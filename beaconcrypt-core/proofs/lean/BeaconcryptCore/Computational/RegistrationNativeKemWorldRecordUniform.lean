@@ -68,7 +68,7 @@ theorem server_input (setup : Setup base KemSK) (codec : Codec Reader Response)
         ((MldsaServerRouting.handler PqxdhRefinement.absBytes (fun _ => server.sender)
           route codec.frameRead query).run server.records)
       let assemble := fun (result : ((RawCtxServerMixed.SourceSpec.Range query ×
-          RawCtxServerRouting.State Unit (Std.Array U8 281#usize)) × List PqxdhDeploymentNative.Frame) × Primitive) =>
+          RawCtxServerRouting.State Unit (Std.Array U8 151#usize)) × List PqxdhDeploymentNative.Frame) × Primitive) =>
         (result.1.1.1, PqxdhRecordLiftWorld.produce (PqxdhDeploymentNative.serverTag query) result.1.2
           { state with server := some { server with records := result.1.1.2 }, primitive := result.2 })
       have law := congrArg (fun computation => assemble <$> computation)

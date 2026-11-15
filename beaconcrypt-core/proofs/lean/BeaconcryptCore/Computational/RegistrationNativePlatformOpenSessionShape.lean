@@ -125,7 +125,7 @@ private theorem after_pin (setup : Setup base KemSK) (checks : Checks) (verify :
             rcases result with ⟨events, verdict⟩
             cases verdict with
             | Accepted authenticated => exact after_authentication setup checks packet authenticated front after env nextEnv reply continued
-            | Rejected | HashRequested _ | MldsaVerificationRequested _ | Ed25519VerificationRequested _ | ServerFingerprintRequested _ | BeaconFingerprintRequested _ =>
+            | Rejected | HashRequested _ | Ed25519VerificationRequested _ =>
                 simp only [StateT.run_pure, mem_support_pure_iff] at continued
                 cases continued
                 exact Or.inl rfl

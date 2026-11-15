@@ -36,7 +36,7 @@ open PqxdhSecretInputKdf (HmacBlock RootOutput)
 section Services
 
 /-- The response tail of a hidden Server session (plan section 18, `PqxdhServerAuthEntryFactor.Services.hiddenBuild`). -/
-abbrev HiddenBuild := PqxdhServerRelatedRootConsumer.Returned → Option Pqxdh.Bytes →
+abbrev HiddenBuild := PqxdhServerRelatedRootConsumer.Returned → Option Pqxdh.Bytes → PqxdhTranscriptAd.AssociatedData →
   PqxdhServerAuthEntryFactor.ServerState →
   StateT PqxdhServerAuthEntryFactor.SealState ProbComp
     (RustM (Option PqxdhServerRegistrationPublication.Response × PqxdhServerAuthEntryFactor.ServerState))
@@ -170,7 +170,7 @@ noncomputable def clientStep (hmac : PqxdhSecretInputKdf.HmacSha512) (control : 
   | .ok (.Ok (_, original)) => do
       let root ← PqxdhSecretInputKdf.expandRoot hmac <$> tableRead (absBytes original.root_key_input.bytes)
       consumeGame original.registration_id
-      pure (ok (some ⟨root, PqxdhServerClearedRoot.cleared original⟩))
+      pure (ok (some ⟨root, PqxdhServerClearedRoot.cleared original, input.verified.candidate⟩))
 
 /-- The Server's accept tail (`PqxdhRegistrationJointServerAccept.tail`). -/
 noncomputable def acceptTail (setup : Setup baseSpec KemSK) (publicIdentity : PublicIdentity)
@@ -202,9 +202,9 @@ noncomputable def acceptStep (setup : Setup baseSpec KemSK) (codec : Codec Reade
 
 /-- The source's native response tail of a session with pending token `token`. -/
 noncomputable def nativeResponse (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks) :
-    HiddenBuild := fun token payload server =>
+    HiddenBuild := fun token payload ad server =>
   simulateQ (tailImpl setup codec checks)
-    (PqxdhServerRegistrationPublication.build setup.source token.pending token.root payload () server)
+    (PqxdhServerRegistrationPublication.build (associatedData := ad) setup.source token.pending token.root payload ad server)
 
 /-- The response tail of a session: the hidden session's service, every other session's native tail. -/
 noncomputable def buildService (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -214,15 +214,21 @@ noncomputable def buildService (setup : Setup baseSpec KemSK) (codec : Codec Rea
       if index = session then (services.hidden value).hiddenBuild else nativeResponse setup codec checks
   | none => nativeResponse setup codec checks
 
-/-- The Server build (`PqxdhServerAuthNative.nativeBuild`), with the hidden session's response tail given by its service. -/
+/-- The Server build (`PqxdhServerAuthNative.nativeBuild`), with the hidden session's response tail given by its service: the pre-hash guard (a rejected token is consumed with no reply), the transcript hash on the shared BLAKE2b cache, then the response tail at the hashed AD. -/
 noncomputable def buildStep (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (services : Services V Response) (session : Nat) (payload : Option Pqxdh.Bytes) :
     NGame KemSK V (Option PqxdhServerRegistrationPublication.Response) := fun state =>
   match state.1.pending session with
   | none => pure (none, state)
-  | some token => do
+  | some token =>
+    match PqxdhServerRegistrationPublication.prehash state.1.server token.pending payload with
+    | none => pure (none, ({ state.1 with pending := Function.update state.1.pending session none }, state.2))
+    | some candidate => do
+      let hashed ← OracleComp.liftComp ((CtxRomAuth.ctxRandomOracle ((), PqxdhTranscriptAd.transcript
+        (PqxdhTranscriptAd.initOf token.init) (PqxdhTranscriptAd.serverResponse candidate))).run state.1.ctx) (SkelSpec V)
       let result ← OracleComp.liftComp
-        ((buildService setup codec checks services state.2 session token payload state.1.server).run ([], state.1.ctx))
+        ((buildService setup codec checks services state.2 session token payload (PqxdhTranscriptAd.adOf hashed.1)
+          state.1.server).run ([], hashed.2))
         (SkelSpec V)
       let settled := settle state.1.server result.1
       pure (settled.1, ({ state.1 with
@@ -327,10 +333,10 @@ noncomputable def skelResume (setup : Setup baseSpec KemSK) (codec : Codec Reade
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)
     (value : PqxdhServerRootPreparation.Verified Reader)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)
-    (consumed : List Pqxdh.Bytes) (game : GameState KemSK) (owners : List EncodedEntry)
+    (consumed : List Pqxdh.Bytes) (game : GameState KemSK) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))
     (next : Option Nat → OracleComp (SourceSpec KemSK) X) (selected : Nat)
     (ciphertext : MlKem768Ciphertext) (services : Services V Response) :
-    OracleComp (Enc KemSK + TSpec V) ((R × List EncodedEntry) × SkelState KemSK V) := do
+    OracleComp (Enc KemSK + TSpec V) ((R × (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))) × SkelState KemSK V) := do
   let answer ← (simulateQ (resumeImpl setup.hmac game.sessions services)
     (PqxdhRegistrationJointKemOpaqueResume.resume setup codec checks identityIndex publicIdentity raw value ephemeral
       (PqxdhAcceptedRegistration.ciphertextArray ciphertext) .challenge game consumed)).run (game, none)

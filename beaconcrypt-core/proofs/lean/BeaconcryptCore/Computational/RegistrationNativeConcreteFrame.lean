@@ -4,6 +4,7 @@ import BeaconcryptCore.Computational.RegistrationNativeBundleCosts
 import BeaconcryptCore.Computational.RegistrationNativeFinishCosts
 import BeaconcryptCore.Computational.RegistrationNativeAcceptCosts
 import BeaconcryptCore.Computational.RegistrationNativeBuildCosts
+import BeaconcryptCore.Computational.RegistrationNativeSelectiveRecordFrame
 
 /-! The actual raw native frontend has a literal callback allowance for every class. Malformed parser inputs and every reached failure retain their own prefix costs. The six implemented classes are derived from their actual typed source programs; all remaining admitted frontend classes cost zero. Only primitive generation, signing and indexed-provider execution receipts are inputs. -/
 

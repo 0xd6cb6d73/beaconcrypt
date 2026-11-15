@@ -9,6 +9,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialSourceSecrecyResources
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf
 open PqxdhInitialBeaconAmbient PqxdhInitialSupportedCertificate RawCtxSelectedParentEntry
 variable {ι M P I D K X Response Shared A N C : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -32,7 +34,7 @@ variable (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writ
   (execution : PqxdhInitialNativeCarried.Execution extra M P I D K Bool Bool S B)
   (depth : Nat) (state : PqxdhInitialNativeAudit.State A N C)
 
-local notation "sourceRun" => PqxdhInitialNativeAuditCarried.carried source writer pre application initializer selector aux
+local notation "sourceRun" => PqxdhInitialNativeAuditCarried.carried (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux
   mark sender route decode execution depth (depth + 1) state
 
 variable (root : RootOutput) (ancestors disclosed : List RatchetChain)
@@ -51,7 +53,7 @@ noncomputable def view : PqxdhInitialCommonSecrecy.View (Supported sourceRun) ex
   remaining := remaining
   depth _ := rfl
 
-local notation "sourceView" => view source writer pre application initializer selector aux mark sender route decode
+local notation "sourceView" => view (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode
   execution depth state root ancestors disclosed selected number remaining
 
 /-- The concrete source carrier derives the earlier root walk from the original zero-depth cursor; no final lineage agreement is assumed. -/
@@ -60,12 +62,12 @@ theorem earlier_walk (initialCursor : state.1.1.1.2.2 = ⟨root, 0⟩) (input : 
       some (past, input.val.2.1.1.1.2.2.input) ∧
       (sourceView).earlier input = (past ++ [input.val.2.1.1.1.2.2.input]).map RawCtxFreshChainCut.concreteChain ++ ancestors := by
   have supported : RawCtxForwardScan.Cut.pending input.val.1 input.val.2.1 ∈ support
-      (PqxdhInitialNativeCarried.carried source writer mark sender route decode execution depth (depth + 1)
+      (PqxdhInitialNativeCarried.carried (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth (depth + 1)
         (PqxdhInitialNativeAudit.external pre application initializer selector aux) state.1) := by
-    rw [← PqxdhInitialNativeAuditCarried.carried_projection source writer pre application initializer selector aux
+    rw [← PqxdhInitialNativeAuditCarried.carried_projection (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux
       mark sender route decode execution depth (depth + 1) state, support_map]
     exact ⟨.pending input.val.1 input.val.2, input.property, rfl⟩
-  obtain ⟨past, walked⟩ := PqxdhInitialPublishedEvent.carried_lineage source writer mark sender route decode execution
+  obtain ⟨past, walked⟩ := PqxdhInitialPublishedEvent.carried_lineage (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution
     depth (depth + 1) (PqxdhInitialNativeAudit.external pre application initializer selector aux)
     root state.1 input.val.2.1 initialCursor input.val.1 supported
   exact ⟨past, walked, by simp only [view, earlier, earlierInputs, walked, Option.map_some, Option.getD_some]⟩
@@ -81,58 +83,58 @@ def candidateBudget : Nat := priorBudget execution qPost state disclosed + 3 * c
 include bounded callbacks in
 /-- The exact masked continuation uses the actual saved-history seed, so the source-derived certificate discharges both its full uniform bill and candidate cap. -/
 theorem pending_bounds (context : Supported sourceRun × Entry) (output : FullOutput) :
-    let work := PqxdhInitialCheckedFreshness.maskedRun source writer mark sender route decode
+    let work := PqxdhInitialCheckedFreshness.maskedRun (completedBinding := completedBinding) source writer mark sender route decode
       (sourceView).continuation context output disclosed ((sourceView).ambient context.1) ((sourceView).priorCandidates context.1)
     work.IsTotalQueryBound (uniformBudget remaining qPost costs) ∧
       ∀ result, result ∈ support work → (PqxdhInitialParentStoppedHop.candidates result).length ≤
         candidateBudget execution state disclosed remaining qPost := by
-  exact PqxdhInitialPreparedResources.pending_resources source writer pre application initializer selector aux mark sender route decode
+  exact PqxdhInitialPreparedResources.pending_resources (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode
     execution depth state qPost bounded costs callbacks disclosed remaining _ context output
 
 include bounded callbacks in
 /-- Common decisions and all supported pending continuations instantiate the full observer bill with no whole-observer resource hypothesis. -/
 theorem observed_uniform (context : (Bool ⊕ Supported sourceRun) × Entry) (output : FullOutput) :
-    (PqxdhInitialCommonSecrecy.observed source writer mark sender route decode sourceView context output).IsTotalQueryBound
+    (PqxdhInitialCommonSecrecy.observed (completedBinding := completedBinding) source writer mark sender route decode sourceView context output).IsTotalQueryBound
       (uniformBudget remaining qPost costs) := by
-  apply PqxdhInitialCommonSecrecy.observed_bound
+  apply PqxdhInitialCommonSecrecy.observed_bound (completedBinding := completedBinding)
   intro pending response
-  exact (pending_bounds source writer pre application initializer selector aux mark sender route decode execution depth state
+  exact (pending_bounds (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode execution depth state
     root ancestors disclosed selected number remaining qPost bounded costs callbacks pending response).1
 
 include bounded callbacks in
 /-- Candidate accounting includes the actual pre-cut history and audit, every stopped callback, and every appended checker query. -/
 theorem candidates_bound (context : (Bool ⊕ Supported sourceRun) × Entry) (output : FullOutput)
     (result : PqxdhInitialCommonSecrecy.Trace M P I D K A N C S B)
-    (supported : result ∈ support (PqxdhInitialCommonSecrecy.observed source writer mark sender route decode sourceView context output)) :
+    (supported : result ∈ support (PqxdhInitialCommonSecrecy.observed (completedBinding := completedBinding) source writer mark sender route decode sourceView context output)) :
     (PqxdhInitialCommonSecrecy.candidates result).length ≤ candidateBudget execution state disclosed remaining qPost := by
-  apply PqxdhInitialCommonSecrecy.candidates_bound
+  apply PqxdhInitialCommonSecrecy.candidates_bound (completedBinding := completedBinding)
   · intro pending response
-    exact (pending_bounds source writer pre application initializer selector aux mark sender route decode execution depth state
+    exact (pending_bounds (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode execution depth state
       root ancestors disclosed selected number remaining qPost bounded costs callbacks pending response).2
   · exact supported
 
 variable (observe : PqxdhInitialPreparedParent.Output M P I D K Bool Bool A N C S B → ProbComp Bool)
 
-local notation "sourceSample" => PqxdhInitialPreparedResources.sample source writer pre application initializer selector aux
+local notation "sourceSample" => PqxdhInitialPreparedResources.sample (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux
   mark sender route decode observe execution depth state
-local notation "sourceAddress" => PqxdhInitialPreparedResources.address source writer pre application initializer selector aux
+local notation "sourceAddress" => PqxdhInitialPreparedResources.address (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux
   mark sender route decode execution depth state
-local notation "mainObserver" => PqxdhInitialCommonSecrecy.observer source writer mark sender route decode sourceView
-local notation "testObserver" => PqxdhInitialCommonSecrecy.aliasTester source writer mark sender route decode sourceView
+local notation "mainObserver" => PqxdhInitialCommonSecrecy.observer (completedBinding := completedBinding) source writer mark sender route decode sourceView
+local notation "testObserver" => PqxdhInitialCommonSecrecy.aliasTester (completedBinding := completedBinding) source writer mark sender route decode sourceView
 
 include bounded callbacks in
 /-- The actual supported source sampler instantiates the full native-freshness reduction with its computed candidate cap, rather than a whole-observer hypothesis. -/
 theorem bound (hmac : HmacSha512) (correct : SourceFullCorrect source hmac) :
-    (PqxdhInitialCommonSecrecy.actual source writer mark sender route decode sourceView sourceSample sourceAddress).boolDistance
-      (PqxdhInitialCommonSecrecy.random source writer mark sender route decode sourceView sourceSample sourceAddress) ≤
+    (PqxdhInitialCommonSecrecy.actual (completedBinding := completedBinding) source writer mark sender route decode sourceView sourceSample sourceAddress).boolDistance
+      (PqxdhInitialCommonSecrecy.random (completedBinding := completedBinding) source writer mark sender route decode sourceView sourceSample sourceAddress) ≤
       RawCtxSelectedParentHop.extractLoss hmac sourceSample sourceAddress mainObserver +
         RawCtxSelectedParentHop.hmacLoss hmac sourceSample sourceAddress mainObserver +
         3 * (RawCtxSelectedParentHop.extractLoss hmac sourceSample sourceAddress testObserver +
           RawCtxSelectedParentHop.hmacLoss hmac sourceSample sourceAddress testObserver +
           (2 ^ 352 : ℝ)⁻¹ + (candidateBudget execution state disclosed remaining qPost : ℝ) / (2 ^ 256 : ℝ)) := by
-  exact PqxdhInitialCommonSecrecy.bound source hmac correct writer mark sender route decode sourceView sourceSample sourceAddress
+  exact PqxdhInitialCommonSecrecy.bound (completedBinding := completedBinding) source hmac correct writer mark sender route decode sourceView sourceSample sourceAddress
     (candidateBudget execution state disclosed remaining qPost)
-    (candidates_bound source writer pre application initializer selector aux mark sender route decode execution depth state
+    (candidates_bound (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode execution depth state
       root ancestors disclosed selected number remaining qPost bounded costs callbacks)
 
 variable (qObserve : Nat) (observeBound : ∀ result, (observe result).IsTotalQueryBound qObserve)
@@ -142,28 +144,28 @@ def sampleBudget : Nat := PqxdhInitialAuditedResources.uniformBudget costs qPost
 include bounded callbacks observeBound in
 /-- Both constructed HMAC adversaries pay two challenge calls and the actual complete prepared source, parent draw and stopped observer coins; the tester additionally pays the full real-HKDF candidate cap. -/
 theorem reduction_queries :
-    (∀ forTester, let observer := PqxdhInitialCommonSecrecy.reductionObserver source writer mark sender route decode sourceView forTester
+    (∀ forTester, let observer := PqxdhInitialCommonSecrecy.reductionObserver (completedBinding := completedBinding) source writer mark sender route decode sourceView forTester
       (fullExpandReduction .ratchet (RawCtxSelectedParentSecrecy.joint sourceSample sourceAddress) observer).IsQueryBoundP IsHmacChallengeQuery 2 ∧
         (fullExpandReduction .ratchet (RawCtxSelectedParentSecrecy.joint sourceSample sourceAddress) observer).IsQueryBoundP
           PqxdhFullSecretInputKdf.IsHmacUniformQuery
             ((sampleBudget qPost costs qObserve + 76) + uniformBudget remaining qPost costs)) ∧
       (∀ context output result, result ∈ support
-        (PqxdhInitialCommonSecrecy.observed source writer mark sender route decode sourceView context output) →
+        (PqxdhInitialCommonSecrecy.observed (completedBinding := completedBinding) source writer mark sender route decode sourceView context output) →
         (RawCtxFullPreimageTester.evaluate output (PqxdhInitialCommonSecrecy.candidates result)).IsTotalQueryBound
           (candidateBudget execution state disclosed remaining qPost)) := by
-  exact PqxdhInitialCommonSecrecy.reduction_queries source writer mark sender route decode sourceView sourceSample sourceAddress
+  exact PqxdhInitialCommonSecrecy.reduction_queries (completedBinding := completedBinding) source writer mark sender route decode sourceView sourceSample sourceAddress
     (sampleBudget qPost costs qObserve) (uniformBudget remaining qPost costs) (candidateBudget execution state disclosed remaining qPost)
-    (PqxdhInitialPreparedResources.sample_uniform source writer pre application initializer selector aux mark sender route decode observe
+    (PqxdhInitialPreparedResources.sample_uniform (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode observe
       execution depth state qPost qObserve bounded costs callbacks observeBound)
-    (observed_uniform source writer pre application initializer selector aux mark sender route decode execution depth state
+    (observed_uniform (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode execution depth state
       root ancestors disclosed selected number remaining qPost bounded costs callbacks)
-    (candidates_bound source writer pre application initializer selector aux mark sender route decode execution depth state
+    (candidates_bound (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode execution depth state
       root ancestors disclosed selected number remaining qPost bounded costs callbacks)
 
 include bounded callbacks observeBound in
 /-- The actual complete source bills also instantiate both ordinary primitive challengers, including Extract and HMAC keys, both random HMAC blocks and the independent full child. -/
 theorem challenger_queries (hmac : HmacSha512) (forTester : Bool) :
-    let observer := PqxdhInitialCommonSecrecy.reductionObserver source writer mark sender route decode sourceView forTester
+    let observer := PqxdhInitialCommonSecrecy.reductionObserver (completedBinding := completedBinding) source writer mark sender route decode sourceView forTester
     let joint := RawCtxSelectedParentSecrecy.joint sourceSample sourceAddress
     (extractRealGame hmac joint (fullExtractReduction hmac .ratchet observer)).IsTotalQueryBound
         ((sampleBudget qPost costs qObserve + 76) + uniformBudget remaining qPost costs) ∧
@@ -175,11 +177,11 @@ theorem challenger_queries (hmac : HmacSha512) (forTester : Bool) :
         ((sampleBudget qPost costs qObserve + 76) + (64 + (64 + uniformBudget remaining qPost costs))) ∧
       (RawCtxSelectedParentSecrecy.random sourceSample sourceAddress observer).IsTotalQueryBound
         ((sampleBudget qPost costs qObserve + 76) + (76 + uniformBudget remaining qPost costs)) := by
-  exact PqxdhInitialCommonSecrecy.challenger_queries source hmac writer mark sender route decode sourceView sourceSample sourceAddress
+  exact PqxdhInitialCommonSecrecy.challenger_queries (completedBinding := completedBinding) source hmac writer mark sender route decode sourceView sourceSample sourceAddress
     (sampleBudget qPost costs qObserve) (uniformBudget remaining qPost costs)
-    (PqxdhInitialPreparedResources.sample_uniform source writer pre application initializer selector aux mark sender route decode observe
+    (PqxdhInitialPreparedResources.sample_uniform (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode observe
       execution depth state qPost qObserve bounded costs callbacks observeBound)
-    (observed_uniform source writer pre application initializer selector aux mark sender route decode execution depth state
+    (observed_uniform (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode execution depth state
       root ancestors disclosed selected number remaining qPost bounded costs callbacks) forTester
 
 end BeaconcryptCore.Computational.PqxdhInitialSourceSecrecyResources

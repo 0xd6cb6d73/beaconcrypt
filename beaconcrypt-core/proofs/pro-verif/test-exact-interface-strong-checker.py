@@ -261,6 +261,80 @@ class ExactInterfaceStrongChecks(unittest.TestCase):
             with self.assertRaises(ValueError):
                 CHECKER.validate_targets(source_root=root)
 
+    def test_owner_approved_limit_exception(self):
+        # Owner decision of 2026-11-13: only SSX-b2s gets 2700 s; every other target
+        # keeps the group limits, and no target gets a larger address space.
+        group = (1800, 10485760)
+        for target in CHECKER.TARGETS:
+            wanted = (2700, 10485760) if target.name == "SSX-b2s" else group
+            self.assertEqual(CHECKER.target_limits(target, *group), wanted, target.name)
+        ssx = CHECKER.TARGETS[0]
+        self.assertEqual(ssx.name, "SSX-b2s")
+        # A larger group limit still applies, and no cap is added to an uncapped run.
+        self.assertEqual(CHECKER.target_limits(ssx, 3600, 0), (3600, 0))
+        # Only the roster entry itself, never a changed target with the same name.
+        self.assertEqual(CHECKER.target_limits(replace(ssx, bound=2), *group), group)
+
+    def test_limit_exceptions_are_reviewed(self):
+        original = dict(CHECKER.LIMIT_EXCEPTIONS)
+        try:
+            for name, limits in (
+                ("SSX-s2b", (2700, None)),
+                ("SSX-b2s-origin", (2700, None)),
+                ("SSX-b2s-leak", (2700, None)),
+                ("missing", (2700, None)),
+                ("SSX-b2s", (2701, None)),
+                ("SSX-b2s", (2700, 10485761)),
+            ):
+                with self.subTest(name=name, limits=limits):
+                    CHECKER.LIMIT_EXCEPTIONS.clear()
+                    CHECKER.LIMIT_EXCEPTIONS.update(original)
+                    CHECKER.LIMIT_EXCEPTIONS[name] = limits
+                    with self.assertRaises(ValueError):
+                        CHECKER.validate_targets()
+        finally:
+            CHECKER.LIMIT_EXCEPTIONS.clear()
+            CHECKER.LIMIT_EXCEPTIONS.update(original)
+        CHECKER.validate_targets()
+
+    def test_run_applies_the_limit_exception(self):
+        calls = []
+        original = CHECKER.FS.run_process
+
+        def record(command, log, timeout, address_space_kib):
+            calls.append((log.stem, timeout, address_space_kib))
+            log.write_text("")
+            return 1.0, 1, 1, False
+
+        CHECKER.FS.run_process = record
+        try:
+            with tempfile.TemporaryDirectory() as scratch:
+                directory = Path(scratch)
+                args = type(
+                    "Args",
+                    (),
+                    dict(
+                        proverif="proverif",
+                        timeout=1800,
+                        address_space_kib=10485760,
+                        lock=directory / "proverif.lock",
+                    ),
+                )()
+                with self.assertRaises(ValueError):
+                    CHECKER.run(args, directory)
+                receipts = (directory / "receipts.json").read_text()
+        finally:
+            CHECKER.FS.run_process = original
+        self.assertEqual(
+            calls,
+            [
+                (t.name, 2700 if t.name == "SSX-b2s" else 1800, 10485760)
+                for t in CHECKER.TARGETS
+            ],
+        )
+        self.assertIn('"seconds": 2700', receipts)
+        self.assertEqual(receipts.count('"seconds": 1800'), len(CHECKER.TARGETS) - 1)
+
     def test_exact_verdict_and_trace_classes(self):
         for target in CHECKER.TARGETS:
             trace = "A trace has been found.\n" * target.expected_traces()

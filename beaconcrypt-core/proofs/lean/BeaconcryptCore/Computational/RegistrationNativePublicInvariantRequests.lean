@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeOrdinaryFinishSourceRequests
 
-/-! Actual native owner creation and outgoing publication preserve the record-request analysis field. Native ML signing retains its real receipt append; no environment projection is used to infer preservation. -/
+/-! Actual native owner creation and outgoing publication preserve the record-request analysis field. The Server-only ML request refuses purely, while the real Ed signing and shared hash paths remain; no environment projection is used to infer preservation. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -83,34 +83,14 @@ private theorem receipts_keeps (receipts : List RegistrationSigningShared.Receip
 
 private theorem prepare_keeps (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64) :
     Keeps (prepare source edPin mlPin keyId : M n KemSK source Auxiliary (RustM (Option (Prepared source)))) := by
-  apply bind_keeps _ _ (sample_keeps _)
-  intro generated
-  cases generated with
-  | none => exact pure_keeps _
-  | some credential =>
-      dsimp only
-      cases initialized : registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
-      | fail error | div => exact pure_keeps _
-      | ok pending =>
-          dsimp only
-          cases requested : pending.request with
-          | fail error | div => exact pure_keeps _
-          | ok request =>
-              dsimp only
-              apply bind_keeps _ _ (lift_keeps _)
-              intro digest
-              cases resumed : pending.resume (.Some (RegistrationAuthenticationShared.digestArray digest)) with
-              | fail error | div => exact pure_keeps _
-              | ok result => cases result with
-                | none => exact pure_keeps _
-                | some pin =>
-                    exact bind_keeps _ _ (sample_keeps _) (fun _ =>
-                      bind_keeps _ _ (sample_keeps _) (fun _ => pure_keeps _))
+  unfold prepare
+  exact bind_keeps _ _ (sample_keeps _) (fun _ =>
+    bind_keeps _ _ (sample_keeps _) (fun _ => pure_keeps _))
 
 private theorem append_keeps (setup : Setup base KemSK) (edPin : Std.Array U8 32#usize) (keyId : U64)
-    (pin : session.ServerAuthenticationPin) (credential : RegistrationNativeMldsa.Credential source)
+    (pin : session.ServerAuthenticationPin)
     (identity : PqxdhJointIdentity.IdentitySeed) (prekey : PqxdhJointGapDh.ScalarBytes) :
-    Keeps (appendBorn setup source edPin keyId pin credential identity prekey : M n KemSK source Auxiliary (RustM (Option Nat))) :=
+    Keeps (appendBorn setup source edPin keyId pin identity prekey : M n KemSK source Auxiliary (RustM (Option Nat))) :=
   bind_keeps _ _ (lift_keeps _) (fun _ => bind_keeps _ _ (lift_keeps _) (fun _ =>
     bind_keeps _ _ get_keeps (fun _ => bind_keeps _ _ (set_keeps _) (fun _ => pure_keeps _))))
 
@@ -121,8 +101,7 @@ private theorem outgoing_keeps (setup : Setup base KemSK) (index : Nat) (owner :
   | inl query => cases query with
     | hash request => exact lift_keeps _
     | sign request payload digest =>
-        exact bind_keeps _ _ (sample_keeps _) (fun _ =>
-          bind_keeps _ _ (receipts_keeps _) (fun _ => pure_keeps _))
+        exact pure_keeps _
   | inr request =>
       classical
       unfold outgoing
@@ -136,7 +115,7 @@ private theorem bundled_keeps (setup : Setup base KemSK) (wire : RegistrationNat
     Keeps (do
       let published ← simulateQ (outgoing setup source index owner)
         (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨owner.pin.binding⟩ (inputs setup owner)
-          ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)
+          ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)
       match published with
       | .fail error => pure (.fail error)
       | .div => pure .div
@@ -167,10 +146,10 @@ theorem create_keeps (setup : Setup base KemSK) (edPin : Std.Array U8 32#usize)
     | fail error | div => exact pure_keeps _
     | ok prepared => cases prepared with
       | none => exact pure_keeps _
-      | some prepared => exact append_keeps setup edPin keyId prepared.pin prepared.credentials prepared.identity prepared.prekey
+      | some prepared => exact append_keeps setup edPin keyId prepared.pin prepared.identity prepared.prekey
   exact valid owners env result supported
 
-/-- Real outgoing ML signing appends its receipts while preserving the independent record-request field on every outcome. -/
+/-- Actual outgoing publication preserves the independent record-request field through its real Ed/hash paths and the pure Server-only ML refusal. -/
 theorem bundle_keeps (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire) (index : Nat)
     (owners : State source) (env : EnvState Auxiliary)
     (result : (RustM (Option Pqxdh.Bytes) × State source) × EnvState Auxiliary)

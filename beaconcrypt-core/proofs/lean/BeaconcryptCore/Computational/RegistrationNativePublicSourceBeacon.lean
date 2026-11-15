@@ -36,7 +36,7 @@ private theorem commit_view (result : ((Value × RegistrationNativeBeaconFronten
 /-- Full local owner execution and publication commits the actual returned roster and current environment on the same reached native World. -/
 theorem program_source (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential source) (roots : Roots)
     (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State Value)
     (before : State n KemSK source)

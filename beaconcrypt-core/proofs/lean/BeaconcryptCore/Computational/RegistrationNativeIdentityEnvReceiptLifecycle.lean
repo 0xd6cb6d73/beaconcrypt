@@ -157,6 +157,11 @@ private theorem record_stable (setup : Setup base KemSK) (wire : RegistrationNat
   apply bind_stable _ _ (update_stable _ (fun _ => rfl))
   intro _
   cases query with
+  | adHash request =>
+    change Stable (do
+      let digest ← RegistrationNativeBeaconFrontend.hash request
+      pure (core.option.Option.Some (RegistrationAuthenticationShared.digestArray digest)))
+    exact bind_stable _ _ (old_effect_stable _) (fun _ => pure_stable _)
   | hash transcript =>
     change Stable (do
       let digest ← RegistrationNativeBeaconFrontend.hash (.Single (Std.Array.to_slice transcript.bytes))
@@ -167,32 +172,14 @@ private theorem record_stable (setup : Setup base KemSK) (wire : RegistrationNat
 private theorem prepare_stable (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64) :
     Stable (RegistrationNativeIdentityFrontend.prepare (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) source edPin mlPin keyId) := by
   unfold RegistrationNativeIdentityFrontend.prepare
-  apply bind_stable _ _ (sample_stable _)
-  intro generated
-  cases generated with
-  | none => exact pure_stable _
-  | some credential =>
-    cases registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
-    | fail error | div => exact pure_stable _
-    | ok pending =>
-      simp only
-      cases pending.request with
-      | fail error | div => exact pure_stable _
-      | ok request =>
-        simp only
-        apply bind_stable _ _ (effect_stable _)
-        intro digest
-        cases pending.resume (.Some (RegistrationAuthenticationShared.digestArray digest)) with
-        | fail error | div => exact pure_stable _
-        | ok result => cases result with
-          | none => exact pure_stable _
-          | some pin =>
-            simp only
-            apply bind_stable _ _ (lift_stable _)
-            intro identity
-            cases identity with
-            | none => exact pure_stable _
-            | some identity => exact bind_stable _ _ (sample_stable _) (fun _ => pure_stable _)
+  cases registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
+  | fail error | div => exact pure_stable _
+  | ok pin =>
+      apply bind_stable _ _ (lift_stable _)
+      intro identity
+      cases identity with
+      | none => exact pure_stable _
+      | some identity => exact bind_stable _ _ (sample_stable _) (fun _ => pure_stable _)
 
 /-- Literal constructor preparation/birth ignores prior compact receipt payloads and retains every actual generation, failure and owner/Env effect. -/
 theorem create (setup : Setup base KemSK) (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64) :

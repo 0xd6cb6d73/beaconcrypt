@@ -27,7 +27,7 @@ def close (result : Intermediate (n := n) (KemSK := KemSK) (Platform := Platform
   (result.1.1.1.1, ({ context := patch result.1.1.2 result.2, beacons := result.1.1.1.2 }, result.1.2))
 
 theorem run (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : Frontend (n := n) (KemSK := KemSK) (Platform := Platform) (source := source) Value)
     (before : MainState (n := n) (KemSK := KemSK) (Platform := Platform) (source := source)) :
     (RegistrationNativePlatformIdentityCtxMain.beacon setup checks representation created work).run before =
@@ -37,7 +37,7 @@ theorem run (setup : Setup base KemSK) (checks : Checks)
 
 /-- The actual compiler's pure closing operation rejoins exactly the initial environment and full World. -/
 theorem pure_source (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit) (value : Value) :
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (value : Value) :
     RegistrationNativePlatformIdentityCtxMain.beacon (n := n) (Platform := Platform) (source := source)
       setup checks representation created (pure value) = pure value := by
   funext before
@@ -52,7 +52,7 @@ private theorem close_patch (environment : Env)
 
 /-- Sequential source publication actions close and reopen the same exact state; only the later tree requires the derived syntactic publication scope. -/
 theorem bind_source (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : Frontend (n := n) (KemSK := KemSK) (Platform := Platform) (source := source) Value)
     (next : Value → Frontend (n := n) (KemSK := KemSK) (Platform := Platform) (source := source) Next)
     (allowed : ∀ value, Work (next value)) :
@@ -80,7 +80,7 @@ theorem bind_source (setup : Setup base KemSK) (checks : Checks)
 
 /-- The actual outgoing hash/ML/Ed and mutable writer dictionary folds query by query through Main, with every source assumption discharged from literal syntax. -/
 theorem publication {E : Type} (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner source)
     (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (work : OracleComp (RegistrationNativePlatformWriter.Spec E) Value) :

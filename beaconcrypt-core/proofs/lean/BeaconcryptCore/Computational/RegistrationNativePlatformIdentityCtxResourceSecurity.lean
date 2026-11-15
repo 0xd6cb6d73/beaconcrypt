@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePlatformIdentityCtxTypedHashBounds
+import BeaconcryptCore.Computational.RegistrationNativePlatformIdentityCtxRuntimeBirthday
 /-! The literal original initialized runtime pays one shared physical CTX birthday term with its concrete API resource bill. Actual startup supplies the warm cache, typed callbacks supply every future allowance, and the full public command compiler supplies every typed cap. No static hash-count or whole-controller resource premise remains. -/
 open OracleComp OracleSpec CoreModels ENNReal Aeneas
 open Aeneas.Std hiding namespace core alloc

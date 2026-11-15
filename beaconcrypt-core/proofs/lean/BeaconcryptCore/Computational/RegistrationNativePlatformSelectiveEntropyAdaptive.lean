@@ -58,7 +58,7 @@ private theorem pair_id {X Y : Type} : Prod.map (id : X → X) (id : Y → Y) = 
 
 /-- Full adaptive source execution equals the gated native environment in the exact same source/P, cursor, Protocol and private World state. -/
 theorem program_source
-    (startup : ProbComp (Option (PqxdhLiveServerConstruction.Created Unit × State n KemSK ProviderState Platform source)))
+    (startup : ProbComp (Option (PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize) × State n KemSK ProviderState Platform source)))
     (work : OracleComp RegistrationNativeInterface.Spec Value) (before : JointState) (valid : Holds before) :
     (lower service codec route (simulateQ actualRaw work)).run before =
       (lower service codec route (simulateQ (reference startup) work)).run before := by
@@ -75,7 +75,7 @@ theorem program_source
 
 /-- The complete original full secrecy ledger and all observation modes retain the same exact initialized source execution. -/
 theorem full_source
-    (startup : ProbComp (Option (PqxdhLiveServerConstruction.Created Unit × State n KemSK ProviderState Platform source)))
+    (startup : ProbComp (Option (PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize) × State n KemSK ProviderState Platform source)))
     (serverKeyId : U64) (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value) (before : JointState) (valid : Holds before) :
     (lower service codec route (simulateQ actualTyped

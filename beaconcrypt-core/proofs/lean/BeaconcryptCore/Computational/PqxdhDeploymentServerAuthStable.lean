@@ -54,10 +54,15 @@ theorem build_stable (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
     (index : Nat) (payload : Option Pqxdh.Bytes) : Stable (nativeBuild setup codec checks index payload) := by
   intro state
   simp only [nativeBuild, nativeGet]
-  cases pending : state.2.pending index
-  all_goals simp only [eraseObservers, pending, native_bind_run, nativeCoins, nativeSet, localState, native_pure_run,
-    pure_bind, map_bind, bind_map_left, map_pure, StateT.run]
-  all_goals rfl
+  cases pending : state.2.pending index with
+  | none =>
+      simp only [eraseObservers, pending, native_bind_run, localState, native_pure_run, pure_bind, map_pure, StateT.run]
+      rfl
+  | some token =>
+      cases pre : PqxdhServerRegistrationPublication.prehash state.2.server token.pending payload
+      all_goals simp only [eraseObservers, pending, pre, native_bind_run, nativeCoins, nativeSet, nativeHash, localState,
+        native_pure_run, pure_bind, map_bind, bind_map_left, map_pure, StateT.run]
+      all_goals rfl
 
 /-- An accept reads only the Server, the session counter, the pending tokens and the Extract table. -/
 theorem accept_stable (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -159,7 +164,7 @@ theorem localCallbacks_route (setup : Setup baseSpec KemSK) (codec : Codec Reade
 theorem onShared_stable {α : Type} (op : NativeGame KemSK α) (stable : Stable op) (state : PqxdhRegistrationSchedule.State KemSK) :
     Prod.map id eraseShared <$> (PqxdhRegistrationSchedule.onShared op).run state =
       Prod.map id eraseShared <$> (PqxdhRegistrationSchedule.onShared op).run (eraseShared state) := by
-  have same := congrArg (fun computation => (fun result => (result.1, ({ shared := result.2, owners := state.owners } :
+  have same := congrArg (fun computation => (fun result => (result.1, ({ shared := result.2, owners := state.owners, inits := state.inits } :
     PqxdhRegistrationSchedule.State KemSK))) <$> computation) (stable state.shared)
   simp only [Functor.map_map] at same
   rw [PqxdhRegistrationSchedule.onShared_run, PqxdhRegistrationSchedule.onShared_run]
@@ -209,6 +214,71 @@ theorem localFinish_route {α : Type} (setup : Setup baseSpec KemSK) (codec : Co
       rw [StateT.run_mk, ← onShared_stable _ (callbacks_stable setup codec query) current]) program state
   rw [← erased, onShared_program, Functor.map_map]
   rfl
+
+/-- A native hash followed by stable continuations is stable: the hash reads only the shared cache, which the erasure keeps. -/
+theorem stable_hash_bind {α : Type} (bytes : Pqxdh.Bytes) (next : CtxRomAuth.CtxDigest → NativeGame KemSK α)
+    (stable : ∀ digest, Stable (next digest)) : Stable (nativeHash bytes >>= next) := by
+  intro state
+  simp only [StateT.run_bind, map_bind]
+  change ((fun result => (result.1, (state.1, { state.2 with ctx := result.2 }))) <$>
+      (CtxRomAuth.ctxRandomOracle ((), bytes)).run state.2.ctx) >>= _ =
+    ((fun result => (result.1, ((eraseObservers state).1, { (eraseObservers state).2 with ctx := result.2 }))) <$>
+      (CtxRomAuth.ctxRandomOracle ((), bytes)).run state.2.ctx) >>= _
+  simp only [bind_map_left]
+  refine bind_congr fun result => ?_
+  rw [stable result.1]
+  conv_rhs => rw [stable result.1]
+  rfl
+
+/-- The scheduler's hashed owner finish is stable: its transcript hash reads only the shared cache and its owner program is a finish program. -/
+theorem ownerFinish_stable (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) :
+    Stable (PqxdhRegistrationSchedule.ownerFinish setup codec retained raw owner) := by
+  unfold PqxdhRegistrationSchedule.ownerFinish
+  split
+  · split
+    · exact stable_hash_bind _ _ fun digest => callbacks_program setup codec _
+    · intro state
+      rfl
+  · intro state
+    rfl
+
+/-- A forwarded BLAKE2b query through the singleton route and the source14 handler is the native hash on the shared state. -/
+theorem forwardHash_route (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (seed : IdentitySeed) (bytes : Pqxdh.Bytes) (state : PqxdhRegistrationSchedule.State KemSK) :
+    (simulateQ (PqxdhRegistrationSchedule.handler setup codec checks seed)
+        (simulateQ route (forward (.hash bytes)))).run state =
+      (fun result => (result.1, { state with shared := result.2 })) <$> (nativeHash bytes).run state.shared := by
+  simp only [forward, simulateQ_query, OracleQuery.input_query, OracleQuery.cont_query, id_map, route,
+    PqxdhRegistrationSchedule.handler, PqxdhRegistrationSchedule.onShared_run]
+  rfl
+
+/-- A local Beacon's hashed finish (`PqxdhDeploymentServerAuthEmbed.localFinish`) through the singleton route and the source14 handler is the scheduler's hashed owner finish (`PqxdhRegistrationSchedule.ownerFinish`) on the shared state, up to the histories: the forwarded transcript hash fills the same shared cache, and the owner program then runs at the same completed binding (`localFinish_route`). -/
+theorem localOwnerFinish_route (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (seed : IdentitySeed) (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) (state : PqxdhRegistrationSchedule.State KemSK) :
+    Prod.map id eraseShared <$>
+      (simulateQ (PqxdhRegistrationSchedule.handler setup codec checks seed)
+        (simulateQ route (PqxdhDeploymentServerAuthEmbed.localFinish setup codec retained raw owner))).run state =
+      (fun result => (result.1, eraseShared { state with shared := result.2 })) <$>
+        (PqxdhRegistrationSchedule.ownerFinish setup codec retained raw owner).run state.shared := by
+  unfold PqxdhDeploymentServerAuthEmbed.localFinish PqxdhRegistrationSchedule.ownerFinish
+  rcases owner with ⟨⟨identity, keyId, pin, phase⟩, slot⟩
+  cases phase with
+  | initSent control prekey oneTime kem =>
+      cases retained with
+      | none => simp
+      | some init =>
+          cases responseOf codec raw with
+          | none => simp
+          | some response =>
+              simp only [simulateQ_bind, StateT.run_bind]
+              rw [forwardHash_route setup codec checks seed _ state]
+              simp only [bind_map_left, map_bind]
+              refine bind_congr fun digest => ?_
+              rw [localFinish_route]
+  | _ => simp
 
 end BeaconcryptCore.Computational.PqxdhDeploymentServerAuthStable
 
@@ -295,3 +365,23 @@ end BeaconcryptCore.Computational.PqxdhDeploymentServerAuthStable
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthStable.localFinish_route
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthStable.forwardHash_route' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthStable.forwardHash_route
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthStable.localOwnerFinish_route' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthStable.localOwnerFinish_route
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthStable.stable_hash_bind' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthStable.stable_hash_bind
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthStable.ownerFinish_stable' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthStable.ownerFinish_stable

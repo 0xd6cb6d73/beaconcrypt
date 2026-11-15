@@ -20,7 +20,7 @@ variable [primitives : AdapterSealPrimitive.Operations]
 variable {n : Nat} {ι KemSK Platform E Value : Type} {base : OracleSpec ι}
 
 structure Initial (n : Nat) (source : RegistrationNativeMldsa.Source) where
-  created : PqxdhLiveServerConstruction.Created Unit
+  created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)
   credential : RegistrationNativeMldsa.Credential source
   state : RegistrationNativeKemServerState.State n source
 

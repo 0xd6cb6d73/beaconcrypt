@@ -75,7 +75,7 @@ theorem create (setup : Setup base KemSK)
 
 private theorem beacon (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State Value)
     (law : ∀ owners env result, Holds setup owners → result ∈ support ((work.run owners).run env) → Holds setup result.1.2)
     (before : RegistrationNativeExperiment.State n KemSK source) (result : Value × RegistrationNativeExperiment.State n KemSK source)
@@ -94,7 +94,7 @@ private theorem beacon (setup : Setup base KemSK) (checks : Checks)
 /-- All original typed callbacks preserve prekey/scalar coherence, including successful creation and every failed source continuation. -/
 theorem handler (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (before : RegistrationNativeExperiment.State n KemSK source)
     (prior : Holds setup before.beacons)
     (result : RegistrationNativeRawAdapter.TypedSpec.Range query × RegistrationNativeExperiment.State n KemSK source)
@@ -117,7 +117,7 @@ theorem handler (setup : Setup base KemSK) (checks : Checks) (wire : Registratio
 
 theorem program (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (work : OracleComp RegistrationNativeRawAdapter.TypedSpec Value) (before : RegistrationNativeExperiment.State n KemSK source)
     (prior : Holds setup before.beacons) (result : Value × RegistrationNativeExperiment.State n KemSK source)
     (supported : result ∈ support ((simulateQ
@@ -133,7 +133,8 @@ theorem start (setup : Setup base KemSK) (ensureInit : StateT Unit ProbComp Bool
     (identityIndex : Nat) (serverKeyId : U64) (initial : RegistrationNativeExperiment.Initial n KemSK source)
     (supported : some initial ∈ support (RegistrationNativeExperiment.start setup source ensureInit identityIndex serverKeyId)) :
     Holds setup initial.state.beacons := by
-  simp only [RegistrationNativeExperiment.start, mem_support_bind_iff] at supported
+  delta RegistrationNativeExperiment.start at supported
+  simp only [mem_support_bind_iff] at supported
   obtain ⟨constructed, _constructed, continued⟩ := supported
   cases built : constructed.1.1 with
   | none => simp only [built, mem_support_pure_iff] at continued; cases continued

@@ -7,6 +7,7 @@ open RustM beaconcrypt_core ratchet ratchet.refined ratchet.concrete PqxdhRefine
 set_option autoImplicit false
 
 namespace BeaconcryptCore.Computational.PqxdhServerAuthCtxBuildSettlement
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhSecretInputKdf PqxdhJointKdfGame
 open PqxdhServerAuthCtxCalls (Chain Material Kernel Residual step interpret initial)
 open RawCtxMaterialInterpretation
@@ -204,14 +205,14 @@ theorem settle_after (candidate : pqxdh.ServerRegistrationCandidate) (authentica
     (state : PqxdhInitialGenericPublication.State Kernel Metadata PeerMetadata Consumed)
     (settled : StateSettled state) :
     Prod.map id (PqxdhInitialGenericPublication.native left) <$>
-      PqxdhInitialGenericPublication.afterInitialization (calls receiveCall source rest sealer) aux
+      PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) (calls receiveCall source rest sealer) aux
         candidate authenticated entry metadata state =
     Prod.map id (PqxdhInitialGenericPublication.native right) <$>
-      PqxdhInitialGenericPublication.afterInitialization (calls receiveCall source rest sealer) aux
+      PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) (calls receiveCall source rest sealer) aux
         candidate authenticated entry metadata state := by
   have base := state_agree left right agree state settled
   simp only [PqxdhInitialGenericPublication.afterInitialization]
-  rcases send_shape receiveCall source rest sealer entry materialKnown (PqxdhServerRegistrationPublication.firstContext candidate authenticated)
+  rcases send_shape receiveCall source rest sealer entry materialKnown (PqxdhServerRegistrationPublication.firstContext candidate associatedData authenticated)
     with sent | ⟨advanced, sealing, fresh, sent⟩
   · rw [sent]
     simp only [pure_bind, map_bind, map_pure, Prod.map_apply, id_eq, base]
@@ -234,10 +235,10 @@ theorem settle_candidate_kernel (kernel : Kernel) (materialKnown : Settled kerne
     (state : PqxdhInitialGenericPublication.State Kernel Metadata PeerMetadata Consumed)
     (settled : StateSettled state) :
     Functor.map (Prod.map id (PqxdhInitialGenericPublication.native left)) <$>
-      PqxdhInitialGenericBuilder.candidate (calls receiveCall source rest sealer) aux
+      PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) (calls receiveCall source rest sealer) aux
         (ok kernel) candidate data metadata state =
     Functor.map (Prod.map id (PqxdhInitialGenericPublication.native right)) <$>
-      PqxdhInitialGenericBuilder.candidate (calls receiveCall source rest sealer) aux
+      PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) (calls receiveCall source rest sealer) aux
         (ok kernel) candidate data metadata state := by
   have base := state_agree left right agree state settled
   simp only [PqxdhInitialGenericBuilder.candidate, PqxdhInitialGenericBuilder.continueRust, map_bind]
@@ -263,7 +264,7 @@ theorem settle_candidate_kernel (kernel : Kernel) (materialKnown : Settled kerne
             | div => simp only [map_pure]; rfl
             | ok binding =>
                 simp only [Functor.map_map]
-                have after := settle_after receiveCall source rest sealer aux left right agree candidate
+                have after := settle_after (associatedData := associatedData) receiveCall source rest sealer aux left right agree candidate
                   (absBytes binding.bytes ++ data.getD registrationWitness) kernel materialKnown metadata state settled
                 have lifted := congrArg (fun work => RustM.ok <$> work) after
                 simpa only [Functor.map_map, Function.comp_def, RawCtxMaterialInterpretation.rust_map_ok] using lifted
@@ -274,24 +275,24 @@ theorem settle_candidate (otherChain : RootOutput) (candidate : pqxdh.ServerRegi
     (state : PqxdhInitialGenericPublication.State Kernel Metadata PeerMetadata Consumed)
     (settled : StateSettled state) :
     Functor.map (Prod.map id (PqxdhInitialGenericPublication.native left)) <$>
-      PqxdhInitialGenericBuilder.candidate (calls receiveCall source rest sealer) aux
+      PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) (calls receiveCall source rest sealer) aux
         (initial false otherChain) candidate data metadata state =
     Functor.map (Prod.map id (PqxdhInitialGenericPublication.native right)) <$>
-      PqxdhInitialGenericBuilder.candidate (calls receiveCall source rest sealer) aux
+      PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) (calls receiveCall source rest sealer) aux
         (initial false otherChain) candidate data metadata state := by
   obtain ⟨kernel, built, materialKnown⟩ := initial_ok otherChain
   rw [built]
-  exact settle_candidate_kernel receiveCall source rest sealer aux left right agree kernel materialKnown candidate data metadata state settled
+  exact settle_candidate_kernel (associatedData := associatedData) receiveCall source rest sealer aux left right agree kernel materialKnown candidate data metadata state settled
 
 theorem settle_generic (otherChain : RootOutput) (pending : pqxdh.PendingServerRegistration)
     (data : Option Pqxdh.Bytes) (metadata : PeerMetadata)
     (state : PqxdhInitialGenericPublication.State Kernel Metadata PeerMetadata Consumed)
     (settled : StateSettled state) :
     Functor.map (Prod.map id (PqxdhInitialGenericPublication.native left)) <$>
-      PqxdhServerAuthSendFactor.genericBuild (calls receiveCall source rest sealer) aux
+      PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData) (calls receiveCall source rest sealer) aux
         (initial false otherChain) pending data metadata state =
     Functor.map (Prod.map id (PqxdhInitialGenericPublication.native right)) <$>
-      PqxdhServerAuthSendFactor.genericBuild (calls receiveCall source rest sealer) aux
+      PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData) (calls receiveCall source rest sealer) aux
         (initial false otherChain) pending data metadata state := by
   have base := state_agree left right agree state settled
   unfold PqxdhServerAuthSendFactor.genericBuild
@@ -313,7 +314,7 @@ theorem settle_generic (otherChain : RootOutput) (pending : pqxdh.PendingServerR
             | Err error =>
                 simp only [map_pure, RawCtxMaterialInterpretation.rust_map_ok, Prod.map_apply, id_eq, base]
             | Ok value =>
-                exact settle_candidate receiveCall source rest sealer aux left right agree otherChain value data metadata state settled
+                exact settle_candidate (associatedData := associatedData) receiveCall source rest sealer aux left right agree otherChain value data metadata state settled
 
 end Settle
 
@@ -329,12 +330,12 @@ theorem build_settled {m : Type → Type} [Monad m] [LawfulMonad m]
     (data : Option Pqxdh.Bytes) (metadata : PeerMetadata)
     (state : PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed) :
     Functor.map (Prod.map id (PqxdhInitialGenericPublication.native (native key))) <$>
-      PqxdhServerAuthSendFactor.genericBuild (calls receiveCall source rest sealer) aux
+      PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData) (calls receiveCall source rest sealer) aux
         (initial false other) pending data metadata (embed state) =
     Functor.map (Prod.map id (PqxdhInitialGenericPublication.native resolve)) <$>
-      PqxdhServerAuthSendFactor.genericBuild (calls receiveCall source rest sealer) aux
+      PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData) (calls receiveCall source rest sealer) aux
         (initial false other) pending data metadata (embed state) :=
-  settle_generic receiveCall source rest sealer aux (native key) resolve (settled_native key)
+  settle_generic (associatedData := associatedData) receiveCall source rest sealer aux (native key) resolve (settled_native key)
     other pending data metadata (embed state) (embed_settled state)
 
 /-- The sealer abstraction is instantiated by the literal source callback, retaining its complete shared cache and optional writer result. -/

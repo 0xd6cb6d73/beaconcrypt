@@ -8,6 +8,7 @@ Seven original source classes retain every adaptive record/public/reveal/finish 
 open OracleComp OracleSpec CoreModels Aeneas
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhLivePrivateFinishBounds
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhLivePrivateFinish PqxdhLivePhase2PrivateRoot PqxdhKemIndCca PqxdhJointIdentity PqxdhJointKdfGame
 open PqxdhPrivateKemSource PqxdhChallengeSecretRouting PqxdhChallengeSecretQueryBounds
 open PqxdhLivePhase2Aux (Identity LocalSpec)
@@ -92,7 +93,7 @@ theorem service_classes (primitives : Primitives)
     (baseBound : ∀ secret ciphertext, (kem.decaps secret ciphertext).IsQueryBoundP
       (fun query => IsMlKemBaseQuery (.inl query)) bDecap)
     (query : (PqxdhPhase2LiveFinish.Spec S B).Domain) (state : State M P D A S B) :
-    PostBounds ((service primitives kem selected target keys source callbacks writer senderId route read challenge query).run state)
+    PostBounds ((service (completedBinding := completedBinding) primitives kem selected target keys source callbacks writer senderId route read challenge query).run state)
       (uniformCost qLocal uDecap (kind query)) (finishCost (69 * bDecap) (kind query))
       (finishCost 1 (kind query)) (finishCost 1 (kind query)) := by
   cases query with
@@ -101,7 +102,7 @@ theorem service_classes (primitives : Primitives)
   | inr query =>
     cases query with
     | finish index raw =>
-      have bounded := PqxdhLivePhase2PrivateBounds.private_owner_classes primitives kem selected keys source callbacks
+      have bounded := PqxdhLivePhase2PrivateBounds.private_owner_classes (completedBinding := completedBinding) primitives kem selected keys source callbacks
         qLocal uDecap bDecap localBound uniformBound baseBound challenge read raw
         (PqxdhBeaconPhase1Publication.mapState id (encode selected) (state.1.roles.1.2 index))
         ((state.1.primitive, state.2.1), [])
@@ -142,27 +143,27 @@ theorem schedule_classes {Result : Type} (primitives : Primitives)
       (fun query => IsMlKemBaseQuery (.inl query)) bDecap)
     (client : OracleComp (PqxdhPhase2LiveFinish.Spec S B) Result) (budget : Budget)
     (bounded : Bounded client budget) (state : State M P D A S B) :
-    PostBounds ((simulateQ (service primitives kem selected target keys source callbacks writer senderId route read challenge) client).run state)
+    PostBounds ((simulateQ (service (completedBinding := completedBinding) primitives kem selected target keys source callbacks writer senderId route read challenge) client).run state)
       (budget (.inl .coin) + 64 * (budget (.inl .send) + budget (.inl .raw) + budget (.inl .hash)) +
         69 * max (max qLocal 64) uDecap * budget (.inr true))
       (69 * bDecap * budget (.inr true)) (budget (.inr true)) (budget (.inr true)) := by
-  have steps := service_classes (P := P) (S := S) (B := B) primitives kem selected target keys source callbacks writer senderId route read challenge
+  have steps := service_classes (completedBinding := completedBinding) (P := P) (S := S) (B := B) primitives kem selected target keys source callbacks writer senderId route read challenge
     qLocal uDecap bDecap localBound uniformBound baseBound
   constructor
   · simpa only [uniform_bill] using FinitePartitionQueryBounds.weighted_bound kind (uniformCost qLocal uDecap) budget
-      (service primitives kem selected target keys source callbacks writer senderId route read challenge)
+      (service (completedBinding := completedBinding) primitives kem selected target keys source callbacks writer senderId route read challenge)
       (PublicClass (baseSpec := baseSpec) IsMlKemUniformQuery) client bounded
       (fun query before => (steps query before).uniforms) state
   · simpa only [finish_bill] using FinitePartitionQueryBounds.weighted_bound kind (finishCost (69 * bDecap)) budget
-      (service primitives kem selected target keys source callbacks writer senderId route read challenge)
+      (service (completedBinding := completedBinding) primitives kem selected target keys source callbacks writer senderId route read challenge)
       (PublicClass (baseSpec := baseSpec) IsMlKemBaseQuery) client bounded
       (fun query before => (steps query before).bases) state
   · simpa only [finish_bill, Nat.one_mul] using FinitePartitionQueryBounds.weighted_bound kind (finishCost 1) budget
-      (service primitives kem selected target keys source callbacks writer senderId route read challenge)
+      (service (completedBinding := completedBinding) primitives kem selected target keys source callbacks writer senderId route read challenge)
       (PublicClass (baseSpec := baseSpec) IsMlKemLogicalDecapsulationQuery) client bounded
       (fun query before => (steps query before).decaps) state
   · simpa only [finish_bill, Nat.one_mul] using FinitePartitionQueryBounds.weighted_bound kind (finishCost 1) budget
-      (service primitives kem selected target keys source callbacks writer senderId route read challenge)
+      (service (completedBinding := completedBinding) primitives kem selected target keys source callbacks writer senderId route read challenge)
       (IsPrivateRoot (baseSpec := baseSpec)) client bounded
       (fun query before => (steps query before).privateRoots) state
 
@@ -182,7 +183,7 @@ theorem ordinary_step (primitives : Primitives)
       (fun query => IsMlKemBaseQuery (.inl query)) bDecap)
     (query : (PqxdhPhase2LiveFinish.Spec S B).Domain) (state : State M P D A S B) :
     let work := simulateQ (PqxdhChallengeSecretRouting.route source challenge supplied)
-      ((service primitives kem selected target keys source callbacks writer senderId route read challenge query).run state)
+      ((service (completedBinding := completedBinding) primitives kem selected target keys source callbacks writer senderId route read challenge query).run state)
     work.IsQueryBoundP IsMlKemUniformQuery (uniformCost qLocal uDecap (kind query)) ∧
       work.IsQueryBoundP IsMlKemBaseQuery (finishCost (69 * bDecap) (kind query)) ∧
       work.IsQueryBoundP IsMlKemLogicalDecapsulationQuery (finishCost 1 (kind query)) := by
@@ -199,7 +200,7 @@ theorem ordinary_step (primitives : Primitives)
     cases query with
     | finish index raw =>
       simpa only [service, finish, StateT.run, simulateQ_map, isQueryBoundP_map_iff, uniformCost, finishCost, kind] using
-        PqxdhLivePhase2PrivateBounds.ordinary_owner_classes primitives kem selected keys source callbacks
+        PqxdhLivePhase2PrivateBounds.ordinary_owner_classes (completedBinding := completedBinding) primitives kem selected keys source callbacks
           qLocal uDecap bDecap localBound uniformBound baseBound challenge supplied read raw
           (PqxdhBeaconPhase1Publication.mapState id (encode selected) (state.1.roles.1.2 index))
           ((state.1.primitive, state.2.1), [])
@@ -221,27 +222,27 @@ theorem ordinary_post {Result : Type} (primitives : Primitives)
     (client : OracleComp (PqxdhPhase2LiveFinish.Spec S B) Result) (budget : Budget)
     (bounded : Bounded client budget) (state : State M P D A S B) :
     let work := simulateQ (PqxdhChallengeSecretRouting.route source challenge supplied)
-      (post primitives kem selected target keys source callbacks writer senderId route read challenge client state)
+      (post (completedBinding := completedBinding) primitives kem selected target keys source callbacks writer senderId route read challenge client state)
     work.IsQueryBoundP IsMlKemUniformQuery
         (budget (.inl .coin) + 64 * (budget (.inl .send) + budget (.inl .raw) + budget (.inl .hash)) +
           69 * max (max qLocal 64) uDecap * budget (.inr true)) ∧
       work.IsQueryBoundP IsMlKemBaseQuery (69 * bDecap * budget (.inr true)) ∧
       work.IsQueryBoundP IsMlKemLogicalDecapsulationQuery (budget (.inr true)) := by
   simp only [post, simulateQ_map, isQueryBoundP_map_iff, QueryImpl.simulateQ_mapStateTBase_run]
-  have steps := ordinary_step (P := P) (S := S) (B := B) primitives kem selected target keys source callbacks
+  have steps := ordinary_step (completedBinding := completedBinding) (P := P) (S := S) (B := B) primitives kem selected target keys source callbacks
     writer senderId route read challenge supplied qLocal uDecap bDecap localBound uniformBound baseBound
   refine ⟨?_, ?_, ?_⟩
   · simpa only [uniform_bill] using FinitePartitionQueryBounds.weighted_bound kind (uniformCost qLocal uDecap) budget
       ((PqxdhChallengeSecretRouting.route source challenge supplied).mapStateTBase
-        (service primitives kem selected target keys source callbacks writer senderId route read challenge))
+        (service (completedBinding := completedBinding) primitives kem selected target keys source callbacks writer senderId route read challenge))
       IsMlKemUniformQuery client bounded (fun query before => (steps query before).1) state
   · simpa only [finish_bill] using FinitePartitionQueryBounds.weighted_bound kind (finishCost (69 * bDecap)) budget
       ((PqxdhChallengeSecretRouting.route source challenge supplied).mapStateTBase
-        (service primitives kem selected target keys source callbacks writer senderId route read challenge))
+        (service (completedBinding := completedBinding) primitives kem selected target keys source callbacks writer senderId route read challenge))
       IsMlKemBaseQuery client bounded (fun query before => (steps query before).2.1) state
   · simpa only [finish_bill, Nat.one_mul] using FinitePartitionQueryBounds.weighted_bound kind (finishCost 1) budget
       ((PqxdhChallengeSecretRouting.route source challenge supplied).mapStateTBase
-        (service primitives kem selected target keys source callbacks writer senderId route read challenge))
+        (service (completedBinding := completedBinding) primitives kem selected target keys source callbacks writer senderId route read challenge))
       IsMlKemLogicalDecapsulationQuery client bounded (fun query before => (steps query before).2.2) state
 
 /-- Every original source operation remains counted, including deterministic public HKDF, compromise reads and rejected finish attempts. -/

@@ -117,7 +117,7 @@ theorem beacon_source (setup : Setup base KemSK) (codec : Codec Reader Response)
       work, realize, replace, StateT.run, found, simulateQ_map, state_map_apply,
       state_lift_apply, bind_pure_comp, Functor.map_map, produce,
       RegistrationNativePlatformCtxOrdinaryPrimitives.realize, Prod.map_def, id_eq] using mapped
-noncomputable def initializeWorld (created : PqxdhLiveServerConstruction.Created Unit) : M (State n) Platform Unit :=
+noncomputable def initializeWorld (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) : M (State n) Platform Unit :=
   fun before => match before.server with
   | some _ => pure ((), before)
   | none => pure ((), {before with server := some (PqxdhRecordLiftWorld.importedServer created)})
@@ -139,7 +139,7 @@ noncomputable def guarded (setup : Setup base KemSK) (codec : Codec Reader Respo
   | some reply => pure (reply, before)
   | none => (handler setup codec reserve route query).run before
 
-theorem initialize_source (created : PqxdhLiveServerConstruction.Created Unit) (before : Full (State n) Platform) :
+theorem initialize_source (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (before : Full (State n) Platform) :
     Prod.map id realize <$> (interpret (initializeWorld created)).run before =
       (RegistrationAgreementNestedState.flatten
         (RegistrationNativePlatformOrdinaryWorld.liftWorld (PqxdhRecordLiftWorld.initializeServer created))).run (realize before) := by

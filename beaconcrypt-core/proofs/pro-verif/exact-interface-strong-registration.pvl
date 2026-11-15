@@ -6,10 +6,11 @@
    Honest origins are observations; no origin lookup controls admission. *)
 table registration_set_consumed(bitstring, beaconcrypt_core__pqxdh__t_RegistrationId).
 table registration_set_origin(bitstring, bitstring).
-(* The opaque returned token retains its root and response fields privately. *)
+(* The opaque returned token retains its root and response fields privately,
+   and the exact received request bytes for the transcript associated data. *)
 table registration_set_pending(bitstring, bitstring,
   beaconcrypt_core__pqxdh__t_RegistrationId, beaconcrypt_core__pqxdh__t_InitKex,
-  bitstring, bitstring, bitstring).
+  bitstring, bitstring, bitstring, bitstring).
 fun registration_set_success(bitstring): bitstring [data].
 fun registration_set_failure(): bitstring [data].
 fun registration_set_mutex(): bitstring [data].
@@ -101,7 +102,7 @@ let RegistrationSetServer(owner: bitstring, server_secret: bitstring, mutex: cha
           registration_set_root(server_secret, identity, prekey, one_time, pq, failure_stage) in (
           event RegistrationSetConsumed(owner, attempt, rid);
           insert registration_set_consumed(owner, rid);
-          insert registration_set_pending(owner, attempt, rid, core_init, ephemeral, ciphertext, root);
+          insert registration_set_pending(owner, attempt, rid, core_init, ephemeral, ciphertext, root, raw);
           event RegistrationSetReturned(owner, attempt, rid);
           (out(mutex, registration_set_mutex()) |
            out(reply, registration_set_success(attempt)) |

@@ -21,7 +21,7 @@ abbrev WorldM (n : Nat) (Auxiliary : Type) := StateT (RegistrationWorldSigning.S
 
 private def side
     (ed : registration.Ed25519SigningRequest → WorldM n Auxiliary RegistrationSigningShared.SignReply)
-    (encode : registration.SignedInitView → WorldM n Auxiliary (RustM (core.option.Option Encoded))) :
+    (encode : registration.InitView → WorldM n Auxiliary (RustM (core.option.Option Encoded))) :
     QueryImpl (RegistrationNativePlatformJournalWorld.BeaconSideSpec Encoded) (WorldM n Auxiliary)
   | .inl request => ed request
   | .inr view => encode view
@@ -31,36 +31,36 @@ private def free : QueryImpl RegistrationBeaconInitExecutor.Spec
   | .inl query => (RegistrationNativePlatformJournalErasure.Spec (RegistrationNativePlatformJournalWorld.BeaconSideSpec Encoded)).query (.inl query)
   | .inr request => (RegistrationNativePlatformJournalErasure.Spec (RegistrationNativePlatformJournalWorld.BeaconSideSpec Encoded)).query (.inr (.inl request))
 
-private def freeEncode (view : registration.SignedInitView) :
+private def freeEncode (view : registration.InitView) :
     OracleComp (RegistrationNativePlatformJournalErasure.Spec (RegistrationNativePlatformJournalWorld.BeaconSideSpec Encoded)) (RustM (core.option.Option Encoded)) :=
   (RegistrationNativePlatformJournalErasure.Spec (RegistrationNativePlatformJournalWorld.BeaconSideSpec Encoded)).query (.inr (.inr view))
 
 theorem source_beacon
     (ed : registration.Ed25519SigningRequest → WorldM n Auxiliary RegistrationSigningShared.SignReply)
-    (encode : registration.SignedInitView → WorldM n Auxiliary (RustM (core.option.Option Encoded)))
+    (encode : registration.InitView → WorldM n Auxiliary (RustM (core.option.Option Encoded)))
     (edFrame : ∀ request before previous result, result ∈ support (((ed request).run before).run previous) → Frame before result.1.2)
     (encodeFrame : ∀ view before previous result, result ∈ support (((encode view).run before).run previous) → Frame before result.1.2)
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (scalar : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize)
+    (pin : session.ServerAuthenticationPin)
     (before : State n) (safe : Safe before) (previous : Auxiliary)
     (result : (RustM (RegistrationBeaconInitExecutor.Result Encoded) × State n) × Auxiliary)
     (supported : result ∈ support (((RegistrationNativePlatformBeaconPublication.begin
       (extended (source coins primitive) (fun request => liftWorld (ed request)))
-      (fun view => liftWorld (encode view)) control inputs scalar pin mldsa).run before).run previous)) : Safe result.1.2 := by
+      (fun view => liftWorld (encode view)) control inputs scalar pin).run before).run previous)) : Safe result.1.2 := by
   have frames : ∀ query before previous result, result ∈ support ((((side ed encode) query).run before).run previous) → Frame before result.1.2 := by
     intro query before previous result reached
     cases query with
     | inl request => exact edFrame request before previous result reached
     | inr view => exact encodeFrame view before previous result reached
   have interpreted := RegistrationNativePlatformBeaconPublication.begin_interpret
-    (RegistrationNativePlatformJournalSafe.handler primitive (side ed encode)) free freeEncode control inputs scalar pin mldsa
+    (RegistrationNativePlatformJournalSafe.handler primitive (side ed encode)) free freeEncode control inputs scalar pin
   have callbacks : (fun query => simulateQ (RegistrationNativePlatformJournalSafe.handler primitive (side ed encode))
       (free (Encoded := Encoded) query)) = extended (source coins primitive) (fun request => liftWorld (ed request)) := by
     funext query
     cases query <;> simp only [free, simulateQ_spec_query, RegistrationNativePlatformJournalSafe.handler, side, extended]
   rw [callbacks] at interpreted
   have possible : result ∈ support (((simulateQ (RegistrationNativePlatformJournalSafe.handler primitive (side ed encode))
-      (RegistrationNativePlatformBeaconPublication.begin free freeEncode control inputs scalar pin mldsa)).run before).run previous) := by
+      (RegistrationNativePlatformBeaconPublication.begin free freeEncode control inputs scalar pin)).run before).run previous) := by
     rw [interpreted]
     simpa only [freeEncode, simulateQ_spec_query, RegistrationNativePlatformJournalSafe.handler, side] using supported
   exact RegistrationNativePlatformJournalSafe.program primitive (side ed encode) frames _ before safe previous result possible
@@ -81,23 +81,23 @@ theorem source_server
 
 theorem beacon
     (ed : registration.Ed25519SigningRequest → WorldM n Auxiliary RegistrationSigningShared.SignReply)
-    (encode : registration.SignedInitView → WorldM n Auxiliary (RustM (core.option.Option Encoded)))
+    (encode : registration.InitView → WorldM n Auxiliary (RustM (core.option.Option Encoded)))
     (edFrame : ∀ request before previous result, result ∈ support (((ed request).run before).run previous) → Frame before result.1.2)
     (encodeFrame : ∀ view before previous result, result ∈ support (((encode view).run before).run previous) → Frame before result.1.2)
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (scalar : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize)
+    (pin : session.ServerAuthenticationPin)
     (before : RegistrationWorldSigning.State n) (cached : RegistrationSigningShared.Cached (RegistrationWorldSigning.project before))
     (previous : Auxiliary) (result : (RustM (RegistrationBeaconInitExecutor.Result Encoded) × RegistrationWorldSigning.State n) × Auxiliary)
     (supported : result ∈ support (((RegistrationNativePlatformBeaconPublication.begin
-      (RegistrationNativePlatformJournalWorld.beaconOutgoing coins primitive ed) encode control inputs scalar pin mldsa).run before).run previous)) :
+      (RegistrationNativePlatformJournalWorld.beaconOutgoing coins primitive ed) encode control inputs scalar pin).run before).run previous)) :
     RegistrationSigningShared.Cached (RegistrationWorldSigning.project result.1.2) := by
   have law := congrArg (fun work => (work : StateT Auxiliary ProbComp _).run previous)
-    (RegistrationNativePlatformJournalWorld.beacon coins primitive ed encode control inputs scalar pin mldsa (before, none))
+    (RegistrationNativePlatformJournalWorld.beacon coins primitive ed encode control inputs scalar pin (before, none))
   rw [StateT.run_map] at law
   rw [← law, support_map] at supported
   obtain ⟨inner, reached, same⟩ := supported
   have safe : Safe (before, none) := ⟨cached, by intro cut impossible; cases impossible⟩
-  have after := source_beacon primitive ed encode edFrame encodeFrame control inputs scalar pin mldsa (before, none) safe previous inner reached
+  have after := source_beacon primitive ed encode edFrame encodeFrame control inputs scalar pin (before, none) safe previous inner reached
   cases same
   exact after.1
 

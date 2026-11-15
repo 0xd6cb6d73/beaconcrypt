@@ -427,9 +427,15 @@ let GeneralAdmissionBeacon(main_beacon_record_secret: bitstring, general_expecte
       beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(main_root_input)
     ) in
     let main_associated_data =
-      beaconcrypt_core__pqxdh__build_associated_data(
-        main_server_identity,
-        main_beacon_identity
+      transcript_associated_data(
+        tag_ed25519(main_beacon_identity),
+        sign(tag_x25519_prekey(main_beacon_prekey), main_beacon_identity_secret),
+        sign(tag_x25519_one_time(main_beacon_one_time), main_beacon_identity_secret),
+        sign(tag_mlkem768(main_beacon_pq), main_beacon_identity_secret),
+        main_response_server_identity,
+        main_server_ephemeral,
+        main_kem_ciphertext,
+        main_assigned_key_id
       )
     in
     let main_session = session_label(
@@ -588,9 +594,15 @@ let GeneralAdmissionServer(
       let registration_continue(=main_registration_id) = main_registration_control in
       new main_assigned_key_id: key_id;
       let main_associated_data =
-        beaconcrypt_core__pqxdh__build_associated_data(
+        transcript_associated_data(
+          main_encoded_identity,
+          main_signed_prekey,
+          main_signed_one_time,
+          main_signed_pq,
           main_server_identity,
-          main_beacon_identity
+          main_server_ephemeral,
+          main_kem_ciphertext,
+          main_assigned_key_id
         )
       in
       let main_session = session_label(

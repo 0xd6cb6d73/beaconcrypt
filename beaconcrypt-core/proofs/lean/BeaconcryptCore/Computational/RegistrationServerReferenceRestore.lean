@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
-import BeaconcryptCore.Computational.RegistrationServerReferenceCompilerNative
-import BeaconcryptCore.Computational.RegistrationServerReferencePrefixSource
+import BeaconcryptCore.Computational.RegistrationServerMaterialFrontend
+import BeaconcryptCore.Computational.RegistrationServerSdkSource
 
 /-! Private reconstruction of native Server one-use tokens from public root references. Only this proof map receives root values; executable frontend state contains no root. Actual replay insertion and moved-handle consumption commute with reconstruction for every replay outcome. -/
 open OracleComp OracleSpec CoreModels Aeneas

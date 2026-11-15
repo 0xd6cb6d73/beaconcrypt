@@ -60,6 +60,8 @@ local notation "full" => RegistrationNativeFullCompiler.handler setup.source.cry
 local notation "FullState" => RegistrationNativeLedger.State × State source Platform Private
 include contract
 
+attribute [local irreducible] RegistrationNativePlatformSecretWordOpen.accept
+
 /-- A retained atom's original successful raw acceptance is the selected parsed call, with its actual decoding retained. -/
 theorem accept_counter (raw : Pqxdh.Bytes) (before after : FullState) (handle : Nat)
     (ready : RegistrationNativeSecretWordMessage.ServerReady)

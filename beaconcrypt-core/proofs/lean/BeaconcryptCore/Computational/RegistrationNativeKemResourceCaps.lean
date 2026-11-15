@@ -67,7 +67,7 @@ theorem liftState_free (kind : Kind) (work : StateT S ProbComp A) :
 
 theorem trusted_bound (kind : Kind) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (checks : PqxdhServerAuthExperiment.Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (query : (RegistrationNativeBeaconFrontend.Trusted n KemSK).Domain) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (query : (RegistrationNativeBeaconFrontend.Trusted n KemSK).Domain) :
     Bounded kind (if NativeCounted kind query then 1 else 0)
       (RegistrationNativeKemCountedTrusted.implementation (source := source) setup checks representation created query) := by
   cases kind with
@@ -77,7 +77,7 @@ theorem trusted_bound (kind : Kind) (setup : PqxdhServerAuthExperiment.Setup bas
 
 theorem beacon_program (kind : Kind) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (checks : PqxdhServerAuthExperiment.Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State A)
     (cap : Nat) (bounded : RegistrationNativeBeaconKemCaps.Bounded (NativeCounted kind) cap work) :
     Bounded kind cap (RegistrationNativeKemCountedBeacon.program setup checks representation created work) := by
@@ -88,7 +88,7 @@ theorem beacon_program (kind : Kind) (setup : PqxdhServerAuthExperiment.Setup ba
 
 theorem create (kind : Kind) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (checks : PqxdhServerAuthExperiment.Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64) :
     Bounded kind (if kind = .birth then 1 else 0)
       (RegistrationNativeKemCountedBeacon.program (n := n) (source := source) setup checks representation created
@@ -99,7 +99,7 @@ theorem create (kind : Kind) (setup : PqxdhServerAuthExperiment.Setup base KemSK
 
 theorem finish (kind : Kind) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (checks : PqxdhServerAuthExperiment.Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (index : Nat) (packet : Option registration.ResponsePacket) :
     Bounded kind (if kind = .decapsulate then 1 else 0)
       (RegistrationNativeKemCountedBeacon.program (n := n) (source := source) setup checks representation created
@@ -136,7 +136,7 @@ theorem server_lower_zero (kind : Kind) (quiet : kind ≠ .encapsulate)
 
 theorem server_primitive_zero (kind : Kind) (quiet : kind ≠ .encapsulate)
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : RegistrationAgreementShared.PrimitiveRequest) :
     Bounded kind 0 (RegistrationNativeKemCountedServerPrimitive.program (n := n) (source := source) setup checks representation created query) :=
   simulate_bound kind (fun request => NativeCounted kind (.inr request)) _
@@ -145,7 +145,7 @@ theorem server_primitive_zero (kind : Kind) (quiet : kind ≠ .encapsulate)
 
 theorem server_core_zero (kind : Kind) (quiet : kind ≠ .encapsulate)
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : RegistrationAgreementExecutor.Request) :
     Bounded kind 0 (RegistrationNativeKemCountedServerPrimitive.core (n := n) (source := source) setup checks representation created query) := by
   cases query with
@@ -154,7 +154,7 @@ theorem server_core_zero (kind : Kind) (quiet : kind ≠ .encapsulate)
 
 theorem server_agreement_zero (kind : Kind) (quiet : kind ≠ .encapsulate)
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : RegistrationAgreementExecutor.Request) :
     Bounded kind 0 (RegistrationNativeKemCountedServerPrimitive.agreement (n := n) (source := source) setup checks representation created query) := by
   intro before
@@ -163,7 +163,7 @@ theorem server_agreement_zero (kind : Kind) (quiet : kind ≠ .encapsulate)
 
 theorem agree (kind : Kind) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (checks : PqxdhServerAuthExperiment.Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (authenticated : registration.AuthenticatedInit) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (authenticated : registration.AuthenticatedInit) :
     Bounded kind (if kind = .encapsulate then 1 else 0)
       (RegistrationNativeKemCountedServerPrimitive.agree (n := n) (source := source) setup checks representation created authenticated) := by
   by_cases charged : kind = .encapsulate

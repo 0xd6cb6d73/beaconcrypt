@@ -66,7 +66,7 @@ theorem modify_free (kind : Kind) (changeState : State → State) : Bounded kind
 
 theorem afterAuthentication (kind : Kind) (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
     (reserve : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) Bool)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit) :
     Bounded kind (if kind = .encapsulate then 1 else 0)
       (RegistrationNativePlatformKemCountedAccept.afterAuthentication (source := source) setup checks reserve representation created packet authenticated) := by
@@ -94,7 +94,7 @@ theorem afterAuthentication (kind : Kind) (setup : PqxdhServerAuthExperiment.Set
 theorem afterPin (kind : Kind) (setup : PqxdhServerAuthExperiment.Setup base KemSK) (codec : PqxdhServerAuthExperiment.Codec A B)
     (checks : PqxdhServerAuthExperiment.Checks) (reserve : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) Bool)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket) (pin : RustM (core.option.Option session.ServerAuthenticationPin)) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket) (pin : RustM (core.option.Option session.ServerAuthenticationPin)) :
     Bounded kind (if kind = .encapsulate then 1 else 0)
       (RegistrationNativePlatformKemCountedAccept.afterPin (source := source) setup codec checks reserve route representation created packet pin) := by
   unfold RegistrationNativePlatformKemCountedAccept.afterPin
@@ -114,7 +114,7 @@ theorem afterPin (kind : Kind) (setup : PqxdhServerAuthExperiment.Setup base Kem
 theorem accept (kind : Kind) (setup : PqxdhServerAuthExperiment.Setup base KemSK) (codec : PqxdhServerAuthExperiment.Codec A B)
     (checks : PqxdhServerAuthExperiment.Checks) (reserve : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) Bool)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket) :
     Bounded kind (if kind = .encapsulate then 1 else 0)
       (RegistrationNativePlatformKemCountedAccept.accept (source := source) setup codec checks reserve route representation created packet) := by
   unfold RegistrationNativePlatformKemCountedAccept.accept
@@ -130,7 +130,7 @@ variable [primitive : AdapterSealPrimitive.Operations]
 variable {E : Type}
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks) (wire : RegistrationNativeWire.Wire)
 variable (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 variable (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
 variable (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
 variable (reserveRegistration reservePeer : StateT Platform ProbComp Bool) (erased : commitment.CommitmentTranscript)

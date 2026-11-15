@@ -174,9 +174,15 @@ let LaterSequenceRegistrationOpen(
       beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)
     ) in
     let associated_data =
-      beaconcrypt_core__pqxdh__build_associated_data(
-        expected_server_identity,
-        beacon_identity
+      transcript_associated_data(
+        tag_ed25519(beacon_identity),
+        sign(tag_x25519_prekey(x25519_public(beacon_prekey_secret)), beacon_identity_secret),
+        sign(tag_x25519_one_time(x25519_public(beacon_one_time_secret)), beacon_identity_secret),
+        sign(tag_mlkem768(mlkem_public(beacon_pq_secret)), beacon_identity_secret),
+        response_server_identity,
+        server_ephemeral,
+        kem_ciphertext,
+        assigned_key_id
       )
     in
     let session = session_label(
@@ -320,9 +326,15 @@ let LaterSequenceRegistrationInitialOpen(
       beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)
     ) in
     let associated_data =
-      beaconcrypt_core__pqxdh__build_associated_data(
-        expected_server_identity,
-        beacon_identity
+      transcript_associated_data(
+        tag_ed25519(beacon_identity),
+        sign(tag_x25519_prekey(x25519_public(beacon_prekey_secret)), beacon_identity_secret),
+        sign(tag_x25519_one_time(x25519_public(beacon_one_time_secret)), beacon_identity_secret),
+        sign(tag_mlkem768(mlkem_public(beacon_pq_secret)), beacon_identity_secret),
+        response_server_identity,
+        server_ephemeral,
+        kem_ciphertext,
+        assigned_key_id
       )
     in
     let session = session_label(
@@ -735,9 +747,15 @@ let LaterSequenceRegistrationControl() =
     beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)
   ) in
   let associated_data =
-    beaconcrypt_core__pqxdh__build_associated_data(
+    transcript_associated_data(
+      tag_ed25519(beacon_identity),
+      sign(tag_x25519_prekey(beacon_prekey), beacon_identity_secret),
+      sign(tag_x25519_one_time(beacon_one_time), beacon_identity_secret),
+      sign(tag_mlkem768(beacon_pq), beacon_identity_secret),
       server_identity,
-      beacon_identity
+      server_ephemeral,
+      kem_ciphertext,
+      assigned_key_id
     )
   in
   let session = session_label(

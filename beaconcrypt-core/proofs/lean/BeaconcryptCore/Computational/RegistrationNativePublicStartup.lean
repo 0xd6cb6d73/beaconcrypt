@@ -19,12 +19,14 @@ structure Started (source : RegistrationNativeMldsa.Source) where
   credential : RegistrationNativeMldsa.Credential source
   frontend : RegistrationNativePublicFrontend.State source
 
+private abbrev PeerMetadata := Std.Array U8 151#usize
+
 /-- Actual dummy constructor draws retain their normal counted position; only their unused public identity is replaced by the challenge public identity. -/
 noncomputable def start (setup : Setup base KemSK) (source : RegistrationNativeMldsa.Source)
     (ensureInit : StateT Unit ProbComp Bool) (identityIndex : Nat) (serverKeyId : U64)
     (identity : PqxdhJointIdentity.PublicIdentity) : M n KemSK (Option (Started source)) := do
   let constructed ← world (PqxdhRecordLiftWorld.sampled
-    ((PqxdhLiveServerConstruction.construct (P := Unit) setup.joint ensureInit identityIndex serverKeyId none).run ()))
+    ((PqxdhLiveServerConstruction.construct (P := PeerMetadata) setup.joint ensureInit identityIndex serverKeyId none).run ()))
   match constructed.1 with
   | none => pure none
   | some _ =>
@@ -34,10 +36,9 @@ noncomputable def start (setup : Setup base KemSK) (source : RegistrationNativeM
     | some credential =>
       let created := RegistrationServerStartup.publicCreated identity identityIndex serverKeyId
       let _ ← world (PqxdhRecordLiftWorld.initializeServer created)
-      let digest ← RegistrationNativePublicInterpreter.effect (.inr (.hash (absBytes credential.publicKey)))
       let pin : session.ServerAuthenticationPin :=
         ⟨⟨PqxdhRootTableInitialization.rootArray identity.ed25519, serverKeyId⟩,
-          credential.publicKey, RegistrationAuthenticationShared.digestArray digest⟩
+          credential.publicKey⟩
       let frontend : RegistrationNativePublicFrontend.State source :=
         ⟨RegistrationServerMaterialFrontend.initial created.control pin, [],
           ⟨RegistrationServerRoleBackend.empty, [], [], []⟩, 0⟩

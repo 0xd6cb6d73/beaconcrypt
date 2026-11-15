@@ -20,7 +20,7 @@ variable {n :Nat} {I KemSK Reader Response P R :Type} {base :OracleSpec I}
 variable (coins :QueryImpl unifSpec (StateT P ProbComp))
 variable (setup :Setup base KemSK) (codec :Codec Reader Response) (checks :Checks)
 variable (reserve :StateT P ProbComp Bool) (route :RawCtxServerRouting.SenderDecoder) (verify :MldsaTranscriptAuth.Verify)
-variable (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created Unit)
+variable (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 
 /-- An exact successful returned slot belongs to this retention, even if an equal-valued token was already present. -/
 theorem retain (accepted :agreement.ServerAgreement) (before after :RegistrationServerFrontendCompiler.State n)
@@ -109,10 +109,9 @@ theorem pin (before after :RegistrationServerFrontendCompiler.State n) (previous
     ((RegistrationNativeServerPinRecompute.native before.pin.binding before.pin.public_key).run before.world.world.1) inner.1 previous inner.2 called
   have replyEq :inner.1.1=.ok (.Some selected):=congrArg (fun value=>value.1.1) same
   change (inner.1.1,inner.1.2)∈_ at original
-  rw [replyEq,RegistrationNativeServerPinRecompute.native_run,mem_support_bind_iff] at original
-  obtain ⟨hashed,_hashed,returned⟩:=original
-  simp only [support_pure,Set.mem_singleton_iff,Prod.mk.injEq,RustM.ok.injEq,core.option.Option.Some] at returned
-  have selectedEq:=Option.some.inj returned.1
+  rw [replyEq,RegistrationNativeServerPinRecompute.native_run] at original
+  simp only [support_pure,Set.mem_singleton_iff,Prod.mk.injEq,RustM.ok.injEq,core.option.Option.Some] at original
+  have selectedEq:=Option.some.inj original.1
   cases selectedEq
   exact ⟨rfl,rfl⟩
 

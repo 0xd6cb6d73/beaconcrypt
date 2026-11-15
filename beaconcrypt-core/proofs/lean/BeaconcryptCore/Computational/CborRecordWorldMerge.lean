@@ -29,8 +29,7 @@ theorem merge_shell (created : PqxdhLiveServerConstruction.Created Unit)
   · obtain ⟨server, existing, senderEq, _⟩ := good.server
     simp only [nativeShell, worldShell, PqxdhDeploymentEnvironmentJoin.merge,
       PqxdhDeploymentEnvironmentJoin.fill, PqxdhDeploymentEnvironmentJoin.fillServer,
-      existing, Option.map_some, MldsaLegacyServerRouting.forgetServer,
-      Option.map_map, MldsaLegacyServerRouting.forgetPeer, Function.comp_def, senderEq]
+      existing, Option.map_some, senderEq]
   · funext index
     simp only [nativeShell, worldShell, PqxdhDeploymentEnvironmentJoin.merge,
       PqxdhDeploymentEnvironmentJoin.fill, List.getElem?_mapIdx]

@@ -11,7 +11,7 @@ CE-11b's ideal environment (design-v2 section 6) and its C1 with the final split
 - `IdealInv`, the admissibility predicate: the World's used markers are the slots of the install ghosts, the seed table holds exactly the used slots' seeds, the material cache holds every allocated slot's material, and the allocator, marks and ghosts satisfy the guards each hidden command needs. `idealInv_stable`, `idealInv_start`; the guards (`initSent_open`, `idealInv_build_ready`, `idealInv_finish_ready`); preservation by moves without hidden effect (`idealInv_move`, `idealInv_realStep`), by the selected accept (`idealInv_selected`), the marked build (`idealInv_build`) and owner k's challenge finish (`idealInv_finish`), from the facts of `PqxdhDeploymentIdealEnvFacts`.
 - `ideal_splits`: the ideal step splits `idealSplit t p` relative to `IdealInv t` for every constructed Server.
 - The environments `envG` (fixed parameters) and `envGD` (the challenger's parameters drawn at startup, `PqxdhDeploymentEnvironmentDraw.paramEnv`). C1 at the full reassembled state (`c1_split`, `join_param` with `ideal_splits`). C1 for the ideal game itself at the observed projection (the adversary's output, the ledger and the produced frames): `c1_ideal`, through `ideal_to_split` pointwise under the draw, and `c1_idealGame` for `PqxdhDeploymentIdealSteps.idealGame`. For the draw followed by the final split game, not for the ideal game itself (`ideal_to_split` reads both games through `splitView`, which empties the CTX cache): the same final CTX cache (`c3_ideal`) and the same reveal (`ideal_reveal`) as the record world with `envGD`.
-- On every outcome of the record world with `envGD`: admissibility (`world_keeps`, generic, and `env_admitted`), at most one slot per role among the World's markers (`server_once`, `beacon_once`, `hidden_server_once`, `hidden_beacon_once`), and F4 at the reassembled state (`seed_at_install`).
+- On every outcome of the record world with `envGD`: admissibility (`world_keeps`, generic, and `env_admitted`; the World imports the constructed Server with AD151 peer metadata, so `world_keeps` reads each startup outcome through its metadata-forgotten view and asks for an empty peer map, which the actual constructor satisfies: `start_noPeer`, `imported_noPeer`; no AD is supplied at startup), at most one slot per role among the World's markers (`server_once`, `beacon_once`, `hidden_server_once`, `hidden_beacon_once`), and F4 at the reassembled state (`seed_at_install`).
 
 Not here: the frames `frame_ideal`/`frame_idealD` beyond the build class, and `c4_ideal` (see the U3 guide). These are equalities in law, support facts and query bounds; no security claim is made here.
 -/
@@ -40,15 +40,21 @@ section Step
 variable {ι : Type} {baseSpec : OracleSpec ι} {Reader Response : Type}
   (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks) {count : ℕ}
 
-/-- The marked build reading its slot's material from the environment's material cache, without a draw: at the slot of the marked coordinates, with the session's pending token and the slot's material cached, CE-11a's split hidden build of that slot (`PqxdhDeploymentEnvironment.buildSplitEnv`) runs on the cached material; the environment keeps the stripped state after the build and sets the Server install ghost when a peer was published (`PqxdhDeploymentIdealEnvBuild.builtEnv`, the material cache unchanged). Without an allocated slot, a pending token or a cached material it does nothing. At a slot whose material is cached it is the lazy-read form `PqxdhDeploymentIdealEnvBuild.buildHiddenEnv` (`buildCached_hit`), and the admissibility predicate `IdealInv` keeps every allocated slot's material cached (`allocCached`), so the build class draws no coin (`idealStep_build_bound`). -/
+/-- The marked build reading its slot's material from the environment's material cache, without a draw: at the slot of the marked coordinates, with the session's pending token and the slot's material cached, the Rust pre-hash guard (`PqxdhServerRegistrationPublication.prehash`) runs first: a rejection consumes the token with no effect; otherwise the transcript hash is forwarded as one BLAKE2b request and CE-11a's split hidden build of that slot (`PqxdhDeploymentEnvironment.buildSplitEnv`) runs on the cached material at the AD of that digest; the environment keeps the stripped state after the build and sets the Server install ghost when a peer was published (`PqxdhDeploymentIdealEnvBuild.builtEnv`, the material cache unchanged). Without an allocated slot, a pending token or a cached material it does nothing. At a slot whose material is cached it is the lazy-read form `PqxdhDeploymentIdealEnvBuild.buildHiddenEnv` (`buildCached_hit`), and the admissibility predicate `IdealInv` keeps every allocated slot's material cached (`allocCached`), so the build class draws no coin (`idealStep_build_bound`). -/
 noncomputable def buildCachedEnv (session : ℕ) (payload : Option Pqxdh.Bytes) (coords : Coord) :
     StateT (EnvState KemSK SplitBk) (OracleComp (EnvEffects 2)) (Option PqxdhServerRegistrationPublication.Response) :=
   fun e => match e.backend.2.1.1 coords, e.native.shared.2.pending session with
   | some j, some token => match e.backend.1 j with
-      | some material => do
-          let result ← (PqxdhDeploymentEnvironment.buildSplitEnv setup codec checks material j token payload
-            e.native.shared.2.server).run []
-          pure (result.1.1, PqxdhDeploymentIdealEnvBuild.builtEnv e session coords e.backend.1 result)
+      | some material =>
+          match PqxdhServerRegistrationPublication.prehash e.native.shared.2.server token.pending payload with
+          | none => pure (none, PqxdhDeploymentIdealEnvBuild.builtEnv e session coords e.backend.1
+              ((none, e.native.shared.2.server), []))
+          | some candidate => do
+              let digest ← PqxdhDeploymentEnvironment.request (.hash (PqxdhTranscriptAd.transcript
+                (PqxdhTranscriptAd.initOf token.init) (PqxdhTranscriptAd.serverResponse candidate)))
+              let result ← (PqxdhDeploymentEnvironment.buildSplitEnv setup codec checks material j token payload
+                (PqxdhTranscriptAd.adOf digest) e.native.shared.2.server).run []
+              pure (result.1.1, PqxdhDeploymentIdealEnvBuild.builtEnv e session coords e.backend.1 result)
       | none => pure (none, e)
   | _, _ => pure (none, e)
 
@@ -497,6 +503,7 @@ theorem buildCached_hit (session : ℕ) (payload : Option Pqxdh.Bytes) (coords :
       dsimp only
       rw [cached, LazyOracleDiscard.query_of_some cached]
       simp only [PqxdhDeploymentEnvironment.coins, simulateQ_pure, pure_bind]
+      rfl
 
 /-- The marked build reading the cached material leaves the material cache unchanged. -/
 theorem buildCached_cache (session : ℕ) (payload : Option Pqxdh.Bytes) (coords : Coord) (e : EnvState KemSK SplitBk) :
@@ -506,11 +513,17 @@ theorem buildCached_cache (session : ℕ) (payload : Option Pqxdh.Bytes) (coords
   unfold buildCachedEnv at member
   split at member
   · split at member
-    · rw [mem_support_bind_iff] at member
-      obtain ⟨_, _, final⟩ := member
-      rw [support_pure, Set.mem_singleton_iff] at final
-      subst final
-      rfl
+    · split at member
+      · rw [support_pure, Set.mem_singleton_iff] at member
+        subst member
+        rfl
+      · rw [mem_support_bind_iff] at member
+        obtain ⟨_, _, member⟩ := member
+        rw [mem_support_bind_iff] at member
+        obtain ⟨_, _, final⟩ := member
+        rw [support_pure, Set.mem_singleton_iff] at final
+        subst final
+        rfl
     · rw [support_pure, Set.mem_singleton_iff] at member
       subst member
       rfl
@@ -518,7 +531,7 @@ theorem buildCached_cache (session : ℕ) (payload : Option Pqxdh.Bytes) (coords
     subst member
     rfl
 
-/-- The marked build reading the cached material stays within the real allowance of the build class at every environment state: no coin, at most one BLAKE2b query (its sequence-one seal) and at most one administrative effect (the hidden Server install), from `PqxdhDeploymentEnvironment.buildSplit_env_cost`. -/
+/-- The marked build reading the cached material stays within the real allowance of the build class at every environment state: no coin, at most two BLAKE2b queries (the forwarded transcript hash and its sequence-one seal) and at most one administrative effect (the hidden Server install), from `PqxdhDeploymentEnvironment.request_hash_bound` and `PqxdhDeploymentEnvironment.buildSplit_env_cost`. -/
 theorem buildCached_bound (caps : PqxdhServerAuthSourceCosts.KemCaps) (session : ℕ) (payload : Option Pqxdh.Bytes)
     (coords : Coord) (e : EnvState KemSK SplitBk) (kind : EffectKind) :
     ((buildCachedEnv setup codec checks session payload coords).run e).IsQueryBoundP
@@ -527,9 +540,12 @@ theorem buildCached_bound (caps : PqxdhServerAuthSourceCosts.KemCaps) (session :
   unfold buildCachedEnv
   split
   · split
-    · apply (isQueryBoundP_bind (m := 0) (PqxdhDeploymentEnvironment.buildSplit_env_cost setup codec checks _ _ _ payload
-        _ [] kind) fun _ _ => isQueryBoundP_pure _ _ _).mono
-      cases kind <;> simp [PqxdhDeploymentEnvironment.baseAllowance]
+    · split
+      · trivial
+      · apply (isQueryBoundP_bind (PqxdhDeploymentEnvironment.request_hash_bound _ kind) fun _ _ =>
+          isQueryBoundP_bind (m := 0) (PqxdhDeploymentEnvironment.buildSplit_env_cost setup codec checks _ _ _ payload
+            _ _ [] kind) fun _ _ => isQueryBoundP_pure _ _ _).mono
+        cases kind <;> simp [PqxdhDeploymentEnvironment.baseAllowance]
     · trivial
   · trivial
 
@@ -777,7 +793,8 @@ theorem c3_ideal (t : Target count) (ensureInit : StateT A ProbComp Bool) (ident
         value.2.2.2.base.native.shared.2.ctx)) <$>
         (gameWith setup codec route splitInit (PqxdhDeploymentIdealDefer.idealSplit setup codec route checks t p)
           ensureInit identityIndex bounds mode adversary).run' runtime)
-      ((fun result => result.1.map fun value => (value.1, value.2.1.1, value.2.1.2, result.2.primitive.2)) <$>
+      ((fun result => result.1.map fun value => (PqxdhDeploymentEnvironmentReal.eraseClient value.1, value.2.1.1,
+          value.2.1.2, result.2.primitive.2)) <$>
         PqxdhRecordLiftWorld.run setup codec route (envGD setup codec checks t ensureInit identityIndex runtime)
           setup.serverKeyId bounds mode adversary) := by
   have projected := (c1_split setup codec route checks t ensureInit identityIndex runtime bounds mode adversary).map
@@ -801,8 +818,8 @@ theorem ideal_reveal (t : Target count) (ensureInit : StateT A ProbComp Bool) (i
         (PqxdhDeploymentLater.revealOf value.2.2.2.base.native.owners value.2.2.2.snap, value.2.2.2.log))) <$>
         (gameWith setup codec route splitInit (PqxdhDeploymentIdealDefer.idealSplit setup codec route checks t p)
           ensureInit identityIndex bounds mode adversary).run' runtime)
-      ((fun result => result.1.map fun value => (value.1, value.2.1.1, value.2.1.2,
-          (PqxdhDeploymentLater.revealOf value.2.2.native.owners value.2.2.snap, value.2.2.log))) <$>
+      ((fun result => result.1.map fun value => (PqxdhDeploymentEnvironmentReal.eraseClient value.1, value.2.1.1,
+          value.2.1.2, (PqxdhDeploymentLater.revealOf value.2.2.native.owners value.2.2.snap, value.2.2.log))) <$>
         PqxdhRecordLiftWorld.run setup codec route (envGD setup codec checks t ensureInit identityIndex runtime)
           setup.serverKeyId bounds mode adversary) := by
   have projected := (c1_split setup codec route checks t ensureInit identityIndex runtime bounds mode adversary).map
@@ -835,14 +852,45 @@ variable {ι : Type} {baseSpec : OracleSpec ι} {Reader Response A X : Type}
   (checks : Checks) {count : ℕ}
 open PqxdhDeploymentEnvironmentDraw (paramInv paramStep paramReg dropE)
 
-/-- Every outcome of the record world with an environment whose every startup outcome is a constructed Server with an initial environment state at which the stable predicate `inv` holds with the initialized fresh World, and whose step splits every constructed Server's registration handler relative to `inv`: the final environment state and World are admissible (`Good` and `inv`). -/
+/-- A Server constructed by the actual startup has no installed peer: `PqxdhLiveServerConstruction.initialized` starts from an empty peer map. Every later peer is installed with the AD151 its own build computed from its registration transcript, so no AD is supplied or derived here. -/
+theorem start_noPeer {Bk : Type} (ensureInit : StateT A ProbComp Bool) (identityIndex : ℕ) (runtime : A)
+    (init : PqxdhLiveServerConstruction.Created Unit → Bk)
+    (created : PqxdhLiveServerConstruction.Created PqxdhTranscriptAd.AssociatedData) (state : EnvState KemSK Bk)
+    (supported : some (created, state) ∈ support (PqxdhDeploymentEnvironment.start setup ensureInit identityIndex runtime init)) :
+    ∀ keyId, created.server.server.peers keyId = none := by
+  simp only [PqxdhDeploymentEnvironment.start, support_map, Set.mem_image] at supported
+  obtain ⟨⟨result, after⟩, constructed, same⟩ := supported
+  cases result with
+  | none => cases same
+  | some made =>
+      simp only [Option.map_some, Option.some.injEq, Prod.mk.injEq] at same
+      obtain ⟨rfl, _⟩ := same
+      obtain ⟨seed, rfl, _⟩ := PqxdhLiveServerConstruction.construct_origin setup.joint ensureInit identityIndex
+        setup.serverKeyId none runtime after made constructed
+      intro keyId
+      rfl
+
+/-- The World's import of a constructed Server without installed peers is `initialized` at the constructed Server with its peer metadata forgotten. -/
+theorem imported_noPeer {n : ℕ} (created : PqxdhLiveServerConstruction.Created PqxdhTranscriptAd.AssociatedData)
+    (noPeer : ∀ keyId, created.server.server.peers keyId = none) (w : PqxdhRecordLiftWorld.State n) :
+    ({ w with server := some (PqxdhRecordLiftWorld.importedServer created) } : PqxdhRecordLiftWorld.State n) =
+      initialized (PqxdhDeploymentEnvironment.eraseCreatedMetadata created) w := by
+  obtain ⟨seed, publicIdentity, ⟨⟨identity, peers, metadata⟩, rawAttempts⟩, control, consumed, origin⟩ := created
+  have empty : peers = fun _ => none := funext noPeer
+  subst empty
+  rfl
+
+/-- Every outcome of the record world with an environment whose every startup outcome is a constructed Server without installed peers, read through its metadata-forgotten view (`PqxdhDeploymentEnvironment.eraseCreatedMetadata`), with an initial environment state at which the stable predicate `inv` holds with the initialized fresh World, and whose step splits every constructed Server's registration handler relative to `inv`: the final environment state and World are admissible (`Good` and `inv`). -/
 theorem world_keeps {Bk : Type} (env : PqxdhRecordLiftInterface.Environment 2 (EnvState KemSK Bk))
     (reg : PqxdhLiveServerConstruction.Created Unit → PqxdhDeploymentBackend.RegImpl KemSK Bk 2)
     (inv : EnvState KemSK Bk → PqxdhRecordLiftWorld.State 2 → Prop) (stable : Stable inv)
     (splits : ∀ created, Splits created (reg created) env.step inv)
     (born : ∀ created start, some (created, start) ∈ support env.start →
-      ∃ backend, start = PqxdhDeploymentEnvironment.envInitial created backend ∧
-        inv start (initialized created (PqxdhRecordLiftWorld.initial (n := 2))))
+      ∃ backend, start = PqxdhDeploymentEnvironment.envInitial (PqxdhDeploymentEnvironment.eraseCreatedMetadata created)
+          backend ∧
+        (∀ keyId, created.server.server.peers keyId = none) ∧
+        inv start (initialized (PqxdhDeploymentEnvironment.eraseCreatedMetadata created)
+          (PqxdhRecordLiftWorld.initial (n := 2))))
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) :
     ∀ result ∈ support (PqxdhRecordLiftWorld.run setup codec route env setup.serverKeyId bounds mode adversary),
@@ -874,13 +922,14 @@ theorem world_keeps {Bk : Type} (env : PqxdhRecordLiftInterface.Environment 2 (E
       Set.mem_singleton_iff] at rest
     subst rest
     cases found
-  · obtain ⟨backend, rfl, holds⟩ := born created _ started
+  · obtain ⟨backend, rfl, noPeer, holds⟩ := born created _ started
+    let retained := PqxdhDeploymentEnvironment.eraseCreatedMetadata created
     have vacant : w.server = none := congrArg PqxdhRecordLiftWorld.State.server fresh
     have initRun : (PqxdhRecordLiftWorld.handler setup codec route (.inl created)).run w =
-        pure ((), initialized created w) := by
+        pure ((), initialized retained w) := by
       change PqxdhRecordLiftWorld.initializeServer created w = _
       simp only [PqxdhRecordLiftWorld.initializeServer, vacant]
-      rfl
+      rw [imported_noPeer created noPeer w]
     dsimp only [PqxdhDeploymentEnvironmentDraw.worldRest] at rest
     rw [simulateQ_bind, StateT.run_bind, simulateQ_spec_query, initRun, pure_bind, simulateQ_bind, StateT.run_bind,
       mem_support_bind_iff] at rest
@@ -889,9 +938,9 @@ theorem world_keeps {Bk : Type} (env : PqxdhRecordLiftInterface.Environment 2 (E
     subst final
     simp only [Option.some.injEq] at found
     subst found
-    exact ⟨created, PqxdhDeploymentEnvironmentJoin.run_keeps setup codec route env (reg created) created inv stable
-      (splits created) _ _ _ (PqxdhDeploymentEnvironmentJoin.good_initial created backend w fresh)
-      (stable _ _ _ (PqxdhDeploymentEnvironmentJoin.initialized_view created w fresh) holds) middle middleMember⟩
+    exact ⟨retained, PqxdhDeploymentEnvironmentJoin.run_keeps setup codec route env (reg retained) retained inv stable
+      (splits retained) _ _ _ (PqxdhDeploymentEnvironmentJoin.good_initial retained backend w fresh)
+      (stable _ _ _ (PqxdhDeploymentEnvironmentJoin.initialized_view retained w fresh) holds) middle middleMember⟩
 
 /-- Every outcome of the record world with the ideal environment of a target (`envGD`): the final environment state and World are admissible, `Good` and `IdealInv` at the drawn parameters' target (design-v2 section 6.3, `env_admitted`). The World's used markers are then exactly the slots of the environment's install ghosts (`IdealInv`'s `serverMarks` and `beaconMarks`); the guard of each hidden step (its slot's World marker unused) comes from `IdealInv` at the state before the step (`idealInv_build_ready`, `idealInv_finish_ready`, used inside `ideal_splits`). -/
 theorem env_admitted (t : Target count) (ensureInit : StateT A ProbComp Bool) (identityIndex : ℕ) (runtime : A)
@@ -915,7 +964,7 @@ theorem env_admitted (t : Target count) (ensureInit : StateT A ProbComp Bool) (i
   have initial := PqxdhDeploymentEnvironment.start_initial setup ensureInit identityIndex runtime _ created start
     startedAt
   subst initial
-  exact ⟨_, rfl, idealInv_start t created⟩
+  exact ⟨_, rfl, start_noPeer setup ensureInit identityIndex runtime _ created _ startedAt, idealInv_start t _⟩
 
 /-- Under the ideal admissibility predicate, the World's Server markers are at one slot at most. -/
 theorem server_once (t : Target count) (e : EnvState KemSK SplitBk) (w : PqxdhRecordLiftWorld.State 2)
@@ -1245,3 +1294,13 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealEnv.seed_at_install' de
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealEnv.seed_at_install
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealEnv.start_noPeer' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealEnv.start_noPeer
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealEnv.imported_noPeer' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealEnv.imported_noPeer

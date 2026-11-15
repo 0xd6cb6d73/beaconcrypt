@@ -18,21 +18,20 @@ variable {n : Nat} {ι KemSK : Type} {base : OracleSpec ι} {source : Registrati
 def initialProject (before : RegistrationNativeExperiment.Initial n KemSK source) : RegistrationNativeExperiment.Initial n KemSK source :=
   ⟨before.created, before.credential, RegistrationNativeMldsaMainView.project before.state⟩
 
-private noncomputable def initializeWorld (created : PqxdhLiveServerConstruction.Created Unit)
-    (publicKey : Std.Array U8 1952#usize) : StateT (PqxdhRecordLiftWorld.State n) ProbComp CtxRomAuth.CtxDigest := do
+private noncomputable def initializeWorld (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
+    (_ : Std.Array U8 1952#usize) : StateT (PqxdhRecordLiftWorld.State n) ProbComp Unit :=
   PqxdhRecordLiftWorld.initializeServer created
-  PqxdhRecordLiftWorld.effects (.inr (.hash (PqxdhRefinement.absBytes publicKey)))
 
-private def initialized (created : PqxdhLiveServerConstruction.Created Unit)
-    (credential : RegistrationNativeMldsa.Credential source) (result : CtxRomAuth.CtxDigest × PqxdhRecordLiftWorld.State n) :
+private def initialized (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
+    (credential : RegistrationNativeMldsa.Credential source) (result : Unit × PqxdhRecordLiftWorld.State n) :
     RegistrationNativeExperiment.Initial n KemSK source :=
   ⟨created, credential,
     ⟨⟨created.control, ⟨⟨created.server.server.identity, created.server.server.metadata.sender⟩,
-      credential.publicKey, RegistrationAuthenticationShared.digestArray result.1⟩, created.consumed, [],
+      credential.publicKey⟩, created.consumed, [],
       ⟨RegistrationServerRoleBackend.empty, [], [], (result.2, [])⟩⟩,
     [], PqxdhLiveKemBirth.empty, 0⟩⟩
 
-private theorem initialize_server_stable (created : PqxdhLiveServerConstruction.Created Unit) :
+private theorem initialize_server_stable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     RegistrationNativeKemCounterIndependence.Stable (RegistrationNativeMldsaWorldView.project (n := n))
       (PqxdhRecordLiftWorld.initializeServer created) := by
   intro before
@@ -42,19 +41,18 @@ private theorem initialize_server_stable (created : PqxdhLiveServerConstruction.
       RegistrationNativeWorldView.project, RegistrationNativeWorldView.eraseNative,
       RegistrationWorldCoinCompiler.eraseCoin, Function.update_idem]
 
-private theorem initialize_stable (created : PqxdhLiveServerConstruction.Created Unit) (publicKey : Std.Array U8 1952#usize) :
+private theorem initialize_stable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (publicKey : Std.Array U8 1952#usize) :
     RegistrationNativeKemCounterIndependence.Stable (RegistrationNativeMldsaWorldView.project (n := n))
       (initializeWorld created publicKey) :=
-  RegistrationNativeKemCounterIndependence.bind_stable _ _ _ (initialize_server_stable created)
-    (fun _ => RegistrationNativeMldsaWorldView.effects _)
+  initialize_server_stable created
 
-private theorem initialized_project (created : PqxdhLiveServerConstruction.Created Unit)
-    (credential : RegistrationNativeMldsa.Credential source) (result : CtxRomAuth.CtxDigest × PqxdhRecordLiftWorld.State n) :
+private theorem initialized_project (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
+    (credential : RegistrationNativeMldsa.Credential source) (result : Unit × PqxdhRecordLiftWorld.State n) :
     initialProject (initialized (n := n) (KemSK := KemSK) created credential result) =
       initialized created credential (result.1, RegistrationNativeMldsaWorldView.project result.2) := rfl
 
-/-- The final actual native initializer equals its literal Server installation and same-cache public-key fingerprint sequence. -/
-theorem initialize_source (created : PqxdhLiveServerConstruction.Created Unit)
+/-- The final actual native initializer equals its literal Server installation and pure exact-pin selection. -/
+theorem initialize_source (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential source) (before : PqxdhRecordLiftWorld.State n) :
     (fun result => some (initialized (KemSK := KemSK) created credential result)) <$>
       (initializeWorld created credential.publicKey).run before = (do
@@ -63,8 +61,9 @@ theorem initialize_source (created : PqxdhLiveServerConstruction.Created Unit)
           | .ok (.Some native) => some ⟨created, credential,
               ⟨RegistrationServerFrontendCompiler.erase native, [], PqxdhLiveKemBirth.empty, 0⟩⟩
           | _ => none)) := by
-  simp only [initializeWorld, StateT.run_bind, map_bind]
-  simp only [RegistrationWorldServerFrontend.start, StateT.run, bind_assoc]
+  simp only [initializeWorld, RegistrationWorldServerFrontend.start, StateT.run]
+  rw [map_eq_bind_pure_comp]
+  simp only [bind_assoc]
   apply bind_congr
   intro installed
   have pin := RegistrationWorldServerFrontend.initializePin_native (n := n)
@@ -73,16 +72,11 @@ theorem initialize_source (created : PqxdhLiveServerConstruction.Created Unit)
       RegistrationWorldAgreement.State n RegistrationServerRoleBackend.State))
   simp only [StateT.run] at pin
   rw [pin]
-  simp only [StateT.run, RegistrationWorldServerCompletion.capability, bind_map_left,
-    bind_pure_comp, Functor.map_map]
-  rw [← bind_pure_comp]
-  apply bind_congr
-  intro hashed
-  simp only [map_pure, initialized, RegistrationServerFrontendCompiler.erase]
+  simp only [pure_bind, Function.comp_def, initialized, RegistrationServerFrontendCompiler.erase]
   rfl
 
 /-- Both actual initializer inputs and its returned private state obey the explicitly named accounting view. -/
-theorem initialize_input (created : PqxdhLiveServerConstruction.Created Unit)
+theorem initialize_input (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential source) (before : PqxdhRecordLiftWorld.State n) :
     (Option.map initialProject) <$>
         ((fun result => some (initialized (KemSK := KemSK) created credential result)) <$>
@@ -95,10 +89,12 @@ theorem initialize_input (created : PqxdhLiveServerConstruction.Created Unit)
   simp only [Functor.map_map, Prod.map, id_eq, Option.map_some, initialized_project] at same ⊢
   exact same
 
+private abbrev PeerMetadata := Std.Array Std.U8 151#usize
+
 private noncomputable def alternate (setup : Setup base KemSK) (ensureInit : StateT Unit ProbComp Bool)
     (identityIndex : Nat) (serverKeyId : U64) : OracleComp (Spec source) (Option (RegistrationNativeExperiment.Initial n KemSK source)) := do
   let constructed ← RegistrationNativeMldsaProgram.lift ((PqxdhRecordLiftWorld.sampled
-    ((PqxdhLiveServerConstruction.construct (P := Unit) setup.joint ensureInit identityIndex serverKeyId none).run ())).run
+    ((PqxdhLiveServerConstruction.construct (P := PeerMetadata) setup.joint ensureInit identityIndex serverKeyId none).run ())).run
       (PqxdhRecordLiftWorld.initial : PqxdhRecordLiftWorld.State n))
   match constructed.1.1 with
   | none => pure none
@@ -148,7 +144,7 @@ theorem initial_idempotent (before : RegistrationNativeExperiment.Initial n KemS
     initialProject (initialProject before) = initialProject before := by
   simp only [initialProject, RegistrationNativeMldsaMainView.idempotent]
 
-private theorem initialized_advance (created : PqxdhLiveServerConstruction.Created Unit)
+private theorem initialized_advance (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential source) (before : PqxdhRecordLiftWorld.State n) (count : Nat) :
     (Option.map initialProject) <$>
         RegistrationNativeMldsaProgram.lift (source := source)

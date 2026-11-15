@@ -23,14 +23,15 @@ import (
 )
 
 const (
-	aeadKeyLen     = chacha20poly1305.KeySize
-	aeadNonceLen   = chacha20poly1305.NonceSize
-	aeadTagLen     = chacha20poly1305.Overhead
-	adSize         = 281
-	kdfStateLen    = 32
-	kdfOutputLen   = aeadKeyLen + kdfStateLen + aeadNonceLen
-	symRatchetInfo = "SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305"
-	pqxdhInfo      = "BeaconcryptPqxdh_CURVE25519_SHA-512_ML-KEM-768"
+	aeadKeyLen         = chacha20poly1305.KeySize
+	aeadNonceLen       = chacha20poly1305.NonceSize
+	aeadTagLen         = chacha20poly1305.Overhead
+	adSize             = 151
+	kdfStateLen        = 32
+	kdfOutputLen       = aeadKeyLen + kdfStateLen + aeadNonceLen
+	initialRatchetInfo = "SymRatchetInit_HKDF_SHA-512_CHACHA20_POLY1305"
+	symRatchetInfo     = "SymRatchetMessage_HKDF_SHA-512_CHACHA20_POLY1305"
+	pqxdhInfo          = "BeaconcryptPqxdh_CURVE25519_SHA-512_ML-KEM-768"
 )
 
 func require(condition bool, message string) {
@@ -145,6 +146,13 @@ func commitmentKnownAnswer() {
 func ratchetKnownAnswer() {
 	state := repeat(0x24, kdfStateLen)
 
+	fmt.Println("[ratchet-initial]")
+	initial := hkdfSHA512(state, initialRatchetInfo, 64)
+	printValue("directional-chains", initial)
+	messagePrefix := hkdfSHA512(state, symRatchetInfo, 64)
+	require(!bytes.Equal(initial, messagePrefix), "initial and message domain prefixes must differ")
+	printValue("message-prefix", messagePrefix)
+
 	fmt.Println("[ratchet]")
 	for step := 1; step <= 2; step++ {
 		output := hkdfSHA512(state, symRatchetInfo, kdfOutputLen)
@@ -191,7 +199,7 @@ func rfc8439AndCommitmentKnownAnswer() {
 			"3ff4def08e4b7a9de576d26586cec64b" +
 			"6116",
 	)
-	expectedTag := mustHex("6a4ebb0cb2dd9643a193f35050a66886")
+	expectedTag := mustHex("924ca595f5af29abc8d3f9c9aa7bb3bb")
 	ciphertext, tag := chacha20Poly1305Encrypt(
 		key,
 		nonce,
@@ -217,8 +225,8 @@ func rfc8439AndCommitmentKnownAnswer() {
 
 func chacha20Poly1305MultiOpeningFixture() {
 	const (
-		attempt = uint32(3)
-		carry   = 1
+		attempt = uint32(2)
+		carry   = 0
 	)
 
 	keyOne := make([]byte, aeadKeyLen)
@@ -240,10 +248,10 @@ func chacha20Poly1305MultiOpeningFixture() {
 		associatedDataOne[index] = byte(index)
 	}
 	associatedDataTwo := append([]byte(nil), associatedDataOne...)
-	copy(associatedDataTwo, mustHex("d0ab0bfa3600d9d715b82befab62d160"))
+	copy(associatedDataTwo, mustHex("010fd10b0825d387f0f6bea280011e46"))
 	plaintextOne := mustHex("89ea2a336d42c3373f1a954854c0e09c")
 	expectedCiphertext := mustHex("00112233445566778899aabbccddeeff")
-	expectedTag := mustHex("39996c6c0e78fdfb0bbf29d428aaed4d")
+	expectedTag := mustHex("8658cdca66b4af19115ed2cacd108b16")
 
 	ciphertext, tag := chacha20Poly1305Encrypt(
 		keyOne,

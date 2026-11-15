@@ -20,7 +20,6 @@ variable {ι KemSK Auxiliary : Type} {base : OracleSpec ι} {n : Nat}
 
 structure SelectedOwner (mlSource : RegistrationNativeMldsa.Source) where
   pin : session.ServerAuthenticationPin
-  mldsa : RegistrationNativeMldsa.Credential mlSource
   identitySeed : IdentitySeed
   prekeyPublic : Std.Array U8 32#usize
   kemHandle : Nat
@@ -30,11 +29,11 @@ structure SelectedOwner (mlSource : RegistrationNativeMldsa.Source) where
   edHistory : PqxdhJointIdentity.History
 
 def eraseOwner {mlSource : RegistrationNativeMldsa.Source} (owner : RegistrationNativeBeaconFrontend.Owner mlSource) : SelectedOwner mlSource :=
-  ⟨owner.pin, owner.mldsa, owner.identitySeed, owner.prekeyPublic, owner.kemHandle, owner.kemPublic, owner.worldOwner, owner.phase, owner.edHistory⟩
+  ⟨owner.pin, owner.identitySeed, owner.prekeyPublic, owner.kemHandle, owner.kemPublic, owner.worldOwner, owner.phase, owner.edHistory⟩
 
 def restoreOwner {mlSource : RegistrationNativeMldsa.Source} (scalar : ScalarBytes) (owner : SelectedOwner mlSource) :
     RegistrationNativeBeaconFrontend.Owner mlSource :=
-  ⟨owner.pin, owner.mldsa, owner.identitySeed, scalar, owner.prekeyPublic, owner.kemHandle, owner.kemPublic, owner.worldOwner, owner.phase, owner.edHistory⟩
+  ⟨owner.pin, owner.identitySeed, scalar, owner.prekeyPublic, owner.kemHandle, owner.kemPublic, owner.worldOwner, owner.phase, owner.edHistory⟩
 
 theorem restore_erase {mlSource : RegistrationNativeMldsa.Source} (owner : RegistrationNativeBeaconFrontend.Owner mlSource) :
     restoreOwner owner.prekeyScalar (eraseOwner owner) = owner := by cases owner; rfl
@@ -145,14 +144,14 @@ noncomputable def trustedCollect (setup : Setup base KemSK) {mlSource : Registra
       (Option (PqxdhPhase2DhMetadata.Prepared registration.AuthenticatedResponse)) :=
   simulateQ (PqxdhPhase2GapDhSource.prefixImpl setup.beaconDomain
     (RegistrationBeaconRootInterpreter.auxImpl (trustedBackend setup owner oneTime) authenticated) trustedVisit)
-    (PqxdhPhase2DhMetadata.prepare authenticated.pending.control () () () [])
+    (PqxdhPhase2DhMetadata.prepare (completedBinding := authenticated.binding) authenticated.control () () () [])
 
 noncomputable def collect (setup : Setup base KemSK) {mlSource : RegistrationNativeMldsa.Source}
     (owner : SelectedOwner mlSource) (oneTime : ScalarBytes) (authenticated : registration.AuthenticatedResponse) :
     M n KemSK Auxiliary (Option (PqxdhPhase2DhMetadata.Prepared registration.AuthenticatedResponse)) :=
   simulateQ (PqxdhPhase2GapDhSource.prefixImpl setup.beaconDomain
     (RegistrationBeaconRootInterpreter.auxImpl (backend setup owner oneTime) authenticated) visit)
-    (PqxdhPhase2DhMetadata.prepare authenticated.pending.control () () () [])
+    (PqxdhPhase2DhMetadata.prepare (completedBinding := authenticated.binding) authenticated.control () () () [])
 
 noncomputable def agreement (setup : Setup base KemSK) {mlSource : RegistrationNativeMldsa.Source}
     (owner : SelectedOwner mlSource) (oneTime : ScalarBytes)
@@ -172,7 +171,7 @@ noncomputable def finishPreparation (setup : Setup base KemSK) (mlSource : Regis
       | .fail error => pure (.fail error)
       | .div => pure .div
       | .ok aborted => do
-          set { owner with phase := .aborted aborted }
+          set ({ owner with phase := .aborted aborted } : SelectedOwner mlSource)
           let accepted ← StateT.lift (StateT.lift (simulateQ effect
             (simulateQ (RegistrationAuthenticationCompiler.callbacks setup.source.crypto mlSource.verify)
               (RegistrationResponseExecutor.begin pending (match packet with | none => .None | some packet => .Some packet)))))

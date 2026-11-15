@@ -24,7 +24,7 @@ noncomputable def serverRecords [primitives : AdapterSealPrimitive.Operations] [
     (erased : commitment.CommitmentTranscript) (server : PqxdhRecordLiftWorld.Server)
     (bytes : Pqxdh.Bytes) (keyId : U64) :
     StateT RegistrationNativePlatformOrdinarySourceJournal.State (StateT Platform ProbComp)
-      (Option RawCtxSourceSend.Encrypted × RawCtxServerRouting.State Unit (Array U8 281#usize)) :=
+      (Option RawCtxSourceSend.Encrypted × RawCtxServerRouting.State Unit (Array U8 151#usize)) :=
   match server.records.server.peers keyId with
   | none => pure (none,server.records)
   | some peer =>

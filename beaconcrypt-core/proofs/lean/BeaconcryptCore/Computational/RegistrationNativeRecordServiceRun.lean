@@ -16,7 +16,7 @@ open RegistrationNativeSelectiveEntropyNative (handler)
 open RegistrationNativeHiddenEnvironmentWorld (lower lower_run interpret_map)
 variable {n : Nat} {ι KemSK ProviderState Value Reader Response E Secret : Type} {base : OracleSpec ι}
 
-def finish (created : PqxdhLiveServerConstruction.Created Unit)
+def finish (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (result : (Value × RegistrationNativeLedger.State) × RegistrationNativeHiddenEnvironmentWorld.State n E Secret) :
     RegistrationNativeRecordServiceInitialized.Result n E Secret Value :=
   ((some (PqxdhRegistrationJointServerBirth.encode created, result.1, result.2.1.1.1), result.2.1.2), result.2.2)
@@ -28,7 +28,7 @@ noncomputable def nativeRun (service : QueryImpl (PqxdhRecordLiftProtocol.Servic
     (seed : PqxdhJointIdentity.IdentitySeed) (scalar : PqxdhJointGapDh.ScalarBytes)
     (candidate : PqxdhKemIndCca.MlKemSharedSecret) (provider : Provider KemSK ProviderState) (selectedOwner selectedAccept : Nat) (serverKeyId : U64)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
-    (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value) (created : PqxdhLiveServerConstruction.Created Unit)
+    (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (before : State n KemSK ProviderState source) (shell : CborRecordWorldClient.Shell)
     (control : PqxdhRecordLiftProtocol.Control n) (secret : Secret) :
     ProbComp (RegistrationNativeRecordServiceInitialized.Result n (State n KemSK ProviderState source) Secret Value) :=
@@ -46,7 +46,7 @@ theorem native_lower (service : QueryImpl (PqxdhRecordLiftProtocol.ServiceSpec n
     (seed : PqxdhJointIdentity.IdentitySeed) (scalar : PqxdhJointGapDh.ScalarBytes)
     (candidate : PqxdhKemIndCca.MlKemSharedSecret) (provider : Provider KemSK ProviderState) (selectedOwner selectedAccept : Nat) (serverKeyId : U64)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
-    (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value) (created : PqxdhLiveServerConstruction.Created Unit)
+    (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (before : State n KemSK ProviderState source) (shell : CborRecordWorldClient.Shell)
     (control : PqxdhRecordLiftProtocol.Control n) (secret : Secret) :
     nativeRun service setup checks wire codec route source credential seed scalar candidate provider selectedOwner selectedAccept serverKeyId
@@ -65,7 +65,7 @@ theorem entropy_lower (service : QueryImpl (PqxdhRecordLiftProtocol.ServiceSpec 
     (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
     (env : RegistrationNativeEntropyInterface.Environment n E) (serverKeyId : U64)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
-    (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value) (created : PqxdhLiveServerConstruction.Created Unit)
+    (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (before : E) (shell : CborRecordWorldClient.Shell) (control : PqxdhRecordLiftProtocol.Control n) (secret : Secret) :
     RegistrationNativeRecordServiceInitialized.run service env setup.source.crypto codec route serverKeyId bounds mode work created before shell control secret =
       finish created <$> (lower service codec route
@@ -84,7 +84,7 @@ theorem native_source (service : QueryImpl (PqxdhRecordLiftProtocol.ServiceSpec 
     (seed : PqxdhJointIdentity.IdentitySeed) (scalar : PqxdhJointGapDh.ScalarBytes)
     (candidate : PqxdhKemIndCca.MlKemSharedSecret) (provider : Provider KemSK ProviderState) (selectedOwner selectedAccept : Nat) (serverKeyId : U64)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
-    (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value) (created : PqxdhLiveServerConstruction.Created Unit)
+    (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (before : State n KemSK ProviderState source) (shell : CborRecordWorldClient.Shell)
     (control : PqxdhRecordLiftProtocol.Control n) (secret : Secret)
     (valid : RegistrationNativeSelectiveAllocationJoint.Holds (((before, shell), control), secret)) :

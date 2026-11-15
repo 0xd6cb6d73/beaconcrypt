@@ -64,6 +64,9 @@ private theorem nested_support {Index A S P : Type} {spec : OracleSpec Index}
   rw [StateT.run'_eq, support_map]
   exact ⟨(value, (after, next)), packed, rfl⟩
 
+/- The concrete corrected open-accept program now selects the Server pin purely (no fingerprint hash query), so elaboration-time `whnf` of its support types would evaluate the whole program; keep it opaque to the elaborator here. Proof terms are unchanged. -/
+attribute [local irreducible] RegistrationNativePlatformServerOpenControl.accept
+
 private theorem component_shape (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire)
     (checks : PqxdhServerAuthExperiment.Checks) (route : RawCtxServerRouting.SenderDecoder)
     (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)

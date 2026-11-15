@@ -151,7 +151,7 @@ theorem main (joint : PqxdhJointIdentity.Primitives) (selected : Nat) (placehold
 variable {E : Type} [primitive : BeaconcryptCore.Refinement.AdapterSealPrimitive.Operations]
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
 variable (wire : RegistrationNativeWire.Wire) (route : RawCtxServerRouting.SenderDecoder)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (credential : RegistrationNativeMldsa.Credential mlSource) (keys : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
 variable (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
 variable (reserveRegistration reservePeer : StateT Platform ProbComp Bool)

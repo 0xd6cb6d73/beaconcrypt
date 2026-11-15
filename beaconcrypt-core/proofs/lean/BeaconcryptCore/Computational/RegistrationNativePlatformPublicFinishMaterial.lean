@@ -111,7 +111,7 @@ theorem complete_source (setup : Setup base KemSK) (wire : RegistrationNativeWir
     (owner current : RegistrationNativeBeaconFrontend.Owner source)
     (ready : RegistrationBeaconReferenceRoot.Ready) (root : PqxdhSecretInputKdf.RootOutput)
     (env : EnvState Auxiliary) (before : Private n KemSK) (prepared : before.extra.1 ready.reference = some root)
-    (erased : Std.Array U8 357#usize) :
+    (erased : Std.Array U8 227#usize) :
     (simulateQ (implementation setup wire route sign seed scalar)
       (((complete setup.source wire.frameWrite effect demand (RegistrationBeaconReferenceCompiler.eraseOwner owner) ready).run
         (RegistrationBeaconReferenceCompiler.eraseOwner current)).run env)).run before =

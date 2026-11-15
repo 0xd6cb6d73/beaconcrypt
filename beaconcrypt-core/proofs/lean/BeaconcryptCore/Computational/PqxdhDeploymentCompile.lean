@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhDeploymentRecordCache
 
-/-! The compiled program of the CE-3 trial. A deployment adversary is turned into an ordinary source14 program: registration, HMAC and BLAKE2b commands are forwarded unchanged (a `create` pin is parsed locally first), and every record command is executed locally on a copy of the addressed Server peer or Beacon owner, behind the same frame log as the native record commands. A copy is built once, from public data and one source14 kernel read: the Server kernel reveal for a peer, the established-kernel field read for an owner. The public data are the program's own log of successful replies: created pins and key IDs, bundle bytes, finish inputs, accept bytes by returned session handle and build responses by assigned key ID. The reads are proof devices of the analysis and are never answered to the deployment adversary; no identity, KEM, prekey or one-time field is read. `merge` reassembles a deployment state from the compiled program's local copies and the source14 state. -/
+/-! The compiled program of the CE-3 trial. A deployment adversary is turned into an ordinary source14 program: registration, HMAC and BLAKE2b commands are forwarded unchanged (a `create` pin is parsed locally first), and every record command is executed locally on a copy of the addressed Server peer or Beacon owner, behind the same frame log as the native record commands. A copy is built once, from public data and one source14 kernel read: the Server kernel reveal for a peer, the established-kernel field read for an owner. The copy's associated data is `AD151 = context87 ‖ digest` (`PqxdhTranscriptAd.adOf`), where the digest is the answer to one forwarded source14 BLAKE2b command on the public registration transcript (`publicTranscript`): the accept bytes and the build response of the peer's session, or the owner's bundle bytes and finish input; on the source14 run this transcript is already cached with the installed digest, so the forwarded command is a cache hit (`PqxdhDeploymentCompileInvariant.copy_hash_hit`). The public data are the program's own log of successful replies: created pins and key IDs, bundle bytes, finish inputs, accept bytes by returned session handle and build responses by assigned key ID. The reads are proof devices of the analysis and are never answered to the deployment adversary; no identity, KEM, prekey or one-time field is read. `merge` reassembles a deployment state from the compiled program's local copies and the source14 state. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
@@ -55,6 +55,27 @@ def serverIdentityOf (codec : Codec Reader Response) (response : PqxdhServerRegi
     Option Identity :=
   codec.read2 response.serialized >>= codec.serverIdentity
 
+/-- The four Init fields read from Phase 1 bytes with the codec reader and exactly the getters of the Server's accept (`PqxdhRegistrationJointRawSignatures.candidate`). -/
+def publicInit (codec : Codec Reader Response) (bytes : Pqxdh.Bytes) : Option Pqxdh.SessionTranscript.InitFields := do
+  let reader ← codec.read1 bytes
+  let identity ← codec.identity reader
+  let pq ← codec.pqField reader
+  let pre ← codec.preField reader
+  let one ← codec.oneField reader
+  pure (PqxdhTranscriptAd.initOf ⟨identity, pre, one, pq⟩)
+
+/-- The 2638-byte registration transcript of public Phase 1 bytes and public Phase 2 bytes: the Init fields read from the first and the Beacon's decoded response fields (`responseOf`) of the second. -/
+def publicTranscript (codec : Codec Reader Response) (phase1 phase2 : Pqxdh.Bytes) : Option Pqxdh.Bytes := do
+  let init ← publicInit codec phase1
+  let response ← responseOf codec phase2
+  pure (PqxdhTranscriptAd.transcript init response)
+
+/-- Public registration transcript of an installed Server peer: the accept bytes and the build response of its session. -/
+def peerTranscript (codec : Codec Reader Response) (log : Log) (kid : Std.U64) : Option Pqxdh.Bytes := do
+  let built ← log.builds kid
+  let raw ← log.accepts built.1
+  publicTranscript codec raw built.2.serialized
+
 /-- Public reconstruction of an installed Server peer: the Server identity from its build response and the Beacon identity from the accept bytes of the same session. -/
 def peerView (codec : Codec Reader Response) (log : Log) (kid : Std.U64) : Option (Identity × Identity) := do
   let built ← log.builds kid
@@ -63,39 +84,42 @@ def peerView (codec : Codec Reader Response) (log : Log) (kid : Std.U64) : Optio
   let peer ← identityOf codec raw
   pure (server, peer)
 
-/-- Public reconstruction of an established owner: its outer key ID (the assigned key ID of its finish input), its established control (the pinned binding from `create` and the assigned key ID) and its 281-byte associated data (pin and the identity key read from its bundle bytes). -/
+/-- Public reconstruction of an established owner: its outer key ID (the assigned key ID of its finish input), its established control (the pinned binding from `create` and the assigned key ID) and the public registration transcript of its bundle bytes and finish input, after the original public parse of its bundle's identity key. -/
 noncomputable def ownerView (codec : Codec Reader Response) (log : Log) (index : Nat) :
-    Option (Std.U64 × beaconcrypt_core.pqxdh.BeaconEstablished × Std.Array Std.U8 281#usize) := do
+    Option (Std.U64 × beaconcrypt_core.pqxdh.BeaconEstablished × Pqxdh.Bytes) := do
   let created ← log.owners[index]?
   let bundle ← log.bundles index
-  let beacon ← identityOf codec bundle
+  let _beacon ← identityOf codec bundle
   let raw ← log.finishes index
   let response ← codec.read2 raw
   let assigned := codec.assignedId response
-  pure (assigned, ⟨⟨created.1, created.2⟩, assigned⟩,
-    PqxdhBeaconPhase2Shared.associatedData ⟨⟨created.1, created.2⟩, beacon⟩)
+  let transcript ← publicTranscript codec bundle raw
+  pure (assigned, ⟨⟨created.1, created.2⟩, assigned⟩, transcript)
 
 /-- The peer addressed by a Server record command: the key ID of a send, the header route of a raw receive. -/
 def serverTarget (route : RawCtxServerRouting.SenderDecoder) : RawCtxServerMixed.SourceSpec.Domain → Option Std.U64
   | .inl (_, kid) => some kid
   | .inr raw => route raw
 
-/-- The local Server: the reconstructed Server identity and at most the addressed peer, with its local or revealed kernel. -/
-def localServer (codec : Codec Reader Response) (log : Log) (kid : Std.U64) (kernel : Option Kernel) (raw : Nat) :
-    RawCtxServerRouting.State Unit Unit :=
+/-- The local Server: the reconstructed Server identity and at most the addressed peer, with its local or revealed kernel and the copy's associated data. -/
+def localServer (codec : Codec Reader Response) (log : Log) (kid : Std.U64) (kernel : Option Kernel)
+    (associatedData : Option PqxdhTranscriptAd.AssociatedData) (raw : Nat) :
+    RawCtxServerRouting.State Unit PqxdhTranscriptAd.AssociatedData :=
   ⟨⟨((peerView codec log kid).map Prod.fst).getD default,
     fun other => if other = kid then (do
       let current ← kernel
       let view ← peerView codec log kid
-      pure ⟨view.2, current, ()⟩) else none, ()⟩, raw⟩
+      let ad ← associatedData
+      pure ⟨view.2, current, ad⟩) else none, ()⟩, raw⟩
 
-/-- The local owner: the reconstructed established owner with its local or read kernel, or an inactive owner. Identity and secret fields are placeholders that no record command reads. -/
-noncomputable def localOwner (codec : Codec Reader Response) (log : Log) (index : Nat) (kernel : Option Kernel) (raw : Nat) :
+/-- The local owner: the reconstructed established owner with its local or read kernel and the copy's associated data, or an inactive owner. Identity and secret fields are placeholders that no record command reads. -/
+noncomputable def localOwner (codec : Codec Reader Response) (log : Log) (index : Nat) (kernel : Option Kernel)
+    (associatedData : Option PqxdhTranscriptAd.AssociatedData) (raw : Nat) :
     RawCtxBeaconLifecycle.State Unit Unit Unit :=
-  match kernel, ownerView codec log index with
-  | some current, some view => ⟨⟨(), view.1, view.2.1.server_binding.identity_public_key,
-      .established view.2.1 view.2.2 current⟩, raw⟩
-  | _, _ => ⟨⟨(), 0#u64, default, .aborted ⟨0#u64⟩⟩, raw⟩
+  match kernel, ownerView codec log index, associatedData with
+  | some current, some view, some ad => ⟨⟨(), view.1, view.2.1.server_binding.identity_public_key,
+      .established view.2.1 ad current⟩, raw⟩
+  | _, _, _ => ⟨⟨(), 0#u64, default, .aborted ⟨0#u64⟩⟩, raw⟩
 
 /-- The established kernel of a local owner phase. -/
 def phaseKernel {DhPair KemPair : Type} :
@@ -114,6 +138,13 @@ def kernelQuery (index : Nat) : OracleComp (SourceSpec KemSK) (Option Kernel) :=
     | _ => none) <$>
     ((SourceSpec KemSK).query (.inr (index, .kernel)) : OracleComp (SourceSpec KemSK) _)
 
+/-- The associated data of a copy: one forwarded source14 BLAKE2b command on its public transcript, if the copied target exists and the transcript decodes; nothing otherwise. -/
+def copyData (kernel : Option Kernel) (transcript : Option Pqxdh.Bytes) :
+    OracleComp (SourceSpec KemSK) (Option PqxdhTranscriptAd.AssociatedData) :=
+  match kernel, transcript with
+  | some _, some bytes => (fun digest => some (PqxdhTranscriptAd.adOf digest)) <$> PqxdhDeploymentRecordCache.hashQuery bytes
+  | _, _ => pure none
+
 /-- The kernel of a peer: the local copy if one exists, otherwise one source14 reveal. -/
 def peerKernel (copies : Local) (kid : Std.U64) : OracleComp (SourceSpec KemSK) (Option Kernel) :=
   match copies.peers kid with
@@ -131,35 +162,37 @@ def forward (request : PqxdhRegistrationSchedule.Request) :
     OracleComp (SourceSpec KemSK) (PqxdhRegistrationSchedule.QuerySpec request) :=
   ((SourceSpec KemSK).query (.inl (.inr request)) : OracleComp (SourceSpec KemSK) _)
 
-/-- Local Server record command: copy the addressed peer if needed, run `serverImpl` on the local Server under the Server key ID behind the frame log with locally answered primitives, keep the returned kernel, counter and produced frames. -/
+/-- Local Server record command: copy the addressed peer if needed, derive its associated data by one forwarded hash of its public transcript (`copyData`), run the per-peer router `MldsaServerRouting.handler` on the local Server under the Server key ID behind the frame log with locally answered primitives, keep the returned kernel, counter and produced frames. -/
 noncomputable def serverLocal (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (query : RawCtxServerMixed.SourceSpec.Domain) :
     StateT Local (OracleComp (SourceSpec KemSK)) (RawCtxServerMixed.SourceSpec.Range query) := fun copies =>
   match serverTarget route query with
   | none => do
       let result ← simulateQ (localPrimitives setup codec) (PqxdhDeploymentNative.logged
-        ((RawCtxServerMixed.serverImpl (fun _ => setup.serverKeyId) route codec.frameRead query).run
-          (localServer codec copies.log 0#u64 none copies.serverRaw)))
+        ((MldsaServerRouting.handler PqxdhRefinement.absBytes (fun _ => setup.serverKeyId) route codec.frameRead query).run
+          (localServer codec copies.log 0#u64 none none copies.serverRaw)))
       pure (result.1.1, ({ copies with serverRaw := result.1.2.rawAttempts } : Local).produce
         (PqxdhDeploymentNative.serverTag query) result.2)
   | some kid => do
       let kernel ← peerKernel copies kid
+      let associatedData ← copyData kernel (peerTranscript codec copies.log kid)
       let result ← simulateQ (localPrimitives setup codec) (PqxdhDeploymentNative.logged
-        ((RawCtxServerMixed.serverImpl (fun _ => setup.serverKeyId) route codec.frameRead query).run
-          (localServer codec copies.log kid kernel copies.serverRaw)))
+        ((MldsaServerRouting.handler PqxdhRefinement.absBytes (fun _ => setup.serverKeyId) route codec.frameRead query).run
+          (localServer codec copies.log kid kernel associatedData copies.serverRaw)))
       pure (result.1.1, ({ copies with
         peers := Function.update copies.peers kid ((result.1.2.server.peers kid).map RawCtxServerRouting.Peer.kernel)
         serverRaw := result.1.2.rawAttempts } : Local).produce (PqxdhDeploymentNative.serverTag query) result.2)
 
-/-- Local Beacon record command: an uncreated handle is rejected; otherwise copy the owner if needed, run `beaconImpl` on the local owner behind the frame log with locally answered primitives, keep the returned kernel, counter and produced frames. -/
+/-- Local Beacon record command: an uncreated handle is rejected; otherwise copy the owner if needed, derive its associated data by one forwarded hash of its public transcript (`copyData`), run `beaconImpl` on the local owner behind the frame log with locally answered primitives, keep the returned kernel, counter and produced frames. -/
 noncomputable def beaconLocal (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (index : Nat)
     (query : RawCtxMixedOwner.SourceSpec.Domain) :
     StateT Local (OracleComp (SourceSpec KemSK)) (RawCtxMixedOwner.SourceSpec.Range query) := fun copies =>
   if index < copies.log.owners.length then do
     let kernel ← ownerKernel copies index
+    let associatedData ← copyData kernel ((ownerView codec copies.log index).map fun view => view.2.2)
     let result ← simulateQ (localPrimitives setup codec) (PqxdhDeploymentNative.logged
       ((RawCtxBeaconLifecycle.beaconImpl codec.frameRead query).run
-        (localOwner codec copies.log index kernel (copies.ownerRaw index))))
+        (localOwner codec copies.log index kernel associatedData (copies.ownerRaw index))))
     pure (result.1.1, ({ copies with
       owners := Function.update copies.owners index (phaseKernel result.1.2.beacon.phase)
       ownerRaw := Function.update copies.ownerRaw index result.1.2.rawAttempts } : Local).produce
@@ -211,7 +244,8 @@ noncomputable def compile (setup : Setup baseSpec KemSK) (codec : Codec Reader R
   (simulateQ (compileImpl setup codec route) adversary).run Local.empty
 
 /-- A Server peer with its local live kernel, if one exists. -/
-def mergePeer (kernel : Option Kernel) (peer : RawCtxServerRouting.Peer Unit) : RawCtxServerRouting.Peer Unit :=
+def mergePeer (kernel : Option Kernel) (peer : RawCtxServerRouting.Peer PqxdhTranscriptAd.AssociatedData) :
+    RawCtxServerRouting.Peer PqxdhTranscriptAd.AssociatedData :=
   match kernel with
   | some current => { peer with kernel := current }
   | none => peer

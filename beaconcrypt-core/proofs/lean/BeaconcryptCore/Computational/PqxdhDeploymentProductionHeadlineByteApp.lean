@@ -11,6 +11,7 @@ The summed CE-APP and later-disclosure CE-APP-L bounds are transported through t
 
 open OracleComp OracleSpec ENNReal
 set_option autoImplicit false
+set_option warningAsError true
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentProductionHeadlineByteApp
 variable {ι KemSK Reader Response Message Root A X Out : Type} {baseSpec : OracleSpec ι}
@@ -30,7 +31,7 @@ open PqxdhDeploymentHeadlineEvents (appEvent appPeerEvent appHandle)
 /-- Production-source form of the byte-accurate `PqxdhDeploymentHeadlineByteApp.ce_app` bound. -/
 theorem ce_app (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 227#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -88,7 +89,7 @@ open PqxdhDeploymentHeadlineEvents (appEvent appPeerEvent appHandle)
 /-- Production-source form of the byte-accurate `PqxdhDeploymentHeadlineByteApp.ce_app_server` bound. -/
 theorem ce_app_server (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 227#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -150,7 +151,7 @@ open PqxdhDeploymentLaterHeadlineChain (kemLossL slotLossL recLossL)
 /-- Production-source form of the byte-accurate `PqxdhDeploymentLaterHeadlineByteApp.ce_app_later` bound. -/
 theorem ce_app_later (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 227#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
@@ -216,7 +217,7 @@ open PqxdhDeploymentLaterHeadlineChain (kemLossL slotLossL recLossL)
 /-- Production-source form of the byte-accurate `PqxdhDeploymentLaterHeadlineByteApp.ce_app_server_later` bound. -/
 theorem ce_app_server_later (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 227#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool)
     (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
     (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)

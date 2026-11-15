@@ -25,14 +25,14 @@ def writeBytes : record_effects.RecordWriteRequest → Pqxdh.Bytes
 
 /-- Ordinary payload admission retains all metadata and sends exactly the borrowed application bytes. -/
 theorem context_new_exact (application : Slice Std.U8) (target sender : Std.U64)
-    (associatedData : Std.Array Std.U8 281#usize) (encoding : record_effects.RecordEncoding) :
+    (associatedData : Std.Array Std.U8 151#usize) (encoding : record_effects.RecordEncoding) :
     record_effects.SealFrameContext.new application target sender associatedData encoding =
       ok ⟨application, .None, associatedData, target, sender, encoding⟩ := by
   rfl
 
 /-- The registration prefix is exactly LE64 of the assigned key; the application and full associated data are retained. -/
 theorem registration_context_exact (application : Slice Std.U8) (assigned sender : Std.U64)
-    (associatedData : Std.Array Std.U8 281#usize) :
+    (associatedData : Std.Array Std.U8 151#usize) :
     ∃ context, record_effects.SealFrameContext.registration application assigned sender associatedData = ok context ∧
       context.plaintext = application ∧ context.associated_data = associatedData ∧
       context.target_kid = assigned ∧ context.sender_kid = sender ∧ context.encoding = .Raw ∧

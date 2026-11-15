@@ -148,33 +148,39 @@ theorem path_token (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
             call index token ⟨previous, created⟩⟩
       · exact Or.inr ⟨original, List.mem_cons_of_mem call member, receipt⟩
 
-/-- In an original run beginning with the literal empty pending map, a successful build consumes a token from a strictly earlier actual accept occurrence. Its installed kernel uses that same token root, whose source receipt remains at the final cache. -/
-theorem path_build (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+/-- In an original run beginning with the literal empty pending map, a successful build consumes a token from a strictly earlier actual accept occurrence, passes the pre-hash guard with a candidate and hashes the transcript of the token's retained Init buffers and that candidate's response fields on the shared cache. Its installed kernel uses that same token root at the AD of the digest, whose source receipt remains at the final cache. -/
+theorem path_build_transcript (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (publicValue : PublicChallenge) (beaconSeed seed : IdentitySeed) (scalar : ScalarBytes)
     (beacon : RawCtxBeaconLifecycle.State Unit (Unit ⊕ ScalarBytes) KemSK)
+    (beaconInit : Option PqxdhEd25519EufCma.Phase1Candidate)
     (initial : PqxdhJointDhExtractFamily.State)
     (final : GameState KemSK × PqxdhJointDhExtractFamily.State) (calls : List (Call KemSK))
     (path : Path setup codec checks publicValue beaconSeed seed scalar
-      (initialGameState setup publicValue beacon, initial) calls final)
+      (initialGameState setup publicValue beacon beaconInit, initial) calls final)
     (index : Nat) (payload : Option Pqxdh.Bytes) (response : PqxdhServerRegistrationPublication.Response)
     (before after : GameState KemSK) (roots : QueryLog PqxdhJointDhExtractRoot.RootSpec)
     (member : (⟨.inr (.build index payload), some response, before, after, roots⟩ : Call KemSK) ∈ calls) :
-    ∃ earlier later token candidate kernel logged cache original,
+    ∃ earlier later token candidate digest hashed published kernel logged cache original,
       calls = earlier ++ ⟨.inr (.build index payload), some response, before, after, roots⟩ :: later ∧
       original ∈ earlier ∧
       TokenAt setup codec checks publicValue seed scalar final.2.cache original index token ∧
       before.pending index = some token ∧
+      PqxdhServerRegistrationPublication.prehash before.server token.pending payload = some candidate ∧
+      (digest, hashed) ∈ support ((CtxRomAuth.ctxRandomOracle (PqxdhTranscriptAd.query
+        (PqxdhTranscriptAd.initOf token.init) (PqxdhTranscriptAd.serverResponse candidate))).run before.ctx) ∧
       Installed setup.source token.root kernel ∧
-      after.server = PqxdhServerRegistrationPublication.publish before.server candidate kernel () ∧
-      (ok (some response, PqxdhServerRegistrationPublication.publish before.server candidate kernel ()),
-        (logged, cache)) ∈ support ((simulateQ (tailImpl setup codec checks)
-          (PqxdhServerRegistrationPublication.build setup.source token.pending token.root payload () before.server)).run
-            ([], before.ctx)) := by
+      after.server = PqxdhServerRegistrationPublication.publish before.server published kernel
+        (PqxdhTranscriptAd.adOf digest) ∧
+      (ok (some response, PqxdhServerRegistrationPublication.publish before.server published kernel
+          (PqxdhTranscriptAd.adOf digest)), (logged, cache)) ∈ support ((simulateQ (tailImpl setup codec checks)
+          (PqxdhServerRegistrationPublication.build (associatedData := PqxdhTranscriptAd.adOf digest) setup.source
+            token.pending token.root payload (PqxdhTranscriptAd.adOf digest) before.server)).run ([], hashed)) := by
   obtain ⟨earlier, later, primitive, middle, split, preceding, reached, following⟩ :=
     path_occurrence setup codec checks publicValue beaconSeed seed scalar _ final calls path _ member
   have source := callback_source setup codec checks publicValue beaconSeed seed scalar _ primitive middle reached
-  obtain ⟨token, candidate, kernel, logged, cache, found, familyEq, _, serverEq, installed, built, _, _⟩ :=
-    PqxdhServerAuthRootInitialization.build_receipt setup codec checks seed scalar index payload
+  obtain ⟨token, candidate, digest, hashed, published, kernel, logged, cache, found, pre, hashRun, familyEq, _,
+      serverEq, installed, built, _, _⟩ :=
+    PqxdhServerAuthRootInitialization.build_receipt_transcript setup codec checks seed scalar index payload
       (before, primitive) response (after, middle) source
   rcases path_token setup codec checks publicValue beaconSeed seed scalar _ _ earlier preceding
       index token found with impossible | ⟨original, atEarlier, receipt⟩
@@ -183,9 +189,9 @@ theorem path_build (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
         (after, middle) final later following).1
     dsimp only at familyEq retained
     rw [familyEq] at retained
-    exact ⟨earlier, later, token, candidate, kernel, logged, cache, original, split, atEarlier,
-      tokenAt_mono setup codec checks publicValue seed scalar primitive.cache final.2.cache retained
-        original index token receipt, found, installed, serverEq, built⟩
+    exact ⟨earlier, later, token, candidate, digest, hashed, published, kernel, logged, cache, original, split,
+      atEarlier, tokenAt_mono setup codec checks publicValue seed scalar primitive.cache final.2.cache retained
+        original index token receipt, found, pre, hashRun, installed, serverEq, built⟩
 
 /-- The original game invariant and complete monotone histories hold along the actual interpreted callback path. No root-origin or authentication property is added to the inherited invariant. -/
 theorem path_inv (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -242,8 +248,8 @@ theorem token_final (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   exact ⟨input, pending, rooted,
     (path_grows setup codec checks publicValue beaconSeed seed scalar _ after _ following).touches.subset touched⟩
 
-/-- A successful finish occurrence retains the actual root/initializer/publication path at the final cache and identifies the original first Beacon touch. Later callbacks can neither replace that occurrence nor erase its root receipt. -/
-theorem path_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+/-- A successful finish occurrence retains the transcript hash of the retained Init bundle and the decoded Phase 2, the actual root/initializer/publication path at the completed binding of that digest at the final cache, and identifies the original first Beacon touch. Later callbacks can neither replace that occurrence nor erase its root receipt. -/
+theorem path_finish_transcript (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (publicValue : PublicChallenge) (beaconSeed seed : IdentitySeed) (scalar : ScalarBytes)
     (initial final : GameState KemSK × PqxdhJointDhExtractFamily.State) (calls : List (Call KemSK))
     (path : Path setup codec checks publicValue beaconSeed seed scalar initial calls final)
@@ -251,17 +257,21 @@ theorem path_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     (raw payload : Pqxdh.Bytes) (before after : GameState KemSK)
     (roots : QueryLog PqxdhJointDhExtractRoot.RootSpec)
     (member : (⟨.inr (.finish raw), some payload, before, after, roots⟩ : Call KemSK) ∈ calls) :
-    ∃ control prekey oneTime kem pending root staged,
+    ∃ control prekey oneTime kem init response digest hashed pending root staged,
       before.beacon.beacon.phase = .initSent control prekey oneTime kem ∧
-      some pending ∈ support ((beaconPrefix setup codec beaconSeed control before.beacon.beacon.identity
-        oneTime kem raw).run' ()) ∧
+      before.beaconInit = some init ∧
+      responseOf codec raw = some response ∧
+      (digest, hashed) ∈ support ((CtxRomAuth.ctxRandomOracle (PqxdhTranscriptAd.query
+        (PqxdhTranscriptAd.initOf init) response)).run before.ctx) ∧
+      some pending ∈ support ((beaconPrefix (PqxdhTranscriptAd.completedOf control digest) setup codec beaconSeed
+        control before.beacon.beacon.identity oneTime kem raw).run' ()) ∧
       RootAt setup seed scalar final.2.cache
         (PqxdhJointDhExtractRoot.beaconMessage publicValue pending.collected) root ∧
       firstBeacon final.1.ghost.touches =
         some (PqxdhJointDhExtractRoot.beaconMessage publicValue pending.collected) ∧
       (some staged, ((), after.ctx)) ∈ support ((simulateQ (beaconNative setup codec)
         (PqxdhPhase2DhRootConsumer.afterRoot codec.frameRead pending (PqxdhRootTableInitialization.rootArray root))).run
-          ((), before.ctx)) ∧
+          ((), hashed)) ∧
       after.beacon.beacon.phase = .established
         ⟨staged.authenticated.candidate.server_binding, staged.authenticated.candidate.assigned_key_id⟩
         staged.associatedData staged.kernel ∧
@@ -270,9 +280,9 @@ theorem path_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   obtain ⟨earlier, later, primitive, middle, _, preceding, reached, following⟩ :=
     path_occurrence setup codec checks publicValue beaconSeed seed scalar initial final calls path _ member
   have source := callback_source setup codec checks publicValue beaconSeed seed scalar _ primitive middle reached
-  obtain ⟨control, prekey, oneTime, kem, pending, root, staged, active, prepared, _, rooted,
-      initialized, installed, plaintext, pinned, touches⟩ :=
-    PqxdhServerAuthRootInitialization.finish_root setup codec publicValue beaconSeed seed scalar raw payload
+  obtain ⟨control, prekey, oneTime, kem, init, response, digest, hashed, pending, root, staged, active, bundle,
+      decoded, hashRun, prepared, _, rooted, initialized, installed, plaintext, pinned, touches⟩ :=
+    PqxdhServerAuthRootInitialization.finish_root_transcript setup codec publicValue beaconSeed seed scalar raw payload
       (before, primitive) (after, middle) source
   have atBefore := (path_inv setup codec checks publicValue beaconSeed seed scalar initial
     (before, primitive) earlier preceding invariant).1
@@ -281,15 +291,15 @@ theorem path_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     rw [touches]
     exact firstBeacon_after before.ghost.touches [] _
       (atBefore.clean ⟨control, prekey, oneTime, kem, active⟩)
-  exact ⟨control, prekey, oneTime, kem, pending, root, staged, active, prepared,
-    root_mono setup seed scalar middle.cache final.2.cache
+  exact ⟨control, prekey, oneTime, kem, init, response, digest, hashed, pending, root, staged, active, bundle,
+    decoded, hashRun, prepared, root_mono setup seed scalar middle.cache final.2.cache
       (path_roots setup codec checks publicValue beaconSeed seed scalar _ _ later following).1 _ root rooted,
     firstBeacon_prefix _ _ _ first
       (path_grows setup codec checks publicValue beaconSeed seed scalar _ _ later following).touches,
     initialized, installed, plaintext, pinned⟩
 
 /-- On one complete actual path, the original partner relation links the root used by a successful owner build to the root used by the successful Beacon finish. Both roots come from their actual callbacks and are retained in one real cache; no installed-key or output injectivity is used. -/
-theorem path_root_agreement (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+theorem path_root_agreement_transcript (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (context : Context KemSK) (sampled : context ∈ support (contextSample setup codec))
     (initial : PqxdhJointDhExtractFamily.State)
     (final : GameState KemSK × PqxdhJointDhExtractFamily.State) (calls : List (Call KemSK))
@@ -303,44 +313,54 @@ theorem path_root_agreement (setup : Setup baseSpec KemSK) (codec : Codec Reader
     (finished : (⟨.inr (.finish raw), some payload, beaconBefore, beaconAfter, beaconRoots⟩ : Call KemSK) ∈ calls)
     (snap : Snapshot) (accepted : final.1.ghost.acceptance = some snap)
     (partner : Partner setup context.seed context.scalar snap index) :
-    ∃ token candidate serverKernel logged cache pending root staged,
+    ∃ token candidate digest hashed published serverKernel logged cache pending root staged,
       serverBefore.pending index = some token ∧
+      PqxdhServerRegistrationPublication.prehash serverBefore.server token.pending data = some candidate ∧
+      (digest, hashed) ∈ support ((CtxRomAuth.ctxRandomOracle (PqxdhTranscriptAd.query
+        (PqxdhTranscriptAd.initOf token.init) (PqxdhTranscriptAd.serverResponse candidate))).run serverBefore.ctx) ∧
       token.root = root ∧ Installed setup.source root serverKernel ∧
-      serverAfter.server = PqxdhServerRegistrationPublication.publish serverBefore.server candidate serverKernel () ∧
-      (ok (some response, PqxdhServerRegistrationPublication.publish serverBefore.server candidate serverKernel ()),
-        (logged, cache)) ∈ support ((simulateQ (tailImpl setup codec checks)
-          (PqxdhServerRegistrationPublication.build setup.source token.pending token.root data () serverBefore.server)).run
-            ([], serverBefore.ctx)) ∧
+      serverAfter.server = PqxdhServerRegistrationPublication.publish serverBefore.server published serverKernel
+        (PqxdhTranscriptAd.adOf digest) ∧
+      (ok (some response, PqxdhServerRegistrationPublication.publish serverBefore.server published serverKernel
+          (PqxdhTranscriptAd.adOf digest)), (logged, cache)) ∈ support ((simulateQ (tailImpl setup codec checks)
+          (PqxdhServerRegistrationPublication.build (associatedData := PqxdhTranscriptAd.adOf digest) setup.source
+            token.pending token.root data (PqxdhTranscriptAd.adOf digest) serverBefore.server)).run ([], hashed)) ∧
       RootAt setup context.seed context.scalar final.2.cache
         (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected) root ∧
+      ∃ init beaconResponse beaconDigest beaconHashed,
       (some staged, ((), beaconAfter.ctx)) ∈ support ((simulateQ (beaconNative setup codec)
         (PqxdhPhase2DhRootConsumer.afterRoot codec.frameRead pending (PqxdhRootTableInitialization.rootArray root))).run
-          ((), beaconBefore.ctx)) ∧
+          ((), beaconHashed)) ∧
       beaconAfter.beacon.beacon.phase = .established
         ⟨staged.authenticated.candidate.server_binding, staged.authenticated.candidate.assigned_key_id⟩
         staged.associatedData staged.kernel ∧
       ∃ control prekey oneTime kem,
         beaconBefore.beacon.beacon.phase = .initSent control prekey oneTime kem ∧
-        some pending ∈ support ((beaconPrefix setup codec context.beaconSeed control
-          beaconBefore.beacon.beacon.identity oneTime kem raw).run' ()) ∧
+        beaconBefore.beaconInit = some init ∧
+        responseOf codec raw = some beaconResponse ∧
+        (beaconDigest, beaconHashed) ∈ support ((CtxRomAuth.ctxRandomOracle (PqxdhTranscriptAd.query
+          (PqxdhTranscriptAd.initOf init) beaconResponse)).run beaconBefore.ctx) ∧
+        some pending ∈ support ((beaconPrefix (PqxdhTranscriptAd.completedOf control beaconDigest) setup codec
+          context.beaconSeed control beaconBefore.beacon.beacon.identity oneTime kem raw).run' ()) ∧
         firstBeacon final.1.ghost.touches = some
           (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected) := by
-  have generated := PqxdhServerAuthPhase1Generation.context_generated setup codec context sampled
-  have first := inv_initial setup codec context.beaconSeed (context.publicValue setup) context.oneTime
-    context.keys.1 context.keys.2 context.published generated.2.2.2.2.2
+  have first := (PqxdhServerAuthEntryFactor.contextSample_invariant (Reader := Reader) (Response := Response)
+    setup codec context sampled).1
   have last := (path_inv setup codec checks (context.publicValue setup) context.beaconSeed context.seed context.scalar
     _ final calls path first).1
-  obtain ⟨earlier, later, token, candidate, serverKernel, logged, cache, original, split, inEarlier,
-      receipt, found, installed, serverEq, buildRun⟩ :=
-    path_build setup codec checks (context.publicValue setup) context.beaconSeed context.seed context.scalar
-      context.published.2 initial final calls path index data response serverBefore serverAfter serverRoots built
+  obtain ⟨earlier, later, token, candidate, digest, hashed, published, serverKernel, logged, cache, original, split,
+      inEarlier, receipt, found, pre, hashRun, installed, serverEq, buildRun⟩ :=
+    path_build_transcript setup codec checks (context.publicValue setup) context.beaconSeed context.seed context.scalar
+      context.published.2 context.beaconInit initial final calls path index data response serverBefore serverAfter
+      serverRoots built
   have originalMember : original ∈ calls := by
     rw [split]
     exact List.mem_append_left _ inEarlier
   obtain ⟨input, _, serverRooted, touched⟩ := token_final setup codec checks (context.publicValue setup)
     context.beaconSeed context.seed context.scalar _ final calls path original originalMember index token receipt
-  obtain ⟨control, prekey, oneTime, kem, pending, root, staged, active, prepared, beaconRooted, firstBeaconEq, nativeRun,
-      phaseEq, _, _⟩ := path_finish setup codec checks (context.publicValue setup) context.beaconSeed
+  obtain ⟨control, prekey, oneTime, kem, init, beaconResponse, beaconDigest, beaconHashed, pending, root, staged, active,
+      bundle, decoded, beaconHashRun, prepared, beaconRooted, firstBeaconEq, nativeRun,
+      phaseEq, _, _⟩ := path_finish_transcript setup codec checks (context.publicValue setup) context.beaconSeed
     context.seed context.scalar _ final calls path first raw payload beaconBefore beaconAfter beaconRoots finished
   obtain ⟨message, reply, bytes, partnerTouch, inputEq, beaconEq⟩ := partner
   have snapshot := (last.frozen snap accepted).1
@@ -353,9 +373,10 @@ theorem path_root_agreement (setup : Setup baseSpec KemSK) (codec : Codec Reader
     simpa only [beaconInput, firstBeaconEq, Option.bind_some] using retained.symm
   have sameRoot := same_input setup context.seed context.scalar final.2.cache _ _ token.root root
     serverRooted beaconRooted sameInput
-  exact ⟨token, candidate, serverKernel, logged, cache, pending, root, staged, found, sameRoot,
-    sameRoot ▸ installed, serverEq, buildRun, beaconRooted, nativeRun, phaseEq,
-    control, prekey, oneTime, kem, active, prepared, firstBeaconEq⟩
+  exact ⟨token, candidate, digest, hashed, published, serverKernel, logged, cache, pending, root, staged, found, pre,
+    hashRun, sameRoot, sameRoot ▸ installed, serverEq, buildRun, beaconRooted, init, beaconResponse, beaconDigest,
+    beaconHashed, nativeRun, phaseEq, control, prekey, oneTime, kem, active, bundle, decoded, beaconHashRun, prepared,
+    firstBeaconEq⟩
 
 /-- A still-active target Beacon is the complete original Phase1 output: no intervening API operation replaces its control, private one-time/KEM handles or identity fields. Every finish leaves the active phase, including failures. -/
 theorem path_active (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -417,11 +438,11 @@ end BeaconcryptCore.Computational.PqxdhServerAuthRootProvenance
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhServerAuthRootProvenance.path_token
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthRootProvenance.path_build' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthRootProvenance.path_build_transcript' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhServerAuthRootProvenance.path_build
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthRootProvenance.path_build_transcript
 
 /-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthRootProvenance.path_inv' depends on axioms: [propext,
  Classical.choice,
@@ -441,17 +462,17 @@ end BeaconcryptCore.Computational.PqxdhServerAuthRootProvenance
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhServerAuthRootProvenance.token_final
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthRootProvenance.path_finish' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthRootProvenance.path_finish_transcript' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhServerAuthRootProvenance.path_finish
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthRootProvenance.path_finish_transcript
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthRootProvenance.path_root_agreement' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthRootProvenance.path_root_agreement_transcript' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhServerAuthRootProvenance.path_root_agreement
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthRootProvenance.path_root_agreement_transcript
 
 /-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthRootProvenance.path_active' depends on axioms: [propext,
  Classical.choice,

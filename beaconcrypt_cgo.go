@@ -142,16 +142,6 @@ func (s *Server) MLDSAPublicKey() ([]byte, error) {
 	})
 }
 
-// MLDSAPublicKey returns the beacon's ML-DSA-65 authentication key.
-func (b *Beacon) MLDSAPublicKey() ([]byte, error) {
-	if b == nil {
-		return nil, ErrClosed
-	}
-	return withBeaconHandle(b.native, func(handle *C.beaconcrypt_Beacon) ([]byte, error) {
-		return copyBuffer(C.beaconcrypt_beacon_mldsa_public_key(handle))
-	})
-}
-
 func (b *Beacon) GenerateRegistration() ([]byte, error) {
 	if b == nil {
 		return nil, ErrClosed

@@ -9,6 +9,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialPrivateCheckedFreshness
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhJointKdfGame
 open RawCtxSelectedChain RawCtxFamilyFreshnessProxy PqxdhInitialParentStoppedHop
 open PqxdhInitialBeaconAmbient PqxdhInitialStoppedDisclosure
@@ -31,14 +32,14 @@ theorem checked_invariant {A N C ContextId : Type}
         (continuation.pre context.1) (continuation.application context.1) (continuation.initializer context.1)
         (continuation.selector context.1) (continuation.aux context.1)
         (RawCtxSelectedLiveTrace.nativeReader (RawCtxFreshChainCut.concreteChain target)) target)
-      (PqxdhInitialParentStoppedHop.program mark sender route decode continuation context)).run
+      (PqxdhInitialParentStoppedHop.program (completedBinding := completedBinding) mark sender route decode continuation context)).run
         (initial disclosed (continuation.cut context.1) state candidates))) :
     PqxdhInitialDisclosureState.Invariant target disclosed result.1.1.2.1.roles.2 result.2 := by
   simp only [PqxdhInitialParentStoppedHop.program, simulateQ_bind, StateT.run_bind, mem_support_bind_iff,
     simulateQ_pure, StateT.run_pure, mem_support_pure_iff] at supported
   obtain ⟨completed, sourceReached, checked, checkerReached, rfl⟩ := supported
   rw [PqxdhInitialParentStoppedHop.baseProgram, ← QueryImpl.simulateQ_compose] at sourceReached
-  have established := stopped_invariant target _
+  have established := stopped_invariant (completedBinding := completedBinding) target _
     (PqxdhInitialParentPrivateObserver.actual_rules source writer (continuation.prior context.1) context.2 output
       (continuation.pre context.1) (continuation.application context.1) (continuation.initializer context.1)
       (continuation.selector context.1) (continuation.aux context.1) target)
@@ -61,7 +62,7 @@ noncomputable def nativeRun : ProbComp (Trace M P I D K A N C Result Origin S B)
       (continuation.pre context.1) (continuation.application context.1) (continuation.initializer context.1)
       (continuation.selector context.1) (continuation.aux context.1)
       (RawCtxSelectedLiveTrace.nativeReader (RawCtxFreshChainCut.concreteChain target)) target)
-    (program mark sender route decode continuation context)).run
+    (PqxdhInitialParentStoppedHop.program (completedBinding := completedBinding) mark sender route decode continuation context)).run
       (initial disclosed (continuation.cut context.1) state candidates)
 
 noncomputable def maskedRun : ProbComp (Trace M P I D K A N C Result Origin S B) :=
@@ -69,18 +70,18 @@ noncomputable def maskedRun : ProbComp (Trace M P I D K A N C Result Origin S B)
     (PqxdhInitialParentObserver.observed source writer (continuation.prior context.1) context.2 output
       (continuation.pre context.1) (continuation.application context.1) (continuation.initializer context.1)
       (continuation.selector context.1) (continuation.aux context.1) RawCtxSelectedLiveRead.labelRead)
-    (program mark sender route decode continuation context)).run
+    (PqxdhInitialParentStoppedHop.program (completedBinding := completedBinding) mark sender route decode continuation context)).run
       (initial disclosed (continuation.cut context.1) state candidates)
 
 /-- The complete source checker interprets its hidden and known slots as precisely the original byte freshness set, retaining every earlier ancestor. -/
 theorem checked_fresh (earlier : List RatchetChain) (n : Nat) (depth : continuation.depth context.1 = some n)
     (result : Trace M P I D K A N C Result Origin S B)
-    (supported : result ∈ support (nativeRun source writer mark sender route decode continuation context target output disclosed state candidates)) :
+    (supported : result ∈ support (nativeRun (completedBinding := completedBinding) source writer mark sender route decode continuation context target output disclosed state candidates)) :
     RawCtxLiveLineage.Fresh (result.1.2.map (interpret (RawCtxFreshChainCut.concreteChain target)) ++ earlier)
       disclosed result.1.1.2.1.roles.2 ↔
     RawCtxLiveLineage.Fresh (RawCtxFreshChainCut.concreteChain target :: RawCtxFiniteLineageCheck.knownValues result.1.2 ++ earlier)
       disclosed result.1.1.2.1.roles.2 := by
-  have hidden := checked_contains _ mark sender route decode continuation context n depth _ result supported
+  have hidden := checked_contains (completedBinding := completedBinding) _ mark sender route decode continuation context n depth _ result supported
   unfold RawCtxLiveLineage.Fresh RawCtxLiveLineage.FreshValues
   apply forall_congr'
   intro value
@@ -89,13 +90,13 @@ theorem checked_fresh (earlier : List RatchetChain) (n : Nat) (depth : continuat
 /-- Outside the same full candidate event, the actual final freshness predicate equals its target-free proxy using the literal saved history. -/
 theorem checked_fresh_proxy (earlier : List RatchetChain) (n : Nat) (depth : continuation.depth context.1 = some n)
     (result : Trace M P I D K A N C Result Origin S B)
-    (supported : result ∈ support (nativeRun source writer mark sender route decode continuation context target output disclosed state candidates))
+    (supported : result ∈ support (nativeRun (completedBinding := completedBinding) source writer mark sender route decode continuation context target output disclosed state candidates))
     (safe : target ∉ result.2.1.2) :
     RawCtxLiveLineage.Fresh (result.1.2.map (interpret (RawCtxFreshChainCut.concreteChain target)) ++ earlier)
       disclosed result.1.1.2.1.roles.2 ↔
     Proxy (RawCtxFiniteLineageCheck.knownValues result.1.2 ++ earlier) disclosed result.1.1.2.1.roles.2 result.2.2 := by
-  rw [checked_fresh source writer mark sender route decode continuation context target output disclosed state candidates earlier n depth result supported]
-  have after := checked_invariant source writer mark sender route decode continuation context target output
+  rw [checked_fresh (completedBinding := completedBinding) source writer mark sender route decode continuation context target output disclosed state candidates earlier n depth result supported]
+  have after := checked_invariant (completedBinding := completedBinding) source writer mark sender route decode continuation context target output
     disclosed state candidates result supported
   exact fresh_proxy target _ disclosed result.1.1.2.1.roles.2 result.2.2 after.1
     (fun clear present => safe (after.2 clear present))
@@ -132,7 +133,7 @@ private theorem event_distance {Value : Type} (work : ProbComp Value) (actual pr
 theorem good_bound (earlier : List RatchetChain)
     (gate : Trace M P I D K A N C Result Origin S B → Prop)
     (n : Nat) (depth : continuation.depth context.1 = some n) :
-    let run := nativeRun source writer mark sender route decode continuation context target output disclosed state candidates
+    let run := nativeRun (completedBinding := completedBinding) source writer mark sender route decode continuation context target output disclosed state candidates
     |(Pr{let result ← run}[gate result ∧ RawCtxLiveLineage.Fresh
       (result.1.2.map (interpret (RawCtxFreshChainCut.concreteChain target)) ++ earlier)
         disclosed result.1.1.2.1.roles.2]).toReal -
@@ -142,14 +143,14 @@ theorem good_bound (earlier : List RatchetChain)
   apply event_distance
   case agreed =>
     intro result supported enabled safe
-    exact ⟨enabled.1, (checked_fresh_proxy source writer mark sender route decode continuation context target output
+    exact ⟨enabled.1, (checked_fresh_proxy (completedBinding := completedBinding) source writer mark sender route decode continuation context target output
       disclosed state candidates earlier n depth result supported (fun hit => safe ⟨hit, enabled.2.1⟩)).mpr enabled.2⟩
   case included =>
     intro result supported enabled
-    have actual := (checked_fresh source writer mark sender route decode continuation context target output
+    have actual := (checked_fresh (completedBinding := completedBinding) source writer mark sender route decode continuation context target output
       disclosed state candidates earlier n depth result supported).mp enabled.2
     exact ⟨enabled.1, fresh_clear _ _ disclosed _ _
-      (checked_invariant source writer mark sender route decode continuation context target output
+      (checked_invariant (completedBinding := completedBinding) source writer mark sender route decode continuation context target output
         disclosed state candidates result supported).1 actual,
       fun value present => actual value (List.mem_cons_of_mem _ present)⟩
 
@@ -158,7 +159,7 @@ set_option backward.isDefEq.respectTransparency false in
 theorem decision_bound (earlier : List RatchetChain)
     (gate : Trace M P I D K A N C Result Origin S B → Prop)
     (n : Nat) (depth : continuation.depth context.1 = some n) :
-    let run := nativeRun source writer mark sender route decode continuation context target output disclosed state candidates
+    let run := nativeRun (completedBinding := completedBinding) source writer mark sender route decode continuation context target output disclosed state candidates
     (actualDecision target earlier disclosed gate <$> run).boolDistance
       (decision (remainingEvent earlier disclosed gate) <$> run) ≤
       (Pr{let result ← run}[target ∈ result.2.1.2 ∧ result.2.2 = false]).toReal := by
@@ -167,16 +168,16 @@ theorem decision_bound (earlier : List RatchetChain)
   rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, decision_probability, prEvent_map]
   simpa only [actualDecision, decide_eq_true_eq, decision, remainingEvent, Proxy, and_assoc, and_left_comm,
     and_comm] using
-      good_bound source writer mark sender route decode continuation context target output disclosed state candidates
+      good_bound (completedBinding := completedBinding) source writer mark sender route decode continuation context target output disclosed state candidates
         earlier gate n depth
 
 
 /-- The exact full stopped program and its masked observer retain the same unconditioned gate and pay the complete original candidate event. -/
 theorem proxy_bound (event : Trace M P I D K A N C Result Origin S B → Prop) :
-    (decision event <$> nativeRun source writer mark sender route decode continuation context target output disclosed state candidates).boolDistance
-      (decision event <$> maskedRun source writer mark sender route decode continuation context output disclosed state candidates) ≤
-      (Pr{let result ← maskedRun source writer mark sender route decode continuation context output disclosed state candidates}[target ∈ result.2.1.2]).toReal := by
-  let client := program mark sender route decode continuation context
+    (decision event <$> nativeRun (completedBinding := completedBinding) source writer mark sender route decode continuation context target output disclosed state candidates).boolDistance
+      (decision event <$> maskedRun (completedBinding := completedBinding) source writer mark sender route decode continuation context output disclosed state candidates) ≤
+      (Pr{let result ← maskedRun (completedBinding := completedBinding) source writer mark sender route decode continuation context output disclosed state candidates}[target ∈ result.2.1.2]).toReal := by
+  let client := PqxdhInitialParentStoppedHop.program (completedBinding := completedBinding) mark sender route decode continuation context
   let initialState := initial disclosed (continuation.cut context.1) state candidates
   let partialMasked := (simulateQ
     (PqxdhInitialParentPrivateObserver.observed source writer (continuation.prior context.1) context.2 output
@@ -190,7 +191,7 @@ theorem proxy_bound (event : Trace M P I D K A N C Result Origin S B → Prop) :
     decision_probability, decision_probability, nativeRun, agreement]
   have variation := (abs_prEvent_toReal_sub_le_discreteDistance
     (decision event <$> partialMasked)
-    (decision event <$> maskedRun source writer mark sender route decode continuation context output disclosed state candidates)).trans
+    (decision event <$> maskedRun (completedBinding := completedBinding) source writer mark sender route decode continuation context output disclosed state candidates)).trans
       (discreteDistance_map_le (decision event) _ _)
   rw [ decision_probability, decision_probability,
     discreteDistance_comm] at variation
@@ -200,15 +201,15 @@ theorem proxy_bound (event : Trace M P I D K A N C Result Origin S B → Prop) :
 
 /-- Candidate aliases on clear-disclosure executions cost at most twice the same masked candidate event; forbidden disclosures add no compromise term. -/
 theorem good_alias_bound :
-    (Pr{let result ← nativeRun source writer mark sender route decode continuation context target output disclosed state candidates}[target ∈ result.2.1.2 ∧ result.2.2 = false]).toReal ≤
-      2 * (Pr{let result ← maskedRun source writer mark sender route decode continuation context output disclosed state candidates}[target ∈ result.2.1.2]).toReal := by
-  have bound := proxy_bound source writer mark sender route decode continuation context target output disclosed state candidates
+    (Pr{let result ← nativeRun (completedBinding := completedBinding) source writer mark sender route decode continuation context target output disclosed state candidates}[target ∈ result.2.1.2 ∧ result.2.2 = false]).toReal ≤
+      2 * (Pr{let result ← maskedRun (completedBinding := completedBinding) source writer mark sender route decode continuation context output disclosed state candidates}[target ∈ result.2.1.2]).toReal := by
+  have bound := proxy_bound (completedBinding := completedBinding) source writer mark sender route decode continuation context target output disclosed state candidates
     (fun result => target ∈ result.2.1.2)
   simp only [ProbComp.boolDistance] at bound
   rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, decision_probability,
     decision_probability] at bound
   have contained := ENNReal.toReal_mono (prEvent_ne_top _) (prEvent_mono_of_support
-    (mx := maskedRun source writer mark sender route decode continuation context output disclosed state candidates)
+    (mx := maskedRun (completedBinding := completedBinding) source writer mark sender route decode continuation context output disclosed state candidates)
     (p := fun result => target ∈ result.2.1.2 ∧ result.2.2 = false) (q := fun result => target ∈ result.2.1.2)
     (fun result _ (hit : target ∈ result.2.1.2 ∧ result.2.2 = false) => hit.1))
   linarith [(abs_le.mp bound).2]
@@ -218,21 +219,21 @@ theorem bound (earlier : List RatchetChain)
     (gate : Trace M P I D K A N C Result Origin S B → Prop)
     (n : Nat) (depth : continuation.depth context.1 = some n) :
     (actualDecision target earlier disclosed gate <$>
-      nativeRun source writer mark sender route decode continuation context target output disclosed state candidates).boolDistance
+      nativeRun (completedBinding := completedBinding) source writer mark sender route decode continuation context target output disclosed state candidates).boolDistance
       (decision (remainingEvent earlier disclosed gate) <$>
-        maskedRun source writer mark sender route decode continuation context output disclosed state candidates) ≤
-      3 * (Pr{let result ← maskedRun source writer mark sender route decode continuation context output disclosed state candidates}[target ∈ result.2.1.2]).toReal := by
+        maskedRun (completedBinding := completedBinding) source writer mark sender route decode continuation context output disclosed state candidates) ≤
+      3 * (Pr{let result ← maskedRun (completedBinding := completedBinding) source writer mark sender route decode continuation context output disclosed state candidates}[target ∈ result.2.1.2]).toReal := by
   have triangle := ProbComp.boolDistance_triangle
     (actualDecision target earlier disclosed gate <$>
-      nativeRun source writer mark sender route decode continuation context target output disclosed state candidates)
+      nativeRun (completedBinding := completedBinding) source writer mark sender route decode continuation context target output disclosed state candidates)
     (decision (remainingEvent earlier disclosed gate) <$>
-      nativeRun source writer mark sender route decode continuation context target output disclosed state candidates)
+      nativeRun (completedBinding := completedBinding) source writer mark sender route decode continuation context target output disclosed state candidates)
     (decision (remainingEvent earlier disclosed gate) <$>
-      maskedRun source writer mark sender route decode continuation context output disclosed state candidates)
-  have first := (decision_bound source writer mark sender route decode continuation context target output disclosed state candidates
+      maskedRun (completedBinding := completedBinding) source writer mark sender route decode continuation context output disclosed state candidates)
+  have first := (decision_bound (completedBinding := completedBinding) source writer mark sender route decode continuation context target output disclosed state candidates
     earlier gate n depth).trans
-      (good_alias_bound source writer mark sender route decode continuation context target output disclosed state candidates)
-  have second := proxy_bound source writer mark sender route decode continuation context target output disclosed state candidates
+      (good_alias_bound (completedBinding := completedBinding) source writer mark sender route decode continuation context target output disclosed state candidates)
+  have second := proxy_bound (completedBinding := completedBinding) source writer mark sender route decode continuation context target output disclosed state candidates
     (remainingEvent earlier disclosed gate)
   linarith
 

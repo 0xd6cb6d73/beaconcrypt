@@ -5,6 +5,7 @@ import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBridge
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhDeploymentLaterServerOpaque
 open PqxdhKemIndCca PqxdhInitializerSecrecy PqxdhServerAuthExperiment PqxdhJointIdentity
 open PqxdhServerAuthNative (NativeState)
@@ -26,13 +27,13 @@ inductive OpaqueCut (Reader KemSK X R : Type) where
   | complete (outcome : Outcome KemSK R)
   | pending (raw : Pqxdh.Bytes) (value : PqxdhServerRootPreparation.Verified Reader)
       (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)
-      (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry) (log : Log)
+      (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log)
       (next : Option Nat → OracleComp (Spec KemSK) X)
 
 /-- The completion of a raw accept with collected input `collected` and logged entry `logged`: the accept tail followed by the rest of the tagged logged program from the extended log. -/
 noncomputable def rejectRun (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)
-    (next : Option Nat → OracleComp (Spec KemSK) X) (owners : List EncodedEntry) (log : Log)
+    (next : Option Nat → OracleComp (Spec KemSK) X) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log)
     (state : NativeState KemSK)
     (collected : Option (PqxdhServerRootPreparation.Inputs Reader PqxdhJointGapDh.ScalarBytes
       PqxdhBeaconPhase2Preparation.Word32) × List Pqxdh.Bytes) (logged : Option PqxdhJointGapDh.ScalarBytes) :
@@ -46,7 +47,7 @@ noncomputable def rejectRun (setup : Setup baseSpec KemSK) (codec : Codec Reader
 /-- The explicit logged scan: the logged prefix up to the selected raw accept, its attached verification and the logged steps before encapsulation; a completed prefix, a rejected verification (entry `none`) and a rejection before encapsulation (the entry of the logged steps, the generated scalar when generation was reached) complete the run; otherwise the source parameters of the active cut are saved. -/
 noncomputable def opaqueScan (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R)
-    (work : OracleComp (Spec KemSK) X) (index : Nat) (owners : List EncodedEntry) (log : Log)
+    (work : OracleComp (Spec KemSK) X) (index : Nat) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log)
     (state : NativeState KemSK) : OracleComp (PqxdhLiveKemBirth.Spec KemSK) (OpaqueCut Reader KemSK X R) := do
   let reached ← simulateQ (actual setup) (run setup codec checks identityIndex publicIdentity (scan work index) owners
     log state)
@@ -80,7 +81,7 @@ noncomputable def toCut (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
 /-- The KEM scan of the logged `exposeAt` is the image of the explicit logged opaque scan. -/
 theorem scan_opaque (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R)
-    (work : OracleComp (Spec KemSK) X) (index : Nat) (owners : List EncodedEntry) (log : Log)
+    (work : OracleComp (Spec KemSK) X) (index : Nat) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log)
     (state : NativeState KemSK) :
     PqxdhRegistrationJointKemCut.scan setup
       (exposeAt setup codec checks identityIndex publicIdentity observe work index owners log state) 0 =
@@ -139,7 +140,7 @@ noncomputable def sourcePreOpaque (setup : Setup baseSpec KemSK) (codec : Codec 
     let result ← (((simulateQ (PqxdhDynamicKemJointRouter.stopped setup.baseImpl setup.joint setup.kem selected.val
       (List.ofFn (selected.insertNth chosen others)))
       (opaqueScan setup codec checks created.server.server.metadata.identityIndex created.publicIdentity
-        (decideTag decision) work index [] [] (PqxdhRegistrationJointInitializedAccept.initial created))).run).run
+        (decideTag decision) work index ([], fun _ => none) [] (PqxdhRegistrationJointInitializedAccept.initial created))).run).run
           (born.2.1.1, PqxdhDynamicKemRouter.empty))
     pure (.ready created others result.1 result.2 born.2.2)
 

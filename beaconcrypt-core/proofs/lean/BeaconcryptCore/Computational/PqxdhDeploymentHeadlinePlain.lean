@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePin
+import BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinCtxCollision
 import BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainUnique
 import BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainSend
 
@@ -14,7 +15,7 @@ The mode-O plaintext rows of design-v2 section 7.6 (ProVerif L2-origin, b2s-C2 a
 - `idealAuth_plain_b2s_zero`, `idealAuth_plain_s2b_zero`: in `idealAuth` with the ideal environment of the target the event has probability zero (`PqxdhDeploymentHeadlineAgree.agreement_statement`).
 - `ce_plain_b2s_target`, `ce_plain_b2s`: at most the sum over the targets of `kemLoss + slotLoss + authLoss_g(dec_g ∧ ISs_g)` (`PqxdhDeploymentHeadlineChain.chain_server`, `PqxdhDeploymentHeadlineChain.auth_le`); `ce_plain_s2b_target`, `ce_plain_s2b`: at most the sum of `kemLoss + slotLoss + β_g + authLoss_g(dec_g ∧ IS_g)` (`PqxdhDeploymentHeadlineAnomaly.chain_beta`, `auth_le`); each term with coefficient one and no publication term. `ce_plain_every_b2s`, `ce_plain_every_s2b`: the same bounds for the every-production reading.
 - CE-OR with the plaintext field: `OriginPlainFailure direction` (the frozen origin failure or the plaintext failure), `originPlainEvent`, `originPlainClaim`, `originPlain_named`, `originPlain_contain_b2s`, `originPlain_contain_s2b`, `idealAuth_originPlain_b2s_le`, `idealAuth_originPlain_s2b_le` and `ce_or_plain_b2s(_target)`, `ce_or_plain_s2b(_target)`: bounds of the same form as the frozen `PqxdhDeploymentHeadlineOrigin.ce_or_b2s` and `ce_or_s2b` (the same kinds of terms: `kemLoss`, `slotLoss` and `authLoss_g` taken at the combined event and claim; `β_g` for s2b (which depends only on the target) and `publicationTerm budget`, once, are the same terms as in `ce_or_s2b`), with the plaintext field computational.
-- CE-OR b2s with every computational field: `OriginFieldsFailure` (the frozen b2s origin failure, the Server pin failure `PqxdhDeploymentHeadlinePin.PinFailure` or the b2s plaintext failure), `originFieldsEvent`, `originFieldsClaim`, `originFields_named`, `originFields_contain`, `idealAuth_originFields_le` and `ce_or_fields_b2s(_target)`: a bound of the same form as the frozen `ce_or_b2s`, with its chain terms taken at the combined event and claim.
+- CE-OR b2s with every computational field: `OriginFieldsFailure` (the frozen b2s origin failure, the Server pin failure `PqxdhDeploymentHeadlinePin.PinFailure` or the b2s plaintext failure), `originFieldsEvent`, `originFieldsClaim`, `originFields_named`, `originFields_contain_of_noCollision`, `originFields_contain_or_collision`, `idealAuth_originFields_le` and `ce_or_fields_b2s(_target)`: the frozen `ce_or_b2s` form at the combined event and claim, plus the proved shared-cache BLAKE2b birthday term inside every target summand.
 
 Premises: those of the frozen `ce_or_b2s` and `ce_or_s2b` (`FunctionalDecapsulation`, `Phase1ReadBack`, `Phase2ReadBack`, `SourceFullCorrect`, `KemBound`, the initializer's query bound, `FrameReadBack` and `budget.Respects`); the AEAD forgery fallback is a parameter of the integrity loss. The bills of the reductions behind every term are CE-12 P2b's `PqxdhDeploymentHeadlineBillsFull.target_bills` at the same adversary (its fields are quantified over every event, claim and target); the forms with `β_g` are restated with them in `PqxdhDeploymentHeadlinePlainGated`. Unlike the pin event of step 2, the plaintext events need `FrameReadBack` themselves: a production's frame is read back from its returned ciphertext. No new assumption or contract. The statements hold in both observation modes; the rows are the mode-O ones (the transcript keeps mode-O replies in both modes). Not claimed here: the root, plaintext-linked UKS (no CE event, design-v2 section 7.6) and any statement in the later-quantum mode. No `PqxdhBoundary*` module is imported.
 -/
@@ -22,6 +23,7 @@ Premises: those of the frozen `ce_or_b2s` and `ce_or_s2b` (`FunctionalDecapsulat
 open OracleComp OracleSpec ENNReal
 
 set_option autoImplicit false
+set_option warningAsError true
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlain
 open PqxdhServerAuthExperiment (Setup Codec Checks)
@@ -285,7 +287,7 @@ theorem counterpart_slot (slots : Handle → Option (PqxdhRecordLiftInterface.Sl
 /-- The core containment: on an outcome with the plaintext facts, an accepted raw receive on a handle holding a hidden slot, whose only counterpart produced the decoded frame with another plaintext, is an AG failure. The AG seal of the receive and the seal behind the production are at labels of the counterpart's slot and direction and match one frame, so they are one seal (`PqxdhDeploymentHeadlinePlainUnique.frame_seal_unique`), and the received plaintext is the produced one. -/
 theorem plain_core {E : Type} (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
     (result : PqxdhRecordLiftIdeal.Client 2 E X × PqxdhRecordLiftIdeal.CtxPrivate 2) (facts : PlainFacts codec result)
-    (value : PqxdhRegistrationJointServerBirth.ClientCreated Unit × (X × PqxdhDeploymentSecrecy.Ledger) × E)
+    (value : PqxdhRegistrationJointServerBirth.ClientCreated PqxdhTranscriptAd.AssociatedData × (X × PqxdhDeploymentSecrecy.Ledger) × E)
     (valueMember : value ∈ result.1.1) (entry : Entry) (entryMember : entry ∈ value.2.1.2.transcript)
     (receiver : PqxdhDeploymentInterface.Receiver) (raw : Pqxdh.Bytes) (decrypted : RawCtxWholeOwner.Decrypted)
     (handle : Handle) (slot : PqxdhRecordLiftInterface.Slot 2) (frame : PqxdhDeploymentNative.Frame)
@@ -480,11 +482,12 @@ theorem originPlain_contain_s2b {E : Type} (g : Fin budget.accept × Fin budget.
       simp only [originPlainClaim, origin, ↓reduceIte]
 
 
-/-- The containment of the b2s origin failure with every computational field: on every CTX-world outcome with the pin facts and the plaintext facts, `dec_g ∧ ISs_g` of it implies the record lift's unpublished-accept event (`PqxdhDeploymentHeadlineContain.origin_b2s`) or AG's failure event (`PqxdhDeploymentHeadlinePin.pin_agree`, `plain_agree_b2s`). -/
-theorem originFields_contain {E : Type} (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
+/-- The unchanged all-fields failure implies unpublished acceptance or agreement failure outside collisions in the actual shared hash cache. The collision condition is internal containment evidence, discharged by a proved birthday term in the public bounds. -/
+theorem originFields_contain_of_noCollision {E : Type} (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
     (g : Fin budget.accept × Fin budget.capacity)
     (result : PqxdhRecordLiftIdeal.Client 2 E X × PqxdhRecordLiftIdeal.CtxPrivate 2)
     (pinFacts : PqxdhDeploymentHeadlinePinInvariant.PinFacts codec result) (facts : PlainFacts codec result)
+    (collisionFree : ¬ CacheHasCollision result.2.base.primitive.2)
     (held : serverSlotted setup codec budget (originFieldsEvent setup.source.crypto codec setup.serverKeyId budget
         route)
       (originFieldsClaim setup.source.crypto codec setup.serverKeyId budget route) g (ctxView result) = true) :
@@ -514,7 +517,7 @@ theorem originFields_contain {E : Type} (phase2 : PqxdhServerAuthNegativeControl
     · right
       by_cases pin : PqxdhDeploymentHeadlinePin.PinFailure setup.source.crypto codec setup.serverKeyId budget route
         observed
-      · apply PqxdhDeploymentHeadlinePin.pin_agree setup codec budget route phase2 g result pinFacts
+      · apply PqxdhDeploymentHeadlinePin.pin_agree_of_noCollision setup codec budget route phase2 g result pinFacts collisionFree
         simp only [serverSlotted, decide_eq_true_eq]
         refine ⟨decision_transfer setup codec budget _ _ _ _ g _ decided fun other same _ => ?_, server⟩
         rw [found, Option.some.injEq] at same
@@ -528,6 +531,52 @@ theorem originFields_contain {E : Type} (phase2 : PqxdhServerAuthNegativeControl
         subst same
         refine ⟨by simp only [plainEvent, decide_eq_true_eq]; exact (happened.resolve_left origin).resolve_left pin, ?_⟩
         simp only [originFieldsClaim, origin, pin, ↓reduceIte]
+
+/-- The unchanged all-fields event is unpublished acceptance, an agreement failure, or a collision in the actual shared cache. -/
+theorem originFields_contain_or_collision {E : Type} (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)
+    (g : Fin budget.accept × Fin budget.capacity)
+    (result : PqxdhRecordLiftIdeal.Client 2 E X × PqxdhRecordLiftIdeal.CtxPrivate 2)
+    (pinFacts : PqxdhDeploymentHeadlinePinInvariant.PinFacts codec result) (facts : PlainFacts codec result)
+    (held : serverSlotted setup codec budget (originFieldsEvent setup.source.crypto codec setup.serverKeyId budget route)
+      (originFieldsClaim setup.source.crypto codec setup.serverKeyId budget route) g (ctxView result) = true) :
+    PqxdhRecordLiftIdeal.unpublishedEvent codec route (ctxView result) = true ∨
+      AgreeFailure codec route result ∨ CacheHasCollision result.2.base.primitive.2 := by
+  classical
+  by_cases collision : CacheHasCollision result.2.base.primitive.2
+  · exact Or.inr (Or.inr collision)
+  · exact (originFields_contain_of_noCollision setup codec budget route phase2 g result pinFacts facts collision held).elim
+      Or.inl (fun disagrees => Or.inr (Or.inl disagrees))
+
+open Classical in
+/-- The all-fields event is bounded by unpublished acceptance, disagreement and actual-cache collision on any source-supported run. -/
+theorem originFields_probability {E : Type}
+    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (g : Fin budget.accept × Fin budget.capacity)
+    (run : ProbComp (PqxdhRecordLiftIdeal.Client 2 E X × PqxdhRecordLiftIdeal.CtxPrivate 2))
+    (pinFacts : ∀ result ∈ support run, PqxdhDeploymentHeadlinePinInvariant.PinFacts codec result)
+    (plainFacts : ∀ result ∈ support run, PlainFacts codec result) :
+    𝒟[(serverSlotted setup codec budget (originFieldsEvent setup.source.crypto codec setup.serverKeyId budget route)
+      (originFieldsClaim setup.source.crypto codec setup.serverKeyId budget route) g ∘ ctxView) <$> run] {true} ≤
+      (𝒟[(PqxdhRecordLiftIdeal.unpublishedEvent codec route ∘ ctxView) <$> run] {true} +
+        𝒟[agreeEvent codec route <$> run] {true}) +
+      𝒟[(fun result => decide (CacheHasCollision result.2.base.primitive.2)) <$> run] {true} := by
+  classical
+  let unpub : (PqxdhRecordLiftIdeal.Client 2 E X × PqxdhRecordLiftIdeal.CtxPrivate 2) → Bool :=
+    PqxdhRecordLiftIdeal.unpublishedEvent codec route ∘ ctxView
+  let collision : (PqxdhRecordLiftIdeal.Client 2 E X × PqxdhRecordLiftIdeal.CtxPrivate 2) → Bool :=
+    fun result => decide (CacheHasCollision result.2.base.primitive.2)
+  have contained : 𝒟[(serverSlotted setup codec budget
+      (originFieldsEvent setup.source.crypto codec setup.serverKeyId budget route)
+      (originFieldsClaim setup.source.crypto codec setup.serverKeyId budget route) g ∘ ctxView) <$> run] {true} ≤
+      𝒟[(fun result => (unpub result || agreeEvent codec route result) || collision result) <$> run] {true} := by
+    apply chance_mono_support
+    intro result member held
+    rcases originFields_contain_or_collision setup codec budget route phase2 g result
+      (pinFacts result member) (plainFacts result member) held with unpublished | failure | collided
+    · simp only [unpub, Function.comp_apply, unpublished, Bool.true_or]
+    · simp only [agreeEvent, failure, decide_true, Bool.or_true, Bool.true_or]
+    · simp only [collision, collided, decide_true, Bool.or_true]
+  exact contained.trans ((chance_or_le run (fun result => unpub result || agreeEvent codec route result) collision).trans
+    (add_le_add (chance_or_le run unpub (agreeEvent codec route)) le_rfl))
 
 end Contain
 
@@ -1060,7 +1109,7 @@ theorem ce_plain_every_s2b (setup : Setup baseSpec KemSK)
     (ce_plain_s2b setup functional codec checks route ensureInit phase1 phase2 correct caps bounded qInit initBound
       frameReadBack bounds mode adversary budget respects runtime fallback)
 
-/-- With the ideal environment of the target of `g`, the probability that the record lift's view of `idealAuth` ends with `dec_g ∧ ISs_g` of the b2s origin failure with every computational field is at most `publicationTerm budget`: the unpublished-accept part is the frozen bound and the pin and plaintext parts have probability zero (AG, with the pin facts `PqxdhDeploymentHeadlinePinInvariant.idealAuth_pinFacts` and the plaintext facts `idealAuth_plainFacts`). -/
+/-- The all-fields final-world probability is bounded by unpublished acceptance plus a collision in its actual shared cache; agreement failure has probability zero. Both remaining probabilities are bounded from the existing source/budget premises. -/
 theorem idealAuth_originFields_le (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (caps : KemCaps) (bounded : KemBound setup caps)
     (ensureInit : StateT A ProbComp Bool) (qInit : ℕ)
@@ -1073,30 +1122,28 @@ theorem idealAuth_originFields_le (setup : Setup baseSpec KemSK) (codec : Codec 
         (originFieldsClaim setup.source.crypto codec setup.serverKeyId budget route) g <$>
       (ctxView <$> idealAuth setup codec route
         (PqxdhDeploymentIdealEnv.envGD setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
-        setup.serverKeyId bounds mode adversary)] {true} ≤ publicationTerm budget := by
+        setup.serverKeyId bounds mode adversary)] {true} ≤ publicationTerm budget + PqxdhDeploymentHeadlinePinCollision.term budget := by
+  classical
   have final := PqxdhDeploymentHeadlineOrigin.unpublished_final setup codec checks route caps bounded ensureInit qInit
     initBound frameReadBack bounds mode adversary budget respects g runtime
   have zero := PqxdhDeploymentHeadlineAgree.agreement_statement setup codec route setup.serverKeyId bounds 2
     (PqxdhDeploymentIdealEnv.envGD setup codec checks (Target.ofCE budget g) ensureInit 0 runtime) mode adversary
+  have collision := PqxdhDeploymentHeadlinePinCtxCollision.idealAuth_collision setup codec checks route caps bounded
+    (Target.ofCE budget g) ensureInit qInit initBound 0 runtime bounds mode budget adversary respects
+  change _ ≤ PqxdhDeploymentHeadlinePinCollision.term budget at collision
+  have contained := originFields_probability setup codec budget route phase2 g
+    (idealAuth setup codec route
+      (PqxdhDeploymentIdealEnv.envGD setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
+      setup.serverKeyId bounds mode adversary)
+    (PqxdhDeploymentHeadlinePinInvariant.idealAuth_pinFacts setup codec checks route (Target.ofCE budget g)
+      ensureInit 0 runtime bounds mode adversary)
+    (idealAuth_plainFacts setup codec route frameReadBack _ setup.serverKeyId bounds mode adversary)
+  rw [zero, add_zero] at contained
   rw [Functor.map_map] at final ⊢
-  calc _ ≤ 𝒟[(fun result => PqxdhRecordLiftIdeal.unpublishedEvent codec route (ctxView result) ||
-        agreeEvent codec route result) <$> idealAuth setup codec route
-          (PqxdhDeploymentIdealEnv.envGD setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
-          setup.serverKeyId bounds mode adversary] {true} :=
-        chance_mono_support _ _ _ fun result member held => by
-          rcases originFields_contain setup codec budget route phase2 g result
-            (PqxdhDeploymentHeadlinePinInvariant.idealAuth_pinFacts setup codec checks route (Target.ofCE budget g)
-              ensureInit 0 runtime bounds mode adversary result member)
-            (idealAuth_plainFacts setup codec route frameReadBack _ setup.serverKeyId bounds mode adversary result
-              member) held with unpublished | failure
-          · simp only [unpublished, Bool.true_or]
-          · simp only [agreeEvent, failure, decide_true, Bool.or_true]
-    _ ≤ _ := chance_or_le _ _ _
-    _ ≤ publicationTerm budget := by
-        rw [zero, add_zero]
-        exact final
+  exact contained.trans (add_le_add final collision)
 
-/-- **CE-OR b2s with every computational field, per target** (design-v2 sections 4.2 and 7.6): the probability that the deployment experiment ends with a b2s origin failure, a Server pin failure or a b2s plaintext failure whose claimed receiving Server peer designates `g` is at most `kemLoss + slotLoss + authLoss_g(dec_g ∧ ISs_g) + publicationTerm budget`, each with coefficient one; no anomaly term. -/
+
+/-- **CE-OR b2s with every computational field, per target** (design-v2 sections 4.2 and 7.6): the probability that the deployment experiment ends with a b2s origin failure, a Server pin failure or a b2s plaintext failure whose claimed receiving Server peer designates `g` is at most `kemLoss + slotLoss + authLoss_g(dec_g ∧ ISs_g) + publicationTerm budget + PinCollision.term budget`, each with coefficient one; no anomaly term. -/
 theorem ce_or_fields_b2s_target (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)
     (codec : Codec Reader Response) (checks : Checks) (route : RawCtxServerRouting.SenderDecoder)
@@ -1121,7 +1168,7 @@ theorem ce_or_fields_b2s_target (setup : Setup baseSpec KemSK)
       authLoss setup codec checks route ensureInit bounds mode adversary budget g runtime fallback caps qInit
         (serverSlotted setup codec budget (originFieldsEvent setup.source.crypto codec setup.serverKeyId budget route)
           (originFieldsClaim setup.source.crypto codec setup.serverKeyId budget route) g) +
-      publicationTerm budget := by
+      publicationTerm budget + PqxdhDeploymentHeadlinePinCollision.term budget := by
   have chain := PqxdhDeploymentHeadlineChain.chain_server setup functional codec checks route ensureInit phase1 phase2
     correct bounds mode adversary budget respects (originFieldsEvent setup.source.crypto codec setup.serverKeyId
         budget route) (originFieldsClaim setup.source.crypto codec setup.serverKeyId budget route) g runtime
@@ -1132,7 +1179,7 @@ theorem ce_or_fields_b2s_target (setup : Setup baseSpec KemSK)
   have final := idealAuth_originFields_le setup codec checks route caps bounded ensureInit qInit initBound phase2
     frameReadBack bounds mode adversary budget respects g runtime
   calc _ ≤ _ := chain
-    _ ≤ ((publicationTerm budget +
+    _ ≤ (((publicationTerm budget + PqxdhDeploymentHeadlinePinCollision.term budget) +
           authLoss setup codec checks route ensureInit bounds mode adversary budget g runtime fallback caps qInit
             (serverSlotted setup codec budget (originFieldsEvent setup.source.crypto codec setup.serverKeyId budget
                 route)
@@ -1146,7 +1193,7 @@ theorem ce_or_fields_b2s_target (setup : Setup baseSpec KemSK)
         add_le_add (add_le_add (lift.trans (add_le_add final le_rfl)) le_rfl) le_rfl
     _ = _ := by ring
 
-/-- **CE-OR b2s with every computational field** (`ce_or_fields_b2s`, design-v2 sections 4.2 and 7.6): the probability that the deployment experiment ends with a b2s origin failure, a Server pin failure or a b2s plaintext failure is at most the sum over `g` in `Fin qAccept × Fin qCreate` (with `k` read in `Fin (qCreate + 1)`) of `kemLoss + slotLoss + authLoss_g(dec_g ∧ ISs_g) + publicationTerm budget`, each with coefficient one; no anomaly term. -/
+/-- **CE-OR b2s with every computational field** (`ce_or_fields_b2s`, design-v2 sections 4.2 and 7.6): the probability that the deployment experiment ends with a b2s origin failure, a Server pin failure or a b2s plaintext failure is at most the sum over `g` in `Fin qAccept × Fin qCreate` (with `k` read in `Fin (qCreate + 1)`) of `kemLoss + slotLoss + authLoss_g(dec_g ∧ ISs_g) + publicationTerm budget + PinCollision.term budget`, each with coefficient one; no anomaly term. -/
 theorem ce_or_fields_b2s (setup : Setup baseSpec KemSK)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)
     (codec : Codec Reader Response) (checks : Checks) (route : RawCtxServerRouting.SenderDecoder)
@@ -1172,7 +1219,7 @@ theorem ce_or_fields_b2s (setup : Setup baseSpec KemSK)
             (serverSlotted setup codec budget (originFieldsEvent setup.source.crypto codec setup.serverKeyId budget
                 route)
               (originFieldsClaim setup.source.crypto codec setup.serverKeyId budget route) (g.1, g.2.castSucc)) +
-          publicationTerm budget) := by
+          publicationTerm budget + PqxdhDeploymentHeadlinePinCollision.term budget) := by
   rw [PqxdhDeploymentHeadlineChain.split_named setup codec checks route ensureInit phase1 phase2 bounds mode adversary
     budget respects _ _ runtime (originFields_named setup.source.crypto codec setup.serverKeyId budget route)]
   exact Finset.sum_le_sum fun g _ => ce_or_fields_b2s_target setup functional codec checks route ensureInit phase1
@@ -1288,12 +1335,12 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlain.originPlain_co
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlain.originPlain_contain_s2b
 
 /--
-info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlain.originFields_contain' depends on axioms: [propext,
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlain.originFields_contain_of_noCollision' depends on axioms: [propext,
  Classical.choice,
  Quot.sound]
 -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlain.originFields_contain
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlain.originFields_contain_of_noCollision
 
 /--
 info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlain.idealAuth_plain_b2s_zero' depends on axioms: [propext,
@@ -1438,3 +1485,19 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlain.ce_or_fields_b
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlain.ce_or_fields_b2s
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlain.originFields_contain_or_collision' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlain.originFields_contain_or_collision
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlain.originFields_probability' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlain.originFields_probability

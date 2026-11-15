@@ -8,7 +8,10 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengePreparedCapture
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily
 open PqxdhKemIndCca PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma
 open PqxdhPhase2GeneratedDriver PqxdhAuthenticatedRootExperiment PqxdhPhase1AcceptanceOracle
@@ -46,7 +49,7 @@ noncomputable def capturedPrefix (start : Input) (output : HmacBlock) (depth : N
   let execution := PqxdhInitialSourceExperiment.execution (RawCtxSelectedInitialConstructor.response64 output)
     start.index start.metadata { start.ready with root := zeroRoot }
     (withPost (setup := setup) start owner number bit adversary).post start.before
-  sharedCarried (PqxdhInitialSelectedOrigin.mark (env).source start.selectedMessage) execution.origin
+  sharedCarried (associatedData := associatedData) (completedBinding := completedBinding) (PqxdhInitialSelectedOrigin.mark (env).source start.selectedMessage) execution.origin
     (env).senderId (env).route (env).decode execution.index execution.before execution.trace
     (env).source (env).recordWriter (depth + 1) pre application
     (initialLocal (env).source start.selectedMessage zeroRoot (RawCtxSelectedInitialConstructor.response64 output)) selector aux
@@ -57,8 +60,8 @@ noncomputable def capturedPrefix (start : Input) (output : HmacBlock) (depth : N
 theorem prefix_erase (start : Input) (output : HmacBlock) (depth : Nat)
     (owner : RawCtxProtocolReveals.Owner S (B + 1)) (number : U64) (bit : Bool)
     (adversary : PqxdhInitialBuilderContext.BuildResult → OracleComp (PqxdhFirstRecordConfidentiality.AdvSpec (SelectorSpec baseSpec) S (B + 1)) Bool) :
-    cutMap Prod.fst <$> capturedPrefix original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number bit adversary =
-      PqxdhPreparedSharedPrefix.run original callbacks baseImpl kem attachedVerify primitives secret challenge
+    cutMap Prod.fst <$> capturedPrefix (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number bit adversary =
+      PqxdhPreparedSharedPrefix.run (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge
         (withPost (setup := setup) start owner number bit adversary) output depth := by
   simp only [capturedPrefix, shared_erase]
   rfl
@@ -90,14 +93,14 @@ private theorem attach_erase {Pending : Type}
 noncomputable def collect (start : Input) (output : HmacBlock) (depth : Nat)
     (cut : CapturedCut (setup := setup) (M := M) (P := P) (I := I) (K := K) (A := A) (S := S) (B := B)) :=
   attachRequest (requestAt cut) <$>
-    PqxdhPreparedSharedParent.collect original callbacks baseImpl kem attachedVerify primitives secret challenge
+    PqxdhPreparedSharedParent.collect (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge
       start output depth (cutMap Prod.fst cut)
 
 /-- Removing only the request capture restores the literal original completed/cached/missing collector, with no branch or callback change. -/
 theorem collect_erase (start : Input) (output : HmacBlock) (depth : Nat)
     (cut : CapturedCut (setup := setup) (M := M) (P := P) (I := I) (K := K) (A := A) (S := S) (B := B)) :
-    Sum.map id Prod.fst <$> collect original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth cut =
-      PqxdhPreparedSharedParent.collect original callbacks baseImpl kem attachedVerify primitives secret challenge
+    Sum.map id Prod.fst <$> collect (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth cut =
+      PqxdhPreparedSharedParent.collect (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge
         start output depth (cutMap Prod.fst cut) := by
   simp only [collect, Functor.map_map, attach_erase]
   exact congrFun Functor.map_id _
@@ -106,16 +109,16 @@ theorem collect_erase (start : Input) (output : HmacBlock) (depth : Nat)
 noncomputable def run (start : Input) (output : HmacBlock) (depth : Nat)
     (owner : RawCtxProtocolReveals.Owner S (B + 1)) (number : U64) (bit : Bool)
     (adversary : PqxdhInitialBuilderContext.BuildResult → OracleComp (PqxdhFirstRecordConfidentiality.AdvSpec (SelectorSpec baseSpec) S (B + 1)) Bool) := do
-  let cut ← capturedPrefix original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number bit adversary
-  collect original callbacks baseImpl kem attachedVerify primitives secret challenge
+  let cut ← capturedPrefix (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number bit adversary
+  collect (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge
     (withPost (setup := setup) start owner number bit adversary) output depth cut
 
 /-- Metadata erasure is a complete oracle-program equality for the actual prepared sampler, including completed and cached decisions before a pending descriptor is returned. -/
 theorem run_erase (start : Input) (output : HmacBlock) (depth : Nat)
     (owner : RawCtxProtocolReveals.Owner S (B + 1)) (number : U64) (bit : Bool)
     (adversary : PqxdhInitialBuilderContext.BuildResult → OracleComp (PqxdhFirstRecordConfidentiality.AdvSpec (SelectorSpec baseSpec) S (B + 1)) Bool) :
-    Sum.map id Prod.fst <$> run original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number bit adversary =
-      PqxdhPreparedSharedParent.run original callbacks baseImpl kem attachedVerify primitives secret challenge
+    Sum.map id Prod.fst <$> run (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number bit adversary =
+      PqxdhPreparedSharedParent.run (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge
         (withPost (setup := setup) start owner number bit adversary) output depth := by
   simp only [run, map_bind, collect_erase]
   rw [← bind_map_left, prefix_erase]
@@ -126,11 +129,11 @@ theorem run_source (start : Input) (output : HmacBlock) (depth : Nat)
     (owner : RawCtxProtocolReveals.Owner S (B + 1)) (number : U64) (bit : Bool)
     (adversary : PqxdhInitialBuilderContext.BuildResult → OracleComp (PqxdhFirstRecordConfidentiality.AdvSpec (SelectorSpec baseSpec) S (B + 1)) Bool) :
     (fun result => PqxdhSharedParentCollect.restore (Sum.map id Prod.fst result.1) result.2) <$>
-      (simulateQ hashImpl (run original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number bit adversary)).run start.shared.2 =
-      PqxdhErasedParentSample.sampleOne (env).source (env).recordWriter (env).senderId (env).route (env).decode depth
+      (simulateQ hashImpl (run (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number bit adversary)).run start.shared.2 =
+      PqxdhErasedParentSample.sampleOne (associatedData := associatedData) (completedBinding := completedBinding) (env).source (env).recordWriter (env).senderId (env).route (env).decode depth
         (PqxdhPreparedSharedPrefix.input original callbacks baseImpl kem attachedVerify primitives secret challenge
           (withPost (setup := setup) start owner number bit adversary), output) := by
-  have actual := PqxdhPreparedSharedParent.source original callbacks baseImpl kem attachedVerify primitives secret challenge
+  have actual := PqxdhPreparedSharedParent.source (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge
     (withPost (setup := setup) start owner number bit adversary) output depth
   rw [← run_erase] at actual
   simpa only [simulateQ_map, StateT.run_map, Functor.map_map, withPost] using actual
@@ -140,8 +143,8 @@ theorem run_budget {Budget : Type} (start : Input) (output : HmacBlock) (depth :
     (owner : RawCtxProtocolReveals.Owner S (B + 1)) (number : U64) (bit : Bool)
     (adversary : PqxdhInitialBuilderContext.BuildResult → OracleComp (PqxdhFirstRecordConfidentiality.AdvSpec (SelectorSpec baseSpec) S (B + 1)) Bool)
     (budget : Budget) (canQuery : HashSpec.Domain → Budget → Prop) (cost : HashSpec.Domain → Budget → Budget) :
-    (run original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number bit adversary).IsQueryBound budget canQuery cost ↔
-      (PqxdhPreparedSharedParent.run original callbacks baseImpl kem attachedVerify primitives secret challenge
+    (run (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number bit adversary).IsQueryBound budget canQuery cost ↔
+      (PqxdhPreparedSharedParent.run (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge
         (withPost (setup := setup) start owner number bit adversary) output depth).IsQueryBound budget canQuery cost := by
   rw [← run_erase, isQueryBound_map_iff]
 
@@ -153,9 +156,9 @@ theorem prefix_joined (start : Input) (output : HmacBlock) (depth : Nat)
     (details : Option (Details (SelectorSpec baseSpec) M P (IdentityHandle I) (DhPair setup) (KemHandle K) Bool S (B + 1)))
     (reached : Local A (BareState 1) RootOracle.QueryCache)
     (supported : RawCtxForwardScan.Cut.pending (context, details) reached ∈ support
-      (capturedPrefix original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number bit adversary)) :
+      (capturedPrefix (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number bit adversary)) :
     JoinedCapture owner number bit (context, details) := by
-  exact shared_joined _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ supported
+  exact shared_joined (associatedData := associatedData) (completedBinding := completedBinding) (supported := supported)
 
 /-- A pending result is the exact missing-address cut, carrying that cut's original callback metadata. Cached and completed branches cannot manufacture a pending descriptor. -/
 theorem collect_pending (start : Input) (output : HmacBlock) (depth : Nat)
@@ -163,7 +166,7 @@ theorem collect_pending (start : Input) (output : HmacBlock) (depth : Nat)
     (pending : PqxdhSharedParentCollect.Pending (SelectorSpec baseSpec) M P (IdentityHandle I) (DhPair setup) (KemHandle K) A (BareState 1) RootOracle.QueryCache S (B + 1))
     (details : Option (Details (SelectorSpec baseSpec) M P (IdentityHandle I) (DhPair setup) (KemHandle K) Bool S (B + 1)))
     (supported : Sum.inr (pending, details) ∈ support
-      (collect original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth cut)) :
+      (collect (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth cut)) :
     cut = .pending (pending.1, details) pending.2 := by
   cases cut <;> simp only [collect, cutMap, PqxdhPreparedSharedParent.collect, PqxdhSharedParentCollect.collect] at supported
   · simp only [map_pure, attachRequest, mem_support_pure_iff, reduceCtorEq] at supported
@@ -180,14 +183,14 @@ theorem run_joined (start : Input) (output : HmacBlock) (depth : Nat)
     (pending : PqxdhSharedParentCollect.Pending (SelectorSpec baseSpec) M P (IdentityHandle I) (DhPair setup) (KemHandle K) A (BareState 1) RootOracle.QueryCache S (B + 1))
     (details : Option (Details (SelectorSpec baseSpec) M P (IdentityHandle I) (DhPair setup) (KemHandle K) Bool S (B + 1)))
     (supported : Sum.inr (pending, details) ∈ support
-      (run original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number bit adversary)) :
+      (run (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number bit adversary)) :
     JoinedCapture owner number bit (pending.1, details) := by
   simp only [run, mem_support_bind_iff] at supported
   obtain ⟨cut, reached, collected⟩ := supported
-  have actual := collect_pending original callbacks baseImpl kem attachedVerify primitives secret challenge
+  have actual := collect_pending (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge
     (withPost (setup := setup) start owner number bit adversary) output depth cut pending details collected
   rw [actual] at reached
-  exact prefix_joined original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number bit adversary pending.1 details pending.2 reached
+  exact prefix_joined (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number bit adversary pending.1 details pending.2 reached
 
 end BeaconcryptCore.Computational.PqxdhLaterChallengePreparedCapture
 

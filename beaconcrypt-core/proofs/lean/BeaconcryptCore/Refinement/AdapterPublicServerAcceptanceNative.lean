@@ -29,7 +29,7 @@ noncomputable def accept (coins : QueryImpl unifSpec (StateT PlatformState ProbC
     (checks : PqxdhServerAuthExperiment.Checks) (reserve : (StateT PlatformState ProbComp) Bool)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (input : Slice U8) : NativeM (RustM (Option Nat)) :=
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (input : Slice U8) : NativeM (RustM (Option Nat)) :=
   match RegistrationNativeConcreteCodec.wire.decodeInit (TranscriptAuthParts.absSlice input) with
   | none => pure (.ok none)
   | some packet => RegistrationNativePlatformExperiment.server
@@ -45,7 +45,7 @@ theorem coupled {E R Error : Type} (coins : QueryImpl unifSpec (StateT PlatformS
     (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (views : AdapterPublicWrapperStorage.Views)
     (model : AdapterPublicAgreementPrimitiveModel.Model (m := ProbComp) generator setup checks view)
     (entropy : AdapterPublicAgreementServerNative.Entropy model)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : beaconcrypt_public_wrapper.server.Server) (input : Slice U8) (rng : R)
     (before : RegistrationNativeExperiment.State n KemSK mlSource)
     (related : AdapterPublicWrapperState.Server view views created credential self before.server)

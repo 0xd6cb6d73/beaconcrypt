@@ -8,6 +8,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
+set_option warningAsError true
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativeG3MaterializedTracedServerFinite
 open RegistrationNativeG3MaterializedTracedServerFrontend (ServiceSpec State known thin materialize known_common thin_common)
@@ -111,6 +112,13 @@ private theorem peer_source (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSou
     known source writer sign seeds service (.inr (.inr (.inr (.peerPresent keyId)))) =
       thin source writer sign seeds service (.inr (.inr (.inr (.peerPresent keyId)))) := rfl
 
+theorem adHash_source (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
+    (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
+    (seeds : Seeds n) (service : QueryImpl (ServiceSpec n) (StateT KeyState ProbComp)) (pending : registration.ServerAdHash) :
+    simulateQ (known source writer sign seeds service) (RegistrationServerMaterialFrontend.adHash pending) =
+      simulateQ (thin source writer sign seeds service) (RegistrationServerMaterialFrontend.adHash pending) := by
+  cases requested : pending.request <;> simp only [RegistrationServerMaterialFrontend.adHash, requested] <;> rfl
+
 attribute [local irreducible] known thin publicAdmitted
 
 /-- Actual completion preflight and occupancy precede the same service demand, and every native failure retains the same full state. -/
@@ -124,23 +132,34 @@ theorem complete_source (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
       (simulateQ (thin source wire.frameWrite sign seeds service)
         ((RegistrationServerMaterialFrontend.complete wire reservePeer ready application).run control)).run before := by
   simp only [RegistrationServerMaterialFrontend.complete, StateT.run]
-  repeat' split
-  all_goals try rfl
-  all_goals
-    simp only [simulateQ_bind, RegistrationServerMaterialFrontend.effect, simulateQ_spec_query]
-    rw [peer_source]
-    change (StateT.run _ before) = StateT.run _ before
-    rw [StateT.run_bind, StateT.run_bind]
-    apply bind_congr
-    intro occupied
-    repeat' split
-    all_goals try rfl
-  simp only [simulateQ_bind]
+  split <;> try rfl
+  split <;> try rfl
+  split <;> try rfl
+  simp only [simulateQ_bind, RegistrationServerMaterialFrontend.effect, simulateQ_spec_query]
+  rw [peer_source]
+  change (StateT.run _ before) = StateT.run _ before
   rw [StateT.run_bind, StateT.run_bind]
-  rw [admitted_source]
   apply bind_congr
-  intro published
-  exact congrArg (fun action => action.run published.2) (finish_source source wire.frameWrite sign seeds service published.1 control)
+  intro occupied
+  split <;> try rfl
+  simp only [simulateQ_bind]
+  rw [StateT.run_bind, StateT.run_bind, adHash_source]
+  apply bind_congr
+  intro hashed
+  cases hashResult : hashed.1 with
+  | fail error | div => rfl
+  | ok reply => cases reply with
+    | Err previous => rfl
+    | Ok initial =>
+      dsimp only
+      split
+      · simp only [simulateQ_bind]
+        rw [StateT.run_bind, StateT.run_bind, admitted_source]
+        apply bind_congr
+        intro published
+        exact congrArg (fun action => action.run published.2)
+          (finish_source source wire.frameWrite sign seeds service published.1 control)
+      · rfl
 
 /-- Moved-handle build retains the exact current native control and cancellation semantics before the identical complete stage. -/
 theorem build_source (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (wire : RegistrationNativeWire.Wire)
@@ -180,3 +199,12 @@ end BeaconcryptCore.Computational.RegistrationNativeG3MaterializedTracedServerFi
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativeG3MaterializedTracedServerFinite.build_source
+
+
+/--
+info: 'BeaconcryptCore.Computational.RegistrationNativeG3MaterializedTracedServerFinite.adHash_source' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativeG3MaterializedTracedServerFinite.adHash_source

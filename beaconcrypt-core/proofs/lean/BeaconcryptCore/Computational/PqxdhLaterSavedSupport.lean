@@ -7,6 +7,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.refined ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhLaterSavedSupport
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhCorrelatedExpand
 open PqxdhErasedParentSample
 variable {ι M P I D K X Response A N : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -23,12 +25,12 @@ local notation "Packet" => PqxdhErasedParentSample.Packet (extra := extra) (M :=
 /-- An actual missing-parent output inherits the original all-reply Post allowance and quiet inner tail. -/
 theorem sample_one_fits (start : Start) (pending : Pending)
     (bounded : ∀ reply, (start.1.post reply).IsTotalQueryBound qPost)
-    (supported : Sum.inr pending ∈ support (sampleOne source writer sender route read depth start)) :
+    (supported : Sum.inr pending ∈ support (sampleOne (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route read depth start)) :
     PqxdhInitialOriginCertificates.Fits qPost pending.1 := by
   unfold sampleOne at supported
-  have carried := (PqxdhInitialPreparedParent.supported_pending source writer _ _ _ _ _ _ sender route read _ _
+  have carried := (PqxdhInitialPreparedParent.supported_pending (associatedData := associatedData) (completedBinding := completedBinding) source writer _ _ _ _ _ _ sender route read _ _
     depth _ pending.2 pending.1).mp supported
-  exact PqxdhInitialNativeAuditCarried.carried_fits source writer _ _ _ _ _ _ sender route read _ depth (depth + 1)
+  exact PqxdhInitialNativeAuditCarried.carried_fits (associatedData := associatedData) (completedBinding := completedBinding) source writer _ _ _ _ _ _ sender route read _ depth (depth + 1)
     qPost bounded _ pending.2 pending.1 carried.1
 
 def PacketFits (qPost : Nat) : Packet → Prop
@@ -40,7 +42,7 @@ def PacketFits (qPost : Nat) : Packet → Prop
 theorem sample_fits
     (prior : ProbComp (PqxdhInitialSourceInitialSecrecy.Context extra M P I D K X Response A N S B))
     (bounded : ∀ input, Sum.inr input ∈ support prior → ∀ reply, (input.post reply).IsTotalQueryBound qPost)
-    (packet : Packet) (supported : packet ∈ support (sample source writer sender route read depth prior)) :
+    (packet : Packet) (supported : packet ∈ support (sample (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route read depth prior)) :
     PacketFits qPost packet := by
   unfold sample at supported
   simp only [mem_support_bind_iff] at supported
@@ -56,7 +58,7 @@ theorem sample_fits
       cases value with
       | inl decision => trivial
       | inr pending =>
-          exact sample_one_fits source writer sender route read depth qPost (input, output) pending
+          exact sample_one_fits (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route read depth qPost (input, output) pending
             (bounded input reached) sampled
 
 /-- Removing the unused earlier cache does not change the saved continuation certificate. -/
@@ -69,16 +71,16 @@ theorem material_scope
     (bounded : ∀ input, Sum.inr input ∈ support prior → ∀ reply, (input.post reply).IsTotalQueryBound qPost)
     (context : PqxdhErasedParentMaterial.MaterialContext (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K)
       (X := X) (Response := Response) (A := A) (N := N) (S := S) (B := B))
-    (supported : context ∈ support (PqxdhErasedParentMaterial.prepare source writer sender route read depth prior)) :
+    (supported : context ∈ support (PqxdhErasedParentMaterial.prepare (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route read depth prior)) :
     PacketFits qPost context.1.1.1 ∧ PqxdhPreparedDescriptorScope.PacketValid read context.1.1.1 ∧
       context.1.1.2.address = address context.1.1.1 := by
   unfold PqxdhErasedParentMaterial.prepare at supported
   simp only [mem_support_bind_iff, mem_support_pure_iff] at supported
   obtain ⟨packet, sampled, parent, _, nonce, _, chain, _, rfl⟩ := supported
   refine ⟨(normalized_fits qPost packet).mpr
-    (sample_fits source writer sender route read depth qPost prior bounded packet sampled), ?_, ?_⟩
+    (sample_fits (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route read depth qPost prior bounded packet sampled), ?_, ?_⟩
   · exact (PqxdhPreparedDescriptorScope.normalized_valid read packet).mpr
-      (PqxdhPreparedDescriptorScope.sample_valid source writer sender route read depth prior packet sampled)
+      (PqxdhPreparedDescriptorScope.sample_valid (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route read depth prior packet sampled)
   · exact (address_normalize packet).symm
 
 end BeaconcryptCore.Computational.PqxdhLaterSavedSupport

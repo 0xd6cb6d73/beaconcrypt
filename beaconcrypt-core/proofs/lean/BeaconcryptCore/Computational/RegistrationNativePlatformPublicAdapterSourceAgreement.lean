@@ -2,6 +2,8 @@
 import BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterSourceAuthentication
 import BeaconcryptCore.Computational.RegistrationNativeInitializedInitializers
 import BeaconcryptCore.Computational.RegistrationNativeCompletionContents
+import BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterBuildAdCut
+import BeaconcryptCore.Computational.RegistrationNativePlatformMldsaProgram
 /-! Agreement is a property of actual source operations. A partner is an earlier response-signing source callback, not a completed publication or installation. The finish initializer and first-record result are the actual source-stage values, while protection remains qualification by the configured ML public key. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
@@ -31,16 +33,49 @@ def Partner (crypto :Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMaterial
     (backend :RegistrationNativePlatformSdkReification.Backend n KemSK×P),
     earlier=leading++Event.opened (.inl (.inr (.build handle payload))) beforeBuild::
       (buildStages.map Event.stage++Event.closed (.inl (.inr (.build handle payload))) buildReply backend::trailing) ∧
-    ∃token serverInitial hashed request digest signature beaconInitial completed,
+    ∃token serverInitial hashed request digest signature adDigest beaconInitial completed,
       beforeBuild.tokens handle=some token ∧
       Stage.firstRecord serverInitial (.ok (.Ok hashed))∈buildStages ∧
       Stage.sign request (RegistrationSigningTrace.Command.payload (.server hashed)) digest signature∈buildStages ∧
       request.public_key=serverPublic ∧
       Stage.beaconFirstRecord beaconInitial (.ok (.Ok completed))∈finishStages ∧
-      RegistrationNativeCompletionContents.Outcome serverInitial ⟨pending,packet⟩ beaconInitial.agreement completed application ∧
+      pending.binding.complete (RegistrationAuthenticationShared.digestArray adDigest)=.ok beaconInitial.agreement.binding ∧
+      RegistrationNativeCompletionContents.Outcome serverInitial (RegistrationResponseExecutor.acceptedResponse pending packet adDigest) beaconInitial.agreement completed application ∧
       token.registration.agreement.root.bytes=beaconInitial.agreement.root.bytes ∧
       RegistrationNativeInitializedInitializers.Initializers crypto source token.registration.agreement
         beaconInitial.agreement serverInitial beaconInitial
+
+/-- The same partner values additionally retain the actual pre-record Server hash callback and agreement with the digest consumed by this Finish's authentication. This private receipt creates no source-log stage. -/
+def PartnerWithSessionAd (crypto :Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMaterial AD PT CT)
+    (source :PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
+    (serverPublic :Std.Array U8 1952#usize) (earlier :Events)
+    (pending :registration.BeaconPending) (packet :registration.ResponsePacket)
+    (application :Pqxdh.Bytes) (finishStages :List Stage) :Prop :=
+  ∃(handle :Nat) (payload :Option (Slice U8)) (beforeBuild :Store n KemSK R P)
+    (leading :Events) (buildStages :List Stage) (trailing :Events)
+    (buildReply :RustM (Option PqxdhServerRegistrationPublication.Response×RegistrationNativePlatformPublicAdapterSourceRuntime.Objects R))
+    (backend :RegistrationNativePlatformSdkReification.Backend n KemSK×P),
+    earlier=leading++Event.opened (.inl (.inr (.build handle payload))) beforeBuild::
+      (buildStages.map Event.stage++Event.closed (.inl (.inr (.build handle payload))) buildReply backend::trailing) ∧
+    ∃token serverInitial hashed request digest signature adDigest beaconInitial completed,
+      beforeBuild.tokens handle=some token ∧
+      Stage.firstRecord serverInitial (.ok (.Ok hashed))∈buildStages ∧
+      Stage.sign request (RegistrationSigningTrace.Command.payload (.server hashed)) digest signature∈buildStages ∧
+      request.public_key=serverPublic ∧
+      Stage.beaconFirstRecord beaconInitial (.ok (.Ok completed))∈finishStages ∧
+      pending.binding.complete (RegistrationAuthenticationShared.digestArray adDigest)=.ok beaconInitial.agreement.binding ∧
+      RegistrationNativeCompletionContents.Outcome serverInitial (RegistrationResponseExecutor.acceptedResponse pending packet adDigest) beaconInitial.agreement completed application ∧
+      token.registration.agreement.root.bytes=beaconInitial.agreement.root.bytes ∧
+      RegistrationNativeInitializedInitializers.Initializers crypto source token.registration.agreement
+        beaconInitial.agreement serverInitial beaconInitial ∧
+      ∃(control : pqxdh.ServerState) (pin : session.ServerAuthenticationPin)
+        (availability : pqxdh.KeyIdAvailability) (plaintext : Slice U8) (cache : CtxRomAuth.CtxRO.QueryCache),
+        Nonempty (RegistrationNativePlatformPublicAdapterBuildAdCut.Cut (n:=n) (Platform:=P) (Auxiliary:=RegistrationServerRoleBackend.State)
+          RegistrationNativePlatformMldsaProgram.coins token.registration control pin availability plaintext serverInitial cache) ∧
+        cache = backend.1.world.primitive.2 ∧
+        serverInitial.binding.session_transcript_hash = RegistrationAuthenticationShared.digestArray adDigest ∧
+        serverInitial.binding.associated_data =
+          (RegistrationResponseExecutor.acceptedResponse pending packet adDigest).binding.associated_data
 
 /-- Every protected successful source Finish has a strict-earlier response-signing partner in the same source log. This is non-injective and makes no claim that the partner publication succeeded. -/
 def AllOwners (crypto :Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMaterial AD PT CT)
@@ -58,6 +93,49 @@ def AllOwners (crypto :Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMateri
     before.beacons index=some self →self.state=.InitSent pending prekey oneTime kem →
     pending.binding.server_pin.public_key=serverPublic →
     Partner crypto source serverPublic leading pending packet application finishStages
+
+def AllOwnersWithSessionAd (crypto :Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMaterial AD PT CT)
+    (source :PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
+    (serverPublic :Std.Array U8 1952#usize) (events :Events) :Prop :=
+  ∀(index :Nat) (input :Slice U8) (packet :registration.ResponsePacket) (application :Pqxdh.Bytes)
+    (before :Store n KemSK R P) (leading :Events) (finishStages :List Stage) (trailing :Events)
+    (objects :RegistrationNativePlatformPublicAdapterSourceRuntime.Objects R)
+    (backend :RegistrationNativePlatformSdkReification.Backend n KemSK×P)
+    (self :beaconcrypt_public_wrapper.beacon.Beacon) (pending :registration.BeaconPending)
+    (prekey oneTime :beaconcrypt_crypto.crypto_kx.KeyPair) (kem :beaconcrypt_crypto.crypto_kem.mlkem768.KeyPair),
+    events=leading++Event.opened (.inl (.inr (.finish index input))) before::
+      (finishStages.map Event.stage++Event.closed (.inl (.inr (.finish index input))) (.ok (some application,objects)) backend::trailing) →
+    RegistrationNativeConcreteCodec.wire.decodeResponse (TranscriptAuthParts.absSlice input)=some packet →
+    before.beacons index=some self →self.state=.InitSent pending prekey oneTime kem →
+    pending.binding.server_pin.public_key=serverPublic →
+    PartnerWithSessionAd crypto source serverPublic leading pending packet application finishStages
+
+/-- Forgetting the extra hash receipt recovers exactly the original partner and its record/root contents. -/
+theorem partner_of_session_ad (crypto :Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMaterial AD PT CT)
+    (source :PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
+    (serverPublic :Std.Array U8 1952#usize) (earlier :Events)
+    (pending :registration.BeaconPending) (packet :registration.ResponsePacket)
+    (application :Pqxdh.Bytes) (finishStages :List Stage)
+    (held :PartnerWithSessionAd crypto source serverPublic earlier pending packet application finishStages) :
+    Partner crypto source serverPublic earlier pending packet application finishStages := by
+  obtain ⟨handle,payload,beforeBuild,leading,buildStages,trailing,buildReply,backend,same,
+    token,serverInitial,hashed,request,digest,signature,adDigest,beaconInitial,completed,
+    stored,recorded,signed,key,finished,completedAt,contents,root,initializers,_physical⟩ := held
+  exact ⟨handle,payload,beforeBuild,leading,buildStages,trailing,buildReply,backend,same,
+    token,serverInitial,hashed,request,digest,signature,adDigest,beaconInitial,completed,
+    stored,recorded,signed,key,finished,completedAt,contents,root,initializers⟩
+
+/-- The stronger per-Finish certificate preserves the original source event without a new eligibility premise. -/
+theorem owners_of_session_ad (crypto :Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMaterial AD PT CT)
+    (source :PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
+    (serverPublic :Std.Array U8 1952#usize) (events :Events)
+    (held :AllOwnersWithSessionAd crypto source serverPublic events) :
+    AllOwners crypto source serverPublic events := by
+  intro index input packet application before leading finishStages trailing objects backend self pending prekey oneTime kem
+    observed decoded found phase protectedKey
+  exact partner_of_session_ad crypto source serverPublic leading pending packet application finishStages
+    (held index input packet application before leading finishStages trailing objects backend self pending prekey oneTime kem
+      observed decoded found phase protectedKey)
 
 noncomputable def flag (crypto :Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMaterial AD PT CT)
     (source :PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
@@ -83,8 +161,8 @@ theorem sign_before (crypto :Ratchet.Crypto ratchet.RatchetChain ratchet.Ratchet
       Event.stage (Stage.sign request (RegistrationSigningTrace.Command.payload (.server hashed)) digest signature)∈earlier ∧
       request.public_key=serverPublic :=by
   obtain ⟨handle,payload,beforeBuild,leading,buildStages,trailing,buildReply,backend,same,
-    token,serverInitial,hashed,request,digest,signature,beaconInitial,completed,
-    _token,_record,signed,key,_finished,_contents,_root,_initializers⟩:=held
+    token,serverInitial,hashed,request,digest,signature,adDigest,beaconInitial,completed,
+    _token,_record,signed,key,_finished,_completedAt,_contents,_root,_initializers⟩:=held
   refine ⟨request,hashed,digest,signature,?_,key⟩
   rw [same]
   apply List.mem_append_right
@@ -99,17 +177,18 @@ theorem records (crypto :Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMate
     (pending :registration.BeaconPending) (packet :registration.ResponsePacket)
     (application :Pqxdh.Bytes) (finishStages :List Stage)
     (held :Partner crypto source serverPublic earlier pending packet application finishStages) :
-    ∃(token :beaconcrypt_public_wrapper.server.RegistrationOutput),∃serverInitial hashed beaconInitial completed,
+    ∃(token :beaconcrypt_public_wrapper.server.RegistrationOutput),∃serverInitial hashed adDigest beaconInitial completed,
       Event.stage (Stage.firstRecord serverInitial (.ok (.Ok hashed)))∈earlier ∧
       Stage.beaconFirstRecord beaconInitial (.ok (.Ok completed))∈finishStages ∧
-      RegistrationNativeCompletionContents.Outcome serverInitial ⟨pending,packet⟩ beaconInitial.agreement completed application ∧
+      pending.binding.complete (RegistrationAuthenticationShared.digestArray adDigest)=.ok beaconInitial.agreement.binding ∧
+      RegistrationNativeCompletionContents.Outcome serverInitial (RegistrationResponseExecutor.acceptedResponse pending packet adDigest) beaconInitial.agreement completed application ∧
       token.registration.agreement.root.bytes=beaconInitial.agreement.root.bytes ∧
       RegistrationNativeInitializedInitializers.Initializers crypto source token.registration.agreement
         beaconInitial.agreement serverInitial beaconInitial :=by
   obtain ⟨handle,payload,beforeBuild,leading,buildStages,trailing,buildReply,backend,same,
-    token,serverInitial,hashed,request,digest,signature,beaconInitial,completed,
-    _token,recorded,_signed,_key,finished,contents,root,initializers⟩:=held
-  refine ⟨token,serverInitial,hashed,beaconInitial,completed,?_,finished,contents,root,initializers⟩
+    token,serverInitial,hashed,request,digest,signature,adDigest,beaconInitial,completed,
+    _token,recorded,_signed,_key,finished,completedAt,contents,root,initializers⟩:=held
+  refine ⟨token,serverInitial,hashed,adDigest,beaconInitial,completed,?_,finished,completedAt,contents,root,initializers⟩
   rw [same]
   apply List.mem_append_right
   apply List.mem_cons_of_mem
@@ -135,3 +214,15 @@ end BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterSourceA
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterSourceAgreement.records
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterSourceAgreement.partner_of_session_ad' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterSourceAgreement.partner_of_session_ad
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterSourceAgreement.owners_of_session_ad' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterSourceAgreement.owners_of_session_ad

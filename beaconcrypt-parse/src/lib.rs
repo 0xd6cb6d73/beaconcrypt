@@ -93,8 +93,6 @@ pub fn encode_init(init: InitKex<'_>, output: &mut [u8]) -> usize {
 		init.pre_key.len(),
 		init.one_time_key.len(),
 		init.pq_key.len(),
-		init.mldsa_public_key.len(),
-		init.signature.len(),
 	])
 	.is_none()
 	{
@@ -129,7 +127,7 @@ pub fn decode_frame(input: &[u8]) -> Option<CryptoFrame<'_>> {
 
 /// Validate and borrow exactly one registration request.
 pub fn decode_init(input: &[u8]) -> Option<InitKex<'_>> {
-	preflight(input, &[0x88, 2, 0], &[2, 2, 2, 2, 2, 2])?;
+	preflight(input, &[0x86, 3, 0], &[2, 2, 2, 2])?;
 	match validate_and_parse_initkex(input) {
 		ParsedInit::Some { v: (init, []) } => Some(init),
 		_ => None,
@@ -138,7 +136,7 @@ pub fn decode_init(input: &[u8]) -> Option<InitKex<'_>> {
 
 /// Validate and borrow exactly one registration response.
 pub fn decode_response(input: &[u8]) -> Option<KexResponse<'_>> {
-	preflight(input, &[0x88, 2, 1], &[2, 2, 2, 2, 0, 2])?;
+	preflight(input, &[0x88, 3, 1], &[2, 2, 2, 2, 0, 2])?;
 	match validate_and_parse_kexresponse(input) {
 		ParsedResponse::Some { v: (response, []) } => Some(response),
 		_ => None,

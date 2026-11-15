@@ -25,7 +25,7 @@ variable [BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations]
 variable [BeaconcryptCore.Refinement.FrameDispatchFallback.Operations]
 
 /-- [beaconcrypt::ratchet::_proof_join_record_three]:
-    Source: 'beaconcrypt/src/ratchet.rs', lines 870:0-880:1 -/
+    Source: 'beaconcrypt/src/ratchet.rs', lines 913:0-923:1 -/
 def ratchet._proof_join_record_three
   (parts : Array (Slice Std.U8) 3#usize) :
   RustM (core.option.Option (alloc.vec.Vec Std.U8))
@@ -78,7 +78,7 @@ def ratchet._proof_join_record_three
       (alloc.vec.Vec Std.U8) residual
 
 /-- [beaconcrypt::wire::_proof_encode_frame_three::{impl core::ops::function::FnOnce<(&'_ mut [u8],), usize> for beaconcrypt::wire::_proof_encode_frame_three::closure<'_0, '_1, '_2, '_3>}::call_once]:
-    Source: 'beaconcrypt/src/wire.rs', lines 149:28-151:5 -/
+    Source: 'beaconcrypt/src/wire.rs', lines 145:28-147:5 -/
 def
   wire._proof_encode_frame_three.closure.Insts.CoreOpsFunctionFnOnceTupleMutSliceU8Usize.call_once
   (c : wire._proof_encode_frame_three.closure) (tupled_args : Slice Std.U8) :
@@ -89,7 +89,7 @@ def
   beaconcrypt_parse.encode_frame_parts i i1 s tupled_args
 
 /-- Trait implementation: [beaconcrypt::wire::_proof_encode_frame_three::{impl core::ops::function::FnOnce<(&'_ mut [u8],), usize> for beaconcrypt::wire::_proof_encode_frame_three::closure<'_0, '_1, '_2, '_3>}]
-    Source: 'beaconcrypt/src/wire.rs', lines 149:28-151:5 -/
+    Source: 'beaconcrypt/src/wire.rs', lines 145:28-147:5 -/
 @[reducible]
 def
   wire._proof_encode_frame_three.closure.Insts.CoreOpsFunctionFnOnceTupleMutSliceU8Usize
@@ -99,7 +99,7 @@ def
 }
 
 /-- [beaconcrypt::wire::_proof_encode_frame_three]:
-    Source: 'beaconcrypt/src/wire.rs', lines 144:0-152:1 -/
+    Source: 'beaconcrypt/src/wire.rs', lines 140:0-148:1 -/
 def wire._proof_encode_frame_three
   (sequence : Std.U64) (sender : Std.U64)
   (parts : Array (Slice Std.U8) 3#usize) :

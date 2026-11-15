@@ -14,7 +14,7 @@ open PqxdhSecretInputKdf PqxdhJointKdfGame PqxdhInitialRatchetComplementarity
 open BeaconcryptCore.Refinement.PqxdhConcreteSession
 variable {ι : Type} {base : OracleSpec ι} {Result : Type}
 
-abbrev InitialSpec := SymmetricRatchetKdfRequest →ₒ pqxdh.concrete.InitialRatchetKdfResponse
+abbrev InitialSpec := InitialRatchetKdfRequest →ₒ pqxdh.concrete.InitialRatchetKdfResponse
 abbrev Spec (base : OracleSpec ι) := base + InitialSpec
 
 def original : QueryImpl base (OracleComp (Spec base)) := fun query => (Spec base).query (.inl query)

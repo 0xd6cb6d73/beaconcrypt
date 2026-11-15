@@ -78,7 +78,7 @@ theorem platform_phase (work : StateT Platform ProbComp A) (before : State n Kem
   cases equal
   exact kept
 
-/-- Actual repeated pin hashing has no selected getter, for every hash result and private poststate. -/
+/-- Actual pure supplied-pin selection preserves the selected getter marker and private state. -/
 theorem pin_phase (current : session.ServerAuthenticationPin) (before : State n KemSK Platform)
     (result : RegistrationNativeServerPinRecompute.PinReply × State n KemSK Platform)
     (supported : result ∈ support ((close impl (StateT.lift (StateT.lift
@@ -86,14 +86,10 @@ theorem pin_phase (current : session.ServerAuthenticationPin) (before : State n 
         (RegistrationNativePlatformSecretWordOpen.effects (wordLocal true)) current)))).run before)) :
     result.2.2.2.2.kem.2 = before.2.2.2.kem.2 := by
   rw [RegistrationNativePlatformSecretWordTargetOpenLift.pin,
-    RegistrationNativePlatformSecretWordTargetOpenLift.lifted_map,support_map] at supported
-  obtain ⟨hashed,called,equal⟩ := supported
-  have kept := environment_phase setup wire route sign input inside selected pairs publicKey challenge outer
-    (((PqxdhRecordLiftInterface.EnvEffects n).query (.inr (.hash (PqxdhRefinement.absBytes current.public_key)))) :
-      OracleComp (PqxdhRecordLiftInterface.EnvEffects n) _) before hashed
-    (by simpa only [simulateQ_spec_query] using called)
-  cases equal
-  exact kept
+    RegistrationNativePlatformSecretWordTargetOpenLift.lifted_run] at supported
+  simp only [StateT.run_pure, simulateQ_pure, map_pure, mem_support_pure_iff] at supported
+  cases supported
+  rfl
 
 /-- The same successful actual agreement exposes its own collector and pure root echo. -/
 theorem agreement (checks : Checks) (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit)

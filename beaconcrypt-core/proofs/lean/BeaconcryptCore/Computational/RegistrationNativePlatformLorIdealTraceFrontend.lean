@@ -80,17 +80,20 @@ theorem handler_source (query : RegistrationNativeRawAdapter.TypedSpec.Domain)
       view failure allocation reserveRegistration reservePeer reserveFrame erased helper writer (.inl coin) (by trivial) before privateBefore
   | inr query =>
     cases query
-    all_goals first
-      | exact ordinary_source setup wire sign seed scalar candidate unused selected pairs publicKey challenge checks selectedOwner selectedAccept publicPrekey
-          view failure allocation reserveRegistration reservePeer reserveFrame erased helper writer _ (by trivial) before privateBefore
-      | exact RegistrationNativePlatformLorIdealTraceFrontendBody.accept_source setup wire sign seed scalar candidate unused selected pairs publicKey challenge checks selectedOwner selectedAccept publicPrekey
+    case accept packet =>
+      exact RegistrationNativePlatformLorIdealTraceFrontendBody.accept_source setup wire sign seed scalar candidate unused selected pairs publicKey challenge checks selectedOwner selectedAccept publicPrekey
           view failure allocation reserveRegistration reservePeer reserveFrame erased helper writer _ before privateBefore
-      | simpa only [RegistrationNativePlatformSecretWordFrontend.handler,RegistrationNativePlatformPublicFrontend.handler] using
+    case build handle application =>
+      simpa only [RegistrationNativePlatformSecretWordFrontend.handler,RegistrationNativePlatformPublicFrontend.handler] using
           RegistrationNativePlatformLorIdealTraceFrontendBody.build_source setup wire sign seed scalar candidate unused selected pairs publicKey challenge
             view failure allocation reservePeer erased helper writer _ _ before privateBefore
-      | simpa only [RegistrationNativePlatformSecretWordFrontend.handler,RegistrationNativePlatformPublicFrontend.handler] using
+    case finish index packet =>
+      simpa only [RegistrationNativePlatformSecretWordFrontend.handler,RegistrationNativePlatformPublicFrontend.handler] using
           RegistrationNativePlatformLorIdealTraceFrontendBody.finish_source setup wire sign seed scalar candidate unused selected pairs publicKey challenge
             _ _ before privateBefore
+    all_goals
+      exact ordinary_source setup wire sign seed scalar candidate unused selected pairs publicKey challenge checks selectedOwner selectedAccept publicPrekey
+          view failure allocation reserveRegistration reservePeer reserveFrame erased helper writer _ (by trivial) before privateBefore
 
 noncomputable def wordTyped : QueryImpl RegistrationNativeRawAdapter.TypedSpec
     (StateT (RegistrationNativePlatformSecretWordOrdinary.State source Platform × Symbolic n KemSK) (World n)) :=

@@ -41,7 +41,7 @@ theorem lookup (before after : RegistrationNativeBeaconFrontend.State source) (p
 
 private theorem beacon_prefix (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State Value)
     (localLaw : ∀ owners env result, result ∈ support ((work.run owners).run env) → Prefix owners result.1.2)
     (before : State n KemSK source) (result : Value × State n KemSK source)
@@ -85,7 +85,7 @@ private theorem create_prefix (setup : Setup base KemSK)
 theorem typed_prefix (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (query : TypedSpec.Domain) (before : State n KemSK source) (result : TypedSpec.Range query × State n KemSK source)
     (supported : result ∈ support ((RegistrationNativeExperiment.handler setup checks wire route representation
       created source credential query).run before)) : Prefix before.beacons result.2.beacons := by
@@ -111,7 +111,7 @@ theorem typed_prefix (setup : Setup base KemSK) (checks : Checks) (wire : Regist
 theorem program_prefix (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (work : OracleComp TypedSpec Value) (before : State n KemSK source) (result : Value × State n KemSK source)
     (supported : result ∈ support ((simulateQ (RegistrationNativeExperiment.handler setup checks wire route representation
       created source credential) work).run before)) : Prefix before.beacons result.2.beacons :=
@@ -124,7 +124,7 @@ theorem program_prefix (setup : Setup base KemSK) (checks : Checks) (wire : Regi
 theorem raw_program_prefix (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (work : OracleComp RegistrationNativeInterface.Spec Value) (before : State n KemSK source)
     (result : Value × State n KemSK source)
     (supported : result ∈ support ((simulateQ (RegistrationNativeRawAdapter.handler wire
@@ -137,7 +137,7 @@ theorem raw_program_prefix (setup : Setup base KemSK) (checks : Checks) (wire : 
 theorem full_step_prefix (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (query : RegistrationNativeInterface.FullSpec.Domain)
     (before : RegistrationNativeLedger.State × State n KemSK source)
     (result : RegistrationNativeInterface.FullSpec.Range query × (RegistrationNativeLedger.State × State n KemSK source))

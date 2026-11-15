@@ -15,7 +15,7 @@ variable {n : Nat} {I KemSK E : Type} {base : OracleSpec I}
 variable {m : Type →Type} [Monad m] [LawfulMonad m]
 variable (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (source : RegistrationNativeMldsa.Source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (source : RegistrationNativeMldsa.Source)
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) m)
 
 noncomputable def localBody (index : Nat) :

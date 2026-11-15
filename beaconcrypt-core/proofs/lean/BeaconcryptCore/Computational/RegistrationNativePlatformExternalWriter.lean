@@ -26,7 +26,7 @@ theorem lift_joint (work : M Platform Value) (before : Native) :
 
 def init
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (M Platform))
-    (view : registration.SignedInitView) :
+    (view : registration.InitView) :
     StateT Native (M Platform) (RustM (core.option.Option (alloc.vec.Vec U8))) :=
   StateT.lift (simulateQ writer (AdapterRegistrationWriterRequestExtraction.encodeInit
     (E := E) (m := AdapterRegistrationWriterRequestMonad.Program E)
@@ -42,7 +42,7 @@ def response
 
 theorem init_joint
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (M Platform))
-    (view : registration.SignedInitView) (current : Native) (before : Platform) :
+    (view : registration.InitView) (current : Native) (before : Platform) :
     ((init writer view).run current).run before =
       (fun result => ((result.1, current), result.2)) <$>
         (simulateQ writer (AdapterRegistrationWriterRequestExtraction.encodeInit
@@ -62,7 +62,7 @@ theorem response_joint
 /-- The source-derived Init writer preserves all private native fields on every reached outcome, including allocation/serializer failure. -/
 theorem init_native
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (M Platform))
-    (view : registration.SignedInitView) (current : Native) (before : Platform)
+    (view : registration.InitView) (current : Native) (before : Platform)
     (result : (RustM (core.option.Option (alloc.vec.Vec U8)) × Native) × Platform)
     (supported : result ∈ support (((init writer view).run current).run before)) :
     result.1.2 = current := by

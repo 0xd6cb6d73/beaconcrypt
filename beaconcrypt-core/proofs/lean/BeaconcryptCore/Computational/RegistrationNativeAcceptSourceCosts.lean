@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhServerAuthSourceCosts
+import BeaconcryptCore.Computational.PqxdhRecordLiftCtxProgramBounds
 import BeaconcryptCore.Computational.RegistrationNativePrimitiveCosts
 
 /-! The actual authenticated Server collector has one scalar draw and one indexed encapsulation site. The weighted source bill retains all thirteen callback positions and their rejected continuations, while charging the precise two nonzero classes. -/

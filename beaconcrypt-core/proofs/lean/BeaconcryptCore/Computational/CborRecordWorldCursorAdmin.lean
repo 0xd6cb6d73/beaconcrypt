@@ -81,7 +81,7 @@ theorem install_server_shell (keyId : Std.U64) (binding : PeerBinding) (ref : Ke
         all_goals congr 1; apply server_ext; rfl
         all_goals funext other; by_cases same : other = keyId
         all_goals simp only [Function.update_apply, same, ite_true, ite_false, Option.map_some]
-        all_goals first | exact congrArg some counterEq | rfl
+        all_goals exact congrArg some counterEq
       · cases ref <;> simp only [worldShell, CborRecordWorldClient.next, ite_true,
           PqxdhRecordLiftWorld.markUsed, ownersEq]
     · simp only [PqxdhRecordLiftWorld.installServer, StateT.run, existing, ite_eq_right admitted,
@@ -192,7 +192,7 @@ theorem effects_shell (query : (EnvEffects n).Domain) (state : PqxdhRecordLiftWo
     exact capability_shell request (PqxdhRecordLiftWorld.chargeEffect (.inr request) state) result supported
 
 /-- The actual first initialization and duplicate refusal agree with public constructor metadata. -/
-theorem initialize_shell (created : PqxdhLiveServerConstruction.Created Unit) (state : PqxdhRecordLiftWorld.State n)
+theorem initialize_shell (created : PqxdhLiveServerConstruction.Created (Std.Array U8 151#usize)) (state : PqxdhRecordLiftWorld.State n)
     (result : Unit × PqxdhRecordLiftWorld.State n)
     (supported : result ∈ support ((PqxdhRecordLiftWorld.initializeServer created).run state)) :
     worldShell result.2 = CborRecordWorldClient.next (n := n) (.inl created) result.1 (worldShell state) := by

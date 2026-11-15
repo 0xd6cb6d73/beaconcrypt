@@ -336,10 +336,10 @@ theorem SourceFullCorrect.root {source : FixedHkdfSha512NoSaltSource} {hmac : Hm
 theorem SourceFullCorrect.initialChains {source : FixedHkdfSha512NoSaltSource}
     {hmac : HmacSha512} (correct : SourceFullCorrect source hmac) (input : Pqxdh.Bytes) :
     Pqxdh.rootChains source.crypto input = PqxdhJointKdf.initialProjection
-      (expandFull hmac .ratchet (extract hmac input)) := by
+      (expandFull hmac .initial (extract hmac input)) := by
   exact (PqxdhJointKdf.rootChains_eq_initialProjection source.crypto
     source.prefixConsistent input).trans
-      (congrArg PqxdhJointKdf.initialProjection (correct .ratchet input))
+      (congrArg PqxdhJointKdf.initialProjection (correct .initial input))
 
 /-- The source's entire 76-byte step is the two-block output in the reduction. -/
 theorem SourceFullCorrect.ratchetStep {source : FixedHkdfSha512NoSaltSource}

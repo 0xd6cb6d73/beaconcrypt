@@ -20,7 +20,7 @@ variable {n : Nat} {I KemSK P : Type} {base : OracleSpec I} {source : Registrati
 variable [material : PublicWrapperPlatform.Material] [ed : AdapterInitEdPrimitive.Operations]
 
  theorem native (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (self : beaconcrypt_public_wrapper.beacon.Beacon)
     (pending : registration.BeaconPending) (input : Slice U8) (owner : Owner source) (scalar : PqxdhJointGapDh.ScalarBytes)
     (before : RegistrationNativeExperiment.State n KemSK source) :
@@ -40,7 +40,7 @@ variable [material : PublicWrapperPlatform.Material] [ed : AdapterInitEdPrimitiv
 
  theorem platform (coins : QueryImpl unifSpec (StateT P ProbComp))
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (self : beaconcrypt_public_wrapper.beacon.Beacon)
     (pending : registration.BeaconPending) (input : Slice U8) (owner : Owner source) (scalar : PqxdhJointGapDh.ScalarBytes)
     (before : RegistrationNativeExperiment.State n KemSK source) (previous : P) :

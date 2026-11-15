@@ -21,6 +21,7 @@ Not restated: the P3 forms without `β_g` (CE-KT-L with its World and symbolic f
 open OracleComp OracleSpec ENNReal
 
 set_option autoImplicit false
+set_option warningAsError true
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineGated
 
@@ -95,7 +96,7 @@ structure LaterTargetBills (setup : Setup baseSpec KemSK) (codec : Codec Reader 
         (PqxdhDeploymentIdealEnv.envGD setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
         setup.serverKeyId bounds mode envReveal first second),
       result.2.primitive.1.effects .hash + result.2.primitive.1.native .hash ≤
-          budget.hash + budget.sends + budget.receives + budget.build + budget.finish + post.hash ∧
+          budget.hash + budget.sends + budget.receives + 2 * budget.build + 2 * budget.finish + post.hash ∧
         result.2.primitive.1.native .kdf ≤ budget.sends + 51 * budget.receives
 
 /-- `LaterTargetBills` holds: `kem_bills_later`, `slot_bills_later`, `ptc_bills` at the run-phase adversary `first`, `records_bills_later` and `hash_route_later`. Premises: `SourceFullCorrect`, `KemBound`, `initBound`, `budget.Respects first` and the post budget of `second` on every input. -/

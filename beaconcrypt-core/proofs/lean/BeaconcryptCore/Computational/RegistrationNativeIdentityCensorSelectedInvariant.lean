@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeIdentityCensorSource
+import BeaconcryptCore.Computational.RegistrationOracleStateSupport
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core

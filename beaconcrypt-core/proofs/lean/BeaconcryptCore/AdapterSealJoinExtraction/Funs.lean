@@ -24,7 +24,7 @@ namespace beaconcrypt_seal_join
 variable [BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations]
 
 /-- [beaconcrypt::ratchet::_proof_join_seal_two]:
-    Source: 'beaconcrypt/src/ratchet.rs', lines 870:0-878:1 -/
+    Source: 'beaconcrypt/src/ratchet.rs', lines 913:0-921:1 -/
 def ratchet._proof_join_seal_two
   (parts : Array (Slice Std.U8) 2#usize) :
   RustM (core.option.Option (alloc.vec.Vec Std.U8))

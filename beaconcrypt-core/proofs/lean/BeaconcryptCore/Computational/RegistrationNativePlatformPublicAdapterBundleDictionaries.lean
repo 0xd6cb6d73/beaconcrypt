@@ -21,14 +21,9 @@ variable [material : PublicWrapperPlatform.Material] [platform : PublicWrapperPl
 variable [ed : AdapterInitEdPrimitive.Operations]
 variable (coins : QueryImpl unifSpec (StateT P ProbComp))
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (view : AdapterPublicWrapperState.MaterialView source KemSK)
 local notation "M"=>StateT (Backend n KemSK) (StateT P ProbComp)
-
-noncomputable def sign (identity : beaconcrypt_public_wrapper.auth.MldsaIdentity) (request : registration.MldsaSigningRequest) : M (core.option.Option (alloc.vec.Vec U8)) :=
-  AdapterPublicBundleNative.vector <$>
-    RegistrationNativePlatformPublicAdapterBundleSigning.sample coins setup checks representation created
-      (RegistrationNativeMldsa.owned source (view.mldsa identity) request)
 
 noncomputable def edSign (failure : ed.Error) (message : Slice U8) (key : beaconcrypt_crypto.crypto_sign.SecretKey) :
     M (core.result.Result (alloc.vec.Vec U8) ed.Error) :=
@@ -37,10 +32,12 @@ noncomputable def edSign (failure : ed.Error) (message : Slice U8) (key : beacon
   pure (AdapterPublicBundlePrimitives.result failure (RegistrationAuthenticationShared.openedBytes (some (signature.toList++bytes))))
 
 @[instance_reducible] noncomputable def locals
-    (previous : LocalOperations (RustT M)) : LocalOperations (RustT M) :=
-  {previous with
-    auth_MldsaIdentity_public_key:=fun identity=>pure (view.mldsa identity).publicKey
-    auth_MldsaIdentity_sign_requested:=fun identity request=>⟨RustM.ok <$>sign coins setup checks representation created view identity request⟩}
+    (_coins : QueryImpl unifSpec (StateT P ProbComp))
+    (_setup : PqxdhServerAuthExperiment.Setup base KemSK) (_checks : PqxdhServerAuthExperiment.Checks)
+    (_representation : RegistrationServerRoleBackend.ConvertedIdentity _setup)
+    (_created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
+    (_view : AdapterPublicWrapperState.MaterialView source KemSK)
+    (previous : LocalOperations (RustT M)) : LocalOperations (RustT M) := previous
 
 @[instance_reducible] noncomputable def crypto
     (previous : CryptoOperations (RustT M)) (failure : ed.Error) : CryptoOperations (RustT M) :=
@@ -73,7 +70,7 @@ theorem getters :
     AdapterPublicBundleMaterial.Getters (m:=M) view := by
   let : LocalOperations (RustT M):=locals coins setup checks representation created view previousLocal
   let : CryptoOperations (RustT M):=crypto setup view previousCrypto failure
-  exact {ed:=fun _=>rfl,kx:=fun _=>rfl,kem:=fun _=>rfl,mldsa:=fun _=>rfl}
+  exact {ed:=fun _=>rfl,kx:=fun _=>rfl,kem:=fun _=>rfl}
 
 noncomputable def leaves (self : beaconcrypt_public_wrapper.beacon.Beacon) :
     let : LocalOperations (RustT M):=locals coins setup checks representation created view previousLocal
@@ -86,10 +83,8 @@ noncomputable def leaves (self : beaconcrypt_public_wrapper.beacon.Beacon) :
   exact {
   edSign:=fun message=>edSign setup view failure message self.identity_key.secret_key
   hash:=fun request before=>simulateQ coins ((RegistrationNativePlatformPublicAdapterAuthentication.hash setup checks representation created (RegistrationInputs.hashBytes request)).run before)
-  sign:=sign coins setup checks representation created view self.authentication.identity
   edLaw:=fun _=>rfl
-  hashLaw:=fun _=>rfl
-  signLaw:=fun _=>rfl}
+  hashLaw:=fun _=>rfl}
 
 omit material platform ed in
 private theorem array_equal {length : Usize} (left right : Std.Array U8 length) (same : left.val=right.val) : left=right := by
@@ -99,17 +94,15 @@ private theorem array_equal {length : Usize} (left right : Std.Array U8 length) 
   rfl
 
 theorem outgoing_source (self : beaconcrypt_public_wrapper.beacon.Beacon) (owner : RegistrationNativeBeaconFrontend.Owner source)
-    (secret : view.edSecret self.identity_key.secret_key=owner.identitySeed)
-    (credential : view.mldsa self.authentication.identity=owner.mldsa) :
+    (secret : view.edSecret self.identity_key.secret_key=owner.identitySeed) :
     let : LocalOperations (RustT M):=locals coins setup checks representation created view previousLocal
     let : CryptoOperations (RustT M):=crypto setup view previousCrypto failure
     let : ChildOperations (RustT M):=children coins setup checks representation created writer previousChildren
     AdapterPublicInitPublication.outgoing
       (AdapterPublicBundleMaterial.PublicationLeaves.hash (self:=self) (leaves coins setup checks representation created view previousLocal previousCrypto failure writer previousChildren self))
-      (AdapterPublicBundleMaterial.PublicationLeaves.sign (self:=self) (leaves coins setup checks representation created view previousLocal previousCrypto failure writer previousChildren self))
       (AdapterPublicInitPublication.edMethod (PqxdhRootTableInitialization.rootArray (setup.joint.publicKeys owner.identitySeed).ed25519)
         (AdapterPublicBundleMaterial.PublicationLeaves.edSign (self:=self) (leaves coins setup checks representation created view previousLocal previousCrypto failure writer previousChildren self)))=
-      RegistrationNativePlatformPublicAdapterBundleSigning.outgoing coins setup checks representation created owner.mldsa owner.identitySeed := by
+      RegistrationNativePlatformPublicAdapterBundleSigning.outgoing coins setup checks representation created owner.identitySeed := by
   let : LocalOperations (RustT M):=locals coins setup checks representation created view previousLocal
   let : CryptoOperations (RustT M):=crypto setup view previousCrypto failure
   let : ChildOperations (RustT M):=children coins setup checks representation created writer previousChildren
@@ -118,13 +111,7 @@ theorem outgoing_source (self : beaconcrypt_public_wrapper.beacon.Beacon) (owner
   cases query with
   | inl query=>cases query with
     | hash request=>rfl
-    | sign request payload digest=>
-      simp only [AdapterPublicInitPublication.outgoing,leaves,sign,credential,Functor.map_map]
-      have identity : (fun reply=>AdapterPublicInitPublication.borrowed (AdapterPublicBundleNative.vector reply))=id := by
-        funext reply
-        exact AdapterPublicBundleNative.borrowed_vector reply
-      rw [identity,id_map]
-      rfl
+    | sign request payload digest=>rfl
   | inr request=>
     classical
     simp only [AdapterPublicInitPublication.outgoing,leaves,AdapterPublicInitPublication.edMethod,edSign,secret]
@@ -133,7 +120,7 @@ theorem outgoing_source (self : beaconcrypt_public_wrapper.beacon.Beacon) (owner
       simp only [owns,views,decide_true,ite_true,map_pure,AdapterPublicBundlePrimitives.result_borrowed]
       apply StateT.ext
       intro current
-      change pure (_,current)=simulateQ coins ((RegistrationNativePlatformPublicAdapterBundleSigning.rawOutgoing setup checks representation created owner.mldsa owner.identitySeed (.inr request)).run current)
+      change pure (_,current)=simulateQ coins ((RegistrationNativePlatformPublicAdapterBundleSigning.rawOutgoing setup checks representation created owner.identitySeed (.inr request)).run current)
       simp only [RegistrationNativePlatformPublicAdapterBundleSigning.rawOutgoing,owns,ite_true,StateT.run_pure,simulateQ_pure]
     · have views : (PqxdhRootTableInitialization.rootArray (setup.joint.publicKeys owner.identitySeed).ed25519).val≠request.public_key.val:=by
         intro same
@@ -141,7 +128,7 @@ theorem outgoing_source (self : beaconcrypt_public_wrapper.beacon.Beacon) (owner
       simp only [views,decide_false,Bool.false_eq_true,ite_false]
       apply StateT.ext
       intro current
-      change pure (_,current)=simulateQ coins ((RegistrationNativePlatformPublicAdapterBundleSigning.rawOutgoing setup checks representation created owner.mldsa owner.identitySeed (.inr request)).run current)
+      change pure (_,current)=simulateQ coins ((RegistrationNativePlatformPublicAdapterBundleSigning.rawOutgoing setup checks representation created owner.identitySeed (.inr request)).run current)
       simp only [RegistrationNativePlatformPublicAdapterBundleSigning.rawOutgoing,owns,ite_false,StateT.run_pure,simulateQ_pure]
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterBundleDictionaries

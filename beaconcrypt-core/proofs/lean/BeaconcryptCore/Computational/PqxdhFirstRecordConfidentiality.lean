@@ -2,7 +2,7 @@ import BeaconcryptCore.Computational.PqxdhFirstRecordStopTagged
 import BeaconcryptCore.Computational.RawCtxSelectedConfidentialityObserver
 
 /-!
-First-record left-or-right confidentiality (step S7). The notion is single-challenge adaptive left-or-right confidentiality of one honest session's first record, in the full multi-party protocol with state reveals and RCCA-style receive suppression: the first record sent by Beacon `b` hides which of two equal-length plaintexts it carries.
+First-record left-or-right confidentiality (step S7). This module studies the classical post-hash HB-112 source model with explicit public AD and completed-binding metadata; current Native transcript hashing and full Server-pin admission are handled by the corresponding actual adapter security proofs. The notion is single-challenge adaptive left-or-right confidentiality of one honest session's first record, in the full multi-party protocol with state reveals and RCCA-style receive suppression: the first record sent by Beacon `b` hides which of two equal-length plaintexts it carries.
 
 The experiment is the HB-112 actual game with all secrets sampled inside. The adversary drives the whole post-registration interface through the wrapper `confPost`, which forwards every post request and handles one challenge `(m0, m1)`. The challenge is sent as Beacon `b`'s send of `m_β` only if it is the first acceptable challenge, no send of Beacon `b` was requested before, and the two plaintexts have equal length; otherwise it is refused without any request. After the challenge, raw-receive replies whose plaintext is a challenge plaintext are reported to the adversary as failures. The wrapper returns the adversary's bit only for a fresh challenge whose reply is Beacon `b`'s unique sequence-one record. `confGame` is the accepted pending leaf of the HB-112 actual game with this post, so its event also requires Beacon `b`'s first record to be published from the selected root with the selected chain and record key undisclosed.
 
@@ -19,6 +19,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhFirstRecordConfidentiality
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 
 section Fiber
 
@@ -1448,28 +1450,28 @@ noncomputable def trOriginal :
   | .inr (.finish index raw) => fun before =>
       (fun result => (some result.1.1.1, ((PqxdhSelectedPostCompiler.install index before.1.1 result.1.1.2, result.2),
           PqxdhInitialOriginPost.finish before.2 index result.1.2))) <$>
-        (selectedFinish pre application initial selector aux source writer prior parent key target nonce next decode mark raw
+        (selectedFinish (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next decode mark raw
           (before.1.1.roles.1.2 index)).run before.1.2
 
 /-- Erasing the transcript of the traced stopped source gives the stopped source. -/
 theorem trOriginal_erase (query : (PqxdhSelectedPostCompiler.Optional (PqxdhInitialGenericPost.Spec extra S B)).Domain)
     (before : Traced M P I D K A N C S B) :
-    Prod.map id Prod.fst <$> (trOriginal pre application initial selector aux source writer prior parent key target nonce next sender
+    Prod.map id Prod.fst <$> (trOriginal (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender
       route decode mark query).run before =
-      (PqxdhSelectedPostCompiler.original pre application initial selector aux source writer prior parent key target nonce next sender
+      (PqxdhSelectedPostCompiler.original (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender
         route decode query).run before.1 := by
   rcases query with (request | request) | ⟨index, raw⟩
   · simp only [trOriginal, PqxdhSelectedPostCompiler.original, StateT.run, Functor.map_map, Prod.map_def, id_eq]
   · simp only [trOriginal, PqxdhSelectedPostCompiler.original, StateT.run, Functor.map_map, Prod.map_def, id_eq]
   · simp only [trOriginal, PqxdhSelectedPostCompiler.original, StateT.run, Functor.map_map, Prod.map_def, id_eq]
-    rw [← finish_erase pre application initial selector aux source writer prior parent key target nonce next decode mark raw,
+    rw [← finish_erase (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next decode mark raw,
       PqxdhSelectedFirstRecord.state_map_apply, Functor.map_map]
 
 /-- Before a hidden disclosure, the traced ordinary source and the traced stopped source agree on every request. -/
 theorem traced_agree (query : (PqxdhSelectedPostCompiler.Optional (PqxdhInitialGenericPost.Spec extra S B)).Domain)
     (before : Traced M P I D K A N C S B) (clear : ¬ PqxdhSelectedPostDisclosure.Discloses (extra := extra) query before.1) :
-    (traced pre application initial selector aux source writer prior parent key target nonce next sender route decode mark query).run before =
-      (trOriginal pre application initial selector aux source writer prior parent key target nonce next sender route decode mark query).run before := by
+    (traced (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route decode mark query).run before =
+      (trOriginal (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route decode mark query).run before := by
   rcases query with (request | request) | ⟨index, raw⟩
   · cases request with
     | inl request =>
@@ -1488,7 +1490,7 @@ theorem traced_agree (query : (PqxdhSelectedPostCompiler.Optional (PqxdhInitialG
 
 /-- The traced ordinary source step at a hidden disclosure. -/
 theorem traced_read (request : RawCtxProtocolReveals.Request S B) (before : Traced M P I D K A N C S B) :
-    (traced pre application initial selector aux source writer prior parent key target nonce next sender route decode mark
+    (traced (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route decode mark
       (.inl (.inl (.inr request)))).run before =
       pure (some (RawCtxSelectedMessageReveals.interpretReply key request (RawCtxSelectedMessageReveals.step request before.1.1.roles).1),
         (PqxdhSelectedPostDisclosure.afterRead request before.1, PqxdhInitialOriginPost.record before.2 (.inr request)
@@ -1498,7 +1500,7 @@ theorem traced_read (request : RawCtxProtocolReveals.Request S B) (before : Trac
 
 /-- The traced stopped source step at a hidden disclosure. -/
 theorem trOriginal_read (request : RawCtxProtocolReveals.Request S B) (before : Traced M P I D K A N C S B) :
-    (trOriginal pre application initial selector aux source writer prior parent key target nonce next sender route decode mark
+    (trOriginal (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route decode mark
       (.inl (.inl (.inr request)))).run before =
       pure (RawCtxSelectedMessageReveals.emit request (RawCtxSelectedMessageReveals.step request before.1.1.roles).1,
         (PqxdhSelectedPostDisclosure.afterRead request before.1, traceRecord before.2 (.inr request)
@@ -1510,31 +1512,31 @@ theorem trOriginal_read (request : RawCtxProtocolReveals.Request S B) (before : 
 /-- Every final event conjoined with the absence of hidden disclosure has the same probability in the traced ordinary source and the traced stopped source. -/
 theorem traced_event_good {Result : Type} (work : OracleComp (PqxdhSelectedPostCompiler.Optional (PqxdhInitialGenericPost.Spec extra S B)) Result)
     (before : Traced M P I D K A N C S B) (event : Result × Traced M P I D K A N C S B → Prop) :
-    Pr{let result ← ((simulateQ (traced pre application initial selector aux source writer prior parent key target nonce next sender route decode mark)
+    Pr{let result ← ((simulateQ (traced (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route decode mark)
           work).run before)}[event result ∧ PqxdhSelectedPostDisclosure.Good result.2.1] =
-      Pr{let result ← ((simulateQ (trOriginal pre application initial selector aux source writer prior parent key target nonce next sender route decode mark)
+      Pr{let result ← ((simulateQ (trOriginal (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route decode mark)
           work).run before)}[event result ∧ PqxdhSelectedPostDisclosure.Good result.2.1] := by
   refine good_event_eq _ _ (fun state => PqxdhSelectedPostDisclosure.Good state.1)
     (fun query state => PqxdhSelectedPostDisclosure.Discloses (extra := extra) query state.1)
-    (traced_agree pre application initial selector aux source writer prior parent key target nonce next sender route decode mark)
+    (traced_agree (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route decode mark)
     ?_ ?_ ?_ ?_ work before event
   · intro query state result supported good
-    have erased := traced_erase pre application initial selector aux source writer prior parent key target nonce next sender route decode mark
+    have erased := traced_erase (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route decode mark
       query state
-    have mem : (result.1, result.2.1) ∈ support ((PqxdhSelectedPostDisclosure.normal pre application initial selector aux source writer
+    have mem : (result.1, result.2.1) ∈ support ((PqxdhSelectedPostDisclosure.normal (completedBinding := completedBinding) pre application initial selector aux source writer
         prior parent key target nonce next sender route decode query).run state.1) := by
       rw [← erased, support_map]
       exact ⟨result, supported, rfl⟩
-    exact PqxdhSelectedPostDisclosure.normal_good pre application initial selector aux source writer prior parent key target nonce next
+    exact PqxdhSelectedPostDisclosure.normal_good (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next
       sender route decode query state.1 _ mem good
   · intro query state result supported good
-    have erased := trOriginal_erase pre application initial selector aux source writer prior parent key target nonce next sender route decode
+    have erased := trOriginal_erase (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route decode
       mark query state
-    have mem : (result.1, result.2.1) ∈ support ((PqxdhSelectedPostCompiler.original pre application initial selector aux source writer
+    have mem : (result.1, result.2.1) ∈ support ((PqxdhSelectedPostCompiler.original (completedBinding := completedBinding) pre application initial selector aux source writer
         prior parent key target nonce next sender route decode query).run state.1) := by
       rw [← erased, support_map]
       exact ⟨result, supported, rfl⟩
-    exact PqxdhSelectedPostDisclosure.original_good pre application initial selector aux source writer prior parent key target nonce next
+    exact PqxdhSelectedPostDisclosure.original_good (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next
       sender route decode query state.1 _ mem good
   · intro query state disclosed result supported
     rcases query with ((request | request) | request) | request
@@ -1570,7 +1572,7 @@ noncomputable def ownerMarked (mark : PqxdhBeaconPhase2Shared.Secrets Shared →
   match before.beacon.phase with
   | .initSent control prekey oneTime kem => do
       let prepared ← simulateQ preForward
-        (PqxdhBeaconPhase2Shared.prepare control before.beacon.identity prekey oneTime kem raw)
+        (PqxdhBeaconPhase2Shared.prepare (completedBinding := completedBinding) control before.beacon.identity prekey oneTime kem raw)
       match prepared with
       | none => pure (finish control before none, none)
       | some pending => do
@@ -1581,14 +1583,14 @@ noncomputable def ownerMarked (mark : PqxdhBeaconPhase2Shared.Secrets Shared →
               let application ← (PqxdhSelectedInitialOwnerCompiler.Spec extra I D K X Response Shared).query (.inl (.inr (.inl pending.response)))
               tag (mark pending.root) <$> (PqxdhSelectedInitialOwnerCompiler.Spec extra I D K X Response Shared).query (.inr
                 ⟨control, before, PqxdhBeaconPhase2Shared.clearedMetadata pending.metadata,
-                  PqxdhSelectedMessageBeacon.knownKernel kernel, application⟩)
+                  pending.metadata.associatedData, PqxdhSelectedMessageBeacon.knownKernel kernel, application⟩)
   | _ => pure ((none, before), none)
 
 /-- Erasing the marker gives the compiled finish. -/
 theorem ownerMarked_erase (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Bool) (raw : Pqxdh.Bytes)
     (before : PqxdhSelectedInitialOwnerCompiler.Beacon I D K) :
-    Prod.fst <$> ownerMarked (extra := extra) (X := X) (Response := Response) mark raw before =
-      PqxdhSelectedInitialOwnerCompiler.owner raw before := by
+    Prod.fst <$> ownerMarked (completedBinding := completedBinding) (extra := extra) (X := X) (Response := Response) mark raw before =
+      PqxdhSelectedInitialOwnerCompiler.owner (completedBinding := completedBinding) raw before := by
   unfold ownerMarked PqxdhSelectedInitialOwnerCompiler.owner
   cases before.beacon.phase with
   | initSent control prekey oneTime kem =>
@@ -1617,8 +1619,8 @@ theorem ownerMarked_source (fixed : FixedHkdfSha512NoSaltSource) (writer : RawCt
     (prior : Prior) (parent : Option Entry) (key target : RootOutput)
     (nonce : NonceOutput) (next : RootOutput) (read : RawCtxReceive.FrameDecoder)
     (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Bool) (raw : Pqxdh.Bytes) (before : PqxdhSelectedInitialOwnerCompiler.Beacon I D K) :
-    simulateQ (source pre application initial selector aux fixed writer prior parent key target nonce next read) (ownerMarked mark raw before) =
-      PqxdhSelectedFirstRecord.selectedFinish pre application initial selector aux fixed writer prior parent key target nonce next read
+    simulateQ (source pre application initial selector aux fixed writer prior parent key target nonce next read) (ownerMarked (completedBinding := completedBinding) mark raw before) =
+      PqxdhSelectedFirstRecord.selectedFinish (completedBinding := completedBinding) pre application initial selector aux fixed writer prior parent key target nonce next read
         mark raw before := by
   unfold ownerMarked PqxdhSelectedFirstRecord.selectedFinish PqxdhInitialFinishOrigin.owner
   cases phase : before.beacon.phase
@@ -1759,7 +1761,7 @@ noncomputable def insImpl :
       (fun result => (some result.1.1.1.1, ((PqxdhSelectedPostCompiler.install index before.1.1 result.1.1.1.2, result.1.2),
         (PqxdhInitialOriginPost.finish before.2.1 index result.1.1.2, before.2.2.1, result.2)))) <$>
         (simulateQ markRaw ((simulateQ (PqxdhSelectedInitialOwnerCompiler.lower pre application initial selector aux prior parent target
-          nonce next read) (ownerMarked mark raw (before.1.1.roles.1.2 index))).run before.1.2)).run before.2.2.2
+          nonce next read) (ownerMarked (completedBinding := completedBinding) mark raw (before.1.1.roles.1.2 index))).run before.1.2)).run before.2.2.2
 
 /-- Evaluating a `markRaw`-wrapped program and dropping the flag evaluates the program. -/
 theorem markRaw_evaluate {σ Result : Type} (impl : QueryImpl AdaptiveCtxDynamicKnownKeys.Spec (StateT σ ProbComp))
@@ -1776,7 +1778,7 @@ noncomputable def insEvaluated :
       (StateT (InsFull M P I D K A N C S B) ProbComp) :=
   fun query => PqxdhSelectedStateInterpreter.evaluate
     (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder read) source.crypto key)
-    ((insImpl pre application initial selector aux source writer prior parent target nonce next sender route read mark b query).run)
+    ((insImpl (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark b query).run)
 
 /-- The instrumented augmented post: record requests use the nonce-refusal ledger of `RawCtxSelectedFamilyNonceCoupling.augmented`, every other request is evaluated. -/
 noncomputable def insAugmented :
@@ -1789,7 +1791,7 @@ noncomputable def insAugmented :
           result.2.2.2))) <$>
         (RawCtxSelectedFamilyNonceCoupling.augmented source writer prior parent key target nonce next sender route read request).run
           (before.1.1.1.roles, (before.1.1.2, before.2))
-  | query => (insEvaluated pre application initial selector aux source writer prior parent key target nonce next sender route read mark b
+  | query => (insEvaluated (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read mark b
       query).run before
 
 /-- The traced source state of an instrumented full state: front, local state with the challenger's cache, and transcript. -/
@@ -1799,9 +1801,9 @@ def insProject (state : InsFull M P I D K A N C S B) : Traced M P I D K A N C S 
 /-- The instrumented augmented post projects to the traced stopped source for every request and every state. -/
 theorem insAugmented_step (query : (PqxdhSelectedPostCompiler.Optional (PqxdhInitialGenericPost.Spec extra S B)).Domain)
     (before : InsFull M P I D K A N C S B) :
-    Prod.map id insProject <$> (insAugmented pre application initial selector aux source writer prior parent key target nonce next sender
+    Prod.map id insProject <$> (insAugmented (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender
       route read mark b query).run before =
-      (trOriginal pre application initial selector aux source writer prior parent key target nonce next sender route read mark query).run
+      (trOriginal (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read mark query).run
         (insProject before) := by
   rcases query with (request | request) | request
   · have actual := RawCtxSelectedFamilyNonceCoupling.augmented_step source writer prior parent key target nonce next sender route read request
@@ -1820,11 +1822,11 @@ theorem insAugmented_step (query : (PqxdhSelectedPostCompiler.Optional (PqxdhIni
   · cases request with
     | finish index raw =>
       have program := PqxdhSelectedInitialOwnerCompiler.program_source pre application initial selector aux source writer prior parent key target
-        nonce next read (ownerMarked mark raw (before.1.1.1.roles.1.2 index)) (before.1.1.2, before.2)
+        nonce next read (ownerMarked (completedBinding := completedBinding) mark raw (before.1.1.1.roles.1.2 index)) (before.1.1.2, before.2)
       rw [ownerMarked_source] at program
       have flagged := markRaw_evaluate (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder read) source.crypto key)
         ((simulateQ (PqxdhSelectedInitialOwnerCompiler.lower pre application initial selector aux prior parent target nonce next read)
-          (ownerMarked mark raw (before.1.1.1.roles.1.2 index))).run before.1.1.2) before.1.2.2.2 before.2
+          (ownerMarked (completedBinding := completedBinding) mark raw (before.1.1.1.roles.1.2 index))).run before.1.1.2) before.1.2.2.2 before.2
       simp only [PqxdhSelectedStateInterpreter.evaluate, PqxdhSelectedStateInterpreter.pair, StateT.run, Functor.map_map,
         RawCtxSelectedReceiveCompiler.project] at program
       simp only [StateT.run] at flagged
@@ -1843,8 +1845,8 @@ noncomputable def insStops (query : (PqxdhSelectedPostCompiler.Optional (PqxdhIn
 theorem insAugmented_nonstop (query : (PqxdhSelectedPostCompiler.Optional (PqxdhInitialGenericPost.Spec extra S B)).Domain)
     (before : InsFull M P I D K A N C S B)
     (clear : ¬ insStops (extra := extra) prior parent target nonce next sender query before) :
-    (insAugmented pre application initial selector aux source writer prior parent key target nonce next sender route read mark b query).run before =
-      (insEvaluated pre application initial selector aux source writer prior parent key target nonce next sender route read mark b query).run
+    (insAugmented (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read mark b query).run before =
+      (insEvaluated (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read mark b query).run
         before := by
   rcases query with (request | request) | request
   · have actual := RawCtxSelectedFamilyNonceCoupling.augmented_nonstop source writer prior parent key target nonce next sender route read
@@ -1863,19 +1865,19 @@ theorem insAugmented_nonstop (query : (PqxdhSelectedPostCompiler.Optional (Pqxdh
 theorem insEvaluated_program {Result : Type} (work : OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result) :
     PqxdhSelectedStateInterpreter.evaluate
       (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder read) source.crypto key)
-      (simulateQ (insImpl (P := P) pre application initial selector aux source writer prior parent target nonce next sender route read mark b)
+      (simulateQ (insImpl (completedBinding := completedBinding) (P := P) pre application initial selector aux source writer prior parent target nonce next sender route read mark b)
         work).run =
-      simulateQ (insEvaluated (P := P) pre application initial selector aux source writer prior parent key target nonce next sender route read
+      simulateQ (insEvaluated (completedBinding := completedBinding) (P := P) pre application initial selector aux source writer prior parent key target nonce next sender route read
         mark b) (RawCtxSelectedFamilyNonceCoupling.optionalClient work) := by
   rw [← RawCtxSelectedFamilyNonceCoupling.optional_client
-    (insImpl (P := P) pre application initial selector aux source writer prior parent target nonce next sender route read mark b) work]
+    (insImpl (completedBinding := completedBinding) (P := P) pre application initial selector aux source writer prior parent target nonce next sender route read mark b) work]
   exact PqxdhSelectedStateInterpreter.program _ _ _
 
 /-- At a selected-nonce stop, the evaluated instrumented step answers `none`. -/
 theorem insEvaluated_stop (query : (PqxdhSelectedPostCompiler.Optional (PqxdhInitialGenericPost.Spec extra S B)).Domain)
     (before : InsFull M P I D K A N C S B) (stops : insStops (extra := extra) prior parent target nonce next sender query before)
     (result : (PqxdhSelectedPostCompiler.Optional (PqxdhInitialGenericPost.Spec extra S B)).Range query × InsFull M P I D K A N C S B)
-    (supported : result ∈ support ((insEvaluated pre application initial selector aux source writer prior parent key target nonce next
+    (supported : result ∈ support ((insEvaluated (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next
       sender route read mark b query).run before)) : result.1 = none := by
   rcases query with (request | request) | request
   · have actual := RawCtxSelectedFamilyLiveCompiler.step_source source writer prior parent key target nonce next sender route read request
@@ -1903,9 +1905,9 @@ def insErase (state : InsFull M P I D K A N C S B) : PqxdhSelectedPostCompiler.F
 
 /-- The instrumented compiled post erases to the compiled post: same requests, replies and compiled state. -/
 theorem insImpl_erase (query : (PqxdhInitialGenericPost.Spec extra S B).Domain) (before : InsState M P I D K A N C S B) :
-    Prod.map id Prod.fst <$> ((insImpl pre application initial selector aux source writer prior parent target nonce next sender route read
+    Prod.map id Prod.fst <$> ((insImpl (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read
       mark b query).run).run before =
-      ((PqxdhSelectedPostCompiler.impl pre application initial selector aux source writer prior parent target nonce next sender route read
+      ((PqxdhSelectedPostCompiler.impl (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read
         query).run).run before.1 := by
   rcases query with (request | request) | request
   · simp only [insImpl, PqxdhSelectedPostCompiler.impl, OptionT.run_mk, StateT.run, Functor.map_map]
@@ -1915,17 +1917,17 @@ theorem insImpl_erase (query : (PqxdhInitialGenericPost.Spec extra S B).Domain) 
   · cases request with
     | finish index raw =>
       have erased := markRaw_erase ((simulateQ (PqxdhSelectedInitialOwnerCompiler.lower pre application initial selector aux prior parent
-        target nonce next read) (ownerMarked mark raw (before.1.1.roles.1.2 index))).run before.1.2) before.2.2.2
+        target nonce next read) (ownerMarked (completedBinding := completedBinding) mark raw (before.1.1.roles.1.2 index))).run before.1.2) before.2.2.2
       have owner : (simulateQ (PqxdhSelectedInitialOwnerCompiler.lower pre application initial selector aux prior parent target nonce next read)
-          (PqxdhSelectedInitialOwnerCompiler.owner raw (before.1.1.roles.1.2 index))).run before.1.2 =
+          (PqxdhSelectedInitialOwnerCompiler.owner (completedBinding := completedBinding) raw (before.1.1.roles.1.2 index))).run before.1.2 =
           (fun z => (z.1.1, z.2)) <$> (simulateQ (PqxdhSelectedInitialOwnerCompiler.lower pre application initial selector aux prior parent
-            target nonce next read) (ownerMarked mark raw (before.1.1.roles.1.2 index))).run before.1.2 := by
-        rw [← ownerMarked_erase (extra := extra) (X := X) (Response := Response) mark raw (before.1.1.roles.1.2 index), simulateQ_map,
+            target nonce next read) (ownerMarked (completedBinding := completedBinding) mark raw (before.1.1.roles.1.2 index))).run before.1.2 := by
+        rw [← ownerMarked_erase (completedBinding := completedBinding) (extra := extra) (X := X) (Response := Response) mark raw (before.1.1.roles.1.2 index), simulateQ_map,
           StateT.run_map]
       change _ <$> (_ <$> (simulateQ markRaw ((simulateQ (PqxdhSelectedInitialOwnerCompiler.lower pre application initial selector aux prior
-          parent target nonce next read) (ownerMarked mark raw (before.1.1.roles.1.2 index))).run before.1.2)).run before.2.2.2) =
+          parent target nonce next read) (ownerMarked (completedBinding := completedBinding) mark raw (before.1.1.roles.1.2 index))).run before.1.2)).run before.2.2.2) =
         _ <$> (simulateQ (PqxdhSelectedInitialOwnerCompiler.lower pre application initial selector aux prior parent target nonce next read)
-          (PqxdhSelectedInitialOwnerCompiler.owner raw (before.1.1.roles.1.2 index))).run before.1.2
+          (PqxdhSelectedInitialOwnerCompiler.owner (completedBinding := completedBinding) raw (before.1.1.roles.1.2 index))).run before.1.2
       rw [owner]
       conv_rhs => rw [← erased]
       simp only [Functor.map_map]
@@ -1934,19 +1936,19 @@ theorem insImpl_erase (query : (PqxdhInitialGenericPost.Spec extra S B).Domain) 
 /-- The instrumented evaluated post erases to the evaluated post of `PqxdhSelectedPostCompiler`. -/
 theorem insEvaluated_erase (query : (PqxdhSelectedPostCompiler.Optional (PqxdhInitialGenericPost.Spec extra S B)).Domain)
     (before : InsFull M P I D K A N C S B) :
-    Prod.map id insErase <$> (insEvaluated pre application initial selector aux source writer prior parent key target nonce next sender
+    Prod.map id insErase <$> (insEvaluated (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender
       route read mark b query).run before =
-      (PqxdhSelectedPostCompiler.evaluated pre application initial selector aux source writer prior parent key target nonce next sender
+      (PqxdhSelectedPostCompiler.evaluated (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender
         route read query).run (insErase before) := by
-  have erased := insImpl_erase pre application initial selector aux source writer prior parent target nonce next sender route read mark b
+  have erased := insImpl_erase (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark b
     query before.1
   change Prod.map id insErase <$> (PqxdhSelectedStateInterpreter.pair <$>
       (simulateQ (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder read) source.crypto key)
-        (((insImpl pre application initial selector aux source writer prior parent target nonce next sender route read mark b query).run).run
+        (((insImpl (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark b query).run).run
           before.1)).run before.2) =
     PqxdhSelectedStateInterpreter.pair <$>
       (simulateQ (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder read) source.crypto key)
-        (((PqxdhSelectedPostCompiler.impl pre application initial selector aux source writer prior parent target nonce next sender route read
+        (((PqxdhSelectedPostCompiler.impl (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read
           query).run).run before.1.1)).run before.2
   rw [← erased, simulateQ_map, StateT.run_map, Functor.map_map, Functor.map_map]
   rfl
@@ -1954,15 +1956,15 @@ theorem insEvaluated_erase (query : (PqxdhSelectedPostCompiler.Optional (PqxdhIn
 /-- The instrumented augmented post erases to the augmented post of `PqxdhSelectedPostCompiler`. -/
 theorem insAugmented_erase (query : (PqxdhSelectedPostCompiler.Optional (PqxdhInitialGenericPost.Spec extra S B)).Domain)
     (before : InsFull M P I D K A N C S B) :
-    Prod.map id insErase <$> (insAugmented pre application initial selector aux source writer prior parent key target nonce next sender
+    Prod.map id insErase <$> (insAugmented (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender
       route read mark b query).run before =
-      (PqxdhSelectedPostCompiler.augmented pre application initial selector aux source writer prior parent key target nonce next sender
+      (PqxdhSelectedPostCompiler.augmented (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender
         route read query).run (insErase before) := by
   rcases query with (request | request) | request
   · simp only [insAugmented, PqxdhSelectedPostCompiler.augmented, insErase, StateT.run, Functor.map_map, Prod.map_def, id_eq]
-  · exact insEvaluated_erase pre application initial selector aux source writer prior parent key target nonce next sender route read mark b
+  · exact insEvaluated_erase (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read mark b
       (.inl (.inr request)) before
-  · exact insEvaluated_erase pre application initial selector aux source writer prior parent key target nonce next sender route read mark b
+  · exact insEvaluated_erase (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read mark b
       (.inr request) before
 
 /-- Every instrumented post request makes at most one request of any class that the source-local callbacks never use. -/
@@ -1970,22 +1972,22 @@ theorem insPost_step (predicate : AdaptiveCtxDynamicKnownKeys.Spec.Domain → Pr
     (externalZero : ∀ query state, ((PqxdhSelectedCallbackCompiler.lower (extra := extra) (I := I) (D := D) (K := K) (X := X)
       (Response := Response) (Shared := Shared) pre application initial selector aux (.inl query)).run state).IsQueryBoundP predicate 0)
     (query : (PqxdhInitialGenericPost.Spec extra S B).Domain) (before : InsState M P I D K A N C S B) :
-    (((insImpl pre application initial selector aux source writer prior parent target nonce next sender route read mark b
+    (((insImpl (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark b
       query).run).run before).IsQueryBoundP predicate 1 := by
-  have bound := PqxdhFirstBeaconRecordCtx.post_step pre application initial selector aux source writer prior parent target nonce next
+  have bound := PqxdhFirstBeaconRecordCtx.post_step (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next
     sender route read predicate externalZero query before.1
-  rw [← insImpl_erase pre application initial selector aux source writer prior parent target nonce next sender route read mark b query
+  rw [← insImpl_erase (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark b query
     before] at bound
   exact (isQueryBoundP_map_iff _ _ _).mp bound
 
 /-- The instrumented post client makes at most `qPost` requests of any class used at most once per post request. -/
 theorem insPost_client (predicate : AdaptiveCtxDynamicKnownKeys.Spec.Domain → Prop) [DecidablePred predicate]
     (step : ∀ query (before : InsState M P I D K A N C S B),
-      (((insImpl (extra := extra) pre application initial selector aux source writer prior parent target nonce next sender route read
+      (((insImpl (completedBinding := completedBinding) (extra := extra) pre application initial selector aux source writer prior parent target nonce next sender route read
         mark b query).run).run before).IsQueryBoundP predicate 1)
     {Result : Type} (work : OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result) (qPost : Nat)
     (bounded : work.IsTotalQueryBound qPost) (before : InsState M P I D K A N C S B) :
-    (((simulateQ (insImpl pre application initial selector aux source writer prior parent target nonce next sender route read mark b)
+    (((simulateQ (insImpl (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark b)
       work).run).run before).IsQueryBoundP predicate qPost := by
   induction work using OracleComp.inductionOn generalizing qPost before with
   | pure value => trivial
@@ -2020,15 +2022,15 @@ variable
 /-- From any instrumented start, the traced ordinary source post and the instrumented augmented post give the same probability to every transcript event conjoined with the absence of hidden disclosure. -/
 theorem post_source_augmented (work : OracleComp (PqxdhInitialGenericPost.Spec extra S B) Bool)
     (start : InsFull M P I D K A N C S B) (event : Option Bool × Traced M P I D K A N C S B → Prop) :
-    Pr{let result ← ((simulateQ (traced pre application initial selector aux source writer prior parent key target nonce next sender route read mark)
+    Pr{let result ← ((simulateQ (traced (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read mark)
           (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run (insProject start))}[event result ∧ PqxdhSelectedPostDisclosure.Good result.2.1] =
-      Pr{let result ← ((simulateQ (insAugmented pre application initial selector aux source writer prior parent key target nonce next sender route read
+      Pr{let result ← ((simulateQ (insAugmented (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read
           mark b) (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run start)}[event (result.1, insProject result.2) ∧ PqxdhSelectedPostDisclosure.Good (insProject result.2).1] := by
   rw [traced_event_good]
   have projected := map_run_simulateQ_eq_of_query_map_eq
-    (insAugmented pre application initial selector aux source writer prior parent key target nonce next sender route read mark b)
-    (trOriginal pre application initial selector aux source writer prior parent key target nonce next sender route read mark)
-    insProject (insAugmented_step pre application initial selector aux source writer prior parent key target nonce next sender route read
+    (insAugmented (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read mark b)
+    (trOriginal (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read mark)
+    insProject (insAugmented_step (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read
       mark b) (RawCtxSelectedFamilyNonceCoupling.optionalClient work) start
   rw [← projected, prEvent_map]
   rfl
@@ -2036,20 +2038,20 @@ theorem post_source_augmented (work : OracleComp (PqxdhInitialGenericPost.Spec e
 /-- Unflagged: the instrumented augmented post exceeds the instrumented evaluated post on an event by at most the flagged event mass of the augmented run. -/
 theorem augmented_le_evaluated (work : OracleComp (PqxdhInitialGenericPost.Spec extra S B) Bool)
     (start : InsFull M P I D K A N C S B) (event : Option Bool × InsFull M P I D K A N C S B → Bool) :
-    𝒟[event <$> (simulateQ (insAugmented pre application initial selector aux source writer prior parent key target nonce next sender route
+    𝒟[event <$> (simulateQ (insAugmented (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route
         read mark b) (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run start] {true} ≤
-      𝒟[event <$> (simulateQ (insEvaluated pre application initial selector aux source writer prior parent key target nonce next sender route
+      𝒟[event <$> (simulateQ (insEvaluated (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route
         read mark b) (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run start] {true} +
       𝒟[(fun result => result.2.2 && event (result.1, result.2.1)) <$>
         (simulateQ (RawCtxSelectedFamilyNonceCoupling.marked
-          (insAugmented pre application initial selector aux source writer prior parent key target nonce next sender route read mark b)
+          (insAugmented (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read mark b)
           (insStops (extra := extra) prior parent target nonce next sender))
           (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run (start, false)] {true} := by
   have bound := PqxdhFirstBeaconRecordIntegrity.restricted_le
-    (insAugmented pre application initial selector aux source writer prior parent key target nonce next sender route read mark b)
-    (insEvaluated pre application initial selector aux source writer prior parent key target nonce next sender route read mark b)
+    (insAugmented (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read mark b)
+    (insEvaluated (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read mark b)
     (insStops (extra := extra) prior parent target nonce next sender)
-    (insAugmented_nonstop pre application initial selector aux source writer prior parent key target nonce next sender route read mark b)
+    (insAugmented_nonstop (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read mark b)
     (RawCtxSelectedFamilyNonceCoupling.optionalClient work) start event
   rw [← RawCtxSelectedFamilyNonceCoupling.marked_client _ (insStops (extra := extra) prior parent target nonce next sender)
       _ (start, false),
@@ -2061,20 +2063,20 @@ theorem augmented_le_evaluated (work : OracleComp (PqxdhInitialGenericPost.Spec 
 theorem evaluated_le_augmented (work : OracleComp (PqxdhInitialGenericPost.Spec extra S B) Bool)
     (start : InsFull M P I D K A N C S B) (event : Option Bool × InsFull M P I D K A N C S B → Bool)
     (returned : ∀ result, event result = true → result.1 = some true) :
-    𝒟[event <$> (simulateQ (insEvaluated pre application initial selector aux source writer prior parent key target nonce next sender route
+    𝒟[event <$> (simulateQ (insEvaluated (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route
         read mark b) (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run start] {true} ≤
-      𝒟[event <$> (simulateQ (insAugmented pre application initial selector aux source writer prior parent key target nonce next sender route
+      𝒟[event <$> (simulateQ (insAugmented (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route
         read mark b) (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run start] {true} := by
   have bound := PqxdhFirstBeaconRecordIntegrity.restricted_le
-    (insEvaluated pre application initial selector aux source writer prior parent key target nonce next sender route read mark b)
-    (insAugmented pre application initial selector aux source writer prior parent key target nonce next sender route read mark b)
+    (insEvaluated (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read mark b)
+    (insAugmented (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read mark b)
     (insStops (extra := extra) prior parent target nonce next sender)
-    (fun query state clear => (insAugmented_nonstop pre application initial selector aux source writer prior parent key target nonce next
+    (fun query state clear => (insAugmented_nonstop (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next
       sender route read mark b query state clear).symm)
     (RawCtxSelectedFamilyNonceCoupling.optionalClient work) start event
   have zero : 𝒟[(fun result => result.2.2 && event (result.1, result.2.1)) <$>
       (simulateQ (RawCtxSelectedFamilyNonceCoupling.marked
-        (insEvaluated pre application initial selector aux source writer prior parent key target nonce next sender route read mark b)
+        (insEvaluated (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read mark b)
         (insStops (extra := extra) prior parent target nonce next sender))
         (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run (start, false)] {true} = 0 := by
     rw [← prEvent_eq_evalDist_singleton _ true]
@@ -2082,7 +2084,7 @@ theorem evaluated_le_augmented (work : OracleComp (PqxdhInitialGenericPost.Spec 
     rw [support_map, Set.mem_image] at supported
     obtain ⟨result, reached, hit⟩ := supported
     rw [Bool.and_eq_true] at hit
-    have stopped := marked_flag_none _ _ (insEvaluated_stop pre application initial selector aux source writer prior parent key target nonce
+    have stopped := marked_flag_none _ _ (insEvaluated_stop (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce
       next sender route read mark b) work start result reached hit.1
     have some := returned _ hit.2
     rw [stopped] at some
@@ -2101,26 +2103,26 @@ theorem flagged_le_stop (work : OracleComp (PqxdhInitialGenericPost.Spec extra S
     (implies : ∀ result, event result = true → undisclosed (PqxdhSelectedPostCompiler.project (insErase result.2)) = true) :
     𝒟[(fun result => result.2.2 && event (result.1, result.2.1)) <$>
         (simulateQ (RawCtxSelectedFamilyNonceCoupling.marked
-          (insAugmented pre application initial selector aux source writer prior parent key target nonce next sender route read mark b)
+          (insAugmented (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read mark b)
           (insStops (extra := extra) prior parent target nonce next sender))
           (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run (start, false)] {true} ≤
       𝒟[(fun result => result.2.2 && undisclosed (PqxdhSelectedPostCompiler.project result.2.1)) <$>
         (simulateQ (RawCtxSelectedFamilyNonceCoupling.marked
-          (PqxdhSelectedPostCompiler.augmented pre application initial selector aux source writer prior parent key target nonce next sender
+          (PqxdhSelectedPostCompiler.augmented (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender
             route read)
           (PqxdhSelectedPostCompiler.Stops (extra := extra) prior parent target nonce next sender))
           (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run (insErase start, false)] {true} := by
   have step : ∀ (query : (PqxdhSelectedPostCompiler.Optional (PqxdhInitialGenericPost.Spec extra S B)).Domain)
       (state : InsFull M P I D K A N C S B × Bool),
       Prod.map id (Prod.map insErase id) <$> (RawCtxSelectedFamilyNonceCoupling.marked
-        (insAugmented pre application initial selector aux source writer prior parent key target nonce next sender route read mark b)
+        (insAugmented (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read mark b)
         (insStops (extra := extra) prior parent target nonce next sender) query).run state =
       (RawCtxSelectedFamilyNonceCoupling.marked
-        (PqxdhSelectedPostCompiler.augmented pre application initial selector aux source writer prior parent key target nonce next sender
+        (PqxdhSelectedPostCompiler.augmented (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender
           route read)
         (PqxdhSelectedPostCompiler.Stops (extra := extra) prior parent target nonce next sender) query).run (Prod.map insErase id state) := by
     intro query state
-    have erased := insAugmented_erase pre application initial selector aux source writer prior parent key target nonce next sender route
+    have erased := insAugmented_erase (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route
       read mark b query state.1
     rw [marked_run, marked_run]
     simp only [Prod.map_fst, Prod.map_snd, id_eq]
@@ -2209,10 +2211,10 @@ scoped instance goodDecidable (state : PqxdhSelectedPostCompiler.SourceState M P
 
 /-- The instrumented compiled first-record run: the selected builder, then the instrumented evaluated post; the event is `InsEvent`. -/
 noncomputable def insCompiledRun (number : Std.U64) (ancestors disclosed : List RatchetChain) : ProbComp Bool := do
-  let built ← firstBuild pre application initial selector aux source writer previousRoot response64 sender index metadata ready
+  let built ← firstBuild (associatedData := associatedData) pre application initial selector aux source writer previousRoot response64 sender index metadata ready
     before selected shared privateState cache store key nonce next
   (fun result => decide (InsEvent source previousRoot response64 selected number ancestors disclosed result)) <$>
-    (simulateQ (insEvaluated pre application initial selector aux source writer (productionStream source.crypto) none key target nonce next
+    (simulateQ (insEvaluated (completedBinding := completedBinding) pre application initial selector aux source writer (productionStream source.crypto) none key target nonce next
       sender route decode (PqxdhInitialSelectedOrigin.mark source selectedMessage) b)
       (RawCtxSelectedFamilyNonceCoupling.optionalClient (post built.1.1))).run (insStart index built)
 
@@ -2222,28 +2224,28 @@ noncomputable def keyRun (number : Std.U64) (ancestors disclosed : List RatchetC
       PqxdhSelectedPostDisclosure.Good result.2.1 ∧
       RawCtxFreshChainCut.concreteChain key ∈ RawCtxSelectedMessageFreshness.known disclosed result.2.1.1.roles.2)
     (Classical.propDecidable _)) <$>
-    firstRun pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode
+    firstRun (associatedData := associatedData) (completedBinding := completedBinding) pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode
       index metadata ready post before selected shared privateState cache store key nonce next
 
 /-- Per selected builder result: the traced source event is dominated by the instrumented evaluated event plus the restricted stop integrand of `PqxdhFirstBeaconRecordIntegrity.stopRun`. -/
 theorem built_upper (number : Std.U64) (ancestors disclosed : List RatchetChain) (built : Built M P I D K A N S B) :
     𝒟[(fun result => decide (FirstEvent source previousRoot response64 selected number ancestors disclosed result ∧
         PqxdhSelectedPostDisclosure.Good result.2.1)) <$>
-      (simulateQ (traced pre application initial selector aux source writer (productionStream source.crypto) none key target nonce next
+      (simulateQ (traced (completedBinding := completedBinding) pre application initial selector aux source writer (productionStream source.crypto) none key target nonce next
         sender route decode (PqxdhInitialSelectedOrigin.mark source selectedMessage))
         (RawCtxSelectedFamilyNonceCoupling.optionalClient (post built.1.1))).run
         ((built.1.2, built.2), selectedAfter PqxdhInitialSourcePublication.empty built.1.2 index true built.1.1)] {true} ≤
     𝒟[(fun result => decide (InsEvent source previousRoot response64 selected number ancestors disclosed result)) <$>
-      (simulateQ (insEvaluated pre application initial selector aux source writer (productionStream source.crypto) none key target nonce next
+      (simulateQ (insEvaluated (completedBinding := completedBinding) pre application initial selector aux source writer (productionStream source.crypto) none key target nonce next
         sender route decode (PqxdhInitialSelectedOrigin.mark source selectedMessage) b)
         (RawCtxSelectedFamilyNonceCoupling.optionalClient (post built.1.1))).run (insStart index built)] {true} +
     𝒟[(fun result => result.2.2 && decide (Undisclosed target ancestors disclosed (PqxdhSelectedPostCompiler.project result.2.1))) <$>
       (simulateQ (RawCtxSelectedFamilyNonceCoupling.marked
-        (PqxdhSelectedPostCompiler.augmented pre application initial selector aux source writer (productionStream source.crypto) none key
+        (PqxdhSelectedPostCompiler.augmented (completedBinding := completedBinding) pre application initial selector aux source writer (productionStream source.crypto) none key
           target nonce next sender route decode)
         (PqxdhSelectedPostCompiler.Stops (extra := extra) (productionStream source.crypto) none target nonce next sender))
         (RawCtxSelectedFamilyNonceCoupling.optionalClient (post built.1.1))).run (startOf built, false)] {true} := by
-  have same := post_source_augmented pre application initial selector aux source writer (productionStream source.crypto) none key target
+  have same := post_source_augmented (completedBinding := completedBinding) pre application initial selector aux source writer (productionStream source.crypto) none key target
     nonce next sender route decode (PqxdhInitialSelectedOrigin.mark source selectedMessage) b (post built.1.1) (insStart index built)
     (FirstEvent source previousRoot response64 selected number ancestors disclosed)
   rw [true_mass_eq]
@@ -2252,11 +2254,11 @@ theorem built_upper (number : Std.U64) (ancestors disclosed : List RatchetChain)
   refine le_of_eq_of_le (prEvent_congr _ _ (InsEvent source previousRoot response64 selected number ancestors disclosed)
     fun _ => Iff.rfl) ?_
   rw [← true_mass_eq]
-  refine (augmented_le_evaluated pre application initial selector aux source writer (productionStream source.crypto) none key target nonce
+  refine (augmented_le_evaluated (completedBinding := completedBinding) pre application initial selector aux source writer (productionStream source.crypto) none key target nonce
     next sender route decode (PqxdhInitialSelectedOrigin.mark source selectedMessage) b (post built.1.1) (insStart index built)
     (fun result => decide (InsEvent source previousRoot response64 selected number ancestors disclosed result))).trans ?_
   refine add_le_add le_rfl ?_
-  exact flagged_le_stop pre application initial selector aux source writer (productionStream source.crypto) none key target nonce
+  exact flagged_le_stop (completedBinding := completedBinding) pre application initial selector aux source writer (productionStream source.crypto) none key target nonce
     next sender route decode (PqxdhInitialSelectedOrigin.mark source selectedMessage) b (post built.1.1) (insStart index built)
     (fun result => decide (InsEvent source previousRoot response64 selected number ancestors disclosed result))
     (fun state => decide (Undisclosed target ancestors disclosed state)) (fun result holds => by
@@ -2266,20 +2268,20 @@ theorem built_upper (number : Std.U64) (ancestors disclosed : List RatchetChain)
 /-- Per selected builder result: the instrumented evaluated event never exceeds the traced source event. -/
 theorem built_lower (number : Std.U64) (ancestors disclosed : List RatchetChain) (built : Built M P I D K A N S B) :
     𝒟[(fun result => decide (InsEvent source previousRoot response64 selected number ancestors disclosed result)) <$>
-      (simulateQ (insEvaluated pre application initial selector aux source writer (productionStream source.crypto) none key target nonce next
+      (simulateQ (insEvaluated (completedBinding := completedBinding) pre application initial selector aux source writer (productionStream source.crypto) none key target nonce next
         sender route decode (PqxdhInitialSelectedOrigin.mark source selectedMessage) b)
         (RawCtxSelectedFamilyNonceCoupling.optionalClient (post built.1.1))).run (insStart index built)] {true} ≤
     𝒟[(fun result => decide (FirstEvent source previousRoot response64 selected number ancestors disclosed result ∧
         PqxdhSelectedPostDisclosure.Good result.2.1)) <$>
-      (simulateQ (traced pre application initial selector aux source writer (productionStream source.crypto) none key target nonce next
+      (simulateQ (traced (completedBinding := completedBinding) pre application initial selector aux source writer (productionStream source.crypto) none key target nonce next
         sender route decode (PqxdhInitialSelectedOrigin.mark source selectedMessage))
         (RawCtxSelectedFamilyNonceCoupling.optionalClient (post built.1.1))).run
         ((built.1.2, built.2), selectedAfter PqxdhInitialSourcePublication.empty built.1.2 index true built.1.1)] {true} := by
-  refine (evaluated_le_augmented pre application initial selector aux source writer (productionStream source.crypto) none key target nonce
+  refine (evaluated_le_augmented (completedBinding := completedBinding) pre application initial selector aux source writer (productionStream source.crypto) none key target nonce
     next sender route decode (PqxdhInitialSelectedOrigin.mark source selectedMessage) b (post built.1.1) (insStart index built)
     (fun result => decide (InsEvent source previousRoot response64 selected number ancestors disclosed result))
     (fun result holds => (decide_eq_true_iff.mp holds).1.1)).trans (le_of_eq ?_)
-  have same := post_source_augmented pre application initial selector aux source writer (productionStream source.crypto) none key target
+  have same := post_source_augmented (completedBinding := completedBinding) pre application initial selector aux source writer (productionStream source.crypto) none key target
     nonce next sender route decode (PqxdhInitialSelectedOrigin.mark source selectedMessage) b (post built.1.1) (insStart index built)
     (FirstEvent source previousRoot response64 selected number ancestors disclosed)
   rw [true_mass_eq, true_mass_eq]
@@ -2287,11 +2289,11 @@ theorem built_lower (number : Std.U64) (ancestors disclosed : List RatchetChain)
 
 /-- The selected first-record run is the selected builder followed by the traced post, as a bind over `firstBuild`. -/
 theorem firstRun_bind {α : Type} (f : Option Bool × Traced M P I D K A N RootOracle.QueryCache S B → α) :
-    f <$> firstRun pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode
+    f <$> firstRun (associatedData := associatedData) (completedBinding := completedBinding) pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode
       index metadata ready post before selected shared privateState cache store key nonce next =
-      firstBuild pre application initial selector aux source writer previousRoot response64 sender index metadata ready
+      firstBuild (associatedData := associatedData) pre application initial selector aux source writer previousRoot response64 sender index metadata ready
         before selected shared privateState cache store key nonce next >>= fun built => f <$>
-          (simulateQ (traced pre application initial selector aux source writer (productionStream source.crypto) none key target nonce next
+          (simulateQ (traced (completedBinding := completedBinding) pre application initial selector aux source writer (productionStream source.crypto) none key target nonce next
             sender route decode (PqxdhInitialSelectedOrigin.mark source selectedMessage))
             (RawCtxSelectedFamilyNonceCoupling.optionalClient (post built.1.1))).run
             ((built.1.2, built.2), selectedAfter PqxdhInitialSourcePublication.empty built.1.2 index true built.1.1) := by
@@ -2301,11 +2303,11 @@ theorem firstRun_bind {α : Type} (f : Option Bool × Traced M P I D K A N RootO
 theorem first_upper (number : Std.U64) (position : number.val = 1) (ancestors disclosed : List RatchetChain) :
     𝒟[(fun result => PqxdhInitialSourceRandom.decision source previousRoot response64 selected
         (RawCtxSelectedMessageKdf.response key nonce next) number ancestors disclosed (nativeView key result)) <$>
-      firstRun pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode
+      firstRun (associatedData := associatedData) (completedBinding := completedBinding) pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode
         index metadata ready post before selected shared privateState cache store key nonce next] {true} ≤
-    𝒟[insCompiledRun pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode index
+    𝒟[insCompiledRun (associatedData := associatedData) (completedBinding := completedBinding) pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode index
       metadata ready post before selected shared privateState cache store key nonce next b number ancestors disclosed] {true} +
-    𝒟[stopRun pre application initial selector aux source writer previousRoot response64 sender route decode index metadata ready
+    𝒟[stopRun (associatedData := associatedData) (completedBinding := completedBinding) pre application initial selector aux source writer previousRoot response64 sender route decode index metadata ready
       post before selected shared privateState cache store key nonce next ancestors disclosed] {true} := by
   refine (PqxdhFirstBeaconRecordIntegrity.map_mono _ _ (fun result => decide (FirstEvent source previousRoot response64 selected number
     ancestors disclosed result ∧ PqxdhSelectedPostDisclosure.Good result.2.1)) ?_).trans ?_
@@ -2316,25 +2318,25 @@ theorem first_upper (number : Std.U64) (position : number.val = 1) (ancestors di
     exact ⟨⟨characterized.1.1, characterized.1.2, characterized.2.2.1⟩, characterized.2.1⟩
   · rw [firstRun_bind]
     exact PqxdhFirstBeaconRecordIntegrity.true_bind_le _ _ _ _ fun built =>
-      built_upper pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode index
+      built_upper (completedBinding := completedBinding) pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode index
         post selected key nonce next b number ancestors disclosed built
 
 /-- The instrumented compiled run is dominated by the first randomized source decision plus the key-disclosure run. -/
 theorem first_lower (number : Std.U64) (position : number.val = 1) (ancestors disclosed : List RatchetChain) :
-    𝒟[insCompiledRun pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode index
+    𝒟[insCompiledRun (associatedData := associatedData) (completedBinding := completedBinding) pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode index
       metadata ready post before selected shared privateState cache store key nonce next b number ancestors disclosed] {true} ≤
     𝒟[(fun result => PqxdhInitialSourceRandom.decision source previousRoot response64 selected
         (RawCtxSelectedMessageKdf.response key nonce next) number ancestors disclosed (nativeView key result)) <$>
-      firstRun pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode
+      firstRun (associatedData := associatedData) (completedBinding := completedBinding) pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode
         index metadata ready post before selected shared privateState cache store key nonce next] {true} +
-    𝒟[keyRun pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode index
+    𝒟[keyRun (associatedData := associatedData) (completedBinding := completedBinding) pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode index
       metadata ready post before selected shared privateState cache store key nonce next number ancestors disclosed] {true} := by
   refine le_trans ?_ (map_le_add _ (fun result => decide (FirstEvent source previousRoot response64 selected number ancestors disclosed
     result ∧ PqxdhSelectedPostDisclosure.Good result.2.1)) _ _ ?_)
   · unfold insCompiledRun
     rw [firstRun_bind]
     exact PqxdhFirstBeaconRecordCtx.true_bind_mono _ _ _ fun built =>
-      built_lower pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode index
+      built_lower (completedBinding := completedBinding) pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode index
         post selected key nonce next b number ancestors disclosed built
   · intro result holds
     rw [decide_eq_true_iff] at holds
@@ -2365,12 +2367,12 @@ local notation "zeroRoot" => (List.Vector.replicate 32 0 : RootOutput)
 
 /-- The instrumented compiled continuation of one prepared context: completed preparations give `false`; a pending preparation runs the selected builder and the instrumented evaluated post with the prepared callbacks of its own KEM secret and challenge. -/
 noncomputable def insCompiledObserve (target : Target S (B + 1))
-    (context : PqxdhInitialLegalObserver.Context env0 kem attachedVerify primitives program post)
+    (context : PqxdhInitialLegalObserver.Context (associatedData := associatedData) (completedBinding := completedBinding) env0 kem attachedVerify primitives program post)
     (initialBlock : HmacBlock) (nonce : NonceOutput) (chain key : RootOutput) : ProbComp Bool :=
-  match PqxdhInitialPreparedSourceInput.input env0 baseImpl kem attachedVerify primitives program post context
+  match PqxdhInitialPreparedSourceInput.input (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program post context
       target.owner target.number target.ancestors target.disclosed with
   | .inl _ => pure false
-  | .inr input => insCompiledRun
+  | .inr input => insCompiledRun (associatedData := associatedData) (completedBinding := completedBinding)
       (PqxdhPreparedPrefixCallbacks.preparation attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem
         context.secretKey context.ciphertext)
       (PqxdhPreparedPrefixCallbacks.application attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem
@@ -2387,12 +2389,12 @@ noncomputable def insCompiledObserve (target : Target S (B + 1))
 
 /-- The key-disclosure continuation of one prepared context. -/
 noncomputable def keyObserve (target : Target S (B + 1))
-    (context : PqxdhInitialLegalObserver.Context env0 kem attachedVerify primitives program post)
+    (context : PqxdhInitialLegalObserver.Context (associatedData := associatedData) (completedBinding := completedBinding) env0 kem attachedVerify primitives program post)
     (initialBlock : HmacBlock) (nonce : NonceOutput) (chain key : RootOutput) : ProbComp Bool :=
-  match PqxdhInitialPreparedSourceInput.input env0 baseImpl kem attachedVerify primitives program post context
+  match PqxdhInitialPreparedSourceInput.input (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program post context
       target.owner target.number target.ancestors target.disclosed with
   | .inl _ => pure false
-  | .inr input => keyRun
+  | .inr input => keyRun (associatedData := associatedData) (completedBinding := completedBinding)
       (PqxdhPreparedPrefixCallbacks.preparation attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem
         context.secretKey context.ciphertext)
       (PqxdhPreparedPrefixCallbacks.application attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem
@@ -2410,28 +2412,28 @@ noncomputable def keyObserve (target : Target S (B + 1))
 /-- The instrumented compiled first-record game: the actual preparation, the initializer block, the selected nonce and next chain, then the selected key, then the instrumented compiled continuation. -/
 noncomputable def insCompiledGame (target : Target S (B + 1)) : ProbComp Bool := do
   let context ← PqxdhCorrelatedExtractFamily.prepare baseImpl kem
-    (PqxdhAuthenticatedRootExperiment.protocol env0 kem attachedVerify primitives program post)
+    (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env0 kem attachedVerify primitives program post)
   let initialBlock ← $ᵗ HmacBlock
   let nonce ← $ᵗ NonceOutput
   let chain ← $ᵗ RootOutput
   let key ← $ᵗ RootOutput
-  insCompiledObserve setup env callbacks baseImpl kem attachedVerify primitives program post b target context initialBlock nonce chain key
+  insCompiledObserve (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b target context initialBlock nonce chain key
 
 /-- The explicit key-disclosure game `keyGame`: the same samples; in the key-last run, the first-record event and no hidden disclosure hold while the uniform record key equals a revealed value. -/
 noncomputable def keyGame (target : Target S (B + 1)) : ProbComp Bool := do
   let context ← PqxdhCorrelatedExtractFamily.prepare baseImpl kem
-    (PqxdhAuthenticatedRootExperiment.protocol env0 kem attachedVerify primitives program post)
+    (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env0 kem attachedVerify primitives program post)
   let initialBlock ← $ᵗ HmacBlock
   let nonce ← $ᵗ NonceOutput
   let chain ← $ᵗ RootOutput
   let key ← $ᵗ RootOutput
-  keyObserve setup env callbacks baseImpl kem attachedVerify primitives program post target context initialBlock nonce chain key
+  keyObserve (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post target context initialBlock nonce chain key
 
 /-- The pending source-observer mass of the first-record key-last endpoint is dominated by the instrumented compiled game plus the restricted stop game. -/
 theorem pending_ideal_upper (target : Target S (B + 1)) (position : target.number.val = 1) :
-    𝒟[PqxdhFirstRecordTarget.pendingIdeal env0 baseImpl kem attachedVerify primitives program post target] {true} ≤
-    𝒟[insCompiledGame setup env callbacks baseImpl kem attachedVerify primitives program post b target] {true} +
-    𝒟[stopGame setup env callbacks baseImpl kem attachedVerify primitives program post target] {true} := by
+    𝒟[PqxdhFirstRecordTarget.pendingIdeal (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program post target] {true} ≤
+    𝒟[insCompiledGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b target] {true} +
+    𝒟[stopGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post target] {true} := by
   unfold PqxdhFirstRecordTarget.pendingIdeal PqxdhAdaptiveMessageKeySource.firstPrepare insCompiledGame stopGame
   rw [PqxdhFirstRecordTarget.mapPost_choose]
   simp only [bind_assoc, pure_bind, PqxdhFirstRecordTarget.unitTargets, PqxdhInitialPreparedSourceInput.prior, bind_map_left]
@@ -2452,17 +2454,17 @@ theorem pending_ideal_upper (target : Target S (B + 1)) (position : target.numbe
     simp only [PqxdhInitialPreparedSourceInput.input, hstate, PqxdhAdaptiveMessageKeySource.firstObserve,
       PqxdhAdaptiveFirstMaterial.observe]
     change 𝒟[PqxdhInitialSourceRandom.decision _ _ _ _ (RawCtxSelectedMessageKdf.response key nonce chain) _ _ _ <$>
-      PqxdhInitialSourceRandom.randomRun _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ (RawCtxSelectedMessageKdf.response key nonce chain)] {true} ≤ _
-    rw [randomRun_prepared setup env callbacks ∅ baseImpl kem attachedVerify primitives context.secretKey context.ciphertext,
+      PqxdhInitialSourceRandom.randomRun (associatedData := associatedData) (completedBinding := completedBinding) _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ (RawCtxSelectedMessageKdf.response key nonce chain)] {true} ≤ _
+    rw [randomRun_prepared (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks ∅ baseImpl kem attachedVerify primitives context.secretKey context.ciphertext,
       Functor.map_map]
-    exact first_upper _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ position _ _
+    exact first_upper (associatedData := associatedData) (completedBinding := completedBinding) _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ position _ _
 
 set_option maxRecDepth 20000 in
 /-- The instrumented compiled game is dominated by the pending source-observer mass of the first-record key-last endpoint plus the key-disclosure game. -/
 theorem pending_ideal_lower (target : Target S (B + 1)) (position : target.number.val = 1) :
-    𝒟[insCompiledGame setup env callbacks baseImpl kem attachedVerify primitives program post b target] {true} ≤
-    𝒟[PqxdhFirstRecordTarget.pendingIdeal env0 baseImpl kem attachedVerify primitives program post target] {true} +
-    𝒟[keyGame setup env callbacks baseImpl kem attachedVerify primitives program post target] {true} := by
+    𝒟[insCompiledGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b target] {true} ≤
+    𝒟[PqxdhFirstRecordTarget.pendingIdeal (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program post target] {true} +
+    𝒟[keyGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post target] {true} := by
   unfold PqxdhFirstRecordTarget.pendingIdeal PqxdhAdaptiveMessageKeySource.firstPrepare insCompiledGame keyGame
   rw [PqxdhFirstRecordTarget.mapPost_choose]
   simp only [bind_assoc, pure_bind, PqxdhFirstRecordTarget.unitTargets, PqxdhInitialPreparedSourceInput.prior, bind_map_left]
@@ -2480,10 +2482,10 @@ theorem pending_ideal_lower (target : Target S (B + 1)) (position : target.numbe
     simp only [PqxdhInitialPreparedSourceInput.input, hstate, PqxdhAdaptiveMessageKeySource.firstObserve,
       PqxdhAdaptiveFirstMaterial.observe]
     change _ ≤ 𝒟[PqxdhInitialSourceRandom.decision _ _ _ _ (RawCtxSelectedMessageKdf.response key nonce chain) _ _ _ <$>
-      PqxdhInitialSourceRandom.randomRun _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ (RawCtxSelectedMessageKdf.response key nonce chain)] {true} + _
-    rw [randomRun_prepared setup env callbacks ∅ baseImpl kem attachedVerify primitives context.secretKey context.ciphertext,
+      PqxdhInitialSourceRandom.randomRun (associatedData := associatedData) (completedBinding := completedBinding) _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ (RawCtxSelectedMessageKdf.response key nonce chain)] {true} + _
+    rw [randomRun_prepared (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks ∅ baseImpl kem attachedVerify primitives context.secretKey context.ciphertext,
       Functor.map_map]
-    exact first_lower _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ position _ _
+    exact first_lower (associatedData := associatedData) (completedBinding := completedBinding) _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ position _ _
 
 end Prepared
 
@@ -2536,10 +2538,10 @@ theorem insEvent_client (number : Std.U64) (ancestors disclosed : List RatchetCh
 /-- The key-free instrumented first-record CTX client with output `out`: the compiled first Server builder, then the instrumented compiled post from the builder's state with the first transcript entry. -/
 noncomputable def insFirstClient (out : Option Bool × InsState M P I D K A N RootOracle.QueryCache S B → Bool) :
     OracleComp AdaptiveCtxDynamicKnownKeys.Spec Bool := do
-  let built ← ((compiledBuild pre application initial selector aux source writer (productionStream source.crypto) none target
+  let built ← ((compiledBuild (associatedData := associatedData) pre application initial selector aux source writer (productionStream source.crypto) none target
     nonce next sender (initialKernel response64) index metadata ready).run (initialFront before)).run
       (initialShared shared privateState cache store).1
-  let result ← ((simulateQ (insImpl pre application initial selector aux source writer (productionStream source.crypto) none target
+  let result ← ((simulateQ (insImpl (completedBinding := completedBinding) pre application initial selector aux source writer (productionStream source.crypto) none target
     nonce next sender route decode (PqxdhInitialSelectedOrigin.mark source selectedMessage) b) (post built.1.1)).run).run
       ((built.1.2, built.2), (selectedAfter PqxdhInitialSourcePublication.empty built.1.2 index true built.1.1, none, false))
   pure (out result)
@@ -2547,18 +2549,18 @@ noncomputable def insFirstClient (out : Option Bool × InsState M P I D K A N Ro
 /-- The raw result of the instrumented first-record client: the compiled first Server builder, then the instrumented compiled post, returning the post result and the final instrumented state. -/
 noncomputable def insFirstRun :
     OracleComp AdaptiveCtxDynamicKnownKeys.Spec (Option Bool × InsState M P I D K A N RootOracle.QueryCache S B) := do
-  let built ← ((compiledBuild pre application initial selector aux source writer (productionStream source.crypto) none target
+  let built ← ((compiledBuild (associatedData := associatedData) pre application initial selector aux source writer (productionStream source.crypto) none target
     nonce next sender (initialKernel response64) index metadata ready).run (initialFront before)).run
       (initialShared shared privateState cache store).1
-  ((simulateQ (insImpl pre application initial selector aux source writer (productionStream source.crypto) none target
+  ((simulateQ (insImpl (completedBinding := completedBinding) pre application initial selector aux source writer (productionStream source.crypto) none target
     nonce next sender route decode (PqxdhInitialSelectedOrigin.mark source selectedMessage) b) (post built.1.1)).run).run
       ((built.1.2, built.2), (selectedAfter PqxdhInitialSourcePublication.empty built.1.2 index true built.1.1, none, false))
 
 /-- The instrumented first client is its output function applied to the raw run. -/
 theorem insFirstClient_run (out : Option Bool × InsState M P I D K A N RootOracle.QueryCache S B → Bool) :
-    insFirstClient pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode
+    insFirstClient (associatedData := associatedData) (completedBinding := completedBinding) pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode
       index metadata ready post before selected shared privateState cache store nonce next b out =
-      out <$> insFirstRun pre application initial selector aux source writer selectedMessage previousRoot response64 sender route
+      out <$> insFirstRun (associatedData := associatedData) (completedBinding := completedBinding) pre application initial selector aux source writer selectedMessage previousRoot response64 sender route
         decode index metadata ready post before selected shared privateState cache store nonce next b := by
   simp only [insFirstClient, insFirstRun, map_bind, bind_pure_comp]
 
@@ -2567,21 +2569,21 @@ noncomputable def insPostBit (out : Option Bool × InsState M P I D K A N RootOr
     (reply : RustM (Option PqxdhServerRegistrationPublication.Response))
     (start : InsFull M P I D K A N RootOracle.QueryCache S B) : ProbComp Bool :=
   (fun result => out (result.1, result.2.1)) <$>
-    (evaluate challenger (simulateQ (insImpl pre application initial selector aux source writer (productionStream source.crypto) none
+    (evaluate challenger (simulateQ (insImpl (completedBinding := completedBinding) pre application initial selector aux source writer (productionStream source.crypto) none
       target nonce next sender route decode (PqxdhInitialSelectedOrigin.mark source selectedMessage) b) (post reply)).run).run start
 
 /-- The instrumented post bit reads no selected public-hash log. -/
 theorem insPostBit_ghost (out : Option Bool × InsState M P I D K A N RootOracle.QueryCache S B → Bool)
     (reply : RustM (Option PqxdhServerRegistrationPublication.Response))
     (state : InsState M P I D K A N RootOracle.QueryCache S B) (component : AdaptiveCtxDynamicKnownKeys.SourceState) :
-    insPostBit pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode post selected
+    insPostBit (completedBinding := completedBinding) pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode post selected
         key nonce next b out reply (state, component) =
-      insPostBit pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode post selected
+      insPostBit (completedBinding := completedBinding) pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode post selected
         key nonce next b out reply (state, clearLog component) := by
   have ghost := congrArg (fun work => (fun result : (Option Bool × InsState M P I D K A N RootOracle.QueryCache S B) ×
       AdaptiveCtxDynamicKnownKeys.SourceState => out result.1) <$> work)
     (source_ghost (RawCtxUniversalDecoder.decoder decode) source.crypto key
-      (((simulateQ (insImpl pre application initial selector aux source writer (productionStream source.crypto) none target
+      (((simulateQ (insImpl (completedBinding := completedBinding) pre application initial selector aux source writer (productionStream source.crypto) none target
         nonce next sender route decode (PqxdhInitialSelectedOrigin.mark source selectedMessage) b) (post reply)).run).run state) component)
   simp only [Functor.map_map, Prod.map_fst, id_eq] at ghost
   simp only [insPostBit, PqxdhSelectedStateInterpreter.evaluate, StateT.run, Functor.map_map, PqxdhSelectedStateInterpreter.pair]
@@ -2590,11 +2592,11 @@ theorem insPostBit_ghost (out : Option Bool × InsState M P I D K A N RootOracle
 
 /-- The instrumented compiled first-record run, written with the instrumented post bit. -/
 theorem insCompiledRun_postBit (number : Std.U64) (ancestors disclosed : List RatchetChain) :
-    insCompiledRun pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode index
+    insCompiledRun (associatedData := associatedData) (completedBinding := completedBinding) pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode index
       metadata ready post before selected shared privateState cache store key nonce next b number ancestors disclosed =
-    firstBuild pre application initial selector aux source writer previousRoot response64 sender index metadata ready
+    firstBuild (associatedData := associatedData) pre application initial selector aux source writer previousRoot response64 sender index metadata ready
       before selected shared privateState cache store key nonce next >>= fun built =>
-      insPostBit pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode post
+      insPostBit (completedBinding := completedBinding) pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode post
         selected key nonce next b (fun result => decide (ClientEvent source previousRoot response64 selected number ancestors disclosed result))
         built.1.1 (insStart index built) := by
   unfold insCompiledRun insPostBit
@@ -2608,26 +2610,26 @@ theorem insRun_client (number : Std.U64) (ancestors disclosed : List RatchetChai
     (known : ∀ kernel, initialKernel response64 = .ok kernel → ∀ context,
       KnownSend (productionStream source.crypto) none target nonce next kernel context)
     (log : List Pqxdh.Bytes) :
-    insCompiledRun pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode index
+    insCompiledRun (associatedData := associatedData) (completedBinding := completedBinding) pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode index
       metadata ready post before selected shared privateState cache store key nonce next b number ancestors disclosed =
-      Prod.fst <$> (simulateQ challenger (insFirstClient pre application initial selector aux source writer selectedMessage previousRoot
+      Prod.fst <$> (simulateQ challenger (insFirstClient (associatedData := associatedData) (completedBinding := completedBinding) pre application initial selector aux source writer selectedMessage previousRoot
         response64 sender route decode index metadata ready post before selected shared privateState cache store nonce next b
         (fun result => decide (ClientEvent source previousRoot response64 selected number ancestors disclosed result)))).run
         (RawCtxSourceSharedRom.install AdaptiveCtxDynamicKnownKeys.initialSource (shared.2, log)) := by
-  have related := build_rel pre application initial selector aux source writer (productionStream source.crypto) none key target
+  have related := build_rel (associatedData := associatedData) pre application initial selector aux source writer (productionStream source.crypto) none key target
     nonce next decode sender (initialKernel response64) index metadata ready (initialFront before) known
     ((initialShared shared privateState cache store).1,
       RawCtxSourceSharedRom.install AdaptiveCtxDynamicKnownKeys.initialSource (shared.2, log))
   simp only [evaluate, StateT.run] at related
-  have clientEq : Prod.fst <$> (simulateQ challenger (insFirstClient pre application initial selector aux source writer selectedMessage
+  have clientEq : Prod.fst <$> (simulateQ challenger (insFirstClient (associatedData := associatedData) (completedBinding := completedBinding) pre application initial selector aux source writer selectedMessage
       previousRoot response64 sender route decode index metadata ready post before selected shared privateState cache store nonce next b
         (fun result => decide (ClientEvent source previousRoot response64 selected number ancestors disclosed result)))).run
         (RawCtxSourceSharedRom.install AdaptiveCtxDynamicKnownKeys.initialSource (shared.2, log)) =
-      (simulateQ challenger (((compiledBuild pre application initial selector aux source writer (productionStream source.crypto) none
+      (simulateQ challenger (((compiledBuild (associatedData := associatedData) pre application initial selector aux source writer (productionStream source.crypto) none
         target nonce next sender (initialKernel response64) index metadata ready).run (initialFront before)).run
           (initialShared shared privateState cache store).1)).run
         (RawCtxSourceSharedRom.install AdaptiveCtxDynamicKnownKeys.initialSource (shared.2, log)) >>= fun result =>
-        insPostBit pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode post
+        insPostBit (completedBinding := completedBinding) pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode post
           selected key nonce next b (fun result => decide (ClientEvent source previousRoot response64 selected number ancestors disclosed
             result)) result.1.1.1
           (((result.1.1.2, result.1.2), (selectedAfter PqxdhInitialSourcePublication.empty result.1.1.2 index true result.1.1.1, none, false)),
@@ -2637,26 +2639,26 @@ theorem insRun_client (number : Std.U64) (ancestors disclosed : List RatchetChai
     simp only [insPostBit, bind_pure_comp]
     change _ = (fun result => decide (ClientEvent source previousRoot response64 selected number ancestors disclosed
         (result.1, result.2.1))) <$>
-      (pair <$> (simulateQ challenger (((simulateQ (insImpl pre application initial selector aux source writer
+      (pair <$> (simulateQ challenger (((simulateQ (insImpl (completedBinding := completedBinding) pre application initial selector aux source writer
         (productionStream source.crypto) none target nonce next sender route decode (PqxdhInitialSelectedOrigin.mark source selectedMessage)
           b) (post result.1.1.1)).run).run ((result.1.1.2, result.1.2),
             (selectedAfter PqxdhInitialSourcePublication.empty result.1.1.2 index true result.1.1.1, none, false)))).run result.2)
     rw [Functor.map_map]
     rfl
-  have cleaned : ((simulateQ challenger (((compiledBuild pre application initial selector aux source writer
+  have cleaned : ((simulateQ challenger (((compiledBuild (associatedData := associatedData) pre application initial selector aux source writer
       (productionStream source.crypto) none target nonce next sender (initialKernel response64) index metadata ready).run
         (initialFront before)).run (initialShared shared privateState cache store).1)).run
         (RawCtxSourceSharedRom.install AdaptiveCtxDynamicKnownKeys.initialSource (shared.2, log)) >>= fun result =>
-        insPostBit pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode post
+        insPostBit (completedBinding := completedBinding) pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode post
           selected key nonce next b (fun result => decide (ClientEvent source previousRoot response64 selected number ancestors disclosed
             result)) result.1.1.1
           (((result.1.1.2, result.1.2), (selectedAfter PqxdhInitialSourcePublication.empty result.1.1.2 index true result.1.1.1, none, false)),
             result.2)) =
-      ((simulateQ challenger (((compiledBuild pre application initial selector aux source writer
+      ((simulateQ challenger (((compiledBuild (associatedData := associatedData) pre application initial selector aux source writer
       (productionStream source.crypto) none target nonce next sender (initialKernel response64) index metadata ready).run
         (initialFront before)).run (initialShared shared privateState cache store).1)).run
         (RawCtxSourceSharedRom.install AdaptiveCtxDynamicKnownKeys.initialSource (shared.2, log)) >>= fun result =>
-        insPostBit pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode post
+        insPostBit (completedBinding := completedBinding) pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode post
           selected key nonce next b (fun result => decide (ClientEvent source previousRoot response64 selected number ancestors disclosed
             result)) result.1.1.1
           (((result.1.1.2, result.1.2), (selectedAfter PqxdhInitialSourcePublication.empty result.1.1.2 index true result.1.1.1, none, false)),
@@ -2669,9 +2671,9 @@ theorem insRun_client (number : Std.U64) (ancestors disclosed : List RatchetChai
     change result.2 = _ at clean
     rw [clean]
     rfl
-  have build : firstBuild pre application initial selector aux source writer previousRoot response64 sender index metadata ready
+  have build : firstBuild (associatedData := associatedData) pre application initial selector aux source writer previousRoot response64 sender index metadata ready
       before selected shared privateState cache store key nonce next =
-      Prod.map id project <$> (pair <$> (simulateQ challenger (((compiledBuild pre application initial selector aux source writer
+      Prod.map id project <$> (pair <$> (simulateQ challenger (((compiledBuild (associatedData := associatedData) pre application initial selector aux source writer
         (productionStream source.crypto) none target nonce next sender (initialKernel response64) index metadata ready).run
           (initialFront before)).run (initialShared shared privateState cache store).1)).run
           (RawCtxSourceSharedRom.install AdaptiveCtxDynamicKnownKeys.initialSource (shared.2, log))) :=
@@ -2685,15 +2687,15 @@ theorem insFirstRun_uses (predicate : AdaptiveCtxDynamicKnownKeys.Spec.Domain �
       (Response := Response) (Shared := PqxdhPhase2DecapsulationRouting.Shared) pre application initial selector aux
         (.inl query)).run state).IsQueryBoundP predicate 0)
     (qPost : Nat) (postBound : ∀ reply, (post reply).IsTotalQueryBound qPost) :
-    (insFirstRun pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode index
+    (insFirstRun (associatedData := associatedData) (completedBinding := completedBinding) pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode index
       metadata ready post before selected shared privateState cache store nonce next b).IsQueryBoundP predicate (1 + qPost) := by
   unfold insFirstRun
-  refine isQueryBoundP_bind ((uses_map predicate _ (ready_uses pre application initial selector aux source writer
+  refine isQueryBoundP_bind ((uses_map predicate _ (ready_uses (associatedData := associatedData) pre application initial selector aux source writer
     (productionStream source.crypto) none target nonce next predicate externalZero (initialKernel response64) _ ready metadata _))
       (initialShared shared privateState cache store).1) fun built _ => ?_
-  exact insPost_client pre application initial selector aux source writer (productionStream source.crypto) none target nonce next
+  exact insPost_client (completedBinding := completedBinding) pre application initial selector aux source writer (productionStream source.crypto) none target nonce next
     sender route decode (PqxdhInitialSelectedOrigin.mark source selectedMessage) b predicate
-    (insPost_step pre application initial selector aux source writer (productionStream source.crypto) none target nonce next
+    (insPost_step (completedBinding := completedBinding) pre application initial selector aux source writer (productionStream source.crypto) none target nonce next
       sender route decode (PqxdhInitialSelectedOrigin.mark source selectedMessage) b predicate externalZero)
     (post built.1.1) qPost (postBound _) _
 
@@ -2737,11 +2739,11 @@ def readOut {M P I D K A : Type} {S B : Nat}
 noncomputable def insSuffixRun (target : Target S (B + 1))
     (sample : Packet (M := M) (P := P) (I := I) (K := K) (A := A) (KemSK := KemSK) setup program × HmacBlock × NonceOutput × RootOutput) :
     OracleComp AdaptiveCtxDynamicKnownKeys.Spec (PrepResult M P I (DhPair setup) K A S (B + 1)) :=
-  match PqxdhSourceSharedInput.input setup env callbacks program post attachedVerify primitives baseImpl kem
+  match PqxdhSourceSharedInput.input (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem
       target.owner target.number target.ancestors target.disclosed sample.1 with
   | .inl _ => pure none
   | .inr input => (fun result => some (input.selected, RawCtxSelectedInitialConstructor.response64 sample.2.1, result)) <$>
-    insFirstRun
+    insFirstRun (associatedData := associatedData) (completedBinding := completedBinding)
       (PqxdhPreparedPrefixCallbacks.preparation attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem
         sample.1.secretKey sample.1.ciphertext)
       (PqxdhPreparedPrefixCallbacks.application attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem
@@ -2762,7 +2764,7 @@ noncomputable def insSuffix (target : Target S (B + 1))
         (PqxdhGeneratedBeaconState.KemHandle K) A (BareState 1) RootOracle.QueryCache S (B + 1) → Bool)
     (sample : Packet (M := M) (P := P) (I := I) (K := K) (A := A) (KemSK := KemSK) setup program × HmacBlock × NonceOutput × RootOutput) :
     OracleComp AdaptiveCtxDynamicKnownKeys.Spec Bool :=
-  readOut out <$> insSuffixRun setup env callbacks baseImpl kem attachedVerify primitives program post b target sample
+  readOut out <$> insSuffixRun (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b target sample
 
 /-- The constructed key-free instrumented CTX client with output function `out`: the forwarded preparation prelude followed by the instrumented suffix. -/
 noncomputable def insFullClient (target : Target S (B + 1))
@@ -2770,8 +2772,8 @@ noncomputable def insFullClient (target : Target S (B + 1))
       Option Bool × InsState M P (PqxdhGeneratedBeaconState.IdentityHandle I) (DhPair setup)
         (PqxdhGeneratedBeaconState.KemHandle K) A (BareState 1) RootOracle.QueryCache S (B + 1) → Bool) :
     OracleComp AdaptiveCtxDynamicKnownKeys.Spec Bool :=
-  simulateQ RawCtxSourceSharedRom.forward (prelude setup env callbacks baseImpl kem attachedVerify primitives program post) >>=
-    insSuffix setup env callbacks baseImpl kem attachedVerify primitives program post b target out
+  simulateQ RawCtxSourceSharedRom.forward (prelude (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post) >>=
+    insSuffix (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b target out
 
 /-- The first-record output function of the chain: the client event of the target with the selected owner and the initializer response. -/
 noncomputable def clientOut (target : Target S (B + 1)) (owner : RawCtxProtocolReveals.Owner S (B + 1))
@@ -2785,20 +2787,20 @@ theorem insObserve_eq
     (sample : Packet (M := M) (P := P) (I := I) (K := K) (A := A) (KemSK := KemSK) setup program × HmacBlock × NonceOutput × RootOutput)
     (cache : CtxRO.QueryCache) (log : List Pqxdh.Bytes) (key : RootOutput)
     (aliased : ¬ RawCtxSendLineageCollision.InitialAlias sample.2.1) :
-    insCompiledObserve setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)
-        (restoreSample setup env callbacks kem attachedVerify primitives program post sample cache).1
+    insCompiledObserve (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)
+        (restoreSample (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks kem attachedVerify primitives program post sample cache).1
         sample.2.1 sample.2.2.1 sample.2.2.2 key =
       Prod.fst <$> (simulateQ (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder (env0).decode)
-        (env0).source.crypto key) (insSuffix setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)
+        (env0).source.crypto key) (insSuffix (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)
           (clientOut setup env callbacks (firstBeacon b)) sample)).run
         (RawCtxSourceSharedRom.install AdaptiveCtxDynamicKnownKeys.initialSource (cache, log)) := by
   unfold insCompiledObserve insSuffix insSuffixRun restoreSample
-  rw [← PqxdhSourceSharedInput.input_cache setup env callbacks program post attachedVerify primitives baseImpl kem]
-  cases pending : PqxdhSourceSharedInput.input setup env callbacks program post attachedVerify primitives baseImpl kem
+  rw [← PqxdhSourceSharedInput.input_cache (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem]
+  cases pending : PqxdhSourceSharedInput.input (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem
       (firstBeacon b).owner (firstBeacon b).number (firstBeacon b).ancestors (firstBeacon b).disclosed sample.1 with
   | inl decision => simp [PqxdhSourceSharedInput.restore, readOut]
   | inr input =>
-    have owner := input_selected setup env callbacks baseImpl kem attachedVerify primitives program post _ _ _ _ sample.1 input pending
+    have owner := input_selected (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post _ _ _ _ sample.1 input pending
     simp only [PqxdhSourceSharedInput.restore]
     have known : ∀ kernel, initialKernel (RawCtxSelectedInitialConstructor.response64 sample.2.1) = .ok kernel → ∀ context,
         KnownSend (productionStream (env0).source.crypto) none (PqxdhInitialSourceExperiment.root (env0).source zeroRoot
@@ -2806,16 +2808,16 @@ theorem insObserve_eq
       fun kernel initialized context => initial_known (S := S) (env0).source sample.2.1 b sample.2.2.1 sample.2.2.2
         aliased kernel initialized context
     rw [owner] at *
-    rw [insRun_client (known := known) (log := log), insFirstClient_run, Functor.map_map]
+    rw [insRun_client (completedBinding := completedBinding) (known := known) (log := log), insFirstClient_run, Functor.map_map]
     rfl
 
 /-- Regrouping the prepared samples through the shared-ROM prelude: the actual preparation, the four uniform draws and a continuation equal the prelude run from the empty shared state, a key draw and the continuation at the restored sample. -/
 theorem prepared_reorder
-    (F : PqxdhInitialLegalObserver.Context env0 kem attachedVerify primitives program post → HmacBlock → NonceOutput → RootOutput →
+    (F : PqxdhInitialLegalObserver.Context (associatedData := associatedData) (completedBinding := completedBinding) env0 kem attachedVerify primitives program post → HmacBlock → NonceOutput → RootOutput →
       RootOutput → ProbComp Bool) :
     (do
       let context ← PqxdhCorrelatedExtractFamily.prepare baseImpl kem
-        (PqxdhAuthenticatedRootExperiment.protocol env0 kem attachedVerify primitives program post)
+        (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env0 kem attachedVerify primitives program post)
       let initialBlock ← $ᵗ HmacBlock
       let nonce ← $ᵗ NonceOutput
       let chain ← $ᵗ RootOutput
@@ -2823,17 +2825,17 @@ theorem prepared_reorder
       F context initialBlock nonce chain key) =
     (do
       let result ← (simulateQ AdaptiveCtxSharedTarget.sharedImpl
-        (prelude setup env callbacks baseImpl kem attachedVerify primitives program post)).run (∅, [])
+        (prelude (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post)).run (∅, [])
       let key ← $ᵗ RootOutput
-      F (restoreSample setup env callbacks kem attachedVerify primitives program post result.1 result.2.1).1
+      F (restoreSample (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks kem attachedVerify primitives program post result.1 result.2.1).1
         result.1.2.1 result.1.2.2.1 result.1.2.2.2 key) := by
-  have shared := AdaptiveCtxSharedTarget.cache_schedule (prelude setup env callbacks baseImpl kem attachedVerify primitives program post)
+  have shared := AdaptiveCtxSharedTarget.cache_schedule (prelude (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post)
     (∅, [])
-  have source := prelude_source setup env callbacks baseImpl kem attachedVerify primitives program post
+  have source := prelude_source (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post
   rw [← shared, Functor.map_map] at source
   have regroup : (do
       let context ← PqxdhCorrelatedExtractFamily.prepare baseImpl kem
-        (PqxdhAuthenticatedRootExperiment.protocol env0 kem attachedVerify primitives program post)
+        (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env0 kem attachedVerify primitives program post)
       let initialBlock ← $ᵗ HmacBlock
       let nonce ← $ᵗ NonceOutput
       let chain ← $ᵗ RootOutput
@@ -2841,7 +2843,7 @@ theorem prepared_reorder
       F context initialBlock nonce chain key) =
       (do
         let context ← PqxdhCorrelatedExtractFamily.prepare baseImpl kem
-          (PqxdhAuthenticatedRootExperiment.protocol env0 kem attachedVerify primitives program post)
+          (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env0 kem attachedVerify primitives program post)
         let initialBlock ← $ᵗ HmacBlock
         let nonce ← $ᵗ NonceOutput
         let chain ← $ᵗ RootOutput
@@ -2855,20 +2857,20 @@ theorem prepared_reorder
 /-- The instrumented compiled game with the initial half-alias runs mapped to `false`. -/
 noncomputable def insSeparatedGame (target : Target S (B + 1)) : ProbComp Bool := do
   let context ← PqxdhCorrelatedExtractFamily.prepare baseImpl kem
-    (PqxdhAuthenticatedRootExperiment.protocol env0 kem attachedVerify primitives program post)
+    (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env0 kem attachedVerify primitives program post)
   let initialBlock ← $ᵗ HmacBlock
   let nonce ← $ᵗ NonceOutput
   let chain ← $ᵗ RootOutput
   let key ← $ᵗ RootOutput
   @ite _ (RawCtxSendLineageCollision.InitialAlias initialBlock) (Classical.propDecidable _) (pure false)
-    (insCompiledObserve setup env callbacks baseImpl kem attachedVerify primitives program post b target context initialBlock nonce chain key)
+    (insCompiledObserve (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b target context initialBlock nonce chain key)
 
 /-- The instrumented compiled game is dominated by the initial half-alias term `2^-256` plus the separated instrumented game. -/
 theorem insCompiled_le_separated (target : Target S (B + 1)) :
-    𝒟[insCompiledGame setup env callbacks baseImpl kem attachedVerify primitives program post b target] {true} ≤
+    𝒟[insCompiledGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b target] {true} ≤
       (1 : ℝ≥0∞) / (2 ^ 256 : ℝ≥0∞) +
-        𝒟[insSeparatedGame setup env callbacks baseImpl kem attachedVerify primitives program post b target] {true} := by
-  refine le_trans ?_ (add_le_add (alias_bound setup env callbacks baseImpl kem attachedVerify primitives program post) le_rfl)
+        𝒟[insSeparatedGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b target] {true} := by
+  refine le_trans ?_ (add_le_add (alias_bound (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post) le_rfl)
   unfold insCompiledGame insSeparatedGame aliasGame
   refine true_bind_le _ _ _ _ fun context => ?_
   refine true_bind_le _ _ _ _ fun initialBlock => ?_
@@ -2889,8 +2891,8 @@ theorem insCompiled_le_separated (target : Target S (B + 1)) :
 
 /-- The separated instrumented game is dominated by the instrumented compiled game. -/
 theorem insSeparated_le_compiled (target : Target S (B + 1)) :
-    𝒟[insSeparatedGame setup env callbacks baseImpl kem attachedVerify primitives program post b target] {true} ≤
-      𝒟[insCompiledGame setup env callbacks baseImpl kem attachedVerify primitives program post b target] {true} := by
+    𝒟[insSeparatedGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b target] {true} ≤
+      𝒟[insCompiledGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b target] {true} := by
   unfold insCompiledGame insSeparatedGame
   refine true_bind_mono _ _ _ fun context => ?_
   refine true_bind_mono _ _ _ fun initialBlock => ?_
@@ -2909,33 +2911,33 @@ theorem insClient_source (target : Target S (B + 1))
       Option Bool × InsState M P (PqxdhGeneratedBeaconState.IdentityHandle I) (DhPair setup)
         (PqxdhGeneratedBeaconState.KemHandle K) A (BareState 1) RootOracle.QueryCache S (B + 1) → Bool) :
     𝒟[Prod.fst <$> AdaptiveCtxDynamicKnownKeys.sourceGame true (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto
-      (insFullClient setup env callbacks baseImpl kem attachedVerify primitives program post b target out)] =
+      (insFullClient (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b target out)] =
     𝒟[do
       let result ← (simulateQ AdaptiveCtxSharedTarget.sharedImpl
-        (prelude setup env callbacks baseImpl kem attachedVerify primitives program post)).run (∅, [])
+        (prelude (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post)).run (∅, [])
       let key ← $ᵗ RootOutput
       Prod.fst <$> (simulateQ (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder (env0).decode)
-        (env0).source.crypto key) (insSuffix setup env callbacks baseImpl kem attachedVerify primitives program post b target out
+        (env0).source.crypto key) (insSuffix (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b target out
           result.1)).run (RawCtxSourceSharedRom.install AdaptiveCtxDynamicKnownKeys.initialSource result.2)] := by
   have exchanged := RawCtxPrefixKeyOrder.source_game true (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto
-    (prelude setup env callbacks baseImpl kem attachedVerify primitives program post)
-    (insSuffix setup env callbacks baseImpl kem attachedVerify primitives program post b target out)
+    (prelude (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post)
+    (insSuffix (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b target out)
   have mapped := exchanged.map Prod.fst
   simp only [map_bind] at mapped
   exact mapped.evalDist_eq
 
 /-- The separated instrumented game is dominated by the instrumented client-event client in the ordinary selected-key CTX source game. -/
 theorem insSeparated_le_client :
-    𝒟[insSeparatedGame setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)] {true} ≤
+    𝒟[insSeparatedGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)] {true} ≤
     𝒟[Prod.fst <$> AdaptiveCtxDynamicKnownKeys.sourceGame true (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto
-      (insFullClient setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)
+      (insFullClient (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)
         (clientOut setup env callbacks (firstBeacon b)))] {true} := by
-  have reorder := prepared_reorder setup env callbacks baseImpl kem attachedVerify primitives program post
+  have reorder := prepared_reorder (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post
     (fun context initialBlock nonce chain key =>
       @ite _ (RawCtxSendLineageCollision.InitialAlias initialBlock) (Classical.propDecidable _) (pure false)
-        (insCompiledObserve setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b) context
+        (insCompiledObserve (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b) context
           initialBlock nonce chain key))
-  change insSeparatedGame setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b) = _ at reorder
+  change insSeparatedGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b) = _ at reorder
   rw [reorder, insClient_source]
   refine true_bind_mono _ _ _ fun result => true_bind_mono _ _ _ fun key => ?_
   classical
@@ -2943,25 +2945,25 @@ theorem insSeparated_le_client :
   · rw [ite_eq_left_iff.mpr fun impossible => absurd aliased impossible]
     simp [ ]
   · rw [ite_eq_right_iff.mpr fun holds => absurd holds aliased,
-      insObserve_eq setup env callbacks baseImpl kem attachedVerify primitives program post b result.1 result.2.1 result.2.2 key aliased]
+      insObserve_eq (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b result.1 result.2.1 result.2.2 key aliased]
 
 /-- The instrumented client-event client in the ordinary selected-key CTX source game is dominated by the separated instrumented game plus the initial half-alias term `2^-256`. -/
 theorem insClient_le_separated :
     𝒟[Prod.fst <$> AdaptiveCtxDynamicKnownKeys.sourceGame true (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto
-      (insFullClient setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)
+      (insFullClient (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)
         (clientOut setup env callbacks (firstBeacon b)))] {true} ≤
-    𝒟[insSeparatedGame setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)] {true} +
+    𝒟[insSeparatedGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)] {true} +
       (1 : ℝ≥0∞) / (2 ^ 256 : ℝ≥0∞) := by
-  refine le_trans ?_ (add_le_add le_rfl (alias_bound setup env callbacks baseImpl kem attachedVerify primitives program post))
-  have reorder := prepared_reorder setup env callbacks baseImpl kem attachedVerify primitives program post
+  refine le_trans ?_ (add_le_add le_rfl (alias_bound (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post))
+  have reorder := prepared_reorder (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post
     (fun context initialBlock nonce chain key =>
       @ite _ (RawCtxSendLineageCollision.InitialAlias initialBlock) (Classical.propDecidable _) (pure false)
-        (insCompiledObserve setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b) context
+        (insCompiledObserve (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b) context
           initialBlock nonce chain key))
-  change insSeparatedGame setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b) = _ at reorder
-  have aliasReorder := prepared_reorder setup env callbacks baseImpl kem attachedVerify primitives program post
+  change insSeparatedGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b) = _ at reorder
+  have aliasReorder := prepared_reorder (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post
     (fun _ initialBlock _ _ _ => pure (@decide (RawCtxSendLineageCollision.InitialAlias initialBlock) (Classical.propDecidable _)))
-  change aliasGame setup env callbacks baseImpl kem attachedVerify primitives program post = _ at aliasReorder
+  change aliasGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post = _ at aliasReorder
   rw [reorder, aliasReorder, insClient_source]
   refine true_bind_le _ _ _ _ fun result => true_bind_le _ _ _ _ fun key => ?_
   classical
@@ -2973,7 +2975,7 @@ theorem insClient_le_separated :
     simp only [↓reduceIte]
     exact prEvent_le_one _
   · rw [ite_eq_right_iff.mpr fun holds => absurd holds aliased,
-      insObserve_eq setup env callbacks baseImpl kem attachedVerify primitives program post b result.1 result.2.1 result.2.2 key aliased]
+      insObserve_eq (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b result.1 result.2.1 result.2.2 key aliased]
     exact le_self_add
 
 /-- The instrumented client's request budget in any class that the source-local callbacks never use: the forwarded prelude's budget, one builder request and the post budget. The output function does not matter. -/
@@ -2992,19 +2994,19 @@ theorem insFullClient_uses (target : Target S (B + 1))
         (PqxdhPreparedPrefixCallbacks.auxiliaryLocal callbacks) (.inl query)).run state).IsQueryBoundP predicate 0)
     (qPrelude : Nat)
     (preludeBound : (simulateQ RawCtxSourceSharedRom.forward
-      (prelude setup env callbacks baseImpl kem attachedVerify primitives program post)).IsQueryBoundP predicate qPrelude)
+      (prelude (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post)).IsQueryBoundP predicate qPrelude)
     (qPost : Nat) (postBound : ∀ selection reply, (post selection reply).IsTotalQueryBound qPost) :
-    (insFullClient setup env callbacks baseImpl kem attachedVerify primitives program post b target out).IsQueryBoundP predicate
+    (insFullClient (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b target out).IsQueryBoundP predicate
       (qPrelude + (1 + qPost)) := by
   refine isQueryBoundP_bind preludeBound fun sample _ => ?_
   unfold insSuffix insSuffixRun
   split
   · simp
   · rename_i input pending
-    obtain ⟨selection, selected⟩ := input_post setup env callbacks baseImpl kem attachedVerify primitives program post _ _ _ _
+    obtain ⟨selection, selected⟩ := input_post (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post _ _ _ _
       sample.1 input pending
     rw [isQueryBoundP_map_iff, isQueryBoundP_map_iff]
-    apply insFirstRun_uses (predicate := predicate) (externalZero := externalZero _ _ _ _) (qPost := qPost)
+    apply insFirstRun_uses (completedBinding := completedBinding) (predicate := predicate) (externalZero := externalZero _ _ _ _) (qPost := qPost)
     exact fun reply => selected ▸ postBound selection reply
 
 end InsPrepared
@@ -3225,7 +3227,7 @@ theorem send_twin (m0 m1 : Pqxdh.Bytes) (source : FixedHkdfSha512NoSaltSource) (
       simp only [RawCtxSelectedSendCompiler.deriveValue, RawCtxSelectedMessageKdf.step, address, hidden, ite_true]
     simp only [withContext, step, RawCtxSelectedSealConsumer.sealing, RawCtxSelectedSealConsumer.call,
       RawCtxInterpretedArguments.sealArguments, ready]
-    by_cases had : context.associatedData.length = 281
+    by_cases had : context.associatedData.length = 151
     · simp only [RawCtxSelectedMessageSealing.selected, had, _root_.dite_true, simulateQ_bind, simulateQ_pure, map_bind, map_pure,
         simulateQ_query, RawCtxSelectedSealConsumer.liftSelected]
       refine Twin.sealing _ _ ?_ fun r => ?_
@@ -3263,10 +3265,10 @@ set_option backward.isDefEq.respectTransparency false in
 /-- One accepted challenge step: the forwarded Beacon send, with the wrapper's bookkeeping. -/
 theorem challenge_run (β : Bool) (m0 m1 : Pqxdh.Bytes) (c : ConfState) (s : InsState M P I D K A N C S B)
     (fresh : c.pair = none) (sent : c.beaconSent = false) (equal : m0.length = m1.length) :
-    runStepper (confIns b β (insImpl pre application initial selector aux source writer prior none target nonce next sender route read
+    runStepper (confIns b β (insImpl (completedBinding := completedBinding) pre application initial selector aux source writer prior none target nonce next sender route read
       mark b) (.inr (m0, m1))) c s =
       (fun z => (z.1.map (fun reply => (reply, { c with pair := some (m0, m1), reply := some reply, beaconSent := true })), z.2)) <$>
-        ((insImpl pre application initial selector aux source writer prior none target nonce next sender route read mark b
+        ((insImpl (completedBinding := completedBinding) pre application initial selector aux source writer prior none target nonce next sender route read mark b
           (beaconSend b (if β then m1 else m0))).run).run s := by
   have accepted : ¬ (c.pair.isSome ∨ c.beaconSent ∨ m0.length ≠ m1.length) := by
     simp [fresh, sent, equal]
@@ -3292,7 +3294,7 @@ theorem hiddenStep_first (p : Pqxdh.Bytes) (front : PqxdhSelectedPostCompiler.Fr
 /-- Every result of an instrumented Beacon `b` send from a state without a monitor value carries the recorded hiddenness. -/
 theorem ins_send_monitor (p : Pqxdh.Bytes) (s : InsState M P I D K A N C S B) (none' : s.2.2.1 = none)
     (z : Option ((ConfPostSpec extra S B).Range (beaconSend b p)) × InsState M P I D K A N C S B)
-    (supported : z ∈ support (((insImpl pre application initial selector aux source writer prior none target nonce next sender route
+    (supported : z ∈ support (((insImpl (completedBinding := completedBinding) pre application initial selector aux source writer prior none target nonce next sender route
       read mark b (beaconSend b p)).run).run s)) :
     z.2.2.2.1 = some (decide (HiddenBeacon target (s.1.1.roles.1.2 b))) := by
   simp only [insImpl, OptionT.run_mk, StateT.run, support_map, Set.mem_image] at supported
@@ -3325,14 +3327,14 @@ theorem challenge_twin (m0 m1 : Pqxdh.Bytes) (c : ConfState) (s : InsState M P I
     (link : InsLink c s) (fresh : c.pair = none) (sent : c.beaconSent = false) (equal : m0.length = m1.length) :
     Twin m0 m1 (fun z0 z1 => z0 = z1 ∧ ∀ reply c', z0.1 = some (reply, c') → c'.pair = some (m0, m1))
       (fun z => InsDead z.2) (fun z => InsDead z.2)
-      (runStepper (confIns b false (insImpl pre application initial selector aux source writer prior none target nonce next sender
+      (runStepper (confIns b false (insImpl (completedBinding := completedBinding) pre application initial selector aux source writer prior none target nonce next sender
         route read mark b) (.inr (m0, m1))) c s)
-      (runStepper (confIns b true (insImpl pre application initial selector aux source writer prior none target nonce next sender
+      (runStepper (confIns b true (insImpl (completedBinding := completedBinding) pre application initial selector aux source writer prior none target nonce next sender
         route read mark b) (.inr (m0, m1))) c s) := by
   have none' : s.2.2.1 = none := link sent
-  rw [challenge_run pre application initial selector aux source writer prior target nonce next sender route read mark b false m0 m1 c s
+  rw [challenge_run (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next sender route read mark b false m0 m1 c s
       fresh sent equal,
-    challenge_run pre application initial selector aux source writer prior target nonce next sender route read mark b true m0 m1 c s
+    challenge_run (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next sender route read mark b true m0 m1 c s
       fresh sent equal]
   by_cases hidden : HiddenBeacon target (s.1.1.roles.1.2 b)
   · unfold HiddenBeacon at hidden
@@ -3371,13 +3373,13 @@ theorem challenge_twin (m0 m1 : Pqxdh.Bytes) (c : ConfState) (s : InsState M P I
       simp only [support_map, Set.mem_image] at hz
       obtain ⟨w, hw, rfl⟩ := hz
       left
-      rw [ins_send_monitor pre application initial selector aux source writer prior target nonce next sender route read mark b _ s none' w hw]
+      rw [ins_send_monitor (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next sender route read mark b _ s none' w hw]
       simp [hidden]
     · intro z hz
       simp only [support_map, Set.mem_image] at hz
       obtain ⟨w, hw, rfl⟩ := hz
       left
-      rw [ins_send_monitor pre application initial selector aux source writer prior target nonce next sender route read mark b _ s none' w hw]
+      rw [ins_send_monitor (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next sender route read mark b _ s none' w hw]
       simp [hidden]
 
 
@@ -3721,10 +3723,10 @@ variable
 set_option backward.isDefEq.respectTransparency false in
 /-- One forwarded adversary request: the instrumented step with the wrapper's screening and bookkeeping. -/
 theorem adv_run (β : Bool) (request : (ConfPostSpec extra S B).Domain) (c : ConfState) (s : InsState M P I D K A N C S B) :
-    runStepper (confIns b β (insImpl pre application initial selector aux source writer prior none target nonce next sender route read
+    runStepper (confIns b β (insImpl (completedBinding := completedBinding) pre application initial selector aux source writer prior none target nonce next sender route read
       mark b) (.inl request)) c s =
       (fun z => (z.1.map (fun reply => (screen c request reply, observe b c request reply)), z.2)) <$>
-        ((insImpl pre application initial selector aux source writer prior none target nonce next sender route read mark b
+        ((insImpl (completedBinding := completedBinding) pre application initial selector aux source writer prior none target nonce next sender route read mark b
           request).run).run s := by
   have conf : (confImpl (extra := extra) (S := S) b β (.inl request)).run c =
       ((liftM ((ConfPostSpec extra S B).query request) : OracleComp (ConfPostSpec extra S B) _) >>= fun reply =>
@@ -3822,13 +3824,13 @@ theorem step_twin (m0 m1 : Pqxdh.Bytes) (q : (AdvSpec extra S B).Domain) (c : Co
     (paired : c.pair = some (m0, m1)) (alive : ¬ InsDead s) :
     Twin m0 m1 (fun z0 z1 => z0 = z1 ∧ ∀ reply c', z0.1 = some (reply, c') → c'.pair = some (m0, m1))
       (fun z => InsDead z.2) (fun z => InsDead z.2)
-      (runStepper (confIns b false (insImpl pre application initial selector aux source writer prior none target nonce next sender
+      (runStepper (confIns b false (insImpl (completedBinding := completedBinding) pre application initial selector aux source writer prior none target nonce next sender
         route read mark b) q) c s)
-      (runStepper (confIns b true (insImpl pre application initial selector aux source writer prior none target nonce next sender
+      (runStepper (confIns b true (insImpl (completedBinding := completedBinding) pre application initial selector aux source writer prior none target nonce next sender
         route read mark b) q) c s) := by
   rcases q with request | ⟨x0, x1⟩
-  · rw [adv_run pre application initial selector aux source writer prior target nonce next sender route read mark b false request c s,
-      adv_run pre application initial selector aux source writer prior target nonce next sender route read mark b true request c s]
+  · rw [adv_run (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next sender route read mark b false request c s,
+      adv_run (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next sender route read mark b true request c s]
     rcases request with (record | ext) | ⟨index, raw⟩
     · refine twin_of_stable b m0 m1 _ c paired _ ?_
       simp only [insImpl, OptionT.run_mk, StateT.run]
@@ -3880,7 +3882,7 @@ theorem step_twin (m0 m1 : Pqxdh.Bytes) (q : (AdvSpec extra S B).Domain) (c : Co
       · intro a flagged
         exact Or.inr flagged
   · have refused : c.pair.isSome ∨ c.beaconSent ∨ x0.length ≠ x1.length := Or.inl (by simp [paired])
-    have stop : ∀ β, runStepper (confIns b β (insImpl pre application initial selector aux source writer prior none target nonce next
+    have stop : ∀ β, runStepper (confIns b β (insImpl (completedBinding := completedBinding) pre application initial selector aux source writer prior none target nonce next
         sender route read mark b) (.inr (x0, x1))) c s = pure (some (none, c), s) := by
       intro β
       have run : (confImpl (extra := extra) (S := S) b β (.inr (x0, x1))).run c =
@@ -3908,7 +3910,7 @@ noncomputable def monitorAfter (request : (ConfPostSpec extra S B).Domain) (fron
 /-- Every instrumented step records the monitor value `monitorAfter`. -/
 theorem ins_monitor (request : (ConfPostSpec extra S B).Domain) (s : InsState M P I D K A N C S B)
     (w : Option ((ConfPostSpec extra S B).Range request) × InsState M P I D K A N C S B)
-    (supported : w ∈ support (((insImpl pre application initial selector aux source writer prior none target nonce next sender route
+    (supported : w ∈ support (((insImpl (completedBinding := completedBinding) pre application initial selector aux source writer prior none target nonce next sender route
       read mark b request).run).run s)) :
     w.2.2.2.1 = monitorAfter target b request s.1.1 s.2.2.1 := by
   rcases request with (record | ext) | ⟨index, raw⟩
@@ -3920,7 +3922,7 @@ theorem ins_monitor (request : (ConfPostSpec extra S B).Domain) (s : InsState M 
 /-- A raised finish flag stays raised through every instrumented step. -/
 theorem ins_flag (request : (ConfPostSpec extra S B).Domain) (s : InsState M P I D K A N C S B) (raised : s.2.2.2 = true)
     (w : Option ((ConfPostSpec extra S B).Range request) × InsState M P I D K A N C S B)
-    (supported : w ∈ support (((insImpl pre application initial selector aux source writer prior none target nonce next sender route
+    (supported : w ∈ support (((insImpl (completedBinding := completedBinding) pre application initial selector aux source writer prior none target nonce next sender route
       read mark b request).run).run s)) :
     w.2.2.2.2 = true := by
   rcases request with (record | ext) | ⟨index, raw⟩
@@ -3946,22 +3948,22 @@ set_option backward.isDefEq.respectTransparency false in
 /-- Dead instrumented states stay dead through every wrapper step. -/
 theorem ins_sticky (β : Bool) (q : (AdvSpec extra S B).Domain) (c : ConfState) (s : InsState M P I D K A N C S B)
     (dead : InsDead s) (z : Option ((AdvSpec extra S B).Range q × ConfState) × InsState M P I D K A N C S B)
-    (supported : z ∈ support (runStepper (confIns b β (insImpl pre application initial selector aux source writer prior none target
+    (supported : z ∈ support (runStepper (confIns b β (insImpl (completedBinding := completedBinding) pre application initial selector aux source writer prior none target
       nonce next sender route read mark b) q) c s)) :
     InsDead z.2 := by
   have step : ∀ (request : (ConfPostSpec extra S B).Domain) (w : Option ((ConfPostSpec extra S B).Range request) × InsState M P I D K A N C S B),
-      w ∈ support (((insImpl pre application initial selector aux source writer prior none target nonce next sender route read mark b
+      w ∈ support (((insImpl (completedBinding := completedBinding) pre application initial selector aux source writer prior none target nonce next sender route read mark b
         request).run).run s) → InsDead w.2 := by
     intro request w hw
     rcases dead with hidden | raised
     · left
-      rw [ins_monitor pre application initial selector aux source writer prior target nonce next sender route read mark b request s w hw,
+      rw [ins_monitor (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next sender route read mark b request s w hw,
         hidden, monitorAfter_some]
     · right
-      exact ins_flag pre application initial selector aux source writer prior target nonce next sender route read mark b request s raised
+      exact ins_flag (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next sender route read mark b request s raised
         w hw
   rcases q with request | ⟨x0, x1⟩
-  · rw [adv_run pre application initial selector aux source writer prior target nonce next sender route read mark b β request c s,
+  · rw [adv_run (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next sender route read mark b β request c s,
       support_map] at supported
     obtain ⟨w, hw, rfl⟩ := supported
     exact step request w hw
@@ -3971,7 +3973,7 @@ theorem ins_sticky (β : Bool) (q : (AdvSpec extra S B).Domain) (c : ConfState) 
             OracleComp (ConfPostSpec extra S B) (Option RawCtxSourceSend.Encrypted × ConfState)) := by
         simp only [confImpl, StateT.run]
         rw [ite_eq_left_iff.mpr fun impossible => absurd refused impossible]
-      have stop : runStepper (confIns b β (insImpl pre application initial selector aux source writer prior none target nonce next
+      have stop : runStepper (confIns b β (insImpl (completedBinding := completedBinding) pre application initial selector aux source writer prior none target nonce next
           sender route read mark b) (.inr (x0, x1))) c s = pure (some (none, c), s) := by
         simp only [runStepper, confIns, StateT.run_mk, run, simulateQ_pure]
         rfl
@@ -3984,7 +3986,7 @@ theorem ins_sticky (β : Bool) (q : (AdvSpec extra S B).Domain) (c : ConfState) 
         cases hc : c.pair with
         | none => rfl
         | some v => simp [hc] at unpaired
-      rw [challenge_run pre application initial selector aux source writer prior target nonce next sender route read mark b β x0 x1 c s
+      rw [challenge_run (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next sender route read mark b β x0 x1 c s
         none' sent equal, support_map] at supported
       obtain ⟨w, hw, rfl⟩ := supported
       exact step _ w hw
@@ -3996,11 +3998,10 @@ theorem observe_monitor (c : ConfState) (request : (ConfPostSpec extra S B).Doma
     (sent' : (observe b c request r).beaconSent = false) (link : c.beaconSent = false → hidden = none) :
     monitorAfter target b request front hidden = none := by
   rcases request with (((⟨i, (⟨p, kid⟩ | raw)⟩ | (⟨i, (p | raw)⟩ | pub)) | reveal) | ext) | fin
-  all_goals first
-    | (have none' := link sent'
-       subst none'
-       simp [monitorAfter, hiddenStep])
-    | skip
+  all_goals try
+    have none' := link sent'
+    subst none'
+    simp [monitorAfter, hiddenStep]
   by_cases same : i = b
   · simp [observe, same] at sent'
   · have none' := link (by simpa [observe, same] using sent')
@@ -4011,18 +4012,18 @@ set_option backward.isDefEq.respectTransparency false in
 /-- Adversary requests keep the challenge pair and the link between the wrapper record and the monitor. -/
 theorem ins_keep (request : (ConfPostSpec extra S B).Domain) (c : ConfState) (s : InsState M P I D K A N C S B) (link : InsLink c s)
     (z : Option ((AdvSpec extra S B).Range (.inl request) × ConfState) × InsState M P I D K A N C S B)
-    (supported : z ∈ support (runStepper (confIns b false (insImpl pre application initial selector aux source writer prior none target
+    (supported : z ∈ support (runStepper (confIns b false (insImpl (completedBinding := completedBinding) pre application initial selector aux source writer prior none target
       nonce next sender route read mark b) (.inl request)) c s))
     (reply : (AdvSpec extra S B).Range (.inl request)) (c' : ConfState) (reached : z.1 = some (reply, c')) :
     c'.pair = c.pair ∧ InsLink c' z.2 := by
-  rw [adv_run pre application initial selector aux source writer prior target nonce next sender route read mark b false request c s,
+  rw [adv_run (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next sender route read mark b false request c s,
     support_map] at supported
   obtain ⟨w, hw, rfl⟩ := supported
   simp only [Option.map_eq_some_iff, Prod.mk.injEq] at reached
   obtain ⟨r, _, _, rfl⟩ := reached
   refine ⟨observe_pair b c request r, ?_⟩
   intro sent'
-  rw [ins_monitor pre application initial selector aux source writer prior target nonce next sender route read mark b request s w hw]
+  rw [ins_monitor (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next sender route read mark b request s w hw]
   exact observe_monitor target b c request r s.1.1 s.2.2.1 sent' link
 
 
@@ -4030,23 +4031,23 @@ theorem ins_keep (request : (ConfPostSpec extra S B).Domain) (c : ConfState) (s 
 theorem ins_post_pre {α : Type} (X : OracleComp (AdvSpec extra S B) α) (c : ConfState) (s : InsState M P I D K A N C S B)
     (link : InsLink c s) (fresh : c.pair = none) :
     Pre (fun a b => a = b) (fun z => InsDead z.2) (fun z => InsDead z.2)
-      (runStepper (simulateQ (confIns b false (insImpl pre application initial selector aux source writer prior none target nonce next
+      (runStepper (simulateQ (confIns b false (insImpl (completedBinding := completedBinding) pre application initial selector aux source writer prior none target nonce next
         sender route read mark b)) X) c s)
-      (runStepper (simulateQ (confIns b true (insImpl pre application initial selector aux source writer prior none target nonce next
+      (runStepper (simulateQ (confIns b true (insImpl (completedBinding := completedBinding) pre application initial selector aux source writer prior none target nonce next
         sender route read mark b)) X) c s) :=
-  pre_run b (insImpl pre application initial selector aux source writer prior none target nonce next sender route read mark b)
+  pre_run b (insImpl (completedBinding := completedBinding) pre application initial selector aux source writer prior none target nonce next sender route read mark b)
     InsDead InsLink
     (fun request c s link z supported reply c' reached =>
-      ins_keep pre application initial selector aux source writer prior target nonce next sender route read mark b request c s link z
+      ins_keep (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next sender route read mark b request c s link z
         supported reply c' reached)
     (fun m0 m1 c s link fresh sent equal _ =>
-      challenge_twin pre application initial selector aux source writer prior target nonce next sender route read mark b m0 m1 c s
+      challenge_twin (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next sender route read mark b m0 m1 c s
         link fresh sent equal)
     (fun m0 m1 q c s paired alive =>
-      step_twin pre application initial selector aux source writer prior target nonce next sender route read mark b m0 m1 q c s
+      step_twin (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next sender route read mark b m0 m1 q c s
         paired alive)
     (fun β q c s dead z supported =>
-      ins_sticky pre application initial selector aux source writer prior target nonce next sender route read mark b β q c s dead z
+      ins_sticky (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next sender route read mark b β q c s dead z
         supported)
     X c s link fresh
 
@@ -4079,14 +4080,14 @@ theorem insFirstRun_pre {Selection : Type}
     (adversary : Selection → RustM (Option PqxdhServerRegistrationPublication.Response) → OracleComp (AdvSpec extra S B) Bool)
     (selection : Selection) :
     Pre (fun a b => a = b) (fun r => InsDead r.2) (fun r => InsDead r.2)
-      (insFirstRun pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode index
+      (insFirstRun (associatedData := associatedData) (completedBinding := completedBinding) pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode index
         metadata ready (confPost adversary b false selection) before selected shared privateState cache store nonce next b)
-      (insFirstRun pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode index
+      (insFirstRun (associatedData := associatedData) (completedBinding := completedBinding) pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode index
         metadata ready (confPost adversary b true selection) before selected shared privateState cache store nonce next b) := by
   unfold insFirstRun
   refine pre_bind_refl _ fun built _ => ?_
   rw [conf_post_run b false _ adversary selection built.1.1, conf_post_run b true _ adversary selection built.1.1]
-  exact pre_map (ins_post_pre pre application initial selector aux source writer (productionStream source.crypto)
+  exact pre_map (ins_post_pre (completedBinding := completedBinding) pre application initial selector aux source writer (productionStream source.crypto)
       (PqxdhInitialSourceExperiment.root source previousRoot response64 selected) nonce next sender route decode
       (PqxdhInitialSelectedOrigin.mark source selectedMessage) b (adversary selection built.1.1) confInitial _ (fun _ => rfl) rfl)
     _ _ (fun a₀ a₁ same => by rw [same]) (fun _ dead => dead) (fun _ dead => dead)
@@ -4116,9 +4117,9 @@ def CompletedMode (mode : PqxdhCommonSharedDispatch.Mode (PqxdhBorrowedSharedPre
 theorem dispatch_same (post0 post1 : PqxdhAuthenticatedRootExperiment.Post (baseSpec := baseSpec) program.Selection S (B + 1))
     (secret : KemSK) (output : PqxdhBorrowedSharedPrefix.LocalOutput (M := M) (P := P) (I := I) (K := K) (A := A) setup program) :
     Same (fun a b => a = b) (CompletedMode setup program) (CompletedMode setup program)
-      (simulateQ RawCtxSourceSharedRom.forward (PqxdhCommonSharedDispatch.dispatch setup env callbacks program post0 attachedVerify
+      (simulateQ RawCtxSourceSharedRom.forward (PqxdhCommonSharedDispatch.dispatch (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post0 attachedVerify
         primitives baseImpl kem secret output))
-      (simulateQ RawCtxSourceSharedRom.forward (PqxdhCommonSharedDispatch.dispatch setup env callbacks program post1 attachedVerify
+      (simulateQ RawCtxSourceSharedRom.forward (PqxdhCommonSharedDispatch.dispatch (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post1 attachedVerify
         primitives baseImpl kem secret output)) := by
   unfold PqxdhCommonSharedDispatch.dispatch
   dsimp only
@@ -4154,15 +4155,15 @@ theorem dispatch_same (post0 post1 : PqxdhAuthenticatedRootExperiment.Post (base
 theorem prelude_same (post0 post1 : PqxdhAuthenticatedRootExperiment.Post (baseSpec := baseSpec) program.Selection S (B + 1)) :
     Same (fun a b => a = b) (fun sample => CompletedMode setup program sample.1.state)
       (fun sample => CompletedMode setup program sample.1.state)
-      (simulateQ RawCtxSourceSharedRom.forward (prelude setup env callbacks baseImpl kem attachedVerify primitives program post0))
-      (simulateQ RawCtxSourceSharedRom.forward (prelude setup env callbacks baseImpl kem attachedVerify primitives program post1)) := by
+      (simulateQ RawCtxSourceSharedRom.forward (prelude (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post0))
+      (simulateQ RawCtxSourceSharedRom.forward (prelude (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post1)) := by
   unfold prelude PqxdhSourceSharedPreparation.prepare PqxdhSourceSharedPreparation.run
   simp only [simulateQ_bind, simulateQ_pure, bind_assoc, pure_bind]
   refine same_bind (same_refl (Dead := fun _ => False) _) ?_ (fun _ h => h.elim) (fun _ h => h.elim)
   rintro pair _ rfl
   refine same_bind (same_refl (Dead := fun _ => False) _) ?_ (fun _ h => h.elim) (fun _ h => h.elim)
   rintro generated _ rfl
-  refine same_bind (dispatch_same setup env callbacks baseImpl kem attachedVerify primitives program post0 post1 pair.2 generated)
+  refine same_bind (dispatch_same (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post0 post1 pair.2 generated)
     ?_ ?_ ?_
   · rintro state _ rfl
     exact same_refl _
@@ -4196,13 +4197,13 @@ variable (setup : StatefulPhase1Setup baseSpec)
 theorem input_relate (post0 post1 : PqxdhAuthenticatedRootExperiment.Post (baseSpec := baseSpec) program.Selection S (B + 1))
     (owner : RawCtxProtocolReveals.Owner S (B + 1)) (number : Std.U64) (ancestors disclosed : List RatchetChain)
     (packet : Packet (M := M) (P := P) (I := I) (K := K) (A := A) (KemSK := KemSK) setup program) :
-    (∃ decision, PqxdhSourceSharedInput.input setup env callbacks program post0 attachedVerify primitives baseImpl kem
+    (∃ decision, PqxdhSourceSharedInput.input (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post0 attachedVerify primitives baseImpl kem
         owner number ancestors disclosed packet = .inl decision ∧
-      PqxdhSourceSharedInput.input setup env callbacks program post1 attachedVerify primitives baseImpl kem
+      PqxdhSourceSharedInput.input (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post1 attachedVerify primitives baseImpl kem
         owner number ancestors disclosed packet = .inl decision ∧ CompletedMode setup program packet.state) ∨
-    (∃ input selection, PqxdhSourceSharedInput.input setup env callbacks program post0 attachedVerify primitives baseImpl kem
+    (∃ input selection, PqxdhSourceSharedInput.input (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post0 attachedVerify primitives baseImpl kem
         owner number ancestors disclosed packet = .inr input ∧
-      PqxdhSourceSharedInput.input setup env callbacks program post1 attachedVerify primitives baseImpl kem
+      PqxdhSourceSharedInput.input (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post1 attachedVerify primitives baseImpl kem
         owner number ancestors disclosed packet = .inr { input with post := post1 selection } ∧ input.post = post0 selection) := by
   rcases packet with ⟨publicKey, secretKey, state, ciphertext⟩
   cases state with
@@ -4214,7 +4215,7 @@ theorem input_completed (post : PqxdhAuthenticatedRootExperiment.Post (baseSpec 
     (owner : RawCtxProtocolReveals.Owner S (B + 1)) (number : Std.U64) (ancestors disclosed : List RatchetChain)
     (packet : Packet (M := M) (P := P) (I := I) (K := K) (A := A) (KemSK := KemSK) setup program)
     (completed : CompletedMode setup program packet.state) :
-    ∃ decision, PqxdhSourceSharedInput.input setup env callbacks program post attachedVerify primitives baseImpl kem
+    ∃ decision, PqxdhSourceSharedInput.input (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem
       owner number ancestors disclosed packet = .inl decision := by
   rcases packet with ⟨publicKey, secretKey, state, ciphertext⟩
   obtain ⟨decision, rfl⟩ := completed
@@ -4245,32 +4246,32 @@ theorem client_pre (b : Fin (B + 1))
     (adversary : program.Selection → RustM (Option PqxdhServerRegistrationPublication.Response) →
       OracleComp (AdvSpec (SelectorSpec baseSpec) S (B + 1)) Bool) (target : Target S (B + 1)) :
     Pre (fun a b => a = b) (fun a => a = false) (fun a => a = false)
-      (insFullClient setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b false) b target
+      (insFullClient (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b false) b target
         (twinOut setup env callbacks target))
-      (insFullClient setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b true) b target
+      (insFullClient (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b true) b target
         (twinOut setup env callbacks target)) := by
   unfold insFullClient
-  refine same_pre (prelude_same setup env callbacks baseImpl kem attachedVerify primitives program _ _) ?_ ?_ ?_
+  refine same_pre (prelude_same (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program _ _) ?_ ?_ ?_
   · rintro sample _ rfl
     unfold insSuffix insSuffixRun
-    rcases input_relate setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b false)
+    rcases input_relate (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b false)
         (confPost adversary b true) target.owner target.number target.ancestors target.disclosed sample.1 with
       ⟨decision, h0, h1, _⟩ | ⟨input, selection, h0, h1, hpost⟩
     · simp only [h0, h1, map_pure]
       exact Pre.pure rfl
     · simp only [h0, h1, hpost, Functor.map_map]
-      exact pre_map (insFirstRun_pre _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ adversary selection) _ _
+      exact pre_map (insFirstRun_pre (associatedData := associatedData) (completedBinding := completedBinding) _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ adversary selection) _ _
         (fun a₀ a₁ same => by rw [same])
         (fun r dead => twinOut_dead setup env callbacks target _ _ r dead)
         (fun r dead => twinOut_dead setup env callbacks target _ _ r dead)
   · intro sample completed c supported
-    obtain ⟨decision, h⟩ := input_completed setup env callbacks baseImpl kem attachedVerify primitives program
+    obtain ⟨decision, h⟩ := input_completed (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program
       (confPost adversary b false) target.owner target.number target.ancestors target.disclosed sample.1 completed
     simp only [insSuffix, insSuffixRun, h, map_pure, support_pure, Set.mem_singleton_iff] at supported
     rw [supported]
     rfl
   · intro sample completed c supported
-    obtain ⟨decision, h⟩ := input_completed setup env callbacks baseImpl kem attachedVerify primitives program
+    obtain ⟨decision, h⟩ := input_completed (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program
       (confPost adversary b true) target.owner target.number target.ancestors target.disclosed sample.1 completed
     simp only [insSuffix, insSuffixRun, h, map_pure, support_pure, Set.mem_singleton_iff] at supported
     rw [supported]
@@ -4305,16 +4306,16 @@ local notation "env0" => PqxdhSourceSharedPreparation.environment setup env call
 /-- The raw instrumented client: the forwarded prelude and the raw suffix. -/
 noncomputable def insFullRun (target : Target S (B + 1)) :
     OracleComp AdaptiveCtxDynamicKnownKeys.Spec (PrepResult M P I (DhPair setup) K A S (B + 1)) :=
-  simulateQ RawCtxSourceSharedRom.forward (prelude setup env callbacks baseImpl kem attachedVerify primitives program post) >>=
-    insSuffixRun setup env callbacks baseImpl kem attachedVerify primitives program post b target
+  simulateQ RawCtxSourceSharedRom.forward (prelude (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post) >>=
+    insSuffixRun (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b target
 
 /-- Every instrumented client reads its output from the raw instrumented client. -/
 theorem insFullClient_run (target : Target S (B + 1))
     (out : RawCtxProtocolReveals.Owner S (B + 1) → PqxdhInitialRootLabelService.Response →
       Option Bool × InsState M P (PqxdhGeneratedBeaconState.IdentityHandle I) (DhPair setup)
         (PqxdhGeneratedBeaconState.KemHandle K) A (BareState 1) RootOracle.QueryCache S (B + 1) → Bool) :
-    insFullClient setup env callbacks baseImpl kem attachedVerify primitives program post b target out =
-      readOut out <$> insFullRun setup env callbacks baseImpl kem attachedVerify primitives program post b target := by
+    insFullClient (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b target out =
+      readOut out <$> insFullRun (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b target := by
   simp only [insFullClient, insFullRun, map_bind]
   rfl
 
@@ -4342,21 +4343,21 @@ noncomputable def gapOut (target : Target S (B + 1)) (owner : RawCtxProtocolReve
 /-- The explicit finish-collision game `collGame`: in the ordinary selected-key CTX source game, the instrumented client event holds and a Beacon finish of the run made a selected raw opening. -/
 noncomputable def collGame (target : Target S (B + 1)) : ProbComp Bool :=
   Prod.fst <$> AdaptiveCtxDynamicKnownKeys.sourceGame true (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto
-    (insFullClient setup env callbacks baseImpl kem attachedVerify primitives program post b target
+    (insFullClient (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b target
       (flagOut setup env callbacks target))
 
 /-- The explicit hidden-gap game `gapGame`: in the ordinary selected-key CTX source game, the instrumented client event holds while the first send of Beacon `b` was not recorded as hidden. -/
 noncomputable def hiddenGapGame (target : Target S (B + 1)) : ProbComp Bool :=
   Prod.fst <$> AdaptiveCtxDynamicKnownKeys.sourceGame true (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto
-    (insFullClient setup env callbacks baseImpl kem attachedVerify primitives program post b target (gapOut setup env callbacks target))
+    (insFullClient (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b target (gapOut setup env callbacks target))
 
 /-- The confidentiality client is dominated by the client-event client. -/
 theorem twin_le_client (target : Target S (B + 1)) :
     𝒟[Prod.fst <$> AdaptiveCtxDynamicKnownKeys.sourceGame true (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto
-      (insFullClient setup env callbacks baseImpl kem attachedVerify primitives program post b target
+      (insFullClient (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b target
         (twinOut setup env callbacks target))] {true} ≤
     𝒟[Prod.fst <$> AdaptiveCtxDynamicKnownKeys.sourceGame true (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto
-      (insFullClient setup env callbacks baseImpl kem attachedVerify primitives program post b target
+      (insFullClient (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b target
         (clientOut setup env callbacks target))] {true} := by
   rw [insFullClient_run, insFullClient_run, source_map, source_map]
   refine map_le_map _ _ _ fun result holds => ?_
@@ -4368,13 +4369,13 @@ theorem twin_le_client (target : Target S (B + 1)) :
 /-- The client-event client is dominated by the confidentiality client plus the hidden-gap game and the finish-collision game. -/
 theorem client_le_twin (target : Target S (B + 1)) :
     𝒟[Prod.fst <$> AdaptiveCtxDynamicKnownKeys.sourceGame true (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto
-      (insFullClient setup env callbacks baseImpl kem attachedVerify primitives program post b target
+      (insFullClient (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b target
         (clientOut setup env callbacks target))] {true} ≤
     𝒟[Prod.fst <$> AdaptiveCtxDynamicKnownKeys.sourceGame true (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto
-      (insFullClient setup env callbacks baseImpl kem attachedVerify primitives program post b target
+      (insFullClient (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b target
         (twinOut setup env callbacks target))] {true} +
-      𝒟[hiddenGapGame setup env callbacks baseImpl kem attachedVerify primitives program post b target] {true} +
-      𝒟[collGame setup env callbacks baseImpl kem attachedVerify primitives program post b target] {true} := by
+      𝒟[hiddenGapGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b target] {true} +
+      𝒟[collGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b target] {true} := by
   unfold hiddenGapGame collGame
   rw [insFullClient_run, insFullClient_run, insFullClient_run, insFullClient_run, source_map, source_map, source_map, source_map]
   refine (map_le_add _ _ (fun result => readOut (twinOut setup env callbacks target) result ||
@@ -4466,18 +4467,18 @@ local notation "env0" => PqxdhSourceSharedPreparation.environment setup env call
 
 /-- Upper half of the chain: the pending source-observer mass is dominated by the confidentiality client in the selected-key CTX source game, the hidden-gap and finish-collision games, the restricted stop game and the initial half-alias term. -/
 theorem ideal_le_twin :
-    𝒟[PqxdhFirstRecordTarget.pendingIdeal env0 baseImpl kem attachedVerify primitives program post (firstBeacon b)] {true} ≤
+    𝒟[PqxdhFirstRecordTarget.pendingIdeal (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program post (firstBeacon b)] {true} ≤
     𝒟[Prod.fst <$> AdaptiveCtxDynamicKnownKeys.sourceGame true (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto
-      (insFullClient setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)
+      (insFullClient (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)
         (twinOut setup env callbacks (firstBeacon b)))] {true} +
-      𝒟[hiddenGapGame setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)] {true} +
-      𝒟[collGame setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)] {true} +
-      𝒟[stopGame setup env callbacks baseImpl kem attachedVerify primitives program post (firstBeacon b)] {true} +
+      𝒟[hiddenGapGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)] {true} +
+      𝒟[collGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)] {true} +
+      𝒟[stopGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post (firstBeacon b)] {true} +
       (1 : ℝ≥0∞) / (2 ^ 256 : ℝ≥0∞) := by
-  refine (pending_ideal_upper setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b) rfl).trans ?_
-  have compiled := (insCompiled_le_separated setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)).trans
-    (add_le_add le_rfl (insSeparated_le_client setup env callbacks baseImpl kem attachedVerify primitives program post b))
-  have switched := client_le_twin setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)
+  refine (pending_ideal_upper (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b) rfl).trans ?_
+  have compiled := (insCompiled_le_separated (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)).trans
+    (add_le_add le_rfl (insSeparated_le_client (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b))
+  have switched := client_le_twin (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)
   calc _ ≤ ((1 : ℝ≥0∞) / (2 ^ 256 : ℝ≥0∞) + _) + _ := add_le_add compiled le_rfl
     _ ≤ ((1 : ℝ≥0∞) / (2 ^ 256 : ℝ≥0∞) + (_ + _ + _)) + _ := add_le_add (add_le_add le_rfl switched) le_rfl
     _ = _ := by ring
@@ -4485,16 +4486,16 @@ theorem ideal_le_twin :
 /-- Lower half of the chain: the confidentiality client in the selected-key CTX source game is dominated by the pending source-observer mass, the key-disclosure game and the initial half-alias term. -/
 theorem twin_le_ideal :
     𝒟[Prod.fst <$> AdaptiveCtxDynamicKnownKeys.sourceGame true (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto
-      (insFullClient setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)
+      (insFullClient (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)
         (twinOut setup env callbacks (firstBeacon b)))] {true} ≤
-    𝒟[PqxdhFirstRecordTarget.pendingIdeal env0 baseImpl kem attachedVerify primitives program post (firstBeacon b)] {true} +
-      𝒟[keyGame setup env callbacks baseImpl kem attachedVerify primitives program post (firstBeacon b)] {true} +
+    𝒟[PqxdhFirstRecordTarget.pendingIdeal (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program post (firstBeacon b)] {true} +
+      𝒟[keyGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post (firstBeacon b)] {true} +
       (1 : ℝ≥0∞) / (2 ^ 256 : ℝ≥0∞) := by
-  refine (twin_le_client setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)).trans ?_
-  refine (insClient_le_separated setup env callbacks baseImpl kem attachedVerify primitives program post b).trans ?_
+  refine (twin_le_client (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)).trans ?_
+  refine (insClient_le_separated (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b).trans ?_
   refine add_le_add ?_ le_rfl
-  exact (insSeparated_le_compiled setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)).trans
-    (pending_ideal_lower setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b) rfl)
+  exact (insSeparated_le_compiled (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)).trans
+    (pending_ideal_lower (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b) rfl)
 
 open RawCtxSelectedAuthenticationObserver AdaptiveCtxDynamicKnownBounds AdaptiveCtxQueryBounds AdaptiveCtxReceive
 open CtxNonceAeadIntCtxt CtxNonceAeadIndDollarValidation
@@ -4503,7 +4504,7 @@ open CtxNonceAeadIntCtxt CtxNonceAeadIndDollarValidation
 noncomputable def twinLoss (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl kem program post)
     (ctxFallback : ModifiedNonceAeadForgery) (qPrelude : Nat) : ℝ≥0∞ :=
   privacyLoss (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto
-    (insFullClient setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)
+    (insFullClient (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)
       (twinOut setup env callbacks (firstBeacon b)))
     ctxFallback (qPrelude + (1 + postTotal setup env callbacks baseImpl kem program c)) (1 + postTotal setup env callbacks baseImpl kem program c)
 
@@ -4514,70 +4515,70 @@ theorem bit_bounds (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl 
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation kem) (hmac : HmacSha512) (correct : SourceFullCorrect (env0).source hmac)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : Forgery)
     (ctxFallback : ModifiedNonceAeadForgery) (qPrelude : Nat)
-    (prepareHash : PrepareHashBudget setup env callbacks baseImpl kem attachedVerify primitives program post qPrelude)
+    (prepareHash : PrepareHashBudget (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post qPrelude)
     (small : 1 + postTotal setup env callbacks baseImpl kem program c < 2 ^ 96) :
-    (𝒟[PqxdhFirstRecordTarget.pendingActual env0 baseImpl kem attachedVerify primitives program post
-        (PqxdhInitialRootEventSecrecy.accepted env0 attachedVerify primitives program post (.beacon b) 1#u64 [] [])] {true}).toReal ≤
+    (𝒟[PqxdhFirstRecordTarget.pendingActual (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program post
+        (PqxdhInitialRootEventSecrecy.accepted (associatedData := associatedData) (completedBinding := completedBinding) env0 attachedVerify primitives program post (.beacon b) 1#u64 [] [])] {true}).toReal ≤
       (𝒟[AdaptiveCtxPrivacyGuard.randomView (RawCtxUniversalDecoder.decoder (env0).decode)
         (AdaptiveCtxDynamicKnownKeys.decisionClient (env0).source.crypto
-          (insFullClient setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)
+          (insFullClient (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)
             (twinOut setup env callbacks (firstBeacon b))))] {true}).toReal +
-      (twinLoss setup env callbacks baseImpl kem attachedVerify primitives program post b c ctxFallback qPrelude).toReal +
-      (PqxdhAdaptiveCoordinateSecrecy.targetLoss env0 baseImpl kem attachedVerify primitives program
+      (twinLoss (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b c ctxFallback qPrelude).toReal +
+      (PqxdhAdaptiveCoordinateSecrecy.targetLoss (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program
         (PqxdhFirstRecordTarget.unitPost program post) (PqxdhFirstRecordTarget.unitTargets (firstBeacon b))
         (PqxdhFirstRecordTarget.certificate env0 baseImpl kem program post c) hmac fallback ordinaryFallback () +
-      PqxdhFirstRecordTarget.completedLoss env0 baseImpl kem attachedVerify primitives program post hmac fallback ordinaryFallback) +
-      (𝒟[hiddenGapGame setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)] {true}).toReal +
-      (𝒟[collGame setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)] {true}).toReal +
-      (𝒟[stopGame setup env callbacks baseImpl kem attachedVerify primitives program post (firstBeacon b)] {true}).toReal +
+      PqxdhFirstRecordTarget.completedLoss (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program post hmac fallback ordinaryFallback) +
+      (𝒟[hiddenGapGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)] {true}).toReal +
+      (𝒟[collGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)] {true}).toReal +
+      (𝒟[stopGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post (firstBeacon b)] {true}).toReal +
       1 / 2 ^ 256 ∧
     (𝒟[AdaptiveCtxPrivacyGuard.randomView (RawCtxUniversalDecoder.decoder (env0).decode)
         (AdaptiveCtxDynamicKnownKeys.decisionClient (env0).source.crypto
-          (insFullClient setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)
+          (insFullClient (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)
             (twinOut setup env callbacks (firstBeacon b))))] {true}).toReal ≤
-      (𝒟[PqxdhFirstRecordTarget.pendingActual env0 baseImpl kem attachedVerify primitives program post
-        (PqxdhInitialRootEventSecrecy.accepted env0 attachedVerify primitives program post (.beacon b) 1#u64 [] [])] {true}).toReal +
-      (twinLoss setup env callbacks baseImpl kem attachedVerify primitives program post b c ctxFallback qPrelude).toReal +
-      (PqxdhAdaptiveCoordinateSecrecy.targetLoss env0 baseImpl kem attachedVerify primitives program
+      (𝒟[PqxdhFirstRecordTarget.pendingActual (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program post
+        (PqxdhInitialRootEventSecrecy.accepted (associatedData := associatedData) (completedBinding := completedBinding) env0 attachedVerify primitives program post (.beacon b) 1#u64 [] [])] {true}).toReal +
+      (twinLoss (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b c ctxFallback qPrelude).toReal +
+      (PqxdhAdaptiveCoordinateSecrecy.targetLoss (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program
         (PqxdhFirstRecordTarget.unitPost program post) (PqxdhFirstRecordTarget.unitTargets (firstBeacon b))
         (PqxdhFirstRecordTarget.certificate env0 baseImpl kem program post c) hmac fallback ordinaryFallback () +
-      PqxdhFirstRecordTarget.completedLoss env0 baseImpl kem attachedVerify primitives program post hmac fallback ordinaryFallback) +
-      (𝒟[keyGame setup env callbacks baseImpl kem attachedVerify primitives program post (firstBeacon b)] {true}).toReal +
+      PqxdhFirstRecordTarget.completedLoss (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program post hmac fallback ordinaryFallback) +
+      (𝒟[keyGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post (firstBeacon b)] {true}).toReal +
       1 / 2 ^ 256 := by
   have postBound : ∀ selection reply, (post selection reply).IsTotalQueryBound (postTotal setup env callbacks baseImpl kem program c) :=
     fun selection reply => total_of_kinds PqxdhPhase2SourceSchedulerBounds.classify (post selection reply) c.postBudget
       (c.postBound selection reply)
-  have hashBound := insFullClient_uses setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)
+  have hashBound := insFullClient_uses (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)
     (twinOut setup env callbacks (firstBeacon b)) HashRoute (fun _ _ _ _ query state => external_no_hash _ _ _ _ _ query state) qPrelude
-    (prelude_hash setup env callbacks baseImpl kem attachedVerify primitives program post qPrelude prepareHash) _ postBound
-  have sealBound := insFullClient_uses setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)
+    (prelude_hash (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post qPrelude prepareHash) _ postBound
+  have sealBound := insFullClient_uses (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)
     (twinOut setup env callbacks (firstBeacon b)) (TargetClass SourceSeal)
     (fun _ _ _ _ query state => external_no_seal _ _ _ _ _ query state) 0 (forward_no_seal _) _ postBound
-  have rawBound := insFullClient_uses setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)
+  have rawBound := insFullClient_uses (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)
     (twinOut setup env callbacks (firstBeacon b)) (TargetClass AdaptiveCtxReceive.IsRawQuery)
     (fun _ _ _ _ query state => PqxdhSelectedInitialOwnerCompiler.external_no_open _ _ _ _ _ query state) 0 (forward_no_open _) _
       postBound
   rw [Nat.zero_add] at sealBound rawBound
   have privacy := source_random (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto
-    (insFullClient setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)
+    (insFullClient (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)
       (twinOut setup env callbacks (firstBeacon b))) ctxFallback _ _ _ hashBound sealBound rawBound small
-  have pending : |(𝒟[PqxdhFirstRecordTarget.pendingActual env0 baseImpl kem attachedVerify primitives program post
-        (PqxdhInitialRootEventSecrecy.accepted env0 attachedVerify primitives program post (.beacon b) 1#u64 [] [])] {true}).toReal -
-      (𝒟[PqxdhFirstRecordTarget.pendingIdeal env0 baseImpl kem attachedVerify primitives program post (firstBeacon b)] {true}).toReal| ≤
-      PqxdhAdaptiveCoordinateSecrecy.targetLoss env0 baseImpl kem attachedVerify primitives program
+  have pending : |(𝒟[PqxdhFirstRecordTarget.pendingActual (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program post
+        (PqxdhInitialRootEventSecrecy.accepted (associatedData := associatedData) (completedBinding := completedBinding) env0 attachedVerify primitives program post (.beacon b) 1#u64 [] [])] {true}).toReal -
+      (𝒟[PqxdhFirstRecordTarget.pendingIdeal (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program post (firstBeacon b)] {true}).toReal| ≤
+      PqxdhAdaptiveCoordinateSecrecy.targetLoss (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program
         (PqxdhFirstRecordTarget.unitPost program post) (PqxdhFirstRecordTarget.unitTargets (firstBeacon b))
         (PqxdhFirstRecordTarget.certificate env0 baseImpl kem program post c) hmac fallback ordinaryFallback () +
-      PqxdhFirstRecordTarget.completedLoss env0 baseImpl kem attachedVerify primitives program post hmac fallback ordinaryFallback :=
-    PqxdhFirstRecordTarget.pending_bound env0 baseImpl kem attachedVerify primitives program post (firstBeacon b) rfl c
+      PqxdhFirstRecordTarget.completedLoss (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program post hmac fallback ordinaryFallback :=
+    PqxdhFirstRecordTarget.pending_bound (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program post (firstBeacon b) rfl c
       compatible adapter functional hmac correct fallback ordinaryFallback
   have halfFinite : (1 : ℝ≥0∞) / (2 ^ 256 : ℝ≥0∞) ≠ ⊤ := ENNReal.div_ne_top ENNReal.one_ne_top (by positivity)
   have lossFinite := privacyLoss_ne_top (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto
-    (insFullClient setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)
+    (insFullClient (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b (firstBeacon b)
       (twinOut setup env callbacks (firstBeacon b))) ctxFallback
     (qPrelude + (1 + postTotal setup env callbacks baseImpl kem program c)) (1 + postTotal setup env callbacks baseImpl kem program c)
-  have up := (ideal_le_twin setup env callbacks baseImpl kem attachedVerify primitives program post b).trans
+  have up := (ideal_le_twin (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b).trans
     (add_le_add (add_le_add (add_le_add (add_le_add privacy.1 le_rfl) le_rfl) le_rfl) le_rfl)
-  have lo := privacy.2.trans (add_le_add (twin_le_ideal setup env callbacks baseImpl kem attachedVerify primitives program post b) le_rfl)
+  have lo := privacy.2.trans (add_le_add (twin_le_ideal (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post b) le_rfl)
   have half : ((1 : ℝ≥0∞) / (2 ^ 256 : ℝ≥0∞)).toReal = 1 / 2 ^ 256 := by
     rw [ENNReal.toReal_div, ENNReal.toReal_pow]
     norm_num
@@ -4613,8 +4614,8 @@ local notation "env0" => PqxdhSourceSharedPreparation.environment setup env call
 noncomputable def confGame (b : Fin (B + 1))
     (adversary : program.Selection → RustM (Option PqxdhServerRegistrationPublication.Response) →
       OracleComp (AdvSpec (SelectorSpec baseSpec) S (B + 1)) Bool) (β : Bool) : ProbComp Bool :=
-  PqxdhFirstRecordTarget.pendingActual env0 baseImpl kem attachedVerify primitives program (confPost adversary b β)
-    (PqxdhInitialRootEventSecrecy.accepted env0 attachedVerify primitives program (confPost adversary b β) (.beacon b) 1#u64 [] [])
+  PqxdhFirstRecordTarget.pendingActual (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program (confPost adversary b β)
+    (PqxdhInitialRootEventSecrecy.accepted (associatedData := associatedData) (completedBinding := completedBinding) env0 attachedVerify primitives program (confPost adversary b β) (.beacon b) 1#u64 [] [])
 
 /-- The ordinary random views of the two confidentiality clients have the same `true` mass. -/
 theorem random_views_equal (b : Fin (B + 1))
@@ -4622,20 +4623,20 @@ theorem random_views_equal (b : Fin (B + 1))
       OracleComp (AdvSpec (SelectorSpec baseSpec) S (B + 1)) Bool) :
     𝒟[AdaptiveCtxPrivacyGuard.randomView (RawCtxUniversalDecoder.decoder (env0).decode)
         (AdaptiveCtxDynamicKnownKeys.decisionClient (env0).source.crypto
-          (insFullClient setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b false) b (firstBeacon b)
+          (insFullClient (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b false) b (firstBeacon b)
             (twinOut setup env callbacks (firstBeacon b))))] {true} =
       𝒟[AdaptiveCtxPrivacyGuard.randomView (RawCtxUniversalDecoder.decoder (env0).decode)
         (AdaptiveCtxDynamicKnownKeys.decisionClient (env0).source.crypto
-          (insFullClient setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b true) b (firstBeacon b)
+          (insFullClient (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b true) b (firstBeacon b)
             (twinOut setup env callbacks (firstBeacon b))))] {true} :=
-  randomView_pre _ _ (client_pre setup env callbacks baseImpl kem attachedVerify primitives program b adversary (firstBeacon b))
+  randomView_pre _ _ (client_pre (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program b adversary (firstBeacon b))
 
 /-- The real value of the nonce-repeat stop bound. -/
 theorem stop_real (post : PqxdhAuthenticatedRootExperiment.Post (baseSpec := baseSpec) program.Selection S (B + 1))
     (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl kem program post) (b : Fin (B + 1)) :
-    (𝒟[stopGame setup env callbacks baseImpl kem attachedVerify primitives program post (firstBeacon b)] {true}).toReal ≤
+    (𝒟[stopGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post (firstBeacon b)] {true}).toReal ≤
       ((1 + c.postBudget (.inl .send) + 51 * (c.postBudget (.inl .raw) + c.postBudget (.inr 5)) : ℕ) : ℝ) / 2 ^ 256 := by
-  have bound := PqxdhFirstRecordStopTagged.stop_bound setup env callbacks baseImpl kem attachedVerify primitives program post
+  have bound := PqxdhFirstRecordStopTagged.stop_bound (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post
     c.postBudget c.postBound b
   have real := ENNReal.toReal_mono (ENNReal.div_ne_top (ENNReal.natCast_ne_top _) (by positivity)) bound
   rw [ENNReal.toReal_div, ENNReal.toReal_pow, ENNReal.toReal_natCast] at real
@@ -5000,10 +5001,10 @@ variable (prior : Prior) (parent : Option Entry) (target : RootOutput) (nonce : 
 /-- A compiled finish application that publishes establishes a kernel with the send chain of the initialized kernel. -/
 theorem finishApplication_chain (control : pqxdh.BeaconInitSent)
     (before : RawCtxGenericRoleStorage.BeaconState RawCtxSelectedMessageReveals.Kernel I D K)
-    (candidate : pqxdh.BeaconRegistrationCandidate) (kernel : RawCtxSelectedMessageReveals.Kernel) (app : Option Pqxdh.Bytes)
+    (candidate : pqxdh.BeaconRegistrationCandidate) (associatedData : Std.Array Std.U8 151#usize) (kernel : RawCtxSelectedMessageReveals.Kernel) (app : Option Pqxdh.Bytes)
     (reply : Option Pqxdh.Bytes × RawCtxGenericRoleStorage.BeaconState RawCtxSelectedMessageReveals.Kernel I D K)
     (supported : reply ∈ support (PqxdhSelectedBeaconCompiler.finishApplication prior parent target nonce next read control before
-      candidate kernel app))
+      candidate associatedData kernel app))
     (bytes : Pqxdh.Bytes) (published : reply.1 = some bytes) :
     ∃ established ad kernel', reply.2.beacon.phase = .established established ad kernel' ∧ kernel'.send_chain = kernel.send_chain := by
   simp only [PqxdhSelectedBeaconCompiler.finishApplication, support_map, Set.mem_image] at supported
@@ -5015,7 +5016,7 @@ theorem finishApplication_chain (control : pqxdh.BeaconInitSent)
   · simp at stagedSupported
   · simp only [support_map, Set.mem_image] at stagedSupported
     obtain ⟨owned, ownedSupported, found⟩ := stagedSupported
-    rw [PqxdhFirstRecordStopTagged.opening_kernel candidate _ _ value found]
+    rw [PqxdhFirstRecordStopTagged.opening_kernel candidate associatedData _ _ value found]
     exact raw_chain prior parent target nonce next read raw _ owned ownedSupported
 
 /-- A compiled marked finish that records origin `true` establishes a Beacon whose send chain is the send chain of the supplied-response kernel; a finish of an established Beacon changes nothing and records no origin. -/
@@ -5024,7 +5025,7 @@ theorem owner_marked_origin (raw : Pqxdh.Bytes) (before : PqxdhSelectedInitialOw
     (w : PqxdhInitialFinishOrigin.Result PqxdhSelectedInitialOwnerCompiler.Kernel Bool I D K × Local A N RootOracle.QueryCache)
     (supported : w ∈ support ((simulateQ (PqxdhSelectedInitialOwnerCompiler.lower (extra := extra) (X := X) pre application
       (initialLocal fixed selectedMessage previousRoot response) selector aux prior parent target nonce next read)
-      (ownerMarked (PqxdhInitialSelectedOrigin.mark fixed selectedMessage) raw before)).run state)) :
+      (ownerMarked (completedBinding := completedBinding) (PqxdhInitialSelectedOrigin.mark fixed selectedMessage) raw before)).run state)) :
     (w.1.2 = some true → ∃ established ad kernel, w.1.1.2.beacon.phase = .established established ad kernel ∧
       kernel.send_chain = (PqxdhInitialRootAudit.kernel (previousRoot, response)).refined.send_chain) ∧
     (∀ control ad kernel, before.beacon.phase = .established control ad kernel → w.1.1.2 = before ∧ w.1.2 = none) := by
@@ -5054,7 +5055,7 @@ theorem owner_marked_origin (raw : Pqxdh.Bytes) (before : PqxdhSelectedInitialOw
         obtain ⟨⟨app, state3⟩, _, final, finalSupported, rfl⟩ := rest
         change final ∈ support ((fun reply => (reply, state3)) <$> PqxdhSelectedBeaconCompiler.finishApplication prior parent target
           nonce next read control before (PqxdhBeaconPhase2Shared.clearedMetadata pending.metadata)
-            (PqxdhSelectedMessageBeacon.knownKernel kernel) app) at finalSupported
+            pending.metadata.associatedData (PqxdhSelectedMessageBeacon.knownKernel kernel) app) at finalSupported
         simp only [support_map, Set.mem_image] at finalSupported
         obtain ⟨reply, replySupported, rfl⟩ := finalSupported
         simp only [tag, Option.map_eq_some_iff] at origin
@@ -5063,7 +5064,7 @@ theorem owner_marked_origin (raw : Pqxdh.Bytes) (before : PqxdhSelectedInitialOw
           pending.root marked state1 (some kernel, state2) kernelSupported
         simp only [Option.some.injEq] at initialKernel
         obtain ⟨established, ad, kernel', phase', chain⟩ := finishApplication_chain prior parent target nonce next read control
-          before _ _ _ reply replySupported bytes published
+          before _ _ _ _ reply replySupported bytes published
         refine ⟨established, ad, kernel', phase', ?_⟩
         rw [chain, initialKernel]
         rfl
@@ -5157,7 +5158,7 @@ local notation "sendTarget" => PqxdhInitialOriginFinishPath.sendRoot previousRoo
 theorem ins_origin_step (q : (PqxdhInitialGenericPost.Spec extra S B).Domain) (s : InsState M P I D K A N RootOracle.QueryCache S B)
     (inv : OriginInv sendTarget b s)
     (w : Option ((PqxdhInitialGenericPost.Spec extra S B).Range q) × InsState M P I D K A N RootOracle.QueryCache S B)
-    (supported : w ∈ support (((insImpl pre application (initialLocal source selectedMessage previousRoot response) selector aux
+    (supported : w ∈ support (((insImpl (completedBinding := completedBinding) pre application (initialLocal source selectedMessage previousRoot response) selector aux
       source writer prior none sendTarget nonce next sender route read (PqxdhInitialSelectedOrigin.mark source selectedMessage) b
         q).run).run s)) :
     OriginInv sendTarget b w.2 := by
@@ -5185,7 +5186,7 @@ theorem ins_origin_step (q : (PqxdhInitialGenericPost.Spec extra S B).Domain) (s
   · simp only [insImpl, OptionT.run_mk, StateT.run, support_map, Set.mem_image] at supported
     obtain ⟨result, resultSupported, rfl⟩ := supported
     have inner := markRaw_support _ _ result resultSupported
-    have origin := owner_marked_origin pre application selector aux source selectedMessage previousRoot response prior none sendTarget
+    have origin := owner_marked_origin (completedBinding := completedBinding) pre application selector aux source selectedMessage previousRoot response prior none sendTarget
       nonce next read raw (s.1.1.roles.1.2 index) s.1.2 result.1 inner
     intro installed
     by_cases same : index = b
@@ -5312,7 +5313,7 @@ variable
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (read : RawCtxReceive.FrameDecoder) (b : Fin B)
 
 local notation "sendTarget" => PqxdhInitialOriginFinishPath.sendRoot previousRoot response
-local notation "impl" => insImpl pre application (initialLocal source selectedMessage previousRoot response) selector aux source writer
+local notation "impl" => insImpl (completedBinding := completedBinding) pre application (initialLocal source selectedMessage previousRoot response) selector aux source writer
   prior none sendTarget nonce next sender route read (PqxdhInitialSelectedOrigin.mark source selectedMessage) b
 
 /-- A published Beacon `b` entry after an instrumented record request was published before or comes from this request's Beacon `b` send, with the current installation. -/
@@ -5344,7 +5345,7 @@ theorem ins_publish_other (q : (PqxdhInitialGenericPost.Spec extra S B).Domain) 
 theorem monitor_true (q : (PqxdhInitialGenericPost.Spec extra S B).Domain) (s : InsState M P I D K A N RootOracle.QueryCache S B)
     (w : Option ((PqxdhInitialGenericPost.Spec extra S B).Range q) × InsState M P I D K A N RootOracle.QueryCache S B)
     (supported : w ∈ support (((impl q).run).run s)) (hidden : s.2.2.1 = some true) : w.2.2.2.1 = some true := by
-  rw [ins_monitor pre application (initialLocal source selectedMessage previousRoot response) selector aux source writer prior sendTarget
+  rw [ins_monitor (completedBinding := completedBinding) pre application (initialLocal source selectedMessage previousRoot response) selector aux source writer prior sendTarget
     nonce next sender route read (PqxdhInitialSelectedOrigin.mark source selectedMessage) b q s w supported, hidden, monitorAfter_some]
 
 set_option backward.isDefEq.respectTransparency false in
@@ -5357,15 +5358,15 @@ theorem all_step (β : Bool) (q : (AdvSpec extra S B).Domain) (c : ConfState) (s
     AllInv sendTarget b c' z.2 := by
   obtain ⟨link, origin, publish⟩ := inv
   rcases q with request | ⟨m0, m1⟩
-  · rw [adv_run pre application (initialLocal source selectedMessage previousRoot response) selector aux source writer prior sendTarget
+  · rw [adv_run (completedBinding := completedBinding) pre application (initialLocal source selectedMessage previousRoot response) selector aux source writer prior sendTarget
       nonce next sender route read (PqxdhInitialSelectedOrigin.mark source selectedMessage) b β request c s, support_map] at supported
     obtain ⟨w, hw, rfl⟩ := supported
     simp only [Option.map_eq_some_iff, Prod.mk.injEq] at reached
     obtain ⟨r, hr, _, rfl⟩ := reached
-    refine ⟨?_, ins_origin_step pre application selector aux source writer selectedMessage previousRoot response prior nonce next
+    refine ⟨?_, ins_origin_step (completedBinding := completedBinding) pre application selector aux source writer selectedMessage previousRoot response prior nonce next
       sender route read b request s origin w hw, ?_⟩
     · intro sent'
-      rw [ins_monitor pre application (initialLocal source selectedMessage previousRoot response) selector aux source writer prior
+      rw [ins_monitor (completedBinding := completedBinding) pre application (initialLocal source selectedMessage previousRoot response) selector aux source writer prior
         sendTarget nonce next sender route read (PqxdhInitialSelectedOrigin.mark source selectedMessage) b request s w hw]
       exact observe_monitor sendTarget b c request r s.1.1 s.2.2.1 sent' link
     · intro mem
@@ -5374,18 +5375,18 @@ theorem all_step (β : Bool) (q : (AdvSpec extra S B).Domain) (c : ConfState) (s
         intro old
         rcases publish old with noted | hidden
         · exact Or.inl (observe_mono b c request r noted)
-        · exact Or.inr (monitor_true pre application selector aux source writer selectedMessage previousRoot response prior nonce next
+        · exact Or.inr (monitor_true (completedBinding := completedBinding) pre application selector aux source writer selectedMessage previousRoot response prior nonce next
             sender route read b request s w hw hidden)
       rcases request with (record | ext) | fin
-      · rcases ins_publish_record pre application selector aux source writer selectedMessage previousRoot response prior nonce next
+      · rcases ins_publish_record (completedBinding := completedBinding) pre application selector aux source writer selectedMessage previousRoot response prior nonce next
             sender route read b record s w hw mem with old | ⟨first, _⟩
         · exact fromOld old
         · rw [hr] at first
           exact Or.inl (observe_first b c record r first)
-      · rw [ins_publish_other pre application selector aux source writer selectedMessage previousRoot response prior nonce next
+      · rw [ins_publish_other (completedBinding := completedBinding) pre application selector aux source writer selectedMessage previousRoot response prior nonce next
           sender route read b _ (fun record h => by cases h) s w hw] at mem
         exact fromOld mem
-      · rw [ins_publish_other pre application selector aux source writer selectedMessage previousRoot response prior nonce next
+      · rw [ins_publish_other (completedBinding := completedBinding) pre application selector aux source writer selectedMessage previousRoot response prior nonce next
           sender route read b _ (fun record h => by cases h) s w hw] at mem
         exact fromOld mem
   · by_cases refused : c.pair.isSome ∨ c.beaconSent ∨ m0.length ≠ m1.length
@@ -5408,25 +5409,25 @@ theorem all_step (β : Bool) (q : (AdvSpec extra S B).Domain) (c : ConfState) (s
         cases hc : c.pair with
         | none => rfl
         | some v => simp [hc] at unpaired
-      rw [challenge_run pre application (initialLocal source selectedMessage previousRoot response) selector aux source writer prior
+      rw [challenge_run (completedBinding := completedBinding) pre application (initialLocal source selectedMessage previousRoot response) selector aux source writer prior
         sendTarget nonce next sender route read (PqxdhInitialSelectedOrigin.mark source selectedMessage) b β m0 m1 c s none' sent equal,
         support_map] at supported
       obtain ⟨w, hw, rfl⟩ := supported
       simp only [Option.map_eq_some_iff, Prod.mk.injEq] at reached
       obtain ⟨r, _, _, rfl⟩ := reached
       have empty : s.2.2.1 = none := link sent
-      refine ⟨fun sent' => by simp at sent', ins_origin_step pre application selector aux source writer selectedMessage previousRoot
+      refine ⟨fun sent' => by simp at sent', ins_origin_step (completedBinding := completedBinding) pre application selector aux source writer selectedMessage previousRoot
         response prior nonce next sender route read b _ s origin w hw, ?_⟩
       intro mem
       change (((RawCtxProtocolReveals.Owner.beacon b), 1#u64), true) ∈ w.2.2.1.published at mem
-      rcases ins_publish_record pre application selector aux source writer selectedMessage previousRoot response prior nonce next
+      rcases ins_publish_record (completedBinding := completedBinding) pre application selector aux source writer selectedMessage previousRoot response prior nonce next
           sender route read b (.inl (.inr (.inl ⟨b, .inl (if β then m1 else m0)⟩))) s w hw mem with old | ⟨_, installed⟩
       · rcases publish old with noted | hidden
         · exact Or.inl noted
         · rw [empty] at hidden
           cases hidden
       · right
-        rw [ins_send_monitor pre application (initialLocal source selectedMessage previousRoot response) selector aux source writer prior
+        rw [ins_send_monitor (completedBinding := completedBinding) pre application (initialLocal source selectedMessage previousRoot response) selector aux source writer prior
           sendTarget nonce next sender route read (PqxdhInitialSelectedOrigin.mark source selectedMessage) b _ s empty w hw]
         have hidden := (origin installed).2 empty
         simp [hidden]
@@ -5451,7 +5452,7 @@ theorem all_run (β : Bool) {α : Type} (X : OracleComp (AdvSpec extra S B) α) 
     · simp only [support_pure, Set.mem_singleton_iff] at rest
       subst rest
       simp at reached
-    · exact ih reply c1 s1 (all_step pre application selector aux source writer selectedMessage previousRoot response prior nonce
+    · exact ih reply c1 s1 (all_step (completedBinding := completedBinding) pre application selector aux source writer selectedMessage previousRoot response prior nonce
         next sender route read b β query c s inv _ hw reply c1 rfl) z rest reached
 
 end ConfInvariant
@@ -5498,7 +5499,7 @@ theorem gap_free {Selection : Type}
     (adversary : Selection → RustM (Option PqxdhServerRegistrationPublication.Response) → OracleComp (AdvSpec extra S B) Bool)
     (selection : Selection) (β : Bool) (ancestors disclosed : List RatchetChain)
     (result : Option Bool × InsState M P I D K A N RootOracle.QueryCache S B)
-    (supported : result ∈ support (insFirstRun pre application (initialLocal source selectedMessage previousRoot response64) selector
+    (supported : result ∈ support (insFirstRun (associatedData := associatedData) (completedBinding := completedBinding) pre application (initialLocal source selectedMessage previousRoot response64) selector
       aux source writer selectedMessage previousRoot response64 sender route decode index metadata ready
       (confPost adversary b β selection) before (.beacon b) shared privateState cache store nonce next b))
     (event : ClientEvent source previousRoot response64 (.beacon b) 1#u64 ancestors disclosed result) :
@@ -5516,7 +5517,7 @@ theorem gap_free {Selection : Type}
     rcases value with ⟨bit, final⟩
     simp only [hz1, Option.map_some, Option.some.injEq, confOutput, Bool.and_eq_true, decide_eq_true_eq] at accepted
     have initial := selectedAfter_beacon built.1.2 index true built.1.1 b
-    have inv := all_run pre application selector aux source writer selectedMessage previousRoot response64
+    have inv := all_run (completedBinding := completedBinding) pre application selector aux source writer selectedMessage previousRoot response64
       (productionStream source.crypto) nonce next sender route decode b β (adversary selection built.1.1) confInitial
       ((built.1.2, built.2), (selectedAfter PqxdhInitialSourcePublication.empty built.1.2 index true built.1.1, none, false))
       ⟨fun _ => rfl, fun installed => by simp [initial.1] at installed, fun mem => absurd mem (initial.2 _ _)⟩ z hz bit final hz1
@@ -5549,7 +5550,7 @@ local notation "env0" => PqxdhSourceSharedPreparation.environment setup env call
 theorem hiddenGap_zero (b : Fin (B + 1))
     (adversary : program.Selection → RustM (Option PqxdhServerRegistrationPublication.Response) →
       OracleComp (AdvSpec (SelectorSpec baseSpec) S (B + 1)) Bool) (β : Bool) :
-    𝒟[hiddenGapGame setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b β) b (firstBeacon b)]
+    𝒟[hiddenGapGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b β) b (firstBeacon b)]
       {true} = 0 := by
   unfold hiddenGapGame
   rw [insFullClient_run, source_map, ← prEvent_eq_evalDist_singleton _ true]
@@ -5560,7 +5561,7 @@ theorem hiddenGap_zero (b : Fin (B + 1))
   obtain ⟨full, hfullKey, rfl⟩ := hr
   rw [mem_support_bind_iff] at hfullKey
   obtain ⟨key, _, hfull⟩ := hfullKey
-  have inRun : full.1 ∈ support (insFullRun setup env callbacks baseImpl kem attachedVerify primitives program
+  have inRun : full.1 ∈ support (insFullRun (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program
       (confPost adversary b β) b (firstBeacon b)) := by
     refine support_simulateQ_run'_subset (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder (env0).decode)
       (env0).source.crypto key) _ AdaptiveCtxDynamicKnownKeys.initialSource ?_
@@ -5578,16 +5579,16 @@ theorem hiddenGap_zero (b : Fin (B + 1))
     simp only [support_map, Set.mem_image] at inSuffix
     obtain ⟨result, resultSupported, same⟩ := inSuffix
     rw [← same] at reached
-    have owner := input_selected setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b β)
+    have owner := input_selected (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b β)
       _ _ _ _ sample.1 input pending
-    obtain ⟨selection, hpost⟩ := input_post setup env callbacks baseImpl kem attachedVerify primitives program
+    obtain ⟨selection, hpost⟩ := input_post (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program
       (confPost adversary b β) _ _ _ _ sample.1 input pending
     simp only [readOut, gapOut, clientOut, Bool.and_eq_true, decide_eq_true_eq, Bool.not_eq_true', decide_eq_false_iff_not]
       at reached
     obtain ⟨event, notHidden⟩ := reached
     rw [owner] at event
     rw [owner, hpost] at resultSupported
-    exact notHidden (gap_free _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ adversary selection β _ _ result resultSupported event)
+    exact notHidden (gap_free (associatedData := associatedData) (completedBinding := completedBinding) _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ adversary selection β _ _ result resultSupported event)
 
 /-- First-record left-or-right confidentiality (S7). For any adversary against the full post-registration protocol (secrets sampled inside, HB-112 actual game) choosing two equal-length plaintexts for the first send of Beacon `b`, the difference between the accepted pending masses of the two challenge bits is at most, for each bit: the confidentiality client's ordinary CTX privacy loss `twinLoss` (IND$ advantages of the constructed validation and view reductions, `qHash/2^128`, twice the INT-CTXT advantages of the constructed attempt-indexed reductions, `qRaw/2^512`), the HB-112 first-record target loss and completed-branch root loss of the challenge-fixed post (advantages of C1's constructed reductions), the explicit games `collGame` (the client event holds and a Beacon finish made a selected raw opening) and `keyGame` (in the key-last run, the first-record event and no hidden disclosure hold while the uniform record key equals a revealed value), which are not yet bounded by assumption terms, and the nonce-repeat stop bound of `PqxdhFirstRecordStopTagged.stop_bound`; plus `2 * 2^-256` for the initial half alias. The stop and CTX budgets are those of the certificates `c0` and `c1` of the two wrapper posts (`first_record_confidentiality_budget` states them with the adversary's own budget). The hidden-gap game of the output switch has mass zero (`hiddenGap_zero`). The restrictions are enforced by the wrapper `confPost` and by HB-112's event: equal lengths, the challenge is the first acceptable challenge and Beacon `b`'s unique sequence-one record, raw-receive replies whose plaintext is a challenge plaintext are reported as failures (finish replies are covered by `collGame`), and the selected chain and record key stay undisclosed. The two plaintext-independent random views are equal (`random_views_equal`). -/
 theorem first_record_confidentiality (b : Fin (B + 1))
@@ -5600,65 +5601,65 @@ theorem first_record_confidentiality (b : Fin (B + 1))
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation kem) (hmac : HmacSha512) (correct : SourceFullCorrect (env0).source hmac)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : Forgery)
     (ctxFallback : ModifiedNonceAeadForgery) (qPrelude0 qPrelude1 : Nat)
-    (prepareHash0 : PrepareHashBudget setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b false)
+    (prepareHash0 : PrepareHashBudget (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b false)
       qPrelude0)
-    (prepareHash1 : PrepareHashBudget setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b true)
+    (prepareHash1 : PrepareHashBudget (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b true)
       qPrelude1)
     (small0 : 1 + postTotal setup env callbacks baseImpl kem program c0 < 2 ^ 96)
     (small1 : 1 + postTotal setup env callbacks baseImpl kem program c1 < 2 ^ 96) :
-    |(𝒟[confGame setup env callbacks baseImpl kem attachedVerify primitives program b adversary false] {true}).toReal -
-      (𝒟[confGame setup env callbacks baseImpl kem attachedVerify primitives program b adversary true] {true}).toReal| ≤
-    (twinLoss setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b false) b c0 ctxFallback
+    |(𝒟[confGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program b adversary false] {true}).toReal -
+      (𝒟[confGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program b adversary true] {true}).toReal| ≤
+    (twinLoss (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b false) b c0 ctxFallback
       qPrelude0).toReal +
-    (twinLoss setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b true) b c1 ctxFallback
+    (twinLoss (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b true) b c1 ctxFallback
       qPrelude1).toReal +
-    (PqxdhAdaptiveCoordinateSecrecy.targetLoss env0 baseImpl kem attachedVerify primitives program
+    (PqxdhAdaptiveCoordinateSecrecy.targetLoss (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program
       (PqxdhFirstRecordTarget.unitPost program (confPost adversary b false)) (PqxdhFirstRecordTarget.unitTargets (firstBeacon b))
       (PqxdhFirstRecordTarget.certificate env0 baseImpl kem program (confPost adversary b false) c0) hmac fallback ordinaryFallback () +
-    PqxdhFirstRecordTarget.completedLoss env0 baseImpl kem attachedVerify primitives program (confPost adversary b false) hmac fallback
+    PqxdhFirstRecordTarget.completedLoss (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program (confPost adversary b false) hmac fallback
       ordinaryFallback) +
-    (PqxdhAdaptiveCoordinateSecrecy.targetLoss env0 baseImpl kem attachedVerify primitives program
+    (PqxdhAdaptiveCoordinateSecrecy.targetLoss (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program
       (PqxdhFirstRecordTarget.unitPost program (confPost adversary b true)) (PqxdhFirstRecordTarget.unitTargets (firstBeacon b))
       (PqxdhFirstRecordTarget.certificate env0 baseImpl kem program (confPost adversary b true) c1) hmac fallback ordinaryFallback () +
-    PqxdhFirstRecordTarget.completedLoss env0 baseImpl kem attachedVerify primitives program (confPost adversary b true) hmac fallback
+    PqxdhFirstRecordTarget.completedLoss (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program (confPost adversary b true) hmac fallback
       ordinaryFallback) +
-    (𝒟[collGame setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b false) b (firstBeacon b)]
+    (𝒟[collGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b false) b (firstBeacon b)]
       {true}).toReal +
-    (𝒟[collGame setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b true) b (firstBeacon b)]
+    (𝒟[collGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b true) b (firstBeacon b)]
       {true}).toReal +
-    (𝒟[keyGame setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b false) (firstBeacon b)]
+    (𝒟[keyGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b false) (firstBeacon b)]
       {true}).toReal +
-    (𝒟[keyGame setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b true) (firstBeacon b)]
+    (𝒟[keyGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b true) (firstBeacon b)]
       {true}).toReal +
     ((1 + c0.postBudget (.inl .send) + 51 * (c0.postBudget (.inl .raw) + c0.postBudget (.inr 5)) : ℕ) : ℝ) / 2 ^ 256 +
     ((1 + c1.postBudget (.inl .send) + 51 * (c1.postBudget (.inl .raw) + c1.postBudget (.inr 5)) : ℕ) : ℝ) / 2 ^ 256 +
     2 / 2 ^ 256 := by
-  have left := bit_bounds setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b false) b c0
+  have left := bit_bounds (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b false) b c0
     compatible adapter functional hmac correct fallback ordinaryFallback ctxFallback qPrelude0 prepareHash0 small0
-  have right := bit_bounds setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b true) b c1
+  have right := bit_bounds (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b true) b c1
     compatible adapter functional hmac correct fallback ordinaryFallback ctxFallback qPrelude1 prepareHash1 small1
-  have gap0 := congrArg ENNReal.toReal (hiddenGap_zero setup env callbacks baseImpl kem attachedVerify primitives program b adversary false)
-  have gap1 := congrArg ENNReal.toReal (hiddenGap_zero setup env callbacks baseImpl kem attachedVerify primitives program b adversary true)
+  have gap0 := congrArg ENNReal.toReal (hiddenGap_zero (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program b adversary false)
+  have gap1 := congrArg ENNReal.toReal (hiddenGap_zero (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program b adversary true)
   rw [ENNReal.toReal_zero] at gap0 gap1
   have views := congrArg ENNReal.toReal
-    (random_views_equal setup env callbacks baseImpl kem attachedVerify primitives program b adversary)
-  have stop0 := stop_real setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b false) c0 b
-  have stop1 := stop_real setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b true) c1 b
-  have n1 := ENNReal.toReal_nonneg (a := twinLoss setup env callbacks baseImpl kem attachedVerify primitives program
+    (random_views_equal (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program b adversary)
+  have stop0 := stop_real (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b false) c0 b
+  have stop1 := stop_real (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b true) c1 b
+  have n1 := ENNReal.toReal_nonneg (a := twinLoss (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program
     (confPost adversary b false) b c0 ctxFallback qPrelude0)
-  have n2 := ENNReal.toReal_nonneg (a := twinLoss setup env callbacks baseImpl kem attachedVerify primitives program
+  have n2 := ENNReal.toReal_nonneg (a := twinLoss (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program
     (confPost adversary b true) b c1 ctxFallback qPrelude1)
-  have n5 := ENNReal.toReal_nonneg (a := 𝒟[collGame setup env callbacks baseImpl kem attachedVerify primitives program
+  have n5 := ENNReal.toReal_nonneg (a := 𝒟[collGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program
     (confPost adversary b false) b (firstBeacon b)] {true})
-  have n6 := ENNReal.toReal_nonneg (a := 𝒟[collGame setup env callbacks baseImpl kem attachedVerify primitives program
+  have n6 := ENNReal.toReal_nonneg (a := 𝒟[collGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program
     (confPost adversary b true) b (firstBeacon b)] {true})
-  have n7 := ENNReal.toReal_nonneg (a := 𝒟[keyGame setup env callbacks baseImpl kem attachedVerify primitives program
+  have n7 := ENNReal.toReal_nonneg (a := 𝒟[keyGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program
     (confPost adversary b false) (firstBeacon b)] {true})
-  have n8 := ENNReal.toReal_nonneg (a := 𝒟[keyGame setup env callbacks baseImpl kem attachedVerify primitives program
+  have n8 := ENNReal.toReal_nonneg (a := 𝒟[keyGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program
     (confPost adversary b true) (firstBeacon b)] {true})
-  have n9 := ENNReal.toReal_nonneg (a := 𝒟[stopGame setup env callbacks baseImpl kem attachedVerify primitives program
+  have n9 := ENNReal.toReal_nonneg (a := 𝒟[stopGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program
     (confPost adversary b false) (firstBeacon b)] {true})
-  have n10 := ENNReal.toReal_nonneg (a := 𝒟[stopGame setup env callbacks baseImpl kem attachedVerify primitives program
+  have n10 := ENNReal.toReal_nonneg (a := 𝒟[stopGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program
     (confPost adversary b true) (firstBeacon b)] {true})
   unfold confGame
   rw [abs_le]
@@ -5741,40 +5742,40 @@ theorem first_record_confidentiality_budget (b : Fin (B + 1))
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation kem) (hmac : HmacSha512) (correct : SourceFullCorrect (env0).source hmac)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : Forgery)
     (ctxFallback : ModifiedNonceAeadForgery) (qPrelude0 qPrelude1 : Nat)
-    (prepareHash0 : PrepareHashBudget setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b false)
+    (prepareHash0 : PrepareHashBudget (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b false)
       qPrelude0)
-    (prepareHash1 : PrepareHashBudget setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b true)
+    (prepareHash1 : PrepareHashBudget (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b true)
       qPrelude1)
     (small : 1 + ∑ kind, budget kind < 2 ^ 96) :
-    |(𝒟[confGame setup env callbacks baseImpl kem attachedVerify primitives program b adversary false] {true}).toReal -
-      (𝒟[confGame setup env callbacks baseImpl kem attachedVerify primitives program b adversary true] {true}).toReal| ≤
-    (twinLoss setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b false) b
+    |(𝒟[confGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program b adversary false] {true}).toReal -
+      (𝒟[confGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program b adversary true] {true}).toReal| ≤
+    (twinLoss (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b false) b
       (confCertificate env0 baseImpl kem program c b adversary budget bounded false) ctxFallback qPrelude0).toReal +
-    (twinLoss setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b true) b
+    (twinLoss (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b true) b
       (confCertificate env0 baseImpl kem program c b adversary budget bounded true) ctxFallback qPrelude1).toReal +
-    (PqxdhAdaptiveCoordinateSecrecy.targetLoss env0 baseImpl kem attachedVerify primitives program
+    (PqxdhAdaptiveCoordinateSecrecy.targetLoss (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program
       (PqxdhFirstRecordTarget.unitPost program (confPost adversary b false)) (PqxdhFirstRecordTarget.unitTargets (firstBeacon b))
       (PqxdhFirstRecordTarget.certificate env0 baseImpl kem program (confPost adversary b false)
         (confCertificate env0 baseImpl kem program c b adversary budget bounded false)) hmac fallback ordinaryFallback () +
-    PqxdhFirstRecordTarget.completedLoss env0 baseImpl kem attachedVerify primitives program (confPost adversary b false) hmac fallback
+    PqxdhFirstRecordTarget.completedLoss (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program (confPost adversary b false) hmac fallback
       ordinaryFallback) +
-    (PqxdhAdaptiveCoordinateSecrecy.targetLoss env0 baseImpl kem attachedVerify primitives program
+    (PqxdhAdaptiveCoordinateSecrecy.targetLoss (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program
       (PqxdhFirstRecordTarget.unitPost program (confPost adversary b true)) (PqxdhFirstRecordTarget.unitTargets (firstBeacon b))
       (PqxdhFirstRecordTarget.certificate env0 baseImpl kem program (confPost adversary b true)
         (confCertificate env0 baseImpl kem program c b adversary budget bounded true)) hmac fallback ordinaryFallback () +
-    PqxdhFirstRecordTarget.completedLoss env0 baseImpl kem attachedVerify primitives program (confPost adversary b true) hmac fallback
+    PqxdhFirstRecordTarget.completedLoss (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program (confPost adversary b true) hmac fallback
       ordinaryFallback) +
-    (𝒟[collGame setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b false) b (firstBeacon b)]
+    (𝒟[collGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b false) b (firstBeacon b)]
       {true}).toReal +
-    (𝒟[collGame setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b true) b (firstBeacon b)]
+    (𝒟[collGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b true) b (firstBeacon b)]
       {true}).toReal +
-    (𝒟[keyGame setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b false) (firstBeacon b)]
+    (𝒟[keyGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b false) (firstBeacon b)]
       {true}).toReal +
-    (𝒟[keyGame setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b true) (firstBeacon b)]
+    (𝒟[keyGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (confPost adversary b true) (firstBeacon b)]
       {true}).toReal +
     2 * (((1 + budget (.inl .send) + 51 * (budget (.inl .raw) + budget (.inr 5)) : ℕ) : ℝ) / 2 ^ 256) +
     2 / 2 ^ 256 := by
-  have bound := first_record_confidentiality setup env callbacks baseImpl kem attachedVerify primitives program b adversary
+  have bound := first_record_confidentiality (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program b adversary
     (confCertificate env0 baseImpl kem program c b adversary budget bounded false)
     (confCertificate env0 baseImpl kem program c b adversary budget bounded true)
     compatible adapter functional hmac correct fallback ordinaryFallback ctxFallback qPrelude0 qPrelude1 prepareHash0 prepareHash1

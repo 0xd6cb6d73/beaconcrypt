@@ -18,6 +18,7 @@ set_option maxRecDepth 8192
 set_option maxHeartbeats 1000000
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterServerReceiptFrame
+attribute [local irreducible] RegistrationNativePlatformSourceAccept.accept
 open BeaconcryptCore.Refinement
 open AdapterPublicWrapperRequestMonad
 open AdapterPublicWrapperRustT (RustT)
@@ -43,7 +44,7 @@ local notation "allocation"=>RegistrationNativePlatformExtractedSdkBuildNormal.a
 local notation "helper"=>RegistrationNativePlatformConcreteSource.helper configuration.reserveFrame
 local notation "writer"=>RegistrationNativePlatformConcreteSource.writer configuration.reservePackets
 local notation "coins"=>RegistrationNativePlatformMldsaProgram.coins
-variable (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
 attribute [local irreducible] RegistrationNativeExperiment.handler
 
 def Quiet :RegistrationNativeRawAdapter.TypedSpec.Domain→Prop

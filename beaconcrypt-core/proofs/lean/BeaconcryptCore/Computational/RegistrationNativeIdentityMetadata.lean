@@ -102,8 +102,7 @@ theorem outgoing_preserves (setup : Setup base KemSK) (index : Nat) (owner : Own
   cases query with
   | inl query => cases query with
     | hash request => exact lift_preserves _
-    | sign request payload digest =>
-        exact bind_preserves _ _ (sample_preserves _) (fun _ => bind_preserves _ _ (lift_preserves _) (fun _ => pure_preserves _))
+    | sign request payload digest => exact pure_preserves (core.option.Option.None : RegistrationSigningShared.SignReply)
   | inr request =>
       simp only [outgoing]
       split
@@ -124,7 +123,7 @@ theorem primitive_preserves (setup : Setup base KemSK) (owner : Owner source) (o
     (query : RegistrationAgreementShared.PrimitiveSpec.Domain) :
     Preserves (primitive (n := n) (Auxiliary := Auxiliary) setup owner oneTime query) := by
   cases query with
-  | convertSecret role => cases role <;> first | exact pure_preserves _ | exact lift_preserves _
+  | convertSecret role => cases role <;> exact pure_preserves _
   | dh request => cases role : request.secret_role <;>
       simp only [primitive, role] <;> exact lift_preserves _
   | convertPublic key | generate role | encapsulate key | decapsulate ciphertext => exact lift_preserves _

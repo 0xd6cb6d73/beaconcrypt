@@ -45,7 +45,7 @@ omit primitive containers [PublicWrapperPlatform.Allocator]
   [PublicWrapperPlatform.LocalOperations] [PublicWrapperPlatform.ContainerOperations] in
 theorem readback_source (coins : QueryImpl unifSpec Base)
     (view : MaterialView mlSource KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : Server) (before : Cut)
     (related : AdapterPublicWrapperState.Server view views created credential self before.1.server)
     (identifier : U64) :
@@ -72,8 +72,10 @@ theorem lookup
 (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) Base)
 (fallback : registration.MldsaSigningRequest → NativeM RegistrationSigningShared.SignReply)
 
+    [children : ChildOperations (RustT SourceM)]
+    (hashOperation : ∀ request, (children.executeHash request).run = AdapterPublicServerCutPin.hash coins sign request)
     (view : MaterialView mlSource KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : Server) (before : Cut) (related : AdapterPublicWrapperState.Server view views created credential self before.1.server)
     (pin : session.ServerAuthenticationPin) (token : beaconcrypt_public_wrapper.server.RegistrationOutput)
     (plaintext : Slice U8) (pending : peer.CompletionLookup)
@@ -147,25 +149,27 @@ theorem lookup
             ({before.1 with server := AdapterPublicServerPresenceNative.charged before.1.server identifier}, before.2)) : Base _) =
             pure (.ok none, {before.1 with server := AdapterPublicServerPresenceNative.charged before.1.server identifier})
           simp only [map_pure, project, AdapterPublicServerPublicationInstall.project, AdapterPublicServerPublicationInstall.output]
-        | Ok initial =>
-          have beganInitial : registration.begin_server_completion self.control pin
+        | Ok pendingAd =>
+          have selected : registration.begin_server_completion self.control pin
               (if (views.peer self.known_ids identifier).isSome then .Occupied else .Available)
-              token.registration.agreement plaintext = .ok (.Ok initial) := by
+              token.registration.agreement plaintext = .ok (.Ok pendingAd) := by
             cases occupied : (views.peer self.known_ids identifier).isSome <;>
               simpa only [occupied, PeerOwnership.completion_lookup_resume, fields.1, fields.2.1,
                 fields.2.2.1, fields.2.2.2] using resumed
-          have previous := RegistrationServerCompletionSnapshot.initial self.control pin
+          have previous := RegistrationServerCompletionSnapshot.ad_selection self.control pin
             (if (views.peer self.known_ids identifier).isSome then .Occupied else .Available)
-            token.registration.agreement plaintext
-          rw [beganInitial] at previous
-          have parsedInitial := AdapterPublicServerCompletionInstall.initial_parsed self.control pin
+            token.registration.agreement plaintext (.Ok pendingAd) selected
+          have origin := RegistrationAd.server_ad_origin self.control pin
             (if (views.peer self.known_ids identifier).isSome then .Occupied else .Available)
-            token plaintext initial beganInitial parsed
+            token.registration.agreement plaintext pendingAd selected
+          have parsedPending : AdapterPublicServerToken.ParsedBinding pendingAd.binding := by
+            rw [origin.2.1]
+            exact parsed
           have currentMaterial := AdapterPublicServerPresenceNative.material_related view views created credential self before.1.server related identifier
-          exact reserved coins setup codec keyView failure allocation helper erased sign writer fallback
+          exact AdapterPublicServerBuildPrefix.hashed coins setup codec keyView failure allocation helper erased sign writer fallback hashOperation
             view views created credential self
             ({before.1 with server := AdapterPublicServerPresenceNative.charged before.1.server identifier}, before.2)
-            currentMaterial initial (previous (.Ok initial) rfl) parsedInitial allocated reserveOperation footprint standard
+            currentMaterial pendingAd previous parsedPending allocated reserveOperation footprint standard
 
 theorem after_pin
 (coins : QueryImpl unifSpec Base) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
@@ -178,8 +182,10 @@ theorem after_pin
 (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) Base)
 (fallback : registration.MldsaSigningRequest → NativeM RegistrationSigningShared.SignReply)
 
+    [children : ChildOperations (RustT SourceM)]
+    (hashOperation : ∀ request, (children.executeHash request).run = AdapterPublicServerCutPin.hash coins sign request)
     (view : MaterialView mlSource KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : Server) (before : Cut) (related : AdapterPublicWrapperState.Server view views created credential self before.1.server)
     (token : beaconcrypt_public_wrapper.server.RegistrationOutput) (plaintext : Slice U8)
     (pinned : RustM (core.option.Option session.ServerAuthenticationPin))
@@ -208,6 +214,7 @@ theorem after_pin
       ((afterPin (completion coins setup codec keyView failure allocation helper erased sign writer fallback) self token plaintext pinned).run before) =
     (RegistrationNativePlatformExperiment.server
       (RegistrationNativePlatformCompletionSdk.afterPin
+        (RegistrationNativePlatformCompletionSdk.nativeAdHash coins)
         (admitted <$> StateT.lift allocated)
         (RegistrationNativePlatformCompletionSdk.nativePresent coins)
         (finish coins setup codec keyView failure allocation helper erased sign writer)
@@ -229,7 +236,7 @@ theorem after_pin
         | Err old => simp only [AdapterPublicServerSourceLens.server_pure, StateT.run_pure, map_pure, project,
             AdapterPublicServerPublicationInstall.project, AdapterPublicServerPublicationInstall.output]
         | Ok pending =>
-          rw [lookup coins setup codec keyView failure allocation helper erased sign writer fallback
+          rw [lookup coins setup codec keyView failure allocation helper erased sign writer fallback hashOperation
             view views created credential self before related pin token plaintext pending began parsed
             allocated reserveOperation footprint containsOperation standard, lookup_global]
           rfl
@@ -252,7 +259,7 @@ theorem source_joint
 
     (previousChildren : ChildOperations (RustT SourceM))
     (view : MaterialView mlSource KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : Server) (before : Cut) (related : AdapterPublicWrapperState.Server view views created credential self before.1.server)
     (token : beaconcrypt_public_wrapper.server.RegistrationOutput) (data : core.option.Option (Slice U8))
     (parsed : AdapterPublicServerToken.ParsedToken token)
@@ -287,6 +294,7 @@ theorem source_joint
         self token data).run before) =
       (RegistrationNativePlatformExperiment.server
         (RegistrationNativePlatformCompletionSdk.complete
+          (RegistrationNativePlatformCompletionSdk.nativeAdHash coins)
           (RegistrationNativePlatformSourceBuild.pin coins)
           (admitted <$> StateT.lift allocated)
           (RegistrationNativePlatformCompletionSdk.nativePresent coins)
@@ -296,7 +304,7 @@ theorem source_joint
       (fun {A} (work : StateT (RegistrationServerRootCompiler.Local n) Base A) => AdapterPublicServerCompletionNative.inCut work)
       (AdapterPublicServerCompletionNative.outgoing coins sign) previousChildren coins setup codec erased
       (AdapterPublicServerCompletionNative.writer writer)
-  have pinErasure := AdapterPublicServerCutPin.source coins sign view views created credential
+  have pinErasure := AdapterPublicServerCutPin.source coins view views created credential
     (AdapterPublicServerRecordNative.children
       (fun {A} (work : StateT (RegistrationServerRootCompiler.Local n) Base A) => AdapterPublicServerCompletionNative.inCut work)
       previousChildren coins setup codec erased)
@@ -317,7 +325,7 @@ theorem source_joint
   have currentMaterial := AdapterPublicServerBuildPrefix.pin_material coins view views created credential self before.1 current.1
     related pinned external between projectedSupport
   simpa only [StateT.run_map, Prod.map, id_eq] using congrArg (fun work => work.run between)
-    (after_pin coins setup codec keyView failure allocation helper erased sign writer fallback
+    (after_pin coins setup codec keyView failure allocation helper erased sign writer fallback (fun _ => rfl)
       view views created credential self current currentMaterial token (application data) pinned parsed
       allocated reserveOperation footprint containsOperation standard)
 
@@ -336,7 +344,7 @@ theorem actual
     (previousLocal : LocalOperations (RustT SourceM))
     (previousChildren : ChildOperations (RustT SourceM))
     (view : MaterialView mlSource KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : Server) (before : Cut) (related : AdapterPublicWrapperState.Server view views created credential self before.1.server)
     (token : beaconcrypt_public_wrapper.server.RegistrationOutput) (data : core.option.Option (Slice U8))
     (parsed : AdapterPublicServerToken.ParsedToken token)
@@ -378,6 +386,7 @@ theorem actual
         self token data).run before) =
       (RegistrationNativePlatformExperiment.server
         (RegistrationNativePlatformCompletionSdk.complete
+          (RegistrationNativePlatformCompletionSdk.nativeAdHash coins)
           (RegistrationNativePlatformSourceBuild.pin coins)
           (admitted <$> StateT.lift allocated)
           (RegistrationNativePlatformCompletionSdk.nativePresent coins)
@@ -408,7 +417,7 @@ private theorem post_reserved
 (fallback : registration.MldsaSigningRequest → NativeM RegistrationSigningShared.SignReply)
 
     (view : MaterialView mlSource KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : Server) (before : Cut) (related : AdapterPublicWrapperState.Server view views created credential self before.1.server)
     (initial : registration.ServerInitialKdf) (previous : initial.candidate.previous_state = self.control)
     (parsed : AdapterPublicServerToken.ParsedKey initial.binding.beacon_identity_public_key)
@@ -467,8 +476,10 @@ private theorem post_lookup
 (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) Base)
 (fallback : registration.MldsaSigningRequest → NativeM RegistrationSigningShared.SignReply)
 
+    [children : ChildOperations (RustT SourceM)]
+    (hashOperation : ∀ request, (children.executeHash request).run = AdapterPublicServerCutPin.hash coins sign request)
     (view : MaterialView mlSource KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : Server) (before : Cut) (related : AdapterPublicWrapperState.Server view views created credential self before.1.server)
     (pin : session.ServerAuthenticationPin) (token : beaconcrypt_public_wrapper.server.RegistrationOutput)
     (plaintext : Slice U8) (pending : peer.CompletionLookup)
@@ -532,7 +543,7 @@ private theorem post_lookup
       rw [containsOperation before related identifier] at supported
       change (((published, .ok (reply, current)), after), next) ∈ support
         (((AdapterPublicServerBuildTrace.checked self (pending.resume (views.peer self.known_ids identifier).isSome)
-          (AdapterPublicServerBuildTrace.reserved (completion coins setup codec keyView failure allocation helper erased sign writer fallback) self)).run
+          (AdapterPublicServerBuildTrace.adHash (completion coins setup codec keyView failure allocation helper erased sign writer fallback) self)).run
           ({before.1 with server := AdapterPublicServerPresenceNative.charged before.1.server identifier}, before.2)).run external) at supported
       have currentMaterial := AdapterPublicServerPresenceNative.material_related view views created credential self before.1.server related identifier
       unfold AdapterPublicServerBuildTrace.checked at supported
@@ -546,25 +557,28 @@ private theorem post_lookup
           simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
           cases supported
           exact currentMaterial
-        | Ok initial =>
+        | Ok pendingAd =>
           rw [resumed] at supported
-          have beganInitial : registration.begin_server_completion self.control pin
+          have selected : registration.begin_server_completion self.control pin
               (if (views.peer self.known_ids identifier).isSome then .Occupied else .Available)
-              token.registration.agreement plaintext = .ok (.Ok initial) := by
+              token.registration.agreement plaintext = .ok (.Ok pendingAd) := by
             cases occupied : (views.peer self.known_ids identifier).isSome <;>
               simpa only [occupied, PeerOwnership.completion_lookup_resume, fields.1, fields.2.1,
                 fields.2.2.1, fields.2.2.2] using resumed
-          have previous := RegistrationServerCompletionSnapshot.initial self.control pin
+          have previous := RegistrationServerCompletionSnapshot.ad_selection self.control pin
             (if (views.peer self.known_ids identifier).isSome then .Occupied else .Available)
-            token.registration.agreement plaintext
-          rw [beganInitial] at previous
-          have parsedInitial := AdapterPublicServerCompletionInstall.initial_parsed self.control pin
+            token.registration.agreement plaintext (.Ok pendingAd) selected
+          have origin := RegistrationAd.server_ad_origin self.control pin
             (if (views.peer self.known_ids identifier).isSome then .Occupied else .Available)
-            token plaintext initial beganInitial parsed
-          exact post_reserved coins setup codec keyView failure allocation helper erased sign writer fallback
+            token.registration.agreement plaintext pendingAd selected
+          have parsedPending : AdapterPublicServerToken.ParsedBinding pendingAd.binding := by
+            rw [origin.2.1]
+            exact parsed
+          have currentMaterial := AdapterPublicServerPresenceNative.material_related view views created credential self before.1.server related identifier
+          exact AdapterPublicServerBuildPost.hashed coins setup codec keyView failure allocation helper erased sign writer fallback hashOperation
             view views created credential self
             ({before.1 with server := AdapterPublicServerPresenceNative.charged before.1.server identifier}, before.2)
-            currentMaterial initial (previous (.Ok initial) rfl) parsedInitial allocated reserveOperation footprint standard
+            currentMaterial pendingAd previous parsedPending allocated reserveOperation footprint standard
             published reply current after external next supported
 
 omit localOps crypto in
@@ -579,8 +593,10 @@ private theorem post_after_pin
 (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) Base)
 (fallback : registration.MldsaSigningRequest → NativeM RegistrationSigningShared.SignReply)
 
+    [children : ChildOperations (RustT SourceM)]
+    (hashOperation : ∀ request, (children.executeHash request).run = AdapterPublicServerCutPin.hash coins sign request)
     (view : MaterialView mlSource KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : Server) (before : Cut) (related : AdapterPublicWrapperState.Server view views created credential self before.1.server)
     (token : beaconcrypt_public_wrapper.server.RegistrationOutput) (plaintext : Slice U8)
     (pinned : RustM (core.option.Option session.ServerAuthenticationPin))
@@ -637,7 +653,7 @@ private theorem post_after_pin
           exact related
         | Ok pending =>
           rw [began] at supported
-          exact post_lookup coins setup codec keyView failure allocation helper erased sign writer fallback
+          exact post_lookup coins setup codec keyView failure allocation helper erased sign writer fallback hashOperation
             view views created credential self before related pin token plaintext pending began parsed
             allocated reserveOperation footprint containsOperation standard published reply current after external next supported
 
@@ -654,7 +670,7 @@ theorem source_post
 
     (previousChildren : ChildOperations (RustT SourceM))
     (view : MaterialView mlSource KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : Server) (before : Cut) (related : AdapterPublicWrapperState.Server view views created credential self before.1.server)
     (token : beaconcrypt_public_wrapper.server.RegistrationOutput) (data : core.option.Option (Slice U8))
     (parsed : AdapterPublicServerToken.ParsedToken token)
@@ -700,7 +716,7 @@ theorem source_post
   rw [AdapterPublicServerBuildPrefix.normalized] at supported
   simp only [StateT.run_bind, mem_support_bind_iff] at supported
   obtain ⟨⟨⟨pinned, middle⟩, between⟩, called, continued⟩ := supported
-  have pinErasure := AdapterPublicServerCutPin.source coins sign view views created credential
+  have pinErasure := AdapterPublicServerCutPin.source coins view views created credential
     (AdapterPublicServerRecordNative.children
       (fun {A} (work : StateT (RegistrationServerRootCompiler.Local n) Base A) => AdapterPublicServerCompletionNative.inCut work)
       previousChildren coins setup codec erased)
@@ -713,7 +729,7 @@ theorem source_post
   rw [pinErasure] at projectedSupport
   have currentMaterial := AdapterPublicServerBuildPrefix.pin_material coins view views created credential self before.1 middle.1
     related pinned external between projectedSupport
-  exact post_after_pin coins setup codec keyView failure allocation helper erased sign writer fallback
+  exact post_after_pin coins setup codec keyView failure allocation helper erased sign writer fallback (fun _ => rfl)
     view views created credential self middle currentMaterial token (AdapterPublicServerBuildPrefix.application data) pinned parsed
     allocated reserveOperation footprint containsOperation standard published reply current after between next continued
 

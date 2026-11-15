@@ -22,7 +22,7 @@ variable [original : CryptoOperations (RustT ProbComp)]
 variable {n : Nat} {I KemSK E P : Type} {base : OracleSpec I} {source : RegistrationNativeMldsa.Source}
 variable (coins : QueryImpl unifSpec (StateT P ProbComp))
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (view : AdapterPublicWrapperState.MaterialView source KemSK)
 variable (previousLocal : LocalOperations (RustT (StateT (Backend n KemSK) (StateT P ProbComp))))
 variable (failure : ed.Error) (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT P ProbComp))
@@ -48,15 +48,15 @@ private theorem with_keys {R : Type} (self : beaconcrypt_public_wrapper.beacon.B
   dsimp only
   rw [AdapterPublicBundlePublication.withKeys self control prekey oneTime kem rng
     (view.kxPublic prekey.public_key) (view.kxPublic oneTime.public_key) (view.edPublic self.identity_key.public_key)
-    (RegistrationNativeBeaconFrontend.pqArray (view.kemPublic kem.public_key)) (view.mldsa self.authentication.identity).publicKey
-    (AdapterPublicBundleMaterial.PublicationLeaves.edSign (self:=self) leaves) (AdapterPublicBundleMaterial.PublicationLeaves.hash (self:=self) leaves) (AdapterPublicBundleMaterial.PublicationLeaves.sign (self:=self) leaves) rfl rfl rfl rfl rfl (AdapterPublicBundleMaterial.PublicationLeaves.edLaw (self:=self) leaves) (AdapterPublicBundleMaterial.PublicationLeaves.hashLaw (self:=self) leaves) (AdapterPublicBundleMaterial.PublicationLeaves.signLaw (self:=self) leaves)]
+    (RegistrationNativeBeaconFrontend.pqArray (view.kemPublic kem.public_key))
+    (AdapterPublicBundleMaterial.PublicationLeaves.edSign (self:=self) leaves) (AdapterPublicBundleMaterial.PublicationLeaves.hash (self:=self) leaves)  rfl rfl rfl rfl (AdapterPublicBundleMaterial.PublicationLeaves.edLaw (self:=self) leaves) (AdapterPublicBundleMaterial.PublicationLeaves.hashLaw (self:=self) leaves) ]
   change Compatible (AdapterPublicBundlePublication.install self prekey oneTime kem rng <$>
-    RegistrationNativePlatformBeaconPublication.begin (AdapterPublicInitPublication.outgoing (AdapterPublicBundleMaterial.PublicationLeaves.hash (self:=self) leaves) (AdapterPublicBundleMaterial.PublicationLeaves.sign (self:=self) leaves)
+    RegistrationNativePlatformBeaconPublication.begin (AdapterPublicInitPublication.outgoing (AdapterPublicBundleMaterial.PublicationLeaves.hash (self:=self) leaves)
       (AdapterPublicInitPublication.edMethod (view.edPublic self.identity_key.public_key) (AdapterPublicBundleMaterial.PublicationLeaves.edSign (self:=self) leaves)))
       (fun signed=>(ChildOperations.encodeInit (m:=RustT M) (AdapterPublicBundleBody.packet signed)).run)
-      control _ _ self.authentication.server_pin _)
+      control _ _ self.authentication.server_pin)
   apply map_frame
-  let outgoing:=AdapterPublicInitPublication.outgoing (AdapterPublicBundleMaterial.PublicationLeaves.hash (self:=self) leaves) (AdapterPublicBundleMaterial.PublicationLeaves.sign (self:=self) leaves)
+  let outgoing:=AdapterPublicInitPublication.outgoing (AdapterPublicBundleMaterial.PublicationLeaves.hash (self:=self) leaves)
     (AdapterPublicInitPublication.edMethod (view.edPublic self.identity_key.public_key) (AdapterPublicBundleMaterial.PublicationLeaves.edSign (self:=self) leaves))
   let handler : QueryImpl (RegistrationNativePlatformWriter.Spec E) M:=fun query=>match query with
     | .inl query=>outgoing query
@@ -67,15 +67,15 @@ private theorem with_keys {R : Type} (self : beaconcrypt_public_wrapper.beacon.B
     | inl query=>cases query with
       | inl query=>cases query with
         | hash request=>exact RegistrationNativePlatformPublicAdapterBundleFrame.hash coins setup checks representation created (RegistrationInputs.hashBytes request)
-        | sign request payload digest=>exact map_frame _ _ (map_frame _ _ (RegistrationNativePlatformPublicAdapterBundleFrame.sample coins setup checks representation created _))
+        | sign request payload digest=>exact pure_frame _
       | inr request=>
         dsimp only [handler,outgoing,AdapterPublicInitPublication.outgoing,AdapterPublicInitPublication.edMethod]
         split <;> exact pure_frame _)
     (RegistrationNativePlatformWriter.begin E control
       ⟨view.edPublic self.identity_key.public_key,view.kxPublic prekey.public_key,RegistrationNativeBeaconFrontend.pqArray (view.kemPublic kem.public_key)⟩
-      ⟨view.kxPublic oneTime.public_key⟩ self.authentication.server_pin (view.mldsa self.authentication.identity).publicKey)
+      ⟨view.kxPublic oneTime.public_key⟩ self.authentication.server_pin)
   rw [RegistrationNativePlatformWriter.begin_interpret] at tree
-  have encoded : (fun signed : registration.SignedInitView=>(ChildOperations.encodeInit (m:=RustT M) (AdapterPublicBundleBody.packet signed)).run)=
+  have encoded : (fun signed : registration.InitView=>(ChildOperations.encodeInit (m:=RustT M) (AdapterPublicBundleBody.packet signed)).run)=
       (fun signed=>simulateQ (fun query=>StateT.lift (writer query))
         (AdapterRegistrationWriterRequestExtraction.encodeInit (E:=E) (m:=AdapterRegistrationWriterRequestMonad.Program E)
           (RegistrationNativePlatformWriter.initPacket signed)).run) :=by

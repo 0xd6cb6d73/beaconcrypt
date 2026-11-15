@@ -92,12 +92,12 @@ private theorem publication_preserves (setup : Setup base KemSK) (index : Nat) (
     Preserves (n := n) (Auxiliary := Auxiliary) (Inv index (PqxdhPhase2InputBytes.word owner.prekeyPublic))
       (simulateQ (RegistrationNativePlatformIdentityPublication.callback setup index owner writer)
         (RegistrationNativePlatformWriter.begin E ⟨owner.pin.binding⟩ (RegistrationNativeIdentityFrontend.inputs owner)
-          ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)) := by
+          ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)) := by
   apply program_preserves _ _ (RegistrationNativePlatformWriterKeyPolicy.AllowedQuery _ _)
     (query_preserves setup index owner writer)
   apply RegistrationNativePlatformWriterKeyPolicy.begin_all (PqxdhPhase2InputBytes.word owner.prekeyPublic) owner.kemPublic
     ⟨owner.pin.binding⟩ (RegistrationNativeIdentityFrontend.inputs owner)
-    ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey (setup.dh.publicKey oneTime)
+    ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin (setup.dh.publicKey oneTime)
   · rfl
   · exact PqxdhRootTableInitialization.rootArray_bytes _
   · simp [RegistrationNativeIdentityFrontend.inputs,RegistrationNativeBeaconFrontend.pqArray,PqxdhRefinement.absBytes,List.map_map,Function.comp_def]

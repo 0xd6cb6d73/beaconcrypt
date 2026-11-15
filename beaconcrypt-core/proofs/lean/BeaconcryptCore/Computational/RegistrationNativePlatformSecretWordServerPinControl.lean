@@ -53,12 +53,35 @@ private theorem afterResult_pin (reserve : M World spec Bool) (service : Service
         | ok value => cases value <;> rfl
 
 
-private theorem afterPin_pin (reserve : M World spec Bool) (present : U64 → M World spec Bool)
+private theorem afterOccupancy_pin (deriveAd : RegistrationNativePlatformServerMaterialFrontend.AdHash (M World spec))
+    (reserve : M World spec Bool) (service : Service (M World spec) Encoded)
+    (control : pqxdh.ServerState) (lookup : peer.CompletionLookup) (reference : Message) (occupied : Bool)
+    (before : ServerState) (previous : World) (result : (Result Encoded × ServerState) × World)
+    (supported : result ∈ support (((afterOccupancy deriveAd reserve service control lookup reference occupied).run before).run previous)) :
+    result.1.2.pin = before.pin := by
+  unfold afterOccupancy at supported
+  cases resumed : lookup.resume occupied with
+  | fail error | div =>
+      simp only [resumed, StateT.run, StateT.monad_pure_def, StateT.pure, mem_support_pure_iff] at supported
+      cases supported
+      rfl
+  | ok answer => cases answer with
+    | Err previous =>
+        simp only [resumed, StateT.run, StateT.monad_pure_def, StateT.pure, mem_support_pure_iff] at supported
+        cases supported
+        rfl
+    | Ok pending =>
+        simp only [resumed, StateT.run_bind, StateT.run_lift, bind_pure_comp, bind_map_left,
+          mem_support_bind_iff] at supported
+        obtain ⟨hashed, _called, supported⟩ := supported
+        exact afterResult_pin reserve service control reference _ before hashed.2 result supported
+
+private theorem afterPin_pin (deriveAd : RegistrationNativePlatformServerMaterialFrontend.AdHash (M World spec)) (reserve : M World spec Bool) (present : U64 → M World spec Bool)
     (service : Service (M World spec) Encoded) (control : pqxdh.ServerState)
     (ready : ServerReady) (application : Slice U8)
     (current : RustM (core.option.Option session.ServerAuthenticationPin))
     (before : ServerState) (previous : World) (result : (Result Encoded × ServerState) × World)
-    (supported : result ∈ support (((afterPin reserve present service control ready application current).run before).run previous)) :
+    (supported : result ∈ support (((afterPin deriveAd reserve present service control ready application current).run before).run previous)) :
     result.1.2.pin = before.pin := by
   cases current with
   | fail error | div =>
@@ -96,21 +119,22 @@ private theorem afterPin_pin (reserve : M World spec Bool) (present : U64 → M 
             split at supported
             · change result ∈ support ((do
                 let occupied ← present keyId
-                (afterOccupancy reserve service control lookup ready.reference occupied).run before).run previous) at supported
+                (afterOccupancy deriveAd reserve service control lookup ready.reference occupied).run before).run previous) at supported
               rw [StateT.run_bind, mem_support_bind_iff] at supported
               obtain ⟨occupied, _called, supported⟩ := supported
-              exact afterResult_pin reserve service control ready.reference _ before occupied.2 result supported
+              exact afterOccupancy_pin deriveAd reserve service control lookup ready.reference occupied.1 before occupied.2 result supported
             · simp only [StateT.monad_pure_def, StateT.pure, mem_support_pure_iff] at supported
               cases supported
               rfl
 
 /-- Every corrected moved-token controller result retains exactly the configured pin after the literal initial take. -/
 theorem build_pin
+    (deriveAd : RegistrationNativePlatformServerMaterialFrontend.AdHash (M World spec))
     (pin : session.ServerAuthenticationPin → M World spec (RustM (core.option.Option session.ServerAuthenticationPin)))
     (reserve : M World spec Bool) (present : U64 → M World spec Bool) (service : Service (M World spec) Encoded)
     (handle : Nat) (application : Option (Slice U8)) (before : ServerState) (previous : World)
     (result : (Result Encoded × ServerState) × World)
-    (supported : result ∈ support (((build pin reserve present service handle application).run before).run previous)) :
+    (supported : result ∈ support (((build deriveAd pin reserve present service handle application).run before).run previous)) :
     result.1.2.pin = (RegistrationNativeSecretWordServerMaterial.take handle before).2.pin := by
   unfold build at supported
   rcases taken : RegistrationNativeSecretWordServerMaterial.take handle before with ⟨selected, current⟩
@@ -128,10 +152,10 @@ theorem build_pin
     | some application =>
       change result ∈ support ((do
         let currentPin ← pin current.pin
-        (afterPin reserve present service current.control ready application currentPin).run current).run previous) at supported
+        (afterPin deriveAd reserve present service current.control ready application currentPin).run current).run previous) at supported
       rw [StateT.run_bind, mem_support_bind_iff] at supported
       obtain ⟨pinned, _called, supported⟩ := supported
-      exact afterPin_pin reserve present service current.control ready application pinned.1 current pinned.2 result supported
+      exact afterPin_pin deriveAd reserve present service current.control ready application pinned.1 current pinned.2 result supported
 
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformSecretWordServerPinControl

@@ -17,7 +17,7 @@ variable {ι KemSK Value : Type} {base : OracleSpec ι} {n : Nat} {mlSource : Re
 /-- The actual candidate run supplies an original successful selected accept under its open candidate provider, including its native preincrement counter. -/
 theorem accepted_call (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (bounds : FreshBounds) (mode : Mode) (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value)
     (parsed : Nat) {count : Nat} (selected : Fin (count + 1))
     (chosen : MlKem768PublicKey × KemSK) (others : Fin count → MlKem768PublicKey × KemSK) (real : Bool)

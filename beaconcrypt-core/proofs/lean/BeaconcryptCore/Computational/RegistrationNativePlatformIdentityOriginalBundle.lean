@@ -83,7 +83,7 @@ private theorem external_lift (work : StateT Platform ProbComp Value) :
 
 /-- The actual six-field writer requests have the same complete P execution inside the generic owner/Env stack. -/
 theorem writer_source (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
-    (view : registration.SignedInitView) :
+    (view : registration.InitView) :
     simulateQ (fun query => externalOriginal (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (source := source) (writer query))
       (AdapterRegistrationWriterRequestExtraction.encodeInit (E := E) (m := AdapterRegistrationWriterRequestMonad.Program E)
         (RegistrationNativePlatformWriter.initPacket view)).run =
@@ -105,7 +105,7 @@ private theorem selected_source (setup : Setup base KemSK) (index : Nat)
           (RegistrationNativeBeaconFrontend.outgoing setup source index owner query))
         (RegistrationNativePlatformGenericBundle.encoderWith (fun query => writerProgram (writer query)))
         ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin owner.mldsa.publicKey
+        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin
       match published with
       | .fail error => pure (.fail error)
       | .div => pure .div

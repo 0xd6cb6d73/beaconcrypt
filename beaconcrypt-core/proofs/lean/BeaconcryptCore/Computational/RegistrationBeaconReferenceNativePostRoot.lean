@@ -34,7 +34,7 @@ private theorem lift_run (work : OracleComp (RegistrationNativeBeaconFrontend.Tr
   exact bind_pure_comp _ _
 
 private theorem program_factored (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire)
-    (erased : Std.Array U8 357#usize) (index : Nat) (owner : SelectedOwner mlSource)
+    (erased : Std.Array U8 227#usize) (index : Nat) (owner : SelectedOwner mlSource)
     (descriptor : RegistrationBeaconBoundSource.PublicAgreement) (root : PqxdhSecretInputKdf.RootOutput)
     (before : Flat mlSource Auxiliary) :
     (simulateQ (target (n := n) setup wire index owner)
@@ -57,7 +57,7 @@ private theorem program_factored (setup : Setup base KemSK) (wire : Registration
 
 /-- The actual initial64/ongoing76/open/install/terminal-phase component uses exactly the bound source entry, without resetting the consumed sequence-one kernel. -/
 theorem post_root (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire)
-    (erased : Std.Array U8 357#usize) (index : Nat) (owner : RegistrationNativeBeaconFrontend.Owner mlSource)
+    (erased : Std.Array U8 227#usize) (index : Nat) (owner : RegistrationNativeBeaconFrontend.Owner mlSource)
     (descriptor : RegistrationBeaconBoundSource.PublicAgreement) (root : PqxdhSecretInputKdf.RootOutput)
     (before : Flat mlSource Auxiliary) :
     (fun value => (value.1.1, (value.1.2, RegistrationBeaconReferenceNativeRecord.erase value.2))) <$>

@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativeMldsaShared
 import BeaconcryptCore.Computational.RegistrationNativeMldsaProgram
 
-/-! Actual Beacon Init signing is reified as a private ML capability at the same chronological callback. All other native bodies remain their original complete source programs; the original mutable owner and environment states are threaded through every continuation. -/
+/-! Current Beacon Init has no ML capability leaf: the complete source controller is lifted as ordinary native work. All other native bodies remain their original complete source programs; the original mutable owner and environment states are threaded through every continuation. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -34,14 +34,14 @@ private theorem state_modify_apply {S : Type} {m : Type → Type} [Monad m]
 
 private theorem lower_pure (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (value : Value) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (value : Value) :
     lower (n := n) (source := source) setup checks representation created (pure value) = pure value := by
   funext before
   simp only [lower, StateT.run, state_pure_apply, simulateQ_pure, map_pure]
 
 private theorem lower_bind (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State Value)
     (next : Value → RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State Next) :
     lower setup checks representation created (work >>= next) =
@@ -51,7 +51,7 @@ private theorem lower_bind (setup : Setup base KemSK) (checks : Checks)
 
 private theorem lower_sample (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (draw : ProbComp Value) (before : Local n KemSK source) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (draw : ProbComp Value) (before : Local n KemSK source) :
     (lower setup checks representation created (RegistrationNativeBeaconFrontend.sample draw)).run before =
       (fun result => (result.1, (before.1, (before.2.1,
         RegistrationBeaconReferenceNativeEffects.embed before.2.2 result.2)))) <$>
@@ -75,66 +75,38 @@ private theorem lower_sample (setup : Setup base KemSK) (checks : Checks)
 
 noncomputable def native (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State Value) :
     StateT (Local n KemSK source) (OracleComp (Spec source)) Value :=
   liftState (lower setup checks representation created work)
 
 private theorem eval_native (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State Value) :
     evalState (native setup checks representation created work) = lower setup checks representation created work :=
   RegistrationNativeMldsaProgram.eval_liftState _
 
 noncomputable def outgoing (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (owner : Owner source) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (owner : Owner source) :
     QueryImpl RegistrationBeaconInitExecutor.Spec (StateT (Local n KemSK source) (OracleComp (Spec source)))
-  | .inl (.sign request payload digest) => fun before => do
-      let reply ← (call .environment (.sign owner.mldsa request)).run before.2.2.server.world.world.1
-      let env := { before.2.1 with receipts := before.2.1.receipts ++
-        [⟨⟨request.public_key, payload, BeaconcryptCore.Refinement.RegistrationSigningTrace.replyBytes reply.1⟩, digest⟩] }
-      pure (reply.1, (before.1, (env, RegistrationBeaconReferenceNativeEffects.embed before.2.2 reply.2)))
   | query => native setup checks representation created
       (RegistrationNativeBeaconFrontend.outgoing setup source index owner query)
 
 /-- Actual evaluation of the named Init signing leaf retains all native poststate and chronological history. -/
 theorem eval_outgoing (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (owner : Owner source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (owner : Owner source)
     (query : RegistrationBeaconInitExecutor.Spec.Domain) :
     evalState (outgoing (n := n) setup checks representation created index owner query) =
       lower setup checks representation created
         (RegistrationNativeBeaconFrontend.outgoing setup source index owner query) := by
-  cases query with
-  | inl query => cases query with
-    | hash request => exact eval_native setup checks representation created _
-    | sign request payload digest =>
-        funext before
-        change (evaluate _ : ProbComp (RegistrationSigningShared.SignReply × Local n KemSK source)) = _
-        have leaf := congrFun (RegistrationNativeMldsaProgram.eval_call (n := n) (source := source)
-          .environment (.sign owner.mldsa request)) before.2.2.server.world.world.1
-        change evaluate ((call .environment (.sign owner.mldsa request)).run before.2.2.server.world.world.1) =
-          (simulateQ PqxdhRecordLiftWorld.effects (simulateQ RegistrationWorldCoinCompiler.envCoin
-            (RegistrationNativeMldsa.owned source owner.mldsa request))).run before.2.2.server.world.world.1 at leaf
-        simp only [outgoing, StateT.run, evaluate, simulateQ_bind, simulateQ_pure]
-        simp only [evaluate, StateT.run] at leaf
-        rw [leaf]
-        simp only [RegistrationNativeBeaconFrontend.outgoing, lower_bind, state_bind_apply]
-        have sampled := lower_sample setup checks representation created
-          (RegistrationNativeMldsa.owned source owner.mldsa request) before
-        simp only [StateT.run] at sampled
-        rw [sampled]
-        simp only [lower, StateT.run, RegistrationNativeBeaconFrontend.updateEnv,
-          state_lift_apply, state_map_apply, state_modify_apply, state_pure_apply,
-          bind_pure_comp, simulateQ_pure, map_pure, Prod.map, id_eq, Functor.map_map]
-        rfl
-  | inr request => exact eval_native setup checks representation created _
+  exact eval_native setup checks representation created _
 
 private theorem lower_program (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (owner : Owner source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (owner : Owner source)
     (work : OracleComp RegistrationBeaconInitExecutor.Spec Value) :
     lower (n := n) setup checks representation created
         (simulateQ (RegistrationNativeBeaconFrontend.outgoing setup source index owner) work) =
@@ -147,7 +119,7 @@ private theorem lower_program (setup : Setup base KemSK) (checks : Checks)
 /-- The entire adaptive Init controller evaluates to the original native body on its same mutable local state. -/
 theorem eval_program (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (owner : Owner source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (owner : Owner source)
     (work : OracleComp RegistrationBeaconInitExecutor.Spec Value) :
     evalState (simulateQ (outgoing (n := n) setup checks representation created index owner) work) =
       lower setup checks representation created
@@ -159,7 +131,7 @@ theorem eval_program (setup : Setup base KemSK) (checks : Checks)
 
 noncomputable def afterPublished (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (owner : Owner source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (owner : Owner source)
     (oneTime : PqxdhJointGapDh.ScalarBytes)
     (published : RustM (RegistrationBeaconInitExecutor.Result Pqxdh.Bytes)) :
     StateT (Local n KemSK source) (OracleComp (Spec source)) (RustM (Option Pqxdh.Bytes)) :=
@@ -176,7 +148,7 @@ noncomputable def afterPublished (setup : Setup base KemSK) (checks : Checks)
 
 private theorem eval_afterPublished (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (owner : Owner source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (owner : Owner source)
     (oneTime : PqxdhJointGapDh.ScalarBytes)
     (published : RustM (RegistrationBeaconInitExecutor.Result Pqxdh.Bytes)) :
     evalState (afterPublished (n := n) setup checks representation created index owner oneTime published) =
@@ -197,7 +169,7 @@ private theorem eval_afterPublished (setup : Setup base KemSK) (checks : Checks)
 
 noncomputable def bundle (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) :
     StateT (Local n KemSK source) (OracleComp (Spec source)) (RustM (Option Pqxdh.Bytes)) := do
   let owners ← native setup checks representation created get
   match owners[index]? with
@@ -218,13 +190,13 @@ noncomputable def bundle (setup : Setup base KemSK) (checks : Checks) (wire : Re
       let published ← simulateQ (outgoing setup checks representation created index owner)
         (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨owner.pin.binding⟩
           (RegistrationNativeBeaconFrontend.inputs setup owner)
-          ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)
+          ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)
       afterPublished setup checks representation created index owner oneTime published
 
 /-- Full bundle evaluation retains the original phase selection, fresh randomness, optional publication and every reached native effect. -/
 theorem eval_bundle (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) :
     evalState (bundle (n := n) (source := source) setup checks wire representation created index) =
       lower setup checks representation created (RegistrationNativeBeaconFrontend.bundle setup source wire index) := by
   unfold bundle RegistrationNativeBeaconFrontend.bundle
@@ -241,7 +213,7 @@ theorem eval_bundle (setup : Setup base KemSK) (checks : Checks) (wire : Registr
 
 noncomputable def sourceBundle (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) :
     StateT (RegistrationNativeExperiment.State n KemSK source) (OracleComp (Spec source)) (RustM (Option Pqxdh.Bytes)) :=
   fun before => Prod.map id close <$> (bundle setup checks wire representation created index).run
     (before.beacons, (RegistrationWorldAgreementCompiler.erase before.server.world, before))
@@ -249,7 +221,7 @@ noncomputable def sourceBundle (setup : Setup base KemSK) (checks : Checks) (wir
 /-- The original native source wrapper is the actual interpretation of the named ML bundle capability program. -/
 theorem eval_sourceBundle (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) :
     evalState (sourceBundle (n := n) (source := source) setup checks wire representation created index) =
       RegistrationNativeExperiment.beacon setup checks representation created
         (RegistrationNativeBeaconFrontend.bundle setup source wire index) := by

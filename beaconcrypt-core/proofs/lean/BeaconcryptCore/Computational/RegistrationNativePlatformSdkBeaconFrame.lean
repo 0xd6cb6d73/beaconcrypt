@@ -106,11 +106,12 @@ private theorem authentication (setup : PqxdhServerAuthExperiment.Setup base Kem
 private theorem pin_native (binding : pqxdh.ServerBinding) (publicKey : Std.Array U8 1952#usize) :
     Keeps (fun before : PqxdhRecordLiftWorld.State n=>before.owners) (RegistrationNativeServerPinRecompute.native binding publicKey) := by
   intro before result supported
-  rw [RegistrationNativeServerPinRecompute.native_run,bind_pure_comp,support_map] at supported
-  obtain ⟨inner,called,rfl⟩ := supported
-  exact RegistrationNativeWorldOwnerFrame.hash_owners _ before inner called
+  rw [RegistrationNativeServerPinRecompute.native_run] at supported
+  simp only [support_pure, Set.mem_singleton_iff] at supported
+  cases supported
+  rfl
 private theorem agree_native (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit) :
     Keeps (fun before : RegistrationServerFrontendCompiler.State n=>before.world.world.1.owners)
       (RegistrationServerNativeSource.agree setup checks representation created packet authenticated) := by
@@ -118,7 +119,7 @@ private theorem agree_native (setup : PqxdhServerAuthExperiment.Setup base KemSK
   simp only [RegistrationServerNativeSource.agree,StateT.run,support_map] at supported
   obtain ⟨inner,called,rfl⟩ := supported
   exact program_keeps owners _ (agreement setup.source _) _ before.world inner called
-private theorem retain_native (created : PqxdhLiveServerConstruction.Created Unit) (accepted : agreement.ServerAgreement) :
+private theorem retain_native (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (accepted : agreement.ServerAgreement) :
     Keeps (fun before : RegistrationServerFrontendCompiler.State n=>before.world.world.1.owners) (RegistrationServerNativeSource.retain created accepted) := by
   intro before result supported
   unfold RegistrationServerNativeSource.retain RegistrationServerNativeSource.sourceStep RegistrationWorldServerFrontend.retain at supported
@@ -177,7 +178,7 @@ private theorem source_authentication (coins : QueryImpl unifSpec (StateT P Prob
 private theorem afterAuthentication (coins : QueryImpl unifSpec (StateT P ProbComp))
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
     (reserve : StateT P ProbComp Bool) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit) :
     KeepsP (serverOwners (n:=n)) (RegistrationNativePlatformServerSdk.afterAuthentication coins setup checks (StateT.lift reserve) representation created packet authenticated) := by
   unfold RegistrationNativePlatformServerSdk.afterAuthentication
   apply bindP
@@ -204,7 +205,7 @@ private theorem afterPin (coins : QueryImpl unifSpec (StateT P ProbComp))
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (codec : PqxdhServerAuthExperiment.Codec Reader Response)
     (checks : PqxdhServerAuthExperiment.Checks) (reserve : StateT P ProbComp Bool)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (pinned : RustM (core.option.Option session.ServerAuthenticationPin)) :
     KeepsP (serverOwners (n:=n)) (RegistrationNativePlatformSourceAccept.afterPin coins setup codec checks (StateT.lift reserve) route verify representation created packet pinned) := by
   unfold RegistrationNativePlatformSourceAccept.afterPin
@@ -226,7 +227,7 @@ private theorem accept_server (coins : QueryImpl unifSpec (StateT P ProbComp))
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (codec : PqxdhServerAuthExperiment.Codec Reader Response)
     (checks : PqxdhServerAuthExperiment.Checks) (reserve : StateT P ProbComp Bool)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) :
     KeepsP (serverOwners (n:=n)) (RegistrationNativePlatformSourceAccept.accept coins setup codec checks reserve route verify representation created packet) := by
   unfold RegistrationNativePlatformSourceAccept.accept RegistrationNativePlatformSourceAccept.acceptWith
@@ -239,7 +240,7 @@ theorem accept [ed : AdapterInitEdPrimitive.Operations]
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (codec : PqxdhServerAuthExperiment.Codec Reader Response)
     (checks : PqxdhServerAuthExperiment.Checks) (reserve : StateT P ProbComp Bool)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (functional : RegistrationNativePlatformAuthentication.EdFunctional setup.source.crypto)
     (input : Slice U8) (before : RegistrationNativeExperiment.State n KemSK source) (previous : P)
     (result : (RustM (Option Nat)×RegistrationNativeExperiment.State n KemSK source)×P)
@@ -600,6 +601,28 @@ private theorem presentP (coins : QueryImpl unifSpec (StateT P ProbComp)) (keyId
     StateT.run,simulateQ_pure,map_pure] at supported
   subst result
   rfl
+omit primitive in
+private theorem adHashP (coins : QueryImpl unifSpec (StateT P ProbComp))
+    (pending : registration.ServerAdHash) :
+    KeepsP (serverOwners (n:=n)) (RegistrationNativePlatformCompletionSdk.nativeAdHash coins pending) := by
+  apply worldP
+  unfold RegistrationNativePlatformServerCompletion.adHash RegistrationNativePlatformServerCompletion.adHashWith
+    RegistrationServerAdHash.runWith
+  cases pending.request with
+  | fail error | div => exact pureP _ _
+  | ok request =>
+    apply bindP
+    · apply bindP
+      · apply nativeP
+        intro before result supported
+        simp only [RegistrationWorldServerCompletion.capability, StateT.run, support_map] at supported
+        obtain ⟨inner, called, rfl⟩ := supported
+        exact RegistrationNativeWorldOwnerFrame.hash_owners _ before.world.1 inner called
+      · intro digest
+        exact pureP _ _
+    · intro digest
+      exact pureP _ _
+
 namespace Outer
 variable (coins : QueryImpl unifSpec (StateT P ProbComp))
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (codec : PqxdhServerAuthExperiment.Codec Reader Response)
@@ -613,23 +636,30 @@ variable (reserve : StateT (RegistrationServerFrontendCompiler.State n) (StateT 
 variable (reserved : KeepsP serverOwners reserve)
 include reserved in
 private theorem afterOccupancy (control : pqxdh.ServerState) (pending : peer.CompletionLookup) (occupied : Bool) :
-    KeepsP serverOwners (RegistrationNativePlatformCompletionSdk.afterOccupancy reserve
+    KeepsP serverOwners (RegistrationNativePlatformCompletionSdk.afterOccupancy (RegistrationNativePlatformCompletionSdk.nativeAdHash coins) reserve
       (RegistrationNativePlatformExtractedSdkServer.Build.sourceFinish coins setup codec view failure allocate helper erased sign writer) control pending occupied) := by
   unfold RegistrationNativePlatformCompletionSdk.afterOccupancy
   cases resumed : pending.resume occupied with
   | fail error | div => exact pureP _ _
   | ok reply => cases reply with
     | Err previous => exact pureP _ _
-    | Ok initial =>
-      apply bindP _ _ _ reserved
-      intro admitted
-      cases admitted with
-      | false => exact pureP _ _
-      | true => exact initialP coins setup codec view failure allocate helper erased sign writer control initial
+    | Ok pendingAd =>
+      apply bindP _ _ _ (adHashP coins pendingAd)
+      intro hashed
+      cases hashed with
+      | fail error | div => exact pureP _ _
+      | ok result => cases result with
+        | Err previous => exact pureP _ _
+        | Ok initial =>
+          apply bindP _ _ _ reserved
+          intro admitted
+          cases admitted with
+          | false => exact pureP _ _
+          | true => exact initialP coins setup codec view failure allocate helper erased sign writer control initial
 include reserved in
 private theorem afterPin (control : pqxdh.ServerState) (token : peer.ConsumedRegistration) (application : Slice U8)
     (pinned : RustM (core.option.Option session.ServerAuthenticationPin)) :
-    KeepsP serverOwners (RegistrationNativePlatformCompletionSdk.afterPin reserve (RegistrationNativePlatformCompletionSdk.nativePresent coins)
+    KeepsP serverOwners (RegistrationNativePlatformCompletionSdk.afterPin (RegistrationNativePlatformCompletionSdk.nativeAdHash coins) reserve (RegistrationNativePlatformCompletionSdk.nativePresent coins)
       (RegistrationNativePlatformExtractedSdkServer.Build.sourceFinish coins setup codec view failure allocate helper erased sign writer) control token application pinned) := by
   unfold RegistrationNativePlatformCompletionSdk.afterPin
   cases pinned with
@@ -654,7 +684,7 @@ private theorem afterPin (control : pqxdh.ServerState) (token : peer.ConsumedReg
             · exact pureP _ _
 include reserved in
 private theorem complete (token : peer.ConsumedRegistration) (application : Slice U8) :
-    KeepsP serverOwners (RegistrationNativePlatformCompletionSdk.complete (RegistrationNativePlatformSourceBuild.pin coins) reserve
+    KeepsP serverOwners (RegistrationNativePlatformCompletionSdk.complete (RegistrationNativePlatformCompletionSdk.nativeAdHash coins) (RegistrationNativePlatformSourceBuild.pin coins) reserve
       (RegistrationNativePlatformCompletionSdk.nativePresent coins)
       (RegistrationNativePlatformExtractedSdkServer.Build.sourceFinish coins setup codec view failure allocate helper erased sign writer) token application) := by
   unfold RegistrationNativePlatformCompletionSdk.complete
@@ -681,7 +711,7 @@ theorem complete {Allocation : Type}
     (before : RegistrationNativeExperiment.State n KemSK source) (previous : P)
     (result : (RustM (Option (U64×alloc.vec.Vec U8))×RegistrationNativeExperiment.State n KemSK source)×P)
     (supported : result∈support (((RegistrationNativePlatformExperiment.server
-      (RegistrationNativePlatformCompletionSdk.complete (RegistrationNativePlatformSourceBuild.pin coins)
+      (RegistrationNativePlatformCompletionSdk.complete (RegistrationNativePlatformCompletionSdk.nativeAdHash coins) (RegistrationNativePlatformSourceBuild.pin coins)
         (admitted <$>StateT.lift reserved) (RegistrationNativePlatformCompletionSdk.nativePresent coins)
         (RegistrationNativePlatformExtractedSdkServer.Build.sourceFinish coins setup codec view failure allocate helper erased sign writer)
         token application)).run before).run previous)) : image result.1.2=image before := by
@@ -726,7 +756,7 @@ theorem material [ed : AdapterInitEdPrimitive.Operations] [material : PublicWrap
       dsimp only at held ⊢
       simp only [found] at held
       obtain ⟨self,objectEq,related⟩ := held
-      refine ⟨self,objectEq,related.identityPublic,related.identitySecret,related.mldsa,related.pin,
+      refine ⟨self,objectEq,related.identityPublic,related.identitySecret,related.pin,
         related.serverPublic,related.identifier,?_⟩
       simpa only [AdapterPublicWrapperState.Phase,AdapterPublicWrapperState.KemPair,sameKeys] using related.phase
   · simpa only [sameBeacons] using indexed

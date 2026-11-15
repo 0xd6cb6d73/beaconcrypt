@@ -7,6 +7,7 @@ import BeaconcryptCore.Computational.CborRawMiddleSimulation
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.CborRawPostActive
 open PqxdhServerAuthExperiment (Setup Codec Checks)
 open PqxdhDeploymentInterface (Spec)
@@ -27,7 +28,8 @@ noncomputable def compiledNext (raw : Pqxdh.Bytes) (next : Option Nat → Oracle
 theorem opaqueRest_selected {X R : Type} (identityIndex : ℕ) (publicIdentity : PqxdhJointIdentity.PublicIdentity)
     (observe : (X × CborAdmissionCompiler.Local) × PqxdhRegistrationJointAcceptCutTag.Tag → R) (raw : Pqxdh.Bytes)
     (next : Option ℕ → OracleComp Spec X) (copies : CborAdmissionCompiler.Local)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) (shared : PqxdhServerAuthNative.NativeState KemSK)
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry ×
+      (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (shared : PqxdhServerAuthNative.NativeState KemSK)
     (value : Verified Reader) (verified : PqxdhRegistrationJointRawSignatures.verified setup (CborRawCompile.sourceCodec wire parse) checks raw = some value)
     (seed : PqxdhJointIdentity.IdentitySeed) (selected : ℕ) (pairs : List (PqxdhLiveKemReservation.Pair KemSK))
     (state : PqxdhDynamicKemJointSource.State KemSK) :
@@ -83,7 +85,8 @@ theorem itemPost_native {count : Nat} (target : Target count) (parameters : Para
         (fun result => event (result.1, result.2.copies.produced))
         (.ready (PqxdhRegistrationJointServerBirth.encode created) parameters.others
           (some (.pending raw value ephemeral consumed joint.shared
-            (PqxdhRegistrationJointGeneratedFinish.encodeState setup joint).owners
+            ((PqxdhRegistrationJointGeneratedFinish.encodeState setup joint).owners,
+              joint.inits)
             (compiledNext setup wire parse raw next memory)))
           (joint.pool.1, PqxdhDeploymentIdealPoolSource.routerOf joint.pool.2) after) =
       (simulateQ (PqxdhRegistrationJointKemSecondEntry.slotImpl PqxdhDeploymentSeedSplit.tableService)

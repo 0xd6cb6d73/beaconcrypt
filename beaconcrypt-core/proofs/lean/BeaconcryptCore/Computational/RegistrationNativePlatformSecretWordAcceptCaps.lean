@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePlatformSecretWordCapsTransport
 import BeaconcryptCore.Computational.RegistrationNativeSecretWordFrontendCapsServer
-/-! The corrected OPEN Word accept derives zero deferred material requests from its repeated pin, authentication, owned replay, real shared-state reserve, ordered collector and one-use retain. All source failure paths remain literal. -/
+/-! The corrected OPEN Word accept derives zero deferred material requests from its pure pin selection, authentication, owned replay, real shared-state reserve, ordered collector and one-use retain. All source failure paths remain literal. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -131,17 +131,21 @@ private theorem pin_free (selected : Bool) (current : session.ServerAuthenticati
       ((PqxdhRecordLiftInterface.EnvEffects n).query
         (.inr (.hash (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request))) : OracleComp (PqxdhRecordLiftInterface.EnvEffects n) _) before
 
-/-- Repeated pin hashing, mandatory authentication, mutable reservation and actual ordered preparation consume no deferred material allowance. -/
+/-- Pure pin selection, mandatory authentication, mutable reservation and actual ordered preparation consume no deferred material allowance. -/
 theorem accept_free (selected : Bool) (reserve : StateT Platform ProbComp Bool)
     (setup : Setup base KemSK) (checks : Checks) (verify : MldsaTranscriptAuth.Verify) (packet : registration.InitPacket)
     (before : ServerState) (env : Environment) (previous : Platform) :
     ((((RegistrationNativePlatformSecretWordOpen.accept (wordLocal (n := n) (KemSK := KemSK) (Platform := Platform) selected)
       (RegistrationNativePlatformSecretWordOrdinary.platform (n := n) (KemSK := KemSK) reserve) setup checks verify packet).run before).run env).run previous).IsQueryBoundP
       (IsDemand (n := n) (KemSK := KemSK)) 0 := by
-  simp only [RegistrationNativePlatformSecretWordOpen.accept, StateT.run_bind, StateT.run_get, pure_bind]
-  apply bind_free _ _ (fun before env previous => lift_free _ (pin_free selected _) before env previous)
-  intro current after nextEnv nextPlatform
-  exact afterPin_free selected reserve setup checks verify packet current after nextEnv nextPlatform
+  unfold RegistrationNativePlatformSecretWordOpen.accept
+  apply bind_free _ _ (fun _ _ _ => by trivial)
+  intro fetched afterGet nextEnv nextPlatform
+  exact bind_free _ _
+    (fun before env previous => lift_free _ (pin_free selected fetched.pin) before env previous)
+    (fun current after nextEnv nextPlatform =>
+      afterPin_free selected reserve setup checks verify packet current after nextEnv nextPlatform)
+    afterGet nextEnv nextPlatform
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformSecretWordAcceptCaps
 

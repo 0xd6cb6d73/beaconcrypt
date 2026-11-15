@@ -28,7 +28,8 @@ theorem prefix_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
       (PqxdhRegistrationJointServerPrefix.compiler (KemSK := KemSK) identityIndex query)).run consumed).IsQueryBoundP
       (IsUniform (KemSK := KemSK))
       (PqxdhServerAuthSourceCosts.serverUniformCost caps (PqxdhServerAuthSourceCosts.serverClass query)) := by
-  cases query <;> first | trivial | skip
+  cases query
+  all_goals try trivial
   case staticDh point =>
     simp only [PqxdhRegistrationJointServerPrefix.compiler, simulateQ_map, simulateQ_spec_query, StateT.run_map]
     simp [prefixImpl, StateT.run, isQueryBoundP_map_iff, isQueryBoundP_query_iff,
@@ -100,7 +101,8 @@ open PqxdhRegistrationJointServiceCosts (Kind poolClass classify)
 /-- Full native uniform allowance per old backend class. The other class includes possible explicit joint coins; charging one also safely covers deterministic missing/reveal requests. -/
 def backendCost (caps : KemCaps) : Kind → Nat
   | .uniform | .other => 1
-  | .tail | .build | .hmac | .hash => 64
+  | .tail | .hmac | .hash => 64
+  | .build => 128
   | .accept => 96 + caps.encapsCost
   | _ => 0
 
@@ -128,7 +130,7 @@ theorem backend_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
   case inr =>
     cases shared with
     | accept raw => exact accept_bound setup codec checks caps bounded identityIndex publicIdentity raw state
-    | build index payload => exact native_bound _ state 64 (PqxdhRegistrationSchedule.build_uniform setup codec checks index payload state)
+    | build index payload => exact native_bound _ state 128 (PqxdhRegistrationSchedule.build_uniform setup codec checks index payload state)
     | hmac key message => exact native_bound _ state 64 (PqxdhRegistrationJointPublicShared.hmac_uniform setup key message state)
     | hash bytes => exact native_bound _ state 64 (PqxdhRegistrationSchedule.hash_uniform bytes state)
     | reveal keyId => exact native_bound _ state 0 (by trivial)
@@ -153,8 +155,8 @@ theorem backend_program (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
 /-- Explicit native/local uniform allowance. The two live private-read coordinates carry a conservative one-call allowance because they share the old other-service class with possible joint coin requests. Identity generation and local KEM generation/decapsulation are charged separately by the replacing interpreter. -/
 def total (caps : KemCaps) (budget : PqxdhRegistrationJointRevealCosts.SourceKind → Nat) : Nat :=
   budget (.inl 0) + 32 * budget (.inl 1) + 32 * budget (.inl 2) +
-    (96 + caps.encapsCost) * budget (.inl 3) + 64 * budget (.inl 4) +
-    (64 * 56) * budget (.inl 5) + 64 * budget (.inl 6) + 64 * budget (.inl 7) +
+    (96 + caps.encapsCost) * budget (.inl 3) + 128 * budget (.inl 4) +
+    (64 * 56 + 64) * budget (.inl 5) + 64 * budget (.inl 6) + 64 * budget (.inl 7) +
     budget (.inr 0) + budget (.inr 1)
 
 /-- The expanded old service ledger evaluates to the stated native bill, counting every actual attempt rather than only successful publications. -/
@@ -173,7 +175,7 @@ theorem command_program (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
     (budget : PqxdhRegistrationJointRevealCosts.SourceKind → Nat)
     (certified : ∀ source, client.IsQueryBoundP
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) (state : NativeState KemSK) :
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK) :
     (PqxdhRegistrationJointKemCommands.program setup codec checks identityIndex publicIdentity client owners state).IsQueryBoundP
       (IsUniform (KemSK := KemSK)) (total caps budget) := by
   rw [← total_eq caps budget]

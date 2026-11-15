@@ -32,7 +32,7 @@ noncomputable def sourceHandler (setup : Setup base KemSK) (wire : RegistrationN
 
 noncomputable def nativeHandler (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (source : RegistrationNativeMldsa.Source) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (source : RegistrationNativeMldsa.Source) :
     QueryImpl (Spec n KemSK) (StateT (RegistrationNativeExperiment.State n KemSK source) ProbComp)
   | .inl query => RegistrationNativeExperiment.trusted setup checks representation created source query
   | .inr query => StateT.lift (unifSpec.query query : ProbComp _)
@@ -40,7 +40,7 @@ noncomputable def nativeHandler (setup : Setup base KemSK) (checks : Checks)
 /-- Each allowed trusted request and each uncounted external draw has the exact same complete source outcome under the named native view. -/
 theorem query_source (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential source) (roots : Roots)
     (query : (Spec n KemSK).Domain) (allowed : Allowed query)
     (frontend : RegistrationNativePublicFrontend.State source) (before : RegistrationNativePublicInterpreter.State n KemSK) :
@@ -57,7 +57,7 @@ theorem query_source (setup : Setup base KemSK) (checks : Checks) (wire : Regist
 /-- The named view commutes with each exact joint native leaf, including external coins. -/
 theorem query_stable (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (query : (Spec n KemSK).Domain) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (query : (Spec n KemSK).Domain) :
     RegistrationStateView.Stable (nativeView (mlSource := source))
       (nativeHandler setup checks representation created source query) := by
   cases query with
@@ -69,7 +69,7 @@ theorem query_stable (setup : Setup base KemSK) (checks : Checks)
 /-- Every adaptive joint program preserves the complete result and native source view. The result can include the complete current platform state. -/
 theorem program_source (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential source) (roots : Roots)
     (work : OracleComp (Spec n KemSK) Value) (allowed : work.AllQueriesSatisfy (Allowed (KemSK := KemSK)))
     (frontend : RegistrationNativePublicFrontend.State source) (before : RegistrationNativePublicInterpreter.State n KemSK) :

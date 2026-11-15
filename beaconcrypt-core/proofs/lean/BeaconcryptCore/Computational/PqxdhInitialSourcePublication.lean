@@ -10,6 +10,8 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhInitialSourcePublication
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily
 open PqxdhInitialOriginPostPath PqxdhInitialOriginFinishPath RawCtxCursorLineage
 variable {ι M P I D K X Response A N Result : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -37,7 +39,7 @@ theorem builder_invariant (source : FixedHkdfSha512NoSaltSource) (writer : RawCt
     (supported : ((reply, after), afterState) ∈ support
       ((simulateQ (PqxdhInitialNativeLog.handler source writer stage
         (withInitial source selectedMessage previousRoot response64 other))
-        ((PqxdhInitialPendingBuilder.build source
+        ((PqxdhInitialPendingBuilder.build (associatedData := associatedData) source
           (ConcreteRatchetKernel.refined <$> PqxdhInitialReplyErasure.kernelOf false response64)
           sender index metadata ready).run before)).run state)) :
     Invariant (rootFor (RawCtxSelectedQueryTrace.rootVector entry.refined.send_chain) previousRoot response64 selected)
@@ -54,7 +56,7 @@ theorem builder_invariant (source : FixedHkdfSha512NoSaltSource) (writer : RawCt
         simpa only [PqxdhInitialOriginPost.afterBuilder, found] using empty_invariant
           (rootFor (RawCtxSelectedQueryTrace.rootVector entry.refined.send_chain) previousRoot response64 selected) selected after afterState
       | some peer =>
-        obtain ⟨actualPeer, actualPresent, path⟩ := PqxdhInitialOriginBuilderPath.supplied_build source writer stage
+        obtain ⟨actualPeer, actualPresent, path⟩ := PqxdhInitialOriginBuilderPath.supplied_build (associatedData := associatedData) source writer stage
           (withInitial source selectedMessage previousRoot response64 other) response64 entry initialized sender index metadata ready
           before after state afterState response supported
         have samePeer : actualPeer = peer := Option.some.inj (actualPresent.symm.trans found)
@@ -95,7 +97,7 @@ noncomputable def sequence (source : FixedHkdfSha512NoSaltSource) (writer : RawC
     (before : Front M P I D K S B) : StateT (State A N) ProbComp (Result × Snapshot M P I D K S B) :=
   simulateQ (PqxdhInitialNativeLog.handler source writer stage
     (withInitial source selectedMessage previousRoot response64 other))
-    ((PqxdhInitialOriginPost.sequence source
+    ((PqxdhInitialOriginPost.sequence (associatedData := associatedData) (completedBinding := completedBinding) source
       (ConcreteRatchetKernel.refined <$> PqxdhInitialReplyErasure.kernelOf false response64)
       (PqxdhInitialSelectedOrigin.mark source selectedMessage) true sender route decode index metadata ready post).run (before, empty))
 
@@ -111,22 +113,22 @@ theorem sequence_invariant (source : FixedHkdfSha512NoSaltSource) (writer : RawC
     (post : RustM (Option PqxdhServerRegistrationPublication.Response) → OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result)
     (before : Front M P I D K S B) (state : State A N)
     (result : (Result × Snapshot M P I D K S B) × State A N)
-    (supported : result ∈ support ((sequence source writer stage selectedMessage previousRoot response64 other
+    (supported : result ∈ support ((sequence (associatedData := associatedData) (completedBinding := completedBinding) source writer stage selectedMessage previousRoot response64 other
       sender route decode index metadata ready post before).run state)) :
     Invariant (rootFor (RawCtxSelectedQueryTrace.rootVector entry.refined.send_chain) previousRoot response64 selected)
       selected result.1.2 result.2 := by
   change result ∈ support ((simulateQ
     (PqxdhInitialNativeLog.handler source writer stage (withInitial source selectedMessage previousRoot response64 other)) (do
-      let built ← (PqxdhInitialPendingBuilder.build source
+      let built ← (PqxdhInitialPendingBuilder.build (associatedData := associatedData) source
         (ConcreteRatchetKernel.refined <$> PqxdhInitialReplyErasure.kernelOf false response64) sender index metadata ready).run before
-      (simulateQ (PqxdhInitialOriginPost.compiler (PqxdhInitialSelectedOrigin.mark source selectedMessage)
+      (simulateQ (PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) (PqxdhInitialSelectedOrigin.mark source selectedMessage)
         sender route decode) (post built.1)).run
         (built.2, PqxdhInitialOriginPost.afterBuilder empty built.2 index true built.1))).run state) at supported
   simp only [simulateQ_bind, StateT.run_bind, mem_support_bind_iff] at supported
   obtain ⟨built, reached, rest⟩ := supported
-  exact program_invariant source writer stage selectedMessage previousRoot response64 other
+  exact program_invariant (completedBinding := completedBinding) source writer stage selectedMessage previousRoot response64 other
     (RawCtxSelectedQueryTrace.rootVector entry.refined.send_chain) selected sender route decode (post built.1.1) _ built.2
-    (builder_invariant source writer stage selectedMessage previousRoot response64 other entry initialized selected
+    (builder_invariant (associatedData := associatedData) source writer stage selectedMessage previousRoot response64 other entry initialized selected
       sender index metadata ready before built.1.2 state built.2 built.1.1 reached) result rest
 
 /-- Every successful selected-session publication of the full actual source has its directional path already cached before any final lineage checker. -/
@@ -141,13 +143,13 @@ theorem publication_cached (source : FixedHkdfSha512NoSaltSource) (writer : RawC
     (post : RustM (Option PqxdhServerRegistrationPublication.Response) → OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result)
     (before : Front M P I D K S B) (state : State A N)
     (result : (Result × Snapshot M P I D K S B) × State A N)
-    (supported : result ∈ support ((sequence source writer stage selectedMessage previousRoot response64 other
+    (supported : result ∈ support ((sequence (associatedData := associatedData) (completedBinding := completedBinding) source writer stage selectedMessage previousRoot response64 other
       sender route decode index metadata ready post before).run state))
     (number : Std.U64) (published : ((selected, number), true) ∈ result.1.2.2.published) :
     RawCtxSourcePublishedPath.Cached
       (rootFor (RawCtxSelectedQueryTrace.rootVector entry.refined.send_chain) previousRoot response64 selected)
       number result.2.1.1.2.1 :=
-  (sequence_invariant source writer stage selectedMessage previousRoot response64 other entry initialized selected
+  (sequence_invariant (associatedData := associatedData) (completedBinding := completedBinding) source writer stage selectedMessage previousRoot response64 other entry initialized selected
     sender route decode index metadata ready post before state result supported).2 number published
 
 end BeaconcryptCore.Computational.PqxdhInitialSourcePublication

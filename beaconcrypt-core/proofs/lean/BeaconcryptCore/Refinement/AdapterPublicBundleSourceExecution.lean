@@ -24,18 +24,17 @@ local notation "CutM" => StateT (RegistrationNativePlatformCutJournal.State Nati
 variable [localOps : LocalOperations (RustT (StateT (RegistrationNativePlatformCutJournal.State (RegistrationNativeExperiment.State n KemSK source)) m))]
 variable [crypto : CryptoOperations (RustT (StateT (RegistrationNativePlatformCutJournal.State (RegistrationNativeExperiment.State n KemSK source)) m))]
 variable (coins : QueryImpl unifSpec m) (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) m)
 variable (index : Nat) (owner : RegistrationNativeBeaconFrontend.Owner source) (failure : ed.Error)
-variable (fallback : registration.MldsaSigningRequest → RegistrationNativePlatformExperiment.M n KemSK source m RegistrationSigningShared.SignReply)
 
-noncomputable def authentication (other : QueryImpl AdapterInitAuthenticationRequestMonad.Spec CutM) :
-    QueryImpl AdapterInitAuthenticationRequestMonad.Spec CutM
+noncomputable def authentication (other : QueryImpl AdapterPublicWrapperChildren.AuthenticationSpec CutM) :
+    QueryImpl AdapterPublicWrapperChildren.AuthenticationSpec CutM
   | .hash request => (fun digest => .ok (some (RegistrationAuthenticationShared.digestArray digest))) <$>
       RegistrationNativePlatformCutJournal.hash (AdapterPublicBundlePrimitives.signing coins setup checks representation created writer index owner) request
   | query => other query
 
-variable (other : QueryImpl AdapterInitAuthenticationRequestMonad.Spec (StateT (RegistrationNativePlatformCutJournal.State (RegistrationNativeExperiment.State n KemSK source)) m))
+variable (other : QueryImpl AdapterPublicWrapperChildren.AuthenticationSpec (StateT (RegistrationNativePlatformCutJournal.State (RegistrationNativeExperiment.State n KemSK source)) m))
 variable (recording : QueryImpl AdapterRecordRequestMonad.Spec (StateT (RegistrationNativePlatformCutJournal.State (RegistrationNativeExperiment.State n KemSK source)) m))
 @[instance_reducible] noncomputable def children : ChildOperations (RustT CutM) := AdapterPublicWrapperChildren.children
   (authentication coins setup checks representation created writer index owner other) recording
@@ -44,24 +43,20 @@ variable (recording : QueryImpl AdapterRecordRequestMonad.Spec (StateT (Registra
 structure Leaves (self : beaconcrypt_public_wrapper.beacon.Beacon) : Prop where
   edLaw : ∀ message, (crypto.edSign message self.identity_key.secret_key).run = RustM.ok <$>
     liftWorld (AdapterPublicBundlePrimitives.sign coins setup checks representation created writer index owner failure message)
-  signLaw : ∀ request, (localOps.auth_MldsaIdentity_sign_requested self.authentication.identity request).run = RustM.ok <$>
-    AdapterPublicBundleNative.sign (AdapterPublicBundlePrimitives.signing coins setup checks representation created writer index owner) fallback request
 
 noncomputable def leaves (self : beaconcrypt_public_wrapper.beacon.Beacon)
-    (law : Leaves coins setup checks representation created writer index owner failure fallback self) :
+    (law : Leaves (n := n) coins setup checks representation created writer index owner failure self) :
     letI : ChildOperations (RustT CutM) := children coins setup checks representation created writer index owner other recording
     AdapterPublicBundleMaterial.PublicationLeaves (m := CutM) (self := self) := by
   let : ChildOperations (RustT CutM) := children coins setup checks representation created writer index owner other recording
   exact {
     edSign message := liftWorld (AdapterPublicBundlePrimitives.sign coins setup checks representation created writer index owner failure message)
     hash := RegistrationNativePlatformCutJournal.hash (AdapterPublicBundlePrimitives.signing coins setup checks representation created writer index owner)
-    sign := AdapterPublicBundleNative.sign (AdapterPublicBundlePrimitives.signing coins setup checks representation created writer index owner) fallback
     edLaw := Leaves.edLaw (self := self) law
-    hashLaw := fun _ => rfl
-    signLaw := Leaves.signLaw (self := self) law }
+    hashLaw := fun _ => rfl }
 
 omit material platform localOps crypto in
-theorem encoder_source (signed : registration.SignedInitView) :
+theorem encoder_source (signed : registration.InitView) :
     letI : ChildOperations (RustT CutM) := children coins setup checks representation created writer index owner other recording
     (ChildOperations.encodeInit (m := RustT CutM) (AdapterPublicBundleBody.packet signed)).run =
       liftWorld (RegistrationNativeBundleInterpretation.encoder (n := n) (source := source) coins setup checks representation created writer signed) := by
@@ -79,17 +74,18 @@ noncomputable def tree (scalar : PqxdhJointGapDh.ScalarBytes) :
               (RegistrationNativeBeaconFrontend.outgoing setup source index owner query))
             (RegistrationNativePlatformGenericBundle.encoder E) ⟨owner.pin.binding⟩
             (RegistrationNativeBeaconFrontend.inputs setup owner)
-            ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin owner.mldsa.publicKey)
+            ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin)
 
+omit platform localOps in
 theorem with_material {R : Type} (self : beaconcrypt_public_wrapper.beacon.Beacon)
-    (law : Leaves coins setup checks representation created writer index owner failure fallback self)
+    (law : Leaves (n := n) coins setup checks representation created writer index owner failure self)
     (scalar : PqxdhJointGapDh.ScalarBytes) (prekey oneTime : beaconcrypt_crypto.crypto_kx.KeyPair)
     (kem : beaconcrypt_crypto.crypto_kem.mlkem768.KeyPair) (rng : R)
     (before : RegistrationNativePlatformCutJournal.State Native) :
     letI : ChildOperations (RustT CutM) := children coins setup checks representation created writer index owner other recording
     Prod.map id Prod.fst <$>
       (AdapterPublicBundleMaterial.withMaterial setup.joint setup.dh self owner
-        (leaves coins setup checks representation created writer index owner failure fallback other recording self law)
+        (leaves coins setup checks representation created writer index owner failure other recording self law)
         scalar prekey oneTime kem rng).run before =
       (fun result => (AdapterPublicBundlePublication.install self prekey oneTime kem rng result.1, result.2)) <$>
         (tree coins setup checks representation created writer index owner scalar).run before.1 := by
@@ -103,18 +99,19 @@ theorem with_material {R : Type} (self : beaconcrypt_public_wrapper.beacon.Beaco
   rw [encoders]
   have actual := congrArg (fun distribution => (fun result =>
     (AdapterPublicBundlePublication.install self prekey oneTime kem rng result.1, result.2)) <$> distribution)
-    (AdapterPublicBundlePrimitives.publication coins setup checks representation created writer index owner failure fallback
+    (AdapterPublicBundlePrimitives.publication coins setup checks representation created writer index owner failure
       ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin owner.mldsa.publicKey before)
+      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin before)
   simpa only [leaves, AdapterPublicBundleNative.outgoing, RegistrationNativeBeaconFrontend.inputs, Functor.map_map, Prod.map, id_eq] using actual
 
 
+omit platform localOps in
 theorem with_keys {R : Type} (self : beaconcrypt_public_wrapper.beacon.Beacon)
     (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (getters : AdapterPublicBundleMaterial.Getters (m := CutM) view)
     (pool : PqxdhLiveKemBirth.Pool KemSK) (world : Option PqxdhRecordLiftBeacon.Phase)
     (related : AdapterPublicWrapperState.Beacon view setup.joint pool self owner world)
-    (law : Leaves coins setup checks representation created writer index owner failure fallback self)
+    (law : Leaves (n := n) coins setup checks representation created writer index owner failure self)
     (control : pqxdh.BeaconFresh) (controlView : control.expected_server_binding = owner.pin.binding)
     (scalar : PqxdhJointGapDh.ScalarBytes) (prekey oneTime : beaconcrypt_crypto.crypto_kx.KeyPair)
     (kem : beaconcrypt_crypto.crypto_kem.mlkem768.KeyPair) (rng : R)
@@ -128,16 +125,17 @@ theorem with_keys {R : Type} (self : beaconcrypt_public_wrapper.beacon.Beacon)
         (tree coins setup checks representation created writer index owner scalar).run before.1 := by
   let : ChildOperations (RustT CutM) := children coins setup checks representation created writer index owner other recording
   rw [AdapterPublicBundleMaterial.withKeys view getters setup.joint pool setup.dh self owner world related
-    (leaves coins setup checks representation created writer index owner failure fallback other recording self law)
+    (leaves coins setup checks representation created writer index owner failure other recording self law)
     control controlView prekey oneTime kem scalar prekeyView oneTimeView kemView rng]
-  exact with_material coins setup checks representation created writer index owner failure fallback other recording self law scalar prekey oneTime kem rng before
+  exact with_material coins setup checks representation created writer index owner failure other recording self law scalar prekey oneTime kem rng before
 
+omit platform localOps in
 theorem with_coins {R Error : Type} (self : beaconcrypt_public_wrapper.beacon.Beacon)
     (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (getters : AdapterPublicBundleMaterial.Getters (m := CutM) view)
     (pool : PqxdhLiveKemBirth.Pool KemSK) (world : Option PqxdhRecordLiftBeacon.Phase)
     (related : AdapterPublicWrapperState.Beacon view setup.joint pool self owner world)
-    (law : Leaves coins setup checks representation created writer index owner failure fallback self)
+    (law : Leaves (n := n) coins setup checks representation created writer index owner failure self)
     (control : pqxdh.BeaconFresh) (scalar : PqxdhJointGapDh.ScalarBytes)
     (prekey oneTime : beaconcrypt_crypto.crypto_kx.KeyPair) (kem : beaconcrypt_crypto.crypto_kem.mlkem768.KeyPair)
     (generator : rand_core.TryCryptoRng R Error) (rng : R)
@@ -152,9 +150,9 @@ theorem with_coins {R Error : Type} (self : beaconcrypt_public_wrapper.beacon.Be
         (tree coins setup checks representation created writer index owner scalar).run before.1 := by
   let : ChildOperations (RustT CutM) := children coins setup checks representation created writer index owner other recording
   rw [AdapterPublicBundleMaterial.with_coins_related view getters setup.joint pool setup.dh self owner world related
-    (leaves coins setup checks representation created writer index owner failure fallback other recording self law)
+    (leaves coins setup checks representation created writer index owner failure other recording self law)
     control scalar prekey oneTime kem generator rng stored phase publicView]
-  exact with_material coins setup checks representation created writer index owner failure fallback other recording self law scalar prekey oneTime kem rng before
+  exact with_material coins setup checks representation created writer index owner failure other recording self law scalar prekey oneTime kem rng before
 
 
 noncomputable def sample : RegistrationNativePlatformExperiment.M n KemSK source m PqxdhJointGapDh.ScalarBytes :=
@@ -163,12 +161,13 @@ noncomputable def sample : RegistrationNativePlatformExperiment.M n KemSK source
     (RegistrationNativePlatformGenericBundle.liftLegacy RegistrationNativePlatformGenericBundle.trustedLift
       (RegistrationNativeBeaconFrontend.sample PqxdhJointGapDh.sampleScalar))
 
+omit platform localOps in
 theorem fresh {R Error : Type} (self : beaconcrypt_public_wrapper.beacon.Beacon)
     (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (getters : AdapterPublicBundleMaterial.Getters (m := CutM) view)
     (pool : PqxdhLiveKemBirth.Pool KemSK) (world : Option PqxdhRecordLiftBeacon.Phase)
     (related : AdapterPublicWrapperState.Beacon view setup.joint pool self owner world)
-    (law : Leaves coins setup checks representation created writer index owner failure fallback self)
+    (law : Leaves (n := n) coins setup checks representation created writer index owner failure self)
     (control : pqxdh.BeaconFresh) (prekey : beaconcrypt_crypto.crypto_kx.KeyPair)
     (kem : beaconcrypt_crypto.crypto_kem.mlkem768.KeyPair)
     (generator : rand_core.TryCryptoRng R Error) (rng : R)
@@ -186,18 +185,18 @@ theorem fresh {R Error : Type} (self : beaconcrypt_public_wrapper.beacon.Beacon)
         (tree coins setup checks representation created writer index owner drawn.1).run drawn.2) := by
   let : ChildOperations (RustT CutM) := children coins setup checks representation created writer index owner other recording
   rw [AdapterPublicBundleMaterial.fresh_related view getters setup.joint pool setup.dh self owner world related
-    (leaves coins setup checks representation created writer index owner failure fallback other recording self law)
+    (leaves coins setup checks representation created writer index owner failure other recording self law)
     control prekey kem generator rng (liftWorld (sample coins setup checks representation created writer)) generation stored phase]
   change Prod.map id Prod.fst <$> ((do
     let scalar ← liftWorld (sample coins setup checks representation created writer)
     AdapterPublicBundleMaterial.withMaterial setup.joint setup.dh self owner
-      (leaves coins setup checks representation created writer index owner failure fallback other recording self law)
+      (leaves coins setup checks representation created writer index owner failure other recording self law)
       scalar prekey (generation.realize scalar rng).1 kem (generation.realize scalar rng).2 : CutM _).run before) = _
   rw [StateT.run_bind]
   simp only [RegistrationNativePlatformCutErasure.liftWorld, StateT.run, map_bind, bind_map_left]
   apply bind_congr
   intro drawn
-  exact with_material coins setup checks representation created writer index owner failure fallback other recording self law
+  exact with_material coins setup checks representation created writer index owner failure other recording self law
     drawn.1 prekey (generation.realize drawn.1 rng).1 kem (generation.realize drawn.1 rng).2 (drawn.2, before.2)
 
 end BeaconcryptCore.Refinement.AdapterPublicBundleSourceExecution

@@ -40,10 +40,7 @@ theorem compact (setup : PqxdhServerAuthExperiment.Setup base KemSK) (index : Na
     Prod.map id RegistrationNativeIdentityEnvReceiptView.view <$>
       (RegistrationNativeIdentityHistoryView.pack (RegistrationNativeIdentityFrontend.outgoing (n := n) (Auxiliary := Auxiliary)
         setup source index owner (.inl (.sign request right digestRight)))).run before := by
-  simp only [RegistrationNativeIdentityHistoryView.pack, RegistrationNativeIdentityFrontend.outgoing,
-    RegistrationNativeIdentityFrontend.updateEnv, StateT.run, bind_apply, pure_apply, lift_apply,
-    modify_apply, map_bind, bind_map_left, map_pure, pure_bind,
-    RegistrationNativeIdentityEnvReceiptView.view, Prod.map_def, id_eq]
+  rfl
 
 /-- The literal CTX/native Local source dictionary has the same metadata independence with all sampled draw counters retained. -/
 theorem local_sign (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)

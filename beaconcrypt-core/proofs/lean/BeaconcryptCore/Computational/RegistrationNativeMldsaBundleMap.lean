@@ -63,7 +63,7 @@ theorem simulate_natural {Query : Type} {spec : OracleSpec Query} (mapping : Map
 
 set_option backward.isDefEq.respectTransparency false in
 theorem lower_natural (mapping : Map left right) (value : Value → Other) (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (first : RegistrationNativeBeaconFrontend.M n KemSK left RegistrationServerRoleBackend.State Value)
     (second : RegistrationNativeBeaconFrontend.M n KemSK right RegistrationServerRoleBackend.State Other)
     (related : RegistrationNativeMldsaOrdinaryMap.Natural mapping value first second) (before : Local n KemSK left) :
@@ -95,7 +95,7 @@ theorem lower_natural (mapping : Map left right) (value : Value → Other) (setu
 
 set_option backward.isDefEq.respectTransparency false in
 theorem native_natural (mapping : Map left right) (value : Value → Other) (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (first : RegistrationNativeBeaconFrontend.M n KemSK left RegistrationServerRoleBackend.State Value)
     (second : RegistrationNativeBeaconFrontend.M n KemSK right RegistrationServerRoleBackend.State Other)
     (related : RegistrationNativeMldsaOrdinaryMap.Natural mapping value first second) :
@@ -117,14 +117,14 @@ private def NonSigning : RegistrationBeaconInitExecutor.Spec.Domain → Prop
 set_option backward.isDefEq.respectTransparency false in
 private theorem ordinary_outgoing (mapping : Map left right) (setup : Setup base KemSK)
     (index : Nat) (current : RegistrationNativeBeaconFrontend.Owner left)
-    (query : RegistrationBeaconInitExecutor.Spec.Domain) (ordinary : NonSigning query) :
+    (query : RegistrationBeaconInitExecutor.Spec.Domain) :
     RegistrationNativeMldsaOrdinaryMap.Natural (n := n) (Auxiliary := RegistrationServerRoleBackend.State) mapping id
       (RegistrationNativeBeaconFrontend.outgoing setup left index current query)
       (RegistrationNativeBeaconFrontend.outgoing setup right index (owner mapping current) query) := by
   classical
   rcases query with (hash | ⟨request, payload, digest⟩) | ed
   · exact RegistrationNativeMldsaOrdinaryMap.hash_natural mapping hash
-  · exact ordinary.elim
+  · exact RegistrationNativeMldsaOrdinaryMap.pure_natural mapping id _
   · by_cases matching : ed.public_key = PqxdhRootTableInitialization.rootArray (setup.joint.publicKeys current.identitySeed).ed25519
     · simp only [RegistrationNativeBeaconFrontend.outgoing, owner, ite_eq_left matching]
       apply RegistrationNativeMldsaOrdinaryMap.bind_natural mapping id id _ _ _ _ (RegistrationNativeMldsaOrdinaryMap.history_natural mapping index _ _)
@@ -135,26 +135,15 @@ private theorem ordinary_outgoing (mapping : Map left right) (setup : Setup base
 
 set_option backward.isDefEq.respectTransparency false in
 theorem outgoing_natural (mapping : Map left right) (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (current : RegistrationNativeBeaconFrontend.Owner left) (query : RegistrationBeaconInitExecutor.Spec.Domain) :
     Natural (n := n) mapping id (RegistrationNativeMldsaBundle.outgoing setup checks representation created index current query)
-      (RegistrationNativeMldsaBundle.outgoing setup checks representation created index (owner mapping current) query) := by
-  rcases query with (hash | ⟨request, payload, digest⟩) | ed
-  · exact native_natural mapping id setup checks representation created _ _ (ordinary_outgoing mapping setup index current (.inl (.hash hash)) trivial)
-  · intro before
-    change @Eq (OracleComp (RegistrationNativeMldsaProgram.Spec right)
-      (RegistrationSigningShared.SignReply × Local n KemSK right)) _ _
-    have leaf := congrFun (RegistrationNativeMldsaSignMap.state_sign (n := n) mapping .environment current.mldsa request)
-      before.2.2.server.world.world.1
-    simp only [RegistrationNativeMldsaSignMap.transformState, transform, StateT.run] at leaf
-    simp only [RegistrationNativeMldsaBundle.outgoing, StateT.run, transform, bind_pure_comp, simulateQ_map, Functor.map_map]
-    rw [leaf]
-    rfl
-  · exact native_natural mapping id setup checks representation created _ _ (ordinary_outgoing mapping setup index current (.inr ed) trivial)
+      (RegistrationNativeMldsaBundle.outgoing setup checks representation created index (owner mapping current) query) :=
+  native_natural mapping id setup checks representation created _ _ (ordinary_outgoing mapping setup index current query)
 
 set_option backward.isDefEq.respectTransparency false in
 theorem afterPublished_natural (mapping : Map left right) (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (current : RegistrationNativeBeaconFrontend.Owner left) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (published : RustM (RegistrationBeaconInitExecutor.Result Pqxdh.Bytes)) :
     Natural (n := n) mapping id (RegistrationNativeMldsaBundle.afterPublished setup checks representation created index current oneTime published)
@@ -175,18 +164,18 @@ theorem afterPublished_natural (mapping : Map left right) (setup : Setup base Ke
 
 set_option backward.isDefEq.respectTransparency false in
 private theorem published_natural (mapping : Map left right) (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (current : RegistrationNativeBeaconFrontend.Owner left) (oneTime : PqxdhJointGapDh.ScalarBytes) :
     Natural (n := n) mapping id
       (do
         let published ← simulateQ (RegistrationNativeMldsaBundle.outgoing setup checks representation created index current)
           (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨current.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup current)
-            ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ current.pin current.mldsa.publicKey)
+            ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ current.pin)
         RegistrationNativeMldsaBundle.afterPublished setup checks representation created index current oneTime published)
       (do
         let published ← simulateQ (RegistrationNativeMldsaBundle.outgoing setup checks representation created index (owner mapping current))
           (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨(owner mapping current).pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup (owner mapping current))
-            ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ (owner mapping current).pin (owner mapping current).mldsa.publicKey)
+            ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ (owner mapping current).pin)
         RegistrationNativeMldsaBundle.afterPublished setup checks representation created index (owner mapping current) oneTime published) := by
   apply bind_natural mapping id id _ _ _ _ (simulate_natural mapping _ _
     (outgoing_natural mapping setup checks representation created index current) _)
@@ -196,7 +185,7 @@ private theorem published_natural (mapping : Map left right) (setup : Setup base
 set_option maxRecDepth 2048 in
 set_option backward.isDefEq.respectTransparency false in
 theorem bundle_natural (mapping : Map left right) (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) :
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) :
     Natural (n := n) mapping id (RegistrationNativeMldsaBundle.bundle (source := left) setup checks wire representation created index)
       (RegistrationNativeMldsaBundle.bundle (source := right) setup checks wire representation created index) := by
   unfold RegistrationNativeMldsaBundle.bundle
@@ -227,7 +216,7 @@ theorem close_map (mapping : Map left right) (before : Local n KemSK left) :
 
 set_option backward.isDefEq.respectTransparency false in
 theorem sourceBundle_natural (mapping : Map left right) (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat)
     (before : RegistrationNativeExperiment.State n KemSK left) :
     Prod.map id (nativeState mapping) <$> transform mapping
       ((RegistrationNativeMldsaBundle.sourceBundle setup checks wire representation created index).run before) =

@@ -18,7 +18,7 @@ local instance (value : transport.kexresponse) : Decidable (RegistrationSerializ
 
 set_option backward.isDefEq.respectTransparency false in
 theorem init_schema_rejected [RegistrationValidatorPrimitive.Operations] (input : Slice U8) (value : transport.initkex)
-    (contents : input.val = 136#u8 :: RegistrationSerializerInitBytes.payload value)
+    (contents : input.val = 134#u8 :: RegistrationSerializerInitBytes.payload value)
     (malformed : ¬ RegistrationSerializerInitBytes.InitShape value) :
     transport.validate_and_parse_initkex input = .ok .None := by
   obtain ⟨payload, payloadBytes, parsed⟩ := RegistrationSchemaAtoms.init_parsed input value contents
@@ -40,7 +40,7 @@ theorem response_schema_rejected [RegistrationValidatorPrimitive.Operations] (in
 
 set_option backward.isDefEq.respectTransparency false in
 theorem init [RegistrationValidatorPrimitive.Operations] (input : Slice U8) (value : transport.initkex)
-    (contents : input.val = 136#u8 :: RegistrationSerializerInitBytes.payload value)
+    (contents : input.val = 134#u8 :: RegistrationSerializerInitBytes.payload value)
     (admitted : input.length ≤ 33554432) :
     extraction_decode_init input = .ok (if RegistrationSerializerInitBytes.InitShape value then .Some value else .None) := by
   by_cases shape : RegistrationSerializerInitBytes.InitShape value
@@ -48,8 +48,8 @@ theorem init [RegistrationValidatorPrimitive.Operations] (input : Slice U8) (val
     exact RegistrationPublicReadback.decode_init input value contents shape
   · rw [ite_eq_right shape]
     have gate : registration_validator_primitive.preflightSlice input initStart
-        ((Array.repeat 6#usize 2#u8).to_slice) = .ok (.Some ()) := by
-      rw [RegistrationPublicDecoderControl.preflight_array, ← init_kinds_source]
+        ((Array.repeat 4#usize 2#u8).to_slice) = .ok (.Some ()) := by
+      rw [RegistrationPublicDecoderControl.preflight_array_four, ← init_kinds_source]
       exact RegistrationPreflightRecords.init input value contents admitted
     have rejected := init_schema_rejected input value contents shape
     dsimp only [initStart] at gate

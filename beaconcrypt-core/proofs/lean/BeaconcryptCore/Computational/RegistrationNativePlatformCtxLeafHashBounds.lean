@@ -104,6 +104,10 @@ private theorem callbacks (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSourc
     simp only [RegistrationRecordPrimitives.callbacks, MldsaSharedNative.recordLift]
     rw [isTotalQueryBound_query_bind_iff]
     exact ⟨by decide, fun _ => by trivial⟩
+  | adHash request =>
+    simp only [RegistrationRecordPrimitives.callbacks, RegistrationAuthenticationShared.callbacks, MldsaSharedNative.authLift]
+    rw [isTotalQueryBound_query_bind_iff]
+    exact ⟨by decide, fun _ => by trivial⟩
   | hash transcript =>
     simp only [RegistrationRecordPrimitives.callbacks, RegistrationAuthenticationShared.callbacks, MldsaSharedNative.authLift]
     rw [isTotalQueryBound_query_bind_iff]

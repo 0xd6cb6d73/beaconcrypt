@@ -29,7 +29,7 @@ variable {setup :PqxdhServerAuthExperiment.Setup base KemSK} {checks :PqxdhServe
 variable (configuration :RegistrationNativePlatformPublicAdapterConfiguration.Configuration
   (P:=P) (E:=E) (R:=R) (Error:=Error) (source:=source) setup checks)
 variable {Value :Type}
-variable (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
 local notation "Private"=>RegistrationNativePlatformPublicAdapterAuditLowModel.Private (n:=n) configuration created credential
 local notation "physical"=>RegistrationNativePlatformPublicAdapterAuditLowModel.physical (n:=n) configuration created credential
 local notation "Log"=>RegistrationNativePlatformPublicAdapterSourceEvents.Log n KemSK R P

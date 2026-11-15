@@ -6,7 +6,10 @@ open OracleComp OracleSpec CoreModels Aeneas OracleComp.ProgramLogic.Relational
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeBeforePrivacy
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPhase1AcceptanceOracle PqxdhKemIndCca PqxdhInitializerSecrecy
 open CtxRomAuth AdaptiveCtxSharedHash PqxdhSecretInputKdf PqxdhFullSecretInputKdf
@@ -49,7 +52,7 @@ local notation "Key" => PqxdhLaterChallengeRandomBefore.Key setup program (M := 
 local notation "backend" => PqxdhLaterChallengeRandomBackend.handler (RawCtxUniversalDecoder.decoder env.decode) env.source.crypto
 local notation "impl" => confRandomImpl (RawCtxUniversalDecoder.decoder env.decode) env.source.crypto
 
-local notation "compiled" => PqxdhLaterChallengeRandomCompiled.client setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+local notation "compiled" => PqxdhLaterChallengeRandomCompiled.client (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
 
 /-- The ordinary selected-key source experiment of the actual generated prefix and saved before continuation. -/
 noncomputable def source (depth qPost : Nat) (bit : Bool) : ProbComp Bool :=
@@ -64,18 +67,18 @@ noncomputable def loss (depth qPost qHashPre : Nat) (fallback : CtxNonceAeadIntC
 /-- Each actual generated source world is connected to its ordinary random interpretation by the existing adaptive CTX reduction, with the complete prefix included in its bill. -/
 theorem source_random (depth qPost qHashPre qUniformPre : Nat)
     (fallback : CtxNonceAeadIntCtxt.ModifiedNonceAeadForgery) (bit : Bool)
-    (hashBound : (PqxdhLaterChallengeGeneratedContinuation.run setup env callbacks program adversary owner number bit
+    (hashBound : (PqxdhLaterChallengeGeneratedContinuation.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit
       attachedVerify primitives baseImpl kem ancestors disclosed depth).IsQueryBoundP (HashClass true) qHashPre)
-    (uniformBound : (PqxdhLaterChallengeGeneratedContinuation.run setup env callbacks program adversary owner number bit
+    (uniformBound : (PqxdhLaterChallengeGeneratedContinuation.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit
       attachedVerify primitives baseImpl kem ancestors disclosed depth).IsQueryBoundP (HashClass false) qUniformPre)
     (small : 1 + qPost < 2 ^ 96) :
-    𝒟[source setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed depth qPost bit] {true} ≤
+    𝒟[source (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed depth qPost bit] {true} ≤
       𝒟[Prod.fst <$> (simulateQ impl (compiled depth qPost bit bit)).run randomInitial] {true} +
-        loss setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed depth qPost qHashPre fallback bit ∧
+        loss (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed depth qPost qHashPre fallback bit ∧
     𝒟[Prod.fst <$> (simulateQ impl (compiled depth qPost bit bit)).run randomInitial] {true} ≤
-      𝒟[source setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed depth qPost bit] {true} +
-        loss setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed depth qPost qHashPre fallback bit := by
-  have bounded := PqxdhLaterChallengeRandomCompiled.bills setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+      𝒟[source (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed depth qPost bit] {true} +
+        loss (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed depth qPost qHashPre fallback bit := by
+  have bounded := PqxdhLaterChallengeRandomCompiled.bills (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
     depth qPost qHashPre qUniformPre bit bit hashBound uniformBound
   have paired := PqxdhFirstRecordConfidentiality.source_random (RawCtxUniversalDecoder.decoder env.decode) env.source.crypto
     (compiled depth qPost bit bit) fallback (qHashPre + (1 + qPost)) (1 + qPost) (1 + qPost) bounded.2.2 bounded.1 bounded.2.1 small
@@ -84,31 +87,31 @@ theorem source_random (depth qPost qHashPre qUniformPre : Nat)
 /-- Both generated before-source worlds are connected by the two explicitly constructed ordinary CTX reductions. The random middle is the checked full-history compiled game; there is no guessed prefix or reset state. -/
 theorem pair (depth qPost qHashPre qUniformPre : Nat)
     (fallback : CtxNonceAeadIntCtxt.ModifiedNonceAeadForgery)
-    (hashBound : ∀ bit, (PqxdhLaterChallengeGeneratedContinuation.run setup env callbacks program adversary owner number bit
+    (hashBound : ∀ bit, (PqxdhLaterChallengeGeneratedContinuation.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit
       attachedVerify primitives baseImpl kem ancestors disclosed depth).IsQueryBoundP (HashClass true) qHashPre)
-    (uniformBound : ∀ bit, (PqxdhLaterChallengeGeneratedContinuation.run setup env callbacks program adversary owner number bit
+    (uniformBound : ∀ bit, (PqxdhLaterChallengeGeneratedContinuation.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit
       attachedVerify primitives baseImpl kem ancestors disclosed depth).IsQueryBoundP (HashClass false) qUniformPre)
     (small : 1 + qPost < 2 ^ 96) :
-    𝒟[source setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed depth qPost false] {true} ≤
-      𝒟[source setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed depth qPost true] {true} +
-        (loss setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed depth qPost qHashPre fallback false +
-         loss setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed depth qPost qHashPre fallback true) ∧
-    𝒟[source setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed depth qPost true] {true} ≤
-      𝒟[source setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed depth qPost false] {true} +
-        (loss setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed depth qPost qHashPre fallback false +
-         loss setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed depth qPost qHashPre fallback true) := by
-  have first := source_random setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+    𝒟[source (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed depth qPost false] {true} ≤
+      𝒟[source (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed depth qPost true] {true} +
+        (loss (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed depth qPost qHashPre fallback false +
+         loss (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed depth qPost qHashPre fallback true) ∧
+    𝒟[source (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed depth qPost true] {true} ≤
+      𝒟[source (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed depth qPost false] {true} +
+        (loss (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed depth qPost qHashPre fallback false +
+         loss (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed depth qPost qHashPre fallback true) := by
+  have first := source_random (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
     depth qPost qHashPre qUniformPre fallback false (hashBound false) (uniformBound false) small
-  have second := source_random setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+  have second := source_random (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
     depth qPost qHashPre qUniformPre fallback true (hashBound true) (uniformBound true) small
-  have equal := PqxdhLaterChallengeRandomCompiled.random setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed depth qPost
+  have equal := PqxdhLaterChallengeRandomCompiled.random (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed depth qPost
   rw [equal] at first
   constructor
   · have bound := _root_.add_le_add second.2 (le_refl
-      (loss setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed depth qPost qHashPre fallback false))
+      (loss (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed depth qPost qHashPre fallback false))
     exact (first.1.trans bound).trans_eq (by ac_rfl)
   · have bound := _root_.add_le_add first.2 (le_refl
-      (loss setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed depth qPost qHashPre fallback true))
+      (loss (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed depth qPost qHashPre fallback true))
     exact (second.1.trans bound).trans_eq (by ac_rfl)
 
 end BeaconcryptCore.Computational.PqxdhLaterChallengeBeforePrivacy

@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePublicStartupFrame
-/-! Actual generated startup preserves the preexisting private record-seed cache and role-use map while retaining its real ML-pin hash cache and all counted draws. Cold source startup therefore derives the empty private record state required by the materialization coupling. -/
+/-! Actual generated startup preserves the preexisting private record-seed cache and role-use map while retaining all counted draws; after the transcript-AD migration the server pin no longer carries a digest of the server ML-DSA public key, so startup performs no pin hash effect. Cold source startup therefore derives the empty private record state required by the materialization coupling. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -23,7 +23,7 @@ private theorem sampled (work : ProbComp A) (before : PqxdhRecordLiftWorld.State
   obtain ⟨value, _actual, rfl⟩ := supported
   rfl
 
-private theorem initialize_fields (created : PqxdhLiveServerConstruction.Created Unit)
+private theorem initialize_fields (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (before : PqxdhRecordLiftWorld.State n) (result : Unit × PqxdhRecordLiftWorld.State n)
     (supported : result ∈ support ((PqxdhRecordLiftWorld.initializeServer created).run before)) :
     fields result.2 = fields before := by
@@ -31,16 +31,7 @@ private theorem initialize_fields (created : PqxdhLiveServerConstruction.Created
     simp only [PqxdhRecordLiftWorld.initializeServer, StateT.run, present, mem_support_pure_iff] at supported <;>
     cases supported <;> rfl
 
-private theorem hash (bytes : Pqxdh.Bytes) (before : PqxdhRecordLiftWorld.State n)
-    (result : CtxRomAuth.CtxDigest × PqxdhRecordLiftWorld.State n)
-    (supported : result ∈ support ((PqxdhRecordLiftWorld.effects (.inr (.hash bytes))).run before)) :
-    fields result.2 = fields before := by
-  simp only [PqxdhRecordLiftWorld.effects, PqxdhRecordLiftWorld.capability, StateT.run,
-    mem_support_bind_iff, mem_support_pure_iff] at supported
-  obtain ⟨middle, drawn, rfl⟩ := supported
-  exact sampled _ (PqxdhRecordLiftWorld.chargeEffect (.inr (.hash bytes)) before) middle drawn
-
-/-- Every actual generated-startup outcome preserves the same private record slots; its shared ML-pin hash and uniform/counter effects remain literal. -/
+/-- Every actual generated-startup outcome preserves the same private record slots; its uniform/counter effects remain literal. -/
 theorem startup (setup : Setup base KemSK) (source : RegistrationNativeMldsa.Source)
     (ensureInit : StateT Unit ProbComp Bool) (identityIndex : Nat) (serverKeyId : U64)
     (identity : PqxdhJointIdentity.PublicIdentity) (before : PqxdhRecordLiftWorld.State n)
@@ -66,9 +57,9 @@ theorem startup (setup : Setup base KemSK) (source : RegistrationNativeMldsa.Sou
       exact Prod.mk.inj (generatedFields.trans constructedFields)
     | some key =>
       simp only [credential, StateT.run_bind, mem_support_bind_iff, StateT.run_pure, mem_support_pure_iff] at continued
-      obtain ⟨installed, installation, hashed, hashedRun, rfl⟩ := continued
-      exact Prod.mk.inj ((hash _ _ hashed hashedRun).trans
-        ((initialize_fields _ _ installed installation).trans (generatedFields.trans constructedFields)))
+      obtain ⟨installed, installation, rfl⟩ := continued
+      exact Prod.mk.inj ((initialize_fields _ _ installed installation).trans
+        (generatedFields.trans constructedFields))
 
 /-- The initialized source material experiment starts with unused private record slots and no cached record seed, without resetting its warmed shared hash cache. -/
 theorem cold (setup : Setup base KemSK) (source : RegistrationNativeMldsa.Source)

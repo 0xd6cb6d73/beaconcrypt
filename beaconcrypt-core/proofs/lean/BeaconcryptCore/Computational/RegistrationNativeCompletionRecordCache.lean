@@ -19,7 +19,7 @@ open RegistrationNativeResponseAuthentication (lower_bind lower_pure)
 variable {n : Nat} {ι KemSK Value : Type} {base : OracleSpec ι} {source : RegistrationNativeMldsa.Source}
 private theorem terminal (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : M n KemSK source RegistrationServerRoleBackend.State Value)
     (outcome : RustM (Option Pqxdh.Bytes)) (before after : Local n KemSK source) (application : Pqxdh.Bytes)
     (supported : (.ok (some application), after) ∈ support
@@ -35,7 +35,7 @@ attribute [local irreducible] agreement record abort effect RegistrationAgreemen
 /-- Actual successful legacy continuation retains its reached record cache through the actual source suffix. -/
 theorem legacy (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (index : Nat) (owner : Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (authenticated : registration.AuthenticatedResponse) (before after : Local n KemSK source)
     (application : Pqxdh.Bytes)
@@ -94,7 +94,7 @@ theorem legacy (setup : Setup base KemSK) (checks : Checks)
 /-- Actual successful platform continuation retains its reached record cache through the actual source suffix. -/
 theorem platform (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (index : Nat) (owner : Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (authenticated : registration.AuthenticatedResponse) (before after : Local n KemSK source)
     (application : Pqxdh.Bytes)

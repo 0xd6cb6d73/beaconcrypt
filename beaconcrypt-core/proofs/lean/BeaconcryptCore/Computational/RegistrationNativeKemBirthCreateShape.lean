@@ -52,7 +52,7 @@ theorem create_shape (setup : Setup base KemSK) (source : RegistrationNativeMlds
         obtain ⟨born, _, worldOwner, _, returned⟩ := continued
         cases returned
         refine ⟨congrArg List.length retained,
-          RegistrationNativeBeaconBirth.owner setup source prepared.pin prepared.credentials
+          RegistrationNativeBeaconBirth.owner setup source prepared.pin
             prepared.identity prepared.prekey born worldOwner, ?_⟩
         rw [retained]
 

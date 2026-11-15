@@ -10,6 +10,7 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhInitialDisclosureState
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhSecretInputKdf PqxdhInitialPendingPost RawCtxSelectedChain RawCtxFamilyFreshnessProxy
 variable {ι M P I D K X Response Shared Result Origin Z : Type} {extra : OracleSpec ι} {S B : Nat}
 
@@ -146,7 +147,7 @@ private theorem tail_quiet (decode : RawCtxReceive.FrameDecoder)
 theorem finish_quiet (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin)
     (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
     (state : RawCtxGenericRoleStorage.BeaconState (KernelOf Slot) I D K) :
-    (PqxdhInitialFinishOrigin.owner mark preForward
+    (PqxdhInitialFinishOrigin.owner (completedBinding := completedBinding) mark preForward
       (calls (extra := extra) (X := X) (Response := Response) (Shared := Shared) (S := S) (B := B))
       applicationForward initialForward decode raw state).IsQueryBoundP (isRead (extra := extra)) 0 := by
   cases active : state.beacon.phase with
@@ -237,7 +238,7 @@ theorem post_invariant (target : RootOutput)
     (result : ((PqxdhInitialGenericPost.Spec extra S B).Range query ×
       (Front Slot M P I D K S B × PqxdhInitialOriginPost.Trace Origin S B)) × State Z)
     (supported : result ∈ support ((simulateQ impl
-      ((PqxdhInitialOriginPost.compiler mark sender route decode query).run before)).run state)) :
+      ((PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) mark sender route decode query).run before)).run state)) :
     Invariant target prior result.1.2.1.roles.2 result.2 := by
   rcases query with (query | query) | ⟨index, raw⟩
   · simp only [PqxdhInitialOriginPost.compiler, StateT.run, bind_pure_comp, simulateQ_map, state_map, support_map] at supported
@@ -251,7 +252,7 @@ theorem post_invariant (target : RootOutput)
   · simp only [PqxdhInitialOriginPost.compiler, StateT.run, bind_pure_comp, simulateQ_map, state_map, support_map] at supported
     obtain ⟨completed, reached, rfl⟩ := supported
     exact invariant_keep target prior before.1.roles.2 state completed.2 valid
-      (quiet_program target impl rules _ (finish_quiet mark decode raw _) state completed reached)
+      (quiet_program target impl rules _ (finish_quiet (completedBinding := completedBinding) mark decode raw _) state completed reached)
 
 /-- Every complete original adaptive post client derives its actual final disclosure invariant from its own initial history and the same interpreter. -/
 theorem schedule_invariant (target : RootOutput)
@@ -264,7 +265,7 @@ theorem schedule_invariant (target : RootOutput)
     (valid : Invariant target prior before.1.roles.2 state)
     (result : (Result × (Front Slot M P I D K S B × PqxdhInitialOriginPost.Trace Origin S B)) × State Z)
     (supported : result ∈ support ((simulateQ impl
-      ((simulateQ (PqxdhInitialOriginPost.compiler mark sender route decode) client).run before)).run state)) :
+      ((simulateQ (PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) mark sender route decode) client).run before)).run state)) :
     Invariant target prior result.1.2.1.roles.2 result.2 := by
   induction client using OracleComp.inductionOn generalizing before state with
   | pure value =>
@@ -275,7 +276,7 @@ theorem schedule_invariant (target : RootOutput)
     simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind, mem_support_bind_iff] at supported
     obtain ⟨completed, reached, rest⟩ := supported
     exact ih completed.1.1 completed.1.2 completed.2
-      (post_invariant target impl rules prior mark sender route decode query before state valid completed reached) rest
+      (post_invariant (completedBinding := completedBinding) target impl rules prior mark sender route decode query before state valid completed reached) rest
 
 
 /-- Any literal program with no flagged queries retains its original candidate prefix and exact sticky bit under full query tracing. -/

@@ -34,6 +34,7 @@ theorem nonzero_honest : PqxdhServerAuthAssumptions.NonzeroHonestDh crypto :=
 /-- The full toy retains the original prefix-consistent HMAC/HKDF construction. -/
 theorem prefix_consistent : PqxdhJointKdf.ProductionHkdfPrefixConsistent crypto :=
   ⟨fun input => hkdfOf_prefix toyHmac input _ 32 (by decide),
+    fun input => hkdfOf_prefix toyHmac input _ 64 (by decide),
     fun input => hkdfOf_prefix toyHmac input _ 64 (by decide)⟩
 
 noncomputable def source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource := ⟨crypto, prefix_consistent⟩

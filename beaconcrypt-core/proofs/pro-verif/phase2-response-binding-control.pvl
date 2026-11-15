@@ -36,7 +36,7 @@ event Phase2AcceptedAssignedPrefix(bitstring).
 event Phase2PinnedInnerSender(bitstring).
 event Phase2AcceptedInnerSender(bitstring).
 
-(* This is the common beacon-side gate for all four fixtures. It follows the production order: parse the five response fields, calculate the response-selected DH/KEM contributions, reject a different outer identity before constructing the root, build server-first associated data from the retained identities, check the nested frame sender, open the frame, authenticate the assigned-ID prefix, and only then commit. *)
+(* This is the common beacon-side gate for all four fixtures. It follows the production order: parse the five response fields, calculate the response-selected DH/KEM contributions, reject a different outer identity before constructing the root, build the transcript associated data from the retained request fields and the response identity, ephemeral key, KEM ciphertext and assigned ID, check the nested frame sender, open the frame, authenticate the assigned-ID prefix, and only then commit. *)
 let Phase2BeaconFinishControl(
   witness: bitstring,
   expected_server_identity: bitstring,
@@ -101,9 +101,15 @@ let Phase2BeaconFinishControl(
       beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)
     ) in
     let associated_data =
-      beaconcrypt_core__pqxdh__build_associated_data(
-        expected_server_identity,
-        beacon_identity
+      transcript_associated_data(
+        tag_ed25519(beacon_identity),
+        sign(tag_x25519_prekey(x25519_public(beacon_prekey_secret)), beacon_identity_secret),
+        sign(tag_x25519_one_time(x25519_public(beacon_one_time_secret)), beacon_identity_secret),
+        sign(tag_mlkem768(mlkem_public(beacon_pq_secret)), beacon_identity_secret),
+        response_server_identity,
+        server_ephemeral,
+        kem_ciphertext,
+        assigned_key_id
       )
     in
     let server_material = ratchet_material(server_to_beacon_chain(root)) in
@@ -212,9 +218,15 @@ let Phase2ResponseBindingControl() =
     beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)
   ) in
   let associated_data =
-    beaconcrypt_core__pqxdh__build_associated_data(
+    transcript_associated_data(
+      tag_ed25519(beacon_identity),
+      sign(tag_x25519_prekey(beacon_prekey), beacon_identity_secret),
+      sign(tag_x25519_one_time(beacon_one_time), beacon_identity_secret),
+      sign(tag_mlkem768(beacon_pq), beacon_identity_secret),
       server_identity,
-      beacon_identity
+      server_ephemeral,
+      kem_ciphertext,
+      assigned_key_id
     )
   in
   let server_material = ratchet_material(server_to_beacon_chain(root)) in

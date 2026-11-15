@@ -31,7 +31,7 @@ abbrev Primitive := Counts × CtxRomAuth.CtxRO.QueryCache
 /-- The immutable outer sender is distinct from each assigned peer handle. -/
 structure Server where
   sender : Std.U64
-  records : RawCtxServerRouting.State Unit (Std.Array Std.U8 281#usize)
+  records : RawCtxServerRouting.State Unit (Std.Array Std.U8 151#usize)
 
 /-- Only record-relevant Beacon fields are retained. The raw counter map distinguishes absent handles from existing inactive owners. -/
 structure State (n : Nat) where
@@ -67,14 +67,14 @@ noncomputable def primitives (setup : Setup baseSpec KemSK) (codec : Codec Reade
     native := Function.update state.1.native kind (state.1.native kind + 1) }, result.1.2.2))
 
 /-- Full source constructor data is private; retain precisely its native record coordinates. Duplicate private initialization cannot reset the world. -/
-noncomputable def importedServer (created : PqxdhLiveServerConstruction.Created Unit) : Server :=
+noncomputable def importedServer (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) : Server :=
   ⟨created.server.server.metadata.sender,
     ⟨⟨created.server.server.identity,
       fun keyId => (created.server.server.peers keyId).map fun peer =>
         ⟨peer.identity, peer.kernel,
-          RawCtxServerRouting.associatedArray created.server.server.identity peer.identity⟩, ()⟩, 0⟩⟩
+          peer.metadata⟩, ()⟩, 0⟩⟩
 
-noncomputable def initializeServer (created : PqxdhLiveServerConstruction.Created Unit) :
+noncomputable def initializeServer (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     StateT (State n) ProbComp Unit :=
   fun state => match state.server with
   | some _ => pure ((), state)
@@ -245,7 +245,7 @@ noncomputable def run (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
     (program env setup.source.crypto codec serverKid bounds mode adversary)).run initial
 
 /-- The C1 target projection retains the exact CE ledger (including test/fresh and transcript) and native produced log. Constructor failure remains none. No equality with the CE game is claimed here. -/
-def observed (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+def observed (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated (Std.Array Std.U8 151#usize) ×
     (X × PqxdhDeploymentSecrecy.Ledger) × E) × State n) :
     Option (X × PqxdhDeploymentSecrecy.Ledger × List (FrameTag × PqxdhDeploymentNative.Frame)) :=
   result.1.map fun value => (value.2.1.1, value.2.1.2, result.2.produced)
@@ -259,7 +259,7 @@ def rawCounters (state : State n) : RawCounters :=
   ⟨(state.server.map fun server => server.records.rawAttempts).getD 0, state.ownerRaw⟩
 
 /-- A permitted analysis projection. Arbitrary predicates over the private result of run are not record-security events. -/
-def analysis (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+def analysis (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated (Std.Array Std.U8 151#usize) ×
     (X × PqxdhDeploymentSecrecy.Ledger) × E) × State n) :=
   result.1.map fun value => (value.2.1.1, value.2.1.2, result.2.produced, rawCounters result.2)
 

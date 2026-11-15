@@ -132,6 +132,17 @@ theorem stopAt_nil {KemSK : Type} (c : Nat) : ¬ stopAt (KemSK := KemSK) c [] :=
   simp [stopAt, Stop, regsOfSource, PqxdhDeploymentServerAuthEvent.accepted, PqxdhDeploymentServerAuthEvent.acceptedFrom,
     PqxdhDeploymentServerAuthEvent.summarizeReg, PqxdhDeploymentTranscript.Summary.empty]
 
+/-- Every event of a registration view that is decided once `c` stops (it holds on an extension of a view on which `c` has stopped exactly when it holds on that view) holds on the registration view of a source14 journal exactly when it holds on that view of the journal cut at the stop of the creation index. `unmatched_frozen` is this fact for the A1 failure. -/
+theorem event_frozen {KemSK : Type} (c : Nat) (event : List PqxdhDeploymentServerAuthEvent.Reg → Prop)
+    (stable : ∀ regs extra, Stop c regs → (event (regs ++ extra) ↔ event regs)) (entries : List (SourceEntry KemSK)) :
+    event (regsOfSource (untilStop (stopAt c) entries)) ↔ event (regsOfSource entries) := by
+  rcases PqxdhDeploymentServerAuthEvent.untilStop_spec (stopAt c) entries with ⟨stopped, rest, same⟩ | same
+  · conv_rhs => rw [same]
+    rw [show regsOfSource (untilStop (stopAt c) entries ++ rest) =
+      regsOfSource (untilStop (stopAt c) entries) ++ regsOfSource rest from List.filterMap_append]
+    exact (stable _ _ stopped).symm
+  · rw [same]
+
 end BeaconcryptCore.Computational.PqxdhDeploymentServerAuthFreeze
 
 /-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthFreeze.journal_erase_from' depends on axioms: [propext,
@@ -180,3 +191,9 @@ end BeaconcryptCore.Computational.PqxdhDeploymentServerAuthFreeze
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthFreeze.stopAt_nil
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthFreeze.event_frozen' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthFreeze.event_frozen

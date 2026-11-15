@@ -9,6 +9,7 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 open OracleComp OracleSpec
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialGenericBeaconNative
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open RawCtxGenericRoleStorage PqxdhBeaconPhase2Shared
 variable {Kernel I D K X Response Shared : Type}
 
@@ -18,10 +19,10 @@ def nativeStaged (interpret : Kernel → ConcreteRatchetKernel)
 
 /-- Exact sequence-one and registration checks retain the same staged native fields. -/
 theorem opening_native (interpret : Kernel → ConcreteRatchetKernel)
-    (candidate : pqxdh.BeaconRegistrationCandidate) (kernel : Kernel)
+    (candidate : pqxdh.BeaconRegistrationCandidate) (associatedData : Array Std.U8 151#usize) (kernel : Kernel)
     (reply : core.option.Option RawCtxWholeOwner.Decrypted) :
-    PqxdhBeaconPhase2Publication.afterOpening candidate (interpret kernel) reply =
-      (PqxdhInitialGenericBeacon.afterOpening candidate kernel reply).map (nativeStaged interpret) := by
+    PqxdhBeaconPhase2Publication.afterOpening candidate associatedData (interpret kernel) reply =
+      (PqxdhInitialGenericBeacon.afterOpening candidate associatedData kernel reply).map (nativeStaged interpret) := by
   cases reply with
   | none => rfl
   | some opened =>
@@ -105,13 +106,13 @@ theorem afterInitial_native
       rw [← QueryImpl.simulateQ_compose handler PqxdhInitialFusedBeacon.rawLift, forwarded,
         ← QueryImpl.simulateQ_compose]
       have localState : ∀ kernel : ConcreteRatchetKernel,
-          PqxdhBeaconPhase2Publication.localOwner (clearedMetadata pending.metadata) kernel =
-          RawCtxChainOwner.nativeState id (PqxdhInitialGenericBeacon.localOwner (clearedMetadata pending.metadata) kernel) := fun _ => rfl
+          PqxdhBeaconPhase2Publication.localOwner (clearedMetadata pending.metadata) pending.metadata.associatedData kernel =
+          RawCtxChainOwner.nativeState id (PqxdhInitialGenericBeacon.localOwner (clearedMetadata pending.metadata) pending.metadata.associatedData kernel) := fun _ => rfl
       rw [localState, raw_native]
       simp only [bind_map_left]
       apply bind_congr
       intro result
-      exact congrArg pure (opening_native id _ _ _)
+      exact congrArg pure (opening_native id _ _ _ _)
 
 /-- The optional64 response is interpreted at the original private callback and the whole remaining native tail is unchanged. -/
 theorem tail_native (handler : QueryImpl (PqxdhInitialFusedBeacon.Spec Response Shared) m)
@@ -133,9 +134,9 @@ theorem owner_native
     (handler : QueryImpl (PqxdhInitialFusedOwner.Spec I D K X Response Shared) m)
     (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
     (state : BeaconState ConcreteRatchetKernel I D K) :
-    simulateQ handler (PqxdhInitialFusedOwner.owner decode raw (nativeBeacon id state)) =
+    simulateQ handler (PqxdhInitialFusedOwner.owner (completedBinding := completedBinding) decode raw (nativeBeacon id state)) =
       Prod.map id (nativeBeacon id) <$>
-        PqxdhInitialGenericBeacon.owner (fun q => handler (.inl q))
+        PqxdhInitialGenericBeacon.owner (completedBinding := completedBinding) (fun q => handler (.inl q))
           (calls (fun q => handler (.inr (.inl (.inl q)))))
           (fun reply => handler (.inr (.inl (.inr reply))))
           (initial (fun q => handler (.inr q))) decode raw state := by
@@ -175,13 +176,13 @@ theorem owner_mapped (interpret : Kernel → ConcreteRatchetKernel)
     (initialImpl : Secrets Shared → m (Option Kernel))
     (initialMap : ∀ secrets, initial (fun q => handler (.inr q)) secrets = Option.map interpret <$> initialImpl secrets)
     (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes) (state : BeaconState Kernel I D K) :
-    simulateQ handler (PqxdhInitialFusedOwner.owner decode raw (nativeBeacon interpret state)) =
+    simulateQ handler (PqxdhInitialFusedOwner.owner (completedBinding := completedBinding) decode raw (nativeBeacon interpret state)) =
       Prod.map id (nativeBeacon interpret) <$>
-        PqxdhInitialGenericBeacon.owner (fun q => handler (.inl q)) kernelCalls
+        PqxdhInitialGenericBeacon.owner (completedBinding := completedBinding) (fun q => handler (.inl q)) kernelCalls
           (fun reply => handler (.inr (.inl (.inr reply)))) initialImpl decode raw state := by
   have projection : nativeBeacon id (mapBeacon interpret state) = nativeBeacon interpret state :=
     beacon_compose interpret id state
-  rw [← projection, owner_native, PqxdhInitialGenericBeacon.owner_map interpret _ kernelCalls _ receiveMap _ initialImpl _ initialMap,
+  rw [← projection, owner_native, PqxdhInitialGenericBeacon.owner_map (completedBinding := completedBinding) interpret _ kernelCalls _ receiveMap _ initialImpl _ initialMap,
     Functor.map_map]
   apply congrArg (fun f => f <$> _)
   funext result

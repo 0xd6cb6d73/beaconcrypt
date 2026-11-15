@@ -31,17 +31,6 @@ theorem flagged_iff (server : Credential source) (calls : List (Call Registratio
   classical
   simp only [flagged, List.any_eq_true, decide_eq_true_eq, BadCalls]
 
-/-- Outside the one global native exception, each protected successful Init accept has earlier same-key unsigned issuance at its actual cut. -/
-theorem accept_issued (server : Credential source) (calls : List (Call RegistrationNativeRawAdapter.TypedSpec Native))
-    (good : ¬ BadCalls server calls) (packet : registration.InitPacket) (session : Nat) (before after : Native)
-    (member : (⟨.inr (.accept packet), before, .ok (some session), after⟩ : Call RegistrationNativeRawAdapter.TypedSpec Native) ∈ calls)
-    (current : RegistrationNativeBeaconFrontend.Owner source) (owned : current ∈ before.beacons)
-    (keyProtected : packet.mldsa_public_key = current.mldsa.publicKey) :
-    MldsaTranscriptAuth.Issued (RegistrationAuthenticationNative.trial true before.server.pin packet
-      (RegistrationSigningShared.historyFor (PqxdhRefinement.absBytes packet.mldsa_public_key) (RegistrationNativeMldsaShared.nativeProject before))) := by
-  by_contra absent
-  exact good ⟨_, member, .accept packet session before current owned keyProtected absent⟩
-
 /-- The same single exception covers every protected successful Beacon finish, using its actual earlier signing prefix. -/
 theorem finish_issued (server : Credential source) (calls : List (Call RegistrationNativeRawAdapter.TypedSpec Native))
     (good : ¬ BadCalls server calls) (index : Nat) (packet : registration.ResponsePacket) (application : Pqxdh.Bytes)
@@ -57,7 +46,7 @@ theorem finish_issued (server : Credential source) (calls : List (Call Registrat
 
 variable (source) (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (server : Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (server : Credential source)
 local notation "implementation" => RegistrationNativeExperiment.handler setup checks wire route representation created source server
 attribute [local irreducible] RegistrationNativeExperiment.handler
 
@@ -125,11 +114,6 @@ end BeaconcryptCore.Computational.RegistrationNativeMldsaOriginJournal
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaOriginJournal.flagged_iff
 
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaOriginJournal.accept_issued' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaOriginJournal.accept_issued
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaOriginJournal.finish_issued' depends on axioms: [propext,
  Classical.choice,

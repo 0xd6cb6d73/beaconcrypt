@@ -7,6 +7,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.refined ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhLaterSavedBuilder
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhJointKdfGame PqxdhNativeSharedPrefix
 open RawCtxSelectedParentTable RawCtxSelectedParentEntry RawCtxSelectedMessageDriver
 open PqxdhSelectedFirstRecord
@@ -38,7 +39,7 @@ noncomputable def nativeBuilder (state : RawCtxSelectedReceiveCompiler.State (Lo
     builder.candidate builder.authenticated builder.metadata
     (PqxdhInitialPendingBuilder.selected sender builder.index builder.before) ((ready).advanced, sealed.1)).run sealed.2
   let installed := PqxdhInitialPendingBuilder.reinstall builder.index builder.before (.ok published.1)
-  (simulateQ (nativeFlat pre application initial selector aux source writer prior (some parent) key target nonce next
+  (simulateQ (nativeFlat (completedBinding := completedBinding) pre application initial selector aux source writer prior (some parent) key target nonce next
     sender route read mark) (builder.outside installed.1)).run
       ((installed.2, PqxdhInitialOriginContext.builtTrace trace origin installed.2 builder.index installed.1), published.2)
 
@@ -51,16 +52,16 @@ noncomputable def selectedBuilder (state : RawCtxSelectedReceiveCompiler.State (
       (RawCtxSelectedReceiveCompiler.project sealed.2)
   let installed := PqxdhInitialPendingBuilder.reinstall builder.index builder.before (.ok published.1)
   Prod.map id (tracedProj key) <$>
-    (simulateQ (tracedPlain pre application initial selector aux source writer prior (some parent) key target nonce next
+    (simulateQ (tracedPlain (completedBinding := completedBinding) pre application initial selector aux source writer prior (some parent) key target nonce next
       sender route read mark) (builder.outside installed.1)).run
         ((initialFront installed.2, published.2),
           PqxdhInitialOriginContext.builtTrace trace origin installed.2 builder.index installed.1)
 
 /-- The known predecessor seal and both writer outcomes retain the exact publication state, installation trace and full outside execution. -/
 theorem builder_source (state : RawCtxSelectedReceiveCompiler.State (Local A N C)) :
-    nativeBuilder pre application initial selector aux source writer prior key target nonce next mark sender route read
+    nativeBuilder (completedBinding := completedBinding) pre application initial selector aux source writer prior key target nonce next mark sender route read
       trace origin builder material state =
-    selectedBuilder pre application initial selector aux source writer prior key target nonce next mark sender route read
+    selectedBuilder (completedBinding := completedBinding) pre application initial selector aux source writer prior key target nonce next mark sender route read
       trace origin builder material state := by
   rw [nativeBuilder, RawCtxSelectedPendingSendCompiler.sealing_source source writer prior (some parent)
     key target nonce next read]
@@ -71,7 +72,7 @@ theorem builder_source (state : RawCtxSelectedReceiveCompiler.State (Local A N C
   intro published
   let installed := PqxdhInitialPendingBuilder.reinstall builder.index builder.before (.ok published.1)
   simpa only [tracedProj, frontOf_initial] using
-    (post_program (P := P) (S := S) (B := B) pre application initial selector aux source writer prior
+    (post_program (completedBinding := completedBinding) (P := P) (S := S) (B := B) pre application initial selector aux source writer prior
       (some parent) key target nonce next sender route read mark (builder.outside installed.1)
       ((initialFront installed.2, published.2),
         PqxdhInitialOriginContext.builtTrace trace origin installed.2 builder.index installed.1)).symm
@@ -112,10 +113,10 @@ theorem afterSend_lowered (sealed : Option RawCtxSourceSend.Encrypted) :
 theorem builder_resume (state : RawCtxSelectedReceiveCompiler.State (Local A N C)) :
     (fun result => (result.1.1, (result.1.2, result.2))) <$>
     (simulateQ (lowered pre application initial selector aux source writer table)
-      (PqxdhInitialOriginContext.resume mark sender route read ⟨.inr builder, trace, origin⟩
+      (PqxdhInitialOriginContext.resume (completedBinding := completedBinding) mark sender route read ⟨.inr builder, trace, origin⟩
         (RawCtxInterpretedReceive.decodeResponse (RawCtxKdfRequestTable.fullResponse (realize parent target))))).run
           (RawCtxSelectedReceiveCompiler.project state) =
-      nativeBuilder pre application initial selector aux source writer prior key target nonce next mark sender route read
+      nativeBuilder (completedBinding := completedBinding) pre application initial selector aux source writer prior key target nonce next mark sender route read
         trace origin builder material state := by
   simp only [PqxdhInitialOriginContext.resume, PqxdhInitialOriginContext.complete,
     simulateQ_bind, simulateQ_spec_query, StateT.run_bind]
@@ -127,17 +128,17 @@ theorem builder_resume (state : RawCtxSelectedReceiveCompiler.State (Local A N C
 theorem retained_builder (state : RawCtxSelectedReceiveCompiler.State (Local A N C)) :
     (simulateQ (PqxdhInitialNativeRetained.retained source writer table
       (lifted pre application initial selector aux))
-      (PqxdhInitialOriginContext.resume mark sender route read ⟨.inr builder, trace, origin⟩
+      (PqxdhInitialOriginContext.resume (completedBinding := completedBinding) mark sender route read ⟨.inr builder, trace, origin⟩
         (RawCtxInterpretedReceive.decodeResponse (RawCtxKdfRequestTable.fullResponse (realize parent target))))).run
           (retainedOf (RawCtxSelectedReceiveCompiler.project state)) =
       (fun result => ((result.1, result.2.1), retainedOf result.2.2)) <$>
-        selectedBuilder pre application initial selector aux source writer prior key target nonce next mark sender route read
+        selectedBuilder (completedBinding := completedBinding) pre application initial selector aux source writer prior key target nonce next mark sender route read
           trace origin builder material state := by
   rw [← low_program pre application initial selector aux]
   have actual := congrArg (fun work => (fun result => ((result.1, result.2.1), retainedOf result.2.2)) <$> work)
-    ((builder_resume pre application initial selector aux source writer prior key target nonce next mark sender route read
+    ((builder_resume (completedBinding := completedBinding) pre application initial selector aux source writer prior key target nonce next mark sender route read
       trace origin builder material state).trans
-      (builder_source pre application initial selector aux source writer prior key target nonce next mark sender route read
+      (builder_source (completedBinding := completedBinding) pre application initial selector aux source writer prior key target nonce next mark sender route read
         trace origin builder material state))
   simpa only [Functor.map_map, Prod.map_def, id_eq] using actual
 

@@ -6,6 +6,7 @@ import BeaconcryptCore.Computational.CborRawIdealBeaconShadow
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.CborRawIdealProvenanceOutcome
 open PqxdhServerAuthExperiment (Setup Codec Checks)
 open PqxdhRecordLiftInterface (Environment EnvQuery EnvSpec)
@@ -142,8 +143,12 @@ theorem world (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (Mode
         cases Option.some.inj same
         have begins := PqxdhDeploymentEnvironment.start_initial setup ensureInit identityIndex runtime
           PqxdhDeploymentIdealSteps.splitInit made environment supported
+        have initialized := CborRawIdealProvenanceStartup.initialized_start setup ensureInit identityIndex runtime
+          PqxdhDeploymentIdealSteps.splitInit made environment supported world
         subst begins
-        exact ⟨made, initial wire parse target parameters made _ world fresh⟩
+        rw [initialized]
+        exact ⟨PqxdhDeploymentEnvironment.eraseCreatedMetadata made,
+          initial wire parse target parameters (PqxdhDeploymentEnvironment.eraseCreatedMetadata made) _ world fresh⟩
 
 end Concrete
 end BeaconcryptCore.Computational.CborRawIdealProvenanceOutcome

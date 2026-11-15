@@ -19,7 +19,7 @@ variable {n : Nat} {ι KemSK : Type} {base : OracleSpec ι} {source : Registrati
 /-- Actual whole Main creation is the eager private-scalar source command on the complete restored native state. -/
 theorem create_source (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential source) (selectedOwner selectedAccept : Nat) (roots : Roots)
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64) (before : State n KemSK source)
     (canonical : RegistrationNativePublicOwnerMask.Canonical selectedOwner (setup.dh.publicKey scalar) before.1.beacons) :

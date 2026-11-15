@@ -8,6 +8,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialRootContext
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhCorrelatedExpand PqxdhCorrelatedExpandHybrid PqxdhCorrelatedExtractFamily
 open PqxdhSecretInputKdf PqxdhJointKdfGame PqxdhKemIndCca
 open PqxdhAuthenticatedRootExperiment PqxdhStatefulPhase1EufCma PqxdhPhase2GeneratedDriver
@@ -73,9 +75,9 @@ theorem current_game {setup : StatefulPhase1Setup baseSpec}
     (baseImpl : QueryImpl baseSpec ProbComp) (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
     (attachedVerify : Ed25519PublicKey → Pqxdh.Bytes → Option Pqxdh.Bytes) (primitives : Primitives)
     (program : Program baseSpec setup.Context S (B + 1)) (post : Post (baseSpec := baseSpec) program.Selection S (B + 1)) :
-    uniformGame (PqxdhCorrelatedExpand.rootReduction env.source baseImpl kem (protocol env kem attachedVerify primitives program post)) =
-      Prod.fst <$> (PqxdhCorrelatedExtractFamily.prepare baseImpl kem (protocol env kem attachedVerify primitives program post) >>=
-        firstMiss env.source baseImpl kem (protocol env kem attachedVerify primitives program post)) := by
+    uniformGame (PqxdhCorrelatedExpand.rootReduction env.source baseImpl kem (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post)) =
+      Prod.fst <$> (PqxdhCorrelatedExtractFamily.prepare baseImpl kem (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post) >>=
+        firstMiss env.source baseImpl kem (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post)) := by
   simp only [uniformGame, StateT.run'_eq, reduction_complete]
 
 set_option backward.isDefEq.respectTransparency false in
@@ -85,19 +87,19 @@ theorem current_continuation {setup : StatefulPhase1Setup baseSpec}
     (baseImpl : QueryImpl baseSpec ProbComp) (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
     (attachedVerify : Ed25519PublicKey → Pqxdh.Bytes → Option Pqxdh.Bytes) (primitives : Primitives)
     (program : Program baseSpec setup.Context S (B + 1)) (post : Post (baseSpec := baseSpec) program.Selection S (B + 1))
-    (prepared : PqxdhCorrelatedExtractFamily.Prepared (protocol env kem attachedVerify primitives program post) KemSK)
+    (prepared : PqxdhCorrelatedExtractFamily.Prepared (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post) KemSK)
     (root : Option RootOutput) (cache : RootOracle.QueryCache) :
-    afterRoot env.source baseImpl kem (protocol env kem attachedVerify primitives program post) prepared root cache =
+    afterRoot env.source baseImpl kem (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post) prepared root cache =
       (simulateQ uniformImpl (simulateQ (PqxdhInitialResponseService.source env.source)
         (simulateQ (PqxdhInitialServiceExperiment.rootPost env.source baseImpl kem prepared.secretKey prepared.ciphertext)
-          (PqxdhInitialServiceExperiment.resume env attachedVerify primitives program post prepared.ciphertext prepared.state root)))).run cache := by
+          (PqxdhInitialServiceExperiment.resume (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program post prepared.ciphertext prepared.state root)))).run cache := by
   have equation : simulateQ (PqxdhInitialResponseService.source env.source)
       (simulateQ (PqxdhInitialServiceExperiment.rootPost env.source baseImpl kem prepared.secretKey prepared.ciphertext)
-        (PqxdhInitialServiceExperiment.resume env attachedVerify primitives program post prepared.ciphertext prepared.state root)) =
+        (PqxdhInitialServiceExperiment.resume (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program post prepared.ciphertext prepared.state root)) =
       simulateQ (PqxdhCorrelatedExpand.rootPost env.source baseImpl kem prepared.secretKey prepared.ciphertext)
-        ((protocol env kem attachedVerify primitives program post).resume prepared.publicKey prepared.ciphertext prepared.state root) := by
+        ((PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post).resume prepared.publicKey prepared.ciphertext prepared.state root) := by
     rw [← QueryImpl.simulateQ_compose, PqxdhInitialServiceExperiment.rootPost_source,
-      QueryImpl.simulateQ_compose, PqxdhInitialServiceExperiment.resume_source env kem attachedVerify primitives program post prepared.publicKey]
+      QueryImpl.simulateQ_compose, PqxdhInitialServiceExperiment.resume_source (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post prepared.publicKey]
   rw [equation]
   rfl
 

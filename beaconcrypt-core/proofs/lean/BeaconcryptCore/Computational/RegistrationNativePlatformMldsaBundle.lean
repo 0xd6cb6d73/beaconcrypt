@@ -26,14 +26,14 @@ private theorem state_map_apply {S X Y : Type} {m : Type → Type} [Monad m] [La
 
 noncomputable def outgoing (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (owner : Owner source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (owner : Owner source)
     (query : RegistrationBeaconInitExecutor.Spec.Domain) :
     StateT (Local n KemSK source) (M source Platform) (RegistrationBeaconInitExecutor.Spec.Range query) :=
   inject (RegistrationNativeMldsaBundle.outgoing setup checks representation created index owner query)
 
 private theorem evaluate_outgoing (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (owner : Owner source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (owner : Owner source)
     (query : RegistrationBeaconInitExecutor.Spec.Domain) :
     evaluate (outgoing (n := n) (Platform := Platform) setup checks representation created index owner query) =
       RegistrationNativePlatformBundleLower.native coins setup checks representation created
@@ -47,8 +47,8 @@ private theorem evaluate_outgoing (setup : Setup base KemSK) (checks : Checks)
 
 noncomputable def bundle (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
-    (encode : registration.SignedInitView → RegistrationNativePlatformBundleLower.Front n KemSK source
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
+    (encode : registration.InitView → RegistrationNativePlatformBundleLower.Front n KemSK source
       (StateT Platform ProbComp) (RustM (Option Encoded))) (index : Nat) :
     StateT (Local n KemSK source) (M source Platform) (RustM (Option Encoded)) := do
   let owners ← lift (RegistrationNativePlatformBundleLower.native coins setup checks representation created get)
@@ -70,7 +70,7 @@ noncomputable def bundle (setup : Setup base KemSK) (checks : Checks)
         (outgoing setup checks representation created index owner)
         (fun view => lift (RegistrationNativePlatformBundleLower.lower (encode view)))
         ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey
+        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin
       match published with
       | .fail error => pure (.fail error)
       | .div => pure .div
@@ -85,8 +85,8 @@ noncomputable def bundle (setup : Setup base KemSK) (checks : Checks)
 /-- All source bundle phases and every stateful writer outcome evaluate to the actual source local program. -/
 theorem evaluate_bundle (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
-    (encode : registration.SignedInitView → RegistrationNativePlatformBundleLower.Front n KemSK source
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
+    (encode : registration.InitView → RegistrationNativePlatformBundleLower.Front n KemSK source
       (StateT Platform ProbComp) (RustM (Option Encoded))) (index : Nat) :
     evaluate (bundle setup checks representation created encode index) =
       RegistrationNativePlatformBundleLower.bundle coins setup checks representation created encode index := by
@@ -119,7 +119,7 @@ theorem evaluate_bundle (setup : Setup base KemSK) (checks : Checks)
 
 noncomputable def sourceBundle (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     {E : Type} (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) (index : Nat) :
     StateT (RegistrationNativeExperiment.State n KemSK source) (M source Platform) (RustM (Option Pqxdh.Bytes)) := fun before =>
   (fun result : RustM (Option (alloc.vec.Vec U8)) × Local n KemSK source =>
@@ -133,7 +133,7 @@ noncomputable def sourceBundle (setup : Setup base KemSK) (checks : Checks)
 /-- Exact capability evaluation of the complete actual source bundle preserves private native state and real allocator poststate. -/
 theorem evaluate_sourceBundle (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     {E : Type} (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) (index : Nat) :
     evaluate (sourceBundle (n := n) (source := source) setup checks representation created writer index) =
       RegistrationNativePlatformExperiment.bundle coins setup checks representation created source writer index := by

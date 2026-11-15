@@ -2,7 +2,7 @@ import BeaconcryptCore.Computational.PqxdhJointDhExtractRoot
 import BeaconcryptCore.Computational.PqxdhBeaconPhase2Shared
 
 /-!
-Actual reached selected-DH references need no secret value to decide the extracted Phase2 metadata admission. The ordinary valid-point/nonzero functional contract discharges only the hidden first and third DH zero checks. Exact raw identity pinning and locally known second/fourth checks remain source operations after the full ordered preparation. This is not a cryptographic authentication premise.
+These post-authentication wrappers retain the explicitly supplied completed binding; they do not derive an AD hash from classical agreement. Actual reached selected-DH references need no secret value to decide the extracted Phase2 metadata admission. The ordinary valid-point/nonzero functional contract discharges only the hidden first and third DH zero checks. Exact raw identity pinning and locally known second/fourth checks remain source operations after the full ordered preparation. This is not a cryptographic authentication premise.
 -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
@@ -11,6 +11,7 @@ open BeaconcryptCore.Refinement.RepresentationBridge PqxdhRefinement
 set_option autoImplicit false
 set_option maxRecDepth 100000
 namespace BeaconcryptCore.Computational.PqxdhPhase2DhMetadata
+variable (completedBinding : session.CompletedRegistrationBinding)
 open PqxdhJointIdentity PqxdhJointGapDh PqxdhPhase2GapDhSource
 open PqxdhBeaconPhase2Preparation (Word32)
 
@@ -57,7 +58,7 @@ noncomputable def admitted {Response : Type} (control : pqxdh.BeaconInitSent)
   classical
   exact if absBytes control.expected_server_binding.identity_public_key = absBytes collected.server then
     if knownNonzero collected then
-      some ⟨control.expected_server_binding, collected.assigned, PqxdhBeaconPhase2Shared.associatedData control⟩
+      some ⟨control.expected_server_binding, collected.assigned, completedBinding⟩
     else none
   else none
 
@@ -66,8 +67,8 @@ set_option backward.isDefEq.respectTransparency false in
 theorem admitted_exact {joint : Primitives} (dh : DhInterface joint) (domain : PublicDomain dh)
     (scalar : ScalarBytes) {Response : Type} (control : pqxdh.BeaconInitSent)
     (collected : Inputs Response) (references : References domain collected) :
-    PqxdhBeaconPhase2Shared.optionalMetadata (PqxdhBeaconPhase2Preparation.normalPrepare control
-      (concreteInputs dh scalar collected).finishInputs) = admitted control collected := by
+    PqxdhBeaconPhase2Shared.optionalMetadata (completedBinding := completedBinding) (PqxdhBeaconPhase2Preparation.normalPrepare control
+      (concreteInputs dh scalar collected).finishInputs) = admitted (completedBinding := completedBinding) control collected := by
   rw [show concreteInputs dh scalar collected =
     PqxdhBeaconPhase2Shared.concreteInputs id (realized dh scalar collected) from rfl,
     PqxdhBeaconPhase2Shared.admitted_exact]
@@ -95,9 +96,9 @@ theorem prepared_related {joint : Primitives} (dh : DhInterface joint) (scalar :
     (candidate : pqxdh.BeaconRegistrationCandidate)
     (actual : PqxdhBeaconPhase2Preparation.normalPrepare control
       (concreteInputs dh scalar collected).finishInputs = .Ok candidate) :
-    ReadyRel dh scalar ⟨collected.response, collected.ciphertext, collected.ephemeral, candidate⟩
-      ⟨collected, PqxdhBeaconPhase2Shared.candidateMetadata candidate⟩ :=
-  PqxdhBeaconPhase2Shared.prepared_related id control (realized dh scalar collected) candidate actual
+    ReadyRel dh scalar ⟨collected.response, collected.ciphertext, collected.ephemeral, candidate, completedBinding⟩
+      ⟨collected, PqxdhBeaconPhase2Shared.candidateMetadata (completedBinding := completedBinding) candidate⟩ :=
+  PqxdhBeaconPhase2Shared.prepared_related (completedBinding := completedBinding) id control (realized dh scalar collected) candidate actual
 
 /-- The native logical erasure callback is executed after admission on both outcomes. Its ordinary no-observation law removes unavailable temporary bytes from the executable continuation. -/
 theorem afterInputs_continuation {joint : Primitives} (dh : DhInterface joint) (domain : PublicDomain dh)
@@ -109,14 +110,14 @@ theorem afterInputs_continuation {joint : Primitives} (dh : DhInterface joint) (
     (nextNative : Option (PqxdhBeaconPhase2Preparation.Prepared Response) → m Result)
     (nextPending : Option (Prepared Response) → m Result)
     (rejected : nextNative none = nextPending none)
-    (accepted : ∀ original metadata, admitted control collected = some metadata → ReadyRel dh scalar original ⟨collected, metadata⟩ →
+    (accepted : ∀ original metadata, admitted (completedBinding := completedBinding) control collected = some metadata → ReadyRel dh scalar original ⟨collected, metadata⟩ →
       nextNative (some original) = nextPending (some ⟨collected, metadata⟩)) :
     (simulateQ (nativeImpl dh scalar aux visit)
-      (PqxdhBeaconPhase2Preparation.afterInputs control (concreteInputs dh scalar collected)) >>= nextNative) =
-      nextPending ((admitted control collected).map (fun metadata => ⟨collected, metadata⟩)) := by
+      (PqxdhBeaconPhase2Preparation.afterInputs (completedBinding := completedBinding) control (concreteInputs dh scalar collected)) >>= nextNative) =
+      nextPending ((admitted (completedBinding := completedBinding) control collected).map (fun metadata => ⟨collected, metadata⟩)) := by
   simp only [PqxdhBeaconPhase2Preparation.afterInputs, simulateQ_bind, simulateQ_spec_query,
     nativeImpl, erase, pure_bind, simulateQ_pure]
-  have metadataEq := (admitted_exact dh domain scalar control collected references).symm
+  have metadataEq := (admitted_exact (completedBinding := completedBinding) dh domain scalar control collected references).symm
   cases actual : PqxdhBeaconPhase2Preparation.normalPrepare control (concreteInputs dh scalar collected).finishInputs with
   | Err error =>
       simp only [actual, PqxdhBeaconPhase2Shared.optionalMetadata] at metadataEq
@@ -124,14 +125,14 @@ theorem afterInputs_continuation {joint : Primitives} (dh : DhInterface joint) (
   | Ok candidate =>
       simp only [actual, PqxdhBeaconPhase2Shared.optionalMetadata] at metadataEq
       simpa only [pure_bind, metadataEq, Option.map_some, concreteInputs] using
-        accepted _ _ metadataEq (prepared_related dh scalar control collected candidate actual)
+        accepted _ _ metadataEq (prepared_related (completedBinding := completedBinding) dh scalar control collected candidate actual)
 
 /-- Source-shaped preparation uses the existing ordered prefix and only available metadata. Logical temporary erasure has no observable callback effect in the native interpreter. -/
 noncomputable def prepare {I D K X Response : Type} (control : pqxdh.BeaconInitSent)
     (identity : I) (oneTime : D) (kem : K) (raw : Pqxdh.Bytes) :
     OracleComp (PrefixSpec I D K X Response) (Option (Prepared Response)) := do
   let collected ← collect identity oneTime kem raw
-  pure (collected.bind (fun value => (admitted control value).map (fun metadata => ⟨value, metadata⟩)))
+  pure (collected.bind (fun value => (admitted (completedBinding := completedBinding) control value).map (fun metadata => ⟨value, metadata⟩)))
 
 set_option backward.isDefEq.respectTransparency false in
 /-- The entire actual preparation and arbitrary complete-state continuation are preserved. Reached references are derived from the source prefix, never assumed of an attacker-selected response. -/
@@ -144,12 +145,12 @@ theorem prepare_continuation {joint : Primitives} (dh : DhInterface joint) (doma
     (nextPending : Option (Prepared Response) × A → ProbComp Result)
     (rejected : ∀ state, nextNative (none, state) = nextPending (none, state))
     (accepted : ∀ original pending state, References domain pending.collected →
-      admitted control pending.collected = some pending.metadata → ReadyRel dh scalar original pending →
+      admitted (completedBinding := completedBinding) control pending.collected = some pending.metadata → ReadyRel dh scalar original pending →
       nextNative (some original, state) = nextPending (some pending, state)) :
     ((simulateQ (nativeImpl dh scalar aux visit)
-      (PqxdhBeaconPhase2Preparation.prepare control identity (.inl ()) (.inr oneTime) kem raw)).run initial >>= nextNative) =
-      ((simulateQ (prefixImpl domain aux visit) (prepare control identity oneTime kem raw)).run initial >>= nextPending) := by
-  rw [PqxdhPhase2GapDhSource.prepare_continuation dh domain scalar aux visit]
+      (PqxdhBeaconPhase2Preparation.prepare (completedBinding := completedBinding) control identity (.inl ()) (.inr oneTime) kem raw)).run initial >>= nextNative) =
+      ((simulateQ (prefixImpl domain aux visit) (prepare (completedBinding := completedBinding) control identity oneTime kem raw)).run initial >>= nextPending) := by
+  rw [PqxdhPhase2GapDhSource.prepare_continuation (completedBinding := completedBinding) dh domain scalar aux visit]
   simp only [prepare, simulateQ_bind, StateT.run_bind, simulateQ_pure, StateT.run_pure, pure_bind, bind_assoc]
   apply bind_congr_of_forall_mem_support
   rintro ⟨collected, state⟩ reached
@@ -159,7 +160,7 @@ theorem prepare_continuation {joint : Primitives} (dh : DhInterface joint) (doma
       have references := collect_references domain aux visit identity oneTime kem raw initial state collected reached
       simp only [PqxdhBeaconPhase2Preparation.afterInputs, simulateQ_bind, simulateQ_spec_query,
         nativeImpl, erase, simulateQ_pure, StateT.run_pure, pure_bind]
-      have metadataEq := (admitted_exact dh domain scalar control collected references).symm
+      have metadataEq := (admitted_exact (completedBinding := completedBinding) dh domain scalar control collected references).symm
       cases actual : PqxdhBeaconPhase2Preparation.normalPrepare control (concreteInputs dh scalar collected).finishInputs with
       | Err error =>
           simp only [actual, PqxdhBeaconPhase2Shared.optionalMetadata] at metadataEq
@@ -167,14 +168,14 @@ theorem prepare_continuation {joint : Primitives} (dh : DhInterface joint) (doma
       | Ok candidate =>
           simp only [actual, PqxdhBeaconPhase2Shared.optionalMetadata] at metadataEq
           simpa only [metadataEq, Option.bind_some, Option.map_some, concreteInputs] using
-            accepted _ _ state references metadataEq (prepared_related dh scalar control collected candidate actual)
+            accepted _ _ state references metadataEq (prepared_related (completedBinding := completedBinding) dh scalar control collected candidate actual)
 
 /-- Successful secret-free admission retains exact raw pinned identity equality, local DH checks, assigned ID and associated data. -/
 theorem admitted_fields {Response : Type} (control : pqxdh.BeaconInitSent) (collected : Inputs Response)
-    (metadata : PqxdhBeaconPhase2Shared.Metadata) (accepted : admitted control collected = some metadata) :
+    (metadata : PqxdhBeaconPhase2Shared.Metadata) (accepted : admitted (completedBinding := completedBinding) control collected = some metadata) :
     absBytes control.expected_server_binding.identity_public_key = absBytes collected.server ∧
       knownNonzero collected ∧ metadata = ⟨control.expected_server_binding, collected.assigned,
-        PqxdhBeaconPhase2Shared.associatedData control⟩ := by
+        completedBinding⟩ := by
   unfold admitted at accepted
   split at accepted <;> simp_all only [reduceCtorEq]
   split at accepted <;> simp_all
@@ -185,10 +186,10 @@ theorem pinned_conversion (c : Pqxdh.Crypto) (joint : Primitives)
     (seed : IdentitySeed) {Response : Type} (control : pqxdh.BeaconInitSent)
     (collected : Inputs Response) (metadata : PqxdhBeaconPhase2Shared.Metadata)
     (pin : absBytes control.expected_server_binding.identity_public_key = (joint.publicKeys seed).ed25519.toList)
-    (accepted : admitted control collected = some metadata)
+    (accepted : admitted (completedBinding := completedBinding) control collected = some metadata)
     (converted : c.xpkConv (absBytes collected.server) = some (absBytes collected.serverConverted)) :
     peer collected.serverConverted = (joint.publicKeys seed).convertedX25519 := by
-  have actualPin := (admitted_fields control collected metadata accepted).1.symm.trans pin
+  have actualPin := (admitted_fields (completedBinding := completedBinding) control collected metadata accepted).1.symm.trans pin
   rw [actualPin] at converted
   apply List.Vector.toList_injective
   exact Option.some.inj (converted.symm.trans (jointPublic_conversion c joint secretOfSeed wiring seed))
@@ -205,7 +206,7 @@ theorem cleared_related {joint : Primitives} (dh : DhInterface joint) (scalar : 
 /-- Metadata processing adds no oracle work to the original twelve-callback prefix. The native logical-erasure functional law is separate. -/
 theorem prepare_bound {I D K X Response : Type} (control : pqxdh.BeaconInitSent)
     (identity : I) (oneTime : D) (kem : K) (raw : Pqxdh.Bytes) :
-    (prepare (X := X) (Response := Response) control identity oneTime kem raw).IsTotalQueryBound 12 := by
+    (prepare (completedBinding := completedBinding) (X := X) (Response := Response) control identity oneTime kem raw).IsTotalQueryBound 12 := by
   unfold prepare
   exact isTotalQueryBound_bind (collect_bound identity oneTime kem raw) (n₂ := 0) (fun _ => by simp [IsTotalQueryBound, isQueryBound_pure])
 
@@ -218,7 +219,7 @@ theorem interpreted_bound {joint : Primitives} {dh : DhInterface joint} (domain 
     (auxBound : ∀ query state, ((aux query).run state).IsQueryBoundP predicate qAux)
     (visitBound : ∀ input state, ((visit input).run state).IsQueryBoundP predicate qVisit)
     (control : pqxdh.BeaconInitSent) (identity : I) (oneTime : D) (kem : K) (raw : Pqxdh.Bytes) (initial : A) :
-    ((simulateQ (prefixImpl domain aux visit) (prepare control identity oneTime kem raw)).run initial).IsQueryBoundP
+    ((simulateQ (prefixImpl domain aux visit) (prepare (completedBinding := completedBinding) control identity oneTime kem raw)).run initial).IsQueryBoundP
       predicate (10 * qAux + 2 * qVisit) := by
   simp only [prepare, simulateQ_bind, simulateQ_pure, StateT.run_bind, StateT.run_pure]
   exact isQueryBoundP_bind (PqxdhPhase2GapDhSource.interpreted_bound domain aux visit predicate qAux qVisit
@@ -239,12 +240,12 @@ theorem prepare_converted_continuation {joint : Primitives} (dh : DhInterface jo
     (rejected : ∀ state, nextNative (none, state) = nextPending (none, state))
     (accepted : ∀ original pending state, References domain pending.collected →
       c.xpkConv (absBytes pending.collected.server) = some (absBytes pending.collected.serverConverted) →
-      admitted control pending.collected = some pending.metadata → ReadyRel dh scalar original pending →
+      admitted (completedBinding := completedBinding) control pending.collected = some pending.metadata → ReadyRel dh scalar original pending →
       nextNative (some original, state) = nextPending (some pending, state)) :
     ((simulateQ (nativeImpl dh scalar aux visit)
-      (PqxdhBeaconPhase2Preparation.prepare control identity (.inl ()) (.inr oneTime) kem raw)).run initial >>= nextNative) =
-      ((simulateQ (prefixImpl domain aux visit) (prepare control identity oneTime kem raw)).run initial >>= nextPending) := by
-  rw [PqxdhPhase2GapDhSource.prepare_continuation dh domain scalar aux visit]
+      (PqxdhBeaconPhase2Preparation.prepare (completedBinding := completedBinding) control identity (.inl ()) (.inr oneTime) kem raw)).run initial >>= nextNative) =
+      ((simulateQ (prefixImpl domain aux visit) (prepare (completedBinding := completedBinding) control identity oneTime kem raw)).run initial >>= nextPending) := by
+  rw [PqxdhPhase2GapDhSource.prepare_continuation (completedBinding := completedBinding) dh domain scalar aux visit]
   simp only [prepare, simulateQ_bind, StateT.run_bind, simulateQ_pure, StateT.run_pure, pure_bind, bind_assoc]
   apply bind_congr_of_forall_mem_support
   rintro ⟨collected, state⟩ reached
@@ -255,7 +256,7 @@ theorem prepare_converted_continuation {joint : Primitives} (dh : DhInterface jo
       have converted := collect_conversion domain c aux conversion visit identity oneTime kem raw initial state collected reached
       simp only [PqxdhBeaconPhase2Preparation.afterInputs, simulateQ_bind, simulateQ_spec_query,
         nativeImpl, erase, simulateQ_pure, StateT.run_pure, pure_bind]
-      have metadataEq := (admitted_exact dh domain scalar control collected references).symm
+      have metadataEq := (admitted_exact (completedBinding := completedBinding) dh domain scalar control collected references).symm
       cases actual : PqxdhBeaconPhase2Preparation.normalPrepare control (concreteInputs dh scalar collected).finishInputs with
       | Err error =>
           simp only [actual, PqxdhBeaconPhase2Shared.optionalMetadata] at metadataEq
@@ -263,7 +264,7 @@ theorem prepare_converted_continuation {joint : Primitives} (dh : DhInterface jo
       | Ok candidate =>
           simp only [actual, PqxdhBeaconPhase2Shared.optionalMetadata] at metadataEq
           simpa only [metadataEq, Option.bind_some, Option.map_some, concreteInputs] using
-            accepted _ _ state references converted metadataEq (prepared_related dh scalar control collected candidate actual)
+            accepted _ _ state references converted metadataEq (prepared_related (completedBinding := completedBinding) dh scalar control collected candidate actual)
 
 
 end BeaconcryptCore.Computational.PqxdhPhase2DhMetadata

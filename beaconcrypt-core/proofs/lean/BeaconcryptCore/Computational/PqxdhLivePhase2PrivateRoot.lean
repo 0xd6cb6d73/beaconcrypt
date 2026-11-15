@@ -7,6 +7,7 @@ Actual native KEM handles are represented by the selected creation slot or an ex
 open OracleComp OracleSpec CoreModels Aeneas
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhLivePhase2PrivateRoot
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhKemIndCca PqxdhLiveKemRouting
 open PqxdhLivePhase2Aux (Identity LocalSpec SharedState)
 variable {KemSK I D A Response : Type}
@@ -55,9 +56,9 @@ theorem native_encoded_run {X : Type} {m : Type → Type} [Monad m] [LawfulMonad
     (owner : RawCtxBeaconLifecycle.State I D Handle) (valid : PqxdhLiveKemOwnership.Owner pool owner) (auxiliary : A) :
     (fun result => ((result.1.1, PqxdhBeaconPhase1Publication.mapState id (decode selected target) result.1.2), result.2)) <$>
       (simulateQ (handler ∘ₛ PqxdhPhase2KemHandles.native (decode selected target))
-        (PqxdhBeaconPhase2Publication.nativeOwner read raw
+        (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) read raw
           (PqxdhBeaconPhase1Publication.mapState id (encode selected) owner))).run auxiliary =
-      (simulateQ handler (PqxdhBeaconPhase2Publication.nativeOwner read raw owner)).run auxiliary := by
+      (simulateQ handler (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) read raw owner)).run auxiliary := by
   rw [PqxdhPhase2KemHandles.native_owner_run, owner_inverse pool selected target secret present owner valid]
 
 
@@ -264,7 +265,7 @@ noncomputable def privateOwner (primitives : Primitives)
     (state : AuxState A × List (DecapsulationEvent Shared)) :=
   (simulateQ (logged selected (PqxdhBeaconPhase2Routed.handles source challenge
       (auxiliary primitives kem selected keys source callbacks)))
-    (PqxdhBeaconPhase2Shared.owner read raw owner)).run state
+    (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) read raw owner)).run state
 
 /-- The retained log does not change the native private-root execution, original optional plaintext, full final owner, auxiliary state or shared cache. -/
 theorem privateOwner_erase (primitives : Primitives)
@@ -274,10 +275,10 @@ theorem privateOwner_erase (primitives : Primitives)
     (owner : RawCtxBeaconLifecycle.State Identity D (Option (OtherHandle selected)))
     (state : AuxState A × List (DecapsulationEvent Shared)) :
     (fun result => (result.1, result.2.1)) <$>
-      privateOwner primitives kem selected keys source callbacks challenge read raw owner state =
+      privateOwner (completedBinding := completedBinding) primitives kem selected keys source callbacks challenge read raw owner state =
       (simulateQ (PqxdhBeaconPhase2Routed.handles source challenge
         (auxiliary primitives kem selected keys source callbacks))
-        (PqxdhBeaconPhase2Shared.owner read raw owner)).run state.1 :=
+        (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) read raw owner)).run state.1 :=
   logged_erase selected _ _ state.1 state.2
 
 
@@ -408,11 +409,11 @@ theorem owner_logged_realization {Shared : Type} {m : Type → Type} [Monad m] [
     (read : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
     (owner : RawCtxBeaconLifecycle.State Identity D (Option (OtherHandle selected)))
     (auxiliary : A) (history : List (DecapsulationEvent Shared)) :
-    (simulateQ (nativeLogged selected native) (PqxdhBeaconPhase2Publication.nativeOwner read raw owner)).run
+    (simulateQ (nativeLogged selected native) (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) read raw owner)).run
       (auxiliary, history.map (mapEvent interpret)) =
         (fun result => (result.1, (result.2.1, result.2.2.map (mapEvent interpret)))) <$>
-          (simulateQ (logged selected handles) (PqxdhBeaconPhase2Shared.owner read raw owner)).run (auxiliary, history) := by
-  rw [PqxdhBeaconPhase2Shared.owner_realization interpret _ _ (logged_full_calls interpret selected native handles calls)]
+          (simulateQ (logged selected handles) (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) read raw owner)).run (auxiliary, history) := by
+  rw [PqxdhBeaconPhase2Shared.owner_realization (completedBinding := completedBinding) interpret _ _ (logged_full_calls interpret selected native handles calls)]
   exact (logged_map interpret selected handles _ auxiliary history).symm
 
 /-- Interpreting the original primitive effects commutes with logging their actual replies; the entire private auxiliary and ordered log states remain present. -/
@@ -448,15 +449,15 @@ theorem privateOwner_actual (primitives : Primitives)
     (state : AuxState A × List (DecapsulationEvent Shared)) :
     (simulateQ (nativeLogged selected (PqxdhBeaconPhase2Routed.native source kem secret challenge
       (auxiliary primitives kem selected keys source callbacks)))
-      (PqxdhBeaconPhase2Publication.nativeOwner read raw owner)).run
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) read raw owner)).run
         (state.1, state.2.map (mapEvent (fun shared => rootArray (PqxdhPhase2DecapsulationRouting.materialize supplied shared)))) =
       (fun result => (result.1, (result.2.1, result.2.2.map
         (mapEvent (fun shared => rootArray (PqxdhPhase2DecapsulationRouting.materialize supplied shared)))))) <$>
         simulateQ (PqxdhChallengeSecretRouting.actualImpl source kem secret challenge)
-          (privateOwner primitives kem selected keys source callbacks challenge read raw owner state) := by
+          (privateOwner (completedBinding := completedBinding) primitives kem selected keys source callbacks challenge read raw owner state) := by
   unfold privateOwner
   rw [logged_program_interpret]
-  exact owner_logged_realization _ selected _ _
+  exact owner_logged_realization (completedBinding := completedBinding) _ selected _ _
     (PqxdhBeaconPhase2Routed.full_calls source kem secret challenge supplied agreement
       (auxiliary primitives kem selected keys source callbacks)) read raw owner state.1 state.2
 
@@ -641,11 +642,11 @@ theorem native_source_owner (baseImpl : QueryImpl baseSpec ProbComp) (primitives
     (fun result => ((result.1.1, PqxdhBeaconPhase1Publication.mapState id (decode selected target) result.1.2),
       restore pool result.2)) <$>
       (simulateQ (evaluatedNative baseImpl primitives kem pool selected secret source callbacks challenge)
-        (PqxdhBeaconPhase2Publication.nativeOwner read raw
+        (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) read raw
           (PqxdhBeaconPhase1Publication.mapState id (encode selected) owner))).run state =
       (simulateQ (PqxdhLivePhase2Aux.dispatch source (PqxdhLivePhase2Aux.direct baseImpl primitives kem source callbacks))
-        (PqxdhBeaconPhase2Publication.nativeOwner read raw owner)).run (restore pool state) := by
-  rw [← native_encoded_run (PqxdhLivePhase2Aux.dispatch source
+        (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) read raw owner)).run (restore pool state) := by
+  rw [← native_encoded_run (completedBinding := completedBinding) (PqxdhLivePhase2Aux.dispatch source
     (PqxdhLivePhase2Aux.direct baseImpl primitives kem source callbacks)) pool selected target secret present read raw owner valid]
   rw [← native_source_program baseImpl primitives kem pool selected target secret present source callbacks challenge]
   simp only [Functor.map_map]
@@ -681,15 +682,15 @@ theorem privateOwner_source (baseImpl : QueryImpl baseSpec ProbComp) (primitives
       restorePrivate pool supplied result.2)) <$>
       simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl baseImpl)
         (simulateQ (PqxdhChallengeSecretRouting.actualImpl source kem secret challenge)
-          (privateOwner primitives kem selected (redact selected pool) source callbacks challenge read raw
+          (privateOwner (completedBinding := completedBinding) primitives kem selected (redact selected pool) source callbacks challenge read raw
             (PqxdhBeaconPhase1Publication.mapState id (encode selected) owner) (state, []))) =
       (simulateQ (PqxdhLivePhase2Aux.dispatch source (PqxdhLivePhase2Aux.direct baseImpl primitives kem source callbacks))
-        (PqxdhBeaconPhase2Publication.nativeOwner read raw owner)).run (state.1, (state.2, pool)) := by
+        (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) read raw owner)).run (state.1, (state.2, pool)) := by
   have realized := congrArg (simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl baseImpl))
-    (privateOwner_actual primitives kem selected (redact selected pool) source callbacks secret challenge supplied agreement
+    (privateOwner_actual (completedBinding := completedBinding) primitives kem selected (redact selected pool) source callbacks secret challenge supplied agreement
       read raw (PqxdhBeaconPhase1Publication.mapState id (encode selected) owner) (state, []))
   rw [simulateQ_map, QueryImpl.simulateQ_mapStateTBase_run, nativeLogged_interpret] at realized
-  have restored := native_source_owner baseImpl primitives kem pool selected target secret present source callbacks challenge
+  have restored := native_source_owner (completedBinding := completedBinding) baseImpl primitives kem pool selected target secret present source callbacks challenge
     read raw owner valid (state, [])
   simp only [List.map_nil] at realized
   simp only [evaluatedNative] at restored
@@ -710,14 +711,14 @@ theorem privateOwner_live (baseImpl : QueryImpl baseSpec ProbComp) (primitives :
     (state : AuxState A) :
     (simulateQ (PqxdhLiveKemBirth.impl baseImpl primitives kem)
       ((simulateQ (PqxdhLivePhase2Aux.dispatch source (PqxdhLivePhase2Aux.aux source callbacks))
-        (PqxdhBeaconPhase2Publication.nativeOwner read raw owner)).run state.1)).run (state.2, pool) =
+        (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) read raw owner)).run state.1)).run (state.2, pool) =
     (fun result => (((result.1.1, PqxdhBeaconPhase1Publication.mapState id (decode selected target) result.1.2),
       (restorePrivate pool supplied result.2).1), (restorePrivate pool supplied result.2).2)) <$>
       simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl baseImpl)
         (simulateQ (PqxdhChallengeSecretRouting.actualImpl source kem secret challenge)
-          (privateOwner primitives kem selected (redact selected pool) source callbacks challenge read raw
+          (privateOwner (completedBinding := completedBinding) primitives kem selected (redact selected pool) source callbacks challenge read raw
             (PqxdhBeaconPhase1Publication.mapState id (encode selected) owner) (state, []))) := by
-  rw [PqxdhLivePhase2Aux.owner_source, ← privateOwner_source baseImpl primitives kem pool selected target secret
+  rw [PqxdhLivePhase2Aux.owner_source, ← privateOwner_source (completedBinding := completedBinding) baseImpl primitives kem pool selected target secret
     present source callbacks challenge supplied agreement read raw owner valid state]
   simp only [Functor.map_map]
 
@@ -737,14 +738,14 @@ theorem privateOwner_supported (baseImpl : QueryImpl baseSpec ProbComp) (primiti
     (state : AuxState A) :
     (simulateQ (PqxdhLiveKemBirth.impl baseImpl primitives kem)
       ((simulateQ (PqxdhLivePhase2Aux.dispatch source (PqxdhLivePhase2Aux.aux source callbacks))
-        (PqxdhBeaconPhase2Publication.nativeOwner read raw owner)).run state.1)).run (state.2, pool) =
+        (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) read raw owner)).run state.1)).run (state.2, pool) =
     (fun result => (((result.1.1, PqxdhBeaconPhase1Publication.mapState id (decode selected target) result.1.2),
       (restorePrivate pool supplied result.2).1), (restorePrivate pool supplied result.2).2)) <$>
       simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl baseImpl)
         (simulateQ (PqxdhChallengeSecretRouting.actualImpl source kem secret challenge)
-          (privateOwner primitives kem selected (redact selected pool) source callbacks challenge read raw
+          (privateOwner (completedBinding := completedBinding) primitives kem selected (redact selected pool) source callbacks challenge read raw
             (PqxdhBeaconPhase1Publication.mapState id (encode selected) owner) (state, []))) :=
-  privateOwner_live baseImpl primitives kem pool selected target secret present source callbacks challenge supplied
+  privateOwner_live (completedBinding := completedBinding) baseImpl primitives kem pool selected target secret present source callbacks challenge supplied
     (PqxdhChallengeSecretRouting.honest_decapsulation_program baseImpl kem functional correct generated encapsulated)
     read raw owner valid state
 

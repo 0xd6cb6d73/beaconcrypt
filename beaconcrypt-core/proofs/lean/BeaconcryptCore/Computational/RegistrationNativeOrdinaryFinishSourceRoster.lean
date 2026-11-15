@@ -56,7 +56,7 @@ theorem finish_source (setup : Setup base KemSK) (wire : RegistrationNativeWire.
     (roster : RegistrationNativePublicOwners.State mlSource)
     (coherent : RegistrationNativeBeaconCoherence.Holds (owners selectedScalar roster))
     (env : EnvState RegistrationServerRoleBackend.State) (empty : env.recordRequests = [])
-    (erased : Std.Array U8 357#usize) (before : Private n KemSK) :
+    (erased : Std.Array U8 227#usize) (before : Private n KemSK) :
     Prod.map (publicView selectedScalar) drop <$>
       (simulateQ (implementation setup wire route sign seed selectedScalar)
         (((RegistrationNativePublicOwners.finish setup mlSource index packet).run roster).run env)).run before =

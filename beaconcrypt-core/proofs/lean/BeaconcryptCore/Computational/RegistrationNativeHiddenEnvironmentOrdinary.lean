@@ -23,7 +23,7 @@ theorem query_source (setup : Setup base KemSK) (checks : Checks) (wire : Regist
     (source : RegistrationNativeMldsa.Source) (credential : RegistrationNativeMldsa.Credential source)
     (seed : PqxdhJointIdentity.IdentitySeed) (scalar : PqxdhJointGapDh.ScalarBytes)
     (provider : Provider KemSK ProviderState) (selectedOwner selectedAccept : Nat)
-    (startup : ProbComp (Option (PqxdhLiveServerConstruction.Created Unit × State n KemSK ProviderState source)))
+    (startup : ProbComp (Option (PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize) × State n KemSK ProviderState source)))
     (query : RegistrationNativeInterface.Spec.Domain) (ordinary : Ordinary query)
     (before : State n KemSK ProviderState source) :
     (handler setup checks wire source credential seed scalar provider selectedOwner selectedAccept query).run before =

@@ -8,6 +8,7 @@ The displayed authenticated-root forgery reduction uses the generated Phase1 pro
 open OracleComp OracleSpec
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhAuthenticatedRootEufResources
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhJointIdentityFamily
 open PqxdhPhase1AcceptanceOracle PqxdhJointPhase1Reports PqxdhDynamicIdentityRouting
 open PqxdhJointPhase1AcceptanceComposition PqxdhJointPhase1SourceWriter PqxdhPrivateSourceCoins
@@ -126,9 +127,9 @@ theorem driver_uniform
     (transcript : Phase1PublicTranscript setup.Context) :
     let total := qWrite + bill qLocal budget
     (simulateQ (localSelector baseImpl kem secret)
-      ((driver env.toDriverEnvironment program).main index identity generated transcript)).IsQueryBoundP
+      ((PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).main index identity generated transcript)).IsQueryBoundP
       (fun query => SourceUniform (translated query)) (total + total + uBase * total + uDecap * total) := by
-  have total := PqxdhPhase2GeneratedDriverBounds.driver_total env.toDriverEnvironment program
+  have total := PqxdhPhase2GeneratedDriverBounds.driver_total (completedBinding := completedBinding) env.toDriverEnvironment program
     qWrite writerBound qLocal localBound budget bounded index identity generated transcript
   exact PrivateSelectorCoinBudgets.localSelector_uniform_bound baseImpl kem secret uBase uDecap baseBound
     (decapBound secret) _ _ _ _ _ total.isQueryBoundP total.isQueryBoundP total.isQueryBoundP total.isQueryBoundP
@@ -142,14 +143,14 @@ theorem signing_bound
     (noCreate : ∀ reply, (program.main reply).IsQueryBoundP (ForwardedSource (baseSpec := baseSpec) Creating) 0)
     (publicIdentity : PublicIdentity) :
     (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
-      (driver env.toDriverEnvironment program) fallback ordinaryFallback publicIdentity).IsQueryBoundP (IsClass .sign) 3 := by
-  refine reduction_class primitives baseImpl kem setup (driver env.toDriverEnvironment program)
+      (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program) fallback ordinaryFallback publicIdentity).IsQueryBoundP (IsClass .sign) 3 := by
+  refine reduction_class primitives baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program)
     fallback ordinaryFallback .sign 3 ?_ publicIdentity
   have same : IsSigning = IsSourceClass (SourceClass (dynamicClass (IsClass .sign))) := by
     funext query
     cases query <;> rfl
   simpa only [same] using
-    (PqxdhPhase2GeneratedDriverBounds.program_source_caps env.toDriverEnvironment program baseImpl kem noSign noCreate).1
+    (PqxdhPhase2GeneratedDriverBounds.program_source_caps (completedBinding := completedBinding) env.toDriverEnvironment program baseImpl kem noSign noCreate).1
 
 set_option maxHeartbeats 1000000 in
 include writerBound localBound bounded in
@@ -158,12 +159,12 @@ theorem staticDh_bound
     (primitives : Primitives) (fallback : DynamicForgery) (ordinaryFallback : Forgery)
     (publicIdentity : PublicIdentity) :
     (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
-      (driver env.toDriverEnvironment program) fallback ordinaryFallback publicIdentity).IsQueryBoundP
+      (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program) fallback ordinaryFallback publicIdentity).IsQueryBoundP
       (IsClass .staticDh) (qWrite + bill qLocal budget) := by
-  refine reduction_class primitives baseImpl kem setup (driver env.toDriverEnvironment program)
+  refine reduction_class primitives baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program)
     fallback ordinaryFallback .staticDh (qWrite + bill qLocal budget) ?_ publicIdentity
   simpa only [Nat.zero_add, Nat.add_zero] using
-    PqxdhGeneratedPhase1Prefix.program_source_bound baseImpl kem setup (driver env.toDriverEnvironment program)
+    PqxdhGeneratedPhase1Prefix.program_source_bound baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program)
       (IsSourceClass (SourceClass (dynamicClass (IsClass .staticDh))))
       (fun coin => by simp [IsSourceClass, sourceQuery, SourceClass, dynamicClass, IsClass])
       0 0 (qWrite + bill qLocal budget) 0
@@ -173,7 +174,7 @@ theorem staticDh_bound
           (publicMaterial setup publicIdentity.ed25519 generated).keyTuple _
           (fun message => by simp [IsSourceClass, sourceQuery, SourceClass, dynamicClass, IsClass]))
       (fun index publicIdentity generated transcript =>
-        (PqxdhPhase2GeneratedDriverBounds.driver_total env.toDriverEnvironment program
+        (PqxdhPhase2GeneratedDriverBounds.driver_total (completedBinding := completedBinding) env.toDriverEnvironment program
           qWrite writerBound qLocal localBound budget bounded index publicIdentity generated transcript).isQueryBoundP)
       (fun candidate => by rw [isQueryBoundP_query_iff]; simp [IsSourceClass, sourceQuery, SourceClass])
 
@@ -193,22 +194,22 @@ theorem uniform_ledger
     let uniforms := (uPrekey + (uKeygen + uOneTime)) + (total + total + uBase * total + uDecap * total)
     (∀ publicIdentity,
       (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
-        (driver env.toDriverEnvironment program) fallback ordinaryFallback publicIdentity).IsQueryBoundP (IsClass .uniform) uniforms) ∧
+        (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program) fallback ordinaryFallback publicIdentity).IsQueryBoundP (IsClass .uniform) uniforms) ∧
     (game primitives (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
-      (driver env.toDriverEnvironment program) fallback ordinaryFallback)).IsTotalQueryBound (32 + uniforms) := by
+      (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program) fallback ordinaryFallback)).IsTotalQueryBound (32 + uniforms) := by
   dsimp only
-  have coins := program_uniform baseImpl kem setup (driver env.toDriverEnvironment program)
+  have coins := program_uniform baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program)
     (uPrekey + (uKeygen + uOneTime))
     ((qWrite + bill qLocal budget) + (qWrite + bill qLocal budget) +
       uBase * (qWrite + bill qLocal budget) + uDecap * (qWrite + bill qLocal budget))
     (PqxdhPrivateRootGameBudgets.generate_uniform_bound baseImpl kem setup uPrekey uKeygen uOneTime
       prekeyBound keygenBound oneTimeBound)
-    (driver_uniform env program baseImpl kem qWrite writerBound qLocal localBound budget bounded
+    (driver_uniform (completedBinding := completedBinding) env program baseImpl kem qWrite writerBound qLocal localBound budget bounded
       uBase uDecap baseBound decapBound)
   simp only [PqxdhPrivateRootEufBudgets.sourceUniform_eq_joint] at coins
-  exact ⟨reduction_class primitives baseImpl kem setup (driver env.toDriverEnvironment program)
+  exact ⟨reduction_class primitives baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program)
       fallback ordinaryFallback .uniform _ coins,
-    reduction_game_uniform primitives baseImpl kem setup (driver env.toDriverEnvironment program)
+    reduction_game_uniform primitives baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program)
       fallback ordinaryFallback _ coins⟩
 
 end BeaconcryptCore.Computational.PqxdhAuthenticatedRootEufResources

@@ -9,6 +9,7 @@ open RustM beaconcrypt_core ratchet ratchet.refined ratchet.concrete
 set_option autoImplicit false
 
 namespace BeaconcryptCore.Computational.PqxdhRecordLiftWorldProvenance
+private abbrev RecordAd := Std.Array Std.U8 151#usize
 open PqxdhRecordLiftInterface PqxdhRecordLiftWorldCompiler
 variable {n : Nat}
 
@@ -241,7 +242,7 @@ theorem installServer_roles (keyId : Std.U64) (identity : PeerBinding) (ref : Ke
         exact roles
 
 /-- The actual constructor imports only caller-known peers; it cannot assign a hidden record the wrong role. -/
-theorem initialize_roles (created : PqxdhLiveServerConstruction.Created Unit) (state : State n)
+theorem initialize_roles (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (state : State n)
     (roles : Roles state) (result : Unit × State n)
     (supported : result ∈ support ((initializeServer created).run state)) : Roles result.2 := by
   simp only [initializeServer, StateT.run] at supported
@@ -497,7 +498,7 @@ theorem run_roles {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response 
     (codec : PqxdhServerAuthExperiment.Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
     (env : Environment n E) (serverKid : Std.U64) (bounds : PqxdhDeploymentInterface.FreshBounds)
     (mode : PqxdhDeploymentInterface.Mode) (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X)
-    (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+    (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated RecordAd ×
       (X × PqxdhDeploymentSecrecy.Ledger) × E) × State n)
     (supported : result ∈ support (run policy setup codec route env serverKid bounds mode adversary)) :
     Roles result.2 :=
@@ -745,7 +746,7 @@ theorem effects_origins (query : (EnvEffects n).Domain) (state : State n)
   | inr request => exact capability_origins request (chargeEffect (.inr request) state) result supported
 
 /-- Initial Server construction introduces no hidden origin and cannot reset an existing Server. -/
-theorem initialize_origins (created : PqxdhLiveServerConstruction.Created Unit) (state : State n)
+theorem initialize_origins (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (state : State n)
     (result : Unit × State n) (supported : result ∈ support ((initializeServer created).run state)) :
     origins result.2 = origins state := by
   simp only [initializeServer, StateT.run] at supported
@@ -1109,7 +1110,7 @@ theorem run_provenance {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Resp
     (codec : PqxdhServerAuthExperiment.Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
     (env : Environment n E) (serverKid : Std.U64) (bounds : PqxdhDeploymentInterface.FreshBounds)
     (mode : PqxdhDeploymentInterface.Mode) (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X)
-    (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+    (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated RecordAd ×
       (X × PqxdhDeploymentSecrecy.Ledger) × E) × State n)
     (supported : result ∈ support (run policy setup codec route env serverKid bounds mode adversary)) :
     Provenance result.2 :=
@@ -1617,7 +1618,7 @@ theorem installBeacon_forward (owner : Nat) (shell : BeaconShell) (ref : KernelR
     exact forward_refl state
 
 /-- Server construction is a one-time absent-store update; duplicate initialization cannot reset a sender. -/
-theorem initialize_forward (created : PqxdhLiveServerConstruction.Created Unit) (state : State n)
+theorem initialize_forward (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (state : State n)
     (result : Unit × State n) (supported : result ∈ support ((initializeServer created).run state)) :
     Forward state result.2 := by
   simp only [initializeServer, StateT.run] at supported
@@ -2328,7 +2329,7 @@ theorem protocol_lift_trace {P : Type}
 /-- Source initialization imports known records but invokes no hidden sealing service. -/
 theorem protocol_initialize_trace {P : Type}
     (service : QueryImpl (PqxdhRecordLiftProtocol.ServiceSpec n) (StateT P ProbComp))
-    (created : PqxdhLiveServerConstruction.Created Unit) (control : PqxdhRecordLiftProtocol.Control n)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (control : PqxdhRecordLiftProtocol.Control n)
     (state : P × List (Label n)) (result : (Unit × PqxdhRecordLiftProtocol.Control n) × (P × List (Label n)))
     (supported : result ∈ support ((simulateQ (recordService service)
       ((PqxdhRecordLiftProtocol.initializeServer created).run control)).run state)) : result.2.2 = state.2 := by
@@ -2583,7 +2584,7 @@ theorem tracedProgram_nodup {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader
     (codec : PqxdhServerAuthExperiment.Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
     (env : Environment n E) (serverKid : Std.U64) (bounds : PqxdhDeploymentInterface.FreshBounds)
     (mode : PqxdhDeploymentInterface.Mode) (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X)
-    (result : (Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+    (result : (Option (PqxdhRegistrationJointServerBirth.ClientCreated RecordAd ×
       (X × PqxdhDeploymentSecrecy.Ledger) × E) × PqxdhRecordLiftProtocol.Control n) ×
       (PqxdhRecordLiftProtocol.Private n × List (Label n)))
     (supported : result ∈ support (tracedSchedule policy setup codec route

@@ -31,7 +31,7 @@ def onNative (work : StateT (RegistrationNativeExperiment.State n KemSK mlSource
 
 noncomputable def target (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential mlSource) :
     QueryImpl (Target n KemSK) (StateT (Inner n KemSK mlSource) ProbComp)
   | .inl query => fun before => (fun result => (result.1, (result.2, before.2))) <$>
@@ -43,7 +43,7 @@ noncomputable def target (setup : Setup base KemSK) (checks : Checks) (wire : Re
 
 noncomputable def implementation (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential mlSource) :
     QueryImpl (Spec n KemSK) (StateT (State n KemSK mlSource) ProbComp) :=
   ((target setup checks wire representation created scalar credential).mapStateTBase
@@ -51,7 +51,7 @@ noncomputable def implementation (setup : Setup base KemSK) (checks : Checks) (w
 
 private theorem env_native (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (PqxdhRecordLiftInterface.EnvEffects n).Domain) :
     RegistrationNativeExperiment.beacon setup checks representation created
       (StateT.lift (StateT.lift ((RegistrationNativeBeaconFrontend.Trusted n KemSK).query (.inl query) :
@@ -87,7 +87,7 @@ private theorem onNative_framed
 /-- Actual root preparation runs now and stores only that returned reply; it neither evaluates108 material nor changes the native World. -/
 theorem prepare (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential mlSource) (message : Message)
     (before : State n KemSK mlSource) :
     (implementation setup checks wire representation created scalar credential (.inl message)).run before = (do
@@ -109,7 +109,7 @@ theorem prepare (setup : Setup base KemSK) (checks : Checks) (wire : Registratio
 /-- Every deferred material request uses precisely the earlier root reply and retains the complete native/family state. -/
 theorem demand_known (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential mlSource) (message : Message)
     (before : State n KemSK mlSource) (root : PqxdhSecretInputKdf.RootOutput)
     (prepared : before.1 message = some root) :
@@ -124,7 +124,7 @@ theorem demand_known (setup : Setup base KemSK) (checks : Checks) (wire : Regist
 /-- Failed or absent preparation cannot manufacture a root or trigger source108 evaluation at demand. -/
 theorem demand_missing (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential mlSource) (message : Message)
     (before : State n KemSK mlSource) (missing : before.1 message = none) :
     (implementation setup checks wire representation created scalar credential (.inr (.inl (.inl message)))).run before =
@@ -138,7 +138,7 @@ theorem demand_missing (setup : Setup base KemSK) (checks : Checks) (wire : Regi
 /-- Ordinary native environment and indexed primitive calls use the same reached World and pool, while retaining the prepared roots and private family state. -/
 theorem trusted_query (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential mlSource)
     (query : (RegistrationNativeBeaconFrontend.Trusted n KemSK).Domain)
     (before : State n KemSK mlSource) :
@@ -168,7 +168,7 @@ theorem trusted_query (setup : Setup base KemSK) (checks : Checks) (wire : Regis
 /-- An arbitrary adaptive ordinary primitive program retains the same complete native execution; no additional root or material queries are introduced. -/
 theorem trusted_program (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential mlSource)
     (work : OracleComp (RegistrationNativeBeaconFrontend.Trusted n KemSK) Value)
     (before : State n KemSK mlSource) :

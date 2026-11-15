@@ -23,7 +23,7 @@ def service (credential : RegistrationNativeIdentityInterface.Credential) (peer 
 /-- The generated handle supplies precisely its source seed's optional static-DH reply. -/
 theorem service_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List IdentitySeed)
     (credential : RegistrationNativeIdentityInterface.Credential) (seed : IdentitySeed)
     (peer : PqxdhBeaconPhase2Preparation.Word32) (found : seeds[credential.handle]? = some seed) :
     Related (n := n) (Auxiliary := Auxiliary) (source := source) setup checks representation created seeds
@@ -37,7 +37,7 @@ theorem service_source (setup : Setup base KemSK) (checks : Checks)
 
 theorem service_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeIdentityInterface.Credential) (peer : PqxdhBeaconPhase2Preparation.Word32) :
     Keeps (n := n) (Auxiliary := Auxiliary) (source := source) setup checks representation created (service credential peer) := by
   intro before result supported
@@ -65,7 +65,7 @@ theorem original_local_dh (setup : Setup base KemSK) (owner : Owner source) (see
 /-- The executable local-identity getter is the literal original native callback after private source interpretation. -/
 theorem local_dh_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List IdentitySeed)
     (owner : Owner source) (seed : IdentitySeed) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (peer : PqxdhBeaconPhase2Preparation.Word32) (found : seeds[owner.identity.handle]? = some seed) :
     Related (n := n) (Auxiliary := Auxiliary) setup checks representation created seeds

@@ -69,7 +69,7 @@ fn reply_header_preserves_full_width_metadata_and_independent_lengths() {
 	let failed = Response::failed(12).encode().unwrap();
 	assert_eq!(failed.len(), 32);
 	assert!(failed[4..].iter().all(|byte| *byte == 0));
-	assert_eq!(bc_abi_version(), 2);
+	assert_eq!(bc_abi_version(), 3);
 	assert_eq!(bc_max_message_size(), 33_554_432);
 }
 
@@ -117,11 +117,10 @@ fn guest_server_interoperates_with_native_beacon_updates_json_and_checkpoint() {
 	)
 	.unwrap();
 	let bundle = beacon.get_registration_bundle().unwrap();
-	assert_eq!(&bundle[..3], &[0x88, 2, 0]);
-	assert_eq!(bundle.len(), 6_757);
-	assert_eq!(&bundle[bundle.len() - 3_312..][..3], &[0x59, 0x0c, 0xed]);
+	assert_eq!(&bundle[..3], &[0x86, 3, 0]);
+	assert_eq!(bundle.len(), 1490);
 	let registration = checked(5, owner, 0, &bundle, b"hello");
-	assert_eq!(&registration.data[..3], &[0x88, 2, 1]);
+	assert_eq!(&registration.data[..3], &[0x88, 3, 1]);
 	assert_eq!(
 		&registration.data[registration.data.len() - 3_312..][..3],
 		&[0x59, 0x0c, 0xed]
@@ -238,17 +237,13 @@ fn guest_beacon_interoperates_with_native_server_and_rejects_wrong_handle_kinds(
 	assert_eq!(identity.data.len(), 32);
 	assert_eq!(dispatch(17, beacon, 0, &[], &[]).status, REJECTED);
 	let registration = checked(4, beacon, 0, &[], &[]);
-	assert_eq!(&registration.data[..3], &[0x88, 2, 0]);
-	assert_eq!(registration.data.len(), 6_757);
-	assert_eq!(
-		&registration.data[registration.data.len() - 3_312..][..3],
-		&[0x59, 0x0c, 0xed]
-	);
+	assert_eq!(&registration.data[..3], &[0x86, 3, 0]);
+	assert_eq!(registration.data.len(), 1490);
 	let pending = native.get_shared_secret(&registration.data).unwrap();
 	let response = native
 		.build_registration_response(pending, Some(b"native hello"))
 		.unwrap();
-	assert_eq!(&response.serialized[..3], &[0x88, 2, 1]);
+	assert_eq!(&response.serialized[..3], &[0x88, 3, 1]);
 	assert_eq!(
 		&response.serialized[response.serialized.len() - 3_312..][..3],
 		&[0x59, 0x0c, 0xed]
@@ -501,7 +496,7 @@ fn beacon_constructor_requires_the_mldsa_pin_after_the_ed25519_key() {
 	assert_eq!(dispatch(2, 0, 19, &ed, &[]).status, INITIALIZATION);
 	let public = [ed, ml].concat();
 	let beacon = checked(2, 0, 19, &public, &[]).handle;
-	assert_eq!(checked(24, beacon, 0, &[], &[]).data.len(), 1952);
+	assert_eq!(dispatch(24, beacon, 0, &[], &[]).status, INVALID_ARGUMENT);
 	checked(9, beacon, 0, &[], &[]);
 	checked(9, server, 0, &[], &[]);
 }

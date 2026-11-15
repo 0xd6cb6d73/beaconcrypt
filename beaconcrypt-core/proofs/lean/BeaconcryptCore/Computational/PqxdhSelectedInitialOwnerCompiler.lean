@@ -11,6 +11,7 @@ open OracleComp OracleSpec
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhSelectedInitialOwnerCompiler
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhSecretInputKdf PqxdhJointKdfGame PqxdhFullSecretInputKdf
 open PqxdhNativeSharedPrefix PqxdhInitialGenericBeacon
 open RawCtxSelectedParentTable RawCtxSelectedParentEntry
@@ -25,6 +26,7 @@ structure Request (I D K : Type) where
   control : pqxdh.BeaconInitSent
   before : Beacon I D K
   candidate : pqxdh.BeaconRegistrationCandidate
+  associatedData : Std.Array Std.U8 151#usize
   kernel : Kernel
   application : Option Pqxdh.Bytes
 
@@ -45,7 +47,7 @@ noncomputable def lower (prior : Prior) (parent : Option Entry) (target : RootOu
   | .inl query => PqxdhSelectedCallbackCompiler.lower pre application initial selector aux (.inl query)
   | .inr request => fun state => (fun reply => (reply, state)) <$>
       PqxdhSelectedBeaconCompiler.finishApplication prior parent target nonce next read
-        request.control request.before request.candidate request.kernel request.application
+        request.control request.before request.candidate request.associatedData request.kernel request.application
 
 noncomputable def sourceExternal : QueryImpl (PqxdhSelectedCallbackCompiler.External extra I D K X Response Shared)
     (StateT (RawCtxSharedPrimitive.SharedState (Local A N C)) ProbComp) :=
@@ -61,10 +63,10 @@ noncomputable def source (fixed : FixedHkdfSha512NoSaltSource) (writer : RawCtxM
   | .inr request => finish request.control request.before <$>
       (match request.application with
       | none => pure none
-      | some raw => PqxdhSelectedBeaconCompiler.stage request.candidate <$>
+      | some raw => PqxdhSelectedBeaconCompiler.stage request.candidate request.associatedData <$>
           (RawCtxChainOwner.rawReceive
             (PqxdhSelectedMessageBeacon.materialCalls fixed writer prior parent key target nonce next) read raw).run
-              (localOwner request.candidate request.kernel))
+              (localOwner request.candidate request.associatedData request.kernel))
 
 /-- The source-local service preserves its complete original reply, private state and audit through the same component state projection. -/
 theorem external_project (fixed : FixedHkdfSha512NoSaltSource) (key : RootOutput) (read : RawCtxReceive.FrameDecoder)
@@ -96,7 +98,7 @@ theorem step_source (fixed : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedS
   | inl query => exact external_project pre application initial selector aux fixed key read query state
   | inr request =>
       have original := PqxdhSelectedBeaconCompiler.finish_application_source fixed writer prior parent key target nonce next read
-        request.control request.before request.candidate request.kernel request.application state
+        request.control request.before request.candidate request.associatedData request.kernel request.application state
       simp only [lower, PqxdhSelectedStateInterpreter.lift_evaluate]
       exact original
 
@@ -123,7 +125,7 @@ noncomputable def owner (raw : Pqxdh.Bytes) (before : Beacon I D K) : OracleComp
   match before.beacon.phase with
   | .initSent control prekey oneTime kem => do
       let prepared ← simulateQ preForward
-        (PqxdhBeaconPhase2Shared.prepare control before.beacon.identity prekey oneTime kem raw)
+        (PqxdhBeaconPhase2Shared.prepare (completedBinding := completedBinding) control before.beacon.identity prekey oneTime kem raw)
       match prepared with
       | none => pure (finish control before none)
       | some pending => do
@@ -134,7 +136,7 @@ noncomputable def owner (raw : Pqxdh.Bytes) (before : Beacon I D K) : OracleComp
               let application ← (Spec extra I D K X Response Shared).query (.inl (.inr (.inl pending.response)))
               (Spec extra I D K X Response Shared).query (.inr
                 ⟨control, before, PqxdhBeaconPhase2Shared.clearedMetadata pending.metadata,
-                  PqxdhSelectedMessageBeacon.knownKernel kernel, application⟩)
+                  pending.metadata.associatedData, PqxdhSelectedMessageBeacon.knownKernel kernel, application⟩)
   | _ => pure (none, before)
 
 /-- Source preparation calls are precisely the original external requests, with their complete evaluated continuation. -/
@@ -151,8 +153,8 @@ theorem owner_source (fixed : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixed
     (prior : Prior) (parent : Option Entry) (key target : RootOutput)
     (nonce : NonceOutput) (next : RootOutput) (read : RawCtxReceive.FrameDecoder)
     (raw : Pqxdh.Bytes) (before : Beacon I D K) :
-    simulateQ (source pre application initial selector aux fixed writer prior parent key target nonce next read) (owner raw before) =
-      PqxdhInitialGenericBeacon.owner
+    simulateQ (source pre application initial selector aux fixed writer prior parent key target nonce next read) (owner (completedBinding := completedBinding) raw before) =
+      PqxdhInitialGenericBeacon.owner (completedBinding := completedBinding)
         (fun query => sourceExternal pre application initial selector aux (.inl query))
         (PqxdhSelectedMessageBeacon.materialCalls fixed writer prior parent key target nonce next)
         (fun reply => sourceExternal pre application initial selector aux (.inr (.inl reply)))
@@ -183,16 +185,16 @@ theorem native_owner (fixed : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixed
     (prior : Prior) (parent : Option Entry) (key target : RootOutput)
     (nonce : NonceOutput) (next : RootOutput) (read : RawCtxReceive.FrameDecoder)
     (raw : Pqxdh.Bytes) (before : Beacon I D K) :
-    PqxdhInitialGenericBeacon.owner
+    PqxdhInitialGenericBeacon.owner (completedBinding := completedBinding)
       (fun query => sourceExternal pre application initial selector aux (.inl query))
       (PqxdhSelectedMessageBeacon.nativeCalls fixed writer prior parent key target nonce next)
       (fun reply => sourceExternal pre application initial selector aux (.inr (.inl reply)))
       (fun secrets => sourceExternal pre application initial selector aux (.inr (.inr (.inl secrets)))) read raw
       (RawCtxGenericRoleStorage.mapBeacon (PqxdhSelectedMessageBeacon.interpretKernel key) before) =
     Prod.map id (RawCtxGenericRoleStorage.mapBeacon (PqxdhSelectedMessageBeacon.interpretKernel key)) <$>
-      simulateQ (source pre application initial selector aux fixed writer prior parent key target nonce next read) (owner raw before) := by
+      simulateQ (source pre application initial selector aux fixed writer prior parent key target nonce next read) (owner (completedBinding := completedBinding) raw before) := by
   rw [owner_source]
-  apply PqxdhInitialGenericBeacon.owner_map
+  apply PqxdhInitialGenericBeacon.owner_map (completedBinding := completedBinding)
   · exact PqxdhSelectedMessageBeacon.receive_map fixed writer prior parent key target nonce next
   · intro secrets
     simp only [Functor.map_map, Option.map_map, Function.comp_def, PqxdhSelectedMessageBeacon.known_roundtrip]
@@ -209,8 +211,8 @@ theorem compiled_owner (fixed : FixedHkdfSha512NoSaltSource) (writer : RawCtxMix
       (Prod.map id (RawCtxGenericRoleStorage.mapBeacon (PqxdhSelectedMessageBeacon.interpretKernel key)) result.1,
         RawCtxSelectedReceiveCompiler.project result.2)) <$>
       (evaluate (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder read) fixed.crypto key)
-        (simulateQ (lower pre application initial selector aux prior parent target nonce next read) (owner raw before))).run state =
-      (PqxdhInitialGenericBeacon.owner
+        (simulateQ (lower pre application initial selector aux prior parent target nonce next read) (owner (completedBinding := completedBinding) raw before))).run state =
+      (PqxdhInitialGenericBeacon.owner (completedBinding := completedBinding)
         (fun query => sourceExternal pre application initial selector aux (.inl query))
         (PqxdhSelectedMessageBeacon.nativeCalls fixed writer prior parent key target nonce next)
         (fun reply => sourceExternal pre application initial selector aux (.inr (.inl reply)))
@@ -219,7 +221,7 @@ theorem compiled_owner (fixed : FixedHkdfSha512NoSaltSource) (writer : RawCtxMix
           (RawCtxSelectedReceiveCompiler.project state) := by
   have original := congrArg (fun work => (fun result =>
     (Prod.map id (RawCtxGenericRoleStorage.mapBeacon (PqxdhSelectedMessageBeacon.interpretKernel key)) result.1, result.2)) <$> work)
-    (program_source pre application initial selector aux fixed writer prior parent key target nonce next read (owner raw before) state)
+    (program_source pre application initial selector aux fixed writer prior parent key target nonce next read (owner (completedBinding := completedBinding) raw before) state)
   rw [native_owner, StateT.run_map]
   simpa only [Functor.map_map, Prod.map_def, id_eq] using original
 
@@ -241,13 +243,13 @@ theorem external_native (fixed : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
 
 /-- A full attempted Beacon finish uses at most thirteen preparation requests followed by one initializer, one getter and one whole raw-finish request. The actual callback and component costs remain separately charged. -/
 theorem owner_queries (raw : Pqxdh.Bytes) (before : Beacon I D K) :
-    (owner (extra := extra) (X := X) (Response := Response) (Shared := Shared) raw before).IsTotalQueryBound 16 := by
+    (owner (completedBinding := completedBinding) (extra := extra) (X := X) (Response := Response) (Shared := Shared) raw before).IsTotalQueryBound 16 := by
   cases active : before.beacon.phase with
   | initSent control prekey oneTime kem =>
     simp only [owner, active]
     apply isTotalQueryBound_bind (n₁ := 13) (n₂ := 3)
     · exact PqxdhBeaconPhase2Bounds.simulate_total preForward _ 13
-        (PqxdhBeaconPhase2SharedBounds.prepare_bound _ _ _ _ _ _) (fun query => by
+        (PqxdhBeaconPhase2SharedBounds.prepare_bound (completedBinding := completedBinding) _ _ _ _ _ _) (fun query => by
           exact (isQueryBoundP_true_iff _ _).mp ((isQueryBoundP_query_iff (spec := Spec extra I D K X Response Shared)
             (p := fun _ => True) (.inl (.inl query)) 1).mpr (by decide)))
     · intro prepared
@@ -275,7 +277,7 @@ instance : DecidablePred (IsFinish (extra := extra) (I := I) (D := D) (K := K) (
 
 /-- Every complete attempted Beacon finish invokes at most one raw-finish service, regardless of arbitrary preparation replies, initializer failure or optional application data. -/
 theorem owner_finish_queries (raw : Pqxdh.Bytes) (before : Beacon I D K) :
-    (owner (extra := extra) (X := X) (Response := Response) (Shared := Shared) raw before).IsQueryBoundP (IsFinish (extra := extra)) 1 := by
+    (owner (completedBinding := completedBinding) (extra := extra) (X := X) (Response := Response) (Shared := Shared) raw before).IsQueryBoundP (IsFinish (extra := extra)) 1 := by
   classical
   cases active : before.beacon.phase with
   | initSent control prekey oneTime kem =>
@@ -319,9 +321,9 @@ theorem compiled_opens (prior : Prior) (parent : Option Entry) (target : RootOut
     (nonce : NonceOutput) (next : RootOutput) (read : RawCtxReceive.FrameDecoder)
     (raw : Pqxdh.Bytes) (before : Beacon I D K) (state : Local A N C) :
     ((simulateQ (lower pre application initial selector aux prior parent target nonce next read)
-      (owner raw before)).run state).IsQueryBoundP
+      (owner (completedBinding := completedBinding) raw before)).run state).IsQueryBoundP
         (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxReceive.IsRawQuery) 1 := by
-  apply (owner_finish_queries (extra := extra) (X := X) (Response := Response) (Shared := Shared) raw before).simulateQ_run_of_step
+  apply (owner_finish_queries (completedBinding := completedBinding) (extra := extra) (X := X) (Response := Response) (Shared := Shared) raw before).simulateQ_run_of_step
   · intro query selected state
     cases query with
     | inl query => exact False.elim selected
@@ -329,7 +331,7 @@ theorem compiled_opens (prior : Prior) (parent : Option Entry) (target : RootOut
       simp only [lower, StateT.run, isQueryBoundP_map_iff]
       exact IsQueryBoundP.of_imp (fun _ _ => True.intro)
         ((isQueryBoundP_true_iff _ _).mpr (PqxdhSelectedBeaconCompiler.finish_queries prior parent target nonce next read
-          request.control request.before request.candidate request.kernel request.application))
+          request.control request.before request.candidate request.associatedData request.kernel request.application))
   · intro query excluded state
     cases query with
     | inl query => exact external_no_open pre application initial selector aux query state

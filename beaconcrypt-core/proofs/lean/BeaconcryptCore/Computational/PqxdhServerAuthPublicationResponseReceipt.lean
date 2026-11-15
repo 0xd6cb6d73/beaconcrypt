@@ -6,6 +6,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core PqxdhRefinement
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhServerAuthPublicationResponseReceipt
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhJointKdfGame
 open PqxdhServerAuthExperiment (Codec Checks)
 open PqxdhServerAuthPublicationTrace (Compiler Event Trace)
@@ -56,12 +57,12 @@ theorem after_success (source : FixedHkdfSha512NoSaltSource) (codec : Codec Read
     (before after : PqxdhServerAuthPublicationTrace.State)
     (response : PqxdhServerRegistrationPublication.Response)
     (supported : (some (some response, published), after) ∈ support
-      ((PqxdhInitialGenericPublication.afterInitialization
+      ((PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData)
         (PqxdhServerAuthPublicationWriter.calls source codec checks rest)
         (PqxdhServerAuthPublicationWriter.aux source codec checks)
         candidate authenticated kernel metadata state).run.run before)) :
     ∃ (pending : PqxdhServerAuthCtxSend.Pending) (encrypted : RawCtxSourceSend.Encrypted),
-      pending.context = PqxdhServerRegistrationPublication.firstContext candidate authenticated ∧
+      pending.context = PqxdhServerRegistrationPublication.firstContext candidate associatedData authenticated ∧
       after.1 = before.1 ++ [pending.context] ∧
       after.2 = before.2 ++ [.seal pending (some (some encrypted)),
         .write (PqxdhServerRegistrationPublication.responseFields candidate encrypted)
@@ -93,7 +94,7 @@ theorem after_success (source : FixedHkdfSha512NoSaltSource) (codec : Codec Read
               rcases supported with ⟨⟨rfl, rfl⟩, rfl⟩
               obtain ⟨pending, contextSame, advancedSame, logSame, traceSame⟩ :=
                 send_success source codec checks rest kernel advanced
-                  (PqxdhServerRegistrationPublication.firstContext candidate authenticated)
+                  (PqxdhServerRegistrationPublication.firstContext candidate associatedData authenticated)
                   encrypted before afterSend reached
               exact ⟨pending, encrypted, contextSame, by simpa only [contextSame] using logSame,
                 by simp only [traceSame, List.append_assoc, List.singleton_append], written, rfl,
@@ -107,14 +108,14 @@ theorem candidate_tail (source : FixedHkdfSha512NoSaltSource) (codec : Codec Rea
     (before after : PqxdhServerAuthPublicationTrace.State)
     (response : PqxdhServerRegistrationPublication.Response)
     (supported : (some (.ok (some response, published)), after) ∈ support
-      ((PqxdhInitialGenericBuilder.candidate
+      ((PqxdhInitialGenericBuilder.candidate (associatedData := associatedData)
         (PqxdhServerAuthPublicationWriter.calls source codec checks rest)
         (PqxdhServerAuthPublicationWriter.aux source codec checks)
         initial candidate data metadata state).run.run before)) :
     ∃ (kernel : Kernel) (binding : pqxdh.RegistrationKeyIdBinding),
       initial = .ok kernel ∧ candidate.key_id_binding = .ok binding ∧
       (some (some response, published), after) ∈ support
-        ((PqxdhInitialGenericPublication.afterInitialization
+        ((PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData)
           (PqxdhServerAuthPublicationWriter.calls source codec checks rest)
           (PqxdhServerAuthPublicationWriter.aux source codec checks) candidate
           (absBytes binding.bytes ++ data.getD PqxdhServerRegistrationPublication.registrationWitness)
@@ -198,7 +199,7 @@ theorem build_tail (source : FixedHkdfSha512NoSaltSource) (codec : Codec Reader 
     (before after : PqxdhServerAuthPublicationTrace.State)
     (response : PqxdhServerRegistrationPublication.Response)
     (supported : (some (.ok (some response, published)), after) ∈ support
-      ((PqxdhServerAuthSendFactor.genericBuild
+      ((PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData)
         (PqxdhServerAuthPublicationWriter.calls source codec checks rest)
         (PqxdhServerAuthPublicationWriter.aux source codec checks)
         initial pending data metadata state).run.run before)) :
@@ -207,7 +208,7 @@ theorem build_tail (source : FixedHkdfSha512NoSaltSource) (codec : Codec Reader 
       pqxdh.server_prepare_commit state.control pending ⟨state.server.identity, state.identityKeyId⟩
         (if (state.server.peers key).isSome then .Occupied else .Available) = .ok (.Ok candidate) ∧
       (some (.ok (some response, published)), after) ∈ support
-        ((PqxdhInitialGenericBuilder.candidate
+        ((PqxdhInitialGenericBuilder.candidate (associatedData := associatedData)
           (PqxdhServerAuthPublicationWriter.calls source codec checks rest)
           (PqxdhServerAuthPublicationWriter.aux source codec checks)
           initial candidate data metadata state).run.run before) := by
@@ -264,11 +265,11 @@ theorem compiled_tail (source : FixedHkdfSha512NoSaltSource) (codec : Codec Read
     (before after : PqxdhServerAuthPublicationTrace.State)
     (response : PqxdhServerRegistrationPublication.Response)
     (supported : (some (.ok (some response, published)), after) ∈ support
-      ((PqxdhServerAuthPublicationTrace.compiled source codec checks rest pending data metadata state).run.run before)) :
+      ((PqxdhServerAuthPublicationTrace.compiled (associatedData := associatedData) source codec checks rest pending data metadata state).run.run before)) :
     ∃ originalPublished : PqxdhInitialGenericPublication.State Kernel Metadata PeerMetadata Consumed,
       PqxdhInitialGenericPublication.native PqxdhServerAuthCtxBuildSettlement.resolve originalPublished = published ∧
       (some (.ok (some response, originalPublished)), after) ∈ support
-        ((PqxdhServerAuthSendFactor.genericBuild
+        ((PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData)
           (PqxdhServerAuthPublicationWriter.calls source codec checks rest)
           (PqxdhServerAuthPublicationWriter.aux source codec checks)
           (PqxdhServerAuthCtxCalls.initial false rest.2.2) pending data metadata
@@ -304,7 +305,7 @@ theorem compiled_receipt (source : FixedHkdfSha512NoSaltSource) (codec : Codec R
     (before after : PqxdhServerAuthPublicationTrace.State)
     (response : PqxdhServerRegistrationPublication.Response)
     (supported : (some (.ok (some response, published)), after) ∈ support
-      ((PqxdhServerAuthPublicationTrace.compiled source codec checks rest pending data metadata state).run.run before)) :
+      ((PqxdhServerAuthPublicationTrace.compiled (associatedData := associatedData) source codec checks rest pending data metadata state).run.run before)) :
     ∃ (key : Std.U64) (candidate : pqxdh.ServerRegistrationCandidate)
       (binding : pqxdh.RegistrationKeyIdBinding) (sealed : PqxdhServerAuthCtxSend.Pending)
       (encrypted : RawCtxSourceSend.Encrypted),
@@ -312,7 +313,7 @@ theorem compiled_receipt (source : FixedHkdfSha512NoSaltSource) (codec : Codec R
       pqxdh.server_prepare_commit state.control pending ⟨state.server.identity, state.identityKeyId⟩
         (if (state.server.peers key).isSome then .Occupied else .Available) = .ok (.Ok candidate) ∧
       candidate.key_id_binding = .ok binding ∧
-      sealed.context = PqxdhServerRegistrationPublication.firstContext candidate
+      sealed.context = PqxdhServerRegistrationPublication.firstContext candidate associatedData
         (absBytes binding.bytes ++ data.getD PqxdhServerRegistrationPublication.registrationWitness) ∧
       after.1 = before.1 ++ [sealed.context] ∧
       after.2 = before.2 ++ [.seal sealed (some (some encrypted)),
@@ -323,17 +324,17 @@ theorem compiled_receipt (source : FixedHkdfSha512NoSaltSource) (codec : Codec R
       published = PqxdhServerRegistrationPublication.publish state candidate
         (PqxdhServerAuthCtxBuildSettlement.resolve sealed.advanced) metadata := by
   obtain ⟨originalPublished, projection, reached⟩ :=
-    compiled_tail source codec checks rest pending data metadata state published before after response supported
+    compiled_tail (associatedData := associatedData) source codec checks rest pending data metadata state published before after response supported
   obtain ⟨key, candidate, next, prepared, reached⟩ :=
-    build_tail source codec checks rest (PqxdhServerAuthCtxCalls.initial false rest.2.2)
+    build_tail (associatedData := associatedData) source codec checks rest (PqxdhServerAuthCtxCalls.initial false rest.2.2)
       pending data metadata (PqxdhServerAuthCtxBuildSettlement.embed state)
       originalPublished before after response reached
   obtain ⟨kernel, binding, _, bindingReply, reached⟩ :=
-    candidate_tail source codec checks rest (PqxdhServerAuthCtxCalls.initial false rest.2.2)
+    candidate_tail (associatedData := associatedData) source codec checks rest (PqxdhServerAuthCtxCalls.initial false rest.2.2)
       candidate data metadata (PqxdhServerAuthCtxBuildSettlement.embed state)
       originalPublished before after response reached
   obtain ⟨sealed, encrypted, contextSame, logSame, traceSame, written, keySame, publishedSame⟩ :=
-    after_success source codec checks rest candidate _ kernel metadata
+    after_success (associatedData := associatedData) source codec checks rest candidate _ kernel metadata
       (PqxdhServerAuthCtxBuildSettlement.embed state) originalPublished before after response reached
   refine ⟨key, candidate, binding, sealed, encrypted, next, ?_, bindingReply,
     contextSame, logSame, traceSame, written, keySame, ?_⟩

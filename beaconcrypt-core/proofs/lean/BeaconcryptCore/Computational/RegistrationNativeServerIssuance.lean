@@ -18,12 +18,21 @@ variable {n : Nat} {ι KemSK Reader Response : Type} {base : OracleSpec ι}
 
 abbrev history (before : State n) := before.world.world.2
 
+/-- One actual source AD callback, retaining its owned continuation and complete reached source states. The capacity is private state representation and is irrelevant to the public core admission. -/
+def AdCut (token : peer.ConsumedRegistration) (control : pqxdh.ServerState)
+    (pin : session.ServerAuthenticationPin) (availability : pqxdh.KeyIdAvailability)
+    (application : Slice U8) (initial : registration.ServerInitialKdf) : Prop :=
+  ∃ capacity : Nat, ∃ pending : registration.ServerAdHash, ∃ before after : State capacity,
+    registration.begin_server_completion control pin availability token.agreement application = .ok (.Ok pending) ∧
+    (.ok (.Ok initial), after) ∈ support ((RegistrationServerSdkSource.adHash pending).run before)
+
 def Stage (token : peer.ConsumedRegistration) (control : pqxdh.ServerState) (pin : session.ServerAuthenticationPin)
     (application : Slice U8) (old newest : List Receipt) : Prop :=
   ∃ availability initial hashed digest signature,
-    registration.begin_server_completion control pin availability token.agreement application = .ok (.Ok initial) ∧
+    BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission control pin availability token.agreement application initial ∧
     RegistrationServerRecordExecutor.Path initial hashed ∧
-    newest = old ++ [(⟨⟨hashed.binding.server_pin.public_key, Command.payload (.server hashed), replyBytes signature⟩, digest⟩ : Receipt)]
+    newest = old ++ [(⟨⟨hashed.binding.server_pin.public_key, Command.payload (.server hashed), replyBytes signature⟩, digest⟩ : Receipt)] ∧
+    AdCut token control pin availability application initial
 
 private theorem pure_history {Value : Type} (value : Value) (before : State n) (result : Value × State n)
     (supported : result ∈ support ((pure value : StateT (State n) ProbComp Value).run before)) : history result.2 = history before := by
@@ -80,17 +89,37 @@ private theorem afterOccupancy_history (setup : Setup base KemSK) (codec : Codec
     | Err previous =>
         simp only [resumed] at supported
         exact Or.inl (pure_history _ before result supported)
-    | Ok initial =>
-        simp only [resumed] at supported
-        split_ifs at supported with reserved
-        · rcases fromInitial_history setup codec sign encode control initial before result supported with old | added
-          · exact Or.inl old
-          · obtain ⟨hashed, digest, signature, path, appended⟩ := added
-            have admitted : registration.begin_server_completion lookup.control lookup.pin
-                (if occupied then .Occupied else .Available) lookup.registration.agreement lookup.application = .ok (.Ok initial) := by
-              cases occupied <;> simpa only [peer.CompletionLookup.resume, Bool.false_eq_true, ite_false, ite_true, bind_tc_ok] using resumed
-            exact Or.inr ⟨_, initial, hashed, digest, signature, admitted, path, appended⟩
-        · exact Or.inl (pure_history _ before result supported)
+    | Ok pendingAd =>
+        simp only [resumed, StateT.run_bind, mem_support_bind_iff] at supported
+        obtain ⟨middle, hashCalled, continued⟩ := supported
+        have retained := RegistrationServerSdkSource.adHash_history pendingAd before middle.2 middle.1 hashCalled
+        cases reply : middle.1 with
+        | fail error | div =>
+            rw [reply] at continued
+            exact Or.inl ((pure_history _ middle.2 result continued).trans retained)
+        | ok answer => cases answer with
+          | Err previous =>
+              rw [reply] at continued
+              exact Or.inl ((pure_history _ middle.2 result continued).trans retained)
+          | Ok initial =>
+              have hashSupport : (.ok (.Ok initial), middle.2) ∈ support
+                  ((RegistrationServerSdkSource.adHash pendingAd).run before) := by
+                have same : middle = (.ok (.Ok initial), middle.2) := Prod.ext reply rfl
+                exact same ▸ hashCalled
+              obtain ⟨adDigest, adResumed⟩ := RegistrationServerSdkSource.adHash_receipt pendingAd before middle.2 initial
+                hashSupport
+              rw [reply] at continued
+              split_ifs at continued with reserved
+              · rcases fromInitial_history setup codec sign encode control initial middle.2 result continued with old | added
+                · exact Or.inl (old.trans retained)
+                · obtain ⟨hashed, digest, signature, path, appended⟩ := added
+                  have admitted : registration.begin_server_completion lookup.control lookup.pin
+                      (if occupied then .Occupied else .Available) lookup.registration.agreement lookup.application = .ok (.Ok pendingAd) := by
+                    cases occupied <;> simpa only [peer.CompletionLookup.resume, Bool.false_eq_true, ite_false, ite_true, bind_tc_ok] using resumed
+                  exact Or.inr ⟨_, initial, hashed, digest, signature, ⟨pendingAd, adDigest, admitted, adResumed⟩,
+                    path, (by simpa only [retained] using appended),
+                    ⟨n, pendingAd, before, middle.2, admitted, hashSupport⟩⟩
+              · exact Or.inl ((pure_history _ middle.2 result continued).trans retained)
 
 private theorem occupancy_history (keyId : U64) (before : State n) (result : Bool × State n)
     (supported : result ∈ support ((RegistrationServerSdkSource.world
@@ -170,30 +199,34 @@ theorem build (setup : Setup base KemSK) (codec : Codec Reader Response) (checks
               · exact Or.inl (old.trans retained)
               · exact Or.inr ⟨token, current, plaintext, rfl, rfl, by simpa only [retained] using stage⟩
 
-/-- Every actual issued response stage carries the taken token's root-derived initializer, full binding, application and consumed sequence-one AD281 capability. -/
+/-- Every issued response retains the actual hash-completed binding, root initializer and complete consumed sequence-one AD151 context. -/
 theorem stage_contents (token : peer.ConsumedRegistration) (control : pqxdh.ServerState) (pin : session.ServerAuthenticationPin)
-    (application : Slice U8) (old newest : List Receipt) (stage : Stage token control pin application old newest) :
-    ∃ (initial : registration.ServerInitialKdf) (hashed : registration.ServerResponseHash),
+    (application : Slice U8) (old newest : List Receipt)
+    (stage : Stage token control pin application old newest) :
+    ∃ (digest : Std.Array U8 64#usize) (binding : session.CompletedRegistrationBinding)
+        (initial : registration.ServerInitialKdf) (hashed : registration.ServerResponseHash),
+      token.agreement.binding.complete digest = .ok binding ∧
       BeaconcryptCore.Refinement.SessionBinding.sameServerPin token.agreement.binding.server_pin pin ∧
-      initial.binding = token.agreement.binding ∧ initial.application = application ∧
+      initial.binding = binding ∧ initial.application = application ∧
       pqxdh.concrete.start_server_candidate_ratchet_kdf initial.candidate token.agreement.root.bytes = .ok initial.pending ∧
-      RegistrationServerRecordExecutor.Path initial hashed ∧ hashed.binding = token.agreement.binding ∧
+      RegistrationServerRecordExecutor.Path initial hashed ∧ hashed.binding = binding ∧
       ∃ selected : ratchet.concrete.SendSeal record_effects.SealFrameContext,
         hashed.kernel = selected.advanced ∧ selected.sequence.val = 1 ∧
-        selected.context.plaintext = application ∧ selected.context.associated_data = token.agreement.binding.associated_data := by
-  obtain ⟨availability, initial, hashed, _digest, _signature, admitted, path, _appended⟩ := stage
-  obtain ⟨pinSame, binding, payload, rooted⟩ := RegistrationNativeServerBindingReceipt.initial_root control pin availability token.agreement application initial admitted
+        selected.context.plaintext = application ∧ selected.context.associated_data = binding.associated_data := by
+  obtain ⟨availability, initial, hashed, _digest, _signature, admitted, path, _appended, _adCut⟩ := stage
+  obtain ⟨pinSame, adDigest, binding, completed, sameBinding, payload, rooted⟩ :=
+    RegistrationNativeServerBindingReceipt.initial_root control pin availability token.agreement application initial admitted
   obtain ⟨retained, _candidate, _response, _kernel, bound, selected, _initialized, _boundRun, _boundBytes, consumed, sequence, context⟩ :=
     RegistrationNativeServerContents.path_contents initial hashed path
-  exact ⟨initial, hashed, pinSame, binding, payload, rooted, path, retained.trans binding,
+  exact ⟨adDigest, binding, initial, hashed, completed, pinSame, sameBinding, payload, rooted, path, retained.trans sameBinding,
     selected, consumed, sequence, by rw [context]; exact payload,
-    by rw [context]; exact congrArg session.RegistrationBinding.associated_data binding⟩
+    by rw [context]; exact congrArg session.CompletedRegistrationBinding.associated_data sameBinding⟩
 
 /-- Every complete original typed build has that same moved-token issuance alternative on all source outcomes. -/
 theorem typed_build {source : RegistrationNativeMldsa.Source}
     (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (index : Nat) (application : Option (Slice U8)) (before : RegistrationNativeExperiment.State n KemSK source)
     (result : RustM (Option (U64 × Pqxdh.Bytes)) × RegistrationNativeExperiment.State n KemSK source)
     (supported : result ∈ support ((RegistrationNativeExperiment.handler setup checks wire route representation created source credential
@@ -211,7 +244,7 @@ theorem typed_build {source : RegistrationNativeMldsa.Source}
 theorem new_receipt {source : RegistrationNativeMldsa.Source}
     (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (index : Nat) (application : Option (Slice U8)) (before after : RegistrationNativeExperiment.State n KemSK source)
     (answer : RustM (Option (U64 × Pqxdh.Bytes)))
     (supported : (answer, after) ∈ support ((RegistrationNativeExperiment.handler setup checks wire route representation created source credential
@@ -219,12 +252,12 @@ theorem new_receipt {source : RegistrationNativeMldsa.Source}
     (receipt : Receipt) (member : receipt ∈ history after.server) (fresh : receipt ∉ history before.server) :
     ∃ token current plaintext availability initial hashed,
       RegistrationServerSdkSource.take index before.server = (some token, current) ∧ application = some plaintext ∧
-      registration.begin_server_completion current.control current.pin availability token.agreement plaintext = .ok (.Ok initial) ∧
+      BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission current.control current.pin availability token.agreement plaintext initial ∧
       RegistrationServerRecordExecutor.Path initial hashed ∧
       receipt.observation.publicKey = hashed.binding.server_pin.public_key ∧ receipt.observation.payload = Command.payload (.server hashed) := by
   rcases typed_build setup checks wire route representation created credential index application before (answer, after) supported with old | issued
   · exact False.elim (fresh (old ▸ member))
-  · obtain ⟨token, current, plaintext, taken, input, availability, initial, hashed, digest, signature, admitted, path, appended⟩ := issued
+  · obtain ⟨token, current, plaintext, taken, input, availability, initial, hashed, digest, signature, admitted, path, appended, _adCut⟩ := issued
     rw [appended, List.mem_append, List.mem_singleton] at member
     rcases member with earlier | same
     · exact False.elim (fresh earlier)

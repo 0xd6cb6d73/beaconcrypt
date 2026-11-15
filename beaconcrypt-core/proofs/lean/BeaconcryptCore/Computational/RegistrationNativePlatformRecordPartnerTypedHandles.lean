@@ -31,6 +31,8 @@ variable (implementation : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistra
 
 
 
+attribute [local irreducible] RegistrationNativePlatformServerOpenControl.accept
+
 /-- The actual typed frontend appends exactly the handles in its same original successful typed reply, for both roles and every failed path. -/
 theorem handler (role : PqxdhRecordLiftInterface.Role) (query : RegistrationNativeRawAdapter.TypedSpec.Domain)
     (before : State source Platform) (indexed : RegistrationNativeHiddenAllocationOwners.Indexed before.1.beacons)

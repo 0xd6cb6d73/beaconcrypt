@@ -36,7 +36,7 @@ private theorem dynamic_apply (joint : PqxdhJointIdentity.Primitives)
 /-- The complete actual public owner/Env native program opens to its same-World indexed source with all private seed and transcript state retained. -/
 theorem beacon_execution (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeIdentityFrontend.M n KemSK RegistrationServerRoleBackend.State mlSource Value)
     (before : State n KemSK mlSource × SourceState) :
     Prod.map id poolProjection <$>
@@ -62,7 +62,7 @@ theorem beacon_execution (setup : Setup base KemSK) (checks : Checks)
 /-- Private native source realization ignores only the additional uniform transcript entries and restores every generated owner seed. -/
 theorem beacon_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeIdentityFrontend.M n KemSK RegistrationServerRoleBackend.State mlSource Value)
     (before : State n KemSK mlSource × SourceState) :
     Prod.map id project <$>

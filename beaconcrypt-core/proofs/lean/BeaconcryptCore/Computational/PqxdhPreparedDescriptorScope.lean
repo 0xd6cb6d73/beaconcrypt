@@ -9,6 +9,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhPreparedDescriptorScope
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhInitialBeaconAmbient PqxdhInitialNativeAuditCarried
 variable {ι M P I D K X Response Shared Result Origin A N C : Type} {extra : OracleSpec ι} {S B : Nat}
 variable (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
@@ -25,9 +27,9 @@ variable (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writ
 theorem carried_valid (depth stage : Nat) (state reached : PqxdhInitialNativeAudit.State A N C)
     (context : Context extra M P I D K Result Origin S B)
     (supported : RawCtxForwardScan.Cut.pending context reached ∈ support
-      (carried source writer pre application initial selector aux mark sender route read execution depth stage state)) :
+      (carried (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initial selector aux mark sender route read execution depth stage state)) :
     PqxdhInitialDescriptorScope.Valid read context :=
-  PqxdhInitialDescriptorScope.carried_valid source mark execution.origin sender route read
+  PqxdhInitialDescriptorScope.carried_valid (associatedData := associatedData) (completedBinding := completedBinding) source mark execution.origin sender route read
     execution.initial execution.index execution.metadata execution.ready execution.outside execution.before execution.trace
     _ _ _ state reached context supported
 
@@ -37,10 +39,10 @@ theorem prepared_valid
     (depth : Nat) (state reached : PqxdhInitialNativeAudit.State A N C)
     (context : Context extra M P I D K Result Origin S B)
     (supported : Sum.inr (context, reached) ∈ support
-      (PqxdhInitialPreparedParent.prepare source writer pre application initial selector aux mark sender route read observe execution depth state)) :
+      (PqxdhInitialPreparedParent.prepare (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initial selector aux mark sender route read observe execution depth state)) :
     PqxdhInitialDescriptorScope.Valid read context :=
-  carried_valid source writer pre application initial selector aux mark sender route read execution depth (depth + 1) state reached context
-    ((PqxdhInitialPreparedParent.supported_pending source writer pre application initial selector aux mark sender route read observe execution depth state reached context).mp supported).1
+  carried_valid (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initial selector aux mark sender route read execution depth (depth + 1) state reached context
+    ((PqxdhInitialPreparedParent.supported_pending (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initial selector aux mark sender route read observe execution depth state reached context).mp supported).1
 
 /-- The concrete source-shaped preparation used by the later message-key game supplies the raw certificate with its exact initializer, root state, callbacks and saved continuation. -/
 theorem sample_one_valid (depth : Nat)
@@ -48,10 +50,10 @@ theorem sample_one_valid (depth : Nat)
       (X := X) (Response := Response) (A := A) (N := N) (S := S) (B := B))
     (pending : PqxdhErasedParentSample.Pending (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K)
       (A := A) (N := N) (S := S) (B := B))
-    (supported : Sum.inr pending ∈ support (PqxdhErasedParentSample.sampleOne source writer sender route read depth start)) :
+    (supported : Sum.inr pending ∈ support (PqxdhErasedParentSample.sampleOne (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route read depth start)) :
     PqxdhInitialDescriptorScope.Valid read pending.1 := by
   unfold PqxdhErasedParentSample.sampleOne at supported
-  exact prepared_valid source writer _ _ _ _ _ _ sender route read _ _ depth _ pending.2 pending.1 supported
+  exact prepared_valid (associatedData := associatedData) (completedBinding := completedBinding) source writer _ _ _ _ _ _ sender route read _ _ depth _ pending.2 pending.1 supported
 
 def PacketValid (read : RawCtxReceive.FrameDecoder) : PqxdhErasedParentSample.Packet
     (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K)
@@ -65,7 +67,7 @@ theorem sample_valid (depth : Nat)
     (prior : ProbComp (PqxdhInitialSourceInitialSecrecy.Context extra M P I D K X Response A N S B))
     (packet : PqxdhErasedParentSample.Packet (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K)
       (X := X) (Response := Response) (A := A) (N := N) (S := S) (B := B))
-    (supported : packet ∈ support (PqxdhErasedParentSample.sample source writer sender route read depth prior)) :
+    (supported : packet ∈ support (PqxdhErasedParentSample.sample (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route read depth prior)) :
     PacketValid read packet := by
   unfold PqxdhErasedParentSample.sample at supported
   simp only [mem_support_bind_iff] at supported
@@ -80,7 +82,7 @@ theorem sample_valid (depth : Nat)
       obtain ⟨value, sampled, rfl⟩ := supported
       cases value with
       | inl decision => trivial
-      | inr pending => exact sample_one_valid source writer sender route read depth (input, output) pending sampled
+      | inr pending => exact sample_one_valid (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route read depth (input, output) pending sampled
 
 /-- Dropping the unused earlier cache field leaves the actual retained descriptor and its raw certificate unchanged. -/
 theorem normalized_valid
@@ -94,12 +96,12 @@ theorem material_valid (depth : Nat)
     (prior : ProbComp (PqxdhInitialSourceInitialSecrecy.Context extra M P I D K X Response A N S B))
     (context : PqxdhErasedParentMaterial.MaterialContext (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K)
       (X := X) (Response := Response) (A := A) (N := N) (S := S) (B := B))
-    (supported : context ∈ support (PqxdhErasedParentMaterial.prepare source writer sender route read depth prior)) :
+    (supported : context ∈ support (PqxdhErasedParentMaterial.prepare (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route read depth prior)) :
     PacketValid read context.1.1.1 := by
   unfold PqxdhErasedParentMaterial.prepare at supported
   simp only [mem_support_bind_iff, mem_support_pure_iff] at supported
   obtain ⟨packet, sampled, parent, _, nonce, _, chain, _, rfl⟩ := supported
-  exact (normalized_valid read packet).mpr (sample_valid source writer sender route read depth prior packet sampled)
+  exact (normalized_valid read packet).mpr (sample_valid (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route read depth prior packet sampled)
 
 end BeaconcryptCore.Computational.PqxdhPreparedDescriptorScope
 

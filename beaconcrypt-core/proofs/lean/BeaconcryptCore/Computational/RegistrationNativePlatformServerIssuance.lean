@@ -3,6 +3,7 @@ import BeaconcryptCore.Computational.RegistrationNativePlatformServerSigningOrig
 import BeaconcryptCore.Computational.RegistrationNativePlatformBuildIssuance
 import BeaconcryptCore.Computational.RegistrationNativeServerIssuance
 import BeaconcryptCore.Computational.RegistrationNativePlatformExperiment
+import BeaconcryptCore.Computational.RegistrationNativePlatformBuildInterpret
 
 /-! Every actual source build that appends a response signing receipt retains its own moved token, source completion gate and first-record hash stage. The exact receipt includes failed signatures and all later failed writers/installations. This proves staged issuance and does not infer completed peer installation. -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -20,6 +21,30 @@ open RegistrationSigningShared (SignReply)
 open RegistrationServerFrontendCompiler (State)
 variable {n : Nat} {E Platform ι KemSK Reader Response : Type} {base : OracleSpec ι}
 variable [primitive : AdapterSealPrimitive.Operations]
+
+omit primitive in
+private theorem adHash_supported (coins : QueryImpl unifSpec (StateT Platform ProbComp))
+    (pending : registration.ServerAdHash) (before after : State n) (previous next : Platform)
+    (initial : registration.ServerInitialKdf)
+    (supported : ((.ok (.Ok initial), after), next) ∈ support
+      (((RegistrationNativePlatformServerSdk.adHash coins pending).run before).run previous)) :
+    (.ok (.Ok initial), after) ∈ support ((RegistrationServerSdkSource.adHash pending).run before) := by
+  have interpreted : simulateQ coins ((RegistrationServerSdkSource.adHash pending).run before) =
+      (RegistrationNativePlatformServerSdk.adHash coins pending).run before := by
+    have same := RegistrationNativePlatformBuildInterpret.sdk_adHash (n := n) coins (QueryImpl.id' unifSpec) pending
+    rw [RegistrationNativePlatformServerSdk.adHash_pure] at same
+    have identity : (fun query => simulateQ coins (QueryImpl.id' unifSpec query)) = coins := by
+      funext query
+      exact simulateQ_spec_query coins query
+    rw [identity] at same
+    exact congrFun same before
+  apply OracleComp.support_simulateQ_run'_subset coins _ previous
+  rw [StateT.run'_eq, support_map]
+  have reached : ((.ok (.Ok initial), after), next) ∈ support
+      ((simulateQ coins ((RegistrationServerSdkSource.adHash pending).run before)).run previous) := by
+    rw [interpreted]
+    exact supported
+  exact Set.mem_image_of_mem Prod.fst reached
 
 /-- All-outcome actual complete source build issuance retains the actual consumed token and record stage rather than assuming publication success. -/
 theorem source (coins : QueryImpl unifSpec (StateT Platform ProbComp))
@@ -52,8 +77,15 @@ theorem source (coins : QueryImpl unifSpec (StateT Platform ProbComp))
   have admitted := cut.occupancyResumed
   rw [PeerOwnership.completion_lookup_resume] at admitted
   simp only [controlEq, pinEq, tokenEq, applicationEq] at admitted
+  obtain ⟨adDigest, adResumed⟩ := RegistrationNativePlatformServerSdk.adHash_resume_receipt
+    coins cut.pendingAd cut.located cut.hashed cut.lookupPlatform cut.hashPlatform cut.initial cut.adHashCalled
+  have completeAd : BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission cut.current.control cut.pinned
+      (if cut.occupied then .Occupied else .Available) cut.token.agreement cut.plaintext cut.initial :=
+    ⟨cut.pendingAd, adDigest, admitted, adResumed⟩
   exact ⟨cut.token, cut.current, cut.pinned, cut.plaintext, cut.tokenTaken, cut.applicationSome,
-    (if cut.occupied then .Occupied else .Available), cut.initial, hashed, digest, signature, admitted, path, appended⟩
+    (if cut.occupied then .Occupied else .Available), cut.initial, hashed, digest, signature, completeAd, path, appended,
+    ⟨n, cut.pendingAd, cut.located, cut.hashed, admitted,
+      adHash_supported coins cut.pendingAd cut.located cut.hashed cut.lookupPlatform cut.hashPlatform cut.initial cut.adHashCalled⟩⟩
 
 omit primitive in
 private theorem map_apply {S X Y : Type} {m : Type → Type} [Monad m] [LawfulMonad m]
@@ -65,7 +97,7 @@ theorem typed {mlSource : RegistrationNativeMldsa.Source}
     (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
     (erased : commitment.CommitmentTranscript) (reserveRegistration reservePeer : StateT Platform ProbComp Bool)

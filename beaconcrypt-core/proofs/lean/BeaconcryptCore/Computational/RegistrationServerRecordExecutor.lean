@@ -1,6 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationRecordPrimitives
 import BeaconcryptCore.Refinement.RegistrationRecords
+import BeaconcryptCore.Refinement.RegistrationAd
 
 /-!
 The first Server record follows the actual extracted completion, initial KDF, ratchet KDF, detached seal, shared commitment and raw-write continuations. A successful result is the source ServerResponseHash capability, including its advanced kernel and retained binding; it is ready for the existing response-hash/sign/publication controller. No freshly reset kernel is installed. The open primitive interface retains every optional failure and the enclosing stateful interpretation retains every reached primitive effect.
@@ -59,11 +60,17 @@ def fromInitial (pending : registration.ServerInitialKdf) : OracleComp Spec (Rus
     let reply ← Spec.query (.initialKdf request)
     continueResult (pending.resume reply) fromRatchet
 
+/-- AD is hashed and completed before either initial-record KDF. Missing replies follow the owned candidate rejection path. -/
+def fromAd (pending : registration.ServerAdHash) : OracleComp Spec (RustM Result) :=
+  continueWith pending.request fun request => do
+    let reply ← Spec.query (.adHash request)
+    continueResult (pending.resume reply) fromInitial
+
 /-- The actual full current-pin comparison and native allocation gate run before any primitive callback. -/
 def begin (control : pqxdh.ServerState) (current : session.ServerAuthenticationPin)
     (availability : pqxdh.KeyIdAvailability) (agreement : agreement.ServerAgreement) (application : Slice Std.U8) :
     OracleComp Spec (RustM Result) :=
-  continueResult (registration.begin_server_completion control current availability agreement application) fromInitial
+  continueResult (registration.begin_server_completion control current availability agreement application) fromAd
 
 noncomputable def execute {Auxiliary : Type} (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (writer : RawCtxMixedShared.Writer) (control : pqxdh.ServerState) (current : session.ServerAuthenticationPin)
@@ -188,21 +195,27 @@ theorem path_retains (initial : registration.ServerInitialKdf) (completed : regi
             · rw [aeadContext, contextSame]
               rfl
 
-/-- Stateful interpretation can return a response only through the actual checked native completion gate and all five source callbacks. -/
+/-- Stateful interpretation can return a response only through the actual checked native completion gate and the AD hash and all five initial-record callbacks. -/
 theorem execute_path {Auxiliary : Type} (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (writer : RawCtxMixedShared.Writer) (control : pqxdh.ServerState) (current : session.ServerAuthenticationPin)
     (availability : pqxdh.KeyIdAvailability) (agreement : agreement.ServerAgreement) (application : Slice Std.U8)
     (before after : RawCtxSharedPrimitive.SharedState Auxiliary) (completed : registration.ServerResponseHash)
     (supported : (.ok (.Ok completed), after) ∈ support
       ((execute source writer control current availability agreement application).run before)) :
-    ∃ initial, registration.begin_server_completion control current availability agreement application = .ok (.Ok initial) ∧
+    ∃ initial, BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission control current availability agreement application initial ∧
       Path initial completed := by
   have native : .ok (.Ok completed) ∈ support (begin control current availability agreement application) := by
     apply OracleComp.support_simulateQ_run'_subset (RegistrationRecordPrimitives.implementation source writer) _ before
     rw [StateT.run'_eq, support_map]
     exact Set.mem_image_of_mem Prod.fst supported
-  obtain ⟨initial, started, continued⟩ := continueResult_support _ _ completed native
-  exact ⟨initial, started, fromInitial_path initial completed continued⟩
+  obtain ⟨ad, selected, hashing⟩ := continueResult_support _ _ completed native
+  obtain ⟨request, _, called⟩ := continueWith_support ad.request _ completed hashing
+  simp only [mem_support_bind_iff] at called
+  obtain ⟨reply, _, continued⟩ := called
+  obtain ⟨initial, resumed, recorded⟩ := continueResult_support _ _ completed continued
+  cases reply with
+  | none => simp [registration.ServerAdHash.resume, pqxdh.server_abort_candidate] at resumed
+  | some digest => exact ⟨initial, ⟨ad, digest, selected, resumed⟩, fromInitial_path initial completed recorded⟩
 
 theorem changed_pin_rejects (control : pqxdh.ServerState) (current : session.ServerAuthenticationPin)
     (availability : pqxdh.KeyIdAvailability) (agreement : agreement.ServerAgreement) (application : Slice Std.U8)
@@ -212,57 +225,42 @@ theorem changed_pin_rejects (control : pqxdh.ServerState) (current : session.Ser
     control current availability agreement application changed]
   rfl
 
-/-- Native completion never substitutes a registration binding when constructing its initial-record capability. -/
-theorem initial_binding (control : pqxdh.ServerState) (current : session.ServerAuthenticationPin)
+/-- The initial record uses the completed binding from the actual selected AD-hash continuation. -/
+theorem initial_completed_binding (control : pqxdh.ServerState) (current : session.ServerAuthenticationPin)
     (availability : pqxdh.KeyIdAvailability) (agreement : agreement.ServerAgreement) (application : Slice Std.U8)
     (initial : registration.ServerInitialKdf)
-    (actual : registration.begin_server_completion control current availability agreement application = .ok (.Ok initial)) :
-    initial.binding = agreement.binding := by
-  obtain ⟨empty, emptyRun⟩ : ∃ result, core.slice.Slice.is_empty application = .ok result := ⟨_, rfl⟩
-  obtain ⟨matched, matchRun⟩ := BeaconcryptCore.PanicFreedom.SessionBinding.RegistrationBinding_matches_server_total
-    agreement.binding current
-  obtain ⟨prepared, prepareRun⟩ := BeaconcryptCore.PanicFreedom.server_prepare_commit_ok control agreement.pending
-    current.binding availability
-  cases prepared with
-  | Err error =>
-      cases empty <;> cases matched <;>
-        simp [registration.begin_server_completion, session.ServerAuthenticationPin.impl.binding,
-          emptyRun, matchRun, prepareRun] at actual
-  | Ok candidate =>
-      obtain ⟨pending, pendingRun⟩ :=
-        BeaconcryptCore.PanicFreedom.Structural.pqxdh_concrete_start_server_candidate_ratchet_kdf_total
-          candidate agreement.root.bytes
-      cases empty <;> cases matched
-      all_goals simp only [registration.begin_server_completion, session.ServerAuthenticationPin.impl.binding,
-        ratchet.RatchetChain.as_bytes, emptyRun, matchRun, prepareRun, pendingRun, bind_tc_ok,
-        Bool.false_eq_true, ite_false, ite_true, RustM.ok.injEq, core.result.Result.Ok.injEq,
-        reduceCtorEq] at actual
-      cases actual
-      rfl
+    (actual : BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission control current availability agreement application initial) :
+    ∃ digest binding, agreement.binding.complete digest = .ok binding ∧ initial.binding = binding ∧
+      BeaconcryptCore.Refinement.SessionBinding.registrationConsistent binding ∧
+      pqxdh.server_prepare_commit control agreement.pending current.binding availability = .ok (.Ok initial.candidate) :=
+  BeaconcryptCore.Refinement.RegistrationAd.server_admission_binding
+    control current availability agreement application initial actual
 
 /-- A successful concrete run returns the source sequence-one advanced kernel and original populated binding, after rechecking the complete current pin. -/
-theorem execute_retains {Auxiliary : Type} (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
+theorem execute_retains_completed_ad {Auxiliary : Type} (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (writer : RawCtxMixedShared.Writer) (control : pqxdh.ServerState) (current : session.ServerAuthenticationPin)
     (availability : pqxdh.KeyIdAvailability) (agreement : agreement.ServerAgreement) (application : Slice Std.U8)
     (before after : RawCtxSharedPrimitive.SharedState Auxiliary) (completed : registration.ServerResponseHash)
     (supported : (.ok (.Ok completed), after) ∈ support
       ((execute source writer control current availability agreement application).run before)) :
     BeaconcryptCore.Refinement.SessionBinding.sameServerPin agreement.binding.server_pin current ∧
-      completed.binding = agreement.binding ∧
+      ∃ digest binding, agreement.binding.complete digest = .ok binding ∧ completed.binding = binding ∧
+      BeaconcryptCore.Refinement.SessionBinding.registrationConsistent binding ∧
       ∃ selected : ratchet.concrete.SendSeal record_effects.SealFrameContext,
         completed.kernel = selected.advanced ∧ selected.sequence.val = 1 ∧
-        selected.context.associated_data = agreement.binding.associated_data := by
+        selected.context.associated_data = binding.associated_data := by
   obtain ⟨initial, started, path⟩ :=
     execute_path source writer control current availability agreement application before after completed supported
-  obtain ⟨binding, _, selected, kernel, sequence, data⟩ := path_retains initial completed path
-  have sameBinding := initial_binding control current availability agreement application initial started
-  refine ⟨?_, binding.trans sameBinding, selected, kernel, sequence, ?_⟩
-  · by_contra changed
-    unfold execute at supported
-    rw [changed_pin_rejects control current availability agreement application changed] at supported
-    simp only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff,
-      Prod.mk.injEq, RustM.ok.injEq, reduceCtorEq, false_and] at supported
-  · exact data.trans (congrArg (fun value => value.associated_data) sameBinding)
+  obtain ⟨bindingSame, _, selected, kernel, sequence, data⟩ := path_retains initial completed path
+  obtain ⟨digest, binding, complete, sameBinding, consistent, _prepared⟩ :=
+    initial_completed_binding control current availability agreement application initial started
+  refine ⟨?_, digest, binding, complete, bindingSame.trans sameBinding, consistent,
+    selected, kernel, sequence, data.trans (congrArg (fun value => value.associated_data) sameBinding)⟩
+  by_contra changed
+  unfold execute at supported
+  rw [changed_pin_rejects control current availability agreement application changed] at supported
+  simp only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff,
+    Prod.mk.injEq, RustM.ok.injEq, reduceCtorEq, false_and] at supported
 
 end BeaconcryptCore.Computational.RegistrationServerRecordExecutor
 
@@ -286,13 +284,13 @@ end BeaconcryptCore.Computational.RegistrationServerRecordExecutor
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationServerRecordExecutor.changed_pin_rejects
-/-- info: 'BeaconcryptCore.Computational.RegistrationServerRecordExecutor.initial_binding' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.RegistrationServerRecordExecutor.initial_completed_binding' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationServerRecordExecutor.initial_binding
-/-- info: 'BeaconcryptCore.Computational.RegistrationServerRecordExecutor.execute_retains' depends on axioms: [propext,
+#print axioms BeaconcryptCore.Computational.RegistrationServerRecordExecutor.initial_completed_binding
+/-- info: 'BeaconcryptCore.Computational.RegistrationServerRecordExecutor.execute_retains_completed_ad' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationServerRecordExecutor.execute_retains
+#print axioms BeaconcryptCore.Computational.RegistrationServerRecordExecutor.execute_retains_completed_ad

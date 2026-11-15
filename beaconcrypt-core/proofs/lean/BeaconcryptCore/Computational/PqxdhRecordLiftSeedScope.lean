@@ -6,6 +6,9 @@ import BeaconcryptCore.Computational.PqxdhRecordLiftAvailability
 open OracleComp OracleSpec CoreModels Aeneas
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhRecordLiftSeedScope
+
+/-- Current AD151, elaborated independently of dependent result annotations. -/
+private abbrev RecordAd := Aeneas.Std.Array Aeneas.Std.U8 151#usize
 open PqxdhRecordLiftInterface PqxdhRecordLiftProtocol PqxdhRecordLiftAvailability
 variable {n : Nat}
 
@@ -402,13 +405,13 @@ theorem sampled_program {ι KemSK Reader Response E X : Type} {baseSpec : Oracle
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) (target : Slot n)
     (result : { result : PqxdhRecordLiftGlobalSeedCut.Cut n
-      (Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+      (Option (PqxdhRegistrationJointServerBirth.ClientCreated RecordAd ×
         (X × PqxdhDeploymentSecrecy.Ledger) × E) × Control n) × Private n //
       result.2.seeds.1 target = none })
     (supported : result ∈ support (PqxdhRecordLiftGlobalSeedCut.sampledPrefix setup.source ideal setup codec target
       (PqxdhRecordLiftProtocol.program env setup.source.crypto codec route serverKid bounds mode adversary)))
     (next : Unit → OracleComp (ServiceSpec n)
-      (Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+      (Option (PqxdhRegistrationJointServerBirth.ClientCreated RecordAd ×
         (X × PqxdhDeploymentSecrecy.Ledger) × E) × Control n)) (pending : result.val.1 = .pending next) :
     Scoped result.val.2 ∧ result.val.2.seeds.1 target = none ∧
       ∀ coordinate, coordinate.slot = target → result.val.2.chain coordinate = none :=

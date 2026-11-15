@@ -20,7 +20,7 @@ open RegistrationNativeBeaconFrontend (Owner)
 open RegistrationNativeMldsaShared (Local lower)
 variable {n count : Nat} {ι KemSK Value : Type} {base : OracleSpec ι} {source : RegistrationNativeMldsa.Source}
 variable (setup : Setup base KemSK) (checks : Checks) (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (packet : registration.InitPacket) (initAuth : registration.AuthenticatedInit)
 variable (serverBefore serverAfter : RegistrationNativeKemServerState.State n source) (completed : agreement.ServerAgreement)
 variable (log : Log KemSK)

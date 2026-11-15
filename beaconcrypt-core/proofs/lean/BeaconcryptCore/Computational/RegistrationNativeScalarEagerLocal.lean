@@ -22,7 +22,7 @@ noncomputable def always (setup : Setup base KemSK) (source : RegistrationNative
     (scalar : PqxdhJointGapDh.ScalarBytes) (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64) :
     M n KemSK source RegistrationServerRoleBackend.State (RustM (Option Nat)) := do
   match ← RegistrationNativeBeaconFrontend.prepare source edPin mlPin keyId with
-  | .ok (some prepared) => appendBorn setup source edPin keyId prepared.pin prepared.credentials prepared.identity scalar
+  | .ok (some prepared) => appendBorn setup source edPin keyId prepared.pin prepared.identity scalar
   | .ok none => pure (.ok none)
   | .fail error => pure (.fail error)
   | .div => pure .div
@@ -71,7 +71,7 @@ theorem always_factor (setup : Setup base KemSK) (source : RegistrationNativeMld
 /-- The actual source wrapper inherits the selected constructor's optional-prefix factor, with its complete private state. -/
 theorem target_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (source : RegistrationNativeMldsa.Source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (source : RegistrationNativeMldsa.Source)
     (selected : Nat) (scalar : PqxdhJointGapDh.ScalarBytes) (edPin : Std.Array U8 32#usize)
     (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (before : RegistrationNativeExperiment.State n KemSK source) (chosen : before.beacons.length = selected) :
@@ -97,7 +97,7 @@ theorem target_source (setup : Setup base KemSK) (checks : Checks)
 /-- An actual World-only scalar prefix closes before any later mutable Beacon continuation. -/
 theorem sample_bind {source : RegistrationNativeMldsa.Source} (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (draw : ProbComp X)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (draw : ProbComp X)
     (next : X → M n KemSK source RegistrationServerRoleBackend.State Y)
     (before : RegistrationNativeExperiment.State n KemSK source) :
     (RegistrationNativeExperiment.beacon setup checks representation created (sample draw >>= next)).run before = (do

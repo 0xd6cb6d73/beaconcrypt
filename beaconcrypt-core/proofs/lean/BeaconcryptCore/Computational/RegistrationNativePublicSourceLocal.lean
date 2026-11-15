@@ -26,7 +26,7 @@ private theorem map_apply {S X Y : Type} {m : Type → Type} [Monad m] [LawfulMo
 /-- Literal public packing and private restoration preserve the full reached World, pool and current environment. -/
 theorem local_source (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential source) (selected : Nat)
     (publicPrekey : PqxdhJointIdentity.PeerEncoding) (roots : Roots)
     (work native : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State Value)

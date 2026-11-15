@@ -18,14 +18,12 @@ set_option maxHeartbeats 1000000
 
 namespace BeaconcryptCore.Computational.TransportSizingBridge
 
-/-- All six request byte fields, including the ML public key and signature. -/
-def initLength (lengths : Array Std.Usize 6#usize) : Nat :=
+/-- All four remaining request byte fields, including attached Ed25519 signatures. -/
+def initLength (lengths : Array Std.Usize 4#usize) : Nat :=
   3 + CborSizing.byteStringLen lengths.val[0]!.val +
     CborSizing.byteStringLen lengths.val[1]!.val +
     CborSizing.byteStringLen lengths.val[2]!.val +
-    CborSizing.byteStringLen lengths.val[3]!.val +
-    CborSizing.byteStringLen lengths.val[4]!.val +
-    CborSizing.byteStringLen lengths.val[5]!.val
+    CborSizing.byteStringLen lengths.val[3]!.val
 
 /-- All five response byte fields and its assigned identifier in schema order. -/
 def responseLength (lengths : Array Std.Usize 5#usize) (assigned : Std.U64) : Nat :=
@@ -147,8 +145,8 @@ theorem encoded_frame_len_exact (sequence sender : Std.U64) (ciphertextLength : 
   simpa only [payloadValue, senderValue, sequenceValue, startValue, overflowCap_add, finish_overflowCap,
     CborSizing.frameLen, CborSizing.byteStringLen, Nat.add_assoc] using finishValue
 
-/-- The actual request operation accounts for all six independently sized byte fields. -/
-theorem encoded_init_len_exact (lengths : Array Std.Usize 6#usize) :
+/-- The actual request operation accounts for all four independently sized byte fields. -/
+theorem encoded_init_len_exact (lengths : Array Std.Usize 4#usize) :
     ∃ reply, transport.encoded_init_len lengths = ok reply ∧
       absLength reply = messageCap (initLength lengths) := by
   obtain ⟨start, startRun, startValue⟩ := cbor_length_new_exact
@@ -156,21 +154,16 @@ theorem encoded_init_len_exact (lengths : Array Std.Usize 6#usize) :
   obtain ⟨field1, field1Run, field1Value⟩ := cbor_length_bytes_exact field0 lengths.val[1]!
   obtain ⟨field2, field2Run, field2Value⟩ := cbor_length_bytes_exact field1 lengths.val[2]!
   obtain ⟨field3, field3Run, field3Value⟩ := cbor_length_bytes_exact field2 lengths.val[3]!
-  obtain ⟨field4, field4Run, field4Value⟩ := cbor_length_bytes_exact field3 lengths.val[4]!
-  obtain ⟨field5, field5Run, field5Value⟩ := cbor_length_bytes_exact field4 lengths.val[5]!
-  obtain ⟨reply, finishRun, finishValue⟩ := cbor_length_finish_exact field5
+  obtain ⟨reply, finishRun, finishValue⟩ := cbor_length_finish_exact field3
   refine ⟨reply, by simp only [transport.encoded_init_len, startRun,
       index_usize_eq lengths 0#usize (by simp),
       index_usize_eq lengths 1#usize (by simp),
       index_usize_eq lengths 2#usize (by simp),
       index_usize_eq lengths 3#usize (by simp),
-      index_usize_eq lengths 4#usize (by simp),
-      index_usize_eq lengths 5#usize (by simp),
       show (0#usize).val = 0 by simp, show (1#usize).val = 1 by simp,
       show (2#usize).val = 2 by simp, show (3#usize).val = 3 by simp,
-      show (4#usize).val = 4 by simp, show (5#usize).val = 5 by simp,
-      field0Run, field1Run, field2Run, field3Run, field4Run, field5Run, finishRun, bind_tc_ok], ?_⟩
-  simpa only [field5Value, field4Value, field3Value, field2Value, field1Value, field0Value,
+      field0Run, field1Run, field2Run, field3Run, finishRun, bind_tc_ok], ?_⟩
+  simpa only [field3Value, field2Value, field1Value, field0Value,
     startValue, overflowCap_add, finish_overflowCap, initLength, CborSizing.byteStringLen, Nat.add_assoc]
     using finishValue
 
@@ -215,13 +208,13 @@ theorem encoded_current_response_len_exact (payloadLength : Std.Usize) (assigned
       pqxdh.SIGN_PUBLIC_KEY_SIZE, pqxdh.X25519_PUBLIC_KEY_SIZE, pqxdh.MLKEM768_CIPHERTEXT_SIZE,
       authentication.MLDSA_SIGNATURE_LEN] using facts.2⟩
 
-/-- The actual current six-field registration-request sizing call returns exactly 6757 bytes. -/
+/-- The actual current four-field registration-request sizing call returns exactly 1490 bytes. -/
 theorem encoded_current_init_len_exact :
     ∃ reply, transport.encoded_init_len
-      (Array.make 6#usize [33#usize, 98#usize, 98#usize, 1249#usize, 1952#usize, 3309#usize]) = ok reply ∧
-      absLength reply = some 6757 := by
+      (Array.make 4#usize [33#usize, 98#usize, 98#usize, 1249#usize]) = ok reply ∧
+      absLength reply = some 1490 := by
   exact (encoded_init_len_exact
-    (Array.make 6#usize [33#usize, 98#usize, 98#usize, 1249#usize, 1952#usize, 3309#usize])).imp
+    (Array.make 4#usize [33#usize, 98#usize, 98#usize, 1249#usize])).imp
     fun reply facts => ⟨facts.1, by simpa [initLength, messageCap, CborSizing.byteStringLen,
       CborSizing.argumentLen, Std.Array.make] using facts.2⟩
 

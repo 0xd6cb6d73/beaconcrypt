@@ -30,26 +30,26 @@ variable (configuration :RegistrationNativePlatformPublicAdapterConfiguration.Co
 abbrev State (n :Nat) (KemSK P :Type) (source :RegistrationNativeMldsa.Source):=
   RegistrationNativePlatformPublicAdapterAuditModel.State n KemSK P source
 
-noncomputable def model (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source) :
+noncomputable def model (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source) :
     QueryImpl RegistrationNativePlatformPublicAdapterLowSpec.Spec (StateT (State n KemSK P source) ProbComp) :=
   RegistrationNativePlatformPublicAdapterAuditModel.raw configuration created credential ∘ₛ
     RegistrationNativePlatformPublicAdapterLowSpec.nativeAdapter
 
-noncomputable def coreModel (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source) :
+noncomputable def coreModel (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source) :
     QueryImpl RegistrationNativePlatformPublicAdapterLowSpec.Spec (StateT (RegistrationNativeExperiment.State n KemSK source×P) ProbComp) :=
   (fun query=>RegistrationNativePlatformPackedState.pack (RegistrationNativePlatformPublicAdapterDispatcherCore.native configuration created credential query)) ∘ₛ
     RegistrationNativePlatformPublicAdapterLowSpec.nativeAdapter
 
-abbrev Private (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+abbrev Private (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
     (before :State n KemSK P source):=
   RegistrationNativePlatformPublicAdapterAuditModel.Private configuration created credential before
 
-noncomputable def physical (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+noncomputable def physical (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
     (before :State n KemSK P source) (stored :Private configuration created credential before):=
   RegistrationNativePlatformPublicAdapterAuditModel.physical configuration created credential before stored
 
 omit [PublicWrapperPlatform.CryptoOperations] in
-theorem native_query (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+theorem native_query (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
     (query :RegistrationNativePlatformPublicAdapterLowSpec.Spec.Domain) (before :State n KemSK P source) :
     Prod.map id Prod.fst <$> ((model configuration created credential query).run before)=
       ((coreModel configuration created credential query).run before.1) :=by
@@ -60,14 +60,14 @@ theorem native_query (created :PqxdhLiveServerConstruction.Created Unit) (creden
     (RegistrationNativePlatformPublicAdapterLowSpec.nativeAdapter query) before
 
 omit [PublicWrapperPlatform.CryptoOperations] in
-theorem native_program {Value :Type} (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+theorem native_program {Value :Type} (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
     (work :OracleComp RegistrationNativePlatformPublicAdapterLowSpec.Spec Value) (before :State n KemSK P source) :
     Prod.map id Prod.fst <$> (simulateQ (model configuration created credential) work).run before=
       (simulateQ (coreModel configuration created credential) work).run before.1 :=
   OracleComp.map_run_simulateQ_eq_of_query_map_eq _ _ Prod.fst (native_query configuration created credential) work before
 
 omit [PublicWrapperPlatform.CryptoOperations] in
-theorem raw_program {Value :Type} (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+theorem raw_program {Value :Type} (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
     (work :OracleComp RegistrationNativePlatformPublicAdapterLowSpec.Spec Value) :
     simulateQ (model (n:=n) configuration created credential) work=
       simulateQ (RegistrationNativePlatformPublicAdapterAuditModel.raw (n:=n) configuration created credential)
@@ -76,7 +76,7 @@ theorem raw_program {Value :Type} (created :PqxdhLiveServerConstruction.Created 
   exact QueryImpl.simulateQ_compose _ _ work
 
 omit [PublicWrapperPlatform.CryptoOperations] in
-theorem public_query (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+theorem public_query (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
     (query :RegistrationNativePlatformPublicAdapterInterface.Spec.Domain) :
     model (n:=n) configuration created credential (.inl query)=
       RegistrationNativePlatformPublicAdapterAuditModel.model configuration created credential query :=by
@@ -87,7 +87,7 @@ theorem public_query (created :PqxdhLiveServerConstruction.Created Unit) (creden
   | inr command=>simp only [RegistrationNativePlatformPublicAdapterLowSpec.nativeAdapter,RegistrationNativePlatformPublicAdapterInterface.adapter,simulateQ_spec_query];rfl
 
 omit [PublicWrapperPlatform.CryptoOperations] in
-theorem server_query (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+theorem server_query (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
     (key :U64) (bytes :Pqxdh.Bytes) (oversized :¬bytes.length≤Usize.max) :
     model (n:=n) configuration created credential (.inr (.serverSend key bytes oversized))=
       RegistrationNativePlatformPublicAdapterAuditModel.raw configuration created credential (.inr (.serverSend key bytes)) :=by
@@ -95,7 +95,7 @@ theorem server_query (created :PqxdhLiveServerConstruction.Created Unit) (creden
   rw [QueryImpl.apply_compose,RegistrationNativePlatformPublicAdapterLowSpec.server_native,simulateQ_spec_query]
 
 omit [PublicWrapperPlatform.CryptoOperations] in
-theorem beacon_query (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+theorem beacon_query (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
     (owner :Nat) (bytes :Pqxdh.Bytes) (oversized :¬bytes.length≤Usize.max) :
     model (n:=n) configuration created credential (.inr (.beaconSend owner bytes oversized))=
       RegistrationNativePlatformPublicAdapterAuditModel.raw configuration created credential (.inr (.beaconSend owner bytes)) :=by

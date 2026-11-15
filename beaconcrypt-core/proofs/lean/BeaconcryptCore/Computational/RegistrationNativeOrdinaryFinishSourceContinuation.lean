@@ -121,7 +121,7 @@ theorem continuation_native (setup : Setup base KemSK) (wire : RegistrationNativ
     (seed : IdentitySeed) (scalar : ScalarBytes)
     (owner current : RegistrationNativeBeaconFrontend.Owner mlSource) (env : EnvState Auxiliary)
     (authenticated : registration.AuthenticatedResponse)
-    (result : RustM (Option RegistrationBeaconReferenceRoot.Ready)) (erased : Std.Array U8 357#usize)
+    (result : RustM (Option RegistrationBeaconReferenceRoot.Ready)) (erased : Std.Array U8 227#usize)
     (before : Private n KemSK) :
     (simulateQ (implementation setup wire route sign seed scalar)
       (((afterPrepared setup.source (eraseOwner owner) result :

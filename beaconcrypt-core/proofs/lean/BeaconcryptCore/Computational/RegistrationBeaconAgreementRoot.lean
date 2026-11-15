@@ -37,7 +37,7 @@ def callbacks (authenticated : registration.AuthenticatedResponse) : QueryImpl P
 
 def state (authenticated : registration.AuthenticatedResponse)
     (input : PqxdhBeaconPhase2Preparation.Inputs registration.AuthenticatedResponse) : agreement.AgreementState :=
-  ⟨.Beacon authenticated.pending.control authenticated.pending.binding authenticated.packet.public authenticated.packet.application,
+  ⟨.Beacon authenticated.control authenticated.binding authenticated.packet.public authenticated.packet.application,
     Array.repeat 32#usize 0#u8, input.ephemeral, input.ciphertext,
     ⟨input.finishInputs.shared_secrets.dh1⟩, ⟨input.finishInputs.shared_secrets.dh2⟩,
     ⟨input.finishInputs.shared_secrets.dh3⟩, ⟨input.finishInputs.shared_secrets.dh4⟩,
@@ -49,7 +49,7 @@ def finish (authenticated : registration.AuthenticatedResponse)
   continueWith (agreement.finish_dh (state authenticated input)) (drive 2)
 
 def rejected (authenticated : registration.AuthenticatedResponse) : agreement.AgreementEffect :=
-  .Rejected (.Some ⟨authenticated.pending.control.expected_server_binding.identity_key_id⟩)
+  .Rejected (.Some ⟨authenticated.control.expected_server_binding.identity_key_id⟩)
 
 def normalized (authenticated : registration.AuthenticatedResponse) : OracleComp Spec (RustM agreement.AgreementEffect) := do
   let input ← simulateQ (callbacks authenticated) (PqxdhBeaconPhase2Preparation.collect () false true () [])
@@ -65,7 +65,7 @@ private theorem drive_rejected (fuel : Nat) (aborted : core.option.Option pqxdh.
 
 /-- The coherent retained native owner executes the same seven real primitive requests, every optional exit and final root admission. -/
 theorem beacon_normalized (authenticated : registration.AuthenticatedResponse)
-    (coherent : authenticated.pending.control.expected_server_binding = authenticated.pending.binding.server_pin.binding) :
+    (coherent : authenticated.control.expected_server_binding = authenticated.binding.server_pin.binding) :
     beacon authenticated = normalized authenticated := by
   rw [beacon, BeaconcryptCore.Refinement.KeyAgreement.beacon_entry_refines authenticated coherent]
   simp only [normalized, PqxdhBeaconPhase2Preparation.collect,

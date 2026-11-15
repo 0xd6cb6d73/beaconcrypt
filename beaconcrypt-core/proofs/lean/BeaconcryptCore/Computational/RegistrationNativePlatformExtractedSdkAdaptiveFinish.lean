@@ -28,7 +28,7 @@ variable [crypto : AdapterPublicWrapperRequestMonad.CryptoOperations (AdapterPub
 variable {E : Type}
 
 noncomputable def step (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire)
     (erased : commitment.CommitmentTranscript)
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State))
@@ -121,7 +121,7 @@ theorem reply (self : beaconcrypt_public_wrapper.beacon.Beacon) (pending : regis
 omit platform [PublicWrapperPlatform.CryptoOperations] localOps crypto in
 theorem normal (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat) (self : beaconcrypt_public_wrapper.beacon.Beacon) (owner : RegistrationNativeBeaconFrontend.Owner source)
     (pending : registration.BeaconPending) (prekey oneTime : beaconcrypt_crypto.crypto_kx.KeyPair)
     (kem : beaconcrypt_crypto.crypto_kem.mlkem768.KeyPair) (scalar : PqxdhJointGapDh.ScalarBytes)

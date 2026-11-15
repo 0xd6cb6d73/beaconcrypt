@@ -6,7 +6,9 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeBeforeResume
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhJointKdfGame PqxdhNativeSharedPrefix
 open RawCtxSelectedParentTable RawCtxSelectedParentEntry PqxdhFirstRecordConfidentiality
 variable {ι M P I D K X Response Shared A N C Value Result : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -55,9 +57,9 @@ theorem resume_pre {Native : Type}
     (state reached : Native)
     (cut : RawCtxForwardScan.Cut.pending details.callback reached ∈ support
       (RawCtxForwardScan.scan PqxdhInitialOriginForwardPost.selected selected selection impl
-        (PqxdhInitialOriginForwardPost.program mark sender route read
+        (PqxdhInitialOriginForwardPost.program (completedBinding := completedBinding) mark sender route read
           ((PqxdhRecordConfidentialityChallenge.handler owner number sourceBit details.request.query).run details.request.before) front trace)
-        (PqxdhInitialOriginForwardPost.program_covered mark sender route read
+        (PqxdhInitialOriginForwardPost.program_covered (completedBinding := completedBinding) mark sender route read
           ((PqxdhRecordConfidentialityChallenge.handler owner number sourceBit details.request.query).run details.request.before) front trace) state))
     (material : PqxdhOrderedChainHybrids.Material) (qPost : Nat)
     (fits : PqxdhInitialOriginCertificates.Fits qPost details.callback) (localState : Local A N C)
@@ -65,9 +67,9 @@ theorem resume_pre {Native : Type}
       PqxdhInitialBuilderContext.address details.callback.original) :
     Pre (fun a b => a = b) (fun result => PqxdhLaterChallengeMonitor.Dead result.2)
       (fun result => PqxdhLaterChallengeMonitor.Dead result.2)
-      (PqxdhLaterChallengeSavedMonitor.resume pre application initial selector aux source writer prior target nonce next
+      (PqxdhLaterChallengeSavedMonitor.resume (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next
         sender route read mark monitor owner number false details material qPost fits localState none)
-      (PqxdhLaterChallengeSavedMonitor.resume pre application initial selector aux source writer prior target nonce next
+      (PqxdhLaterChallengeSavedMonitor.resume (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next
         sender route read mark monitor owner number true details material qPost fits localState none) := by
   unfold PqxdhLaterChallengeSavedMonitor.resume
   apply pre_bind_refl
@@ -75,11 +77,11 @@ theorem resume_pre {Native : Type}
   rcases callback with ⟨_ | ⟨reply, current⟩, after⟩
   · exact Pre.pure rfl
   · have unused := before_unused owner number sourceBit details classified (reply, current)
-      (PqxdhLaterSavedCompilerSupport.source_support pre application initial selector aux source writer prior target nonce next
+      (PqxdhLaterSavedCompilerSupport.source_support (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next
         sender route read mark monitor selected selection impl
         ((PqxdhRecordConfidentialityChallenge.handler owner number sourceBit details.request.query).run details.request.before)
         front trace state reached qPost details.callback cut material fits localState (reply, current) after supported)
-    exact pre_map (PqxdhLaterChallengeMonitor.program_pre pre application initial selector aux source writer prior
+    exact pre_map (PqxdhLaterChallengeMonitor.program_pre (completedBinding := completedBinding) pre application initial selector aux source writer prior
       ⟨PqxdhInitialBuilderContext.address details.callback.original, material⟩ target nonce next sender route read mark monitor
       owner number (details.request.next reply) current unused after separate)
       _ _ (fun _ _ same => by rw [same]) (fun _ dead => dead) (fun _ dead => dead)

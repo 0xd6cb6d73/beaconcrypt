@@ -29,16 +29,6 @@ theorem extraction_serialize_initkex_size_3 (payload output : Slice U8) (low hig
       beaconcrypt_parse.transport.extraction_serialize_initkex_size_3 payload output low high :=
   BeaconcryptCore.Refinement.RegistrationSerializerFieldBoundary.helper_eta _ _ _ _ _
 
-theorem extraction_serialize_initkex_size_4 (payload output : Slice U8) (low high : Bool) :
-    ((fun captured state lo hi => beaconcrypt_parse.transport.extraction_serialize_initkex_size_4 captured state lo hi) payload output low high) =
-      beaconcrypt_parse.transport.extraction_serialize_initkex_size_4 payload output low high :=
-  BeaconcryptCore.Refinement.RegistrationSerializerFieldBoundary.helper_eta _ _ _ _ _
-
-theorem extraction_serialize_initkex_size_5 (payload output : Slice U8) (low high : Bool) :
-    ((fun captured state lo hi => beaconcrypt_parse.transport.extraction_serialize_initkex_size_5 captured state lo hi) payload output low high) =
-      beaconcrypt_parse.transport.extraction_serialize_initkex_size_5 payload output low high :=
-  BeaconcryptCore.Refinement.RegistrationSerializerFieldBoundary.helper_eta _ _ _ _ _
-
 theorem extraction_serialize_kexresponse_size_0 (payload output : Slice U8) (low high : Bool) :
     ((fun captured state lo hi => beaconcrypt_parse.transport.extraction_serialize_kexresponse_size_0 captured state lo hi) payload output low high) =
       beaconcrypt_parse.transport.extraction_serialize_kexresponse_size_0 payload output low high :=
@@ -84,18 +74,6 @@ end BeaconcryptCore.RegistrationSerializerControllerExtraction.SourceCertificate
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.RegistrationSerializerControllerExtraction.SourceCertificates.extraction_serialize_initkex_size_3
-
-/-- info: 'BeaconcryptCore.RegistrationSerializerControllerExtraction.SourceCertificates.extraction_serialize_initkex_size_4' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.RegistrationSerializerControllerExtraction.SourceCertificates.extraction_serialize_initkex_size_4
-
-/-- info: 'BeaconcryptCore.RegistrationSerializerControllerExtraction.SourceCertificates.extraction_serialize_initkex_size_5' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.RegistrationSerializerControllerExtraction.SourceCertificates.extraction_serialize_initkex_size_5
 
 /-- info: 'BeaconcryptCore.RegistrationSerializerControllerExtraction.SourceCertificates.extraction_serialize_kexresponse_size_0' depends on axioms: [propext,
  Classical.choice,

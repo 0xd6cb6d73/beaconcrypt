@@ -20,6 +20,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 
 set_option autoImplicit false
+set_option warningAsError true
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGuessBill
 open PqxdhServerAuthExperiment (Setup Codec Checks)
@@ -42,17 +43,19 @@ variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response : Type}
   (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
   (checks : Checks) (caps : KemCaps) {count : ℕ}
 
-/-- Owner k's finish with the decapsulation oracle draws at most `69 · max 64 decapsCost` uniform coins: the native owner program makes at most 69 callbacks (`PqxdhBeaconPhase2Bounds.native_interpreted_bound`), each on the guesser's own coins within `max 64 decapsCost` (`PqxdhRegistrationSchedule.callbacks_uniform`), except the decapsulation, which is one oracle query and no coin. -/
-theorem oracleFinish_uniform (bounded : KemBound setup caps) {Bk : Type} {n : ℕ} (index : ℕ) (raw : Pqxdh.Bytes)
-    (x : XState KemSK Bk n) :
-    ((oracleFinish (baseSpec := baseSpec) setup codec index raw).run x).IsQueryBoundP IsMlKemUniformQuery
-      (69 * max 64 caps.decapsCost) := by
-  unfold oracleFinish
-  dsimp only [StateT.run]
-  split
-  · exact isQueryBoundP_pure _ _ _
-  · rw [isQueryBoundP_map_iff]
-    refine PqxdhBeaconPhase2Bounds.native_interpreted_bound _ _ _ (fun query state => ?_) _ _ _ _
+/-- Owner k's finish with the decapsulation oracle draws at most `64 + 69 · max 64 decapsCost` uniform coins: its transcript digest costs 64 and the native owner program makes at most 69 callbacks (`PqxdhBeaconPhase2Bounds.native_interpreted_bound`), each on the guesser's own coins within `max 64 decapsCost` (`PqxdhRegistrationSchedule.callbacks_uniform`), except the decapsulation, which is one oracle query and no coin. -/
+theorem oracleOwnerFinish_uniform (bounded : KemBound setup caps)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) (state : PqxdhServerAuthNative.NativeState KemSK) :
+    ((PqxdhDeploymentIdealAnomalyGuesser.oracleOwnerFinish setup codec retained raw owner).run state).IsQueryBoundP
+      IsMlKemUniformQuery (64 + 69 * max 64 caps.decapsCost) := by
+  have native : ∀ (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+      (current : PqxdhServerAuthNative.NativeState KemSK),
+      ((simulateQ (oracleCallbacks setup codec)
+        (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw owner)).run
+        current).IsQueryBoundP IsMlKemUniformQuery (69 * max 64 caps.decapsCost) := by
+    intro completedBinding current
+    refine PqxdhBeaconPhase2Bounds.native_interpreted_bound (completedBinding := completedBinding) _ _ _ (fun query state => ?_) _ _ _ _
     rcases query with query | query
     · cases query
       case decapsulate ciphertext keys =>
@@ -67,15 +70,39 @@ theorem oracleFinish_uniform (bounded : KemBound setup caps) {Bk : Type} {n : �
     · simp only [oracleCallbacks, StateT.run]
       exact PqxdhPrivateRootQueryBounds.ccaCoins_uniform _ _
         (PqxdhRegistrationSchedule.callbacks_uniform setup codec caps bounded _ state)
+  unfold PqxdhDeploymentIdealAnomalyGuesser.oracleOwnerFinish
+  split
+  · split
+    · rw [StateT.run_bind]
+      exact isQueryBoundP_bind (PqxdhPrivateRootQueryBounds.ccaCoins_uniform _ _
+        (PqxdhServerAuthNativeUniformCosts.hash_uniform _ state)) fun hashed _ => native _ hashed.2
+    · trivial
+  · trivial
 
-/-- Owner k's finish with the decapsulation oracle makes no base-oracle query. -/
-theorem oracleFinish_base {Bk : Type} {n : ℕ} (index : ℕ) (raw : Pqxdh.Bytes) (x : XState KemSK Bk n) :
-    ((oracleFinish (baseSpec := baseSpec) setup codec index raw).run x).IsQueryBoundP IsMlKemBaseQuery 0 := by
+/-- The source owner's transcript hash is own-coin work before the existing native callback bill. -/
+theorem oracleFinish_uniform (bounded : KemBound setup caps) {Bk : Type} {n : ℕ} (index : ℕ) (raw : Pqxdh.Bytes)
+    (x : XState KemSK Bk n) :
+    ((oracleFinish (baseSpec := baseSpec) setup codec index raw).run x).IsQueryBoundP IsMlKemUniformQuery
+      (64 + 69 * max 64 caps.decapsCost) := by
   unfold oracleFinish
   dsimp only [StateT.run]
   split
-  · exact isQueryBoundP_pure _ _ _
+  · trivial
   · rw [isQueryBoundP_map_iff]
+    exact oracleOwnerFinish_uniform setup codec caps bounded _ raw _ x.base.native.shared
+
+/-- Owner k's finish with the decapsulation oracle makes no base-oracle query. -/
+theorem oracleOwnerFinish_base
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) (state : PqxdhServerAuthNative.NativeState KemSK) :
+    ((PqxdhDeploymentIdealAnomalyGuesser.oracleOwnerFinish setup codec retained raw owner).run state).IsQueryBoundP
+      IsMlKemBaseQuery 0 := by
+  have native : ∀ (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+      (current : PqxdhServerAuthNative.NativeState KemSK),
+      ((simulateQ (oracleCallbacks setup codec)
+        (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw owner)).run
+        current).IsQueryBoundP IsMlKemBaseQuery 0 := by
+    intro completedBinding current
     refine PqxdhDeploymentCompileSecrecy.simulate_zero _ _ (fun query state => ?_) _ _
     rcases query with query | query
     · cases query
@@ -89,6 +116,24 @@ theorem oracleFinish_base {Bk : Type} {n : ℕ} (index : ℕ) (raw : Pqxdh.Bytes
         exact PqxdhPrivateRootQueryBounds.ccaCoins_excluded _ _ fun _ => id
     · simp only [oracleCallbacks, StateT.run]
       exact PqxdhPrivateRootQueryBounds.ccaCoins_excluded _ _ fun _ => id
+  unfold PqxdhDeploymentIdealAnomalyGuesser.oracleOwnerFinish
+  split
+  · split
+    · rw [StateT.run_bind]
+      exact isQueryBoundP_bind (PqxdhPrivateRootQueryBounds.ccaCoins_excluded _ _ fun _ => id)
+        fun (hashed : CtxRomAuth.CtxDigest × PqxdhServerAuthNative.NativeState KemSK) _ => native _ hashed.2
+    · trivial
+  · trivial
+
+/-- The hashed owner finish makes no base-oracle query. -/
+theorem oracleFinish_base {Bk : Type} {n : ℕ} (index : ℕ) (raw : Pqxdh.Bytes) (x : XState KemSK Bk n) :
+    ((oracleFinish (baseSpec := baseSpec) setup codec index raw).run x).IsQueryBoundP IsMlKemBaseQuery 0 := by
+  unfold oracleFinish
+  dsimp only [StateT.run]
+  split
+  · trivial
+  · rw [isQueryBoundP_map_iff]
+    exact oracleOwnerFinish_base setup codec _ raw _ x.base.native.shared
 
 /-- Every step of the guesser's native handler draws at most the split weight of its class: on the guesser's own coins it is the split handler's step (`splitStep_uniform`), and owner k's oracle finish is within the finish weight. Premise: `KemBound setup caps`. -/
 theorem guessStep_uniform (bounded : KemBound setup caps) (t : Target count) (p : Params KemSK count)
@@ -99,7 +144,7 @@ theorem guessStep_uniform (bounded : KemBound setup caps) (t : Target count) (p 
   by_cases oracle : ∃ raw, query = .inr (.finish t.kem.val raw) ∧ x.backend.2.2.active = false
   · obtain ⟨raw, rfl, inactive⟩ := oracle
     rw [PqxdhDeploymentIdealAnomalyGuesser.guessReg_oracle setup codec route checks t p created raw x inactive]
-    exact (oracleFinish_uniform setup codec caps bounded t.kem.val raw x).mono (by simp [splitWeight, commandKind])
+    exact (oracleFinish_uniform setup codec caps bounded t.kem.val raw x).mono (by simp [splitWeight, commandKind, Nat.add_comm])
   · rw [PqxdhDeploymentIdealAnomalyGuesser.guessReg_lift setup codec route checks t p created query x fun raw same => by
       cases active : x.backend.2.2.active
       · exact absurd ⟨raw, same, active⟩ oracle
@@ -129,7 +174,7 @@ def guessWeight (caps : KemCaps) (bounds : FreshBounds) (kind : Fin 14) : ℕ :=
 
 /-- The values of `guessWeight`: the twelve native classes at their split weight, `test` at `1 + 64 + 64` (the hidden bit and one Server or Beacon send, both send classes charged), `fresh` at `bounds.max + 64 + 64` (one coin per message byte and one send). -/
 theorem guessWeight_eq (caps : KemCaps) (bounds : FreshBounds) :
-    guessWeight caps bounds = ![1, 64 + caps.keygenCost, 32, 140 + caps.encapsCost, 108 + 64 + 64,
+    guessWeight caps bounds = ![1, 64 + caps.keygenCost, 32, 140 + caps.encapsCost, 108 + (64 + 64) + 64,
       69 * max 64 caps.decapsCost + 64, 64, 64, 64, 64, 64, 64, 1 + 64 + 64, bounds.max + 64 + 64] := by
   funext kind
   fin_cases kind <;> simp [guessWeight, Fin.sum_univ_succ, splitWeight, wrapCost]
@@ -188,7 +233,7 @@ def guessBill (caps : KemCaps) (qInit : ℕ) (budget : Budget) (bounds : FreshBo
 theorem guessBill_eq (caps : KemCaps) (qInit : ℕ) (budget : Budget) (bounds : FreshBounds) :
     guessBill caps qInit budget bounds = (budget.create + 1) * caps.keygenCost + (qInit + 32) +
       (budget.coin + (64 + caps.keygenCost) * budget.create + 32 * budget.bundle +
-        (140 + caps.encapsCost) * budget.accept + 236 * budget.build +
+        (140 + caps.encapsCost) * budget.accept + 300 * budget.build +
         (69 * max 64 caps.decapsCost + 64) * budget.finish +
         64 * (budget.hmac + budget.hash + budget.serverSend + budget.serverRaw + budget.beaconSend + budget.beaconRaw) +
         129 * budget.test + (bounds.max + 128) * budget.fresh) := by
@@ -402,3 +447,19 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGuessBill.ptc_bills'
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGuessBill.ptc_bills
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGuessBill.oracleOwnerFinish_uniform' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGuessBill.oracleOwnerFinish_uniform
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGuessBill.oracleOwnerFinish_base' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGuessBill.oracleOwnerFinish_base

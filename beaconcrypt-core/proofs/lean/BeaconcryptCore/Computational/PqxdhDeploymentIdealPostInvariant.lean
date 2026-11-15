@@ -312,10 +312,11 @@ open PqxdhRegistrationJointOwnership (Entry Owned activeKey)
 open PqxdhDeploymentIdealSteps (groupedOwnerCE ownerImplCE)
 open PqxdhRegistrationJointKemEntryFactor (Output factoredHidden)
 
-/-- The native grouped owner returns the owner with its identity, and at most with its own live KEM key pair. -/
-theorem groupedOwnerCE_fields (raw : Pqxdh.Bytes) (owner : PqxdhRegistrationSchedule.Owner KemSK)
+/-- The native grouped owner (at any completed binding) returns the owner with its identity, and at most with its own live KEM key pair. -/
+theorem groupedOwnerCE_fields (binding : beaconcrypt_core.session.CompletedRegistrationBinding) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK)
     (result : Option Pqxdh.Bytes × PqxdhRegistrationSchedule.Owner KemSK)
-    (member : result ∈ support (groupedOwnerCE (Response := Response) raw owner)) :
+    (member : result ∈ support (groupedOwnerCE (Response := Response) binding raw owner)) :
     result.2.beacon.identity = owner.beacon.identity ∧ ∀ keys, activeKey result.2 = some keys → activeKey owner = some keys := by
   unfold groupedOwnerCE at member
   rcases phase : owner.beacon.phase with _ | _ | ⟨control, prekey, oneTime, kem⟩ | _ | _
@@ -335,31 +336,61 @@ theorem groupedOwnerCE_fields (raw : Pqxdh.Bytes) (owner : PqxdhRegistrationSche
       rw [(PqxdhRegistrationJointOwnership.finish_fields control owner staged).2] at live
       cases live⟩
 
-/-- Owner k's challenge finish on the CE side returns the owner with its identity, and at most with its own live KEM key pair. -/
+/-- Owner k's challenge finish on the CE side (the hashed grouped native owner at its retained bundle) returns the owner with its identity, and at most with its own live KEM key pair. -/
 theorem challenge_fields (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
-    (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (raw : Pqxdh.Bytes) (owner : PqxdhRegistrationSchedule.Owner KemSK)
+    (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (retained : Option PqxdhEd25519EufCma.Phase1Candidate)
+    (raw : Pqxdh.Bytes) (owner : PqxdhRegistrationSchedule.Owner KemSK)
     (state : PqxdhServerAuthNative.NativeState KemSK × Option PqxdhDeploymentIdealSlots.Coord)
     (slots : PqxdhDeploymentIdealPostSim.SlotState)
     (result : ((Option Pqxdh.Bytes × PqxdhRegistrationSchedule.Owner KemSK) ×
       (PqxdhServerAuthNative.NativeState KemSK × Option PqxdhDeploymentIdealSlots.Coord)) ×
         PqxdhDeploymentIdealPostSim.SlotState)
     (member : result ∈ support ((simulateQ (PqxdhRegistrationJointKemSecondEntry.slotImpl
-      PqxdhDeploymentSeedSplit.tableService) ((simulateQ (ownerImplCE setup codec (factoredHidden setup codec checks)
-        challenge) (groupedOwnerCE raw owner)).run state)).run slots)) :
+      PqxdhDeploymentSeedSplit.tableService) ((PqxdhDeploymentIdealSteps.hashedOwnerCE setup codec
+        (factoredHidden setup codec checks) challenge retained raw owner).run state)).run slots)) :
     result.1.1.2.beacon.identity = owner.beacon.identity ∧
       ∀ keys, activeKey result.1.1.2 = some keys → activeKey owner = some keys := by
-  have outer : result.1 ∈ support ((simulateQ (ownerImplCE setup codec (factoredHidden setup codec checks) challenge)
-      (groupedOwnerCE raw owner)).run state) := by
+  have outer : result.1 ∈ support ((PqxdhDeploymentIdealSteps.hashedOwnerCE setup codec
+      (factoredHidden setup codec checks) challenge retained raw owner).run state) := by
     apply OracleComp.support_simulateQ_run'_subset
       (PqxdhRegistrationJointKemSecondEntry.slotImpl PqxdhDeploymentSeedSplit.tableService) _ slots
     rw [StateT.run'_eq, support_map]
     exact ⟨result, member, rfl⟩
-  have inner : result.1.1 ∈ support (groupedOwnerCE (Response := Response) raw owner) := by
+  generalize result.1 = reached at outer
+  unfold PqxdhDeploymentIdealSteps.hashedOwnerCE at outer
+  rcases phase : owner.beacon.phase with _ | _ | ⟨control, prekey, oneTime, kem⟩ | _ | _
+  all_goals simp only [phase] at outer
+  case fresh | freshWithCoins | established | aborted =>
+    simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at outer
+    subst outer
+    exact ⟨rfl, fun _ live => live⟩
+  have aborted : reached ∈ support ((pure (none, PqxdhBeaconPhase2Preparation.abort control owner) :
+      StateT (PqxdhServerAuthNative.NativeState KemSK × Option PqxdhDeploymentIdealSlots.Coord)
+        (OracleComp PqxdhDeploymentIdealSlots.SlotSpec) _).run state) →
+      reached.1.2.beacon.identity = owner.beacon.identity ∧
+        ∀ keys, activeKey reached.1.2 = some keys → activeKey owner = some keys := by
+    intro hit
+    simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at hit
+    subst hit
+    have dropped := (PqxdhRegistrationJointOwnership.finish_fields control owner none).2
+    change activeKey (PqxdhBeaconPhase2Preparation.abort control owner) = none at dropped
+    exact ⟨(PqxdhRegistrationJointOwnership.finish_fields control owner none).1, fun keys live => by
+      change activeKey (PqxdhBeaconPhase2Preparation.abort control owner) = some keys at live
+      rw [dropped] at live
+      cases live⟩
+  generalize PqxdhServerAuthExperiment.responseOf codec raw = decoded at outer
+  rcases retained with _ | init <;> rcases decoded with _ | response
+  case none.none | none.some | some.none => exact aborted outer
+  rw [StateT.run_bind, support_bind] at outer
+  simp only [Set.mem_iUnion, exists_prop] at outer
+  obtain ⟨hashed, -, outer⟩ := outer
+  have inner : reached.1 ∈ support (groupedOwnerCE (Response := Response)
+      (PqxdhTranscriptAd.completedOf control hashed.1) raw owner) := by
     apply OracleComp.support_simulateQ_run'_subset (ownerImplCE setup codec (factoredHidden setup codec checks) challenge)
-      _ state
+      _ hashed.2
     rw [StateT.run'_eq, support_map]
-    exact ⟨result.1, outer, rfl⟩
-  exact groupedOwnerCE_fields raw owner result.1.1 inner
+    exact ⟨reached, outer, rfl⟩
+  exact groupedOwnerCE_fields _ raw owner reached.1 inner
 
 end Keep
 
@@ -449,13 +480,13 @@ theorem keep_challenge (address : ℕ) (raw : Pqxdh.Bytes) (m : Mid KemSK) (inv 
   rw [PqxdhDeploymentIdealPostChallenge.sourceMid_challenge setup codec route checks t p created address raw m hidden entry
     found, support_map] at member
   obtain ⟨reached, inner, rfl⟩ := member
-  have fields := challenge_fields setup codec checks p.challenge raw entry.owner _ _ reached inner
+  have fields := challenge_fields setup codec checks p.challenge (m.joint.inits address) raw entry.owner _ _ reached inner
   obtain ⟨good, keep⟩ := PqxdhDeploymentIdealPostChallenge.slot_keepProgram _ _ inv.good reached inner
   have entryOwned := inv.owned.1.1 entry (List.mem_of_getElem? found)
   have replacement : Owned m.joint.pool { entry with owner := reached.1.1.2 } :=
     ⟨by rw [show ({ entry with owner := reached.1.1.2 } : Entry KemSK).owner.beacon.identity = entry.owner.beacon.identity
         from fields.1]; exact entryOwned.1, fun keys live => entryOwned.2 keys (fields.2 keys live)⟩
-  refine ⟨⟨⟨⟨PqxdhRegistrationJointSchedule.updated_owned m.joint m.joint.pool reached.1.2.1 address
+  refine ⟨⟨⟨⟨PqxdhRegistrationJointSchedule.updated_owned m.joint m.joint.pool reached.1.2.1 m.joint.inits address
       { entry with owner := reached.1.1.2 } inv.owned.1.1 rfl rfl replacement, inv.owned.1.2⟩, ?_⟩,
     inv.prefixed, ?_, inv.active, inv.done, good, ?_⟩, le_rfl⟩
   · change m.joint.pool.2.keys.length = (m.joint.owners.set address _).length

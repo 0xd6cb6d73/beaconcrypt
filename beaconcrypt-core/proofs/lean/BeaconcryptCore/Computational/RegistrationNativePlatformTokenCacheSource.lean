@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePlatformTokenSource
 
-/-! Actual token-creating authentication retains the earlier stored pin and original Init preimage at its same reached cache. The explicit stored-pin hash receipt is an initialized execution invariant, not an equality assumption about two authentication games. The repeated hash charge remains in the reached native state. -/
+/-! Actual token-creating authentication retains the configured pin and original Init preimage at its same reached cache. Pure pin selection leaves both native and platform state unchanged; the real authentication hash remains in the reached state. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -17,20 +17,19 @@ variable {n : Nat} {Platform ι KemSK Reader Response : Type} {base : OracleSpec
 attribute [local irreducible] RegistrationServerNativeSource.authenticate RegistrationWorldAuthentication.begin
   RegistrationAuthenticationShared.begin RegistrationNativePlatformSourceAccept.authenticate RegistrationNativePlatformSourceBuild.pin
 
-/-- The actual reached source pin/authentication pair supplies literal native authentication support at that same charged state. -/
+/-- The actual reached source pin/authentication pair supplies literal native authentication support at that same reached state. -/
 theorem authentication (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
-    (verify : MldsaTranscriptAuth.Verify) (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (verify : MldsaTranscriptAuth.Verify) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (before pinned checked : State n) (previous pinPlatform authPlatform : Platform) (pin : session.ServerAuthenticationPin)
     (events : List RegistrationAuthenticationFlow.Event) (authenticated : registration.AuthenticatedInit)
-    (cached : RegistrationNativeServerPinRecompute.Cached before.pin before.world.world.1.primitive.2)
     (pinCalled : ((.ok (.Some pin), pinned), pinPlatform) ∈ support (((RegistrationNativePlatformSourceBuild.pin coins).run before).run previous))
     (authCalled : ((.ok (events, .Accepted authenticated), checked), authPlatform) ∈ support
       (((RegistrationNativePlatformSourceAccept.authenticate coins setup codec route verify pin packet).run pinned).run pinPlatform)) :
     pin = before.pin ∧ pinned.pin = before.pin ∧
       (.ok (events, .Accepted authenticated), checked) ∈ support
         ((RegistrationServerNativeSource.authenticate setup codec route verify created packet).run pinned) := by
-  rw [RegistrationNativePlatformSourceBuild.pin_hit coins before cached] at pinCalled
+  rw [RegistrationNativePlatformSourceBuild.pin_exact coins before] at pinCalled
   simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at pinCalled
   have samePin : pin = before.pin := by
     have reply := congrArg (fun result => result.1.1) pinCalled
@@ -42,17 +41,16 @@ theorem authentication (coins : QueryImpl unifSpec (StateT Platform ProbComp))
 /-- The token-creating actual source cut retains exactly the original unsigned Init preimage at its authenticated binding digest. -/
 theorem authenticated_cache (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
-    (verify : MldsaTranscriptAuth.Verify) (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (verify : MldsaTranscriptAuth.Verify) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (before pinned checked : State n) (previous pinPlatform authPlatform : Platform) (pin : session.ServerAuthenticationPin)
     (events : List RegistrationAuthenticationFlow.Event) (authenticated : registration.AuthenticatedInit)
-    (cached : RegistrationNativeServerPinRecompute.Cached before.pin before.world.world.1.primitive.2)
     (pinCalled : ((.ok (.Some pin), pinned), pinPlatform) ∈ support (((RegistrationNativePlatformSourceBuild.pin coins).run before).run previous))
     (authCalled : ((.ok (events, .Accepted authenticated), checked), authPlatform) ∈ support
       (((RegistrationNativePlatformSourceAccept.authenticate coins setup codec route verify pin packet).run pinned).run pinPlatform)) :
     ∃ digest, checked.world.world.1.primitive.2 ((), RegistrationAuthentication.initPreimage before.pin packet) = some digest ∧
       authenticated.binding.init_hash = RegistrationAuthenticationShared.digestArray digest := by
   obtain ⟨_pin, stored, actual⟩ := authentication coins setup codec route verify created packet before pinned checked previous pinPlatform authPlatform pin
-    events authenticated cached pinCalled authCalled
+    events authenticated pinCalled authCalled
   obtain ⟨digest, receipt, binding⟩ := RegistrationNativeTokenCacheSource.authenticated_cache setup codec route verify created packet pinned checked events authenticated actual
   change pinned.pin = before.pin at stored
   rw [stored] at receipt

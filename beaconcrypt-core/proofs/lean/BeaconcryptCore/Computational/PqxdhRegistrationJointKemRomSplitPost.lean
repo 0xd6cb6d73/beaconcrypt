@@ -217,7 +217,10 @@ theorem readsN_build (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
     | some token => _ : OracleComp (SkelSpec V) _).IsQueryBoundP _ 0
   split
   · trivial
-  · exact isQueryBoundP_bind (n := 0) (m := 0) (liftComp_reads _) fun _ _ => trivial
+  · split
+    · trivial
+    · exact isQueryBoundP_bind (n := 0) (m := 0) (liftComp_reads _) fun _ _ =>
+        isQueryBoundP_bind (n := 0) (m := 0) (liftComp_reads _) fun _ _ => trivial
 
 theorem readsN_tail (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (query : (PqxdhBeaconPhase2Publication.NativeTailSpec Response).Domain) :
@@ -328,8 +331,9 @@ def ownerGroup : (OwnerSpec Response).Domain → Bool
   | .inr _ => true
   | .inl _ => false
 
-theorem groupedOwner_bound (raw : Pqxdh.Bytes) (state : PqxdhRegistrationJointBundle.Owner) :
-    (groupedOwner (Response := Response) raw state).IsQueryBoundP (fun query => ownerGroup query = true) 1 := by
+theorem groupedOwner_bound (binding : beaconcrypt_core.session.CompletedRegistrationBinding) (raw : Pqxdh.Bytes)
+    (state : PqxdhRegistrationJointBundle.Owner) :
+    (groupedOwner (Response := Response) binding raw state).IsQueryBoundP (fun query => ownerGroup query = true) 1 := by
   unfold groupedOwner
   split
   · refine isQueryBoundP_bind (n := 0) (m := 1) (simulate_free _ _ (fun query => ?_) _) fun prepared _ => ?_
@@ -342,7 +346,8 @@ theorem groupedOwner_bound (raw : Pqxdh.Bytes) (state : PqxdhRegistrationJointBu
 /-- Every source request makes at most one table request of the grouped interface, and only if it is a table request of the source. -/
 theorem groupedClient_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (selected : Nat)
     (challenge : MlKem768Ciphertext) (query : (PqxdhRegistrationJointRevealSchedule.Spec KemSK).Domain)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) :
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry ×
+      (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) :
     ((groupedClient setup codec selected challenge query).run owners).IsQueryBoundP
       (fun query => groupKind (KemSK := KemSK) (Response := Response) query = true)
       (if TableKind query then 1 else 0) := by
@@ -362,15 +367,23 @@ theorem groupedClient_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader
         split
         · trivial
         · rw [isQueryBoundP_map_iff]
-          refine IsQueryBoundP.simulateQ_of_step (groupedOwner_bound raw _) (fun query owner => ?_)
-            (fun query owner => ?_)
-          · rcases query with query | query
-            · simp [ownerGroup] at owner
-            · exact query_one _ _
-          · rcases query with query | query
-            · exact simulate_free (groupedPoolLift (KemSK := KemSK) (Response := Response)) _
-                (fun query => query_free _ _ (by simp [groupKind])) _
-            · simp [ownerGroup] at owner
+          unfold groupedHashed
+          split
+          · split
+            · rw [isQueryBoundP_query_bind_iff]
+              refine ⟨Or.inl (by simp [groupKind]), fun digest => ?_⟩
+              simp only [groupKind, Bool.false_eq_true, ↓reduceIte]
+              refine IsQueryBoundP.simulateQ_of_step (groupedOwner_bound _ raw _) (fun query owner => ?_)
+                (fun query owner => ?_)
+              · rcases query with query | query
+                · simp [ownerGroup] at owner
+                · exact query_one _ _
+              · rcases query with query | query
+                · exact simulate_free (groupedPoolLift (KemSK := KemSK) (Response := Response)) _
+                    (fun query => query_free _ _ (by simp)) _
+                · simp [ownerGroup] at owner
+            · trivial
+          · trivial
     | _ => exact lifted _ _ (client_bound setup codec _ owners)
   · exact lifted _ _ (client_bound setup codec _ owners)
 
@@ -431,7 +444,7 @@ theorem skelResume_reads (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)
     (value : PqxdhServerRootPreparation.Verified Reader)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)
-    (consumed : List Pqxdh.Bytes) (game : GameState KemSK) (owners : List EncodedEntry)
+    (consumed : List Pqxdh.Bytes) (game : GameState KemSK) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))
     (next : Option Nat → OracleComp (SourceSpec KemSK) X) (selected : Nat) (ciphertext : MlKem768Ciphertext)
     (services : Services V Response) (m : ℕ)
     (bounded : ∀ reply, (next reply).IsQueryBoundP (TableKind (KemSK := KemSK)) m) :
@@ -495,7 +508,7 @@ theorem sharedClient_direct (setup : Setup baseSpec KemSK) (codec : Codec Reader
     · exact query_one _ _
   · rcases query with coin | (point | point)
     · exact query_free _ _ (by simp [PqxdhExtractRomHiddenSuffix.IsDirect])
-    · simp only [compileHidden, QueryImpl.add_apply_inr, QueryImpl.add_apply_inl, isQueryBoundP_map_iff]
+    · simp only [compileHidden, isQueryBoundP_map_iff]
       exact query_free _ _ (by simp [PqxdhExtractRomHiddenSuffix.IsDirect])
     · simp [directRead?] at direct
 

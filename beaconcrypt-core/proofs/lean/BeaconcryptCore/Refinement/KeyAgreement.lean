@@ -150,7 +150,7 @@ theorem server_root_admission_refines (state : agreement.AgreementState)
 
 /-- Beacon admission uses the same ordered transcript, after checking the retained Ed25519 identity. -/
 theorem beacon_root_admission_refines (state : agreement.AgreementState)
-    (control : pqxdh.BeaconInitSent) (binding : session.RegistrationBinding)
+    (control : pqxdh.BeaconInitSent) (binding : session.CompletedRegistrationBinding)
     (response : agreement.ResponsePublic) (ciphertext : Slice Std.U8)
     (identity : response.identity_key = control.expected_server_binding.identity_public_key)
     (nonzero : Pqxdh.dhNonZero (absDHs (stateSecrets state))) :
@@ -163,13 +163,11 @@ theorem beacon_root_admission_refines (state : agreement.AgreementState)
         Pqxdh.pqxdhIKM (absBytes state.dh1.bytes) (absBytes state.dh2.bytes)
           (absBytes state.dh3.bytes) (absBytes state.dh4.bytes) (absBytes state.kem.bytes) := by
   obtain ⟨root, rootEq, rootBytes⟩ := (build_root_key_input_abs (stateSecrets state)).1 nonzero
-  obtain ⟨associatedData, associatedDataEq⟩ := BeaconcryptCore.PanicFreedom.build_associated_data_ok
-    control.expected_server_binding.identity_public_key control.beacon_identity_public_key
-  refine ⟨⟨control.expected_server_binding, response.key_id, root, associatedData⟩,
+  refine ⟨⟨control.expected_server_binding, response.key_id, root⟩,
     ?_, rfl, rfl, rootBytes⟩
   simp only [stateSecrets] at rootEq
   simp [agreement.finish_dh, ratchet.RatchetChain.as_bytes, pqxdh.beacon_prepare_finish,
-    array_eq_abs, identity, rootEq, associatedDataEq]
+    array_eq_abs, identity, rootEq]
 
 /-- Replay rejection precedes all effects; a fresh entry retains the complete authenticated input. -/
 theorem server_entry_refines (control : pqxdh.ServerState)
@@ -184,14 +182,14 @@ theorem server_entry_refines (control : pqxdh.ServerState)
 
 /-- The Beacon starts from the retained request control and binding, never from a reconstructed control value. -/
 theorem beacon_entry_refines (authenticated : registration.AuthenticatedResponse)
-    (coherent : authenticated.pending.control.expected_server_binding =
-      authenticated.pending.binding.server_pin.binding) :
+    (coherent : authenticated.control.expected_server_binding =
+      authenticated.binding.server_pin.binding) :
     agreement.begin_beacon_agreement authenticated = (do
-      let state ← agreement.AgreementState.new (.Beacon authenticated.pending.control
-        authenticated.pending.binding authenticated.packet.public authenticated.packet.application)
+      let state ← agreement.AgreementState.new (.Beacon authenticated.control
+        authenticated.binding authenticated.packet.public authenticated.packet.application)
       ok (.ConvertPublic ⟨state⟩)) := by
   simp [agreement.begin_beacon_agreement, registration.AuthenticatedResponse.into_parts,
-    pqxdh.BeaconInitSent.impl.expected_server_binding, session.RegistrationBinding.impl.server_pin,
+    pqxdh.BeaconInitSent.impl.expected_server_binding, session.CompletedRegistrationBinding.impl.server_pin,
     session.ServerAuthenticationPin.impl.binding, core.Array.Insts.CoreCmpPartialEqArray.ne,
     array_eq_abs, coherent]
 

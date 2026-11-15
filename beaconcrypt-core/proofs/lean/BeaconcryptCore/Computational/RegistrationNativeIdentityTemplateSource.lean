@@ -46,7 +46,7 @@ def Allowed (verify : Ed25519PublicKey → Pqxdh.Bytes → Ed25519Signature → 
   | .inl (.inr described) => match described.input with
       | some bytes => RegistrationNativeIdentityRecognition.recognize verify publicKey message bytes = none
       | none => False
-  | .inr (.template _ _ leading _) => leading.length = 4140
+  | .inr (.template _ _ leading _) => leading.length = 2188
   | _ => True
 
 private theorem hash_source (signature : Ed25519Signature) (key : Key) (before : State)
@@ -90,7 +90,7 @@ private theorem unchanged_source (joint : PqxdhJointIdentity.Primitives) (select
         pure_apply, map_pure, Prod.map_def, id_eq, realize]
 
 private theorem template_source (signature : Ed25519Signature) (frame : Frame) (before : State)
-    (canonical : before.1.canonical = some signature) (width : frame.1.length = 4140) :
+    (canonical : before.1.canonical = some signature) (width : frame.1.length = 2188) :
     Prod.map id (realize signature) <$> (template frame).run before =
       (RegistrationNativeIdentityCensorSource.template frame.1 frame.2).run (realize signature before) := by
   have law := hash_source signature (.inr frame) before (RegistrationNativeIdentityTemplateAddress.abstract_hidden signature frame width)

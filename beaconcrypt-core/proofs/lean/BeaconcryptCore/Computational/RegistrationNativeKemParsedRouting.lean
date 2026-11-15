@@ -24,14 +24,14 @@ abbrev Spec (n : Nat) (mlSource : RegistrationNativeMldsa.Source) (KemSK : Type)
 noncomputable def other (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource) :=
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource) :=
   RegistrationNativeKemRouting.publicAmbient setup.baseImpl setup.kem
     (RegistrationNativeKemFrontendInterface.other (n := n) setup checks wire route representation created credential)
 
 noncomputable def source (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource) :=
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource) :=
   RegistrationNativeKemInterface.source setup.baseImpl setup.kem (Ambient n mlSource)
     (other setup checks wire route representation created credential)
 
@@ -50,7 +50,7 @@ noncomputable def handler (setup : Setup base KemSK) (checks : Checks) (wire : W
 private theorem route_run (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (chosen : Bool) (work : OracleComp (RegistrationNativeKemFrontendInterface.Spec n mlSource KemSK) Value)
     (before : RegistrationNativeKemServerState.State n mlSource × PqxdhLiveKemBirth.Pool KemSK) :
     (simulateQ (source setup checks wire route representation created credential)
@@ -62,7 +62,7 @@ private theorem route_run (setup : Setup base KemSK) (checks : Checks) (wire : W
 private theorem get_run (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (before : RegistrationNativeExperiment.State n KemSK mlSource) :
     (simulateQ (source setup checks wire route representation created credential) get).run (nativeProject before) =
       pure ((nativeProject before).1, nativeProject before) := by
@@ -76,7 +76,7 @@ private theorem get_run (setup : Setup base KemSK) (checks : Checks) (wire : Wir
 theorem handler_source (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (selected : Nat) (query : TypedSpec.Domain) (before : RegistrationNativeExperiment.State n KemSK mlSource) :
     Prod.map id nativeProject <$>
         (RegistrationNativeExperiment.handler setup checks wire route representation created mlSource credential query).run before =
@@ -93,7 +93,7 @@ theorem handler_source (setup : Setup base KemSK) (checks : Checks) (wire : Wire
 theorem program_source (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (selected : Nat) (work : OracleComp TypedSpec Value) (before : RegistrationNativeExperiment.State n KemSK mlSource) :
     Prod.map id nativeProject <$>
         (simulateQ (RegistrationNativeExperiment.handler setup checks wire route representation created mlSource credential) work).run before =
@@ -107,7 +107,7 @@ theorem program_source (setup : Setup base KemSK) (checks : Checks) (wire : Wire
 theorem full_source (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (selected : Nat) (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value)
     (before : RegistrationNativeExperiment.State n KemSK mlSource) :

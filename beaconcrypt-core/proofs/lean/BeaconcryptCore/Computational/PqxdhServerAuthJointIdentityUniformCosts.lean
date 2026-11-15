@@ -10,6 +10,7 @@ namespace BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityUniformCosts
 open PqxdhJointIdentity PqxdhServerAuthExperiment PqxdhJointIdentityFamily
 open PqxdhServerAuthJointIdentityCompiler PqxdhServerAuthSourceCosts
 open PqxdhJointGapDh (ScalarBytes PublicChallenge)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 variable {ι KemSK Reader Response : Type} {baseSpec : OracleSpec ι}
 
 /-- Every draw of a fully interpreted local primitive computation remains on the joint uniform interface. -/
@@ -41,7 +42,7 @@ theorem collect_decaps {I D K X R : Type} (identity : I) (prekey oneTime : D) (k
 /-- Core admission and shared-secret erasure add no KEM request after collection. -/
 theorem prepare_decaps {I D K X R : Type} (control : pqxdh.BeaconInitSent)
     (identity : I) (prekey oneTime : D) (kem : K) (raw : Pqxdh.Bytes) :
-    (PqxdhBeaconPhase2Preparation.prepare (X := X) (Response := R) control identity prekey oneTime kem raw).IsQueryBoundP
+    (PqxdhBeaconPhase2Preparation.prepare (completedBinding := completedBinding) (X := X) (Response := R) control identity prekey oneTime kem raw).IsQueryBoundP
       (fun query => Decaps query = true) 1 := by
   unfold PqxdhBeaconPhase2Preparation.prepare
   refine isQueryBoundP_bind (n := 1) (m := 0) (collect_decaps identity prekey oneTime kem raw) ?_
@@ -52,11 +53,11 @@ theorem prepare_decaps {I D K X R : Type} (control : pqxdh.BeaconInitSent)
 /-- Both disjoint source query classes include every optional reply path. -/
 theorem prepare_classes {I D K X R : Type} (control : pqxdh.BeaconInitSent)
     (identity : I) (prekey oneTime : D) (kem : K) (raw : Pqxdh.Bytes) (kind : Bool) :
-    (PqxdhBeaconPhase2Preparation.prepare (X := X) (Response := R) control identity prekey oneTime kem raw).IsQueryBoundP
+    (PqxdhBeaconPhase2Preparation.prepare (completedBinding := completedBinding) (X := X) (Response := R) control identity prekey oneTime kem raw).IsQueryBoundP
       (fun query => Decaps query = kind) (if kind then 1 else 13) := by
   cases kind
-  · exact (PqxdhBeaconPhase2Preparation.prepare_bound control identity prekey oneTime kem raw).isQueryBoundP
-  · exact prepare_decaps control identity prekey oneTime kem raw
+  · exact (PqxdhBeaconPhase2Preparation.prepare_bound (completedBinding := completedBinding) control identity prekey oneTime kem raw).isQueryBoundP
+  · exact prepare_decaps (completedBinding := completedBinding) control identity prekey oneTime kem raw
 
 set_option backward.isDefEq.respectTransparency false in
 /-- Only actual KEM work contributes uniform queries in the auxiliary interpreter; its full interpreted base bill is retained. -/
@@ -91,13 +92,13 @@ theorem prepare_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
     (scalar : ScalarBytes) (caps : KemCaps) (bounded : KemBound setup caps)
     (control : pqxdh.BeaconInitSent) (identity : Unit) (oneTime : Unit ⊕ ScalarBytes)
     (kem : KemSK) (raw : Pqxdh.Bytes) :
-    (prepare setup codec scalar control identity oneTime kem raw).IsQueryBoundP (IsClass .uniform) caps.decapsCost := by
+    (prepare (completedBinding := completedBinding) setup codec scalar control identity oneTime kem raw).IsQueryBoundP (IsClass .uniform) caps.decapsCost := by
   have result := FinitePartitionQueryBounds.weighted_bound
     (Decaps (I := Unit) (D := Unit ⊕ (Unit ⊕ ScalarBytes)) (K := KemSK) (X := Unit) (R := Response))
     (fun kind => if kind then caps.decapsCost else 0) (fun kind => if kind then 1 else 13)
     (prefixImpl setup codec scalar) (IsClass .uniform)
-    (PqxdhBeaconPhase2Preparation.prepare control identity (.inl ()) (.inr oneTime) kem raw)
-    (prepare_classes (X := Unit) (R := Response) control identity
+    (PqxdhBeaconPhase2Preparation.prepare (completedBinding := completedBinding) control identity (.inl ()) (.inr oneTime) kem raw)
+    (prepare_classes (completedBinding := completedBinding) (X := Unit) (R := Response) control identity
       (Sum.inl () : Unit ⊕ (Unit ⊕ ScalarBytes)) (.inr oneTime) kem raw)
     (prefix_uniform setup codec scalar caps bounded) ()
   simpa only [prepare, StateT.run'_eq, isQueryBoundP_map_iff, Fintype.sum_bool,
@@ -108,31 +109,37 @@ theorem stage_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
     (serverSeed : IdentitySeed) (scalar : ScalarBytes) (caps : KemCaps) (bounded : KemBound setup caps)
     (control : pqxdh.BeaconInitSent) (identity : Unit) (oneTime : Unit ⊕ ScalarBytes)
     (kem : KemSK) (raw : Pqxdh.Bytes) (state : PqxdhServerAuthNative.NativeState KemSK) :
-    ((stage setup codec serverSeed scalar control identity oneTime kem raw).run state).IsQueryBoundP
+    ((stage (completedBinding := completedBinding) setup codec serverSeed scalar control identity oneTime kem raw).run state).IsQueryBoundP
       (IsClass .uniform) (caps.decapsCost + 128) := by
   simp only [stage, StateT.run]
   refine isQueryBoundP_bind (n := caps.decapsCost) (m := 128)
-    (prepare_uniform setup codec scalar caps bounded control identity oneTime kem raw) ?_
+    (prepare_uniform (completedBinding := completedBinding) setup codec scalar caps bounded control identity oneTime kem raw) ?_
   rintro (_ | original) _
   · trivial
   · exact coins_uniform _ 128 (PqxdhServerAuthNativeUniformCosts.beacon_tail_uniform setup codec _ original state)
 
-/-- Every attempted finish pays the full active-stage allowance; inactive, rejected and aborted calls retain their original results. -/
+/-- Every attempted finish pays the transcript hash and the full active-stage allowance; inactive, undecodable, rejected and aborted calls retain their original results. -/
 theorem finish_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (serverSeed : IdentitySeed) (scalar : ScalarBytes) (caps : KemCaps) (bounded : KemBound setup caps)
     (raw : Pqxdh.Bytes) (state : PqxdhServerAuthNative.NativeState KemSK) :
     ((finish setup codec serverSeed scalar raw).run state).IsQueryBoundP
-      (IsClass .uniform) (caps.decapsCost + 128) := by
+      (IsClass .uniform) (caps.decapsCost + 192) := by
   simp only [finish, StateT.run]
   cases state.2.beacon.beacon.phase <;> simp only [isQueryBoundP_pure]
   rename_i control prekey oneTime kem
-  refine (isQueryBoundP_bind (n := caps.decapsCost + 128) (m := 0)
-    (stage_uniform setup codec serverSeed scalar caps bounded control state.2.beacon.beacon.identity oneTime kem raw state)
-    ?_).mono (by omega)
-  exact fun _ _ => trivial
+  split
+  · refine (isQueryBoundP_bind (n := 64) (m := caps.decapsCost + 128)
+      (coins_uniform _ 64 (PqxdhServerAuthNativeUniformCosts.hash_uniform _ state)) (fun hashed _ => ?_)).mono
+        (by omega)
+    refine (isQueryBoundP_bind (n := caps.decapsCost + 128) (m := 0)
+      (stage_uniform (completedBinding := PqxdhTranscriptAd.completedOf control hashed.1) setup codec serverSeed scalar
+        caps bounded control hashed.2.2.beacon.beacon.identity oneTime kem raw hashed.2)
+      ?_).mono (by omega)
+    exact fun _ _ => trivial
+  · trivial
 
 /-- A conservative common bill for any public API call. Its KEM terms include every interpreted base query. -/
-def callCost (caps : KemCaps) : Nat := 128 + caps.encapsCost + caps.decapsCost
+def callCost (caps : KemCaps) : Nat := 192 + caps.encapsCost + caps.decapsCost
 
 set_option backward.isDefEq.respectTransparency false in
 /-- The complete public handler bills arbitrary accepts, builds, finishes, public primitive queries and reveals without assuming any accepted candidate is honest. -/
@@ -152,7 +159,7 @@ theorem handler_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
         (PqxdhServerAuthNativeUniformCosts.accept_uniform setup codec checks caps bounded serverSeed scalar raw state)).mono
           (by unfold callCost; omega)
     case build session payload =>
-      exact (coins_uniform _ 64
+      exact (coins_uniform _ 128
         (PqxdhServerAuthNativeUniformCosts.native_build_uniform setup codec checks session payload state)).mono
           (by unfold callCost; omega)
     case hmac key message =>
@@ -194,6 +201,26 @@ theorem phase1_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
   repeat' (rw [isQueryBoundP_query_bind_iff]; refine ⟨by simp [IsClass], ?_⟩; intro signature)
   split <;> simp only [simulateQ_pure] <;> trivial
 
+set_option backward.isDefEq.respectTransparency false in
+/-- The logged Phase1 bundle (the written bundle retained by its writer callback) makes the same three signing calls and no uniform request, including optional writer refusal. -/
+theorem loggedPhase1_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (target : PublicIdentity) (publicValue : PublicChallenge) (oneTime : ScalarBytes)
+    (kemPk : PqxdhKemIndCca.MlKem768PublicKey) (kemSk : KemSK) :
+    (loggedPhase1 setup codec target publicValue oneTime kemPk kemSk).IsQueryBoundP (IsClass .uniform) 0 := by
+  simp only [loggedPhase1, PqxdhLivePhase1Bundle.bundle, freshBeacon,
+    simulateQ_bind, simulateQ_spec_query, signingLogImpl, signingImpl, StateT.run_bind, StateT.run_lift]
+  simp only [pure_bind, PqxdhLivePhase1Bundle.afterGenerated,
+    PqxdhBeaconPhase1Publication.prepare, Option.map_some, publicProjection, PqxdhLivePhase1Bundle.signing,
+    PqxdhJointPhase1SourceWriter.signingProgram, simulateQ_bind, simulateQ_spec_query, signingLogImpl, signingImpl,
+    StateT.run_bind, StateT.run_lift, bind_assoc]
+  simp only [simulateQ_pure, StateT.run_pure, bind_assoc, pure_bind, PqxdhLivePhase1Bundle.writing,
+    PqxdhBeaconPhase1Publication.afterSigning, PqxdhBeaconPhase1Publication.prepare,
+    Option.map_some, simulateQ_bind, simulateQ_spec_query, signingLogImpl, signingImpl,
+    StateT.run_bind, StateT.run_lift, bind_map_left]
+  repeat' (rw [isQueryBoundP_query_bind_iff]; refine ⟨by simp [IsClass], ?_⟩; intro signature)
+  simp only [StateT.run, pure_bind]
+  split <;> simp only [simulateQ_pure] <;> exact isQueryBoundP_pure _ _ _
+
 /-- Publication followed by the complete adaptive source continuation retains the all-call uniform bill and every original output and state field. -/
 theorem execution_uniform {Result : Type} (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (serverSeed : IdentitySeed) (scalar oneTime : ScalarBytes)
@@ -204,7 +231,7 @@ theorem execution_uniform {Result : Type} (setup : Setup baseSpec KemSK) (codec 
       (IsClass .uniform) (qTotal * callCost caps) := by
   unfold execution
   refine (isQueryBoundP_bind (n := 0) (m := qTotal * callCost caps)
-    (phase1_uniform setup codec target _ oneTime keys.1 keys.2) ?_).mono (by omega)
+    (loggedPhase1_uniform setup codec target _ oneTime keys.1 keys.2) ?_).mono (by omega)
   intro published _
   refine (isQueryBoundP_bind (n := qTotal * callCost caps) (m := 0)
     (program_uniform setup codec checks serverSeed scalar caps kemBound _ qTotal (bounded _) _) ?_).mono (by omega)
@@ -257,7 +284,7 @@ theorem game_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
 /-- Expanded whole-game bill: four 32-byte samplers and the declared direct/base costs of key generation and all optional KEM calls. -/
 theorem expanded_game_cost (caps : KemCaps) (qTotal : Nat) :
     32 + reductionCost caps qTotal = 128 + caps.keygenUniform + caps.baseUniform * caps.keygenBase +
-      qTotal * (128 + caps.encapsUniform + caps.baseUniform * caps.encapsBase +
+      qTotal * (192 + caps.encapsUniform + caps.baseUniform * caps.encapsBase +
         caps.decapsUniform + caps.baseUniform * caps.decapsBase) := by
   simp only [reductionCost, callCost, KemCaps.keygenCost, KemCaps.encapsCost, KemCaps.decapsCost, Nat.add_assoc]
   omega
@@ -349,6 +376,11 @@ end BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityUniformCosts
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityUniformCosts.phase1_uniform
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityUniformCosts.loggedPhase1_uniform' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityUniformCosts.loggedPhase1_uniform
 /-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityUniformCosts.execution_uniform' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/

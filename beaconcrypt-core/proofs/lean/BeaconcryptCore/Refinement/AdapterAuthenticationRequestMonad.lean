@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Refinement.AdapterRecordRequestMonad
-import BeaconcryptCore.Refinement.AdapterResponseAuthentication
+import BeaconcryptCore.AdapterAuthenticationExtraction.Funs
 
 /-! Exact response-authentication primitive requests. Each dynamic occurrence is a separate request, retaining optional hash failure, ordinary verifier rejection, failure/divergence and the complete primitive state. The primitive implementations and their security guarantees remain explicit parameters. -/
 
@@ -42,6 +42,12 @@ def verifyRequest (pending : registration.ResponseMldsaVerification) :=
 
 def verifyResume (pending : registration.ResponseMldsaVerification) (verified : Bool) :=
   liftRust (registration.ResponseMldsaVerification.resume pending verified) (m := m)
+
+def adHashRequest (pending : registration.BeaconAdHash) :=
+  liftRust (registration.BeaconAdHash.request pending) (m := m)
+
+def adHashResume (pending : registration.BeaconAdHash) (digest : Option (Array Std.U8 64#usize)) :=
+  liftRust (registration.BeaconAdHash.resume pending digest) (m := m)
 
 def fromResidual (residual : _) :=
   liftRust (core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual

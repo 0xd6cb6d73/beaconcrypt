@@ -4,6 +4,7 @@ import BeaconcryptCore.Computational.CborRawRecordOriginFlatten
 /-! The literal guarded CTX world runs on its complete cursor, record control and private state below the unchanged secrecy ledger. This is the operational whole-program representation used by the fresh-message and test-bit couplings. -/
 open OracleComp OracleSpec
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.CborRawRecordFlatRun
 open PqxdhRecordLiftInterface (Environment)
 open PqxdhServerAuthExperiment (Setup Codec)
@@ -19,7 +20,7 @@ noncomputable def startup (modes : Label n → KeyMode) (replace : Pqxdh.Bytes �
 
 noncomputable def install (modes : Label n → KeyMode) (replace : Pqxdh.Bytes → Pqxdh.Bytes)
     (setup : Setup base KemSK) (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
-    (created : PqxdhLiveServerConstruction.Created Unit) (shell : CborRecordWorldClient.Shell)
+    (created : PqxdhLiveServerConstruction.Created (Aeneas.Std.Array Aeneas.Std.U8 151#usize)) (shell : CborRecordWorldClient.Shell)
     (control : PqxdhRecordLiftProtocol.Control n) (secret : CtxPrivate n) :=
   CborRawRecordOriginFlatten.install (ctxInterpreter modes replace setup codec) codec route created shell control secret
 

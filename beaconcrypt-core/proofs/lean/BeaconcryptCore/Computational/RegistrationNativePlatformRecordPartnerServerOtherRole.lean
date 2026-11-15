@@ -192,9 +192,20 @@ theorem target (reserve : StateT Platform ProbComp Bool)
   cases query with
   | pin current =>
     apply lift_effects_free
-    exact RegistrationNativePlatformPairedPublicationFree.bind_quiet _ _
-      (effect_quiet _ (by intro role; simp [RegistrationNativeSecretWordAtomInstallCaps.InstallEnv]))
-      (fun _ => RegistrationNativePlatformPairedPublicationFree.pure_quiet _)
+    exact RegistrationNativePlatformPairedPublicationFree.pure_quiet _
+  | adHash pending =>
+    apply lift_effects_free
+    unfold RegistrationNativePlatformServerRestrictedService.adHash RegistrationServerAdHash.runWith
+    split
+    · exact RegistrationNativePlatformPairedPublicationFree.pure_quiet _
+    · exact RegistrationNativePlatformPairedPublicationFree.pure_quiet _
+    · apply RegistrationNativePlatformPairedPublicationFree.bind_quiet
+      · apply RegistrationNativePlatformPairedPublicationFree.bind_quiet
+        · exact effect_quiet _ (by intro role; simp [RegistrationNativeSecretWordAtomInstallCaps.InstallEnv])
+        · intro digest
+          exact RegistrationNativePlatformPairedPublicationFree.pure_quiet _
+      · intro digest
+        exact RegistrationNativePlatformPairedPublicationFree.pure_quiet _
   | reserve =>
     apply lift_effects_free
     intro current
@@ -205,7 +216,7 @@ theorem target (reserve : StateT Platform ProbComp Bool)
     exact effect_quiet _ (by intro role; simp [RegistrationNativeSecretWordAtomInstallCaps.InstallEnv])
   | service control initial message => exact service source view failure allocation erased helper sign writer control initial message before
 
-/-- The complete actual four-leaf Server controller issues no Beacon installation query under any replies. -/
+/-- The complete actual five-leaf Server controller issues no Beacon installation query under any replies. -/
 theorem program (reserve : StateT Platform ProbComp Bool)
     (work : OracleComp RegistrationNativePlatformServerFrontendProgram.Spec A) (before : PublicState Platform) :
     Free (simulateQ (embed (n := n) (KemSK := KemSK))

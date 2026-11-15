@@ -39,16 +39,16 @@ theorem refused_contracts : @AdapterWire.Contracts refused := by
   exact ⟨fun _ _ => ⟨.Err (), rfl⟩⟩
 
 /-- This positive allocation model actually exposes the source serializer to the initialized buffer. -/
-theorem init_callback_returns_bytes (view : registration.SignedInitView) :
+theorem init_callback_returns_bytes (view : registration.InitView) :
     ∃ after, (sourceOperations hostile).encodeInit (initSyntax view)
-      (AdapterWireVector.zeros 6757#usize) = ok (6757#usize, after) := by
+      (AdapterWireVector.zeros 1490#usize) = ok (1490#usize, after) := by
   obtain ⟨after, actual, _, _⟩ := RegistrationSerializerInitBytes.public_bytes hostile
-    (initSyntax view) (AdapterWireVector.zeros 6757#usize)
+    (initSyntax view) (AdapterWireVector.zeros 1490#usize)
     (RegistrationNativeSourceEncoders.init_shape view)
     (by simp only [AdapterWireVector.zeros, Slice.length, List.length_replicate]; decide)
   exact ⟨after, actual⟩
 
-theorem source_init_normal (view : registration.SignedInitView) :
+theorem source_init_normal (view : registration.InitView) :
     letI := accepted
     letI := sourceOperations hostile
     Normal (beaconcrypt_registration_writer.wire.encode_init (initSyntax view)) :=

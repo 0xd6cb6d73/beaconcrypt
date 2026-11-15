@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RawCtxServerRouting
 
-/-! Public associated data accompanies an installed peer identity. The legacy embedding retains identity-derived AD, while completed native registrations supply their actual populated AD281. Neither form supplies ratchet keys or hidden seed material. -/
+/-! Current record installations carry an explicit complete AD151 from the completed session. The independent historical identity-derived AD model is not a constructor of this capability. No identity-only coercion or missing-hash fallback can produce a current binding. -/
 
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
@@ -11,32 +11,21 @@ set_option autoImplicit false
 
 namespace BeaconcryptCore.Computational.PqxdhRecordLiftInterface
 
-/-- Public per-peer installation data. Legacy callers retain their original identity-derived AD. -/
+/-- Public per-peer installation data. A completed transcript hash is required by production registration before construction. -/
 structure PeerBinding where
   identity : RawCtxServerRouting.Identity
-  associatedData : Option (Std.Array Std.U8 281#usize)
+  associatedData : Std.Array Std.U8 151#usize
 
-def PeerBinding.legacy (identity : RawCtxServerRouting.Identity) : PeerBinding :=
-  ⟨identity, none⟩
+/-- Routing reads the exact complete AD fixed at installation. -/
+def PeerBinding.associatedArray (_server : RawCtxServerRouting.Identity)
+    (binding : PeerBinding) : Std.Array Std.U8 151#usize := binding.associatedData
 
-instance : Coe RawCtxServerRouting.Identity PeerBinding := ⟨PeerBinding.legacy⟩
-
-/-- Public AD is fixed at installation and does not reveal or choose hidden ratchet material. -/
-noncomputable def PeerBinding.associatedArray (server : RawCtxServerRouting.Identity)
-    (binding : PeerBinding) : Std.Array Std.U8 281#usize :=
-  binding.associatedData.getD (RawCtxServerRouting.associatedArray server binding.identity)
-
-noncomputable def PeerBinding.associatedBytes (server : RawCtxServerRouting.Identity)
+def PeerBinding.associatedBytes (server : RawCtxServerRouting.Identity)
     (binding : PeerBinding) : Pqxdh.Bytes :=
   PqxdhRefinement.absBytes (binding.associatedArray server)
 
 def PeerBinding.ofSession (binding : session.SessionBinding) : PeerBinding :=
-  ⟨binding.beacon_identity_public_key, some binding.associated_data⟩
-
-theorem PeerBinding.legacy_associatedBytes (server peer : RawCtxServerRouting.Identity) :
-    (PeerBinding.legacy peer).associatedBytes server =
-      RawCtxServerRouting.associatedBytes server peer := by
-  rfl
+  ⟨binding.beacon_identity_public_key, binding.associated_data⟩
 
 theorem PeerBinding.ofSession_associatedBytes (server : RawCtxServerRouting.Identity)
     (binding : session.SessionBinding) :
@@ -45,12 +34,6 @@ theorem PeerBinding.ofSession_associatedBytes (server : RawCtxServerRouting.Iden
   rfl
 
 end BeaconcryptCore.Computational.PqxdhRecordLiftInterface
-
-/-- info: 'BeaconcryptCore.Computational.PqxdhRecordLiftInterface.PeerBinding.legacy_associatedBytes' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhRecordLiftInterface.PeerBinding.legacy_associatedBytes
 
 /-- info: 'BeaconcryptCore.Computational.PqxdhRecordLiftInterface.PeerBinding.ofSession_associatedBytes' depends on axioms: [propext,
  Classical.choice,

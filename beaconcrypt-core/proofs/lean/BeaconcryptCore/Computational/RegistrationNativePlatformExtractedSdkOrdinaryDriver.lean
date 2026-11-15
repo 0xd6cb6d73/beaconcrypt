@@ -57,7 +57,7 @@ theorem send_native [primitives : AdapterSealPrimitive.Operations] [FrameDispatc
     (converted : RegistrationNativePlatformOrdinarySourceNative.Conversion view)
     (failure : primitives.Error) (erased : commitment.CommitmentTranscript)
     {Metadata : Type} (owner : RawCtxWholeOwner.OwnerState Metadata)
-    (plaintext : Slice U8) (sender : U64) (associated : Array U8 281#usize)
+    (plaintext : Slice U8) (sender : U64) (associated : Array U8 151#usize)
     (sameAD : owner.owner.associatedData = PqxdhRefinement.absBytes associated) :
     (RegistrationNativePlatformOrdinarySourceReceiptOwner.ownerResult owner ∘
       RegistrationNativePlatformOrdinarySourceReceipt.abstractOutput) <$>
@@ -80,7 +80,7 @@ theorem send_normal [primitives : AdapterSealPrimitive.Operations] [FrameDispatc
     (converted : RegistrationNativePlatformOrdinarySourceNative.Conversion view)
     (failure : primitives.Error) (erased : commitment.CommitmentTranscript)
     {Metadata : Type} (owner : RawCtxWholeOwner.OwnerState Metadata)
-    (plaintext : Slice U8) (sender : U64) (associated : Array U8 281#usize)
+    (plaintext : Slice U8) (sender : U64) (associated : Array U8 151#usize)
     (sameAD : owner.owner.associatedData = PqxdhRefinement.absBytes associated)
     (before after : State) (previous next : Platform) (reply : RustM AdapterRecordStatefulSend.Result)
     (supported : ((reply,after),next) ∈ support

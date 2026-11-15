@@ -40,15 +40,15 @@ theorem outgoing_key (setup : Setup base KemSK) (mlSource : RegistrationNativeMl
     (reached : ((.ok (.Ok published), ownersAfter), envAfter) ∈ support
       (((simulateQ (outgoing (n := n) setup mlSource index selected)
         (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨selected.pin.binding⟩ (inputs setup selected)
-          ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ selected.pin selected.mldsa.publicKey)).run owners).run env)) :
+          ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ selected.pin)).run owners).run env)) :
     RegistrationNativeKemPublication.PublishedKey wire.encodeInit selected.kemPublic published := by
   have original := nested_support mlSource (outgoing setup mlSource index selected)
     (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨selected.pin.binding⟩ (inputs setup selected)
-      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ selected.pin selected.mldsa.publicKey)
+      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ selected.pin)
     owners ownersAfter env envAfter (.ok (.Ok published)) reached
   simpa only [inputs, pq_key] using RegistrationNativeKemPublication.begin_key wire.encodeInit
     ⟨selected.pin.binding⟩ (inputs setup selected)
-    ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ selected.pin selected.mldsa.publicKey published original
+    ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ selected.pin published original
 
 theorem bundle_key (setup : Setup base KemSK) (mlSource : RegistrationNativeMldsa.Source)
     (wire : Wire) (index : Nat) (owners ownersAfter : State mlSource) (env envAfter : EnvState Auxiliary)
@@ -66,7 +66,7 @@ theorem bundle_key (setup : Setup base KemSK) (mlSource : RegistrationNativeMlds
 /-- The full source wrapper's public encoded Init recovers its actual original owner's PQ input under the native wire readback contract. -/
 theorem source_bundle_key (setup : Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (mlSource : RegistrationNativeMldsa.Source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (mlSource : RegistrationNativeMldsa.Source)
     (wire : Wire) (readback : RegistrationNativeWire.InitReadBack wire) (index : Nat)
     (before after : RegistrationNativeExperiment.State n KemSK mlSource) (bytes : Pqxdh.Bytes)
     (reached : (.ok (some bytes), after) ∈ support

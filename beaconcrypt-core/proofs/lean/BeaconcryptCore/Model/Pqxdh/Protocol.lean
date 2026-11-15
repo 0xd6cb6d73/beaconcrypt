@@ -3,8 +3,7 @@ import BeaconcryptCore.Model.Pqxdh.Kdf
 /-!
 # BeaconCrypt modified PQXDH — the two state machines
 
-Third part of the ideal model of `pqxdh_spec.md`: the wire messages, the two
-principals' states, and the four transitions of a registration.
+Historical abstract lifecycle model of `pqxdh_spec.md`: the wire messages, the two principals' states and four registration transitions. It retains identity-prefix AD281 and does not model current mandatory Server ML-DSA response authentication. Current wire framing and transcript AD151 are defined separately in `TranscriptAuth` and `SessionTranscript`; source/computational correspondence is proved in their dedicated modules.
 
 * `Pqxdh.beaconInit` — spec §5: the beacon emits its authenticated `InitKex` and
   moves `Fresh → InitSent`; no second bundle can be emitted, which is modelled by

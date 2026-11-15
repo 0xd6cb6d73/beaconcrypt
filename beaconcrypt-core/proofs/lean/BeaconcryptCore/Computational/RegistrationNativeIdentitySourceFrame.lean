@@ -14,7 +14,7 @@ variable {source : RegistrationNativeMldsa.Source}
 /-- An arbitrary ordinary native program retains the private generated-identity pool and the same complete public context. -/
 theorem ambient_program (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Aeneas.Std.Array Aeneas.Std.U8 151#usize))
     (work : OracleComp (RegistrationNativeIdentityFrontend.Ambient n KemSK) Value)
     (before : State n KemSK) :
     (simulateQ (implementation (mlSource := source) setup checks representation created)

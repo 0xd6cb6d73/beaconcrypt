@@ -63,7 +63,7 @@ theorem query {E R Error : Type} (coins : QueryImpl unifSpec (StateT PlatformSta
     (joint : PqxdhJointIdentity.Primitives)
     (model : AdapterPublicAgreementPrimitiveModel.Model (m := ProbComp) generator setup checks view)
     (entropy : AdapterPublicAgreementServerNative.Entropy model)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (current : Native×PlatformState)
     (before : RegistrationNativePlatformExtractedSdkCarrier.Carrier (R:=R) view views joint created credential current)
     (input : Slice U8)

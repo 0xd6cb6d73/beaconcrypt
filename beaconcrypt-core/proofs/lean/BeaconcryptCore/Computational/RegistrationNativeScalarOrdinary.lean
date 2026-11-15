@@ -17,7 +17,7 @@ variable {source : RegistrationNativeMldsa.Source}
 /-- Every ordinary source step keeps the old roster length as a lower bound, without any key-injectivity assumption. -/
 theorem monotone (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (query : TypedSpec.Domain) (before : RegistrationNativeExperiment.State n KemSK source)
     (result : TypedSpec.Range query × RegistrationNativeExperiment.State n KemSK source)
     (supported : result ∈ support ((RegistrationNativeExperiment.handler setup checks wire route representation
@@ -30,7 +30,7 @@ theorem monotone (setup : Setup base KemSK) (checks : Checks) (wire : Registrati
 /-- Outside the selected roster index, every literal typed callback is the original native callback. -/
 theorem handler (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (selected : Nat) (scalar : PqxdhJointGapDh.ScalarBytes) (query : TypedSpec.Domain)
     (before : RegistrationNativeExperiment.State n KemSK source) (ordinary : before.beacons.length ≠ selected) :
     (RegistrationNativeScalarEager.handler setup checks wire route representation created source credential selected scalar query).run before =
@@ -38,8 +38,8 @@ theorem handler (setup : Setup base KemSK) (checks : Checks) (wire : Registratio
   cases query with
   | inl coin => rfl
   | inr command =>
-      cases command <;> try rfl
-      case create edPin mlPin keyId =>
+      cases command with
+      | create edPin mlPin keyId =>
         change (RegistrationNativeExperiment.beacon setup checks representation created
           (RegistrationNativeScalarEager.create setup source selected scalar edPin mlPin keyId)).run before =
             (RegistrationNativeExperiment.beacon setup checks representation created
@@ -49,11 +49,13 @@ theorem handler (setup : Setup base KemSK) (checks : Checks) (wire : Registratio
           before.beacons (RegistrationWorldAgreementCompiler.erase before.server.world) ordinary
         dsimp only [StateT.run] at localEq ⊢
         rw [localEq]
+      | bundle _ | accept _ | build _ _ | finish _ _ | hmac _ _ | hash _
+      | serverSend _ _ | serverRaw _ | beaconSend _ _ | beaconRaw _ _ => rfl
 
 /-- Once the selected roster position exists, every complete adaptive eager-source continuation is exactly the ordinary native source. -/
 theorem done_program (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (selected : Nat) (scalar : PqxdhJointGapDh.ScalarBytes) (work : OracleComp TypedSpec Value)
     (before : RegistrationNativeExperiment.State n KemSK source) (done : selected < before.beacons.length) :
     (simulateQ (RegistrationNativeExperiment.handler setup checks wire route representation created source credential) work).run before =

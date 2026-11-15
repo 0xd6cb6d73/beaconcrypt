@@ -15,7 +15,7 @@ data: the generated provisioning inputs, the generated server state and the
 generated inputs of the beacon's completion step, together with the (only)
 assumption that they abstract to the values of the ideal run `h`.
 
-`honest_run_refines` then says: on this data the generated pipeline
+`honest_run_metadata_refines` then says: on this data the generated pipeline
 `beacon_start` → `validate_init_kex` → `serverRegister` → `beaconFinishDriver`
 runs to completion without a single rejection and produces, on both sides, the
 identifier, the peer entry, the associated data and the pinned binding of the ideal
@@ -92,10 +92,10 @@ structure GenHonestRun (h : Pqxdh.HonestRun) where
 primitives produce in the honest run `h`, the generated pipeline runs to completion:
 the generated bundle is accepted by the generated parser with the ideal validated
 content, the generated server allocates the ideal identifier and publishes the ideal
-peer (identity key and associated data), and the generated beacon completes with the
+peer metadata (identifier and identity key), and the generated beacon completes with the
 ideal identifier and keeps the pinned binding — exactly the outcome of the two ideal
 transitions `Pqxdh.serverRespond` and `Pqxdh.beaconFinish`. -/
-theorem honest_run_refines (h : Pqxdh.HonestRun) (hok : h.Ok) (g : GenHonestRun h) :
+theorem honest_run_metadata_refines (h : Pqxdh.HonestRun) (hok : h.Ok) (g : GenHonestRun h) :
     ∃ (out : pqxdh.BeaconStart) (v : pqxdh.VerifiedInitKex) (st : pqxdh.ServerState)
       (peer : pqxdh.EstablishedPeer) (est : pqxdh.BeaconEstablished),
       -- the beacon emits its bundle
@@ -110,7 +110,6 @@ theorem honest_run_refines (h : Pqxdh.HonestRun) (hok : h.Ok) (g : GenHonestRun 
       st.last_key_id.val = h.kid ∧
       peer.key_id.val = h.kid ∧
       absBytes peer.identity_public_key = h.ikBPub ∧
-      absBytes peer.associated_data = h.ad ∧
       -- the beacon completes the registration
       beaconFinishDriver out.state g.finishInputs g.authSenderId g.authBinding
         = ok (core.result.Result.Ok est) ∧
@@ -151,7 +150,7 @@ theorem honest_run_refines (h : Pqxdh.HonestRun) (hok : h.Ok) (g : GenHonestRun 
     simp only [Pqxdh.HonestRun.kid] at this
     simp [Pqxdh.HonestRun.server, this]
   obtain ⟨-, -, -, -, hsucc⟩ :=
-    serverRegister_refines h.c h.server h.initMsg g.serverState v
+    serverRegister_metadata_refines h.c h.server h.initMsg g.serverState v
       pqxdh.RegistrationStatus.Fresh g.serverBinding g.serverCoins g.serverSecrets
       pqxdh.KeyIdAvailability.Available h.eSk h.coins (h.c.xpub (h.c.xsk h.ikSkB))
       (some h.app) hvalideal hconvB (by simpa using hok.appNonempty) g.counter g.serverIk
@@ -163,7 +162,7 @@ theorem honest_run_refines (h : Pqxdh.HonestRun) (hok : h.Ok) (g : GenHonestRun 
       (by simp only [iff_false_intro (by simp : pqxdh.KeyIdAvailability.Available ≠
             pqxdh.KeyIdAvailability.Occupied)]
           simp [hfree])
-  obtain ⟨st, peer, resp, S', pr, hreg, -, hrespkid, hSn, hstn, hpeerkid, hpeerik, hpeerad,
+  obtain ⟨st, peer, resp, S', pr, hreg, -, hrespkid, hSn, hstn, hpeerkid, hpeerik,
       -, -, -, -⟩ :=
     hsucc hfresh (by rw [hdhs]; exact hok.nonzero) hok.notExhausted hfree
   -- the beacon
@@ -210,12 +209,11 @@ theorem honest_run_refines (h : Pqxdh.HonestRun) (hok : h.Ok) (g : GenHonestRun 
       hrecv hptlen (by rw [g.authBound, htake])
   obtain ⟨est, hest, hestkid, hestbind, -⟩ :=
     hbsucc rfl (by rw [hbdhs]; exact hok.nonzero) rfl htake
-  refine ⟨out, v, st, peer, est, hout, hv, hvalid, hreg, ?_, ?_, ?_, ?_, hest, ?_, hestbind,
+  refine ⟨out, v, st, peer, est, hout, hv, hvalid, hreg, ?_, ?_, ?_, hest, ?_, hestbind,
     h.serverStep hok, h.beaconStep hok⟩
   · rw [hstn, hSn]; rfl
   · rw [hpeerkid, hrespkid]; rfl
   · rw [hpeerik, hvalid]; rfl
-  · rw [hpeerad, hvalid]; rfl
   · exact hestkid
 
 end PqxdhRefinement

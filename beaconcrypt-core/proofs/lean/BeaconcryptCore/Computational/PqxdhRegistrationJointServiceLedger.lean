@@ -50,23 +50,47 @@ theorem finish_queries (program : OracleComp (PqxdhRegistrationJointFinishCompil
       simp only [simulateQ_bind, simulateQ_spec_query, finishLift, isQueryBoundP_query_bind_iff, ih]
       rfl
 
-/-- Every compiled whole-owner finish has at most one logical decapsulation, at most one joint DH, at most 56 native-tail calls and zero requests in all remaining global classes. -/
-theorem finish_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (raw : Pqxdh.Bytes) (owner : PqxdhRegistrationJointBundle.Owner) (kind : Kind) :
+/-- Every compiled whole-owner finish has at most one logical decapsulation, at most one joint DH, at most 56 native-tail calls and zero requests in all remaining global classes (`ownerCap`). -/
+theorem owner_bound (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding) (setup : Setup baseSpec KemSK)
+    (codec : Codec Reader Response) (raw : Pqxdh.Bytes) (owner : PqxdhRegistrationJointBundle.Owner) (kind : Kind) :
     (simulateQ finishLift (simulateQ (PqxdhRegistrationJointFinishCompiler.compiler setup codec)
-      (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw owner))).IsQueryBoundP
-        (fun query => classify (KemSK := KemSK) query = kind) (finishCap kind) := by
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw owner))).IsQueryBoundP
+        (fun query => classify (KemSK := KemSK) query = kind) (ownerCap kind) := by
   rw [finish_queries]
   apply IsQueryBoundP.of_imp (p' := fun query =>
     PqxdhRegistrationJointFinishCompiler.classify (KemSK := KemSK) query = finishClass kind)
   · exact fun query same => (finish_partition query).trans (congrArg finishClass same)
-  · simpa only [show PqxdhRegistrationJointFinishCompiler.cap (finishClass kind) = finishCap kind by
+  · simpa only [show PqxdhRegistrationJointFinishCompiler.cap (finishClass kind) = ownerCap kind by
       cases kind <;> rfl] using
-      PqxdhRegistrationJointCompiledOwner.owner_queries setup codec raw owner (finishClass kind)
+      PqxdhRegistrationJointCompiledOwner.owner_queries (completedBinding := completedBinding) setup codec raw owner
+        (finishClass kind)
+
+/-- Every compiled whole-owner finish has at most one logical decapsulation, at most one joint DH, at most 56 native-tail calls and zero requests in all remaining global classes. -/
+theorem finish_bound (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding) (setup : Setup baseSpec KemSK)
+    (codec : Codec Reader Response) (raw : Pqxdh.Bytes) (owner : PqxdhRegistrationJointBundle.Owner) (kind : Kind) :
+    (simulateQ finishLift (simulateQ (PqxdhRegistrationJointFinishCompiler.compiler setup codec)
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw owner))).IsQueryBoundP
+        (fun query => classify (KemSK := KemSK) query = kind) (finishCap kind) :=
+  (owner_bound completedBinding setup codec raw owner kind).mono (by cases kind <;> decide)
+
+/-- The logged bundle compiler emits exactly the requests of `PqxdhRegistrationJointBundleCompiler.compiler`; the retained bundle is a pure annotation. -/
+theorem log_fst (codec : Codec Reader Response) (program : OracleComp (PqxdhLivePhase1Bundle.Spec ScalarBytes) Result)
+    (logged : Option PqxdhEd25519EufCma.Phase1Candidate) :
+    Prod.fst <$> (simulateQ (logCompiler (KemSK := KemSK) codec) program).run logged =
+      simulateQ (PqxdhRegistrationJointBundleCompiler.compiler codec) program := by
+  induction program using OracleComp.inductionOn generalizing logged with
+  | pure value => simp
+  | query_bind query next ih =>
+      rcases query with request | request | candidate
+      all_goals simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind, map_bind, ih]
+      · simp [logCompiler, StateT.run_lift]
+      · simp [logCompiler, StateT.run_lift]
+      · rfl
 
 /-- The executable constructor's owner installation adds no service request to its exact creation ledger. -/
 theorem create_bound (pin : PqxdhBeaconPhase2Preparation.Word32) (keyId : Std.U64)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) (kind : Kind) :
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))
+    (kind : Kind) :
     ((create (KemSK := KemSK) (Response := Response) pin keyId).run owners).IsQueryBoundP
       (fun query => classify (KemSK := KemSK) query = kind) (createCap kind) := by
   simpa only [StateT.run, create, bind_pure_comp, isQueryBoundP_map_iff, pool_queries] using
@@ -74,31 +98,45 @@ theorem create_bound (pin : PqxdhBeaconPhase2Preparation.Word32) (keyId : Std.U6
 
 /-- Missing owners, inactive phases and optional writer outcomes keep the same per-attempt bundle ledger. -/
 theorem bundle_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (address : Nat)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) (kind : Kind) :
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))
+    (kind : Kind) :
     ((bundle setup codec address).run owners).IsQueryBoundP
       (fun query => classify (KemSK := KemSK) query = kind) (bundleCap kind) := by
-  cases found : owners[address]? with
+  cases found : owners.1[address]? with
   | none => simp only [StateT.run, bundle, found, isQueryBoundP_pure]
   | some entry =>
-      simpa only [StateT.run, bundle, found, isQueryBoundP_map_iff, pool_queries] using
-        bundle_queries setup codec entry.2.2 kind
+      simp only [StateT.run, bundle, found, isQueryBoundP_map_iff, pool_queries]
+      rw [← isQueryBoundP_map_iff (f := Prod.fst)]
+      erw [log_fst]
+      exact bundle_queries setup codec entry.2.2 kind
 
 /-- Full owner lookup and reinstallation add no backend call to the complete finish attempt, on success or failure. -/
 theorem finish_owner_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (address : Nat) (raw : Pqxdh.Bytes)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) (kind : Kind) :
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))
+    (kind : Kind) :
     ((finish setup codec address raw).run owners).IsQueryBoundP
       (fun query => classify (KemSK := KemSK) query = kind) (finishCap kind) := by
-  cases found : owners[address]? with
+  cases found : owners.1[address]? with
   | none => simp only [StateT.run, finish, found, isQueryBoundP_pure]
   | some entry =>
-      simpa only [StateT.run, finish, found, isQueryBoundP_map_iff] using
-        finish_bound setup codec raw entry.2.2 kind
+      simp only [StateT.run, finish, found, isQueryBoundP_map_iff]
+      unfold finishOwner
+      split
+      · split
+        · rw [isQueryBoundP_query_bind_iff]
+          refine ⟨?_, fun digest => ?_⟩
+          · cases kind <;> simp [classify, finishCap]
+          · refine (owner_bound _ setup codec raw entry.2.2 kind).mono ?_
+            cases kind <;> simp [classify, finishCap, ownerCap]
+        · trivial
+      · trivial
 
 /-- The sparse source-to-service matrix bounds every public handler on every owner registry and every typed reply, without ownership or success premises. -/
 theorem query_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (query : PqxdhRegistrationSchedule.Spec.Domain)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) (kind : Kind) :
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))
+    (kind : Kind) :
     ((handler setup codec query).run owners).IsQueryBoundP
       (fun query => classify (KemSK := KemSK) query = kind) (cost kind (PqxdhRegistrationSchedule.sourceKind query)) := by
   rcases query with coin | request
@@ -110,8 +148,7 @@ theorem query_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     | exact create_bound _ _ owners kind
     | exact bundle_bound setup codec _ owners kind
     | exact finish_owner_bound setup codec _ _ owners kind
-    | skip
-    all_goals simp +contextual [handler, StateT.run_lift, bind_pure_comp, isQueryBoundP_map_iff,
+    | simp +contextual [handler, StateT.run_lift, bind_pure_comp, isQueryBoundP_map_iff,
       isQueryBoundP_query_iff, classify, cost, PqxdhRegistrationSchedule.sourceKind, eq_comm]
 
 /-- Closed-form global service allowances in terms of the nine original source-attempt caps. -/
@@ -124,7 +161,7 @@ def total (budget : Fin 9 → Nat) : Kind → Nat
   | .accept => budget 3
   | .build => budget 4
   | .hmac => budget 6
-  | .hash => budget 7
+  | .hash => budget 5 + budget 7
   | .read => budget 8
   | .other => 0
 
@@ -138,7 +175,8 @@ theorem program_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
     (program : OracleComp PqxdhRegistrationSchedule.Spec Result) (budget : Fin 9 → Nat)
     (certified : ∀ source, program.IsQueryBoundP
       (fun query => PqxdhRegistrationSchedule.sourceKind query = source) (budget source))
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) (kind : Kind) :
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))
+    (kind : Kind) :
     ((simulateQ (handler setup codec) program).run owners).IsQueryBoundP
       (fun query => classify (KemSK := KemSK) query = kind) (total budget kind) := by
   rw [← cost_total budget kind]
@@ -207,3 +245,15 @@ end BeaconcryptCore.Computational.PqxdhRegistrationJointServiceLedger
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointServiceLedger.program_bound
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationJointServiceLedger.owner_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointServiceLedger.owner_bound
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationJointServiceLedger.log_fst' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointServiceLedger.log_fst

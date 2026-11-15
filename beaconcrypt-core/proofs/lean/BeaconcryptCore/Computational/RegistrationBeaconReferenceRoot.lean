@@ -27,7 +27,7 @@ def client (authenticated : registration.AuthenticatedResponse)
   let reference ← PrepareSpec.query (pinnedBeaconMessage pending.collected)
   pure (.ok (reference.map fun reference =>
     ⟨⟨PqxdhBeaconPhase2Shared.clearedMetadata pending.metadata,
-      authenticated.pending.binding, authenticated.packet.application⟩, reference⟩))
+      authenticated.binding, authenticated.packet.application⟩, reference⟩))
 
 def restored (authenticated : registration.AuthenticatedResponse) (root : Option RootOutput) :
     RustM (Option Ready) → RustM agreement.AgreementEffect
@@ -55,7 +55,7 @@ theorem ready_fields (authenticated : registration.AuthenticatedResponse)
     (pending : PqxdhPhase2DhMetadata.Prepared registration.AuthenticatedResponse) (ready : Ready)
     (supported : .ok (some ready) ∈ support (client authenticated pending)) :
     ready.descriptor.candidate = PqxdhBeaconPhase2Shared.clearedMetadata pending.metadata ∧
-      ready.descriptor.binding = authenticated.pending.binding ∧
+      ready.descriptor.binding = authenticated.binding ∧
       ready.descriptor.application = authenticated.packet.application := by
   simp only [client, bind_pure_comp, support_map] at supported
   obtain ⟨reference, _reached, equal⟩ := supported
@@ -85,7 +85,7 @@ theorem client_native {Auxiliary : Type} (source : PqxdhJointKdfGame.FixedHkdfSh
         (simulateQ annotateNative (client authenticated pending)).run none) =
       simulateQ (RegistrationNativeBeaconRootSource.instrument source hmac primitive pending)
         (RegistrationAgreementExecutor.drive 2 (.RootKdf ⟨.Beacon original.candidate
-          authenticated.pending.binding authenticated.packet.application⟩)) := by
+          authenticated.binding authenticated.packet.application⟩)) := by
   rw [client_source]
   exact RegistrationNativeBeaconRootSource.client_source source hmac dh domain seed scalar primitive authenticated original pending references related
 

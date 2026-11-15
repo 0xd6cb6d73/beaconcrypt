@@ -120,7 +120,7 @@ theorem source {E : Type} (coins : QueryImpl unifSpec m)
     (recording : QueryImpl AdapterRecordRequestMonad.Spec NativeM)
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) NativeM)
     (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : beaconcrypt_public_wrapper.server.Server) (input : Slice U8)
     (before : RegistrationNativeExperiment.State n KemSK mlSource)
     (related : AdapterPublicWrapperState.Server view views created credential self before.server)
@@ -147,8 +147,7 @@ theorem source {E : Type} (coins : QueryImpl unifSpec m)
     simp only []
     unfold program
     rw [bind_world, StateT.run_bind, StateT.run_bind]
-    rw [AdapterPublicServerPinGlobal.source coins view views created credential self before related edGetter mlGetter
-      (fun request => AdapterPublicServerPinGlobal.hash_child coins setup codec route verify edLaws recording writer request)]
+    rw [AdapterPublicServerPinGlobal.source coins view views created credential self before related edGetter mlGetter]
     have pinSame : (RegistrationNativePlatformExperiment.server (RegistrationNativePlatformSourceBuild.pin coins)).run before =
         (world (RegistrationNativePlatformInterpret.state coins
           (RegistrationNativeServerPinRecompute.native before.server.pin.binding before.server.pin.public_key))).run before := by

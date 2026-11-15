@@ -22,14 +22,14 @@ variable [original : CryptoOperations (RustT ProbComp)]
 variable {n : Nat} {I KemSK A : Type} {base : OracleSpec I} {source : RegistrationNativeMldsa.Source}
 
 noncomputable def closed (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (owner : Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes) :
     QueryImpl RegistrationAgreementExecutor.Spec (StateT (Backend n KemSK) ProbComp) :=
   RegistrationNativePlatformSdkFinishBackend.handler setup checks representation created ∘ₛ
     RegistrationNativeAgreementJournal.core setup owner oneTime
 
  theorem program (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (originalModel : AdapterPublicAgreementCommonModel.Model (m:=ProbComp) setup view)
     (aligned : RegistrationNativePlatformSdkFinishDecapsulation.Aligned setup originalModel.decapsulate)

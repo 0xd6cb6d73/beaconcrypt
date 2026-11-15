@@ -1,4 +1,4 @@
-import BeaconcryptCore.Computational.PqxdhServerAuthPhase1Identity
+import BeaconcryptCore.Computational.PqxdhServerAuthPhase1PublicFields
 
 /-! Actual unsigned verifier fields and native pending registration projection. -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -182,54 +182,6 @@ theorem token_projection (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
     source_unsigned (fun identity => setup.source.crypto.verify identity.toList)
       verified.candidate verified.identity verified.keys accepted⟩
 
-open PqxdhServerAuthEntryFactor PqxdhServerAuthCtxState PqxdhSecretInputKdf
-abbrev Observed := PqxdhServerAuthPublicationRecordReserve.Observed
-
-/-- The actual accepted-owner journal supplies one same-token native projection and either the context's exact unsigned Phase1 tuple or the existing joint-use field-substitution event. The ordinary observer-win alternative and every successful builder record are retained. -/
-theorem journal_projection (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (checks : Checks) (adversary : Adversary) (context : Context KemSK)
-    (sampled : context ∈ support (contextSample setup codec))
-    (rest : PqxdhServerAuthCtxCalls.Residual) (key : RootOutput) (Q : Nat) (j : Fin (Q + 1))
-    (writable : PqxdhFirstBeaconRecordCanonical.ReadWritable codec.frameWrite codec.frameRead)
-    (result : (Option (Unit × QueryLog ServerAuthSpec) × (Local KemSK × Option Nat)) × Observed)
-    (supported : result ∈ support ((simulateQ
-      (RawCtxSelectedAuthenticationObserver.observed true (RawCtxUniversalDecoder.decoder codec.frameRead)
-        setup.source.crypto key)
-      (PqxdhServerAuthPublicationOccurrence.execution setup codec checks adversary Q j context rest)).run
-      (RawCtxSelectedAuthenticationObserver.initialState, AdaptiveCtxDynamicKnownKeys.initialSource)))
-    (journal : QueryLog ServerAuthSpec) (normal : result.1.1 = some ((), journal))
-    (snap : Snapshot) (accepted : result.1.2.1.1.1.ghost.acceptance = some snap)
-    (owned : entryOwner setup context.seed context.scalar Q result.1.2.1.1.1.ghost = some j)
-    (notBad : result.1.2.1.1.2.2.bad = false)
-    (unique : ¬ CollB setup context.seed context.scalar result.1.2.1.1.1.ghost)
-    (payload : Option Pqxdh.Bytes) (response : PqxdhServerRegistrationPublication.Response)
-    (adapter : HasAttachedVerificationAdapter
-      (fun identity => setup.source.crypto.verify identity.toList) setup.joint.verify)
-    (published : (⟨.inr (.build j.val payload), some response⟩ :
-      (query : ServerAuthSpec.Domain) × ServerAuthSpec.Range query) ∈ journal) :
-    RawCtxSelectedAuthenticationObserver.won (RawCtxUniversalDecoder.decoder codec.frameRead) result.2.1 = true ∨
-      ∃ (token : PqxdhServerRelatedRootConsumer.Returned) (server : ServerState) (raw : Pqxdh.Bytes)
-        (verified : PqxdhServerRootPreparation.Verified Reader),
-        TokenReceipt setup codec checks (context.publicValue setup) raw token ∧
-        PqxdhServerAuthPhase1BuildOrigins.BeforeBuild journal j.val payload response raw ∧
-        Decoded codec raw verified ∧ verified.identity = (setup.joint.publicKeys context.beaconSeed).ed25519 ∧
-        PqxdhJointPhase1Reports.sourceAccept (fun identity => setup.source.crypto.verify identity.toList)
-          verified.candidate = some (verified.identity, verified.keys) ∧
-        Projected setup (context.publicValue setup) token verified ∧
-        (verified.keys = (PqxdhServerAuthPhase1Identity.contextMaterial setup context).keyTuple ∨ phase1FieldSubstitutionBit setup.joint.verify
-          (setup.joint.publicKeys context.beaconSeed).ed25519 (PqxdhServerAuthPhase1Identity.contextMaterial setup context) verified.candidate = true) ∧
-        ∀ entry ∈ result.2.1.seals,
-          PqxdhServerAuthPublicationBuiltRecord.At codec token.pending payload server response entry := by
-  rcases PqxdhServerAuthPhase1Identity.journal_fields setup codec checks adversary context sampled rest key Q j
-    writable result supported journal normal snap accepted owned notBad unique payload response adapter
-    (PqxdhServerAuthPhase1Identity.contextMaterial setup context) published with won | origin
-  · exact Or.inl won
-  · obtain ⟨token, server, raw, verified, receipt, beforeBuild, decoded, identityEq, acceptedFields,
-      fields, records⟩ := origin
-    exact Or.inr ⟨token, server, raw, verified, receipt, beforeBuild, decoded, identityEq, acceptedFields,
-      token_projection setup codec checks (context.publicValue setup) raw token receipt verified decoded acceptedFields,
-      fields, records⟩
-
 end BeaconcryptCore.Computational.PqxdhServerAuthPhase1Projection
 
 /-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthPhase1Projection.source_fields' depends on axioms: [propext, Quot.sound] -/
@@ -277,9 +229,3 @@ end BeaconcryptCore.Computational.PqxdhServerAuthPhase1Projection
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhServerAuthPhase1Projection.token_projection
-
-/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthPhase1Projection.journal_projection' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhServerAuthPhase1Projection.journal_projection

@@ -34,7 +34,7 @@ def update (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (views
   {objects with server:=reached.returned,snapshot:=reached.registrationSnapshot view views}
 
 noncomputable def put (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (views : Views)
-    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created Unit)
+    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential mlSource) (current : Native ×Platform)
     (before : Carrier (R:=R) view views joint created credential current)
     (key : U64) (remote : Remote ed.PublicKey) (back : Option (Remote ed.PublicKey) →PeerMap)
@@ -66,7 +66,7 @@ noncomputable def put (view : AdapterPublicWrapperState.MaterialView mlSource Ke
          peers:=related.peers}
 
 theorem put_objects (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (views : Views)
-    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created Unit)
+    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential mlSource) (current : Native ×Platform)
     (before : Carrier (R:=R) view views joint created credential current)
     (key : U64) (remote : Remote ed.PublicKey) (back : Option (Remote ed.PublicKey) →PeerMap)

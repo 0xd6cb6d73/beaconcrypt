@@ -9,7 +9,7 @@
 use crate::agreement::{self, AgreementEffect, ServerAgreement};
 use crate::pqxdh::{self, RegistrationId, ServerState};
 use crate::ratchet::ConcreteRatchetKernel;
-use crate::registration::{self, AuthenticatedInit, PublishedServerResponse, ServerInitialKdf};
+use crate::registration::{self, AuthenticatedInit, PublishedServerResponse, ServerAdHash};
 use crate::session::{ServerAuthenticationPin, SessionBinding};
 
 /// Core-owned immutable peer binding and the ratchet stored for that peer.
@@ -145,7 +145,7 @@ impl<'a> CompletionLookup<'a> {
 	}
 
 	/// `occupied` is the actual membership reply for this continuation's key ID.
-	pub fn resume(self, occupied: bool) -> Result<ServerInitialKdf<'a>, ServerState> {
+	pub fn resume(self, occupied: bool) -> Result<ServerAdHash<'a>, ServerState> {
 		let availability = if occupied {
 			pqxdh::KeyIdAvailability::Occupied
 		} else {

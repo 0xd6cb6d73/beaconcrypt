@@ -8,6 +8,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialFusedCompiler
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhKemIndCca PqxdhCorrelatedExpand PqxdhPhase2SourceAux
 open PqxdhPhase1AcceptanceOracle PqxdhEd25519EufCma PqxdhJointIdentity PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState (IdentityHandle KemHandle)
@@ -201,10 +202,10 @@ theorem owner_source
     (state : SharedState A × BareState count) :
     simulateQ (PqxdhInitialLabelCompiler.source fixed)
       ((simulateQ (compiler attachedVerify primitives count fixed localImpl baseImpl kem secret challenge)
-        (PqxdhInitialFusedOwner.owner decode raw owner)).run state) =
+        (PqxdhInitialFusedOwner.owner (completedBinding := completedBinding) decode raw owner)).run state) =
       simulateQ (rootPost fixed baseImpl kem secret challenge)
         ((simulateQ (PqxdhPhase2PostScheduler.handles attachedVerify primitives count fixed localImpl challenge)
-          (PqxdhBeaconPhase2Shared.owner decode raw owner)).run state) := by
+          (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) decode raw owner)).run state) := by
   rw [program_source, native_program, PqxdhInitialFusedOwner.owner_native]
 
 end BeaconcryptCore.Computational.PqxdhInitialFusedCompiler

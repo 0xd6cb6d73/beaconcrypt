@@ -52,10 +52,10 @@ theorem step_admits (implementation : QueryImpl Spec (StateT S ProbComp))
     (supported : (.ok (some (event, final)), after) ∈ support
       ((simulateQ implementation (step initial)).run before)) : ReplyValid valid initial event := by
   cases initial with
-  | HashRequested _ | MldsaVerificationRequested _ | ServerFingerprintRequested _ | BeaconFingerprintRequested _ | Accepted _ | Rejected => trivial
+  | HashRequested _ | Accepted _ | Rejected => trivial
   | Ed25519VerificationRequested pending =>
     cases event with
-    | hash _ | mldsa _ | serverFingerprint _ | beaconFingerprint _ => trivial
+    | hash _ => trivial
     | ed25519 stage opened =>
       cases opened with
       | none => trivial
@@ -119,20 +119,36 @@ theorem accepted_invariant (implementation : QueryImpl Spec (StateT S ProbComp))
     (events : List Event) (authenticated : registration.AuthenticatedInit) (before after : S)
     (supported : (.ok (events, .Accepted authenticated), after) ∈ support
       ((simulateQ implementation (begin pin packet)).run before)) :
-    valid authenticated.binding.beacon_identity_public_key := by
+    valid authenticated.registration.beacon_identity_public_key := by
   obtain ⟨phase, started, _packet, _pin, _input⟩ := RegistrationAuthentication.begin_init_exact pin packet
   unfold begin at supported
-  rw [started] at supported
-  have traced := RegistrationAuthenticationInterpretation.execute_trace implementation 8
+  simp only [started, continueWith] at supported
+  have traced := RegistrationAuthenticationInterpretation.execute_trace implementation 5
     (.HashRequested phase) events (.Accepted authenticated) before after supported
-  exact trace implementation valid admission traced True.intro
+  exact (trace implementation valid admission traced True.intro).1
+
+omit primitive in
+/-- Accepted Init retains the exact same raw identity suffix that the actual Ed parser admitted. -/
+theorem binding_identity (implementation : QueryImpl Spec (StateT S ProbComp))
+    (pin : session.ServerAuthenticationPin) (packet : registration.InitPacket)
+    (events : List Event) (authenticated : registration.AuthenticatedInit) (before after : S)
+    (supported : (.ok (events, .Accepted authenticated), after) ∈ support
+      ((simulateQ implementation (begin pin packet)).run before)) :
+    authentication.OwnedInitFields.identity_public_key authenticated.binding.init_fields =
+      .ok authenticated.registration.beacon_identity_public_key := by
+  obtain ⟨phase, started, _packet, _pin, _input⟩ := RegistrationAuthentication.begin_init_exact pin packet
+  unfold begin at supported
+  simp only [started, continueWith] at supported
+  have traced := RegistrationAuthenticationInterpretation.execute_trace implementation 5
+    (.HashRequested phase) events (.Accepted authenticated) before after supported
+  exact (trace implementation (fun _ => True) (fun _ _ _ _ _ => True.intro) traced True.intro).2
 
 theorem accepted (native : QueryImpl AdapterInitAuthenticationStateful.NativeSpec (StateT S ProbComp))
     (parser : Parser native) (pin : session.ServerAuthenticationPin) (packet : registration.InitPacket)
     (events : List Event) (authenticated : registration.AuthenticatedInit) (before after : S)
     (supported : (.ok (events, .Accepted authenticated), after) ∈ support
       ((simulateQ (native ∘ₛ AdapterInitAuthenticationStateful.abstractNative) (begin pin packet)).run before)) :
-    Parsed parser authenticated.binding.beacon_identity_public_key :=
+    Parsed parser authenticated.registration.beacon_identity_public_key :=
   accepted_invariant _ (Parsed parser) (opened_admits native parser) pin packet events authenticated before after supported
 
 theorem reparse (native : QueryImpl AdapterInitAuthenticationStateful.NativeSpec (StateT S ProbComp))
@@ -141,7 +157,7 @@ theorem reparse (native : QueryImpl AdapterInitAuthenticationStateful.NativeSpec
     (supported : (.ok (events, .Accepted authenticated), after) ∈ support
       ((simulateQ (native ∘ₛ AdapterInitAuthenticationStateful.abstractNative) (begin pin packet)).run before)) :
     ∃ publicKey, beaconcrypt_crypto.crypto_sign.PublicKey.from_bytes
-      authenticated.binding.beacon_identity_public_key.to_slice = .ok (.Ok publicKey) := by
+      authenticated.registration.beacon_identity_public_key.to_slice = .ok (.Ok publicKey) := by
   obtain ⟨publicKey, parsed⟩ := accepted native parser pin packet events authenticated before after supported
   exact ⟨publicKey, (parser.source _).trans (congrArg RustM.ok parsed)⟩
 end
@@ -182,3 +198,9 @@ end BeaconcryptCore.Refinement.RegistrationAuthenticationReparse
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Refinement.RegistrationAuthenticationReparse.reparse
+
+/-- info: 'BeaconcryptCore.Refinement.RegistrationAuthenticationReparse.binding_identity' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.RegistrationAuthenticationReparse.binding_identity

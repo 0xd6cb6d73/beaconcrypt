@@ -55,9 +55,13 @@ let RegistrationBeaconOpen(owner: channel, token: channel, reply: channel,
    still reaches its complete plan/open before the registration gate refuses. *)
 let RegistrationBeaconAfterRoot(owner: channel, token: channel, reply: channel,
   attempt: bitstring, raw: bitstring, server_identity: bitstring, server_id: key_id,
-  identity: bitstring, assigned: key_id, frame: bitstring, root: bitstring, failure_stage: nat) =
+  encoded_identity: bitstring, signed_prekey: bitstring, signed_one_time: bitstring,
+  signed_pq: bitstring, ephemeral: bitstring, ciphertext: bitstring,
+  assigned: key_id, frame: bitstring, root: bitstring, failure_stage: nat) =
   if failure_stage <> 13 then (
-    let associated_data = beaconcrypt_core__pqxdh__build_associated_data(server_identity, identity) in
+    (* Transcript AD151 over the request this Beacon sent and the parsed response fields. *)
+    let associated_data = transcript_associated_data(encoded_identity, signed_prekey,
+      signed_one_time, signed_pq, server_identity, ephemeral, ciphertext, assigned) in
     let send = beacon_to_server_chain(root) in
     let receive = server_to_beacon_chain(root) in
     event RegistrationBeaconPrepared(owner, attempt, root, send, receive);
@@ -112,7 +116,11 @@ let RegistrationBeaconPrepare(owner: channel, token: channel, reply: channel,
                                         if failure_stage <> 12 then (
                                           let root = pqxdh_root(beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(input)) in
                                           RegistrationBeaconAfterRoot(owner, token, reply, attempt, raw, server_identity,
-                                            server_id, ed_public(identity_secret), assigned, frame, root, failure_stage)
+                                            server_id, tag_ed25519(ed_public(identity_secret)),
+                                            sign(tag_x25519_prekey(x25519_public(prekey_secret)), identity_secret),
+                                            sign(tag_x25519_one_time(x25519_public(one_time_secret)), identity_secret),
+                                            sign(tag_mlkem768(mlkem_public(pq_secret)), identity_secret),
+                                            ephemeral, ciphertext, assigned, frame, root, failure_stage)
                                         ) else RegistrationBeaconFailure(owner, token, reply, attempt)
                                       ) else RegistrationBeaconFailure(owner, token, reply, attempt)
                                     ) else (event RegistrationBeaconPinRejected(owner, attempt, server_identity);

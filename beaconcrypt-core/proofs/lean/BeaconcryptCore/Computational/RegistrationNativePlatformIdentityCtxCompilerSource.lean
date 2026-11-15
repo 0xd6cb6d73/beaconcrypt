@@ -3,7 +3,7 @@ import BeaconcryptCore.Computational.RegistrationNativePlatformIdentityCtxSource
 import BeaconcryptCore.Computational.RegistrationNativePlatformIdentityCtxAmbient
 
 /-! The source interpretation of the shared-hash indexed compiler retains both private service states independently. Physical cache restoration and uniform-transcript normalization are explicit; all native counters, generated credentials, KEM rows and ordinary failed effects remain source fields. -/
-open OracleComp OracleSpec CoreModels
+open OracleComp OracleSpec CoreModels Aeneas
 set_option autoImplicit false
 set_option warningAsError true
 set_option maxRecDepth 16384
@@ -21,7 +21,7 @@ def project (before : Full n KemSK) : RegistrationNativeIdentityWorld.State n Ke
     RegistrationNativeIdentityCompiler.poolView before.2.1⟩
 
 noncomputable def implementation (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit) :
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     QueryImpl (RegistrationNativePlatformIdentityProgram.Spec n KemSK) (StateT (Full n KemSK) ProbComp) :=
   fun query before => (fun result => (result.1.1, (result.1.2, result.2))) <$>
     (simulateQ (RegistrationNativePlatformIdentityCtxSource.implementation setup.joint)
@@ -30,7 +30,7 @@ noncomputable def implementation (setup : Setup base KemSK) (checks : Checks)
 
 /-- Every literal actual ambient callback restores the same source Context while retaining its actual private joint seed table. -/
 theorem ambient_source (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (RegistrationNativeIdentityFrontend.Ambient n KemSK).Domain) (before : Full n KemSK) :
     Prod.map id project <$> (implementation (source := source) setup checks representation created (.inr (.inl query))).run before =
       (RegistrationNativePlatformIdentityProgram.implementation (source := source) setup checks representation created (.inr (.inl query))).run (project before) := by
@@ -63,7 +63,7 @@ private theorem lift_apply {S A : Type} {m : Type → Type} [Monad m] [LawfulMon
 attribute [local irreducible] RegistrationNativeIdentityWorld.implementation PqxdhDynamicIdentityPool.lazyImpl
 
 private theorem joint_source (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : PqxdhDynamicIdentityPool.PoolSpec.Domain) (before : Full n KemSK) :
     Prod.map id project <$> (implementation (source := source) setup checks representation created (.inr (.inr query))).run before =
       (RegistrationNativePlatformIdentityProgram.implementation (source := source) setup checks representation created (.inr (.inr query))).run (project before) := by
@@ -84,7 +84,7 @@ private theorem joint_source (setup : Setup base KemSK) (checks : Checks)
   exact same
 
 private theorem uniform_source (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : unifSpec.Domain) (before : Full n KemSK) :
     Prod.map id project <$> (implementation (source := source) setup checks representation created (.inl query)).run before =
       (RegistrationNativePlatformIdentityProgram.implementation (source := source) setup checks representation created (.inl query)).run (project before) := by
@@ -101,7 +101,7 @@ private theorem uniform_source (setup : Setup base KemSK) (checks : Checks)
 
 /-- Each concrete indexed compiler query restores the complete original native source state; the physical CTX cache and generated joint table stay in the private interpreter. -/
 theorem query_source (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (RegistrationNativePlatformIdentityProgram.Spec n KemSK).Domain) (before : Full n KemSK) :
     Prod.map id project <$> (implementation (source := source) setup checks representation created query).run before =
       (RegistrationNativePlatformIdentityProgram.implementation (source := source) setup checks representation created query).run (project before) := by
@@ -113,7 +113,7 @@ theorem query_source (setup : Setup base KemSK) (checks : Checks)
 
 /-- Arbitrary adaptive owner/Env programs use the same literal native source interpretation without exposing the private physical hash addresses to executable compiler state. -/
 theorem complete (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp (RegistrationNativePlatformIdentityProgram.Spec n KemSK) Value) (before : Full n KemSK) :
     Prod.map id project <$> (simulateQ (implementation (source := source) setup checks representation created) work).run before =
       (simulateQ (RegistrationNativePlatformIdentityProgram.implementation (source := source) setup checks representation created) work).run (project before) :=

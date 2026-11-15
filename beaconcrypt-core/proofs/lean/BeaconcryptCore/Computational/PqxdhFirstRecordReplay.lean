@@ -22,6 +22,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhFirstRecordReplay
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 
 section Control
 open ratchet.control ratchet.refined
@@ -127,9 +129,7 @@ theorem begin_admitted (kernel : RefinedRatchet Send Receive Material) (target :
         obtain ⟨skipped, skippedEq, _⟩ := uscalar_sub_eq_ok plan.derivations 1#u64 (by scalar_tac)
         simp only [skippedEq, bind_tc_ok, RawCtxChainReceive.rejected, RatchetState.receive_cache_len, lift] at exact
         repeat' split at exact
-        all_goals first
-          | (simp only [RustM.ok.injEq] at exact; subst exact; rfl)
-          | skip
+        all_goals try (simp only [RustM.ok.injEq] at exact; subst exact; rfl)
         cases emptied : refined_receive_slots_are_empty kernel kernel.control.receive_cache.len
             (UScalar.cast UScalarTy.U8 skipped) with
         | fail error => simp only [emptied, bind_tc_fail, reduceCtorEq] at exact
@@ -822,7 +822,7 @@ theorem compiler_tracks (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origi
     (tracks : Tracks index route decode kid log before.1)
     (result : (PostSpec baseSpec S B).Range query ×
       (PqxdhInitialPendingPost.Front Chain M P I D K S B × PqxdhInitialOriginPost.Trace Origin S B))
-    (supported : result ∈ support ((PqxdhInitialOriginPost.compiler (X := X) (Response := Response)
+    (supported : result ∈ support ((PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) (X := X) (Response := Response)
       (extra := PqxdhPrivateKemSource.SelectorSpec baseSpec) mark sender route decode query).run before)) :
     Tracks index route decode kid (log ++ [⟨query, result.1⟩]) result.2.1 := by
   rcases query with (((⟨i, request⟩ | (⟨b, request⟩ | request)) | reveal) | selector) | ⟨b, raw⟩
@@ -924,7 +924,7 @@ theorem after_installed (calls : RawCtxChainOwner.Calls Kernel (OracleComp spec)
     (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Pqxdh.Bytes) (kernel : Kernel) (metadata : PeerMetadata)
     (state : State Kernel Metadata PeerMetadata ConsumedIds)
     (result : Option PqxdhServerRegistrationPublication.Response × State Kernel Metadata PeerMetadata ConsumedIds)
-    (supported : result ∈ support (afterInitialization calls aux candidate authenticated kernel metadata state))
+    (supported : result ∈ support (afterInitialization (associatedData := associatedData) calls aux candidate authenticated kernel metadata state))
     (response : PqxdhServerRegistrationPublication.Response) (replied : result.1 = some response) :
     ∃ found, result.2.server.peers response.keyId = some found ∧
       ∃ context, ∃ sent ∈ support (calls.send kernel context), sent.1 = found.kernel := by
@@ -958,7 +958,7 @@ theorem candidate_installed (calls : RawCtxChainOwner.Calls Kernel (OracleComp s
     (initial : RustM Kernel) (candidate : pqxdh.ServerRegistrationCandidate) (data : Option Pqxdh.Bytes) (metadata : PeerMetadata)
     (state : State Kernel Metadata PeerMetadata ConsumedIds)
     (result : RustM (Option PqxdhServerRegistrationPublication.Response × State Kernel Metadata PeerMetadata ConsumedIds))
-    (supported : result ∈ support (PqxdhInitialGenericBuilder.candidate calls aux initial candidate data metadata state))
+    (supported : result ∈ support (PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) calls aux initial candidate data metadata state))
     (response : PqxdhServerRegistrationPublication.Response) (final : State Kernel Metadata PeerMetadata ConsumedIds)
     (replied : result = ok (some response, final)) :
     ∃ found, final.server.peers response.keyId = some found ∧ ∃ kernel, initial = ok kernel ∧
@@ -1019,7 +1019,7 @@ theorem candidate_installed (calls : RawCtxChainOwner.Calls Kernel (OracleComp s
       rw [support_map] at rest
       obtain ⟨tail, tailFound, rfl⟩ := rest
       simp only [RustM.ok.injEq] at replied
-      obtain ⟨found, peers, moves⟩ := after_installed calls aux candidate _ kernel metadata state tail tailFound response
+      obtain ⟨found, peers, moves⟩ := after_installed (associatedData := associatedData) calls aux candidate _ kernel metadata state tail tailFound response
         (by rw [replied])
       refine ⟨found, ?_, kernel, rfl, moves⟩
       rw [replied] at peers
@@ -1032,7 +1032,7 @@ theorem ready_installed (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (initial : RustM Kernel) (binding : pqxdh.ServerBinding) (ready : PqxdhPrivateAcceptedRoot.Ready) (metadata : PeerMetadata)
     (state : State Kernel Metadata PeerMetadata ConsumedIds)
     (result : RustM (Option PqxdhServerRegistrationPublication.Response × State Kernel Metadata PeerMetadata ConsumedIds))
-    (supported : result ∈ support (PqxdhInitialGenericBuilder.readyBuild source calls aux initial binding ready metadata state))
+    (supported : result ∈ support (PqxdhInitialGenericBuilder.readyBuild (associatedData := associatedData) source calls aux initial binding ready metadata state))
     (response : PqxdhServerRegistrationPublication.Response) (final : State Kernel Metadata PeerMetadata ConsumedIds)
     (replied : result = ok (some response, final)) :
     ∃ found, final.server.peers response.keyId = some found ∧ ∃ kernel, initial = ok kernel ∧
@@ -1060,7 +1060,7 @@ theorem ready_installed (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     simp only at supported
     generalize PqxdhRegistrationInputs.prepare _ _ _ _ = prepared at supported
     rcases prepared with (candidate | error) | error | _
-    · exact candidate_installed calls aux initial candidate _ metadata state result supported response final replied
+    · exact candidate_installed (associatedData := associatedData) calls aux initial candidate _ metadata state result supported response final replied
     · exact (stop_case _ (by simp) supported).elim
     · exact (stop_case _ (by simp) supported).elim
     · exact (stop_case _ (by simp) supported).elim
@@ -1094,7 +1094,7 @@ theorem build_tracks (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (sender : M → Std.U64) (index : Fin S) (metadata : P) (ready : PqxdhPrivateAcceptedRoot.Ready)
     (front : PqxdhInitialPendingPost.Front Chain M P I D K S B)
     (built : RustM (Option PqxdhServerRegistrationPublication.Response) × PqxdhInitialPendingPost.Front Chain M P I D K S B)
-    (supported : built ∈ support ((PqxdhInitialPendingBuilder.build (extra := extra) (X := X) (Response := Response) (Shared := Shared)
+    (supported : built ∈ support ((PqxdhInitialPendingBuilder.build (associatedData := associatedData) (extra := extra) (X := X) (Response := Response) (Shared := Shared)
       source initial sender index metadata ready).run front))
     (response : PqxdhServerRegistrationPublication.Response) (replied : built.1 = ok (some response))
     (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder) :
@@ -1105,7 +1105,7 @@ theorem build_tracks (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
   · rw [outcome] at reached replied
     simp only [PqxdhInitialPendingBuilder.reinstall, RustM.ok.injEq] at replied ⊢
     obtain ⟨found, peers, kernel, initialized, context, sent, sentFound, same⟩ :=
-      ready_installed source _ _ initial _ ready metadata _ _ reached response value.2 (by rw [← replied])
+      ready_installed (associatedData := associatedData) source _ _ initial _ ready metadata _ _ reached response value.2 (by rw [← replied])
     have kept := send_result kernel context sent (support_simulate _ _ sentFound)
     refine ⟨⟨found, ?_, ?_, fun n accepted => ?_⟩, fun again => ?_⟩
     · simp only [PqxdhInitialPendingBuilder.install, Function.update_self]
@@ -1142,32 +1142,32 @@ theorem replay_bit (index : Fin S) (route : RawCtxServerRouting.SenderDecoder) (
 
 /-- In the pending branch of the actual game no reachable transcript has a reacceptance at the registered Server peer, for every post and whatever the adversary's bit, before the HB-112 gate is applied: after a successful first Server builder, every reachable final transcript of the logged post run satisfies `¬Reaccepted` at the key identifier of the registration reply. -/
 theorem no_reacceptance
-    (prepared : PqxdhPrivateRootSource.Prepared setup (driver env.toDriverEnvironment program).State)
+    (prepared : PqxdhPrivateRootSource.Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)
     (ready : PqxdhPrivateAcceptedRoot.Ready)
     (built : RustM (Option PqxdhServerRegistrationPublication.Response) ×
       PqxdhInitialPendingPost.Front RatchetChain M P (PqxdhGeneratedBeaconState.IdentityHandle I)
         (PqxdhGeneratedBeaconState.DhPair setup) (PqxdhGeneratedBeaconState.KemHandle K) S (B + 1))
-    (reached : built ∈ support (PqxdhInitialPendingBuilder.build (extra := PqxdhPrivateKemSource.SelectorSpec (baseSpec := baseSpec))
+    (reached : built ∈ support (PqxdhInitialPendingBuilder.build (associatedData := associatedData) (extra := PqxdhPrivateKemSource.SelectorSpec (baseSpec := baseSpec))
         (X := X ⊕ PqxdhPhase2JointIdentity.Converted) (Response := Response) (Shared := PqxdhPhase2DecapsulationRouting.Shared) env.source
       (ConcreteRatchetKernel.refined <$>
         PqxdhInitialReplyErasure.kernelOf false (PqxdhInitialRootLabelService.realInitial env.source ready.root))
-      env.senderId env.index env.metadata ready (PqxdhInitialRootEventAccepted.front env program prepared)))
+      env.senderId env.index env.metadata ready (PqxdhInitialRootEventAccepted.front (completedBinding := completedBinding) env program prepared)))
     (response : PqxdhServerRegistrationPublication.Response) (replied : built.1 = .ok (some response)) :
-    ∀ final ∈ support ((simulateQ (PqxdhInitialOriginPost.compiler (extra := PqxdhPrivateKemSource.SelectorSpec (baseSpec := baseSpec))
+    ∀ final ∈ support ((simulateQ (PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) (extra := PqxdhPrivateKemSource.SelectorSpec (baseSpec := baseSpec))
         (X := X ⊕ PqxdhPhase2JointIdentity.Converted) (Response := Response) (Shared := PqxdhPhase2DecapsulationRouting.Shared)
-        (PqxdhInitialSelectedOrigin.mark env.source (PqxdhInitialRootEventAccepted.selectedMessage env program prepared ready))
+        (PqxdhInitialSelectedOrigin.mark env.source (PqxdhInitialRootEventAccepted.selectedMessage (completedBinding := completedBinding) env program prepared ready))
         env.senderId env.route env.decode) (logged (post0 prepared.1.context.selection.1 built.1) [])).run
       (built.2, PqxdhInitialOriginPost.afterBuilder PqxdhInitialSourcePublication.empty built.2 env.index true built.1)),
       ¬Reaccepted env.index env.route env.decode response.keyId final.1.2 := by
   intro final finalReached
   have start : Tracks (baseSpec := baseSpec) env.index env.route env.decode response.keyId [] built.2 :=
-    build_tracks env.source _ (fun kernel built => initial_valid false _ kernel built) env.senderId env.index env.metadata
+    build_tracks (associatedData := associatedData) env.source _ (fun kernel built => initial_valid false _ kernel built) env.senderId env.index env.metadata
       ready _ built reached response replied env.route env.decode
-  have tracks := logged_invariant (PqxdhInitialOriginPost.compiler
-    (PqxdhInitialSelectedOrigin.mark env.source (PqxdhInitialRootEventAccepted.selectedMessage env program prepared ready))
+  have tracks := logged_invariant (PqxdhInitialOriginPost.compiler (completedBinding := completedBinding)
+    (PqxdhInitialSelectedOrigin.mark env.source (PqxdhInitialRootEventAccepted.selectedMessage (completedBinding := completedBinding) env program prepared ready))
     env.senderId env.route env.decode)
     (fun log state => Tracks env.index env.route env.decode response.keyId log state.1)
-    (fun log state query holds result reached => compiler_tracks _ env.senderId env.route env.decode env.index response.keyId
+    (fun log state query holds result reached => compiler_tracks (completedBinding := completedBinding) _ env.senderId env.route env.decode env.index response.keyId
       log query state holds result reached)
     (post0 prepared.1.context.selection.1 built.1) [] _ start final finalReached
   exact tracks.2
@@ -1176,11 +1176,11 @@ theorem no_reacceptance
 theorem client_congr (first second : RustM (Option PqxdhServerRegistrationPublication.Response) →
       Bool × List (Entry baseSpec S (B + 1)) → Bool)
     (agree : ∀ reply result, ¬ReplyReaccepted env.index env.route env.decode reply result.2 → first reply result = second reply result)
-    (prepared : PqxdhPrivateRootSource.Prepared setup (driver env.toDriverEnvironment program).State)
+    (prepared : PqxdhPrivateRootSource.Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)
     (ready : PqxdhPrivateAcceptedRoot.Ready) :
-    PqxdhInitialRootEventAccepted.client env program (fun selection reply => first reply <$> logged (post0 selection reply) [])
+    PqxdhInitialRootEventAccepted.client (associatedData := associatedData) (completedBinding := completedBinding) env program (fun selection reply => first reply <$> logged (post0 selection reply) [])
         prepared ready =
-      PqxdhInitialRootEventAccepted.client env program (fun selection reply => second reply <$> logged (post0 selection reply) [])
+      PqxdhInitialRootEventAccepted.client (associatedData := associatedData) (completedBinding := completedBinding) env program (fun selection reply => second reply <$> logged (post0 selection reply) [])
         prepared ready := by
   simp only [PqxdhInitialRootEventAccepted.client, PqxdhInitialNativeCarried.original, PqxdhInitialSourceExperiment.execution,
     PqxdhInitialOriginPost.sequence, StateT.run]
@@ -1196,16 +1196,16 @@ theorem client_congr (first second : RustM (Option PqxdhServerRegistrationPublic
   apply agree
   rcases replied : built.1 with (_ | response) | error | _
   · exact id
-  · exact no_reacceptance env program post0 prepared ready built reached response replied final finalReached
+  · exact no_reacceptance (associatedData := associatedData) (completedBinding := completedBinding) env program post0 prepared ready built reached response replied final finalReached
   · exact id
   · exact id
 
 /-- In the pending branch of the actual game the replay proxy and the canonical proxy give the same source client. -/
-theorem client_replay (prepared : PqxdhPrivateRootSource.Prepared setup (driver env.toDriverEnvironment program).State)
+theorem client_replay (prepared : PqxdhPrivateRootSource.Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)
     (ready : PqxdhPrivateAcceptedRoot.Ready) :
-    PqxdhInitialRootEventAccepted.client env program (replayPost env program post0) prepared ready =
-      PqxdhInitialRootEventAccepted.client env program (canonicalPost env program post0) prepared ready :=
-  client_congr env program post0 _ _ (fun reply result once => replay_bit env.index env.route env.decode env.recordWriter reply result once)
+    PqxdhInitialRootEventAccepted.client (associatedData := associatedData) (completedBinding := completedBinding) env program (replayPost env program post0) prepared ready =
+      PqxdhInitialRootEventAccepted.client (associatedData := associatedData) (completedBinding := completedBinding) env program (canonicalPost env program post0) prepared ready :=
+  client_congr (associatedData := associatedData) (completedBinding := completedBinding) env program post0 _ _ (fun reply result once => replay_bit env.index env.route env.decode env.recordWriter reply result once)
     prepared ready
 
 end Client
@@ -1223,46 +1223,46 @@ variable {setup : StatefulPhase1Setup baseSpec}
 
 /-- The accepted source-event continuation of the replay proxy is that of the canonical proxy. -/
 theorem accepted_replay :
-    PqxdhInitialRootEventSecrecy.accepted env attachedVerify primitives program (replayPost env program post0)
+    PqxdhInitialRootEventSecrecy.accepted (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program (replayPost env program post0)
         selected number ancestors disclosed =
-      PqxdhInitialRootEventSecrecy.accepted env attachedVerify primitives program (canonicalPost env program post0)
+      PqxdhInitialRootEventSecrecy.accepted (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program (canonicalPost env program post0)
         selected number ancestors disclosed := by
   funext prepared ready
   simp only [PqxdhInitialRootEventSecrecy.accepted, PqxdhInitialRootEventAccepted.target, client_replay]
 
 /-- The pending-branch game of the replay proxy is the pending-branch game of the canonical proxy. -/
 theorem pending_replay :
-    PqxdhFirstRecordTarget.pendingActual env baseImpl kem attachedVerify primitives program (replayPost env program post0)
-        (PqxdhInitialRootEventSecrecy.accepted env attachedVerify primitives program (replayPost env program post0)
+    PqxdhFirstRecordTarget.pendingActual (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program (replayPost env program post0)
+        (PqxdhInitialRootEventSecrecy.accepted (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program (replayPost env program post0)
           selected number ancestors disclosed) =
-      PqxdhFirstRecordTarget.pendingActual env baseImpl kem attachedVerify primitives program (canonicalPost env program post0)
-        (PqxdhInitialRootEventSecrecy.accepted env attachedVerify primitives program (canonicalPost env program post0)
+      PqxdhFirstRecordTarget.pendingActual (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program (canonicalPost env program post0)
+        (PqxdhInitialRootEventSecrecy.accepted (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program (canonicalPost env program post0)
           selected number ancestors disclosed) := by
   rw [accepted_replay]
   rfl
 
 /-- The HB-112 actual game with any post, minus its constant-`false` continuation, is the `true` mass of its pending branch. -/
 theorem actual_pending (post : PqxdhAuthenticatedRootExperiment.Post (baseSpec := baseSpec) program.Selection S (B + 1)) :
-    (𝒟[PqxdhInitialRootEventSecrecy.actual env baseImpl kem attachedVerify primitives program post selected number ancestors
+    (𝒟[PqxdhInitialRootEventSecrecy.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors
         disclosed] {true}).toReal -
-      (𝒟[PqxdhInitialRootEventExperiment.actual env baseImpl kem attachedVerify primitives program post
-        (PqxdhFirstRecordTarget.rejectAll env program)] {true}).toReal =
-    (𝒟[PqxdhFirstRecordTarget.pendingActual env baseImpl kem attachedVerify primitives program post
-      (PqxdhInitialRootEventSecrecy.accepted env attachedVerify primitives program post selected number ancestors disclosed)]
+      (𝒟[PqxdhInitialRootEventExperiment.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post
+        (PqxdhFirstRecordTarget.rejectAll (completedBinding := completedBinding) env program)] {true}).toReal =
+    (𝒟[PqxdhFirstRecordTarget.pendingActual (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post
+      (PqxdhInitialRootEventSecrecy.accepted (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program post selected number ancestors disclosed)]
       {true}).toReal := by
   rw [PqxdhFirstRecordTarget.target_split, ENNReal.toReal_add (PqxdhFirstRecordTarget.true_ne_top _)
     (PqxdhFirstRecordTarget.true_ne_top _), add_sub_cancel_left]
 
 /-- The HB-112 actual game with the replay proxy, minus its constant-`false` continuation, equals the same difference for the canonical proxy: no run of the pending branch has a reacceptance. -/
 theorem replay_canonical :
-    (𝒟[PqxdhInitialRootEventSecrecy.actual env baseImpl kem attachedVerify primitives program (replayPost env program post0)
+    (𝒟[PqxdhInitialRootEventSecrecy.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program (replayPost env program post0)
         selected number ancestors disclosed] {true}).toReal -
-      (𝒟[PqxdhInitialRootEventExperiment.actual env baseImpl kem attachedVerify primitives program (replayPost env program post0)
-        (PqxdhFirstRecordTarget.rejectAll env program)] {true}).toReal =
-    (𝒟[PqxdhInitialRootEventSecrecy.actual env baseImpl kem attachedVerify primitives program (canonicalPost env program post0)
+      (𝒟[PqxdhInitialRootEventExperiment.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program (replayPost env program post0)
+        (PqxdhFirstRecordTarget.rejectAll (completedBinding := completedBinding) env program)] {true}).toReal =
+    (𝒟[PqxdhInitialRootEventSecrecy.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program (canonicalPost env program post0)
         selected number ancestors disclosed] {true}).toReal -
-      (𝒟[PqxdhInitialRootEventExperiment.actual env baseImpl kem attachedVerify primitives program (canonicalPost env program post0)
-        (PqxdhFirstRecordTarget.rejectAll env program)] {true}).toReal := by
+      (𝒟[PqxdhInitialRootEventExperiment.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program (canonicalPost env program post0)
+        (PqxdhFirstRecordTarget.rejectAll (completedBinding := completedBinding) env program)] {true}).toReal := by
   rw [actual_pending, actual_pending, pending_replay]
 
 end Pending
@@ -1305,14 +1305,14 @@ theorem support_run {κ τ σ α : Type} {spec : OracleSpec κ} {target : Oracle
     exact ⟨reply.1, mem_support_query query reply.1, ih reply.1 reply.2 result reached⟩
 
 /-- In the pending branch of the actual game the accepted source-event continuation of the reacceptance proxy never returns `true`. -/
-theorem accepted_reaccept (prepared : PqxdhPrivateRootSource.Prepared setup (driver env.toDriverEnvironment program).State)
+theorem accepted_reaccept (prepared : PqxdhPrivateRootSource.Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)
     (ready : PqxdhPrivateAcceptedRoot.Ready) (bit : Bool)
-    (reached : bit ∈ support (PqxdhInitialRootEventSecrecy.accepted env attachedVerify primitives program
+    (reached : bit ∈ support (PqxdhInitialRootEventSecrecy.accepted (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program
       (reacceptPost env program post0) selected number ancestors disclosed prepared ready)) : bit = false := by
-  have silent : PqxdhInitialRootEventAccepted.client env program (reacceptPost env program post0) prepared ready =
-      PqxdhInitialRootEventAccepted.client env program (fun selection reply => (fun _ => false) <$> logged (post0 selection reply) [])
+  have silent : PqxdhInitialRootEventAccepted.client (associatedData := associatedData) (completedBinding := completedBinding) env program (reacceptPost env program post0) prepared ready =
+      PqxdhInitialRootEventAccepted.client (associatedData := associatedData) (completedBinding := completedBinding) env program (fun selection reply => (fun _ => false) <$> logged (post0 selection reply) [])
         prepared ready :=
-    client_congr env program post0 (reacceptBit env.index env.route env.decode) (fun _ _ => false)
+    client_congr (associatedData := associatedData) (completedBinding := completedBinding) env program post0 (reacceptBit env.index env.route env.decode) (fun _ _ => false)
       (fun reply result once => by
         unfold reacceptBit
         rw [Bool.and_eq_false_iff]
@@ -1336,8 +1336,8 @@ theorem accepted_reaccept (prepared : PqxdhPrivateRootSource.Prepared setup (dri
 
 /-- In the actual game the pending branch of the reacceptance proxy never outputs `true`. -/
 theorem pending_reaccept :
-    𝒟[PqxdhFirstRecordTarget.pendingActual env baseImpl kem attachedVerify primitives program (reacceptPost env program post0)
-      (PqxdhInitialRootEventSecrecy.accepted env attachedVerify primitives program (reacceptPost env program post0)
+    𝒟[PqxdhFirstRecordTarget.pendingActual (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program (reacceptPost env program post0)
+      (PqxdhInitialRootEventSecrecy.accepted (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program (reacceptPost env program post0)
         selected number ancestors disclosed)] {true} = 0 := by
   rw [← prEvent_eq_evalDist_singleton _ true]
   refine prEvent_eq_zero_of_not_mem_support _ fun reached => ?_
@@ -1355,16 +1355,16 @@ theorem pending_reaccept :
     split at reached
     · simp only [support_pure, Set.mem_singleton_iff, Bool.true_eq_false] at reached
     unfold PqxdhInitialRootEventExperiment.nativeAccepted at reached
-    exact Bool.true_eq_false.mp (accepted_reaccept env attachedVerify primitives program post0 selected number ancestors disclosed
+    exact Bool.true_eq_false.mp (accepted_reaccept (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program post0 selected number ancestors disclosed
       _ _ true (support_simulate _ _ reached)) |>.elim
   · simp only [support_pure, Set.mem_singleton_iff, Bool.true_eq_false] at reached
 
 /-- The HB-112 difference of the reacceptance proxy is zero: the HB-112 actual game with that proxy, minus its constant-`false` continuation, is zero, because its pending branch never returns `true`. The gate-free fact behind it is `no_reacceptance`. -/
 theorem reaccepted_zero :
-    (𝒟[PqxdhInitialRootEventSecrecy.actual env baseImpl kem attachedVerify primitives program (reacceptPost env program post0)
+    (𝒟[PqxdhInitialRootEventSecrecy.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program (reacceptPost env program post0)
         selected number ancestors disclosed] {true}).toReal -
-      (𝒟[PqxdhInitialRootEventExperiment.actual env baseImpl kem attachedVerify primitives program (reacceptPost env program post0)
-        (PqxdhFirstRecordTarget.rejectAll env program)] {true}).toReal = 0 := by
+      (𝒟[PqxdhInitialRootEventExperiment.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program (reacceptPost env program post0)
+        (PqxdhFirstRecordTarget.rejectAll (completedBinding := completedBinding) env program)] {true}).toReal = 0 := by
   rw [actual_pending, pending_reaccept, ENNReal.toReal_zero]
 
 end Zero
@@ -1397,27 +1397,27 @@ theorem first_beacon_record_integrity_replay
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation kem) (hmac : HmacSha512) (correct : SourceFullCorrect (env0).source hmac)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : Forgery)
     (ctxFallback : ModifiedNonceAeadForgery) (qPrelude : Nat)
-    (prepareHash : PrepareHashBudget setup env callbacks baseImpl kem attachedVerify primitives program
+    (prepareHash : PrepareHashBudget (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program
       (canonicalPost env0 program post0) qPrelude)
     (small : 1 + postTotal setup env callbacks baseImpl kem program c < 2 ^ 96)
     (writable : ReadWritable env.recordWriter env.decode) :
-    (𝒟[PqxdhInitialRootEventSecrecy.actual env0 baseImpl kem attachedVerify primitives program (replayPost env0 program post0)
+    (𝒟[PqxdhInitialRootEventSecrecy.actual (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program (replayPost env0 program post0)
         (.beacon b) 1#u64 [] []] {true}).toReal -
-      (𝒟[PqxdhInitialRootEventExperiment.actual env0 baseImpl kem attachedVerify primitives program (replayPost env0 program post0)
-        (PqxdhFirstRecordTarget.rejectAll env0 program)] {true}).toReal ≤
-    PqxdhAdaptiveCoordinateSecrecy.targetLoss env0 baseImpl kem attachedVerify primitives program
+      (𝒟[PqxdhInitialRootEventExperiment.actual (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program (replayPost env0 program post0)
+        (PqxdhFirstRecordTarget.rejectAll (completedBinding := completedBinding) env0 program)] {true}).toReal ≤
+    PqxdhAdaptiveCoordinateSecrecy.targetLoss (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program
       (PqxdhFirstRecordTarget.unitPost program (canonicalPost env0 program post0)) (PqxdhFirstRecordTarget.unitTargets (firstBeacon b))
       (PqxdhFirstRecordTarget.certificate env0 baseImpl kem program (canonicalPost env0 program post0)
         (canonicalCertificate env0 baseImpl kem program post0 c)) hmac fallback ordinaryFallback () +
-    PqxdhFirstRecordTarget.completedLoss env0 baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
+    PqxdhFirstRecordTarget.completedLoss (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
       hmac fallback ordinaryFallback +
-    (ctxLoss setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0) (firstBeacon b)
+    (ctxLoss (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0) (firstBeacon b)
       ctxFallback (qPrelude + (1 + postTotal setup env callbacks baseImpl kem program c))
       (1 + postTotal setup env callbacks baseImpl kem program c)).toReal +
     1 / 2 ^ 256 + 1 / 2 ^ 256 +
     ((1 + c.postBudget (.inl .send) + 51 * (c.postBudget (.inl .raw) + c.postBudget (.inr 5)) : ℕ) : ℝ) / 2 ^ 256 := by
   rw [replay_canonical]
-  exact PqxdhFirstRecordStopTagged.first_beacon_record_integrity_stop setup env callbacks baseImpl kem attachedVerify primitives
+  exact PqxdhFirstRecordStopTagged.first_beacon_record_integrity_stop (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives
     program post0 b c compatible adapter functional hmac correct fallback ordinaryFallback ctxFallback qPrelude prepareHash small writable
 
 end Integrity

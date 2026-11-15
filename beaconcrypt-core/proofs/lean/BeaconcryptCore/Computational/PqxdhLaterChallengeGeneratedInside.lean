@@ -5,7 +5,10 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeGeneratedInside
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPhase1AcceptanceOracle PqxdhKemIndCca PqxdhInitializerSecrecy
 open CtxRomAuth AdaptiveCtxSharedHash PqxdhSecretInputKdf PqxdhFullSecretInputKdf
@@ -36,19 +39,19 @@ theorem inside_source (depth : Nat)
     (details : PqxdhLaterChallengeGeneratedChronology.Details (setup := setup) (M := M) (P := P) (I := I) (K := K) (S := S) (B := B))
     (after : CtxRO.QueryCache)
     (supported : (result, after) ∈ support ((simulateQ hashImpl
-      (PqxdhLaterChallengeGeneratedContinuation.run setup env callbacks program adversary owner number bit attachedVerify primitives
+      (PqxdhLaterChallengeGeneratedContinuation.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify primitives
         baseImpl kem ancestors disclosed depth)).run ∅))
     (shape : result.1.1.2.1.1.1 = Sum.inr (stored, Sum.inr pending))
     (captured : result.1.2 = some details)
     (classified : PqxdhLaterChallengeSavedClassification.phase (some details) = .inside) :
     ∃ selection, result.2 = some selection ∧ ∃ start secret challenge output cache,
-      PqxdhLaterChallengeSampleInside.Inside env0 callbacks baseImpl kem attachedVerify primitives secret challenge
+      PqxdhLaterChallengeSampleInside.Inside (associatedData := associatedData) (completedBinding := completedBinding) env0 callbacks baseImpl kem attachedVerify primitives secret challenge
         start output depth owner number bit (adversary selection) pending details cache after := by
   obtain ⟨selection, selected, start, secret, challenge, output, cache, reached⟩ :=
-    PqxdhLaterChallengeCarriedChronology.carried_reaches setup env callbacks program adversary owner number bit attachedVerify
+    PqxdhLaterChallengeCarriedChronology.carried_reaches (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify
       primitives baseImpl kem ancestors disclosed depth result stored pending details after supported shape captured
   exact ⟨selection, selected, start, secret, challenge, output, cache,
-    PqxdhLaterChallengeSampleInside.reached_inside env0 callbacks baseImpl kem attachedVerify primitives secret challenge start output
+    PqxdhLaterChallengeSampleInside.reached_inside (associatedData := associatedData) (completedBinding := completedBinding) env0 callbacks baseImpl kem attachedVerify primitives secret challenge start output
       depth owner number bit (adversary selection) pending details cache after reached
       classified⟩
 

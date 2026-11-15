@@ -5,7 +5,10 @@ open OracleComp OracleSpec CoreModels Aeneas OracleComp.ProgramLogic.Relational
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengePrefixMass
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhLaterChallengeCapture PqxdhLaterChallengeSavedClassification
 variable {ι M P I D K Origin Local : Type} {extra : OracleSpec ι} {S B : Nat}
 
@@ -81,11 +84,11 @@ theorem prepared_before
     (adversary : PqxdhInitialBuilderContext.BuildResult → OracleComp
       (PqxdhFirstRecordConfidentiality.AdvSpec (SelectorSpec baseSpec) S (B + 1)) Bool) (cache : CtxRO.QueryCache) :
     𝒟[beforeKey <$> (RawCtxSharedPrefixScan.restore attach <$> (simulateQ hashImpl
-        (capturedPrefix original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number first adversary)).run cache)] =
+        (capturedPrefix (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number first adversary)).run cache)] =
     𝒟[beforeKey <$> (RawCtxSharedPrefixScan.restore attach <$> (simulateQ hashImpl
-        (capturedPrefix original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number second adversary)).run cache)] := by
+        (capturedPrefix (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number second adversary)).run cache)] := by
   exact (evalDistEq_map_of_relTriple (relTriple_post_mono
-    (PqxdhLaterChallengePrefixCoupling.prepared original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth
+    (PqxdhLaterChallengePrefixCoupling.prepared (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth
       owner number first second adversary cache) (related_key owner number first second adversary))).evalDist_eq
 
 end Prepared

@@ -59,6 +59,7 @@ theorem invalid {Error : Type} (view : AdapterPublicWrapperState.MaterialView ml
     (bad : PqxdhDeploymentInterface.parsePin (TranscriptAuthParts.absSlice identityKey)=none ∨
       RegistrationNativeWire.parseMldsaPin (TranscriptAuthParts.absSlice mlKey)=none) :
     source generator keyId identityKey mlKey before=pure (.ok (none,before),before.backend) := by
+  have _children := children
   unfold source
   rw [RegistrationNativePlatformPublicAdapterPinParsing.rejected view parsing generator keyId identityKey mlKey before.rng bad,
     run_pure,rejected]

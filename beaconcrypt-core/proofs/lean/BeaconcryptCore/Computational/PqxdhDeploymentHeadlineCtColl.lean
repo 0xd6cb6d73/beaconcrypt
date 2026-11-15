@@ -16,6 +16,7 @@ Premises: the approved Phase 1 and Phase 2 read-back contracts and the budget; `
 open OracleComp OracleSpec ENNReal
 
 set_option autoImplicit false
+set_option warningAsError true
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentHeadlineCtColl
 open PqxdhServerAuthExperiment (Setup Codec Checks)
@@ -52,7 +53,7 @@ theorem triple_expect (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
     (order : i < j) :
     wp ((gameG setup codec checks route ensureInit identityIndex bounds mode adversary).run runtime)
       (fun outcome => @ite _ (TripleColl k i j outcome) (Classical.propDecidable _) 1 0) ≤ pairCollision setup := by
-  have bound := PqxdhDeploymentHeadlineCtGhost.triple_le setup codec checks route ensureInit identityIndex bounds mode
+  have bound := PqxdhDeploymentHeadlineCtGhost.triple_le   setup codec checks route ensureInit identityIndex bounds mode
     adversary runtime k i j order
   rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map,
     OracleComp.ProgramLogic.prEvent_eq_wp_indicator] at bound
@@ -85,7 +86,7 @@ theorem ct_collision_game (setup : Setup baseSpec KemSK) (codec : Codec Reader R
         by_cases event : ((fun hit => hit = true) ∘ (PqxdhDeploymentKemTransfer.happens
             (ctCollEvent setup.source.crypto codec) ∘ forget)) outcome
         · simp only [event, ite_true]
-          obtain ⟨k, kBound, j, jBound, i, iBound, triple⟩ := PqxdhDeploymentHeadlineCtTrace.ctColl_triple setup codec
+          obtain ⟨k, kBound, j, jBound, i, iBound, triple⟩ := PqxdhDeploymentHeadlineCtTrace.ctColl_triple   setup codec
             checks route ensureInit 0 phase1 phase2 bounds mode adversary budget respects runtime outcome member event
           calc (1 : ℝ≥0∞) = @ite _ (TripleColl k i j outcome) (Classical.propDecidable _) 1 0 := by simp [triple]
             _ ≤ ∑ i' ∈ Finset.range j, @ite _ (TripleColl k i' j outcome) (Classical.propDecidable _) 1 0 :=
@@ -113,7 +114,7 @@ theorem ct_collision_game (setup : Setup baseSpec KemSK) (codec : Codec Reader R
     _ ≤ ∑ _k ∈ Finset.range budget.create, ∑ j ∈ Finset.range budget.accept, ∑ _i ∈ Finset.range j,
           pairCollision setup := by
         refine Finset.sum_le_sum fun k _ => Finset.sum_le_sum fun j _ => Finset.sum_le_sum fun i member => ?_
-        exact triple_expect setup codec checks route ensureInit 0 bounds mode adversary runtime k i j
+        exact triple_expect   setup codec checks route ensureInit 0 bounds mode adversary runtime k i j
           (Finset.mem_range.mp member)
 
 end Game
@@ -139,7 +140,7 @@ theorem ct_coll_le (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) (bounds : FreshBounds) (mode : Mode)
     (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (respects : budget.Respects adversary) (runtime : A) :
     ctCollTerm setup codec checks route ensureInit bounds mode adversary runtime ≤ ctCollEps setup budget :=
-  (ct_collision_game setup codec checks route ensureInit phase1 phase2 bounds mode adversary budget respects runtime).trans
+  (ct_collision_game   setup codec checks route ensureInit phase1 phase2 bounds mode adversary budget respects runtime).trans
     (mul_le_mul' le_rfl (PqxdhDeploymentHeadlineCollision.pair_cp_le setup functional))
 
 /-- `ε_ctcoll` is at most design-v2's form, which counts `qCreate + 1` owners. -/
@@ -160,7 +161,7 @@ theorem ct_coll_billed (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
     (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (respects : budget.Respects adversary) (runtime : A) :
     ctCollTerm setup codec checks route ensureInit bounds mode adversary runtime ≤ ctCollEps setup budget ∧
       (pairAdversary setup.kem).MakesAtMostQueries 0 0 0 caps.encapsUniform caps.encapsBase 0 :=
-  ⟨ct_coll_le setup codec checks route ensureInit phase1 phase2 functional bounds mode adversary budget respects runtime,
+  ⟨ct_coll_le   setup codec checks route ensureInit phase1 phase2 functional bounds mode adversary budget respects runtime,
     PqxdhDeploymentHeadlineBills.pair_bills setup caps bounded⟩
 
 end Closed

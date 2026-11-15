@@ -30,7 +30,7 @@ noncomputable def original (setup : Setup base KemSK) (wire : RegistrationNative
 
 theorem start_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List PqxdhJointIdentity.IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List PqxdhJointIdentity.IdentitySeed)
     (wire : RegistrationNativeWire.Wire) (index : Nat) (owner : Owner source) (seed : PqxdhJointIdentity.IdentitySeed)
     (packet : Option registration.ResponsePacket) (found : seeds[owner.identity.handle]? = some seed) :
     Related (n := n) (Auxiliary := Auxiliary) setup checks representation created seeds
@@ -46,7 +46,7 @@ theorem start_source (setup : Setup base KemSK) (checks : Checks)
 
 theorem start_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat) (owner : Owner source) (packet : Option registration.ResponsePacket) :
     Keeps (n := n) (Auxiliary := Auxiliary) setup checks representation created (start setup wire index owner packet) := by
   cases phase : owner.phase with

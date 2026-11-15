@@ -169,6 +169,9 @@ private theorem syntax_admin (role : Role) (query : (RegistrationNativePlatformS
   · exact installed.elim
   · exact installed.elim
 
+attribute [local irreducible] RegistrationNativePlatformServerOpenSyntax.accept
+  RegistrationNativePlatformServerOpenControl.afterPin
+
 theorem accept_zero (role : Role) (selected : Bool) (reserve : StateT Platform ProbComp Bool)
     (setup : Setup base KemSK) (checks : Checks) (verify : MldsaTranscriptAuth.Verify) (packet : registration.InitPacket)
     (front : RegistrationServerMaterialFrontend.State) (env : RegistrationServerReferenceCompiler.Environment) (before : Platform) :

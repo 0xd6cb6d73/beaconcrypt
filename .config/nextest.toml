@@ -29,6 +29,8 @@ priority = 90
 [[profile.mutants.overrides]]
 filter = 'package(=beaconcrypt-parse)'
 priority = 80
+# Detect non-terminating codec mutants within each isolated test process.
+slow-timeout = { period = "5s", terminate-after = 2, grace-period = "1s" }
 
 [[profile.mutants.overrides]]
 filter = 'package(=beaconcrypt) & binary(=backend_compat)'

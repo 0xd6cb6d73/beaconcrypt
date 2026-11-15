@@ -6,6 +6,7 @@ import BeaconcryptCore.Computational.CborRawStartupEquality
 open OracleComp OracleSpec CoreModels Aeneas ENNReal
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.CborRawTargetSlot
 open PqxdhServerAuthExperiment (Setup Codec Checks)
 open PqxdhDeploymentInterface (FreshBounds Mode ModeSpec Budget Handle)
@@ -23,24 +24,49 @@ variable (setup : Setup baseSpec KemSK) (wire : Codec Reader Response)
     (ensureInit : StateT A ProbComp Bool) (runtime : A) (bounds : FreshBounds) (mode : Mode)
     (adversary : OracleComp (ModeSpec mode) X) (budget : Budget)
     (g : Fin budget.accept × Fin budget.capacity) (event : Observed X → Bool) (claim : Observed X → Option Handle)
+private noncomputable def recordBirth : ProbComp (Option (PqxdhLiveServerConstruction.Created PqxdhTranscriptAd.AssociatedData) ×
+    PqxdhRegistrationJointServerPrefix.State KemSK A) :=
+  (PqxdhRegistrationJointServerBirth.source setup.joint ensureInit setup.serverKeyId none).run
+    ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime)
+
+private theorem birth_erase :
+    (fun result => (result.1.map PqxdhDeploymentEnvironment.eraseCreatedMetadata, result.2)) <$>
+      recordBirth setup ensureInit runtime = birth setup ensureInit runtime := by
+  simp only [recordBirth, birth, PqxdhRegistrationJointServerBirth.source, StateT.run,
+    PqxdhLiveServerConstruction.construct, Functor.map_map, map_bind]
+  refine bind_congr fun ready => ?_
+  split <;> simp only [map_pure, Functor.map_map] <;> rfl
+
 /-- Actual raw target decisions retain their derived mark, so native-to-World transport is exact. -/
 theorem marked_world (parameters : Params KemSK budget.create)
     (nativePhase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack (boundaryWire wire parse))
-    (created : PqxdhLiveServerConstruction.Created Unit) (world : PqxdhRecordLiftWorld.State 2)
+    (created : PqxdhLiveServerConstruction.Created PqxdhTranscriptAd.AssociatedData)
+    (afterBirth : PqxdhRegistrationJointServerPrefix.State KemSK A)
+    (born : (some created, afterBirth) ∈ support (recordBirth setup ensureInit runtime))
+    (world : PqxdhRecordLiftWorld.State 2)
     (fresh : uncount world = uncount PqxdhRecordLiftWorld.initial) :
-    𝒟[CborRawMarkedPrefix.run setup wire parse checks (Target.ofCE budget g) parameters created (PqxdhDeploymentSecrecy.wrap setup.source.crypto (boundaryWire wire parse) setup.serverKeyId bounds
+    𝒟[CborRawMarkedPrefix.run setup wire parse checks (Target.ofCE budget g) parameters (PqxdhDeploymentEnvironment.eraseCreatedMetadata created) (PqxdhDeploymentSecrecy.wrap setup.source.crypto (boundaryWire wire parse) setup.serverKeyId bounds
     (PqxdhDeploymentInterface.asModeO mode adversary)) (fun result : (X × PqxdhDeploymentSecrecy.Ledger) × CborRawPostActive.Produced =>
     decisionOn setup (boundaryWire wire parse) budget event claim g (result.1.1, result.1.2, result.2))
       (⟨PqxdhDeploymentCompile.Log.empty, setup.serverKeyId⟩,
-        PqxdhDeploymentBackend.xinitial created (PqxdhDeploymentIdealSteps.idealInit created))] {true} =
+        PqxdhDeploymentBackend.xinitial (PqxdhDeploymentEnvironment.eraseCreatedMetadata created) (PqxdhDeploymentIdealSteps.idealInit (PqxdhDeploymentEnvironment.eraseCreatedMetadata created)))] {true} =
       𝒟[observe (fun result : (X × PqxdhDeploymentSecrecy.Ledger) × CborRawPostActive.Produced =>
     decisionOn setup (boundaryWire wire parse) budget event claim g (result.1.1, result.1.2, result.2)) <$> (simulateQ (CborRecordWorldSimulation.guarded setup (boundaryWire wire parse)
         (CborRawCompile.route parse))
         (after setup wire parse checks (Target.ofCE budget g) ensureInit runtime parameters created (PqxdhDeploymentSecrecy.wrap setup.source.crypto (boundaryWire wire parse) setup.serverKeyId bounds
     (PqxdhDeploymentInterface.asModeO mode adversary)))).run world] {true} := by
-  rw [CborRawTargetMarked.marked_eq setup wire parse checks nativePhase1 budget g parameters created bounds mode
+  have actualConstructor := (PqxdhRegistrationJointServerBirth.source_constructor setup.joint ensureInit
+    setup.serverKeyId none ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime)
+    afterBirth created born).2
+  have initializedSame : CborRawIdealProvenanceStartup.initialized created world =
+      PqxdhDeploymentEnvironmentJoin.initialized (PqxdhDeploymentEnvironment.eraseCreatedMetadata created) world := by
+    obtain ⟨seed, canonical, _⟩ := PqxdhLiveServerConstruction.construct_origin setup.joint ensureInit
+      0 setup.serverKeyId none runtime afterBirth.2 created actualConstructor
+    subst created
+    rfl
+  rw [CborRawTargetMarked.marked_eq setup wire parse checks nativePhase1 budget g parameters (PqxdhDeploymentEnvironment.eraseCreatedMetadata created) bounds mode
     adversary event claim]
-  have joined := (CborRawWorldCoreHandoff.middle_world_from setup wire parse checks (Target.ofCE budget g) parameters created ensureInit 0
+  have joined := (CborRawWorldCoreHandoff.middle_world_from setup wire parse checks (Target.ofCE budget g) parameters (PqxdhDeploymentEnvironment.eraseCreatedMetadata created) ensureInit 0
     runtime world fresh (PqxdhDeploymentSecrecy.wrap setup.source.crypto (boundaryWire wire parse) setup.serverKeyId bounds
     (PqxdhDeploymentInterface.asModeO mode adversary)) (⟨PqxdhDeploymentCompile.Log.empty, setup.serverKeyId⟩ : Public)).map
       (fun value => (fun result : (X × PqxdhDeploymentSecrecy.Ledger) × CborRawPostActive.Produced =>
@@ -49,7 +75,7 @@ theorem marked_world (parameters : Params KemSK budget.create)
   rw [joined.evalDist_eq, CborRecordWorldSimulation.client_simulation]
   rw [after_event setup wire parse checks (Target.ofCE budget g) parameters ensureInit runtime (PqxdhDeploymentSecrecy.wrap setup.source.crypto (boundaryWire wire parse) setup.serverKeyId bounds
     (PqxdhDeploymentInterface.asModeO mode adversary)) (fun result : (X × PqxdhDeploymentSecrecy.Ledger) × CborRawPostActive.Produced =>
-    decisionOn setup (boundaryWire wire parse) budget event claim g (result.1.1, result.1.2, result.2)) created world fresh]
+    decisionOn setup (boundaryWire wire parse) budget event claim g (result.1.1, result.1.2, result.2)) created world fresh, initializedSame]
 
 /-- The complete source slot and counted raw World agree for their actual per-target decision. -/
 theorem slot_world (parameters : Params KemSK budget.create)
@@ -77,15 +103,17 @@ theorem slot_world (parameters : Params KemSK budget.create)
   rw [source.evalDist_eq, fixed_event setup wire parse checks (Target.ofCE budget g) parameters ensureInit runtime (PqxdhDeploymentSecrecy.wrap setup.source.crypto (boundaryWire wire parse) setup.serverKeyId bounds
     (PqxdhDeploymentInterface.asModeO mode adversary)) (fun result : (X × PqxdhDeploymentSecrecy.Ledger) × CborRawPostActive.Produced =>
     decisionOn setup (boundaryWire wire parse) budget event claim g (result.1.1, result.1.2, result.2)) world]
+  change 𝒟[birth setup ensureInit runtime >>= _] {true} = _
+  rw [← birth_erase setup ensureInit runtime, bind_map_left]
   have result := CborRawStartupEquality.bind_eq setup (boundaryWire wire parse) (CborRawCompile.route parse)
-    (birth setup ensureInit runtime)
+    (recordBirth setup ensureInit runtime)
     (fun born => match born.1 with
       | none => pure false
-      | some created => CborRawMarkedPrefix.run setup wire parse checks (Target.ofCE budget g) parameters created (PqxdhDeploymentSecrecy.wrap setup.source.crypto (boundaryWire wire parse) setup.serverKeyId bounds
+      | some created => CborRawMarkedPrefix.run setup wire parse checks (Target.ofCE budget g) parameters (PqxdhDeploymentEnvironment.eraseCreatedMetadata created) (PqxdhDeploymentSecrecy.wrap setup.source.crypto (boundaryWire wire parse) setup.serverKeyId bounds
     (PqxdhDeploymentInterface.asModeO mode adversary)) (fun result : (X × PqxdhDeploymentSecrecy.Ledger) × CborRawPostActive.Produced =>
     decisionOn setup (boundaryWire wire parse) budget event claim g (result.1.1, result.1.2, result.2))
           (⟨PqxdhDeploymentCompile.Log.empty, setup.serverKeyId⟩,
-            PqxdhDeploymentBackend.xinitial created (PqxdhDeploymentIdealSteps.idealInit created)))
+            PqxdhDeploymentBackend.xinitial (PqxdhDeploymentEnvironment.eraseCreatedMetadata created) (PqxdhDeploymentIdealSteps.idealInit (PqxdhDeploymentEnvironment.eraseCreatedMetadata created))))
     (fun born current => match born.1 with
       | none => pure false
       | some created => observe (fun result : (X × PqxdhDeploymentSecrecy.Ledger) × CborRawPostActive.Produced =>
@@ -93,14 +121,21 @@ theorem slot_world (parameters : Params KemSK budget.create)
           (simulateQ (CborRecordWorldSimulation.guarded setup (boundaryWire wire parse) (CborRawCompile.route parse))
             (after setup wire parse checks (Target.ofCE budget g) ensureInit runtime parameters created (PqxdhDeploymentSecrecy.wrap setup.source.crypto (boundaryWire wire parse) setup.serverKeyId bounds
     (PqxdhDeploymentInterface.asModeO mode adversary)))).run current) world (by
-      intro born _ current same
+      intro born supported current same
       cases found : born.1 with
       | none => rfl
       | some created =>
           exact marked_world setup wire parse checks ensureInit runtime bounds mode adversary budget g event claim
-            parameters nativePhase1 created current (same.trans fresh))
+            parameters nativePhase1 created born.2 (by
+              change (born.1, born.2) ∈ support (recordBirth setup ensureInit runtime) at supported
+              rw [found] at supported
+              exact supported) current (same.trans fresh))
   convert result using 1
-  rfl
+  · congr 1
+    apply congrArg evalDist
+    apply bind_congr
+    rintro ⟨_ | created, afterBirth⟩ <;> rfl
+  · rfl
 
 /-- Challenger and constructor draws preserve the exact raw slot-to-World target event. -/
 theorem drawn_world

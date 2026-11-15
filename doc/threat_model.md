@@ -17,14 +17,7 @@ The adversary is assumed to have two goals:
 
 Exfiltrated data secrecy and tasking integrity are, in my eyes, existential aspects of a useful C2 infrastructure. See Tim MalcomVetter’s [Responsible Red Teams](https://malcomvetter.medium.com/responsible-red-teams-1c6209fd43cc) medium post.
 
-The attacker may register arbitrary self-signed malicious beacons and controls
-all key material for those beacons. This does not authorize them to receive
-another beacon's tasking. The C2 protocol is therefore assumed not to broadcast
-taskings and to send each tasking only to its intended beacon. The symbolic
-model exercises this assumption by requiring the server to commit valid
-responses for attacker-owned registrations and the attacker to recover their
-routed canary while the five honest-session canaries remain secret. The proof
-does not verify the surrounding application's recipient-selection policy.
+The attacker may register arbitrary malicious beacons and controls all key material for those beacons. Init contains three attached Ed25519 signatures under the Beacon identity and no Beacon ML-DSA credential or protected Beacon ML-DSA signing oracle. This does not authorize an attacker-owned registration to receive another beacon's tasking. The C2 application must send each tasking only to its intended session. The current symbolic profile checks honest-session isolation while requiring valid responses and a recoverable routed canary for attacker-owned registrations; it does not verify the surrounding application's recipient-selection policy. Server response origin relies on the pinned Server ML-DSA-65 public key and the retained mandatory response signature. Beacon authentication is Ed25519-only; removing the Beacon ML-DSA credential does not provide post-quantum Beacon authentication.
 
 ## Modality
 The adversaries has two modes, active or passive. An active adversary means they will attempt to send or modify existing messages to any principal in our protocol. This includes MitM-style attacks. A passive adversary will only listen.
@@ -36,7 +29,7 @@ legitimate principals, the attacker exists only on the wire.
 
 *This is obviously unreasonable*, an active PQ attacker is highly likely state-sponsored, at least in the short to medium term. Such an attacker almost certainly does not mind RCEing your C2. However, I think this limitation is required to bound analysis to those aspects that beaconcrypt itself can address. The rest is up to C2 developpers.
 
-It is also assumed that the attacker does not modify the staged beacons at rest or in transit. That is, the attacker cannot replaced the compiled-in server public key with its own. Indeed, doing so allows the attacker to MitM the beacon's registration and completely breaks any security properties. This, too, is unreasonable, yet in my mind required. Indeed, I don't see how this issue can be resolved as even something like a key transparency log can be subverted by this kind of attacker. This is a massive assumption, and all but forces the hypothetical beaconcrypt user to host their C2 and staging infrastructure in a manner which only breaks TLS on-premises.
+It is also assumed that the attacker does not modify the staged beacons at rest or in transit. That is, the compiled-in Server Ed25519 key, ML-DSA-65 key and numeric identity-key ID must retain their authentic values. Replacing the trusted Server pins with attacker-controlled values can defeat registration authentication. This, too, is unreasonable, yet in my mind required. Indeed, I don't see how this issue can be resolved as even something like a key transparency log can be subverted by this kind of attacker. This is a massive assumption, and all but forces the hypothetical beaconcrypt user to host their C2 and staging infrastructure in a manner which only breaks TLS on-premises.
 
 # C2 protocol
 ## Principals

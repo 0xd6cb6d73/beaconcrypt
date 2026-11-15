@@ -46,7 +46,7 @@ noncomputable def program (env : Environment n E) (crypto : Pqxdh.Crypto)
     (codec : PqxdhServerAuthExperiment.Codec Reader Response) (serverKid : Std.U64)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value) :
-    OracleComp (WorldSpec n) (Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+    OracleComp (WorldSpec n) (Option (PqxdhRegistrationJointServerBirth.ClientCreated (Std.Array Std.U8 151#usize) ×
       (Value × RegistrationNativeLedger.State) × E)) := do
   let born ← simulateQ coinLift env.start
   match born with

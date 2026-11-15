@@ -76,7 +76,7 @@ theorem entry_source (setup : Setup baseSpec KemSK) (field : Field) (entry : Ent
       simp [entryClient, kemHandle, entrySource, activeKey, encodeEntry, PqxdhRegistrationJointBundle.encode,
         PqxdhBeaconPhase1Publication.mapState, PqxdhBeaconPhase1Publication.mapPhase, phase,
         PqxdhRegistrationJointBundle.keyMap]
-    all_goals first | rfl | simp only [PqxdhLiveKemBirth.impl, PqxdhLiveKemBirth.poolImpl, StateT.run, map_pure, Option.map_map]
+    all_goals simp only [PqxdhLiveKemBirth.impl, PqxdhLiveKemBirth.poolImpl, StateT.run, map_pure, Option.map_map]
     all_goals rw [owned.2 _ (by simp only [activeKey, phase]; rfl), Option.map_some, Option.map_some]
     all_goals rfl
   case identity =>
@@ -114,10 +114,10 @@ def sourceStep (request : Nat × Field) (state : PqxdhRegistrationJointSchedule.
     let result := entrySource request.2 entry state.pool
     (result.1, { state with pool := result.2 })
 
-def clientStep (request : Nat × Field) : PqxdhRegistrationJointServiceSchedule.Client KemSK Response (Option (Value KemSK)) := fun owners =>
-  match owners[request.1]? with
-  | none => pure (none, owners)
-  | some entry => (fun result => (result, owners)) <$>
+def clientStep (request : Nat × Field) : PqxdhRegistrationJointServiceSchedule.Client KemSK Response (Option (Value KemSK)) := fun state =>
+  match state.1[request.1]? with
+  | none => pure (none, state)
+  | some entry => (fun result => (result, state)) <$>
       simulateQ PqxdhRegistrationJointServiceSchedule.poolLift (entryClient request.2 entry)
 
 /-- The current-field read has exactly the source reply and full encoded poststate at every present or missing address. -/

@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterSourceSigningHistory
 import BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterSourceEvents
 import BeaconcryptCore.Computational.RegistrationNativeMldsaOriginEvent
-/-! The source unsigned-origin decision reads only actual SDK objects, returned source tokens, parsed public input and earlier source signing observations. Protection is public-key qualification; no key uniqueness or signature uniqueness is imposed. -/
+/-! The Server response unsigned-origin decision reads only actual SDK objects, returned source tokens, parsed public input and earlier source signing observations. Protection is public-key qualification; no key uniqueness or signature uniqueness is imposed. -/
 open CoreModels Aeneas OracleComp OracleSpec
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -25,17 +25,6 @@ inductive Bad (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (serverPublic : Std.Array U8 1952#usize) (log : List Stage) :
     (command : RegistrationNativePlatformPublicAdapterInterface.Command) → Store n KemSK R P →
       RegistrationNativePlatformPublicAdapterInterface.CommandSpec.Range command → Store n KemSK R P → Prop where
-  | accept (input : Slice U8) (packet : registration.InitPacket) (session ownerIndex : Nat)
-      (before after : Store n KemSK R P) (owner : beaconcrypt_public_wrapper.beacon.Beacon)
-      (token : beaconcrypt_public_wrapper.server.RegistrationOutput)
-      (decoded : RegistrationNativeConcreteCodec.wire.decodeInit (TranscriptAuthParts.absSlice input)=some packet)
-      (found : before.beacons ownerIndex=some owner)
-      (protectedKey : packet.mldsa_public_key=(view.mldsa owner.authentication.identity).publicKey)
-      (returned : after.tokens session=some token)
-      (absent : ¬ MldsaTranscriptAuth.Issued (RegistrationAuthenticationNative.trial true
-        token.registration.agreement.binding.server_pin packet
-        (history (PqxdhRefinement.absBytes packet.mldsa_public_key) log))) :
-      Bad view serverPublic log (.accept input) before (some session) after
   | finish (index : Nat) (input : Slice U8) (packet : registration.ResponsePacket) (application : Pqxdh.Bytes)
       (before after : Store n KemSK R P) (owner : beaconcrypt_public_wrapper.beacon.Beacon)
       (pending : registration.BeaconPending) (prekey oneTime : beaconcrypt_crypto.crypto_kx.KeyPair)
@@ -76,7 +65,7 @@ theorem flag_iff (view : AdapterPublicWrapperState.MaterialView source KemSK)
   simp only [flag,decide_eq_true_eq]
 
 theorem beacon (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created Unit)
+    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential source) (current : Native × P)
     (before : Carrier (R:=R) view views joint created credential current)
     (index : Nat) (self : beaconcrypt_public_wrapper.beacon.Beacon)
@@ -116,7 +105,7 @@ theorem pending (view : AdapterPublicWrapperState.MaterialView source KemSK) (jo
     exact ⟨scalar,rfl⟩
 
 theorem finish (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created Unit)
+    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential source) (current : Native × P)
     (before : Carrier (R:=R) view views joint created credential current)
     (log : List Stage)
@@ -133,28 +122,6 @@ theorem finish (view : AdapterPublicWrapperState.MaterialView source KemSK) (vie
   obtain ⟨scalar,ownerPhase⟩ := pending view joint current.1.pool self owner _ held retained prekey oneTime kem phase
   apply RegistrationNativeMldsaOriginEvent.Bad.finish index packet application current.1 owner retained scalar selected ownerPhase protectedKey
   simpa only [historyEq] using absent
-
-theorem accept (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created Unit)
-    (credential : RegistrationNativeMldsa.Credential source) (current : Native × P)
-    (before : Carrier (R:=R) view views joint created credential current)
-    (log : List Stage)
-    (historyEq : ∀ key, RegistrationSigningShared.historyFor key (RegistrationNativeMldsaShared.nativeProject current.1)=history key log)
-    (packet : registration.InitPacket) (session ownerIndex : Nat)
-    (self : beaconcrypt_public_wrapper.beacon.Beacon) (found : (erase before.objects).beacons ownerIndex=some self)
-    (token : beaconcrypt_public_wrapper.server.RegistrationOutput)
-    (pinCoordinates : token.registration.agreement.binding.server_pin.binding=current.1.server.pin.binding ∧
-      token.registration.agreement.binding.server_pin.public_key=current.1.server.pin.public_key)
-    (protectedKey : packet.mldsa_public_key=(view.mldsa self.authentication.identity).publicKey)
-    (absent : ¬ MldsaTranscriptAuth.Issued (RegistrationAuthenticationNative.trial true
-      token.registration.agreement.binding.server_pin packet
-      (history (PqxdhRefinement.absBytes packet.mldsa_public_key) log))) :
-    RegistrationNativeMldsaOriginEvent.Bad source credential (.inr (.accept packet)) current.1 (.ok (some session)) := by
-  obtain ⟨owner,selected,held⟩ := beacon view views joint created credential current before ownerIndex self found
-  rw [held.mldsa] at protectedKey
-  apply RegistrationNativeMldsaOriginEvent.Bad.accept packet session current.1 owner (List.mem_of_getElem? selected) protectedKey
-  simpa only [RegistrationAuthenticationNative.trial,RegistrationAuthentication.initPreimage,
-    historyEq,pinCoordinates.1,pinCoordinates.2] using absent
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterSourceAuthentication
 
@@ -173,11 +140,6 @@ end BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterSourceA
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterSourceAuthentication.finish
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterSourceAuthentication.accept' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterSourceAuthentication.accept
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterSourceAuthentication.flag_iff' depends on axioms: [propext,
  Classical.choice,

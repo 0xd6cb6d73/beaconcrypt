@@ -48,7 +48,7 @@ theorem hash_owners (bytes : Pqxdh.Bytes) (before : PqxdhRecordLiftWorld.State n
 
 theorem trusted (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (Trusted n KemSK).Domain) (safe : Safe query) (before : Native)
     (result : (Trusted n KemSK).Range query × Native)
     (reached : result ∈ support ((RegistrationNativeExperiment.trusted setup checks representation created source query).run before)) :
@@ -74,7 +74,7 @@ theorem trusted (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : P
 
 theorem program (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (work : OracleComp (Trusted n KemSK) A)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (work : OracleComp (Trusted n KemSK) A)
     (allowed : AllQueriesSatisfy work (Safe (n := n) (KemSK := KemSK))) (before : Native) (result : A × Native)
     (reached : result ∈ support ((simulateQ (RegistrationNativeExperiment.trusted setup checks representation created source) work).run before)) :
     result.2.server.world.world.1.owners = before.server.world.world.1.owners := by

@@ -144,7 +144,7 @@ theorem server_bytes (control next : pqxdh.ServerState)
 theorem beacon (source : FixedHkdfSha512NoSaltSource)
     (primitive : QueryImpl RegistrationAgreementShared.PrimitiveSpec (StateT Auxiliary ProbComp))
     (authenticated : registration.AuthenticatedResponse)
-    (coherent : authenticated.pending.control.expected_server_binding = authenticated.pending.binding.server_pin.binding)
+    (coherent : authenticated.control.expected_server_binding = authenticated.binding.server_pin.binding)
     (completed : agreement.BeaconAgreement) (before after : RawCtxSharedPrimitive.SharedState Auxiliary)
     (supported : (.ok (.BeaconComplete completed), after) ∈ support
       ((simulateQ (RegistrationAgreementShared.implementation source primitive)
@@ -155,9 +155,9 @@ theorem beacon (source : FixedHkdfSha512NoSaltSource)
         (simulateQ (RegistrationBeaconAgreementRoot.callbacks authenticated)
           (PqxdhBeaconPhase2Preparation.collect () false true () []))).run before) ∧
       RegistrationBeaconRootPreparation.Fields authenticated input ∧
-      pqxdh.beacon_prepare_finish authenticated.pending.control input.finishInputs = .ok (.Ok original) ∧
+      pqxdh.beacon_prepare_finish authenticated.control input.finishInputs = .ok (.Ok original) ∧
       completed = ⟨{ original with root_key_input := ⟨Array.repeat 192#usize 0#u8⟩ },
-        authenticated.pending.binding, ⟨RegistrationAgreementShared.rootResponse source.crypto
+        authenticated.binding, ⟨RegistrationAgreementShared.rootResponse source.crypto
           ⟨original.root_key_input.bytes, pqxdh.PQXDH_INFO⟩⟩, authenticated.packet.application⟩ ∧ after = atRoot := by
   rw [RegistrationBeaconAgreementRoot.beacon_normalized authenticated coherent] at supported
   simp only [RegistrationBeaconAgreementRoot.normalized, simulateQ_bind, StateT.run_bind,
@@ -185,7 +185,7 @@ theorem beacon (source : FixedHkdfSha512NoSaltSource)
       rw [RegistrationBeaconAgreementRoot.finish,
         RegistrationBeaconRootPreparation.finish_admission authenticated input fields] at tail
       obtain ⟨accepted, actual⟩ := BeaconcryptCore.PanicFreedom.beacon_prepare_finish_ok
-        authenticated.pending.control input.finishInputs
+        authenticated.control input.finishInputs
       rw [actual] at tail
       cases accepted with
       | Err error =>
@@ -195,7 +195,7 @@ theorem beacon (source : FixedHkdfSha512NoSaltSource)
           cases tail.1
       | Ok original =>
           simp only [bind_tc_ok, continueWith] at tail
-          have requested : (⟨.Beacon original authenticated.pending.binding authenticated.packet.application⟩ : agreement.RootKdfPending).request =
+          have requested : (⟨.Beacon original authenticated.binding authenticated.packet.application⟩ : agreement.RootKdfPending).request =
               .ok ⟨original.root_key_input.bytes, pqxdh.PQXDH_INFO⟩ := by
             simp only [agreement.RootKdfPending.request, pqxdh.BeaconRegistrationCandidate.impl.root_key_input,
               pqxdh.RootKeyInput.as_bytes, bind_tc_ok]
@@ -217,7 +217,7 @@ theorem beacon_bytes (control : pqxdh.BeaconInitSent)
       (absBytes input.finishInputs.shared_secrets.dh3) (absBytes input.finishInputs.shared_secrets.dh4)
       (absBytes input.finishInputs.shared_secrets.kem_shared_secret) := by
   have built := (BeaconcryptCore.Refinement.PqxdhSurface.beacon_prepare_finish_success_shape
-    control input.finishInputs original accepted).2.2.2.1
+    control input.finishInputs original accepted).2.2.2
   simpa only [PqxdhHiddenRoot.hiddenRootIKM, PqxdhPhase2InputBytes.coordinates,
     PqxdhPhase2InputBytes.word, List.Vector.toList_mk] using
     PqxdhPhase2InputBytes.root_input input.finishInputs.shared_secrets original.root_key_input built

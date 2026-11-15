@@ -82,7 +82,7 @@ theorem agreement_source (setup : Setup base KemSK) (wire : RegistrationNativeWi
     (seed : IdentitySeed) (selectedScalar localScalar : ScalarBytes)
     (owner : SelectedOwner mlSource) (oneTime : ScalarBytes)
     (authenticated : registration.AuthenticatedResponse)
-    (coherent : authenticated.pending.control.expected_server_binding = authenticated.pending.binding.server_pin.binding)
+    (coherent : authenticated.control.expected_server_binding = authenticated.binding.server_pin.binding)
     (env : EnvState Auxiliary) (before : Private n KemSK) :
     (fun result => (restored result.2.extra.1 authenticated result.1.1, (result.1.2, drop result.2))) <$>
       (simulateQ (implementation setup wire route sign seed selectedScalar)

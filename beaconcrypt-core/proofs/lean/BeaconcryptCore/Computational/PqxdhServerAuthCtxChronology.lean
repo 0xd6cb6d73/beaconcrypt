@@ -207,8 +207,14 @@ theorem finish_history (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
   simp only [finishStep, StateT.run] at supported
   cases phase : before.1.beacon.beacon.phase with
   | initSent control prekey oneTime kem =>
-    simp only [phase, mem_support_bind_iff] at supported
-    obtain ⟨prepared, _, supported⟩ := supported
+    simp only [phase] at supported
+    split at supported
+    rotate_left
+    · simp only [support_pure, Set.mem_singleton_iff] at supported
+      subst supported
+      exact ⟨fun _ present => present, clean⟩
+    simp only [mem_support_bind_iff] at supported
+    obtain ⟨hashed, _, prepared, _, supported⟩ := supported
     cases found : prepared with
     | none =>
       simp only [found, support_pure, Set.mem_singleton_iff] at supported
@@ -253,10 +259,15 @@ theorem build_table (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   · simp only [support_pure, Set.mem_singleton_iff] at supported
     subst result
     rfl
-  · obtain ⟨built, _, supported⟩ := (mem_support_bind_iff _ _ _).1 supported
-    simp only [support_pure, Set.mem_singleton_iff] at supported
-    subst result
-    rfl
+  · split at supported
+    · simp only [support_pure, Set.mem_singleton_iff] at supported
+      subst result
+      rfl
+    · simp only [mem_support_bind_iff] at supported
+      obtain ⟨hashed, _, built, _, supported⟩ := supported
+      simp only [support_pure, Set.mem_singleton_iff] at supported
+      subst result
+      rfl
 
 /-- Complete public HMAC keeps real off-domain evaluation and on-domain retained-table/refusal effects while preserving prior entries and selected-input omission. -/
 theorem hmac_history (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)

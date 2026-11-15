@@ -52,10 +52,15 @@ use refined::{
 /// Fixed width of every symmetric-ratchet root and chain value.
 pub const RATCHET_CHAIN_SIZE: usize = 32;
 
-/// Fixed HKDF domain label for initial and subsequent symmetric-ratchet derivations.
-pub const SYM_RATCHET_INFO_SIZE: usize = 41;
+/// Fixed HKDF domain label for message-step derivations.
+pub const SYM_RATCHET_INFO_SIZE: usize = 48;
 pub const SYM_RATCHET_INFO: &[u8; SYM_RATCHET_INFO_SIZE] =
-	b"SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305";
+	b"SymRatchetMessage_HKDF_SHA-512_CHACHA20_POLY1305";
+
+/// Fixed HKDF domain label for root-to-directional-chain initialization.
+pub const INITIAL_RATCHET_INFO_SIZE: usize = 45;
+pub const INITIAL_RATCHET_INFO: &[u8; INITIAL_RATCHET_INFO_SIZE] =
+	b"SymRatchetInit_HKDF_SHA-512_CHACHA20_POLY1305";
 
 /// Number of bytes returned by one production symmetric-ratchet HKDF expansion.
 pub const RATCHET_KDF_OUTPUT_SIZE: usize =
@@ -151,6 +156,30 @@ impl RatchetMaterial {
 
 	pub const fn nonce(&self) -> &RatchetNonce {
 		&self.nonce
+	}
+}
+
+/// Core-owned initial-ratchet KDF invocation, distinct from every message step.
+#[cfg_attr(not(hax_compilation), derive(Zeroize, ZeroizeOnDrop))]
+pub struct InitialRatchetKdfRequest {
+	input: [u8; RATCHET_CHAIN_SIZE],
+	info: [u8; INITIAL_RATCHET_INFO_SIZE],
+}
+
+impl InitialRatchetKdfRequest {
+	pub(crate) const fn new(input: [u8; RATCHET_CHAIN_SIZE]) -> Self {
+		Self {
+			input,
+			info: *INITIAL_RATCHET_INFO,
+		}
+	}
+
+	pub const fn input(&self) -> &[u8; RATCHET_CHAIN_SIZE] {
+		&self.input
+	}
+
+	pub const fn info(&self) -> &[u8; INITIAL_RATCHET_INFO_SIZE] {
+		&self.info
 	}
 }
 

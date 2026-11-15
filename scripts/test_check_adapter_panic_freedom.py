@@ -755,6 +755,27 @@ class AdapterBoundaryTests(unittest.TestCase):
                 "AdapterRatchetKdfExtraction", next(iter(definitions.values()))
             )
 
+    def test_source_kdf_contracts_keep_initial_and_message_request_types_separate(self):
+        coverage = (
+            Path(__file__).resolve().parents[1]
+            / "beaconcrypt-core/proofs/lean/BeaconcryptCore/PanicFreedom/AdapterCoverage.lean"
+        ).read_text()
+        initial = coverage.split("theorem source_kdf_initial ", 1)[1].split("\n\n", 1)[
+            0
+        ]
+        self.assertIn(
+            "request : beaconcrypt_core.ratchet.InitialRatchetKdfRequest", initial
+        )
+        self.assertNotIn("SymmetricRatchetKdfRequest", initial)
+        for operation in ("send", "receive"):
+            message = coverage.split("theorem source_kdf_" + operation + " ", 1)[
+                1
+            ].split("\n\n", 1)[0]
+            self.assertIn(
+                "request : beaconcrypt_core.ratchet.SymmetricRatchetKdfRequest", message
+            )
+            self.assertNotIn("InitialRatchetKdfRequest", message)
+
     def test_compared_profiles_require_exact_roster_inputs_and_both_output_hashes(self):
         with tempfile.TemporaryDirectory() as directory:
             target = Path(directory)
@@ -1058,9 +1079,20 @@ class AdapterBoundaryTests(unittest.TestCase):
             )
         )
         reviewed = reviewed["native_cohorts"]
-        self.assertEqual(sum(len(ds) for _, _, ds in parsed.values()), 133)
+        operations = {
+            name for _, _, definitions in parsed.values() for name in definitions
+        }
+        self.assertIn("beaconcrypt_public_wrapper.auth.server_pin", operations)
+        self.assertNotIn("beaconcrypt_public_wrapper.auth.fingerprint_pin", operations)
+        self.assertNotIn(
+            "beaconcrypt_public_wrapper.beacon.Beacon.mldsa_public_key", operations
+        )
+        self.assertIn(
+            "beaconcrypt_public_wrapper.server.Server.mldsa_public_key", operations
+        )
+        self.assertEqual(sum(len(ds) for _, _, ds in parsed.values()), 132)
         self.assertEqual(
-            sum(d.monadic for _, _, ds in parsed.values() for d in ds.values()), 102
+            sum(d.monadic for _, _, ds in parsed.values() for d in ds.values()), 101
         )
         self.assertEqual(
             reviewed["AdapterBeaconConstructorExtraction"]["features"],

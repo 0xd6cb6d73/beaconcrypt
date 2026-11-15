@@ -13,12 +13,12 @@ open RegistrationNativeWire (Wire ledgerCodec)
 open RegistrationNativePlatformOrdinaryExperiment (canonicalWire)
 variable {n : Nat} {Platform E I KemSK : Type} {base : OracleSpec I}
 noncomputable def server (setup : Setup base KemSK) (wire : Wire)
-    (erased : Array U8 357#usize) (route : RawCtxServerRouting.SenderDecoder) (raw : Pqxdh.Bytes) :
+    (erased : Array U8 227#usize) (route : RawCtxServerRouting.SenderDecoder) (raw : Pqxdh.Bytes) :
     RegistrationNativePlatformOrdinaryWorld.M n Platform (Option RawCtxWholeOwner.Decrypted) :=
   RegistrationNativePlatformOrdinaryWorld.liftWorld
     (RegistrationNativeReceiveDispatch.serverRaw setup (canonicalWire wire) erased route raw)
 noncomputable def beacon (setup : Setup base KemSK) (wire : Wire)
-    (erased : Array U8 357#usize) (index : Nat) (raw : Pqxdh.Bytes) :
+    (erased : Array U8 227#usize) (index : Nat) (raw : Pqxdh.Bytes) :
     RegistrationNativePlatformOrdinaryWorld.M n Platform (Option RawCtxWholeOwner.Decrypted) :=
   RegistrationNativePlatformOrdinaryWorld.liftWorld
     (RegistrationNativeReceiveDispatch.beaconRaw setup (canonicalWire wire) erased index raw)
@@ -26,7 +26,7 @@ noncomputable def beacon (setup : Setup base KemSK) (wire : Wire)
 theorem server_source (setup : Setup base KemSK) (wire : Wire)
     (reserve : Nat → StateT Platform ProbComp (core.result.Result Unit E))
     (length : RegistrationNativeExtractedReceive.AeadLength setup.source.crypto)
-    (erased : Array U8 357#usize) (route : RawCtxServerRouting.SenderDecoder) (raw : Pqxdh.Bytes) :
+    (erased : Array U8 227#usize) (route : RawCtxServerRouting.SenderDecoder) (raw : Pqxdh.Bytes) :
     server (n:=n) setup wire erased route raw =
       RegistrationNativePlatformOrdinaryWorld.serverStep setup (ledgerCodec wire) reserve route (.inr raw) := by
   rw [server, RegistrationNativeReceiveDispatch.server_native setup (canonicalWire wire) length erased route raw]
@@ -35,7 +35,7 @@ theorem server_source (setup : Setup base KemSK) (wire : Wire)
 theorem beacon_source (setup : Setup base KemSK) (wire : Wire)
     (reserve : Nat → StateT Platform ProbComp (core.result.Result Unit E))
     (length : RegistrationNativeExtractedReceive.AeadLength setup.source.crypto)
-    (erased : Array U8 357#usize) (index : Nat) (raw : Pqxdh.Bytes) :
+    (erased : Array U8 227#usize) (index : Nat) (raw : Pqxdh.Bytes) :
     beacon (n:=n) setup wire erased index raw =
       RegistrationNativePlatformOrdinaryWorld.beaconStep setup (ledgerCodec wire) reserve index (.inr raw) := by
   rw [beacon, RegistrationNativeReceiveDispatch.beacon_native setup (canonicalWire wire) length erased index raw]

@@ -81,7 +81,7 @@ variable {mlSource : RegistrationNativeMldsa.Source} {KemSK : Type}
 
 theorem source (coins : QueryImpl unifSpec m)
     (view : MaterialView mlSource KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : beaconcrypt_public_wrapper.server.Server) (before : RegistrationServerFrontendCompiler.State n)
     (related : Server view views created credential self before)
     (initial : registration.ServerInitialKdf)

@@ -10,16 +10,16 @@ namespace BeaconcryptCore.Computational.RegistrationNativeSeedConstruct
 open PqxdhRecordLiftWorld (sampled)
 open PqxdhJointIdentity (IdentitySeed Primitives)
 open PqxdhLiveServerConstruction (Created initialized)
-variable {n : Nat} {Value : Type}
+variable {n : Nat} {P Value : Type}
 
 def replace (joint : Primitives) (identityIndex : Nat) (serverKeyId : U64) (seed : IdentitySeed)
-    (constructed : Option (Created Unit) × Unit) : Option (Created Unit) × Unit :=
+    (constructed : Option (Created P) × Unit) : Option (Created P) × Unit :=
   (constructed.1.map (fun _ => initialized joint identityIndex serverKeyId .generated seed), constructed.2)
 
 /-- The literal constructor's initialization and optional generated-seed branch use the actual native counted sampler. -/
 theorem construct (joint : Primitives) (ensureInit : StateT Unit ProbComp Bool)
     (identityIndex : Nat) (serverKeyId : U64) (before : PqxdhRecordLiftWorld.State n) :
-    (sampled ((PqxdhLiveServerConstruction.construct (P := Unit) joint ensureInit identityIndex serverKeyId none).run ())).run before = (do
+    (sampled ((PqxdhLiveServerConstruction.construct (P := P) joint ensureInit identityIndex serverKeyId none).run ())).run before = (do
       let ready ← (sampled (ensureInit.run ())).run before
       if ready.1.1 then do
         let generated ← (sampled PqxdhJointIdentity.sampleSeed).run ready.2
@@ -40,11 +40,11 @@ theorem construct (joint : Primitives) (ensureInit : StateT Unit ProbComp Bool)
 /-- Replacing the source seed by an early independent private seed retains the complete constructor outcome and World law for every continuation. -/
 theorem eager (joint : Primitives) (ensureInit : StateT Unit ProbComp Bool)
     (identityIndex : Nat) (serverKeyId : U64) (before : PqxdhRecordLiftWorld.State n)
-    (next : (Option (Created Unit) × Unit) → PqxdhRecordLiftWorld.State n → ProbComp Value) :
-    (do let constructed ← (sampled ((PqxdhLiveServerConstruction.construct (P := Unit) joint ensureInit identityIndex serverKeyId none).run ())).run before
+    (next : (Option (Created P) × Unit) → PqxdhRecordLiftWorld.State n → ProbComp Value) :
+    (do let constructed ← (sampled ((PqxdhLiveServerConstruction.construct (P := P) joint ensureInit identityIndex serverKeyId none).run ())).run before
         next constructed.1 constructed.2) =ᵈ
       (do let seed ← PqxdhJointIdentity.sampleSeed
-          let constructed ← (sampled ((PqxdhLiveServerConstruction.construct (P := Unit) joint ensureInit identityIndex serverKeyId none).run ())).run before
+          let constructed ← (sampled ((PqxdhLiveServerConstruction.construct (P := P) joint ensureInit identityIndex serverKeyId none).run ())).run before
           next (replace joint identityIndex serverKeyId seed constructed.1) constructed.2) := by
   simp only [construct, bind_assoc]
   refine _root_.EvalDistEq.trans ?_ (OracleComp.EvalDistEq.bind_bind_swap PqxdhJointIdentity.sampleSeed

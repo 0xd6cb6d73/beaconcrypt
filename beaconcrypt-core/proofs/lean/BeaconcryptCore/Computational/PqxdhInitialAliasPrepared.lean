@@ -10,6 +10,8 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhInitialAliasPrepared
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf
 open PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily PqxdhInitialBeaconAmbient
 open PqxdhKemIndCca PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma
@@ -56,9 +58,9 @@ variable (selected : RawCtxProtocolReveals.Owner S (B + 1)) (number : Std.U64) (
 local notation "SourceInput" => PqxdhInitialPreparedSourceInput.Input (M := M) (P := P) (I := I) (K := K) (X := X) (Response := Response) (A := A) (S := S) (B := B) (setup := setup)
 
 /-- Every pending input constructed by the actual preparation has an empty initial root cache and the literal original cache-free callbacks. -/
-theorem input_admissible (context : PqxdhInitialLegalObserver.Context env kem attachedVerify primitives program post)
+theorem input_admissible (context : PqxdhInitialLegalObserver.Context (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post)
     (input : SourceInput)
-    (same : PqxdhInitialPreparedSourceInput.input env baseImpl kem attachedVerify primitives program post context selected number ancestors disclosed = .inr input) :
+    (same : PqxdhInitialPreparedSourceInput.input (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post context selected number ancestors disclosed = .inr input) :
     PqxdhInitialSourceAliases.Admissible input := by
   cases state : context.state with
   | completed decision => simp [PqxdhInitialPreparedSourceInput.input, state] at same
@@ -72,16 +74,16 @@ theorem input_admissible (context : PqxdhInitialLegalObserver.Context env kem at
 
 /-- Support of the actual original preparation carries these implementation facts without conditioning or any additional acceptance/freshness premise. -/
 theorem prior_admissible (input : SourceInput)
-    (reached : Sum.inr input ∈ support (PqxdhInitialPreparedSourceInput.prior env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed)) :
+    (reached : Sum.inr input ∈ support (PqxdhInitialPreparedSourceInput.prior (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed)) :
     PqxdhInitialSourceAliases.Admissible input := by
   rw [PqxdhInitialPreparedSourceInput.prior, support_map, Set.mem_image] at reached
   obtain ⟨context, _, same⟩ := reached
-  exact input_admissible env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed context input same
+  exact input_admissible (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed context input same
 
 /-- The source initializer alias allowance is paid by the original adaptive post budget on the exact preparation support. -/
 theorem prior_post (qPost : Nat) (bounded : ∀ selection reply, (post selection reply).IsTotalQueryBound qPost)
     (input : SourceInput)
-    (reached : Sum.inr input ∈ support (PqxdhInitialPreparedSourceInput.prior env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed)) :
+    (reached : Sum.inr input ∈ support (PqxdhInitialPreparedSourceInput.prior (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed)) :
     ∀ reply, (input.post reply).IsTotalQueryBound qPost := by
   rw [PqxdhInitialPreparedSourceInput.prior, support_map, Set.mem_image] at reached
   obtain ⟨context, _, same⟩ := reached
@@ -94,14 +96,14 @@ theorem prior_post (qPost : Nat) (bounded : ∀ selection reply, (post selection
 
 /-- The actual authenticated-root preparation and original adaptive schedule discharge every operational premise of the full-source value-consistency correction. -/
 theorem bound (stage qPost : Nat) (bounded : ∀ selection reply, (post selection reply).IsTotalQueryBound qPost) :
-    (PqxdhInitialSourceSampled.game env.source env.recordWriter env.senderId env.route env.decode
-      (PqxdhInitialPreparedSourceInput.prior env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed) stage).boolDistance
-    (PqxdhInitialSourceAliases.consistent env.source env.recordWriter env.senderId env.route env.decode
-      (PqxdhInitialPreparedSourceInput.prior env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed) stage) ≤
+    (PqxdhInitialSourceSampled.game (associatedData := associatedData) (completedBinding := completedBinding) env.source env.recordWriter env.senderId env.route env.decode
+      (PqxdhInitialPreparedSourceInput.prior (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed) stage).boolDistance
+    (PqxdhInitialSourceAliases.consistent (associatedData := associatedData) (completedBinding := completedBinding) env.source env.recordWriter env.senderId env.route env.decode
+      (PqxdhInitialPreparedSourceInput.prior (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed) stage) ≤
       ((1 + (7 + qPost * 67) : Nat) : ENNReal).toReal / (2 ^ 256 : ℝ) :=
-  PqxdhInitialSourceAliases.bound env.source env.recordWriter env.senderId env.route env.decode _ stage qPost
-    (prior_admissible env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed)
-    (prior_post env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed qPost bounded)
+  PqxdhInitialSourceAliases.bound (associatedData := associatedData) (completedBinding := completedBinding) env.source env.recordWriter env.senderId env.route env.decode _ stage qPost
+    (prior_admissible (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed)
+    (prior_post (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed qPost bounded)
 
 end BeaconcryptCore.Computational.PqxdhInitialAliasPrepared
 

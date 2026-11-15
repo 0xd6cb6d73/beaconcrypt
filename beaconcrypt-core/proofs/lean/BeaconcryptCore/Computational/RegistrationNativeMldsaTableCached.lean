@@ -34,7 +34,7 @@ theorem run (setup : Setup base KemSK) (checks : Checks)
       (RegistrationNativeMldsaProfile.run setup checks wire route representation initial.created initial.credential
         bounds mode work initial.state) started.2)) :
     RegistrationSigningShared.Cached (RegistrationNativeMldsaShared.nativeProject result.1.2.2) := by
-  obtain ⟨key, server, owners⟩ := RegistrationNativeMldsaTableStart.initialized source setup ensureInit identityIndex
+  obtain ⟨key, server⟩ := RegistrationNativeMldsaTableStart.initialized source setup ensureInit identityIndex
     serverKeyId started startup initial member
   let actualInitial := RegistrationNativeMldsaMap.initial (restore source key started.2) initial
   have restoredStartup : some actualInitial ∈ support
@@ -45,7 +45,7 @@ theorem run (setup : Setup base KemSK) (checks : Checks)
     simp only [RegistrationNativeMldsaTableStart.restored, selected, Option.bind_some, server.1, Option.map_some]
     rfl
   have restoredRun := RegistrationNativeMldsaTableRun.run source setup checks wire route representation
-    initial.created initial.credential key bounds mode work initial.state started.2 server owners
+    initial.created initial.credential key bounds mode work initial.state started.2 server
   have reached : RegistrationNativeMldsaTableRun.observeRun source key result ∈ support
       (RegistrationNativeExperiment.run setup checks wire route representation actualInitial.created source
         actualInitial.credential bounds mode work actualInitial.state) := by

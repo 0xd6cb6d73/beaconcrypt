@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativeIdentityStartupJournal
 import BeaconcryptCore.Computational.RegistrationNativePlatformCtxBirthdayCache
 
-/-! The actual one-input startup provenance determines its literal cache shape. The retained digest is kept exactly, without a freshness/uniformity premise or an empty-cache reset. This supplies the warm-start hypothesis of the shared physical-cache birthday theorem. -/
+/-! Actual startup performs no CTX hash. Its exact empty journal proves that the original initial cache stays empty and supplies the warm-start hypothesis of the shared physical-cache birthday theorem. No callback cache is reset. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open beaconcrypt_core PqxdhRefinement
@@ -45,9 +45,14 @@ theorem of_provenance (cache : CtxRomAuth.CtxRO.QueryCache) (anchor : Pqxdh.Byte
 theorem start (setup : PqxdhServerAuthExperiment.Setup base KemSK) (ensureInit : StateT Unit ProbComp Bool)
     (identityIndex : Nat) (serverKeyId : U64) (initial : RegistrationNativeExperiment.Initial n KemSK source)
     (reached : some initial ∈ support (RegistrationNativeExperiment.start setup source ensureInit identityIndex serverKeyId)) :
-    Warm (RegistrationNativeWorldCache.cache initial.state) :=
-  of_provenance _ (absBytes initial.credential.publicKey)
-    (RegistrationNativeIdentityStartupJournal.start setup ensureInit identityIndex serverKeyId initial reached)
+    Warm (RegistrationNativeWorldCache.cache initial.state) := by
+  have known := RegistrationNativeIdentityStartupJournal.start setup ensureInit identityIndex serverKeyId initial reached
+  left
+  apply QueryCache.ext
+  rintro ⟨tag, bytes⟩
+  cases tag
+  by_contra present
+  exact List.not_mem_nil (known bytes present)
 
 end BeaconcryptCore.Computational.RegistrationNativeIdentityStartupWarm
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativeIdentityStartupWarm.of_provenance' depends on axioms: [propext,

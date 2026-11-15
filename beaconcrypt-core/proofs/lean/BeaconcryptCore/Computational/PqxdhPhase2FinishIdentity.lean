@@ -12,6 +12,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhPhase2FinishIdentity
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhPhase2SharedIdentity PqxdhPhase2OldSource PqxdhPhase2LiveFinish
 variable {M P I D K X Response A J : Type} {S B : Nat}
 
@@ -22,14 +23,14 @@ theorem finish_reassociate {m : Type → Type} [Monad m] [LawfulMonad m]
     (decode : RawCtxReceive.FrameDecoder) (query : (FinishSpec B).Domain)
     (state : PqxdhRegistrationProtocolState.State M P I D K A S B) (identities : J) :
     (fun result => (result.1, packState result.2.1 result.2.2)) <$>
-      (((finishImpl native decode).flattenStateT query).run (state, identities)) =
-      ((finishImpl (packed native.flattenStateT) decode query).run (packState state identities)) := by
+      (((PqxdhPhase2LiveFinish.finishImpl (completedBinding := completedBinding) native decode).flattenStateT query).run (state, identities)) =
+      ((PqxdhPhase2LiveFinish.finishImpl (completedBinding := completedBinding) (packed native.flattenStateT) decode query).run (packState state identities)) := by
   cases query with
   | finish index raw =>
       change @Eq (m (Option PqxdhBeaconPhase2Preparation.Bytes ×
         PqxdhRegistrationProtocolState.State M P I D K (A × J) S B)) _ _
       have complete := packed_run native.flattenStateT
-        (PqxdhBeaconPhase2Publication.nativeOwner decode raw (state.roles.1.2 index))
+        (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw (state.roles.1.2 index))
         (state.primitive, identities)
       rw [simulateQ_flattenStateT_run] at complete
       have projected := congrArg (fun work =>
@@ -37,7 +38,7 @@ theorem finish_reassociate {m : Type → Type} [Monad m] [LawfulMonad m]
           Shared (A := A × J) =>
           (result.1.1, install index (packState state identities) result.1.2 result.2)) <$> work) complete
       convert projected using 1
-      · simp only [QueryImpl.flattenStateT, finishImpl, StateT.run_mk,
+      · simp only [QueryImpl.flattenStateT, PqxdhPhase2LiveFinish.finishImpl, StateT.run_mk,
           bind_pure_comp, StateT.run_map, Functor.map_map, packState, install, pack]
         rfl
 

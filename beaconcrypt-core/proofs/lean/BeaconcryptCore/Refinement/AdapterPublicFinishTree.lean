@@ -41,7 +41,7 @@ noncomputable def accepted (setup : PqxdhServerAuthExperiment.Setup base KemSK) 
 
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (wire : RegistrationNativeWire.Wire)
 variable (erased : commitment.CommitmentTranscript)
-variable (authentication : QueryImpl AdapterInitAuthenticationRequestMonad.Spec (M n KemSK source Auxiliary))
+variable (authentication : QueryImpl AdapterPublicWrapperChildren.AuthenticationSpec (M n KemSK source Auxiliary))
 variable (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (M n KemSK source Auxiliary))
 variable (initial : ∀ request, (localOps.ratchet_initial_ratchet_hkdf request).run =
   pure (.ok (RawCtxSourceHkdf.initialResponse setup.source.crypto request).bytes))

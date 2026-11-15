@@ -79,6 +79,12 @@ theorem complete (reservePeer : Bool) (ready : Ready) (application : Slice U8) (
     rw [pure_source, mem_support_pure_iff] at continued
     subst result
     cases successful }
+  rw [bind_source, mem_support_bind_iff] at continued
+  obtain ⟨hashed, _hashCalled, continued⟩ := continued
+  split at continued <;> try {
+    rw [pure_source, mem_support_pure_iff] at continued
+    subst result
+    cases successful }
   split at continued <;> try {
     rw [pure_source, mem_support_pure_iff] at continued
     subst result
@@ -89,7 +95,7 @@ theorem complete (reservePeer : Bool) (ready : Ready) (application : Slice U8) (
     published.1.1.1.1 before published.1.1.1.2 published.1.1.2 published.1.2 published.2 result completed keyId bytes successful
   have installed := RegistrationNativeSelectiveMaterialAdmitted.server setup wire route sign seed scalar candidate provider service codec
     ready.reference realizedBytes realized selected wire.encodeResponse before.control _ peer
-    occupied.1.1.1.2 occupied.1.1.2 occupied.1.2 occupied.2 published admitted same
+    hashed.1.1.1.2 hashed.1.1.2 hashed.1.2 hashed.2 published admitted same
   rw [control, ← key]
   exact installed
 

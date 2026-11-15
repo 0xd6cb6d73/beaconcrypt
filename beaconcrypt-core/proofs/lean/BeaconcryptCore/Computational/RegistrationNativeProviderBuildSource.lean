@@ -70,7 +70,7 @@ theorem build_source (setup : Setup base KemSK) (checks : Checks) (wire : Regist
 /-- The complete typed build has the same actual SDK dispatcher entry and preserves the provider coordinate without a whole-game equality assumption. -/
 theorem handler_source (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential source) (selectedOwner selectedAccept : Nat)
     (publicPrekey : PqxdhJointIdentity.PeerEncoding) (provider : Provider KemSK ProviderState)
     (handle : Nat) (application : Option (Slice U8)) (before : FrontState n KemSK ProviderState source)

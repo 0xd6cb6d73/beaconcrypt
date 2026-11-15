@@ -34,7 +34,7 @@ private theorem state_map_apply {S X Y : Type} {m : Type → Type} [Monad m] [La
 
 /-- Closing actual owner/Env/Main/P state preserves the checked source history law and every physical request. -/
 theorem beacon (placeholder : Ed25519Signature) (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativePlatformIdentityProgram.M n KemSK RegistrationServerRoleBackend.State Platform source A)
     (law : RegistrationNativePlatformIdentityHistoryView.Stable placeholder work) :
     Stable placeholder (RegistrationNativePlatformIdentityCtxMain.beacon setup checks representation created work) := by
@@ -55,7 +55,7 @@ theorem view_idempotent (placeholder : Ed25519Signature) (before : RegistrationN
 
 /-- Actual generated-owner creation ignores only the earlier raw signature slots. -/
 theorem create_stable (placeholder : Ed25519Signature) (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64) :
     Stable placeholder (RegistrationNativePlatformIdentityCtxLifecycle.create (n := n) (source := source) (Platform := Platform)
       setup edPin mlPin keyId checks representation created) :=
@@ -65,7 +65,7 @@ theorem create_stable (placeholder : Ed25519Signature) (setup : Setup base KemSK
 
 /-- The entire corrected assigned-ID finish keeps full state after earlier signature-slot replacement. -/
 theorem finish_stable (placeholder : Ed25519Signature) (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat) (packet : Option registration.ResponsePacket) :
     Stable placeholder (RegistrationNativePlatformIdentityCtxLifecycle.finish (n := n) (source := source) (Platform := Platform)
       setup checks representation created wire index packet) :=
@@ -75,7 +75,7 @@ theorem finish_stable (placeholder : Ed25519Signature) (setup : Setup base KemSK
 
 /-- Full dynamic writer bundle behavior ignores earlier signature slots while keeping all current signature bytes and P effects. -/
 theorem bundle_stable {E : Type} (placeholder : Ed25519Signature) (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) (index : Nat) :
     Stable placeholder (RegistrationNativePlatformIdentityCtxLifecycle.bundle (n := n) (source := source) setup checks representation created writer index) := by
   apply RegistrationNativePlatformViewStable.map_stable (view placeholder) (view_idempotent placeholder)

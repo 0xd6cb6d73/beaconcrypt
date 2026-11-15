@@ -33,7 +33,7 @@ private theorem seed (before : PqxdhRecordLiftWorld.State n) :
 /-- The actual source query counts and stores its one seed before publishing the exact generated index and correlated public keys. -/
 theorem query_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (before : State n KemSK) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (before : State n KemSK) :
     (implementation (mlSource := source) setup checks representation created (.inr .create)).run before =
       (fun value => (some (before.identities.seeds.length, setup.joint.publicKeys value), born setup.joint before value)) <$>
         PqxdhJointIdentity.sampleSeed := by
@@ -49,7 +49,7 @@ theorem query_source (setup : Setup base KemSK) (checks : Checks)
 /-- The actual public identity-create wrapper returns only a generated public credential, retaining the complete original World and actual private pool. -/
 theorem create_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (before : State n KemSK) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (before : State n KemSK) :
     (simulateQ (implementation (mlSource := source) setup checks representation created)
       (RegistrationNativeIdentityInterface.create (RegistrationNativeIdentityFrontend.Ambient n KemSK))).run before =
       (fun value => (some (credential setup.joint before value), born setup.joint before value)) <$>

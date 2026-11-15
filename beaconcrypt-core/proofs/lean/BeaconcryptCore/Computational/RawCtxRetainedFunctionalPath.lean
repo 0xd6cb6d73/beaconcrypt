@@ -23,7 +23,7 @@ theorem request_address (chain : RatchetChain) :
   change (⟨PqxdhRefinement.absBytes ratchet.SYM_RATCHET_INFO,
     PqxdhRefinement.absBytes chain.bytes⟩ : JointKdfAddress) =
       ⟨Pqxdh.INFO_R, PqxdhRefinement.absBytes chain.bytes⟩
-  simpa only [pqxdh.SYM_RATCHET_INFO] using
+  simpa only [ratchet.SYM_RATCHET_INFO] using
     congrArg (fun domain => (⟨domain, PqxdhRefinement.absBytes chain.bytes⟩ : JointKdfAddress))
       PqxdhRefinement.absBytes_SYM_RATCHET_INFO
 

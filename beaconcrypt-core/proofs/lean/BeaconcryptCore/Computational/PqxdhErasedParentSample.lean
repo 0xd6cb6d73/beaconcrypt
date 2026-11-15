@@ -7,6 +7,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhErasedParentSample
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf
 open PqxdhCorrelatedExpand PqxdhInitialBeaconAmbient PqxdhInitialSourceInitialSecrecy
 open RawCtxSelectedParentEntry
@@ -24,7 +26,7 @@ local notation "zeroRoot" => (List.Vector.replicate 32 0 : RootOutput)
 
 noncomputable def sampleOne (start : Start (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K)
     (X := X) (Response := Response) (A := A) (N := N) (S := S) (B := B)) :=
-  PqxdhInitialPreparedParent.prepare source writer
+  PqxdhInitialPreparedParent.prepare (associatedData := associatedData) (completedBinding := completedBinding) source writer
     (PqxdhInitialSourcePreparedSecrecy.pre start.1.other) (PqxdhInitialSourcePreparedSecrecy.application start.1.other)
     (PqxdhInitialNativeInitializer.initial source start.1.selectedMessage zeroRoot (PqxdhInitialSampledParent.response start))
     (PqxdhInitialSourcePreparedSecrecy.selector start.1.other) (PqxdhInitialSourcePreparedSecrecy.aux start.1.other)
@@ -40,9 +42,9 @@ noncomputable def sampleOne (start : Start (extra := extra) (M := M) (P := P) (I
 /-- The exact original prepared sampler differs only by its proof annotation, including every cached/common branch. -/
 theorem one_erase (start : Start (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K)
     (X := X) (Response := Response) (A := A) (N := N) (S := S) (B := B)) :
-    Sum.map id Subtype.val <$> PqxdhInitialSampledParent.sampleOne source writer sender route decode depth start =
-      sampleOne source writer sender route decode depth start :=
-  PqxdhInitialPreparedResources.sample_erase _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+    Sum.map id Subtype.val <$> PqxdhInitialSampledParent.sampleOne (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth start =
+      sampleOne (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth start :=
+  PqxdhInitialPreparedResources.sample_erase (associatedData := associatedData) (completedBinding := completedBinding) _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 noncomputable def sample (prior : ProbComp (Context extra M P I D K X Response A N S B)) :
     ProbComp (Packet (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K)
@@ -52,12 +54,12 @@ noncomputable def sample (prior : ProbComp (Context extra M P I D K X Response A
   match context with
   | .inl decision => pure (.inl decision)
   | .inr input =>
-    let value ← sampleOne source writer sender route decode depth (input, output)
+    let value ← sampleOne (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth (input, output)
     pure (.inr ((input, output), value))
 
 variable {prior : ProbComp (Context extra M P I D K X Response A N S B)}
 
-def erase (packet : PqxdhInitialSampledParent.Packet (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K)
+def erase (packet : PqxdhInitialSampledParent.Packet (associatedData := associatedData) (completedBinding := completedBinding) (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K)
     (X := X) (Response := Response) (A := A) (N := N) (S := S) (B := B) source writer sender route decode depth prior) :
     Packet (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K)
       (X := X) (Response := Response) (A := A) (N := N) (S := S) (B := B) :=
@@ -68,9 +70,9 @@ def erase (packet : PqxdhInitialSampledParent.Packet (extra := extra) (M := M) (
 set_option backward.isDefEq.respectTransparency false in
 /-- Both actual support annotations erase forwards to the same sampler, without filtering the prior or the native continuation. -/
 theorem sample_erase :
-    erase source writer sender route decode depth <$>
-      PqxdhInitialSampledParent.sample source writer sender route decode depth prior =
-      sample source writer sender route decode depth prior := by
+    erase (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth <$>
+      PqxdhInitialSampledParent.sample (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth prior =
+      sample (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth prior := by
   unfold PqxdhInitialSampledParent.sample sample
   conv_rhs => rw [← RawCtxSupportedSample.sum_erase prior]
   simp only [bind_map_left, map_bind]
@@ -82,7 +84,7 @@ theorem sample_erase :
   | inl decision => rfl
   | inr input =>
     simp only [Sum.map_inr, map_bind, map_pure, erase]
-    rw [← one_erase source writer sender route decode depth (input.val, output), bind_map_left]
+    rw [← one_erase (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth (input.val, output), bind_map_left]
     rfl
 
 def address (packet : Packet (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K)
@@ -93,10 +95,10 @@ def address (packet : Packet (extra := extra) (M := M) (P := P) (I := I) (D := D
   | .inr (_, .inr input) => PqxdhInitialBuilderContext.address input.1.original
 
 /-- Removing support evidence keeps the exact selected parent address on common and pending branches. -/
-theorem address_erase (packet : PqxdhInitialSampledParent.Packet (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K)
+theorem address_erase (packet : PqxdhInitialSampledParent.Packet (associatedData := associatedData) (completedBinding := completedBinding) (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K)
     (X := X) (Response := Response) (A := A) (N := N) (S := S) (B := B) source writer sender route decode depth prior) :
-    address (erase source writer sender route decode depth packet) =
-      PqxdhInitialSampledParent.address source writer sender route decode depth packet := by
+    address (erase (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth packet) =
+      PqxdhInitialSampledParent.address (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth packet := by
   rcases packet with common | ⟨start, pending⟩
   · rfl
   · rcases pending with ⟨common | pending, supported⟩ <;> rfl
@@ -108,7 +110,7 @@ noncomputable def native (remaining : Nat)
   match context.1 with
   | .inl decision => pure decision
   | .inr (start, pending) =>
-    PqxdhInitialCommonSecrecy.native source writer (PqxdhInitialSampledParent.marker source start) sender route decode
+    PqxdhInitialCommonSecrecy.native (completedBinding := completedBinding) source writer (PqxdhInitialSampledParent.marker source start) sender route decode
       (PqxdhErasedParentView.view source
         (PqxdhInitialSourcePreparedSecrecy.pre start.1.other) (PqxdhInitialSourcePreparedSecrecy.application start.1.other)
         (PqxdhInitialNativeInitializer.initial source start.1.selectedMessage zeroRoot (PqxdhInitialSampledParent.response start))
@@ -119,14 +121,14 @@ noncomputable def native (remaining : Nat)
 
 /-- The whole original native observer, including its exact Gate/Fresh test and all optional replies, factors through the proof-erased runtime carrier. -/
 theorem native_erase (remaining : Nat)
-    (context : PqxdhInitialSampledParent.Packet (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K)
+    (context : PqxdhInitialSampledParent.Packet (associatedData := associatedData) (completedBinding := completedBinding) (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K)
       (X := X) (Response := Response) (A := A) (N := N) (S := S) (B := B) source writer sender route decode depth prior × Entry)
     (target : RootOutput) (output : FullOutput) :
-    PqxdhInitialSampledParent.native source writer sender route decode depth remaining context target output =
-      native source writer sender route decode remaining (erase source writer sender route decode depth context.1, context.2) target output := by
+    PqxdhInitialSampledParent.native (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth remaining context target output =
+      native (completedBinding := completedBinding) source writer sender route decode remaining (erase (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth context.1, context.2) target output := by
   rcases context with ⟨common | ⟨start, pending⟩, entry⟩
   · rfl
-  · apply PqxdhErasedParentView.native_erase
+  · apply PqxdhErasedParentView.native_erase (associatedData := associatedData) (completedBinding := completedBinding)
 
 def forgetStart (start : Start (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K)
     (X := X) (Response := Response) (A := A) (N := N) (S := S) (B := B)) :=
@@ -151,8 +153,8 @@ theorem native_normalize (remaining : Nat)
     (context : Packet (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K)
       (X := X) (Response := Response) (A := A) (N := N) (S := S) (B := B) × Entry)
     (target : RootOutput) (output : FullOutput) :
-    native source writer sender route decode remaining (normalize context.1, context.2) target output =
-      native source writer sender route decode remaining context target output := by
+    native (completedBinding := completedBinding) source writer sender route decode remaining (normalize context.1, context.2) target output =
+      native (completedBinding := completedBinding) source writer sender route decode remaining context target output := by
   rcases context with ⟨common | ⟨start, pending⟩, entry⟩ <;> rfl
 
 end BeaconcryptCore.Computational.PqxdhErasedParentSample

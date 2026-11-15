@@ -1085,21 +1085,13 @@ def transport.kexresponse_right
     }
 
 /-- [beaconcrypt_parse::transport::initkex_right]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2927:0-2946:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2820:0-2829:1 -/
 def transport.initkex_right
-  (x8 : (Unit × (Unit × ((Slice Std.U8) × ((Slice Std.U8) × ((Slice Std.U8)
-  × ((Slice Std.U8) × ((Slice Std.U8) × (Slice Std.U8))))))))) :
+  (x6 : (Unit × (Unit × ((Slice Std.U8) × ((Slice Std.U8) × ((Slice Std.U8)
+  × (Slice Std.U8))))))) :
   RustM transport.initkex
   := do
-  let (_, (_, (x11, (x12, (x13, (x14, (x15, x16))))))) := x8
-  ok
-    {
-      identity_key := x11,
-      pre_key := x12,
-      one_time_key := x13,
-      pq_key := x14,
-      mldsa_public_key := x15,
-      signature := x16
-    }
+  let (_, (_, (x9, (x10, (x11, x12))))) := x6
+  ok { identity_key := x9, pre_key := x10, one_time_key := x11, pq_key := x12 }
 
 end beaconcrypt_parse

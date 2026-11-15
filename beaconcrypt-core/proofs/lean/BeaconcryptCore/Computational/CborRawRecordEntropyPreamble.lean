@@ -15,7 +15,7 @@ variable {n : Nat} {ι KemSK Reader Response E X : Type} {base : OracleSpec ι}
 /-- Hiding-invariant observations commute with actual random-record plaintext replacement at the reached initialized World state. -/
 theorem law_zeros (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (env : Environment n E) (serverKid : Std.U64) (bounds : FreshBounds)
-    (adversary : OracleComp (ModeSpec .P) X) (created : PqxdhLiveServerConstruction.Created Unit)
+    (adversary : OracleComp (ModeSpec .P) X) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (state : CborRawRecordFlat.NativeState n E) (observe : View n E X → Bool)
     (invariant : ∀ first second, hidingView first = hidingView second → observe first = observe second) :
     (fun result => observe (ctxView result)) <$>
@@ -49,7 +49,7 @@ theorem law_zeros (setup : Setup base KemSK) (codec : Codec Reader Response)
 theorem fresh_bytes (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (env : Environment n E) (serverKid : Std.U64) (bounds : FreshBounds)
     (adversary : OracleComp (ModeSpec .P) X) (claim : X → Option (Nat × Pqxdh.Bytes))
-    (created : PqxdhLiveServerConstruction.Created Unit) (state : CborRawRecordFlat.NativeState n E) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (state : CborRawRecordFlat.NativeState n E) :
     𝒟[(fun result => freshEvent claim (ctxView result)) <$>
       CborRawRecordEntropyInitial.run (fun _ => .random) id setup codec route env serverKid bounds .P adversary created state] {true} ≤
       ((256 ^ bounds.min : Nat) : ℝ≥0∞)⁻¹ := by
@@ -58,8 +58,8 @@ theorem fresh_bytes (setup : Setup base KemSK) (codec : Codec Reader Response)
 
 noncomputable def run (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (env : Environment n E) (serverKid : Std.U64) (bounds : FreshBounds)
-    (startup : ProbComp (Option (PqxdhLiveServerConstruction.Created Unit) × CborRawRecordFlat.NativeState n E))
-    (adversary : PqxdhLiveServerConstruction.Created Unit → E → OracleComp (ModeSpec .P) X) :
+    (startup : ProbComp (Option (PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) × CborRawRecordFlat.NativeState n E))
+    (adversary : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize) → E → OracleComp (ModeSpec .P) X) :
     ProbComp (Client n E X × CtxPrivate n) := do
   let started ← startup
   match started.1 with
@@ -71,8 +71,8 @@ noncomputable def run (setup : Setup base KemSK) (codec : Codec Reader Response)
 /-- Averaging the actual public startup and all its cache effects preserves the same fresh-message entropy bound. -/
 theorem startup_fresh_bytes (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (env : Environment n E) (serverKid : Std.U64) (bounds : FreshBounds)
-    (startup : ProbComp (Option (PqxdhLiveServerConstruction.Created Unit) × CborRawRecordFlat.NativeState n E))
-    (adversary : PqxdhLiveServerConstruction.Created Unit → E → OracleComp (ModeSpec .P) X)
+    (startup : ProbComp (Option (PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) × CborRawRecordFlat.NativeState n E))
+    (adversary : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize) → E → OracleComp (ModeSpec .P) X)
     (claim : X → Option (Nat × Pqxdh.Bytes)) :
     𝒟[(fun result => freshEvent claim (ctxView result)) <$> run setup codec route env serverKid bounds startup adversary] {true} ≤
       ((256 ^ bounds.min : Nat) : ℝ≥0∞)⁻¹ := by

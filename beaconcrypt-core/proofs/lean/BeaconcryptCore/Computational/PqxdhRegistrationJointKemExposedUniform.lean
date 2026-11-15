@@ -36,7 +36,7 @@ theorem prefix_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
       (PqxdhRegistrationJointServerPrefix.compiler (KemSK := KemSK) identityIndex query)).run consumed).IsQueryBoundP
       (Uniform (KemSK := KemSK))
       (PqxdhServerAuthSourceCosts.serverUniformCost caps (PqxdhServerAuthSourceCosts.serverClass query)) := by
-  cases query <;> first | trivial | skip
+  cases query <;> try trivial
   case staticDh point =>
     simp only [PqxdhRegistrationJointServerPrefix.compiler, simulateQ_map, simulateQ_spec_query, StateT.run_map]
     simp [prefixImpl, StateT.run, forward, isQueryBoundP_map_iff, isQueryBoundP_query_iff,
@@ -124,7 +124,7 @@ theorem command_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
     (budget : PqxdhRegistrationJointKemCommands.Budget)
     (certified : ∀ source, work.IsQueryBoundP
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) (state : NativeState KemSK) :
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK) :
     (commands setup codec checks identityIndex publicIdentity work owners state).IsQueryBoundP
       (Uniform (KemSK := KemSK)) (total caps budget) := by
   rw [← PqxdhRegistrationJointOpenUniform.total_eq caps budget]

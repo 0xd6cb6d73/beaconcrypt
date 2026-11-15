@@ -8,6 +8,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhBorrowedSharedPrefix
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPhase1AcceptanceOracle PqxdhKemIndCca
 open PqxdhPrivatePhase1Prefix PqxdhPrivateCandidateAcceptance PqxdhJointPhase1Reports
@@ -44,7 +45,7 @@ noncomputable def run (target : TargetKemPublicKey) : OracleComp HashSpec (Local
   let material := publicMaterial setup (primitives.publicKeys seed).ed25519 generated
   let bundle := signedCandidate primitives seed (primitives.publicKeys seed).ed25519 material.keyTuple
   let initial := singletonState primitives 1 seed
-  let selected ← PqxdhGeneratedSharedPrefix.run setup env callbacks program attachedVerify primitives 1 baseImpl kem secret
+  let selected ← PqxdhGeneratedSharedPrefix.run (completedBinding := completedBinding) setup env callbacks program attachedVerify primitives 1 baseImpl kem secret
     0 (primitives.publicKeys seed) generated (transcript bundle material.context)
     (signedGlobalState primitives seed 1 0 material.keyTuple initial.1, signedState primitives seed 0 material.keyTuple initial.2)
   pure ⟨⟨0, primitives.publicKeys seed, generated, bundle, selected.2⟩,
@@ -54,9 +55,9 @@ set_option backward.isDefEq.respectTransparency false in
 /-- The full generated-source prefix, including all original logs, cache and optional replies, equals its explicit same-ROM program. -/
 theorem source (target : TargetKemPublicKey) (cache : CtxRO.QueryCache) :
     (fun result => restore setup program result.1 result.2) <$>
-      (simulateQ hashImpl (PqxdhBorrowedSharedPrefix.run setup env callbacks program attachedVerify primitives baseImpl kem secret target)).run cache =
+      (simulateQ hashImpl (PqxdhBorrowedSharedPrefix.run (completedBinding := completedBinding) setup env callbacks program attachedVerify primitives baseImpl kem secret target)).run cache =
     evalKem baseImpl kem secret (PqxdhGeneratedRootSource.borrowedPrefix attachedVerify primitives setup
-      (PqxdhPhase2GeneratedDriver.driver (PqxdhGeneratedSharedPrefix.environment setup env callbacks cache) program) target) := by
+      (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) (PqxdhGeneratedSharedPrefix.environment setup env callbacks cache) program) target) := by
   simp only [PqxdhBorrowedSharedPrefix.run, simulateQ_bind, StateT.run_bind, map_bind,
     RawCtxSelectiveSharedRom.coins_complete, bind_map_left,
     PqxdhGeneratedRootSource.borrowedPrefix_evaluated, PqxdhPhase2GeneratedDriver.driver_private]
@@ -70,7 +71,7 @@ theorem source (target : TargetKemPublicKey) (cache : CtxRO.QueryCache) :
   let generated : Generated setup Unit := ⟨before, target, (), after⟩
   let material := publicMaterial setup (primitives.publicKeys seed).ed25519 generated
   let signed := signedCandidate primitives seed (primitives.publicKeys seed).ed25519 material.keyTuple
-  have original := PqxdhGeneratedSharedPrefix.source setup env callbacks program attachedVerify primitives 1 baseImpl kem secret
+  have original := PqxdhGeneratedSharedPrefix.source (completedBinding := completedBinding) setup env callbacks program attachedVerify primitives 1 baseImpl kem secret
     0 (primitives.publicKeys seed) generated (transcript signed material.context)
     (signedGlobalState primitives seed 1 0 material.keyTuple (singletonState primitives 1 seed).1,
       signedState primitives seed 0 material.keyTuple (singletonState primitives 1 seed).2) cache

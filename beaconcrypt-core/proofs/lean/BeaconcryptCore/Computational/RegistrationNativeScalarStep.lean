@@ -16,7 +16,7 @@ variable {source : RegistrationNativeMldsa.Source}
 
 private theorem beacon_pure (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (value : X) (before : State n KemSK source) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (value : X) (before : State n KemSK source) :
     (RegistrationNativeExperiment.beacon setup checks representation created
       (pure value : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State X)).run before = pure (value, before) := by
   unfold RegistrationNativeExperiment.beacon
@@ -26,7 +26,7 @@ private theorem beacon_pure (setup : Setup base KemSK) (checks : Checks)
 /-- The actual optional-prefix outcome preserves the complete adaptive scalar interchange, using the induction hypothesis only on still-waiting refusals. -/
 theorem after_step (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (selected : Nat) (edPin : Std.Array U8 32#usize) (keyId : U64)
     (prepared : RustM (Option (RegistrationNativeBeaconFrontend.Prepared source)))
     (before : State n KemSK source) (chosen : before.beacons.length = selected)
@@ -60,7 +60,7 @@ theorem after_step (setup : Setup base KemSK) (checks : Checks) (wire : Registra
         have moved := RegistrationNativeScalarSource.scalar_eager setup checks representation created before
           (fun scalar current => do
             let result ← (RegistrationNativeExperiment.beacon setup checks representation created
-              (RegistrationNativeBeaconFrontend.appendBorn setup source edPin keyId prepared.pin prepared.credentials prepared.identity scalar)).run current
+              (RegistrationNativeBeaconFrontend.appendBorn setup source edPin keyId prepared.pin prepared.identity scalar)).run current
             (simulateQ (RegistrationNativeExperiment.handler setup checks wire route representation created source credential) (next result.1)).run result.2)
         refine moved.trans ?_
         apply _root_.EvalDistEq.bind_right
@@ -73,7 +73,6 @@ theorem after_step (setup : Setup base KemSK) (checks : Checks) (wire : Registra
           (next born.1) born.2
           (RegistrationNativeScalarWaiting.birth_done setup checks representation created selected edPin keyId prepared scalar before chosen
             drawn drawnSupport born bornSupport)]
-        all_goals exact .rfl
 
 end BeaconcryptCore.Computational.RegistrationNativeScalarStep
 

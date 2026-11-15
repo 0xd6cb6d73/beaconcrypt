@@ -18,7 +18,7 @@ open PqxdhEd25519EufCma (Ed25519Signature)
 open RegistrationNativeIdentityCensorEdOutgoingSource (Full interpret)
 variable {n : Nat} {I KemSK Platform A : Type} {base : OracleSpec I} {mlSource : RegistrationNativeMldsa.Source}
 variable (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (selected : Nat) (placeholder : Ed25519Signature)
 local notation "FullState" => Full (n := n) (KemSK := KemSK) (Platform := Platform) (mlSource := mlSource)
 local notation "sample(" work ")" => RegistrationNativePlatformIdentityCtxMain.beacon setup checks representation created

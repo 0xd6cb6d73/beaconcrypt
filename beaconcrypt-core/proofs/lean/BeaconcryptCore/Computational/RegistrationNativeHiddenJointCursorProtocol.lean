@@ -34,8 +34,8 @@ theorem query_installed (decode : RawCtxReceive.FrameDecoder) (route : RawCtxSer
                 ((PqxdhRecordLiftProtocol.effects (.inr (.installBeacon index metadata reference))).run before) := by
               change result ∈ support
                 ((PqxdhRecordLiftProtocol.effects (.inr (.installBeacon index metadata reference))).run before) at supported
-              rw [← successful]
-              exact supported
+              have same : result = (true, result.2) := Prod.ext successful rfl
+              exact same ▸ supported
             have present := RegistrationNativeHiddenAllocationProtocol.effects_install_beacon_present index metadata reference
               before result.2 reached
             exact Nat.lt_of_lt_of_le (List.getElem?_eq_some_iff.mp present).1 growth

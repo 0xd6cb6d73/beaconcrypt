@@ -9,6 +9,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.refined ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialBuilderContext
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : session.CompletedRegistrationBinding)
 open PqxdhInitialPendingPost PqxdhInitialPostContext
 variable {ι Chain Kernel M P I D K X Response Shared Result : Type} {extra : OracleSpec ι} {S B : Nat}
 
@@ -38,8 +40,8 @@ theorem after_factor {m : Type → Type} [Monad m] [LawfulMonad m]
     (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Pqxdh.Bytes)
     (kernel : Kernel) (metadata : P)
     (state : PqxdhInitialGenericPublication.State Kernel M P (List Pqxdh.Bytes)) :
-    PqxdhInitialGenericPublication.afterInitialization calls aux candidate authenticated kernel metadata state =
-      (calls.send kernel (PqxdhServerRegistrationPublication.firstContext candidate authenticated) >>=
+    PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) calls aux candidate authenticated kernel metadata state =
+      (calls.send kernel (PqxdhServerRegistrationPublication.firstContext candidate associatedData authenticated) >>=
         afterSend aux candidate authenticated metadata state) := rfl
 
 structure Builder (extra : OracleSpec ι) (M P I D K Result : Type) (S B : Nat) where
@@ -63,7 +65,7 @@ noncomputable def complete (sender : M → Std.U64) (route : RawCtxServerRouting
   let published ← afterSend auxForward candidate authenticated metadata
     (PqxdhInitialPendingBuilder.selected sender index before) result
   let installed := PqxdhInitialPendingBuilder.reinstall index before (.ok published)
-  (simulateQ (compiler sender route decode) (outside installed.1)).run installed.2
+  (simulateQ (PqxdhInitialPendingPost.compiler (completedBinding := completedBinding) sender route decode) (outside installed.1)).run installed.2
 
 noncomputable def builderFrame (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
     (decode : RawCtxReceive.FrameDecoder) (context : Builder extra M P I D K Result S B) :
@@ -71,14 +73,14 @@ noncomputable def builderFrame (sender : M → Std.U64) (route : RawCtxServerRou
   ⟨.inl (.inl (.inr (.inl (.inl context.pending)))), fun reply => do
     let ready := RawCtxChainSend.ready context.pending reply
     let sealed ← (Base extra RatchetChain I D K X Response Shared S B).query (.inl (.inl (.inr (.inl (.inr ready)))))
-    complete sender route decode context.index context.before context.candidate context.authenticated
+    complete (completedBinding := completedBinding) sender route decode context.index context.before context.candidate context.authenticated
       context.metadata context.outside (ready.advanced, sealed)⟩
 
 noncomputable def frame (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
     (decode : RawCtxReceive.FrameDecoder) : Context extra M P I D K Result S B →
     PqxdhInitialPostContext.Frame extra M P I D K X Response Shared Result S B
-  | .inl context => PqxdhInitialPostContext.frame sender route decode context
-  | .inr context => builderFrame sender route decode context
+  | .inl context => PqxdhInitialPostContext.frame (completedBinding := completedBinding) sender route decode context
+  | .inr context => builderFrame (completedBinding := completedBinding) sender route decode context
 
 noncomputable def stopped (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
     (decode : RawCtxReceive.FrameDecoder) (context : Context extra M P I D K Result S B)
@@ -86,12 +88,12 @@ noncomputable def stopped (sender : M → Std.U64) (route : RawCtxServerRouting.
     OracleComp (Base extra RawCtxSelectedChain.Slot I D K X Response Shared S B)
       (Result × LabelFront M P I D K S B) :=
   match context with
-  | .inl context => PqxdhInitialPostContext.stopped sender route decode context material
+  | .inl context => PqxdhInitialPostContext.stopped (completedBinding := completedBinding) sender route decode context material
   | .inr context => do
       let ready := RawCtxSelectedPendingCut.sendStop context.pending material
       let sealed ← (Base extra RawCtxSelectedChain.Slot I D K X Response Shared S B).query
         (.inl (.inl (.inr (.inl (.inr ready)))))
-      complete sender route decode context.index (knownFront context.before) context.candidate
+      complete (completedBinding := completedBinding) sender route decode context.index (knownFront context.before) context.candidate
         context.authenticated context.metadata context.outside (ready.advanced, sealed)
 
 def address : Context extra M P I D K Result S B → PqxdhJointKdf.JointKdfAddress
@@ -102,9 +104,9 @@ def address : Context extra M P I D K Result S B → PqxdhJointKdf.JointKdfAddre
 theorem frame_address (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
     (decode : RawCtxReceive.FrameDecoder) (context : Context extra M P I D K Result S B) :
     PqxdhInitialPostContext.queryAddress (extra := extra)
-      (frame (X := X) (Response := Response) (Shared := Shared) sender route decode context).1 = some (address context) := by
+      (frame (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared) sender route decode context).1 = some (address context) := by
   cases context with
-  | inl context => exact PqxdhInitialPostContext.frame_address sender route decode context
+  | inl context => exact PqxdhInitialPostContext.frame_address (completedBinding := completedBinding) sender route decode context
   | inr context => rfl
 
 end BeaconcryptCore.Computational.PqxdhInitialBuilderContext

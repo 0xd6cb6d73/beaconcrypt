@@ -50,7 +50,7 @@ private theorem genuine_tree (selected : Nat) (owner : RegistrationNativeIdentit
       fun reply => ih reply (allowed.2 reply)⟩
 
 variable (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (selected index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner mlSource) (placeholder : Ed25519Signature)
 variable (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
 local notation "FullState" => Full (n := n) (KemSK := KemSK) (Platform := Platform) (mlSource := mlSource)
@@ -58,7 +58,7 @@ local notation "Main" => RegistrationNativePlatformIdentityCtxMain.beacon (n := 
 local notation "source(" censored "," work ")" => interpret setup.joint selected placeholder censored work
 local notation "tree(" scalar ")" => RegistrationNativePlatformWriter.begin E (pqxdh.BeaconFresh.mk owner.pin.binding)
   (RegistrationNativeIdentityFrontend.inputs owner) (pqxdh.BeaconCoins.mk (PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)))
-  owner.pin owner.mldsa.publicKey
+  owner.pin
 local notation "published(" scalar ")" => Main (simulateQ (RegistrationNativePlatformIdentityPublication.callback setup index owner writer) (tree(scalar)))
 local notation "body(" scalar ")" => Main (RegistrationNativePlatformIdentityBundle.bundled setup index owner scalar writer)
 
@@ -70,7 +70,7 @@ private theorem genuine_source (target : Pqxdh.Bytes) (targetRole : Registration
     (different : target ≠ PqxdhRefinement.absBytes started.message.one_time_key) :
     (tree(scalar)).AllQueriesSatisfy (Genuine (E := E) selected owner target) :=
   genuine_tree selected owner target _ different targetRole _
-    (RegistrationNativePlatformOneTimeOperandLineage.begin_allowed _ _ _ _ _ started built tagged)
+    (RegistrationNativePlatformOneTimeOperandLineage.begin_allowed _ _ _ _ started built tagged)
 
 /-- The actual source message lineage rules out every omitted signing request for a different one-time message; no private row, success or ownership condition is supplied. -/
 theorem publication (target : Pqxdh.Bytes) (targetRole : RegistrationNativeIdentitySigningRole.oneTime target = true)

@@ -9,6 +9,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialSentinelBeacon
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhKemIndCca PqxdhCorrelatedExpand PqxdhPhase2SourceAux
 open PqxdhPhase1AcceptanceOracle PqxdhEd25519EufCma PqxdhJointIdentity PqxdhPrivateKemSource
 open PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhCorrelatedExtractFamily PqxdhCorrelatedExpandHybrid
@@ -85,9 +86,9 @@ theorem owner_marker (writer : RawCtxMixedShared.Writer) (prior : Prior)
       (PqxdhGeneratedBeaconState.KemHandle K)) :
     simulateQ (evaluated attachedVerify primitives count fixed localImpl baseImpl kem secret challenge selected response
       (retainedKdf prior (RawCtxInitialSentinel.entry other extra) target))
-      (PqxdhInitialFusedOwner.owner decode raw state) =
+      (PqxdhInitialFusedOwner.owner (completedBinding := completedBinding) decode raw state) =
     simulateQ (evaluated attachedVerify primitives count fixed localImpl baseImpl kem secret challenge selected response
-      (priorKdf prior)) (PqxdhInitialFusedOwner.owner decode raw state) := by
+      (priorKdf prior)) (PqxdhInitialFusedOwner.owner (completedBinding := completedBinding) decode raw state) := by
   rw [← RawCtxGenericRoleStorage.beacon_roundtrip id id (fun _ => rfl) state,
     PqxdhInitialGenericBeaconNative.owner_native, PqxdhInitialGenericBeaconNative.owner_native,
     calls_marker attachedVerify primitives count fixed localImpl baseImpl kem secret challenge selected response writer]

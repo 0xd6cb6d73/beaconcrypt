@@ -30,7 +30,7 @@ private theorem state_modify_apply {S : Type} {m : Type → Type} [Monad m]
 
 private theorem lower_pure (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (value : Value) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (value : Value) :
     lower (n := n) (source := source) setup checks representation created (pure value) = pure value := by
   apply StateT.ext
   intro before
@@ -38,7 +38,7 @@ private theorem lower_pure (setup : Setup base KemSK) (checks : Checks)
 
 private theorem lower_bind (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : M n KemSK source RegistrationServerRoleBackend.State Value)
     (next : Value → M n KemSK source RegistrationServerRoleBackend.State Next) :
     lower setup checks representation created (work >>= next) =
@@ -49,21 +49,21 @@ private theorem lower_bind (setup : Setup base KemSK) (checks : Checks)
 
 private theorem lower_get (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (before : Local n KemSK source) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (before : Local n KemSK source) :
     (lower setup checks representation created (get : M n KemSK source RegistrationServerRoleBackend.State _)).run before =
       pure (before.1, before) := by
   simp only [lower, StateT.run, state_get_apply, state_pure_apply, simulateQ_pure, map_pure]
 
 private theorem lower_modify (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (change : RegistrationNativeBeaconFrontend.State source → RegistrationNativeBeaconFrontend.State source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (change : RegistrationNativeBeaconFrontend.State source → RegistrationNativeBeaconFrontend.State source)
     (before : Local n KemSK source) :
     (lower setup checks representation created (modify change)).run before = pure ((), (change before.1, before.2)) := by
   simp only [lower, StateT.run, state_modify_apply, state_pure_apply, simulateQ_pure, map_pure]
 
 private theorem lower_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : M n KemSK source RegistrationServerRoleBackend.State Value)
     (before : Local n KemSK source) (value : Value) (after : Local n KemSK source)
     (supported : (value, after) ∈ support ((lower setup checks representation created work).run before)) :
@@ -79,7 +79,7 @@ private theorem lower_source (setup : Setup base KemSK) (checks : Checks)
 
 private theorem lower_sample_owners (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (draw : ProbComp Value)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (draw : ProbComp Value)
     (before : Local n KemSK source) (value : Value) (after : Local n KemSK source)
     (supported : (value, after) ∈ support ((lower setup checks representation created
       (RegistrationNativeBeaconFrontend.sample draw)).run before)) : after.1 = before.1 := by
@@ -92,7 +92,7 @@ private theorem lower_sample_owners (setup : Setup base KemSK) (checks : Checks)
 
 private theorem lower_effect_owners (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (query : (PqxdhRecordLiftInterface.EnvEffects n).Domain)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (query : (PqxdhRecordLiftInterface.EnvEffects n).Domain)
     (before : Local n KemSK source) (value : (PqxdhRecordLiftInterface.EnvEffects n).Range query) (after : Local n KemSK source)
     (supported : (value, after) ∈ support ((lower setup checks representation created
       (RegistrationNativeBeaconFrontend.effect query)).run before)) : after.1 = before.1 := by
@@ -120,12 +120,12 @@ private noncomputable def bundled (setup : Setup base KemSK) (wire : Registratio
     M n KemSK source RegistrationServerRoleBackend.State (RustM (Option Pqxdh.Bytes)) := do
   let published ← simulateQ (RegistrationNativeBeaconFrontend.outgoing setup source index owner)
     (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)
+      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)
   next index owner oneTime published
 
 private theorem bundled_receipt (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (index : Nat) (owner : Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (before after : Local n KemSK source) (bytes : Pqxdh.Bytes) (found : before.1[index]? = some owner)
     (supported : (.ok (some bytes), after) ∈ support
@@ -135,7 +135,7 @@ private theorem bundled_receipt (setup : Setup base KemSK) (checks : Checks)
         ((lower setup checks representation created
           (simulateQ (RegistrationNativeBeaconFrontend.outgoing setup source index owner)
             (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-              ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey))).run before) ∧
+              ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin))).run before) ∧
       published.encoded = bytes ∧ outgoingAfter.1[index]? = some current ∧
       RegistrationNativeOwnerFields.metadata current = RegistrationNativeOwnerFields.metadata owner ∧
       after.1 = outgoingAfter.1.set index { current with phase := .initSent published.pending oneTime } ∧
@@ -171,7 +171,7 @@ private theorem bundled_receipt (setup : Setup base KemSK) (checks : Checks)
 
 def Selected (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (owner : Owner source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (owner : Owner source)
     (oneTime : PqxdhJointGapDh.ScalarBytes) (before during : Local n KemSK source) : Prop :=
   (owner.phase = .fresh ∧ (oneTime, during) ∈ support ((lower setup checks representation created
     (RegistrationNativeBeaconFrontend.sample PqxdhJointGapDh.sampleScalar)).run before)) ∨
@@ -180,7 +180,7 @@ def Selected (setup : Setup base KemSK) (checks : Checks)
 /-- Every successful actual bundle selects its literal old owner and one-time scalar, reaches the full original outgoing source, then stores exactly that publication's pending capability at the same owner slot. -/
 theorem local_receipt (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (index : Nat) (before after : Local n KemSK source) (bytes : Pqxdh.Bytes)
     (supported : (.ok (some bytes), after) ∈ support
       ((lower setup checks representation created (RegistrationNativeBeaconFrontend.bundle setup source wire index)).run before)) :
@@ -191,7 +191,7 @@ theorem local_receipt (setup : Setup base KemSK) (checks : Checks)
         ((lower setup checks representation created
           (simulateQ (RegistrationNativeBeaconFrontend.outgoing setup source index owner)
             (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-              ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey))).run beforeOutgoing) ∧
+              ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin))).run beforeOutgoing) ∧
       published.encoded = bytes ∧ outgoingAfter.1[index]? = some current ∧
       RegistrationNativeOwnerFields.metadata current = RegistrationNativeOwnerFields.metadata owner ∧
       after.1 = outgoingAfter.1.set index { current with phase := .initSent published.pending oneTime } ∧
@@ -231,7 +231,7 @@ theorem local_receipt (setup : Setup base KemSK) (checks : Checks)
 def Receipt (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire) (index : Nat)
     (before after : RegistrationNativeExperiment.State n KemSK source) (bytes : Pqxdh.Bytes) : Prop :=
   ∃ (owner current : Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes) (pending : registration.BeaconPending)
-    (started : pqxdh.BeaconStart) (fingerprint : registration.BeaconFingerprint) (digest : CtxRomAuth.CtxDigest) (view : registration.SignedInitView),
+    (started : pqxdh.BeaconStart) (hashing : registration.BeaconInitHash) (digest : CtxRomAuth.CtxDigest) (view : registration.InitView),
     before.beacons[index]? = some owner ∧ after.beacons[index]? = some current ∧
     current.phase = .initSent pending oneTime ∧
     RegistrationNativeOwnerFields.metadata current = RegistrationNativeOwnerFields.metadata owner ∧
@@ -245,17 +245,18 @@ def Receipt (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire) (ind
       beacon_pq_public_key := RegistrationNativeBeaconFrontend.pqArray owner.kemPublic }) ∧
     RegistrationNativeInitTupleSource.Fixed started owner.pin
       (PqxdhRootTableInitialization.rootArray (setup.joint.publicKeys owner.identitySeed).ed25519)
-      owner.mldsa.publicKey fingerprint.state ∧ RegistrationNativeInitTupleSource.Attached started fingerprint.state ∧
-    RegistrationNativeWorldCache.cache after ((), (RegistrationNativeInitStageContents.sourcePayload fingerprint.state).transcript) = some digest ∧
-    pending.control = fingerprint.state.started.state ∧ pending.binding.server_pin = fingerprint.state.server_pin ∧
-    pending.binding.beacon_identity_public_key = fingerprint.state.beacon_identity ∧
+      hashing.state ∧ RegistrationNativeInitTupleSource.Attached started hashing.state ∧
+    RegistrationNativeWorldCache.cache after ((), (RegistrationNativeInitStageContents.sourcePayload hashing.state).transcript) = some digest ∧
+    pending.control = hashing.state.started.state ∧ pending.binding.server_pin = hashing.state.server_pin ∧
+    pending.binding.init_fields.identity_key = hashing.state.started.message.identity_key ∧
     pending.binding.init_hash = RegistrationAuthenticationShared.digestArray digest ∧
     wire.encodeInit view = .Some bytes ∧
-    view.fields = BeaconcryptCore.Refinement.RegistrationSigningContinuations.retainedFields fingerprint.state
+    view.fields = BeaconcryptCore.Refinement.RegistrationSigningContinuations.retainedFields hashing.state ∧
+    pending.binding.init_fields = RegistrationNativeInitTupleSource.ownedFields hashing.state
 
 private theorem source_lower (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : M n KemSK source RegistrationServerRoleBackend.State Value)
     (before : RegistrationNativeExperiment.State n KemSK source) :
     (RegistrationNativeExperiment.beacon setup checks representation created work).run before =
@@ -267,7 +268,7 @@ private theorem source_lower (setup : Setup base KemSK) (checks : Checks)
 /-- The original typed bundle callback derives the complete raw-tuple, one-time scalar, stored InitSent and same-cache preimage receipt from its actual supported execution. -/
 theorem typed_receipt (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (index : Nat) (before after : RegistrationNativeExperiment.State n KemSK source) (bytes : Pqxdh.Bytes)
     (supported : (.ok (some bytes), after) ∈ support ((RegistrationNativeExperiment.handler setup checks wire route representation
       created source credential (.inr (.bundle index))).run before)) : Receipt setup wire index before after bytes := by
@@ -284,8 +285,8 @@ theorem typed_receipt (setup : Setup base KemSK) (checks : Checks) (wire : Regis
   obtain ⟨owner, oneTime, beforeOutgoing, published, outgoingAfter, current, found, selected,
     beforeFound, outgoingSupport, encoded, currentFound, metadata, stored, extension⟩ :=
     local_receipt setup checks representation created wire index _ localResult.2 bytes possible
-  obtain ⟨started, pending, fingerprint, atFingerprint, digest, view, startedRun, validated, _leading, fixed, attached,
-    _cut, cached, initHash, control, pin, identity, encodedView, fields⟩ :=
+  obtain ⟨started, pending, hashing, atHash, digest, view, startedRun, validated, _leading, fixed, attached,
+    _cut, cached, initHash, control, pin, identity, encodedView, fields, retainedFields⟩ :=
     RegistrationNativeInitTupleCache.outgoing setup checks representation created wire index owner oneTime
       published beforeOutgoing outgoingAfter outgoingSupport
   have reached : localResult.2.1[index]? = some { current with phase := .initSent published.pending oneTime } := by
@@ -296,12 +297,12 @@ theorem typed_receipt (setup : Setup base KemSK) (checks : Checks) (wire : Regis
     exact reached
   have retained := extension cached
   have finalCache : RegistrationNativeWorldCache.cache after
-      ((), (RegistrationNativeInitStageContents.sourcePayload fingerprint.state).transcript) = some digest := by
+      ((), (RegistrationNativeInitStageContents.sourcePayload hashing.state).transcript) = some digest := by
     rw [← stateSame]
     exact retained
   refine ⟨owner, { current with phase := .initSent published.pending oneTime }, oneTime, published.pending,
-    started, fingerprint, digest, view, found, closed, rfl, ?_, ?_, startedRun, validated, fixed, attached,
-    finalCache, control, pin, identity, initHash, ?_, fields⟩
+    started, hashing, digest, view, found, closed, rfl, ?_, ?_, startedRun, validated, fixed, attached,
+    finalCache, control, pin, identity, initHash, ?_, fields, retainedFields⟩
   · exact metadata
   · rcases selected with ⟨phase, _⟩ | ⟨phase, _⟩
     · exact Or.inl phase

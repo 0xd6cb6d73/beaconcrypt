@@ -8,6 +8,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhAuthenticatedRootSource
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhPhase2GeneratedDriver PqxdhGeneratedBeaconState
 open PqxdhPrivateRootSource PqxdhPrivateAcceptedRoot PqxdhKemIndCca PqxdhInitializerSecrecy
@@ -24,10 +26,10 @@ variable {setup : StatefulPhase1Setup baseSpec}
 /-- Whole-continuation native/total compatibility is used only for an actually generated target key. -/
 theorem nativeNext_eq_total
     (compatible : PqxdhOptionalKemSource.HonestKeyCompatibility baseImpl kem env.native)
-    (secret : KemSK) (prepared : Prepared setup (driver env.toDriverEnvironment program).State)
+    (secret : KemSK) (prepared : Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)
     (supported : (prepared.1.context.generated.target, secret) ∈ support (simulateQ (kemAmbientImpl baseImpl) kem.keygen)) :
-    𝒟[PqxdhAuthenticatedRootExperiment.nativeNext env baseImpl kem attachedVerify primitives program post secret prepared] =
-      𝒟[PqxdhAuthenticatedRootExperiment.totalNext env baseImpl kem attachedVerify primitives program post secret prepared] := by
+    𝒟[PqxdhAuthenticatedRootExperiment.nativeNext (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post secret prepared] =
+      𝒟[PqxdhAuthenticatedRootExperiment.totalNext (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post secret prepared] := by
   refine EvalDistEq.evalDist_eq ?_
   simp only [PqxdhAuthenticatedRootExperiment.nativeNext, PqxdhAuthenticatedRootExperiment.totalNext]
   split
@@ -39,9 +41,9 @@ theorem nativeNext_eq_total
 /-- Total encapsulation is justified inside the same source prefix, with no honest selected-candidate premise. -/
 theorem actual_eq_total
     (compatible : PqxdhOptionalKemSource.HonestKeyCompatibility baseImpl kem env.native) :
-    𝒟[actual env baseImpl kem attachedVerify primitives program post] =
-      𝒟[nativeContinued attachedVerify primitives baseImpl kem setup (driver env.toDriverEnvironment program)
-        (PqxdhAuthenticatedRootExperiment.totalNext env baseImpl kem attachedVerify primitives program post) false] := by
+    𝒟[PqxdhAuthenticatedRootExperiment.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post] =
+      𝒟[nativeContinued attachedVerify primitives baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program)
+        (PqxdhAuthenticatedRootExperiment.totalNext (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post) false] := by
   refine EvalDistEq.evalDist_eq ?_
   rw [actual]
   refine (nativeContinued_keyfirst _ _ _ _ _ _ _ _).trans ?_
@@ -49,32 +51,32 @@ theorem actual_eq_total
   refine OracleComp.EvalDistEq.bind_congr_of_support _ fun pair generated => ?_
   refine OracleComp.EvalDistEq.bind_congr_of_support _ fun prepared reached => ?_
   refine EvalDistEq.of_evalDist_eq ?_
-  apply nativeNext_eq_total env baseImpl kem attachedVerify primitives program post compatible pair.2 prepared
+  apply nativeNext_eq_total (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post compatible pair.2 prepared
   rw [PqxdhGeneratedRootSource.borrowedPrefix_target attachedVerify primitives baseImpl kem pair.2 setup
-    (driver env.toDriverEnvironment program) pair.1 prepared reached]
+    (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program) pair.1 prepared reached]
   exact generated
 
 /-- The private mathematical completion retains the initial encapsulated secret and all later native calls. Completed modes ignore the additional ordinary challenger encapsulation. -/
 noncomputable def nativeComplete (key : TargetKemPublicKey) (secret : KemSK)
-    (mode : Mode setup (driver env.toDriverEnvironment program).State) : ProbComp Bool := do
+    (mode : Mode setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State) : ProbComp Bool := do
   let pair ← simulateQ (kemAmbientImpl baseImpl) (kem.encaps key)
-  nativeAfter env baseImpl kem attachedVerify primitives program post key secret mode pair.1 pair.2
+  PqxdhAuthenticatedRootExperiment.nativeAfter (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post key secret mode pair.1 pair.2
 
 /-- This key-first presentation is the exact private actual continuation expected by the ordinary endpoint. -/
 noncomputable def nativeMain : ProbComp Bool := do
   let pair ← simulateQ (kemAmbientImpl baseImpl) kem.keygen
-  let mode ← evalKem baseImpl kem pair.2 ((protocol env kem attachedVerify primitives program post).prepare pair.1)
-  nativeComplete env baseImpl kem attachedVerify primitives program post pair.1 pair.2 mode
+  let mode ← evalKem baseImpl kem pair.2 ((PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post).prepare pair.1)
+  nativeComplete (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post pair.1 pair.2 mode
 
 /-- Dispatch preserves every source branch and the complete native continuation, erasing only an unused independent challenger draw on completed branches. -/
 theorem dispatch_complete_eq_source
-    (prepared : Prepared setup (driver env.toDriverEnvironment program).State)
+    (prepared : Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)
     (key : TargetKemPublicKey) (secret : KemSK) (target_eq : prepared.1.context.generated.target = key) :
     𝒟[do
       let mode ← evalKem baseImpl kem secret
-        (PqxdhPrivateAcceptedRoot.dispatch kem env.parameters attachedVerify primitives setup (commonObserver env program post) prepared)
-      nativeComplete env baseImpl kem attachedVerify primitives program post key secret mode] =
-      𝒟[PqxdhAuthenticatedRootExperiment.filteredNext env baseImpl kem attachedVerify primitives program post secret prepared] := by
+        (PqxdhPrivateAcceptedRoot.dispatch kem env.parameters attachedVerify primitives setup (PqxdhAuthenticatedRootExperiment.commonObserver (associatedData := associatedData) (completedBinding := completedBinding) env program post) prepared)
+      nativeComplete (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post key secret mode] =
+      𝒟[PqxdhAuthenticatedRootExperiment.filteredNext (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post secret prepared] := by
   refine EvalDistEq.evalDist_eq ?_
   by_cases bad : changedBit (some prepared.1, prepared.2) = true
   · simp [PqxdhPrivateAcceptedRoot.dispatch, PqxdhAuthenticatedRootExperiment.filteredNext, bad, evalKem, nativeComplete, nativeAfter]
@@ -105,30 +107,30 @@ theorem dispatch_complete_eq_source
 
 /-- Complete evaluated source-order equality moves only the independently generated KEM pair and the unused completed-mode challenge draw. -/
 theorem filtered_eq_nativeMain :
-    𝒟[nativeContinued attachedVerify primitives baseImpl kem setup (driver env.toDriverEnvironment program)
-      (PqxdhAuthenticatedRootExperiment.filteredNext env baseImpl kem attachedVerify primitives program post) false] =
-      𝒟[nativeMain env baseImpl kem attachedVerify primitives program post] := by
+    𝒟[nativeContinued attachedVerify primitives baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program)
+      (PqxdhAuthenticatedRootExperiment.filteredNext (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post) false] =
+      𝒟[nativeMain (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post] := by
   refine EvalDistEq.evalDist_eq ?_
   refine (nativeContinued_keyfirst _ _ _ _ _ _ _ _).trans ?_
   simp only [nativeMain, protocol, evalKem_bind, bind_assoc]
   refine EvalDistEq.bind_right _ fun pair => ?_
   refine OracleComp.EvalDistEq.bind_congr_of_support _ fun prepared supported => ?_
   refine EvalDistEq.of_evalDist_eq ?_
-  exact (dispatch_complete_eq_source env baseImpl kem attachedVerify primitives program post prepared pair.1 pair.2
+  exact (dispatch_complete_eq_source (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post prepared pair.1 pair.2
     (PqxdhGeneratedRootSource.borrowedPrefix_target attachedVerify primitives baseImpl kem pair.2 setup
-      (driver env.toDriverEnvironment program) pair.1 prepared supported)).symm
+      (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program) pair.1 prepared supported)).symm
 
 /-- The explicit source filter charges only the original changed-acceptance event; all later native work is kept verbatim. -/
 theorem nativeContinued_filtered :
-    nativeContinued attachedVerify primitives baseImpl kem setup (driver env.toDriverEnvironment program)
-      (PqxdhAuthenticatedRootExperiment.filteredNext env baseImpl kem attachedVerify primitives program post) false = (do
+    nativeContinued attachedVerify primitives baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program)
+      (PqxdhAuthenticatedRootExperiment.filteredNext (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post) false = (do
       let stopped ← privateRun attachedVerify primitives 1
-        (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (driver env.toDriverEnvironment program))
+        (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program))
       if changedBit stopped then pure false else
         match stopped.1 with
         | none => pure false
         | some output =>
-            PqxdhAuthenticatedRootExperiment.totalNext env baseImpl kem attachedVerify primitives program post
+            PqxdhAuthenticatedRootExperiment.totalNext (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post
               output.context.generated.secret (eraseOutput output, stopped.2)) := by
   unfold nativeContinued
   apply bind_congr
@@ -147,26 +149,26 @@ theorem authentication_hop
     (noCreate : ∀ reply, (program.main reply).IsQueryBoundP
       (PqxdhPhase2SourceSchedulerBounds.ForwardedSource (baseSpec := baseSpec) Creating) 0)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : PqxdhJointIdentity.Forgery) :
-    (actual env baseImpl kem attachedVerify primitives program post).boolDistance
-      (nativeMain env baseImpl kem attachedVerify primitives program post) ≤
+    (PqxdhAuthenticatedRootExperiment.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post).boolDistance
+      (nativeMain (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post) ≤
       (PqxdhJointIdentity.advantage primitives
         (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
-          (driver env.toDriverEnvironment program) fallback ordinaryFallback)).toReal := by
-  have auth := PqxdhPhase2GeneratedDriverBounds.authentication_continuation_bound env.toDriverEnvironment program
+          (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program) fallback ordinaryFallback)).toReal := by
+  have auth := PqxdhPhase2GeneratedDriverBounds.authentication_continuation_bound (completedBinding := completedBinding) env.toDriverEnvironment program
     attachedVerify primitives adapter baseImpl kem noSign noCreate fallback ordinaryFallback
     (fun stopped => match stopped.1 with
       | none => pure false
-      | some output => PqxdhAuthenticatedRootExperiment.totalNext env baseImpl kem attachedVerify primitives program post
+      | some output => PqxdhAuthenticatedRootExperiment.totalNext (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post
           output.context.generated.secret (eraseOutput output, stopped.2))
     (fun _ => pure false)
   have totalBound :
-      discreteDistance (nativeContinued attachedVerify primitives baseImpl kem setup (driver env.toDriverEnvironment program)
-        (PqxdhAuthenticatedRootExperiment.totalNext env baseImpl kem attachedVerify primitives program post) false)
-        (nativeContinued attachedVerify primitives baseImpl kem setup (driver env.toDriverEnvironment program)
-          (PqxdhAuthenticatedRootExperiment.filteredNext env baseImpl kem attachedVerify primitives program post) false) ≤
+      discreteDistance (nativeContinued attachedVerify primitives baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program)
+        (PqxdhAuthenticatedRootExperiment.totalNext (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post) false)
+        (nativeContinued attachedVerify primitives baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program)
+          (PqxdhAuthenticatedRootExperiment.filteredNext (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post) false) ≤
       (PqxdhJointIdentity.advantage primitives
         (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
-          (driver env.toDriverEnvironment program) fallback ordinaryFallback)).toReal := by
+          (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program) fallback ordinaryFallback)).toReal := by
     rw [nativeContinued_filtered]
     unfold nativeContinued
     convert auth using 1
@@ -175,8 +177,8 @@ theorem authentication_hop
     all_goals split <;> simp_all only
   have output := (abs_prEvent_toReal_sub_le_discreteDistance _ _).trans totalBound
   simpa only [ProbComp.boolDistance, ← prEvent_eq_evalDist_singleton, prEvent_eq_evalDist_singleton,
-    actual_eq_total env baseImpl kem attachedVerify primitives program post compatible,
-    ← filtered_eq_nativeMain env baseImpl kem attachedVerify primitives program post] using output
+    actual_eq_total (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post compatible,
+    ← filtered_eq_nativeMain (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post] using output
 
 end BeaconcryptCore.Computational.PqxdhAuthenticatedRootSource
 

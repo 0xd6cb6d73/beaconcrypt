@@ -1,6 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePlatformPublicBuildRuntime
 import BeaconcryptCore.Computational.RegistrationNativePlatformOrdinaryScalarEager
+import BeaconcryptCore.Computational.RegistrationNativeMainViewLift
 /-! The actual source build comparison is expressed in the same complete Native/P observation as every other corrected typed callback. Only the named instrumentation projection is composed; source cost and operational execution remain the literal marginal proved separately. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
@@ -33,7 +34,7 @@ private theorem project_world (roots : RegistrationServerReferenceRestore.Roots)
 theorem build [primitive : AdapterSealPrimitive.Operations]
     (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (selectedOwner selectedAccept : Nat) (scalar : PqxdhJointGapDh.ScalarBytes)
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))

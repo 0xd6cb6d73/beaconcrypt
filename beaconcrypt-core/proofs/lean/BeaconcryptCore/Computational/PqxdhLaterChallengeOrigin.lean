@@ -5,7 +5,10 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeOrigin
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhInitialReceiptConstruction PqxdhInitialPendingPost PqxdhLaterChallengePaths
 variable {ι A N M P I D K X Response : Type} {extra : OracleSpec ι} {S B : Nat}
 
@@ -19,7 +22,7 @@ variable (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (writer : RawC
     (selector : QueryImpl extra (StateT (InitialState A N) ProbComp))
     (aux : QueryImpl PqxdhServerRegistrationPublication.AuxSpec (StateT (InitialState A N) ProbComp))
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
-local notation "impl" => sourceHandler source writer prior selected root response pre application selector aux sender route decode
+local notation "impl" => sourceHandler (completedBinding := completedBinding) source writer prior selected root response pre application selector aux sender route decode
 
 /-- Every marked publication added by a source query records the marker installed before that exact query. Failed and successful finish operations can change the current marker, but cannot add a record publication. -/
 theorem source_publication (query : (PqxdhInitialGenericPost.Spec extra S B).Domain)
@@ -99,7 +102,7 @@ theorem used_publication {Result : Type}
         forwarded_excluded impl owner number bit query next before ambient step result actual tail target
       exact (ih (by simpa only [projected, observe] using used) target).trans
         (by simpa only [excluded, false_and, or_false] using
-          (source_publication source writer prior selected root response pre application selector aux sender route decode
+          (source_publication (completedBinding := completedBinding) source writer prior selected root response pre application selector aux sender route decode
             query ambient (reply, step.2) returned (owner, number)))
     · simp only [PqxdhRecordConfidentialityChallenge.handler, StateT.run, used, true_or, ite_true,
         simulateQ_pure] at actual
@@ -132,7 +135,7 @@ theorem unused_publication {Result : Type}
       have excluded := ((observe_target owner number before query reply.1).mp (kept.2 clear)).2
       exact (ih unused clear).trans (by
         simpa only [excluded, false_and, or_false] using
-          (source_publication source writer prior selected root response pre application selector aux sender route decode
+          (source_publication (completedBinding := completedBinding) source writer prior selected root response pre application selector aux sender route decode
             query ambient reply returned (owner, number)))
     · simp only [PqxdhRecordConfidentialityChallenge.handler, StateT.run] at actual
       split at actual
@@ -157,12 +160,12 @@ theorem send_publication (owner : RawCtxProtocolReveals.Owner S B) (plaintext : 
       ((owner, record.sequence), true) ∈ before.1.1.2.published ∨ before.1.1.2.installed owner = some true := by
   cases owner with
   | server index peer =>
-    have actual := source_publication source writer prior selected root response pre application selector aux sender route decode
+    have actual := source_publication (completedBinding := completedBinding) source writer prior selected root response pre application selector aux sender route decode
       (sendRequest (extra := extra) (.server index peer) plaintext) before (some record, after)
       (by simpa only [send, simulateQ_spec_query] using supported) (.server index peer, record.sequence)
     simpa only [publications, sendRequest, RawCtxPublishedRecords.record, List.mem_singleton, true_and] using actual
   | beacon index =>
-    have actual := source_publication source writer prior selected root response pre application selector aux sender route decode
+    have actual := source_publication (completedBinding := completedBinding) source writer prior selected root response pre application selector aux sender route decode
       (sendRequest (extra := extra) (.beacon index) plaintext) before (some record, after)
       (by simpa only [send, simulateQ_spec_query] using supported) (.beacon index, record.sequence)
     simpa only [publications, sendRequest, RawCtxPublishedRecords.record, List.mem_singleton, true_and] using actual
@@ -176,12 +179,12 @@ theorem send_kernel (owner : RawCtxProtocolReveals.Owner S B) (plaintext : Pqxdh
       record.sequence.val = kernel.control.send_sequence.val + 1 := by
   cases owner with
   | server index peer =>
-    exact source_record_kernel source writer prior selected root response pre application selector aux sender route decode
+    exact source_record_kernel (completedBinding := completedBinding) source writer prior selected root response pre application selector aux sender route decode
       (.inl (.inl ⟨index, .inl (plaintext, peer)⟩)) before (some record, after)
       (by simpa only [send, sendRequest, simulateQ_spec_query] using supported) (.server index peer) record.sequence
       (by simp only [RawCtxPublishedRecords.record, List.mem_singleton])
   | beacon index =>
-    exact source_record_kernel source writer prior selected root response pre application selector aux sender route decode
+    exact source_record_kernel (completedBinding := completedBinding) source writer prior selected root response pre application selector aux sender route decode
       (.inl (.inr (.inl ⟨index, .inl plaintext⟩))) before (some record, after)
       (by simpa only [send, sendRequest, simulateQ_spec_query] using supported) (.beacon index) record.sequence
       (by simp only [RawCtxPublishedRecords.record, List.mem_singleton])
@@ -205,13 +208,13 @@ theorem marked_request {Result : Type}
     (absent : ((owner, number), true) ∉ ambient.1.1.2.published)
     (recorded : ((owner, number), true) ∈ result.2.1.1.2.published) :
     reached.1.1.2.installed owner = some true := by
-  have atSend := (used_publication source writer prior selected root response pre application selector aux sender route decode
+  have atSend := (used_publication (completedBinding := completedBinding) source writer prior selected root response pre application selector aux sender route decode
     owner number bit (next (some record)) _ after result tail (by rfl) target).mp recorded
-  have atRequest := send_publication source writer prior selected root response pre application selector aux sender route decode
+  have atRequest := send_publication (completedBinding := completedBinding) source writer prior selected root response pre application selector aux sender route decode
     owner (if bit then right else left) reached after record sent
   rw [sequence] at atRequest
   exact (atRequest.mp atSend).resolve_left (fun earlier => absent
-    ((unused_publication source writer prior selected root response pre application selector aux sender route decode
+    ((unused_publication (completedBinding := completedBinding) source writer prior selected root response pre application selector aux sender route decode
       owner number bit client _ before current ambient reached traced unused clear).mp earlier))
 
 /-- The same actual challenge request simultaneously has a source-established selected path, a marked owner and the exact pre-send counter. The complete request and suffix witnesses are retained. -/
@@ -239,12 +242,12 @@ theorem request_facts {Result AD PT CT : Type}
       reached.1.1.2.installed owner = some true ∧
       ∃ kernel, RawCtxGenericRoleFamily.selectedKernel owner reached.1.1.1.roles.1 = some kernel ∧
         number.val = kernel.control.send_sequence.val + 1 := by
-  refine ⟨source_reaches source writer prior selected root response pre application selector aux sender route decode
+  refine ⟨source_reaches (completedBinding := completedBinding) source writer prior selected root response pre application selector aux sender route decode
     cr serverInitial owner number bit client _ before current ambient reached initial traced,
-    marked_request source writer prior selected root response pre application selector aux sender route decode
+    marked_request (completedBinding := completedBinding) source writer prior selected root response pre application selector aux sender route decode
       owner number bit client left right next before current ambient reached after record result traced unused clear sent tail
       sequence target absent recorded, ?_⟩
-  simpa only [sequence] using send_kernel source writer prior selected root response pre application selector aux sender route decode
+  simpa only [sequence] using send_kernel (completedBinding := completedBinding) source writer prior selected root response pre application selector aux sender route decode
     owner (if bit then right else left) reached after record sent
 
 /-- The literal first Builder and complete challenge Post supply the request-time marker, kernel and counter from the original final publication event; there is no incoming source-path or old-publication premise. -/
@@ -260,7 +263,7 @@ theorem sequence_request {Selection AD PT CT : Type}
       PqxdhPhase2DecapsulationRouting.Shared Bool S B) × InitialState A N)
     (supported : result ∈ support ((simulateQ
       (PqxdhInitialOccurrencePaths.handler source writer prior selected root response pre application selector aux)
-      ((PqxdhInitialInstallOccurrence.sequence source
+      ((PqxdhInitialInstallOccurrence.sequence (associatedData := associatedData) (completedBinding := completedBinding) source
         (ConcreteRatchetKernel.refined <$> PqxdhInitialReplyErasure.kernelOf false serverResponse)
         (PqxdhInitialSelectedOrigin.mark source selected) origin sender route decode index metadata input
         (PqxdhRecordConfidentialityChallenge.post adversary owner number bit selection)).run
@@ -284,12 +287,12 @@ theorem sequence_request {Selection AD PT CT : Type}
       reached.1.1.2.installed owner = some true ∧
       ∃ kernel, RawCtxGenericRoleFamily.selectedKernel owner reached.1.1.1.roles.1 = some kernel ∧
         number.val = kernel.control.send_sequence.val + 1 := by
-  obtain ⟨reply, ambient, final, valid, origin, target, absent⟩ := sequence_origin source writer prior selected root response
+  obtain ⟨reply, ambient, final, valid, origin, target, absent⟩ := sequence_origin (associatedData := associatedData) (completedBinding := completedBinding) source writer prior selected root response
     pre application selector aux sender route decode cr serverResponse origin index metadata input adversary owner number bit
       selection entry before result supported accepted
   obtain ⟨left, right, next, current, reached, after, record, traced, unused, length, clear, sent, tail, sequence⟩ := origin
   exact ⟨reply, ambient, final, left, right, next, current, reached, after, record, traced, unused, length, clear,
-    sent, tail, sequence, target, request_facts source writer prior selected root response pre application selector aux
+    sent, tail, sequence, target, request_facts (completedBinding := completedBinding) source writer prior selected root response pre application selector aux
       sender route decode cr _ owner number bit (adversary selection reply) left right next initial current ambient reached
         after record ((true, final), (result.1.2, result.2)) valid traced unused clear sent tail sequence target (absent later) published⟩
 

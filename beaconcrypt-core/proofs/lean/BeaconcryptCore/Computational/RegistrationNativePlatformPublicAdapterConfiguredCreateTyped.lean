@@ -26,7 +26,7 @@ variable {setup :PqxdhServerAuthExperiment.Setup base KemSK} {checks :PqxdhServe
 variable (configuration :RegistrationNativePlatformPublicAdapterConfiguration.Configuration
   (P:=P) (E:=E) (R:=R) (Error:=Error) (source:=source) setup checks)
 local notation "coins"=>RegistrationNativePlatformMldsaProgram.coins
-variable (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
 variable (current :RegistrationNativeExperiment.State n KemSK source×P)
 variable (before :RegistrationNativePlatformPublicAdapterDispatcherCore.Private configuration created credential current)
 variable (keyId :U64) (serverId :beaconcrypt_crypto.crypto_sign.PublicKey) (mlPin :Std.Array U8 1952#usize)
@@ -49,7 +49,7 @@ noncomputable def typed :=
     RegistrationNativePlatformPublicAdapterCreateDictionaries.children RegistrationNativePlatformPublicAdapterDispatcherCore.children
       (RegistrationNativePlatformPublicAdapterCreatePrimitives.hash coins setup checks configuration.agreement.representation created)
   let leaves:=RegistrationNativePlatformPublicAdapterCreateDictionaries.sourceLeaves coins setup checks configuration.agreement.representation created configuration.view
-    RegistrationNativePlatformPublicAdapterDispatcherCore.children configuration.generator configuration.kem configuration.mlGeneration configuration.edGeneration
+    RegistrationNativePlatformPublicAdapterDispatcherCore.children configuration.generator configuration.kem configuration.edGeneration
     configuration.prekeyGeneration configuration.kemGeneration
   RegistrationNativePlatformSdkStrongCreateStep.total coins setup checks configuration.agreement.representation created configuration.generator configuration.view
     configuration.kem leaves configuration.views credential keyId serverId mlPin identityKey mlKey parsed parsedMl current.1 current.2 before
@@ -59,7 +59,7 @@ theorem mapped :
     RegistrationNativePlatformPublicAdapterReply.map RegistrationNativeRawAdapter.resultOption
       (typed configuration created credential current before keyId serverId mlPin identityKey mlKey parsed parsedMl)=
       RegistrationNativePlatformPublicAdapterCreatePhysical.active coins setup checks configuration.agreement.representation created configuration.view
-        RegistrationNativePlatformPublicAdapterDispatcherCore.children configuration.generator configuration.kem configuration.mlGeneration configuration.edGeneration
+        RegistrationNativePlatformPublicAdapterDispatcherCore.children configuration.generator configuration.kem configuration.edGeneration
         configuration.prekeyGeneration configuration.kemGeneration configuration.views credential keyId serverId mlPin identityKey mlKey parsed parsedMl current before :=rfl
 
 omit [PublicWrapperPlatform.CryptoOperations] in

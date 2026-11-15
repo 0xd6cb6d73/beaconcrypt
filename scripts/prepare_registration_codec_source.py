@@ -22,10 +22,10 @@ import registration_codec_normalization as normalization
 
 ROOT = checkpoint.ROOT
 ORIGINALS = {
-    "beaconcrypt-parse/src/lib.rs": "e3ee33763548d8e22950e0f1b459b686f392a182f85d55289f718dd8a3f3b378",
+    "beaconcrypt-parse/src/lib.rs": "1566e1f7314eb0c46354c6d0763e019272fbb891ef95a08959ed153d63917b9a",
     "beaconcrypt-parse/src/generated/cbordetver.rs": "e60e27d58b3fe7eeaca202e9751b596c88884b4a76d5bf57a345a21861066d6c",
     "beaconcrypt-parse/src/generated/cbordetveraux.rs": "36420e78b9feed0a4c4a1b6a57b28aeba16ae38be9c61f5ff8165fa088ac3589",
-    "beaconcrypt-parse/src/generated/transport.rs": "218245bef2baa287d6d2a77f6013fe7d78c887b4416a88756618240ad83e3fa8",
+    "beaconcrypt-parse/src/generated/transport.rs": "c271a30fe4aa35fb90782c7cec8755c50148fdab139fa7e1eadafd5e4b373b66",
 }
 WRAPPER = """
 /// Extraction-only value wrapper; delegates exactly once to the original generated helper.
@@ -295,7 +295,7 @@ def transform(
         )
 
     transport, count = re.subn(pattern, replace_next, transport)
-    if count != 60:
+    if count != 54:
         raise ValueError("original iterator-call roster changed: " + str(count))
     steps.append(
         {

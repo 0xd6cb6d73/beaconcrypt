@@ -79,7 +79,7 @@ def complete (authenticated : registration.AuthenticatedResponse)
     Option Word32 → RustM agreement.AgreementEffect
   | none => .ok (RegistrationBeaconAgreementRoot.rejected authenticated)
   | some root => .ok (.BeaconComplete
-      ⟨PqxdhBeaconPhase2Shared.clearedMetadata pending.metadata, authenticated.pending.binding,
+      ⟨PqxdhBeaconPhase2Shared.clearedMetadata pending.metadata, authenticated.binding,
         ⟨root⟩, authenticated.packet.application⟩)
 
 def client (publicValue : PublicChallenge) (authenticated : registration.AuthenticatedResponse)
@@ -100,20 +100,20 @@ theorem root_native {Auxiliary : Type} (source : FixedHkdfSha512NoSaltSource) (h
     (original : PqxdhBeaconPhase2Preparation.Prepared registration.AuthenticatedResponse)
     (before : State (RawCtxSharedPrimitive.SharedState Auxiliary)) :
     (simulateQ (instrument source hmac primitive publicValue pending)
-      (drive 2 (.RootKdf ⟨.Beacon original.candidate authenticated.pending.binding authenticated.packet.application⟩))).run before =
+      (drive 2 (.RootKdf ⟨.Beacon original.candidate authenticated.binding authenticated.packet.application⟩))).run before =
       pure (.ok (.BeaconComplete ⟨PqxdhBeaconPhase2Publication.clearedCandidate original.candidate,
-        authenticated.pending.binding, ⟨RawCtxSourceHkdf.rootResponse source.crypto original.candidate.root_key_input⟩,
+        authenticated.binding, ⟨RawCtxSourceHkdf.rootResponse source.crypto original.candidate.root_key_input⟩,
         authenticated.packet.application⟩),
         (rootState hmac (beaconMessage publicValue pending.collected)
           (absBytes original.candidate.root_key_input.bytes) before.1, before.2)) := by
-  have requested : (⟨.Beacon original.candidate authenticated.pending.binding authenticated.packet.application⟩ : agreement.RootKdfPending).request =
+  have requested : (⟨.Beacon original.candidate authenticated.binding authenticated.packet.application⟩ : agreement.RootKdfPending).request =
       .ok ⟨original.candidate.root_key_input.bytes, pqxdh.PQXDH_INFO⟩ := by
     simp only [agreement.RootKdfPending.request, pqxdh.BeaconRegistrationCandidate.impl.root_key_input,
       pqxdh.RootKeyInput.as_bytes, bind_tc_ok]
   rw [root_step_two _ _ requested]
   simp only [simulateQ_bind, simulateQ_spec_query, simulateQ_pure]
   change (pure
-    ((⟨.Beacon original.candidate authenticated.pending.binding authenticated.packet.application⟩ : agreement.RootKdfPending).resume
+    ((⟨.Beacon original.candidate authenticated.binding authenticated.packet.application⟩ : agreement.RootKdfPending).resume
       (.Some (RegistrationAgreementShared.rootResponse source.crypto
         ⟨original.candidate.root_key_input.bytes, pqxdh.PQXDH_INFO⟩)),
       (rootState hmac (beaconMessage publicValue pending.collected)
@@ -136,13 +136,13 @@ theorem client_source {Auxiliary : Type} (source : FixedHkdfSha512NoSaltSource) 
         (sourceImpl source hmac joint dh seed scalar))
       (client (challenge joint dh seed scalar) authenticated pending) =
       simulateQ (instrument source hmac primitive (challenge joint dh seed scalar) pending)
-        (drive 2 (.RootKdf ⟨.Beacon original.candidate authenticated.pending.binding authenticated.packet.application⟩)) := by
+        (drive 2 (.RootKdf ⟨.Beacon original.candidate authenticated.binding authenticated.packet.application⟩)) := by
   funext before
   change (simulateQ (PqxdhPhase2DhRootConsumer.familyImpl (A := RawCtxSharedPrimitive.SharedState Auxiliary)
         (sourceImpl source hmac joint dh seed scalar))
       (client (challenge joint dh seed scalar) authenticated pending)).run before =
     (simulateQ (instrument source hmac primitive (challenge joint dh seed scalar) pending)
-      (drive 2 (.RootKdf ⟨.Beacon original.candidate authenticated.pending.binding authenticated.packet.application⟩))).run before
+      (drive 2 (.RootKdf ⟨.Beacon original.candidate authenticated.binding authenticated.packet.application⟩))).run before
   simp only [client, simulateQ_map, StateT.run_map]
   rw [PqxdhPhase2DhRootConsumer.root_complete source hmac dh domain seed scalar original pending references converted related]
   rw [root_native]

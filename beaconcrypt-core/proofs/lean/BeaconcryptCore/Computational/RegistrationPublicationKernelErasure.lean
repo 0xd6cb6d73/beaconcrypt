@@ -75,7 +75,7 @@ theorem signing_map (kernel : ConcreteRatchetKernel)
     signing encode payload digest { pending with kernel } =
       result kernel <$> signing encode payload digest pending := by
   simp only [signing, registration.ServerResponseSigning.request,
-    session.RegistrationBinding.impl.server_pin, session.ServerAuthenticationPin.impl.public_key,
+    session.CompletedRegistrationBinding.impl.server_pin, session.ServerAuthenticationPin.impl.public_key,
     bind_tc_ok, continueWith, map_bind]
   apply bind_congr
   intro signature

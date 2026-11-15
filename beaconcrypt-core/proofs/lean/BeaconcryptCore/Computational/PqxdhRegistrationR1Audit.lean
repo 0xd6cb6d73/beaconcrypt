@@ -37,6 +37,22 @@ theorem program_audit {Result : Type} (setup : Setup baseSpec KemSK) (codec : Co
   map_run_simulateQ_eq_of_query_map_eq _ _ eraseObservers
     (callback_audit setup codec) work state
 
+/-- One owner's hashed finish (transcript hash of the retained bundle, then the complete native owner, or the pre-hash abort) commutes with audit erasure; the shared BLAKE2b cache is not an audit history. -/
+theorem ownerFinish_audit (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) (state : NativeState KemSK) :
+    Prod.map id eraseObservers <$>
+        (PqxdhRegistrationSchedule.ownerFinish setup codec retained raw owner).run state =
+      (PqxdhRegistrationSchedule.ownerFinish setup codec retained raw owner).run (eraseObservers state) := by
+  unfold PqxdhRegistrationSchedule.ownerFinish
+  split
+  · split
+    · simp only [StateT.run, native_bind_run, nativeHash, bind_map_left, map_bind]
+      refine bind_congr (m := ProbComp) fun hashed => ?_
+      exact program_audit setup codec _ (state.1, { state.2 with ctx := hashed.2 })
+    · simp only [StateT.run_pure, map_pure, Prod.map, id]
+  · simp only [StateT.run_pure, map_pure, Prod.map, id]
+
 /-- Actual owner lookup, complete finish and reinstallation commute with the same operational projection, including missing owners and every optional failure. -/
 theorem finish_audit (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (index : Nat) (raw : Pqxdh.Bytes) (state : PqxdhRegistrationSchedule.State KemSK) :
@@ -52,7 +68,7 @@ theorem finish_audit (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
   | some owner =>
     rw [PqxdhRegistrationSchedule.finish_source setup codec index raw state owner found,
       PqxdhRegistrationSchedule.finish_source setup codec index raw (eraseShared state) owner found]
-    simp only [eraseShared, ← program_audit setup codec _ state.shared, Functor.map_map]
+    simp only [eraseShared, ← ownerFinish_audit setup codec _ raw owner state.shared, Functor.map_map]
     rfl
 
 /-- The complete literal accept operation does not read its inherited analysis histories. Optional preparation, allocation, actual root/consume and pending installation are all retained. -/
@@ -86,10 +102,16 @@ theorem build_audit (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
       Prod.map id eraseObservers <$>
         nativeBuild setup codec checks index payload (eraseObservers state) := by
   simp only [nativeBuild, native_bind_run, nativeGet, localState, pure_bind, eraseObservers]
-  cases pending : state.2.pending index
-  all_goals simp only [native_bind_run, nativeCoins, nativeSet, localState,
-    native_pure_run, pure_bind, map_bind, bind_map_left, map_pure]
-  all_goals rfl
+  cases pending : state.2.pending index with
+  | none =>
+      simp only [native_pure_run, map_pure]
+      rfl
+  | some token =>
+      simp only
+      cases prehashed : PqxdhServerRegistrationPublication.prehash state.2.server token.pending payload
+      all_goals simp only [nativeHash, native_bind_run, nativeCoins, nativeSet, localState,
+        native_pure_run, pure_bind, map_bind, bind_map_left, map_pure]
+      all_goals rfl
 
 /-- Public HMAC's real outside-domain branch and restricted Extract table branch both ignore inherited proof histories. -/
 theorem hmac_audit (setup : Setup baseSpec KemSK) (seed : IdentitySeed) (selected : ScalarBytes)
@@ -127,10 +149,9 @@ theorem handler_audit (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
   all_goals simp only [normalized, route, simulateQ_spec_query, PqxdhRegistrationSchedule.handler, StateT.run]
   case inr.accept =>
     simpa only [StateT.run] using shared_audit _ (accept_audit setup codec checks seed _ raw) state
-  all_goals first
+  all_goals try first
     | simpa only [StateT.run] using shared_audit _ (build_audit setup codec checks _ _) state
     | simpa only [StateT.run] using shared_audit _ (hmac_audit setup seed _ _ _) state
-    | skip
   case inr.finish =>
     rw [finish_audit setup codec 0 raw state, finish_audit setup codec 0 raw (eraseShared state)]
     rfl
@@ -181,6 +202,11 @@ end BeaconcryptCore.Computational.PqxdhRegistrationR1Audit
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhRegistrationR1Audit.program_audit
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationR1Audit.ownerFinish_audit' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationR1Audit.ownerFinish_audit
 /-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationR1Audit.finish_audit' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/

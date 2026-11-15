@@ -15,12 +15,13 @@ variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response Result : 
 
 abbrev Budget := PqxdhRegistrationJointRevealCosts.SourceKind → Nat
 abbrev SourceSpec (KemSK : Type) := PqxdhRegistrationJointRevealSchedule.Spec KemSK
-abbrev Outcome (KemSK Result : Type) := (Result × List EncodedEntry) × NativeState KemSK
+abbrev Outcome (KemSK Result : Type) :=
+  (Result × (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))) × NativeState KemSK
 
 /-- Literal existing command compiler, retaining its complete owners and native poststate. Private pools are supplied only by the eventual interpreter. -/
 noncomputable def program (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (client : OracleComp (SourceSpec KemSK) Result)
-    (owners : List EncodedEntry) (state : NativeState KemSK) :
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK) :
     OracleComp (PqxdhLiveKemBirth.Spec KemSK) (Outcome KemSK Result) :=
   (PqxdhRegistrationJointOpenBackend.compile setup codec checks identityIndex publicIdentity
     (simulateQ (PqxdhRegistrationJointRevealSchedule.client setup codec) client) owners).run state
@@ -31,7 +32,7 @@ theorem creations (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (budget : Budget)
     (certified : ∀ source, client.IsQueryBoundP
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))
-    (owners : List EncodedEntry) (state : NativeState KemSK) :
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK) :
     (program setup codec checks identityIndex publicIdentity client owners state).IsQueryBoundP
       (PqxdhLiveKemReservation.IsCreate (KemSK := KemSK)) (budget (.inl 1)) := by
   have cap := PqxdhRegistrationJointOpenCosts.command_program setup codec checks identityIndex publicIdentity
@@ -55,7 +56,7 @@ theorem decapsulations (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
     (budget : Budget)
     (certified : ∀ source, client.IsQueryBoundP
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))
-    (owners : List EncodedEntry) (state : NativeState KemSK) :
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK) :
     (program setup codec checks identityIndex publicIdentity client owners state).IsQueryBoundP
       (PqxdhDynamicKemJointBounds.IsDecapsulation (KemSK := KemSK)) (budget (.inl 5)) := by
   have cap := PqxdhRegistrationJointOpenCosts.command_program setup codec checks identityIndex publicIdentity
@@ -79,7 +80,7 @@ theorem selected_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
     (budget : Budget)
     (certified : ∀ source, client.IsQueryBoundP
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))
-    (owners : List EncodedEntry) (state : NativeState KemSK)
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK)
     (joint : PqxdhDynamicIdentityPool.SourceState) (count : Nat) (selected : Fin (count + 1))
     (room : budget (.inl 1) ≤ count + 1) :
     EvalDistEq ((fun result => (some result.1, result.2)) <$>

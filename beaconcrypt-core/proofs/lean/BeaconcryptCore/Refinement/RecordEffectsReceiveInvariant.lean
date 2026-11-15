@@ -15,7 +15,7 @@ set_option autoImplicit false
 namespace BeaconcryptCore.Refinement.RecordEffectsReceiveInvariant
 
 /-- Every live phase retains the original target and complete payload view; rejection publishes no metadata. -/
-def RecordReceiveMetadata (sender sequence : Std.U64) (associatedData : Std.Array Std.U8 281#usize)
+def RecordReceiveMetadata (sender sequence : Std.U64) (associatedData : Std.Array Std.U8 151#usize)
     (ciphertext : Slice Std.U8) : record_effects.RecordReceiveEffect → Prop
   | .Rejected _ => True
   | .KdfRequested pending => pending.pending.target = sequence ∧
@@ -26,7 +26,7 @@ def RecordReceiveMetadata (sender sequence : Std.U64) (associatedData : Std.Arra
       PayloadView ciphertext associatedData sender pending.pending.opening.context
 
 /-- Actual opening normalization preserves the old source target/context invariant and exact payload view. -/
-theorem normalize_metadata (sender sequence : Std.U64) (associatedData : Std.Array Std.U8 281#usize)
+theorem normalize_metadata (sender sequence : Std.U64) (associatedData : Std.Array Std.U8 151#usize)
     (ciphertext : Slice Std.U8) (context : record.OpenFrameContext)
     (effect : ratchet.concrete.ReceiveEffect record.OpenFrameContext)
     (scope : RawCtxOwnerProvenance.Scope sequence context effect)
@@ -52,7 +52,7 @@ theorem normalize_metadata (sender sequence : Std.U64) (associatedData : Std.Arr
 
 /-- Every actual record admission establishes the target and exact payload metadata, including rejection paths. -/
 theorem begin_metadata (kernel : ConcreteRatchetKernel) (sender sequence : Std.U64)
-    (associatedData : Std.Array Std.U8 281#usize) (ciphertext : Slice Std.U8) :
+    (associatedData : Std.Array Std.U8 151#usize) (ciphertext : Slice Std.U8) :
     ∃ next, record_effects.begin_record_receive kernel sequence ciphertext associatedData sender = ok next ∧
       RecordReceiveMetadata sender sequence associatedData ciphertext next := by
   obtain ⟨context, admitted, view⟩ := payload_views ciphertext associatedData sender
@@ -67,7 +67,7 @@ theorem begin_metadata (kernel : ConcreteRatchetKernel) (sender sequence : Std.U
       simpa only [record_effects.begin_record_receive, admitted, begun, bind_tc_ok] using normalized, metadata⟩
 
 /-- Every actual typed KDF reply preserves the requested target and original admitted context. -/
-theorem kdf_metadata (sender sequence : Std.U64) (associatedData : Std.Array Std.U8 281#usize)
+theorem kdf_metadata (sender sequence : Std.U64) (associatedData : Std.Array Std.U8 151#usize)
     (ciphertext : Slice Std.U8) (pending : record_effects.RecordReceiveKdf)
     (response : RatchetKdfResponse)
     (metadata : RecordReceiveMetadata sender sequence associatedData ciphertext (.KdfRequested pending)) :
@@ -81,7 +81,7 @@ theorem kdf_metadata (sender sequence : Std.U64) (associatedData : Std.Array Std
 
 /-- Both actual commitment-check outcomes preserve the complete source-selected metadata whenever a live phase remains. -/
 theorem commitment_metadata (sender sequence : Std.U64)
-    (associatedData : Std.Array Std.U8 281#usize) (ciphertext : Slice Std.U8)
+    (associatedData : Std.Array Std.U8 151#usize) (ciphertext : Slice Std.U8)
     (pending : record_effects.RecordReceiveCommitment) (matched : Bool)
     (metadata : RecordReceiveMetadata sender sequence associatedData ciphertext
       (.CommitmentRequested pending)) :
@@ -95,7 +95,7 @@ theorem commitment_metadata (sender sequence : Std.U64)
 
 /-- Exposing and replacing the hash transcript never replaces the retained opening capability or its metadata. -/
 theorem transcript_metadata (sender sequence : Std.U64)
-    (associatedData : Std.Array Std.U8 281#usize) (ciphertext : Slice Std.U8)
+    (associatedData : Std.Array Std.U8 151#usize) (ciphertext : Slice Std.U8)
     (pending : record_effects.RecordReceiveCommitment)
     (metadata : RecordReceiveMetadata sender sequence associatedData ciphertext
       (.CommitmentRequested pending)) :
@@ -108,7 +108,7 @@ theorem transcript_metadata (sender sequence : Std.U64)
 
 /-- The final source-owned AEAD capability selects the admitted sender, full associated data and original target sequence. -/
 theorem aead_metadata_fields (sender sequence : Std.U64)
-    (associatedData : Std.Array Std.U8 281#usize) (ciphertext : Slice Std.U8)
+    (associatedData : Std.Array Std.U8 151#usize) (ciphertext : Slice Std.U8)
     (pending : record_effects.RecordReceiveAead)
     (metadata : RecordReceiveMetadata sender sequence associatedData ciphertext
       (.AeadRequested pending)) :

@@ -463,7 +463,7 @@ noncomputable def freeResume (setup : Setup baseSpec KemSK) (codec : Codec Reade
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)
     (value : PqxdhServerRootPreparation.Verified Reader)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)
-    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry)
+    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))
     (next : Option Nat → OracleComp (SourceSpec KemSK) X)
     (ciphertext : MlKem768Ciphertext) (candidate : MlKemSharedSecret) :
     OracleComp (PqxdhRegistrationJointKemEncapsulation.Spec KemSK) (Outcome KemSK R) := do
@@ -480,7 +480,7 @@ theorem resume_free (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)
     (value : PqxdhServerRootPreparation.Verified Reader)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)
-    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry)
+    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))
     (next : Option Nat → OracleComp (SourceSpec KemSK) X)
     (ciphertext : MlKem768Ciphertext) (candidate : MlKemSharedSecret) :
     eraseOutcome <$> opaqueResume setup codec checks identityIndex publicIdentity observe raw value ephemeral consumed

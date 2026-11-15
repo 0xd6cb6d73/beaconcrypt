@@ -15,10 +15,10 @@ open RegistrationNativeEdOrigin (Allowed)
 open PqxdhEd25519EufCma (X25519PublicKey)
 variable {Encoded : Type}
 
-attribute [local irreducible] registration.BeaconInitHash.resume registration.BeaconFingerprint.resume
-  registration.BeaconMldsaSigning.resume registration.begin_beacon_init
-  RegistrationBeaconInitExecutor.ready RegistrationBeaconInitExecutor.fromSigning
-  RegistrationBeaconInitExecutor.fromHash RegistrationBeaconInitExecutor.fromFingerprint
+attribute [local irreducible] registration.BeaconInitHash.resume
+  registration.begin_beacon_init
+  RegistrationBeaconInitExecutor.ready
+  RegistrationBeaconInitExecutor.fromHash
 
 def AllowedQuery (prekey : X25519PublicKey) : Spec.Domain → Prop
   | .inl _ => True
@@ -34,28 +34,13 @@ private theorem continue_all {Input : Type} (prekey : X25519PublicKey) (action :
   | div => trivial
 
 private theorem ready_all (prekey : X25519PublicKey)
-    (encode : registration.SignedInitView → core.option.Option Encoded) (pending : registration.BeaconInitReady) :
+    (encode : registration.InitView → core.option.Option Encoded) (pending : registration.BeaconInitReady) :
     AllQueriesSatisfy (ready encode pending) (AllowedQuery prekey) := by
   unfold ready
   exact continue_all prekey _ _ (fun _ => by trivial)
 
-private theorem signing_all (prekey : X25519PublicKey)
-    (encode : registration.SignedInitView → core.option.Option Encoded)
-    (payload : MldsaTranscriptAuth.Payload) (digest : CtxRomAuth.CtxDigest) (pending : registration.BeaconMldsaSigning) :
-    AllQueriesSatisfy (fromSigning encode payload digest pending) (AllowedQuery prekey) := by
-  unfold fromSigning
-  apply continue_all prekey
-  intro request
-  rw [allQueriesSatisfy_query_bind_iff]
-  refine ⟨trivial, fun signature => ?_⟩
-  apply continue_all prekey
-  intro effect
-  cases effect with
-  | Ready selected => exact ready_all prekey encode selected
-  | _ => trivial
-
 private theorem hash_all (prekey : X25519PublicKey)
-    (encode : registration.SignedInitView → core.option.Option Encoded) (pending : registration.BeaconInitHash) :
+    (encode : registration.InitView → core.option.Option Encoded) (pending : registration.BeaconInitHash) :
     AllQueriesSatisfy (fromHash encode pending) (AllowedQuery prekey) := by
   unfold fromHash
   apply continue_all prekey
@@ -65,25 +50,11 @@ private theorem hash_all (prekey : X25519PublicKey)
   apply continue_all prekey
   intro effect
   cases effect with
-  | MldsaSigningRequested selected => exact signing_all prekey encode _ _ selected
-  | _ => trivial
-
-private theorem fingerprint_all (prekey : X25519PublicKey)
-    (encode : registration.SignedInitView → core.option.Option Encoded) (pending : registration.BeaconFingerprint) :
-    AllQueriesSatisfy (fromFingerprint encode pending) (AllowedQuery prekey) := by
-  unfold fromFingerprint
-  apply continue_all prekey
-  intro request
-  rw [allQueriesSatisfy_query_bind_iff]
-  refine ⟨trivial, fun digest => ?_⟩
-  apply continue_all prekey
-  intro effect
-  cases effect with
-  | HashRequested selected => exact hash_all prekey encode selected
+  | Ready selected => exact ready_all prekey encode selected
   | _ => trivial
 
 theorem ed_all (prekey : X25519PublicKey)
-    (encode : registration.SignedInitView → core.option.Option Encoded)
+    (encode : registration.InitView → core.option.Option Encoded)
     (pending : registration.BeaconEd25519Signing) (shape : Shape prekey pending.state.started) :
     AllQueriesSatisfy (fromEd encode pending) (AllowedQuery prekey) := by
   rw [fromEd.eq_def]
@@ -94,7 +65,7 @@ theorem ed_all (prekey : X25519PublicKey)
     match _actual : pending.resume reply with
     | .ok (.Rejected previous) => pure (.ok (.Err previous))
     | .ok (.Ed25519SigningRequested next) => fromEd encode next
-    | .ok (.FingerprintRequested selected) => fromFingerprint encode selected
+    | .ok (.HashRequested selected) => fromHash encode selected
     | .ok _ => pure .div
     | .fail error => pure (.fail error)
     | .div => pure .div) (AllowedQuery prekey)
@@ -108,29 +79,29 @@ theorem ed_all (prekey : X25519PublicKey)
       | Ed25519SigningRequested next =>
           exact ed_all prekey encode next
             ((congrArg (Shape prekey) (RegistrationNativeEdRequests.resume_started pending next reply actual)).mpr shape)
-      | FingerprintRequested selected => exact fingerprint_all prekey encode selected
+      | HashRequested selected => exact hash_all prekey encode selected
       | _ => trivial
 termination_by edRank pending
 decreasing_by exact ed_rank pending reply next actual
 
 /-- The actual native begin gate derives the allowed-message bound from the original source public inputs. -/
-theorem begin_all (encode : registration.SignedInitView → core.option.Option Encoded)
+theorem begin_all (encode : registration.InitView → core.option.Option Encoded)
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize)
+    (pin : session.ServerAuthenticationPin)
     (prekey oneTime : X25519PublicKey) (pq : PqxdhKemIndCca.MlKem768PublicKey)
     (prekeyBytes : PqxdhRefinement.absBytes inputs.prekey_public_key = prekey.toList)
     (oneTimeBytes : PqxdhRefinement.absBytes coins.one_time_public_key = oneTime.toList)
     (pqBytes : PqxdhRefinement.absBytes inputs.pq_public_key = pq.toList) :
-    AllQueriesSatisfy (begin encode control inputs coins pin mldsa) (AllowedQuery prekey) := by
+    AllQueriesSatisfy (begin encode control inputs coins pin) (AllowedQuery prekey) := by
   unfold begin
-  cases actual : registration.begin_beacon_init control inputs coins pin mldsa with
+  cases actual : registration.begin_beacon_init control inputs coins pin with
   | fail error => trivial
   | div => trivial
   | ok effect =>
       cases effect with
       | Ed25519SigningRequested pending =>
           exact ed_all prekey encode pending
-            (RegistrationNativeEdRequests.begin_shape control inputs coins pin mldsa prekey oneTime pq
+            (RegistrationNativeEdRequests.begin_shape control inputs coins pin prekey oneTime pq
               prekeyBytes oneTimeBytes pqBytes pending actual)
       | _ => trivial
 

@@ -2,7 +2,7 @@ import BeaconcryptCore.Computational.RawCtxInitialSecrecy
 import BeaconcryptCore.Computational.PqxdhProtocolQueryBounds
 
 /-!
-The initial-secret component is consumed by the original registration builder before its first record is sent. The challenge is explicitly sampled before the factored builder and paid even when the builder rejects before initialization. The original fixed initializer is pure, so its actual game is literally the source builder; no random generator interchange is inferred from that fact. The global root-miss sampler remains a caller supplied distribution, whose context must be established by the authenticated-root composition. This module supplies its concrete source continuation rather than a security assumption about arbitrary established roles.
+These generic suffix games take public supplied AD151 and make no classical-admission claim about its hash provenance. The initial-secret component is consumed by the original registration builder before its first record is sent. The challenge is explicitly sampled before the factored builder and paid even when the builder rejects before initialization. The original fixed initializer is pure, so its actual game is literally the source builder; no random generator interchange is inferred from that fact. The global root-miss sampler remains a caller supplied distribution, whose context must be established by the authenticated-root composition. This module supplies its concrete source continuation rather than a security assumption about arbitrary established roles.
 -/
 
 open OracleComp OracleSpec CoreModels Aeneas
@@ -10,6 +10,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete PqxdhRefinement
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialBuilderSecrecy
+variable (associatedData : Std.Array Std.U8 151#usize)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf
 
 variable {M P I D K A Context : Type} {S B : Nat}
@@ -24,7 +25,7 @@ noncomputable def observer
     (state : Context → State (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B))
     (outside : Context → Result (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B) → ProbComp Bool) :
     RawCtxInitialSecrecy.Observer Context := fun context initial => do
-  let result ← (PqxdhInitialBuilderCut.protocolBuild source writer initial.1 aux senderId index metadata
+  let result ← (PqxdhInitialBuilderCut.protocolBuild (associatedData := associatedData) source writer initial.1 aux senderId index metadata
     (PqxdhInitialBuilderCut.eraseRoot (ready context))).run (state context)
   outside context result
 
@@ -37,7 +38,7 @@ noncomputable def native
     (state : Context → State (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B))
     (outside : Context → Result (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B) → ProbComp Bool) : ProbComp Bool := do
   let (context, root) ← sample
-  let result ← (PqxdhRegistrationProtocolState.build source writer aux senderId index metadata
+  let result ← (PqxdhRegistrationProtocolState.build (associatedData := associatedData) source writer aux senderId index metadata
     {(ready context) with root := root}).run (state context)
   outside context result
 
@@ -50,8 +51,8 @@ theorem native_source
     (ready : Context → PqxdhPrivateAcceptedRoot.Ready)
     (state : Context → State (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B))
     (outside : Context → Result (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B) → ProbComp Bool) :
-    RawCtxInitialSecrecy.actual source sample (observer source writer aux senderId index metadata ready state outside) =
-      native source writer aux senderId index metadata sample ready state outside := by
+    RawCtxInitialSecrecy.actual source sample (observer (associatedData := associatedData) source writer aux senderId index metadata ready state outside) =
+      native (associatedData := associatedData) source writer aux senderId index metadata sample ready state outside := by
   rfl
 
 /-- The actual source builder before its first send reduces to the same explicit fixed-Extract and HMAC games on the root/context sampler. -/
@@ -64,19 +65,19 @@ theorem native_bound
     (ready : Context → PqxdhPrivateAcceptedRoot.Ready)
     (state : Context → State (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B))
     (outside : Context → Result (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B) → ProbComp Bool) :
-    let observe := observer source writer aux senderId index metadata ready state outside
-    (native source writer aux senderId index metadata sample ready state outside).boolDistance
+    let observe := observer (associatedData := associatedData) source writer aux senderId index metadata ready state outside
+    (native (associatedData := associatedData) source writer aux senderId index metadata sample ready state outside).boolDistance
         (RawCtxInitialSecrecy.random sample observe) ≤
       (extractRealGame hmac (RawCtxInitialSecrecy.joint sample)
-        (fullExtractReduction hmac .ratchet (RawCtxInitialSecrecy.observer observe))).boolDistance
+        (fullExtractReduction hmac .initial (RawCtxInitialSecrecy.observer observe))).boolDistance
         (extractUniformGame (RawCtxInitialSecrecy.joint sample)
-          (fullExtractReduction hmac .ratchet (RawCtxInitialSecrecy.observer observe))) +
-      (hmacPrfRealGame hmac (fullExpandReduction .ratchet (RawCtxInitialSecrecy.joint sample)
+          (fullExtractReduction hmac .initial (RawCtxInitialSecrecy.observer observe))) +
+      (hmacPrfRealGame hmac (fullExpandReduction .initial (RawCtxInitialSecrecy.joint sample)
         (RawCtxInitialSecrecy.observer observe))).boolDistance
-        (hmacPrfRandomGame (fullExpandReduction .ratchet (RawCtxInitialSecrecy.joint sample)
+        (hmacPrfRandomGame (fullExpandReduction .initial (RawCtxInitialSecrecy.joint sample)
           (RawCtxInitialSecrecy.observer observe))) := by
   simpa only [native_source] using RawCtxInitialSecrecy.primitive_bound source hmac correct sample
-    (observer source writer aux senderId index metadata ready state outside)
+    (observer (associatedData := associatedData) source writer aux senderId index metadata ready state outside)
 
 /-- The actual source consumer pays the complete sampler, real builder callback bill and caller continuation, including rejected registrations. -/
 theorem native_uniform
@@ -91,10 +92,10 @@ theorem native_uniform
     (sampleBound : sample.IsTotalQueryBound qSample)
     (auxBound : ∀ query primitive, ((aux query).run primitive).IsTotalQueryBound qAux)
     (outsideBound : ∀ context result, (outside context result).IsTotalQueryBound qOutside) :
-    (native source writer aux senderId index metadata sample ready state outside).IsTotalQueryBound
+    (native (associatedData := associatedData) source writer aux senderId index metadata sample ready state outside).IsTotalQueryBound
       (qSample + ((64 + 5 * qAux) + qOutside)) := by
   exact isTotalQueryBound_bind sampleBound fun pair => isTotalQueryBound_bind
-    (PqxdhProtocolQueryBounds.build_uniform source writer aux qAux auxBound senderId index metadata
+    (PqxdhProtocolQueryBounds.build_uniform (associatedData := associatedData) source writer aux qAux auxBound senderId index metadata
       {(ready pair.1) with root := pair.2} (state pair.1)) (fun result => outsideBound pair.1 result)
 
 end BeaconcryptCore.Computational.PqxdhInitialBuilderSecrecy

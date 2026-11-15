@@ -151,8 +151,6 @@ theorem pqxdh_BeaconRegistrationCandidate_impl_root_key_input_total (self : pqxd
 theorem pqxdh_BeaconRegistrationCandidate_root_key_input_mut_total (self : pqxdh.BeaconRegistrationCandidate) :
     ∃ result, pqxdh.BeaconRegistrationCandidate.root_key_input_mut self = ok result := ⟨_, rfl⟩
 
-theorem pqxdh_BeaconRegistrationCandidate_impl_associated_data_total (self : pqxdh.BeaconRegistrationCandidate) :
-    ∃ result, pqxdh.BeaconRegistrationCandidate.impl.associated_data self = ok result := ⟨_, rfl⟩
 
 theorem pqxdh_RegistrationKeyIdBinding_Insts_CoreCloneClone_clone_total (self : pqxdh.RegistrationKeyIdBinding) :
     ∃ result, pqxdh.RegistrationKeyIdBinding.Insts.CoreCloneClone.clone self = ok result := ⟨_, rfl⟩
@@ -241,8 +239,6 @@ theorem pqxdh_ServerRegistrationCandidate_impl_ephemeral_public_key_total (self 
 theorem pqxdh_ServerRegistrationCandidate_impl_kem_ciphertext_total (self : pqxdh.ServerRegistrationCandidate) :
     ∃ result, pqxdh.ServerRegistrationCandidate.impl.kem_ciphertext self = ok result := ⟨_, rfl⟩
 
-theorem pqxdh_ServerRegistrationCandidate_impl_associated_data_total (self : pqxdh.ServerRegistrationCandidate) :
-    ∃ result, pqxdh.ServerRegistrationCandidate.impl.associated_data self = ok result := ⟨_, rfl⟩
 
 theorem pqxdh_KeyIdAvailability_Insts_CoreCloneClone_clone_total (self : pqxdh.KeyIdAvailability) :
     ∃ result, pqxdh.KeyIdAvailability.Insts.CoreCloneClone.clone self = ok result := ⟨_, rfl⟩
@@ -411,5 +407,14 @@ theorem ratchet_RatchetKdfOutput_impl_next_chain_total (self : ratchet.RatchetKd
 
 theorem ratchet_RatchetKdfOutput_impl_nonce_total (self : ratchet.RatchetKdfOutput) :
     ∃ result, ratchet.RatchetKdfOutput.impl.nonce self = ok result := ⟨_, rfl⟩
+
+theorem ratchet_InitialRatchetKdfRequest_impl_info_total (self : ratchet.InitialRatchetKdfRequest) :
+    ∃ result, ratchet.InitialRatchetKdfRequest.impl.info self = ok result := ⟨_, rfl⟩
+
+theorem ratchet_InitialRatchetKdfRequest_impl_input_total (self : ratchet.InitialRatchetKdfRequest) :
+    ∃ result, ratchet.InitialRatchetKdfRequest.impl.input self = ok result := ⟨_, rfl⟩
+
+theorem ratchet_InitialRatchetKdfRequest_new_total (input : Array Std.U8 32#usize) :
+    ∃ result, ratchet.InitialRatchetKdfRequest.new input = ok result := ⟨_, rfl⟩
 
 end BeaconcryptCore.PanicFreedom.Trivial

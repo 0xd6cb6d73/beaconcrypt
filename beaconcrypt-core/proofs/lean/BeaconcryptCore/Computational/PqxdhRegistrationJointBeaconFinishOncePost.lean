@@ -63,9 +63,9 @@ noncomputable def topImpl (setup : Setup baseSpec KemSK) (codec : Codec Reader R
     (midImpl setup codec checks identityIndex publicIdentity services router)
 
 /-- The potential of the post-challenge phase: the owners holding the selected KEM index, plus one while the router has not yet handed it out. -/
-def potential (selected : Nat) {S : Type} (state : List EncodedEntry × (S × PqxdhDynamicKemJointSource.State KemSK)) :
-    Nat :=
-  ownerCount selected state.1 + pending selected (created state.2.2)
+def potential (selected : Nat) {S : Type}
+    (state : (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) × (S × PqxdhDynamicKemJointSource.State KemSK)) : Nat :=
+  ownerCount selected state.1.1 + pending selected (created state.2.2)
 
 /-- The lower interpreters forward hidden reads one for one. -/
 theorem low_hidden (setup : Setup baseSpec KemSK)
@@ -131,14 +131,14 @@ theorem mid_pool (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) 
 theorem create_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (services : Services V Response) (selected : Nat)
     (challenge : MlKem768Ciphertext) (counts : CountsCreates pool) (pin : PqxdhBeaconPhase2Preparation.Word32)
-    (keyId : Std.U64) (owners : List EncodedEntry) (skel : SkelState KemSK V)
+    (keyId : Std.U64) (owners : (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))) (skel : SkelState KemSK V)
     (lower : PqxdhDynamicKemJointSource.State KemSK) :
     ∀ result ∈ support (((simulateQ (midImpl setup codec checks identityIndex publicIdentity services
         (PqxdhDynamicKemJointRouter.combine coins primitives pool))
         ((groupedClient setup codec selected challenge (.inl (.inr (.create pin keyId)))).run owners)).run).run
           (skel, lower)), ∀ value, result.1 = some value →
-      ownerCount selected value.2 + pending selected (created result.2.2) ≤
-        ownerCount selected owners + pending selected (created lower) := by
+      ownerCount selected value.2.1 + pending selected (created result.2.2) ≤
+        ownerCount selected owners.1 + pending selected (created lower) := by
   intro result member value found
   have program : (groupedClient (KemSK := KemSK) setup codec selected challenge (.inl (.inr (.create pin keyId)))).run
       owners = simulateQ groupedLift ((PqxdhRegistrationJointRevealSchedule.client setup codec
@@ -186,14 +186,14 @@ theorem top_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) 
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (services : Services V Response) (selected : Nat)
     (challenge : MlKem768Ciphertext) (counts : CountsCreates pool)
     (query : (PqxdhRegistrationJointRevealSchedule.Spec KemSK).Domain)
-    (state : List EncodedEntry × (SkelState KemSK V × PqxdhDynamicKemJointSource.State KemSK)) :
+    (state : (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) × (SkelState KemSK V × PqxdhDynamicKemJointSource.State KemSK)) :
     PotBound (((topImpl setup codec checks identityIndex publicIdentity services selected challenge
         (PqxdhDynamicKemJointRouter.combine coins primitives pool) query).run).run state)
       (fun query => valueRead? query = true) (optPot (potential selected)) (potential selected state) := by
   rw [topImpl, composeOpt_step]
   apply potBound_map
-  have dle := finishBound_le selected query state.1
-  refine potBound_of_bound (d := finishBound selected query state.1)
+  have dle := finishBound_le selected query state.1.1
+  refine potBound_of_bound (d := finishBound selected query state.1.1)
     (isQueryBoundP_option_of_step _ _ _ (groupedClient_marked setup codec selected challenge query state.1)
       (fun query current => mid_marked setup codec checks identityIndex publicIdentity services _ query current) state.2)
     (dle.trans (Nat.le_add_right _ _)) ?_
@@ -218,7 +218,7 @@ theorem top_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) 
       have grows := option_monotone _ _ (mid_mono setup codec checks identityIndex publicIdentity services counts) _
         state.2 _ member
       have pend := pending_anti selected grows
-      have counted' : ownerCount selected owners + finishBound selected query state.1 ≤ ownerCount selected state.1 :=
+      have counted' : ownerCount selected owners.1 + finishBound selected query state.1.1 ≤ ownerCount selected state.1.1 :=
         counted
       dsimp only at pend
       omega
@@ -228,7 +228,7 @@ theorem top_potential (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (services : Services V Response) (selected : Nat)
     (challenge : MlKem768Ciphertext) (counts : CountsCreates pool) {α : Type}
     (work : OracleComp (PqxdhRegistrationJointRevealSchedule.Spec KemSK) α)
-    (state : List EncodedEntry × (SkelState KemSK V × PqxdhDynamicKemJointSource.State KemSK)) :
+    (state : (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) × (SkelState KemSK V × PqxdhDynamicKemJointSource.State KemSK)) :
     PotBound (((simulateQ (topImpl setup codec checks identityIndex publicIdentity services selected challenge
         (PqxdhDynamicKemJointRouter.combine coins primitives pool)) work).run).run state)
       (fun query => valueRead? query = true) (optPot (potential selected)) (potential selected state) :=
@@ -250,7 +250,7 @@ variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response A X V : T
 /-- The prechallenge context of an active cut has at most one owner holding the selected KEM index, and none while the router has not yet handed it out: the potential at the cut is at most one. -/
 def KemOnce (selected : Nat) {count : Nat} : OpaqueContext Reader KemSK A X count → Prop
   | .ready _ _ (some (.pending _ _ _ _ _ owners _)) state _ =>
-      ownerCount selected owners + pending selected state.2.created ≤ 1
+      ownerCount selected owners.1 + pending selected state.2.created ≤ 1
   | _ => True
 
 /-- The actual encapsulator followed by the router is the lower interpreter. -/

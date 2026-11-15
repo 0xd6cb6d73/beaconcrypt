@@ -29,14 +29,10 @@ theorem bad_native (server : Credential source) (query : RegistrationNativeRawAd
   constructor
   · intro failure
     cases failure with
-    | accept packet session _ current owned protectedKey absent =>
-        exact .accept packet session before current owned protectedKey absent
     | finish index packet application _ current pending oneTime found phase protectedKey absent =>
         exact .finish index packet application before current pending oneTime found phase protectedKey absent
   · intro failure
     cases failure with
-    | accept packet session _ current owned protectedKey absent =>
-        exact .accept packet session _ current owned protectedKey absent
     | finish index packet application _ current pending oneTime found phase protectedKey absent =>
         exact .finish index packet application _ current pending oneTime found phase protectedKey absent
 

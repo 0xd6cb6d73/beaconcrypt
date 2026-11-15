@@ -38,7 +38,7 @@ theorem send (setup : Setup base KemSK)
     (converted : RegistrationNativePlatformOrdinarySourceNative.Conversion keyView)
     (failure : primitives.Error) (erased : commitment.CommitmentTranscript) (route : RawCtxServerRouting.SenderDecoder)
     (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (current : Native×Platform) (before : StrongCarrier (R:=R) setup view views created credential current)
     (logical : Nat) (bytes : Slice U8) :
     raw (strongPhysical setup view views created credential) (RegistrationNativePlatformSdkOrdinaryBeaconDispatch.send setup reserve length keyView converted failure erased route view views created credential current before logical bytes)=
@@ -149,7 +149,7 @@ theorem receive (setup : Setup base KemSK)
     (keyView : RegistrationNativePlatformSourceSeal.KeyView)
     (failure : primitives.Error) (erased : commitment.CommitmentTranscript) (route : RawCtxServerRouting.SenderDecoder)
     (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (current : Native×Platform) (before : StrongCarrier (R:=R) setup view views created credential current)
     (logical : Nat) (bytes : Slice U8) :
     raw (strongPhysical setup view views created credential) (RegistrationNativePlatformSdkOrdinaryBeaconDispatch.receive setup reserve length keyView failure erased route view views created credential current before logical bytes)=

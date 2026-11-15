@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.CborAdmissionCompiler
 import BeaconcryptCore.Computational.CborAdmissionCachedBudget
 
-/-! The public admission compiler prefetches one Server peer kernel, checks the complete CBOR frame length, and runs the existing local record operation only when admitted. The simulation preserves the exact reply and complete merged deployment state, retains the full compiler invariant including the public assignment counter, and issues at most the original one peer reveal plus one commitment hash. -/
+/-! The public admission compiler prefetches one Server peer kernel, checks the complete CBOR frame length, and runs the existing local record operation only when admitted. The simulation preserves the exact reply and complete merged deployment state, retains the full compiler invariant including the public assignment counter, and issues at most the original one peer reveal plus two BLAKE2b queries: the copy's forwarded transcript hash (`PqxdhDeploymentCompile.copyData`, design §4.7) and one commitment hash. -/
 open CoreModels Aeneas OracleComp OracleSpec
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
@@ -47,10 +47,10 @@ theorem step_exact (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
     simp only [CborProductionBoundary.allowed, merge, found, identity]
     split_ifs with fits
     case pos =>
-      have old := PqxdhDeploymentCompileRecords.server_record setup codec checks route seed
+      have old := PqxdhDeploymentCompileRecords.server_record_cached setup codec checks route seed
         (.inl (plaintext, keyId))
         { memory.copies with peers := Function.update memory.copies.peers keyId (some peer.kernel) }
-        native loadedGood.keyId loadedGood.installed loadedGood.serverVisible
+        native loadedGood.keyId loadedGood.installed loadedGood.serverVisible loadedGood.peers
       rw [preserved] at old
       simpa only [simulateQ_map, StateT.run_map, Functor.map_map, PqxdhDeploymentNative.handler] using old
     case neg =>
@@ -59,9 +59,8 @@ theorem step_exact (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
     simp only [Option.map_none, simulateQ_pure, StateT.run_pure, map_pure]
     simp only [nativeHandler, CborCommandFilter.handler, StateT.run,
       CborProductionBoundary.allowed, merge, found, ite_true, PqxdhDeploymentNative.handler,
-      PqxdhDeploymentNative.serverStep, RawCtxServerMixed.serverImpl, RawCtxServerMixed.sendServer,
-      RawCtxServerSend.sendServer, PqxdhDeploymentNative.serverView, RawCtxServerRouting.peerAssociatedData,
-      Option.bind_eq_bind, Option.bind_none, simulateQ_pure, PqxdhDeploymentNative.logged_pure,
+      PqxdhDeploymentNative.serverStep, MldsaServerRouting.handler, MldsaServerRouting.send,
+      PqxdhDeploymentNative.serverView, simulateQ_pure, PqxdhDeploymentNative.logged_pure,
       PqxdhDeploymentNative.record, PqxdhRegistrationSchedule.onShared, PqxdhServerAuthNative.nativeCtx,
       PqxdhDeploymentNative.withServer, PqxdhDeploymentNative.produce]
     simp only [StateT.monad_pure_def, StateT.pure, map_pure, pure_bind, List.map_nil, List.append_nil]
@@ -112,9 +111,11 @@ theorem source_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
     (keyId : Std.U64) (plaintext : Pqxdh.Bytes) (memory : Local) :
     ((serverSend setup codec route keyId plaintext).run memory).IsQueryBoundP
       (fun request => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) request = kind)
-      (PqxdhDeploymentCompileBudget.unit kind (.inl 8) + PqxdhDeploymentCompileBudget.unit kind (.inl 7)) := by
+      (PqxdhDeploymentCompileBudget.unit kind (.inl 8) + PqxdhDeploymentCompileBudget.unit kind (.inl 7) +
+        PqxdhDeploymentCompileBudget.unit kind (.inl 7)) := by
   change (CborAdmissionCompiler.serverSend setup codec route keyId plaintext memory).IsQueryBoundP _ _
   unfold CborAdmissionCompiler.serverSend
+  rw [Nat.add_assoc]
   refine isQueryBoundP_bind (PqxdhDeploymentCompileBudget.peerKernel_bound kind memory.copies keyId)
     fun kernel _ => ?_
   cases kernel

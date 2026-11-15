@@ -24,7 +24,7 @@ def Away (selected : Nat) (query : TypedSpec.Domain) (before : State n KemSK sou
 variable [primitive : AdapterSealPrimitive.Operations]
 variable (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
 variable (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 variable (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
 variable (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
 variable (reserveRegistration reservePeer : StateT Platform ProbComp Bool)
@@ -45,7 +45,7 @@ theorem away_handler (selected : Nat) (scalar : PqxdhJointGapDh.ScalarBytes) (qu
   cases query with
   | inl coin => rfl
   | inr command =>
-    cases command <;> try rfl
+    cases command
     case create edPin mlPin keyId =>
       have localEq := RegistrationNativeScalarOrdinary.handler setup checks (RegistrationNativePlatformOrdinaryExperiment.canonicalWire wire)
         route representation created credential selected scalar (.inr (.create edPin mlPin keyId)) before (away edPin mlPin keyId rfl)
@@ -54,6 +54,7 @@ theorem away_handler (selected : Nat) (scalar : PqxdhJointGapDh.ScalarBytes) (qu
           route representation created source credential selected scalar (.inr (.create edPin mlPin keyId))).run before) = _
       rw [localEq]
       rfl
+    all_goals rfl
 
 /-- Every supported actual callback away from selected birth keeps that owner index waiting. -/
 theorem away_short (selected : Nat) (query : TypedSpec.Domain) (before after : State n KemSK source)

@@ -117,7 +117,7 @@ private theorem joined_normal
     rcases allocated with ⟨allocationReply,afterPlatform⟩
     cases allocationReply <;> exact ⟨_,rfl⟩
 private theorem aead_normal (allocate : alloc.vec.Vec U8→Usize→StateT P ProbComp (core.result.Result Unit E))
-    (plaintext : Slice U8) (associated : Std.Array U8 281#usize)
+    (plaintext : Slice U8) (associated : Std.Array U8 151#usize)
     (nonce : primitives.Nonce) (key : primitives.Key) :
     Normal (simulateQ (RegistrationNativePlatformSourceSeal.handler (n:=n) (Auxiliary:=Auxiliary) coins setup codec view failure
       (fun before capacity=>RustM.ok <$>allocate before capacity)) (AdapterSealNative.aead E plaintext associated nonce key)) := by

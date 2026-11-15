@@ -44,7 +44,7 @@ private theorem world_run (baseImpl : QueryImpl base ProbComp) (kem : PqxdhKemIn
 
 noncomputable def other (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (query : RegistrationNativeKemInterface.OtherRequest) : StateT Client ProbComp
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (query : RegistrationNativeKemInterface.OtherRequest) : StateT Client ProbComp
       (RegistrationNativeKemInterface.OtherSpec.Range query) := fun before => do
   let result ← (PqxdhRecordLiftWorld.sampled ((RegistrationNativeKemBackend.serverOther setup checks representation created.seed query).run
     before.server.world.auxiliary)).run before.server.world.world.1
@@ -53,7 +53,7 @@ noncomputable def other (setup : Setup base KemSK) (checks : Checks)
 
 noncomputable def implementation (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     QueryImpl (RegistrationNativeBeaconFrontend.Trusted n KemSK) (StateT Client (OracleComp (Spec KemSK)))
   | .inl query => world (RegistrationNativeKemCountedProgram.liftState (PqxdhRecordLiftWorld.effects query))
   | .inr (.inl query) => RegistrationNativeKemCountedProgram.liftState (other setup checks representation created query)
@@ -92,7 +92,7 @@ private theorem execute_simulate {κ : Type} {spec : OracleSpec κ} (setup : Set
 /-- Every actual native trusted request retains all full counters and private pool state in its exact indexed free interpretation. -/
 theorem query_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (RegistrationNativeBeaconFrontend.Trusted n KemSK).Domain) (before : Native) :
     arrange <$> RegistrationNativeKemCountedProgram.runState setup.baseImpl setup.kem (implementation setup checks representation created query)
       (ofNative before) before.pool =
@@ -130,7 +130,7 @@ theorem query_source (setup : Setup base KemSK) (checks : Checks)
 /-- Arbitrary actual trusted continuations preserve every full native coordinate and the private pool through the free indexed source. -/
 theorem program_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp (RegistrationNativeBeaconFrontend.Trusted n KemSK) Value) (before : Native) :
     (execute setup (simulateQ (implementation setup checks representation created) work)).run (project before) =
       Prod.map id project <$> (simulateQ (RegistrationNativeExperiment.trusted setup checks representation created source) work).run before := by

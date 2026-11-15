@@ -46,6 +46,24 @@ theorem program_realize (candidate : PqxdhKemIndCca.MlKemSharedSecret)
       funext reply
       exact ih reply (later reply)
 
+private theorem executeLocal_realize (candidate : PqxdhKemIndCca.MlKemSharedSecret)
+    (selected : Nat) (publicPrekey : PqxdhJointIdentity.PeerEncoding)
+    (work : RegistrationNativeBeaconFrontend.M n KemSK source Auxiliary Value)
+    (owners : RegistrationNativePublicOwners.State source) (env : EnvState Auxiliary)
+    (safe : AllQueriesSatisfy ((work.run (owners.map RegistrationNativePublicOwners.restore)).run env)
+      (Allowed (KemSK := KemSK))) :
+    simulateQ (realize candidate)
+      (((RegistrationNativePublicOwners.executeLocal selected publicPrekey work).run owners).run env) =
+      simulateQ (realize RegistrationNativeSecretWordMessage.zero)
+        (((RegistrationNativePublicOwners.executeLocal selected publicPrekey work).run owners).run env) := by
+  simp only [RegistrationNativePublicOwners.executeLocal, StateT.run, simulateQ_map]
+  rw [← QueryImpl.simulateQ_compose, ← QueryImpl.simulateQ_compose]
+  exact congrArg (fun result : OracleComp (RegistrationNativeSecretWordInterface.LocalSpec n KemSK)
+      ((Value × RegistrationNativeBeaconFrontend.State source) × EnvState Auxiliary) =>
+    (fun outcome => ((outcome.1.1,
+      RegistrationNativePublicOwners.pack selected publicPrekey outcome.1.2), outcome.2)) <$> result)
+    (program_realize candidate _ safe)
+
 /-- Actual complete public creation has exactly the same result, owner list and current environment at every realization. -/
 theorem create_realize (setup : Setup base KemSK) (selected : Nat)
     (publicPrekey : PqxdhJointIdentity.PeerEncoding) (candidate : PqxdhKemIndCca.MlKemSharedSecret)
@@ -55,12 +73,10 @@ theorem create_realize (setup : Setup base KemSK) (selected : Nat)
       (((RegistrationNativePublicOwners.create (n := n) setup source selected publicPrekey edPin mlPin keyId).run owners).run env) =
       simulateQ (realize RegistrationNativeSecretWordMessage.zero)
         (((RegistrationNativePublicOwners.create (n := n) setup source selected publicPrekey edPin mlPin keyId).run owners).run env) := by
-  simp only [RegistrationNativePublicOwners.create, RegistrationNativePublicOwners.executeLocal,
-    StateT.run, simulateQ_map]
-  rw [← QueryImpl.simulateQ_compose, ← QueryImpl.simulateQ_compose]
-  exact congrArg (fun work => (fun result => ((result.1.1,
-    RegistrationNativePublicOwners.pack selected publicPrekey result.1.2), result.2)) <$> work)
-    (program_realize candidate _ (RegistrationNativeSecretWordTargetBirthCaps.create_safe setup edPin mlPin keyId _ env))
+  exact executeLocal_realize candidate selected publicPrekey
+    (RegistrationNativeBeaconFrontend.create (n := n) setup source edPin mlPin keyId) owners env
+    (RegistrationNativeSecretWordTargetBirthCaps.create_safe (source := source) setup edPin mlPin keyId
+      (owners.map RegistrationNativePublicOwners.restore) env)
 
 /-- Actual full outgoing publication retains all signing/hash failures and the exact current environment at every realization. -/
 theorem bundle_realize (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire) (selected index : Nat)

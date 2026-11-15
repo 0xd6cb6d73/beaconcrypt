@@ -9,6 +9,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialHalfBuilderMap
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhInitialPendingPost PqxdhInitialPostContext PqxdhInitialParentPost PqxdhInitialOriginPost
 open RawCtxSelectedParentCalls RawCtxSelectedParentEntry RawCtxSelectedFamilyContext
 open RawCtxGenericRoleStorage RawCtxGenericRoleFamily PqxdhJointKdfGame PqxdhSecretInputKdf
@@ -52,9 +54,9 @@ include sendLaw in
 /-- The actual first-send tail preserves every erase and serialization effect under the complete kernel interpretation. -/
 theorem after_map (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Pqxdh.Bytes)
     (kernel : KernelOf Chain) (metadata : P) (before : Publication (KernelOf Chain) M P) :
-    PqxdhInitialGenericPublication.afterInitialization right aux candidate authenticated (f kernel) metadata (mapPublication f before) =
+    PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) right aux candidate authenticated (f kernel) metadata (mapPublication f before) =
       Prod.map id (mapPublication f) <$>
-        PqxdhInitialGenericPublication.afterInitialization left aux candidate authenticated kernel metadata before := by
+        PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) left aux candidate authenticated kernel metadata before := by
   simp only [PqxdhInitialGenericPublication.afterInitialization, sendLaw, bind_map_left, map_bind]
   apply bind_congr
   rintro ⟨advanced, encrypted⟩
@@ -72,9 +74,9 @@ include sendLaw in
 /-- Identity, allocation and nonempty application admission precede the same complete mapped first send on every original branch. -/
 theorem candidate_map (initial : RustM (KernelOf Chain)) (pending : pqxdh.ServerRegistrationCandidate)
     (data : Option Pqxdh.Bytes) (metadata : P) (before : Publication (KernelOf Chain) M P) :
-    PqxdhInitialGenericBuilder.candidate right aux (f <$> initial) pending data metadata (mapPublication f before) =
+    PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) right aux (f <$> initial) pending data metadata (mapPublication f before) =
       Functor.map (Prod.map id (mapPublication f)) <$>
-        PqxdhInitialGenericBuilder.candidate left aux initial pending data metadata before := by
+        PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) left aux initial pending data metadata before := by
   simp only [PqxdhInitialGenericBuilder.candidate, map_bind]
   apply bind_congr
   intro valid
@@ -104,7 +106,7 @@ theorem candidate_map (initial : RustM (KernelOf Chain)) (pending : pqxdh.Server
                 | fail error => simp only [map_pure]; rfl
                 | div => simp only [map_pure]; rfl
                 | ok binding =>
-                    simp only [after_map f left right aux sendLaw, Functor.map_map]
+                    simp only [after_map (associatedData := associatedData) f left right aux sendLaw, Functor.map_map]
                     rfl
             · simp only [map_pure]; rfl
 
@@ -113,9 +115,9 @@ include sendLaw in
 theorem ready_map (source : FixedHkdfSha512NoSaltSource) (initial : RustM (KernelOf Chain))
     (binding : pqxdh.ServerBinding) (ready : PqxdhPrivateAcceptedRoot.Ready)
     (metadata : P) (before : Publication (KernelOf Chain) M P) :
-    PqxdhInitialGenericBuilder.readyBuild source right aux (f <$> initial) binding ready metadata (mapPublication f before) =
+    PqxdhInitialGenericBuilder.readyBuild (associatedData := associatedData) source right aux (f <$> initial) binding ready metadata (mapPublication f before) =
       Functor.map (Prod.map id (mapPublication f)) <$>
-        PqxdhInitialGenericBuilder.readyBuild source left aux initial binding ready metadata before := by
+        PqxdhInitialGenericBuilder.readyBuild (associatedData := associatedData) source left aux initial binding ready metadata before := by
   unfold PqxdhInitialGenericBuilder.readyBuild PqxdhInitialGenericBuilder.usedBuild
   simp only [mapPublication, mapServer, Option.isSome_map]
   cases next : pqxdh.server_next_key_id before.control with
@@ -135,7 +137,7 @@ theorem ready_map (source : FixedHkdfSha512NoSaltSource) (initial : RustM (Kerne
           | ok result =>
               cases result with
               | Err error => simp only [map_pure]; rfl
-              | Ok candidate => exact candidate_map f left right aux sendLaw initial candidate ready.application metadata before
+              | Ok candidate => exact candidate_map (associatedData := associatedData) f left right aux sendLaw initial candidate ready.application metadata before
 
 end Generic
 section Source
@@ -183,12 +185,12 @@ theorem build (first : RustM (KernelOf RawCtxSelectedChain.Slot))
     (sender : M → Std.U64) (index : Fin S) (metadata : P) (ready : PqxdhPrivateAcceptedRoot.Ready)
     (before : LabelFront M P I D K S B) :
     simulateQ (PqxdhInitialHalfSourceMap.nativeHandler source writer prior entry target pre application initial selector aux)
-      ((PqxdhInitialPendingBuilder.build source (nativeKernel target <$> first) sender index metadata ready).run
+      ((PqxdhInitialPendingBuilder.build (associatedData := associatedData) source (nativeKernel target <$> first) sender index metadata ready).run
         (mapFront (nativeKernel target) before)) =
       Prod.map id (mapFront (nativeKernel target)) <$> simulateQ
         (PqxdhInitialHalfSourceMap.labelHandler source writer prior entry target pre application initial selector aux
           (childResponse prior entry target))
-        ((PqxdhInitialPendingBuilder.build source first sender index metadata ready).run before) := by
+        ((PqxdhInitialPendingBuilder.build (associatedData := associatedData) source first sender index metadata ready).run before) := by
   rw [PqxdhInitialPendingBuilder.build_interpretation, PqxdhInitialPendingBuilder.build_interpretation]
   simp only [PqxdhInitialPendingBuilder.interpretedBuild, StateT.run, native_calls, label_calls]
   have nativeAux : PqxdhInitialHalfSourceMap.nativeHandler (S := S) (B := B) source writer prior entry target pre application initial selector aux ∘ₛ auxForward = aux := by
@@ -208,10 +210,10 @@ theorem build (first : RustM (KernelOf RawCtxSelectedChain.Slot))
     simp only [liftCalls, send_map, lift_map]
   change PqxdhInitialPendingBuilder.reinstall index
       (mapFront (nativeKernel target) (PqxdhInitialPendingBuilder.consume index ready before)) <$>
-    PqxdhInitialGenericBuilder.readyBuild source (liftCalls (nativeCalls source writer prior entry target)) aux
+    PqxdhInitialGenericBuilder.readyBuild (associatedData := associatedData) source (liftCalls (nativeCalls source writer prior entry target)) aux
       (nativeKernel target <$> first) _ ready metadata
       (mapPublication (nativeKernel target) (PqxdhInitialPendingBuilder.selected sender index (PqxdhInitialPendingBuilder.consume index ready before))) = _
-  rw [ready_map (nativeKernel target) _ _ aux sent]
+  rw [ready_map (associatedData := associatedData) (nativeKernel target) _ _ aux sent]
   simp only [Functor.map_map]
   apply congrArg (fun function => function <$> _)
   funext result
@@ -231,22 +233,22 @@ theorem sequence (first : RustM (KernelOf RawCtxSelectedChain.Slot))
     (post : RustM (Option PqxdhServerRegistrationPublication.Response) → OracleComp (PostSpec extra S B) Result)
     (before : LabelFront M P I D K S B × Trace Origin S B) :
     simulateQ (PqxdhInitialHalfSourceMap.nativeHandler source writer prior entry target pre application initial selector aux)
-      ((PqxdhInitialOriginPost.sequence source (nativeKernel target <$> first) mark origin sender route decode index metadata ready post).run
+      ((PqxdhInitialOriginPost.sequence (associatedData := associatedData) (completedBinding := completedBinding) source (nativeKernel target <$> first) mark origin sender route decode index metadata ready post).run
         (mapFront (nativeKernel target) before.1, before.2)) =
       Prod.map id (Prod.map (mapFront (nativeKernel target)) id) <$> simulateQ
         (PqxdhInitialHalfSourceMap.labelHandler source writer prior entry target pre application initial selector aux
           (childResponse prior entry target))
-        ((PqxdhInitialOriginPost.sequence source first mark origin sender route decode index metadata ready post).run before) := by
+        ((PqxdhInitialOriginPost.sequence (associatedData := associatedData) (completedBinding := completedBinding) source first mark origin sender route decode index metadata ready post).run before) := by
   change simulateQ (PqxdhInitialHalfSourceMap.nativeHandler source writer prior entry target pre application initial selector aux) (do
-    let built ← (PqxdhInitialPendingBuilder.build source (nativeKernel target <$> first) sender index metadata ready).run
+    let built ← (PqxdhInitialPendingBuilder.build (associatedData := associatedData) source (nativeKernel target <$> first) sender index metadata ready).run
       (mapFront (nativeKernel target) before.1)
-    (simulateQ (PqxdhInitialOriginPost.compiler mark sender route decode) (post built.1)).run
+    (simulateQ (PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) mark sender route decode) (post built.1)).run
       (built.2, afterBuilder before.2 built.2 index origin built.1)) =
     Prod.map id (Prod.map (mapFront (nativeKernel target)) id) <$>
       simulateQ (PqxdhInitialHalfSourceMap.labelHandler source writer prior entry target pre application initial selector aux
         (childResponse prior entry target)) (do
-        let built ← (PqxdhInitialPendingBuilder.build source first sender index metadata ready).run before.1
-        (simulateQ (PqxdhInitialOriginPost.compiler mark sender route decode) (post built.1)).run
+        let built ← (PqxdhInitialPendingBuilder.build (associatedData := associatedData) source first sender index metadata ready).run before.1
+        (simulateQ (PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) mark sender route decode) (post built.1)).run
           (built.2, afterBuilder before.2 built.2 index origin built.1))
   simp only [simulateQ_bind, map_bind]
   rw [build]
@@ -254,7 +256,7 @@ theorem sequence (first : RustM (KernelOf RawCtxSelectedChain.Slot))
   apply bind_congr
   intro built
   simp only [Prod.map_def, id_eq, PqxdhInitialOriginPostMap.builder_trace]
-  exact PqxdhInitialHalfSourceMap.program source writer prior entry target pre application initial selector aux
+  exact PqxdhInitialHalfSourceMap.program (completedBinding := completedBinding) source writer prior entry target pre application initial selector aux
     mark sender route decode (post built.1)
     (built.2, PqxdhInitialOriginPost.afterBuilder before.2 built.2 index origin built.1)
 

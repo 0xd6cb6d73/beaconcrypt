@@ -34,7 +34,7 @@ ENTRIES = preparation.ENTRIES
 NAMESPACE = primitives.NAMESPACE
 MODELS = {
     "TypesExternal.lean": "-- SPDX-License-Identifier: 0BSD\nimport BeaconcryptCore.RegistrationSchemaExtraction.Types\nopen CoreModels Aeneas\nopen Aeneas.Std hiding namespace core alloc\nopen RustM\nset_option autoImplicit false\nset_option warningAsError true\nnamespace BeaconcryptCore.Refinement.RegistrationValidatorPrimitive\n/-! Complete effects for text and map-only branches. No parser law is a field. -/\nclass Operations where\n  utf8Correct : Slice U8 → RustM Bool\n  sortedMap : Slice U8 → Slice U8 → U64 → RustM Bool\nend BeaconcryptCore.Refinement.RegistrationValidatorPrimitive\n",
-    "FunsExternal.lean": "-- SPDX-License-Identifier: 0BSD\nimport BeaconcryptCore.RegistrationValidatorExtraction.Types\nimport BeaconcryptCore.RegistrationSchemaExtraction.Funs\nimport BeaconcryptCore.RegistrationHeaderOptimalExtraction.Funs\nimport BeaconcryptCore.RegistrationPreflightExtraction.Funs\nopen CoreModels Aeneas\nopen Aeneas.Std hiding namespace core alloc\nopen RustM\nset_option autoImplicit false\nset_option warningAsError true\nnamespace beaconcrypt_parse.registration_validator_primitive\nvariable [ops : BeaconcryptCore.Refinement.RegistrationValidatorPrimitive.Operations]\ndef utf8Correct := ops.utf8Correct\ndef sortedMap := ops.sortedMap\ndef preflightSlice (input start fields : Slice U8) : RustM (core.option.Option Unit) := do\n  let copied ← core.Array.Insts.CoreConvertTryFromShared0SliceTryFromSliceError.try_from\n    6#usize core.U8.Insts.CoreMarkerCopy fields\n  match copied with\n  | .Err _ => fail .panic\n  | .Ok values => beaconcrypt_parse.preflight input start values\nend beaconcrypt_parse.registration_validator_primitive\n",
+    "FunsExternal.lean": "-- SPDX-License-Identifier: 0BSD\nimport BeaconcryptCore.RegistrationValidatorExtraction.Types\nimport BeaconcryptCore.RegistrationSchemaExtraction.Funs\nimport BeaconcryptCore.RegistrationHeaderOptimalExtraction.Funs\nimport BeaconcryptCore.RegistrationPreflightExtraction.Funs\nopen CoreModels Aeneas\nopen Aeneas.Std hiding namespace core alloc\nopen RustM\nset_option autoImplicit false\nset_option warningAsError true\nnamespace beaconcrypt_parse.registration_validator_primitive\nvariable [ops : BeaconcryptCore.Refinement.RegistrationValidatorPrimitive.Operations]\ndef utf8Correct := ops.utf8Correct\ndef sortedMap := ops.sortedMap\ndef preflightSlice (input start fields : Slice U8) : RustM (core.option.Option Unit) := do\n  if fields.length = 4 then\n    let copied ← core.Array.Insts.CoreConvertTryFromShared0SliceTryFromSliceError.try_from\n      4#usize core.U8.Insts.CoreMarkerCopy fields\n    match copied with\n    | .Err _ => fail .panic\n    | .Ok values => beaconcrypt_parse.extraction_preflight_four input start values\n  else\n    let copied ← core.Array.Insts.CoreConvertTryFromShared0SliceTryFromSliceError.try_from\n      6#usize core.U8.Insts.CoreMarkerCopy fields\n    match copied with\n    | .Err _ => fail .panic\n    | .Ok values => beaconcrypt_parse.preflight input start values\nend beaconcrypt_parse.registration_validator_primitive\n",
 }
 
 INSTALLED = (
@@ -56,7 +56,7 @@ OPAQUE = (
 INCLUDED = ()
 
 TEMPLATE_SHA256 = {
-    "FunsExternal_Template.lean": "fb1b6283a6fb29121a2ac0e11d7e7f5ce0cc3b9099a3059d266604bcc6b1acb0",
+    "FunsExternal_Template.lean": "f3e1d7c375faf0d31f2a65e2c0af6c7425f76f6737438ce067252bc480b28fbb",
     "TypesExternal_Template.lean": "c07da04e32da19a0f64c83b869e621e4ddee0450ebaf48e820b9c5aa1b828735",
 }
 CALLS = {

@@ -80,7 +80,7 @@ theorem generation (accounting : RegistrationNativeMldsaCapability.Accounting)
 /-- The complete actual creation callback preserves true-count signing chronology through every optional generation and constructor outcome. -/
 theorem create (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (edPin : Std.Array U8 32#usize)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (edPin : Std.Array U8 32#usize)
     (mlPin : Std.Array U8 1952#usize) (keyId : Std.U64)
     (before : RegistrationNativeExperiment.State n KemSK (handleSource source)) (pool : Pool source)
     (result : (RustM (Option Nat) × RegistrationNativeExperiment.State n KemSK (handleSource source)) × Pool source)
@@ -91,10 +91,8 @@ theorem create (setup : Setup base KemSK) (checks : Checks)
   have law : Keeps source (RegistrationNativeMldsaCreation.create (n := n) (source := handleSource source)
       setup checks representation created edPin mlPin keyId) := by
     unfold RegistrationNativeMldsaCreation.create
-    apply bind_keeps source _ _ (generation source .environment)
-    intro generated
-    exact lift_keeps source _ (RegistrationNativeMldsaReceiptPreservation.source_createSuffix setup checks representation created
-      edPin mlPin keyId generated)
+    exact lift_keeps source _ (RegistrationNativeMldsaReceiptPreservation.source_create setup checks representation created
+      edPin mlPin keyId)
   exact law before pool result aligned supported
 
 private theorem server_build (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
@@ -114,7 +112,7 @@ private theorem server_build (setup : Setup base KemSK) (checks : Checks) (wire 
 theorem handler (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential (handleSource source))
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential (handleSource source))
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain)
     (before : RegistrationNativeExperiment.State n KemSK (handleSource source)) (pool : Pool source)
     (result : (RegistrationNativeRawAdapter.TypedSpec.Range query × RegistrationNativeExperiment.State n KemSK (handleSource source)) × Pool source)
@@ -140,7 +138,7 @@ theorem handler (setup : Setup base KemSK) (checks : Checks) (wire : Registratio
 theorem program (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential (handleSource source))
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential (handleSource source))
     (work : OracleComp RegistrationNativeRawAdapter.TypedSpec Value)
     (before : RegistrationNativeExperiment.State n KemSK (handleSource source)) (pool : Pool source)
     (result : (Value × RegistrationNativeExperiment.State n KemSK (handleSource source)) × Pool source)
@@ -160,7 +158,7 @@ theorem program (setup : Setup base KemSK) (checks : Checks) (wire : Registratio
 theorem run (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential (handleSource source))
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential (handleSource source))
     (bounds : FreshBounds) (mode : Mode) (work : OracleComp (ModeSpec mode) Value)
     (before : RegistrationNativeExperiment.State n KemSK (handleSource source)) (pool : Pool source)
     (result : RegistrationNativeEvents.Observed Value (RegistrationNativeExperiment.State n KemSK (handleSource source)) × Pool source)

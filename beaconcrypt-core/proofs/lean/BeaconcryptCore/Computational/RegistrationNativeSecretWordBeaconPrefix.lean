@@ -71,8 +71,8 @@ theorem afterDecap_frame (oneTime : D) (header : Header X Response) (first secon
     | (simp only [Option.elim_some, map_bind, ])
 
 /-- Actual raw pin equality, local DH zero checks, assigned ID and populated associated data do not inspect the decapsulated secret. -/
-theorem admitted_setShared (control : beaconcrypt_core.pqxdh.BeaconInitSent) (inputs : Inputs Response) (shared : Word32) :
-    PqxdhPhase2DhMetadata.admitted control (setShared shared inputs) = PqxdhPhase2DhMetadata.admitted control inputs := rfl
+theorem admitted_setShared (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding) (control : beaconcrypt_core.pqxdh.BeaconInitSent) (inputs : Inputs Response) (shared : Word32) :
+    PqxdhPhase2DhMetadata.admitted (completedBinding := completedBinding) control (setShared shared inputs) = PqxdhPhase2DhMetadata.admitted (completedBinding := completedBinding) control inputs := rfl
 
 end BeaconcryptCore.Computational.RegistrationNativeSecretWordBeaconPrefix
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativeSecretWordBeaconPrefix.collect_split' depends on axioms: [propext,

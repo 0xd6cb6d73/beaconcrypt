@@ -10,6 +10,7 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 open OracleComp OracleSpec
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhBeaconSingleInitialization
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open RawCtxGenericRoleStorage PqxdhBeaconPhase2Shared PqxdhInitialGenericBeacon
 variable {Kernel I D K X Response Shared Origin : Type}
 
@@ -35,7 +36,7 @@ theorem owner_closed {m : Type → Type*} [Monad m]
     (calls : RawCtxChainOwner.Calls Kernel m) (application : Response → m (Option Pqxdh.Bytes))
     (initial : Secrets Shared → m (Option Kernel)) (decode : RawCtxReceive.FrameDecoder)
     (raw : Pqxdh.Bytes) (state : BeaconState Kernel I D K) (closed : Closed state) :
-    PqxdhInitialFinishOrigin.owner mark pre calls application initial decode raw state = pure ((none, state), none) := by
+    PqxdhInitialFinishOrigin.owner (completedBinding := completedBinding) mark pre calls application initial decode raw state = pure ((none, state), none) := by
   cases phase : state.beacon.phase <;> simp_all only [Closed]
   all_goals simp only [PqxdhInitialFinishOrigin.owner, phase]
 
@@ -49,7 +50,7 @@ theorem attempt_closed {State : Type}
     (raw : Pqxdh.Bytes) (entry : BeaconState Kernel I D K) (control : pqxdh.BeaconInitSent)
     (prekey oneTime : D) (kem : K) (phase : entry.beacon.phase = .initSent control prekey oneTime kem)
     (before : State) (result : PqxdhInitialFinishOrigin.Result Kernel Origin I D K × State)
-    (supported : result ∈ support ((PqxdhInitialFinishOrigin.owner mark pre calls application initial decode raw entry).run before)) :
+    (supported : result ∈ support ((PqxdhInitialFinishOrigin.owner (completedBinding := completedBinding) mark pre calls application initial decode raw entry).run before)) :
     Closed result.1.1.2 := by
   simp only [PqxdhInitialFinishOrigin.owner, phase, StateT.run_bind, mem_support_bind_iff] at supported
   obtain ⟨prepared, _, rest⟩ := supported
@@ -74,11 +75,11 @@ theorem marker_closed {State : Type}
     (initial : Secrets Shared → StateT State ProbComp (Option Kernel)) (decode : RawCtxReceive.FrameDecoder)
     (raw : Pqxdh.Bytes) (entry : BeaconState Kernel I D K) (before : State)
     (result : PqxdhInitialFinishOrigin.Result Kernel Origin I D K × State)
-    (supported : result ∈ support ((PqxdhInitialFinishOrigin.owner mark pre calls application initial decode raw entry).run before))
+    (supported : result ∈ support ((PqxdhInitialFinishOrigin.owner (completedBinding := completedBinding) mark pre calls application initial decode raw entry).run before))
     (origin : Origin) (recorded : result.1.2 = some origin) : Closed result.1.1.2 := by
   obtain ⟨control, prekey, oneTime, kem, prepared, atTail, staged, phase, _, _, _, _, _⟩ :=
-    PqxdhInitialFinishOrigin.origin mark pre calls application initial decode raw entry before result supported origin recorded
-  exact attempt_closed mark pre calls application initial decode raw entry control prekey oneTime kem phase before result supported
+    PqxdhInitialFinishOrigin.origin (completedBinding := completedBinding) mark pre calls application initial decode raw entry before result supported origin recorded
+  exact attempt_closed (completedBinding := completedBinding) mark pre calls application initial decode raw entry control prekey oneTime kem phase before result supported
 
 /-- The original record frontend retains a terminal registration phase through every send, receive, rejection and callback outcome. -/
 theorem record_closed {State : Type}
@@ -229,19 +230,19 @@ theorem no_second_after_live {State M P Result : Type} {S B : Nat}
     (raw laterRaw : Pqxdh.Bytes) (entry : RawCtxGenericFamilyLive.State Kernel M P I D K S B)
     (selected : Fin B) (before : State)
     (first : PqxdhInitialFinishOrigin.Result Kernel Origin I D K × State)
-    (firstSupported : first ∈ support ((PqxdhInitialFinishOrigin.owner mark pre calls application initial decode raw (entry.1.2 selected)).run before))
+    (firstSupported : first ∈ support ((PqxdhInitialFinishOrigin.owner (completedBinding := completedBinding) mark pre calls application initial decode raw (entry.1.2 selected)).run before))
     (origin : Origin) (recorded : first.1.2 = some origin)
     (client : OracleComp (RawCtxProtocolReveals.SourceSpec S B) Result)
     (result : (Result × RawCtxGenericFamilyLive.State Kernel M P I D K S B) × State)
     (supported : result ∈ support (((simulateQ (RawCtxGenericFamilyLive.impl calls publicCalls reader sender route decode) client).run
       ((entry.1.1, Function.update entry.1.2 selected first.1.1.2), entry.2)).run first.2)) :
-    PqxdhInitialFinishOrigin.owner mark pre calls application initial decode laterRaw (result.1.2.1.2 selected) =
+    PqxdhInitialFinishOrigin.owner (completedBinding := completedBinding) mark pre calls application initial decode laterRaw (result.1.2.1.2 selected) =
       pure ((none, result.1.2.1.2 selected), none) := by
-  apply owner_closed
+  apply owner_closed (completedBinding := completedBinding)
   apply live_schedule_closed calls publicCalls reader sender route decode client
     ((entry.1.1, Function.update entry.1.2 selected first.1.1.2), entry.2) selected _ first.2 result supported
   simpa only [Function.update_self] using
-    marker_closed mark pre calls application initial decode raw (entry.1.2 selected) before first firstSupported origin recorded
+    marker_closed (completedBinding := completedBinding) mark pre calls application initial decode raw (entry.1.2 selected) before first firstSupported origin recorded
 
 /-- The original uninstrumented finish also rejects a terminal owner exactly, without consulting any primitive callback. -/
 theorem original_closed {m : Type → Type*} [Monad m]
@@ -249,7 +250,7 @@ theorem original_closed {m : Type → Type*} [Monad m]
     (calls : RawCtxChainOwner.Calls Kernel m) (application : Response → m (Option Pqxdh.Bytes))
     (initial : Secrets Shared → m (Option Kernel)) (decode : RawCtxReceive.FrameDecoder)
     (raw : Pqxdh.Bytes) (state : BeaconState Kernel I D K) (closed : Closed state) :
-    PqxdhInitialGenericBeacon.owner pre calls application initial decode raw state = pure (none, state) := by
+    PqxdhInitialGenericBeacon.owner (completedBinding := completedBinding) pre calls application initial decode raw state = pure (none, state) := by
   cases phase : state.beacon.phase <;> simp_all only [Closed]
   all_goals simp only [PqxdhInitialGenericBeacon.owner, phase]
 

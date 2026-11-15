@@ -25,14 +25,14 @@ local notation "PhysicalM" => StateT (Backend n KemSK) (StateT P ProbComp)
 
 noncomputable def trusted (coins : QueryImpl unifSpec (StateT P ProbComp))
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit) :
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     QueryImpl (Trusted n KemSK) PhysicalM := fun query =>
   RegistrationNativePlatformInterpret.state coins
     (RegistrationNativePlatformSdkFinishBackend.handler setup checks representation created query)
 
 noncomputable def body (coins : QueryImpl unifSpec (StateT P ProbComp))
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (erased : commitment.CommitmentTranscript)
     (parseEd : Slice U8 → StateT P ProbComp (RustM (core.result.Result ed.PublicKey ed.Error)))
     (verifyEd : Slice U8 → ed.PublicKey → StateT P ProbComp (RustM (core.option.Option (alloc.vec.Vec U8))))
@@ -57,7 +57,7 @@ noncomputable def model (coins : QueryImpl unifSpec (StateT P ProbComp))
 
  theorem body_source (coins : QueryImpl unifSpec (StateT P ProbComp))
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (erased : commitment.CommitmentTranscript)
     (parseEd : Slice U8 → StateT P ProbComp (RustM (core.result.Result ed.PublicKey ed.Error)))
     (verifyEd : Slice U8 → ed.PublicKey → StateT P ProbComp (RustM (core.option.Option (alloc.vec.Vec U8))))

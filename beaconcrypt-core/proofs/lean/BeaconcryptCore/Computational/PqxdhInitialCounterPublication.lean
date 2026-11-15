@@ -9,13 +9,15 @@ open RustM beaconcrypt_core ratchet ratchet.refined ratchet.concrete
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhInitialCounterPublication
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily
 open PqxdhInitialNativeLog PqxdhInitialPendingPost PqxdhInitialOriginFinishPath
 variable {ι Chain M P I D K X Response Shared A N C Result : Type} {extra : OracleSpec ι} {S B : Nat}
 
-private theorem opening_kernel (candidate : pqxdh.BeaconRegistrationCandidate) (kernel : KernelOf Chain)
+private theorem opening_kernel (candidate : pqxdh.BeaconRegistrationCandidate) (associatedData : Std.Array Std.U8 151#usize) (kernel : KernelOf Chain)
     (reply : core.option.Option RawCtxWholeOwner.Decrypted) (staged : PqxdhInitialGenericBeacon.Staged (KernelOf Chain))
-    (found : PqxdhInitialGenericBeacon.afterOpening candidate kernel reply = some staged) : staged.kernel = kernel := by
+    (found : PqxdhInitialGenericBeacon.afterOpening candidate associatedData kernel reply = some staged) : staged.kernel = kernel := by
   cases reply with
   | none => cases found
   | some opened =>
@@ -69,10 +71,10 @@ theorem after_counter (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMix
     simp only [simulateQ_pure, StateT.run_pure, mem_support_pure_iff] at finished
     subst result
     have preserved := PqxdhInitialCounterBudget.raw_counter source writer stage external decode raw
-      (PqxdhInitialGenericBeacon.localOwner (PqxdhBeaconPhase2Shared.clearedMetadata pending.metadata) kernel)
+      (PqxdhInitialGenericBeacon.localOwner (PqxdhBeaconPhase2Shared.clearedMetadata pending.metadata) pending.metadata.associatedData kernel)
       application.2 valid' received actual
     intro staged produced
-    rw [opening_kernel _ _ _ staged produced]
+    rw [opening_kernel _ _ _ _ staged produced]
     exact preserved
 
 
@@ -109,14 +111,14 @@ theorem marked_finish_counter (source : FixedHkdfSha512NoSaltSource) (writer : R
     (result : PqxdhInitialFinishOrigin.Result (KernelOf RatchetChain) Bool I D K × State A N RootOracle.QueryCache)
     (supported : result ∈ support ((simulateQ (handler (S := S) (B := B) source writer stage
       (withInitial source selected previousRoot response other))
-      (PqxdhInitialFinishOrigin.owner (PqxdhInitialSelectedOrigin.mark source selected)
+      (PqxdhInitialFinishOrigin.owner (completedBinding := completedBinding) (PqxdhInitialSelectedOrigin.mark source selected)
         preForward calls applicationForward initialForward decode raw entry)).run state))
     (marked : result.1.2 = some true) :
     ∃ kernel, beaconKernel result.1.1.2 = some kernel ∧
       kernel.control.send_sequence.val ≤ result.2.1.2.length := by
   rw [PqxdhInitialOriginPost.owner_interpretation] at supported
   obtain ⟨control, prekey, oneTime, kem, prepared, atTail, staged, phase, preparation, tail, finished, success, chosen⟩ :=
-    PqxdhInitialFinishOrigin.origin (PqxdhInitialSelectedOrigin.mark source selected) _ _ _ _ decode raw entry state result supported true marked
+    PqxdhInitialFinishOrigin.origin (completedBinding := completedBinding) (PqxdhInitialSelectedOrigin.mark source selected) _ _ _ _ decode raw entry state result supported true marked
   have actualTail : (staged, result.2) ∈ support ((simulateQ (handler (S := S) (B := B) source writer stage
       (withInitial source selected previousRoot response other))
       (PqxdhInitialGenericBeacon.tail calls applicationForward initialForward decode prepared)).run atTail) := by
@@ -228,7 +230,7 @@ noncomputable def impl (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (query : (PqxdhInitialGenericPost.Spec extra S B).Domain) (before : Snapshot M P I D K S B) :=
   simulateQ (PqxdhInitialNativeLog.handler source writer stage (withInitial source selected previousRoot response other))
-    ((PqxdhInitialOriginPost.compiler (PqxdhInitialSelectedOrigin.mark source selected) sender route decode query).run before)
+    ((PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) (PqxdhInitialSelectedOrigin.mark source selected) sender route decode query).run before)
 
 
 /-- Every actual successful or rejected finish preserves the installed-session counter bound and all prior publications. -/
@@ -241,14 +243,14 @@ theorem finish_invariant (source : FixedHkdfSha512NoSaltSource) (writer : RawCtx
     (index : Fin B) (raw : Pqxdh.Bytes) (before : Snapshot M P I D K S B) (state : SourceState A N)
     (valid : Invariant selected before state)
     (result : (Option Pqxdh.Bytes × Snapshot M P I D K S B) × SourceState A N)
-    (supported : result ∈ support ((impl source writer stage selectedMessage previousRoot response other
+    (supported : result ∈ support ((impl (completedBinding := completedBinding) source writer stage selectedMessage previousRoot response other
       sender route decode (.inr (.finish index raw)) before).run state)) :
     Invariant selected result.1.2 result.2 := by
   have extension := PqxdhInitialCounterBudget.program_mono source writer stage
     (withInitial source selectedMessage previousRoot response other) _ state result supported
   change result ∈ support ((simulateQ (PqxdhInitialNativeLog.handler source writer stage
     (withInitial source selectedMessage previousRoot response other)) (do
-      let finished ← PqxdhInitialFinishOrigin.owner (PqxdhInitialSelectedOrigin.mark source selectedMessage)
+      let finished ← PqxdhInitialFinishOrigin.owner (completedBinding := completedBinding) (PqxdhInitialSelectedOrigin.mark source selectedMessage)
         PqxdhInitialPendingPost.preForward PqxdhInitialPendingPost.calls PqxdhInitialPendingPost.applicationForward
         PqxdhInitialPendingPost.initialForward decode raw (before.1.roles.1.2 index)
       pure (finished.1.1, (PqxdhInitialPendingPost.install index before.1 finished.1.2,
@@ -275,7 +277,7 @@ theorem finish_invariant (source : FixedHkdfSha512NoSaltSource) (writer : RawCtx
         | none =>
           have old : before.2.installed (.beacon index) = some true := by
             simpa only [PqxdhInitialOriginPost.finish, origin] using marked
-          have unchanged := unmarked_kernel _ _ decode raw (before.1.roles.1.2 index) state finished reached origin kernel current
+          have unchanged := PqxdhInitialOriginFinishPath.unmarked_kernel (completedBinding := completedBinding) _ _ decode raw (before.1.roles.1.2 index) state finished reached origin kernel current
           exact (valid.1 old kernel (by
             cases phase : (before.1.roles.1.2 index).beacon.phase <;>
               simpa only [RawCtxGenericRoleFamily.selectedKernel, beaconKernel, phase] using unchanged)).trans extension
@@ -283,7 +285,7 @@ theorem finish_invariant (source : FixedHkdfSha512NoSaltSource) (writer : RawCtx
           have valueEq : value = true := by
             simpa only [PqxdhInitialOriginPost.finish, origin, Function.update_self, Option.some.injEq] using marked
           subst value
-          obtain ⟨actual, present, path⟩ := marked_finish_counter source writer stage selectedMessage previousRoot response
+          obtain ⟨actual, present, path⟩ := marked_finish_counter (completedBinding := completedBinding) source writer stage selectedMessage previousRoot response
             other decode raw (before.1.roles.1.2 index) state finished reached origin
           have sameKernel : actual = kernel := Option.some.inj (present.symm.trans current)
           subst actual
@@ -313,7 +315,7 @@ theorem records_invariant (source : FixedHkdfSha512NoSaltSource) (writer : RawCt
     (query : (RawCtxProtocolReveals.SourceSpec S B).Domain) (before : Snapshot M P I D K S B) (state : SourceState A N)
     (valid : Invariant selected before state)
     (result : ((RawCtxProtocolReveals.SourceSpec S B).Range query × Snapshot M P I D K S B) × SourceState A N)
-    (supported : result ∈ support ((impl source writer stage selectedMessage previousRoot response other
+    (supported : result ∈ support ((impl (completedBinding := completedBinding) source writer stage selectedMessage previousRoot response other
       sender route decode (.inl (.inl query)) before).run state)) :
     Invariant selected result.1.2 result.2 := by
   have extension := PqxdhInitialCounterBudget.program_mono source writer stage
@@ -345,11 +347,11 @@ theorem step_invariant (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
     (query : (PqxdhInitialGenericPost.Spec extra S B).Domain) (before : Snapshot M P I D K S B) (state : SourceState A N)
     (valid : Invariant selected before state)
     (result : ((PqxdhInitialGenericPost.Spec extra S B).Range query × Snapshot M P I D K S B) × SourceState A N)
-    (supported : result ∈ support ((impl source writer stage selectedMessage previousRoot response other
+    (supported : result ∈ support ((impl (completedBinding := completedBinding) source writer stage selectedMessage previousRoot response other
       sender route decode query before).run state)) :
     Invariant selected result.1.2 result.2 := by
   rcases query with (query | query) | ⟨index, raw⟩
-  · exact records_invariant source writer stage selectedMessage previousRoot response other selected
+  · exact records_invariant (completedBinding := completedBinding) source writer stage selectedMessage previousRoot response other selected
       sender route decode query before state valid result supported
   · have extension := PqxdhInitialCounterBudget.program_mono source writer stage
       (withInitial source selectedMessage previousRoot response other) _ state result supported
@@ -359,7 +361,7 @@ theorem step_invariant (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
     simp only [simulateQ_map, StateT.run_map, support_map] at supported
     obtain ⟨completed, reached, rfl⟩ := supported
     exact invariant_mono selected before state completed.2 valid extension
-  · exact finish_invariant source writer stage selectedMessage previousRoot response other selected
+  · exact finish_invariant (completedBinding := completedBinding) source writer stage selectedMessage previousRoot response other selected
       sender route decode index raw before state valid result supported
 
 noncomputable def program (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer) (stage : Nat)
@@ -369,7 +371,7 @@ noncomputable def program (source : FixedHkdfSha512NoSaltSource) (writer : RawCt
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (client : OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result) (before : Snapshot M P I D K S B) :=
   simulateQ (PqxdhInitialNativeLog.handler source writer stage (withInitial source selectedMessage previousRoot response other))
-    ((simulateQ (PqxdhInitialOriginPost.compiler (PqxdhInitialSelectedOrigin.mark source selectedMessage)
+    ((simulateQ (PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) (PqxdhInitialSelectedOrigin.mark source selectedMessage)
       sender route decode) client).run before)
 
 /-- The whole original adaptive post client retains its selected-session counter and successful-publication bounds, from the same full source prefix state. -/
@@ -382,7 +384,7 @@ theorem program_invariant (source : FixedHkdfSha512NoSaltSource) (writer : RawCt
     (client : OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result) (before : Snapshot M P I D K S B) (state : SourceState A N)
     (valid : Invariant selected before state)
     (result : (Result × Snapshot M P I D K S B) × SourceState A N)
-    (supported : result ∈ support ((program source writer stage selectedMessage previousRoot response other
+    (supported : result ∈ support ((program (completedBinding := completedBinding) source writer stage selectedMessage previousRoot response other
       sender route decode client before).run state)) :
     Invariant selected result.1.2 result.2 := by
   induction client using OracleComp.inductionOn generalizing before state with
@@ -394,7 +396,7 @@ theorem program_invariant (source : FixedHkdfSha512NoSaltSource) (writer : RawCt
     simp only [program, simulateQ_bind, simulateQ_spec_query, StateT.run_bind, mem_support_bind_iff] at supported
     obtain ⟨completed, reached, rest⟩ := supported
     exact ih completed.1.1 completed.1.2 completed.2
-      (step_invariant source writer stage selectedMessage previousRoot response other selected
+      (step_invariant (completedBinding := completedBinding) source writer stage selectedMessage previousRoot response other selected
         sender route decode query before state valid completed reached) rest
 
 
@@ -410,7 +412,7 @@ private theorem builder_after_counter (source : FixedHkdfSha512NoSaltSource) (wr
     (state : PqxdhInitialNativeLog.State A N C)
     (result : (Option PqxdhServerRegistrationPublication.Response × BuildState M P) × PqxdhInitialNativeLog.State A N C)
     (supported : result ∈ support ((simulateQ (handler source writer stage external)
-      (PqxdhInitialGenericPublication.afterInitialization (PqxdhInitialPendingPost.calls (S := S) (B := B))
+      (PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) (PqxdhInitialPendingPost.calls (S := S) (B := B))
         auxForward candidate authenticated entry metadata before)).run state))
     (valid : entry.control.send_sequence.val ≤ state.1.2.length)
     (response : PqxdhServerRegistrationPublication.Response) (returned : result.1.1 = some response) :
@@ -446,7 +448,7 @@ private theorem builder_candidate_counter (source : FixedHkdfSha512NoSaltSource)
     (response : PqxdhServerRegistrationPublication.Response) (updated : BuildState M P)
     (supported : (ok (some response, updated), afterState) ∈ support
       ((simulateQ (handler source writer stage external)
-        (PqxdhInitialGenericBuilder.candidate (PqxdhInitialPendingPost.calls (S := S) (B := B))
+        (PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) (PqxdhInitialPendingPost.calls (S := S) (B := B))
           auxForward initial candidate data metadata before)).run state))
     (initialZero : ∀ entry, initial = ok entry → entry.control.send_sequence.val = 0) :
     ∃ peer, updated.server.peers response.keyId = some peer ∧ peer.kernel.control.send_sequence.val ≤ afterState.1.2.length := by
@@ -477,7 +479,7 @@ private theorem builder_candidate_counter (source : FixedHkdfSha512NoSaltSource)
   obtain ⟨⟨⟨reply, output⟩, finalState⟩, actual, same⟩ := supported
   simp only [Prod.mk.injEq, RustM.ok.injEq] at same
   obtain ⟨⟨rfl, rfl⟩, rfl⟩ := same
-  exact builder_after_counter source writer stage external candidate _ _ metadata before afterAllocation
+  exact builder_after_counter (associatedData := associatedData) source writer stage external candidate _ _ metadata before afterAllocation
     _ actual (by rw [initialZero _ initialEq]; exact Nat.zero_le _) response rfl
 
 /-- Current key allocation and Ready preparation preserve the source-backed successful publication counter. -/
@@ -490,7 +492,7 @@ private theorem builder_ready_counter (source : FixedHkdfSha512NoSaltSource) (wr
     (response : PqxdhServerRegistrationPublication.Response) (updated : BuildState M P)
     (supported : (ok (some response, updated), afterState) ∈ support
       ((simulateQ (handler source writer stage external)
-        (PqxdhInitialGenericBuilder.readyBuild source (PqxdhInitialPendingPost.calls (S := S) (B := B))
+        (PqxdhInitialGenericBuilder.readyBuild (associatedData := associatedData) source (PqxdhInitialPendingPost.calls (S := S) (B := B))
           auxForward initial binding ready metadata before)).run state))
     (initialZero : ∀ entry, initial = ok entry → entry.control.send_sequence.val = 0) :
     ∃ peer, updated.server.peers response.keyId = some peer ∧ peer.kernel.control.send_sequence.val ≤ afterState.1.2.length := by
@@ -505,7 +507,7 @@ private theorem builder_ready_counter (source : FixedHkdfSha512NoSaltSource) (wr
     Prod.mk.injEq, reduceCtorEq, false_and] at supported
   split at supported <;> try simp only [simulateQ_pure, StateT.run_pure, mem_support_pure_iff,
     Prod.mk.injEq, RustM.ok.injEq, reduceCtorEq, false_and] at supported
-  exact builder_candidate_counter source writer stage external initial _ ready.application metadata before
+  exact builder_candidate_counter (associatedData := associatedData) source writer stage external initial _ ready.application metadata before
     state afterState response updated supported initialZero
 
 /-- The complete source builder installs a peer with its actual first-send counter bounded by the full source log. -/
@@ -518,14 +520,14 @@ private theorem builder_counter (source : FixedHkdfSha512NoSaltSource) (writer :
     (response : PqxdhServerRegistrationPublication.Response)
     (supported : ((ok (some response), after), afterState) ∈ support
       ((simulateQ (handler source writer stage external)
-        ((PqxdhInitialPendingBuilder.build source initial sender index metadata ready).run before)).run state))
+        ((PqxdhInitialPendingBuilder.build (associatedData := associatedData) source initial sender index metadata ready).run before)).run state))
     (initialZero : ∀ entry, initial = ok entry → entry.control.send_sequence.val = 0) :
     ∃ peer, (after.roles.1.1 index).server.peers response.keyId = some peer ∧
       peer.kernel.control.send_sequence.val ≤ afterState.1.2.length := by
   change ((ok (some response), after), afterState) ∈ support
     ((simulateQ (handler source writer stage external)
       (PqxdhInitialPendingBuilder.reinstall index (PqxdhInitialPendingBuilder.consume index ready before) <$>
-        PqxdhInitialGenericBuilder.readyBuild source PqxdhInitialPendingPost.calls auxForward initial
+        PqxdhInitialGenericBuilder.readyBuild (associatedData := associatedData) source PqxdhInitialPendingPost.calls auxForward initial
           ⟨(PqxdhInitialPendingBuilder.selected sender index (PqxdhInitialPendingBuilder.consume index ready before)).server.identity,
             (PqxdhInitialPendingBuilder.selected sender index (PqxdhInitialPendingBuilder.consume index ready before)).identityKeyId⟩
           ready metadata (PqxdhInitialPendingBuilder.selected sender index (PqxdhInitialPendingBuilder.consume index ready before)))).run state) at supported
@@ -537,7 +539,7 @@ private theorem builder_counter (source : FixedHkdfSha512NoSaltSource) (writer :
   rcases built with ⟨reply, updated⟩
   obtain ⟨⟨rfl, rfl⟩, rfl⟩ := same
   simpa only [PqxdhInitialPendingBuilder.install, Function.update_self] using
-    builder_ready_counter source writer stage external initial _ ready metadata _ state finalState
+    builder_ready_counter (associatedData := associatedData) source writer stage external initial _ ready metadata _ state finalState
       response updated actual initialZero
 
 private theorem supplied_zero (source : FixedHkdfSha512NoSaltSource)
@@ -562,12 +564,12 @@ private theorem supplied_build_counter (source : FixedHkdfSha512NoSaltSource) (w
     (response : PqxdhServerRegistrationPublication.Response)
     (supported : ((ok (some response), after), afterState) ∈ support
       ((simulateQ (handler source writer stage external)
-        ((PqxdhInitialPendingBuilder.build source
+        ((PqxdhInitialPendingBuilder.build (associatedData := associatedData) source
           ((fun kernel : ConcreteRatchetKernel => kernel.refined) <$> PqxdhInitialReplyErasure.kernelOf false supplied)
           sender index metadata ready).run before)).run state)) :
     ∃ peer, (after.roles.1.1 index).server.peers response.keyId = some peer ∧
       peer.kernel.control.send_sequence.val ≤ afterState.1.2.length := by
-  apply builder_counter source writer stage external _ sender index metadata ready before after state afterState response supported
+  apply builder_counter (associatedData := associatedData) source writer stage external _ sender index metadata ready before after state afterState response supported
   intro kernel returned
   rw [initialized, RawCtxMaterialInterpretation.rust_map_ok] at returned
   cases RustM.ok.inj returned
@@ -597,7 +599,7 @@ private theorem builder_invariant (source : FixedHkdfSha512NoSaltSource) (writer
     (supported : ((reply, after), afterState) ∈ support
       ((simulateQ (PqxdhInitialNativeLog.handler source writer stage
         (withInitial source selectedMessage previousRoot response64 other))
-        ((PqxdhInitialPendingBuilder.build source
+        ((PqxdhInitialPendingBuilder.build (associatedData := associatedData) source
           (ConcreteRatchetKernel.refined <$> PqxdhInitialReplyErasure.kernelOf false response64)
           sender index metadata ready).run before)).run state)) :
     Invariant selected (after, PqxdhInitialOriginPost.afterBuilder empty after index true reply) afterState := by
@@ -612,7 +614,7 @@ private theorem builder_invariant (source : FixedHkdfSha512NoSaltSource) (writer
       | none =>
         simpa only [PqxdhInitialOriginPost.afterBuilder, found] using empty_invariant selected after afterState
       | some peer =>
-        obtain ⟨actualPeer, actualPresent, path⟩ := supplied_build_counter source writer stage
+        obtain ⟨actualPeer, actualPresent, path⟩ := supplied_build_counter (associatedData := associatedData) source writer stage
           (withInitial source selectedMessage previousRoot response64 other) response64 entry initialized sender index metadata ready
           before after state afterState response supported
         have samePeer : actualPeer = peer := Option.some.inj (actualPresent.symm.trans found)
@@ -652,7 +654,7 @@ noncomputable def sequence (source : FixedHkdfSha512NoSaltSource) (writer : RawC
     (before : Front M P I D K S B) : StateT (SourceState A N) ProbComp (Result × Snapshot M P I D K S B) :=
   simulateQ (PqxdhInitialNativeLog.handler source writer stage
     (withInitial source selectedMessage previousRoot response64 other))
-    ((PqxdhInitialOriginPost.sequence source
+    ((PqxdhInitialOriginPost.sequence (associatedData := associatedData) (completedBinding := completedBinding) source
       (ConcreteRatchetKernel.refined <$> PqxdhInitialReplyErasure.kernelOf false response64)
       (PqxdhInitialSelectedOrigin.mark source selectedMessage) true sender route decode index metadata ready post).run (before, empty))
 
@@ -668,21 +670,21 @@ theorem sequence_invariant (source : FixedHkdfSha512NoSaltSource) (writer : RawC
     (post : RustM (Option PqxdhServerRegistrationPublication.Response) → OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result)
     (before : Front M P I D K S B) (state : SourceState A N)
     (result : (Result × Snapshot M P I D K S B) × SourceState A N)
-    (supported : result ∈ support ((sequence source writer stage selectedMessage previousRoot response64 other
+    (supported : result ∈ support ((sequence (associatedData := associatedData) (completedBinding := completedBinding) source writer stage selectedMessage previousRoot response64 other
       sender route decode index metadata ready post before).run state)) :
     Invariant selected result.1.2 result.2 := by
   change result ∈ support ((simulateQ
     (PqxdhInitialNativeLog.handler source writer stage (withInitial source selectedMessage previousRoot response64 other)) (do
-      let built ← (PqxdhInitialPendingBuilder.build source
+      let built ← (PqxdhInitialPendingBuilder.build (associatedData := associatedData) source
         (ConcreteRatchetKernel.refined <$> PqxdhInitialReplyErasure.kernelOf false response64) sender index metadata ready).run before
-      (simulateQ (PqxdhInitialOriginPost.compiler (PqxdhInitialSelectedOrigin.mark source selectedMessage)
+      (simulateQ (PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) (PqxdhInitialSelectedOrigin.mark source selectedMessage)
         sender route decode) (post built.1)).run
         (built.2, PqxdhInitialOriginPost.afterBuilder empty built.2 index true built.1))).run state) at supported
   simp only [simulateQ_bind, StateT.run_bind, mem_support_bind_iff] at supported
   obtain ⟨built, reached, rest⟩ := supported
-  exact program_invariant source writer stage selectedMessage previousRoot response64 other
+  exact program_invariant (completedBinding := completedBinding) source writer stage selectedMessage previousRoot response64 other
     selected sender route decode (post built.1.1) _ built.2
-    (builder_invariant source writer stage selectedMessage previousRoot response64 other entry initialized selected
+    (builder_invariant (associatedData := associatedData) source writer stage selectedMessage previousRoot response64 other entry initialized selected
       sender index metadata ready before built.1.2 state built.2 built.1.1 reached) result rest
 
 
@@ -699,13 +701,13 @@ theorem publication_bound (source : FixedHkdfSha512NoSaltSource) (writer : RawCt
     (qPost : Nat) (bounded : ∀ reply, (post reply).IsTotalQueryBound qPost)
     (before : Front M P I D K S B) (state : SourceState A N)
     (result : (Result × Snapshot M P I D K S B) × SourceState A N)
-    (supported : result ∈ support ((sequence source writer stage selectedMessage previousRoot response64 other
+    (supported : result ∈ support ((sequence (associatedData := associatedData) (completedBinding := completedBinding) source writer stage selectedMessage previousRoot response64 other
       sender route decode index metadata ready post before).run state))
     (number : Std.U64) (published : ((selected, number), true) ∈ result.1.2.2.published) :
     number.val ≤ state.1.2.length + (7 + qPost * 67) := by
-  have counted := (sequence_invariant source writer stage selectedMessage previousRoot response64 other
+  have counted := (sequence_invariant (associatedData := associatedData) (completedBinding := completedBinding) source writer stage selectedMessage previousRoot response64 other
     entry initialized selected sender route decode index metadata ready post before state result supported).2 number published
-  have total := PqxdhInitialOriginPost.sequence_total (X := X) (Response := Response)
+  have total := PqxdhInitialOriginPost.sequence_total (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response)
     source (ConcreteRatchetKernel.refined <$> PqxdhInitialReplyErasure.kernelOf false response64)
     (PqxdhInitialSelectedOrigin.mark source selectedMessage) true sender route decode index metadata ready
     post qPost bounded (before, empty)
@@ -726,18 +728,18 @@ theorem selection_bound (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxM
     (qPost : Nat) (bounded : ∀ reply, (post reply).IsTotalQueryBound qPost)
     (before : Front M P I D K S B) (state : SourceState A N)
     (event : Nat → (Result × Snapshot M P I D K S B) × SourceState A N → Prop) :
-    Pr{let result ← sequence source writer stage selectedMessage previousRoot response64 other sender route decode index metadata ready post before state}[∃ number : Std.U64, ((selected, number), true) ∈ result.1.2.2.published ∧ event number.val result] ≤
+    Pr{let result ← sequence (associatedData := associatedData) (completedBinding := completedBinding) source writer stage selectedMessage previousRoot response64 other sender route decode index metadata ready post before state}[∃ number : Std.U64, ((selected, number), true) ∈ result.1.2.2.published ∧ event number.val result] ≤
       ∑ position ∈ Finset.range (state.1.2.length + (7 + qPost * 67) + 1),
-        Pr{let result ← sequence source writer stage selectedMessage previousRoot response64 other sender route decode index metadata ready post before state}[∃ number : Std.U64, number.val = position ∧ ((selected, number), true) ∈ result.1.2.2.published ∧ event position result] := by
+        Pr{let result ← sequence (associatedData := associatedData) (completedBinding := completedBinding) source writer stage selectedMessage previousRoot response64 other sender route decode index metadata ready post before state}[∃ number : Std.U64, number.val = position ∧ ((selected, number), true) ∈ result.1.2.2.published ∧ event position result] := by
   classical
   calc
-    _ ≤ Pr{let result ← sequence source writer stage selectedMessage previousRoot response64 other sender route decode index metadata ready post before state}[∃ position ∈ Finset.range (state.1.2.length + (7 + qPost * 67) + 1),
+    _ ≤ Pr{let result ← sequence (associatedData := associatedData) (completedBinding := completedBinding) source writer stage selectedMessage previousRoot response64 other sender route decode index metadata ready post before state}[∃ position ∈ Finset.range (state.1.2.length + (7 + qPost * 67) + 1),
         ∃ number : Std.U64, number.val = position ∧ ((selected, number), true) ∈ result.1.2.2.published ∧ event position result] := by
       apply prEvent_mono_of_support
       intro result supported accepted
       obtain ⟨number, published, enabled⟩ := accepted
       exact ⟨number.val, Finset.mem_range.mpr (Nat.lt_succ_of_le
-        (publication_bound source writer stage selectedMessage previousRoot response64 other entry initialized selected
+        (publication_bound (associatedData := associatedData) (completedBinding := completedBinding) source writer stage selectedMessage previousRoot response64 other entry initialized selected
           sender route decode index metadata ready post qPost bounded before state result supported number published)),
         number, rfl, published, enabled⟩
     _ ≤ _ := prEvent_exists_finset_le _ _ _

@@ -1,7 +1,8 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeMldsaCoinPrimitives
+import BeaconcryptCore.Computational.RegistrationNativeMldsaBundle
 
-/-! Actual free Beacon creation pays its shared pin fingerprint, ordinary identity/prekey draws and indexed KEM generation. The ML generation remains a named free capability, and every raw reply/count and failed source prefix is retained. Only the actual KEM key-generation program has an external primitive draw contract. -/
+/-! Actual free Beacon creation uses pure pin selection, ordinary identity/prekey draws and indexed KEM generation. The Beacon controller generates no ML credential; every raw reply/count and failed source prefix is retained. Only the actual KEM key-generation program has an external primitive draw contract. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -18,7 +19,7 @@ variable {n : Nat} {ι KemSK Value Next : Type} {base : OracleSpec ι}
 variable {source : Source}
 variable (setup : Setup base KemSK) (checks : Checks)
 variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 
 private theorem state_lift_apply {S X : Type} {m : Type → Type} [Monad m] [LawfulMonad m]
     (work : m X) (state : S) : (StateT.lift work) state = (fun value => (value, state)) <$> work := by
@@ -142,44 +143,26 @@ private theorem append (keyId : U64) (edPin : Std.Array U8 32#usize) :
   simp only [PqxdhRecordLiftWorld.effects, PqxdhRecordLiftWorld.capability, StateT.run,
     IsTotalQueryBound, isQueryBound_pure]
 
-attribute [local irreducible] registration.begin_server_pin registration.PinFingerprint.request registration.PinFingerprint.resume
+attribute [local irreducible] registration.begin_server_pin
 
-private theorem afterGenerated (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize)
-    (keyId : U64) (generated : Option (Credential source)) :
-    B (RegistrationNativeMldsaCreation.afterGenerated edPin mlPin keyId generated) 128 := by
-  unfold RegistrationNativeMldsaCreation.afterGenerated
-  cases generated with
-  | none => exact pure_bound setup checks representation created _ _
-  | some credential =>
-    simp only
-    cases registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
-    | fail error | div => exact pure_bound setup checks representation created _ _
-    | ok pending =>
-      simp only
-      cases pending.request with
-      | fail error | div => exact pure_bound setup checks representation created _ _
-      | ok request =>
-        simp only
-        apply bind_bound setup checks representation created _ _ 64 64 (hash setup checks representation created request)
-        intro digest
-        cases pending.resume (.Some (RegistrationAuthenticationShared.digestArray digest)) with
-        | fail error | div => exact pure_bound setup checks representation created _ _
-        | ok result =>
-          cases result with
-          | none => exact pure_bound setup checks representation created _ _
-          | some pin =>
-            apply bind_bound setup checks representation created _ _ 32 32
-              (sample setup checks representation created _ 32 PqxdhJointIdentity.sampleSeed_uniform_bound)
-            intro identity
-            exact bind_bound setup checks representation created _ _ 32 0
-              (sample setup checks representation created _ 32 PqxdhJointIdentity.sampleSeed_uniform_bound)
-              (fun _ => pure_bound setup checks representation created _ _)
+private theorem prepare (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize)
+    (keyId : U64) : B (RegistrationNativeBeaconFrontend.prepare source edPin mlPin keyId) 128 := by
+  unfold RegistrationNativeBeaconFrontend.prepare
+  cases registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
+  | fail error | div => exact pure_bound setup checks representation created _ _
+  | ok pin =>
+      apply bind_bound setup checks representation created _ _ 32 96
+        (sample setup checks representation created _ 32 PqxdhJointIdentity.sampleSeed_uniform_bound)
+      intro identity
+      exact bind_bound setup checks representation created _ _ 32 64
+        (sample setup checks representation created _ 32 PqxdhJointIdentity.sampleSeed_uniform_bound)
+        (fun _ => pure_bound setup checks representation created _ _)
 
 private theorem appendBorn (qKeygen : Nat)
     (bounded : (simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl) setup.kem.keygen).IsTotalQueryBound qKeygen)
     (edPin : Std.Array U8 32#usize) (keyId : U64) (pin : session.ServerAuthenticationPin)
-    (credential : Credential source) (identity : PqxdhJointIdentity.IdentitySeed) (prekey : PqxdhJointGapDh.ScalarBytes) :
-    B (RegistrationNativeBeaconFrontend.appendBorn setup source edPin keyId pin credential identity prekey) qKeygen := by
+    (identity : PqxdhJointIdentity.IdentitySeed) (prekey : PqxdhJointGapDh.ScalarBytes) :
+    B (RegistrationNativeBeaconFrontend.appendBorn setup source edPin keyId pin identity prekey) qKeygen := by
   unfold RegistrationNativeBeaconFrontend.appendBorn
   apply bind_bound setup checks representation created _ _ qKeygen 0 (keygen setup checks representation created qKeygen bounded)
   intro born
@@ -193,16 +176,16 @@ private theorem appendBorn (qKeygen : Nat)
 private theorem suffix (qKeygen : Nat)
     (bounded : (simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl) setup.kem.keygen).IsTotalQueryBound qKeygen)
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
-    (generated : Option (Credential source)) :
-    B (RegistrationNativeMldsaCreation.createSuffix setup edPin mlPin keyId generated) (128 + qKeygen) := by
-  unfold RegistrationNativeMldsaCreation.createSuffix
-  apply bind_bound setup checks representation created _ _ 128 qKeygen (afterGenerated setup checks representation created _ _ _ _)
+    :
+    B (RegistrationNativeBeaconFrontend.create setup source edPin mlPin keyId) (128 + qKeygen) := by
+  unfold RegistrationNativeBeaconFrontend.create
+  apply bind_bound setup checks representation created _ _ 128 qKeygen (prepare setup checks representation created _ _ _)
   intro result
   cases result with
   | fail error | div => exact pure_bound setup checks representation created _ _
   | ok option => cases option with
     | none => exact pure_bound setup checks representation created _ _
-    | some prepared => exact appendBorn setup checks representation created qKeygen bounded _ _ _ _ _ _
+    | some prepared => exact appendBorn setup checks representation created qKeygen bounded _ _ _ _ _
 
 private theorem source_lower
     (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State Value)
@@ -220,17 +203,12 @@ theorem create (qKeygen : Nat)
     (before : RegistrationNativeExperiment.State n KemSK source) :
     ((RegistrationNativeMldsaCreation.create setup checks representation created edPin mlPin keyId).run before).IsQueryBoundP
       IsCoin (128 + qKeygen) := by
-  simp only [RegistrationNativeMldsaCreation.create, StateT.run_bind]
-  rw [← Nat.zero_add (128 + qKeygen)]
-  apply isQueryBoundP_bind (n := 0) (m := 128 + qKeygen)
-  · simpa only [RegistrationNativeMldsaCreation.world, StateT.run, isQueryBoundP_map_iff] using
-      RegistrationNativeMldsaCoinPrimitives.call (source := source) .environment .generate before.server.world.world.1
-  · intro middle _
-    apply RegistrationNativeMldsaCoinPrimitives.ordinary _ (128 + qKeygen)
-    rw [source_lower]
-    simpa only [IsTotalQueryBound, isQueryBound_map_iff] using
-      suffix setup checks representation created qKeygen bounded edPin mlPin keyId middle.1
-        (middle.2.beacons, (RegistrationWorldAgreementCompiler.erase middle.2.server.world, middle.2))
+  unfold RegistrationNativeMldsaCreation.create
+  apply RegistrationNativeMldsaCoinPrimitives.ordinary _ (128 + qKeygen)
+  rw [source_lower]
+  simpa only [IsTotalQueryBound, isQueryBound_map_iff] using
+    suffix setup checks representation created qKeygen bounded edPin mlPin keyId
+      (before.beacons, (RegistrationWorldAgreementCompiler.erase before.server.world, before))
 end BeaconcryptCore.Computational.RegistrationNativeMldsaCoinCreate
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaCoinCreate.create' depends on axioms: [propext,

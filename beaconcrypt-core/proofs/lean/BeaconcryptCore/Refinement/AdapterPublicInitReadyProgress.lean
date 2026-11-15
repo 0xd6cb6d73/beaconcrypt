@@ -54,10 +54,11 @@ private theorem resume_cut {Reply Input Output : Type} (work : M S Reply) (resum
 
 variable [material : PublicWrapperPlatform.Material] [platform : PublicWrapperPlatform.Platform]
 variable [primitive : AdapterInitEdPrimitive.Operations]
-variable [AdapterPublicWrapperRequestMonad.LocalOperations (M S)]
+variable [localOps : AdapterPublicWrapperRequestMonad.LocalOperations (M S)]
 variable [AdapterPublicWrapperRequestMonad.CryptoOperations (M S)]
 variable [children : AdapterPublicWrapperRequestMonad.ChildOperations (M S)]
 
+omit platform localOps in
 theorem step_progress (beacon : beaconcrypt_public_wrapper.beacon.Beacon)
     (effect next : registration.BeaconInitEffect) (before after : S)
     (supported : (.ok (.cont next), after) ∈ support ((AdapterPublicInitReady.step (m := StateT S ProbComp) beacon effect).run.run before)) :
@@ -70,28 +71,10 @@ theorem step_progress (beacon : beaconcrypt_public_wrapper.beacon.Beacon)
       obtain ⟨request, _, continued⟩ := request_cut pending.request _ (.cont next : ControlFlow registration.BeaconInitEffect (core.option.Option registration.BeaconInitReady)) before after supported
       obtain ⟨reply, resumed⟩ := resume_cut (AdapterPublicInitReady.ed (m := StateT S ProbComp) beacon request) pending.resume next before after continued
       exact AdapterPublicInitSourceLoop.ed_progress pending reply next resumed
-  | FingerprintRequested pending =>
-      obtain ⟨request, _, continued⟩ := request_cut pending.request _ (.cont next : ControlFlow registration.BeaconInitEffect (core.option.Option registration.BeaconInitReady)) before after supported
-      obtain ⟨reply, resumed⟩ := resume_cut (children.executeHash request) pending.resume next before after continued
-      exact AdapterPublicInitSourceLoop.fingerprint_progress pending reply next resumed
   | HashRequested pending =>
       obtain ⟨request, _, continued⟩ := request_cut pending.request _ (.cont next : ControlFlow registration.BeaconInitEffect (core.option.Option registration.BeaconInitReady)) before after supported
       obtain ⟨reply, resumed⟩ := resume_cut (children.executeHash request) pending.resume next before after continued
       exact AdapterPublicInitSourceLoop.hash_progress pending reply next resumed
-  | MldsaSigningRequested pending =>
-      obtain ⟨request, _, continued⟩ := request_cut pending.request _ (.cont next : ControlFlow registration.BeaconInitEffect (core.option.Option registration.BeaconInitReady)) before after supported
-      let borrowing : M S (core.option.Option (Slice U8)) := do
-        let signature ← AdapterPublicWrapperRequestMonad.LocalOperations.auth_MldsaIdentity_sign_requested
-          beacon.authentication.identity request
-        liftRust (core.option.Option.as_deref (alloc.vec.Vec.Insts.CoreOpsDerefDerefSlice U8) signature)
-      have joined : (.ok (.cont next), after) ∈ support (((do
-          let reply ← borrowing
-          let result ← liftRust (pending.resume reply)
-          pure (.cont result : ControlFlow registration.BeaconInitEffect (core.option.Option registration.BeaconInitReady))
-          : M S _).run).run before) := by
-        simpa only [borrowing, bind_assoc] using continued
-      obtain ⟨reply, resumed⟩ := resume_cut borrowing pending.resume next before after joined
-      exact AdapterPublicInitSourceLoop.signing_progress pending reply next resumed
 
 noncomputable def execute (beacon : beaconcrypt_public_wrapper.beacon.Beacon)
     (effect : registration.BeaconInitEffect) (before : S) :
@@ -106,6 +89,7 @@ noncomputable def execute (beacon : beaconcrypt_public_wrapper.beacon.Beacon)
 termination_by AdapterPublicInitSourceLoop.rank effect
 decreasing_by exact step_progress beacon effect next before after _supported
 
+omit platform localOps in
 theorem finite_execute (beacon : beaconcrypt_public_wrapper.beacon.Beacon)
     (fuel : Nat) (effect : registration.BeaconInitEffect) (before : S)
     (enough : AdapterPublicInitSourceLoop.rank effect < fuel) :
@@ -131,6 +115,7 @@ theorem finite_execute (beacon : beaconcrypt_public_wrapper.beacon.Beacon)
             exact ih next after (by omega)
 
 
+omit platform localOps in
 theorem source_execute (beacon : beaconcrypt_public_wrapper.beacon.Beacon)
     (effect : registration.BeaconInitEffect) (before : S) :
     ((beaconcrypt_public_request.beacon._proof_beacon_init_ready_loop

@@ -136,7 +136,7 @@ theorem exact_receipt (previous :P) (initial :RegistrationNativeExperiment.Initi
     exact ⟨⟨ready.initial,startup,output.2.1.1.2.calls,output.2.1.1.1.1,reached,rfl,rfl,rfl,rfl⟩,rfl,rfl,rfl⟩
 
 omit [AdapterServerConstructorPrimitive.Standard] in
-theorem invariant_path (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+theorem invariant_path (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
     {before after :RegistrationNativePlatformPublicAdapterLoggedJoint.State (n:=n) configuration created credential}
     {calls :List (RegistrationNativeStageTrace.Call RegistrationNativePlatformPublicAdapterLowSpec.Spec
       (RegistrationNativePlatformPublicAdapterLoggedJoint.State (n:=n) configuration created credential))}

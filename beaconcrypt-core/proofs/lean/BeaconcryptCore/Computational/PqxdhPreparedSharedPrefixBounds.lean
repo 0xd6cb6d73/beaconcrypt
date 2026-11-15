@@ -10,6 +10,8 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhPreparedSharedPrefixBounds
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhNativeSharedPrefix PqxdhPreparedSharedPrefix PqxdhJointKdfGame PqxdhSecretInputKdf
 open PqxdhKemIndCca PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma
 open PqxdhPhase1AcceptanceOracle PqxdhCorrelatedExpand PqxdhPrivateKemSource AdaptiveCtxSharedHash
@@ -37,10 +39,10 @@ theorem bills (start : Input) (output : HmacBlock) (depth qPost qPre qApplicatio
     (caps : PqxdhInitialSampledResources.Caps
       (input original callbacks baseImpl kem attachedVerify primitives secret challenge start)
       qPost qPre qApplication qSelector qAux qKnown) (hash : Bool) :
-    (PqxdhPreparedSharedPrefix.run original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth).IsQueryBoundP
+    (PqxdhPreparedSharedPrefix.run (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth).IsQueryBoundP
       (HashClass hash) ((7 + qPost * 67) * (if hash then 1 else 76 + qPre + qApplication + 32 + qSelector + qAux)) := by
   unfold PqxdhPreparedSharedPrefix.run
-  apply PqxdhNativeSharedPrefixBounds.carried_bound
+  apply PqxdhNativeSharedPrefixBounds.carried_bound (associatedData := associatedData) (completedBinding := completedBinding)
   · intro query state
     apply (local_uniform _ state qPre).mpr
     rw [PqxdhPreparedPrefixCallbacks.preparation_source]

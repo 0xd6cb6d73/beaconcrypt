@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePlatformSourceBuild
 
-/-! Typed Server acceptance recomputes the actual pin before mandatory authentication, then performs replay rejection, external stateful reservation, actual agreement and one-use retention. The packet is already the typed output of the decoder; no parser or container correspondence is assumed here. Pin/hash and allocation effects share the same outer interpreter as all native primitive draws. -/
+/-! Typed Server acceptance selects the exact configured full pin before mandatory authentication, then performs replay rejection, external stateful reservation, actual agreement and one-use retention. The packet is already the typed output of the decoder; no parser or container correspondence is assumed here. Authentication hash and allocation effects share the same outer interpreter as all native primitive draws. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -27,7 +27,7 @@ noncomputable def afterPin (coins : QueryImpl unifSpec m) (setup : Setup base Ke
     (codec : Codec Reader Response) (checks : Checks) (reserve : StateT (State n) m Bool)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (result : RustM (core.option.Option session.ServerAuthenticationPin)) :
     StateT (State n) m (RustM (Option Nat)) :=
   match result with
@@ -49,7 +49,7 @@ noncomputable def acceptWith
     (checks : Checks) (reserve : StateT (State n) m Bool)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket) :
     StateT (State n) m (RustM (Option Nat)) := do
   let current ← pin
   afterPin coins setup codec checks reserve route verify representation created packet current
@@ -58,7 +58,7 @@ noncomputable def accept (coins : QueryImpl unifSpec m) (setup : Setup base KemS
     (checks : Checks) (reserve : m Bool)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket) :
     StateT (State n) m (RustM (Option Nat)) :=
   acceptWith (RegistrationNativePlatformSourceBuild.pin coins) coins setup codec checks (StateT.lift reserve)
     route verify representation created packet
@@ -77,7 +77,7 @@ theorem acceptWith_run
     (checks : Checks) (reserve : StateT (State n) m Bool)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket) (before : State n) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket) (before : State n) :
     (acceptWith pin coins setup codec checks reserve route verify representation created packet).run before = (do
       let current ← pin.run before
       (afterPin coins setup codec checks reserve route verify representation created packet current.1).run current.2) :=
@@ -87,7 +87,7 @@ variable [LawfulMonad m]
 
 theorem authenticate_stored (coins : QueryImpl unifSpec m) (setup : Setup base KemSK)
     (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket) (before : State n) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket) (before : State n) :
     (authenticate coins setup codec route verify before.pin packet).run before =
       simulateQ coins ((RegistrationServerNativeSource.authenticate setup codec route verify created packet).run before) := by
   simp only [authenticate, RegistrationServerNativeSource.authenticate, RegistrationServerNativeSource.sourceStep,
@@ -99,7 +99,7 @@ theorem acceptWith_stored (coins : QueryImpl unifSpec m) (setup : Setup base Kem
     (checks : Checks) (reserve : StateT (State n) m Bool)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket) :
     acceptWith RegistrationNativePlatformCompletionSdk.storedPin coins setup codec checks reserve
       route verify representation created packet =
       RegistrationNativePlatformServerSdk.accept coins setup codec checks reserve route verify representation created packet := by
@@ -134,7 +134,7 @@ theorem afterPin_interpret (implementation : QueryImpl spec m) (coins : QueryImp
     (reserve : StateT (State n) (OracleComp spec) Bool)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (result : RustM (core.option.Option session.ServerAuthenticationPin)) :
     state implementation (afterPin coins setup codec checks reserve route verify representation created packet result) =
       afterPin (fun query => simulateQ implementation (coins query)) setup codec checks (state implementation reserve)
@@ -167,7 +167,7 @@ theorem acceptWith_interpret (implementation : QueryImpl spec m)
     (checks : Checks) (reserve : StateT (State n) (OracleComp spec) Bool)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket) :
     state implementation (acceptWith pin coins setup codec checks reserve route verify representation created packet) =
       acceptWith (state implementation pin) (fun query => simulateQ implementation (coins query)) setup codec checks
         (state implementation reserve) route verify representation created packet := by
@@ -189,7 +189,7 @@ theorem accept_interpret (implementation : QueryImpl spec m) (coins : QueryImpl 
     (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks) (reserve : OracleComp spec Bool)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket) :
     state implementation (accept (n := n) coins setup codec checks reserve route verify representation created packet) =
       accept (fun query => simulateQ implementation (coins query)) setup codec checks (simulateQ implementation reserve)
         route verify representation created packet := by
@@ -200,7 +200,7 @@ theorem accept_continuation (implementation : QueryImpl spec m) (coins : QueryIm
     (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks) (reserve : OracleComp spec Bool)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (next : RustM (Option Nat) → StateT (State n) (OracleComp spec) Value) :
     state implementation (accept coins setup codec checks reserve route verify representation created packet >>= next) = (do
       let result ← accept (fun query => simulateQ implementation (coins query)) setup codec checks

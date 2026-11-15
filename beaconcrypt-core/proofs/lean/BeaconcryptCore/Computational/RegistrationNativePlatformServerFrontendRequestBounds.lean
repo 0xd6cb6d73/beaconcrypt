@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePlatformServerFrontendProgram
-/-! The literal moved-token Server frontend reaches at most four request leaves, including refused pin, occupancy, reservation and material-service outcomes. This is a source-syntax bound before the individual leaves are lowered to shared hash, native coin and public platform operations. -/
+/-! The literal moved-token Server frontend reaches at most five request leaves, including refused pin, occupancy, AD hash, reservation and material-service outcomes. This is a source-syntax bound before the individual leaves are lowered to shared hash, native coin and public platform operations. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -10,7 +10,7 @@ set_option maxRecDepth 8192
 set_option maxHeartbeats 1000000
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativePlatformServerFrontendRequestBounds
-open RegistrationNativePlatformServerFrontendProgram (Spec pin reserve present service)
+open RegistrationNativePlatformServerFrontendProgram (Spec adHash pin reserve present service)
 open RegistrationNativePlatformServerMaterialFrontend (Result)
 
 private theorem afterResult (control : pqxdh.ServerState) (reference : RegistrationNativeRelatedFamily.Message)
@@ -37,13 +37,21 @@ private theorem afterResult (control : pqxdh.ServerState) (reference : Registrat
 private theorem afterOccupancy (control : pqxdh.ServerState) (lookup : peer.CompletionLookup)
     (reference : RegistrationNativeRelatedFamily.Message) (occupied : Bool)
     (before : RegistrationServerMaterialFrontend.State) :
-    ((RegistrationNativePlatformServerMaterialFrontend.afterOccupancy reserve service control lookup reference occupied).run before).IsTotalQueryBound 2 :=
-  afterResult control reference _ before
+    ((RegistrationNativePlatformServerMaterialFrontend.afterOccupancy adHash reserve service control lookup reference occupied).run before).IsTotalQueryBound 3 := by
+  unfold RegistrationNativePlatformServerMaterialFrontend.afterOccupancy
+  cases lookup.resume occupied with
+  | fail error | div => trivial
+  | ok answer => cases answer with
+    | Err previous => trivial
+    | Ok pending =>
+      simp only [StateT.run_bind, StateT.run_lift, bind_pure_comp, bind_map_left, adHash]
+      rw [isTotalQueryBound_query_bind_iff]
+      exact ⟨by decide, fun hashed => afterResult control reference _ before⟩
 
 private theorem afterPin (control : pqxdh.ServerState) (ready : RegistrationServerReferenceRoot.Ready)
     (application : Slice U8) (current : RustM (core.option.Option session.ServerAuthenticationPin))
     (before : RegistrationServerMaterialFrontend.State) :
-    ((RegistrationNativePlatformServerMaterialFrontend.afterPin reserve present service control ready application current).run before).IsTotalQueryBound 3 := by
+    ((RegistrationNativePlatformServerMaterialFrontend.afterPin adHash reserve present service control ready application current).run before).IsTotalQueryBound 4 := by
   unfold RegistrationNativePlatformServerMaterialFrontend.afterPin StateT.run
   cases current with
   | fail error | div => trivial
@@ -69,14 +77,14 @@ private theorem afterPin (control : pqxdh.ServerState) (ready : RegistrationServ
 
 private theorem complete (ready : RegistrationServerReferenceRoot.Ready) (application : Slice U8)
     (before : RegistrationServerMaterialFrontend.State) :
-    ((RegistrationNativePlatformServerMaterialFrontend.complete pin reserve present service ready application).run before).IsTotalQueryBound 4 := by
+    ((RegistrationNativePlatformServerMaterialFrontend.complete adHash pin reserve present service ready application).run before).IsTotalQueryBound 5 := by
   unfold RegistrationNativePlatformServerMaterialFrontend.complete StateT.run pin
   rw [isTotalQueryBound_query_bind_iff]
   exact ⟨by decide, fun current => afterPin before.control ready application current before⟩
 
-/-- Every actual source frontend path has at most its four literal requests; handle cancellation and all failed-prefix paths use their own smaller prefixes. -/
+/-- Every actual source frontend path has at most its five literal requests; handle cancellation and all failed-prefix paths use their own smaller prefixes. -/
 theorem program (handle : Nat) (application : Option (Slice U8)) (before : RegistrationServerMaterialFrontend.State) :
-    ((RegistrationNativePlatformServerFrontendProgram.program handle application).run before).IsTotalQueryBound 4 := by
+    ((RegistrationNativePlatformServerFrontendProgram.program handle application).run before).IsTotalQueryBound 5 := by
   unfold RegistrationNativePlatformServerFrontendProgram.program RegistrationNativePlatformServerMaterialFrontend.build StateT.run
   cases RegistrationServerMaterialFrontend.take handle before with
   | mk selected current => cases selected with
@@ -84,6 +92,32 @@ theorem program (handle : Nat) (application : Option (Slice U8)) (before : Regis
     | some ready => cases application with
       | none => trivial
       | some application => exact complete ready application current
+/-- Pin selection performs no shared hash request; the remaining four possible frontend leaves carry the entire hash budget. -/
+def NonPin : Spec.Domain → Prop
+  | .pin _ => False
+  | _ => True
+
+instance : DecidablePred NonPin := fun query => by
+  cases query <;> dsimp [NonPin] <;> infer_instance
+
+private theorem complete_nonpin (ready : RegistrationServerReferenceRoot.Ready) (application : Slice U8)
+    (before : RegistrationServerMaterialFrontend.State) :
+    ((RegistrationNativePlatformServerMaterialFrontend.complete adHash pin reserve present service ready application).run before).IsQueryBoundP NonPin 4 := by
+  unfold RegistrationNativePlatformServerMaterialFrontend.complete StateT.run pin
+  rw [isQueryBoundP_query_bind_iff]
+  exact ⟨by simp [NonPin], fun current => (afterPin before.control ready application current before).isQueryBoundP⟩
+
+/-- Every source path reaches at most four non-pin leaves, retaining the real AD hash and all failure prefixes. -/
+theorem program_nonpin (handle : Nat) (application : Option (Slice U8)) (before : RegistrationServerMaterialFrontend.State) :
+    ((RegistrationNativePlatformServerFrontendProgram.program handle application).run before).IsQueryBoundP NonPin 4 := by
+  unfold RegistrationNativePlatformServerFrontendProgram.program RegistrationNativePlatformServerMaterialFrontend.build StateT.run
+  cases RegistrationServerMaterialFrontend.take handle before with
+  | mk selected current => cases selected with
+    | none => trivial
+    | some ready => cases application with
+      | none => trivial
+      | some application => exact complete_nonpin ready application current
+
 end BeaconcryptCore.Computational.RegistrationNativePlatformServerFrontendRequestBounds
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformServerFrontendRequestBounds.program' depends on axioms: [propext,
@@ -91,3 +125,9 @@ end BeaconcryptCore.Computational.RegistrationNativePlatformServerFrontendReques
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativePlatformServerFrontendRequestBounds.program
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformServerFrontendRequestBounds.program_nonpin' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformServerFrontendRequestBounds.program_nonpin

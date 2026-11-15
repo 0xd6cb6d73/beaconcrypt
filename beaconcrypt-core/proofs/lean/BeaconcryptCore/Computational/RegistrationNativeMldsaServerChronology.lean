@@ -116,6 +116,25 @@ private theorem capability_receipts (query : PqxdhRecordLiftInterface.Capability
   obtain ⟨inner, _possible, same⟩ := supported
   cases same
   rfl
+/-- Response-dependent hashing retain exactly the existing Server signing history. -/
+private theorem adHash_receipts (pending : registration.ServerAdHash)
+    (before : RegistrationWorldAgreement.State n Auxiliary)
+    (result : RustM (core.result.Result registration.ServerInitialKdf pqxdh.ServerState) × RegistrationWorldAgreement.State n Auxiliary)
+    (supported : result ∈ support ((RegistrationWorldServerCompletion.adHash pending).run before)) :
+    result.2.world.2 = before.world.2 := by
+  unfold RegistrationWorldServerCompletion.adHash at supported
+  cases requested : pending.request with
+  | fail error | div =>
+      simp only [requested, StateT.run_pure, mem_support_pure_iff] at supported
+      cases supported
+      rfl
+  | ok request =>
+      simp only [requested, StateT.run_bind, mem_support_bind_iff] at supported
+      obtain ⟨hashed, called, returned⟩ := supported
+      simp only [StateT.run_pure, mem_support_pure_iff] at returned
+      cases returned
+      exact capability_receipts _ before hashed called
+
 private theorem install_receipts (control : pqxdh.ServerState)
     (published : registration.PublishedServerResponse Encoded) (before : RegistrationWorldAgreement.State n Auxiliary)
     (result : RustM (RegistrationWorldServerCompletion.Result Encoded) × RegistrationWorldAgreement.State n Auxiliary)
@@ -227,6 +246,16 @@ private theorem fromInitial_keeps (setup : Setup base KemSK) (codec : Codec Read
   intro reply
   exact lift_keeps source receipts _ (commit_receipts reply)
 
+private theorem sdk_adHash_receipts (pending : registration.ServerAdHash)
+    (before : RegistrationServerFrontendCompiler.State n)
+    (result : RustM (core.result.Result registration.ServerInitialKdf pqxdh.ServerState) × RegistrationServerFrontendCompiler.State n)
+    (supported : result ∈ support ((RegistrationServerSdkSource.adHash pending).run before)) :
+    receipts result.2 = receipts before := by
+  simp only [RegistrationServerSdkSource.adHash, RegistrationServerSdkSource.world, StateT.run, support_map] at supported
+  obtain ⟨inner, actual, same⟩ := supported
+  cases same
+  exact adHash_receipts pending before.world inner actual
+
 private theorem afterOccupancy_keeps (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (encode : registration.SignedResponseView → core.option.Option Pqxdh.Bytes)
     (control : pqxdh.ServerState) (lookup : peer.CompletionLookup) (occupied : Bool) :
@@ -238,13 +267,20 @@ private theorem afterOccupancy_keeps (setup : Setup base KemSK) (codec : Codec R
   | ok answer => cases answer with
     | Err previous => exact pure_keeps source receipts _
     | Ok pending =>
-        cases reserved : checks.reservePeer with
-        | false =>
-            simp only [Bool.false_eq_true, ite_false]
-            exact pure_keeps source receipts _
-        | true =>
-            simp only [ite_true]
-            exact fromInitial_keeps source credential setup codec encode control pending
+        apply bind_keeps source receipts _ _ (lift_keeps source receipts _ (sdk_adHash_receipts pending))
+        intro hashed
+        cases hashed with
+        | fail error | div => exact pure_keeps source receipts _
+        | ok result => cases result with
+          | Err previous => exact pure_keeps source receipts _
+          | Ok initial =>
+              cases reserved : checks.reservePeer with
+              | false =>
+                  simp only [Bool.false_eq_true, ite_false]
+                  exact pure_keeps source receipts _
+              | true =>
+                  simp only [ite_true]
+                  exact fromInitial_keeps source credential setup codec encode control initial
 
 private theorem pure_at (value : Value) (current : State) (pool : Pool source)
     (receipts : State → List Receipt)

@@ -18,7 +18,7 @@ local notation "Native" => RegistrationNativeExperiment.State n KemSK source
 open RegistrationNativePlatformExtractedSdkFinish (BodyResult)
 
 theorem tree (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (pending : registration.BeaconPending) (packet : Option registration.ResponsePacket)
     (owner : Owner source) (scalar : PqxdhJointGapDh.ScalarBytes) (before : Native) (result : BodyResult n KemSK source)
     (supported : result∈support (RegistrationNativeFinishLifetime.tree setup checks representation created wire pending packet owner scalar before)) :
@@ -37,7 +37,7 @@ theorem tree (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : Pqxd
   exact ⟨localFrame,congrArg RegistrationWorldAgreementCompiler.EnvState.auxiliary rawFrame.2⟩
 
 theorem runner (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (pending : registration.BeaconPending) (packet : Option registration.ResponsePacket)
     (owner : Owner source) (scalar : PqxdhJointGapDh.ScalarBytes) (before : Native)
     (coins : QueryImpl unifSpec (StateT Platform ProbComp)) (previous : Platform) (reached : BodyResult n KemSK source×Platform)
@@ -47,7 +47,7 @@ theorem runner (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : Pq
   exact tree setup checks representation created wire pending packet owner scalar before reached.1 actual
 
 theorem commit (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (pending : registration.BeaconPending) (packet : Option registration.ResponsePacket)
     (owner : Owner source) (scalar : PqxdhJointGapDh.ScalarBytes) (before : Native)
     (coins : QueryImpl unifSpec (StateT Platform ProbComp)) (previous : Platform) (reached : BodyResult n KemSK source×Platform)

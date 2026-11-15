@@ -32,7 +32,7 @@ private theorem evaluated {Answer : Type}
 /-- Every reached complete callback preserves live private credentials, exact cached native receipts and actual successful-birth provenance together. -/
 theorem step (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : Credential (handleSource source)) (fallback : Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential (handleSource source)) (fallback : Credential source)
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (before : State (n := n) (KemSK := KemSK) source)
     (good : Holds source credential fallback before)
     (result : RegistrationNativeRawAdapter.TypedSpec.Range query × State (n := n) (KemSK := KemSK) source)
@@ -59,7 +59,7 @@ theorem initialized (setup : Setup base KemSK) (ensureInit : StateT Unit ProbCom
 /-- Arbitrary adaptive original typed continuations retain the actual initialized protected-cut invariant. -/
 theorem program (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : Credential (handleSource source)) (fallback : Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential (handleSource source)) (fallback : Credential source)
     (work : OracleComp RegistrationNativeRawAdapter.TypedSpec Value) (before : State (n := n) (KemSK := KemSK) source)
     (good : Holds source credential fallback before) (result : Value × State (n := n) (KemSK := KemSK) source)
     (supported : result ∈ support ((simulateQ (callback source setup checks wire route representation created credential) work).run before)) :

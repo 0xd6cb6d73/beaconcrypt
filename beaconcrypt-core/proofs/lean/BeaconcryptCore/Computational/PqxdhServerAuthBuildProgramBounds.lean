@@ -7,6 +7,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete PqxdhRefinement
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhServerAuthBuildProgramBounds
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhJointKdfGame
 open PqxdhServerAuthCtxCalls (Kernel Residual)
 open PqxdhServerAuthBuildProgram
@@ -34,7 +35,7 @@ variable {Metadata PeerMetadata Consumed : Type}
 theorem after_bound (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
     (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Pqxdh.Bytes)
     (entry : Kernel) (metadata : PeerMetadata) (state : State Kernel Metadata PeerMetadata Consumed) :
-    (PqxdhInitialGenericPublication.afterInitialization
+    (PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData)
       (PqxdhServerAuthCtxBuildSettlement.calls (fun entry _ _ => pure (entry, .None)) source rest sealQuery)
       auxQuery candidate authenticated entry metadata state).IsQueryBoundP IsSealing 1 := by
   unfold PqxdhInitialGenericPublication.afterInitialization
@@ -52,7 +53,7 @@ theorem after_bound (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
 theorem candidate_bound (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
     (initial : RustM Kernel) (candidate : pqxdh.ServerRegistrationCandidate) (data : Option Pqxdh.Bytes)
     (metadata : PeerMetadata) (state : State Kernel Metadata PeerMetadata Consumed) :
-    (PqxdhInitialGenericBuilder.candidate
+    (PqxdhInitialGenericBuilder.candidate (associatedData := associatedData)
       (PqxdhServerAuthCtxBuildSettlement.calls (fun entry _ _ => pure (entry, .None)) source rest sealQuery)
       auxQuery initial candidate data metadata state).IsQueryBoundP IsSealing 1 := by
   unfold PqxdhInitialGenericBuilder.candidate
@@ -76,7 +77,7 @@ theorem candidate_bound (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
         cases candidate.key_id_binding
         case ok binding =>
           rw [isQueryBoundP_map_iff]
-          exact after_bound source rest candidate _ entry metadata state
+          exact after_bound (associatedData := associatedData) source rest candidate _ entry metadata state
         all_goals trivial
       · trivial
   all_goals trivial
@@ -85,7 +86,7 @@ theorem candidate_bound (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
 theorem build_bound (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
     (initial : RustM Kernel) (pending : pqxdh.PendingServerRegistration) (data : Option Pqxdh.Bytes)
     (metadata : PeerMetadata) (state : State Kernel Metadata PeerMetadata Consumed) :
-    (PqxdhServerAuthSendFactor.genericBuild
+    (PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData)
       (PqxdhServerAuthCtxBuildSettlement.calls (fun entry _ _ => pure (entry, .None)) source rest sealQuery)
       auxQuery initial pending data metadata state).IsQueryBoundP IsSealing 1 := by
   unfold PqxdhServerAuthSendFactor.genericBuild
@@ -101,7 +102,7 @@ theorem build_bound (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
       case ok value =>
         cases value with
         | Err => trivial
-        | Ok candidate => exact candidate_bound source rest initial candidate data metadata state
+        | Ok candidate => exact candidate_bound (associatedData := associatedData) source rest initial candidate data metadata state
       all_goals trivial
   all_goals trivial
 
@@ -109,9 +110,9 @@ theorem build_bound (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
 theorem program_bound (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
     (pending : pqxdh.PendingServerRegistration) (data : Option Pqxdh.Bytes)
     (metadata : PeerMetadata) (state : PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed) :
-    (program source rest pending data metadata state).IsQueryBoundP IsSealing 1 := by
+    (program (associatedData := associatedData) source rest pending data metadata state).IsQueryBoundP IsSealing 1 := by
   rw [program, isQueryBoundP_map_iff]
-  exact build_bound source rest _ pending data metadata _
+  exact build_bound (associatedData := associatedData) source rest _ pending data metadata _
 
 /-- Explicit stopping can only remove later calls. This transports a weighted budget while retaining the complete local state and each actual optional reply. -/
 theorem stopping_bound {ι κ A Result : Type} {input : OracleSpec ι} {output : OracleSpec κ}
@@ -161,11 +162,11 @@ theorem compiled_bound (source : FixedHkdfSha512NoSaltSource) (codec : Codec Rea
     (checks : Checks) (rest : Residual) (pending : pqxdh.PendingServerRegistration)
     (data : Option Pqxdh.Bytes) (metadata : PeerMetadata)
     (state : PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed) (log : Log) :
-    ((compiled source codec checks rest pending data metadata state).run.run log).IsTotalQueryBound 1 := by
+    ((compiled (associatedData := associatedData) source codec checks rest pending data metadata state).run.run log).IsTotalQueryBound 1 := by
   exact (isQueryBoundP_true_iff _ _).1
     (stopping_bound (compiler source codec checks) IsSealing (fun _ => True)
       (fun query before => (isQueryBoundP_true_iff _ _).2 (compiler_step source codec checks query before))
-      (program source rest pending data metadata state) 1 (program_bound source rest pending data metadata state) log)
+      (program (associatedData := associatedData) source rest pending data metadata state) 1 (program_bound (associatedData := associatedData) source rest pending data metadata state) log)
 
 /-- The actual selected sealing/compiler service contributes no raw-opening or uniform requests, even when a known byte alias is supplied. -/
 theorem compiler_other (source : FixedHkdfSha512NoSaltSource) (codec : Codec Reader WireResponse)
@@ -190,36 +191,36 @@ theorem compiled_other (source : FixedHkdfSha512NoSaltSource) (codec : Codec Rea
     (checks : Checks) (rest : Residual) (pending : pqxdh.PendingServerRegistration)
     (data : Option Pqxdh.Bytes) (metadata : PeerMetadata)
     (state : PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed) (log : Log) :
-    ((compiled source codec checks rest pending data metadata state).run.run log).IsQueryBoundP
+    ((compiled (associatedData := associatedData) source codec checks rest pending data metadata state).run.run log).IsQueryBoundP
         (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxReceive.IsRawQuery) 0 ∧
-      ((compiled source codec checks rest pending data metadata state).run.run log).IsQueryBoundP
+      ((compiled (associatedData := associatedData) source codec checks rest pending data metadata state).run.run log).IsQueryBoundP
         AdaptiveCtxDynamicKnownBounds.UniformRoute 0 := by
   constructor
   · exact stopping_bound (compiler source codec checks) (fun _ => False) _
       (fun query before => (compiler_other source codec checks query before).1)
-      (program source rest pending data metadata state) 0 (by simp) log
+      (program (associatedData := associatedData) source rest pending data metadata state) 0 (by simp) log
   · exact stopping_bound (compiler source codec checks) (fun _ => False) _
       (fun query before => (compiler_other source codec checks query before).2)
-      (program source rest pending data metadata state) 0 (by simp) log
+      (program (associatedData := associatedData) source rest pending data metadata state) 0 (by simp) log
 
 /-- Explicit per-class bounds for the actual compiled builder: at most one selected seal and one forwarded hash, and zero raw-opening and uniform requests. The total component-call cap is one, so the two upper bounds do not assert two calls occur. -/
 theorem compiled_bills (source : FixedHkdfSha512NoSaltSource) (codec : Codec Reader WireResponse)
     (checks : Checks) (rest : Residual) (pending : pqxdh.PendingServerRegistration)
     (data : Option Pqxdh.Bytes) (metadata : PeerMetadata)
     (state : PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed) (log : Log) :
-    ((compiled source codec checks rest pending data metadata state).run.run log).IsQueryBoundP
+    ((compiled (associatedData := associatedData) source codec checks rest pending data metadata state).run.run log).IsQueryBoundP
         (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxQueryBounds.SourceSeal) 1 ∧
-      ((compiled source codec checks rest pending data metadata state).run.run log).IsQueryBoundP
+      ((compiled (associatedData := associatedData) source codec checks rest pending data metadata state).run.run log).IsQueryBoundP
         AdaptiveCtxDynamicKnownBounds.HashRoute 1 ∧
-      ((compiled source codec checks rest pending data metadata state).run.run log).IsQueryBoundP
+      ((compiled (associatedData := associatedData) source codec checks rest pending data metadata state).run.run log).IsQueryBoundP
         (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxReceive.IsRawQuery) 0 ∧
-      ((compiled source codec checks rest pending data metadata state).run.run log).IsQueryBoundP
+      ((compiled (associatedData := associatedData) source codec checks rest pending data metadata state).run.run log).IsQueryBoundP
         AdaptiveCtxDynamicKnownBounds.UniformRoute 0 := by
   have total := (isQueryBoundP_true_iff _ _).2
-    (compiled_bound source codec checks rest pending data metadata state log)
+    (compiled_bound (associatedData := associatedData) source codec checks rest pending data metadata state log)
   exact ⟨IsQueryBoundP.of_imp (fun _ _ => True.intro) total,
     IsQueryBoundP.of_imp (fun _ _ => True.intro) total,
-    compiled_other source codec checks rest pending data metadata state log⟩
+    compiled_other (associatedData := associatedData) source codec checks rest pending data metadata state log⟩
 
 end BeaconcryptCore.Computational.PqxdhServerAuthBuildProgramBounds
 

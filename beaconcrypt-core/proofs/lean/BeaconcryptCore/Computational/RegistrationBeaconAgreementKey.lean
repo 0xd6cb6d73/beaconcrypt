@@ -55,11 +55,8 @@ theorem prepare_binding (control : pqxdh.BeaconInitSent) (inputs : pqxdh.BeaconF
               cases result with
               | Err error => simp at returned
               | Ok root =>
-                  cases ad : pqxdh.build_associated_data control.expected_server_binding.identity_public_key control.beacon_identity_public_key with
-                  | fail error | div => simp [ad] at returned
-                  | ok bytes =>
-                      simp only [ad, bind_tc_ok, RustM.ok.injEq, core.result.Result.Ok.injEq] at returned
-                      exact (congrArg pqxdh.BeaconRegistrationCandidate.server_binding returned).symm
+                  simp only [RustM.ok.injEq, core.result.Result.Ok.injEq] at returned
+                  exact (congrArg pqxdh.BeaconRegistrationCandidate.server_binding returned).symm
 
 theorem rejected_key (keyId : U64) (state : agreement.AgreementState) (prior : InputKey keyId state.input)
     (final : agreement.AgreementEffect) (returned : state.reject = .ok final) : PhaseKey keyId final := by
@@ -177,36 +174,36 @@ theorem run (keyId : U64) {initial final : agreement.AgreementEffect} (path : Ru
 
 theorem entry_key (authenticated : registration.AuthenticatedResponse) (initial : agreement.AgreementEffect)
     (actual : agreement.begin_beacon_agreement authenticated = .ok initial) :
-    PhaseKey authenticated.pending.control.expected_server_binding.identity_key_id initial := by
-  by_cases identityId : authenticated.pending.control.expected_server_binding.identity_key_id =
-    authenticated.pending.binding.server_pin.binding.identity_key_id
-  · by_cases identityKey : PqxdhRefinement.absBytes authenticated.pending.control.expected_server_binding.identity_public_key =
-      PqxdhRefinement.absBytes authenticated.pending.binding.server_pin.binding.identity_public_key
+    PhaseKey authenticated.control.expected_server_binding.identity_key_id initial := by
+  by_cases identityId : authenticated.control.expected_server_binding.identity_key_id =
+    authenticated.binding.server_pin.binding.identity_key_id
+  · by_cases identityKey : PqxdhRefinement.absBytes authenticated.control.expected_server_binding.identity_public_key =
+      PqxdhRefinement.absBytes authenticated.binding.server_pin.binding.identity_public_key
     · simp [agreement.begin_beacon_agreement, registration.AuthenticatedResponse.into_parts,
-        pqxdh.BeaconInitSent.impl.expected_server_binding, session.RegistrationBinding.impl.server_pin,
+        pqxdh.BeaconInitSent.impl.expected_server_binding, session.CompletedRegistrationBinding.impl.server_pin,
         session.ServerAuthenticationPin.impl.binding, core.Array.Insts.CoreCmpPartialEqArray.ne,
         array_eq_abs, agreement.AgreementState.new, ratchet.RatchetChain.from_bytes,
         pqxdh.beacon_abort_init, identityId, identityKey] at actual
       subst initial
       rfl
     · simp [agreement.begin_beacon_agreement, registration.AuthenticatedResponse.into_parts,
-        pqxdh.BeaconInitSent.impl.expected_server_binding, session.RegistrationBinding.impl.server_pin,
+        pqxdh.BeaconInitSent.impl.expected_server_binding, session.CompletedRegistrationBinding.impl.server_pin,
         session.ServerAuthenticationPin.impl.binding, core.Array.Insts.CoreCmpPartialEqArray.ne,
         array_eq_abs, pqxdh.beacon_abort_init, identityId, identityKey] at actual
       subst initial
       exact identityId.symm
-  · have unequal : authenticated.pending.control.expected_server_binding.identity_key_id.val ≠
-        authenticated.pending.binding.server_pin.binding.identity_key_id.val :=
+  · have unequal : authenticated.control.expected_server_binding.identity_key_id.val ≠
+        authenticated.binding.server_pin.binding.identity_key_id.val :=
       fun same => identityId (UScalar.eq_of_val_eq same)
     simp [agreement.begin_beacon_agreement, registration.AuthenticatedResponse.into_parts,
-      pqxdh.BeaconInitSent.impl.expected_server_binding, session.RegistrationBinding.impl.server_pin,
+      pqxdh.BeaconInitSent.impl.expected_server_binding, session.CompletedRegistrationBinding.impl.server_pin,
       session.ServerAuthenticationPin.impl.binding, pqxdh.beacon_abort_init, unequal] at actual
     subst initial
     rfl
 
 theorem beacon_key (authenticated : registration.AuthenticatedResponse) (final : agreement.AgreementEffect)
     (supported : .ok final ∈ support (beacon authenticated)) :
-    PhaseKey authenticated.pending.control.expected_server_binding.identity_key_id final := by
+    PhaseKey authenticated.control.expected_server_binding.identity_key_id final := by
   obtain ⟨initial, started, path⟩ := beacon_sound authenticated final supported
   exact run _ path (entry_key authenticated initial started)
 

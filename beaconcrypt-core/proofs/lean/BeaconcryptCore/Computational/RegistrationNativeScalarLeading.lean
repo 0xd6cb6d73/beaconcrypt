@@ -14,25 +14,12 @@ variable {n : Nat} {KemSK Value : Type}
 noncomputable def program (source : RegistrationNativeMldsa.Source) (edPin : Std.Array U8 32#usize)
     (mlPin : Std.Array U8 1952#usize) (keyId : U64) :
     OracleComp (PqxdhRecordLiftInterface.EnvEffects n) (RustM (Option (Prepared source))) := do
-  let generated ← simulateQ RegistrationWorldCoinCompiler.envCoin (RegistrationNativeMldsa.generate source)
-  match generated with
-  | none => pure (.ok none)
-  | some credentials =>
-    match registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
-    | .fail error => pure (.fail error)
-    | .div => pure .div
-    | .ok pending => match pending.request with
-      | .fail error => pure (.fail error)
-      | .div => pure .div
-      | .ok request => do
-        let digest ← (PqxdhRecordLiftInterface.EnvEffects n).query (.inr (.hash (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request)))
-        match pending.resume (.Some (RegistrationAuthenticationShared.digestArray digest)) with
-        | .fail error => pure (.fail error)
-        | .div => pure .div
-        | .ok .None => pure (.ok none)
-        | .ok (.Some pin) => do
-          let identity ← simulateQ RegistrationWorldCoinCompiler.envCoin PqxdhJointIdentity.sampleSeed
-          pure (.ok (some ⟨credentials, pin, identity, RegistrationNativePublicOwners.dummy⟩))
+  match registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
+  | .fail error => pure (.fail error)
+  | .div => pure .div
+  | .ok pin => do
+    let identity ← simulateQ RegistrationWorldCoinCompiler.envCoin PqxdhJointIdentity.sampleSeed
+    pure (.ok (some ⟨pin, identity, RegistrationNativePublicOwners.dummy⟩))
 
 private theorem sample_program {source : RegistrationNativeMldsa.Source} (draw : ProbComp Value) :
     simulateQ (RegistrationNativeBeaconFrontend.effect (n := n) (KemSK := KemSK)
@@ -53,33 +40,10 @@ theorem leading (source : RegistrationNativeMldsa.Source) (edPin : Std.Array U8 
     RegistrationNativeScalarPreparation.leading (n := n) (KemSK := KemSK)
       (Auxiliary := RegistrationServerRoleBackend.State) source edPin mlPin keyId =
       simulateQ RegistrationNativeBeaconFrontend.effect (program source edPin mlPin keyId) := by
-  simp only [RegistrationNativeScalarPreparation.leading, program, simulateQ_bind, sample_program]
-  apply congrArg (fun continuation => (RegistrationNativeBeaconFrontend.sample (n := n) (KemSK := KemSK)
-    (mldsaSource := source) (Auxiliary := RegistrationServerRoleBackend.State)
-    (RegistrationNativeMldsa.generate source) >>= continuation))
-  funext generated
-  cases generated with
-  | none => simp only [simulateQ_pure]
-  | some credentials =>
-      cases initial : registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
-      | fail error => simp only [simulateQ_pure]
-      | div => simp only [simulateQ_pure]
-      | ok pending =>
-          cases requested : pending.request with
-          | fail error => simp only [requested, simulateQ_pure]
-          | div => simp only [requested, simulateQ_pure]
-          | ok request =>
-              simp only [requested, simulateQ_bind, simulateQ_spec_query]
-              apply congrArg (fun continuation => (RegistrationNativeBeaconFrontend.hash (n := n) (KemSK := KemSK)
-                (mldsaSource := source) (Auxiliary := RegistrationServerRoleBackend.State) request >>= continuation))
-              funext digest
-              cases resumed : pending.resume (.Some (RegistrationAuthenticationShared.digestArray digest)) with
-              | fail error => simp only [simulateQ_pure]
-              | div => simp only [simulateQ_pure]
-              | ok outcome =>
-                  cases outcome with
-                  | none => simp only [simulateQ_pure]
-                  | some pin => simp only [simulateQ_bind, sample_program, simulateQ_pure]
+  unfold RegistrationNativeScalarPreparation.leading program
+  cases registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
+  | fail error | div => simp only [simulateQ_pure]
+  | ok pin => simp only [simulateQ_bind, sample_program, simulateQ_pure]
 
 end BeaconcryptCore.Computational.RegistrationNativeScalarLeading
 

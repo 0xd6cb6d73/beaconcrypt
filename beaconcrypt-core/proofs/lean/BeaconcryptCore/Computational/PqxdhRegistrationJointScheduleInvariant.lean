@@ -62,9 +62,9 @@ theorem bundle_trace_owned (setup : Setup baseSpec KemSK) (codec : Codec Reader 
 
 /-- Reinstalling one actual returned owner preserves all other ownership facts when callbacks changed only the histories and shared native state. -/
 theorem updated_owned (state : State KemSK) (pool : Pool KemSK) (shared : NativeState KemSK)
-    (address : Nat) (entry : Entry KemSK)
+    (inits : Nat → Option PqxdhEd25519EufCma.Phase1Candidate) (address : Nat) (entry : Entry KemSK)
     (owned : Invariant state) (seeds : pool.1.seeds = state.pool.1.seeds) (keys : pool.2.keys = state.pool.2.keys)
-    (replacement : Owned pool entry) : Invariant ⟨pool, shared, state.owners.set address entry⟩ := by
+    (replacement : Owned pool entry) : Invariant ⟨pool, shared, state.owners.set address entry, inits⟩ := by
   intro current member
   exact (List.mem_or_eq_of_mem_set member).elim
     (fun previous => PqxdhRegistrationJointOwnership.owned_slots state.pool pool current seeds keys (owned current previous))
@@ -79,10 +79,46 @@ theorem bundle_owned (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
     simp only [bundle, StateT.run, found, support_map, Set.mem_image, mem_support_pure_iff] at supported
   case some entry =>
     obtain ⟨reached, member, rfl⟩ := supported
-    have preserved := bundle_trace_owned setup codec entry state.pool reached (owned entry (List.mem_of_getElem? found)) member
-    exact updated_owned state (reached.2, state.pool.2) state.shared address
-      { entry with owner := reached.1.2 } owned preserved.1 rfl preserved.2
+    have traced : reached.1 ∈ support (PqxdhRegistrationJointBundle.trace setup codec entry.identityIndex entry.owner
+        state.pool.1) := by
+      rw [← PqxdhRegistrationJointBundle.trace_log setup codec entry.identityIndex entry.owner state.pool.1
+        (state.inits address), support_map]
+      exact ⟨reached, member, rfl⟩
+    have preserved := bundle_trace_owned setup codec entry state.pool reached.1 (owned entry (List.mem_of_getElem? found)) traced
+    exact updated_owned state (reached.1.2, state.pool.2) state.shared _ address
+      { entry with owner := reached.1.1.2 } owned preserved.1 rfl preserved.2
   case none => simpa only [supported] using owned
+
+/-- One annotated hashed owner finish keeps both private slot arrays and ownership of its returned owner: the transcript hash touches only the shared state, the abort keeps the identity and drops the active KEM key. -/
+theorem annotatedFinish_owned (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (entry : Entry KemSK) (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (state : PqxdhRegistrationJointFinish.State KemSK)
+    (result : (Option Pqxdh.Bytes × PqxdhRegistrationSchedule.Owner KemSK) × PqxdhRegistrationJointFinish.State KemSK)
+    (owned : Owned state.1 entry)
+    (supported : result ∈ support ((PqxdhRegistrationJointFinish.annotatedFinish setup codec entry.identityIndex
+      entry.kemIndex retained raw entry.owner).run state)) :
+    result.2.1.1.seeds = state.1.1.seeds ∧ result.2.1.2.keys = state.1.2.keys ∧
+      Owned result.2.1 { entry with owner := result.1.2 } := by
+  unfold PqxdhRegistrationJointFinish.annotatedFinish at supported
+  cases phase : entry.owner.beacon.phase <;> simp only [phase, StateT.run_pure, mem_support_pure_iff] at supported
+  case initSent control prekey oneTime kem =>
+    cases retained <;> cases decoded : responseOf codec raw <;>
+      simp only [decoded, StateT.run_pure, mem_support_pure_iff] at supported
+    case some.some init response =>
+      rw [StateT.run_bind, mem_support_bind_iff] at supported
+      obtain ⟨hashed, hashMember, member⟩ := supported
+      simp only [PqxdhRegistrationJointFinish.onNative, StateT.run, support_map, Set.mem_image] at hashMember
+      obtain ⟨value, _, rfl⟩ := hashMember
+      have slots := PqxdhRegistrationJointFinish.annotated_program_slots setup codec entry.identityIndex entry.kemIndex
+        _ (state.1, value.2) result member
+      exact ⟨slots.1, slots.2, PqxdhRegistrationJointOwnership.owner_owned
+        (completedBinding := PqxdhTranscriptAd.completedOf control value.1) setup codec entry raw
+        (state.1, value.2) result owned member⟩
+    all_goals subst supported
+    all_goals exact ⟨rfl, rfl, owned.1, fun keys live => by
+      simp [PqxdhBeaconPhase2Preparation.abort, PqxdhRegistrationJointOwnership.activeKey] at live⟩
+  all_goals subst supported
+  all_goals exact ⟨rfl, rfl, owned⟩
 
 /-- Every source finish attempt preserves ownership across all owners and keeps both private slot arrays intact, even when preparation or publication rejects. -/
 theorem finish_owned (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -93,11 +129,10 @@ theorem finish_owned (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
     simp only [finish, StateT.run, found, support_map, Set.mem_image, mem_support_pure_iff] at supported
   case some entry =>
     obtain ⟨reached, member, rfl⟩ := supported
-    have slots := PqxdhRegistrationJointFinish.annotated_program_slots setup codec entry.identityIndex entry.kemIndex
-      (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw entry.owner) (state.pool, state.shared) reached member
-    exact updated_owned state reached.2.1 reached.2.2 address { entry with owner := reached.1.2 } owned slots.1 slots.2
-      (PqxdhRegistrationJointOwnership.owner_owned setup codec entry raw (state.pool, state.shared) reached
-        (owned entry (List.mem_of_getElem? found)) member)
+    have finished := annotatedFinish_owned setup codec entry (state.inits address) raw (state.pool, state.shared) reached
+      (owned entry (List.mem_of_getElem? found)) member
+    exact updated_owned state reached.2.1 reached.2.2 state.inits address { entry with owner := reached.1.2 } owned
+      finished.1 finished.2.1 finished.2.2
   case none => simpa only [supported] using owned
 
 /-- Native Server and public primitive requests change no Beacon ownership field or private service slot. -/
@@ -116,11 +151,10 @@ theorem query_owned (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     Invariant result.2 := by
   rcases query with coin | request
   case inr =>
-    cases request <;> first
+    cases request <;> try first
     | exact bundle_owned setup codec _ state result owned supported
     | exact finish_owned setup codec _ _ state result owned supported
     | exact shared_owned _ state result owned supported
-    | skip
     case create pin keyId =>
       simp only [handler, create, StateT.run, support_map, Set.mem_image] at supported
       exact supported.elim (fun value witness => witness.2 ▸ created_owned setup pin keyId state value owned)
@@ -232,3 +266,8 @@ end BeaconcryptCore.Computational.PqxdhRegistrationJointSchedule
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointSchedule.generated_slots
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationJointSchedule.annotatedFinish_owned' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointSchedule.annotatedFinish_owned

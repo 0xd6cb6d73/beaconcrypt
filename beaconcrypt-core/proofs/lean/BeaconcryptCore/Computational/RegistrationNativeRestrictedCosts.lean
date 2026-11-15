@@ -1,5 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeSelectiveMaterialCosts
+import BeaconcryptCore.Computational.RegistrationNativeSelectiveEntropyEnvironment
+import BeaconcryptCore.Computational.PqxdhRecordLiftCtxBills
 import BeaconcryptCore.Computational.RegistrationNativePublicationCosts
 
 /-! Literal local bills for the actual restricted selective backend. Root preparation costs no capability; material demand uses only its actual coin sampler; publication retains shared CTX/signing requests; indexed KEM retains the supplied primitive program and private pool state. These are per-request source bills, not a supplied native callback frame. -/

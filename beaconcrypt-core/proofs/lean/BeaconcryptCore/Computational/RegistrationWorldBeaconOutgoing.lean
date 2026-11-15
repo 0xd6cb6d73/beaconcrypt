@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationWorldAgreement
 import BeaconcryptCore.Computational.RegistrationBeaconInitHistory
 
-/-! The complete actual Beacon Init runs in the same World and primitive state used by Server agreement and records. Its three Ed signing attempts retain their native auxiliary state and chronological replies. Beacon fingerprint, Init hash and ML signing use the existing shared World cache, coin counter and signing ledger. Unrelated native request ledgers remain in the full state. -/
+/-! The complete actual Beacon Init runs in the same World and primitive state used by Server agreement and records. Its three Ed signing attempts retain their native auxiliary state and chronological replies. The Init transcript hash uses the existing shared World cache and coin counter; the Beacon issues no ML signing request, and the global Server signing ledger is preserved. Unrelated native request ledgers remain in the full state. -/
 
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
@@ -55,28 +55,28 @@ theorem program_ledgers {Output : Type} (sign : registration.MldsaSigningRequest
 
 theorem begin_coherent (sign : registration.MldsaSigningRequest → ProbComp SignReply)
     (ed : QueryImpl EdSpec (StateT Auxiliary ProbComp))
-    (encode : registration.SignedInitView → core.option.Option Encoded)
+    (encode : registration.InitView → core.option.Option Encoded)
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array Std.U8 1952#usize)
+    (pin : session.ServerAuthenticationPin)
     (published : registration.PublishedBeaconInit Encoded) (before after : State n Auxiliary)
     (supported : (.ok (.Ok published), after) ∈ support
-      ((simulateQ (implementation sign ed) (RegistrationBeaconInitExecutor.begin encode control inputs coins pin mldsa)).run before)) :
+      ((simulateQ (implementation sign ed) (RegistrationBeaconInitExecutor.begin encode control inputs coins pin)).run before)) :
     published.pending.control.expected_server_binding = published.pending.binding.server_pin.binding :=
-  RegistrationBeaconInitExecutor.simulated_coherent (implementation sign ed) encode control inputs coins pin mldsa published before after supported
+  RegistrationBeaconInitExecutor.simulated_coherent (implementation sign ed) encode control inputs coins pin published before after supported
 
-/-- Cached chronological ML signing receipts are derived through all native Ed, fingerprint, transcript, signature and encoder outcomes. -/
+/-- Cached chronological ML signing receipts of the shared Server signing ledger are preserved through all native Ed, transcript-hash and encoder outcomes. -/
 theorem begin_cached (sign : registration.MldsaSigningRequest → ProbComp SignReply)
     (ed : QueryImpl EdSpec (StateT Auxiliary ProbComp))
-    (encode : registration.SignedInitView → core.option.Option Encoded)
+    (encode : registration.InitView → core.option.Option Encoded)
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array Std.U8 1952#usize)
+    (pin : session.ServerAuthenticationPin)
     (before : State n Auxiliary)
     (cached : RegistrationSigningShared.Cached (RegistrationWorldSigning.project before.world))
     (result : RustM (RegistrationBeaconInitExecutor.Result Encoded) × State n Auxiliary)
     (supported : result ∈ support
-      ((simulateQ (implementation sign ed) (RegistrationBeaconInitExecutor.begin encode control inputs coins pin mldsa)).run before)) :
+      ((simulateQ (implementation sign ed) (RegistrationBeaconInitExecutor.begin encode control inputs coins pin)).run before)) :
     RegistrationSigningShared.Cached (RegistrationWorldSigning.project result.2.world) := by
-  apply RegistrationBeaconInitHistory.world_cached sign ed encode control inputs coins pin mldsa
+  apply RegistrationBeaconInitHistory.world_cached sign ed encode control inputs coins pin
     (project before) cached (result.1, project result.2)
   rw [← program_project sign ed _ before, support_map]
   exact Set.mem_image_of_mem (Prod.map id project) supported

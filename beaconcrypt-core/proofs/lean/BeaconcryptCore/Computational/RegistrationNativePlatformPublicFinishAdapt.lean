@@ -107,7 +107,7 @@ theorem continuation_source (setup : Setup base KemSK) (wire : RegistrationNativ
     (seed : IdentitySeed) (selectedScalar : ScalarBytes) (localScalar : Option ScalarBytes)
     (owner current : RegistrationNativeBeaconFrontend.Owner source) (env : EnvState Auxiliary)
     (authenticated : registration.AuthenticatedResponse) (result : RustM (Option RegistrationBeaconReferenceRoot.Ready))
-    (erased : Std.Array U8 357#usize) (before : Private n KemSK) :
+    (erased : Std.Array U8 227#usize) (before : Private n KemSK) :
     Prod.map id drop <$>
       (simulateQ (implementation setup wire route sign seed selectedScalar)
         (simulateQ (adapt setup localScalar)
@@ -184,8 +184,8 @@ theorem phase_native (setup : Setup base KemSK) (wire : RegistrationNativeWire.W
     (seed : IdentitySeed) (selectedScalar : ScalarBytes) (localScalar : Option ScalarBytes)
     (owner current : RegistrationNativeBeaconFrontend.Owner source) (oneTime : ScalarBytes)
     (authenticated : registration.AuthenticatedResponse)
-    (coherent : authenticated.pending.control.expected_server_binding = authenticated.pending.binding.server_pin.binding)
-    (env : EnvState RegistrationServerRoleBackend.State) (erased : Std.Array U8 357#usize) (before : Private n KemSK) :
+    (coherent : authenticated.control.expected_server_binding = authenticated.binding.server_pin.binding)
+    (env : EnvState RegistrationServerRoleBackend.State) (erased : Std.Array U8 227#usize) (before : Private n KemSK) :
     Prod.map id drop <$>
       (simulateQ (implementation setup wire route sign seed selectedScalar)
         (simulateQ (adapt setup localScalar)

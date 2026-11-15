@@ -14,7 +14,7 @@ namespace BeaconcryptCore.Refinement.AdapterRecordRequestExtraction
 open AdapterRecordRequestMonad
 variable {m : Type → Type} [Monad m] [LiftRust m] [Operations m]
 
--- Extracted input SHA-256: bec5fc1958c02937b82564a147e68f00dd1fac4430dd13e486ba06edba7b7907
+-- Extracted input SHA-256: fd2e995d850f4092689b2506583856faff58168f907088ad0c9ec7c07a215efe
 -- Transformation SHA-256: f769ed978946dfcb43715417cfd76d18c20df9f9c972a9a6d903453d804599e6
 def body
   (effect : beaconcrypt_core.record_effects.RecordReceiveEffect) :

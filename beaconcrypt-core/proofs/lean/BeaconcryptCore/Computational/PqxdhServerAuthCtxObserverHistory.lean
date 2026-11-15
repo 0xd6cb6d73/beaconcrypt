@@ -13,6 +13,7 @@ open PqxdhServerAuthExperiment PqxdhServerAuthEntryFactor
 open PqxdhSecretInputKdf PqxdhJointKdfGame PqxdhJointIdentity PqxdhJointGapDh
 open PqxdhServerAuthCtxStop
 
+variable (associatedData : PqxdhTranscriptAd.AssociatedData)
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response : Type}
 
 /-- Existing source receipts remain attributed after a nonsealing component continuation and actual source-log growth, provided the already selected input is retained. -/
@@ -49,8 +50,14 @@ theorem finish_hidden (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
   simp only [finishStep, StateT.run] at supported
   cases phase : state.1.beacon.beacon.phase with
   | initSent control prekey oneTime kem =>
-    simp only [phase, mem_support_bind_iff] at supported
-    obtain ⟨prepared, _, supported⟩ := supported
+    simp only [phase] at supported
+    split at supported
+    rotate_left
+    · simp only [support_pure, Set.mem_singleton_iff] at supported
+      subst supported
+      rfl
+    simp only [mem_support_bind_iff] at supported
+    obtain ⟨hashed, _, prepared, _, supported⟩ := supported
     cases found : prepared with
     | none =>
       simp only [found, support_pure, Set.mem_singleton_iff] at supported
@@ -122,11 +129,16 @@ theorem skeleton_hidden (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
               subst supported
               rfl
           | some token =>
-              simp only [found, mem_support_bind_iff] at supported
-              obtain ⟨built, _, supported⟩ := supported
-              simp only [support_pure, Set.mem_singleton_iff] at supported
-              subst supported
-              rfl
+              simp only [found] at supported
+              split at supported
+              · simp only [support_pure, Set.mem_singleton_iff] at supported
+                subst supported
+                rfl
+              · simp only [mem_support_bind_iff] at supported
+                obtain ⟨hashed, _, built, _, supported⟩ := supported
+                simp only [support_pure, Set.mem_singleton_iff] at supported
+                subst supported
+                rfl
       | finish raw =>
           exact finish_hidden setup codec checks context value raw state result supported
       | hmac key bytes =>
@@ -247,7 +259,7 @@ theorem handler_quiet_origins (setup : Setup baseSpec KemSK) (codec : Codec Read
       result.1.2.1.1.ghost result.1.2.1.2.2.hidden result.2.1 := by
   obtain ⟨reply, _, reached⟩ := handler_source_support setup codec checks context rest key Q j query
     localState before ready result supported
-  have grown := PqxdhServerAuthCtxAcceptanceHistory.handler_grows setup codec checks context Q j
+  have grown := PqxdhServerAuthCtxAcceptanceHistory.handler_logs setup codec checks context Q j
     (factorServices setup codec checks context (PqxdhServerAuthCtxMaterial.output key rest)) query
     (PqxdhServerAuthCtxState.project (localState, before.2)) _ reached
   have retained := handler_hidden setup codec checks context (PqxdhServerAuthCtxMaterial.output key rest)
@@ -268,15 +280,15 @@ theorem selected_build_origins (setup : Setup baseSpec KemSK) (codec : Codec Rea
     (supported : ((some answer, afterLocal), after) ∈ support ((simulateQ
       (RawCtxSelectedAuthenticationObserver.observed true (RawCtxUniversalDecoder.decoder codec.frameRead)
         setup.source.crypto key)
-      ((PqxdhServerAuthCtxBuild.selected setup.source codec checks rest session token payload
+      ((PqxdhServerAuthCtxBuild.selected associatedData setup.source codec checks rest session token payload
         localState.1.1.server).run.run localState)).run before)) :
     PqxdhServerAuthCtxOrigin.Origins setup context codec.frameWrite
       afterLocal.1.1.ghost afterLocal.1.2.2.hidden after.1 := by
   change ((some answer, afterLocal), after) ∈ support ((simulateQ
     (RawCtxSelectedAuthenticationObserver.observed true (RawCtxUniversalDecoder.decoder codec.frameRead)
       setup.source.crypto key) (PqxdhServerAuthCtxBuild.post session localState <$>
-        (PqxdhServerAuthBuildProgram.compiled setup.source codec checks rest token.pending payload ()
-          localState.1.1.server).run.run [])).run before) at supported
+        (PqxdhServerAuthBuildProgram.compiled associatedData setup.source codec checks rest token.pending payload
+          associatedData localState.1.1.server).run.run [])).run before) at supported
   simp only [simulateQ_map, StateT.run_map, support_map, Set.mem_image] at supported
   obtain ⟨built, reached, equal⟩ := supported
   rcases built with ⟨⟨_ | outcome, log⟩, actual⟩
@@ -284,7 +296,7 @@ theorem selected_build_origins (setup : Setup baseSpec KemSK) (codec : Codec Rea
   · simp only [PqxdhServerAuthCtxBuild.post, Prod.mk.injEq, Option.some.injEq] at equal
     rw [← equal.1.2, ← equal.2]
     obtain ⟨message, reply, bytes, touched, selected, input⟩ := trace.marked session marked
-    exact PqxdhServerAuthCtxOrigin.build_origins setup codec checks context rest token.pending payload
+    exact PqxdhServerAuthCtxOrigin.build_origins associatedData setup codec checks context rest token.pending payload
       localState.1.1 session localState.1.2.2.hidden before.1 actual.1 origins message reply bytes touched
       selected input outcome log localState.1.1.ctx
       (PqxdhFirstBeaconRecordCanonical.observed_monitor _ _ _ _ before _ reached)
@@ -315,24 +327,54 @@ theorem handler_build_origins (setup : Setup baseSpec KemSK) (codec : Codec Read
           (.inr (.build session payload))).run.run localState))).run before) at supported
   simp only [PqxdhServerAuthCtxHandler.route, PqxdhServerAuthCtxBuild.build, OptionT.run_mk,
     StateT.run, pending, marked, ite_true] at supported
-  change ((some answer, afterLocal), after) ∈ support ((simulateQ
-    (RawCtxSelectedAuthenticationObserver.observed true (RawCtxUniversalDecoder.decoder codec.frameRead)
-      setup.source.crypto key) (PqxdhServerAuthCtxHandler.settle Q j (.inr (.build session payload)) localState <$>
-        ((PqxdhServerAuthCtxBuild.selected setup.source codec checks rest session token payload
-          localState.1.1.server).run.run localState))).run before) at supported
-  simp only [simulateQ_map, StateT.run_map, support_map, Set.mem_image] at supported
-  obtain ⟨built, reached, equal⟩ := supported
-  have normal : built.1.1 = some answer :=
-    (PqxdhServerAuthCtxHandlerBounds.settle_fields Q j (.inr (.build session payload)) localState built.1).1.symm.trans
-      (congrArg (fun value => value.1.1) equal)
-  have valid := selected_build_origins setup codec checks context rest key Q j session token payload
-    localState built.1.2 before built.2 trace marked origins answer (by rw [← normal]; exact reached)
-  have localEq : (PqxdhServerAuthCtxHandler.settle Q j (.inr (.build session payload)) localState built.1).2 = afterLocal :=
-    congrArg (fun value => value.1.2) equal
-  have observerEq : built.2 = after := congrArg Prod.snd equal
-  rw [← localEq, ← observerEq]
-  unfold PqxdhServerAuthCtxHandler.settle keepHiddenBad
-  split <;> exact valid
+  cases pre : PqxdhServerRegistrationPublication.prehash localState.1.1.server token.pending payload with
+  | none =>
+    simp only [pre, map_pure, simulateQ_pure] at supported
+    change ((some answer, afterLocal), after) ∈ support (StateT.run (pure _) before) at supported
+    simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
+    have localEq := congrArg (fun value => value.1.2) supported
+    have observerEq := congrArg (fun value => value.2.1) supported
+    simp only at localEq observerEq
+    rw [localEq, observerEq]
+    unfold PqxdhServerAuthCtxHandler.settle keepHiddenBad
+    split <;> exact origins
+  | some candidate =>
+    have liftBind : ∀ {β : Type} (x : OracleComp AdaptiveCtxDynamicKnownKeys.Spec CtxRomAuth.CtxDigest)
+        (f : CtxRomAuth.CtxDigest → PqxdhServerAuthCtxState.Program KemSK β) (s : PqxdhServerAuthCtxState.Local KemSK),
+        (StateT.lift x >>= f) s = x >>= fun digest => f digest s := by
+      intro β x f s
+      change StateT.run _ s = _
+      simp only [StateT.run_bind, StateT.run_lift, bind_assoc, pure_bind]
+      rfl
+    simp only [pre, PqxdhServerAuthCtxState.hash, liftBind, map_bind, simulateQ_bind] at supported
+    change ((some answer, afterLocal), after) ∈ support (StateT.run (_ >>= _) before) at supported
+    simp only [StateT.run_bind, mem_support_bind_iff] at supported
+    obtain ⟨hashed, hashReached, supported⟩ := supported
+    have hashOrigins := origins_quiet setup context codec key _
+      (by simp [PqxdhServerAuthCtxAmbient.hash, AdaptiveCtxDynamicKnownBounds.TargetClass,
+        AdaptiveCtxQueryBounds.SourceSeal])
+      localState.1.1.ghost localState.1.1.ghost localState.1.2.2.hidden localState.1.2.2.hidden before hashed
+      origins (List.prefix_refl _) (List.prefix_refl _) (fun _ found => found) hashReached
+    change ((some answer, afterLocal), after) ∈ support ((simulateQ
+      (RawCtxSelectedAuthenticationObserver.observed true (RawCtxUniversalDecoder.decoder codec.frameRead)
+        setup.source.crypto key) (PqxdhServerAuthCtxHandler.settle Q j (.inr (.build session payload)) localState <$>
+          ((PqxdhServerAuthCtxBuild.selected (PqxdhTranscriptAd.adOf hashed.1) setup.source codec checks rest session
+            token payload localState.1.1.server).run.run localState))).run hashed.2) at supported
+    simp only [simulateQ_map, StateT.run_map, support_map, Set.mem_image] at supported
+    obtain ⟨built, reached, equal⟩ := supported
+    have normal : built.1.1 = some answer :=
+      (PqxdhServerAuthCtxHandlerBounds.settle_fields Q j (.inr (.build session payload)) localState built.1).1.symm.trans
+        (congrArg (fun value => value.1.1) equal)
+    have valid := selected_build_origins (PqxdhTranscriptAd.adOf hashed.1) setup codec checks context rest key Q j
+      session token payload localState built.1.2 hashed.2 built.2 trace marked hashOrigins answer
+      (by rw [← normal]; exact reached)
+    have localEq : (PqxdhServerAuthCtxHandler.settle Q j (.inr (.build session payload)) localState built.1).2 =
+        afterLocal :=
+      congrArg (fun value => value.1.2) equal
+    have observerEq : built.2 = after := congrArg Prod.snd equal
+    rw [← localEq, ← observerEq]
+    unfold PqxdhServerAuthCtxHandler.settle keepHiddenBad
+    split <;> exact valid
 
 /-- Every normal complete API reply preserves exact source origins for the observer's full successful-seal history. Concrete attempted-query bills discharge every nonsealing case. -/
 theorem handler_origins (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)

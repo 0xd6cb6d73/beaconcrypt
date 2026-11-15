@@ -155,6 +155,29 @@ theorem scans (input : Slice U8) (atoms : List Atom) (size : atoms.length = 8)
   · simp only [extraction_canonical_scan_1, show Array.repeat 1#usize = @pack Usize from rfl,
       show Array.repeat 1#usize = @pack Bool from rfl, index_pack, bind_tc_ok, ↓reduceIte,
       run_one trace]
+set_option backward.isDefEq.respectTransparency false in
+theorem array6_trace (input : Slice U8) (atoms : List Atom) (size : atoms.length = 6)
+    (contents : input.val = encodedBytes cbor_major_type_array 6#u64 ++ atomsBytes atoms) :
+    Trace 1#usize input := by
+  obtain ⟨item, tail, _, children⟩ := array_item input 6#u64 (atomsBytes atoms) contents
+  apply Trace.step item (by scalar_tac)
+  rw [children, next_initial]
+  apply flat_trace atoms item.tail (UScalar.cast .Usize 6#u64) tail
+  rw [RegistrationHeaderCanonical.cast_value .Usize 6#u64 (by scalar_tac), size]
+  rfl
+
+set_option backward.isDefEq.respectTransparency false in
+theorem scans6 (input : Slice U8) (atoms : List Atom) (size : atoms.length = 6)
+    (contents : input.val = encodedBytes cbor_major_type_array 6#u64 ++ atomsBytes atoms) :
+    extraction_canonical_scan_0 input = .ok true ∧ extraction_canonical_scan_1 input = .ok true := by
+  have trace := array6_trace input atoms size contents
+  constructor
+  · simp only [extraction_canonical_scan_0, show Array.repeat 1#usize = @pack Usize from rfl,
+      show Array.repeat 1#usize = @pack Bool from rfl, index_pack, bind_tc_ok, ↓reduceIte,
+      run_zero trace]
+  · simp only [extraction_canonical_scan_1, show Array.repeat 1#usize = @pack Usize from rfl,
+      show Array.repeat 1#usize = @pack Bool from rfl, index_pack, bind_tc_ok, ↓reduceIte,
+      run_one trace]
 end BeaconcryptCore.Refinement.RegistrationCanonicalTrace
 
 /-- info: 'BeaconcryptCore.Refinement.RegistrationCanonicalTrace.loop_zero_unfold' depends on axioms: [propext,
@@ -208,3 +231,15 @@ end BeaconcryptCore.Refinement.RegistrationCanonicalTrace
 /-- info: 'BeaconcryptCore.Refinement.RegistrationCanonicalTrace.scans' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Refinement.RegistrationCanonicalTrace.scans
+
+/-- info: 'BeaconcryptCore.Refinement.RegistrationCanonicalTrace.array6_trace' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.RegistrationCanonicalTrace.array6_trace
+
+/-- info: 'BeaconcryptCore.Refinement.RegistrationCanonicalTrace.scans6' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.RegistrationCanonicalTrace.scans6

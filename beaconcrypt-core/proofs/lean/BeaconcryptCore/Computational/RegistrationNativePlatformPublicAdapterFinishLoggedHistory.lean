@@ -22,7 +22,7 @@ local notation "Native"=>RegistrationNativeExperiment.State n KemSK mlSource
 
 theorem sample (coins :QueryImpl unifSpec (StateT P ProbComp))
     (setup :PqxdhServerAuthExperiment.Setup base KemSK) (checks :PqxdhServerAuthExperiment.Checks)
-    (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created Unit)
+    (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire :RegistrationNativeWire.Wire) (note :Stage→Log)
     (pending :registration.BeaconPending) (input :Slice U8) (owner :Owner mlSource) (scalar :PqxdhJointGapDh.ScalarBytes)
     (before :Native) (previous :P) (past :List Log)
@@ -74,7 +74,7 @@ open RegistrationNativePlatformPublicAdapterLoggedRuntime (Augmentation unchange
 open RegistrationNativePlatformPublicAdapterFinishLoggedJoint (output physicalLog)
 open RegistrationNativePlatformExtractedSdkPublic (TotalStep)
 
-variable (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential mlSource)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential mlSource)
 
 open RegistrationNativePlatformPublicAdapterFinishLoggedDispatch (augmentation transport)
 

@@ -100,6 +100,17 @@ private theorem capability_keeps (query : PqxdhRecordLiftInterface.Capability n)
   exact RegistrationSigningShared.cached_extend before.world.2 _ _
     (RegistrationWorldCache.effects_cache (.inr query) before.world.1 inner possible) valid
 
+/-- The AD transcript hash extends the shared cache without changing any earlier Server signing receipt. -/
+theorem adHash (pending : registration.ServerAdHash) :
+    Keeps (RegistrationWorldServerCompletion.adHash (n := n) (Auxiliary := Auxiliary) pending) := by
+  unfold RegistrationWorldServerCompletion.adHash
+  cases pending.request with
+  | fail error | div => exact pure_keeps _
+  | ok request =>
+      apply bind_keeps _ _ (capability_keeps _)
+      intro digest
+      exact pure_keeps _
+
 /-- Actual response hashing and every attempted signature retain a valid chronological receipt before any writer can fail. -/
 theorem signing (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
     (encode : registration.SignedResponseView → core.option.Option Encoded)
@@ -224,10 +235,17 @@ private theorem afterOccupancy (setup : Setup base KemSK) (codec : Codec Reader 
         dsimp only
         exact front_pure _
     | Ok pending =>
-        dsimp only
-        split
-        · exact sdk_fromInitial setup codec sign encode control pending
-        · exact front_pure _
+        apply front_bind _ _ (front_world _ (adHash pending))
+        intro hashed
+        cases hashed with
+        | fail error | div => exact front_pure _
+        | ok result => cases result with
+          | Err previous => exact front_pure _
+          | Ok initial =>
+              dsimp only
+              split
+              · exact sdk_fromInitial setup codec sign encode control initial
+              · exact front_pure _
 
 private theorem complete (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
@@ -305,7 +323,7 @@ theorem build (setup : Setup base KemSK) (codec : Codec Reader Response) (checks
 theorem accept (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket) :
     ∀ (before : RegistrationServerFrontendCompiler.State n), FrontValid before → ∀ result,
       result ∈ support ((RegistrationServerSdkSource.accept setup codec checks route verify representation created packet).run before) → FrontValid result.2 := by
   intro before valid result supported
@@ -348,29 +366,13 @@ private theorem pin_valid (binding : pqxdh.ServerBinding) (publicKey : Std.Array
     (result : RustM (core.option.Option session.ServerAuthenticationPin) × RegistrationWorldServerReplay.Global n Auxiliary)
     (supported : result ∈ support ((RegistrationWorldServerFrontend.initializePin binding publicKey).run before)) :
     Valid result.2.2 := by
-  simp only [RegistrationWorldServerFrontend.initializePin, StateT.run] at supported
-  cases started : registration.begin_server_pin binding publicKey with
-  | fail error | div =>
-      simp only [started, support_pure, Set.mem_singleton_iff] at supported
-      cases supported
-      exact valid
-  | ok pending =>
-      simp only [started] at supported
-      cases requested : pending.request with
-      | fail error | div =>
-          simp only [requested, support_pure, Set.mem_singleton_iff] at supported
-          cases supported
-          exact valid
-      | ok request =>
-          simp only [requested, mem_support_bind_iff] at supported
-          obtain ⟨hashed, reached, returned⟩ := supported
-          have after := capability_keeps (.hash (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request)) before.2 valid hashed reached
-          simp only [support_pure, Set.mem_singleton_iff] at returned
-          cases returned
-          exact after
+  simp only [RegistrationWorldServerFrontend.initializePin, StateT.run,
+    support_pure, Set.mem_singleton_iff] at supported
+  cases supported
+  exact valid
 
-/-- Successful actual Server startup begins with a valid empty signing history and retains it through its shared-cache pin hash. -/
-theorem start (created : PqxdhLiveServerConstruction.Created Unit)
+/-- Successful actual Server startup begins with a valid empty signing history and retains it through pure exact-pin selection. -/
+theorem start (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (publicKey : Std.Array Std.U8 1952#usize) (auxiliary : Auxiliary)
     (before after : PqxdhRecordLiftWorld.State n)
     (native : RegistrationWorldServerFrontend.State n Auxiliary)
@@ -427,3 +429,9 @@ end BeaconcryptCore.Computational.RegistrationNativeMldsaServerCached
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaServerCached.start
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaServerCached.adHash' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaServerCached.adHash

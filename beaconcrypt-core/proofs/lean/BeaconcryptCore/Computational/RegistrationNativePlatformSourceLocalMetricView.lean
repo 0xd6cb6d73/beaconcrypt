@@ -131,6 +131,20 @@ private theorem capability (coins : QueryImpl unifSpec m) (query : PqxdhRecordLi
   closed coins _ (RegistrationNativeLocalView.capability_input query)
 
 omit primitive in
+/-- The reached AD hash keeps its real query/cache effects while ignoring only the named instrumentation view. -/
+theorem adHash (coins : QueryImpl unifSpec m) (pending : registration.ServerAdHash) :
+    Stable (project (n := n) (Auxiliary := Auxiliary))
+      (RegistrationNativePlatformServerCompletion.adHash coins pending) := by
+  unfold RegistrationNativePlatformServerCompletion.adHash RegistrationNativePlatformServerCompletion.adHashWith RegistrationServerAdHash.runWith
+  cases pending.request with
+  | fail error | div => exact pure_stable _ RegistrationNativeLocalView.project_idempotent _
+  | ok request =>
+      simp only [bind_assoc, pure_bind]
+      apply bind_stable _ _ _ (capability coins (.hash (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request)))
+      intro _digest
+      exact pure_stable _ RegistrationNativeLocalView.project_idempotent _
+
+omit primitive in
 private theorem effects (coins : QueryImpl unifSpec m) (query : (PqxdhRecordLiftInterface.EnvEffects n).Domain) :
     Stable (project (n := n) (Auxiliary := Auxiliary))
       (RegistrationNativePlatformPairedServerService.nativeEffects coins query) := by
@@ -213,3 +227,9 @@ end BeaconcryptCore.Computational.RegistrationNativePlatformSourceLocalMetricVie
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativePlatformSourceLocalMetricView.finish
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformSourceLocalMetricView.adHash' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformSourceLocalMetricView.adHash

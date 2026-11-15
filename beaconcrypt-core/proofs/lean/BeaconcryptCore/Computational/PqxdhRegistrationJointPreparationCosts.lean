@@ -1,11 +1,12 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhRegistrationJointPreparation
 
-/-! Exact service classes and complete interpreted primitive bills for the actual registration preparation. Deterministic source/codec work remains real local work, separate from oracle counts. -/
+/-! Exact service classes and complete interpreted primitive bills for the actual registration preparation. Deterministic source/codec work remains real local work, separate from oracle counts. These generic post-hash service bills retain the supplied completed binding; the actual Native registration hash phases have their separate source accounting. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhRegistrationJointPreparationCosts
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhRefinement PqxdhJointIdentity PqxdhJointGapDh PqxdhServerAuthExperiment
 open PqxdhRegistrationJointPreparation PqxdhServerAuthSourceCosts
 variable {ι I D K X Reader Response Result KemSK : Type} {baseSpec : OracleSpec ι}
@@ -52,10 +53,10 @@ theorem collect_classes (identity : I) (prekey oneTime : D) (key : K) (raw : Pqx
 /-- Core admission and erasure add no service call. Every source branch retains at most one logical request to each private service and the full local callback allowance. -/
 theorem prepare_classes (control : beaconcrypt_core.pqxdh.BeaconInitSent)
     (identity : I) (prekey oneTime : D) (key : K) (raw : Pqxdh.Bytes) (kind : Kind) :
-    (PqxdhBeaconPhase2Preparation.prepare (X := X) (Response := Response) control identity prekey oneTime key raw).IsQueryBoundP
+    (PqxdhBeaconPhase2Preparation.prepare (completedBinding := completedBinding) (X := X) (Response := Response) control identity prekey oneTime key raw).IsQueryBoundP
       (fun query => classify query = kind) (cap kind) := by
   cases kind
-  case localCall => exact (PqxdhBeaconPhase2Preparation.prepare_bound control identity prekey oneTime key raw).isQueryBoundP
+  case localCall => exact (PqxdhBeaconPhase2Preparation.prepare_bound (completedBinding := completedBinding) control identity prekey oneTime key raw).isQueryBoundP
   all_goals unfold PqxdhBeaconPhase2Preparation.prepare
   all_goals refine isQueryBoundP_bind (n := 1) (m := 0) (collect_classes identity prekey oneTime key raw _) ?_
   all_goals rintro (_ | input) _
@@ -93,11 +94,11 @@ theorem annotated_prepare_uniform (setup : Setup baseSpec KemSK) (codec : Codec 
     (control : beaconcrypt_core.pqxdh.BeaconInitSent) (seed : IdentitySeed) (prekey oneTime : ScalarBytes)
     (key : PqxdhKemIndCca.MlKem768PublicKey × KemSK) (raw : Pqxdh.Bytes) (pool : Pool KemSK) :
     ((simulateQ (annotated setup codec identityIndex kemIndex)
-      (PqxdhBeaconPhase2Preparation.prepare control seed prekey oneTime key raw)).run pool).IsTotalQueryBound caps.decapsCost := by
+      (PqxdhBeaconPhase2Preparation.prepare (completedBinding := completedBinding) control seed prekey oneTime key raw)).run pool).IsTotalQueryBound caps.decapsCost := by
   have bound := FinitePartitionQueryBounds.weighted_bound classify (uniformCost caps) cap
     (annotated setup codec identityIndex kemIndex) (fun _ => True)
-    (PqxdhBeaconPhase2Preparation.prepare control seed prekey oneTime key raw)
-    (prepare_classes control seed prekey oneTime key raw)
+    (PqxdhBeaconPhase2Preparation.prepare (completedBinding := completedBinding) control seed prekey oneTime key raw)
+    (prepare_classes (completedBinding := completedBinding) control seed prekey oneTime key raw)
     (fun query state => (annotated_step_uniform setup codec caps bounded identityIndex kemIndex query state).isQueryBoundP) pool
   simpa only [uniform_bill, isQueryBoundP_true_iff] using bound
 
@@ -109,11 +110,11 @@ theorem prepare_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
     (identityOwned : pool.1.seeds[identityIndex]? = some seed)
     (kemOwned : pool.2.keys[kemIndex]? = some key) :
     ((simulateQ (interpreted setup codec)
-      (PqxdhBeaconPhase2Preparation.prepare control (PqxdhRegistrationJointBundle.identityMap setup identityIndex seed)
+      (PqxdhBeaconPhase2Preparation.prepare (completedBinding := completedBinding) control (PqxdhRegistrationJointBundle.identityMap setup identityIndex seed)
         prekey oneTime (PqxdhRegistrationJointBundle.keyMap kemIndex key) raw)).run pool).IsTotalQueryBound
       (caps.decapsUniform + caps.baseUniform * caps.decapsBase) := by
-  rw [prepare_source setup codec identityIndex kemIndex seed prekey oneTime key control raw pool identityOwned kemOwned]
-  exact annotated_prepare_uniform setup codec caps bounded identityIndex kemIndex control seed prekey oneTime key raw pool
+  rw [prepare_source (completedBinding := completedBinding) setup codec identityIndex kemIndex seed prekey oneTime key control raw pool identityOwned kemOwned]
+  exact annotated_prepare_uniform (completedBinding := completedBinding) setup codec caps bounded identityIndex kemIndex control seed prekey oneTime key raw pool
 
 
 /-- Only the two reached private service operations are protocol preparation requests; every other service capability is in the remaining class. -/
@@ -153,13 +154,13 @@ theorem compiler_prepare_classes (setup : Setup baseSpec KemSK) (codec : Codec R
     (control : beaconcrypt_core.pqxdh.BeaconInitSent) (identity : PqxdhRegistrationJointBundle.Identity)
     (prekey oneTime : ScalarBytes) (key : PqxdhRegistrationJointBundle.Key) (raw : Pqxdh.Bytes) (kind : Kind) :
     (simulateQ (compiler setup codec)
-      (PqxdhBeaconPhase2Preparation.prepare control identity prekey oneTime key raw)).IsQueryBoundP
+      (PqxdhBeaconPhase2Preparation.prepare (completedBinding := completedBinding) control identity prekey oneTime key raw)).IsQueryBoundP
       (fun request => serviceClass (KemSK := KemSK) request = kind) (serviceCap kind) := by
   by_cases localKind : kind = .localCall
   · subst kind
     exact compiler_other_free setup codec _
   · have same : cap kind = serviceCap kind := by cases kind <;> simp_all [cap, serviceCap]
-    have source := prepare_classes (X := Nat) (Response := Response) control identity prekey oneTime key raw kind
+    have source := prepare_classes (completedBinding := completedBinding) (X := Nat) (Response := Response) control identity prekey oneTime key raw kind
     rw [same] at source
     apply source.simulateQ_of_step
     · intro query selected

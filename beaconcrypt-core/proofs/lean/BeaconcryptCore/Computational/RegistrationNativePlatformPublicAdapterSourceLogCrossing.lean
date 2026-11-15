@@ -1,7 +1,8 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeStageTrace
+import VCVio.OracleComp.QueryTracking.QueryBound.Basic
 /-! A given newly emitted source observation has a genuine first emitting source query. Its actual before/after states and complete source prefix/suffix paths are retained, including repeated observations already present before the program. This is used to locate the actual Builder complete leaf and earlier source callback, not to substitute a compatible native trace. -/
-open OracleComp OracleSpec CoreModels Aeneas
+open OracleComp OracleSpec
 set_option autoImplicit false
 set_option warningAsError true
 namespace BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterSourceLogCrossing

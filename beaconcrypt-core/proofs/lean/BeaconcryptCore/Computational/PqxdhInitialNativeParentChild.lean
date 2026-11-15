@@ -11,6 +11,7 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhInitialNativeParentChild
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhOrderedChainHybrids
 open PqxdhInitialNativeLog PqxdhInitialNativeResponse PqxdhInitialNativeRetained
 open RawCtxSelectedParentTable RawCtxSelectedParentEntry RawCtxSelectedParentPrivatePatch RawCtxCursorLineage RawCtxSelectiveChainGame
@@ -55,8 +56,8 @@ theorem frame_compiled (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin
       (simulateQ (PqxdhInitialParentPost.nativeHandler source writer (privatePatch prior (nextChain parent) output)
         (fromOutput (PqxdhInitialBuilderContext.address context.original) parent) (nextChain parent)
         pre application (fun secrets => Prod.snd <$> initial secrets) selector aux)
-        ((PqxdhInitialOriginContext.frame mark sender route decode context).2
-          (PqxdhInitialParentBuilderContext.reply sender route decode context.original parent)))).run state =
+        ((PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode context).2
+          (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode context.original parent)))).run state =
       (fun result => (Prod.map id (Prod.map (PqxdhInitialParentPost.mapFront
         (RawCtxSelectedParentCalls.nativeKernel (nextChain parent))) id) result.1, flat result.2)) <$>
         (simulateQ (PqxdhInitialParentPrivateObserver.handler source writer prior
@@ -64,7 +65,7 @@ theorem frame_compiled (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin
           pre application initial selector aux (RawCtxSelectedLiveTrace.nativeReader (RawCtxFreshChainCut.concreteChain (nextChain parent)))
           (nextChain parent))
           (simulateQ PqxdhInitialParentObserverCompiler.compiler
-            (PqxdhInitialOriginContext.stopped mark sender route decode context (material parent)))).run (nested state) := by
+            (PqxdhInitialOriginContext.stopped (completedBinding := completedBinding) mark sender route decode context (material parent)))).run (nested state) := by
   rw [PqxdhInitialOriginNativeContext.frame_cut, child_response _ _ _ _ separate, ambient_map, ambient_flatten]
   rw [← PqxdhInitialParentPrivateObserver.compiled_source source writer prior _ output pre application initial selector aux
     (nextChain parent) _ separate]
@@ -81,8 +82,8 @@ theorem retained_compiled (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Ori
         ((updated (PqxdhInitialBuilderContext.address context.original) parent state).1.1.2.1.cacheQuery
           (targetAddress (nextChain parent)) output))
       (PqxdhInitialNativeAudit.external pre application initial selector aux))
-      ((PqxdhInitialOriginContext.frame mark sender route decode context).2
-        (PqxdhInitialParentBuilderContext.reply sender route decode context.original parent))).run (project state) =
+      ((PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode context).2
+        (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode context.original parent))).run (project state) =
       (fun result => (Prod.map id (Prod.map (PqxdhInitialParentPost.mapFront
         (RawCtxSelectedParentCalls.nativeKernel (nextChain parent))) id) result.1, flat result.2)) <$>
         (simulateQ (PqxdhInitialParentPrivateObserver.handler source writer (view (productionStream source.crypto) state.1.1.2.1)
@@ -90,9 +91,9 @@ theorem retained_compiled (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Ori
           pre application initial selector aux (RawCtxSelectedLiveTrace.nativeReader (RawCtxFreshChainCut.concreteChain (nextChain parent)))
           (nextChain parent))
           (simulateQ PqxdhInitialParentObserverCompiler.compiler
-            (PqxdhInitialOriginContext.stopped mark sender route decode context (material parent)))).run (nested (project state)) := by
+            (PqxdhInitialOriginContext.stopped (completedBinding := completedBinding) mark sender route decode context (material parent)))).run (nested (project state)) := by
   rw [child_view source state _ parent output separate, PqxdhInitialNativeParentContinuation.retained_program]
-  exact frame_compiled source writer (view (productionStream source.crypto) state.1.1.2.1)
+  exact frame_compiled (completedBinding := completedBinding) source writer (view (productionStream source.crypto) state.1.1.2.1)
     pre application initial selector aux mark sender route decode context parent output (project state) separate
 
 end Interpreter

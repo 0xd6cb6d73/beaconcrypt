@@ -7,6 +7,7 @@ import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhDeploymentLaterServerTransfer
 open PqxdhServerAuthExperiment PqxdhJointIdentity
 open PqxdhDeploymentInterface (Entry Handle FullSpec ModeSpec Mode Budget FreshBounds asModeO)

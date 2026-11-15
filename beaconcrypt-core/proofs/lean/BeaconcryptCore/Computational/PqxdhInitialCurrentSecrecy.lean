@@ -8,16 +8,18 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialCurrentSecrecy
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhJointKdf PqxdhJointKdfGame
 open PqxdhInitialRootLabelService PqxdhInitialLegalObserver PqxdhKemIndCca
 open PqxdhAuthenticatedRootExperiment PqxdhStatefulPhase1EufCma PqxdhPhase2GeneratedDriver
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhCorrelatedExpand PqxdhCorrelatedExpandHybrid
 variable {ι M P I K X Response A KemSK : Type} {baseSpec : OracleSpec ι} {S B : Nat}
 
-/-- The typed response at the actual initializer request is exactly the first64 bytes of the same fixed76-byte expansion. No nonce is introduced into source initialization. -/
+/-- The actual typed initializer response is the first 64 bytes of the expansion under the initial-only 45-byte domain. The 76-byte mathematical comparison uses that same initial domain; ongoing message requests use their separate 48-byte domain. -/
 theorem response_prefix (fixed : FixedHkdfSha512NoSaltSource) (root : RootOutput) :
     realInitial fixed root = RawCtxSelectedInitialConstructor.response64
-      (initialPrefix (productionStream fixed.crypto (FixedHkdfDomain.ratchet.address root.toList))) := by
+      (initialPrefix (productionStream fixed.crypto (FixedHkdfDomain.initial.address root.toList))) := by
   have shared := PqxdhRootTableInitialization.initialResponse_prefix fixed root
   simp only [PqxdhRootTableInitialization.initialResponse_bytes] at shared
   unfold realInitial RawCtxSourceHkdf.initialResponse RawCtxSelectedInitialConstructor.response64
@@ -31,67 +33,67 @@ variable {setup : StatefulPhase1Setup baseSpec}
     (attachedVerify : Ed25519PublicKey → Pqxdh.Bytes → Option Pqxdh.Bytes) (primitives : Primitives)
     (program : Program baseSpec setup.Context S (B + 1)) (post : Post (baseSpec := baseSpec) program.Selection S (B + 1))
 
-noncomputable def joint : SecretInputSampler (Context env kem attachedVerify primitives program post) :=
-  RawCtxInitialSecrecy.joint (sample env baseImpl kem attachedVerify primitives program post)
+noncomputable def joint : SecretInputSampler (PqxdhInitialLegalObserver.Context (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post) :=
+  RawCtxInitialSecrecy.joint (PqxdhInitialLegalObserver.sample (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post)
 
-noncomputable def observer : FullObserver (Context env kem attachedVerify primitives program post) :=
-  fun context output => observe env baseImpl kem attachedVerify primitives program post context
+noncomputable def observer : FullObserver (PqxdhInitialLegalObserver.Context (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post) :=
+  fun context output => PqxdhInitialLegalObserver.observe (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post context
     (RawCtxSelectedInitialConstructor.response64 (initialPrefix output))
 
 noncomputable def random : ProbComp Bool := do
-  let (context, _) ← sample env baseImpl kem attachedVerify primitives program post
+  let (context, _) ← PqxdhInitialLegalObserver.sample (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post
   let output ← $ᵗ HmacBlock
-  observe env baseImpl kem attachedVerify primitives program post context
+  PqxdhInitialLegalObserver.observe (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post context
     (RawCtxSelectedInitialConstructor.response64 output)
 
 /-- The full-output comparison observer consumes exactly the typed64 source response at the current prepared-context sampler. -/
 theorem source_game :
-    sourceFullGame env.source .ratchet (joint env baseImpl kem attachedVerify primitives program post)
-      (observer env baseImpl kem attachedVerify primitives program post) =
-      (sample env baseImpl kem attachedVerify primitives program post >>= fun pair =>
-        observe env baseImpl kem attachedVerify primitives program post pair.1 (realInitial env.source pair.2)) := by
+    sourceFullGame env.source .initial (joint (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post)
+      (observer (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post) =
+      (PqxdhInitialLegalObserver.sample (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post >>= fun pair =>
+        PqxdhInitialLegalObserver.observe (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post pair.1 (realInitial env.source pair.2)) := by
   simp only [sourceFullGame, joint, RawCtxInitialSecrecy.joint, bind_map_left, observer, response_prefix]
 
 /-- The comparison's uniform76 output exposes only its first64 bytes, giving exactly the actual64 response distribution for the complete current continuation. -/
 theorem random_comparison :
-    𝒟[independentFullGame (joint env baseImpl kem attachedVerify primitives program post)
-      (observer env baseImpl kem attachedVerify primitives program post)] =
-      𝒟[random env baseImpl kem attachedVerify primitives program post] := by
+    𝒟[independentFullGame (joint (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post)
+      (observer (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post)] =
+      𝒟[random (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post] := by
   apply EvalDistEq.evalDist_eq
   simp only [independentFullGame, joint, RawCtxInitialSecrecy.joint, bind_map_left, random]
   refine EvalDistEq.bind_right (m := ProbComp) _ (fun pair => ?_)
   have projected := initialPrefix_uniform.bind_left fun output =>
-    observe env baseImpl kem attachedVerify primitives program post pair.1
+    PqxdhInitialLegalObserver.observe (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post pair.1
       (RawCtxSelectedInitialConstructor.response64 output)
   simpa only [bind_map_left, observer] using projected
 
 /-- The current protocol's actual uniform-root endpoint reduces with coefficient one to fixed-salt Extract at its exact joint sampler and ordinary uniform-secret HMAC PRF. The one selected initializer response remains shared across all repeated source requests. -/
 theorem primitive_bound (hmac : HmacSha512) (correct : SourceFullCorrect env.source hmac) :
     (uniformGame (PqxdhCorrelatedExpand.rootReduction env.source baseImpl kem
-      (protocol env kem attachedVerify primitives program post))).boolDistance
-      (random env baseImpl kem attachedVerify primitives program post) ≤
-    (extractRealGame hmac (joint env baseImpl kem attachedVerify primitives program post)
-      (fullExtractReduction hmac .ratchet (observer env baseImpl kem attachedVerify primitives program post))).boolDistance
-      (extractUniformGame (joint env baseImpl kem attachedVerify primitives program post)
-        (fullExtractReduction hmac .ratchet (observer env baseImpl kem attachedVerify primitives program post))) +
-    (hmacPrfRealGame hmac (fullExpandReduction .ratchet
-      (joint env baseImpl kem attachedVerify primitives program post)
-      (observer env baseImpl kem attachedVerify primitives program post))).boolDistance
-      (hmacPrfRandomGame (fullExpandReduction .ratchet
-        (joint env baseImpl kem attachedVerify primitives program post)
-        (observer env baseImpl kem attachedVerify primitives program post))) := by
+      (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post))).boolDistance
+      (random (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post) ≤
+    (extractRealGame hmac (joint (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post)
+      (fullExtractReduction hmac .initial (observer (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post))).boolDistance
+      (extractUniformGame (joint (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post)
+        (fullExtractReduction hmac .initial (observer (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post))) +
+    (hmacPrfRealGame hmac (fullExpandReduction .initial
+      (joint (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post)
+      (observer (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post))).boolDistance
+      (hmacPrfRandomGame (fullExpandReduction .initial
+        (joint (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post)
+        (observer (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post))) := by
   have realLaw :=
-    PqxdhInitialLegalObserver.current_game env baseImpl kem attachedVerify primitives program post
-  have randomLaw := random_comparison env baseImpl kem attachedVerify primitives program post
+    PqxdhInitialLegalObserver.current_game (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post
+  have randomLaw := random_comparison (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post
   simpa only [source_game, ProbComp.boolDistance, realLaw, randomLaw] using
-    sourceFullAdvantage_le_extract_add_hmac env.source hmac correct .ratchet
-      (joint env baseImpl kem attachedVerify primitives program post)
-      (observer env baseImpl kem attachedVerify primitives program post)
+    sourceFullAdvantage_le_extract_add_hmac env.source hmac correct .initial
+      (joint (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post)
+      (observer (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post)
 
 /-- The constructed ordinary PRF reduction has two challenge queries. Its complete sampler and real observer uniform/local work are accounted separately. -/
 theorem hmac_queries :
-    (fullExpandReduction .ratchet (joint env baseImpl kem attachedVerify primitives program post)
-      (observer env baseImpl kem attachedVerify primitives program post)).IsQueryBoundP IsHmacChallengeQuery 2 :=
+    (fullExpandReduction .initial (joint (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post)
+      (observer (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post)).IsQueryBoundP IsHmacChallengeQuery 2 :=
   fullExpandReduction_hmac_query_bound _ _ _
 
 end Current

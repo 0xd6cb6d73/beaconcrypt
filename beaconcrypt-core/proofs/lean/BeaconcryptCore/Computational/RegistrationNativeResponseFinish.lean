@@ -78,14 +78,14 @@ private theorem finish_eq (setup : Setup base KemSK) (wire : RegistrationNativeW
 
 private theorem lower_get (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (before : Local n KemSK source) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (before : Local n KemSK source) :
     (lower setup checks representation created (get : M n KemSK source RegistrationServerRoleBackend.State (State source))).run before =
       pure (before.1, before) := by
   simp only [lower, StateT.run, state_get_apply, state_pure_apply, simulateQ_pure, map_pure]
 
 private theorem lower_consume (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (before : Local n KemSK source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (before : Local n KemSK source)
     (index : Nat) (aborted : pqxdh.BeaconAborted) :
     (lower setup checks representation created (updatePhase index (.aborted aborted))).run before =
       pure ((), consumed before index aborted) := by
@@ -94,7 +94,7 @@ private theorem lower_consume (setup : Setup base KemSK) (checks : Checks)
 
 private theorem terminal (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : M n KemSK source RegistrationServerRoleBackend.State Value)
     (outcome : RustM (Option Pqxdh.Bytes)) (before after : Local n KemSK source) (application : Pqxdh.Bytes)
     (supported : (.ok (some application), after) ∈ support
@@ -111,7 +111,7 @@ attribute [local irreducible] afterAuthentication authentication RegistrationRes
 /-- Successful actual completion has a same-run accepted response cut and the literal continuation to its original returned plaintext. -/
 theorem cut (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (index : Nat) (packet : Option registration.ResponsePacket) (before after : Local n KemSK source)
     (application : Pqxdh.Bytes)
     (supported : (.ok (some application), after) ∈ support
@@ -161,7 +161,7 @@ theorem cut (setup : Setup base KemSK) (checks : Checks)
 /-- The whole original successful finish verifies its original pending pin and actual response, and retains that exact unsigned-message hash in the returned global cache. -/
 theorem final_receipt (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (index : Nat) (packet : Option registration.ResponsePacket) (before after : Local n KemSK source)
     (application : Pqxdh.Bytes)
     (supported : (.ok (some application), after) ∈ support
@@ -196,7 +196,7 @@ theorem final_receipt (setup : Setup base KemSK) (checks : Checks)
 /-- The original complete native finish supplies an ordinary accepted verification trial using its returned cache and literal prior global signing prefix. -/
 theorem accepted (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (index : Nat) (packet : Option registration.ResponsePacket) (before after : Local n KemSK source)
     (application : Pqxdh.Bytes)
     (supported : (.ok (some application), after) ∈ support
@@ -225,7 +225,7 @@ theorem accepted (setup : Setup base KemSK) (checks : Checks)
 
 private theorem source_lower (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : M n KemSK source RegistrationServerRoleBackend.State Value)
     (before : RegistrationNativeExperiment.State n KemSK source) :
     (RegistrationNativeExperiment.beacon setup checks representation created work).run before =
@@ -237,7 +237,7 @@ private theorem source_lower (setup : Setup base KemSK) (checks : Checks)
 /-- The original typed finish has its same source-derived verification trial, with no private-cut observer or successful-authentication premise. -/
 theorem typed_accepted (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (credential : RegistrationNativeMldsa.Credential source)
     (index : Nat) (packet : Option registration.ResponsePacket)
     (before after : RegistrationNativeExperiment.State n KemSK source) (application : Pqxdh.Bytes)
@@ -271,7 +271,7 @@ theorem typed_accepted (setup : Setup base KemSK) (checks : Checks)
 /-- The same returned typed success retains the concrete digest and original pending pin used by actual response verification. -/
 theorem typed_receipt (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (credential : RegistrationNativeMldsa.Credential source)
     (index : Nat) (packet : Option registration.ResponsePacket)
     (before after : RegistrationNativeExperiment.State n KemSK source) (application : Pqxdh.Bytes)
@@ -299,7 +299,7 @@ theorem typed_receipt (setup : Setup base KemSK) (checks : Checks)
 /-- A known pre-call pending owner gives a literal executable response trial, without selecting a private internal authentication result. -/
 theorem typed_trial (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (credential : RegistrationNativeMldsa.Credential source)
     (index : Nat) (owner : Owner source) (pending : registration.BeaconPending)
     (oneTime : PqxdhJointGapDh.ScalarBytes) (received : registration.ResponsePacket)
@@ -326,7 +326,7 @@ theorem typed_trial (setup : Setup base KemSK) (checks : Checks)
 /-- An actual original protected-key response outside the prior unsigned signing prefix yields an ordinary weak ML forgery or a reached shared-cache collision. -/
 theorem typed_origin_split (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (credential : RegistrationNativeMldsa.Credential source)
     (index : Nat) (owner : Owner source) (pending : registration.BeaconPending)
     (oneTime : PqxdhJointGapDh.ScalarBytes) (received : registration.ResponsePacket)

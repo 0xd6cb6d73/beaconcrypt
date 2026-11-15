@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePlatformSecretWordNoCreateLocal
 import BeaconcryptCore.Computational.RegistrationNativeSecretWordTargetPhaseCore
-/-! Before the selected parsed attempt, the actual corrected OPEN callback uses only ordinary routed getters. Its repeated pin hash, mandatory authentication, stateful reserve and every collector failure therefore leave the selected-getter channel unused. -/
+/-! Before the selected parsed attempt, the actual corrected OPEN callback uses only ordinary routed getters. Its supplied-pin selection, mandatory authentication, stateful reserve and every collector failure therefore leave the selected-getter channel unused. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -150,8 +150,9 @@ theorem accept_free (reserve : StateT Platform ProbComp Bool)
       (RegistrationNativePlatformSecretWordOrdinary.platform (n := n) (KemSK := KemSK) reserve) setup checks verify packet).run before).run env).run previous).IsQueryBoundP
       (Selected (n := n) (KemSK := KemSK)) 0 := by
   simp only [RegistrationNativePlatformSecretWordOpen.accept, StateT.run_bind, StateT.run_get, pure_bind]
-  apply bind_free _ _ (fun before env previous => lift_free _ (pin_free _) before env previous)
-  intro current after nextEnv nextPlatform
+  apply isQueryBoundP_bind (m := 0)
+    (lift_free _ (pin_free before.pin) before env previous)
+  rintro ⟨⟨⟨current, after⟩, nextEnv⟩, nextPlatform⟩ _
   exact afterPin_free reserve setup checks verify packet current after nextEnv nextPlatform
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformSecretWordTargetOpenPhase

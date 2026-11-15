@@ -8,7 +8,7 @@ namespace BeaconcryptCore.Computational.PqxdhRegistrationJointReportCommands
 open PqxdhJointIdentity PqxdhServerAuthExperiment PqxdhServerAuthNative
 open PqxdhRegistrationJointReportLift (Spec lift erase extend)
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response Result Next : Type}
-abbrev State (KemSK : Type) := List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × NativeState KemSK
+abbrev State (KemSK : Type) := (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) × NativeState KemSK
 abbrev Birth (KemSK : Type) := PqxdhRegistrationJointServerBirth.Spec KemSK
 
 /-- The existing full source command compiler, with its owner/native pair reassociated and all service requests forwarded through the real constructor interface. -/
@@ -74,7 +74,7 @@ noncomputable def initialized (setup : Setup baseSpec KemSK) (codec : Codec Read
   | some created =>
     (fun result => some (created, result.1, result.2.2, result.2.1)) <$>
       (reported setup codec checks created.server.server.metadata.identityIndex created.publicIdentity count program).run
-        ([], PqxdhRegistrationJointInitializedAccept.initial created)
+        (([], fun _ => none), PqxdhRegistrationJointInitializedAccept.initial created)
 
 /-- Public successful-accept reports preserve the exact existing initialized source client tree, including its full private/native/runtime continuation after interpretation. -/
 theorem initialized_erase (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)

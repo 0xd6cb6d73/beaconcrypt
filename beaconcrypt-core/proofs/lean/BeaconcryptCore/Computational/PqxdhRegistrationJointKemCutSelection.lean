@@ -46,7 +46,7 @@ theorem source_occurrence (setup : PqxdhServerAuthExperiment.Setup baseSpec KemS
     (budget : PqxdhRegistrationJointKemCommands.Budget)
     (certified : ∀ source, work.IsQueryBoundP
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) (state : PqxdhServerAuthNative.NativeState KemSK)
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : PqxdhServerAuthNative.NativeState KemSK)
     (index : Nat) (request : Request)
     (next : Reply → OracleComp (Spec KemSK) (PqxdhRegistrationJointKemCommands.Outcome KemSK Result))
     (reached : Cut.pending request next ∈ support

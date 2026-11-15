@@ -47,7 +47,7 @@ private theorem raw_transport {N A B : Type} {Private : N→Type} {left right : 
 
 variable (coins : QueryImpl unifSpec (StateT P ProbComp))
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (view : AdapterPublicWrapperState.MaterialView source KemSK)
 variable (physicalLocal : LocalOperations (RustT (StateT (Backend n KemSK) (StateT P ProbComp))))
 variable (failure : ed.Error) (reservePackets : Usize→StateT P ProbComp (core.result.Result Unit E))
@@ -146,6 +146,7 @@ private theorem idle_raw (views : AdapterPublicWrapperStorage.Views) (credential
           (RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views created credential)
           current objects.base.objects.snapshot.committed objects generator self objects.base.objects.rng idle))=
       pure (.ok (none,erase objects.base.objects),(erase objects.base.objects).backend) :=by
+  have _idleLocal := idleLocal
   let call:=RegistrationNativePlatformExtractedSdkAdaptiveIdlePublic.bundle
       (RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views created credential)
       current objects.base.objects.snapshot.committed objects generator self objects.base.objects.rng idle
@@ -164,7 +165,7 @@ private theorem idle_raw (views : AdapterPublicWrapperStorage.Views) (credential
 
 variable (previousLocal : LocalOperations (RustT (StateT (RegistrationNativePlatformCutJournal.State
   (RegistrationNativeExperiment.State n KemSK source)) (StateT P ProbComp))))
-variable (other : QueryImpl AdapterInitAuthenticationRequestMonad.Spec (StateT (RegistrationNativePlatformCutJournal.State (RegistrationNativeExperiment.State n KemSK source)) (StateT P ProbComp)))
+variable (other : QueryImpl AdapterPublicWrapperChildren.AuthenticationSpec (StateT (RegistrationNativePlatformCutJournal.State (RegistrationNativeExperiment.State n KemSK source)) (StateT P ProbComp)))
 variable (recording : QueryImpl AdapterRecordRequestMonad.Spec (StateT (RegistrationNativePlatformCutJournal.State (RegistrationNativeExperiment.State n KemSK source)) (StateT P ProbComp)))
 variable (views : AdapterPublicWrapperStorage.Views) (credential : RegistrationNativeMldsa.Credential source)
 

@@ -19,7 +19,7 @@ key-identifier availability verdict (`pqxdh.KeyIdAvailability`), the authenticat
 sender identifier and the authenticated key-identifier binding recovered from the
 first record.
 
-This file connects the two.  It
+This file connects identity, root-input, counter and abort metadata only. Its older ideal record hypotheses use the historical identity-prefix model; the current registration signature/AD path is established by RegistrationAuthenticationFlow, SessionTranscript and SessionBinding. The previous AD-bearing server refinement names are retired and replaced with explicitly named metadata refinements. It
 
 * abstracts the generated protocol data to the ideal model (`absBinding`,
   `absVerified`, `absDHs`);
@@ -29,7 +29,7 @@ This file connects the two.  It
   `pqxdh.validate_init_kex` agrees with the ideal `Pqxdh.validateInit`
   (`validate_init_kex_refines`, `honest_bundle_validates`);
 * packages the generated server steps into the driver `serverRegister` and proves
-  `serverRegister_refines`: on the inputs the ideal model computes, the generated
+  `serverRegister_metadata_refines`: on the inputs the ideal model computes, the generated
   server pipeline returns the outcome of `Pqxdh.serverRespond`, with the same
   allocated identifier, the same published peer and the same rejection;
 * packages the generated beacon steps into the driver `beaconFinishDriver` and
@@ -342,9 +342,8 @@ theorem server_next_key_id_refines (S : Pqxdh.ServerState) (state : pqxdh.Server
     exact ⟨z, by simp [pqxdh.server_next_key_id, hne, hz], by rw [hzval, hn]⟩
 
 /-- **The generated commit preparation refines `Pqxdh.serverEmit`.**  It allocates the
-ideal identifier, refuses the ideal collision, and computes the ideal associated
-data of spec §9. -/
-theorem server_prepare_commit_refines (c : Pqxdh.Crypto) (S : Pqxdh.ServerState)
+ideal identifier, refuses the ideal collision, and retains the exact response public metadata. Final AD is established later by ServerAdHash. -/
+theorem server_prepare_commit_metadata_refines (c : Pqxdh.Crypto) (S : Pqxdh.ServerState)
     (state : pqxdh.ServerState) (pending : pqxdh.PendingServerRegistration)
     (binding : pqxdh.ServerBinding) (availability : pqxdh.KeyIdAvailability)
     (hn : state.last_key_id.val = S.n) (hbind : pending.server_binding = binding)
@@ -366,9 +365,7 @@ theorem server_prepare_commit_refines (c : Pqxdh.Crypto) (S : Pqxdh.ServerState)
         cand.key_id.val = S.n + 1 ∧
         cand.beacon_identity_public_key = pending.beacon_identity_public_key ∧
         cand.ephemeral_public_key = pending.ephemeral_public_key ∧
-        cand.kem_ciphertext = pending.kem_ciphertext ∧
-        absBytes cand.associated_data =
-          Pqxdh.assocData (c.edPub S.ikSk) (absBytes pending.beacon_identity_public_key)) := by
+        cand.kem_ciphertext = pending.kem_ciphertext) := by
   subst hbind
   have hself : core.Array.Insts.CoreCmpPartialEqArray.eq core.U8.Insts.CoreCmpPartialEqU8
       pending.server_binding.identity_public_key pending.server_binding.identity_public_key
@@ -390,9 +387,6 @@ theorem server_prepare_commit_refines (c : Pqxdh.Crypto) (S : Pqxdh.ServerState)
       | Available => rfl
       | Occupied => exact absurd (havail.mp rfl) hocc
     subst hfree
-    obtain ⟨a, ha, haabs⟩ :=
-      build_associated_data_abs pending.server_binding.identity_public_key
-        pending.beacon_identity_public_key
     have heq : pqxdh.server_prepare_commit state pending pending.server_binding
           pqxdh.KeyIdAvailability.Available
         = ok (core.result.Result.Ok
@@ -402,17 +396,14 @@ theorem server_prepare_commit_refines (c : Pqxdh.Crypto) (S : Pqxdh.ServerState)
                server_identity_public_key := pending.server_binding.identity_public_key,
                server_identity_key_id := pending.server_binding.identity_key_id,
                ephemeral_public_key := pending.ephemeral_public_key,
-               kem_ciphertext := pending.kem_ciphertext,
-               associated_data := a } : pqxdh.ServerRegistrationCandidate)) := by
-      simp [pqxdh.server_prepare_commit, hself, hkid, ha]
-    refine ⟨_, heq, rfl, hkidval, hkidval, rfl, rfl, rfl, ?_⟩
-    rw [haabs, hikS]
+               kem_ciphertext := pending.kem_ciphertext } : pqxdh.ServerRegistrationCandidate)) := by
+      simp [pqxdh.server_prepare_commit, hself, hkid]
+    exact ⟨_, heq, rfl, hkidval, hkidval, rfl, rfl, rfl⟩
 
 /-- The generated publication step publishes the ideal peer entry. -/
-theorem server_commit_refines (cand : pqxdh.ServerRegistrationCandidate) :
+theorem server_commit_metadata_refines (cand : pqxdh.ServerRegistrationCandidate) :
     pqxdh.server_commit cand = ok (cand.next_state,
-      { key_id := cand.key_id, identity_public_key := cand.beacon_identity_public_key,
-        associated_data := cand.associated_data }) := rfl
+      { key_id := cand.key_id, identity_public_key := cand.beacon_identity_public_key }) := rfl
 
 /-! ### Ideal-side facts about response construction -/
 
@@ -485,9 +476,9 @@ X25519 contributions, the ML-KEM shared secret, the replay verdict and the
 key-identifier availability verdict — the generated server pipeline returns exactly
 the outcome of the handwritten `Pqxdh.serverRespond`: the same rejection in each of
 the four rejection cases the extracted core can express, and on success the ideal
-assigned identifier, the ideal published peer and the ideal associated data, with
+assigned identifier and classical peer identity, with
 `RID` consumed. -/
-theorem serverRegister_refines (c : Pqxdh.Crypto) (S : Pqxdh.ServerState)
+theorem serverRegister_metadata_refines (c : Pqxdh.Crypto) (S : Pqxdh.ServerState)
     (m : Pqxdh.InitKex) (state : pqxdh.ServerState) (reg : pqxdh.VerifiedInitKex)
     (status : pqxdh.RegistrationStatus) (binding : pqxdh.ServerBinding)
     (gcoins : pqxdh.ServerCoins) (secrets : pqxdh.PqxdhSharedSecrets)
@@ -553,8 +544,6 @@ theorem serverRegister_refines (c : Pqxdh.Crypto) (S : Pqxdh.ServerState)
         resp.keyId = S.n + 1 ∧ S'.n = S.n + 1 ∧ st.last_key_id.val = S'.n ∧
         peer.key_id.val = resp.keyId ∧
         absBytes peer.identity_public_key = (absVerified reg).ikB ∧
-        absBytes peer.associated_data =
-          Pqxdh.assocData (c.edPub S.ikSk) (absVerified reg).ikB ∧
         S'.consumed = (absVerified reg).rid :: S.consumed ∧
         S'.peers = (S.n + 1, pr) :: S.peers ∧
         pr.ikPub = (absVerified reg).ikB ∧
@@ -572,22 +561,22 @@ theorem serverRegister_refines (c : Pqxdh.Crypto) (S : Pqxdh.ServerState)
   · intro hrid hnz hmax
     obtain ⟨pending, hacc, hbind, -, -, -, -, -⟩ := haccept hrid hnz
     obtain ⟨hpmax, -, -⟩ :=
-      server_prepare_commit_refines c S state pending binding availability hn hbind hikS havail
+      server_prepare_commit_metadata_refines c S state pending binding availability hn hbind hikS havail
     refine ⟨by simp [serverRegister, hacc, hpmax hmax], ?_⟩
     rw [serverRespond_eq_emit c S m eSk coins ikBX app _ hval hrid hconv hnz happ]
     exact serverEmit_exhausted _ _ _ _ _ _ _ hmax
   · intro hrid hnz hmax hocc
     obtain ⟨pending, hacc, hbind, -, -, -, -, -⟩ := haccept hrid hnz
     obtain ⟨-, hpocc, -⟩ :=
-      server_prepare_commit_refines c S state pending binding availability hn hbind hikS havail
+      server_prepare_commit_metadata_refines c S state pending binding availability hn hbind hikS havail
     refine ⟨by simp [serverRegister, hacc, hpocc hmax hocc], ?_⟩
     rw [serverRespond_eq_emit c S m eSk coins ikBX app _ hval hrid hconv hnz happ]
     exact serverEmit_collision _ _ _ _ _ _ _ hmax hocc
   · intro hrid hnz hmax hfree
     obtain ⟨pending, hacc, hbind, -, hpik, -, -, -⟩ := haccept hrid hnz
     obtain ⟨-, -, hpok⟩ :=
-      server_prepare_commit_refines c S state pending binding availability hn hbind hikS havail
-    obtain ⟨cand, hcand, -, hnext, hkid, hcik, -, -, hcad⟩ := hpok hmax hfree
+      server_prepare_commit_metadata_refines c S state pending binding availability hn hbind hikS havail
+    obtain ⟨cand, hcand, -, hnext, hkid, hcik, -, -⟩ := hpok hmax hfree
     obtain ⟨resp, S', pr, hemit, hrespkid, hSn, hScons, hSpeers, hprik, hprad⟩ :=
       serverEmit_ok c { S with consumed := (absVerified reg).rid :: S.consumed }
         (absVerified reg).ikB
@@ -597,15 +586,13 @@ theorem serverRegister_refines (c : Pqxdh.Crypto) (S : Pqxdh.ServerState)
         (c.encap (absVerified reg).kemPub coins).1 (c.xpub eSk) (app.getD [0xFF])
         hmax hfree
     refine ⟨cand.next_state,
-      { key_id := cand.key_id, identity_public_key := cand.beacon_identity_public_key,
-        associated_data := cand.associated_data }, resp, S', pr,
-      by simp [serverRegister, hacc, hcand, pqxdh.server_commit], ?_, hrespkid, hSn, ?_, ?_, ?_, ?_, hScons, hSpeers, ?_, ?_⟩
+      { key_id := cand.key_id, identity_public_key := cand.beacon_identity_public_key }, resp, S', pr,
+      by simp [serverRegister, hacc, hcand, pqxdh.server_commit], ?_, hrespkid, hSn, ?_, ?_, ?_, hScons, hSpeers, ?_, ?_⟩
     · rw [serverRespond_eq_emit c S m eSk coins ikBX app _ hval hrid hconv hnz happ]
       exact hemit
     · rw [hnext, hSn]
     · rw [hkid, hrespkid]
     · rw [hcik, hpik]
-    · rw [hcad, hpik]
     · rw [hprik]
     · rw [hprad]
 
@@ -747,20 +734,16 @@ theorem beaconFinishDriver_refines (c : Pqxdh.Crypto) (b : Pqxdh.ServerBinding)
     · simp [Pqxdh.beaconFinish, hdecap, heq, hconv, hz]
   · intro heq hnz hsid
     obtain ⟨v, hv, -⟩ := hok hnz
-    obtain ⟨a, ha, -⟩ := build_associated_data_abs
-      state.expected_server_binding.identity_public_key state.beacon_identity_public_key
     have hsidne : ¬ (authSenderId = state.expected_server_binding.identity_key_id) := by
       intro hc
       exact hsid (by rw [← hsender, hc, hbindid])
     refine ⟨?_, ?_⟩
-    · simp [beaconFinishDriver, pqxdh.beacon_prepare_finish, hidcmp, heq, hv, ha,
+    · simp [beaconFinishDriver, pqxdh.beacon_prepare_finish, hidcmp, heq, hv,
         pqxdh.authenticate_registration_key_id_binding, hsidne]
     · rw [heq] at hconv
       simp [Pqxdh.beaconFinish, hdecap, heq, hconv, hnz, hsid]
   · intro heq hnz hsid hbind
     obtain ⟨v, hv, -⟩ := hok hnz
-    obtain ⟨a, ha, -⟩ := build_associated_data_abs
-      state.expected_server_binding.identity_public_key state.beacon_identity_public_key
     have hsideq : authSenderId = state.expected_server_binding.identity_key_id :=
       Std.UScalar.eq_of_val_eq (by rw [hsender, hbindid, hsid])
     obtain ⟨rk, hrk, hrkabs⟩ := registration_key_id_binding_abs inputs.assigned_key_id
@@ -768,7 +751,7 @@ theorem beaconFinishDriver_refines (c : Pqxdh.Crypto) (b : Pqxdh.ServerBinding)
         authBinding rk.bytes = ok (decide (pt.take 8 = Pqxdh.LE64 resp.keyId)) := by
       rw [array_eq_abs, hauthbind, hrkabs, hkid]
     refine ⟨?_, ?_⟩
-    · simp [beaconFinishDriver, pqxdh.beacon_prepare_finish, hidcmp, heq, hv, ha,
+    · simp [beaconFinishDriver, pqxdh.beacon_prepare_finish, hidcmp, heq, hv,
         pqxdh.authenticate_registration_key_id_binding, hsideq,
         pqxdh.BeaconRegistrationCandidate.key_id_binding, hrk, hbindcmp, hbind]
     · rw [heq] at hconv
@@ -777,8 +760,6 @@ theorem beaconFinishDriver_refines (c : Pqxdh.Crypto) (b : Pqxdh.ServerBinding)
         Nat.not_le.mpr hptlen, hbind]
   · intro heq hnz hsid hbind
     obtain ⟨v, hv, -⟩ := hok hnz
-    obtain ⟨a, ha, -⟩ := build_associated_data_abs
-      state.expected_server_binding.identity_public_key state.beacon_identity_public_key
     have hsideq : authSenderId = state.expected_server_binding.identity_key_id :=
       Std.UScalar.eq_of_val_eq (by rw [hsender, hbindid, hsid])
     obtain ⟨rk, hrk, hrkabs⟩ := registration_key_id_binding_abs inputs.assigned_key_id
@@ -786,7 +767,7 @@ theorem beaconFinishDriver_refines (c : Pqxdh.Crypto) (b : Pqxdh.ServerBinding)
         authBinding rk.bytes = ok (decide (pt.take 8 = Pqxdh.LE64 resp.keyId)) := by
       rw [array_eq_abs, hauthbind, hrkabs, hkid]
     refine ⟨⟨state.expected_server_binding, inputs.assigned_key_id⟩, ?_, hkid, ?_, ?_⟩
-    · simp [beaconFinishDriver, pqxdh.beacon_prepare_finish, hidcmp, heq, hv, ha,
+    · simp [beaconFinishDriver, pqxdh.beacon_prepare_finish, hidcmp, heq, hv,
         pqxdh.authenticate_registration_key_id_binding, hsideq,
         pqxdh.BeaconRegistrationCandidate.key_id_binding, hrk, hbindcmp, hbind,
         pqxdh.beacon_commit]

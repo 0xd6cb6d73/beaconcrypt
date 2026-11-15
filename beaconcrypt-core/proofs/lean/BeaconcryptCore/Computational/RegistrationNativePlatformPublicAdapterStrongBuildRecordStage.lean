@@ -1,6 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterBuildProgramRecordStage
 import BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterBuildSigningAligned
+import BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterBuildAdCut
 open CoreModels Aeneas OracleComp OracleSpec
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -43,7 +44,7 @@ theorem sample {R :Type}
 (originalContainers : ContainerOperations (RustT Base))
 (previousChildren : ChildOperations (RustT SourceM))
 (view : MaterialView mlSource KemSK) (views : Views)
-(created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+(created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
 (current : Native×Platform)
 (before : RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views created credential current)
 (token : beaconcrypt_public_wrapper.server.RegistrationOutput) (data : core.option.Option (Slice U8))
@@ -73,7 +74,10 @@ theorem sample {R :Type}
     (digest :CtxRomAuth.CtxDigest) (signature :RegistrationSigningShared.SignReply)
     (present :RegistrationNativePlatformPublicAdapterSourceTrace.Stage.sign request payload digest signature∈suffix) :
     ∃initial hashed pin availability application,
-      registration.begin_server_completion before.base.objects.server.control pin availability token.registration.agreement application=.ok (.Ok initial) ∧
+      BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission before.base.objects.server.control pin availability token.registration.agreement application initial ∧
+      Nonempty (RegistrationNativePlatformPublicAdapterBuildAdCut.Cut (n:=n) (Auxiliary:=RegistrationServerRoleBackend.State)
+        coins token.registration before.base.objects.server.control pin availability application initial
+        (RegistrationNativeWorldCache.cache ((RegistrationNativePlatformPublicAdapterStrongBuild.complete coins setup (RegistrationNativeWire.ledgerCodec wire) keyView converted failure allocate reserveFrame erased reservePackets originalLocal originalContainers previousChildren view views created credential current before token data edContract allocated reserveLeaf footprint containsLeaf installLeaves).step.native result.1).2.1)) ∧
       RegistrationServerRecordExecutor.Path initial hashed ∧
       RegistrationNativePlatformSourceFinishContents.RecordCut (n:=n) coins setup wire keyView failure
         (RegistrationNativePlatformExtractedSdkBuildNormal.allocation allocate) erased
@@ -87,7 +91,7 @@ theorem sample {R :Type}
   let fallback (request :registration.MldsaSigningRequest) :NativeM RegistrationSigningShared.SignReply:=
     RegistrationNativePlatformExperiment.liftNative coins
       (RegistrationNativeExperiment.world (PqxdhRecordLiftWorld.sampled (RegistrationNativeMldsa.owned mlSource credential request)))
-  obtain ⟨initial,hashed,pin,availability,application,started,path,cut,first,payloadEq,key⟩:=
+  obtain ⟨initial,hashed,pin,availability,application,started,⟨adCut⟩,path,cut,first,payloadEq,key⟩:=
     RegistrationNativePlatformPublicAdapterBuildProgramRecordStage.sample coins setup wire keyView failure
       (RegistrationNativePlatformExtractedSdkBuildNormal.allocation allocate)
       (RegistrationNativePlatformConcreteSource.rawAllocation reserveFrame) (RegistrationNativePlatformConcreteSource.serializer (Platform:=Platform))
@@ -96,7 +100,8 @@ theorem sample {R :Type}
       before.base.objects.server token data (current.1,none) current.2 prior result supported suffix observed request payload digest signature present
   obtain ⟨recordBefore,recordAfter,recorded,anchor⟩:=cut
   have extension:=RegistrationNativePlatformPublicAdapterBuildCacheFrame.build_project before.base.objects.server.control result.1.1
-  exact ⟨initial,hashed,pin,availability,application,started,path,
+  exact ⟨initial,hashed,pin,availability,application,started,
+    ⟨RegistrationNativePlatformPublicAdapterBuildAdCut.extend coins token.registration before.base.objects.server.control pin availability application initial _ _ adCut extension⟩,path,
     ⟨recordBefore,recordAfter,recorded,anchor.trans extension⟩,first,payloadEq,key⟩
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterStrongBuildRecordStage

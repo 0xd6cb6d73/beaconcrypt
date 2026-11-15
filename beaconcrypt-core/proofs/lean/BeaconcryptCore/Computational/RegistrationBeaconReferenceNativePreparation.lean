@@ -25,7 +25,7 @@ def restored (memo : RegistrationNativeReferenceInterpreter.State)
 /-- The single native preparation stores the actual root before exposing its reference; reconstruction therefore uses that reply rather than any preexisting memo entry. -/
 theorem client_source (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential mlSource)
     (authenticated : registration.AuthenticatedResponse)
     (pending : PqxdhPhase2DhMetadata.Prepared registration.AuthenticatedResponse)
@@ -55,7 +55,7 @@ theorem client_source (setup : Setup base KemSK) (checks : Checks) (wire : Regis
 /-- A successful ready value always names the root just returned by its actual preparation, even if the memo previously contained a different entry. -/
 theorem client_prepared (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential mlSource)
     (authenticated : registration.AuthenticatedResponse)
     (pending : PqxdhPhase2DhMetadata.Prepared registration.AuthenticatedResponse)
@@ -79,7 +79,7 @@ theorem client_prepared (setup : Setup base KemSK) (checks : Checks) (wire : Reg
 /-- All ordinary collection effects pass through the actual shared native World and private KEM pool without preparing a root. -/
 theorem collect_source (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential mlSource)
     (owner : SelectedOwner mlSource) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (authenticated : registration.AuthenticatedResponse)

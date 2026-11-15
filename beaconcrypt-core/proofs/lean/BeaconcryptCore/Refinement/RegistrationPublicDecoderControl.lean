@@ -27,10 +27,10 @@ theorem complete [LawfulMonad m] (rest : Slice A) (yes no : m B) :
       (if rest.val = [] then yes else no) := by
   rcases rest with ⟨rest, bound⟩
   cases rest <;> rfl
-private theorem copy_array (value : Array U8 6#usize) :
+private theorem copy_array {size : Usize} (value : Array U8 size) :
     core.Array.Insts.CoreConvertTryFromShared0SliceTryFromSliceError.try_from
-      6#usize core.U8.Insts.CoreMarkerCopy (Std.Array.to_slice value) = .ok (.Ok value) := by
-  obtain ⟨result, actual, facts⟩ := RegistrationInputs.copied_slice_exact 6#usize (Std.Array.to_slice value)
+      size core.U8.Insts.CoreMarkerCopy (Std.Array.to_slice value) = .ok (.Ok value) := by
+  obtain ⟨result, actual, facts⟩ := RegistrationInputs.copied_slice_exact size (Std.Array.to_slice value)
   cases result with
   | Err error => exact False.elim (facts (by simpa only [Std.Array.to_slice] using value.property))
   | Ok copied =>
@@ -41,8 +41,22 @@ theorem preflight_array (input start : Slice U8) (fields : Array U8 6#usize) :
     beaconcrypt_parse.registration_validator_primitive.preflightSlice input start (Std.Array.to_slice fields) =
       beaconcrypt_parse.preflight input start fields := by
   unfold beaconcrypt_parse.registration_validator_primitive.preflightSlice
-  rw [copy_array]
+  have length : (Std.Array.to_slice fields).length = 6 := by
+    change fields.val.length = 6
+    exact fields.property
+  have not_four : (Std.Array.to_slice fields).length ≠ 4 := by rw [length]; decide
+  rw [ite_eq_right not_four, copy_array]
   rfl
+theorem preflight_array_four (input start : Slice U8) (fields : Array U8 4#usize) :
+    beaconcrypt_parse.registration_validator_primitive.preflightSlice input start (Std.Array.to_slice fields) =
+      beaconcrypt_parse.extraction_preflight_four input start fields := by
+  unfold beaconcrypt_parse.registration_validator_primitive.preflightSlice
+  have length : (Std.Array.to_slice fields).length = 4 := by
+    change fields.val.length = 4
+    exact fields.property
+  rw [ite_eq_left length, copy_array]
+  rfl
+
 end BeaconcryptCore.Refinement.RegistrationPublicDecoderControl
 
 /-- info: 'BeaconcryptCore.Refinement.RegistrationPublicDecoderControl.empty_rest' depends on axioms: [propext,
@@ -64,3 +78,9 @@ end BeaconcryptCore.Refinement.RegistrationPublicDecoderControl
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Refinement.RegistrationPublicDecoderControl.preflight_array
+
+/-- info: 'BeaconcryptCore.Refinement.RegistrationPublicDecoderControl.preflight_array_four' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.RegistrationPublicDecoderControl.preflight_array_four

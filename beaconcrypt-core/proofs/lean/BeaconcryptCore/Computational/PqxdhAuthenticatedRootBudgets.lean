@@ -10,6 +10,8 @@ open OracleComp OracleSpec CoreModels Aeneas ENNReal
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhAuthenticatedRootBudgets
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhPhase2GeneratedDriver PqxdhAuthenticatedRootExperiment PqxdhPrivateAcceptedRoot
 open PqxdhKemIndCca PqxdhInitializerSecrecy PqxdhChallengeSecretRouting PqxdhJointKdfGame
@@ -112,8 +114,8 @@ variable (c : Certificate env baseImpl kem program post)
 
 /-- The executable preparation cap follows from the source prefix and all common and rejected continuations. -/
 theorem prepare_bounds (key : TargetKemPublicKey) :
-    Caps ((protocol env kem attachedVerify primitives program post).prepare key) c.uPre c.bPre c.dPre := by
-  exact PqxdhAuthenticatedRootPrepareBounds.prepare_caps env program post attachedVerify primitives
+    Caps ((PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post).prepare key) c.uPre c.bPre c.dPre := by
+  exact PqxdhAuthenticatedRootPrepareBounds.prepare_caps (associatedData := associatedData) (completedBinding := completedBinding) env program post attachedVerify primitives
     c.qLocal c.localBound c.postBudget c.postBound c.qAux c.auxBound kem c.qWrite c.writerBound
     c.preBudget c.preBound c.noSign c.noCreate
     c.prekey.uniform c.prekey.base c.prekey.decapsulation c.oneTime.uniform c.oneTime.base c.oneTime.decapsulation
@@ -133,15 +135,15 @@ theorem localCoins_bounds {Result : Type} (client : ProbComp Result) (q : Nat)
 
 /-- The original registration builder precedes the full adaptive target schedule, adding its actual coins and no private root request. -/
 theorem targetAccepted_bounds
-    (prepared : PqxdhPrivateRootSource.Prepared setup (driver env.toDriverEnvironment program).State)
+    (prepared : PqxdhPrivateRootSource.Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)
     (ready : Ready) :
-    PostBounds (targetAccepted env attachedVerify primitives program post prepared ready)
+    PostBounds (PqxdhAuthenticatedRootExperiment.targetAccepted (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program post prepared ready)
       c.uPost c.bPost c.dPost c.privatePost := by
   have builder := localCoins_bounds (baseSpec := baseSpec) _ _
-    (PqxdhProtocolQueryBounds.build_uniform env.source env.recordWriter env.aux c.qAux c.auxBound
+    (PqxdhProtocolQueryBounds.build_uniform (associatedData := associatedData) env.source env.recordWriter env.aux c.qAux c.auxBound
       env.senderId env.index env.metadata ready prepared.1.context.selection.2)
   have tail := fun (result : RustM (Option PqxdhServerRegistrationPublication.Response) ×
-    PqxdhGeneratedBeaconState.State setup M P I K A S (B + 1)) => PqxdhPhase2PostSchedulerBounds.fullPostBounds attachedVerify primitives 1
+    PqxdhGeneratedBeaconState.State setup M P I K A S (B + 1)) => PqxdhPhase2PostSchedulerBounds.fullPostBounds (completedBinding := completedBinding) attachedVerify primitives 1
     env.source env.localImpl c.qLocal c.localBound env.recordWriter env.senderId env.route env.decode
     ready.ciphertext (post prepared.1.context.selection.1 result.1) c.postBudget (c.postBound _ _)
     (result.2, prepared.2)
@@ -156,44 +158,44 @@ theorem targetAccepted_bounds
 
 /-- Completed, rejected and pending modes all satisfy the same derived continuation contract, for every optional initial root. -/
 theorem resume_bounds (key : PqxdhKemIndCca.MlKem768PublicKey) (ciphertext : MlKem768Ciphertext)
-    (state : (protocol env kem attachedVerify primitives program post).State) (initial : Option RootOutput) :
-    PostBounds ((protocol env kem attachedVerify primitives program post).resume key ciphertext state initial)
+    (state : (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post).State) (initial : Option RootOutput) :
+    PostBounds ((PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post).resume key ciphertext state initial)
       c.uPost c.bPost c.dPost c.privatePost := by
   cases state with
   | completed decision => exact ⟨by trivial, by trivial, by trivial, by trivial⟩
   | pending prepared ephemeral =>
     cases initial with
     | none => exact ⟨by trivial, by trivial, by trivial, by trivial⟩
-    | some value => exact targetAccepted_bounds env baseImpl kem attachedVerify primitives program post c prepared _
+    | some value => exact targetAccepted_bounds (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c prepared _
 
 /-- Every whole-protocol field of the existing sampler contract is derived from the transparent source certificate. -/
 theorem sampler_bounds :
-    SamplerBounds baseImpl kem (protocol env kem attachedVerify primitives program post)
+    SamplerBounds baseImpl kem (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post)
       c.qKeygen c.qEncap c.qBase c.qDecap c.uPre c.bPre c.dPre c.uPost c.bPost c.dPost c.privatePost := by
   exact ⟨c.keygenBound, c.encapsBound, c.baseBound, c.decapsBound,
-    fun key => let bounded := prepare_bounds env baseImpl kem attachedVerify primitives program post c key
+    fun key => let bounded := prepare_bounds (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c key
       ⟨bounded.uniforms, bounded.bases, bounded.decaps⟩,
-    fun key ciphertext state initial => resume_bounds env baseImpl kem attachedVerify primitives program post c
+    fun key ciphertext state initial => resume_bounds (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c
       key ciphertext state initial⟩
 
 /-- The consistent root-family reduction has a proved cap of one initial request plus every caller-bounded finish attempt. -/
 theorem root_reduction_bounds :
-    let client := rootReduction env.source baseImpl kem (protocol env kem attachedVerify primitives program post)
+    let client := rootReduction env.source baseImpl kem (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post)
     client.IsQueryBoundP PqxdhCorrelatedExpandQueryBounds.IsCoin c.uReduction ∧ client.IsQueryBoundP IsRoot c.qRoot := by
   exact PqxdhCorrelatedExpandQueryBounds.reduction_bounds env.source baseImpl kem
-    (protocol env kem attachedVerify primitives program post) _ _ _ _ _ _ _ _ _ _ _
-    (sampler_bounds env baseImpl kem attachedVerify primitives program post c)
+    (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post) _ _ _ _ _ _ _ _ _ _ _
+    (sampler_bounds (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c)
 
 /-- The displayed ordinary one-key reduction pays both public decapsulation and the conservative private-attempt allowance. -/
 theorem cca_reduction_bounds :
-    (PqxdhChallengeSecretRouting.reduction env.source kem (protocol env kem attachedVerify primitives program post)).MakesAtMostQueries c.uPre c.bPre c.dPre c.uPost c.bPost (c.dPost + c.privatePost) := by
-  let bounded := sampler_bounds env baseImpl kem attachedVerify primitives program post c
+    (PqxdhChallengeSecretRouting.reduction env.source kem (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post)).MakesAtMostQueries c.uPre c.bPre c.dPre c.uPost c.bPost (c.dPost + c.privatePost) := by
+  let bounded := sampler_bounds (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c
   exact PqxdhChallengeSecretQueryBounds.reduction_bounds env.source kem
-    (protocol env kem attachedVerify primitives program post) _ _ _ _ _ _ _ bounded.prepare bounded.resume
+    (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post) _ _ _ _ _ _ _ bounded.prepare bounded.resume
 
 /-- Both fixed CCA worlds retain their unused shared-secret sample; the fair challenger also pays its hidden-bit draw. The typed source wrapper is separately named and charged. -/
 theorem cca_uniform_ledger :
-    let p := protocol env kem attachedVerify primitives program post
+    let p := PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post
     (∀ bit, (simulateQ (kemAmbientImpl baseImpl)
       (oneKeyBranchMain kem (runtimeOfImpl (kemAmbientImpl baseImpl))
         (PqxdhChallengeSecretRouting.reduction env.source kem p) bit)).IsTotalQueryBound (c.uReduction + 32)) ∧
@@ -202,46 +204,46 @@ theorem cca_uniform_ledger :
     (PqxdhPrivateRootGameBudgets.oneKeyFairProgram baseImpl kem
       (PqxdhChallengeSecretRouting.reduction env.source kem p)).IsTotalQueryBound (c.uReduction + 33) ∧
     (simulateQ (kemAmbientImpl baseImpl) (PqxdhChallengeSecretRouting.sourceMain env.source kem p)).IsTotalQueryBound c.uReduction := by
-  let bounded := sampler_bounds env baseImpl kem attachedVerify primitives program post c
+  let bounded := sampler_bounds (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c
   refine ⟨fun bit => ?_, ?_, ?_, ?_⟩
   · simpa only [Certificate.uReduction, Nat.add_assoc, Nat.add_left_comm, Nat.add_comm] using
       PqxdhChallengeSecretQueryBounds.fixed_world_uniform_bound env.source baseImpl kem
-        (protocol env kem attachedVerify primitives program post) _ _ _ _ _ _ _ _ _ _ _
+        (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post) _ _ _ _ _ _ _ _ _ _ _
         bounded.keygen bounded.encaps bounded.base bounded.decaps bounded.prepare bounded.resume bit
   · simpa only [Certificate.uReduction, Nat.add_assoc, Nat.add_left_comm, Nat.add_comm] using
       PqxdhChallengeSecretQueryBounds.native_uniform_bound env.source baseImpl kem
-        (protocol env kem attachedVerify primitives program post) _ _ _ _ _ _ _ _ _ _ _ bounded
+        (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post) _ _ _ _ _ _ _ _ _ _ _ bounded
   · apply (PqxdhChallengeSecretQueryBounds.fair_uniform_bound env.source baseImpl kem
-        (protocol env kem attachedVerify primitives program post) _ _ _ _ _ _ _ _ _ _ _ bounded).mono
+        (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post) _ _ _ _ _ _ _ _ _ _ _ bounded).mono
     dsimp only [Certificate.uReduction]
     omega
   · simpa only [Certificate.uReduction, Nat.add_assoc] using
       PqxdhChallengeSecretQueryBounds.source_uniform_bound env.source baseImpl kem
-        (protocol env kem attachedVerify primitives program post) _ _ _ _ _ _ _ _ _ _ _ bounded
+        (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post) _ _ _ _ _ _ _ _ _ _ _ bounded
 
 /-- The exact Extract-family reduction has the same interpreted source coin bill and initial-plus-finish family cap. -/
 theorem extract_reduction_bounds (hmac : HmacSha512) :
     let client := PqxdhCorrelatedExtractFamily.reduction env.source hmac baseImpl kem
-      (protocol env kem attachedVerify primitives program post)
+      (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post)
     client.IsQueryBoundP PqxdhCorrelatedExtractQueryBounds.IsCoin c.uReduction ∧
     client.IsQueryBoundP PqxdhCorrelatedExtractQueryBounds.IsFamily c.qRoot := by
   exact PqxdhCorrelatedExtractQueryBounds.reduction_bounds env.source hmac baseImpl kem
-    (protocol env kem attachedVerify primitives program post) _ _ _ _ _ _ _ _ _ _ _
-    (sampler_bounds env baseImpl kem attachedVerify primitives program post c)
+    (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post) _ _ _ _ _ _ _ _ _ _ _
+    (sampler_bounds (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c)
 
 /-- Real Extract pays its one hidden 32-byte input sample; random Extract pays at most 64 draws per distinct family request and reuses cached answers. -/
 theorem extract_uniform_ledger (hmac : HmacSha512) :
     let client := PqxdhCorrelatedExtractFamily.reduction env.source hmac baseImpl kem
-      (protocol env kem attachedVerify primitives program post)
+      (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post)
     (PqxdhCorrelatedExtractFamily.realGame hmac client).IsTotalQueryBound (32 + c.uReduction) ∧
     (PqxdhCorrelatedExtractFamily.randomGame client).IsTotalQueryBound (c.uReduction + 64 * c.qRoot) := by
   exact PqxdhCorrelatedExtractQueryBounds.reduction_uniform_ledger env.source hmac baseImpl kem
-    (protocol env kem attachedVerify primitives program post) _ _ _ _ _ _ _ _ _ _ _
-    (sampler_bounds env baseImpl kem attachedVerify primitives program post c)
+    (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post) _ _ _ _ _ _ _ _ _ _ _
+    (sampler_bounds (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c)
 
 /-- Consistent expanded and uniform root families retain their own exact output sampling, and both indexed HMAC challengers retain their separate 64-draw allowance. -/
 theorem root_and_hmac_uniform_ledger (hmac : HmacSha512) :
-    let client := rootReduction env.source baseImpl kem (protocol env kem attachedVerify primitives program post)
+    let client := rootReduction env.source baseImpl kem (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post)
     client.IsQueryBoundP IsRoot c.qRoot ∧
     (expandedGame hmac client).IsTotalQueryBound (c.uReduction + 64 * c.qRoot) ∧
     (uniformGame client).IsTotalQueryBound (c.uReduction + 32 * c.qRoot) ∧
@@ -251,15 +253,15 @@ theorem root_and_hmac_uniform_ledger (hmac : HmacSha512) :
       (hmacPrfRandomGame (indexedReduction hmac client index)).IsTotalQueryBound
         (64 + c.uReduction + 64 * c.qRoot) := by
   exact PqxdhCorrelatedExpandQueryBounds.source_uniform_ledger env.source hmac baseImpl kem
-    (protocol env kem attachedVerify primitives program post) _ _ _ _ _ _ _ _ _ _ _
-    (sampler_bounds env baseImpl kem attachedVerify primitives program post c)
+    (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post) _ _ _ _ _ _ _ _ _ _ _
+    (sampler_bounds (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c)
 
 /-- Each constructed ordinary HMAC reduction makes at most one challenge query and pays for every simulated other family input. -/
 theorem indexed_hmac_bounds (hmac : HmacSha512) (index : Nat) :
-    let client := rootReduction env.source baseImpl kem (protocol env kem attachedVerify primitives program post)
+    let client := rootReduction env.source baseImpl kem (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post)
     (indexedReduction hmac client index).IsQueryBoundP PqxdhSecretInputInitializer.IsHmacUniformQuery (c.uReduction + 64 * c.qRoot) ∧
     (indexedReduction hmac client index).IsQueryBoundP IsHmacChallengeQuery 1 := by
-  have bounded := root_reduction_bounds env baseImpl kem attachedVerify primitives program post c
+  have bounded := root_reduction_bounds (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c
   exact PqxdhCorrelatedExpandQueryBounds.indexed_bounds hmac _ index _ _ bounded.1 bounded.2
 
 /-- The displayed ordinary correctness-error probability uses one actual key generation, encapsulation and decapsulation, each with its certified evaluated cost. -/
@@ -279,12 +281,12 @@ theorem authenticated_native_root_bound
     (secretIdentity : M → Pqxdh.Bytes)
     (initialMatch : PqxdhProtocolServerInvariant.RootFields env.source.crypto secretIdentity
       env.senderId env.index env.server env.initial) :
-    let p := protocol env kem attachedVerify primitives program post
-    ((actual env baseImpl kem attachedVerify primitives program post).boolDistance
+    let p := PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post
+    ((PqxdhAuthenticatedRootExperiment.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post).boolDistance
       (uniformGame (rootReduction env.source baseImpl kem p)) ≤
       (PqxdhJointIdentity.advantage primitives
         (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
-          (driver env.toDriverEnvironment program) fallback ordinaryFallback)).toReal +
+          (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program) fallback ordinaryFallback)).toReal +
       Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)}[x = true].toReal +
       (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
         (PqxdhChallengeSecretRouting.reduction env.source kem p).toINDCCA).toReal +
@@ -294,13 +296,13 @@ theorem authenticated_native_root_bound
         (hmacPrfRealGame hmac (indexedReduction hmac (rootReduction env.source baseImpl kem p) index)).boolDistance
           (hmacPrfRandomGame (indexedReduction hmac (rootReduction env.source baseImpl kem p) index))) ∧
     ∀ result ∈ support (PqxdhPrivateSourceCoins.privateRun attachedVerify primitives 1
-      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (driver env.toDriverEnvironment program))),
+      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program))),
       ∃ output, result.1.map PqxdhPrivateRootSource.eraseOutput = some output ∧
         PqxdhProtocolServerInvariant.RootFields env.source.crypto secretIdentity env.senderId env.index
           env.server output.context.selection.2 := by
-  exact PqxdhAuthenticatedRootComposition.authenticated_native_root_bound env baseImpl kem attachedVerify primitives program post
+  exact PqxdhAuthenticatedRootComposition.authenticated_native_root_bound (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post
     compatible adapter functional hmac sourceCorrect c.noSign c.noCreate fallback ordinaryFallback c.qRoot
-    (root_reduction_bounds env baseImpl kem attachedVerify primitives program post c).2 secretIdentity initialMatch
+    (root_reduction_bounds (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c).2 secretIdentity initialMatch
 
 end BeaconcryptCore.Computational.PqxdhAuthenticatedRootBudgets
 

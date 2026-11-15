@@ -64,7 +64,7 @@ theorem source {R E : Type} (generator : rand_core.TryCryptoRng R E)
 
 theorem fresh {R E : Type} {ml : RegistrationNativeMldsa.Source} {KemSK : Type} {n : Nat}
     (generator : rand_core.TryCryptoRng R E) (view : AdapterPublicWrapperState.MaterialView ml KemSK)
-    (views : AdapterPublicWrapperStorage.Views) (created : PqxdhLiveServerConstruction.Created Unit)
+    (views : AdapterPublicWrapperStorage.Views) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential ml) (self : beaconcrypt_public_wrapper.server.Server)
     (native : RegistrationServerFrontendCompiler.State n)
     (related : AdapterPublicWrapperState.Server view views created credential self native)

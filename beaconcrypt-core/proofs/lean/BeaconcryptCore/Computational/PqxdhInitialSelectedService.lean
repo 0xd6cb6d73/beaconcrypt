@@ -16,7 +16,7 @@ open PqxdhInitialRootLabelService PqxdhInitialSelectedBeacon
 variable {Result : Type}
 
 noncomputable def known (fixed : FixedHkdfSha512NoSaltSource) (root : RootOutput) : InitialValue :=
-  .inl (initialPrefix (productionStream fixed.crypto (FixedHkdfDomain.ratchet.address root.toList)))
+  .inl (initialPrefix (productionStream fixed.crypto (FixedHkdfDomain.initial.address root.toList)))
 
 noncomputable def value (fixed : FixedHkdfSha512NoSaltSource) (selected : Message)
     (second : Bool) (other : RootOutput) :

@@ -245,16 +245,32 @@ noncomputable def markedCompiler (setup : Setup baseSpec KemSK) (codec : Codec R
   | .inr (.inr (.application response)) =>
       (MarkedSpec KemSK Response).query (.inl (.inl (.inr (.inr (.application response)))))
 
-/-- The marked Beacon finish: the opaque-handle owner of `PqxdhBeaconPhase2Shared.owner` in place of the native owner, with the same owner lookup and reinstallation. -/
+/-- The marked owner finish on an encoded owner: the hashed owner finish of `PqxdhRegistrationJointServiceSchedule.finishOwner` (one public transcript `hash` request for an InitSent owner with a retained bundle and a decodable response) with the opaque-handle owner of `PqxdhBeaconPhase2Shared.owner` in place of the native owner at the completed binding of the digest; abort and inactive branches are unchanged. -/
+noncomputable def markedOwner (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (selected : Nat)
+    (challenge : MlKem768Ciphertext) (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationJointBundle.Owner) :
+    OracleComp (MarkedSpec KemSK Response) (Option Pqxdh.Bytes × PqxdhRegistrationJointBundle.Owner) :=
+  match owner.beacon.phase with
+  | .initSent control _ _ _ =>
+    match retained, responseOf codec raw with
+    | some init, some response => do
+        let digest ← (MarkedSpec KemSK Response).query
+          (.inl (.inr (.hash (PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf init) response))))
+        simulateQ (markedCompiler setup codec selected challenge)
+          (PqxdhBeaconPhase2Shared.owner (completedBinding := PqxdhTranscriptAd.completedOf control digest)
+            codec.frameRead raw owner)
+    | _, _ => pure (none, PqxdhBeaconPhase2Preparation.abort control owner)
+  | _ => pure (none, owner)
+
+/-- The marked Beacon finish: the marked owner finish (`markedOwner`) in place of the hashed native owner finish, with the same owner lookup, retained bundle and reinstallation. -/
 noncomputable def markedFinish (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (selected : Nat)
     (challenge : MlKem768Ciphertext) (address : Nat) (raw : Pqxdh.Bytes) :
-    StateT (List EncodedEntry) (OracleComp (MarkedSpec KemSK Response)) (Option Pqxdh.Bytes) := fun owners =>
-  match owners[address]? with
-  | none => pure (none, owners)
+    StateT (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (OracleComp (MarkedSpec KemSK Response)) (Option Pqxdh.Bytes) := fun state =>
+  match state.1[address]? with
+  | none => pure (none, state)
   | some entry =>
-    (fun result => (result.1, owners.set address (entry.1, entry.2.1, result.2))) <$>
-      simulateQ (markedCompiler setup codec selected challenge)
-        (PqxdhBeaconPhase2Shared.owner codec.frameRead raw entry.2.2)
+    (fun result => (result.1, (state.1.set address (entry.1, entry.2.1, result.2), state.2))) <$>
+      markedOwner setup codec selected challenge (state.2 address) raw entry.2.2
 
 /-- Lift a source client step to the marked interface. -/
 def markedLift : QueryImpl (PqxdhRegistrationJointServiceSchedule.Spec KemSK Response)
@@ -262,14 +278,14 @@ def markedLift : QueryImpl (PqxdhRegistrationJointServiceSchedule.Spec KemSK Res
   fun query => (MarkedSpec KemSK Response).query (.inl query)
 
 def liftClient {α : Type} (work : PqxdhRegistrationJointServiceSchedule.Client KemSK Response α) :
-    StateT (List EncodedEntry) (OracleComp (MarkedSpec KemSK Response)) α :=
+    StateT (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (OracleComp (MarkedSpec KemSK Response)) α :=
   fun owners => simulateQ markedLift (work.run owners)
 
 /-- The source client with the marked Beacon finish; every other request is the source's. -/
 noncomputable def markedClient (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (selected : Nat)
     (challenge : MlKem768Ciphertext) :
     QueryImpl (PqxdhRegistrationJointRevealSchedule.Spec KemSK)
-      (StateT (List EncodedEntry) (OracleComp (MarkedSpec KemSK Response)))
+      (StateT (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (OracleComp (MarkedSpec KemSK Response)))
   | .inl (.inr (.finish address raw)) => markedFinish setup codec selected challenge address raw
   | query => liftClient (PqxdhRegistrationJointRevealSchedule.client setup codec query)
 
@@ -473,40 +489,65 @@ theorem marked_calls (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
 /-- The native Beacon owner and the opaque-handle owner have the same marked interpretation (`PqxdhBeaconPhase2Shared.owner_realization`). -/
 theorem owner_marked (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (selected : Nat) (challenge : MlKem768Ciphertext)
-    (candidate : MlKemSharedSecret) (raw : Pqxdh.Bytes) (owner : PqxdhRegistrationJointBundle.Owner) :
+    (candidate : MlKemSharedSecret) (binding : beaconcrypt_core.session.CompletedRegistrationBinding) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationJointBundle.Owner) :
     simulateQ (sourceMarked setup codec checks identityIndex publicIdentity selected challenge candidate)
         (simulateQ PqxdhRegistrationJointServiceSchedule.finishLift
           (simulateQ (PqxdhRegistrationJointFinishCompiler.compiler setup codec)
-            (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw owner))) =
+            (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := binding) codec.frameRead raw owner))) =
       simulateQ (markedMarked setup codec checks identityIndex publicIdentity selected challenge candidate)
         (simulateQ (markedCompiler setup codec selected challenge)
-          (PqxdhBeaconPhase2Shared.owner codec.frameRead raw owner)) := by
+          (PqxdhBeaconPhase2Shared.owner (completedBinding := binding) codec.frameRead raw owner)) := by
   rw [← QueryImpl.simulateQ_compose, ← QueryImpl.simulateQ_compose, ← QueryImpl.simulateQ_compose]
-  exact PqxdhBeaconPhase2Shared.owner_realization (interpret candidate) _ _
+  exact PqxdhBeaconPhase2Shared.owner_realization (completedBinding := binding) (interpret candidate) _ _
     (marked_calls setup codec checks identityIndex publicIdentity selected challenge candidate)
     codec.frameRead raw owner
 
-/-- The source Beacon finish and the marked Beacon finish have the same marked interpretation, for every owner list. -/
+/-- The hashed source owner finish and the marked owner finish have the same marked interpretation: the transcript `hash` request is the same source request on both sides, and the two owners then agree at the completed binding of its digest (`owner_marked`). -/
+theorem finishOwner_marked (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (identityIndex : Nat) (publicIdentity : PublicIdentity) (selected : Nat) (challenge : MlKem768Ciphertext)
+    (candidate : MlKemSharedSecret) (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationJointBundle.Owner) :
+    simulateQ (sourceMarked setup codec checks identityIndex publicIdentity selected challenge candidate)
+        (PqxdhRegistrationJointServiceSchedule.finishOwner setup codec retained raw owner) =
+      simulateQ (markedMarked setup codec checks identityIndex publicIdentity selected challenge candidate)
+        (markedOwner setup codec selected challenge retained raw owner) := by
+  unfold PqxdhRegistrationJointServiceSchedule.finishOwner markedOwner
+  rcases owner with ⟨⟨identity, keyId, pin, phase⟩, slot⟩
+  cases phase with
+  | initSent control prekey oneTime kem =>
+      cases retained with
+      | none => simp
+      | some init =>
+          cases responseOf codec raw with
+          | none => simp
+          | some response =>
+              simp only [simulateQ_bind, simulateQ_query, OracleQuery.input_query, OracleQuery.cont_query, id_map]
+              refine bind_congr fun digest => ?_
+              exact owner_marked setup codec checks identityIndex publicIdentity selected challenge candidate _ raw _
+  | _ => simp
+
+/-- The source Beacon finish and the marked Beacon finish have the same marked interpretation, for every owner list and retained bundles. -/
 theorem finish_marked (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (selected : Nat) (challenge : MlKem768Ciphertext)
     (candidate : MlKemSharedSecret) (address : Nat) (raw : Pqxdh.Bytes)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) :
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) :
     simulateQ (sourceMarked setup codec checks identityIndex publicIdentity selected challenge candidate)
         ((PqxdhRegistrationJointServiceSchedule.finish setup codec address raw).run owners) =
       simulateQ (markedMarked setup codec checks identityIndex publicIdentity selected challenge candidate)
         ((markedFinish setup codec selected challenge address raw).run owners) := by
   simp only [PqxdhRegistrationJointServiceSchedule.finish, markedFinish, StateT.run]
-  cases found : owners[address]? with
+  cases found : owners.1[address]? with
   | none => simp
   | some entry =>
       simp only [simulateQ_map]
-      rw [owner_marked]
+      rw [finishOwner_marked]
 
 /-- Lifting a source client step to the marked interface does not change its marked interpretation. -/
 theorem lift_marked {α : Type} (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (selected : Nat) (challenge : MlKem768Ciphertext)
     (candidate : MlKemSharedSecret) (work : PqxdhRegistrationJointServiceSchedule.Client KemSK Response α)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) :
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) :
     simulateQ (sourceMarked setup codec checks identityIndex publicIdentity selected challenge candidate)
         (work.run owners) =
       simulateQ (markedMarked setup codec checks identityIndex publicIdentity selected challenge candidate)
@@ -522,7 +563,7 @@ theorem lift_marked {α : Type} (setup : Setup baseSpec KemSK) (codec : Codec Re
 theorem client_marked (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (selected : Nat) (challenge : MlKem768Ciphertext)
     (candidate : MlKemSharedSecret) (query : (PqxdhRegistrationJointRevealSchedule.Spec KemSK).Domain)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) :
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) :
     simulateQ (sourceMarked setup codec checks identityIndex publicIdentity selected challenge candidate)
         ((PqxdhRegistrationJointRevealSchedule.client setup codec query).run owners) =
       simulateQ (markedMarked setup codec checks identityIndex publicIdentity selected challenge candidate)
@@ -573,7 +614,7 @@ noncomputable def markedResume (setup : Setup baseSpec KemSK) (codec : Codec Rea
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)
     (value : PqxdhServerRootPreparation.Verified Reader)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)
-    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry)
+    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))
     (next : Option Nat → OracleComp (SourceSpec KemSK) X) (selected : Nat)
     (ciphertext : MlKem768Ciphertext) (candidate : MlKemSharedSecret) :
     OracleComp (PqxdhRegistrationJointKemEncapsulation.Spec KemSK) (Outcome KemSK R) := do
@@ -590,7 +631,7 @@ theorem resume_marked (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)
     (value : PqxdhServerRootPreparation.Verified Reader)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)
-    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry)
+    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))
     (next : Option Nat → OracleComp (SourceSpec KemSK) X) (selected : Nat)
     (ciphertext : MlKem768Ciphertext) (candidate : MlKemSharedSecret) :
     simulateQ (markEnc selected ciphertext candidate)
@@ -820,3 +861,8 @@ end BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinish
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinish.opaqueBranch_marked
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinish.finishOwner_marked' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinish.finishOwner_marked

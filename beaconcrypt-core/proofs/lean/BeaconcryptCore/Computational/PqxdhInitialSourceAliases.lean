@@ -12,6 +12,8 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhInitialSourceAliases
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily
 open PqxdhInitialSourceInitialSecrecy
 variable {ι M P I D K X Response A N : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -40,7 +42,7 @@ noncomputable def selected (context : SourceContext) : Message :=
 noncomputable def client (stage : Nat) (context : SourceContext) : OracleComp PqxdhInitialLabelCompiler.Spec (Result M P I D K A N S B) :=
   match context with
   | .inl _ => pure none
-  | .inr input => some <$> PqxdhInitialSourceAliasCompiler.client source writer stage (plain input) input.selectedMessage sender route decode
+  | .inr input => some <$> PqxdhInitialSourceAliasCompiler.client (associatedData := associatedData) (completedBinding := completedBinding) source writer stage (plain input) input.selectedMessage sender route decode
       input.index input.metadata {input.ready with root := zeroRoot} input.post input.before input.selected input.shared input.privateState
 
 noncomputable def event (context : SourceContext) (output : HmacBlock)
@@ -57,8 +59,8 @@ theorem point_source (stage : Nat) (input : SourceInput) (valid : Admissible inp
     event source (.inr input) output <$>
       (simulateQ (PqxdhInitialRootLabelService.labelledFull source (QueryImpl.ofLift unifSpec ProbComp)
         input.selectedMessage (RawCtxSelectedInitialConstructor.response64 output))
-        (client source writer sender route decode stage (.inr input))).run ∅ =
-    sourceGame source writer sender route decode input zeroRoot (RawCtxSelectedInitialConstructor.response64 output) stage := by
+        (client (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode stage (.inr input))).run ∅ =
+    sourceGame (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode input zeroRoot (RawCtxSelectedInitialConstructor.response64 output) stage := by
   simp only [client, simulateQ_map, StateT.run_map, Functor.map_map]
   change PqxdhInitialSourceAliasCompiler.observation source input.selected
     (RawCtxSelectedInitialConstructor.response64 output) input.number input.ancestors input.disclosed <$> _ = _
@@ -68,13 +70,13 @@ theorem point_source (stage : Nat) (input : SourceInput) (valid : Admissible inp
 /-- The actual bounded suffix gives the private initializer allowance, counting the first shared response and every compiled callback. -/
 theorem client_initial (stage : Nat) (input : SourceInput) (qPost : Nat)
     (bounded : ∀ reply, (input.post reply).IsTotalQueryBound qPost) :
-    (client source writer sender route decode stage (.inr input)).IsQueryBoundP
+    (client (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode stage (.inr input)).IsQueryBoundP
       PqxdhInitialRootAliases.IsInitializer (1 + (7 + qPost * 67)) := by
   apply (isQueryBoundP_map_iff _ _ _).2
   apply (isQueryBoundP_congr_pred (p := PqxdhInitialRootAliases.IsInitializer)
     (p' := PqxdhInitialObserverCallbackBudgets.IsService) (fun query => by
       cases query <;> simp [PqxdhInitialRootAliases.IsInitializer, PqxdhInitialObserverCallbackBudgets.IsService])).mpr
-  exact PqxdhInitialSourceAliasCompiler.client_initial source writer stage (plain input) input.selectedMessage sender route decode
+  exact PqxdhInitialSourceAliasCompiler.client_initial (associatedData := associatedData) (completedBinding := completedBinding) source writer stage (plain input) input.selectedMessage sender route decode
     input.index input.metadata {input.ready with root := zeroRoot} input.post input.before input.selected input.shared input.privateState qPost bounded
 
 abbrev Pending (prior : ProbComp SourceContext) := RawCtxSupportedSample.Pending prior
@@ -84,48 +86,48 @@ noncomputable def erase (prior : ProbComp SourceContext) (context : Bool ⊕ Pen
 
 noncomputable def consistent (prior : ProbComp SourceContext) (stage : Nat) : ProbComp Bool :=
   PqxdhInitialAliasEvent.rightGame source (fun context => selected (erase prior context))
-    (fun context => client source writer sender route decode stage (erase prior context))
+    (fun context => client (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode stage (erase prior context))
     (fun context => event source (erase prior context)) (RawCtxSupportedSample.sum prior)
 
 /-- Forward support certificates preserve the whole original source sampler and every original final event. -/
 theorem sampled_source (prior : ProbComp SourceContext) (stage : Nat)
     (valid : ∀ input, Sum.inr input ∈ support prior → Admissible input) :
     PqxdhInitialAliasEvent.sourceGame source (fun context => selected (erase prior context))
-      (fun context => client source writer sender route decode stage (erase prior context))
+      (fun context => client (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode stage (erase prior context))
       (fun context => event source (erase prior context)) (RawCtxSupportedSample.sum prior) =
-    PqxdhInitialSourceSampled.game source writer sender route decode prior stage := by
+    PqxdhInitialSourceSampled.game (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode prior stage := by
   unfold PqxdhInitialAliasEvent.sourceGame
   have point : ∀ context : Bool ⊕ Pending prior, ∀ output : HmacBlock,
       event source (erase prior context) output <$>
         (simulateQ (PqxdhInitialRootLabelService.labelledFull source (QueryImpl.ofLift unifSpec ProbComp)
           (selected (erase prior context)) (RawCtxSelectedInitialConstructor.response64 output))
-          (client source writer sender route decode stage (erase prior context))).run ∅ =
-        PqxdhInitialSourceSampled.observe source writer sender route decode (erase prior context)
+          (client (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode stage (erase prior context))).run ∅ =
+        PqxdhInitialSourceSampled.observe (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode (erase prior context)
           (RawCtxSelectedInitialConstructor.response64 output) stage := by
     intro context output
     cases context with
     | inl decision => rfl
-    | inr input => exact point_source source writer sender route decode stage input.val (valid input.val input.property) output
+    | inr input => exact point_source (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode stage input.val (valid input.val input.property) output
   simp_rw [point]
   exact RawCtxSupportedSample.sum_run prior (fun context => do
     let output ← $ᵗ HmacBlock
-    PqxdhInitialSourceSampled.observe source writer sender route decode context (RawCtxSelectedInitialConstructor.response64 output) stage)
+    PqxdhInitialSourceSampled.observe (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode context (RawCtxSelectedInitialConstructor.response64 output) stage)
 
 /-- The complete selected source event, at any evolving-chain stage, differs from value-consistent private initialization only by the explicit independent-root collision allowance. -/
 theorem bound (prior : ProbComp SourceContext) (stage qPost : Nat)
     (valid : ∀ input, Sum.inr input ∈ support prior → Admissible input)
     (bounded : ∀ input, Sum.inr input ∈ support prior → ∀ reply, (input.post reply).IsTotalQueryBound qPost) :
-    (PqxdhInitialSourceSampled.game source writer sender route decode prior stage).boolDistance
-      (consistent source writer sender route decode prior stage) ≤
+    (PqxdhInitialSourceSampled.game (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode prior stage).boolDistance
+      (consistent (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode prior stage) ≤
       ((1 + (7 + qPost * 67) : Nat) : ENNReal).toReal / (2 ^ 256 : ℝ) := by
   have result := PqxdhInitialAliasEvent.bound source (fun context => selected (erase prior context))
-    (fun context => client source writer sender route decode stage (erase prior context))
+    (fun context => client (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode stage (erase prior context))
     (fun context => event source (erase prior context)) (RawCtxSupportedSample.sum prior) (1 + (7 + qPost * 67))
     (fun context => by
       cases context with
       | inl decision => trivial
-      | inr input => exact client_initial source writer sender route decode stage input.val qPost (bounded input.val input.property))
-  rw [sampled_source source writer sender route decode prior stage valid] at result
+      | inr input => exact client_initial (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode stage input.val qPost (bounded input.val input.property))
+  rw [sampled_source (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode prior stage valid] at result
   simpa only [consistent, ENNReal.toReal_div, ENNReal.toReal_pow, ENNReal.toReal_ofNat] using result
 
 end BeaconcryptCore.Computational.PqxdhInitialSourceAliases

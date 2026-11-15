@@ -310,8 +310,16 @@ theorem ghostFree_buildStep (services : PqxdhRegistrationJointKemPostSkeleton.Se
   rcases state.1.pending session with _ | token
   · simp only [map_pure]
     rfl
-  · simp only [map_bind, map_pure]
-    rfl
+  · have server : (cleanSkel state).1.server = state.1.server := rfl
+    dsimp only
+    rw [server]
+    cases PqxdhServerRegistrationPublication.prehash state.1.server token.pending payload with
+    | none =>
+        simp only [map_pure]
+        rfl
+    | some candidate =>
+        simp only [map_bind, map_pure]
+        rfl
 
 /-- The adversary's public HMAC in the skeleton (`hmacStep`) is `GhostFree`. -/
 theorem ghostFree_hmacStep (key : PqxdhSecretInputKdf.HmacBlock) (message : Pqxdh.Bytes) :
@@ -351,9 +359,9 @@ theorem skelImpl_ghostFree (identityIndex : ℕ) (publicIdentity : PqxdhJointIde
     | reveal keyId => exact ghostFree_liftT _ (ghostFree_gameStep _)
   · exact ghostFree_liftT _ (ghostFree_groupStep setup codec services pending)
 
-/-- The upper layers' state with the analysis observers of the skeleton's game state erased. -/
-def cleanUpper (state : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × SkelState KemSK V) :
-    List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × SkelState KemSK V :=
+/-- The upper layers' state (the owners pair: encoded owners and their retained Phase 1 bundles) with the analysis observers of the skeleton's game state erased. -/
+def cleanUpper (state : (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate)) × SkelState KemSK V) :
+    (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate)) × SkelState KemSK V :=
   (state.1, cleanSkel state.2)
 
 /-- The upper layers never read the analysis observers of the skeleton's game state. -/
@@ -413,7 +421,7 @@ theorem itemPost_clean {A Y : Type} {count : ℕ} (setup : Setup baseSpec KemSK)
     (value : PqxdhServerRootPreparation.Verified Reader) (matched : value.keys.pqKey = p.chosen.1)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes) (consumed : List Pqxdh.Bytes)
     (native : PqxdhServerAuthNative.NativeState KemSK)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry)
+    (owners : (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate)))
     (next : Option ℕ → OracleComp (PqxdhRegistrationJointKemCommands.SourceSpec KemSK) (Y × PqxdhDeploymentCompile.Local))
     (state : PqxdhDynamicKemJointSource.State KemSK) (after : A) :
     PqxdhDeploymentIdealBranch.itemPost setup codec checks t p decision
@@ -443,7 +451,7 @@ theorem itemPost_clean {A Y : Type} {count : ℕ} (setup : Setup baseSpec KemSK)
             created.publicIdentity t.kem.val p.challenge (factoredServices setup codec checks)))
           (PqxdhRegistrationJointAcceptKemCut.tagged (PqxdhRegistrationJointAcceptCutTag.decideTag decision) raw
             next answer.1)).run (owners, cleanSkel answer.2) =
-      (fun result : (Bool × List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) × SkelState KemSK Output =>
+      (fun result : (Bool × (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate))) × SkelState KemSK Output =>
           (result.1, cleanSkel result.2)) <$>
         ((fun result => ((result.1, result.2.1), result.2.2)) <$>
           (simulateQ (PqxdhDeploymentIdealPostSim.upperLayer setup codec checks created.server.server.metadata.identityIndex

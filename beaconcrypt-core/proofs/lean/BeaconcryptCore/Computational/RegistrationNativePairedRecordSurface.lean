@@ -82,7 +82,7 @@ private theorem opened (bytes : Pqxdh.Bytes) (result : Slice U8)
 /-- Actual source AEAD correctness on those derived operands determines the original application and populated binding, for the real Platform Server callback surface. -/
 theorem application {SS : Type} (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (serverImplementation : QueryImpl RegistrationRecordPrimitives.Spec (StateT SS ProbComp)) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (serverInitial : registration.ServerInitialKdf) (hashed : registration.ServerResponseHash)
     (serverBefore serverAfter : SS)
     (serverTrace : RegistrationNativeServerRecordTrace.Trace serverImplementation serverInitial hashed serverBefore serverAfter)

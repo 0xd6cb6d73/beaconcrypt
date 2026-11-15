@@ -57,7 +57,7 @@ theorem material_preserved (view : MaterialView source KemSK) (joint : PqxdhJoin
       (some (.established ⟨binding.assigned_key_id,control,binding.associated_data⟩ kernel)) := by
   have phase := related.phase
   simp only [Phase,stored,established] at phase
-  refine ⟨related.identityPublic,related.identitySecret,related.mldsa,related.pin,
+  refine ⟨related.identityPublic,related.identitySecret,related.pin,
     related.serverPublic,related.identifier,?_⟩
   simp only [Phase,established]
   exact ⟨phase.1,phase.2.1,kernel,rfl,rfl⟩

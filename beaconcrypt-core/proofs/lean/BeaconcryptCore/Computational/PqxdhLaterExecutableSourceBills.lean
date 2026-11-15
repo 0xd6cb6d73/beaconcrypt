@@ -9,6 +9,8 @@ set_option autoImplicit false
 set_option maxRecDepth 2048
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhLaterExecutableSourceBills
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPhase1AcceptanceOracle PqxdhKemIndCca PqxdhInitializerSecrecy
 open CtxRomAuth AdaptiveCtxSharedHash PqxdhSecretInputKdf PqxdhFullSecretInputKdf
@@ -58,29 +60,29 @@ include postBound selectorBound localBound peerBound plaintextBound writerBound 
     preBound oneBound phase1WriteBound mainBound keygenBound in
 /-- The ordinary executable client's four classes are discharged from the original source interfaces. No whole-observer or successful-cut resource premise is introduced. -/
 theorem source_bills (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl kem program post) (depth : Nat) :
-    (client setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth).IsQueryBoundP
+    (client (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth).IsQueryBoundP
       AdaptiveCtxDynamicKnownBounds.UniformRoute
       (uniformCost qKeygen qPre qOne qPhase1Write qMain qPost qSelector qLocal qEphemeral qEncaps qPeer qPlaintext qWriter + 184 +
         parentCost false qPost (PqxdhInitialPreparedSourceCaps.callbackCap env0 baseImpl kem program post c)
           (PqxdhInitialPreparedSourceCaps.selectorCap env0 baseImpl kem program post c) c.qAux +
         tailAllowance setup env callbacks program post baseImpl kem c) ∧
-    (client setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth).IsQueryBoundP
+    (client (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth).IsQueryBoundP
       AdaptiveCtxDynamicKnownBounds.HashRoute
       (((69 * qMain + 1 + 69 * qPost) + (7 + qPost * 67)) +
         (1 + PqxdhInitialPreparedSourceCaps.postCap env0 baseImpl kem program post c)) ∧
-    (client setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth).IsQueryBoundP
+    (client (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth).IsQueryBoundP
       (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxQueryBounds.SourceSeal)
       (1 + PqxdhInitialPreparedSourceCaps.postCap env0 baseImpl kem program post c) ∧
-    (client setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth).IsQueryBoundP
+    (client (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth).IsQueryBoundP
       (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxReceive.IsRawQuery)
       (1 + PqxdhInitialPreparedSourceCaps.postCap env0 baseImpl kem program post c) := by
-  have original := fun hash => PqxdhLaterSharedMessageResources.later setup env callbacks program post attachedVerify primitives baseImpl kem
+  have original := fun hash => PqxdhLaterSharedMessageResources.later (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem
     qPost qSelector qLocal qPeer qPlaintext qWriter postBound selectorBound localBound peerBound plaintextBound writerBound
     qEphemeral qEncaps ephemeralBound nativeEncapsBound encapsBound qPre qOne qPhase1Write qMain
     preBound oneBound phase1WriteBound mainBound qKeygen keygenBound selected number ancestors disclosed c hash depth
-  exact ⟨client_uniform setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth _ (original false),
-    client_hash setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth _ (original true),
-    client_record_bills setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth⟩
+  exact ⟨client_uniform (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth _ (original false),
+    client_hash (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth _ (original true),
+    client_record_bills (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth⟩
 
 end BeaconcryptCore.Computational.PqxdhLaterExecutableSourceBills
 

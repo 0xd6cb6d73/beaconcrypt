@@ -7,6 +7,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core PqxdhRefinement
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhServerAuthCtxBuild
+variable (associatedData : PqxdhTranscriptAd.AssociatedData)
 open PqxdhServerAuthExperiment PqxdhServerAuthEntryFactor PqxdhServerAuthCtxState
 open PqxdhSecretInputKdf PqxdhJointKdfGame
 open CtxRomAuth
@@ -66,7 +67,7 @@ noncomputable def selected (source : FixedHkdfSha512NoSaltSource) (codec : Codec
     (checks : Checks) (rest : PqxdhServerAuthCtxCalls.Residual) (session : Nat)
     (token : PqxdhServerRelatedRootConsumer.Returned) (payload : Option Pqxdh.Bytes)
     (server : ServerState) : Compiler KemSK (Option Response) :=
-  after session ((PqxdhServerAuthBuildProgram.compiled source codec checks rest token.pending payload () server).run.run [])
+  after session ((PqxdhServerAuthBuildProgram.compiled (associatedData := associatedData) source codec checks rest token.pending payload associatedData server).run.run [])
 
 /-- The full selected builder, source log and final session settlement agree from an initially unused component endpoint. Failed inner and outer native writers remain in the same source execution. -/
 theorem selected_source (setup : Setup baseSpec KemSK) (codec : Codec Reader WireResponse)
@@ -75,14 +76,14 @@ theorem selected_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Wir
     (key : RootOutput) (state : State KemSK) (empty : state.2.selected.1.usedNonces = []) :
     Prod.map id PqxdhServerAuthCtxState.project <$>
       (evaluate setup.source key codec.frameRead
-        (selected setup.source codec checks rest session token payload state.1.1.1.server).run).run state =
+        (selected (associatedData := associatedData) setup.source codec checks rest session token payload state.1.1.1.server).run).run state =
       (fun result => post session (restore state.1 result.2.2) (some result.1, result.2.1)) <$>
         ((factorServices setup codec checks context (PqxdhServerAuthCtxMaterial.output key rest)).hiddenBuild
-          token payload state.1.1.1.server).run ([], state.2.cache) := by
+          token payload associatedData state.1.1.1.server).run ([], state.2.cache) := by
   rw [selected, after_evaluate]
   have same := congrArg (Functor.map (fun result => post session (restore state.1 result.2.2) (result.1, result.2.1)))
-    (PqxdhServerAuthBuildSource.compiled_source setup codec checks key codec.frameRead rest
-      token.pending payload () state.1.1.1.server ([], state.2) empty)
+    (PqxdhServerAuthBuildSource.compiled_source (associatedData := associatedData) setup codec checks key codec.frameRead rest
+      token.pending payload associatedData state.1.1.1.server ([], state.2) empty)
   simpa only [factorServices, RawCtxSelectedReceiveCompiler.project, PqxdhServerAuthCtxNative.evaluate,
     PqxdhSelectedStateInterpreter.evaluate, StateT.run, Functor.map_map, Prod.map_def,
     PqxdhSelectedStateInterpreter.pair, id_eq] using same.symm
@@ -93,7 +94,7 @@ noncomputable def known (source : FixedHkdfSha512NoSaltSource) (codec : Codec Re
     (payload : Option Pqxdh.Bytes) (server : ServerState) : Compiler KemSK (Option Response) :=
   after session ((fun result => (some result.1, result.2)) <$>
     (simulateQ (PqxdhServerAuthCtxNative.tail source codec checks)
-      (PqxdhServerRegistrationPublication.build source token.pending token.root payload () server)).run [])
+      (PqxdhServerRegistrationPublication.build (associatedData := associatedData) source token.pending token.root payload associatedData server)).run [])
 
 /-- The full ordinary builder preserves every source outcome, successful-frame context and shared-cache effect before exact token and session settlement. -/
 theorem known_source (setup : Setup baseSpec KemSK) (codec : Codec Reader WireResponse)
@@ -101,20 +102,20 @@ theorem known_source (setup : Setup baseSpec KemSK) (codec : Codec Reader WireRe
     (payload : Option Pqxdh.Bytes) (key : RootOutput) (state : State KemSK) :
     Prod.map id PqxdhServerAuthCtxState.project <$>
       (evaluate setup.source key codec.frameRead
-        (known setup.source codec checks session token payload state.1.1.1.server).run).run state =
+        (known (associatedData := associatedData) setup.source codec checks session token payload state.1.1.1.server).run).run state =
       (fun result => post session (restore state.1 result.2.2) (some result.1, result.2.1)) <$>
         (simulateQ (tailImpl setup codec checks)
-          (PqxdhServerRegistrationPublication.build setup.source token.pending token.root payload ()
+          (PqxdhServerRegistrationPublication.build (associatedData := associatedData) setup.source token.pending token.root payload associatedData
             state.1.1.1.server)).run ([], state.2.cache) := by
   rw [known, after_evaluate, simulateQ_map, StateT.run_map]
   have same := congrArg (Functor.map (fun result => post session (restore state.1 result.2.2) (some result.1, result.2.1)))
-    (PqxdhServerAuthCtxNative.build_source setup codec checks key codec.frameRead
+    (PqxdhServerAuthCtxNative.build_source (associatedData := associatedData) setup codec checks key codec.frameRead
       token.pending token.root payload state.1.1.1.server ([], state.2))
   simpa only [RawCtxSelectedReceiveCompiler.project, PqxdhServerAuthCtxNative.evaluate,
     PqxdhSelectedStateInterpreter.evaluate, StateT.run, Functor.map_map, Prod.map_def,
     PqxdhSelectedStateInterpreter.pair, id_eq] using same.symm
 
-/-- Actual pending-token lookup dispatches the complete ordinary or selected builder, then consumes that token under the unchanged source settlement. -/
+/-- Actual pending-token lookup consumes a present token; after the pure pre-hash guard the component hashes the transcript, then dispatches the complete ordinary or selected builder at the AD of that digest under the unchanged source settlement. -/
 noncomputable def build (source : FixedHkdfSha512NoSaltSource) (codec : Codec Reader WireResponse)
     (checks : Checks) (rest : PqxdhServerAuthCtxCalls.Residual) (session : Nat)
     (payload : Option Pqxdh.Bytes) : Compiler KemSK (Option Response) :=
@@ -122,9 +123,17 @@ noncomputable def build (source : FixedHkdfSha512NoSaltSource) (codec : Codec Re
     match state.1.1.pending session with
     | none => pure (some none, state)
     | some token =>
-        if state.1.2.1 session then
-          (selected source codec checks rest session token payload state.1.1.server).run state
-        else (known source codec checks session token payload state.1.1.server).run state
+      match PqxdhServerRegistrationPublication.prehash state.1.1.server token.pending payload with
+      | none => pure (some none,
+          (({ state.1.1 with pending := Function.update state.1.1.pending session none }, state.1.2), state.2))
+      | some candidate =>
+          (PqxdhServerAuthCtxState.hash (PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf token.init)
+            (PqxdhTranscriptAd.serverResponse candidate)) >>= fun digest =>
+            if state.1.2.1 session then
+              (selected (PqxdhTranscriptAd.adOf digest) source codec checks rest session token payload
+                state.1.1.server).run
+            else (known (PqxdhTranscriptAd.adOf digest) source codec checks session token payload
+              state.1.1.server).run).run state
 
 set_option backward.isDefEq.respectTransparency false in
 /-- The complete actual build reply and source poststate are preserved. Only a reached selected builder requires the initially unused endpoint; an absent token or ordinary root adds no such condition. -/
@@ -146,17 +155,55 @@ theorem build_source (setup : Setup baseSpec KemSK) (codec : Codec Reader WireRe
         restore, restoreFlat, found, simulateQ_pure, map_pure]
       rfl
   | some token =>
+    cases pre : PqxdhServerRegistrationPublication.prehash state.1.1.1.server token.pending payload with
+    | none =>
+        simp only [build, OptionT.run_mk, evaluate, PqxdhServerAuthCtxNative.evaluate,
+          PqxdhSelectedStateInterpreter.evaluate, StateT.run, buildStep, PqxdhServerAuthCtxState.project,
+          restore, restoreFlat, found, pre, simulateQ_pure, map_pure]
+        rfl
+    | some candidate =>
+      have unfolded : (evaluate setup.source key codec.frameRead
+          (build setup.source codec checks rest session payload).run).run state =
+          (evaluate setup.source key codec.frameRead
+            (PqxdhServerAuthCtxState.hash (PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf token.init)
+              (PqxdhTranscriptAd.serverResponse candidate)) >>= fun digest =>
+              if state.1.1.2.1 session then
+                (selected (PqxdhTranscriptAd.adOf digest) setup.source codec checks rest session token payload
+                  state.1.1.1.server).run
+              else (known (PqxdhTranscriptAd.adOf digest) setup.source codec checks session token payload
+                state.1.1.1.server).run)).run state := by
+        simp only [build, OptionT.run_mk, evaluate, PqxdhServerAuthCtxNative.evaluate,
+          PqxdhSelectedStateInterpreter.evaluate, StateT.run, found, pre]
+      rw [unfolded]
+      simp only [evaluate, PqxdhServerAuthCtxNative.evaluate]
+      rw [PqxdhSelectedStateInterpreter.bind_evaluate, StateT.run_bind]
+      have hashed := PqxdhServerAuthCtxFinish.hash_run setup.source key codec.frameRead
+        (PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf token.init)
+          (PqxdhTranscriptAd.serverResponse candidate)) state
+      simp only [evaluate, PqxdhServerAuthCtxNative.evaluate] at hashed
+      rw [hashed, bind_map_left, map_bind]
+      simp only [buildStep, StateT.run, PqxdhServerAuthCtxState.project, restore, restoreFlat, found, pre, map_bind]
+      refine bind_congr fun digest => ?_
       by_cases marked : state.1.1.2.1 session = true
-      · have same := selected_source setup codec checks context rest session token payload key state
-          (empty marked (by rw [found]; rfl))
-        simpa only [build, OptionT.run_mk, evaluate, PqxdhServerAuthCtxNative.evaluate,
-          PqxdhSelectedStateInterpreter.evaluate, StateT.run, buildStep, PqxdhServerAuthCtxState.project,
-          restore, restoreFlat, found, marked, ite_true, bind_pure_comp, Functor.map_map,
+      · have same := selected_source (PqxdhTranscriptAd.adOf digest.1) setup codec checks context rest session
+          token payload key (state.1, { state.2 with
+            selected := ({ state.2.selected.1 with publicInputs := (PqxdhTranscriptAd.transcript
+              (PqxdhTranscriptAd.initOf token.init) (PqxdhTranscriptAd.serverResponse candidate) ::
+                state.2.selected.1.publicInputs) }, state.2.selected.2)
+            cache := digest.2 }) (empty marked (by rw [found]; rfl))
+        simpa only [evaluate, PqxdhServerAuthCtxNative.evaluate,
+          PqxdhSelectedStateInterpreter.evaluate, StateT.run, PqxdhServerAuthCtxState.project,
+          restore, restoreFlat, marked, ite_true, map_pure, bind_pure_comp, Functor.map_map,
           post, complete, afterBuild] using same
-      · have same := known_source setup codec checks session token payload key state
-        simpa only [build, OptionT.run_mk, evaluate, PqxdhServerAuthCtxNative.evaluate,
-          PqxdhSelectedStateInterpreter.evaluate, StateT.run, buildStep, PqxdhServerAuthCtxState.project,
-          restore, restoreFlat, found, marked, Bool.false_eq_true, ite_false, bind_pure_comp, Functor.map_map,
+      · have same := known_source (PqxdhTranscriptAd.adOf digest.1) setup codec checks session token payload key
+          (state.1, { state.2 with
+            selected := ({ state.2.selected.1 with publicInputs := (PqxdhTranscriptAd.transcript
+              (PqxdhTranscriptAd.initOf token.init) (PqxdhTranscriptAd.serverResponse candidate) ::
+                state.2.selected.1.publicInputs) }, state.2.selected.2)
+            cache := digest.2 })
+        simpa only [evaluate, PqxdhServerAuthCtxNative.evaluate,
+          PqxdhSelectedStateInterpreter.evaluate, StateT.run, PqxdhServerAuthCtxState.project,
+          restore, restoreFlat, marked, Bool.false_eq_true, ite_false, map_pure, bind_pure_comp, Functor.map_map,
           post, complete, afterBuild] using same
 
 end BeaconcryptCore.Computational.PqxdhServerAuthCtxBuild

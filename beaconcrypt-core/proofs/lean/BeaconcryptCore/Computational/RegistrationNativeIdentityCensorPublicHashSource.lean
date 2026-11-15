@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativeIdentityCensorHashOutgoingSource
 import BeaconcryptCore.Computational.RegistrationNativePlatformIdentityCtxMain
 
-/-! Literal public hash addresses preserve the exact original native source through active selected-signing phases. The real1952-byte ML fingerprint is public on either mode branch, with full shared-cache state and draw charges retained. -/
+/-! Literal public hash addresses preserve the exact original native source through active selected-signing phases. An arbitrary public 1952-byte hash query stays literal on either mode branch, with full shared-cache state and draw charges retained. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -61,7 +61,7 @@ private theorem compiler_hash (selected : Nat) (placeholder : Ed25519Signature) 
 
 section Actual
 variable (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (selected : Nat) (placeholder : Ed25519Signature) (request : registration.HashRequest)
 local notation "bytes" => BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request
 local notation "action" => RegistrationNativePlatformIdentityCtxMain.beacon setup checks representation created
@@ -97,7 +97,7 @@ theorem outgoing (before : Full (n := n) (KemSK := KemSK) (Platform := Platform)
   simp only [RegistrationNativeIdentityCensorSource.implementation, RegistrationNativeIdentityCensorSource.physical,
     StateT.run, Functor.map_map, project, Prod.map_def, id_eq, routed]
 
-/-- The actual public1952-byte ML fingerprint stays literal even while the selected one-time role is active. -/
+/-- An arbitrary public 1952-byte hash query stays literal even while the selected one-time role is active; this is not a Beacon credential or fingerprint stage. -/
 theorem fingerprint (before : Full (n := n) (KemSK := KemSK) (Platform := Platform) (mlSource := mlSource))
     (width : (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request).length = 1952) :
     Prod.map id project <$> (interpret setup.joint selected placeholder false action).run before =

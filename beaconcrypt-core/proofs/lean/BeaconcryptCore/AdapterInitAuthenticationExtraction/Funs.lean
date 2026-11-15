@@ -24,7 +24,7 @@ namespace beaconcrypt
 variable [beaconcrypt.auth.Operations] [BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations]
 
 /-- [beaconcrypt::auth::authenticate_init::{impl core::ops::function::Fn<(), core::option::Option<alloc::vec::Vec<u8>>> for beaconcrypt::auth::authenticate_init::closure<'_0, '_1>}::call]:
-    Source: 'beaconcrypt/src/auth.rs', lines 245:30-250:17 -/
+    Source: 'beaconcrypt/src/auth.rs', lines 235:30-240:17 -/
 def auth.authenticate_init.closure.Insts.CoreOpsFunctionFnTupleOptionVecU8.call
   (c : auth.authenticate_init.closure) (_ : Unit) :
   RustM (core.option.Option (alloc.vec.Vec Std.U8))
@@ -42,7 +42,7 @@ def auth.authenticate_init.closure.Insts.CoreOpsFunctionFnTupleOptionVecU8.call
       (alloc.vec.Vec Std.U8) residual
 
 /-- [beaconcrypt::auth::authenticate_init]: loop body 0:
-    Source: 'beaconcrypt/src/auth.rs', lines 231:4-263:1 -/
+    Source: 'beaconcrypt/src/auth.rs', lines 224:4-245:1 -/
 @[rust_loop_body]
 def auth.authenticate_init_loop.body
   (effect : beaconcrypt_core.registration.InitAuthentication) :
@@ -54,15 +54,6 @@ def auth.authenticate_init_loop.body
     let hr ← beaconcrypt_core.registration.InitHash.request pending
     let hash ← auth.execute_hash hr
     let effect1 ← beaconcrypt_core.registration.InitHash.resume pending hash
-    ok (cont effect1)
-  | beaconcrypt_core.registration.InitAuthentication.MldsaVerificationRequested
-    pending =>
-    let mvr ←
-      beaconcrypt_core.registration.InitMldsaVerification.request pending
-    let verified ← auth.verify_requested mvr
-    let effect1 ←
-      beaconcrypt_core.registration.InitMldsaVerification.resume pending
-        verified
     ok (cont effect1)
   |
     beaconcrypt_core.registration.InitAuthentication.Ed25519VerificationRequested
@@ -78,31 +69,13 @@ def auth.authenticate_init_loop.body
     let effect1 ←
       beaconcrypt_core.registration.InitEd25519Verification.resume pending o
     ok (cont effect1)
-  | beaconcrypt_core.registration.InitAuthentication.ServerFingerprintRequested
-    pending =>
-    let hr ←
-      beaconcrypt_core.registration.InitServerFingerprint.request pending
-    let fingerprint ← auth.execute_hash hr
-    let effect1 ←
-      beaconcrypt_core.registration.InitServerFingerprint.resume pending
-        fingerprint
-    ok (cont effect1)
-  | beaconcrypt_core.registration.InitAuthentication.BeaconFingerprintRequested
-    pending =>
-    let hr ←
-      beaconcrypt_core.registration.InitBeaconFingerprint.request pending
-    let fingerprint ← auth.execute_hash hr
-    let effect1 ←
-      beaconcrypt_core.registration.InitBeaconFingerprint.resume pending
-        fingerprint
-    ok (cont effect1)
   | beaconcrypt_core.registration.InitAuthentication.Accepted authenticated =>
     ok (done (core.option.Option.Some authenticated))
   | beaconcrypt_core.registration.InitAuthentication.Rejected =>
     ok (done core.option.Option.None)
 
 /-- [beaconcrypt::auth::authenticate_init]: loop 0:
-    Source: 'beaconcrypt/src/auth.rs', lines 231:4-263:1 -/
+    Source: 'beaconcrypt/src/auth.rs', lines 224:4-245:1 -/
 @[rust_loop]
 def auth.authenticate_init_loop
   (effect : beaconcrypt_core.registration.InitAuthentication) :
@@ -113,7 +86,7 @@ def auth.authenticate_init_loop
     effect
 
 /-- [beaconcrypt::auth::authenticate_init]:
-    Source: 'beaconcrypt/src/auth.rs', lines 225:0-263:1 -/
+    Source: 'beaconcrypt/src/auth.rs', lines 218:0-245:1 -/
 def auth.authenticate_init
   (pin : beaconcrypt_core.session.ServerAuthenticationPin)
   (packet : beaconcrypt_core.registration.InitPacket) :
@@ -124,7 +97,7 @@ def auth.authenticate_init
   auth.authenticate_init_loop effect
 
 /-- [beaconcrypt::auth::authenticate_init::{impl core::ops::function::FnMut<(), core::option::Option<alloc::vec::Vec<u8>>> for beaconcrypt::auth::authenticate_init::closure<'_0, '_1>}::call_mut]:
-    Source: 'beaconcrypt/src/auth.rs', lines 245:30-250:17 -/
+    Source: 'beaconcrypt/src/auth.rs', lines 235:30-240:17 -/
 def
   auth.authenticate_init.closure.Insts.CoreOpsFunctionFnMutTupleOptionVecU8.call_mut
   (state : auth.authenticate_init.closure) (_ : Unit) :
@@ -137,7 +110,7 @@ def
   ok (o, state)
 
 /-- [beaconcrypt::auth::authenticate_init::{impl core::ops::function::FnOnce<(), core::option::Option<alloc::vec::Vec<u8>>> for beaconcrypt::auth::authenticate_init::closure<'_0, '_1>}::call_once]:
-    Source: 'beaconcrypt/src/auth.rs', lines 245:30-250:17 -/
+    Source: 'beaconcrypt/src/auth.rs', lines 235:30-240:17 -/
 def
   auth.authenticate_init.closure.Insts.CoreOpsFunctionFnOnceTupleOptionVecU8.call_once
   (c : auth.authenticate_init.closure) (_ : Unit) :
@@ -149,7 +122,7 @@ def
   ok o
 
 /-- Trait implementation: [beaconcrypt::auth::authenticate_init::{impl core::ops::function::FnOnce<(), core::option::Option<alloc::vec::Vec<u8>>> for beaconcrypt::auth::authenticate_init::closure<'_0, '_1>}]
-    Source: 'beaconcrypt/src/auth.rs', lines 245:30-250:17 -/
+    Source: 'beaconcrypt/src/auth.rs', lines 235:30-240:17 -/
 @[reducible]
 def auth.authenticate_init.closure.Insts.CoreOpsFunctionFnOnceTupleOptionVecU8
   : core.ops.function.FnOnce auth.authenticate_init.closure Unit
@@ -159,7 +132,7 @@ def auth.authenticate_init.closure.Insts.CoreOpsFunctionFnOnceTupleOptionVecU8
 }
 
 /-- Trait implementation: [beaconcrypt::auth::authenticate_init::{impl core::ops::function::FnMut<(), core::option::Option<alloc::vec::Vec<u8>>> for beaconcrypt::auth::authenticate_init::closure<'_0, '_1>}]
-    Source: 'beaconcrypt/src/auth.rs', lines 245:30-250:17 -/
+    Source: 'beaconcrypt/src/auth.rs', lines 235:30-240:17 -/
 @[reducible]
 def auth.authenticate_init.closure.Insts.CoreOpsFunctionFnMutTupleOptionVecU8 :
   core.ops.function.FnMut auth.authenticate_init.closure Unit
@@ -171,7 +144,7 @@ def auth.authenticate_init.closure.Insts.CoreOpsFunctionFnMutTupleOptionVecU8 :
 }
 
 /-- Trait implementation: [beaconcrypt::auth::authenticate_init::{impl core::ops::function::Fn<(), core::option::Option<alloc::vec::Vec<u8>>> for beaconcrypt::auth::authenticate_init::closure<'_0, '_1>}]
-    Source: 'beaconcrypt/src/auth.rs', lines 245:30-250:17 -/
+    Source: 'beaconcrypt/src/auth.rs', lines 235:30-240:17 -/
 @[reducible]
 def auth.authenticate_init.closure.Insts.CoreOpsFunctionFnTupleOptionVecU8 :
   core.ops.function.Fn auth.authenticate_init.closure Unit (core.option.Option

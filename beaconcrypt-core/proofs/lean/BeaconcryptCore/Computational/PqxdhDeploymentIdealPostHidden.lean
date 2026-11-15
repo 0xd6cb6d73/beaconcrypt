@@ -208,7 +208,8 @@ noncomputable abbrev lowerEC :=
 
 /-- Item 2's view of a middle state with the table counters erased as well. -/
 def encodeMidC (m : Mid KemSK) :
-    (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × SkelState KemSK Output) × ServiceState KemSK :=
+    ((List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate)) ×
+      SkelState KemSK Output) × ServiceState KemSK :=
   ((encodeMid setup m).1, eraseServiceC (encodeMid setup m).2)
 
 /-- `StepAt` at item 2's view without table counters. -/
@@ -249,7 +250,7 @@ theorem itemPost_erasedC {A Y : Type} (decision : Y × PqxdhDeploymentCompile.Lo
     (raw : Pqxdh.Bytes) (value : PqxdhServerRootPreparation.Verified Reader) (matched : value.keys.pqKey = p.chosen.1)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes) (consumed : List Pqxdh.Bytes)
     (native : PqxdhServerAuthNative.NativeState KemSK)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry)
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate))
     (next : Option ℕ → OracleComp (PqxdhRegistrationJointKemCommands.SourceSpec KemSK) (Y × PqxdhDeploymentCompile.Local))
     (state : PqxdhDynamicKemJointSource.State KemSK) (after : A) :
     PqxdhDeploymentIdealBranch.itemPost setup codec checks t p decision
@@ -333,7 +334,8 @@ theorem buildStep_hidden_run (session : ℕ) (payload : Option Pqxdh.Bytes)
 
 /-- Rejoining an annotated source state with its own owners and a new shared native state replaces only the shared state. -/
 theorem rejoin_source (old : PqxdhRegistrationJointSchedule.State KemSK) (shared : PqxdhServerAuthNative.NativeState KemSK) :
-    PqxdhDeploymentIdealPostSource.rejoin old ⟨shared, old.owners.map PqxdhRegistrationJointOwnership.Entry.owner⟩ =
+    PqxdhDeploymentIdealPostSource.rejoin old ⟨shared, old.owners.map PqxdhRegistrationJointOwnership.Entry.owner,
+      old.inits⟩ =
       { old with shared := shared } := by
   simp only [PqxdhDeploymentIdealPostSource.rejoin]
   congr 1
@@ -395,7 +397,8 @@ theorem sourceMid_build_hidden (session : ℕ) (payload : Option Pqxdh.Bytes) (m
   simp only [afterBuild, PqxdhDeploymentIdealPostSource.fromX, PqxdhDeploymentIdealSlots.attach,
     PqxdhDeploymentIdealSlots.detach, PqxdhDeploymentIdealPostSource.toX]
   rw [show (PqxdhRegistrationJointSchedule.source m.joint).owners =
-    m.joint.owners.map PqxdhRegistrationJointOwnership.Entry.owner from rfl, rejoin_source]
+    m.joint.owners.map PqxdhRegistrationJointOwnership.Entry.owner from rfl,
+    show (PqxdhRegistrationJointSchedule.source m.joint).inits = m.joint.inits from rfl, rejoin_source]
 
 /-- On a native skeleton step, item 2's service layers with both observers erased act as the table layers, with the router state kept and the table counters erased. -/
 theorem lowerEC_native {α : Type} (work : OracleComp (SkelSpec Output) α) (state : ServiceState KemSK) :
@@ -439,18 +442,29 @@ theorem step_build_hidden (session : ℕ) (payload : Option Pqxdh.Bytes) (m : Mi
     simp only [PqxdhRegistrationJointKemPostSkeleton.buildStep, cleanFound,
       PqxdhRegistrationJointKemPostSkeleton.buildService, ite_true]
     simp only [buildHidden, StateT.run, PqxdhServerAuthNative.native_bind_run, PqxdhServerAuthNative.nativeGet,
-      PqxdhServerAuthNative.localState, pure_bind, found, PqxdhServerAuthNative.nativeCoins,
-      PqxdhServerAuthNative.nativeSet, bind_pure_comp, simulateQ_map, Functor.map_map,
-      PqxdhServerAuthNative.native_map_run, map_pure]
-    change _ <$> StateT.run (_ <$> simulateQ tableLayer (OracleComp.liftComp _ (SkelSpec Output))) _ = _
-    rw [StateT.run_map, PqxdhDeploymentIdealPostItem.tableLayer_lift, Functor.map_map, Functor.map_map]
-    change _ <$> (((PqxdhRegistrationJointKemEntryFactor.factoredHidden setup codec checks value).hiddenBuild token payload
-      m.joint.shared.2.server).run ([], m.joint.shared.2.ctx)) = _ <$> (((PqxdhRegistrationJointKemEntryFactor.factoredHidden
-        setup codec checks value).hiddenBuild token payload m.joint.shared.2.server).run ([], m.joint.shared.2.ctx))
-    refine congrArg (fun f => f <$> _) (funext fun result => ?_)
-    simp only [encodeMidC, encodeMid, eraseServiceC, eraseTables, eraseCounts, eraseTable, Prod.map,
-      PqxdhDeploymentIdealPostItem.cleanUpper, Option.map_some, id_eq, skelMarks_afterBuild, marks]
-    rfl
+      PqxdhServerAuthNative.localState, pure_bind, found, PqxdhServerAuthNative.nativeSet, bind_pure_comp,
+      Functor.map_map]
+    have server : (clean m.joint.shared.2).server = m.joint.shared.2.server := rfl
+    rw [server]
+    cases PqxdhServerRegistrationPublication.prehash m.joint.shared.2.server token.pending payload with
+    | none =>
+        simp only [simulateQ_pure, PqxdhServerAuthNative.native_map_run, PqxdhServerAuthNative.localState, map_pure]
+        simp only [encodeMidC, encodeMid, eraseServiceC, eraseTables, eraseCounts, eraseTable, Prod.map,
+          PqxdhDeploymentIdealPostItem.cleanUpper, Option.map_some, id_eq, skelMarks_afterBuild, marks]
+        rfl
+    | some candidate =>
+        simp only [simulateQ_bind, bind_map_left, simulateQ_map, map_bind, PqxdhServerAuthNative.native_bind_run,
+          PqxdhServerAuthNative.nativeHash, PqxdhServerAuthNative.nativeCoins, PqxdhServerAuthNative.native_map_run,
+          PqxdhServerAuthNative.localState, pure_bind, map_pure]
+        change _ <$> StateT.run (_ >>= _) _ = _
+        simp only [StateT.run_bind, StateT.run_map, PqxdhDeploymentIdealPostItem.tableLayer_lift, bind_map_left,
+          map_bind, Functor.map_map]
+        refine bind_congr fun hashed => ?_
+        rw [← bind_pure_comp]
+        refine bind_congr fun result => ?_
+        simp only [encodeMidC, encodeMid, eraseServiceC, eraseTables, eraseCounts, eraseTable, Prod.map,
+          PqxdhDeploymentIdealPostItem.cleanUpper, Option.map_some, id_eq, skelMarks_afterBuild, marks]
+        rfl
 
 end Build
 

@@ -9,6 +9,7 @@ namespace BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityDhBudget
 open PqxdhJointIdentity PqxdhServerAuthExperiment
 open PqxdhServerAuthJointIdentityCompiler PqxdhServerAuthJointIdentityLog
 open PqxdhJointGapDh (ScalarBytes)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 variable {ι KemSK Reader Response : Type} {baseSpec : OracleSpec ι}
 
 /-- Exact optional static-DH requests to the joint challenger. -/
@@ -53,7 +54,7 @@ theorem collect_identity {I D K X R : Type} (identity : I) (prekey oneTime : D) 
 /-- Core preparation and mandatory shared-secret erasure add no identity-DH callback. -/
 theorem prepare_identity {I D K X R : Type} (control : pqxdh.BeaconInitSent)
     (identity : I) (prekey oneTime : D) (kem : K) (raw : Pqxdh.Bytes) :
-    (PqxdhBeaconPhase2Preparation.prepare (X := X) (Response := R) control identity prekey oneTime kem raw).IsQueryBoundP
+    (PqxdhBeaconPhase2Preparation.prepare (completedBinding := completedBinding) (X := X) (Response := R) control identity prekey oneTime kem raw).IsQueryBoundP
       IdentityDh 1 := by
   unfold PqxdhBeaconPhase2Preparation.prepare
   refine isQueryBoundP_bind (n := 1) (m := 0) (collect_identity identity prekey oneTime kem raw) ?_
@@ -89,9 +90,9 @@ set_option backward.isDefEq.respectTransparency false in
 theorem prepare_dh (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (scalar : ScalarBytes) (control : pqxdh.BeaconInitSent) (identity : Unit)
     (oneTime : Unit ⊕ ScalarBytes) (kem : KemSK) (raw : Pqxdh.Bytes) :
-    (prepare setup codec scalar control identity oneTime kem raw).IsQueryBoundP IsDh 1 := by
+    (prepare (completedBinding := completedBinding) setup codec scalar control identity oneTime kem raw).IsQueryBoundP IsDh 1 := by
   simp only [prepare, StateT.run'_eq, isQueryBoundP_map_iff]
-  have source := prepare_identity (X := Unit) (R := Response) control identity
+  have source := prepare_identity (completedBinding := completedBinding) (X := Unit) (R := Response) control identity
     (Sum.inl () : Unit ⊕ (Unit ⊕ ScalarBytes)) (.inr oneTime) kem raw
   exact source.simulateQ_run_StateT_of_step
     (fun query state => prefix_dh setup codec scalar query state) ()
@@ -101,9 +102,9 @@ theorem stage_dh (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (serverSeed : IdentitySeed) (scalar : ScalarBytes) (control : pqxdh.BeaconInitSent)
     (identity : Unit) (oneTime : Unit ⊕ ScalarBytes) (kem : KemSK) (raw : Pqxdh.Bytes)
     (state : PqxdhServerAuthNative.NativeState KemSK) :
-    ((stage setup codec serverSeed scalar control identity oneTime kem raw).run state).IsQueryBoundP IsDh 1 := by
+    ((stage (completedBinding := completedBinding) setup codec serverSeed scalar control identity oneTime kem raw).run state).IsQueryBoundP IsDh 1 := by
   simp only [stage, StateT.run]
-  refine isQueryBoundP_bind (n := 1) (m := 0) (prepare_dh setup codec scalar control identity oneTime kem raw) ?_
+  refine isQueryBoundP_bind (n := 1) (m := 0) (prepare_dh (completedBinding := completedBinding) setup codec scalar control identity oneTime kem raw) ?_
   rintro (_ | original) _
   · trivial
   · exact coins_no_dh _
@@ -116,9 +117,13 @@ theorem finish_dh (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
   simp only [finish, StateT.run]
   cases state.2.beacon.beacon.phase <;> simp only [isQueryBoundP_pure]
   rename_i control prekey oneTime kem
-  exact isQueryBoundP_bind (n := 1) (m := 0)
-    (stage_dh setup codec serverSeed scalar control state.2.beacon.beacon.identity oneTime kem raw state)
-    (fun _ _ => trivial)
+  split
+  · refine isQueryBoundP_bind (n := 0) (m := 1) (coins_no_dh _) (fun hashed _ => ?_)
+    exact isQueryBoundP_bind (n := 1) (m := 0)
+      (stage_dh (completedBinding := PqxdhTranscriptAd.completedOf control hashed.1) setup codec serverSeed scalar
+        control hashed.2.2.beacon.beacon.identity oneTime kem raw hashed.2)
+      (fun _ _ => trivial)
+  · trivial
 
 /-- All attempted original Beacon finishes, including calls that reject or arrive after termination. -/
 def IsFinish : ServerAuthSpec.Domain → Prop
@@ -167,6 +172,26 @@ theorem phase1_no_dh (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
     rename_i index service
     cases service <;> simp [IsDh]
 
+set_option backward.isDefEq.respectTransparency false in
+/-- The logged Phase1 publication (the written bundle retained by its writer callback) performs the same three signature calls and never accesses the joint static-DH interface. -/
+theorem loggedPhase1_no_dh (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (target : PublicIdentity) (publicValue : PqxdhJointGapDh.PublicChallenge) (oneTime : ScalarBytes)
+    (kemPk : PqxdhKemIndCca.MlKem768PublicKey) (kemSk : KemSK) :
+    (loggedPhase1 setup codec target publicValue oneTime kemPk kemSk).IsQueryBoundP IsDh 0 := by
+  unfold loggedPhase1
+  apply (isQueryBoundP_false _ 0).simulateQ_run_StateT_of_step
+  intro query state
+  rcases query with gen | ((coin | request) | bundle)
+  · simp [signingLogImpl, signingImpl, StateT.run_lift]
+  · simp [signingLogImpl, signingImpl, StateT.run_lift, IsDh]
+  · cases request with
+    | create => simp [signingLogImpl, signingImpl, StateT.run_lift]
+    | service index service =>
+      cases service <;> simp [signingLogImpl, signingImpl, StateT.run_lift, IsDh]
+    | reveal index => simp [signingLogImpl, signingImpl, StateT.run_lift]
+  · change (pure _ : OracleComp AdversarySpec _).IsQueryBoundP IsDh _
+    exact isQueryBoundP_pure _ _ _
+
 /-- The complete publication/API execution spends only the attempted-finish static-DH allowance; arbitrary identity candidates do not add a target DH oracle capability. -/
 theorem execution_dh {Result : Type} (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (serverSeed : IdentitySeed) (scalar oneTime : ScalarBytes)
@@ -176,7 +201,7 @@ theorem execution_dh {Result : Type} (setup : Setup baseSpec KemSK) (codec : Cod
     (execution setup codec checks serverSeed scalar oneTime keys work target).IsQueryBoundP IsDh qFinish := by
   unfold execution
   refine (isQueryBoundP_bind (n := 0) (m := qFinish)
-    (phase1_no_dh setup codec target _ oneTime keys.1 keys.2) ?_).mono (by omega)
+    (loggedPhase1_no_dh setup codec target _ oneTime keys.1 keys.2) ?_).mono (by omega)
   intro published _
   refine (isQueryBoundP_bind (n := qFinish) (m := 0)
     (program_dh setup codec checks serverSeed scalar _ qFinish (bounded _) _) ?_).mono (by omega)
@@ -264,6 +289,11 @@ end BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityDhBudget
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityDhBudget.phase1_no_dh
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityDhBudget.loggedPhase1_no_dh' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityDhBudget.loggedPhase1_no_dh
 /-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityDhBudget.execution_dh' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/

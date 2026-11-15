@@ -99,7 +99,7 @@ private theorem snapshot_commit (view : AdapterPublicWrapperState.MaterialView s
 /-- The source Server row is computed from the actual returned object and raw counter. -/
 theorem accept_project {R : Type}
     (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (before raw after : Native) (receipt : AdapterPublicServerReservationReceipt.Receipt R)
     (word : AdapterPublicServerAgreementReceipt.Word R) (reply : RustM (Option Nat))
     (projected : AdapterPublicServerReservationNative.project view before ((receipt,.ok word),raw)=.ok (reply,after))

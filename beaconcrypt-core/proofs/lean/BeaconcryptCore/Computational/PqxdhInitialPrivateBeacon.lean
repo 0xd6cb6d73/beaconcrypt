@@ -8,6 +8,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialPrivateBeacon
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhKemIndCca PqxdhCorrelatedExpand PqxdhPhase2SourceAux
 open PqxdhPhase1AcceptanceOracle PqxdhEd25519EufCma PqxdhJointIdentity PqxdhPrivateKemSource
 open PqxdhInitializerSecrecy PqxdhChallengeSecretRouting
@@ -97,7 +98,7 @@ noncomputable def finish
         (OracleComp PqxdhInitialLabelCompiler.Spec))
   | .finish index raw => fun before => PqxdhPhase2PostScheduler.installed index before <$>
       (simulateQ (compiler attachedVerify primitives count fixed kdf localImpl baseImpl kem secret challenge)
-        (PqxdhInitialFusedOwner.owner decode raw (before.1.roles.1.2 index))).run (before.1.primitive, before.2)
+        (PqxdhInitialFusedOwner.owner (completedBinding := completedBinding) decode raw (before.1.roles.1.2 index))).run (before.1.primitive, before.2)
 
 
 /-- The entire attempted Beacon completion specializes exactly to the original source-derived finish, retaining all live owner installation and shared/private state. -/
@@ -107,9 +108,9 @@ theorem finish_source
     (localImpl : QueryImpl (LocalSpec I D K X Response) (StateT A ProbComp))
     (baseImpl : QueryImpl baseSpec ProbComp) (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
     (secret : KemSK) (challenge : MlKem768Ciphertext) (decode : RawCtxReceive.FrameDecoder) :
-    finish (M := M) (P := P) (S := S) (B := B) attachedVerify primitives count fixed
+    finish (completedBinding := completedBinding) (M := M) (P := P) (S := S) (B := B) attachedVerify primitives count fixed
       (RawCtxSourceHkdf.kdfImpl fixed) localImpl baseImpl kem secret challenge decode =
-      PqxdhInitialLabelPost.finish attachedVerify primitives count fixed localImpl baseImpl kem secret challenge decode := by
+      PqxdhInitialLabelPost.finish (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl baseImpl kem secret challenge decode := by
   funext query state
   cases query with
   | finish index bytes => simp only [finish, PqxdhInitialLabelPost.finish, compiler_source]
@@ -131,8 +132,8 @@ noncomputable def target
         (PqxdhInitialPrivateKdf.records fixed writer kdf sender route decode query).run state.1)
   | .inl (.inr query) => fun state => PqxdhInitialLabelCompiler.coins
       (simulateQ (PqxdhInitialRootFreeCallbacks.publicOnly baseImpl kem secret challenge)
-        ((PqxdhPhase2PostScheduler.target attachedVerify primitives count fixed localImpl writer sender route decode challenge (.inl (.inr query))).run state))
-  | .inr query => finish attachedVerify primitives count fixed kdf localImpl baseImpl kem secret challenge decode query
+        ((PqxdhPhase2PostScheduler.target (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl writer sender route decode challenge (.inl (.inr query))).run state))
+  | .inr query => finish (completedBinding := completedBinding) attachedVerify primitives count fixed kdf localImpl baseImpl kem secret challenge decode query
 
 
 /-- The same private interpreter governs every original send/raw receive and attempted initialization in the actual adaptive scheduler. Its real specialization is the exact current post interface. -/
@@ -144,12 +145,12 @@ theorem target_source
     (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (baseImpl : QueryImpl baseSpec ProbComp) (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
     (secret : KemSK) (challenge : MlKem768Ciphertext) :
-    target (P := P) (S := S) (B := B) attachedVerify primitives count fixed
+    target (completedBinding := completedBinding) (P := P) (S := S) (B := B) attachedVerify primitives count fixed
       (RawCtxSourceHkdf.kdfImpl fixed) localImpl writer sender route decode baseImpl kem secret challenge =
-      PqxdhInitialLabelPost.target attachedVerify primitives count fixed localImpl writer sender route decode baseImpl kem secret challenge := by
+      PqxdhInitialLabelPost.target (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl writer sender route decode baseImpl kem secret challenge := by
   funext query state
   cases query with
-  | inr query => exact congrFun (congrFun (finish_source attachedVerify primitives count fixed localImpl baseImpl kem secret challenge decode) query) state
+  | inr query => exact congrFun (congrFun (finish_source (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl baseImpl kem secret challenge decode) query) state
   | inl query => cases query with
     | inr query => rfl
     | inl query =>
@@ -167,9 +168,9 @@ theorem program_source
     (secret : KemSK) (challenge : MlKem768Ciphertext)
     (client : OracleComp (PqxdhPhase2SourceScheduler.Spec baseSpec S B) Result)
     (state : PqxdhPhase2PostScheduler.State (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B) count) :
-    (simulateQ (target attachedVerify primitives count fixed (RawCtxSourceHkdf.kdfImpl fixed)
+    (simulateQ (target (completedBinding := completedBinding) attachedVerify primitives count fixed (RawCtxSourceHkdf.kdfImpl fixed)
       localImpl writer sender route decode baseImpl kem secret challenge) client).run state =
-      (simulateQ (PqxdhInitialLabelPost.target attachedVerify primitives count fixed localImpl
+      (simulateQ (PqxdhInitialLabelPost.target (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl
         writer sender route decode baseImpl kem secret challenge) client).run state := by
   rw [target_source]
 

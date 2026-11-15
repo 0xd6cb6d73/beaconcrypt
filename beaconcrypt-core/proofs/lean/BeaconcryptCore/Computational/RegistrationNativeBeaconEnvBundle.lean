@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeBeaconEnvCreate
 
-/-! Actual outgoing Beacon publication keeps the exact source Ed and ML signing order, current owner history and all optional writer outcomes under unrelated record-kind input erasure. -/
+/-! Actual outgoing Beacon publication keeps the three attached Ed signatures followed by its request hash, current owner history and all optional writer outcomes under unrelated record-kind input erasure. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -23,14 +23,7 @@ theorem outgoing_stable (setup : Setup base KemSK) (index : Nat) (owner : Owner 
   cases query with
   | inl query => cases query with
     | hash request => exact hash_stable request
-    | sign request payload digest =>
-      unfold RegistrationNativeBeaconFrontend.outgoing
-      apply RegistrationNativeBeaconEnvView.bind_stable
-      · exact sample_stable _
-      · intro reply
-        apply RegistrationNativeBeaconEnvView.bind_stable
-        · exact RegistrationNativeBeaconEnvView.update_stable _ (fun _ => rfl)
-        · intro result; exact RegistrationNativeBeaconEnvView.pure_stable _
+    | sign request payload digest => exact RegistrationNativeBeaconEnvView.pure_stable _
   | inr request =>
       unfold RegistrationNativeBeaconFrontend.outgoing
       dsimp only

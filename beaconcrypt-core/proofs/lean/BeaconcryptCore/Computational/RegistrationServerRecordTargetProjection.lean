@@ -30,6 +30,19 @@ theorem query (hkdf : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (writer : R
   | «seal» request => rfl
   | write request => cases request <;> rfl
   | openAead request => rfl
+  | adHash request =>
+      have same := congrArg (fun distribution => (fun result =>
+        (core.option.Option.Some (RegistrationAuthenticationShared.digestArray result.1),
+          { project before with world := (result.2, before.world.2) })) <$> distribution)
+        (RegistrationNativeWorldView.hash (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request) before.world.1)
+      simp only [RegistrationRecordPrimitives.callbacks, RegistrationAuthenticationShared.callbacks,
+        RegistrationServerRecordSourceProgram.native, RegistrationRawSealBridge.nativeAdapter,
+        RegistrationBoundSourceCompiler.rawCompiler, QueryImpl.apply_compose,
+        RegistrationBoundSourceCompiler.rawCallbacks, RegistrationBoundSourceCompiler.sharedCompiler,
+        RegistrationRawSealBridge.Spec, MldsaSharedNative.authLift, bind_pure_comp, simulateQ_map, simulateQ_spec_query,
+        target, StateT.run, Functor.map_map, Prod.map_def, id_eq, project,
+        state_map_apply, PqxdhDeploymentEnvironment.request] at same ⊢
+      exact same
   | hash transcript =>
       have same := congrArg (fun distribution => (fun result =>
         (core.option.Option.Some (RegistrationAuthenticationShared.digestArray result.1),

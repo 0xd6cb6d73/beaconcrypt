@@ -40,7 +40,7 @@ instance : DecidablePred cost := fun query => inferInstanceAs (Decidable (Regist
 
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : Credential (handleSource source)) (fallback : Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential (handleSource source)) (fallback : Credential source)
 
 private theorem projected (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (before : State source cap n KemSK)
     (result : RegistrationNativeRawAdapter.TypedSpec.Range query × State source cap n KemSK)

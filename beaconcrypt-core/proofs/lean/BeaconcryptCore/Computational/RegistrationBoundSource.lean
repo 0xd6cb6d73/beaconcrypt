@@ -19,14 +19,14 @@ open RegistrationBoundKeySchedule (publicInitial factored supplied)
 
 theorem initial_response (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (root : RootOutput) :
     RawCtxSourceHkdf.initialResponse source.crypto
-        ⟨PqxdhRootTableInitialization.rootArray root, SYM_RATCHET_INFO⟩ =
+        ⟨PqxdhRootTableInitialization.rootArray root, INITIAL_RATCHET_INFO⟩ =
       RawCtxSelectedInitialConstructor.response64 (PqxdhSecretInputKdf.first32 (initializer source root) ++
         RawCtxSelectedInitialSecond.secondChain (initializer source root)) := by
   rw [RawCtxSelectedInitialConstructor.split_reconstruct]
   unfold RawCtxSourceHkdf.initialResponse RawCtxSelectedInitialConstructor.response64 initializer
   congr 2
   rw [PqxdhRootTableInitialization.rootArray_bytes,
-    PqxdhInitialRatchetComplementarity.absBytes_ratchetSymmetricInfo]
+    PqxdhInitialRatchetComplementarity.absBytes_ratchetInitialInfo]
   rfl
 
 theorem ratchet_reply {Auxiliary : Type} (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
@@ -77,7 +77,7 @@ theorem initial_supplied {Auxiliary : Type} (source : PqxdhJointKdfGame.FixedHkd
         (supplied initial (PqxdhSecretInputKdf.first32 (initializer source root))
           (RawCtxSelectedInitialSecond.secondChain (initializer source root)) (fromRoot source root).1)).run state := by
   have initialRequested : initial.request =
-      .ok ⟨PqxdhRootTableInitialization.rootArray root, SYM_RATCHET_INFO⟩ := by
+      .ok ⟨PqxdhRootTableInitialization.rootArray root, INITIAL_RATCHET_INFO⟩ := by
     simp only [registration.ServerInitialKdf.request, role,
       pqxdh.concrete.InitialRatchetKdfPending.impl.request, PqxdhInitialRatchetComplementarity.serverPending]
   obtain ⟨next, initialRun, nextRequested⟩ := next_request initial _ role
@@ -114,18 +114,18 @@ theorem initial_factored {Auxiliary : Type} (source : PqxdhJointKdfGame.FixedHkd
     rw [RegistrationBoundKeySchedule.root_unused initial (PqxdhRootTableInitialization.rootArray root) role]
   rw [erased]
 
-theorem execute_factored {Auxiliary : Type} (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
+/-- Factoring begins at a real already completed AD phase; it does not erase the preceding hash effect. -/
+theorem admitted_initial_factored {Auxiliary : Type} (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (writer : RawCtxMixedShared.Writer) (control : pqxdh.ServerState) (current : session.ServerAuthenticationPin)
     (availability : pqxdh.KeyIdAvailability) (agreement : agreement.ServerAgreement) (application : Slice Std.U8)
     (initial : registration.ServerInitialKdf)
-    (actual : registration.begin_server_completion control current availability agreement application = .ok (.Ok initial))
+    (actual : BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission control current availability agreement application initial)
     (root : RootOutput) (rootEq : agreement.root.bytes = PqxdhRootTableInitialization.rootArray root)
     (state : RawCtxSharedPrimitive.SharedState Auxiliary) :
-    (RegistrationServerRecordExecutor.execute source writer control current availability agreement application).run state =
+    (simulateQ (RegistrationRecordPrimitives.implementation source writer)
+      (RegistrationServerRecordExecutor.fromInitial initial)).run state =
       (simulateQ (RegistrationRecordPrimitives.implementation source writer)
         (factored (publicInitial initial) (fromRoot source root))).run state := by
-  simp only [RegistrationServerRecordExecutor.execute, RegistrationServerRecordExecutor.begin,
-    actual, RegistrationServerRecordExecutor.continueResult]
   apply initial_factored source writer initial root
   rw [RegistrationSeedKernel.server_pending control current availability agreement application initial actual, rootEq]
 
@@ -139,15 +139,52 @@ theorem root_value_array (bytes : Std.Array Std.U8 32#usize) :
   rw [PqxdhRootTableInitialization.rootArray_bytes]
   rfl
 
+/-- The actual AD query is retained before public root-free key-schedule factoring. -/
+def fromAd (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
+    (pending : registration.ServerAdHash) :
+    OracleComp RegistrationRecordPrimitives.Spec (RustM RegistrationServerRecordExecutor.Result) :=
+  RegistrationServerRecordExecutor.continueWith pending.request fun request => do
+    let reply ← RegistrationRecordPrimitives.Spec.query (.adHash request)
+    RegistrationServerRecordExecutor.continueResult (pending.resume reply) fun initial =>
+      factored (publicInitial initial) (fromRoot source (rootValue pending.root.bytes))
+
+/-- Every actual AD-hash outcome retains its cache effect and selects the same consumed kernel. -/
+theorem ad_factored {Auxiliary : Type} (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
+    (writer : RawCtxMixedShared.Writer) (pending : registration.ServerAdHash)
+    (state : RawCtxSharedPrimitive.SharedState Auxiliary) :
+    (simulateQ (RegistrationRecordPrimitives.implementation source writer)
+      (RegistrationServerRecordExecutor.fromAd pending)).run state =
+      (simulateQ (RegistrationRecordPrimitives.implementation source writer) (fromAd source pending)).run state := by
+  cases requested : pending.request with
+  | fail error => simp only [RegistrationServerRecordExecutor.fromAd, fromAd, requested,
+      RegistrationServerRecordExecutor.continueWith]
+  | div => simp only [RegistrationServerRecordExecutor.fromAd, fromAd, requested,
+      RegistrationServerRecordExecutor.continueWith]
+  | ok request =>
+    simp only [RegistrationServerRecordExecutor.fromAd, fromAd, requested,
+      RegistrationServerRecordExecutor.continueWith, simulateQ_bind, simulateQ_spec_query, StateT.run_bind]
+    apply bind_congr
+    intro result
+    rcases result with ⟨reply, after⟩
+    cases reply with
+    | none => simp only [registration.ServerAdHash.resume, pqxdh.server_abort_candidate, bind_tc_ok,
+        RegistrationServerRecordExecutor.continueResult]
+    | some digest =>
+      obtain ⟨initial, resumed, _⟩ :=
+        BeaconcryptCore.Refinement.RegistrationAd.server_digest_completes_binding pending digest
+      simp only [resumed, RegistrationServerRecordExecutor.continueResult]
+      apply initial_factored source writer initial (rootValue pending.root.bytes)
+      rw [root_value_array]
+      exact BeaconcryptCore.Refinement.RegistrationAd.server_ad_resume_pending pending digest initial resumed
+
 def begin (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (control : pqxdh.ServerState) (current : session.ServerAuthenticationPin)
     (availability : pqxdh.KeyIdAvailability) (agreement : agreement.ServerAgreement) (application : Slice Std.U8) :
     OracleComp RegistrationRecordPrimitives.Spec (RustM RegistrationServerRecordExecutor.Result) :=
   RegistrationServerRecordExecutor.continueResult
-    (registration.begin_server_completion control current availability agreement application) fun initial =>
-      factored (publicInitial initial) (fromRoot source (rootValue agreement.root.bytes))
+    (registration.begin_server_completion control current availability agreement application) (fromAd source)
 
-/-- Every actual current-pin/allocator outcome has the same complete source experiment, including failure before either KDF call. -/
+/-- Whole source factoring preserves the actual AD request, every failure, and the reached global cache. -/
 theorem execute_source {Auxiliary : Type} (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (writer : RawCtxMixedShared.Writer) (control : pqxdh.ServerState) (current : session.ServerAuthenticationPin)
     (availability : pqxdh.KeyIdAvailability) (agreement : agreement.ServerAgreement) (application : Slice Std.U8)
@@ -156,23 +193,18 @@ theorem execute_source {Auxiliary : Type} (source : PqxdhJointKdfGame.FixedHkdfS
       (simulateQ (RegistrationRecordPrimitives.implementation source writer)
         (begin source control current availability agreement application)).run state := by
   cases actual : registration.begin_server_completion control current availability agreement application with
-  | fail error =>
-      simp only [RegistrationServerRecordExecutor.execute, RegistrationServerRecordExecutor.begin, begin,
-        actual, RegistrationServerRecordExecutor.continueResult]
-  | div =>
-      simp only [RegistrationServerRecordExecutor.execute, RegistrationServerRecordExecutor.begin, begin,
-        actual, RegistrationServerRecordExecutor.continueResult]
+  | fail error => simp only [RegistrationServerRecordExecutor.execute, RegistrationServerRecordExecutor.begin,
+      begin, actual, RegistrationServerRecordExecutor.continueResult]
+  | div => simp only [RegistrationServerRecordExecutor.execute, RegistrationServerRecordExecutor.begin,
+      begin, actual, RegistrationServerRecordExecutor.continueResult]
   | ok result =>
-      cases result with
-      | Err previous =>
-          simp only [RegistrationServerRecordExecutor.execute, RegistrationServerRecordExecutor.begin, begin,
-            actual, RegistrationServerRecordExecutor.continueResult]
-      | Ok initial =>
-          simp only [RegistrationServerRecordExecutor.execute, RegistrationServerRecordExecutor.begin, begin,
-            actual, RegistrationServerRecordExecutor.continueResult]
-          apply initial_factored source writer initial (rootValue agreement.root.bytes)
-          rw [RegistrationSeedKernel.server_pending control current availability agreement application initial actual,
-            root_value_array]
+    cases result with
+    | Err previous => simp only [RegistrationServerRecordExecutor.execute, RegistrationServerRecordExecutor.begin,
+        begin, actual, RegistrationServerRecordExecutor.continueResult]
+    | Ok pending =>
+      simp only [RegistrationServerRecordExecutor.execute, RegistrationServerRecordExecutor.begin,
+        begin, actual, RegistrationServerRecordExecutor.continueResult]
+      exact ad_factored source writer pending state
 
 end BeaconcryptCore.Computational.RegistrationBoundSource
 
@@ -211,11 +243,11 @@ end BeaconcryptCore.Computational.RegistrationBoundSource
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationBoundSource.initial_factored
 
-/-- info: 'BeaconcryptCore.Computational.RegistrationBoundSource.execute_factored' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.RegistrationBoundSource.admitted_initial_factored' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationBoundSource.execute_factored
+#print axioms BeaconcryptCore.Computational.RegistrationBoundSource.admitted_initial_factored
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationBoundSource.root_value_array' depends on axioms: [propext,
  Classical.choice,

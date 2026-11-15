@@ -34,7 +34,7 @@ private theorem coin_only (message : Pqxdh.Bytes) (query : Spec.Domain)
   · trivial
 
 variable (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner source)
 
 /-- Every actual outgoing Ed leaf preserves its current source message, with both public-key gate outcomes retained. -/
@@ -112,7 +112,7 @@ theorem bundled (scalar : PqxdhJointGapDh.ScalarBytes)
   rw [RegistrationNativePlatformIdentityCtxBundleScope.bundled_fold, StateT.run_bind]
   apply allQueriesSatisfy_bind
     (publication setup checks representation created index owner writer _ _
-      (RegistrationNativePlatformOneTimeOperandLineage.begin_allowed _ _ _ _ _ started built tagged) before)
+      (RegistrationNativePlatformOneTimeOperandLineage.begin_allowed _ _ _ _ started built tagged) before)
   intro reached
   rw [RegistrationNativeIdentityCensorBundleTerminal.next_run]
   trivial

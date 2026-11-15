@@ -95,7 +95,7 @@ theorem native {n : Nat} {ι KemSK : Type} {base : OracleSpec ι}
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
     (wire : RegistrationNativeWire.Wire) (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (publicKey : RegistrationNativeMldsaEuf.PublicKey)
     (defaultReply : (query : RegistrationNativeRawAdapter.TypedSpec.Domain) → RegistrationNativeRawAdapter.TypedSpec.Range query)
     (work : OracleComp RegistrationNativeRawAdapter.TypedSpec Value) :

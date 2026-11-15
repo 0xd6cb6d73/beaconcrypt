@@ -7,6 +7,7 @@ Actual indexed creation and retained native-owner handles establish the reversib
 open OracleComp OracleSpec CoreModels Aeneas
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhLiveKemOwnership
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhLiveKemRouting PqxdhKemIndCca
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK I D : Type}
 
@@ -68,9 +69,9 @@ theorem native_encoded_run {A X Response : Type} {m : Type → Type} [Monad m] [
     (state : RawCtxBeaconLifecycle.State I D Handle) (valid : Owner pool state) (auxiliary : A) :
     (fun result => ((result.1.1, PqxdhBeaconPhase1Publication.mapState id (decode selected target) result.1.2), result.2)) <$>
       (simulateQ (handler ∘ₛ PqxdhPhase2KemHandles.native (decode selected target))
-        (PqxdhBeaconPhase2Publication.nativeOwner decodeFrame raw
+        (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decodeFrame raw
           (PqxdhBeaconPhase1Publication.mapState id (encode selected) state))).run auxiliary =
-      (simulateQ handler (PqxdhBeaconPhase2Publication.nativeOwner decodeFrame raw state)).run auxiliary := by
+      (simulateQ handler (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decodeFrame raw state)).run auxiliary := by
   rw [PqxdhPhase2KemHandles.native_owner_run, owner_inverse pool selected target secret present state valid]
 
 /-- A later source creation preserves every earlier handle's actual private slot, including public-byte aliases. -/

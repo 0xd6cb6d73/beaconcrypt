@@ -86,7 +86,7 @@ private theorem startup_pin (setup : Setup base KemSK) (source : RegistrationNat
       | none => simp only [sampled, mem_support_pure_iff] at continued; cases continued
       | some credential =>
           simp only [sampled, mem_support_bind_iff] at continued
-          obtain ⟨installed, _installed, digest, _hashed, returned⟩ := continued
+          obtain ⟨installed, _installed, returned⟩ := continued
           simp only [mem_support_pure_iff, Option.some.injEq] at returned
           cases returned
           exact PqxdhRootTableInitialization.rootArray_bytes identity.ed25519
@@ -113,7 +113,7 @@ theorem startup
       seed scalar candidate nativeProvider target.2.val target.1.val view failure allocation reserveRegistration reservePeer reserveFrame erased helper writer
       actualPhysical ensureInit identityIndex serverKeyId previous privateBefore bounds mode adversary
       (CborRecordWorldClient.initial,PqxdhRecordLiftProtocol.initialControl,warm)))
-    (finished : PqxdhRegistrationJointServerBirth.ClientCreated Unit ×(A×RegistrationNativeLedger.State)×
+    (finished : PqxdhRegistrationJointServerBirth.ClientCreated PqxdhTranscriptAd.AssociatedData ×(A×RegistrationNativeLedger.State)×
       RegistrationNativePlatformSelectiveEntropyEnvironment.State n KemSK RegistrationNativeKemSwitchSource.Phase Platform source)
     (present : finished∈result.1)
     (kind : RegistrationNativePlatformRecordSessionTargets.Kind)
@@ -191,7 +191,7 @@ theorem initialized
     (supported : result∈support (RegistrationNativePlatformRecordPartnerJointUniform.joint setup checks RegistrationNativePlatformConcreteSource.wire route source
       ensureInit identityIndex serverKeyId target.1.val view failure allocation reserveRegistration reservePeer reserveFrame erased helper writer
       bounds mode adversary budget target.2 previous))
-    (finished : PqxdhRegistrationJointServerBirth.ClientCreated Unit ×(A×RegistrationNativeLedger.State)×
+    (finished : PqxdhRegistrationJointServerBirth.ClientCreated PqxdhTranscriptAd.AssociatedData ×(A×RegistrationNativeLedger.State)×
       RegistrationNativePlatformSelectiveEntropyEnvironment.State (budget.cap 4+budget.cap 5) KemSK RegistrationNativeKemSwitchSource.Phase Platform source)
     (present : finished∈result.1)
     (kind : RegistrationNativePlatformRecordSessionTargets.Kind)

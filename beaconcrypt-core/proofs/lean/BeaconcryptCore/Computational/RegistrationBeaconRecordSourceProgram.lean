@@ -31,7 +31,7 @@ theorem primitive_kdf (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
 
 /-- Native decoding, optional plaintext representation and final admission agree before any public effect is interpreted. -/
 theorem receive_source (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
-    (writer : RawCtxMixedShared.Writer) (erased : Std.Array U8 357#usize)
+    (writer : RawCtxMixedShared.Writer) (erased : Std.Array U8 227#usize)
     (descriptor : PublicAgreement) (root : RootOutput) (kernel : ConcreteRatchetKernel) :
     simulateQ (read (n := n) source writer)
       (RegistrationRawReceiveBridge.finishModel (atRoot descriptor root) <$>
@@ -112,14 +112,14 @@ theorem output_program (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
 
 /-- The actual initial64 callback uses the source function without any public oracle effect. -/
 theorem initial_source (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
-    (writer : RawCtxMixedShared.Writer) (request : SymmetricRatchetKdfRequest) :
+    (writer : RawCtxMixedShared.Writer) (request : InitialRatchetKdfRequest) :
     read (n := n) source writer (.inl (.initialKdf request)) =
       pure (.Some (RawCtxSourceHkdf.initialResponse source.crypto request)) := by
   rfl
 
 /-- Actual initial64 and ongoing76 are the same source108 entry, with all later hash effects still explicit. -/
 theorem source_factor (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
-    (writer : RawCtxMixedShared.Writer) (erased : Std.Array U8 357#usize)
+    (writer : RawCtxMixedShared.Writer) (erased : Std.Array U8 227#usize)
     (descriptor : PublicAgreement) (root : RootOutput) :
     simulateQ (read (n := n) source writer)
       (RegistrationBeaconPostRootServices.beacon erased (atRoot descriptor root)) =
@@ -136,7 +136,7 @@ theorem source_factor (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
   have kernelRun := PqxdhBeaconPhase2Publication.normalInitial_exact
     (PqxdhInitialRatchetComplementarity.beaconPending (PqxdhRootTableInitialization.rootArray root))
     (RawCtxSourceHkdf.initialResponse source.crypto
-      ⟨PqxdhRootTableInitialization.rootArray root, SYM_RATCHET_INFO⟩)
+      ⟨PqxdhRootTableInitialization.rootArray root, INITIAL_RATCHET_INFO⟩)
   have initialEq := PqxdhServerAuthBeaconFactor.initial_source source root
   simp only [PqxdhInitialRatchetComplementarity.beaconPending] at kernelRun initialEq
   rw [initialEq] at kernelRun
@@ -150,7 +150,7 @@ noncomputable def native (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource
 
 /-- The complete extracted first-record controller and its bound108 open service have identical public primitive programs. -/
 theorem controller_source (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
-    (writer : RawCtxMixedShared.Writer) (erased : Std.Array U8 357#usize)
+    (writer : RawCtxMixedShared.Writer) (erased : Std.Array U8 227#usize)
     (descriptor : PublicAgreement) (root : RootOutput) :
     simulateQ (native (n := n) source writer) (RegistrationBeaconRecordExecutor.begin (atRoot descriptor root)) =
       simulateQ (RegistrationBoundSourceCompiler.rawCompiler source writer)

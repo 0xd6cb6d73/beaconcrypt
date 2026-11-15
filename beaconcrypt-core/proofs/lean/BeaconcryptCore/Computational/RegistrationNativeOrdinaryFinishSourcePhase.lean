@@ -36,7 +36,7 @@ theorem agreement_source (setup : Setup base KemSK) (wire : RegistrationNativeWi
     (seed : IdentitySeed) (selectedScalar : ScalarBytes) (localScalar : Option ScalarBytes)
     (owner : SelectedOwner mlSource) (oneTime : ScalarBytes)
     (authenticated : registration.AuthenticatedResponse)
-    (coherent : authenticated.pending.control.expected_server_binding = authenticated.pending.binding.server_pin.binding)
+    (coherent : authenticated.control.expected_server_binding = authenticated.binding.server_pin.binding)
     (env : EnvState Auxiliary) (before : Private n KemSK) :
     (fun result => (restored result.2.extra.1 authenticated result.1.1, (result.1.2, drop result.2))) <$>
       (simulateQ (implementation setup wire route sign seed selectedScalar)
@@ -108,9 +108,9 @@ theorem phase_source (setup : Setup base KemSK) (wire : RegistrationNativeWire.W
     (seed : IdentitySeed) (selectedScalar : ScalarBytes) (localScalar : Option ScalarBytes)
     (owner current : RegistrationNativeBeaconFrontend.Owner mlSource) (oneTime : ScalarBytes)
     (authenticated : registration.AuthenticatedResponse)
-    (coherent : authenticated.pending.control.expected_server_binding = authenticated.pending.binding.server_pin.binding)
+    (coherent : authenticated.control.expected_server_binding = authenticated.binding.server_pin.binding)
     (env : EnvState Auxiliary) (empty : env.recordRequests = [])
-    (erased : Std.Array U8 357#usize) (before : Private n KemSK) :
+    (erased : Std.Array U8 227#usize) (before : Private n KemSK) :
     Prod.map id drop <$>
       (simulateQ (implementation setup wire route sign seed selectedScalar)
         (simulateQ (adapt setup localScalar)
@@ -186,9 +186,9 @@ theorem phase_native (setup : Setup base KemSK) (wire : RegistrationNativeWire.W
     (seed : IdentitySeed) (selectedScalar : ScalarBytes) (localScalar : Option ScalarBytes)
     (owner current : RegistrationNativeBeaconFrontend.Owner mlSource) (oneTime : ScalarBytes)
     (authenticated : registration.AuthenticatedResponse)
-    (coherent : authenticated.pending.control.expected_server_binding = authenticated.pending.binding.server_pin.binding)
+    (coherent : authenticated.control.expected_server_binding = authenticated.binding.server_pin.binding)
     (env : EnvState Auxiliary) (empty : env.recordRequests = [])
-    (erased : Std.Array U8 357#usize) (before : Private n KemSK) :
+    (erased : Std.Array U8 227#usize) (before : Private n KemSK) :
     Prod.map id drop <$>
       (simulateQ (implementation setup wire route sign seed selectedScalar)
         (simulateQ (adapt setup localScalar)

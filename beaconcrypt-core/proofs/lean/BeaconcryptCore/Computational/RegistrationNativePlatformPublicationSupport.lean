@@ -43,11 +43,11 @@ private theorem continue_possible {Input : Type} (action : RustM Input)
   | div => cases pure_possible _ _ possible
   | ok value => exact ⟨value, rfl, possible⟩
 
-attribute [local irreducible] registration.BeaconInitHash.resume registration.BeaconFingerprint.resume registration.BeaconMldsaSigning.resume
+attribute [local irreducible] registration.BeaconInitHash.resume
 
 variable (impl : QueryImpl Spec (Work S T P base))
-    (encode : registration.SignedInitView → Work S T P base (RustM (core.option.Option Encoded)))
-    (pureEncode : registration.SignedInitView → core.option.Option Encoded)
+    (encode : registration.InitView → Work S T P base (RustM (core.option.Option Encoded)))
+    (pureEncode : registration.InitView → core.option.Option Encoded)
     (encoding : ∀ view bytes, Possible (encode view) (.ok (.Some bytes)) → pureEncode view = .Some bytes)
 
 include encoding
@@ -80,23 +80,6 @@ private theorem continue_replay {Input : Type} (action : RustM Input)
   simp only [RegistrationBeaconInitExecutor.continueWith, actual]
   exact replay value continued
 
-private theorem signing (payload : MldsaTranscriptAuth.Payload) (digest : CtxRomAuth.CtxDigest)
-    (pending : registration.BeaconMldsaSigning) (published : registration.PublishedBeaconInit Encoded)
-    (possible : Possible (RegistrationNativePlatformBeaconPublication.fromSigning impl encode payload digest pending) (.ok (.Ok published))) :
-    .ok (.Ok published) ∈ support (RegistrationBeaconInitExecutor.fromSigning pureEncode payload digest pending) := by
-  unfold RegistrationNativePlatformBeaconPublication.fromSigning RegistrationBeaconInitExecutor.fromSigning at *
-  apply continue_replay _ _ _ published _ possible
-  intro request called
-  obtain ⟨signature, _queried, continued⟩ := bind_possible _ _ _ called
-  rw [mem_support_bind_iff]
-  refine ⟨signature, mem_support_query _ _, ?_⟩
-  apply continue_replay _ _ _ published _ continued
-  intro effect resumed
-  cases effect
-  all_goals first
-    | exact ready encode pureEncode encoding _ published resumed
-    | cases pure_possible _ _ resumed
-
 private theorem hash (pending : registration.BeaconInitHash) (published : registration.PublishedBeaconInit Encoded)
     (possible : Possible (RegistrationNativePlatformBeaconPublication.fromHash impl encode pending) (.ok (.Ok published))) :
     .ok (.Ok published) ∈ support (RegistrationBeaconInitExecutor.fromHash pureEncode pending) := by
@@ -110,23 +93,7 @@ private theorem hash (pending : registration.BeaconInitHash) (published : regist
   intro effect resumed
   cases effect
   all_goals first
-    | exact signing impl encode pureEncode encoding _ _ _ published resumed
-    | cases pure_possible _ _ resumed
-
-private theorem fingerprint (pending : registration.BeaconFingerprint) (published : registration.PublishedBeaconInit Encoded)
-    (possible : Possible (RegistrationNativePlatformBeaconPublication.fromFingerprint impl encode pending) (.ok (.Ok published))) :
-    .ok (.Ok published) ∈ support (RegistrationBeaconInitExecutor.fromFingerprint pureEncode pending) := by
-  unfold RegistrationNativePlatformBeaconPublication.fromFingerprint RegistrationBeaconInitExecutor.fromFingerprint at *
-  apply continue_replay _ _ _ published _ possible
-  intro request called
-  obtain ⟨digest, _queried, continued⟩ := bind_possible _ _ _ called
-  rw [mem_support_bind_iff]
-  refine ⟨digest, mem_support_query _ _, ?_⟩
-  apply continue_replay _ _ _ published _ continued
-  intro effect resumed
-  cases effect
-  all_goals first
-    | exact hash impl encode pureEncode encoding _ published resumed
+    | exact ready encode pureEncode encoding _ published resumed
     | cases pure_possible _ _ resumed
 
 private theorem ed (pending : registration.BeaconEd25519Signing) (published : registration.PublishedBeaconInit Encoded)
@@ -147,8 +114,8 @@ private theorem ed (pending : registration.BeaconEd25519Signing) (published : re
   | ok effect => cases effect with
     | Ed25519SigningRequested next =>
         exact ed next published continued
-    | FingerprintRequested next =>
-        exact fingerprint impl encode pureEncode encoding next published continued
+    | HashRequested next =>
+        exact hash impl encode pureEncode encoding next published continued
     | _ =>
         cases pure_possible _ _ continued
 termination_by RegistrationBeaconInitExecutor.edRank pending
@@ -156,10 +123,10 @@ decreasing_by exact RegistrationBeaconInitExecutor.ed_rank pending reply next ac
 
 /-- Every successful effectful publication has the same successful Core publication using its locally proved pure encoding. This receipt does not remove any failed writer outcome from the actual execution. -/
 theorem begin (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize)
+    (pin : session.ServerAuthenticationPin)
     (published : registration.PublishedBeaconInit Encoded)
-    (possible : Possible (RegistrationNativePlatformBeaconPublication.begin impl encode control inputs coins pin mldsa) (.ok (.Ok published))) :
-    .ok (.Ok published) ∈ support (RegistrationBeaconInitExecutor.begin pureEncode control inputs coins pin mldsa) := by
+    (possible : Possible (RegistrationNativePlatformBeaconPublication.begin impl encode control inputs coins pin) (.ok (.Ok published))) :
+    .ok (.Ok published) ∈ support (RegistrationBeaconInitExecutor.begin pureEncode control inputs coins pin) := by
   unfold RegistrationNativePlatformBeaconPublication.begin RegistrationBeaconInitExecutor.begin at *
   apply continue_replay _ _ _ published _ possible
   intro effect continued
@@ -170,12 +137,12 @@ theorem begin (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (
 
 /-- Successful dynamic source publication retains the literal generated PQ payload, derived through every actual signing continuation. -/
 theorem begin_key (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize)
+    (pin : session.ServerAuthenticationPin)
     (published : registration.PublishedBeaconInit Encoded)
-    (possible : Possible (RegistrationNativePlatformBeaconPublication.begin impl encode control inputs coins pin mldsa) (.ok (.Ok published))) :
+    (possible : Possible (RegistrationNativePlatformBeaconPublication.begin impl encode control inputs coins pin) (.ok (.Ok published))) :
     RegistrationNativeKemPublication.PublishedKey pureEncode (RegistrationRootInput.pqKey inputs.pq_public_key) published :=
-  RegistrationNativeKemPublication.begin_key pureEncode control inputs coins pin mldsa published
-    (begin impl encode pureEncode encoding control inputs coins pin mldsa published possible)
+  RegistrationNativeKemPublication.begin_key pureEncode control inputs coins pin published
+    (begin impl encode pureEncode encoding control inputs coins pin published possible)
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformPublicationSupport
 

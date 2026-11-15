@@ -40,6 +40,9 @@ private theorem callbacks_bound (source : PqxdhJointKdfGame.FixedHkdfSha512NoSal
   cases query with
   | write request => cases request <;>
       simp [RegistrationRecordPrimitives.callbacks, MldsaSharedNative.recordLift, IsTotalQueryBound, isQueryBound_map_iff]
+  | adHash request =>
+      simp [RegistrationRecordPrimitives.callbacks, RegistrationAuthenticationShared.callbacks,
+        MldsaSharedNative.authLift, IsTotalQueryBound, isQueryBound_map_iff]
   | hash transcript =>
       simp [RegistrationRecordPrimitives.callbacks, RegistrationAuthenticationShared.callbacks,
         MldsaSharedNative.authLift, IsTotalQueryBound, isQueryBound_map_iff]

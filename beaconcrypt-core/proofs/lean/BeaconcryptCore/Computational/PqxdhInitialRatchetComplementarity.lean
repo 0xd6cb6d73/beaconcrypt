@@ -11,7 +11,7 @@ It treats the adapter response equation as an explicit representation and primit
 The Server consumes the first 32 bytes as its send chain and the second 32 bytes as its receive chain, while the Beacon uses the opposite orientation.
 Separate concrete roots and separate response objects are allowed, and concrete cross-role chain equality follows only when both roots represent one model root and both local responses satisfy their own pending-request equation.
 The reusable kernel lemma is parametric in a concrete-chain Ratchet.Crypto and does not identify that crypto with the byte-list Pqxdh.ratchetCrypto.
-The joint-stream corollary additionally assumes ProductionHkdfPrefixConsistent and exposes the two canonical projections at ratchetAddress root.
+The joint-stream corollary additionally assumes ProductionHkdfPrefixConsistent and exposes the two canonical projections at initialAddress root.
 This module proves no root agreement or provenance, HKDF implementation or security property, adapter execution or provenance, ongoing 76-byte step semantics, AEAD/CTX/nonce property, source-to-Lean or compiler refinement, schedule, persistence, multi-user statement, crash property, erasure property, or probability bound.
 -/
 
@@ -70,25 +70,30 @@ theorem InitialResponseRefines.modelOutput (c : Pqxdh.Crypto)
     (root : Pqxdh.Bytes)
     (hresponse : InitialResponseRefines c pending response)
     (hinput : PqxdhRefinement.absBytes pending.request.input = root)
-    (hinfo : PqxdhRefinement.absBytes pending.request.info = Pqxdh.INFO_R) :
-    PqxdhRefinement.absBytes response.bytes = c.hkdf root Pqxdh.INFO_R 64 := by
+    (hinfo : PqxdhRefinement.absBytes pending.request.info = Pqxdh.INFO_INIT) :
+    PqxdhRefinement.absBytes response.bytes = c.hkdf root Pqxdh.INFO_INIT 64 := by
   simpa [InitialResponseRefines, hinput, hinfo] using hresponse
 
+@[simp] theorem absBytes_ratchetInitialInfo :
+    PqxdhRefinement.absBytes ratchet.INITIAL_RATCHET_INFO = Pqxdh.INFO_INIT := by
+  simpa [ratchet.INITIAL_RATCHET_INFO] using PqxdhRefinement.absBytes_INITIAL_RATCHET_INFO
+
+/-- The distinct message48 label retained by ongoing source requests. -/
 @[simp] theorem absBytes_ratchetSymmetricInfo :
     PqxdhRefinement.absBytes ratchet.SYM_RATCHET_INFO = Pqxdh.INFO_R := by
-  simpa [pqxdh.SYM_RATCHET_INFO] using PqxdhRefinement.absBytes_SYM_RATCHET_INFO
+  exact PqxdhRefinement.absBytes_SYM_RATCHET_INFO
 
 /-- The exact pending value returned by the extracted Server start phase. -/
 def serverPending (root : Std.Array Std.U8 32#usize) :
     pqxdh.concrete.InitialRatchetKdfPending := {
-  request := { input := root, info := ratchet.SYM_RATCHET_INFO }
+  request := { input := root, info := ratchet.INITIAL_RATCHET_INFO }
   initialization := { send_offset := 0#u8, receive_offset := 32#u8 }
 }
 
 /-- The exact pending value returned by the extracted Beacon start phase. -/
 def beaconPending (root : Std.Array Std.U8 32#usize) :
     pqxdh.concrete.InitialRatchetKdfPending := {
-  request := { input := root, info := ratchet.SYM_RATCHET_INFO }
+  request := { input := root, info := ratchet.INITIAL_RATCHET_INFO }
   initialization := { send_offset := 32#u8, receive_offset := 0#u8 }
 }
 
@@ -98,7 +103,7 @@ theorem serverStartRequest_refines (rootArray : Std.Array Std.U8 32#usize)
     pqxdh.concrete.InitialRatchetKdfPending.impl.request (serverPending rootArray) =
       ok (serverPending rootArray).request ∧
     RootArrayRefines (serverPending rootArray).request.input root ∧
-    PqxdhRefinement.absBytes (serverPending rootArray).request.info = Pqxdh.INFO_R := by
+    PqxdhRefinement.absBytes (serverPending rootArray).request.info = Pqxdh.INFO_INIT := by
   refine ⟨?_, ?_, ?_, ?_⟩
   · simpa [serverPending] using
       beaconcrypt_core.pqxdh.concrete.start_server_ratchet_kdf_exact rootArray
@@ -112,7 +117,7 @@ theorem beaconStartRequest_refines (rootArray : Std.Array Std.U8 32#usize)
     pqxdh.concrete.InitialRatchetKdfPending.impl.request (beaconPending rootArray) =
       ok (beaconPending rootArray).request ∧
     RootArrayRefines (beaconPending rootArray).request.input root ∧
-    PqxdhRefinement.absBytes (beaconPending rootArray).request.info = Pqxdh.INFO_R := by
+    PqxdhRefinement.absBytes (beaconPending rootArray).request.info = Pqxdh.INFO_INIT := by
   refine ⟨?_, ?_, ?_, ?_⟩
   · simpa [beaconPending] using
       beaconcrypt_core.pqxdh.concrete.start_beacon_ratchet_kdf_exact rootArray
@@ -132,7 +137,7 @@ def InitialKernelResult {AD PT CT : Type}
   start rootArray = ok pending ∧
   pqxdh.concrete.resume_initial_ratchet_kdf pending response = ok kernel ∧
   RootArrayRefines pending.request.input root ∧
-  PqxdhRefinement.absBytes pending.request.info = Pqxdh.INFO_R ∧
+  PqxdhRefinement.absBytes pending.request.info = Pqxdh.INFO_INIT ∧
   ChainBytesRefines kernel.refined.send_chain modelSend ∧
   ChainBytesRefines kernel.refined.receive_chain modelReceive ∧
   ratchet.concrete.KernelRefines cr kernel.refined.receive_chain
@@ -311,7 +316,7 @@ theorem serverStartResume_refines {AD PT CT : Type}
       (Pqxdh.rootChains c root).1 (Pqxdh.rootChains c root).2 := by
   have hrootAbs : PqxdhRefinement.absBytes rootArray = root := hroot
   have hresponseModel : PqxdhRefinement.absBytes response.bytes =
-      c.hkdf root Pqxdh.INFO_R 64 := by
+      c.hkdf root Pqxdh.INFO_INIT 64 := by
     simpa [InitialResponseRefines, serverPending, hrootAbs] using hresponse
   obtain ⟨sendChain, receiveChain, hsplit, hsend, hreceive⟩ :=
     splitInitialServer_exact response.bytes
@@ -347,7 +352,7 @@ theorem beaconStartResume_refines {AD PT CT : Type}
       (Pqxdh.rootChains c root).2 (Pqxdh.rootChains c root).1 := by
   have hrootAbs : PqxdhRefinement.absBytes rootArray = root := hroot
   have hresponseModel : PqxdhRefinement.absBytes response.bytes =
-      c.hkdf root Pqxdh.INFO_R 64 := by
+      c.hkdf root Pqxdh.INFO_INIT 64 := by
     simpa [InitialResponseRefines, beaconPending, hrootAbs] using hresponse
   obtain ⟨sendChain, receiveChain, hsplit, hsend, hreceive⟩ :=
     splitInitialBeacon_exact response.bytes
@@ -418,7 +423,7 @@ theorem initialRatchetComplementarity_jointStream {AD PT CT : Type}
     (hbeaconResponse : InitialResponseRefines c (beaconPending beaconRoot) beaconResponse) :
     let projections := BeaconcryptCore.Computational.PqxdhJointKdf.initialProjection
       (BeaconcryptCore.Computational.PqxdhJointKdf.productionStream c
-        (BeaconcryptCore.Computational.PqxdhJointKdf.ratchetAddress root))
+        (BeaconcryptCore.Computational.PqxdhJointKdf.initialAddress root))
     ∃ serverPendingResult beaconPendingResult : pqxdh.concrete.InitialRatchetKdfPending,
       ∃ serverKernel beaconKernel : ratchet.concrete.ConcreteRatchetKernel,
         InitialKernelResult cr pqxdh.concrete.start_server_ratchet_kdf serverRoot

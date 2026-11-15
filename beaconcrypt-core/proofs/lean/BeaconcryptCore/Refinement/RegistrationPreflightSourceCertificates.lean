@@ -12,14 +12,12 @@ universe v
 variable {S : Type} {m : Type → Type v} [Monad m] [LawfulMonad m]
 
 theorem init_fields_preserved (step : S → U8 → m S) (initial : S) :
-    [2#u8, 2#u8, 2#u8, 2#u8, 2#u8, 2#u8].foldlM step initial = (do
+    [2#u8, 2#u8, 2#u8, 2#u8].foldlM step initial = (do
       let state0 ← step initial 2#u8
       let state1 ← step state0 2#u8
       let state2 ← step state1 2#u8
-      let state3 ← step state2 2#u8
-      let state4 ← step state3 2#u8
-      step state4 2#u8) :=
-  RegistrationCodecFixedFields.fold_six step initial 2#u8 2#u8 2#u8 2#u8 2#u8 2#u8
+      step state2 2#u8) :=
+  RegistrationCodecFixedFields.fold_four step initial 2#u8 2#u8 2#u8 2#u8
 
 theorem response_fields_preserved (step : S → U8 → m S) (initial : S) :
     [2#u8, 2#u8, 2#u8, 2#u8, 0#u8, 2#u8].foldlM step initial = (do

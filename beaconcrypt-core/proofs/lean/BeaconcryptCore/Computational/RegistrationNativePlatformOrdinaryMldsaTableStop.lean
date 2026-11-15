@@ -20,6 +20,7 @@ open RegistrationNativePlatformOrdinaryMldsaTableCallback (State callback observ
 open RegistrationNativeMldsaEuf (PublicKey Forgery)
 variable {n : Nat} {E Platform Value ι KemSK : Type} {base : OracleSpec ι}
 variable (source : RegistrationNativeMldsa.Source)
+attribute [local irreducible] RegistrationNativePlatformSourceAccept.accept
 
 abbrev core := RegistrationNativePlatformMldsaTableStop.core (n := n) (KemSK := KemSK) (Platform := Platform) source
 abbrev Safe := RegistrationNativePlatformMldsaTableStop.Safe (n := n) (KemSK := KemSK) (Platform := Platform) source
@@ -60,7 +61,7 @@ theorem initialized (setup : Setup base KemSK) (ensureInit : StateT Unit ProbCom
 variable [primitive : AdapterSealPrimitive.Operations]
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
 variable (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential (handleSource source))
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential (handleSource source))
 variable (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
 variable (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
 variable (reserveRegistration reservePeer : StateT Platform ProbComp Bool)
@@ -94,7 +95,7 @@ private theorem prior_cache (fallback : RegistrationNativeMldsa.Credential sourc
   cases same
   exact RegistrationNativePlatformHandlerCache.table setup checks
     (RegistrationNativePlatformOrdinaryExperiment.canonicalWire wire) route representation created view failure allocation
-      reserveRegistration reservePeer erased helper writer source credential fallback before.2 safe.server query before.1.1 before.1.2 safe.owners inner reached
+      reserveRegistration reservePeer erased helper writer source credential fallback before.2 safe.server query before.1.1 before.1.2 inner reached
 
 /-- Actual terminal writer failure changes only public platform state after the reached private safe state. -/
 theorem step_safe (fallback : RegistrationNativeMldsa.Credential source)

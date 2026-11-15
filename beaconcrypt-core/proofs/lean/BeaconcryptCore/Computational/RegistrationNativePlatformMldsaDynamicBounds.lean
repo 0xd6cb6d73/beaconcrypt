@@ -38,7 +38,7 @@ private theorem predicate (query : (RegistrationNativeMldsaProgram.Spec (handleS
   | inr query => cases query <;> simp only [RegistrationNativeMldsaGenerateBounds.IsGenerate,
       RegistrationNativeMldsaNoGenerate.Allowed, IsGenerate, not_true_eq_false, not_false_eq_true]
 
-private theorem callback (selected : Nat) (created : PqxdhLiveServerConstruction.Created Unit)
+private theorem callback (selected : Nat) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential (handleSource source))
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain)
     (before : RegistrationNativePlatformMldsaDynamicGame.State (n := n) (KemSK := KemSK) (Platform := Platform) source) :

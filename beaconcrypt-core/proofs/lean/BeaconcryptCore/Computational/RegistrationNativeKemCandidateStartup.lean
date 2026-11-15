@@ -35,7 +35,7 @@ theorem start_facts (setup : Setup base KemSK) (source : RegistrationNativeMldsa
   simp only [RegistrationNativeExperiment.start, mem_support_bind_iff] at supported
   obtain ⟨constructed, constructorSupport, continued⟩ := supported
   have actual := sampled_support
-    ((PqxdhLiveServerConstruction.construct (P := Unit) setup.joint ensureInit identityIndex serverKeyId none).run ())
+    ((PqxdhLiveServerConstruction.construct (P := Std.Array U8 151#usize) setup.joint ensureInit identityIndex serverKeyId none).run ())
     (PqxdhRecordLiftWorld.initial : PqxdhRecordLiftWorld.State n) constructed constructorSupport
   change (constructed.1.1, constructed.1.2) ∈ support _ at actual
   cases constructor : constructed.1.1 with

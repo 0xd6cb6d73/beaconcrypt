@@ -42,21 +42,19 @@ def test_register_without_initial_message():
     assert phase_2 == b"\xff"
 
 
-def test_registration_signatures_are_fields_of_cbor_version_two():
+def test_registration_v3_has_four_request_fields_and_server_signature():
     server = BeaconCryptServer(0, None, None)
     beacon = BeaconCryptBeacon(0, server.id_pk(), server.mldsa_public_key())
 
     request = beacon.generate_registration()
     assert request is not None
-    assert request[:3] == b"\x88\x02\x00"
-    assert len(request) == 6757
-    assert request[-5267:-3312] == b"\x59\x07\xa0" + beacon.mldsa_public_key()
-    assert request[-3312:-3309] == b"\x59\x0c\xed"
+    assert request[:3] == b"\x86\x03\x00"
+    assert len(request) == 1490
 
     response = server.register_beacon(request, b"signed CBOR response")
     assert response is not None
     encoded_response = response.serialized()
-    assert encoded_response[:3] == b"\x88\x02\x01"
+    assert encoded_response[:3] == b"\x88\x03\x01"
     assert encoded_response[-3312:-3309] == b"\x59\x0c\xed"
     assert beacon.process_initial_message(encoded_response) == b"signed CBOR response"
 
@@ -66,7 +64,7 @@ def test_registration_signatures_are_fields_of_cbor_version_two():
     assert server.decrypt_beacon_message(frame) == b"established frame"
 
 
-def test_invalid_cbor_request_signature_does_not_consume_registration():
+def test_invalid_cbor_request_signed_pq_key_does_not_consume_registration():
     server = BeaconCryptServer(0, None, None)
     beacon = BeaconCryptBeacon(0, server.id_pk(), server.mldsa_public_key())
     request = beacon.generate_registration()
@@ -118,7 +116,7 @@ def test_malformed_registration_is_rejected():
     assert server.register_beacon(b"not a registration", b"initial") is None
 
 
-def test_wrong_mldsa_server_rejects_a_request_with_the_same_ed25519_identity():
+def test_beacon_rejects_wrong_mldsa_response_with_the_same_ed25519_identity():
     ed_seed = bytes([3]) * 32
     expected_server = BeaconCryptServer(0, ed_seed, bytes([4]) * 32)
     wrong_server = BeaconCryptServer(0, ed_seed, bytes([5]) * 32)
@@ -131,9 +129,13 @@ def test_wrong_mldsa_server_rejects_a_request_with_the_same_ed25519_identity():
     correct_response = expected_server.register_beacon(phase_1, b"expected server")
     assert correct_response is not None
     wrong_response = wrong_server.register_beacon(phase_1, b"wrong server")
-    assert wrong_response is None
+    assert wrong_response is not None
+    assert beacon.process_initial_message(wrong_response.serialized()) is None
+    assert beacon.process_initial_message(correct_response.serialized()) is None
 
-    assert (
-        beacon.process_initial_message(correct_response.serialized())
-        == b"expected server"
+    fresh = BeaconCryptBeacon(
+        0, expected_server.id_pk(), expected_server.mldsa_public_key()
     )
+    request = fresh.generate_registration()
+    response = expected_server.register_beacon(request, b"expected server")
+    assert fresh.process_initial_message(response.serialized()) == b"expected server"

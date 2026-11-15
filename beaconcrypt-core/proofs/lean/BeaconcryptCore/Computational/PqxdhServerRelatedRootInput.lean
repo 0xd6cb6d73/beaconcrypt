@@ -146,14 +146,14 @@ theorem accept_failure (c : Pqxdh.Crypto) (joint : Primitives) (domain : PublicD
   simp [accept, pqxdh.server_accept, pqxdh.validate_registration_status, rejected]
 
 /-- The accepted full native pending value runs the existing source response tail through exactly its used public fields, preserving the complete tail program. -/
-theorem accepted_tail {Reader E Metadata PeerMetadata Consumed : Type}
+theorem accepted_tail (associatedData : Std.Array Std.U8 151#usize) {Reader E Metadata PeerMetadata Consumed : Type}
     (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (input : Inputs Reader E Word32)
     (control : pqxdh.ServerState) (binding : pqxdh.ServerBinding) (pending : pqxdh.PendingServerRegistration)
     (accepted : accept control binding input = ok (.Ok (control, pending)))
     (root : PqxdhSecretInputKdf.RootOutput) (data : Option Pqxdh.Bytes) (peerMetadata : PeerMetadata)
     (state : PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed) :
-    PqxdhServerRegistrationPublication.build source pending root data peerMetadata state =
-      PqxdhRegistrationInputs.build source (metadata binding input) root data peerMetadata state := by
+    PqxdhServerRegistrationPublication.build (associatedData := associatedData) source pending root data peerMetadata state =
+      PqxdhRegistrationInputs.build (associatedData := associatedData) source (metadata binding input) root data peerMetadata state := by
   have fields := (PqxdhRegistrationInputs.accepted_used control control
     (PqxdhProtocolAcceptance.verified input.verified.identity input.verified.keys) .Fresh binding
     ⟨input.ephemeral.publicKey, input.ciphertext⟩ (secrets input) pending accepted).2

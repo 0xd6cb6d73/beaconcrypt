@@ -268,8 +268,8 @@ theorem keys_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
         · rename_i entry found
           simp only [support_map, Set.mem_image] at supported
           obtain ⟨finished, finishedMember, rfl⟩ := supported
-          have keys := PqxdhDeploymentKemIndex.finish_keys setup codec entry.identityIndex entry.kemIndex raw entry.owner
-            (state.pool, state.shared) finished finishedMember
+          have keys := PqxdhDeploymentKemIndex.annotatedFinish_keys setup codec entry.identityIndex entry.kemIndex _ raw
+            entry.owner (state.pool, state.shared) finished finishedMember
           simp only [keys]
           exact List.prefix_refl _
     | hmac key message => exact sharedKept _ result supported
@@ -437,8 +437,13 @@ theorem bundle_pooled (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
   · rename_i entry found
     simp only [support_map, Set.mem_image] at supported
     obtain ⟨traced, member, rfl⟩ := supported
+    have unlogged : traced.1 ∈ support (PqxdhRegistrationJointBundle.trace setup codec entry.identityIndex entry.owner
+        state.pool.1) := by
+      rw [← PqxdhRegistrationJointBundle.trace_log setup codec entry.identityIndex entry.owner state.pool.1
+        (state.inits address), support_map]
+      exact ⟨traced, member, rfl⟩
     obtain ⟨kem, keys, active, pq, written⟩ := trace_published setup codec entry.identityIndex entry.owner state.pool.1
-      traced member bytes published
+      traced.1 unlogged bytes published
     have pool := (owned entry (List.mem_of_getElem? found)).2 kem active
     rw [positional.2 address entry found] at pool
     refine ⟨_, keys, _, _, _, written, ?_⟩

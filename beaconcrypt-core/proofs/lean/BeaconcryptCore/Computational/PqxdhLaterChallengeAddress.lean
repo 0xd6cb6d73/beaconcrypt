@@ -5,7 +5,10 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeAddress
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhCorrelatedExpand PqxdhOrderedChainHybrids
 open PqxdhInitialNativeRetained PqxdhPreparedPendingReplay PqxdhRetainedOccurrenceInterpreter
 open PqxdhRecordConfidentialityChallenge PqxdhRecordConfidentialityTrace PqxdhLaterChallengePaths
@@ -25,7 +28,7 @@ noncomputable def sampleHandler (source : FixedHkdfSha512NoSaltSource) (writer :
     (prior : RawCtxSelectedParentTable.Prior)
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder) (start : Start) :
     QueryImpl (PqxdhInitialGenericPost.Spec extra S B) (StateT Source ProbComp) :=
-  sourceHandler source writer prior start.1.selectedMessage zeroRoot (PqxdhInitialSampledParent.response start)
+  sourceHandler (completedBinding := completedBinding) source writer prior start.1.selectedMessage zeroRoot (PqxdhInitialSampledParent.response start)
     (fun query => ambient (PqxdhInitialSourcePreparedSecrecy.pre start.1.other query))
     (fun reply => ambient (PqxdhInitialSourcePreparedSecrecy.application start.1.other reply))
     (fun query => ambient (PqxdhInitialSourcePreparedSecrecy.selector start.1.other query))
@@ -38,7 +41,7 @@ def AtChallenge (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShar
     (start : Start) (child : RootOutput)
     (adversary : Selection → RustM (Option PqxdhServerRegistrationPublication.Response) → OracleComp (AdvSpec extra S B) Bool)
     (number : Std.U64) (bit : Bool) (selection : Selection) (result : Final) : Prop :=
-  let impl := sampleHandler source writer prior sender route decode start
+  let impl := sampleHandler (completedBinding := completedBinding) source writer prior sender route decode start
   ∃ (evidence : Evidence) (reply : RustM (Option PqxdhServerRegistrationPublication.Response)) (ambient : Source) (final current : State) (left right : Pqxdh.Bytes)
     (next : Option RawCtxSourceSend.Encrypted → OracleComp (AdvSpec extra S B) Bool)
     (reached after : Source) (record : RawCtxSourceSend.Encrypted) (kernel : PqxdhInitialPendingPost.KernelOf RatchetChain),
@@ -61,7 +64,7 @@ theorem sampled_request (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxM
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (cr : Ratchet.Crypto RatchetChain RatchetMaterial AD PT CT)
     (depth : Nat) (start : Start) (pending : Pending)
-    (sampled : Sum.inr pending ∈ support (PqxdhErasedParentSample.sampleOne source writer sender route decode depth start))
+    (sampled : Sum.inr pending ∈ support (PqxdhErasedParentSample.sampleOne (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth start))
     (parent output : FullOutput)
     (safe : RawCtxSelectedParentPrivatePatch.targetAddress (nextChain parent) ∉ pending.2.1.1.2 ++
       [PqxdhInitialBuilderContext.address pending.1.original])
@@ -71,11 +74,11 @@ theorem sampled_request (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxM
     (result : Final) (evidence : Evidence)
     (supported : ((result.1.1, (result.1.2, evidence)), result.2) ∈ support
       ((simulateQ (retained source writer (PqxdhLaterPatchedOccurrence.patchedPrior source pending parent output)
-        (sampleExternal source start)) (PqxdhPreparedOccurrencePaths.sampleAnnotated source sender route decode start)).run
+        (sampleExternal source start)) (PqxdhPreparedOccurrencePaths.sampleAnnotated (associatedData := associatedData) (completedBinding := completedBinding) source sender route decode start)).run
           (start.1.shared, (start.1.privateState, start.1.cache))))
     (accepted : result.1.1 = true)
     (published : ((start.1.selected, number), true) ∈ result.1.2.2.published) :
-    AtChallenge source writer (PqxdhLaterPatchedOccurrence.patchedPrior source pending parent output)
+    AtChallenge (completedBinding := completedBinding) source writer (PqxdhLaterPatchedOccurrence.patchedPrior source pending parent output)
       sender route decode start (nextChain parent) adversary number bit selection result := by
   have actual := Set.mem_image_of_mem (Prod.map id (reassociate (A := A) (N := N))) supported
   rw [← support_map] at actual
@@ -88,7 +91,7 @@ theorem sampled_request (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxM
     PqxdhInitialSampledParent.marker, challenge] at actual
   obtain ⟨reply, initialState, final, left, right, next, current, reached, after, record, traced, unused, length, clear,
     sent, tail, sequence, target, valid, marked, kernel, found, counter⟩ :=
-    PqxdhLaterChallengeOrigin.sequence_request source writer
+    PqxdhLaterChallengeOrigin.sequence_request (associatedData := associatedData) (completedBinding := completedBinding) source writer
       (PqxdhLaterPatchedOccurrence.patchedPrior source pending parent output) start.1.selectedMessage zeroRoot
       (PqxdhInitialSampledParent.response start)
       (fun query => ambient (PqxdhInitialSourcePreparedSecrecy.pre start.1.other query))
@@ -100,7 +103,7 @@ theorem sampled_request (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxM
       (reassociate (start.1.shared, (start.1.privateState, start.1.cache))) _ actual accepted (by omega) published
   refine ⟨evidence, reply, initialState, final, current, left, right, next, reached, after, record, kernel,
     traced, unused, length, clear, sent, tail, sequence, target, marked, found, counter, ?_⟩
-  exact PqxdhLaterSendAddress.marked_address source writer sender route decode cr depth start pending sampled
+  exact PqxdhLaterSendAddress.marked_address (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode cr depth start pending sampled
     parent output safe reached.1.1.1 reached.1.1.2 reached.1.2 valid.1 valid.2 marked kernel found (by omega)
 
 /-- The actual saved pending completion supplies the complete annotated execution and therefore the literal challenge request, with no caller-supplied request marker, counter or path. -/
@@ -108,7 +111,7 @@ theorem pending_request (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxM
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (cr : Ratchet.Crypto RatchetChain RatchetMaterial AD PT CT)
     (depth : Nat) (start : Start) (pending : Pending)
-    (sampled : Sum.inr pending ∈ support (PqxdhErasedParentSample.sampleOne source writer sender route decode depth start))
+    (sampled : Sum.inr pending ∈ support (PqxdhErasedParentSample.sampleOne (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth start))
     (parent output : FullOutput)
     (safe : RawCtxSelectedParentPrivatePatch.targetAddress (nextChain parent) ∉ pending.2.1.1.2 ++
       [PqxdhInitialBuilderContext.address pending.1.original])
@@ -118,15 +121,15 @@ theorem pending_request (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxM
     (result : Final)
     (completed : result ∈ support ((simulateQ
       (retained source writer (PqxdhLaterPatchedOccurrence.patchedPrior source pending parent output) (sampleExternal source start))
-      (PqxdhInitialOriginContext.resume (PqxdhInitialSampledParent.marker source start) sender route decode pending.1
-        (PqxdhInitialParentBuilderContext.reply sender route decode pending.1.original parent))).run (project pending.2.1)))
+      (PqxdhInitialOriginContext.resume (completedBinding := completedBinding) (PqxdhInitialSampledParent.marker source start) sender route decode pending.1
+        (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode pending.1.original parent))).run (project pending.2.1)))
     (accepted : result.1.1 = true)
     (published : ((start.1.selected, number), true) ∈ result.1.2.2.published) :
-    AtChallenge source writer (PqxdhLaterPatchedOccurrence.patchedPrior source pending parent output)
+    AtChallenge (completedBinding := completedBinding) source writer (PqxdhLaterPatchedOccurrence.patchedPrior source pending parent output)
       sender route decode start (nextChain parent) adversary number bit selection result := by
-  obtain ⟨evidence, annotated, _⟩ := PqxdhLaterPatchedOccurrence.sample_one_paths source writer sender route decode
+  obtain ⟨evidence, annotated, _⟩ := PqxdhLaterPatchedOccurrence.sample_one_paths (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode
     cr depth start pending sampled parent output safe result completed
-  exact sampled_request source writer sender route decode cr depth start pending sampled parent output safe
+  exact sampled_request (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode cr depth start pending sampled parent output safe
     adversary number position bit selection challenge result evidence annotated accepted published
 
 local notation "MaterialContext" => PqxdhErasedParentMaterial.MaterialContext (extra := extra) (M := M) (P := P)
@@ -138,7 +141,7 @@ theorem material_request (source : FixedHkdfSha512NoSaltSource) (writer : RawCtx
     (cr : Ratchet.Crypto RatchetChain RatchetMaterial AD PT CT) (depth : Nat)
     (prior : ProbComp (PqxdhInitialSourceInitialSecrecy.Context extra M P I D K X Response A N S B))
     (context : MaterialContext)
-    (sampled : context ∈ support (PqxdhErasedParentMaterial.prepare source writer sender route decode depth prior))
+    (sampled : context ∈ support (PqxdhErasedParentMaterial.prepare (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth prior))
     (start : Start) (pending : Pending) (shape : context.1.1.1 = .inr (start, .inr pending))
     (safe : PqxdhLaterInputAlias.collision context = false) (output : FullOutput)
     (adversary : Selection → RustM (Option PqxdhServerRegistrationPublication.Response) → OracleComp (AdvSpec extra S B) Bool)
@@ -149,15 +152,15 @@ theorem material_request (source : FixedHkdfSha512NoSaltSource) (writer : RawCtx
       (retained source writer
         (PqxdhLaterPatchedOccurrence.patchedPrior source pending (RawCtxSelectedParentEntry.realize context.1.1.2 context.1.2) output)
         (sampleExternal source start))
-      (PqxdhInitialOriginContext.resume (PqxdhInitialSampledParent.marker source start) sender route decode pending.1
-        (PqxdhInitialParentBuilderContext.reply sender route decode pending.1.original
+      (PqxdhInitialOriginContext.resume (completedBinding := completedBinding) (PqxdhInitialSampledParent.marker source start) sender route decode pending.1
+        (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode pending.1.original
           (RawCtxSelectedParentEntry.realize context.1.1.2 context.1.2)))).run (project pending.2.1)))
     (accepted : result.1.1 = true)
     (published : ((start.1.selected, number), true) ∈ result.1.2.2.published) :
     ∃ actualStart : Start,
       PqxdhErasedParentSample.forgetStart actualStart = start ∧
       Sum.inr actualStart.1 ∈ support prior ∧
-      AtChallenge source writer
+      AtChallenge (completedBinding := completedBinding) source writer
         (PqxdhLaterPatchedOccurrence.patchedPrior source pending (RawCtxSelectedParentEntry.realize context.1.1.2 context.1.2) output)
         sender route decode actualStart context.1.2 adversary number bit selection result := by
   simp only [PqxdhErasedParentMaterial.prepare, mem_support_bind_iff, mem_support_pure_iff] at sampled
@@ -171,7 +174,7 @@ theorem material_request (source : FixedHkdfSha512NoSaltSource) (writer : RawCtx
     · cases shape
     · simp only [PqxdhErasedParentSample.normalize, Sum.inr.injEq, Prod.mk.injEq] at shape
       rcases shape with ⟨rfl, rfl⟩
-      exact ⟨(input, block), rfl, priorReached, pending_request source writer sender route decode cr depth
+      exact ⟨(input, block), rfl, priorReached, pending_request (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode cr depth
         (input, block) reachedPending reached parent output (of_decide_eq_false safe) adversary number position bit
         selection challenge result completed accepted published⟩
 

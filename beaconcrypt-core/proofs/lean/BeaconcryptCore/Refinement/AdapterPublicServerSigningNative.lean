@@ -25,7 +25,7 @@ variable (fallback : registration.MldsaSigningRequest → StateT S m Registratio
 @[instance_reducible] noncomputable def localOperations (previous : LocalOperations (RustT SourceM)) :
     LocalOperations (RustT SourceM) :=
   {previous with auth_MldsaIdentity_sign_requested := fun _ request =>
-    ⟨RustM.ok <$> AdapterPublicBundleNative.sign impl fallback request⟩}
+    ⟨RustM.ok <$> AdapterPublicServerPublicationNative.sign impl fallback request⟩}
 
 @[instance_reducible] noncomputable def children (previous : ChildOperations (RustT SourceM))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT S m)) :

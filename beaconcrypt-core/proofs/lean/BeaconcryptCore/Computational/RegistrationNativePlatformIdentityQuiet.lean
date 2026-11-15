@@ -109,7 +109,7 @@ private theorem outgoing_safe (setup : Setup base KemSK) (index : Nat) (owner : 
   cases query with
   | inl query => cases query with
     | hash request => exact effect_safe _
-    | sign request payload digest => exact bind_safe _ _ (sample_safe _) (fun _ => bind_safe _ _ (update_safe _) (fun _ => pure_safe _))
+    | sign request payload digest => exact pure_safe (core.option.Option.None : RegistrationSigningShared.SignReply)
   | inr request =>
       simp only [outgoing]
       split

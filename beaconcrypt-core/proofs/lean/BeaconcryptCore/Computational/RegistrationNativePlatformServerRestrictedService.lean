@@ -54,10 +54,16 @@ noncomputable def admitted (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSour
 
 omit primitive in
 def pin (current : session.ServerAuthenticationPin) :
-    StateT (PublicState Platform) (OracleComp (Spec n)) (RustM (core.option.Option session.ServerAuthenticationPin)) := do
-  let digest ← RegistrationNativePlatformEffectCompiler.effect
-    (.inr (.hash (PqxdhRefinement.absBytes current.public_key)))
-  pure (.ok (.Some ⟨current.binding, current.public_key, RegistrationAuthenticationShared.digestArray digest⟩))
+    StateT (PublicState Platform) (OracleComp (Spec n)) (RustM (core.option.Option session.ServerAuthenticationPin)) :=
+  pure (.ok (.Some current))
+
+omit primitive in
+def adHash (pending : registration.ServerAdHash) :
+    StateT (PublicState Platform) (OracleComp (Spec n)) RegistrationServerAdHash.Result :=
+  RegistrationServerAdHash.runWith (fun request => do
+    let digest ← RegistrationNativePlatformEffectCompiler.effect
+      (.inr (.hash (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request)))
+    pure (.Some (RegistrationAuthenticationShared.digestArray digest))) pending
 
 noncomputable def build (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
@@ -72,7 +78,7 @@ noncomputable def build (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     StateT RegistrationServerMaterialFrontend.State
       (StateT (PublicState Platform) (OracleComp (Spec n)))
       (RegistrationNativePlatformServerMaterialFrontend.Result (alloc.vec.Vec U8)) :=
-  RegistrationNativePlatformServerMaterialFrontend.build pin
+  RegistrationNativePlatformServerMaterialFrontend.build adHash pin
     (RegistrationNativePlatformBoundCompiler.liftPlatform (RegistrationNativePlatformEffectCompiler.compile reserve))
     (fun keyId => RegistrationNativePlatformEffectCompiler.effect (.inr (.peerPresent keyId)))
     (admitted source view failure allocation erased helper sign writer demand) handle application
@@ -143,32 +149,21 @@ private theorem pure_apply {S V : Type} {q : Type → Type} [Monad q] (value : V
 
 omit primitive in
 private theorem native_pin_apply (current : session.ServerAuthenticationPin) (before : PqxdhRecordLiftWorld.State n) :
-    RegistrationNativeServerPinRecompute.native current.binding current.public_key before = (do
-      let hashed ← PqxdhRecordLiftWorld.effects (.inr (.hash (PqxdhRefinement.absBytes current.public_key))) before
-      pure (.ok (.Some (⟨current.binding, current.public_key, RegistrationAuthenticationShared.digestArray hashed.1⟩ : session.ServerAuthenticationPin)), hashed.2)) :=
-  RegistrationNativeServerPinRecompute.native_run current.binding current.public_key before
+    RegistrationNativeServerPinRecompute.native current.binding current.public_key before =
+      pure (.ok (.Some current), before) :=
+  RegistrationNativeServerPinRecompute.native_exact current before
 
 omit primitive in
-/-- Repeated source pin recomputation is the same literal public-key hash in this client, retaining its extra hash charge and all actual uniform/cache effects. -/
+/-- Pure source pin selection retains the complete configured key and every current state coordinate. -/
 theorem pin_source (current : session.ServerAuthenticationPin) (before : Local n) (previous : Platform) :
     (fun result => (result.1.1, strip (result.1.2, result.2))) <$>
       ((RegistrationNativePlatformServerMaterialState.pin RegistrationNativePlatformMldsaProgram.coins current).run before).run previous =
       (fun result => (result.1.1, (result.2, result.1.2))) <$>
         ((RegistrationNativePlatformWorldEffectView.close (pin current)).run
           (RegistrationNativeWorldView.project before.world.1)).run (before.world.2, previous) := by
-  have actual := RegistrationNativePlatformWorldEffectView.program
-    ((Spec n).query (.inl (.inr (.hash (PqxdhRefinement.absBytes current.public_key)))) : OracleComp (Spec n) _) before.world.1
-  simp only [simulateQ_spec_query, RegistrationNativePlatformWorldEffectClosure.implementation] at actual
-  have mapped := congrArg (fun action => (fun result =>
-    ((.ok (.Some (⟨current.binding, current.public_key, RegistrationAuthenticationShared.digestArray result.1⟩ : session.ServerAuthenticationPin)) :
-      RustM (core.option.Option session.ServerAuthenticationPin)), ((before.world.2, previous), result.2))) <$> action) actual
-  convert mapped using 1 <;>
-    simp only [RegistrationNativePlatformServerMaterialState.pin, native_program,
-      RegistrationNativePlatformWorldEffectView.close, pin, RegistrationNativePlatformEffectCompiler.effect,
-      StateT.run, native_pin_apply, bind_apply, pure_apply, lift_apply, map_apply,
-      simulateQ_map, simulateQ_spec_query,
-      bind_pure_comp, Functor.map_map, Prod.map, id_eq, strip]
-  all_goals rfl
+  simp only [RegistrationNativePlatformServerMaterialState.pin, native_pin_apply,
+    simulateQ_pure, map_pure, RegistrationNativePlatformWorldEffectView.close, pin,
+    StateT.run, pure_apply, strip]
 
 
 /-- The concrete private-root source service restores only its actual earlier root and exact KDF accounting prefix; the executable branch receives its material reply, not the root table. -/

@@ -19,7 +19,7 @@ variable [PublicWrapperPlatform.Allocator] [PublicWrapperPlatform.LocalOperation
 def Allowed (token :beaconcrypt_public_wrapper.server.RegistrationOutput) (control :pqxdh.ServerState) :Spec.Domain→Prop
   | .inr (.inr (.inr (self,initial)))=>self.control=control ∧
       ∃pin availability application,
-        registration.begin_server_completion control pin availability token.registration.agreement application=.ok (.Ok initial)
+        BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission control pin availability token.registration.agreement application initial
   | _=>True
 
 private def returned {A :Type} (result :RustM A)
@@ -63,7 +63,7 @@ private theorem reserved (token :beaconcrypt_public_wrapper.server.RegistrationO
     (self :beaconcrypt_public_wrapper.server.Server) (initial :registration.ServerInitialKdf)
     (same :self.control=control)
     (admitted :∃pin availability application,
-      registration.begin_server_completion control pin availability token.registration.agreement application=.ok (.Ok initial)) :
+      BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission control pin availability token.registration.agreement application initial) :
     (RegistrationNativePlatformPublicAdapterBuildProgram.reserved self initial).AllQueriesSatisfy (Allowed token control) :=by
   unfold RegistrationNativePlatformPublicAdapterBuildProgram.reserved
   rw [allQueriesSatisfy_query_bind_iff]
@@ -81,6 +81,30 @@ private theorem reserved (token :beaconcrypt_public_wrapper.server.RegistrationO
       exact ⟨same,admitted⟩
 
 omit [PublicWrapperPlatform.Allocator] [PublicWrapperPlatform.LocalOperations] [PublicWrapperPlatform.ContainerOperations] in
+private theorem adHash (token : beaconcrypt_public_wrapper.server.RegistrationOutput) (control : pqxdh.ServerState)
+    (self : beaconcrypt_public_wrapper.server.Server) (pending : registration.ServerAdHash)
+    (same : self.control = control) (pin : session.ServerAuthenticationPin)
+    (availability : pqxdh.KeyIdAvailability) (application : Slice U8)
+    (selected : registration.begin_server_completion control pin availability token.registration.agreement application = .ok (.Ok pending)) :
+    (RegistrationNativePlatformPublicAdapterBuildProgram.adHash self pending).AllQueriesSatisfy (Allowed token control) := by
+  change AllQueriesSatisfy (returned pending.request fun request => do
+    let reply ← Spec.query (.inl (.inr request))
+    returned reply fun digest => checked self (pending.resume digest)
+      (RegistrationNativePlatformPublicAdapterBuildProgram.reserved self)) (Allowed token control)
+  apply returned_scope
+  intro request
+  rw [allQueriesSatisfy_query_bind_iff]
+  refine ⟨True.intro, ?_⟩
+  intro reply
+  apply returned_scope
+  intro digest
+  apply checked_scope
+  intro initial resumed
+  obtain ⟨actualDigest, _present, completed⟩ := RegistrationServerAdHash.resumed_digest pending digest initial resumed
+  apply reserved token control self initial same
+  exact ⟨pin, availability, application, pending, actualDigest, selected, completed⟩
+
+omit [PublicWrapperPlatform.Allocator] [PublicWrapperPlatform.LocalOperations] [PublicWrapperPlatform.ContainerOperations] in
 private theorem lookup (token :beaconcrypt_public_wrapper.server.RegistrationOutput) (control :pqxdh.ServerState)
     (self :beaconcrypt_public_wrapper.server.Server) (pending :peer.CompletionLookup) (plaintext :Slice U8)
     (same :self.control=control) (pendingControl :pending.control=control)
@@ -93,7 +117,7 @@ private theorem lookup (token :beaconcrypt_public_wrapper.server.RegistrationOut
     | .Some _=>do
       let reply←Spec.query (.inr (.inl (self.known_ids,identifier)))
       returned reply fun occupied=>checked self (pending.resume occupied)
-        (RegistrationNativePlatformPublicAdapterBuildProgram.reserved self)) (Allowed token control)
+        (RegistrationNativePlatformPublicAdapterBuildProgram.adHash self)) (Allowed token control)
   apply returned_scope
   intro identifier
   apply returned_scope
@@ -109,10 +133,10 @@ private theorem lookup (token :beaconcrypt_public_wrapper.server.RegistrationOut
     apply returned_scope
     intro occupied
     apply checked_scope
-    intro initial resumed
-    apply reserved token control self initial same
-    refine ⟨pending.pin,(if occupied then .Occupied else .Available),pending.application,?_⟩
-    simpa only [PeerOwnership.completion_lookup_resume,pendingControl,pendingToken] using resumed
+    intro selected resumed
+    apply adHash token control self selected same pending.pin
+      (if occupied then .Occupied else .Available) pending.application
+    simpa only [PeerOwnership.completion_lookup_resume, pendingControl, pendingToken] using resumed
 
 omit [PublicWrapperPlatform.Allocator] [PublicWrapperPlatform.LocalOperations] [PublicWrapperPlatform.ContainerOperations] in
 theorem program (self :beaconcrypt_public_wrapper.server.Server)
@@ -120,7 +144,7 @@ theorem program (self :beaconcrypt_public_wrapper.server.Server)
     (RegistrationNativePlatformPublicAdapterBuildProgram.program self token data).AllQueriesSatisfy (Allowed token self.control) :=by
   change AllQueriesSatisfy (returned (transport.normalize_registration_application data) fun application=>
     returned (beaconcrypt_public_wrapper.server.registration_application_bytes application) fun plaintext=>do
-      let reply←Spec.query (.inl self)
+      let reply←Spec.query (.inl (.inl self))
       returned reply fun optional=>match optional with
       | .None=>pure (none,.ok (.None,self))
       | .Some pin=>checked self (peer.begin_completion_lookup self.control pin token.registration plaintext)

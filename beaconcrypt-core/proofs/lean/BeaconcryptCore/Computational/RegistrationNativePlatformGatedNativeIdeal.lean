@@ -23,7 +23,7 @@ theorem lor (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire)
     (serverKeyId : U64) (bounds : PqxdhDeploymentInterface.FreshBounds) (budget : PqxdhDeploymentInterface.Budget)
     (work : OracleComp (RegistrationNativeInterface.ModeSpec .P) Value)
     (filter : RegistrationNativeLorEvents.Filter Value) (guess : Value → Bool)
-    (target : Fin budget.accept × Fin budget.capacity) (created : PqxdhLiveServerConstruction.Created Unit) (initial : E)
+    (target : Fin budget.accept × Fin budget.capacity) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (initial : E)
     (shell : CborRecordWorldClient.Shell) (control : PqxdhRecordLiftProtocol.Control n) (secret : PqxdhRecordLiftIdeal.CtxPrivate n) :
     𝒟[RegistrationNativeLorEntropy.winning setup.source.crypto wire serverKeyId budget filter guess target <$>
       run (fun _ => .random) id setup (RegistrationNativeWire.ledgerCodec wire) route env reserve serverKeyId bounds .P work created initial shell control secret] {true} =
@@ -44,7 +44,7 @@ theorem fresh_bytes (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wi
     (serverKeyId : U64) (bounds : PqxdhDeploymentInterface.FreshBounds) (budget : PqxdhDeploymentInterface.Budget)
     (work : OracleComp (RegistrationNativeInterface.ModeSpec .P) Value)
     (claim : Value → Option (Nat × Pqxdh.Bytes)) (target : RegistrationNativeCanonicalSelector.Target budget)
-    (created : PqxdhLiveServerConstruction.Created Unit) (initial : E)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (initial : E)
     (shell : CborRecordWorldClient.Shell) (control : PqxdhRecordLiftProtocol.Control n) (secret : PqxdhRecordLiftIdeal.CtxPrivate n) :
     𝒟[RegistrationNativeWeightedFresh.winning setup.source.crypto wire serverKeyId budget claim target <$>
       run (fun _ => .random) id setup (RegistrationNativeWire.ledgerCodec wire) route env reserve serverKeyId bounds .P work created initial shell control secret] {true} ≤

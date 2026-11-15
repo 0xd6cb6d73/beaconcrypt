@@ -44,10 +44,10 @@ theorem packet_tuple (setup : Setup base KemSK) (wire : RegistrationNativeWire.W
         beacon_pq_public_key := RegistrationNativeBeaconFrontend.pqArray original.kemPublic }) ∧
       packet.identity_key = started.message.identity_key ∧ packet.pre_key.val.drop 64 = started.message.prekey.val ∧
       packet.one_time_key.val.drop 64 = started.message.one_time_key.val ∧ packet.pq_key.val.drop 64 = started.message.pq_key.val ∧
-      packet.mldsa_public_key = original.mldsa.publicKey ∧
+
       pin.binding.identity_key_id = original.pin.binding.identity_key_id ∧
       pin.binding.identity_public_key = original.pin.binding.identity_public_key ∧ pin.public_key = original.pin.public_key := by
-  obtain ⟨original, stored, scalar, capability, started, fingerprint, actualDigest, view, originalFound, storedFound, storedPhase,
+  obtain ⟨original, stored, scalar, capability, started, hashing, actualDigest, view, originalFound, storedFound, storedPhase,
     immutable, _oldPhase, _started, validated, fixed, attached, cached, _control, _pin, _identity, initHash, _encoded, _fields⟩ := receipt
   have ownerSame := Option.some.inj (storedFound.symm.trans found)
   subst stored
@@ -58,12 +58,11 @@ theorem packet_tuple (setup : Setup base KemSK) (wire : RegistrationNativeWire.W
   subst scalar
   have digestSame : actualDigest = digest := digest_injective _ _ (initHash.symm.trans hashSame)
   subst actualDigest
-  obtain ⟨identity, prekey, oneTimeKey, pq, mldsa, numeric, ed, ml⟩ := RegistrationNativeInitTupleCache.accepted_fields cache
-    fingerprint.state pin packet digest (extension cached) packetCached collisionFree
-  have raw : fingerprint.state.started = started := congrArg Prod.fst fixed
-  have pinSame : fingerprint.state.server_pin = original.pin := congrArg (fun snapshot => snapshot.2.1) fixed
-  have mlSame : fingerprint.state.beacon_mldsa = original.mldsa.publicKey := congrArg (fun snapshot => snapshot.2.2.2) fixed
-  refine ⟨original, started, originalFound, immutable, validated, ?_, ?_, ?_, ?_, mldsa.symm.trans mlSame, ?_, ?_, ?_⟩
+  obtain ⟨identity, prekey, oneTimeKey, pq, numeric, ed, ml⟩ := RegistrationNativeInitTupleCache.accepted_fields cache
+    hashing.state pin packet digest (extension cached) packetCached collisionFree
+  have raw : hashing.state.started = started := congrArg Prod.fst fixed
+  have pinSame : hashing.state.server_pin = original.pin := congrArg (fun snapshot => snapshot.2.1) fixed
+  refine ⟨original, started, originalFound, immutable, validated, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · exact identity.symm.trans (congrArg (fun value : pqxdh.BeaconStart => value.message.identity_key) raw)
   · rw [← prekey]
     exact attached.1
@@ -78,7 +77,7 @@ theorem packet_tuple (setup : Setup base KemSK) (wire : RegistrationNativeWire.W
 
 private theorem cache_path (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (initial final : Native) (calls : List (Call RegistrationNativeRawAdapter.TypedSpec Native))
     (actual : Path (RegistrationNativeExperiment.handler setup checks wire route representation created source credential) initial calls final) :
     RegistrationNativeWorldCache.cache initial ≤ RegistrationNativeWorldCache.cache final := by
@@ -90,7 +89,7 @@ private theorem cache_path (setup : Setup base KemSK) (checks : Checks) (wire : 
 
 private theorem prekey_path (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (initial final : Native) (calls : List (Call RegistrationNativeRawAdapter.TypedSpec Native))
     (actual : Path (RegistrationNativeExperiment.handler setup checks wire route representation created source credential) initial calls final)
     (prior : RegistrationNativePrekeyCoherence.Holds setup initial.beacons) :
@@ -113,7 +112,7 @@ def OwnerTuple (setup : Setup base KemSK) (owner : Owner source) (oneTime : Pqxd
     beacon_pq_public_key := RegistrationNativeBeaconFrontend.pqArray owner.kemPublic }) ∧
   packet.identity_key = started.message.identity_key ∧ packet.pre_key.val.drop 64 = started.message.prekey.val ∧
   packet.one_time_key.val.drop 64 = started.message.one_time_key.val ∧ packet.pq_key.val.drop 64 = started.message.pq_key.val ∧
-  packet.mldsa_public_key = owner.mldsa.publicKey ∧
+
   pin.binding.identity_key_id = owner.pin.binding.identity_key_id ∧
   pin.binding.identity_public_key = owner.pin.binding.identity_public_key ∧ pin.public_key = owner.pin.public_key
 
@@ -142,7 +141,7 @@ theorem initialized_packet (setup : Setup base KemSK) (checks : Checks) (wire : 
       initial startup final calls actual index owner pending oneTime found phase
   have sourceOrigin := origin
   obtain ⟨bytes, _query, _reply, receipt, _pending⟩ := origin
-  obtain ⟨original, started, originalFound, sourceMetadata, validated, identity, prekey, ephemeral, pq, mldsa, numeric, ed, ml⟩ :=
+  obtain ⟨original, started, originalFound, sourceMetadata, validated, identity, prekey, ephemeral, pq, numeric, ed, ml⟩ :=
     packet_tuple setup wire index call.before call.after bytes receipt earlier pending oneTime earlierFound earlierPhase
       (RegistrationNativeWorldCache.cache final)
       (cache_path setup checks wire route representation initial.created initial.credential call.after final trailing after)
@@ -158,13 +157,10 @@ theorem initialized_packet (setup : Setup base KemSK) (checks : Checks) (wire : 
     simpa only [metadata] using congrArg (fun value : Owner source => value.prekeyPublic) immutable
   have pqSame : owner.kemPublic = original.kemPublic := by
     simpa only [metadata] using congrArg (fun value : Owner source => value.kemPublic) immutable
-  have mldsaSame : owner.mldsa.publicKey = original.mldsa.publicKey := by
-    simpa only [metadata] using congrArg (fun value : Owner source => value.mldsa.publicKey) immutable
   have pinSame : owner.pin = original.pin := by
     simpa only [metadata] using congrArg (fun value : Owner source => value.pin) immutable
-  refine ⟨call, member, sourceOrigin, original, started, originalFound, immutable, coherent, ?_, identity, prekey, ephemeral, pq, ?_, ?_, ?_, ?_⟩
+  refine ⟨call, member, sourceOrigin, original, started, originalFound, immutable, coherent, ?_, identity, prekey, ephemeral, pq, ?_, ?_, ?_⟩
   · simpa only [← seedSame, ← prekeySame, ← pqSame, coherent] using validated
-  · simpa only [← mldsaSame] using mldsa
   · simpa only [← pinSame] using numeric
   · simpa only [← pinSame] using ed
   · simpa only [← pinSame] using ml

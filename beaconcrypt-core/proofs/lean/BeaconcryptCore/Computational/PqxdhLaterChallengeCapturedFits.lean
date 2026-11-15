@@ -7,7 +7,10 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeCapturedFits
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhFirstRecordConfidentiality PqxdhInitialPostContext PqxdhInitialOriginForwardPost
 open PqxdhLaterChallengeCapture RawCtxForwardTags PqxdhInitialBuilderContext
 variable {ι M P I D K X Response Shared Origin Value Result : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -19,7 +22,7 @@ theorem append_fits (outside : Value → OracleComp (PostSpec extra S B) Result)
     (fits : PqxdhInitialOriginCertificates.Fits qCallback context)
     (bounded : ∀ value, (outside value).IsTotalQueryBound qOutside) :
     PqxdhInitialOriginCertificates.Fits (qCallback + qOutside) (append outside context) := by
-  rcases context with ⟨(⟨request, before, continuation, inner⟩ | ⟨index, before, control, candidate, continuation, inner⟩) | builder, trace, origin⟩
+  rcases context with ⟨(⟨request, before, continuation, inner⟩ | ⟨index, before, control, candidate, associatedData, continuation, inner⟩) | builder, trace, origin⟩
   case inr => exact fun reply => isTotalQueryBound_bind (fits reply) bounded
   all_goals exact ⟨fun reply => isTotalQueryBound_bind (fits.1 reply) bounded, fits.2⟩
 
@@ -52,7 +55,7 @@ theorem captured_fits (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin)
     (trace : PqxdhInitialOriginPost.Trace Origin S B) :
     All (fun capture => ∀ bit, PqxdhInitialOriginCertificates.Fits (1 + q)
       (PqxdhLaterChallengeScanCoupling.tagged owner number bit capture.2).1)
-      (captured (X := X) (Response := Response) mark sender route read owner number sourceBit work current before trace) := by
+      (captured (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route read owner number sourceBit work current before trace) := by
   induction work using OracleComp.inductionOn generalizing current before trace with
   | pure value => trivial
   | query_bind query next ih =>
@@ -62,7 +65,7 @@ theorem captured_fits (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin)
     change All _ (_ >>= _)
     refine bind_all _ _ _ ?_ (fun result => ih _ (nextBound _) _ _ _)
     refine map_all (PqxdhInitialOriginCertificates.Fits 1) _ _ ?_ _
-      (PqxdhInitialOriginCertificates.post_fits mark sender route read _ 1
+      (PqxdhInitialOriginCertificates.post_fits (completedBinding := completedBinding) mark sender route read _ 1
         (handler_total owner number sourceBit query current) before trace)
     intro context valid bit
     exact append_fits _ context 1 q valid (fun reply =>
@@ -87,7 +90,7 @@ theorem builder_fits (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin) 
     (adversary : BuildResult → OracleComp (AdvSpec extra S B) Bool)
     (q : Nat) (bounded : ∀ reply, (adversary reply).IsTotalQueryBound q) :
     All (BothFits owner number q)
-      (PqxdhLaterChallengeBuilderCapture.capturedBuilder (X := X) (Response := Response)
+      (PqxdhLaterChallengeBuilderCapture.capturedBuilder (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response)
         mark origin sender route read index before trace source initial metadata ready owner number bit adversary) := by
   unfold PqxdhLaterChallengeBuilderCapture.capturedBuilder
   refine bind_all _ _ _ ?_ ?_
@@ -96,7 +99,7 @@ theorem builder_fits (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin) 
     trivial
   · intro result
     refine map_all _ (BothFits owner number q) _ ?_ _
-      (captured_fits mark sender route read owner number bit (adversary result.1) q (bounded result.1)
+      (captured_fits (completedBinding := completedBinding) mark sender route read owner number bit (adversary result.1) q (bounded result.1)
         PqxdhRecordConfidentialityChallenge.initial result.2.1 result.2.2)
     intro context valid
     exact valid
@@ -123,11 +126,11 @@ theorem shared_fits {A N C : Type}
     (context : PqxdhInitialOriginContext.Context extra M P I D K Bool Origin S B)
     (details : Option (Details extra M P I D K Origin S B)) (reached : PqxdhNativeSharedPrefix.Local A N C)
     (supported : RawCtxForwardScan.Cut.pending (context, details) reached ∈ support
-      (PqxdhLaterChallengeBuilderCapture.sharedCarried mark origin sender route read index before trace source writer stage pre application initializer selector aux
+      (PqxdhLaterChallengeBuilderCapture.sharedCarried (associatedData := associatedData) (completedBinding := completedBinding) mark origin sender route read index before trace source writer stage pre application initializer selector aux
         initial metadata ready owner number bit adversary depth state)) :
     BothFits owner number q (context, details) := by
   exact shared_scan_all _ _ _ _ _ _ _
-    (builder_fits mark origin sender route read index before trace source initial metadata ready owner number bit adversary q bounded)
+    (builder_fits (associatedData := associatedData) (completedBinding := completedBinding) mark origin sender route read index before trace source initial metadata ready owner number bit adversary q bounded)
     _ _ _ supported
 
 end BeaconcryptCore.Computational.PqxdhLaterChallengeCapturedFits

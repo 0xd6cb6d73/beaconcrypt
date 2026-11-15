@@ -61,7 +61,7 @@ private theorem compiler_hash (selected : Nat) (placeholder : Ed25519Signature) 
 
 section Actual
 variable (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (selected : Nat) (placeholder : Ed25519Signature) (request : registration.HashRequest)
 local notation "bytes" => BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request
 local notation "action" => RegistrationNativePlatformIdentityCtxMain.beacon setup checks representation created

@@ -5,7 +5,10 @@ open OracleComp OracleSpec CoreModels Aeneas OracleComp.ProgramLogic.Relational
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeBuilderCoupling
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+variable (associatedData : Std.Array Std.U8 151#usize)
 open PqxdhFirstRecordConfidentiality PqxdhInitialBuilderContext PqxdhInitialPostContext
 open PqxdhLaterChallengeCapture PqxdhLaterChallengeBuilderCapture RawCtxForwardScan
 variable {ι M P I D K X Response Shared Origin Local : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -49,49 +52,49 @@ variable (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin) (origin : Or
 noncomputable def run (owner : RawCtxProtocolReveals.Owner S B) (number : U64) (bit : Bool)
     (adversary : BuildResult → OracleComp (AdvSpec extra S B) Bool) (state : Local) :=
   scan PqxdhInitialForwardPost.selected chosen selection impl
-    (capturedBuilder mark origin sender route read index before trace source initial metadata ready owner number bit adversary)
-    (builder_covered mark origin sender route read index before trace source initial metadata ready owner number bit adversary) state
+    (capturedBuilder (associatedData := associatedData) (completedBinding := completedBinding) mark origin sender route read index before trace source initial metadata ready owner number bit adversary)
+    (builder_covered (associatedData := associatedData) (completedBinding := completedBinding) mark origin sender route read index before trace source initial metadata ready owner number bit adversary) state
 
 /-- Factor the complete evaluated source scan at the actual initial Builder result, without imposing success or discarding its pending branch. -/
 theorem run_builder (owner : RawCtxProtocolReveals.Owner S B) (number : U64) (bit : Bool)
     (adversary : BuildResult → OracleComp (AdvSpec extra S B) Bool) (state : Local) :
-    run mark origin sender route read index before trace source initial metadata ready impl chosen selection owner number bit adversary state =
+    run (associatedData := associatedData) (completedBinding := completedBinding) mark origin sender route read index before trace source initial metadata ready impl chosen selection owner number bit adversary state =
       (scan PqxdhInitialForwardPost.selected chosen selection impl
-        (PqxdhInitialOriginForwardBuilder.program source mark origin sender route read initial index metadata ready pure before trace)
-        (PqxdhInitialOriginForwardBuilder.program_covered source mark origin sender route read initial index metadata ready pure before trace) state >>= fun cut =>
+        (PqxdhInitialOriginForwardBuilder.program (associatedData := associatedData) (completedBinding := completedBinding) source mark origin sender route read initial index metadata ready pure before trace)
+        (PqxdhInitialOriginForwardBuilder.program_covered (associatedData := associatedData) (completedBinding := completedBinding) source mark origin sender route read initial index metadata ready pure before trace) state >>= fun cut =>
           match cut with
           | .complete reply ambient => liftCut <$>
-              PqxdhLaterChallengeScanCoupling.run mark sender route read impl chosen selection owner number bit
+              PqxdhLaterChallengeScanCoupling.run (completedBinding := completedBinding) mark sender route read impl chosen selection owner number bit
                 (adversary reply.1) PqxdhRecordConfidentialityChallenge.initial reply.2.1 reply.2.2 ambient
           | .pending callback ambient => pure (.pending (tagged owner number bit adversary callback) ambient)) := by
   let liftTag := tagged (M := M) (P := P) (I := I) (D := D) (K := K) (Origin := Origin) owner number bit adversary
-  have baseCovered := PqxdhInitialOriginForwardBuilder.program_covered (X := X) (Response := Response) source mark origin sender route read
+  have baseCovered := PqxdhInitialOriginForwardBuilder.program_covered (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response) source mark origin sender route read
     initial index metadata ready (pure : BuildResult → OracleComp (PostSpec extra S B) BuildResult) before trace
   have headCovered := (covered_tags liftTag PqxdhInitialForwardPost.selected _).mpr baseCovered
   have following := fun reply : BuildResult × (NativeFront M P I D K S B × PqxdhInitialOriginPost.Trace Origin S B) => (covered_tags (fun tag => (tag.1, some tag.2)) PqxdhInitialForwardPost.selected _).mpr
-    (captured_covered (X := X) (Response := Response) mark sender route read owner number bit (adversary reply.1)
+    (captured_covered (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route read owner number bit (adversary reply.1)
       PqxdhRecordConfidentialityChallenge.initial reply.2.1 reply.2.2)
   unfold run capturedBuilder
   change scan _ _ _ _ (RawCtxForwardAnnotation.mapTags liftTag
-    (PqxdhInitialOriginForwardBuilder.program source mark origin sender route read initial index metadata ready pure before trace) >>=
+    (PqxdhInitialOriginForwardBuilder.program (associatedData := associatedData) (completedBinding := completedBinding) source mark origin sender route read initial index metadata ready pure before trace) >>=
     fun reply => RawCtxForwardAnnotation.mapTags (fun tag => (tag.1, some tag.2))
-      (captured mark sender route read owner number bit (adversary reply.1) PqxdhRecordConfidentialityChallenge.initial reply.2.1 reply.2.2)) _ state = _
+      (captured (completedBinding := completedBinding) mark sender route read owner number bit (adversary reply.1) PqxdhRecordConfidentialityChallenge.initial reply.2.1 reply.2.2)) _ state = _
   rw [PqxdhLaterChallengeCutChronology.native_bind PqxdhInitialForwardPost.selected chosen selection impl _ _ headCovered following
-    (builder_covered mark origin sender route read index before trace source initial metadata ready owner number bit adversary) state]
+    (builder_covered (associatedData := associatedData) (completedBinding := completedBinding) mark origin sender route read index before trace source initial metadata ready owner number bit adversary) state]
   rw [← native_scan_tags liftTag PqxdhInitialForwardPost.selected chosen selection impl _ baseCovered state, bind_map_left]
   refine bind_congr fun cut => ?_
   cases cut with
   | complete reply ambient =>
       exact (native_scan_tags (fun tag => (tag.1, some tag.2)) PqxdhInitialForwardPost.selected chosen selection impl _
-        (captured_covered mark sender route read owner number bit (adversary reply.1)
+        (captured_covered (completedBinding := completedBinding) mark sender route read owner number bit (adversary reply.1)
           PqxdhRecordConfidentialityChallenge.initial reply.2.1 reply.2.2) ambient).symm
   | pending callback ambient => rfl
 
 /-- The full original initial Builder and adaptive source wrapper are coupled without conditioning on a selected cut or successful Builder reply. Every native state and actual callback remains in the paired outputs. -/
 theorem coupled (owner : RawCtxProtocolReveals.Owner S B) (number : U64) (first second : Bool)
     (adversary : BuildResult → OracleComp (AdvSpec extra S B) Bool) (state : Local) :
-    RelTriple (run mark origin sender route read index before trace source initial metadata ready impl chosen selection owner number first adversary state)
-      (run mark origin sender route read index before trace source initial metadata ready impl chosen selection owner number second adversary state)
+    RelTriple (run (associatedData := associatedData) (completedBinding := completedBinding) mark origin sender route read index before trace source initial metadata ready impl chosen selection owner number first adversary state)
+      (run (associatedData := associatedData) (completedBinding := completedBinding) mark origin sender route read index before trace source initial metadata ready impl chosen selection owner number second adversary state)
       (Related owner number first second adversary) := by
   rw [run_builder, run_builder]
   refine relTriple_bind (relTriple_refl _) ?_
@@ -99,7 +102,7 @@ theorem coupled (owner : RawCtxProtocolReveals.Owner S B) (number : U64) (first 
   cases cut with
   | complete reply ambient =>
       apply relTriple_map
-      exact relTriple_post_mono (PqxdhLaterChallengeScanCoupling.coupled mark sender route read impl chosen selection
+      exact relTriple_post_mono (PqxdhLaterChallengeScanCoupling.coupled (completedBinding := completedBinding) mark sender route read impl chosen selection
         owner number first second (adversary reply.1) PqxdhRecordConfidentialityChallenge.initial reply.2.1 reply.2.2 ambient rfl)
         (fun left right related => Or.inr ⟨left, right, rfl, rfl, related⟩)
   | pending callback ambient => exact relTriple_pure_pure (Or.inl ⟨callback, ambient, rfl, rfl⟩)

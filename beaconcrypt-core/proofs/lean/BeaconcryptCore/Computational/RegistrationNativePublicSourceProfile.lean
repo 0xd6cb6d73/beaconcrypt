@@ -61,7 +61,7 @@ theorem fixed_source (setup : Setup base KemSK) (checks : Checks) (wire : Regist
   | some started =>
       have valid := RegistrationNativePublicSourceStartupGood.start_good setup source seed scalar ensureInit identityIndex serverKeyId
         selectedOwner started after supported
-      let created : PqxdhLiveServerConstruction.Created Unit :=
+      let created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize) :=
         PqxdhLiveServerConstruction.initialized setup.joint identityIndex serverKeyId .generated seed
       have exactRun := RegistrationNativePublicSourceFull.ledger_source setup checks wire route representation correct created scalar
         started.credential selectedOwner selectedAccept bounds mode

@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
-import BeaconcryptCore.Computational.RegistrationNativeMldsaSignStoppedBounds
+import BeaconcryptCore.Computational.RegistrationNativeMldsaCreation
+import BeaconcryptCore.Computational.RegistrationNativeMldsaProgram
 import BeaconcryptCore.Computational.CtxComputationalSecurity
 import BeaconcryptCore.Computational.RegistrationNativePrimitiveCosts
 
@@ -42,15 +43,21 @@ private theorem capability_hash {Auxiliary : Type} (bytes : Pqxdh.Bytes) (before
   simpa only [RegistrationWorldServerCompletion.capability, StateT.run, IsTotalQueryBound, isQueryBound_map_iff] using
     hash bytes before.world.1
 
-/-- Initial pin construction has one actual shared fingerprint request. -/
+/-- Current pin selection is pure and has no uniform query. -/
+theorem initializePin_no_queries {Auxiliary : Type} (binding : pqxdh.ServerBinding) (publicKey : Std.Array U8 1952#usize)
+    (before : RegistrationWorldServerReplay.Global n Auxiliary) :
+    ((RegistrationWorldServerFrontend.initializePin binding publicKey).run before).IsTotalQueryBound 0 := by
+  rw [RegistrationWorldServerFrontend.initializePin_native]
+  trivial
+
+/-- The prior conservative ceiling follows from the exact zero-query result. -/
 theorem initializePin {Auxiliary : Type} (binding : pqxdh.ServerBinding) (publicKey : Std.Array U8 1952#usize)
     (before : RegistrationWorldServerReplay.Global n Auxiliary) :
-    ((RegistrationWorldServerFrontend.initializePin binding publicKey).run before).IsTotalQueryBound 64 := by
-  rw [RegistrationWorldServerFrontend.initializePin_native]
-  exact isTotalQueryBound_bind (n₂ := 0) (capability_hash _ before.2) (fun _ => by trivial)
+    ((RegistrationWorldServerFrontend.initializePin binding publicKey).run before).IsTotalQueryBound 64 :=
+  (initializePin_no_queries binding publicKey before).mono (Nat.zero_le 64)
 
-/-- Initial Server installation is deterministic, and its actual pin initialization pays at most64 draws. -/
-theorem frontend_start {Auxiliary : Type} (created : PqxdhLiveServerConstruction.Created Unit)
+/-- Initial Server installation and pure pin selection fit the prior conservative64-draw resource ceiling. -/
+theorem frontend_start {Auxiliary : Type} (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (publicKey : Std.Array U8 1952#usize) (auxiliary : Auxiliary) (before : PqxdhRecordLiftWorld.State n) :
     ((RegistrationWorldServerFrontend.start created publicKey auxiliary).run before).IsTotalQueryBound 64 := by
   simp only [RegistrationWorldServerFrontend.start, StateT.run]
@@ -87,16 +94,21 @@ theorem call (accounting : RegistrationNativeMldsaCapability.Accounting)
     ((RegistrationNativeMldsaProgram.call accounting query).run before).IsQueryBoundP IsCoin 0 := by
   simp [RegistrationNativeMldsaProgram.call, StateT.run, IsCoin]
 
-/-- Complete free startup pays the actual initializer,32 identity-byte draws and at most64 fingerprint-byte draws; generation remains a separate named slot. -/
+/-- Complete free startup pays the actual initializer and32 identity-byte draws, retaining the prior conservative64 allowance for the now-pure pin prefix; Server generation remains a separate named slot. -/
 theorem start (setup : Setup base KemSK) (ensureInit : StateT Unit ProbComp Bool)
     (qInit : Nat) (initialization : (ensureInit.run ()).IsTotalQueryBound qInit)
     (identityIndex : Nat) (serverKid : U64) :
     (RegistrationNativeMldsaCreation.start (n := n) (source := source) setup ensureInit identityIndex serverKid).IsQueryBoundP
       IsCoin (qInit + 32 + 64) := by
+  have constructor :
+      ((PqxdhLiveServerConstruction.construct (P := Std.Array U8 151#usize) setup.joint ensureInit identityIndex serverKid none).run ()).IsTotalQueryBound
+        (qInit + 32) := by
+    simpa only [Option.isNone_none, ite_true] using
+      PqxdhLiveServerConstruction.construct_uniform (P := Std.Array U8 151#usize) setup.joint ensureInit qInit
+        (fun state => by cases state; exact initialization) identityIndex serverKid none ()
   unfold RegistrationNativeMldsaCreation.start
-  apply isQueryBoundP_bind
-    (ordinary _ (qInit + 32)
-      (sampled _ _ (RegistrationNativePrimitiveCosts.constructor_bound setup.joint ensureInit qInit initialization identityIndex serverKid) _))
+  apply isQueryBoundP_bind (n := qInit + 32) (m := 64)
+    (ordinary _ (qInit + 32) (sampled _ _ constructor _))
   intro constructed _
   cases selected : constructed.1.1 with
   | none => trivial
@@ -161,3 +173,9 @@ end BeaconcryptCore.Computational.RegistrationNativeMldsaCoinPrimitives
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaCoinPrimitives.start
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaCoinPrimitives.initializePin_no_queries' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaCoinPrimitives.initializePin_no_queries

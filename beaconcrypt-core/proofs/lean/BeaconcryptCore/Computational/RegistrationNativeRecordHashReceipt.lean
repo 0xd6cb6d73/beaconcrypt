@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeWorldStageCache
-import BeaconcryptCore.Computational.RegistrationNativePlatformFinishRootReceipt
+import BeaconcryptCore.Computational.RegistrationNativeResponseAuthentication
 
 /-! Actual Server and Beacon record commitment callbacks retain their exact single shared-cache query and digest. Marker updates are retained and no source cache is reset or replaced by an unrelated reply. -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -44,7 +44,7 @@ theorem record_hash (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wi
 
 /-- The actual native Beacon commitment query returns its literal digest in the same reached shared cache. -/
 theorem beacon (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (transcript : commitment.CommitmentTranscript) (before after : Local n KemSK source)
     (answer : RegistrationRecordPrimitives.Spec.Range (.hash transcript))
     (supported : (answer, after) ∈ support ((lower setup checks representation created

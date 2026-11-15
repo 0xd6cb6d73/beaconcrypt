@@ -20,14 +20,14 @@ open PqxdhEd25519EufCma (Ed25519Signature)
 open RegistrationNativeIdentityCensorEdOutgoingSource (Full interpret)
 variable {n : Nat} {I KemSK Platform E A Q : Type} {base : OracleSpec I} {queries : OracleSpec Q} {mlSource : RegistrationNativeMldsa.Source}
 variable (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (selected index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner mlSource) (placeholder : Ed25519Signature)
 variable (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E))
 local notation "Main" => RegistrationNativePlatformIdentityCtxMain.beacon (n := n) (Platform := Platform) (source := mlSource) setup checks representation created
 local notation "source(" censored "," work ")" => interpret setup.joint selected placeholder censored work
 local notation "original(" work ")" => RegistrationNativePlatformIdentityCtxMain.interpret setup.joint work
 local notation "tree(" scalar ")" => RegistrationNativePlatformWriter.begin E (pqxdh.BeaconFresh.mk owner.pin.binding)
-  (RegistrationNativeIdentityFrontend.inputs owner) (pqxdh.BeaconCoins.mk (PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar))) owner.pin owner.mldsa.publicKey
+  (RegistrationNativeIdentityFrontend.inputs owner) (pqxdh.BeaconCoins.mk (PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar))) owner.pin
 local notation "publication(" scalar ")" => Main (simulateQ
   (RegistrationNativePlatformIdentityPublication.callback (n := n) (Auxiliary := RegistrationServerRoleBackend.State)
     setup index owner (RegistrationNativePlatformConcreteSource.writer reserve)) (tree(scalar)))
@@ -92,7 +92,7 @@ theorem stale (scalar : PqxdhJointGapDh.ScalarBytes) (started : pqxdh.BeaconStar
     rw [RegistrationNativeIdentityCensorPublicationSource.source setup checks representation created selected index owner placeholder reserve false,
       RegistrationNativeIdentityCensorOriginalPublication.source setup checks representation created index owner reserve]
     exact RegistrationNativeIdentityCensorStaleBeginSource.begin setup checks representation created index owner
-      (RegistrationNativeIdentityCensorConcreteWriter.encode reserve) selected placeholder _ _ _ _ _ started built rfl
+      (RegistrationNativeIdentityCensorConcreteWriter.encode reserve) selected placeholder _ _ _ _ started built rfl
       before seed handle held sourceTarget issued found
   simp only [RegistrationNativePlatformIdentityCtxBundleScope.bundled_fold, RegistrationNativeIdentityCensorSourceFold.bind_source,
     RegistrationNativePlatformIdentityCtxOrdinary.interpret_bind, StateT.run_bind, map_bind]

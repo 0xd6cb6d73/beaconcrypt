@@ -22,7 +22,7 @@ variable {n : Nat} {E Platform Value Next ι KemSK : Type} {base : OracleSpec ι
 
 noncomputable def encoder
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
-    (view : registration.SignedInitView) : StateT (Local n KemSK source) (StateT Platform ProbComp)
+    (view : registration.InitView) : StateT (Local n KemSK source) (StateT Platform ProbComp)
       (RustM (Option (alloc.vec.Vec U8))) :=
   RegistrationNativePlatformBundleLower.lower (RegistrationNativePlatformGenericBundle.encoderWith
     (RegistrationNativePlatformExperiment.writer (n := n) (KemSK := KemSK) (source := source) writer) view)
@@ -46,7 +46,7 @@ private theorem map_apply {S A B : Type} {m : Type → Type} [Monad m] [LawfulMo
 /-- Actual source encoding changes only the external platform state. -/
 theorem encoder_frame
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
-    (view : registration.SignedInitView) :
+    (view : registration.InitView) :
     encoder (n := n) (KemSK := KemSK) (source := source) writer view =
       StateT.lift (simulateQ writer
         (AdapterRegistrationWriterRequestExtraction.encodeInit (E := E) (m := AdapterRegistrationWriterRequestMonad.Program E)

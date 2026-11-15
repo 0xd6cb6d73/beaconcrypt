@@ -15,13 +15,13 @@ open RegistrationNativePlatformExtractedSdkOrdinaryDriver (M)
 open RegistrationNativePlatformExtractedSdkOrdinarySendCommon (project ownerNative owner_noop)
 variable {Platform E I KemSK Reader Response : Type} {base : OracleSpec I}
 variable [primitives : AdapterSealPrimitive.Operations] [FrameDispatchFallback.Operations]
-def owner (target : U64) (associated : Array U8 281#usize)
+def owner (target : U64) (associated : Array U8 151#usize)
     (kernel : ratchet.concrete.ConcreteRatchetKernel) (rawBefore : Nat) : RawCtxWholeOwner.OwnerState Unit :=
   ⟨⟨kernel,target,PqxdhRefinement.absBytes associated,()⟩,rawBefore⟩
 noncomputable def sample (setup : Setup base KemSK) (codec : Codec Reader Response)
     (reserve : Nat →StateT Platform ProbComp (core.result.Result Unit E))
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitives.Error)
-    (erased : commitment.CommitmentTranscript) (target sender : U64) (associated : Array U8 281#usize)
+    (erased : commitment.CommitmentTranscript) (target sender : U64) (associated : Array U8 151#usize)
     (kernel : ratchet.concrete.ConcreteRatchetKernel) (bytes : Slice U8) :
     M Platform (RustM AdapterRecordStatefulSend.Result) :=
   match AdapterPublicOrdinaryEnvelope.prepareSend bytes target sender associated kernel with
@@ -33,7 +33,7 @@ theorem native (setup : Setup base KemSK) (codec : Codec Reader Response)
     (view : RegistrationNativePlatformSourceSeal.KeyView)
     (converted : RegistrationNativePlatformOrdinarySourceNative.Conversion view)
     (failure : primitives.Error) (erased : commitment.CommitmentTranscript)
-    (target sender : U64) (associated : Array U8 281#usize) (kernel : ratchet.concrete.ConcreteRatchetKernel) (bytes : Slice U8) (rawBefore : Nat) :
+    (target sender : U64) (associated : Array U8 151#usize) (kernel : ratchet.concrete.ConcreteRatchetKernel) (bytes : Slice U8) (rawBefore : Nat) :
     project (owner target associated kernel rawBefore) <$>
       sample setup codec reserve view failure erased target sender associated kernel bytes =
     if CborRecordWorldClient.nextFits bytes.val.length kernel.refined.control.send_sequence.val sender.val then
@@ -76,7 +76,7 @@ theorem normal (setup : Setup base KemSK) (codec : Codec Reader Response)
     (view : RegistrationNativePlatformSourceSeal.KeyView)
     (converted : RegistrationNativePlatformOrdinarySourceNative.Conversion view)
     (failure : primitives.Error) (erased : commitment.CommitmentTranscript)
-    (target sender : U64) (associated : Array U8 281#usize) (kernel : ratchet.concrete.ConcreteRatchetKernel) (bytes : Slice U8)
+    (target sender : U64) (associated : Array U8 151#usize) (kernel : ratchet.concrete.ConcreteRatchetKernel) (bytes : Slice U8)
     (before after : RegistrationNativePlatformExtractedSdkOrdinaryDriver.State) (previous next : Platform)
     (reply : RustM AdapterRecordStatefulSend.Result)
     (supported : ((reply,after),next) ∈support

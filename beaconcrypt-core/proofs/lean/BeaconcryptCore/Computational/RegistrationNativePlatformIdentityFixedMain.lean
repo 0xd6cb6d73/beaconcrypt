@@ -21,7 +21,7 @@ variable {n : Nat} {I KemSK Platform E Value : Type} {base : OracleSpec I} {sour
 
 /-- Source interpretation preserves a fixed-history receipt derived from the actual common-P source body, without assuming source-history synchronization. -/
 theorem beacon_fixed (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativePlatformIdentityProgram.M n KemSK RegistrationServerRoleBackend.State Platform source Value)
     (law : RegistrationNativePlatformIdentityFixedCore.Preserves Fixed work)
     (before : (State n KemSK source × Platform) × SourceState)
@@ -73,7 +73,7 @@ private theorem interpret_map {Next : Type} (joint : PqxdhJointIdentity.Primitiv
 variable [primitives : BeaconcryptCore.Refinement.AdapterSealPrimitive.Operations]
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
 variable (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 variable (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitives.Error)
 variable (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
 variable (reserveRegistration reservePeer : StateT Platform ProbComp Bool)

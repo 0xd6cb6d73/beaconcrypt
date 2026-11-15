@@ -23,8 +23,7 @@ private theorem outgoing_equivariant (setup : Setup base KemSK) (source : Regist
   classical
   rcases query with (hashRequest | signRequest) | edRequest
   · exact lift_equivariant selected scalar _
-  · exact bind_equivariant selected scalar _ _ (sample_equivariant selected scalar _) (fun _ =>
-      bind_equivariant selected scalar _ _ (lift_equivariant selected scalar _) (fun _ => pure_equivariant selected scalar _))
+  · exact pure_equivariant selected scalar _
   · simp only [outgoing]
     split
     · exact bind_equivariant selected scalar _ _ (log_equivariant selected scalar index _ _) (fun _ => pure_equivariant selected scalar _)
@@ -35,7 +34,7 @@ noncomputable def after (setup : Setup base KemSK) (source : RegistrationNativeM
     (oneTime : PqxdhJointGapDh.ScalarBytes) : M n KemSK source Auxiliary (RustM (Option Pqxdh.Bytes)) := do
   let published ← simulateQ (outgoing setup source index owner)
     (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨owner.pin.binding⟩ (inputs setup owner)
-      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)
+      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)
   match published with
   | .fail error => pure (.fail error)
   | .div => pure .div

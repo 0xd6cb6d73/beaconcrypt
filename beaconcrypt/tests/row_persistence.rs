@@ -1057,3 +1057,117 @@ fn database_errors_and_duplicate_creation_do_not_replace_identity() {
 		assert_eq!(rows(&path).get(&key), Some(&value));
 	}
 }
+
+// Storage keys are the namespace, the 32-byte lineage, one row-kind byte and the row identifier.
+fn row_of_kind(rows: &BTreeMap<Vec<u8>, Vec<u8>>, kind: u8) -> (Vec<u8>, Vec<u8>) {
+	let namespace = b"beaconcrypt/rows/v1/".len() + LINEAGE.as_bytes().len();
+	let mut matching = rows
+		.iter()
+		.filter(|(key, _)| key.get(namespace) == Some(&kind));
+	let (key, value) = matching.next().unwrap();
+	assert!(matching.next().is_none(), "one row of kind {kind}");
+	(key.clone(), value.clone())
+}
+
+fn replace_row(path: &Path, key: &[u8], value: &[u8]) {
+	Connection::open(path)
+		.unwrap()
+		.execute(
+			"UPDATE beaconcrypt_rows SET value = ?1 WHERE key = ?2",
+			rusqlite::params![value, key],
+		)
+		.unwrap();
+}
+
+#[test]
+fn consumed_registration_stays_rejected_after_v2_reopen_and_old_rows_never_reset_it() {
+	let directory = tempfile::tempdir().unwrap();
+	let path = directory.path().join("registration-ledger.sqlite");
+	let mut server = create(&path);
+	let mut beacon = beacon(&server);
+	let request = beacon.get_registration_bundle().unwrap();
+	let response = server
+		.register_beacon(&request, Some(b"registered"))
+		.unwrap()
+		.unwrap();
+	assert_eq!(
+		beacon.finish_registration(&response.serialized).unwrap(),
+		b"registered"
+	);
+	assert!(
+		server
+			.register_beacon(&request, Some(b"live replay"))
+			.unwrap()
+			.is_none()
+	);
+	drop(server);
+	let committed = rows(&path);
+	let (marker_key, marker) = row_of_kind(&committed, 3);
+	assert_eq!(marker[16], 2);
+	let mut server = open(&path);
+	assert!(
+		server
+			.register_beacon(&request, Some(b"replay after reopen"))
+			.unwrap()
+			.is_none()
+	);
+	assert_eq!(rows(&path), committed);
+
+	// A marker row from a previous envelope version is refused rather than treated as absent.
+	for version in [0, 1] {
+		let mut legacy = marker.clone();
+		legacy[16] = version;
+		replace_row(&path, &marker_key, &legacy);
+		let damaged = rows(&path);
+		assert!(matches!(
+			server.register_beacon(&request, Some(b"legacy marker")),
+			Err(RowError::InvalidRow)
+		));
+		assert_eq!(rows(&path), damaged);
+	}
+	replace_row(&path, &marker_key, &marker);
+	drop(server);
+
+	// A previous-version identity row neither opens nor lets creation start a fresh ledger.
+	let (identity_key, identity) = row_of_kind(&committed, 0);
+	let mut legacy = identity.clone();
+	legacy[16] = 1;
+	replace_row(&path, &identity_key, &legacy);
+	let damaged = rows(&path);
+	assert!(matches!(
+		RowServer::open(SqliteRowStore::open(&path).unwrap(), LINEAGE),
+		Err(RowError::InvalidRow)
+	));
+	assert!(matches!(
+		RowServer::create(
+			SERVER_ID,
+			Some(&[0x32; 32]),
+			Some(&[0x33; 32]),
+			SqliteRowStore::open(&path).unwrap(),
+			LINEAGE,
+		),
+		Err(RowError::Conflict)
+	));
+	assert_eq!(rows(&path), damaged);
+	replace_row(&path, &identity_key, &identity);
+	assert_eq!(rows(&path), committed);
+
+	let mut server = open(&path);
+	assert!(
+		server
+			.register_beacon(&request, Some(b"replay after repair"))
+			.unwrap()
+			.is_none()
+	);
+	assert_eq!(rows(&path), committed);
+	let frame = beacon.encrypt_message(b"reopened peer").unwrap();
+	assert_eq!(
+		server
+			.decrypt_message(&frame.ciphertext)
+			.unwrap()
+			.unwrap()
+			.plaintext,
+		b"reopened peer"
+	);
+	assert_eq!(register(&mut server).1, response.kid + 1);
+}

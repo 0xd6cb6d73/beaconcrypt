@@ -278,7 +278,21 @@ def main():
     args = parser.parse_args()
     validate_targets()
     if not 0 < args.timeout <= 1800 or not 0 < args.address_space_kib <= 10485760:
-        parser.error("retain the approved 1800-second and 10-GiB per-target caps")
+        # Owner decisions of 2026-11-12 and 2026-11-13: the only per-target exceptions
+        # are those of fs-registration A1 and fs-records-s2b C1/C3
+        # (check-free-schedule.py, LIMIT_EXCEPTIONS) and of exact-interface-strong SSX-b2s
+        # (check-exact-interface-strong.py, LIMIT_EXCEPTIONS). SS-b2s got two long
+        # diagnostic runs instead, without a verdict: under the 10-GiB address space it
+        # ran out of memory after 15202 s (2026-11-12), and with a 16-GiB address space
+        # (2026-11-13) it hit the 28800 s limit at 86200 inserted rules with the
+        # saturation queue still near 15000 rules. So this group keeps the approved caps
+        # and SS-b2s stays inconclusive under transcript AD151.
+        parser.error(
+            "retain the approved 1800-second and 10-GiB per-target caps (owner decisions "
+            "2026-11-12 and 2026-11-13: per-target exceptions only for fs-registration "
+            "A1, fs-records-s2b C1/C3 and exact-interface-strong SSX-b2s; none in this "
+            "group)"
+        )
     if args.check_only:
         print(f"active strong-secrecy manifest: {len(TARGETS)} targets checked")
         return

@@ -120,7 +120,7 @@ theorem itemPost_middle {A Y : Type} (decision : Y × PqxdhDeploymentCompile.Loc
     PqxdhDeploymentIdealBranch.itemPost setup codec checks t p decision
         (.ready (PqxdhRegistrationJointServerBirth.encode created) p.others
           (some (.pending raw value ephemeral consumed joint.shared
-            (PqxdhRegistrationJointGeneratedFinish.encodeState setup joint).owners next))
+            ((PqxdhRegistrationJointGeneratedFinish.encodeState setup joint).owners, joint.inits) next))
           (joint.pool.1, PqxdhDeploymentIdealPoolSource.routerOf joint.pool.2) after) =
       (simulateQ (PqxdhRegistrationJointKemSecondEntry.slotImpl PqxdhDeploymentSeedSplit.tableService)
           ((PqxdhDeploymentIdealActive.acceptAfter setup codec checks created.seed p.challenge value ephemeral consumed
@@ -140,8 +140,8 @@ theorem itemPost_middle {A Y : Type} (decision : Y × PqxdhDeploymentCompile.Loc
     rfl
   rw [counts]
   have toC : ∀ work : OracleComp (PqxdhRegistrationJointKemPostSkeleton.Enc KemSK +
-      PqxdhRegistrationJointKemPostSkeleton.TSpec Output) ((Bool × List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) ×
-        PqxdhRegistrationJointKemPostSkeleton.SkelState KemSK Output),
+      PqxdhRegistrationJointKemPostSkeleton.TSpec Output) ((Bool × (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry ×
+        (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate))) × PqxdhRegistrationJointKemPostSkeleton.SkelState KemSK Output),
       PqxdhRegistrationJointKemPostSkeleton.skelDecide <$> ((simulateQ (PqxdhDeploymentIdealPostSteps.lowerE setup t p)
         work).run).run (PqxdhDeploymentIdealPostSim.eraseService ((joint.pool.1,
           PqxdhDeploymentIdealPoolSource.routerOf joint.pool.2), (joint.shared.1.cache,
@@ -167,7 +167,8 @@ theorem itemPost_middle {A Y : Type} (decision : Y × PqxdhDeploymentCompile.Loc
       (fun answer skel => (fun result => ((result.1, result.2.1), result.2.2)) <$>
         (simulateQ (PqxdhDeploymentIdealPostSteps.upperE setup codec checks t p created)
           (PqxdhRegistrationJointAcceptKemCut.tagged (PqxdhRegistrationJointAcceptCutTag.decideTag decision) raw next
-            answer)).run ((PqxdhRegistrationJointGeneratedFinish.encodeState setup joint).owners, skel)))) ?_
+            answer)).run (((PqxdhRegistrationJointGeneratedFinish.encodeState setup joint).owners, joint.inits),
+              skel)))) ?_
   rw [show (PqxdhRegistrationJointServerBirth.encode created).publicIdentity = setup.joint.publicKeys created.seed
       from identity, simulateQ_bind, OptionT.run_bind, Option.elimM, StateT.run_bind,
     PqxdhDeploymentIdealPostAccept.resume_accept setup codec checks t p created.seed
@@ -189,7 +190,8 @@ theorem itemPost_middle {A Y : Type} (decision : Y × PqxdhDeploymentCompile.Loc
     _ PqxdhRegistrationJointKemSecondEntry.slotGood_empty (by decide) w member
   have holds := itemInv_after t p created joint owned prefixed indexed w active good stored
   have encodeAfter : encodeMidC setup (afterSelected t joint w) =
-      (((PqxdhRegistrationJointGeneratedFinish.encodeState setup joint).owners, (clean w.1.2.2, marksOf w.1.1.2.2 w.2)),
+      ((((PqxdhRegistrationJointGeneratedFinish.encodeState setup joint).owners, joint.inits),
+          (clean w.1.2.2, marksOf w.1.1.2.2 w.2)),
         eraseServiceC ((joint.pool.1, PqxdhDeploymentIdealPoolSource.routerOf joint.pool.2), (w.1.2.1.cache, w.2))) := by
     simp only [encodeMidC, PqxdhDeploymentIdealPostSteps.encodeMid, eraseServiceC, Prod.map,
       PqxdhRegistrationJointKemObserverFree.eraseJoint_idem]

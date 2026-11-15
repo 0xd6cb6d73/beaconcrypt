@@ -19,7 +19,7 @@ variable {source : RegistrationNativeMldsa.Source}
 /-- The actual native signing source retains the attempted indexed request and signature before any callback buffer conversion. -/
 theorem sign_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeIdentityInterface.Credential) (seed : IdentitySeed)
     (message : Pqxdh.Bytes) (before : State n KemSK)
     (found : before.identities.seeds[credential.handle]? = some seed) :
@@ -35,7 +35,7 @@ theorem sign_source (setup : Setup base KemSK) (checks : Checks)
 /-- Static-DH uses the same private generated seed and keeps optional source rejection without publishing its converted secret. -/
 theorem dh_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeIdentityInterface.Credential) (seed : IdentitySeed)
     (peer : PqxdhBeaconPhase2Preparation.Word32) (before : State n KemSK)
     (found : before.identities.seeds[credential.handle]? = some seed) :
@@ -63,7 +63,7 @@ def appendHistory (owners : RegistrationNativeIdentityFrontend.State source) (in
 /-- A successful indexed signature is recorded in both the joint-service transcript and the current owner history before packing, including the path where native packing returns none. -/
 theorem outgoing_ed_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (owner : Owner source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (owner : Owner source)
     (request : registration.Ed25519SigningRequest) (seed : IdentitySeed)
     (owners : RegistrationNativeIdentityFrontend.State source) (env : EnvState Auxiliary) (before : State n KemSK)
     (found : before.identities.seeds[owner.identity.handle]? = some seed)

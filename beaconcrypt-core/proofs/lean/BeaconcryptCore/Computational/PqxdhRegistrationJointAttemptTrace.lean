@@ -6,6 +6,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptTrace
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhJointGapDh PqxdhServerAuthExperiment
 open PqxdhBeaconPhase1Publication PqxdhRegistrationJointIssuedAttempts
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response : Type}
@@ -106,15 +107,15 @@ theorem finish_basis {A : Type} (setup : Setup baseSpec KemSK)
     (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
     (owner : PqxdhRegistrationSchedule.Owner KemSK) (before : A)
     (result : (Option Pqxdh.Bytes × PqxdhRegistrationSchedule.Owner KemSK) × A)
-    (supported : result ∈ support ((simulateQ handler (PqxdhBeaconPhase2Publication.nativeOwner decode raw owner)).run before)) :
+    (supported : result ∈ support ((simulateQ handler (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw owner)).run before)) :
     ∀ actual, basis setup result.1.2 = some actual → basis setup owner = some actual := by
   rcases result with ⟨⟨_ | plaintext, after⟩, final⟩
   case none =>
-    have failed := PqxdhBeaconPhase2Publication.native_failure handler decode raw owner after before final supported
+    have failed := PqxdhBeaconPhase2Publication.native_failure (completedBinding := completedBinding) handler decode raw owner after before final supported
     cases phase : owner.beacon.phase <;> simp only [phase] at failed <;>
       simp [failed, PqxdhBeaconPhase2Preparation.abort, basis]
   case some =>
-    obtain ⟨staged, _, _, published⟩ := PqxdhBeaconPhase2Publication.native_success handler decode raw plaintext owner after before final supported
+    obtain ⟨staged, _, _, published⟩ := PqxdhBeaconPhase2Publication.native_success (completedBinding := completedBinding) handler decode raw plaintext owner after before final supported
     simp [show after = (PqxdhBeaconPhase2Publication.publish owner staged).2 from (congrArg Prod.snd published).symm, PqxdhBeaconPhase2Publication.publish, basis]
 
 end BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptTrace

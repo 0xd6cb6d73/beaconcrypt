@@ -28,7 +28,7 @@ private theorem pure_present (value : Value) (before : State n) (result : Value 
 
 private theorem authenticate_sessions (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (before : State n) (result : RustM (List BeaconcryptCore.Refinement.RegistrationAuthenticationFlow.Event × registration.InitAuthentication) × State n)
     (supported : result ∈ support ((RegistrationServerNativeSource.authenticate setup codec route verify created packet).run before)) :
     result.2.sessions = before.sessions := by
@@ -41,7 +41,7 @@ private theorem authenticate_sessions (setup : Setup base KemSK) (codec : Codec 
 theorem accept (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (before : State n) (result : RustM (Option Nat) × State n)
     (supported : result ∈ support ((RegistrationServerSdkSource.accept setup codec checks route verify representation created packet).run before))
     (token : peer.ConsumedRegistration) (present : Present token result.2) :
@@ -76,7 +76,7 @@ theorem accept (setup : Setup base KemSK) (codec : Codec Reader Response) (check
 /-- The exact actual source authentication cut leaves the accepted Init preimage at its retained binding digest in the shared cache. -/
 theorem authenticated_cache (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (before after : State n) (events : List BeaconcryptCore.Refinement.RegistrationAuthenticationFlow.Event)
     (authenticated : registration.AuthenticatedInit)
     (supported : (.ok (events, .Accepted authenticated), after) ∈ support
@@ -84,26 +84,13 @@ theorem authenticated_cache (setup : Setup base KemSK) (codec : Codec Reader Res
     ∃ digest,
       after.world.world.1.primitive.2 ((), BeaconcryptCore.Refinement.RegistrationAuthentication.initPreimage before.pin packet) = some digest ∧
       authenticated.binding.init_hash = RegistrationAuthenticationShared.digestArray digest := by
-  rw [RegistrationNativeInitAuthentication.authenticate, support_map] at supported
-  obtain ⟨inner, called, same⟩ := supported
-  have valueEq : inner.1 = .ok (events, .Accepted authenticated) := congrArg Prod.fst same
-  have native : (.ok (events, .Accepted authenticated), inner.2) ∈ support
-      ((RegistrationWorldAuthentication.begin setup codec route verify before.pin packet).run before.world.world.1) := by
-    simpa only [← valueEq, Prod.mk.eta] using called
-  have source := RegistrationWorldAuthentication.begin_native_support setup codec route verify before.pin packet
-    before.world.world.1 inner.2 events authenticated native
-  obtain ⟨digest, _verified, cached, _extension, hashEq⟩ := RegistrationAuthenticationNative.begin_gate_receipt
-    setup.source.crypto verify codec.frameWrite (RawCtxSourceHkdf.kdfImpl setup.source) before.pin packet
-      (RegistrationWorldAuthentication.project before.world.world.1) (RegistrationWorldAuthentication.project inner.2)
-        events authenticated source
-  have worldEq : (RegistrationNativeInitAuthentication.withWorld before inner.2) = after := congrArg Prod.snd same
-  rw [← worldEq]
-  exact ⟨digest, cached, hashEq⟩
+  exact RegistrationNativeInitAuthentication.authenticated_cache setup codec route verify created packet
+    before after events authenticated supported
 
 /-- Actual authentication changes the shared World alone; its pin, control and private token metadata are literal. -/
 theorem authenticate_frame (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (before after : State n) (reply : RustM (List BeaconcryptCore.Refinement.RegistrationAuthenticationFlow.Event × registration.InitAuthentication))
     (supported : (reply, after) ∈ support ((RegistrationServerNativeSource.authenticate setup codec route verify created packet).run before)) :
     after.pin = before.pin ∧ after.control = before.control ∧ after.consumed = before.consumed ∧ after.sessions = before.sessions := by

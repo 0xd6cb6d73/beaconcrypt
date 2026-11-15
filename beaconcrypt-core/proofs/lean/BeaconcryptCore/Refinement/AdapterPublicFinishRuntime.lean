@@ -21,7 +21,7 @@ variable [platform : PublicWrapperPlatform.Platform] [PublicWrapperPlatform.Cryp
 variable [localOps : AdapterPublicWrapperRequestMonad.LocalOperations (AdapterPublicWrapperRustT.RustT (M n KemSK source RegistrationServerRoleBackend.State))]
 variable [crypto : AdapterPublicWrapperRequestMonad.CryptoOperations (AdapterPublicWrapperRustT.RustT (M n KemSK source RegistrationServerRoleBackend.State))]
 theorem active (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (route : RawCtxServerRouting.SenderDecoder) (credential : RegistrationNativeMldsa.Credential source)
     (sealView : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))

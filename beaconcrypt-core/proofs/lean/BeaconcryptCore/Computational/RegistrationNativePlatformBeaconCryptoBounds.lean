@@ -18,7 +18,7 @@ def IsCrypto : (Spec E).Domain → Prop
   | .inr _ => False
 instance : DecidablePred (IsCrypto (E := E)) := fun query => by
   cases query <;> dsimp [IsCrypto] <;> infer_instance
-attribute [local irreducible] registration.BeaconInitHash.resume registration.BeaconFingerprint.resume registration.BeaconMldsaSigning.resume
+attribute [local irreducible] registration.BeaconInitHash.resume
 
 private theorem continue_bound (action : RustM Input)
     (next : Input → OracleComp (Spec E) (RustM (Result (alloc.vec.Vec U8)))) (count : Nat)
@@ -41,20 +41,7 @@ private theorem ready_bound (pending : registration.BeaconInitReady) : (ready (i
   · intro result _
     trivial
 
-private theorem signing_bound (payload : MldsaTranscriptAuth.Payload) (digest : CtxRomAuth.CtxDigest) (pending : registration.BeaconMldsaSigning) :
-    (fromSigning (cryptoLift (E := E)) (init E) payload digest pending).IsQueryBoundP (IsCrypto (E := E)) 1 := by
-  unfold fromSigning
-  apply continue_bound
-  intro request
-  simp only [cryptoLift, isQueryBoundP_query_bind_iff, IsCrypto, ite_true]
-  refine ⟨by decide, fun signature => ?_⟩
-  apply continue_bound
-  intro effect
-  cases effect with
-  | Ready selected => exact ready_bound selected
-  | _ => trivial
-
-private theorem hash_bound (pending : registration.BeaconInitHash) : (fromHash (cryptoLift (E := E)) (init E) pending).IsQueryBoundP (IsCrypto (E := E)) 2 := by
+private theorem hash_bound (pending : registration.BeaconInitHash) : (fromHash (cryptoLift (E := E)) (init E) pending).IsQueryBoundP (IsCrypto (E := E)) 1 := by
   unfold fromHash
   apply continue_bound
   intro request
@@ -63,23 +50,11 @@ private theorem hash_bound (pending : registration.BeaconInitHash) : (fromHash (
   apply continue_bound
   intro effect
   cases effect with
-  | MldsaSigningRequested selected => exact signing_bound _ _ selected
-  | _ => trivial
-
-private theorem fingerprint_bound (pending : registration.BeaconFingerprint) : (fromFingerprint (cryptoLift (E := E)) (init E) pending).IsQueryBoundP (IsCrypto (E := E)) 3 := by
-  unfold fromFingerprint
-  apply continue_bound
-  intro request
-  simp only [cryptoLift, isQueryBoundP_query_bind_iff, IsCrypto, ite_true]
-  refine ⟨by decide, fun digest => ?_⟩
-  apply continue_bound
-  intro effect
-  cases effect with
-  | HashRequested selected => exact hash_bound selected
+  | Ready selected => exact ready_bound selected
   | _ => trivial
 
 /-- The original attached-signing rank bounds every actual outgoing prefix, without assuming replies succeed. -/
-theorem ed_bound (pending : registration.BeaconEd25519Signing) : (fromEd (cryptoLift (E := E)) (init E) pending).IsQueryBoundP (IsCrypto (E := E)) (edRank pending + 3) := by
+theorem ed_bound (pending : registration.BeaconEd25519Signing) : (fromEd (cryptoLift (E := E)) (init E) pending).IsQueryBoundP (IsCrypto (E := E)) (edRank pending + 1) := by
   rw [fromEd.eq_def]
   apply continue_bound
   intro request
@@ -91,8 +66,8 @@ theorem ed_bound (pending : registration.BeaconEd25519Signing) : (fromEd (crypto
   | ok effect =>
       cases effect with
       | Ed25519SigningRequested next => exact (ed_bound next).mono (by have := ed_rank pending reply next actual; omega)
-      | FingerprintRequested selected =>
-          apply (fingerprint_bound selected).mono
+      | HashRequested selected =>
+          apply (hash_bound selected).mono
           have positive : 1 ≤ edRank pending := by cases stage : pending.stage <;> simp [edRank, stage]
           omega
       | _ => trivial
@@ -103,8 +78,8 @@ attribute [local irreducible] registration.begin_beacon_init
 
 /-- The literal native begin gate has the six-callback allowance on all error and optional-failure branches. -/
 theorem begin_bound (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize) :
-    (RegistrationNativePlatformWriter.begin E control inputs coins pin mldsa).IsQueryBoundP (IsCrypto (E := E)) 6 := by
+    (pin : session.ServerAuthenticationPin) :
+    (RegistrationNativePlatformWriter.begin E control inputs coins pin).IsQueryBoundP (IsCrypto (E := E)) 4 := by
   unfold RegistrationNativePlatformWriter.begin begin
   apply continue_bound
   intro effect

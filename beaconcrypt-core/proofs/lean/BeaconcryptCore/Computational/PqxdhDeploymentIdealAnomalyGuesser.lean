@@ -101,16 +101,107 @@ theorem oracleCallbacks_interp (secret : KemSK) (relabel : MlKem768PublicKey × 
       PqxdhRegistrationJointKemEntryFactor.mapRun_run, oracleCallbacks]
     exact interp_coins setup secret _
 
+/-- The literal native finish is equivariant under secret-key replacement when decapsulation is answered by the selected secret key's oracle. -/
+theorem nativeOwner_interp (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+    (old new : KemSK) (raw : Pqxdh.Bytes) (owner : Owner KemSK)
+    (state : PqxdhServerAuthNative.NativeState KemSK) (held : swapOwner old owner = owner) :
+    simulateQ (interp setup old) ((simulateQ (oracleCallbacks setup codec)
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw
+        (swapOwner new owner))).run state) =
+      (fun result => ((result.1.1, swapOwner new result.1.2), result.2)) <$>
+        (simulateQ (PqxdhRegistrationSchedule.callbacks setup codec)
+          (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw owner)).run state ∧
+    ∀ r ∈ support ((simulateQ (PqxdhRegistrationSchedule.callbacks setup codec)
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw owner)).run state),
+      swapOwner old r.1.2 = r.1.2 := by
+  have realRun : (simulateQ (PqxdhRegistrationSchedule.callbacks setup codec)
+        (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw owner)).run state =
+      (fun result => ((result.1.1, swapOwner old result.1.2), result.2)) <$>
+        (simulateQ (PqxdhRegistrationSchedule.callbacks setup codec ∘ₛ PqxdhPhase2KemHandles.native (withSecret old))
+          (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw owner)).run state := by
+    conv_lhs => rw [← held]
+    exact (PqxdhPhase2KemHandles.native_owner_run (completedBinding := completedBinding)
+      (withSecret old) _ codec.frameRead raw owner _).symm
+  refine ⟨?_, ?_⟩
+  · rw [PqxdhRegistrationJointKemEntryFactor.simulateQ_mapRun,
+      show swapOwner new owner = PqxdhBeaconPhase1Publication.mapState id (withSecret new) owner from rfl,
+      ← PqxdhPhase2KemHandles.native_owner_run (completedBinding := completedBinding)
+        (withSecret new) _ codec.frameRead raw owner _, oracleCallbacks_interp, realRun, Functor.map_map]
+    refine congrArg (fun f => f <$> _) (funext fun r => ?_)
+    simp only [swapOwner_swapOwner]
+    rfl
+  · intro r member
+    rw [realRun, support_map] at member
+    obtain ⟨r', -, rfl⟩ := member
+    exact swapOwner_swapOwner _ _ _
+
+/-- The addressed owner's hashed finish, with its transcript hash on the guesser's own coins and only decapsulation delegated to its oracle. -/
+noncomputable def oracleOwnerFinish
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes) (owner : Owner KemSK) :
+    StateT (PqxdhServerAuthNative.NativeState KemSK) (OracleComp (MlKemCCAOracleSpec baseSpec))
+      (Option Pqxdh.Bytes × Owner KemSK) :=
+  match owner.beacon.phase with
+  | .initSent control _ _ _ =>
+    match retained, PqxdhServerAuthExperiment.responseOf codec raw with
+    | some init, some response => do
+        let digest ← fun state => ccaCoins ((PqxdhServerAuthNative.nativeHash
+          (PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf init) response)).run state)
+        simulateQ (oracleCallbacks setup codec)
+          (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := PqxdhTranscriptAd.completedOf control digest)
+            codec.frameRead raw owner)
+    | _, _ => pure (none, PqxdhBeaconPhase2Preparation.abort control owner)
+  | _ => pure (none, owner)
+
+/-- The hashed finish computes the same transcript before and after secret-key replacement, and keeps the selected original key. -/
+theorem ownerFinish_interp (old new : KemSK)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes) (owner : Owner KemSK)
+    (state : PqxdhServerAuthNative.NativeState KemSK) (held : swapOwner old owner = owner) :
+    simulateQ (interp setup old) ((oracleOwnerFinish setup codec retained raw (swapOwner new owner)).run state) =
+      (fun result => ((result.1.1, swapOwner new result.1.2), result.2)) <$>
+        (PqxdhRegistrationSchedule.ownerFinish setup codec retained raw owner).run state ∧
+    ∀ r ∈ support ((PqxdhRegistrationSchedule.ownerFinish setup codec retained raw owner).run state),
+      swapOwner old r.1.2 = r.1.2 := by
+  cases active : owner.beacon.phase <;>
+    simp only [oracleOwnerFinish, PqxdhRegistrationSchedule.ownerFinish, swapOwner,
+      PqxdhBeaconPhase1Publication.mapState, PqxdhBeaconPhase1Publication.mapPhase, active]
+  all_goals try
+    constructor
+    · simp only [StateT.run_pure, simulateQ_pure, map_pure, active]
+    · intro r member
+      simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at member
+      subst member
+      exact held
+  case initSent control prekey oneTime kem =>
+    cases retained with
+    | none => simp [StateT.run_pure, PqxdhBeaconPhase2Preparation.abort]
+    | some init =>
+      cases decoded : PqxdhServerAuthExperiment.responseOf codec raw with
+      | none => simp [StateT.run_pure, PqxdhBeaconPhase2Preparation.abort]
+      | some response =>
+        constructor
+        · simp only [StateT.run_bind, simulateQ_bind]
+          change (simulateQ (interp setup old) (ccaCoins _) >>= _) = _
+          rw [interp_coins, map_bind]
+          refine bind_congr fun result => ?_
+          simpa only [swapOwner, PqxdhBeaconPhase1Publication.mapState,
+            PqxdhBeaconPhase1Publication.mapPhase, active, id_eq] using
+            (nativeOwner_interp setup codec (PqxdhTranscriptAd.completedOf control result.1)
+              old new raw owner result.2 held).1
+        · intro r member
+          rw [StateT.run_bind, mem_support_bind_iff] at member
+          obtain ⟨result, -, member⟩ := member
+          exact (nativeOwner_interp setup codec (PqxdhTranscriptAd.completedOf control result.1)
+            old new raw owner result.2 held).2 r member
+
 /-- Owner `index`'s registration finish with the decapsulation oracle: the real finish (the LQ snapshot of the addressed owner, then `PqxdhRegistrationSchedule.finish`, which runs the native owner program on its callbacks and reinstalls the returned owner) with the native callbacks replaced by `oracleCallbacks`. It never reads a KEM secret key: the owner's own key pair is only passed to the decapsulation request, which the oracle answers from the ciphertext alone. -/
 noncomputable def oracleFinish {Bk : Type} {n : ℕ} (index : ℕ) (raw : Pqxdh.Bytes) :
     StateT (XState KemSK Bk n) (OracleComp (MlKemCCAOracleSpec baseSpec)) (Option Pqxdh.Bytes) := fun x =>
   match x.base.native.owners[index]? with
   | none => pure (none, { x with snap := PqxdhDeploymentLater.snapshotAt x.snap x.base.native.owners (some index) })
   | some owner => (fun result => (result.1.1, { x with
-      base := { x.base with native := { shared := result.2, owners := x.base.native.owners.set index result.1.2 } },
+      base := { x.base with native := { x.base.native with shared := result.2, owners := x.base.native.owners.set index result.1.2 } },
       snap := PqxdhDeploymentLater.snapshotAt x.snap x.base.native.owners (some index) })) <$>
-    (simulateQ (oracleCallbacks setup codec) (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw owner)).run
-      x.base.native.shared
+    (oracleOwnerFinish setup codec (x.base.native.inits index) raw owner).run x.base.native.shared
 
 /-- Interpreted by the pre-challenge oracle of owner `index`'s secret key `old`, the oracle finish at the state with that key replaced by `new` is the real finish at the original state, with the key replaced in its final state; the real finish keeps owner `index`'s key. -/
 theorem oracleFinish_interp {Bk : Type} {n : ℕ} (checks : Checks) (route : RawCtxServerRouting.SenderDecoder)
@@ -150,50 +241,34 @@ theorem oracleFinish_interp {Bk : Type} {n : ℕ} (checks : Checks) (route : Raw
   · have found' : (swapX index new x).base.native.owners[index]? = some (swapOwner new o) := by
       simp [swapX, swapNative, swapSched, found]
     have bound : index < x.base.native.owners.length := (List.getElem?_eq_some_iff.mp found).1
-    have realRun : (simulateQ (PqxdhRegistrationSchedule.callbacks setup codec)
-        (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw o)).run x.base.native.shared =
-        (fun result => ((result.1.1, swapOwner old result.1.2), result.2)) <$>
-          (simulateQ (PqxdhRegistrationSchedule.callbacks setup codec ∘ₛ PqxdhPhase2KemHandles.native (withSecret old))
-            (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw o)).run x.base.native.shared := by
-      conv_lhs => rw [← held o found]
-      exact (PqxdhPhase2KemHandles.native_owner_run (withSecret old) _ codec.frameRead raw o _).symm
-    have source : (PqxdhRegistrationSchedule.finish setup codec index raw).run x.base.native =
-        (fun result => (result.1.1, ({ shared := result.2, owners := x.base.native.owners.set index result.1.2 } :
-          PqxdhRegistrationSchedule.State KemSK))) <$>
-          (simulateQ (PqxdhRegistrationSchedule.callbacks setup codec)
-            (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw o)).run x.base.native.shared :=
-      PqxdhRegistrationSchedule.finish_source setup codec index raw _ _ found
+    have source := PqxdhRegistrationSchedule.finish_source setup codec index raw x.base.native o found
+    obtain ⟨oracleEq, keeps⟩ := ownerFinish_interp setup codec old new (x.base.native.inits index) raw o
+      x.base.native.shared (held o found)
+    change (PqxdhRegistrationSchedule.finish setup codec index raw).run x.base.native = _ at source
     rw [real, source]
     refine ⟨?_, ?_⟩
     · change simulateQ (interp setup old) (match (swapX index new x).base.native.owners[index]? with
         | none => _ | some owner => _) = _
-      rw [found', simulateQ_map, PqxdhRegistrationJointKemEntryFactor.simulateQ_mapRun,
-        show swapOwner new o = PqxdhBeaconPhase1Publication.mapState id (withSecret new) o from rfl]
-      rw [← PqxdhPhase2KemHandles.native_owner_run (withSecret new) _ codec.frameRead raw o _,
-        oracleCallbacks_interp]
-      change _ = Prod.map id (swapX index new) <$> (_ <$> (_ <$> (simulateQ (PqxdhRegistrationSchedule.callbacks setup
-        codec) (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw o)).run x.base.native.shared))
-      rw [realRun]
+      rw [found', simulateQ_map]
+      have retained : (swapX (Bk := Bk) (n := n) index new x).base.native.inits = x.base.native.inits := rfl
+      have shared : (swapX (Bk := Bk) (n := n) index new x).base.native.shared = x.base.native.shared := rfl
+      rw [retained, shared, oracleEq, Functor.map_map, Functor.map_map]
       simp only [Functor.map_map]
-      refine congrArg (fun f => f <$> _) (funext fun r => ?_)
+      refine congrArg (fun f => f <$> (PqxdhRegistrationSchedule.ownerFinish setup codec
+        (x.base.native.inits index) raw o).run x.base.native.shared) (funext fun r => ?_)
       have owners : (swapX (Bk := Bk) (n := n) index new x).base.native.owners =
           x.base.native.owners.modify index (swapOwner new) := rfl
       simp only [Prod.map, id_eq, owners, snapshotAt_swap]
-      rw [show PqxdhBeaconPhase1Publication.mapState id (withSecret new) r.1.2 = swapOwner new (swapOwner old r.1.2) from
-        (swapOwner_swapOwner new old r.1.2).symm, modify_set_same]
+      rw [modify_set_same]
       rfl
     · intro r member
-      rw [support_map] at member
-      obtain ⟨r', member', rfl⟩ := member
-      change r' ∈ support ((fun result => _) <$> (simulateQ (PqxdhRegistrationSchedule.callbacks setup codec)
-        (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw o)).run x.base.native.shared) at member'
-      rw [realRun, Functor.map_map, support_map] at member'
-      obtain ⟨r'', -, rfl⟩ := member'
+      rw [support_map, support_map] at member
+      obtain ⟨r', ⟨result, member, rfl⟩, rfl⟩ := member
       intro o' found''
-      change (x.base.native.owners.set index (swapOwner old r''.1.2))[index]? = some o' at found''
+      change (x.base.native.owners.set index result.1.2)[index]? = some o' at found''
       rw [List.getElem?_set_self bound, Option.some.injEq] at found''
       subst found''
-      exact swapOwner_swapOwner _ _ _
+      exact keeps result member
 
 end Oracle
 
@@ -781,9 +856,9 @@ theorem guess_le_cca (t : Target count) (ensureInit : StateT A ProbComp Bool) (i
       guessCt codec t value.2.2.1.transcript = some value.2.2.2.backend.1.challenge
   refine (PqxdhDeploymentIdealAnomalyBound.evalDist_decide_mono _ _
     (fun result => hit (PqxdhDeploymentEnvironmentJoin.joined result))
-    fun result _ ⟨value, found, guessed⟩ => ⟨(value.1, value.2.1.1, value.2.1.2,
+    fun result _ ⟨value, found, guessed⟩ => ⟨(PqxdhDeploymentEnvironmentReal.eraseClient value.1, value.2.1.1, value.2.1.2,
       PqxdhDeploymentEnvironmentJoin.merge value.2.2 result.2), by
-        simp only [PqxdhDeploymentEnvironmentJoin.joined, found, Option.map_some], guessed⟩).trans ?_
+        simp only [PqxdhDeploymentEnvironmentJoin.joined, found, Option.map_some]; rfl, guessed⟩).trans ?_
   have law := (PqxdhDeploymentIdealEnv.c1_split setup codec route checks t ensureInit identityIndex runtime bounds mode
     adversary).map (fun outcome => decide (hit outcome))
   have joinedEq : (fun result => decide (hit (PqxdhDeploymentEnvironmentJoin.joined result))) <$>
@@ -873,17 +948,19 @@ theorem ccaCoins_decapsulate {α : Type} (work : ProbComp α) :
       intro decap
       exact decap.elim
 
-/-- The oracle finish makes at most one decapsulation query: the native owner program decapsulates at most once (`nativeOwner_decapsulate`), each decapsulation is one oracle query, and every other callback runs on the guesser's own coins. -/
-theorem oracleFinish_decapsulate {Bk : Type} {n : ℕ} (index : ℕ) (raw : Pqxdh.Bytes) (x : XState KemSK Bk n) :
-    ((oracleFinish (baseSpec := baseSpec) setup codec index raw).run x).IsQueryBoundP
+/-- The hashed owner finish makes at most one decapsulation query; its transcript hash is run on the guesser's own coins. -/
+theorem oracleOwnerFinish_decapsulate
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes) (owner : Owner KemSK)
+    (state : PqxdhServerAuthNative.NativeState KemSK) :
+    ((oracleOwnerFinish setup codec retained raw owner).run state).IsQueryBoundP
       IsMlKemLogicalDecapsulationQuery 1 := by
-  unfold oracleFinish
-  dsimp only [StateT.run]
-  split
-  · exact isQueryBoundP_pure _ _ _
-  · rw [isQueryBoundP_map_iff]
-    refine (nativeOwner_decapsulate _ raw _).simulateQ_run_of_step (fun query decap state => ?_)
-      (fun query other state => ?_) _
+  have nativeBound (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+      (owner : Owner KemSK) (state : PqxdhServerAuthNative.NativeState KemSK) :
+      ((simulateQ (oracleCallbacks setup codec)
+        (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw owner)).run state).IsQueryBoundP
+          IsMlKemLogicalDecapsulationQuery 1 := by
+    refine (nativeOwner_decapsulate (completedBinding := completedBinding) _ raw _).simulateQ_run_of_step
+      (fun query decap state => ?_) (fun query other state => ?_) _
     · rcases query with query | query
       · cases query <;> try cases decap
         simp only [oracleCallbacks, prepOracle, StateT.run]
@@ -896,6 +973,24 @@ theorem oracleFinish_decapsulate {Bk : Type} {n : ℕ} (index : ℕ) (raw : Pqxd
         case decapsulate ciphertext keys => exact absurd rfl other
         all_goals exact ccaCoins_decapsulate _
       · exact ccaCoins_decapsulate _
+  unfold oracleOwnerFinish
+  split
+  · split
+    · rw [StateT.run_bind]
+      exact isQueryBoundP_bind (ccaCoins_decapsulate _) fun result _ => nativeBound _ _ _
+    · exact isQueryBoundP_pure _ _ _
+  · exact isQueryBoundP_pure _ _ _
+
+/-- The oracle finish makes at most one decapsulation query through its hashed owner finish. -/
+theorem oracleFinish_decapsulate {Bk : Type} {n : ℕ} (index : ℕ) (raw : Pqxdh.Bytes) (x : XState KemSK Bk n) :
+    ((oracleFinish (baseSpec := baseSpec) setup codec index raw).run x).IsQueryBoundP
+      IsMlKemLogicalDecapsulationQuery 1 := by
+  unfold oracleFinish
+  dsimp only [StateT.run]
+  split
+  · exact isQueryBoundP_pure _ _ _
+  · rw [isQueryBoundP_map_iff]
+    exact oracleOwnerFinish_decapsulate setup codec _ raw _ _
 
 /-- Every step of the guesser's native handler makes at most one decapsulation query. -/
 theorem guessReg_decapsulate (t : Target count) (p : Params KemSK count)
@@ -1231,3 +1326,27 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomalyGuesser.anomalyG
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomalyGuesser.anomalyGuesser_decapsulations
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomalyGuesser.nativeOwner_interp' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomalyGuesser.nativeOwner_interp
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomalyGuesser.ownerFinish_interp' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomalyGuesser.ownerFinish_interp
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomalyGuesser.oracleOwnerFinish_decapsulate' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealAnomalyGuesser.oracleOwnerFinish_decapsulate

@@ -5,16 +5,43 @@ import BeaconcryptCore.Computational.CborRawIdealProvenanceWorld
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.CborRawIdealProvenanceStartup
 open PqxdhServerAuthExperiment (Setup Codec)
 open PqxdhRecordLiftInterface (Environment WorldSpec EnvQuery)
 open PqxdhDeploymentInterface (Entry Spec FreshBounds Mode ModeSpec)
 open PqxdhRecordLiftOrigins (Origins)
 open PqxdhDeploymentIdealOrigins (IsFixed QuietEntry aEffects isAnnot query_free free_run)
-open PqxdhDeploymentEnvironmentJoin (uncount initialized)
+open PqxdhDeploymentEnvironmentJoin (uncount)
 open CborRawIdealProvenanceStep (worldStep)
 variable {ι KemSK Reader Response E X : Type} {baseSpec : OracleSpec ι} {n : Nat}
+/-- The exact record World after its private AD151 Server initialization; all peer metadata is retained. -/
+noncomputable def initialized (created : PqxdhLiveServerConstruction.Created PqxdhTranscriptAd.AssociatedData)
+    (world : PqxdhRecordLiftWorld.State n) : PqxdhRecordLiftWorld.State n :=
+  { world with server := some (PqxdhRecordLiftWorld.importedServer created) }
+
 variable (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
+
+/-- Actual fresh construction has no imported peers, so its exact record initialization agrees with the internal constructor view after erasing only peer metadata. -/
+theorem initialized_start {Bk : Type} (ensureInit : StateT E ProbComp Bool)
+    (identityIndex : Nat) (runtime : E) (init : PqxdhLiveServerConstruction.Created Unit → Bk)
+    (created : PqxdhLiveServerConstruction.Created PqxdhTranscriptAd.AssociatedData)
+    (state : PqxdhDeploymentEnvironment.EnvState KemSK Bk)
+    (supported : some (created, state) ∈ support
+      (PqxdhDeploymentEnvironment.start setup ensureInit identityIndex runtime init))
+    (world : PqxdhRecordLiftWorld.State n) :
+    initialized created world = PqxdhDeploymentEnvironmentJoin.initialized
+      (PqxdhDeploymentEnvironment.eraseCreatedMetadata created) world := by
+  simp only [PqxdhDeploymentEnvironment.start, support_map, Set.mem_image] at supported
+  obtain ⟨⟨result, after⟩, constructed, same⟩ := supported
+  cases result with
+  | none => cases same
+  | some made =>
+      simp only [Option.map_some, Option.some.injEq, Prod.mk.injEq] at same
+      obtain ⟨rfl, _⟩ := same
+      obtain ⟨seed, rfl, _⟩ := PqxdhLiveServerConstruction.construct_origin setup.joint ensureInit
+        identityIndex setup.serverKeyId none runtime after made constructed
+      rfl
 
 /-- Startup coins see the same actual annotated World and counters, before any record command exists. -/
 theorem coins_annotated {Result : Type} (draw : ProbComp Result) (state : PqxdhRecordLiftOrigins.State n) :
@@ -102,7 +129,7 @@ theorem world_keeps (env : Environment n E)
     cases found
   · have vacant : w.server = none := congrArg PqxdhRecordLiftWorld.State.server fresh
     have initRun : (CborRawIdealProvenanceGuard.handler setup codec route (.inl created)).run (w, PqxdhRecordLiftOrigins.empty) =
-        pure ((), (PqxdhDeploymentEnvironmentJoin.initialized created w, PqxdhRecordLiftOrigins.empty)) := by
+        pure ((), (initialized created w, PqxdhRecordLiftOrigins.empty)) := by
       change (PqxdhRecordLiftOrigins.handler setup codec route (.inl created)).run
         (w, PqxdhRecordLiftOrigins.empty) = _
       rw [PqxdhDeploymentIdealOrigins.handler_other setup codec route _ _ rfl]
@@ -120,7 +147,7 @@ theorem world_keeps (env : Environment n E)
     subst found
     exact CborRawIdealProvenanceRun.run_keeps setup codec route env R rFixed rQuiet rStep
       setup.source.crypto serverKid bounds _ PqxdhDeploymentSecrecy.Ledger.empty start
-      (PqxdhDeploymentEnvironmentJoin.initialized created w) PqxdhRecordLiftOrigins.empty
+      (initialized created w) PqxdhRecordLiftOrigins.empty
       (born created start started w fresh) middle middleMember
 
 end BeaconcryptCore.Computational.CborRawIdealProvenanceStartup
@@ -142,3 +169,9 @@ end BeaconcryptCore.Computational.CborRawIdealProvenanceStartup
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.CborRawIdealProvenanceStartup.world_keeps
+
+/-- info: 'BeaconcryptCore.Computational.CborRawIdealProvenanceStartup.initialized_start' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CborRawIdealProvenanceStartup.initialized_start

@@ -12,7 +12,7 @@
 
 (* Load order: production-transcript-interface.pvl, crypto.pvl,
    extraction/lib.pvl, this file, then the fs process libraries.  This file
-   does not load environment.pvl.  The five declarations below that are
+   does not load environment.pvl.  The nine declarations below that are
    marked "copied from environment.pvl" are compact-text identical to their
    source; the transcript-fidelity test checks that.
 
@@ -33,7 +33,7 @@
    equals the Server's own ID SERVER_KEY_ID.  fs_seq(t) is the u64 frame
    sequence t, so sequence_le64(fs_seq(t)) is the CTX sequence field. *)
 (* @beaconcrypt-fs-fidelity key=common.kid_counter_start src=beaconcrypt/src/server.rs:224-224 anchor=control: verified_pqxdh::ServerState::new(server_kid), *)
-(* @beaconcrypt-fs-fidelity key=common.kid_next src=beaconcrypt-core/src/pqxdh.rs:845-851 anchor=pub const fn server_next_key_id(state: ServerState) -> Result<u64, RegistrationError> { *)
+(* @beaconcrypt-fs-fidelity key=common.kid_next src=beaconcrypt-core/src/pqxdh.rs:828-834 anchor=pub const fn server_next_key_id(state: ServerState) -> Result<u64, RegistrationError> { *)
 fun fs_kid(nat): key_id [data].
 fun fs_seq(nat): sequence [data].
 
@@ -67,6 +67,27 @@ fun kex_response(
   bitstring,
   key_id
 ): bitstring [data].
+
+(* Copied from environment.pvl: registration version 3 record AD151 =
+   AD_CONTEXT87 || BLAKE2b-512(T), with T the four InitKex fields exactly as
+   sent (tagged identity, then the prekey, one-time and ML-KEM fields with
+   their attached Ed25519 signatures), then the response Server identity,
+   ephemeral key, KEM ciphertext and LE64 assigned ID.  The same AD protects
+   the initial record and every later record in both directions.  No new
+   primitive or equation: these are the environment.pvl constructors. *)
+fun record_ad_context87(): bitstring [data].
+fun record_ad_preimage(bitstring, bitstring, bitstring, bitstring,
+  bitstring, bitstring, bitstring, bitstring): bitstring [data].
+fun record_associated_data(bitstring, bitstring): bitstring [data].
+letfun transcript_associated_data(
+  encoded_identity: bitstring, signed_prekey: bitstring,
+  signed_one_time: bitstring, signed_pq: bitstring,
+  server_identity: bitstring, ephemeral: bitstring,
+  kem: bitstring, assigned: key_id
+) =
+  record_associated_data(record_ad_context87(), blake2b512(record_ad_preimage(
+    encoded_identity, signed_prekey, signed_one_time, signed_pq,
+    server_identity, ephemeral, kem, sender_id_le64(assigned)))).
 
 (* An empty consumed-set slot: a data constant that differs from every
    beaconcrypt_core__pqxdh__RegistrationId(...) term. *)

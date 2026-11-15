@@ -100,20 +100,20 @@ theorem root_native {Auxiliary : Type} (source : FixedHkdfSha512NoSaltSource) (h
     (original : PqxdhBeaconPhase2Preparation.Prepared registration.AuthenticatedResponse)
     (before : State Auxiliary) :
     (simulateQ (instrument source hmac primitive pending)
-      (RegistrationAgreementExecutor.drive 2 (.RootKdf ⟨.Beacon original.candidate authenticated.pending.binding authenticated.packet.application⟩))).run before =
+      (RegistrationAgreementExecutor.drive 2 (.RootKdf ⟨.Beacon original.candidate authenticated.binding authenticated.packet.application⟩))).run before =
       pure (.ok (.BeaconComplete ⟨PqxdhBeaconPhase2Publication.clearedCandidate original.candidate,
-        authenticated.pending.binding, ⟨RawCtxSourceHkdf.rootResponse source.crypto original.candidate.root_key_input⟩,
+        authenticated.binding, ⟨RawCtxSourceHkdf.rootResponse source.crypto original.candidate.root_key_input⟩,
         authenticated.packet.application⟩),
         (rootState hmac (pinnedBeaconMessage pending.collected)
           (absBytes original.candidate.root_key_input.bytes) before.1, before.2)) := by
-  have requested : (⟨.Beacon original.candidate authenticated.pending.binding authenticated.packet.application⟩ : agreement.RootKdfPending).request =
+  have requested : (⟨.Beacon original.candidate authenticated.binding authenticated.packet.application⟩ : agreement.RootKdfPending).request =
       .ok ⟨original.candidate.root_key_input.bytes, pqxdh.PQXDH_INFO⟩ := by
     simp only [agreement.RootKdfPending.request, pqxdh.BeaconRegistrationCandidate.impl.root_key_input,
       pqxdh.RootKeyInput.as_bytes, bind_tc_ok]
   rw [RegistrationBeaconRelatedRoot.root_step_two _ _ requested]
   simp only [simulateQ_bind, simulateQ_spec_query, simulateQ_pure]
   change (pure
-    ((⟨.Beacon original.candidate authenticated.pending.binding authenticated.packet.application⟩ : agreement.RootKdfPending).resume
+    ((⟨.Beacon original.candidate authenticated.binding authenticated.packet.application⟩ : agreement.RootKdfPending).resume
       (.Some (RegistrationAgreementShared.rootResponse source.crypto
         ⟨original.candidate.root_key_input.bytes, pqxdh.PQXDH_INFO⟩)),
       (rootState hmac (pinnedBeaconMessage pending.collected)
@@ -134,11 +134,11 @@ theorem client_source {Auxiliary : Type} (source : FixedHkdfSha512NoSaltSource) 
     (related : PqxdhPhase2DhMetadata.ReadyRel dh scalar original pending) :
     simulateQ (familyImpl (sourceImpl source hmac joint dh seed scalar)) (client authenticated pending) =
       simulateQ (instrument source hmac primitive pending)
-        (RegistrationAgreementExecutor.drive 2 (.RootKdf ⟨.Beacon original.candidate authenticated.pending.binding authenticated.packet.application⟩)) := by
+        (RegistrationAgreementExecutor.drive 2 (.RootKdf ⟨.Beacon original.candidate authenticated.binding authenticated.packet.application⟩)) := by
   funext before
   change (simulateQ (familyImpl (sourceImpl source hmac joint dh seed scalar)) (client authenticated pending)).run before =
     (simulateQ (instrument source hmac primitive pending)
-      (RegistrationAgreementExecutor.drive 2 (.RootKdf ⟨.Beacon original.candidate authenticated.pending.binding authenticated.packet.application⟩))).run before
+      (RegistrationAgreementExecutor.drive 2 (.RootKdf ⟨.Beacon original.candidate authenticated.binding authenticated.packet.application⟩))).run before
   rw [root_native]
   have inputEq := pinned_source dh domain seed scalar pending.collected references
     original.candidate.root_key_input related.2.2.2.2

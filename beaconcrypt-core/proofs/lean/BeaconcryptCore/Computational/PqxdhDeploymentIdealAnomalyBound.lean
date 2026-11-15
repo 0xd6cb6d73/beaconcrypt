@@ -712,9 +712,9 @@ theorem guess_le_pk_sup (t : Target count) (ensureInit : StateT A ProbComp Bool)
     fun outcome => ∃ value, outcome = some value ∧
       guessCt codec t value.2.2.1.transcript = some value.2.2.2.backend.1.challenge
   refine (evalDist_decide_mono _ _ (fun result => hit (PqxdhDeploymentEnvironmentJoin.joined result))
-    fun result _ ⟨value, found, guessed⟩ => ⟨(value.1, value.2.1.1, value.2.1.2,
+    fun result _ ⟨value, found, guessed⟩ => ⟨(PqxdhDeploymentEnvironmentReal.eraseClient value.1, value.2.1.1, value.2.1.2,
       PqxdhDeploymentEnvironmentJoin.merge value.2.2 result.2), by
-        simp only [PqxdhDeploymentEnvironmentJoin.joined, found, Option.map_some], guessed⟩).trans ?_
+        simp only [PqxdhDeploymentEnvironmentJoin.joined, found, Option.map_some]; rfl, guessed⟩).trans ?_
   have law := (PqxdhDeploymentIdealEnv.c1_split setup codec route checks t ensureInit identityIndex runtime bounds mode
     adversary).map (fun outcome => decide (hit outcome))
   have joinedEq : (fun result => decide (hit (PqxdhDeploymentEnvironmentJoin.joined result))) <$>

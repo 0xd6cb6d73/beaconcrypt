@@ -17,7 +17,7 @@ variable [ed : AdapterInitEdPrimitive.Operations]
 variable {n : Nat} {I KemSK R Platform : Type} {base : OracleSpec I} {source : RegistrationNativeMldsa.Source}
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK)
 variable (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : AdapterPublicWrapperStorage.Views)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 variable (current : RegistrationNativeExperiment.State n KemSK source ×Platform)
 variable (before : StrongCarrier (R:=R) setup view views created credential current)
 variable (world : PqxdhRecordLiftWorld.State n) (next : Platform)

@@ -1,28 +1,26 @@
--- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinEnv
+import BeaconcryptCore.Computational.PqxdhRecordFactsBindingEvidence
+-- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl
 
 /-!
-# The two env_g ideal-world invariants of the pin lift (CE-12 P4 step 2, AG lift R1)
+# Cached transcript invariants for the computational Server-pin row
 
-The two facts of the ideal environment that the P2b remainder names for the b2s Server-pin row of design-v2 section 7.6 (R1), on every outcome of every CTX world (in particular `idealAuth`) with the ideal environment of a target (`PqxdhDeploymentIdealEnv.envGD`), as `PinFacts`:
+The actual CTX world's installed owner shells and Server peer bindings carry AD151 values computed from cached registration transcripts. Owner receipts certify the public pin recorded for that owner in the deployment transcript; peer receipts certify the record Server's identity. Successful build responses carry the same Server identity. These are the three support facts collected by `PinFacts` and `idealAuth_pinFacts`.
 
-- (a) every established owner's installed shell has associated data `RawCtxServerRouting.associatedArray pin beacon`, where `pin` is the pin with which the public transcript summary (`PqxdhDeploymentTranscript.summarize`) created that owner and `beacon` is some Beacon identity;
-- (b) when the record control holds a Server, every successful build entry of the final transcript is the Phase 2 writer output of fields carrying that Server's identity (`PqxdhDeploymentEligibility.BuildShaped`); with `Phase2ReadBack`, the Server identity field read from a build response is then the record control's Server identity.
+The proof fixes an ambient final cache and refines each environment hash reply to a digest cached at its exact queried bytes. `PqxdhDeploymentHeadlinePinEffects.actual_support` and `actual_keep` derive this refinement from the actual CTX execution and cache growth. The source installation lemmas reuse the maintained native preparation, publication and hidden finish bodies, including every rejection path. The internal invariant is propagated as `currentCache ≤ finalCache → Inv finalCache state`; its final antecedent is reflexivity, so the resulting support theorem has no new premise. Actual startup imports no peer, as proved from the constructor's initialized state, rather than assuming a certificate for arbitrary imported metadata.
 
-The invariant also records that every Server peer in this old environment has identity-derived AD (`LegacyPeers`). The actual constructor import explicitly fills that metadata, and subsequent real and hidden Server publication effects use `PeerBinding.legacy`; record callbacks preserve the binding. This source-derived fact connects the generic agreement theorem's full `PeerBinding.associatedBytes` to the legacy `owner_pin` helper without imposing any law on arbitrary populated bindings.
-
-Proof: the joint invariant `Inv` of the flattened world (ledger, environment state, record control): the environment's Server identity, the environment's pins equal to the summary's created pins, `ControlOk` with `PinOk` (the associated data the transcript admits) and `LegacyPeers`, and every build entry shaped. It holds after the startup, whose effects are coins, and the Server installation (`startup_facts`, `install_facts`, `PqxdhDeploymentHeadlinePinEnv.envGD_start`), and every adversary query keeps it (`full_inv`): quiet native commands (`forward_quiet`), environment commands (`forward_env`, from `PqxdhDeploymentHeadlinePinEnv.envGD_move`, `PqxdhDeploymentHeadlinePinEnv.envGD_ok` and `PqxdhDeploymentHeadlinePinControl.nativeImpl_env`, with `fits_of_ok`) and secrecy commands, whose native commands are coins and sends (`secrecy_quiet`, `secrecy_inv`). `ctxRun_pinFacts` (every key modes and plaintext replacement), `idealAuth_pinFacts`.
-
-No assumption or codec law; support facts only. No `PqxdhBoundary*` module is imported.
+This module changes no deployment event, distribution or primitive assumption. It reads the final shared cache only in internal proof evidence and establishes no new adversarial observation.
 -/
 
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 
 set_option autoImplicit false
+set_option warningAsError true
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant
+variable (cache : CtxRomAuth.CtxRO.QueryCache)
 open PqxdhServerAuthExperiment (Setup Codec Checks)
 open PqxdhDeploymentInterface (Entry Spec FullSpec Command FreshBounds Mode ModeSpec)
 open PqxdhDeploymentTranscript (summarize)
@@ -31,16 +29,20 @@ open PqxdhRecordLiftIdeal (ctxRun idealAuth)
 open PqxdhRecordLiftFlat (NativeState nativeImpl fullImpl)
 open PqxdhDeploymentEnvironment (EnvState)
 open PqxdhDeploymentHeadlinePinEnv (pins serverId InstallOk badInstall PinMove)
-open PqxdhDeploymentHeadlinePinControl (LegacyPeers ServerIs ShellsOk ControlOk InstallFits Quiet)
+open PqxdhDeploymentHeadlinePinControl (PeersOk ServerIs ShellsOk ControlOk InstallFits Quiet)
 
 variable {KemSK : Type}
 
 /-! ### The public pins of a transcript -/
 
-/-- The associated data of an owner index admitted by a transcript: the extracted builder's output on the pin the transcript's summary records for that owner and some Beacon identity. -/
-def PinOk (transcript : List Entry) (owner : ℕ) (associatedData : Std.Array Std.U8 281#usize) : Prop :=
-  ∃ pin keyId beacon, (summarize transcript).owners[owner]? = some (pin, keyId) ∧
-    associatedData = RawCtxServerRouting.associatedArray pin beacon
+/-- A transcript's owner pin certified by an actual cached registration transcript. -/
+def PinOk (transcript : List Entry) (owner : ℕ) (ad : PqxdhTranscriptAd.AssociatedData) : Prop :=
+  ∃ pin keyId, (summarize transcript).owners[owner]? = some (pin, keyId) ∧
+    PqxdhDeploymentHeadlinePinCollision.Receipt cache (PqxdhRefinement.absBytes pin) ad
+
+/-- An installed peer certifies the current Server identity in the same actual cache. -/
+def PeerOk (identity : RawCtxServerRouting.Identity) (_keyId : Std.U64) (ad : PqxdhTranscriptAd.AssociatedData) : Prop :=
+  PqxdhDeploymentHeadlinePinCollision.Receipt cache (PqxdhRefinement.absBytes identity) ad
 
 /-- A transcript entry only extends the summary's owners. -/
 theorem summarize_owners_extend (transcript : List Entry) (entry : Entry) :
@@ -66,34 +68,33 @@ theorem summarize_owners_extend (transcript : List Entry) (entry : Entry) :
 
 /-- A later transcript admits every associated data an earlier one admits. -/
 theorem pinOk_extend (transcript : List Entry) (entry : Entry) (owner : ℕ)
-    (associatedData : Std.Array Std.U8 281#usize) (ok : PinOk transcript owner associatedData) :
-    PinOk (transcript ++ [entry]) owner associatedData := by
-  obtain ⟨pin, keyId, beacon, found, built⟩ := ok
+    (associatedData : PqxdhTranscriptAd.AssociatedData) (ok : PinOk cache transcript owner associatedData) :
+    PinOk cache (transcript ++ [entry]) owner associatedData := by
+  obtain ⟨pin, keyId, found, receipt⟩ := ok
   obtain ⟨extra, extended⟩ := summarize_owners_extend transcript entry
-  refine ⟨pin, keyId, beacon, ?_, built⟩
+  refine ⟨pin, keyId, ?_, receipt⟩
   rw [extended, List.getElem?_append_left (List.getElem?_eq_some_iff.mp found).1]
   exact found
 
 /-- The established shells admitted by a transcript are admitted by every later transcript. -/
 theorem shellsOk_extend {n : ℕ} (transcript : List Entry) (entry : Entry) (control : PqxdhRecordLiftProtocol.Control n)
-    (holds : ShellsOk (PinOk transcript) control) : ShellsOk (PinOk (transcript ++ [entry])) control :=
-  fun owner shell kernel found => pinOk_extend transcript entry owner _ (holds owner shell kernel found)
+    (holds : ShellsOk (PinOk cache transcript) control) : ShellsOk (PinOk cache (transcript ++ [entry])) control :=
+  fun owner shell kernel found => pinOk_extend (cache := cache) transcript entry owner _ (holds owner shell kernel found)
 
-/-- An admissible request of an environment state whose pins agree with the transcript fits the transcript's admitted associated data. -/
+/-- The source installation certificate fits the public transcript and current Server identity. -/
 theorem fits_of_ok {Bk : Type} {n : ℕ} (transcript : List Entry) (e : EnvState KemSK Bk)
+    (identity : RawCtxServerRouting.Identity) (same : serverId e = identity)
     (agree : (summarize transcript).owners.map Prod.fst = pins e) (query : (EnvEffects n).Domain)
-    (good : badInstall e query = false) : InstallFits (PinOk transcript) query := by
-  have admissible : InstallOk e query := by
-    by_contra bad
-    have flagged := (PqxdhDeploymentHeadlinePinEnv.badInstall_iff e _).2 bad
-    rw [good] at flagged
-    cases flagged
+    (good : badInstall cache e query = false) :
+    InstallFits (PeerOk cache identity) (PinOk cache transcript) query := by
+  have admissible : InstallOk cache e query := by simpa [badInstall] using good
   rcases query with coin | capability
   · trivial
   · cases capability with
-    | installServer _ _ _ => exact admissible
+    | installServer keyId binding ref =>
+        simpa only [InstallOk, InstallFits, PeerOk, ← same, serverId] using admissible
     | installBeacon owner shell ref =>
-        obtain ⟨before, found, beacon, built⟩ := admissible
+        obtain ⟨before, found, receipt⟩ := admissible
         have mapped : ((summarize transcript).owners.map Prod.fst)[owner]? = some before.beacon.serverIdentity := by
           rw [agree]
           unfold pins
@@ -101,9 +102,8 @@ theorem fits_of_ok {Bk : Type} {n : ℕ} (transcript : List Entry) (e : EnvState
           rfl
         rw [List.getElem?_map] at mapped
         obtain ⟨⟨pin, keyId⟩, entryFound, pinEq⟩ := Option.map_eq_some_iff.mp mapped
-        exact ⟨pin, keyId, beacon, entryFound, by rw [built]; simp only at pinEq; rw [pinEq]⟩
+        exact ⟨pin, keyId, entryFound, by simpa only [show pin = before.beacon.serverIdentity from pinEq] using receipt⟩
     | _ => trivial
-
 
 /-! ### The secrecy commands issue only coins and sends -/
 
@@ -188,7 +188,7 @@ abbrev GD (KemSK : Type) (count : ℕ) :=
 def Inv (identity : RawCtxServerRouting.Identity)
     (state : PqxdhDeploymentSecrecy.Ledger × NativeState 2 (GD KemSK count)) : Prop :=
   serverId state.2.1.1 = identity ∧ (summarize state.1.transcript).owners.map Prod.fst = pins state.2.1.1 ∧
-    ControlOk identity (PinOk state.1.transcript) state.2.1.2 ∧
+    ControlOk identity (PeerOk cache identity) (PinOk cache state.1.transcript) state.2.1.2 ∧
     ∀ entry ∈ state.1.transcript, PqxdhDeploymentEligibility.BuildShaped codec identity entry
 
 /-- An entry that is not a command keeps the summary. -/
@@ -204,15 +204,15 @@ theorem summarize_quiet (transcript : List Entry) (entry : Entry)
 /-- Appending an entry that keeps the summary's owners and is shaped keeps the invariant at an unchanged environment state with a control that keeps both facts. -/
 theorem inv_append (identity : RawCtxServerRouting.Identity) (ledger : PqxdhDeploymentSecrecy.Ledger)
     (native native' : NativeState 2 (GD KemSK count)) (entry : Entry)
-    (holds : Inv codec identity (ledger, native))
+    (holds : Inv cache codec identity (ledger, native))
     (identityEq : serverId native'.1.1 = identity)
     (agree : (summarize (ledger.transcript ++ [entry])).owners.map Prod.fst = pins native'.1.1)
-    (control : ControlOk identity (PinOk ledger.transcript) native'.1.2)
+    (control : ControlOk identity (PeerOk cache identity) (PinOk cache ledger.transcript) native'.1.2)
     (shaped : PqxdhDeploymentEligibility.BuildShaped codec identity entry) (ledger' : PqxdhDeploymentSecrecy.Ledger)
-    (transcript : ledger'.transcript = ledger.transcript ++ [entry]) : Inv codec identity (ledger', native') := by
+    (transcript : ledger'.transcript = ledger.transcript ++ [entry]) : Inv cache codec identity (ledger', native') := by
   refine ⟨identityEq, by rw [transcript]; exact agree, ⟨control.1, ?_⟩, fun other member => ?_⟩
   · rw [transcript]
-    exact shellsOk_extend ledger.transcript entry native'.1.2 control.2
+    exact shellsOk_extend (cache := cache) ledger.transcript entry native'.1.2 control.2
   · rw [transcript, List.mem_append, List.mem_singleton] at member
     rcases member with old | rfl
     · exact holds.2.2.2 other old
@@ -223,11 +223,11 @@ theorem forward_quiet (modes : Label 2 → PqxdhRecordLiftIdeal.KeyMode) (replac
     (route : RawCtxServerRouting.SenderDecoder) (env : Environment 2 (GD KemSK count))
     (identity : RawCtxServerRouting.Identity) (query : Spec.Domain) (quiet : envQuery query = false)
     (ledger : PqxdhDeploymentSecrecy.Ledger) (native : NativeState 2 (GD KemSK count))
-    (holds : Inv codec identity (ledger, native)) :
+    (holds : Inv cache codec identity (ledger, native)) :
     ∀ inner ∈ support ((nativeImpl modes replace setup codec route env query).run native),
-      Inv codec identity (ledger.record (.inl query) inner.1, inner.2) := by
+      Inv cache codec identity (ledger.record (.inl query) inner.1, inner.2) := by
   intro inner member
-  obtain ⟨same, control⟩ := PqxdhDeploymentHeadlinePinControl.nativeImpl_quiet identity (PinOk ledger.transcript)
+  obtain ⟨same, control⟩ := PqxdhDeploymentHeadlinePinControl.nativeImpl_quiet identity (PeerOk cache identity) (PinOk cache ledger.transcript)
     modes replace setup codec route env query (quiet_of_envQuery query quiet) native holds.2.2.1 inner member
   have summary : summarize (ledger.transcript ++ [⟨.inl query, inner.1⟩]) = summarize ledger.transcript := by
     rcases query with coin | command
@@ -236,31 +236,77 @@ theorem forward_quiet (modes : Label 2 → PqxdhRecordLiftIdeal.KeyMode) (replac
       exact PqxdhDeploymentTranscript.step_other _ _ (fun _ _ _ wrong => by cases wrong; simp [envQuery] at quiet)
         (fun _ _ wrong => by cases wrong; simp [envQuery] at quiet)
         (fun _ _ _ wrong => by cases wrong; simp [envQuery] at quiet)
-  refine inv_append codec identity ledger native inner.2 _ holds (by rw [same]; exact holds.1)
+  refine inv_append (cache := cache) codec identity ledger native inner.2 _ holds (by rw [same]; exact holds.1)
     (by rw [summary, same]; exact holds.2.1) control ?_ _ rfl
   rcases query with coin | command
   · trivial
   · cases command <;> trivial
 
+
+/-- An admitted environment effect preserves the control under the actual CTX interpreter. -/
+theorem effects_ok_actual {n : ℕ} (identity : RawCtxServerRouting.Identity)
+    (okPeer : Std.U64 → PqxdhTranscriptAd.AssociatedData → Prop) (ok : ℕ → PqxdhTranscriptAd.AssociatedData → Prop)
+    (modes : PqxdhRecordLiftWorldCompiler.Label n → PqxdhRecordLiftIdeal.KeyMode)
+    (replace : Pqxdh.Bytes → Pqxdh.Bytes) (query : (EnvEffects n).Domain) (fits : InstallFits okPeer ok query)
+    (before : PqxdhRecordLiftProtocol.Control n × PqxdhRecordLiftIdeal.CtxPrivate n)
+    (held : ControlOk identity okPeer ok before.1)
+    (result : (EnvEffects n).Range query × (PqxdhRecordLiftProtocol.Control n × PqxdhRecordLiftIdeal.CtxPrivate n))
+    (supported : result ∈ support ((PqxdhDeploymentHeadlinePinEffects.actual modes replace setup codec query).run before)) :
+    ControlOk identity okPeer ok result.2.1 := by
+  simp only [PqxdhDeploymentHeadlinePinEffects.actual, StateT.run, support_map] at supported
+  obtain ⟨inner, reached, rfl⟩ := supported
+  exact PqxdhDeploymentHeadlinePinControl.effects_ok identity okPeer ok query fits before.1 held inner.1
+    (PqxdhDeploymentHeadlinePinControl.run_value _ _ _ inner reached)
+
+/-- Restricted source install admissibility preserves the actual native environment command's complete control. -/
+theorem nativeImpl_env_cached {n : ℕ} {E : Type} (identity : RawCtxServerRouting.Identity)
+    (okPeer : Std.U64 → PqxdhTranscriptAd.AssociatedData → Prop) (ok : ℕ → PqxdhTranscriptAd.AssociatedData → Prop)
+    (modes : PqxdhRecordLiftWorldCompiler.Label n → PqxdhRecordLiftIdeal.KeyMode)
+    (replace : Pqxdh.Bytes → Pqxdh.Bytes) (route : RawCtxServerRouting.SenderDecoder)
+    (env : Environment n E) (command : Command) (allowed : IsEnvironment command)
+    (bad : (EnvEffects n).Domain → Bool) (fitting : ∀ query, bad query = false → InstallFits okPeer ok query)
+    (native : NativeState n E) (held : ControlOk identity okPeer ok native.1.2)
+    (bounded : (PqxdhDeploymentHeadlinePinEffects.restricted cache ((env.step ⟨command, allowed⟩).run native.1.1)).IsQueryBoundP
+      (fun query => bad query = true) 0)
+    (result : Spec.Range (.inr command) × NativeState n E)
+    (supported : result ∈ support ((nativeImpl modes replace setup codec route env (.inr command)).run native))
+    (extended : result.2.2.base.primitive.2 ≤ cache) : ControlOk identity okPeer ok result.2.1.2 := by
+  rw [PqxdhRecordLiftFlat.nativeImpl_run, support_map] at supported
+  obtain ⟨inner, reached, rfl⟩ := supported
+  rw [PqxdhDeploymentHeadlinePinControl.native_env_run env command allowed,
+    ← QueryImpl.simulateQ_compose, PqxdhDeploymentHeadlinePinControl.handler_effectLift] at reached
+  have actualMember : (inner.1.1, (inner.1.2, inner.2)) ∈ support
+      ((simulateQ (PqxdhDeploymentHeadlinePinEffects.actual modes replace setup codec)
+        ((env.step ⟨command, allowed⟩).run native.1.1)).run (native.1.2, native.2)) := by
+    rw [PqxdhDeploymentHeadlinePinEffects.actual_run, support_map]
+    exact ⟨inner, reached, rfl⟩
+  exact PqxdhDeploymentHeadlinePinEffects.actual_keep modes replace setup codec (fun query => bad query = true)
+    (fun state => ControlOk identity okPeer ok state.1)
+    (fun query before notBad holds after member => effects_ok_actual setup codec identity okPeer ok modes replace
+      query (fitting query (Bool.eq_false_iff.mpr notBad)) before holds after member)
+    ((env.step ⟨command, allowed⟩).run native.1.1) cache bounded (native.1.2, native.2) held
+    (inner.1.1, (inner.1.2, inner.2)) actualMember extended
 /-- An environment command of the ideal environment of a target keeps the invariant with its entry recorded. -/
 theorem forward_env {A : Type} (modes : Label 2 → PqxdhRecordLiftIdeal.KeyMode) (replace : Pqxdh.Bytes → Pqxdh.Bytes)
     (route : RawCtxServerRouting.SenderDecoder) (t : PqxdhDeploymentIdealParams.Target count)
     (ensureInit : StateT A ProbComp Bool) (identityIndex : ℕ) (runtime : A) (identity : RawCtxServerRouting.Identity)
     (command : Command) (allowed : IsEnvironment command) (ledger : PqxdhDeploymentSecrecy.Ledger)
-    (native : NativeState 2 (GD KemSK count)) (holds : Inv codec identity (ledger, native)) :
+    (native : NativeState 2 (GD KemSK count)) (holds : Inv cache codec identity (ledger, native)) :
     ∀ inner ∈ support ((nativeImpl modes replace setup codec route
       (PqxdhDeploymentIdealEnv.envGD setup codec checks t ensureInit identityIndex runtime) (.inr command)).run native),
-      Inv codec identity (ledger.record (.inl (.inr command)) inner.1, inner.2) := by
-  intro inner member
-  obtain ⟨stepped, control⟩ := PqxdhDeploymentHeadlinePinControl.nativeImpl_env identity (PinOk ledger.transcript)
+      inner.2.2.base.primitive.2 ≤ cache → Inv cache codec identity (ledger.record (.inl (.inr command)) inner.1, inner.2) := by
+  intro inner member extended
+  obtain ⟨stepped, _⟩ := PqxdhDeploymentHeadlinePinControl.nativeImpl_env identity (PeerOk cache identity) (PinOk cache ledger.transcript)
     modes replace setup codec route _ command allowed native inner member
   have moved := PqxdhDeploymentHeadlinePinEnv.envGD_move setup codec checks t ensureInit identityIndex runtime
     ⟨command, allowed⟩ native.1.1 _ stepped
-  have controlOk := control (badInstall native.1.1)
-    (fun query good => fits_of_ok ledger.transcript native.1.1 holds.2.1 query good)
-    (PqxdhDeploymentHeadlinePinEnv.envGD_ok setup codec checks t ensureInit identityIndex runtime ⟨command, allowed⟩
-      native.1.1) holds.2.2.1
-  refine inv_append codec identity ledger native inner.2 _ holds (moved.1.trans holds.1) ?_ controlOk ?_ _ rfl
+  have controlOk := nativeImpl_env_cached (cache := cache) setup codec identity (PeerOk cache identity)
+    (PinOk cache ledger.transcript) modes replace route _ command allowed (badInstall cache native.1.1)
+    (fun query good => fits_of_ok (cache := cache) ledger.transcript native.1.1 identity holds.1 holds.2.1 query good)
+    native holds.2.2.1
+    (PqxdhDeploymentHeadlinePinEnv.envGD_ok_cached cache setup codec checks t ensureInit identityIndex runtime
+      ⟨command, allowed⟩ native.1.1) inner member extended
+  refine inv_append (cache := cache) codec identity ledger native inner.2 _ holds (moved.1.trans holds.1) ?_ controlOk ?_ _ rfl
   · rw [PqxdhDeploymentTranscript.summarize_append]
     exact moved.2.1 _ holds.2.1
   · have shaped := moved.2.2
@@ -272,22 +318,22 @@ theorem secrecy_inv (modes : Label 2 → PqxdhRecordLiftIdeal.KeyMode) (replace 
     (route : RawCtxServerRouting.SenderDecoder) (env : Environment 2 (GD KemSK count)) (serverKid : Std.U64)
     (bounds : FreshBounds) (identity : RawCtxServerRouting.Identity) (secrecy : PqxdhDeploymentInterface.Secrecy)
     (ledger : PqxdhDeploymentSecrecy.Ledger) (native : NativeState 2 (GD KemSK count))
-    (holds : Inv codec identity (ledger, native)) :
+    (holds : Inv cache codec identity (ledger, native)) :
     ∀ result ∈ support ((fullImpl modes replace setup codec route env serverKid bounds (.inr secrecy)).run
-      (ledger, native)), Inv codec identity result.2 := by
+      (ledger, native)), Inv cache codec identity result.2 := by
   intro result member
   rw [PqxdhRecordLiftFlat.fullImpl_run, support_map] at member
   obtain ⟨z, zMember, rfl⟩ := member
   obtain ⟨reply, transcript⟩ := PqxdhRecordLiftFlat.ledger_append setup.source.crypto codec serverKid bounds
     (.inr secrecy) ledger z.1 (PqxdhDeploymentHeadlinePinControl.run_value _ _ _ z zMember)
   have kept := PqxdhDeploymentHeadlinePinControl.keep_bounded (nativeImpl modes replace setup codec route env) envQuery
-    (fun state => state.1.1 = native.1.1 ∧ ControlOk identity (PinOk ledger.transcript) state.1.2)
+    (fun state => state.1.1 = native.1.1 ∧ ControlOk identity (PeerOk cache identity) (PinOk cache ledger.transcript) state.1.2)
     (fun query state good held next nextMember => by
-      obtain ⟨same, control⟩ := PqxdhDeploymentHeadlinePinControl.nativeImpl_quiet identity (PinOk ledger.transcript)
+      obtain ⟨same, control⟩ := PqxdhDeploymentHeadlinePinControl.nativeImpl_quiet identity (PeerOk cache identity) (PinOk cache ledger.transcript)
         modes replace setup codec route env query (quiet_of_envQuery query good) state held.2 next nextMember
       exact ⟨same.trans held.1, control⟩) _ (secrecy_quiet setup.source.crypto codec serverKid bounds secrecy ledger)
     native ⟨rfl, holds.2.2.1⟩ z zMember
-  refine inv_append codec identity ledger native z.2 _ holds (by rw [kept.1]; exact holds.1)
+  refine inv_append (cache := cache) codec identity ledger native z.2 _ holds (by rw [kept.1]; exact holds.1)
     (by rw [summarize_quiet _ _ (fun _ _ wrong => by cases wrong), kept.1]; exact holds.2.1) kept.2
     (show PqxdhDeploymentEligibility.BuildShaped codec identity ⟨.inr secrecy, reply⟩ from trivial) _ transcript
 
@@ -296,52 +342,51 @@ theorem full_inv {A : Type} (modes : Label 2 → PqxdhRecordLiftIdeal.KeyMode) (
     (route : RawCtxServerRouting.SenderDecoder) (t : PqxdhDeploymentIdealParams.Target count)
     (ensureInit : StateT A ProbComp Bool) (identityIndex : ℕ) (runtime : A) (serverKid : Std.U64)
     (bounds : FreshBounds) (identity : RawCtxServerRouting.Identity) (query : FullSpec.Domain)
-    (state : PqxdhDeploymentSecrecy.Ledger × NativeState 2 (GD KemSK count)) (holds : Inv codec identity state) :
+    (state : PqxdhDeploymentSecrecy.Ledger × NativeState 2 (GD KemSK count)) (holds : Inv cache codec identity state) :
     ∀ result ∈ support ((fullImpl modes replace setup codec route
       (PqxdhDeploymentIdealEnv.envGD setup codec checks t ensureInit identityIndex runtime) serverKid bounds query).run
-        state), Inv codec identity result.2 := by
+        state), result.2.2.2.base.primitive.2 ≤ cache → Inv cache codec identity result.2 := by
   obtain ⟨ledger, native⟩ := state
   rcases query with forwarded | secrecy
-  · intro result member
+  · intro result member extended
     rw [PqxdhRecordLiftFlat.fullImpl_run, PqxdhDeploymentSecrecy.ledgerImpl_forward, simulateQ_map, simulateQ_spec_query,
       StateT.run_map, support_map, support_map] at member
     obtain ⟨_, ⟨inner, reached, rfl⟩, rfl⟩ := member
     rcases forwarded with coin | command
-    · exact forward_quiet setup codec modes replace route _ identity (.inl coin) rfl ledger native holds inner reached
+    · exact forward_quiet (cache := cache) setup codec modes replace route _ identity (.inl coin) rfl ledger native holds inner reached
     · cases command with
       | create pin keyId =>
-          exact forward_env setup codec checks modes replace route t ensureInit identityIndex runtime identity (.create pin keyId) trivial
-            ledger native holds inner reached
+          exact forward_env (cache := cache) setup codec checks modes replace route t ensureInit identityIndex runtime identity (.create pin keyId) trivial
+            ledger native holds inner reached extended
       | bundle owner =>
-          exact forward_env setup codec checks modes replace route t ensureInit identityIndex runtime identity (.bundle owner) trivial
-            ledger native holds inner reached
+          exact forward_env (cache := cache) setup codec checks modes replace route t ensureInit identityIndex runtime identity (.bundle owner) trivial
+            ledger native holds inner reached extended
       | accept raw =>
-          exact forward_env setup codec checks modes replace route t ensureInit identityIndex runtime identity (.accept raw) trivial
-            ledger native holds inner reached
+          exact forward_env (cache := cache) setup codec checks modes replace route t ensureInit identityIndex runtime identity (.accept raw) trivial
+            ledger native holds inner reached extended
       | build session payload =>
-          exact forward_env setup codec checks modes replace route t ensureInit identityIndex runtime identity (.build session payload) trivial
-            ledger native holds inner reached
+          exact forward_env (cache := cache) setup codec checks modes replace route t ensureInit identityIndex runtime identity (.build session payload) trivial
+            ledger native holds inner reached extended
       | finish owner raw =>
-          exact forward_env setup codec checks modes replace route t ensureInit identityIndex runtime identity (.finish owner raw) trivial
-            ledger native holds inner reached
+          exact forward_env (cache := cache) setup codec checks modes replace route t ensureInit identityIndex runtime identity (.finish owner raw) trivial
+            ledger native holds inner reached extended
       | hmac key message =>
-          exact forward_env setup codec checks modes replace route t ensureInit identityIndex runtime identity (.hmac key message) trivial
-            ledger native holds inner reached
+          exact forward_env (cache := cache) setup codec checks modes replace route t ensureInit identityIndex runtime identity (.hmac key message) trivial
+            ledger native holds inner reached extended
       | hash bytes =>
-          exact forward_quiet setup codec modes replace route _ identity (.inr (.hash bytes)) rfl ledger native holds inner reached
+          exact forward_quiet (cache := cache) setup codec modes replace route _ identity (.inr (.hash bytes)) rfl ledger native holds inner reached
       | serverSend keyId plaintext =>
-          exact forward_quiet setup codec modes replace route _ identity (.inr (.serverSend keyId plaintext)) rfl ledger native holds inner reached
+          exact forward_quiet (cache := cache) setup codec modes replace route _ identity (.inr (.serverSend keyId plaintext)) rfl ledger native holds inner reached
       | serverRaw raw =>
-          exact forward_quiet setup codec modes replace route _ identity (.inr (.serverRaw raw)) rfl ledger native holds inner reached
+          exact forward_quiet (cache := cache) setup codec modes replace route _ identity (.inr (.serverRaw raw)) rfl ledger native holds inner reached
       | beaconSend owner plaintext =>
-          exact forward_quiet setup codec modes replace route _ identity (.inr (.beaconSend owner plaintext)) rfl ledger native holds inner reached
+          exact forward_quiet (cache := cache) setup codec modes replace route _ identity (.inr (.beaconSend owner plaintext)) rfl ledger native holds inner reached
       | beaconRaw owner raw =>
-          exact forward_quiet setup codec modes replace route _ identity (.inr (.beaconRaw owner raw)) rfl ledger native holds inner reached
-  · exact secrecy_inv setup codec modes replace route _ serverKid bounds identity secrecy ledger native holds
+          exact forward_quiet (cache := cache) setup codec modes replace route _ identity (.inr (.beaconRaw owner raw)) rfl ledger native holds inner reached
+  · intro result member _
+    exact secrecy_inv (cache := cache) setup codec modes replace route _ serverKid bounds identity secrecy ledger native holds result member
 
 end Invariant
-
-
 /-! ### The ideal-world facts -/
 
 section Facts
@@ -349,16 +394,21 @@ variable {ι : Type} {baseSpec : OracleSpec ι} {Reader Response : Type}
   (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks) {count : ℕ}
 open PqxdhRecordLiftWorldCompiler (Label Phase)
 
-/-- The pin lift's two protocol facts, together with the old environment's source-derived legacy peer AD: build fields carry the record Server identity; established owner AD carries its created pin; every Server peer binding has its identity-derived AD. -/
-def PinFacts {n : ℕ} {E X : Type} (result : PqxdhRecordLiftIdeal.Client n E X × PqxdhRecordLiftIdeal.CtxPrivate n) :
-    Prop :=
+/-- The actual CTX world's source-derived Server identity, owner-pin and cached registration-transcript evidence. -/
+def PinFacts {Reader Response : Type} (codec : PqxdhServerAuthExperiment.Codec Reader Response)
+    {n : ℕ} {E X : Type} (result : PqxdhRecordLiftIdeal.Client n E X × PqxdhRecordLiftIdeal.CtxPrivate n) : Prop :=
   ∀ value ∈ result.1.1,
     (∀ server, result.1.2.server = some server → ∀ entry ∈ value.2.1.2.transcript,
       PqxdhDeploymentEligibility.BuildShaped codec server.identity entry) ∧
-    (∀ (owner : ℕ) shell kernel, result.1.2.owners[owner]? = some (Phase.established shell kernel) →
-      ∃ pin keyId beacon, (summarize value.2.1.2.transcript).owners[owner]? = some (pin, keyId) ∧
-        shell.associatedData = RawCtxServerRouting.associatedArray pin beacon) ∧
-    (∀ server, result.1.2.server = some server → LegacyPeers server)
+    (∀ (owner : ℕ) shell kernel, result.1.2.owners[owner]? =
+        some (PqxdhRecordLiftWorldCompiler.Phase.established shell kernel) →
+      ∃ pin keyId, (PqxdhDeploymentTranscript.summarize value.2.1.2.transcript).owners[owner]? = some (pin, keyId) ∧
+        PqxdhDeploymentHeadlinePinCollision.Receipt result.2.base.primitive.2 (PqxdhRefinement.absBytes pin)
+          shell.associatedData) ∧
+    (∀ server, result.1.2.server = some server → ∀ keyId peer, server.peers keyId = some peer →
+      PqxdhDeploymentHeadlinePinCollision.Receipt result.2.base.primitive.2
+        (PqxdhRefinement.absBytes server.identity) peer.binding.associatedData)
+
 
 /-- An environment coin of the compiled client keeps the record control. -/
 theorem effects_coin_control {n : ℕ} (coin : unifSpec.Domain) (control : PqxdhRecordLiftProtocol.Control n) :
@@ -386,13 +436,38 @@ theorem startup_facts {n : ℕ} {E : Type} (modes : Label n → PqxdhRecordLiftI
       rw [← held]
       exact effects_coin_control coin control next nextMember) _ _ rfl born.1 client
 
+
+/-- An actual ideal-environment startup imports an empty Server peer map. -/
+theorem envGD_start_emptyPeers {A : Type} (t : PqxdhDeploymentIdealParams.Target count)
+    (ensureInit : StateT A ProbComp Bool) (identityIndex : ℕ) (runtime : A)
+    (created : PqxdhLiveServerConstruction.Created PqxdhTranscriptAd.AssociatedData)
+    (initial : GD KemSK count)
+    (started : some (created, initial) ∈ support
+      (PqxdhDeploymentIdealEnv.envGD setup codec checks t ensureInit identityIndex runtime).start) :
+    ∀ keyId, created.server.server.peers keyId = none := by
+  change some (created, initial) ∈ support (PqxdhDeploymentIdealParams.drawParams setup count >>= fun p =>
+    PqxdhDeploymentEnvironment.start setup ensureInit identityIndex runtime
+      (fun created => (p, PqxdhDeploymentIdealSteps.splitInit created))) at started
+  rw [mem_support_bind_iff] at started
+  obtain ⟨p, _, startedAt⟩ := started
+  simp only [PqxdhDeploymentEnvironment.start, support_map, Set.mem_image] at startedAt
+  obtain ⟨⟨result, after⟩, constructed, same⟩ := startedAt
+  cases result with
+  | none => cases same
+  | some made =>
+      simp only [Option.map_some, Option.some.injEq, Prod.mk.injEq] at same
+      obtain ⟨rfl, _⟩ := same
+      obtain ⟨seed, rfl, _⟩ := PqxdhLiveServerConstruction.construct_origin setup.joint ensureInit identityIndex
+        setup.serverKeyId none runtime after made constructed
+      exact fun _ => rfl
 /-- The installation of the constructed Server from the initial record control holds that Server's identity and no owner. -/
-theorem install_facts {n : ℕ} (modes : Label n → PqxdhRecordLiftIdeal.KeyMode) (replace : Pqxdh.Bytes → Pqxdh.Bytes)
-    (route : RawCtxServerRouting.SenderDecoder) (created : PqxdhLiveServerConstruction.Created Unit)
-    (secret : PqxdhRecordLiftIdeal.CtxPrivate n) :
+theorem install_facts_of_emptyPeers {n : ℕ} (modes : Label n → PqxdhRecordLiftIdeal.KeyMode) (replace : Pqxdh.Bytes → Pqxdh.Bytes)
+    (route : RawCtxServerRouting.SenderDecoder) (created : PqxdhLiveServerConstruction.Created PqxdhTranscriptAd.AssociatedData)
+    (secret : PqxdhRecordLiftIdeal.CtxPrivate n)
+    (emptyPeers : ∀ keyId, created.server.server.peers keyId = none) :
     ∀ installed ∈ support (PqxdhRecordLiftFlat.install modes replace setup codec route created
       PqxdhRecordLiftProtocol.initialControl secret),
-      ServerIs created.server.server.identity installed.1.2 ∧ installed.1.2.owners = [] := by
+      ServerIs created.server.server.identity (PeerOk cache created.server.server.identity) installed.1.2 ∧ installed.1.2.owners = [] := by
   intro installed member
   have client := PqxdhDeploymentHeadlinePinControl.run_value _ _ _ installed member
   change installed.1 ∈ support (PqxdhRecordLiftProtocol.initializeServer created
@@ -401,7 +476,11 @@ theorem install_facts {n : ℕ} (modes : Label n → PqxdhRecordLiftIdeal.KeyMod
     PqxdhRecordLiftProtocol.control, PqxdhRecordLiftWorldCompiler.initial, support_pure,
     Set.mem_singleton_iff] at client
   rw [client]
-  exact ⟨⟨_, rfl, rfl, PqxdhDeploymentHeadlinePinControl.legacyPeers_imported created⟩, rfl⟩
+  exact ⟨⟨_, rfl, rfl, PqxdhDeploymentHeadlinePinControl.peersOk_imported
+    (PeerOk cache created.server.server.identity) created
+      (fun keyId peer found => by
+        rw [emptyPeers keyId] at found
+        cases found)⟩, rfl⟩
 
 /-- **The two env_g ideal-world invariants.** On every outcome of every CTX world (in particular `idealAuth`) with the ideal environment of a target, the record control and the final transcript satisfy `PinFacts`. -/
 theorem ctxRun_pinFacts {A X : Type} (modes : Label 2 → PqxdhRecordLiftIdeal.KeyMode) (replace : Pqxdh.Bytes → Pqxdh.Bytes)
@@ -412,6 +491,7 @@ theorem ctxRun_pinFacts {A X : Type} (modes : Label 2 → PqxdhRecordLiftIdeal.K
       (PqxdhDeploymentIdealEnv.envGD setup codec checks t ensureInit identityIndex runtime) serverKid bounds mode
         adversary), PinFacts codec result := by
   intro result member
+  let cache := result.2.base.primitive.2
   rw [PqxdhRecordLiftFlat.ctxRun_flat, mem_support_bind_iff] at member
   obtain ⟨born, bornMember, member⟩ := member
   obtain ⟨started, bornControl⟩ := startup_facts setup codec modes replace route _ born bornMember
@@ -427,32 +507,42 @@ theorem ctxRun_pinFacts {A X : Type} (modes : Label 2 → PqxdhRecordLiftIdeal.K
     rw [support_map] at member
     obtain ⟨final, finalMember, rfl⟩ := member
     rw [bornControl] at installedMember
-    obtain ⟨serverIs, ownersEmpty⟩ := install_facts setup codec modes replace route created born.2 installed installedMember
+    obtain ⟨serverIs, ownersEmpty⟩ := install_facts_of_emptyPeers (cache := cache) setup codec modes replace route created born.2
+      (envGD_start_emptyPeers setup codec checks t ensureInit identityIndex runtime created initial started)
+      installed installedMember
     obtain ⟨identityEq, pinsEmpty⟩ := PqxdhDeploymentHeadlinePinEnv.envGD_start setup codec checks t ensureInit
       identityIndex runtime created initial started
-    have initialInv : Inv codec created.server.server.identity
+    have initialInv : Inv cache codec created.server.server.identity
         (PqxdhDeploymentSecrecy.Ledger.empty, ((initial, installed.1.2), installed.2)) := by
       refine ⟨identityEq, ?_, ⟨serverIs, fun owner shell kernel found => ?_⟩, fun entry member => by cases member⟩
       · rw [pinsEmpty]
         rfl
       · rw [ownersEmpty] at found
         cases found
-    have finalInv := PqxdhRecordLiftFlat.support_keep_oracle _ (Inv codec created.server.server.identity)
-      (fun query state held next nextMember => full_inv setup codec checks modes replace route t ensureInit identityIndex
-        runtime serverKid bounds _ query state held next nextMember) _ _ initialInv final finalMember
+    have finalBelow := PqxdhRecordLiftFlat.support_keep_oracle _
+      (fun state : PqxdhDeploymentSecrecy.Ledger × NativeState 2 (GD KemSK count) =>
+        state.2.2.base.primitive.2 ≤ cache → Inv cache codec created.server.server.identity state)
+      (fun query state held next nextMember extended =>
+        full_inv (cache := cache) setup codec checks modes replace route t ensureInit identityIndex runtime serverKid
+          bounds _ query state
+          (held ((PqxdhRecordFactsBindingEvidence.full_cache_grows modes replace setup codec route _ serverKid bounds
+            query state next nextMember).trans extended)) next nextMember extended)
+      _ _ (fun _ => initialInv) final finalMember
+    have finalInv := finalBelow le_rfl
     intro value valueMember
     simp only [Option.mem_def, Option.some.injEq] at valueMember
     subst valueMember
-    obtain ⟨current, currentFound, currentIdentity, legacy⟩ := finalInv.2.2.1.1
+    obtain ⟨current, currentFound, currentIdentity, peerCertificates⟩ := finalInv.2.2.1.1
     refine ⟨fun server found entry entryMember => ?_,
-      (fun owner shell kernel found => finalInv.2.2.1.2 owner shell kernel found), fun server found => ?_⟩
+      (fun owner shell kernel found => finalInv.2.2.1.2 owner shell kernel found), fun server found keyId peer peerFound => ?_⟩
     · rw [found, Option.some.injEq] at currentFound
       subst currentFound
       rw [currentIdentity]
       exact finalInv.2.2.2 entry entryMember
     · rw [found, Option.some.injEq] at currentFound
       subst currentFound
-      exact legacy
+      rw [currentIdentity]
+      exact peerCertificates keyId peer peerFound
 
 /-- **The two env_g ideal-world invariants in `idealAuth`.** On every outcome of the integrity-ideal world with the ideal environment of a target, `PinFacts` holds. -/
 theorem idealAuth_pinFacts {A X : Type} (route : RawCtxServerRouting.SenderDecoder)
@@ -467,8 +557,6 @@ theorem idealAuth_pinFacts {A X : Type} (route : RawCtxServerRouting.SenderDecod
 end Facts
 
 end BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant
-
--- Axiom guards (generated)
 
 /--
 info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.summarize_owners_extend' depends on axioms: [propext,
@@ -565,6 +653,22 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.forward
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.forward_quiet
 
 /--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.effects_ok_actual' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.effects_ok_actual
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.nativeImpl_env_cached' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.nativeImpl_env_cached
+
+/--
 info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.forward_env' depends on axioms: [propext,
  Classical.choice,
  Quot.sound]
@@ -605,12 +709,20 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.startup
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.startup_facts
 
 /--
-info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.install_facts' depends on axioms: [propext,
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.envGD_start_emptyPeers' depends on axioms: [propext,
  Classical.choice,
  Quot.sound]
 -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.install_facts
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.envGD_start_emptyPeers
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.install_facts_of_emptyPeers' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.install_facts_of_emptyPeers
 
 /--
 info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinInvariant.ctxRun_pinFacts' depends on axioms: [propext,

@@ -22,7 +22,7 @@ theorem run {S : Type} (source : FixedHkdfSha512NoSaltSource)
     (root : ∀ request before, (implementation (.root request)).run before =
       pure (.Some (RegistrationAgreementShared.rootResponse source.crypto request), before))
     (authenticated : registration.AuthenticatedResponse)
-    (coherent : authenticated.pending.control.expected_server_binding = authenticated.pending.binding.server_pin.binding)
+    (coherent : authenticated.control.expected_server_binding = authenticated.binding.server_pin.binding)
     (completed : agreement.BeaconAgreement) (before after : S)
     (supported : (.ok (.BeaconComplete completed), after) ∈ support
       ((simulateQ implementation
@@ -33,9 +33,9 @@ theorem run {S : Type} (source : FixedHkdfSha512NoSaltSource)
         (simulateQ (RegistrationBeaconAgreementRoot.callbacks authenticated)
           (PqxdhBeaconPhase2Preparation.collect () false true () []))).run before) ∧
       RegistrationBeaconRootPreparation.Fields authenticated input ∧
-      pqxdh.beacon_prepare_finish authenticated.pending.control input.finishInputs = .ok (.Ok original) ∧
+      pqxdh.beacon_prepare_finish authenticated.control input.finishInputs = .ok (.Ok original) ∧
       completed = ⟨{ original with root_key_input := ⟨Array.repeat 192#usize 0#u8⟩ },
-        authenticated.pending.binding, ⟨RegistrationAgreementShared.rootResponse source.crypto
+        authenticated.binding, ⟨RegistrationAgreementShared.rootResponse source.crypto
           ⟨original.root_key_input.bytes, pqxdh.PQXDH_INFO⟩⟩, authenticated.packet.application⟩ ∧ after = atRoot := by
   rw [RegistrationBeaconAgreementRoot.beacon_normalized authenticated coherent] at supported
   simp only [RegistrationBeaconAgreementRoot.normalized, simulateQ_bind, StateT.run_bind,
@@ -63,7 +63,7 @@ theorem run {S : Type} (source : FixedHkdfSha512NoSaltSource)
       rw [RegistrationBeaconAgreementRoot.finish,
         RegistrationBeaconRootPreparation.finish_admission authenticated input fields] at tail
       obtain ⟨accepted, actual⟩ := BeaconcryptCore.PanicFreedom.beacon_prepare_finish_ok
-        authenticated.pending.control input.finishInputs
+        authenticated.control input.finishInputs
       rw [actual] at tail
       cases accepted with
       | Err error =>
@@ -73,7 +73,7 @@ theorem run {S : Type} (source : FixedHkdfSha512NoSaltSource)
           cases tail.1
       | Ok original =>
           simp only [bind_tc_ok, continueWith] at tail
-          have requested : (⟨.Beacon original authenticated.pending.binding authenticated.packet.application⟩ : agreement.RootKdfPending).request =
+          have requested : (⟨.Beacon original authenticated.binding authenticated.packet.application⟩ : agreement.RootKdfPending).request =
               .ok ⟨original.root_key_input.bytes, pqxdh.PQXDH_INFO⟩ := by
             simp only [agreement.RootKdfPending.request, pqxdh.BeaconRegistrationCandidate.impl.root_key_input,
               pqxdh.RootKeyInput.as_bytes, bind_tc_ok]
@@ -92,7 +92,7 @@ open RegistrationNativeResponseAuthentication (lower_bind lower_pure)
 
 private theorem lower_simulate (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (implementation : QueryImpl spec (RegistrationNativeBeaconFrontend.M n KemSK mlSource RegistrationServerRoleBackend.State))
     (work : OracleComp spec Value) :
     lower setup checks representation created (simulateQ implementation work) =
@@ -104,7 +104,7 @@ private theorem lower_simulate (setup : Setup base KemSK) (checks : Checks)
 /-- The original native root callback returns the fixed source derivation and changes no local, World, owner or cache coordinate. -/
 theorem root (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (owner : Owner mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (owner : Owner mlSource)
     (oneTime : PqxdhJointGapDh.ScalarBytes) (request : agreement.RootKdfRequest) (before : Local n KemSK mlSource) :
     ((lower setup checks representation created (RegistrationNativeBeaconFrontend.agreement setup owner oneTime (.root request))).run before) =
       pure (.Some (RegistrationAgreementShared.rootResponse setup.source.crypto request), before) := by
@@ -118,9 +118,9 @@ theorem root (setup : Setup base KemSK) (checks : Checks)
 /-- Actual native lowered agreement exposes its exact private inputs before root clearing; no partner, root-equality or whole-game simulation premise is supplied. -/
 theorem local_cut (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (owner : Owner mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (owner : Owner mlSource)
     (oneTime : PqxdhJointGapDh.ScalarBytes) (authenticated : registration.AuthenticatedResponse)
-    (coherent : authenticated.pending.control.expected_server_binding = authenticated.pending.binding.server_pin.binding)
+    (coherent : authenticated.control.expected_server_binding = authenticated.binding.server_pin.binding)
     (completed : agreement.BeaconAgreement) (before after : Local n KemSK mlSource)
     (supported : (.ok (.BeaconComplete completed), after) ∈ support
       ((lower setup checks representation created
@@ -132,9 +132,9 @@ theorem local_cut (setup : Setup base KemSK) (checks : Checks)
           (simulateQ (RegistrationBeaconAgreementRoot.callbacks authenticated)
             (PqxdhBeaconPhase2Preparation.collect () false true () [])))).run before) ∧
       RegistrationBeaconRootPreparation.Fields authenticated input ∧
-      pqxdh.beacon_prepare_finish authenticated.pending.control input.finishInputs = .ok (.Ok original) ∧
+      pqxdh.beacon_prepare_finish authenticated.control input.finishInputs = .ok (.Ok original) ∧
       completed = ⟨{ original with root_key_input := ⟨Array.repeat 192#usize 0#u8⟩ },
-        authenticated.pending.binding, ⟨RegistrationAgreementShared.rootResponse setup.source.crypto
+        authenticated.binding, ⟨RegistrationAgreementShared.rootResponse setup.source.crypto
           ⟨original.root_key_input.bytes, pqxdh.PQXDH_INFO⟩⟩, authenticated.packet.application⟩ ∧ after = atRoot := by
   rw [lower_simulate] at supported
   obtain ⟨input, atRoot, original, collected, fields, prepared, completedEq, afterEq⟩ :=

@@ -27,7 +27,7 @@ noncomputable def after (implementation : QueryImpl (Trusted n KemSK) m)
       (RegistrationNativeBeaconFrontend.outgoing setup source index owner query))
     (RegistrationNativePlatformGenericBundle.encoderWith writer) ⟨owner.pin.binding⟩
     (RegistrationNativeBeaconFrontend.inputs setup owner)
-    ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey
+    ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin
   match published with
   | .fail error => pure (.fail error)
   | .div => pure .div
@@ -46,7 +46,7 @@ private theorem after_equivariant (implementation : QueryImpl (Trusted n KemSK) 
     Equivariant selected scalar publicPrekey (after (Auxiliary := Auxiliary) implementation writer setup index owner oneTime) := by
   unfold after
   apply bind_equivariant selected scalar publicPrekey _ _
-    (RegistrationNativePlatformPublicPublicationMask.publication implementation writer setup index owner _ _ _ _ _ selected scalar publicPrekey)
+    (RegistrationNativePlatformPublicPublicationMask.publication implementation writer setup index owner _ _ _ _ selected scalar publicPrekey)
   intro published
   cases published with
   | fail error | div => exact pure_equivariant selected scalar publicPrekey _

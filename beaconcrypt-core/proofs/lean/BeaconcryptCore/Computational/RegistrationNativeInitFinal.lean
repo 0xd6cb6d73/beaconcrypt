@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeInitAuthentication
 
-/-! Successful original native acceptance retains its actual mandatory ML-verification cache until the returned typed result. The post-authentication agreement only samples ordinary source primitives, and native replay insertion changes no cache or signing history. This permits executable trial observers to use the actual returned cache rather than choose an existential internal cut. -/
+/-! Successful native acceptance retains the actual initial request-hash cache until its returned typed result. The post-authentication agreement only samples ordinary source primitives, and native replay insertion changes no cache or signing history. This permits executable trial observers to use the actual returned cache rather than choose an existential internal cut. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -17,7 +17,7 @@ variable {n : Nat} {ι KemSK Reader Response Value Auxiliary : Type} {base : Ora
 variable {source : RegistrationNativeMldsa.Source}
 attribute [local irreducible] RegistrationWorldAuthentication.begin RegistrationAuthenticationShared.begin
   RegistrationServerNativeSource.agree RegistrationServerNativeSource.retain
-  RegistrationNativeExperiment.handler RegistrationSigningShared.historyFor RegistrationAuthenticationNative.trial
+  RegistrationNativeExperiment.handler RegistrationSigningShared.historyFor
   RegistrationReplaySchedule.consume
 
 private theorem state_pure_apply {S X : Type} {m : Type → Type} [Monad m]
@@ -50,7 +50,7 @@ def summary (before : State n) : RegistrationSigningShared.State :=
 /-- The SDK's actual agreement body preserves its complete ML history/cache summary. -/
 theorem agree (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (authenticated : registration.AuthenticatedInit) (before : State n)
     (result : RustM agreement.AgreementEffect × State n)
     (supported : result ∈ support ((RegistrationServerNativeSource.agree setup checks representation created packet authenticated).run before)) :
@@ -64,7 +64,7 @@ theorem agree (setup : Setup base KemSK) (checks : Checks)
   exact Prod.ext receipts cached
 
 /-- Moving a retained native token changes no shared-cache or ML signing-attempt receipt. -/
-theorem retain (created : PqxdhLiveServerConstruction.Created Unit) (accepted : agreement.ServerAgreement)
+theorem retain (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (accepted : agreement.ServerAgreement)
     (before : State n) (result : RustM (Option Nat) × State n)
     (supported : result ∈ support ((RegistrationServerNativeSource.retain created accepted).run before)) :
     summary result.2 = summary before := by
@@ -86,7 +86,7 @@ theorem retain (created : PqxdhLiveServerConstruction.Created Unit) (accepted : 
 /-- Source replay, reservation, agreement failure and insertion retain exactly the cache/history reached by authentication. -/
 theorem afterAuthentication (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (authenticated : registration.AuthenticatedInit) (before : State n)
     (result : RustM (Option Nat) × State n)
     (supported : result ∈ support ((RegistrationServerSdkSource.afterAuthentication setup checks representation created packet authenticated).run before)) :
@@ -117,36 +117,11 @@ theorem afterAuthentication (setup : Setup base KemSK) (checks : Checks)
     cases supported
     rfl
 
-/-- A successful actual SDK accept carries its ordinary ML trial to the returned cache with the literal prior signing history. -/
-theorem accepted (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
-    (route : RawCtxServerRouting.SenderDecoder)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
-    (before after : State n) (session : Nat)
-    (supported : (.ok (some session), after) ∈ support
-      ((RegistrationServerSdkSource.accept setup codec checks route source.verify representation created packet).run before))
-    (protectedKey : Bool) (honest : protectedKey = true) :
-    MldsaTranscriptAuth.Accepted (MldsaSharedAuthentication.cacheHash after.world.world.1.primitive.2) source.verify
-      (RegistrationAuthenticationNative.trial protectedKey before.pin packet
-        (RegistrationSigningShared.historyFor (PqxdhRefinement.absBytes packet.mldsa_public_key) (summary before))) := by
-  obtain ⟨events, authenticated, middle, called, continued⟩ := RegistrationNativeInitAuthentication.accept_cut setup codec checks
-    route source.verify representation created packet before after session supported
-  have same := afterAuthentication setup checks representation created packet authenticated (withWorld before middle)
-    (.ok (some session), after) continued
-  have cached : after.world.world.1.primitive.2 = middle.primitive.2 := congrArg (fun value : RegistrationSigningShared.State => value.2) same
-  rw [cached]
-  apply RegistrationAuthenticationNative.begin_accepted_trial setup.source.crypto source.verify codec.frameWrite
-    (RawCtxSourceHkdf.kdfImpl setup.source) before.pin packet
-    (RegistrationWorldAuthentication.project before.world.world.1) (RegistrationWorldAuthentication.project middle)
-    events authenticated (RegistrationWorldAuthentication.begin_native_support setup codec route source.verify before.pin packet
-      before.world.world.1 middle events authenticated called) protectedKey honest
-    (RegistrationSigningShared.historyFor (PqxdhRefinement.absBytes packet.mldsa_public_key) (summary before))
-
 /-- Successful typed acceptance retains its exact original SDK poststate. -/
 theorem typed_source (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential source) (packet : registration.InitPacket)
     (before after : RegistrationNativeExperiment.State n KemSK source) (session : Nat)
     (supported : (.ok (some session), after) ∈ support
@@ -167,81 +142,6 @@ theorem typed_source (setup : Setup base KemSK) (checks : Checks) (wire : Regist
   have success : reached.1 = .ok (some session) := congrArg Prod.fst same
   exact ⟨reached.2, success ▸ possible,
     (congrArg (fun result : RustM (Option Nat) × RegistrationNativeExperiment.State n KemSK source => result.2.server) same).symm⟩
-
-/-- The executable original native result supplies the ordinary ML trial, using its returned cache and literal pre-call history. -/
-theorem typed_accepted (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
-    (route : RawCtxServerRouting.SenderDecoder)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
-    (credential : RegistrationNativeMldsa.Credential source) (packet : registration.InitPacket)
-    (before after : RegistrationNativeExperiment.State n KemSK source) (session : Nat)
-    (supported : (.ok (some session), after) ∈ support
-      ((RegistrationNativeExperiment.handler setup checks wire route representation created source credential
-        (.inr (.accept packet))).run before)) (protectedKey : Bool) (honest : protectedKey = true) :
-    MldsaTranscriptAuth.Accepted (MldsaSharedAuthentication.cacheHash after.server.world.world.1.primitive.2) source.verify
-      (RegistrationAuthenticationNative.trial protectedKey before.server.pin packet
-        (RegistrationSigningShared.historyFor (PqxdhRefinement.absBytes packet.mldsa_public_key)
-          (RegistrationNativeMldsaShared.nativeProject before))) := by
-  obtain ⟨returned, possible, same⟩ := typed_source setup checks wire route representation created credential packet
-    before after session supported
-  rw [same]
-  exact accepted setup (RegistrationNativeWire.ledgerCodec wire) checks route representation created packet
-    before.server returned session possible protectedKey honest
-
-/-- Byte-origin failure in the successful returned SDK result exposes an actual weak ML forgery or shared-cache collision. -/
-theorem origin_split (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
-    (route : RawCtxServerRouting.SenderDecoder)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
-    (before after : State n) (session : Nat)
-    (supported : (.ok (some session), after) ∈ support
-      ((RegistrationServerSdkSource.accept setup codec checks route source.verify representation created packet).run before))
-    (protectedKey : Bool) (honest : protectedKey = true) (cached : RegistrationSigningShared.Cached (summary before))
-    (absent : ¬ MldsaTranscriptAuth.Issued (RegistrationAuthenticationNative.trial protectedKey before.pin packet
-      (RegistrationSigningShared.historyFor (PqxdhRefinement.absBytes packet.mldsa_public_key) (summary before)))) :
-    MldsaTranscriptAuth.WeakForgery (MldsaSharedAuthentication.cacheHash after.world.world.1.primitive.2) source.verify
-      (RegistrationAuthenticationNative.trial protectedKey before.pin packet
-        (RegistrationSigningShared.historyFor (PqxdhRefinement.absBytes packet.mldsa_public_key) (summary before))) ∨
-      CacheHasCollision after.world.world.1.primitive.2 := by
-  obtain ⟨events, authenticated, middle, called, continued⟩ := RegistrationNativeInitAuthentication.accept_cut setup codec checks
-    route source.verify representation created packet before after session supported
-  have same := afterAuthentication setup checks representation created packet authenticated (withWorld before middle)
-    (.ok (some session), after) continued
-  have finalCache : after.world.world.1.primitive.2 = middle.primitive.2 :=
-    congrArg (fun value : RegistrationSigningShared.State => value.2) same
-  rw [finalCache]
-  apply RegistrationAuthenticationNative.begin_origin_split setup.source.crypto source.verify codec.frameWrite
-    (RawCtxSourceHkdf.kdfImpl setup.source) before.pin packet
-    (RegistrationWorldAuthentication.project before.world.world.1) (RegistrationWorldAuthentication.project middle)
-    events authenticated (RegistrationWorldAuthentication.begin_native_support setup codec route source.verify before.pin packet
-      before.world.world.1 middle events authenticated called) protectedKey honest
-    (RegistrationSigningShared.historyFor (PqxdhRefinement.absBytes packet.mldsa_public_key) (summary before))
-  · exact RegistrationSigningShared.history_cached (PqxdhRefinement.absBytes packet.mldsa_public_key) (summary before) cached
-  · exact absent
-
-/-- The actual returned native typed result has the same ordinary forgery-or-cache-collision decomposition. -/
-theorem typed_origin_split (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
-    (route : RawCtxServerRouting.SenderDecoder)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
-    (credential : RegistrationNativeMldsa.Credential source) (packet : registration.InitPacket)
-    (before after : RegistrationNativeExperiment.State n KemSK source) (session : Nat)
-    (supported : (.ok (some session), after) ∈ support
-      ((RegistrationNativeExperiment.handler setup checks wire route representation created source credential
-        (.inr (.accept packet))).run before)) (protectedKey : Bool) (honest : protectedKey = true)
-    (cached : RegistrationSigningShared.Cached (RegistrationNativeMldsaShared.nativeProject before))
-    (absent : ¬ MldsaTranscriptAuth.Issued (RegistrationAuthenticationNative.trial protectedKey before.server.pin packet
-      (RegistrationSigningShared.historyFor (PqxdhRefinement.absBytes packet.mldsa_public_key)
-        (RegistrationNativeMldsaShared.nativeProject before)))) :
-    MldsaTranscriptAuth.WeakForgery (MldsaSharedAuthentication.cacheHash after.server.world.world.1.primitive.2) source.verify
-      (RegistrationAuthenticationNative.trial protectedKey before.server.pin packet
-        (RegistrationSigningShared.historyFor (PqxdhRefinement.absBytes packet.mldsa_public_key)
-          (RegistrationNativeMldsaShared.nativeProject before))) ∨ CacheHasCollision after.server.world.world.1.primitive.2 := by
-  obtain ⟨returned, possible, same⟩ := typed_source setup checks wire route representation created credential packet
-    before after session supported
-  rw [same]
-  exact origin_split setup (RegistrationNativeWire.ledgerCodec wire) checks route representation created packet
-    before.server returned session possible protectedKey honest cached absent
 
 end BeaconcryptCore.Computational.RegistrationNativeInitFinal
 
@@ -265,28 +165,8 @@ end BeaconcryptCore.Computational.RegistrationNativeInitFinal
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativeInitFinal.afterAuthentication
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeInitFinal.accepted' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeInitFinal.accepted
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativeInitFinal.typed_source' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativeInitFinal.typed_source
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeInitFinal.typed_accepted' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeInitFinal.typed_accepted
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeInitFinal.origin_split' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeInitFinal.origin_split
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeInitFinal.typed_origin_split' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeInitFinal.typed_origin_split

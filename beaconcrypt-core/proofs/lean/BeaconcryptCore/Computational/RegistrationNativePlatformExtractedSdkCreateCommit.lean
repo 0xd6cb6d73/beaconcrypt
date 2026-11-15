@@ -21,7 +21,7 @@ variable [crypto : AdapterPublicWrapperRequestMonad.CryptoOperations (RustT (Sou
 variable [children : AdapterPublicWrapperRequestMonad.ChildOperations (RustT (SourceM n KemSK source Platform))]
 variable (coins : QueryImpl unifSpec (StateT Platform ProbComp)) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (checks : PqxdhServerAuthExperiment.Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (generator : rand_core.TryCryptoRng R Error) (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (kem : AdapterBeaconConstructorKem.Representation view R)
 variable (leaves : AdapterBeaconConstructorNative.Leaves (n := n) (Auxiliary := RegistrationServerRoleBackend.State)
@@ -37,10 +37,11 @@ noncomputable def result (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sig
   match captured.1 with
   | none => (((⟨outcome,snapshot,.ok none⟩,owners),environment),before)
   | some (ready,generated) =>
-    let nextOwner := RegistrationNativeBeaconBirth.owner setup source ready.pin ready.credentials ready.identity ready.prekey generated.born before.server.world.world.1.owners.length
+    let nextOwner := RegistrationNativeBeaconBirth.owner setup source ready.pin ready.identity ready.prekey generated.born before.server.world.world.1.owners.length
     (((⟨outcome,snapshot,.ok (some owners.length)⟩,owners ++[nextOwner]),environment),
       AdapterBeaconConstructorMaterial.appendNative keyId (view.edPublic serverId) before)
 
+omit children in
 theorem exact_result (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicKey)
     (captured : Option (AdapterBeaconConstructorJoint.Capture source R) ×R)
     (owners : RegistrationNativeBeaconFrontend.State source)
@@ -61,6 +62,7 @@ theorem exact_result (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.Pu
       rw [AdapterBeaconConstructorNativeRegister.register_exact]
       simp only [pure_bind,StateT.run_pure,result,selected]
 
+omit children in
 theorem backend (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicKey)
     (captured : Option (AdapterBeaconConstructorJoint.Capture source R) ×R)
     (owners : RegistrationNativeBeaconFrontend.State source)
@@ -82,6 +84,7 @@ theorem backend (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicK
 def observe (nextOwner : Nat) (outcome : AdapterBeaconConstructorBody.Outcome R) : RustM (Option Nat) :=
   .ok (match outcome.1 with | .Err _ =>none | .Ok _ =>some nextOwner)
 
+omit children in
 theorem reply (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicKey)
     (captured : Option (AdapterBeaconConstructorJoint.Capture source R) ×R)
     (owners : RegistrationNativeBeaconFrontend.State source)
@@ -93,6 +96,7 @@ theorem reply (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicKey
   | none => simp only [result,observe,AdapterBeaconConstructorNative.sourceResult,AdapterBeaconConstructorJoint.sourceResult,selected]
   | some generated => simp only [result,observe,AdapterBeaconConstructorNative.sourceResult,AdapterBeaconConstructorJoint.sourceResult,selected]
 
+omit children in
 theorem decompose (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicKey)
     (mlPin : Std.Array U8 1952#usize) (rng : R)
     (before : RegistrationNativeExperiment.State n KemSK source) (previous next : Platform)

@@ -201,9 +201,9 @@ noncomputable def executeWith {α : Type}
     (identityIndex : ℕ) (publicIdentity : PublicIdentity)
     (work : PqxdhRegistrationJointServiceSchedule.Client KemSK Response α) (state : EncodedState KemSK) :
     ProbComp (α × EncodedState KemSK) :=
-  (fun result => (result.1.1, ⟨result.2.1, result.2.2, result.1.2⟩)) <$>
+  (fun result => (result.1.1, ⟨result.2.1, result.2.2, result.1.2.1, result.1.2.2⟩)) <$>
     runWith service (PqxdhRegistrationJointOpenBackend.compile setup codec checks identityIndex publicIdentity work
-      state.owners) (state.pool, state.shared)
+      (state.owners, state.inits)) (state.pool, state.shared)
 
 /-- With the actual private services, `executeWith` is the open backend's execution. -/
 theorem executeWith_impl {α : Type} (identityIndex : ℕ) (publicIdentity : PublicIdentity)
@@ -228,7 +228,7 @@ theorem executeWith_bind {α β : Type}
 theorem executeWith_noCreate {α : Type} (pairs : List (Pair KemSK)) (identityIndex : ℕ) (publicIdentity : PublicIdentity)
     (work : PqxdhRegistrationJointServiceSchedule.Client KemSK Response α) (state : EncodedState KemSK)
     (none : ((PqxdhRegistrationJointOpenBackend.compile setup codec checks identityIndex publicIdentity work
-      state.owners).run state.shared).IsQueryBoundP (PqxdhLiveKemReservation.IsCreate (KemSK := KemSK)) 0) :
+      (state.owners, state.inits)).run state.shared).IsQueryBoundP (PqxdhLiveKemReservation.IsCreate (KemSK := KemSK)) 0) :
     executeWith setup codec checks (reservedAt setup pairs) identityIndex publicIdentity work state =
       PqxdhRegistrationJointOpenBackend.execute setup codec checks identityIndex publicIdentity work state := by
   rw [← executeWith_impl]
@@ -238,7 +238,8 @@ theorem executeWith_noCreate {α : Type} (pairs : List (Pair KemSK)) (identityIn
 theorem client_noCreate (identityIndex : ℕ) (publicIdentity : PublicIdentity)
     (query : (PqxdhRegistrationJointRevealSchedule.Spec KemSK).Domain)
     (other : PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query ≠ .inl 1)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) (shared : PqxdhServerAuthNative.NativeState KemSK) :
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate))
+    (shared : PqxdhServerAuthNative.NativeState KemSK) :
     ((PqxdhRegistrationJointOpenBackend.compile setup codec checks identityIndex publicIdentity
       (PqxdhRegistrationJointRevealSchedule.client setup codec query) owners).run shared).IsQueryBoundP
         (PqxdhLiveKemReservation.IsCreate (KemSK := KemSK)) 0 := by
@@ -269,18 +270,19 @@ theorem compile_poolLift {α : Type} (identityIndex : ℕ) (publicIdentity : Pub
 
 /-- The open backend runs the executable constructor as the indexed constructor client, then installs the encoded owner. -/
 theorem compile_create (identityIndex : ℕ) (publicIdentity : PublicIdentity) (pin : PqxdhBeaconPhase2Preparation.Word32)
-    (keyId : Std.U64) (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry)
+    (keyId : Std.U64)
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate))
     (shared : PqxdhServerAuthNative.NativeState KemSK) :
     (PqxdhRegistrationJointOpenBackend.compile setup codec checks identityIndex publicIdentity
       (PqxdhRegistrationJointServiceSchedule.create (Response := Response) pin keyId) owners).run shared =
-      (fun value => ((owners.length, match value with
-        | none => owners
-        | some value => owners ++ [PqxdhRegistrationJointServiceSchedule.birth pin keyId value]), shared)) <$>
+      (fun value => ((owners.1.length, (match value with
+        | none => owners.1
+        | some value => owners.1 ++ [PqxdhRegistrationJointServiceSchedule.birth pin keyId value], owners.2)), shared)) <$>
         PqxdhRegistrationJointCreation.client (KemSK := KemSK) := by
   have shape : (PqxdhRegistrationJointServiceSchedule.create (KemSK := KemSK) (Response := Response) pin keyId).run owners =
-      (fun value => (owners.length, match value with
-        | none => owners
-        | some value => owners ++ [PqxdhRegistrationJointServiceSchedule.birth pin keyId value])) <$>
+      (fun value => (owners.1.length, (match value with
+        | none => owners.1
+        | some value => owners.1 ++ [PqxdhRegistrationJointServiceSchedule.birth pin keyId value], owners.2))) <$>
         simulateQ PqxdhRegistrationJointServiceSchedule.poolLift PqxdhRegistrationJointCreation.client := by
     simp only [PqxdhRegistrationJointServiceSchedule.create, StateT.run, bind_pure_comp]
     rfl
@@ -361,9 +363,24 @@ theorem source_counts (seed : IdentitySeed) (identityIndex : ℕ)
         case none => exact supported ▸ ⟨rfl, rfl⟩
         case some entry =>
           obtain ⟨reached, member, rfl⟩ := supported
-          exact ⟨(PqxdhRegistrationJointFinish.annotated_program_slots setup codec entry.identityIndex entry.kemIndex
-            (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw entry.owner) (state.pool, state.shared)
-            reached member).2, List.length_set⟩
+          refine ⟨?_, List.length_set⟩
+          unfold PqxdhRegistrationJointFinish.annotatedFinish at member
+          cases phase : entry.owner.beacon.phase <;> simp only [phase] at member
+          case initSent control prekey oneTime kem =>
+            cases retained : state.inits address <;> cases decoded : PqxdhServerAuthExperiment.responseOf codec raw <;>
+              simp only [retained, decoded] at member
+            case some.some init response =>
+              change reached ∈ support (StateT.run (_ >>= _) _) at member
+              rw [StateT.run_bind, mem_support_bind_iff] at member
+              obtain ⟨hashed, hashMember, member⟩ := member
+              simp only [PqxdhRegistrationJointFinish.onNative, StateT.run, support_map, Set.mem_image] at hashMember
+              obtain ⟨value, _, rfl⟩ := hashMember
+              exact (PqxdhRegistrationJointFinish.annotated_program_slots setup codec entry.identityIndex
+                entry.kemIndex _ (state.pool, value.2) reached member).2
+            all_goals subst member
+            all_goals rfl
+          all_goals subst member
+          all_goals rfl
     | build session payload => exact shared _ result supported
     | hmac key message => exact shared _ result supported
     | hash bytes => exact shared _ result supported
@@ -651,13 +668,15 @@ theorem kemCommands_reserved (seed : IdentitySeed) (identityIndex : ℕ) (pairs 
     (program : OracleComp (PqxdhRegistrationJointRevealSchedule.Spec KemSK) Result) (state : State KemSK)
     (owned : PoolOwned seed identityIndex state) :
     (simulateQ (reservedAt setup pairs) (PqxdhRegistrationJointKemCommands.program setup codec checks identityIndex
-        (setup.joint.publicKeys seed) program (encodeState setup state).owners state.shared)).run state.pool =
-      (fun result => (((result.1, (encodeState setup result.2).owners), result.2.shared), result.2.pool)) <$>
+        (setup.joint.publicKeys seed) program ((encodeState setup state).owners, (encodeState setup state).inits)
+        state.shared)).run state.pool =
+      (fun result => (((result.1, ((encodeState setup result.2).owners, (encodeState setup result.2).inits)),
+          result.2.shared), result.2.pool)) <$>
         (simulateQ (sourcePool setup codec checks seed identityIndex pairs) program).run state := by
   have source := program_reserved setup codec checks seed identityIndex pairs program state owned
   simp only [executeWith, runWith, Functor.map_map] at source
   have back := congrArg (fun work => (fun result : Result × EncodedState KemSK =>
-    (((result.1, result.2.owners), result.2.shared), result.2.pool)) <$> work) source
+    (((result.1, (result.2.owners, result.2.inits)), result.2.shared), result.2.pool)) <$> work) source
   simp only [Functor.map_map, Prod.mk.eta, id_map'] at back
   exact back
 
@@ -672,14 +691,16 @@ theorem kemCommands_stopped (selected : ℕ) (seed : IdentitySeed) (identityInde
     (room : state.pool.2.keys.length + budget (.inl 1) ≤ pairs.length) :
     ((simulateQ (PqxdhDynamicKemJointRouter.stopped setup.baseImpl setup.joint setup.kem selected pairs)
         (PqxdhRegistrationJointKemCommands.program setup codec checks identityIndex (setup.joint.publicKeys seed)
-          program (encodeState setup state).owners state.shared)).run).run (state.pool.1, routerOf state.pool.2) =
-      (fun result => (some (((result.1, (encodeState setup result.2).owners), result.2.shared)),
+          program ((encodeState setup state).owners, (encodeState setup state).inits) state.shared)).run).run
+          (state.pool.1, routerOf state.pool.2) =
+      (fun result => (some (((result.1, ((encodeState setup result.2).owners, (encodeState setup result.2).inits)),
+          result.2.shared)),
           (result.2.pool.1, routerOf result.2.pool.2))) <$>
         (simulateQ (sourcePool setup codec checks seed identityIndex pairs) program).run state := by
   have creations := PqxdhRegistrationJointKemCommands.creations setup codec checks identityIndex
-    (setup.joint.publicKeys seed) program budget certified (encodeState setup state).owners state.shared
+    (setup.joint.publicKeys seed) program budget certified ((encodeState setup state).owners, (encodeState setup state).inits) state.shared
   have reveals := PqxdhRegistrationJointOpenCosts.command_program setup codec checks identityIndex
-    (setup.joint.publicKeys seed) program budget certified (encodeState setup state).owners state.shared .other
+    (setup.joint.publicKeys seed) program budget certified ((encodeState setup state).owners, (encodeState setup state).inits) state.shared .other
     (by decide)
   simp only [PqxdhRegistrationJointOpenCosts.privateTotal, unreadIdentity, unreadKem] at reveals
   rw [stopped_program setup selected pairs _ _ creations reveals state.pool.1 state.pool.2 prefixed room]

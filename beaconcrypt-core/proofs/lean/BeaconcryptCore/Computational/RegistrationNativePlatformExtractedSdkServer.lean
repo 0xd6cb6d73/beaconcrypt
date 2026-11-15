@@ -38,7 +38,7 @@ noncomputable def native (coins : QueryImpl unifSpec (StateT PlatformState ProbC
     (checks : PqxdhServerAuthExperiment.Checks) (reserve : StateT PlatformState ProbComp Bool)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (input : Slice U8) : NativeM (RustM (Option Nat)) :=
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (input : Slice U8) : NativeM (RustM (Option Nat)) :=
   match RegistrationNativeConcreteCodec.wire.decodeInit (TranscriptAuthParts.absSlice input) with
   | none=>pure (.ok none)
   | some packet=>do
@@ -52,7 +52,7 @@ theorem native_current (coins : QueryImpl unifSpec (StateT PlatformState ProbCom
     (checks : PqxdhServerAuthExperiment.Checks) (reserve : StateT PlatformState ProbComp Bool)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (input : Slice U8)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (input : Slice U8)
     (functional : RegistrationNativePlatformAuthentication.EdFunctional setup.source.crypto) :
     native (n:=n) (mlSource:=mlSource) coins setup codec checks reserve route verify representation created input=
       AdapterPublicServerAcceptDispatch.native coins setup codec checks reserve route verify representation created input := by
@@ -106,7 +106,7 @@ theorem coupled {E R Error : Type} (coins : QueryImpl unifSpec (StateT PlatformS
     (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (views : AdapterPublicWrapperStorage.Views)
     (model : AdapterPublicAgreementPrimitiveModel.Model (m := ProbComp) generator setup checks view)
     (entropy : AdapterPublicAgreementServerNative.Entropy model)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : beaconcrypt_public_wrapper.server.Server) (input : Slice U8) (rng : R)
     (before : RegistrationNativeExperiment.State n KemSK mlSource)
     (related : AdapterPublicWrapperState.Server view views created credential self before.server)
@@ -147,7 +147,7 @@ theorem post {E R Error : Type} (coins : QueryImpl unifSpec (StateT PlatformStat
     (generator : rand_core.TryCryptoRng R Error) (self : beaconcrypt_public_wrapper.server.Server)
     (input : Slice U8) (rng : R)
     (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (before after : Native) (related : AdapterPublicWrapperState.Server view views created credential self before.server)
     (edGetter : ∀ key, (@CryptoOperations.edPublicBytes material ed (RustT NativeM)
       (AdapterPublicAgreementNativePlatformInterpreter.operations coins original) key).run = pure (.ok (view.edPublic key)))
@@ -259,7 +259,7 @@ theorem actual
     (previousLocal : LocalOperations (RustT SourceM))
     (previousChildren : ChildOperations (RustT SourceM))
     (view : MaterialView mlSource KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : Server) (before : Cut) (related : AdapterPublicWrapperState.Server view views created credential self before.1.server)
     (token : beaconcrypt_public_wrapper.server.RegistrationOutput) (data : core.option.Option (Slice U8))
     (parsed : AdapterPublicServerToken.ParsedToken token)
@@ -298,7 +298,7 @@ theorem actual
       ((run coins setup codec keyView failure allocation helper erased sign writer fallback self token data).run before) =
       (RegistrationNativePlatformExperiment.server
         (RegistrationNativePlatformCompletionSdk.complete
-          (RegistrationNativePlatformSourceBuild.pin coins)
+          (RegistrationNativePlatformCompletionSdk.nativeAdHash coins) (RegistrationNativePlatformSourceBuild.pin coins)
           (admitted <$> StateT.lift allocated)
           (RegistrationNativePlatformCompletionSdk.nativePresent coins)
           (sourceFinish coins setup codec keyView failure allocation helper erased sign writer)
@@ -322,7 +322,7 @@ theorem post
     (previousLocal : LocalOperations (RustT SourceM))
     (previousChildren : ChildOperations (RustT SourceM))
     (view : MaterialView mlSource KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : Server) (before : Cut) (related : AdapterPublicWrapperState.Server view views created credential self before.1.server)
     (token : beaconcrypt_public_wrapper.server.RegistrationOutput) (data : core.option.Option (Slice U8))
     (parsed : AdapterPublicServerToken.ParsedToken token)
@@ -380,7 +380,7 @@ theorem source_post
 
     (previousChildren : ChildOperations (RustT SourceM))
     (view : MaterialView mlSource KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : Server) (before : Cut) (related : AdapterPublicWrapperState.Server view views created credential self before.1.server)
     (token : beaconcrypt_public_wrapper.server.RegistrationOutput) (data : core.option.Option (Slice U8))
     (parsed : AdapterPublicServerToken.ParsedToken token)

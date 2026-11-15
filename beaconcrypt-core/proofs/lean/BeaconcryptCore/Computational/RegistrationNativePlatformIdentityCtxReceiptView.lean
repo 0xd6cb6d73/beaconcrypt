@@ -37,7 +37,7 @@ private def observe (result : (A × RegistrationNativePlatformIdentityHistoryVie
 
 /-- The actual frontend compact receipt law closes through physical compilation and the full Main state. -/
 theorem beacon (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativePlatformIdentityProgram.M n KemSK RegistrationServerRoleBackend.State Platform source A)
     (law : RegistrationNativeIdentityEnvReceiptView.PlatformStable work) :
     Stable (RegistrationNativePlatformIdentityCtxMain.beacon setup checks representation created work) := by
@@ -66,7 +66,7 @@ theorem view_idempotent (before : RegistrationNativeIdentityMain.State n KemSK s
 
 /-- Actual generated owner creation is independent of earlier compact/raw ML receipts. -/
 theorem create_stable (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64) :
     Stable (RegistrationNativePlatformIdentityCtxLifecycle.create (n := n) (source := source) (Platform := Platform)
       setup edPin mlPin keyId checks representation created) :=
@@ -76,7 +76,7 @@ theorem create_stable (setup : Setup base KemSK) (checks : Checks)
 
 /-- Actual corrected finish retains every source/P outcome under the prior raw ML receipt view. -/
 theorem finish_stable (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat) (packet : Option registration.ResponsePacket) :
     Stable (RegistrationNativePlatformIdentityCtxLifecycle.finish (n := n) (source := source) (Platform := Platform)
       setup checks representation created wire index packet) :=
@@ -86,7 +86,7 @@ theorem finish_stable (setup : Setup base KemSK) (checks : Checks)
 
 /-- Whole dynamic writer bundle execution retains exact current signature bytes and P, ignoring only prior raw ML receipts. -/
 theorem bundle_stable {E : Type} (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) (index : Nat) :
     Stable (RegistrationNativePlatformIdentityCtxLifecycle.bundle (n := n) (source := source) setup checks representation created writer index) := by
   apply RegistrationNativePlatformViewStable.map_stable view view_idempotent

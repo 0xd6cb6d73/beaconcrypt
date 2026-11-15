@@ -25,7 +25,7 @@ structure Replies where
   aead : RawCtxSourceOpen.BaseInput → Option (alloc.vec.Vec Std.U8)
 
 /-- A primitive interpretation erases the borrowed copy on every hash outcome. -/
-@[instance_reducible] def operations (replies : Replies) (erased : Array Std.U8 357#usize) : Operations where
+@[instance_reducible] def operations (replies : Replies) (erased : Array Std.U8 227#usize) : Operations where
   kdf request := ok (replies.kdf request)
   hash transcript := ok (replies.hash (PqxdhRefinement.absBytes transcript.bytes), { bytes := erased })
   aead request := ok (request.bind fun request => replies.aead (RecordEffectsReceiveProgram.aeadQuery request))
@@ -102,7 +102,7 @@ theorem output_map (reply : Option (record.OpenedRecord (alloc.vec.Vec Std.U8)))
       reply () = ok (Option.map publicOpened reply) := by
   cases reply <;> rfl
 
-theorem receiver_aead (replies : Replies) (erased : Array Std.U8 357#usize)
+theorem receiver_aead (replies : Replies) (erased : Array Std.U8 227#usize)
     (pending : record_effects.RecordReceiveAead) :
     decodeResult <$> @beaconcrypt.ratchet.execute_record_receive (operations replies erased)
       (.AeadRequested pending) =
@@ -158,7 +158,7 @@ def afterHash (pending : record_effects.RecordReceiveCommitment) (digest : Optio
     | .AeadRequested opening => RecordEffectsReceiveProgram.executeAead opening
     | .KdfRequested _ | .CommitmentRequested _ => pure .div
 
-theorem receiver_commitment (replies : Replies) (erased : Array Std.U8 357#usize)
+theorem receiver_commitment (replies : Replies) (erased : Array Std.U8 227#usize)
     (pending : record_effects.RecordReceiveCommitment) :
     decodeResult <$> @beaconcrypt.ratchet.execute_record_receive (operations replies erased)
       (.CommitmentRequested pending) =
@@ -223,7 +223,7 @@ theorem receiver_commitment (replies : Replies) (erased : Array Std.U8 357#usize
             receiver_aead replies erased ⟨{ opening := pending.pending.opening }⟩
 
 /-- Exact equality with the existing source request program for every starting record phase. -/
-theorem receiver_source (replies : Replies) (erased : Array Std.U8 357#usize)
+theorem receiver_source (replies : Replies) (erased : Array Std.U8 227#usize)
     (effect : record_effects.RecordReceiveEffect) :
     decodeResult <$> @beaconcrypt.ratchet.execute_record_receive (operations replies erased) effect =
       simulateQ (implementation replies) (RecordEffectsReceiveProgram.execute erased effect) := by
@@ -260,9 +260,9 @@ theorem receiver_source (replies : Replies) (erased : Array Std.U8 357#usize)
       | AeadRequested pending => exact receiver_aead replies erased pending
 
 /-- Core admission followed by the actual generated Rust controller preserves the whole source execution. -/
-theorem receive_source (replies : Replies) (erased : Array Std.U8 357#usize)
+theorem receive_source (replies : Replies) (erased : Array Std.U8 227#usize)
     (kernel : ratchet.concrete.ConcreteRatchetKernel) (sequence : Std.U64)
-    (payload : Slice Std.U8) (ad : Array Std.U8 281#usize) (sender : Std.U64) :
+    (payload : Slice Std.U8) (ad : Array Std.U8 151#usize) (sender : Std.U64) :
     decodeResult <$> (do
       let effect ← record_effects.begin_record_receive kernel sequence payload ad sender
       @beaconcrypt.ratchet.execute_record_receive (operations replies erased) effect) =
@@ -275,9 +275,9 @@ theorem receive_source (replies : Replies) (erased : Array Std.U8 357#usize)
   exact receiver_source replies erased effect
 
 /-- The selected production receive loop reaches the existing model bridge, including malformed admission and every optional primitive failure. -/
-theorem receive_native_model (replies : Replies) (erased : Array Std.U8 357#usize)
+theorem receive_native_model (replies : Replies) (erased : Array Std.U8 227#usize)
     (kernel : ratchet.concrete.ConcreteRatchetKernel) (sequence : Std.U64)
-    (payload : Slice Std.U8) (ad : Array Std.U8 281#usize) (sender : Std.U64) :
+    (payload : Slice Std.U8) (ad : Array Std.U8 151#usize) (sender : Std.U64) :
     decodeResult <$> (do
       let effect ← record_effects.begin_record_receive kernel sequence payload ad sender
       @beaconcrypt.ratchet.execute_record_receive (operations replies erased) effect) =

@@ -50,14 +50,14 @@ def initialObserver {Context : Type} (source : FixedHkdfSha512NoSaltSource)
 noncomputable def initializedGame {Context : Type} (source : FixedHkdfSha512NoSaltSource)
     (sample : ProbComp Context) (observer : BidirectionalObserver Context)
     (leftRounds rightRounds : Nat) : ProbComp Bool :=
-  sourceFullGame source .ratchet (rootSampler sample)
+  sourceFullGame source .initial (rootSampler sample)
     (initialObserver source observer leftRounds rightRounds)
 
 /-- The source's actual 64-byte initialization pair is the observed pair of this one expansion. -/
 theorem initialized_pair_source (source : FixedHkdfSha512NoSaltSource) (root : RootOutput) :
     Pqxdh.rootChains source.crypto root.toList =
       PqxdhJointKdf.initialProjection (PqxdhJointKdf.productionStream source.crypto
-        (FixedHkdfDomain.ratchet.address root.toList)) := by
+        (FixedHkdfDomain.initial.address root.toList)) := by
   exact PqxdhJointKdf.rootChains_eq_initialProjection source.crypto source.prefixConsistent _
 
 /-- Idealizing initialization produces exactly the existing two-direction experiment. -/
@@ -80,10 +80,10 @@ noncomputable def initialLoss {Context : Type} (source : FixedHkdfSha512NoSaltSo
     (leftRounds rightRounds : Nat) : ℝ :=
   let joint := rootSampler sample
   let observe := initialObserver source observer leftRounds rightRounds
-  (extractRealGame hmac joint (fullExtractReduction hmac .ratchet observe)).boolDistance
-    (extractUniformGame joint (fullExtractReduction hmac .ratchet observe)) +
-  (hmacPrfRealGame hmac (fullExpandReduction .ratchet joint observe)).boolDistance
-    (hmacPrfRandomGame (fullExpandReduction .ratchet joint observe))
+  (extractRealGame hmac joint (fullExtractReduction hmac .initial observe)).boolDistance
+    (extractUniformGame joint (fullExtractReduction hmac .initial observe)) +
+  (hmacPrfRealGame hmac (fullExpandReduction .initial joint observe)).boolDistance
+    (hmacPrfRandomGame (fullExpandReduction .initial joint observe))
 
 /-- The first hop replaces the shared initialization prefix, before any directional hop. -/
 theorem initialized_bound {Context : Type} (source : FixedHkdfSha512NoSaltSource)
@@ -95,7 +95,7 @@ theorem initialized_bound {Context : Type} (source : FixedHkdfSha512NoSaltSource
       initialLoss source hmac sample observer leftRounds rightRounds := by
   have random := (independent_initial_eq_bidirectional source sample observer leftRounds rightRounds).evalDist_eq
   simpa only [initializedGame, initialLoss, ProbComp.boolDistance, random] using
-    sourceFullAdvantage_le_extract_add_hmac source hmac correct .ratchet
+    sourceFullAdvantage_le_extract_add_hmac source hmac correct .initial
       (rootSampler sample) (initialObserver source observer leftRounds rightRounds)
 
 /-- The actual initialization and both complete directional derivations compose in order. -/
@@ -119,7 +119,7 @@ theorem initialized_evolving_bound {Context : Type} (source : FixedHkdfSha512NoS
 /-- Execute the actual 64-byte source call once, then split its two halves. -/
 def sourceInitialChains (source : FixedHkdfSha512NoSaltSource) (root : RootOutput) :
     RootOutput × RootOutput :=
-  let bytes := source.crypto.hkdf root.toList Pqxdh.INFO_R 64
+  let bytes := source.crypto.hkdf root.toList Pqxdh.INFO_INIT 64
   (⟨bytes.take 32, by simp [bytes, source.crypto.hkdf_length]⟩,
     ⟨bytes.drop 32, by simp [bytes, source.crypto.hkdf_length]⟩)
 
@@ -132,7 +132,7 @@ theorem sourceInitialChains_bytes (source : FixedHkdfSha512NoSaltSource) (root :
 theorem sourceInitialChains_eq (source : FixedHkdfSha512NoSaltSource) (root : RootOutput) :
     sourceInitialChains source root =
       let output := PqxdhJointKdf.productionStream source.crypto
-        (FixedHkdfDomain.ratchet.address root.toList)
+        (FixedHkdfDomain.initial.address root.toList)
       (JointKdfProjection.first32.project output, JointKdfProjection.second32.project output) := by
   have bytes := (sourceInitialChains_bytes source root).trans (initialized_pair_source source root)
   apply Prod.ext
@@ -191,7 +191,7 @@ theorem initialReduction_query_bounds {Context : Type} (source : FixedHkdfSha512
     (leftRounds rightRounds qSample qObserver : Nat)
     (sampleBound : sample.IsTotalQueryBound qSample)
     (observerBound : ∀ context left right, (observer context left right).IsTotalQueryBound qObserver) :
-    let reduction := fullExpandReduction .ratchet (rootSampler sample)
+    let reduction := fullExpandReduction .initial (rootSampler sample)
       (initialObserver source observer leftRounds rightRounds)
     reduction.IsQueryBoundP IsHmacChallengeQuery 2 ∧
       reduction.IsQueryBoundP IsHmacUniformQuery ((qSample + 32) + qObserver) :=
@@ -208,7 +208,7 @@ theorem actualInitializedGame_query_bound {Context : Type} (source : FixedHkdfSh
     (actualInitializedGame source sample observer leftRounds rightRounds).IsTotalQueryBound
       ((qSample + 32) + qObserver) := by
   rw [actualInitializedGame_eq]
-  exact sourceFullGame_uniform_query_bound source .ratchet _ _
+  exact sourceFullGame_uniform_query_bound source .initial _ _
     (rootSampler_query_bound sample qSample sampleBound) (fun _ _ => observerBound _ _ _)
 
 /-- All initialization challenger worlds retain their actual sampled root, PRK/key, blocks and complete observer costs. -/
@@ -219,13 +219,13 @@ theorem initialChallenger_query_bounds {Context : Type} (source : FixedHkdfSha51
     (observerBound : ∀ context left right, (observer context left right).IsTotalQueryBound qObserver) :
     let joint := rootSampler sample
     let observe := initialObserver source observer leftRounds rightRounds
-    (extractRealGame hmac joint (fullExtractReduction hmac .ratchet observe)).IsTotalQueryBound
+    (extractRealGame hmac joint (fullExtractReduction hmac .initial observe)).IsTotalQueryBound
       ((qSample + 32) + qObserver) ∧
-    (extractUniformGame joint (fullExtractReduction hmac .ratchet observe)).IsTotalQueryBound
+    (extractUniformGame joint (fullExtractReduction hmac .initial observe)).IsTotalQueryBound
       ((qSample + 32) + (64 + qObserver)) ∧
-    (hmacPrfRealGame hmac (fullExpandReduction .ratchet joint observe)).IsTotalQueryBound
+    (hmacPrfRealGame hmac (fullExpandReduction .initial joint observe)).IsTotalQueryBound
       (64 + ((qSample + 32) + qObserver)) ∧
-    (hmacPrfRandomGame (fullExpandReduction .ratchet joint observe)).IsTotalQueryBound
+    (hmacPrfRandomGame (fullExpandReduction .initial joint observe)).IsTotalQueryBound
       ((qSample + 32) + (64 + (64 + qObserver))) ∧
     (independentFullGame joint observe).IsTotalQueryBound
       ((qSample + 32) + (76 + qObserver)) := by
@@ -233,9 +233,9 @@ theorem initialChallenger_query_bounds {Context : Type} (source : FixedHkdfSha51
   have outputBound : ∀ context output,
       ((initialObserver source observer leftRounds rightRounds) context output).IsTotalQueryBound qObserver :=
     fun _ _ => observerBound _ _ _
-  refine ⟨?_, fullExtractUniform_uniform_query_bound hmac .ratchet _ _ rootBound outputBound,
-    fullHmacReal_uniform_query_bound hmac .ratchet _ _ rootBound outputBound,
-    fullHmacRandom_uniform_query_bound .ratchet _ _ rootBound outputBound,
+  refine ⟨?_, fullExtractUniform_uniform_query_bound hmac .initial _ _ rootBound outputBound,
+    fullHmacReal_uniform_query_bound hmac .initial _ _ rootBound outputBound,
+    fullHmacRandom_uniform_query_bound .initial _ _ rootBound outputBound,
     independentFullGame_uniform_query_bound _ _ rootBound outputBound⟩
   exact OracleComp.isTotalQueryBound_bind rootBound (fun pair => outputBound _ _)
 

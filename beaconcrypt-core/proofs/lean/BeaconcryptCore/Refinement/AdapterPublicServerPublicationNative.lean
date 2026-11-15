@@ -17,9 +17,13 @@ variable {S Encoded : Type} {m : Type → Type} [Monad m] [LawfulMonad m]
 variable (impl : QueryImpl RegistrationSigningShared.Spec (StateT S m))
 variable (fallback : registration.MldsaSigningRequest → StateT S m RegistrationSigningShared.SignReply)
 
+noncomputable def sign (request : registration.MldsaSigningRequest) :
+    StateT (State S) m (Option (alloc.vec.Vec U8)) :=
+  AdapterPublicBundleNative.vector <$> RegistrationNativePlatformCutJournal.sign impl fallback request
+
 noncomputable def primitives : AdapterPublicServerPublication.Primitives (StateT (State S) m) where
   hash := RegistrationNativePlatformCutJournal.hash impl
-  sign := AdapterPublicBundleNative.sign impl fallback
+  sign := sign impl fallback
 
 theorem outgoing_source : AdapterPublicServerPublication.outgoing (primitives impl fallback) =
     RegistrationNativePlatformCutJournal.source impl fallback := by

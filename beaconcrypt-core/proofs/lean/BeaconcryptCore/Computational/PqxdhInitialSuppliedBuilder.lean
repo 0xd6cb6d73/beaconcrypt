@@ -8,6 +8,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete PqxdhRefinement
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialSuppliedBuilder
+variable (associatedData : Std.Array Std.U8 151#usize)
 open PqxdhServerRegistrationPublication PqxdhSecretInputKdf PqxdhJointKdfGame
 open PqxdhInitialReplyErasure PqxdhInitialResponseService
 
@@ -15,8 +16,8 @@ open PqxdhInitialReplyErasure PqxdhInitialResponseService
 theorem candidate_supplied {Metadata PeerMetadata Consumed : Type}
     (response : pqxdh.concrete.InitialRatchetKdfResponse) (pending : pqxdh.ServerRegistrationCandidate)
     (root : RootOutput) (data : Option Bytes) (metadata : PeerMetadata) (state : State Metadata PeerMetadata Consumed) :
-    simulateQ (supplied response) (PqxdhInitialServiceBuilder.candidate pending root data metadata state) =
-      PqxdhInitialBuilderCut.candidate (kernelOf false response) pending data metadata state := by
+    simulateQ (supplied response) (PqxdhInitialServiceBuilder.candidate (associatedData := associatedData) pending root data metadata state) =
+      PqxdhInitialBuilderCut.candidate (associatedData := associatedData) (kernelOf false response) pending data metadata state := by
   simp only [PqxdhInitialServiceBuilder.candidate, PqxdhInitialBuilderCut.candidate, original, OracleSpec.query,
     simulateQ_bind]
   apply bind_congr
@@ -36,8 +37,8 @@ theorem candidate_supplied {Metadata PeerMetadata Consumed : Type}
 theorem used_supplied {Metadata PeerMetadata Consumed : Type}
     (response : pqxdh.concrete.InitialRatchetKdfResponse) (pending : PqxdhRegistrationInputs.UsedInput)
     (root : RootOutput) (data : Option Bytes) (metadata : PeerMetadata) (state : State Metadata PeerMetadata Consumed) :
-    simulateQ (supplied response) (PqxdhInitialServiceBuilder.usedBuild pending root data metadata state) =
-      PqxdhInitialBuilderCut.usedBuild (kernelOf false response) pending data metadata state := by
+    simulateQ (supplied response) (PqxdhInitialServiceBuilder.usedBuild (associatedData := associatedData) pending root data metadata state) =
+      PqxdhInitialBuilderCut.usedBuild (associatedData := associatedData) (kernelOf false response) pending data metadata state := by
   unfold PqxdhInitialServiceBuilder.usedBuild PqxdhInitialBuilderCut.usedBuild
   cases next : pqxdh.server_next_key_id state.control
   case ok value =>
@@ -51,7 +52,7 @@ theorem used_supplied {Metadata PeerMetadata Consumed : Type}
       case ok value =>
         cases value
         case Err error => rfl
-        case Ok value => exact candidate_supplied response value root data metadata state
+        case Ok value => exact candidate_supplied (associatedData := associatedData) response value root data metadata state
       all_goals rfl
   all_goals rfl
 
@@ -60,9 +61,9 @@ theorem ready_supplied {Metadata PeerMetadata Consumed : Type}
     (fixed : FixedHkdfSha512NoSaltSource) (response : pqxdh.concrete.InitialRatchetKdfResponse)
     (binding : pqxdh.ServerBinding) (ready : PqxdhPrivateAcceptedRoot.Ready) (metadata : PeerMetadata)
     (state : State Metadata PeerMetadata Consumed) :
-    simulateQ (supplied response) (PqxdhInitialServiceBuilder.readyBuild fixed binding ready metadata state) =
-      PqxdhInitialBuilderCut.readyBuild fixed (kernelOf false response) binding (PqxdhInitialBuilderCut.eraseRoot ready) metadata state := by
-  exact used_supplied response _ ready.root ready.application metadata state
+    simulateQ (supplied response) (PqxdhInitialServiceBuilder.readyBuild (associatedData := associatedData) fixed binding ready metadata state) =
+      PqxdhInitialBuilderCut.readyBuild (associatedData := associatedData) fixed (kernelOf false response) binding (PqxdhInitialBuilderCut.eraseRoot ready) metadata state := by
+  exact used_supplied (associatedData := associatedData) response _ ready.root ready.application metadata state
 
 /-- The fixed reply interpretation preserves each original builder primitive callback, complete shared state and original random coins. -/
 theorem tail_supplied {A : Type} (fixed : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
@@ -100,12 +101,12 @@ theorem protocol_supplied {M P I D K A : Type} {S B : Nat}
     (aux : QueryImpl AuxSpec (StateT (RawCtxSharedPrimitive.SharedState A) ProbComp))
     (senderId : M → Std.U64) (index : Fin S) (metadata : P) (ready : PqxdhPrivateAcceptedRoot.Ready)
     (state : PqxdhRegistrationProtocolState.State M P I D K A S B) :
-    simulateQ (supplied response) ((PqxdhInitialServiceBuilder.protocolBuild fixed writer aux senderId index metadata ready).run state) =
-      (PqxdhInitialBuilderCut.protocolBuild fixed writer (kernelOf false response) aux senderId index metadata
+    simulateQ (supplied response) ((PqxdhInitialServiceBuilder.protocolBuild (associatedData := associatedData) fixed writer aux senderId index metadata ready).run state) =
+      (PqxdhInitialBuilderCut.protocolBuild (associatedData := associatedData) fixed writer (kernelOf false response) aux senderId index metadata
         (PqxdhInitialBuilderCut.eraseRoot ready)).run state := by
   simp only [PqxdhInitialServiceBuilder.protocolBuild, PqxdhInitialBuilderCut.protocolBuild, StateT.run, simulateQ_map]
   have complete := tail_program fixed writer response aux
-    (PqxdhInitialServiceBuilder.readyBuild fixed
+    (PqxdhInitialServiceBuilder.readyBuild (associatedData := associatedData) fixed
       (PqxdhRegistrationProtocolState.input senderId index metadata
         (PqxdhRegistrationProtocolState.consume index ready state)).binding ready metadata
       (PqxdhRegistrationProtocolState.input senderId index metadata

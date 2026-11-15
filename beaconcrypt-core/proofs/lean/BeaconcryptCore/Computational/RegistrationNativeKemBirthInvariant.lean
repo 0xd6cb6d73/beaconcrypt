@@ -29,7 +29,7 @@ def Holds (setup : Setup base KemSK) {mlSource : RegistrationNativeMldsa.Source}
 /-- Every concrete global effect has the actual source pool step, including sampled primitive work and all rejected private decapsulations. -/
 theorem trusted_step (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (mlSource : RegistrationNativeMldsa.Source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (mlSource : RegistrationNativeMldsa.Source)
     (query : (RegistrationNativeBeaconFrontend.Trusted n KemSK).Domain)
     (before after : State n KemSK mlSource)
     (reply : (RegistrationNativeBeaconFrontend.Trusted n KemSK).Range query)
@@ -72,7 +72,7 @@ private theorem step_holds (setup : Setup base KemSK) {mlSource : RegistrationNa
 /-- An arbitrary adaptive global subprogram preserves the exact private pair of every earlier owner and all generator receipts. -/
 theorem trusted_program (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (mlSource : RegistrationNativeMldsa.Source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (mlSource : RegistrationNativeMldsa.Source)
     (owners : List (Owner mlSource))
     (work : OracleComp (RegistrationNativeBeaconFrontend.Trusted n KemSK) Value)
     (before after : State n KemSK mlSource) (reply : Value)

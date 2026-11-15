@@ -8,6 +8,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core PqxdhRefinement
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhServerAuthPublicationCutoff
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhServerAuthPublicationTrace (Annotation AnnotatedSpec)
 open CtxRomAuth
 
@@ -250,14 +251,14 @@ theorem builder_prefix {Reader WireResponse Metadata PeerMetadata Consumed Resul
     (next : (Option (RustM (Option PqxdhServerRegistrationPublication.Response ×
       PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed)) × PqxdhServerAuthBuildProgram.Log) →
       OracleComp AnnotatedSpec Result) (history : Journal) :
-    beforeRaw (PqxdhServerAuthPublicationTrace.annotated source codec checks rest coordinate
+    beforeRaw (PqxdhServerAuthPublicationTrace.annotated (associatedData := associatedData) source codec checks rest coordinate
       pending data metadata state log >>= next) history = (do
-        let result ← (simulateQ journalImpl (PqxdhServerAuthPublicationTrace.annotated source codec checks rest
+        let result ← (simulateQ journalImpl (PqxdhServerAuthPublicationTrace.annotated (associatedData := associatedData) source codec checks rest
           coordinate pending data metadata state log)).run history
         beforeRaw (next result.1) result.2) := by
   apply beforeRaw_prefix
   rw [PqxdhServerAuthPublicationTrace.annotated_erase]
-  exact (PqxdhServerAuthBuildProgramBounds.compiled_other source codec checks rest pending data metadata state log).1
+  exact (PqxdhServerAuthBuildProgramBounds.compiled_other (associatedData := associatedData) source codec checks rest pending data metadata state log).1
 
 /-- The nonstopping source journal places the actual builder's component observations strictly between its begin and completion annotations. The completion contains the actual local trailer, including all optional failure outcomes. -/
 theorem journal_builder {Reader WireResponse Metadata PeerMetadata Consumed : Type}
@@ -267,10 +268,10 @@ theorem journal_builder {Reader WireResponse Metadata PeerMetadata Consumed : Ty
     (pending : pqxdh.PendingServerRegistration) (data : Option Pqxdh.Bytes) (metadata : PeerMetadata)
     (state : PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed)
     (log : PqxdhServerAuthBuildProgram.Log) (history : Journal) :
-    (simulateQ journalImpl (PqxdhServerAuthPublicationTrace.annotated source codec checks rest coordinate
+    (simulateQ journalImpl (PqxdhServerAuthPublicationTrace.annotated (associatedData := associatedData) source codec checks rest coordinate
       pending data metadata state log)).run history = (do
         let result ← (simulateQ journalImpl (simulateQ PqxdhServerAuthPublicationTrace.liftDynamic
-          ((PqxdhServerAuthPublicationTrace.compiled source codec checks rest pending data metadata state).run.run
+          ((PqxdhServerAuthPublicationTrace.compiled (associatedData := associatedData) source codec checks rest pending data metadata state).run.run
             (log, [])))).run (history ++ [.annotation (.beginBuild coordinate)])
         pure (PqxdhServerAuthPublicationTrace.project result.1,
           result.2 ++ [.annotation (.completedBuild coordinate result.1.2.2)])) := by

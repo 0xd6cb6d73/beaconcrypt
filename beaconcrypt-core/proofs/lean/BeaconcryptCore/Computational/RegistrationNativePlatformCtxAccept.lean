@@ -21,14 +21,14 @@ def increment (before : Context n KemSK × Platform) : Context n KemSK × Platfo
 
 noncomputable def accept (setup : Setup base KemSK) (checks : Checks) (reserve : StateT Platform ProbComp Bool)
     (verify : MldsaTranscriptAuth.Verify) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket) : M n KemSK Platform (RustM (Option Nat)) :=
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket) : M n KemSK Platform (RustM (Option Nat)) :=
   fun before => (RegistrationNativePlatformCtxBuild.server
     (RegistrationNativePlatformCtxAcceptSdk.accept setup checks reserve verify representation created packet)).run (increment before)
 
 /-- The actual parse-attempt increment and full SDK source accept share one physical backend, preserving the same Context and P. -/
 theorem accept_source (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks) (reserve : StateT Platform ProbComp Bool)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (before : Full n KemSK Platform) :
     Prod.map id realize <$> (interpret (accept setup checks reserve verify representation created packet)).run before =
       (RegistrationNativePlatformCtxBuild.nativeServer
@@ -54,7 +54,7 @@ private theorem state_map_apply {S X Y : Type} {m : Type → Type} [Monad m] [La
 variable [primitive : AdapterSealPrimitive.Operations]
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
 variable (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (source : RegistrationNativeMldsa.Source)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (source : RegistrationNativeMldsa.Source)
 variable (credential : RegistrationNativeMldsa.Credential source)
 variable (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
 variable (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))

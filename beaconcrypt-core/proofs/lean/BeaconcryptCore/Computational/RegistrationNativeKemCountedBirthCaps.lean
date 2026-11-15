@@ -83,7 +83,7 @@ theorem call_bound (query : (RegistrationNativeKemCountedCapability.LeafSpec Kem
 
 theorem trusted_bound (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (checks : PqxdhServerAuthExperiment.Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (RegistrationNativeBeaconFrontend.Trusted n KemSK).Domain) :
     Bounded (if RegistrationNativeBeaconKemBirthCaps.Born (n := n) (KemSK := KemSK) query then 1 else 0)
       (RegistrationNativeKemCountedTrusted.implementation (source := source) setup checks representation created query) := by
@@ -97,7 +97,7 @@ theorem trusted_bound (setup : PqxdhServerAuthExperiment.Setup base KemSK)
 
 theorem beacon_program (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (checks : PqxdhServerAuthExperiment.Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State A)
     (cap : Nat) (bounded : RegistrationNativeBeaconKemCaps.Bounded
       (RegistrationNativeBeaconKemBirthCaps.Born (n := n) (KemSK := KemSK)) cap work) :
@@ -113,7 +113,7 @@ theorem beacon_program (setup : PqxdhServerAuthExperiment.Setup base KemSK)
 
 theorem create_one (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (checks : PqxdhServerAuthExperiment.Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64) :
     Bounded 1 (RegistrationNativeKemCountedBeacon.program (n := n) (source := source) setup checks representation created
       (RegistrationNativeBeaconFrontend.create setup source edPin mlPin keyId)) :=

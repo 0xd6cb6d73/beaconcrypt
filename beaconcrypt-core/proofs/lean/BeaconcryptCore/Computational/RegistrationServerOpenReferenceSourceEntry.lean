@@ -75,7 +75,7 @@ theorem close_effect (setup : Setup base KemSK)
 /-- Incoming mandatory ML/Ed/hash verification has its literal native source interpretation before every owned replay check. -/
 theorem authenticate_native (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (remember : Extra → Message → Option RootOutput → Extra) (services : Callbacks n KemSK Extra)
     (packet : registration.InitPacket) (before : State n KemSK Extra) :
     Prod.map id (project setup created.seed scalar) <$>
@@ -106,7 +106,7 @@ theorem accept_native (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (remember : Extra → Message → Option RootOutput → Extra) (services : Callbacks n KemSK Extra)
     (packet : registration.InitPacket) (before : State n KemSK Extra) :
     Prod.map id (project setup created.seed scalar) <$>
@@ -128,10 +128,7 @@ theorem accept_native (setup : Setup base KemSK) (codec : Codec Reader Response)
       cases verdict with
       | Rejected => simp only [close_pure, map_pure]; rfl
       | HashRequested _ => simp only [close_pure, map_pure]; rfl
-      | MldsaVerificationRequested _ => simp only [close_pure, map_pure]; rfl
       | Ed25519VerificationRequested _ => simp only [close_pure, map_pure]; rfl
-      | ServerFingerprintRequested _ => simp only [close_pure, map_pure]; rfl
-      | BeaconFingerprintRequested _ => simp only [close_pure, map_pure]; rfl
       | Accepted authenticated =>
           exact RegistrationServerOpenReferenceSourceAccept.after_native setup checks representation correct
             created scalar remember services packet authenticated current

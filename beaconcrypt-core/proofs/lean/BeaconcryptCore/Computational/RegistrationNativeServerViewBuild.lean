@@ -7,6 +7,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
+set_option warningAsError true
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativeServerViewBuild
 open PqxdhServerAuthExperiment (Setup Codec Checks)
@@ -47,6 +48,21 @@ theorem initial_input (setup : Setup base KemSK) (codec : Codec Reader Response)
   · exact world_input _ (RegistrationNativeCompletionView.initial_input setup codec sign encode control pending)
   · exact commit_input
 
+/-- The actual selected hash reads the same shared cache and preserves the complete operational source view. -/
+theorem adHash_input (pending : registration.ServerAdHash) :
+    Stable (nativeView (n := n)) (RegistrationServerSdkSource.adHash pending) := by
+  unfold RegistrationServerSdkSource.adHash
+  apply world_input
+  unfold RegistrationWorldServerCompletion.adHash
+  cases pending.request with
+  | fail error | div =>
+      exact RegistrationStateView.pure_stable _ RegistrationNativeLocalView.project_idempotent _
+  | ok request =>
+      apply RegistrationStateView.bind_stable
+      · exact RegistrationNativeLocalView.capability_input _
+      · intro digest
+        exact RegistrationStateView.pure_stable _ RegistrationNativeLocalView.project_idempotent _
+
 /-- Occupancy and the outer peer reservation preserve all actual failure branches before either KDF. -/
 theorem after_input (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
@@ -59,10 +75,18 @@ theorem after_input (setup : Setup base KemSK) (codec : Codec Reader Response) (
   | ok result => cases result with
     | Err previous => exact RegistrationStateView.pure_stable _ view_idempotent _
     | Ok pending =>
-        dsimp only
-        split
-        · exact initial_input setup codec sign encode control pending
-        · exact RegistrationStateView.pure_stable _ view_idempotent _
+        apply RegistrationStateView.bind_stable
+        · exact adHash_input pending
+        · intro hashed
+          cases hashed with
+          | fail error | div => exact RegistrationStateView.pure_stable _ view_idempotent _
+          | ok answer => cases answer with
+            | Err previous => exact RegistrationStateView.pure_stable _ view_idempotent _
+            | Ok initial =>
+                dsimp only
+                split
+                · exact initial_input setup codec sign encode control initial
+                · exact RegistrationStateView.pure_stable _ view_idempotent _
 
 private noncomputable def atControl (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
@@ -204,3 +228,9 @@ end BeaconcryptCore.Computational.RegistrationNativeServerViewBuild
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativeServerViewBuild.build_input
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeServerViewBuild.adHash_input' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativeServerViewBuild.adHash_input

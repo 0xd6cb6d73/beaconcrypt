@@ -14,7 +14,7 @@ open RegistrationRecordPrimitives (Spec)
 variable {Input : Type}
 
 def IsHash : Spec.Domain → Prop
-  | .hash _ => True
+  | .hash _ | .adHash _ => True
   | _ => False
 instance : DecidablePred IsHash := fun query => by
   cases query <;> first | exact instDecidableFalse | exact instDecidableTrue

@@ -57,14 +57,14 @@ private theorem finish_eq (setup : Setup base KemSK) (wire : RegistrationNativeW
 
 private theorem lower_get (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (before : Local n KemSK source) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (before : Local n KemSK source) :
     (lower setup checks representation created (get : M n KemSK source RegistrationServerRoleBackend.State (State source))).run before =
       pure (before.1, before) := by
   simp only [lower, StateT.run, state_get_apply, state_pure_apply, simulateQ_pure, map_pure]
 
 private theorem lower_consume (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (before : Local n KemSK source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (before : Local n KemSK source)
     (index : Nat) (aborted : pqxdh.BeaconAborted) :
     (lower setup checks representation created (updatePhase index (.aborted aborted))).run before =
       pure ((), consumed before index aborted) := by
@@ -73,7 +73,7 @@ private theorem lower_consume (setup : Setup base KemSK) (checks : Checks)
 
 private theorem terminal (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : M n KemSK source RegistrationServerRoleBackend.State Value)
     (outcome : RustM (Option Pqxdh.Bytes)) (before after : Local n KemSK source) (application : Pqxdh.Bytes)
     (supported : (.ok (some application), after) ∈ support
@@ -90,7 +90,7 @@ attribute [local irreducible] afterAuthentication authentication RegistrationRes
 /-- Successful actual completion has a same-run accepted response cut and the literal continuation to its original returned plaintext. -/
 theorem cut (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (index : Nat) (packet : Option registration.ResponsePacket) (before after : Local n KemSK source)
     (application : Pqxdh.Bytes)
     (supported : (.ok (some application), after) ∈ support
@@ -143,7 +143,7 @@ attribute [local irreducible] agreement record effect RegistrationAgreementExecu
 /-- Successful actual post-authentication execution contains one actual completed agreement, first-record result and true install reply, before publishing the exact application suffix. -/
 theorem completion_cut (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (index : Nat) (owner : Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (authenticated : registration.AuthenticatedResponse) (before after : Local n KemSK source)
     (application : Pqxdh.Bytes)

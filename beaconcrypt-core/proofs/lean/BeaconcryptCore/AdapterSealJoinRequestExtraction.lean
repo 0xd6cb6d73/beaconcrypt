@@ -12,8 +12,8 @@ open AdapterSealJoinRequestMonad
 open AdapterRecordRequestMonad (LiftRust)
 variable {E : Type} {m : Type → Type} [Monad m] [LiftRust m] [Operations E m]
 
--- Extracted input SHA-256: 55711814d9022d49895d68c585632a85e965d582335c25696154115df6e15718
--- Transformation SHA-256: b926e550542a4b2eb11c5bb8cefcd2b9e25d3bb77a29db0a93a730a14240567d
+-- Extracted input SHA-256: ab4e352dae7b2b70bee57afeba8cd1d47d7258aec0a4e4ee1dad5dc81154935c
+-- Transformation SHA-256: 3a3caff09aea57616b41a49d75b15e0dd0583664c7ad831669a7711dae1fe797
 
 def join
   (parts : Array (Slice Std.U8) 2#usize) :

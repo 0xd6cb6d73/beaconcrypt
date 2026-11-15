@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhDeploymentSigningHistory
+import BeaconcryptCore.Computational.PqxdhPublishedTupleParser
 import BeaconcryptCore.Computational.PqxdhRegistrationJointAcceptCutMonotone
 
 /-! Published-tuple provenance and published-tuple replay in the common deployment experiment (CE-7 CE-A2pub, CE-6 CE-R1'). `PublishedForgery` is the CE-A2pub event on a transcript: some successful accept carries a raw candidate that the source attached verification accepts with the identity key of a created owner and a key tuple other than the tuple of that owner's published bundle, read from public bytes, or that owner published none; `OwnerForgery` is the same event at one owner (`published_owner`). For an owner that made no rejected bundle call in Fresh (`NoBundleFailureAt`), the signing-history lemma of `PqxdhDeploymentSigningHistory` makes that owner's whole signing history empty or exactly the three messages of its published tuple, so the accepted tuple was never signed. With a generated Server seed no known seed is imported (`initialized_free`), so every identity handle is a generated report position below the creation cap (`report_generated`, `generated_lt`), and the A2 client's terminal batch for that accept's raw candidate detects an original-field failure in the final report snapshot (`owner_published_failure`, `announceAll_detects`); only the forged owner's `NoBundleFailureAt` is used. `game_report_holds` carries any property of the final transcript and the owners' identity keys from the deployment experiment to the report-instrumented initialized execution under the approved codec laws `Phase1ReadBack` and `Phase2ReadBack`, at Server identity index 0, the index `compile_full_source` assigns when that execution starts from empty pools; no lemma here relates other Server identity indices, which the deployment game stores in the Server's metadata. `a2pub_owner_bound` bounds the per-owner event `OwnerEvent` (a published-tuple forgery at an owner without a rejected bundle call in Fresh, whatever the other owners did) by the same sum of ordinary joint-use weak-EUF advantages of the A2 client's reductions as CE-A2, with coefficient one, and `a2pub_bound` is its corollary for the planned event `GameEvent`, which requires `NoBundleFailure` for every owner (`game_owner`). `DoubleAccept` is the CE-R1' event: two successful accepts at distinct transcript positions carry raw candidates accepted under one created owner's identity key; `DoubleAcceptAt` fixes the owner. `replay_owner_published` shows from CE-R1 that on every outcome where that owner made no rejected bundle call in Fresh one of them is a published-tuple forgery at that owner, because two accepts of the published tuple would carry one registration ID, which the live Server object consumes once; `r1prime_owner_bound` then has the per-owner CE-A2pub bound, and `r1prime_bound` is its corollary for the planned event `ReplayEvent`. The premises are `shortRejects` with `setup.wiring`, the two approved codec laws and the adversary's budget; no new assumption is used. -/
@@ -372,16 +373,6 @@ theorem generated_lt (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
   simp only [PqxdhDynamicIdentityReports.initialSource, PqxdhDynamicIdentityPool.initialState, List.length_nil,
     Nat.zero_add] at bounded
   exact lt_of_lt_of_le valid bounded
-
-/-- The key tuple a published Phase 1 candidate carries: the messages of its three attached fields, parsed without a signature check. -/
-def candidateTuple (candidate : PqxdhEd25519EufCma.Phase1Candidate) : Option PqxdhEd25519EufCma.Phase1KeyTuple := do
-  let pre ← PqxdhEd25519EufCma.splitAttachedSignature candidate.preKey
-  let one ← PqxdhEd25519EufCma.splitAttachedSignature candidate.oneTimeKey
-  let pq ← PqxdhEd25519EufCma.splitAttachedSignature candidate.pqKey
-  let prekey ← PqxdhEd25519EufCma.parsePrekeyMessage pre.2
-  let oneTime ← PqxdhEd25519EufCma.parseOneTimeMessage one.2
-  let pqKey ← PqxdhEd25519EufCma.parsePqMessage pq.2
-  pure ⟨prekey, oneTime, pqKey⟩
 
 /-- An honestly signed candidate carries exactly the key tuple it signed. -/
 theorem candidateTuple_signed (primitives : Primitives) (seed : IdentitySeed)

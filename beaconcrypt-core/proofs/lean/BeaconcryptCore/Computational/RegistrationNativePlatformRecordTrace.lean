@@ -24,7 +24,7 @@ abbrev Write (S : Type) := record_effects.RecordWriteRequest → StateT S ProbCo
 structure Trace (implementation : QueryImpl Spec (StateT S ProbComp))
     (sealing : Seal S) (hash : Hash S) (write : Write S)
     (initial : registration.ServerInitialKdf) (completed : registration.ServerResponseHash) (before after : S) where
-  initialRequest : beaconcrypt_core.ratchet.SymmetricRatchetKdfRequest
+  initialRequest : beaconcrypt_core.ratchet.InitialRatchetKdfRequest
   initialReply : Spec.Range (.initialKdf initialRequest)
   first : S
   ratchet : registration.ServerInitialSeal

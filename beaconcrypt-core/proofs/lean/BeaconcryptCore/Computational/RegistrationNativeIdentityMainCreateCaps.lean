@@ -49,7 +49,7 @@ theorem record_zero (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wi
 theorem accept_zero (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (packet : beaconcrypt_core.registration.InitPacket) :
     Bound (RegistrationNativeIdentityMain.handler (n := n) setup checks wire route representation created credential (.inr (.accept packet))) 0 := by
   unfold RegistrationNativeIdentityMain.handler
@@ -60,7 +60,7 @@ theorem accept_zero (setup : Setup base KemSK) (checks : Checks) (wire : Registr
 theorem handler_bound (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain) :
     Bound (RegistrationNativeIdentityMain.handler (n := n) setup checks wire route representation created credential query)
       (if RegistrationNativeRawAdapter.kind query = 1 then 1 else 0) := by
@@ -89,7 +89,7 @@ theorem handler_bound (setup : Setup base KemSK) (checks : Checks) (wire : Regis
 theorem program_bound (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (work : OracleComp RegistrationNativeRawAdapter.TypedSpec Value) (cap : Nat)
     (bounded : work.IsQueryBoundP (fun query => RegistrationNativeRawAdapter.kind query = 1) cap)
     (before : State n KemSK source) :

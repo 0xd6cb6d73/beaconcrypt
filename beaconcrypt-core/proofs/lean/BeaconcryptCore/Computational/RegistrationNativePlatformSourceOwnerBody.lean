@@ -25,7 +25,7 @@ def returned (result : (((Value × RegistrationNativeBeaconFrontend.State source
 /-- The real native owner/writer dictionary commits exactly its reached outputs after the joint-language reassociation. -/
 theorem native_returned (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (tree : OracleComp (RegistrationNativePlatformGenericBundle.Spec E n KemSK)
       ((Value × RegistrationNativeBeaconFrontend.State source) × RegistrationWorldAgreementCompiler.EnvState RegistrationServerRoleBackend.State))
@@ -43,7 +43,7 @@ theorem native_returned (setup : Setup base KemSK) (checks : Checks)
 /-- The actual public owner wrapper's explicit source syntax composes with the same complete reached source state, before native representation is committed. -/
 theorem raw_source (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential source) (roots : Roots)
     (work : RegistrationNativePlatformPublicOwners.M source RegistrationServerRoleBackend.State
       (RegistrationNativePlatformPublicFrontend.Base n KemSK Platform) Value)

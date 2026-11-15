@@ -49,7 +49,7 @@ theorem peer_merge (copies : Local) (native : PqxdhRegistrationSchedule.State Ke
       RawCtxServerRouting.Peer.kernel = some kernel) :
     merge { copies with peers := Function.update copies.peers keyId (some kernel) } native =
       merge copies native := by
-  have fixed (cached : Option Kernel) (peer : RawCtxServerRouting.Peer Unit)
+  have fixed (cached : Option Kernel) (peer : RawCtxServerRouting.Peer PqxdhTranscriptAd.AssociatedData)
       (current : (mergePeer cached peer).kernel = kernel) :
       mergePeer (some kernel) peer = mergePeer cached peer := by
     cases cached
@@ -113,7 +113,7 @@ theorem preload_peer_good (setup : Setup baseSpec KemSK) (codec : Codec Reader R
     (present : native.shared.2.server.server.peers keyId ≠ none) :
     Good setup codec { copies with peers := Function.update copies.peers keyId (some kernel) } native := by
   refine ⟨good.keyId, ?_, good.serverVisible, good.count, good.copied, good.owners,
-    good.pending, good.accepts⟩
+    good.pending, good.accepts, good.peers, good.pendingInit⟩
   intro other current cached
   rcases eq_or_ne other keyId with rfl | different
   case inl => exact present
@@ -127,7 +127,7 @@ theorem preload_owner_good (setup : Setup baseSpec KemSK) (codec : Codec Reader 
       owner.beacon.phase = .established control associatedData old) :
     Good setup codec { copies with owners := Function.update copies.owners index (some kernel) } native := by
   refine ⟨good.keyId, good.installed, good.serverVisible, good.count, ?_, good.owners,
-    good.pending, good.accepts⟩
+    good.pending, good.accepts, good.peers, good.pendingInit⟩
   intro other current cached
   rcases eq_or_ne other index with rfl | different
   case inl => exact present

@@ -16,15 +16,17 @@ structure State (KemSK : Type) where
   pool : Pool KemSK
   shared : NativeState KemSK
   owners : List (Entry KemSK)
+  /-- The Phase 1 bundle each owner address last handed to the writer with a successful write (`PqxdhRegistrationSchedule.State.inits`). -/
+  inits : Nat → Option PqxdhEd25519EufCma.Phase1Candidate
 
 /-- Forget only service indices and private service analysis histories; every source owner and shared cache is retained. -/
 def source (state : State KemSK) : PqxdhRegistrationSchedule.State KemSK :=
-  ⟨state.shared, state.owners.map Entry.owner⟩
+  ⟨state.shared, state.owners.map Entry.owner, state.inits⟩
 
 def Invariant (state : State KemSK) : Prop := ∀ entry ∈ state.owners, Owned state.pool entry
 
-/-- The initialized schedule has no Beacon owners. Prior service histories may be arbitrary and remain private. -/
-def initial (pool : Pool KemSK) (shared : NativeState KemSK) : State KemSK := ⟨pool, shared, []⟩
+/-- The initialized schedule has no Beacon owners and no retained bundle. Prior service histories may be arbitrary and remain private. -/
+def initial (pool : Pool KemSK) (shared : NativeState KemSK) : State KemSK := ⟨pool, shared, [], fun _ => none⟩
 
 def birth (pin : Word32) (keyId : Std.U64) (pool : Pool KemSK)
     (material : PqxdhRegistrationJointCreation.Material KemSK) : Entry KemSK :=
@@ -40,18 +42,20 @@ def created (setup : Setup baseSpec KemSK) (pin : Word32) (keyId : Std.U64)
 def create (setup : Setup baseSpec KemSK) (pin : Word32) (keyId : Std.U64) : StateT (State KemSK) ProbComp Nat :=
   fun state => created setup pin keyId state <$> PqxdhRegistrationJointCreation.material setup
 
-/-- Every optional write retains all three signing replies in the exact trace before reinstalling the complete native owner. -/
+/-- Every optional write retains all three signing replies in the exact trace before reinstalling the complete native owner; a successfully written bundle is retained at the owner's address. -/
 def bundle (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (address : Nat) : StateT (State KemSK) ProbComp (Option Pqxdh.Bytes) := fun state =>
   match state.owners[address]? with
   | none => pure (none, state)
   | some entry =>
-      (fun result => (result.1.1, { state with
-        pool := (result.2, state.pool.2),
-        owners := state.owners.set address { entry with owner := result.1.2 } })) <$>
-          PqxdhRegistrationJointBundle.trace setup codec entry.identityIndex entry.owner state.pool.1
+      (fun result => (result.1.1.1, { state with
+        pool := (result.1.2, state.pool.2),
+        owners := state.owners.set address { entry with owner := result.1.1.2 },
+        inits := Function.update state.inits address result.2 })) <$>
+          PqxdhRegistrationJointBundle.traceLog setup codec entry.identityIndex entry.owner state.pool.1
+            (state.inits address)
 
-/-- Present entries run the existing annotated complete owner once, preserving failure effects and replacing only the selected live owner. -/
+/-- Present entries run the existing annotated complete owner once after the transcript hash of their retained bundle (`PqxdhRegistrationJointFinish.annotatedFinish`), preserving failure effects and replacing only the selected live owner. -/
 noncomputable def finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (address : Nat) (raw : Pqxdh.Bytes) : StateT (State KemSK) ProbComp (Option Pqxdh.Bytes) := fun state =>
   match state.owners[address]? with
@@ -60,8 +64,8 @@ noncomputable def finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
       (fun result => (result.1.1, { state with
         pool := result.2.1, shared := result.2.2,
         owners := state.owners.set address { entry with owner := result.1.2 } })) <$>
-          (simulateQ (PqxdhRegistrationJointFinish.annotated setup codec entry.identityIndex entry.kemIndex)
-            (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw entry.owner)).run (state.pool, state.shared)
+          (PqxdhRegistrationJointFinish.annotatedFinish setup codec entry.identityIndex entry.kemIndex
+            (state.inits address) raw entry.owner).run (state.pool, state.shared)
 
 /-- Server and public operations use the original shared state, retaining every annotated owner and both private pools. -/
 def onShared (work : NativeGame KemSK Result) : StateT (State KemSK) ProbComp Result := fun state =>

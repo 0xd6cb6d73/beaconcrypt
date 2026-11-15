@@ -152,7 +152,7 @@ theorem stage_native (setup : Setup base KemSK)
     (trusted : QueryImpl (RegistrationNativeBeaconFrontend.Trusted n KemSK) (StateT Private ProbComp)) (seed : PqxdhJointIdentity.IdentitySeed) (scalar : PqxdhJointGapDh.ScalarBytes)
     (owner : SelectedOwner mlSource) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (authenticated : registration.AuthenticatedResponse)
-    (coherent : authenticated.pending.control.expected_server_binding = authenticated.pending.binding.server_pin.binding)
+    (coherent : authenticated.control.expected_server_binding = authenticated.binding.server_pin.binding)
     (before : RegistrationNativeBeaconRootSource.State (Local Auxiliary Private)) :
     Prod.map id (Prod.fst ∘ Prod.snd) <$>
       (RegistrationNativeBeaconRootStage.stage setup.beaconDomain

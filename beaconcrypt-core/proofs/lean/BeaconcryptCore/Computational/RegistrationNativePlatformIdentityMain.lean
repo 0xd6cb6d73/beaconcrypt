@@ -24,7 +24,7 @@ def liftMain (work : RegistrationNativeIdentityMain.M n KemSK source Value) : M 
   fun before => (fun result => (result.1, (result.2, before.2))) <$> work.run before.1
 
 noncomputable def beacon (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativePlatformIdentityProgram.M n KemSK RegistrationServerRoleBackend.State Platform source Value) :
     M n KemSK Platform source Value := fun before => do
   let result ← simulateQ RegistrationNativeIdentityMain.dynamicLift
@@ -68,7 +68,7 @@ private theorem dynamic_apply (joint : PqxdhJointIdentity.Primitives)
 
 /-- The whole effectful indexed frontend has its literal ordinary joint-source execution, including the reached platform state and private service log. -/
 theorem beacon_execution (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativePlatformIdentityProgram.M n KemSK RegistrationServerRoleBackend.State Platform source Value)
     (before : (State n KemSK source × Platform) × SourceState) :
     Prod.map id poolProjection <$> (interpret setup.joint (beacon setup checks representation created work)).run before =
@@ -87,7 +87,7 @@ theorem beacon_execution (setup : Setup base KemSK) (checks : Checks)
 
 /-- Ordinary native subtrees reuse their original counted compiler; adding external state does not reset or re-count any native primitive work. -/
 theorem beacon_native (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeIdentityFrontend.M n KemSK RegistrationServerRoleBackend.State source Value) :
     beacon setup checks representation created (RegistrationNativePlatformIdentityProgram.native (Platform := Platform) work) =
       liftMain (RegistrationNativeIdentityMain.beacon setup checks representation created work) := by

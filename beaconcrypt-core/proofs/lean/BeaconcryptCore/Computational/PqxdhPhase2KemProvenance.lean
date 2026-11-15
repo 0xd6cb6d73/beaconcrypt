@@ -10,6 +10,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhPhase2KemProvenance
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhGeneratedBeaconState (KemHandle)
 open PqxdhStatefulPhase1EufCma (TargetKemPublicKey)
 variable {I D K : Type}
@@ -135,7 +136,7 @@ theorem owner_valid {A X Response ι : Type} {base : OracleSpec ι}
     (valid : Owner index publicKey state) (auxiliary : A)
     (result : (Option Pqxdh.Bytes × RawCtxBeaconLifecycle.State I D (KemHandle K)) × A)
     (supported : result ∈ support ((simulateQ handler
-      (PqxdhBeaconPhase2Publication.owner decodeFrame raw state)).run auxiliary)) :
+      (PqxdhBeaconPhase2Publication.owner (completedBinding := completedBinding) decodeFrame raw state)).run auxiliary)) :
     Owner index publicKey result.1.2 := by
   cases active : state.beacon.phase
   all_goals simp only [PqxdhBeaconPhase2Publication.owner, active, simulateQ_pure,
@@ -163,9 +164,9 @@ theorem native_valid {A X Response ι : Type} {base : OracleSpec ι}
     (valid : Owner index publicKey state) (auxiliary : A)
     (result : (Option Pqxdh.Bytes × RawCtxBeaconLifecycle.State I D (KemHandle K)) × A)
     (supported : result ∈ support ((simulateQ handler
-      (PqxdhBeaconPhase2Publication.nativeOwner decodeFrame raw state)).run auxiliary)) :
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decodeFrame raw state)).run auxiliary)) :
     Owner index publicKey result.1.2 := by
-  apply owner_valid (handler ∘ₛ PqxdhBeaconPhase2Publication.nativeAdapter)
+  apply owner_valid (completedBinding := completedBinding) (handler ∘ₛ PqxdhBeaconPhase2Publication.nativeAdapter)
     index publicKey decodeFrame raw state valid auxiliary result
   simpa only [PqxdhBeaconPhase2Publication.nativeOwner, QueryImpl.simulateQ_compose] using supported
 
@@ -301,16 +302,16 @@ theorem live_valid {M P A X Response Result : Type} {S B : Nat}
     (valid : ∀ position, Owner index publicKey (state.roles.1.2 position))
     (result : Result × PqxdhRegistrationProtocolState.State M P I D (KemHandle K) A S B)
     (supported : result ∈ support ((simulateQ
-      (PqxdhPhase2LiveFinish.sourceImpl source writer senderId route decodeFrame native) client).run state)) :
+      (PqxdhPhase2LiveFinish.sourceImpl (completedBinding := completedBinding) source writer senderId route decodeFrame native) client).run state)) :
     ∀ position, Owner index publicKey (result.2.roles.1.2 position) := by
-  apply PqxdhPhase2LiveFinish.live_invariant
+  apply PqxdhPhase2LiveFinish.live_invariant (completedBinding := completedBinding)
     (PqxdhRegistrationProtocolState.sourceImpl source writer senderId route decodeFrame) native decodeFrame
     (fun current => ∀ position, Owner index publicKey (current.roles.1.2 position))
     ?_ ?_ client state valid result supported
   · intro query before after beforeValid present
     exact source_step_valid source writer senderId route decodeFrame index publicKey query before beforeValid after present
   · intro selected raw before after beforeValid present position
-    have changed := native_valid native index publicKey decodeFrame raw (before.roles.1.2 selected)
+    have changed := native_valid (completedBinding := completedBinding) native index publicKey decodeFrame raw (before.roles.1.2 selected)
       (beforeValid selected) before.primitive after present
     by_cases same : position = selected
     · subst position
@@ -325,9 +326,9 @@ theorem native_encoded_run {A X Response : Type} {m : Type → Type} [Monad m] [
     (valid : Owner index publicKey state) (auxiliary : A) :
     (fun result => ((result.1.1, PqxdhBeaconPhase1Publication.mapState id (decode index publicKey) result.1.2), result.2)) <$>
       (simulateQ (handler ∘ₛ PqxdhPhase2KemHandles.native (decode index publicKey))
-        (PqxdhBeaconPhase2Publication.nativeOwner decodeFrame raw
+        (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decodeFrame raw
           (PqxdhBeaconPhase1Publication.mapState id encode state))).run auxiliary =
-      (simulateQ handler (PqxdhBeaconPhase2Publication.nativeOwner decodeFrame raw state)).run auxiliary := by
+      (simulateQ handler (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decodeFrame raw state)).run auxiliary := by
   rw [PqxdhPhase2KemHandles.native_owner_run, owner_inverse index publicKey state valid]
 
 end BeaconcryptCore.Computational.PqxdhPhase2KemProvenance

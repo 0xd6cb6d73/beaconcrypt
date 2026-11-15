@@ -102,7 +102,7 @@ section Send
 variable [beaconcrypt_record_send.ratchet.Operations]
 
 theorem encrypt_with_ratchet_preserves (contracts : AdapterRecordSend.Contracts)
-    (bytes : Slice U8) (target sender : U64) (associatedData : Array U8 281#usize)
+    (bytes : Slice U8) (target sender : U64) (associatedData : Array U8 151#usize)
     (manager : ratchet.RatchetManager) (frameEncoding : Bool) (valid : ValidManager manager) :
     Ensures (beaconcrypt_public_ordinary.ratchet.encrypt_with_ratchet bytes target sender associatedData manager frameEncoding)
       (fun result => ValidManager result.2) := by
@@ -129,20 +129,20 @@ theorem encrypt_with_ratchet_preserves (contracts : AdapterRecordSend.Contracts)
       | apply ensures_bind_at
 
 theorem encrypt_with_ratchet_total (contracts : AdapterRecordSend.Contracts)
-    (bytes : Slice U8) (target sender : U64) (associatedData : Array U8 281#usize)
+    (bytes : Slice U8) (target sender : U64) (associatedData : Array U8 151#usize)
     (manager : ratchet.RatchetManager) (frameEncoding : Bool) (valid : ValidManager manager) :
     ∃ result, beaconcrypt_public_ordinary.ratchet.encrypt_with_ratchet bytes target sender associatedData manager frameEncoding = ok result :=
   ensures_normal (encrypt_with_ratchet_preserves contracts bytes target sender associatedData manager frameEncoding valid)
 
 theorem encrypt_message_with_ratchet_preserves (contracts : AdapterRecordSend.Contracts)
-    (bytes : Slice U8) (target sender : U64) (associatedData : Array U8 281#usize)
+    (bytes : Slice U8) (target sender : U64) (associatedData : Array U8 151#usize)
     (manager : ratchet.RatchetManager) (valid : ValidManager manager) :
     Ensures (beaconcrypt_public_ordinary.ratchet.encrypt_message_with_ratchet bytes target sender associatedData manager)
       (fun result => ValidManager result.2) :=
   encrypt_with_ratchet_preserves contracts bytes target sender associatedData manager true valid
 
 theorem encrypt_message_with_ratchet_total (contracts : AdapterRecordSend.Contracts)
-    (bytes : Slice U8) (target sender : U64) (associatedData : Array U8 281#usize)
+    (bytes : Slice U8) (target sender : U64) (associatedData : Array U8 151#usize)
     (manager : ratchet.RatchetManager) (valid : ValidManager manager) :
     ∃ result, beaconcrypt_public_ordinary.ratchet.encrypt_message_with_ratchet bytes target sender associatedData manager = ok result :=
   ensures_normal (encrypt_message_with_ratchet_preserves contracts bytes target sender associatedData manager valid)
@@ -190,7 +190,7 @@ theorem encrypted_frame_sender_total (bytes : Slice U8) :
   cases frame <;> exact ⟨_, rfl⟩
 
 theorem decrypt_payload_with_ratchet_preserves (contracts : AdapterRecordReceive.Contracts)
-    (bytes : Slice U8) (sequence sender : U64) (associatedData : Array U8 281#usize)
+    (bytes : Slice U8) (sequence sender : U64) (associatedData : Array U8 151#usize)
     (manager : ratchet.RatchetManager) (valid : ValidManager manager) :
     Ensures (beaconcrypt_public_ordinary.ratchet.decrypt_payload_with_ratchet bytes sequence sender associatedData manager)
       (fun result => ValidManager result.2) := by
@@ -207,13 +207,13 @@ theorem decrypt_payload_with_ratchet_preserves (contracts : AdapterRecordReceive
   rfl
 
 theorem decrypt_payload_with_ratchet_total (contracts : AdapterRecordReceive.Contracts)
-    (bytes : Slice U8) (sequence sender : U64) (associatedData : Array U8 281#usize)
+    (bytes : Slice U8) (sequence sender : U64) (associatedData : Array U8 151#usize)
     (manager : ratchet.RatchetManager) (valid : ValidManager manager) :
     ∃ result, beaconcrypt_public_ordinary.ratchet.decrypt_payload_with_ratchet bytes sequence sender associatedData manager = ok result :=
   ensures_normal (decrypt_payload_with_ratchet_preserves contracts bytes sequence sender associatedData manager valid)
 
 theorem decrypt_message_with_ratchet_preserves (contracts : AdapterRecordReceive.Contracts)
-    (bytes : Slice U8) (sender : U64) (associatedData : Array U8 281#usize)
+    (bytes : Slice U8) (sender : U64) (associatedData : Array U8 151#usize)
     (manager : ratchet.RatchetManager) (valid : ValidManager manager) :
     Ensures (beaconcrypt_public_ordinary.ratchet.decrypt_message_with_ratchet bytes sender associatedData manager)
       (fun result => ValidManager result.2) := by
@@ -234,7 +234,7 @@ theorem decrypt_message_with_ratchet_preserves (contracts : AdapterRecordReceive
       | apply ensures_bind_at
 
 theorem decrypt_message_with_ratchet_total (contracts : AdapterRecordReceive.Contracts)
-    (bytes : Slice U8) (sender : U64) (associatedData : Array U8 281#usize)
+    (bytes : Slice U8) (sender : U64) (associatedData : Array U8 151#usize)
     (manager : ratchet.RatchetManager) (valid : ValidManager manager) :
     ∃ result, beaconcrypt_public_ordinary.ratchet.decrypt_message_with_ratchet bytes sender associatedData manager = ok result :=
   ensures_normal (decrypt_message_with_ratchet_preserves contracts bytes sender associatedData manager valid)

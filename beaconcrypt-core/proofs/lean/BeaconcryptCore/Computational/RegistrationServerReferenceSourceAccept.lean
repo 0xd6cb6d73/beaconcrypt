@@ -38,7 +38,7 @@ noncomputable def afterAuthentication (setup : Setup base KemSK) (checks : Check
 theorem agree_native (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit) (before : State n)
     (fresh : before.1.consumed.contains (RegistrationReplaySchedule.identifier authenticated) = false) :
     Prod.map (RegistrationServerReferenceSourceClient.restore
@@ -59,7 +59,7 @@ theorem agree_native (setup : Setup base KemSK) (checks : Checks)
 
 private theorem sdk_run (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (authenticated : registration.AuthenticatedInit) (before : RegistrationServerFrontendCompiler.State n) :
     (RegistrationServerSdkSource.afterAuthentication setup checks representation created packet authenticated).run before =
       (if before.consumed.contains (RegistrationReplaySchedule.identifier authenticated) then pure (.ok none, before)
@@ -76,7 +76,7 @@ private theorem sdk_run (setup : Setup base KemSK) (checks : Checks)
 theorem after_native (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit) (before : State n) :
     Prod.map id (project (RegistrationServerReferenceSourceClient.roots setup.source setup.joint setup.dh created.seed scalar)) <$>
         (afterAuthentication setup checks created.seed scalar packet authenticated).run before =

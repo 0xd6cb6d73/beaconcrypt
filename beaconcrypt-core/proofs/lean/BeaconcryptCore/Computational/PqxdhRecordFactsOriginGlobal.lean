@@ -8,6 +8,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhRecordFactsOriginGlobal
+private abbrev RecordAd := Aeneas.Std.Array Aeneas.Std.U8 151#usize
 open PqxdhRecordLiftInterface PqxdhRecordLiftIdeal PqxdhRecordLiftFlat
 open PqxdhRecordFactsOriginHandles PqxdhRecordFactsOriginControl
 open PqxdhRecordFactsOriginPublished PqxdhRecordFactsOriginAccepted
@@ -22,7 +23,7 @@ theorem startup_safe (modes : Label n → KeyMode) (replace : Pqxdh.Bytes → Pq
     (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (codec : PqxdhServerAuthExperiment.Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
     (env : Environment n E)
-    (result : (Option (PqxdhLiveServerConstruction.Created Unit × E) × PqxdhRecordLiftProtocol.Control n) × CtxPrivate n)
+    (result : (Option (PqxdhLiveServerConstruction.Created RecordAd × E) × PqxdhRecordLiftProtocol.Control n) × CtxPrivate n)
     (supported : result ∈ support (startup modes replace setup codec route env)) :
     Safe result.1.2 :=
   (PqxdhRecordLiftProtocolHistory.interpreted_schedule (ctxInterpreter modes replace setup codec)
@@ -33,7 +34,7 @@ theorem startup_safe (modes : Label n → KeyMode) (replace : Pqxdh.Bytes → Pq
 theorem install_safe (modes : Label n → KeyMode) (replace : Pqxdh.Bytes → Pqxdh.Bytes)
     (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (codec : PqxdhServerAuthExperiment.Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
-    (created : PqxdhLiveServerConstruction.Created Unit) (control : PqxdhRecordLiftProtocol.Control n)
+    (created : PqxdhLiveServerConstruction.Created RecordAd) (control : PqxdhRecordLiftProtocol.Control n)
     (safe : Safe control) (secret : CtxPrivate n)
     (result : (Unit × PqxdhRecordLiftProtocol.Control n) × CtxPrivate n)
     (supported : result ∈ support (install modes replace setup codec route created control secret)) :

@@ -150,11 +150,39 @@ theorem complete (selected : Bool) (source : PqxdhJointKdfGame.FixedHkdfSha512No
       isQueryBoundP_map_iff, isQueryBoundP_query_iff]
   · intro occupied
     split <;> try (rw [compile_pure]; exact RegistrationNativeSecretWordPairedTrace.pure_safe _)
-    split <;> try (rw [compile_pure]; exact RegistrationNativeSecretWordPairedTrace.pure_safe _)
     rw [compile_bind]
-    apply RegistrationNativeSecretWordPairedTrace.bind_safe _ _ (admitted selected source wire sign before.control _ ready.reference occupied.2)
-    intro published
-    exact finished selected source wire sign published.1 before published.2
+    apply RegistrationNativeSecretWordPairedTrace.bind_safe
+    · unfold RegistrationNativeSecretWordServerMaterial.adHash
+      split
+      · rw [compile_pure]; exact RegistrationNativeSecretWordPairedTrace.pure_safe _
+      · rw [compile_pure]; exact RegistrationNativeSecretWordPairedTrace.pure_safe _
+      · rw [compile_bind]
+        apply RegistrationNativeSecretWordPairedTrace.bind_safe
+        · rw [compile_effect]
+          apply RegistrationNativeSecretWordPairedSafe.free
+          intro role
+          simp [RegistrationNativeSecretWordAtomInstallPredicate.GlobalInstall,
+            RegistrationNativeSecretWordAtomInstallCaps.Install, RegistrationNativeSecretWordAtomInstallCaps.InstallEnv,
+            isQueryBoundP_map_iff, isQueryBoundP_query_iff]
+        · intro digest
+          rw [compile_pure]
+          exact RegistrationNativeSecretWordPairedTrace.pure_safe _
+    · intro hashed
+      rcases hashed with ⟨hashed, afterHash⟩
+      cases hashed with
+      | fail error | div => rw [compile_pure]; exact RegistrationNativeSecretWordPairedTrace.pure_safe _
+      | ok reply => cases reply with
+        | Err previous => rw [compile_pure]; exact RegistrationNativeSecretWordPairedTrace.pure_safe _
+        | Ok initial =>
+          dsimp only
+          split
+          · rw [compile_bind]
+            apply RegistrationNativeSecretWordPairedTrace.bind_safe _ _
+              (admitted selected source wire sign before.control _ ready.reference afterHash)
+            intro published
+            exact finished selected source wire sign published.1 before published.2
+          · rw [compile_pure]
+            exact RegistrationNativeSecretWordPairedTrace.pure_safe _
 
 /-- The exact one-use native build moves its Ready before every cancellation or callback and derives its paired-provenance safety internally. -/
 theorem build (selected : Bool) (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)

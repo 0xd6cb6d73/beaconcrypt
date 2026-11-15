@@ -24,7 +24,7 @@ theorem normalize_receive_total (effect : ratchet.concrete.ReceiveEffect record.
     cases next <;> simp [record_effects.normalize_receive, nextRun]
 
 theorem SealFrameContext_new_total (plaintext : Slice Std.U8) (target_kid : Std.U64) (sender_kid : Std.U64)
-  (associated_data : Array Std.U8 281#usize)
+  (associated_data : Array Std.U8 151#usize)
   (encoding : record_effects.RecordEncoding) :
     ∃ result, record_effects.SealFrameContext.new plaintext target_kid sender_kid associated_data encoding = ok result :=
   ⟨_, rfl⟩
@@ -112,7 +112,7 @@ theorem RecordReceiveAead_finish_total {Plaintext : Type} (self : record_effects
   BeaconcryptCore.PanicFreedom.Record.finish_total self.pending plaintext
 
 theorem begin_record_receive_total (kernel : ratchet.concrete.ConcreteRatchetKernel) (sequence : Std.U64)
-  (ciphertext : Slice Std.U8) (associated_data : Array Std.U8 281#usize)
+  (ciphertext : Slice Std.U8) (associated_data : Array Std.U8 151#usize)
   (sender : Std.U64) :
     ∃ result, record_effects.begin_record_receive kernel sequence ciphertext associated_data sender = ok result :=
   (BeaconcryptCore.PanicFreedom.Record.payload_total ciphertext associated_data sender).elim fun context admitted =>
@@ -125,7 +125,7 @@ theorem begin_record_receive_total (kernel : ratchet.concrete.ConcreteRatchetKer
             simpa only [record_effects.begin_record_receive, admitted, begun, bind_tc_ok] using normal)
 
 theorem SealFrameContext_registration_total (application : Slice Std.U8) (assigned_kid : Std.U64) (sender_kid : Std.U64)
-  (associated_data : Array Std.U8 281#usize) :
+  (associated_data : Array Std.U8 151#usize) :
     ∃ result, record_effects.SealFrameContext.registration application assigned_kid sender_kid associated_data = ok result :=
   (BeaconcryptCore.PanicFreedom.registration_key_id_binding_ok assigned_kid).elim fun bound run =>
     ⟨⟨application, .Some bound.bytes, associated_data, assigned_kid, sender_kid, .Raw⟩,

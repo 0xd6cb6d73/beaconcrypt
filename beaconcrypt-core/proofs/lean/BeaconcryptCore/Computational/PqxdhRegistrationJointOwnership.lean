@@ -6,6 +6,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhRegistrationJointOwnership
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointIdentity PqxdhJointGapDh PqxdhServerAuthExperiment
 open PqxdhRegistrationJointPreparation (Pool)
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response Result : Type}
@@ -69,16 +70,16 @@ theorem owner_fields {A : Type}
     (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
     (owner : PqxdhRegistrationSchedule.Owner KemSK) (before : A)
     (result : (Option Pqxdh.Bytes × PqxdhRegistrationSchedule.Owner KemSK) × A)
-    (supported : result ∈ support ((simulateQ handler (PqxdhBeaconPhase2Publication.nativeOwner decode raw owner)).run before)) :
+    (supported : result ∈ support ((simulateQ handler (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw owner)).run before)) :
     result.1.2.beacon.identity = owner.beacon.identity ∧
       ∀ keys, activeKey result.1.2 = some keys → activeKey owner = some keys := by
   rcases result with ⟨⟨_ | plaintext, after⟩, final⟩
   case none =>
-    have failed := PqxdhBeaconPhase2Publication.native_failure handler decode raw owner after before final supported
+    have failed := PqxdhBeaconPhase2Publication.native_failure (completedBinding := completedBinding) handler decode raw owner after before final supported
     cases phase : owner.beacon.phase <;> simp only [phase] at failed <;>
       simp [failed, PqxdhBeaconPhase2Preparation.abort, activeKey]
   case some =>
-    obtain ⟨staged, _, _, published⟩ := PqxdhBeaconPhase2Publication.native_success handler decode raw plaintext owner after before final supported
+    obtain ⟨staged, _, _, published⟩ := PqxdhBeaconPhase2Publication.native_success (completedBinding := completedBinding) handler decode raw plaintext owner after before final supported
     have afterEq : after = (PqxdhBeaconPhase2Publication.publish owner staged).2 := (congrArg Prod.snd published).symm
     simp [afterEq, PqxdhBeaconPhase2Publication.publish, activeKey]
 
@@ -89,11 +90,11 @@ theorem owner_owned (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     (owned : Owned state.1 entry)
     (supported : result ∈ support ((simulateQ
       (PqxdhRegistrationJointFinish.annotated setup codec entry.identityIndex entry.kemIndex)
-      (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw entry.owner)).run state)) :
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw entry.owner)).run state)) :
     Owned result.2.1 { entry with owner := result.1.2 } := by
   have slots := PqxdhRegistrationJointFinish.annotated_program_slots setup codec entry.identityIndex entry.kemIndex
-    (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw entry.owner) state result supported
-  have fields := owner_fields (PqxdhRegistrationJointFinish.annotated setup codec entry.identityIndex entry.kemIndex)
+    (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw entry.owner) state result supported
+  have fields := owner_fields (completedBinding := completedBinding) (PqxdhRegistrationJointFinish.annotated setup codec entry.identityIndex entry.kemIndex)
     codec.frameRead raw entry.owner state result supported
   simp only [Owned, slots.1, slots.2, fields.1]
   exact ⟨owned.1, fun keys live => owned.2 keys (fields.2 keys live)⟩

@@ -18,7 +18,7 @@ open PqxdhServerAuthExperiment (Setup Checks)
 variable {n cap : Nat} {ι KemSK V : Type} {base : OracleSpec ι}
 variable (source : Source) (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : Credential (handleSource source)) (fallback : Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential (handleSource source)) (fallback : Credential source)
 
 private theorem bind_apply {m : Type → Type} [Monad m] {S A B : Type}
     (work : StateT S m A) (next : A → StateT S m B) (before : S) :

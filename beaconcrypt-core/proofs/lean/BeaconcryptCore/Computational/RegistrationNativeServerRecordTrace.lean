@@ -1,5 +1,5 @@
 -- SPDX-License-Identifier: 0BSD
-import BeaconcryptCore.Computational.RegistrationNativeCausalRecordContents
+import BeaconcryptCore.Computational.RegistrationServerRecordExecutor
 
 /-! Supported actual Server first-record execution retains each of its five reached callbacks and exact source resumes, including the concrete commitment and raw-writer cuts. No abstract-path reply is substituted for a reached primitive result. -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -17,7 +17,7 @@ variable {S : Type}
 /-- All source operands, replies and states of one actual successful first-record execution, before response signing. -/
 structure Trace (implementation : QueryImpl Spec (StateT S ProbComp))
     (initial : registration.ServerInitialKdf) (completed : registration.ServerResponseHash) (before after : S) where
-  initialRequest : beaconcrypt_core.ratchet.SymmetricRatchetKdfRequest
+  initialRequest : beaconcrypt_core.ratchet.InitialRatchetKdfRequest
   initialReply : Spec.Range (.initialKdf initialRequest)
   first : S
   ratchet : registration.ServerInitialSeal

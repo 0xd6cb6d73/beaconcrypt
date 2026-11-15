@@ -56,10 +56,9 @@ theorem generation_body_diverges {R E : Type} (generator : rand_core.TryCryptoRn
 
 omit material primitive crypto in
 def alignedResponse (authenticated : registration.AuthenticatedResponse) : registration.AuthenticatedResponse :=
-  { authenticated with pending :=
-      { authenticated.pending with control :=
-          { authenticated.pending.control with expected_server_binding :=
-              authenticated.pending.binding.server_pin.binding } } }
+  { authenticated with control :=
+      { authenticated.control with expected_server_binding :=
+          authenticated.binding.server_pin.binding } }
 
 omit material primitive crypto in
 theorem aligned_entry_rank_eight (authenticated : registration.AuthenticatedResponse) :
@@ -68,7 +67,7 @@ theorem aligned_entry_rank_eight (authenticated : registration.AuthenticatedResp
   obtain ⟨initial, started⟩ := KeyAgreement.begin_beacon_agreement_total (alignedResponse authenticated)
   refine ⟨initial, started, ?_⟩
   simp [alignedResponse, agreement.begin_beacon_agreement, registration.AuthenticatedResponse.into_parts,
-    pqxdh.BeaconInitSent.impl.expected_server_binding, session.RegistrationBinding.impl.server_pin,
+    pqxdh.BeaconInitSent.impl.expected_server_binding, session.CompletedRegistrationBinding.impl.server_pin,
     session.ServerAuthenticationPin.impl.binding, core.Array.Insts.CoreCmpPartialEqArray.ne,
     PqxdhRefinement.array_eq_abs, agreement.AgreementState.new, ratchet.RatchetChain.from_bytes] at started
   subst initial

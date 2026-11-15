@@ -4,6 +4,7 @@ import BeaconcryptCore.Computational.RegistrationNativePlatformInitTupleCache
 import BeaconcryptCore.Computational.RegistrationNativePlatformPublicationRole
 import BeaconcryptCore.Computational.RegistrationNativeWorldCache
 import BeaconcryptCore.Computational.RegistrationNativePlatformHashReceipt
+import BeaconcryptCore.Computational.RegistrationNativePlatformMldsaProgram
 
 /-! Every complete actual source bundle preserves the Server-role signing subsequence through owner selection, all crypto/writer failures and the actual later phase/lifecycle suffix. No public key distinctness or publication-success premise is used. -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -45,7 +46,7 @@ private theorem bind_keeps (work : PWork (n := n) (KemSK := KemSK) (Platform := 
 
 /-- Literal complete effectful source Init publication preserves the actual Server-role receipt subsequence. -/
 theorem publication (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (index : Nat) (owner : RegistrationNativeBeaconFrontend.Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes) :
     Keeps source (RegistrationNativePlatformInitTupleCache.program (n := n) coins setup checks representation created writer index owner oneTime) := by
@@ -101,7 +102,7 @@ private theorem noSign_sample (draw : ProbComp Value) :
       exact lift_bind _ _ (noSign_lift source _) ih
 
 private theorem native_keeps (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State Value)
     (law : NoSign source work) :
     Keeps source (RegistrationNativePlatformBundleLower.native (m := StateT Platform ProbComp) coins setup checks representation created work) := by
@@ -125,7 +126,7 @@ attribute [local irreducible] RegistrationNativePlatformBundleLower.native Regis
 
 /-- All actual source bundle selection, failed publication and later phase/World branches preserve Server-role receipts. -/
 theorem bundle (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) (index : Nat) :
     Keeps source (RegistrationNativePlatformBundleLower.bundle (n := n) coins setup checks representation created
       (RegistrationNativePlatformGenericBundle.encoderWith (source := source) (Auxiliary := RegistrationServerRoleBackend.State)
@@ -161,7 +162,7 @@ private theorem map_apply {S A B : Type} {m : Type → Type} [Monad m] [LawfulMo
 
 /-- Literal complete native source bundle execution preserves Server-role receipts at its actual returned native/platform cut. -/
 theorem native_bundle (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) (index : Nat)
     (before : RegistrationNativeExperiment.State n KemSK source) (previous : Platform)
     (result : (RustM (Option Pqxdh.Bytes) × RegistrationNativeExperiment.State n KemSK source) × Platform)

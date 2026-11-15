@@ -35,7 +35,7 @@ private theorem abort_run {Index Auxiliary : Type} {target : OracleSpec Index}
 
 private theorem actual_effect (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     RegistrationNativeExperiment.trusted (n := n) setup checks representation created mlSource ∘ₛ
       RegistrationBeaconReferenceNativeRecord.environment =
       RegistrationBeaconReferenceNativeEffects.native setup checks representation created := by
@@ -45,7 +45,7 @@ private theorem actual_effect (setup : Setup base KemSK) (checks : Checks)
 
 private theorem actual_raw (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     RegistrationNativeExperiment.trusted (n := n) setup checks representation created mlSource ∘ₛ
       (RegistrationBeaconReferenceNativeRecord.environment ∘ₛ RegistrationBoundSourceCompiler.rawCompiler setup.source wire.frameWrite) =
       RegistrationBeaconReferenceNativeEffects.native setup checks representation created ∘ₛ
@@ -56,7 +56,7 @@ private theorem actual_raw (setup : Setup base KemSK) (checks : Checks) (wire : 
 /-- Terminal abort uses the same existing World effect, retaining every native state field and the current owner/environment. -/
 theorem abort_source (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential mlSource)
     (owner current : SelectedOwner mlSource) (env : EnvState RegistrationServerRoleBackend.State)
     (value : Value) (before : State n KemSK mlSource) :
@@ -79,7 +79,7 @@ theorem abort_source (setup : Setup base KemSK) (checks : Checks) (wire : Regist
 /-- Every successful or failed scalar-free settling branch uses exactly the same concrete native World and owner phase. -/
 theorem after_source (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential mlSource)
     (owner current : SelectedOwner mlSource) (env : EnvState RegistrationServerRoleBackend.State)
     (result : RustM RegistrationNativePairedBeaconService.Result) (before : State n KemSK mlSource) :
@@ -143,7 +143,7 @@ private theorem native_settle (setup : Setup base KemSK) (wire : RegistrationNat
 /-- A completed reference uses the root actually prepared earlier and the same complete native opening, installation and owner-phase continuation. -/
 theorem complete_known (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential mlSource)
     (owner current : SelectedOwner mlSource) (env : EnvState RegistrationServerRoleBackend.State)
     (ready : RegistrationBeaconReferenceRoot.Ready) (root : PqxdhSecretInputKdf.RootOutput)
@@ -172,7 +172,7 @@ theorem complete_known (setup : Setup base KemSK) (checks : Checks) (wire : Regi
 /-- An unprepared reference rejects before any source108 opening; its actual terminal abort is retained on the reached World. -/
 theorem complete_missing (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential mlSource)
     (owner current : SelectedOwner mlSource) (env : EnvState RegistrationServerRoleBackend.State)
     (ready : RegistrationBeaconReferenceRoot.Ready) (before : State n KemSK mlSource)

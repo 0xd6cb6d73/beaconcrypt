@@ -17,7 +17,7 @@ variable {ι KemSK Auxiliary : Type} {base : OracleSpec ι} {n : Nat}
 
 theorem trusted_env_pool (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (mlSource : RegistrationNativeMldsa.Source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (mlSource : RegistrationNativeMldsa.Source)
     (query : (PqxdhRecordLiftInterface.EnvEffects n).Domain)
     (before : RegistrationNativeExperiment.State n KemSK mlSource)
     (result : (PqxdhRecordLiftInterface.EnvEffects n).Range query × RegistrationNativeExperiment.State n KemSK mlSource)
@@ -31,7 +31,7 @@ theorem trusted_env_pool (setup : Setup base KemSK) (checks : Checks)
 /-- This endpoint starts with the complete constructor, rather than a caller-supplied generated-key receipt. -/
 theorem create_generated (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (mlSource : RegistrationNativeMldsa.Source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (mlSource : RegistrationNativeMldsa.Source)
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (owners : State mlSource) (env : EnvState Auxiliary)
     (before after : RegistrationNativeExperiment.State n KemSK mlSource)
@@ -53,7 +53,7 @@ theorem create_generated (setup : Setup base KemSK) (checks : Checks)
       after.pool = afterBirth.pool ∧
       index = leadingOwners.length ∧
       ownersAfter = leadingOwners ++
-        [owner setup mlSource prepared.pin prepared.credentials prepared.identity prepared.prekey born worldOwner] ∧
+        [owner setup mlSource prepared.pin prepared.identity prepared.prekey born worldOwner] ∧
       envAfter = leadingEnv := by
   obtain ⟨prepared, leadingOwners, leadingEnv, middle, earlier, appended⟩ :=
     RegistrationNativeBeaconBirth.create_supported setup mlSource
@@ -61,7 +61,7 @@ theorem create_generated (setup : Setup base KemSK) (checks : Checks)
       edPin mlPin keyId owners env before index ownersAfter envAfter after supported
   obtain ⟨born, afterBirth, worldOwner, final, generated, allocated, returned⟩ :=
     append_supported setup mlSource (RegistrationNativeExperiment.trusted setup checks representation created mlSource)
-      edPin keyId prepared.pin prepared.credentials prepared.identity prepared.prekey leadingOwners leadingEnv middle _ appended
+      edPin keyId prepared.pin prepared.identity prepared.prekey leadingOwners leadingEnv middle _ appended
   obtain ⟨pair, genuine, bornEq, poolEq⟩ := RegistrationNativeExperiment.trusted_create_generated
     setup checks representation created mlSource middle (born, afterBirth) generated
   have retained := trusted_env_pool setup checks representation created mlSource
@@ -78,7 +78,7 @@ theorem create_generated (setup : Setup base KemSK) (checks : Checks)
 /-- The actual deployment wrapper returns a local owner whose opaque handle selects the genuine generated pair in its reached private pool. -/
 theorem owner_generated (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (mlSource : RegistrationNativeMldsa.Source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (mlSource : RegistrationNativeMldsa.Source)
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (before after : RegistrationNativeExperiment.State n KemSK mlSource) (index : Nat)
     (supported : (.ok (some index), after) ∈ support
@@ -98,7 +98,7 @@ theorem owner_generated (setup : Setup base KemSK) (checks : Checks)
         (RegistrationWorldAgreementCompiler.erase before.server.world) before sourceAfter index ownersAfter envAfter reached
   have beaconsEq : after.beacons = ownersAfter := congrArg (fun result => result.2.beacons) returned
   have poolAfter : after.pool = sourceAfter.pool := congrArg (fun result => result.2.pool) returned
-  refine ⟨pair, genuine, owner setup mlSource prepared.pin prepared.credentials prepared.identity prepared.prekey born worldOwner, ?_, ?_, ?_⟩
+  refine ⟨pair, genuine, owner setup mlSource prepared.pin prepared.identity prepared.prekey born worldOwner, ?_, ?_, ?_⟩
   · rw [beaconsEq]
     simp only [ownersEq, indexEq, List.getElem?_concat_length]
   · exact congrArg Prod.snd bornEq

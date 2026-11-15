@@ -73,10 +73,7 @@ theorem accept_native (setup : Setup base KemSK) (checks : Checks) (wire : Regis
       | Accepted authenticated => exact RegistrationNativeProviderAcceptAfter.after_native setup checks wire route sign seed scalar provider selected correct packet authenticated memo current
       | Rejected => simp only [Prod.map_def, id_eq, close_pure, StateT.run_pure, map_pure]; rfl
       | HashRequested request => simp only [Prod.map_def, id_eq, close_pure, StateT.run_pure, map_pure]; rfl
-      | MldsaVerificationRequested request => simp only [Prod.map_def, id_eq, close_pure, StateT.run_pure, map_pure]; rfl
       | Ed25519VerificationRequested request => simp only [Prod.map_def, id_eq, close_pure, StateT.run_pure, map_pure]; rfl
-      | ServerFingerprintRequested request => simp only [Prod.map_def, id_eq, close_pure, StateT.run_pure, map_pure]; rfl
-      | BeaconFingerprintRequested request => simp only [Prod.map_def, id_eq, close_pure, StateT.run_pure, map_pure]; rfl
 
 end BeaconcryptCore.Computational.RegistrationNativeProviderAcceptEntry
 

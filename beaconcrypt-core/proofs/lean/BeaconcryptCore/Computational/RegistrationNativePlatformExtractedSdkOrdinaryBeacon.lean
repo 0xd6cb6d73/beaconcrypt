@@ -77,7 +77,7 @@ theorem send_source (setup : Setup base KemSK) (codec : Codec Reader Response)
       | some context=>exact returned_run self control binding _
 
 noncomputable def receive (setup : Setup base KemSK) (codec : Codec Reader Response)
-    (erased : Array U8 357#usize) (self : beaconcrypt_public_wrapper.beacon.Beacon)
+    (erased : Array U8 227#usize) (self : beaconcrypt_public_wrapper.beacon.Beacon)
     (control : pqxdh.BeaconEstablished) (binding : session.SessionBinding)
     (kernel : ratchet.concrete.ConcreteRatchetKernel) (bytes : Slice U8) :
     M Platform (RustM (Option beaconcrypt.shared.Decrypted ×beaconcrypt_public_wrapper.beacon.Beacon)) :=

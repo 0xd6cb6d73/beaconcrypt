@@ -10,6 +10,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialGenericProtocolBuilder
+variable (associatedData : Std.Array Std.U8 151#usize)
 open PqxdhJointKdfGame PqxdhInitialGenericProtocol
 variable {Kernel M P I D K A : Type} {S B : Nat}
 
@@ -22,7 +23,7 @@ noncomputable def build (source : FixedHkdfSha512NoSaltSource)
   let current := consume index ready state
   let input := selected senderId index current
   reinstall index current <$>
-    (PqxdhInitialGenericBuilder.readyBuild source calls aux initial
+    (PqxdhInitialGenericBuilder.readyBuild (associatedData := associatedData) source calls aux initial
       ⟨input.server.identity, input.identityKeyId⟩ ready metadata input).run current.primitive
 
 /-- The complete original private-KDF builder is obtained by interpreting only the private kernel representation, including all failure and publication branches. -/
@@ -37,20 +38,20 @@ theorem build_native (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixe
         (fun result => (interpret result.1, result.2)) <$> calls.send entry context)
     (initial : RustM Kernel) (senderId : M → Std.U64) (index : Fin S) (metadata : P)
     (ready : PqxdhPrivateAcceptedRoot.Ready) (state : State Kernel M P I D K A S B) :
-    (PqxdhInitialPrivateKdf.build source writer kdf (interpret <$> initial) aux senderId index metadata ready).run
+    (PqxdhInitialPrivateKdf.build (associatedData := associatedData) source writer kdf (interpret <$> initial) aux senderId index metadata ready).run
       (native interpret state) =
-      Prod.map id (native interpret) <$> (build source calls aux initial senderId index metadata ready).run state := by
+      Prod.map id (native interpret) <$> (build (associatedData := associatedData) source calls aux initial senderId index metadata ready).run state := by
   unfold PqxdhInitialPrivateKdf.build build
   simp only [StateT.run, ← consume_native, ← selected_native interpret senderId index metadata]
   change PqxdhRegistrationProtocolState.reinstall index (native interpret (consume index ready state)) <$>
     (simulateQ (PqxdhInitialGenericPublication.nativeImpl (RawCtxMixedShared.sharedImpl source.crypto writer kdf) aux)
       (simulateQ PqxdhServerRegistrationPublication.nativeAdapter
-        (PqxdhInitialBuilderCut.readyBuild source (interpret <$> initial)
+        (PqxdhInitialBuilderCut.readyBuild (associatedData := associatedData) source (interpret <$> initial)
           ⟨(selected senderId index (consume index ready state)).server.identity,
             (selected senderId index (consume index ready state)).identityKeyId⟩ ready metadata
           (PqxdhInitialGenericPublication.native interpret (selected senderId index (consume index ready state)))))).run
       (consume index ready state).primitive = _
-  rw [PqxdhInitialGenericBuilder.ready_native source interpret calls _ aux sendRealized]
+  rw [PqxdhInitialGenericBuilder.ready_native (associatedData := associatedData) source interpret calls _ aux sendRealized]
   simp only [StateT.run_map, Functor.map_map]
   simp only [← reinstall_native]
   rfl
@@ -80,14 +81,14 @@ theorem selected_build (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
     (aux : QueryImpl PqxdhServerRegistrationPublication.AuxSpec (StateT (RawCtxSharedPrimitive.SharedState A) ProbComp))
     (initial : RustM RawCtxSelectedChain.Kernel) (senderId : M → Std.U64) (index : Fin S) (metadata : P)
     (ready : PqxdhPrivateAcceptedRoot.Ready) (state : State RawCtxSelectedChain.Kernel M P I D K A S B) :
-    (PqxdhInitialPrivateKdf.build source writer (retainedKdf prior entry target)
+    (PqxdhInitialPrivateKdf.build (associatedData := associatedData) source writer (retainedKdf prior entry target)
       (RawCtxSelectedChain.nativeKernel (RawCtxFreshChainCut.concreteChain target) <$> initial)
       aux senderId index metadata ready).run
       (native (RawCtxSelectedChain.nativeKernel (RawCtxFreshChainCut.concreteChain target)) state) =
       Prod.map id (native (RawCtxSelectedChain.nativeKernel (RawCtxFreshChainCut.concreteChain target))) <$>
-        (build source (RawCtxSelectedParentCalls.labelCalls source writer prior entry
+        (build (associatedData := associatedData) source (RawCtxSelectedParentCalls.labelCalls source writer prior entry
           (RawCtxSelectedParentCalls.childResponse prior entry target)) aux initial senderId index metadata ready).run state := by
-  apply build_native
+  apply build_native (associatedData := associatedData)
   intro kernel context
   rw [← retained_backend]
   exact PqxdhInitialGenericPublication.selected_send source writer prior entry target kernel context
@@ -98,8 +99,8 @@ theorem root_unused (source : FixedHkdfSha512NoSaltSource)
     (aux : QueryImpl PqxdhServerRegistrationPublication.AuxSpec (StateT (RawCtxSharedPrimitive.SharedState A) ProbComp))
     (initial : RustM Kernel) (senderId : M → Std.U64) (index : Fin S) (metadata : P)
     (ready : PqxdhPrivateAcceptedRoot.Ready) (root : PqxdhSecretInputKdf.RootOutput) :
-    build (I := I) (D := D) (K := K) (B := B) source calls aux initial senderId index metadata {ready with root := root} =
-      build source calls aux initial senderId index metadata ready := rfl
+    build (associatedData := associatedData) (I := I) (D := D) (K := K) (B := B) source calls aux initial senderId index metadata {ready with root := root} =
+      build (associatedData := associatedData) source calls aux initial senderId index metadata ready := rfl
 
 end BeaconcryptCore.Computational.PqxdhInitialGenericProtocolBuilder
 

@@ -28,7 +28,9 @@ abbrev SharedSpec : OracleSpec SharedRequest
   | .reveal _ => Option beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel
 
 abbrev Spec (KemSK Response : Type) := PqxdhRegistrationJointFinishCompiler.Spec KemSK Response + SharedSpec
-abbrev Client (KemSK Response Result : Type) := StateT (List EncodedEntry) (OracleComp (Spec KemSK Response)) Result
+/-- The client keeps its encoded owners and, per owner address, the Phase 1 bundle it last handed to the writer with a successful write (`PqxdhRegistrationJointSchedule.State.inits`). -/
+abbrev Client (KemSK Response Result : Type) :=
+  StateT (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (OracleComp (Spec KemSK Response)) Result
 
 noncomputable def shared (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (serverSeed : IdentitySeed) : QueryImpl SharedSpec (NativeGame KemSK)
@@ -47,6 +49,22 @@ noncomputable def impl (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
 def poolLift : QueryImpl (PqxdhLiveKemBirth.Spec KemSK) (OracleComp (Spec KemSK Response)) :=
   fun query => (Spec KemSK Response).query (.inl (.inl query))
 
+/-- `PqxdhRegistrationJointBundleCompiler.compiler` with the bundle handed to the writer retained exactly when the write succeeds (`PqxdhRegistrationSchedule.bundleLogCallbacks`); every other request is unchanged. -/
+def logCompiler (codec : Codec Reader Response) :
+    QueryImpl (PqxdhLivePhase1Bundle.Spec ScalarBytes)
+      (StateT (Option PqxdhEd25519EufCma.Phase1Candidate) (OracleComp (PqxdhLiveKemBirth.Spec KemSK)))
+  | .inl query => StateT.lift (PqxdhRegistrationJointBundleCompiler.compiler codec (.inl query))
+  | .inr (.inl query) => StateT.lift (PqxdhRegistrationJointBundleCompiler.compiler codec (.inr (.inl query)))
+  | .inr (.inr candidate) => fun logged =>
+      pure (codec.write1 candidate, if (codec.write1 candidate).isSome then some candidate else logged)
+
+/-- The analysis writer of `PqxdhRegistrationJointBundle.writer` with the same retained bundle as `logCompiler`, kept next to the auxiliary state. -/
+def writerLog {A : Type} (codec : Codec Reader Response) :
+    QueryImpl PqxdhBeaconPhase1Publication.WriterSpec
+      (StateT (A × Option PqxdhEd25519EufCma.Phase1Candidate) ProbComp) :=
+  fun candidate state =>
+    pure (codec.write1 candidate, (state.1, if (codec.write1 candidate).isSome then some candidate else state.2))
+
 def finishLift : QueryImpl (PqxdhRegistrationJointFinishCompiler.Spec KemSK Response) (OracleComp (Spec KemSK Response)) :=
   fun query => (Spec KemSK Response).query (.inl query)
 
@@ -57,31 +75,48 @@ def birth (pin : Word32) (keyId : Std.U64) (value : PqxdhRegistrationJointCreati
       .fresh ⟨⟨pin, keyId⟩⟩ value.prekey (value.kemPublic, value.kemIndex)⟩, 0⟩)
 
 /-- The actual indexed constructor never returns None under its source interpreter. The syntactic None branch remains total and makes no owner installation. -/
-def create (pin : Word32) (keyId : Std.U64) : Client KemSK Response Nat := fun owners => do
+def create (pin : Word32) (keyId : Std.U64) : Client KemSK Response Nat := fun state => do
   let value ← simulateQ poolLift (PqxdhRegistrationJointCreation.client (KemSK := KemSK))
-  pure (owners.length, match value with
-    | none => owners
-    | some value => owners ++ [birth pin keyId value])
+  pure (state.1.length, (match value with
+    | none => state.1
+    | some value => state.1 ++ [birth pin keyId value], state.2))
 
-/-- Every bundle uses the selected live owner and reinstalls its complete optional publication result, retaining its original service indices. -/
+/-- Every bundle uses the selected live owner and reinstalls its complete optional publication result, retaining its original service indices and the bundle it handed to the writer with a successful write. -/
 def bundle (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (address : Nat) :
-    Client KemSK Response (Option Pqxdh.Bytes) := fun owners =>
-  match owners[address]? with
-  | none => pure (none, owners)
+    Client KemSK Response (Option Pqxdh.Bytes) := fun state =>
+  match state.1[address]? with
+  | none => pure (none, state)
   | some entry =>
-    (fun result => (result.1, owners.set address (entry.1, entry.2.1, result.2))) <$>
-      simulateQ poolLift (simulateQ (PqxdhRegistrationJointBundleCompiler.compiler codec)
-        (PqxdhLivePhase1Bundle.bundle (PqxdhRegistrationJointBundle.projection setup) entry.2.2))
+    (fun result => (result.1.1, (state.1.set address (entry.1, entry.2.1, result.1.2),
+        Function.update state.2 address result.2))) <$>
+      simulateQ poolLift ((simulateQ (logCompiler codec)
+        (PqxdhLivePhase1Bundle.bundle (PqxdhRegistrationJointBundle.projection setup) entry.2.2)).run (state.2 address))
 
-/-- The original complete finish client returns its actual optional plaintext and complete reinstalled owner through the same private-service backend. -/
+/-- The owner finish on an encoded owner (`PqxdhRegistrationJointCompiledOwner.compiledFinish`): an InitSent owner with a retained bundle and a decodable response forwards the transcript hash as the public `hash` request, then runs the original complete owner through the same private-service backend at the completed binding of the digest; abort and inactive branches are unchanged. -/
+noncomputable def finishOwner (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationJointBundle.Owner) :
+    OracleComp (Spec KemSK Response) (Option Pqxdh.Bytes × PqxdhRegistrationJointBundle.Owner) :=
+  match owner.beacon.phase with
+  | .initSent control _ _ _ =>
+    match retained, responseOf codec raw with
+    | some init, some response => do
+        let digest ← (Spec KemSK Response).query
+          (.inr (.hash (PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf init) response)))
+        simulateQ finishLift (simulateQ (PqxdhRegistrationJointFinishCompiler.compiler setup codec)
+          (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := PqxdhTranscriptAd.completedOf control digest)
+            codec.frameRead raw owner))
+    | _, _ => pure (none, PqxdhBeaconPhase2Preparation.abort control owner)
+  | _ => pure (none, owner)
+
+/-- The original complete finish client returns its actual optional plaintext and complete reinstalled owner through the same private-service backend, after the transcript hash of the owner's retained bundle. -/
 noncomputable def finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (address : Nat) (raw : Pqxdh.Bytes) : Client KemSK Response (Option Pqxdh.Bytes) := fun owners =>
-  match owners[address]? with
-  | none => pure (none, owners)
+    (address : Nat) (raw : Pqxdh.Bytes) : Client KemSK Response (Option Pqxdh.Bytes) := fun state =>
+  match state.1[address]? with
+  | none => pure (none, state)
   | some entry =>
-    (fun result => (result.1, owners.set address (entry.1, entry.2.1, result.2))) <$>
-      simulateQ finishLift (simulateQ (PqxdhRegistrationJointFinishCompiler.compiler setup codec)
-        (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw entry.2.2))
+    (fun result => (result.1, (state.1.set address (entry.1, entry.2.1, result.2), state.2))) <$>
+      finishOwner setup codec (state.2 address) raw entry.2.2
 
 /-- The client has exactly the original public scheduling interface. Private service histories and creation handles are not returned to the caller. -/
 noncomputable def handler (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) :
@@ -100,8 +135,8 @@ noncomputable def handler (setup : Setup baseSpec KemSK) (codec : Codec Reader R
 noncomputable def execute (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (serverSeed : IdentitySeed) (client : Client KemSK Response Result)
     (state : EncodedState KemSK) : ProbComp (Result × EncodedState KemSK) :=
-  (fun result => (result.1.1, ⟨result.2.1, result.2.2, result.1.2⟩)) <$>
-    (simulateQ (impl setup codec checks serverSeed) (client.run state.owners)).run (state.pool, state.shared)
+  (fun result => (result.1.1, ⟨result.2.1, result.2.2, result.1.2.1, result.1.2.2⟩)) <$>
+    (simulateQ (impl setup codec checks serverSeed) (client.run (state.owners, state.inits))).run (state.pool, state.shared)
 
 /-- A whole private-service client retains the complete shared native state while updating both private pools and their histories. -/
 theorem pool_program (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -117,6 +152,82 @@ theorem pool_program (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
     exact simulateQ_spec_query (impl setup codec checks serverSeed) (.inl (.inl query))
   rw [routed, PqxdhRegistrationJointFinish.pool_program]
 
+/-- The logged compiled bundle interpreted by the private services is the signing interpreter with the logging analysis writer `writerLog`, which keeps the retained bundle next to the KEM pool. -/
+theorem log_interpreted (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (program : OracleComp (PqxdhLivePhase1Bundle.Spec ScalarBytes) Result)
+    (logged : Option PqxdhEd25519EufCma.Phase1Candidate) (pool : PqxdhLiveKemBirth.State KemSK) :
+    (simulateQ (PqxdhLiveKemBirth.impl setup.baseImpl setup.joint setup.kem)
+      ((simulateQ (logCompiler codec) program).run logged)).run pool =
+      (fun result => ((result.1, result.2.2.2), (result.2.1, result.2.2.1))) <$>
+        (simulateQ (PqxdhLiveJointSigning.impl setup.joint
+          (PqxdhRegistrationJointBundle.generate
+            (A := PqxdhLiveKemBirth.Pool KemSK × Option PqxdhEd25519EufCma.Phase1Candidate))
+          (writerLog codec)) program).run (pool.1, (pool.2, logged)) := by
+  induction program using OracleComp.inductionOn generalizing logged pool with
+  | pure value => simp
+  | query_bind query next ih =>
+      obtain ⟨source, keys⟩ := pool
+      have routed : simulateQ (PqxdhLiveKemBirth.impl setup.baseImpl setup.joint setup.kem)
+          (PqxdhRegistrationJointBundleCompiler.compiler codec query) =
+            PqxdhLiveJointSigning.impl setup.joint PqxdhRegistrationJointBundle.generate
+              (PqxdhRegistrationJointBundle.writer codec) query :=
+        congrFun (PqxdhRegistrationJointBundleCompiler.compiler_interpreted setup codec) query
+      rcases query with request | request | candidate
+      · simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind, logCompiler,
+          StateT.run_lift, bind_assoc, pure_bind, map_bind, ih]
+        rw [routed]
+        simp [StateT.run, PqxdhLiveJointSigning.impl, PqxdhRegistrationJointBundle.generate, StateT.lift]
+      · simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind, logCompiler,
+          StateT.run_lift, bind_assoc, pure_bind, map_bind, ih]
+        rw [routed]
+        simp [StateT.run, PqxdhLiveJointSigning.impl]
+      · have written : (logCompiler (KemSK := KemSK) codec (.inr (.inr candidate))).run logged =
+            pure (codec.write1 candidate, if (codec.write1 candidate).isSome then some candidate else logged) := rfl
+        simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind, written, pure_bind, ih]
+        simp [StateT.run, PqxdhLiveJointSigning.impl, writerLog]
+
+set_option backward.isDefEq.respectTransparency false in
+/-- The signing interpreter with the logging writer returns the mapped `PqxdhRegistrationJointBundle.traceLog`: the same result as `PqxdhRegistrationJointBundle.client_source`, with the retained bundle next to the unchanged auxiliary state. -/
+theorem client_log {A : Type} (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (identityIndex kemIndex : Nat) (owner : PqxdhRegistrationSchedule.Owner KemSK)
+    (pool : PqxdhDynamicIdentityPool.SourceState) (auxiliary : A)
+    (logged : Option PqxdhEd25519EufCma.Phase1Candidate)
+    (created : pool.seeds[identityIndex]? = some owner.beacon.identity) :
+    (simulateQ (PqxdhLiveJointSigning.impl setup.joint PqxdhRegistrationJointBundle.generate (writerLog codec))
+      (PqxdhLivePhase1Bundle.bundle (PqxdhRegistrationJointBundle.projection setup)
+        (PqxdhRegistrationJointBundle.encode setup identityIndex kemIndex owner))).run (pool, (auxiliary, logged)) =
+      (fun result => ((result.1.1.1, PqxdhRegistrationJointBundle.encode setup identityIndex kemIndex result.1.1.2),
+        (result.1.2, (auxiliary, result.2)))) <$>
+        PqxdhRegistrationJointBundle.traceLog setup codec identityIndex owner pool logged := by
+  rw [show PqxdhRegistrationJointBundle.encode setup identityIndex kemIndex owner =
+      PqxdhBeaconPhase1Publication.mapState (PqxdhRegistrationJointBundle.identityMap setup identityIndex)
+        (PqxdhRegistrationJointBundle.keyMap kemIndex) owner from rfl,
+    ← PqxdhLivePhase1Bundle.bundle_map_run (PqxdhRegistrationJointBundle.identityMap setup identityIndex)
+      (PqxdhRegistrationJointBundle.keyMap kemIndex)
+      (PqxdhRegistrationSchedule.projection setup identityIndex) (PqxdhRegistrationJointBundle.projection setup)
+      (fun _ => rfl) (fun _ => rfl) rfl (fun _ => rfl)]
+  rw [PqxdhLiveJointSigning.bundle_source setup.joint PqxdhRegistrationJointBundle.generate (writerLog codec)
+    (PqxdhRegistrationSchedule.projection setup identityIndex) owner (pool, (auxiliary, logged))
+    owner.beacon.identity created]
+  have written : ∀ (candidate : PqxdhEd25519EufCma.Phase1Candidate)
+      (state : A × Option PqxdhEd25519EufCma.Phase1Candidate),
+      (writerLog codec candidate).run state = pure (codec.write1 candidate,
+        (state.1, if (codec.write1 candidate).isSome then some candidate else state.2)) := fun _ _ => rfl
+  cases phase : owner.beacon.phase <;> simp only [PqxdhLiveJointSigning.sourceBundle,
+    PqxdhRegistrationJointBundle.traceLog, phase, PqxdhRegistrationJointBundle.generate,
+    StateT.run_lift, map_bind, bind_map_left, map_pure, PqxdhRegistrationJointBundle.encode]
+  all_goals simp only [PqxdhLiveJointSigning.sourceAfter, PqxdhRegistrationJointBundle.after,
+    PqxdhRegistrationJointBundle.afterLog, PqxdhBeaconPhase1Publication.prepare, phase,
+    PqxdhRegistrationSchedule.projection, PqxdhBeaconPhase1Publication.afterSigning, simulateQ_bind,
+    simulateQ_spec_query, StateT.run_bind, written, pure_bind, bind_assoc, Functor.map_map, Option.map_some]
+  case fresh =>
+    rw [map_eq_bind_pure_comp]
+    apply bind_congr
+    intro scalar
+    split <;> simp_all
+  case freshWithCoins =>
+    split <;> simp_all
+
 /-- Routing the existing complete finish program preserves every native tail and private service reply and the entire product state. -/
 theorem finish_program (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (serverSeed : IdentitySeed)
@@ -126,6 +237,22 @@ theorem finish_program (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
   rw [← QueryImpl.simulateQ_compose]
   congr 1; funext query
   exact simulateQ_spec_query (impl setup codec checks serverSeed) (.inl query)
+
+/-- The encoded owner finish under the private-service backend is the compiled hashed owner finish (`PqxdhRegistrationJointCompiledOwner.compiledFinish`): the forwarded `hash` request reaches the same shared native transcript hash. -/
+theorem finishOwner_compiled (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (checks : Checks) (serverSeed : IdentitySeed) (identityIndex kemIndex : Nat)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) :
+    simulateQ (impl setup codec checks serverSeed)
+      (finishOwner setup codec retained raw (PqxdhRegistrationJointBundle.encode setup identityIndex kemIndex owner)) =
+      PqxdhRegistrationJointCompiledOwner.compiledFinish setup codec identityIndex kemIndex retained raw owner := by
+  unfold finishOwner PqxdhRegistrationJointCompiledOwner.compiledFinish
+  cases phase : owner.beacon.phase <;> simp only [PqxdhRegistrationJointBundle.encode,
+    PqxdhBeaconPhase1Publication.mapState, PqxdhBeaconPhase1Publication.mapPhase, phase, simulateQ_pure]
+  case initSent control prekey oneTime kem =>
+    cases retained <;> cases responseOf codec raw <;>
+      simp only [simulateQ_pure, simulateQ_bind, simulateQ_spec_query, finish_program]
+    all_goals rfl
 
 /-- The actual source constructor and executable handle constructor have the same full encoded distribution, with identity, prekey and KEM generators in source order. -/
 theorem create_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -161,9 +288,10 @@ theorem bundle_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
       simp only [execute, StateT.run, bundle, encodeState, List.getElem?_map, found,
         Option.map_some, encodeEntry, simulateQ_map]
       change _ <$> StateT.run (_ <$> _) _ = _
-      rw [StateT.run_map, pool_program, PqxdhRegistrationJointBundleCompiler.bundle_source setup codec
-        entry.identityIndex entry.kemIndex entry.owner state.pool
-        (owned entry (List.mem_of_getElem? found)).1]
+      rw [StateT.run_map, pool_program]
+      erw [log_interpreted setup codec _ (state.inits address) state.pool,
+        client_log setup codec entry.identityIndex entry.kemIndex entry.owner state.pool.1 state.pool.2
+          (state.inits address) (owned entry (List.mem_of_getElem? found)).1]
       simp [PqxdhRegistrationJointSchedule.bundle, found, Functor.map_map, encodeEntry]
 
 /-- Every raw finish attempt uses the selected source-owned identity/KEM slots and reinstalls the complete optional native result without changing any other owner. -/
@@ -182,8 +310,11 @@ theorem finish_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
       simp only [execute, StateT.run, finish, encodeState, List.getElem?_map, found,
         Option.map_some, encodeEntry, simulateQ_map]
       change _ <$> StateT.run (_ <$> _) _ = _
-      rw [StateT.run_map, finish_program, PqxdhRegistrationJointCompiledOwner.owner_source setup codec
-        entry.identityIndex entry.kemIndex entry.owner raw (state.pool, state.shared)
+      rw [StateT.run_map]
+      erw [finishOwner_compiled setup codec checks serverSeed entry.identityIndex entry.kemIndex
+        (state.inits address) raw entry.owner,
+        PqxdhRegistrationJointCompiledOwner.compiledFinish_source setup codec
+        entry.identityIndex entry.kemIndex (state.inits address) raw entry.owner (state.pool, state.shared)
         (owned entry (List.mem_of_getElem? found)).1
         (fun control prekey oneTime keys phase => (owned entry (List.mem_of_getElem? found)).2 keys
           (by simp only [PqxdhRegistrationJointOwnership.activeKey, phase]))]
@@ -253,7 +384,7 @@ theorem generated_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
     (checks : Checks) (serverSeed : IdentitySeed)
     (program : OracleComp PqxdhRegistrationSchedule.Spec Result)
     (pool : PqxdhRegistrationJointPreparation.Pool KemSK) (native : NativeState KemSK) :
-    execute setup codec checks serverSeed (simulateQ (handler setup codec) program) ⟨pool, native, []⟩ =
+    execute setup codec checks serverSeed (simulateQ (handler setup codec) program) ⟨pool, native, [], fun _ => none⟩ =
       (fun result => (result.1, encodeState setup result.2)) <$>
         (simulateQ (PqxdhRegistrationJointSchedule.handler setup codec checks serverSeed) program).run
           (PqxdhRegistrationJointSchedule.initial pool native) := by
@@ -339,3 +470,21 @@ end BeaconcryptCore.Computational.PqxdhRegistrationJointServiceSchedule
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointServiceSchedule.program_uniform
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationJointServiceSchedule.log_interpreted' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointServiceSchedule.log_interpreted
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationJointServiceSchedule.client_log' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointServiceSchedule.client_log
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationJointServiceSchedule.finishOwner_compiled' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointServiceSchedule.finishOwner_compiled

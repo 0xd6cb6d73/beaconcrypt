@@ -15,6 +15,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 
 set_option autoImplicit false
+set_option warningAsError true
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPost
 open PqxdhServerAuthExperiment (Setup Codec Checks)
@@ -326,16 +327,18 @@ theorem start_goodL (raw : Pqxdh.Bytes) (value : PqxdhServerRootPreparation.Veri
         logged).run joint.shared)).run (PqxdhRegistrationJointKemSecondEntry.emptyAlloc, PqxdhRecordLiftLazyTable.initial))) :
     GoodMidL setup codec t (startL t snap copies joint log raw w) := by
   refine ⟨?_, Nat.lt_succ_self _⟩
-  obtain ⟨server, keyId, sessions, others, rejected, accepted⟩ :=
+  obtain ⟨server, keyId, sessions, others, rejected, accepted, ctx⟩ :=
     PqxdhDeploymentIdealPostGood.acceptAfter_footprint setup codec checks created.seed p.challenge value ephemeral
       consumed logged joint.shared _ w member
   exact PqxdhDeploymentIdealPostGood.good_of_accept setup codec raw copies (PqxdhRegistrationJointSchedule.source joint)
-    ⟨w.1.2, (PqxdhRegistrationJointSchedule.source joint).owners⟩ good w.1.1.1.1 rfl server keyId sessions others rejected
+    ⟨w.1.2, (PqxdhRegistrationJointSchedule.source joint).owners, (PqxdhRegistrationJointSchedule.source joint).inits⟩ good w.1.1.1.1 rfl rfl (le_of_eq ctx.symm) server keyId sessions others rejected
     (fun session found => by
-      obtain ⟨same, token, stored, identity⟩ := accepted session found
+      obtain ⟨same, token, stored, identity, init⟩ := accepted session found
       exact ⟨same, token, stored, by
         rw [identity]
-        exact PqxdhDeploymentIdealPostGood.identityOf_verified setup codec checks raw value verified⟩)
+        exact PqxdhDeploymentIdealPostGood.identityOf_verified setup codec checks raw value verified, by
+        rw [init]
+        exact PqxdhDeploymentIdealPostGood.publicInit_verified setup codec checks raw value verified⟩)
 
 /-- Item 2's invariant holds after the selected accept (`PqxdhDeploymentIdealPostItemRun.itemInv_after`). -/
 theorem start_itemL (raw : Pqxdh.Bytes) (value : PqxdhServerRootPreparation.Verified Reader) (snap : Snap)

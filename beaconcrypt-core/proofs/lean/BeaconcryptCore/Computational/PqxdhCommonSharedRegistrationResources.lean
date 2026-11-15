@@ -8,6 +8,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhCommonSharedRegistrationResources
+variable (associatedData : Std.Array Std.U8 151#usize)
 open PqxdhJointKdfGame CtxRomAuth AdaptiveCtxSharedHash PqxdhAcceptedRegistration
 variable {M P I D K A : Type} {S B : Nat}
 
@@ -55,10 +56,10 @@ theorem build (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared
     (writerBound : ∀ fields state, ((callbacks.responseWrite fields).run state).IsTotalQueryBound qWriter)
     (hash : Bool) (sender : M → Std.U64) (index : Fin S) (metadata : P) (ready : PqxdhPrivateAcceptedRoot.Ready)
     (state : PqxdhRegistrationProtocolState.State M P I D K A S B) :
-    (PqxdhCommonSharedRegistration.build source writer callbacks sender index metadata ready state).IsQueryBoundP
+    (PqxdhCommonSharedRegistration.build (associatedData := associatedData) source writer callbacks sender index metadata ready state).IsQueryBoundP
       (HashClass hash) (if hash then 1 else qPeer + qPlaintext + qWriter) := by
   simp only [PqxdhCommonSharedRegistration.build, bind_pure_comp, isQueryBoundP_map_iff]
-  have bounded := buildReady_weighted (PqxdhCommonSharedRegistration.compiler source writer callbacks)
+  have bounded := PqxdhAcceptedRegistration.buildReady_weighted (associatedData := associatedData) (PqxdhCommonSharedRegistration.compiler source writer callbacks)
     (HashClass hash) (cost hash qPeer qPlaintext qWriter)
     (step source writer callbacks qPeer qPlaintext qWriter peerBound plaintextBound writerBound hash)
     source (PqxdhRegistrationProtocolState.input sender index metadata

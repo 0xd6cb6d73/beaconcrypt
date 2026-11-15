@@ -123,131 +123,19 @@ def transport.kexresponse_left
     (x17.app_cipher_text, (x17.key_id, x17.signature)))))))
 
 /-- [beaconcrypt_parse::transport::initkex_left]:
-    Source: 'beaconcrypt-parse/src/extraction_registration_transport.rs', lines 2948:0-2958:1 -/
+    Source: 'beaconcrypt-parse/src/extraction_registration_transport.rs', lines 2831:0-2839:1 -/
 def transport.initkex_left
-  (x17 : transport.initkex) :
+  (x13 : transport.initkex) :
   RustM (Unit × (Unit × ((Slice Std.U8) × ((Slice Std.U8) × ((Slice Std.U8)
-    × ((Slice Std.U8) × ((Slice Std.U8) × (Slice Std.U8))))))))
+    × (Slice Std.U8))))))
   := do
-  ok ((), ((), (x17.identity_key, (x17.pre_key, (x17.one_time_key, (x17.pq_key,
-    (x17.mldsa_public_key, x17.signature)))))))
-
-/-- [beaconcrypt_parse::transport::extraction_serialize_initkex_size_5]:
-    Source: 'beaconcrypt-parse/src/extraction_registration_transport.rs', lines 5738:0-5893:1 -/
-def transport.extraction_serialize_initkex_size_5
-  (c26 : Slice Std.U8) (out1 : Slice Std.U8) (lo_ok : Bool) (hi_ok : Bool) :
-  RustM (Std.Usize × (Slice Std.U8))
-  := do
-  if lo_ok
-  then
-    if hi_ok
-    then
-      if 2#u8 = cbordetveraux.cbor_major_type_byte_string
-      then
-        let len1 ← core.slice.Slice.len c26
-        let bcExtractedToken5f5f616e6630 ←
-          cbordetveraux.sizet_lte_u64 len1 18446744073709551615#u64
-        if bcExtractedToken5f5f616e6630
-        then
-          let res ←
-            registration_serializer_primitive.mkString
-              cbordetver.cbor_det_string_kind.ByteString c26
-          match res with
-          | cbordetver.bcExtractedToken6f7074696f6e5f5f43424f525f50756c73655f5261775f547970655f63626f725f726177.None => fail panic
-          | cbordetver.bcExtractedToken6f7074696f6e5f5f43424f525f50756c73655f5261775f547970655f63626f725f726177.Some c3 =>
-            let (ser, out11) ← cbordetver.cbor_det_serialize c3 out1
-            match ser with
-            | cbordetver.bcExtractedToken6f7074696f6e5f5f73697a655f74.None => ok (0#usize, out11)
-            | cbordetver.bcExtractedToken6f7074696f6e5f5f73697a655f74.Some sz => ok (sz, out11)
-        else ok (0#usize, out1)
-      else
-        let len1 ← core.slice.Slice.len c26
-        let bcExtractedToken5f5f616e6630 ←
-          cbordetveraux.sizet_lte_u64 len1 18446744073709551615#u64
-        if bcExtractedToken5f5f616e6630
-        then
-          let correct ← registration_serializer_primitive.utf8Correct c26
-          if correct
-          then
-            let mty ←
-              if cbordetveraux.cbor_major_type_text_string =
-                cbordetveraux.cbor_major_type_byte_string
-              then ok cbordetver.cbor_det_string_kind.ByteString
-              else ok cbordetver.cbor_det_string_kind.TextString
-            let res ← registration_serializer_primitive.mkString mty c26
-            match res with
-            | cbordetver.bcExtractedToken6f7074696f6e5f5f43424f525f50756c73655f5261775f547970655f63626f725f726177.None =>
-              fail panic
-            | cbordetver.bcExtractedToken6f7074696f6e5f5f43424f525f50756c73655f5261775f547970655f63626f725f726177.Some c3 =>
-              let (ser, out11) ← cbordetver.cbor_det_serialize c3 out1
-              match ser with
-              | cbordetver.bcExtractedToken6f7074696f6e5f5f73697a655f74.None => ok (0#usize, out11)
-              | cbordetver.bcExtractedToken6f7074696f6e5f5f73697a655f74.Some sz => ok (sz, out11)
-          else ok (0#usize, out1)
-        else ok (0#usize, out1)
-    else ok (0#usize, out1)
-  else ok (0#usize, out1)
-
-/-- [beaconcrypt_parse::transport::extraction_serialize_initkex_size_4]:
-    Source: 'beaconcrypt-parse/src/extraction_registration_transport.rs', lines 5582:0-5737:1 -/
-def transport.extraction_serialize_initkex_size_4
-  (c16 : Slice Std.U8) (out1 : Slice Std.U8) (lo_ok : Bool) (hi_ok : Bool) :
-  RustM (Std.Usize × (Slice Std.U8))
-  := do
-  if lo_ok
-  then
-    if hi_ok
-    then
-      if 2#u8 = cbordetveraux.cbor_major_type_byte_string
-      then
-        let len1 ← core.slice.Slice.len c16
-        let bcExtractedToken5f5f616e6630 ←
-          cbordetveraux.sizet_lte_u64 len1 18446744073709551615#u64
-        if bcExtractedToken5f5f616e6630
-        then
-          let res ←
-            registration_serializer_primitive.mkString
-              cbordetver.cbor_det_string_kind.ByteString c16
-          match res with
-          | cbordetver.bcExtractedToken6f7074696f6e5f5f43424f525f50756c73655f5261775f547970655f63626f725f726177.None => fail panic
-          | cbordetver.bcExtractedToken6f7074696f6e5f5f43424f525f50756c73655f5261775f547970655f63626f725f726177.Some c3 =>
-            let (ser, out11) ← cbordetver.cbor_det_serialize c3 out1
-            match ser with
-            | cbordetver.bcExtractedToken6f7074696f6e5f5f73697a655f74.None => ok (0#usize, out11)
-            | cbordetver.bcExtractedToken6f7074696f6e5f5f73697a655f74.Some sz => ok (sz, out11)
-        else ok (0#usize, out1)
-      else
-        let len1 ← core.slice.Slice.len c16
-        let bcExtractedToken5f5f616e6630 ←
-          cbordetveraux.sizet_lte_u64 len1 18446744073709551615#u64
-        if bcExtractedToken5f5f616e6630
-        then
-          let correct ← registration_serializer_primitive.utf8Correct c16
-          if correct
-          then
-            let mty ←
-              if cbordetveraux.cbor_major_type_text_string =
-                cbordetveraux.cbor_major_type_byte_string
-              then ok cbordetver.cbor_det_string_kind.ByteString
-              else ok cbordetver.cbor_det_string_kind.TextString
-            let res ← registration_serializer_primitive.mkString mty c16
-            match res with
-            | cbordetver.bcExtractedToken6f7074696f6e5f5f43424f525f50756c73655f5261775f547970655f63626f725f726177.None =>
-              fail panic
-            | cbordetver.bcExtractedToken6f7074696f6e5f5f43424f525f50756c73655f5261775f547970655f63626f725f726177.Some c3 =>
-              let (ser, out11) ← cbordetver.cbor_det_serialize c3 out1
-              match ser with
-              | cbordetver.bcExtractedToken6f7074696f6e5f5f73697a655f74.None => ok (0#usize, out11)
-              | cbordetver.bcExtractedToken6f7074696f6e5f5f73697a655f74.Some sz => ok (sz, out11)
-          else ok (0#usize, out1)
-        else ok (0#usize, out1)
-    else ok (0#usize, out1)
-  else ok (0#usize, out1)
+  ok ((), ((), (x13.identity_key, (x13.pre_key, (x13.one_time_key,
+    x13.pq_key)))))
 
 /-- [beaconcrypt_parse::transport::extraction_serialize_initkex_size_3]:
-    Source: 'beaconcrypt-parse/src/extraction_registration_transport.rs', lines 5434:0-5581:1 -/
+    Source: 'beaconcrypt-parse/src/extraction_registration_transport.rs', lines 4755:0-4892:1 -/
 def transport.extraction_serialize_initkex_size_3
-  (c15 : Slice Std.U8) (out1 : Slice Std.U8) (lo_ok : Bool) (hi_ok : Bool) :
+  (c24 : Slice Std.U8) (out1 : Slice Std.U8) (lo_ok : Bool) (hi_ok : Bool) :
   RustM (Std.Usize × (Slice Std.U8))
   := do
   if lo_ok
@@ -256,14 +144,14 @@ def transport.extraction_serialize_initkex_size_3
     then
       if 2#u8 = cbordetveraux.cbor_major_type_byte_string
       then
-        let len1 ← core.slice.Slice.len c15
+        let len1 ← core.slice.Slice.len c24
         let bcExtractedToken5f5f616e6630 ←
           cbordetveraux.sizet_lte_u64 len1 18446744073709551615#u64
         if bcExtractedToken5f5f616e6630
         then
           let res ←
             registration_serializer_primitive.mkString
-              cbordetver.cbor_det_string_kind.ByteString c15
+              cbordetver.cbor_det_string_kind.ByteString c24
           match res with
           | cbordetver.bcExtractedToken6f7074696f6e5f5f43424f525f50756c73655f5261775f547970655f63626f725f726177.None => fail panic
           | cbordetver.bcExtractedToken6f7074696f6e5f5f43424f525f50756c73655f5261775f547970655f63626f725f726177.Some c3 =>
@@ -273,12 +161,12 @@ def transport.extraction_serialize_initkex_size_3
             | cbordetver.bcExtractedToken6f7074696f6e5f5f73697a655f74.Some sz => ok (sz, out11)
         else ok (0#usize, out1)
       else
-        let len1 ← core.slice.Slice.len c15
+        let len1 ← core.slice.Slice.len c24
         let bcExtractedToken5f5f616e6630 ←
           cbordetveraux.sizet_lte_u64 len1 18446744073709551615#u64
         if bcExtractedToken5f5f616e6630
         then
-          let correct ← registration_serializer_primitive.utf8Correct c15
+          let correct ← registration_serializer_primitive.utf8Correct c24
           if correct
           then
             let mty ←
@@ -286,7 +174,7 @@ def transport.extraction_serialize_initkex_size_3
                 cbordetveraux.cbor_major_type_byte_string
               then ok cbordetver.cbor_det_string_kind.ByteString
               else ok cbordetver.cbor_det_string_kind.TextString
-            let res ← registration_serializer_primitive.mkString mty c15
+            let res ← registration_serializer_primitive.mkString mty c24
             match res with
             | cbordetver.bcExtractedToken6f7074696f6e5f5f43424f525f50756c73655f5261775f547970655f63626f725f726177.None =>
               fail panic
@@ -301,7 +189,7 @@ def transport.extraction_serialize_initkex_size_3
   else ok (0#usize, out1)
 
 /-- [beaconcrypt_parse::transport::extraction_serialize_initkex_size_2]:
-    Source: 'beaconcrypt-parse/src/extraction_registration_transport.rs', lines 5296:0-5433:1 -/
+    Source: 'beaconcrypt-parse/src/extraction_registration_transport.rs', lines 4617:0-4754:1 -/
 def transport.extraction_serialize_initkex_size_2
   (c14 : Slice Std.U8) (out1 : Slice Std.U8) (lo_ok : Bool) (hi_ok : Bool) :
   RustM (Std.Usize × (Slice Std.U8))
@@ -357,7 +245,7 @@ def transport.extraction_serialize_initkex_size_2
   else ok (0#usize, out1)
 
 /-- [beaconcrypt_parse::transport::extraction_serialize_initkex_size_1]:
-    Source: 'beaconcrypt-parse/src/extraction_registration_transport.rs', lines 5173:0-5295:1 -/
+    Source: 'beaconcrypt-parse/src/extraction_registration_transport.rs', lines 4494:0-4616:1 -/
 def transport.extraction_serialize_initkex_size_1
   (c13 : Slice Std.U8) (out1 : Slice Std.U8) (lo_ok : Bool) (hi_ok : Bool) :
   RustM (Std.Usize × (Slice Std.U8))
@@ -413,7 +301,7 @@ def transport.extraction_serialize_initkex_size_1
   else ok (0#usize, out1)
 
 /-- [beaconcrypt_parse::transport::extraction_serialize_initkex_size_0]:
-    Source: 'beaconcrypt-parse/src/extraction_registration_transport.rs', lines 5061:0-5172:1 -/
+    Source: 'beaconcrypt-parse/src/extraction_registration_transport.rs', lines 4382:0-4493:1 -/
 def transport.extraction_serialize_initkex_size_0
   (c12 : Slice Std.U8) (out1 : Slice Std.U8) (lo_ok : Bool) (hi_ok : Bool) :
   RustM (Std.Usize × (Slice Std.U8))
@@ -469,7 +357,7 @@ def transport.extraction_serialize_initkex_size_0
   else ok (0#usize, out1)
 
 /-- [beaconcrypt_parse::transport::extraction_serialize_initkex]:
-    Source: 'beaconcrypt-parse/src/extraction_registration_transport.rs', lines 4485:0-4778:1
+    Source: 'beaconcrypt-parse/src/extraction_registration_transport.rs', lines 3877:0-4099:1
     Visibility: public -/
 def transport.extraction_serialize_initkex
   (c : transport.initkex) (out : Slice Std.U8) :
@@ -477,8 +365,7 @@ def transport.extraction_serialize_initkex
   := do
   let pcount := Array.repeat 1#usize 0#u64
   let psize := Array.repeat 1#usize 0#usize
-  let (_, (_, (c12, (c13, (c14, (c15, (c16, c26))))))) ←
-    transport.initkex_left c
+  let (_, (_, (c12, (c13, (c14, c24))))) ← transport.initkex_left c
   let count ← Array.index_usize pcount 0#usize
   if count < 18446744073709551615#u64
   then
@@ -486,7 +373,7 @@ def transport.extraction_serialize_initkex
     let ((_out0, out1), split_at_mut_back) ←
       core.slice.Slice.split_at_mut out size
     let c3 ←
-      cbordetver.cbor_det_mk_int64 cbordetver.cbor_det_int_kind.UInt64 2#u64
+      cbordetver.cbor_det_mk_int64 cbordetver.cbor_det_int_kind.UInt64 3#u64
     let (res, out11) ← cbordetver.cbor_det_serialize c3 out1
     let size1 ←
       match res with
@@ -603,13 +490,13 @@ def transport.extraction_serialize_initkex
                         let out6 := split_at_mut_back4 (_out04, out19)
                         let ((_out05, out110), split_at_mut_back5) ←
                           core.slice.Slice.split_at_mut out6 size6
-                        let len3 ← core.slice.Slice.len c15
+                        let len3 ← core.slice.Slice.len c24
                         let lo_ok3 ←
                           cbordetveraux.u64_lte_sizet 1249#u64 len3
                         let hi_ok3 ←
                           cbordetveraux.sizet_lte_u64 len3 1249#u64
                         let (size15, out111) ←
-                          transport.extraction_serialize_initkex_size_3 c15
+                          transport.extraction_serialize_initkex_size_3 c24
                             out110 lo_ok3 hi_ok3
                         if size15 = 0#usize
                         then
@@ -619,80 +506,11 @@ def transport.extraction_serialize_initkex
                           let i10 ← core.num.U64.wrapping_add count4 1#u64
                           let pcount6 ← Array.update pcount5 0#usize i10
                           let i11 ← core.num.Usize.wrapping_add size6 size15
-                          let (_, index_mut_back5) ←
-                            Array.index_mut_usize psize5 0#usize
+                          let psize6 ← Array.update psize5 0#usize i11
+                          let size7 ← Array.index_usize psize6 0#usize
                           let count5 ← Array.index_usize pcount6 0#usize
-                          if count5 < 18446744073709551615#u64
-                          then
-                            let psize6 := index_mut_back5 i11
-                            let size7 ← Array.index_usize psize6 0#usize
-                            let out7 := split_at_mut_back5 (_out05, out111)
-                            let ((_out06, out112), split_at_mut_back6) ←
-                              core.slice.Slice.split_at_mut out7 size7
-                            let len4 ← core.slice.Slice.len c16
-                            let lo_ok4 ←
-                              cbordetveraux.u64_lte_sizet 1952#u64 len4
-                            let hi_ok4 ←
-                              cbordetveraux.sizet_lte_u64 len4 1952#u64
-                            let (size16, out113) ←
-                              transport.extraction_serialize_initkex_size_4 c16
-                                out112 lo_ok4 hi_ok4
-                            if size16 = 0#usize
-                            then
-                              let out8 := split_at_mut_back6 (_out06, out113)
-                              ok (0#usize, out8)
-                            else
-                              let i12 ←
-                                core.num.U64.wrapping_add count5 1#u64
-                              let pcount7 ← Array.update pcount6 0#usize i12
-                              let i13 ←
-                                core.num.Usize.wrapping_add size7 size16
-                              let (_, index_mut_back6) ←
-                                Array.index_mut_usize psize6 0#usize
-                              let count6 ← Array.index_usize pcount7 0#usize
-                              if count6 < 18446744073709551615#u64
-                              then
-                                let psize7 := index_mut_back6 i13
-                                let size8 ← Array.index_usize psize7 0#usize
-                                let out8 := split_at_mut_back6 (_out06, out113)
-                                let ((_out07, out114), split_at_mut_back7) ←
-                                  core.slice.Slice.split_at_mut out8 size8
-                                let len5 ← core.slice.Slice.len c26
-                                let lo_ok5 ←
-                                  cbordetveraux.u64_lte_sizet 3309#u64 len5
-                                let hi_ok5 ←
-                                  cbordetveraux.sizet_lte_u64 len5 3309#u64
-                                let (size17, out115) ←
-                                  transport.extraction_serialize_initkex_size_5
-                                    c26 out114 lo_ok5 hi_ok5
-                                if size17 = 0#usize
-                                then
-                                  let out9 :=
-                                    split_at_mut_back7 (_out07, out115)
-                                  ok (0#usize, out9)
-                                else
-                                  let i14 ←
-                                    core.num.U64.wrapping_add count6 1#u64
-                                  let pcount8 ←
-                                    Array.update pcount7 0#usize i14
-                                  let i15 ←
-                                    core.num.Usize.wrapping_add size8 size17
-                                  let psize8 ←
-                                    Array.update psize7 0#usize i15
-                                  let size9 ←
-                                    Array.index_usize psize8 0#usize
-                                  let count7 ←
-                                    Array.index_usize pcount8 0#usize
-                                  let out9 :=
-                                    split_at_mut_back7 (_out07, out115)
-                                  registration_serializer_primitive.serializeArray count7
-                                    out9 size9
-                              else
-                                let out8 := split_at_mut_back6 (_out06, out113)
-                                ok (0#usize, out8)
-                          else
-                            let out7 := split_at_mut_back5 (_out05, out111)
-                            ok (0#usize, out7)
+                          let out7 := split_at_mut_back5 (_out05, out111)
+                          registration_serializer_primitive.serializeArray count5 out7 size7
                       else
                         let out6 := split_at_mut_back4 (_out04, out19)
                         ok (0#usize, out6)
@@ -710,7 +528,7 @@ def transport.extraction_serialize_initkex
   else ok (0#usize, out)
 
 /-- [beaconcrypt_parse::transport::extraction_serialize_kexresponse_size_3]:
-    Source: 'beaconcrypt-parse/src/extraction_registration_transport.rs', lines 6267:0-6422:1 -/
+    Source: 'beaconcrypt-parse/src/extraction_registration_transport.rs', lines 5266:0-5421:1 -/
 def transport.extraction_serialize_kexresponse_size_3
   (c26 : Slice Std.U8) (out1 : Slice Std.U8) (lo_ok : Bool) (hi_ok : Bool) :
   RustM (Std.Usize × (Slice Std.U8))
@@ -766,7 +584,7 @@ def transport.extraction_serialize_kexresponse_size_3
   else ok (0#usize, out1)
 
 /-- [beaconcrypt_parse::transport::extraction_serialize_kexresponse_size_2]:
-    Source: 'beaconcrypt-parse/src/extraction_registration_transport.rs', lines 6129:0-6266:1 -/
+    Source: 'beaconcrypt-parse/src/extraction_registration_transport.rs', lines 5128:0-5265:1 -/
 def transport.extraction_serialize_kexresponse_size_2
   (c14 : Slice Std.U8) (out1 : Slice Std.U8) (lo_ok : Bool) (hi_ok : Bool) :
   RustM (Std.Usize × (Slice Std.U8))
@@ -822,7 +640,7 @@ def transport.extraction_serialize_kexresponse_size_2
   else ok (0#usize, out1)
 
 /-- [beaconcrypt_parse::transport::extraction_serialize_kexresponse_size_1]:
-    Source: 'beaconcrypt-parse/src/extraction_registration_transport.rs', lines 6006:0-6128:1 -/
+    Source: 'beaconcrypt-parse/src/extraction_registration_transport.rs', lines 5005:0-5127:1 -/
 def transport.extraction_serialize_kexresponse_size_1
   (c13 : Slice Std.U8) (out1 : Slice Std.U8) (lo_ok : Bool) (hi_ok : Bool) :
   RustM (Std.Usize × (Slice Std.U8))
@@ -878,7 +696,7 @@ def transport.extraction_serialize_kexresponse_size_1
   else ok (0#usize, out1)
 
 /-- [beaconcrypt_parse::transport::extraction_serialize_kexresponse_size_0]:
-    Source: 'beaconcrypt-parse/src/extraction_registration_transport.rs', lines 5894:0-6005:1 -/
+    Source: 'beaconcrypt-parse/src/extraction_registration_transport.rs', lines 4893:0-5004:1 -/
 def transport.extraction_serialize_kexresponse_size_0
   (c12 : Slice Std.U8) (out1 : Slice Std.U8) (lo_ok : Bool) (hi_ok : Bool) :
   RustM (Std.Usize × (Slice Std.U8))
@@ -934,7 +752,7 @@ def transport.extraction_serialize_kexresponse_size_0
   else ok (0#usize, out1)
 
 /-- [beaconcrypt_parse::transport::extraction_serialize_kexresponse]:
-    Source: 'beaconcrypt-parse/src/extraction_registration_transport.rs', lines 4779:0-5060:1
+    Source: 'beaconcrypt-parse/src/extraction_registration_transport.rs', lines 4100:0-4381:1
     Visibility: public -/
 def transport.extraction_serialize_kexresponse
   (c : transport.kexresponse) (out : Slice Std.U8) :
@@ -951,7 +769,7 @@ def transport.extraction_serialize_kexresponse
     let ((_out0, out1), split_at_mut_back) ←
       core.slice.Slice.split_at_mut out size
     let c3 ←
-      cbordetver.cbor_det_mk_int64 cbordetver.cbor_det_int_kind.UInt64 2#u64
+      cbordetver.cbor_det_mk_int64 cbordetver.cbor_det_int_kind.UInt64 3#u64
     let (res, out11) ← cbordetver.cbor_det_serialize c3 out1
     let size1 ←
       match res with
@@ -1163,7 +981,7 @@ def transport.extraction_serialize_kexresponse
   else ok (0#usize, out)
 
 /-- [beaconcrypt_parse::extraction_encode_init]:
-    Source: 'beaconcrypt-parse/src/lib.rs', lines 154:0-168:1
+    Source: 'beaconcrypt-parse/src/lib.rs', lines 152:0-164:1
     Visibility: public -/
 def extraction_encode_init
   (init : transport.initkex) (output : Slice Std.U8) :
@@ -1173,18 +991,16 @@ def extraction_encode_init
   let i1 ← core.slice.Slice.len init.pre_key
   let i2 ← core.slice.Slice.len init.one_time_key
   let i3 ← core.slice.Slice.len init.pq_key
-  let i4 ← core.slice.Slice.len init.mldsa_public_key
-  let i5 ← core.slice.Slice.len init.signature
   let o ←
     beaconcrypt_core.transport.encoded_init_len
-      (Array.make 6#usize [ i, i1, i2, i3, i4, i5 ])
+      (Array.make 4#usize [ i, i1, i2, i3 ])
   let b ← core.option.Option.is_none o
   if b
   then ok (0#usize, output)
   else transport.extraction_serialize_initkex init output
 
 /-- [beaconcrypt_parse::extraction_encode_response]:
-    Source: 'beaconcrypt-parse/src/lib.rs', lines 169:0-185:1
+    Source: 'beaconcrypt-parse/src/lib.rs', lines 165:0-181:1
     Visibility: public -/
 def extraction_encode_response
   (response : transport.kexresponse) (output : Slice Std.U8) :

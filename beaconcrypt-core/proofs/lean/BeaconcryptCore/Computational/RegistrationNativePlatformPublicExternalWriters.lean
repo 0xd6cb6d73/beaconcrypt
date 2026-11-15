@@ -62,17 +62,17 @@ theorem writer_bound (reserve : Usize → StateT Platform ProbComp (core.result.
       StateT.run_map, total_map_iff] using bounded capacity before
   | encodeInit packet output | encodeResponse packet output => trivial
 
-/-- The complete actual Init source writer pays one6757 reservation, including its failure, under the NEW local external-coin interface. -/
+/-- The complete actual Init source writer pays one1490 reservation, including its failure, under the NEW local external-coin interface. -/
 theorem init_bound (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E))
     (cap : Nat) (bounded : ∀ amount before, ((reserve amount).run before).IsTotalQueryBound cap)
-    (view : registration.SignedInitView) (before : Platform) :
+    (view : registration.InitView) (before : Platform) :
     ((simulateQ (writer (n := n) (KemSK := KemSK) (RegistrationNativePlatformConcreteSource.writer reserve))
       (AdapterRegistrationWriterRequestExtraction.encodeInit (E := E) (m := AdapterRegistrationWriterRequestMonad.Program E)
         (RegistrationNativePlatformWriter.initPacket view)).run).run before).IsQueryBoundP (IsLocalExternal (KemSK := KemSK)) cap := by
   rw [writer_program]
   apply platform_bound
   rw [RegistrationNativePlatformConcreteSource.init_writer]
-  simpa only [StateT.run_map, total_map_iff] using bounded 6757#usize before
+  simpa only [StateT.run_map, total_map_iff] using bounded 1490#usize before
 
 /-- Every admitted or refused actual Response source writer pays at most its one capacity reservation and retains the failure/P state. -/
 theorem response_bound (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E))

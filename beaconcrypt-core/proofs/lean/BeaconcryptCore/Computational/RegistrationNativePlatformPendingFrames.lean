@@ -161,7 +161,7 @@ theorem finish (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire) (
 /-- The literal nested corrected Platform finish inherits that exact pending frame at its actual native/platform poststates. -/
 theorem native_finish (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire) (index : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire) (index : Nat)
     (packet : Option registration.ResponsePacket)
     (before after : RegistrationNativeExperiment.State n KemSK source) (previous next : Platform) (reply : RustM (Option Pqxdh.Bytes))
     (supported : ((reply, after), next) ∈ support
@@ -194,11 +194,14 @@ private theorem server_frame (work : StateT (RegistrationServerFrontendCompiler.
 
 variable {E : Type} [primitive : BeaconcryptCore.Refinement.AdapterSealPrimitive.Operations]
 
+attribute [local irreducible] RegistrationNativePlatformSourceAccept.accept
+  RegistrationNativePlatformSourceSeal.build
+
 /-- Every actual corrected typed callback except bundle transports exact pending capabilities backwards, including stateful source accept/build and assigned-ID finish. -/
 theorem handler (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
     (reserveRegistration reservePeer : StateT Platform ProbComp Bool) (erased : commitment.CommitmentTranscript)

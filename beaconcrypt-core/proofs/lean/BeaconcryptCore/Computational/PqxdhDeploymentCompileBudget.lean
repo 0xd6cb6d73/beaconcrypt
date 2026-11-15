@@ -34,8 +34,10 @@ def unit (kind target : SourceKind) : Nat := if kind = target then 1 else 0
 def cost (kind : SourceKind) : Fin 12 → Nat :=
   ![unit kind (.inl 0), unit kind (.inl 1), unit kind (.inl 2), unit kind (.inl 3), unit kind (.inl 4),
     unit kind (.inl 5), unit kind (.inl 6), unit kind (.inl 7),
-    unit kind (.inl 8) + unit kind (.inl 7), unit kind (.inl 8) + unit kind (.inl 7),
-    unit kind (.inr 4) + unit kind (.inl 7), unit kind (.inr 4) + unit kind (.inl 7)]
+    unit kind (.inl 8) + unit kind (.inl 7) + unit kind (.inl 7),
+    unit kind (.inl 8) + unit kind (.inl 7) + unit kind (.inl 7),
+    unit kind (.inr 4) + unit kind (.inl 7) + unit kind (.inl 7),
+    unit kind (.inr 4) + unit kind (.inl 7) + unit kind (.inl 7)]
 
 /-- Locally answered record primitives issue one BLAKE2b command per commitment hash and nothing else. -/
 theorem local_bound {Result : Type} (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -144,6 +146,16 @@ theorem server_hashes (senderId : Unit → Std.U64) (route : RawCtxServerRouting
   · exact RawCtxServerMixed.send_bound senderId plaintext kid state .hash
   · exact RawCtxServerMixed.raw_bound route decode raw state .hash
 
+/-- A Server record command of the per-peer router (`MldsaServerRouting.handler`, each peer under its own associated data) issues at most one BLAKE2b commitment query. -/
+theorem router_hashes (senderId : Unit → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
+    (decode : RawCtxReceive.FrameDecoder) (query : RawCtxServerMixed.SourceSpec.Domain)
+    (state : RawCtxServerRouting.State Unit PqxdhTranscriptAd.AssociatedData) :
+    ((MldsaServerRouting.handler PqxdhRefinement.absBytes senderId route decode query).run state).IsQueryBoundP
+      (fun request => RawCtxMixedOwner.callKind request = .hash) 1 := by
+  rcases query with ⟨plaintext, kid⟩ | raw
+  · exact MldsaServerRouting.send_bound PqxdhRefinement.absBytes senderId plaintext kid state .hash
+  · exact MldsaServerRouting.raw_bound PqxdhRefinement.absBytes route decode raw state .hash
+
 /-- A Beacon record command issues at most one BLAKE2b commitment query. -/
 theorem beacon_hashes {I D K : Type} (decode : RawCtxReceive.FrameDecoder) (query : RawCtxMixedOwner.SourceSpec.Domain)
     (state : RawCtxBeaconLifecycle.State I D K) :
@@ -173,37 +185,54 @@ theorem ownerKernel_bound (kind : SourceKind) (copies : Local) (index : Nat) :
   | some current => trivial
   | none => exact single_bound kind (.inr (index, .kernel)) _ (unit kind (.inr 4)) (le_refl _)
 
-/-- A compiled Server record command costs at most one Server kernel reveal and one BLAKE2b query. -/
+/-- The copy's forwarded transcript hash costs at most one BLAKE2b query. -/
+theorem copyData_bound (kind : SourceKind) (kernel : Option PqxdhDeploymentCompile.Kernel)
+    (transcript : Option Pqxdh.Bytes) :
+    (PqxdhDeploymentCompile.copyData (KemSK := KemSK) kernel transcript).IsQueryBoundP
+      (fun request => sourceKind (KemSK := KemSK) request = kind) (unit kind (.inl 7)) := by
+  unfold PqxdhDeploymentCompile.copyData
+  rcases kernel with _ | current <;> rcases transcript with _ | bytes
+  · trivial
+  · trivial
+  · trivial
+  · exact single_bound kind (.inl (.inr (.hash bytes))) _ (unit kind (.inl 7)) (le_refl _)
+
+/-- A compiled Server record command costs at most one Server kernel reveal and two BLAKE2b queries: the copy's forwarded transcript hash and the record commitment hash. -/
 theorem serverLocal_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (kind : SourceKind) (query : RawCtxServerMixed.SourceSpec.Domain)
     (copies : Local) :
     ((PqxdhDeploymentCompile.serverLocal setup codec route query).run copies).IsQueryBoundP
-      (fun request => sourceKind (KemSK := KemSK) request = kind) (unit kind (.inl 8) + unit kind (.inl 7)) := by
+      (fun request => sourceKind (KemSK := KemSK) request = kind)
+      (unit kind (.inl 8) + unit kind (.inl 7) + unit kind (.inl 7)) := by
   cases target : PqxdhDeploymentCompile.serverTarget route query with
   | none =>
       rw [PqxdhDeploymentCompileRecords.serverLocal_none setup codec route query copies target, isQueryBoundP_map_iff]
-      have bound := local_bound setup codec kind _ 1 (logged_bound _ _ 1 [] (server_hashes (fun _ => setup.serverKeyId)
-        route codec.frameRead query (PqxdhDeploymentCompile.localServer codec copies.log 0#u64 none copies.serverRaw)))
+      have bound := local_bound setup codec kind _ 1 (logged_bound _ _ 1 [] (router_hashes (fun _ => setup.serverKeyId)
+        route codec.frameRead query (PqxdhDeploymentCompile.localServer codec copies.log 0#u64 none none copies.serverRaw)))
       exact bound.mono (by omega)
   | some kid =>
-      rw [PqxdhDeploymentCompileRecords.serverLocal_some setup codec route query copies kid target]
+      rw [PqxdhDeploymentCompileRecords.serverLocal_some setup codec route query copies kid target, Nat.add_assoc]
       refine isQueryBoundP_bind (peerKernel_bound kind copies kid) fun kernel _ => ?_
+      refine isQueryBoundP_bind (copyData_bound kind kernel _) fun associatedData _ => ?_
       rw [isQueryBoundP_map_iff]
-      have bound := local_bound setup codec kind _ 1 (logged_bound _ _ 1 [] (server_hashes (fun _ => setup.serverKeyId)
-        route codec.frameRead query (PqxdhDeploymentCompile.localServer codec copies.log kid kernel copies.serverRaw)))
+      have bound := local_bound setup codec kind _ 1 (logged_bound _ _ 1 [] (router_hashes (fun _ => setup.serverKeyId)
+        route codec.frameRead query (PqxdhDeploymentCompile.localServer codec copies.log kid kernel associatedData
+          copies.serverRaw)))
       exact bound.mono (by omega)
 
-/-- A compiled Beacon record command costs at most one established-kernel read and one BLAKE2b query. -/
+/-- A compiled Beacon record command costs at most one established-kernel read and two BLAKE2b queries: the copy's forwarded transcript hash and the record commitment hash. -/
 theorem beaconLocal_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (kind : SourceKind)
     (index : Nat) (query : RawCtxMixedOwner.SourceSpec.Domain) (copies : Local) :
     ((PqxdhDeploymentCompile.beaconLocal setup codec index query).run copies).IsQueryBoundP
-      (fun request => sourceKind (KemSK := KemSK) request = kind) (unit kind (.inr 4) + unit kind (.inl 7)) := by
+      (fun request => sourceKind (KemSK := KemSK) request = kind)
+      (unit kind (.inr 4) + unit kind (.inl 7) + unit kind (.inl 7)) := by
   by_cases inside : index < copies.log.owners.length
-  · rw [PqxdhDeploymentCompileRecords.beaconLocal_present setup codec index query copies inside]
+  · rw [PqxdhDeploymentCompileRecords.beaconLocal_present setup codec index query copies inside, Nat.add_assoc]
     refine isQueryBoundP_bind (ownerKernel_bound kind copies index) fun kernel _ => ?_
+    refine isQueryBoundP_bind (copyData_bound kind kernel _) fun associatedData _ => ?_
     rw [isQueryBoundP_map_iff]
     have bound := local_bound setup codec kind _ 1 (logged_bound _ _ 1 [] (beacon_hashes codec.frameRead query
-      (PqxdhDeploymentCompile.localOwner codec copies.log index kernel (copies.ownerRaw index))))
+      (PqxdhDeploymentCompile.localOwner codec copies.log index kernel associatedData (copies.ownerRaw index))))
     exact bound.mono (by omega)
   · rw [PqxdhDeploymentCompileRecords.beaconLocal_absent setup codec index query copies inside]
     trivial
@@ -323,3 +352,13 @@ end BeaconcryptCore.Computational.PqxdhDeploymentCompileBudget
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentCompileBudget.compile_bound
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentCompileBudget.copyData_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentCompileBudget.copyData_bound
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentCompileBudget.router_hashes' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentCompileBudget.router_hashes

@@ -41,9 +41,54 @@ class DelayedResponseChecks(unittest.TestCase):
         CHECKER.validate_targets()
         self.assertEqual(
             [t.cls for t in CHECKER.TARGETS],
-            ["security"] * 2 + ["witness"] + ["negative-control"] * 2,
+            ["security"] * 2
+            + ["witness", "differential-control", "negative-control"]
+            + ["differential-control", "negative-control"],
         )
-        self.assertEqual(sum(len(t.results) for t in CHECKER.TARGETS), 7)
+        self.assertEqual(sum(len(t.results) for t in CHECKER.TARGETS), 9)
+
+    def test_assigned_id_counterfactual_changes_only_the_two_ad_fields(self):
+        for filename in ("delayed-response-wrong-binding.pvl", "delayed-response.pvl"):
+            with self.subTest(filename):
+                source = (CHECKER.HERE / filename).read_text()
+                derived = CHECKER.MODELS.ad_omits_assigned_id(source)
+                constant = CHECKER.MODELS.COUNTERFACTUAL_ASSIGNED
+                self.assertEqual(
+                    derived.replace(constant + ") in", "assigned) in", 1)
+                    .replace(constant + "\n  ) in", "assigned_key_id\n  ) in", 1)
+                    .replace(
+                        "(* Counterfactual control only: the transcript AD omits the assigned ID. *)\n"
+                        f"const {constant}: key_id.\n",
+                        "",
+                    ),
+                    source,
+                )
+                with self.assertRaises(ValueError):
+                    CHECKER.MODELS.ad_omits_assigned_id(derived)
+                with self.assertRaises(ValueError):
+                    CHECKER.MODELS.ad_omits_assigned_id(
+                        source.replace(
+                            "ciphertext,assigned) in", "ciphertext,root) in", 1
+                        )
+                    )
+
+    def test_counterfactual_pair_differs_only_in_the_binding_check(self):
+        targets = {target.name: target for target in CHECKER.TARGETS}
+        positive = targets["A1-delayed-ad-omits-assigned-id"]
+        negative = targets["A1-C-binding-ad-omits-assigned-id"]
+        self.assertEqual(
+            positive.libraries()[-1], CHECKER.MODELS.COUNTERFACTUAL_BINDING_LIBRARY
+        )
+        self.assertEqual(
+            negative.libraries()[-1], CHECKER.MODELS.COUNTERFACTUAL_LIBRARY
+        )
+        self.assertEqual(positive.libraries()[:-1], negative.libraries()[:-1])
+        self.assertEqual(positive.query, targets["A1-delayed"].query)
+        self.assertEqual(positive.results, targets["A1-delayed"].results)
+        self.assertEqual(positive.process, targets["A1-delayed"].process)
+        self.assertEqual(
+            negative.results[0].replace(" is false.", " is true."), positive.results[0]
+        )
 
     def test_lexical_token_identity(self):
         self.assertEqual(

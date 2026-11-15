@@ -343,11 +343,17 @@ theorem split_build (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   rcases found : state.1.pending session with _ | token
   · simp only [PqxdhServerAuthNative.native_pure_run, map_pure, simulateQ_pure, StateT.run_pure]
     rfl
-  · simp only [PqxdhServerAuthNative.native_bind_run, PqxdhServerAuthNative.nativeCoins,
-      PqxdhServerAuthNative.nativeSet, buildService_native, bind_pure_comp,
-      simulateQ_map, StateT.run_map, tableAt_liftComp, Functor.map_map, PqxdhServerAuthNative.native_map_run,
-      PqxdhServerAuthNative.localState, map_pure, nativeResponse]
-    rfl
+  · rcases pre : PqxdhServerRegistrationPublication.prehash state.1.server token.pending payload with _ | prepared
+    · simp only [pre, PqxdhServerAuthNative.native_bind_run, PqxdhServerAuthNative.nativeSet,
+        PqxdhServerAuthNative.localState, PqxdhServerAuthNative.native_pure_run, pure_bind, map_pure,
+        simulateQ_pure, StateT.run_pure]
+      rfl
+    · simp only [pre, PqxdhServerAuthNative.native_bind_run, PqxdhServerAuthNative.nativeHash,
+        PqxdhServerAuthNative.nativeCoins, PqxdhServerAuthNative.nativeSet,
+        buildService_native, bind_pure_comp, simulateQ_bind, simulateQ_map, StateT.run_bind, StateT.run_map,
+        tableAt_liftComp, Functor.map_map, PqxdhServerAuthNative.native_map_run, PqxdhServerAuthNative.localState,
+        map_pure, nativeResponse, map_bind, bind_map_left, pure_bind]
+      rfl
 
 /-- The source's continuation after a Beacon root, on the prepared state with the opaque handle, is the native continuation of `PqxdhPhase2DhRootConsumer` on the embedded prepared state: both read only the response and the cleared metadata. -/
 theorem afterRoot_embed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)

@@ -17,7 +17,7 @@ variable {ι KemSK : Type} {base : OracleSpec ι} {n : Nat} {source : Registrati
 /-- Every actual successful constructor appends its configured binding, and failure appends nothing. -/
 theorem typed_create_pins (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : PqxdhBeaconPhase2Preparation.Word32) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (before : State n KemSK source) (reply : RustM (Option Nat)) (after : State n KemSK source)
     (supported : (reply, after) ∈ support ((RegistrationNativeExperiment.beacon setup checks representation created
@@ -54,7 +54,7 @@ def advance (before : List (PqxdhBeaconPhase2Preparation.Word32 × U64)) :
 theorem raw_create_pins (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (edPin mlPin : Pqxdh.Bytes) (keyId : U64) (before : State n KemSK source)
     (reply : Option Nat) (after : State n KemSK source)
     (supported : (reply, after) ∈ support ((native setup checks wire route representation created credential
@@ -89,7 +89,7 @@ theorem raw_create_pins (setup : Setup base KemSK) (checks : Checks) (wire : Reg
 private theorem noncreate_pins (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (query : RegistrationNativeInterface.Spec.Domain) (quiet : RegistrationNativeLedgerCaps.coreKind query ≠ 1)
     (before : State n KemSK source) (reply : RegistrationNativeInterface.Spec.Range query) (after : State n KemSK source)
     (supported : (reply, after) ∈ support ((native setup checks wire route representation created credential query).run before)) :
@@ -107,7 +107,7 @@ private theorem noncreate_pins (setup : Setup base KemSK) (checks : Checks) (wir
 theorem raw_step (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (query : RegistrationNativeInterface.Spec.Domain) (before : State n KemSK source)
     (reply : RegistrationNativeInterface.Spec.Range query) (after : State n KemSK source)
     (supported : (reply, after) ∈ support ((native setup checks wire route representation created credential query).run before)) :

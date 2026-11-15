@@ -65,13 +65,7 @@ theorem outgoing_safe (setup : PqxdhServerAuthExperiment.Setup base KemSK) (inde
   cases query with
   | inl query => cases query with
     | hash request => exact effect_safe _ trivial
-    | sign request payload digest =>
-        unfold RegistrationNativeBeaconFrontend.outgoing
-        apply bind_safe _ _ (sample_safe _)
-        intro reply
-        apply bind_safe _ _ (fun _ _ => allQueriesSatisfy_pure _ _)
-        intro _
-        exact pure_safe reply
+    | sign request payload digest => exact pure_safe _
   | inr request =>
       simp only [RegistrationNativeBeaconFrontend.outgoing]
       split
@@ -113,14 +107,14 @@ theorem publication_safe (setup : PqxdhServerAuthExperiment.Setup base KemSK) (i
         (fun query => RegistrationNativePlatformGenericBundle.liftLegacy RegistrationNativePlatformGenericBundle.trustedLift
           (RegistrationNativeBeaconFrontend.outgoing setup source index owner query))
         (RegistrationNativePlatformGenericBundle.encoder E) ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin owner.mldsa.publicKey) := by
-  rw [← RegistrationNativePlatformFrontend.publication_tree setup index owner _ _ _ _ _]
+        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin) := by
+  rw [← RegistrationNativePlatformFrontend.publication_tree setup index owner _ _ _ _]
   exact RegistrationNativePlatformFrontend.simulate_work _ _ (joint_safe setup index owner) _
 
 
 variable (coins : QueryImpl unifSpec (StateT Platform ProbComp))
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
 
 theorem query_snapshot (query : (RegistrationNativePlatformGenericBundle.Spec E n KemSK).Domain)

@@ -39,7 +39,7 @@ private theorem map_apply {S V W : Type} {m : Type → Type} [Monad m] [LawfulMo
 
 variable (coins : QueryImpl unifSpec (StateT P ProbComp))
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 
 noncomputable def uniform : QueryImpl unifSpec SourceM :=fun query =>
   AdapterBeaconConstructorNative.lift coins setup checks representation created

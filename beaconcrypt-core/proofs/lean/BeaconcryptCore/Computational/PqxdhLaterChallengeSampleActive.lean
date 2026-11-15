@@ -6,7 +6,10 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeSampleActive
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily
 open PqxdhKemIndCca PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma
 open PqxdhPhase2GeneratedDriver PqxdhAuthenticatedRootExperiment PqxdhPhase1AcceptanceOracle
@@ -47,7 +50,7 @@ theorem reached_active (start : Input) (output : HmacBlock) (depth : Nat)
     (owner : RawCtxProtocolReveals.Owner S (B + 1)) (number : U64) (bit : Bool)
     (adversary : PqxdhInitialBuilderContext.BuildResult → OracleComp (PqxdhFirstRecordConfidentiality.AdvSpec (SelectorSpec baseSpec) S (B + 1)) Bool)
     (pending : Pending) (details : Details) (cache after : CtxRO.QueryCache)
-    (reached : PqxdhLaterChallengeSampleChronology.Reached original callbacks baseImpl kem attachedVerify primitives secret challenge
+    (reached : PqxdhLaterChallengeSampleChronology.Reached (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge
       start output depth owner number bit adversary pending details cache after)
     (classified : PqxdhLaterChallengeSavedClassification.phase (some details) = .inside) :
     ∃ (front : Front) (history : Trace),
@@ -58,26 +61,26 @@ theorem reached_active (start : Input) (output : HmacBlock) (depth : Nat)
         (RawCtxForwardScan.scan PqxdhInitialForwardPost.selected (PqxdhInitialNativeAuditCarried.selected depth)
           (native_selection depth)
           (PqxdhLaterChallengeSampleChronology.native original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth)
-          (PqxdhInitialOriginForwardPost.program
+          (PqxdhInitialOriginForwardPost.program (completedBinding := completedBinding)
             (PqxdhInitialSelectedOrigin.mark (env).source start.selectedMessage) (env).senderId (env).route (env).decode
             ((PqxdhRecordConfidentialityChallenge.handler owner number bit details.request.query).run details.request.before) front history)
-          (PqxdhInitialOriginForwardPost.program_covered
+          (PqxdhInitialOriginForwardPost.program_covered (completedBinding := completedBinding)
             (PqxdhInitialSelectedOrigin.mark (env).source start.selectedMessage) (env).senderId (env).route (env).decode
             ((PqxdhRecordConfidentialityChallenge.handler owner number bit details.request.query).run details.request.before) front history)
           (attach pending.2 after)) := by
   obtain ⟨built, backend, front, history, ambient, initialized, traced, captured⟩ := reached
-  have unchanged := (PqxdhLaterChallengeInsideFirst.cut_start _ _ _ _ owner number bit details classified
+  have unchanged := (PqxdhLaterChallengeInsideFirst.cut_start (completedBinding := completedBinding) _ _ _ _ owner number bit details classified
     _ _ _ front history ambient (attach pending.2 after) captured).1
   subst ambient
   simp only [PqxdhLaterChallengeSampleChronology.native, PqxdhNativeSharedPrefix.initial_source] at initialized traced
-  have first := PqxdhLaterChallengePrefixCache.builder_invariant (env).source (env).recordWriter (depth + 1)
+  have first := PqxdhLaterChallengePrefixCache.builder_invariant (associatedData := associatedData) (completedBinding := completedBinding) (env).source (env).recordWriter (depth + 1)
     start.selectedMessage zeroRoot (RawCtxSelectedInitialConstructor.response64 output)
     (fun query => localLift (pre query)) (fun value => localLift (application value))
     (fun query => localLift (selector query)) (fun query => localLift (aux query))
     (env).senderId (env).route (env).decode owner start.index start.metadata { start.ready with root := zeroRoot }
     start.before (attach (PqxdhPreparedSharedPrefix.state original start output) cache) (built, backend)
     (by simpa only [PqxdhInitialSourceExperiment.execution, withPost] using initialized)
-  have current := PqxdhLaterChallengePrefixCache.reaches_invariant (env).source (env).recordWriter (depth + 1)
+  have current := PqxdhLaterChallengePrefixCache.reaches_invariant (completedBinding := completedBinding) (env).source (env).recordWriter (depth + 1)
     start.selectedMessage zeroRoot (RawCtxSelectedInitialConstructor.response64 output)
     (fun query => localLift (pre query)) (fun value => localLift (application value))
     (fun query => localLift (selector query)) (fun query => localLift (aux query))

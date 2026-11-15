@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationServerNativeSource
 import BeaconcryptCore.Computational.RegistrationAuthenticationCompiler
 
-/-! The actual SDK Server wrapper retains its outer allocator and moved-capability order. Incoming native authentication updates the shared World first; private replay lookup and registration reservation precede agreement. Building consumes the handle before conversion, pin, size, occupancy or reservation failure. Actual complete response sizing and peer occupancy precede peer reservation, then the existing initial-record/signing/publication controller runs. This is a concrete source interpreter, not a cryptographic replacement of its known kernels. -/
+/-! The actual SDK Server wrapper retains its outer allocator and moved-capability order. Incoming native authentication updates the shared World first; private replay lookup and registration reservation precede agreement. Building consumes the handle before conversion, pin, size, occupancy or reservation failure. Actual complete response sizing and peer occupancy precede transcript AD hashing; its actual digest completes the binding before peer reservation and the initial-record/signing/publication controller. This is a concrete source interpreter, not a cryptographic replacement of its known kernels. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core PqxdhRefinement
@@ -17,7 +17,7 @@ variable {n : Nat} {Value ι KemSK Reader Response : Type} {base : OracleSpec ι
 /-- Registration reservation follows authentication and actual owned replay lookup, before every conversion, KEM or DH primitive. -/
 noncomputable def afterAuthentication (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit) :
     StateT (State n) ProbComp (RustM (Option Nat)) := fun before =>
   if before.consumed.contains (RegistrationReplaySchedule.identifier authenticated) then pure (.ok none, before)
@@ -33,7 +33,7 @@ noncomputable def afterAuthentication (setup : Setup base KemSK) (checks : Check
 noncomputable def accept (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket) :
     StateT (State n) ProbComp (RustM (Option Nat)) := do
   let checked ← RegistrationServerNativeSource.authenticate setup codec route verify created packet
   match checked with
@@ -75,7 +75,32 @@ noncomputable def fromInitial (setup : Setup base KemSK) (codec : Codec Reader R
   let published ← world (RegistrationWorldServerCompletion.fromInitial setup codec sign encode control pending)
   commit published
 
-/-- The actual lookup continuation rejects occupied entries before allocator reservation; reservation precedes both record KDFs. -/
+/-- The response-dependent AD hash updates the same retained World before peer reservation. -/
+noncomputable def adHash (pending : registration.ServerAdHash) :
+    StateT (State n) ProbComp (RustM (core.result.Result registration.ServerInitialKdf pqxdh.ServerState)) :=
+  world (RegistrationWorldServerCompletion.adHash pending)
+
+/-- The reached hash result supplies the digest consumed by the owned initial-record continuation. -/
+theorem adHash_receipt (pending : registration.ServerAdHash) (before after : State n)
+    (initial : registration.ServerInitialKdf)
+    (supported : (.ok (.Ok initial), after) ∈ support ((adHash pending).run before)) :
+    ∃ digest, pending.resume (.Some digest) = .ok (.Ok initial) := by
+  simp only [adHash, world, StateT.run, support_map] at supported
+  obtain ⟨inner, called, same⟩ := supported
+  have value : inner.1 = .ok (.Ok initial) := congrArg Prod.fst same
+  apply RegistrationWorldServerCompletion.adHash_receipt pending before.world inner.2 initial
+  simpa only [StateT.run, ← value, Prod.mk.eta] using called
+
+theorem adHash_history (pending : registration.ServerAdHash) (before after : State n)
+    (reply : RegistrationServerAdHash.Result)
+    (supported : (reply, after) ∈ support ((adHash pending).run before)) :
+    after.world.world.2 = before.world.world.2 := by
+  simp only [adHash, world, StateT.run, support_map] at supported
+  obtain ⟨inner, called, same⟩ := supported
+  have stateEq := congrArg (fun result => result.2.world.world.2) same
+  rw [← stateEq]
+  exact RegistrationWorldServerCompletion.adHash_history pending before.world inner.2 inner.1 called
+
 noncomputable def afterOccupancy (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
     (encode : registration.SignedResponseView → core.option.Option Pqxdh.Bytes)
@@ -85,7 +110,14 @@ noncomputable def afterOccupancy (setup : Setup base KemSK) (codec : Codec Reade
   | .fail error => pure (.fail error)
   | .div => pure .div
   | .ok (.Err _) => pure (.ok none)
-  | .ok (.Ok pending) => if checks.reservePeer then fromInitial setup codec sign encode control pending else pure (.ok none)
+  | .ok (.Ok pending) => do
+    let hashed ← adHash pending
+    match hashed with
+    | .fail error => pure (.fail error)
+    | .div => pure .div
+    | .ok (.Err _) => pure (.ok none)
+    | .ok (.Ok initial) =>
+      if checks.reservePeer then fromInitial setup codec sign encode control initial else pure (.ok none)
 
 /-- Complete-message preflight uses the actual key ID returned by the native lookup, before any occupancy effect. -/
 noncomputable def complete (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -120,7 +152,7 @@ noncomputable def build (setup : Setup base KemSK) (codec : Codec Reader Respons
 /-- A replay rejection performs no registration reservation or agreement callback. -/
 theorem replay_rejected (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (authenticated : registration.AuthenticatedInit) (before : State n)
     (replayed : before.consumed.contains (RegistrationReplaySchedule.identifier authenticated) = true) :
     (afterAuthentication setup checks representation created packet authenticated).run before = pure (.ok none, before) := by
@@ -129,7 +161,7 @@ theorem replay_rejected (setup : Setup base KemSK) (checks : Checks)
 /-- A failed outer registration reservation retains the already-reached authentication World and executes no agreement. -/
 theorem registration_reservation_rejected (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (authenticated : registration.AuthenticatedInit) (before : State n)
     (fresh : before.consumed.contains (RegistrationReplaySchedule.identifier authenticated) = false)
     (refused : checks.reserveRegistration = false) :
@@ -171,15 +203,26 @@ theorem complete_preflight_rejected (setup : Setup base KemSK) (codec : Codec Re
     (complete setup codec checks sign encode token application).run before = pure (.ok none, before) := by
   simp only [complete, StateT.run, looked, requested, refused, Bool.false_eq_true, ite_false]
 
-/-- The outer peer reservation runs only after successful occupancy admission, before any initial-record effect. -/
-theorem peer_reservation_rejected (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
+/-- A refused peer reservation retains the already performed AD-hash effect and its failure result. -/
+theorem peer_reservation_rejected_keeps_hash (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
     (encode : registration.SignedResponseView → core.option.Option Pqxdh.Bytes)
     (control : pqxdh.ServerState) (lookup : peer.CompletionLookup) (occupied : Bool)
-    (pending : registration.ServerInitialKdf) (admitted : lookup.resume occupied = .ok (.Ok pending))
-    (refused : checks.reservePeer = false) (before : State n) :
-    (afterOccupancy setup codec checks sign encode control lookup occupied).run before = pure (.ok none, before) := by
-  simp only [afterOccupancy, admitted, refused, Bool.false_eq_true, ite_false, StateT.run_pure]
+    (pending : registration.ServerAdHash) (admitted : lookup.resume occupied = .ok (.Ok pending))
+    (refused : checks.reservePeer = false) :
+    afterOccupancy (n := n) setup codec checks sign encode control lookup occupied = (do
+      let hashed ← adHash pending
+      match hashed with
+      | .fail error => pure (.fail error)
+      | .div => pure .div
+      | .ok _ => pure (.ok none)) := by
+  simp only [afterOccupancy, admitted]
+  apply bind_congr
+  intro result
+  cases result with
+  | fail error => rfl
+  | div => rfl
+  | ok result => cases result <;> simp only [refused, Bool.false_eq_true, ite_false]
 
 /-- Successful complete-message admission executes exactly the actual occupancy capability and its native continuation, with the reached World preserved. -/
 theorem complete_admitted (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -192,6 +235,7 @@ theorem complete_admitted (setup : Setup base KemSK) (codec : Codec Reader Respo
       let occupied ← (world (RegistrationWorldServerCompletion.capability (.peerPresent keyId))).run before
       (afterOccupancy setup codec checks sign encode before.control lookup occupied.1).run occupied.2) := by
   simp only [complete, StateT.run, looked, requested, admitted, ite_true]
+
 
 end BeaconcryptCore.Computational.RegistrationServerSdkSource
 
@@ -225,13 +269,25 @@ end BeaconcryptCore.Computational.RegistrationServerSdkSource
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationServerSdkSource.complete_preflight_rejected
-/-- info: 'BeaconcryptCore.Computational.RegistrationServerSdkSource.peer_reservation_rejected' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.RegistrationServerSdkSource.peer_reservation_rejected_keeps_hash' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationServerSdkSource.peer_reservation_rejected
+#print axioms BeaconcryptCore.Computational.RegistrationServerSdkSource.peer_reservation_rejected_keeps_hash
 /-- info: 'BeaconcryptCore.Computational.RegistrationServerSdkSource.complete_admitted' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationServerSdkSource.complete_admitted
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationServerSdkSource.adHash_receipt' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationServerSdkSource.adHash_receipt
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationServerSdkSource.adHash_history' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationServerSdkSource.adHash_history

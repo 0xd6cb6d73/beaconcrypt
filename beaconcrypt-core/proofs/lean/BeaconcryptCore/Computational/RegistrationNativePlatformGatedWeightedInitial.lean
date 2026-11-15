@@ -25,7 +25,7 @@ variable {n : Nat} {ι KemSK Reader Response E X Failure : Type} {base : OracleS
 theorem world_couple (modes : Label n → KeyMode) (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (env : Environment n E) (reserve : Nat → StateT E ProbComp (core.result.Result Unit Failure)) (serverKid : Std.U64) (bounds : FreshBounds)
     (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (claim : X → Option (Nat × Pqxdh.Bytes))
-    (select : PublicHiding n E X → Bool) (created : PqxdhLiveServerConstruction.Created Unit)
+    (select : PublicHiding n E X → Bool) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (state : CborRawRecordFlat.NativeState n E) (index length : Nat) (offsets : Fin length → Fin 256) :
     Swap (fun first second => hitAt claim index length (ctxView (mask select first)) =
       shiftedHit bounds claim index length offsets (ctxView (mask select second)))
@@ -65,7 +65,7 @@ theorem world_couple (modes : Label n → KeyMode) (setup : Setup base KemSK) (c
 theorem fresh_zeros (modes : Label n → KeyMode) (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (env : Environment n E) (reserve : Nat → StateT E ProbComp (core.result.Result Unit Failure)) (serverKid : Std.U64) (bounds : FreshBounds)
     (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (claim : X → Option (Nat × Pqxdh.Bytes))
-    (select : PublicHiding n E X → Bool) (created : PqxdhLiveServerConstruction.Created Unit)
+    (select : PublicHiding n E X → Bool) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (state : CborRawRecordFlat.NativeState n E) :
     𝒟[(fun result => select (publicHiding (ctxView result)) && freshEvent claim (ctxView result)) <$>
       run modes zeros setup codec route env reserve serverKid bounds mode adversary created state] {true} ≤
@@ -85,7 +85,7 @@ theorem fresh_zeros (modes : Label n → KeyMode) (setup : Setup base KemSK) (co
 theorem fresh_bytes (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (env : Environment n E) (reserve : Nat → StateT E ProbComp (core.result.Result Unit Failure)) (serverKid : Std.U64) (bounds : FreshBounds)
     (adversary : OracleComp (ModeSpec .P) X) (claim : X → Option (Nat × Pqxdh.Bytes))
-    (select : PublicHiding n E X → Bool) (created : PqxdhLiveServerConstruction.Created Unit)
+    (select : PublicHiding n E X → Bool) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (state : CborRawRecordFlat.NativeState n E) :
     𝒟[(fun result => select (publicHiding (ctxView result)) && freshEvent claim (ctxView result)) <$>
       run (fun _ => .random) id setup codec route env reserve serverKid bounds .P adversary created state] {true} ≤

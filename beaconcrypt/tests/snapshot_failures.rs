@@ -193,3 +193,53 @@ fn uncertain_receive_commits_withhold_all_outputs_and_restore_authoritative_cons
 		}
 	}
 }
+
+#[test]
+fn consumed_registration_stays_rejected_across_v4_restores_and_old_versions_never_reset_it() {
+	let store = Store::default();
+	let mut server = server(store.clone());
+	let mut peer = beacon(&server);
+	let (request, kid) = register(&mut server, &mut peer);
+	assert!(server.get_shared_secret(&request).unwrap().is_none());
+	drop(server);
+	let current = store.0.lock().unwrap().bytes.clone().unwrap();
+	assert_eq!(current[16..18], 4u16.to_le_bytes());
+
+	// An envelope from a previous version is refused; it never activates as a fresh ledger.
+	for version in [0u16, 1, 2, 3] {
+		let mut legacy = current.clone();
+		legacy[16..18].copy_from_slice(&version.to_le_bytes());
+		let writes = {
+			let mut state = store.0.lock().unwrap();
+			state.bytes = Some(legacy.clone());
+			state.writes
+		};
+		assert_eq!(
+			PersistentServer::restore(store.clone()).err(),
+			Some(PersistenceError::InvalidSnapshot),
+			"version {version}"
+		);
+		let state = store.0.lock().unwrap();
+		assert_eq!(state.writes, writes);
+		assert_eq!(state.bytes.as_deref(), Some(legacy.as_slice()));
+	}
+	store.0.lock().unwrap().bytes = Some(current);
+
+	for _ in 0..2 {
+		let mut restored = PersistentServer::restore(store.clone()).unwrap();
+		let head = restored.head();
+		let writes = store.0.lock().unwrap().writes;
+		assert!(restored.get_shared_secret(&request).unwrap().is_none());
+		assert_eq!(restored.head(), head);
+		assert_eq!(store.0.lock().unwrap().writes, writes);
+		let frame = peer.encrypt_message(b"restored session").unwrap();
+		assert_eq!(
+			restored.decrypt_message(&frame).unwrap().unwrap().plaintext,
+			b"restored session"
+		);
+	}
+	let mut restored = PersistentServer::restore(store).unwrap();
+	let mut next = beacon(&restored);
+	assert_eq!(register(&mut restored, &mut next).1, kid + 1);
+	assert!(restored.get_shared_secret(&request).unwrap().is_none());
+}

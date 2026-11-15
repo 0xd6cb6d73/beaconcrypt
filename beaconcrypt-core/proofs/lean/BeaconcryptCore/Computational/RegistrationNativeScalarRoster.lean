@@ -16,7 +16,7 @@ variable {source : RegistrationNativeMldsa.Source}
 
 private theorem beacon_property (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State Value)
     (predicate : Value → RegistrationNativeBeaconFrontend.State source → Prop)
     (before : State n KemSK source) (result : Value × State n KemSK source)
@@ -38,7 +38,7 @@ private theorem beacon_property (setup : Setup base KemSK) (checks : Checks)
 /-- Every failed constructor leaves the roster fixed; every successful constructor appends exactly one actual owner and returns its index. -/
 theorem create_shape (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (before : State n KemSK source) (result : RustM (Option Nat) × State n KemSK source)
     (supported : result ∈ support ((RegistrationNativeExperiment.beacon setup checks representation created
@@ -51,7 +51,7 @@ theorem create_shape (setup : Setup base KemSK) (checks : Checks)
 /-- Every native callback other than creation keeps the original roster length exactly. -/
 theorem noncreate_length (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (query : TypedSpec.Domain) (notCreate : ∀ edPin mlPin keyId, query ≠ .inr (.create edPin mlPin keyId))
     (before : State n KemSK source) (result : TypedSpec.Range query × State n KemSK source)
     (supported : result ∈ support ((RegistrationNativeExperiment.handler setup checks wire route representation created source credential query).run before)) :
@@ -80,7 +80,7 @@ theorem noncreate_length (setup : Setup base KemSK) (checks : Checks) (wire : Re
 /-- Before reaching the selected position, any actual typed callback leaves the owner count at most that position. -/
 theorem step_short (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (selected : Nat) (query : TypedSpec.Domain) (before : State n KemSK source)
     (result : TypedSpec.Range query × State n KemSK source) (short : before.beacons.length < selected)
     (supported : result ∈ support ((RegistrationNativeExperiment.handler setup checks wire route representation created source credential query).run before)) :
@@ -110,11 +110,11 @@ theorem step_short (setup : Setup base KemSK) (checks : Checks) (wire : Registra
 /-- The literal post-scalar native birth always creates the next owner, on every callback reply. -/
 theorem born_length (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (edPin : Std.Array U8 32#usize) (keyId : U64)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (edPin : Std.Array U8 32#usize) (keyId : U64)
     (prepared : RegistrationNativeBeaconFrontend.Prepared source) (scalar : PqxdhJointGapDh.ScalarBytes)
     (before : State n KemSK source) (result : RustM (Option Nat) × State n KemSK source)
     (supported : result ∈ support ((RegistrationNativeExperiment.beacon setup checks representation created
-      (RegistrationNativeBeaconFrontend.appendBorn setup source edPin keyId prepared.pin prepared.credentials prepared.identity scalar)).run before)) :
+      (RegistrationNativeBeaconFrontend.appendBorn setup source edPin keyId prepared.pin prepared.identity scalar)).run before)) :
     result.2.beacons.length = before.beacons.length + 1 := by
   apply beacon_property setup checks representation created _ (fun _ owners => owners.length = before.beacons.length + 1) before result _ supported
   intro inner reached

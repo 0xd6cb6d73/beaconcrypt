@@ -78,17 +78,12 @@ theorem lifted_map (work : Base n KemSK Platform A) (observe : A → B) (before 
   simp only [close,StateT.run,lift_apply,map_apply,simulateQ_map,Functor.map_map]
   rfl
 
-/-- Repeated fingerprint computation is its literal one environment hash with the actual returned digest. -/
+/-- The current supplied Server pin is selected without a primitive callback. -/
 theorem pin {m : Type → Type} [Monad m] [LawfulMonad m]
     (effects : QueryImpl (PqxdhRecordLiftInterface.EnvEffects n) m) (current : session.ServerAuthenticationPin) :
-    RegistrationNativePlatformServerReferenceAccept.pin effects current =
-      (fun digest => .ok (.Some (⟨current.binding,current.public_key,
-        RegistrationAuthenticationShared.digestArray digest⟩ : session.ServerAuthenticationPin))) <$>
-        effects (.inr (.hash (PqxdhRefinement.absBytes current.public_key))) := by
-  simp only [RegistrationNativePlatformServerReferenceAccept.pin,RegistrationNativeServerPinRecompute.program,
-    RegistrationNativePlatformServerReferenceAccept.hash,simulateQ_map,simulateQ_spec_query,Functor.map_map,
-    bind_pure_comp,RegistrationNativeServerPinRecompute.request,
-    BeaconcryptCore.Refinement.RegistrationInputs.hashBytes,Std.Array.to_slice]
+    RegistrationNativePlatformServerReferenceAccept.pin effects current = pure (.ok (.Some current)) := by
+  simp only [RegistrationNativePlatformServerReferenceAccept.pin, RegistrationNativeServerPinRecompute.program,
+    registration.begin_server_pin, session.ServerAuthenticationPin.new, simulateQ_pure]
   rfl
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformSecretWordTargetOpenLift

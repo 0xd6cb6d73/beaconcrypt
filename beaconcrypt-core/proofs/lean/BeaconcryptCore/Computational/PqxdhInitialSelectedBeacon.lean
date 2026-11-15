@@ -11,6 +11,7 @@ open RustM beaconcrypt_core ratchet ratchet.refined ratchet.concrete
 open OracleComp OracleSpec
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialSelectedBeacon
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open RawCtxGenericRoleStorage PqxdhBeaconPhase2Shared
 open PqxdhJointKdfGame PqxdhSecretInputKdf
 open RawCtxSelectedParentEntry RawCtxSelectedParentTable
@@ -151,14 +152,14 @@ theorem owner_selected (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
     (decode : RawCtxReceive.FrameDecoder) (bytes : Pqxdh.Bytes)
     (state : BeaconState RawCtxSelectedChain.Kernel I D K) :
     simulateQ (handler source writer prior entry target pre application service)
-      (PqxdhInitialFusedOwner.owner decode bytes
+      (PqxdhInitialFusedOwner.owner (completedBinding := completedBinding) decode bytes
         (nativeBeacon (RawCtxSelectedChain.nativeKernel (RawCtxFreshChainCut.concreteChain target)) state)) =
       Prod.map id (nativeBeacon (RawCtxSelectedChain.nativeKernel (RawCtxFreshChainCut.concreteChain target))) <$>
-        PqxdhInitialGenericBeacon.owner pre
+        PqxdhInitialGenericBeacon.owner (completedBinding := completedBinding) pre
           (RawCtxSelectedParentCalls.labelCalls source writer prior entry
             (RawCtxSelectedParentCalls.childResponse prior entry target))
           application (labelInitial service) decode bytes state := by
-  exact PqxdhInitialGenericBeaconNative.owner_mapped _ _ _
+  exact PqxdhInitialGenericBeaconNative.owner_mapped (completedBinding := completedBinding) _ _ _
     (selected_receive source writer prior entry target) _
     (initializer_map source writer prior entry target pre application service) decode bytes state
 

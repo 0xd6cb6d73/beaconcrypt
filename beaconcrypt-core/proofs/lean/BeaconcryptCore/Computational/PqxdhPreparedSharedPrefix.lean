@@ -2,6 +2,7 @@ import BeaconcryptCore.Computational.PqxdhPreparedPrefixCallbacks
 import BeaconcryptCore.Computational.PqxdhInitialSampledParent
 
 /-!
+This generic post-hash source suffix is parameterized by explicit public AD151 and a completed binding. Its state and cache equations preserve those supplied contexts; the current registration hash phase and its admission receipts are established by the actual Registration modules, rather than by this suffix alone.
 The actual prepared-source prefix is compiled to the common ROM. Preparation, application, selector and publication callbacks are the literal source callbacks, using source-local allocation and writer interfaces. This file does not install a reached cache into an ordinary challenger: its complete cache equation is intended for a prefix that has already executed the actual earlier preparation through that same ROM.
 -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -9,6 +10,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhPreparedSharedPrefix
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+variable (associatedData : Std.Array Std.U8 151#usize)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily
 open PqxdhKemIndCca PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma
 open PqxdhPhase2GeneratedDriver PqxdhAuthenticatedRootExperiment PqxdhPhase1AcceptanceOracle
@@ -43,7 +46,7 @@ noncomputable def state (start : Input) (output : HmacBlock) : Local A (BareStat
   audit := [] }
 
 noncomputable def run (start : Input) (output : HmacBlock) (depth : Nat) :=
-  PqxdhNativeSharedPrefix.carried (env).source (env).recordWriter (depth + 1)
+  PqxdhNativeSharedPrefix.carried (associatedData := associatedData) (completedBinding := completedBinding) (env).source (env).recordWriter (depth + 1)
     (PqxdhPreparedPrefixCallbacks.preparation attachedVerify primitives 1 (env).source (env).localImpl baseImpl kem secret challenge)
     (PqxdhPreparedPrefixCallbacks.application attachedVerify primitives 1 (env).source (env).localImpl baseImpl kem secret challenge)
     (PqxdhNativeSharedPrefix.initialLocal (env).source start.selectedMessage zeroRoot (RawCtxSelectedInitialConstructor.response64 output))
@@ -58,8 +61,8 @@ set_option backward.isDefEq.respectTransparency false in
 /-- The actual full source prefix, including its first builder and every adaptive callback, is the compiled shared-ROM computation with exactly its reached state restored. -/
 theorem source (start : Input) (output : HmacBlock) (depth : Nat) :
     RawCtxSharedPrefixScan.restore attach <$>
-      (simulateQ AdaptiveCtxSharedHash.hashImpl (run original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth)).run start.shared.2 =
-      PqxdhInitialSampledParent.sourceRun (env).source (env).recordWriter (env).senderId (env).route (env).decode depth
+      (simulateQ AdaptiveCtxSharedHash.hashImpl (run (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth)).run start.shared.2 =
+      PqxdhInitialSampledParent.sourceRun (associatedData := associatedData) (completedBinding := completedBinding) (env).source (env).recordWriter (env).senderId (env).route (env).decode depth
         (input original callbacks baseImpl kem attachedVerify primitives secret challenge start, output) := by
   unfold run
   rw [PqxdhNativeSharedPrefix.carried_source]
@@ -71,12 +74,12 @@ theorem source (start : Input) (output : HmacBlock) (depth : Nat) :
 theorem input_source
     (program : Program baseSpec setup.Context S (B + 1))
     (post : Post (baseSpec := baseSpec) program.Selection S (B + 1))
-    (context : PqxdhInitialLegalObserver.Context env kem attachedVerify primitives program post)
+    (context : PqxdhInitialLegalObserver.Context (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post)
     (selected : RawCtxProtocolReveals.Owner S (B + 1)) (number : Std.U64)
     (ancestors disclosed : List RatchetChain) :
     Sum.map id (input original callbacks baseImpl kem attachedVerify primitives context.secretKey context.ciphertext)
-      (PqxdhInitialPreparedSourceInput.input env baseImpl kem attachedVerify primitives program post context selected number ancestors disclosed) =
-      PqxdhInitialPreparedSourceInput.input env baseImpl kem attachedVerify primitives program post context selected number ancestors disclosed := by
+      (PqxdhInitialPreparedSourceInput.input (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post context selected number ancestors disclosed) =
+      PqxdhInitialPreparedSourceInput.input (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post context selected number ancestors disclosed := by
   unfold PqxdhInitialPreparedSourceInput.input
   cases context.state <;> rfl
 

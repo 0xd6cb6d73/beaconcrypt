@@ -6,7 +6,7 @@ import BeaconcryptCore.Computational.PqxdhRecordFactsOriginGlobal
 
 The first of the three ingredients that design-v2 section 7.7 lists for AG, the agreement of an accepted hidden receive with a counterpart production of its frame: every replay-dictionary seal of an ideal CTX world (`PqxdhRecordLiftIdeal.ctxRun` in any assignment of the replay and random modes, in particular `idealAuth`) was made with the associated data of a handle that owns its label, read at the current source control.
 
-- `handleAd control handle` is the associated data of a handle's installed record owner, exactly as the source program builds it: a Server peer's `PqxdhRecordLiftWorldCompiler.serverOwner` AD, `PeerBinding.associatedBytes` of the Server identity and the retained authenticated peer binding, including populated ML-DSA fingerprint AD when supplied, and an established Beacon owner's `PqxdhRecordLiftWorldCompiler.beaconOwner` AD, the 281 bytes of its installed shell. Absent and inactive handles have none (`handleAd_peer`, `handleAd_owner`).
+- `handleAd control handle` is the associated data of a handle's installed record owner, exactly as the source program builds it: a Server peer's `PqxdhRecordLiftWorldCompiler.serverOwner` AD, `PeerBinding.associatedBytes` of the Server identity and the retained authenticated peer binding, i.e. the complete 151-byte AD fixed at installation, and an established Beacon owner's `PqxdhRecordLiftWorldCompiler.beaconOwner` AD, the 151 bytes of its installed shell. Absent and inactive handles have none (`handleAd_peer`, `handleAd_owner`).
 - `AdKept before after`: every handle AD present before is present unchanged after. Every source dispatcher request keeps it for every private service reply (`handler_adKept`, from the Server initializer, the capabilities, which install only vacant peers and init-sent owners, and the Server and Beacon record dispatchers, which change only kernels and counters), hence every adaptive schedule (`schedule_adKept`), every private interpreter (`interpreted_adKept`), every native command and continuation (`native_adKept`, `native_program_adKept`) and every secrecy-ledger command (`full_adKept`).
 - `SealsBy control handle ad before after`: every new dictionary entry is a seal by `handle` at a label it owns, with record AD bytes `ad`. The exact hidden sealing service adds only its own selected input, whose record AD bytes are the sealing context's AD (`sealing_sealsBy`, from `PqxdhRecordFactsOriginServices.sealing_trace` and `RawCtxSelectedMessageSealing.selectedInput`); the hidden kernel send seals its current sending coordinate with its own context (`kernelSend_sealsBy`, from `PqxdhRecordLiftChainState.send_begin_tracked`); the owner send seals with the owner's AD and owner receives add no seal (`ownerSend_sealsBy`, `ownerReceive_keys`, `ownerRun_sealsBy`).
 - `NewSealsAd`, the per-request form with the handle's `handleAd` (`serverStep_newSealsAd`, `beaconStep_newSealsAd`, `handler_newSealsAd`), and the invariant `SealAd control secret`: every dictionary entry has a handle that owns its label and whose `handleAd` is the entry's record AD bytes. It holds initially (`initial_sealAd`), is kept by every request (`handler_sealAd`, with `PqxdhRecordLiftProtocolHistory.handler` for label ownership and `handler_adKept`) and every schedule (`schedule_sealAd`), and holds at every supported outcome of every ideal CTX world (`ctxRun_sealAd`).
@@ -28,7 +28,7 @@ open PqxdhRecordLiftWorldCompiler (Label StoredKernel LabeledKernel)
 open PqxdhDeploymentInterface (Handle FrameTag Spec FullSpec FreshBounds)
 variable {n : Nat} {ι KemSK Reader Response E X : Type} {baseSpec : OracleSpec ι}
 
-/-- The associated data of a handle's installed record owner in the source control: a Server peer's `serverOwner` AD from its retained complete peer binding and an established Beacon owner's `beaconOwner` AD (its shell's 281 bytes); absent Server peers, absent owners and inactive owners have none. -/
+/-- The associated data of a handle's installed record owner in the source control: a Server peer's `serverOwner` AD from its retained complete peer binding and an established Beacon owner's `beaconOwner` AD (its shell's 151 bytes); absent Server peers, absent owners and inactive owners have none. -/
 noncomputable def handleAd (control : PqxdhRecordLiftProtocol.Control n) : Handle → Option Pqxdh.Bytes
   | .peer keyId => control.server.bind fun server => (server.peers keyId).map fun peer =>
       PeerBinding.associatedBytes server.identity peer.binding
@@ -75,7 +75,7 @@ theorem adKept_of (before after : PqxdhRecordLiftProtocol.Control n)
   | owner owner => exact owners owner ad present
 
 /-- The Server initializer keeps every AD: a present Server is not reset, and before the first initialization no Server peer has an AD. -/
-theorem initialize_adKept (created : PqxdhLiveServerConstruction.Created Unit)
+theorem initialize_adKept (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (control : PqxdhRecordLiftProtocol.Control n) (result : Unit × PqxdhRecordLiftProtocol.Control n)
     (supported : result ∈ support (PqxdhRecordLiftProtocol.initializeServer created control)) :
     AdKept control result.2 := by

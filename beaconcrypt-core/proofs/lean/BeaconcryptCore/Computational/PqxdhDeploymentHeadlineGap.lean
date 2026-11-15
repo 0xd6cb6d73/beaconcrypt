@@ -2,6 +2,7 @@
 import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthInjectiveGame
 import BeaconcryptCore.Computational.PqxdhDeploymentTargetRange
 import BeaconcryptCore.Computational.PqxdhDeploymentKeyMatch
+import BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple
 
 /-!
 # Symbolic eligibility and the gap lemmas (CE-12 P2, design-v2 section 7.1, F-ct2 form)
@@ -336,9 +337,9 @@ theorem ready_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
               rw [PqxdhRegistrationSchedule.finish_source setup codec index input native.native ownerState found,
                 support_map] at innerMember
               obtain ⟨reached, reachedMember, rfl⟩ := innerMember
-              obtain ⟨control, prekey, oneTime, kem, _, _, ownerPhase, _, _⟩ :=
-                (PqxdhDeploymentCompileFootprint.finish_owner setup codec input ownerState native.native.shared reached
-                  reachedMember).2 payload replied
+              obtain ⟨control, prekey, oneTime, kem, _, _, _, _, _, ownerPhase, _, _, _, _, _⟩ :=
+                (PqxdhDeploymentCompileFootprint.ownerFinish_owner setup codec (native.native.inits index) input ownerState
+                  native.native.shared reached reachedMember).2.2.2 payload replied
               have phases := agree.phases index
               simp only [PqxdhDeploymentEligibility.nativePhase, found, ownerPhase,
                 PqxdhDeploymentEligibility.phaseClass] at phases

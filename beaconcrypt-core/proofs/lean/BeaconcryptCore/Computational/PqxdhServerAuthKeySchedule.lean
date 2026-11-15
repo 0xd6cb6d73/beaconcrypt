@@ -38,9 +38,9 @@ abbrev Output := FullOutput × RootOutput
 /-- A distinguisher receives the whole 108-byte output and may run any local probabilistic computation, including public HMAC and HKDF evaluations. -/
 abbrev Distinguisher := Output → ProbComp Bool
 
-/-- The production 64-byte initial ratchet HKDF of a 32-byte root, `HKDF(root, INFO_R, 64)`. -/
+/-- The production 64-byte initial ratchet HKDF of a 32-byte root, `HKDF(root, INFO_INIT, 64)`. -/
 def initializer (source : FixedHkdfSha512NoSaltSource) (root : RootOutput) : HmacBlock :=
-  ⟨source.crypto.hkdf root.toList Pqxdh.INFO_R 64, source.crypto.hkdf_length _ _ _⟩
+  ⟨source.crypto.hkdf root.toList Pqxdh.INFO_INIT 64, source.crypto.hkdf_length _ _ _⟩
 
 /-- The production 76-byte ratchet step of a 32-byte chain, `HKDF(chain, INFO_R, 76)`. -/
 def step (source : FixedHkdfSha512NoSaltSource) (chain : RootOutput) : FullOutput :=
@@ -94,12 +94,12 @@ def rootExpandReduction (source : FixedHkdfSha512NoSaltSource) (distinguisher : 
 /-- Reduction 2 (Extract of the root): given the PRK of the root, compute the first ratchet Expand block locally and finish. -/
 def initExtractReduction (source : FixedHkdfSha512NoSaltSource) (hmac : HmacSha512)
     (distinguisher : Distinguisher) : Unit → HmacBlock → ProbComp Bool :=
-  fun _ prk => distinguisher (fromInitializer source (hmac.eval prk (firstExpandInput .ratchet)))
+  fun _ prk => distinguisher (fromInitializer source (hmac.eval prk (firstExpandInput .initial)))
 
 /-- Reduction 3 (HMAC PRF): one challenge query at the first ratchet Expand message gives the 64-byte initializer. -/
 def initExpandReduction (source : FixedHkdfSha512NoSaltSource) (distinguisher : Distinguisher) :
     OracleComp HmacAdversarySpec Bool := do
-  let init ← liftM (HmacAdversarySpec.query (.inr (firstExpandInput .ratchet)))
+  let init ← liftM (HmacAdversarySpec.query (.inr (firstExpandInput .initial)))
   liftM (distinguisher (fromInitializer source init))
 
 /-- The continuation of the step hops: it draws the independent second half itself and passes both parts on. -/
@@ -130,7 +130,7 @@ noncomputable def rootHybrid (source : FixedHkdfSha512NoSaltSource)
 noncomputable def initKeyHybrid (source : FixedHkdfSha512NoSaltSource) (hmac : HmacSha512)
     (distinguisher : Distinguisher) : ProbComp Bool := do
   let prk ← $ᵗ HmacBlock
-  distinguisher (fromInitializer source (hmac.eval prk (firstExpandInput .ratchet)))
+  distinguisher (fromInitializer source (hmac.eval prk (firstExpandInput .initial)))
 
 /-- Hybrid 3: a uniform 64-byte initializer. -/
 noncomputable def initHybrid (source : FixedHkdfSha512NoSaltSource)
@@ -157,14 +157,14 @@ noncomputable def stepKeyHybrid (hmac : HmacSha512) (distinguisher : Distinguish
 /-- The production 64-byte initializer is the first ratchet Expand block under the Extract of the root. -/
 theorem initializer_eq {source : FixedHkdfSha512NoSaltSource} {hmac : HmacSha512}
     (correct : SourceFullCorrect source hmac) (root : RootOutput) :
-    initializer source root = hmac.eval (extract hmac root.toList) (firstExpandInput .ratchet) := by
+    initializer source root = hmac.eval (extract hmac root.toList) (firstExpandInput .initial) := by
   apply List.Vector.toList_injective
-  have prefixEq := source.prefixConsistent.ratchetPrefix root.toList
+  have prefixEq := source.prefixConsistent.initialPrefix root.toList
   have stream := congrArg (fun output : FullOutput => (initialPrefix output).toList)
-    (correct .ratchet root.toList)
+    (correct .initial root.toList)
   simp only [initialPrefix_expandFull] at stream
   rw [← stream]
-  change source.crypto.hkdf root.toList Pqxdh.INFO_R 64 = _
+  change source.crypto.hkdf root.toList Pqxdh.INFO_INIT 64 = _
   rw [prefixEq]
   rfl
 
@@ -179,9 +179,9 @@ theorem keySchedule_hmac {source : FixedHkdfSha512NoSaltSource} {hmac : HmacSha5
     (correct : SourceFullCorrect source hmac) (prk : HmacBlock) :
     keySchedule source hmac prk =
       (expandFull hmac .ratchet (extract hmac (PqxdhSecretInputKdf.first32
-          (hmac.eval (extract hmac (expandRoot hmac prk).toList) (firstExpandInput .ratchet))).toList),
+          (hmac.eval (extract hmac (expandRoot hmac prk).toList) (firstExpandInput .initial))).toList),
         RawCtxSelectedInitialSecond.secondChain
-          (hmac.eval (extract hmac (expandRoot hmac prk).toList) (firstExpandInput .ratchet))) := by
+          (hmac.eval (extract hmac (expandRoot hmac prk).toList) (firstExpandInput .initial))) := by
   simp only [keySchedule, fromRoot, fromInitializer, initializer_eq correct, step_eq correct]
 
 /-- The 108 bytes from a root are the model's record expansion `Pqxdh.ratchetOut` on the initial left chain, then the initial right chain, both from `Pqxdh.rootChains`. -/

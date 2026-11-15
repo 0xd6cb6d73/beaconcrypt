@@ -15,7 +15,7 @@ variable {source : RegistrationNativeMldsa.Source}
 
 private theorem beacon_pure (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (value : X)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (value : X)
     (before : RegistrationNativeExperiment.State n KemSK source) :
     (RegistrationNativeExperiment.beacon setup checks representation created
       (pure value : M n KemSK source RegistrationServerRoleBackend.State X)).run before = pure (value, before) := by
@@ -26,7 +26,7 @@ private theorem beacon_pure (setup : Setup base KemSK) (checks : Checks)
 /-- Actual prefix refusal leaves the early scalar unused; successful preparation substitutes only the original counted draw's returned scalar. -/
 theorem after_eager (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (edPin : Std.Array U8 32#usize) (keyId : U64)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (edPin : Std.Array U8 32#usize) (keyId : U64)
     (prepared : RustM (Option (Prepared source))) (before : RegistrationNativeExperiment.State n KemSK source)
     (next : RustM (Option Nat) → RegistrationNativeExperiment.State n KemSK source → ProbComp Value) :
     (do let result ← (RegistrationNativeExperiment.beacon setup checks representation created
@@ -54,13 +54,13 @@ theorem after_eager (setup : Setup base KemSK) (checks : Checks)
           (RegistrationNativeScalarSource.scalar_eager setup checks representation created before
             (fun scalar current => do
               let result ← (RegistrationNativeExperiment.beacon setup checks representation created
-                (appendBorn setup source edPin keyId prepared.pin prepared.credentials prepared.identity scalar)).run current
+                (appendBorn setup source edPin keyId prepared.pin prepared.identity scalar)).run current
               next result.1 result.2))
 
 /-- The complete actual selected constructor commutes with its independent private challenge draw, with arbitrary full native continuation. -/
 theorem create_eager (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (selected : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (selected : Nat)
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (before : RegistrationNativeExperiment.State n KemSK source) (chosen : before.beacons.length = selected)
     (next : RustM (Option Nat) → RegistrationNativeExperiment.State n KemSK source → ProbComp Value) :

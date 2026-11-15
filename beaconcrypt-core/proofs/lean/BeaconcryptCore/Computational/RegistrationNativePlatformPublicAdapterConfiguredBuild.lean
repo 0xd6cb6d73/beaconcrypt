@@ -38,7 +38,7 @@ local notation "codec"=>RegistrationNativeWire.ledgerCodec wire
 local notation "allocation"=>RegistrationNativePlatformExtractedSdkBuildNormal.allocation configuration.allocateJoin
 local notation "helper"=>RegistrationNativePlatformConcreteSource.helper configuration.reserveFrame
 local notation "writer"=>RegistrationNativePlatformConcreteSource.writer configuration.reservePackets
-variable (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
 
 noncomputable def typedStep (current :Native×P) (before :Private configuration created credential current)
     (handle :Nat) (payload :Option (Slice U8)) :=

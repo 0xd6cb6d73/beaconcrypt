@@ -17,7 +17,7 @@ open PqxdhEd25519EufCma (Ed25519Signature)
 open RegistrationNativeIdentityCensorEdOutgoingSource (Full interpret)
 variable {n : Nat} {I KemSK Platform E : Type} {base : OracleSpec I} {mlSource : RegistrationNativeMldsa.Source}
 variable (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (selected index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner mlSource) (placeholder : Ed25519Signature)
 variable (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E))
 local notation "Main" => RegistrationNativePlatformIdentityCtxMain.beacon (n := n) (Platform := Platform) (source := mlSource) setup checks representation created
@@ -27,7 +27,7 @@ local notation "publication(" scalar ")" => Main (simulateQ
   (RegistrationNativePlatformIdentityPublication.callback (n := n) (Auxiliary := RegistrationServerRoleBackend.State)
     setup index owner (RegistrationNativePlatformConcreteSource.writer reserve))
   (RegistrationNativePlatformWriter.begin E (pqxdh.BeaconFresh.mk owner.pin.binding) (RegistrationNativeIdentityFrontend.inputs owner)
-    (pqxdh.BeaconCoins.mk (PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar))) owner.pin owner.mldsa.publicKey))
+    (pqxdh.BeaconCoins.mk (PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar))) owner.pin))
 local notation "body(" scalar ")" => Main (RegistrationNativePlatformIdentityBundle.bundled setup index owner scalar (RegistrationNativePlatformConcreteSource.writer reserve))
 local notation "next(" scalar "," reply ")" => Main (RegistrationNativePlatformIdentityBundle.next index owner scalar reply)
 
@@ -52,7 +52,7 @@ private theorem first_publication (scalar : PqxdhJointGapDh.ScalarBytes) (starte
   rw [RegistrationNativeIdentityCensorPublicationSource.source setup checks representation created selected index owner placeholder reserve false,
     RegistrationNativeIdentityCensorOriginalPublication.source setup checks representation created index owner reserve]
   exact RegistrationNativeIdentityCensorRealBeginSource.begin setup checks representation created index owner
-    (RegistrationNativeIdentityCensorConcreteWriter.encode reserve) selected placeholder _ _ _ _ _ started built rfl
+    (RegistrationNativeIdentityCensorConcreteWriter.encode reserve) selected placeholder _ _ _ _ started built rfl
     before seed handle armed held sourceTarget fresh found
 
 /-- The complete actual first selected captured body restores the honest source, including original failed publication and the precise terminal native phase/World effect. -/
@@ -87,7 +87,7 @@ private theorem repeated_publication (scalar : PqxdhJointGapDh.ScalarBytes) (sta
   rw [RegistrationNativeIdentityCensorPublicationSource.source setup checks representation created selected index owner placeholder reserve false,
     RegistrationNativeIdentityCensorOriginalPublication.source setup checks representation created index owner reserve]
   exact RegistrationNativeIdentityCensorRealBeginSource.repeated_begin setup checks representation created index owner
-    (RegistrationNativeIdentityCensorConcreteWriter.encode reserve) selected placeholder _ _ _ _ _ started built rfl
+    (RegistrationNativeIdentityCensorConcreteWriter.encode reserve) selected placeholder _ _ _ _ started built rfl
     before seed handle held sourceTarget found
 
 /-- Every matching repeated captured source bundle retains the full literal honest-source marginal without freshness or rearming. -/

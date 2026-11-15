@@ -50,7 +50,7 @@ theorem program (setup : Setup base KemSK) (mlSource : RegistrationNativeMldsa.S
 /-- Actual response authentication is interpreted on the existing complete native World and private KEM pool. -/
 theorem native_program (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (mlSource : RegistrationNativeMldsa.Source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (mlSource : RegistrationNativeMldsa.Source)
     (work : OracleComp RegistrationAuthenticationExecutor.Spec Value) :
     RegistrationNativeExperiment.beacon setup checks representation created
       (simulateQ (RegistrationNativeBeaconFrontend.authentication (n := n) setup mlSource) work) =

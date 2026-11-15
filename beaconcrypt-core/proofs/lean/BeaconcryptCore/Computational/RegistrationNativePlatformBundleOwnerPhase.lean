@@ -25,7 +25,7 @@ def setPending (owners : RegistrationNativeBeaconFrontend.State source) (index :
 
 private theorem native_source (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : M n KemSK source RegistrationServerRoleBackend.State Value)
     (before after : Local n KemSK source) (previous next : Platform) (value : Value)
     (supported : ((value, after), next) ∈ support (((RegistrationNativePlatformBundleLower.native coins setup checks representation created work).run before).run previous)) :
@@ -47,7 +47,7 @@ private theorem native_source (coins : QueryImpl unifSpec (StateT Platform ProbC
 /-- Actual phase update and World advance have exactly the source owner-list result, including an absent slot. -/
 theorem afterPublished_owners (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (owner : Owner source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (owner : Owner source)
     (oneTime : PqxdhJointGapDh.ScalarBytes) (published : registration.PublishedBeaconInit (alloc.vec.Vec U8))
     (before after : Local n KemSK source) (previous next : Platform) (bytes : alloc.vec.Vec U8)
     (supported : ((.ok (some bytes), after), next) ∈ support
@@ -71,7 +71,7 @@ theorem afterPublished_owners (coins : QueryImpl unifSpec (StateT Platform ProbC
 
 structure Stored (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (index : Nat) (before after : RegistrationNativeExperiment.State n KemSK source) (previous next : Platform) (bytes : Pqxdh.Bytes) where
   encoded : alloc.vec.Vec U8
@@ -88,7 +88,7 @@ structure Stored (coins : QueryImpl unifSpec (StateT Platform ProbComp))
 /-- Literal complete native source bundle success retains that actual owner slot, exact reached pending capability and immutable source owner fields. -/
 theorem native_bundle (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (index : Nat) (before after : RegistrationNativeExperiment.State n KemSK source) (previous next : Platform) (bytes : Pqxdh.Bytes)
     (supported : ((.ok (some bytes), after), next) ∈ support

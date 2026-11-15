@@ -16,7 +16,7 @@ variable {n : Nat} {Auxiliary ι KemSK Reader Response : Type} {base : OracleSpe
 
 /-- Chronological callback kinds retain actual attempts without copying private root or chain operands into optional instrumentation. -/
 inductive RecordCall where
-  | rootKdf | initialKdf | ratchetKdf | seal | hash | write | openAead
+  | rootKdf | initialKdf | ratchetKdf | seal | adHash | hash | write | openAead
   deriving DecidableEq
 
 def recordCall : RegistrationRecordPrimitives.Request → RecordCall
@@ -24,6 +24,7 @@ def recordCall : RegistrationRecordPrimitives.Request → RecordCall
   | .initialKdf _ => .initialKdf
   | .ratchetKdf _ => .ratchetKdf
   | .seal _ => .seal
+  | .adHash _ => .adHash
   | .hash _ => .hash
   | .write _ => .write
   | .openAead _ => .openAead

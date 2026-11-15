@@ -25,7 +25,7 @@ variable [AdapterInitEdPrimitive.Operations] [PublicWrapperPlatform.CryptoOperat
 variable [AdapterBeaconConstructorPrimitive.Operations] [AdapterBeaconConstructorPrimitive.Standard]
 variable [beaconcrypt.auth.Operations]
 
-omit [PublicWrapperPlatform.Platform] in
+omit [PublicWrapperPlatform.Platform] [beaconcrypt.auth.Operations] in
 theorem beacon_new_of_error (identifier : U64) (identityKey mldsaKey : Slice U8)
     (rejected : beaconcrypt_constructor.beacon.Beacon.try_new identifier identityKey mldsaKey = ok (.Err ())) :
     beaconcrypt_constructor.beacon.Beacon.new identifier identityKey mldsaKey = fail .panic := by

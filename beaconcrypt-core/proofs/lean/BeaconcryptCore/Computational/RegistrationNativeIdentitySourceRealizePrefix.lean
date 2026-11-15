@@ -40,7 +40,7 @@ theorem owners_eq (joint : PqxdhJointIdentity.Primitives) (before after : PqxdhD
 /-- Complete actual adaptive source programs preserve the private realization of every previously owned public credential. -/
 theorem program_owners (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (work : OracleComp (Trusted n KemSK) Value)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (work : OracleComp (Trusted n KemSK) Value)
     (before : State n KemSK) (result : Value × State n KemSK)
     (current : RegistrationNativeIdentityFrontend.State source) (owned : Owned setup.joint before.identities current)
     (supported : result ∈ support ((simulateQ (implementation (mlSource := source) setup checks representation created) work).run before)) :

@@ -32,13 +32,13 @@ theorem create_stable (setup : Setup base KemSK) (selected : Nat) (scalar : Pqxd
           apply RegistrationNativeBeaconEnvView.bind_stable
           · exact RegistrationNativeBeaconEnvView.get_stable
           · intro owners
-            exact RegistrationNativeBeaconEnvCreate.append_stable setup edPin keyId prepared.pin prepared.credentials
+            exact RegistrationNativeBeaconEnvCreate.append_stable setup edPin keyId prepared.pin
               prepared.identity (if owners.length = selected then scalar else prepared.prekey)
 
 /-- Every actual eager typed query retains its literal native result after the explicitly named source view. -/
 theorem handler_input (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (selected : Nat) (scalar : PqxdhJointGapDh.ScalarBytes) (query : RegistrationNativeRawAdapter.TypedSpec.Domain) :
     Stable (nativeView (n := n))
       (RegistrationNativeScalarEager.handler setup checks wire route representation created source credential selected scalar query) := by
@@ -62,7 +62,7 @@ theorem handler_input (setup : Setup base KemSK) (checks : Checks) (wire : Regis
 /-- The original full secrecy compiler, or any other adaptive typed client, retains its entire eager native outcome under the stated source view. -/
 theorem program_input (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (selected : Nat) (scalar : PqxdhJointGapDh.ScalarBytes)
     (work : OracleComp RegistrationNativeRawAdapter.TypedSpec Value) :
     Stable (nativeView (n := n))

@@ -87,7 +87,7 @@ private theorem backend_coins (work : ProbComp A) :
     exact (allQueriesSatisfy_query_bind_iff _ _ _).mpr ⟨trivial, ih⟩
 
 private theorem compiler_coin (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (RegistrationNativePlatformIdentityProgram.Spec n KemSK).Domain)
     (permitted : PlatformCoin (n := n) (KemSK := KemSK) query) (before : RegistrationNativeIdentityWorld.Context n KemSK) :
     ((RegistrationNativePlatformIdentityCtxCompiler.free
@@ -123,7 +123,7 @@ private theorem compiled_state {J K S X : Type} {left : OracleSpec J} {right : O
 
 /-- Every actual native sampled program compiles only to the original uniform capability, preserving its full state and true accounting. -/
 theorem sample (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : ProbComp A) (before : RegistrationNativeIdentityMain.State n KemSK source × Platform) :
     ((RegistrationNativePlatformIdentityCtxMain.beacon setup checks representation created
       (RegistrationNativePlatformIdentityProgram.native

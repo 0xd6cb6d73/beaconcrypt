@@ -26,7 +26,7 @@ def Spec : OracleSpec Request
   | .publicView request => JointKdfViewSpec.Range request
 
 def address : Request → JointKdfAddress
-  | .initial input => RawCtxKdfRequestTable.address ⟨input, ratchet.SYM_RATCHET_INFO⟩
+  | .initial input => RawCtxKdfRequestTable.initialAddress ⟨input, ratchet.INITIAL_RATCHET_INFO⟩
   | .ongoing request => RawCtxKdfRequestTable.address request
   | .publicView request => request.address
 
@@ -41,7 +41,7 @@ def forward : QueryImpl Spec (OracleComp JointKdfRO) :=
 
 def sourceReply (source : FixedHkdfSha512NoSaltSource) (request : Request) : Spec.Range request :=
   match request with
-  | .initial input => RawCtxSourceHkdf.initialResponse source.crypto ⟨input, ratchet.SYM_RATCHET_INFO⟩
+  | .initial input => RawCtxSourceHkdf.initialResponse source.crypto ⟨input, ratchet.INITIAL_RATCHET_INFO⟩
   | .ongoing query => RawCtxSourceHkdf.response source.crypto query
   | .publicView query => query.project (productionStream source.crypto query.address)
 
@@ -101,22 +101,19 @@ theorem reply_width (request : Request) (reply : Spec.Range request) :
   | publicView request =>
     simpa only [replyBytes, width, List.Vector.toList] using reply.property
 
-/-- An initial view and an ongoing view at its exact input/info are one table address. -/
-theorem initial_ongoing_address (input : Std.Array Std.U8 32#usize) :
-    address (.initial input) = address (.ongoing ⟨input, ratchet.SYM_RATCHET_INFO⟩) := rfl
+/-- Actual initial and message views select different addresses even at the same input. -/
+theorem initial_ongoing_address_ne (input : Std.Array Std.U8 32#usize) :
+    address (.initial input) ≠ address (.ongoing ⟨input, ratchet.SYM_RATCHET_INFO⟩) := by
+  intro same
+  have infos := congrArg JointKdfAddress.info same
+  exact Pqxdh.INFO_INIT_ne_INFO_R (by simpa only [address,
+    RawCtxKdfRequestTable.initialAddress, RawCtxKdfRequestTable.address,
+    absBytes_INITIAL_RATCHET_INFO, absBytes_SYM_RATCHET_INFO] using infos)
 
-/-- Every existing public ratchet projection at the same input uses that very same private address. -/
+/-- Public evaluation at the actual initial label shares exactly that initial request address. -/
 theorem initial_public_address (input : Std.Array Std.U8 32#usize) (projection : JointKdfProjection) :
-    address (.initial input) = address (.publicView ⟨absBytes input, .ratchet, projection⟩) :=
-  congrArg (fun info => (⟨info, absBytes input⟩ : JointKdfAddress))
-    (by simpa only [pqxdh.SYM_RATCHET_INFO, FixedHkdfDomain.info_ratchet] using absBytes_SYM_RATCHET_INFO)
-
-/-- Both typed private views of one response share the entire initial 64-byte prefix. -/
-theorem initial_ongoing_prefix (input : Std.Array Std.U8 32#usize) (output : FullOutput) :
-    replyBytes (.initial input) (project (.initial input) output) =
-      (replyBytes (.ongoing ⟨input, ratchet.SYM_RATCHET_INFO⟩)
-        (project (.ongoing ⟨input, ratchet.SYM_RATCHET_INFO⟩) output)).take 64 := by
-  simp only [project_bytes, projectedBytes]
+    address (.initial input) = address (.publicView ⟨absBytes input, .initial, projection⟩) :=
+  congrArg (fun info => (⟨info, absBytes input⟩ : JointKdfAddress)) absBytes_INITIAL_RATCHET_INFO
 
 end BeaconcryptCore.Computational.RawCtxKdfRequestViews
 
@@ -144,20 +141,14 @@ end BeaconcryptCore.Computational.RawCtxKdfRequestViews
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RawCtxKdfRequestViews.reply_width
 
-/-- info: 'BeaconcryptCore.Computational.RawCtxKdfRequestViews.initial_ongoing_address' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.RawCtxKdfRequestViews.initial_ongoing_address_ne' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.RawCtxKdfRequestViews.initial_ongoing_address
+#print axioms BeaconcryptCore.Computational.RawCtxKdfRequestViews.initial_ongoing_address_ne
 
 /-- info: 'BeaconcryptCore.Computational.RawCtxKdfRequestViews.initial_public_address' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RawCtxKdfRequestViews.initial_public_address
-
-/-- info: 'BeaconcryptCore.Computational.RawCtxKdfRequestViews.initial_ongoing_prefix' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RawCtxKdfRequestViews.initial_ongoing_prefix

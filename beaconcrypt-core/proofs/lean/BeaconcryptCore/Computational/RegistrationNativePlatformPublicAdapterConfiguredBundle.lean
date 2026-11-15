@@ -42,18 +42,18 @@ noncomputable local instance idleLocal :LocalOperations (RustT (StateT (Registra
 noncomputable local instance idleCrypto :CryptoOperations (RustT (StateT (RegistrationNativeExperiment.State n KemSK source×P) ProbComp)):=packedCrypto
 noncomputable local instance idleChildren :ChildOperations (RustT (StateT (RegistrationNativeExperiment.State n KemSK source×P) ProbComp)):=children
 
-variable (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
 
 noncomputable def typed (current :Native×P) (before :Private configuration created credential current) (index :Nat) :=
   RegistrationNativePlatformPublicAdapterStrongBundle.step previousLocal coins setup checks configuration.agreement.representation created
-    configuration.reservePackets index configuration.edFailure (other (m:=CutM)) (recording (m:=CutM)) configuration.views credential
+    configuration.reservePackets index configuration.edFailure (fun _=>pure (.fail .panic)) (recording (m:=CutM)) configuration.views credential
     configuration.view configuration.generator (RegistrationNativePlatformPublicAdapterConfiguration.generation configuration)
     (current.1,none) current.2 before
 
 noncomputable def step (current :Native×P) (before :Private configuration created credential current) (index :Nat) :
     TotalStep (Private configuration created credential) ((model configuration created credential (.inr (.bundle index))).run current) :=
   RegistrationNativePlatformPublicAdapterBundleRawSteps.step previousLocal setup checks configuration.agreement.representation created
-    configuration.reservePackets index configuration.edFailure (other (m:=CutM)) (recording (m:=CutM)) configuration.views credential
+    configuration.reservePackets index configuration.edFailure (fun _=>pure (.fail .panic)) (recording (m:=CutM)) configuration.views credential
     configuration.keyView configuration.sealFailure allocation configuration.reserveRegistration configuration.reservePeer
     configuration.reserveFrame configuration.erased helper configuration.view configuration.generator
     (RegistrationNativePlatformPublicAdapterConfiguration.generation configuration) (current.1,none) current.2 before
@@ -64,7 +64,7 @@ theorem query (current :Native×P) (before :Private configuration created creden
         (RegistrationNativePlatformPublicAdapterLeaves.localOperations originalLocal) configuration.edFailure writer children
         configuration.generator (physical configuration created credential current before) index :=
   RegistrationNativePlatformPublicAdapterBundleRawSteps.query previousLocal setup checks configuration.agreement.representation created
-    configuration.reservePackets index configuration.edFailure (other (m:=CutM)) (recording (m:=CutM)) configuration.views credential
+    configuration.reservePackets index configuration.edFailure (fun _=>pure (.fail .panic)) (recording (m:=CutM)) configuration.views credential
     configuration.keyView configuration.sealFailure allocation configuration.reserveRegistration configuration.reservePeer
     configuration.reserveFrame configuration.erased helper configuration.view configuration.generator
     (RegistrationNativePlatformPublicAdapterConfiguration.generation configuration) (current.1,none) current.2 before

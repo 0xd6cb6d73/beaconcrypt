@@ -69,7 +69,7 @@ theorem initial_key (pending : registration.BeaconInitialKdf) (reply : core.opti
       obtain ⟨effect, effectRun⟩ := RecordEffects.begin_record_receive_total kernel 1#u64
         pending.agreement.application_ciphertext pending.agreement.binding.associated_data
         pending.agreement.candidate.server_binding.identity_key_id
-      simp only [registration.BeaconInitialKdf.resume, kernelRun, session.RegistrationBinding.impl.associated_data,
+      simp only [registration.BeaconInitialKdf.resume, kernelRun, session.CompletedRegistrationBinding.impl.associated_data,
         pqxdh.BeaconRegistrationCandidate.server_key_id, effectRun, bind_tc_ok] at returned
       exact normalized_key pending.agreement effect result returned
 
@@ -106,7 +106,7 @@ theorem aead_rejected_key (pending : registration.BeaconRecordAead) (plaintext :
           obtain ⟨authenticated, authRun⟩ := authenticate_registration_key_id_binding_ok pending.agreement.candidate opened.key_id bound
           cases authenticated <;>
             simp [splitRun, convertedRun, authRun, pqxdh.AuthenticatedBeaconRegistration.assigned_key_id,
-              session.RegistrationBinding.finish, pqxdh.beacon_commit] at returned
+              session.CompletedRegistrationBinding.finish, pqxdh.beacon_commit] at returned
           cases returned
           rfl
 

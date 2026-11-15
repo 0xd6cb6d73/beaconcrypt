@@ -10,6 +10,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core PqxdhRefinement
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhServerAuthTailCosts
+variable (associatedData : PqxdhTranscriptAd.AssociatedData)
 open PqxdhJointIdentity PqxdhJointGapDh PqxdhServerAuthExperiment
 
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response : Type}
@@ -59,14 +60,16 @@ theorem registration_uniform {A α : Type} (setup : Setup baseSpec KemSK)
 theorem build_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (pending : pqxdh.PendingServerRegistration) (root : PqxdhSecretInputKdf.RootOutput)
     (payload : Option Pqxdh.Bytes)
-    (server : PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes))
+    (server : PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes))
     (state : RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext)) :
     ((simulateQ (tailImpl setup codec checks)
-      (PqxdhServerRegistrationPublication.build setup.source pending root payload () server)).run state).IsTotalQueryBound 64 := by
+      (PqxdhServerRegistrationPublication.build (associatedData := associatedData) setup.source pending root payload
+        associatedData server)).run state).IsTotalQueryBound 64 := by
   rw [IsTotalQueryBound, ← isQueryBound_map_iff (f := Prod.map id forgetAux),
     tail_native, ← IsTotalQueryBound]
   exact registration_uniform setup codec checks _ 1
-    ((PqxdhServerRegistrationPublication.native_build_bounds setup.source pending root payload () server).2.1 .hash) _
+    ((PqxdhServerRegistrationPublication.native_build_bounds (associatedData := associatedData) setup.source pending root payload associatedData
+      server).2.1 .hash) _
 
 set_option backward.isDefEq.respectTransparency false in
 /-- The actual complete Beacon post-root tail performs at most one attempted CTX hash. Real initial/ratchet HKDF calls and optional opening retain their original effects. -/

@@ -129,7 +129,7 @@ theorem body_erase (pending :registration.BeaconPending) (packet :core.option.Op
   bind_erase _ _ _ _ (lift_erase _) (authentication_erase setup wire note owner scalar) before
 
 noncomputable def sample (coins :QueryImpl unifSpec (StateT P ProbComp)) (checks :PqxdhServerAuthExperiment.Checks)
-    (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created Unit)
+    (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (pending :registration.BeaconPending) (packet :Option registration.ResponsePacket) (owner :Owner mlSource)
     (scalar :PqxdhJointGapDh.ScalarBytes) (before :Native) (previous :P) (past :List Log) :
     ProbComp ((RegistrationNativePlatformExtractedSdkFinish.BodyResult n KemSK mlSource×P)×List Log):=
@@ -139,7 +139,7 @@ noncomputable def sample (coins :QueryImpl unifSpec (StateT P ProbComp)) (checks
         (RegistrationWorldAgreementCompiler.erase before.server.world,past))).run before)).run previous
 
 theorem sample_erase (coins :QueryImpl unifSpec (StateT P ProbComp)) (checks :PqxdhServerAuthExperiment.Checks)
-    (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created Unit)
+    (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (pending :registration.BeaconPending) (packet :Option registration.ResponsePacket) (owner :Owner mlSource)
     (scalar :PqxdhJointGapDh.ScalarBytes) (before :Native) (previous :P) (past :List Log) :
     Prod.fst <$>sample setup wire note coins checks representation created pending packet owner scalar before previous past=

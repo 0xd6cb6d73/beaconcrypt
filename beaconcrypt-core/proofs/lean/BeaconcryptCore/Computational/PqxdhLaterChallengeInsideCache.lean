@@ -5,6 +5,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeInsideCache
 open PqxdhSecretInputKdf RawCtxCursorLineage RawCtxSelectiveChainGame
 variable {M P I D K A N : Type} {S B : Nat}

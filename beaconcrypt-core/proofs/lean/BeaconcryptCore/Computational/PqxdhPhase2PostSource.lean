@@ -8,6 +8,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhPhase2PostSource
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhPhase2SourceAux PqxdhKemIndCca PqxdhPrivateKemSource PqxdhJointKdfGame
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhPhase1AcceptanceOracle
 open PqxdhStatefulPhase1EufCma PqxdhInitializerSecrecy PqxdhChallengeSecretRouting
@@ -149,16 +150,16 @@ theorem owner_actual
     (state : SharedState A × BareState count) :
     (simulateQ (PqxdhPhase2NativeSource.native source baseImpl kem secret
       (directAux attachedVerify primitives count source localImpl))
-      (PqxdhBeaconPhase2Publication.nativeOwner decode raw owner)).run state =
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw owner)).run state =
       simulateQ (kemAmbientImpl baseImpl)
         (simulateQ (actualImpl source kem secret challenge)
           ((simulateQ (PqxdhBeaconPhase2Routed.handles source challenge
             (borrowedAux attachedVerify primitives count source localImpl))
-            (PqxdhBeaconPhase2Shared.owner decode raw owner)).run state)) := by
+            (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) decode raw owner)).run state)) := by
   exact (native_complete attachedVerify primitives count source localImpl baseImpl kem secret challenge
-    (PqxdhBeaconPhase2Publication.nativeOwner decode raw owner) state).symm.trans
+    (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw owner) state).symm.trans
       (congrArg (simulateQ (kemAmbientImpl baseImpl))
-        (PqxdhBeaconPhase2Routed.owner_actual source kem secret challenge supplied agreement
+        (PqxdhBeaconPhase2Routed.owner_actual (completedBinding := completedBinding) source kem secret challenge supplied agreement
           (borrowedAux attachedVerify primitives count source localImpl) decode raw owner state))
 
 /-- Every later private continuation receives the same optional reply, complete native owner, source cache and joint identity history. -/
@@ -178,14 +179,14 @@ theorem owner_continuation {Result : Type}
       (SharedState A × BareState count)) → OracleComp (LocalPostSpec baseSpec) Result) :
     ((simulateQ (PqxdhPhase2NativeSource.native source baseImpl kem secret
       (directAux attachedVerify primitives count source localImpl))
-      (PqxdhBeaconPhase2Publication.nativeOwner decode raw owner)).run state >>= fun result =>
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw owner)).run state >>= fun result =>
         simulateQ (kemAmbientImpl baseImpl) (simulateQ (actualImpl source kem secret challenge) (next result))) =
       simulateQ (kemAmbientImpl baseImpl)
         (simulateQ (actualImpl source kem secret challenge)
           ((simulateQ (PqxdhBeaconPhase2Routed.handles source challenge
             (borrowedAux attachedVerify primitives count source localImpl))
-            (PqxdhBeaconPhase2Shared.owner decode raw owner)).run state >>= next)) := by
-  rw [owner_actual attachedVerify primitives count source localImpl baseImpl kem secret challenge supplied agreement,
+            (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) decode raw owner)).run state >>= next)) := by
+  rw [owner_actual (completedBinding := completedBinding) attachedVerify primitives count source localImpl baseImpl kem secret challenge supplied agreement,
     simulateQ_bind, simulateQ_bind]
 
 end BeaconcryptCore.Computational.PqxdhPhase2PostSource

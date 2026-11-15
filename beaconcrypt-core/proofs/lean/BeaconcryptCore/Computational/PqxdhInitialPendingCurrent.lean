@@ -10,6 +10,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialPendingCurrent
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhKemIndCca PqxdhPhase2SourceAux PqxdhPhase1AcceptanceOracle
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhPrivateKemSource PqxdhCorrelatedExtractFamily
 open PqxdhInitialRootLabelService PqxdhInitialGenericProtocolBuilder PqxdhCorrelatedExpand
@@ -162,13 +163,13 @@ theorem program
     (client : OracleComp (PqxdhPhase2SourceScheduler.Spec baseSpec S B) Result)
     (before : PqxdhInitialPostPacking.Full RawCtxSelectedChain.Slot M P
       (PqxdhGeneratedBeaconState.IdentityHandle I) D (PqxdhGeneratedBeaconState.KemHandle K) A (BareState count) S B) :
-    (simulateQ (PqxdhInitialEvaluatedPost.handler attachedVerify primitives count fixed localImpl writer sender route decode
+    (simulateQ (PqxdhInitialEvaluatedPost.handler (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl writer sender route decode
       baseImpl kem secret challenge prior entry selected second other target) client).run (PqxdhInitialPostPacking.pack before) =
       (fun result => (result.1.1, PqxdhInitialPostPacking.pack (result.1.2, result.2))) <$>
         (simulateQ (handler attachedVerify primitives count fixed localImpl writer baseImpl kem secret challenge
           prior entry selected second other target aux)
-          ((simulateQ (PqxdhInitialPendingPost.compiler sender route decode) client).run before.1)).run before.2 := by
-  have exactSource := PqxdhInitialPendingAmbient.schedule
+          ((simulateQ (PqxdhInitialPendingPost.compiler (completedBinding := completedBinding) sender route decode) client).run before.1)).run before.2 := by
+  have exactSource := PqxdhInitialPendingAmbient.schedule (completedBinding := completedBinding)
     (RawCtxSelectedParentCompiler.pending (Auxiliary := A) fixed writer prior entry (RawCtxSelectedParentCalls.childResponse prior entry target))
     (RawCtxGenericFamilyRead.nativeReader (RawCtxSelectedChain.nativeKernel (RawCtxFreshChainCut.concreteChain target)))
     (PqxdhInitialCurrentBeacon.preparation attachedVerify primitives count fixed localImpl baseImpl kem secret challenge)
@@ -177,7 +178,7 @@ theorem program
     (selector attachedVerify primitives count baseImpl kem secret challenge)
     (fun query => lift (aux query)) sender route decode client before
   simp only [handler, PqxdhInitialEvaluatedPost.handler, records, selector_source]
-  delta PqxdhInitialCurrentBeacon.owner
+  unfold PqxdhInitialCurrentBeacon.owner
   simpa only [lifted_calls] using exactSource
 
 end Current

@@ -19,7 +19,7 @@ set_option maxRecDepth 2048
 namespace beaconcrypt_record_helpers
 
 /-- [beaconcrypt::wire::_proof_encode_frame_three::closure]
-    Source: 'beaconcrypt/src/wire.rs', lines 149:28-151:5 -/
+    Source: 'beaconcrypt/src/wire.rs', lines 145:28-147:5 -/
 def wire._proof_encode_frame_three.closure :=
   Std.U64 × Std.U64 × Array (Slice Std.U8) 3#usize
 

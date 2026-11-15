@@ -1,9 +1,8 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.AdapterPublicWrapperExtraction.Funs
-import BeaconcryptCore.Computational.RegistrationNativeServerPinStartup
-import BeaconcryptCore.Computational.RegistrationNativeHandlerCache
+import BeaconcryptCore.Computational.RegistrationWorldServerFrontend
 
-/-! The actual extracted Server fingerprint helper issues one public-key hash at each call. Its free request program retains optional primitive failures and admits a common stateful native interpreter. A retained pin-cache receipt makes recomputation deterministic while preserving the extra hash-effect charge. -/
+/-! Current Server pin selection is pure and retains the complete supplied binding and ML public key. Its native interpretation preserves every World coordinate and performs no oracle query. Generic hash-cache lemmas below concern actual transcript hash operations, not pin selection. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -21,22 +20,14 @@ abbrev Spec := registration.HashRequest →ₒ HashReply
 def request (publicKey : Std.Array U8 1952#usize) : registration.HashRequest :=
   .Single (Std.Array.to_slice publicKey)
 
-def program (binding : pqxdh.ServerBinding) (publicKey : Std.Array U8 1952#usize) : OracleComp Spec PinReply := do
-  let fingerprint ← Spec.query (request publicKey)
-  pure (do
-    let value ← fingerprint
-    (⟨binding, publicKey⟩ : registration.PinFingerprint).resume value)
+def program (binding : pqxdh.ServerBinding) (publicKey : Std.Array U8 1952#usize) : OracleComp Spec PinReply :=
+  pure (do let pin ← registration.begin_server_pin binding publicKey; ok (.Some pin))
 
-/-- Kernel-checked specialization of the complete extracted helper, including failed and divergent primitive results. -/
+/-- The complete current extracted helper selects the supplied pin without a primitive callback. -/
 theorem source [beaconcrypt.auth.Operations]
     (binding : pqxdh.ServerBinding) (publicKey : Std.Array U8 1952#usize) :
     Id.run (simulateQ (fun query => pure (beaconcrypt.auth.execute_hash query) : QueryImpl Spec Id)
-      (program binding publicKey)) =
-      beaconcrypt_public_wrapper.auth.fingerprint_pin binding publicKey := by
-  simp only [program, simulateQ_bind, simulateQ_spec_query, simulateQ_pure, pure_bind]
-  unfold beaconcrypt_public_wrapper.auth.fingerprint_pin registration.begin_server_pin
-    registration.PinFingerprint.request
-  rfl
+      (program binding publicKey)) = beaconcrypt_public_wrapper.auth.server_pin binding publicKey := rfl
 
 noncomputable def nativeHash : QueryImpl Spec (StateT (PqxdhRecordLiftWorld.State n) ProbComp) := fun query => do
   let digest ← PqxdhRecordLiftWorld.effects (.inr (.hash (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes query)))
@@ -47,17 +38,22 @@ noncomputable def native (binding : pqxdh.ServerBinding) (publicKey : Std.Array 
 
 theorem native_run (binding : pqxdh.ServerBinding) (publicKey : Std.Array U8 1952#usize)
     (before : PqxdhRecordLiftWorld.State n) :
-    (native binding publicKey).run before = (do
-      let hashed ← (PqxdhRecordLiftWorld.effects (.inr (.hash (PqxdhRefinement.absBytes publicKey)))).run before
-      pure (.ok (.Some (⟨binding, publicKey, RegistrationAuthenticationShared.digestArray hashed.1⟩ : session.ServerAuthenticationPin)), hashed.2)) := by
-  simp only [native, program, simulateQ_bind, simulateQ_spec_query, simulateQ_pure, nativeHash,
-    StateT.run_bind, StateT.run_pure, bind_assoc, pure_bind, request,
-    BeaconcryptCore.Refinement.RegistrationInputs.hashBytes, Std.Array.to_slice]
+    (native binding publicKey).run before =
+      pure (.ok (.Some (⟨binding, publicKey⟩ : session.ServerAuthenticationPin)), before) := rfl
+
+/-- Repeated selection returns the complete stored pin and leaves the World unchanged. -/
+theorem native_exact (pin : session.ServerAuthenticationPin) (before : PqxdhRecordLiftWorld.State n) :
+    (native pin.binding pin.public_key).run before = pure (.ok (.Some pin), before) := by
+  cases pin
   rfl
 
-def Cached (pin : session.ServerAuthenticationPin) (cache : CtxRomAuth.CtxRO.QueryCache) : Prop :=
-  ∃ digest, cache ((), PqxdhRefinement.absBytes pin.public_key) = some digest ∧
-    RegistrationAuthenticationShared.digestArray digest = pin.fingerprint
+theorem native_no_uniform (pin : session.ServerAuthenticationPin) (before : PqxdhRecordLiftWorld.State n) :
+    ((native pin.binding pin.public_key).run before).IsTotalQueryBound 0 := by
+  rw [native_exact]
+  trivial
+
+theorem program_no_queries (binding : pqxdh.ServerBinding) (publicKey : Std.Array U8 1952#usize) :
+    (program binding publicKey).IsTotalQueryBound 0 := by trivial
 
 /-- Cache hits retain the exact World and uniform count while recording one additional hash-effect request. -/
 theorem hash_hit (input : Pqxdh.Bytes) (digest : CtxRomAuth.CtxDigest)
@@ -72,27 +68,6 @@ theorem hash_hit (input : Pqxdh.Bytes) (digest : CtxRomAuth.CtxDigest)
   rw [hit]
   simp only [PqxdhRecordLiftWorld.sampled, StateT.run, simulateQ_pure]
   rfl
-
-/-- A stored actual pin-cache receipt makes repeated recomputation return the same pin, with the literal extra hash charge. -/
-theorem native_hit (pin : session.ServerAuthenticationPin) (before : PqxdhRecordLiftWorld.State n)
-    (cached : Cached pin before.primitive.2) :
-    (native pin.binding pin.public_key).run before =
-      pure (.ok (.Some pin), PqxdhRecordLiftWorld.chargeEffect (.inr (.hash (PqxdhRefinement.absBytes pin.public_key))) before) := by
-  obtain ⟨digest, hit, fingerprint⟩ := cached
-  rw [native_run, hash_hit _ _ _ hit]
-  simp only [pure_bind, fingerprint]
-
-/-- The repeated cached helper emits zero underlying uniform queries; its hash-effect request remains charged. -/
-theorem native_hit_uniform (pin : session.ServerAuthenticationPin) (before : PqxdhRecordLiftWorld.State n)
-    (cached : Cached pin before.primitive.2) :
-    ((native pin.binding pin.public_key).run before).IsTotalQueryBound 0 := by
-  rw [native_hit pin before cached]
-  trivial
-
-theorem program_hashes (binding : pqxdh.ServerBinding) (publicKey : Std.Array U8 1952#usize) :
-    (program binding publicKey).IsTotalQueryBound 1 := by
-  rw [program, isTotalQueryBound_query_bind_iff]
-  exact ⟨by decide, fun _ => by trivial⟩
 
 theorem charged_counts (input : Pqxdh.Bytes) (before : PqxdhRecordLiftWorld.State n) :
     let after := PqxdhRecordLiftWorld.chargeEffect (.inr (.hash input)) before
@@ -124,7 +99,7 @@ open BeaconcryptCore.Refinement.PublicWrapperPlatform
 variable [Material] [Platform] [BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations]
 variable [LocalOperations] [CryptoOperations] [beaconcrypt.auth.Operations]
 
-/-- The original Server helper performs its actual ordered getters before the same exact lifted fingerprint request program. Getter failures remain literal RustM failures. -/
+/-- The actual Server helper preserves the ordered key getters before pure pin selection. Getter failures remain literal RustM failures. -/
 theorem server_source (self : beaconcrypt_public_wrapper.server.Server) :
     beaconcrypt_public_wrapper.server.Server.authentication_pin self = (do
       let key ← beaconcrypt_public_wrapper.server.Server.identity_pk self
@@ -137,38 +112,19 @@ theorem server_source (self : beaconcrypt_public_wrapper.server.Server) :
   rfl
 end Adapter
 
-/-- Startup's actual shared fingerprint call establishes the cache receipt needed by every later repeated helper. -/
-theorem initialize_cached {Auxiliary : Type} (binding : pqxdh.ServerBinding) (publicKey : Std.Array U8 1952#usize)
-    (before after : RegistrationWorldServerReplay.Global n Auxiliary) (pin : session.ServerAuthenticationPin)
-    (supported : (.ok (.Some pin), after) ∈ support
-      ((RegistrationWorldServerFrontend.initializePin binding publicKey).run before)) :
-    Cached pin after.2.world.1.primitive.2 := by
-  rw [RegistrationWorldServerFrontend.initializePin_native] at supported
-  simp only [mem_support_bind_iff, mem_support_pure_iff] at supported
-  obtain ⟨hashed, reached, returned⟩ := supported
-  cases returned
-  simp only [RegistrationWorldServerCompletion.capability, StateT.run, support_map] at reached
-  obtain ⟨world, actual, same⟩ := reached
-  cases same
-  exact ⟨world.1, hash_cached _ _ _ actual, rfl⟩
-
-/-- The free helper's stateful interpretation is exactly the actual native startup fingerprint on the whole retained Global state. -/
+/-- The stateful free helper and native startup preserve the whole retained Global state. -/
 theorem initialize_native {Auxiliary : Type} (binding : pqxdh.ServerBinding) (publicKey : Std.Array U8 1952#usize)
     (before : RegistrationWorldServerReplay.Global n Auxiliary) :
     (RegistrationWorldServerFrontend.initializePin binding publicKey).run before =
       (fun result => (result.1, (before.1, { before.2 with world := (result.2, before.2.world.2) }))) <$>
         (native binding publicKey).run before.2.world.1 := by
-  rw [RegistrationWorldServerFrontend.initializePin_native, native_run]
-  simp only [RegistrationWorldServerCompletion.capability, StateT.run, map_bind, map_pure, bind_map_left]
+  rw [RegistrationWorldServerFrontend.initializePin_native, native_run, map_pure]
 
-/-- Repeated cache-hit recomputation passes its exact charged poststate to every adaptive continuation. -/
-theorem native_hit_bind {Value : Type} (pin : session.ServerAuthenticationPin) (before : PqxdhRecordLiftWorld.State n)
-    (cached : Cached pin before.primitive.2)
+/-- Pure pin selection passes the original state to every adaptive continuation. -/
+theorem native_bind {Value : Type} (pin : session.ServerAuthenticationPin) (before : PqxdhRecordLiftWorld.State n)
     (next : PinReply → StateT (PqxdhRecordLiftWorld.State n) ProbComp Value) :
-    ((native pin.binding pin.public_key >>= next).run before) =
-      (next (.ok (.Some pin))).run
-        (PqxdhRecordLiftWorld.chargeEffect (.inr (.hash (PqxdhRefinement.absBytes pin.public_key))) before) := by
-  rw [StateT.run_bind, native_hit pin before cached, pure_bind]
+    ((native pin.binding pin.public_key >>= next).run before) = (next (.ok (.Some pin))).run before := by
+  rw [StateT.run_bind, native_exact, pure_bind]
 
 end BeaconcryptCore.Computational.RegistrationNativeServerPinRecompute
 
@@ -184,29 +140,29 @@ end BeaconcryptCore.Computational.RegistrationNativeServerPinRecompute
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativeServerPinRecompute.native_run
 
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeServerPinRecompute.native_exact' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativeServerPinRecompute.native_exact
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeServerPinRecompute.native_no_uniform' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativeServerPinRecompute.native_no_uniform
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeServerPinRecompute.program_no_queries' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativeServerPinRecompute.program_no_queries
+
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativeServerPinRecompute.hash_hit' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativeServerPinRecompute.hash_hit
-
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeServerPinRecompute.native_hit' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeServerPinRecompute.native_hit
-
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeServerPinRecompute.native_hit_uniform' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeServerPinRecompute.native_hit_uniform
-
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeServerPinRecompute.program_hashes' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeServerPinRecompute.program_hashes
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativeServerPinRecompute.charged_counts' depends on axioms: [propext,
  Classical.choice,
@@ -226,20 +182,14 @@ end BeaconcryptCore.Computational.RegistrationNativeServerPinRecompute
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativeServerPinRecompute.server_source
 
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeServerPinRecompute.initialize_cached' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeServerPinRecompute.initialize_cached
-
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativeServerPinRecompute.initialize_native' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativeServerPinRecompute.initialize_native
 
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeServerPinRecompute.native_hit_bind' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeServerPinRecompute.native_bind' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeServerPinRecompute.native_hit_bind
+#print axioms BeaconcryptCore.Computational.RegistrationNativeServerPinRecompute.native_bind

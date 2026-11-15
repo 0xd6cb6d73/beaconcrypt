@@ -9,6 +9,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhPhase2GeneratedDriver
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedPhase1Prefix PqxdhGeneratedBeaconState
 open PqxdhGeneratedBeaconSelector (Published bundle)
@@ -35,7 +36,7 @@ noncomputable def driver {setup : StatefulPhase1Setup baseSpec}
     let started ← PqxdhProtocolSelector.coins
       (start setup env.phase1Writer index publicIdentity generated env.binding (bundle transcript) env.initial)
     let selected ← (simulateQ
-      (PqxdhPhase2SourceScheduler.compiler env.source env.recordWriter env.senderId env.route env.decode env.localImpl)
+      (PqxdhPhase2SourceScheduler.compiler (completedBinding := completedBinding) env.source env.recordWriter env.senderId env.route env.decode env.localImpl)
       (program.main (started.1.map (fun bytes => ⟨transcript, bytes⟩)))).run started.2
     pure (selected.1.1, (selected.1.2, selected.2))
 
@@ -51,7 +52,7 @@ noncomputable def ordinaryRun {setup : StatefulPhase1Setup baseSpec}
   let started ← ccaCoins
     (start setup env.phase1Writer index publicIdentity generated env.binding (bundle transcript) env.initial)
   let selected ← (simulateQ
-    (PqxdhPhase2SourceScheduler.ordinary attachedVerify primitives count env.source env.recordWriter
+    (PqxdhPhase2SourceScheduler.ordinary (completedBinding := completedBinding) attachedVerify primitives count env.source env.recordWriter
       env.senderId env.route env.decode env.localImpl)
     (program.main (started.1.map (fun bytes => ⟨transcript, bytes⟩)))).run (packState started.2 identities)
   pure (selected.1.1, (selected.1.2, selected.2))
@@ -71,13 +72,13 @@ theorem driver_borrowed {setup : StatefulPhase1Setup baseSpec}
     (transcript : Phase1PublicTranscript setup.Context) (identities : BareState count) :
     (fun result => (result.1.1, (result.1.2.1, packState result.1.2.2 result.2))) <$>
       (simulateQ (borrowedSelector attachedVerify primitives count)
-        ((driver env program).main index publicIdentity generated transcript)).run identities =
-      ordinaryRun env program attachedVerify primitives count index publicIdentity generated transcript identities := by
+        ((driver (completedBinding := completedBinding) env program).main index publicIdentity generated transcript)).run identities =
+      ordinaryRun (completedBinding := completedBinding) env program attachedVerify primitives count index publicIdentity generated transcript identities := by
   simp only [driver, ordinaryRun, simulateQ_bind, StateT.run_bind, PqxdhPhase2SourceAux.borrowed_coins,
     ccaCoins, simulateQ_map, bind_map_left, map_bind, bind_pure_comp]
   apply bind_congr
   intro started
-  have complete := PqxdhPhase2SourceScheduler.compiler_complete attachedVerify primitives count
+  have complete := PqxdhPhase2SourceScheduler.compiler_complete (completedBinding := completedBinding) attachedVerify primitives count
     env.source env.recordWriter env.senderId env.route env.decode env.localImpl
     (program.main (started.1.map (fun bytes => ⟨transcript, bytes⟩))) started.2 identities
   have reordered := congrArg (fun work => (fun result => (result.1.1, (result.1.2, result.2))) <$> work) complete
@@ -93,13 +94,13 @@ theorem driver_private {KemSK : Type} {setup : StatefulPhase1Setup baseSpec}
     (transcript : Phase1PublicTranscript setup.Context) (identities : BareState count) :
     (simulateQ (PqxdhPrivateSourceCoins.privateImpl attachedVerify primitives count)
       (simulateQ (localSelector baseImpl kem secret)
-        ((driver env program).main index publicIdentity generated transcript))).run identities =
+        ((driver (completedBinding := completedBinding) env program).main index publicIdentity generated transcript))).run identities =
       evalKem baseImpl kem secret (unpackSelection <$>
-        ordinaryRun env program attachedVerify primitives count index publicIdentity generated transcript identities) := by
+        ordinaryRun (completedBinding := completedBinding) env program attachedVerify primitives count index publicIdentity generated transcript identities) := by
   rw [localSelector_complete]
   apply congrArg (evalKem baseImpl kem secret)
   have original := congrArg (fun work => unpackSelection <$> work)
-    (driver_borrowed env program attachedVerify primitives count index publicIdentity generated transcript identities)
+    (driver_borrowed (completedBinding := completedBinding) env program attachedVerify primitives count index publicIdentity generated transcript identities)
   simp only [Functor.map_map, unpackSelection, PqxdhPhase2OldSource.unpackState_packState] at original
   change (id <$> _) = _ at original
   rw [id_map] at original
@@ -112,14 +113,14 @@ theorem program_complete {KemSK : Type} {setup : StatefulPhase1Setup baseSpec}
     (primitives : Primitives) (count : Nat) (baseImpl : QueryImpl baseSpec ProbComp)
     (kem : PqxdhKemIndCca.MlKemScheme (baseSpec := baseSpec) (SK := KemSK)) :
     privateRun attachedVerify primitives count
-      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (driver env program)) = (do
+      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (driver (completedBinding := completedBinding) env program)) = (do
       let seed ← sampleSeed
       let generated ← generate baseImpl kem setup (primitives.publicKeys seed).ed25519
       let material := publicMaterial setup (primitives.publicKeys seed).ed25519 generated
       let signed := signedCandidate primitives seed (primitives.publicKeys seed).ed25519 material.keyTuple
       let prior := singletonState primitives count seed
       let selected ← evalKem baseImpl kem generated.secret (unpackSelection <$>
-        ordinaryRun env program attachedVerify primitives count 0 (primitives.publicKeys seed)
+        ordinaryRun (completedBinding := completedBinding) env program attachedVerify primitives count 0 (primitives.publicKeys seed)
           (eraseGenerated generated) (transcript signed material.context)
           (signedGlobalState primitives seed count 0 material.keyTuple prior.1,
            signedState primitives seed 0 material.keyTuple prior.2))

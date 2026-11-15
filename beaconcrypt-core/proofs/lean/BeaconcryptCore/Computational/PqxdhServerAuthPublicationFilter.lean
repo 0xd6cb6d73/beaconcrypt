@@ -10,6 +10,7 @@ open PqxdhServerAuthExperiment PqxdhServerAuthEntryFactor PqxdhServerAuthCtxStat
 open PqxdhJointKdfGame PqxdhServerAuthCtxCalls
 open PqxdhServerAuthCtxBuild (Outcome Log Response)
 open PqxdhServerAuthPublicationFailure
+variable (associatedData : PqxdhTranscriptAd.AssociatedData)
 variable {ι KemSK Reader WireResponse Result : Type} {baseSpec : OracleSpec ι}
 
 /-- Actual component refusal produces the identical complete source settlement in both paired views, before any public response exists. -/
@@ -25,7 +26,7 @@ theorem selected_refusal (source : FixedHkdfSha512NoSaltSource) (codec : Codec R
     (checks : Checks) (rest : Residual) (session : Nat)
     (token : PqxdhServerRelatedRootConsumer.Returned) (payload : Option Pqxdh.Bytes)
     (state : Local KemSK) (result : (Option (Option Response) × Local KemSK) × (Option (Option Response) × Local KemSK))
-    (supported : result ∈ support (selected source codec checks rest session token payload state))
+    (supported : result ∈ support (selected associatedData source codec checks rest session token payload state))
     (refused : result.1.1 = none) : result.1 = result.2 := by
   simp only [selected, support_map, Set.mem_image] at supported
   obtain ⟨actual, _, rfl⟩ := supported
@@ -50,18 +51,22 @@ theorem build_unpublished (source : FixedHkdfSha512NoSaltSource) (codec : Codec 
   unfold build at supported
   split at supported
   · simp_all only [mem_support_pure_iff]
-  · split_ifs at supported with marked
-    · cases answer : result.1.1 with
-      | none =>
-          exact congrArg (Prod.map id PqxdhServerAuthPublicationGhost.project)
-            (selected_refusal source codec checks rest session _ payload state result supported answer)
-      | some value =>
-          cases value with
-          | none => exact selected_rejection source codec checks rest session _ payload state result supported answer
-          | some response => simp [published, marked, answer] at quiet
-    · simp only [support_map, Set.mem_image] at supported
-      rcases supported with ⟨actual, _, rfl⟩
-      rfl
+  · split at supported
+    · simp_all only [mem_support_pure_iff]
+    · simp only [mem_support_bind_iff] at supported
+      obtain ⟨digest, _, supported⟩ := supported
+      split_ifs at supported with marked
+      · cases answer : result.1.1 with
+        | none =>
+            exact congrArg (Prod.map id PqxdhServerAuthPublicationGhost.project)
+              (selected_refusal _ source codec checks rest session _ payload state result supported answer)
+        | some value =>
+            cases value with
+            | none => exact selected_rejection _ source codec checks rest session _ payload state result supported answer
+            | some response => simp [published, marked, answer] at quiet
+      · simp only [support_map, Set.mem_image] at supported
+        rcases supported with ⟨actual, _, rfl⟩
+        rfl
 
 /-- Every original API route has equal projected settlements until actual selected publication, without suppressing ordinary successful source operations. -/
 theorem route_unpublished (setup : Setup baseSpec KemSK) (codec : Codec Reader WireResponse)

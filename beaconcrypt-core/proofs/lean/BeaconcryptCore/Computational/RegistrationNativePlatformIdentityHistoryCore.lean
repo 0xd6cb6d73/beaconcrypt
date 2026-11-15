@@ -18,7 +18,7 @@ open RegistrationNativeIdentitySourceSimulation (NewState)
 variable {n : Nat} {I KemSK Auxiliary Platform Value Next : Type} {base : OracleSpec I}
 variable {source : RegistrationNativeMldsa.Source}
 variable (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 
 def Preserves (index handle : Nat) (work : M n KemSK Auxiliary Platform source Value) : Prop :=
   ∀ before result, Good setup.joint index handle before.1 →

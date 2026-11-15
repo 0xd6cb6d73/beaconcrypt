@@ -122,7 +122,7 @@ private theorem tail_native (control : pqxdh.ServerState)
 /-- Actual returned Server/map views reconstruct the known-install tail, preserving its reached backend. -/
 theorem projected
     (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (control : pqxdh.ServerState) (publication : Option AdapterPublicServerBuildTrace.Publication)
     (word : AdapterPublicServerBuildBody.Reply) (raw : RegistrationNativePlatformCutJournal.State Native)
     (held : AdapterPublicWrapperState.Server view views created credential word.2

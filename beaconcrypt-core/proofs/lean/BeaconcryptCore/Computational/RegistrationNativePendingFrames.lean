@@ -218,7 +218,7 @@ theorem finish (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire) (
 
 private theorem beacon (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : M n KemSK source RegistrationServerRoleBackend.State Value)
     (law : ∀ owners env result, result ∈ support ((work.run owners).run env) → Backwards owners result.1.2)
     (before : RegistrationNativeExperiment.State n KemSK source)
@@ -241,7 +241,7 @@ def NonBundle : RegistrationNativeRawAdapter.TypedSpec.Domain → Prop
 /-- Every original typed callback except bundle preserves the exact backward pending frame, with no initial phase or journal condition. -/
 theorem handler (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (allowed : NonBundle query)
     (before : RegistrationNativeExperiment.State n KemSK source)
     (result : RegistrationNativeRawAdapter.TypedSpec.Range query × RegistrationNativeExperiment.State n KemSK source)

@@ -42,7 +42,7 @@ theorem rawResume_tag (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)
     (value : PqxdhServerRootPreparation.Verified Reader)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)
-    (consumed : List Pqxdh.Bytes) (state : NativeState KemSK) (owners : List EncodedEntry)
+    (consumed : List Pqxdh.Bytes) (state : NativeState KemSK) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))
     (next : Option Nat → OracleComp (SourceSpec KemSK) X) (reply : PqxdhRegistrationJointKemCut.Reply)
     (outcome : Outcome KemSK R)
     (reached : outcome ∈ support (rawResume setup codec checks identityIndex publicIdentity observe raw value ephemeral
@@ -60,7 +60,7 @@ theorem rawResume_tag (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
 /-- Every outcome of the actual source command program of the tagged client whose selected accept returned a session records raw bytes whose attached verification succeeds. -/
 theorem program_tag (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (work : OracleComp (SourceSpec KemSK) X) (index : Nat)
-    (owners : List EncodedEntry) (state : NativeState KemSK) (outcome : Outcome KemSK (X × Tag))
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK) (outcome : Outcome KemSK (X × Tag))
     (reached : outcome ∈ support (PqxdhRegistrationJointKemCommands.program setup codec checks identityIndex
       publicIdentity (tag work index) owners state))
     (session : accepted outcome.1.1.2 = true) :
@@ -127,7 +127,7 @@ set_option backward.isDefEq.respectTransparency false in
 /-- At a pending KEM cut of the identity-observation exposure, every completed stopped-router continuation that satisfies the run event encapsulated to the selected reserved key: the recorded raw bytes are those of the cut, so their verified PQ key is the requested key, and the run event equates that key with the reserved key at the selected creation index. -/
 theorem active_raw (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (decision : X → Bool) (identityIndex : Nat) (publicIdentity : PublicIdentity)
-    (work : OracleComp (SourceSpec KemSK) X) (index : Nat) (owners : List EncodedEntry) (state : NativeState KemSK)
+    (work : OracleComp (SourceSpec KemSK) X) (index : Nat) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK)
     (selected : Nat) (pairs : List (MlKem768PublicKey × KemSK)) (chosen : MlKem768PublicKey × KemSK)
     (reserved : pairs[selected]? = some chosen) (request : PqxdhRegistrationJointKemCut.Request)
     (resume : PqxdhRegistrationJointKemCut.Reply →
@@ -172,7 +172,7 @@ theorem run_le_real (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
       ((simulateQ (PqxdhDynamicKemJointRouter.stopped setup.baseImpl setup.joint setup.kem selected.val
         (List.ofFn (selected.insertNth chosen others)))
         (PqxdhRegistrationJointKemCommands.program setup codec checks created.server.server.metadata.identityIndex
-          created.publicIdentity (tag work index) [] (PqxdhRegistrationJointInitializedAccept.initial created))).run).run
+          created.publicIdentity (tag work index) ([], fun _ => none) (PqxdhRegistrationJointInitializedAccept.initial created))).run).run
         (joint, PqxdhDynamicKemRouter.empty)] {true} ≤
     𝒟[((simulateQ (PqxdhDynamicKemJointRouter.stopped setup.baseImpl setup.joint setup.kem selected.val
         (List.ofFn (selected.insertNth chosen others)))
@@ -356,7 +356,7 @@ theorem client_tag (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
     obtain ⟨executed, ran, rfl⟩ := reached
     cases found
     have program : executed.1 ∈ support (PqxdhRegistrationJointKemCommands.program setup codec checks
-        created.server.server.metadata.identityIndex created.publicIdentity (tag work index) []
+        created.server.server.metadata.identityIndex created.publicIdentity (tag work index) ([], fun _ => none)
         (PqxdhRegistrationJointInitializedAccept.initial created)) := by
       apply support_simulateQ_run'_subset
         (PqxdhLiveKemBirth.impl setup.baseImpl setup.joint setup.kem) _ (PqxdhRegistrationJointInitializedSchedule.initial

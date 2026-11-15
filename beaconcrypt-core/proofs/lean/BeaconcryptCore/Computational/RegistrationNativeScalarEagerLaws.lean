@@ -23,7 +23,7 @@ theorem create_program (setup : Setup base KemSK) (source : RegistrationNativeMl
       let earlier ← ((RegistrationNativeBeaconFrontend.prepare (n := n) (KemSK := KemSK) source edPin mlPin keyId).run owners).run env
       match earlier.1.1 with
       | .ok (some prepared) =>
-          ((RegistrationNativeBeaconFrontend.appendBorn setup source edPin keyId prepared.pin prepared.credentials prepared.identity
+          ((RegistrationNativeBeaconFrontend.appendBorn setup source edPin keyId prepared.pin prepared.identity
             (if earlier.1.2.length = selected then scalar else prepared.prekey)).run earlier.1.2).run earlier.2
       | .ok none => pure ((.ok none, earlier.1.2), earlier.2)
       | .fail error => pure ((.fail error, earlier.1.2), earlier.2)

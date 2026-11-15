@@ -9,7 +9,7 @@ import BeaconcryptCore.Computational.RawCtxSharedPrimitive
 
 This module is stage B9a of the Server-authentication proof (Milestone B, route R1). It is a component result about the Beacon's Phase 2 finish and the Server's registration seal. It reads no definition of the Server-authentication experiment and adds no premise to any existing theorem.
 
-The Beacon finishes registration by opening the Server's sequence-one record with a local raw owner (`PqxdhBeaconPhase2Publication.localOwner`), which pins the Server's identity key ID as sender and uses the candidate's 281-byte associated data. The raw receive rejects any other sender before opening (`ratchet.rs:505-513`). The Beacon then requires sequence one and checks that the first eight plaintext bytes are the little-endian encoding of the assigned key ID from the Phase 2 response (`beacon.rs:462-484`, core `pqxdh.rs:616-628`). The Server seals exactly that binding followed by the payload, with its assigned key ID as target and its identity key ID as sender (`server.rs:463-477`, `PqxdhServerRegistrationPublication.firstContext`).
+The Beacon finishes registration by opening the Server's sequence-one record with a local raw owner (`PqxdhBeaconPhase2Publication.localOwner`), which pins the Server's identity key ID as sender and uses the retained session AD151. The raw receive rejects any other sender before opening (`ratchet.rs:505-513`). The Beacon then requires sequence one and checks that the first eight plaintext bytes are the little-endian encoding of the assigned key ID from the Phase 2 response (`beacon.rs:462-484`, core `pqxdh.rs:616-628`). The Server seals exactly that binding followed by the payload, with its assigned key ID as target and its identity key ID as sender (`server.rs:463-477`, `PqxdhServerRegistrationPublication.firstContext`).
 
 `matching_open` is the local-owner form of the existing matched-plaintext lemma: if the Beacon's record has the same full CTX tuple (nonce, associated data with sequence and sender, protected payload) as a correct successful seal under the key that opened it, the Beacon's plaintext, sequence and sender are exactly those of the seal. `accepted_of_match` then shows that the Beacon accepts exactly the sealed key ID, payload and associated data (`sealedFields`), using `afterOpening_success`, `plaintextBinding_bytes`, `registration_key_id_binding_abs` and `LE64_inj`. `fresh_of_differs` (every history entry records a key-ID-bound seal context with different sealed fields) and `fresh_forall` (the accepted fields differ from the sealed fields of every key-ID-bound context any entry records) state the contrapositive in the form the selected authentication observer reads, and `attempt_accepted` and `won_of_attempt` turn it into an observer win. `afterOpening_of_binding` is the converse of the binding gate, `relay_fields` checks on an honest relay that the Beacon's accepted fields and the Server's sealed fields agree, and `joint` shows that all premises of `accepted_of_match` hold together for every non-empty payload and every `Pqxdh.Crypto` whose seal of the bound payload has a non-empty body; the non-empty payload is necessary, because the Beacon's binding gate needs more than eight plaintext bytes.
 
@@ -25,6 +25,7 @@ open PqxdhRefinement BeaconcryptCore.Refinement BeaconcryptCore.Refinement.Repre
 set_option autoImplicit false
 
 namespace BeaconcryptCore.Computational.PqxdhPhase2LocalMatching
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open CtxRomAuth
 open PqxdhBeaconPhase2Publication (Staged afterOpening localOwner clearedCandidate)
 
@@ -42,14 +43,14 @@ def sealedFields (context : RawCtxSourceSend.SealContext) : Std.U64 × Pqxdh.Byt
 def KeyIdBound (context : RawCtxSourceSend.SealContext) : Prop :=
   context.plaintext.take 8 = Pqxdh.LE64 context.targetId.val
 
-/-- The Server's registration seal context binds its target key ID and carries the caller's payload after the binding, with the Server identity key ID as sender and the candidate's associated data. -/
+/-- The Server's registration seal context binds its target key ID and carries the caller's payload after the binding, with the Server identity key ID as sender and the explicit session associated data. -/
 theorem firstContext_bound (candidate : pqxdh.ServerRegistrationCandidate)
     (binding : pqxdh.RegistrationKeyIdBinding) (hbinding : candidate.key_id_binding = ok binding)
     (payload : Pqxdh.Bytes) :
-    KeyIdBound (PqxdhServerRegistrationPublication.firstContext candidate (absBytes binding.bytes ++ payload)) ∧
-      sealedFields (PqxdhServerRegistrationPublication.firstContext candidate (absBytes binding.bytes ++ payload)) =
-        (candidate.key_id, payload, absBytes candidate.associated_data) ∧
-      (PqxdhServerRegistrationPublication.firstContext candidate (absBytes binding.bytes ++ payload)).senderId =
+    KeyIdBound (PqxdhServerRegistrationPublication.firstContext candidate associatedData (absBytes binding.bytes ++ payload)) ∧
+      sealedFields (PqxdhServerRegistrationPublication.firstContext candidate associatedData (absBytes binding.bytes ++ payload)) =
+        (candidate.key_id, payload, absBytes associatedData) ∧
+      (PqxdhServerRegistrationPublication.firstContext candidate associatedData (absBytes binding.bytes ++ payload)).senderId =
         candidate.server_identity_key_id := by
   obtain ⟨actual, hactual, hbytes⟩ := PqxdhServerRegistrationPublication.candidate_binding candidate
   have same : actual = binding := RustM.ok.inj (hactual.symm.trans hbinding)
@@ -58,7 +59,7 @@ theorem firstContext_bound (candidate : pqxdh.ServerRegistrationCandidate)
   refine ⟨?_, ?_, rfl⟩
   · change (absBytes actual.bytes ++ payload).take 8 = Pqxdh.LE64 candidate.key_id.val
     rw [List.take_left' hlength, hbytes]
-  · change (candidate.key_id, (absBytes actual.bytes ++ payload).drop 8, absBytes candidate.associated_data) = _
+  · change (candidate.key_id, (absBytes actual.bytes ++ payload).drop 8, absBytes associatedData) = _
     rw [List.drop_left' hlength]
 
 /-! ## Binding authentication at the Beacon -/
@@ -66,14 +67,14 @@ theorem firstContext_bound (candidate : pqxdh.ServerRegistrationCandidate)
 /-- A staged Phase 2 success keeps the candidate unchanged, was sent by the pinned Server key ID, has sequence one, and its plaintext starts with the little-endian encoding of the candidate's assigned key ID. -/
 theorem authenticated_binding (candidate : pqxdh.BeaconRegistrationCandidate) (kernel : ConcreteRatchetKernel)
     (reply : core.option.Option RawCtxWholeOwner.Decrypted) (staged : Staged)
-    (success : afterOpening candidate kernel reply = some staged) :
+    (success : afterOpening candidate associatedData kernel reply = some staged) :
     reply = .Some staged.opened ∧ staged.authenticated.candidate = candidate ∧
       staged.opened.keyId = candidate.server_binding.identity_key_id ∧
       staged.opened.sequence = 1#u64 ∧ 8 < staged.opened.plaintext.length ∧
       staged.opened.plaintext.take 8 = Pqxdh.LE64 candidate.assigned_key_id.val ∧
-      staged.associatedData = candidate.associated_data := by
+      staged.associatedData = associatedData := by
   obtain ⟨hreply, hsequence, _, had, hlength, hauth⟩ :=
-    PqxdhBeaconPhase2Publication.afterOpening_success candidate kernel reply staged success
+    PqxdhBeaconPhase2Publication.afterOpening_success (associatedData := associatedData) candidate kernel reply staged success
   obtain ⟨binding, hbinding, hbytes⟩ := registration_key_id_binding_abs candidate.assigned_key_id
   unfold pqxdh.authenticate_registration_key_id_binding at hauth
   split at hauth
@@ -92,12 +93,12 @@ theorem authenticated_binding (candidate : pqxdh.BeaconRegistrationCandidate) (k
 /-- If the Beacon's staged plaintext and associated data are those of a key-ID-bound seal context, the Beacon accepts exactly the sealed key ID, payload and associated data. -/
 theorem accepted_of_plaintext (candidate : pqxdh.BeaconRegistrationCandidate) (kernel : ConcreteRatchetKernel)
     (reply : core.option.Option RawCtxWholeOwner.Decrypted) (staged : Staged)
-    (success : afterOpening candidate kernel reply = some staged)
+    (success : afterOpening candidate associatedData kernel reply = some staged)
     (context : RawCtxSourceSend.SealContext) (bound : KeyIdBound context)
     (plaintext : staged.opened.plaintext = context.plaintext)
-    (associated : absBytes candidate.associated_data = context.associatedData) :
+    (associated : absBytes associatedData = context.associatedData) :
     acceptedFields staged = sealedFields context := by
-  obtain ⟨_, hcandidate, _, _, _, hprefix, had⟩ := authenticated_binding candidate kernel reply staged success
+  obtain ⟨_, hcandidate, _, _, _, hprefix, had⟩ := authenticated_binding (associatedData := associatedData) candidate kernel reply staged success
   have hencoded : Pqxdh.LE64 candidate.assigned_key_id.val = Pqxdh.LE64 context.targetId.val := by
     rw [← hprefix, plaintext]
     exact bound
@@ -126,7 +127,7 @@ theorem afterOpening_of_binding (candidate : pqxdh.BeaconRegistrationCandidate) 
     (sender : opened.keyId = candidate.server_binding.identity_key_id) (sequence : opened.sequence = 1#u64)
     (payload : Pqxdh.Bytes) (nonempty : payload ≠ [])
     (plaintext : opened.plaintext = Pqxdh.LE64 candidate.assigned_key_id.val ++ payload) :
-    afterOpening candidate kernel (.Some opened) = some ⟨⟨candidate⟩, candidate.associated_data, kernel, opened⟩ := by
+    afterOpening candidate associatedData kernel (.Some opened) = some ⟨⟨candidate⟩, associatedData, kernel, opened⟩ := by
   have hlength : 8 < opened.plaintext.length := by
     have positive : 0 < payload.length := List.length_pos_iff.mpr nonempty
     rw [plaintext, List.length_append, Pqxdh.LE64_length]
@@ -144,28 +145,28 @@ theorem afterOpening_of_binding (candidate : pqxdh.BeaconRegistrationCandidate) 
   unfold afterOpening
   simp only [sequence, ne_eq, not_true_eq_false, ↓reduceIte, hlength, ↓reduceDIte, hnormal]
 
-/-- Consistency of the two field readings on an honest relay: if the Beacon opens exactly the plaintext of the Server's registration seal with a non-empty payload, from the pinned sender at sequence one, and the Beacon candidate's assigned key ID and associated data are the Server candidate's, the Beacon stages the record and accepts exactly the sealed fields. -/
-theorem relay_fields (server : pqxdh.ServerRegistrationCandidate) (binding : pqxdh.RegistrationKeyIdBinding)
+/-- Consistency of the two field readings on an honest relay: if the Beacon opens exactly the plaintext of the Server's registration seal with a non-empty payload, from the pinned sender at sequence one, and the Beacon candidate's assigned key ID is the Server candidate's and their explicitly supplied session AD arrays agree, the Beacon stages the record and accepts exactly the sealed fields. -/
+theorem relay_fields (server : pqxdh.ServerRegistrationCandidate) (serverAssociatedData : Std.Array Std.U8 151#usize) (binding : pqxdh.RegistrationKeyIdBinding)
     (hbinding : server.key_id_binding = ok binding) (payload : Pqxdh.Bytes) (nonempty : payload ≠ [])
     (candidate : pqxdh.BeaconRegistrationCandidate) (kernel : ConcreteRatchetKernel)
     (opened : RawCtxWholeOwner.Decrypted)
     (assigned : candidate.assigned_key_id = server.key_id)
-    (associated : candidate.associated_data = server.associated_data)
+    (associated : associatedData = serverAssociatedData)
     (sender : opened.keyId = candidate.server_binding.identity_key_id) (sequence : opened.sequence = 1#u64)
     (plaintext : opened.plaintext =
-      (PqxdhServerRegistrationPublication.firstContext server (absBytes binding.bytes ++ payload)).plaintext) :
-    ∃ staged, afterOpening candidate kernel (.Some opened) = some staged ∧
+      (PqxdhServerRegistrationPublication.firstContext server serverAssociatedData (absBytes binding.bytes ++ payload)).plaintext) :
+    ∃ staged, afterOpening candidate associatedData kernel (.Some opened) = some staged ∧
       acceptedFields staged =
-        sealedFields (PqxdhServerRegistrationPublication.firstContext server (absBytes binding.bytes ++ payload)) := by
+        sealedFields (PqxdhServerRegistrationPublication.firstContext server serverAssociatedData (absBytes binding.bytes ++ payload)) := by
   obtain ⟨actual, hactual, hbytes⟩ := PqxdhServerRegistrationPublication.candidate_binding server
   have same : actual = binding := RustM.ok.inj (hactual.symm.trans hbinding)
   subst same
-  have bound := (firstContext_bound server actual hbinding payload).1
+  have bound := (firstContext_bound (associatedData := serverAssociatedData) server actual hbinding payload).1
   have encoded : opened.plaintext = Pqxdh.LE64 candidate.assigned_key_id.val ++ payload := by
     rw [plaintext, assigned, ← hbytes]
     rfl
-  have success := afterOpening_of_binding candidate kernel opened sender sequence payload nonempty encoded
-  refine ⟨_, success, accepted_of_plaintext candidate kernel _ _ success _ bound plaintext ?_⟩
+  have success := afterOpening_of_binding (associatedData := associatedData) candidate kernel opened sender sequence payload nonempty encoded
+  refine ⟨_, success, accepted_of_plaintext (associatedData := associatedData) candidate kernel _ _ success _ bound plaintext ?_⟩
   rw [associated]
   rfl
 
@@ -218,24 +219,24 @@ theorem target_matching (c : Pqxdh.Crypto) (key : CtxKey) (target : CtxUnclaimed
 
 /-! ## The Phase 2 local owner -/
 
-/-- The key-free component target of a delivery to the Phase 2 local owner of `candidate`: the raw bytes are non-empty and decode to a frame that the owner validated against the pinned Server key ID and the candidate's associated data, the returned API value carries that frame's sender and sequence, and the target is the frame's CTX target under some nonce. -/
+/-- The key-free component target of a delivery to the Phase 2 local owner of `candidate`: the raw bytes are non-empty and decode to a frame that the owner validated against the pinned Server key ID and the explicit session associated data, the returned API value carries that frame's sender and sequence, and the target is the frame's CTX target under some nonce. -/
 def LocalTarget (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
     (candidate : pqxdh.BeaconRegistrationCandidate) (opened : RawCtxWholeOwner.Decrypted)
     (target : CtxUnclaimedAcceptance.Target) : Prop :=
   ∃ (frame : RawCtxReceive.DecodedFrame) (nonce : CtxNonce) (slices : RawCtxFrameDecoding.Slices)
     (parsed : RawCtxFrameDecoding.fromPayload frame.payload = some slices)
-    (width : (absBytes candidate.associated_data).length = 281),
+    (width : (absBytes associatedData).length = 151),
     raw.isEmpty = false ∧ decode raw = some frame ∧
-      RawCtxReceive.ValidFrame candidate.server_binding.identity_key_id (absBytes candidate.associated_data) frame ∧
+      RawCtxReceive.ValidFrame candidate.server_binding.identity_key_id (absBytes associatedData) frame ∧
       opened.keyId = frame.sender ∧ opened.sequence = frame.sequence ∧
-      target = RawCtxKeyFreeDecoder.target nonce frame.sequence frame (absBytes candidate.associated_data)
+      target = RawCtxKeyFreeDecoder.target nonce frame.sequence frame (absBytes associatedData)
         slices parsed width
 
-/-- The local target carries the candidate's associated data, the API sequence and the pinned sender in its CTX context. -/
+/-- The local target carries the explicit session associated data, the API sequence and the pinned sender in its CTX context. -/
 theorem localTarget_context (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
     (candidate : pqxdh.BeaconRegistrationCandidate) (opened : RawCtxWholeOwner.Decrypted)
-    (target : CtxUnclaimedAcceptance.Target) (delivery : LocalTarget decode raw candidate opened target) :
-    target.context.ad = ⟨absBytes candidate.associated_data, opened.sequence.val, opened.keyId.val⟩ ∧
+    (target : CtxUnclaimedAcceptance.Target) (delivery : LocalTarget (associatedData := associatedData) decode raw candidate opened target) :
+    target.context.ad = ⟨absBytes associatedData, opened.sequence.val, opened.keyId.val⟩ ∧
       opened.keyId = candidate.server_binding.identity_key_id ∧
       ∃ frame, decode raw = some frame ∧ target.record.encode = frame.payload := by
   obtain ⟨frame, nonce, slices, parsed, width, _, decoded, valid, key, sequence, rfl⟩ := delivery
@@ -245,15 +246,15 @@ theorem localTarget_context (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.B
 /-- Matched opening for the Phase 2 local owner: if the Beacon's local target opens to its plaintext under some key and has the same full CTX tuple as a correct seal under that key, the Beacon's plaintext, sequence and sender are the seal's, the seal's associated data is the candidate's, its sender is the pinned Server key ID, and the protected payloads agree. -/
 theorem matching_open (c : Pqxdh.Crypto) (key : CtxKey) (decode : RawCtxReceive.FrameDecoder)
     (raw : Pqxdh.Bytes) (candidate : pqxdh.BeaconRegistrationCandidate) (opened : RawCtxWholeOwner.Decrypted)
-    (target : CtxUnclaimedAcceptance.Target) (delivery : LocalTarget decode raw candidate opened target)
+    (target : CtxUnclaimedAcceptance.Target) (delivery : LocalTarget (associatedData := associatedData) decode raw candidate opened target)
     (opens : Opens c key target opened.plaintext)
     (entry : CtxSuccessfulSeal) (correct : SealCorrect c key entry)
     (same : target.toLegacy.sameFullTupleAsSuccessfulSeal entry) :
     opened.plaintext = entry.input.plaintext ∧
-      entry.input.context.ad = ⟨absBytes candidate.associated_data, opened.sequence.val, opened.keyId.val⟩ ∧
+      entry.input.context.ad = ⟨absBytes associatedData, opened.sequence.val, opened.keyId.val⟩ ∧
       opened.keyId = candidate.server_binding.identity_key_id ∧ entry.input.nonce = target.nonce ∧
       ∃ frame, decode raw = some frame ∧ frame.payload = entry.record.encode := by
-  obtain ⟨ad, pinned, frame, decoded, payload⟩ := localTarget_context decode raw candidate opened target delivery
+  obtain ⟨ad, pinned, frame, decoded, payload⟩ := localTarget_context (associatedData := associatedData) decode raw candidate opened target delivery
   exact ⟨target_matching c key target opened.plaintext opens entry correct same, same.2.1.symm.trans ad,
     pinned, same.1.symm, frame, decoded, payload.symm.trans same.2.2⟩
 
@@ -263,7 +264,7 @@ def Records (entry : CtxSuccessfulSeal) (context : RawCtxSourceSend.SealContext)
     entry.input.context.ad.sid = context.senderId.val
 
 /-- The typed CTX seal input of a source seal records that seal's context, and its sequence is the seal's sequence. -/
-theorem sourceInput_records (input : RawCtxSourceSend.SealInput) (had : input.context.associatedData.length = 281)
+theorem sourceInput_records (input : RawCtxSourceSend.SealInput) (had : input.context.associatedData.length = 151)
     (record : CtxRomRecord) :
     Records ⟨RawCtxCanonicalSeal.sourceInput input had, record⟩ input.context ∧
       (RawCtxCanonicalSeal.sourceInput input had).context.ad.seq = input.sequence.val :=
@@ -273,23 +274,23 @@ theorem sourceInput_records (input : RawCtxSourceSend.SealInput) (had : input.co
 theorem accepted_of_match (c : Pqxdh.Crypto) (key : CtxKey)
     (candidate : pqxdh.BeaconRegistrationCandidate) (kernel : ConcreteRatchetKernel)
     (reply : core.option.Option RawCtxWholeOwner.Decrypted) (staged : Staged)
-    (success : afterOpening candidate kernel reply = some staged)
+    (success : afterOpening candidate associatedData kernel reply = some staged)
     (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes) (target : CtxUnclaimedAcceptance.Target)
-    (delivery : LocalTarget decode raw candidate staged.opened target)
+    (delivery : LocalTarget (associatedData := associatedData) decode raw candidate staged.opened target)
     (opens : Opens c key target staged.opened.plaintext)
     (entry : CtxSuccessfulSeal) (correct : SealCorrect c key entry)
     (same : target.toLegacy.sameFullTupleAsSuccessfulSeal entry)
     (context : RawCtxSourceSend.SealContext) (records : Records entry context) (bound : KeyIdBound context) :
     acceptedFields staged = sealedFields context ∧ context.senderId = candidate.server_binding.identity_key_id ∧
       entry.input.context.ad.seq = 1 := by
-  obtain ⟨plaintext, ad, pinned, _⟩ := matching_open c key decode raw candidate staged.opened target delivery opens
+  obtain ⟨plaintext, ad, pinned, _⟩ := matching_open (associatedData := associatedData) c key decode raw candidate staged.opened target delivery opens
     entry correct same
-  obtain ⟨_, _, _, sequence, _⟩ := authenticated_binding candidate kernel reply staged success
-  have associated : absBytes candidate.associated_data = context.associatedData := by
+  obtain ⟨_, _, _, sequence, _⟩ := authenticated_binding (associatedData := associatedData) candidate kernel reply staged success
+  have associated : absBytes associatedData = context.associatedData := by
     rw [← records.2.1, ad]
   have sender : context.senderId.val = candidate.server_binding.identity_key_id.val := by
     rw [← records.2.2, ad, pinned]
-  refine ⟨accepted_of_plaintext candidate kernel reply staged success context bound
+  refine ⟨accepted_of_plaintext (associatedData := associatedData) candidate kernel reply staged success context bound
     (plaintext.trans records.1) associated, UScalar.eq_of_val_eq sender, ?_⟩
   rw [ad, sequence]
   rfl
@@ -298,9 +299,9 @@ theorem accepted_of_match (c : Pqxdh.Crypto) (key : CtxKey)
 theorem fresh_of_differs (c : Pqxdh.Crypto) (key : CtxKey)
     (candidate : pqxdh.BeaconRegistrationCandidate) (kernel : ConcreteRatchetKernel)
     (reply : core.option.Option RawCtxWholeOwner.Decrypted) (staged : Staged)
-    (success : afterOpening candidate kernel reply = some staged)
+    (success : afterOpening candidate associatedData kernel reply = some staged)
     (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes) (target : CtxUnclaimedAcceptance.Target)
-    (delivery : LocalTarget decode raw candidate staged.opened target)
+    (delivery : LocalTarget (associatedData := associatedData) decode raw candidate staged.opened target)
     (opens : Opens c key target staged.opened.plaintext)
     (history : List CtxSuccessfulSeal) (correct : RawCtxSelectedPlaintextOrigins.HistoryCorrect c key history)
     (differs : ∀ entry ∈ history, ∃ context, Records entry context ∧ KeyIdBound context ∧
@@ -308,32 +309,32 @@ theorem fresh_of_differs (c : Pqxdh.Crypto) (key : CtxKey)
     ∀ entry ∈ history, ¬ target.toLegacy.sameFullTupleAsSuccessfulSeal entry := by
   intro entry member same
   obtain ⟨context, records, bound, different⟩ := differs entry member
-  exact different (accepted_of_match c key candidate kernel reply staged success decode raw target delivery opens
+  exact different (accepted_of_match (associatedData := associatedData) c key candidate kernel reply staged success decode raw target delivery opens
     entry (correct entry member) same context records bound).1
 
 /-- Universal form of `fresh_of_differs`: if the Beacon's accepted fields differ from the sealed fields of every key-ID-bound seal context that any entry of a correct history records, the Beacon's local target has no full-tuple match in that history. Entries that record no key-ID-bound context impose nothing. -/
 theorem fresh_forall (c : Pqxdh.Crypto) (key : CtxKey)
     (candidate : pqxdh.BeaconRegistrationCandidate) (kernel : ConcreteRatchetKernel)
     (reply : core.option.Option RawCtxWholeOwner.Decrypted) (staged : Staged)
-    (success : afterOpening candidate kernel reply = some staged)
+    (success : afterOpening candidate associatedData kernel reply = some staged)
     (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes) (target : CtxUnclaimedAcceptance.Target)
-    (delivery : LocalTarget decode raw candidate staged.opened target)
+    (delivery : LocalTarget (associatedData := associatedData) decode raw candidate staged.opened target)
     (opens : Opens c key target staged.opened.plaintext)
     (history : List CtxSuccessfulSeal) (correct : RawCtxSelectedPlaintextOrigins.HistoryCorrect c key history)
     (differs : ∀ entry ∈ history, ∀ context, Records entry context → KeyIdBound context →
       acceptedFields staged ≠ sealedFields context) :
     ∀ entry ∈ history, ¬ target.toLegacy.sameFullTupleAsSuccessfulSeal entry := by
   intro entry member same
-  obtain ⟨plaintext, ad, _⟩ := matching_open c key decode raw candidate staged.opened target delivery opens
+  obtain ⟨plaintext, ad, _⟩ := matching_open (associatedData := associatedData) c key decode raw candidate staged.opened target delivery opens
     entry (correct entry member) same
-  obtain ⟨_, _, _, _, _, hprefix, _⟩ := authenticated_binding candidate kernel reply staged success
+  obtain ⟨_, _, _, _, _, hprefix, _⟩ := authenticated_binding (associatedData := associatedData) candidate kernel reply staged success
   let context : RawCtxSourceSend.SealContext :=
     ⟨entry.input.plaintext, candidate.assigned_key_id, staged.opened.keyId, entry.input.context.ad.bytes⟩
   have records : Records entry context := ⟨rfl, rfl, by rw [ad]⟩
   have bound : KeyIdBound context := by
     change entry.input.plaintext.take 8 = _
     rw [← plaintext, hprefix]
-  exact differs entry member context records bound (accepted_of_match c key candidate kernel reply staged success
+  exact differs entry member context records bound (accepted_of_match (associatedData := associatedData) c key candidate kernel reply staged success
     decode raw target delivery opens entry (correct entry member) same context records bound).1
 
 /-- A present reply whose decoded target has no full-tuple match in the attempt-time history is an accepted attempt of the selected authentication observer. -/
@@ -352,27 +353,27 @@ theorem won_of_attempt (rawDecode : AdaptiveCtxReceive.RawDecoder) (state : RawC
     RawCtxSelectedAuthenticationObserver.won rawDecode state = true :=
   List.any_eq_true.mpr ⟨attempt, member, accepted⟩
 
-/-- Joint satisfiability of every premise of `accepted_of_match`, for every non-empty payload and every `Pqxdh.Crypto` whose seal of the binding-prefixed payload has a non-empty body (the non-empty payload is necessary, since the binding gate needs more than eight plaintext bytes): a correctly bound sequence-one delivery whose frame carries that seal is staged, is a local target, opens to its plaintext and fully matches the correct seal entry, and the entry records a key-ID-bound context whose sealed fields are the assigned key ID, the payload and the candidate's associated data. -/
+/-- Joint satisfiability of every premise of `accepted_of_match`, for every non-empty payload and every `Pqxdh.Crypto` whose seal of the binding-prefixed payload has a non-empty body (the non-empty payload is necessary, since the binding gate needs more than eight plaintext bytes): a correctly bound sequence-one delivery whose frame carries that seal is staged, is a local target, opens to its plaintext and fully matches the correct seal entry, and the entry records a key-ID-bound context whose sealed fields are the assigned key ID, the payload and the explicit session associated data. -/
 theorem joint (c : Pqxdh.Crypto) (candidate : pqxdh.BeaconRegistrationCandidate) (kernel : ConcreteRatchetKernel)
     (key : CtxKey) (nonce : CtxNonce) (commit : CtxDigest) (payload : Pqxdh.Bytes) (nonempty : payload ≠ [])
-    (body : (c.aeadSeal key.toList nonce.toList (absBytes candidate.associated_data)
+    (body : (c.aeadSeal key.toList nonce.toList (absBytes associatedData)
       (Pqxdh.LE64 candidate.assigned_key_id.val ++ payload)).1 ≠ []) :
     ∃ (staged : Staged) (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
       (target : CtxUnclaimedAcceptance.Target) (entry : CtxSuccessfulSeal) (context : RawCtxSourceSend.SealContext),
-      afterOpening candidate kernel (.Some staged.opened) = some staged ∧
-      LocalTarget decode raw candidate staged.opened target ∧ Opens c key target staged.opened.plaintext ∧
+      afterOpening candidate associatedData kernel (.Some staged.opened) = some staged ∧
+      LocalTarget (associatedData := associatedData) decode raw candidate staged.opened target ∧ Opens c key target staged.opened.plaintext ∧
       SealCorrect c key entry ∧ target.toLegacy.sameFullTupleAsSuccessfulSeal entry ∧ Records entry context ∧
       KeyIdBound context ∧ acceptedFields staged = sealedFields context ∧
-      sealedFields context = (candidate.assigned_key_id, payload, absBytes candidate.associated_data) := by
+      sealedFields context = (candidate.assigned_key_id, payload, absBytes associatedData) := by
   let pinned := candidate.server_binding.identity_key_id
   let plaintext := Pqxdh.LE64 candidate.assigned_key_id.val ++ payload
   let opened : RawCtxWholeOwner.Decrypted := ⟨plaintext, pinned, 1#u64⟩
-  have success := afterOpening_of_binding candidate kernel opened rfl rfl payload nonempty rfl
-  have width : (absBytes candidate.associated_data).length = 281 := by simp
+  have success := afterOpening_of_binding (associatedData := associatedData) candidate kernel opened rfl rfl payload nonempty rfl
+  have width : (absBytes associatedData).length = 151 := by simp
   let context : CtxRecordContext :=
-    ⟨⟨absBytes candidate.associated_data, (1#u64 : Std.U64).val, pinned.val⟩, width,
+    ⟨⟨absBytes associatedData, (1#u64 : Std.U64).val, pinned.val⟩, width,
       (1#u64 : Std.U64).bv.isLt, pinned.bv.isLt⟩
-  let sealed := c.aeadSeal key.toList nonce.toList (absBytes candidate.associated_data) plaintext
+  let sealed := c.aeadSeal key.toList nonce.toList (absBytes associatedData) plaintext
   have tagLength : sealed.2.length = 16 := c.aeadSeal_tag_length _ _ _ _
   let record : CtxRomRecord := ⟨sealed.1, sealed.2, tagLength, commit⟩
   let entry : CtxSuccessfulSeal := ⟨⟨nonce, context, plaintext⟩, record⟩
@@ -387,29 +388,29 @@ theorem joint (c : Pqxdh.Crypto) (candidate : pqxdh.BeaconRegistrationCandidate)
     split
     · omega
     · exact ⟨_, rfl⟩
-  let target := RawCtxKeyFreeDecoder.target nonce frame.sequence frame (absBytes candidate.associated_data)
+  let target := RawCtxKeyFreeDecoder.target nonce frame.sequence frame (absBytes associatedData)
     slices parsed width
   have same : target.toLegacy.sameFullTupleAsSuccessfulSeal entry :=
     ⟨rfl, rfl, RawCtxSelectedPlaintextOrigins.record_payload frame slices parsed⟩
   obtain ⟨_, _, fields⟩ := AdaptiveCtxReplayDictionary.fullTuple_fields target entry same
   have hbody : target.record.body = sealed.1 := congrArg Pqxdh.RecordCipher.body fields
   have htag : target.record.tag = sealed.2 := congrArg Pqxdh.RecordCipher.tag fields
-  have delivery : LocalTarget (fun _ => some frame) [0] candidate opened target :=
+  have delivery : LocalTarget (associatedData := associatedData) (fun _ => some frame) [0] candidate opened target :=
     ⟨frame, nonce, slices, parsed, width, rfl, rfl, ⟨rfl, long, width⟩, rfl, rfl, rfl⟩
   have opens : Opens c key target opened.plaintext := by
-    change c.aeadOpen key.toList nonce.toList (absBytes candidate.associated_data) target.record.body
+    change c.aeadOpen key.toList nonce.toList (absBytes associatedData) target.record.body
       target.record.tag = some plaintext
     rw [hbody, htag]
     exact c.aead_open_seal _ _ _ _
   have correct : SealCorrect c key entry := c.aead_open_seal _ _ _ _
   let sealContext : RawCtxSourceSend.SealContext :=
-    ⟨plaintext, candidate.assigned_key_id, pinned, absBytes candidate.associated_data⟩
+    ⟨plaintext, candidate.assigned_key_id, pinned, absBytes associatedData⟩
   have records : Records entry sealContext := ⟨rfl, rfl, rfl⟩
   have bound : KeyIdBound sealContext := List.take_left' (Pqxdh.LE64_length _)
   have sealedEq : sealedFields sealContext =
-      (candidate.assigned_key_id, payload, absBytes candidate.associated_data) := by
+      (candidate.assigned_key_id, payload, absBytes associatedData) := by
     simp only [sealedFields, sealContext, plaintext, List.drop_left' (Pqxdh.LE64_length _)]
-  have main := accepted_of_match c key candidate kernel (.Some opened) _ success (fun _ => some frame) [0] target
+  have main := accepted_of_match (associatedData := associatedData) c key candidate kernel (.Some opened) _ success (fun _ => some frame) [0] target
     delivery opens entry correct same sealContext records bound
   exact ⟨_, fun _ => some frame, [0], target, entry, sealContext, success, delivery, opens, correct, same, records,
     bound, main.1, sealedEq⟩
@@ -548,23 +549,23 @@ theorem raw_nonempty {Metadata σ ι : Type} {base : OracleSpec ι}
   · rename_i nonempty
     exact Bool.eq_false_iff.mpr nonempty
 
-/-- Kernel opening of the Phase 2 local owner of `candidate` with installed kernel `kernel`, entered in primitive state `primitive` and left in state `after`, for the delivery `raw` and returned value `opened`: an opening capability is reached from the extracted receive admission of `kernel` at the frame's sequence and the delivery context, through KDF replies in the support of the native interpreter's KDF branch, in some state `final`; the opening arguments `input` carry that capability's material; the opening callback at `input`, run from `final`, returns the present plaintext and ends in `after`; the delivery context holds `raw` and the candidate's associated data; the input sequence is the frame's; the selected target of `input` is a local target of the delivery; and that target opens to the returned plaintext under the source key of `input`, which is the key half of the capability's material. -/
+/-- Kernel opening of the Phase 2 local owner of `candidate` with installed kernel `kernel`, entered in primitive state `primitive` and left in state `after`, for the delivery `raw` and returned value `opened`: an opening capability is reached from the extracted receive admission of `kernel` at the frame's sequence and the delivery context, through KDF replies in the support of the native interpreter's KDF branch, in some state `final`; the opening arguments `input` carry that capability's material; the opening callback at `input`, run from `final`, returns the present plaintext and ends in `after`; the delivery context holds `raw` and the explicit session associated data; the input sequence is the frame's; the selected target of `input` is a local target of the delivery; and that target opens to the returned plaintext under the source key of `input`, which is the key half of the capability's material. -/
 def KernelOpening {σ ι : Type} {base : OracleSpec ι} (c : Pqxdh.Crypto)
     (impl : QueryImpl RawCtxSourceOpen.NativeSpec (StateT σ (OracleComp base)))
     (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes) (candidate : pqxdh.BeaconRegistrationCandidate)
     (kernel : ConcreteRatchetKernel) (primitive after : σ) (opened : RawCtxWholeOwner.Decrypted)
     (input : RawCtxWholeOwner.OpenInput) (slices : RawCtxFrameDecoding.Slices)
     (parsed : RawCtxFrameDecoding.fromPayload input.context.frame.payload = some slices)
-    (width : input.context.associatedData.length = 281) : Prop :=
+    (width : input.context.associatedData.length = 151) : Prop :=
   (∃ (pending : ReceiveOpen RawCtxWholeOwner.OpenContext) (final : σ),
     Reaches (fun request => impl (.inl request)) primitive
       (RawCtxOwnerOracle.begin kernel input.context.frame.sequence input.context) pending final ∧
     RawCtxWholeOwner.arguments pending = some input ∧ pending.material = ok (.Some input.material) ∧
     (.Some opened.plaintext, after) ∈ support
       (((impl ∘ₛ RawCtxSourceOpen.nativeAdapter) (.inr input)).run final)) ∧
-  input.context.raw = raw ∧ input.context.associatedData = absBytes candidate.associated_data ∧
+  input.context.raw = raw ∧ input.context.associatedData = absBytes associatedData ∧
   input.sequence = input.context.frame.sequence ∧
-  LocalTarget decode raw candidate opened (RawCtxCanonicalOpening.selectedTarget input slices parsed width) ∧
+  LocalTarget (associatedData := associatedData) decode raw candidate opened (RawCtxCanonicalOpening.selectedTarget input slices parsed width) ∧
   Opens c (RawCtxSourceOpen.sourceKey input) (RawCtxCanonicalOpening.selectedTarget input slices parsed width)
     opened.plaintext
 
@@ -580,12 +581,12 @@ theorem local_opening {σ ι : Type} {base : OracleSpec ι} (c : Pqxdh.Crypto)
     (kernel : ConcreteRatchetKernel) (primitive : σ)
     (result : (core.option.Option RawCtxWholeOwner.Decrypted × RawCtxWholeOwner.OwnerState Unit) × σ)
     (supported : result ∈ support (RawCtxWholeOwner.rawGame (impl ∘ₛ RawCtxSourceOpen.nativeAdapter) decode raw
-      (localOwner candidate kernel) primitive))
+      (localOwner candidate associatedData kernel) primitive))
     (opened : RawCtxWholeOwner.Decrypted) (success : result.1.1 = .Some opened) :
     ∃ (input : RawCtxWholeOwner.OpenInput) (slices : RawCtxFrameDecoding.Slices)
       (parsed : RawCtxFrameDecoding.fromPayload input.context.frame.payload = some slices)
-      (width : input.context.associatedData.length = 281),
-      KernelOpening c impl decode raw candidate kernel primitive result.2 opened input slices parsed width := by
+      (width : input.context.associatedData.length = 151),
+      KernelOpening (associatedData := associatedData) c impl decode raw candidate kernel primitive result.2 opened input slices parsed width := by
   have nonempty := raw_nonempty _ decode raw _ primitive result supported opened success
   obtain ⟨frame, pending, input, plaintext, final, decoded, valid, reached, hargs, hmaterial, sequence, context,
     message, reply⟩ := raw_reaches (impl ∘ₛ RawCtxSourceOpen.nativeAdapter) decode raw _ primitive result
@@ -609,12 +610,12 @@ theorem local_opening {σ ι : Type} {base : OracleSpec ι} (c : Pqxdh.Crypto)
   obtain ⟨material, inputSequence, inputContext⟩ := input
   simp only at context sequence
   subst context sequence message
-  have width : (absBytes candidate.associated_data).length = 281 := valid.2.2
+  have width : (absBytes associatedData).length = 151 := valid.2.2
   refine ⟨_, slices, parsed, width, ⟨pending, final, reachedNative, hargs, hmaterial, link⟩, rfl, rfl, rfl,
     ⟨frame, _, slices, parsed, width, nonempty, decoded, valid, rfl, rfl, rfl⟩, ?_⟩
   obtain ⟨_, hbase, _⟩ := RawCtxSourceOpen.sourceRecord_spec _ slices parsed
   have combined := RawCtxSourceOpen.baseOpen_combined c (absMaterial material).1 (absMaterial material).2
-    (absBytes candidate.associated_data) (RawCtxSourceOpen.sourceRecord _ slices parsed).body
+    (absBytes associatedData) (RawCtxSourceOpen.sourceRecord _ slices parsed).body
     (RawCtxSourceOpen.sourceRecord _ slices parsed).tag (RawCtxSourceOpen.sourceRecord _ slices parsed).tagLength
   rw [← hbase] at combined
   exact combined.symm.trans hplain.symm
@@ -633,11 +634,11 @@ theorem afterRoot_run {Response σ ι Result : Type} {base : OracleSpec ι}
           | none => next (none, application.2)
           | some raw =>
               RawCtxWholeOwner.rawGame (fun query => handler (.inl query)) decode raw
-                (localOwner (clearedCandidate prepared.candidate)
+                (localOwner (clearedCandidate prepared.candidate) prepared.binding.associated_data
                   (PqxdhBeaconPhase2Publication.normalInitial
                     (PqxdhInitialRatchetComplementarity.beaconPending root) initial.1))
                 application.2 >>= fun received =>
-                next (afterOpening (clearedCandidate prepared.candidate) received.1.2.owner.kernel received.1.1,
+                next (afterOpening (clearedCandidate prepared.candidate) prepared.binding.associated_data received.1.2.owner.kernel received.1.1,
                   received.2) := by
   simp only [PqxdhBeaconPhase2Publication.afterRoot, PqxdhBeaconPhase2Publication.initialRun, simulateQ_bind,
     simulateQ_spec_query, StateT.run_bind, bind_assoc, pure_bind]
@@ -670,17 +671,17 @@ theorem afterRoot_opening {Response σ ι : Type} {base : OracleSpec ι} (c : Pq
       (received : (core.option.Option RawCtxWholeOwner.Decrypted × RawCtxWholeOwner.OwnerState Unit) × σ)
       (input : RawCtxWholeOwner.OpenInput) (slices : RawCtxFrameDecoding.Slices)
       (parsed : RawCtxFrameDecoding.fromPayload input.context.frame.payload = some slices)
-      (width : input.context.associatedData.length = 281),
+      (width : input.context.associatedData.length = 151),
       (initial, initialState) ∈ support ((handler
         (.inr (.initial (PqxdhInitialRatchetComplementarity.beaconPending root).request))).run auxiliary) ∧
       (some raw, application) ∈ support ((handler (.inr (.application prepared.response))).run initialState) ∧
       received ∈ support (RawCtxWholeOwner.rawGame (impl ∘ₛ RawCtxSourceOpen.nativeAdapter) decode raw
-        (localOwner (clearedCandidate prepared.candidate)
+        (localOwner (clearedCandidate prepared.candidate) prepared.binding.associated_data
           (PqxdhBeaconPhase2Publication.normalInitial (PqxdhInitialRatchetComplementarity.beaconPending root)
             initial)) application) ∧
       received.2 = final ∧ received.1.1 = .Some staged.opened ∧
-      afterOpening (clearedCandidate prepared.candidate) received.1.2.owner.kernel received.1.1 = some staged ∧
-      KernelOpening c impl decode raw (clearedCandidate prepared.candidate)
+      afterOpening (clearedCandidate prepared.candidate) prepared.binding.associated_data received.1.2.owner.kernel received.1.1 = some staged ∧
+      KernelOpening (associatedData := prepared.binding.associated_data) c impl decode raw (clearedCandidate prepared.candidate)
         (PqxdhBeaconPhase2Publication.normalInitial (PqxdhInitialRatchetComplementarity.beaconPending root) initial)
         application received.2 staged.opened input slices parsed width := by
   have equation := afterRoot_run handler decode prepared root auxiliary (fun result => pure result)
@@ -696,14 +697,14 @@ theorem afterRoot_opening {Response σ ι : Type} {base : OracleSpec ι} (c : Pq
       rw [mem_support_bind_iff] at supported
       obtain ⟨received, rawSupport, supported⟩ := supported
       rw [support_pure, Set.mem_singleton_iff] at supported
-      have staging : afterOpening (clearedCandidate prepared.candidate) received.1.2.owner.kernel received.1.1 =
+      have staging : afterOpening (clearedCandidate prepared.candidate) prepared.binding.associated_data received.1.2.owner.kernel received.1.1 =
           some staged := (congrArg Prod.fst supported).symm
       have handlers : (fun query => handler (.inl query)) = impl ∘ₛ RawCtxSourceOpen.nativeAdapter :=
         funext routed
       rw [handlers] at rawSupport
-      have reply := (authenticated_binding _ _ _ staged staging).1
+      have reply := (authenticated_binding (associatedData := prepared.binding.associated_data) _ _ _ staged staging).1
       obtain ⟨input, slices, parsed, width, opening⟩ :=
-        local_opening c impl ordinary decode raw (clearedCandidate prepared.candidate) _ appState received
+        local_opening (associatedData := prepared.binding.associated_data) c impl ordinary decode raw (clearedCandidate prepared.candidate) _ appState received
           rawSupport staged.opened reply
       exact ⟨initial, initialState, raw, appState, received, input, slices, parsed, width, initialSupport, appSupport,
         rawSupport, (congrArg Prod.snd supported).symm, reply, staging, opening⟩
@@ -720,20 +721,20 @@ theorem consumer_opening {Response σ ι : Type} {base : OracleSpec ι} (c : Pqx
       (received : (core.option.Option RawCtxWholeOwner.Decrypted × RawCtxWholeOwner.OwnerState Unit) × σ)
       (input : RawCtxWholeOwner.OpenInput) (slices : RawCtxFrameDecoding.Slices)
       (parsed : RawCtxFrameDecoding.fromPayload input.context.frame.payload = some slices)
-      (width : input.context.associatedData.length = 281),
+      (width : input.context.associatedData.length = 151),
       (initial, initialState) ∈ support ((native
         (.inr (.initial (PqxdhInitialRatchetComplementarity.beaconPending root).request))).run auxiliary) ∧
       (some raw, application) ∈ support
         ((native (.inr (.application (PqxdhPhase2DhRootConsumer.cleared pending).response))).run initialState) ∧
       received ∈ support (RawCtxWholeOwner.rawGame
         ((fun query => native (.inl query)) ∘ₛ RawCtxSourceOpen.nativeAdapter) decode raw
-        (localOwner (clearedCandidate (PqxdhPhase2DhRootConsumer.cleared pending).candidate)
+        (localOwner (clearedCandidate (PqxdhPhase2DhRootConsumer.cleared pending).candidate) (PqxdhPhase2DhRootConsumer.cleared pending).binding.associated_data
           (PqxdhBeaconPhase2Publication.normalInitial (PqxdhInitialRatchetComplementarity.beaconPending root)
             initial)) application) ∧
       received.2 = final ∧ received.1.1 = .Some staged.opened ∧
-      afterOpening (clearedCandidate (PqxdhPhase2DhRootConsumer.cleared pending).candidate)
+      afterOpening (clearedCandidate (PqxdhPhase2DhRootConsumer.cleared pending).candidate) (PqxdhPhase2DhRootConsumer.cleared pending).binding.associated_data
         received.1.2.owner.kernel received.1.1 = some staged ∧
-      KernelOpening c (fun query => native (.inl query)) decode raw
+      KernelOpening (associatedData := (PqxdhPhase2DhRootConsumer.cleared pending).binding.associated_data) c (fun query => native (.inl query)) decode raw
         (clearedCandidate (PqxdhPhase2DhRootConsumer.cleared pending).candidate)
         (PqxdhBeaconPhase2Publication.normalInitial (PqxdhInitialRatchetComplementarity.beaconPending root) initial)
         application received.2 staged.opened input slices parsed width := by
@@ -769,20 +770,20 @@ theorem consumer_matching {Response σ ι : Type} {base : OracleSpec ι} (c : Pq
       (received : (core.option.Option RawCtxWholeOwner.Decrypted × RawCtxWholeOwner.OwnerState Unit) × σ)
       (input : RawCtxWholeOwner.OpenInput) (slices : RawCtxFrameDecoding.Slices)
       (parsed : RawCtxFrameDecoding.fromPayload input.context.frame.payload = some slices)
-      (width : input.context.associatedData.length = 281),
+      (width : input.context.associatedData.length = 151),
       (initial, initialState) ∈ support ((native
         (.inr (.initial (PqxdhInitialRatchetComplementarity.beaconPending root).request))).run auxiliary) ∧
       (some raw, application) ∈ support
         ((native (.inr (.application (PqxdhPhase2DhRootConsumer.cleared pending).response))).run initialState) ∧
       received ∈ support (RawCtxWholeOwner.rawGame
         ((fun query => native (.inl query)) ∘ₛ RawCtxSourceOpen.nativeAdapter) decode raw
-        (localOwner (clearedCandidate (PqxdhPhase2DhRootConsumer.cleared pending).candidate)
+        (localOwner (clearedCandidate (PqxdhPhase2DhRootConsumer.cleared pending).candidate) (PqxdhPhase2DhRootConsumer.cleared pending).binding.associated_data
           (PqxdhBeaconPhase2Publication.normalInitial (PqxdhInitialRatchetComplementarity.beaconPending root)
             initial)) application) ∧
       received.2 = final ∧ received.1.1 = .Some staged.opened ∧
-      afterOpening (clearedCandidate (PqxdhPhase2DhRootConsumer.cleared pending).candidate)
+      afterOpening (clearedCandidate (PqxdhPhase2DhRootConsumer.cleared pending).candidate) (PqxdhPhase2DhRootConsumer.cleared pending).binding.associated_data
         received.1.2.owner.kernel received.1.1 = some staged ∧
-      KernelOpening c (fun query => native (.inl query)) decode raw
+      KernelOpening (associatedData := (PqxdhPhase2DhRootConsumer.cleared pending).binding.associated_data) c (fun query => native (.inl query)) decode raw
         (clearedCandidate (PqxdhPhase2DhRootConsumer.cleared pending).candidate)
         (PqxdhBeaconPhase2Publication.normalInitial (PqxdhInitialRatchetComplementarity.beaconPending root) initial)
         application received.2 staged.opened input slices parsed width ∧
@@ -797,7 +798,7 @@ theorem consumer_matching {Response σ ι : Type} {base : OracleSpec ι} (c : Pq
   exact ⟨initial, initialState, raw, application, received, input, slices, parsed, width, initialSupport,
     appSupport, rawSupport, hfinal, reply, staging, opening,
     fun entry correct same context records bound =>
-      (accepted_of_match c _ _ _ _ staged staging decode raw _ delivery opens entry correct
+      (accepted_of_match (associatedData := (PqxdhPhase2DhRootConsumer.cleared pending).binding.associated_data) c _ _ _ _ staged staging decode raw _ delivery opens entry correct
         same context records bound).1⟩
 
 end BeaconcryptCore.Computational.PqxdhPhase2LocalMatching

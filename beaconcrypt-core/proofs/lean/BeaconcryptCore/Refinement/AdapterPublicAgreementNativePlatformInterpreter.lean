@@ -93,7 +93,7 @@ variable {view : AdapterPublicWrapperState.MaterialView source KemSK}
 theorem native (coins : QueryImpl unifSpec m)
     (model : AdapterPublicAgreementPrimitiveModel.Model (m := ProbComp) generator setup checks view)
     (entropy : AdapterPublicAgreementServerNative.Entropy model) (identity : material.EdSecretKey)
-    (created : PqxdhLiveServerConstruction.Created Unit) (identityView : view.edSecret identity = created.seed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (identityView : view.edSecret identity = created.seed)
     (rng : R) (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit)
     (before : RegistrationNativeExperiment.State n KemSK source)
     (fresh : before.server.consumed.contains (RegistrationReplaySchedule.identifier authenticated) = false) :

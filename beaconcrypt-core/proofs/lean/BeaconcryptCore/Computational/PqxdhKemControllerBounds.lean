@@ -8,6 +8,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhKemControllerBounds
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhKemCoordinateController
 
 def serverKem {Reader E : Type} : PqxdhServerRootPreparation.Query Reader E → Bool
@@ -74,7 +75,7 @@ theorem beacon_collect {I D K X Response : Type} (kind : Bool)
 /-- Core preparation always runs its single shared-secret erasure callback and makes no further KEM request, including pin mismatch and zero-DH errors. -/
 theorem beacon_after {I D K X Response : Type} (kind : Bool)
     (control : pqxdh.BeaconInitSent) (inputs : PqxdhBeaconPhase2Preparation.Inputs Response) :
-    (PqxdhBeaconPhase2Preparation.afterInputs (I := I) (D := D) (K := K) (X := X) control inputs).IsQueryBoundP
+    (PqxdhBeaconPhase2Preparation.afterInputs (completedBinding := completedBinding) (I := I) (D := D) (K := K) (X := X) control inputs).IsQueryBoundP
       (fun query => beaconKem query = kind) (if kind then 0 else 1) := by
   cases kind <;> unfold PqxdhBeaconPhase2Preparation.afterInputs
   all_goals rw [isQueryBoundP_query_bind_iff]
@@ -83,27 +84,27 @@ theorem beacon_after {I D K X Response : Type} (kind : Bool)
 /-- Full active preparation retains all twelve non-KEM positions around its single possible decapsulation. -/
 theorem beacon_prepare {I D K X Response : Type} (kind : Bool)
     (control : pqxdh.BeaconInitSent) (identity : I) (prekey oneTime : D) (kem : K) (raw : Pqxdh.Bytes) :
-    (PqxdhBeaconPhase2Preparation.prepare (X := X) (Response := Response) control identity prekey oneTime kem raw).IsQueryBoundP
+    (PqxdhBeaconPhase2Preparation.prepare (completedBinding := completedBinding) (X := X) (Response := Response) control identity prekey oneTime kem raw).IsQueryBoundP
       (fun query => beaconKem query = kind) (if kind then 1 else 12) := by
   cases kind <;> unfold PqxdhBeaconPhase2Preparation.prepare
   · apply isQueryBoundP_bind (beacon_collect (X := X) (Response := Response) false identity prekey oneTime kem raw) (m := 1)
     rintro (_ | inputs) _
     · trivial
-    · exact beacon_after false control inputs
+    · exact beacon_after (completedBinding := completedBinding) false control inputs
   · apply isQueryBoundP_bind (beacon_collect (X := X) (Response := Response) true identity prekey oneTime kem raw) (m := 0)
     rintro (_ | inputs) _
     · trivial
-    · exact beacon_after true control inputs
+    · exact beacon_after (completedBinding := completedBinding) true control inputs
 
 /-- The literal owner dispatch adds no KEM or other callback when inactive and preserves the active cap through both success and abort. -/
 theorem beacon_owner {I D K X Response : Type} (kind : Bool) (raw : Pqxdh.Bytes)
     (owner : PqxdhBeaconPhase2Preparation.State I D K) :
-    (PqxdhBeaconPhase2Preparation.owner (X := X) (Response := Response) raw owner).IsQueryBoundP
+    (PqxdhBeaconPhase2Preparation.owner (completedBinding := completedBinding) (X := X) (Response := Response) raw owner).IsQueryBoundP
       (fun query => beaconKem query = kind) (if kind then 1 else 12) := by
   cases active : owner.beacon.phase with
   | initSent control prekey oneTime kem =>
       simp only [PqxdhBeaconPhase2Preparation.owner, active, bind_pure_comp, isQueryBoundP_map_iff]
-      exact beacon_prepare kind control owner.beacon.identity prekey oneTime kem raw
+      exact beacon_prepare (completedBinding := completedBinding) kind control owner.beacon.identity prekey oneTime kem raw
   | _ => simp only [PqxdhBeaconPhase2Preparation.owner, active]; trivial
 
 /-- The complete source Server computation pays actual stateful callback bills, including generation, reservation and every rejected branch. -/
@@ -127,13 +128,13 @@ theorem beacon_interpreted {I D K X Response A ι : Type} {base : OracleSpec ι}
     (bounded : ∀ query state, ((native query).run state).IsQueryBoundP predicate
       (if beaconKem query then qKem else qOther)) (raw : Pqxdh.Bytes)
     (owner : PqxdhBeaconPhase2Preparation.State I D K) (state : A) :
-    ((simulateQ native (PqxdhBeaconPhase2Preparation.owner raw owner)).run state).IsQueryBoundP predicate
+    ((simulateQ native (PqxdhBeaconPhase2Preparation.owner (completedBinding := completedBinding) raw owner)).run state).IsQueryBoundP predicate
       (qKem + 12 * qOther) := by
   simpa [Fintype.sum_bool, Nat.mul_comm, Nat.add_comm] using
     FinitePartitionQueryBounds.weighted_bound beaconKem
       (fun kind => if kind then qKem else qOther) (fun kind => if kind then 1 else 12)
-      native predicate (PqxdhBeaconPhase2Preparation.owner raw owner)
-      (fun kind => beacon_owner kind raw owner) bounded state
+      native predicate (PqxdhBeaconPhase2Preparation.owner (completedBinding := completedBinding) raw owner)
+      (fun kind => beacon_owner (completedBinding := completedBinding) kind raw owner) bounded state
 
 end BeaconcryptCore.Computational.PqxdhKemControllerBounds
 

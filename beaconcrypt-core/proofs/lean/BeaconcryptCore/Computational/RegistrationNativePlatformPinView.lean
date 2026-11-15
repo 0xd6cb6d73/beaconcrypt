@@ -15,20 +15,18 @@ open RegistrationNativeKemCounterIndependence (Stable pure_stable bind_stable pr
 open RegistrationNativeMldsaWorldView (project idempotent)
 variable {n : Nat} {Platform : Type}
 
-/-- The complete native fingerprint helper retains its value and operational World under the private accounting projection. -/
+/-- Pure configured pin selection retains its value and full operational World under the accounting projection. -/
 theorem native (binding : pqxdh.ServerBinding) (publicKey : Std.Array U8 1952#usize) :
     Stable project (RegistrationNativeServerPinRecompute.native (n := n) binding publicKey) := by
-  unfold RegistrationNativeServerPinRecompute.native
-  apply program_stable project idempotent
-  intro query
-  unfold RegistrationNativeServerPinRecompute.nativeHash
-  exact bind_stable project _ _ (RegistrationNativeMldsaWorldView.effects _) (fun _ => pure_stable project idempotent _)
+  intro before
+  rw [RegistrationNativeServerPinRecompute.native_run, RegistrationNativeServerPinRecompute.native_run]
+  simp only [map_pure, Prod.map, id_eq, idempotent]
 
 private theorem map_apply {S A B : Type} {m : Type → Type} [Monad m] [LawfulMonad m]
     (f : A → B) (work : StateT S m A) (before : S) :
     (f <$> work) before = Prod.map f id <$> work before := StateT.run_map f work before
 
-/-- The actual effectful source SDK pin call is accounting-input independent on packed Server/platform state. -/
+/-- The actual pure source SDK pin call preserves accounting-input independence on packed Server/platform state. -/
 theorem pin (coins : QueryImpl unifSpec (StateT Platform ProbComp)) :
     Stable (Prod.map RegistrationNativeMldsaCountServer.serverProject id)
       (RegistrationNativePlatformPackedState.pack (RegistrationNativePlatformSourceBuild.pin (n := n) coins)) := by

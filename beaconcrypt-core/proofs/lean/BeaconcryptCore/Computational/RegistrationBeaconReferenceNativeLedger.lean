@@ -49,7 +49,7 @@ theorem program (setup : Setup base KemSK) (scalar : PqxdhJointGapDh.ScalarBytes
 /-- The record-ledger projection also retains the whole concrete native World and private KEM pool after actual interpretation. -/
 theorem native_program (setup : Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (owner : SelectedOwner mlSource) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (work : OracleComp RegistrationAgreementExecutor.Spec Value)
     (env : EnvState RegistrationServerRoleBackend.State)

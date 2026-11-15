@@ -143,6 +143,17 @@ private theorem capability_stable (query : PqxdhRecordLiftInterface.Capability n
     Prod.map, id_eq, localProject] at same ⊢
   exact same
 
+/-- Both executions perform the actual AD hash; the established count projection erases analysis counters. -/
+theorem adHash_stable (pending : registration.ServerAdHash) :
+    RegistrationNativeKemCounterIndependence.Stable (localProject (n := n) (Auxiliary := Auxiliary))
+      (RegistrationWorldServerCompletion.adHash pending) := by
+  unfold RegistrationWorldServerCompletion.adHash
+  cases pending.request with
+  | fail error | div => exact RegistrationNativeKemCounterIndependence.pure_stable _ local_idempotent _
+  | ok request =>
+      exact RegistrationNativeKemCounterIndependence.bind_stable _ _ _ (capability_stable _)
+        (fun _ => RegistrationNativeKemCounterIndependence.pure_stable _ local_idempotent _)
+
 private theorem install_stable (control : pqxdh.ServerState)
     (published : registration.PublishedServerResponse Encoded) :
     RegistrationNativeKemCounterIndependence.Stable (localProject (n := n) (Auxiliary := Auxiliary))
@@ -214,3 +225,9 @@ end BeaconcryptCore.Computational.RegistrationNativeMldsaCountServer
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaCountServer.completionFromInitial
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaCountServer.adHash_stable' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaCountServer.adHash_stable

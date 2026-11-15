@@ -30,7 +30,7 @@ variable {n : Nat} {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response
 theorem world_couple (modes : Label n → KeyMode) (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (env : Environment n E) (reserve : Nat → StateT E ProbComp (core.result.Result Unit Failure)) (serverKid : Std.U64) (bounds : FreshBounds)
     (adversary : OracleComp (ModeSpec .P) X) (decision eligible : PublicHiding n E X → Bool)
-    (created : PqxdhLiveServerConstruction.Created Unit) (state : CborRawRecordFlat.NativeState n E) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (state : CborRawRecordFlat.NativeState n E) :
     Swap (fun r₁ r₂ => lorGuess setup.source.crypto codec serverKid decision eligible (ctxView r₁) =
         lorGuess setup.source.crypto codec serverKid (fun projection => !decision projection) eligible (ctxView r₂))
       (rawRun modes zeros setup codec route env reserve serverKid bounds .P adversary created state)
@@ -58,7 +58,7 @@ theorem world_couple (modes : Label n → KeyMode) (setup : Setup baseSpec KemSK
 theorem lor_zeros (modes : Label n → KeyMode) (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (env : Environment n E) (reserve : Nat → StateT E ProbComp (core.result.Result Unit Failure)) (serverKid : Std.U64) (bounds : FreshBounds)
     (adversary : OracleComp (ModeSpec .P) X) (decision eligible : PublicHiding n E X → Bool)
-    (created : PqxdhLiveServerConstruction.Created Unit) (state : CborRawRecordFlat.NativeState n E) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (state : CborRawRecordFlat.NativeState n E) :
     𝒟[(fun result => lorGuess setup.source.crypto codec serverKid decision eligible (ctxView result)) <$>
       rawRun modes zeros setup codec route env reserve serverKid bounds .P adversary created state] {true} =
       2⁻¹ * 𝒟[(fun result => lorEligible setup.source.crypto codec serverKid eligible (ctxView result)) <$>
@@ -70,7 +70,7 @@ theorem lor_zeros (modes : Label n → KeyMode) (setup : Setup baseSpec KemSK) (
 theorem lor (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (env : Environment n E) (reserve : Nat → StateT E ProbComp (core.result.Result Unit Failure)) (serverKid : Std.U64) (bounds : FreshBounds)
     (adversary : OracleComp (ModeSpec .P) X) (decision eligible : PublicHiding n E X → Bool)
-    (created : PqxdhLiveServerConstruction.Created Unit) (state : CborRawRecordFlat.NativeState n E) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (state : CborRawRecordFlat.NativeState n E) :
     𝒟[(fun result => lorGuess setup.source.crypto codec serverKid decision eligible (ctxView result)) <$>
       rawRun (fun _ => .random) id setup codec route env reserve serverKid bounds .P adversary created state] {true} =
       2⁻¹ * 𝒟[(fun result => lorEligible setup.source.crypto codec serverKid eligible (ctxView result)) <$>

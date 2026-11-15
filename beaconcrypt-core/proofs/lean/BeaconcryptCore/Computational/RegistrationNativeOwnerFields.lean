@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeKemBirthOwners
 
-/-! Native lifecycle publication and finishing retain every immutable owner field, including the private generated identity seed, scalar and public credentials. Only phase and chronological Ed signing history are omitted from this structural snapshot. The proof follows every actual primitive failure and terminal lifecycle update. -/
+/-! Native lifecycle publication and finishing retain every immutable owner field, including the private generated identity seed, scalar, configured Server pin and opaque KEM key. Only phase and chronological Ed signing history are omitted from this structural snapshot. The proof follows every actual primitive failure and terminal lifecycle update. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core PqxdhRefinement
@@ -100,8 +100,7 @@ private theorem outgoing_keeps (setup : Setup base KemSK) (source : Registration
   classical
   rcases query with (hashRequest | signRequest) | edRequest
   · exact lift_keeps expected _
-  · exact bind_keeps expected _ _ (sample_keeps expected _) (fun _ =>
-      bind_keeps expected _ _ (lift_keeps expected _) (fun _ => pure_keeps expected _))
+  · exact pure_keeps expected _
   · simp only [outgoing]
     split
     · exact bind_keeps expected _ _ (log_keeps expected index _ _) (fun _ => pure_keeps expected _)
@@ -155,7 +154,7 @@ private noncomputable def bundled (setup : Setup base KemSK) (source : Registrat
     (oneTime : PqxdhJointGapDh.ScalarBytes) : M n KemSK source Auxiliary (RustM (Option Pqxdh.Bytes)) := do
   let published ← simulateQ (outgoing setup source index owner)
     (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨owner.pin.binding⟩ (inputs setup owner)
-      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)
+      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)
   match published with
   | .fail error => pure (.fail error)
   | .div => pure .div

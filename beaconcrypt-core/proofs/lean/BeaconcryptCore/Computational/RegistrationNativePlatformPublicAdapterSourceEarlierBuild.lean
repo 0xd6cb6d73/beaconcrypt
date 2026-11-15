@@ -29,7 +29,7 @@ variable {setup :PqxdhServerAuthExperiment.Setup base KemSK} {checks :PqxdhServe
 variable (configuration :RegistrationNativePlatformPublicAdapterConfiguration.Configuration
   (P:=P) (E:=E) (R:=R) (Error:=Error) (source:=source) setup checks)
 variable {Value :Type}
-variable (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
 local notation "Private"=>RegistrationNativePlatformPublicAdapterAuditLowModel.Private (n:=n) configuration created credential
 local notation "physical"=>RegistrationNativePlatformPublicAdapterAuditLowModel.physical (n:=n) configuration created credential
 local notation "Log"=>RegistrationNativePlatformPublicAdapterSourceEvents.Log n KemSK R P
@@ -69,7 +69,7 @@ structure Staged (request :registration.MldsaSigningRequest) (candidate :MldsaTr
   application :Slice U8
   tokenFound :(physical call.before.1.1 call.before.1.2).tokens handle=some token
   taken :RegistrationServerSdkSource.take handle call.before.1.1.1.1.server=(some token.registration,current)
-  started :registration.begin_server_completion current.control pin availability token.registration.agreement application=.ok (.Ok initial)
+  started :BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission current.control pin availability token.registration.agreement application initial
   recordPath :RegistrationServerRecordExecutor.Path initial hashed
   recordCut :RegistrationNativePlatformSourceFinishContents.RecordCut (n:=n) coins setup
     (RegistrationNativePlatformOrdinaryExperiment.canonicalWire RegistrationNativeConcreteCodec.wire) configuration.keyView configuration.sealFailure
@@ -80,6 +80,9 @@ structure Staged (request :registration.MldsaSigningRequest) (candidate :MldsaTr
   signed :Stage.sign request candidate digest signature∈middle
   payloadEq :candidate=RegistrationSigningTrace.Command.payload (.server hashed)
   key :request.public_key=hashed.binding.server_pin.public_key
+  adCut : RegistrationNativePlatformPublicAdapterBuildAdCut.Cut (n:=n) (Platform:=P) (Auxiliary:=RegistrationServerRoleBackend.State)
+    coins token.registration current.control pin availability application initial
+    (RegistrationNativeWorldCache.cache call.after.1.1.1.1)
 
 private theorem path_log {before after :State} {calls :List (Call Spec State)}
     (path :Path implementation before calls after) :∃suffix,after.2=before.2++suffix :=by
@@ -145,13 +148,13 @@ theorem stage {before after :State} {calls :List (Call Spec State)}
   obtain ⟨handle,data,queryEq⟩:=RegistrationNativePlatformPublicAdapterServerSigning.server_build configuration created credential query current.1 incoming
     packet.val packet.property history fresh logEq request candidate digest signature emitted role
   subst query
-  obtain ⟨token,nativeCurrent,initial,hashed,pin,availability,application,tokenFound,taken,started,recordPath,recordCut,recorded,payloadEq,key⟩:=
+  obtain ⟨token,nativeCurrent,initial,hashed,pin,availability,application,tokenFound,taken,started,⟨adCut⟩,recordPath,recordCut,recorded,payloadEq,key⟩:=
     RegistrationNativePlatformPublicAdapterBuildCallbackRecordStage.sample configuration created credential handle data current.1 incoming
       packet.val packet.property fresh logEq request candidate digest signature emitted
   have nativeEq:=congrArg (fun state:RegistrationNativePlatformExtractedSdkPublic.State Private=>state.1) samePrivate.symm
   have cacheEq:=congrArg (fun state:RegistrationNativePlatformPublicAdapterAuditLowModel.State n KemSK P source=>RegistrationNativeWorldCache.cache state.1.1) nativeEq
   exact ⟨⟨handle,data,rfl,fresh,block,token,nativeCurrent,initial,hashed,pin,availability,application,
-    tokenFound,taken,started,recordPath,cacheEq ▸recordCut,recorded,emitted,payloadEq,key⟩⟩
+    tokenFound,taken,started,recordPath,cacheEq ▸recordCut,recorded,emitted,payloadEq,key,cacheEq ▸adCut⟩⟩
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterSourceEarlierBuild
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterSourceEarlierBuild.stage' depends on axioms: [propext,

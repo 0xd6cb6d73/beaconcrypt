@@ -1,6 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Refinement.AdapterServerConstructorObjects
 import BeaconcryptCore.Refinement.AdapterBeaconConstructorGeneration
+import BeaconcryptCore.Refinement.AdapterServerConstructorGeneration
 open CoreModels Aeneas OracleComp OracleSpec
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -43,7 +44,7 @@ variable (jointKeys : PqxdhJointIdentity.Primitives)
 variable (edSample : m (Option PqxdhJointIdentity.IdentitySeed))
 variable (ed : EdContract generator view jointKeys edSample)
 variable (mlSample : m (Option (RegistrationNativeMldsa.Credential source)))
-variable (ml : AdapterBeaconConstructorGeneration.MldsaContract generator view mlSample)
+variable (ml : AdapterServerConstructorGeneration.MldsaContract generator view mlSample)
 
 noncomputable def joint (rng : R) : m (Option (Prepared source) ×R) := do
   let generated ← ed.joint rng

@@ -26,7 +26,7 @@ variable [crypto : AdapterPublicWrapperRequestMonad.CryptoOperations (RustT (Sou
 variable [children : AdapterPublicWrapperRequestMonad.ChildOperations (RustT (SourceM n KemSK source Platform))]
 variable (coins : QueryImpl unifSpec (StateT Platform ProbComp))
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (generator : rand_core.TryCryptoRng R Error) (view : AdapterPublicWrapperState.MaterialView source KemSK)
 variable (kem : AdapterBeaconConstructorKem.Representation view R)
 variable (leaves : AdapterBeaconConstructorNative.Leaves (n:=n) (Auxiliary:=RegistrationServerRoleBackend.State)

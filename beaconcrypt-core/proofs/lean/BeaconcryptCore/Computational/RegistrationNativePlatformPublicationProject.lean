@@ -25,7 +25,7 @@ noncomputable def shared (coins : QueryImpl unifSpec (StateT Platform ProbComp))
 
 noncomputable def encode
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
-    (view : registration.SignedInitView) : StateT Platform ProbComp (RustM (Option (alloc.vec.Vec U8))) :=
+    (view : registration.InitView) : StateT Platform ProbComp (RustM (Option (alloc.vec.Vec U8))) :=
   simulateQ writer (AdapterRegistrationWriterRequestExtraction.encodeInit (E := E) (m := AdapterRegistrationWriterRequestMonad.Program E)
     (RegistrationNativePlatformWriter.initPacket view)).run
 
@@ -40,7 +40,7 @@ private theorem lift_apply {S A : Type} {m : Type → Type} [Monad m] [LawfulMon
 /-- Literal native callback projection keeps the original source reply/cache/history and the exact external poststate. -/
 theorem outgoing (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (owner : Owner source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (owner : Owner source)
     (query : RegistrationBeaconInitExecutor.Spec.Domain) (before : Local n KemSK source) (previous : Platform) :
     Prod.map id (Prod.map project id) <$>
       (pack (RegistrationNativePlatformBundleLower.native coins setup checks representation created
@@ -57,7 +57,7 @@ theorem outgoing (coins : QueryImpl unifSpec (StateT Platform ProbComp))
 /-- Actual terminal encoding preserves the entire native Local state while retaining the exact source writer result and external poststate. -/
 theorem encoding
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
-    (view : registration.SignedInitView) (before : Local n KemSK source) (previous : Platform) :
+    (view : registration.InitView) (before : Local n KemSK source) (previous : Platform) :
     Prod.map id (Prod.map project id) <$>
       (pack (RegistrationNativePlatformInitWriterFrame.encoder writer view)).run (before, previous) =
       (pack (StateT.lift (encode writer view) : StateT RegistrationSigningShared.State (StateT Platform ProbComp) _)).run (project before, previous) := by
@@ -70,26 +70,26 @@ private theorem pack_hom {Native : Type} :
   .mk' RegistrationNativePlatformPackedState.pure_pack RegistrationNativePlatformPackedState.bind_pack
 
 private abbrev Spec := RegistrationBeaconInitExecutor.Spec +
-  (registration.SignedInitView →ₒ RustM (Option (alloc.vec.Vec U8)))
+  (registration.InitView →ₒ RustM (Option (alloc.vec.Vec U8)))
 private def free : QueryImpl RegistrationBeaconInitExecutor.Spec (OracleComp Spec) := fun query => Spec.query (.inl query)
-private def freeEncode (view : registration.SignedInitView) : OracleComp Spec (RustM (Option (alloc.vec.Vec U8))) := Spec.query (.inr view)
+private def freeEncode (view : registration.InitView) : OracleComp Spec (RustM (Option (alloc.vec.Vec U8))) := Spec.query (.inr view)
 
 /-- Every complete actual source publication retains the full projected signing state and external poststate, through the literal effectful terminal writer. -/
 theorem begin_project (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (index : Nat) (owner : Owner source)
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (scalar : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize)
+    (pin : session.ServerAuthenticationPin)
     (before : Local n KemSK source) (previous : Platform) :
     Prod.map id (Prod.map project id) <$>
       (pack (RegistrationNativePlatformBeaconPublication.begin
         (fun query => RegistrationNativePlatformBundleLower.native coins setup checks representation created
           (RegistrationNativeBeaconFrontend.outgoing setup source index owner query))
-        (RegistrationNativePlatformInitWriterFrame.encoder writer) control inputs scalar pin mldsa)).run (before, previous) =
+        (RegistrationNativePlatformInitWriterFrame.encoder writer) control inputs scalar pin)).run (before, previous) =
       (pack (RegistrationNativePlatformBeaconPublication.begin (shared coins setup owner)
-        (fun view => StateT.lift (encode writer view)) control inputs scalar pin mldsa)).run (project before, previous) := by
+        (fun view => StateT.lift (encode writer view)) control inputs scalar pin)).run (project before, previous) := by
   let native : QueryImpl Spec (StateT (Local n KemSK source × Platform) ProbComp)
     | .inl query => pack (RegistrationNativePlatformBundleLower.native coins setup checks representation created
         (RegistrationNativeBeaconFrontend.outgoing setup source index owner query))
@@ -104,24 +104,24 @@ theorem begin_project (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     cases query with
     | inl query => exact outgoing coins setup checks representation created index owner query current platform
     | inr view => exact encoding writer view current platform
-  let work := RegistrationNativePlatformBeaconPublication.begin free freeEncode control inputs scalar pin mldsa
+  let work := RegistrationNativePlatformBeaconPublication.begin free freeEncode control inputs scalar pin
   have law := OracleComp.map_run_simulateQ_eq_of_query_map_eq native projected (Prod.map project id) queries work (before, previous)
   have nativeProgram : simulateQ native work =
       pack (RegistrationNativePlatformBeaconPublication.begin
         (fun query => RegistrationNativePlatformBundleLower.native coins setup checks representation created
           (RegistrationNativeBeaconFrontend.outgoing setup source index owner query))
-        (RegistrationNativePlatformInitWriterFrame.encoder writer) control inputs scalar pin mldsa) := by
+        (RegistrationNativePlatformInitWriterFrame.encoder writer) control inputs scalar pin) := by
     unfold work
     rw [RegistrationNativePlatformBeaconPublication.begin_interpret]
     simp only [free, freeEncode, simulateQ_spec_query, native]
-    exact (RegistrationNativePlatformBeaconMap.begin pack_hom _ _ control inputs scalar pin mldsa).symm
+    exact (RegistrationNativePlatformBeaconMap.begin pack_hom _ _ control inputs scalar pin).symm
   have sharedProgram : simulateQ projected work =
       pack (RegistrationNativePlatformBeaconPublication.begin (shared coins setup owner)
-        (fun view => StateT.lift (encode writer view)) control inputs scalar pin mldsa) := by
+        (fun view => StateT.lift (encode writer view)) control inputs scalar pin) := by
     unfold work
     rw [RegistrationNativePlatformBeaconPublication.begin_interpret]
     simp only [free, freeEncode, simulateQ_spec_query, projected]
-    exact (RegistrationNativePlatformBeaconMap.begin pack_hom _ _ control inputs scalar pin mldsa).symm
+    exact (RegistrationNativePlatformBeaconMap.begin pack_hom _ _ control inputs scalar pin).symm
   rw [nativeProgram, sharedProgram] at law
   exact law
 

@@ -60,7 +60,7 @@ theorem program (joint : PqxdhJointIdentity.Primitives) (selected : Nat) (placeh
 /-- The original mutable Init writer and actual outgoing Ed/hash/ML dictionary close through both source interpreters query by query, with no whole-callback equation supplied. -/
 theorem publication {E : Type} (joint : PqxdhJointIdentity.Primitives) (selected : Nat) (placeholder : Ed25519Signature)
     (censored : Bool) (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner mlSource)
     (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (work : OracleComp (RegistrationNativePlatformWriter.Spec E) A) :

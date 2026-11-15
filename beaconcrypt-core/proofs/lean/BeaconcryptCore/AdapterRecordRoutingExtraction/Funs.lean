@@ -24,7 +24,7 @@ namespace beaconcrypt_record_routing
 variable [BeaconcryptCore.Refinement.RecordRoutingCallbacks.Operations]
 
 /-- [beaconcrypt::ratchet::execute_write_request]:
-    Source: 'beaconcrypt/src/ratchet.rs', lines 511:0-520:1 -/
+    Source: 'beaconcrypt/src/ratchet.rs', lines 515:0-524:1 -/
 def ratchet.execute_write_request
   (request : beaconcrypt_core.record_effects.RecordWriteRequest) :
   RustM (core.option.Option (alloc.vec.Vec Std.U8))

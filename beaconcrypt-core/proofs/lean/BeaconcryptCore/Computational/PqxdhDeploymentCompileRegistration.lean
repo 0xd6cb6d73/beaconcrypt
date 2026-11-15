@@ -1,19 +1,20 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords
 
-/-! Registration commands of the CE-3 trial (item a of the compile lemma). The source14 registration handlers never read a Server peer kernel or an established Beacon kernel: accept, public HMAC and BLAKE2b do not read the peer map at all, build reads it only through occupancy and installs a new peer only at an unoccupied key ID, and bundle and finish return without any effect on an established owner. Hence replacing every copied kernel by its live local copy commutes with each registration command, and the compiled program, which forwards these commands unchanged, has after merging exactly the native command's reply and deployment poststate. -/
+/-! Registration commands of the CE-3 trial (item a of the compile lemma). The source14 registration handlers never read a Server peer kernel or an established Beacon kernel: accept, public HMAC and BLAKE2b do not read the peer map at all, build reads it only through occupancy (also in its pre-hash guard) and installs a new peer only at an unoccupied key ID, the transcript hashes of build and finish touch only the BLAKE2b cache, and bundle and finish return without any effect on an established owner. The lemmas about the Server's lower builder keep its per-call associated data and peer metadata as parameters. Hence replacing every copied kernel by its live local copy commutes with each registration command, and the compiled program, which forwards these commands unchanged, has after merging exactly the native command's reply and deployment poststate. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhServerAuthExperiment PqxdhServerAuthNative PqxdhJointIdentity PqxdhJointGapDh
 open PqxdhDeploymentCompile (Kernel Local merge mergePeer mergeOwner)
 open PqxdhJointDhExtractRoot (RootSpec)
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response : Type}
 
 /-- The Server registration state with every copied peer kernel replaced by its live local copy. -/
-def overrideServer (copies : Local) (server : PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes)) :
-    PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes) :=
+def overrideServer (copies : Local) (server : PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes)) :
+    PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes) :=
   { server with server := { server.server with
     peers := fun kid => (server.server.peers kid).map (mergePeer (copies.peers kid)) } }
 
@@ -132,9 +133,7 @@ theorem prepare_key (state : beaconcrypt_core.pqxdh.ServerState) (pending : beac
     (prepared : beaconcrypt_core.pqxdh.server_prepare_commit state pending current availability = .ok (.Ok candidate)) :
     availability = .Available ∧ beaconcrypt_core.pqxdh.server_next_key_id state = .ok (.Ok candidate.key_id) := by
   obtain ⟨next, hnext⟩ := BeaconcryptCore.PanicFreedom.server_next_key_id_ok state
-  obtain ⟨ad, had⟩ := BeaconcryptCore.PanicFreedom.build_associated_data_ok current.identity_public_key
-    pending.beacon_identity_public_key
-  simp only [beaconcrypt_core.pqxdh.server_prepare_commit, PqxdhRefinement.array_eq_abs, bind_tc_ok, hnext, had] at prepared
+  simp only [beaconcrypt_core.pqxdh.server_prepare_commit, PqxdhRefinement.array_eq_abs, bind_tc_ok, hnext] at prepared
   split_ifs at prepared
   all_goals cases next
   all_goals cases availability
@@ -143,11 +142,11 @@ theorem prepare_key (state : beaconcrypt_core.pqxdh.ServerState) (pending : beac
   rfl
 
 /-- Publishing at a key ID with no local copy commutes with the override. -/
-theorem publish_override (copies : Local) (state : PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes))
+theorem publish_override (copies : Local) (state : PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes))
     (candidate : beaconcrypt_core.pqxdh.ServerRegistrationCandidate) (kernel : Kernel)
-    (unused : copies.peers candidate.key_id = none) :
-    PqxdhServerRegistrationPublication.publish (overrideServer copies state) candidate kernel () =
-      overrideServer copies (PqxdhServerRegistrationPublication.publish state candidate kernel ()) := by
+    (metadata : PqxdhTranscriptAd.AssociatedData) (unused : copies.peers candidate.key_id = none) :
+    PqxdhServerRegistrationPublication.publish (overrideServer copies state) candidate kernel metadata =
+      overrideServer copies (PqxdhServerRegistrationPublication.publish state candidate kernel metadata) := by
   simp only [PqxdhServerRegistrationPublication.publish, overrideServer]
   congr 2
   funext kid
@@ -159,11 +158,11 @@ theorem publish_override (copies : Local) (state : PqxdhServerRegistrationPublic
 /-- The post-initialization tail commutes with the override when the candidate key ID has no local copy. -/
 theorem afterInitialization_override (copies : Local)
     (candidate : beaconcrypt_core.pqxdh.ServerRegistrationCandidate) (authenticated : Pqxdh.Bytes) (kernel : Kernel)
-    (state : PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes))
-    (unused : copies.peers candidate.key_id = none) :
-    PqxdhServerRegistrationPublication.afterInitialization candidate authenticated kernel () (overrideServer copies state) =
+    (state : PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes))
+    (metadata : PqxdhTranscriptAd.AssociatedData) (unused : copies.peers candidate.key_id = none) :
+    PqxdhServerRegistrationPublication.afterInitialization (associatedData := associatedData) candidate authenticated kernel metadata (overrideServer copies state) =
       (fun value => (value.1, overrideServer copies value.2)) <$>
-        PqxdhServerRegistrationPublication.afterInitialization candidate authenticated kernel () state := by
+        PqxdhServerRegistrationPublication.afterInitialization (associatedData := associatedData) candidate authenticated kernel metadata state := by
   unfold PqxdhServerRegistrationPublication.afterInitialization
   simp only [map_bind]
   apply bind_congr
@@ -177,23 +176,23 @@ theorem afterInitialization_override (copies : Local)
     intro serialized
     rcases serialized with _ | serialized
     · simp only [map_pure]
-    · simp only [map_pure, publish_override copies state candidate advanced unused]
+    · simp only [map_pure, publish_override copies state candidate advanced metadata unused]
 
 /-- Mapping a Rust result of the Server builder. -/
 def mapBuilt (copies : Local) :
     RustM (Option PqxdhServerRegistrationPublication.Response ×
-      PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes)) →
+      PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes)) →
     RustM (Option PqxdhServerRegistrationPublication.Response ×
-      PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes)) :=
+      PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes)) :=
   fun result => (fun value => (value.1, overrideServer copies value.2)) <$> result
 
 /-- The candidate tail commutes with the override when the candidate key ID has no local copy. -/
 theorem candidateTail_override (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (copies : Local)
     (candidate : beaconcrypt_core.pqxdh.ServerRegistrationCandidate) (root : PqxdhSecretInputKdf.RootOutput)
-    (data : Option Pqxdh.Bytes) (state : PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes))
-    (unused : copies.peers candidate.key_id = none) :
-    PqxdhServerRegistrationPublication.candidateTail source candidate root data () (overrideServer copies state) =
-      mapBuilt copies <$> PqxdhServerRegistrationPublication.candidateTail source candidate root data () state := by
+    (data : Option Pqxdh.Bytes) (state : PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes))
+    (metadata : PqxdhTranscriptAd.AssociatedData) (unused : copies.peers candidate.key_id = none) :
+    PqxdhServerRegistrationPublication.candidateTail (associatedData := associatedData) source candidate root data metadata (overrideServer copies state) =
+      mapBuilt copies <$> PqxdhServerRegistrationPublication.candidateTail (associatedData := associatedData) source candidate root data metadata state := by
   unfold PqxdhServerRegistrationPublication.candidateTail
   simp only [map_bind]
   apply bind_congr
@@ -220,7 +219,7 @@ theorem candidateTail_override (source : PqxdhJointKdfGame.FixedHkdfSha512NoSalt
             · simp only [map_pure]
               rfl
             · split
-              · simp only [afterInitialization_override copies candidate _ _ state unused, Functor.map_map]
+              · simp only [afterInitialization_override (associatedData := associatedData) copies candidate _ _ state metadata unused, Functor.map_map]
                 rfl
               · simp only [map_pure]
                 rfl
@@ -236,12 +235,13 @@ theorem candidateTail_override (source : PqxdhJointKdfGame.FixedHkdfSha512NoSalt
 /-- The Server builder commutes with the override whenever every copied peer is installed: occupancy is read only through `isSome`, and a new peer is installed only at an unoccupied key ID, which then has no local copy. -/
 theorem build_override (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (copies : Local)
     (pending : beaconcrypt_core.pqxdh.PendingServerRegistration) (root : PqxdhSecretInputKdf.RootOutput)
-    (data : Option Pqxdh.Bytes) (state : PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes))
+    (data : Option Pqxdh.Bytes) (state : PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes))
+    (metadata : PqxdhTranscriptAd.AssociatedData)
     (installed : ∀ kid current, copies.peers kid = some current → state.server.peers kid ≠ none) :
-    PqxdhServerRegistrationPublication.build source pending root data () (overrideServer copies state) =
-      mapBuilt copies <$> PqxdhServerRegistrationPublication.build source pending root data () state := by
+    PqxdhServerRegistrationPublication.build (associatedData := associatedData) source pending root data metadata (overrideServer copies state) =
+      mapBuilt copies <$> PqxdhServerRegistrationPublication.build (associatedData := associatedData) source pending root data metadata state := by
   unfold PqxdhServerRegistrationPublication.build PqxdhServerRegistrationPublication.continueRust
-  have candidateStep := fun candidate unused => candidateTail_override source copies candidate root data state unused
+  have candidateStep := fun candidate unused => candidateTail_override (associatedData := associatedData) source copies candidate root data state metadata unused
   simp only [overrideServer, Option.isSome_map] at candidateStep ⊢
   cases next : beaconcrypt_core.pqxdh.server_next_key_id state.control with
   | ok value =>
@@ -282,12 +282,20 @@ def Installed (copies : Local) (game : GameState KemSK) : Prop :=
   ∀ kid current, copies.peers kid = some current → game.server.server.peers kid ≠ none
 
 /-- Settling a mapped builder result on the overridden Server is the override of the settled Server. -/
-theorem settle_override (copies : Local) (server : PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes))
+theorem settle_override (copies : Local) (server : PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes))
     (result : RustM (Option PqxdhServerRegistrationPublication.Response ×
-      PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes))) :
+      PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes))) :
     settle (overrideServer copies server) (mapBuilt copies result) =
       ((settle server result).1, overrideServer copies (settle server result).2) := by
   rcases result with value | error | _ <;> rfl
+
+/-- The pure pre-hash guard reads the peer map only through occupancy; it is unchanged by the override. -/
+theorem prehash_override (copies : Local)
+    (server : PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes))
+    (pending : beaconcrypt_core.pqxdh.PendingServerRegistration) (data : Option Pqxdh.Bytes) :
+    PqxdhServerRegistrationPublication.prehash (overrideServer copies server) pending data =
+      PqxdhServerRegistrationPublication.prehash server pending data := by
+  simp only [PqxdhServerRegistrationPublication.prehash, overrideServer, Option.isSome_map]
 
 /-- `build_registration_response` commutes with the override when every copied peer is installed. -/
 theorem build_commutes (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -303,18 +311,34 @@ theorem build_commutes (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
       rfl
   | some token =>
       have same : (overrideGame copies game).pending session = some token := found
-      simp only [same, liftCoins, StateT.run_bind, StateT.run_lift, bind_assoc, pure_bind, StateT.run_set,
-        StateT.run_pure, map_bind, map_pure]
-      have built := build_override setup.source copies token.pending token.root payload game.server installed
-      change (familyCoins ((simulateQ (tailImpl setup codec checks)
-          (PqxdhServerRegistrationPublication.build setup.source token.pending token.root payload ()
-            (overrideServer copies game.server))).run ([], game.ctx)) >>= _) = _
-      rw [built, simulateQ_map, StateT.run_map]
-      have settled : ∀ result, settle (overrideGame copies game).server (mapBuilt copies result) =
-          ((settle game.server result).1, overrideServer copies (settle game.server result).2) :=
-        fun result => settle_override copies game.server result
-      simp only [familyCoins, simulateQ_map, bind_map_left, settled]
-      rfl
+      have pre : PqxdhServerRegistrationPublication.prehash (overrideGame copies game).server token.pending payload =
+          PqxdhServerRegistrationPublication.prehash game.server token.pending payload :=
+        prehash_override copies game.server token.pending payload
+      simp only [same, pre]
+      cases prepared : PqxdhServerRegistrationPublication.prehash game.server token.pending payload with
+      | none =>
+          simp only [StateT.run_bind, StateT.run_set, StateT.run_pure, pure_bind, map_pure]
+          rfl
+      | some candidate =>
+          have hashRun : ∀ (bytes : Pqxdh.Bytes) (state : GameState KemSK), (hashOracle bytes).run state =
+              familyCoins ((CtxRomAuth.ctxRandomOracle ((), bytes)).run state.ctx) >>= fun result =>
+                pure (result.1, { state with ctx := result.2 }) := fun _ _ => rfl
+          simp only [liftCoins, StateT.run_bind, StateT.run_get, StateT.run_lift, bind_assoc, pure_bind,
+            StateT.run_set, StateT.run_pure, map_bind, map_pure, hashRun]
+          apply bind_congr
+          intro hashed
+          have built := build_override (PqxdhTranscriptAd.adOf hashed.1) setup.source copies token.pending token.root
+            payload game.server (PqxdhTranscriptAd.adOf hashed.1) installed
+          change (familyCoins ((simulateQ (tailImpl setup codec checks)
+              (PqxdhServerRegistrationPublication.build (associatedData := PqxdhTranscriptAd.adOf hashed.1) setup.source
+                token.pending token.root payload (PqxdhTranscriptAd.adOf hashed.1)
+                (overrideServer copies game.server))).run ([], hashed.2)) >>= _) = _
+          rw [built, simulateQ_map, StateT.run_map]
+          have settled : ∀ result, settle (overrideGame copies game).server (mapBuilt copies result) =
+              ((settle game.server result).1, overrideServer copies (settle game.server result).2) :=
+            fun result => settle_override copies game.server result
+          simp only [familyCoins, simulateQ_map, bind_map_left, settled]
+          rfl
 
 /-- The shared native state with the Server override. -/
 def overrideShared (copies : Local) (shared : NativeState KemSK) : NativeState KemSK :=
@@ -408,6 +432,15 @@ theorem merge_set (copies : Local) (native : PqxdhRegistrationSchedule.State Kem
         owners := (merge copies native).native.owners.set index (mergeOwner (copies.owners index) owner) } := by
   simp only [merge_native, List.mapIdx_set]
 
+/-- Replacing one owner and the retained bundles commutes with merging up to the merged replacement. -/
+theorem merge_set_inits (copies : Local) (native : PqxdhRegistrationSchedule.State KemSK) (index : Nat)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) (inits : Nat → Option PqxdhEd25519EufCma.Phase1Candidate) :
+    (merge copies { native with owners := native.owners.set index owner, inits := inits }).native =
+      { (merge copies native).native with
+        owners := (merge copies native).native.owners.set index (mergeOwner (copies.owners index) owner),
+        inits := inits } := by
+  simp only [merge_native, List.mapIdx_set]
+
 /-- Setting an owner to its current value changes nothing. -/
 theorem set_found {α : Type} (list : List α) (index : Nat) (value : α) (found : list[index]? = some value) :
     list.set index value = list := by
@@ -419,7 +452,7 @@ theorem mergeOwner_none (owner : PqxdhRegistrationSchedule.Owner KemSK) : mergeO
 
 /-- An established owner stays established and terminal after merging. -/
 theorem mergeOwner_terminal (kernel : Option Kernel) (owner : PqxdhRegistrationSchedule.Owner KemSK)
-    (control : beaconcrypt_core.pqxdh.BeaconEstablished) (associatedData : Std.Array Std.U8 281#usize)
+    (control : beaconcrypt_core.pqxdh.BeaconEstablished) (associatedData : Std.Array Std.U8 151#usize)
     (current : Kernel) (phase : owner.beacon.phase = .established control associatedData current) :
     PqxdhRegistrationSchedule.Terminal (mergeOwner kernel owner) := by
   cases kernel <;> simp [mergeOwner, phase, PqxdhRegistrationSchedule.Terminal]
@@ -461,12 +494,14 @@ theorem bundle_merge (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
         have mergedFound : (merge copies native).native.owners[index]? = some (mergeOwner (copies.owners index) owner) := by
           rw [PqxdhDeploymentCompileRecords.merge_owner, found, Option.map_some]
         rw [set_found _ index _ mergedFound, set_found _ index _ found]
+        simp only [Function.update_eq_self]
       · have noCopy := uncopied copies native copied index owner found active
         simp only [noCopy, mergeOwner_none, StateT.run_bind, StateT.run_lift, bind_assoc, pure_bind, StateT.run_modify,
           StateT.run_pure, map_bind, map_pure]
         apply bind_congr
         intro result
-        rw [merge_set, noCopy, mergeOwner_none]
+        rw [merge_set_inits, noCopy, mergeOwner_none]
+        rfl
 
 /-- Every Beacon finish callback commutes with the override: preparation callbacks are stateless, and the root and tail callbacks touch only the Extract table and the BLAKE2b cache. -/
 theorem callback_commutes (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (copies : Local)
@@ -505,6 +540,26 @@ theorem callbacks_commute {Result : Type} (setup : Setup baseSpec KemSK) (codec 
     (PqxdhRegistrationSchedule.callbacks setup codec) (overrideShared copies)
     (fun query state => (callback_commutes setup codec copies query state).symm) program shared).symm
 
+/-- The owner's hashed finish commutes with the Server override: the transcript hash touches only the BLAKE2b cache and the callbacks commute. -/
+theorem ownerFinish_commutes (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (copies : Local)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) (shared : NativeState KemSK) :
+    (PqxdhRegistrationSchedule.ownerFinish setup codec retained raw owner).run (overrideShared copies shared) =
+      (fun result => (result.1, overrideShared copies result.2)) <$>
+        (PqxdhRegistrationSchedule.ownerFinish setup codec retained raw owner).run shared := by
+  unfold PqxdhRegistrationSchedule.ownerFinish
+  split
+  · split
+    · have hashRun : ∀ (bytes : Pqxdh.Bytes) (state : NativeState KemSK), (nativeHash bytes).run state =
+          (fun result => (result.1, (state.1, { state.2 with ctx := result.2 }))) <$>
+            (CtxRomAuth.ctxRandomOracle ((), bytes)).run state.2.ctx := fun _ _ => rfl
+      simp only [StateT.run_bind, hashRun, bind_map_left, map_bind]
+      apply bind_congr
+      intro hashed
+      exact callbacks_commute setup codec copies _ (shared.1, { shared.2 with ctx := hashed.2 })
+    · simp only [StateT.run_pure, map_pure]
+  · simp only [StateT.run_pure, map_pure]
+
 /-- `finish_registration` commutes with merging: an established owner returns without effect and every other owner has no local copy, while the callbacks commute with the Server override. -/
 theorem finish_merge (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (serverSeed : IdentitySeed) (copies : Local) (native : PqxdhRegistrationSchedule.State KemSK) (index : Nat)
@@ -542,8 +597,9 @@ theorem finish_merge (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
           PqxdhRegistrationSchedule.finish_source setup codec index raw _ _ found, noCopy, mergeOwner_none]
         rw [merge_native]
         change (fun result => _) <$>
-            (simulateQ (PqxdhRegistrationSchedule.callbacks setup codec) _).run (overrideShared copies native.shared) = _
-        rw [callbacks_commute, Functor.map_map, Functor.map_map]
+            (PqxdhRegistrationSchedule.ownerFinish setup codec (native.inits index) raw owner).run
+              (overrideShared copies native.shared) = _
+        rw [ownerFinish_commutes, Functor.map_map, Functor.map_map]
         congr 1
         funext result
         rw [merge_native]
@@ -728,3 +784,18 @@ end BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.finish_merge
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.prehash_override' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.prehash_override
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.merge_set_inits' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.merge_set_inits
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.ownerFinish_commutes' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration.ownerFinish_commutes

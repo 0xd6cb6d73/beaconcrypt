@@ -12,9 +12,9 @@ open RegistrationNativeEntropyInterface (Environment)
 open PqxdhRecordLiftInterface (WorldSpec)
 variable {n : Nat} {E Value Reader Response First Second : Type}
 
-def outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+def outcome : Option (PqxdhRegistrationJointServerBirth.ClientCreated (Std.Array Std.U8 151#usize) ×
     (Value × PqxdhDeploymentSecrecy.Ledger) × RegistrationNativeEntropyPort.State E) →
-    Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+    Option (PqxdhRegistrationJointServerBirth.ClientCreated (Std.Array Std.U8 151#usize) ×
       (Value × RegistrationNativeLedger.State) × E) :=
   Option.map (fun old => (old.1, RegistrationNativeEntropyExecution.result old.2))
 

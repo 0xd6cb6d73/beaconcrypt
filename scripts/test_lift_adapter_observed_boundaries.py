@@ -63,6 +63,31 @@ class ObservedBoundaryTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "subtree changed"):
                     self.render_source(module, changed)
 
+    def test_removed_ad_hash_before_builder_hole_is_rejected(self):
+        text = build.SOURCE.read_text()
+        start = text.index(build.NAME)
+        position = text.index("ServerAdHash.resume", start)
+        changed = text[:position] + text[position:].replace(
+            "ServerAdHash.resume", "omitted_ad_hash_reply", 1
+        )
+        with self.assertRaisesRegex(ValueError, "AD-hash and reserve prefix"):
+            self.render_source(build, changed)
+
+    def test_ad_hash_after_reserve_is_rejected(self):
+        text = build.SOURCE.read_text()
+        start = text.index(build.NAME)
+        head, body = text[:start], text[start:]
+        request = "beaconcrypt_core.registration.ServerAdHash.request"
+        reserve = (
+            "BeaconcryptCore.Refinement.AdapterPublicWrapperRequestMonad."
+            "ContainerOperations.mapReserve"
+        )
+        body = body.replace(request, "temporary_order_marker", 1)
+        body = body.replace(reserve, request, 1)
+        body = body.replace("temporary_order_marker", reserve, 1)
+        with self.assertRaisesRegex(ValueError, "AD hashing must precede"):
+            self.render_source(build, head + body)
+
     def test_check_rejects_stale_output_without_writing(self):
         for module in self.modules:
             with self.subTest(body=module.NAME):

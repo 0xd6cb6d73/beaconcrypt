@@ -128,7 +128,7 @@ theorem agree_native (coins : QueryImpl unifSpec m)
     (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit) (before : State n)
     (fresh : before.1.consumed.contains (RegistrationReplaySchedule.identifier authenticated) = false) :
     Prod.map (RegistrationServerReferenceSourceClient.restore
@@ -153,7 +153,7 @@ theorem agree_native (coins : QueryImpl unifSpec m)
     RegistrationServerReferenceSourceRetain.project, roots] using compared
 
 theorem retain_native (coins : QueryImpl unifSpec m) (roots : RegistrationServerReferenceRestore.Roots)
-    (ready : Ready) (before : State n) (created : PqxdhLiveServerConstruction.Created Unit) :
+    (ready : Ready) (before : State n) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     Prod.map id (project roots) <$> (close (retain ready)).run before =
       simulateQ coins ((RegistrationServerNativeSource.retain created
         (RegistrationServerReferenceRoot.atRoot ready (roots ready.reference))).run (project roots before)) := by
@@ -181,7 +181,7 @@ theorem close_reserve (work : m Value) (before : State n) :
 
 private theorem sdk_run (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (checks : Checks)
     (reserve : m Bool) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (authenticated : registration.AuthenticatedInit) (before : RegistrationServerFrontendCompiler.State n) :
     (RegistrationNativePlatformServerSdk.afterAuthentication coins setup checks (StateT.lift reserve)
       representation created packet authenticated).run before =
@@ -218,7 +218,7 @@ theorem after_native (coins : QueryImpl unifSpec m)
     (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (reserve : m Bool) (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit) (before : State n) :
     Prod.map id (project (RegistrationServerReferenceSourceClient.roots setup.source setup.joint setup.dh created.seed scalar)) <$>
       (close (afterAuthentication (RegistrationNativePlatformServerReferencePrefix.effects coins)

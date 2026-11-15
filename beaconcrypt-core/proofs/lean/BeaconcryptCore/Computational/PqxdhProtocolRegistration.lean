@@ -1,7 +1,7 @@
 import BeaconcryptCore.Computational.PqxdhProtocolSelector
 
 /-!
-Five complete-program equalities instantiate the previously arbitrary accepted-root Plan with the actual native state reached by the compiled selector. Accepted response construction resumes the same record/public/reveal scheduler after installing the actual optional result and primitive poststate. Early completion maps the modeled registration errors to the source Option API. Source branch and Server-field lemmas separately justify unchanged rejection history and exact accepted consumption; this Plan definition alone does not establish those facts. The reduction interface gains no KEM shared-secret argument.
+This generic post-hash suffix receives public supplied AD151 and makes no classical-admission assertion about its provenance. Five complete-program equalities instantiate the previously arbitrary accepted-root Plan with the actual native state reached by the compiled selector. Accepted response construction resumes the same record/public/reveal scheduler after installing the actual optional result and primitive poststate. Early completion maps the modeled registration errors to the source Option API. Source branch and Server-field lemmas separately justify unchanged rejection history and exact accepted consumption; this Plan definition alone does not establish those facts. The reduction interface gains no KEM shared-secret argument.
 -/
 
 open OracleComp OracleSpec CoreModels Aeneas
@@ -9,6 +9,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhProtocolRegistration
+variable (associatedData : Std.Array Std.U8 151#usize)
 open PqxdhPrivateAcceptedRoot
 open PqxdhServerRegistrationPublication (NativeSpec AuxSpec Response)
 
@@ -147,9 +148,9 @@ theorem accepted_run {Selection : Type}
     (post : Option Selection → RustM (Option Response) → OracleComp (RawCtxProtocolReveals.SourceSpec S B) Bool)
     (output : Output (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B) setup Selection)
     (ready : Ready) :
-    ((plan source writer aux senderId route decode setup index metadata initial post).continuation source).accepted output ready =
+    ((plan source writer aux senderId route decode setup index metadata initial post).continuation (associatedData := associatedData) source).accepted output ready =
       coins (do
-        let result ← (PqxdhRegistrationProtocolState.build source writer aux senderId index metadata ready).run (reached initial output)
+        let result ← (PqxdhRegistrationProtocolState.build (associatedData := associatedData) source writer aux senderId index metadata ready).run (reached initial output)
         Prod.fst <$> (simulateQ (PqxdhRegistrationProtocolState.sourceImpl source writer senderId route decode)
           (post (choice output) result.1)).run result.2) := by
   dsimp only [PqxdhAcceptedRegistration.Plan.continuation, PqxdhAcceptedRegistration.registrationContinuation, plan]

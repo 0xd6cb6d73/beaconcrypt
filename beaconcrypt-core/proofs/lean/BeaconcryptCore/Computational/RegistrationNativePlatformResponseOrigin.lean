@@ -24,7 +24,7 @@ attribute [local irreducible] RegistrationNativePlatformBeaconFinish.afterAuthen
 /-- Every successful corrected source finish has its actual verification/hash receipt at the final shared cache. -/
 theorem final_receipt (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (index : Nat) (packet : Option registration.ResponsePacket) (before after : Local n KemSK source)
     (application : Pqxdh.Bytes)
     (supported : (.ok (some application), after) ∈ support
@@ -59,7 +59,7 @@ theorem final_receipt (setup : Setup base KemSK) (checks : Checks)
 /-- The original complete native finish supplies an ordinary accepted verification trial using its returned cache and literal prior global signing prefix. -/
 theorem accepted (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (index : Nat) (packet : Option registration.ResponsePacket) (before after : Local n KemSK source)
     (application : Pqxdh.Bytes)
     (supported : (.ok (some application), after) ∈ support
@@ -89,7 +89,7 @@ theorem accepted (setup : Setup base KemSK) (checks : Checks)
 /-- A protected displayed pending Server key outside the earlier unsigned prefix yields an actual same-cut forgery or cache collision. -/
 theorem origin_split (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (index : Nat) (owner : Owner source) (pending : registration.BeaconPending)
     (oneTime : PqxdhJointGapDh.ScalarBytes) (received : registration.ResponsePacket)
     (before after : Local n KemSK source) (application : Pqxdh.Bytes)

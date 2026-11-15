@@ -16,6 +16,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhSelectedFirstRecord
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame RawCtxSelectedParentTable
 
 /-- Mapping a state-passing computation maps only its returned value. -/
@@ -413,7 +415,7 @@ noncomputable def selectedFinish {Origin : Type} (mark : PqxdhBeaconPhase2Shared
     (beacon : PqxdhSelectedInitialOwnerCompiler.Beacon I D K) :
     StateT (RawCtxSharedPrimitive.SharedState (Local A N C)) ProbComp
       (PqxdhInitialFinishOrigin.Result RawCtxSelectedMessageReveals.Kernel Origin I D K) :=
-  PqxdhInitialFinishOrigin.owner mark
+  PqxdhInitialFinishOrigin.owner (completedBinding := completedBinding) mark
     (fun query => PqxdhSelectedInitialOwnerCompiler.sourceExternal (extra := extra) pre application initial selector aux (.inl query))
     (PqxdhSelectedMessageBeacon.materialCalls source writer prior parent key target nonce next)
     (fun reply => PqxdhSelectedInitialOwnerCompiler.sourceExternal (extra := extra) pre application initial selector aux (.inr (.inl reply)))
@@ -425,11 +427,11 @@ noncomputable def selectedFinish {Origin : Type} (mark : PqxdhBeaconPhase2Shared
 theorem finish_step {Origin : Type} (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin) (raw : Pqxdh.Bytes)
     (beacon : PqxdhSelectedInitialOwnerCompiler.Beacon I D K) :
     simulateQ (lowered (extra := extra) (X := X) (Response := Response) (S := S) (B := B) pre application initial selector aux source writer table)
-      (PqxdhInitialFinishOrigin.owner mark PqxdhInitialPendingPost.preForward PqxdhInitialPendingPost.calls
+      (PqxdhInitialFinishOrigin.owner (completedBinding := completedBinding) mark PqxdhInitialPendingPost.preForward PqxdhInitialPendingPost.calls
         PqxdhInitialPendingPost.applicationForward PqxdhInitialPendingPost.initialForward decode raw
         (RawCtxGenericRoleStorage.mapBeacon (PqxdhSelectedMessageBeacon.interpretKernel key) beacon)) =
       Prod.map (Prod.map id (RawCtxGenericRoleStorage.mapBeacon (PqxdhSelectedMessageBeacon.interpretKernel key))) id <$>
-        selectedFinish pre application initial selector aux source writer prior parent key target nonce next decode mark raw beacon := by
+        selectedFinish (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next decode mark raw beacon := by
   rw [PqxdhInitialOriginPost.owner_interpretation, lowered_calls]
   have preparation : (lowered (extra := extra) (X := X) (Response := Response) (S := S) (B := B) pre application initial selector aux source writer table ∘ₛ
       PqxdhInitialPendingPost.preForward) =
@@ -450,7 +452,7 @@ theorem finish_step {Origin : Type} (mark : PqxdhBeaconPhase2Shared.Secrets Shar
     simp only [PqxdhInitialPendingPost.initialForward, simulateQ_spec_query]
     rfl
   rw [preparation, getter, initializer]
-  apply PqxdhInitialFinishOrigin.owner_map
+  apply PqxdhInitialFinishOrigin.owner_map (completedBinding := completedBinding)
   · exact PqxdhSelectedMessageBeacon.receive_map source writer prior parent key target nonce next
   · intro secrets
     simp only [Functor.map_map, Option.map_map, Function.comp_def, PqxdhSelectedMessageBeacon.known_roundtrip]
@@ -460,9 +462,9 @@ theorem finish_step {Origin : Type} (mark : PqxdhBeaconPhase2Shared.Secrets Shar
 /-- Erasing the private installation marker gives the selected source finish used by the stopped post interpreter. -/
 theorem finish_erase {Origin : Type} (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin) (raw : Pqxdh.Bytes)
     (beacon : PqxdhSelectedInitialOwnerCompiler.Beacon I D K) :
-    Prod.fst <$> selectedFinish pre application initial selector aux source writer prior parent key target nonce next decode mark raw beacon =
+    Prod.fst <$> selectedFinish (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next decode mark raw beacon =
       simulateQ (PqxdhSelectedInitialOwnerCompiler.source (extra := extra) pre application initial selector aux source writer prior parent key target nonce next decode)
-        (PqxdhSelectedInitialOwnerCompiler.owner raw beacon) := by
+        (PqxdhSelectedInitialOwnerCompiler.owner (completedBinding := completedBinding) raw beacon) := by
   rw [selectedFinish, PqxdhInitialFinishOrigin.erase, PqxdhSelectedInitialOwnerCompiler.owner_source]
 
 /-- Selected source state together with the private origin and publication transcript. -/
@@ -485,7 +487,7 @@ noncomputable def tracedPlain (mark : PqxdhBeaconPhase2Shared.Secrets Shared →
   | .inr (.finish index raw) => fun before =>
       (fun result => (result.1.1.1, ((PqxdhSelectedPostCompiler.install index before.1.1 result.1.1.2, result.2),
           PqxdhInitialOriginPost.finish before.2 index result.1.2))) <$>
-        (selectedFinish pre application initial selector aux source writer prior parent key target nonce next decode mark raw
+        (selectedFinish (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next decode mark raw
           (before.1.1.roles.1.2 index)).run before.1.2
 
 /-- The traced selected post interpreter over the optional-reply interface of the stopped source. -/
@@ -493,21 +495,21 @@ noncomputable def traced (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Bool
     QueryImpl (PqxdhSelectedPostCompiler.Optional (PqxdhInitialGenericPost.Spec extra S B))
       (StateT (Traced M P I D K A N C S B) ProbComp) :=
   fun query before => (fun result => (some result.1, result.2)) <$>
-    (tracedPlain pre application initial selector aux source writer prior parent key target nonce next sender route decode mark query).run before
+    (tracedPlain (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route decode mark query).run before
 
 /-- Erasing only the private transcript recovers the ordinary selected post interpreter. -/
 theorem traced_erase (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Bool)
     (query : (PqxdhSelectedPostCompiler.Optional (PqxdhInitialGenericPost.Spec extra S B)).Domain)
     (before : Traced M P I D K A N C S B) :
-    Prod.map id Prod.fst <$> (traced pre application initial selector aux source writer prior parent key target nonce next sender route decode mark query).run before =
-      (PqxdhSelectedPostDisclosure.normal pre application initial selector aux source writer prior parent key target nonce next sender route decode query).run before.1 := by
+    Prod.map id Prod.fst <$> (traced (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route decode mark query).run before =
+      (PqxdhSelectedPostDisclosure.normal (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route decode query).run before.1 := by
   rcases query with (request | request) | ⟨index, raw⟩
   · simp only [traced, tracedPlain, PqxdhSelectedPostDisclosure.normal, StateT.run, Functor.map_map, Prod.map_def, id_eq]
   · simp only [traced, tracedPlain, PqxdhSelectedPostDisclosure.normal, PqxdhSelectedPostCompiler.original, StateT.run,
       Functor.map_map, Prod.map_def, id_eq]
   · simp only [traced, tracedPlain, PqxdhSelectedPostDisclosure.normal, PqxdhSelectedPostCompiler.original, StateT.run,
       Functor.map_map, Prod.map_def, id_eq]
-    rw [← finish_erase pre application initial selector aux source writer prior parent key target nonce next decode (fun secrets => mark secrets) raw,
+    rw [← finish_erase (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next decode (fun secrets => mark secrets) raw,
       state_map_apply, Functor.map_map]
 
 local notation "interp" => PqxdhSelectedMessageBeacon.interpretKernel key
@@ -524,7 +526,7 @@ noncomputable def selectedBuild (initialKernel : RustM RawCtxSelectedMessageReve
       (RustM (Option PqxdhServerRegistrationPublication.Response)) := fun before =>
   let current := consumeFront index ready before
   let input := selectedServer sender index current
-  reinstallServer index current <$> PqxdhInitialGenericBuilder.readyBuild source
+  reinstallServer index current <$> PqxdhInitialGenericBuilder.readyBuild (associatedData := associatedData) source
     (PqxdhSelectedMessageBeacon.materialCalls source writer prior parent key target nonce next) (serverAux pre application initial selector aux) initialKernel
     ⟨input.server.identity, input.identityKeyId⟩ ready metadata input
 
@@ -560,18 +562,18 @@ theorem publication_selected (key : RootOutput)
 theorem ready_map (initialKernel : RustM RawCtxSelectedMessageReveals.Kernel) (binding : pqxdh.ServerBinding)
     (ready : PqxdhPrivateAcceptedRoot.Ready) (metadata : P)
     (state : PqxdhInitialGenericPublication.State RawCtxSelectedMessageReveals.Kernel M P (List Pqxdh.Bytes)) :
-    PqxdhInitialGenericBuilder.readyBuild source
+    PqxdhInitialGenericBuilder.readyBuild (associatedData := associatedData) source
       (RawCtxGenericNativeCalls.calls (RawCtxFunctionalFamily.native (A := Local A N C) source writer table))
       (serverAux pre application initial selector aux)
       (interp <$> initialKernel) binding ready metadata (pubMap interp state) =
-      Functor.map (Prod.map id (pubMap interp)) <$> PqxdhInitialGenericBuilder.readyBuild source
+      Functor.map (Prod.map id (pubMap interp)) <$> PqxdhInitialGenericBuilder.readyBuild (associatedData := associatedData) source
         (PqxdhSelectedMessageBeacon.materialCalls source writer prior parent key target nonce next)
         (serverAux pre application initial selector aux) initialKernel binding ready metadata state := by
-  have native := PqxdhInitialGenericBuilder.ready_native source ConcreteRatchetKernel.mk
+  have native := PqxdhInitialGenericBuilder.ready_native (associatedData := associatedData) source ConcreteRatchetKernel.mk
     (RawCtxGenericNativeCalls.calls (RawCtxFunctionalFamily.native (A := Local A N C) source writer table))
     (RawCtxFunctionalFamily.native (A := Local A N C) source writer table) (serverAux pre application initial selector aux)
     (RawCtxGenericNativeCalls.send_realized _) (interp <$> initialKernel) binding ready metadata (pubMap interp state)
-  have selected := PqxdhSelectedMessageBuilder.ready_source (A := Local A N C) source writer prior parent key target nonce next
+  have selected := PqxdhSelectedMessageBuilder.ready_source (associatedData := associatedData) (A := Local A N C) source writer prior parent key target nonce next
     (serverAux pre application initial selector aux) initialKernel binding ready metadata state
   have kernels : ConcreteRatchetKernel.mk <$> (interp <$> initialKernel) =
       RawCtxSelectedMessageReveals.nativeKernel key <$> initialKernel := by
@@ -608,9 +610,9 @@ theorem ready_map (initialKernel : RustM RawCtxSelectedMessageReveals.Kernel) (b
 theorem build_step (initialKernel : RustM RawCtxSelectedMessageReveals.Kernel) (index : Fin S) (metadata : P)
     (ready : PqxdhPrivateAcceptedRoot.Ready) (before : PqxdhSelectedPostCompiler.Front M P I D K S B) :
     simulateQ (lowered (extra := extra) (X := X) (Response := Response) pre application initial selector aux source writer table)
-      ((PqxdhInitialPendingBuilder.build source (interp <$> initialKernel) sender index metadata ready).run (frontOf key before)) =
+      ((PqxdhInitialPendingBuilder.build (associatedData := associatedData) source (interp <$> initialKernel) sender index metadata ready).run (frontOf key before)) =
       Prod.map id (frontOf key) <$>
-        (selectedBuild pre application initial selector aux source writer prior parent key target nonce next sender
+        (selectedBuild (associatedData := associatedData) pre application initial selector aux source writer prior parent key target nonce next sender
           initialKernel index metadata ready).run before := by
   have auxiliary : (lowered (extra := extra) (X := X) (Response := Response) (S := S) (B := B) pre application initial selector aux source writer table ∘ₛ
       PqxdhInitialPendingPost.auxForward) = serverAux pre application initial selector aux := by
@@ -642,7 +644,7 @@ noncomputable def nativeFlat (mark : PqxdhBeaconPhase2Shared.Secrets Shared → 
       (StateT ((PqxdhInitialOriginPostPath.Front M P I D K S B × PqxdhInitialOriginPost.Trace Bool S B) ×
         RawCtxSharedPrimitive.SharedState (Local A N C)) ProbComp) :=
   ((lowered (X := X) (Response := Response) pre application initial selector aux source writer table).mapStateTBase
-    (PqxdhInitialOriginPost.compiler mark sender route decode)).flattenStateT
+    (PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) mark sender route decode)).flattenStateT
 
 /-- The native displayed front, transcript and selected local state of a traced selected state. -/
 def tracedProj (key : RootOutput) (state : Traced M P I D K A N C S B) :
@@ -654,8 +656,8 @@ def tracedProj (key : RootOutput) (state : Traced M P I D K A N C S B) :
 theorem post_step (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Bool)
     (query : (PqxdhInitialGenericPost.Spec extra S B).Domain) (before : Traced M P I D K A N C S B) :
     Prod.map id (tracedProj key) <$>
-      (tracedPlain pre application initial selector aux source writer prior parent key target nonce next sender route decode mark query).run before =
-      (nativeFlat pre application initial selector aux source writer prior parent key target nonce next sender route decode mark query).run
+      (tracedPlain (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route decode mark query).run before =
+      (nativeFlat (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route decode mark query).run
         (tracedProj key before) := by
   rcases before with ⟨⟨front, shared⟩, trace⟩
   rcases query with (request | request) | ⟨index, raw⟩
@@ -669,7 +671,7 @@ theorem post_step (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Bool)
       tracedPlain, StateT.mk, StateT.run, bind_pure_comp, simulateQ_map, state_map_apply, Functor.map_map,
       PqxdhInitialPendingPost.selectorForward, simulateQ_spec_query]
     rfl
-  · have step := finish_step (S := S) (B := B) pre application initial selector aux source writer prior parent key target nonce next decode
+  · have step := finish_step (completedBinding := completedBinding) (S := S) (B := B) pre application initial selector aux source writer prior parent key target nonce next decode
       mark raw (front.roles.1.2 index)
     simp only [nativeFlat, tracedProj, QueryImpl.flattenStateT, QueryImpl.mapStateTBase, PqxdhInitialOriginPost.compiler,
       tracedPlain, StateT.mk, StateT.run, bind_pure_comp, simulateQ_map, state_map_apply, Functor.map_map]
@@ -686,22 +688,22 @@ theorem post_step (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Bool)
 theorem post_program {Result : Type} (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Bool)
     (work : OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result) (before : Traced M P I D K A N C S B) :
     Prod.map id (tracedProj key) <$>
-      (simulateQ (tracedPlain pre application initial selector aux source writer prior parent key target nonce next sender route decode mark) work).run before =
-      (simulateQ (nativeFlat pre application initial selector aux source writer prior parent key target nonce next sender route decode mark) work).run
+      (simulateQ (tracedPlain (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route decode mark) work).run before =
+      (simulateQ (nativeFlat (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route decode mark) work).run
         (tracedProj key before) :=
   map_run_simulateQ_eq_of_query_map_eq _ _ (tracedProj key)
-    (post_step pre application initial selector aux source writer prior parent key target nonce next sender route decode mark) work before
+    (post_step (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route decode mark) work before
 
 /-- The optional-reply traced interpreter always answers and is the total traced interpreter wrapped in `some`. -/
 theorem traced_total {Result : Type} (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Bool)
     (work : OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result) (before : Traced M P I D K A N C S B) :
-    (simulateQ (traced pre application initial selector aux source writer prior parent key target nonce next sender route decode mark)
+    (simulateQ (traced (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route decode mark)
       (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run before =
       (fun result => (some result.1, result.2)) <$>
-        (simulateQ (tracedPlain pre application initial selector aux source writer prior parent key target nonce next sender route decode mark) work).run before := by
-  have lifted : traced (M := M) (P := P) (I := I) (D := D) (K := K) (S := S) (B := B)
+        (simulateQ (tracedPlain (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route decode mark) work).run before := by
+  have lifted : traced (completedBinding := completedBinding) (M := M) (P := P) (I := I) (D := D) (K := K) (S := S) (B := B)
       pre application initial selector aux source writer prior parent key target nonce next sender route decode mark =
-      fun query => some <$> tracedPlain pre application initial selector aux source writer prior parent key target nonce next sender route decode mark query := by
+      fun query => some <$> tracedPlain (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route decode mark query := by
     funext query before
     rw [state_map_apply]
     rfl
@@ -711,12 +713,12 @@ theorem traced_total {Result : Type} (mark : PqxdhBeaconPhase2Shared.Secrets Sha
 theorem traced_program_erase {Result : Type} (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Bool)
     (work : OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result) (before : Traced M P I D K A N C S B) :
     Prod.map id Prod.fst <$>
-      (simulateQ (traced pre application initial selector aux source writer prior parent key target nonce next sender route decode mark)
+      (simulateQ (traced (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route decode mark)
         (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run before =
-      (simulateQ (PqxdhSelectedPostDisclosure.normal pre application initial selector aux source writer prior parent key target nonce next
+      (simulateQ (PqxdhSelectedPostDisclosure.normal (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next
         sender route decode) (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run before.1 :=
   map_run_simulateQ_eq_of_query_map_eq _ _ Prod.fst
-    (traced_erase pre application initial selector aux source writer prior parent key target nonce next sender route decode mark) _ before
+    (traced_erase (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route decode mark) _ before
 
 /-- The private transcript entry for the first Server response, read from the selected front. -/
 def selectedAfter (before : PqxdhInitialOriginPost.Trace Bool S B) (front : PqxdhSelectedPostCompiler.Front M P I D K S B)
@@ -750,9 +752,9 @@ noncomputable def selectedRun (mark : PqxdhBeaconPhase2Shared.Secrets Shared →
     (post : RustM (Option PqxdhServerRegistrationPublication.Response) → OracleComp (PqxdhInitialGenericPost.Spec extra S B) Bool)
     (front : PqxdhSelectedPostCompiler.Front M P I D K S B) (shared : RawCtxSharedPrimitive.SharedState (Local A N C)) :
     ProbComp (Option Bool × Traced M P I D K A N C S B) := do
-  let built ← (selectedBuild pre application initial selector aux source writer prior parent key target nonce next sender
+  let built ← (selectedBuild (associatedData := associatedData) pre application initial selector aux source writer prior parent key target nonce next sender
     initialKernel index metadata ready front).run shared
-  (simulateQ (traced pre application initial selector aux source writer prior parent key target nonce next sender route decode mark)
+  (simulateQ (traced (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route decode mark)
     (RawCtxSelectedFamilyNonceCoupling.optionalClient (post built.1.1))).run
       ((built.1.2, built.2), selectedAfter PqxdhInitialSourcePublication.empty built.1.2 index true built.1.1)
 
@@ -761,15 +763,15 @@ theorem selectedRun_erase (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Boo
     (initialKernel : RustM RawCtxSelectedMessageReveals.Kernel) (index : Fin S) (metadata : P) (ready : PqxdhPrivateAcceptedRoot.Ready)
     (post : RustM (Option PqxdhServerRegistrationPublication.Response) → OracleComp (PqxdhInitialGenericPost.Spec extra S B) Bool)
     (front : PqxdhSelectedPostCompiler.Front M P I D K S B) (shared : RawCtxSharedPrimitive.SharedState (Local A N C)) :
-    Prod.map id Prod.fst <$> selectedRun pre application initial selector aux source writer prior parent key target nonce next sender route decode
+    Prod.map id Prod.fst <$> selectedRun (associatedData := associatedData) (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route decode
       mark initialKernel index metadata ready post front shared =
-      ((selectedBuild pre application initial selector aux source writer prior parent key target nonce next sender
+      ((selectedBuild (associatedData := associatedData) pre application initial selector aux source writer prior parent key target nonce next sender
         initialKernel index metadata ready front).run shared >>= fun built =>
-        (simulateQ (PqxdhSelectedPostDisclosure.normal pre application initial selector aux source writer prior parent key target nonce next
+        (simulateQ (PqxdhSelectedPostDisclosure.normal (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next
           sender route decode) (RawCtxSelectedFamilyNonceCoupling.optionalClient (post built.1.1))).run (built.1.2, built.2)) := by
   simp only [selectedRun, map_bind]
   refine bind_congr fun built => ?_
-  exact traced_program_erase pre application initial selector aux source writer prior parent key target nonce next sender route decode mark
+  exact traced_program_erase (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route decode mark
     (post built.1.1) ((built.1.2, built.2), selectedAfter PqxdhInitialSourcePublication.empty built.1.2 index true built.1.1)
 
 /-- The explicit projection from a selected run to the native retained run: reply, displayed front, transcript and retained state. -/
@@ -783,31 +785,31 @@ theorem sequence_selected (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Boo
     (post : RustM (Option PqxdhServerRegistrationPublication.Response) → OracleComp (PqxdhInitialGenericPost.Spec extra S B) Bool)
     (front : PqxdhSelectedPostCompiler.Front M P I D K S B) (shared : RawCtxSharedPrimitive.SharedState (Local A N C)) :
     (simulateQ (PqxdhInitialNativeRetained.retained source writer table (lifted pre application initial selector aux))
-      ((PqxdhInitialOriginPost.sequence (X := X) (Response := Response) source (interp <$> initialKernel) mark true sender route decode
+      ((PqxdhInitialOriginPost.sequence (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response) source (interp <$> initialKernel) mark true sender route decode
         index metadata ready post).run (frontOf key front, PqxdhInitialSourcePublication.empty))).run (retainedOf shared) =
-      nativeView key <$> selectedRun pre application initial selector aux source writer prior parent key target nonce next sender route decode
+      nativeView key <$> selectedRun (associatedData := associatedData) (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route decode
         mark initialKernel index metadata ready post front shared := by
   rw [← low_program]
   change Prod.map id retainedOf <$> (simulateQ (lowered pre application initial selector aux source writer table)
-    ((PqxdhInitialPendingBuilder.build source (interp <$> initialKernel) sender index metadata ready).run (frontOf key front) >>= fun built =>
-      (simulateQ (PqxdhInitialOriginPost.compiler (X := X) (Response := Response) mark sender route decode) (post built.1)).run
+    ((PqxdhInitialPendingBuilder.build (associatedData := associatedData) source (interp <$> initialKernel) sender index metadata ready).run (frontOf key front) >>= fun built =>
+      (simulateQ (PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode) (post built.1)).run
         (built.2, PqxdhInitialOriginPost.afterBuilder PqxdhInitialSourcePublication.empty built.2 index true built.1))).run shared = _
   rw [simulateQ_bind, StateT.run_bind, build_step, StateT.run_map, bind_map_left]
   have continuation : ∀ built : (RustM (Option PqxdhServerRegistrationPublication.Response) × PqxdhSelectedPostCompiler.Front M P I D K S B) ×
       RawCtxSharedPrimitive.SharedState (Local A N C),
       (simulateQ (lowered pre application initial selector aux source writer table)
-        ((simulateQ (PqxdhInitialOriginPost.compiler (X := X) (Response := Response) mark sender route decode) (post built.1.1)).run
+        ((simulateQ (PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode) (post built.1.1)).run
           (frontOf key built.1.2, PqxdhInitialOriginPost.afterBuilder PqxdhInitialSourcePublication.empty (frontOf key built.1.2) index true built.1.1))).run
         built.2 =
       (fun result => ((result.1, (frontOf key result.2.1.1, result.2.2)), result.2.1.2)) <$>
-        (simulateQ (tracedPlain pre application initial selector aux source writer prior parent key target nonce next sender route decode mark)
+        (simulateQ (tracedPlain (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route decode mark)
           (post built.1.1)).run ((built.1.2, built.2), selectedAfter PqxdhInitialSourcePublication.empty built.1.2 index true built.1.1) := by
     intro built
     rw [OracleComp.simulateQ_mapStateTBase_run_eq_map_flattenStateT, selectedAfter_native]
-    have program := post_program pre application initial selector aux source writer prior parent key target nonce next sender route decode mark
+    have program := post_program (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route decode mark
       (post built.1.1) ((built.1.2, built.2), selectedAfter PqxdhInitialSourcePublication.empty built.1.2 index true built.1.1)
     change (fun result => ((result.1, result.2.1), result.2.2)) <$>
-      (simulateQ (nativeFlat pre application initial selector aux source writer prior parent key target nonce next sender route decode mark)
+      (simulateQ (nativeFlat (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route decode mark)
         (post built.1.1)).run (tracedProj key ((built.1.2, built.2), selectedAfter PqxdhInitialSourcePublication.empty built.1.2 index true built.1.1)) = _
     rw [← program, Functor.map_map]
     rfl
@@ -884,7 +886,7 @@ variable
 
 /-- The selected first-record run for the actual stage-one source input: prior production stream, no parent entry, and the actual selected directional root as target. -/
 noncomputable def firstRun : ProbComp (Option Bool × Traced M P I D K A N RootOracle.QueryCache S B) :=
-  selectedRun pre application initial selector aux source writer (productionStream source.crypto) none key
+  selectedRun (associatedData := associatedData) (completedBinding := completedBinding) pre application initial selector aux source writer (productionStream source.crypto) none key
     (PqxdhInitialSourceExperiment.root source previousRoot response64 selected) nonce next sender route decode
     (PqxdhInitialSelectedOrigin.mark source selectedMessage) (initialKernel response64) index metadata ready post
     (initialFront before) (initialShared shared privateState cache store)
@@ -893,11 +895,11 @@ noncomputable def firstRun : ProbComp (Option Bool × Traced M P I D K A N RootO
 theorem randomRun_selected
     (hext : lifted pre application initial selector aux =
       PqxdhInitialOriginFinishPath.withInitial source selectedMessage previousRoot response64 other) :
-    PqxdhInitialSourceRandom.randomRun source writer selectedMessage previousRoot response64 other sender route decode
+    PqxdhInitialSourceRandom.randomRun (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
       index metadata ready post before selected shared privateState cache (RawCtxSelectedMessageKdf.response key nonce next) =
-      nativeView key <$> firstRun pre application initial selector aux source writer selectedMessage previousRoot response64
+      nativeView key <$> firstRun (associatedData := associatedData) (completedBinding := completedBinding) pre application initial selector aux source writer selectedMessage previousRoot response64
         sender route decode index metadata ready post before selected shared privateState cache store key nonce next := by
-  have sequence := sequence_selected pre application initial selector aux source writer (productionStream source.crypto) none key
+  have sequence := sequence_selected (associatedData := associatedData) (completedBinding := completedBinding) pre application initial selector aux source writer (productionStream source.crypto) none key
     (PqxdhInitialSourceExperiment.root source previousRoot response64 selected) nonce next sender route decode
     (PqxdhInitialSelectedOrigin.mark source selectedMessage) (initialKernel response64) index metadata ready post
     (initialFront before) (initialShared shared privateState cache store)
@@ -954,13 +956,13 @@ theorem decision_selected (number : Std.U64) (ancestors disclosed : List Ratchet
       PqxdhInitialOriginFinishPath.withInitial source selectedMessage previousRoot response64 other) :
     PqxdhInitialSourceRandom.decision source previousRoot response64 selected (RawCtxSelectedMessageKdf.response key nonce next)
         number ancestors disclosed <$>
-      PqxdhInitialSourceRandom.randomRun source writer selectedMessage previousRoot response64 other sender route decode
+      PqxdhInitialSourceRandom.randomRun (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
         index metadata ready post before selected shared privateState cache (RawCtxSelectedMessageKdf.response key nonce next) =
       (fun result => PqxdhInitialSourceRandom.decision source previousRoot response64 selected
           (RawCtxSelectedMessageKdf.response key nonce next) number ancestors disclosed (nativeView key result)) <$>
-        firstRun pre application initial selector aux source writer selectedMessage previousRoot response64
+        firstRun (associatedData := associatedData) (completedBinding := completedBinding) pre application initial selector aux source writer selectedMessage previousRoot response64
           sender route decode index metadata ready post before selected shared privateState cache store key nonce next := by
-  rw [randomRun_selected pre application initial selector aux source writer selectedMessage previousRoot response64 other
+  rw [randomRun_selected (associatedData := associatedData) (completedBinding := completedBinding) pre application initial selector aux source writer selectedMessage previousRoot response64 other
     sender route decode index metadata ready post before selected shared privateState cache store key nonce next hext, Functor.map_map]
 
 end Random
@@ -1013,11 +1015,11 @@ variable (writer : RawCtxMixedShared.Writer) (sender : M → Std.U64) (route : R
 
 /-- For the actual prepared source callbacks, the first randomized source run is the selected first-record run under `nativeView`, with no callback premise. -/
 theorem randomRun_prepared :
-    PqxdhInitialSourceRandom.randomRun (sharedEnv).source writer selectedMessage previousRoot response64
+    PqxdhInitialSourceRandom.randomRun (associatedData := associatedData) (completedBinding := completedBinding) (sharedEnv).source writer selectedMessage previousRoot response64
       (PqxdhInitialPreparedSourceInput.other sharedEnv baseImpl kem attachedVerify primitives secret challenge)
       sender route decode index metadata ready post before selected shared privateState cache
       (RawCtxSelectedMessageKdf.response key nonce next) =
-      nativeView key <$> firstRun
+      nativeView key <$> firstRun (associatedData := associatedData) (completedBinding := completedBinding)
         (PqxdhPreparedPrefixCallbacks.preparation attachedVerify primitives 1 (sharedEnv).source (sharedEnv).localImpl baseImpl kem secret challenge)
         (PqxdhPreparedPrefixCallbacks.application attachedVerify primitives 1 (sharedEnv).source (sharedEnv).localImpl baseImpl kem secret challenge)
         (initialLocal (A := A) (N := PqxdhPhase1AcceptanceOracle.BareState 1) (sharedEnv).source selectedMessage previousRoot response64)
@@ -1026,7 +1028,7 @@ theorem randomRun_prepared :
         (PqxdhPreparedPrefixCallbacks.auxiliaryLocal callbacks)
         (sharedEnv).source writer selectedMessage previousRoot response64 sender route decode index metadata ready post before selected
         shared privateState cache store key nonce next :=
-  randomRun_selected _ _ _ _ _ _ writer selectedMessage previousRoot response64 _ sender route decode index metadata ready post before
+  randomRun_selected (associatedData := associatedData) (completedBinding := completedBinding) _ _ _ _ _ _ writer selectedMessage previousRoot response64 _ sender route decode index metadata ready post before
     selected shared privateState cache store key nonce next
     (prepared_lifted setup env callbacks hashCache baseImpl kem attachedVerify primitives secret challenge selectedMessage previousRoot response64)
 

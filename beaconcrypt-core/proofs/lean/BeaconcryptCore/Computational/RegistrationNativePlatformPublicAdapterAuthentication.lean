@@ -16,7 +16,7 @@ variable {n : Nat} {I KemSK Reader Response : Type} {base : OracleSpec I}
 variable {source : RegistrationNativeMldsa.Source}
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 
 noncomputable def hash (bytes : Pqxdh.Bytes) : StateT (Backend n KemSK) ProbComp CtxRomAuth.CtxDigest :=
   RegistrationNativePlatformSdkReification.backendLeaf setup checks representation created (.inr (.inl bytes))

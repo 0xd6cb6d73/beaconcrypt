@@ -38,18 +38,16 @@ theorem beacon_contracts {R E : Type} (generator : rand_core.TryCryptoRng R E)
     letI := AdapterRatchetKdfSource.sourceLocalOperations localOps
     AdapterFiniteCallsSource.BeaconContracts generator := by
   have finish := AdapterRatchetKdfSource.finish_contracts initial ongoing contracts.finish
-  rcases contracts.bundle with ⟨init, kxPublicBytes, publicLeaves, allocation, kemPublicBytes⟩
-  rcases init with ⟨initHash, sign, initPublicBytes, edSign⟩
-  rcases publicLeaves with ⟨mldsaPublic, edPublicBytes, hash⟩
+  rcases contracts.bundle with ⟨init, kxPublicBytes, allocation, kemPublicBytes⟩
+  rcases init with ⟨initHash, initPublicBytes, edSign⟩
   have generation := contracts.generation
   have sealing := contracts.sealing
   let _ := AdapterRatchetKdfSource.sourceReceiveOperations recordOps
   let _ := AdapterRatchetKdfSource.sourceLocalOperations localOps
   exact {
     bundle := {
-      init := { hash := initHash, sign := sign, edPublicBytes := initPublicBytes, edSign := edSign }
+      init := { hash := initHash, edPublicBytes := initPublicBytes, edSign := edSign }
       kxPublicBytes := kxPublicBytes
-      publicLeaves := { mldsaPublic := mldsaPublic, edPublicBytes := edPublicBytes, hash := hash }
       allocation := allocation
       kemPublicBytes := kemPublicBytes }
     generation := generation
@@ -140,7 +138,7 @@ theorem server_contracts {R E : Type} (generator : rand_core.TryCryptoRng R E)
   have response := AdapterRatchetKdfSource.response_contracts initial ongoing contracts.response
   have receive := AdapterRatchetKdfSource.receive_contracts ongoing contracts.receive
   have containerLaws := AdapterRatchetKdfSource.local_container_contracts contracts.containers
-  rcases contracts.authentication.publicLeaves with ⟨mldsaPublic, edPublicBytes, hash⟩
+  rcases contracts.authentication.publicLeaves with ⟨mldsaPublic, edPublicBytes⟩
   rcases contracts.replay with ⟨contains, reserve, insert⟩
   rcases contracts.lookups with ⟨get, getMut⟩
   have init := contracts.authentication.init
@@ -150,7 +148,7 @@ theorem server_contracts {R E : Type} (generator : rand_core.TryCryptoRng R E)
   let _ := AdapterRatchetKdfSource.sourceLocalOperations localOps
   exact {
     authentication := {
-      publicLeaves := { mldsaPublic := mldsaPublic, edPublicBytes := edPublicBytes, hash := hash }
+      publicLeaves := { mldsaPublic := mldsaPublic, edPublicBytes := edPublicBytes }
       init := init }
     agreement := agreement
     random := random

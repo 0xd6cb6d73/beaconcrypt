@@ -39,7 +39,7 @@ theorem source (coins : QueryImpl unifSpec (StateT Platform ProbComp))
         (pin : session.ServerAuthenticationPin) (availability : pqxdh.KeyIdAvailability) (plaintext : Slice U8)
         (initial : registration.ServerInitialKdf) (hashed : registration.ServerResponseHash),
       RegistrationServerSdkSource.take handle before = (some token, current) ∧ application = some plaintext ∧
-      registration.begin_server_completion current.control pin availability token.agreement plaintext = .ok (.Ok initial) ∧
+      BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission current.control pin availability token.agreement plaintext initial ∧
       RegistrationServerRecordExecutor.Path initial hashed ∧
       RegistrationNativePlatformSourceFinishContents.RecordCut (n := n) coins setup wire view failure allocation erased
         rawAllocation serializer initial hashed result.2.world.world.1.primitive.2 := by
@@ -51,8 +51,13 @@ theorem source (coins : QueryImpl unifSpec (StateT Platform ProbComp))
   have admitted := cut.occupancyResumed
   rw [PeerOwnership.completion_lookup_resume] at admitted
   simp only [controlEq, pinEq, tokenEq, applicationEq] at admitted
+  obtain ⟨adDigest, adResumed⟩ := RegistrationNativePlatformServerSdk.adHash_resume_receipt
+    coins cut.pendingAd cut.located cut.hashed cut.lookupPlatform cut.hashPlatform cut.initial cut.adHashCalled
+  have completeAd : BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission cut.current.control cut.pinned
+      (if cut.occupied then .Occupied else .Available) cut.token.agreement cut.plaintext cut.initial :=
+    ⟨cut.pendingAd, adDigest, admitted, adResumed⟩
   refine ⟨cut.token, cut.current, cut.pinned, (if cut.occupied then .Occupied else .Available), cut.plaintext,
-    cut.initial, hashed, cut.tokenTaken, cut.applicationSome, admitted, path, ?_⟩
+    cut.initial, hashed, cut.tokenTaken, cut.applicationSome, completeAd, path, ?_⟩
   refine ⟨(cut.reserved.world, cut.reservePlatform), (current, platform), ?_, extension⟩
   exact (RegistrationNativePlatformRawFrame.joint_support _ _ _ _ _ _).mpr called
 
@@ -67,7 +72,7 @@ theorem typed {mlSource : RegistrationNativeMldsa.Source}
     (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
     (erased : commitment.CommitmentTranscript) (reserveRegistration reservePeer : StateT Platform ProbComp Bool)
@@ -86,7 +91,7 @@ theorem typed {mlSource : RegistrationNativeMldsa.Source}
         (pin : session.ServerAuthenticationPin) (availability : pqxdh.KeyIdAvailability) (plaintext : Slice U8)
         (initial : registration.ServerInitialKdf) (hashed : registration.ServerResponseHash),
       RegistrationServerSdkSource.take handle before.server = (some token, current) ∧ application = some plaintext ∧
-      registration.begin_server_completion current.control pin availability token.agreement plaintext = .ok (.Ok initial) ∧
+      BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission current.control pin availability token.agreement plaintext initial ∧
       RegistrationServerRecordExecutor.Path initial hashed ∧
       RegistrationNativePlatformSourceFinishContents.RecordCut (n := n) coins setup wire view failure allocation erased
         rawAllocation serializer initial hashed (RegistrationNativeWorldCache.cache after) := by

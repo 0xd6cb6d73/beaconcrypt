@@ -40,8 +40,15 @@ def createCap (kind : Kind) : Nat :=
 def bundleCap (kind : Kind) : Nat :=
   (if kind = .uniform then 32 else 0) + (if kind = .signing then 3 else 0)
 
-def finishCap : Kind → Nat
+/-- The compiled whole-owner finish: at most one decapsulation, one joint DH and 56 native-tail calls. -/
+def ownerCap : Kind → Nat
   | .decapsulate | .staticDh => 1
+  | .tail => 56
+  | _ => 0
+
+/-- A finish attempt: the transcript hash of the retained bundle (one `hash` request), then the compiled owner (`ownerCap`). -/
+def finishCap : Kind → Nat
+  | .decapsulate | .staticDh | .hash => 1
   | .tail => 56
   | _ => 0
 

@@ -10,6 +10,8 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhInitialHalfRetained
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhJointKdf PqxdhSecretInputKdf PqxdhFullSecretInputKdf
 open PqxdhInitialBeaconAmbient PqxdhInitialHalfProgram PqxdhInitialNativeParentRealization
 open PqxdhInitialNativeParentContinuation (ambient)
@@ -80,16 +82,16 @@ theorem sequence_compiled (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Ori
     (state : RetainedState A N C) :
     (simulateQ (PqxdhInitialNativeRetained.retained source writer (privatePatch prior target output)
       (PqxdhInitialNativeAudit.external pre application (nativeInitial target initial) selector aux))
-      ((PqxdhInitialOriginPost.sequence source (RawCtxSelectedParentCalls.nativeKernel target <$> execution.first)
+      ((PqxdhInitialOriginPost.sequence (associatedData := associatedData) (completedBinding := completedBinding) source (RawCtxSelectedParentCalls.nativeKernel target <$> execution.first)
         mark execution.origin sender route decode execution.index execution.metadata execution.ready execution.post).run
         (PqxdhInitialParentPost.mapFront (RawCtxSelectedParentCalls.nativeKernel target) execution.before, execution.trace))).run state =
     (fun result => (Prod.map id (Prod.map (PqxdhInitialParentPost.mapFront (RawCtxSelectedParentCalls.nativeKernel target)) id) result.1,
       flat result.2)) <$>
       (simulateQ (PqxdhInitialHalfPrivateObserver.handler source writer prior (RawCtxInitialSentinel.entry other padding) output
         pre application initial selector aux (RawCtxSelectedLiveTrace.nativeReader (RawCtxFreshChainCut.concreteChain target)) target)
-        (baseProgram source mark sender route decode execution)).run (nested state) := by
+        (baseProgram (associatedData := associatedData) (completedBinding := completedBinding) source mark sender route decode execution)).run (nested state) := by
   rw [retained_program source writer (privatePatch prior target output) other target padding pre application initial selector aux,
-    PqxdhInitialHalfBuilderMap.sequence source writer (privatePatch prior target output)
+    PqxdhInitialHalfBuilderMap.sequence (associatedData := associatedData) (completedBinding := completedBinding) source writer (privatePatch prior target output)
       (RawCtxInitialSentinel.entry other padding) target pre application (fun secrets => Prod.snd <$> initial secrets) selector aux
       execution.first mark execution.origin sender route decode execution.index execution.metadata execution.ready execution.post
       (execution.before, execution.trace),
@@ -129,22 +131,22 @@ theorem decision_compiled (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Boo
     (fun result => decision (privatePatch prior target output) target depth ancestors disclosed selected number result.1) <$>
       (simulateQ (PqxdhInitialNativeRetained.retained source writer (privatePatch prior target output)
         (PqxdhInitialNativeAudit.external pre application (nativeInitial target initial) selector aux))
-        ((PqxdhInitialOriginPost.sequence source (RawCtxSelectedParentCalls.nativeKernel target <$> execution.first)
+        ((PqxdhInitialOriginPost.sequence (associatedData := associatedData) (completedBinding := completedBinding) source (RawCtxSelectedParentCalls.nativeKernel target <$> execution.first)
           mark execution.origin sender route decode execution.index execution.metadata execution.ready execution.post).run
           (PqxdhInitialParentPost.mapFront (RawCtxSelectedParentCalls.nativeKernel target) execution.before, execution.trace))).run state =
       PqxdhInitialHalfCheckedFreshness.actualDecision target ancestors disclosed
         (fun result => PqxdhInitialPublishedEvent.Gate selected number result.1.1) <$>
-      PqxdhInitialHalfCheckedFreshness.nativeRun source writer prior (RawCtxInitialSentinel.entry other padding)
+      PqxdhInitialHalfCheckedFreshness.nativeRun (associatedData := associatedData) (completedBinding := completedBinding) source writer prior (RawCtxInitialSentinel.entry other padding)
         pre application initial selector aux mark sender route decode execution depth target output disclosed (nested state) candidates := by
-  rw [sequence_compiled source writer prior other target padding pre application initial selector aux mark sender route decode execution output state]
-  have observed := PqxdhInitialHalfNative.observation source writer prior (RawCtxInitialSentinel.entry other padding)
+  rw [sequence_compiled (associatedData := associatedData) (completedBinding := completedBinding) source writer prior other target padding pre application initial selector aux mark sender route decode execution output state]
+  have observed := PqxdhInitialHalfNative.observation (associatedData := associatedData) (completedBinding := completedBinding) source writer prior (RawCtxInitialSentinel.entry other padding)
     pre application initial selector aux mark sender route decode execution depth target output disclosed (nested state) candidates
     (fun result slots => @decide (PqxdhInitialPublishedEvent.Gate selected number result ∧
       RawCtxLiveLineage.Fresh (slots.map (RawCtxSelectedChain.interpret (RawCtxFreshChainCut.concreteChain target)) ++ ancestors)
         disclosed result.2.1.roles.2) (Classical.propDecidable _))
   rw [show (PqxdhInitialHalfCheckedFreshness.actualDecision target ancestors disclosed
       (fun result => PqxdhInitialPublishedEvent.Gate selected number result.1.1) <$>
-      PqxdhInitialHalfCheckedFreshness.nativeRun source writer prior (RawCtxInitialSentinel.entry other padding)
+      PqxdhInitialHalfCheckedFreshness.nativeRun (associatedData := associatedData) (completedBinding := completedBinding) source writer prior (RawCtxInitialSentinel.entry other padding)
         pre application initial selector aux mark sender route decode execution depth target output disclosed (nested state) candidates) = _ from observed]
   simp only [Functor.map_map, decision]
   rw [checker_lineage prior other target padding output depth]

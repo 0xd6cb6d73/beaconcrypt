@@ -91,7 +91,7 @@ class RegistrationSourcePreparationTests(unittest.TestCase):
             preparation.original_sources(), "schema"
         )
         distributions = [item for step in steps for item in step.get("certificate", [])]
-        self.assertEqual(len(fragments), 16)
+        self.assertEqual(len(fragments), 14)
         self.assertEqual(len(distributions), len(fragments))
         self.assertEqual(len({item["name"] for item in fragments}), len(fragments))
         for item in distributions:
@@ -105,7 +105,7 @@ class RegistrationSourcePreparationTests(unittest.TestCase):
         checks = [
             step for step in steps if step.get("rule") == "typed-parse-check-outlining"
         ]
-        self.assertEqual([len(step["checks"]) for step in checks], [7, 7])
+        self.assertEqual([len(step["checks"]) for step in checks], [5, 7])
         transport = files["beaconcrypt-parse/src/generated/transport.rs"]
         for step in checks:
             for index, check in enumerate(step["checks"]):

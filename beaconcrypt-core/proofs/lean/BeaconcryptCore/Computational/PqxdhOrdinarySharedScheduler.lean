@@ -9,6 +9,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhOrdinarySharedScheduler
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhPhase2SourceAux PqxdhEd25519EufCma PqxdhJointIdentity PqxdhPhase1AcceptanceOracle
 open PqxdhKemIndCca PqxdhJointKdfGame PqxdhPrivateKemSource PqxdhInitializerSecrecy
 open CtxRomAuth AdaptiveCtxSharedHash PqxdhGeneratedBeaconState
@@ -51,7 +52,7 @@ noncomputable def finish (query : (PqxdhPhase2LiveFinish.FinishSpec B).Domain) :
   match query with
   | .finish index raw => do
     let result ← (simulateQ (PqxdhOrdinaryNativeSharedRom.compiler attachedVerify primitives count source localImpl baseImpl kem secret)
-      (PqxdhBeaconPhase2Publication.nativeOwner decode raw (state.roles.1.2 index))).run state.auxiliary
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw (state.roles.1.2 index))).run state.auxiliary
     pure (result.1.1, {state with
       roles := ((state.roles.1.1, Function.update state.roles.1.2 index result.1.2), RawCtxProtocolReveals.tick state.roles.2)
       auxiliary := result.2})
@@ -60,7 +61,7 @@ noncomputable def compiler : QueryImpl (PqxdhPhase2SourceScheduler.Spec baseSpec
     (StateT (Local M P I D K A S B count) (OracleComp HashSpec))
   | .inl (.inl query) => record count source writer sender route decode query
   | .inl (.inr query) => selector attachedVerify primitives count baseImpl kem secret query
-  | .inr query => finish attachedVerify primitives count source decode localImpl baseImpl kem secret query
+  | .inr query => finish (completedBinding := completedBinding) attachedVerify primitives count source decode localImpl baseImpl kem secret query
 
 /-- The local representation retains every original source field, with only the common cache threaded externally. -/
 theorem attach_separate (state : PqxdhPhase2SourceScheduler.State M P I D K (A × BareState count) S B) :
@@ -73,9 +74,9 @@ set_option backward.isDefEq.respectTransparency false in
 theorem finish_source (query : (PqxdhPhase2LiveFinish.FinishSpec B).Domain)
     (state : Local M P I D K A S B count) (cache : CtxRO.QueryCache) :
     (fun result => (result.1.1, attach result.1.2 result.2)) <$>
-      (simulateQ hashImpl ((finish attachedVerify primitives count source decode localImpl baseImpl kem secret query).run state)).run cache =
+      (simulateQ hashImpl ((finish (completedBinding := completedBinding) attachedVerify primitives count source decode localImpl baseImpl kem secret query).run state)).run cache =
       simulateQ (PqxdhPhase2NativeSource.interpretation baseImpl kem secret)
-        ((PqxdhPhase2LiveFinish.finishImpl
+        ((PqxdhPhase2LiveFinish.finishImpl (completedBinding := completedBinding)
           (PqxdhPhase2SourceScheduler.ordinaryNative attachedVerify primitives count source localImpl) decode query).run
             (attach state cache)) := by
   cases query with
@@ -111,7 +112,7 @@ theorem selector_source (query : (SelectorSpec baseSpec).Domain)
     (fun result => (result.1.1, attach result.1.2 result.2)) <$>
       (simulateQ hashImpl ((selector attachedVerify primitives count baseImpl kem secret query).run state)).run cache =
       simulateQ (PqxdhPhase2NativeSource.interpretation baseImpl kem secret)
-        ((PqxdhPhase2SourceScheduler.ordinary attachedVerify primitives count source writer sender route decode localImpl
+        ((PqxdhPhase2SourceScheduler.ordinary (completedBinding := completedBinding) attachedVerify primitives count source writer sender route decode localImpl
           (.inl (.inr query))).run (attach state cache)) := by
   simp only [selector, StateT.run_mk, simulateQ_map, StateT.run_map, Functor.map_map]
   rw [RawCtxSelectiveSharedRom.coins_complete]
@@ -124,28 +125,28 @@ set_option backward.isDefEq.respectTransparency false in
 theorem step (query : (PqxdhPhase2SourceScheduler.Spec baseSpec S B).Domain)
     (state : Local M P I D K A S B count) (cache : CtxRO.QueryCache) :
     (fun result => (result.1.1, attach result.1.2 result.2)) <$>
-      (simulateQ hashImpl ((compiler attachedVerify primitives count source writer sender route decode localImpl baseImpl kem secret query).run state)).run cache =
+      (simulateQ hashImpl ((compiler (completedBinding := completedBinding) attachedVerify primitives count source writer sender route decode localImpl baseImpl kem secret query).run state)).run cache =
       simulateQ (PqxdhPhase2NativeSource.interpretation baseImpl kem secret)
-        ((PqxdhPhase2SourceScheduler.ordinary attachedVerify primitives count source writer sender route decode localImpl query).run
+        ((PqxdhPhase2SourceScheduler.ordinary (completedBinding := completedBinding) attachedVerify primitives count source writer sender route decode localImpl query).run
           (attach state cache)) := by
   rcases query with ((query | query) | query)
   · simp only [compiler, PqxdhPhase2SourceScheduler.ordinary, StateT.run_mk]
     rw [PqxdhPhase2NativeSource.interpretation, QueryImpl.simulateQ_compose]
     exact (record_source count source writer sender route decode query state cache).trans
       (evalKem_coins baseImpl kem secret _).symm
-  · exact selector_source attachedVerify primitives count source writer sender route decode localImpl baseImpl kem secret query state cache
-  · exact finish_source attachedVerify primitives count source decode localImpl baseImpl kem secret query state cache
+  · exact selector_source (completedBinding := completedBinding) attachedVerify primitives count source writer sender route decode localImpl baseImpl kem secret query state cache
+  · exact finish_source (completedBinding := completedBinding) attachedVerify primitives count source decode localImpl baseImpl kem secret query state cache
 
 /-- The common-ROM compiler executes the complete adaptive scheduler, retaining all source fields and all replies in their original order. -/
 theorem program (client : OracleComp (PqxdhPhase2SourceScheduler.Spec baseSpec S B) Result)
     (state : Local M P I D K A S B count) (cache : CtxRO.QueryCache) :
     (fun result => (result.1.1, attach result.1.2 result.2)) <$>
-      (simulateQ hashImpl ((simulateQ (compiler attachedVerify primitives count source writer sender route decode localImpl baseImpl kem secret) client).run state)).run cache =
+      (simulateQ hashImpl ((simulateQ (compiler (completedBinding := completedBinding) attachedVerify primitives count source writer sender route decode localImpl baseImpl kem secret) client).run state)).run cache =
       simulateQ (PqxdhPhase2NativeSource.interpretation baseImpl kem secret)
-        ((simulateQ (PqxdhPhase2SourceScheduler.ordinary attachedVerify primitives count source writer sender route decode localImpl) client).run
+        ((simulateQ (PqxdhPhase2SourceScheduler.ordinary (completedBinding := completedBinding) attachedVerify primitives count source writer sender route decode localImpl) client).run
           (attach state cache)) := by
-  let compiled := compiler (P := P) (S := S) (B := B) attachedVerify primitives count source writer sender route decode localImpl baseImpl kem secret
-  let original := PqxdhPhase2SourceScheduler.ordinary (baseSpec := baseSpec) (P := P) (S := S) (B := B) attachedVerify primitives count source writer sender route decode localImpl
+  let compiled := compiler (completedBinding := completedBinding) (P := P) (S := S) (B := B) attachedVerify primitives count source writer sender route decode localImpl baseImpl kem secret
+  let original := PqxdhPhase2SourceScheduler.ordinary (completedBinding := completedBinding) (baseSpec := baseSpec) (P := P) (S := S) (B := B) attachedVerify primitives count source writer sender route decode localImpl
   let interpreted := PqxdhPhase2NativeSource.interpretation baseImpl kem secret
   have perQuery : ∀ query before,
       Prod.map id (fun (pair : Local M P I D K A S B count × CtxRO.QueryCache) => attach pair.1 pair.2) <$>
@@ -154,7 +155,7 @@ theorem program (client : OracleComp (PqxdhPhase2SourceScheduler.Spec baseSpec S
     intro query before
     simpa only [compiled, original, interpreted, QueryImpl.flattenStateT, QueryImpl.mapStateTBase,
       StateT.run, StateT.mk, Functor.map_map, Prod.map_def, id_eq] using
-      step attachedVerify primitives count source writer sender route decode localImpl baseImpl kem secret query before.1 before.2
+      step (completedBinding := completedBinding) attachedVerify primitives count source writer sender route decode localImpl baseImpl kem secret query before.1 before.2
   have whole := map_run_simulateQ_eq_of_query_map_eq
     ((hashImpl.mapStateTBase compiled).flattenStateT) (interpreted.mapStateTBase original)
     (fun pair => attach pair.1 pair.2) perQuery client (state, cache)

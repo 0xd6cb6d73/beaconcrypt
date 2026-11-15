@@ -83,7 +83,7 @@ theorem reservation (before : RegistrationNativeExperiment.State n KemSK source)
       simp only [AdapterPublicServerReservationNative.project,receiptEq] at projected
       exact agreement view before ((receipt,raw.1.2),raw.2) index after projected
 theorem represented (views : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (before : RegistrationNativeExperiment.State n KemSK source)
     (raw : (AdapterPublicServerReservationReceipt.Receipt R ×RustM (AdapterPublicServerAgreementReceipt.Word R)) ×RegistrationNativeExperiment.State n KemSK source)
     (word : AdapterPublicServerAgreementReceipt.Word R) (handle : Option Nat)

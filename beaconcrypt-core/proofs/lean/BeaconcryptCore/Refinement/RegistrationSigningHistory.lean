@@ -29,7 +29,7 @@ def trial (publicKey : Pqxdh.Bytes) (protectedKey : Bool) (events : List Observa
     (candidate : MldsaTranscriptAuth.Payload) (signature : Pqxdh.Bytes) : MldsaTranscriptAuth.Trial :=
   ⟨publicKey, protectedKey, historyFor publicKey events, candidate, signature⟩
 
-/-- Key selection preserves chronological concatenation across interleaved protocol roles. -/
+/-- Key selection preserves chronological concatenation across interleaved Server response calls. -/
 theorem history_append (publicKey : Pqxdh.Bytes) (before after : List Observation) :
     historyFor publicKey (before ++ after) = historyFor publicKey before ++ historyFor publicKey after := by
   simp [historyFor]
@@ -47,7 +47,7 @@ theorem history_mem_iff (publicKey : Pqxdh.Bytes) (events : List Observation)
       ∃ event ∈ events, absBytes event.publicKey = publicKey ∧ event.call = call := by
   simp [historyFor, List.mem_filterMap]
 
-/-- Unsigned origin quantifies every prior invocation under the key, across both roles and outcomes. -/
+/-- Unsigned origin quantifies every prior invocation under the key, across Server response calls and all outcomes. -/
 theorem issued_iff_source_event (publicKey : Pqxdh.Bytes) (protectedKey : Bool)
     (events : List Observation) (candidate : MldsaTranscriptAuth.Payload) (signature : Pqxdh.Bytes) :
     MldsaTranscriptAuth.Issued (trial publicKey protectedKey events candidate signature) ↔

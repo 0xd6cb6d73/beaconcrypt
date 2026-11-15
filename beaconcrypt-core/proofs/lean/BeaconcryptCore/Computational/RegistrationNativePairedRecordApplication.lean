@@ -33,7 +33,7 @@ private theorem opened (bytes : Pqxdh.Bytes) (result : Slice U8)
 /-- One actual successful source first-record pair agrees on complete AD, sender, allocated identifier and original application outside its actual shared-cache collision event. -/
 theorem paired (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (codec : Codec Reader Encoded) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (serverInitial : registration.ServerInitialKdf) (hashed : registration.ServerResponseHash)
     (serverBefore serverAfter : RegistrationWorldAgreement.State n Auxiliary)
     (serverTrace : RegistrationNativeServerRecordTrace.Trace (RegistrationWorldRecords.handler setup codec) serverInitial hashed serverBefore serverAfter)

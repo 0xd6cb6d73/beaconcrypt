@@ -68,6 +68,9 @@ theorem agreement_safe (setup : PqxdhServerAuthExperiment.Setup base KemSK) (own
 theorem record_safe (setup : PqxdhServerAuthExperiment.Setup base KemSK) (wire : RegistrationNativeWire.Wire)
     (query : RegistrationRecordPrimitives.Request) : Safe (RegistrationNativeRecordJournal.core (n := n) setup wire query) := by
   cases query with
+  | adHash request =>
+      unfold RegistrationNativeRecordJournal.core
+      exact allQueriesSatisfy_bind (query_safe _ trivial) (fun _ => pure_safe _)
   | hash transcript =>
       unfold RegistrationNativeRecordJournal.core
       exact allQueriesSatisfy_bind (query_safe _ trivial) (fun _ => pure_safe _)

@@ -50,13 +50,13 @@ theorem originMap_two : originMap (n := 2) = originSlots := by
   cases handle <;> rfl
 
 /-- The record lift's permitted view (`PqxdhRecordLiftIdeal.View`) read off an outcome of the provenance-annotated record world: the adversary's output, the ledger and the environment state, the produced frames and raw-attempt counters of the World, and the annotation's handle-to-slot map. -/
-def annotatedView {E X : Type} (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+def annotatedView {E X : Type} (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated (Std.Array Std.U8 151#usize) ×
     (X × PqxdhDeploymentSecrecy.Ledger) × E) × PqxdhRecordLiftOrigins.State n) : PqxdhRecordLiftIdeal.View n E X :=
   ⟨result.1.map fun value => (value.2.1.1, value.2.1.2, value.2.2), result.2.1.produced,
     PqxdhRecordLiftWorld.rawCounters result.2.1, originMap result.2.2⟩
 
 /-- The CE-12 analysis projection of the annotated view is the World's analysis projection of the erased outcome. -/
-theorem annotatedView_analysis {E X : Type} (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+theorem annotatedView_analysis {E X : Type} (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated (Std.Array Std.U8 151#usize) ×
     (X × PqxdhDeploymentSecrecy.Ledger) × E) × PqxdhRecordLiftOrigins.State n) :
     (annotatedView result).analysis = PqxdhRecordLiftWorld.analysis (result.1, result.2.1) := by
   rcases result with ⟨_ | value, state⟩ <;> rfl
@@ -99,7 +99,7 @@ theorem run_origins {E X : Type} (env : Environment n E) (serverKid : Std.U64) (
     (PqxdhRecordLiftWorldCompiler.initial_good setup.source)
 
 /-- The record lift's view of a split compiler result is the annotated view of its projection: the handle-to-slot map `PqxdhRecordLiftIdeal.handleSlot` of the record control is the handle-to-slot map of the computed installation origins. -/
-theorem chainView_split {E X : Type} (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+theorem chainView_split {E X : Type} (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated (Std.Array Std.U8 151#usize) ×
     (X × PqxdhDeploymentSecrecy.Ledger) × E) × PqxdhRecordLiftWorldCompiler.State n) :
     PqxdhRecordLiftIdeal.chainView (PqxdhRecordLiftProtocol.splitResult result) =
       annotatedView (Prod.map id project result) := by
@@ -224,7 +224,7 @@ theorem viewObserved_chainView {n : ℕ} {E : Type} (result : PqxdhRecordLiftPro
   rcases result with ⟨⟨_ | value, control⟩, secret⟩ <;> rfl
 
 /-- The observation of the annotated view is the World's observation of the erased outcome. -/
-theorem viewObserved_annotated {n : ℕ} {E : Type} (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+theorem viewObserved_annotated {n : ℕ} {E : Type} (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated (Std.Array Std.U8 151#usize) ×
     (X × PqxdhDeploymentSecrecy.Ledger) × E) × PqxdhRecordLiftOrigins.State n) :
     viewObserved (annotatedView result) = PqxdhRecordLiftWorld.observed (result.1, result.2.1) := by
   rcases result with ⟨_ | value, state⟩ <;> rfl
@@ -326,8 +326,7 @@ theorem ideal_world_slots (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBac
     have slots := PqxdhDeploymentIdealBeacon.ideal_slots setup codec route checks phase1 phase2 (Target.ofCE budget g)
       ensureInit 0 runtime bounds mode adversary result member
     refine congrArg pure ((Bool.eq_iff_iff).2 ?_)
-    rw [decide_eq_true_iff]
-    exact ⟨fun held => ⟨held, slots⟩, And.left⟩
+    exact ⟨fun held => decide_eq_true ⟨held, slots⟩, fun held => (of_decide_eq_true held).1⟩
   rw [same]
 
 open Classical in

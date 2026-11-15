@@ -5,14 +5,16 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeRemainderPublication
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhInitialPostContext PqxdhRecordConfidentialityChallenge
 open PqxdhFirstRecordConfidentiality (AdvSpec)
 variable {ι M P I D K X Response Shared Result : Type} {extra : OracleSpec ι} {S B : Nat}
 variable (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Bool)
     (sender : M → U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
 local notation "Snapshot" => NativeFront M P I D K S B × PqxdhInitialOriginPost.Trace Bool S B
-local notation "sourceImpl" => PqxdhInitialOriginPost.compiler (X := X) (Response := Response) mark sender route decode
+local notation "sourceImpl" => PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode
 
 /-- On every original source reply path, only the actual returned record adds a publication with the marker installed before that callback. -/
 theorem step_publication (query : (PostSpec extra S B).Domain)
@@ -62,7 +64,7 @@ theorem used_program (owner : RawCtxProtocolReveals.Owner S B) (number : U64) (b
         have excluded := ((observe_target owner number before query reply.1).mp (kept.2 clear)).2
         exact (ih _ _ _ later used).trans (by
           simpa only [excluded, false_and, or_false] using
-            step_publication mark sender route decode query ambient reply returned (owner, number))
+            step_publication (completedBinding := completedBinding) mark sender route decode query ambient reply returned (owner, number))
       · simp only [handler, StateT.run, used, true_or, ite_true, simulateQ_pure] at actual
         change step ∈ support (pure ((none, before), ambient)) at actual
         simp only [mem_support_pure_iff] at actual
@@ -84,7 +86,7 @@ theorem wrapped_publication (owner : RawCtxProtocolReveals.Owner S B) (number : 
     classical
     simp only [output, Bool.and_eq_true, decide_eq_true_eq] at accepted
     exact accepted.2.2.2
-  exact used_program mark sender route decode owner number bit client before ambient final actual used clear
+  exact used_program (completedBinding := completedBinding) mark sender route decode owner number bit client before ambient final actual used clear
 
 /-- A resumed actual capture with its unchanged full wrapper and a true output has exactly the target-publication membership already present before that captured callback, provided the wrapper had already chosen its challenge there. -/
 theorem captured_publication {Local Other : Type}
@@ -97,17 +99,17 @@ theorem captured_publication {Local Other : Type}
     (joined : PqxdhLaterChallengeCapture.Joined owner number bit tag)
     (supported : RawCtxForwardScan.Cut.pending tag.2.callback reached ∈ support
       (RawCtxForwardScan.scan PqxdhInitialOriginForwardPost.selected selected selection impl
-        (PqxdhInitialOriginForwardPost.program mark sender route decode
+        (PqxdhInitialOriginForwardPost.program (completedBinding := completedBinding) mark sender route decode
           ((handler owner number bit tag.2.request.query).run tag.2.request.before) ambient.1 ambient.2)
-        (PqxdhInitialOriginForwardPost.program_covered mark sender route decode
+        (PqxdhInitialOriginForwardPost.program_covered (completedBinding := completedBinding) mark sender route decode
           ((handler owner number bit tag.2.request.query).run tag.2.request.before) ambient.1 ambient.2) state))
     (afterImpl : QueryImpl (Base extra RatchetChain I D K X Response Shared S B) (StateT Other ProbComp))
     (before : Other)
     (reply : (Base extra RatchetChain I D K X Response Shared S B).Range
-      (PqxdhInitialOriginContext.frame mark sender route decode tag.1).1)
+      (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode tag.1).1)
     (result : (Bool × Snapshot) × Other)
     (completed : result ∈ support ((simulateQ afterImpl
-      ((PqxdhInitialOriginContext.frame mark sender route decode tag.1).2 reply)).run before))
+      ((PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode tag.1).2 reply)).run before))
     (used : tag.2.request.before.pair.isSome) (accepted : result.1.1 = true) :
     ((owner, number), true) ∈ result.1.2.2.published ↔
       ((owner, number), true) ∈ ambient.2.published := by
@@ -116,12 +118,12 @@ theorem captured_publication {Local Other : Type}
     (fun reply => PqxdhLaterChallengeCapture.wrapped owner number bit (details.request.next reply.1) reply.2)
     details.callback at joined
   subst context
-  apply wrapped_publication (X := X) (Response := Response) mark sender route decode owner number bit
+  apply wrapped_publication (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode owner number bit
     (((AdvSpec extra S B).query details.request.query : OracleComp (AdvSpec extra S B) _) >>= details.request.next)
     details.request.before ambient result.1 _ used accepted
   simpa only [PqxdhLaterChallengeCapture.wrapped, simulateQ_bind, simulateQ_spec_query,
     StateT.run_bind, map_bind] using
-    (PqxdhLaterChallengeRemainderSupport.appended_support mark sender route decode selected selection impl
+    (PqxdhLaterChallengeRemainderSupport.appended_support (completedBinding := completedBinding) mark sender route decode selected selection impl
       ((handler owner number bit details.request.query).run details.request.before)
       (fun reply => PqxdhLaterChallengeCapture.wrapped owner number bit (details.request.next reply.1) reply.2)
       ambient.1 ambient.2 state reached details.callback supported afterImpl before reply result completed)

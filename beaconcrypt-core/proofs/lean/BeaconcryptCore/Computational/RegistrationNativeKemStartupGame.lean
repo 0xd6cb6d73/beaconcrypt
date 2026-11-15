@@ -15,7 +15,7 @@ open RegistrationNativeWire (Wire)
 variable {ι KemSK Value : Type} {base : OracleSpec ι} {n : Nat}
 
 structure Bootstrap (n : Nat) (source : RegistrationNativeMldsa.Source) where
-  created : PqxdhLiveServerConstruction.Created Unit
+  created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)
   credential : RegistrationNativeMldsa.Credential source
   state : RegistrationNativeKemServerState.State n source
 

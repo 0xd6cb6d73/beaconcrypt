@@ -101,13 +101,14 @@ theorem created_invariant (setup : Setup baseSpec KemSK) (pin : PqxdhBeaconPhase
 
 /-- Reinstall the same complete returned owner and private signing transcript while replacing only the selected receipt's chronological attempts. -/
 theorem bundle_result (setup : Setup baseSpec KemSK) (state : State KemSK) (address : Nat)
+    (inits : Nat → Option Phase1Candidate)
     (entry : Entry KemSK) (receipt : Receipt) (valid : Invariant setup state)
     (found : state.2 entry.identityIndex = some receipt) (sameKem : receipt.kemIndex = entry.kemIndex)
     (result : PqxdhRegistrationJointAttemptTrace.NativeResult KemSK × List Phase1KeyTuple)
     (good : PqxdhRegistrationJointAttemptProperties.Good setup entry.identityIndex receipt state.1.pool.1 result) :
     Invariant setup
       ((⟨(result.1.2, state.1.pool.2), state.1.shared,
-        state.1.owners.set address { entry with owner := result.1.1.2 }⟩ : PqxdhRegistrationJointSchedule.State KemSK),
+        state.1.owners.set address { entry with owner := result.1.1.2 }, inits⟩ : PqxdhRegistrationJointSchedule.State KemSK),
         Function.update state.2 entry.identityIndex (some { receipt with attempts := result.2 })) := by
   constructor
   case allocated =>
@@ -160,11 +161,17 @@ theorem bundle_invariant (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
     obtain ⟨receipt, recorded, kem, live⟩ := valid.live entry (List.mem_of_getElem? found)
     simp only [recorded, Option.map_some, Option.getD_some] at supported
     obtain ⟨reached, member, rfl⟩ := supported
-    exact bundle_result setup state address entry receipt valid recorded kem reached
+    have traced : reached.1 ∈ support (PqxdhRegistrationJointAttemptTrace.trace setup codec entry.identityIndex entry.owner
+        state.1.pool.1 receipt.attempts) := by
+      rw [← traceLog_trace setup codec entry.identityIndex entry.owner state.1.pool.1 receipt.attempts (state.1.inits address),
+        support_map]
+      exact ⟨reached, member, rfl⟩
+    exact bundle_result setup state address (Function.update state.1.inits address reached.2) entry receipt valid
+      recorded kem reached.1
       (PqxdhRegistrationJointAttemptProperties.trace_good setup codec entry.identityIndex entry.owner state.1.pool.1 receipt
         (valid.fixed entry.identityIndex receipt recorded) live
         (by simpa only [attempts, recorded, Option.map_some, Option.getD_some] using valid.exactHistory entry.identityIndex)
-        reached member)
+        reached.1 traced)
 
 end BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptInvariant
 

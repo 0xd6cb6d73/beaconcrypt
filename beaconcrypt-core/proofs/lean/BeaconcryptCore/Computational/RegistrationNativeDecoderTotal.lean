@@ -18,7 +18,7 @@ theorem init_total [RegistrationValidatorPrimitive.Operations] (input : Slice U8
   | none => exact ⟨.None, rfl⟩
   | some value =>
     obtain ⟨reply, run, _⟩ := RegistrationInputs.init_packet_exact value.identity_key value.pre_key
-      value.one_time_key value.pq_key value.mldsa_public_key value.signature
+      value.one_time_key value.pq_key
     exact ⟨reply, by simpa only [bind_tc_ok] using run⟩
 
 theorem response_total [RegistrationValidatorPrimitive.Operations] (input : Slice U8) :

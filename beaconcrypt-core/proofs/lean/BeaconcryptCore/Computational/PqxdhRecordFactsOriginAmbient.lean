@@ -53,7 +53,7 @@ theorem environmental_kept (modes : Label n → KeyMode) (replace : Pqxdh.Bytes 
     (supported : result ∈ support ((ctxInterpreter modes replace setup codec query).run before)) :
     Kept before result.2 := by
   cases query
-  all_goals first | exact False.elim environmental | skip
+  all_goals try exact False.elim environmental
   case allocate slot => exact allocate_kept modes replace setup codec slot before result supported
   case charge kind =>
     simp only [ctxInterpreter, onBase, PqxdhRecordLiftProtocol.interpreter, StateT.run,
@@ -191,7 +191,7 @@ theorem effects_kept (modes : Label n → KeyMode) (replace : Pqxdh.Bytes → Pq
 theorem initialize_kept (modes : Label n → KeyMode) (replace : Pqxdh.Bytes → Pqxdh.Bytes)
     (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (codec : PqxdhServerAuthExperiment.Codec Reader Response)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Aeneas.Std.Array Aeneas.Std.U8 151#usize))
     (control : PqxdhRecordLiftProtocol.Control n) (before : CtxPrivate n)
     (result : (Unit × PqxdhRecordLiftProtocol.Control n) × CtxPrivate n)
     (supported : result ∈ support ((simulateQ (ctxInterpreter modes replace setup codec)

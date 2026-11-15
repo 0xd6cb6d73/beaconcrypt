@@ -3,7 +3,7 @@ import BeaconcryptCore.Computational.RegistrationNativeKemBirthCreateShape
 import BeaconcryptCore.Computational.RegistrationNativeIdentitySourceNativeProgram
 import BeaconcryptCore.Computational.RegistrationNativePublicSourceSupport
 
-/-! A successful actual Beacon constructor retains precisely the configured classical and ML Server pins. The native fingerprint callback may consume shared-cache effects, but its result changes only the fingerprint field. No generated identity, signature-origin or timing premise is used. -/
+/-! A successful actual Beacon constructor retains precisely the configured classical and ML Server pins. Pin selection is pure and retains the full supplied Server key. No generated identity, signature-origin or timing premise is used. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -14,32 +14,17 @@ open RegistrationNativeBeaconFrontend
 open RegistrationWorldAgreementCompiler (EnvState)
 open PqxdhServerAuthExperiment (Setup)
 variable {ι KemSK : Type} {base : OracleSpec ι} {n : Nat}
-attribute [local irreducible] registration.PinFingerprint.request
 
 private theorem common_pin (source : RegistrationNativeMldsa.Source)
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
-    (credentials : RegistrationNativeMldsa.Credential source) (pin : session.ServerAuthenticationPin)
-    (supported : .ok (some (credentials, pin)) ∈ support
+    (pin : session.ServerAuthenticationPin)
+    (supported : .ok (some pin) ∈ support
       (RegistrationNativeIdentitySourceCommon.program (n := n) source edPin mlPin keyId)) :
     pin.binding = ⟨edPin, keyId⟩ ∧ pin.public_key = mlPin := by
-  simp only [RegistrationNativeIdentitySourceCommon.program, mem_support_bind_iff] at supported
-  obtain ⟨generated, _generated, continued⟩ := supported
-  cases chosen : generated with
-  | none => simp only [chosen, mem_support_pure_iff] at continued; cases continued
-  | some credential =>
-      simp only [chosen, registration.begin_server_pin] at continued
-      cases requested : (registration.PinFingerprint.mk ⟨edPin, keyId⟩ mlPin).request with
-      | fail error => simp only [requested, mem_support_pure_iff] at continued; cases continued
-      | div => simp only [requested, mem_support_pure_iff] at continued; cases continued
-      | ok request =>
-          simp only [requested, mem_support_bind_iff] at continued
-          obtain ⟨digest, _hashed, returned⟩ := continued
-          have resumed : (registration.PinFingerprint.mk ⟨edPin, keyId⟩ mlPin).resume
-              (.Some (RegistrationAuthenticationShared.digestArray digest)) =
-              .ok (.Some ⟨⟨edPin, keyId⟩, mlPin, RegistrationAuthenticationShared.digestArray digest⟩) := rfl
-          simp only [resumed, mem_support_pure_iff, RustM.ok.injEq, Option.some.injEq, Prod.mk.injEq] at returned
-          obtain ⟨rfl, rfl⟩ := returned
-          exact ⟨rfl, rfl⟩
+  simp only [RegistrationNativeIdentitySourceCommon.program, registration.begin_server_pin, session.ServerAuthenticationPin.new,
+    mem_support_pure_iff, RustM.ok.injEq, Option.some.injEq] at supported
+  subst pin
+  exact ⟨rfl, rfl⟩
 
 /-- Every successful native preparation retains the exact supplied binding and ML public pin. -/
 theorem prepare_pin (source : RegistrationNativeMldsa.Source)
@@ -61,8 +46,7 @@ theorem prepare_pin (source : RegistrationNativeMldsa.Source)
   | ok chosen => cases chosen with
     | none => simp only [RegistrationNativeIdentitySourceCommon.afterNative, mem_support_pure_iff] at suffixReached; cases suffixReached
     | some selected =>
-        rcases selected with ⟨credentials, pin⟩
-        have pins := common_pin source edPin mlPin keyId credentials pin prefixActual
+        have pins := common_pin source edPin mlPin keyId selected prefixActual
         simp only [RegistrationNativeIdentitySourceCommon.afterNative, RegistrationNativeIdentitySourceSuffix.native,
           mem_support_bind_iff, mem_support_pure_iff, RustM.ok.injEq, Option.some.injEq] at suffixReached
         obtain ⟨identity, _identity, scalar, _scalar, returned⟩ := suffixReached
@@ -97,7 +81,7 @@ theorem create_pin (setup : Setup base KemSK) (source : RegistrationNativeMldsa.
         simp only [mem_support_bind_iff, mem_support_pure_iff] at continued
         obtain ⟨born, _born, worldOwner, _allocated, returned⟩ := continued
         cases returned
-        refine ⟨RegistrationNativeBeaconBirth.owner setup source prepared.pin prepared.credentials
+        refine ⟨RegistrationNativeBeaconBirth.owner setup source prepared.pin
           prepared.identity prepared.prekey born worldOwner, ?_, pins.1, pins.2⟩
         simp only [List.getElem?_append, Nat.lt_irrefl, ite_false, Nat.sub_self, List.getElem?_cons_zero]
 

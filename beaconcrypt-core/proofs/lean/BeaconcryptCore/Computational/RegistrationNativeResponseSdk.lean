@@ -63,15 +63,27 @@ theorem after_identity (setup : Setup base KemSK) (codec : Codec Reader Response
     | Ok pending =>
         rw [resumed] at supported
         dsimp only at supported
-        split at supported
-        · have admitted : registration.begin_server_completion lookup.control lookup.pin
-              (if occupied then .Occupied else .Available) lookup.registration.agreement lookup.application = .ok (.Ok pending) := by
-            rw [← BeaconcryptCore.Refinement.PeerOwnership.completion_lookup_resume]
-            exact resumed
-          have identity := RegistrationNativeResponseCandidate.initial_identity _ _ _ _ _ _ admitted
-          rw [← identity]
-          exact fromInitial_identity setup codec sign encode control pending before after keyId bytes supported
-        · simp [StateT.run_pure] at supported
+        simp only [StateT.run_bind, mem_support_bind_iff] at supported
+        obtain ⟨⟨hashed, middle⟩, reached, continued⟩ := supported
+        cases hashed with
+        | fail error | div => simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff, Prod.mk.injEq, reduceCtorEq, false_and] at continued
+        | ok hashed => cases hashed with
+          | Err previous => simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff, Prod.mk.injEq, RustM.ok.injEq, reduceCtorEq, false_and] at continued
+          | Ok initial =>
+              dsimp only at continued
+              split at continued
+              · have selected : registration.begin_server_completion lookup.control lookup.pin
+                    (if occupied then .Occupied else .Available) lookup.registration.agreement lookup.application =
+                      .ok (.Ok pending) := by
+                  rw [← BeaconcryptCore.Refinement.PeerOwnership.completion_lookup_resume]
+                  exact resumed
+                obtain ⟨digest, completed⟩ :=
+                  RegistrationServerSdkSource.adHash_receipt pending before middle initial reached
+                have identity := RegistrationNativeResponseCandidate.initial_identity _ _ _ _ _ _
+                  ⟨pending, digest, selected, completed⟩
+                rw [← identity]
+                exact fromInitial_identity setup codec sign encode control initial middle after keyId bytes continued
+              · simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff, Prod.mk.injEq, RustM.ok.injEq, reduceCtorEq, false_and] at continued
 
 /-- Actual complete-message sizing and occupancy preserve the Server identity selected by the current SDK pin. -/
 theorem complete_identity (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)

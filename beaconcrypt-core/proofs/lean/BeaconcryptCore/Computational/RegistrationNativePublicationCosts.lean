@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePrimitiveCosts
+import BeaconcryptCore.Computational.RegistrationBoundSourceCompiler
 
 /-! Effect bills for the actual publication primitive compiler. Every actual raw/typed commitment and response hash reaches the existing shared CTX capability; deterministic HKDF, detached AEAD and optional frame writing add no World query. ML signing retains all supplied primitive draws and the chronological receipt even if its continuation later fails. -/
 
@@ -42,6 +43,13 @@ theorem raw_bound (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (writ
           RegistrationBoundSourceCompiler.sharedCompiler, PqxdhDeploymentEnvironment.sharedFwd,
           RawCtxMixedShared.sharedAdapter, simulateQ_pure]
         trivial
+    | adHash request =>
+        simpa only [RegistrationBoundSourceCompiler.rawCompiler, QueryImpl.apply_compose,
+          RegistrationBoundSourceCompiler.rawCallbacks, RegistrationRecordPrimitives.callbacks,
+          RegistrationAuthenticationShared.callbacks, MldsaSharedNative.authLift,
+          bind_pure_comp, simulateQ_map, simulateQ_spec_query, RegistrationBoundSourceCompiler.sharedCompiler,
+          isQueryBoundP_map_iff] using hash_bound
+            (n := n) (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request) kind
     | hash transcript =>
         simpa only [RegistrationBoundSourceCompiler.rawCompiler, QueryImpl.apply_compose,
           RegistrationBoundSourceCompiler.rawCallbacks, RegistrationRecordPrimitives.callbacks,

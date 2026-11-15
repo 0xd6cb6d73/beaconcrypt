@@ -6,6 +6,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhSharedParentInput
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily
 open PqxdhKemIndCca PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma
 open PqxdhPhase2GeneratedDriver PqxdhAuthenticatedRootExperiment PqxdhPhase1AcceptanceOracle
@@ -35,7 +37,7 @@ abbrev LocalPacket := Bool ⊕ ((Input × HmacBlock) × (Bool ⊕
 noncomputable def run (start : Input) (output : HmacBlock) (depth : Nat) :
     OracleComp HashSpec (LocalPacket (setup := setup) (M := M) (P := P) (I := I) (K := K)
       (X := X) (Response := Response) (A := A) (S := S) (B := B)) := do
-  let value ← PqxdhPreparedSharedParent.run original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth
+  let value ← PqxdhPreparedSharedParent.run (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth
   pure (.inr (PqxdhErasedParentSample.forgetStart
     (PqxdhPreparedSharedPrefix.input original callbacks baseImpl kem attachedVerify primitives secret challenge start, output), value))
 
@@ -53,21 +55,21 @@ set_option backward.isDefEq.respectTransparency false in
 /-- The runtime packet retains the actual reached cache while dropping only an earlier cache field that the saved native continuation never reads. -/
 theorem source (start : Input) (output : HmacBlock) (depth : Nat) (cache : CtxRO.QueryCache) :
     (fun result => restore result.1 result.2) <$>
-      (simulateQ hashImpl (run original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth)).run cache =
+      (simulateQ hashImpl (run (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth)).run cache =
     (fun value => PqxdhErasedParentSample.normalize (.inr
       ((PqxdhPreparedSharedPrefix.input original callbacks baseImpl kem attachedVerify primitives secret challenge
         { start with shared := (start.shared.1, cache) }, output), value))) <$>
-      PqxdhErasedParentSample.sampleOne (env).source (env).recordWriter (env).senderId (env).route (env).decode depth
+      PqxdhErasedParentSample.sampleOne (associatedData := associatedData) (completedBinding := completedBinding) (env).source (env).recordWriter (env).senderId (env).route (env).decode depth
         (PqxdhPreparedSharedPrefix.input original callbacks baseImpl kem attachedVerify primitives secret challenge
           { start with shared := (start.shared.1, cache) }, output) := by
   have actual := congrArg (fun work => (fun value => PqxdhErasedParentSample.normalize (.inr
       ((PqxdhPreparedSharedPrefix.input original callbacks baseImpl kem attachedVerify primitives secret challenge
         { start with shared := (start.shared.1, cache) }, output), value))) <$> work)
-    (PqxdhPreparedSharedParent.source original callbacks baseImpl kem attachedVerify primitives secret challenge
+    (PqxdhPreparedSharedParent.source (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge
       { start with shared := (start.shared.1, cache) } output depth)
-  have runEq : PqxdhPreparedSharedParent.run original callbacks baseImpl kem attachedVerify primitives secret challenge
+  have runEq : PqxdhPreparedSharedParent.run (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge
       { start with shared := (start.shared.1, cache) } output depth =
-      PqxdhPreparedSharedParent.run original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth := rfl
+      PqxdhPreparedSharedParent.run (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth := rfl
   rw [runEq] at actual
   simpa only [run, simulateQ_bind, StateT.run_bind, map_bind, simulateQ_pure, StateT.run_pure,
     map_pure, bind_pure_comp, simulateQ_map, StateT.run_map, Functor.map_map, restore, PqxdhErasedParentSample.normalize,

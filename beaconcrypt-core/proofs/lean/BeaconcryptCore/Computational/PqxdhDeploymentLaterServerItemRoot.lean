@@ -11,6 +11,7 @@ The classical stage S2 also bounds the root requests by `1 + qFinish` (`PqxdhReg
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
+set_option warningAsError true
 set_option maxRecDepth 100000
 namespace BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemRoot
 open PqxdhKemIndCca PqxdhInitializerSecrecy PqxdhServerAuthExperiment PqxdhJointIdentity

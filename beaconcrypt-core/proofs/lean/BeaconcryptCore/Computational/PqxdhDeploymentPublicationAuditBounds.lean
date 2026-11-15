@@ -94,9 +94,14 @@ theorem bundle_audit (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
     simp only [bundle, StateT.run, found, support_map, Set.mem_image] at supported
     obtain ⟨returned, returnedSupport, same⟩ := supported
     subst result
+    have traced : returned.1 ∈ support (trace setup codec address entry.identityIndex entry.owner
+        state.1.pool.1 state.2) := by
+      rw [← traceLogged_trace setup codec address entry.identityIndex entry.owner state.1.pool.1 state.2
+        (state.1.inits address), support_map]
+      exact ⟨returned, returnedSupport, rfl⟩
     obtain ⟨tuples, bounded, recorded⟩ := trace_record setup codec address entry.identityIndex entry.owner
-      state.1.pool.1 state.2 returned returnedSupport
-    change returned.2.nextBundle = state.2.nextBundle + 1 ∧ (Valid state.2 → Valid returned.2)
+      state.1.pool.1 state.2 returned.1 traced
+    change returned.1.2.nextBundle = state.2.nextBundle + 1 ∧ (Valid state.2 → Valid returned.1.2)
     rw [recorded]
     exact ⟨rfl, record_valid _ _ _ _ tuples bounded⟩
 

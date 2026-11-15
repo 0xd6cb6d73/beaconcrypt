@@ -15,6 +15,8 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 open OracleComp OracleSpec
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialReceiptPublication
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhInitialGenericPublication
 open PqxdhServerRegistrationPublication (AuxSpec Response firstContext responseFields)
 variable {Kernel M P Auxiliary ξ : Type} {base : OracleSpec.{0, 0} ξ}
@@ -25,9 +27,9 @@ theorem sent (calls : RawCtxChainOwner.Calls Kernel (StateT Auxiliary (OracleCom
     (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Pqxdh.Bytes)
     (kernel : Kernel) (metadata : P) (entry : State Kernel M P (List Pqxdh.Bytes)) (before : Auxiliary)
     (result : (Option Response × State Kernel M P (List Pqxdh.Bytes)) × Auxiliary)
-    (supported : result ∈ support ((afterInitialization calls aux candidate authenticated kernel metadata entry).run before)) :
+    (supported : result ∈ support ((afterInitialization (associatedData := associatedData) calls aux candidate authenticated kernel metadata entry).run before)) :
     ∃ (sent : Kernel × Option RawCtxSourceSend.Encrypted) (atSend : Auxiliary),
-      (sent, atSend) ∈ support ((calls.send kernel (firstContext candidate authenticated)).run before) ∧
+      (sent, atSend) ∈ support ((calls.send kernel (firstContext (associatedData := associatedData) candidate authenticated)).run before) ∧
       result ∈ support ((PqxdhInitialBuilderContext.afterSend aux candidate authenticated metadata entry sent).run atSend) := by
   rw [PqxdhInitialBuilderContext.after_factor] at supported
   simpa only [StateT.run_bind, mem_support_bind_iff, Prod.exists] using supported
@@ -39,10 +41,10 @@ theorem published (calls : RawCtxChainOwner.Calls Kernel (StateT Auxiliary (Orac
     (kernel : Kernel) (metadata : P) (entry : State Kernel M P (List Pqxdh.Bytes)) (before : Auxiliary)
     (response : Response) (updated : State Kernel M P (List Pqxdh.Bytes)) (after : Auxiliary)
     (supported : ((some response, updated), after) ∈ support
-      ((afterInitialization calls aux candidate authenticated kernel metadata entry).run before)) :
+      ((afterInitialization (associatedData := associatedData) calls aux candidate authenticated kernel metadata entry).run before)) :
     ∃ (advanced : Kernel) (encrypted : RawCtxSourceSend.Encrypted) (serialized : Pqxdh.Bytes)
       (atSend atErased : Auxiliary),
-      ((advanced, some encrypted), atSend) ∈ support ((calls.send kernel (firstContext candidate authenticated)).run before) ∧
+      ((advanced, some encrypted), atSend) ∈ support ((calls.send kernel (firstContext (associatedData := associatedData) candidate authenticated)).run before) ∧
       ((), atErased) ∈ support ((aux (.erase authenticated)).run atSend) ∧
       (some serialized, after) ∈ support ((aux (.write (responseFields candidate encrypted))).run atErased) ∧
       response = ⟨serialized, candidate.key_id⟩ ∧ updated = publish entry candidate advanced metadata := by
@@ -77,20 +79,20 @@ theorem server_path {A AD PT CT : Type}
     (response : Response) (updated : State (RawCtxPendingOwnerQueries.Kernel RatchetChain) M P (List Pqxdh.Bytes))
     (after : RawCtxSharedPrimitive.SharedState A)
     (supported : ((some response, updated), after) ∈ support
-      ((afterInitialization (RawCtxGenericNativeCalls.calls (RawCtxFunctionalFamily.native source writer prior))
+      ((afterInitialization (associatedData := associatedData) (RawCtxGenericNativeCalls.calls (RawCtxFunctionalFamily.native source writer prior))
         aux candidate authenticated kernel.refined metadata entry).run before)) :
     response.keyId = candidate.key_id ∧
       ∃ peer, updated.server.peers response.keyId = some peer ∧
         RoleReachable (withInterpreter cr (RawCtxFunctionalFamily.execute prior))
           kernel.refined.send_chain kernel.refined.receive_chain ⟨peer.kernel⟩ := by
   obtain ⟨advanced, encrypted, serialized, atSend, _, first, _, _, responseEq, updatedEq⟩ :=
-    published (RawCtxGenericNativeCalls.calls (RawCtxFunctionalFamily.native source writer prior))
+    published (associatedData := associatedData) (RawCtxGenericNativeCalls.calls (RawCtxFunctionalFamily.native source writer prior))
       aux candidate authenticated kernel.refined metadata entry before response updated after supported
   have valid := PqxdhInitialKernelConstruction.supplied_reachable
     (withInterpreter cr (RawCtxFunctionalFamily.execute prior)) false response64 kernel initialized
   have reached := RawCtxRetainedNativeCycles.send_valid source writer prior cr
     kernel.refined.send_chain kernel.refined.receive_chain kernel.refined valid
-    (firstContext candidate authenticated) before ((advanced, some encrypted), atSend) first
+    (firstContext (associatedData := associatedData) candidate authenticated) before ((advanced, some encrypted), atSend) first
   subst response
   subst updated
   exact ⟨rfl, ⟨candidate.beacon_identity_public_key, advanced, metadata⟩,
@@ -103,9 +105,9 @@ private theorem after_accepted
     (metadata : P) (entry : State Kernel M P (List Pqxdh.Bytes)) (before : Auxiliary)
     (response : Response) (updated : State Kernel M P (List Pqxdh.Bytes)) (after : Auxiliary)
     (supported : (.ok (some response, updated), after) ∈ support
-      ((PqxdhInitialBuilderReceipt.afterInitial calls aux kernel candidate data metadata entry).run before)) :
+      ((PqxdhInitialBuilderReceipt.afterInitial (associatedData := associatedData) calls aux kernel candidate data metadata entry).run before)) :
     ∃ atSend, ((some response, updated), after) ∈ support
-      ((afterInitialization calls aux candidate
+      ((afterInitialization (associatedData := associatedData) calls aux candidate
         (Pqxdh.LE64 candidate.key_id.val ++ data.getD PqxdhServerRegistrationPublication.registrationWitness)
         kernel metadata entry).run atSend) := by
   unfold PqxdhInitialBuilderReceipt.afterInitial at supported
@@ -141,10 +143,10 @@ theorem candidate_published
     (response : Response) (updated : State Kernel M P (List Pqxdh.Bytes)) (after : Auxiliary)
     (receipt : Option (PqxdhInitialBuilderReceipt.Receipt Kernel))
     (supported : ((.ok (some response, updated), receipt), after) ∈ support
-      ((PqxdhInitialBuilderReceipt.candidate calls aux initial candidate data metadata entry).run before)) :
+      ((PqxdhInitialBuilderReceipt.candidate (associatedData := associatedData) calls aux initial candidate data metadata entry).run before)) :
     ∃ (kernel : Kernel) (atSend : Auxiliary), receipt = some ⟨candidate, kernel⟩ ∧ initial = .ok kernel ∧
       ((some response, updated), after) ∈ support
-        ((afterInitialization calls aux candidate
+        ((afterInitialization (associatedData := associatedData) calls aux candidate
           (Pqxdh.LE64 candidate.key_id.val ++ data.getD PqxdhServerRegistrationPublication.registrationWitness)
           kernel metadata entry).run atSend) := by
   unfold PqxdhInitialBuilderReceipt.candidate at supported
@@ -176,7 +178,7 @@ theorem candidate_published
         rcases completed with ⟨value, finalState⟩
         simp only [Prod.mk.injEq] at same
         obtain ⟨⟨rfl, rfl⟩, rfl⟩ := same
-        obtain ⟨atSend, tail⟩ := after_accepted calls aux kernel candidate data metadata entry
+        obtain ⟨atSend, tail⟩ := after_accepted (associatedData := associatedData) calls aux kernel candidate data metadata entry
           reserved.2 response updated _ reached
         exact ⟨kernel, atSend, rfl, rfl, tail⟩
 
@@ -189,11 +191,11 @@ theorem used_published
     (response : Response) (updated : State Kernel M P (List Pqxdh.Bytes)) (after : Auxiliary)
     (recorded : Option (PqxdhInitialBuilderReceipt.Receipt Kernel))
     (supported : ((.ok (some response, updated), recorded), after) ∈ support
-      ((PqxdhInitialBuilderReceipt.used calls aux initial pending data metadata entry).run before)) :
+      ((PqxdhInitialBuilderReceipt.used (associatedData := associatedData) calls aux initial pending data metadata entry).run before)) :
     ∃ (receipt : PqxdhInitialBuilderReceipt.Receipt Kernel) (atSend : Auxiliary),
       recorded = some receipt ∧ initial = .ok receipt.initial ∧
       ((some response, updated), after) ∈ support
-        ((afterInitialization calls aux receipt.candidate
+        ((afterInitialization (associatedData := associatedData) calls aux receipt.candidate
           (Pqxdh.LE64 receipt.candidate.key_id.val ++ data.getD PqxdhServerRegistrationPublication.registrationWitness)
           receipt.initial metadata entry).run atSend) := by
   unfold PqxdhInitialBuilderReceipt.used at supported
@@ -211,7 +213,7 @@ theorem used_published
     | Err error => simp only [prepared, StateT.run_pure, mem_support_pure_iff] at supported; cases supported
     | Ok candidate =>
       simp only [prepared] at supported
-      obtain ⟨kernel, atSend, recorded, initialized, tail⟩ := candidate_published calls aux initial candidate data
+      obtain ⟨kernel, atSend, recorded, initialized, tail⟩ := candidate_published (associatedData := associatedData) calls aux initial candidate data
         metadata entry before response updated after recorded supported
       exact ⟨⟨candidate, kernel⟩, atSend, recorded, initialized, tail⟩
 
@@ -228,7 +230,7 @@ theorem build_published
     (result : ((RustM (Option Response) × Option (PqxdhInitialBuilderReceipt.Receipt (KernelOf Chain))) ×
       Front Chain M P I D K S B) × Auxiliary)
     (supported : result ∈ support ((simulateQ impl
-      ((PqxdhInitialBuilderReceipt.build source initial sender index metadata input).run before)).run state))
+      ((PqxdhInitialBuilderReceipt.build (associatedData := associatedData) source initial sender index metadata input).run before)).run state))
     (response : Response) (accepted : result.1.1.1 = .ok (some response)) :
     ∃ receipt, result.1.1.2 = some receipt ∧ initial = .ok receipt.initial ∧ response.keyId = receipt.candidate.key_id ∧
       ∃ (advanced : KernelOf Chain) (encrypted : RawCtxSourceSend.Encrypted) (atSend atSent : Auxiliary),
@@ -236,7 +238,7 @@ theorem build_published
           some ⟨receipt.candidate.beacon_identity_public_key, advanced, metadata⟩ ∧
         ((advanced, some encrypted), atSent) ∈ support
           (((RawCtxGenericOwnerInterpretation.interpretedCalls impl calls).send receipt.initial
-            (firstContext receipt.candidate
+            (firstContext (associatedData := associatedData) receipt.candidate
               (Pqxdh.LE64 receipt.candidate.key_id.val ++ input.application.getD PqxdhServerRegistrationPublication.registrationWitness))).run atSend) := by
   simp only [PqxdhInitialBuilderReceipt.build, StateT.run, simulateQ_map] at supported
   rw [PqxdhInitialBuilderReceipt.ready_interpretation] at supported
@@ -251,11 +253,11 @@ theorem build_published
     rcases output with ⟨optional, updated⟩
     simp only [PqxdhInitialPendingBuilder.reinstall, RustM.ok.injEq] at accepted
     subst optional
-    obtain ⟨receipt, atSend, recordedEq, initialized, tail⟩ := used_published
+    obtain ⟨receipt, atSend, recordedEq, initialized, tail⟩ := used_published (associatedData := associatedData)
       (RawCtxGenericOwnerInterpretation.interpretedCalls impl calls) (impl ∘ₛ auxForward)
       initial _ input.application metadata _ state response updated after recorded reached
     obtain ⟨advanced, encrypted, serialized, atSent, _, first, _, _, responseEq, updatedEq⟩ :=
-      published (RawCtxGenericOwnerInterpretation.interpretedCalls impl calls) (impl ∘ₛ auxForward)
+      published (associatedData := associatedData) (RawCtxGenericOwnerInterpretation.interpretedCalls impl calls) (impl ∘ₛ auxForward)
         receipt.candidate _ receipt.initial metadata _ atSend response updated after tail
     have keyEq : response.keyId = receipt.candidate.key_id := congrArg Response.keyId responseEq
     refine ⟨receipt, recordedEq, initialized, keyEq, advanced, encrypted, atSend, atSent, ?_, first⟩
@@ -271,7 +273,7 @@ theorem build_occurrence
     (result : ((RustM (Option Response) × Option (PqxdhInitialBuilderReceipt.Receipt (KernelOf Chain))) ×
       Front Chain M P I D K S B) × Auxiliary)
     (supported : result ∈ support ((simulateQ impl
-      ((PqxdhInitialBuilderReceipt.build source initial sender index metadata input).run before)).run state))
+      ((PqxdhInitialBuilderReceipt.build (associatedData := associatedData) source initial sender index metadata input).run before)).run state))
     (response : Response) (accepted : result.1.1.1 = .ok (some response))
     (started : PqxdhInitialInstallOccurrence.Trace Chain SourceResponse Shared S B) (attempt : Nat) :
     ∃ receipt, result.1.1.2 = some receipt ∧
@@ -279,7 +281,7 @@ theorem build_occurrence
         (.server index response.keyId) =
           some ⟨⟨.server index response.keyId, attempt⟩, .server input receipt⟩ := by
   obtain ⟨receipt, recorded, _, keyEq, advanced, _, _, _, peer, _⟩ :=
-    build_published impl source initial sender index metadata input before state result supported response accepted
+    build_published (associatedData := associatedData) impl source initial sender index metadata input before state result supported response accepted
   refine ⟨receipt, recorded, ?_⟩
   rw [keyEq] at peer ⊢
   simp only [PqxdhInitialInstallOccurrence.built, recorded, accepted, keyEq, decide_true,
@@ -334,7 +336,7 @@ theorem build_native_path (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSourc
     (result : ((RustM (Option Response) × Option (PqxdhInitialBuilderReceipt.Receipt (KernelOf RatchetChain))) ×
       Front RatchetChain M P I D K S B) × RawCtxSharedPrimitive.SharedState A)
     (supported : result ∈ support ((simulateQ (retained source writer prior reader external)
-      ((PqxdhInitialBuilderReceipt.build source
+      ((PqxdhInitialBuilderReceipt.build (associatedData := associatedData) source
         (ConcreteRatchetKernel.refined <$> PqxdhInitialReplyErasure.kernelOf false response64)
         sender index metadata input).run before)).run state))
     (response : Response) (accepted : result.1.1.1 = .ok (some response)) :
@@ -343,9 +345,9 @@ theorem build_native_path (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSourc
         RoleReachable (withInterpreter cr (RawCtxFunctionalFamily.execute prior))
           receipt.initial.send_chain receipt.initial.receive_chain ⟨peer.kernel⟩ := by
   obtain ⟨receipt, recorded, _, keyEq, advanced, encrypted, atSend, atSent, peer, sent⟩ :=
-    build_published (retained source writer prior reader external) source _ sender index metadata input
+    build_published (associatedData := associatedData) (retained source writer prior reader external) source _ sender index metadata input
       before state result supported response accepted
-  have initialPath := (PqxdhInitialReceiptConstruction.server (retained source writer prior reader external)
+  have initialPath := (PqxdhInitialReceiptConstruction.server (associatedData := associatedData) (retained source writer prior reader external)
     source response64 sender index metadata input before state result supported receipt recorded
     (withInterpreter cr (RawCtxFunctionalFamily.execute prior))).2
   rw [retained_calls] at sent
@@ -399,9 +401,9 @@ private theorem native_rules (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSo
       sendOrigin receiveOrigin entry valid context state.1.1 actual reached⟩
 
 private theorem opened_kernel (candidate : pqxdh.BeaconRegistrationCandidate)
-    (kernel : RawCtxPendingOwnerQueries.Kernel RatchetChain)
+    (associatedData : Array Std.U8 151#usize) (kernel : RawCtxPendingOwnerQueries.Kernel RatchetChain)
     (reply : core.option.Option RawCtxWholeOwner.Decrypted) (staged : Staged (RawCtxPendingOwnerQueries.Kernel RatchetChain))
-    (found : afterOpening candidate kernel reply = some staged) : staged.kernel = kernel := by
+    (found : afterOpening candidate associatedData kernel reply = some staged) : staged.kernel = kernel := by
   cases reply with
   | none => cases found
   | some opened =>
@@ -441,13 +443,13 @@ theorem beacon_tail_path (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource
     subst result
     have preserved := (RawCtxFamilyStateInvariant.raw (nativeCalls source writer prior) _ _
       (native_rules source writer prior cr kernel.send_chain kernel.receive_chain) decode raw
-      (localOwner (PqxdhBeaconPhase2Shared.clearedMetadata prepared.metadata) kernel)
+      (localOwner (PqxdhBeaconPhase2Shared.clearedMetadata prepared.metadata) prepared.metadata.associatedData kernel)
       applicationResult.2 received reached).2
     obtain ⟨created, creation, _, valid⟩ := new_reachable
       (withInterpreter cr (RawCtxFunctionalFamily.execute prior)) kernel.send_chain kernel.receive_chain
     have same : created = ⟨kernel⟩ := RustM.ok.inj (creation.symm.trans constructed)
     intro staged produced
-    rw [opened_kernel _ _ _ staged produced]
+    rw [opened_kernel _ _ _ _ staged produced]
     exact preserved (by simpa only [same, localOwner] using valid)
 
 /-- An actual successful Beacon installation is reachable from the exact two chains recorded before its first receive. The concrete retained initializer discharges source construction; no arbitrary initializer or path-preservation callback premise is used. -/
@@ -465,7 +467,7 @@ theorem beacon_path (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (before : InitialState A N)
     (result : PqxdhInitialFinishReceipt.Result (PqxdhInitialPendingPost.KernelOf RatchetChain) Origin I D K Response
       PqxdhPhase2DecapsulationRouting.Shared × InitialState A N)
-    (supported : result ∈ support ((PqxdhInitialFinishReceipt.owner mark pre (nativeCalls source writer prior)
+    (supported : result ∈ support ((PqxdhInitialFinishReceipt.owner (completedBinding := completedBinding) mark pre (nativeCalls source writer prior)
       application (initial source selected previousRoot response) decode raw entry).run before))
     (receipt : PqxdhInitialFinishReceipt.Receipt (PqxdhInitialPendingPost.KernelOf RatchetChain) Response PqxdhPhase2DecapsulationRouting.Shared)
     (recorded : result.1.2 = some receipt)
@@ -474,7 +476,7 @@ theorem beacon_path (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     RoleReachable (withInterpreter cr (RawCtxFunctionalFamily.execute prior))
       receipt.initial.send_chain receipt.initial.receive_chain ⟨installed⟩ := by
   obtain ⟨control, _, _, _, atPrepared, atInitial, staged, _, _, initialized, completed, finished⟩ :=
-    PqxdhInitialFinishReceipt.owner_origin mark pre (nativeCalls source writer prior) application
+    PqxdhInitialFinishReceipt.owner_origin (completedBinding := completedBinding) mark pre (nativeCalls source writer prior) application
       (initial source selected previousRoot response) decode raw entry before result supported receipt recorded
   have constructed := (initial_constructed source selected previousRoot response receipt.prepared.root
     (withInterpreter cr (RawCtxFunctionalFamily.execute prior)) atPrepared atInitial receipt.initial initialized).1

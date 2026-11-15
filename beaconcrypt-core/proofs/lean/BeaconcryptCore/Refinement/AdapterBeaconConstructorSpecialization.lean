@@ -16,20 +16,26 @@ variable [AdapterBeaconConstructorPrimitive.Standard]
 variable [beaconcrypt.auth.Operations] [beaconcrypt.ratchet.Operations]
 variable [RegistrationWriterPrimitive.Operations] [AdapterWirePrimitive.Operations]
 
-omit [PublicWrapperPlatform.Platform] [PublicWrapperPlatform.Allocator] [AdapterBeaconConstructorPrimitive.Standard] in
+omit [PublicWrapperPlatform.Platform] [PublicWrapperPlatform.Allocator] [AdapterBeaconConstructorPrimitive.Standard]
+    [beaconcrypt.auth.Operations] [beaconcrypt.ratchet.Operations]
+    [RegistrationWriterPrimitive.Operations] [AdapterWirePrimitive.Operations] in
 theorem caller_rng {R Error : Type} (generator : rand_core.TryCryptoRng R Error)
     (identifier : U64) (identityKey mldsaKey : Slice U8) (rng : R) :
     beaconcrypt_constructor_request.beacon.Beacon.try_new_with_rng (m := RustM) generator identifier identityKey mldsaKey rng =
       beaconcrypt_constructor.beacon.Beacon.try_new_with_rng generator identifier identityKey mldsaKey rng := by
   rfl
 
-omit [PublicWrapperPlatform.Platform] [PublicWrapperPlatform.Allocator] in
+omit [PublicWrapperPlatform.Platform] [PublicWrapperPlatform.Allocator]
+    [beaconcrypt.auth.Operations] [beaconcrypt.ratchet.Operations]
+    [RegistrationWriterPrimitive.Operations] [AdapterWirePrimitive.Operations] in
 theorem operating_system (identifier : U64) (identityKey mldsaKey : Slice U8) :
     beaconcrypt_constructor_request.beacon.Beacon.try_new (m := RustM) identifier identityKey mldsaKey =
       beaconcrypt_constructor.beacon.Beacon.try_new identifier identityKey mldsaKey := by
   rfl
 
-omit [PublicWrapperPlatform.Platform] [PublicWrapperPlatform.Allocator] in
+omit [PublicWrapperPlatform.Platform] [PublicWrapperPlatform.Allocator]
+    [beaconcrypt.auth.Operations] [beaconcrypt.ratchet.Operations]
+    [RegistrationWriterPrimitive.Operations] [AdapterWirePrimitive.Operations] in
 theorem panicking_entry (identifier : U64) (identityKey mldsaKey : Slice U8) :
     beaconcrypt_constructor_request.beacon.Beacon.new (m := RustM) identifier identityKey mldsaKey =
       beaconcrypt_constructor.beacon.Beacon.new identifier identityKey mldsaKey := by

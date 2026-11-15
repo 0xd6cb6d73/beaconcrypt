@@ -4,7 +4,7 @@ import BeaconcryptCore.Computational.CborAdmissionServerCompiler
 import BeaconcryptCore.Computational.CborAdmissionCachedBudget
 import BeaconcryptCore.Computational.PqxdhDeploymentCompileSecrecy
 
-/-! CBOR admission preserves the existing twelve deployment-command cost classes and fourteen source14 query kinds. Prefetching and caching issue at most one addressed kernel read, while admitted local records issue no second read and at most one commitment hash. The weighted adversary budget therefore stays unchanged, and every compiled adaptive program issues zero identity, KEM, prekey or one-time field reads without needing a client budget or simulation invariant. -/
+/-! CBOR admission preserves the existing twelve deployment-command cost classes and fourteen source14 query kinds. Prefetching and caching issue at most one addressed kernel read, while admitted local records issue no second read and at most two BLAKE2b queries: the copy's forwarded transcript hash (design §4.7) and one commitment hash. The weighted adversary budget therefore stays unchanged, and every compiled adaptive program issues zero identity, KEM, prekey or one-time field reads without needing a client budget or simulation invariant. -/
 open CoreModels Aeneas OracleComp OracleSpec
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
@@ -19,9 +19,10 @@ theorem beacon_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
     (kind : SourceKind) (index : Nat) (plaintext : Pqxdh.Bytes) (memory : Local) :
     ((CborAdmissionCompiler.beaconSend setup codec index plaintext).run memory).IsQueryBoundP
       (fun request => sourceKind (KemSK := KemSK) request = kind)
-      (unit kind (.inr 4) + unit kind (.inl 7)) := by
+      (unit kind (.inr 4) + unit kind (.inl 7) + unit kind (.inl 7)) := by
   change (CborAdmissionCompiler.beaconSend setup codec index plaintext memory).IsQueryBoundP _ _
   unfold CborAdmissionCompiler.beaconSend
+  rw [Nat.add_assoc]
   by_cases inside : index < memory.copies.log.owners.length
   case pos =>
     rw [ite_eq_left inside]

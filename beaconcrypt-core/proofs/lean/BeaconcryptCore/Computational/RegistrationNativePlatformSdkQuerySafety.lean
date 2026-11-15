@@ -39,31 +39,40 @@ theorem fromInitial (finish : Completion n (M source Platform) Encoded)
   unfold RegistrationNativePlatformCompletionSdk.fromInitial
   exact bind_safe predicate _ _ (world predicate _ (allowed control initial)) (commit predicate)
 
-theorem afterOccupancy (reserve : StateT (RegistrationServerFrontendCompiler.State n) (M source Platform) Bool)
+theorem afterOccupancy (deriveAd : AdHash n (M source Platform))
+    (hashed : ∀ pending, Safe predicate (deriveAd pending)) (reserve : StateT (RegistrationServerFrontendCompiler.State n) (M source Platform) Bool)
     (reserved : Safe predicate reserve) (finish : Completion n (M source Platform) Encoded)
     (allowed : ∀ control initial, Safe predicate (finish control initial))
     (control : pqxdh.ServerState) (lookup : peer.CompletionLookup) (occupied : Bool) :
-    Safe predicate (RegistrationNativePlatformCompletionSdk.afterOccupancy reserve finish control lookup occupied) := by
+    Safe predicate (RegistrationNativePlatformCompletionSdk.afterOccupancy deriveAd reserve finish control lookup occupied) := by
   unfold RegistrationNativePlatformCompletionSdk.afterOccupancy
   cases lookup.resume occupied with
   | fail error | div => exact pure_safe predicate _
   | ok result => cases result with
     | Err previous => exact pure_safe predicate _
-    | Ok initial =>
-        apply bind_safe predicate _ _ reserved
-        intro admitted
-        cases admitted with
-        | false => exact pure_safe predicate _
-        | true => exact fromInitial predicate finish allowed control initial
+    | Ok pending =>
+        apply bind_safe predicate _ _ (hashed pending)
+        intro reply
+        cases reply with
+        | fail error | div => exact pure_safe predicate _
+        | ok result => cases result with
+          | Err previous => exact pure_safe predicate _
+          | Ok initial =>
+              apply bind_safe predicate _ _ reserved
+              intro admitted
+              cases admitted with
+              | false => exact pure_safe predicate _
+              | true => exact fromInitial predicate finish allowed control initial
 
-theorem afterPin (reserve : StateT (RegistrationServerFrontendCompiler.State n) (M source Platform) Bool)
+theorem afterPin (deriveAd : AdHash n (M source Platform))
+    (hashed : ∀ pending, Safe predicate (deriveAd pending)) (reserve : StateT (RegistrationServerFrontendCompiler.State n) (M source Platform) Bool)
     (reserved : Safe predicate reserve)
     (present : U64 → StateT (RegistrationServerFrontendCompiler.State n) (M source Platform) Bool)
     (presence : ∀ keyId, Safe predicate (present keyId)) (finish : Completion n (M source Platform) Encoded)
     (allowed : ∀ control initial, Safe predicate (finish control initial))
     (control : pqxdh.ServerState) (token : peer.ConsumedRegistration) (application : Slice U8)
     (pin : RustM (core.option.Option session.ServerAuthenticationPin)) :
-    Safe predicate (RegistrationNativePlatformCompletionSdk.afterPin reserve present finish control token application pin) := by
+    Safe predicate (RegistrationNativePlatformCompletionSdk.afterPin deriveAd reserve present finish control token application pin) := by
   unfold RegistrationNativePlatformCompletionSdk.afterPin
   cases pin with
   | fail error | div => exact pure_safe predicate _
@@ -83,10 +92,12 @@ theorem afterPin (reserve : StateT (RegistrationServerFrontendCompiler.State n) 
                   simp only
                   split
                   · exact bind_safe predicate _ _ (presence keyId)
-                      (fun occupied => afterOccupancy predicate reserve reserved finish allowed control lookup occupied)
+                      (fun occupied => afterOccupancy predicate deriveAd hashed reserve reserved finish allowed control lookup occupied)
                   · exact pure_safe predicate _
 
 theorem complete
+    (deriveAd : AdHash n (M source Platform))
+    (hashed : ∀ pending, Safe predicate (deriveAd pending))
     (pin : StateT (RegistrationServerFrontendCompiler.State n) (M source Platform) (RustM (core.option.Option session.ServerAuthenticationPin)))
     (pinned : Safe predicate pin) (reserve : StateT (RegistrationServerFrontendCompiler.State n) (M source Platform) Bool)
     (reserved : Safe predicate reserve)
@@ -94,14 +105,16 @@ theorem complete
     (presence : ∀ keyId, Safe predicate (present keyId)) (finish : Completion n (M source Platform) Encoded)
     (allowed : ∀ control initial, Safe predicate (finish control initial))
     (token : peer.ConsumedRegistration) (application : Slice U8) :
-    Safe predicate (RegistrationNativePlatformCompletionSdk.complete pin reserve present finish token application) := by
+    Safe predicate (RegistrationNativePlatformCompletionSdk.complete deriveAd pin reserve present finish token application) := by
   unfold RegistrationNativePlatformCompletionSdk.complete
   apply bind_safe predicate _ _ (get_safe predicate)
   intro before
   exact bind_safe predicate _ _ pinned
-    (fun selected => afterPin predicate reserve reserved present presence finish allowed before.control token application selected)
+    (fun selected => afterPin predicate deriveAd hashed reserve reserved present presence finish allowed before.control token application selected)
 
 theorem build
+    (deriveAd : AdHash n (M source Platform))
+    (hashed : ∀ pending, Safe predicate (deriveAd pending))
     (pin : StateT (RegistrationServerFrontendCompiler.State n) (M source Platform) (RustM (core.option.Option session.ServerAuthenticationPin)))
     (pinned : Safe predicate pin) (reserve : StateT (RegistrationServerFrontendCompiler.State n) (M source Platform) Bool)
     (reserved : Safe predicate reserve)
@@ -109,7 +122,7 @@ theorem build
     (presence : ∀ keyId, Safe predicate (present keyId)) (finish : Completion n (M source Platform) Encoded)
     (allowed : ∀ control initial, Safe predicate (finish control initial))
     (handle : Nat) (application : Option (Slice U8)) :
-    Safe predicate (RegistrationNativePlatformCompletionSdk.build pin reserve present finish handle application) := by
+    Safe predicate (RegistrationNativePlatformCompletionSdk.build deriveAd pin reserve present finish handle application) := by
   intro before previous
   simp only [RegistrationNativePlatformCompletionSdk.build, StateT.run]
   cases taken : RegistrationServerSdkSource.take handle before with
@@ -118,7 +131,7 @@ theorem build
       | none => exact allQueriesSatisfy_pure _ _
       | some token => cases application with
         | none => exact allQueriesSatisfy_pure _ _
-        | some application => exact complete predicate pin pinned reserve reserved present presence finish allowed token application current previous
+        | some application => exact complete predicate deriveAd hashed pin pinned reserve reserved present presence finish allowed token application current previous
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformSdkQuerySafety
 

@@ -56,7 +56,7 @@ theorem detects (joint : PqxdhJointIdentity.Primitives) (count : Nat) (packet : 
 theorem prefix_detects (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value) (context : Context n KemSK) (count : Nat)
     (prefixResult : RegistrationNativeEvents.Observed Value (State n KemSK source) × MonitorState count)
@@ -91,7 +91,7 @@ theorem prefix_native_detects (setup : Setup base KemSK) (checks : Checks) (wire
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
     (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) bytes, bytes.length < 64 →
       setup.source.crypto.verify publicKey.toList bytes = none)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value) (context : Context n KemSK) (count : Nat)
     (prefixResult : RegistrationNativeEvents.Observed Value (State n KemSK source) × MonitorState count)

@@ -26,7 +26,7 @@ private theorem coin_only (handle : Nat) (query : Spec.Domain)
   · exact allowed.elim
   · trivial
 variable (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner source)
 /-- Every literal current outgoing leaf can sign only through its captured owner's indexed source handle. -/
 theorem outgoing (request : RegistrationBeaconInitExecutor.Spec.Domain)

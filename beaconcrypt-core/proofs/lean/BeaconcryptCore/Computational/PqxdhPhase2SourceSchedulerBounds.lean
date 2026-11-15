@@ -10,6 +10,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhPhase2SourceSchedulerBounds
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhPhase2SourceScheduler PqxdhPhase2SourceAux PqxdhPrivateKemSource PqxdhJointKdfGame
 open PqxdhGeneratedBeaconState (IdentityHandle KemHandle)
 open PqxdhPhase2JointIdentity (Converted)
@@ -76,7 +77,7 @@ theorem compiler_step_total
     (localImpl : QueryImpl (LocalSpec I D K X Response) (StateT A ProbComp))
     (qLocal : Nat) (localBound : ∀ query state, ((localImpl query).run state).IsTotalQueryBound qLocal)
     (query : (Spec baseSpec S B).Domain) (state : State M P I D K A S B) :
-    ((compiler source writer senderId route decode localImpl query).run state).IsTotalQueryBound
+    ((PqxdhPhase2SourceScheduler.compiler (completedBinding := completedBinding) source writer senderId route decode localImpl query).run state).IsTotalQueryBound
       (cost qLocal (classify (baseSpec := baseSpec) query)) := by
   rcases query with (query | query)
   · have old := PqxdhProtocolQueryBounds.compiler_step (baseSpec := baseSpec) source writer senderId route decode query state
@@ -84,7 +85,7 @@ theorem compiler_step_total
       simpa [compiler, classify, cost, PqxdhProtocolQueryBounds.compilerCost,
         RawCtxRevealBudgets.weight] using old
   · exact (isQueryBoundP_true_iff _ _).1
-      (PqxdhPhase2LiveFinish.finish_query_bound (sourceNative source localImpl) decode (fun _ => True)
+      (PqxdhPhase2LiveFinish.finish_query_bound (completedBinding := completedBinding) (sourceNative source localImpl) decode (fun _ => True)
         (max qLocal 64 + 1) (fun request primitive => (isQueryBoundP_true_iff _ _).2
           (native_step_total source localImpl qLocal localBound request primitive)) query state)
 
@@ -96,13 +97,13 @@ theorem compiler_total {Result : Type}
     (qLocal : Nat) (localBound : ∀ query state, ((localImpl query).run state).IsTotalQueryBound qLocal)
     (client : OracleComp (Spec baseSpec S B) Result) (budget : Budget) (bounded : Bounded client budget)
     (state : State M P I D K A S B) :
-    ((simulateQ (compiler source writer senderId route decode localImpl) client).run state).IsTotalQueryBound
+    ((simulateQ (PqxdhPhase2SourceScheduler.compiler (completedBinding := completedBinding) source writer senderId route decode localImpl) client).run state).IsTotalQueryBound
       (bill qLocal budget) := by
   exact (isQueryBoundP_true_iff _ _).1
     (FinitePartitionQueryBounds.weighted_bound (classify (baseSpec := baseSpec)) (cost qLocal) budget
-      (compiler source writer senderId route decode localImpl) (fun _ => True) client bounded
+      (PqxdhPhase2SourceScheduler.compiler (completedBinding := completedBinding) source writer senderId route decode localImpl) (fun _ => True) client bounded
       (fun query state => (isQueryBoundP_true_iff _ _).2
-        (compiler_step_total source writer senderId route decode localImpl qLocal localBound query state)) state)
+        (compiler_step_total (completedBinding := completedBinding) source writer senderId route decode localImpl qLocal localBound query state)) state)
 
 /-- The scalar bill retains all four forwarded-service counts and the separate finish count, including inactive attempts. -/
 theorem bill_eq (qLocal : Nat) (budget : Budget) :
@@ -142,7 +143,7 @@ private theorem compiler_source_bound {Result : Type}
     (client : OracleComp (Spec baseSpec S B) Result) (budget : Nat)
     (bounded : client.IsQueryBoundP (ForwardedSource (baseSpec := baseSpec) predicate) budget)
     (state : State M P I D K A S B) :
-    ((simulateQ (compiler source writer senderId route decode localImpl) client).run state).IsQueryBoundP
+    ((simulateQ (PqxdhPhase2SourceScheduler.compiler (completedBinding := completedBinding) source writer senderId route decode localImpl) client).run state).IsQueryBoundP
       (PqxdhPrivateKemQueryBounds.SelectorSource (baseSpec := baseSpec) predicate) budget := by
   apply bounded.simulateQ_run_StateT_of_step _ state
   intro query before
@@ -161,7 +162,7 @@ private theorem compiler_source_bound {Result : Type}
     simpa only [simulateQ_spec_query, compiler, ForwardedSource] using step
   | inr query =>
     simpa only [compiler, ForwardedSource, ite_false, Nat.mul_zero] using
-      PqxdhPhase2LiveFinish.finish_query_bound (sourceNative source localImpl) decode
+      PqxdhPhase2LiveFinish.finish_query_bound (completedBinding := completedBinding) (sourceNative source localImpl) decode
         (PqxdhPrivateKemQueryBounds.SelectorSource (baseSpec := baseSpec) predicate) 0 nativeZero query before
 
 /-- Only caller-forwarded signing or creation requests contribute to those source classes; actual finish work adds neither. -/
@@ -175,19 +176,19 @@ theorem compiler_source_caps {Result : Type}
     (createBound : client.IsQueryBoundP (ForwardedSource (baseSpec := baseSpec)
       PqxdhPrivatePhase1Prefix.Creating) qCreate)
     (state : State M P I D K A S B) :
-    let work := (simulateQ (compiler source writer senderId route decode localImpl) client).run state
+    let work := (simulateQ (PqxdhPhase2SourceScheduler.compiler (completedBinding := completedBinding) source writer senderId route decode localImpl) client).run state
     work.IsQueryBoundP (PqxdhPrivateKemQueryBounds.SelectorSource (baseSpec := baseSpec)
       PqxdhJointPhase1AcceptanceComposition.IsSigning) qSign ∧
     work.IsQueryBoundP (PqxdhPrivateKemQueryBounds.SelectorSource (baseSpec := baseSpec)
       PqxdhPrivatePhase1Prefix.Creating) qCreate := by
   constructor
-  · exact compiler_source_bound source writer senderId route decode localImpl _
+  · exact compiler_source_bound (completedBinding := completedBinding) source writer senderId route decode localImpl _
       (fun query primitive => by
         simpa only [simulateQ_spec_query] using
           (native_restrictions (baseSpec := baseSpec) source localImpl
             (liftM ((NativeSpec I D K X Response).query query)) primitive).1)
       client qSign signBound state
-  · exact compiler_source_bound source writer senderId route decode localImpl _
+  · exact compiler_source_bound (completedBinding := completedBinding) source writer senderId route decode localImpl _
       (fun query primitive => by
         simpa only [simulateQ_spec_query] using
           (native_restrictions (baseSpec := baseSpec) source localImpl
@@ -205,12 +206,12 @@ theorem compiler_restrictions {Result : Type}
     (noCreate : client.IsQueryBoundP (ForwardedSource (baseSpec := baseSpec)
       PqxdhPrivatePhase1Prefix.Creating) 0)
     (state : State M P I D K A S B) :
-    let work := (simulateQ (compiler source writer senderId route decode localImpl) client).run state
+    let work := (simulateQ (PqxdhPhase2SourceScheduler.compiler (completedBinding := completedBinding) source writer senderId route decode localImpl) client).run state
     work.IsQueryBoundP (PqxdhPrivateKemQueryBounds.SelectorSource (baseSpec := baseSpec)
       PqxdhJointPhase1AcceptanceComposition.IsSigning) 0 ∧
     work.IsQueryBoundP (PqxdhPrivateKemQueryBounds.SelectorSource (baseSpec := baseSpec)
       PqxdhPrivatePhase1Prefix.Creating) 0 :=
-  compiler_source_caps source writer senderId route decode localImpl client 0 0 noSign noCreate state
+  compiler_source_caps (completedBinding := completedBinding) source writer senderId route decode localImpl client 0 0 noSign noCreate state
 
 /-- The subsequent source continuation is charged on every complete optional result and live state, including failed finish attempts. -/
 theorem compiler_continuation_total {Result Output : Type}
@@ -222,10 +223,10 @@ theorem compiler_continuation_total {Result Output : Type}
     (state : State M P I D K A S B)
     (next : Result × State M P I D K A S B → OracleComp (SelectorSpec baseSpec) Output)
     (qNext : Nat) (nextBound : ∀ result, (next result).IsTotalQueryBound qNext) :
-    (((simulateQ (compiler source writer senderId route decode localImpl) client).run state) >>= next).IsTotalQueryBound
+    (((simulateQ (PqxdhPhase2SourceScheduler.compiler (completedBinding := completedBinding) source writer senderId route decode localImpl) client).run state) >>= next).IsTotalQueryBound
       (bill qLocal budget + qNext) := by
   exact isTotalQueryBound_bind
-    (compiler_total source writer senderId route decode localImpl qLocal localBound client budget bounded state)
+    (compiler_total (completedBinding := completedBinding) source writer senderId route decode localImpl qLocal localBound client budget bounded state)
     nextBound
 
 end BeaconcryptCore.Computational.PqxdhPhase2SourceSchedulerBounds

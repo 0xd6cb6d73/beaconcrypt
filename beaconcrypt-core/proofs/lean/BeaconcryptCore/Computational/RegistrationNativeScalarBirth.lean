@@ -20,7 +20,7 @@ noncomputable def after (setup : Setup base KemSK) (source : RegistrationNativeM
   match prepared with
   | .ok (some prepared) =>
       let scalar ← draw
-      appendBorn setup source edPin keyId prepared.pin prepared.credentials prepared.identity scalar
+      appendBorn setup source edPin keyId prepared.pin prepared.identity scalar
   | .ok none => pure (.ok none)
   | .fail error => pure (.fail error)
   | .div => pure .div
@@ -47,7 +47,7 @@ theorem create (setup : Setup base KemSK) (source : RegistrationNativeMldsa.Sour
 /-- The actual whole closed constructor keeps its optional prefix on the original World before its complete draw and birth suffix. -/
 theorem source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (source : RegistrationNativeMldsa.Source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (source : RegistrationNativeMldsa.Source)
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (before : RegistrationNativeExperiment.State n KemSK source) :
     (RegistrationNativeExperiment.beacon setup checks representation created

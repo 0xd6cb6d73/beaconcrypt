@@ -64,7 +64,7 @@ private theorem inject_natural (mapping : Map left right) (value : Value → Oth
 private theorem native_inject {source : RegistrationNativeMldsa.Source}
     (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State Value) :
     RegistrationNativePlatformMldsaProgram.lift (RegistrationNativePlatformBundleLower.native
       (RegistrationNativePlatformMldsaProgram.coins (Platform := Platform)) setup checks representation created work) =
@@ -86,7 +86,7 @@ private theorem native_inject {source : RegistrationNativeMldsa.Source}
 private theorem native_natural (mapping : Map left right) (value : Value → Other)
     (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (first : RegistrationNativeBeaconFrontend.M n KemSK left RegistrationServerRoleBackend.State Value)
     (second : RegistrationNativeBeaconFrontend.M n KemSK right RegistrationServerRoleBackend.State Other)
     (related : RegistrationNativeMldsaOrdinaryMap.Natural mapping value first second) :
@@ -101,7 +101,7 @@ private theorem native_natural (mapping : Map left right) (value : Value → Oth
 
 private theorem outgoing_natural (mapping : Map left right) (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat)
     (current : RegistrationNativeBeaconFrontend.Owner left) (query : RegistrationBeaconInitExecutor.Spec.Domain) :
     Natural (n := n) (Platform := Platform) mapping id
       (RegistrationNativePlatformMldsaBundle.outgoing setup checks representation created index current query)
@@ -120,7 +120,7 @@ private theorem state_liftM_apply {S X : Type} {m : Type → Type} [Monad m] [La
 
 private theorem encoder_lower {source : RegistrationNativeMldsa.Source} {m : Type → Type} [Monad m] [LawfulMonad m]
     {E : Type} (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) m)
-    (view : registration.SignedInitView) :
+    (view : registration.InitView) :
     RegistrationNativePlatformBundleLower.lower
       (RegistrationNativePlatformGenericBundle.encoderWith (source := source) (Auxiliary := RegistrationServerRoleBackend.State)
         (RegistrationNativePlatformExperiment.writer (n := n) (KemSK := KemSK) (source := source) writer) view) =
@@ -152,7 +152,7 @@ private theorem external_natural (mapping : Map left right) (work : StateT Platf
 
 private theorem encoder_natural (mapping : Map left right) {E : Type}
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
-    (view : registration.SignedInitView) :
+    (view : registration.InitView) :
     Natural (n := n) (KemSK := KemSK) mapping id
       (RegistrationNativePlatformMldsaProgram.lift (RegistrationNativePlatformBundleLower.lower
         (RegistrationNativePlatformGenericBundle.encoderWith (source := left) (Auxiliary := RegistrationServerRoleBackend.State)
@@ -220,13 +220,13 @@ theorem begin_source {source : RegistrationNativeMldsa.Source} {E : Type}
     (crypto : QueryImpl RegistrationBeaconInitExecutor.Spec (StateT (Local n KemSK source) (M source Platform)))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize) :
-    simulateQ (combined crypto writer) (RegistrationNativePlatformWriter.begin E control inputs coins pin mldsa) =
+    (pin : session.ServerAuthenticationPin) :
+    simulateQ (combined crypto writer) (RegistrationNativePlatformWriter.begin E control inputs coins pin) =
       RegistrationNativePlatformBeaconPublication.begin crypto
         (fun view => RegistrationNativePlatformMldsaProgram.lift (RegistrationNativePlatformBundleLower.lower
           (RegistrationNativePlatformGenericBundle.encoderWith (source := source) (Auxiliary := RegistrationServerRoleBackend.State)
             (RegistrationNativePlatformExperiment.writer (n := n) (KemSK := KemSK) (source := source) writer) view)))
-        control inputs coins pin mldsa := by
+        control inputs coins pin := by
   rw [RegistrationNativePlatformWriter.begin_interpret]
   simp only [combined]
   congr 1
@@ -236,24 +236,24 @@ theorem begin_source {source : RegistrationNativeMldsa.Source} {E : Type}
 private theorem begin_natural (mapping : Map left right) {E : Type}
     (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat)
     (current : RegistrationNativeBeaconFrontend.Owner left)
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize) :
+    (pin : session.ServerAuthenticationPin) :
     Natural mapping id
       (RegistrationNativePlatformBeaconPublication.begin
         (RegistrationNativePlatformMldsaBundle.outgoing setup checks representation created index current)
         (fun view => RegistrationNativePlatformMldsaProgram.lift (RegistrationNativePlatformBundleLower.lower
           (RegistrationNativePlatformGenericBundle.encoderWith (source := left) (Auxiliary := RegistrationServerRoleBackend.State)
             (RegistrationNativePlatformExperiment.writer (n := n) (KemSK := KemSK) (source := left) writer) view)))
-        control inputs coins pin mldsa)
+        control inputs coins pin)
       (RegistrationNativePlatformBeaconPublication.begin
         (RegistrationNativePlatformMldsaBundle.outgoing setup checks representation created index (owner mapping current))
         (fun view => RegistrationNativePlatformMldsaProgram.lift (RegistrationNativePlatformBundleLower.lower
           (RegistrationNativePlatformGenericBundle.encoderWith (source := right) (Auxiliary := RegistrationServerRoleBackend.State)
             (RegistrationNativePlatformExperiment.writer (n := n) (KemSK := KemSK) (source := right) writer) view)))
-        control inputs coins pin mldsa) := by
+        control inputs coins pin) := by
   rw [← begin_source, ← begin_source]
   apply simulate_natural
   intro query
@@ -263,7 +263,7 @@ private theorem begin_natural (mapping : Map left right) {E : Type}
 
 private noncomputable def tail {source : RegistrationNativeMldsa.Source} (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat)
     (current : RegistrationNativeBeaconFrontend.Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (published : RustM (RegistrationBeaconInitExecutor.Result (alloc.vec.Vec U8))) :
     StateT (Local n KemSK source) (M source Platform) (RustM (Option (alloc.vec.Vec U8))) :=
@@ -282,7 +282,7 @@ private noncomputable def tail {source : RegistrationNativeMldsa.Source} (setup 
 
 private theorem tail_natural (mapping : Map left right) (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat)
     (current : RegistrationNativeBeaconFrontend.Owner left) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (published : RustM (RegistrationBeaconInitExecutor.Result (alloc.vec.Vec U8))) :
     Natural (n := n) (Platform := Platform) mapping id
@@ -304,7 +304,7 @@ private theorem tail_natural (mapping : Map left right) (setup : Setup base KemS
 private theorem published_natural (mapping : Map left right) {E : Type}
     (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat)
     (current : RegistrationNativeBeaconFrontend.Owner left) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) :
     Natural (n := n) mapping id
@@ -315,7 +315,7 @@ private theorem published_natural (mapping : Map left right) {E : Type}
             (RegistrationNativePlatformGenericBundle.encoderWith (source := left) (Auxiliary := RegistrationServerRoleBackend.State)
               (RegistrationNativePlatformExperiment.writer (n := n) (KemSK := KemSK) (source := left) writer) view)))
           ⟨current.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup current)
-          ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ current.pin current.mldsa.publicKey
+          ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ current.pin
         tail setup checks representation created index current oneTime published)
       (do
         let published ← RegistrationNativePlatformBeaconPublication.begin
@@ -324,17 +324,17 @@ private theorem published_natural (mapping : Map left right) {E : Type}
             (RegistrationNativePlatformGenericBundle.encoderWith (source := right) (Auxiliary := RegistrationServerRoleBackend.State)
               (RegistrationNativePlatformExperiment.writer (n := n) (KemSK := KemSK) (source := right) writer) view)))
           ⟨(owner mapping current).pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup (owner mapping current))
-          ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ (owner mapping current).pin (owner mapping current).mldsa.publicKey
+          ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ (owner mapping current).pin
         tail setup checks representation created index (owner mapping current) oneTime published) := by
-  apply bind_natural mapping id id _ _ _ _ (begin_natural mapping setup checks representation created index current writer _ _ _ _ _)
+  apply bind_natural mapping id id _ _ _ _ (begin_natural mapping setup checks representation created index current writer _ _ _ _)
   intro published
   exact tail_natural mapping setup checks representation created index current oneTime published
 
-/-- The entire actual effectful source Init bundle translates private credentials while retaining all public allocator state. -/
+/-- The actual effectful Init bundle preserves its complete public owner data under the Server ML representation map and retains all allocator state. -/
 theorem bundle_natural (mapping : Map left right) {E : Type}
     (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) (index : Nat) :
     Natural (n := n) mapping id
       (RegistrationNativePlatformMldsaBundle.bundle (source := left) setup checks representation created
@@ -383,7 +383,7 @@ theorem bundle_natural (mapping : Map left right) {E : Type}
 theorem sourceBundle_natural (mapping : Map left right) {E : Type}
     (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) (index : Nat)
     (before : RegistrationNativeExperiment.State n KemSK left) (previous : Platform) :
     Prod.map (Prod.map id (nativeState mapping)) id <$>

@@ -18,7 +18,7 @@ variable {source : RegistrationNativeMldsa.Source}
 /-- Every actual preparation outcome preserves source ownership of its unchanged prior roster. -/
 theorem prepare_old_owned (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (current : RegistrationNativeIdentityFrontend.State source)
     (env : RegistrationWorldAgreementCompiler.EnvState RegistrationServerRoleBackend.State) (before : State n KemSK)
@@ -38,7 +38,7 @@ theorem prepare_old_owned (setup : Setup base KemSK) (checks : Checks)
 /-- Literal KEM/owner allocation appends only its already source-owned credential and preserves every existing owner. -/
 theorem append_owned (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (edPin : Std.Array U8 32#usize) (keyId : U64)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (edPin : Std.Array U8 32#usize) (keyId : U64)
     (prepared : RegistrationNativeIdentityFrontend.Prepared source) (current : RegistrationNativeIdentityFrontend.State source)
     (env : RegistrationWorldAgreementCompiler.EnvState RegistrationServerRoleBackend.State) (before : State n KemSK)
     (result : ((RustM (Option Nat) × RegistrationNativeIdentityFrontend.State source) ×
@@ -65,7 +65,7 @@ theorem append_owned (setup : Setup base KemSK) (checks : Checks)
 /-- The actual complete public constructor preserves credential ownership on every failure and derives the new owner's ownership on success. -/
 theorem create_owned (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (current : RegistrationNativeIdentityFrontend.State source)
     (env : RegistrationWorldAgreementCompiler.EnvState RegistrationServerRoleBackend.State) (before : State n KemSK)

@@ -58,6 +58,9 @@ private theorem syntax_bound (kind : Kind) (selected : Bool) (reserve : StateT P
         (by rw [isQueryBoundP_query_iff]; intro hit; exact (free hit).elim) current
     | inr query => exact platform_zero kind reserve current
 
+attribute [local irreducible] RegistrationNativePlatformServerOpenSyntax.accept
+  RegistrationNativePlatformServerOpenControl.afterPin
+
 /-- The literal corrected OPEN controller has zero private-birth and reveal cost, including its actual reservation. -/
 theorem accept_zero (kind : Kind) (selected : Bool) (reserve : StateT Platform ProbComp Bool)
     (setup : Setup base KemSK) (checks : Checks) (verify : MldsaTranscriptAuth.Verify) (packet : registration.InitPacket)

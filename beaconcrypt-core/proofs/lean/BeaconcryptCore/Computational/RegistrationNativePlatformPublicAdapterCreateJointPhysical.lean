@@ -3,7 +3,7 @@ import BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterCrea
 import BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterCreateGeneration
 import BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterCreatePrimitives
 import BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterCreateKemPhysical
-/-! The existing constructor joint tree has an exact interpretation on the retained physical backend. The same five primitive stages and returned RNG are used on both sides; the proof derives each source query projection internally. -/
+/-! The existing constructor joint tree has an exact interpretation on the retained physical backend. The same three sampler stages and returned RNG are used on both sides; the proof derives each source query projection internally. -/
 open CoreModels Aeneas OracleComp OracleSpec
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -21,18 +21,15 @@ variable {n : Nat} {I KemSK R P : Type} {base : OracleSpec I} {source : Registra
 variable [material : PublicWrapperPlatform.Material] [ed : AdapterInitEdPrimitive.Operations]
 variable (coins : QueryImpl unifSpec (StateT P ProbComp))
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (view : AdapterPublicWrapperState.MaterialView source KemSK) (kem : AdapterBeaconConstructorKem.Representation view R)
 local notation "SourceM" => AdapterBeaconConstructorNative.M n KemSK source RegistrationServerRoleBackend.State (StateT P ProbComp)
 local notation "PhysicalM" => StateT (Backend n KemSK) (StateT P ProbComp)
-variable (ml : R → ProbComp (Option (RegistrationNativeMldsa.Credential source) × R))
 variable (signing : R → ProbComp (PqxdhJointIdentity.IdentitySeed × R))
 variable (prekey : R → ProbComp (PqxdhJointGapDh.ScalarBytes × R))
 
-noncomputable def sourceHandler : QueryImpl (RegistrationNativePlatformPublicAdapterCreateProgram.Spec source R) SourceM :=
+noncomputable def sourceHandler : QueryImpl (RegistrationNativePlatformPublicAdapterCreateProgram.Spec R) SourceM :=
   RegistrationNativePlatformPublicAdapterCreateProgram.handler
-    (fun rng => simulateQ (RegistrationNativePlatformPublicAdapterCreatePrimitives.uniform coins setup checks representation created) (ml rng))
-    (RegistrationNativePlatformPublicAdapterCreatePrimitives.hash coins setup checks representation created)
     (fun rng => simulateQ (RegistrationNativePlatformPublicAdapterCreatePrimitives.uniform coins setup checks representation created) (signing rng))
     (fun rng => simulateQ (RegistrationNativePlatformPublicAdapterCreatePrimitives.uniform coins setup checks representation created) (prekey rng))
     (AdapterBeaconConstructorKemLift.joint coins setup view kem)
@@ -41,10 +38,8 @@ noncomputable def hash (request : registration.HashRequest) : PhysicalM CtxRomAu
   simulateQ coins ((RegistrationNativePlatformSdkReification.backendLeaf setup checks representation created
     (.inr (.inl (RegistrationInputs.hashBytes request)))).run before)
 
-noncomputable def handler : QueryImpl (RegistrationNativePlatformPublicAdapterCreateProgram.Spec source R) PhysicalM :=
+noncomputable def handler : QueryImpl (RegistrationNativePlatformPublicAdapterCreateProgram.Spec R) PhysicalM :=
   RegistrationNativePlatformPublicAdapterCreateProgram.handler
-    (fun rng => simulateQ (RegistrationNativePlatformPublicAdapterBundleGeneration.backendUniform coins setup checks representation created) (ml rng))
-    (hash coins setup checks representation created)
     (fun rng => simulateQ (RegistrationNativePlatformPublicAdapterBundleGeneration.backendUniform coins setup checks representation created) (signing rng))
     (fun rng => simulateQ (RegistrationNativePlatformPublicAdapterBundleGeneration.backendUniform coins setup checks representation created) (prekey rng))
     (RegistrationNativePlatformPublicAdapterCreateKemPhysical.joint view coins setup kem)
@@ -80,19 +75,12 @@ private theorem sample_source {A : Type} (work : ProbComp A) (before : Full n Ke
   simp only [Functor.map_map] at law
   simpa only [sampleImpl,QueryImpl.flattenStateT,StateT.run_mk,mk_apply,map_apply,StateT.run_map,Functor.map_map] using law
 
-theorem query_source (query : (RegistrationNativePlatformPublicAdapterCreateProgram.Spec source R).Domain)
+theorem query_source (query : (RegistrationNativePlatformPublicAdapterCreateProgram.Spec R).Domain)
     (before : Full n KemSK source) :
     Prod.map id project <$>
-      ((sourceHandler coins setup checks representation created view kem ml signing prekey).flattenStateT.flattenStateT query).run before =
-    (handler coins setup checks representation created view kem ml signing prekey query).run (project before) := by
-  rcases query with rng | request | rng | rng | rng
-  · exact sample_source coins setup checks representation created (ml rng) before
-  · have law := RegistrationNativePlatformPublicAdapterCreatePrimitives.hash_source coins setup checks representation created request before
-    simpa only [sourceHandler,handler,RegistrationNativePlatformPublicAdapterCreateProgram.handler,
-      RegistrationNativePlatformPublicAdapterCreatePrimitives.flatHash,QueryImpl.flattenStateT,
-      StateT.run_mk,mk_apply,map_apply,StateT.run_map,Functor.map_map,hash,StateT.run,
-      RegistrationNativePlatformPublicAdapterCreateProgram.Spec,OracleSpec.Range,OracleSpec.add_apply_inr,
-      OracleSpec.add_apply_inl,OracleSpec.ofFn] using law
+      ((sourceHandler coins setup checks representation created view kem signing prekey).flattenStateT.flattenStateT query).run before =
+    (handler coins setup checks representation created view kem signing prekey query).run (project before) := by
+  rcases query with rng | rng | rng
   · exact sample_source coins setup checks representation created (signing rng) before
   · exact sample_source coins setup checks representation created (prekey rng) before
   · have law := RegistrationNativePlatformPublicAdapterCreateKemPhysical.joint_source view coins setup kem rng before.1.1 before.1.2 before.2
@@ -102,13 +90,13 @@ theorem query_source (query : (RegistrationNativePlatformPublicAdapterCreateProg
     exact law
 
 theorem program_source {A : Type}
-    (work : OracleComp (RegistrationNativePlatformPublicAdapterCreateProgram.Spec source R) A)
+    (work : OracleComp (RegistrationNativePlatformPublicAdapterCreateProgram.Spec R) A)
     (before : Full n KemSK source) :
     Prod.map id project <$>
-      (simulateQ (sourceHandler coins setup checks representation created view kem ml signing prekey).flattenStateT.flattenStateT work).run before =
-    (simulateQ (handler coins setup checks representation created view kem ml signing prekey) work).run (project before) := by
+      (simulateQ (sourceHandler coins setup checks representation created view kem signing prekey).flattenStateT.flattenStateT work).run before =
+    (simulateQ (handler coins setup checks representation created view kem signing prekey) work).run (project before) := by
   apply OracleComp.map_run_simulateQ_eq_of_query_map_eq
-  exact query_source coins setup checks representation created view kem ml signing prekey
+  exact query_source coins setup checks representation created view kem signing prekey
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterCreateJointPhysical
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterCreateJointPhysical.query_source' depends on axioms: [propext,

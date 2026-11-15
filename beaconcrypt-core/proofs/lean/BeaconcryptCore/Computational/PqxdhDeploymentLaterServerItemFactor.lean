@@ -11,6 +11,7 @@ These are program and distribution equalities; they charge nothing and add no as
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
+set_option warningAsError true
 set_option maxRecDepth 100000
 namespace BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemFactor
 open PqxdhKemIndCca PqxdhInitializerSecrecy PqxdhServerAuthExperiment PqxdhJointIdentity
@@ -115,7 +116,7 @@ theorem skelResumeL_factor (setup : Setup baseSpec KemSK) (codec : Codec Reader 
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)
     (value : PqxdhServerRootPreparation.Verified Reader)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)
-    (consumed : List Pqxdh.Bytes) (game : GameState KemSK) (owners : List EncodedEntry) (log : Log)
+    (consumed : List Pqxdh.Bytes) (game : GameState KemSK) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log)
     (next : Option Nat → OracleComp (PqxdhDeploymentLaterServerSource.Spec KemSK) X) (selected : Nat)
     (ciphertext : MlKem768Ciphertext) :
     Prod.map id (proj (PqxdhServerAuthKeySchedule.fromRoot setup.source)) <$>

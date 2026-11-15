@@ -65,21 +65,20 @@ structure Beacon (view : MaterialView source KemSK) (joint : PqxdhJointIdentity.
     (owner : RegistrationNativeBeaconFrontend.Owner source) (world : Option PqxdhRecordLiftBeacon.Phase) : Prop where
   identityPublic : view.edPublic stored.identity_key.public_key = PqxdhRootTableInitialization.rootArray (joint.publicKeys owner.identitySeed).ed25519
   identitySecret : view.edSecret stored.identity_key.secret_key = owner.identitySeed
-  mldsa : view.mldsa stored.authentication.identity = owner.mldsa
   pin : stored.authentication.server_pin = owner.pin
   serverPublic : view.edPublic stored.server_id = owner.pin.binding.identity_public_key
   identifier : stored.identity_key_kid = currentId owner
   phase : Phase view pool owner stored.state world
 
 structure ServerIdentity (view : MaterialView source KemSK) (stored : beaconcrypt_public_wrapper.server.ServerIdentity)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source) : Prop where
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source) : Prop where
   publicKey : view.edPublic stored.identity_key.public_key = created.server.server.identity
   secret : view.edSecret stored.identity_key.secret_key = created.seed
   mldsa : view.mldsa stored.mldsa_identity = credential
   identifier : stored.identity_key_kid = created.server.server.metadata.sender
 
 structure Server (view : MaterialView source KemSK) (containers : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (stored : beaconcrypt_public_wrapper.server.Server) {n : Nat} (native : RegistrationServerFrontendCompiler.State n) : Prop where
   identity : ServerIdentity view (platform.arcView stored.identity) created credential
   control : stored.control = native.control
@@ -104,7 +103,7 @@ theorem installed (view : MaterialView source KemSK) (joint : PqxdhJointIdentity
       ({ stored with identity_key_kid := completed.binding.assigned_key_id, state := .Established completed.control completed.binding ⟨⟨some completed.kernel⟩⟩ })
       { owner with phase := .established ⟨completed.control, completed.binding, completed.application⟩ }
       (some (.established ⟨completed.binding.assigned_key_id, completed.control, completed.binding.associated_data⟩ completed.kernel)) := by
-  exact ⟨related.identityPublic, related.identitySecret, related.mldsa, related.pin, related.serverPublic,
+  exact ⟨related.identityPublic, related.identitySecret, related.pin, related.serverPublic,
     rfl, rfl, rfl, completed.kernel, rfl, rfl⟩
 
 omit platform in
@@ -116,7 +115,7 @@ theorem aborted (view : MaterialView source KemSK) (joint : PqxdhJointIdentity.P
     (before : owner.phase = .initSent pending oneTime) (control : pqxdh.BeaconAborted) :
     Beacon view joint pool { stored with state := .Aborted control }
       { owner with phase := .aborted control } (some (.inactive .aborted)) := by
-  refine ⟨related.identityPublic, related.identitySecret, related.mldsa, related.pin, related.serverPublic,
+  refine ⟨related.identityPublic, related.identitySecret, related.pin, related.serverPublic,
     ?_, rfl, rfl⟩
   simpa only [currentId, before] using related.identifier
 
@@ -133,11 +132,11 @@ theorem pending (view : MaterialView source KemSK) (joint : PqxdhJointIdentity.P
     (kemView : KemPair view pool kem owner.kemHandle owner.kemPublic) :
     Beacon view joint pool { stored with state := .InitSent pending prekey oneTime kem }
       { owner with phase := .initSent pending scalar } (some (.inactive .initSent)) := by
-  exact ⟨related.identityPublic, related.identitySecret, related.mldsa, related.pin, related.serverPublic,
+  exact ⟨related.identityPublic, related.identitySecret, related.pin, related.serverPublic,
     related.identifier.trans identifier, rfl, prekeyView, oneTimeView, kemView, rfl⟩
 
 theorem replay_reserved (view : MaterialView source KemSK) (containers : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (stored : beaconcrypt_public_wrapper.server.Server) {n : Nat} (native : RegistrationServerFrontendCompiler.State n)
     (related : Server view containers created credential stored native)
     (result : core.result.Result Unit platform.ReserveError × ReplaySet)
@@ -146,7 +145,7 @@ theorem replay_reserved (view : MaterialView source KemSK) (containers : Views)
   exact { related with replay := replay_reserve containers _ _ result related.replay preserves }
 
 theorem replay_inserted (view : MaterialView source KemSK) (containers : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (stored : beaconcrypt_public_wrapper.server.Server) {n : Nat} (native : RegistrationServerFrontendCompiler.State n)
     (related : Server view containers created credential stored native)
     (identifier : Std.Array U8 64#usize) (result : Bool × ReplaySet)
@@ -156,7 +155,7 @@ theorem replay_inserted (view : MaterialView source KemSK) (containers : Views)
   exact { related with replay := replay_insert containers _ _ identifier result related.replay updates }
 
 theorem peer_reserved (view : MaterialView source KemSK) (containers : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (stored : beaconcrypt_public_wrapper.server.Server) {n : Nat} (native : RegistrationServerFrontendCompiler.State n)
     (related : Server view containers created credential stored native)
     (result : core.result.Result Unit platform.ReserveError × PeerMap)
@@ -183,7 +182,7 @@ theorem retain_exact (accepted : agreement.ServerAgreement) (inserted : Bool) :
 
 omit platform ed material in
 def withPeer {n : Nat} (native : RegistrationServerFrontendCompiler.State n) (identifier : U64)
-    (installed : RawCtxServerRouting.Peer (Std.Array U8 281#usize)) : RegistrationServerFrontendCompiler.State n :=
+    (installed : RawCtxServerRouting.Peer (Std.Array U8 151#usize)) : RegistrationServerFrontendCompiler.State n :=
   match native.world.world.1.server with
   | none => native
   | some records =>
@@ -194,12 +193,12 @@ def withPeer {n : Nat} (native : RegistrationServerFrontendCompiler.State n) (id
       { native with world := { native.world with world := (world, native.world.world.2) } }
 
 theorem peer_inserted (view : MaterialView source KemSK) (containers : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (stored : beaconcrypt_public_wrapper.server.Server) {n : Nat} (native : RegistrationServerFrontendCompiler.State n)
     (related : Server view containers created credential stored native)
     (identifier : U64) (back : Entry → PeerMap) (value : Remote ed.PublicKey)
     (result : Remote ed.PublicKey × (Remote ed.PublicKey → Vacant))
-    (installed : RawCtxServerRouting.Peer (Std.Array U8 281#usize))
+    (installed : RawCtxServerRouting.Peer (Std.Array U8 151#usize))
     (updates : VacantInsert containers stored.known_ids identifier back value result)
     (viewed : peerView value = some installed) :
     Server view containers created credential { stored with known_ids := back (.Vacant (result.2 result.1)) }

@@ -9,6 +9,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialNativeResponse
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhInitialBeaconAmbient PqxdhInitialNativeLog PqxdhFullSecretInputKdf
 open PqxdhInitialBuilderContext
 variable {ι M P I D K X Response Shared A N C Result Origin : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -19,8 +20,8 @@ theorem bare_frame_step (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxM
     (external : QueryImpl (External extra RatchetChain I D K X Response Shared) (Ambient A N C))
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (context : Context extra M P I D K Result S B) (state : Bare A N C) :
-    (bare source writer stage external (frame sender route decode context).1).run state =
-      (fun result => (PqxdhInitialParentBuilderContext.reply sender route decode context result.1,
+    (bare source writer stage external (frame (completedBinding := completedBinding) sender route decode context).1).run state =
+      (fun result => (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode context result.1,
         ((state.1.1, result.2), state.2))) <$>
         RawCtxSelectiveChainGame.privateStep source stage (address context) state.1.2 := by
   cases context with
@@ -31,7 +32,7 @@ theorem bare_frame_step (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxM
             PqxdhInitialParentContext.reply, address, PqxdhInitialPostContext.address, bind_pure_comp, Functor.map_map] using
             congrArg (fun work => (fun result => (result.1, (result.2, state.2))) <$> work)
               (RawCtxLoggedParentResponse.frame_step source writer stage sender route decode inner state.1)
-      | finish index before control candidate outside inner =>
+      | finish index before control candidate associatedData outside inner =>
           cases inner <;>
             simp only [bare, frame, PqxdhInitialPostContext.frame, RawCtxSelectedFamilyContext.ownerFrame,
               StateT.run, PqxdhInitialParentBuilderContext.reply, PqxdhInitialParentContext.reply,
@@ -63,16 +64,16 @@ theorem logged_frame_step (source : FixedHkdfSha512NoSaltSource) (writer : RawCt
     (external : QueryImpl (External extra RatchetChain I D K X Response Shared) (Ambient A N C))
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (context : Context extra M P I D K Result S B) (state : State A N C) :
-    (handler source writer stage external (frame sender route decode context).1).run state =
-      (fun result => (PqxdhInitialParentBuilderContext.reply sender route decode context result.1,
+    (handler source writer stage external (frame (completedBinding := completedBinding) sender route decode context).1).run state =
+      (fun result => (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode context result.1,
         (((state.1.1.1, result.2), state.1.2 ++ [address context]), state.2))) <$>
         RawCtxSelectiveChainGame.privateStep source stage (address context) state.1.1.2 := by
   simp only [handler, StateT.run, bind_pure_comp]
-  have actual := bare_frame_step source writer stage external sender route decode context (erase state)
+  have actual := bare_frame_step (completedBinding := completedBinding) source writer stage external sender route decode context (erase state)
   simp only [StateT.run] at actual
   rw [actual]
   simp only [Functor.map_map, erase,
-    inputs_address _ _ (PqxdhInitialBuilderContext.frame_address sender route decode context)]
+    inputs_address _ _ (PqxdhInitialBuilderContext.frame_address (completedBinding := completedBinding) sender route decode context)]
 
 def updated (request : JointKdfAddress) (output : FullOutput) (state : State A N C) : State A N C :=
   (((state.1.1.1, (state.1.1.2.1.cacheQuery request output,
@@ -84,8 +85,8 @@ theorem frame_hit (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedSh
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (context : Context extra M P I D K Result S B) (state : State A N C) (output : FullOutput)
     (found : state.1.1.2.1 (address context) = some output) :
-    (handler source writer stage external (frame sender route decode context).1).run state =
-      pure (PqxdhInitialParentBuilderContext.reply sender route decode context output, updated (address context) output state) := by
+    (handler source writer stage external (frame (completedBinding := completedBinding) sender route decode context).1).run state =
+      pure (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode context output, updated (address context) output state) := by
   rw [logged_frame_step, RawCtxSelectiveChainGame.private_hit source stage (address context) state.1.1.2 output found]
   rfl
 
@@ -97,8 +98,8 @@ theorem frame_miss (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedS
     (missing : state.1.1.2.1 (address context) = none)
     (matching : RawCtxSelectiveChainGame.matched state.1.1.2.2 (address context) = true)
     (before : state.1.1.2.2.depth < stage) :
-    (handler source writer stage external (frame sender route decode context).1).run state =
-      (fun output => (PqxdhInitialParentBuilderContext.reply sender route decode context output,
+    (handler source writer stage external (frame (completedBinding := completedBinding) sender route decode context).1).run state =
+      (fun output => (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode context output,
         updated (address context) output state)) <$> ($ᵗ FullOutput) := by
   rw [logged_frame_step, RawCtxSelectiveChainGame.private_selected source stage (address context) state.1.1.2 missing matching before]
   simp only [Functor.map_map, updated]
@@ -112,10 +113,10 @@ theorem origin_frame_miss (source : FixedHkdfSha512NoSaltSource) (writer : RawCt
     (missing : state.1.1.2.1 (address context.original) = none)
     (matching : RawCtxSelectiveChainGame.matched state.1.1.2.2 (address context.original) = true)
     (before : state.1.1.2.2.depth < stage) :
-    (handler source writer stage external (PqxdhInitialOriginContext.frame mark sender route decode context).1).run state =
-      (fun output => (PqxdhInitialParentBuilderContext.reply sender route decode context.original output,
+    (handler source writer stage external (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode context).1).run state =
+      (fun output => (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode context.original output,
         updated (address context.original) output state)) <$> ($ᵗ FullOutput) :=
-  frame_miss source writer stage external sender route decode context.original state missing matching before
+  frame_miss (completedBinding := completedBinding) source writer stage external sender route decode context.original state missing matching before
 
 end BeaconcryptCore.Computational.PqxdhInitialNativeResponse
 

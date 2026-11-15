@@ -38,7 +38,7 @@ noncomputable def project (self : beaconcrypt_public_wrapper.beacon.Beacon) (pen
 
  theorem active (coins : QueryImpl unifSpec (StateT P ProbComp))
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (erased : commitment.CommitmentTranscript)
     (parseEd : Slice U8 → StateT P ProbComp (RustM (core.result.Result ed.PublicKey ed.Error)))
     (verifyEd : Slice U8 → ed.PublicKey → StateT P ProbComp (RustM (core.option.Option (alloc.vec.Vec U8))))
@@ -103,7 +103,7 @@ noncomputable def project (self : beaconcrypt_public_wrapper.beacon.Beacon) (pen
 omit platform [PublicWrapperPlatform.CryptoOperations] original localOriginal in
  theorem project_run (coins : QueryImpl unifSpec (StateT P ProbComp))
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (self : beaconcrypt_public_wrapper.beacon.Beacon)
     (pending : registration.BeaconPending) (input : Slice U8) (owner : Owner source) (scalar : PqxdhJointGapDh.ScalarBytes)
     (before : RegistrationNativeExperiment.State n KemSK source) (previous : P) :
@@ -120,7 +120,7 @@ omit platform [PublicWrapperPlatform.CryptoOperations] original localOriginal in
 
  theorem observed (coins : QueryImpl unifSpec (StateT P ProbComp))
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (erased : commitment.CommitmentTranscript)
     (parseEd : Slice U8 → StateT P ProbComp (RustM (core.result.Result ed.PublicKey ed.Error)))
     (verifyEd : Slice U8 → ed.PublicKey → StateT P ProbComp (RustM (core.option.Option (alloc.vec.Vec U8))))

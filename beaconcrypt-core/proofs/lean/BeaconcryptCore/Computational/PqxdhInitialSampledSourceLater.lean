@@ -9,6 +9,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialSampledSourceLater
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf
 open PqxdhInitialSourceInitialSecrecy PqxdhInitialSampledResources
 variable {ι M P I D K X Response A N : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -18,12 +20,12 @@ variable (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writ
   (qPost qPre qApplication qSelector qAux qKnown : Nat)
   (sourceCaps : ∀ input, Sum.inr input ∈ support prior → Caps input qPost qPre qApplication qSelector qAux qKnown)
 
-local notation "sample" => PqxdhInitialSampledParent.sample source writer sender route decode depth prior
-local notation "address" => PqxdhInitialSampledParent.address (prior := prior) source writer sender route decode depth
-local notation "actualGame" => PqxdhInitialSampledParentSecrecy.actual source writer sender route decode depth remaining sample address
-local notation "randomGame" => PqxdhInitialSampledParentSecrecy.random source writer sender route decode depth remaining sample address
-local notation "sourceGame" => PqxdhInitialSourceSampled.game source writer sender route decode prior
-local notation "primitiveLoss" => PqxdhInitialSampledReduction.loss source writer sender route decode depth remaining prior qPost qKnown
+local notation "sample" => PqxdhInitialSampledParent.sample (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth prior
+local notation "address" => PqxdhInitialSampledParent.address (associatedData := associatedData) (completedBinding := completedBinding) (prior := prior) source writer sender route decode depth
+local notation "actualGame" => PqxdhInitialSampledParentSecrecy.actual (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth remaining sample address
+local notation "randomGame" => PqxdhInitialSampledParentSecrecy.random (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth remaining sample address
+local notation "sourceGame" => PqxdhInitialSourceSampled.game (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode prior
+local notation "primitiveLoss" => PqxdhInitialSampledReduction.loss (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth remaining prior qPost qKnown
 local notation "collision" => ((8 + qPost * 67 : Nat) : ENNReal) * (2 ^ 256 : ENNReal)⁻¹
 local notation "cacheSum" => ∑ j ∈ Finset.range (7 + qPost * 67), ((j + 1 : Nat) : ENNReal) * (2 ^ 256 : ENNReal)⁻¹
 
@@ -33,11 +35,11 @@ theorem source_bound (hmac : HmacSha512) (correct : SourceFullCorrect source hma
     (position : ∀ input, Sum.inr input ∈ support prior → input.number.val = (depth + 1) + remaining + 1) :
     ENNReal.ofReal ((sourceGame (depth + 1)).boolDistance (sourceGame (depth + 2))) ≤
       ENNReal.ofReal (primitiveLoss hmac) + 2 * collision + cacheSum := by
-  have realBound := PqxdhInitialSampledSourceEndpoints.real_bound source writer sender route decode depth remaining prior qPost
+  have realBound := PqxdhInitialSampledSourceEndpoints.real_bound (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth remaining prior qPost
     (fun input supported => (sourceCaps input supported).postBound) position
-  have randomBound := PqxdhInitialSampledSourceEndpoints.random_bound source writer sender route decode depth remaining prior qPost
+  have randomBound := PqxdhInitialSampledSourceEndpoints.random_bound (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth remaining prior qPost
     (fun input supported => (sourceCaps input supported).postBound) position
-  have primitive := PqxdhInitialSampledReduction.bound source writer sender route decode depth remaining prior
+  have primitive := PqxdhInitialSampledReduction.bound (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth remaining prior
     qPost qPre qApplication qSelector qAux qKnown sourceCaps hmac correct
   have triangle : (sourceGame (depth + 1)).boolDistance (sourceGame (depth + 2)) ≤
       (sourceGame (depth + 1)).boolDistance actualGame + (actualGame).boolDistance randomGame +

@@ -45,7 +45,7 @@ theorem encoded_frame_len_total (sequence sender : Std.U64) (ciphertextLength : 
     ∃ result, transport.encoded_frame_len sequence sender ciphertextLength = ok result :=
   (BeaconcryptCore.Computational.TransportSizingBridge.encoded_frame_len_exact sequence sender ciphertextLength).imp (fun _ normal => normal.1)
 
-theorem encoded_init_len_total (lengths : Array Std.Usize 6#usize) :
+theorem encoded_init_len_total (lengths : Array Std.Usize 4#usize) :
     ∃ result, transport.encoded_init_len lengths = ok result :=
   (BeaconcryptCore.Computational.TransportSizingBridge.encoded_init_len_exact lengths).imp (fun _ normal => normal.1)
 

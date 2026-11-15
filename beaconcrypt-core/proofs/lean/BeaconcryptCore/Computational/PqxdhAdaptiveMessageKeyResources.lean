@@ -7,6 +7,8 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option maxRecDepth 2048
 namespace BeaconcryptCore.Computational.PqxdhAdaptiveMessageKeyResources
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhAdaptiveTargetPost PqxdhAdaptiveAcceptedResult PqxdhAdaptiveCommonResult
 open PqxdhAdaptiveGeneratedResult PqxdhInitializerSecrecy PqxdhChallengeSecretRouting
 open PqxdhFullSecretInputKdf PqxdhOrderedChainHybrids
@@ -28,7 +30,7 @@ variable [DecidableEq Choice]
 variable (c : PqxdhAuthenticatedRootBudgets.Certificate env baseImpl kem program (mapPost post Prod.snd))
 
 variable (selected : Choice)
-local notation "sourcePrior" => PqxdhInitialPreparedSourceInput.prior env baseImpl kem attachedVerify primitives program
+local notation "sourcePrior" => PqxdhInitialPreparedSourceInput.prior (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program
   (mapPost post (choose selected)) (Target.owner (targets selected)) (Target.number (targets selected))
   (Target.ancestors (targets selected)) (Target.disclosed (targets selected))
 
@@ -43,10 +45,10 @@ local notation "qSample" => qPrior + (64 + PqxdhInitialSourcePreparedSecrecy.sam
 
 /-- First-record key-free preparation pays actual authenticated preparation plus shared64, nonce12 and nextchain32; the external selected key is charged separately to its primitive challenger. -/
 theorem first_prepare :
-    (PqxdhAdaptiveMessageKeySource.firstPrepare env baseImpl kem attachedVerify primitives program post targets selected).IsTotalQueryBound
+    (PqxdhAdaptiveMessageKeySource.firstPrepare (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post targets selected).IsTotalQueryBound
       (qPrior + (64 + (12 + 32))) := by
   unfold PqxdhAdaptiveMessageKeySource.firstPrepare
-  apply isTotalQueryBound_bind (PqxdhInitialPreparedSourceCaps.prior_uniform env baseImpl kem attachedVerify primitives program
+  apply isTotalQueryBound_bind (PqxdhInitialPreparedSourceCaps.prior_uniform (completedBinding := completedBinding) (associatedData := associatedData) env baseImpl kem attachedVerify primitives program
     (mapPost post (choose selected)) projected (targets selected).owner (targets selected).number
     (targets selected).ancestors (targets selected).disclosed)
   intro context
@@ -58,14 +60,14 @@ theorem first_prepare :
 
 /-- Later-record preparation additionally pays the actual stopped-source prefix and its complete76-byte parent draw, followed by nonce12 and nextchain32. No opaque ambient work is assigned zero cost. -/
 theorem later_prepare (depth : Nat) :
-    (PqxdhAdaptiveMessageKeySource.laterPrepare env baseImpl kem attachedVerify primitives program post targets selected depth).IsTotalQueryBound
+    (PqxdhAdaptiveMessageKeySource.laterPrepare (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post targets selected depth).IsTotalQueryBound
       (qSample + (76 + (12 + 32))) := by
-  have sampled := PqxdhInitialSampledResources.sample_uniform env.source env.recordWriter env.senderId env.route env.decode depth
+  have sampled := PqxdhInitialSampledResources.sample_uniform (associatedData := associatedData) (completedBinding := completedBinding) env.source env.recordWriter env.senderId env.route env.decode depth
     qPost qCallback qCallback qSelector c.qAux qKnown sourcePrior
-    (PqxdhInitialPreparedSourceCaps.supported_caps env baseImpl kem attachedVerify primitives program
+    (PqxdhInitialPreparedSourceCaps.supported_caps (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program
       (mapPost post (choose selected)) projected (targets selected).owner (targets selected).number
       (targets selected).ancestors (targets selected).disclosed)
-    qPrior (PqxdhInitialPreparedSourceCaps.prior_uniform env baseImpl kem attachedVerify primitives program
+    qPrior (PqxdhInitialPreparedSourceCaps.prior_uniform (completedBinding := completedBinding) (associatedData := associatedData) env baseImpl kem attachedVerify primitives program
       (mapPost post (choose selected)) projected (targets selected).owner (targets selected).number
       (targets selected).ancestors (targets selected).disclosed)
   unfold PqxdhAdaptiveMessageKeySource.laterPrepare RawCtxSelectedParentCandidates.sample

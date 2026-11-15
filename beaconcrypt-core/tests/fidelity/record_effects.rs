@@ -55,7 +55,7 @@ const BODIES: &[(&str, &str, &str, &str, &str, &str, &str)] = &[
 		"symmetric_ratchet_hkdf",
 		"",
 		"",
-		"const{assert!(OUTPUT_SIZE<=255*64)};letprk=crypto_kdf::hkdf::sha512::extract(None,request.input()).expect(\"HKDF-SHA-512extractacceptseveryfixed-widthratchetchain\");letmutoutput=Zeroizing::new([0u8;OUTPUT_SIZE]);crypto_kdf::hkdf::sha512::expand_into(&mutoutput[..],Some(request.info()),&prk).expect(\"thefixedratchetoutputsizesarebelowtheHKDF-SHA-512limit\");*output",
+		"const{assert!(OUTPUT_SIZE<=255*64)};letprk=crypto_kdf::hkdf::sha512::extract(None,input).expect(\"HKDF-SHA-512extractacceptseveryfixed-widthratchetchain\");letmutoutput=Zeroizing::new([0u8;OUTPUT_SIZE]);crypto_kdf::hkdf::sha512::expand_into(&mutoutput[..],Some(info),&prk).expect(\"thefixedratchetoutputsizesarebelowtheHKDF-SHA-512limit\");*output",
 		"ratchet::symmetric_ratchet_hkdf",
 	),
 	(

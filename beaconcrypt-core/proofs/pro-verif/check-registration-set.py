@@ -117,9 +117,9 @@ def check_record_effect_source(root):
             "",
             [
                 "const { assert!(OUTPUT_SIZE <= 255 * 64) };",
-                "crypto_kdf::hkdf::sha512::extract(None, request.input())",
+                "crypto_kdf::hkdf::sha512::extract(None, input)",
                 "let mut output = Zeroizing::new([0u8; OUTPUT_SIZE]);",
-                "crypto_kdf::hkdf::sha512::expand_into(&mut output[..], Some(request.info()), &prk)",
+                "crypto_kdf::hkdf::sha512::expand_into(&mut output[..], Some(info), &prk)",
                 "*output",
             ],
         ),
@@ -398,7 +398,7 @@ def check_source_order():
         [
             "let control = self.control;",
             "let registration = decode_init(buffer)?;",
-            "InitPacket::from_slices(registration.identity_key, registration.pre_key, registration.one_time_key, registration.pq_key, registration.mldsa_public_key, registration.signature,)",
+            "InitPacket::from_slices(registration.identity_key, registration.pre_key, registration.one_time_key, registration.pq_key,)",
             "auth::authenticate_init(self.authentication_pin()?, packet)?",
             "Some(beaconcrypt_core::peer::begin_registration_lookup(control, authenticated,))",
         ],
@@ -434,14 +434,10 @@ def check_source_order():
             "InitAuthentication::Accepted(authenticated) => return Some(authenticated),",
             "InitAuthentication::HashRequested(pending)",
             "let hash = execute_hash(&pending.request()); pending.resume(hash)",
-            "InitAuthentication::MldsaVerificationRequested(pending)",
-            "let verified = verify_requested(&pending.request()); pending.resume(verified)",
             "InitAuthentication::Ed25519VerificationRequested(pending)",
             "beaconcrypt_crypto::crypto_sign::PublicKey::from_bytes(request.public_key)",
             "beaconcrypt_crypto::crypto_sign::verify(request.signed, &public_key)",
             "pending.resume(opened.as_deref())",
-            "InitAuthentication::ServerFingerprintRequested(pending)",
-            "InitAuthentication::BeaconFingerprintRequested(pending)",
         ],
     )
     source_order(
@@ -476,15 +472,25 @@ def check_source_order():
     source_order(
         root,
         "beaconcrypt-core/src/registration.rs",
-        "pub fn resume(self, verified: bool)",
+        "pub fn resume(self, hash:",
         [
-            "if !verified || self.state.packet.identity_key[0] != SIGN_TYPE_ED25519",
-            "InitAuthentication::Rejected",
+            "let Some(init_hash) = hash else",
+            "if self.fields.fields().identity_key[0] != SIGN_TYPE_ED25519 { return InitAuthentication::Rejected; }",
             "stage: SignedKeyStage::PqKey",
         ],
-        "impl<'a> InitMldsaVerification<'a>",
+        "impl InitHash",
     )
-    scope = "impl<'a> InitEd25519Verification<'a>"
+    registration_source = (root / "beaconcrypt-core/src/registration.rs").read_text()
+    for obsolete in (
+        "InitMldsaVerification",
+        "ServerFingerprintRequested",
+        "BeaconFingerprintRequested",
+    ):
+        if obsolete in registration_source:
+            raise ValueError(
+                "removed Beacon ML admission/fingerprint stage restored: " + obsolete
+            )
+    scope = "impl InitEd25519Verification"
     source_order(
         root,
         "beaconcrypt-core/src/registration.rs",
@@ -494,9 +500,10 @@ def check_source_order():
             "SignedKeyStage::PreKey =>",
             "self.pre_key = pre_key; self.stage = SignedKeyStage::OneTimeKey;",
             "SignedKeyStage::OneTimeKey =>",
-            "InitKex::from_encoded(*self.state.packet.identity_key, self.pre_key, one_time_key, self.pq_key,)",
+            "InitKex::from_encoded(*self.state.fields.fields().identity_key, self.pre_key, one_time_key, self.pq_key,)",
             "validate_init_kex(message)",
-            "InitAuthentication::ServerFingerprintRequested",
+            "RegistrationBinding::new(self.state.server_pin, self.state.init_hash, self.state.fields,)",
+            "InitAuthentication::Accepted(AuthenticatedInit { registration, binding, })",
             "SignedKeyStage::PqKey =>",
             "self.pq_key = pq_key; self.stage = SignedKeyStage::PreKey;",
         ],

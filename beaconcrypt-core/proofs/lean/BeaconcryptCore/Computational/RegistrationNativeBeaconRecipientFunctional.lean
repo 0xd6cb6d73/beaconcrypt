@@ -18,7 +18,7 @@ open RegistrationNativeMldsaShared (Local lower)
 open RegistrationNativeKemCountedRecipientSample (Draw)
 variable {n count : Nat} {ι KemSK : Type} {base : OracleSpec ι} {source : RegistrationNativeMldsa.Source}
 variable (setup : Setup base KemSK) (checks : Checks) (functional : FunctionalDecapsulation setup.kem)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (owner : Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes)
 variable (authenticated : registration.AuthenticatedResponse)
 variable (input : PqxdhBeaconPhase2Preparation.Inputs registration.AuthenticatedResponse)

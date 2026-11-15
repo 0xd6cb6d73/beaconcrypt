@@ -6,6 +6,7 @@ import BeaconcryptCore.Computational.CborRawHeadlineStartup
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.CborRawIdealWorldProgram
 open PqxdhServerAuthExperiment (Setup Codec Checks)
 open PqxdhDeploymentIdealParams (Target Params drawParams)
@@ -20,18 +21,19 @@ variable (setup : Setup baseSpec KemSK) (wire : Codec Reader Response)
     (target : Target count) (ensureInit : StateT A ProbComp Bool) (runtime : A)
 
 abbrev Output (KemSK Result : Type) (count : Nat) :=
-  Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × Result ×
+  Option (PqxdhRegistrationJointServerBirth.ClientCreated PqxdhTranscriptAd.AssociatedData × Result ×
     (Public × EnvState KemSK (Params KemSK count × SplitBk)))
 
 noncomputable def after (parameters : Params KemSK count)
-    (created : PqxdhLiveServerConstruction.Created Unit) (work : OracleComp Spec Result) :
+    (created : PqxdhLiveServerConstruction.Created PqxdhTranscriptAd.AssociatedData) (work : OracleComp Spec Result) :
     OracleComp (WorldSpec 2) (Output KemSK Result count) := do
   let _ ← (WorldSpec 2).query (.inl created)
   let result ← (simulateQ (PqxdhRecordLiftInterface.native (CborRawEnvironment.environment
     (PqxdhDeploymentIdealEnv.envG setup (CborRawCompile.sourceCodec wire parse) checks target parameters ensureInit 0
       runtime) setup.serverKeyId)) work).run
       (⟨PqxdhDeploymentCompile.Log.empty, setup.serverKeyId⟩,
-        PqxdhDeploymentEnvironment.envInitial created (PqxdhDeploymentIdealSteps.splitInit created))
+        PqxdhDeploymentEnvironment.envInitial (PqxdhDeploymentEnvironment.eraseCreatedMetadata created)
+          (PqxdhDeploymentIdealSteps.splitInit (PqxdhDeploymentEnvironment.eraseCreatedMetadata created)))
   pure (some (PqxdhRegistrationJointServerBirth.encode created, result.1,
     CborRawIdealProvenanceParameter.put parameters result.2))
 
@@ -65,7 +67,8 @@ theorem program (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (Mo
       (fun result => result.1.map fun created =>
         (created, CborRawIdealProvenanceParameter.put parameters
           ((⟨PqxdhDeploymentCompile.Log.empty, setup.serverKeyId⟩ : Public),
-            PqxdhDeploymentEnvironment.envInitial created (PqxdhDeploymentIdealSteps.splitInit created)))) <$>
+            PqxdhDeploymentEnvironment.envInitial (PqxdhDeploymentEnvironment.eraseCreatedMetadata created)
+          (PqxdhDeploymentIdealSteps.splitInit (PqxdhDeploymentEnvironment.eraseCreatedMetadata created))))) <$>
         (PqxdhLiveServerConstruction.construct setup.joint ensureInit 0 setup.serverKeyId none).run runtime := by
     simp only [environment, CborRawEnvironment.environment, PqxdhDeploymentIdealEnv.envGD,
       PqxdhDeploymentEnvironmentDraw.paramEnv, PqxdhDeploymentEnvironment.start, map_bind, Functor.map_map, Option.map_map]
@@ -90,7 +93,8 @@ theorem program (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (Mo
             (PqxdhDeploymentSecrecy.wrap setup.source.crypto (CborTaggedSimulation.boundaryWire wire parse)
               setup.serverKeyId bounds (PqxdhDeploymentInterface.asModeO mode adversary))
             ((⟨PqxdhDeploymentCompile.Log.empty, setup.serverKeyId⟩ : Public),
-              PqxdhDeploymentEnvironment.envInitial created (PqxdhDeploymentIdealSteps.splitInit created))
+              PqxdhDeploymentEnvironment.envInitial (PqxdhDeploymentEnvironment.eraseCreatedMetadata created)
+          (PqxdhDeploymentIdealSteps.splitInit (PqxdhDeploymentEnvironment.eraseCreatedMetadata created)))
           dsimp only [StateT.run] at nativeEq
           dsimp only [environment]
           rw [nativeEq]

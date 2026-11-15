@@ -31,7 +31,7 @@ private theorem assemble_view (result : ((Value × RegistrationNativeBeaconFront
 /-- Main's actual Beacon wrapper preserves the whole literal owner/Env reply and native poststate from proved concrete callback nonread laws. -/
 theorem beacon_input (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK mlSource RegistrationServerRoleBackend.State Value)
     (stable : RegistrationNativeBeaconEnvView.Stable work) :
     RegistrationStateView.Stable nativeView (RegistrationNativeExperiment.beacon setup checks representation created work) := by

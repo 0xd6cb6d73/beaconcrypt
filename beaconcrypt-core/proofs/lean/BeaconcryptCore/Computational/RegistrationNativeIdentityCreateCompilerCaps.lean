@@ -24,7 +24,7 @@ theorem dynamic_coins_zero (work : ProbComp Value) :
 
 theorem query_bound (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (RegistrationNativeIdentityFrontend.Trusted n KemSK).Domain)
     (before : RegistrationNativeIdentityWorld.Context n KemSK) :
     ((RegistrationNativeIdentityCompiler.implementation (source := source) setup checks representation created query).run before).IsQueryBoundP
@@ -44,7 +44,7 @@ theorem query_bound (setup : Setup base KemSK) (checks : Checks)
 /-- The complete actual stateful compiler preserves a trusted-AST creation cap for every initial public context. -/
 theorem program_bound (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp (RegistrationNativeIdentityFrontend.Trusted n KemSK) Value) (cap : Nat)
     (bounded : work.IsQueryBoundP (Creates n KemSK) cap) (before : RegistrationNativeIdentityWorld.Context n KemSK) :
     ((simulateQ (RegistrationNativeIdentityCompiler.implementation (source := source) setup checks representation created) work).run before).IsQueryBoundP
@@ -61,7 +61,7 @@ theorem dynamic_bound (work : OracleComp DynamicSpec Value) (cap : Nat) (bounded
 /-- The whole executable native Beacon wrapper retains the same ordinary indexed creation bill. -/
 theorem beacon_bound (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeIdentityFrontend.M n KemSK RegistrationServerRoleBackend.State source Value) (cap : Nat)
     (bounded : ∀ owners env, ((work.run owners).run env).IsQueryBoundP (Creates n KemSK) cap)
     (before : RegistrationNativeIdentityMain.State n KemSK source) :

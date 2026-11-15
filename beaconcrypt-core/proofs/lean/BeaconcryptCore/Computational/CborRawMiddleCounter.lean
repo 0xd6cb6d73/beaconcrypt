@@ -130,14 +130,15 @@ theorem allocation_of_shape (write : ResponseFields → Option Pqxdh.Bytes)
 
 /-- The generic builder's allocation relation follows from the actual successful prepare result, without assuming any property of an existential candidate. -/
 theorem generic_allocation (write : ResponseFields → Option Pqxdh.Bytes)
-    (calls : RawCtxChainOwner.Calls Kernel (OracleComp spec))
+    (associatedData : PqxdhTranscriptAd.AssociatedData) (calls : RawCtxChainOwner.Calls Kernel (OracleComp spec))
     (aux : QueryImpl AuxSpec (OracleComp spec))
     (writes : ∀ fields, ∀ bytes ∈ support (aux (.write fields)), bytes = write fields)
     (initial : RustM Kernel) (pending : pqxdh.PendingServerRegistration)
     (data : Option Pqxdh.Bytes) (metadata : PeerMetadata) (state : State Kernel Metadata PeerMetadata Consumed)
     (result : RustM (Option Response × State Kernel Metadata PeerMetadata Consumed))
     (supported : result ∈ support
-      (PqxdhServerAuthSendFactor.genericBuild calls aux initial pending data metadata state)) :
+      (PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData) calls aux initial pending data
+        metadata state)) :
     Allocation state result := by
   apply allocation_of_shape write state metadata result
   unfold PqxdhServerAuthSendFactor.genericBuild PqxdhInitialGenericBuilder.continueRust at supported
@@ -161,8 +162,8 @@ theorem generic_allocation (write : ResponseFields → Option Pqxdh.Bytes)
                 simp at available
               have counter := (PqxdhRegistrationResponse.prepared_counter state.control pending
                 ⟨state.server.identity, state.identityKeyId⟩ _ candidate prepared).2.2
-              exact candidateW_shape write _ calls aux writes initial candidate counter data metadata state
-                vacant result supported
+              exact candidateW_shape associatedData write _ calls aux writes initial candidate counter data metadata
+                state vacant result supported
             · simp only [support_pure, Set.mem_singleton_iff] at supported
               subst supported
               rfl
@@ -200,22 +201,23 @@ def NativeAllocation (before : PqxdhServerAuthEntryFactor.ServerState) :
 
 /-- Replacing the private send chains by labels leaves the exact allocation relation unchanged. -/
 theorem free_allocation (write : ResponseFields → Option Pqxdh.Bytes)
-    (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (factor : PqxdhServerAuthSendFactor.Factor)
+    (associatedData : PqxdhTranscriptAd.AssociatedData) (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (factor : PqxdhServerAuthSendFactor.Factor)
     (pending : pqxdh.PendingServerRegistration) (data : Option Pqxdh.Bytes)
     (server : PqxdhServerAuthEntryFactor.ServerState)
     (result : RustM (Option Response × PqxdhServerAuthEntryFactor.ServerState))
     (supported : result ∈ support (simulateQ (writeImpl write)
-      (PqxdhDeploymentSplitFactor.freeBuild source factor pending data server))) :
+      (PqxdhDeploymentSplitFactor.freeBuild associatedData source factor pending data server))) :
     NativeAllocation server result := by
-  rw [← PqxdhDeploymentSplitFactor.factored_free (writeImpl write) source factor pending data server] at supported
+  rw [← PqxdhDeploymentSplitFactor.factored_free associatedData (writeImpl write) source factor pending data server]
+    at supported
   unfold PqxdhServerAuthLoggedSendFactor.factored at supported
   rw [support_map] at supported
   obtain ⟨inner, member, rfl⟩ := supported
-  have shape := generic_allocation write _ (fun request => writeImpl write (.inr request))
+  have shape := generic_allocation write associatedData _ (fun request => writeImpl write (.inr request))
     (fun fields bytes written => by
       change bytes ∈ support (pure (write fields) : OracleComp TailSpec _) at written
       rw [support_pure, Set.mem_singleton_iff] at written
-      exact written) _ pending data () _ inner member
+      exact written) _ pending data associatedData _ inner member
   rcases inner with ⟨(_ | response), after⟩ | error | _
   · change after.control = server.control
     exact shape
@@ -227,15 +229,16 @@ theorem free_allocation (write : ResponseFields → Option Pqxdh.Bytes)
 /-- The actual factored hidden service inherits the allocation relation before the source scheduler settles its Rust result. -/
 theorem hidden_allocation (setup : Setup baseSpec KemSK) (codec : Codec Reader WireResponse) (checks : Checks)
     (value : PqxdhRegistrationJointKemEntryFactor.Output) (token : PqxdhServerRelatedRootConsumer.Returned)
-    (data : Option Pqxdh.Bytes) (server : PqxdhServerAuthEntryFactor.ServerState)
+    (data : Option Pqxdh.Bytes) (associatedData : PqxdhTranscriptAd.AssociatedData)
+    (server : PqxdhServerAuthEntryFactor.ServerState)
     (primitive : RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext))
     (result : RustM (Option Response × PqxdhServerAuthEntryFactor.ServerState) ×
       RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext))
     (supported : result ∈ support
       (((PqxdhRegistrationJointKemEntryFactor.factoredHidden setup codec checks value).hiddenBuild
-        token data server).run primitive)) : NativeAllocation server result.1 := by
-  apply free_allocation codec.write2 setup.source (PqxdhServerAuthCtxMaterial.factor value) token.pending data
-    server result.1
+        token data associatedData server).run primitive)) : NativeAllocation server result.1 := by
+  apply free_allocation codec.write2 associatedData setup.source (PqxdhServerAuthCtxMaterial.factor value)
+    token.pending data server result.1
   apply OracleComp.support_simulateQ_run'_subset (PqxdhServerAuthExperiment.tailImpl setup codec checks) _ primitive
   rw [StateT.run'_eq, support_map]
   refine ⟨result, ?_, rfl⟩
@@ -258,12 +261,22 @@ theorem hidden_build_assignment (setup : Setup baseSpec KemSK) (codec : Codec Re
     subst supported
     rfl
   · rename_i token found
-    rw [PqxdhDeploymentBackend.nativeCoins_bind, mem_support_bind_iff] at supported
+    split at supported
+    · rw [PqxdhDeploymentBackend.nativeSet_run_bind] at supported
+      simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
+      subst supported
+      rfl
+    rw [StateT.run_bind, mem_support_bind_iff] at supported
+    obtain ⟨hashed, hashing, supported⟩ := supported
+    simp only [PqxdhServerAuthNative.nativeHash, StateT.run, support_map, Set.mem_image] at hashing
+    obtain ⟨⟨digest, cache⟩, _, rfl⟩ := hashing
+    rw [PqxdhDeploymentBackend.nativeGet_bind, PqxdhDeploymentBackend.nativeCoins_bind, mem_support_bind_iff]
+      at supported
     obtain ⟨built, builtMember, supported⟩ := supported
     simp only [PqxdhServerAuthNative.nativeSet, StateT.run] at supported
     subst supported
-    have shape := hidden_allocation setup codec checks value token data before.2.server
-      ([], before.2.ctx) built builtMember
+    have shape := hidden_allocation setup codec checks value token data (PqxdhTranscriptAd.adOf digest)
+      before.2.server ([], cache) built builtMember
     rcases built with ⟨⟨(_ | response), after⟩ | error | _, primitive⟩
     · exact (congrArg (fun control => control.last_key_id) shape).symm
     · exact shape
@@ -368,10 +381,10 @@ theorem accept_inactive_counter (setup : Setup baseSpec KemSK) (codec : Codec Re
     exact ⟨logged, loggedMember, rfl⟩
   apply native_noBuild setup codec checks seed (.inl (.inr (.accept raw)))
     (by simp [PqxdhRegistrationJointRevealCosts.sourceKind, PqxdhRegistrationSchedule.sourceKind])
-    (⟨before, []⟩ : PqxdhRegistrationSchedule.State KemSK)
-    (logged.1.1, ⟨logged.2, []⟩)
+    (⟨before, [], fun _ => none⟩ : PqxdhRegistrationSchedule.State KemSK)
+    (logged.1.1, ⟨logged.2, [], fun _ => none⟩)
   change _ ∈ support ((fun answer : Option Nat × PqxdhServerAuthNative.NativeState KemSK => (answer.1,
-    (⟨answer.2, []⟩ : PqxdhRegistrationSchedule.State KemSK))) <$> _)
+    (⟨answer.2, [], fun _ => none⟩ : PqxdhRegistrationSchedule.State KemSK))) <$> _)
   rw [support_map]
   exact ⟨(logged.1.1, logged.2), plain, rfl⟩
 
@@ -450,8 +463,8 @@ theorem middle_hidden_finish (address : Nat) (raw : Pqxdh.Bytes) (before : Mid K
   rw [PqxdhDeploymentIdealPostChallenge.sourceMid_challenge setup codec route checks target parameters created
     address raw before hidden entry found, support_map] at supported
   obtain ⟨inner, member, rfl⟩ := supported
-  have frame := (PqxdhDeploymentIdealPostGoodFinish.groupedOwnerCE_footprint setup codec checks parameters raw
-    entry.owner (before.joint.shared, none) (before.backend.2.1, before.backend.1) inner member).1
+  have frame := (PqxdhDeploymentIdealPostGoodFinish.hashedOwnerCE_footprint setup codec checks parameters
+    (before.joint.inits address) raw entry.owner (before.joint.shared, none) (before.backend.2.1, before.backend.1) inner member).1
   exact congrArg (fun game => game.server.control.last_key_id) frame
 
 set_option backward.isDefEq.respectTransparency false in

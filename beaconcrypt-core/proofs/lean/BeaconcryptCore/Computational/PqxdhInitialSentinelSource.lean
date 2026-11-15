@@ -9,6 +9,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialSentinelSource
+variable (associatedData : Std.Array Std.U8 151#usize)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf
 open RawCtxSelectedParentTable PqxdhInitialGenericProtocolBuilder
 variable {A M P I D K : Type} {S B : Nat}
@@ -95,12 +96,12 @@ theorem selected_build (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
     (initial : RustM RawCtxSelectedChain.Kernel) (sender : M → Std.U64) (index : Fin S) (metadata : P)
     (ready : PqxdhPrivateAcceptedRoot.Ready)
     (state : PqxdhInitialGenericProtocol.State RawCtxSelectedChain.Kernel M P I D K A S B) :
-    (PqxdhInitialPrivateKdf.build source writer (priorKdf prior)
+    (PqxdhInitialPrivateKdf.build (associatedData := associatedData) source writer (priorKdf prior)
       (RawCtxSelectedChain.nativeKernel (RawCtxFreshChainCut.concreteChain target) <$> initial)
       aux sender index metadata ready).run
       (PqxdhInitialGenericProtocol.native (RawCtxSelectedChain.nativeKernel (RawCtxFreshChainCut.concreteChain target)) state) =
       Prod.map id (PqxdhInitialGenericProtocol.native (RawCtxSelectedChain.nativeKernel (RawCtxFreshChainCut.concreteChain target))) <$>
-        (build source (RawCtxSelectedParentCalls.labelCalls source writer prior (RawCtxInitialSentinel.entry other extra)
+        (PqxdhInitialGenericProtocolBuilder.build (associatedData := associatedData) source (RawCtxSelectedParentCalls.labelCalls source writer prior (RawCtxInitialSentinel.entry other extra)
           (RawCtxSelectedParentCalls.childResponse prior (RawCtxInitialSentinel.entry other extra) target)) aux initial
           sender index metadata ready).run state := by
   apply build_native
@@ -116,9 +117,9 @@ theorem supplied_source (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxM
     (state : PqxdhRegistrationProtocolState.State M P I D K A S B) :
     simulateQ (PqxdhInitialReplyErasure.supplied (RawCtxSelectedInitialConstructor.response64
       (RawCtxInitialSentinelSampler.join second other target)))
-      ((PqxdhInitialServiceBuilder.protocolBuild source writer aux sender index metadata ready).run state) =
+      ((PqxdhInitialServiceBuilder.protocolBuild (associatedData := associatedData) source writer aux sender index metadata ready).run state) =
       Prod.map id (PqxdhInitialGenericProtocol.native (RawCtxSelectedChain.nativeKernel (RawCtxFreshChainCut.concreteChain target))) <$>
-        (build source (RawCtxSelectedParentCalls.labelCalls source writer (PqxdhJointKdf.productionStream source.crypto)
+        (PqxdhInitialGenericProtocolBuilder.build (associatedData := associatedData) source (RawCtxSelectedParentCalls.labelCalls source writer (PqxdhJointKdf.productionStream source.crypto)
           (RawCtxInitialSentinel.entry other extra)
           (RawCtxSelectedParentCalls.childResponse (PqxdhJointKdf.productionStream source.crypto) (RawCtxInitialSentinel.entry other extra) target))
           aux (RawCtxInitialSentinelSampler.labelInitial second false other)
@@ -126,7 +127,7 @@ theorem supplied_source (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxM
             (PqxdhInitialGenericProtocol.fromNative PqxdhInitialSelectedBuilder.knownKernel state) := by
   rw [PqxdhInitialSuppliedBuilder.protocol_supplied, ← PqxdhInitialPrivateKdf.build_source,
     PqxdhInitialSelectedBuilder.kernel_response, ← prior_source]
-  simpa only [PqxdhInitialSelectedBuilder.known_state] using selected_build source writer
+  simpa only [PqxdhInitialSelectedBuilder.known_state] using selected_build (associatedData := associatedData) source writer
     (PqxdhJointKdf.productionStream source.crypto) other target extra aux
     (RawCtxInitialSentinelSampler.labelInitial second false other) sender index metadata
     (PqxdhInitialBuilderCut.eraseRoot ready)

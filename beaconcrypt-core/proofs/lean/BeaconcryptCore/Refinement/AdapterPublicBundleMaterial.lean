@@ -26,17 +26,14 @@ structure Getters (view : AdapterPublicWrapperState.MaterialView source KemSK) :
   ed : ∀ key, (crypto.edPublicBytes key).run = pure (.ok (view.edPublic key))
   kx : ∀ key, (crypto.kxPublicBytes key).run = pure (.ok (view.kxPublic key))
   kem : ∀ key, (crypto.kemPublicBytes key).run = pure (.ok (RegistrationNativeBeaconFrontend.pqArray (view.kemPublic key)))
-  mldsa : ∀ key, (localOps.auth_MldsaIdentity_public_key key).run = pure (.ok (view.mldsa key).publicKey)
 
 /-- Per-primitive functional effects, without a source controller or security conclusion premise. -/
 structure PublicationLeaves {self : beaconcrypt_public_wrapper.beacon.Beacon} where
   edSign : Slice U8 → m (core.result.Result (alloc.vec.Vec U8) ed.Error)
   hash : registration.HashRequest → m CtxRomAuth.CtxDigest
-  sign : registration.MldsaSigningRequest → m (core.option.Option (alloc.vec.Vec U8))
   edLaw : ∀ message, (crypto.edSign message self.identity_key.secret_key).run = RustM.ok <$> edSign message
   hashLaw : ∀ request, (children.executeHash request).run =
     (fun digest => .ok (some (RegistrationAuthenticationShared.digestArray digest))) <$> hash request
-  signLaw : ∀ request, (localOps.auth_MldsaIdentity_sign_requested self.authentication.identity request).run = RustM.ok <$> sign request
 
 def withMaterial (joint : PqxdhJointIdentity.Primitives) (dh : PqxdhJointGapDh.DhInterface joint)
     (self : beaconcrypt_public_wrapper.beacon.Beacon) (owner : RegistrationNativeBeaconFrontend.Owner source)
@@ -44,14 +41,15 @@ def withMaterial (joint : PqxdhJointIdentity.Primitives) (dh : PqxdhJointGapDh.D
     (prekey oneTime : beaconcrypt_crypto.crypto_kx.KeyPair) (kem : beaconcrypt_crypto.crypto_kem.mlkem768.KeyPair)
     {R : Type} (rng : R) : m (RustM (core.option.Option (alloc.vec.Vec U8) × beaconcrypt_public_wrapper.beacon.Beacon × R)) := (do
       let published ← RegistrationNativePlatformBeaconPublication.begin
-        (AdapterPublicInitPublication.outgoing (PublicationLeaves.hash (self := self) leaves) (PublicationLeaves.sign (self := self) leaves)
+        (AdapterPublicInitPublication.outgoing (PublicationLeaves.hash (self := self) leaves)
           (AdapterPublicInitPublication.edMethod (PqxdhRootTableInitialization.rootArray (joint.publicKeys owner.identitySeed).ed25519) (PublicationLeaves.edSign (self := self) leaves)))
         (fun signed => (children.encodeInit (AdapterPublicBundleBody.packet signed)).run)
         ⟨owner.pin.binding⟩
         ⟨PqxdhRootTableInitialization.rootArray (joint.publicKeys owner.identitySeed).ed25519, owner.prekeyPublic, RegistrationNativeBeaconFrontend.pqArray owner.kemPublic⟩
-        ⟨PqxdhRootTableInitialization.rootArray (dh.publicKey scalar)⟩ owner.pin owner.mldsa.publicKey
+        ⟨PqxdhRootTableInitialization.rootArray (dh.publicKey scalar)⟩ owner.pin
       pure (AdapterPublicBundlePublication.install self prekey oneTime kem rng published))
 
+omit platform localOps in
 theorem withKeys (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (getters : Getters (m := m) view) (joint : PqxdhJointIdentity.Primitives)
     (pool : PqxdhLiveKemBirth.Pool KemSK) (dh : PqxdhJointGapDh.DhInterface joint)
@@ -73,18 +71,17 @@ theorem withKeys (view : AdapterPublicWrapperState.MaterialView source KemSK)
   rw [AdapterPublicBundlePublication.withKeys self control prekey oneTime kem rng
     owner.prekeyPublic (PqxdhRootTableInitialization.rootArray (dh.publicKey scalar))
     (PqxdhRootTableInitialization.rootArray (joint.publicKeys owner.identitySeed).ed25519)
-    (RegistrationNativeBeaconFrontend.pqArray owner.kemPublic) owner.mldsa.publicKey
-    (PublicationLeaves.edSign (self := self) leaves) (PublicationLeaves.hash (self := self) leaves) (PublicationLeaves.sign (self := self) leaves)]
+    (RegistrationNativeBeaconFrontend.pqArray owner.kemPublic)
+    (PublicationLeaves.edSign (self := self) leaves) (PublicationLeaves.hash (self := self) leaves)]
   · rw [controlSame, related.pin]
   · simpa only [prekeyView.2] using getters.kx prekey.public_key
   · simpa only [oneTimeView.2] using getters.kx oneTime.public_key
   · simpa only [kemView.1] using getters.kem kem.public_key
   · simpa only [related.identityPublic] using getters.ed self.identity_key.public_key
-  · simpa only [related.mldsa] using getters.mldsa self.authentication.identity
   · exact (PublicationLeaves.edLaw (self := self) leaves)
   · exact (PublicationLeaves.hashLaw (self := self) leaves)
-  · exact (PublicationLeaves.signLaw (self := self) leaves)
 
+omit platform localOps in
 theorem fresh (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (getters : Getters (m := m) view) (joint : PqxdhJointIdentity.Primitives)
     (pool : PqxdhLiveKemBirth.Pool KemSK) (dh : PqxdhJointGapDh.DhInterface joint)
@@ -114,6 +111,7 @@ theorem fresh (view : AdapterPublicWrapperState.MaterialView source KemSK)
   exact ⟨generation.privateView scalar rng, generation.publicView scalar rng⟩
 
 
+omit platform localOps in
 theorem fresh_related (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (getters : Getters (m := m) view) (joint : PqxdhJointIdentity.Primitives)
     (pool : PqxdhLiveKemBirth.Pool KemSK) (dh : PqxdhJointGapDh.DhInterface joint)
@@ -136,6 +134,7 @@ theorem fresh_related (view : AdapterPublicWrapperState.MaterialView source KemS
   exact fresh view getters joint pool dh self owner world related leaves control phase.1 prekey kem
     phase.2.1 phase.2.2.1 generator rng sample generation state
 
+omit platform localOps in
 theorem with_coins_related (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (getters : Getters (m := m) view) (joint : PqxdhJointIdentity.Primitives)
     (pool : PqxdhLiveKemBirth.Pool KemSK) (dh : PqxdhJointGapDh.DhInterface joint)

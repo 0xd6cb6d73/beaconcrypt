@@ -20,11 +20,11 @@ abbrev Front (n : Nat) (Platform : Type) := RegistrationNativePlatformOriginFree
 abbrev Calls (View : Type) := List (Call PqxdhDeploymentInterface.FullSpec View)
 abbrev Client (n : Nat) (Platform Value : Type) := PqxdhRecordLiftIdeal.Client n (RegistrationNativeRecordPackage.Extra Platform) Value
 
-def plain (created : PqxdhLiveServerConstruction.Created Unit) (result : Value × Front n Platform) : Client n Platform Value :=
+def plain (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (result : Value × Front n Platform) : Client n Platform Value :=
   (RegistrationNativeRecordPackage.encode (some (PqxdhRegistrationJointServerBirth.encode created,
     (result.1,RegistrationNativeEntropyRestore.ledger result.2.1),result.2.2.1.1.2)),result.2.2.2)
 
-def pack (created : PqxdhLiveServerConstruction.Created Unit) (result : Value × (Front n Platform × Calls View)) : Client n Platform Value × Calls View :=
+def pack (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (result : Value × (Front n Platform × Calls View)) : Client n Platform Value × Calls View :=
   (plain created (result.1,result.2.1),result.2.2)
 
 variable (setup : Setup base KemSK) (source : RegistrationNativeMldsa.Source)

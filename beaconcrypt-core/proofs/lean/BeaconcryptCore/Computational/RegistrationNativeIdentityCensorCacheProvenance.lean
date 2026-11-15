@@ -3,7 +3,7 @@ import BeaconcryptCore.Computational.RegistrationNativeIdentityTemplateFirstOmit
 import BeaconcryptCore.Computational.RegistrationNativeIdentityStartupJournal
 import BeaconcryptCore.Computational.RegistrationNativeIdentityCensorPublicSource
 
-/-! Every cached physical address remains in the same actual chronological source journal. The invariant threads through canonical omitted attempts, optional source services and every public/template hash, beginning with the literal warm startup cache. -/
+/-! Every cached physical address remains in the same actual chronological source journal. The invariant threads through canonical omitted attempts, optional source services and every public/template hash, beginning with the actual empty startup journal. -/
 open OracleComp OracleSpec
 set_option autoImplicit false
 set_option warningAsError true
@@ -59,7 +59,7 @@ theorem query (joint : PqxdhJointIdentity.Primitives) (selected : Nat) (placehol
       obtain ⟨actual, _called, rfl⟩ := supported
       exact prior
 
-/-- Arbitrary adaptive operational source work retains the entire warm-cache provenance invariant. -/
+/-- Arbitrary adaptive operational source work retains the entire inherited-cache provenance invariant. -/
 theorem program (joint : PqxdhJointIdentity.Primitives) (selected : Nat) (placeholder : Ed25519Signature)
     (work : OracleComp Spec Value) (before : State) (prior : Known before) (result : Value × State)
     (supported : result ∈ support ((simulateQ (RegistrationNativeIdentityCensorSource.censored joint selected placeholder) work).run before)) :
@@ -74,13 +74,13 @@ theorem program (joint : PqxdhJointIdentity.Primitives) (selected : Nat) (placeh
     obtain ⟨middle, called, continued⟩ := supported
     exact ih middle.1 middle.2 (query joint selected placeholder request before prior middle called) result continued
 
-/-- Actual initialized source state has the genuine warmed Server pin cache and its known public-key address; it is never reset. -/
+/-- Actual initialized source state has the unchanged initial CTX cache and empty journal; pure pin selection creates no hash address. -/
 theorem initialized {n : Nat} {source : RegistrationNativeMldsa.Source}
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (ensureInit : StateT Unit ProbComp Bool)
     (identityIndex : Nat) (serverKeyId : Aeneas.Std.U64) (initial : RegistrationNativeExperiment.Initial n KemSK source)
     (reached : some initial ∈ support (RegistrationNativeExperiment.start setup source ensureInit identityIndex serverKeyId)) :
     Known ⟨PqxdhDynamicIdentityPool.initialState,
-      (RegistrationNativeWorldCache.cache initial.state, [PqxdhRefinement.absBytes initial.credential.publicKey]), none, none, none⟩ :=
+      (RegistrationNativeWorldCache.cache initial.state, []), none, none, none⟩ :=
   RegistrationNativeIdentityStartupJournal.start setup ensureInit identityIndex serverKeyId initial reached
 
 section Main
@@ -113,7 +113,7 @@ theorem callback (joint : PqxdhJointIdentity.Primitives) (selected position : Na
   exact main joint selected placeholder (frontend query)
     ((before.1.1, RegistrationNativeIdentityCensorCompiler.enter position query before.1.2), before.2) prior result supported
 
-/-- Every reached actual adaptive callback prefix retains the warmed cache's source-derived provenance. -/
+/-- Every reached actual adaptive callback prefix retains the inherited cache's source-derived provenance. -/
 theorem adaptive (joint : PqxdhJointIdentity.Primitives) (selected position : Nat) (placeholder : Ed25519Signature)
     (frontend : QueryImpl TypedSpec (RegistrationNativePlatformIdentityCtxMain.M n KemSK Platform source)) (work : OracleComp TypedSpec Value)
     (before : Full (n := n) (KemSK := KemSK) (Platform := Platform) (mlSource := source)) (prior : Known before.2)

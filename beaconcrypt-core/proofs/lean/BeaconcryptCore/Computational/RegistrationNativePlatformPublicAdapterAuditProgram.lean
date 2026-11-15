@@ -27,7 +27,7 @@ variable [originalContainers :ContainerOperations (RustT (StateT P ProbComp))]
 variable {setup :PqxdhServerAuthExperiment.Setup base KemSK} {checks :PqxdhServerAuthExperiment.Checks}
 variable (configuration :RegistrationNativePlatformPublicAdapterConfiguration.Configuration
   (P:=P) (E:=E) (R:=R) (Error:=Error) (source:=source) setup checks)
-variable (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
 local notation "wire"=>RegistrationNativePlatformOrdinaryExperiment.canonicalWire RegistrationNativeConcreteCodec.wire
 local notation "native"=>RegistrationNativePlatformPublicAdapterDispatcherCore.native configuration created credential
 local notation "typed"=>RegistrationNativePlatformPublicAdapterAuditModel.typed (n:=n) configuration created credential

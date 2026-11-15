@@ -48,7 +48,7 @@ theorem path_contents (setup : Setup base KemSK) (checks : Checks) (wire : Regis
         calls = leading ++ (⟨.inr (.finish index (some packet)), beforeFinish, .ok (some application), afterFinish⟩ : Call RegistrationNativeRawAdapter.TypedSpec Native) :: trailing ∧
         serverCall ∈ leading ∧ serverCall.query = .inr (.build serverIndex serverInput) ∧
         RegistrationServerSdkSource.take serverIndex serverCall.before.server = (some token, current) ∧ serverInput = some plaintext ∧
-        SourceAt serverCall receipt ∧ registration.begin_server_completion current.control current.pin availability token.agreement plaintext = .ok (.Ok serverInitial) ∧
+        SourceAt serverCall receipt ∧ BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission current.control current.pin availability token.agreement plaintext serverInitial ∧
         RegistrationServerRecordExecutor.Path serverInitial hashed ∧
         hashed.candidate.server_identity_public_key = packet.public.identity_key ∧
         hashed.candidate.ephemeral_public_key = packet.public.ephemeral_key ∧

@@ -15,6 +15,7 @@ Decorrelation caveat (route R1, sharpened for LQ-F): the post-run adversary know
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemTargets
 open PqxdhKemIndCca PqxdhInitializerSecrecy PqxdhServerAuthExperiment PqxdhJointIdentity
 open PqxdhSecretInputKdf (HmacOracle RootOutput hmacPrfRealGame hmacPrfRandomGame)
@@ -70,7 +71,7 @@ noncomputable def skelImplL (setup : Setup baseSpec KemSK) (codec : Codec Reader
 noncomputable def groupedClientL (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (selected : Nat)
     (challenge : MlKem768Ciphertext) (identityIndex : Nat) :
     QueryImpl (PqxdhDeploymentLaterServerSource.Spec KemSK)
-      (StateT (List EncodedEntry × Log) (OracleComp (GSpecL KemSK Response)))
+      (StateT ((List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) × Log) (OracleComp (GSpecL KemSK Response)))
   | .inl (.inl (.inr (.accept raw))) => fun held =>
       (fun answer => (answer.1, (held.1, held.2 ++ [answer.2]))) <$>
         ((GSpecL KemSK Response).query (.inr raw) : OracleComp (GSpecL KemSK Response) _)
@@ -122,7 +123,7 @@ theorem skelImplL_accept (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
 theorem groupedClientL_inl (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (selected : Nat)
     (challenge : MlKem768Ciphertext) (identityIndex : Nat)
     (query : (PqxdhRegistrationJointRevealSchedule.Spec KemSK).Domain)
-    (other : ∀ raw, query ≠ .inl (.inr (.accept raw))) (held : List EncodedEntry × Log) :
+    (other : ∀ raw, query ≠ .inl (.inr (.accept raw))) (held : (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) × Log) :
     groupedClientL (Response := Response) setup codec selected challenge identityIndex (.inl query) held =
       (fun result => (result.1, (result.2, held.2))) <$>
         simulateQ (fun q => ((GSpecL KemSK Response).query (.inl q) : OracleComp (GSpecL KemSK Response) _))
@@ -136,7 +137,7 @@ theorem groupedClientL_inl (setup : Setup baseSpec KemSK) (codec : Codec Reader 
 
 /-- The logged grouped client on the raw accept sends the logged accept and appends the logged entry. -/
 theorem groupedClientL_accept (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (selected : Nat)
-    (challenge : MlKem768Ciphertext) (identityIndex : Nat) (raw : Pqxdh.Bytes) (held : List EncodedEntry × Log) :
+    (challenge : MlKem768Ciphertext) (identityIndex : Nat) (raw : Pqxdh.Bytes) (held : (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) × Log) :
     groupedClientL (Response := Response) setup codec selected challenge identityIndex (.inl (.inl (.inr (.accept raw))))
         held =
       (fun answer => (answer.1, (held.1, held.2 ++ [answer.2]))) <$>
@@ -144,7 +145,7 @@ theorem groupedClientL_accept (setup : Setup baseSpec KemSK) (codec : Codec Read
 
 /-- The logged grouped client on the Server read sends the identity-pool reveal of the Server's slot, returns its answer with the log and keeps its state. -/
 theorem groupedClientL_read (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (selected : Nat)
-    (challenge : MlKem768Ciphertext) (identityIndex : Nat) (held : List EncodedEntry × Log) :
+    (challenge : MlKem768Ciphertext) (identityIndex : Nat) (held : (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) × Log) :
     groupedClientL (Response := Response) setup codec selected challenge identityIndex (.inr ()) held =
       (fun seed => ((seed, held.2), held)) <$>
         simulateQ (fun q => ((GSpecL KemSK Response).query (.inl q) : OracleComp (GSpecL KemSK Response) _))
@@ -162,10 +163,10 @@ noncomputable def skelResumeL (setup : Setup baseSpec KemSK) (codec : Codec Read
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)
     (value : PqxdhServerRootPreparation.Verified Reader)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)
-    (consumed : List Pqxdh.Bytes) (game : GameState KemSK) (owners : List EncodedEntry) (log : Log)
+    (consumed : List Pqxdh.Bytes) (game : GameState KemSK) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log)
     (next : Option Nat → OracleComp (PqxdhDeploymentLaterServerSource.Spec KemSK) X) (selected : Nat)
     (ciphertext : MlKem768Ciphertext) (services : Services V Response) :
-    OracleComp (Enc KemSK + TSpec V) ((R × (List EncodedEntry × Log)) × SkelState KemSK V) := do
+    OracleComp (Enc KemSK + TSpec V) ((R × ((List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) × Log)) × SkelState KemSK V) := do
   let answer ← (simulateQ (resumeImpl setup.hmac game.sessions services)
     (PqxdhRegistrationJointKemOpaqueResume.resume setup codec checks identityIndex publicIdentity raw value ephemeral
       (PqxdhAcceptedRegistration.ciphertextArray ciphertext) .challenge game consumed)).run (game, none)
@@ -404,7 +405,9 @@ def LaterSlotsTwoTarget : Prop :=
         budget.create (PqxdhDeploymentKemTransfer.selectedKem budget g) g.1.val (laterTransported bounds budget post)
 
 /-- The generic target of U-L1 gives its instance at the compiled LQ-F program: the compiled program meets the logged source budget `laterTransported` (`PqxdhDeploymentLaterServerCompileBudget.compile_server_certified`). -/
-theorem laterSlotsTwo_of_generic (generic : OpaqueBranchSlotsTwoTargetL) : LaterSlotsTwoTarget :=
+theorem laterSlotsTwo_of_generic
+    (generic : OpaqueBranchSlotsTwoTargetL) :
+    LaterSlotsTwoTarget :=
   fun setup codec route checks correct ensureInit bounds mode first second budget respects post postRespects event
       claim g runtime =>
     generic setup codec checks ensureInit none

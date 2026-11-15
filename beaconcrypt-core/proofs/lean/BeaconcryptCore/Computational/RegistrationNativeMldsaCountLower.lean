@@ -48,7 +48,7 @@ private theorem compose_stable {S Answer : Type} (first second : S → S)
 /-- The actual trusted native service ignores exactly the complete Main accounting-input view. -/
 theorem trusted (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (RegistrationNativeBeaconFrontend.Trusted n KemSK).Domain) :
     RegistrationNativeKemCounterIndependence.Stable project
       (RegistrationNativeExperiment.trusted setup checks representation created source query) := by
@@ -70,7 +70,7 @@ theorem idempotent (before : Local n KemSK source) : localProject (localProject 
 /-- Actual lower execution retains both its mutable local Env and the shared native poststate under the source-proved accounting-input view. -/
 theorem lower_stable (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State Value)
     (stable : RegistrationNativeBeaconEnvView.Stable work) :
     RegistrationNativeKemCounterIndependence.Stable localProject (lower setup checks representation created work) := by
@@ -98,7 +98,7 @@ theorem lower_stable (setup : Setup base KemSK) (checks : Checks)
 /-- Every actual source-proved ordinary Beacon subprogram supplies both free ML count-continuation laws. -/
 theorem native (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State Value)
     (stable : RegistrationNativeBeaconEnvView.Stable work) :
     RegistrationNativeMldsaCountRules.Correct localProject (RegistrationNativeMldsaBundle.native setup checks representation created work) :=

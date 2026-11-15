@@ -4,6 +4,8 @@ import BeaconcryptCore.Computational.PqxdhPrivateAcceptedRootBounds
 import BeaconcryptCore.Computational.FinitePartitionQueryBounds
 
 /-!
+The generic post-hash tail takes explicit complete AD151 as an entry parameter. Current native entry correspondence must separately supply the completed binding and reached hash-admission receipt; neither classical acceptance nor this accepted-root factoring constructs AD. This generic interface alone is not the current full registration hash/signing driver.
+
 The private accepted-root callback executes the already checked actual registration builder before any ideal finish/publication. Actual extracted acceptance derives the original pending-field and RID relations; source consumption retains the prior native map/control/binding/metadata/primitive context. The full original pending stays an interpreter-side source witness through its by-value consuming prepare call. Its root_input and RID are absent from the builder result. Executable construction reads only the four proven-used fields and the supplied root; arbitrary post-derivation root_input bytes do not affect the complete returned/primitive/poststate computation. This is functional non-use, not physical erasure or equality of shortened pending states.
 
 The explicit source game with this private continuation inherits the same joint-use weak-EUF plus coefficient-one ordinary CCA bound and same-secret root correlation. The nine native callback classes each have cap one; exact finite weighted transfer charges each stated callback cost and then the arbitrary continued source work. The initial fixed HKDF64 remains separate local work. Full native/source field and state representations are explicit operational relations: an arbitrary private Plan does not itself prove that relation for a global native scheduler. Consumed-list versus native HashSet, allocation, writer, zeroization, runtime/error and crash contracts, multiple-family/evolving/reveal composition and pinned-Server/global authentication remain separate. No shared-secret bytes are added to a reduction or adversary interface.
@@ -17,6 +19,7 @@ open BeaconcryptCore.Refinement.ProtocolComposition
 open BeaconcryptCore.Computational
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhAcceptedRegistration
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhServerRegistrationPublication
 open PqxdhPrivateAcceptedRoot
 
@@ -41,7 +44,7 @@ noncomputable def buildReady {Metadata PeerMetadata Consumed : Type}
     (binding : pqxdh.ServerBinding) (ready : Ready) (metadata : PeerMetadata)
     (state : State Metadata PeerMetadata Consumed) :
     OracleComp TailSpec (RustM (Option Response × State Metadata PeerMetadata Consumed)) :=
-  PqxdhRegistrationInputs.build source (usedReady source.crypto binding ready)
+  PqxdhRegistrationInputs.build (associatedData := associatedData) source (usedReady source.crypto binding ready)
     ready.root ready.application metadata state
 
 /-- Actual successful acceptance supplies the builder fields; the full pending value is preserved as witness. -/
@@ -79,9 +82,9 @@ theorem buildReady_source {Metadata PeerMetadata Consumed PrimitiveState : Type}
     (fields : PqxdhRegistrationInputs.used pending = usedReady source.crypto binding ready)
     (metadata : PeerMetadata) (state : State Metadata PeerMetadata Consumed)
     (primitive : PrimitiveState) :
-    sourceBuild execute sealReply aux source pending ready.root ready.application metadata state primitive =
+    PqxdhServerRegistrationPublication.sourceBuild (associatedData := associatedData) execute sealReply aux source pending ready.root ready.application metadata state primitive =
       collectState ((simulateQ (functionalImpl execute sealReply aux)
-        (buildReady source binding ready metadata state)).run primitive) := by
+        (buildReady (associatedData := associatedData) source binding ready metadata state)).run primitive) := by
   rw [PqxdhRegistrationInputs.source_build_exact, fields]
   rfl
 
@@ -97,9 +100,9 @@ theorem buildReady_complete {Metadata PeerMetadata Consumed PrimitiveState Resul
     (next : (RustM (Option Response × State Metadata PeerMetadata Consumed) × PrimitiveState) →
       OracleComp base Result) :
     ((simulateQ impl (simulateQ nativeAdapter
-        (buildReady source binding ready metadata state))).run primitive >>= next) =
+        (buildReady (associatedData := associatedData) source binding ready metadata state))).run primitive >>= next) =
       ((simulateQ impl (simulateQ nativeAdapter
-        (PqxdhServerRegistrationPublication.build source pending ready.root ready.application metadata state))).run primitive
+        (PqxdhServerRegistrationPublication.build (associatedData := associatedData) source pending ready.root ready.application metadata state))).run primitive
         >>= next) := by
   unfold buildReady
   rw [← fields, PqxdhRegistrationInputs.build_exact]
@@ -127,7 +130,7 @@ noncomputable def registrationContinuation {ι Metadata PeerMetadata Consumed Pr
   accepted := fun output ready => do
     let input := inputs output ready
     let result ← (simulateQ impl (simulateQ nativeAdapter
-      (buildReady source input.binding ready input.metadata input.state))).run input.primitive
+      (buildReady (associatedData := associatedData) source input.binding ready input.metadata input.state))).run input.primitive
     next output result
 
 
@@ -136,28 +139,28 @@ theorem buildReady_bounds {Metadata PeerMetadata Consumed : Type}
     (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (binding : pqxdh.ServerBinding) (ready : Ready) (metadata : PeerMetadata)
     (state : State Metadata PeerMetadata Consumed) (kind : CallKind) :
-    (buildReady source binding ready metadata state).IsQueryBoundP (fun query => callKind query = kind) 1 :=
-  PqxdhRegistrationInputs.build_bound source _ ready.root ready.application metadata state kind
+    (buildReady (associatedData := associatedData) source binding ready metadata state).IsQueryBoundP (fun query => callKind query = kind) 1 :=
+  PqxdhRegistrationInputs.build_bound (associatedData := associatedData) source _ ready.root ready.application metadata state kind
 
 /-- Concrete native KDF/AEAD/hash/writer and auxiliary caps retain every rejected attempt. -/
 theorem buildReady_native_bounds {Metadata PeerMetadata Consumed : Type}
     (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (binding : pqxdh.ServerBinding) (ready : Ready) (metadata : PeerMetadata)
     (state : State Metadata PeerMetadata Consumed) :
-    let work := simulateQ nativeAdapter (buildReady source binding ready metadata state)
+    let work := simulateQ nativeAdapter (buildReady (associatedData := associatedData) source binding ready metadata state)
     work.IsQueryBoundP (fun query => leftPredicate Sum.isLeft query = true) 1 ∧
       (∀ kind, work.IsQueryBoundP
         (fun query => leftPredicate (RawCtxSourceSeal.category kind) query = true) 1) ∧
       (∀ kind, work.IsQueryBoundP (fun query => auxPredicate kind query = true) 1) :=
-  PqxdhRegistrationInputs.native_build_bounds source _ ready.root ready.application metadata state
+  PqxdhRegistrationInputs.native_build_bounds (associatedData := associatedData) source _ ready.root ready.application metadata state
 
 /-- Arbitrary typed callback replies produce an ordinary optional source result, never a dropped diagnostic state. -/
 theorem buildReady_normal {Metadata PeerMetadata Consumed : Type}
     (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (binding : pqxdh.ServerBinding) (ready : Ready) (metadata : PeerMetadata)
     (state : State Metadata PeerMetadata Consumed) :
-    Normal (buildReady source binding ready metadata state) :=
-  PqxdhRegistrationInputs.build_normal source _ ready.root ready.application metadata state
+    Normal (buildReady (associatedData := associatedData) source binding ready metadata state) :=
+  PqxdhRegistrationInputs.build_normal (associatedData := associatedData) source _ ready.root ready.application metadata state
 
 /-- Complete primitive-state normality follows from actual source totality, without a losslessness assumption. -/
 theorem buildReady_run_normal {Metadata PeerMetadata Consumed PrimitiveState ι : Type}
@@ -168,10 +171,10 @@ theorem buildReady_run_normal {Metadata PeerMetadata Consumed PrimitiveState ι 
     (state : State Metadata PeerMetadata Consumed) (primitive : PrimitiveState)
     (result : RustM (Option Response × State Metadata PeerMetadata Consumed) × PrimitiveState)
     (supported : result ∈ support ((simulateQ impl (simulateQ nativeAdapter
-      (buildReady source binding ready metadata state))).run primitive)) :
+      (buildReady (associatedData := associatedData) source binding ready metadata state))).run primitive)) :
     ∃ value, result = (ok value, result.2) := by
-  have normal := buildReady_normal source binding ready metadata state
-  have member : result.1 ∈ support (buildReady source binding ready metadata state) := by
+  have normal := buildReady_normal (associatedData := associatedData) source binding ready metadata state
+  have member : result.1 ∈ support (buildReady (associatedData := associatedData) source binding ready metadata state) := by
     rw [← QueryImpl.simulateQ_compose] at supported
     apply OracleComp.support_simulateQ_run'_subset (impl ∘ₛ nativeAdapter) _ primitive
     rw [StateT.run'_eq, support_map]
@@ -197,7 +200,7 @@ noncomputable def Plan.continuation {ι Metadata PeerMetadata Consumed Primitive
     {baseSpec : OracleSpec ι} {setup : PqxdhStatefulPhase1EufCma.StatefulPhase1Setup baseSpec}
     (plan : Plan baseSpec setup Selection Metadata PeerMetadata Consumed PrimitiveState)
     (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) : Continuation setup Selection :=
-  registrationContinuation source setup plan.inputs plan.impl plan.completed plan.next
+  registrationContinuation (associatedData := associatedData) source setup plan.inputs plan.impl plan.completed plan.next
 
 /-- At the source boundary, the actual full pending/context is retained until the builder consumes it. -/
 theorem Plan.accepted_source {ι Metadata PeerMetadata Consumed PrimitiveState Selection : Type}
@@ -207,12 +210,12 @@ theorem Plan.accepted_source {ι Metadata PeerMetadata Consumed PrimitiveState S
     (output : Option (PqxdhPrivateCandidateAcceptance.Outcome (PqxdhPrivatePhase1Prefix.Retained setup Unit Selection)))
     (ready : Ready) (pending : pqxdh.PendingServerRegistration)
     (fields : PqxdhRegistrationInputs.used pending = usedReady source.crypto (plan.inputs output ready).binding ready) :
-    (plan.continuation source).accepted output ready =
+    (plan.continuation (associatedData := associatedData) source).accepted output ready =
       ((simulateQ plan.impl (simulateQ nativeAdapter
-        (PqxdhServerRegistrationPublication.build source pending ready.root ready.application
+        (PqxdhServerRegistrationPublication.build (associatedData := associatedData) source pending ready.root ready.application
           (plan.inputs output ready).metadata (plan.inputs output ready).state))).run
           (plan.inputs output ready).primitive >>= plan.next output) := by
-  exact buildReady_complete plan.impl source (plan.inputs output ready).binding ready pending fields
+  exact buildReady_complete (associatedData := associatedData) plan.impl source (plan.inputs output ready).binding ready pending fields
     (plan.inputs output ready).metadata (plan.inputs output ready).state
     (plan.inputs output ready).primitive (plan.next output)
 
@@ -243,7 +246,7 @@ theorem authenticated_registration_bound {Metadata PeerMetadata Consumed Primiti
       (PqxdhPrivateKemQueryBounds.SelectorSource (baseSpec := baseSpec) Creating) 0)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : Forgery)
     (plan : Plan baseSpec setup selector.State Metadata PeerMetadata Consumed PrimitiveState) :
-    let observer := plan.continuation parameters.source
+    let observer := plan.continuation (associatedData := associatedData) parameters.source
     let protocol := rootProtocol kem parameters attachedVerify primitives setup selector observer
     (actualGame baseImpl kem parameters attachedVerify primitives setup selector observer).boolDistance
       (simulateQ (kemAmbientImpl baseImpl)
@@ -253,7 +256,7 @@ theorem authenticated_registration_bound {Metadata PeerMetadata Consumed Primiti
         (reduction parameters.source kem protocol).toINDCCA).toReal := by
   exact authenticated_correlated_bound baseImpl kem parameters compatible functional correct attachedVerify
     primitives adapter setup selector selectorNoSign selectorNoCreate fallback ordinaryFallback
-    (plan.continuation parameters.source)
+    (plan.continuation (associatedData := associatedData) parameters.source)
 
 
 /-- Retain the complete prior native/primitive context and install only the already-executed consumption mark. -/
@@ -317,17 +320,17 @@ theorem accepted_native_complete {Metadata PeerMetadata PrimitiveState Result ι
     (next : (RustM (Option Response × State Metadata PeerMetadata (List Pqxdh.Bytes)) × PrimitiveState) →
       OracleComp base Result) :
     let execution := ready server application identity oneTime ephemeral ciphertext root
-    ((simulateQ impl (simulateQ nativeAdapter (buildReady source input.binding execution input.metadata
+    ((simulateQ impl (simulateQ nativeAdapter (buildReady (associatedData := associatedData) source input.binding execution input.metadata
       (input.afterReady execution).state))).run input.primitive >>= next) =
       ((simulateQ impl (simulateQ nativeAdapter
-        (PqxdhServerRegistrationPublication.build source { pending with root_key_input := afterDerivation }
+        (PqxdhServerRegistrationPublication.build (associatedData := associatedData) source { pending with root_key_input := afterDerivation }
           root application input.metadata
           { input.state with consumed := absBytes pending.registration_id.bytes :: input.state.consumed }))).run
         input.primitive >>= next) := by
   dsimp only
   rw [input.actual_consumption server application identity oneTime ephemeral ciphertext root registration status
     input.binding coins secrets acceptedState pending accepted hidentity honeTime history]
-  apply buildReady_complete impl source input.binding _ _ _ input.metadata _ input.primitive next
+  apply buildReady_complete (associatedData := associatedData) impl source input.binding _ _ _ input.metadata _ input.primitive next
   change PqxdhRegistrationInputs.used pending = _
   exact accepted_fields source.crypto (ready server application identity oneTime ephemeral ciphertext root)
     input.state.control acceptedState registration status input.binding coins secrets pending accepted
@@ -377,10 +380,10 @@ theorem buildReady_native_partition {Metadata PeerMetadata Consumed : Type}
     (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (binding : pqxdh.ServerBinding) (ready : Ready) (metadata : PeerMetadata)
     (state : State Metadata PeerMetadata Consumed) (kind : NativeKind) :
-    (simulateQ nativeAdapter (buildReady source binding ready metadata state)).IsQueryBoundP
+    (simulateQ nativeAdapter (buildReady (associatedData := associatedData) source binding ready metadata state)).IsQueryBoundP
       (fun query => nativeKind query = kind) 1 := by
   apply (isQueryBoundP_congr_pred (p' := nativePredicate kind) (nativeKind_iff kind)).mpr
-  have bounds := buildReady_native_bounds source binding ready metadata state
+  have bounds := buildReady_native_bounds (associatedData := associatedData) source binding ready metadata state
   cases kind
   · exact bounds.1
   · exact bounds.2.1 .aead
@@ -403,9 +406,9 @@ theorem buildReady_weighted {Metadata PeerMetadata Consumed PrimitiveState ι : 
     (binding : pqxdh.ServerBinding) (ready : Ready) (metadata : PeerMetadata)
     (state : State Metadata PeerMetadata Consumed) (primitive : PrimitiveState) :
     ((simulateQ impl (simulateQ nativeAdapter
-      (buildReady source binding ready metadata state))).run primitive).IsQueryBoundP predicate (∑ kind, cost kind) := by
+      (buildReady (associatedData := associatedData) source binding ready metadata state))).run primitive).IsQueryBoundP predicate (∑ kind, cost kind) := by
   simpa only [Nat.mul_one] using FinitePartitionQueryBounds.weighted_bound nativeKind cost (fun _ => 1)
-    impl predicate _ (buildReady_native_partition source binding ready metadata state) step primitive
+    impl predicate _ (buildReady_native_partition (associatedData := associatedData) source binding ready metadata state) step primitive
 
 /-- Exact weighted native work and arbitrary post-publication continuation compose in the original source class. -/
 theorem Plan.accepted_bound {ι Metadata PeerMetadata Consumed PrimitiveState Selection : Type}
@@ -418,8 +421,8 @@ theorem Plan.accepted_bound {ι Metadata PeerMetadata Consumed PrimitiveState Se
     (next : ∀ output result, (plan.next output result).IsQueryBoundP predicate qNext)
     (output : Option (PqxdhPrivateCandidateAcceptance.Outcome (PqxdhPrivatePhase1Prefix.Retained setup Unit Selection)))
     (ready : Ready) :
-    ((plan.continuation source).accepted output ready).IsQueryBoundP predicate ((∑ kind, cost kind) + qNext) :=
-  isQueryBoundP_bind (buildReady_weighted plan.impl predicate cost step source
+    ((plan.continuation (associatedData := associatedData) source).accepted output ready).IsQueryBoundP predicate ((∑ kind, cost kind) + qNext) :=
+  isQueryBoundP_bind (buildReady_weighted (associatedData := associatedData) plan.impl predicate cost step source
     (plan.inputs output ready).binding ready (plan.inputs output ready).metadata
     (plan.inputs output ready).state (plan.inputs output ready).primitive) (fun result _ => next output result)
 

@@ -9,6 +9,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.refined ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialOriginCertificates
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhInitialPostContext PqxdhInitialBuilderContext RawCtxForwardTags
 open PqxdhInitialPostCertificates (LiveQuiet)
 variable {ι M P I D K X Response Shared Result Origin : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -62,7 +64,7 @@ private theorem finish_fits (mark : PqxdhBeaconPhase2Shared.Secrets Shared → O
       OracleComp (PqxdhInitialOriginForwardPost.Spec extra M P I D K X Response Shared Result Origin S B) (Result × (NativeFront M P I D K S B × PqxdhInitialOriginPost.Trace Origin S B)))
     (qPost : Nat) (bounded : ∀ reply, (outside reply).IsTotalQueryBound qPost)
     (later : ∀ reply updated saved, All (Fits qPost) (after reply updated saved)) :
-    All (Fits qPost) (PqxdhInitialOriginForwardPost.finish mark decode index raw before trace outside after) := by
+    All (Fits qPost) (PqxdhInitialOriginForwardPost.finish (completedBinding := completedBinding) mark decode index raw before trace outside after) := by
   unfold PqxdhInitialOriginForwardPost.finish
   cases phase : (before.roles.1.2 index).beacon.phase
   case initSent control prekey oneTime kem =>
@@ -87,7 +89,7 @@ private theorem finish_fits (mark : PqxdhBeaconPhase2Shared.Secrets Shared → O
                 · unfold PqxdhInitialOriginForwardPost.ownerLift
                   apply lift_all RawCtxQuietOwnerTails.Quiet (Fits qPost)
                     (fun inner => ⟨.inl (.finish index before control
-                      (PqxdhBeaconPhase2Shared.clearedMetadata prepared.metadata) outside inner), trace, some (mark prepared.root)⟩)
+                      (PqxdhBeaconPhase2Shared.clearedMetadata prepared.metadata) prepared.metadata.associatedData outside inner), trace, some (mark prepared.root)⟩)
                     (fun inner valid => ⟨bounded, valid⟩)
                   apply lift_all RawCtxQuietOwnerTails.Quiet RawCtxQuietOwnerTails.Quiet id (fun _ valid => valid)
                   apply RawCtxForwardOwnerCertificates.program_quiet
@@ -99,14 +101,14 @@ private theorem finish_fits (mark : PqxdhBeaconPhase2Shared.Secrets Shared → O
 theorem post_fits (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin) (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
     (decode : RawCtxReceive.FrameDecoder) (client : OracleComp (PostSpec extra S B) Result)
     (qPost : Nat) (bounded : client.IsTotalQueryBound qPost) (before : NativeFront M P I D K S B) (trace : PqxdhInitialOriginPost.Trace Origin S B) :
-    All (Fits qPost) (PqxdhInitialOriginForwardPost.program (X := X) (Response := Response) (Shared := Shared)
+    All (Fits qPost) (PqxdhInitialOriginForwardPost.program (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
       mark sender route decode client before trace) := by
   induction client using OracleComp.inductionOn generalizing qPost before trace with
   | pure value => trivial
   | query_bind request outside ih =>
       rw [isTotalQueryBound_query_bind_iff] at bounded
       have later : ∀ reply (updated : NativeFront M P I D K S B) (saved : PqxdhInitialOriginPost.Trace Origin S B), All (Fits qPost)
-          (PqxdhInitialOriginForwardPost.program (X := X) (Response := Response) (Shared := Shared)
+          (PqxdhInitialOriginForwardPost.program (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
             mark sender route decode (outside reply) updated saved) := by
         intro reply updated saved
         exact mono _ _ (fits_mono (qPost - 1) qPost (Nat.sub_le _ _)) _
@@ -118,7 +120,7 @@ theorem post_fits (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin) (se
       · exact plain_fits _ _ qPost (fun reply => later reply before trace)
       · cases request with
         | finish index raw =>
-            exact finish_fits mark decode index raw before trace outside _ qPost
+            exact finish_fits (completedBinding := completedBinding) mark decode index raw before trace outside _ qPost
               (fun reply => (bounded.2 reply).mono (Nat.sub_le _ _)) later
 
 private theorem finished_fits (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin) (origin : Origin) (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
@@ -126,9 +128,9 @@ private theorem finished_fits (mark : PqxdhBeaconPhase2Shared.Secrets Shared →
     (outside : BuildResult → OracleComp (PostSpec extra S B) Result)
     (qPost : Nat) (bounded : ∀ reply, (outside reply).IsTotalQueryBound qPost)
     (result : RustM (Option PqxdhServerRegistrationPublication.Response × PqxdhInitialOriginForwardBuilder.Publication M P)) :
-    All (Fits qPost) (PqxdhInitialOriginForwardBuilder.finished (X := X) (Response := Response) (Shared := Shared)
+    All (Fits qPost) (PqxdhInitialOriginForwardBuilder.finished (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
       mark origin sender route decode index before trace outside result) :=
-  post_fits mark sender route decode _ qPost (bounded _) _ _
+  post_fits (completedBinding := completedBinding) mark sender route decode _ qPost (bounded _) _ _
 
 private theorem builder_plain_fits {Value : Type}
     (client : OracleComp (Base extra RatchetChain I D K X Response Shared S B) Value)
@@ -147,10 +149,10 @@ private theorem publication_fits (mark : PqxdhBeaconPhase2Shared.Secrets Shared 
     (outside : BuildResult → OracleComp (PostSpec extra S B) Result)
     (qPost : Nat) (bounded : ∀ reply, (outside reply).IsTotalQueryBound qPost)
     (result : PqxdhInitialPendingPost.KernelOf RatchetChain × Option RawCtxSourceSend.Encrypted) :
-    All (Fits qPost) (PqxdhInitialOriginForwardBuilder.publication (X := X) (Response := Response) (Shared := Shared)
+    All (Fits qPost) (PqxdhInitialOriginForwardBuilder.publication (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
       mark origin sender route decode index before trace candidate authenticated metadata outside result) := by
   apply builder_plain_fits
-  exact fun value => finished_fits mark origin sender route decode index before trace outside qPost bounded (.ok value)
+  exact fun value => finished_fits (completedBinding := completedBinding) mark origin sender route decode index before trace outside qPost bounded (.ok value)
 
 private theorem send_fits (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin) (origin : Origin) (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
     (decode : RawCtxReceive.FrameDecoder) (index : Fin S) (before : NativeFront M P I D K S B) (trace : PqxdhInitialOriginPost.Trace Origin S B)
@@ -158,15 +160,15 @@ private theorem send_fits (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Ori
     (outside : BuildResult → OracleComp (PostSpec extra S B) Result)
     (qPost : Nat) (bounded : ∀ reply, (outside reply).IsTotalQueryBound qPost)
     (kernel : PqxdhInitialPendingPost.KernelOf RatchetChain) :
-    All (Fits qPost) (PqxdhInitialOriginForwardBuilder.send (X := X) (Response := Response) (Shared := Shared)
+    All (Fits qPost) (PqxdhInitialOriginForwardBuilder.send (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
       mark origin sender route decode index before trace candidate authenticated metadata outside kernel) := by
   unfold PqxdhInitialOriginForwardBuilder.send
-  cases start : RawCtxChainSend.normalBegin kernel (PqxdhServerRegistrationPublication.firstContext candidate authenticated) with
-  | exhausted entry context => exact publication_fits mark origin sender route decode index before trace candidate authenticated metadata outside qPost bounded _
+  cases start : RawCtxChainSend.normalBegin kernel (PqxdhServerRegistrationPublication.firstContext candidate associatedData authenticated) with
+  | exhausted entry context => exact publication_fits (completedBinding := completedBinding) mark origin sender route decode index before trace candidate authenticated metadata outside qPost bounded _
   | requested pending =>
       exact ⟨(fun tag same => by cases same; exact bounded), fun reply =>
         ⟨(fun _ impossible => by cases impossible), fun sealed =>
-          publication_fits mark origin sender route decode index before trace candidate authenticated metadata outside qPost bounded _⟩⟩
+          publication_fits (completedBinding := completedBinding) mark origin sender route decode index before trace candidate authenticated metadata outside qPost bounded _⟩⟩
 
 private theorem candidate_fits (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin) (origin : Origin) (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
     (decode : RawCtxReceive.FrameDecoder) (index : Fin S) (before : NativeFront M P I D K S B) (trace : PqxdhInitialOriginPost.Trace Origin S B)
@@ -174,37 +176,37 @@ private theorem candidate_fits (mark : PqxdhBeaconPhase2Shared.Secrets Shared �
     (candidate : pqxdh.ServerRegistrationCandidate) (data : Option Pqxdh.Bytes) (metadata : P)
     (outside : BuildResult → OracleComp (PostSpec extra S B) Result)
     (qPost : Nat) (bounded : ∀ reply, (outside reply).IsTotalQueryBound qPost) :
-    All (Fits qPost) (PqxdhInitialOriginForwardBuilder.candidate (X := X) (Response := Response) (Shared := Shared)
+    All (Fits qPost) (PqxdhInitialOriginForwardBuilder.candidate (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
       mark origin sender route decode index before trace initial candidate data metadata outside) := by
   unfold PqxdhInitialOriginForwardBuilder.candidate
   apply builder_plain_fits
   intro valid
   cases valid
-  · exact finished_fits mark origin sender route decode index before trace outside qPost bounded _
+  · exact finished_fits (completedBinding := completedBinding) mark origin sender route decode index before trace outside qPost bounded _
   · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
     apply builder_plain_fits
     intro reserved
     cases reserved
-    · exact finished_fits mark origin sender route decode index before trace outside qPost bounded _
+    · exact finished_fits (completedBinding := completedBinding) mark origin sender route decode index before trace outside qPost bounded _
     · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
       cases initial with
-      | fail error => exact finished_fits mark origin sender route decode index before trace outside qPost bounded _
-      | div => exact finished_fits mark origin sender route decode index before trace outside qPost bounded _
+      | fail error => exact finished_fits (completedBinding := completedBinding) mark origin sender route decode index before trace outside qPost bounded _
+      | div => exact finished_fits (completedBinding := completedBinding) mark origin sender route decode index before trace outside qPost bounded _
       | ok kernel =>
           dsimp only
           split
-          · exact finished_fits mark origin sender route decode index before trace outside qPost bounded _
+          · exact finished_fits (completedBinding := completedBinding) mark origin sender route decode index before trace outside qPost bounded _
           · split
             · apply builder_plain_fits
               intro allocated
               cases allocated
-              · exact finished_fits mark origin sender route decode index before trace outside qPost bounded _
+              · exact finished_fits (completedBinding := completedBinding) mark origin sender route decode index before trace outside qPost bounded _
               · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
                 cases binding : candidate.key_id_binding with
-                | fail error => exact finished_fits mark origin sender route decode index before trace outside qPost bounded _
-                | div => exact finished_fits mark origin sender route decode index before trace outside qPost bounded _
-                | ok binding => exact send_fits mark origin sender route decode index before trace candidate _ metadata outside qPost bounded kernel
-            · exact finished_fits mark origin sender route decode index before trace outside qPost bounded _
+                | fail error => exact finished_fits (completedBinding := completedBinding) mark origin sender route decode index before trace outside qPost bounded _
+                | div => exact finished_fits (completedBinding := completedBinding) mark origin sender route decode index before trace outside qPost bounded _
+                | ok binding => exact send_fits (associatedData := associatedData) (completedBinding := completedBinding) mark origin sender route decode index before trace candidate _ metadata outside qPost bounded kernel
+            · exact finished_fits (completedBinding := completedBinding) mark origin sender route decode index before trace outside qPost bounded _
 
 private theorem used_fits (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin) (origin : Origin) (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
     (decode : RawCtxReceive.FrameDecoder) (index : Fin S) (before : NativeFront M P I D K S B) (trace : PqxdhInitialOriginPost.Trace Origin S B)
@@ -212,16 +214,16 @@ private theorem used_fits (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Ori
     (pending : PqxdhRegistrationInputs.UsedInput) (data : Option Pqxdh.Bytes) (metadata : P)
     (outside : BuildResult → OracleComp (PostSpec extra S B) Result)
     (qPost : Nat) (bounded : ∀ reply, (outside reply).IsTotalQueryBound qPost) :
-    All (Fits qPost) (PqxdhInitialOriginForwardBuilder.used (X := X) (Response := Response) (Shared := Shared)
+    All (Fits qPost) (PqxdhInitialOriginForwardBuilder.used (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
       mark origin sender route decode index before trace initial pending data metadata outside) := by
   unfold PqxdhInitialOriginForwardBuilder.used
   dsimp only
   cases nextResult : pqxdh.server_next_key_id (PqxdhInitialPendingBuilder.selected sender index before).control with
-  | fail error => exact finished_fits mark origin sender route decode index before trace outside qPost bounded _
-  | div => exact finished_fits mark origin sender route decode index before trace outside qPost bounded _
+  | fail error => exact finished_fits (completedBinding := completedBinding) mark origin sender route decode index before trace outside qPost bounded _
+  | div => exact finished_fits (completedBinding := completedBinding) mark origin sender route decode index before trace outside qPost bounded _
   | ok value =>
       cases value with
-      | Err error => exact finished_fits mark origin sender route decode index before trace outside qPost bounded _
+      | Err error => exact finished_fits (completedBinding := completedBinding) mark origin sender route decode index before trace outside qPost bounded _
       | Ok key =>
           dsimp only
           cases preparation : PqxdhRegistrationInputs.prepare
@@ -230,12 +232,12 @@ private theorem used_fits (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Ori
               (PqxdhInitialPendingBuilder.selected sender index before).identityKeyId⟩
             (if ((PqxdhInitialPendingBuilder.selected sender index before).server.peers key).isSome
               then pqxdh.KeyIdAvailability.Occupied else .Available) with
-          | fail error => exact finished_fits mark origin sender route decode index before trace outside qPost bounded _
-          | div => exact finished_fits mark origin sender route decode index before trace outside qPost bounded _
+          | fail error => exact finished_fits (completedBinding := completedBinding) mark origin sender route decode index before trace outside qPost bounded _
+          | div => exact finished_fits (completedBinding := completedBinding) mark origin sender route decode index before trace outside qPost bounded _
           | ok prepared =>
               cases prepared with
-              | Err error => exact finished_fits mark origin sender route decode index before trace outside qPost bounded _
-              | Ok prepared => exact candidate_fits mark origin sender route decode index before trace initial prepared data metadata outside qPost bounded
+              | Err error => exact finished_fits (completedBinding := completedBinding) mark origin sender route decode index before trace outside qPost bounded _
+              | Ok prepared => exact candidate_fits (associatedData := associatedData) (completedBinding := completedBinding) mark origin sender route decode index before trace initial prepared data metadata outside qPost bounded
 
 /-- Every descriptor in the complete accepted builder and post source retains its actual original outside allowance, including the first private send before publication. -/
 theorem program_fits (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
@@ -244,9 +246,9 @@ theorem program_fits (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (ready : PqxdhPrivateAcceptedRoot.Ready) (outside : BuildResult → OracleComp (PostSpec extra S B) Result)
     (qPost : Nat) (bounded : ∀ reply, (outside reply).IsTotalQueryBound qPost)
     (before : NativeFront M P I D K S B) (trace : PqxdhInitialOriginPost.Trace Origin S B) :
-    All (Fits qPost) (PqxdhInitialOriginForwardBuilder.program (X := X) (Response := Response) (Shared := Shared)
+    All (Fits qPost) (PqxdhInitialOriginForwardBuilder.program (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
       source mark origin sender route decode initial index metadata ready outside before trace) :=
-  used_fits mark origin sender route decode index _ trace initial _ ready.application metadata outside qPost bounded
+  used_fits (associatedData := associatedData) (completedBinding := completedBinding) mark origin sender route decode index _ trace initial _ ready.application metadata outside qPost bounded
 
 /-- The complete origin-aware source keeps the original seven builder callbacks and sixty-seven callbacks per remaining post request. -/
 theorem program_total (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
@@ -256,12 +258,12 @@ theorem program_total (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (ready : PqxdhPrivateAcceptedRoot.Ready) (outside : BuildResult → OracleComp (PostSpec extra S B) Result)
     (qPost : Nat) (bounded : ∀ reply, (outside reply).IsTotalQueryBound qPost)
     (before : NativeFront M P I D K S B) (trace : PqxdhInitialOriginPost.Trace Origin S B) :
-    (PqxdhInitialOriginForwardBuilder.program (X := X) (Response := Response) (Shared := Shared)
+    (PqxdhInitialOriginForwardBuilder.program (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
       source mark origin sender route decode initial index metadata ready outside before trace).IsTotalQueryBound (7 + qPost * 67) := by
   apply (isQueryBoundP_true_iff _ _).mp
   apply (RawCtxForwardCosts.erase_class (fun _ => True) _ _).mp
   rw [PqxdhInitialOriginForwardBuilder.program_erase]
-  exact (PqxdhInitialOriginPost.sequence_total source initial mark origin sender route decode index metadata ready outside qPost bounded (before, trace)).isQueryBoundP
+  exact (PqxdhInitialOriginPost.sequence_total (associatedData := associatedData) (completedBinding := completedBinding) source initial mark origin sender route decode index metadata ready outside qPost bounded (before, trace)).isQueryBoundP
 
 /-- A supported executable full-source scan returns its own resource-certified descriptor with its actual origin and publication metadata. -/
 theorem carried_fits {State : Type}
@@ -278,12 +280,12 @@ theorem carried_fits {State : Type}
     (initial reached : State) (context : PqxdhInitialOriginContext.Context extra M P I D K Result Origin S B)
     (supported : RawCtxForwardScan.Cut.pending context reached ∈ support
       (RawCtxForwardScan.scan PqxdhInitialForwardPost.selected chosen selection impl
-        (PqxdhInitialOriginForwardBuilder.program source mark origin sender route decode initialKernel index metadata ready outside before trace)
-        (PqxdhInitialOriginForwardBuilder.program_covered source mark origin sender route decode initialKernel index metadata ready outside before trace) initial)) :
+        (PqxdhInitialOriginForwardBuilder.program (associatedData := associatedData) (completedBinding := completedBinding) source mark origin sender route decode initialKernel index metadata ready outside before trace)
+        (PqxdhInitialOriginForwardBuilder.program_covered (associatedData := associatedData) (completedBinding := completedBinding) source mark origin sender route decode initialKernel index metadata ready outside before trace) initial)) :
     Fits qPost context :=
   scan_all PqxdhInitialForwardPost.selected chosen selection impl (Fits qPost) _
-    (PqxdhInitialOriginForwardBuilder.program_covered source mark origin sender route decode initialKernel index metadata ready outside before trace)
-    (program_fits source mark origin sender route decode initialKernel index metadata ready outside qPost bounded before trace)
+    (PqxdhInitialOriginForwardBuilder.program_covered (associatedData := associatedData) (completedBinding := completedBinding) source mark origin sender route decode initialKernel index metadata ready outside before trace)
+    (program_fits (associatedData := associatedData) (completedBinding := completedBinding) source mark origin sender route decode initialKernel index metadata ready outside qPost bounded before trace)
     initial reached context supported
 
 end BeaconcryptCore.Computational.PqxdhInitialOriginCertificates

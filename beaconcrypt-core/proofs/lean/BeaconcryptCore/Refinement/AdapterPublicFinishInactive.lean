@@ -19,7 +19,7 @@ def Inactive (owner : Owner source) : Prop :=
   ∀ pending scalar, owner.phase ≠ .initSent pending scalar
 
 theorem native (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat) (owner : Owner source)
     (packet : Option registration.ResponsePacket) (before : RegistrationNativeExperiment.State n KemSK source)
     (selected : before.beacons[index]? = some owner) (inactive : Inactive owner) :
@@ -67,7 +67,7 @@ theorem source_inactive (self : beaconcrypt_public_wrapper.beacon.Beacon) (input
 
 
 theorem same (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat) (owner : Owner source)
     (view : AdapterPublicWrapperState.MaterialView source KemSK) (self : beaconcrypt_public_wrapper.beacon.Beacon)
     (input : Slice U8) (before : RegistrationNativeExperiment.State n KemSK source)

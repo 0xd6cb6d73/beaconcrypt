@@ -6,6 +6,12 @@
 
 (* Production-facing transcript sorts, domains, encodings, AEAD, and CTX
    declarations come from production-transcript-interface.pvl. *)
+
+(* Historical identity-prefix AD for retained classical projections only. This is not generated current Rust and does not refine registration version 3 transcript AD. *)
+reduc forall server_identity: bitstring, beacon_identity: bitstring;
+  historical__identity_associated_data(server_identity, beacon_identity) =
+    beaconcrypt_associated_data(tag_ed25519(server_identity), tag_ed25519(beacon_identity), pqxdh_domain(), symmetric_ratchet_domain()).
+
 type direction.
 type role.
 
@@ -89,12 +95,12 @@ letfun pqxdh_root(input: bitstring) =
    second; the beacon reverses those roles at its existing call sites. *)
 letfun server_to_beacon_chain(root: bitstring) =
   hkdf_first_32(
-    hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+    hkdf_sha512_no_salt(root, initial_ratchet_domain())
   ).
 
 letfun beacon_to_server_chain(root: bitstring) =
   hkdf_second_32(
-    hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+    hkdf_sha512_no_salt(root, initial_ratchet_domain())
   ).
 
 letfun ratchet_next(chain: bitstring) =

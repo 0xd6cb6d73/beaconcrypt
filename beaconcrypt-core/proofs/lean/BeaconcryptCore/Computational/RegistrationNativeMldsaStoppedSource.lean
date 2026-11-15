@@ -72,7 +72,7 @@ variable {n : Nat} {ι KemSK : Type} {base : OracleSpec ι}
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
     (wire : RegistrationNativeWire.Wire) (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential (handleSource source))
 
 /-- The concrete original typed free source program executes exactly the checked TableStop frozen run. -/

@@ -8,6 +8,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhPhase2SelectorBounds
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhPhase2Selector PqxdhPhase2SourceAux PqxdhKemIndCca PqxdhPrivateKemSource PqxdhJointKdfGame
 open PqxdhGeneratedBeaconState (IdentityHandle)
 open PqxdhPhase2JointIdentity (Converted)
@@ -101,10 +102,10 @@ theorem owner_total
     (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
     (owner : PqxdhBeaconPhase2Preparation.State (IdentityHandle I) D (Option K)) (state : SharedState A) :
     ((simulateQ (sourcePre (baseSpec := baseSpec) source localImpl)
-      (PqxdhBeaconPhase2Publication.nativeOwner decode raw owner)).run state).IsTotalQueryBound
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw owner)).run state).IsTotalQueryBound
       (69 * (max qLocal 64 + 1)) := by
   exact (isQueryBoundP_true_iff _ _).1
-    (PqxdhBeaconPhase2Bounds.native_interpreted_bound (sourcePre source localImpl) (fun _ => True)
+    (PqxdhBeaconPhase2Bounds.native_interpreted_bound (completedBinding := completedBinding) (sourcePre source localImpl) (fun _ => True)
       (max qLocal 64 + 1) (fun query state => (isQueryBoundP_true_iff _ _).2
         (step_total source localImpl qLocal localBound query state)) decode raw owner state)
 

@@ -122,7 +122,7 @@ theorem after_pin_native (coins : QueryImpl unifSpec m)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (reserve : m Bool) (packet : registration.InitPacket) (result : RegistrationNativeServerPinRecompute.PinReply) (before : State n) :
     Prod.map id (project (RegistrationServerReferenceSourceClient.roots setup.source setup.joint setup.dh created.seed scalar)) <$>
       (close (RegistrationNativePlatformServerReferenceAccept.afterPin
@@ -161,7 +161,7 @@ theorem accept_native (coins : QueryImpl unifSpec m)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (reserve : m Bool) (packet : registration.InitPacket) (before : State n) :
     Prod.map id (project (RegistrationServerReferenceSourceClient.roots setup.source setup.joint setup.dh created.seed scalar)) <$>
       (close (RegistrationNativePlatformServerReferenceAccept.accept

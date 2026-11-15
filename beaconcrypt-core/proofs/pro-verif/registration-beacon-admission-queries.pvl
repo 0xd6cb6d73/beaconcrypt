@@ -30,6 +30,6 @@ query owner:channel, attempt:bitstring, server:bitstring;
 query owner:channel, attempt:bitstring, raw:bitstring, assigned:key_id, ad:bitstring,
  payload:bitstring, send:bitstring, receive:bitstring, cache:receive_cache, root:bitstring;
  event(RegistrationBeaconCommitted(owner,attempt,raw,assigned,ad,payload,send,receive,cache)) ==>
- event(RegistrationBeaconPrepared(owner,attempt,root,send,hkdf_first_32(hkdf_sha512_no_salt(root,symmetric_ratchet_domain())))) &&
- send=hkdf_second_32(hkdf_sha512_no_salt(root,symmetric_ratchet_domain())) &&
- receive=hkdf_second_32(hkdf_sha512_no_salt(hkdf_first_32(hkdf_sha512_no_salt(root,symmetric_ratchet_domain())),symmetric_ratchet_domain())) && cache=receive_cache_empty().
+ event(RegistrationBeaconPrepared(owner,attempt,root,send,hkdf_first_32(hkdf_sha512_no_salt(root,initial_ratchet_domain())))) &&
+ send=hkdf_second_32(hkdf_sha512_no_salt(root,initial_ratchet_domain())) &&
+ receive=hkdf_second_32(hkdf_sha512_no_salt(hkdf_first_32(hkdf_sha512_no_salt(root,initial_ratchet_domain())),symmetric_ratchet_domain())) && cache=receive_cache_empty().

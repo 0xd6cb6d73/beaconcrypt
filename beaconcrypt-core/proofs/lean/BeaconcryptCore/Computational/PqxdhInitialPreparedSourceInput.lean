@@ -10,6 +10,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialPreparedSourceInput
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf
 open PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily PqxdhInitialBeaconAmbient
 open PqxdhKemIndCca PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma
@@ -39,7 +41,7 @@ noncomputable def other (secret : KemSK) (challenge : MlKem768Ciphertext) :
   | .inr (.inr (.inr (.inr query))) => lift (env.aux query)
 
 noncomputable def input
-    (context : PqxdhInitialLegalObserver.Context env kem attachedVerify primitives program post)
+    (context : PqxdhInitialLegalObserver.Context (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post)
     (selected : RawCtxProtocolReveals.Owner S (B + 1)) (number : Std.U64) (ancestors disclosed : List RatchetChain) :
     Bool ⊕ Input (M := M) (P := P) (I := I) (K := K) (X := X) (Response := Response) (A := A) (S := S) (B := B) (setup := setup) :=
   match context.state with
@@ -65,38 +67,38 @@ noncomputable def input
       cache := ∅ }
 
 noncomputable def prior (selected : RawCtxProtocolReveals.Owner S (B + 1)) (number : Std.U64) (ancestors disclosed : List RatchetChain) :=
-  (fun context => input env baseImpl kem attachedVerify primitives program post context selected number ancestors disclosed) <$>
-    PqxdhCorrelatedExtractFamily.prepare baseImpl kem (protocol env kem attachedVerify primitives program post)
+  (fun context => input (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post context selected number ancestors disclosed) <$>
+    PqxdhCorrelatedExtractFamily.prepare baseImpl kem (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post)
 
 variable (selected : RawCtxProtocolReveals.Owner S (B + 1)) (number : Std.U64) (ancestors disclosed : List RatchetChain)
-local notation "preparedPrior" => prior env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed
+local notation "preparedPrior" => prior (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed
 
 noncomputable def uniformRoot : ProbComp Bool :=
-  PqxdhInitialSourceInitialSecrecy.real env.source env.recordWriter env.senderId env.route env.decode preparedPrior
+  PqxdhInitialSourceInitialSecrecy.real (associatedData := associatedData) (completedBinding := completedBinding) env.source env.recordWriter env.senderId env.route env.decode preparedPrior
 noncomputable def uniformInitial : ProbComp Bool :=
-  PqxdhInitialSourceInitialSecrecy.random env.source env.recordWriter env.senderId env.route env.decode preparedPrior
+  PqxdhInitialSourceInitialSecrecy.random (associatedData := associatedData) (completedBinding := completedBinding) env.source env.recordWriter env.senderId env.route env.decode preparedPrior
 noncomputable def joint := PqxdhInitialSourceInitialSecrecy.sampler preparedPrior
-noncomputable def observer := PqxdhInitialSourceInitialSecrecy.observer
+noncomputable def observer := PqxdhInitialSourceInitialSecrecy.observer (associatedData := associatedData) (completedBinding := completedBinding)
   (extra := SelectorSpec baseSpec) (P := P) (I := IdentityHandle I) (D := DhPair setup) (K := KemHandle K)
   (X := X ⊕ PqxdhPhase2JointIdentity.Converted) (Response := Response) (A := A) (N := BareState 1) (S := S) (B := B + 1)
   env.source env.recordWriter env.senderId env.route env.decode
 
-local notation "actualJoint" => joint env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed
-local notation "actualObserver" => observer env
+local notation "actualJoint" => joint (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed
+local notation "actualObserver" => observer (associatedData := associatedData) (completedBinding := completedBinding) env
 
 /-- The original authenticated-root preparation supplies the exact joint sampler and the whole actual source publication/freshness observer for the coefficient-one initializer reduction. -/
 theorem initial_bound (hmac : HmacSha512) (correct : SourceFullCorrect env.source hmac) :
-    (uniformRoot env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed).boolDistance
-      (uniformInitial env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed) ≤
-      (extractRealGame hmac actualJoint (fullExtractReduction hmac .ratchet actualObserver)).boolDistance
-        (extractUniformGame actualJoint (fullExtractReduction hmac .ratchet actualObserver)) +
-      (hmacPrfRealGame hmac (fullExpandReduction .ratchet actualJoint actualObserver)).boolDistance
-        (hmacPrfRandomGame (fullExpandReduction .ratchet actualJoint actualObserver)) := by
-  exact PqxdhInitialSourceInitialSecrecy.bound env.source env.recordWriter env.senderId env.route env.decode preparedPrior hmac correct
+    (uniformRoot (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed).boolDistance
+      (uniformInitial (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed) ≤
+      (extractRealGame hmac actualJoint (fullExtractReduction hmac .initial actualObserver)).boolDistance
+        (extractUniformGame actualJoint (fullExtractReduction hmac .initial actualObserver)) +
+      (hmacPrfRealGame hmac (fullExpandReduction .initial actualJoint actualObserver)).boolDistance
+        (hmacPrfRandomGame (fullExpandReduction .initial actualJoint actualObserver)) := by
+  exact PqxdhInitialSourceInitialSecrecy.bound (associatedData := associatedData) (completedBinding := completedBinding) env.source env.recordWriter env.senderId env.route env.decode preparedPrior hmac correct
 
 /-- The constructed concrete source initializer reduction makes at most two ordinary HMAC challenge queries. -/
 theorem hmac_queries :
-    (fullExpandReduction .ratchet actualJoint actualObserver).IsQueryBoundP IsHmacChallengeQuery 2 :=
+    (fullExpandReduction .initial actualJoint actualObserver).IsQueryBoundP IsHmacChallengeQuery 2 :=
   fullExpandReduction_hmac_query_bound _ _ _
 
 /-- The actual preparation, copied into the source input carrier, pays the source certificate's key-generation, full preparation, base/decapsulation interpretation and encapsulation bill before its independent root draw. -/
@@ -106,8 +108,8 @@ theorem joint_uniform (c : PqxdhAuthenticatedRootBudgets.Certificate env baseImp
   apply PqxdhInitialSourceInitialSecrecy.sampler_uniform
   apply (isQueryBound_map_iff _ _ _ _ _).2
   exact PqxdhCorrelatedExtractQueryBounds.prepare_uniform_bound baseImpl kem
-    (protocol env kem attachedVerify primitives program post) _ _ _ _ _ _ _ _ _ _ _
-    (PqxdhAuthenticatedRootBudgets.sampler_bounds env baseImpl kem attachedVerify primitives program post c)
+    (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post) _ _ _ _ _ _ _ _ _ _ _
+    (PqxdhAuthenticatedRootBudgets.sampler_bounds (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c)
 
 end BeaconcryptCore.Computational.PqxdhInitialPreparedSourceInput
 

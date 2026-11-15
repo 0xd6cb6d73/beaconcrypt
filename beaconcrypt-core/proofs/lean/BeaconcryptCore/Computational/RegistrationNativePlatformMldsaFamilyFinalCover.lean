@@ -20,7 +20,7 @@ open PqxdhServerAuthExperiment (Setup Checks)
 variable {n cap : Nat} {ι KemSK Platform E V : Type} {base : OracleSpec ι}
 variable (source : Source) (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : Credential (handleSource source))
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential (handleSource source))
 variable [primitive : AdapterSealPrimitive.Operations]
 variable (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
 variable (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
@@ -44,7 +44,7 @@ private theorem table_cache (query : RegistrationNativeRawAdapter.TypedSpec.Doma
   obtain ⟨inner, reached, same⟩ := supported
   cases same
   exact RegistrationNativePlatformHandlerCache.table setup checks wire route representation created view failure allocation reserveRegistration reservePeer erased helper writer
-    source credential fallback before.2 safe.server query before.1.1 before.1.2 safe.owners inner reached
+    source credential fallback before.2 safe.server query before.1.1 before.1.2 inner reached
 
 private theorem family_cache (query : RegistrationNativeRawAdapter.TypedSpec.Domain)
     (before : State source cap n KemSK Platform) (safe : Safe source credential fallback before)

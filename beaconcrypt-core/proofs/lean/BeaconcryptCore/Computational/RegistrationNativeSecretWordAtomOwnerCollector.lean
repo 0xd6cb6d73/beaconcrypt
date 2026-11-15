@@ -12,6 +12,7 @@ open RegistrationNativeSecretWordBeaconPrefix (Header beforeDecap afterDecap)
 open RegistrationNativeSecretWordBeaconPrepare (Prepared prepare)
 open RegistrationNativeSecretWord (Word)
 variable {I D K X Response Private : Type}
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 
 /-- The exact successful collected word comes from its actual sole decapsulation at the reached prefix state. -/
 theorem collect_receipt (implementation : QueryImpl (Spec I D K X Response) (StateT Private ProbComp))
@@ -45,7 +46,7 @@ theorem prepare_receipt (implementation : QueryImpl (Spec I D K X Response) (Sta
     (control : beaconcrypt_core.pqxdh.BeaconInitSent) (identity : I) (oneTime : D) (kem : K) (raw : Pqxdh.Bytes)
     (before after : Private) (pending : Prepared Response)
     (supported : (some pending, after) ∈ support
-      ((simulateQ implementation (prepare control identity oneTime kem raw)).run before)) :
+      ((simulateQ implementation (prepare (completedBinding := completedBinding) control identity oneTime kem raw)).run before)) :
     (some pending.collected, after) ∈ support ((simulateQ implementation (collect identity oneTime kem raw)).run before) := by
   simp only [prepare, simulateQ_bind, StateT.run_bind, mem_support_bind_iff] at supported
   obtain ⟨⟨collected, middle⟩, called, returned⟩ := supported
@@ -55,7 +56,7 @@ theorem prepare_receipt (implementation : QueryImpl (Spec I D K X Response) (Sta
   | none => simp only [Option.bind_none, reduceCtorEq] at equal
   | some collected =>
       simp only [Option.bind_some] at equal
-      cases admitted : PqxdhPhase2DhMetadata.admitted control collected.plain with
+      cases admitted : PqxdhPhase2DhMetadata.admitted (completedBinding := completedBinding) control collected.plain with
       | none => simp only [admitted, Option.map_none, reduceCtorEq] at equal
       | some metadata =>
           simp only [admitted, Option.map_some, Option.some.injEq] at equal

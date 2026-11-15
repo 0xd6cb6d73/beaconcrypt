@@ -4,9 +4,11 @@
 
 This checker does not prove contextual equivalence or run ProVerif. It does
 not reorder a computational sampler or change a maintained process.
-The source pin concerns the classical projection after the mandatory ML-DSA
-guard; it establishes no reordering across that guard or primitive failure.
-See doc/impl/mldsa-source-pins.md for the reviewed source changes.
+The source pin is a drift guard for a classical projection whose record AD is
+registration version 3 transcript AD151 but which omits the pinned-Server ML-DSA
+response signature. It establishes no current version-3 refinement or reordering
+across authentication and primitive failure. Reviewed scope is recorded in
+var/formal-verification-analysis.md.
 """
 
 import argparse
@@ -26,24 +28,24 @@ MACROS = {
     "fs-records-b2s.pvl": "FsB2sServer",
 }
 TOKEN_SHA256 = {
-    "extraction/lib.pvl": "d98c064616c17b784a6478e2fb732c5b743869405bd491bf40c73a1cf3f79403",
-    "fs-records-s2b.pvl": "cdadbc31c34fbe7bc6b592bdcd21f88427c420af0586e036aad80f171ffd4e22",
-    "fs-records-b2s.pvl": "7fc2a35fefe9cfa0aa0e93a641b73523e8d1d2345baa55edf717772ad1bdaf3a",
-    "crypto.pvl": "cf590d7c0799f077a1e1e164aa955b81a626037a58c8aa3e279add6754625323",
-    "production-transcript-interface.pvl": "27b04f004249f80c071d07b046f35e8e1932dbbe8e44b4c2af39076e5dce1edf",
-    "fs-common.pvl": "fddb894e764ce90949ab5477bd8f6ee8f6def0ea34bfd0958263d6b8ca9ceb3f",
+    "extraction/lib.pvl": "858836a8c5009b167e0e1ec9b7067c8d84b683d3b126ae57dca4efb6e37dfe75",
+    "fs-records-s2b.pvl": "8ccbb333d6366b0b94691049e0492fc36e1653184f64e0d2cf8c1c95ead4219f",
+    "fs-records-b2s.pvl": "4960848b849207617d6413752874751ed4d9a2772fc26de693c297e368187654",
+    "crypto.pvl": "6e2f24249ce5a0d061676c5aa7f8762bcb77214a0a152d2b559a3ea9afa3dcc1",
+    "production-transcript-interface.pvl": "46f7c94e5a4ce6e63dc41cf212f40ba08e9db2acdd06805d057993146445dadb",
+    "fs-common.pvl": "86ba720e2790fa558957cc8b755057bc41cce7feb2d0426e5be14c51dd581cdd",
 }
 SOURCE_SHA256 = {
-    "beaconcrypt/src/server.rs": "9bd205117f41c690f5fae2936c2f70de61e751f04caee78de800e2ba51dffb13",
-    "beaconcrypt-core/src/session.rs": "3779c778ce4f8ec534c2fa610c0a334302ada76fc5cd601ade575802ff9c07c4",
-    "beaconcrypt/src/auth.rs": "45b2513e304b4d4b12b41ca15ff15b94db54886e302453971d99ec0f1ce4f884",
-    "beaconcrypt/src/pqxdh.rs": "f3b880ec118bebfd49851156588e681da40f50761470fbacc6940fd69cabc319",
-    "beaconcrypt-core/src/agreement.rs": "cea8e603c7943f18ba79f95743cc113e3d16e8589c3614240b542ee3ac1109de",
-    "beaconcrypt-core/src/registration.rs": "fb6f679499585a9d9976abaea31f8dbd8f68f53f6c0f1deb7462ee393acf9f25",
-    "beaconcrypt-core/src/pqxdh.rs": "bff5dca4b9a292a025ad96ab9fba8761bc63d2e49dac493a2bae0d1cea67a018",
+    "beaconcrypt/src/server.rs": "b5e6992a58eacce5b51d2624ff58206fbd56c744a97561146d07176a9242b66b",
+    "beaconcrypt-core/src/session.rs": "4f83234a89c0fe8df60d68753930339f68208e2f14c464849177006af550c15e",
+    "beaconcrypt/src/auth.rs": "f812e268cdd86cac01c43fdba5b25b944ebcdda1f6c03407203a6fbfa9ed16b5",
+    "beaconcrypt/src/pqxdh.rs": "031465df2916c2fd118a28b3cb91f79484f535e2149c9c5bc48d3c5395dacf23",
+    "beaconcrypt-core/src/agreement.rs": "7abf5bb56eb76ed461d52d0d6efff8bb18f165cc6831417a4f78f6e4d0672fa6",
+    "beaconcrypt-core/src/registration.rs": "8be65a2c601a151d0ec9d2a570b929d55d72394edceac59599e1b11d741bba83",
+    "beaconcrypt-core/src/pqxdh.rs": "0e90604b6537968f73873850ca7626f5019a9482c3225bb333d9a3ff555fde4f",
     "beaconcrypt-core/src/record_effects.rs": "dbdf79661a17c8d8c128ff349a7efe906d6713912e5510c9a0476b0c3efad2b5",
-    "beaconcrypt-core/src/peer.rs": "df4b0fc85a7a303f56908b13a4d90fb7d9233601040b43e035a99d341bd757bc",
-    "beaconcrypt-core/src/transport.rs": "bc3f347f251cb07e44c47699c6fa3db4c9ae8b73c6d1d54c6f9eb54911a463a9",
+    "beaconcrypt-core/src/peer.rs": "5ace82b81a3e1c191223fd0629be3f00bbd321336baed0b568c9e432df0f9d77",
+    "beaconcrypt-core/src/transport.rs": "795012d453a3ed209d6f8815eeedb2ccabaebd9a81d03f932d64f95aea9c3617",
     "beaconcrypt-crypto/src/crypto_aead.rs": "1b62a128ed169c81a45825ede6853b32ae715ce9ea96f9d53803e7fb461b9bf1",
     "beaconcrypt-crypto/src/crypto_generichash.rs": "292e806217ff105632f48ac32d89f3e9820b8a2b118810790be06e60104168f3",
     "beaconcrypt-crypto/src/crypto_kdf.rs": "8fc41159cc32f483a89ee4a273b9ebdf32fd75d23591580c991efb8b8c70cdf2",
@@ -143,7 +145,7 @@ def compare(text, macro):
 def validate(directory=HERE, source_root=None):
     marker = (
         "(* @beaconcrypt-fidelity-v1 legacy_profiles.scope="
-        "classical_projection:MLDSA_guards_not_globally_lifted *)"
+        "historical_classical_projection:no_current_runtime_refinement_claim *)"
     )
     if (directory / "production-transcript-interface.pvl").read_text().count(
         marker

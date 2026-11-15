@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Refinement.TranscriptAuth
+import BeaconcryptCore.Refinement.SessionTranscript
 
 /-!
 The full-crate authentication extraction returns normally for arbitrary represented inputs. The byte-building certificates reuse the exact transcript refinements of those same generated operations, without assumptions about hashing or signatures.
@@ -46,11 +47,21 @@ theorem build_signature_input_total (role : authentication.AuthRole)
     ∃ result, authentication.build_signature_input role digest = ok result :=
   (TranscriptAuthInputsRefinement.build_signature_input_abs role digest).imp (fun _ h => h.1)
 
-/-- Both hash slots can be filled for any base buffer and fingerprint bytes. -/
-theorem bind_associated_data_total (base : Std.Array Std.U8 281#usize)
-    (server beacon : Std.Array Std.U8 64#usize) :
-    ∃ result, authentication.bind_associated_data base server beacon = ok result :=
-  (TranscriptAuthInputsRefinement.bind_associated_data_abs base server beacon).imp (fun _ h => h.1)
+/-- Complete AD assembly returns normally for every exact-width transcript digest. -/
+theorem assemble_associated_data_total (digest : Std.Array Std.U8 64#usize) :
+    ∃ result, authentication.assemble_associated_data digest = ok result :=
+  (TranscriptAuthInputsRefinement.assemble_associated_data_abs digest).imp (fun _ h => h.1)
+
+/-- The current exact-width field encoder always returns its 2638-byte transcript. -/
+theorem build_record_ad_transcript_total (init : authentication.InitFields)
+    (response : authentication.AdResponseFields) :
+    ∃ result, authentication.build_record_ad_transcript init response = ok result :=
+  SessionTranscriptRefinement.build_record_ad_transcript_total init response
+
+/-- Owned exact request fields provide the complete identity suffix without a panic. -/
+theorem owned_identity_public_key_total (fields : authentication.OwnedInitFields) :
+    ∃ result, authentication.OwnedInitFields.identity_public_key fields = ok result :=
+  (TranscriptAuthInputsRefinement.identity_public_key_exact fields).imp (fun _ h => h.1)
 
 /-- Little-endian encoding covers every represented unsigned 64-bit value. -/
 theorem encode_u64_le_total (value : Std.U64) :
@@ -73,6 +84,12 @@ theorem transcript_hash_width_total : ∃ result, authentication.__1 = ok result
 /-- The associated-data width assertion holds on every supported word width. -/
 theorem associated_data_width_total : ∃ result, authentication.__2 = ok result := by
   simp [authentication.__2, constants.ASSOCIATED_DATA_SIZE]
+
+theorem owned_fields_total (self : authentication.OwnedInitFields) :
+    ∃ result, authentication.OwnedInitFields.fields self = ok result := ⟨_, rfl⟩
+
+theorem owned_fields_new_total (fields : authentication.InitFields) :
+    ∃ result, authentication.OwnedInitFields.new fields = ok result := ⟨_, rfl⟩
 
 end BeaconcryptCore.PanicFreedom.Authentication
 
@@ -101,11 +118,11 @@ end BeaconcryptCore.PanicFreedom.Authentication
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.PanicFreedom.Authentication.build_signature_input_total
-/-- info: 'BeaconcryptCore.PanicFreedom.Authentication.bind_associated_data_total' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.PanicFreedom.Authentication.assemble_associated_data_total' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.PanicFreedom.Authentication.bind_associated_data_total
+#print axioms BeaconcryptCore.PanicFreedom.Authentication.assemble_associated_data_total
 /-- info: 'BeaconcryptCore.PanicFreedom.Authentication.encode_u64_le_total' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
@@ -129,3 +146,15 @@ end BeaconcryptCore.PanicFreedom.Authentication
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.PanicFreedom.Authentication.associated_data_width_total
+
+/-- info: 'BeaconcryptCore.PanicFreedom.Authentication.build_record_ad_transcript_total' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.PanicFreedom.Authentication.build_record_ad_transcript_total
+
+/-- info: 'BeaconcryptCore.PanicFreedom.Authentication.owned_identity_public_key_total' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.PanicFreedom.Authentication.owned_identity_public_key_total

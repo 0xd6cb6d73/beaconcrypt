@@ -28,7 +28,7 @@ open RegistrationNativePlatformPublicAdapterBundlePhysical (Word finish call run
 variable [original : CryptoOperations (RustT ProbComp)]
 variable (coins : QueryImpl unifSpec (StateT P ProbComp))
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (view : AdapterPublicWrapperState.MaterialView source KemSK)
 variable (physicalLocal : LocalOperations (RustT (StateT (Backend n KemSK) (StateT P ProbComp))))
 variable (failure : ed.Error) (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT P ProbComp))

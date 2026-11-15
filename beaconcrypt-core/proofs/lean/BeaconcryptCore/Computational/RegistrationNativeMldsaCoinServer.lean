@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeMldsaCoinServerPrimitives
+import BeaconcryptCore.Computational.RegistrationNativeMldsaServer
 
 /-! The complete original free Server response build has an all-raw-replies ordinary-randomness cap. The source record and response controllers retain every failed prefix; known-kernel installation, occupancy and moved-token bookkeeping add no random draw. The only ML signing request stays an explicit free capability. -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -186,20 +187,48 @@ private theorem fromInitial (setup : Setup base KemSK) (codec : Codec Reader Res
     (world source _ _ (completionFromInitial source credential setup codec encode control pending))
     (fun result before => ordinary _ 0 (commit result before))
 
+/-- The actual response-dependent AD hash has at most one64-byte ROM miss, before any peer reservation. -/
+private theorem nativeAdHash (pending : registration.ServerAdHash) (before : RegistrationServerFrontendCompiler.State n) :
+    ((RegistrationServerSdkSource.adHash pending).run before).IsTotalQueryBound 64 := by
+  unfold RegistrationServerSdkSource.adHash RegistrationServerSdkSource.world
+  simp only [StateT.run, IsTotalQueryBound, isQueryBound_map_iff]
+  unfold RegistrationWorldServerCompletion.adHash
+  cases pending.request with
+  | fail error | div => trivial
+  | ok request =>
+      apply isTotalQueryBound_bind (n₁ := 64) (n₂ := 0)
+      · simpa only [RegistrationWorldServerCompletion.capability, StateT.run, IsTotalQueryBound,
+          isQueryBound_map_iff] using RegistrationNativeMldsaCoinPrimitives.hash
+            (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request) before.world.world.1
+      · intro hashed
+        trivial
+
+/-- Reifying the AD hash adds no ML request and preserves its actual ordinary draw bound. -/
+theorem adHash (pending : registration.ServerAdHash) (before : RegistrationServerFrontendCompiler.State n) :
+    ((RegistrationNativeMldsaServer.adHash source pending).run before).IsQueryBoundP IsCoin 64 :=
+  ordinary _ 64 (nativeAdHash pending before)
+
 private theorem afterOccupancy (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (encode : registration.SignedResponseView → core.option.Option Pqxdh.Bytes)
     (control : pqxdh.ServerState) (lookup : peer.CompletionLookup) (occupied : Bool) :
-    Bound source (RegistrationNativeMldsaServer.afterOccupancy (n := n) source credential setup codec checks encode control lookup occupied) 448 := by
+    Bound source (RegistrationNativeMldsaServer.afterOccupancy (n := n) source credential setup codec checks encode control lookup occupied) 512 := by
   unfold RegistrationNativeMldsaServer.afterOccupancy
   cases lookup.resume occupied with
   | fail error | div => exact pure_bound source _ _
   | ok answer => cases answer with
     | Err previous => exact pure_bound source _ _
     | Ok pending =>
-        simp only
-        split
-        · exact fromInitial source credential setup codec encode control pending
-        · exact pure_bound source _ _
+        apply bind_bound source _ _ 64 448 (adHash source pending)
+        intro hashed
+        cases hashed with
+        | fail error | div => exact pure_bound source _ _
+        | ok result => cases result with
+          | Err previous => exact pure_bound source _ _
+          | Ok initial =>
+              simp only
+              split
+              · exact fromInitial source credential setup codec encode control initial
+              · exact pure_bound source _ _
 
 private theorem peerPresent (keyId : U64) (before : RegistrationServerRootCompiler.Local n) :
     ((RegistrationWorldServerCompletion.capability (.peerPresent keyId)).run before).IsTotalQueryBound 0 := by
@@ -209,7 +238,7 @@ private theorem peerPresent (keyId : U64) (before : RegistrationServerRootCompil
 private theorem complete (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (encode : registration.SignedResponseView → core.option.Option Pqxdh.Bytes)
     (token : peer.ConsumedRegistration) (application : Slice U8) :
-    Bound source (RegistrationNativeMldsaServer.complete (n := n) source credential setup codec checks encode token application) 448 := by
+    Bound source (RegistrationNativeMldsaServer.complete (n := n) source credential setup codec checks encode token application) 512 := by
   intro before
   simp only [RegistrationNativeMldsaServer.complete, StateT.run]
   cases peer.begin_completion_lookup before.control before.pin token application with
@@ -223,16 +252,16 @@ private theorem complete (setup : Setup base KemSK) (codec : Codec Reader Respon
         | ok keyId =>
             simp only
             split
-            · exact isQueryBoundP_bind (n := 0) (m := 448)
+            · exact isQueryBoundP_bind (n := 0) (m := 512)
                 (world source _ 0 (fun current => ordinary _ 0 (peerPresent keyId current)) before)
                 (fun result _ => afterOccupancy source credential setup codec checks encode before.control lookup result.1 result.2)
             · trivial
 
-/-- The complete original moved-handle SDK build pays at most seven literal64-draw slots, with no successful-signature or cost-frame premise. -/
+/-- The complete original moved-handle SDK build pays at most eight literal64-draw slots including the AD hash, with no successful-signature or cost-frame premise. -/
 theorem build (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (encode : registration.SignedResponseView → core.option.Option Pqxdh.Bytes)
     (handle : Nat) (application : Option (Slice U8)) (before : RegistrationServerFrontendCompiler.State n) :
-    ((RegistrationNativeMldsaServer.build source credential setup codec checks encode handle application).run before).IsQueryBoundP IsCoin 448 := by
+    ((RegistrationNativeMldsaServer.build source credential setup codec checks encode handle application).run before).IsQueryBoundP IsCoin 512 := by
   simp only [RegistrationNativeMldsaServer.build, StateT.run]
   cases RegistrationServerSdkSource.take handle before with
   | mk found current => cases found with
@@ -271,3 +300,9 @@ end BeaconcryptCore.Computational.RegistrationNativeMldsaCoinServer
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaCoinServer.build
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaCoinServer.adHash' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaCoinServer.adHash

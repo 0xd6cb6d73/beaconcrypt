@@ -11,6 +11,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhProtocolExperiment
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhJointIdentityFamily PqxdhJointIdentityFreshness
 open PqxdhJointPhase1SourceWriter PqxdhJointPhase1AcceptanceComposition
 open PqxdhPhase1AcceptanceOracle PqxdhPrivateSourceCoins PqxdhPrivateCandidateAcceptance
@@ -53,14 +54,14 @@ noncomputable def Environment.plan (env : Environment baseSpec M P I D K A S B)
 
 noncomputable def Environment.observer (env : Environment baseSpec M P I D K A S B)
     (setup : StatefulPhase1Setup baseSpec) (program : PqxdhProtocolSelector.Program baseSpec setup.Context S B)
-    (post : Post program.Selection S B) := (env.plan setup program post).continuation env.parameters.source
+    (post : Post program.Selection S B) := (env.plan setup program post).continuation (associatedData := associatedData) env.parameters.source
 
 noncomputable def Environment.protocol (env : Environment baseSpec M P I D K A S B)
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
     (attachedVerify : Ed25519PublicKey → Pqxdh.Bytes → Option Pqxdh.Bytes) (primitives : Primitives)
     (setup : StatefulPhase1Setup baseSpec) (program : PqxdhProtocolSelector.Program baseSpec setup.Context S B)
     (post : Post program.Selection S B) :=
-  rootProtocol kem env.parameters attachedVerify primitives setup (env.selector program) (env.observer setup program post)
+  rootProtocol kem env.parameters attachedVerify primitives setup (env.selector program) (env.observer (associatedData := associatedData) setup program post)
 
 /-- The all-candidate source root runs the compiled adaptive prefix and the reached native response builder. -/
 noncomputable def Environment.actual (env : Environment baseSpec M P I D K A S B)
@@ -69,7 +70,7 @@ noncomputable def Environment.actual (env : Environment baseSpec M P I D K A S B
     (setup : StatefulPhase1Setup baseSpec) (program : PqxdhProtocolSelector.Program baseSpec setup.Context S B)
     (post : Post program.Selection S B) : ProbComp Bool :=
   actualGame baseImpl kem env.parameters attachedVerify primitives setup (env.selector program)
-    (env.observer setup program post)
+    (env.observer (associatedData := associatedData) setup program post)
 
 /-- The target contribution is uniform with the existing same-secret routing; public fixed HKDF remains real. -/
 noncomputable def Environment.correlated (env : Environment baseSpec M P I D K A S B)
@@ -78,7 +79,7 @@ noncomputable def Environment.correlated (env : Environment baseSpec M P I D K A
     (setup : StatefulPhase1Setup baseSpec) (program : PqxdhProtocolSelector.Program baseSpec setup.Context S B)
     (post : Post program.Selection S B) : ProbComp Bool :=
   simulateQ (kemAmbientImpl baseImpl) (randomMain env.parameters.source kem (runtimeOfImpl (kemAmbientImpl baseImpl))
-    (env.protocol kem attachedVerify primitives setup program post))
+    (env.protocol (associatedData := associatedData) kem attachedVerify primitives setup program post))
 
 noncomputable def Environment.authenticationReduction (env : Environment baseSpec M P I D K A S B)
     (baseImpl : QueryImpl baseSpec ProbComp) (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
@@ -92,7 +93,7 @@ noncomputable def Environment.kemReduction (env : Environment baseSpec M P I D K
     (attachedVerify : Ed25519PublicKey → Pqxdh.Bytes → Option Pqxdh.Bytes) (primitives : Primitives)
     (setup : StatefulPhase1Setup baseSpec) (program : PqxdhProtocolSelector.Program baseSpec setup.Context S B)
     (post : Post program.Selection S B) :=
-  (reduction env.parameters.source kem (env.protocol kem attachedVerify primitives setup program post)).toINDCCA
+  (reduction env.parameters.source kem (env.protocol (associatedData := associatedData) kem attachedVerify primitives setup program post)).toINDCCA
 
 /-- Original public-program restrictions, not an honest-selected-key premise, discharge the two source restrictions. -/
 theorem authenticated_bound (env : Environment baseSpec M P I D K A S B)
@@ -109,12 +110,12 @@ theorem authenticated_bound (env : Environment baseSpec M P I D K A S B)
       (PqxdhProtocolSelector.SelectorClass (PqxdhPrivateKemQueryBounds.SelectorSource (baseSpec := baseSpec) Creating)) 0)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : Forgery)
     (post : Post program.Selection S B) :
-    (env.actual baseImpl kem attachedVerify primitives setup program post).boolDistance
-      (env.correlated baseImpl kem attachedVerify primitives setup program post) ≤
+    (env.actual (associatedData := associatedData) baseImpl kem attachedVerify primitives setup program post).boolDistance
+      (env.correlated (associatedData := associatedData) baseImpl kem attachedVerify primitives setup program post) ≤
       (advantage primitives (env.authenticationReduction baseImpl kem primitives setup program fallback ordinaryFallback)).toReal +
       (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
-        (env.kemReduction kem attachedVerify primitives setup program post)).toReal := by
-  exact PqxdhAcceptedRegistration.authenticated_registration_bound baseImpl kem env.parameters compatible functional
+        (env.kemReduction (associatedData := associatedData) kem attachedVerify primitives setup program post)).toReal := by
+  exact PqxdhAcceptedRegistration.authenticated_registration_bound (associatedData := associatedData) baseImpl kem env.parameters compatible functional
     correct attachedVerify primitives adapter setup (env.selector program)
     (fun transcript => PqxdhProtocolSelector.selected_source_bound env.parameters.source env.writer env.senderId
       env.route env.decode program env.initial IsSigning transcript 0 (noSign transcript))
@@ -147,10 +148,10 @@ theorem reached_accepted_run (env : Environment baseSpec M P I D K A S B)
           PqxdhRefinement.absBytes pending.root_key_input.bytes = hiddenRootIKM
             (serverCoordinates env.parameters.source.crypto env.parameters.server.ikSk ephemeral.toList
               identity keys.prekey keys.oneTime) secret ∧
-          ((env.observer setup program post).accepted (some output)
+          ((env.observer (associatedData := associatedData) setup program post).accepted (some output)
             (ready env.parameters.server env.parameters.application identity keys.oneTime ephemeral ciphertext root)) =
             PqxdhProtocolRegistration.coins (do
-              let result ← (PqxdhRegistrationProtocolState.nativeBuild env.parameters.source env.writer env.aux
+              let result ← (PqxdhRegistrationProtocolState.nativeBuild (associatedData := associatedData) env.parameters.source env.writer env.aux
                 env.senderId env.index env.metadata pending root env.parameters.application).run
                   { output.context.selection.2 with
                     consumed := Function.update output.context.selection.2.consumed env.index
@@ -162,7 +163,7 @@ theorem reached_accepted_run (env : Environment baseSpec M P I D K A S B)
     prefixResult present secretIdentity env.index env.parameters.server initialMatch
   refine ⟨output, outputEq, ?_⟩
   intro identity keys ephemeral ciphertext secret root fresh valid
-  obtain ⟨pending, accepted, rootBytes, _, builder⟩ := PqxdhProtocolAcceptance.accepted_builder
+  obtain ⟨pending, accepted, rootBytes, _, builder⟩ := PqxdhProtocolAcceptance.accepted_builder (associatedData := associatedData)
     env.parameters.source env.writer env.aux secretIdentity env.senderId env.index env.metadata
     output.context.selection.2 env.parameters.server related env.parameters.application identity keys ephemeral ciphertext
     secret root fresh valid

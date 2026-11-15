@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePlatformOriginCallbackPrefix
 /-! Rewriting the exact callbacks at the supported original prefixes preserves the full adaptive result and state. This transports source-derived readiness into the checked material dictionary without changing any original trace or failed callback outcome. -/
-open OracleComp OracleSpec CoreModels
+open OracleComp OracleSpec
 set_option autoImplicit false
 set_option warningAsError true
 set_option maxRecDepth 8192

@@ -127,7 +127,7 @@ private theorem typed_query (setup : Setup base KemSK) (codec : Codec Reader Res
       (native_query setup codec (.inr (.inr input))) before
 
 theorem receive_program (setup : Setup base KemSK) (codec : Codec Reader Response)
-    (erased : Array U8 357#usize) (work : OracleComp BeaconcryptCore.Refinement.AdapterRecordRequestMonad.Spec A)
+    (erased : Array U8 227#usize) (work : OracleComp BeaconcryptCore.Refinement.AdapterRecordRequestMonad.Spec A)
     (before : Primitive) :
     Prod.map id primitive <$>
       ((simulateQ (RegistrationNativePlatformExtractedSdkOrdinaryReceiveDriver.replies setup codec erased) work).run before)=

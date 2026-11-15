@@ -60,9 +60,9 @@ LINTERS = (
 POLICY = "set_option autoImplicit false\nset_option warningAsError true\n"
 RAW_SHA256 = {
     "Types.lean": "89c58951f50b1467b5b4e6980c969d8e05b9e1b1aeaf58120e7c7e1e27d9ef96",
-    "Funs.lean": "c6eb0ddd5ebe874b99fc1c255a3dbfc142f7ccf0ed2c81085c2aa437a257215c",
+    "Funs.lean": "85f4a51b4ad99a69a42fa78b2bf45d26ac5e06df233a3d1d4d6f09b61ff52f4a",
     "TypesExternal_Template.lean": "8523567a9ec3d2416673fd29f4aa75fe72104a375dba090d9d0746e2e9ca447e",
-    "FunsExternal_Template.lean": "f60b18aab2f54ec391b0df1aa47dd4af88451aa11a7a3d81e42e7dd4ca8d94cf",
+    "FunsExternal_Template.lean": "5206955c64d1936b916e9be59183004507bb31d20b117f0ca832fe8607b9f548",
 }
 INTERFACES = []
 

@@ -42,25 +42,33 @@ def Failure (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (chec
     (result : Outcome KemSK) : Prop :=
   (∃ snap, result.state.1.ghost.acceptance = some snap) ∧ ¬ Authenticated setup codec checks result
 
-/-- The complete accepted-session failure is covered by the stronger same-owner record event or the existing all-attempt signed-field substitution event, on this one exact audited run. -/
-theorem failure_cases (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+/-- Authentication failure or a collision of the final BLAKE2b cache on the actual source execution. -/
+def FailureOrCollision (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (result : Outcome KemSK) : Prop :=
+  Failure setup codec checks result ∨ CacheHasCollision result.state.1.ctx
+
+/-- The complete accepted-session failure, or a collision of the final BLAKE2b cache, is covered by the stronger same-owner record event, the existing all-attempt signed-field substitution event or that collision, on this one exact audited run. This replaces `failure_cases`, which is false once associated data is hashed. -/
+theorem failure_cases_or_collision (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (adversary : Adversary) (Q qH qHash : Nat) (budget : AuthBudget adversary Q qH qHash)
     (adapter : HasAttachedVerificationAdapter
       (fun identity => setup.source.crypto.verify identity.toList) setup.joint.verify)
     (result : Outcome KemSK) (supported : result ∈ support (game setup codec checks false adversary))
-    (failed : Failure setup codec checks result) :
+    (failed : FailureOrCollision setup codec checks result) :
     PqxdhServerAuthPublicationOwnerFamily.Accepted setup Q (PqxdhServerAuthSessionRecord.observers codec Q)
-      (observed result) ∨ changed setup codec result = true := by
+      (observed result) ∨ changed setup codec result = true ∨ CacheHasCollision result.state.1.ctx := by
+  by_cases collided : CacheHasCollision result.state.1.ctx
+  · exact Or.inr (Or.inr collided)
+  have failed : Failure setup codec checks result := failed.resolve_right collided
   cases substituted : changed setup codec result with
-  | true => exact Or.inr rfl
+  | true => exact Or.inr (Or.inl rfl)
   | false =>
       refine Or.inl ⟨failed.1, fun j owned => ?_⟩
       apply (PqxdhServerAuthSessionRecordEvent.observer_true codec j.val result.state.1.ghost
         (result.state.2.map publicCall)).mpr
       exact fun published => failed.2 ⟨j.val,
-        game_common setup codec checks adversary result supported j.val
+        game_common_of_noCollision setup codec checks adversary result supported j.val
           (owner_matching setup codec checks adversary Q qH qHash budget result supported j owned published)
-          adapter substituted,
+          adapter substituted collided,
         published.2⟩
 
 end BeaconcryptCore.Computational.PqxdhServerAuthCommonEvent
@@ -71,8 +79,8 @@ end BeaconcryptCore.Computational.PqxdhServerAuthCommonEvent
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhServerAuthCommonEvent.owner_matching
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthCommonEvent.failure_cases' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthCommonEvent.failure_cases_or_collision' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhServerAuthCommonEvent.failure_cases
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthCommonEvent.failure_cases_or_collision

@@ -1,6 +1,9 @@
 -- SPDX-License-Identifier: 0BSD
-import BeaconcryptCore.Computational.RegistrationNativePlatformIdentityCtxRuntimeBirthday
-import BeaconcryptCore.Computational.RegistrationNativePlatformCtxSdkHashBounds
+import BeaconcryptCore.Computational.RegistrationNativePlatformIdentityCtxOrdinary
+import BeaconcryptCore.Computational.RegistrationNativePlatformIdentityCtxBackend
+import BeaconcryptCore.Computational.RegistrationNativePlatformCtxLeafHashBounds
+import BeaconcryptCore.Computational.RegistrationNativePlatformCtxBuild
+import BeaconcryptCore.Computational.RegistrationNativePlatformCtxBirthdayBudget
 /-! Resource accounting retains physical shared hashes separately from native and public sampler coins. The Main/Context lenses and adaptive sequencing preserve actual all-reply hash caps. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc

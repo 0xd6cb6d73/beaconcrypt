@@ -12,17 +12,20 @@ open PqxdhDeploymentCompileRegistration (Installed Copied)
 open PqxdhDeploymentCompileStep (Inv compiledImpl)
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response : Type}
 
-/-- The public reconstruction of one owner from the log: its `create` entry, its pinned Server identity, and, by phase, its expected binding, its bundle's identity key, or its established outer key ID, control and associated data. -/
-def OwnerShape (codec : Codec Reader Response) (log : Log) (index : Nat)
-    (owner : PqxdhRegistrationSchedule.Owner KemSK) : Prop :=
+/-- The public reconstruction of one owner from the log: its `create` entry, its pinned Server identity, and, by phase, its expected binding, its bundle's identity key and the retained bundle whose Init fields its bundle bytes read back to, or its established outer key ID, control and public registration transcript, cached in the BLAKE2b cache at the digest whose `PqxdhTranscriptAd.adOf` is its associated data. -/
+def OwnerShape (codec : Codec Reader Response) (log : Log) (inits : Nat → Option PqxdhEd25519EufCma.Phase1Candidate)
+    (cache : CtxRomAuth.CtxRO.QueryCache) (index : Nat) (owner : PqxdhRegistrationSchedule.Owner KemSK) : Prop :=
   ∃ pin keyId, log.owners[index]? = some (pin, keyId) ∧ owner.beacon.serverIdentity = pin ∧
     match owner.beacon.phase with
     | .fresh control _ _ => control.expected_server_binding = ⟨pin, keyId⟩
     | .freshWithCoins control _ _ _ => control.expected_server_binding = ⟨pin, keyId⟩
     | .initSent control _ _ _ => control.expected_server_binding = ⟨pin, keyId⟩ ∧
-        ∃ bytes, log.bundles index = some bytes ∧ identityOf codec bytes = some control.beacon_identity_public_key
+        ∃ bytes, log.bundles index = some bytes ∧ identityOf codec bytes = some control.beacon_identity_public_key ∧
+          ∃ init, inits index = some init ∧
+            PqxdhDeploymentCompile.publicInit codec bytes = some (PqxdhTranscriptAd.initOf init)
     | .established control associatedData _ =>
-        ownerView codec log index = some (owner.beacon.identityKeyId, control, associatedData)
+        ∃ transcript digest, ownerView codec log index = some (owner.beacon.identityKeyId, control, transcript) ∧
+          cache ((), transcript) = some digest ∧ associatedData = PqxdhTranscriptAd.adOf digest
     | .aborted _ => True
 
 /-- The full simulation invariant. -/
@@ -34,17 +37,24 @@ structure Good (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (c
     peerView codec copies.log kid = some (native.shared.2.server.server.identity, peer.identity)
   count : copies.log.owners.length = native.owners.length
   copied : Copied copies native
-  owners : ∀ index owner, native.owners[index]? = some owner → OwnerShape codec copies.log index owner
+  owners : ∀ index owner, native.owners[index]? = some owner →
+    OwnerShape codec copies.log native.inits native.shared.2.ctx index owner
   pending : ∀ session token, native.shared.2.pending session = some token →
     session < native.shared.2.sessions ∧ ∃ raw, copies.log.accepts session = some raw ∧
       identityOf codec raw = some token.pending.beacon_identity_public_key
   accepts : ∀ session raw, copies.log.accepts session = some raw → session < native.shared.2.sessions
+  peers : ∀ kid peer, native.shared.2.server.server.peers kid = some peer →
+    ∃ transcript digest, PqxdhDeploymentCompile.peerTranscript codec copies.log kid = some transcript ∧
+      native.shared.2.ctx ((), transcript) = some digest ∧ peer.metadata = PqxdhTranscriptAd.adOf digest
+  pendingInit : ∀ session token, native.shared.2.pending session = some token →
+    ∃ raw, copies.log.accepts session = some raw ∧
+      PqxdhDeploymentCompile.publicInit codec raw = some (PqxdhTranscriptAd.initOf token.init)
 
 /-- The full invariant implies the compile-step invariant. -/
 theorem good_inv (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (copies : Local)
     (native : PqxdhRegistrationSchedule.State KemSK) (good : Good setup codec copies native) :
     Inv setup codec copies native := by
-  refine ⟨good.keyId, good.installed, good.serverVisible, good.count, good.copied, ?_⟩
+  refine ⟨good.keyId, good.installed, good.serverVisible, good.count, good.copied, ?_, good.peers⟩
   intro index owner control associatedData kernel found phase
   obtain ⟨pin, keyId, _, _, shape⟩ := good.owners index owner found
   simpa only [phase] using shape
@@ -61,14 +71,40 @@ theorem shared_footprint {Result : Type} (setup : Setup baseSpec KemSK) (serverS
   obtain ⟨reached, _, rfl⟩ := supported
   rfl
 
-/-- The invariant survives any step that keeps the log, the owners, the Server peer map, identity and key ID, the pending tokens and the session counter. -/
+/-- A source14 command run on the shared native state keeps the retained Phase 1 bundles. -/
+theorem shared_inits {Result : Type} (setup : Setup baseSpec KemSK) (serverSeed : IdentitySeed)
+    (work : Game KemSK Result) (native : PqxdhRegistrationSchedule.State KemSK)
+    (result : Result × PqxdhRegistrationSchedule.State KemSK)
+    (supported : result ∈ support ((PqxdhRegistrationSchedule.onShared
+      (evaluate setup serverSeed PqxdhRegistrationSchedule.observationScalar work)).run native)) :
+    result.2.inits = native.inits := by
+  rw [PqxdhRegistrationSchedule.onShared_run, support_map] at supported
+  obtain ⟨reached, _, rfl⟩ := supported
+  rfl
+
+/-- An owner's reconstruction survives every extension of the BLAKE2b cache. -/
+theorem ownerShape_grow (codec : Codec Reader Response) (log : Log)
+    (inits : Nat → Option PqxdhEd25519EufCma.Phase1Candidate) {cache grown : CtxRomAuth.CtxRO.QueryCache}
+    (grow : cache ≤ grown) (index : Nat) (owner : PqxdhRegistrationSchedule.Owner KemSK)
+    (shape : OwnerShape codec log inits cache index owner) : OwnerShape codec log inits grown index owner := by
+  obtain ⟨pin, keyId, created, pinned, phase⟩ := shape
+  refine ⟨pin, keyId, created, pinned, ?_⟩
+  revert phase
+  cases owner.beacon.phase with
+  | established control associatedData kernel =>
+      rintro ⟨transcript, digest, view, cached, adEq⟩
+      exact ⟨transcript, digest, view, grow cached, adEq⟩
+  | _ => exact id
+
+/-- The invariant survives any step that keeps the log, the owners, the retained bundles, the Server peer map, identity and key ID, the pending tokens and the session counter and only extends the BLAKE2b cache. -/
 theorem good_frame (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (copies : Local)
     (native after : PqxdhRegistrationSchedule.State KemSK) (good : Good setup codec copies native)
-    (owners : after.owners = native.owners)
+    (owners : after.owners = native.owners) (inits : after.inits = native.inits)
+    (grow : native.shared.2.ctx ≤ after.shared.2.ctx)
     (fixed : PqxdhDeploymentCompileFootprint.ServerFixed native.shared.2 after.shared.2) :
     Good setup codec copies after := by
   obtain ⟨server, keyId, pending, sessions⟩ := fixed
-  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [keyId]
     exact good.keyId
   · intro kid current copied
@@ -81,12 +117,20 @@ theorem good_frame (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
   · intro index current copied
     rw [owners]
     exact good.copied index current copied
-  · rw [owners]
-    exact good.owners
+  · intro index owner found
+    rw [owners] at found
+    rw [inits]
+    exact ownerShape_grow codec copies.log native.inits grow index owner (good.owners index owner found)
   · rw [pending, sessions]
     exact good.pending
   · rw [sessions]
     exact good.accepts
+  · intro kid peer found
+    rw [server] at found
+    obtain ⟨transcript, digest, view, cached, adEq⟩ := good.peers kid peer found
+    exact ⟨transcript, digest, view, grow cached, adEq⟩
+  · rw [pending]
+    exact good.pendingInit
 
 /-- The public HMAC and BLAKE2b commands keep the invariant. -/
 theorem good_public (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -104,17 +148,24 @@ theorem good_public (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
       at supported
     obtain ⟨owners, reached⟩ := shared_footprint setup serverSeed _ native result supported
     exact good_frame setup codec copies native result.2 good owners
+      (shared_inits setup serverSeed _ native result supported)
+      (PqxdhServerAuthExperiment.hmac_step (Reader := Reader) (Response := Response) (setup := setup)
+        (publicValue := PqxdhJointGapDh.challenge setup.joint setup.dh serverSeed
+          PqxdhRegistrationSchedule.observationScalar) key message _ _ reached).2.1.ctx
       (PqxdhDeploymentCompileFootprint.hmac_fixed key message _ _ reached)
   · simp only [PqxdhRegistrationSchedule.handler, ← hash_native setup serverSeed PqxdhRegistrationSchedule.observationScalar]
       at supported
     obtain ⟨owners, reached⟩ := shared_footprint setup serverSeed _ native result supported
     exact good_frame setup codec copies native result.2 good owners
+      (shared_inits setup serverSeed _ native result supported) (hashOracle_grows bytes _ _ reached).2.1
       (PqxdhDeploymentCompileFootprint.hash_fixed bytes _ _ reached)
 
 /-- Owner shapes read only the created, bundle and finish entries of the log. -/
 theorem ownerShape_accepts (codec : Codec Reader Response) (log : Log) (accepts : Nat → Option Pqxdh.Bytes)
+    (inits : Nat → Option PqxdhEd25519EufCma.Phase1Candidate) (cache : CtxRomAuth.CtxRO.QueryCache)
     (index : Nat) (owner : PqxdhRegistrationSchedule.Owner KemSK) :
-    OwnerShape codec { log with accepts := accepts } index owner ↔ OwnerShape codec log index owner := Iff.rfl
+    OwnerShape codec { log with accepts := accepts } inits cache index owner ↔
+      OwnerShape codec log inits cache index owner := Iff.rfl
 
 /-- Logging an accept at a handle with no earlier entry keeps every reconstructible peer. -/
 theorem peerView_accept (codec : Codec Reader Response) (log : Log) (session : Nat) (raw : Pqxdh.Bytes)
@@ -122,6 +173,20 @@ theorem peerView_accept (codec : Codec Reader Response) (log : Log) (session : N
     (found : peerView codec log kid = some view) :
     peerView codec { log with accepts := Function.update log.accepts session (some raw) } kid = some view := by
   simp only [peerView, Option.bind_eq_bind, Option.bind_eq_some_iff] at found ⊢
+  obtain ⟨built, builtEq, raw', rawEq, rest⟩ := found
+  have different : built.1 ≠ session := by
+    intro same
+    rw [same, fresh] at rawEq
+    cases rawEq
+  exact ⟨built, builtEq, raw', by rw [Function.update_of_ne different]; exact rawEq, rest⟩
+
+/-- Logging an accept at a handle with no earlier entry keeps every public peer transcript. -/
+theorem peerTranscript_accept (codec : Codec Reader Response) (log : Log) (session : Nat) (raw : Pqxdh.Bytes)
+    (fresh : log.accepts session = none) (kid : Std.U64) (transcript : Pqxdh.Bytes)
+    (found : PqxdhDeploymentCompile.peerTranscript codec log kid = some transcript) :
+    PqxdhDeploymentCompile.peerTranscript codec { log with accepts := Function.update log.accepts session (some raw) } kid =
+      some transcript := by
+  simp only [PqxdhDeploymentCompile.peerTranscript, Option.bind_eq_bind, Option.bind_eq_some_iff] at found ⊢
   obtain ⟨built, builtEq, raw', rawEq, rest⟩ := found
   have different : built.1 ≠ session := by
     intro same
@@ -139,16 +204,25 @@ theorem good_accept (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   simp only [PqxdhRegistrationSchedule.handler,
     ← accept_native setup codec checks serverSeed PqxdhRegistrationSchedule.observationScalar] at supported
   obtain ⟨owners, reached⟩ := shared_footprint setup serverSeed _ native result supported
+  have initsEq := shared_inits setup serverSeed _ native result supported
+  have grow := (PqxdhServerAuthExperiment.accept_step codec checks raw _ _ reached).2.1.ctx
+  have initData := PqxdhDeploymentCompileFootprint.accept_init setup codec checks _ raw _ _ reached
   obtain ⟨server, keyId, sessions, others, rejected, accepted⟩ :=
     PqxdhDeploymentCompileFootprint.accept_footprint setup codec checks _ raw _ _ reached
   have freshLog : copies.log.accepts native.shared.2.sessions = none := by
     cases logged : copies.log.accepts native.shared.2.sessions with
     | none => rfl
     | some old => exact absurd (good.accepts _ old logged) (Nat.lt_irrefl _)
+  have ownersKept : ∀ index owner, result.2.owners[index]? = some owner →
+      OwnerShape codec copies.log result.2.inits result.2.shared.2.ctx index owner := by
+    intro index owner found
+    rw [owners] at found
+    rw [initsEq]
+    exact ownerShape_grow codec copies.log native.inits grow index owner (good.owners index owner found)
   rcases outcome : result.1 with _ | handle
   · have pending := rejected outcome
     simp only [PqxdhDeploymentCompile.logReply]
-    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    refine ⟨?_, ?_, ?_, ?_, ?_, ownersKept, ?_, ?_, ?_, ?_⟩
     · rw [keyId]; exact good.keyId
     · intro kid current copied
       rw [server]
@@ -158,7 +232,6 @@ theorem good_accept (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     · intro index current copied
       rw [owners]
       exact good.copied index current copied
-    · rw [owners]; exact good.owners
     · intro session token found
       rw [pending] at found
       obtain ⟨below, logged⟩ := good.pending session token found
@@ -167,10 +240,16 @@ theorem good_accept (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
       have below := good.accepts session logged found
       rw [sessions]
       omega
+    · intro kid peer found
+      rw [server] at found
+      obtain ⟨transcript, digest, view, cached, adEq⟩ := good.peers kid peer found
+      exact ⟨transcript, digest, view, grow cached, adEq⟩
+    · rw [pending]
+      exact good.pendingInit
   · obtain ⟨handleEq, token, stored, identified⟩ := accepted handle outcome
     subst handleEq
     simp only [PqxdhDeploymentCompile.logReply]
-    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    refine ⟨?_, ?_, ?_, ?_, ?_, ownersKept, ?_, ?_, ?_, ?_⟩
     · rw [keyId]; exact good.keyId
     · intro kid current copied
       rw [server]
@@ -182,7 +261,6 @@ theorem good_accept (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     · intro index current copied
       rw [owners]
       exact good.copied index current copied
-    · rw [owners]; exact good.owners
     · intro session found_token found
       by_cases same : session = native.shared.2.sessions
       · subst same
@@ -199,12 +277,26 @@ theorem good_accept (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
       · simp only [Function.update_of_ne same] at found
         have below := good.accepts session logged found
         omega
+    · intro kid peer found
+      rw [server] at found
+      obtain ⟨transcript, digest, view, cached, adEq⟩ := good.peers kid peer found
+      exact ⟨transcript, digest, peerTranscript_accept codec copies.log _ raw freshLog kid transcript view, grow cached,
+        adEq⟩
+    · intro session found_token found
+      by_cases same : session = native.shared.2.sessions
+      · subst same
+        exact ⟨raw, Function.update_self .., initData _ found_token outcome found⟩
+      · rw [others session same] at found
+        obtain ⟨old, logged, oldInit⟩ := good.pendingInit session found_token found
+        exact ⟨old, by simp only [Function.update_of_ne same]; exact logged, oldInit⟩
 
 /-- Owner shapes do not read the build entries of the log. -/
 theorem ownerShape_builds (codec : Codec Reader Response) (log : Log)
     (builds : Std.U64 → Option (Nat × PqxdhServerRegistrationPublication.Response))
+    (inits : Nat → Option PqxdhEd25519EufCma.Phase1Candidate) (cache : CtxRomAuth.CtxRO.QueryCache)
     (index : Nat) (owner : PqxdhRegistrationSchedule.Owner KemSK) :
-    OwnerShape codec { log with builds := builds } index owner ↔ OwnerShape codec log index owner := Iff.rfl
+    OwnerShape codec { log with builds := builds } inits cache index owner ↔
+      OwnerShape codec log inits cache index owner := Iff.rfl
 
 /-- A build keeps the invariant under the approved Phase 2 read-back contract: the new peer is reconstructible from the logged accept bytes of its session and the Server identity in its response. -/
 theorem good_build (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -219,6 +311,10 @@ theorem good_build (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
   simp only [PqxdhRegistrationSchedule.handler,
     ← build_native setup codec checks serverSeed PqxdhRegistrationSchedule.observationScalar] at supported
   obtain ⟨owners, reached⟩ := shared_footprint setup serverSeed _ native result supported
+  have initsEq := shared_inits setup serverSeed _ native result supported
+  have grow := (PqxdhServerAuthExperiment.build_step (setup := setup)
+    (publicValue := PqxdhJointGapDh.challenge setup.joint setup.dh serverSeed PqxdhRegistrationSchedule.observationScalar)
+    codec checks session payload _ _ reached).2.1.ctx
   obtain ⟨identity, keyId, sessions, others, removed, rejected, published⟩ :=
     PqxdhDeploymentCompileFootprint.build_footprint setup codec checks session payload _ _ reached
   have pendingKept : ∀ other token, result.2.shared.2.pending other = some token →
@@ -230,10 +326,16 @@ theorem good_build (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
       cases found
     · rw [← others other same]
       exact found
+  have ownersKept : ∀ index owner, result.2.owners[index]? = some owner →
+      OwnerShape codec copies.log result.2.inits result.2.shared.2.ctx index owner := by
+    intro index owner found
+    rw [owners] at found
+    rw [initsEq]
+    exact ownerShape_grow codec copies.log native.inits grow index owner (good.owners index owner found)
   rcases outcome : result.1 with _ | response
   · have peers := rejected outcome
     simp only [PqxdhDeploymentCompile.logReply]
-    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    refine ⟨?_, ?_, ?_, ?_, ?_, ownersKept, ?_, ?_, ?_, ?_⟩
     · rw [keyId]; exact good.keyId
     · intro kid current copied
       rw [peers]
@@ -243,16 +345,23 @@ theorem good_build (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
     · intro index current copied
       rw [owners]
       exact good.copied index current copied
-    · rw [owners]; exact good.owners
     · intro other token found
       rw [sessions]
       exact good.pending other token (pendingKept other token found)
     · rw [sessions]; exact good.accepts
-  · obtain ⟨token, kernel, fields, tokenFound, free, peers, written, fieldsIdentity⟩ := published response outcome
+    · intro kid peer found
+      rw [peers] at found
+      obtain ⟨transcript, digest, view, cached, adEq⟩ := good.peers kid peer found
+      exact ⟨transcript, digest, view, grow cached, adEq⟩
+    · intro other token found
+      exact good.pendingInit other token (pendingKept other token found)
+  · obtain ⟨token, kernel, fields, digest, tokenFound, free, peers, written, fieldsIdentity, cachedNew⟩ :=
+      published response outcome
     obtain ⟨_, raw, logged, identified⟩ := good.pending session token tokenFound
-    obtain ⟨decoded, decodedRead, _, _, serverRead, _, _⟩ := phase2 fields response.serialized written
+    obtain ⟨decoded, decodedRead, cipherRead, ephemeralRead, serverRead, assignedRead, _⟩ :=
+      phase2 fields response.serialized written
     simp only [PqxdhDeploymentCompile.logReply]
-    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    refine ⟨?_, ?_, ?_, ?_, ?_, ownersKept, ?_, ?_, ?_, ?_⟩
     · rw [keyId]; exact good.keyId
     · intro kid current copied
       rw [peers]
@@ -278,11 +387,31 @@ theorem good_build (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
     · intro index current copied
       rw [owners]
       exact good.copied index current copied
-    · rw [owners]; exact good.owners
     · intro other token found
       rw [sessions]
       exact good.pending other token (pendingKept other token found)
     · rw [sessions]; exact good.accepts
+    · intro kid peer found
+      rw [peers] at found
+      by_cases same : kid = response.keyId
+      · subst same
+        simp only [Function.update_self, Option.some.injEq] at found
+        subst found
+        obtain ⟨raw', loggedInit, publicInitEq⟩ := good.pendingInit session token tokenFound
+        rw [logged, Option.some.injEq] at loggedInit
+        subst loggedInit
+        refine ⟨PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf token.init)
+          (PqxdhTranscriptAd.adResponse fields.identity fields.ephemeral fields.kemCiphertext fields.keyId), digest, ?_,
+          cachedNew, rfl⟩
+        simp only [PqxdhDeploymentCompile.peerTranscript, PqxdhDeploymentCompile.publicTranscript, Function.update_self,
+          Option.bind_eq_bind, Option.bind_some, logged, publicInitEq, responseOf, decodedRead, cipherRead,
+          ephemeralRead, serverRead, assignedRead, Option.pure_def]
+      · rw [Function.update_of_ne same] at found
+        obtain ⟨transcript, digest', view, cached, adEq⟩ := good.peers kid peer found
+        exact ⟨transcript, digest', by simpa only [PqxdhDeploymentCompile.peerTranscript, Function.update_of_ne same]
+          using view, grow cached, adEq⟩
+    · intro other token found
+      exact good.pendingInit other token (pendingKept other token found)
 
 /-- Appending a created owner to the log keeps every earlier owner's reconstruction. -/
 theorem ownerView_extend (codec : Codec Reader Response) (log : Log) (entry : PqxdhBeaconPhase2Preparation.Word32 × Std.U64)
@@ -292,17 +421,17 @@ theorem ownerView_extend (codec : Codec Reader Response) (log : Log) (entry : Pq
 
 /-- Appending a created owner to the log keeps every earlier owner's shape. -/
 theorem ownerShape_extend (codec : Codec Reader Response) (log : Log) (entry : PqxdhBeaconPhase2Preparation.Word32 × Std.U64)
+    (inits : Nat → Option PqxdhEd25519EufCma.Phase1Candidate) (cache : CtxRomAuth.CtxRO.QueryCache)
     (index : Nat) (bound : index < log.owners.length) (owner : PqxdhRegistrationSchedule.Owner KemSK)
-    (shape : OwnerShape codec log index owner) :
-    OwnerShape codec { log with owners := log.owners ++ [entry] } index owner := by
+    (shape : OwnerShape codec log inits cache index owner) :
+    OwnerShape codec { log with owners := log.owners ++ [entry] } inits cache index owner := by
   obtain ⟨pin, keyId, created, pinned, phase⟩ := shape
   refine ⟨pin, keyId, by rw [List.getElem?_append_left bound]; exact created, pinned, ?_⟩
   revert phase
   cases owner.beacon.phase with
   | established control associatedData kernel =>
-      intro phase
-      rw [ownerView_extend codec log entry index bound]
-      exact phase
+      rintro ⟨transcript, digest, view, cached, adEq⟩
+      exact ⟨transcript, digest, by rw [ownerView_extend codec log entry index bound]; exact view, cached, adEq⟩
   | _ => exact id
 
 /-- Owner creation keeps the invariant: the new Fresh owner is pinned and bound exactly as its logged `create`. -/
@@ -317,7 +446,8 @@ theorem good_create (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   simp only [PqxdhRegistrationSchedule.handler, StateT.run, PqxdhRegistrationSchedule.create_source,
     mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at supported
   obtain ⟨identity, _, prekey, _, keys, _, rfl⟩ := supported
-  refine ⟨good.keyId, good.installed, good.serverVisible, ?_, ?_, ?_, good.pending, good.accepts⟩
+  refine ⟨good.keyId, good.installed, good.serverVisible, ?_, ?_, ?_, good.pending, good.accepts, good.peers,
+    good.pendingInit⟩
   · simp only [List.length_append, List.length_singleton, good.count]
   · intro index current copied
     obtain ⟨owner, control, associatedData, kernel, found, phase⟩ := good.copied index current copied
@@ -326,8 +456,8 @@ theorem good_create (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   · intro index owner found
     by_cases bound : index < native.owners.length
     · rw [List.getElem?_append_left bound] at found
-      exact ownerShape_extend codec copies.log (pin, keyId) index (good.count ▸ bound) owner
-        (good.owners index owner found)
+      exact ownerShape_extend codec copies.log (pin, keyId) native.inits native.shared.2.ctx index (good.count ▸ bound)
+        owner (good.owners index owner found)
     · have last : index = native.owners.length := by
         have := (List.getElem?_eq_some_iff.mp found).1
         simp only [List.length_append, List.length_singleton] at this
@@ -341,20 +471,24 @@ theorem good_create (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
       rfl
 
 /-- Logging a bundle for one owner keeps every other owner's reconstruction. -/
-theorem ownerShape_bundle (codec : Codec Reader Response) (log : Log) (index other : Nat) (bytes : Pqxdh.Bytes)
+theorem ownerShape_bundle (codec : Codec Reader Response) (log : Log)
+    (inits : Nat → Option PqxdhEd25519EufCma.Phase1Candidate) (cache : CtxRomAuth.CtxRO.QueryCache)
+    (index other : Nat) (bytes : Pqxdh.Bytes) (retained : Option PqxdhEd25519EufCma.Phase1Candidate)
     (different : other ≠ index) (owner : PqxdhRegistrationSchedule.Owner KemSK)
-    (shape : OwnerShape codec log other owner) :
-    OwnerShape codec { log with bundles := Function.update log.bundles index (some bytes) } other owner := by
+    (shape : OwnerShape codec log inits cache other owner) :
+    OwnerShape codec { log with bundles := Function.update log.bundles index (some bytes) }
+      (Function.update inits index retained) cache other owner := by
   obtain ⟨pin, keyId, created, pinned, phase⟩ := shape
   refine ⟨pin, keyId, created, pinned, ?_⟩
   revert phase
   cases owner.beacon.phase with
   | initSent control prekey oneTime kem =>
-      rintro ⟨binding, logged, bytesOld, identified⟩
-      exact ⟨binding, logged, by simp only [Function.update_of_ne different]; exact bytesOld, identified⟩
+      rintro ⟨binding, logged, bytesOld, identified, init, initFound, initRead⟩
+      exact ⟨binding, logged, by simp only [Function.update_of_ne different]; exact bytesOld, identified, init,
+        by simp only [Function.update_of_ne different]; exact initFound, initRead⟩
   | established control associatedData kernel =>
-      intro view
-      simpa only [ownerView, Function.update_of_ne different] using view
+      rintro ⟨transcript, digest, view, cached, adEq⟩
+      exact ⟨transcript, digest, by simpa only [ownerView, Function.update_of_ne different] using view, cached, adEq⟩
   | _ => exact id
 
 /-- The bundle bytes of an owner read back, under the approved Phase 1 contract, to the owner's own identity key. -/
@@ -367,7 +501,15 @@ theorem identityOf_bundle (codec : Codec Reader Response) (phase1 : PqxdhServerA
   simp only [identityOf, read, identityRead, encoded, PqxdhEd25519EufCma.parseIdentity_encodedIdentity,
     Option.bind_eq_bind, Option.bind_some, Option.pure_def, PqxdhLivePhase1Bundle.identityArray]
 
-/-- A Beacon bundle keeps the invariant under the approved Phase 1 read-back contract: a published bundle is logged and reads back to the identity key of the new InitSent control. -/
+/-- The bundle bytes of an owner read back, under the approved Phase 1 contract, to the Init fields of the written candidate. -/
+theorem publicInit_bundle (codec : Codec Reader Response) (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
+    (candidate : PqxdhEd25519EufCma.Phase1Candidate) (bytes : Pqxdh.Bytes) (written : codec.write1 candidate = some bytes) :
+    PqxdhDeploymentCompile.publicInit codec bytes = some (PqxdhTranscriptAd.initOf candidate) := by
+  obtain ⟨reader, read, identityRead, pqRead, preRead, oneRead⟩ := phase1 candidate bytes written
+  simp only [PqxdhDeploymentCompile.publicInit, read, identityRead, pqRead, preRead, oneRead, Option.bind_eq_bind,
+    Option.bind_some, Option.pure_def]
+
+/-- A Beacon bundle keeps the invariant under the approved Phase 1 read-back contract: a published bundle is logged, reads back to the identity key of the new InitSent control, and its retained candidate is the one whose Init fields the bytes read back to. -/
 theorem good_bundle (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (serverSeed : IdentitySeed) (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec) (index : Nat)
     (copies : Local) (native : PqxdhRegistrationSchedule.State KemSK) (good : Good setup codec copies native)
@@ -387,11 +529,20 @@ theorem good_bundle (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
         PqxdhRegistrationSchedule.bundle_source setup codec index native owner found, support_map,
         Set.mem_image] at supported
       obtain ⟨reached, member, rfl⟩ := supported
-      obtain ⟨rejected, published⟩ := PqxdhDeploymentCompileFootprint.bundle_owner setup codec index owner reached member
+      have unlogged : reached.1 ∈ support (simulateQ (PqxdhRegistrationSchedule.bundleCallbacks setup codec
+          owner.beacon.identity) (PqxdhLivePhase1Bundle.bundle (PqxdhRegistrationSchedule.projection setup index) owner)) := by
+        rw [← PqxdhRegistrationSchedule.bundleLog_fst, support_map]
+        exact ⟨reached, member, rfl⟩
+      obtain ⟨rejected, published⟩ := PqxdhDeploymentCompileFootprint.bundle_owner setup codec index owner reached.1
+        unlogged
+      obtain ⟨logRejected, logPublished⟩ := PqxdhDeploymentCompileFootprint.bundle_log setup codec index owner _ reached
+        member
       have bound : index < native.owners.length := (List.getElem?_eq_some_iff.mp found).1
-      rcases outcome : reached.1 with _ | bytes
+      rcases outcome : reached.1.1 with _ | bytes
       · have same := rejected outcome
-        simp only [PqxdhDeploymentCompile.logReply, same, PqxdhDeploymentCompileRegistration.set_found _ index _ found]
+        have logSame := logRejected outcome
+        simp only [PqxdhDeploymentCompile.logReply, same, logSame, Function.update_eq_self,
+          PqxdhDeploymentCompileRegistration.set_found _ index _ found]
         exact good
       · obtain ⟨fresh, prekey, oneTime, kem, candidate, phase, after, written, encoded⟩ := published bytes outcome
         have active : ¬ ∃ control associatedData kernel,
@@ -399,7 +550,8 @@ theorem good_bundle (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
           rintro ⟨control, associatedData, kernel, established⟩
           rcases phase with phase | phase <;> rw [phase] at established <;> cases established
         simp only [PqxdhDeploymentCompile.logReply]
-        refine ⟨good.keyId, good.installed, good.serverVisible, ?_, ?_, ?_, good.pending, good.accepts⟩
+        refine ⟨good.keyId, good.installed, good.serverVisible, ?_, ?_, ?_, good.pending, good.accepts, good.peers,
+          good.pendingInit⟩
         · simp only [List.length_set, good.count]
         · intro other current copied
           obtain ⟨old, control, associatedData, kernel, oldFound, established⟩ := good.copied other current copied
@@ -422,24 +574,27 @@ theorem good_bundle (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
             dsimp only
             have binding : fresh.expected_server_binding = ⟨pin, keyId⟩ := by
               rcases phase with phase | phase <;> simpa only [phase] using oldPhase
-            refine ⟨binding, bytes, Function.update_self .., ?_⟩
-            exact identityOf_bundle codec phase1 candidate bytes _ written encoded
+            refine ⟨binding, bytes, Function.update_self .., identityOf_bundle codec phase1 candidate bytes _ written encoded,
+              ?_⟩
+            obtain ⟨stored, storedEq, storedWritten⟩ := logPublished bytes outcome
+            exact ⟨stored, by rw [Function.update_self, storedEq], publicInit_bundle codec phase1 stored bytes storedWritten⟩
           · rw [List.getElem?_set_ne (Ne.symm same)] at currentFound
-            exact ownerShape_bundle codec copies.log index other bytes same current
+            exact ownerShape_bundle codec copies.log native.inits native.shared.2.ctx index other bytes reached.2 same current
               (good.owners other current currentFound)
 
 /-- Logging a finish for one owner keeps every other owner's reconstruction. -/
-theorem ownerShape_finish (codec : Codec Reader Response) (log : Log) (index other : Nat) (raw : Pqxdh.Bytes)
-    (different : other ≠ index) (owner : PqxdhRegistrationSchedule.Owner KemSK)
-    (shape : OwnerShape codec log other owner) :
-    OwnerShape codec { log with finishes := Function.update log.finishes index (some raw) } other owner := by
+theorem ownerShape_finish (codec : Codec Reader Response) (log : Log)
+    (inits : Nat → Option PqxdhEd25519EufCma.Phase1Candidate) (cache : CtxRomAuth.CtxRO.QueryCache)
+    (index other : Nat) (raw : Pqxdh.Bytes) (different : other ≠ index) (owner : PqxdhRegistrationSchedule.Owner KemSK)
+    (shape : OwnerShape codec log inits cache other owner) :
+    OwnerShape codec { log with finishes := Function.update log.finishes index (some raw) } inits cache other owner := by
   obtain ⟨pin, keyId, created, pinned, phase⟩ := shape
   refine ⟨pin, keyId, created, pinned, ?_⟩
   revert phase
   cases owner.beacon.phase with
   | established control associatedData kernel =>
-      intro view
-      simpa only [ownerView, Function.update_of_ne different] using view
+      rintro ⟨transcript, digest, view, cached, adEq⟩
+      exact ⟨transcript, digest, by simpa only [ownerView, Function.update_of_ne different] using view, cached, adEq⟩
   | _ => exact id
 
 /-- A Beacon finish keeps the invariant: a successful finish is logged, and the new Established owner's outer key ID, control and associated data are its public reconstruction. -/
@@ -463,9 +618,8 @@ theorem good_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
         PqxdhRegistrationSchedule.finish_source setup codec index raw native owner found, support_map,
         Set.mem_image] at supported
       obtain ⟨reached, member, rfl⟩ := supported
-      have fields := PqxdhRegistrationSchedule.program_fields setup codec _ native.shared reached member
-      obtain ⟨rejected, published⟩ := PqxdhDeploymentCompileFootprint.finish_owner setup codec raw owner native.shared
-        reached member
+      obtain ⟨fields, grow, rejected, published⟩ := PqxdhDeploymentCompileFootprint.ownerFinish_owner setup codec
+        (native.inits index) raw owner native.shared reached member
       have bound : index < native.owners.length := (List.getElem?_eq_some_iff.mp found).1
       have fixed : PqxdhDeploymentCompileFootprint.ServerFixed native.shared.2 reached.2.2 := by
         rw [fields]
@@ -486,16 +640,23 @@ theorem good_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
           · rcases rejected outcome with unchanged | ⟨control', prekey, oneTime, kem, initSent, _⟩
             · rw [unchanged]; exact established
             · rw [initSent] at established; cases established
-          · obtain ⟨control', prekey, oneTime, kem, _, _, initSent, _⟩ := published plaintext outcome
+          · obtain ⟨control', prekey, oneTime, kem, _, _, _, _, _, initSent, _⟩ := published plaintext outcome
             rw [initSent] at established
             cases established
         · exact ⟨old, control, associatedData, kernel, by rw [List.getElem?_set_ne (Ne.symm same)]; exact oldFound,
             established⟩
+      have peersKept : ∀ kid peer, reached.2.2.server.server.peers kid = some peer →
+          ∃ transcript digest, PqxdhDeploymentCompile.peerTranscript codec copies.log kid = some transcript ∧
+            reached.2.2.ctx ((), transcript) = some digest ∧ peer.metadata = PqxdhTranscriptAd.adOf digest := by
+        intro kid peer peerFound
+        rw [server] at peerFound
+        obtain ⟨transcript, digest, view, cached, adEq⟩ := good.peers kid peer peerFound
+        exact ⟨transcript, digest, view, grow cached, adEq⟩
       rcases outcome : reached.1.1 with _ | plaintext
       · simp only [PqxdhDeploymentCompile.logReply]
         refine ⟨by rw [keyId]; exact good.keyId, ?_, by rw [server]; exact good.serverVisible,
           by simp only [List.length_set, good.count], copiedKept, ?_, by rw [pending, sessions]; exact good.pending,
-          by rw [sessions]; exact good.accepts⟩
+          by rw [sessions]; exact good.accepts, peersKept, by rw [pending]; exact good.pendingInit⟩
         · intro kid current copied
           rw [server]
           exact good.installed kid current copied
@@ -506,18 +667,20 @@ theorem good_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
             subst currentFound
             obtain ⟨pin, keyId', created, pinned, _⟩ := good.owners other owner found
             rcases rejected outcome with unchanged | ⟨control, prekey, oneTime, kem, _, aborted⟩
-            · rw [unchanged]; exact good.owners other owner found
+            · rw [unchanged]
+              exact ownerShape_grow codec copies.log native.inits grow other owner (good.owners other owner found)
             · refine ⟨pin, keyId', created, by rw [aborted]; exact pinned, ?_⟩
               rw [aborted]
               trivial
           · rw [List.getElem?_set_ne (Ne.symm same)] at currentFound
-            exact good.owners other current currentFound
-      · obtain ⟨control, prekey, oneTime, kem, response, kernel, initSent, decoded, established⟩ :=
-          published plaintext outcome
+            exact ownerShape_grow codec copies.log native.inits grow other current
+              (good.owners other current currentFound)
+      · obtain ⟨control, prekey, oneTime, kem, response, kernel, init, decodedFields, digest, initSent, decoded, retained,
+          responseDecoded, cachedTranscript, established⟩ := published plaintext outcome
         simp only [PqxdhDeploymentCompile.logReply]
         refine ⟨by rw [keyId]; exact good.keyId, ?_, by rw [server]; exact good.serverVisible,
           by simp only [List.length_set, good.count], copiedKept, ?_, by rw [pending, sessions]; exact good.pending,
-          by rw [sessions]; exact good.accepts⟩
+          by rw [sessions]; exact good.accepts, peersKept, by rw [pending]; exact good.pendingInit⟩
         · intro kid current copied
           rw [server]
           exact good.installed kid current copied
@@ -528,36 +691,82 @@ theorem good_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
             subst currentFound
             obtain ⟨pin, keyId', created, pinned, oldShape⟩ := good.owners other owner found
             rw [initSent] at oldShape
-            obtain ⟨binding, bytes, logged, identified⟩ := oldShape
+            obtain ⟨binding, bytes, logged, identified, init', initFound, initRead⟩ := oldShape
+            rw [retained, Option.some.injEq] at initFound
+            subst initFound
             refine ⟨pin, keyId', created, by rw [established]; exact pinned, ?_⟩
             rw [established]
             dsimp only
+            refine ⟨PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf init) decodedFields, digest, ?_,
+              cachedTranscript, rfl⟩
             simp only [ownerView, created, logged, identified, Function.update_self, decoded, Option.bind_eq_bind,
-              Option.bind_some, Option.pure_def]
+              Option.bind_some, Option.pure_def, PqxdhDeploymentCompile.publicTranscript, initRead, responseDecoded]
             rw [← binding]
           · rw [List.getElem?_set_ne (Ne.symm same)] at currentFound
-            exact ownerShape_finish codec copies.log index other raw same current
-              (good.owners other current currentFound)
+            exact ownerShape_grow codec _ native.inits grow other current
+              (ownerShape_finish codec copies.log native.inits native.shared.2.ctx index other raw same current
+                (good.owners other current currentFound))
 
-/-- A compiled Server record command changes only the BLAKE2b cache of the source14 state, keeps the log, owners and owner counters, and holds a local kernel only for a peer that had a local copy or is installed. -/
+/-- A record program only extends the BLAKE2b cache of the source14 state and changes nothing else. -/
+theorem record_grows {Result : Type} (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (work : OracleComp RawCtxMixedOwner.NativeSpec Result) (native : PqxdhRegistrationSchedule.State KemSK)
+    (result : Result × PqxdhRegistrationSchedule.State KemSK)
+    (supported : result ∈ support ((PqxdhDeploymentNative.record setup codec work).run native)) :
+    ∃ cache, result.2 = PqxdhDeploymentRecordCache.setCtx native cache ∧ native.shared.2.ctx ≤ cache := by
+  rw [PqxdhDeploymentNative.record_run, support_map] at supported
+  obtain ⟨inner, member, rfl⟩ := supported
+  exact ⟨inner.2.2, rfl, PqxdhServerAuthExperiment.run_rel _ (fun before after => before.2 ≤ after.2) (fun _ => le_rfl)
+    (fun _ _ _ left right => le_trans left right)
+    (fun query state result supported => PqxdhServerAuthExperiment.sharedImpl_grows setup.source codec.frameWrite query
+      state result supported) work _ inner member⟩
+
+/-- A copy's forwarded transcript hash only extends the BLAKE2b cache of the source14 state and changes nothing else. -/
+theorem copyData_support (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (serverSeed : IdentitySeed) (kernel : Option Kernel) (transcript : Option Pqxdh.Bytes)
+    (native : PqxdhRegistrationSchedule.State KemSK)
+    (result : Option PqxdhTranscriptAd.AssociatedData × PqxdhRegistrationSchedule.State KemSK)
+    (supported : result ∈ support ((simulateQ (PqxdhRegistrationJointRevealSchedule.native setup codec checks serverSeed)
+      (PqxdhDeploymentCompile.copyData kernel transcript)).run native)) :
+    ∃ cache, result.2 = PqxdhDeploymentRecordCache.setCtx native cache ∧ native.shared.2.ctx ≤ cache := by
+  cases kernel with
+  | none =>
+      rw [PqxdhDeploymentCompileRecords.copyData_none, support_pure, Set.mem_singleton_iff] at supported
+      subst supported
+      exact ⟨native.shared.2.ctx, rfl, le_rfl⟩
+  | some current =>
+      cases transcript with
+      | none =>
+          simp only [PqxdhDeploymentCompile.copyData, simulateQ_pure, StateT.run_pure, support_pure,
+            Set.mem_singleton_iff] at supported
+          subst supported
+          exact ⟨native.shared.2.ctx, rfl, le_rfl⟩
+      | some bytes =>
+          simp only [PqxdhDeploymentCompile.copyData, PqxdhDeploymentRecordCache.hashQuery, simulateQ_map,
+            simulateQ_spec_query, StateT.run_map, PqxdhRegistrationJointRevealSchedule.native,
+            PqxdhRegistrationSchedule.handler, PqxdhRegistrationSchedule.onShared_run, PqxdhServerAuthNative.nativeHash,
+            Functor.map_map, support_map, Set.mem_image] at supported
+          obtain ⟨inner, member, rfl⟩ := supported
+          exact ⟨inner.2, rfl, QueryImpl.withCaching_cache_le uniformSampleImpl _ native.shared.2.ctx inner member⟩
+
+/-- A compiled Server record command only extends the BLAKE2b cache of the source14 state, keeps the log, owners and owner counters, and holds a local kernel only for a peer that had a local copy or is installed. -/
 theorem serverLocal_support (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (serverSeed : IdentitySeed)
     (query : RawCtxServerMixed.SourceSpec.Domain) (copies : Local) (native : PqxdhRegistrationSchedule.State KemSK)
     (result : (RawCtxServerMixed.SourceSpec.Range query × Local) × PqxdhRegistrationSchedule.State KemSK)
     (supported : result ∈ support ((simulateQ (PqxdhRegistrationJointRevealSchedule.native setup codec checks serverSeed)
       ((PqxdhDeploymentCompile.serverLocal setup codec route query).run copies)).run native)) :
-    (∃ cache, result.2 = PqxdhDeploymentRecordCache.setCtx native cache) ∧ result.1.2.log = copies.log ∧
-      result.1.2.owners = copies.owners ∧
+    (∃ cache, result.2 = PqxdhDeploymentRecordCache.setCtx native cache ∧ native.shared.2.ctx ≤ cache) ∧
+      result.1.2.log = copies.log ∧ result.1.2.owners = copies.owners ∧
       ∀ kid current, result.1.2.peers kid = some current →
         copies.peers kid ≠ none ∨ native.shared.2.server.server.peers kid ≠ none := by
   cases target : PqxdhDeploymentCompile.serverTarget route query with
   | none =>
       rw [PqxdhDeploymentCompileRecords.serverLocal_none setup codec route query copies target,
-        PqxdhDeploymentCompileRecords.serverImpl_absent _ route codec.frameRead query _
+        PqxdhDeploymentCompileRecords.handler_absent _ route codec.frameRead query _
           (fun kid found => by simp only [target, reduceCtorEq] at found), PqxdhDeploymentNative.logged_pure] at supported
       simp only [simulateQ_pure, StateT.run_pure, map_pure, support_pure, Set.mem_singleton_iff] at supported
       subst supported
-      exact ⟨⟨native.shared.2.ctx, rfl⟩, rfl, rfl, fun kid current found => Or.inl (by simp only [PqxdhDeploymentCompile.Local.produce] at found; rw [found]; simp)⟩
+      exact ⟨⟨native.shared.2.ctx, rfl, le_rfl⟩, rfl, rfl, fun kid current found => Or.inl (by simp only [PqxdhDeploymentCompile.Local.produce] at found; rw [found]; simp)⟩
   | some kid =>
       rw [PqxdhDeploymentCompileRecords.serverLocal_some setup codec route query copies kid target] at supported
       simp only [simulateQ_bind, StateT.run_bind, mem_support_bind_iff] at supported
@@ -578,10 +787,15 @@ theorem serverLocal_support (setup : Setup baseSpec KemSK) (codec : Codec Reader
             intro missing
             simp [missing] at some
       obtain ⟨middleEq, kernelOrigin⟩ := kernelFacts
-      rw [middleEq, simulateQ_map, StateT.run_map, PqxdhDeploymentRecordCache.local_record, support_map] at supported
+      rw [middleEq] at supported
+      obtain ⟨⟨associatedData, copied⟩, copiedSupport, supported⟩ := supported
+      obtain ⟨copyCache, copiedEq, copyGrow⟩ :=
+        copyData_support setup codec checks serverSeed kernel _ native _ copiedSupport
+      dsimp only at copiedEq
+      rw [copiedEq, simulateQ_map, StateT.run_map, PqxdhDeploymentRecordCache.local_record, support_map] at supported
       obtain ⟨recorded, recordedSupport, rfl⟩ := supported
-      obtain ⟨cache, cacheEq⟩ := PqxdhDeploymentNative.record_support setup codec _ native recorded recordedSupport
-      refine ⟨⟨cache, cacheEq⟩, rfl, rfl, fun other current found => ?_⟩
+      obtain ⟨cache, cacheEq, recordGrow⟩ := record_grows setup codec _ _ recorded recordedSupport
+      refine ⟨⟨cache, by rw [cacheEq]; rfl, le_trans copyGrow recordGrow⟩, rfl, rfl, fun other current found => ?_⟩
       by_cases same : other = kid
       · subst same
         simp only [PqxdhDeploymentCompile.Local.produce, Function.update_self, Option.map_eq_some_iff] at found
@@ -591,7 +805,7 @@ theorem serverLocal_support (setup : Setup baseSpec KemSK) (codec : Codec Reader
         | some _ => rfl
         | none =>
             exfalso
-            rw [PqxdhDeploymentCompileRecords.serverImpl_absent _ route codec.frameRead query _ (fun other routed => by
+            rw [PqxdhDeploymentCompileRecords.handler_absent _ route codec.frameRead query _ (fun other routed => by
                 simp only [target, Option.some.injEq] at routed
                 subst routed
                 simp [PqxdhDeploymentCompile.localServer]), PqxdhDeploymentNative.logged_pure,
@@ -608,8 +822,8 @@ theorem beaconLocal_support (setup : Setup baseSpec KemSK) (codec : Codec Reader
     (result : (RawCtxMixedOwner.SourceSpec.Range query × Local) × PqxdhRegistrationSchedule.State KemSK)
     (supported : result ∈ support ((simulateQ (PqxdhRegistrationJointRevealSchedule.native setup codec checks serverSeed)
       ((PqxdhDeploymentCompile.beaconLocal setup codec index query).run copies)).run native)) :
-    (∃ cache, result.2 = PqxdhDeploymentRecordCache.setCtx native cache) ∧ result.1.2.log = copies.log ∧
-      result.1.2.peers = copies.peers ∧
+    (∃ cache, result.2 = PqxdhDeploymentRecordCache.setCtx native cache ∧ native.shared.2.ctx ≤ cache) ∧
+      result.1.2.log = copies.log ∧ result.1.2.peers = copies.peers ∧
       ∀ position current, result.1.2.owners position = some current →
         copies.owners position ≠ none ∨ ∃ owner control associatedData kernel,
           native.owners[position]? = some owner ∧ owner.beacon.phase = .established control associatedData kernel := by
@@ -639,10 +853,15 @@ theorem beaconLocal_support (setup : Setup baseSpec KemSK) (codec : Codec Reader
                 simp [found, phase, PqxdhDeploymentCompile.phaseKernel] at some
               exact ⟨owner, _, _, _, rfl, phase⟩
     obtain ⟨middleEq, kernelOrigin⟩ := kernelFacts
-    rw [middleEq, simulateQ_map, StateT.run_map, PqxdhDeploymentRecordCache.local_record, support_map] at supported
+    rw [middleEq] at supported
+    obtain ⟨⟨associatedData, copied⟩, copiedSupport, supported⟩ := supported
+    obtain ⟨copyCache, copiedEq, copyGrow⟩ :=
+      copyData_support setup codec checks serverSeed kernel _ native _ copiedSupport
+    dsimp only at copiedEq
+    rw [copiedEq, simulateQ_map, StateT.run_map, PqxdhDeploymentRecordCache.local_record, support_map] at supported
     obtain ⟨recorded, recordedSupport, rfl⟩ := supported
-    obtain ⟨cache, cacheEq⟩ := PqxdhDeploymentNative.record_support setup codec _ native recorded recordedSupport
-    refine ⟨⟨cache, cacheEq⟩, rfl, rfl, fun other current found => ?_⟩
+    obtain ⟨cache, cacheEq, recordGrow⟩ := record_grows setup codec _ _ recorded recordedSupport
+    refine ⟨⟨cache, by rw [cacheEq]; rfl, le_trans copyGrow recordGrow⟩, rfl, rfl, fun other current found => ?_⟩
     by_cases same : other = index
     · subst same
       simp only [PqxdhDeploymentCompile.Local.produce, Function.update_self] at found
@@ -652,7 +871,7 @@ theorem beaconLocal_support (setup : Setup baseSpec KemSK) (codec : Codec Reader
       | none =>
           exfalso
           have inactive : ¬ RawCtxBeaconLifecycle.Established
-              (PqxdhDeploymentCompile.localOwner codec copies.log other none (copies.ownerRaw other)).beacon.phase := by
+              (PqxdhDeploymentCompile.localOwner codec copies.log other none associatedData (copies.ownerRaw other)).beacon.phase := by
             simp [PqxdhDeploymentCompile.localOwner, RawCtxBeaconLifecycle.Established]
           rw [RawCtxBeaconLifecycle.inactive codec.frameRead query _ inactive, PqxdhDeploymentNative.logged_pure,
             PqxdhDeploymentCompileRecords.record_pure, support_pure, Set.mem_singleton_iff] at recordedSupport
@@ -665,7 +884,7 @@ theorem beaconLocal_support (setup : Setup baseSpec KemSK) (codec : Codec Reader
   · rw [PqxdhDeploymentCompileRecords.beaconLocal_absent setup codec index query copies inside] at supported
     simp only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
     subst supported
-    exact ⟨⟨native.shared.2.ctx, rfl⟩, rfl, rfl, fun position current found => Or.inl (by rw [found]; simp)⟩
+    exact ⟨⟨native.shared.2.ctx, rfl, le_rfl⟩, rfl, rfl, fun position current found => Or.inl (by rw [found]; simp)⟩
 
 /-- A compiled Server record command keeps the invariant. -/
 theorem good_server_record (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -676,11 +895,17 @@ theorem good_server_record (setup : Setup baseSpec KemSK) (codec : Codec Reader 
     (supported : result ∈ support ((simulateQ (PqxdhRegistrationJointRevealSchedule.native setup codec checks serverSeed)
       ((PqxdhDeploymentCompile.serverLocal setup codec route query).run copies)).run native)) :
     Good setup codec result.1.2 result.2 := by
-  obtain ⟨⟨cache, nativeEq⟩, logEq, ownersEq, origin⟩ :=
+  obtain ⟨⟨cache, nativeEq, grow⟩, logEq, ownersEq, origin⟩ :=
     serverLocal_support setup codec checks route serverSeed query copies native result supported
   rw [nativeEq]
   refine ⟨good.keyId, ?_, by rw [logEq]; exact good.serverVisible, by rw [logEq]; exact good.count, ?_,
-    by rw [logEq]; exact good.owners, by rw [logEq]; exact good.pending, by rw [logEq]; exact good.accepts⟩
+    fun index owner found => by
+      rw [logEq]
+      exact ownerShape_grow codec copies.log native.inits grow index owner (good.owners index owner found),
+    by rw [logEq]; exact good.pending, by rw [logEq]; exact good.accepts, fun kid peer found => by
+      obtain ⟨transcript, digest, view, cached, adEq⟩ := good.peers kid peer found
+      exact ⟨transcript, digest, by rw [logEq]; exact view, grow cached, adEq⟩,
+    by rw [logEq]; exact good.pendingInit⟩
   · intro kid current found
     rcases origin kid current found with copied | installed
     · cases copiedValue : copies.peers kid with
@@ -699,11 +924,17 @@ theorem good_beacon_record (setup : Setup baseSpec KemSK) (codec : Codec Reader 
     (supported : result ∈ support ((simulateQ (PqxdhRegistrationJointRevealSchedule.native setup codec checks serverSeed)
       ((PqxdhDeploymentCompile.beaconLocal setup codec index query).run copies)).run native)) :
     Good setup codec result.1.2 result.2 := by
-  obtain ⟨⟨cache, nativeEq⟩, logEq, peersEq, origin⟩ :=
+  obtain ⟨⟨cache, nativeEq, grow⟩, logEq, peersEq, origin⟩ :=
     beaconLocal_support setup codec checks serverSeed index query copies native result supported
   rw [nativeEq]
   refine ⟨good.keyId, ?_, by rw [logEq]; exact good.serverVisible, by rw [logEq]; exact good.count, ?_,
-    by rw [logEq]; exact good.owners, by rw [logEq]; exact good.pending, by rw [logEq]; exact good.accepts⟩
+    fun position owner found => by
+      rw [logEq]
+      exact ownerShape_grow codec copies.log native.inits grow position owner (good.owners position owner found),
+    by rw [logEq]; exact good.pending, by rw [logEq]; exact good.accepts, fun kid peer found => by
+      obtain ⟨transcript, digest, view, cached, adEq⟩ := good.peers kid peer found
+      exact ⟨transcript, digest, by rw [logEq]; exact view, grow cached, adEq⟩,
+    by rw [logEq]; exact good.pendingInit⟩
   · intro kid current found
     rw [peersEq] at found
     exact good.installed kid current found
@@ -713,6 +944,32 @@ theorem good_beacon_record (setup : Setup baseSpec KemSK) (codec : Codec Reader 
       | none => exact absurd copiedValue copied
       | some value => exact good.copied position value copiedValue
     · exact established
+
+/-- Design §4.7 `copy_hash_hit`: at every state satisfying the invariant, which every state reached by the compiled program from the initial state does (`good_initial`, `good_step`), a copy's forwarded transcript hash is a cache hit that leaves the source14 state unchanged and answers the associated data of the copied target: the installed metadata of a Server peer, the established associated data of an owner. -/
+theorem copy_hash_hit (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (serverSeed : IdentitySeed) (copies : Local) (native : PqxdhRegistrationSchedule.State KemSK)
+    (good : Good setup codec copies native) :
+    (∀ kid peer kernel, native.shared.2.server.server.peers kid = some peer →
+      (simulateQ (PqxdhRegistrationJointRevealSchedule.native setup codec checks serverSeed)
+        (PqxdhDeploymentCompile.copyData (KemSK := KemSK) (some kernel)
+          (PqxdhDeploymentCompile.peerTranscript codec copies.log kid))).run native = pure (some peer.metadata, native)) ∧
+    (∀ index owner control associatedData current kernel, native.owners[index]? = some owner →
+      owner.beacon.phase = .established control associatedData current →
+      (simulateQ (PqxdhRegistrationJointRevealSchedule.native setup codec checks serverSeed)
+        (PqxdhDeploymentCompile.copyData (KemSK := KemSK) (some kernel)
+          ((ownerView codec copies.log index).map fun view => view.2.2))).run native =
+        pure (some associatedData, native)) := by
+  constructor
+  · intro kid peer kernel found
+    obtain ⟨transcript, digest, view, cached, adEq⟩ := good.peers kid peer found
+    rw [view, adEq]
+    exact PqxdhDeploymentCompileRecords.copyData_hit setup codec checks serverSeed kernel transcript digest native cached
+  · intro index owner control associatedData current kernel found phase
+    obtain ⟨pin, keyId, _, _, shape⟩ := good.owners index owner found
+    simp only [phase] at shape
+    obtain ⟨transcript, digest, view, cached, adEq⟩ := shape
+    rw [view, Option.map_some, adEq]
+    exact PqxdhDeploymentCompileRecords.copyData_hit setup codec checks serverSeed kernel transcript digest native cached
 
 /-- Every compiled step keeps the invariant, under the approved Phase 1 and Phase 2 read-back contracts. -/
 theorem good_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -803,10 +1060,14 @@ theorem good_initial (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
     Good setup codec Local.empty native := by
   refine ⟨keyId, fun _ _ found => (by cases found), fun kid peer found => ?_, (by rw [owners]; rfl),
     fun _ _ found => (by cases found), fun index owner found => ?_, fun session token found => ?_,
-    fun _ _ found => (by cases found)⟩
+    fun _ _ found => (by cases found), fun kid peer found => ?_, fun session token found => ?_⟩
   · rw [peers] at found
     cases found
   · rw [owners] at found
+    cases found
+  · rw [pending] at found
+    cases found
+  · rw [peers] at found
     cases found
   · rw [pending] at found
     cases found
@@ -974,3 +1235,38 @@ end BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.compile_native
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.shared_inits' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.shared_inits
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.ownerShape_grow' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.ownerShape_grow
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.peerTranscript_accept' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.peerTranscript_accept
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.publicInit_bundle' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.publicInit_bundle
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.record_grows' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.record_grows
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.copyData_support' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.copyData_support
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.copy_hash_hit' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentCompileInvariant.copy_hash_hit

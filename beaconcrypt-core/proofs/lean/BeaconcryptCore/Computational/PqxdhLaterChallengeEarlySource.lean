@@ -9,7 +9,10 @@ open OracleComp OracleSpec CoreModels Aeneas OracleComp.ProgramLogic.Relational
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeEarlySource
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPhase1AcceptanceOracle PqxdhKemIndCca PqxdhInitializerSecrecy
 open CtxRomAuth AdaptiveCtxSharedHash PqxdhSecretInputKdf PqxdhFullSecretInputKdf
@@ -89,25 +92,25 @@ include bounded selectorBound localBound peerBound plaintextBound writerBound ep
 /-- Every query class of the same complete guard-free Builder/before reduction is billed from original source calls: full uniform work, public hashes, selected seals and adaptive raw openings. -/
 theorem source_bills (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl kem program original)
     (depth : Nat) (prefixBit continuationBit : Bool) :
-    (PqxdhLaterChallengeEarlyCertified.compiled setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+    (PqxdhLaterChallengeEarlyCertified.compiled (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
       depth budget bounded prefixBit continuationBit).IsQueryBoundP AdaptiveCtxDynamicKnownBounds.UniformRoute
       (uniformAllowance setup env callbacks program baseImpl kem qSelector qLocal qPeer qPlaintext qWriter qEphemeral qEncaps
           qPre qOne qPhase1Write qMain qKeygen budget original c +
         PqxdhLaterChallengeBeforeResources.suffixAllowance setup env callbacks program baseImpl kem original c (1 + q)) ∧
-    (PqxdhLaterChallengeEarlyCertified.compiled setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+    (PqxdhLaterChallengeEarlyCertified.compiled (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
       depth budget bounded prefixBit continuationBit).IsQueryBoundP AdaptiveCtxDynamicKnownBounds.HashRoute
       (hashAllowance qMain budget + (1 + (1 + q))) ∧
-    (PqxdhLaterChallengeEarlyCertified.compiled setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+    (PqxdhLaterChallengeEarlyCertified.compiled (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
       depth budget bounded prefixBit continuationBit).IsQueryBoundP
       (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxQueryBounds.SourceSeal) (1 + (1 + q)) ∧
-    (PqxdhLaterChallengeEarlyCertified.compiled setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+    (PqxdhLaterChallengeEarlyCertified.compiled (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
       depth budget bounded prefixBit continuationBit).IsQueryBoundP
       (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxReceive.IsRawQuery) (1 + (1 + q)) := by
-  have preludeCaps := fun hash => prefix_bills setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+  have preludeCaps := fun hash => prefix_bills (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
     qSelector qLocal qPeer qPlaintext qWriter selectorBound localBound peerBound plaintextBound writerBound
     qEphemeral qEncaps ephemeralBound nativeEncapsBound encapsBound qPre qOne qPhase1Write qMain
     preBound oneBound phase1WriteBound mainBound qKeygen keygenBound budget bounded original c depth prefixBit hash
-  exact PqxdhLaterChallengeEarlyResources.compiled_bills setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem
+  exact PqxdhLaterChallengeEarlyResources.compiled_bills (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem
     ancestors disclosed original c depth _ _ budget bounded prefixBit continuationBit (preludeCaps true) (preludeCaps false)
 
 include bounded selectorBound localBound peerBound plaintextBound writerBound ephemeralBound nativeEncapsBound encapsBound
@@ -116,19 +119,19 @@ include bounded selectorBound localBound peerBound plaintextBound writerBound ep
 theorem pair (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl kem program original)
     (depth : Nat) (fallback : CtxNonceAeadIntCtxt.ModifiedNonceAeadForgery)
     (small : 1 + (1 + q) < 2 ^ 96) :
-    𝒟[PqxdhLaterChallengeEarlyPrivacy.source setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed budget bounded depth false] {true} ≤
-      𝒟[PqxdhLaterChallengeEarlyPrivacy.source setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed budget bounded depth true] {true} +
-        (PqxdhLaterChallengeEarlyPrivacy.loss setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed budget bounded depth (hashAllowance qMain budget) fallback false +
-         PqxdhLaterChallengeEarlyPrivacy.loss setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed budget bounded depth (hashAllowance qMain budget) fallback true) ∧
-    𝒟[PqxdhLaterChallengeEarlyPrivacy.source setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed budget bounded depth true] {true} ≤
-      𝒟[PqxdhLaterChallengeEarlyPrivacy.source setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed budget bounded depth false] {true} +
-        (PqxdhLaterChallengeEarlyPrivacy.loss setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed budget bounded depth (hashAllowance qMain budget) fallback false +
-         PqxdhLaterChallengeEarlyPrivacy.loss setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed budget bounded depth (hashAllowance qMain budget) fallback true) := by
-  have preludeCaps := fun bit hash => prefix_bills setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+    𝒟[PqxdhLaterChallengeEarlyPrivacy.source (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed budget bounded depth false] {true} ≤
+      𝒟[PqxdhLaterChallengeEarlyPrivacy.source (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed budget bounded depth true] {true} +
+        (PqxdhLaterChallengeEarlyPrivacy.loss (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed budget bounded depth (hashAllowance qMain budget) fallback false +
+         PqxdhLaterChallengeEarlyPrivacy.loss (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed budget bounded depth (hashAllowance qMain budget) fallback true) ∧
+    𝒟[PqxdhLaterChallengeEarlyPrivacy.source (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed budget bounded depth true] {true} ≤
+      𝒟[PqxdhLaterChallengeEarlyPrivacy.source (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed budget bounded depth false] {true} +
+        (PqxdhLaterChallengeEarlyPrivacy.loss (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed budget bounded depth (hashAllowance qMain budget) fallback false +
+         PqxdhLaterChallengeEarlyPrivacy.loss (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed budget bounded depth (hashAllowance qMain budget) fallback true) := by
+  have preludeCaps := fun bit hash => prefix_bills (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
     qSelector qLocal qPeer qPlaintext qWriter selectorBound localBound peerBound plaintextBound writerBound
     qEphemeral qEncaps ephemeralBound nativeEncapsBound encapsBound qPre qOne qPhase1Write qMain
     preBound oneBound phase1WriteBound mainBound qKeygen keygenBound budget bounded original c depth bit hash
-  exact PqxdhLaterChallengeEarlyPrivacy.pair setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+  exact PqxdhLaterChallengeEarlyPrivacy.pair (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
     budget bounded original c depth _ _ fallback (fun bit => preludeCaps bit true) (fun bit => preludeCaps bit false) small
 
 end BeaconcryptCore.Computational.PqxdhLaterChallengeEarlySource

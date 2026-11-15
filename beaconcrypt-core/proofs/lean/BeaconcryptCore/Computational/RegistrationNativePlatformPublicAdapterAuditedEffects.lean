@@ -25,7 +25,7 @@ variable [originalContainers :ContainerOperations (RustT (StateT P ProbComp))]
 variable {setup :PqxdhServerAuthExperiment.Setup base KemSK} {checks :PqxdhServerAuthExperiment.Checks}
 variable (configuration :RegistrationNativePlatformPublicAdapterConfiguration.Configuration
   (P:=P) (E:=E) (R:=R) (Error:=Error) (source:=source) setup checks)
-variable (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
 variable (current :RegistrationNativeExperiment.State n KemSK source×P)
 variable (prior :RegistrationNativePlatformPublicAdapterTypedAudit.Audit RegistrationNativeRawAdapter.TypedSpec
   (RegistrationNativeExperiment.State n KemSK source×P))

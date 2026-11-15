@@ -18,8 +18,11 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.refined ratchet.concrete PqxdhRefinement
 
 set_option autoImplicit false
+set_option warningAsError true
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentSplitFactor
+/- The split builds are the hidden Server response tail at a supplied AD (design §4.8: the generic builder is the lower AD-parametric layer; the hidden builds take the AD per call, D7b-5); every statement below holds at every AD. -/
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhServerAuthExperiment (Setup Codec Checks)
 open PqxdhRecordLiftInterface (EnvEffects CapabilitySpec)
 open PqxdhServerRegistrationPublication (AuxSpec TailSpec)
@@ -45,8 +48,8 @@ theorem afterInitialization_simulateQ (calls₀ : RawCtxChainOwner.Calls Kernel 
     (auxEq : ∀ query, aux query = simulateQ impl (aux₀ query))
     (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Pqxdh.Bytes) (kernel : Kernel)
     (metadata : PeerMetadata) (state : PqxdhInitialGenericPublication.State Kernel Metadata PeerMetadata Consumed) :
-    PqxdhInitialGenericPublication.afterInitialization calls aux candidate authenticated kernel metadata state =
-      simulateQ impl (PqxdhInitialGenericPublication.afterInitialization calls₀ aux₀ candidate authenticated kernel
+    PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) calls aux candidate authenticated kernel metadata state =
+      simulateQ impl (PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) calls₀ aux₀ candidate authenticated kernel
         metadata state) := by
   unfold PqxdhInitialGenericPublication.afterInitialization
   rw [send, simulateQ_bind]
@@ -68,11 +71,11 @@ theorem candidate_simulateQ (calls₀ : RawCtxChainOwner.Calls Kernel (OracleCom
     (auxEq : ∀ query, aux query = simulateQ impl (aux₀ query))
     (initial : RustM Kernel) (candidate : pqxdh.ServerRegistrationCandidate) (data : Option Pqxdh.Bytes)
     (metadata : PeerMetadata) (state : PqxdhInitialGenericPublication.State Kernel Metadata PeerMetadata Consumed) :
-    PqxdhInitialGenericBuilder.candidate calls aux initial candidate data metadata state =
-      simulateQ impl (PqxdhInitialGenericBuilder.candidate calls₀ aux₀ initial candidate data metadata state) := by
+    PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) calls aux initial candidate data metadata state =
+      simulateQ impl (PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) calls₀ aux₀ initial candidate data metadata state) := by
   unfold PqxdhInitialGenericBuilder.candidate
   simp only [auxEq, simulateQ_bind, apply_ite (simulateQ impl), simulateQ_pure, continueRust_simulateQ, simulateQ_map,
-    afterInitialization_simulateQ impl calls₀ calls aux₀ aux send auxEq]
+    afterInitialization_simulateQ (associatedData := associatedData) impl calls₀ calls aux₀ aux send auxEq]
 
 /-- The generic Server build commutes with simulation when its send and auxiliary callbacks do. -/
 theorem genericBuild_simulateQ (calls₀ : RawCtxChainOwner.Calls Kernel (OracleComp spec₀))
@@ -81,8 +84,8 @@ theorem genericBuild_simulateQ (calls₀ : RawCtxChainOwner.Calls Kernel (Oracle
     (auxEq : ∀ query, aux query = simulateQ impl (aux₀ query))
     (initial : RustM Kernel) (pending : pqxdh.PendingServerRegistration) (data : Option Pqxdh.Bytes)
     (metadata : PeerMetadata) (state : PqxdhInitialGenericPublication.State Kernel Metadata PeerMetadata Consumed) :
-    PqxdhServerAuthSendFactor.genericBuild calls aux initial pending data metadata state =
-      simulateQ impl (PqxdhServerAuthSendFactor.genericBuild calls₀ aux₀ initial pending data metadata state) := by
+    PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData) calls aux initial pending data metadata state =
+      simulateQ impl (PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData) calls₀ aux₀ initial pending data metadata state) := by
   unfold PqxdhServerAuthSendFactor.genericBuild
   rw [continueRust_simulateQ]
   congr 1
@@ -96,7 +99,7 @@ theorem genericBuild_simulateQ (calls₀ : RawCtxChainOwner.Calls Kernel (Oracle
       funext prepared
       cases prepared with
       | Err error => simp only [simulateQ_pure]
-      | Ok candidate => exact candidate_simulateQ impl calls₀ calls aux₀ aux send auxEq _ _ _ _ _
+      | Ok candidate => exact candidate_simulateQ (associatedData := associatedData) impl calls₀ calls aux₀ aux send auxEq _ _ _ _ _
 
 /-- The labelled Server send primitives commute with simulation. -/
 theorem sendLabels_simulateQ (prim₀ : QueryImpl RawCtxSourceSend.PrimitiveSpec (OracleComp spec₀))
@@ -120,12 +123,12 @@ theorem factored_simulateQ
     (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (value : PqxdhServerAuthSendFactor.Factor)
     (pending : pqxdh.PendingServerRegistration) (data : Option Pqxdh.Bytes) (metadata : PeerMetadata)
     (state : PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed) :
-    PqxdhServerAuthLoggedSendFactor.factored receive (fun request => simulateQ impl (prim₀ request)) source
+    PqxdhServerAuthLoggedSendFactor.factored (associatedData := associatedData) receive (fun request => simulateQ impl (prim₀ request)) source
         (fun request => simulateQ impl (aux₀ request)) value pending data metadata state =
-      simulateQ impl (PqxdhServerAuthLoggedSendFactor.factored receive₀ prim₀ source aux₀ value pending data metadata
+      simulateQ impl (PqxdhServerAuthLoggedSendFactor.factored (associatedData := associatedData) receive₀ prim₀ source aux₀ value pending data metadata
         state) := by
   unfold PqxdhServerAuthLoggedSendFactor.factored
-  rw [simulateQ_map, genericBuild_simulateQ impl (PqxdhServerAuthLoggedSendFactor.calls receive₀ prim₀ source value.1)
+  rw [simulateQ_map, genericBuild_simulateQ (associatedData := associatedData) impl (PqxdhServerAuthLoggedSendFactor.calls receive₀ prim₀ source value.1)
     (PqxdhServerAuthLoggedSendFactor.calls receive (fun request => simulateQ impl (prim₀ request)) source value.1)
     aux₀ _ (fun entry context => ?_) (fun _ => rfl)]
   simp only [PqxdhServerAuthLoggedSendFactor.calls]
@@ -140,18 +143,18 @@ noncomputable def freeBuild (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSou
     (pending : pqxdh.PendingServerRegistration) (data : Option Pqxdh.Bytes)
     (server : PqxdhServerAuthEntryFactor.ServerState) :
     OracleComp TailSpec (RustM (Option PqxdhServerRegistrationPublication.Response × PqxdhServerAuthEntryFactor.ServerState)) :=
-  PqxdhServerAuthLoggedSendFactor.factored (fun entry _ _ => pure (entry, .None))
+  PqxdhServerAuthLoggedSendFactor.factored (associatedData := associatedData) (fun entry _ _ => pure (entry, .None))
     (fun request => liftM (TailSpec.query (.inl request))) source (fun request => liftM (TailSpec.query (.inr request)))
-    value pending data () server
+    value pending data associatedData server
 
 /-- The factored Server build with the callbacks of a tail interpreter is that interpreter run on `freeBuild`. -/
 theorem factored_free {m : Type → Type} [Monad m] [LawfulMonad m] (impl : QueryImpl TailSpec m)
     (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (value : PqxdhServerAuthSendFactor.Factor)
     (pending : pqxdh.PendingServerRegistration) (data : Option Pqxdh.Bytes)
     (server : PqxdhServerAuthEntryFactor.ServerState) :
-    PqxdhServerAuthLoggedSendFactor.factored (fun entry _ _ => pure (entry, .None)) (fun request => impl (.inl request))
-        source (fun request => impl (.inr request)) value pending data () server =
-      simulateQ impl (freeBuild source value pending data server) := by
+    PqxdhServerAuthLoggedSendFactor.factored (associatedData := associatedData) (fun entry _ _ => pure (entry, .None)) (fun request => impl (.inl request))
+        source (fun request => impl (.inr request)) value pending data associatedData server =
+      simulateQ impl (freeBuild (associatedData := associatedData) source value pending data server) := by
   have prim : (fun request => impl (.inl request)) =
       fun request => simulateQ impl (liftM (TailSpec.query (.inl request)) : OracleComp TailSpec _) := by
     funext request
@@ -161,7 +164,7 @@ theorem factored_free {m : Type → Type} [Monad m] [LawfulMonad m] (impl : Quer
     funext request
     rw [simulateQ_spec_query]
   rw [prim, aux]
-  exact factored_simulateQ impl _ _ _ _ source value pending data () server
+  exact factored_simulateQ (associatedData := associatedData) impl _ _ _ _ source value pending data associatedData server
 
 section BuildFactor
 variable {n : Nat} {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response : Type}
@@ -172,33 +175,33 @@ variable {n : Nat} {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response
 theorem buildFactor_free (material : PqxdhDeploymentHiddenLayout.Material) (seed : PqxdhRecordLiftSeed.Seed)
     (token : PqxdhServerRelatedRootConsumer.Returned) (payload : Option Pqxdh.Bytes)
     (server : PqxdhServerAuthEntryFactor.ServerState) :
-    PqxdhDeploymentHiddenEntry.buildFactor setup codec checks material seed token payload server =
+    PqxdhDeploymentHiddenEntry.buildFactor setup codec checks material seed token payload associatedData server =
       simulateQ (PqxdhServerAuthExperiment.tailImpl setup codec checks)
-        (freeBuild setup.source (PqxdhServerAuthCtxMaterial.factor (PqxdhDeploymentHiddenLayout.joinOutput material seed))
+        (freeBuild (associatedData := associatedData) setup.source (PqxdhServerAuthCtxMaterial.factor (PqxdhDeploymentHiddenLayout.joinOutput material seed))
           token.pending payload server) :=
-  factored_free (PqxdhServerAuthExperiment.tailImpl setup codec checks) _ _ _ _ _
+  factored_free (associatedData := associatedData) (PqxdhServerAuthExperiment.tailImpl setup codec checks) _ _ _ _ _
 
 /-- The forwarded split build, before its kernel replacement, is the forwarded logged tail run on `freeBuild`. -/
 theorem buildSplitFwd_free (material : PqxdhDeploymentHiddenLayout.Material)
     (token : PqxdhServerRelatedRootConsumer.Returned) (payload : Option Pqxdh.Bytes)
     (server : PqxdhServerAuthEntryFactor.ServerState) :
-    PqxdhDeploymentEnvironment.buildSplitFwd (n := n) setup codec checks material token payload server =
+    PqxdhDeploymentEnvironment.buildSplitFwd (n := n) setup codec checks material token payload associatedData server =
       Functor.map (PqxdhDeploymentHiddenSplit.replaceRaw PqxdhDeploymentHiddenSplit.placeholderKernel) <$>
         simulateQ (PqxdhDeploymentEnvironment.tailFwd setup codec checks)
-          (freeBuild setup.source (PqxdhServerAuthCtxMaterial.factor (PqxdhDeploymentHiddenLayout.joinOutput material
+          (freeBuild (associatedData := associatedData) setup.source (PqxdhServerAuthCtxMaterial.factor (PqxdhDeploymentHiddenLayout.joinOutput material
             PqxdhDeploymentHiddenSplit.dummySeed)) token.pending payload server) := by
   unfold PqxdhDeploymentEnvironment.buildSplitFwd
-  rw [factored_free (PqxdhDeploymentEnvironment.tailFwd setup codec checks)]
+  rw [factored_free (associatedData := associatedData) (PqxdhDeploymentEnvironment.tailFwd setup codec checks)]
 
 /-- Factoring of the split hidden build (open point of increment 3): the CE-side split build `PqxdhDeploymentHiddenSplit.buildSplit` on a seal log and a CTX cache is the environment's forwarded split build `buildSplitFwd` on the log, its forwarded BLAKE2b queries answered by the lazy CTX oracle on the cache (`ctxEffects`, any interpretation `admin` of the administrative capabilities, which it never issues). -/
 theorem buildSplit_factor (material : PqxdhDeploymentHiddenLayout.Material)
     (token : PqxdhServerRelatedRootConsumer.Returned) (payload : Option Pqxdh.Bytes)
     (server : PqxdhServerAuthEntryFactor.ServerState) (log : List RawCtxSourceSend.SealContext)
     (cache : CtxRomAuth.CtxRO.QueryCache) :
-    (PqxdhDeploymentHiddenSplit.buildSplit setup codec checks material token payload server).run (log, cache) =
+    (PqxdhDeploymentHiddenSplit.buildSplit setup codec checks material token payload associatedData server).run (log, cache) =
       (fun result => (result.1.1, (result.1.2, result.2))) <$>
         (simulateQ (PqxdhDeploymentEnvironment.ctxEffects admin)
-          ((PqxdhDeploymentEnvironment.buildSplitFwd (n := n) setup codec checks material token payload server).run
+          ((PqxdhDeploymentEnvironment.buildSplitFwd (n := n) setup codec checks material token payload associatedData server).run
             log)).run cache := by
   unfold PqxdhDeploymentHiddenSplit.buildSplit
   rw [buildFactor_free, buildSplitFwd_free, StateT.run_map, StateT.run_map,
@@ -211,13 +214,13 @@ theorem buildSplitEnv_factor (material : PqxdhDeploymentHiddenLayout.Material) (
     (server : PqxdhServerAuthEntryFactor.ServerState) (log : List RawCtxSourceSend.SealContext)
     (cache : CtxRomAuth.CtxRO.QueryCache) :
     (simulateQ (PqxdhDeploymentEnvironment.ctxEffects admin)
-        ((PqxdhDeploymentEnvironment.buildSplitEnv (n := n) setup codec checks material slot token payload server).run
+        ((PqxdhDeploymentEnvironment.buildSplitEnv (n := n) setup codec checks material slot token payload associatedData server).run
           log)).run cache =
-      (PqxdhDeploymentHiddenSplit.buildSplit setup codec checks material token payload server).run (log, cache) >>=
+      (PqxdhDeploymentHiddenSplit.buildSplit setup codec checks material token payload associatedData server).run (log, cache) >>=
         fun result => (fun installed => ((PqxdhServerAuthExperiment.settle server result.1, result.2.1), installed.2)) <$>
           (simulateQ (PqxdhDeploymentEnvironment.ctxEffects admin) (PqxdhDeploymentEnvironment.hiddenServerEffect slot
             (PqxdhServerAuthExperiment.settle server result.1))).run result.2.2 := by
-  rw [buildSplit_factor setup codec checks admin, bind_map_left]
+  rw [buildSplit_factor (associatedData := associatedData) setup codec checks admin, bind_map_left]
   simp only [PqxdhDeploymentEnvironment.buildSplitEnv, StateT.run_bind, simulateQ_bind, bind_pure_comp]
   refine bind_congr fun result => ?_
   simp only [StateT.run_lift, bind_pure_comp, simulateQ_map, StateT.run_map, Functor.map_map]

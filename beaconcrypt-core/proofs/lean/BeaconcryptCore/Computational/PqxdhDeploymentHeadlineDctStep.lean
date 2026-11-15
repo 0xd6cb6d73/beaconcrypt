@@ -19,6 +19,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 
 set_option autoImplicit false
+set_option warningAsError true
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctStep
 open PqxdhServerAuthExperiment (Setup Codec Checks)
@@ -180,7 +181,7 @@ theorem sharedImpl_grows (c : Pqxdh.Crypto) (writer : RawCtxMixedShared.Writer)
   all_goals simp only [RawCtxMixedShared.sharedImpl, QueryImpl.compose, RawCtxMixedShared.sharedAdapter,
     simulateQ_pure, simulateQ_spec_query, RawCtxSharedPrimitive.nativeImpl, RawCtxSharedPrimitive.openingImpl,
     RawCtxSourceHkdf.kdfImpl, StateT.run, support_pure, Set.mem_singleton_iff, bind_pure_comp, support_map] at supported
-  all_goals first | change result ∈ support (pure (_, before) : ProbComp _) at supported | skip
+  all_goals try change result ∈ support (pure (_, before) : ProbComp _) at supported
   case inr.inr.inr.inl =>
     obtain ⟨hashed, reached, rfl⟩ := supported
     exact PqxdhRecordFactsBindingEvidence.hash_grows ((), bytes) before.2 hashed reached
@@ -251,11 +252,21 @@ theorem build_grows (session : ℕ) (payload : Option Pqxdh.Bytes) :
   · simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at member
     subst member
     exact nGrows_refl state
-  · rw [PqxdhDeploymentBackend.nativeCoins_bind, mem_support_bind_iff] at member
-    obtain ⟨built, builtMember, member⟩ := member
-    simp only [PqxdhServerAuthNative.nativeSet, StateT.run] at member
-    subst member
-    exact ⟨fun _ _ found => found, fun i d found => tailRun_grows setup codec checks _ _ built builtMember found⟩
+  · split at member
+    · rw [PqxdhDeploymentBackend.nativeSet_run_bind] at member
+      simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at member
+      subst result
+      exact nGrows_refl state
+    · rw [StateT.run_bind, mem_support_bind_iff] at member
+      obtain ⟨hashed, hashMember, member⟩ := member
+      have hashGrows := growsW_hash _ state hashed hashMember
+      rw [PqxdhDeploymentBackend.nativeGet_bind, PqxdhDeploymentBackend.nativeCoins_bind,
+        mem_support_bind_iff] at member
+      obtain ⟨built, builtMember, member⟩ := member
+      simp only [PqxdhServerAuthNative.nativeSet, StateT.run] at member
+      subst result
+      exact nGrows_trans hashGrows ⟨fun _ _ found => found,
+        fun i d found => tailRun_grows setup codec checks _ _ built builtMember found⟩
 
 /-- The marked build with the erased hidden services at any value grows the native shared state. -/
 theorem buildHidden_grows (value : PqxdhServerAuthKeySchedule.Output) (session : ℕ) (payload : Option Pqxdh.Bytes) :
@@ -269,17 +280,28 @@ theorem buildHidden_grows (value : PqxdhServerAuthKeySchedule.Output) (session :
     subst member
     exact nGrows_refl state
   · rename_i token _
-    rw [PqxdhDeploymentBackend.nativeCoins_bind, mem_support_bind_iff] at member
-    obtain ⟨built, builtMember, member⟩ := member
-    simp only [PqxdhServerAuthNative.nativeSet, StateT.run] at member
-    subst member
-    change built ∈ support ((PqxdhServerAuthLoggedSendFactor.factored (fun entry _ _ => pure (entry, .None))
-      (fun request => PqxdhServerAuthExperiment.tailImpl setup codec checks (.inl request)) setup.source
-      (fun request => PqxdhServerAuthExperiment.tailImpl setup codec checks (.inr request))
-      (PqxdhServerAuthCtxMaterial.factor value) token.pending payload () state.2.server).run ([], state.2.ctx))
-      at builtMember
-    rw [PqxdhDeploymentSplitFactor.factored_free] at builtMember
-    exact ⟨fun _ _ found => found, fun i d found => tailRun_grows setup codec checks _ _ built builtMember found⟩
+    split at member
+    · rw [PqxdhDeploymentBackend.nativeSet_run_bind] at member
+      simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at member
+      subst result
+      exact nGrows_refl state
+    · rw [StateT.run_bind, mem_support_bind_iff] at member
+      obtain ⟨hashed, hashMember, member⟩ := member
+      have hashGrows := growsW_hash _ state hashed hashMember
+      rw [PqxdhDeploymentBackend.nativeGet_bind, PqxdhDeploymentBackend.nativeCoins_bind,
+        mem_support_bind_iff] at member
+      obtain ⟨built, builtMember, member⟩ := member
+      simp only [PqxdhServerAuthNative.nativeSet, StateT.run] at member
+      subst result
+      change built ∈ support ((PqxdhServerAuthLoggedSendFactor.factored
+        (associatedData := PqxdhTranscriptAd.adOf hashed.1) (fun entry _ _ => pure (entry, .None))
+        (fun request => PqxdhServerAuthExperiment.tailImpl setup codec checks (.inl request)) setup.source
+        (fun request => PqxdhServerAuthExperiment.tailImpl setup codec checks (.inr request))
+        (PqxdhServerAuthCtxMaterial.factor value) token.pending payload (PqxdhTranscriptAd.adOf hashed.1)
+        hashed.2.2.server).run ([], hashed.2.2.ctx)) at builtMember
+      rw [PqxdhDeploymentSplitFactor.factored_free] at builtMember
+      exact nGrows_trans hashGrows ⟨fun _ _ found => found,
+        fun i d found => tailRun_grows setup codec checks _ _ built builtMember found⟩
 
 end Tail
 
@@ -404,6 +426,17 @@ theorem run_callbacks_growsW {α : Type}
     (fun query middle grown next member => nGrows_trans grown (callbacks_growsW setup codec query middle next member))
     program state (nGrows_refl state)
 
+/-- The actual retained-Init transcript hash grows the same shared cache before the literal native finish. -/
+theorem ownerFinish_grows (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) :
+    GrowsW (PqxdhRegistrationSchedule.ownerFinish setup codec retained raw owner) := by
+  unfold PqxdhRegistrationSchedule.ownerFinish
+  split
+  · split
+    · exact growsW_bind (growsW_hash _) fun _ => run_callbacks_growsW setup codec _
+    · exact growsW_pure _
+  · exact growsW_pure _
+
 /-- The source schedule's finish grows the native shared state. -/
 theorem finish_grows (index : ℕ) (raw : Pqxdh.Bytes) (state : PqxdhRegistrationSchedule.State KemSK) :
     ∀ result ∈ support ((PqxdhRegistrationSchedule.finish setup codec index raw).run state),
@@ -419,7 +452,7 @@ theorem finish_grows (index : ℕ) (raw : Pqxdh.Bytes) (state : PqxdhRegistratio
       change result ∈ support (PqxdhRegistrationSchedule.finish setup codec index raw state) at member
       rw [PqxdhRegistrationSchedule.finish_source setup codec index raw state owner found, support_map] at member
       obtain ⟨inner, innerMember, rfl⟩ := member
-      exact run_callbacks_growsW setup codec _ _ inner innerMember
+      exact ownerFinish_grows setup codec (state.inits index) raw owner state.shared inner innerMember
 
 /-- A native program lifted to the registration state grows its shared part when the program grows the native state. -/
 theorem onShared_grows {α : Type} (work : NativeGame KemSK α) (grows : GrowsW work)
@@ -708,7 +741,51 @@ theorem groupCE_grows (pending : PqxdhRegistrationJointKemPostSkeleton.Pending R
         · exact beaconNative_grows setup codec (.inr (.initial request)) before result member
         · exact beaconNative_grows setup codec (.inr (.application response)) before result member
 
-/-- Owner k's challenge finish grows the shared native state. -/
+/-- The grouped source owner at its actual per-call completed binding grows the complete native state. -/
+theorem groupedOwnerCE_grows (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+    (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK)
+    (state : NativeState KemSK × Option PqxdhDeploymentIdealSlots.Coord) :
+    ∀ result ∈ support ((simulateQ (PqxdhDeploymentIdealSteps.ownerImplCE setup codec
+      (PqxdhDeploymentIdealSteps.erasedHidden setup codec checks) challenge)
+      (PqxdhDeploymentIdealSteps.groupedOwnerCE (Response := Response) completedBinding raw owner)).run state),
+      NGrows state.1 result.2.1 := by
+  intro result member
+  refine slotRun_nGrows _ (fun query current result member => ?_) _ _ result member
+  rcases query with query | pending
+  · change result ∈ support ((fun reply => (reply, current)) <$> PqxdhDeploymentIdealSteps.liftS
+      (PqxdhDeploymentIdealSteps.preparationCE setup codec challenge query)) at member
+    rw [support_map] at member
+    obtain ⟨_, _, rfl⟩ := member
+    exact nGrows_refl _
+  · exact groupCE_grows setup codec checks pending current result member
+
+/-- The hashed grouped source finish retains its actual CTX hash poststate into the growing grouped owner. -/
+theorem hashedOwnerCE_grows (challenge : PqxdhKemIndCca.MlKem768Ciphertext)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK)
+    (state : NativeState KemSK × Option PqxdhDeploymentIdealSlots.Coord) :
+    ∀ result ∈ support ((PqxdhDeploymentIdealSteps.hashedOwnerCE setup codec
+      (PqxdhDeploymentIdealSteps.erasedHidden setup codec checks) challenge retained raw owner).run state),
+      NGrows state.1 result.2.1 := by
+  intro result member
+  unfold PqxdhDeploymentIdealSteps.hashedOwnerCE at member
+  split at member
+  · split at member
+    · simp only [StateT.run_bind, mem_support_bind_iff] at member
+      obtain ⟨hashed, hashMember, groupedMember⟩ := member
+      simp only [StateT.run, support_map, OracleComp.support_liftComp] at hashMember
+      obtain ⟨native, nativeMember, rfl⟩ := hashMember
+      exact nGrows_trans (growsW_hash _ state.1 native nativeMember)
+        (groupedOwnerCE_grows setup codec checks _ challenge raw owner _ result groupedMember)
+    · simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at member
+      subst result
+      exact nGrows_refl _
+  · simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at member
+    subst result
+    exact nGrows_refl _
+
+/-- Owner k's actual hashed challenge finish grows the shared native state. -/
 theorem finishChallenge_grows (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (index : ℕ) (raw : Pqxdh.Bytes)
     (state : PqxdhRegistrationSchedule.State KemSK × Option PqxdhDeploymentIdealSlots.Coord) :
     ∀ result ∈ support ((PqxdhDeploymentIdealSteps.finishChallenge setup codec
@@ -718,27 +795,19 @@ theorem finishChallenge_grows (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (i
   change result ∈ support (match state.1.owners[index]? with
     | none => pure (none, state)
     | some owner => do
-        let result ← (simulateQ (PqxdhDeploymentIdealSteps.ownerImplCE setup codec
-          (PqxdhDeploymentIdealSteps.erasedHidden setup codec checks) challenge)
-          (PqxdhDeploymentIdealSteps.groupedOwnerCE (Response := Response) raw owner)).run (state.1.shared, state.2)
-        pure (result.1.1, (({ shared := result.2.1, owners := state.1.owners.set index result.1.2 } :
-          PqxdhRegistrationSchedule.State KemSK), result.2.2))) at member
+        let result ← (PqxdhDeploymentIdealSteps.hashedOwnerCE setup codec
+          (PqxdhDeploymentIdealSteps.erasedHidden setup codec checks) challenge (state.1.inits index) raw owner).run
+            (state.1.shared, state.2)
+        pure (result.1.1, ({ state.1 with shared := result.2.1, owners := state.1.owners.set index result.1.2 }, result.2.2))) at member
   split at member
   · rw [support_pure, Set.mem_singleton_iff] at member
-    subst member
+    subst result
     exact nGrows_refl _
   · rw [mem_support_bind_iff] at member
     obtain ⟨inner, innerMember, member⟩ := member
     rw [support_pure, Set.mem_singleton_iff] at member
-    subst member
-    refine slotRun_nGrows _ (fun query current result member => ?_) _ _ inner innerMember
-    rcases query with query | pending
-    · change result ∈ support ((fun reply => (reply, current)) <$> PqxdhDeploymentIdealSteps.liftS
-        (PqxdhDeploymentIdealSteps.preparationCE setup codec challenge query)) at member
-      rw [support_map] at member
-      obtain ⟨_, _, rfl⟩ := member
-      exact nGrows_refl _
-    · exact groupCE_grows setup codec checks pending current result member
+    subst result
+    exact hashedOwnerCE_grows setup codec checks challenge _ raw _ _ inner innerMember
 
 end Hidden
 
@@ -958,7 +1027,7 @@ theorem serverStep_grows (query : RawCtxServerMixed.SourceSpec.Domain) (state : 
   intro result member
   change result ∈ support (do
     let result ← (PqxdhDeploymentNative.record setup codec (PqxdhDeploymentNative.logged
-      ((RawCtxServerMixed.serverImpl (PqxdhDeploymentNative.senderId state) route codec.frameRead query).run
+      ((MldsaServerRouting.handler PqxdhRefinement.absBytes (PqxdhDeploymentNative.senderId state) route codec.frameRead query).run
         (PqxdhDeploymentNative.serverView state)))).run state.native
     pure (result.1.1.1, PqxdhDeploymentNative.produce (PqxdhDeploymentNative.serverTag query) result.1.2
       (PqxdhDeploymentNative.withServer { state with native := result.2 } result.1.1.2))) at member
@@ -2044,3 +2113,27 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctStep.step_facts' 
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctStep.step_facts
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctStep.ownerFinish_grows' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctStep.ownerFinish_grows
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctStep.groupedOwnerCE_grows' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctStep.groupedOwnerCE_grows
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctStep.hashedOwnerCE_grows' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctStep.hashedOwnerCE_grows

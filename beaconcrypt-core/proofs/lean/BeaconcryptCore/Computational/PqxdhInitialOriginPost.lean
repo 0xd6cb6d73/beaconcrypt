@@ -13,6 +13,8 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 open OracleComp OracleSpec
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialOriginPost
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhInitialPendingPost RawCtxProtocolReveals
 variable {ι Chain M P I D K X Response Shared Result Origin : Type} {extra : OracleSpec ι} {S B : Nat}
 
@@ -43,7 +45,7 @@ noncomputable def compiler (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Or
       let reply ← selectorForward query
       pure (reply, before)
   | .inr (.finish index raw) => fun before => do
-      let result ← PqxdhInitialFinishOrigin.owner mark preForward calls applicationForward initialForward decode raw (before.1.roles.1.2 index)
+      let result ← PqxdhInitialFinishOrigin.owner (completedBinding := completedBinding) mark preForward calls applicationForward initialForward decode raw (before.1.roles.1.2 index)
       pure (result.1.1, (install index before.1 result.1.2, finish before.2 index result.2))
 
 /-- Erasing only private origin and publication metadata recovers each complete original post operation. -/
@@ -51,15 +53,15 @@ theorem step_erase (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin)
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (query : (PqxdhInitialGenericPost.Spec extra S B).Domain)
     (before : Front Chain M P I D K S B × Trace Origin S B) :
-    Prod.map id Prod.fst <$> (compiler (X := X) (Response := Response) mark sender route decode query).run before =
-      (PqxdhInitialPendingPost.compiler sender route decode query).run before.1 := by
+    Prod.map id Prod.fst <$> (compiler (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode query).run before =
+      (PqxdhInitialPendingPost.compiler (completedBinding := completedBinding) sender route decode query).run before.1 := by
   rcases query with (query | query) | ⟨index, raw⟩
   · simp only [compiler, PqxdhInitialPendingPost.compiler, StateT.run, map_bind, map_pure]
     rfl
   · simp only [compiler, PqxdhInitialPendingPost.compiler, StateT.run, map_bind, map_pure]
     rfl
   · simp only [compiler, PqxdhInitialPendingPost.compiler, StateT.run, bind_pure_comp, Functor.map_map]
-    rw [← PqxdhInitialFinishOrigin.erase mark preForward calls applicationForward initialForward decode raw (before.1.roles.1.2 index)]
+    rw [← PqxdhInitialFinishOrigin.erase (completedBinding := completedBinding) mark preForward calls applicationForward initialForward decode raw (before.1.roles.1.2 index)]
     simp only [Functor.map_map]
     rfl
 
@@ -68,13 +70,13 @@ theorem program_erase (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin)
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (client : OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result)
     (before : Front Chain M P I D K S B × Trace Origin S B) :
-    Prod.map id Prod.fst <$> (simulateQ (compiler (X := X) (Response := Response) mark sender route decode) client).run before =
-      (simulateQ (PqxdhInitialPendingPost.compiler sender route decode) client).run before.1 := by
+    Prod.map id Prod.fst <$> (simulateQ (compiler (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode) client).run before =
+      (simulateQ (PqxdhInitialPendingPost.compiler (completedBinding := completedBinding) sender route decode) client).run before.1 := by
   induction client using OracleComp.inductionOn generalizing before with
   | pure value => simp only [simulateQ_pure, StateT.run_pure, map_pure]; rfl
   | query_bind query next ih =>
     simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind, map_bind]
-    rw [← step_erase mark sender route decode query before]
+    rw [← step_erase (completedBinding := completedBinding) mark sender route decode query before]
     simp only [bind_map_left]
     apply bind_congr
     intro result
@@ -87,9 +89,9 @@ theorem query_bound (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin)
     (before : Front Chain M P I D K S B × Trace Origin S B)
     (predicate : (PqxdhInitialPendingPost.Spec extra Chain I D K X Response Shared S B).Domain → Prop)
     [DecidablePred predicate] (budget : Nat) :
-    ((simulateQ (compiler mark sender route decode) client).run before).IsQueryBoundP predicate budget ↔
-      ((simulateQ (PqxdhInitialPendingPost.compiler sender route decode) client).run before.1).IsQueryBoundP predicate budget := by
-  rw [← program_erase mark sender route decode client before]
+    ((simulateQ (compiler (completedBinding := completedBinding) mark sender route decode) client).run before).IsQueryBoundP predicate budget ↔
+      ((simulateQ (PqxdhInitialPendingPost.compiler (completedBinding := completedBinding) sender route decode) client).run before.1).IsQueryBoundP predicate budget := by
+  rw [← program_erase (completedBinding := completedBinding) mark sender route decode client before]
   exact (isQueryBoundP_map_iff _ _ _).symm
 
 /-- Each newly appended record has both an actual successful send reply and the origin installed at that owner before the operation. -/
@@ -121,8 +123,8 @@ theorem owner_interpretation {κ Kernel : Type} {spec : OracleSpec κ} {m : Type
     (initial : PqxdhBeaconPhase2Shared.Secrets Shared → OracleComp spec (Option Kernel))
     (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
     (state : RawCtxGenericRoleStorage.BeaconState Kernel I D K) :
-    simulateQ impl (PqxdhInitialFinishOrigin.owner mark pre calls application initial decode raw state) =
-      PqxdhInitialFinishOrigin.owner mark (impl ∘ₛ pre)
+    simulateQ impl (PqxdhInitialFinishOrigin.owner (completedBinding := completedBinding) mark pre calls application initial decode raw state) =
+      PqxdhInitialFinishOrigin.owner (completedBinding := completedBinding) mark (impl ∘ₛ pre)
         (RawCtxGenericOwnerInterpretation.interpretedCalls impl calls)
         (fun reply => simulateQ impl (application reply))
         (fun secrets => simulateQ impl (initial secrets)) decode raw state := by
@@ -146,10 +148,10 @@ theorem finish_supported {State : Type}
     (index : Fin B) (raw : Pqxdh.Bytes) (before : Front Chain M P I D K S B × Trace Origin S B)
     (ambient : State) (result : (Option Pqxdh.Bytes × (Front Chain M P I D K S B × Trace Origin S B)) × State)
     (supported : result ∈ support ((simulateQ impl
-      ((compiler mark sender route decode (.inr (.finish index raw))).run before)).run ambient))
+      ((compiler (completedBinding := completedBinding) mark sender route decode (.inr (.finish index raw))).run before)).run ambient))
     (success : result.1.1.isSome = true) :
     ∃ (finished : PqxdhInitialFinishOrigin.Result (KernelOf Chain) Origin I D K × State) (origin : Origin),
-      finished ∈ support ((PqxdhInitialFinishOrigin.owner mark (impl ∘ₛ preForward)
+      finished ∈ support ((PqxdhInitialFinishOrigin.owner (completedBinding := completedBinding) mark (impl ∘ₛ preForward)
         (RawCtxGenericOwnerInterpretation.interpretedCalls impl calls)
         (fun reply => simulateQ impl (applicationForward reply))
         (fun secrets => simulateQ impl (initialForward secrets)) decode raw (before.1.roles.1.2 index)).run ambient) ∧
@@ -157,12 +159,12 @@ theorem finish_supported {State : Type}
       result = ((finished.1.1.1, (install index before.1 finished.1.1.2, finish before.2 index finished.1.2)), finished.2) ∧
       result.1.2.2.installed (.beacon index) = some origin := by
   change result ∈ support ((simulateQ impl (do
-    let finished ← PqxdhInitialFinishOrigin.owner mark preForward calls applicationForward initialForward decode raw (before.1.roles.1.2 index)
+    let finished ← PqxdhInitialFinishOrigin.owner (completedBinding := completedBinding) mark preForward calls applicationForward initialForward decode raw (before.1.roles.1.2 index)
     pure (finished.1.1, (install index before.1 finished.1.2, finish before.2 index finished.2)))).run ambient) at supported
   simp only [bind_pure_comp, simulateQ_map, owner_interpretation, StateT.run_map, support_map] at supported
   obtain ⟨finished, reached, equality⟩ := supported
   subst result
-  have present := PqxdhInitialFinishOrigin.published mark (impl ∘ₛ preForward)
+  have present := PqxdhInitialFinishOrigin.published (completedBinding := completedBinding) mark (impl ∘ₛ preForward)
     (RawCtxGenericOwnerInterpretation.interpretedCalls impl calls)
     (fun reply => simulateQ impl (applicationForward reply))
     (fun secrets => simulateQ impl (initialForward secrets)) decode raw (before.1.roles.1.2 index)
@@ -191,8 +193,8 @@ noncomputable def sequence (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSour
     (post : RustM (Option PqxdhServerRegistrationPublication.Response) → OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result) :
     StateT (Front Chain M P I D K S B × Trace Origin S B)
       (OracleComp (PqxdhInitialPendingPost.Spec extra Chain I D K X Response Shared S B)) Result := fun before => do
-  let built ← (PqxdhInitialPendingBuilder.build source initial sender index metadata ready).run before.1
-  (simulateQ (compiler mark sender route decode) (post built.1)).run
+  let built ← (PqxdhInitialPendingBuilder.build (associatedData := associatedData) source initial sender index metadata ready).run before.1
+  (simulateQ (compiler (completedBinding := completedBinding) mark sender route decode) (post built.1)).run
     (built.2, afterBuilder before.2 built.2 index origin built.1)
 
 /-- The actual first builder, its returned response, installed peer and complete original post client are retained when only the private transcript is erased. -/
@@ -202,13 +204,13 @@ theorem sequence_erase (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (index : Fin S) (metadata : P) (ready : PqxdhPrivateAcceptedRoot.Ready)
     (post : RustM (Option PqxdhServerRegistrationPublication.Response) → OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result)
     (before : Front Chain M P I D K S B × Trace Origin S B) :
-    Prod.map id Prod.fst <$> ((sequence (X := X) (Response := Response) source initial mark origin
+    Prod.map id Prod.fst <$> ((sequence (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response) source initial mark origin
       sender route decode index metadata ready post).run before) =
-      (PqxdhInitialPendingAccepted.sequence source initial sender route decode index metadata ready post).run before.1 := by
+      (PqxdhInitialPendingAccepted.sequence (associatedData := associatedData) (completedBinding := completedBinding) source initial sender route decode index metadata ready post).run before.1 := by
   simp only [sequence, StateT.run, PqxdhInitialPendingAccepted.sequence, map_bind]
   apply bind_congr
   intro built
-  exact program_erase mark sender route decode (post built.1) _
+  exact program_erase (completedBinding := completedBinding) mark sender route decode (post built.1) _
 
 /-- A new first-response transcript entry requires an actual successful builder reply and its actual installed peer; its sequence is read from that same returned kernel. -/
 theorem builder_recorded (before : Trace Origin S B) (front : Front Chain M P I D K S B)
@@ -242,11 +244,11 @@ theorem sequence_total (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (post : RustM (Option PqxdhServerRegistrationPublication.Response) → OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result)
     (qPost : Nat) (bounded : ∀ reply, (post reply).IsTotalQueryBound qPost)
     (before : Front Chain M P I D K S B × Trace Origin S B) :
-    ((sequence (X := X) (Response := Response) source initial mark origin sender route decode index metadata ready post).run before).IsTotalQueryBound
+    ((sequence (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response) source initial mark origin sender route decode index metadata ready post).run before).IsTotalQueryBound
       (7 + qPost * 67) := by
   apply (isQueryBound_map_iff _ (Prod.map id Prod.fst) _ _ _).mp
   rw [sequence_erase]
-  exact PqxdhInitialPendingSourceBounds.sequence_total source initial sender route decode index metadata ready post qPost bounded before.1
+  exact PqxdhInitialPendingSourceBounds.sequence_total (associatedData := associatedData) (completedBinding := completedBinding) source initial sender route decode index metadata ready post qPost bounded before.1
 
 end BeaconcryptCore.Computational.PqxdhInitialOriginPost
 

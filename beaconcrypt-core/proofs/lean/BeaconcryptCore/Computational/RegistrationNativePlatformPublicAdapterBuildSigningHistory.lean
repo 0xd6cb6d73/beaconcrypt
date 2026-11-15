@@ -29,7 +29,7 @@ variable {setup :PqxdhServerAuthExperiment.Setup base KemSK} {checks :PqxdhServe
 variable (configuration :RegistrationNativePlatformPublicAdapterConfiguration.Configuration
   (P:=P) (E:=E) (R:=R) (Error:=Error) (source:=source) setup checks)
 variable {Value :Type}
-variable (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
 local notation "Private"=>RegistrationNativePlatformPublicAdapterAuditLowModel.Private (n:=n) configuration created credential
 local notation "physical"=>RegistrationNativePlatformPublicAdapterAuditLowModel.physical (n:=n) configuration created credential
 local notation "Log"=>RegistrationNativePlatformPublicAdapterSourceEvents.Log n KemSK R P
@@ -155,7 +155,7 @@ theorem configured_aligned (current :NativeP) (before :CorePrivate current)
     dsimp only
     erw [dite_eq_left missing]
     have basePure:=RegistrationNativePlatformExtractedSdkBuildDispatch.missing_model configuration.view configuration.views setup.joint created credential current before.base
-      pin reserve present finish handle missing (RegistrationNativeRawAdapter.application (payload.map TranscriptAuthParts.absSlice))
+      (RegistrationNativePlatformCompletionSdk.nativeAdHash coins) pin reserve present finish handle missing (RegistrationNativeRawAdapter.application (payload.map TranscriptAuthParts.absSlice))
     have pureLaw:=congrArg (fun tree=>Prod.map RegistrationNativePlatformPublicAdapterBuildRaw.response id <$>tree) basePure
     simp only [map_pure] at pureLaw
     exact quiet_aligned configuration created credential _ prior none current pureLaw held
@@ -168,9 +168,9 @@ theorem configured_aligned (current :NativeP) (before :CorePrivate current)
         | none=>exact (missing found).elim
         | some _=>rfl
       have basePure:=RegistrationNativePlatformExtractedSdkBuildDispatch.cancel_model configuration.view configuration.views setup.joint created credential current before.base
-        pin reserve present finish handle ((before.base.objects.tokens handle).get has) (Option.some_get has).symm
+        (RegistrationNativePlatformCompletionSdk.nativeAdHash coins) pin reserve present finish handle ((before.base.objects.tokens handle).get has) (Option.some_get has).symm
       have appPure:RegistrationNativePlatformPackedState.pack (RegistrationNativePlatformExperiment.server
-          (RegistrationNativePlatformCompletionSdk.build pin reserve present finish handle (RegistrationNativeRawAdapter.application (payload.map TranscriptAuthParts.absSlice)))) current=
+          (RegistrationNativePlatformCompletionSdk.build (RegistrationNativePlatformCompletionSdk.nativeAdHash coins) pin reserve present finish handle (RegistrationNativeRawAdapter.application (payload.map TranscriptAuthParts.absSlice)))) current=
           pure (.ok none,(AdapterPublicServerBuildOwnership.moved handle current.1,current.2)):=by
         rw [declined]
         exact basePure

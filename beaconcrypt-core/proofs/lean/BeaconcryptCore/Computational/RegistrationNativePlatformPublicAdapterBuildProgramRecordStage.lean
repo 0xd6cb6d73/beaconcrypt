@@ -1,6 +1,8 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterBuildProgramStageCut
 import BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterBuildRecordAnchor
+import BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterBuildAdCut
+import BeaconcryptCore.Refinement.AdapterPublicServerAdHash
 /-! A given emitted server-sign operation in the same complete Builder callback determines its actual source token initializer and successful first-record stage. The concrete first-record cut is anchored at that callback's final cache, even when later source publication or installation refuses. -/
 open CoreModels Aeneas OracleComp OracleSpec
 open Aeneas.Std hiding namespace core alloc
@@ -81,6 +83,70 @@ private theorem path_cache {before after :(Cut×Events)×P}
       RegistrationNativePlatformPublicAdapterSourceEvents.Event.stage call.query call.before.1 call.before.2 _ nested
     exact extension.trans ih
 
+omit material platform ed primitive [PublicWrapperPlatform.Allocator] [PublicWrapperPlatform.LocalOperations] [PublicWrapperPlatform.ContainerOperations] in
+private theorem log_erasure_support {S T Value : Type}
+    (left : StateT (S × T) (StateT P ProbComp) Value)
+    (right : StateT S (StateT P ProbComp) Value)
+    (erases : ∀ before, Prod.map id Prod.fst <$> left.run before = right.run before.1)
+    (before : S × T) (previous : P) (result : (Value × (S × T)) × P)
+    (supported : result ∈ support ((left.run before).run previous)) :
+    ((result.1.1, result.1.2.1), result.2) ∈ support ((right.run before.1).run previous) := by
+  have same := congrArg (fun work => work.run previous) (erases before)
+  rw [StateT.run_map] at same
+  rw [← same, support_map]
+  exact ⟨result, supported, rfl⟩
+
+attribute [local irreducible] RegistrationNativePlatformPublicAdapterBuildSource.nativeHandler
+
+/-- Erasure of only the private hash/log cuts retains the actual shared native hash callback and its exact platform support. -/
+private theorem physical_ad_cut (self : beaconcrypt_public_wrapper.server.Server)
+    (token : beaconcrypt_public_wrapper.server.RegistrationOutput) (initial : registration.ServerInitialKdf)
+    (first : (Cut×Events)×P)
+    (ad : RegistrationNativePlatformPublicAdapterBuildAdProgramCut.HashCut actual token self.control initial first)
+    (cache : CtxRomAuth.CtxRO.QueryCache)
+    (extension : RegistrationNativeWorldCache.cache ad.afterHash.1.1.1 ≤ cache) :
+    Nonempty (RegistrationNativePlatformPublicAdapterBuildAdCut.Cut (n:=n) (Auxiliary:=RegistrationServerRoleBackend.State)
+      coins token.registration self.control ad.pin ad.availability ad.application initial cache) := by
+  have nested : ((.ok ad.digest, ad.afterHash.1), ad.afterHash.2) ∈ support
+      (((interpreter (.inl (.inr ad.request))).run ad.beforeHash.1).run ad.beforeHash.2) :=
+    (RegistrationNativePlatformRawFrame.joint_support _ _ _ _ _ _).mp ad.called
+  have hashLeaf : ((.ok ad.digest, ad.afterHash.1.1), ad.afterHash.2) ∈ support
+      (((RegistrationNativePlatformPublicAdapterBuildSource.nativeHandler coins setup codec keyView failure allocation helper erased sign writer
+        view originalLocal original previousCrypto previousChildren fallback (.inl (.inr ad.request))).run ad.beforeHash.1.1).run ad.beforeHash.2) := by
+    apply log_erasure_support (interpreter (.inl (.inr ad.request)))
+      (RegistrationNativePlatformPublicAdapterBuildSource.nativeHandler coins setup codec keyView failure allocation helper erased sign writer
+        view originalLocal original previousCrypto previousChildren fallback (.inl (.inr ad.request)))
+      _ ad.beforeHash.1 ad.beforeHash.2 ((.ok ad.digest, ad.afterHash.1), ad.afterHash.2) nested
+    intro current
+    exact RegistrationNativePlatformPublicAdapterBuildProgramStages.query_native_erasure
+      RegistrationNativePlatformPublicAdapterSourceEvents.Event.stage coins setup codec keyView failure allocation helper erased sign writer
+      view originalLocal original previousCrypto previousChildren fallback (.inl (.inr ad.request)) current
+  have hash_eq : RegistrationNativePlatformPublicAdapterBuildSource.nativeHandler coins setup codec keyView failure allocation helper erased sign writer
+      view originalLocal original previousCrypto previousChildren fallback (.inl (.inr ad.request)) =
+      AdapterPublicServerCutPin.hash coins sign ad.request := by
+    unfold RegistrationNativePlatformPublicAdapterBuildSource.nativeHandler RegistrationNativePlatformPublicAdapterBuildProgram.handler
+    rfl
+  rw [hash_eq, AdapterPublicServerAdHash.hash_run, StateT.run_map, support_map] at hashLeaf
+  obtain ⟨raw, called, same⟩ := hashLeaf
+  have replySame := RustM.ok.inj (congrArg (fun result => result.1.1) same)
+  have rawCache : RegistrationNativeWorldCache.cache raw.1.2 = RegistrationNativeWorldCache.cache ad.afterHash.1.1.1 :=
+    congrArg (fun result => RegistrationNativeWorldCache.cache result.1.2.1) same
+  rw [AdapterPublicServerCutPin.outgoing, AdapterPublicServerLocalLens.local_run, StateT.run_map, support_map] at called
+  obtain ⟨world, hashed, worldSame⟩ := called
+  have digestSame : world.1.1 = raw.1.1 := congrArg (fun result => result.1.1) worldSame
+  have worldCache : world.1.2.world.1.primitive.2 = RegistrationNativeWorldCache.cache raw.1.2 :=
+    congrArg (fun result : (CtxRomAuth.CtxDigest × Native) × P => RegistrationNativeWorldCache.cache result.1.2) worldSame
+  rw [AdapterPublicServerAdHash.hash_outgoing] at hashed
+  have resumed : ad.pending.resume (.Some (RegistrationAuthenticationShared.digestArray world.1.1)) = .ok (.Ok initial) := by
+    rw [digestSame, replySame]
+    exact ad.resumed
+  have retained : world.1.2.world.1.primitive.2 ≤ cache := by
+    rw [worldCache, rawCache]
+    exact extension
+  exact ⟨RegistrationNativePlatformPublicAdapterBuildAdCut.of_hash coins token.registration self.control ad.pin ad.availability
+    ad.application initial cache ad.pending ad.beforeHash.1.1.1.server.world world.1.2 ad.beforeHash.2 world.2
+    ad.request world.1.1 ad.selected ad.requested resumed hashed retained⟩
+
 theorem sample (self :beaconcrypt_public_wrapper.server.Server) (token :beaconcrypt_public_wrapper.server.RegistrationOutput)
     (data :core.option.Option (Slice U8)) (before :Cut) (previous :P) (prior :Events)
     (result :(((Word×Cut)×P)×Events))
@@ -91,15 +157,18 @@ theorem sample (self :beaconcrypt_public_wrapper.server.Server) (token :beaconcr
     (digest :CtxRomAuth.CtxDigest) (signature :RegistrationSigningShared.SignReply)
     (present :Stage.sign request payload digest signature∈suffix) :
     ∃initial hashed pin availability application,
-      registration.begin_server_completion self.control pin availability token.registration.agreement application=.ok (.Ok initial) ∧
+      BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission self.control pin availability token.registration.agreement application initial ∧
+      Nonempty (RegistrationNativePlatformPublicAdapterBuildAdCut.Cut (n:=n) (Auxiliary:=RegistrationServerRoleBackend.State)
+        coins token.registration self.control pin availability application initial
+        (RegistrationNativeWorldCache.cache result.1.1.2.1)) ∧
       RegistrationServerRecordExecutor.Path initial hashed ∧
       RegistrationNativePlatformSourceFinishContents.RecordCut (n:=n) coins setup wire keyView failure allocation erased rawAllocation serializer
         initial hashed (RegistrationNativeWorldCache.cache result.1.1.2.1) ∧
       Stage.firstRecord initial (.ok (.Ok hashed))∈suffix ∧
       payload=RegistrationSigningTrace.Command.payload (.server hashed) ∧
       request.public_key=hashed.binding.server_pin.public_key :=by
-  obtain ⟨leading,trailing,call,beforePath,called,afterPath,current,initial,queryEq,controlEq,admitted,emitted,logEq,seen⟩:=
-    RegistrationNativePlatformPublicAdapterBuildProgramStageCut.call coins setup codec keyView failure allocation helper erased sign writer view originalLocal original previousCrypto previousChildren fallback
+  obtain ⟨leading,trailing,call,beforePath,called,afterPath,current,initial,queryEq,controlEq,_admitted,ad,between,hashPath,emitted,logEq,seen⟩:=
+    RegistrationNativePlatformPublicAdapterBuildProgramStageCut.call_with_ad coins setup codec keyView failure allocation helper erased sign writer view originalLocal original previousCrypto previousChildren fallback
       self token data before previous prior result supported suffix observed request payload digest signature present
   obtain ⟨query,callBefore,reply,callAfter⟩:=call
   dsimp only at queryEq
@@ -135,8 +204,17 @@ theorem sample (self :beaconcrypt_public_wrapper.server.Server) (token :beaconcr
   obtain ⟨selected,member,same⟩:=List.mem_map.mp firstIn
   have selectedEq:=RegistrationNativePlatformPublicAdapterSourceEvents.Event.stage.inj same
   cases selectedEq
-  obtain ⟨pin,availability,application,started⟩:=admitted
-  exact ⟨initial,hashed,pin,availability,application,started,recordPath,
+  have hashToComplete := path_cache coins setup wire keyView failure allocation rawAllocation serializer erased sign writer view originalLocal original previousCrypto previousChildren fallback hashPath
+  have completeExtension := RegistrationNativePlatformPublicAdapterBuildCacheFrame.complete coins setup codec keyView failure allocation helper erased sign writer
+    RegistrationNativePlatformPublicAdapterSourceEvents.Event.stage original current initial callBefore.1 callBefore.2 _ completeCalled
+  have hashToFinal := hashToComplete.trans (completeExtension.trans extension)
+  obtain ⟨adCut⟩ := physical_ad_cut coins setup wire keyView failure allocation rawAllocation serializer erased sign writer view originalLocal original previousCrypto previousChildren fallback
+    self token initial _ ad (RegistrationNativeWorldCache.cache result.1.1.2.1) hashToFinal
+  obtain ⟨selectedDigest,adResumed,_cached⟩ := RegistrationNativePlatformPublicAdapterBuildAdCut.cached
+    coins token.registration self.control ad.pin ad.availability ad.application initial _ adCut
+  have started : RegistrationAd.ServerAdmission self.control ad.pin ad.availability token.registration.agreement ad.application initial :=
+    ⟨adCut.pendingAd,RegistrationAuthenticationShared.digestArray selectedDigest,adCut.selected,adResumed⟩
+  exact ⟨initial,hashed,ad.pin,ad.availability,ad.application,started,⟨adCut⟩,recordPath,
     ⟨recordBefore,recordAfter,recorded,anchor.trans extension⟩,member,payloadEq,key⟩
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterBuildProgramRecordStage

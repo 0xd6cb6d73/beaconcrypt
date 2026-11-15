@@ -63,18 +63,22 @@ theorem good_after_selected (setup : Setup baseSpec KemSK) (wire : Codec Reader 
         parameters.challenge value ephemeral consumed logged).run joint.shared)).run slots)) :
     CborRawMiddleInvariant.Good setup wire parse target
       (CborRawCompileCut.logAccept memory raw result.1.1.1.1) (afterSelected target joint result) := by
-  obtain ⟨server, keyId, sessions, others, rejected, accepted⟩ :=
+  obtain ⟨server, keyId, sessions, others, rejected, accepted, ctx⟩ :=
     PqxdhDeploymentIdealPostGood.acceptAfter_footprint setup (CborRawCompile.sourceCodec wire parse)
       checks seed parameters.challenge value ephemeral consumed logged joint.shared slots result supported
   refine ⟨⟨?_, ?_⟩, Nat.lt_succ_self _⟩
   · exact PqxdhDeploymentIdealPostGood.good_of_accept setup (CborRawCompile.sourceCodec wire parse) raw
       memory.copies (PqxdhRegistrationJointSchedule.source joint)
-      ⟨result.1.2, (PqxdhRegistrationJointSchedule.source joint).owners⟩ good.nativeGood result.1.1.1.1
-      rfl server keyId sessions others rejected (fun session found => by
-        obtain ⟨same, token, stored, identity⟩ := accepted session found
+      ⟨result.1.2, (PqxdhRegistrationJointSchedule.source joint).owners, joint.inits⟩ good.nativeGood result.1.1.1.1
+      rfl rfl (by simpa only [PqxdhRegistrationJointSchedule.source, ctx] using (le_refl joint.shared.2.ctx))
+      server keyId sessions others rejected (fun session found => by
+        obtain ⟨same, token, stored, identity, init⟩ := accepted session found
         exact ⟨same, token, stored, by
           rw [identity]
           exact PqxdhDeploymentIdealPostGood.identityOf_verified setup (CborRawCompile.sourceCodec wire parse)
+            checks raw value verified, by
+          rw [init]
+          exact PqxdhDeploymentIdealPostGood.publicInit_verified setup (CborRawCompile.sourceCodec wire parse)
             checks raw value verified⟩)
   · have control := acceptAfter_control setup (CborRawCompile.sourceCodec wire parse) checks seed
       parameters.challenge value ephemeral consumed logged joint.shared slots result supported

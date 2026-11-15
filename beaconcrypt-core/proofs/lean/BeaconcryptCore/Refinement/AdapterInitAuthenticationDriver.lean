@@ -2,7 +2,7 @@
 import BeaconcryptCore.Refinement.AdapterInitAuthenticationStateful
 import BeaconcryptCore.Computational.RegistrationAuthenticationTermination
 
-/-! The lifted actual Init loop runs to its source terminal branch within seven callbacks plus one terminal inspection. The comparison retains its separate Ed parse/open calls and every optional primitive failure, with the complete state of arbitrary preceding calls. -/
+/-! The lifted actual Init loop runs to its source terminal branch within four callbacks plus one terminal inspection. The comparison retains its separate Ed parse/open calls and every optional primitive failure, with the complete state of arbitrary preceding calls. -/
 open CoreModels Aeneas OracleComp OracleSpec
 open Aeneas.Std hiding namespace core alloc
 open RustM ControlFlow beaconcrypt_core
@@ -82,7 +82,7 @@ theorem drive_source (fuel : Nat) (state : registration.InitAuthentication)
 def authenticate (pin : session.ServerAuthenticationPin) (packet : registration.InitPacket) :
     Program (core.option.Option registration.AuthenticatedInit) := do
   let state ← liftRust (registration.begin_init_authentication pin packet)
-  drive 8 state
+  drive 5 state
 
 /-- The actual Init entrypoint followed by its complete source loop equals the mandatory native authentication controller; malformed/absent primitive replies and failed Ed parsing remain explicit. -/
 theorem source (pin : session.ServerAuthenticationPin) (packet : registration.InitPacket) :
@@ -91,7 +91,7 @@ theorem source (pin : session.ServerAuthenticationPin) (packet : registration.In
   obtain ⟨initial, started, _packet, _pin, _input⟩ := RegistrationAuthentication.begin_init_exact pin packet
   simp only [authenticate, interpret_bind, interpret_lift, started, pure_bind,
     RegistrationAuthenticationExecutor.begin, RegistrationAuthenticationExecutor.continueWith]
-  exact drive_source 8 _ (by simpa only [RegistrationAuthenticationTermination.rank] using (by decide : 7 < 8))
+  exact drive_source 5 _ (by simpa only [RegistrationAuthenticationTermination.rank] using (by decide : 4 < 5))
 
 /-- The source transformation and complete stateful native execution equality hold together for every actual original implementation and arbitrary reached shared primitive state. -/
 theorem stateful {PrimitiveState Index : Type} {base : OracleSpec Index}

@@ -7,6 +7,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhRecordFactsOriginPublicationGlobal
+private abbrev RecordAd := Aeneas.Std.Array Aeneas.Std.U8 151#usize
 open PqxdhRecordLiftIdeal PqxdhRecordLiftInterface PqxdhRecordLiftFlat
 open PqxdhRecordFactsOriginPublicationHistory PqxdhRecordFactsOriginPublicationNative
 open PqxdhRecordFactsOriginPublicationLedger PqxdhRecordFactsOriginAmbient
@@ -31,7 +32,7 @@ theorem startup_kept (modes : Label n → KeyMode) (replace : Pqxdh.Bytes → Pq
     (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (codec : PqxdhServerAuthExperiment.Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
     (env : Environment n E)
-    (result : (Option (PqxdhLiveServerConstruction.Created Unit × E) × PqxdhRecordLiftProtocol.Control n) × CtxPrivate n)
+    (result : (Option (PqxdhLiveServerConstruction.Created RecordAd × E) × PqxdhRecordLiftProtocol.Control n) × CtxPrivate n)
     (supported : result ∈ support (startup modes replace setup codec route env)) :
     Kept CtxPrivate.initial result.2 := by
   simp only [startup, coin_lift] at supported

@@ -24,7 +24,7 @@ variable {n : Nat} {ι KemSK : Type} {base : OracleSpec ι} {source : Registrati
 /-- The actual mixed frontend's complete finishing command preserves the whole native owner roster, pool, current environment and reached World under the named source view. -/
 theorem finish_source (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential source) (roots : Roots)
     (index : Nat) (packet : Option registration.ResponsePacket) (before : State n KemSK source)
     (coherent : RegistrationNativeBeaconCoherence.Holds (owners scalar before.1.beacons)) :
@@ -44,7 +44,7 @@ theorem finish_source (setup : Setup base KemSK) (checks : Checks) (wire : Regis
       rw [RegistrationNativePublicSourceOwnerLayout.beacon_run]
       have native := RegistrationNativePlatformPublicFinishRoster.finish_source setup wire route
         (RegistrationNativeMldsa.owned source credential) created.seed scalar index packet before.1.beacons coherent
-        before.1.environment (Std.Array.repeat 357#usize 0#u8) (toPrivate before.2)
+        before.1.environment (Std.Array.repeat 227#usize 0#u8) (toPrivate before.2)
       have mapped := congrArg (fun distribution => RegistrationNativePublicSourceOwnerWorld.observe roots before.1 <$> distribution) native
       simp only [Functor.map_map, Prod.map_def, id_eq,
         RegistrationNativePlatformPublicFinishRoster.publicView, RegistrationNativePlatformPublicFinishRoster.nativeView,

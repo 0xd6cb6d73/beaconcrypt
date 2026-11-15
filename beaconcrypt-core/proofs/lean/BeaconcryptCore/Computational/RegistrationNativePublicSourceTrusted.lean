@@ -35,7 +35,7 @@ private theorem sampled_apply {First Second : Type} (work : ProbComp First) (obs
 
 private theorem pool_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (roots : Roots) (query : (PqxdhLiveKemBirth.PoolSpec KemSK).Domain) (before : State n KemSK source) :
     (fun result => (result.1, project roots scalar before.1 (fromPrivate result.2))) <$>
       (RegistrationNativeKemReferenceWorld.kem setup RegistrationNativePublicInterpreter.unavailable
@@ -54,7 +54,7 @@ private theorem pool_source (setup : Setup base KemSK) (checks : Checks)
 /-- Actual externally requested indexed operations retain the entire source protocol state and private pool. Ordinary role callbacks remain locally owned and are not added as an oracle capability. -/
 theorem query_source (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential source) (roots : Roots)
     (query : (RegistrationNativeBeaconFrontend.Trusted n KemSK).Domain) (allowed : Allowed query)
     (before : State n KemSK source) :
@@ -128,7 +128,7 @@ private theorem close_program (setup : Setup base KemSK) (wire : RegistrationNat
 
 private theorem program_project (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential source) (roots : Roots)
     (work : OracleComp (RegistrationNativeBeaconFrontend.Trusted n KemSK) Value)
     (allowed : work.AllQueriesSatisfy (Allowed (KemSK := KemSK)))
@@ -182,7 +182,7 @@ private theorem program_project (setup : Setup base KemSK) (checks : Checks) (wi
 /-- A complete adaptive local owner program retains its actual native result, roster, pool and World after only the named analysis view. The syntactic callback condition excludes the selected-role capability absent from the concrete local controller. -/
 theorem program_source (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential source) (roots : Roots)
     (work : OracleComp (RegistrationNativeBeaconFrontend.Trusted n KemSK) Value)
     (allowed : work.AllQueriesSatisfy (Allowed (KemSK := KemSK))) (before : State n KemSK source) :

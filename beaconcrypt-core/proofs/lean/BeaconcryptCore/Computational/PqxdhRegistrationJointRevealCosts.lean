@@ -37,17 +37,17 @@ theorem entry_bound (field : Field) (entry : PqxdhRegistrationJointGeneratedFini
     simp [isQueryBoundP_map_iff, isQueryBoundP_query_iff]
 
 /-- Missing addresses add no backend work; each present read keeps its per-field service allowance. -/
-theorem read_bound (request : Nat × Field) (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) (kind : Kind) :
+theorem read_bound (request : Nat × Field) (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (kind : Kind) :
     ((clientStep (KemSK := KemSK) (Response := Response) request).run owners).IsQueryBoundP
       (fun query => classify (KemSK := KemSK) query = kind) (readCap kind (fieldIndex request.2)) := by
-  cases found : owners[request.1]? with
+  cases found : owners.1[request.1]? with
   | none => simp only [StateT.run, clientStep, found, isQueryBoundP_pure]
   | some entry => simpa only [StateT.run, clientStep, found, isQueryBoundP_map_iff,
       PqxdhRegistrationJointServiceLedger.pool_queries] using entry_bound (KemSK := KemSK) request.2 entry kind
 
 /-- The extended fourteen-coordinate source partition bounds every attempted request on all replies and every client registry. -/
 theorem query_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (query : (Spec KemSK).Domain)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) (kind : Kind) :
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (kind : Kind) :
     ((client setup codec query).run owners).IsQueryBoundP
       (fun query => classify (KemSK := KemSK) query = kind) (cost kind (sourceKind (KemSK := KemSK) query)) := by
   cases query with
@@ -66,7 +66,7 @@ theorem cost_total (budget : SourceKind → Nat) (kind : Kind) :
 theorem program_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (program : OracleComp (Spec KemSK) Result) (budget : SourceKind → Nat)
     (certified : ∀ source, program.IsQueryBoundP (fun query => sourceKind (KemSK := KemSK) query = source) (budget source))
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) (kind : Kind) :
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (kind : Kind) :
     ((simulateQ (client setup codec) program).run owners).IsQueryBoundP
       (fun query => classify (KemSK := KemSK) query = kind)
       (PqxdhRegistrationJointServiceLedger.total (fun source => budget (.inl source)) kind +
@@ -115,8 +115,8 @@ theorem program_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
 theorem uniform_bill (caps : PqxdhServerAuthSourceCosts.KemCaps) (budget : SourceKind → Nat) :
     (∑ source, uniformCost caps source * budget source) =
       budget (.inl 0) + (64 + caps.keygenCost) * budget (.inl 1) + 32 * budget (.inl 2) +
-      (96 + caps.encapsCost) * budget (.inl 3) + 64 * budget (.inl 4) +
-      (69 * max 64 caps.decapsCost) * budget (.inl 5) + 64 * budget (.inl 6) + 64 * budget (.inl 7) := by
+      (96 + caps.encapsCost) * budget (.inl 3) + 128 * budget (.inl 4) +
+      (64 + 69 * max 64 caps.decapsCost) * budget (.inl 5) + 64 * budget (.inl 6) + 64 * budget (.inl 7) := by
   simp only [Fintype.sum_sum_type, uniformCost, zero_mul, Finset.sum_const_zero, Nat.add_zero]
   simpa only [Nat.zero_add] using PqxdhRegistrationSchedule.uniform_bill caps 0 (fun source => budget (.inl source))
 

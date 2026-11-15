@@ -74,7 +74,7 @@ theorem finish_registration_preserves (contracts : Contracts) (self : beacon.Bea
       | exact RegistrationTrivial.BeaconInitialKdf_request_total _
       | exact Trivial.pqxdh_concrete_InitialRatchetKdfResponse_from_bytes_total _
       | with_reducible exact resume_initial_ratchet_kdf_ok _ _
-      | with_reducible exact SessionBinding.RegistrationBinding_associated_data_total _
+      | with_reducible exact SessionBinding.CompletedRegistrationBinding_associated_data_total _
       | with_reducible exact RecordEffects.begin_record_receive_total _ _ _ _ _
       | with_reducible exact Trivial.pqxdh_BeaconRegistrationCandidate_server_key_id_total _
       | with_reducible exact RegistrationPublication.normalize_beacon_open_total _ _

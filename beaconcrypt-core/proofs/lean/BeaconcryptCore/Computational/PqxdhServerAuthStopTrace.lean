@@ -239,13 +239,21 @@ theorem finish_shape (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
   simp only [finishStep, StateT.run] at supported
   cases phase : state.1.beacon.beacon.phase with
   | initSent control prekey oneTime kem =>
-      simp only [phase, mem_support_bind_iff] at supported
-      obtain ⟨prepared, _, supported⟩ := supported
+      simp only [phase] at supported
+      split at supported
+      rotate_left
+      · simp only [support_pure, Set.mem_singleton_iff] at supported
+        subst supported
+        refine ⟨shape.touched, shape.once, ?_⟩
+        rintro ⟨control', prekey', oneTime', kem', active⟩
+        exact absurd active (finish_phase control state.1.beacon none control' prekey' oneTime' kem')
+      simp only [mem_support_bind_iff] at supported
+      obtain ⟨hashed, _, prepared, _, supported⟩ := supported
       cases found : prepared with
       | none =>
           simp only [found, support_pure, Set.mem_singleton_iff] at supported
           subst supported
-          exact Shape.finish control state.1 none shape.touched shape.once
+          exact Shape.finish control _ none shape.touched shape.once
       | some pending =>
           simp only [found, mem_support_bind_iff] at supported
           obtain ⟨derived, _, supported⟩ := supported
@@ -253,7 +261,7 @@ theorem finish_shape (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
           | rejected =>
               simp only [reply, support_pure, Set.mem_singleton_iff] at supported
               subst supported
-              exact Shape.finishTouched control state.1 shape _ state.1.ctx none
+              exact Shape.finishTouched control state.1 shape _ hashed.2 none
           | root root =>
               simp only [reply, mem_support_bind_iff] at supported
               obtain ⟨staged, _, supported⟩ := supported
@@ -311,11 +319,16 @@ theorem skeleton_shape (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
               subst supported
               exact shape
           | some token =>
-              simp only [found, mem_support_bind_iff] at supported
-              obtain ⟨built, _, supported⟩ := supported
-              simp only [support_pure, Set.mem_singleton_iff] at supported
-              subst supported
-              exact ⟨shape.touched, shape.once, shape.clean⟩
+              simp only [found] at supported
+              split at supported
+              · simp only [support_pure, Set.mem_singleton_iff] at supported
+                subst supported
+                exact ⟨shape.touched, shape.once, shape.clean⟩
+              · simp only [mem_support_bind_iff] at supported
+                obtain ⟨hashed, _, built, _, supported⟩ := supported
+                simp only [support_pure, Set.mem_singleton_iff] at supported
+                subst supported
+                exact ⟨shape.touched, shape.once, shape.clean⟩
       | finish raw =>
           exact finish_shape setup codec publicValue beaconSeed services raw state shape result supported
       | hmac key bytes =>

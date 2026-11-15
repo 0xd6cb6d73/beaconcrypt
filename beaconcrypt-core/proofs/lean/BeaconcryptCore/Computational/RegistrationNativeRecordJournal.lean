@@ -17,6 +17,9 @@ variable {source : RegistrationNativeMldsa.Source}
 
 noncomputable def unlogged (setup : PqxdhServerAuthExperiment.Setup base KemSK) (wire : RegistrationNativeWire.Wire) :
     QueryImpl RegistrationRecordPrimitives.Spec (M n KemSK source Auxiliary)
+  | .adHash request => do
+      let digest ← RegistrationNativeBeaconFrontend.hash request
+      pure (core.option.Option.Some (RegistrationAuthenticationShared.digestArray digest))
   | .hash transcript => do
       let digest ← RegistrationNativeBeaconFrontend.hash (.Single (Std.Array.to_slice transcript.bytes))
       pure (core.option.Option.Some (RegistrationAuthenticationShared.digestArray digest))
@@ -32,6 +35,9 @@ theorem record_eq (setup : PqxdhServerAuthExperiment.Setup base KemSK) (wire : R
 
 noncomputable def core (setup : PqxdhServerAuthExperiment.Setup base KemSK) (wire : RegistrationNativeWire.Wire) :
     QueryImpl RegistrationRecordPrimitives.Spec (OracleComp (Trusted n KemSK))
+  | .adHash request => do
+      let digest ← (Trusted n KemSK).query (.inl (.inr (.hash (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request))))
+      pure (core.option.Option.Some (RegistrationAuthenticationShared.digestArray digest))
   | .hash transcript => do
       let digest ← (Trusted n KemSK).query (.inl (.inr (.hash (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes (.Single (Std.Array.to_slice transcript.bytes))))))
       pure (core.option.Option.Some (RegistrationAuthenticationShared.digestArray digest))
@@ -42,6 +48,20 @@ theorem core_lift (setup : PqxdhServerAuthExperiment.Setup base KemSK) (wire : R
     (query : RegistrationRecordPrimitives.Request) :
     unlogged (n := n) (source := source) (Auxiliary := Auxiliary) setup wire query = RegistrationNativeAgreementJournal.lift (core setup wire query) := by
   cases query with
+  | adHash request =>
+      funext owners env
+      let query : OracleComp (Trusted n KemSK) CtxRomAuth.CtxDigest :=
+        (Trusted n KemSK).query (.inl (.inr (.hash (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request))))
+      change (((RegistrationNativeAgreementJournal.lift query >>= fun digest =>
+        pure (core.option.Option.Some (RegistrationAuthenticationShared.digestArray digest)) : M n KemSK source Auxiliary (core.option.Option (Std.Array U8 64#usize))).run owners).run env) = _
+      rw [StateT.run_bind, StateT.run_bind, lift_run]
+      simp only [StateT.run_pure, bind_map_left]
+      change (query >>= fun digest => pure ((core.option.Option.Some (RegistrationAuthenticationShared.digestArray digest), owners), env)) =
+        ((RegistrationNativeAgreementJournal.lift (n := n) (source := source) (Auxiliary := Auxiliary) (core setup wire (.adHash request))).run owners).run env
+      rw [lift_run]
+      change (query >>= fun digest => pure ((core.option.Option.Some (RegistrationAuthenticationShared.digestArray digest), owners), env)) =
+        (fun value => ((value, owners), env)) <$> (query >>= fun digest => pure (core.option.Option.Some (RegistrationAuthenticationShared.digestArray digest)))
+      simp only [map_bind, map_pure]
   | hash transcript =>
       funext owners env
       let request : registration.HashRequest := .Single (Std.Array.to_slice transcript.bytes)

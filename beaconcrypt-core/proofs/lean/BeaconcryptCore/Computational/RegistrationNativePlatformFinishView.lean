@@ -1,4 +1,5 @@
 -- SPDX-License-Identifier: 0BSD
+import BeaconcryptCore.Computational.RegistrationNativePlatformExperiment
 import BeaconcryptCore.Computational.RegistrationNativePlatformMldsaCountRules
 import BeaconcryptCore.Computational.RegistrationNativePlatformBeaconFinish
 import BeaconcryptCore.Computational.RegistrationNativeMldsaCountLower
@@ -89,7 +90,7 @@ private theorem close_project (before : RegistrationNativeMldsaShared.Local n Ke
     RegistrationNativeMldsaShared.close (RegistrationNativeMldsaCountLower.localProject before) =
       RegistrationNativeMldsaMainView.project (RegistrationNativeMldsaShared.close before) := rfl
 private theorem beacon_source (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : M n KemSK source RegistrationServerRoleBackend.State Value) (before : RegistrationNativeExperiment.State n KemSK source) :
     (RegistrationNativeExperiment.beacon setup checks representation created work).run before =
       Prod.map id RegistrationNativeMldsaShared.close <$>
@@ -99,7 +100,7 @@ private theorem beacon_source (setup : Setup base KemSK) (checks : Checks)
 
 /-- The complete actual native lift of corrected finish ignores all omitted accounting coordinates while preserving its exact protocol state. -/
 theorem native (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat) (packet : Option registration.ResponsePacket) :
     RegistrationNativeKemCounterIndependence.Stable RegistrationNativeMldsaMainView.project
       (RegistrationNativeExperiment.beacon (n := n) setup checks representation created
@@ -114,7 +115,7 @@ theorem native (setup : Setup base KemSK) (checks : Checks)
 
 /-- Actual corrected shared-state finish has both free count laws, with complete external platform state retained. -/
 theorem count (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat) (packet : Option registration.ResponsePacket) :
     RegistrationNativePlatformMldsaCountRules.Correct (source := source) (Platform := Platform) RegistrationNativeMldsaMainView.project
       (RegistrationNativePlatformMldsaProgram.lift

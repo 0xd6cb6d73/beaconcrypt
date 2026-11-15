@@ -9,6 +9,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.CborRawRegistrationBuild
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhServerAuthExperiment (Setup Codec Checks)
 variable {ι KemSK Reader Response PrimitiveState Result : Type} {baseSpec : OracleSpec ι}
 
@@ -23,7 +24,7 @@ def rawSeal (input : RawCtxSourceSend.SealInput) : OracleComp RawSealSpec (Optio
   match sealed with
   | none => pure none
   | some (body, tag) =>
-      if input.context.associatedData.length = 281 then
+      if input.context.associatedData.length = 151 then
         if tag.length = 16 then do
           let digest ← RawSealSpec.query (.inr (RawCtxSourceSeal.hashInput input tag))
           match digest with
@@ -101,7 +102,7 @@ theorem raw_render_run {κ : Type} {target : OracleSpec κ}
 theorem shared_raw_seal {Auxiliary : Type} (crypto : Pqxdh.Crypto)
     (kdf : QueryImpl RawCtxSharedPrimitive.KdfSpec
       (StateT (RawCtxSharedPrimitive.SharedState Auxiliary) ProbComp))
-    (input : RawCtxSourceSend.SealInput) (valid : input.context.associatedData.length = 281)
+    (input : RawCtxSourceSend.SealInput) (valid : input.context.associatedData.length = 151)
     (auxiliary : Auxiliary) (cache : CtxRomAuth.CtxRO.QueryCache) :
     (simulateQ (RawCtxCanonicalSeal.sharedImpl crypto rawWriter kdf)
       (RawCtxSourceSeal.sealInput input)).run (auxiliary, cache) = (do
@@ -137,36 +138,36 @@ theorem auxiliary_unchanged (setup : Setup baseSpec KemSK) (wire : Codec Reader 
 noncomputable def build (setup : Setup baseSpec KemSK) (wire : Codec Reader Response) (checks : Checks)
     (pending : pqxdh.PendingServerRegistration) (root : PqxdhSecretInputKdf.RootOutput)
     (payload : Option Pqxdh.Bytes)
-    (server : PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes))
+    (server : PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes))
     (primitive : RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext)) :
     ProbComp ((Option PqxdhServerRegistrationPublication.Response ×
-      PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes)) ×
+      PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes)) ×
       RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext)) :=
   (fun result => (PqxdhServerAuthExperiment.settle server result.1, result.2)) <$>
     (simulateQ (PqxdhServerAuthExperiment.tailImpl setup (CborRegistrationCodec.raw wire) checks)
-      (PqxdhServerRegistrationPublication.build setup.source pending root payload () server)).run primitive
+      (PqxdhServerRegistrationPublication.build (associatedData := associatedData) setup.source pending root payload associatedData server)).run primitive
 
 /-- Changing the ordinary frame encoder cannot change a raw registration build or any reached state. -/
 theorem build_writer_irrelevant (setup : Setup baseSpec KemSK) (wire : Codec Reader Response) (checks : Checks)
     (writer : RawCtxMixedShared.Writer) (pending : pqxdh.PendingServerRegistration)
     (root : PqxdhSecretInputKdf.RootOutput) (payload : Option Pqxdh.Bytes)
-    (server : PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes))
+    (server : PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes))
     (primitive : RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext)) :
-    build setup { wire with frameWrite := writer } checks pending root payload server primitive =
-      build setup wire checks pending root payload server primitive := rfl
+    build (associatedData := associatedData) setup { wire with frameWrite := writer } checks pending root payload server primitive =
+      build (associatedData := associatedData) setup wire checks pending root payload server primitive := rfl
 
 /-- A rejected outer response retains all reached sealing/cache/log effects and publishes no peer or control update. -/
 theorem outer_none (setup : Setup baseSpec KemSK) (wire : Codec Reader Response) (checks : Checks)
     (failed : ∀ fields, wire.write2 fields = none)
     (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Pqxdh.Bytes)
     (kernel : ratchet.concrete.ConcreteRatchetKernel)
-    (server : PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes))
+    (server : PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes))
     (primitive : RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext)) :
     (simulateQ (PqxdhServerAuthExperiment.tailImpl setup (CborRegistrationCodec.raw wire) checks)
-      (PqxdhServerRegistrationPublication.afterInitialization candidate authenticated kernel () server)).run primitive = (do
+      (PqxdhServerRegistrationPublication.afterInitialization (associatedData := associatedData) candidate authenticated kernel associatedData server)).run primitive = (do
       let sent ← (simulateQ (PqxdhServerAuthExperiment.tailImpl setup (CborRegistrationCodec.raw wire) checks)
         (simulateQ PqxdhServerRegistrationPublication.sendLift (simulateQ RawCtxSourceSend.adapter
-          (RawCtxSourceSend.send kernel (PqxdhServerRegistrationPublication.firstContext candidate authenticated))))).run primitive
+          (RawCtxSourceSend.send kernel (PqxdhServerRegistrationPublication.firstContext candidate associatedData authenticated))))).run primitive
       pure ((none, server), sent.2)) := by
   simp only [PqxdhServerRegistrationPublication.afterInitialization, simulateQ_bind, StateT.run_bind]
   apply bind_congr

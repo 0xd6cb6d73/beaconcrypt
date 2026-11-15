@@ -14,7 +14,7 @@ namespace BeaconcryptCore.Computational.RegistrationNativeIdentityCensorOriginal
 open PqxdhServerAuthExperiment (Setup Checks)
 variable {n : Nat} {I KemSK Platform E A B Q : Type} {base : OracleSpec I} {queries : OracleSpec Q} {mlSource : RegistrationNativeMldsa.Source}
 variable (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner mlSource)
 variable (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E))
 local notation "Main" => RegistrationNativePlatformIdentityCtxMain.beacon (n := n) (Platform := Platform) (source := mlSource) setup checks representation created
@@ -56,12 +56,12 @@ private theorem external_program (impl : QueryImpl queries (StateT Platform Prob
 
 /-- Literal honest-source binding through the actual NoKem Main publication and complete concrete source encoder, retaining all pool/cache/journal/native/P state. -/
 theorem source (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Array U8 1952#usize) :
+    (pin : session.ServerAuthenticationPin) :
     run(Main (simulateQ
       (RegistrationNativePlatformIdentityPublication.callback (n := n) (Auxiliary := RegistrationServerRoleBackend.State)
         setup index owner (RegistrationNativePlatformConcreteSource.writer reserve))
-      (RegistrationNativePlatformWriter.begin E control inputs coins pin mldsa))) =
-      RegistrationNativePlatformBeaconPublication.begin callback encoder control inputs coins pin mldsa := by
+      (RegistrationNativePlatformWriter.begin E control inputs coins pin))) =
+      RegistrationNativePlatformBeaconPublication.begin callback encoder control inputs coins pin := by
   rw [RegistrationNativePlatformIdentityCtxOutgoingFold.publication, original_program,
     RegistrationNativePlatformWriter.begin_interpret]
   have writerEq : (fun fields => simulateQ

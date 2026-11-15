@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePlatformIdentitySourceEdBounds
 import BeaconcryptCore.Computational.RegistrationNativePlatformIdentityPublication
-/-! The literal generated-owner outgoing callback issues at most one indexed Ed signing request precisely on its attached-signing branch. Rejected keys, missing signatures, ML work, hashes and bookkeeping keep their original source outcomes. -/
+/-! The literal generated-owner outgoing callback issues at most one indexed Ed signing request precisely on its attached-signing branch. Rejected keys, missing signatures, the purely refused Beacon ML signing request, hashes and bookkeeping keep their original source outcomes. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -38,8 +38,7 @@ theorem outgoing_bound (setup : Setup base KemSK) (index : Nat) (owner : Registr
     | hash request => exact hash_bound request
     | sign request payload digest =>
       unfold RegistrationNativeIdentityFrontend.outgoing
-      exact bind_bound _ _ 0 0 (sample_bound _) (fun _ =>
-        bind_bound _ _ 0 0 (update_env_bound _) (fun _ => pure_bound _ _))
+      exact pure_bound _ _
   | inr request =>
     classical
     simp only [IsOutgoingSign, ite_true, RegistrationNativeIdentityFrontend.outgoing]

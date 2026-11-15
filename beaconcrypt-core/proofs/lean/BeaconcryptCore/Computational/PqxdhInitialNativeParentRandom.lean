@@ -11,6 +11,7 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhInitialNativeParentRandom
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhOrderedChainHybrids
 open PqxdhInitialNativeLog PqxdhInitialNativeResponse PqxdhInitialNativeRetained
 open RawCtxSelectedParentTable RawCtxSelectedParentEntry RawCtxSelectedParentPrivatePatch RawCtxCursorLineage RawCtxSelectiveChainGame
@@ -220,16 +221,16 @@ include missing matching childMissing separate walked position in
 theorem frame_random
     (published : ∀ result ∈ support ((simulateQ (handler source writer (state.1.1.2.2.depth + 2)
       (PqxdhInitialNativeAudit.external pre application initial selector aux))
-      ((PqxdhInitialOriginContext.frame mark sender route decode context).2
-        (PqxdhInitialParentBuilderContext.reply sender route decode context.original parent))).run
+      ((PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode context).2
+        (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode context.original parent))).run
           (updated (PqxdhInitialBuilderContext.address context.original) parent state)),
       PqxdhInitialPublishedEvent.Gate selected number result.1 →
         RawCtxSourcePublishedPath.Cached root number result.2.1.1.2.1) :
     𝒟[PqxdhInitialPublishedEvent.sourceDecision source root selected number ancestors disclosed <$>
       (simulateQ (handler source writer (state.1.1.2.2.depth + 2)
         (PqxdhInitialNativeAudit.external pre application initial selector aux))
-        ((PqxdhInitialOriginContext.frame mark sender route decode context).2
-          (PqxdhInitialParentBuilderContext.reply sender route decode context.original parent))).run
+        ((PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode context).2
+          (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode context.original parent))).run
             (updated (PqxdhInitialBuilderContext.address context.original) parent state)] =
     𝒟[($ᵗ FullOutput) >>= fun output =>
       (fun result => PqxdhInitialNativeParentEvent.nativeDecision (view (productionStream source.crypto) state.1.1.2.1)
@@ -241,15 +242,15 @@ theorem frame_random
         (fromOutput (PqxdhInitialBuilderContext.address context.original) parent) output pre application initial selector aux
         (RawCtxSelectedLiveTrace.nativeReader (RawCtxFreshChainCut.concreteChain (nextChain parent))) (nextChain parent))
         (simulateQ PqxdhInitialParentObserverCompiler.compiler
-          (PqxdhInitialOriginContext.stopped mark sender route decode context (material parent)))).run (nested (project state))] := by
+          (PqxdhInitialOriginContext.stopped (completedBinding := completedBinding) mark sender route decode context (material parent)))).run (nested (project state))] := by
   rw [parent_random source writer (PqxdhInitialNativeAudit.external pre application initial selector aux)
-    ((PqxdhInitialOriginContext.frame mark sender route decode context).2
-      (PqxdhInitialParentBuilderContext.reply sender route decode context.original parent)) state
+    ((PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode context).2
+      (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode context.original parent)) state
     (PqxdhInitialBuilderContext.address context.original) parent missing matching childMissing separate root earlier walked
     selected number remaining position ancestors disclosed published]
   apply EvalDistEq.evalDist_eq
   refine EvalDistEq.bind_right ($ᵗ FullOutput) fun output => ?_
-  rw [PqxdhInitialNativeParentChild.retained_compiled source writer pre application initial selector aux
+  rw [PqxdhInitialNativeParentChild.retained_compiled (completedBinding := completedBinding) source writer pre application initial selector aux
     mark sender route decode context parent output state separate]
   simp only [Functor.map_map]
   exact EvalDistEq.rfl
@@ -259,16 +260,16 @@ include missing matching separate walked position in
 theorem frame_real
     (published : ∀ result ∈ support ((simulateQ (handler source writer (state.1.1.2.2.depth + 1)
       (PqxdhInitialNativeAudit.external pre application initial selector aux))
-      ((PqxdhInitialOriginContext.frame mark sender route decode context).2
-        (PqxdhInitialParentBuilderContext.reply sender route decode context.original parent))).run
+      ((PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode context).2
+        (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode context.original parent))).run
           (updated (PqxdhInitialBuilderContext.address context.original) parent state)),
       PqxdhInitialPublishedEvent.Gate selected number result.1 →
         RawCtxSourcePublishedPath.Cached root number result.2.1.1.2.1) :
     PqxdhInitialPublishedEvent.sourceDecision source root selected number ancestors disclosed <$>
       (simulateQ (handler source writer (state.1.1.2.2.depth + 1)
         (PqxdhInitialNativeAudit.external pre application initial selector aux))
-        ((PqxdhInitialOriginContext.frame mark sender route decode context).2
-          (PqxdhInitialParentBuilderContext.reply sender route decode context.original parent))).run
+        ((PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode context).2
+          (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode context.original parent))).run
             (updated (PqxdhInitialBuilderContext.address context.original) parent state) =
     (fun result => PqxdhInitialNativeParentEvent.nativeDecision (view (productionStream source.crypto) state.1.1.2.1)
       (fromOutput (PqxdhInitialBuilderContext.address context.original) parent) (nextChain parent)
@@ -281,13 +282,13 @@ theorem frame_real
       (view (productionStream source.crypto) state.1.1.2.1 (targetAddress (nextChain parent))) pre application initial selector aux
       (RawCtxSelectedLiveTrace.nativeReader (RawCtxFreshChainCut.concreteChain (nextChain parent))) (nextChain parent))
       (simulateQ PqxdhInitialParentObserverCompiler.compiler
-        (PqxdhInitialOriginContext.stopped mark sender route decode context (material parent)))).run (nested (project state)) := by
+        (PqxdhInitialOriginContext.stopped (completedBinding := completedBinding) mark sender route decode context (material parent)))).run (nested (project state)) := by
   let decision : (Bool × PqxdhInitialOriginPostPath.Snapshot M P I D K S B) → Bool :=
     PqxdhInitialNativeParentEvent.nativeDecision (view (productionStream source.crypto) state.1.1.2.1)
     (fromOutput (PqxdhInitialBuilderContext.address context.original) parent) (nextChain parent)
     (view (productionStream source.crypto) state.1.1.2.1 (targetAddress (nextChain parent))) remaining
     ((earlier ++ [state.1.1.2.2.input]).map RawCtxFreshChainCut.concreteChain) ancestors disclosed selected number
-  have evaluated := PqxdhInitialNativeParentRealization.source_compiled source writer pre application initial selector aux
+  have evaluated := PqxdhInitialNativeParentRealization.source_compiled (completedBinding := completedBinding) source writer pre application initial selector aux
     mark sender route decode context parent state matching separate
   have changed := congrArg (fun work => (fun result => decision result.1) <$> work) evaluated
   simp only [Functor.map_map] at changed
@@ -297,8 +298,8 @@ theorem frame_real
   intro result reached
   rw [PqxdhInitialNativeParentEvent.source_decision source writer
     (PqxdhInitialNativeAudit.external pre application initial selector aux)
-    ((PqxdhInitialOriginContext.frame mark sender route decode context).2
-      (PqxdhInitialParentBuilderContext.reply sender route decode context.original parent))
+    ((PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode context).2
+      (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode context.original parent))
     state (PqxdhInitialBuilderContext.address context.original) parent missing matching separate root earlier walked result reached
     selected number remaining position (published result reached) ancestors disclosed]
 

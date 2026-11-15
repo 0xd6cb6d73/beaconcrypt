@@ -94,15 +94,15 @@ theorem full_initial (request : RawCtxInitializedKdfFamily.InitialRequest) (entr
 theorem source_initial (source : FixedHkdfSha512NoSaltSource) (request : RawCtxInitializedKdfFamily.InitialRequest) :
     RawCtxInitializedKdfFamily.initialReply source request =
       nativeKernel (RawCtxFreshChainCut.concreteChain (JointKdfProjection.first32.project
-        (productionStream source.crypto (RawCtxKdfRequestTable.address ⟨request.2, ratchet.SYM_RATCHET_INFO⟩)))) <$>
-      initial request.1 (fromOutput (RawCtxKdfRequestTable.address ⟨request.2, ratchet.SYM_RATCHET_INFO⟩)
-        (productionStream source.crypto (RawCtxKdfRequestTable.address ⟨request.2, ratchet.SYM_RATCHET_INFO⟩))).otherChain := by
+        (productionStream source.crypto (RawCtxKdfRequestTable.initialAddress ⟨request.2, ratchet.INITIAL_RATCHET_INFO⟩)))) <$>
+      initial request.1 (fromOutput (RawCtxKdfRequestTable.initialAddress ⟨request.2, ratchet.INITIAL_RATCHET_INFO⟩)
+        (productionStream source.crypto (RawCtxKdfRequestTable.initialAddress ⟨request.2, ratchet.INITIAL_RATCHET_INFO⟩))).otherChain := by
   rw [← RawCtxInitializedKdfFamily.initial_projection]
   simpa only [realize_fromOutput] using full_initial request
-    (fromOutput (RawCtxKdfRequestTable.address ⟨request.2, ratchet.SYM_RATCHET_INFO⟩)
-      (productionStream source.crypto (RawCtxKdfRequestTable.address ⟨request.2, ratchet.SYM_RATCHET_INFO⟩)))
+    (fromOutput (RawCtxKdfRequestTable.initialAddress ⟨request.2, ratchet.INITIAL_RATCHET_INFO⟩)
+      (productionStream source.crypto (RawCtxKdfRequestTable.initialAddress ⟨request.2, ratchet.INITIAL_RATCHET_INFO⟩)))
     (JointKdfProjection.first32.project
-      (productionStream source.crypto (RawCtxKdfRequestTable.address ⟨request.2, ratchet.SYM_RATCHET_INFO⟩)))
+      (productionStream source.crypto (RawCtxKdfRequestTable.initialAddress ⟨request.2, ratchet.INITIAL_RATCHET_INFO⟩)))
 
 /-- The same pair of chain values has opposite source orientation in the two roles; no independent second draw is introduced. -/
 theorem opposite_roles (other : RootOutput) :

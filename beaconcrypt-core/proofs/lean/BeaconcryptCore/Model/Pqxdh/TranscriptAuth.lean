@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Model.Pqxdh.Primitives
+import BeaconcryptCore.Model.Pqxdh.SessionTranscript
 
 /-!
 The production constructors live in `beaconcrypt-core/src/authentication.rs`.
@@ -7,7 +8,7 @@ The authentication and PQXDH adapters use those constructors.
 The `Refinement/TranscriptAuth*.lean` proofs connect their extraction to this byte model.
 Hashing remains an opaque function supplied by the caller.
 No ML-DSA algorithm or security property is asserted here.
-These are unsigned decoded registration fields; CBOR encodings remain outside the model.
+These are remaining decoded registration fields; CBOR encodings remain outside the model.
 Native primitive and allocation failures remain outside these pure byte functions.
 -/
 set_option autoImplicit false
@@ -23,17 +24,17 @@ def signingContext : Bytes :=
   [98, 101, 97, 99, 111, 110, 99, 114, 121, 112, 116, 32, 114, 101, 103, 105,
    115, 116, 114, 97, 116, 105, 111, 110, 32, 97, 117, 116, 104, 32, 118, 49]
 
-/-- ASCII `beaconcrypt ML-DSA-65 init transcript v1` followed by NUL. -/
+/-- ASCII `beaconcrypt ML-DSA-65 init transcript v2` followed by NUL. -/
 def initDomain : Bytes :=
   [98, 101, 97, 99, 111, 110, 99, 114, 121, 112, 116, 32, 77, 76, 45, 68, 83,
    65, 45, 54, 53, 32, 105, 110, 105, 116, 32, 116, 114, 97, 110, 115, 99,
-   114, 105, 112, 116, 32, 118, 49, 0]
+   114, 105, 112, 116, 32, 118, 50, 0]
 
-/-- ASCII `beaconcrypt ML-DSA-65 response transcript v1` followed by NUL. -/
+/-- ASCII `beaconcrypt ML-DSA-65 response transcript v2` followed by NUL. -/
 def responseDomain : Bytes :=
   [98, 101, 97, 99, 111, 110, 99, 114, 121, 112, 116, 32, 77, 76, 45, 68, 83,
    65, 45, 54, 53, 32, 114, 101, 115, 112, 111, 110, 115, 101, 32, 116, 114,
-   97, 110, 115, 99, 114, 105, 112, 116, 32, 118, 49, 0]
+   97, 110, 115, 99, 114, 105, 112, 116, 32, 118, 50, 0]
 
 inductive Role where
   | beacon
@@ -59,7 +60,6 @@ structure InitFields where
   preKey : Bytes
   oneTimeKey : Bytes
   pqKey : Bytes
-  mldsaPublicKey : Bytes
   deriving DecidableEq
 
 /-- Exact unsigned response fields; application bytes are raw `C || T || U`. -/
@@ -78,7 +78,6 @@ structure InitFields.WellFormed (init : InitFields) : Prop where
   preWidth : init.preKey.length = 98
   oneTimeWidth : init.oneTimeKey.length = 98
   pqWidth : init.pqKey.length = 1249
-  mldsaWidth : init.mldsaPublicKey.length = 1952
 
 /-- Fixed response widths and the length conversion checked before transcript hashing. -/
 structure ResponseFields.WellFormed (response : ResponseFields) : Prop where
@@ -95,10 +94,10 @@ structure Signed (Fields : Type) where
 /-- Rust checks conversion of each length to u64 before emitting this framing. -/
 def hashField (field : Bytes) : Bytes := LE64 field.length ++ field
 
-/-- Request bytes bind the numeric server pin, its Ed25519 pin, and both ML-DSA keys. -/
+/-- Request bytes bind the numeric server pin, its Ed25519 pin, and the Server ML-DSA key. -/
 def initTranscript (init : InitFields) (serverId : UInt64)
     (serverEd serverMldsa : Bytes) : Bytes :=
-  initDomain ++ LE64 serverId.toNat ++ serverEd ++ init.mldsaPublicKey ++ serverMldsa ++
+  initDomain ++ LE64 serverId.toNat ++ serverEd ++ serverMldsa ++
     hashField init.identityKey ++ hashField init.preKey ++
     hashField init.oneTimeKey ++ hashField init.pqKey
 
@@ -115,25 +114,13 @@ def initHash (hash : Hash512) (init : InitFields) (serverId : UInt64)
 def responseHash (hash : Hash512) (initDigest : Bytes) (response : ResponseFields) : Bytes :=
   hash (responseTranscript initDigest response)
 
-def signedInitHash (hash : Hash512) (init : Signed InitFields) (serverId : UInt64)
-    (serverEd serverMldsa : Bytes) : Bytes :=
-  initHash hash init.fields serverId serverEd serverMldsa
-
 def signedResponseHash (hash : Hash512) (initDigest : Bytes)
     (response : Signed ResponseFields) : Bytes :=
   responseHash hash initDigest response.fields
 
-/-- Width-checked raw public-key hashing, with the same opaque BLAKE2b function as the transcripts. -/
-def publicKeyHash (hash : Hash512) (key : Bytes) : Option Bytes :=
-  if key.length = 1952 then some (hash key) else none
-
-/-- Extend the original ordered 153-byte identity/domain prefix with both 64-byte fingerprints. -/
-def associatedData (base153 serverDigest beaconDigest : Bytes) : Bytes :=
-  base153 ++ serverDigest ++ beaconDigest
-
-/-- Model the native overwrite of slots 153..217 and 217..281 in its 281-byte array. -/
-def fillAssociatedData (base281 serverDigest beaconDigest : Bytes) : Bytes :=
-  associatedData (base281.take 153) serverDigest beaconDigest
+/-- The retained context followed by the exact registration transcript digest. -/
+def associatedData (transcriptDigest : Bytes) : Bytes :=
+  SessionTranscript.associatedData transcriptDigest
 
 /-- The deterministic current CTX preimage; this is not an extraction/refinement claim. -/
 def commitmentInput (key nonce ad tag : Bytes) (sequence sender : UInt64) : Bytes :=
@@ -168,36 +155,19 @@ theorem signatureInput_length (role : Role) (digest : Bytes) :
   simp only [signatureInput, List.length_append, List.length_replicate,
     List.length_cons, List.length_nil, roleLabel_length]
 
-theorem signatures_excluded (hash : Hash512) (init : InitFields) (response : ResponseFields)
-    (serverId : UInt64) (serverEd serverMldsa initDigest leftSignature rightSignature : Bytes) :
-    signedInitHash hash ⟨init, leftSignature⟩ serverId serverEd serverMldsa =
-      signedInitHash hash ⟨init, rightSignature⟩ serverId serverEd serverMldsa ∧
+/-- The response signature is excluded from its own signing input. Attached Init signatures remain included. -/
+theorem signatures_excluded (hash : Hash512) (response : ResponseFields)
+    (initDigest leftSignature rightSignature : Bytes) :
     signedResponseHash hash initDigest ⟨response, leftSignature⟩ =
-      signedResponseHash hash initDigest ⟨response, rightSignature⟩ := ⟨rfl, rfl⟩
+      signedResponseHash hash initDigest ⟨response, rightSignature⟩ := rfl
 
-theorem associatedData_length (base serverDigest beaconDigest : Bytes)
-    (baseWidth : base.length = 153) (serverWidth : serverDigest.length = 64)
-    (beaconWidth : beaconDigest.length = 64) :
-    (associatedData base serverDigest beaconDigest).length = 281 := by
-  simp only [associatedData, List.length_append, baseWidth, serverWidth, beaconWidth]
+theorem associatedData_length (digest : Bytes) (width : digest.length = 64) :
+    (associatedData digest).length = 151 :=
+  SessionTranscript.associatedData_length digest width
 
-/-- Existing slots are replaced; their previous fingerprint bytes do not survive. -/
-theorem fillAssociatedData_overwrite (base oldServer oldBeacon serverDigest beaconDigest : Bytes)
-    (baseWidth : base.length = 153) :
-    fillAssociatedData (base ++ oldServer ++ oldBeacon) serverDigest beaconDigest =
-      associatedData base serverDigest beaconDigest := by
-  simp [fillAssociatedData, List.append_assoc, ← baseWidth]
-
-/-- Equal associated data determines the ordered fingerprints, without asserting key/hash injectivity. -/
-theorem associatedData_inj {leftBase rightBase leftServer rightServer leftBeacon rightBeacon : Bytes}
-    (baseWidths : leftBase.length = rightBase.length)
-    (serverWidths : leftServer.length = rightServer.length)
-    (same : associatedData leftBase leftServer leftBeacon =
-      associatedData rightBase rightServer rightBeacon) :
-    leftBase = rightBase ∧ leftServer = rightServer ∧ leftBeacon = rightBeacon := by
-  simp only [associatedData, List.append_assoc] at same
-  exact ⟨(List.append_inj same baseWidths).1,
-    List.append_inj (List.append_inj same baseWidths).2 serverWidths⟩
+theorem associatedData_inj (left right : Bytes)
+    (same : associatedData left = associatedData right) : left = right :=
+  SessionTranscript.associatedData_inj left right same
 
 theorem le64_id_inj {left right : UInt64} (same : LE64 left.toNat = LE64 right.toNat) :
     left = right := by
@@ -206,10 +176,10 @@ theorem le64_id_inj {left right : UInt64} (same : LE64 left.toNat = LE64 right.t
 theorem initTranscript_length (init : InitFields) (serverId : UInt64)
     (serverEd serverMldsa : Bytes) (valid : init.WellFormed)
     (edWidth : serverEd.length = 32) (mldsaWidth : serverMldsa.length = 1952) :
-    (initTranscript init serverId serverEd serverMldsa).length = 5495 := by
+    (initTranscript init serverId serverEd serverMldsa).length = 3543 := by
   simp only [initTranscript, hashField, List.length_append, LE64_length,
     literal_lengths.2.1, valid.identityWidth, valid.preWidth, valid.oneTimeWidth,
-    valid.pqWidth, valid.mldsaWidth, edWidth, mldsaWidth]
+    valid.pqWidth, edWidth, mldsaWidth]
 
 theorem responseTranscript_length (initDigest : Bytes) (response : ResponseFields)
     (digestWidth : initDigest.length = 64) (valid : response.WellFormed) :
@@ -235,8 +205,6 @@ theorem initTranscript_inj {left right : InitFields} {leftId rightId : UInt64}
   simp only [initTranscript, List.append_assoc, List.append_right_inj] at same
   obtain ⟨ids, same⟩ := List.append_inj same (by simp)
   obtain ⟨ed, same⟩ := List.append_inj same edWidths
-  obtain ⟨mldsa, same⟩ := List.append_inj same
-    (leftValid.mldsaWidth.trans rightValid.mldsaWidth.symm)
   obtain ⟨server, same⟩ := List.append_inj same serverWidths
   obtain ⟨identity, same⟩ := hashField_append_inj
     (by simp [leftValid.identityWidth]) (by simp [rightValid.identityWidth]) same
@@ -244,7 +212,7 @@ theorem initTranscript_inj {left right : InitFields} {leftId rightId : UInt64}
     (by simp [leftValid.preWidth]) (by simp [rightValid.preWidth]) same
   obtain ⟨oneTime, pq⟩ := hashField_append_inj
     (by simp [leftValid.oneTimeWidth]) (by simp [rightValid.oneTimeWidth]) same
-  exact ⟨InitFields.ext identity prekey oneTime (hashField_injective pq) mldsa,
+  exact ⟨InitFields.ext identity prekey oneTime (hashField_injective pq),
     le64_id_inj ids, ed, server⟩
 
 /-- Exact response preimages retain the request digest, raw application payload and assigned ID. -/
@@ -274,22 +242,10 @@ theorem initTranscript_ne_responseTranscript (init : InitFields) (serverId : UIn
 
 theorem commitmentInput_length (key nonce ad tag : Bytes) (sequence sender : UInt64)
     (keyWidth : key.length = 32) (nonceWidth : nonce.length = 12)
-    (adWidth : ad.length = 281) (tagWidth : tag.length = 16) :
-    (commitmentInput key nonce ad tag sequence sender).length = 357 := by
+    (adWidth : ad.length = 151) (tagWidth : tag.length = 16) :
+    (commitmentInput key nonce ad tag sequence sender).length = 227 := by
   simp only [commitmentInput, List.length_append, LE64_length, keyWidth,
     nonceWidth, adWidth, tagWidth]
-
-theorem fillAssociatedData_length (base serverDigest beaconDigest : Bytes)
-    (baseWidth : base.length = 281) (serverWidth : serverDigest.length = 64)
-    (beaconWidth : beaconDigest.length = 64) :
-    (fillAssociatedData base serverDigest beaconDigest).length = 281 := by
-  simp only [fillAssociatedData, associatedData, List.length_append, List.length_take,
-    baseWidth, serverWidth, beaconWidth]
-  decide
-
-theorem publicKeyHash_eq_some_iff (hash : Hash512) (key digest : Bytes) :
-    publicKeyHash hash key = some digest ↔ key.length = 1952 ∧ hash key = digest := by
-  simp [publicKeyHash]
 
 end Pqxdh.TranscriptAuth
 
@@ -314,9 +270,6 @@ end Pqxdh.TranscriptAuth
 /-- info: 'Pqxdh.TranscriptAuth.associatedData_length' depends on axioms: [propext] -/
 #guard_msgs in
 #print axioms Pqxdh.TranscriptAuth.associatedData_length
-/-- info: 'Pqxdh.TranscriptAuth.fillAssociatedData_overwrite' depends on axioms: [propext] -/
-#guard_msgs in
-#print axioms Pqxdh.TranscriptAuth.fillAssociatedData_overwrite
 /-- info: 'Pqxdh.TranscriptAuth.associatedData_inj' depends on axioms: [propext] -/
 #guard_msgs in
 #print axioms Pqxdh.TranscriptAuth.associatedData_inj
@@ -344,9 +297,3 @@ end Pqxdh.TranscriptAuth
 /-- info: 'Pqxdh.TranscriptAuth.commitmentInput_length' depends on axioms: [propext] -/
 #guard_msgs in
 #print axioms Pqxdh.TranscriptAuth.commitmentInput_length
-/-- info: 'Pqxdh.TranscriptAuth.fillAssociatedData_length' depends on axioms: [propext] -/
-#guard_msgs in
-#print axioms Pqxdh.TranscriptAuth.fillAssociatedData_length
-/-- info: 'Pqxdh.TranscriptAuth.publicKeyHash_eq_some_iff' depends on axioms: [propext] -/
-#guard_msgs in
-#print axioms Pqxdh.TranscriptAuth.publicKeyHash_eq_some_iff

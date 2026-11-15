@@ -33,11 +33,11 @@ variable [original : CryptoOperations (RustT ProbComp)]
 variable (previousLocal : LocalOperations (RustT (StateT (RegistrationNativePlatformCutJournal.State (RegistrationNativeExperiment.State n KemSK source)) (StateT Platform ProbComp))))
 variable (coins : QueryImpl unifSpec (StateT Platform ProbComp))
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (reservePackets : Usize →StateT Platform ProbComp (core.result.Result Unit E))
 local notation "packetWriter" => RegistrationNativePlatformConcreteSource.writer reservePackets
 variable (index : Nat) (failure : ed.Error)
-variable (other : QueryImpl AdapterInitAuthenticationRequestMonad.Spec (StateT (RegistrationNativePlatformCutJournal.State (RegistrationNativeExperiment.State n KemSK source)) (StateT Platform ProbComp)))
+variable (other : QueryImpl AdapterPublicWrapperChildren.AuthenticationSpec (StateT (RegistrationNativePlatformCutJournal.State (RegistrationNativeExperiment.State n KemSK source)) (StateT Platform ProbComp)))
 variable (recording : QueryImpl AdapterRecordRequestMonad.Spec (StateT (RegistrationNativePlatformCutJournal.State (RegistrationNativeExperiment.State n KemSK source)) (StateT Platform ProbComp)))
 
 variable (containersView : AdapterPublicWrapperStorage.Views) (credential : RegistrationNativeMldsa.Credential source)
@@ -102,8 +102,6 @@ noncomputable def step {R Error : Type}
       coins setup checks representation created packetWriter view index owner self previousLocal previousCrypto failure
     let law:=RegistrationNativePlatformPublicAdapterBundleInstrumentation.leaves
       coins setup checks representation created packetWriter view index owner self previousLocal previousCrypto failure
-    let fallback:=RegistrationNativePlatformPublicAdapterBundleInstrumentation.fallback (n:=n)
-      coins setup checks representation created owner
     let generation:=RegistrationNativePlatformPublicAdapterBundleInstrumentation.generation_native (n:=n)
       coins setup checks representation created packetWriter view index owner self failure generator contract
     cases stored:self.state with
@@ -112,7 +110,7 @@ noncomputable def step {R Error : Type}
         have matched:=related.phase
         cases phaseEq:owner.phase <;> simp only [AdapterPublicWrapperState.Phase,stored,phaseEq] at matched
         rfl
-      exact RegistrationNativePlatformSdkStrongBundleSteps.fresh coins setup checks representation created reservePackets index owner failure fallback other recording containersView credential
+      exact RegistrationNativePlatformSdkStrongBundleSteps.fresh coins setup checks representation created reservePackets index owner failure other recording containersView credential
         self view getters law control prekey kem generator generation stored phase before previous objects sourceSelected selected
     | FreshWithCoins control prekey oneTime kem=>
       have phase : ∃scalar,owner.phase=.freshWithCoins scalar := by
@@ -121,7 +119,7 @@ noncomputable def step {R Error : Type}
         exact ⟨_,rfl⟩
       let scalar:=Classical.choose phase
       have phase:owner.phase=.freshWithCoins scalar:=Classical.choose_spec phase
-      exact RegistrationNativePlatformSdkStrongBundleSteps.withCoins coins setup checks representation created reservePackets index owner failure fallback other recording containersView credential
+      exact RegistrationNativePlatformSdkStrongBundleSteps.withCoins coins setup checks representation created reservePackets index owner failure other recording containersView credential
         self view getters law control scalar prekey oneTime kem generator stored phase before previous objects sourceSelected selected
     | InitSent pending prekey oneTime kem | Established control binding manager | Aborted control=>
       have idle : RegistrationNativePlatformExtractedSdkIdle.BundleIdle self.state := by rw [stored]; trivial

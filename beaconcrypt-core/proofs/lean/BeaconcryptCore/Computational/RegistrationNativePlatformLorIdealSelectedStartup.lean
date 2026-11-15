@@ -74,7 +74,7 @@ private noncomputable def stage (born : RegistrationNativeHiddenStartup.Started 
 private theorem startup_stage (initialSecret : Secret) (result : TraceResult)
     (supported : result ∈ support (CborRawRecordOriginFlatten.interpret service codec route job
       CborRecordWorldClient.initial PqxdhRecordLiftProtocol.initialControl initialSecret))
-    (finished : PqxdhRegistrationJointServerBirth.ClientCreated Unit × (A × RegistrationNativeLedger.State) ×
+    (finished : PqxdhRegistrationJointServerBirth.ClientCreated PqxdhTranscriptAd.AssociatedData × (A × RegistrationNativeLedger.State) ×
       RegistrationNativePlatformSelectiveRecordTraceStartup.Extra n KemSK RegistrationNativeKemSwitchSource.Phase Platform source)
     (present : finished ∈ result.1.1.1) :
     ∃ (born : RegistrationNativeHiddenStartup.Started source) (shell : CborRecordWorldClient.Shell) (control : PqxdhRecordLiftProtocol.Control n) (secret : Secret) (observed : StageResult),
@@ -121,7 +121,7 @@ private theorem startup_pin (setup : Setup base KemSK) (source : RegistrationNat
       | none => simp only [sampled, mem_support_pure_iff] at continued; cases continued
       | some credential =>
           simp only [sampled, mem_support_bind_iff] at continued
-          obtain ⟨installed, _installed, digest, _hashed, returned⟩ := continued
+          obtain ⟨installed, _installed, returned⟩ := continued
           simp only [mem_support_pure_iff, Option.some.injEq] at returned
           cases returned
           exact PqxdhRootTableInitialization.rootArray_bytes identity.ed25519
@@ -132,7 +132,7 @@ theorem ctx_selected (bounded : ∀ exposed,RegistrationNativeInterface.Respects
     (initialSecret : Secret) (result : TraceResult)
     (supported : result ∈ support (CborRawRecordOriginFlatten.interpret service codec route job
       CborRecordWorldClient.initial PqxdhRecordLiftProtocol.initialControl initialSecret))
-    (finished : PqxdhRegistrationJointServerBirth.ClientCreated Unit × (A × RegistrationNativeLedger.State) ×
+    (finished : PqxdhRegistrationJointServerBirth.ClientCreated PqxdhTranscriptAd.AssociatedData × (A × RegistrationNativeLedger.State) ×
       RegistrationNativePlatformSelectiveRecordTraceStartup.Extra n KemSK RegistrationNativeKemSwitchSource.Phase Platform source)
     (present : finished ∈ result.1.1.1)
     (filter : RegistrationNativeLorEvents.Filter A)
@@ -162,7 +162,7 @@ theorem ctx_claimed (bounded : ∀ exposed,RegistrationNativeInterface.Respects 
     (initialSecret : Secret) (result : TraceResult)
     (supported : result ∈ support (CborRawRecordOriginFlatten.interpret service codec route job
       CborRecordWorldClient.initial PqxdhRecordLiftProtocol.initialControl initialSecret))
-    (finished : PqxdhRegistrationJointServerBirth.ClientCreated Unit × (A × RegistrationNativeLedger.State) ×
+    (finished : PqxdhRegistrationJointServerBirth.ClientCreated PqxdhTranscriptAd.AssociatedData × (A × RegistrationNativeLedger.State) ×
       RegistrationNativePlatformSelectiveRecordTraceStartup.Extra n KemSK RegistrationNativeKemSwitchSource.Phase Platform source)
     (present : finished ∈ result.1.1.1)
     (claim : A → Option (Nat × Pqxdh.Bytes))

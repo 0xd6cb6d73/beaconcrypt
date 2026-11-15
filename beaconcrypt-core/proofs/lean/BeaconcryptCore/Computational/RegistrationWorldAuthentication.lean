@@ -1,8 +1,8 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhRecordLiftWorld
-import BeaconcryptCore.Computational.RegistrationRecordBinding
+import BeaconcryptCore.Computational.RegistrationAuthenticationNative
 
-/-! The actual extracted Init authentication controller is an open client of the global record world. Every transcript and fingerprint hash uses that world's instrumented shared cache. Erasing instrumentation gives the concrete native callback interpretation, so its accepted-source receipts apply to the reached global cache. This adapter does not identify the legacy registration/KEM interpreter with the native first-record completion controller. -/
+/-! The actual extracted Init authentication controller is an open client of the global record world. Every request transcript hash uses that world's instrumented shared cache. Erasing instrumentation gives the concrete native callback interpretation, so its accepted-source receipts apply to the reached global cache. This adapter does not identify the legacy registration/KEM interpreter with the native first-record completion controller. -/
 
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
@@ -116,23 +116,21 @@ theorem begin_native_support (setup : Setup baseSpec KemSK) (codec : Codec Reade
   rw [← begin_project, support_map]
   exact Set.mem_image_of_mem (Prod.map id project) supported
 
-/-- Installed AD retains the selected keys and fingerprints from the reached global cache. -/
-theorem begin_associated_data (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+/-- The actual Init entry point retains its exact pin and request buffers; response-dependent AD is a later operation. -/
+theorem begin_request_provenance (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (pin : session.ServerAuthenticationPin) (packet : registration.InitPacket)
     (before after : PqxdhRecordLiftWorld.State n) (events : List Event)
     (authenticated : registration.AuthenticatedInit)
     (supported : (.ok (events, .Accepted authenticated), after) ∈ support
-      ((begin setup codec route verify pin packet).run before))
-    (server : RawCtxServerRouting.Identity) :
-    (RegistrationRecordBinding.ofRegistration authenticated.binding).associatedBytes server =
-      BeaconcryptCore.Refinement.SessionBinding.boundAssociatedData
-        (absBytes pin.binding.identity_public_key) (absBytes authenticated.binding.beacon_identity_public_key)
-        (MldsaSharedAuthentication.cacheHash after.primitive.2 (absBytes pin.public_key))
-        (MldsaSharedAuthentication.cacheHash after.primitive.2 (absBytes packet.mldsa_public_key)) :=
-  RegistrationRecordBinding.accepted_selected_associated_data setup.source.crypto verify codec.frameWrite
-    (RawCtxSourceHkdf.kdfImpl setup.source) pin packet (project before) (project after) events authenticated
-    (begin_native_support setup codec route verify pin packet before after events authenticated supported) server
+      ((begin setup codec route verify pin packet).run before)) :
+    authenticated.binding.server_pin = pin ∧
+      authenticated.binding.init_fields = BeaconcryptCore.Refinement.RegistrationAuthentication.ownedFields packet ∧
+      ∃ tail, events = .hash (.Some authenticated.binding.init_hash) :: tail := by
+  exact BeaconcryptCore.Refinement.RegistrationAuthenticationFlow.accepted_request_provenance pin packet events authenticated
+    (RegistrationAuthenticationExecutor.simulated_begin_sound _ pin packet events (.Accepted authenticated)
+      (project before) (project after)
+      (begin_native_support setup codec route verify pin packet before after events authenticated supported))
 
 end BeaconcryptCore.Computational.RegistrationWorldAuthentication
 
@@ -160,8 +158,8 @@ end BeaconcryptCore.Computational.RegistrationWorldAuthentication
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationWorldAuthentication.begin_native_support
 
-/-- info: 'BeaconcryptCore.Computational.RegistrationWorldAuthentication.begin_associated_data' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.RegistrationWorldAuthentication.begin_request_provenance' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationWorldAuthentication.begin_associated_data
+#print axioms BeaconcryptCore.Computational.RegistrationWorldAuthentication.begin_request_provenance

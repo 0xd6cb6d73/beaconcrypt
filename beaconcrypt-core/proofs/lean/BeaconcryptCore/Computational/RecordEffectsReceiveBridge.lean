@@ -24,7 +24,7 @@ theorem compare_digest_exact (digest : Option Pqxdh.Bytes)
   cases digest <;> rfl
 
 
-theorem open_execution (erased : Std.Array Std.U8 357#usize)
+theorem open_execution (erased : Std.Array Std.U8 227#usize)
     (opening : ReceiveOpen record.OpenFrameContext) :
     bindResult (record_effects.normalize_receive (.ReceiveOpenRequested opening)) (execute erased) =
       simulateQ RawCtxSourceOpen.openLift (PqxdhOpenBridges.executeOpen erased opening) := by
@@ -47,7 +47,7 @@ theorem open_execution (erased : Std.Array Std.U8 357#usize)
       funext matched
       cases matched <;> rfl
 
-theorem normalize_execution (erased : Std.Array Std.U8 357#usize)
+theorem normalize_execution (erased : Std.Array Std.U8 227#usize)
     (effect : ReceiveEffect record.OpenFrameContext) :
     bindResult (record_effects.normalize_receive effect) (execute erased) =
       PqxdhOpenContextBridge.executeReceive erased effect := by
@@ -69,8 +69,8 @@ theorem normalize_execution (erased : Std.Array Std.U8 357#usize)
       | ReceiveOpenRequested opening =>
           simpa only [PqxdhOpenContextBridge.executeReceive] using open_execution erased opening
 
-theorem receive_execution (erased : Std.Array Std.U8 357#usize) (kernel : ConcreteRatchetKernel)
-    (sequence : Std.U64) (payload : Slice Std.U8) (ad : Std.Array Std.U8 281#usize)
+theorem receive_execution (erased : Std.Array Std.U8 227#usize) (kernel : ConcreteRatchetKernel)
+    (sequence : Std.U64) (payload : Slice Std.U8) (ad : Std.Array Std.U8 151#usize)
     (sender : Std.U64) :
     receive erased kernel sequence payload ad sender =
       bindResult (record.OpenFrameContext.from_frame payload ad sender) (fun admitted =>
@@ -88,19 +88,19 @@ theorem receive_execution (erased : Std.Array Std.U8 357#usize) (kernel : Concre
       exact normalize_execution erased _
 
 /-- Equality includes sender rejection, malformed record admission and every primitive failure. -/
-theorem decoded_execution (erased : Std.Array Std.U8 357#usize)
+theorem decoded_execution (erased : Std.Array Std.U8 227#usize)
     (kernel : ConcreteRatchetKernel) (expected : Std.U64) (frame : RawCtxReceive.DecodedFrame)
-    (payload : Slice Std.U8) (ad : Std.Array Std.U8 281#usize) :
+    (payload : Slice Std.U8) (ad : Std.Array Std.U8 151#usize) :
     decoded erased kernel expected frame payload ad =
       PqxdhOpenContextBridge.executeDecoded erased kernel expected frame payload ad := by
   simp only [decoded, PqxdhOpenContextBridge.executeDecoded, receive_execution]
   rfl
 
 /-- The actual record controller reaches the existing source receive model under explicit byte representation. -/
-theorem decoded_native_model (erased : Std.Array Std.U8 357#usize)
+theorem decoded_native_model (erased : Std.Array Std.U8 227#usize)
     (kernel : ConcreteRatchetKernel) (expected : Std.U64) (raw : Pqxdh.Bytes)
     (frame : RawCtxReceive.DecodedFrame) (associatedData : Pqxdh.Bytes)
-    (payload : Slice Std.U8) (ad : Std.Array Std.U8 281#usize)
+    (payload : Slice Std.U8) (ad : Std.Array Std.U8 151#usize)
     (hpayload : RawCtxNativeFramePrelude.sliceBytes payload = frame.payload)
     (had : absBytes ad = associatedData) :
     decoded erased kernel expected frame payload ad =
@@ -117,9 +117,9 @@ theorem decoded_native_model (erased : Std.Array Std.U8 357#usize)
 /-- Equality preserves the complete state of arbitrary stateful KDF/hash/AEAD interpreters. -/
 theorem stateful_execution {PrimitiveState : Type} {ι : Type} {base : OracleSpec ι}
     (impl : QueryImpl RawCtxSourceOpen.NativeSpec (StateT PrimitiveState (OracleComp base)))
-    (erased : Std.Array Std.U8 357#usize) (kernel : ConcreteRatchetKernel)
+    (erased : Std.Array Std.U8 227#usize) (kernel : ConcreteRatchetKernel)
     (expected : Std.U64) (frame : RawCtxReceive.DecodedFrame) (payload : Slice Std.U8)
-    (ad : Std.Array Std.U8 281#usize) (state : PrimitiveState) :
+    (ad : Std.Array Std.U8 151#usize) (state : PrimitiveState) :
     (simulateQ impl (decoded erased kernel expected frame payload ad)).run state =
       (simulateQ impl
         (PqxdhOpenContextBridge.executeDecoded erased kernel expected frame payload ad)).run state :=

@@ -18,7 +18,7 @@ open BeaconcryptCore.Refinement
 variable {ι KemSK Metadata : Type} {base : OracleSpec ι}
 
 noncomputable def raw (setup : Setup base KemSK) (wire : Wire)
-    (erased : Array Std.U8 357#usize) (ad : Array Std.U8 281#usize)
+    (erased : Array Std.U8 227#usize) (ad : Array Std.U8 151#usize)
     (bytes : Pqxdh.Bytes) (state : RawCtxWholeOwner.OwnerState Metadata) :=
   AdapterRecordRawContext.raw (RegistrationNativeExtractedReceive.primitives setup (ledgerCodec wire))
     erased wire.parseFrame ad bytes state
@@ -26,7 +26,7 @@ noncomputable def raw (setup : Setup base KemSK) (wire : Wire)
 /-- Literal parser admission, selected sender, complete owner and primitive histories agree with the original native receive model. -/
 theorem raw_native (setup : Setup base KemSK) (wire : Wire)
     (length : RegistrationNativeExtractedReceive.AeadLength setup.source.crypto)
-    (erased : Array Std.U8 357#usize) (ad : Array Std.U8 281#usize)
+    (erased : Array Std.U8 227#usize) (ad : Array Std.U8 151#usize)
     (bytes : Pqxdh.Bytes) (state : RawCtxWholeOwner.OwnerState Metadata)
     (represented : state.owner.associatedData = PqxdhRefinement.absBytes ad)
     (before : PqxdhRecordLiftWorld.Primitive) :
@@ -44,7 +44,7 @@ theorem raw_native (setup : Setup base KemSK) (wire : Wire)
 /-- The original receive logger adds no frame, and its complete joint result is the source execution with that unchanged empty receipt list. -/
 theorem raw_logged_native (setup : Setup base KemSK) (wire : Wire)
     (length : RegistrationNativeExtractedReceive.AeadLength setup.source.crypto)
-    (erased : Array Std.U8 357#usize) (ad : Array Std.U8 281#usize)
+    (erased : Array Std.U8 227#usize) (ad : Array Std.U8 151#usize)
     (bytes : Pqxdh.Bytes) (state : RawCtxWholeOwner.OwnerState Metadata)
     (represented : state.owner.associatedData = PqxdhRefinement.absBytes ad)
     (before : PqxdhRecordLiftWorld.Primitive) :

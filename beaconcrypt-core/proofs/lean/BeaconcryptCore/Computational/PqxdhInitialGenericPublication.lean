@@ -10,6 +10,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialGenericPublication
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhServerRegistrationPublication
 variable {Kernel Metadata PeerMetadata Consumed Result : Type}
 variable {m : Type → Type} [Monad m] [LawfulMonad m]
@@ -51,7 +52,7 @@ noncomputable def afterInitialization (calls : RawCtxChainOwner.Calls Kernel m) 
     (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Pqxdh.Bytes)
     (kernel : Kernel) (metadata : PeerMetadata) (state : State Kernel Metadata PeerMetadata Consumed) :
     m (Option Response × State Kernel Metadata PeerMetadata Consumed) := do
-  let (advanced, encrypted) ← calls.send kernel (firstContext candidate authenticated)
+  let (advanced, encrypted) ← calls.send kernel (PqxdhServerRegistrationPublication.firstContext candidate associatedData authenticated)
   let _ ← aux (.erase authenticated)
   match encrypted with
   | none => pure (none, state)
@@ -92,14 +93,14 @@ theorem after_native (interpret : Kernel → ConcreteRatchetKernel)
     (kernel : Kernel) (metadata : PeerMetadata) (state : State Kernel Metadata PeerMetadata Consumed) :
     simulateQ (nativeImpl backend aux)
       (simulateQ PqxdhServerRegistrationPublication.nativeAdapter
-        (PqxdhServerRegistrationPublication.afterInitialization candidate authenticated (interpret kernel) metadata (native interpret state))) =
-      Prod.map id (native interpret) <$> afterInitialization calls aux candidate authenticated kernel metadata state := by
+        (PqxdhServerRegistrationPublication.afterInitialization (associatedData := associatedData) candidate authenticated (interpret kernel) metadata (native interpret state))) =
+      Prod.map id (native interpret) <$> afterInitialization (associatedData := associatedData) calls aux candidate authenticated kernel metadata state := by
   have first :
       simulateQ (nativeImpl backend aux)
         (simulateQ PqxdhServerRegistrationPublication.nativeAdapter
           (simulateQ PqxdhServerRegistrationPublication.sendLift
-            (simulateQ RawCtxSourceSend.adapter (RawCtxSourceSend.send (interpret kernel) (firstContext candidate authenticated))))) =
-        (fun result => (interpret result.1, result.2)) <$> calls.send kernel (firstContext candidate authenticated) := by
+            (simulateQ RawCtxSourceSend.adapter (RawCtxSourceSend.send (interpret kernel) (PqxdhServerRegistrationPublication.firstContext candidate associatedData authenticated))))) =
+        (fun result => (interpret result.1, result.2)) <$> calls.send kernel (PqxdhServerRegistrationPublication.firstContext candidate associatedData authenticated) := by
     rw [← QueryImpl.simulateQ_compose, ← QueryImpl.simulateQ_compose, send_adapter,
       ← QueryImpl.simulateQ_compose, sendRealized]
   simp only [PqxdhServerRegistrationPublication.afterInitialization, afterInitialization,
@@ -150,13 +151,13 @@ theorem selected_after {A : Type} (source : PqxdhJointKdfGame.FixedHkdfSha512NoS
     (state : State RawCtxSelectedChain.Kernel Metadata PeerMetadata Consumed) :
     simulateQ (nativeImpl (RawCtxSelectedParentNativeBackend.backend source writer prior entry target) aux)
       (simulateQ PqxdhServerRegistrationPublication.nativeAdapter
-        (PqxdhServerRegistrationPublication.afterInitialization candidate authenticated
+        (PqxdhServerRegistrationPublication.afterInitialization (associatedData := associatedData) candidate authenticated
           (RawCtxSelectedChain.nativeKernel (RawCtxFreshChainCut.concreteChain target) kernel) metadata
           (native (RawCtxSelectedChain.nativeKernel (RawCtxFreshChainCut.concreteChain target)) state))) =
       Prod.map id (native (RawCtxSelectedChain.nativeKernel (RawCtxFreshChainCut.concreteChain target))) <$>
-        afterInitialization (RawCtxSelectedParentCalls.labelCalls source writer prior entry
+        afterInitialization (associatedData := associatedData) (RawCtxSelectedParentCalls.labelCalls source writer prior entry
           (RawCtxSelectedParentCalls.childResponse prior entry target)) aux candidate authenticated kernel metadata state :=
-  after_native _ _ _ aux (selected_send source writer prior entry target) candidate authenticated kernel metadata state
+  after_native (associatedData := associatedData) _ _ _ aux (selected_send source writer prior entry target) candidate authenticated kernel metadata state
 
 end BeaconcryptCore.Computational.PqxdhInitialGenericPublication
 

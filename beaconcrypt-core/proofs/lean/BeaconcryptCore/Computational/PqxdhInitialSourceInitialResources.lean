@@ -10,6 +10,8 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option maxRecDepth 2048
 namespace BeaconcryptCore.Computational.PqxdhInitialSourceInitialResources
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf
 open PqxdhInitialSourceInitialSecrecy
 open PqxdhInitialSourceFirstResources (Caps)
@@ -46,11 +48,11 @@ theorem callbacks (input : Input extra M P I D K X Response A N S B)
 theorem one_uniform (input : Input extra M P I D K X Response A N S B)
     (caps : Caps input qPost qCheck qKnown qPre qApplication qSelector qAux)
     (root : RootOutput) (response : PqxdhInitialRootLabelService.Response) (stage : Nat) :
-    (sourceGame source writer sender route decode input root response stage).IsTotalQueryBound
+    (sourceGame (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode input root response stage).IsTotalQueryBound
       (uniformCap qPost qPre qApplication qSelector qAux) := by
   unfold sourceGame PqxdhInitialSourceExperiment.game
   apply (isQueryBound_map_iff _ _ _ _ _).mpr
-  exact PqxdhInitialNativeBudgets.source_uniform source writer stage
+  exact PqxdhInitialNativeBudgets.source_uniform (associatedData := associatedData) (completedBinding := completedBinding) source writer stage
     (PqxdhInitialOriginFinishPath.withInitial source input.selectedMessage root response input.other)
     (budget qPre qApplication qSelector qAux)
     (callbacks source qPost qCheck qKnown qPre qApplication qSelector qAux input caps root response)
@@ -66,20 +68,20 @@ include caps in
 /-- Every source context actually supplied by preparation has the same full-source observer cap; completed source branches perform no observer work. -/
 theorem observer_uniform (context : Context extra M P I D K X Response A N S B)
     (supported : context ∈ support prior) (output : FullOutput) :
-    (observer source writer sender route decode context output).IsTotalQueryBound
+    (observer (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode context output).IsTotalQueryBound
       (uniformCap qPost qPre qApplication qSelector qAux) := by
   cases context with
   | inl decision => trivial
   | inr input =>
-      exact one_uniform source writer sender route decode qPost qCheck qKnown qPre qApplication qSelector qAux input
+      exact one_uniform (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode qPost qCheck qKnown qPre qApplication qSelector qAux input
         (caps input supported) _ _ 0
 
 include caps in
 /-- The exact initializer HMAC reduction asks at most two challenge queries and pays preparation plus the independent32-byte root plus all original source observation work. The proof uses only source contexts reached by its actual sampler. -/
 theorem reduction_queries (qPrior : Nat) (bounded : prior.IsTotalQueryBound qPrior) :
-    (fullExpandReduction .ratchet (sampler prior) (observer source writer sender route decode)).IsQueryBoundP
+    (fullExpandReduction .initial (sampler prior) (observer (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode)).IsQueryBoundP
       IsHmacChallengeQuery 2 ∧
-    (fullExpandReduction .ratchet (sampler prior) (observer source writer sender route decode)).IsQueryBoundP
+    (fullExpandReduction .initial (sampler prior) (observer (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode)).IsQueryBoundP
       IsHmacUniformQuery ((qPrior + 32) + uniformCap qPost qPre qApplication qSelector qAux) := by
   refine ⟨fullExpandReduction_hmac_query_bound _ _ _, ?_⟩
   unfold fullExpandReduction
@@ -94,7 +96,7 @@ theorem reduction_queries (qPrior : Nat) (bounded : prior.IsTotalQueryBound qPri
   refine ⟨Or.inl (by simp [IsHmacUniformQuery]), fun first => ?_⟩
   rw [isQueryBoundP_query_bind_iff]
   refine ⟨Or.inl (by simp [IsHmacUniformQuery]), fun second => ?_⟩
-  exact local_uniform_query_bound (observer_uniform source writer sender route decode qPost qCheck qKnown qPre qApplication
+  exact local_uniform_query_bound (observer_uniform (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode qPost qCheck qKnown qPre qApplication
     qSelector qAux prior caps context supported (joinBlocks first second))
 
 private theorem bind_uniform_support {Value Result : Type} (first : ProbComp Value)
@@ -116,14 +118,14 @@ include caps in
 /-- All four literal primitive challenger games retain the actual preparation and observer work, separately charging the replacement64-byte Extract key and both complete random HMAC blocks. -/
 theorem challenger_queries (hmac : HmacSha512) (qPrior : Nat) (bounded : prior.IsTotalQueryBound qPrior) :
     let sample := sampler prior
-    let observe := observer source writer sender route decode
+    let observe := observer (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode
     let u := uniformCap qPost qPre qApplication qSelector qAux
-    (extractRealGame hmac sample (fullExtractReduction hmac .ratchet observe)).IsTotalQueryBound ((qPrior + 32) + u) ∧
-      (extractUniformGame sample (fullExtractReduction hmac .ratchet observe)).IsTotalQueryBound ((qPrior + 32) + (64 + u)) ∧
-      (hmacPrfRealGame hmac (fullExpandReduction .ratchet sample observe)).IsTotalQueryBound (64 + ((qPrior + 32) + u)) ∧
-      (hmacPrfRandomGame (fullExpandReduction .ratchet sample observe)).IsTotalQueryBound ((qPrior + 32) + (64 + (64 + u))) := by
+    (extractRealGame hmac sample (fullExtractReduction hmac .initial observe)).IsTotalQueryBound ((qPrior + 32) + u) ∧
+      (extractUniformGame sample (fullExtractReduction hmac .initial observe)).IsTotalQueryBound ((qPrior + 32) + (64 + u)) ∧
+      (hmacPrfRealGame hmac (fullExpandReduction .initial sample observe)).IsTotalQueryBound (64 + ((qPrior + 32) + u)) ∧
+      (hmacPrfRandomGame (fullExpandReduction .initial sample observe)).IsTotalQueryBound ((qPrior + 32) + (64 + (64 + u))) := by
   have sampleBound := sampler_uniform prior qPrior bounded
-  have observerBound := observer_uniform source writer sender route decode qPost qCheck qKnown qPre qApplication qSelector qAux prior caps
+  have observerBound := observer_uniform (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode qPost qCheck qKnown qPre qApplication qSelector qAux prior caps
   refine ⟨?_, ?_, ?_, ?_⟩
   · exact bind_uniform_support _ _ _ _ sampleBound (fun pair reached => observerBound pair.1 (sampled_context prior pair reached) _)
   · apply bind_uniform_support _ _ _ _ sampleBound

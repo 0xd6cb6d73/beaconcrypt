@@ -51,7 +51,7 @@ structure CtxRecordContext where
   /-- The complete modified-CTX record context. -/
   ad : Pqxdh.RecordAD
   /-- Base associated data has BeaconCrypt's fixed width. -/
-  bytesLength : ad.bytes.length = 281
+  bytesLength : ad.bytes.length = 151
   /-- Sequence serialization is injective at the protocol width. -/
   seqRange : ad.seq < 2 ^ 64
   /-- Sender serialization is injective at the protocol width. -/

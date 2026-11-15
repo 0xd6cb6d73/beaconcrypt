@@ -20,7 +20,7 @@ variable {m : Type → Type} [Monad m] [LawfulMonad m]
 variable [children : ChildOperations (RustT m)]
 
 structure Primitives (m : Type → Type) where
-  initial : ratchet.SymmetricRatchetKdfRequest → m (Std.Array U8 64#usize)
+  initial : ratchet.InitialRatchetKdfRequest → m (Std.Array U8 64#usize)
   kdf : ratchet.SymmetricRatchetKdfRequest → m ratchet.RatchetKdfResponse
   hash : commitment.CommitmentTranscript → m (core.option.Option (Std.Array U8 64#usize) × commitment.CommitmentTranscript)
   aead : record.AeadRequest → m (core.option.Option (alloc.vec.Vec U8))
@@ -29,6 +29,8 @@ def handler (primitive : Primitives m) : QueryImpl RegistrationRecordPrimitives.
   | .ratchetKdf request => core.option.Option.Some <$> primitive.kdf request
   | .hash request => Prod.fst <$> primitive.hash request
   | .openAead request => AdapterPublicInitPublication.borrowed <$> primitive.aead request
+  -- This post-authentication Beacon record program cannot request the earlier AD hash.
+  | .adHash _ => pure .None
   | .rootKdf _ => pure .None
   | .initialKdf request => (fun bytes => core.option.Option.Some (⟨bytes⟩ : pqxdh.concrete.InitialRatchetKdfResponse)) <$> primitive.initial request
   | .seal _ => pure .None

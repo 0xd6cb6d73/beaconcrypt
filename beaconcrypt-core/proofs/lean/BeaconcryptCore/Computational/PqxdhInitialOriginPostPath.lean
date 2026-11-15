@@ -9,6 +9,7 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhInitialOriginPostPath
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily
 open PqxdhInitialOriginPost PqxdhInitialOriginFinishPath RawCtxCursorLineage
 variable {ι M P I D K X Response A N Result : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -53,7 +54,7 @@ noncomputable def impl (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (query : (PqxdhInitialGenericPost.Spec extra S B).Domain) (before : Snapshot M P I D K S B) :=
   simulateQ (PqxdhInitialNativeLog.handler source writer stage (withInitial source selected previousRoot response other))
-    ((PqxdhInitialOriginPost.compiler (PqxdhInitialSelectedOrigin.mark source selected) sender route decode query).run before)
+    ((PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) (PqxdhInitialSelectedOrigin.mark source selected) sender route decode query).run before)
 
 
 /-- Every actual successful or rejected finish preserves the installed-session path and all prior publications. -/
@@ -66,14 +67,14 @@ theorem finish_invariant (source : FixedHkdfSha512NoSaltSource) (writer : RawCtx
     (index : Fin B) (raw : Pqxdh.Bytes) (before : Snapshot M P I D K S B) (state : State A N)
     (valid : Invariant (rootFor serverRoot previousRoot response selected) selected before state)
     (result : (Option Pqxdh.Bytes × Snapshot M P I D K S B) × State A N)
-    (supported : result ∈ support ((impl source writer stage selectedMessage previousRoot response other
+    (supported : result ∈ support ((impl (completedBinding := completedBinding) source writer stage selectedMessage previousRoot response other
       sender route decode (.inr (.finish index raw)) before).run state)) :
     Invariant (rootFor serverRoot previousRoot response selected) selected result.1.2 result.2 := by
   have extension := PqxdhInitialNativePath.program_extends source writer stage
     (withInitial source selectedMessage previousRoot response other) _ state result supported
   change result ∈ support ((simulateQ (PqxdhInitialNativeLog.handler source writer stage
     (withInitial source selectedMessage previousRoot response other)) (do
-      let finished ← PqxdhInitialFinishOrigin.owner (PqxdhInitialSelectedOrigin.mark source selectedMessage)
+      let finished ← PqxdhInitialFinishOrigin.owner (completedBinding := completedBinding) (PqxdhInitialSelectedOrigin.mark source selectedMessage)
         PqxdhInitialPendingPost.preForward PqxdhInitialPendingPost.calls PqxdhInitialPendingPost.applicationForward
         PqxdhInitialPendingPost.initialForward decode raw (before.1.roles.1.2 index)
       pure (finished.1.1, (PqxdhInitialPendingPost.install index before.1 finished.1.2,
@@ -100,7 +101,7 @@ theorem finish_invariant (source : FixedHkdfSha512NoSaltSource) (writer : RawCtx
         | none =>
           have old : before.2.installed (.beacon index) = some true := by
             simpa only [PqxdhInitialOriginPost.finish, origin] using marked
-          have unchanged := unmarked_kernel _ _ decode raw (before.1.roles.1.2 index) state finished reached origin kernel current
+          have unchanged := unmarked_kernel (completedBinding := completedBinding) _ _ decode raw (before.1.roles.1.2 index) state finished reached origin kernel current
           exact RawCtxSourceSendPath.path_extends _ ⟨kernel⟩ _ _ (valid.1 old kernel (by
             cases phase : (before.1.roles.1.2 index).beacon.phase <;>
               simpa only [RawCtxGenericRoleFamily.selectedKernel, beaconKernel, phase] using unchanged)) extension
@@ -108,7 +109,7 @@ theorem finish_invariant (source : FixedHkdfSha512NoSaltSource) (writer : RawCtx
           have valueEq : value = true := by
             simpa only [PqxdhInitialOriginPost.finish, origin, Function.update_self, Option.some.injEq] using marked
           subst value
-          obtain ⟨actual, present, path⟩ := marked_finish_path source writer stage selectedMessage previousRoot response
+          obtain ⟨actual, present, path⟩ := marked_finish_path (completedBinding := completedBinding) source writer stage selectedMessage previousRoot response
             other decode raw (before.1.roles.1.2 index) state finished reached origin
           have sameKernel : actual = kernel := Option.some.inj (present.symm.trans current)
           subst actual
@@ -138,7 +139,7 @@ theorem records_invariant (source : FixedHkdfSha512NoSaltSource) (writer : RawCt
     (query : (RawCtxProtocolReveals.SourceSpec S B).Domain) (before : Snapshot M P I D K S B) (state : State A N)
     (valid : Invariant root selected before state)
     (result : ((RawCtxProtocolReveals.SourceSpec S B).Range query × Snapshot M P I D K S B) × State A N)
-    (supported : result ∈ support ((impl source writer stage selectedMessage previousRoot response other
+    (supported : result ∈ support ((impl (completedBinding := completedBinding) source writer stage selectedMessage previousRoot response other
       sender route decode (.inl (.inl query)) before).run state)) :
     Invariant root selected result.1.2 result.2 := by
   have extension := PqxdhInitialNativePath.program_extends source writer stage
@@ -170,11 +171,11 @@ theorem step_invariant (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
     (query : (PqxdhInitialGenericPost.Spec extra S B).Domain) (before : Snapshot M P I D K S B) (state : State A N)
     (valid : Invariant (rootFor serverRoot previousRoot response selected) selected before state)
     (result : ((PqxdhInitialGenericPost.Spec extra S B).Range query × Snapshot M P I D K S B) × State A N)
-    (supported : result ∈ support ((impl source writer stage selectedMessage previousRoot response other
+    (supported : result ∈ support ((impl (completedBinding := completedBinding) source writer stage selectedMessage previousRoot response other
       sender route decode query before).run state)) :
     Invariant (rootFor serverRoot previousRoot response selected) selected result.1.2 result.2 := by
   rcases query with (query | query) | ⟨index, raw⟩
-  · exact records_invariant source writer stage selectedMessage previousRoot response other _ selected
+  · exact records_invariant (completedBinding := completedBinding) source writer stage selectedMessage previousRoot response other _ selected
       sender route decode query before state valid result supported
   · have extension := PqxdhInitialNativePath.program_extends source writer stage
       (withInitial source selectedMessage previousRoot response other) _ state result supported
@@ -184,7 +185,7 @@ theorem step_invariant (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
     simp only [simulateQ_map, StateT.run_map, support_map] at supported
     obtain ⟨completed, reached, rfl⟩ := supported
     exact invariant_mono _ selected before state completed.2 valid extension
-  · exact finish_invariant source writer stage selectedMessage previousRoot response other serverRoot selected
+  · exact finish_invariant (completedBinding := completedBinding) source writer stage selectedMessage previousRoot response other serverRoot selected
       sender route decode index raw before state valid result supported
 
 noncomputable def program (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer) (stage : Nat)
@@ -194,7 +195,7 @@ noncomputable def program (source : FixedHkdfSha512NoSaltSource) (writer : RawCt
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (client : OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result) (before : Snapshot M P I D K S B) :=
   simulateQ (PqxdhInitialNativeLog.handler source writer stage (withInitial source selectedMessage previousRoot response other))
-    ((simulateQ (PqxdhInitialOriginPost.compiler (PqxdhInitialSelectedOrigin.mark source selectedMessage)
+    ((simulateQ (PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) (PqxdhInitialSelectedOrigin.mark source selectedMessage)
       sender route decode) client).run before)
 
 /-- The whole original adaptive post client retains its selected-session path and pre-checker successful-publication cache, from the same full source prefix state. -/
@@ -207,7 +208,7 @@ theorem program_invariant (source : FixedHkdfSha512NoSaltSource) (writer : RawCt
     (client : OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result) (before : Snapshot M P I D K S B) (state : State A N)
     (valid : Invariant (rootFor serverRoot previousRoot response selected) selected before state)
     (result : (Result × Snapshot M P I D K S B) × State A N)
-    (supported : result ∈ support ((program source writer stage selectedMessage previousRoot response other
+    (supported : result ∈ support ((program (completedBinding := completedBinding) source writer stage selectedMessage previousRoot response other
       sender route decode client before).run state)) :
     Invariant (rootFor serverRoot previousRoot response selected) selected result.1.2 result.2 := by
   induction client using OracleComp.inductionOn generalizing before state with
@@ -219,7 +220,7 @@ theorem program_invariant (source : FixedHkdfSha512NoSaltSource) (writer : RawCt
     simp only [program, simulateQ_bind, simulateQ_spec_query, StateT.run_bind, mem_support_bind_iff] at supported
     obtain ⟨completed, reached, rest⟩ := supported
     exact ih completed.1.1 completed.1.2 completed.2
-      (step_invariant source writer stage selectedMessage previousRoot response other serverRoot selected
+      (step_invariant (completedBinding := completedBinding) source writer stage selectedMessage previousRoot response other serverRoot selected
         sender route decode query before state valid completed reached) rest
 
 end BeaconcryptCore.Computational.PqxdhInitialOriginPostPath

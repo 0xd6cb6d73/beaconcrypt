@@ -150,9 +150,9 @@ theorem capture_plain (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
       let scalar ← PqxdhJointGapDh.sampleScalar
       let keys ← simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl) setup.kem.keygen
       let oneTime ← PqxdhJointGapDh.sampleScalar
-      let published ← phase1Run setup codec beaconSeed
+      let logged ← phase1Logged setup codec beaconSeed
         (PqxdhJointGapDh.challenge setup.joint setup.dh serverSeed scalar) oneTime keys.1 keys.2
-      nativeCapture setup codec checks adversary ⟨serverSeed, scalar, beaconSeed, oneTime, keys, published⟩) := by
+      nativeCapture setup codec checks adversary ⟨serverSeed, scalar, beaconSeed, oneTime, keys, logged.1, logged.2⟩) := by
   simp only [capture, simulateQ_bind, coins_plain, execution_plain, simulateQ_pure, bind_assoc, pure_bind]
   simp only [nativeCapture, PqxdhServerAuthEntryFactor.contextInput,
     PqxdhServerAuthEntryFactor.contextState, PqxdhServerAuthEntryFactor.Context.publicValue,
@@ -180,9 +180,9 @@ noncomputable def sourceBad (setup : Setup baseSpec KemSK) (codec : Codec Reader
   let scalar ← PqxdhJointGapDh.sampleScalar
   let keys ← simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl) setup.kem.keygen
   let oneTime ← PqxdhJointGapDh.sampleScalar
-  let published ← phase1Run setup codec beaconSeed
+  let logged ← phase1Logged setup codec beaconSeed
     (PqxdhJointGapDh.challenge setup.joint setup.dh serverSeed scalar) oneTime keys.1 keys.2
-  let result ← nativeCapture setup codec checks adversary ⟨serverSeed, scalar, beaconSeed, oneTime, keys, published⟩
+  let result ← nativeCapture setup codec checks adversary ⟨serverSeed, scalar, beaconSeed, oneTime, keys, logged.1, logged.2⟩
   pure (changed setup.joint (setup.joint.publicKeys beaconSeed) result.honest (candidates codec result.journal))
 
 set_option backward.isDefEq.respectTransparency false in

@@ -20,7 +20,7 @@ variable {m : Type → Type} [Monad m] [LawfulMonad m]
 
 /-- Actual primitive source sampling commutes with marker erasure in the same arbitrary lawful common monad. -/
 theorem trusted (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (RegistrationNativeBeaconFrontend.Trusted n KemSK).Domain) :
     Stable nativeView (RegistrationNativePlatformExperiment.trusted coins setup checks representation created source query) := by
   intro before
@@ -36,7 +36,7 @@ private theorem external (work : m A) :
 
 /-- Each actual source trusted/registration-writer request retains the same common state and literal optional reply. -/
 theorem program (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) m)
     (work : OracleComp (RegistrationNativePlatformGenericBundle.Spec E n KemSK) A) :
     Stable nativeView (simulateQ (RegistrationNativePlatformExperiment.bundleHandler coins setup checks representation created source writer) work) := by
@@ -68,7 +68,7 @@ private theorem output_env (result : LocalOutput source × RegistrationNativeExp
 
 /-- The complete literal source bundle ignores only instrumentation markers, retaining true uniform costs and all allocation/serializer poststates in the same common monad. -/
 theorem bundle (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) m) (index : Nat) :
     Stable (nativeView (n := n) (KemSK := KemSK) (mlSource := source))
       (RegistrationNativePlatformExperiment.bundle coins setup checks representation created source writer index) := by

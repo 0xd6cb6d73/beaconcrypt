@@ -48,7 +48,7 @@ theorem backend_zero (kind : Kind) (work : OracleComp RegistrationNativePlatform
   cases query <;> simp [RegistrationNativePlatformIdentityCtxCompiler.backend, Target, isQueryBoundP_query_iff]
 
 private theorem query_bound (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (kind : Kind) (query : (RegistrationNativePlatformIdentityProgram.Spec n KemSK).Domain)
     (before : RegistrationNativeIdentityWorld.Context n KemSK) :
     ((RegistrationNativePlatformIdentityCtxCompiler.free
@@ -73,7 +73,7 @@ private theorem query_bound (setup : Setup base KemSK) (checks : Checks)
         isQueryBoundP_map_iff, isQueryBoundP_query_iff]
 
 theorem program_bound (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (kind : Kind) (work : OracleComp (RegistrationNativePlatformIdentityProgram.Spec n KemSK) Value)
     (cap : Nat) (bounded : work.IsQueryBoundP (Program (KemSK := KemSK) kind) cap)
     (before : RegistrationNativeIdentityWorld.Context n KemSK) :
@@ -83,7 +83,7 @@ theorem program_bound (setup : Setup base KemSK) (checks : Checks)
   OracleComp.IsQueryBoundP.simulateQ_run_StateT_of_step bounded (fun query current => query_bound setup checks representation created kind query current) before
 
 theorem beacon_bound (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (kind : Kind) (work : RegistrationNativePlatformIdentityProgram.M n KemSK RegistrationServerRoleBackend.State Platform source Value)
     (cap : Nat) (bounded : ∀ owners env previous, (((work.run owners).run env).run previous).IsQueryBoundP (Program (KemSK := KemSK) kind) cap)
     (before : RegistrationNativeIdentityMain.State n KemSK source × Platform) :

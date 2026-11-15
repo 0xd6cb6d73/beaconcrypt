@@ -13,10 +13,9 @@ set_option autoImplicit false
 namespace BeaconcryptCore.PanicFreedom.Registration
 
 theorem InitPacket_from_slices_total (identity_key : Slice Std.U8) (pre_key : Slice Std.U8)
-  (one_time_key : Slice Std.U8) (pq_key : Slice Std.U8)
-  (mldsa_public_key : Slice Std.U8) (signature : Slice Std.U8) :
-    ∃ result, registration.InitPacket.from_slices identity_key pre_key one_time_key pq_key mldsa_public_key signature = ok result :=
-  (BeaconcryptCore.Refinement.RegistrationInputs.init_packet_exact identity_key pre_key one_time_key pq_key mldsa_public_key signature).imp (fun _ h => h.1)
+  (one_time_key : Slice Std.U8) (pq_key : Slice Std.U8) :
+    ∃ result, registration.InitPacket.from_slices identity_key pre_key one_time_key pq_key = ok result :=
+  (BeaconcryptCore.Refinement.RegistrationInputs.init_packet_exact identity_key pre_key one_time_key pq_key).imp (fun _ h => h.1)
 
 theorem ResponsePacket_from_slices_total (identity_key : Slice Std.U8) (ephemeral_key : Slice Std.U8)
   (kem_cipher_text : Slice Std.U8) (key_id : Std.U64)
@@ -40,13 +39,8 @@ theorem InitHash_resume_total (self : registration.InitHash)
   match hash with
   | .None => ⟨_, BeaconcryptCore.Refinement.RegistrationAuthentication.init_hash_failure self⟩
   | .Some digest =>
-      (BeaconcryptCore.Refinement.RegistrationAuthentication.init_hash_success self digest).elim
+      (BeaconcryptCore.Refinement.RegistrationAuthentication.init_hash_resume_refines self digest).elim
         (fun _next facts => ⟨_, facts.1⟩)
-
-theorem InitMldsaVerification_resume_total (self : registration.InitMldsaVerification) (verified : Bool) :
-    ∃ result, registration.InitMldsaVerification.resume self verified = ok result :=
-  (BeaconcryptCore.Refinement.RegistrationAuthentication.init_mldsa_exact self verified).imp
-    (fun _ facts => facts.1)
 
 theorem InitEd25519Verification_request_total (self : registration.InitEd25519Verification) :
     ∃ result, registration.InitEd25519Verification.request self = ok result :=
@@ -58,15 +52,6 @@ theorem InitEd25519Verification_resume_total (self : registration.InitEd25519Ver
     ∃ result, registration.InitEd25519Verification.resume self opened = ok result :=
   (BeaconcryptCore.Refinement.RegistrationInbound.init_ed_resume_refines self opened).imp
     (fun _ facts => facts.1)
-
-theorem InitBeaconFingerprint_resume_total (self : registration.InitBeaconFingerprint)
-  (fingerprint : core.option.Option (Array Std.U8 64#usize)) :
-    ∃ result, registration.InitBeaconFingerprint.resume self fingerprint = ok result :=
-  match fingerprint with
-  | .None => ⟨_, rfl⟩
-  | .Some fingerprint =>
-      (BeaconcryptCore.Refinement.RegistrationInbound.init_beacon_fingerprint_exact self fingerprint).elim
-        (fun _accepted facts => ⟨_, facts.1⟩)
 
 end BeaconcryptCore.PanicFreedom.Registration
 
@@ -95,11 +80,6 @@ end BeaconcryptCore.PanicFreedom.Registration
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.PanicFreedom.Registration.InitHash_resume_total
-/-- info: 'BeaconcryptCore.PanicFreedom.Registration.InitMldsaVerification_resume_total' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.PanicFreedom.Registration.InitMldsaVerification_resume_total
 /-- info: 'BeaconcryptCore.PanicFreedom.Registration.InitEd25519Verification_request_total' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
@@ -111,8 +91,3 @@ end BeaconcryptCore.PanicFreedom.Registration
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.PanicFreedom.Registration.InitEd25519Verification_resume_total
-/-- info: 'BeaconcryptCore.PanicFreedom.Registration.InitBeaconFingerprint_resume_total' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.PanicFreedom.Registration.InitBeaconFingerprint_resume_total

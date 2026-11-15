@@ -16,7 +16,7 @@ open RegistrationNativePlatformPublicAdapterPhysicalBackend (erase)
 variable {n : Nat} {I KemSK R P A : Type} {base : OracleSpec I} {mlSource : RegistrationNativeMldsa.Source}
 variable (coins : QueryImpl unifSpec (StateT P ProbComp))
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 
 private theorem map_apply {S V W : Type} {m : Type → Type} [Monad m] [LawfulMonad m]
     (f : V → W) (work : StateT S m V) (before : S) :
@@ -45,7 +45,6 @@ theorem hash (request : registration.HashRequest) (before : Backend n KemSK) :
 
 variable [material : PublicWrapperPlatform.Material] [ed : AdapterInitEdPrimitive.Operations]
 variable (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (kem : AdapterBeaconConstructorKem.Representation view R)
-variable (ml : R → ProbComp (Option (RegistrationNativeMldsa.Credential mlSource) × R))
 variable (signing : R → ProbComp (PqxdhJointIdentity.IdentitySeed × R))
 variable (prekey : R → ProbComp (PqxdhJointGapDh.ScalarBytes × R))
 
@@ -56,34 +55,30 @@ theorem kem_joint (rng : R) (before : Backend n KemSK) :
   simp only [simulateQ_map,Functor.map_map]
   rfl
 
-noncomputable def handler : QueryImpl (RegistrationNativePlatformPublicAdapterCreateProgram.Spec mlSource R)
+noncomputable def handler : QueryImpl (RegistrationNativePlatformPublicAdapterCreateProgram.Spec R)
     (StateT (Backend n KemSK) (StateT P ProbComp)) :=
   RegistrationNativePlatformPublicAdapterCreateProgram.handler
-    (fun rng => simulateQ (RegistrationNativePlatformPublicAdapterBundleGeneration.backendUniform coins setup checks representation created) (ml rng))
-    (RegistrationNativePlatformPublicAdapterCreateJointPhysical.hash coins setup checks representation created)
     (fun rng => simulateQ (RegistrationNativePlatformPublicAdapterBundleGeneration.backendUniform coins setup checks representation created) (signing rng))
     (fun rng => simulateQ (RegistrationNativePlatformPublicAdapterBundleGeneration.backendUniform coins setup checks representation created) (prekey rng))
     (fun rng before => Prod.map id erase <$> (RegistrationNativePlatformPublicAdapterCreateKemPhysical.joint view coins setup kem rng).run before)
 
-theorem query (request : (RegistrationNativePlatformPublicAdapterCreateProgram.Spec mlSource R).Domain) (before : Backend n KemSK) :
-    Prod.map id erase <$> (RegistrationNativePlatformPublicAdapterCreateJointPhysical.handler coins setup checks representation created view kem ml signing prekey request).run before =
-      (handler coins setup checks representation created view kem ml signing prekey request).run (erase before) := by
-  rcases request with rng | request | rng | rng | rng
-  · exact sample coins setup checks representation created (ml rng) before
-  · exact hash coins setup checks representation created request before
+theorem query (request : (RegistrationNativePlatformPublicAdapterCreateProgram.Spec R).Domain) (before : Backend n KemSK) :
+    Prod.map id erase <$> (RegistrationNativePlatformPublicAdapterCreateJointPhysical.handler coins setup checks representation created view kem signing prekey request).run before =
+      (handler coins setup checks representation created view kem signing prekey request).run (erase before) := by
+  rcases request with rng | rng | rng
   · exact sample coins setup checks representation created (signing rng) before
   · exact sample coins setup checks representation created (prekey rng) before
   · exact kem_joint coins setup view kem rng before
 
-theorem program (work : OracleComp (RegistrationNativePlatformPublicAdapterCreateProgram.Spec mlSource R) A) (before : Backend n KemSK) :
-    Prod.map id erase <$> (simulateQ (RegistrationNativePlatformPublicAdapterCreateJointPhysical.handler coins setup checks representation created view kem ml signing prekey) work).run before =
-      (simulateQ (handler coins setup checks representation created view kem ml signing prekey) work).run (erase before) := by
+theorem program (work : OracleComp (RegistrationNativePlatformPublicAdapterCreateProgram.Spec R) A) (before : Backend n KemSK) :
+    Prod.map id erase <$> (simulateQ (RegistrationNativePlatformPublicAdapterCreateJointPhysical.handler coins setup checks representation created view kem signing prekey) work).run before =
+      (simulateQ (handler coins setup checks representation created view kem signing prekey) work).run (erase before) := by
   apply OracleComp.map_run_simulateQ_eq_of_query_map_eq
-  exact query coins setup checks representation created view kem ml signing prekey
+  exact query coins setup checks representation created view kem signing prekey
 
-theorem stable (work : OracleComp (RegistrationNativePlatformPublicAdapterCreateProgram.Spec mlSource R) A) (before : Backend n KemSK) :
-    Prod.map id erase <$> (simulateQ (RegistrationNativePlatformPublicAdapterCreateJointPhysical.handler coins setup checks representation created view kem ml signing prekey) work).run before =
-    Prod.map id erase <$> (simulateQ (RegistrationNativePlatformPublicAdapterCreateJointPhysical.handler coins setup checks representation created view kem ml signing prekey) work).run (erase before) := by
+theorem stable (work : OracleComp (RegistrationNativePlatformPublicAdapterCreateProgram.Spec R) A) (before : Backend n KemSK) :
+    Prod.map id erase <$> (simulateQ (RegistrationNativePlatformPublicAdapterCreateJointPhysical.handler coins setup checks representation created view kem signing prekey) work).run before =
+    Prod.map id erase <$> (simulateQ (RegistrationNativePlatformPublicAdapterCreateJointPhysical.handler coins setup checks representation created view kem signing prekey) work).run (erase before) := by
   rw [program,program,RegistrationNativePlatformPublicAdapterPhysicalBackend.idempotent]
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterCreateNormalization

@@ -26,7 +26,7 @@ def prefixView (outcome : Result × PqxdhDeploymentSessionSnapshot.State (Source
   let snapshot := PqxdhDeploymentSessionSnapshot.view outcome.2
   (snapshot.1, eraseShared snapshot.2)
 
-def auditPrefixView (setup : Setup baseSpec KemSK)
+noncomputable def auditPrefixView (setup : Setup baseSpec KemSK)
     (audit : PqxdhRegistrationR1RootAudit.RootAudit KemSK (ReducedResult KemSK Result)) :
     PqxdhDeploymentSessionSnapshot.Journal (SourceSpec KemSK) × PqxdhRegistrationSchedule.State KemSK :=
   ((auditedView setup audit).1.2, (auditedView setup audit).2)

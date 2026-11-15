@@ -10,6 +10,8 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhNativeSharedPrefixBounds
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhNativeSharedPrefix AdaptiveCtxSharedHash
 variable {ι M P I D K X Response Shared Result Origin A N C : Type} {extra : OracleSpec ι} {S B : Nat}
 
@@ -78,22 +80,22 @@ variable (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin)
 
 /-- The carried code is the original first builder and adaptive post schedule, with exactly the proved7+67*qPost callback cap. -/
 theorem code_total (qPost : Nat) (bounded : ∀ reply, (execution.outside reply).IsTotalQueryBound qPost) :
-    (PqxdhInitialNativeCarried.code (X := X) (Response := Response) source mark sender route decode execution).IsTotalQueryBound (7 + qPost * 67) := by
+    (PqxdhInitialNativeCarried.code (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response) source mark sender route decode execution).IsTotalQueryBound (7 + qPost * 67) := by
   apply (RawCtxSharedPrefixBounds.annotation_total _ _).mp
   simpa only [PqxdhInitialNativeCarried.code, PqxdhInitialOriginForwardBuilder.program_erase] using
-    PqxdhInitialOriginPost.sequence_total source execution.initial mark execution.origin sender route decode
+    PqxdhInitialOriginPost.sequence_total (associatedData := associatedData) (completedBinding := completedBinding) source execution.initial mark execution.origin sender route decode
       execution.index execution.metadata execution.ready execution.outside qPost bounded (execution.before, execution.trace)
 
 include preBound applicationBound initialBound selectorBound auxBound in
 /-- The complete actual carried prefix has the explicit H/U ledger, derived from its original source callback and post bounds. -/
 theorem carried_bound (depth qPost : Nat) (bounded : ∀ reply, (execution.outside reply).IsTotalQueryBound qPost)
     (hash : Bool) (state : Local A N C) :
-    (carried source writer stage pre application initial selector aux mark sender route decode execution depth state).IsQueryBoundP
+    (carried (completedBinding := completedBinding) (associatedData := associatedData) source writer stage pre application initial selector aux mark sender route decode execution depth state).IsQueryBoundP
       (HashClass hash) ((7 + qPost * 67) * (if hash then 1 else 76 + qPre + qApplication + qInitial + qSelector + qAux)) := by
   exact RawCtxSharedPrefixBounds.scan_bound _ _ _ _ (HashClass hash) _
     (step_bound source writer stage pre application initial selector aux qPre qApplication qInitial qSelector qAux
       preBound applicationBound initialBound selectorBound auxBound hash)
-    _ _ _ (code_total source mark sender route decode execution qPost bounded) state
+    _ _ _ (code_total (associatedData := associatedData) (completedBinding := completedBinding) source mark sender route decode execution qPost bounded) state
 
 end BeaconcryptCore.Computational.PqxdhNativeSharedPrefixBounds
 

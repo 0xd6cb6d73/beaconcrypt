@@ -60,7 +60,7 @@ private theorem record_keeps (setup : Setup base KemSK) (wire : RegistrationNati
 /-- Every actual typed operation preserves the derived generated-owner history invariant. -/
 theorem handler_fixed (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (source : RegistrationNativeMldsa.Source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (source : RegistrationNativeMldsa.Source)
     (credential : RegistrationNativeMldsa.Credential source)
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (before : State n KemSK source)
     (result : RegistrationNativeRawAdapter.TypedSpec.Range query × State n KemSK source)
@@ -95,7 +95,7 @@ theorem handler_fixed (setup : Setup base KemSK) (checks : Checks) (wire : Regis
 /-- Arbitrary adaptive clients retain the same invariant at every reached native prefix. -/
 theorem program_fixed (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (source : RegistrationNativeMldsa.Source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (source : RegistrationNativeMldsa.Source)
     (credential : RegistrationNativeMldsa.Credential source)
     (work : OracleComp RegistrationNativeRawAdapter.TypedSpec Value) (before : State n KemSK source)
     (result : Value × State n KemSK source) (prior : Fixed before.beacons)
@@ -109,7 +109,7 @@ theorem program_fixed (setup : Setup base KemSK) (checks : Checks) (wire : Regis
 /-- The original secrecy ledger changes only public query flow and retains the actual native histories beneath it. -/
 theorem run_fixed (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (source : RegistrationNativeMldsa.Source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (source : RegistrationNativeMldsa.Source)
     (credential : RegistrationNativeMldsa.Credential source)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value) (before : State n KemSK source)

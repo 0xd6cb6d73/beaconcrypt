@@ -7,6 +7,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhLaterExecutableCertificates
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open RawCtxForwardAnnotation RawCtxForwardCoverage RawCtxForwardScan RawCtxForwardTags
 open AdaptiveCtxSharedHash
 
@@ -59,11 +61,11 @@ theorem prefix_fits (start : Input) (output : HmacBlock) (depth qPost : Nat)
     (bounded : ∀ reply, (start.post reply).IsTotalQueryBound qPost)
     (pending : Pending)
     (supported : Cut.pending pending.1 pending.2 ∈ support
-      (PqxdhPreparedSharedPrefix.run original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth)) :
+      (PqxdhPreparedSharedPrefix.run (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth)) :
     PqxdhInitialOriginCertificates.Fits qPost pending.1 := by
   unfold PqxdhPreparedSharedPrefix.run PqxdhNativeSharedPrefix.carried at supported
   apply shared_scan_all _ _ _ _ _ _ _ _ _ _ _ supported
-  exact PqxdhInitialOriginCertificates.program_fits (env).source _ _ (env).senderId (env).route (env).decode
+  exact PqxdhInitialOriginCertificates.program_fits (associatedData := associatedData) (completedBinding := completedBinding) (env).source _ _ (env).senderId (env).route (env).decode
     _ _ _ _ _ qPost bounded _ _
 
 /-- The complete/cached branches keep their original Boolean; a syntactic pending output must come from the certified missing-parent branch. -/
@@ -71,7 +73,7 @@ theorem prepared_fits (start : Input) (output : HmacBlock) (depth qPost : Nat)
     (bounded : ∀ reply, (start.post reply).IsTotalQueryBound qPost)
     (pending : Pending)
     (supported : Sum.inr pending ∈ support
-      (PqxdhPreparedSharedParent.run original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth)) :
+      (PqxdhPreparedSharedParent.run (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth)) :
     PqxdhInitialOriginCertificates.Fits qPost pending.1 := by
   unfold PqxdhPreparedSharedParent.run at supported
   simp only [mem_support_bind_iff] at supported
@@ -85,7 +87,7 @@ theorem prepared_fits (start : Input) (output : HmacBlock) (depth qPost : Nat)
       split at supported
       · simp only [mem_support_pure_iff, Sum.inr.injEq] at supported
         subst pending
-        exact prefix_fits original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth qPost bounded _ reached
+        exact prefix_fits (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth qPost bounded _ reached
       · simp only [mem_support_bind_iff, mem_support_pure_iff] at supported
         obtain ⟨_, _, impossible⟩ := supported
         cases impossible
@@ -103,13 +105,13 @@ theorem input_fits (start : Input) (output : HmacBlock) (depth qPost : Nat)
     (bounded : ∀ reply, (start.post reply).IsTotalQueryBound qPost)
     (result : LocalPacket)
     (supported : result ∈ support
-      (PqxdhSharedParentInput.run original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth)) :
+      (PqxdhSharedParentInput.run (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth)) :
     PacketFits qPost result := by
   simp only [PqxdhSharedParentInput.run, mem_support_bind_iff, mem_support_pure_iff] at supported
   obtain ⟨value, reached, rfl⟩ := supported
   cases value with
   | inl decision => trivial
-  | inr pending => exact prepared_fits original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth qPost bounded pending reached
+  | inr pending => exact prepared_fits (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth qPost bounded pending reached
 
 variable (program : PqxdhPhase2GeneratedDriver.Program baseSpec setup.Context S (B + 1))
     (post : PqxdhAuthenticatedRootExperiment.Post (baseSpec := baseSpec) program.Selection S (B + 1))
@@ -117,7 +119,7 @@ variable (program : PqxdhPhase2GeneratedDriver.Program baseSpec setup.Context S 
 local notation "env0" => PqxdhSourceSharedPreparation.environment setup original callbacks ∅
 local notation "Packet" => PqxdhSourceSharedPreparation.Packet
   (PqxdhSourceSharedPreparation.LocalOutput (M := M) (P := P) (I := I) (K := K) (A := A) setup program) KemSK
-local notation "input" => PqxdhSourceSharedInput.input setup original callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed
+local notation "input" => PqxdhSourceSharedInput.input (associatedData := associatedData) (completedBinding := completedBinding) setup original callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed
 
 /-- Every possible prepared input carries the same original all-reply post budget, independently of cryptographic oracle answers. -/
 theorem input_post (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl kem program post)
@@ -134,7 +136,7 @@ theorem input_post (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl 
 /-- The actual preparation installs the original source cap before any completed, cached or pending parent branch is chosen. -/
 theorem after_fits (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl kem program post)
     (packet : Packet) (output : HmacBlock) (depth : Nat) (result : LocalPacket)
-    (supported : result ∈ support (PqxdhLaterSharedParent.after setup original callbacks program post attachedVerify primitives baseImpl kem
+    (supported : result ∈ support (PqxdhLaterSharedParent.after (associatedData := associatedData) (completedBinding := completedBinding) setup original callbacks program post attachedVerify primitives baseImpl kem
       selected number ancestors disclosed packet output depth)) :
     PacketFits (PqxdhInitialPreparedSourceCaps.postCap env0 baseImpl kem program post c) result := by
   unfold PqxdhLaterSharedParent.after at supported
@@ -143,9 +145,9 @@ theorem after_fits (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl 
     subst result
     trivial
   · rename_i start same
-    exact input_fits env0 callbacks baseImpl kem attachedVerify primitives packet.secretKey packet.ciphertext
+    exact input_fits (associatedData := associatedData) (completedBinding := completedBinding) env0 callbacks baseImpl kem attachedVerify primitives packet.secretKey packet.ciphertext
       start output depth _
-      (input_post original callbacks baseImpl kem attachedVerify primitives program post selected number ancestors disclosed c packet start same)
+      (input_post (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives program post selected number ancestors disclosed c packet start same)
       result supported
 
 /-- Every pending result of the complete enriched sampler has a syntactic continuation certificate. All common decisions and all parent/material draws remain unchanged. -/
@@ -153,12 +155,12 @@ theorem run_fits (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl ke
     (depth : Nat)
     (result : PqxdhLaterSavedSampler.Carrier (setup := setup) (M := M) (P := P) (I := I) (K := K)
       (X := X) (Response := Response) (A := A) (KemSK := KemSK) (S := S) (B := B))
-    (supported : result ∈ support (PqxdhLaterSavedSampler.run setup original callbacks program post attachedVerify primitives baseImpl kem
+    (supported : result ∈ support (PqxdhLaterSavedSampler.run (associatedData := associatedData) (completedBinding := completedBinding) setup original callbacks program post attachedVerify primitives baseImpl kem
       selected number ancestors disclosed depth)) :
     PacketFits (PqxdhInitialPreparedSourceCaps.postCap env0 baseImpl kem program post c) result.2.1.1.1 := by
   simp only [PqxdhLaterSavedSampler.run, mem_support_bind_iff, mem_support_pure_iff] at supported
   obtain ⟨packet, _, output, _, localPacket, reached, parent, _, nonce, _, chain, _, rfl⟩ := supported
-  exact after_fits original callbacks baseImpl kem attachedVerify primitives program post selected number ancestors disclosed c packet output depth localPacket reached
+  exact after_fits (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives program post selected number ancestors disclosed c packet output depth localPacket reached
 
 local notation "Carrier" => PqxdhLaterSavedSampler.Carrier (setup := setup) (M := M) (P := P) (I := I) (K := K)
       (X := X) (Response := Response) (A := A) (KemSK := KemSK) (S := S) (B := B)
@@ -170,43 +172,43 @@ noncomputable def certified (c : PqxdhAuthenticatedRootBudgets.Certificate env0 
     (depth : Nat) : OracleComp HashSpec (Certified (setup := setup) (M := M) (P := P) (I := I) (K := K)
       (X := X) (Response := Response) (A := A) (KemSK := KemSK) (S := S) (B := B)
       (PqxdhInitialPreparedSourceCaps.postCap env0 baseImpl kem program post c)) :=
-  (fun result => ⟨result.1, run_fits original callbacks baseImpl kem attachedVerify primitives program post
+  (fun result => ⟨result.1, run_fits (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives program post
     selected number ancestors disclosed c depth result.1 result.2⟩) <$>
-    MonadAttach.attach (PqxdhLaterSavedSampler.run setup original callbacks program post attachedVerify primitives baseImpl kem
+    MonadAttach.attach (PqxdhLaterSavedSampler.run (associatedData := associatedData) (completedBinding := completedBinding) setup original callbacks program post attachedVerify primitives baseImpl kem
       selected number ancestors disclosed depth)
 
 /-- Erasing certificates is a literal oracle-program equality, preserving every query, source draw and original complete/cached result. -/
 theorem certified_erase (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl kem program post) (depth : Nat) :
-    Subtype.val <$> certified original callbacks baseImpl kem attachedVerify primitives program post selected number ancestors disclosed c depth =
-      PqxdhLaterSavedSampler.run setup original callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed depth := by
+    Subtype.val <$> certified (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives program post selected number ancestors disclosed c depth =
+      PqxdhLaterSavedSampler.run (associatedData := associatedData) (completedBinding := completedBinding) setup original callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed depth := by
   unfold certified Certified
   rw [Functor.map_map]
   exact
     (WeaklyLawfulMonadAttach.map_attach (m := OracleComp HashSpec)
-      (x := PqxdhLaterSavedSampler.run setup original callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed depth))
+      (x := PqxdhLaterSavedSampler.run (associatedData := associatedData) (completedBinding := completedBinding) setup original callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed depth))
 
 /-- Proof attachment changes no complete query ledger of the actual sampler. -/
 theorem certified_budget {Budget : Type}
     (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl kem program post) (depth : Nat)
     (budget : Budget) (canQuery : HashSpec.Domain → Budget → Prop) (cost : HashSpec.Domain → Budget → Budget) :
-    (certified original callbacks baseImpl kem attachedVerify primitives program post selected number ancestors disclosed c depth).IsQueryBound budget canQuery cost ↔
-    (PqxdhLaterSharedMessagePrefix.run setup original callbacks program post attachedVerify primitives baseImpl kem
+    (certified (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives program post selected number ancestors disclosed c depth).IsQueryBound budget canQuery cost ↔
+    (PqxdhLaterSharedMessagePrefix.run (associatedData := associatedData) (completedBinding := completedBinding) setup original callbacks program post attachedVerify primitives baseImpl kem
       selected number ancestors disclosed depth).IsQueryBound budget canQuery cost := by
-  rw [← PqxdhLaterSavedSampler.run_budget setup original callbacks program post attachedVerify primitives baseImpl kem
+  rw [← PqxdhLaterSavedSampler.run_budget (associatedData := associatedData) (completedBinding := completedBinding) setup original callbacks program post attachedVerify primitives baseImpl kem
     selected number ancestors disclosed depth budget canQuery cost,
-    ← certified_erase original callbacks baseImpl kem attachedVerify primitives program post selected number ancestors disclosed c depth,
+    ← certified_erase (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives program post selected number ancestors disclosed c depth,
     isQueryBound_map_iff]
 
 /-- The certified executable prefix erases to the same complete original material sampler with its actual reached ROM cache. -/
 theorem certified_source (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl kem program post) (depth : Nat) :
     (fun result => PqxdhLaterSharedMessagePrefix.restore setup result.1.val.2 result.2) <$>
-      (simulateQ hashImpl (certified original callbacks baseImpl kem attachedVerify primitives program post
+      (simulateQ hashImpl (certified (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives program post
         selected number ancestors disclosed c depth)).run ∅ =
-    PqxdhErasedParentMaterial.prepare original.source original.recordWriter original.senderId original.route original.decode depth
-      (PqxdhInitialPreparedSourceInput.prior env0 baseImpl kem attachedVerify primitives program post selected number ancestors disclosed) := by
-  rw [← PqxdhLaterSavedSampler.source setup original callbacks program post attachedVerify primitives baseImpl kem
+    PqxdhErasedParentMaterial.prepare (associatedData := associatedData) (completedBinding := completedBinding) original.source original.recordWriter original.senderId original.route original.decode depth
+      (PqxdhInitialPreparedSourceInput.prior (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program post selected number ancestors disclosed) := by
+  rw [← PqxdhLaterSavedSampler.source (associatedData := associatedData) (completedBinding := completedBinding) setup original callbacks program post attachedVerify primitives baseImpl kem
     selected number ancestors disclosed depth,
-    ← certified_erase original callbacks baseImpl kem attachedVerify primitives program post selected number ancestors disclosed c depth]
+    ← certified_erase (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives program post selected number ancestors disclosed c depth]
   simp only [simulateQ_map, StateT.run_map, Functor.map_map]
 
 /-- Every evaluated certificate output projects to a supported output of the identical original richer sampler. -/
@@ -215,10 +217,10 @@ theorem evaluated_support (c : PqxdhAuthenticatedRootBudgets.Certificate env0 ba
       (Response := Response) (A := A) (KemSK := KemSK) (S := S) (B := B)
       (PqxdhInitialPreparedSourceCaps.postCap env0 baseImpl kem program post c) × CtxRomAuth.CtxRO.QueryCache)
     (supported : result ∈ support ((simulateQ hashImpl
-      (certified original callbacks baseImpl kem attachedVerify primitives program post selected number ancestors disclosed c depth)).run ∅)) :
+      (certified (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives program post selected number ancestors disclosed c depth)).run ∅)) :
     (result.1.val, result.2) ∈ support ((simulateQ hashImpl
-      (PqxdhLaterSavedSampler.run setup original callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed depth)).run ∅) := by
-  rw [← certified_erase original callbacks baseImpl kem attachedVerify primitives program post selected number ancestors disclosed c depth,
+      (PqxdhLaterSavedSampler.run (associatedData := associatedData) (completedBinding := completedBinding) setup original callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed depth)).run ∅) := by
+  rw [← certified_erase (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives program post selected number ancestors disclosed c depth,
     simulateQ_map, StateT.run_map, support_map]
   exact ⟨result, supported, rfl⟩
 

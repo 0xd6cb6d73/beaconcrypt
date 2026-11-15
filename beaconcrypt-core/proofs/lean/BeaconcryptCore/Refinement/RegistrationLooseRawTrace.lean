@@ -132,6 +132,55 @@ theorem validate (input : Slice U8) (atoms : List Atom) (size : atoms.length = 8
   rw [toSlice, validate_raw input atoms size contents]
   simp only [bind_tc_ok, uncurry, ↓reduceIte, copyBack, index_pack]
 
+set_option backward.isDefEq.respectTransparency false in
+theorem array6 (input : Slice U8) (atoms : List Atom) (size : atoms.length = 6)
+    (contents : input.val = encodedBytes cbor_major_type_array 6#u64 ++ atomsBytes atoms) :
+    Trace input 0#usize 1#usize input.len := by
+  have headerWidth : (writtenCount 6#u64).val = 1 := rfl
+  have minimum := atoms_length atoms
+  have lengths := congrArg List.length contents
+  simp only [List.length_append, encoded_length, headerWidth] at lengths
+  change input.length = 1 + (atomsBytes atoms).length at lengths
+  obtain ⟨afterHeader, body, afterHeaderValue⟩ := RegistrationRawItems.array_body input 0#usize 1#usize 6#u64 []
+    (atomsBytes atoms) (by simpa using contents) rfl
+    (by change 1 ≤ input.length - 0; omega) (by change 6 ≤ input.length - 0 - 1; omega)
+  have castSix : UScalar.cast .Usize 6#u64 = 6#usize := by
+    apply UScalar.eq_of_val_eq
+    rw [RegistrationHeaderCanonical.cast_value .Usize 6#u64 (by scalar_tac)]
+    rfl
+  rw [castSix, RegistrationCanonicalTrace.next_initial] at body
+  obtain ⟨final, later, finalValue⟩ := flat_trace atoms input afterHeader 6#usize
+    (encodedBytes cbor_major_type_array 6#u64) [] (by simpa using contents)
+    (by rw [afterHeaderValue, encoded_length, headerWidth]; rfl) (by simpa using size.symm)
+  have finalIsLength : final = input.len := by
+    apply UScalar.eq_of_val_eq
+    rw [finalValue, afterHeaderValue, headerWidth, Slice.len_val]
+    change 0 + 1 + (atomsBytes atoms).length = input.length
+    omega
+  rw [finalIsLength] at later
+  apply Trace.step (children := 6#usize) (by scalar_tac)
+  · simpa only [RegistrationCanonicalTrace.next_initial] using body
+  · simpa only [RegistrationCanonicalTrace.next_initial] using later
+
+set_option backward.isDefEq.respectTransparency false in
+theorem validate_raw6 (input : Slice U8) (atoms : List Atom) (size : atoms.length = 6)
+    (contents : input.val = encodedBytes cbor_major_type_array 6#u64 ++ atomsBytes atoms) :
+    validate_raw_data_item input (cell 0#usize) = .ok (true, cell input.len) := by
+  have trace := array6 input atoms size contents
+  simp only [validate_raw_data_item, show Array.repeat 1#usize = @pack Usize from rfl,
+    show Array.repeat 1#usize = @pack Bool from rfl, index_pack, bind_tc_ok, ↓reduceIte,
+    run trace, uncurry]
+set_option backward.isDefEq.respectTransparency false in
+theorem validate6 (input : Slice U8) (atoms : List Atom) (size : atoms.length = 6)
+    (contents : input.val = encodedBytes cbor_major_type_array 6#u64 ++ atomsBytes atoms) :
+    cbor_validate input = .ok input.len := by
+  simp only [cbor_validate, show Array.repeat 1#usize = @pack Usize from rfl,
+    Array.to_slice_mut, lift, bind_tc_ok, uncurry]
+  have toSlice : Array.to_slice (pack 0#usize) = cell 0#usize := rfl
+  have copyBack : Array.from_slice (pack 0#usize) (cell input.len) = pack input.len := rfl
+  rw [toSlice, validate_raw6 input atoms size contents]
+  simp only [bind_tc_ok, uncurry, ↓reduceIte, copyBack, index_pack]
+
 end BeaconcryptCore.Refinement.RegistrationLooseRawTrace
 
 /-- info: 'BeaconcryptCore.Refinement.RegistrationLooseRawTrace.atom_length' depends on axioms: [propext,
@@ -167,3 +216,19 @@ end BeaconcryptCore.Refinement.RegistrationLooseRawTrace
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Refinement.RegistrationLooseRawTrace.validate
+
+/-- info: 'BeaconcryptCore.Refinement.RegistrationLooseRawTrace.array6' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.RegistrationLooseRawTrace.array6
+
+/-- info: 'BeaconcryptCore.Refinement.RegistrationLooseRawTrace.validate_raw6' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.RegistrationLooseRawTrace.validate_raw6
+
+/-- info: 'BeaconcryptCore.Refinement.RegistrationLooseRawTrace.validate6' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.RegistrationLooseRawTrace.validate6

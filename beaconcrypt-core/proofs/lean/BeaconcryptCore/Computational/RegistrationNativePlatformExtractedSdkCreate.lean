@@ -30,7 +30,7 @@ private theorem map_apply {S V W : Type} {m : Type → Type} [Monad m] [LawfulMo
 
 theorem lift_closed (coins : QueryImpl unifSpec (StateT Platform ProbComp)) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (checks : PqxdhServerAuthExperiment.Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State A) :
     close (AdapterBeaconConstructorNative.lift coins setup checks representation created work)=
       RegistrationNativePlatformExperiment.liftNative coins (RegistrationNativeExperiment.beacon setup checks representation created work) := by
@@ -52,10 +52,11 @@ variable [crypto : AdapterPublicWrapperRequestMonad.CryptoOperations (RustT (Ada
 variable [children : AdapterPublicWrapperRequestMonad.ChildOperations (RustT (AdapterBeaconConstructorNative.M n KemSK source RegistrationServerRoleBackend.State (StateT Platform ProbComp)))]
 variable (coins : QueryImpl unifSpec (StateT Platform ProbComp)) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (checks : PqxdhServerAuthExperiment.Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (generator : rand_core.TryCryptoRng R Error) (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (kem : AdapterBeaconConstructorKem.Representation view R)
 
+omit children in
 theorem native_entry
     (leaves : AdapterBeaconConstructorNative.Leaves (n := n) (Auxiliary := RegistrationServerRoleBackend.State)
       coins setup checks representation created generator view kem) (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicKey)
@@ -77,6 +78,7 @@ theorem native_entry
   rw [mapped,lift_closed] at equation
   exact equation
 
+omit children in
 theorem typed_source
     (leaves : AdapterBeaconConstructorNative.Leaves (n := n) (Auxiliary := RegistrationServerRoleBackend.State)
       coins setup checks representation created generator view kem)

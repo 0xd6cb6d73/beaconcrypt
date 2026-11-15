@@ -22,23 +22,23 @@ variable [allocator : AdapterWirePrimitive.Operations]
 structure BundleContracts : Prop where
   init : AdapterPublicRegistrationLoops.InitContracts
   kxPublicBytes : ∀ key, Normal (crypto.kxPublicBytes key)
-  publicLeaves : AdapterPublicTrivial.Contracts
   allocation : AdapterWire.Contracts
   kemPublicBytes : ∀ key, Normal (crypto.kemPublicBytes key)
 
+omit platform localOps in
 theorem bundle_contracts (contracts : BundleContracts) (other : OtherBranches) :
     letI := sourceOperations other
     AdapterPublicBeacon.BundleContracts := by
-  rcases contracts with ⟨init, kxPublicBytes, publicLeaves, allocation, kemPublicBytes⟩
+  rcases contracts with ⟨init, kxPublicBytes, allocation, kemPublicBytes⟩
   let _ := sourceOperations other
   exact {
     init := init
     kxPublicBytes := kxPublicBytes
-    publicLeaves := publicLeaves
     writer := AdapterRegistrationWriterSource.init_caller_contracts allocation other
     allocation := allocation
     kemPublicBytes := kemPublicBytes }
 
+omit platform localOps in
 theorem get_registration_bundle_total (contracts : BundleContracts) (other : OtherBranches)
     {R E : Type} (generator : rand_core.TryCryptoRng R E)
     (random : AdapterPublicRegistrationLoops.GenerationContracts generator)
@@ -49,6 +49,7 @@ theorem get_registration_bundle_total (contracts : BundleContracts) (other : Oth
   let _ := sourceOperations other
   exact AdapterPublicBeacon.get_registration_bundle_total selected generator random self rng
 
+omit platform localOps in
 theorem get_registration_bundle_preserves (contracts : BundleContracts) (other : OtherBranches)
     {R E : Type} (generator : rand_core.TryCryptoRng R E)
     (random : AdapterPublicRegistrationLoops.GenerationContracts generator)
@@ -66,6 +67,7 @@ variable [FrameDispatchFallback.Operations]
 
 structure ResponseContracts : Prop where
   publicLeaves : AdapterPublicTrivial.Contracts
+  hash : ∀ request, Normal (authentication.hash request)
   allocation : AdapterWire.Contracts
   sealingPrimitive : AdapterSeal.PrimitiveContracts
   parse : ∀ input, Normal (primitive.parse input)
@@ -82,11 +84,12 @@ omit [FrameDispatchFallback.Operations] in
 theorem response_contracts (contracts : ResponseContracts) (other : OtherBranches) :
     letI := sourceOperations other
     AdapterPublicServerBuildSource.Contracts := by
-  rcases contracts with ⟨publicLeaves, allocation, sealingPrimitive, parse, initial, kdf,
+  rcases contracts with ⟨publicLeaves, hash, allocation, sealingPrimitive, parse, initial, kdf,
     commitment, sign, contains, reserve, entry, insert⟩
   let _ := sourceOperations other
   exact {
     publicLeaves := publicLeaves
+    hash := hash
     allocation := allocation
     serialization := AdapterRegistrationWriterSource.response_caller_contracts allocation other
     sealingPrimitive := sealingPrimitive

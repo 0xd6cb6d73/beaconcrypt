@@ -26,7 +26,7 @@ local notation "Whole" => Native × Platform
 
 def SourceAt (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (call : Call RegistrationNativeRawAdapter.TypedSpec Whole) (index : Nat)
     (pending : registration.BeaconPending) (oneTime : PqxdhJointGapDh.ScalarBytes) : Prop :=
@@ -38,7 +38,7 @@ variable [primitive : AdapterSealPrimitive.Operations]
 variable (coins : QueryImpl unifSpec (StateT Platform ProbComp))
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
 variable (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 variable (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
 variable (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
 variable (reserveRegistration reservePeer : StateT Platform ProbComp Bool) (erased : commitment.CommitmentTranscript)

@@ -7,6 +7,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhPreparedPendingReplay
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhFullSecretInputKdf PqxdhSecretInputKdf PqxdhCorrelatedExpand
 open PqxdhInitialBeaconAmbient PqxdhInitialNativeRetained RawCtxCursorLineage RawCtxSelectedParentTable
 variable {ι M P I D K X Response Shared Result Origin A N C : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -27,24 +29,24 @@ local notation "external" => PqxdhInitialNativeAudit.external pre application in
 theorem prepared_replay (depth : Nat) (state reached : PqxdhInitialNativeAudit.State A N C)
     (context : PqxdhInitialOriginContext.Context extra M P I D K Result Origin S B)
     (supported : Sum.inr (context, reached) ∈ support
-      (PqxdhInitialPreparedParent.prepare source writer pre application initial selector aux mark sender route decode
+      (PqxdhInitialPreparedParent.prepare (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initial selector aux mark sender route decode
         observe execution depth state))
     (table : RawCtxKdfRequestTable.Table) (larger : Extends reached.1.1.1.2.1 table)
     (result : PqxdhInitialNativeCarried.Final M P I D K Result Origin S B × RetainedState A N C)
     (completed : result ∈ support (RawCtxPendingMixedPrefix.finish
       (retained source writer (view (productionStream source.crypto) table) external)
-      (.pending (PqxdhInitialOriginContext.frame (X := X) (Response := Response) mark sender route decode context).1
-        (PqxdhInitialOriginContext.frame mark sender route decode context).2, project reached.1))) :
+      (.pending (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode context).1
+        (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode context).2, project reached.1))) :
     result ∈ support ((simulateQ (retained source writer (view (productionStream source.crypto) table) external)
-      (PqxdhInitialNativeCarried.original (X := X) (Response := Response) source mark sender route decode execution)).run
+      (PqxdhInitialNativeCarried.original (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response) source mark sender route decode execution)).run
       (project state.1)) := by
-  apply PqxdhInitialPendingRetainedReplay.carried_replay source writer mark sender route decode execution
+  apply PqxdhInitialPendingRetainedReplay.carried_replay (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution
     depth (depth + 1) external state.1 reached.1 context ?_ table larger result completed
-  rw [← PqxdhInitialNativeAuditCarried.carried_projection source writer pre application initial selector aux
+  rw [← PqxdhInitialNativeAuditCarried.carried_projection (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initial selector aux
     mark sender route decode execution depth (depth + 1) state]
   simp only [support_map, Set.mem_image]
   exact ⟨RawCtxForwardScan.Cut.pending context reached,
-    ((PqxdhInitialPreparedParent.supported_pending source writer pre application initial selector aux
+    ((PqxdhInitialPreparedParent.supported_pending (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initial selector aux
       mark sender route decode observe execution depth state reached context).1 supported).1, rfl⟩
 
 local notation "Start" => PqxdhErasedParentSample.Start (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K)
@@ -64,17 +66,17 @@ local notation "sampleMark" start => PqxdhInitialSampledParent.marker source sta
 /-- The exact proof-erased later sampler supplies the source support needed for retained completion, with its literal initializer, original outside Post and original ambient/cache initialization. No whole-prefix provenance premise is added. -/
 theorem sample_one_replay (depth : Nat) (start : Start) (pending : Pending)
     (supported : Sum.inr pending ∈ support
-      (PqxdhErasedParentSample.sampleOne source writer sender route decode depth start))
+      (PqxdhErasedParentSample.sampleOne (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth start))
     (table : RawCtxKdfRequestTable.Table) (larger : Extends pending.2.1.1.1.2.1 table)
     (result : PqxdhInitialNativeCarried.Final M P I D K Bool Bool S B × RetainedState A N RootOracle.QueryCache)
     (completed : result ∈ support (RawCtxPendingMixedPrefix.finish
       (retained source writer (view (productionStream source.crypto) table) (sampleExternal source start))
-      (.pending (PqxdhInitialOriginContext.frame (X := X) (Response := Response) (sampleMark start) sender route decode pending.1).1
-        (PqxdhInitialOriginContext.frame (sampleMark start) sender route decode pending.1).2, project pending.2.1))) :
+      (.pending (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) (X := X) (Response := Response) (sampleMark start) sender route decode pending.1).1
+        (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) (sampleMark start) sender route decode pending.1).2, project pending.2.1))) :
     result ∈ support ((simulateQ (retained source writer (view (productionStream source.crypto) table) (sampleExternal source start))
-      (PqxdhInitialNativeCarried.original (X := X) (Response := Response) source (sampleMark start) sender route decode
+      (PqxdhInitialNativeCarried.original (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response) source (sampleMark start) sender route decode
         (sampleExecution start))).run (start.1.shared, (start.1.privateState, start.1.cache))) := by
-  exact prepared_replay source writer _ _ _ _ _ _ sender route decode _ _ depth _ pending.2 pending.1
+  exact prepared_replay (associatedData := associatedData) (completedBinding := completedBinding) source writer _ _ _ _ _ _ sender route decode _ _ depth _ pending.2 pending.1
     supported table larger result completed
 
 end BeaconcryptCore.Computational.PqxdhPreparedPendingReplay

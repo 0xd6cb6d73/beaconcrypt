@@ -9,7 +9,10 @@ open OracleComp OracleSpec CoreModels Aeneas OracleComp.ProgramLogic.Relational
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeRandomBefore
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPhase1AcceptanceOracle PqxdhKemIndCca PqxdhInitializerSecrecy
 open CtxRomAuth AdaptiveCtxSharedHash PqxdhSecretInputKdf PqxdhFullSecretInputKdf
@@ -132,7 +135,7 @@ theorem encoded_related (packet : Packet) (start : Input) (output : HmacBlock) (
 /-- The full actual generated-carrier relation implies equality of its complete before observation, including all private source context/material and the complementary None outcome. -/
 theorem related_key (first second : Bool)
     (left right : (Carrier × Option program.Selection) × RandomState)
-    (related : PqxdhLaterChallengeRandomSampler.CarriedRelated setup env callbacks program adversary owner number
+    (related : PqxdhLaterChallengeRandomSampler.CarriedRelated (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number
       attachedVerify primitives baseImpl kem ancestors disclosed first second left right) :
     beforeKey setup program left = beforeKey setup program right := by
   rcases related with ⟨beforeLeft, beforeRight, output, parent, nonce, next, leftAfter, rightAfter, packets, collected, rfl, rfl⟩
@@ -146,14 +149,14 @@ theorem related_key (first second : Bool)
 /-- The entire unconditioned before-observation distribution of the actual ordinary random source sampler has a diagonal coupling, including its full complementary mass. -/
 theorem carried (depth : Nat) (first second : Bool) (cache : RandomState) :
     RelTriple
-      (beforeKey setup program <$> (simulateQ backend (PqxdhLaterChallengeGeneratedContinuation.run setup env callbacks program adversary owner number first attachedVerify primitives baseImpl kem ancestors disclosed depth)).run cache)
-      (beforeKey setup program <$> (simulateQ backend (PqxdhLaterChallengeGeneratedContinuation.run setup env callbacks program adversary owner number second attachedVerify primitives baseImpl kem ancestors disclosed depth)).run cache)
+      (beforeKey setup program <$> (simulateQ backend (PqxdhLaterChallengeGeneratedContinuation.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number first attachedVerify primitives baseImpl kem ancestors disclosed depth)).run cache)
+      (beforeKey setup program <$> (simulateQ backend (PqxdhLaterChallengeGeneratedContinuation.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number second attachedVerify primitives baseImpl kem ancestors disclosed depth)).run cache)
       Eq := by
   apply relTriple_map
   exact relTriple_post_mono
-    (PqxdhLaterChallengeRandomSampler.carried setup env callbacks program adversary owner number
+    (PqxdhLaterChallengeRandomSampler.carried (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number
       attachedVerify primitives baseImpl kem ancestors disclosed depth first second cache)
-    (related_key setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed first second)
+    (related_key (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed first second)
 
 /-- Type of the retained before observation: the same full source and private state, with only the explicit world wrapper omitted. -/
 abbrev Key := Option (((KemSK × MlKem768Ciphertext) × Input × HmacBlock × CaptureDetails ×

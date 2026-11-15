@@ -8,7 +8,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
 set_option warningAsError true
-/-! Native packet decoding composes the actual public parser with the actual extracted fixed-width packet constructors. All six fields and the complete application slice survive this composition. -/
+/-! Native packet decoding composes the actual public parser with the actual extracted fixed-width packet constructors. All four Init fields and all Response fields including the complete application slice survive this composition. -/
 namespace BeaconcryptCore.Computational.RegistrationNativePacketReadback
 open BeaconcryptCore.Refinement RegistrationNativeSourceEncoders
 
@@ -16,7 +16,7 @@ def decodeInit [RegistrationValidatorPrimitive.Operations] (input : Slice U8) : 
   let parsed ← beaconcrypt_parse.extraction_decode_init input
   match parsed with
   | .None => .ok .None
-  | .Some value => registration.InitPacket.from_slices value.identity_key value.pre_key value.one_time_key value.pq_key value.mldsa_public_key value.signature
+  | .Some value => registration.InitPacket.from_slices value.identity_key value.pre_key value.one_time_key value.pq_key
 
 def decodeResponse [RegistrationValidatorPrimitive.Operations] (input : Slice U8) : RustM (core.option.Option registration.ResponsePacket) := do
   let parsed ← beaconcrypt_parse.extraction_decode_response input
@@ -42,10 +42,9 @@ theorem copied_array {size : Usize} (array : Array U8 size) :
     have same : output = array := Subtype.ext facts.1
     simpa only [same] using run
 
-theorem init_packet (view : registration.SignedInitView) :
+theorem init_packet (view : registration.InitView) :
     registration.InitPacket.from_slices (initSyntax view).identity_key (initSyntax view).pre_key
-      (initSyntax view).one_time_key (initSyntax view).pq_key (initSyntax view).mldsa_public_key
-      (initSyntax view).signature = .ok (.Some (RegistrationNativeWire.initPacket view)) := by
+      (initSyntax view).one_time_key (initSyntax view).pq_key = .ok (.Some (RegistrationNativeWire.initPacket view)) := by
   simp only [registration.InitPacket.from_slices, initSyntax, borrowed_array, bind_tc_ok]
   rfl
 
@@ -57,8 +56,8 @@ theorem response_packet (view : registration.SignedResponseView) :
   rfl
 
 theorem init_readback [RegistrationValidatorPrimitive.Operations] (input : Slice U8)
-    (view : registration.SignedInitView)
-    (contents : input.val = 136#u8 :: RegistrationSerializerInitBytes.payload (initSyntax view)) :
+    (view : registration.InitView)
+    (contents : input.val = 134#u8 :: RegistrationSerializerInitBytes.payload (initSyntax view)) :
     decodeInit input = .ok (.Some (RegistrationNativeWire.initPacket view)) := by
   rw [decodeInit, RegistrationPublicReadback.decode_init input (initSyntax view) contents (init_shape view)]
   simp only [bind_tc_ok, init_packet]

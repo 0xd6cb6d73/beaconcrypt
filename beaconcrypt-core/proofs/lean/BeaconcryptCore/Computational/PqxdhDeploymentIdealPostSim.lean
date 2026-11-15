@@ -195,7 +195,7 @@ theorem itemPost_active {A Y : Type} {count : ℕ} (setup : Setup baseSpec KemSK
     (value : PqxdhServerRootPreparation.Verified Reader) (matched : value.keys.pqKey = p.chosen.1)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes) (consumed : List Pqxdh.Bytes)
     (native : PqxdhServerAuthNative.NativeState KemSK)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry)
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate))
     (next : Option ℕ → OracleComp (PqxdhRegistrationJointKemCommands.SourceSpec KemSK) (Y × PqxdhDeploymentCompile.Local))
     (state : PqxdhDynamicKemJointSource.State KemSK) (after : A) :
     PqxdhDeploymentIdealBranch.itemPost setup codec checks t p decision
@@ -229,7 +229,7 @@ noncomputable def upperLayer {V : Type} (setup : Setup baseSpec KemSK) (codec : 
     (identityIndex : ℕ) (publicIdentity : PqxdhJointIdentity.PublicIdentity) (selected : ℕ)
     (challenge : MlKem768Ciphertext) (services : PqxdhRegistrationJointKemPostSkeleton.Services V Response) :
     QueryImpl (PqxdhRegistrationJointKemCommands.SourceSpec KemSK)
-      (StateT (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry ×
+      (StateT ((List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate)) ×
         PqxdhRegistrationJointKemPostSkeleton.SkelState KemSK V) (OracleComp (Enc KemSK + TSpec V))) :=
   ((PqxdhRegistrationJointKemPostSkeleton.skelImpl setup codec checks identityIndex publicIdentity services).mapStateTBase
     (PqxdhRegistrationJointKemPostSkeleton.groupedClient setup codec selected challenge)).flattenStateT
@@ -240,7 +240,7 @@ theorem skelResume_upper {X R V : Type} (setup : Setup baseSpec KemSK) (codec : 
     (observe : X × PqxdhRegistrationJointAcceptCutTag.Tag → R) (raw : Pqxdh.Bytes)
     (value : PqxdhServerRootPreparation.Verified Reader)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes) (consumed : List Pqxdh.Bytes)
-    (game : PqxdhServerAuthExperiment.GameState KemSK) (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry)
+    (game : PqxdhServerAuthExperiment.GameState KemSK) (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate))
     (next : Option ℕ → OracleComp (PqxdhRegistrationJointKemCommands.SourceSpec KemSK) X) (selected : ℕ)
     (challenge : MlKem768Ciphertext) (services : PqxdhRegistrationJointKemPostSkeleton.Services V Response) :
     skelResume setup codec checks identityIndex publicIdentity observe raw value ephemeral consumed game owners next
@@ -278,7 +278,7 @@ theorem itemPost_erased {A Y : Type} {count : ℕ} (setup : Setup baseSpec KemSK
     (value : PqxdhServerRootPreparation.Verified Reader) (matched : value.keys.pqKey = p.chosen.1)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes) (consumed : List Pqxdh.Bytes)
     (native : PqxdhServerAuthNative.NativeState KemSK)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry)
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate))
     (next : Option ℕ → OracleComp (PqxdhRegistrationJointKemCommands.SourceSpec KemSK) (Y × PqxdhDeploymentCompile.Local))
     (state : PqxdhDynamicKemJointSource.State KemSK) (after : A) :
     PqxdhDeploymentIdealBranch.itemPost setup codec checks t p decision

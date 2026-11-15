@@ -72,6 +72,8 @@ private theorem cap_eq (qSign qKem : Nat) (kind : EffectKind) :
   rw [show (Finset.univ : Finset Kind) = kinds from rfl]
   cases kind <;> simp [kinds, cost, cap, acceptBill, coinCost, hashCost, administrativeCost]
 
+-- The concrete OPEN accept program builds the 2638-byte Init transcript; keep it opaque so applying `RegistrationNativePlatformServerOpenSyntaxBounds.accept_bound` does not whnf-evaluate it.
+attribute [local irreducible] RegistrationNativePlatformServerOpenSyntax.accept in
 /-- Literal corrected accept retains the exact native bill independently of arbitrary stateful reservation effects. -/
 theorem accept_bound (selected : Bool) (reserve : StateT Platform ProbComp Bool)
     (setup : Setup base KemSK) (checks : Checks) (verify : MldsaTranscriptAuth.Verify) (packet : registration.InitPacket)

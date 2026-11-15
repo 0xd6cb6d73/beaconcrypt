@@ -57,7 +57,7 @@ variable [platform : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform]
 variable {I : Type} {base : OracleSpec I}
 
 
-noncomputable def roleContinue (coins : QueryImpl unifSpec m) (created : PqxdhLiveServerConstruction.Created Unit)
+noncomputable def roleContinue (coins : QueryImpl unifSpec m) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (effect : RustM agreement.AgreementEffect) : ServerM (RustM (Option Nat)) :=
   match effect with
   | .fail error => pure (.fail error)
@@ -69,7 +69,7 @@ noncomputable def roleContinue (coins : QueryImpl unifSpec m) (created : PqxdhLi
 theorem native_server (coins : QueryImpl unifSpec m)
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (authenticated : registration.AuthenticatedInit)
     (allocated : m AdapterPublicServerReservationNative.AllocationReply) :
     AdapterPublicServerReservationNative.native (n := n) (mlSource := mlSource) coins setup checks representation created packet authenticated allocated =
@@ -105,7 +105,7 @@ def admitted (reply : AdapterPublicServerReservationNative.AllocationReply) : Bo
 theorem after_authentication (coins : QueryImpl unifSpec m)
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (authenticated : registration.AuthenticatedInit)
     (allocated : m AdapterPublicServerReservationNative.AllocationReply)
     (before : RegistrationNativeExperiment.State n KemSK mlSource)

@@ -1019,7 +1019,7 @@ theorem initializerKdfReductionMain_stream_query_bound
     (adversary.publicContext sampled.state sampled.publicKey
       sampled.ciphertext)
 
-/-- The complete initializer KDF reduction emits only canonical `INFO_PQ` and `INFO_R` addresses. -/
+/-- The complete initializer KDF reduction emits only canonical `INFO_PQ` and `INFO_INIT` addresses. -/
 theorem initializerKdfReductionMain_no_untyped_stream_queries
     {qPrefix qPost qRoot qSym : ℕ}
     (baseImpl : QueryImpl baseSpec ProbComp)

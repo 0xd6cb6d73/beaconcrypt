@@ -19,7 +19,7 @@ set_option maxRecDepth 2048
 namespace beaconcrypt
 
 /-- [beaconcrypt::auth::authenticate_init::closure]
-    Source: 'beaconcrypt/src/auth.rs', lines 245:30-250:17 -/
+    Source: 'beaconcrypt/src/auth.rs', lines 235:30-240:17 -/
 def auth.authenticate_init.closure := Array Std.U8 32#usize × Slice Std.U8
 
 end beaconcrypt

@@ -9,7 +9,7 @@ set_option warningAsError true
 set_option maxRecDepth 4096
 set_option maxHeartbeats 1000000
 set_option backward.isDefEq.respectTransparency false
-/-! One joint constructor run returns the source object, private native preparation, indexed KEM receipt and exact caller RNG. Native erasure follows from individual sampler marginals. SDK correspondence uses an explicit individual KEM generation/availability contract; the unconditional raw source theorem separately retains all seven errors. Owner registration is a later proof-administration step. -/
+/-! One joint constructor run returns the source object, private native preparation, indexed KEM receipt and exact caller RNG. Native erasure follows from individual sampler marginals. SDK correspondence uses an explicit individual KEM generation/availability contract; the separate raw body correspondence retains every source error. Owner registration is a later proof-administration step. -/
 namespace BeaconcryptCore.Refinement.AdapterBeaconConstructorJoint
 open AdapterPublicWrapperRustT (RustT)
 open BeaconcryptCore.Computational
@@ -22,14 +22,11 @@ variable [children : AdapterPublicWrapperRequestMonad.ChildOperations (RustT m)]
 variable {source : RegistrationNativeMldsa.Source} {KemSK R Error : Type}
 variable (generator : rand_core.TryCryptoRng R Error)
 variable (view : AdapterPublicWrapperState.MaterialView source KemSK)
-variable (mlSample : m (Option (RegistrationNativeMldsa.Credential source)))
-variable (ml : AdapterBeaconConstructorGeneration.MldsaContract generator view mlSample)
 variable (jointKeys : PqxdhJointIdentity.Primitives) (edSample : m PqxdhJointIdentity.IdentitySeed)
 variable (ed : AdapterBeaconConstructorGeneration.EdContract generator view jointKeys edSample)
 variable (kxPublic : PqxdhJointGapDh.ScalarBytes → Std.Array U8 32#usize)
 variable (kxSample : m PqxdhJointGapDh.ScalarBytes)
 variable (kx : AdapterBeaconConstructorGeneration.KxContract generator view kxPublic kxSample)
-variable (hash : registration.HashRequest → m CtxRomAuth.CtxDigest)
 variable (kemJoint : R → m (AdapterBeaconConstructorKem.Receipt R))
 
 abbrev Capture (source : RegistrationNativeMldsa.Source) (R : Type) := Prepared source × AdapterBeaconConstructorKem.Receipt R
@@ -38,11 +35,11 @@ noncomputable def object (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sig
     (captured : Capture source R) : beaconcrypt_public_wrapper.beacon.Beacon :=
   ⟨ed.realize captured.1.identity, keyId,
     .Fresh ⟨captured.1.pin.binding⟩ (kx.realize captured.1.prekey) captured.2.pair,
-    serverId, ⟨ml.realize captured.1.credentials, captured.1.pin⟩⟩
+    serverId, ⟨captured.1.pin⟩⟩
 
 noncomputable def joint (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64) (rng : R) :
     m (Option (Capture source R) × R) := do
-  let prepared ← AdapterBeaconConstructorPrepare.joint generator view mlSample ml jointKeys edSample ed kxPublic kxSample kx hash edPin mlPin keyId rng
+  let prepared ← AdapterBeaconConstructorPrepare.joint generator view jointKeys edSample ed kxPublic kxSample kx edPin mlPin keyId rng
   match prepared.1 with
   | none => pure (none, prepared.2)
   | some ready =>
@@ -53,7 +50,7 @@ noncomputable def sourceResult (keyId : U64) (serverId : beaconcrypt_crypto.cryp
     (result : Option (Capture source R) × R) : AdapterBeaconConstructorBody.Outcome R :=
   (match result.1 with
    | none => .Err ()
-   | some captured => .Ok (object generator view mlSample ml jointKeys edSample ed kxPublic kxSample kx keyId serverId captured), result.2)
+   | some captured => .Ok (object generator view jointKeys edSample ed kxPublic kxSample kx keyId serverId captured), result.2)
 
 def nativeResult (result : Option (Capture source R) × R) : Option (Prepared source × (Nat × PqxdhKemIndCca.MlKem768PublicKey)) :=
   result.1.map (fun captured => (captured.1, captured.2.born))
@@ -73,23 +70,18 @@ omit children in
 theorem native (kemSample : m (Nat × PqxdhKemIndCca.MlKem768PublicKey))
     (kemMarginal : ∀ rng, AdapterBeaconConstructorKem.Receipt.born <$> kemJoint rng = kemSample)
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64) (rng : R) :
-    nativeResult <$> joint generator view mlSample ml jointKeys edSample ed kxPublic kxSample kx hash kemJoint edPin mlPin keyId rng = (do
+    nativeResult <$> joint generator view jointKeys edSample ed kxPublic kxSample kx kemJoint edPin mlPin keyId rng = (do
       let prepared ← (do
-        let generated ← mlSample
-        match generated with
-        | none => pure none
-        | some credentials =>
-          let digest ← hash (.Single (Std.Array.to_slice mlPin))
-          let identity ← edSample
-          let prekey ← kxSample
-          pure (some (⟨credentials, RegistrationNativeBeaconCreateProgram.pin edPin mlPin keyId digest, identity, prekey⟩ : Prepared source)))
+        let identity ← edSample
+        let prekey ← kxSample
+        pure (some (⟨RegistrationNativeBeaconCreateProgram.pin edPin mlPin keyId, identity, prekey⟩ : Prepared source)))
       match prepared with
       | none => pure none
       | some ready =>
         let born ← kemSample
         pure (some (ready, born))) := by
   simp only [joint, map_bind]
-  apply marginal_bind _ Prod.fst _ (AdapterBeaconConstructorPrepare.native generator view mlSample ml jointKeys edSample ed kxPublic kxSample kx hash edPin mlPin keyId rng)
+  apply marginal_bind _ Prod.fst _ (AdapterBeaconConstructorPrepare.native generator view jointKeys edSample ed kxPublic kxSample kx edPin mlPin keyId rng)
   rintro ⟨prepared, nextRng⟩
   cases prepared with
   | none => simp only [map_pure, nativeResult, Option.map_none]
@@ -100,17 +92,16 @@ theorem native (kemSample : m (Nat × PqxdhKemIndCca.MlKem768PublicKey))
       _ = (fun born => some (ready, born)) <$> (AdapterBeaconConstructorKem.Receipt.born <$> kemJoint nextRng) := by rw [Functor.map_map]
       _ = _ := by rw [kemMarginal]
 
+omit children in
 theorem source_program (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicKey)
     (mlPin : Std.Array U8 1952#usize) (rng : R)
     (getter : crypto.edPublicBytes serverId = pure (view.edPublic serverId))
-    (hashLeaf : ∀ request, (children.executeHash request).run =
-      (fun digest => RustM.ok (core.option.Option.Some (RegistrationAuthenticationShared.digestArray digest))) <$> hash request)
     (kemOperation : ∀ rng, generators.kemGenerate generator rng = RustT.lift
       ((fun receipt : AdapterBeaconConstructorKem.Receipt R => (.Ok receipt.pair, receipt.rng)) <$> kemJoint rng)) :
     AdapterBeaconConstructorBody.withInputs generator keyId serverId mlPin rng =
-      RustT.lift (sourceResult generator view mlSample ml jointKeys edSample ed kxPublic kxSample kx keyId serverId <$>
-        joint generator view mlSample ml jointKeys edSample ed kxPublic kxSample kx hash kemJoint (view.edPublic serverId) mlPin keyId rng) := by
-  rw [AdapterBeaconConstructorPrepare.source_program generator view mlSample ml jointKeys edSample ed kxPublic kxSample kx hash keyId serverId mlPin rng getter hashLeaf]
+      RustT.lift (sourceResult generator view jointKeys edSample ed kxPublic kxSample kx keyId serverId <$>
+        joint generator view jointKeys edSample ed kxPublic kxSample kx kemJoint (view.edPublic serverId) mlPin keyId rng) := by
+  rw [AdapterBeaconConstructorPrepare.source_program generator view jointKeys edSample ed kxPublic kxSample kx keyId serverId mlPin rng getter]
   apply RustT.ext
   simp only [joint, RustT.run_bind, RustT.run_lift, map_bind, bind_map_left]
   apply bind_congr
@@ -129,12 +120,12 @@ def normalize (edPin : Std.Array U8 32#usize) (keyId : U64) (result : Option (Ca
 
 omit children in
 theorem normalized (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64) (rng : R) :
-    normalize edPin keyId <$> joint generator view mlSample ml jointKeys edSample ed kxPublic kxSample kx hash kemJoint edPin mlPin keyId rng =
-      joint generator view mlSample ml jointKeys edSample ed kxPublic kxSample kx hash kemJoint edPin mlPin keyId rng := by
+    normalize edPin keyId <$> joint generator view jointKeys edSample ed kxPublic kxSample kx kemJoint edPin mlPin keyId rng =
+      joint generator view jointKeys edSample ed kxPublic kxSample kx kemJoint edPin mlPin keyId rng := by
   calc
     _ = (do
       let prepared ← AdapterBeaconConstructorPrepare.normalize edPin keyId <$>
-        AdapterBeaconConstructorPrepare.joint generator view mlSample ml jointKeys edSample ed kxPublic kxSample kx hash edPin mlPin keyId rng
+        AdapterBeaconConstructorPrepare.joint generator view jointKeys edSample ed kxPublic kxSample kx edPin mlPin keyId rng
       match prepared.1 with
       | none => pure (none, prepared.2)
       | some ready => do

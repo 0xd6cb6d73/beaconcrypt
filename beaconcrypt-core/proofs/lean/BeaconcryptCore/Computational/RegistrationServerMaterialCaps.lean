@@ -50,6 +50,16 @@ private theorem finish_free (result : RustM (RegistrationNativePairedServerServi
   | ok reply => cases reply <;> trivial
 
 
+/-- The transcript digest uses the common hash service and makes no private-material demand. -/
+private theorem adHash_free (pending : registration.ServerAdHash) :
+    (adHash (n := n) pending).IsQueryBoundP IsDemand 0 := by
+  unfold adHash
+  cases pending.request with
+  | fail error | div => trivial
+  | ok request =>
+    exact isQueryBoundP_bind (n := 0) (m := 0)
+      (by simp [effect, IsDemand, isQueryBoundP_query_iff]) (fun _ _ => by trivial)
+
 /-- Complete native lookup/preflight/occupancy/reservation precede at most one material demand. -/
 theorem complete_bound (wire : RegistrationNativeWire.Wire) (reservePeer : Bool)
     (ready : RegistrationServerReferenceRoot.Ready) (application : Slice U8) (before : State) :
@@ -79,12 +89,20 @@ theorem complete_bound (wire : RegistrationNativeWire.Wire) (reservePeer : Bool)
               | Err previous => trivial
               | Ok selected =>
                 simp only []
-                split
-                · exact isQueryBoundP_bind (n := 1) (m := 0)
-                    (admitted_bound wire.encodeResponse before.control
-                      (RegistrationBoundKeySchedule.publicInitial selected) ready.reference)
-                    (fun published _ => finish_free published before)
-                · trivial
+                refine isQueryBoundP_bind (n := 0) (m := 1) (adHash_free selected) (fun hashed _ => ?_)
+                cases hashed with
+                | fail error | div => trivial
+                | ok reply =>
+                  cases reply with
+                  | Err previous => trivial
+                  | Ok initial =>
+                    dsimp only
+                    split
+                    · exact isQueryBoundP_bind (n := 1) (m := 0)
+                        (admitted_bound wire.encodeResponse before.control
+                          (RegistrationBoundKeySchedule.publicInitial initial) ready.reference)
+                        (fun published _ => finish_free published before)
+                    · trivial
         · trivial
 
 /-- Taking a handle and cancellation are local; every concrete build has at most one material demand. -/

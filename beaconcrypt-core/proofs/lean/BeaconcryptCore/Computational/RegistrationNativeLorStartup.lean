@@ -39,7 +39,7 @@ theorem native_lor (setup : Setup base KemSK) (checks : Checks) (wire : Registra
     (provider : Provider KemSK ProviderState) (selectedOwner selectedAccept : Nat) (serverKeyId : U64)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (work : OracleComp (RegistrationNativeInterface.ModeSpec .P) Value)
     (budget : PqxdhDeploymentInterface.Budget) (filter : RegistrationNativeLorEvents.Filter Value) (guess : Value → Bool)
-    (target : Fin budget.accept × Fin budget.capacity) (created : PqxdhLiveServerConstruction.Created Unit)
+    (target : Fin budget.accept × Fin budget.capacity) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (before : State n KemSK ProviderState source) (shell : CborRecordWorldClient.Shell)
     (control : PqxdhRecordLiftProtocol.Control n) (secret : CtxPrivate n)
     (valid : RegistrationNativeSelectiveAllocationJoint.Holds (((before, shell), control), secret)) :

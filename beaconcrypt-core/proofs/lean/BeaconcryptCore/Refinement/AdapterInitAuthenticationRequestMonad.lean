@@ -2,7 +2,7 @@
 import BeaconcryptCore.AdapterInitAuthenticationExtraction.Funs
 import BeaconcryptCore.Refinement.AdapterRecordRequestMonad
 
-/-! The actual source Init authentication loop requests hash and ML verification together with its two separate Ed25519 leaves: public-key parsing and opening the attached signature. Every optional failure and primitive poststate remains in the interpretation; the std borrowed view retains the actual opened buffer. -/
+/-! The actual source Init authentication loop requests the transcript hash together with its two separate Ed25519 leaves: public-key parsing and opening the attached signature. Every optional failure and primitive poststate remains in the interpretation; the std borrowed view retains the actual opened buffer. -/
 
 open CoreModels Aeneas OracleComp OracleSpec
 open Aeneas.Std hiding namespace core alloc
@@ -17,13 +17,11 @@ open AdapterRecordRequestMonad (LiftRust liftRust)
 
 class Operations (m : Type → Type) where
   hash : beaconcrypt_core.registration.HashRequest → m (core.option.Option (Array U8 64#usize))
-  verifyMldsa : beaconcrypt_core.registration.MldsaVerificationRequest → m Bool
   parseEd : Slice U8 → m (core.result.Result primitive.PublicKey primitive.Error)
   verifyEd : Slice U8 → primitive.PublicKey → m (core.option.Option (alloc.vec.Vec U8))
 
 instance [beaconcrypt.auth.Operations] : Operations RustM where
   hash := beaconcrypt.auth.execute_hash
-  verifyMldsa := beaconcrypt.auth.verify_requested
   parseEd := beaconcrypt_crypto.crypto_sign.PublicKey.from_bytes
   verifyEd := beaconcrypt_crypto.crypto_sign.verify
 
@@ -34,22 +32,10 @@ def hashRequest (pending : beaconcrypt_core.registration.InitHash) :=
   liftRust (beaconcrypt_core.registration.InitHash.request pending) (m := m)
 def hashResume (pending : beaconcrypt_core.registration.InitHash) (reply : core.option.Option (Array U8 64#usize)) :=
   liftRust (beaconcrypt_core.registration.InitHash.resume pending reply) (m := m)
-def mldsaRequest (pending : beaconcrypt_core.registration.InitMldsaVerification) :=
-  liftRust (beaconcrypt_core.registration.InitMldsaVerification.request pending) (m := m)
-def mldsaResume (pending : beaconcrypt_core.registration.InitMldsaVerification) (reply : Bool) :=
-  liftRust (beaconcrypt_core.registration.InitMldsaVerification.resume pending reply) (m := m)
 def edRequest (pending : beaconcrypt_core.registration.InitEd25519Verification) :=
   liftRust (beaconcrypt_core.registration.InitEd25519Verification.request pending) (m := m)
 def edResume (pending : beaconcrypt_core.registration.InitEd25519Verification) (reply : core.option.Option (Slice U8)) :=
   liftRust (beaconcrypt_core.registration.InitEd25519Verification.resume pending reply) (m := m)
-def serverRequest (pending : beaconcrypt_core.registration.InitServerFingerprint) :=
-  liftRust (beaconcrypt_core.registration.InitServerFingerprint.request pending) (m := m)
-def serverResume (pending : beaconcrypt_core.registration.InitServerFingerprint) (reply : core.option.Option (Array U8 64#usize)) :=
-  liftRust (beaconcrypt_core.registration.InitServerFingerprint.resume pending reply) (m := m)
-def beaconRequest (pending : beaconcrypt_core.registration.InitBeaconFingerprint) :=
-  liftRust (beaconcrypt_core.registration.InitBeaconFingerprint.request pending) (m := m)
-def beaconResume (pending : beaconcrypt_core.registration.InitBeaconFingerprint) (reply : core.option.Option (Array U8 64#usize)) :=
-  liftRust (beaconcrypt_core.registration.InitBeaconFingerprint.resume pending reply) (m := m)
 
 def resultOk (result : core.result.Result primitive.PublicKey primitive.Error) :=
   liftRust (core.result.Result.ok result) (m := m)
@@ -65,13 +51,11 @@ end Lifted
 
 inductive Request where
   | hash (request : beaconcrypt_core.registration.HashRequest)
-  | verifyMldsa (request : beaconcrypt_core.registration.MldsaVerificationRequest)
   | parseEd (input : Slice U8)
   | verifyEd (signed : Slice U8) (publicKey : primitive.PublicKey)
 
 abbrev Response : Request → Type
   | .hash _ => core.option.Option (Array U8 64#usize)
-  | .verifyMldsa _ => Bool
   | .parseEd _ => core.result.Result primitive.PublicKey primitive.Error
   | .verifyEd _ _ => core.option.Option (alloc.vec.Vec U8)
 
@@ -103,7 +87,6 @@ def query (request : Request) : Program (Response request) :=
 
 instance : Operations Program where
   hash request := query (.hash request)
-  verifyMldsa request := query (.verifyMldsa request)
   parseEd input := query (.parseEd input)
   verifyEd signed publicKey := query (.verifyEd signed publicKey)
 

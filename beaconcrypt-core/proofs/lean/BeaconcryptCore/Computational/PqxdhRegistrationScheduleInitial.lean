@@ -17,20 +17,22 @@ def bookkeeping (created : PqxdhLiveServerConstruction.Created Unit) :
   ⟨⟨(), created.server.server.metadata.sender, created.server.server.identity,
     .aborted ⟨created.server.server.metadata.sender⟩⟩, 0⟩
 
-/-- Retain the actual constructed Server's identity, peers, control and consumed list; erase only its private registry metadata. Both primitive tables and the dynamic owner/pending registries start empty. -/
+/-- Retain the actual constructed Server's identity, control and consumed list; erase only its private registry metadata. The peer map is the constructor's empty map (`PqxdhLiveServerConstruction`, the only peer map a constructed Server has); it is spelled out because installed peers now carry their per-session AD151 (design §4.3), which a Unit-labelled constructed map cannot. Both primitive tables, the dynamic owner/pending registries and the retained Phase 1 bundles start empty. -/
 def initial (created : PqxdhLiveServerConstruction.Created Unit) : State KemSK :=
   { shared := (PqxdhJointDhExtractFamily.empty,
       { ctx := ∅
         server :=
-          { server := ⟨created.server.server.identity, created.server.server.peers, ()⟩
+          { server := ⟨created.server.server.identity, fun _ => none, ()⟩
             identityKeyId := created.server.server.metadata.sender
             control := created.control
             consumed := created.consumed }
         pending := fun _ => none
         beacon := bookkeeping created
+        beaconInit := none
         sessions := 0
         ghost := Ghost.empty })
-    owners := [] }
+    owners := []
+    inits := fun _ => none }
 
 /-- The unused analysis field is literally aborted and the public owner registry is literally empty; no auxiliary honest identity or KEM key is sampled. -/
 theorem initial_bookkeeping (created : PqxdhLiveServerConstruction.Created Unit) :

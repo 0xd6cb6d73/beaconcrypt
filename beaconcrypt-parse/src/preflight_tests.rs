@@ -11,14 +11,14 @@ type Shape = (&'static [u8], &'static [u8], &'static [u8]);
 const SHAPES: &[Shape] = &[
 	(&[0x85, 1, 2], &[0, 0, 2], &[0x85, 1, 2, 0, 0, 0x40]),
 	(
-		&[0x88, 2, 0],
-		&[2, 2, 2, 2, 2, 2],
-		&[0x88, 2, 0, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40],
+		&[0x86, 3, 0],
+		&[2, 2, 2, 2],
+		&[0x86, 3, 0, 0x40, 0x40, 0x40, 0x40],
 	),
 	(
-		&[0x88, 2, 1],
+		&[0x88, 3, 1],
 		&[2, 2, 2, 2, 0, 2],
-		&[0x88, 2, 1, 0x40, 0x40, 0x40, 0x40, 0, 0x40],
+		&[0x88, 3, 1, 0x40, 0x40, 0x40, 0x40, 0, 0x40],
 	),
 ];
 
@@ -139,7 +139,7 @@ fn primitive_arguments_reject_truncated_reserved_indefinite_and_wrong_major_head
 			let mut input = vec![major << 5 | information];
 			for _ in 0..width {
 				assert_eq!(primitive_argument(&input, major), None);
-				input.push(0);
+				input.resize(input.len() + 1, 0);
 			}
 		}
 		for information in 28..=31 {

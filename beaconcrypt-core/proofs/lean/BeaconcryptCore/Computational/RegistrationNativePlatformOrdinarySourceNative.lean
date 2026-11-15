@@ -41,7 +41,7 @@ theorem sealing_single (view : RegistrationNativePlatformSourceSeal.KeyView) (co
     (failure : primitives.Error) (reserve : Nat → m (core.result.Result Unit E))
     (aead : RawCtxSourceSeal.AeadInput → m Sealed)
     (key : Std.Array U8 32#usize) (nonce : Std.Array U8 12#usize)
-    (associated : Std.Array U8 281#usize) (plaintext : Slice U8) :
+    (associated : Std.Array U8 151#usize) (plaintext : Slice U8) :
     sealing view failure reserve aead ⟨key, nonce, associated, .Single plaintext⟩ =
       .ok <$> aead ⟨absBytes key, absBytes nonce, absBytes associated, TranscriptAuthParts.absSlice plaintext⟩ := by
   obtain ⟨nativeKey, keyRun, keyView⟩ := converted.key key

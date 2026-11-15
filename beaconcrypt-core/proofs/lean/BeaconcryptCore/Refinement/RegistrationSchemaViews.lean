@@ -62,6 +62,20 @@ theorem sub_small (count : Nat) (bound : count < 8) :
     U64.wrapping_sub (U64.ofNat (count + 1) (by scalar_tac)) 1#u64 = U64.ofNat count (by scalar_tac) := by
   interval_cases count <;> apply UScalar.eq_of_val_eq <;>
     norm_num [U64.wrapping_sub_val_eq, UScalar.size_def]
+theorem array_major6 (payload : Slice U8) : cbordetver.cbor_det_major_type (array6 payload) = .ok cbor_major_type_array := rfl
+
+theorem array_view6 (payload : Slice U8) :
+    cbordetver.cbor_det_destruct (array6 payload) = .ok (.Array (array6 payload)) := by
+  simp [cbordetver.cbor_det_destruct, cbordetver.cbor_det_major_type, impl_major_type, array6,
+    cbordetver.extraction_destruct_scalar_0, cbordetver.extraction_destruct_branch_20,
+    cbordetver.extraction_destruct_scalar_4, cbordetver.extraction_destruct_branch_19,
+    cbordetver.extraction_destruct_scalar_8, cbordetver.extraction_destruct_branch_9,
+    cbor_major_type_uint64, cbor_major_type_neg_int64, cbor_major_type_byte_string,
+    cbor_major_type_text_string, cbor_major_type_array, bind_tc_ok]
+
+theorem array_start6 (payload : Slice U8) :
+    cbordetver.cbor_det_array_iterator_start (array6 payload) = .ok (iterator payload 6#u64) := rfl
+
 end BeaconcryptCore.Refinement.RegistrationSchemaViews
 
 /-- info: 'BeaconcryptCore.Refinement.RegistrationSchemaViews.uint_major' depends on axioms: [propext,
@@ -135,3 +149,21 @@ end BeaconcryptCore.Refinement.RegistrationSchemaViews
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Refinement.RegistrationSchemaViews.sub_small
+
+/-- info: 'BeaconcryptCore.Refinement.RegistrationSchemaViews.array_major6' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.RegistrationSchemaViews.array_major6
+
+/-- info: 'BeaconcryptCore.Refinement.RegistrationSchemaViews.array_view6' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.RegistrationSchemaViews.array_view6
+
+/-- info: 'BeaconcryptCore.Refinement.RegistrationSchemaViews.array_start6' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.RegistrationSchemaViews.array_start6

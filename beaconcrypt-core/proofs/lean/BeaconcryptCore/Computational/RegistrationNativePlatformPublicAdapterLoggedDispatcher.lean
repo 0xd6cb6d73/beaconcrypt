@@ -36,7 +36,7 @@ variable {setup :PqxdhServerAuthExperiment.Setup base KemSK} {checks :PqxdhServe
 variable (configuration :RegistrationNativePlatformPublicAdapterConfiguration.Configuration
   (P:=P) (E:=E) (R:=R) (Error:=Error) (source:=source) setup checks)
 variable {Value :Type}
-variable (created :PqxdhLiveServerConstruction.Created Unit)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 
 noncomputable def stages :QueryImpl RegistrationNativePlatformPublicAdapterLowSpec.Spec
     (RegistrationNativePlatformPublicAdapterSourceRuntime.M n KemSK R (P×RegistrationNativePlatformPublicAdapterSourceEvents.Log n KemSK R P))

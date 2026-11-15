@@ -46,6 +46,20 @@ fn section<'a>(source: &'a str, from: &str, to: &str) -> Result<&'a str, String>
 
 fn validate(source: &str) -> Result<(), String> {
 	let model = normalized(source);
+	for obsolete in [
+		"beacon_ml",
+		"candidate_ml",
+		"protected_ml",
+		"mldsa_beacon_input",
+		"mldsa_signed_init_kex",
+		"JointProtectedBeacon",
+		"JointInitSigned",
+	] {
+		if model.contains(obsolete) {
+			return Err(format!("deleted Beacon ML credential restored: {obsolete}"));
+		}
+	}
+
 	ordered(
 		&model,
 		&[
@@ -68,42 +82,29 @@ fn validate(source: &str) -> Result<(), String> {
 	ordered(
 		&model,
 		&[
-			"new replay_lock: channel; new accepted_observation: channel; new rejected_observation: channel; ( out(replay_lock, mldsa_joint_lock_token()) | MldsaJointReplayWitness(accepted_observation, rejected_observation) | MldsaJointServer(",
+			"new replay_lock: channel; new accepted_observation: channel; new rejected_observation: channel; ( out(replay_lock, mldsa_joint_lock_token()) | MldsaJointServer(",
 			"mldsa_joint_first_id(), replay_lock, accepted_observation, rejected_observation)",
 			"| MldsaJointServer(",
 			"mldsa_joint_second_id(), replay_lock, accepted_observation, rejected_observation)",
 			"| MldsaJointBeacon(",
-			"| MldsaJointOwnedRequest(",
+			"| MldsaJointOwnedRequest(beacon_ed, owned_pq_secret)",
+			"| MldsaJointCopiedKemRequest(beacon_ed, selected_pq)",
 			"| MldsaJointCapabilityWitness(server_secret, prekey_secret)",
-		],
-	)?;
-	let witness = section(
-		&model,
-		"let MldsaJointReplayWitness(",
-		"letfun mldsa_joint_server_input(",
-	)?;
-	ordered(
-		witness,
-		&[
-			"in(accepted, (accepted_slot: key_id, registration_id: beaconcrypt_core__pqxdh__t_RegistrationId));",
-			"in(rejected, (rejected_slot: key_id, =registration_id, =mldsa_joint_released_token(accepted_slot, registration_id)));",
-			"if rejected_slot = accepted_slot then 0 else event JointReplayRejected().",
 		],
 	)?;
 	let server = section(&model, "let MldsaJointServer(", "let MldsaJointBeacon(")?;
 	let admission = server
-		.split_once("eventJointInitAccepted(")
+		.split_once("eventJointRequestAdmitted(")
 		.ok_or("missing admission event")?
 		.0;
-	if admission.contains("ifcandidate_ml=") {
-		return Err("honest-key condition must not gate registration admission".into());
+	if admission.contains("ifcandidate_init=") {
+		return Err("session selection must not gate registration admission".into());
 	}
 	ordered(
 		server,
 		&[
-			"let candidate_hash = mldsa_init_hash(SERVER_KEY_ID, server_ed, candidate_ml, server_ml, candidate_init) in",
-			"let verified_init_input = mldsa_verify(candidate_signature, candidate_ml, mldsa_signing_context()) in",
-			"if verified_init_input = mldsa_beacon_input(candidate_hash) then",
+			"let candidate_init = incoming in",
+			"let candidate_hash = mldsa_init_hash(SERVER_KEY_ID, server_ed, server_ml, candidate_init) in",
 			"let tag_mlkem768(candidate_pq) = verify_signature(signed_pq, candidate_ed) in",
 			"let tag_x25519_prekey(candidate_prekey) = verify_signature(signed_prekey, candidate_ed) in",
 			"let tag_x25519_one_time(candidate_one_time) = verify_signature(signed_one_time, candidate_ed) in",
@@ -112,16 +113,16 @@ fn validate(source: &str) -> Result<(), String> {
 			"let root_input = mldsa_joint_server_input(server_secret, ephemeral_secret, candidate_ed, candidate_prekey, candidate_one_time, candidate_pq, kem_coins) in",
 			"let root = pqxdh_root(beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)) in",
 			"in(replay_lock, lock_token: bitstring);",
-			"get mldsa_joint_consumed(=registration_id) in (out(replay_lock, mldsa_joint_released_token(assigned, registration_id)) | out(rejected_observation, (assigned, registration_id, lock_token))) else insert mldsa_joint_consumed(registration_id); (out(replay_lock, mldsa_joint_released_token(assigned, registration_id)) | out(accepted_observation, (assigned, registration_id)) | event JointInitAccepted(candidate_ml, server_ml, candidate_hash, candidate_init);",
-			"if candidate_ml = protected_ml then MldsaJointServerPublish(",
+			"get mldsa_joint_consumed(=registration_id) in (out(replay_lock, mldsa_joint_released_token(assigned, registration_id)) | out(rejected_observation, (assigned, registration_id, lock_token)) | (let mldsa_joint_released_token(previous_slot, =registration_id) = lock_token in if previous_slot = assigned then 0 else event JointReplayRejected())) else insert mldsa_joint_consumed(registration_id); (out(replay_lock, mldsa_joint_released_token(assigned, registration_id)) | out(accepted_observation, (assigned, registration_id)) | event JointRequestAdmitted(candidate_init, server_ml, candidate_hash);",
+			"if candidate_init = selected_init then MldsaJointServerPublish(",
 			"root, assigned, MLDSA_JOINT_INITIAL, MLDSA_JOINT_SERVER_RECORD) else MldsaJointServerPublish(",
-			"root, assigned, mldsa_joint_owned_initial(), mldsa_joint_owned_record())",
+			"root, assigned, MLDSA_JOINT_OWNED_INITIAL, MLDSA_JOINT_OWNED_RECORD)",
 		],
 	)?;
 	ordered(
 		server,
 		&[
-			"if candidate_ml = owned_ml then if candidate_ed = protected_ed then event JointOwnedAccepted()",
+			"if candidate_pq = owned_pq then if candidate_ed = selected_ed then event JointOwnedAccepted()",
 		],
 	)?;
 	let publish = section(
@@ -132,19 +133,18 @@ fn validate(source: &str) -> Result<(), String> {
 	ordered(
 		publish,
 		&[
-			"let base_ad = beaconcrypt_core__pqxdh__build_associated_data(server_ed, candidate_ed) in",
-			"let ad = mldsa_ad(base_ad, server_ml, candidate_ml) in",
+			"let ad = mldsa_ad(candidate_init, server_ed, ephemeral, kem_ciphertext, assigned) in",
 			"let initial_frame = seal_frame(ratchet_material(server_to_beacon_chain(root)), ad, first_sequence(), SERVER_KEY_ID, registration_payload(beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(key_id_encoding(assigned)), initial_plaintext)) in",
 			"let raw_initial = mldsa_strip(initial_frame) in",
 			"let response = mldsa_response_fields(server_ed, ephemeral, kem_ciphertext, raw_initial, assigned) in",
 			"let response_hash = mldsa_response_hash(candidate_hash, response) in",
 			"let response_signature = mldsa_sign(mldsa_server_input(response_hash), server_ml_secret, mldsa_signing_context()) in",
-			"event JointServerCommitted(candidate_ml, server_ml, candidate_hash, response, root, ad, assigned, initial_plaintext);",
+			"event JointServerCommitted(candidate_init, server_ml, candidate_hash, response, root, ad, assigned, initial_plaintext);",
 			"out(mldsa_joint_registration, mldsa_signed_kex_response(response, response_signature));",
 			"let record_sequence = next_sequence(first_sequence()) in",
 			"let record_material = ratchet_material(ratchet_next(server_to_beacon_chain(root))) in",
 			"let record_frame = seal_frame(record_material, ad, record_sequence, SERVER_KEY_ID, record_plaintext) in",
-			"event JointRecordSent(candidate_ml, server_ml, candidate_hash, root, ad, server_to_beacon(), record_sequence, SERVER_KEY_ID, assigned, record_plaintext); out(mldsa_joint_server_records, record_frame);",
+			"event JointRecordSent(candidate_init, server_ml, candidate_hash, root, ad, server_to_beacon(), record_sequence, SERVER_KEY_ID, assigned, record_plaintext); out(mldsa_joint_server_records, record_frame);",
 		],
 	)?;
 	let beacon = section(
@@ -161,18 +161,17 @@ fn validate(source: &str) -> Result<(), String> {
 			"let root_input = mldsa_joint_beacon_input(identity_secret, prekey_secret, one_time_secret, pq_secret, response_ed, ephemeral, kem_ciphertext) in",
 			"if response_ed = server_ed then",
 			"let root = pqxdh_root(beaconcrypt_core__pqxdh__t_RootKeyInput_to_bitstring(root_input)) in",
-			"let base_ad = beaconcrypt_core__pqxdh__build_associated_data(response_ed, beacon_ed) in",
-			"let ad = mldsa_ad(base_ad, server_ml, beacon_ml) in",
+			"let ad = mldsa_ad(classical_init, response_ed, ephemeral, kem_ciphertext, assigned) in",
 			"let initial_frame = mldsa_restore(raw_initial, SERVER_KEY_ID) in",
 			"let initial_payload = open_frame(ratchet_material(server_to_beacon_chain(root)), ad, first_sequence(), SERVER_KEY_ID, initial_frame) in",
 			"let expected_binding = beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(key_id_encoding(assigned)) in",
 			"let registration_payload(=expected_binding, initial_plaintext) = initial_payload in",
-			"event JointBeaconCompleted(beacon_ml, server_ml, init_hash, response, root, ad, assigned, initial_plaintext); event JointHonestComplete();",
+			"event JointBeaconCompleted(classical_init, server_ml, init_hash, response, root, ad, assigned, initial_plaintext); event JointHonestComplete();",
 			"let beacon_frame = seal_frame(ratchet_material(beacon_to_server_chain(root)), ad, first_sequence(), assigned, MLDSA_JOINT_BEACON_RECORD) in",
-			"event JointRecordSent(beacon_ml, server_ml, init_hash, root, ad, beacon_to_server(), first_sequence(), assigned, SERVER_KEY_ID, MLDSA_JOINT_BEACON_RECORD); out(mldsa_joint_beacon_records, beacon_frame);",
+			"event JointRecordSent(classical_init, server_ml, init_hash, root, ad, beacon_to_server(), first_sequence(), assigned, SERVER_KEY_ID, MLDSA_JOINT_BEACON_RECORD); out(mldsa_joint_beacon_records, beacon_frame);",
 			"if parsed_sender = SERVER_KEY_ID then if parsed_sequence = next_sequence(first_sequence()) then",
 			"let record_plaintext = open_frame(ratchet_material(ratchet_next(server_to_beacon_chain(root))), ad, next_sequence(first_sequence()), SERVER_KEY_ID, incoming_record) in",
-			"event JointRecordReceived(beacon_ml, server_ml, init_hash, root, ad, server_to_beacon(), next_sequence(first_sequence()), SERVER_KEY_ID, assigned, record_plaintext); if record_plaintext = MLDSA_JOINT_SERVER_RECORD then event JointServerRecordOpened().",
+			"event JointRecordReceived(classical_init, server_ml, init_hash, root, ad, server_to_beacon(), next_sequence(first_sequence()), SERVER_KEY_ID, assigned, record_plaintext); if record_plaintext = MLDSA_JOINT_SERVER_RECORD then event JointServerRecordOpened().",
 		],
 	)?;
 	let receive = section(
@@ -185,7 +184,7 @@ fn validate(source: &str) -> Result<(), String> {
 		&[
 			"if parsed_sender = assigned then if parsed_sequence = first_sequence() then",
 			"let plaintext = open_frame(ratchet_material(beacon_to_server_chain(root)), ad, first_sequence(), assigned, incoming_record) in",
-			"event JointRecordReceived(agent_ml, server_ml, init_hash, root, ad, beacon_to_server(), first_sequence(), assigned, SERVER_KEY_ID, plaintext); if plaintext = MLDSA_JOINT_BEACON_RECORD then event JointBeaconRecordOpened().",
+			"event JointRecordReceived(request, server_ml, init_hash, root, ad, beacon_to_server(), first_sequence(), assigned, SERVER_KEY_ID, plaintext); if plaintext = MLDSA_JOINT_BEACON_RECORD then event JointBeaconRecordOpened().",
 		],
 	)?;
 	let capability = section(
@@ -200,13 +199,26 @@ fn validate(source: &str) -> Result<(), String> {
 			"let recovered_dh = quantum_recover_x25519_secret(x25519_public(prekey_secret)) in if recovered_dh = prekey_secret then event JointClassicalRecovered().",
 		],
 	)?;
+	let creation = section(
+		&model,
+		"let MldsaJointSession() =",
+		"new replay_lock: channel;",
+	)?;
+	ordered(
+		creation,
+		&[
+			"let selected_pq = mlkem_public(pq_secret) in",
+			"let selected_init = signed_init_kex(tag_ed25519(beacon_ed), sign(tag_x25519_prekey(x25519_public(prekey_secret)), identity_secret), sign(tag_x25519_one_time(x25519_public(one_time_secret)), identity_secret), sign(tag_mlkem768(selected_pq), identity_secret)) in",
+			"event JointSessionCreated(selected_init);",
+		],
+	)?;
 	Ok(())
 }
 
 #[test]
 fn joint_model_connects_authentication_to_kex_and_record_state() {
 	validate(MODEL).unwrap();
-	assert_eq!(normalized(QUERIES).matches("query").count(), 14);
+	assert_eq!(normalized(QUERIES).matches("query").count(), 16);
 	let makefile = normalized(MAKEFILE);
 	for wanted in [
 		"$(MAKE) check-proverif-mldsa-joint",
@@ -231,35 +243,35 @@ fn joint_model_rejects_changes_to_security_relevant_composition() {
 	let mut checked = 0;
 	for (from, to) in [
 		(
-			"=mldsa_joint_released_token(accepted_slot, registration_id)",
-			"consumed_token: bitstring",
+			"mldsa_joint_released_token(previous_slot, =registration_id) = lock_token",
+			"mldsa_joint_released_token(previous_slot, prior_id) = lock_token",
 		),
 		(
-			"rejected_slot: key_id, =registration_id",
-			"rejected_slot: key_id, other_id: beaconcrypt_core__pqxdh__t_RegistrationId",
+			"if previous_slot = assigned then 0 else event JointReplayRejected()",
+			"event JointReplayRejected()",
 		),
 		(
 			"out(replay_lock, mldsa_joint_released_token(assigned, registration_id))\n      |",
 			"out(replay_lock, mldsa_joint_released_token(assigned, registration_id));",
 		),
 		(
-			"build_associated_data(server_ed, candidate_ed)",
-			"build_associated_data(candidate_ed, server_ed)",
+			"mldsa_ad(candidate_init, server_ed, ephemeral, kem_ciphertext, assigned)",
+			"mldsa_ad(candidate_init, ephemeral, server_ed, kem_ciphertext, assigned)",
 		),
 		(
-			"build_associated_data(response_ed, beacon_ed)",
-			"build_associated_data(beacon_ed, response_ed)",
+			"mldsa_ad(classical_init, response_ed, ephemeral, kem_ciphertext, assigned)",
+			"mldsa_ad(classical_init, response_ed, response_ed, kem_ciphertext, assigned)",
 		),
 		(
 			"candidate_hash, response, root, ad,\n    assigned, initial_plaintext);",
 			"candidate_hash, response, root, root,\n    assigned, initial_plaintext);",
 		),
 		(
-			"event JointBeaconCompleted(beacon_ml, server_ml, init_hash, response, root, ad, assigned, initial_plaintext);",
-			"event JointBeaconCompleted(beacon_ml, server_ml, init_hash, response, root, root, assigned, initial_plaintext);",
+			"event JointBeaconCompleted(classical_init, server_ml, init_hash, response, root, ad, assigned, initial_plaintext);",
+			"event JointBeaconCompleted(classical_init, server_ml, init_hash, response, root, root, assigned, initial_plaintext);",
 		),
 		(
-			"if candidate_ed = protected_ed then event JointOwnedAccepted()",
+			"if candidate_ed = selected_ed then event JointOwnedAccepted()",
 			"event JointOwnedAccepted()",
 		),
 		(
@@ -287,12 +299,12 @@ fn joint_model_rejects_changes_to_security_relevant_composition() {
 			"mlkem_decapsulate(kem_ciphertext, identity_secret)",
 		),
 		(
-			"candidate_ml, mldsa_signing_context())",
-			"protected_ml, mldsa_signing_context())",
+			"mldsa_init_hash(SERVER_KEY_ID, server_ed, server_ml, candidate_init)",
+			"mldsa_init_hash(SERVER_KEY_ID, server_ed, server_ml, selected_init)",
 		),
 		(
-			"mldsa_beacon_input(candidate_hash) then",
-			"mldsa_server_input(candidate_hash) then",
+			"let candidate_init = incoming in",
+			"let candidate_init = selected_init in",
 		),
 		(
 			"registration_id(verified_init)",
@@ -305,24 +317,24 @@ fn joint_model_rejects_changes_to_security_relevant_composition() {
 		),
 		(
 			"let tag_ed25519(candidate_ed) = encoded_identity in",
-			"if candidate_ml = protected_ml then let tag_ed25519(candidate_ed) = encoded_identity in",
+			"if candidate_init = selected_init then let tag_ed25519(candidate_ed) = encoded_identity in",
 		),
 		("insert mldsa_joint_consumed(registration_id);", ""),
 		(
-			"if rejected_slot = accepted_slot then 0 else event JointReplayRejected()",
-			"event JointReplayRejected()",
+			"event JointSessionCreated(selected_init);",
+			"event JointSessionCreated(server_ml);",
 		),
 		(
 			"MLDSA_JOINT_INITIAL, MLDSA_JOINT_SERVER_RECORD",
 			"MLDSA_JOINT_INITIAL, MLDSA_JOINT_INITIAL",
 		),
 		(
-			"mldsa_joint_owned_initial(), mldsa_joint_owned_record()",
+			"MLDSA_JOINT_OWNED_INITIAL, MLDSA_JOINT_OWNED_RECORD",
 			"MLDSA_JOINT_INITIAL, MLDSA_JOINT_SERVER_RECORD",
 		),
 		(
-			"mldsa_ad(base_ad, server_ml, candidate_ml)",
-			"mldsa_ad(base_ad, candidate_ml, server_ml)",
+			"mldsa_ad(candidate_init, server_ed, ephemeral, kem_ciphertext, assigned)",
+			"mldsa_ad(candidate_init, server_ed, ephemeral, kem_ciphertext, SERVER_KEY_ID)",
 		),
 		("mldsa_strip(initial_frame)", "initial_frame"),
 		(
@@ -331,7 +343,7 @@ fn joint_model_rejects_changes_to_security_relevant_composition() {
 		),
 		(
 			"mldsa_server_input(response_hash)",
-			"mldsa_beacon_input(response_hash)",
+			"mldsa_other_role(response_hash)",
 		),
 		(
 			"mldsa_response_hash(init_hash, response)",
@@ -339,12 +351,12 @@ fn joint_model_rejects_changes_to_security_relevant_composition() {
 		),
 		(
 			"server_ml, mldsa_signing_context()) in",
-			"beacon_ml, mldsa_signing_context()) in",
+			"untrusted_key, mldsa_signing_context()) in",
 		),
 		("if response_ed = server_ed then", ""),
 		(
-			"mldsa_ad(base_ad, server_ml, beacon_ml)",
-			"mldsa_ad(base_ad, beacon_ml, server_ml)",
+			"mldsa_ad(classical_init, response_ed, ephemeral, kem_ciphertext, assigned)",
+			"mldsa_ad(classical_init, response_ed, ephemeral, kem_ciphertext, SERVER_KEY_ID)",
 		),
 		(
 			"mldsa_restore(raw_initial, SERVER_KEY_ID)",

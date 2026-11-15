@@ -13,6 +13,7 @@ Decorrelation caveat (route R1, sharpened for LQ-F; LQ-F upstream design-v2, sec
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
+set_option warningAsError true
 set_option maxRecDepth 100000
 namespace BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemKeys
 open PqxdhKemIndCca PqxdhInitializerSecrecy PqxdhServerAuthExperiment PqxdhJointIdentity

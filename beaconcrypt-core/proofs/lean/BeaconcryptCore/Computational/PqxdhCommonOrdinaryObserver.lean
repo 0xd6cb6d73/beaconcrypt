@@ -7,6 +7,8 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhCommonOrdinaryObserver
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhPhase2GeneratedDriver PqxdhGeneratedBeaconState PqxdhAuthenticatedRootExperiment
 open PqxdhPrivateAcceptedRoot PqxdhKemIndCca PqxdhInitializerSecrecy PqxdhPhase1AcceptanceOracle
@@ -73,14 +75,14 @@ theorem schedule (writer : RawCtxMixedShared.Writer) (sender : M → Std.U64)
     simulateQ (sourcePost source none) (Prod.fst <$>
       (simulateQ (localSourceImpl source attachedVerify primitives count)
         (simulateQ selectorLift (Prod.fst <$>
-          (simulateQ (PqxdhPhase2SourceScheduler.compiler source writer sender route decode localImpl) client).run state))).run identities) =
-      Prod.fst <$> (simulateQ (PqxdhPhase2SourceScheduler.ordinary attachedVerify primitives count source writer sender route decode localImpl) client).run
+          (simulateQ (PqxdhPhase2SourceScheduler.compiler (completedBinding := completedBinding) source writer sender route decode localImpl) client).run state))).run identities) =
+      Prod.fst <$> (simulateQ (PqxdhPhase2SourceScheduler.ordinary (completedBinding := completedBinding) attachedVerify primitives count source writer sender route decode localImpl) client).run
         (PqxdhPhase2OldSource.packState state identities) := by
   simp only [simulateQ_map, StateT.run_map]
   rw [selector_program]
   simp only [Functor.map_map]
   have full := congrArg (Functor.map Prod.fst)
-    (PqxdhPhase2SourceScheduler.compiler_complete attachedVerify primitives count source writer sender route decode localImpl client state identities)
+    (PqxdhPhase2SourceScheduler.compiler_complete (completedBinding := completedBinding) attachedVerify primitives count source writer sender route decode localImpl client state identities)
   simpa only [Functor.map_map] using full
 
 variable {setup : StatefulPhase1Setup baseSpec}
@@ -90,12 +92,12 @@ variable {setup : StatefulPhase1Setup baseSpec}
 
 /-- Every completed common branch runs the original unblocked source schedule and preserves its actual decision. -/
 theorem completed (output : PqxdhPrivateCandidateAcceptance.Outcome
-      (PqxdhPrivatePhase1Prefix.Retained setup Unit (driver env.toDriverEnvironment program).State))
+      (PqxdhPrivatePhase1Prefix.Retained setup Unit (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State))
     (execution : PqxdhSourceAuthenticatedRoot.ServerExecution) (identities : BareState count) :
-    observe env.source none attachedVerify primitives count setup (commonObserver env program post) (some output) execution identities =
-      Prod.fst <$> (simulateQ (PqxdhPhase2SourceScheduler.ordinary attachedVerify primitives count env.source env.recordWriter env.senderId env.route env.decode env.localImpl)
+    observe env.source none attachedVerify primitives count setup (PqxdhAuthenticatedRootExperiment.commonObserver (associatedData := associatedData) (completedBinding := completedBinding) env program post) (some output) execution identities =
+      Prod.fst <$> (simulateQ (PqxdhPhase2SourceScheduler.ordinary (completedBinding := completedBinding) attachedVerify primitives count env.source env.recordWriter env.senderId env.route env.decode env.localImpl)
         (post output.context.selection.1 (RustM.ok none))).run (PqxdhPhase2OldSource.packState output.context.selection.2 identities) := by
-  exact schedule env.source attachedVerify primitives count env.recordWriter env.senderId env.route env.decode env.localImpl
+  exact schedule (completedBinding := completedBinding) env.source attachedVerify primitives count env.recordWriter env.senderId env.route env.decode env.localImpl
     (post output.context.selection.1 (RustM.ok none)) output.context.selection.2 identities
 
 /-- The concrete builder's private coin channel is exactly the original selector lift. -/
@@ -116,12 +118,12 @@ theorem builder_coins (work : ProbComp Result) (state : BareState count) :
 set_option backward.isDefEq.respectTransparency false in
 /-- Accepted common candidates run the actual native registration builder and then their full original unblocked source schedule. -/
 theorem accepted (output : PqxdhPrivateCandidateAcceptance.Outcome
-      (PqxdhPrivatePhase1Prefix.Retained setup Unit (driver env.toDriverEnvironment program).State))
+      (PqxdhPrivatePhase1Prefix.Retained setup Unit (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State))
     (ready : Ready) (identities : BareState count) :
-    acceptedObserve env.source none attachedVerify primitives count setup (commonObserver env program post) (some output) ready identities = (do
-      let result ← ccaCoins ((PqxdhRegistrationProtocolState.build env.source env.recordWriter env.aux env.senderId
+    acceptedObserve env.source none attachedVerify primitives count setup (PqxdhAuthenticatedRootExperiment.commonObserver (associatedData := associatedData) (completedBinding := completedBinding) env program post) (some output) ready identities = (do
+      let result ← ccaCoins ((PqxdhRegistrationProtocolState.build (associatedData := associatedData) env.source env.recordWriter env.aux env.senderId
         env.index env.metadata ready).run output.context.selection.2)
-      Prod.fst <$> (simulateQ (PqxdhPhase2SourceScheduler.ordinary attachedVerify primitives count env.source env.recordWriter env.senderId env.route env.decode env.localImpl)
+      Prod.fst <$> (simulateQ (PqxdhPhase2SourceScheduler.ordinary (completedBinding := completedBinding) attachedVerify primitives count env.source env.recordWriter env.senderId env.route env.decode env.localImpl)
         (post output.context.selection.1 result.1)).run (PqxdhPhase2OldSource.packState result.2 identities)) := by
   simp only [acceptedObserve, localAccepted, commonObserver, simulateQ_bind, StateT.run_bind, simulateQ_map, map_bind]
   rw [builder_coins]
@@ -129,7 +131,7 @@ theorem accepted (output : PqxdhPrivateCandidateAcceptance.Outcome
   apply bind_congr
   intro result
   simpa only [simulateQ_map, StateT.run_map, Functor.map_map] using
-    schedule env.source attachedVerify primitives count env.recordWriter env.senderId env.route env.decode env.localImpl
+    schedule (completedBinding := completedBinding) env.source attachedVerify primitives count env.recordWriter env.senderId env.route env.decode env.localImpl
       (post output.context.selection.1 result.1) result.2 identities
 
 end BeaconcryptCore.Computational.PqxdhCommonOrdinaryObserver

@@ -152,8 +152,8 @@ const LATER_REGISTRATION_QUERY_HASHES: [u64; 18] = [
 	6_185_069_684_262_088_586,
 	1_202_361_603_546_247_583,
 	3_455_186_719_080_634_235,
-	676_668_089_077_458_887,
-	14_740_752_099_764_896_718,
+	5_319_413_779_140_790_391,
+	6_894_391_033_447_199_552,
 	3_761_750_926_410_306_009,
 	15_713_490_337_305_187_190,
 	346_165_226_435_181_147,
@@ -165,81 +165,81 @@ const LATER_REGISTRATION_QUERY_HASHES: [u64; 18] = [
 	7_422_622_837_596_238_938,
 	9_459_416_062_583_179_785,
 ];
-const LATER_REGISTRATION_CHECKER_HASH: u64 = 13_744_418_603_477_632_925;
+const LATER_REGISTRATION_CHECKER_HASH: u64 = 6_515_234_937_666_591_647;
 const POST_REGISTRATION_QUERY_HASHES: [u64; 29] = [
-	13_732_113_423_386_418_035,
-	15_659_167_285_277_539_827,
-	911_672_438_838_539_665,
-	15_414_942_233_535_245_802,
-	3_382_390_634_288_590_345,
+	6_850_627_021_120_265_432,
+	14_227_819_075_228_054_108,
+	7_746_043_979_336_975_619,
+	8_888_247_304_665_348_968,
+	13_750_036_975_069_067_614,
 	10_419_032_750_057_719_768,
-	2_662_333_429_768_925_921,
-	14_413_618_228_441_011_121,
+	882_072_111_584_504_985,
+	9_387_493_586_254_252_345,
 	18_312_738_672_001_042_933,
 	15_470_908_886_182_888_698,
 	173_383_255_443_887_514,
 	5_994_236_791_793_324_971,
-	15_269_535_120_974_471_958,
-	8_391_988_441_863_424_093,
-	9_861_910_612_467_458_182,
-	18_266_619_734_200_497_216,
-	8_809_092_985_519_307_107,
-	6_167_450_721_035_756_786,
-	6_159_604_066_175_398_263,
-	17_692_630_698_947_081_654,
+	18_280_123_537_546_338_415,
+	9_879_207_628_325_987_955,
+	10_082_605_668_478_345_467,
+	2_178_042_802_020_799_576,
+	15_340_832_972_115_108_241,
+	3_351_669_877_217_761_113,
+	3_118_217_401_851_485_402,
+	4_874_222_713_089_313_108,
 	4_988_454_840_997_839_352,
-	10_540_583_738_131_838_007,
+	17_122_689_681_167_665_328,
 	17_713_933_936_207_445_299,
 	2_790_340_688_878_177_269,
 	16_409_484_950_328_146_878,
 	6_185_348_103_479_085_792,
 	7_787_840_347_632_236_485,
-	312_642_977_985_801_463,
-	18_304_722_595_062_215_684,
+	801_528_082_129_343_495,
+	13_460_187_679_922_315_556,
 ];
-const POST_REGISTRATION_CHECKER_HASH: u64 = 329_879_472_483_210_497;
+const POST_REGISTRATION_CHECKER_HASH: u64 = 1_893_504_508_156_789_959;
 const EXPECTED_FACTS: &[&str] = &[
 	"schema=1",
-	"legacy_profiles.scope=classical_projection:MLDSA_guards_not_globally_lifted",
+	"legacy_profiles.scope=historical_classical_projection:no_current_runtime_refinement_claim",
 	"domain.scope=HKDF_domains_only:MLDSA_signing_and_transcript_domains_are_separate",
-	"phase1.init_kex.scope=classical_four_field_projection_inside_mandatory_MLDSA_v2_wire",
-	"phase2.response.scope=classical_five_field_projection_inside_mandatory_MLDSA_v2_wire",
-	"associated_data.core=281_bytes:classical_prefix_153_then_128_zero_placeholder_bytes",
-	"associated_data.adapter=overwrite_153..217_with_server_hash_and_217..281_with_beacon_hash",
-	"associated_data.symbolic_scope=legacy_constructor_is_classical_prefix:new_MLDSA_profile_models_both_hash_slots",
+	"phase1.init_kex.scope=four_field_InitKex_v3:attached_Ed25519_signatures_retained",
+	"phase2.response.scope=five_fields_plus_mandatory_pinned_Server_MLDSA_v3",
+	"associated_data.core=151_bytes:explicit_context87_then_transcript_hash64",
+	"associated_data.adapter=unkeyed_BLAKE2b512_over_exact_core_preimage2638_then_core_owned_continuation",
+	"associated_data.symbolic_scope=current_transcript_profile:exact_remaining_Init_and_response_public_fields",
 	"mldsa.security=explicit_external_EUF_CMA_assumption:implementation_and_assumption_not_proved",
 	"mldsa.algorithm=ML_DSA_65:seed_32,public_key_1952,signature_3309",
-	"mldsa.wire.init=CBOR_v2_array_8:identity,prekey,one_time,pq,mldsa_public_key,signature",
-	"mldsa.wire.response=CBOR_v2_array_8:identity,ephemeral,kem,raw_app,assigned_id,signature",
+	"mldsa.wire.init=CBOR_v3_array_6:identity,prekey,one_time,pq",
+	"mldsa.wire.response=CBOR_v3_array_8:identity,ephemeral,kem,raw_app,assigned_id,signature",
 	"mldsa.signature.context=beaconcrypt_registration_auth_v1",
 	"mldsa.signature.input=64_spaces||role_label||00||blake2b512_transcript",
-	"mldsa.signature.roles=beaconcrypt_v1_beacon_registration,beaconcrypt_v1_server_registration",
+	"mldsa.signature.roles=beaconcrypt_v1_server_registration",
 	"mldsa.hash=unkeyed_BLAKE2b512:64_bytes",
 	"mldsa.hash.variable_fields=LE64_length_then_exact_bytes",
-	"mldsa.init.hash=init_domain,LE64_server_kid,server_ed_pin,beacon_MLpk,server_MLpk,length_framed_identity_prekey_one_time_pq",
-	"mldsa.response.hash=response_domain,init_hash,length_framed_identity_ephemeral_kem_app,LE64_assigned_id",
+	"mldsa.init.hash=init_domain_v2,LE64_server_kid,server_ed_pin,server_MLpk,length_framed_identity_prekey_one_time_pq",
+	"mldsa.response.hash=response_domain_v2,init_hash,length_framed_identity_ephemeral_kem_app,LE64_assigned_id",
 	"mldsa.hash.signature_field=excluded",
-	"mldsa.init.verify=decoded_request_MLkey_before_classical_signatures_replay_KEM_and_DH",
-	"mldsa.response.verify=pinned_server_MLkey_before_KEM_DH_and_CTX_open",
+	"mldsa.init.verify=Ed25519_signed_fields_then_replay_KEM_and_DH:no_Beacon_ML_credential",
+	"mldsa.response.verify=pinned_server_MLkey_before_transcript_AD_hash_KEM_DH_and_CTX_open",
 	"mldsa.response.publish=signature_and_complete_CBOR_encoding_before_server_commit",
-	"mldsa.accepted_token=private_init_hash,server_MLkey_hash,beacon_MLkey_hash",
-	"mldsa.accepted_token.retarget=reject_current_server_MLkey_hash_mismatch_before_candidate_and_KDF",
-	"mldsa.authorization=attacker_owned_beacon_keys_and_registrations_allowed:no_enrollment_assumption",
+	"mldsa.accepted_token=private_init_hash,exact_remaining_Init_fields,exact_Server_pin",
+	"mldsa.accepted_token.retarget=reject_exact_current_Server_pin_mismatch_before_candidate_AD_hash_and_KDF",
+	"mldsa.authorization=arbitrary_attacker_registrations_allowed:no_enrollment_or_Beacon_ML_assumption",
 	"mldsa.proof_scope=focused_signature_provenance_and_source_synchronization:not_whole_protocol_refinement",
 	"mldsa.symbolic.files=mldsa-auth.pvl,mldsa-registration-auth.pvl,mldsa-registration-auth.pv",
-	"mldsa.symbolic.init_origin=only_exact_uncompromised_honest_MLkey:not_Ed_identity_authorization",
+	"mldsa.symbolic.init_origin=retired_deleted_Beacon_ML_credential:no_protected_init_origin_claim",
 	"mldsa.symbolic.response_origin=pinned_uncompromised_server_MLkey_and_retained_request_hash",
-	"mldsa.symbolic.controls=owned_key_admission,explicit_compromise,role_context_request_separation,AD_hash_slot_binding",
+	"mldsa.symbolic.controls=arbitrary_registration,copied_classical_identity,own_canary_traffic,Server_compromise,request_substitution,transcript_AD_binding",
 	"mldsa.source_fidelity=reviewed_transcription_guards:not_Rust_to_ProVerif_semantic_compilation",
 	"mldsa.transcript.core=beaconcrypt-core/src/authentication.rs:pure_bytes_without_hashing_or_signing",
-	"mldsa.transcript.lengths=Init_5495,response_prefix_1293,assigned_id_8,signature_input_163",
+	"mldsa.transcript.lengths=Init_3543,response_prefix_1293,assigned_id_8,signature_input_163",
 	"mldsa.transcript.fixed_fields=adapter_checked_slice_to_array_conversions_before_core_construction",
 	"mldsa.transcript.response=private_prefix,actual_borrowed_CTU,LE64_assigned_id:checked_actual_CTU_length",
 	"mldsa.transcript.hashing=adapter_unkeyed_BLAKE2b512_over_exact_core_Init_or_ordered_response_parts",
 	"mldsa.transcript.transport_limit=parser_codec_33554432:not_preimage_builder",
 	"transport.format=deterministic_CBOR:definite_arrays,canonical_primitive_encodings",
-	"transport.prefix.init=version:2,kind:0,array_length:8",
-	"transport.prefix.response=version:2,kind:1,array_length:8",
+	"transport.prefix.init=version:3,kind:0,array_length:6",
+	"transport.prefix.response=version:3,kind:1,array_length:8",
 	"transport.prefix.frame=version:1,kind:2,array_length:5",
 	"transport.message_limit=33554432:complete_encoded_message_bytes",
 	"transport.parser=bounded_primitive_preflight_then_generated_validator:empty_remainder_required",
@@ -247,30 +247,35 @@ const EXPECTED_FACTS: &[&str] = &[
 	"transport.registration.payload=raw_ciphertext||retained_aead_tag||commitment:no_nested_frame",
 	"transport.registration.open=shared_payload_receive:sequence_1,pinned_server_id",
 	"transport.proof_scope=source_fidelity_and_logical_record_normalization:not_serialization_refinement_or_parser_proof",
-	"domain.count=2",
+	"domain.count=3",
 	"domain.pqxdh.hex=426561636f6e637279707450717864685f435552564532353531395f5348412d3531325f4d4c2d4b454d2d373638",
 	"domain.pqxdh.length=46",
-	"domain.symmetric.hex=53796d526174636865745f484b44465f5348412d3531325f43484143484132305f504f4c5931333035",
-	"domain.symmetric.length=41",
+	"domain.symmetric.hex=53796d526174636865744d6573736167655f484b44465f5348412d3531325f43484143484132305f504f4c5931333035",
+	"domain.symmetric.length=48",
+	"domain.initial.hex=53796d52617463686574496e69745f484b44465f5348412d3531325f43484143484132305f504f4c5931333035",
+	"domain.initial.length=45",
+	"associated_data.context.hex=426561636f6e637279707450717864685f435552564532353531395f5348412d3531325f4d4c2d4b454d2d37363853796d526174636865745f484b44465f5348412d3531325f43484143484132305f504f4c5931333035",
+	"associated_data.transcript.length=2638",
+	"associated_data.transcript.offsets=0..33,33..131,131..229,229..1478,1478..1510,1510..1542,1542..2630,2630..2638",
 	"domain.distinct=true",
-	"labels.absent=aead,ctx,direction,sequence,session,phase",
+	"labels.absent=aead,ctx,direction,sequence,session,output_length",
 	"hkdf.hash=sha512",
 	"hkdf.salt=none",
 	"hkdf.output_length_domain=absent",
 	"hkdf.root.domain=pqxdh",
 	"hkdf.root.output=32",
-	"hkdf.initial.domain=symmetric",
+	"hkdf.initial.domain=initial45",
 	"hkdf.initial.output=64",
 	"hkdf.initial.left=0..32",
 	"hkdf.initial.right=32..64",
 	"hkdf.initial.server=send:left,receive:right",
 	"hkdf.initial.beacon=send:right,receive:left",
-	"hkdf.step.domain=symmetric",
+	"hkdf.step.domain=message48",
 	"hkdf.step.output=76",
 	"hkdf.step.key=0..32",
 	"hkdf.step.next_chain=32..64",
 	"hkdf.step.nonce=64..76",
-	"hkdf.symmetric.prefix=initial[0..64]=step[0..64]",
+	"hkdf.symmetric.prefix=same_input_salt_label_only:initial45_and_message48_are_distinct_addresses",
 	"root.padding.byte=ff",
 	"root.padding.length=32",
 	"root.fields=padding,dh1,dh2,dh3,dh4,kem_shared_secret",
@@ -280,10 +285,10 @@ const EXPECTED_FACTS: &[&str] = &[
 	"encoding.mlkem768=03,pk",
 	"encoding.x25519_prekey=04,80,pk",
 	"encoding.x25519_one_time=04,81,pk",
-	"associated_data.fields=tag_ed25519(server_identity),tag_ed25519(beacon_identity),pqxdh_domain,symmetric_ratchet_domain,blake2b512(server_mldsa_public_key),blake2b512(beacon_mldsa_public_key)",
-	"associated_data.offsets=0..33,33..66,66..112,112..153,153..217,217..281",
-	"associated_data.length=281",
-	"associated_data.domains=hkdf_domain_values",
+	"associated_data.fields=AD_CONTEXT87,blake2b512(remaining_Init_fields,server_identity,server_ephemeral,kem_ciphertext,LE64_assigned_id)",
+	"associated_data.offsets=0..87,87..151",
+	"associated_data.length=151",
+	"associated_data.domains=retained_fixed_context87_independent_of_current_HKDF_labels",
 	"aead.primitive=chacha20poly1305_ietf",
 	"aead.fields=key,nonce,associated_data,plaintext",
 	"aead.key_length=32",
@@ -295,8 +300,8 @@ const EXPECTED_FACTS: &[&str] = &[
 	"aead.label=none",
 	"ctx.hash=blake2b512",
 	"ctx.fields=key,nonce,associated_data,retained_aead_tag,le64(sequence),le64(sender_id)",
-	"ctx.offsets=0..32,32..44,44..325,325..341,341..349,349..357",
-	"ctx.length=357",
+	"ctx.offsets=0..32,32..44,44..195,195..211,211..219,219..227",
+	"ctx.length=227",
 	"ctx.sequence_encoding=le64",
 	"ctx.sender_id_encoding=le64",
 	"ctx.label=none",
@@ -335,7 +340,7 @@ const EXPECTED_FACTS: &[&str] = &[
 	"cryptoframe.schema.field.2=cipher-text@4:ciphertext||retained_aead_tag||commitment",
 	"cryptoframe.wire.key_id=sender_kid",
 	"cryptoframe.local.encrypted.key_id=target_kid:not_serialized",
-	"cryptoframe.seal.inputs=key:32,nonce:12,associated_data:281,plaintext",
+	"cryptoframe.seal.inputs=key:32,nonce:12,associated_data:151,plaintext",
 	"cryptoframe.seal.detached_outputs=ciphertext,retained_aead_tag:16",
 	"cryptoframe.seal.commitment.output=blake2b512_unkeyed_unlabeled:64",
 	"cryptoframe.seal.commitment.input=existing_ctx_transcript",
@@ -371,17 +376,17 @@ const EXPECTED_FACTS: &[&str] = &[
 	"cryptoframe.symbolic.absent=frame_and_seal_arguments:target_id,direction,session,phase,aead_label,ctx_label",
 	"endpoint.server.send.target=peer_key_id",
 	"endpoint.server.send.sender=local_identity_key_id",
-	"endpoint.server.send.associated_data=server_identity,peer_identity",
+	"endpoint.server.send.associated_data=stored_session_binding_AD151",
 	"endpoint.server.send.ratchet=peer_key_id",
 	"endpoint.server.receive.sender_source=parsed_wire_key_id",
 	"endpoint.server.receive.lookup_id.trust=untrusted_before_open",
 	"endpoint.server.receive.peer_lookup=parsed_wire_key_id",
-	"endpoint.server.receive.associated_data=server_identity,selected_peer_identity",
+	"endpoint.server.receive.associated_data=selected_peer_session_binding_AD151",
 	"endpoint.server.receive.ratchet=parsed_wire_key_id",
 	"endpoint.server.receive.expected_sender=parsed_wire_key_id",
 	"endpoint.server.receive.acceptance_control=open_returns_some",
 	"endpoint.server.receive.order=parsed_sender,peer_associated_data,peer_ratchet,open,accept",
-	"endpoint.server.established.associated_data=recomputed_server_identity,stored_selected_peer_identity",
+	"endpoint.server.established.associated_data=stored_transcript_hash64_with_authoritative_context87",
 	"endpoint.beacon.send.target=control.server_key_id",
 	"endpoint.beacon.send.sender=assigned_identity_key_id",
 	"endpoint.beacon.send.associated_data=stored_establishment",
@@ -391,15 +396,15 @@ const EXPECTED_FACTS: &[&str] = &[
 	"endpoint.beacon.receive.ratchet=single_established",
 	"endpoint.registration.server.initial.target=assigned_remote_key_id",
 	"endpoint.registration.server.initial.sender=candidate.server_identity_key_id",
-	"endpoint.registration.server.initial.associated_data=candidate.associated_data",
+	"endpoint.registration.server.initial.associated_data=completed_binding_after_response_fields_and_assigned_id_AD_hash",
 	"endpoint.registration.server.initial.ratchet=candidate_initial",
 	"endpoint.registration.server.initial.returned_target_metadata=assigned_remote_key_id",
 	"endpoint.registration.server.commit.peer_map=assigned_remote_key_id,peer_identity,candidate_ratchet_after_initial_send",
 	"endpoint.registration.server.order=initial_seal,serialize_response,commit_candidate,insert_peer,publish_control,return",
 	"endpoint.registration.beacon.initial.expected_sender=candidate.server_key_id",
-	"endpoint.registration.beacon.initial.associated_data=candidate.associated_data",
+	"endpoint.registration.beacon.initial.associated_data=authenticated_response_then_matching_transcript_AD_hash",
 	"endpoint.registration.beacon.initial.ratchet=candidate_initial",
-	"endpoint.registration.beacon.commit.associated_data=same_candidate_value",
+	"endpoint.registration.beacon.commit.associated_data=same_completed_session_binding_AD151",
 	"endpoint.registration.beacon.commit.ratchet=candidate_ratchet_after_successful_initial_open",
 	"endpoint.registration.beacon.commit.local_sender=authenticated_assigned_key_id",
 	"endpoint.registration.beacon.order=initial_open,decrypted_sequence_1_gate,key_id_binding_authentication,pinned_server_id,pinned_server_identity,assign_local_id,store_established",
@@ -601,8 +606,8 @@ const EXPECTED_FACTS: &[&str] = &[
 	"initial_ratchet.core.response.provenance=not_tied_to_particular_pending_by_type",
 	"initial_ratchet.core.response.bytes_accessor=&self.bytes",
 	"initial_ratchet.core.request.input=exact_32_byte_root",
-	"initial_ratchet.core.request.label=SYM_RATCHET_INFO",
-	"initial_ratchet.core.request.fields=input:[u8;32],info:[u8;41]",
+	"initial_ratchet.core.request.label=INITIAL_RATCHET_INFO",
+	"initial_ratchet.core.request.fields=input:[u8;32],info:[u8;45]",
 	"initial_ratchet.core.request.accessors=input:&self.input,info:&self.info",
 	"initial_ratchet.core.start.signatures=root:&[u8;32],candidate:role_specific_reference,return:InitialRatchetKdfPending",
 	"initial_ratchet.core.start.server=candidate.ratchet_initialization()",
@@ -615,7 +620,7 @@ const EXPECTED_FACTS: &[&str] = &[
 	"initial_ratchet.core.kernel=ConcreteRatchetKernel::new(send_chain,receive_chain)",
 	"initial_ratchet.core.kernel.initialization=ConcreteRatchetKernel::from_counters(0,0,send_chain,receive_chain)",
 	"initial_ratchet.adapter.initial_hkdf.output=64",
-	"initial_ratchet.adapter.executor=input:request.input(),label:request.info(),output:OUTPUT_SIZE_bytes",
+	"initial_ratchet.adapter.executor=typed_phase_request_selects_label:borrowed_input_and_info:output_width_does_not_select_domain",
 	"initial_ratchet.adapter.finish.hkdf=initial_ratchet_hkdf(same_pending.request()):once",
 	"initial_ratchet.adapter.finish.response=InitialRatchetKdfResponse::from_bytes(exact_hkdf_bytes)",
 	"initial_ratchet.adapter.finish.resume=resume_initial_ratchet_kdf(same_pending,same_response):once",
@@ -623,8 +628,8 @@ const EXPECTED_FACTS: &[&str] = &[
 	"initial_ratchet.lean.structural=start_initial_ratchet_kdf_exact,initial_request_accessor_exact,start_beacon_ratchet_kdf_exact,start_server_ratchet_kdf_exact,resume_initial_ratchet_kdf_is_core_partition",
 	"initial_ratchet.lean.ideal=Pqxdh.rootChains,Pqxdh.HonestRun.chain_agreement",
 	"initial_ratchet.lean.scope=checked_interpretation_anchors_and_ideal_model:text_link_only",
-	"initial_ratchet.proverif.definition.server_to_beacon=first32(HKDF(root,SYM))",
-	"initial_ratchet.proverif.definition.beacon_to_server=second32(HKDF(root,SYM))",
+	"initial_ratchet.proverif.definition.server_to_beacon=first32(HKDF(root,INITIAL45))",
+	"initial_ratchet.proverif.definition.beacon_to_server=second32(HKDF(root,INITIAL45))",
 	"initial_ratchet.proverif.honest_beacon.root=pqxdh_root(RootKeyInput_to_bitstring(root_input))",
 	"initial_ratchet.proverif.server.root=pqxdh_root(RootKeyInput_to_bitstring(root_input))",
 	"initial_ratchet.proverif.malicious_server.root=pqxdh_root(RootKeyInput_to_bitstring(root_input))",
@@ -692,7 +697,7 @@ const EXPECTED_FACTS: &[&str] = &[
 	"later_registration.proverif.substitution=original_and_candidate_KexResponse_fields_equal_except_appCipherText:first_frame_to_third_frame",
 	"later_registration.proverif.candidate=one_attacker_candidate_equals_substituted_response_then_the_same_term_is_fanned_to_both_branches",
 	"later_registration.proverif.response=both_branches_parse_all_five_fields_from_their_same_candidate_response",
-	"later_registration.proverif.root_ad=both_branches_reconstruct_the_same_session_root_and_server_first_associated_data_from_the_candidate_fields",
+	"later_registration.proverif.root_ad=both_branches_reconstruct_the_same_session_root_and_transcript_ad151_from_exact_attached_init_and_response_fields",
 	"later_registration.proverif.sender=inner_crypto_frame_sender_must_equal_genuine_Server_key_id",
 	"later_registration.proverif.sequence=parsed_inner_sequence_is_passed_to_open_and_stored_in_poststate;exact_candidate_uses_material_3",
 	"later_registration.proverif.payload=generic_open_is_exact_binding_plus_SEQ3_PAYLOAD;only_omitted_gate_control_returns_SEQ3_PAYLOAD",
@@ -958,7 +963,9 @@ fn decode_hex(value: &str) -> Vec<u8> {
 	assert_eq!(value.len() % 2, 0);
 	value
 		.as_bytes()
-		.chunks_exact(2)
+		.as_chunks::<2>()
+		.0
+		.iter()
 		.map(|pair| u8::from_str_radix(core::str::from_utf8(pair).unwrap(), 16).unwrap())
 		.collect()
 }
@@ -1312,8 +1319,8 @@ fn validate_cbor_transport(snapshot: &Snapshot) -> Result<(), String> {
 		"pubuseframe::FrameasCryptoFrame;",
 		"pubusetransport::{initkexasInitKex,kexresponseasKexResponse};",
 		"pubfndecode_frame(input:&[u8])->Option<CryptoFrame<'_>>{frame::decode(input)}",
-		"preflight(input,&[0x88,2,0],&[2,2,2,2,2,2])?;matchvalidate_and_parse_initkex(input){ParsedInit::Some{v:(init,[])}=>Some(init),_=>None,}",
-		"preflight(input,&[0x88,2,1],&[2,2,2,2,0,2])?;matchvalidate_and_parse_kexresponse(input){ParsedResponse::Some{v:(response,[])}=>Some(response),_=>None,}",
+		"preflight(input,&[0x86,3,0],&[2,2,2,2])?;matchvalidate_and_parse_initkex(input){ParsedInit::Some{v:(init,[])}=>Some(init),_=>None,}",
+		"preflight(input,&[0x88,3,1],&[2,2,2,2,0,2])?;matchvalidate_and_parse_kexresponse(input){ParsedResponse::Some{v:(response,[])}=>Some(response),_=>None,}",
 	] {
 		require_once(&parser, wanted, "CBOR exact complete-message parser")?;
 	}
@@ -1403,7 +1410,7 @@ fn validate_cbor_transport(snapshot: &Snapshot) -> Result<(), String> {
 
 fn validate_phase1_source(snapshot: &Snapshot) -> Result<(), String> {
 	let schema = compact(&uncommented_cddl(&snapshot.phase1_schema));
-	let expected_schema = "init-kex=[2,0,identity-key:bstr.size33,pre-key:bstr.size98,one-time-key:bstr.size98,pq-key:bstr.size1249,mldsa-public-key:bstr.size1952,signature:bstr.size3309]";
+	let expected_schema = "init-kex=[3,0,identity-key:bstr.size33,pre-key:bstr.size98,one-time-key:bstr.size98,pq-key:bstr.size1249]";
 	require(&schema, expected_schema, "Phase-1 InitKex schema")?;
 
 	let core_start = rust_body(&snapshot.core_pqxdh, "beacon_start")?;
@@ -1482,10 +1489,10 @@ fn validate_mldsa_core(snapshot: &Snapshot) -> Result<(), String> {
 		"pubconstMLDSA_PUBLIC_KEY_LEN:usize=1952;",
 		"pubconstMLDSA_SIGNATURE_LEN:usize=3309;",
 		"pubconstTRANSCRIPT_HASH_LEN:usize=64;",
-		"pubconstINIT_DOMAIN:[u8;41]=*b\"beaconcryptML-DSA-65inittranscriptv1\\0\";",
-		"pubconstRESPONSE_DOMAIN:[u8;45]=*b\"beaconcryptML-DSA-65responsetranscriptv1\\0\";",
+		"pubconstINIT_DOMAIN:[u8;41]=*b\"beaconcryptML-DSA-65inittranscriptv2\\0\";",
+		"pubconstRESPONSE_DOMAIN:[u8;45]=*b\"beaconcryptML-DSA-65responsetranscriptv2\\0\";",
 		"pubconstSIGNING_CONTEXT:[u8;32]=*b\"beaconcryptregistrationauthv1\";",
-		"pubconstINIT_TRANSCRIPT_LEN:usize=5495;",
+		"pubconstINIT_TRANSCRIPT_LEN:usize=3543;",
 		"pubconstRESPONSE_PREFIX_LEN:usize=1293;",
 		"pubconstSIGNATURE_INPUT_LEN:usize=163;",
 	] {
@@ -1514,16 +1521,15 @@ fn validate_mldsa_core(snapshot: &Snapshot) -> Result<(), String> {
 			"ifi<41{INIT_DOMAIN[i]}",
 			"elseifi<49{server_id[i-41]}",
 			"elseifi<81{server_ed[i-49]}",
-			"elseifi<2033{fields.mldsa_public_key[i-81]}",
-			"elseifi<3985{server_mldsa[i-2033]}",
-			"elseifi<3993{identity_len[i-3985]}",
-			"elseifi<4026{fields.identity_key[i-3993]}",
-			"elseifi<4034{signed_key_len[i-4026]}",
-			"elseifi<4132{fields.pre_key[i-4034]}",
-			"elseifi<4140{signed_key_len[i-4132]}",
-			"elseifi<4238{fields.one_time_key[i-4140]}",
-			"elseifi<4246{pq_key_len[i-4238]}",
-			"else{fields.pq_key[i-4246]}",
+			"elseifi<2033{server_mldsa[i-81]}",
+			"elseifi<2041{identity_len[i-2033]}",
+			"elseifi<2074{fields.identity_key[i-2041]}",
+			"elseifi<2082{signed_key_len[i-2074]}",
+			"elseifi<2180{fields.pre_key[i-2082]}",
+			"elseifi<2188{signed_key_len[i-2180]}",
+			"elseifi<2286{fields.one_time_key[i-2188]}",
+			"elseifi<2294{pq_key_len[i-2286]}",
+			"else{fields.pq_key[i-2294]}",
 		],
 		"MLDSA request transcript field order and pins",
 	)?;
@@ -1578,90 +1584,116 @@ fn validate_mldsa_core(snapshot: &Snapshot) -> Result<(), String> {
 		],
 		"MLDSA TLS-style signed input",
 	)?;
-	let ad = rust_body(&snapshot.core_authentication, "bind_associated_data")?;
+	for wanted in [
+		"pubconstRECORD_AD_TRANSCRIPT_LEN:usize=2638;",
+		"pubconstAD_CONTEXT_LEN:usize=87;",
+		"pubconstAD_CONTEXT:[u8;AD_CONTEXT_LEN]=*b\"BeaconcryptPqxdh_CURVE25519_SHA-512_ML-KEM-768SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305\";",
+		"pubstructAdResponseFields<'a>{pubidentity_key:&'a[u8;32],pubephemeral_key:&'a[u8;32],pubkem_cipher_text:&'a[u8;1088],pubkey_id:u64,}",
+	] {
+		require_once(
+			&source,
+			wanted,
+			"session transcript exact fixed-width interface",
+		)?;
+	}
+	let ad = rust_body(&snapshot.core_authentication, "build_record_ad_transcript")?;
 	require_ordered_once(
 		&ad,
 		&[
-			"ifi<153{base[i]}",
-			"elseifi<217{server_hash[i-153]}",
-			"else{beacon_hash[i-217]}",
+			"letkey_id=encode_u64_le(response.key_id);",
+			"ifi<33{init.identity_key[i]}",
+			"elseifi<131{init.pre_key[i-33]}",
+			"elseifi<229{init.one_time_key[i-131]}",
+			"elseifi<1478{init.pq_key[i-229]}",
+			"elseifi<1510{response.identity_key[i-1478]}",
+			"elseifi<1542{response.ephemeral_key[i-1510]}",
+			"elseifi<2630{response.kem_cipher_text[i-1542]}",
+			"else{key_id[i-2630]}",
 		],
-		"MLDSA associated-data hash-slot order",
+		"session transcript preserves exact attached-signature fields and response order",
 	)?;
+	let ad = rust_body(&snapshot.core_authentication, "assemble_associated_data")?;
+	require_ordered_once(
+		&ad,
+		&["ifi<87{AD_CONTEXT[i]}", "else{transcript_hash[i-87]}"],
+		"session AD retains fixed context then exact transcript digest",
+	)?;
+
 	Ok(())
 }
 
 fn validate_session_source(snapshot: &Snapshot) -> Result<(), String> {
 	let source = compact(&uncommented_rust(&snapshot.core_session)?);
 	for wanted in [
-		"pubstructServerAuthenticationPin{binding:ServerBinding,public_key:[u8;MLDSA_PUBLIC_KEY_LEN],fingerprint:[u8;TRANSCRIPT_HASH_LEN],}",
-		"pubstructRegistrationBinding{server_pin:ServerAuthenticationPin,init_hash:[u8;TRANSCRIPT_HASH_LEN],beacon_identity_public_key:[u8;SIGN_PUBLIC_KEY_SIZE],beacon_fingerprint:[u8;TRANSCRIPT_HASH_LEN],associated_data:[u8;ASSOCIATED_DATA_SIZE],}",
-		"pubstructSessionBinding{server_binding:ServerBinding,assigned_key_id:u64,beacon_identity_public_key:[u8;SIGN_PUBLIC_KEY_SIZE],server_fingerprint:[u8;TRANSCRIPT_HASH_LEN],beacon_fingerprint:[u8;TRANSCRIPT_HASH_LEN],associated_data:[u8;ASSOCIATED_DATA_SIZE],}",
+		"pubstructServerAuthenticationPin{binding:ServerBinding,public_key:[u8;MLDSA_PUBLIC_KEY_LEN],}",
+		"pubstructRegistrationBinding{server_pin:ServerAuthenticationPin,init_hash:[u8;TRANSCRIPT_HASH_LEN],init_fields:OwnedInitFields,}",
+		"pubstructCompletedRegistrationBinding{server_pin:ServerAuthenticationPin,init_hash:[u8;TRANSCRIPT_HASH_LEN],beacon_identity_public_key:[u8;SIGN_PUBLIC_KEY_SIZE],session_transcript_hash:[u8;TRANSCRIPT_HASH_LEN],associated_data:[u8;ASSOCIATED_DATA_SIZE],}",
+		"pubstructSessionBinding{server_binding:ServerBinding,assigned_key_id:u64,beacon_identity_public_key:[u8;SIGN_PUBLIC_KEY_SIZE],session_transcript_hash:[u8;TRANSCRIPT_HASH_LEN],associated_data:[u8;ASSOCIATED_DATA_SIZE],}",
 	] {
-		require_once(&source, wanted, "MLDSA private accepted-token context")?;
+		require_once(
+			&source,
+			wanted,
+			"session private pending and completed capability context",
+		)?;
 	}
-	let pin = snapshot
-		.core_session
-		.split_once("impl ServerAuthenticationPin {")
-		.ok_or("missing core ServerAuthenticationPin implementation")?
-		.1;
-	if rust_body(pin, "new")? != "Self{binding,public_key,fingerprint,}" {
-		return Err("MLDSA server pin retains all supplied metadata".to_owned());
-	}
-	for (name, body) in [
-		("binding", "self.binding"),
-		("public_key", "&self.public_key"),
-		("fingerprint", "&self.fingerprint"),
+	for (scope, name, expected, label) in [
+		(
+			"impl ServerAuthenticationPin",
+			"new",
+			"Self{binding,public_key,}",
+			"server pin retains all supplied metadata",
+		),
+		(
+			"impl RegistrationBinding",
+			"new",
+			"Self{server_pin,init_hash,init_fields,}",
+			"registration retains exact published request buffers",
+		),
+		(
+			"impl RegistrationBinding",
+			"ad_transcript",
+			"build_record_ad_transcript(self.init_fields.fields(),response)",
+			"registration hashes exact retained request",
+		),
+		(
+			"impl RegistrationBinding",
+			"matches_server",
+			"self.server_pin.binding.identity_key_id==current.binding.identity_key_id&&self.server_pin.binding.identity_public_key==current.binding.identity_public_key&&self.server_pin.public_key==current.public_key",
+			"complete current-server pin comparison",
+		),
+		(
+			"impl RegistrationBinding",
+			"complete",
+			"CompletedRegistrationBinding{server_pin:self.server_pin,init_hash:self.init_hash,beacon_identity_public_key:self.init_fields.identity_public_key(),session_transcript_hash:transcript_hash,associated_data:assemble_associated_data(&transcript_hash),}",
+			"completion retains exact transcript digest and complete AD",
+		),
+		(
+			"impl CompletedRegistrationBinding",
+			"finish",
+			"SessionBinding{server_binding:self.server_pin.binding,assigned_key_id,beacon_identity_public_key:self.beacon_identity_public_key,session_transcript_hash:self.session_transcript_hash,associated_data:self.associated_data,}",
+			"establishment preserves the exact registration binding",
+		),
+		(
+			"impl SessionBinding",
+			"from_trusted_metadata",
+			"Self{server_binding,assigned_key_id,beacon_identity_public_key,session_transcript_hash,associated_data:assemble_associated_data(&session_transcript_hash),}",
+			"trusted restoration assembles authoritative context and exact digest",
+		),
+		(
+			"impl SessionBinding",
+			"associated_data",
+			"&self.associated_data",
+			"session associated-data getter changed",
+		),
 	] {
-		if rust_body(pin, name)? != body {
-			return Err(format!("MLDSA server pin getter changed: {name}"));
+		let source = snapshot
+			.core_session
+			.split_once(scope)
+			.ok_or_else(|| format!("missing {scope}"))?
+			.1;
+		if rust_body(source, name)? != expected {
+			return Err(label.to_owned());
 		}
-	}
-	let registration = snapshot
-		.core_session
-		.split_once("impl RegistrationBinding {")
-		.ok_or("missing core RegistrationBinding implementation")?
-		.1;
-	let registration_new = rust_body(registration, "new")?;
-	require_once(
-		&registration_new,
-		"letbase=build_associated_data(server_pin.binding.identity_public_key,beacon_identity_public_key,);Self{associated_data:bind_associated_data(&base,&server_pin.fingerprint,&beacon_fingerprint,),server_pin,init_hash,beacon_identity_public_key,beacon_fingerprint,}",
-		"MLDSA registration binding retains exact pins, request and populated AD",
-	)?;
-	let matches = rust_body(registration, "matches_server")?;
-	require_once(
-		&matches,
-		"self.server_pin.binding.identity_key_id==current.binding.identity_key_id&&self.server_pin.binding.identity_public_key==current.binding.identity_public_key&&self.server_pin.public_key==current.public_key&&self.server_pin.fingerprint==current.fingerprint",
-		"MLDSA complete current-server pin comparison",
-	)?;
-	let finish = rust_body(registration, "finish")?;
-	require_once(
-		&finish,
-		"SessionBinding{server_binding:self.server_pin.binding,assigned_key_id,beacon_identity_public_key:self.beacon_identity_public_key,server_fingerprint:self.server_pin.fingerprint,beacon_fingerprint:self.beacon_fingerprint,associated_data:self.associated_data,}",
-		"MLDSA establishment preserves the exact registration binding",
-	)?;
-	for (name, body) in [
-		("init_hash", "&self.init_hash"),
-		("server_pin", "&self.server_pin"),
-		("associated_data", "&self.associated_data"),
-	] {
-		if rust_body(registration, name)? != body {
-			return Err(format!("MLDSA registration binding getter changed: {name}"));
-		}
-	}
-	let session = snapshot
-		.core_session
-		.split_once("impl SessionBinding {")
-		.ok_or("missing core SessionBinding implementation")?
-		.1;
-	let restore = rust_body(session, "from_trusted_metadata")?;
-	require_once(
-		&restore,
-		"letbase=build_associated_data(server_binding.identity_public_key,beacon_identity_public_key,);Self{server_binding,assigned_key_id,beacon_identity_public_key,server_fingerprint,beacon_fingerprint,associated_data:bind_associated_data(&base,&server_fingerprint,&beacon_fingerprint),}",
-		"MLDSA trusted restoration preserves ordered session metadata",
-	)?;
-	if rust_body(session, "associated_data")? != "&self.associated_data" {
-		return Err("MLDSA session associated-data getter changed".to_owned());
 	}
 	Ok(())
 }
@@ -1720,7 +1752,7 @@ fn validate_mldsa_model(snapshot: &Snapshot) -> Result<(), String> {
 			"MLDSA assumed matching secret, message and context",
 		),
 		(
-			"letfunmldsa_init_hash(server_id:key_id,server_ed:bitstring,agent_ml:bitstring,server_ml:bitstring,classical_init:bitstring)=letsigned_init_kex(identity,prekey,one_time,pq)=classical_initinblake2b512(mldsa_init_preimage(mldsa_init_domain(),sender_id_le64(server_id),server_ed,agent_ml,server_ml,mldsa_length_prefixed(identity),mldsa_length_prefixed(prekey),mldsa_length_prefixed(one_time),mldsa_length_prefixed(pq))).",
+			"letfunmldsa_init_hash(server_id:key_id,server_ed:bitstring,server_ml:bitstring,init:bitstring)=letsigned_init_kex(identity,prekey,one_time,pq)=initinblake2b512(mldsa_init_preimage(mldsa_init_domain(),sender_id_le64(server_id),server_ed,server_ml,mldsa_length_prefixed(identity),mldsa_length_prefixed(prekey),mldsa_length_prefixed(one_time),mldsa_length_prefixed(pq))).",
 			"MLDSA symbolic request transcript",
 		),
 		(
@@ -1732,24 +1764,16 @@ fn validate_mldsa_model(snapshot: &Snapshot) -> Result<(), String> {
 			"MLDSA symbolic raw response transcript",
 		),
 		(
-			"letfunmldsa_beacon_input(hash:bitstring)=mldsa_signature_input(mldsa_spaces64(),mldsa_beacon_label(),mldsa_zero(),hash).",
-			"MLDSA symbolic beacon role input",
-		),
-		(
 			"letfunmldsa_server_input(hash:bitstring)=mldsa_signature_input(mldsa_spaces64(),mldsa_server_label(),mldsa_zero(),hash).",
 			"MLDSA symbolic server role input",
-		),
-		(
-			"funmldsa_signed_init_kex(bitstring,bitstring,bitstring):bitstring[data].",
-			"MLDSA mandatory symbolic request wrapper",
 		),
 		(
 			"funmldsa_signed_kex_response(bitstring,bitstring):bitstring[data].",
 			"MLDSA mandatory symbolic response wrapper",
 		),
 		(
-			"letfunmldsa_ad(base:bitstring,server_ml:bitstring,agent_ml:bitstring)=mldsa_associated_data(base,blake2b512(server_ml),blake2b512(agent_ml)).",
-			"MLDSA symbolic associated-data hash-slot order",
+			"letfunmldsa_ad(init:bitstring,identity:bitstring,ephemeral:bitstring,kem:bitstring,assigned:key_id)=letsigned_init_kex(encoded_identity,signed_prekey,signed_one_time,signed_pq)=initinrecord_associated_data(record_ad_context87(),blake2b512(record_ad_preimage(encoded_identity,signed_prekey,signed_one_time,signed_pq,identity,ephemeral,kem,sender_id_le64(assigned)))).",
+			"session symbolic exact transcript AD",
 		),
 		(
 			"mldsa_strip(crypto_frame(body,tag,commitment,seq,sender))=mldsa_raw_ctu(body,tag,commitment).",
@@ -1762,19 +1786,21 @@ fn validate_mldsa_model(snapshot: &Snapshot) -> Result<(), String> {
 	] {
 		require_once(&model, wanted, label)?;
 	}
+	// The fixed field framing is shared with the ported environment transcript AD.
+	require_once(
+		&compact(&uncommented_pv(&snapshot.environment)?),
+		"funrecord_ad_preimage(bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring,bitstring):bitstring[data].",
+		"session transcript fixed symbolic field framing",
+	)?;
 	let profile = compact(&uncommented_pv(&snapshot.mldsa_registration)?);
 	for (wanted, label) in [
 		(
-			"out(mldsa_channel,(server_ed_secret,beacon_ed_secret,prekey_secret,one_time_secret,server_ml,beacon_ml,owned_ml_secret,mlkem_public(pq_secret)));",
-			"MLDSA public classical secrets and attacker-owned signing key",
+			"out(mldsa_channel,(server_ed_secret,beacon_ed_secret,prekey_secret,one_time_secret,server_ml,mlkem_public(pq_secret)));",
+			"MLDSA public classical secrets and attacker registration interface",
 		),
 		(
-			"letverified_init_input=mldsa_verify(candidate_signature,candidate_ml,mldsa_signing_context())inifverified_init_input=mldsa_beacon_input(candidate_hash)thenletsigned_init_kex(encoded_identity,signed_prekey,signed_one_time,signed_pq)=candidate_initin",
-			"MLDSA symbolic self-presented request verification before classical projection",
-		),
-		(
-			"lettag_x25519_one_time(candidate_one_time)=verify_signature(signed_one_time,candidate_ed)in((ifcandidate_ml=beacon_mltheneventMldsaHonestInitAccepted(candidate_ml,server_ml,candidate_hash,candidate_init))|(ifcandidate_ml=owned_mlthenifcandidate_ed=beacon_edtheneventMldsaOwnedKeyAccepted())|(newephemeral_secret:bitstring;",
-			"MLDSA target events do not gate response admission",
+			"lettag_x25519_one_time(candidate_one_time)=verify_signature(signed_one_time,candidate_ed)ineventMldsaRequestAdmitted();((ifcandidate_ed=beacon_edtheneventMldsaCopiedClassicalAccepted())|(newephemeral_secret:bitstring;",
+			"arbitrary registration admission is independent of copied identity event",
 		),
 		(
 			"letresponse=mldsa_response_fields(server_ed,x25519_public(ephemeral_secret),mlkem_ciphertext(candidate_pq,kem_coins),mldsa_raw_ctu(body,tag,commitment),mldsa_assigned_id())in",
@@ -1792,9 +1818,24 @@ fn validate_mldsa_model(snapshot: &Snapshot) -> Result<(), String> {
 		require_once(&profile, wanted, label)?;
 	}
 	let queries = compact(&uncommented_pv(&snapshot.mldsa_queries)?);
-	let expected = compact("query agent_ml: bitstring, server_ml: bitstring, init_hash: bitstring, classical_init: bitstring; event(MldsaHonestInitAccepted(agent_ml, server_ml, init_hash, classical_init)) ==> event(MldsaInitSigned(agent_ml, server_ml, init_hash, classical_init)).
-query server_ml: bitstring, init_hash: bitstring, response: bitstring; event(MldsaResponseAccepted(server_ml, init_hash, response)) ==> event(MldsaResponseSigned(server_ml, init_hash, response)).
-query event(MldsaHonestResponseVerified()). query event(MldsaOwnedKeyAccepted()). query event(MldsaCompromisedAgentAccepted()). query event(MldsaCompromisedServerAccepted()). query event(MldsaAdOpened()). query event(MldsaWrongServerAdOpened()). query event(MldsaWrongAgentAdOpened()). query event(MldsaWrongRoleAccepted()). query event(MldsaWrongContextAccepted()). query event(MldsaWrongRequestAccepted()).
+	for removed in [
+		"beacon_ml",
+		"candidate_ml",
+		"MldsaHonestInitAccepted",
+		"MldsaInitSigned",
+		"mldsa_signed_init_kex",
+		"mldsa_beacon_input",
+	] {
+		for source in [&model, &profile, &queries] {
+			forbid(
+				source,
+				removed,
+				"retired Beacon ML credential or protected-origin clause",
+			)?;
+		}
+	}
+	let expected=compact("query server_ml: bitstring, init_hash: bitstring, response: bitstring; event(MldsaResponseAccepted(server_ml, init_hash, response)) ==> event(MldsaResponseSigned(server_ml, init_hash, response)).
+query event(MldsaRequestAdmitted()). query event(MldsaCopiedClassicalAccepted()). query event(MldsaHonestResponseVerified()). query event(MldsaCompromisedServerAccepted()). query event(MldsaAdOpened()). query event(MldsaWrongResponseAdOpened()). query event(MldsaWrongInitAdOpened()). query event(MldsaWrongRoleAccepted()). query event(MldsaWrongContextAccepted()). query event(MldsaWrongRequestAccepted()).
 process MldsaRegistrationProfile() | MldsaCompromiseControl() | MldsaSeparationControl() | MldsaAdControl()");
 	if queries != expected {
 		return Err("MLDSA exact focused query and control roster changed".to_owned());
@@ -1806,7 +1847,7 @@ fn validate_phase2_source(snapshot: &Snapshot) -> Result<(), String> {
 	let schema = compact(&uncommented_cddl(&snapshot.phase2_schema));
 	require(
 		&schema,
-		"kex-response=[2,1,identity-key:bstr.size32,ephemeral-key:bstr.size32,kem-cipher-text:bstr.size1088,app-cipher-text:bstr,key-id:uint,signature:bstr.size3309]",
+		"kex-response=[3,1,identity-key:bstr.size32,ephemeral-key:bstr.size32,kem-cipher-text:bstr.size1088,app-cipher-text:bstr,key-id:uint,signature:bstr.size3309]",
 		"Phase-2 response schema",
 	)?;
 	registration_effects::runtime(snapshot)?;
@@ -2058,11 +2099,11 @@ fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
 			"CryptoFrame core transcript-size formula",
 		),
 		(
-			"const_:()=assert!(ASSOCIATED_DATA_SIZE==281);",
+			"const_:()=assert!(ASSOCIATED_DATA_SIZE==151);",
 			"CryptoFrame core associated-data length",
 		),
 		(
-			"const_:()=assert!(COMMITMENT_TRANSCRIPT_SIZE==357);",
+			"const_:()=assert!(COMMITMENT_TRANSCRIPT_SIZE==227);",
 			"CryptoFrame core transcript length",
 		),
 		(
@@ -2093,18 +2134,18 @@ fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
 		("ifi<32{key[i]}", "CryptoFrame core key field"),
 		("elseifi<44{nonce[i-32]}", "CryptoFrame core nonce field"),
 		(
-			"elseifi<325{associated_data[i-44]}",
+			"elseifi<195{associated_data[i-44]}",
 			"CryptoFrame core associated-data field",
 		),
 		(
-			"elseifi<341{tag[i-325]}",
+			"elseifi<211{tag[i-195]}",
 			"CryptoFrame core retained-tag field",
 		),
 		(
-			"elseifi<349{sequence[i-341]}",
+			"elseifi<219{sequence[i-211]}",
 			"CryptoFrame core sequence field",
 		),
-		("else{sender_id[i-349]}", "CryptoFrame core sender-ID field"),
+		("else{sender_id[i-219]}", "CryptoFrame core sender-ID field"),
 	] {
 		require_once(&core_commitment, wanted, label)?;
 	}
@@ -2113,10 +2154,10 @@ fn validate_cryptoframe_source(snapshot: &Snapshot) -> Result<(), String> {
 		&[
 			"ifi<32{key[i]}",
 			"elseifi<44{nonce[i-32]}",
-			"elseifi<325{associated_data[i-44]}",
-			"elseifi<341{tag[i-325]}",
-			"elseifi<349{sequence[i-341]}",
-			"else{sender_id[i-349]}",
+			"elseifi<195{associated_data[i-44]}",
+			"elseifi<211{tag[i-195]}",
+			"elseifi<219{sequence[i-211]}",
+			"else{sender_id[i-219]}",
 		],
 		"CryptoFrame core transcript field order",
 	)?;
@@ -2750,14 +2791,14 @@ fn validate_pv(snapshot: &Snapshot) -> Result<(), String> {
 		require(&interface, declaration, "interface declaration")?;
 		forbid(&crypto, declaration, "duplicate crypto declaration")?;
 	}
-	if count(&interface, "):kdf_domain[data].") != 2
+	if count(&interface, "):kdf_domain[data].") != 3
 		|| count(&interface, "funpqxdh_domain():kdf_domain[data].") != 1
 		|| count(
 			&interface,
 			"funsymmetric_ratchet_domain():kdf_domain[data].",
-		) != 1
+		) != 1 || count(&interface, "funinitial_ratchet_domain():kdf_domain[data].") != 1
 	{
-		return Err("interface must declare exactly two production domains".to_owned());
+		return Err("interface must declare exactly three production domains".to_owned());
 	}
 	forbid(&crypto, "kdf_domain", "extra crypto-domain declaration")?;
 	if count(&crypto, "hkdf_sha512_no_salt(") != 6 {
@@ -2770,12 +2811,12 @@ fn validate_pv(snapshot: &Snapshot) -> Result<(), String> {
 	)?;
 	require(
 		&crypto,
-		"letfunserver_to_beacon_chain(root:bitstring)=hkdf_first_32(hkdf_sha512_no_salt(root,symmetric_ratchet_domain())).",
+		"letfunserver_to_beacon_chain(root:bitstring)=hkdf_first_32(hkdf_sha512_no_salt(root,initial_ratchet_domain())).",
 		"initial left projection",
 	)?;
 	require(
 		&crypto,
-		"letfunbeacon_to_server_chain(root:bitstring)=hkdf_second_32(hkdf_sha512_no_salt(root,symmetric_ratchet_domain())).",
+		"letfunbeacon_to_server_chain(root:bitstring)=hkdf_second_32(hkdf_sha512_no_salt(root,initial_ratchet_domain())).",
 		"initial right projection",
 	)?;
 	require(
@@ -2896,31 +2937,71 @@ fn validate_pv(snapshot: &Snapshot) -> Result<(), String> {
 			return Err(format!("{label} fields changed: {arguments:?}"));
 		}
 	}
-	let ad_calls = all_arguments(
+	// Registration version 3 transcript AD: the exact sent/received InitKex
+	// fields, then the response identity, ephemeral key, KEM ciphertext and
+	// assigned ID, in the Rust transcript order (one call per role process).
+	require(
 		&environment,
-		"beaconcrypt_core__pqxdh__build_associated_data",
+		"letfuntranscript_associated_data(encoded_identity:bitstring,signed_prekey:bitstring,signed_one_time:bitstring,signed_pq:bitstring,server_identity:bitstring,ephemeral:bitstring,kem:bitstring,assigned:key_id)=record_associated_data(record_ad_context87(),blake2b512(record_ad_preimage(encoded_identity,signed_prekey,signed_one_time,signed_pq,server_identity,ephemeral,kem,sender_id_le64(assigned)))).",
+		"field-wise session transcript AD",
 	)?;
+	let beacon_ad = |prefix: &str| {
+		vec![
+			format!("tag_ed25519({prefix}beacon_identity)"),
+			format!(
+				"sign(tag_x25519_prekey({prefix}beacon_prekey),{prefix}beacon_identity_secret)"
+			),
+			format!(
+				"sign(tag_x25519_one_time({prefix}beacon_one_time),{prefix}beacon_identity_secret)"
+			),
+			format!("sign(tag_mlkem768({prefix}beacon_pq),{prefix}beacon_identity_secret)"),
+			format!("{prefix}response_server_identity"),
+			format!("{prefix}server_ephemeral"),
+			format!("{prefix}kem_ciphertext"),
+			format!("{prefix}assigned_key_id"),
+		]
+	};
+	let server_ad = |prefix: &str| {
+		vec![
+			format!("{prefix}encoded_identity"),
+			format!("{prefix}signed_prekey"),
+			format!("{prefix}signed_one_time"),
+			format!("{prefix}signed_pq"),
+			format!("{prefix}server_identity"),
+			format!("{prefix}server_ephemeral"),
+			format!("{prefix}kem_ciphertext"),
+			format!("{prefix}assigned_key_id"),
+		]
+	};
+	let ad_calls = all_arguments(&environment, "=transcript_associated_data")?;
 	if ad_calls
 		!= [
-			vec!["server_identity", "beacon_identity"],
-			vec!["server_identity", "beacon_identity"],
-			vec!["server_identity", "beacon_identity"],
-			vec!["main_server_identity", "main_beacon_identity"],
-			vec!["main_server_identity", "main_beacon_identity"],
+			beacon_ad(""),
+			server_ad(""),
+			server_ad(""),
+			beacon_ad("main_"),
+			server_ad("main_"),
 		] {
 		return Err(format!(
-			"associated-data identity order changed: {ad_calls:?}"
+			"associated-data transcript field order changed: {ad_calls:?}"
 		));
+	}
+	if count(&environment, "historical__identity_associated_data(") != 0 {
+		return Err("ported environment calls the historical identity AD".to_owned());
 	}
 
 	let extraction = compact(&uncommented_pv(&snapshot.extraction)?);
 	for reduction in [
 		"reducforallidentity:bitstring,prekey:bitstring,one_time:bitstring,pq:bitstring;beaconcrypt_core__pqxdh__registration_id(beaconcrypt_core__pqxdh__VerifiedInitKex(identity,prekey,one_time,pq))=beaconcrypt_core__pqxdh__RegistrationId(registration_identifier(identity,one_time)).",
 		"reducforalldh1:bitstring,dh2:bitstring,dh3:bitstring,dh4:bitstring,kem:bitstring;beaconcrypt_core__pqxdh__build_root_key_input(beaconcrypt_core__pqxdh__PqxdhSharedSecrets(dh1,dh2,dh3,dh4,kem))=beaconcrypt_core__pqxdh__RootKeyInput(pqxdh_root_input(pqxdh_ff32_padding(),dh1,dh2,dh3,dh4,kem)).",
-		"reducforallserver_identity:bitstring,beacon_identity:bitstring;beaconcrypt_core__pqxdh__build_associated_data(server_identity,beacon_identity)=beaconcrypt_associated_data(tag_ed25519(server_identity),tag_ed25519(beacon_identity),pqxdh_domain(),symmetric_ratchet_domain()).",
 	] {
 		require(&extraction, reduction, "checked extraction replacement")?;
 	}
+	require(
+		&compact(&uncommented_pv(&snapshot.crypto)?),
+		"reducforallserver_identity:bitstring,beacon_identity:bitstring;historical__identity_associated_data(server_identity,beacon_identity)=beaconcrypt_associated_data(tag_ed25519(server_identity),tag_ed25519(beacon_identity),pqxdh_domain(),symmetric_ratchet_domain()).",
+		"explicit historical identity-AD equation",
+	)?;
 	Ok(())
 }
 
@@ -2965,11 +3046,19 @@ fn validate_x25519_alias_runner(
 			"X25519 alias preserves crypto outside X25519",
 		),
 		(
-			r#"queries=work/"exact-registration-queries.pvl"queries.write_text(selected_queries(directory))projected_queries=work/"projected-registration-queries.pvl"projected_queries.write_text(selected_projected_queries(directory))alias=work/"crypto-with-x25519-aliases.pvl"alias.write_text(alias_crypto(directory))forlabel,crypto,query_source,expected,projectedin(("canonical",directory/"crypto.pvl",queries,"true",False),("alias",alias,queries,"false",False),("projected-canonical",directory/"crypto.pvl",projected_queries,"true",True,),("projected-alias",alias,projected_queries,"true",True),):"#,
-			"X25519 alias canonical and alias query runs",
+			r#"queries=work/"exact-registration-queries.pvl"queries.write_text(selected_queries(directory))projected_queries=work/"projected-registration-queries.pvl"projected_queries.write_text(selected_projected_queries(directory))alias=work/"crypto-with-x25519-aliases.pvl"alias.write_text(alias_crypto(directory))environment=directory/"environment.pvl"omitted=work/"environment-ad-omits-ephemeral.pvl"omitted.write_text(ad_omits_ephemeral_environment(directory))forlabel,crypto,model,query_source,expected,projectedin(("canonical",directory/"crypto.pvl",environment,queries,"true",False),("alias",alias,environment,queries,"true",False),("projected-canonical",directory/"crypto.pvl",environment,projected_queries,"true",True,),("projected-alias",alias,environment,projected_queries,"true",True),("ad-omits-ephemeral-canonical",directory/"crypto.pvl",omitted,queries,"true",False,),("ad-omits-ephemeral-alias",alias,omitted,queries,"false",False),):"#,
+			"X25519 alias canonical, alias (transcript AD binds the aliased ephemeral) and ephemeral-omitted counterfactual query runs",
 		),
 		(
-			r#"command=[args.proverif]forlibraryin(directory/"production-transcript-interface.pvl",crypto,directory/"extraction/lib.pvl",directory/"environment.pvl",query_source,):command.extend(("-lib",str(library)))command.append(str(directory/"phase2-x25519-alias-control.pv"))"#,
+			r#"TRANSCRIPT_AD_BODY="server_identity,ephemeral,kem,sender_id_le64(assigned)))).\n""#,
+			"X25519 alias counterfactual exact transcript-AD letfun anchor",
+		),
+		(
+			r#"returnsource.replace(TRANSCRIPT_AD_BODY,TRANSCRIPT_AD_BODY.replace("ephemeral,",f"{OMITTED_EPHEMERAL},",1),1,)"#,
+			"X25519 alias counterfactual omits only the ephemeral transcript field",
+		),
+		(
+			r#"command=[args.proverif]forlibraryin(directory/"production-transcript-interface.pvl",crypto,directory/"extraction/lib.pvl",model,query_source,):command.extend(("-lib",str(library)))command.append(str(directory/"phase2-x25519-alias-control.pv"))"#,
 			"X25519 alias exact ordered library and control loading",
 		),
 		(
@@ -2989,7 +3078,7 @@ fn validate_x25519_alias_runner(
 	}
 	// Pin the independently reviewed runner as well as its readable wiring above.
 	// Extra code must not silently bypass a check or rewrite the selected queries.
-	if stable_text_hash(runner) != 12_041_226_837_296_030_277 {
+	if stable_text_hash(runner) != 7_195_036_686_896_737_028 {
 		return Err("X25519 alias reviewed runner changed; review the complete runner".to_owned());
 	}
 	let control = compact(&uncommented_pv(control)?);
@@ -3126,7 +3215,7 @@ fn validate_general_registration_runner(
 		),
 		(
 			"general-registration-admission.pvl",
-			17_941_204_731_846_309_212,
+			6_302_950_241_408_473_978,
 		),
 		(
 			"general-registration-admission-queries.pvl",
@@ -3361,24 +3450,24 @@ fn validate_adapters() -> Result<(), String> {
 	let symmetric = rust_body(ADAPTER_RATCHET, "symmetric_ratchet_hkdf")?;
 	require(
 		&symmetric,
-		"crypto_kdf::hkdf::sha512::extract(None,request.input())",
+		"crypto_kdf::hkdf::sha512::extract(None,input)",
 		"no-salt symmetric extract",
 	)?;
 	require(
 		&symmetric,
-		"crypto_kdf::hkdf::sha512::expand_into(&mutoutput[..],Some(request.info()),&prk)",
+		"crypto_kdf::hkdf::sha512::expand_into(&mutoutput[..],Some(info),&prk)",
 		"symmetric label/output request",
 	)?;
 	let record_executor = rust_body(ADAPTER_RATCHET, "ratchet_hkdf")?;
 	require(
 		&record_executor,
-		"RatchetKdfResponse::from_bytes(symmetric_ratchet_hkdf(request))",
+		"RatchetKdfResponse::from_bytes(symmetric_ratchet_hkdf(request.input(),request.info(),))",
 		"record-step shared HKDF executor",
 	)?;
 	let initial_executor = rust_body(ADAPTER_RATCHET, "initial_ratchet_hkdf")?;
 	require(
 		&initial_executor,
-		"symmetric_ratchet_hkdf(request)",
+		"symmetric_ratchet_hkdf(request.input(),request.info())",
 		"initial shared HKDF executor",
 	)?;
 	let ratchet = compact(&uncommented_rust(ADAPTER_RATCHET)?);
@@ -3415,7 +3504,7 @@ fn validate_ratchet_effect_driver(snapshot: &Snapshot) -> Result<(), String> {
 	)?;
 	require_once(
 		&adapter,
-		"pub(crate)fnratchet_hkdf(request:&verified_ratchet::SymmetricRatchetKdfRequest,)->verified_ratchet::RatchetKdfResponse{verified_ratchet::RatchetKdfResponse::from_bytes(symmetric_ratchet_hkdf(request))}",
+		"pub(crate)fnratchet_hkdf(request:&verified_ratchet::SymmetricRatchetKdfRequest,)->verified_ratchet::RatchetKdfResponse{verified_ratchet::RatchetKdfResponse::from_bytes(symmetric_ratchet_hkdf(request.input(),request.info(),))}",
 		"ratchet driver typed KDF reply",
 	)?;
 
@@ -4655,11 +4744,11 @@ fn validate_initial_ratchet_fidelity(snapshot: &Snapshot) -> Result<(), String> 
 			"initial ratchet request input width",
 		),
 		(
-			"pubconstSYM_RATCHET_INFO_SIZE:usize=41;",
+			"pubconstINITIAL_RATCHET_INFO_SIZE:usize=45;",
 			"initial ratchet request label width",
 		),
 		(
-			"pubconstSYM_RATCHET_INFO:&[u8;SYM_RATCHET_INFO_SIZE]=b\"SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305\";",
+			"pubconstINITIAL_RATCHET_INFO:&[u8;INITIAL_RATCHET_INFO_SIZE]=b\"SymRatchetInit_HKDF_SHA-512_CHACHA20_POLY1305\";",
 			"initial ratchet request label",
 		),
 		(
@@ -4671,7 +4760,7 @@ fn validate_initial_ratchet_fidelity(snapshot: &Snapshot) -> Result<(), String> 
 			"initial ratchet distinct 76-byte step response",
 		),
 		(
-			"pubstructSymmetricRatchetKdfRequest{input:[u8;RATCHET_CHAIN_SIZE],info:[u8;SYM_RATCHET_INFO_SIZE],}",
+			"pubstructInitialRatchetKdfRequest{input:[u8;RATCHET_CHAIN_SIZE],info:[u8;INITIAL_RATCHET_INFO_SIZE],}",
 			"initial ratchet request field types",
 		),
 		(
@@ -4681,19 +4770,63 @@ fn validate_initial_ratchet_fidelity(snapshot: &Snapshot) -> Result<(), String> 
 	] {
 		require_once(&core_ratchet, wanted, label)?;
 	}
-	let request_new = rust_body(&snapshot.core_ratchet, "new")?;
+	// Each phase has its own private fixed-label constructor. No output-width branch chooses a label.
+	for (wanted, label) in [
+		(
+			"pubconstSYM_RATCHET_INFO_SIZE:usize=48;",
+			"message ratchet request label width",
+		),
+		(
+			"pubconstSYM_RATCHET_INFO:&[u8;SYM_RATCHET_INFO_SIZE]=b\"SymRatchetMessage_HKDF_SHA-512_CHACHA20_POLY1305\";",
+			"message ratchet request label",
+		),
+		(
+			"pubstructSymmetricRatchetKdfRequest{input:[u8;RATCHET_CHAIN_SIZE],info:[u8;SYM_RATCHET_INFO_SIZE],}",
+			"message ratchet request field types",
+		),
+	] {
+		require_once(&core_ratchet, wanted, label)?;
+	}
+	let initial_impl = section_between(
+		&core_ratchet,
+		"implInitialRatchetKdfRequest{",
+		"pubstructSymmetricRatchetKdfRequest",
+		"initial request constructor boundary",
+	)?;
+	let message_impl = section_between(
+		&core_ratchet,
+		"implSymmetricRatchetKdfRequest{",
+		"pubstructRatchetKdfResponse",
+		"message request constructor boundary",
+	)?;
+	require_once(
+		message_impl,
+		"pub(crate)constfnnew(input:[u8;RATCHET_CHAIN_SIZE])->Self{Self{input,info:*SYM_RATCHET_INFO,}}",
+		"message fixed-domain request construction",
+	)?;
+	require_once(
+		initial_impl,
+		"pub(crate)constfnnew(input:[u8;RATCHET_CHAIN_SIZE])->Self{Self{input,info:*INITIAL_RATCHET_INFO,}}",
+		"initial fixed-domain request construction",
+	)?;
+	let initial_raw = snapshot
+		.core_ratchet
+		.split_once("impl InitialRatchetKdfRequest {")
+		.ok_or("missing initial request implementation")?
+		.1;
+	let request_new = rust_body(initial_raw, "new")?;
 	require_once(
 		&request_new,
-		"Self{input,info:*SYM_RATCHET_INFO,}",
+		"Self{input,info:*INITIAL_RATCHET_INFO,}",
 		"initial ratchet exact fixed-domain request construction",
 	)?;
-	let request_input = rust_body(&snapshot.core_ratchet, "input")?;
+	let request_input = rust_body(initial_raw, "input")?;
 	if request_input != "&self.input" {
 		return Err(format!(
 			"initial ratchet request input accessor changed: {request_input}"
 		));
 	}
-	let request_info = rust_body(&snapshot.core_ratchet, "info")?;
+	let request_info = rust_body(initial_raw, "info")?;
 	if request_info != "&self.info" {
 		return Err(format!(
 			"initial ratchet request info accessor changed: {request_info}"
@@ -4709,7 +4842,7 @@ fn validate_initial_ratchet_fidelity(snapshot: &Snapshot) -> Result<(), String> 
 	)?;
 	require_once(
 		pending_declaration,
-		"pubstructInitialRatchetKdfPending{request:SymmetricRatchetKdfRequest,initialization:RatchetInitialization,}",
+		"pubstructInitialRatchetKdfPending{request:InitialRatchetKdfRequest,initialization:RatchetInitialization,}",
 		"initial ratchet pending fields",
 	)?;
 	for forbidden in [
@@ -4773,7 +4906,7 @@ fn validate_initial_ratchet_fidelity(snapshot: &Snapshot) -> Result<(), String> 
 	let start_initial = rust_body(&snapshot.core_pqxdh_concrete, "start_initial_ratchet_kdf")?;
 	require_once(
 		&start_initial,
-		"InitialRatchetKdfPending{request:SymmetricRatchetKdfRequest::new(*root),initialization,}",
+		"InitialRatchetKdfPending{request:InitialRatchetKdfRequest::new(*root),initialization,}",
 		"initial ratchet exact root request and initialization",
 	)?;
 	for (wanted, label) in [
@@ -4878,26 +5011,26 @@ fn validate_initial_ratchet_fidelity(snapshot: &Snapshot) -> Result<(), String> 
 	let adapter_ratchet = compact(&uncommented_rust(&snapshot.adapter_ratchet)?);
 	require_once(
 		&adapter_ratchet,
-		"pub(crate)fninitial_ratchet_hkdf(request:&verified_ratchet::SymmetricRatchetKdfRequest,)->[u8;INITIAL_RATCHET_KDF_OUTPUT_SIZE]{",
+		"pub(crate)fninitial_ratchet_hkdf(request:&verified_ratchet::InitialRatchetKdfRequest,)->[u8;INITIAL_RATCHET_KDF_OUTPUT_SIZE]{",
 		"initial ratchet adapter 64-byte HKDF signature",
 	)?;
 	let initial_hkdf = rust_body(&snapshot.adapter_ratchet, "initial_ratchet_hkdf")?;
 	require_once(
 		&initial_hkdf,
-		"symmetric_ratchet_hkdf(request)",
+		"symmetric_ratchet_hkdf(request.input(),request.info())",
 		"initial ratchet adapter HKDF executor",
 	)?;
 	let symmetric_hkdf = rust_body(&snapshot.adapter_ratchet, "symmetric_ratchet_hkdf")?;
 	require_one_call(
 		&symmetric_hkdf,
 		"crypto_kdf::hkdf::sha512::extract",
-		&["None", "request.input()"],
+		&["None", "input"],
 		"initial ratchet adapter executor input",
 	)?;
 	require_one_call(
 		&symmetric_hkdf,
 		"crypto_kdf::hkdf::sha512::expand_into",
-		&["&mutoutput[..]", "Some(request.info())", "&prk"],
+		&["&mutoutput[..]", "Some(info)", "&prk"],
 		"initial ratchet adapter executor label",
 	)?;
 	require_once(
@@ -4918,7 +5051,7 @@ fn validate_initial_ratchet_fidelity(snapshot: &Snapshot) -> Result<(), String> 
 	let step_hkdf = rust_body(&snapshot.adapter_ratchet, "ratchet_hkdf")?;
 	require_once(
 		&step_hkdf,
-		"verified_ratchet::RatchetKdfResponse::from_bytes(symmetric_ratchet_hkdf(request))",
+		"verified_ratchet::RatchetKdfResponse::from_bytes(symmetric_ratchet_hkdf(request.input(),request.info(),))",
 		"initial ratchet distinct 76-byte adapter response",
 	)?;
 	let kernel_new = rust_body(&snapshot.core_ratchet_concrete, "new")?;
@@ -4937,7 +5070,7 @@ fn validate_initial_ratchet_fidelity(snapshot: &Snapshot) -> Result<(), String> 
 	)?;
 	require_once(
 		lean_initial,
-		"request:={input:=root,info:=ratchet.SYM_RATCHET_INFO},initialization:=initialization",
+		"request:={input:=root,info:=ratchet.INITIAL_RATCHET_INFO},initialization:=initialization",
 		"initial ratchet Lean exact request interpretation",
 	)?;
 	let lean_accessor = section_between(
@@ -4994,7 +5127,7 @@ fn validate_initial_ratchet_fidelity(snapshot: &Snapshot) -> Result<(), String> 
 	let lean_kdf = compact(&snapshot.lean_pqxdh_kdf);
 	require_once(
 		&lean_kdf,
-		"defrootChains(c:Crypto)(ds:Bytes):Bytes×Bytes:=((c.hkdfdsINFO_R64).take32,(c.hkdfdsINFO_R64).drop32)",
+		"defrootChains(c:Crypto)(ds:Bytes):Bytes×Bytes:=((c.hkdfdsINFO_INIT64).take32,(c.hkdfdsINFO_INIT64).drop32)",
 		"initial ratchet Lean ideal root-chain split anchor",
 	)?;
 	let lean_theorems = compact(&snapshot.lean_pqxdh_theorems);
@@ -5007,11 +5140,11 @@ fn validate_initial_ratchet_fidelity(snapshot: &Snapshot) -> Result<(), String> 
 	let crypto = compact(&uncommented_pv(&snapshot.crypto)?);
 	for (wanted, label) in [
 		(
-			"letfunserver_to_beacon_chain(root:bitstring)=hkdf_first_32(hkdf_sha512_no_salt(root,symmetric_ratchet_domain())).",
+			"letfunserver_to_beacon_chain(root:bitstring)=hkdf_first_32(hkdf_sha512_no_salt(root,initial_ratchet_domain())).",
 			"initial ratchet ProVerif server-to-beacon definition",
 		),
 		(
-			"letfunbeacon_to_server_chain(root:bitstring)=hkdf_second_32(hkdf_sha512_no_salt(root,symmetric_ratchet_domain())).",
+			"letfunbeacon_to_server_chain(root:bitstring)=hkdf_second_32(hkdf_sha512_no_salt(root,initial_ratchet_domain())).",
 			"initial ratchet ProVerif beacon-to-server definition",
 		),
 	] {
@@ -5641,7 +5774,7 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 			"later-registration reconstructed root",
 		),
 		(
-			"letassociated_data=beaconcrypt_core__pqxdh__build_associated_data(expected_server_identity,beacon_identity)in",
+			"letassociated_data=transcript_associated_data(tag_ed25519(beacon_identity),sign(tag_x25519_prekey(x25519_public(beacon_prekey_secret)),beacon_identity_secret),sign(tag_x25519_one_time(x25519_public(beacon_one_time_secret)),beacon_identity_secret),sign(tag_mlkem768(mlkem_public(beacon_pq_secret)),beacon_identity_secret),response_server_identity,server_ephemeral,kem_ciphertext,assigned_key_id)in",
 			"later-registration reconstructed associated data",
 		),
 		(
@@ -5861,7 +5994,7 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 		"letLaterSequenceRegistrationCommit(",
 		"later-registration initial opening",
 	)?;
-	if stable_text_hash(initial) != 9_228_980_847_782_159_909 {
+	if stable_text_hash(initial) != 10_660_892_126_441_142_132 {
 		return Err("later-registration reviewed initial opening changed".to_owned());
 	}
 	let initial = section_between(
@@ -5912,7 +6045,7 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 			"later-registration coordinator root",
 		),
 		(
-			"letassociated_data=beaconcrypt_core__pqxdh__build_associated_data(server_identity,beacon_identity)in",
+			"letassociated_data=transcript_associated_data(tag_ed25519(beacon_identity),sign(tag_x25519_prekey(beacon_prekey),beacon_identity_secret),sign(tag_x25519_one_time(beacon_one_time),beacon_identity_secret),sign(tag_mlkem768(beacon_pq),beacon_identity_secret),server_identity,server_ephemeral,kem_ciphertext,assigned_key_id)in",
 			"later-registration coordinator associated data",
 		),
 		(
@@ -6001,7 +6134,7 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 		return Err("later-registration query count changed".to_owned());
 	}
 	let sym = "symmetric_ratchet_domain()";
-	let chain1 = format!("hkdf_first_32(hkdf_sha512_no_salt(root,{sym}))");
+	let chain1 = "hkdf_first_32(hkdf_sha512_no_salt(root,initial_ratchet_domain()))".to_owned();
 	let chain2 = format!("hkdf_second_32(hkdf_sha512_no_salt({chain1},{sym}))");
 	let chain3 = format!("hkdf_second_32(hkdf_sha512_no_salt({chain2},{sym}))");
 	let chain4 = format!("hkdf_second_32(hkdf_sha512_no_salt({chain3},{sym}))");
@@ -6019,7 +6152,8 @@ fn validate_later_registration_fidelity(snapshot: &Snapshot) -> Result<(), Strin
 	);
 	let receive_state =
 		format!("receive_state(next_sequence(next_sequence(first_sequence())),{chain4},{cache})");
-	let send_chain = format!("hkdf_second_32(hkdf_sha512_no_salt(root,{sym}))");
+	let send_chain =
+		"hkdf_second_32(hkdf_sha512_no_salt(root,initial_ratchet_domain()))".to_owned();
 	let ratchet =
 		format!("later_registration_ratchet_state(zero_sequence(),{send_chain},{receive_state})");
 	for (wanted, label) in [
@@ -6657,7 +6791,7 @@ fn validate_post_registration_fidelity(snapshot: &Snapshot) -> Result<(), String
 	}
 	for (wanted, label) in [
 		(
-			"event(PostRegistrationReturned(POST_REGISTRATION_FAITHFUL,POST_REGISTRATION_CACHED,session,sender,receiver,beaconcrypt_associated_data(tag_ed25519(server_identity),tag_ed25519(beacon_identity),pqxdh_domain(),symmetric_ratchet_domain()),crypto_frame(ciphertext,tag,commitment,next_sequence(first_sequence()),sender),next_sequence(first_sequence()),LATER_REGISTRATION_SEQ2_PAYLOAD,",
+			"event(PostRegistrationReturned(POST_REGISTRATION_FAITHFUL,POST_REGISTRATION_CACHED,session,sender,receiver,record_associated_data(record_ad_context87(),blake2b512(record_ad_preimage(tag_ed25519(beacon_identity),ad_prekey,ad_one_time,ad_pq,server_identity,ad_ephemeral,ad_kem,sender_id_le64(receiver)))),crypto_frame(ciphertext,tag,commitment,next_sequence(first_sequence()),sender),next_sequence(first_sequence()),LATER_REGISTRATION_SEQ2_PAYLOAD,",
 			"post-registration full cached-payload query",
 		),
 		(
@@ -6665,7 +6799,7 @@ fn validate_post_registration_fidelity(snapshot: &Snapshot) -> Result<(), String
 			"post-registration exact replay-state query",
 		),
 		(
-			"event(PostRegistrationReturned(POST_REGISTRATION_FAITHFUL,POST_REGISTRATION_FUTURE,session,sender,receiver,beaconcrypt_associated_data(tag_ed25519(server_identity),tag_ed25519(beacon_identity),pqxdh_domain(),symmetric_ratchet_domain()),crypto_frame(ciphertext,tag,commitment,next_sequence(next_sequence(next_sequence(first_sequence()))),sender),next_sequence(next_sequence(next_sequence(first_sequence()))),POST_REGISTRATION_SEQ4_PAYLOAD,",
+			"event(PostRegistrationReturned(POST_REGISTRATION_FAITHFUL,POST_REGISTRATION_FUTURE,session,sender,receiver,record_associated_data(record_ad_context87(),blake2b512(record_ad_preimage(tag_ed25519(beacon_identity),ad_prekey,ad_one_time,ad_pq,server_identity,ad_ephemeral,ad_kem,sender_id_le64(receiver)))),crypto_frame(ciphertext,tag,commitment,next_sequence(next_sequence(next_sequence(first_sequence()))),sender),next_sequence(next_sequence(next_sequence(first_sequence()))),POST_REGISTRATION_SEQ4_PAYLOAD,",
 			"post-registration exact sequence-four query",
 		),
 	] {
@@ -7259,12 +7393,24 @@ fn check_x25519_alias_runner_mutations() {
 			"",
 		),
 		(
-			"\"canonical\", directory / \"crypto.pvl\", queries, \"true\", False",
-			"\"canonical\", alias, queries, \"true\", False",
+			"(\"canonical\", directory / \"crypto.pvl\", environment, queries, \"true\", False)",
+			"(\"canonical\", alias, environment, queries, \"true\", False)",
 		),
 		(
-			"\"alias\", alias, queries, \"false\", False",
-			"\"alias\", alias, queries, \"true\", False",
+			"\"alias\", alias, environment, queries, \"true\", False",
+			"\"alias\", alias, environment, queries, \"false\", False",
+		),
+		(
+			"(\"ad-omits-ephemeral-alias\", alias, omitted, queries, \"false\", False)",
+			"(\"ad-omits-ephemeral-alias\", alias, omitted, queries, \"true\", False)",
+		),
+		(
+			"TRANSCRIPT_AD_BODY.replace(\" ephemeral,\", f\" {OMITTED_EPHEMERAL},\", 1)",
+			"TRANSCRIPT_AD_BODY",
+		),
+		(
+			"        model,\n                query_source,",
+			"        directory / \"environment.pvl\",\n                query_source,",
 		),
 		(
 			"queries.write_text(selected_queries(directory))",
@@ -7454,7 +7600,7 @@ fn compiled_core_matches_the_canonical_transcript() {
 	);
 	assert_ne!(pqxdh::PQXDH_INFO.as_slice(), SYM_RATCHET_INFO.as_slice());
 	assert_eq!(pqxdh::PQXDH_INFO.len(), 46);
-	assert_eq!(SYM_RATCHET_INFO.len(), 41);
+	assert_eq!(SYM_RATCHET_INFO.len(), 48);
 	assert_eq!(pqxdh::ROOT_KEY_INPUT_SIZE, 192);
 	assert_eq!(pqxdh::INITIAL_RATCHET_KDF_OUTPUT_SIZE, 64);
 	assert_eq!(RATCHET_KDF_OUTPUT_SIZE, 76);
@@ -7477,15 +7623,11 @@ fn compiled_core_matches_the_canonical_transcript() {
 
 	let server_identity = [0xa1; 32];
 	let beacon_identity = [0xb2; 32];
-	let ad = pqxdh::build_associated_data(server_identity, beacon_identity);
-	assert_eq!(ad.len(), 281);
-	assert_eq!(&ad[153..281], &[0; 128]);
-	assert_eq!(ad[0], 0x01);
-	assert_eq!(&ad[1..33], &server_identity);
-	assert_eq!(ad[33], 0x01);
-	assert_eq!(&ad[34..66], &beacon_identity);
-	assert_eq!(&ad[66..112], pqxdh::PQXDH_INFO);
-	assert_eq!(&ad[112..153], SYM_RATCHET_INFO);
+	let digest = [0xc3; 64];
+	let ad = beaconcrypt_core::authentication::assemble_associated_data(&digest);
+	assert_eq!(ad.len(), 151);
+	assert_eq!(&ad[..87], &beaconcrypt_core::authentication::AD_CONTEXT);
+	assert_eq!(&ad[87..], &digest);
 
 	let prekey = [0xc3; 32];
 	let one_time = [0xd4; 32];
@@ -7557,7 +7699,10 @@ fn compiled_core_matches_the_canonical_transcript() {
 	let root = [0x36; 32];
 	let pending = pqxdh::start_server_ratchet_kdf(&root);
 	assert_eq!(pending.request().input(), &root);
-	assert_eq!(pending.request().info(), SYM_RATCHET_INFO);
+	assert_eq!(
+		pending.request().info(),
+		beaconcrypt_core::INITIAL_RATCHET_INFO
+	);
 	let kernel = pqxdh::resume_initial_ratchet_kdf(
 		pending,
 		InitialRatchetKdfResponse::from_bytes(initial_output),
@@ -7573,7 +7718,7 @@ fn compiled_core_matches_the_canonical_transcript() {
 	assert_eq!(AEAD_KEY_SIZE, 32);
 	assert_eq!(AEAD_NONCE_SIZE, 12);
 	assert_eq!(AEAD_TAG_SIZE, 16);
-	assert_eq!(COMMITMENT_TRANSCRIPT_SIZE, 357);
+	assert_eq!(COMMITMENT_TRANSCRIPT_SIZE, 227);
 	let key = core::array::from_fn(|index| index as u8);
 	let nonce = core::array::from_fn(|index| 0x20 + index as u8);
 	let associated_data = core::array::from_fn(|index| (index as u8).wrapping_add(0x40));
@@ -7585,10 +7730,10 @@ fn compiled_core_matches_the_canonical_transcript() {
 	let bytes = transcript.as_bytes();
 	assert_eq!(&bytes[0..32], &key);
 	assert_eq!(&bytes[32..44], &nonce);
-	assert_eq!(&bytes[44..325], &associated_data);
-	assert_eq!(&bytes[325..341], &tag);
-	assert_eq!(&bytes[341..349], &sequence.to_le_bytes());
-	assert_eq!(&bytes[349..357], &sender_id.to_le_bytes());
+	assert_eq!(&bytes[44..195], &associated_data);
+	assert_eq!(&bytes[195..211], &tag);
+	assert_eq!(&bytes[211..219], &sequence.to_le_bytes());
+	assert_eq!(&bytes[219..227], &sender_id.to_le_bytes());
 }
 
 #[test]
@@ -7793,7 +7938,7 @@ fn post_registration_cached_replay_and_future_trace_is_exact_and_nonvacuous() {
 	assert!(snapshot(&kernel).4[1..].iter().all(Option::is_none));
 
 	// Carry that very kernel into ordinary receive; do not reconstruct its post-registration state.
-	let original_frame_context = ("original seq2 frame", 7u64, [0x51; 281]);
+	let original_frame_context = ("original seq2 frame", 7u64, [0x51; 151]);
 	let full_cached_payload = "seq2 application payload";
 	let ReceiveEffect::ReceiveOpenRequested(open) =
 		begin_receive(kernel, 2, &original_frame_context)
@@ -7822,7 +7967,7 @@ fn post_registration_cached_replay_and_future_trace_is_exact_and_nonvacuous() {
 	assert_eq!(context, &original_frame_context);
 	assert_eq!(snapshot(&kernel), before_replay);
 
-	let fourth_frame_context = ("genuine seq4 frame", 7u64, [0x51; 281]);
+	let fourth_frame_context = ("genuine seq4 frame", 7u64, [0x51; 151]);
 	let ReceiveEffect::ReceiveKdfRequested(pending) =
 		begin_receive(kernel, 4, &fourth_frame_context)
 	else {
@@ -9658,8 +9803,8 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 		(
 			"later_registration_pv_associated_data_identity_substituted",
 			"let LaterSequenceRegistrationOpen(",
-			"expected_server_identity,\n        beacon_identity",
-			"response_server_identity,\n        beacon_identity",
+			"response_server_identity,\n        server_ephemeral",
+			"beacon_identity,\n        server_ephemeral",
 			"later-registration reconstructed associated data",
 		),
 		(
@@ -10209,8 +10354,8 @@ fn later_registration_mutation_matrix_is_complete_and_rejected() {
 		(
 			"later_registration_pv_coordinator_ad_order_swapped",
 			"let LaterSequenceRegistrationControl() =",
-			"server_identity,\n      beacon_identity",
-			"beacon_identity,\n      server_identity",
+			"server_identity,\n      server_ephemeral,",
+			"server_ephemeral,\n      server_identity,",
 			"later-registration coordinator associated data",
 		),
 		(
@@ -11443,13 +11588,9 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 			"decode_argument(rest, 0)?",
 			"decode_argument(rest, 2)?",
 		),
-		("cbor_init_array_arity", "[0x88, 2, 0]", "[0x87, 2, 0]"),
-		(
-			"cbor_init_field_types",
-			"&[2, 2, 2, 2, 2, 2]",
-			"&[0, 2, 2, 2, 2, 2]",
-		),
-		("cbor_response_array_arity", "[0x88, 2, 1]", "[0x87, 2, 1]"),
+		("cbor_init_array_arity", "[0x86, 3, 0]", "[0x87, 3, 0]"),
+		("cbor_init_field_types", "&[2, 2, 2, 2]", "&[0, 2, 2, 2]"),
+		("cbor_response_array_arity", "[0x88, 3, 1]", "[0x87, 3, 1]"),
 		(
 			"cbor_response_field_types",
 			"&[2, 2, 2, 2, 0, 2]",
@@ -11712,20 +11853,20 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"cryptoframe_core_ad_length_assertion_drift",
-			"assert!(ASSOCIATED_DATA_SIZE == 281)",
+			"assert!(ASSOCIATED_DATA_SIZE == 151)",
 			"assert!(ASSOCIATED_DATA_SIZE == 280)",
 			"CryptoFrame core associated-data length",
 		),
 		(
 			"cryptoframe_core_transcript_length_assertion_drift",
-			"assert!(COMMITMENT_TRANSCRIPT_SIZE == 357)",
+			"assert!(COMMITMENT_TRANSCRIPT_SIZE == 227)",
 			"assert!(COMMITMENT_TRANSCRIPT_SIZE == 356)",
 			"CryptoFrame core transcript length",
 		),
 		(
 			"cryptoframe_core_result_uses_literal_size",
 			"bytes: [u8; COMMITMENT_TRANSCRIPT_SIZE]",
-			"bytes: [u8; 357]",
+			"bytes: [u8; 227]",
 			"CryptoFrame core fixed-width result",
 		),
 		(
@@ -11787,19 +11928,19 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"cryptoframe_core_tag_offset_drift",
-			"tag[i - 325]",
+			"tag[i - 195]",
 			"tag[i - 324]",
 			"CryptoFrame core retained-tag field",
 		),
 		(
 			"cryptoframe_core_sequence_offset_drift",
-			"sequence[i - 341]",
+			"sequence[i - 211]",
 			"sequence[i - 340]",
 			"CryptoFrame core sequence field",
 		),
 		(
 			"cryptoframe_core_sender_offset_drift",
-			"sender_id[i - 349]",
+			"sender_id[i - 219]",
 			"sender_id[i - 348]",
 			"CryptoFrame core sender-ID field",
 		),
@@ -11839,8 +11980,8 @@ fn cryptoframe_wire_mutation_matrix_is_complete_and_rejected() {
 		|snapshot| {
 			replace_once(
 				&mut snapshot.core_commitment,
-				"\t\t} else if i < 341 {\n\t\t\ttag[i - 325]\n\t\t} else if i < 349 {\n\t\t\tsequence[i - 341]",
-				"\t\t} else if i < 349 {\n\t\t\tsequence[i - 341]\n\t\t} else if i < 341 {\n\t\t\ttag[i - 325]",
+				"\t\t} else if i < 211 {\n\t\t\ttag[i - 195]\n\t\t} else if i < 219 {\n\t\t\tsequence[i - 211]",
+				"\t\t} else if i < 219 {\n\t\t\tsequence[i - 211]\n\t\t} else if i < 211 {\n\t\t\ttag[i - 195]",
 			);
 		},
 	);
@@ -12450,7 +12591,7 @@ fn phase1_registration_mutation_matrix_is_complete_and_rejected() {
 	assert_eq!(mutation_count, PHASE1_REGISTRATION_MUTATION_COUNT);
 }
 
-const ENDPOINT_FRAME_CONTEXT_MUTATION_COUNT: usize = 214;
+const ENDPOINT_FRAME_CONTEXT_MUTATION_COUNT: usize = 217;
 
 #[test]
 fn endpoint_frame_context_mutation_matrix_is_complete_and_rejected() {
@@ -12508,12 +12649,12 @@ fn endpoint_frame_context_mutation_matrix_is_complete_and_rejected() {
 
 	for (name, target, marker, from, to, diagnostic) in [
 		(
-			"endpoint_server_ad_reverses_identities",
+			"endpoint_server_ad_drops_exact_signature_fields",
 			"core_session",
 			"impl RegistrationBinding",
-			"server_pin.binding.identity_public_key,\n\t\t\tbeacon_identity_public_key,",
-			"beacon_identity_public_key,\n\t\t\tserver_pin.binding.identity_public_key,",
-			"registration binding retains exact pins, request and populated AD",
+			"build_record_ad_transcript(self.init_fields.fields(), response)",
+			"build_record_ad_transcript(zero_fields(), response)",
+			"registration hashes exact retained request",
 		),
 		(
 			"endpoint_server_ad_selects_local_id",
@@ -12524,12 +12665,12 @@ fn endpoint_frame_context_mutation_matrix_is_complete_and_rejected() {
 			"endpoint Server retained session associated-data mapping",
 		),
 		(
-			"endpoint_server_ad_uses_peer_twice",
+			"endpoint_server_ad_replaces_digest",
 			"core_session",
 			"impl RegistrationBinding",
-			"server_pin.binding.identity_public_key,\n\t\t\tbeacon_identity_public_key,",
-			"beacon_identity_public_key,\n\t\t\tbeacon_identity_public_key,",
-			"registration binding retains exact pins, request and populated AD",
+			"associated_data: assemble_associated_data(&transcript_hash)",
+			"associated_data: assemble_associated_data(&[0; 64])",
+			"completion retains exact transcript digest and complete AD",
 		),
 	] {
 		assert_rejected(name, diagnostic, move |snapshot| {
@@ -12999,39 +13140,77 @@ fn endpoint_frame_context_mutation_matrix_is_complete_and_rejected() {
 		mutation_count += 1;
 	}
 
-	for (name, scope) in [
+	for (name, scope, identity) in [
 		(
-			"endpoint_symbolic_honest_ad_reverses_identities",
+			"endpoint_symbolic_honest_ad_swaps_identity_and_ephemeral",
 			"let HonestBeacon(",
+			"response_server_identity",
 		),
 		(
-			"endpoint_symbolic_server_ad_reverses_identities",
+			"endpoint_symbolic_server_ad_swaps_identity_and_ephemeral",
 			"let Server(",
+			"server_identity",
 		),
 		(
-			"endpoint_symbolic_malicious_server_ad_reverses_identities",
+			"endpoint_symbolic_malicious_server_ad_swaps_identity_and_ephemeral",
 			"let MaliciousServer(",
+			"server_identity",
 		),
 	] {
 		assert_rejected(
 			name,
-			"associated-data identity order changed",
+			"associated-data transcript field order changed",
 			move |snapshot| {
 				replace_nth_call_argument_after(
 					&mut snapshot.environment,
 					scope,
-					"beaconcrypt_core__pqxdh__build_associated_data",
+					"transcript_associated_data",
 					0,
-					0,
-					"beacon_identity",
+					4,
+					"server_ephemeral",
 				);
 				replace_nth_call_argument_after(
 					&mut snapshot.environment,
 					scope,
-					"beaconcrypt_core__pqxdh__build_associated_data",
+					"transcript_associated_data",
 					0,
-					1,
-					"server_identity",
+					5,
+					identity,
+				);
+			},
+		);
+		mutation_count += 1;
+	}
+
+	// The field-wise transcript-AD letfun itself is pinned: reordering two
+	// transcript fields, replacing the LE64 assigned ID by a constant, or
+	// dropping the BLAKE2b-512 hash must each be rejected.
+	for (name, from, to) in [
+		(
+			"environment_transcript_ad_reorders_ephemeral_and_kem",
+			"server_identity, ephemeral, kem, sender_id_le64(assigned)))).",
+			"server_identity, kem, ephemeral, sender_id_le64(assigned)))).",
+		),
+		(
+			"environment_transcript_ad_replaces_assigned_id_by_constant",
+			"kem, sender_id_le64(assigned)))).",
+			"kem, record_ad_context87()))).",
+		),
+		(
+			"environment_transcript_ad_drops_blake2b512_hash",
+			"record_associated_data(record_ad_context87(), blake2b512(record_ad_preimage(",
+			"record_associated_data(record_ad_context87(), (record_ad_preimage(",
+		),
+	] {
+		assert_rejected(
+			name,
+			"missing exact field-wise session transcript AD",
+			move |snapshot| {
+				replace_once_after(
+					&mut snapshot.environment,
+					"letfun transcript_associated_data(",
+					from,
+					to,
 				);
 			},
 		);
@@ -13085,15 +13264,15 @@ fn ratchet_effect_driver_mutation_matrix_is_complete_and_rejected() {
 		(
 			"ratchet_driver_kdf_uses_fixed_request",
 			"pub(crate) fn ratchet_hkdf",
-			"symmetric_ratchet_hkdf(request)",
-			"symmetric_ratchet_hkdf(&verified_ratchet::SymmetricRatchetKdfRequest::new([0; KDF_STATE_SIZE]))",
+			"symmetric_ratchet_hkdf(\n\t\trequest.input(),\n\t\trequest.info(),\n\t)",
+			"symmetric_ratchet_hkdf(&[0; KDF_STATE_SIZE], request.info())",
 			"ratchet driver typed KDF reply",
 		),
 		(
 			"ratchet_driver_kdf_returns_untyped_bytes",
 			"pub(crate) fn ratchet_hkdf",
-			"verified_ratchet::RatchetKdfResponse::from_bytes(symmetric_ratchet_hkdf(request))",
-			"symmetric_ratchet_hkdf(request)",
+			"verified_ratchet::RatchetKdfResponse::from_bytes(symmetric_ratchet_hkdf(\n\t\trequest.input(),\n\t\trequest.info(),\n\t))",
+			"symmetric_ratchet_hkdf(\n\t\trequest.input(),\n\t\trequest.info(),\n\t)",
 			"ratchet driver typed KDF reply",
 		),
 	] {
@@ -16335,14 +16514,14 @@ fn initial_ratchet_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"initial_ratchet_request_label_width_drifts",
-			"pub const SYM_RATCHET_INFO_SIZE: usize = 41;",
-			"pub const SYM_RATCHET_INFO_SIZE: usize = 40;",
+			"pub const INITIAL_RATCHET_INFO_SIZE: usize = 45;",
+			"pub const INITIAL_RATCHET_INFO_SIZE: usize = 44;",
 			"request label width",
 		),
 		(
 			"initial_ratchet_request_label_drifts",
-			"b\"SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305\"",
-			"b\"SymRatchet_HKDF_SHA-512_CHACHA20_POLY1304\"",
+			"b\"SymRatchetInit_HKDF_SHA-512_CHACHA20_POLY1305\"",
+			"b\"SymRatchetInit_HKDF_SHA-512_CHACHA20_POLY1304\"",
 			"request label",
 		),
 		(
@@ -16365,7 +16544,7 @@ fn initial_ratchet_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"initial_ratchet_request_uses_other_label",
-			"info: *SYM_RATCHET_INFO,",
+			"info: *INITIAL_RATCHET_INFO,",
 			"info: *PQXDH_INFO,",
 			"fixed-domain request construction",
 		),
@@ -16383,14 +16562,14 @@ fn initial_ratchet_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"initial_ratchet_request_info_field_type_drifts",
-			"info: [u8; SYM_RATCHET_INFO_SIZE]",
+			"info: [u8; INITIAL_RATCHET_INFO_SIZE]",
 			"info: [u8; 40]",
 		),
 	] {
 		assert_initial_ratchet_rejected(name, "request field types", |snapshot| {
 			replace_once_after(
 				&mut snapshot.core_ratchet,
-				"pub struct SymmetricRatchetKdfRequest",
+				"pub struct InitialRatchetKdfRequest",
 				from,
 				to,
 			);
@@ -16434,7 +16613,7 @@ fn initial_ratchet_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"initial_ratchet_pending_drops_request",
-			"\trequest: SymmetricRatchetKdfRequest,\n",
+			"\trequest: InitialRatchetKdfRequest,\n",
 			"",
 			"pending fields",
 		),
@@ -16458,8 +16637,8 @@ fn initial_ratchet_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"initial_ratchet_start_substitutes_root",
-			"request: SymmetricRatchetKdfRequest::new(*root),",
-			"request: SymmetricRatchetKdfRequest::new([0; RATCHET_CHAIN_SIZE]),",
+			"request: InitialRatchetKdfRequest::new(*root),",
+			"request: InitialRatchetKdfRequest::new([0; RATCHET_CHAIN_SIZE]),",
 			"exact root request and initialization",
 		),
 		(
@@ -16700,8 +16879,8 @@ fn initial_ratchet_mutation_matrix_is_complete_and_rejected() {
 		),
 		(
 			"initial_ratchet_adapter_step_response_uses_initial_type",
-			"verified_ratchet::RatchetKdfResponse::from_bytes(symmetric_ratchet_hkdf(request))",
-			"beaconcrypt_core::pqxdh::InitialRatchetKdfResponse::from_bytes(symmetric_ratchet_hkdf(request))",
+			"verified_ratchet::RatchetKdfResponse::from_bytes(symmetric_ratchet_hkdf(\n\t\trequest.input(),\n\t\trequest.info(),\n\t))",
+			"beaconcrypt_core::pqxdh::InitialRatchetKdfResponse::from_bytes(symmetric_ratchet_hkdf(\n\t\trequest.input(),\n\t\trequest.info(),\n\t))",
 			"distinct 76-byte adapter response",
 		),
 	] {
@@ -16713,14 +16892,14 @@ fn initial_ratchet_mutation_matrix_is_complete_and_rejected() {
 	for (name, from, to, diagnostic) in [
 		(
 			"initial_ratchet_adapter_executor_substitutes_input",
-			"request.input()",
-			"replacement.input()",
+			"extract(None, input)",
+			"extract(None, replacement)",
 			"adapter executor input",
 		),
 		(
 			"initial_ratchet_adapter_executor_substitutes_label",
-			"request.info()",
-			"replacement.info()",
+			"Some(info)",
+			"Some(replacement)",
 			"adapter executor label",
 		),
 		(
@@ -16759,7 +16938,7 @@ fn initial_ratchet_mutation_matrix_is_complete_and_rejected() {
 			replace_once_after(
 				&mut snapshot.adapter_ratchet,
 				"pub(crate) fn initial_ratchet_hkdf",
-				"symmetric_ratchet_hkdf(request)",
+				"symmetric_ratchet_hkdf(request.input(), request.info())",
 				"ratchet_hkdf(request)",
 			);
 		},
@@ -16808,8 +16987,8 @@ fn initial_ratchet_mutation_matrix_is_complete_and_rejected() {
 	for (name, from, to, diagnostic) in [
 		(
 			"initial_ratchet_lean_start_root_substituted",
-			"request := { input := root, info := ratchet.SYM_RATCHET_INFO },",
-			"request := { input := replacement, info := ratchet.SYM_RATCHET_INFO },",
+			"request := { input := root, info := ratchet.INITIAL_RATCHET_INFO },",
+			"request := { input := replacement, info := ratchet.INITIAL_RATCHET_INFO },",
 			"Lean exact request interpretation",
 		),
 		(
@@ -16860,8 +17039,8 @@ fn initial_ratchet_mutation_matrix_is_complete_and_rejected() {
 		|snapshot| {
 			replace_once(
 				&mut snapshot.lean_pqxdh_kdf,
-				"(c.hkdf ds INFO_R 64).take 32",
-				"(c.hkdf ds INFO_R 64).take 31",
+				"(c.hkdf ds INFO_INIT 64).take 32",
+				"(c.hkdf ds INFO_INIT 64).take 31",
 			);
 		},
 	);
@@ -16872,8 +17051,8 @@ fn initial_ratchet_mutation_matrix_is_complete_and_rejected() {
 		|snapshot| {
 			replace_once(
 				&mut snapshot.lean_pqxdh_kdf,
-				"(c.hkdf ds INFO_R 64).drop 32",
-				"(c.hkdf ds INFO_R 64).drop 31",
+				"(c.hkdf ds INFO_INIT 64).drop 32",
+				"(c.hkdf ds INFO_INIT 64).drop 31",
 			);
 		},
 	);
@@ -16902,14 +17081,14 @@ fn initial_ratchet_mutation_matrix_is_complete_and_rejected() {
 		(
 			"initial_ratchet_pv_server_definition_substitutes_root",
 			"letfun server_to_beacon_chain",
-			"hkdf_sha512_no_salt(root, symmetric_ratchet_domain())",
-			"hkdf_sha512_no_salt(replacement_root, symmetric_ratchet_domain())",
+			"hkdf_sha512_no_salt(root, initial_ratchet_domain())",
+			"hkdf_sha512_no_salt(replacement_root, initial_ratchet_domain())",
 			"ProVerif server-to-beacon definition",
 		),
 		(
 			"initial_ratchet_pv_server_definition_substitutes_label",
 			"letfun server_to_beacon_chain",
-			"symmetric_ratchet_domain()",
+			"initial_ratchet_domain()",
 			"pqxdh_domain()",
 			"ProVerif server-to-beacon definition",
 		),
@@ -16923,14 +17102,14 @@ fn initial_ratchet_mutation_matrix_is_complete_and_rejected() {
 		(
 			"initial_ratchet_pv_beacon_definition_substitutes_root",
 			"letfun beacon_to_server_chain",
-			"hkdf_sha512_no_salt(root, symmetric_ratchet_domain())",
-			"hkdf_sha512_no_salt(replacement_root, symmetric_ratchet_domain())",
+			"hkdf_sha512_no_salt(root, initial_ratchet_domain())",
+			"hkdf_sha512_no_salt(replacement_root, initial_ratchet_domain())",
 			"ProVerif beacon-to-server definition",
 		),
 		(
 			"initial_ratchet_pv_beacon_definition_substitutes_label",
 			"letfun beacon_to_server_chain",
-			"symmetric_ratchet_domain()",
+			"initial_ratchet_domain()",
 			"pqxdh_domain()",
 			"ProVerif beacon-to-server definition",
 		),
@@ -17184,12 +17363,12 @@ fn requested_transcript_mutations_are_rejected() {
 	);
 	assert_rejected(
 		"reversed_ad_identities",
-		"associated-data identity order",
+		"associated-data transcript field order",
 		|snapshot| {
 			replace_once(
 				&mut snapshot.environment,
-				"        server_identity,\n        beacon_identity",
-				"        beacon_identity,\n        server_identity",
+				"        response_server_identity,\n        server_ephemeral,",
+				"        server_ephemeral,\n        response_server_identity,",
 			);
 		},
 	);
@@ -17373,6 +17552,101 @@ fn requested_transcript_mutations_are_rejected() {
 		assert_rejected(name, "CTX preimage field order", |snapshot| {
 			omit_ctx(snapshot, field);
 		});
+	}
+}
+
+const PHASE2_CONTROL_MODEL: &str =
+	include_str!("../proofs/pro-verif/phase2-response-binding-control.pvl");
+
+/// The Phase-2 control derives the registration version 3 transcript AD twice:
+/// the Beacon finish gate from the request it sent and the parsed response
+/// fields, and the fixture Server from the same request and its own response.
+/// All eight transcript fields are pinned in Rust transcript order.
+fn validate_phase2_transcript_ad(source: &str) -> Result<(), String> {
+	let control = compact(&uncommented_pv(source)?);
+	let fields = |request: [&str; 4], response_identity: &str| {
+		request
+			.into_iter()
+			.chain([
+				response_identity,
+				"server_ephemeral",
+				"kem_ciphertext",
+				"assigned_key_id",
+			])
+			.map(str::to_owned)
+			.collect::<Vec<_>>()
+	};
+	let expected = vec![
+		fields(
+			[
+				"tag_ed25519(beacon_identity)",
+				"sign(tag_x25519_prekey(x25519_public(beacon_prekey_secret)),beacon_identity_secret)",
+				"sign(tag_x25519_one_time(x25519_public(beacon_one_time_secret)),beacon_identity_secret)",
+				"sign(tag_mlkem768(mlkem_public(beacon_pq_secret)),beacon_identity_secret)",
+			],
+			"response_server_identity",
+		),
+		fields(
+			[
+				"tag_ed25519(beacon_identity)",
+				"sign(tag_x25519_prekey(beacon_prekey),beacon_identity_secret)",
+				"sign(tag_x25519_one_time(beacon_one_time),beacon_identity_secret)",
+				"sign(tag_mlkem768(beacon_pq),beacon_identity_secret)",
+			],
+			"server_identity",
+		),
+	];
+	let calls = all_arguments(&control, "letassociated_data=transcript_associated_data")?;
+	if calls != expected || count(&control, "transcript_associated_data(") != 2 {
+		return Err(format!("Phase-2 transcript AD fields changed: {calls:?}"));
+	}
+	if count(&control, "historical__identity_associated_data(") != 0 {
+		return Err("Phase-2 control calls the historical identity AD".to_owned());
+	}
+	Ok(())
+}
+
+#[test]
+fn phase2_control_pins_all_eight_transcript_ad_fields() {
+	validate_phase2_transcript_ad(PHASE2_CONTROL_MODEL).unwrap();
+	for (name, from, to) in [
+		(
+			"beacon_swaps_prekey_and_one_time",
+			"sign(tag_x25519_prekey(x25519_public(beacon_prekey_secret)), beacon_identity_secret),\n        sign(tag_x25519_one_time(x25519_public(beacon_one_time_secret)), beacon_identity_secret),",
+			"sign(tag_x25519_one_time(x25519_public(beacon_one_time_secret)), beacon_identity_secret),\n        sign(tag_x25519_prekey(x25519_public(beacon_prekey_secret)), beacon_identity_secret),",
+		),
+		(
+			"beacon_drops_identity_tag",
+			"        tag_ed25519(beacon_identity),\n        sign(tag_x25519_prekey(x25519_public(",
+			"        beacon_identity,\n        sign(tag_x25519_prekey(x25519_public(",
+		),
+		(
+			"beacon_unsigned_pq_field",
+			"sign(tag_mlkem768(mlkem_public(beacon_pq_secret)), beacon_identity_secret),",
+			"tag_mlkem768(mlkem_public(beacon_pq_secret)),",
+		),
+		(
+			"server_swaps_one_time_and_pq",
+			"sign(tag_x25519_one_time(beacon_one_time), beacon_identity_secret),\n      sign(tag_mlkem768(beacon_pq), beacon_identity_secret),",
+			"sign(tag_mlkem768(beacon_pq), beacon_identity_secret),\n      sign(tag_x25519_one_time(beacon_one_time), beacon_identity_secret),",
+		),
+		(
+			"server_relabeled_assigned_id",
+			"      kem_ciphertext,\n      assigned_key_id\n    )\n  in\n  let server_material",
+			"      kem_ciphertext,\n      relabeled_assigned_key_id\n    )\n  in\n  let server_material",
+		),
+	] {
+		assert_eq!(
+			PHASE2_CONTROL_MODEL.matches(from).count(),
+			1,
+			"{name}: anchor"
+		);
+		let changed = PHASE2_CONTROL_MODEL.replacen(from, to, 1);
+		assert!(
+			validate_phase2_transcript_ad(&changed)
+				.is_err_and(|error| error.contains("Phase-2 transcript AD fields changed")),
+			"Phase-2 transcript-AD mutation survived: {name}"
+		);
 	}
 }
 
@@ -17940,7 +18214,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration-consumed.pvl",
 		"consumed.contains",
-		"beaconcrypt/src/server.rs:572-576",
+		"beaconcrypt/src/server.rs:560-564",
 	),
 	(
 		"fs-common.pvl",
@@ -17950,82 +18224,82 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-common.pvl",
 		"common.kid_next",
-		"beaconcrypt-core/src/pqxdh.rs:845-851",
+		"beaconcrypt-core/src/pqxdh.rs:828-834",
 	),
 	(
 		"fs-registration-binding.pvl",
 		"binding.root_input",
-		"beaconcrypt-core/src/pqxdh.rs:398-412",
+		"beaconcrypt-core/src/pqxdh.rs:396-410",
 	),
 	(
 		"fs-registration-binding.pvl",
 		"binding.associated_data",
-		"beaconcrypt-core/src/pqxdh.rs:938-959",
+		"beaconcrypt-core/src/authentication.rs:271-281",
 	),
 	(
 		"fs-registration.pvl",
 		"server.accept",
-		"beaconcrypt/src/server.rs:542-557",
+		"beaconcrypt/src/server.rs:532-547",
 	),
 	(
 		"fs-registration.pvl",
 		"server.identity_tag",
-		"beaconcrypt-core/src/registration.rs:209-213",
+		"beaconcrypt-core/src/registration.rs:140-144",
 	),
 	(
 		"fs-registration.pvl",
 		"server.signatures",
-		"beaconcrypt-core/src/registration.rs:238-249",
+		"beaconcrypt-core/src/registration.rs:175-186",
 	),
 	(
 		"fs-registration.pvl",
 		"server.validate_init_kex",
-		"beaconcrypt-core/src/registration.rs:271-280",
+		"beaconcrypt-core/src/registration.rs:208-217",
 	),
 	(
 		"fs-registration.pvl",
 		"core.validate_init_kex",
-		"beaconcrypt-core/src/pqxdh.rs:325-345",
+		"beaconcrypt-core/src/pqxdh.rs:323-343",
 	),
 	(
 		"fs-registration.pvl",
 		"server.registration_id",
-		"beaconcrypt/src/server.rs:571-572",
+		"beaconcrypt/src/server.rs:559-560",
 	),
 	(
 		"fs-registration.pvl",
 		"core.registration_id",
-		"beaconcrypt-core/src/pqxdh.rs:195-204",
+		"beaconcrypt-core/src/pqxdh.rs:193-202",
 	),
 	(
 		"fs-registration.pvl",
 		"core.registration_id_replacement",
-		"beaconcrypt-core/src/pqxdh.rs:218-220",
+		"beaconcrypt-core/src/pqxdh.rs:216-218",
 	),
 	(
 		"fs-registration.pvl",
 		"server.consumed_status",
-		"beaconcrypt/src/server.rs:572-576",
+		"beaconcrypt/src/server.rs:560-564",
 	),
 	(
 		"fs-registration.pvl",
 		"core.replay_status",
-		"beaconcrypt-core/src/pqxdh.rs:245-251",
+		"beaconcrypt-core/src/pqxdh.rs:243-249",
 	),
 	(
 		"fs-registration.pvl",
 		"server.fresh_ephemeral",
-		"beaconcrypt/src/pqxdh.rs:124-129",
+		"beaconcrypt/src/pqxdh.rs:107-112",
 	),
 	(
 		"fs-registration.pvl",
 		"server.encapsulate",
-		"beaconcrypt/src/pqxdh.rs:134-138",
+		"beaconcrypt/src/pqxdh.rs:117-121",
 	),
 	(
 		"fs-registration.pvl",
 		"server.identity_conversion",
-		"beaconcrypt/src/pqxdh.rs:111-122",
+		"beaconcrypt/src/pqxdh.rs:94-105",
 	),
 	(
 		"fs-registration.pvl",
@@ -18045,17 +18319,17 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"server.insert",
-		"beaconcrypt/src/server.rs:594-598",
+		"beaconcrypt/src/server.rs:582-586",
 	),
 	(
 		"fs-registration.pvl",
 		"server.accept_return",
-		"beaconcrypt/src/server.rs:598-601",
+		"beaconcrypt/src/server.rs:586-589",
 	),
 	(
 		"fs-registration.pvl",
 		"server.build",
-		"beaconcrypt/src/server.rs:611-616",
+		"beaconcrypt/src/server.rs:599-604",
 	),
 	(
 		"fs-registration.pvl",
@@ -18065,32 +18339,32 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"server.prepare_commit",
-		"beaconcrypt-core/src/registration.rs:1022-1031",
+		"beaconcrypt-core/src/registration.rs:880-889",
 	),
 	(
 		"fs-registration.pvl",
 		"core.prepare_commit",
-		"beaconcrypt-core/src/pqxdh.rs:854-865",
+		"beaconcrypt-core/src/pqxdh.rs:837-848",
 	),
 	(
 		"fs-registration.pvl",
 		"core.prepare_commit_ad",
-		"beaconcrypt-core/src/pqxdh.rs:884-887",
+		"beaconcrypt-core/src/registration.rs:889-892",
 	),
 	(
 		"fs-registration.pvl",
 		"server.ratchet_start",
-		"beaconcrypt-core/src/registration.rs:1031-1032",
+		"beaconcrypt-core/src/registration.rs:927-928",
 	),
 	(
 		"fs-registration.pvl",
 		"server.associated_data",
-		"beaconcrypt-core/src/registration.rs:1066-1066",
+		"beaconcrypt-core/src/registration.rs:962-962",
 	),
 	(
 		"fs-registration.pvl",
 		"server.payload",
-		"beaconcrypt/src/server.rs:617-618",
+		"beaconcrypt/src/server.rs:605-606",
 	),
 	(
 		"fs-registration.pvl",
@@ -18100,17 +18374,17 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"server.seal",
-		"beaconcrypt/src/server.rs:639-646",
+		"beaconcrypt/src/server.rs:629-636",
 	),
 	(
 		"fs-registration.pvl",
 		"server.commit",
-		"beaconcrypt-core/src/registration.rs:1329-1338",
+		"beaconcrypt-core/src/registration.rs:1225-1234",
 	),
 	(
 		"fs-registration.pvl",
 		"server.build_return",
-		"beaconcrypt/src/server.rs:677-680",
+		"beaconcrypt/src/server.rs:667-670",
 	),
 	(
 		"fs-registration.pvl",
@@ -18120,52 +18394,52 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"beacon.new",
-		"beaconcrypt/src/beacon.rs:102-134",
+		"beaconcrypt/src/beacon.rs:101-133",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.one_time",
-		"beaconcrypt/src/beacon.rs:371-375",
+		"beaconcrypt/src/beacon.rs:365-369",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.start",
-		"beaconcrypt/src/beacon.rs:401-414",
+		"beaconcrypt/src/beacon.rs:395-408",
 	),
 	(
 		"fs-registration.pvl",
 		"core.beacon_start",
-		"beaconcrypt-core/src/pqxdh.rs:304-321",
+		"beaconcrypt-core/src/pqxdh.rs:302-319",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.sign",
-		"beaconcrypt-core/src/registration.rs:616-627",
+		"beaconcrypt-core/src/registration.rs:531-542",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.bundle_return",
-		"beaconcrypt/src/beacon.rs:493-493",
+		"beaconcrypt/src/beacon.rs:473-473",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.finish",
-		"beaconcrypt/src/beacon.rs:503-509",
+		"beaconcrypt/src/beacon.rs:483-489",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.decode",
-		"beaconcrypt/src/beacon.rs:521-531",
+		"beaconcrypt/src/beacon.rs:501-511",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.identity_conversion",
-		"beaconcrypt/src/pqxdh.rs:111-122",
+		"beaconcrypt/src/pqxdh.rs:94-105",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.decapsulate",
-		"beaconcrypt/src/pqxdh.rs:140-149",
+		"beaconcrypt/src/pqxdh.rs:123-132",
 	),
 	(
 		"fs-registration.pvl",
@@ -18180,7 +18454,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"core.pin_check",
-		"beaconcrypt-core/src/pqxdh.rs:552-554",
+		"beaconcrypt-core/src/pqxdh.rs:545-547",
 	),
 	(
 		"fs-registration.pvl",
@@ -18190,47 +18464,47 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-registration.pvl",
 		"beacon.ratchet_start",
-		"beaconcrypt-core/src/registration.rs:810-813",
+		"beaconcrypt-core/src/registration.rs:668-671",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.associated_data",
-		"beaconcrypt-core/src/registration.rs:839-840",
+		"beaconcrypt-core/src/registration.rs:697-698",
 	),
 	(
 		"fs-registration.pvl",
 		"core.finish_ad",
-		"beaconcrypt-core/src/pqxdh.rs:559-562",
+		"beaconcrypt-core/src/registration.rs:389-392",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.receive",
-		"beaconcrypt/src/beacon.rs:568-590",
+		"beaconcrypt/src/beacon.rs:548-570",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.sequence_one",
-		"beaconcrypt-core/src/registration.rs:835-841",
+		"beaconcrypt-core/src/registration.rs:693-699",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.binding",
-		"beaconcrypt-core/src/registration.rs:956-970",
+		"beaconcrypt-core/src/registration.rs:814-828",
 	),
 	(
 		"fs-registration.pvl",
 		"core.binding",
-		"beaconcrypt-core/src/pqxdh.rs:623-635",
+		"beaconcrypt-core/src/pqxdh.rs:611-623",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.pin_checks",
-		"beaconcrypt-core/src/pqxdh.rs:552-556",
+		"beaconcrypt-core/src/pqxdh.rs:545-549",
 	),
 	(
 		"fs-registration.pvl",
 		"beacon.commit",
-		"beaconcrypt/src/beacon.rs:595-602",
+		"beaconcrypt/src/beacon.rs:575-582",
 	),
 	(
 		"fs-records-s2b-window.pvl",
@@ -18245,22 +18519,22 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b-gate.pvl",
 		"gate.sequence_one",
-		"beaconcrypt-core/src/registration.rs:835-841",
+		"beaconcrypt-core/src/registration.rs:693-699",
 	),
 	(
 		"fs-records-s2b-gate.pvl",
 		"gate.abort",
-		"beaconcrypt/src/beacon.rs:586-593",
+		"beaconcrypt/src/beacon.rs:566-573",
 	),
 	(
 		"fs-records-s2b-taskings.pvl",
 		"taskings.encrypt",
-		"beaconcrypt/src/server.rs:372-376",
+		"beaconcrypt/src/server.rs:362-366",
 	),
 	(
 		"fs-records-s2b-taskings.pvl",
 		"taskings.seal",
-		"beaconcrypt/src/ratchet.rs:537-570",
+		"beaconcrypt/src/ratchet.rs:541-574",
 	),
 	(
 		"fs-records-s2b-taskings.pvl",
@@ -18280,17 +18554,17 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b-taskings.pvl",
 		"taskings.snapshot",
-		"beaconcrypt/src/server.rs:683-693",
+		"beaconcrypt/src/server.rs:673-683",
 	),
 	(
 		"fs-records-s2b-taskings-chosen.pvl",
 		"taskings.encrypt",
-		"beaconcrypt/src/server.rs:372-376",
+		"beaconcrypt/src/server.rs:362-366",
 	),
 	(
 		"fs-records-s2b-taskings-chosen.pvl",
 		"taskings.seal",
-		"beaconcrypt/src/ratchet.rs:537-570",
+		"beaconcrypt/src/ratchet.rs:541-574",
 	),
 	(
 		"fs-records-s2b-taskings-chosen.pvl",
@@ -18310,17 +18584,17 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b-taskings-chosen.pvl",
 		"taskings.snapshot",
-		"beaconcrypt/src/server.rs:683-693",
+		"beaconcrypt/src/server.rs:673-683",
 	),
 	(
 		"fs-records-s2b-receive.pvl",
 		"beacon.decrypt",
-		"beaconcrypt/src/beacon.rs:226-241",
+		"beaconcrypt/src/beacon.rs:220-235",
 	),
 	(
 		"fs-records-s2b-receive.pvl",
 		"ratchet.decode_sender",
-		"beaconcrypt/src/ratchet.rs:616-633",
+		"beaconcrypt/src/ratchet.rs:620-637",
 	),
 	(
 		"fs-records-s2b-receive.pvl",
@@ -18350,7 +18624,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b-receive.pvl",
 		"ratchet.open",
-		"beaconcrypt/src/ratchet.rs:570-599",
+		"beaconcrypt/src/ratchet.rs:574-603",
 	),
 	(
 		"fs-records-s2b-receive.pvl",
@@ -18390,57 +18664,57 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.fresh_ephemeral",
-		"beaconcrypt/src/pqxdh.rs:124-129",
+		"beaconcrypt/src/pqxdh.rs:107-112",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.encapsulate",
-		"beaconcrypt/src/pqxdh.rs:134-138",
+		"beaconcrypt/src/pqxdh.rs:117-121",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.accept",
-		"beaconcrypt/src/server.rs:542-557",
+		"beaconcrypt/src/server.rs:532-547",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.identity_tag",
-		"beaconcrypt-core/src/registration.rs:209-213",
+		"beaconcrypt-core/src/registration.rs:140-144",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.signatures",
-		"beaconcrypt-core/src/registration.rs:238-249",
+		"beaconcrypt-core/src/registration.rs:175-186",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.validate_init_kex",
-		"beaconcrypt-core/src/registration.rs:271-280",
+		"beaconcrypt-core/src/registration.rs:208-217",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"core.validate_init_kex",
-		"beaconcrypt-core/src/pqxdh.rs:325-345",
+		"beaconcrypt-core/src/pqxdh.rs:323-343",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.registration_id",
-		"beaconcrypt/src/server.rs:571-572",
+		"beaconcrypt/src/server.rs:559-560",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"core.registration_id",
-		"beaconcrypt-core/src/pqxdh.rs:195-204",
+		"beaconcrypt-core/src/pqxdh.rs:193-202",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.consumed_status",
-		"beaconcrypt/src/server.rs:572-576",
+		"beaconcrypt/src/server.rs:560-564",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.identity_conversion",
-		"beaconcrypt/src/pqxdh.rs:111-122",
+		"beaconcrypt/src/pqxdh.rs:94-105",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -18455,7 +18729,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"core.root_input",
-		"beaconcrypt-core/src/pqxdh.rs:398-412",
+		"beaconcrypt-core/src/pqxdh.rs:396-410",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -18465,17 +18739,17 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.insert",
-		"beaconcrypt/src/server.rs:594-598",
+		"beaconcrypt/src/server.rs:582-586",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.accept_return",
-		"beaconcrypt/src/server.rs:598-601",
+		"beaconcrypt/src/server.rs:586-589",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.build",
-		"beaconcrypt/src/server.rs:611-616",
+		"beaconcrypt/src/server.rs:599-604",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -18485,32 +18759,32 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.prepare_commit",
-		"beaconcrypt-core/src/registration.rs:1022-1031",
+		"beaconcrypt-core/src/registration.rs:880-889",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"core.prepare_commit_ad",
-		"beaconcrypt-core/src/pqxdh.rs:884-887",
+		"beaconcrypt-core/src/registration.rs:889-892",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.ratchet_start",
-		"beaconcrypt-core/src/registration.rs:1031-1032",
+		"beaconcrypt-core/src/registration.rs:927-928",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.associated_data",
-		"beaconcrypt-core/src/registration.rs:1066-1066",
+		"beaconcrypt-core/src/registration.rs:962-962",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"core.associated_data",
-		"beaconcrypt-core/src/pqxdh.rs:938-959",
+		"beaconcrypt-core/src/authentication.rs:271-281",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.payload",
-		"beaconcrypt/src/server.rs:617-618",
+		"beaconcrypt/src/server.rs:605-606",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -18520,67 +18794,67 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"server.seal",
-		"beaconcrypt/src/server.rs:639-646",
+		"beaconcrypt/src/server.rs:629-636",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.commit",
-		"beaconcrypt-core/src/registration.rs:1329-1338",
+		"beaconcrypt-core/src/registration.rs:1225-1234",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"server.build_return",
-		"beaconcrypt/src/server.rs:677-680",
+		"beaconcrypt/src/server.rs:667-670",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.new",
-		"beaconcrypt/src/beacon.rs:102-134",
+		"beaconcrypt/src/beacon.rs:101-133",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.one_time",
-		"beaconcrypt/src/beacon.rs:371-375",
+		"beaconcrypt/src/beacon.rs:365-369",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.start",
-		"beaconcrypt/src/beacon.rs:401-414",
+		"beaconcrypt/src/beacon.rs:395-408",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"core.beacon_start",
-		"beaconcrypt-core/src/pqxdh.rs:304-321",
+		"beaconcrypt-core/src/pqxdh.rs:302-319",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.sign",
-		"beaconcrypt-core/src/registration.rs:616-627",
+		"beaconcrypt-core/src/registration.rs:531-542",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.bundle_return",
-		"beaconcrypt/src/beacon.rs:493-493",
+		"beaconcrypt/src/beacon.rs:473-473",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.finish",
-		"beaconcrypt/src/beacon.rs:503-509",
+		"beaconcrypt/src/beacon.rs:483-489",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.decode",
-		"beaconcrypt/src/beacon.rs:521-531",
+		"beaconcrypt/src/beacon.rs:501-511",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.identity_conversion",
-		"beaconcrypt/src/pqxdh.rs:111-122",
+		"beaconcrypt/src/pqxdh.rs:94-105",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.decapsulate",
-		"beaconcrypt/src/pqxdh.rs:140-149",
+		"beaconcrypt/src/pqxdh.rs:123-132",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -18595,7 +18869,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"core.pin_check",
-		"beaconcrypt-core/src/pqxdh.rs:552-554",
+		"beaconcrypt-core/src/pqxdh.rs:545-547",
 	),
 	(
 		"fs-records-s2b.pvl",
@@ -18605,52 +18879,52 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-s2b.pvl",
 		"beacon.ratchet_start",
-		"beaconcrypt-core/src/registration.rs:810-813",
+		"beaconcrypt-core/src/registration.rs:668-671",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.associated_data",
-		"beaconcrypt-core/src/registration.rs:839-840",
+		"beaconcrypt-core/src/registration.rs:697-698",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"core.finish_ad",
-		"beaconcrypt-core/src/pqxdh.rs:559-562",
+		"beaconcrypt-core/src/registration.rs:389-392",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.receive",
-		"beaconcrypt/src/beacon.rs:568-590",
+		"beaconcrypt/src/beacon.rs:548-570",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"ratchet.decrypt",
-		"beaconcrypt/src/ratchet.rs:610-652",
+		"beaconcrypt/src/ratchet.rs:614-656",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.sequence_one",
-		"beaconcrypt-core/src/registration.rs:835-841",
+		"beaconcrypt-core/src/registration.rs:693-699",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.binding",
-		"beaconcrypt-core/src/registration.rs:956-970",
+		"beaconcrypt-core/src/registration.rs:814-828",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"core.binding",
-		"beaconcrypt-core/src/pqxdh.rs:623-635",
+		"beaconcrypt-core/src/pqxdh.rs:611-623",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.pin_checks",
-		"beaconcrypt-core/src/pqxdh.rs:552-556",
+		"beaconcrypt-core/src/pqxdh.rs:545-549",
 	),
 	(
 		"fs-records-s2b.pvl",
 		"beacon.commit",
-		"beaconcrypt/src/beacon.rs:595-602",
+		"beaconcrypt/src/beacon.rs:575-582",
 	),
 	(
 		"fs-records-b2s-window.pvl",
@@ -18665,12 +18939,12 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s-sends.pvl",
 		"sends.encrypt",
-		"beaconcrypt/src/beacon.rs:198-215",
+		"beaconcrypt/src/beacon.rs:192-209",
 	),
 	(
 		"fs-records-b2s-sends.pvl",
 		"sends.seal",
-		"beaconcrypt/src/ratchet.rs:537-570",
+		"beaconcrypt/src/ratchet.rs:541-574",
 	),
 	(
 		"fs-records-b2s-sends.pvl",
@@ -18690,12 +18964,12 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s-sends-chosen.pvl",
 		"sends.encrypt",
-		"beaconcrypt/src/beacon.rs:198-215",
+		"beaconcrypt/src/beacon.rs:192-209",
 	),
 	(
 		"fs-records-b2s-sends-chosen.pvl",
 		"sends.seal",
-		"beaconcrypt/src/ratchet.rs:537-570",
+		"beaconcrypt/src/ratchet.rs:541-574",
 	),
 	(
 		"fs-records-b2s-sends-chosen.pvl",
@@ -18715,27 +18989,27 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s-receive.pvl",
 		"server.decrypt",
-		"beaconcrypt/src/server.rs:419-421",
+		"beaconcrypt/src/server.rs:409-411",
 	),
 	(
 		"fs-records-b2s-receive.pvl",
 		"server.route",
-		"beaconcrypt/src/server.rs:427-435",
+		"beaconcrypt/src/server.rs:417-425",
 	),
 	(
 		"fs-records-b2s-receive.pvl",
 		"ratchet.frame_sender",
-		"beaconcrypt/src/ratchet.rs:355-357",
+		"beaconcrypt/src/ratchet.rs:359-361",
 	),
 	(
 		"fs-records-b2s-receive.pvl",
 		"server.peer_associated_data",
-		"beaconcrypt/src/server.rs:368-370",
+		"beaconcrypt/src/server.rs:358-360",
 	),
 	(
 		"fs-records-b2s-receive.pvl",
 		"ratchet.decode_sender",
-		"beaconcrypt/src/ratchet.rs:616-633",
+		"beaconcrypt/src/ratchet.rs:620-637",
 	),
 	(
 		"fs-records-b2s-receive.pvl",
@@ -18765,7 +19039,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s-receive.pvl",
 		"ratchet.open",
-		"beaconcrypt/src/ratchet.rs:570-599",
+		"beaconcrypt/src/ratchet.rs:574-603",
 	),
 	(
 		"fs-records-b2s-receive.pvl",
@@ -18790,7 +19064,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s-receive.pvl",
 		"server.accepted",
-		"beaconcrypt/src/server.rs:436-439",
+		"beaconcrypt/src/server.rs:426-429",
 	),
 	(
 		"fs-records-b2s-receive.pvl",
@@ -18810,57 +19084,57 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.fresh_ephemeral",
-		"beaconcrypt/src/pqxdh.rs:124-129",
+		"beaconcrypt/src/pqxdh.rs:107-112",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.encapsulate",
-		"beaconcrypt/src/pqxdh.rs:134-138",
+		"beaconcrypt/src/pqxdh.rs:117-121",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.accept",
-		"beaconcrypt/src/server.rs:542-557",
+		"beaconcrypt/src/server.rs:532-547",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.identity_tag",
-		"beaconcrypt-core/src/registration.rs:209-213",
+		"beaconcrypt-core/src/registration.rs:140-144",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.signatures",
-		"beaconcrypt-core/src/registration.rs:238-249",
+		"beaconcrypt-core/src/registration.rs:175-186",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.validate_init_kex",
-		"beaconcrypt-core/src/registration.rs:271-280",
+		"beaconcrypt-core/src/registration.rs:208-217",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"core.validate_init_kex",
-		"beaconcrypt-core/src/pqxdh.rs:325-345",
+		"beaconcrypt-core/src/pqxdh.rs:323-343",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.registration_id",
-		"beaconcrypt/src/server.rs:571-572",
+		"beaconcrypt/src/server.rs:559-560",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"core.registration_id",
-		"beaconcrypt-core/src/pqxdh.rs:195-204",
+		"beaconcrypt-core/src/pqxdh.rs:193-202",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.consumed_status",
-		"beaconcrypt/src/server.rs:572-576",
+		"beaconcrypt/src/server.rs:560-564",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.identity_conversion",
-		"beaconcrypt/src/pqxdh.rs:111-122",
+		"beaconcrypt/src/pqxdh.rs:94-105",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -18880,17 +19154,17 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.insert",
-		"beaconcrypt/src/server.rs:594-598",
+		"beaconcrypt/src/server.rs:582-586",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.accept_return",
-		"beaconcrypt/src/server.rs:598-601",
+		"beaconcrypt/src/server.rs:586-589",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.build",
-		"beaconcrypt/src/server.rs:611-616",
+		"beaconcrypt/src/server.rs:599-604",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -18900,32 +19174,32 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.prepare_commit",
-		"beaconcrypt-core/src/registration.rs:1022-1031",
+		"beaconcrypt-core/src/registration.rs:880-889",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.ratchet_start",
-		"beaconcrypt-core/src/registration.rs:1031-1032",
+		"beaconcrypt-core/src/registration.rs:927-928",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"core.server_ratchets",
-		"beaconcrypt-core/src/pqxdh.rs:439-442",
+		"beaconcrypt-core/src/pqxdh.rs:437-440",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.associated_data",
-		"beaconcrypt-core/src/registration.rs:1066-1066",
+		"beaconcrypt-core/src/registration.rs:962-962",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"core.prepare_commit_ad",
-		"beaconcrypt-core/src/pqxdh.rs:884-887",
+		"beaconcrypt-core/src/registration.rs:889-892",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.payload",
-		"beaconcrypt/src/server.rs:617-618",
+		"beaconcrypt/src/server.rs:605-606",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -18935,17 +19209,17 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"server.seal",
-		"beaconcrypt/src/server.rs:639-646",
+		"beaconcrypt/src/server.rs:629-636",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.commit",
-		"beaconcrypt-core/src/registration.rs:1329-1338",
+		"beaconcrypt-core/src/registration.rs:1225-1234",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"server.build_return",
-		"beaconcrypt/src/server.rs:677-680",
+		"beaconcrypt/src/server.rs:667-670",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -18955,52 +19229,52 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"beacon.new",
-		"beaconcrypt/src/beacon.rs:102-134",
+		"beaconcrypt/src/beacon.rs:101-133",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.one_time",
-		"beaconcrypt/src/beacon.rs:371-375",
+		"beaconcrypt/src/beacon.rs:365-369",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.start",
-		"beaconcrypt/src/beacon.rs:401-414",
+		"beaconcrypt/src/beacon.rs:395-408",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"core.beacon_start",
-		"beaconcrypt-core/src/pqxdh.rs:304-321",
+		"beaconcrypt-core/src/pqxdh.rs:302-319",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.sign",
-		"beaconcrypt-core/src/registration.rs:616-627",
+		"beaconcrypt-core/src/registration.rs:531-542",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.bundle_return",
-		"beaconcrypt/src/beacon.rs:493-493",
+		"beaconcrypt/src/beacon.rs:473-473",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.finish",
-		"beaconcrypt/src/beacon.rs:503-509",
+		"beaconcrypt/src/beacon.rs:483-489",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.decode",
-		"beaconcrypt/src/beacon.rs:521-531",
+		"beaconcrypt/src/beacon.rs:501-511",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.identity_conversion",
-		"beaconcrypt/src/pqxdh.rs:111-122",
+		"beaconcrypt/src/pqxdh.rs:94-105",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.decapsulate",
-		"beaconcrypt/src/pqxdh.rs:140-149",
+		"beaconcrypt/src/pqxdh.rs:123-132",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -19015,7 +19289,7 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"core.pin_check",
-		"beaconcrypt-core/src/pqxdh.rs:552-554",
+		"beaconcrypt-core/src/pqxdh.rs:545-547",
 	),
 	(
 		"fs-records-b2s.pvl",
@@ -19025,52 +19299,52 @@ const FS_FIDELITY: &[(&str, &str, &str)] = &[
 	(
 		"fs-records-b2s.pvl",
 		"beacon.ratchet_start",
-		"beaconcrypt-core/src/registration.rs:810-813",
+		"beaconcrypt-core/src/registration.rs:668-671",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"core.beacon_ratchets",
-		"beaconcrypt-core/src/pqxdh.rs:435-438",
+		"beaconcrypt-core/src/pqxdh.rs:433-436",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.associated_data",
-		"beaconcrypt-core/src/registration.rs:839-840",
+		"beaconcrypt-core/src/registration.rs:697-698",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"core.finish_ad",
-		"beaconcrypt-core/src/pqxdh.rs:559-562",
+		"beaconcrypt-core/src/registration.rs:389-392",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.receive",
-		"beaconcrypt/src/beacon.rs:568-590",
+		"beaconcrypt/src/beacon.rs:548-570",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.sequence_one",
-		"beaconcrypt-core/src/registration.rs:835-841",
+		"beaconcrypt-core/src/registration.rs:693-699",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.binding",
-		"beaconcrypt-core/src/registration.rs:956-970",
+		"beaconcrypt-core/src/registration.rs:814-828",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"core.binding",
-		"beaconcrypt-core/src/pqxdh.rs:623-635",
+		"beaconcrypt-core/src/pqxdh.rs:611-623",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.pin_checks",
-		"beaconcrypt-core/src/pqxdh.rs:552-556",
+		"beaconcrypt-core/src/pqxdh.rs:545-549",
 	),
 	(
 		"fs-records-b2s.pvl",
 		"beacon.commit",
-		"beaconcrypt/src/beacon.rs:595-602",
+		"beaconcrypt/src/beacon.rs:575-582",
 	),
 ];
 
@@ -19310,12 +19584,16 @@ const FS_EVENTS: [&str; 12] = [
 ];
 
 /// Declarations copied verbatim from environment.pvl into the self-contained fs-common.pvl.
-const FS_COPIED_DECLARATIONS: [&str; 5] = [
+const FS_COPIED_DECLARATIONS: [&str; 9] = [
 	"free SERVER_IDENTITY_SECRET:",
 	"free SERVER_KEY_ID:",
 	"fun signed_init_kex(",
 	"fun registration_payload(",
 	"fun kex_response(",
+	"fun record_ad_context87(",
+	"fun record_ad_preimage(",
+	"fun record_associated_data(",
+	"letfun transcript_associated_data(",
 ];
 
 struct FsFiles {
@@ -19635,6 +19913,7 @@ fn fs_rust_source(path: &str) -> Option<&'static str> {
 		"beaconcrypt/src/ratchet.rs" => Some(ADAPTER_RATCHET),
 		"beaconcrypt-core/src/registration.rs" => Some(CORE_REGISTRATION),
 		"beaconcrypt-core/src/agreement.rs" => Some(CORE_AGREEMENT),
+		"beaconcrypt-core/src/authentication.rs" => Some(CORE_AUTHENTICATION),
 		"beaconcrypt/src/pqxdh.rs" => Some(ADAPTER_PQXDH),
 		"beaconcrypt-core/src/pqxdh.rs" => Some(CORE_PQXDH),
 		"beaconcrypt-core/src/record.rs" => Some(CORE_RECORD),
@@ -19827,7 +20106,7 @@ fn validate_fs_model(files: &FsFiles) -> Result<(), String> {
 			"event FsServerAccepted( obj, server_identity, identity, init, registration_id, root );",
 			"in(c, control: bitstring) [precise];",
 			"let assigned_key_id = fs_kid(kid_next) in",
-			"let associated_data = fs_associated_data(server_identity, identity) in",
+			"let associated_data = fs_associated_data( tag_ed25519(identity), signed_prekey, signed_one_time, signed_pq, server_identity, x25519_public(ephemeral_secret), mlkem_ciphertext(pq, kem_coins), assigned_key_id ) in",
 			"new payload: bitstring;",
 			"fs_seq(1), SERVER_KEY_ID, registration_payload(binding, payload)",
 			"event FsServerCommitted( obj, server_identity, identity, init, assigned_key_id, root, associated_data, payload );",
@@ -19841,7 +20120,7 @@ fn validate_fs_model(files: &FsFiles) -> Result<(), String> {
 			"let kem_secret = mlkem_decapsulate(kem_ciphertext, beacon_pq_secret) in",
 			"if response_server_identity = server_identity then",
 			"fs_root_dh2(dh2, dh3), dh3, dh4, kem_secret",
-			"let associated_data = fs_associated_data(server_identity, beacon_identity) in",
+			"let associated_data = fs_associated_data( tag_ed25519(beacon_identity), sign(tag_x25519_prekey(x25519_public(beacon_prekey_secret)), beacon_identity_secret), sign(tag_x25519_one_time(x25519_public(beacon_one_time_secret)), beacon_identity_secret), sign(tag_mlkem768(mlkem_public(beacon_pq_secret)), beacon_identity_secret), response_server_identity, server_ephemeral, kem_ciphertext, assigned_key_id ) in",
 			"if frame_sender = SERVER_KEY_ID then",
 			"if frame_sequence = fs_seq(1) then",
 			"if binding = beaconcrypt_core__pqxdh__RegistrationKeyIdBinding( key_id_encoding(assigned_key_id) ) then",
@@ -19869,12 +20148,12 @@ fn validate_fs_model(files: &FsFiles) -> Result<(), String> {
 		(
 			"fs-registration-binding.pvl",
 			&files.binding,
-			"letfun fs_root_dh2(dh2: bitstring, dh3: bitstring) = dh2. letfun fs_associated_data(server_identity: bitstring, beacon_identity: bitstring) = beaconcrypt_core__pqxdh__build_associated_data(server_identity, beacon_identity).",
+			"letfun fs_root_dh2(dh2: bitstring, dh3: bitstring) = dh2. letfun fs_associated_data( encoded_identity: bitstring, signed_prekey: bitstring, signed_one_time: bitstring, signed_pq: bitstring, server_identity: bitstring, ephemeral: bitstring, kem: bitstring, assigned: key_id ) = transcript_associated_data(encoded_identity, signed_prekey, signed_one_time, signed_pq, server_identity, ephemeral, kem, assigned).",
 		),
 		(
 			"fs-control-uks.pvl",
 			&files.uks,
-			"fun fs_uks_ad(bitstring): bitstring. letfun fs_root_dh2(dh2: bitstring, dh3: bitstring) = dh3. letfun fs_associated_data(server_identity: bitstring, beacon_identity: bitstring) = fs_uks_ad(server_identity).",
+			"fun fs_uks_ad(bitstring): bitstring. letfun fs_root_dh2(dh2: bitstring, dh3: bitstring) = dh3. letfun fs_associated_data( encoded_identity: bitstring, signed_prekey: bitstring, signed_one_time: bitstring, signed_pq: bitstring, server_identity: bitstring, ephemeral: bitstring, kem: bitstring, assigned: key_id ) = fs_uks_ad(server_identity).",
 		),
 	] {
 		let text = normalized(&uncommented_pv(source)?);
@@ -20004,14 +20283,14 @@ fn validate_fs_records_s2b(files: &FsFiles) -> Result<(), String> {
 			"x25519_server_dh(ephemeral_secret, x25519_public_from_ed(identity)),",
 			"dh1, dh2, dh3, dh4, mlkem_shared_secret(pq, kem_coins)",
 			"event FsServerAccepted( obj, server_identity, identity, init, registration_id, root ); in(c, build_request: bitstring) [precise]; let assigned_key_id = fs_kid(1) in",
-			"let associated_data = beaconcrypt_core__pqxdh__build_associated_data( server_identity, identity ) in new payload: bitstring;",
+			"let associated_data = transcript_associated_data( tag_ed25519(identity), signed_prekey, signed_one_time, signed_pq, server_identity, x25519_public(ephemeral_secret), mlkem_ciphertext(pq, kem_coins), assigned_key_id ) in new payload: bitstring;",
 			"fs_seq(1), SERVER_KEY_ID, response_plaintext ) in event FsServerCommitted( obj, server_identity, identity, init, assigned_key_id, root, associated_data, payload ); event FsSent( server_to_beacon(), server_identity, identity, assigned_key_id, root, 1, response_plaintext );",
 			"FsS2bTaskings( server_identity, identity, assigned_key_id, root, associated_data, send_chain_2, send_chain_3 ).",
 			"let FsS2bBeacon() =",
 			"event FsBeaconStarted(server_identity, beacon_identity, init, registration_id);",
 			"in(c, response: bitstring) [precise];",
 			"if response_server_identity = server_identity then",
-			"let associated_data = beaconcrypt_core__pqxdh__build_associated_data( server_identity, beacon_identity ) in",
+			"let associated_data = transcript_associated_data( tag_ed25519(beacon_identity), sign(tag_x25519_prekey(x25519_public(beacon_prekey_secret)), beacon_identity_secret), sign(tag_x25519_one_time(x25519_public(beacon_one_time_secret)), beacon_identity_secret), sign(tag_mlkem768(mlkem_public(beacon_pq_secret)), beacon_identity_secret), response_server_identity, server_ephemeral, kem_ciphertext, assigned_key_id ) in",
 			"fs_seq(frame_t: nat), =SERVER_KEY_ID ) = initial_frame in if frame_t = 1 then",
 			"let registration_payload( =expected_binding, application_payload: bitstring ) = finish_plaintext in event FsBeaconEstablished( server_identity, beacon_identity, init, assigned_key_id, root, associated_data, application_payload ); event FsReceived( server_to_beacon(), server_identity, beacon_identity, assigned_key_id, root, 1, finish_plaintext ); event FsReceivedFrame( server_to_beacon(), server_identity, beacon_identity, assigned_key_id, root, 1, initial_frame ); FsS2bRecv1( server_identity, beacon_identity, assigned_key_id, root, associated_data, ratchet_material(receive_chain_2), ratchet_material(receive_chain_3), receive_chain_4, 1, false )",
 			"else if frame_t = 2 then",
@@ -20221,7 +20500,7 @@ fn validate_fs_records_b2s(files: &FsFiles) -> Result<(), String> {
 			"x25519_server_dh(ephemeral_secret, x25519_public_from_ed(identity)),",
 			"dh1, fs_root_dh2(dh2, dh3), dh3, dh4, mlkem_shared_secret(pq, kem_coins)",
 			"event FsServerAccepted( obj, server_identity, identity, init, registration_id, root ); in(c, build_request: bitstring) [precise]; let assigned_key_id = fs_kid(1) in",
-			"let send_chain_1 = server_to_beacon_chain(root) in let receive_chain_1 = beacon_to_server_chain(root) in let receive_chain_2 = ratchet_next(receive_chain_1) in let receive_chain_3 = ratchet_next(receive_chain_2) in let associated_data = fs_associated_data(server_identity, identity) in new payload: bitstring;",
+			"let send_chain_1 = server_to_beacon_chain(root) in let receive_chain_1 = beacon_to_server_chain(root) in let receive_chain_2 = ratchet_next(receive_chain_1) in let receive_chain_3 = ratchet_next(receive_chain_2) in let associated_data = fs_associated_data( tag_ed25519(identity), signed_prekey, signed_one_time, signed_pq, server_identity, x25519_public(ephemeral_secret), mlkem_ciphertext(pq, kem_coins), assigned_key_id ) in new payload: bitstring;",
 			"fs_seq(1), SERVER_KEY_ID, response_plaintext ) in event FsServerCommitted( obj, server_identity, identity, init, assigned_key_id, root, associated_data, payload ); event FsSent( server_to_beacon(), server_identity, identity, assigned_key_id, root, 1, response_plaintext );",
 			"FsB2sRecv1( server_identity, identity, assigned_key_id, root, associated_data, ratchet_material(receive_chain_1), ratchet_material(receive_chain_2), receive_chain_3, 0, false ).",
 			"let FsB2sBeacon(server_identity: bitstring, server_key_id: key_id) =",
@@ -20229,7 +20508,7 @@ fn validate_fs_records_b2s(files: &FsFiles) -> Result<(), String> {
 			"in(c, response: bitstring) [precise];",
 			"if response_server_identity = server_identity then",
 			"dh1, fs_root_dh2(dh2, dh3), dh3, dh4, kem_secret",
-			"let receive_chain_1 = server_to_beacon_chain(root) in let send_chain_1 = beacon_to_server_chain(root) in let send_chain_2 = ratchet_next(send_chain_1) in let associated_data = fs_associated_data(server_identity, beacon_identity) in",
+			"let receive_chain_1 = server_to_beacon_chain(root) in let send_chain_1 = beacon_to_server_chain(root) in let send_chain_2 = ratchet_next(send_chain_1) in let associated_data = fs_associated_data( tag_ed25519(beacon_identity), sign(tag_x25519_prekey(x25519_public(beacon_prekey_secret)), beacon_identity_secret), sign(tag_x25519_one_time(x25519_public(beacon_one_time_secret)), beacon_identity_secret), sign(tag_mlkem768(mlkem_public(beacon_pq_secret)), beacon_identity_secret), response_server_identity, server_ephemeral, kem_ciphertext, assigned_key_id ) in",
 			"fs_seq(frame_t: nat), =server_key_id ) = initial_frame in if frame_t = 1 then let finish_plaintext = open_frame( ratchet_material(receive_chain_1), associated_data, fs_seq(1), server_key_id, initial_frame ) in",
 			"let registration_payload( =expected_binding, application_payload: bitstring ) = finish_plaintext in event FsBeaconEstablished( server_identity, beacon_identity, init, assigned_key_id, root, associated_data, application_payload ); event FsReceived( server_to_beacon(), server_identity, beacon_identity, assigned_key_id, root, 1, finish_plaintext ); event FsReceivedFrame( server_to_beacon(), server_identity, beacon_identity, assigned_key_id, root, 1, initial_frame ); FsB2sSends( server_identity, beacon_identity, assigned_key_id, root, associated_data, send_chain_1, send_chain_2 ).",
 			"let FsRecordsB2sMain() = out(c, ed_public(SERVER_IDENTITY_SECRET)); ( (!(new obj: bitstring; FsB2sServer(obj))) | (!FsB2sBeacon(ed_public(SERVER_IDENTITY_SECRET), SERVER_KEY_ID)) ).",
@@ -21386,7 +21665,7 @@ fn free_schedule_rust_fidelity_annotations_are_exact() {
 			Box::new(|files: &mut FsFiles| {
 				replace_once(
 					&mut files.registration,
-					"src=beaconcrypt/src/server.rs:594-598",
+					"src=beaconcrypt/src/server.rs:582-586",
 					"src=beaconcrypt/src/server.rs:1-1",
 				)
 			}) as Box<dyn Fn(&mut FsFiles)>,
@@ -21443,7 +21722,7 @@ fn free_schedule_rust_fidelity_annotations_are_exact() {
 		);
 	}
 	assert_eq!(
-		check_fs_citation("beaconcrypt/src/server.rs:594-598", "let inserted"),
+		check_fs_citation("beaconcrypt/src/server.rs:582-586", "let inserted"),
 		Ok(())
 	);
 	assert!(check_fs_citation("beaconcrypt/src/server.rs:416-415", "let inserted").is_err());
@@ -21490,8 +21769,8 @@ fn free_schedule_vocabulary_and_registration_model_are_pinned() {
 			Box::new(|files: &mut FsFiles| {
 				replace_once(
 					&mut files.registration,
-					"    if fs_reg_consumed(registration_id, slot_1, slot_2) then\n    (\n      event FsServerReplayRejected(obj, server_identity, identity, registration_id);\n      Next(obj, kid_next, slot_1, slot_2)\n    )\n    else\n    (\n      (* @beaconcrypt-fs-fidelity key=server.fresh_ephemeral src=beaconcrypt/src/pqxdh.rs:124-129 anchor=server_ephemeral = crypto_kx::KeyPair::generate_with_rng(rng).ok(); *)\n      new ephemeral_secret: bitstring;\n",
-					"    new ephemeral_secret: bitstring;\n    if fs_reg_consumed(registration_id, slot_1, slot_2) then\n    (\n      event FsServerReplayRejected(obj, server_identity, identity, registration_id);\n      Next(obj, kid_next, slot_1, slot_2)\n    )\n    else\n    (\n      (* @beaconcrypt-fs-fidelity key=server.fresh_ephemeral src=beaconcrypt/src/pqxdh.rs:124-129 anchor=server_ephemeral = crypto_kx::KeyPair::generate_with_rng(rng).ok(); *)\n",
+					"    if fs_reg_consumed(registration_id, slot_1, slot_2) then\n    (\n      event FsServerReplayRejected(obj, server_identity, identity, registration_id);\n      Next(obj, kid_next, slot_1, slot_2)\n    )\n    else\n    (\n      (* @beaconcrypt-fs-fidelity key=server.fresh_ephemeral src=beaconcrypt/src/pqxdh.rs:107-112 anchor=server_ephemeral = crypto_kx::KeyPair::generate_with_rng(rng).ok(); *)\n      new ephemeral_secret: bitstring;\n",
+					"    new ephemeral_secret: bitstring;\n    if fs_reg_consumed(registration_id, slot_1, slot_2) then\n    (\n      event FsServerReplayRejected(obj, server_identity, identity, registration_id);\n      Next(obj, kid_next, slot_1, slot_2)\n    )\n    else\n    (\n      (* @beaconcrypt-fs-fidelity key=server.fresh_ephemeral src=beaconcrypt/src/pqxdh.rs:107-112 anchor=server_ephemeral = crypto_kx::KeyPair::generate_with_rng(rng).ok(); *)\n",
 				)
 			}),
 			"fs-registration Rust-ordered process changed",
@@ -21754,8 +22033,8 @@ fn free_schedule_records_b2s_model_is_pinned() {
 			Box::new(|files: &mut FsFiles| {
 				replace_once(
 					&mut files.b2s,
-					"let associated_data = fs_associated_data(server_identity, beacon_identity) in",
-					"let associated_data = fs_uks_ad(server_identity) in",
+					"let associated_data = fs_associated_data(\n    tag_ed25519(beacon_identity),",
+					"let associated_data = fs_uks_ad(\n    tag_ed25519(beacon_identity),",
 				)
 			}),
 			"fs-records-b2s process (Rust order except the v2 draw) changed",
@@ -22559,15 +22838,15 @@ fn proverif_verdict_classes_cover_every_checker_and_profile() {
 fn validate_hkdf_prefix_source_fidelity(crypto: &str, native: &str) -> Result<(), String> {
 	let crypto = compact(&uncommented_pv(crypto)?);
 	for definition in [
-		"letfun server_to_beacon_chain(root:bitstring) = hkdf_first_32(hkdf_sha512_no_salt(root,symmetric_ratchet_domain())).",
-		"letfun beacon_to_server_chain(root:bitstring) = hkdf_second_32(hkdf_sha512_no_salt(root,symmetric_ratchet_domain())).",
+		"letfun server_to_beacon_chain(root:bitstring) = hkdf_first_32(hkdf_sha512_no_salt(root,initial_ratchet_domain())).",
+		"letfun beacon_to_server_chain(root:bitstring) = hkdf_second_32(hkdf_sha512_no_salt(root,initial_ratchet_domain())).",
 		"letfun ratchet_next(chain:bitstring) = hkdf_second_32(hkdf_sha512_no_salt(chain,symmetric_ratchet_domain())).",
 		"letfun ratchet_material(chain:bitstring) = ratchet_key_nonce(hkdf_first_32(hkdf_sha512_no_salt(chain,symmetric_ratchet_domain())),hkdf_final_12(hkdf_sha512_no_salt(chain,symmetric_ratchet_domain()))).",
 	] {
 		require_once(
 			&crypto,
 			&compact(definition),
-			"shared initial/step HKDF projection",
+			"phase-separated HKDF projections",
 		)?;
 	}
 	let native = compact(native);
@@ -22915,110 +23194,89 @@ fn serial_proverif_ci_preserves_every_gate_and_separate_group() {
 	}
 }
 
-const MLDSA_TRANSCRIPT_MUTATION_COUNT: usize = 60;
+const MLDSA_TRANSCRIPT_MUTATION_COUNT: usize = 70;
 
 #[test]
 fn session_binding_source_mutations_are_rejected() {
 	let baseline = Snapshot::production();
 	validate_session_source(&baseline).unwrap();
 	let mut checked = 0;
-	for (name, scope, from, to, diagnostic) in [
+	for (scope, from, to) in [
 		(
-			"pin_public_key_substitution",
 			"impl ServerAuthenticationPin",
 			"\n\t\t\tpublic_key,",
 			"\n\t\t\tpublic_key: [0; MLDSA_PUBLIC_KEY_LEN],",
-			"server pin retains all supplied metadata",
 		),
 		(
-			"pin_fingerprint_substitution",
-			"impl ServerAuthenticationPin",
-			"\n\t\t\tfingerprint,",
-			"\n\t\t\tfingerprint: [0; TRANSCRIPT_HASH_LEN],",
-			"server pin retains all supplied metadata",
-		),
-		(
-			"registration_ad_hashes_reversed",
-			"impl RegistrationBinding",
-			"&server_pin.fingerprint,\n\t\t\t\t&beacon_fingerprint,",
-			"&beacon_fingerprint,\n\t\t\t\t&server_pin.fingerprint,",
-			"registration binding retains exact pins, request and populated AD",
-		),
-		(
-			"registration_request_hash_substituted",
 			"impl RegistrationBinding",
 			"\n\t\t\tinit_hash,",
 			"\n\t\t\tinit_hash: [0; TRANSCRIPT_HASH_LEN],",
-			"registration binding retains exact pins, request and populated AD",
 		),
 		(
-			"retarget_server_identifier_unchecked",
+			"impl RegistrationBinding",
+			"\n\t\t\tinit_fields,",
+			"\n\t\t\tinit_fields: panic!(),",
+		),
+		(
 			"fn matches_server",
 			"self.server_pin.binding.identity_key_id == current.binding.identity_key_id",
 			"true",
-			"complete current-server pin comparison",
 		),
 		(
-			"retarget_classical_identity_unchecked",
 			"fn matches_server",
 			"self.server_pin.binding.identity_public_key == current.binding.identity_public_key",
 			"true",
-			"complete current-server pin comparison",
 		),
 		(
-			"retarget_mldsa_key_unchecked",
 			"fn matches_server",
 			"self.server_pin.public_key == current.public_key",
 			"true",
-			"complete current-server pin comparison",
 		),
 		(
-			"retarget_fingerprint_unchecked",
-			"fn matches_server",
-			"self.server_pin.fingerprint == current.fingerprint",
-			"true",
-			"complete current-server pin comparison",
+			"fn ad_transcript",
+			"build_record_ad_transcript(self.init_fields.fields(), response)",
+			"[0; RECORD_AD_TRANSCRIPT_LEN]",
 		),
 		(
-			"established_assignment_substituted",
+			"fn complete",
+			"session_transcript_hash: transcript_hash,",
+			"session_transcript_hash: [0; TRANSCRIPT_HASH_LEN],",
+		),
+		(
+			"fn complete",
+			"assemble_associated_data(&transcript_hash)",
+			"[0; ASSOCIATED_DATA_SIZE]",
+		),
+		(
 			"pub const fn finish",
 			"\n\t\t\tassigned_key_id,",
 			"\n\t\t\tassigned_key_id: 0,",
-			"establishment preserves the exact registration binding",
 		),
 		(
-			"established_ad_substituted",
 			"pub const fn finish",
 			"associated_data: self.associated_data,",
 			"associated_data: [0; ASSOCIATED_DATA_SIZE],",
-			"establishment preserves the exact registration binding",
 		),
 		(
-			"restored_ad_hashes_reversed",
 			"fn from_trusted_metadata",
-			"bind_associated_data(&base, &server_fingerprint, &beacon_fingerprint)",
-			"bind_associated_data(&base, &beacon_fingerprint, &server_fingerprint)",
-			"trusted restoration preserves ordered session metadata",
+			"assemble_associated_data(&session_transcript_hash)",
+			"[0; ASSOCIATED_DATA_SIZE]",
 		),
 		(
-			"record_ad_getter_substituted",
 			"impl SessionBinding",
 			"&self.associated_data",
 			"&[0; ASSOCIATED_DATA_SIZE]",
-			"session associated-data getter changed",
 		),
 	] {
 		let mut changed = baseline.clone();
 		replace_once_after(&mut changed.core_session, scope, from, to);
-		let error = validate_session_source(&changed)
-			.expect_err(&format!("session source mutation survived: {name}"));
 		assert!(
-			error.contains(diagnostic),
-			"session source mutation {name} produced wrong diagnostic: {error}"
+			validate_session_source(&changed).is_err(),
+			"survived: {scope} {from}"
 		);
 		checked += 1;
 	}
-	assert_eq!(checked, 12);
+	assert_eq!(checked, 13);
 }
 
 #[test]
@@ -23056,16 +23314,16 @@ fn mldsa_transcript_source_and_model_mutations_are_rejected() {
 			"mldsa_init_domain",
 			"core_authentication",
 			"",
-			"beaconcrypt ML-DSA-65 init transcript v1",
 			"beaconcrypt ML-DSA-65 init transcript v2",
+			"beaconcrypt ML-DSA-65 init transcript v3",
 			"fixed primitive and domain",
 		),
 		(
 			"mldsa_response_domain",
 			"core_authentication",
 			"",
-			"beaconcrypt ML-DSA-65 response transcript v1",
 			"beaconcrypt ML-DSA-65 response transcript v2",
+			"beaconcrypt ML-DSA-65 response transcript v3",
 			"fixed primitive and domain",
 		),
 		(
@@ -23136,7 +23394,7 @@ fn mldsa_transcript_source_and_model_mutations_are_rejected() {
 			"mldsa_variable_field_bytes_substitution",
 			"core_authentication",
 			"fn build_init_transcript",
-			"fields.identity_key[i - 3993]",
+			"fields.identity_key[i - 2041]",
 			"0",
 			"request transcript field order and pins",
 		),
@@ -23157,18 +23415,18 @@ fn mldsa_transcript_source_and_model_mutations_are_rejected() {
 			"request transcript field order and pins",
 		),
 		(
-			"mldsa_request_beacon_ml_key_omitted",
+			"transcript_attached_signature_omitted",
 			"core_authentication",
-			"fn build_init_transcript",
-			"fields.mldsa_public_key[i - 81]",
-			"0",
-			"request transcript field order and pins",
+			"fn build_record_ad_transcript",
+			"init.pre_key[i - 33]",
+			"init.pre_key[i - 33 + 64]",
+			"preserves exact attached-signature fields",
 		),
 		(
 			"mldsa_request_server_ml_key_omitted",
 			"core_authentication",
 			"fn build_init_transcript",
-			"server_mldsa[i - 2033]",
+			"server_mldsa[i - 81]",
 			"0",
 			"request transcript field order and pins",
 		),
@@ -23176,8 +23434,8 @@ fn mldsa_transcript_source_and_model_mutations_are_rejected() {
 			"mldsa_request_classical_field_order",
 			"core_authentication",
 			"fn build_init_transcript",
-			"fields.pre_key[i - 4034]",
-			"fields.one_time_key[i - 4034]",
+			"fields.pre_key[i - 2082]",
+			"fields.one_time_key[i - 2082]",
 			"request transcript field order and pins",
 		),
 		(
@@ -23205,20 +23463,20 @@ fn mldsa_transcript_source_and_model_mutations_are_rejected() {
 			"response binds streamed ciphertext length and assigned identifier",
 		),
 		(
-			"mldsa_ad_server_hash_slot",
+			"session_context_omitted",
 			"core_authentication",
-			"fn bind_associated_data",
-			"server_hash[i - 153]",
-			"beacon_hash[i - 153]",
-			"associated-data hash-slot order",
+			"fn assemble_associated_data",
+			"AD_CONTEXT[i]",
+			"0",
+			"session AD retains fixed context",
 		),
 		(
-			"mldsa_ad_beacon_hash_slot",
+			"session_digest_omitted",
 			"core_authentication",
-			"fn bind_associated_data",
-			"beacon_hash[i - 217]",
-			"server_hash[i - 217]",
-			"associated-data hash-slot order",
+			"fn assemble_associated_data",
+			"transcript_hash[i - 87]",
+			"0",
+			"session AD retains fixed context",
 		),
 		(
 			"mldsa_token_context_public",
@@ -23226,7 +23484,7 @@ fn mldsa_transcript_source_and_model_mutations_are_rejected() {
 			"",
 			"init_hash: [u8; TRANSCRIPT_HASH_LEN],",
 			"pub init_hash: [u8; TRANSCRIPT_HASH_LEN],",
-			"private accepted-token context",
+			"private pending and completed capability context",
 		),
 		(
 			"mldsa_model_context_match",
@@ -23240,8 +23498,8 @@ fn mldsa_transcript_source_and_model_mutations_are_rejected() {
 			"mldsa_model_request_pin_order",
 			"mldsa_auth",
 			"",
-			"server_ed, agent_ml, server_ml,",
-			"server_ed, server_ml, agent_ml,",
+			"server_ed, server_ml,",
+			"server_ml, server_ed,",
 			"symbolic request transcript",
 		),
 		(
@@ -23277,12 +23535,12 @@ fn mldsa_transcript_source_and_model_mutations_are_rejected() {
 			"symbolic raw response transcript",
 		),
 		(
-			"mldsa_model_beacon_role",
-			"mldsa_auth",
+			"retired_beacon_origin_restored",
+			"mldsa_registration",
 			"",
-			"mldsa_spaces64(), mldsa_beacon_label(), mldsa_zero(), hash",
-			"mldsa_spaces64(), mldsa_server_label(), mldsa_zero(), hash",
-			"symbolic beacon role input",
+			"event MldsaRequestAdmitted().",
+			"event MldsaRequestAdmitted(). event MldsaHonestInitAccepted().",
+			"retired Beacon ML credential",
 		),
 		(
 			"mldsa_model_server_role",
@@ -23293,12 +23551,12 @@ fn mldsa_transcript_source_and_model_mutations_are_rejected() {
 			"symbolic server role input",
 		),
 		(
-			"mldsa_model_init_wrapper",
+			"retired_beacon_wrapper_restored",
 			"mldsa_auth",
 			"",
-			"fun mldsa_signed_init_kex(bitstring, bitstring, bitstring)",
-			"fun mldsa_signed_init_kex(bitstring, bitstring)",
-			"mandatory symbolic request wrapper",
+			"fun mldsa_signed_kex_response",
+			"fun mldsa_signed_init_kex(bitstring):bitstring. fun mldsa_signed_kex_response",
+			"retired Beacon ML credential",
 		),
 		(
 			"mldsa_model_response_wrapper",
@@ -23309,12 +23567,12 @@ fn mldsa_transcript_source_and_model_mutations_are_rejected() {
 			"mandatory symbolic response wrapper",
 		),
 		(
-			"mldsa_model_ad_hash_order",
+			"session_symbolic_transcript_field_order",
 			"mldsa_auth",
 			"",
-			"base, blake2b512(server_ml), blake2b512(agent_ml)",
-			"base, blake2b512(agent_ml), blake2b512(server_ml)",
-			"symbolic associated-data hash-slot order",
+			"encoded_identity, signed_prekey, signed_one_time, signed_pq,",
+			"signed_prekey, encoded_identity, signed_one_time, signed_pq,",
+			"session symbolic exact transcript AD",
 		),
 		(
 			"mldsa_model_raw_tag_omitted",
@@ -23344,25 +23602,25 @@ fn mldsa_transcript_source_and_model_mutations_are_rejected() {
 			"mldsa_model_owned_key_not_public",
 			"mldsa_registration",
 			"",
-			"server_ml, beacon_ml, owned_ml_secret, mlkem_public(pq_secret)",
-			"server_ml, beacon_ml, mlkem_public(pq_secret)",
-			"public classical secrets and attacker-owned signing key",
+			"one_time_secret, server_ml, mlkem_public(pq_secret)",
+			"one_time_secret, server_ml, beacon_ed_secret, mlkem_public(pq_secret)",
+			"public classical secrets and attacker registration interface",
 		),
 		(
-			"mldsa_model_init_verifier_bypassed",
-			"mldsa_registration",
+			"session_symbolic_ad_collapsed",
+			"mldsa_auth",
 			"",
-			"let verified_init_input = mldsa_verify(candidate_signature,\n        candidate_ml, mldsa_signing_context()) in",
-			"let verified_init_input = mldsa_beacon_input(candidate_hash) in",
-			"symbolic self-presented request verification before classical projection",
+			"record_associated_data(record_ad_context87(), blake2b512(record_ad_preimage(",
+			"record_associated_data(record_ad_context87(), record_ad_preimage(",
+			"session symbolic exact transcript AD",
 		),
 		(
-			"mldsa_model_honest_event_becomes_admission_guard",
+			"copied_identity_becomes_admission_guard",
 			"mldsa_registration",
 			"",
-			"((if candidate_ml = beacon_ml then",
-			"if candidate_ml = beacon_ml then\n      ((if candidate_ml = beacon_ml then",
-			"target events do not gate response admission",
+			"((if candidate_ed = beacon_ed then",
+			"if candidate_ed = beacon_ed then ((if candidate_ed = beacon_ed then",
+			"arbitrary registration admission",
 		),
 		(
 			"mldsa_model_response_ciphertext_substituted",
@@ -23400,7 +23658,7 @@ fn mldsa_transcript_source_and_model_mutations_are_rejected() {
 			"mldsa_model_owned_admission_query_omitted",
 			"mldsa_queries",
 			"",
-			"query event(MldsaOwnedKeyAccepted()).",
+			"query event(MldsaRequestAdmitted()).",
 			"",
 			"exact focused query and control roster",
 		),
@@ -23416,8 +23674,8 @@ fn mldsa_transcript_source_and_model_mutations_are_rejected() {
 			"mldsa_core_init_length",
 			"core_authentication",
 			"",
-			"INIT_TRANSCRIPT_LEN: usize = 5495",
-			"INIT_TRANSCRIPT_LEN: usize = 5494",
+			"INIT_TRANSCRIPT_LEN: usize = 3543",
+			"INIT_TRANSCRIPT_LEN: usize = 3542",
 			"fixed primitive and domain",
 		),
 		(
@@ -23508,6 +23766,86 @@ fn mldsa_transcript_source_and_model_mutations_are_rejected() {
 			"AuthRole::Beacon => SERVER_LABEL,",
 			"TLS-style signed input",
 		),
+		(
+			"transcript_identity_omitted",
+			"core_authentication",
+			"fn build_record_ad_transcript",
+			"init.identity_key[i]",
+			"0",
+			"preserves exact attached-signature fields",
+		),
+		(
+			"transcript_prekey_omitted",
+			"core_authentication",
+			"fn build_record_ad_transcript",
+			"init.pre_key[i - 33]",
+			"0",
+			"preserves exact attached-signature fields",
+		),
+		(
+			"transcript_one_time_omitted",
+			"core_authentication",
+			"fn build_record_ad_transcript",
+			"init.one_time_key[i - 131]",
+			"0",
+			"preserves exact attached-signature fields",
+		),
+		(
+			"transcript_pq_omitted",
+			"core_authentication",
+			"fn build_record_ad_transcript",
+			"init.pq_key[i - 229]",
+			"0",
+			"preserves exact attached-signature fields",
+		),
+		(
+			"transcript_server_omitted",
+			"core_authentication",
+			"fn build_record_ad_transcript",
+			"response.identity_key[i - 1478]",
+			"0",
+			"preserves exact attached-signature fields",
+		),
+		(
+			"transcript_ephemeral_omitted",
+			"core_authentication",
+			"fn build_record_ad_transcript",
+			"response.ephemeral_key[i - 1510]",
+			"0",
+			"preserves exact attached-signature fields",
+		),
+		(
+			"transcript_kem_ciphertext_omitted",
+			"core_authentication",
+			"fn build_record_ad_transcript",
+			"response.kem_cipher_text[i - 1542]",
+			"0",
+			"preserves exact attached-signature fields",
+		),
+		(
+			"transcript_assigned_id_omitted",
+			"core_authentication",
+			"fn build_record_ad_transcript",
+			"key_id[i - 2630]",
+			"0",
+			"preserves exact attached-signature fields",
+		),
+		(
+			"transcript_id_big_endian",
+			"core_authentication",
+			"fn build_record_ad_transcript",
+			"encode_u64_le(response.key_id)",
+			"response.key_id.to_be_bytes()",
+			"preserves exact attached-signature fields",
+		),
+		(
+			"retained_context_changed",
+			"core_authentication",
+			"",
+			"SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305",
+			"SymRatchetMessage_HKDF_SHA-512_CHACHA20_POLY1305",
+			"session transcript exact fixed-width interface",
+		),
 	] {
 		let mut changed = baseline.clone();
 		let source = match target {
@@ -23549,4 +23887,50 @@ fn mldsa_transcript_source_and_model_mutations_are_rejected() {
 		checked += 1;
 	}
 	assert_eq!(checked, MLDSA_TRANSCRIPT_MUTATION_COUNT);
+}
+
+#[test]
+fn initial_and_message_kdf_domain_controls_reject_source_drift() {
+	for (name, from, to, diagnostic) in [
+		(
+			"initial_uses_message_label",
+			"info: *INITIAL_RATCHET_INFO,",
+			"info: *SYM_RATCHET_INFO,",
+			"initial fixed-domain request construction",
+		),
+		(
+			"message_uses_initial_label",
+			"info: *SYM_RATCHET_INFO,",
+			"info: *INITIAL_RATCHET_INFO,",
+			"message fixed-domain request construction",
+		),
+		(
+			"initial_label_equals_message",
+			"b\"SymRatchetInit_HKDF_SHA-512_CHACHA20_POLY1305\"",
+			"b\"SymRatchetMessage_HKDF_SHA-512_CHACHA20_POLY1305\"",
+			"request label",
+		),
+		(
+			"message_label_equals_initial",
+			"b\"SymRatchetMessage_HKDF_SHA-512_CHACHA20_POLY1305\"",
+			"b\"SymRatchetInit_HKDF_SHA-512_CHACHA20_POLY1305\"",
+			"message ratchet request label",
+		),
+	] {
+		assert_initial_ratchet_rejected(name, diagnostic, |snapshot| {
+			replace_once(&mut snapshot.core_ratchet, from, to);
+		});
+	}
+	assert_initial_ratchet_rejected(
+		"adapter_selects_domain_from_output_width",
+		"adapter executor label",
+		|snapshot| {
+			replace_once_after(
+				&mut snapshot.adapter_ratchet,
+				"fn symmetric_ratchet_hkdf",
+				"Some(info)",
+				"Some(if OUTPUT_SIZE == 64 { INITIAL_RATCHET_INFO } else { SYM_RATCHET_INFO })",
+			);
+		},
+	);
 }

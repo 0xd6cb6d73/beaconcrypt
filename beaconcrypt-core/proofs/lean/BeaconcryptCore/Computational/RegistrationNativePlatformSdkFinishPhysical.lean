@@ -42,7 +42,7 @@ def finish (before : Store n KemSK R P) (index : Nat)
 
 noncomputable def source (coins : QueryImpl unifSpec (StateT P ProbComp))
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (erased : commitment.CommitmentTranscript)
     (parseEd : Slice U8 → StateT P ProbComp (RustM (core.result.Result ed.PublicKey ed.Error)))
     (verifyEd : Slice U8 → ed.PublicKey → StateT P ProbComp (RustM (core.option.Option (alloc.vec.Vec U8))))
@@ -57,7 +57,7 @@ noncomputable def source (coins : QueryImpl unifSpec (StateT P ProbComp))
 
 noncomputable def physical (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (current : Native × P)
     (before : RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views created credential current) : Store n KemSK R P :=
   normalize (erase before.base.objects)
@@ -65,7 +65,7 @@ noncomputable def physical (setup : PqxdhServerAuthExperiment.Setup base KemSK)
 omit [PublicWrapperPlatform.CryptoOperations] original localOriginal in
 theorem physical_backend (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (current : Native × P)
     (before : RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views created credential current) :
     (physical setup view views created credential current before).backend=
@@ -77,7 +77,7 @@ theorem physical_backend (setup : PqxdhServerAuthExperiment.Setup base KemSK)
 omit [PublicWrapperPlatform.CryptoOperations] original localOriginal in
 theorem active_objects (coins : QueryImpl unifSpec (StateT P ProbComp))
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (view : AdapterPublicWrapperState.MaterialView mlSource KemSK)
     (views : AdapterPublicWrapperStorage.Views) (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : beaconcrypt_public_wrapper.beacon.Beacon) (pending : registration.BeaconPending)
@@ -118,7 +118,7 @@ theorem active_objects (coins : QueryImpl unifSpec (StateT P ProbComp))
 
 theorem active (coins : QueryImpl unifSpec (StateT P ProbComp))
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (erased : commitment.CommitmentTranscript)
     (parseEd : Slice U8 → StateT P ProbComp (RustM (core.result.Result ed.PublicKey ed.Error)))
     (verifyEd : Slice U8 → ed.PublicKey → StateT P ProbComp (RustM (core.option.Option (alloc.vec.Vec U8))))
@@ -187,7 +187,7 @@ theorem active (coins : QueryImpl unifSpec (StateT P ProbComp))
 
  theorem body_idle (coins : QueryImpl unifSpec (StateT P ProbComp))
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (erased : commitment.CommitmentTranscript)
     (parseEd : Slice U8 → StateT P ProbComp (RustM (core.result.Result ed.PublicKey ed.Error)))
     (verifyEd : Slice U8 → ed.PublicKey → StateT P ProbComp (RustM (core.option.Option (alloc.vec.Vec U8))))
@@ -213,7 +213,7 @@ theorem active (coins : QueryImpl unifSpec (StateT P ProbComp))
 
  theorem source_idle (coins : QueryImpl unifSpec (StateT P ProbComp))
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (erased : commitment.CommitmentTranscript)
     (parseEd : Slice U8 → StateT P ProbComp (RustM (core.result.Result ed.PublicKey ed.Error)))
     (verifyEd : Slice U8 → ed.PublicKey → StateT P ProbComp (RustM (core.option.Option (alloc.vec.Vec U8))))
@@ -264,7 +264,7 @@ private theorem raw_transport {N A : Type} {Private : N→Type} {left right : Pr
 omit [PublicWrapperPlatform.CryptoOperations] original localOriginal in
 private noncomputable def missing
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (view : AdapterPublicWrapperState.MaterialView mlSource KemSK)
-    (views : AdapterPublicWrapperStorage.Views) (created : PqxdhLiveServerConstruction.Created Unit)
+    (views : AdapterPublicWrapperStorage.Views) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential mlSource) (current : Native×P)
     (objects : RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views created credential current) :
     RegistrationNativePlatformExtractedSdkPublic.TotalStep
@@ -287,7 +287,7 @@ private noncomputable def missing
 omit [PublicWrapperPlatform.CryptoOperations] original localOriginal in
 private theorem missing_raw
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (view : AdapterPublicWrapperState.MaterialView mlSource KemSK)
-    (views : AdapterPublicWrapperStorage.Views) (created : PqxdhLiveServerConstruction.Created Unit)
+    (views : AdapterPublicWrapperStorage.Views) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential mlSource) (current : Native×P)
     (objects : RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views created credential current) :
     raw (physical setup view views created credential) (missing setup view views created credential current objects)=
@@ -316,7 +316,7 @@ variable [idleCodecs : Codecs (RustT (StateT (RegistrationNativeExperiment.State
 omit original localOriginal in
 private theorem idle_raw
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (view : AdapterPublicWrapperState.MaterialView mlSource KemSK)
-    (views : AdapterPublicWrapperStorage.Views) (created : PqxdhLiveServerConstruction.Created Unit)
+    (views : AdapterPublicWrapperStorage.Views) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential mlSource) (current : Native×P)
     (objects : RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views created credential current)
     (self : beaconcrypt_public_wrapper.beacon.Beacon) (input : Slice U8)
@@ -346,7 +346,7 @@ private theorem idle_raw
 
 theorem query (coins : QueryImpl unifSpec (StateT P ProbComp))
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (erased : commitment.CommitmentTranscript)
     (parseEd : Slice U8 → StateT P ProbComp (RustM (core.result.Result ed.PublicKey ed.Error)))
     (verifyEd : Slice U8 → ed.PublicKey → StateT P ProbComp (RustM (core.option.Option (alloc.vec.Vec U8))))
@@ -527,7 +527,7 @@ theorem query (coins : QueryImpl unifSpec (StateT P ProbComp))
 
 theorem normal (coins : QueryImpl unifSpec (StateT P ProbComp))
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (erased : commitment.CommitmentTranscript)
     (parseEd : Slice U8 → StateT P ProbComp (RustM (core.result.Result ed.PublicKey ed.Error)))
     (verifyEd : Slice U8 → ed.PublicKey → StateT P ProbComp (RustM (core.option.Option (alloc.vec.Vec U8))))

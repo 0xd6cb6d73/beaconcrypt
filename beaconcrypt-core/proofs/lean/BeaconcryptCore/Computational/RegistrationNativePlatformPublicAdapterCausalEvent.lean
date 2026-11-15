@@ -40,7 +40,7 @@ def roster (view :AdapterPublicWrapperState.MaterialView source KemSK) (objects 
 
 variable (setup :PqxdhServerAuthExperiment.Setup base KemSK)
 variable (view :AdapterPublicWrapperState.MaterialView source KemSK) (views :AdapterPublicWrapperStorage.Views)
-variable (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
 variable (current :RegistrationNativeExperiment.State n KemSK source×P)
 variable (before :StrongCarrier (R:=R) setup view views created credential current)
 

@@ -1,5 +1,5 @@
 -- SPDX-License-Identifier: 0BSD
-import BeaconcryptCore.Computational.RegistrationNativeServerRecordHashSource
+import BeaconcryptCore.Computational.RegistrationNativeServerRecordTrace
 
 /-! Actual Server record trace fields retain the original source context and exact CTX preimage. These equations derive public binding/sequence contents from reached source resumes, independently of a private-root equality premise. -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -23,7 +23,7 @@ theorem path (implementation : QueryImpl Spec (StateT S ProbComp))
     trace.aeadReply, trace.commitmentState, trace.aeadResumed, trace.digestReply, trace.writer, trace.hashResumed,
     trace.writeReply, trace.writeResumed⟩
 
-/-- The actual selected AEAD capability has the initializer's full AD281/context and implicit sequence one. -/
+/-- The actual selected AEAD capability has the initializer's full AD151/context and implicit sequence one. -/
 theorem context (implementation : QueryImpl Spec (StateT S ProbComp))
     (initial : registration.ServerInitialKdf) (completed : registration.ServerResponseHash) (before after : S)
     (trace : Trace implementation initial completed before after) :

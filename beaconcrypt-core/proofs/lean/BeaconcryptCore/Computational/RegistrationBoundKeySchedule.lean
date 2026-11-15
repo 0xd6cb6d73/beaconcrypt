@@ -12,10 +12,25 @@ set_option autoImplicit false
 namespace BeaconcryptCore.Computational.RegistrationBoundKeySchedule
 open PqxdhSecretInputKdf (RootOutput)
 
+/-- Public response-dependent hash inputs, before a digest exists. The private root is omitted. -/
+structure PublicAd where
+  candidate : pqxdh.ServerRegistrationCandidate
+  binding : session.RegistrationBinding
+  application : Slice Std.U8
+  input : Std.Array Std.U8 2638#usize
+
+def publicAd (pending : registration.ServerAdHash) : PublicAd :=
+  ⟨pending.candidate, pending.binding, pending.application, pending.input⟩
+
+/-- Restore the private root only at the actual hash/initialization boundary. No AD digest is supplied by this descriptor. -/
+def restoreAd (pending : PublicAd) (root : RootOutput) : registration.ServerAdHash :=
+  ⟨pending.candidate, pending.binding, ⟨PqxdhRootTableInitialization.rootArray root⟩,
+    pending.application, pending.input⟩
+
 /-- The actual public post-root fields, without the selected root value or a private KDF request. -/
 structure PublicInitial where
   candidate : pqxdh.ServerRegistrationCandidate
-  binding : session.RegistrationBinding
+  binding : session.CompletedRegistrationBinding
   application : Slice Std.U8
 
 def publicInitial (initial : registration.ServerInitialKdf) : PublicInitial :=
@@ -56,7 +71,7 @@ def supplied (initial : registration.ServerInitialKdf) (left right : RootOutput)
 theorem supplied_factored (control : pqxdh.ServerState) (current : session.ServerAuthenticationPin)
     (availability : pqxdh.KeyIdAvailability) (agreement : agreement.ServerAgreement) (application : Slice Std.U8)
     (initial : registration.ServerInitialKdf)
-    (actual : registration.begin_server_completion control current availability agreement application = .ok (.Ok initial))
+    (actual : BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission control current availability agreement application initial)
     (left right : RootOutput) (output : PqxdhFullSecretInputKdf.FullOutput) :
     supplied initial left right output = factored (publicInitial initial) (output, right) := by
   unfold supplied factored

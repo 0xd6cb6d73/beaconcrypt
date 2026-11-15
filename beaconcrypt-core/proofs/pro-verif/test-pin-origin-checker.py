@@ -35,7 +35,7 @@ class PinOriginChecks(unittest.TestCase):
         result = CHECKER.validate()
         self.assertEqual(len(result["files"]), 14)
         self.assertEqual(len(result["reductions"]), 28)
-        self.assertEqual(len(result["data_constructors"]), 36)
+        self.assertEqual(len(result["data_constructors"]), 40)
 
     def test_comments_and_spacing_do_not_change_tokens(self):
         self.assertEqual(

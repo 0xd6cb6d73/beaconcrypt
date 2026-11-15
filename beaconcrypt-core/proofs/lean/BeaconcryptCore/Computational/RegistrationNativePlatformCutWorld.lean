@@ -19,11 +19,11 @@ variable (impl : QueryImpl RegistrationSigningShared.Spec (StateT S m))
 variable (fallback : registration.MldsaSigningRequest → StateT S m RegistrationSigningShared.SignReply)
 
 abbrev BeaconSideSpec (Encoded : Type) := RegistrationBeaconInitExecutor.EdSpec +
-  (registration.SignedInitView →ₒ RustM (core.option.Option Encoded))
+  (registration.InitView →ₒ RustM (core.option.Option Encoded))
 
 private def beaconSide
     (ed : registration.Ed25519SigningRequest → StateT S m RegistrationSigningShared.SignReply)
-    (encode : registration.SignedInitView → StateT S m (RustM (core.option.Option Encoded))) :
+    (encode : registration.InitView → StateT S m (RustM (core.option.Option Encoded))) :
     QueryImpl (BeaconSideSpec Encoded) (StateT S m)
   | .inl request => ed request
   | .inr view => encode view
@@ -31,40 +31,46 @@ private def beaconSide
 noncomputable def beaconOutgoing
     (ed : registration.Ed25519SigningRequest → StateT S m RegistrationSigningShared.SignReply) :
     QueryImpl RegistrationBeaconInitExecutor.Spec (StateT S m)
-  | .inl query => impl query
+  | .inl (.hash request) => impl (.hash request)
+  | .inl (.sign _ _ _) => pure .None
   | .inr request => ed request
 
 private def beaconFree : QueryImpl RegistrationBeaconInitExecutor.Spec
     (OracleComp (RegistrationNativePlatformCutErasure.Spec (BeaconSideSpec Encoded)))
-  | .inl query => (RegistrationNativePlatformCutErasure.Spec (BeaconSideSpec Encoded)).query (.inl query)
+  | .inl (.hash request) => (RegistrationNativePlatformCutErasure.Spec (BeaconSideSpec Encoded)).query (.inl (.hash request))
+  | .inl (.sign _ _ _) => pure .None
   | .inr request => (RegistrationNativePlatformCutErasure.Spec (BeaconSideSpec Encoded)).query (.inr (.inl request))
 
-private def encodeFree (view : registration.SignedInitView) :
+private def encodeFree (view : registration.InitView) :
     OracleComp (RegistrationNativePlatformCutErasure.Spec (BeaconSideSpec Encoded)) (RustM (core.option.Option Encoded)) :=
   (RegistrationNativePlatformCutErasure.Spec (BeaconSideSpec Encoded)).query (.inr (.inr view))
 
 private theorem beacon_forward
     (ed : registration.Ed25519SigningRequest → StateT S m RegistrationSigningShared.SignReply)
-    (encode : registration.SignedInitView → StateT S m (RustM (core.option.Option Encoded)))
+    (encode : registration.InitView → StateT S m (RustM (core.option.Option Encoded)))
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (scalar : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize) (before : State S) :
+    (pin : session.ServerAuthenticationPin) (before : State S) :
     Prod.map id Prod.fst <$>
       (RegistrationNativePlatformBeaconPublication.begin (extended (forward impl) (fun request => liftWorld (ed request)))
-        (fun view => liftWorld (encode view)) control inputs scalar pin mldsa).run before =
-      (RegistrationNativePlatformBeaconPublication.begin (beaconOutgoing impl ed) encode control inputs scalar pin mldsa).run before.1 := by
+        (fun view => liftWorld (encode view)) control inputs scalar pin).run before =
+      (RegistrationNativePlatformBeaconPublication.begin (beaconOutgoing impl ed) encode control inputs scalar pin).run before.1 := by
   have erased := RegistrationNativePlatformCutErasure.program impl (beaconSide ed encode)
-    (RegistrationNativePlatformBeaconPublication.begin beaconFree encodeFree control inputs scalar pin mldsa) before
+    (RegistrationNativePlatformBeaconPublication.begin beaconFree encodeFree control inputs scalar pin) before
   rw [RegistrationNativePlatformBeaconPublication.begin_interpret,
     RegistrationNativePlatformBeaconPublication.begin_interpret] at erased
   have leftCallbacks : (fun query => simulateQ (RegistrationNativePlatformCutErasure.handler impl (beaconSide ed encode))
       (beaconFree (Encoded := Encoded) query)) =
       extended (forward impl) (fun request => liftWorld (ed request)) := by
     funext query
-    cases query <;> simp only [beaconFree, simulateQ_spec_query, RegistrationNativePlatformCutErasure.handler, beaconSide, extended]
+    cases query with
+    | inl query => cases query <;> simp only [beaconFree, simulateQ_spec_query, RegistrationNativePlatformCutErasure.handler, extended, simulateQ_pure]
+    | inr query => simp only [beaconFree, simulateQ_spec_query, RegistrationNativePlatformCutErasure.handler, beaconSide, extended]
   have rightCallbacks : (fun query => simulateQ (RegistrationNativePlatformCutErasure.native impl (beaconSide ed encode))
       (beaconFree (Encoded := Encoded) query)) = beaconOutgoing impl ed := by
     funext query
-    cases query <;> simp only [beaconFree, simulateQ_spec_query, RegistrationNativePlatformCutErasure.native, beaconSide, beaconOutgoing]
+    cases query with
+    | inl query => cases query <;> simp only [beaconFree, simulateQ_spec_query, RegistrationNativePlatformCutErasure.native, beaconOutgoing, simulateQ_pure]
+    | inr query => simp only [beaconFree, simulateQ_spec_query, RegistrationNativePlatformCutErasure.native, beaconSide, beaconOutgoing]
   rw [leftCallbacks, rightCallbacks] at erased
   simpa only [encodeFree, simulateQ_spec_query, RegistrationNativePlatformCutErasure.handler,
     RegistrationNativePlatformCutErasure.native, beaconSide] using erased
@@ -72,15 +78,15 @@ private theorem beacon_forward
 /-- Source request-only signing and effectful source writing retain the complete native interpreter poststate after erasing only the private chronological cut. -/
 theorem beacon
     (ed : registration.Ed25519SigningRequest → StateT S m RegistrationSigningShared.SignReply)
-    (encode : registration.SignedInitView → StateT S m (RustM (core.option.Option Encoded)))
+    (encode : registration.InitView → StateT S m (RustM (core.option.Option Encoded)))
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (scalar : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize) (before : State S) :
+    (pin : session.ServerAuthenticationPin) (before : State S) :
     Prod.map id Prod.fst <$>
       (RegistrationNativePlatformBeaconPublication.begin (extended (source impl fallback) (fun request => liftWorld (ed request)))
-        (fun view => liftWorld (encode view)) control inputs scalar pin mldsa).run before =
-      (RegistrationNativePlatformBeaconPublication.begin (beaconOutgoing impl ed) encode control inputs scalar pin mldsa).run before.1 := by
+        (fun view => liftWorld (encode view)) control inputs scalar pin).run before =
+      (RegistrationNativePlatformBeaconPublication.begin (beaconOutgoing impl ed) encode control inputs scalar pin).run before.1 := by
   rw [RegistrationNativePlatformCutJournal.beacon_begin]
-  exact beacon_forward impl ed encode control inputs scalar pin mldsa before
+  exact beacon_forward impl ed encode control inputs scalar pin before
 
 theorem server
     (encode : registration.SignedResponseView → StateT S m (RustM (core.option.Option Encoded)))

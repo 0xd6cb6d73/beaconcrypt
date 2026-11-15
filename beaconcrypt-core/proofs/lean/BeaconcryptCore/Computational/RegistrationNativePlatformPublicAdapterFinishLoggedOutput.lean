@@ -84,7 +84,7 @@ private theorem lift_support (work :OracleComp (Trusted n KemSK) A) (past :List 
 theorem accepted_output (self :beaconcrypt_public_wrapper.beacon.Beacon) (control :pqxdh.BeaconAborted)
     (aborted :self.state=.Aborted control) (owner :Owner mlSource) (scalar :PqxdhJointGapDh.ScalarBytes)
     (authenticated :registration.AuthenticatedResponse)
-    (key :control.server_key_id=authenticated.pending.control.expected_server_binding.identity_key_id) (past :List Log) :
+    (key :control.server_key_id=authenticated.control.expected_server_binding.identity_key_id) (past :List Log) :
     (accepted (n:=n) setup wire note self owner scalar authenticated).run past=
       (fun result=>(AdapterPublicFinishNormalized.output self result.1,result.2)) <$>
         (RegistrationNativePlatformPublicAdapterFinishLoggedTree.accepted setup wire note owner scalar authenticated).run past :=by
@@ -135,12 +135,12 @@ theorem program_output (self :beaconcrypt_public_wrapper.beacon.Beacon) (pending
   have actual:=AdapterPublicFinishNormalized.simulation_support (AdapterPublicFinishFreeTree.authentication (source:=mlSource) setup)
     (RegistrationResponseExecutor.begin pending (RegistrationNativeConcreteCodec.wire.decodeResponse (TranscriptAuthParts.absSlice input)))
     (lift_support _ past (reply,log) reached)
-  rcases RegistrationResponseNormal.begin_shape pending _ reply actual with rejected |⟨supplied,_accepted,accepted⟩
+  rcases RegistrationResponseNormal.begin_shape pending _ reply actual with rejected |⟨supplied,authenticated,_packet,_acceptedPacket,retained,accepted⟩
   · rw [rejected]
     simp only [afterAuthentication,RegistrationNativePlatformPublicAdapterFinishLoggedTree.afterAuthentication,
       AdapterPublicFinishNormalized.output,StateT.run_pure,map_pure]
   · rw [accepted]
-    exact accepted_output setup wire note _ (RegistrationResponse.abortedState pending) rfl owner scalar ⟨pending,supplied⟩ rfl log
+    exact accepted_output setup wire note _ (RegistrationResponse.abortedState pending) rfl owner scalar authenticated (by rw [retained.1]; rfl) log
 
 theorem program_projection (self :beaconcrypt_public_wrapper.beacon.Beacon) (pending :registration.BeaconPending) (input :Slice U8)
     (owner :Owner mlSource) (scalar :PqxdhJointGapDh.ScalarBytes) (before :EnvState Auxiliary×List Log) :

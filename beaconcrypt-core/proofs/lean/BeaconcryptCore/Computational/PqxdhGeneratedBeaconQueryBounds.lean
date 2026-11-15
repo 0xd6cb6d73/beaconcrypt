@@ -9,6 +9,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhGeneratedBeaconQueryBounds
+variable (associatedData : Std.Array Std.U8 151#usize)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhGeneratedBeaconExperiment
 open PqxdhGeneratedBeaconSelector (Program driver driver_source_bound driver_class_bound driver_total)
@@ -31,13 +32,13 @@ theorem accepted_observer_bounds {setup : StatefulPhase1Setup baseSpec}
     (output : Option (PqxdhPrivateCandidateAcceptance.Outcome
       (PqxdhPrivatePhase1Prefix.Retained setup Unit (driver env.toEnvironment program).State)))
     (ready : Ready) :
-    ObserverBounds ((observer env program post).accepted output ready) 0 0
+    ObserverBounds ((PqxdhGeneratedBeaconExperiment.observer (associatedData := associatedData) env program post).accepted output ready) 0 0
       ((64 + 5 * qAux) + (budget.1 .coin + 64 * (budget.1 .send + budget.1 .raw + budget.1 .hash))) 0 0 0 := by
   cases output with
   | none => exact ⟨by trivial, by trivial, by trivial, by trivial, by trivial, by trivial⟩
   | some output =>
       apply coins_observer_bounds
-      apply isTotalQueryBound_bind (build_uniform env.source env.recordWriter env.aux qAux auxBound
+      apply isTotalQueryBound_bind (PqxdhProtocolQueryBounds.build_uniform (associatedData := associatedData) env.source env.recordWriter env.aux qAux auxBound
         env.senderId env.index env.metadata ready output.context.selection.2)
       intro result
       simpa only [IsTotalQueryBound, isQueryBound_map_iff] using
@@ -53,7 +54,7 @@ theorem completed_observer_bounds {setup : StatefulPhase1Setup baseSpec}
     (output : Option (PqxdhPrivateCandidateAcceptance.Outcome
       (PqxdhPrivatePhase1Prefix.Retained setup Unit (driver env.toEnvironment program).State)))
     (execution : PqxdhSourceAuthenticatedRoot.ServerExecution) :
-    ObserverBounds ((observer env program post).completed output execution) 0 0
+    ObserverBounds ((PqxdhGeneratedBeaconExperiment.observer (associatedData := associatedData) env program post).completed output execution) 0 0
       ((64 + 5 * qAux) + (budget.1 .coin + 64 * (budget.1 .send + budget.1 .raw + budget.1 .hash))) 0 0 0 := by
   cases output with
   | none => exact ⟨by trivial, by trivial, by trivial, by trivial, by trivial, by trivial⟩
@@ -109,27 +110,27 @@ theorem actual_uniform_ledger {KemSK : Type} {setup : StatefulPhase1Setup baseSp
     (nativeUniform : ∀ target, (ccaAmbient (env.native.encaps target)).IsQueryBoundP IsMlKemUniformQuery uNative)
     (ephemeralBase : (ccaAmbient env.ephemeralGen).IsQueryBoundP IsMlKemBaseQuery bEphemeral)
     (nativeBase : ∀ target, (ccaAmbient (env.native.encaps target)).IsQueryBoundP IsMlKemBaseQuery bNative) :
-    (actual env baseImpl kem attachedVerify primitives program post).IsTotalQueryBound
+    (PqxdhGeneratedBeaconExperiment.actual (associatedData := associatedData) env baseImpl kem attachedVerify primitives program post).IsTotalQueryBound
       ((32 + ((qPrekey + (qKeygen + qOneTime)) +
         (qSource + (qWrite + compilerBill prefixBudget) + qBase * qB + qDecap * qD))) +
         ((uEphemeral + (uNative + ((64 + 5 * qAux) +
           (postBudget.1 .coin + 64 * (postBudget.1 .send + postBudget.1 .raw + postBudget.1 .hash))))) +
           qBase * (bEphemeral + bNative))) := by
   have afterBound := nativeNext_observer_bounds kem env.parameters attachedVerify primitives setup
-    (observer env program post) uEphemeral uNative bEphemeral bNative 0 0
+    (PqxdhGeneratedBeaconExperiment.observer (associatedData := associatedData) env program post) uEphemeral uNative bEphemeral bNative 0 0
     ((64 + 5 * qAux) + (postBudget.1 .coin + 64 * (postBudget.1 .send + postBudget.1 .raw + postBudget.1 .hash))) 0 0 0
     ephemeralUniform nativeUniform ephemeralBase nativeBase
-    (completed_observer_bounds env program post postBudget postBound qAux)
-    (accepted_observer_bounds env program post postBudget postBound qAux auxBound)
+    (completed_observer_bounds (associatedData := associatedData) env program post postBudget postBound qAux)
+    (accepted_observer_bounds (associatedData := associatedData) env program post postBudget postBound qAux auxBound)
   have beforeCoins : ∀ index identity generated transcript,
       ((driver env.toEnvironment program).main index identity generated transcript).IsQueryBoundP
         (SelectorCCA (baseSpec := baseSpec) IsMlKemUniformQuery) (qWrite + compilerBill prefixBudget) := by
     intro index identity generated transcript
     exact (driver_total env.toEnvironment program qWrite writerBound prefixBudget prefixBound
       index identity generated transcript).isQueryBoundP
-  simpa only [actual, Nat.mul_zero, Nat.zero_add, Nat.add_zero] using
+  simpa only [PqxdhGeneratedBeaconExperiment.actual, Nat.mul_zero, Nat.zero_add, Nat.add_zero] using
     PqxdhGeneratedRootQueryBounds.actualGame_uniform_from_calls baseImpl kem env.parameters attachedVerify primitives setup
-      (driver env.toEnvironment program) (observer env program post) qPrekey qKeygen qOneTime qBase qDecap 0 qSource
+      (driver env.toEnvironment program) (PqxdhGeneratedBeaconExperiment.observer (associatedData := associatedData) env program post) qPrekey qKeygen qOneTime qBase qDecap 0 qSource
       (qWrite + compilerBill prefixBudget) qB qD _ _ 0 prekeyBound keygenBound oneTimeBound baseBound decapBound
       (fun index identity generated transcript => driver_source_bound env.toEnvironment program _ 0 noCreate index identity generated transcript)
       (fun index identity generated transcript => driver_source_bound env.toEnvironment program _ qSource sourceCoins index identity generated transcript)

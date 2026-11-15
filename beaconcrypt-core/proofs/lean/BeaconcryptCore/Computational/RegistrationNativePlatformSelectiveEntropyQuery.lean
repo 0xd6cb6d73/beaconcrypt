@@ -35,19 +35,19 @@ variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNative
 local notation "sourceHandler" => RegistrationNativePlatformSelectiveEntropyNative.handler setup checks wire source credential seed scalar candidate provider selectedOwner selectedAccept view failure allocation reserveRegistration reservePeer reserveFrame erased helper writer
 
 noncomputable def environment
-    (startup : ProbComp (Option (PqxdhLiveServerConstruction.Created Unit × State n KemSK ProviderState Platform source))) :
+    (startup : ProbComp (Option (PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize) × State n KemSK ProviderState Platform source))) :
     RegistrationNativeEntropyInterface.Environment n (State n KemSK ProviderState Platform source) :=
   RegistrationNativePlatformSelectiveEntropyEnvironment.environment setup checks wire source credential seed scalar candidate provider selectedOwner selectedAccept view failure allocation reserveRegistration reservePeer reserveFrame erased helper writer startup
 
 noncomputable def reference
-    (startup : ProbComp (Option (PqxdhLiveServerConstruction.Created Unit × State n KemSK ProviderState Platform source))) :=
+    (startup : ProbComp (Option (PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize) × State n KemSK ProviderState Platform source))) :=
   RegistrationNativePlatformGatedNativeEntropy.native
     (environment setup checks wire source credential seed scalar candidate provider selectedOwner selectedAccept view failure allocation reserveRegistration reservePeer reserveFrame erased helper writer startup)
     (fun amount => RegistrationNativePlatformSelectiveEntropyEffects.liftPlatform (reserveFrame amount))
 
 /-- Every registration, coin, hash and Server record callback has the actual gated native environment execution before World lowering. -/
 theorem ordinary_source
-    (startup : ProbComp (Option (PqxdhLiveServerConstruction.Created Unit × State n KemSK ProviderState Platform source)))
+    (startup : ProbComp (Option (PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize) × State n KemSK ProviderState Platform source)))
     (query : RegistrationNativeInterface.Spec.Domain)
     (ordinary : RegistrationNativeHiddenEnvironmentOrdinary.Ordinary query)
     (before : State n KemSK ProviderState Platform source) :
@@ -100,7 +100,7 @@ open RegistrationNativeHiddenEnvironmentWorld (lower lower_run lower_lift lower_
 
 /-- The actual complete raw callback has the same gated environment execution at every reached physical allocation state. -/
 theorem query_source
-    (startup : ProbComp (Option (PqxdhLiveServerConstruction.Created Unit × State n KemSK ProviderState Platform source)))
+    (startup : ProbComp (Option (PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize) × State n KemSK ProviderState Platform source)))
     (service : QueryImpl (PqxdhRecordLiftProtocol.ServiceSpec n) (StateT Secret ProbComp))
     (codec : PqxdhServerAuthExperiment.Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
     (query : RegistrationNativeInterface.Spec.Domain)

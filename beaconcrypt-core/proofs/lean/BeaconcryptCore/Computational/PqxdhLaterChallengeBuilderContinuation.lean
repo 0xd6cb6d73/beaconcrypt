@@ -5,7 +5,10 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeBuilderContinuation
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhInitialPostContext PqxdhInitialBuilderContext RawCtxForwardAnnotation RawCtxForwardTags
 open PqxdhLaterChallengeCapture
 variable {ι M P I D K X Response Shared Origin Result : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -31,34 +34,34 @@ variable (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin) (origin : Or
 
 private theorem finished_pure
     (result : RustM (Option PqxdhServerRegistrationPublication.Response × PqxdhInitialOriginForwardBuilder.Publication M P)) :
-    All (BuilderOutside (extra := extra) pure) (PqxdhInitialOriginForwardBuilder.finished (X := X) (Response := Response)
+    All (BuilderOutside (extra := extra) pure) (PqxdhInitialOriginForwardBuilder.finished (completedBinding := completedBinding) (X := X) (Response := Response)
       mark origin sender route read index before trace pure result) := by
   trivial
 
 private theorem publication_pure
     (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Pqxdh.Bytes) (metadata : P)
     (result : PqxdhInitialPendingPost.KernelOf RatchetChain × Option RawCtxSourceSend.Encrypted) :
-    All (BuilderOutside (extra := extra) pure) (PqxdhInitialOriginForwardBuilder.publication (X := X) (Response := Response)
+    All (BuilderOutside (extra := extra) pure) (PqxdhInitialOriginForwardBuilder.publication (completedBinding := completedBinding) (X := X) (Response := Response)
       mark origin sender route read index before trace candidate authenticated metadata pure result) := by
-  exact plain_all _ _ _ (fun value => finished_pure mark origin sender route read index before trace (.ok value))
+  exact plain_all _ _ _ (fun value => finished_pure (completedBinding := completedBinding) mark origin sender route read index before trace (.ok value))
 
 private theorem send_pure
     (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Pqxdh.Bytes) (metadata : P)
     (kernel : PqxdhInitialPendingPost.KernelOf RatchetChain) :
-    All (BuilderOutside (extra := extra) pure) (PqxdhInitialOriginForwardBuilder.send (X := X) (Response := Response)
+    All (BuilderOutside (extra := extra) pure) (PqxdhInitialOriginForwardBuilder.send (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response)
       mark origin sender route read index before trace candidate authenticated metadata pure kernel) := by
   unfold PqxdhInitialOriginForwardBuilder.send
   split
   case h_2 =>
     exact ⟨(fun tag same => by cases same; exact ⟨_, rfl, rfl⟩), fun reply =>
       ⟨(fun _ impossible => by cases impossible), fun sealed =>
-        publication_pure mark origin sender route read index before trace candidate authenticated metadata _⟩⟩
-  exact publication_pure mark origin sender route read index before trace candidate authenticated metadata _
+        publication_pure (completedBinding := completedBinding) mark origin sender route read index before trace candidate authenticated metadata _⟩⟩
+  exact publication_pure (completedBinding := completedBinding) mark origin sender route read index before trace candidate authenticated metadata _
 
 private theorem candidate_pure
     (initial : RustM (PqxdhInitialPendingPost.KernelOf RatchetChain))
     (pending : pqxdh.ServerRegistrationCandidate) (data : Option Pqxdh.Bytes) (metadata : P) :
-    All (BuilderOutside (extra := extra) pure) (PqxdhInitialOriginForwardBuilder.candidate (X := X) (Response := Response)
+    All (BuilderOutside (extra := extra) pure) (PqxdhInitialOriginForwardBuilder.candidate (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response)
       mark origin sender route read index before trace initial pending data metadata pure) := by
   unfold PqxdhInitialOriginForwardBuilder.candidate
   refine plain_all _ _ _ fun valid => ?_
@@ -66,8 +69,8 @@ private theorem candidate_pure
   refine plain_all _ _ _ fun reserved => ?_
   cases reserved <;> simp only [Bool.not_false, Bool.not_true, Bool.false_eq_true, ite_true, ite_false, finished_pure]
   cases initial <;> simp only [finished_pure]
-  split <;> first | exact finished_pure mark origin sender route read index before trace _ | skip
-  split <;> first | exact finished_pure mark origin sender route read index before trace _ | skip
+  split <;> try exact finished_pure (completedBinding := completedBinding) mark origin sender route read index before trace _
+  split <;> try exact finished_pure (completedBinding := completedBinding) mark origin sender route read index before trace _
   refine plain_all _ _ _ fun allocated => ?_
   cases allocated <;> simp only [Bool.not_false, Bool.not_true, Bool.false_eq_true, ite_true, ite_false, finished_pure]
   cases pending.key_id_binding <;> simp only [finished_pure, send_pure]
@@ -75,20 +78,20 @@ private theorem candidate_pure
 private theorem used_pure
     (initial : RustM (PqxdhInitialPendingPost.KernelOf RatchetChain))
     (pending : PqxdhRegistrationInputs.UsedInput) (data : Option Pqxdh.Bytes) (metadata : P) :
-    All (BuilderOutside (extra := extra) pure) (PqxdhInitialOriginForwardBuilder.used (X := X) (Response := Response)
+    All (BuilderOutside (extra := extra) pure) (PqxdhInitialOriginForwardBuilder.used (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response)
       mark origin sender route read index before trace initial pending data metadata pure) := by
   unfold PqxdhInitialOriginForwardBuilder.used
   dsimp only
-  split <;> first | exact finished_pure mark origin sender route read index before trace _ | skip
-  split <;> first | exact finished_pure mark origin sender route read index before trace _ | exact candidate_pure mark origin sender route read index before trace _ _ _ _
+  split <;> try exact finished_pure (completedBinding := completedBinding) mark origin sender route read index before trace _
+  split <;> first | exact finished_pure (completedBinding := completedBinding) mark origin sender route read index before trace _ | exact candidate_pure (associatedData := associatedData) (completedBinding := completedBinding) mark origin sender route read index before trace _ _ _ _
 
 /-- Before the wrapper starts, the complete original Builder can save only its literal Builder continuation. Every admission, diagnostic and writer branch is retained. -/
 theorem builder_pure (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (initial : RustM (PqxdhInitialPendingPost.KernelOf RatchetChain)) (metadata : P)
     (ready : PqxdhPrivateAcceptedRoot.Ready) :
-    All (BuilderOutside (extra := extra) pure) (PqxdhInitialOriginForwardBuilder.program (X := X) (Response := Response)
+    All (BuilderOutside (extra := extra) pure) (PqxdhInitialOriginForwardBuilder.program (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response)
       source mark origin sender route read initial index metadata ready pure before trace) := by
-  exact used_pure mark origin sender route read index _ trace initial _ _ metadata
+  exact used_pure (associatedData := associatedData) (completedBinding := completedBinding) mark origin sender route read index _ trace initial _ _ metadata
 
 /-- Appending the original wrapper to an actual initial Builder retains that literal wrapper as its outside continuation. -/
 theorem append_pure
@@ -115,17 +118,17 @@ theorem captured_continuation (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltS
     (owner : RawCtxProtocolReveals.Owner S B) (number : U64) (bit : Bool)
     (adversary : BuildResult → OracleComp (PqxdhFirstRecordConfidentiality.AdvSpec extra S B) Bool) :
     All (Continuation owner number bit adversary)
-      (PqxdhLaterChallengeBuilderCapture.capturedBuilder (X := X) (Response := Response) mark origin sender route read index before trace
+      (PqxdhLaterChallengeBuilderCapture.capturedBuilder (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response) mark origin sender route read index before trace
         source initial metadata ready owner number bit adversary) := by
   unfold PqxdhLaterChallengeBuilderCapture.capturedBuilder
   refine bind_all _ _ _ ?_ ?_
   case refine_1 =>
     refine map_all (BuilderOutside pure) (Continuation owner number bit adversary) _ ?_ _
-      (builder_pure mark origin sender route read index before trace source initial metadata ready)
+      (builder_pure (associatedData := associatedData) (completedBinding := completedBinding) mark origin sender route read index before trace source initial metadata ready)
     exact fun context valid => append_pure _ context valid
   exact fun value => map_all (Joined owner number bit) (Continuation owner number bit adversary)
     (fun context => (context.1, some context.2)) (fun _ valid => valid) _
-    (captured_joined mark sender route read owner number bit (adversary value.1)
+    (captured_joined (completedBinding := completedBinding) mark sender route read owner number bit (adversary value.1)
       PqxdhRecordConfidentialityChallenge.initial value.2.1 value.2.2)
 
 /-- The complete shared-ROM scanner returns that exact source-generated Builder or wrapper continuation, including failed publication paths. -/
@@ -146,11 +149,11 @@ theorem shared_continuation {A N C : Type}
     (context : PqxdhInitialOriginContext.Context extra M P I D K Bool Origin S B)
     (details : Option (Details extra M P I D K Origin S B)) (reached : PqxdhNativeSharedPrefix.Local A N C)
     (supported : RawCtxForwardScan.Cut.pending (context, details) reached ∈ support
-      (PqxdhLaterChallengeBuilderCapture.sharedCarried mark origin sender route read index before trace source writer stage pre application initializer selector aux
+      (PqxdhLaterChallengeBuilderCapture.sharedCarried (associatedData := associatedData) (completedBinding := completedBinding) mark origin sender route read index before trace source writer stage pre application initializer selector aux
         initial metadata ready owner number bit adversary depth state)) :
     Continuation owner number bit adversary (context, details) := by
   exact shared_scan_all _ _ _ _ _ _ _
-    (captured_continuation mark origin sender route read index before trace source initial metadata ready owner number bit adversary)
+    (captured_continuation (associatedData := associatedData) (completedBinding := completedBinding) mark origin sender route read index before trace source initial metadata ready owner number bit adversary)
     _ _ _ supported
 
 

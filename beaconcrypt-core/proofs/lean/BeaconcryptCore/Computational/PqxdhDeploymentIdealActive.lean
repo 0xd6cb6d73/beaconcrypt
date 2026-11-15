@@ -199,7 +199,8 @@ noncomputable def compiledNext {Y : Type} (raw : Pqxdh.Bytes) (next : Option ℕ
 theorem opaqueRest_selected {Y R : Type} (identityIndex : ℕ) (publicIdentity : PqxdhJointIdentity.PublicIdentity)
     (observe : (Y × Local) × PqxdhRegistrationJointAcceptCutTag.Tag → R) (raw : Pqxdh.Bytes)
     (next : Option ℕ → OracleComp Spec Y) (copies : Local)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) (shared : PqxdhServerAuthNative.NativeState KemSK)
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate))
+    (shared : PqxdhServerAuthNative.NativeState KemSK)
     (value : Verified Reader) (verified : PqxdhRegistrationJointRawSignatures.verified setup codec checks raw = some value)
     (seed : PqxdhJointIdentity.IdentitySeed) (selected : ℕ) (pairs : List (PqxdhLiveKemReservation.Pair KemSK))
     (state : PqxdhDynamicKemJointSource.State KemSK) :
@@ -241,7 +242,8 @@ theorem itemRest_selected {A Y : Type} (t : Target count) (p : Params KemSK coun
         | none => pure false
         | some ephemeral => PqxdhDeploymentIdealBranch.itemPost setup codec checks t p decision
             (.ready created p.others (some (.pending raw value ephemeral pre.2 reached.2.shared
-              (PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2).owners
+              ((PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2).owners,
+                (PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2).inits)
               (compiledNext setup codec route raw next reached.1.2)))
               (reached.2.pool.1, PqxdhDeploymentIdealPoolSource.routerOf reached.2.pool.2) after)) := by
   rcases reached with ⟨⟨cut, copies⟩, source⟩
@@ -464,7 +466,8 @@ def ActiveBranch {A : Type} (ensureInit : StateT A ProbComp Bool) (bounds : Fres
         (PqxdhDeploymentKemTransfer.decision setup.source.crypto codec setup.serverKeyId budget event claim g)
         (.ready (PqxdhRegistrationJointServerBirth.encode created) p.others
           (some (.pending raw value ephemeral pre.2 reached.2.shared
-            (PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2).owners
+            ((PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2).owners,
+              (PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2).inits)
             (compiledNext setup codec route raw next reached.1.2)))
           (reached.2.pool.1, PqxdhDeploymentIdealPoolSource.routerOf reached.2.pool.2) born.2.2))
       (activeCE setup codec route checks (Target.ofCE budget g) p created

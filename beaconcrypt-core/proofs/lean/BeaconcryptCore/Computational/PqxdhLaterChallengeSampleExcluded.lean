@@ -7,7 +7,10 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeSampleExcluded
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily
 open PqxdhKemIndCca PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma
 open PqxdhPhase2GeneratedDriver PqxdhAuthenticatedRootExperiment PqxdhPhase1AcceptanceOracle
@@ -49,7 +52,7 @@ theorem run_not_inside {OtherA OtherN OtherC : Type} (start : Input) (output : H
     (adversary : PqxdhInitialBuilderContext.BuildResult → OracleComp (PqxdhFirstRecordConfidentiality.AdvSpec (SelectorSpec baseSpec) S (B + 1)) Bool)
     (pending : Pending) (details : Details) (after : CtxRO.QueryCache)
     (supported : (Sum.inr (pending, some details), after) ∈ support
-      ((simulateQ hashImpl (PqxdhLaterChallengePreparedCapture.run original callbacks baseImpl kem attachedVerify primitives secret challenge
+      ((simulateQ hashImpl (PqxdhLaterChallengePreparedCapture.run (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge
         start output depth start.selected number bit adversary)).run start.shared.2))
     (prior : RawCtxSelectedParentTable.Prior) (entry : RawCtxSelectedParentEntry.Entry)
     (target : RootOutput) (full : PqxdhFullSecretInputKdf.FullOutput)
@@ -61,38 +64,38 @@ theorem run_not_inside {OtherA OtherN OtherC : Type} (start : Input) (output : H
     (result : (Bool × (Front × Trace)) × PqxdhInitialNativeRetained.RetainedState OtherA OtherN OtherC)
     (completed : result ∈ support ((simulateQ (PqxdhInitialNativeRetained.retained (env).source (env).recordWriter
       (RawCtxSelectedMessageDriver.privateTable prior (some entry) target full) external)
-      (PqxdhInitialOriginContext.resume
+      (PqxdhInitialOriginContext.resume (completedBinding := completedBinding)
         (PqxdhInitialSelectedOrigin.mark (env).source start.selectedMessage) (env).senderId (env).route (env).decode pending.1
-        (PqxdhInitialParentBuilderContext.reply (env).senderId (env).route (env).decode pending.1.original
+        (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) (env).senderId (env).route (env).decode pending.1.original
           (RawCtxSelectedParentEntry.realize entry target)))).run before))
     (accepted : result.1.1 = true) (published : ((start.selected, number), true) ∈ result.1.2.2.published) :
     PqxdhLaterChallengeSavedClassification.phase (some details) ≠ .inside := by
   intro classified
   have syntactic : Sum.inr (pending, some details) ∈ support
-      (PqxdhLaterChallengePreparedCapture.run original callbacks baseImpl kem attachedVerify primitives secret challenge
+      (PqxdhLaterChallengePreparedCapture.run (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge
         start output depth start.selected number bit adversary) := by
     apply support_simulateQ_run'_subset hashImpl _ start.shared.2
     simp only [StateT.run'_eq, support_map, Set.mem_image]
     exact ⟨(Sum.inr (pending, some details), after), supported, rfl⟩
-  have joined := PqxdhLaterChallengePreparedCapture.run_joined original callbacks baseImpl kem attachedVerify primitives secret challenge
+  have joined := PqxdhLaterChallengePreparedCapture.run_joined (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge
     start output depth start.selected number bit adversary pending (some details) syntactic
-  have reached := PqxdhLaterChallengeSampleChronology.run_reaches original callbacks baseImpl kem attachedVerify primitives secret challenge
+  have reached := PqxdhLaterChallengeSampleChronology.run_reaches (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge
     start output depth start.selected number bit adversary pending details start.shared.2 after supported
-  obtain ⟨front, history, invariant, cut⟩ := PqxdhLaterChallengeSampleActive.reached_active original callbacks
+  obtain ⟨front, history, invariant, cut⟩ := PqxdhLaterChallengeSampleActive.reached_active (associatedData := associatedData) (completedBinding := completedBinding) original callbacks
     baseImpl kem attachedVerify primitives secret challenge start output depth start.selected number bit adversary
     pending details start.shared.2 after reached classified
   have sampled : Sum.inr (pending.1, attach pending.2 after) ∈ support
-      (PqxdhErasedParentSample.sampleOne (env).source (env).recordWriter (env).senderId (env).route (env).decode depth
+      (PqxdhErasedParentSample.sampleOne (associatedData := associatedData) (completedBinding := completedBinding) (env).source (env).recordWriter (env).senderId (env).route (env).decode depth
         (PqxdhPreparedSharedPrefix.input original callbacks baseImpl kem attachedVerify primitives secret challenge
           (withPost (setup := setup) start start.selected number bit adversary), output)) := by
-    rw [← PqxdhLaterChallengePreparedCapture.run_source original callbacks baseImpl kem attachedVerify primitives secret challenge,
+    rw [← PqxdhLaterChallengePreparedCapture.run_source (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge,
       support_map]
     exact ⟨(Sum.inr (pending, some details), after), supported, rfl⟩
-  have cursor := PqxdhLaterSendAddress.sample_one_cursor (env).source (env).recordWriter (env).senderId (env).route (env).decode
+  have cursor := PqxdhLaterSendAddress.sample_one_cursor (associatedData := associatedData) (completedBinding := completedBinding) (env).source (env).recordWriter (env).senderId (env).route (env).decode
     depth _ _ sampled
-  have absent := (PqxdhInitialPreparedParent.supported_pending (env).source (env).recordWriter _ _ _ _ _ _
+  have absent := (PqxdhInitialPreparedParent.supported_pending (associatedData := associatedData) (completedBinding := completedBinding) (env).source (env).recordWriter _ _ _ _ _ _
     (env).senderId (env).route (env).decode _ _ depth _ (attach pending.2 after) pending.1).mp sampled
-  apply PqxdhLaterChallengeInsideExcluded.frame_excluded
+  apply PqxdhLaterChallengeInsideExcluded.frame_excluded (completedBinding := completedBinding)
     (PqxdhInitialSelectedOrigin.mark (env).source start.selectedMessage) (env).senderId (env).route (env).decode
     start.selected number bit details classified (PqxdhInitialNativeAuditCarried.selected depth) (native_selection depth)
     (PqxdhLaterChallengeSampleChronology.native original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth)
@@ -113,7 +116,7 @@ theorem cache_not_inside {OtherA OtherN OtherC : Type} (start : Input) (output :
     (adversary : PqxdhInitialBuilderContext.BuildResult → OracleComp (PqxdhFirstRecordConfidentiality.AdvSpec (SelectorSpec baseSpec) S (B + 1)) Bool)
     (pending : Pending) (details : Details) (cache after : CtxRO.QueryCache)
     (supported : (Sum.inr (pending, some details), after) ∈ support
-      ((simulateQ hashImpl (PqxdhLaterChallengePreparedCapture.run original callbacks baseImpl kem attachedVerify primitives secret challenge
+      ((simulateQ hashImpl (PqxdhLaterChallengePreparedCapture.run (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge
         start output depth start.selected number bit adversary)).run cache))
     (prior : RawCtxSelectedParentTable.Prior) (entry : RawCtxSelectedParentEntry.Entry)
     (target : RootOutput) (full : PqxdhFullSecretInputKdf.FullOutput)
@@ -125,13 +128,13 @@ theorem cache_not_inside {OtherA OtherN OtherC : Type} (start : Input) (output :
     (result : (Bool × (Front × Trace)) × PqxdhInitialNativeRetained.RetainedState OtherA OtherN OtherC)
     (completed : result ∈ support ((simulateQ (PqxdhInitialNativeRetained.retained (env).source (env).recordWriter
       (RawCtxSelectedMessageDriver.privateTable prior (some entry) target full) external)
-      (PqxdhInitialOriginContext.resume
+      (PqxdhInitialOriginContext.resume (completedBinding := completedBinding)
         (PqxdhInitialSelectedOrigin.mark (env).source start.selectedMessage) (env).senderId (env).route (env).decode pending.1
-        (PqxdhInitialParentBuilderContext.reply (env).senderId (env).route (env).decode pending.1.original
+        (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) (env).senderId (env).route (env).decode pending.1.original
           (RawCtxSelectedParentEntry.realize entry target)))).run before))
     (accepted : result.1.1 = true) (published : ((start.selected, number), true) ∈ result.1.2.2.published) :
     PqxdhLaterChallengeSavedClassification.phase (some details) ≠ .inside := by
-  apply run_not_inside original callbacks baseImpl kem attachedVerify primitives secret challenge
+  apply run_not_inside (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge
     { start with shared := (start.shared.1, cache) } output depth number position bit adversary pending details after
     _ prior entry target full external atParent before result completed accepted published
   simpa only [PqxdhLaterChallengeCapturedCache.run_start_cache] using supported

@@ -14,7 +14,7 @@ variable {mlSource : RegistrationNativeMldsa.Source}
 /-- Every allowed actual trusted identity callback compiles to an ordinary non-revealing joint program. -/
 theorem query_safe (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (RegistrationNativeIdentityFrontend.Trusted n KemSK).Domain)
     (allowed : RegistrationNativeIdentityNoReveal.Allowed n KemSK query)
     (before : RegistrationNativeIdentityWorld.Context n KemSK) :
@@ -34,7 +34,7 @@ theorem query_safe (setup : Setup base KemSK) (checks : Checks)
 /-- All oracle replies and adaptive trusted callbacks preserve structural non-reveal safety through compilation. -/
 theorem program_safe (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp (RegistrationNativeIdentityFrontend.Trusted n KemSK) Value)
     (allowed : AllQueriesSatisfy work (RegistrationNativeIdentityNoReveal.Allowed n KemSK))
     (before : RegistrationNativeIdentityWorld.Context n KemSK) :
@@ -51,7 +51,7 @@ theorem program_safe (setup : Setup base KemSK) (checks : Checks)
 /-- Actual whole native Beacon execution contains no generated-identity reveal operation. -/
 theorem beacon_safe (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeIdentityFrontend.M n KemSK RegistrationServerRoleBackend.State mlSource Value)
     (allowed : RegistrationNativeIdentityNoReveal.Safe work) :
     Safe (RegistrationNativeIdentityMain.beacon setup checks representation created work) := by

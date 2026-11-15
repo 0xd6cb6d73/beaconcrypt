@@ -110,7 +110,7 @@ theorem finish_source (setup : Setup base KemSK) (wire : RegistrationNativeWire.
     (coherent : ∀ pending oneTime, owner.phase = .initSent pending oneTime →
       pending.control.expected_server_binding = pending.binding.server_pin.binding)
     (env : EnvState RegistrationServerRoleBackend.State) (empty : env.recordRequests = [])
-    (erased : Std.Array U8 357#usize) (before : Private n KemSK) :
+    (erased : Std.Array U8 227#usize) (before : Private n KemSK) :
     Prod.map id drop <$>
       (simulateQ (implementation setup wire route sign seed selectedScalar)
         (simulateQ (adapt setup localScalar)
@@ -154,24 +154,24 @@ theorem finish_source (setup : Setup base KemSK) (wire : RegistrationNativeWire.
                 exact abort_source setup wire route sign seed selectedScalar localScalar owner
                   { owner with phase := .aborted aborted } env empty _ afterPrivate
             | Ok accepted =>
-                have retained : accepted.pending = pending := by
+                have retained : RegistrationBeaconResponseMetadata.Retained pending accepted := by
                   cases packet with
                   | none =>
-                      apply RegistrationBeaconResponseMetadata.simulated_pending
+                      apply RegistrationBeaconResponseMetadata.simulated_metadata
                         (trusted setup wire route sign seed selectedScalar ∘ₛ
                           (RegistrationBeaconReferenceNativeRecord.environment ∘ₛ
                             RegistrationAuthenticationCompiler.callbacks setup.source.crypto mlSource.verify))
                         pending .None accepted before afterPrivate
                       simpa only [QueryImpl.simulateQ_compose] using supported
                   | some value =>
-                      apply RegistrationBeaconResponseMetadata.simulated_pending
+                      apply RegistrationBeaconResponseMetadata.simulated_metadata
                         (trusted setup wire route sign seed selectedScalar ∘ₛ
                           (RegistrationBeaconReferenceNativeRecord.environment ∘ₛ
                             RegistrationAuthenticationCompiler.callbacks setup.source.crypto mlSource.verify))
                         pending (.Some value) accepted before afterPrivate
                       simpa only [QueryImpl.simulateQ_compose] using supported
-                have correct : accepted.pending.control.expected_server_binding = accepted.pending.binding.server_pin.binding := by
-                  rw [retained]
+                have correct : accepted.control.expected_server_binding = accepted.binding.server_pin.binding := by
+                  rw [retained.1, retained.2.1]
                   exact coherent pending oneTime phase
                 have actual := RegistrationNativeOrdinaryFinishSourcePhase.phase_native setup wire route sign seed selectedScalar localScalar
                   owner { owner with phase := .aborted aborted } oneTime accepted correct env empty erased afterPrivate

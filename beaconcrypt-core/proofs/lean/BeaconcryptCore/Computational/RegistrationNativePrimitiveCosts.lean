@@ -1,5 +1,8 @@
 -- SPDX-License-Identifier: 0BSD
-import BeaconcryptCore.Computational.RegistrationNativeSelectiveRecordFrame
+import BeaconcryptCore.Computational.RegistrationNativeHiddenService
+import BeaconcryptCore.Computational.RegistrationNativeMldsa
+import BeaconcryptCore.Computational.PqxdhLiveServerConstruction
+import BeaconcryptCore.Computational.RawCtxSourceOpen
 
 /-! Literal native startup and primitive-source costs. Initialization, ML generation, signing and indexed KEM are explicit primitive programs; their supplied costs constrain only those bodies. Constructor failure retains its actual draws, and successful unsupplied identity construction adds exactly the existing32-byte sampling allowance. No callback frame or protocol security conclusion is assumed. -/
 

@@ -12,39 +12,14 @@ set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativeMldsaTypedOrigin
 open PqxdhServerAuthExperiment (Setup Checks)
 open RegistrationNativeMldsaEuf (PublicKey Forgery)
-attribute [local irreducible] RegistrationNativeExperiment.handler RegistrationSigningShared.historyFor RegistrationAuthenticationNative.trial
+attribute [local irreducible] RegistrationNativeExperiment.handler RegistrationSigningShared.historyFor
 variable {n : Nat} {ι KemSK : Type} {base : OracleSpec ι} {source : RegistrationNativeMldsa.Source}
-
-/-- The original protected-key Init acceptance failure is covered at its actual returned callback cut. -/
-theorem accept (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
-    (route : RawCtxServerRouting.SenderDecoder)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
-    (publicKey : PublicKey) (packet : registration.InitPacket)
-    (before after : RegistrationNativeExperiment.State n KemSK source) (session : Nat)
-    (supported : (.ok (some session), after) ∈ support
-      ((RegistrationNativeExperiment.handler setup checks wire route representation created source credential
-        (.inr (.accept packet))).run before))
-    (key : packet.mldsa_public_key = publicKey)
-    (cached : RegistrationSigningShared.Cached (RegistrationNativeMldsaShared.nativeProject before))
-    (absent : ¬ MldsaTranscriptAuth.Issued (RegistrationAuthenticationNative.trial true before.server.pin packet
-      (RegistrationSigningShared.historyFor (PqxdhRefinement.absBytes packet.mldsa_public_key)
-        (RegistrationNativeMldsaShared.nativeProject before)))) :
-    (∃ forgery, RegistrationNativeMldsaTrialObserver.observe source.verify publicKey (.inr (.accept packet)) before
-      (.ok (some session)) after = some forgery) ∨ CacheHasCollision after.server.world.world.1.primitive.2 := by
-  rcases RegistrationNativeInitFinal.typed_origin_split setup checks wire route representation created credential packet
-    before after session supported true rfl cached absent with weak | collision
-  · apply Or.inl
-    obtain ⟨forgery, chosen⟩ := RegistrationNativeMldsaTrialObserver.choose_complete source.verify publicKey
-      after.server.world.world.1.primitive.2 _ (by rw [← key]; simp only [RegistrationAuthenticationNative.trial]) weak
-    exact ⟨forgery, chosen⟩
-  · exact Or.inr collision
 
 /-- The original protected pending-Server response failure is covered at its actual returned callback cut. -/
 theorem finish (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (publicKey : PublicKey) (index : Nat) (owner : RegistrationNativeBeaconFrontend.Owner source)
     (pending : registration.BeaconPending) (oneTime : PqxdhJointGapDh.ScalarBytes) (packet : registration.ResponsePacket)
     (before after : RegistrationNativeExperiment.State n KemSK source) (application : Pqxdh.Bytes)
@@ -70,11 +45,6 @@ theorem finish (setup : Setup base KemSK) (checks : Checks) (wire : Registration
   · exact Or.inr collision
 
 end BeaconcryptCore.Computational.RegistrationNativeMldsaTypedOrigin
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaTypedOrigin.accept' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaTypedOrigin.accept
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaTypedOrigin.finish' depends on axioms: [propext,
  Classical.choice,

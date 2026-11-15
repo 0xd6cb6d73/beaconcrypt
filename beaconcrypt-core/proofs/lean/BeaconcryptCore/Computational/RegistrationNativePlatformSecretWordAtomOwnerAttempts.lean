@@ -56,6 +56,8 @@ abbrev Front (source : RegistrationNativeMldsa.Source) (Platform : Type) := Regi
 local notation "typed" => RegistrationNativePlatformSecretWordExecution.traced setup wire route sign input inside provider outer controller
 
 
+attribute [local irreducible] RegistrationNativePlatformSecretWordOpen.accept
+
 private theorem trace_cost (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (before : TracedState (Front source Platform) n KemSK)
     (aligned : Aligned before.1.1.beacons before.2.2.kem.1.keys)
     (result : RegistrationNativeRawAdapter.TypedSpec.Range query × TracedState (Front source Platform) n KemSK)

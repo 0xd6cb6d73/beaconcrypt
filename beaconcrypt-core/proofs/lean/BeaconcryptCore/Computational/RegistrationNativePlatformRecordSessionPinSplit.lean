@@ -19,7 +19,7 @@ local notation "Native" => RegistrationNativeExperiment.State n KemSK source
 variable {A : Type} [primitive : AdapterSealPrimitive.Operations]
 variable (setup : Setup base KemSK) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
     (reserveRegistration reservePeer : StateT Platform ProbComp Bool)

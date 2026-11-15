@@ -10,6 +10,7 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 open OracleComp OracleSpec
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialHalfSourceMap
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhInitialPendingPost PqxdhInitialOriginPost PqxdhInitialParentPost PqxdhInitialPostContext RawCtxSelectedParentCalls
 open RawCtxSelectedFamilyContext RawCtxGenericRoleStorage RawCtxGenericRoleFamily
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhInitialBeaconAmbient
@@ -84,11 +85,11 @@ theorem step (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin)
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (query : (PostSpec extra S B).Domain) (before : LabelFront M P I D K S B × Trace Origin S B) :
     simulateQ (nativeHandler source writer prior entry target pre application initial selector aux)
-      ((PqxdhInitialOriginPost.compiler mark sender route decode query).run
+      ((PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) mark sender route decode query).run
         (mapFront (nativeKernel target) before.1, before.2)) =
     Prod.map id (Prod.map (mapFront (nativeKernel target)) id) <$> simulateQ
       (labelHandler source writer prior entry target pre application initial selector aux (childResponse prior entry target))
-      ((PqxdhInitialOriginPost.compiler mark sender route decode query).run before) := by
+      ((PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) mark sender route decode query).run before) := by
   rcases query with (query | query) | query
   case inr =>
     cases query with
@@ -106,7 +107,7 @@ theorem step (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin)
         simp only [liftCalls, receive_map, lift_map]
       have initialLaw : ∀ secrets, nativeInitial target initial secrets =
           Option.map (nativeKernel target) <$> initial secrets := fun _ => rfl
-      rw [PqxdhInitialFinishOrigin.owner_map (nativeKernel target) mark pre
+      rw [PqxdhInitialFinishOrigin.owner_map (completedBinding := completedBinding) (nativeKernel target) mark pre
         (liftCalls (labelCalls source writer prior entry (childResponse prior entry target)))
         (liftCalls (nativeCalls source writer prior entry target)) receiveLaw application
         initial (nativeInitial target initial) initialLaw]
@@ -135,11 +136,11 @@ theorem program (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin)
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (client : OracleComp (PostSpec extra S B) Result) (before : LabelFront M P I D K S B × Trace Origin S B) :
     simulateQ (nativeHandler source writer prior entry target pre application initial selector aux)
-      ((simulateQ (PqxdhInitialOriginPost.compiler mark sender route decode) client).run
+      ((simulateQ (PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) mark sender route decode) client).run
         (mapFront (nativeKernel target) before.1, before.2)) =
     Prod.map id (Prod.map (mapFront (nativeKernel target)) id) <$> simulateQ
       (labelHandler source writer prior entry target pre application initial selector aux (childResponse prior entry target))
-      ((simulateQ (PqxdhInitialOriginPost.compiler mark sender route decode) client).run before) := by
+      ((simulateQ (PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) mark sender route decode) client).run before) := by
   induction client using OracleComp.inductionOn generalizing before with
   | pure value => simp only [simulateQ_pure, StateT.run_pure, map_pure]; rfl
   | query_bind query next ih =>

@@ -151,7 +151,7 @@ def rootQueryCandidate? (known : KnownPqxdhRootCoordinates)
     (query : JointKdfViewQuery) : Option HiddenRootCoordinate :=
   match query.domain with
   | .pqxdh => parseHiddenRootCoordinate? known query.input
-  | .ratchet => none
+  | .initial | .ratchet => none
 
 /-- Candidate extraction recognizes every projection at exactly the hidden root address. -/
 theorem rootQueryCandidate?_eq_some_iff
@@ -170,6 +170,12 @@ theorem rootQueryCandidate?_eq_some_iff
       · intro addressEquality
         apply (parseHiddenRootCoordinate?_eq_some_iff known input hidden).mpr
         exact rootAddress_injective addressEquality
+  | initial =>
+      constructor
+      · simp [rootQueryCandidate?]
+      · intro addressEquality
+        have labels : Pqxdh.INFO_INIT = Pqxdh.INFO_PQ := congrArg JointKdfAddress.info addressEquality
+        exact (Pqxdh.INFO_PQ_ne_INFO_INIT labels.symm).elim
   | ratchet =>
       constructor
       · simp [rootQueryCandidate?]
@@ -191,13 +197,13 @@ instance : DecidablePred IsHiddenRootDomainQuery
 /-- Logical adversary projection requests under the symmetric-ratchet domain. -/
 def IsHiddenRootSymmetricQuery : JointKdfViewAdversarySpec.Domain → Prop
   | .inl _ => False
-  | .inr query => query.domain = .ratchet
+  | .inr query => query.domain ≠ .pqxdh
 
 instance : DecidablePred IsHiddenRootSymmetricQuery
   | .inl _ => isFalse id
-  | .inr query => inferInstanceAs (Decidable (query.domain = .ratchet))
+  | .inr query => inferInstanceAs (Decidable (query.domain ≠ .pqxdh))
 
-/-- Every public projection request lies in exactly one of the two source domains. -/
+/-- Every public projection request lies in either the root domain or one of the two symmetric domains. -/
 theorem isProjectionQuery_iff_root_or_symmetric
     (query : JointKdfViewAdversarySpec.Domain) :
     IsJointKdfViewProjectionQuery query ↔
@@ -252,6 +258,11 @@ theorem isProjectionQueryBound_of_root_and_symmetric_bounds {alpha : Type}
           refine ⟨Or.inr hsym.1, fun response => ?_⟩
           exact (ih response (hroot response) (hsym.2 response)).mono (by omega)
 
+        · simp [IsHiddenRootDomainQuery, IsHiddenRootSymmetricQuery,
+            IsJointKdfViewProjectionQuery] at hroot hsym ⊢
+          refine ⟨Or.inr hsym.1, fun response => ?_⟩
+          exact (ih response (hroot response) (hsym.2 response)).mono (by omega)
+
 /-- Primitive complete-stream requests in the exact PQXDH root domain. -/
 def IsFixedHkdfRootStreamQuery :
     FixedHkdfSha512JointStreamSpec.Domain → Prop
@@ -266,11 +277,11 @@ instance : DecidablePred IsFixedHkdfRootStreamQuery
 def IsFixedHkdfSymmetricStreamQuery :
     FixedHkdfSha512JointStreamSpec.Domain → Prop
   | .inl _ => False
-  | .inr address => address.info = Pqxdh.INFO_R
+  | .inr address => address.info = Pqxdh.INFO_INIT ∨ address.info = Pqxdh.INFO_R
 
 instance : DecidablePred IsFixedHkdfSymmetricStreamQuery
   | .inl _ => isFalse id
-  | .inr address => inferInstanceAs (Decidable (address.info = Pqxdh.INFO_R))
+  | .inr address => inferInstanceAs (Decidable (address.info = Pqxdh.INFO_INIT ∨ address.info = Pqxdh.INFO_R))
 
 /-- Forwarding preserves the root-domain indicator one-for-one. -/
 theorem jointKdfViewForwardImpl_root_query_bound_step
@@ -334,37 +345,13 @@ theorem jointKdfViewForwardImpl_symmetric_query_bound_step
       IsFixedHkdfSymmetricStreamQuery 0
     rw [OracleComp.isQueryBoundP_query_iff]
     simp [IsFixedHkdfSymmetricStreamQuery]
-  · by_cases hsym : viewQuery.domain = .ratchet
-    · simp only [jointKdfViewForwardImpl_projection, IsHiddenRootSymmetricQuery,
-        hsym, ite_true, bind_pure_comp]
-      change (viewQuery.project <$> (liftM
-        (FixedHkdfSha512JointStreamSpec.query (.inr viewQuery.address)) :
-          OracleComp FixedHkdfSha512JointStreamSpec
-            (FixedHkdfSha512JointStreamSpec.Range
-              (.inr viewQuery.address)))).IsQueryBoundP
-        IsFixedHkdfSymmetricStreamQuery 1
-      rw [OracleComp.isQueryBoundP_map_iff]
-      exact (OracleComp.isQueryBoundP_query_iff
-        (p := IsFixedHkdfSymmetricStreamQuery) (.inr viewQuery.address) 1).2
-          (by simp [IsFixedHkdfSymmetricStreamQuery, JointKdfViewQuery.address,
-            hsym, FixedHkdfDomain.address])
-    · simp only [jointKdfViewForwardImpl_projection, IsHiddenRootSymmetricQuery,
-        hsym, ite_false, bind_pure_comp]
-      change (viewQuery.project <$> (liftM
-        (FixedHkdfSha512JointStreamSpec.query (.inr viewQuery.address)) :
-          OracleComp FixedHkdfSha512JointStreamSpec
-            (FixedHkdfSha512JointStreamSpec.Range
-              (.inr viewQuery.address)))).IsQueryBoundP
-        IsFixedHkdfSymmetricStreamQuery 0
-      rw [OracleComp.isQueryBoundP_map_iff]
-      exact (OracleComp.isQueryBoundP_query_iff
-        (p := IsFixedHkdfSymmetricStreamQuery) (.inr viewQuery.address) 0).2
-          (by intro hinfo
-              exfalso
-              apply hsym
-              apply FixedHkdfDomain.info_injective
-              simpa [IsFixedHkdfSymmetricStreamQuery, JointKdfViewQuery.address,
-                FixedHkdfDomain.address] using hinfo)
+  · rcases viewQuery with ⟨input, domain, projection⟩
+    cases domain <;>
+      simp [jointKdfViewForwardImpl_projection, IsHiddenRootSymmetricQuery,
+        IsFixedHkdfSymmetricStreamQuery, JointKdfViewQuery.address,
+        FixedHkdfDomain.address, FixedHkdfDomain.info,
+        OracleComp.isQueryBoundP_map_iff, OracleComp.isQueryBoundP_query_iff,
+        Pqxdh.INFO_PQ, Pqxdh.INFO_INIT, Pqxdh.INFO_R]
 
 /-- Forwarding preserves the logical root-domain budget without loss. -/
 theorem jointKdfViewForwardImpl_root_query_bound {alpha : Type}

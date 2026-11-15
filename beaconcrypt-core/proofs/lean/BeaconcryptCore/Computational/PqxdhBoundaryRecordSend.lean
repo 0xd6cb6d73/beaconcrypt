@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhBoundaryRecordExecution
 
-/-! Production send transcription composed from extracted begin, resume, getters and finish. The loop and public adapter remain RT. -/
+/-! Send transcription composed from extracted generic begin, resume, getters and finish. The CE identity-only routing equations retain their historical281 model and its real current sealing width rejection. The current Server specialization reads each peer's installed151-byte metadata; complete adapter authentication and installation receipts are separate source obligations. The CE Server-send command transcription runs that current specialization on the deployment Server, whose peers carry their own installed AD151, matching the per-peer CE router. The loop and public adapter remain RT. -/
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
@@ -103,6 +103,47 @@ theorem executeServer_exact {Metadata PeerMetadata : Type} (senderId : Metadata 
     simp only [PFunctor.FreeM.bind_eq_bind, PFunctor.FreeM.pure_eq_pure, RawCtxMixedOwner.ownerImpl, StateT.run, RawCtxMixedOwner.sendAdapter, QueryImpl.simulateQ_compose, simulateQ_map, bind_pure_comp, Functor.map_map, PqxdhOpenContextBridge.map_ok]
     rfl
 
+
+/-- A current Server send reads the selected peer's installed151-byte AD before invoking the same extracted generic send transcription. -/
+noncomputable def executeCurrentServer {Metadata PeerMetadata : Type}
+    (ad : PeerMetadata → Std.Array Std.U8 151#usize) (senderId : Metadata → Std.U64)
+    (plaintext : Pqxdh.Bytes) (kid : Std.U64) (state : RawCtxServerRouting.State Metadata PeerMetadata) :
+    OracleComp RawCtxMixedOwner.NativeSpec (RustM (Option Encrypted × RawCtxServerRouting.State Metadata PeerMetadata)) :=
+  match state.server.peers kid with
+  | none => pure (ok (none, state))
+  | some peer => do
+      let result ← executeOwner (senderId state.server.metadata) plaintext
+        ⟨MldsaServerRouting.selected (fun metadata => absBytes (ad metadata)) kid peer, state.rawAttempts⟩
+      pure ((fun result => (result.1,
+        ⟨RawCtxServerRouting.putPeer state.server kid peer result.2.owner.kernel,
+          result.2.rawAttempts⟩)) <$> result)
+
+set_option backward.isDefEq.respectTransparency false in
+/-- Stored-metadata Server routing executes the same source controller and retains every optional writer result, full peer map and primitive call. -/
+theorem executeCurrentServer_exact {Metadata PeerMetadata : Type}
+    (ad : PeerMetadata → Std.Array Std.U8 151#usize) (senderId : Metadata → Std.U64)
+    (plaintext : Pqxdh.Bytes) (kid : Std.U64) (state : RawCtxServerRouting.State Metadata PeerMetadata) :
+    executeCurrentServer ad senderId plaintext kid state =
+      (fun result => ok result) <$> MldsaServerRouting.send
+        (fun metadata => absBytes (ad metadata)) senderId plaintext kid state := by
+  unfold executeCurrentServer MldsaServerRouting.send
+  cases found : state.server.peers kid with
+  | none => simp only [map_pure]
+  | some peer =>
+      dsimp only
+      rw [executeOwner_exact _ _ _ (fun _ => none)]
+      simp only [bind_map_left, map_bind, map_pure, RawCtxMaterialInterpretation.rust_map_ok]
+      rfl
+
+/-- Completed registration metadata supplies precisely its retained source AD, without an identity reconstruction or an unrelated public AD argument. -/
+theorem executeCompletedServer_exact {Metadata : Type} (senderId : Metadata → Std.U64)
+    (plaintext : Pqxdh.Bytes) (kid : Std.U64)
+    (state : RawCtxServerRouting.State Metadata session.CompletedRegistrationBinding) :
+    executeCurrentServer (fun binding => binding.associated_data) senderId plaintext kid state =
+      (fun result => ok result) <$> MldsaServerRouting.send
+        (fun binding => absBytes binding.associated_data) senderId plaintext kid state :=
+  executeCurrentServer_exact _ senderId plaintext kid state
+
 /-- Only an established Beacon sends, using the outer identity ID and the pinned control target independently. -/
 noncomputable def executeBeacon {Identity DhPair KemPair : Type} (plaintext : Pqxdh.Bytes)
     (state : RawCtxBeaconLifecycle.State Identity DhPair KemPair) :
@@ -126,12 +167,29 @@ theorem executeBeacon_exact {Identity DhPair KemPair : Type} (plaintext : Pqxdh.
 open PqxdhDeploymentNative
 variable {ι KemSK Reader Response : Type} {baseSpec : OracleSpec ι}
 
-/-- The Server send transcription uses the real shared record interpreter and logs every attempted writer publication. -/
+/-- The model Server send runs the current stored-metadata transcription on the deployment peer map, each peer under its installed AD151, exactly as the CE per-peer router does. -/
+private noncomputable def modelExecuteServerSend (senderId : Unit → Std.U64)
+    (plaintext : Pqxdh.Bytes) (kid : Std.U64) (state : RawCtxServerRouting.State Unit PqxdhTranscriptAd.AssociatedData) :
+    OracleComp RawCtxMixedOwner.NativeSpec
+      (RustM (Option Encrypted × RawCtxServerRouting.State Unit PqxdhTranscriptAd.AssociatedData)) :=
+  executeCurrentServer id senderId plaintext kid state
+
+private theorem modelExecuteServerSend_exact (senderId : Unit → Std.U64)
+    (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
+    (plaintext : Pqxdh.Bytes) (kid : Std.U64) (state : RawCtxServerRouting.State Unit PqxdhTranscriptAd.AssociatedData) :
+    modelExecuteServerSend senderId plaintext kid state =
+      (fun result => ok result) <$>
+        (MldsaServerRouting.handler PqxdhRefinement.absBytes senderId route decode (.inl (plaintext, kid))).run state := by
+  rw [modelExecuteServerSend, executeCurrentServer_exact]
+  simp only [MldsaServerRouting.handler, StateT.run]
+  rfl
+
+/-- The Server send transcription uses the real shared record interpreter on each peer's installed AD151 and logs every attempted writer publication. -/
 noncomputable def executeServerSend (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (codec : PqxdhServerAuthExperiment.Codec Reader Response) (kid : Std.U64) (plaintext : Pqxdh.Bytes)
     (state : PqxdhDeploymentNative.State KemSK) :
     ProbComp (RustM (Option Encrypted × PqxdhDeploymentNative.State KemSK)) := do
-  let result ← (record setup codec (logged (executeServer (senderId state) plaintext kid (serverView state)))).run state.native
+  let result ← (record setup codec (logged (modelExecuteServerSend (senderId state) plaintext kid (serverView state)))).run state.native
   pure ((fun output => (output.1, produce (serverTag (.inl (plaintext, kid))) result.1.2
     (withServer { state with native := result.2 } output.2))) <$> result.1.1)
 
@@ -142,13 +200,13 @@ theorem executeServerSend_exact (setup : PqxdhServerAuthExperiment.Setup baseSpe
     executeServerSend setup codec kid plaintext state =
       (fun result => ok result) <$> (serverStep setup codec route (.inl (plaintext, kid))).run state := by
   unfold executeServerSend serverStep
-  rw [executeServer_exact _ _ _ _ codec.frameRead, logged_map]
+  rw [modelExecuteServerSend_exact _ route codec.frameRead, logged_map]
   have mapped := PqxdhBoundaryRecordExecution.record_map_result setup codec (Prod.map (fun result => ok result) id)
-    (logged (RawCtxServerMixed.sendServer (senderId state) plaintext kid (serverView state))) state.native
+    (logged ((MldsaServerRouting.handler PqxdhRefinement.absBytes (senderId state) route codec.frameRead
+      (.inl (plaintext, kid))).run (serverView state))) state.native
   simp only [StateT.run] at mapped ⊢
   rw [mapped]
-  simp only [RawCtxServerMixed.serverImpl, bind_pure_comp, Functor.map_map, Prod.map, id_eq, PqxdhOpenContextBridge.map_ok]
-  rfl
+  simp only [bind_pure_comp, Functor.map_map, Prod.map, id_eq, PqxdhOpenContextBridge.map_ok]
 
 /-- The Beacon send transcription runs on the looked-up live owner, preserves the shared primitive cache and publishes the returned owner and frame log. -/
 noncomputable def executeBeaconSend (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
@@ -324,3 +382,15 @@ end BeaconcryptCore.Computational.PqxdhBoundaryRecordSend
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhBoundaryRecordSend.executeOwner_active
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhBoundaryRecordSend.executeCurrentServer_exact' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhBoundaryRecordSend.executeCurrentServer_exact
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhBoundaryRecordSend.executeCompletedServer_exact' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhBoundaryRecordSend.executeCompletedServer_exact

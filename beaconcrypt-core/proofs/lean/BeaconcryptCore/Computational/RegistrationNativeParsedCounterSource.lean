@@ -29,7 +29,7 @@ private theorem world_counter (work : StateT (PqxdhRecordLiftWorld.State n) Prob
 
 private theorem trusted_counter (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (RegistrationNativeBeaconFrontend.Trusted n KemSK).Domain)
     (before : State n KemSK mlSource)
     (result : (RegistrationNativeBeaconFrontend.Trusted n KemSK).Range query × State n KemSK mlSource)
@@ -46,7 +46,7 @@ private theorem trusted_counter (setup : Setup base KemSK) (checks : Checks)
 
 private theorem trusted_program_counter (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp (RegistrationNativeBeaconFrontend.Trusted n KemSK) Value)
     (before : State n KemSK mlSource) (result : Value × State n KemSK mlSource)
     (reached : result ∈ support ((simulateQ (RegistrationNativeExperiment.trusted setup checks representation created mlSource) work).run before)) :
@@ -65,7 +65,7 @@ private theorem trusted_program_counter (setup : Setup base KemSK) (checks : Che
 /-- Every actual Beacon lifecycle AST keeps the parsed-attempt counter, including all error continuations and private indexed KEM effects. -/
 theorem beacon_counter (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK mlSource RegistrationServerRoleBackend.State Value)
     (before : State n KemSK mlSource) (result : Value × State n KemSK mlSource)
     (reached : result ∈ support ((RegistrationNativeExperiment.beacon setup checks representation created work).run before)) :
@@ -105,7 +105,7 @@ set_option maxRecDepth 2048 in
 theorem typed_counter (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (query : TypedSpec.Domain) (before : State n KemSK mlSource)
     (result : TypedSpec.Range query × State n KemSK mlSource)
     (reached : result ∈ support

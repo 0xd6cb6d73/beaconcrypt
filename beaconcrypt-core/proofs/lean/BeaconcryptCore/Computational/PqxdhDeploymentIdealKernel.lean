@@ -231,10 +231,11 @@ open PqxdhDeploymentHiddenLayout (joinOutput splitOutput)
 open PqxdhDeploymentHiddenSplit (dummySeed replaceRaw setPeerKernel withKernel)
 
 /-- Settling commutes with replacing the published kernel. -/
-theorem settle_replaceRaw (server : PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes))
+theorem settle_replaceRaw
+    (server : PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes))
     (kernel : beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel)
     (result : RustM (Option PqxdhServerRegistrationPublication.Response ×
-      PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes))) :
+      PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes))) :
     PqxdhServerAuthExperiment.settle server (Functor.map (replaceRaw kernel) result) =
       replaceRaw kernel (PqxdhServerAuthExperiment.settle server result) := by
   cases result <;> rfl
@@ -255,22 +256,30 @@ theorem buildHidden_seed (m : PqxdhDeploymentHiddenLayout.Material) (seed : Pqxd
         (buildHidden (PqxdhRegistrationJointKemEntryFactor.factoredHidden setup codec checks (joinOutput m dummySeed))
           session payload).run state := by
   have built : (PqxdhRegistrationJointKemEntryFactor.factoredHidden setup codec checks (joinOutput m seed)).hiddenBuild =
-      fun token payload server => Functor.map (replaceRaw (PqxdhRecordLiftWorld.kernel .server seed)) <$>
+      fun token payload ad server => Functor.map (replaceRaw (PqxdhRecordLiftWorld.kernel .server seed)) <$>
         (PqxdhRegistrationJointKemEntryFactor.factoredHidden setup codec checks (joinOutput m dummySeed)).hiddenBuild
-          token payload server := by
-    funext token payload server
-    exact PqxdhDeploymentHiddenSplit.build_split_raw _ _ setup.source _ m seed dummySeed _ _ () server
+          token payload ad server := by
+    funext token payload ad server
+    exact PqxdhDeploymentHiddenSplit.build_split_raw (associatedData := ad) _ _ setup.source _ m seed dummySeed _ _ ad
+      server
   unfold buildHidden
   rw [built, PqxdhDeploymentBackend.nativeGet_bind, PqxdhDeploymentBackend.nativeGet_bind]
   rcases pending : state.2.pending session with _ | token
   · simp only [StateT.run_pure, map_pure]
     rfl
   · simp only []
-    rw [PqxdhDeploymentBackend.nativeCoins_bind, PqxdhDeploymentBackend.nativeCoins_bind, StateT.run_map, bind_map_left,
+    rcases pre : PqxdhServerRegistrationPublication.prehash state.2.server token.pending payload with _ | candidate
+    · simp only [StateT.run_bind, map_bind]
+      rfl
+    simp only []
+    rw [StateT.run_bind, StateT.run_bind, map_bind]
+    refine bind_congr fun digest => ?_
+    rw [PqxdhDeploymentBackend.nativeGet_bind, PqxdhDeploymentBackend.nativeGet_bind,
+      PqxdhDeploymentBackend.nativeCoins_bind, PqxdhDeploymentBackend.nativeCoins_bind, StateT.run_map, bind_map_left,
       map_bind]
     refine bind_congr fun result => ?_
     rw [settle_replaceRaw]
-    rcases settled : PqxdhServerAuthExperiment.settle state.2.server result.1 with ⟨_ | response, after⟩
+    rcases settled : PqxdhServerAuthExperiment.settle digest.2.2.server result.1 with ⟨_ | response, after⟩
     · simp only [PqxdhDeploymentHiddenSplit.replaceRaw]
       rfl
     · simp only [PqxdhDeploymentHiddenSplit.replaceRaw]
@@ -581,14 +590,17 @@ noncomputable def ownerApply (seed : PqxdhRecordLiftSeed.Seed)
   ((r.1.1, setOwnerKernel r.1.2 (PqxdhRecordLiftWorld.kernel .beacon seed)), r.2)
 
 /-- Kernel identity of the grouped owner, on pairs: in front of the split service the grouped owner with the erased hidden services is, exactly, the grouped owner in front of the eager service with dummy values followed by the seed fix of its recorded coordinates. -/
-theorem owner_seed (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (raw : Pqxdh.Bytes)
+theorem owner_seed (challenge : PqxdhKemIndCca.MlKem768Ciphertext)
+    (binding : beaconcrypt_core.session.CompletedRegistrationBinding) (raw : Pqxdh.Bytes)
     (owner : PqxdhRegistrationSchedule.Owner KemSK) (s : NativeState KemSK)
     (state : Alloc Coord 2 × (MatCache 2 × SeedCache 2)) :
     (onPair splitService (simulateQ (PqxdhDeploymentIdealSteps.ownerImplCE setup codec (erasedHidden setup codec checks)
-        challenge) (PqxdhDeploymentIdealSteps.groupedOwnerCE (Response := Response) raw owner))).run ((s, none), state) =
+        challenge) (PqxdhDeploymentIdealSteps.groupedOwnerCE (Response := Response) binding raw owner))).run
+        ((s, none), state) =
       pairPeek (fun r => r.2.2) ownerApply <$>
         (onPair eagerDummy (simulateQ (PqxdhDeploymentIdealSteps.ownerImplCE setup codec (erasedHidden setup codec checks)
-          challenge) (PqxdhDeploymentIdealSteps.groupedOwnerCE (Response := Response) raw owner))).run ((s, none), state) := by
+          challenge) (PqxdhDeploymentIdealSteps.groupedOwnerCE (Response := Response) binding raw owner))).run
+          ((s, none), state) := by
   rw [PqxdhDeploymentIdealErase.owner_explicit]
   unfold PqxdhDeploymentIdealErase.ownerExplicit
   split
@@ -613,6 +625,42 @@ theorem owner_seed (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (raw : Pqxdh.
   · rw [onPair_pure, onPair_pure, StateT.run_pure, map_pure]
     rfl
 
+/-- The transcript hash step of the hashed owner finish, on pairs: the native BLAKE2b oracle on the shared native state; the recorded coordinates and the slot service state are unchanged, whatever the service. -/
+theorem hashStep_pair {S : Type} (svc : SlotService S 2) (bytes : Pqxdh.Bytes) (s : NativeState KemSK)
+    (state : Alloc Coord 2 × S) :
+    (onPair svc (PqxdhDeploymentIdealErase.hashStep (KemSK := KemSK) bytes)).run ((s, none), state) =
+      (fun r => (r.1, ((r.2, none), state))) <$> (PqxdhServerAuthNative.nativeHash (KemSK := KemSK) bytes).run s := by
+  rw [PqxdhDeploymentIdealErase.hashStep_onSlots, onPair_onSlots]
+  simp only [StateLens.lift, StateT.run, StateLens.fst, Functor.map_map]
+
+/-- Kernel identity of the hashed grouped owner finish (`PqxdhDeploymentIdealSteps.hashedOwnerCE`), on pairs: the transcript hash step reads no slot (`hashStep_pair`), so the identity of the grouped owner at the completed binding of every digest (`owner_seed`) carries over; the abort and non-InitSent branches read nothing. -/
+theorem hashed_seed (challenge : PqxdhKemIndCca.MlKem768Ciphertext)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) (s : NativeState KemSK)
+    (state : Alloc Coord 2 × (MatCache 2 × SeedCache 2)) :
+    (onPair splitService (PqxdhDeploymentIdealSteps.hashedOwnerCE setup codec (erasedHidden setup codec checks)
+        challenge retained raw owner)).run ((s, none), state) =
+      pairPeek (fun r => r.2.2) ownerApply <$>
+        (onPair eagerDummy (PqxdhDeploymentIdealSteps.hashedOwnerCE setup codec (erasedHidden setup codec checks)
+          challenge retained raw owner)).run ((s, none), state) := by
+  unfold PqxdhDeploymentIdealSteps.hashedOwnerCE
+  cases phase : owner.beacon.phase <;> simp only
+  case initSent control prekey oneTime kem =>
+    rcases retained with _ | init
+    · rw [onPair_pure, onPair_pure, StateT.run_pure, map_pure]
+      rfl
+    · rcases decoded : PqxdhServerAuthExperiment.responseOf codec raw with _ | response
+      · rw [onPair_pure, onPair_pure, StateT.run_pure, map_pure]
+        rfl
+      · change (onPair splitService (PqxdhDeploymentIdealErase.hashStep _ >>= _)).run _ =
+          _ <$> (onPair eagerDummy (PqxdhDeploymentIdealErase.hashStep _ >>= _)).run _
+        rw [onPair_bind, onPair_bind, StateT.run_bind, StateT.run_bind, hashStep_pair, hashStep_pair, bind_map_left,
+          bind_map_left, map_bind]
+        refine bind_congr fun digest => ?_
+        exact owner_seed setup codec checks challenge _ raw owner digest.2 state
+  all_goals rw [onPair_pure, onPair_pure, StateT.run_pure, map_pure]
+  all_goals rfl
+
 /-- Modifying a list at an index after setting it there applies the modification to the set value. -/
 theorem set_modify {β : Type} (l : List β) (i : ℕ) (a : β) (f : β → β) : (l.set i a).modify i f = l.set i (f a) := by
   apply List.ext_getElem?
@@ -632,7 +680,7 @@ noncomputable def setKernelAt (seed : PqxdhRecordLiftSeed.Seed) (owner : PqxdhRe
 def reinstall (sched : PqxdhRegistrationSchedule.State KemSK) (index : ℕ)
     (b : Option Pqxdh.Bytes × PqxdhRegistrationSchedule.Owner KemSK) (q : NativeState KemSK × Option Coord) :
     Option Pqxdh.Bytes × (PqxdhRegistrationSchedule.State KemSK × Option Coord) :=
-  (b.1, ({ shared := q.1, owners := sched.owners.set index b.2 }, q.2))
+  (b.1, ({ sched with shared := q.1, owners := sched.owners.set index b.2 }, q.2))
 
 /-- Owner k's established kernel, at its index in the registration state, gets the World's Beacon kernel of a seed. -/
 noncomputable def challengeApply (index : ℕ) (seed : PqxdhRecordLiftSeed.Seed)
@@ -645,8 +693,8 @@ theorem finishChallenge_branch (hidden : PqxdhServerAuthKeySchedule.Output → P
     (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (index : ℕ) (raw : Pqxdh.Bytes)
     (state : PqxdhRegistrationSchedule.State KemSK × Option Coord) :
     (PqxdhDeploymentIdealSteps.finishChallenge setup codec hidden challenge index raw).run state =
-      (PqxdhDeploymentIdealErase.challengeBranch setup codec hidden challenge index raw (state.1.owners[index]?)).run
-        state := by
+      (PqxdhDeploymentIdealErase.challengeBranch setup codec hidden challenge index raw
+        (state.1.owners[index]?, state.1.inits index)).run state := by
   unfold PqxdhDeploymentIdealSteps.finishChallenge PqxdhDeploymentIdealErase.challengeBranch
   simp only [StateT.run]
   rcases state.1.owners[index]? with _ | owner
@@ -661,10 +709,10 @@ theorem challenge_seed (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (index : 
       pairPeek (fun r => r.2.2) (challengeApply index) <$>
         (onPair eagerDummy (PqxdhDeploymentIdealSteps.finishChallenge setup codec (erasedHidden setup codec checks)
           challenge index raw)).run ((sched, none), state) := by
-  rw [PqxdhDeploymentIdealErase.onPair_dispatch _ _ (fun st => st.1.owners[index]?)
+  rw [PqxdhDeploymentIdealErase.onPair_dispatch _ _ (fun st => (st.1.owners[index]?, st.1.inits index))
       (PqxdhDeploymentIdealErase.challengeBranch setup codec (erasedHidden setup codec checks) challenge index raw)
       (finishChallenge_branch setup codec _ challenge index raw),
-    PqxdhDeploymentIdealErase.onPair_dispatch _ _ (fun st => st.1.owners[index]?)
+    PqxdhDeploymentIdealErase.onPair_dispatch _ _ (fun st => (st.1.owners[index]?, st.1.inits index))
       (PqxdhDeploymentIdealErase.challengeBranch setup codec (erasedHidden setup codec checks) challenge index raw)
       (finishChallenge_branch setup codec _ challenge index raw)]
   rcases found : sched.owners[index]? with _ | owner
@@ -673,21 +721,21 @@ theorem challenge_seed (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (index : 
     rfl
   · have shape : ∀ st : PqxdhRegistrationSchedule.State KemSK × Option Coord,
         (PqxdhDeploymentIdealErase.challengeBranch setup codec (erasedHidden setup codec checks) challenge index raw
-          (some owner)).run st =
+          (some owner, sched.inits index)).run st =
         (fun r => reinstall st.1 index r.1 r.2) <$>
-          (simulateQ (PqxdhDeploymentIdealSteps.ownerImplCE setup codec (erasedHidden setup codec checks) challenge)
-            (PqxdhDeploymentIdealSteps.groupedOwnerCE (Response := Response) raw owner)).run (st.1.shared, st.2) :=
+          (PqxdhDeploymentIdealSteps.hashedOwnerCE setup codec (erasedHidden setup codec checks) challenge
+            (sched.inits index) raw owner).run (st.1.shared, st.2) :=
       fun _ => rfl
     have focused := fun svc : SlotService (MatCache 2 × SeedCache 2) 2 =>
       PqxdhDeploymentIdealErase.onPair_focus svc
         (PqxdhDeploymentIdealErase.challengeBranch setup codec (erasedHidden setup codec checks) challenge index raw
-          (some owner))
-        (simulateQ (PqxdhDeploymentIdealSteps.ownerImplCE setup codec (erasedHidden setup codec checks) challenge)
-          (PqxdhDeploymentIdealSteps.groupedOwnerCE (Response := Response) raw owner))
+          (some owner, sched.inits index))
+        (PqxdhDeploymentIdealSteps.hashedOwnerCE setup codec (erasedHidden setup codec checks) challenge
+          (sched.inits index) raw owner)
         (fun st => (st.1.shared, st.2)) (fun st b q => reinstall st.1 index b q) shape ((sched, none), state)
     rw [focused, focused]
     simp only []
-    rw [owner_seed, Functor.map_map, Functor.map_map]
+    rw [hashed_seed, Functor.map_map, Functor.map_map]
     congr 1
     funext r
     exact pairPeek_map (fun q => reinstall sched index q.1 q.2) (fun r => r.2.2) (fun r => r.2.2) ownerApply
@@ -1413,3 +1461,13 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealKernel.ideal_to_splitEa
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealKernel.ideal_to_splitEager
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealKernel.hashStep_pair' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealKernel.hashStep_pair
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealKernel.hashed_seed' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealKernel.hashed_seed

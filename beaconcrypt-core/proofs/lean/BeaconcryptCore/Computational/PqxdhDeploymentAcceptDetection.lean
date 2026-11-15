@@ -148,7 +148,8 @@ theorem continuation_step (setup : Setup baseSpec KemSK) (codec : Codec Reader R
     (pending : outcome.2.1 = .pending raw next) (final : ReportResult KemSK A (Stop KemSK X) count)
     (supported : final ∈ support (continuation setup codec checks ensureInit count stepAccept reached)) :
     ∃ (answer : Option Nat)
-      (rest : PqxdhServerAuthNative.NativeState KemSK × List PqxdhRegistrationJointGeneratedFinish.EncodedEntry)
+      (rest : PqxdhServerAuthNative.NativeState KemSK ×
+        (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)))
       (middle : Monitor count × ReportingState count),
       final.1.1.1 = some (outcome.1, .accepted raw answer next, rest) ∧
       ((), final.2) ∈ support ((simulateQ (sourceImpl setup.joint count)
@@ -171,7 +172,8 @@ theorem continuation_accepted (setup : Setup baseSpec KemSK) (codec : Codec Read
     (supported : final ∈ support (continuation setup codec checks ensureInit count stepAccept reached))
     (created : PqxdhRegistrationJointServerBirth.ClientCreated Unit) (raw : Pqxdh.Bytes) (answer : Option Nat)
     (next : Option Nat → OracleComp (Spec KemSK) X)
-    (rest : PqxdhServerAuthNative.NativeState KemSK × List PqxdhRegistrationJointGeneratedFinish.EncodedEntry)
+    (rest : PqxdhServerAuthNative.NativeState KemSK ×
+      (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)))
     (stopped : final.1.1.1 = some (created, .accepted raw answer next, rest)) :
     ∃ (middle : Monitor count × ReportingState count),
       ((), final.2) ∈ support ((simulateQ (sourceImpl setup.joint count)

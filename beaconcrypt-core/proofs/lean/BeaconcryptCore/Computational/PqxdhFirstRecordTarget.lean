@@ -11,6 +11,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhFirstRecordTarget
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhAdaptiveTargetPost PqxdhAdaptiveAcceptedResult PqxdhKemIndCca PqxdhEd25519EufCma PqxdhJointIdentity
 open PqxdhStatefulPhase1EufCma PqxdhPhase2GeneratedDriver PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhChallengeSecretRouting
 open PqxdhPrivateRootSource PqxdhPrivateAcceptedRoot PqxdhInitializerSecrecy PqxdhSourceAuthenticatedRoot
@@ -37,11 +39,11 @@ theorem true_bind_split {α : Type} (mx : ProbComp α) (f g h : α → ProbComp 
   simp only [OracleComp.prEvent_bind_eq_tsum, pointwise, mul_add, ENNReal.tsum_add]
 
 section Actual
-variable (accepted : PqxdhPrivateRootSource.Prepared setup (driver env.toDriverEnvironment program).State → Ready →
+variable (accepted : PqxdhPrivateRootSource.Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State → Ready →
   OracleComp (LocalPostSpec baseSpec) Bool)
 
 /-- The accepted leaf of the actual target path; every rejected or common leaf returns `false`. -/
-noncomputable def pendingAfterEncapsulation (secret : KemSK) (prepared : Prepared setup (driver env.toDriverEnvironment program).State)
+noncomputable def pendingAfterEncapsulation (secret : KemSK) (prepared : Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)
     (ephemeral : List.Vector UInt8 32) (encapsulated : Option (MlKem768Ciphertext × MlKemSharedSecret)) : ProbComp Bool :=
   match encapsulated with
   | none => pure false
@@ -49,42 +51,42 @@ noncomputable def pendingAfterEncapsulation (secret : KemSK) (prepared : Prepare
       match rootFailure env.source.crypto env.server.ikSk ephemeral.toList prepared.1.context.publicIdentity.ed25519
         prepared.1.context.generated.before.publicKey prepared.1.context.generated.after.publicKey with
       | some _ => pure false
-      | none => PqxdhInitialRootEventExperiment.nativeAccepted env baseImpl kem attachedVerify primitives program post accepted secret prepared
+      | none => PqxdhInitialRootEventExperiment.nativeAccepted (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post accepted secret prepared
           (ready env.server env.application prepared.1.context.publicIdentity.ed25519 prepared.1.context.generated.after.publicKey
             ephemeral ciphertext (productionHiddenRoot env.source
               (serverCoordinates env.source.crypto env.server.ikSk ephemeral.toList prepared.1.context.publicIdentity.ed25519
                 prepared.1.context.generated.before.publicKey prepared.1.context.generated.after.publicKey) shared))
 
 /-- The actual continuation with the same eligibility test and private generators, keeping only its accepted leaf. -/
-noncomputable def pendingNext (secret : KemSK) (prepared : Prepared setup (driver env.toDriverEnvironment program).State) : ProbComp Bool :=
+noncomputable def pendingNext (secret : KemSK) (prepared : Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State) : ProbComp Bool :=
   if targetEligible env.parameters prepared then do
     let ephemeral ← simulateQ (kemAmbientImpl baseImpl) env.ephemeralGen
     let encapsulated ← simulateQ (kemAmbientImpl baseImpl) (env.native.encaps prepared.1.context.generated.target)
-    pendingAfterEncapsulation env baseImpl kem attachedVerify primitives program post accepted secret prepared ephemeral encapsulated
+    pendingAfterEncapsulation (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post accepted secret prepared ephemeral encapsulated
   else pure false
 
 /-- The pending-branch mass: the identical actual source execution, true only when the accepted continuation runs and returns `true`. -/
 noncomputable def pendingActual : ProbComp Bool :=
-  PqxdhGeneratedNativeContinuation.nativeContinued attachedVerify primitives baseImpl kem setup (driver env.toDriverEnvironment program)
-    (pendingNext env baseImpl kem attachedVerify primitives program post accepted) false
+  PqxdhGeneratedNativeContinuation.nativeContinued attachedVerify primitives baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program)
+    (pendingNext (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post accepted) false
 
 end Actual
 
 /-- The constant-`false` accepted continuation. -/
-def rejectAll : PqxdhPrivateRootSource.Prepared setup (driver env.toDriverEnvironment program).State → Ready →
+def rejectAll : PqxdhPrivateRootSource.Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State → Ready →
     OracleComp (LocalPostSpec baseSpec) Bool := fun _ _ => pure false
 
-variable (accepted : PqxdhPrivateRootSource.Prepared setup (driver env.toDriverEnvironment program).State → Ready →
+variable (accepted : PqxdhPrivateRootSource.Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State → Ready →
   OracleComp (LocalPostSpec baseSpec) Bool)
 
 /-- After encapsulation, each leaf of the actual target path splits into its constant-`false` leaf and its accepted-only leaf. -/
-theorem after_split (secret : KemSK) (prepared : Prepared setup (driver env.toDriverEnvironment program).State)
+theorem after_split (secret : KemSK) (prepared : Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)
     (ephemeral : List.Vector UInt8 32) (encapsulated : Option (MlKem768Ciphertext × MlKemSharedSecret)) :
-    𝒟[PqxdhInitialRootEventExperiment.nativeAfterEncapsulation env baseImpl kem attachedVerify primitives program post accepted
+    𝒟[PqxdhInitialRootEventExperiment.nativeAfterEncapsulation (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post accepted
       secret prepared ephemeral encapsulated] {true} =
-    𝒟[PqxdhInitialRootEventExperiment.nativeAfterEncapsulation env baseImpl kem attachedVerify primitives program post
-      (rejectAll env program) secret prepared ephemeral encapsulated] {true} +
-    𝒟[pendingAfterEncapsulation env baseImpl kem attachedVerify primitives program post accepted secret prepared ephemeral encapsulated] {true} := by
+    𝒟[PqxdhInitialRootEventExperiment.nativeAfterEncapsulation (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post
+      (rejectAll (completedBinding := completedBinding) env program) secret prepared ephemeral encapsulated] {true} +
+    𝒟[pendingAfterEncapsulation (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post accepted secret prepared ephemeral encapsulated] {true} := by
   rcases encapsulated with _ | ⟨ciphertext, shared⟩
   · simp [PqxdhInitialRootEventExperiment.nativeAfterEncapsulation, pendingAfterEncapsulation]
   · simp only [PqxdhInitialRootEventExperiment.nativeAfterEncapsulation, pendingAfterEncapsulation]
@@ -93,31 +95,31 @@ theorem after_split (secret : KemSK) (prepared : Prepared setup (driver env.toDr
     next same => simp [same, PqxdhInitialRootEventExperiment.nativeAccepted, rejectAll]
 
 /-- The complete actual continuation, including eligibility and private generators, splits in the same way. -/
-theorem next_split (secret : KemSK) (prepared : Prepared setup (driver env.toDriverEnvironment program).State) :
-    𝒟[PqxdhInitialRootEventExperiment.nativeNext env baseImpl kem attachedVerify primitives program post accepted secret prepared] {true} =
-    𝒟[PqxdhInitialRootEventExperiment.nativeNext env baseImpl kem attachedVerify primitives program post
-      (rejectAll env program) secret prepared] {true} +
-    𝒟[pendingNext env baseImpl kem attachedVerify primitives program post accepted secret prepared] {true} := by
+theorem next_split (secret : KemSK) (prepared : Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State) :
+    𝒟[PqxdhInitialRootEventExperiment.nativeNext (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post accepted secret prepared] {true} =
+    𝒟[PqxdhInitialRootEventExperiment.nativeNext (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post
+      (rejectAll (completedBinding := completedBinding) env program) secret prepared] {true} +
+    𝒟[pendingNext (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post accepted secret prepared] {true} := by
   unfold PqxdhInitialRootEventExperiment.nativeNext pendingNext
   split
   · apply true_bind_split
     intro ephemeral
     apply true_bind_split
     intro encapsulated
-    exact after_split env baseImpl kem attachedVerify primitives program post accepted secret prepared ephemeral encapsulated
+    exact after_split (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post accepted secret prepared ephemeral encapsulated
   · simp [ ]
 
 /-- The actual root-event experiment is exactly its constant-`false` continuation plus the accepted-branch mass, for any executable accepted continuation. -/
 theorem actual_split :
-    𝒟[PqxdhInitialRootEventExperiment.actual env baseImpl kem attachedVerify primitives program post accepted] {true} =
-    𝒟[PqxdhInitialRootEventExperiment.actual env baseImpl kem attachedVerify primitives program post (rejectAll env program)] {true} +
-    𝒟[pendingActual env baseImpl kem attachedVerify primitives program post accepted] {true} := by
+    𝒟[PqxdhInitialRootEventExperiment.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post accepted] {true} =
+    𝒟[PqxdhInitialRootEventExperiment.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post (rejectAll (completedBinding := completedBinding) env program)] {true} +
+    𝒟[pendingActual (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post accepted] {true} := by
   unfold PqxdhInitialRootEventExperiment.actual pendingActual PqxdhGeneratedNativeContinuation.nativeContinued
   apply true_bind_split
   intro stopped
   rcases stopped with ⟨_ | output, state⟩
   · simp
-  · exact next_split env baseImpl kem attachedVerify primitives program post accepted _ _
+  · exact next_split (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post accepted _ _
 
 /-- The adversary post with its single target choice attached. -/
 def unitPost : PqxdhAdaptiveTargetPost.Post Unit program.Selection baseSpec S (B + 1) :=
@@ -148,24 +150,24 @@ theorem first_target (target : Target S (B + 1)) (position : target.number.val =
     (adapter : HasAttachedVerificationAdapter attachedVerify primitives.verify)
     (functional : FunctionalDecapsulation kem) (hmac : HmacSha512) (correct : SourceFullCorrect env.source hmac)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : Forgery) :
-    (PqxdhInitialRootEventSecrecy.actual env baseImpl kem attachedVerify primitives program post
+    (PqxdhInitialRootEventSecrecy.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post
         target.owner target.number target.ancestors target.disclosed).boolDistance
-      (PqxdhAdaptiveMessageKeySource.firstIdeal env baseImpl kem attachedVerify primitives program
+      (PqxdhAdaptiveMessageKeySource.firstIdeal (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program
         (unitPost program post) (unitTargets target) ()) ≤
-    PqxdhAdaptiveCoordinateSecrecy.targetLoss env baseImpl kem attachedVerify primitives program
+    PqxdhAdaptiveCoordinateSecrecy.targetLoss (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program
       (unitPost program post) (unitTargets target) (certificate env baseImpl kem program post c) hmac fallback ordinaryFallback () := by
-  have mapped := PqxdhAdaptiveNativeResult.actual_map env baseImpl kem attachedVerify primitives program
+  have mapped := PqxdhAdaptiveNativeResult.actual_map (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program
     (unitPost program post) (unitTargets target) ()
   rw [mapPost_choose] at mapped
   simp only [unitTargets] at mapped
   rw [mapped]
-  exact PqxdhAdaptiveMessageKeySource.first_bound env baseImpl kem attachedVerify primitives program
+  exact PqxdhAdaptiveMessageKeySource.first_bound (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program
     (unitPost program post) (unitTargets target) (certificate env baseImpl kem program post c) ()
     position compatible adapter functional hmac correct fallback ordinaryFallback
 
 /-- The completed decisions of the actual preparation; every pending preparation contributes `false`. -/
 noncomputable def commonOnly (target : Target S (B + 1)) : ProbComp Bool := do
-  let context ← PqxdhInitialPreparedSourceInput.prior env baseImpl kem attachedVerify primitives program post
+  let context ← PqxdhInitialPreparedSourceInput.prior (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post
     target.owner target.number target.ancestors target.disclosed
   match context with
   | .inl decision => pure decision
@@ -173,19 +175,19 @@ noncomputable def commonOnly (target : Target S (B + 1)) : ProbComp Bool := do
 
 /-- The first-record key-last endpoint restricted to pending preparations: completed preparations contribute `false`. -/
 noncomputable def pendingIdeal (target : Target S (B + 1)) : ProbComp Bool := do
-  let context ← PqxdhAdaptiveMessageKeySource.firstPrepare env baseImpl kem attachedVerify primitives program
+  let context ← PqxdhAdaptiveMessageKeySource.firstPrepare (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program
     (unitPost program post) (unitTargets target) ()
   let key ← $ᵗ RootOutput
   match context.1 with
   | .inl _ => pure false
-  | .inr _ => PqxdhAdaptiveMessageKeySource.firstObserve env context key
+  | .inr _ => PqxdhAdaptiveMessageKeySource.firstObserve (associatedData := associatedData) (completedBinding := completedBinding) env context key
 
 /-- The first-record key-last endpoint is exactly its completed decisions plus its pending source-observer mass. -/
 theorem ideal_split (target : Target S (B + 1)) :
-    𝒟[PqxdhAdaptiveMessageKeySource.firstIdeal env baseImpl kem attachedVerify primitives program
+    𝒟[PqxdhAdaptiveMessageKeySource.firstIdeal (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program
       (unitPost program post) (unitTargets target) ()] {true} =
-    𝒟[commonOnly env baseImpl kem attachedVerify primitives program post target] {true} +
-    𝒟[pendingIdeal env baseImpl kem attachedVerify primitives program post target] {true} := by
+    𝒟[commonOnly (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post target] {true} +
+    𝒟[pendingIdeal (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post target] {true} := by
   unfold PqxdhAdaptiveMessageKeySource.firstIdeal pendingIdeal PqxdhAdaptiveMessageKeySource.firstPrepare commonOnly
   simp only [bind_assoc, pure_bind, mapPost_choose, unitTargets]
   apply true_bind_split
@@ -198,8 +200,8 @@ set_option backward.isDefEq.respectTransparency false in
 /-- The uniform-root endpoint of the constant-`false` root-event protocol is exactly the completed decisions of the actual preparation. -/
 theorem completed_uniform (target : Target S (B + 1)) :
     𝒟[uniformGame (rootReduction env.source baseImpl kem
-      (PqxdhInitialRootEventExperiment.protocol env kem attachedVerify primitives program post (rejectAll env program)))] =
-    𝒟[commonOnly env baseImpl kem attachedVerify primitives program post target] := by
+      (PqxdhInitialRootEventExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post (rejectAll (completedBinding := completedBinding) env program)))] =
+    𝒟[commonOnly (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post target] := by
   apply EvalDistEq.evalDist_eq
   simp only [uniformGame, StateT.run'_eq, PqxdhInitialRootContext.reduction_complete,
     commonOnly, PqxdhInitialPreparedSourceInput.prior, PqxdhCorrelatedExtractFamily.prepare,
@@ -221,11 +223,11 @@ theorem completed_uniform (target : Target S (B + 1)) :
 /-- The constant-`false` protocol pays the original key-generation, encapsulation, base, decapsulation and preparation bills and nothing after its root. -/
 theorem reject_sampler_bounds (c : PqxdhAuthenticatedRootBudgets.Certificate env baseImpl kem program post) :
     PqxdhChallengeSecretQueryBounds.SamplerBounds baseImpl kem
-      (PqxdhInitialRootEventExperiment.protocol env kem attachedVerify primitives program post (rejectAll env program))
+      (PqxdhInitialRootEventExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post (rejectAll (completedBinding := completedBinding) env program))
       c.qKeygen c.qEncap c.qBase c.qDecap c.uPre c.bPre c.dPre 0 0 0 0 := by
   refine ⟨c.keygenBound, c.encapsBound, c.baseBound, c.decapsBound, ?_, ?_⟩
   · intro key
-    have original := PqxdhAuthenticatedRootBudgets.prepare_bounds env baseImpl kem attachedVerify primitives program post c key
+    have original := PqxdhAuthenticatedRootBudgets.prepare_bounds (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c key
     exact ⟨original.uniforms, original.bases, original.decaps⟩
   · intro key ciphertext mode root
     cases mode with
@@ -238,18 +240,18 @@ theorem reject_sampler_bounds (c : PqxdhAuthenticatedRootBudgets.Certificate env
 /-- The constant-`false` root reduction makes only its initial root query. -/
 theorem reject_root_queries (c : PqxdhAuthenticatedRootBudgets.Certificate env baseImpl kem program post) :
     (rootReduction env.source baseImpl kem
-      (PqxdhInitialRootEventExperiment.protocol env kem attachedVerify primitives program post (rejectAll env program))).IsQueryBoundP
+      (PqxdhInitialRootEventExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post (rejectAll (completedBinding := completedBinding) env program))).IsQueryBoundP
       IsRoot 1 :=
   (PqxdhCorrelatedExpandQueryBounds.reduction_bounds env.source baseImpl kem _ _ _ _ _ _ _ _ _ _ _ _
-    (reject_sampler_bounds env baseImpl kem attachedVerify primitives program post c)).2
+    (reject_sampler_bounds (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c)).2
 
 /-- Explicit authenticated-root loss of the constant-`false` continuation: joint identity, KEM correctness error, one-key IND-CCA, Extract and one indexed HMAC term, each for its constructed reduction. -/
 noncomputable def completedLoss (hmac : HmacSha512) (fallback : PqxdhDynamicIdentityRouting.DynamicForgery)
     (ordinaryFallback : PqxdhJointIdentity.Forgery) : ℝ :=
-  let p := PqxdhInitialRootEventExperiment.protocol env kem attachedVerify primitives program post (rejectAll env program)
+  let p := PqxdhInitialRootEventExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post (rejectAll (completedBinding := completedBinding) env program)
   (PqxdhJointIdentity.advantage primitives
     (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
-      (driver env.toDriverEnvironment program) fallback ordinaryFallback)).toReal +
+      (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program) fallback ordinaryFallback)).toReal +
   (𝒟[simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)] {true}).toReal +
   (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
     (PqxdhChallengeSecretRouting.reduction env.source kem p).toINDCCA).toReal +
@@ -266,16 +268,16 @@ theorem completed_bound (target : Target S (B + 1))
     (adapter : HasAttachedVerificationAdapter attachedVerify primitives.verify)
     (functional : FunctionalDecapsulation kem) (hmac : HmacSha512) (sourceCorrect : SourceRootCorrect env.source hmac)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : Forgery) :
-    (PqxdhInitialRootEventExperiment.actual env baseImpl kem attachedVerify primitives program post (rejectAll env program)).boolDistance
-      (commonOnly env baseImpl kem attachedVerify primitives program post target) ≤
-    completedLoss env baseImpl kem attachedVerify primitives program post hmac fallback ordinaryFallback := by
-  have result := PqxdhInitialRootEventComposition.authenticated_root_bound env baseImpl kem attachedVerify primitives program post
-    (rejectAll env program) compatible adapter functional hmac sourceCorrect c.noSign c.noCreate fallback ordinaryFallback
-    1 (reject_root_queries env baseImpl kem attachedVerify primitives program post c)
-  have endpoint := completed_uniform env baseImpl kem attachedVerify primitives program post target
+    (PqxdhInitialRootEventExperiment.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post (rejectAll (completedBinding := completedBinding) env program)).boolDistance
+      (commonOnly (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post target) ≤
+    completedLoss (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post hmac fallback ordinaryFallback := by
+  have result := PqxdhInitialRootEventComposition.authenticated_root_bound (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post
+    (rejectAll (completedBinding := completedBinding) env program) compatible adapter functional hmac sourceCorrect c.noSign c.noCreate fallback ordinaryFallback
+    1 (reject_root_queries (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c)
+  have endpoint := completed_uniform (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post target
   have same : ∀ game : ProbComp Bool, game.boolDistance (uniformGame (rootReduction env.source baseImpl kem
-      (PqxdhInitialRootEventExperiment.protocol env kem attachedVerify primitives program post (rejectAll env program)))) =
-      game.boolDistance (commonOnly env baseImpl kem attachedVerify primitives program post target) := fun game => by
+      (PqxdhInitialRootEventExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post (rejectAll (completedBinding := completedBinding) env program)))) =
+      game.boolDistance (commonOnly (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post target) := fun game => by
     simp only [ProbComp.boolDistance, endpoint]
   simp only [same] at result
   unfold completedLoss
@@ -283,11 +285,11 @@ theorem completed_bound (target : Target S (B + 1))
 
 /-- The fixed-target source experiment is exactly its constant-`false` continuation plus the mass on which the accepted source-event continuation runs and returns `true`. -/
 theorem target_split (selected : RawCtxProtocolReveals.Owner S (B + 1)) (number : Std.U64) (ancestors disclosed : List RatchetChain) :
-    𝒟[PqxdhInitialRootEventSecrecy.actual env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed] {true} =
-    𝒟[PqxdhInitialRootEventExperiment.actual env baseImpl kem attachedVerify primitives program post (rejectAll env program)] {true} +
-    𝒟[pendingActual env baseImpl kem attachedVerify primitives program post
-      (PqxdhInitialRootEventSecrecy.accepted env attachedVerify primitives program post selected number ancestors disclosed)] {true} :=
-  actual_split env baseImpl kem attachedVerify primitives program post _
+    𝒟[PqxdhInitialRootEventSecrecy.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed] {true} =
+    𝒟[PqxdhInitialRootEventExperiment.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post (rejectAll (completedBinding := completedBinding) env program)] {true} +
+    𝒟[pendingActual (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post
+      (PqxdhInitialRootEventSecrecy.accepted (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program post selected number ancestors disclosed)] {true} :=
+  actual_split (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post _
 
 /-- A Boolean game has finite `true` mass. -/
 theorem true_ne_top (game : ProbComp Bool) : 𝒟[game] {true} ≠ ⊤ := by
@@ -301,16 +303,16 @@ theorem pending_bound (target : Target S (B + 1)) (position : target.number.val 
     (adapter : HasAttachedVerificationAdapter attachedVerify primitives.verify)
     (functional : FunctionalDecapsulation kem) (hmac : HmacSha512) (correct : SourceFullCorrect env.source hmac)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : Forgery) :
-    |(𝒟[pendingActual env baseImpl kem attachedVerify primitives program post
-        (PqxdhInitialRootEventSecrecy.accepted env attachedVerify primitives program post
+    |(𝒟[pendingActual (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post
+        (PqxdhInitialRootEventSecrecy.accepted (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program post
           target.owner target.number target.ancestors target.disclosed)] {true}).toReal -
-      (𝒟[pendingIdeal env baseImpl kem attachedVerify primitives program post target] {true}).toReal| ≤
-    PqxdhAdaptiveCoordinateSecrecy.targetLoss env baseImpl kem attachedVerify primitives program
+      (𝒟[pendingIdeal (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post target] {true}).toReal| ≤
+    PqxdhAdaptiveCoordinateSecrecy.targetLoss (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program
       (unitPost program post) (unitTargets target) (certificate env baseImpl kem program post c) hmac fallback ordinaryFallback () +
-    completedLoss env baseImpl kem attachedVerify primitives program post hmac fallback ordinaryFallback := by
-  have first := first_target env baseImpl kem attachedVerify primitives program post target position c
+    completedLoss (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post hmac fallback ordinaryFallback := by
+  have first := first_target (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post target position c
     compatible adapter functional hmac correct fallback ordinaryFallback
-  have completed := completed_bound env baseImpl kem attachedVerify primitives program post target c
+  have completed := completed_bound (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post target c
     compatible adapter functional hmac correct.root fallback ordinaryFallback
   simp only [ProbComp.boolDistance] at first completed
   rw [target_split, ideal_split, ENNReal.toReal_add (true_ne_top _) (true_ne_top _),
@@ -325,14 +327,14 @@ theorem pending_le (target : Target S (B + 1)) (position : target.number.val = 1
     (adapter : HasAttachedVerificationAdapter attachedVerify primitives.verify)
     (functional : FunctionalDecapsulation kem) (hmac : HmacSha512) (correct : SourceFullCorrect env.source hmac)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : Forgery) :
-    (𝒟[pendingActual env baseImpl kem attachedVerify primitives program post
-        (PqxdhInitialRootEventSecrecy.accepted env attachedVerify primitives program post
+    (𝒟[pendingActual (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post
+        (PqxdhInitialRootEventSecrecy.accepted (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program post
           target.owner target.number target.ancestors target.disclosed)] {true}).toReal ≤
-    (𝒟[pendingIdeal env baseImpl kem attachedVerify primitives program post target] {true}).toReal +
-    PqxdhAdaptiveCoordinateSecrecy.targetLoss env baseImpl kem attachedVerify primitives program
+    (𝒟[pendingIdeal (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post target] {true}).toReal +
+    PqxdhAdaptiveCoordinateSecrecy.targetLoss (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program
       (unitPost program post) (unitTargets target) (certificate env baseImpl kem program post c) hmac fallback ordinaryFallback () +
-    completedLoss env baseImpl kem attachedVerify primitives program post hmac fallback ordinaryFallback := by
-  have bound := pending_bound env baseImpl kem attachedVerify primitives program post target position c
+    completedLoss (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post hmac fallback ordinaryFallback := by
+  have bound := pending_bound (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post target position c
     compatible adapter functional hmac correct fallback ordinaryFallback
   rw [abs_le] at bound
   linarith [bound.2]

@@ -17,7 +17,7 @@ def realize (signature : Ed25519Signature) : Key → Pqxdh.Bytes
 
 noncomputable def abstract (signature : Ed25519Signature) (bytes : Pqxdh.Bytes) : Key := by
   classical
-  exact if (parts bytes).1.length = 4140 ∧ bytes = realize signature (.inr (parts bytes)) then
+  exact if (parts bytes).1.length = 2188 ∧ bytes = realize signature (.inr (parts bytes)) then
     .inr (parts bytes) else .inl bytes
 
 /-- Every physical address is reconstructed exactly after private abstraction; no width or recognition premise is needed. -/
@@ -25,18 +25,18 @@ theorem realize_abstract (signature : Ed25519Signature) (bytes : Pqxdh.Bytes) :
     realize signature (abstract signature bytes) = bytes := by
   unfold abstract
   split
-  · exact ‹(parts bytes).1.length = 4140 ∧ bytes = realize signature (.inr (parts bytes))›.2.symm
+  · exact ‹(parts bytes).1.length = 2188 ∧ bytes = realize signature (.inr (parts bytes))›.2.symm
   · rfl
 
 /-- An admitted hidden source template retains its exact public framing, independently of the signature value. -/
-theorem abstract_hidden (signature : Ed25519Signature) (frame : Frame) (width : frame.1.length = 4140) :
+theorem abstract_hidden (signature : Ed25519Signature) (frame : Frame) (width : frame.1.length = 2188) :
     abstract signature (realize signature (.inr frame)) = .inr frame := by
   have extracted := RegistrationNativeIdentityPublicHashTemplate.extracted frame.1 frame.2 signature width
   simp only [abstract,realize,extracted,width,true_and,ite_true]
 
 /-- Equal realized admitted hidden addresses have identical public framing; no signature uniqueness or key injectivity is used. -/
 theorem hidden_injective (signature : Ed25519Signature) (left right : Frame)
-    (leftWidth : left.1.length = 4140) (rightWidth : right.1.length = 4140)
+    (leftWidth : left.1.length = 2188) (rightWidth : right.1.length = 2188)
     (same : realize signature (.inr left) = realize signature (.inr right)) : left = right := by
   have first := abstract_hidden signature left leftWidth
   have second := abstract_hidden signature right rightWidth
@@ -61,7 +61,7 @@ theorem abstract_public (verify : Ed25519PublicKey → Pqxdh.Bytes → Ed25519Si
 def Admitted (verify : Ed25519PublicKey → Pqxdh.Bytes → Ed25519Signature → Bool)
     (publicKey : Ed25519PublicKey) (message : Pqxdh.Bytes) : Key → Prop
   | .inl bytes => RegistrationNativeIdentityRecognition.recognize verify publicKey message bytes = none
-  | .inr frame => frame.1.length = 4140
+  | .inr frame => frame.1.length = 2188
 
 /-- Both admitted public inputs and actual width-correct templates have an exact left inverse under the same private signature. -/
 theorem abstract_admitted (verify : Ed25519PublicKey → Pqxdh.Bytes → Ed25519Signature → Bool)

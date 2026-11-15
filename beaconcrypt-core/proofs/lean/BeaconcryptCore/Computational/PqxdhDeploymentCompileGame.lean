@@ -38,14 +38,15 @@ theorem compile_game (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
     mergeOutcome <$> (PqxdhRegistrationJointInitializedSchedule.native setup codec checks ensureInit identityIndex none
         (compile setup codec route adversary)).run runtime =
       (PqxdhDeploymentNative.game setup codec checks route ensureInit identityIndex adversary).run runtime := by
-  simp only [PqxdhRegistrationJointInitializedSchedule.native, PqxdhDeploymentNative.game, StateT.run, map_bind]
+  delta PqxdhDeploymentNative.game
+  simp only [PqxdhRegistrationJointInitializedSchedule.native, StateT.run, map_bind]
   apply bind_congr_of_forall_mem_support
   rintro ⟨_ | created, after⟩ born
   · simp only [map_pure, mergeOutcome, Option.map_none]
-  · obtain ⟨sender, peers⟩ := construct_fields setup.joint ensureInit identityIndex setup.serverKeyId runtime
+  · obtain ⟨sender, _⟩ := construct_fields setup.joint ensureInit identityIndex setup.serverKeyId runtime
       created after born
     have compiled := PqxdhDeploymentCompileInvariant.compile_native setup codec checks route created.seed phase1 phase2
-      adversary (PqxdhRegistrationSchedule.initial created) sender peers rfl (fun _ => rfl)
+      adversary (PqxdhRegistrationSchedule.initial created) sender (fun _ => rfl) rfl (fun _ => rfl)
     simp only [StateT.run] at compiled
     simp only [PqxdhDeploymentNative.initial]
     rw [← compiled, Functor.map_map, Functor.map_map]

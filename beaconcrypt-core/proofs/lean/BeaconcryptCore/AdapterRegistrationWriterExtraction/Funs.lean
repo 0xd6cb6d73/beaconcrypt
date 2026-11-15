@@ -25,7 +25,7 @@ variable [BeaconcryptCore.Refinement.RegistrationWriterPrimitive.Operations]
 variable [BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations]
 
 /-- [beaconcrypt::wire::encode_init::{impl core::ops::function::FnOnce<(&'_ mut [u8],), usize> for beaconcrypt::wire::encode_init::closure<'_0, '_1>}::call_once]:
-    Source: 'beaconcrypt/src/wire.rs', lines 60:28-62:5 -/
+    Source: 'beaconcrypt/src/wire.rs', lines 58:28-60:5 -/
 def
   wire.encode_init.closure.Insts.CoreOpsFunctionFnOnceTupleMutSliceU8Usize.call_once
   (c : wire.encode_init.closure) (tupled_args : Slice Std.U8) :
@@ -34,7 +34,7 @@ def
   beaconcrypt_parse.encode_init c tupled_args
 
 /-- Trait implementation: [beaconcrypt::wire::encode_init::{impl core::ops::function::FnOnce<(&'_ mut [u8],), usize> for beaconcrypt::wire::encode_init::closure<'_0, '_1>}]
-    Source: 'beaconcrypt/src/wire.rs', lines 60:28-62:5 -/
+    Source: 'beaconcrypt/src/wire.rs', lines 58:28-60:5 -/
 @[reducible]
 def wire.encode_init.closure.Insts.CoreOpsFunctionFnOnceTupleMutSliceU8Usize :
   BeaconcryptCore.Refinement.AdapterWirePrimitive.Serializer wire.encode_init.closure
@@ -44,7 +44,7 @@ def wire.encode_init.closure.Insts.CoreOpsFunctionFnOnceTupleMutSliceU8Usize :
 }
 
 /-- [beaconcrypt::wire::encode_init]:
-    Source: 'beaconcrypt/src/wire.rs', lines 51:0-63:1 -/
+    Source: 'beaconcrypt/src/wire.rs', lines 51:0-61:1 -/
 def wire.encode_init
   (init : beaconcrypt_parse.transport.initkex) :
   RustM (core.option.Option (alloc.vec.Vec Std.U8))
@@ -53,11 +53,9 @@ def wire.encode_init
   let i1 ← core.slice.Slice.len init.pre_key
   let i2 ← core.slice.Slice.len init.one_time_key
   let i3 ← core.slice.Slice.len init.pq_key
-  let i4 ← core.slice.Slice.len init.mldsa_public_key
-  let i5 ← core.slice.Slice.len init.signature
   let o ←
     beaconcrypt_core.transport.encoded_init_len
-      (Array.make 6#usize [ i, i1, i2, i3, i4, i5 ])
+      (Array.make 4#usize [ i, i1, i2, i3 ])
   let cf ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
@@ -69,7 +67,7 @@ def wire.encode_init
       (alloc.vec.Vec Std.U8) residual
 
 /-- [beaconcrypt::wire::encode_response::{impl core::ops::function::FnOnce<(&'_ mut [u8],), usize> for beaconcrypt::wire::encode_response::closure<'_0, '_1>}::call_once]:
-    Source: 'beaconcrypt/src/wire.rs', lines 77:28-79:5 -/
+    Source: 'beaconcrypt/src/wire.rs', lines 75:28-77:5 -/
 def
   wire.encode_response.closure.Insts.CoreOpsFunctionFnOnceTupleMutSliceU8Usize.call_once
   (c : wire.encode_response.closure) (tupled_args : Slice Std.U8) :
@@ -78,7 +76,7 @@ def
   beaconcrypt_parse.encode_response c tupled_args
 
 /-- Trait implementation: [beaconcrypt::wire::encode_response::{impl core::ops::function::FnOnce<(&'_ mut [u8],), usize> for beaconcrypt::wire::encode_response::closure<'_0, '_1>}]
-    Source: 'beaconcrypt/src/wire.rs', lines 77:28-79:5 -/
+    Source: 'beaconcrypt/src/wire.rs', lines 75:28-77:5 -/
 @[reducible]
 def
   wire.encode_response.closure.Insts.CoreOpsFunctionFnOnceTupleMutSliceU8Usize
@@ -88,7 +86,7 @@ def
 }
 
 /-- [beaconcrypt::wire::encode_response]:
-    Source: 'beaconcrypt/src/wire.rs', lines 66:0-80:1 -/
+    Source: 'beaconcrypt/src/wire.rs', lines 64:0-78:1 -/
 def wire.encode_response
   (response : beaconcrypt_parse.transport.kexresponse) :
   RustM (core.option.Option (alloc.vec.Vec Std.U8))

@@ -178,7 +178,7 @@ def terminal (native : QueryImpl RegistrationNativeRawAdapter.TypedSpec (M n Kem
 theorem handler_terminal [primitives : AdapterSealPrimitive.Operations]
     (setup : Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitives.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
     (reserveRegistration reservePeer : StateT Platform ProbComp Bool)
@@ -207,7 +207,7 @@ theorem handler_terminal [primitives : AdapterSealPrimitive.Operations]
 theorem run_terminal [primitives : AdapterSealPrimitive.Operations]
     (setup : Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitives.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
     (reserveRegistration reservePeer : StateT Platform ProbComp Bool)

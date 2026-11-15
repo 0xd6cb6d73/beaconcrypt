@@ -21,7 +21,7 @@ variable [ed : AdapterInitEdPrimitive.Operations]
 omit platform in
 theorem native (coins : QueryImpl unifSpec (StateT P ProbComp))
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (self : beaconcrypt_public_wrapper.beacon.Beacon) (pending : registration.BeaconPending)
     (prekey oneTime : beaconcrypt_crypto.crypto_kx.KeyPair) (kem : beaconcrypt_crypto.crypto_kem.mlkem768.KeyPair)
@@ -47,7 +47,7 @@ theorem native (coins : QueryImpl unifSpec (StateT P ProbComp))
 
 noncomputable def active (coins : QueryImpl unifSpec (StateT P ProbComp))
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (containers : AdapterPublicWrapperStorage.Views) (credential : RegistrationNativeMldsa.Credential source)
     (self : beaconcrypt_public_wrapper.beacon.Beacon) (pending : registration.BeaconPending)

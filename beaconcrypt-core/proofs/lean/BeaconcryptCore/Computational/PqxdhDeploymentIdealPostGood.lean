@@ -227,6 +227,22 @@ theorem identityOf_verified (raw : Pqxdh.Bytes) (value : PqxdhServerRootPreparat
     simp only [PqxdhDeploymentCompile.identityOf, read, encodedField, parsedIdentity, Option.bind_eq_bind,
       Option.bind_some, Option.pure_def]
 
+/-- The public Init fields read from raw accept bytes that pass the Server's verification are the Init fields of the verified tuple's received Phase 1 candidate. -/
+theorem publicInit_verified (raw : Pqxdh.Bytes) (value : PqxdhServerRootPreparation.Verified Reader)
+    (accepted : PqxdhRegistrationJointRawSignatures.verified setup codec checks raw = some value) :
+    PqxdhDeploymentCompile.publicInit codec raw = some (PqxdhTranscriptAd.initOf value.candidate) := by
+  unfold PqxdhRegistrationJointRawSignatures.verified at accepted
+  dsimp at accepted
+  simp only [Option.bind_eq_some_iff] at accepted
+  obtain ⟨reader, read, encoded, encodedField, identity, parsedIdentity, accepted⟩ := accepted
+  split at accepted
+  · cases accepted
+  · simp only [Option.bind_eq_some_iff, Option.some.injEq] at accepted
+    obtain ⟨pqSigned, pqField, _, _, preSigned, preField, _, _, oneSigned, oneField, _, _, _, _, _, _, _, _, rfl⟩ :=
+      accepted
+    simp only [PqxdhDeploymentCompile.publicInit, read, encodedField, pqField, preField, oneField, Option.bind_eq_bind,
+      Option.bind_some, Option.pure_def]
+
 /-- Item 2's candidate-free suffix returns prepared inputs carrying the verified tuple it was given, under any interpreter. -/
 theorem suffix_verified {E Shared σ ι' : Type} {spec' : OracleSpec ι'}
     (impl : QueryImpl (PqxdhServerRootPreparation.Spec Reader E Shared) (StateT σ (OracleComp spec')))
@@ -265,7 +281,7 @@ theorem accept_token {E : Type} (control : beaconcrypt_core.pqxdh.ServerState)
     rfl
   · simp at accepted
 
-/-- The marker client under `tailCE` with a challenge-marked input, from any state: it changes only the consumed registrations of the game state, and a returned token carries the Beacon identity of the input's verified tuple. -/
+/-- The marker client under `tailCE` with a challenge-marked input, from any state: it changes only the consumed registrations of the game state, and a returned token carries the Beacon identity of the input's verified tuple and the verified tuple's received Phase 1 candidate as its retained Init buffers. -/
 theorem tailCE_client_footprint (hmac : PqxdhSecretInputKdf.HmacSha512) (index : ℕ)
     (control : beaconcrypt_core.pqxdh.ServerState) (binding : beaconcrypt_core.pqxdh.ServerBinding)
     (input : PqxdhRegistrationJointKemOpaqueClient.Input Reader) (marker : input.shared = .challenge)
@@ -276,7 +292,8 @@ theorem tailCE_client_footprint (hmac : PqxdhSecretInputKdf.HmacSha512) (index :
       (PqxdhRegistrationJointKemOpaqueClient.client control binding input))).run s)) :
     (∃ consumed, result.2.1.2 = { s.1.2 with server := { s.1.2.server with consumed := consumed } }) ∧
       ∀ token, result.1 = RustM.ok (some token) →
-        token.pending.beacon_identity_public_key = PqxdhRootTableInitialization.rootArray input.verified.identity := by
+        token.pending.beacon_identity_public_key = PqxdhRootTableInitialization.rootArray input.verified.identity ∧
+          token.init = input.verified.candidate := by
   have auxStep : ∀ (query : PqxdhServerRelatedRootConsumer.Auxiliary) (st : PqxdhServerAuthNative.NativeState KemSK ×
       Option (ℕ × Coord)),
       (match query with
@@ -329,9 +346,9 @@ theorem tailCE_client_footprint (hmac : PqxdhSecretInputKdf.HmacSha512) (index :
     refine ⟨⟨_, rfl⟩, fun token same => ?_⟩
     simp only [RustM.ok.injEq, Option.some.injEq] at same
     subst same
-    exact accept_token control binding input final pending accepted
+    exact ⟨accept_token control binding input final pending accepted, rfl⟩
 
-/-- The marker tail under `tailCE` (`PqxdhDeploymentIdealKeymatch.tailCE_tail` with the Server fields): from the given game state it keeps the Server's routing record and key ID, advances the session counter by one, changes no other session's pending token and no token at all without a reply, and a returned session is the counter of the given state and holds a token with the Beacon identity of the collected input's verified tuple. -/
+/-- The marker tail under `tailCE` (`PqxdhDeploymentIdealKeymatch.tailCE_tail` with the Server fields): from the given game state it keeps the Server's routing record and key ID and the BLAKE2b cache, advances the session counter by one, changes no other session's pending token and no token at all without a reply, and a returned session is the counter of the given state and holds a token with the Beacon identity of the collected input's verified tuple and that tuple's received Phase 1 candidate. -/
 theorem tailCE_tail_footprint (hmac : PqxdhSecretInputKdf.HmacSha512) (index : ℕ) (serverKeyId : Std.U64)
     (publicIdentity : PqxdhJointIdentity.PublicIdentity) (state : PqxdhServerAuthExperiment.GameState KemSK)
     (collected : Option (PqxdhRegistrationJointKemOpaqueClient.Input Reader) × List Pqxdh.Bytes)
@@ -347,7 +364,9 @@ theorem tailCE_tail_footprint (hmac : PqxdhSecretInputKdf.HmacSha512) (index : �
       (result.1 = none → result.2.1.2.pending = state.pending) ∧
       (∀ session, result.1 = some session → session = state.sessions ∧ ∃ input token, collected.1 = some input ∧
         result.2.1.2.pending session = some token ∧
-        token.pending.beacon_identity_public_key = PqxdhRootTableInitialization.rootArray input.verified.identity) := by
+        token.pending.beacon_identity_public_key = PqxdhRootTableInitialization.rootArray input.verified.identity ∧
+        token.init = input.verified.candidate) ∧
+      result.2.1.2.ctx = state.ctx := by
   unfold PqxdhRegistrationJointKemOpaqueTail.tail at member
   simp only [simulateQ_bind, StateT.run_bind, simulateQ_spec_query, mem_support_bind_iff] at member
   obtain ⟨installed, installedMember, member⟩ := member
@@ -360,7 +379,7 @@ theorem tailCE_tail_footprint (hmac : PqxdhSecretInputKdf.HmacSha512) (index : �
   rcases found : collected.1 with _ | input
   · simp only [found, simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] at member
     subst member
-    exact ⟨rfl, rfl, rfl, fun _ _ => rfl, fun _ => rfl, fun session none => by cases none⟩
+    exact ⟨rfl, rfl, rfl, fun _ _ => rfl, fun _ => rfl, fun session none => (by cases none), rfl⟩
   · simp only [found, simulateQ_bind, StateT.run_bind, mem_support_bind_iff] at member
     obtain ⟨returned, returnedMember, member⟩ := member
     obtain ⟨⟨consumed, stateEq⟩, tokens⟩ := tailCE_client_footprint hmac index state.server.control
@@ -370,7 +389,7 @@ theorem tailCE_tail_footprint (hmac : PqxdhSecretInputKdf.HmacSha512) (index : �
     · simp only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] at member
       subst member
       rw [stateEq]
-      exact ⟨rfl, rfl, rfl, fun _ _ => rfl, fun _ => rfl, fun session none => by cases none⟩
+      exact ⟨rfl, rfl, rfl, fun _ _ => rfl, fun _ => rfl, fun session none => (by cases none), rfl⟩
     · simp only [simulateQ_bind, StateT.run_bind, simulateQ_spec_query, mem_support_bind_iff, simulateQ_pure,
         StateT.run_pure, support_pure, Set.mem_singleton_iff] at member
       obtain ⟨published, publishedMember, rfl⟩ := member
@@ -382,20 +401,20 @@ theorem tailCE_tail_footprint (hmac : PqxdhSecretInputKdf.HmacSha512) (index : �
       subst publishedMember
       rw [stateEq]
       refine ⟨rfl, rfl, rfl, fun other different => Function.update_of_ne different _ _, (fun absent => by cases absent),
-        fun session same => ?_⟩
+        fun session same => ?_, rfl⟩
       simp only [Option.some.injEq] at same
       subst same
-      exact ⟨rfl, input, token, rfl, Function.update_self .., tokens token outcome⟩
+      exact ⟨rfl, input, token, rfl, Function.update_self .., (tokens token outcome).1, (tokens token outcome).2⟩
     · simp only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] at member
       subst member
       rw [stateEq]
-      exact ⟨rfl, rfl, rfl, fun _ _ => rfl, fun _ => rfl, fun session none => by cases none⟩
+      exact ⟨rfl, rfl, rfl, fun _ _ => rfl, fun _ => rfl, fun session none => (by cases none), rfl⟩
     · simp only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] at member
       subst member
       rw [stateEq]
-      exact ⟨rfl, rfl, rfl, fun _ _ => rfl, fun _ => rfl, fun session none => by cases none⟩
+      exact ⟨rfl, rfl, rfl, fun _ _ => rfl, fun _ => rfl, fun session none => (by cases none), rfl⟩
 
-/-- The selected accept's steps after encapsulation through the allocator, from any native state (CE-3's `PqxdhDeploymentCompileFootprint.accept_footprint` for `PqxdhDeploymentIdealActive.acceptAfter`): they keep the Server's routing record and key ID, advance the session counter by one, change no other session's pending token and no token at all without a reply, and a returned session is the counter before the call and holds a token with the Beacon identity of the verified tuple. -/
+/-- The selected accept's steps after encapsulation through the allocator, from any native state (CE-3's `PqxdhDeploymentCompileFootprint.accept_footprint` for `PqxdhDeploymentIdealActive.acceptAfter`): they keep the Server's routing record and key ID and the BLAKE2b cache, advance the session counter by one, change no other session's pending token and no token at all without a reply, and a returned session is the counter before the call and holds a token with the Beacon identity of the verified tuple and the verified tuple's received Phase 1 candidate. -/
 theorem acceptAfter_footprint (seed : PqxdhJointIdentity.IdentitySeed) (challenge : PqxdhKemIndCca.MlKem768Ciphertext)
     (value : PqxdhServerRootPreparation.Verified Reader)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes) (consumed : List Pqxdh.Bytes)
@@ -410,7 +429,9 @@ theorem acceptAfter_footprint (seed : PqxdhJointIdentity.IdentitySeed) (challeng
       (w.1.1.1.1 = none → w.1.2.2.pending = native.2.pending) ∧
       (∀ session, w.1.1.1.1 = some session → session = native.2.sessions ∧ ∃ token,
         w.1.2.2.pending session = some token ∧
-        token.pending.beacon_identity_public_key = PqxdhRootTableInitialization.rootArray value.identity) := by
+        token.pending.beacon_identity_public_key = PqxdhRootTableInitialization.rootArray value.identity ∧
+        token.init = value.candidate) ∧
+      w.1.2.2.ctx = native.2.ctx := by
   have outer : w.1 ∈ support ((PqxdhDeploymentIdealActive.acceptAfter setup codec checks seed challenge value ephemeral
       consumed logged).run native) := by
     apply OracleComp.support_simulateQ_run'_subset
@@ -428,12 +449,13 @@ theorem acceptAfter_footprint (seed : PqxdhJointIdentity.IdentitySeed) (challeng
   rw [mem_support_bind_iff] at outer
   obtain ⟨answer, answerMember, outer⟩ := outer
   rw [support_pure, Set.mem_singleton_iff] at outer
-  obtain ⟨server, keyId, sessions, others, rejected, accepted⟩ := tailCE_tail_footprint setup.hmac native.2.sessions
-    setup.serverKeyId (setup.joint.publicKeys seed) native.2 prepared marker (native, none) answer answerMember
+  obtain ⟨server, keyId, sessions, others, rejected, accepted, ctx⟩ := tailCE_tail_footprint setup.hmac
+    native.2.sessions setup.serverKeyId (setup.joint.publicKeys seed) native.2 prepared marker (native, none) answer
+    answerMember
   rw [outer]
-  refine ⟨server, keyId, sessions, others, rejected, fun session found => ?_⟩
-  obtain ⟨same, input, token, inputFound, stored, identity⟩ := accepted session found
-  exact ⟨same, token, stored, by rw [identity, verified input inputFound]⟩
+  refine ⟨server, keyId, sessions, others, rejected, fun session found => ?_, ctx⟩
+  obtain ⟨same, input, token, inputFound, stored, identity, init⟩ := accepted session found
+  exact ⟨same, token, stored, by rw [identity, verified input inputFound], by rw [init, verified input inputFound]⟩
 
 end Accept
 
@@ -443,9 +465,10 @@ section Start
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response : Type}
   (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
 
-/-- CE-3's invariant survives every raw accept with the footprint of `PqxdhDeploymentCompileFootprint.accept_footprint` that keeps the owners, with the reply logged (the argument of CE-3's `PqxdhDeploymentCompileInvariant.good_accept`, from the footprint alone). -/
+/-- CE-3's invariant survives every raw accept with the footprint of `PqxdhDeploymentCompileFootprint.accept_footprint` (and `accept_init`) that keeps the owners and the retained bundles and only extends the BLAKE2b cache, with the reply logged (the argument of CE-3's `PqxdhDeploymentCompileInvariant.good_accept`, from the footprint alone). -/
 theorem good_of_accept (raw : Pqxdh.Bytes) (copies : Local) (native after : PqxdhRegistrationSchedule.State KemSK)
     (good : Good setup codec copies native) (reply : Option ℕ) (owners : after.owners = native.owners)
+    (inits : after.inits = native.inits) (grow : native.shared.2.ctx ≤ after.shared.2.ctx)
     (server : after.shared.2.server.server = native.shared.2.server.server)
     (keyId : after.shared.2.server.identityKeyId = native.shared.2.server.identityKeyId)
     (sessions : after.shared.2.sessions = native.shared.2.sessions + 1)
@@ -454,16 +477,24 @@ theorem good_of_accept (raw : Pqxdh.Bytes) (copies : Local) (native after : Pqxd
     (rejected : reply = none → after.shared.2.pending = native.shared.2.pending)
     (accepted : ∀ session, reply = some session → session = native.shared.2.sessions ∧ ∃ token,
       after.shared.2.pending session = some token ∧
-      PqxdhDeploymentCompile.identityOf codec raw = some token.pending.beacon_identity_public_key) :
+      PqxdhDeploymentCompile.identityOf codec raw = some token.pending.beacon_identity_public_key ∧
+      PqxdhDeploymentCompile.publicInit codec raw = some (PqxdhTranscriptAd.initOf token.init)) :
     Good setup codec { copies with log := PqxdhDeploymentCompile.logReply copies.log (.accept raw) reply } after := by
   have freshLog : copies.log.accepts native.shared.2.sessions = none := by
     cases logged : copies.log.accepts native.shared.2.sessions with
     | none => rfl
     | some old => exact absurd (good.accepts _ old logged) (Nat.lt_irrefl _)
+  have ownersKept : ∀ index owner, after.owners[index]? = some owner →
+      PqxdhDeploymentCompileInvariant.OwnerShape codec copies.log after.inits after.shared.2.ctx index owner := by
+    intro index owner found
+    rw [owners] at found
+    rw [inits]
+    exact PqxdhDeploymentCompileInvariant.ownerShape_grow codec copies.log native.inits grow index owner
+      (good.owners index owner found)
   rcases reply with _ | handle
   · have pending := rejected rfl
     simp only [PqxdhDeploymentCompile.logReply]
-    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    refine ⟨?_, ?_, ?_, ?_, ?_, ownersKept, ?_, ?_, ?_, ?_⟩
     · rw [keyId]; exact good.keyId
     · intro kid current copied
       rw [server]
@@ -473,7 +504,6 @@ theorem good_of_accept (raw : Pqxdh.Bytes) (copies : Local) (native after : Pqxd
     · intro index current copied
       rw [owners]
       exact good.copied index current copied
-    · rw [owners]; exact good.owners
     · intro session token found
       rw [pending] at found
       obtain ⟨below, logged⟩ := good.pending session token found
@@ -482,10 +512,16 @@ theorem good_of_accept (raw : Pqxdh.Bytes) (copies : Local) (native after : Pqxd
       have below := good.accepts session logged found
       rw [sessions]
       omega
-  · obtain ⟨handleEq, token, stored, identified⟩ := accepted handle rfl
+    · intro kid peer found
+      rw [server] at found
+      obtain ⟨transcript, digest, view, cached, adEq⟩ := good.peers kid peer found
+      exact ⟨transcript, digest, view, grow cached, adEq⟩
+    · rw [pending]
+      exact good.pendingInit
+  · obtain ⟨handleEq, token, stored, identified, initRead⟩ := accepted handle rfl
     subst handleEq
     simp only [PqxdhDeploymentCompile.logReply]
-    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    refine ⟨?_, ?_, ?_, ?_, ?_, ownersKept, ?_, ?_, ?_, ?_⟩
     · rw [keyId]; exact good.keyId
     · intro kid current copied
       rw [server]
@@ -498,7 +534,6 @@ theorem good_of_accept (raw : Pqxdh.Bytes) (copies : Local) (native after : Pqxd
     · intro index current copied
       rw [owners]
       exact good.copied index current copied
-    · rw [owners]; exact good.owners
     · intro session found_token found
       by_cases same : session = native.shared.2.sessions
       · subst same
@@ -515,6 +550,20 @@ theorem good_of_accept (raw : Pqxdh.Bytes) (copies : Local) (native after : Pqxd
       · simp only [Function.update_of_ne same] at found
         have below := good.accepts session logged found
         omega
+    · intro kid peer found
+      rw [server] at found
+      obtain ⟨transcript, digest, view, cached, adEq⟩ := good.peers kid peer found
+      exact ⟨transcript, digest, PqxdhDeploymentCompileInvariant.peerTranscript_accept codec copies.log _ raw freshLog
+        kid transcript view, grow cached, adEq⟩
+    · intro session found_token found
+      by_cases same : session = native.shared.2.sessions
+      · subst same
+        rw [stored, Option.some.injEq] at found
+        subst found
+        exact ⟨raw, Function.update_self .., initRead⟩
+      · rw [others session same] at found
+        obtain ⟨old, logged, oldInit⟩ := good.pendingInit session found_token found
+        exact ⟨old, by simp only [Function.update_of_ne same]; exact logged, oldInit⟩
 
 end Start
 
@@ -532,13 +581,14 @@ theorem middleStart {A : Type} (ensureInit : StateT A ProbComp Bool) (bounds : F
       budget g runtime p (fun _ => GoodMid setup codec (Target.ofCE budget g)) := by
   intro born _ created _ reached _ rel raw next _ value verified _ pre _ ephemeral _ w member
   refine ⟨?_, Nat.lt_succ_self _⟩
-  obtain ⟨server, keyId, sessions, others, rejected, accepted⟩ := acceptAfter_footprint setup codec checks created.seed
-    p.challenge value ephemeral pre.2 pre.1.2 reached.2.shared _ w member
+  obtain ⟨server, keyId, sessions, others, rejected, accepted, ctx⟩ := acceptAfter_footprint setup codec checks
+    created.seed p.challenge value ephemeral pre.2 pre.1.2 reached.2.shared _ w member
   exact good_of_accept setup codec raw reached.1.2 (PqxdhRegistrationJointSchedule.source reached.2)
-    ⟨w.1.2, (PqxdhRegistrationJointSchedule.source reached.2).owners⟩ rel.base.good w.1.1.1.1 rfl server keyId sessions
-    others rejected (fun session found => by
-      obtain ⟨same, token, stored, identity⟩ := accepted session found
-      exact ⟨same, token, stored, by rw [identity]; exact identityOf_verified setup codec checks raw value verified⟩)
+    ⟨w.1.2, (PqxdhRegistrationJointSchedule.source reached.2).owners, (PqxdhRegistrationJointSchedule.source reached.2).inits⟩
+    rel.base.good w.1.1.1.1 rfl rfl (le_of_eq ctx.symm) server keyId sessions others rejected (fun session found => by
+      obtain ⟨same, token, stored, identity, init⟩ := accepted session found
+      exact ⟨same, token, stored, by rw [identity]; exact identityOf_verified setup codec checks raw value verified,
+        by rw [init]; exact publicInit_verified setup codec checks raw value verified⟩)
 
 end Begin
 
@@ -633,3 +683,8 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGood.middleStart' d
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGood.middleStart
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGood.publicInit_verified' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGood.publicInit_verified

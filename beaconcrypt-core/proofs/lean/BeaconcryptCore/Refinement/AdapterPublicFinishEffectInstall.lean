@@ -25,7 +25,7 @@ theorem effect (index : Nat) (shell : PqxdhRecordLiftInterface.BeaconShell) (ker
 
 theorem native (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat)
     (shell : PqxdhRecordLiftInterface.BeaconShell) (kernel : ConcreteRatchetKernel)
     (before : RegistrationNativeExperiment.State n KemSK source)
     (ready : PqxdhRecordLiftWorld.BeaconReady before.server.world.world.1 index) :

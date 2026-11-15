@@ -27,7 +27,7 @@ noncomputable def checker (n : Nat) (input : RatchetChain) : OracleComp (spec + 
 theorem request_concrete (root : RootOutput) :
     request (RawCtxFreshChainCut.concreteChain root) = RawCtxFirstParentRisk.inputAddress root := by
   have info : PqxdhRefinement.absBytes ratchet.SYM_RATCHET_INFO = Pqxdh.INFO_R := by
-    simpa only [pqxdh.SYM_RATCHET_INFO] using PqxdhRefinement.absBytes_SYM_RATCHET_INFO
+    simpa only [ratchet.SYM_RATCHET_INFO] using PqxdhRefinement.absBytes_SYM_RATCHET_INFO
   simp only [request, address, RawCtxChainSend.nativeRequest, info]
   change (⟨Pqxdh.INFO_R, (RawCtxSelectedQueryTrace.rootVector (RawCtxFreshChainCut.concreteChain root)).toList⟩ : JointKdfAddress) = _
   rw [RawCtxSelectedQueryTrace.rootVector_concrete]

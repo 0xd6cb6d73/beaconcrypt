@@ -132,7 +132,7 @@ def eraseEager (state : Journal KemSK × (State KemSK × Phase)) : Journal KemSK
   (state.1, (eraseShared state.2.1, state.2.2))
 
 /-- Reassemble the eager state from the singleton side's state. -/
-def reassemble (pre : Pre KemSK) (state : Journal KemSK × (Emb KemSK × State KemSK)) :
+noncomputable def reassemble (pre : Pre KemSK) (state : Journal KemSK × (Emb KemSK × State KemSK)) :
     Journal KemSK × (State KemSK × Phase) :=
   (state.1, (eraseShared (multiOf pre state.2.1 state.2.2), phaseOf state.2.1.slot))
 
@@ -177,10 +177,12 @@ structure Consistent (c : Nat) (journal : Journal KemSK) (emb : Emb KemSK) (sing
 def Inv (c : Nat) (pre : Pre KemSK) (state : Journal KemSK × (Emb KemSK × State KemSK)) : Prop :=
   stopAt c state.1 ∨ (Ready c pre state.2.1 state.2.2 ∧ Consistent c state.1 state.2.1 state.2.2)
 
-/-- Readiness reads only the embedding and the singleton's owners. -/
-theorem ready_owners (c : Nat) (pre : Pre KemSK) (emb : Emb KemSK) (single other : State KemSK)
-    (ready : Ready c pre emb single) (same : other.owners = single.owners) : Ready c pre emb other :=
-  ⟨ready.target, ready.noTarget, ready.placed, by rw [same]; exact ready.singleton, ready.notFailed, ready.createdFresh⟩
+/-- Readiness reads only the embedding and the singleton's owners and retained bundles. -/
+theorem ready_frame (c : Nat) (pre : Pre KemSK) (emb : Emb KemSK) (single other : State KemSK)
+    (ready : Ready c pre emb single) (same : other.owners = single.owners) (inits : other.inits = single.inits) :
+    Ready c pre emb other :=
+  ⟨ready.target, ready.noTarget, ready.placed, by rw [same]; exact ready.singleton, ready.notFailed, ready.createdFresh,
+    by rw [inits]; exact ready.init⟩
 
 /-- Consistency reads only the embedding, the singleton's owners and the journal's summary. -/
 theorem consistent_transfer (c : Nat) (journal other : Journal KemSK) (emb : Emb KemSK) (single next : State KemSK)
@@ -211,6 +213,13 @@ theorem server_entry (c : Nat) (journal : Journal KemSK) (entry : SourceEntry Ke
     PqxdhDeploymentServerAuthEvent.acceptCheck, PqxdhDeploymentServerAuthEvent.stepReg, Option.or_none, and_self,
     iff_self]
 
+/-- A shared-state operation keeps the retained bundles. -/
+theorem onShared_inits {α : Type} (op : NativeGame KemSK α) (state : State KemSK) (result : α × State KemSK)
+    (member : result ∈ support ((PqxdhRegistrationSchedule.onShared op).run state)) : result.2.inits = state.inits := by
+  rw [PqxdhRegistrationSchedule.onShared_run, support_map] at member
+  obtain ⟨inner, _, rfl⟩ := member
+  rfl
+
 /-- A shared-state operation keeps the owners. -/
 theorem onShared_owners {α : Type} (op : NativeGame KemSK α) (state : State KemSK) (result : α × State KemSK)
     (member : result ∈ support ((PqxdhRegistrationSchedule.onShared op).run state)) : result.2.owners = state.owners := by
@@ -218,14 +227,15 @@ theorem onShared_owners {α : Type} (op : NativeGame KemSK α) (state : State Ke
   obtain ⟨inner, _, rfl⟩ := member
   rfl
 
-/-- A step that keeps the embedding and the singleton's owners and adds no phase-changing registration entry keeps the invariant. -/
-theorem kept_shared (c : Nat) (pre : Pre KemSK) (journal : Journal KemSK) (emb : Emb KemSK) (single next : State KemSK)
+/-- A step that keeps the embedding and the singleton's owners and retained bundles and adds no phase-changing registration entry keeps the invariant. -/
+theorem kept_frame (c : Nat) (pre : Pre KemSK) (journal : Journal KemSK) (emb : Emb KemSK) (single next : State KemSK)
     (entry : SourceEntry KemSK) (ready : Ready c pre emb single)
     (consistent : Consistent c journal emb single) (owners : next.owners = single.owners)
+    (inits : next.inits = single.inits)
     (keeps : summarizeReg (regsOfSource (journal ++ [entry])) = summarizeReg (regsOfSource journal) ∧
       (stopAt c (journal ++ [entry]) ↔ stopAt c journal)) :
     Inv c pre (journal ++ [entry], (emb, next)) :=
-  Or.inr ⟨ready_owners c pre emb single next ready owners,
+  Or.inr ⟨ready_frame c pre emb single next ready owners inits,
     consistent_transfer c journal _ emb single next consistent owners keeps.1⟩
 
 /-- A accept keeps the embedding and the singleton's owners. -/
@@ -233,60 +243,60 @@ theorem accept_support (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
     (seed : IdentitySeed) (c : Nat) (input : AuthInput) (raw : Pqxdh.Bytes) (emb : Emb KemSK) (single : State KemSK)
     (result : (((SourceSpec KemSK).Range (.inl (.inr (.accept raw))) × Emb KemSK) × State KemSK))
     (member : result ∈ support (singleStep setup codec checks seed c input (.inl (.inr (.accept raw))) emb single)) :
-    result.1.2 = emb ∧ result.2.owners = single.owners := by
+    result.1.2 = emb ∧ result.2.owners = single.owners ∧ result.2.inits = single.inits := by
   rw [PqxdhDeploymentServerAuthLocal.singleStep_lift setup codec checks seed c input _ emb single _ rfl] at member
   simp only [route, PqxdhDeploymentServerAuthEmbed.forward, simulateQ_query, OracleQuery.input_query,
     OracleQuery.cont_query, id_map, PqxdhRegistrationSchedule.handler, support_map, Set.mem_image] at member
   obtain ⟨inner, innerMember, rfl⟩ := member
-  exact ⟨rfl, onShared_owners _ single inner innerMember⟩
+  exact ⟨rfl, onShared_owners _ single inner innerMember, onShared_inits _ single inner innerMember⟩
 
 /-- A build keeps the embedding and the singleton's owners. -/
 theorem build_support (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (seed : IdentitySeed) (c : Nat) (input : AuthInput) (session : Nat) (payload : Option Pqxdh.Bytes) (emb : Emb KemSK) (single : State KemSK)
     (result : (((SourceSpec KemSK).Range (.inl (.inr (.build session payload))) × Emb KemSK) × State KemSK))
     (member : result ∈ support (singleStep setup codec checks seed c input (.inl (.inr (.build session payload))) emb single)) :
-    result.1.2 = emb ∧ result.2.owners = single.owners := by
+    result.1.2 = emb ∧ result.2.owners = single.owners ∧ result.2.inits = single.inits := by
   rw [PqxdhDeploymentServerAuthLocal.singleStep_lift setup codec checks seed c input _ emb single _ rfl] at member
   simp only [route, PqxdhDeploymentServerAuthEmbed.forward, simulateQ_query, OracleQuery.input_query,
     OracleQuery.cont_query, id_map, PqxdhRegistrationSchedule.handler, support_map, Set.mem_image] at member
   obtain ⟨inner, innerMember, rfl⟩ := member
-  exact ⟨rfl, onShared_owners _ single inner innerMember⟩
+  exact ⟨rfl, onShared_owners _ single inner innerMember, onShared_inits _ single inner innerMember⟩
 
 /-- A hmac keeps the embedding and the singleton's owners. -/
 theorem hmac_support (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (seed : IdentitySeed) (c : Nat) (input : AuthInput) (key : HmacBlock) (message : Pqxdh.Bytes) (emb : Emb KemSK) (single : State KemSK)
     (result : (((SourceSpec KemSK).Range (.inl (.inr (.hmac key message))) × Emb KemSK) × State KemSK))
     (member : result ∈ support (singleStep setup codec checks seed c input (.inl (.inr (.hmac key message))) emb single)) :
-    result.1.2 = emb ∧ result.2.owners = single.owners := by
+    result.1.2 = emb ∧ result.2.owners = single.owners ∧ result.2.inits = single.inits := by
   rw [PqxdhDeploymentServerAuthLocal.singleStep_lift setup codec checks seed c input _ emb single _ rfl] at member
   simp only [route, PqxdhDeploymentServerAuthEmbed.forward, simulateQ_query, OracleQuery.input_query,
     OracleQuery.cont_query, id_map, PqxdhRegistrationSchedule.handler, support_map, Set.mem_image] at member
   obtain ⟨inner, innerMember, rfl⟩ := member
-  exact ⟨rfl, onShared_owners _ single inner innerMember⟩
+  exact ⟨rfl, onShared_owners _ single inner innerMember, onShared_inits _ single inner innerMember⟩
 
 /-- A hash keeps the embedding and the singleton's owners. -/
 theorem hash_support (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (seed : IdentitySeed) (c : Nat) (input : AuthInput) (bytes : Pqxdh.Bytes) (emb : Emb KemSK) (single : State KemSK)
     (result : (((SourceSpec KemSK).Range (.inl (.inr (.hash bytes))) × Emb KemSK) × State KemSK))
     (member : result ∈ support (singleStep setup codec checks seed c input (.inl (.inr (.hash bytes))) emb single)) :
-    result.1.2 = emb ∧ result.2.owners = single.owners := by
+    result.1.2 = emb ∧ result.2.owners = single.owners ∧ result.2.inits = single.inits := by
   rw [PqxdhDeploymentServerAuthLocal.singleStep_lift setup codec checks seed c input _ emb single _ rfl] at member
   simp only [route, PqxdhDeploymentServerAuthEmbed.forward, simulateQ_query, OracleQuery.input_query,
     OracleQuery.cont_query, id_map, PqxdhRegistrationSchedule.handler, support_map, Set.mem_image] at member
   obtain ⟨inner, innerMember, rfl⟩ := member
-  exact ⟨rfl, onShared_owners _ single inner innerMember⟩
+  exact ⟨rfl, onShared_owners _ single inner innerMember, onShared_inits _ single inner innerMember⟩
 
 /-- A reveal keeps the embedding and the singleton's owners. -/
 theorem reveal_support (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (seed : IdentitySeed) (c : Nat) (input : AuthInput) (keyId : Std.U64) (emb : Emb KemSK) (single : State KemSK)
     (result : (((SourceSpec KemSK).Range (.inl (.inr (.reveal keyId))) × Emb KemSK) × State KemSK))
     (member : result ∈ support (singleStep setup codec checks seed c input (.inl (.inr (.reveal keyId))) emb single)) :
-    result.1.2 = emb ∧ result.2.owners = single.owners := by
+    result.1.2 = emb ∧ result.2.owners = single.owners ∧ result.2.inits = single.inits := by
   rw [PqxdhDeploymentServerAuthLocal.singleStep_lift setup codec checks seed c input _ emb single _ rfl] at member
   simp only [route, PqxdhDeploymentServerAuthEmbed.forward, simulateQ_query, OracleQuery.input_query,
     OracleQuery.cont_query, id_map, PqxdhRegistrationSchedule.handler, support_map, Set.mem_image] at member
   obtain ⟨inner, innerMember, rfl⟩ := member
-  exact ⟨rfl, onShared_owners _ single inner innerMember⟩
+  exact ⟨rfl, onShared_owners _ single inner innerMember, onShared_inits _ single inner innerMember⟩
 
 /-- A coin keeps the embedding and the singleton state. -/
 theorem coin_support (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -370,7 +380,7 @@ theorem kept_create (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
         PqxdhDeploymentServerAuthEvent.stepReg (summarizeReg (regsOfSource journal)) (.create pin keyId c) := by
       rw [regs, PqxdhDeploymentServerAuthEvent.summarizeReg_snoc]
     refine ⟨⟨fun index held => ?_, fun slot => by simp at slot, fun _ => ?_, ⟨owner, single_eq, fun _ => drawn (Or.inl waiting),
-      fun slot => by simp at slot⟩, by simp, ready.createdFresh⟩, ⟨fun slot => by simp at slot, fun index above => ?_,
+      fun slot => by simp at slot⟩, by simp, ready.createdFresh, ready.init⟩, ⟨fun slot => by simp at slot, fun index above => ?_,
       fun _ => ?_, fun slot => by simp at slot⟩⟩
     · by_cases same : index = emb.owners.length
       · rw [same, atC]
@@ -407,7 +417,7 @@ theorem kept_create (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
       exact (List.getElem?_eq_some_iff.mp (ready.placed taken)).1
     simp only
     refine ⟨⟨fun index held => ?_, fun free => ?_, fun taken => ?_, ⟨single_owner, single_eq, fun slot => ?_,
-      fun slot => ?_⟩, ?_, ready.createdFresh⟩, ⟨fun slot => ?_, fun index above => ?_, fun slot => ?_,
+      fun slot => ?_⟩, ?_, ready.createdFresh, ready.init⟩, ⟨fun slot => ?_, fun index above => ?_, fun slot => ?_,
       fun slot owner owned => ?_⟩⟩
     · by_cases same : index = emb.owners.length
       · subst same
@@ -457,13 +467,16 @@ theorem kept_create (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
         rw [phaseAt c (by omega)]
         exact consistent.sent slot owner owned
 
-/-- A step at a local owner keeps the invariant: the owner's entry stays local, the singleton's owners are kept, and the new registration entry concerns only that owner's handle. -/
-theorem kept_local (c : Nat) (pre : Pre KemSK) (journal : Journal KemSK) (emb : Emb KemSK) (single next : State KemSK)
-    (index : Nat) (owner updated : Owner KemSK) (entry : SourceEntry KemSK) (reg : PqxdhDeploymentServerAuthEvent.Reg)
+/-- A step at a local owner keeps the invariant: the owner's entry stays local (with any retained bundles of the embedding), the singleton's owners and retained bundles are kept, and the new registration entry concerns only that owner's handle. -/
+theorem kept_localFrame (c : Nat) (pre : Pre KemSK) (journal : Journal KemSK) (emb : Emb KemSK)
+    (single next : State KemSK) (index : Nat) (owner updated : Owner KemSK)
+    (retained : Nat → Option PqxdhEd25519EufCma.Phase1Candidate) (entry : SourceEntry KemSK)
+    (reg : PqxdhDeploymentServerAuthEvent.Reg)
     (found : emb.owners[index]? = some (some owner)) (ready : Ready c pre emb single)
     (consistent : Consistent c journal emb single) (owners : next.owners = single.owners)
+    (inits : next.inits = single.inits)
     (registered : regsOfSource (journal ++ [entry]) = regsOfSource journal ++ [reg]) (atOwner : regOwner reg = some index) :
-    Inv c pre (journal ++ [entry], ({ emb with owners := emb.owners.set index (some updated) }, next)) := by
+    Inv c pre (journal ++ [entry], ({ emb with owners := emb.owners.set index (some updated), inits := retained }, next)) := by
   have bound : index < emb.owners.length := (List.getElem?_eq_some_iff.mp found).1
   have phaseAt : ∀ other, other ≠ index →
       (summarizeReg (regsOfSource (journal ++ [entry]))).phases other = (summarizeReg (regsOfSource journal)).phases other := by
@@ -476,7 +489,7 @@ theorem kept_local (c : Nat) (pre : Pre KemSK) (journal : Journal KemSK) (emb : 
     cases found
   obtain ⟨single_owner, single_eq, drawn, sent⟩ := ready.singleton
   refine Or.inr ⟨⟨fun other held => ?_, fun free => ?_, fun taken => ?_, ⟨single_owner, owners ▸ single_eq, drawn, sent⟩,
-    ready.notFailed, ready.createdFresh⟩, ⟨fun slot => ?_, fun other above => ?_, fun slot => ?_,
+    ready.notFailed, ready.createdFresh, inits ▸ ready.init⟩, ⟨fun slot => ?_, fun other above => ?_, fun slot => ?_,
     fun slot candidate owned => ?_⟩⟩
   · by_cases same : other = index
     · subst same
@@ -576,7 +589,7 @@ theorem kept_bundle (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
       rw [found] at member
       simp only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] at member
       subst member
-      exact kept_shared c pre journal emb single single _ ready consistent rfl
+      exact kept_frame c pre journal emb single single _ ready consistent rfl rfl
         (absent_entry c journal _ _ index (registered none) (Or.inl ⟨none, rfl⟩)
           (absent_missing c journal emb single consistent index found))
   | some slot =>
@@ -607,7 +620,7 @@ theorem kept_bundle (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
                 simp only [Option.isSome_some, ite_true]
                 refine ⟨⟨ready.target, fun free => by simp at free, fun _ => found,
                   ⟨single_owner, single_eq, fun slot => by simp at slot, fun _ => Or.inl (owner_eq ▸ isSent)⟩,
-                  by simp, ready.createdFresh⟩, ⟨fun slot => by simp at slot, fun other above => ?_,
+                  by simp, ready.createdFresh, ready.init⟩, ⟨fun slot => by simp at slot, fun other above => ?_,
                   fun slot => by simp at slot, fun _ owner owned => ?_⟩⟩
                 · dsimp only at above
                   rw [summary, (stepReg_other _ _ other (by simp only [regOwner, ne_eq, Option.some.injEq]; omega)).1]
@@ -636,7 +649,7 @@ theorem kept_bundle (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
             have same : PqxdhDeploymentServerAuthEvent.stepReg (summarizeReg (regsOfSource journal)) (.bundle index none) =
                 summarizeReg (regsOfSource journal) := by
               simp [PqxdhDeploymentServerAuthEvent.stepReg, notFreshPhase]
-            exact kept_shared index pre journal emb single single _ ready consistent rfl
+            exact kept_frame index pre journal emb single single _ ready consistent rfl rfl
               ⟨by rw [registered, PqxdhDeploymentServerAuthEvent.summarizeReg_snoc, same], by
                 simp only [stopAt, Stop, registered, PqxdhDeploymentServerAuthEvent.summarizeReg_snoc, same,
                   PqxdhDeploymentServerAuthEvent.accepted_snoc, PqxdhDeploymentServerAuthEvent.acceptCheck,
@@ -646,8 +659,26 @@ theorem kept_bundle (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
           simp only [simulateQ_map, StateT.run_map, PqxdhDeploymentServerAuthEmbed.coins_route, Functor.map_map,
             support_map, Set.mem_image] at member
           obtain ⟨bundled, _, rfl⟩ := member
-          exact kept_local c pre journal emb single single index owner bundled.2 _ _ found ready consistent rfl
-            (registered bundled.1) rfl
+          exact kept_localFrame c pre journal emb single single index owner bundled.1.2 _ _ _ found ready consistent rfl
+            rfl (registered bundled.1.1) rfl
+
+/-- A local Beacon's hashed finish through the route keeps the singleton's owners and retained bundles. -/
+theorem localOwnerFinish_frame (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (seed : IdentitySeed) (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes) (owner : Owner KemSK)
+    (single : State KemSK) (result : (Option Pqxdh.Bytes × Owner KemSK) × State KemSK)
+    (member : result ∈ support ((simulateQ (PqxdhRegistrationSchedule.handler setup codec checks seed)
+      (simulateQ route (PqxdhDeploymentServerAuthEmbed.localFinish setup codec retained raw owner))).run single)) :
+    result.2.owners = single.owners ∧ result.2.inits = single.inits := by
+  have mapped : Prod.map id eraseShared result ∈ support (Prod.map id eraseShared <$>
+      (simulateQ (PqxdhRegistrationSchedule.handler setup codec checks seed)
+        (simulateQ route (PqxdhDeploymentServerAuthEmbed.localFinish setup codec retained raw owner))).run single) := by
+    rw [support_map]
+    exact Set.mem_image_of_mem _ member
+  rw [PqxdhDeploymentServerAuthStable.localOwnerFinish_route, support_map] at mapped
+  obtain ⟨inner, _, same⟩ := mapped
+  have owners := congrArg (fun value => value.2.owners) same
+  have inits := congrArg (fun value => value.2.inits) same
+  exact ⟨by simpa [eraseShared] using owners.symm, by simpa [eraseShared] using inits.symm⟩
 
 /-- A finish step keeps the invariant. -/
 theorem kept_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -668,7 +699,7 @@ theorem kept_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
       rw [found] at member
       simp only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] at member
       subst member
-      exact kept_shared c pre journal emb single single _ ready consistent rfl
+      exact kept_frame c pre journal emb single single _ ready consistent rfl rfl
         (absent_entry c journal _ _ index (registered none) (Or.inr ⟨raw, none, rfl⟩)
           (absent_missing c journal emb single consistent index found))
   | some slot =>
@@ -695,8 +726,8 @@ theorem kept_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
                     PqxdhDeploymentServerAuthEvent.acceptCheck, phaseC, initSent, and_self, ite_true, Option.isSome_or,
                     Option.isSome_some, Bool.or_true, true_or]
               | none =>
-                  have failed := PqxdhDeploymentEligibility.finish_failure setup codec raw single_owner single.shared
-                    finished.1.2 finished.2 (by rw [← reply]; exact finishedMember)
+                  have failed := PqxdhDeploymentEligibility.ownerFinish_failure setup codec (single.inits 0) raw
+                    single_owner single.shared finished.1.2 finished.2 (by rw [← reply]; exact finishedMember)
                   have abortedNext : PqxdhDeploymentEligibility.phaseClass finished.1.2.beacon.phase = .aborted := by
                     cases phase : single_owner.beacon.phase with
                     | initSent control prekey oneTime kem =>
@@ -714,7 +745,7 @@ theorem kept_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
                   simp only [single_eq, List.set_cons_zero]
                   refine ⟨⟨ready.target, ready.noTarget, ready.placed,
                     ⟨finished.1.2, rfl, fun slot => by rw [bundled] at slot; simp at slot, fun _ => Or.inr abortedNext⟩,
-                    ready.notFailed, ready.createdFresh⟩, ⟨consistent.waiting, fun other above => ?_,
+                    ready.notFailed, ready.createdFresh, ready.init⟩, ⟨consistent.waiting, fun other above => ?_,
                     fun slot => (by rw [bundled] at slot; cases slot), fun _ owner owned => ?_⟩⟩
                   · rw [summary, (stepReg_other _ _ other (by simp only [regOwner, ne_eq, Option.some.injEq]; omega)).1]
                     exact consistent.absent other above
@@ -724,13 +755,13 @@ theorem kept_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
             · have open_ : PqxdhDeploymentEligibility.phaseClass single_owner.beacon.phase ≠ .initSent := by
                 rw [aborted]
                 decide
-              rw [PqxdhDeploymentServerAuthLocal.nativeOwner_open codec.frameRead raw single_owner open_] at finishedMember
-              simp only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] at finishedMember
+              rw [PqxdhDeploymentServerAuthLocal.ownerFinish_open setup codec _ raw single_owner open_] at finishedMember
+              simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at finishedMember
               subst finishedMember
               have same : PqxdhDeploymentServerAuthEvent.stepReg (summarizeReg (regsOfSource journal))
                   (.finish index raw none) = summarizeReg (regsOfSource journal) := by
                 simp [PqxdhDeploymentServerAuthEvent.stepReg, phaseC, aborted]
-              exact kept_shared index pre journal emb single _ _ ready consistent (by simp [single_eq])
+              exact kept_frame index pre journal emb single _ _ ready consistent (by simp [single_eq]) rfl
                 ⟨by rw [registered, PqxdhDeploymentServerAuthEvent.summarizeReg_snoc, same], by
                   simp only [stopAt, Stop, registered, PqxdhDeploymentServerAuthEvent.summarizeReg_snoc, same,
                     PqxdhDeploymentServerAuthEvent.accepted_snoc, PqxdhDeploymentServerAuthEvent.acceptCheck,
@@ -749,7 +780,7 @@ theorem kept_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
             have same : PqxdhDeploymentServerAuthEvent.stepReg (summarizeReg (regsOfSource journal))
                 (.finish index raw none) = summarizeReg (regsOfSource journal) := by
               simp [PqxdhDeploymentServerAuthEvent.stepReg, phaseC]
-            exact kept_shared index pre journal emb single single _ ready consistent rfl
+            exact kept_frame index pre journal emb single single _ ready consistent rfl rfl
               ⟨by rw [registered, PqxdhDeploymentServerAuthEvent.summarizeReg_snoc, same], by
                 simp only [stopAt, Stop, registered, PqxdhDeploymentServerAuthEvent.summarizeReg_snoc, same,
                   PqxdhDeploymentServerAuthEvent.accepted_snoc, PqxdhDeploymentServerAuthEvent.acceptCheck,
@@ -758,8 +789,10 @@ theorem kept_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
           rw [found] at member
           simp only [simulateQ_map, StateT.run_map, support_map, Set.mem_image] at member
           obtain ⟨finished, finishedMember, rfl⟩ := member
-          exact kept_local c pre journal emb single finished.2 index owner finished.1.2 _ _ found ready consistent
-            (localFinish_owners setup codec checks seed _ single finished finishedMember) (registered finished.1.1) rfl
+          have frame := localOwnerFinish_frame setup codec checks seed (emb.inits index) raw owner single finished
+            finishedMember
+          exact kept_localFrame c pre journal emb single finished.2 index owner finished.1.2 emb.inits _ _ found ready
+            consistent frame.1 frame.2 (registered finished.1.1) rfl
 
 /-- Every step of the singleton side keeps the invariant. -/
 theorem kept (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -784,7 +817,7 @@ theorem kept (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (che
     rcases query with (coin | request) | ⟨index, field⟩
     · obtain ⟨sameEmb, sameSingle⟩ := coin_support setup codec checks seed c input coin emb single step stepMember
       rw [sameEmb, sameSingle]
-      exact kept_shared c pre journal emb single single _ ready consistent rfl (quiet_entry c journal _ rfl)
+      exact kept_frame c pre journal emb single single _ ready consistent rfl rfl (quiet_entry c journal _ rfl)
     · cases request with
       | create pin keyId =>
           exact kept_create setup codec checks seed c input pre pin keyId journal emb single stopped ready
@@ -793,34 +826,34 @@ theorem kept (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (che
           exact kept_bundle setup codec checks seed c input pre published bundledSent index journal emb single
             ready consistent step stepMember
       | accept raw =>
-          obtain ⟨sameEmb, owners⟩ := accept_support setup codec checks seed c input raw emb single step stepMember
+          obtain ⟨sameEmb, owners, inits⟩ := accept_support setup codec checks seed c input raw emb single step stepMember
           rw [sameEmb]
-          exact kept_shared c pre journal emb single step.2 _ ready consistent owners
+          exact kept_frame c pre journal emb single step.2 _ ready consistent owners inits
             (server_entry c journal _ (Or.inl ⟨raw, step.1.1, rfl⟩))
       | build session payload =>
-          obtain ⟨sameEmb, owners⟩ := build_support setup codec checks seed c input session payload emb single step
+          obtain ⟨sameEmb, owners, inits⟩ := build_support setup codec checks seed c input session payload emb single step
             stepMember
           rw [sameEmb]
-          exact kept_shared c pre journal emb single step.2 _ ready consistent owners
+          exact kept_frame c pre journal emb single step.2 _ ready consistent owners inits
             (server_entry c journal _ (Or.inr ⟨session, payload, step.1.1, rfl⟩))
       | finish index raw =>
           exact kept_finish setup codec checks seed c input pre index raw journal emb single ready
             consistent step stepMember
       | hmac key message =>
-          obtain ⟨sameEmb, owners⟩ := hmac_support setup codec checks seed c input key message emb single step stepMember
+          obtain ⟨sameEmb, owners, inits⟩ := hmac_support setup codec checks seed c input key message emb single step stepMember
           rw [sameEmb]
-          exact kept_shared c pre journal emb single step.2 _ ready consistent owners (quiet_entry c journal _ rfl)
+          exact kept_frame c pre journal emb single step.2 _ ready consistent owners inits (quiet_entry c journal _ rfl)
       | hash bytes =>
-          obtain ⟨sameEmb, owners⟩ := hash_support setup codec checks seed c input bytes emb single step stepMember
+          obtain ⟨sameEmb, owners, inits⟩ := hash_support setup codec checks seed c input bytes emb single step stepMember
           rw [sameEmb]
-          exact kept_shared c pre journal emb single step.2 _ ready consistent owners (quiet_entry c journal _ rfl)
+          exact kept_frame c pre journal emb single step.2 _ ready consistent owners inits (quiet_entry c journal _ rfl)
       | reveal keyId =>
-          obtain ⟨sameEmb, owners⟩ := reveal_support setup codec checks seed c input keyId emb single step stepMember
+          obtain ⟨sameEmb, owners, inits⟩ := reveal_support setup codec checks seed c input keyId emb single step stepMember
           rw [sameEmb]
-          exact kept_shared c pre journal emb single step.2 _ ready consistent owners (quiet_entry c journal _ rfl)
+          exact kept_frame c pre journal emb single step.2 _ ready consistent owners inits (quiet_entry c journal _ rfl)
     · rw [PqxdhDeploymentServerAuthLocal.singleStep_read, support_pure, Set.mem_singleton_iff] at stepMember
       subst stepMember
-      exact kept_shared c pre journal emb single single _ ready consistent rfl (quiet_entry c journal _ rfl)
+      exact kept_frame c pre journal emb single single _ ready consistent rfl rfl (quiet_entry c journal _ rfl)
 
 /-- The eager handler reads neither analysis history. -/
 theorem eager_stable (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -882,13 +915,14 @@ theorem eagerSide_stable (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
     simp only [Functor.map_map] at same ⊢
     exact same
 
-/-- The initial state of the singleton side satisfies the invariant when the singleton's only owner is the drawn bundled owner. -/
+/-- The initial state of the singleton side satisfies the invariant when the singleton's only owner is the drawn bundled owner and it retains the drawn Phase 1 bundle. -/
 theorem inv_initial (c : Nat) (pre : Pre KemSK) (single : State KemSK) (owner : single.owners = [pre.bundled])
+    (init : single.inits 0 = pre.init)
     (createdFresh : PqxdhDeploymentEligibility.phaseClass pre.created.beacon.phase = .fresh) :
     Inv c pre ([], (Emb.empty, single)) :=
   Or.inr ⟨⟨fun index held => by simp [Emb.empty] at held, fun _ => by simp [Emb.empty], fun taken => by
       simp [Emb.empty] at taken, ⟨pre.bundled, owner, fun _ => rfl, fun slot => by simp [Emb.empty] at slot⟩,
-      by simp [Emb.empty], createdFresh⟩,
+      by simp [Emb.empty], createdFresh, init⟩,
     ⟨fun _ => by simp [Emb.empty], fun index _ => rfl, fun slot => by simp [Emb.empty] at slot,
       fun slot => by simp [Emb.empty] at slot⟩⟩
 
@@ -900,11 +934,12 @@ theorem localize (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) 
     (bundledSent : ∀ bytes, pre.reply = some bytes →
       PqxdhDeploymentEligibility.phaseClass pre.bundled.beacon.phase = .initSent)
     (program : OracleComp (SourceSpec KemSK) Result) (unread : program.IsQueryBoundP (Bad (KemSK := KemSK)) 0)
-    (single : State KemSK) (owner : single.owners = [pre.bundled]) :
+    (single : State KemSK) (owner : single.owners = [pre.bundled]) (init : single.inits 0 = pre.init) :
     Prod.map id (reassemble pre) <$>
         (simulateQ (singleSide setup codec checks seed c input) program).run ([], (Emb.empty, single)) =
       Prod.map id eraseEager <$>
-        (simulateQ (eagerSide setup codec checks seed c binding pre) program).run ([], (⟨single.shared, []⟩, .waiting)) := by
+        (simulateQ (eagerSide setup codec checks seed c binding pre) program).run
+          ([], (⟨single.shared, [], fun _ => none⟩, .waiting)) := by
   rw [OracleComp.map_run_simulateQ_eq_of_query_map_eq (eagerSide setup codec checks seed c binding pre)
     (erasedSide setup codec checks seed c binding pre) eraseEager
     (eagerSide_stable setup codec checks seed c binding pre) program _]
@@ -912,7 +947,7 @@ theorem localize (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) 
     (Inv c pre) (reassemble pre) Bad
     (fun query state good holds => kept setup codec checks seed c input pre published bundledSent query good state holds)
     (fun query state good holds => side_commute setup codec checks seed c input binding pre bound published query good
-      state (holds.imp id And.left)) program unread _ (inv_initial c pre single owner createdFresh)
+      state (holds.imp id And.left)) program unread _ (inv_initial c pre single owner init createdFresh)
 
 end BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocalize
 
@@ -951,12 +986,6 @@ end BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocalize
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocalize.side_commute
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocalize.ready_owners' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocalize.ready_owners
-
 /-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocalize.consistent_transfer' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
@@ -980,12 +1009,6 @@ end BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocalize
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocalize.onShared_owners
-
-/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocalize.kept_shared' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocalize.kept_shared
 
 /-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocalize.accept_support' depends on axioms: [propext,
  Classical.choice,
@@ -1047,12 +1070,6 @@ end BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocalize
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocalize.kept_create
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocalize.kept_local' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocalize.kept_local
-
 /-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocalize.localFinish_owners' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
@@ -1112,3 +1129,28 @@ end BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocalize
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocalize.localize
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocalize.ready_frame' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocalize.ready_frame
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocalize.onShared_inits' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocalize.onShared_inits
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocalize.kept_frame' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocalize.kept_frame
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocalize.kept_localFrame' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocalize.kept_localFrame
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocalize.localOwnerFinish_frame' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocalize.localOwnerFinish_frame

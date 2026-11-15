@@ -2,8 +2,12 @@ import BeaconcryptCore.Computational.PqxdhRootTableInitialization
 import BeaconcryptCore.Computational.RawCtxSourceSeal
 import BeaconcryptCore.Computational.RawCtxServerRouting
 import BeaconcryptCore.Refinement.ServerTransactionRefinement
+import BeaconcryptCore.Computational.TransportSizingBridge
 
 /-!
+
+The generic record tail takes explicit complete AD151 as a public parameter. Current native entry callers must obtain that array from the actual completed registration binding and its reached hash-admission receipt. Classical candidate preparation supplies only allocation/identity/KEM metadata and never constructs AD. The older generic Phase2 writer callback remains a separate interpreter boundary; these equations alone do not implement or authenticate the current Server response signing/hash pipeline.
+
 The private Server registration-response tail uses the already-produced root and already-consumed registration context. It rechecks current allocation control, binding and peer availability before identity parsing or reservation. The extracted candidate initializer executes the same fixed-source 64-byte call, then plaintext admission and allocation precede the actual first-send driver. Authenticated plaintext is erased before the optional seal result is inspected. Phase2 serialization precedes candidate commit and same-handle peer publication. Failed sealing may advance the local candidate, which remains unpublished on any ordinary failure.
 
 The direct source equations preserve exact supplied callback arguments, original optional results, prior logical map/control and every normal auxiliary/primitive poststate. Totality over all typed replies excludes diagnostic loss of poststate. Arbitrary stateful probabilistic tail support separately retains send, erase and writer poststates. The seven private source categories each have a checked one-call cap, and native seal expansion separately preserves KDF, AEAD, commitment-hash, inner-frame-writer and auxiliary counts. Fixed initial HKDF, preparation, binding bytes, copies, allocation, erasure and serialization remain real local work; logical callback budgets do not assert zero sampling or native execution cost inside their implementations.
@@ -23,6 +27,7 @@ set_option autoImplicit false
 set_option maxRecDepth 100000
 
 namespace BeaconcryptCore.Computational.PqxdhServerRegistrationPublication
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 
 private theorem id_bind_eq {α β : Type} (value : Id α) (next : α → Id β) :
     value >>= next = next value := rfl
@@ -99,9 +104,9 @@ def publish {Metadata PeerMetadata Consumed : Type}
     server := { state.server with peers := Function.update state.server.peers candidate.key_id (some ⟨candidate.beacon_identity_public_key, kernel, metadata⟩) } }
 
 def firstContext (candidate : pqxdh.ServerRegistrationCandidate)
-    (authenticated : Bytes) : RawCtxSourceSend.SealContext :=
+    (associatedData : Std.Array Std.U8 151#usize) (authenticated : Bytes) : RawCtxSourceSend.SealContext :=
   ⟨authenticated, candidate.key_id, candidate.server_identity_key_id,
-    absBytes candidate.associated_data⟩
+    absBytes associatedData⟩
 
 /-- The post-allocation source tail runs the first send before Phase2 serialization and publication. -/
 noncomputable def afterInitialization {Metadata PeerMetadata Consumed : Type}
@@ -110,7 +115,7 @@ noncomputable def afterInitialization {Metadata PeerMetadata Consumed : Type}
     (state : State Metadata PeerMetadata Consumed) :
     OracleComp TailSpec (Option Response × State Metadata PeerMetadata Consumed) := do
   let (advanced, encrypted) ← simulateQ sendLift (simulateQ RawCtxSourceSend.adapter
-    (RawCtxSourceSend.send kernel (firstContext candidate authenticated)))
+    (RawCtxSourceSend.send kernel (firstContext (associatedData := associatedData) candidate authenticated)))
   let _ ← TailSpec.query (.inr (.erase authenticated))
   match encrypted with
   | none => pure (none, state)
@@ -125,7 +130,7 @@ theorem publish_commit {Metadata PeerMetadata Consumed : Type}
     (kernel : ConcreteRatchetKernel) (metadata : PeerMetadata) :
     pqxdh.server_commit candidate = ok
       ((publish state candidate kernel metadata).control,
-        ⟨candidate.key_id, candidate.beacon_identity_public_key, candidate.associated_data⟩) := rfl
+        ⟨candidate.key_id, candidate.beacon_identity_public_key⟩) := rfl
 
 theorem publish_fields {Metadata PeerMetadata Consumed : Type}
     (state : State Metadata PeerMetadata Consumed) (candidate : pqxdh.ServerRegistrationCandidate)
@@ -169,7 +174,7 @@ noncomputable def candidateTail {Metadata PeerMetadata Consumed : Type}
           let allocated ← TailSpec.query (.inr (.reservePlaintext (8 + plaintext.length)))
           if !allocated then pure (ok (none, state)) else
             continueRust (candidate.key_id_binding) fun binding =>
-              ok <$> afterInitialization candidate (absBytes binding.bytes ++ plaintext)
+              ok <$> afterInitialization (associatedData := associatedData) candidate (absBytes binding.bytes ++ plaintext)
                 kernel metadata state
         else pure (ok (none, state))
 
@@ -190,7 +195,7 @@ noncomputable def build {Metadata PeerMetadata Consumed : Type}
           ⟨state.server.identity, state.identityKeyId⟩ availability) fun prepared =>
           match prepared with
           | .Err _ => pure (ok (none, state))
-          | .Ok candidate => candidateTail source candidate root data metadata state
+          | .Ok candidate => candidateTail (associatedData := associatedData) source candidate root data metadata state
 
 theorem candidate_initialization
     (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
@@ -227,7 +232,7 @@ theorem first_send_state {PrimitiveState ι : Type} {base : OracleSpec ι}
     (sent : (ConcreteRatchetKernel × Option RawCtxSourceSend.Encrypted) × PrimitiveState)
     (hsupport : sent ∈ support ((simulateQ impl (simulateQ sendLift
       (simulateQ RawCtxSourceSend.adapter
-        (RawCtxSourceSend.send kernel (firstContext candidate authenticated))))).run primitive)) :
+        (RawCtxSourceSend.send kernel (firstContext (associatedData := associatedData) candidate authenticated))))).run primitive)) :
     sent.1.1.refined.control.send_sequence.val = 1 ∧
       sent.1.1.refined.control.receive_sequence = kernel.refined.control.receive_sequence ∧
       sent.1.1.refined.control.receive_cache = kernel.refined.control.receive_cache ∧
@@ -240,7 +245,7 @@ theorem first_send_state {PrimitiveState ι : Type} {base : OracleSpec ι}
     simp only [hzero] at hv
     contradiction
   obtain ⟨_, _, _, _, _, _, _, _, _, _, hstate⟩ :=
-    RawCtxSourceSend.send_nonexhausted_support _ kernel (firstContext candidate authenticated)
+    RawCtxSourceSend.send_nonexhausted_support _ kernel (firstContext (associatedData := associatedData) candidate authenticated)
       primitive hmax sent hsupport
   simpa only [hzero, Nat.zero_add] using hstate
 
@@ -282,7 +287,7 @@ def sourceAfterInitialization {Metadata PeerMetadata Consumed PrimitiveState : T
     (state : State Metadata PeerMetadata Consumed) (primitive : PrimitiveState) :
     RustM ((Option Response × State Metadata PeerMetadata Consumed) × PrimitiveState) := do
   let (sent, afterSend) ← RawCtxSourceSend.sourceDriver execute (selectedSeal sealReply)
-    kernel (firstContext candidate authenticated) primitive
+    kernel (firstContext (associatedData := associatedData) candidate authenticated) primitive
   let (_, afterErase) := aux (.erase authenticated) afterSend
   match sent.2 with
   | none => ok ((none, state), afterErase)
@@ -301,15 +306,15 @@ theorem source_afterInitialization_exact {Metadata PeerMetadata Consumed Primiti
     (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Bytes)
     (kernel : ConcreteRatchetKernel) (metadata : PeerMetadata)
     (state : State Metadata PeerMetadata Consumed) (primitive : PrimitiveState) :
-    sourceAfterInitialization execute sealReply aux candidate authenticated kernel metadata state primitive =
+    sourceAfterInitialization (associatedData := associatedData) execute sealReply aux candidate authenticated kernel metadata state primitive =
       ok ((simulateQ (functionalImpl execute sealReply aux)
-        (afterInitialization candidate authenticated kernel metadata state)).run primitive) := by
+        (afterInitialization (associatedData := associatedData) candidate authenticated kernel metadata state)).run primitive) := by
   rw [sourceAfterInitialization, RawCtxSourceSend.sourceDriver_exact]
   simp only [afterInitialization, simulateQ_bind, bind_tc_ok]
   rw [← QueryImpl.simulateQ_compose, ← QueryImpl.simulateQ_compose, functional_send]
   simp only [simulateQ_spec_query, functionalImpl, StateT.run_bind]
   generalize (simulateQ (RawCtxSourceSend.deterministicImpl execute (selectedSeal sealReply))
-    (RawCtxSourceSend.send kernel (firstContext candidate authenticated))).run primitive = sent
+    (RawCtxSourceSend.send kernel (firstContext (associatedData := associatedData) candidate authenticated))).run primitive = sent
   rcases sent with ⟨⟨advanced, encrypted⟩, afterSend⟩
   cases encrypted <;> try rfl
   rename_i encrypted
@@ -366,11 +371,11 @@ theorem candidate_normal {Metadata PeerMetadata Consumed : Type}
     (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (candidate : pqxdh.ServerRegistrationCandidate) (root : PqxdhSecretInputKdf.RootOutput)
     (data : Option Bytes) (metadata : PeerMetadata) (state : State Metadata PeerMetadata Consumed) :
-    Normal (candidateTail source candidate root data metadata state) := by
+    Normal (candidateTail (associatedData := associatedData) source candidate root data metadata state) := by
   obtain ⟨kernel, hinitial⟩ := BeaconcryptCore.PanicFreedom.resume_initial_ratchet_kdf_ok
     (PqxdhInitialRatchetComplementarity.serverPending (PqxdhRootTableInitialization.rootArray root))
     (PqxdhRootTableInitialization.initialResponse source.crypto
-      ⟨PqxdhRootTableInitialization.rootArray root, ratchet.SYM_RATCHET_INFO⟩)
+      ⟨PqxdhRootTableInitialization.rootArray root, ratchet.INITIAL_RATCHET_INFO⟩)
   have hinit : initializeCandidate candidate (PqxdhRootTableInitialization.rootArray root)
       (PqxdhRootTableInitialization.initialResponse source.crypto) = ok kernel := by
     simpa only [initializeCandidate_eq, initializeServer_eq] using hinitial
@@ -416,7 +421,7 @@ def sourceCandidateTail {Metadata PeerMetadata Consumed PrimitiveState : Type}
         let (allocated, afterAllocation) := aux (.reservePlaintext (8 + plaintext.length)) afterReserve
         if !allocated then ok ((none, state), afterAllocation) else do
           let binding ← candidate.key_id_binding
-          sourceAfterInitialization execute sealReply aux candidate
+          sourceAfterInitialization (associatedData := associatedData) execute sealReply aux candidate
             (absBytes binding.bytes ++ plaintext) kernel metadata state afterAllocation
       else ok ((none, state), afterReserve)
 
@@ -430,13 +435,13 @@ theorem source_candidateTail_exact {Metadata PeerMetadata Consumed PrimitiveStat
     (root : PqxdhSecretInputKdf.RootOutput) (data : Option Bytes)
     (metadata : PeerMetadata) (state : State Metadata PeerMetadata Consumed)
     (primitive : PrimitiveState) :
-    sourceCandidateTail execute sealReply aux source candidate root data metadata state primitive =
+    sourceCandidateTail (associatedData := associatedData) execute sealReply aux source candidate root data metadata state primitive =
       collectState ((simulateQ (functionalImpl execute sealReply aux)
-        (candidateTail source candidate root data metadata state)).run primitive) := by
+        (candidateTail (associatedData := associatedData) source candidate root data metadata state)).run primitive) := by
   obtain ⟨kernel, hinitial⟩ := BeaconcryptCore.PanicFreedom.resume_initial_ratchet_kdf_ok
     (PqxdhInitialRatchetComplementarity.serverPending (PqxdhRootTableInitialization.rootArray root))
     (PqxdhRootTableInitialization.initialResponse source.crypto
-      ⟨PqxdhRootTableInitialization.rootArray root, ratchet.SYM_RATCHET_INFO⟩)
+      ⟨PqxdhRootTableInitialization.rootArray root, ratchet.INITIAL_RATCHET_INFO⟩)
   have hinit : initializeCandidate candidate (PqxdhRootTableInitialization.rootArray root)
       (PqxdhRootTableInitialization.initialResponse source.crypto) = ok kernel := by
     simpa only [initializeCandidate_eq, initializeServer_eq] using hinitial
@@ -453,13 +458,13 @@ theorem source_candidateTail_exact {Metadata PeerMetadata Consumed PrimitiveStat
   cases allocated <;> simp only [Bool.not_false, Bool.not_true, Bool.false_eq_true,
     ite_true, ite_false, simulateQ_pure, state_pure_eq, rust_ok_map, simulateQ_map]
   all_goals try rfl
-  change sourceAfterInitialization execute sealReply aux candidate
+  change sourceAfterInitialization (associatedData := associatedData) execute sealReply aux candidate
       (Pqxdh.LE64 candidate.key_id.val ++ data.getD registrationWitness) kernel metadata state afterAllocation =
     collectState ((ok <$> simulateQ (functionalImpl execute sealReply aux)
-      (afterInitialization candidate (Pqxdh.LE64 candidate.key_id.val ++ data.getD registrationWitness)
+      (afterInitialization (associatedData := associatedData) candidate (Pqxdh.LE64 candidate.key_id.val ++ data.getD registrationWitness)
         kernel metadata state)).run afterAllocation)
   rw [collect_ok]
-  exact source_afterInitialization_exact ..
+  exact source_afterInitialization_exact (associatedData := associatedData) ..
 
 def sourceBuild {Metadata PeerMetadata Consumed PrimitiveState : Type}
     (execute : PrimitiveState → SymmetricRatchetKdfRequest → RatchetKdfResponse × PrimitiveState)
@@ -481,7 +486,7 @@ def sourceBuild {Metadata PeerMetadata Consumed PrimitiveState : Type}
         ⟨state.server.identity, state.identityKeyId⟩ availability
       match prepared with
       | .Err _ => ok ((none, state), primitive)
-      | .Ok candidate => sourceCandidateTail execute sealReply aux source candidate root data metadata state primitive
+      | .Ok candidate => sourceCandidateTail (associatedData := associatedData) execute sealReply aux source candidate root data metadata state primitive
 
 set_option backward.isDefEq.respectTransparency false in
 theorem source_build_exact {Metadata PeerMetadata Consumed PrimitiveState : Type}
@@ -493,9 +498,9 @@ theorem source_build_exact {Metadata PeerMetadata Consumed PrimitiveState : Type
     (root : PqxdhSecretInputKdf.RootOutput) (data : Option Bytes)
     (metadata : PeerMetadata) (state : State Metadata PeerMetadata Consumed)
     (primitive : PrimitiveState) :
-    sourceBuild execute sealReply aux source pending root data metadata state primitive =
+    sourceBuild (associatedData := associatedData) execute sealReply aux source pending root data metadata state primitive =
       collectState ((simulateQ (functionalImpl execute sealReply aux)
-        (build source pending root data metadata state)).run primitive) := by
+        (build (associatedData := associatedData) source pending root data metadata state)).run primitive) := by
   simp only [sourceBuild, build]
   cases hn : pqxdh.server_next_key_id state.control with
   | fail => rfl
@@ -513,7 +518,7 @@ theorem source_build_exact {Metadata PeerMetadata Consumed PrimitiveState : Type
           | ok prepared =>
               cases prepared with
               | Err => rfl
-              | Ok candidate => exact source_candidateTail_exact ..
+              | Ok candidate => exact source_candidateTail_exact (associatedData := associatedData) ..
 
 /-- Every optional branch retains the actual send and writer poststates; publication is last. -/
 theorem afterInitialization_support {Metadata PeerMetadata Consumed PrimitiveState ι : Type}
@@ -524,11 +529,11 @@ theorem afterInitialization_support {Metadata PeerMetadata Consumed PrimitiveSta
     (state : State Metadata PeerMetadata Consumed) (primitive : PrimitiveState)
     (result : (Option Response × State Metadata PeerMetadata Consumed) × PrimitiveState)
     (hsupport : result ∈ support ((simulateQ impl
-      (afterInitialization candidate authenticated kernel metadata state)).run primitive)) :
+      (afterInitialization (associatedData := associatedData) candidate authenticated kernel metadata state)).run primitive)) :
     ∃ sent afterSend afterErase,
       (sent, afterSend) ∈ support ((simulateQ impl (simulateQ sendLift
         (simulateQ RawCtxSourceSend.adapter
-          (RawCtxSourceSend.send kernel (firstContext candidate authenticated))))).run primitive) ∧
+          (RawCtxSourceSend.send kernel (firstContext (associatedData := associatedData) candidate authenticated))))).run primitive) ∧
       ((), afterErase) ∈ support ((impl (.inr (.erase authenticated))).run afterSend) ∧
       match sent.2 with
       | none => result = ((none, state), afterErase)
@@ -561,7 +566,7 @@ theorem build_normal {Metadata PeerMetadata Consumed : Type}
     (pending : pqxdh.PendingServerRegistration)
     (root : PqxdhSecretInputKdf.RootOutput) (data : Option Bytes)
     (metadata : PeerMetadata) (state : State Metadata PeerMetadata Consumed) :
-    Normal (build source pending root data metadata state) := by
+    Normal (build (associatedData := associatedData) source pending root data metadata state) := by
   obtain ⟨next, hnext⟩ := BeaconcryptCore.PanicFreedom.server_next_key_id_ok state.control
   simp only [build, hnext, continueRust]
   cases next with
@@ -573,7 +578,7 @@ theorem build_normal {Metadata PeerMetadata Consumed : Type}
     simp only [hprepared]
     cases prepared with
     | Err => exact normal_pure _
-    | Ok candidate => exact candidate_normal source candidate root data metadata state
+    | Ok candidate => exact candidate_normal (associatedData := associatedData) source candidate root data metadata state
 
 private theorem normal_run {α PrimitiveState ι κ : Type}
     {source : OracleSpec ι} {base : OracleSpec κ}
@@ -598,9 +603,9 @@ theorem build_run_normal {Metadata PeerMetadata Consumed PrimitiveState ι : Typ
     (primitive : PrimitiveState)
     (result : RustM (Option Response × State Metadata PeerMetadata Consumed) × PrimitiveState)
     (hsupport : result ∈ support ((simulateQ impl
-      (build source pending root data metadata state)).run primitive)) :
+      (build (associatedData := associatedData) source pending root data metadata state)).run primitive)) :
     ∃ value, result = (ok value, result.2) := by
-  obtain ⟨value, hvalue⟩ := normal_run impl _ (build_normal source pending root data metadata state)
+  obtain ⟨value, hvalue⟩ := normal_run impl _ (build_normal (associatedData := associatedData) source pending root data metadata state)
     primitive result hsupport
   exact ⟨value, Prod.ext hvalue rfl⟩
 
@@ -661,10 +666,10 @@ theorem afterInitialization_bound {Metadata PeerMetadata Consumed : Type}
     (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Bytes)
     (kernel : ConcreteRatchetKernel) (metadata : PeerMetadata)
     (state : State Metadata PeerMetadata Consumed) (kind : CallKind) :
-    (afterInitialization candidate authenticated kernel metadata state).IsQueryBoundP
+    (afterInitialization (associatedData := associatedData) candidate authenticated kernel metadata state).IsQueryBoundP
       (fun query => callKind query = kind) (afterAllowance kind) := by
   unfold afterInitialization
-  refine (isQueryBoundP_bind (selected_bound kernel (firstContext candidate authenticated) kind)
+  refine (isQueryBoundP_bind (selected_bound kernel (firstContext (associatedData := associatedData) candidate authenticated) kind)
     (m := if kind = .erase ∨ kind = .writer then 1 else 0) (fun sent _ => ?_)).mono ?_
   · rw [isQueryBoundP_query_bind_iff]
     constructor
@@ -687,12 +692,12 @@ theorem candidate_bound {Metadata PeerMetadata Consumed : Type}
     (candidate : pqxdh.ServerRegistrationCandidate)
     (root : PqxdhSecretInputKdf.RootOutput) (data : Option Bytes)
     (metadata : PeerMetadata) (state : State Metadata PeerMetadata Consumed) (kind : CallKind) :
-    (candidateTail source candidate root data metadata state).IsQueryBoundP
+    (candidateTail (associatedData := associatedData) source candidate root data metadata state).IsQueryBoundP
       (fun query => callKind query = kind) 1 := by
   obtain ⟨kernel, hinitial⟩ := BeaconcryptCore.PanicFreedom.resume_initial_ratchet_kdf_ok
     (PqxdhInitialRatchetComplementarity.serverPending (PqxdhRootTableInitialization.rootArray root))
     (PqxdhRootTableInitialization.initialResponse source.crypto
-      ⟨PqxdhRootTableInitialization.rootArray root, ratchet.SYM_RATCHET_INFO⟩)
+      ⟨PqxdhRootTableInitialization.rootArray root, ratchet.INITIAL_RATCHET_INFO⟩)
   have hinit : initializeCandidate candidate (PqxdhRootTableInitialization.rootArray root)
       (PqxdhRootTableInitialization.initialResponse source.crypto) = ok kernel := by
     simpa only [initializeCandidate_eq, initializeServer_eq] using hinitial
@@ -720,7 +725,7 @@ theorem candidate_bound {Metadata PeerMetadata Consumed : Type}
               cases allocated
               · exact isQueryBoundP_pure _ _ _
               · simp only [Bool.not_true, Bool.false_eq_true, ite_false, isQueryBoundP_map_iff]
-                apply (afterInitialization_bound candidate _ kernel metadata state kind).mono
+                apply (afterInitialization_bound (associatedData := associatedData) candidate _ kernel metadata state kind).mono
                 cases kind <;> simp [callKind, auxKind, afterAllowance]
           · exact isQueryBoundP_pure _ _ _
 
@@ -730,7 +735,7 @@ theorem build_bound {Metadata PeerMetadata Consumed : Type}
     (pending : pqxdh.PendingServerRegistration)
     (root : PqxdhSecretInputKdf.RootOutput) (data : Option Bytes)
     (metadata : PeerMetadata) (state : State Metadata PeerMetadata Consumed) (kind : CallKind) :
-    (build source pending root data metadata state).IsQueryBoundP
+    (build (associatedData := associatedData) source pending root data metadata state).IsQueryBoundP
       (fun query => callKind query = kind) 1 := by
   obtain ⟨next, hnext⟩ := BeaconcryptCore.PanicFreedom.server_next_key_id_ok state.control
   simp only [build, hnext, continueRust]
@@ -743,7 +748,7 @@ theorem build_bound {Metadata PeerMetadata Consumed : Type}
     simp only [hprepared]
     cases prepared with
     | Err => exact isQueryBoundP_pure _ _ _
-    | Ok candidate => exact candidate_bound source candidate root data metadata state kind
+    | Ok candidate => exact candidate_bound (associatedData := associatedData) source candidate root data metadata state kind
 
 def leftPredicate (predicate : RawCtxSourceSeal.NativeSpec.Domain → Bool) : NativeSpec.Domain → Bool
   | .inl query => predicate query
@@ -839,14 +844,14 @@ theorem native_build_bounds {Metadata PeerMetadata Consumed : Type}
     (pending : pqxdh.PendingServerRegistration)
     (root : PqxdhSecretInputKdf.RootOutput) (data : Option Bytes)
     (metadata : PeerMetadata) (state : State Metadata PeerMetadata Consumed) :
-    let work := simulateQ nativeAdapter (build source pending root data metadata state)
+    let work := simulateQ nativeAdapter (build (associatedData := associatedData) source pending root data metadata state)
     work.IsQueryBoundP (fun query => leftPredicate Sum.isLeft query = true) 1 ∧
       (∀ kind, work.IsQueryBoundP
         (fun query => leftPredicate (RawCtxSourceSeal.category kind) query = true) 1) ∧
       (∀ kind, work.IsQueryBoundP (fun query => auxPredicate kind query = true) 1) := by
-  exact ⟨native_kdf_bound _ 1 (build_bound source pending root data metadata state .kdf),
-    fun kind => native_seal_bound _ 1 (build_bound source pending root data metadata state .seal) kind,
-    fun kind => native_aux_bound _ 1 kind (build_bound source pending root data metadata state kind)⟩
+  exact ⟨native_kdf_bound _ 1 (build_bound (associatedData := associatedData) source pending root data metadata state .kdf),
+    fun kind => native_seal_bound _ 1 (build_bound (associatedData := associatedData) source pending root data metadata state .seal) kind,
+    fun kind => native_aux_bound _ 1 kind (build_bound (associatedData := associatedData) source pending root data metadata state kind)⟩
 
 /-- Concrete AEAD/hash/frame expansion retains the normal result and entire final primitive state. -/
 theorem native_build_normal {Metadata PeerMetadata Consumed PrimitiveState ι : Type}
@@ -859,10 +864,10 @@ theorem native_build_normal {Metadata PeerMetadata Consumed PrimitiveState ι : 
     (primitive : PrimitiveState)
     (result : RustM (Option Response × State Metadata PeerMetadata Consumed) × PrimitiveState)
     (hsupport : result ∈ support ((simulateQ impl (simulateQ nativeAdapter
-      (build source pending root data metadata state))).run primitive)) :
+      (build (associatedData := associatedData) source pending root data metadata state))).run primitive)) :
     ∃ value, result = (ok value, result.2) := by
   rw [← QueryImpl.simulateQ_compose] at hsupport
-  exact build_run_normal _ source pending root data metadata state primitive result hsupport
+  exact build_run_normal (associatedData := associatedData) _ source pending root data metadata state primitive result hsupport
 
 /-- Candidate initialization uses the supplied root and gives the complete zero-counter, empty-cache source relation. -/
 theorem candidate_initial_state {AD PT CT : Type}
@@ -878,6 +883,173 @@ theorem candidate_initial_state {AD PT CT : Type}
     PqxdhRootTableInitialization.initialize_refines source cr false root
   refine ⟨kernel, (candidate_initialization source candidate root).trans initialized, ?_, refines⟩
   exact refines.sendSequence
+
+/-- The Rust response-size admission `registration_response_len(plaintext.len(), next_key_id)?` of `build_registration_response` (`beaconcrypt/src/server.rs:616`, wrapper `server.rs:67-69`), evaluated as the extracted `transport.registration_response_len` (`beaconcrypt-core/src/transport.rs:118-137`): the checked sum `application_length + 8` (the key-ID prefix), the checked sum with `MESSAGE_OVERHEAD = COMMITMENT_SIZE + AEAD_TAG_SIZE = 64 + 16` (`beaconcrypt-core/src/record.rs:13-14`, `commitment.rs:11`), and the exact canonical-CBOR response length `encoded_response_len` over the Server identity (32), ephemeral (32), KEM ciphertext (1088), application ciphertext and ML-DSA signature (3309) fields with the assigned key ID (`transport.rs:96-106`, sizes `pqxdh.rs:21-24`, `authentication.rs:15`), whose every step is a checked addition and whose result is admitted only up to `MAX_MESSAGE_SIZE` (`transport.rs:14`, `transport.rs:69-74`). A Rust slice length is a `usize`, so a model plaintext whose length is not a `usize` value has no Rust counterpart and is not admitted. -/
+def responseAdmitted (plaintext : Bytes) (next : Std.U64) : Bool :=
+  if h : plaintext.length < 2 ^ UScalarTy.Usize.numBits then
+    match transport.registration_response_len (UScalar.ofNatCore plaintext.length h) next with
+    | .ok (.Some _) => true
+    | _ => false
+  else false
+
+/-- The extracted response-size admission is exactly the mathematical canonical-CBOR bound of the complete registration response: the application plus the 8-byte key-ID prefix and the 80 authentication bytes, at the assigned key ID, within the 32 MiB message limit (`CborSizing.responseFits`). -/
+theorem responseAdmitted_iff (plaintext : Bytes) (next : Std.U64) :
+    responseAdmitted plaintext next = true ↔ CborSizing.responseFits plaintext.length next.val := by
+  unfold responseAdmitted CborSizing.responseFits CborSizing.maxMessageSize
+  split
+  · rename_i h
+    obtain ⟨reply, run, size⟩ := TransportSizingBridge.registration_response_len_exact
+      (UScalar.ofNatCore plaintext.length h) next
+    rw [run]
+    rw [UScalar.ofNatCore_val_eq] at size
+    cases reply with
+    | none =>
+        simp only [BeaconcryptCore.Refinement.Transport.absLength,
+          BeaconcryptCore.Refinement.Transport.messageCap] at size
+        split_ifs at size with hle
+        simp only [Bool.false_eq_true, false_iff]
+        exact hle
+    | some value =>
+        simp only [BeaconcryptCore.Refinement.Transport.absLength,
+          BeaconcryptCore.Refinement.Transport.messageCap] at size
+        split_ifs at size with hle
+        simp only [hle]
+  · rename_i h
+    simp only [Bool.false_eq_true, false_iff, not_le]
+    have payload := TransportSizingBridge.response_payload_le (plaintext.length + 88) next.val
+    have representable := BeaconcryptCore.Refinement.Transport.message_limit_representable
+    rw [UScalar.max_def] at representable
+    omega
+
+/-- An admitted response size implies the builder's own plaintext-allocation bound `8 + length ≤ usize::MAX` (checked in `candidateTail` and, as the modelled size guard, in `prehash`): every application the Rust Server admits passes the model's guard, so the model's pre-hash guard admits a superset of the Rust's sizes. -/
+theorem responseAdmitted_allocatable (plaintext : Bytes) (next : Std.U64)
+    (admitted : responseAdmitted plaintext next = true) : 8 + plaintext.length ≤ Usize.max := by
+  have fits := (responseAdmitted_iff plaintext next).1 admitted
+  unfold CborSizing.responseFits CborSizing.maxMessageSize at fits
+  have payload := TransportSizingBridge.response_payload_le (plaintext.length + 88) next.val
+  have representable := BeaconcryptCore.Refinement.Transport.message_limit_representable
+  rw [UScalar.max_def] at representable
+  rw [Usize.max_def]
+  simp only [UScalarTy.numBits, Usize.numBits] at representable ⊢
+  omega
+
+/-- The pure pre-hash guard of the Rust Server's `build_registration_response`, in Rust order. The application is normalized (`beaconcrypt/src/server.rs:605-606`, `beaconcrypt-core/src/transport.rs:169-176`; here `data.getD registrationWitness`). The next key ID is computed (`server.rs:608-614`, `beaconcrypt-core/src/peer.rs:123-140`, `pqxdh::server_next_key_id`); its failure rejects. The response size is admitted by the bound `8 + length ≤ usize::MAX` (`server.rs:615-616`), the same plaintext-allocation bound that `candidateTail` checks; this is the base model's abstraction of `registration_response_len` (design §4.2). The Rust check is stricter: the extracted `transport.registration_response_len` (`transport.rs:118-137`, here `responseAdmitted`, characterized by `responseAdmitted_iff`) also adds the authentication overhead and the response framing and rejects a response above the 32 MiB `MAX_MESSAGE_SIZE` (`transport.rs:14`). By `responseAdmitted_allocatable`, every size the Rust admits passes this guard, so on applications whose response exceeds the message limit the modelled Server goes on to hash the transcript and may answer where the Rust Server rejects; the model over-approximates the Server, as the base builder already did. Key-ID availability is read from the peer map (`server.rs:617-619`, `peer.rs:148-153`). `begin_server_completion` (`beaconcrypt-core/src/registration.rs:869-888`) then rejects an empty application (`registration.rs:877`) and runs `server_prepare_commit` (`registration.rs:880-888`, `beaconcrypt-core/src/pqxdh.rs:837-867`), which rejects a pending Server binding whose identity key ID or Ed25519 identity differs from the current Server binding (`pqxdh.rs:843-848`), and an exhausted or occupied key ID. Pin check: the Rust's `!agreement.binding.matches_server(current_pin)` at `registration.rs:877` (`beaconcrypt-core/src/session.rs:71-75`) compares the agreement binding's `server_pin.binding` identity key ID and identity key with the current pin and also the Server's ML-DSA pin public key `server_pin.public_key`. The generic model has no Server ML-DSA key and no separate agreement binding (the pending registration's `server_binding` plays its role), so the ML-DSA comparison is not modelled; the identity-binding comparison is the one `server_prepare_commit` performs. Only after this guard does the Rust build the AD transcript (`registration.rs:889-894`) and hash it (`server.rs:620`). The Server's authentication pin (`server.rs:610`) is always present in this model. No AD is read. -/
+def prehash {Metadata PeerMetadata Consumed : Type} (state : State Metadata PeerMetadata Consumed)
+    (pending : pqxdh.PendingServerRegistration) (data : Option Bytes) :
+    Option pqxdh.ServerRegistrationCandidate :=
+  match pqxdh.server_next_key_id state.control with
+  | .ok (.Ok next) =>
+      let plaintext := data.getD registrationWitness
+      if 8 + plaintext.length ≤ Usize.max then
+        let availability := if (state.server.peers next).isSome then
+          pqxdh.KeyIdAvailability.Occupied else .Available
+        if plaintext.isEmpty then none
+        else
+          match pqxdh.server_prepare_commit state.control pending
+              ⟨state.server.identity, state.identityKeyId⟩ availability with
+          | .ok (.Ok candidate) => some candidate
+          | _ => none
+      else none
+  | _ => none
+
+/-- A passed pre-hash guard determines the builder's pure prefix: for every supplied AD, the builder is the candidate tail of the guard's candidate. -/
+theorem build_prehash_some {Metadata PeerMetadata Consumed : Type}
+    (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
+    (pending : pqxdh.PendingServerRegistration)
+    (root : PqxdhSecretInputKdf.RootOutput) (data : Option Bytes)
+    (metadata : PeerMetadata) (state : State Metadata PeerMetadata Consumed)
+    (candidate : pqxdh.ServerRegistrationCandidate)
+    (passed : prehash state pending data = some candidate) :
+    build (associatedData := associatedData) source pending root data metadata state =
+      candidateTail (associatedData := associatedData) source candidate root data metadata state := by
+  obtain ⟨next, hnext⟩ := BeaconcryptCore.PanicFreedom.server_next_key_id_ok state.control
+  simp only [prehash, hnext] at passed
+  cases next with
+  | Err => exact absurd passed (by simp)
+  | Ok next =>
+      obtain ⟨prepared, hprepared⟩ := BeaconcryptCore.PanicFreedom.server_prepare_commit_ok
+        state.control pending ⟨state.server.identity, state.identityKeyId⟩
+        (if (state.server.peers next).isSome then pqxdh.KeyIdAvailability.Occupied else .Available)
+      simp only [hprepared] at passed
+      simp only [build, hnext, hprepared, continueRust]
+      cases prepared with
+      | Err => split_ifs at passed
+      | Ok prepared =>
+          split_ifs at passed
+          cases passed
+          rfl
+
+/-- A failed pre-hash guard makes the builder a pure rejection: under every interpreter whose auxiliary callbacks leave its state unchanged, and for every supplied AD and peer metadata, each outcome answers nothing, keeps the Server state, and leaves the interpreter state (for example a seal log and a hash cache) unchanged. -/
+theorem build_prehash_none {Metadata PeerMetadata Consumed PrimitiveState ι : Type}
+    {base : OracleSpec ι}
+    (impl : QueryImpl TailSpec (StateT PrimitiveState (OracleComp base)))
+    (stateless : ∀ (query : AuxQuery) (primitive : PrimitiveState)
+      (result : AuxSpec.Range query × PrimitiveState),
+      result ∈ support ((impl (.inr query)).run primitive) → result.2 = primitive)
+    (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
+    (pending : pqxdh.PendingServerRegistration)
+    (root : PqxdhSecretInputKdf.RootOutput) (data : Option Bytes)
+    (metadata : PeerMetadata) (state : State Metadata PeerMetadata Consumed)
+    (rejected : prehash state pending data = none) (primitive : PrimitiveState)
+    (result : RustM (Option Response × State Metadata PeerMetadata Consumed) × PrimitiveState)
+    (hsupport : result ∈ support ((simulateQ impl
+      (build (associatedData := associatedData) source pending root data metadata state)).run primitive)) :
+    result = (ok (none, state), primitive) := by
+  obtain ⟨next, hnext⟩ := BeaconcryptCore.PanicFreedom.server_next_key_id_ok state.control
+  simp only [build, hnext, continueRust] at hsupport
+  cases next with
+  | Err =>
+      simpa only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] using hsupport
+  | Ok next =>
+      obtain ⟨prepared, hprepared⟩ := BeaconcryptCore.PanicFreedom.server_prepare_commit_ok
+        state.control pending ⟨state.server.identity, state.identityKeyId⟩
+        (if (state.server.peers next).isSome then pqxdh.KeyIdAvailability.Occupied else .Available)
+      simp only [hprepared] at hsupport
+      cases prepared with
+      | Err =>
+          simpa only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] using hsupport
+      | Ok candidate =>
+          simp only [prehash, hnext, hprepared] at rejected
+          have guard : 8 + (data.getD registrationWitness).length ≤ Usize.max →
+              (data.getD registrationWitness).isEmpty = true := by
+            intro fits
+            by_contra nonempty
+            simp only [fits, nonempty, ite_true, ite_false] at rejected
+            exact absurd rejected (by simp)
+          obtain ⟨kernel, hinitial⟩ := BeaconcryptCore.PanicFreedom.resume_initial_ratchet_kdf_ok
+            (PqxdhInitialRatchetComplementarity.serverPending (PqxdhRootTableInitialization.rootArray root))
+            (PqxdhRootTableInitialization.initialResponse source.crypto
+              ⟨PqxdhRootTableInitialization.rootArray root, ratchet.INITIAL_RATCHET_INFO⟩)
+          have hinit : initializeCandidate candidate (PqxdhRootTableInitialization.rootArray root)
+              (PqxdhRootTableInitialization.initialResponse source.crypto) = ok kernel := by
+            simpa only [initializeCandidate_eq, initializeServer_eq] using hinitial
+          simp only [candidateTail, hinit, continueRust, simulateQ_bind, simulateQ_spec_query,
+            StateT.run_bind, mem_support_bind_iff] at hsupport
+          obtain ⟨⟨valid, afterCheck⟩, hvalid, hsupport⟩ := hsupport
+          have checkState := stateless _ _ _ hvalid
+          simp only at checkState
+          subst checkState
+          cases valid
+          · simpa only [Bool.not_false, ite_true, simulateQ_pure, StateT.run_pure, support_pure,
+              Set.mem_singleton_iff] using hsupport
+          · simp only [Bool.not_true, Bool.false_eq_true, ite_false, simulateQ_bind,
+              simulateQ_spec_query, StateT.run_bind, mem_support_bind_iff] at hsupport
+            obtain ⟨⟨reserved, afterReserve⟩, hreserved, hsupport⟩ := hsupport
+            have reserveState := stateless _ _ _ hreserved
+            simp only at reserveState
+            subst reserveState
+            cases reserved
+            · simpa only [Bool.not_false, ite_true, simulateQ_pure, StateT.run_pure, support_pure,
+                Set.mem_singleton_iff] using hsupport
+            · simp only [Bool.not_true, Bool.false_eq_true, ite_false] at hsupport
+              by_cases fits : 8 + (data.getD registrationWitness).length ≤ Usize.max
+              · simpa only [guard fits, ite_true, simulateQ_pure, StateT.run_pure, support_pure,
+                  Set.mem_singleton_iff] using hsupport
+              · by_cases empty : (data.getD registrationWitness).isEmpty = true
+                · simpa only [empty, ite_true, simulateQ_pure, StateT.run_pure, support_pure,
+                    Set.mem_singleton_iff] using hsupport
+                · simpa only [empty, fits, Bool.false_eq_true, ite_false, simulateQ_pure,
+                    StateT.run_pure, support_pure, Set.mem_singleton_iff] using hsupport
 
 end BeaconcryptCore.Computational.PqxdhServerRegistrationPublication
 
@@ -1064,3 +1236,35 @@ info: 'BeaconcryptCore.Computational.PqxdhServerRegistrationPublication.candidat
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhServerRegistrationPublication.candidate_initial_state
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhServerRegistrationPublication.responseAdmitted_iff' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhServerRegistrationPublication.responseAdmitted_iff
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhServerRegistrationPublication.responseAdmitted_allocatable' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhServerRegistrationPublication.responseAdmitted_allocatable
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhServerRegistrationPublication.build_prehash_some' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhServerRegistrationPublication.build_prehash_some
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhServerRegistrationPublication.build_prehash_none' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhServerRegistrationPublication.build_prehash_none

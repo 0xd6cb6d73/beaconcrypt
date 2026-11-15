@@ -17,7 +17,7 @@ variable {source : RegistrationNativeMldsa.Source}
 /-- Actual bundle execution privately realizes exactly the original complete native bundle operation, retaining all mutable source fields and optional failures. -/
 theorem bundle_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat)
     (current : RegistrationNativeIdentityFrontend.State source)
     (env : RegistrationWorldAgreementCompiler.EnvState Auxiliary)

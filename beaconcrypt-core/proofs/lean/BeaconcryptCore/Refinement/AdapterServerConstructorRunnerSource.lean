@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Refinement.AdapterServerConstructorRunner
+import BeaconcryptCore.Refinement.AdapterServerConstructorGeneration
 open CoreModels Aeneas OracleComp OracleSpec
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -34,10 +35,11 @@ local notation "edSample"   =>   PqxdhRecordLiftWorld.sampled (n:=n) (AdapterSer
 local notation "mlSample"   =>   PqxdhRecordLiftWorld.sampled (n:=n) (RegistrationNativeMldsa.generate mlSource)
 variable (ed : AdapterServerConstructorJoint.EdContract generator view setup.joint
   (PqxdhRecordLiftWorld.sampled (n:=n) (AdapterServerConstructorStartup.edCore ensureInit)))
-variable (ml : AdapterBeaconConstructorGeneration.MldsaContract generator view
+variable (ml : AdapterServerConstructorGeneration.MldsaContract generator view
   (PqxdhRecordLiftWorld.sampled (n:=n) (RegistrationNativeMldsa.generate mlSource)))
 include views objects ed ml
 
+omit children in
 theorem source (identityIndex : Nat) (identifier : U64) (rng : R) :
     run setup view identityIndex identifier generator rng=(do
       let result←AdapterServerConstructorJoint.joint generator view setup.joint edSample ed mlSample ml rng
@@ -55,6 +57,7 @@ theorem source (identityIndex : Nat) (identifier : U64) (rng : R) :
   rintro ⟨prepared,nextRng⟩
   cases prepared <;> rfl
 
+omit children in
 theorem selected (identityIndex : Nat) (identifier : U64) (rng : R)
     (receipt : Receipt n KemSK R mlSource)
     (ready : AdapterServerConstructorInitialized.Ready n KemSK R mlSource)

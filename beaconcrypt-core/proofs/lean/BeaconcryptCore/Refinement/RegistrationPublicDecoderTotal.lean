@@ -13,7 +13,7 @@ open beaconcrypt_parse cbordetveraux RegistrationPreflightRecords
 def InitResult (input : Slice U8) : core.option.Option transport.initkex → Prop
   | .None => True
   | .Some value => RegistrationSerializerInitBytes.InitShape value ∧
-      input.val = 136#u8 :: RegistrationSerializerInitBytes.payload value ∧ input.length ≤ 33554432
+      input.val = 134#u8 :: RegistrationSerializerInitBytes.payload value ∧ input.length ≤ 33554432
 
 def ResponseResult (input : Slice U8) : core.option.Option transport.kexresponse → Prop
   | .None => True
@@ -33,7 +33,7 @@ theorem width_false [RegistrationValidatorPrimitive.Operations] (input : Slice U
 set_option backward.isDefEq.respectTransparency false in
 theorem init_preflight_none [RegistrationValidatorPrimitive.Operations] (input : Slice U8)
     (gate : registration_validator_primitive.preflightSlice input initStart
-      ((Array.repeat 6#usize 2#u8).to_slice) = .ok .None) :
+      ((Array.repeat 4#usize 2#u8).to_slice) = .ok .None) :
     extraction_decode_init input = .ok .None := by
   dsimp only [initStart] at gate
   simp only [extraction_decode_init, lift, gate, bind_tc_ok,
@@ -55,7 +55,7 @@ theorem response_preflight_none [RegistrationValidatorPrimitive.Operations] (inp
 set_option backward.isDefEq.respectTransparency false in
 theorem init_nonminimal [RegistrationValidatorPrimitive.Operations] (input : Slice U8)
     (gate : registration_validator_primitive.preflightSlice input initStart
-      ((Array.repeat 6#usize 2#u8).to_slice) = .ok (.Some ()))
+      ((Array.repeat 4#usize 2#u8).to_slice) = .ok (.Some ()))
     (failed : extraction_canonical_scan_0 input = .ok false) :
     extraction_decode_init input = .ok .None := by
   have rejected := width_false input (RegistrationDecoderBranchIndependence.init_det input gate) failed
@@ -81,19 +81,19 @@ theorem response_nonminimal [RegistrationValidatorPrimitive.Operations] (input :
 set_option backward.isDefEq.respectTransparency false in
 theorem init_total [RegistrationValidatorPrimitive.Operations] (input : Slice U8) :
     ∃ reply, extraction_decode_init input = .ok reply ∧ InitResult input reply := by
-  obtain ⟨result, run⟩ := RegistrationPreflightTotal.complete_total input initStart 2#u8 2#u8 2#u8 2#u8 2#u8 2#u8
-  have gate : registration_validator_primitive.preflightSlice input initStart ((Array.repeat 6#usize 2#u8).to_slice) = .ok result := by
-    rw [RegistrationPublicDecoderControl.preflight_array, ← init_kinds_source]
+  obtain ⟨result, run⟩ := RegistrationPreflightTotal.complete_total_four input initStart 2#u8 2#u8 2#u8 2#u8
+  have gate : registration_validator_primitive.preflightSlice input initStart ((Array.repeat 4#usize 2#u8).to_slice) = .ok result := by
+    rw [RegistrationPublicDecoderControl.preflight_array_four, ← init_kinds_source]
     exact run
   cases result with
   | none => exact ⟨.None, init_preflight_none input gate, True.intro⟩
   | some item =>
     cases item
     have admittedGate := gate
-    rw [RegistrationPublicDecoderControl.preflight_array, ← init_kinds_source] at admittedGate
-    obtain ⟨values, length, contents, _⟩ := RegistrationPreflightValidation.atoms input initStart false 2#u8 2#u8 2#u8 2#u8 2#u8 2#u8
-      (Or.inr rfl) (Or.inr rfl) (Or.inr rfl) (Or.inr rfl) (Or.inr rfl) (Or.inr rfl) rfl admittedGate
-    have width := RegistrationLooseWidthTrace.scan input values length contents
+    rw [RegistrationPublicDecoderControl.preflight_array_four, ← init_kinds_source] at admittedGate
+    obtain ⟨values, length, contents, _⟩ := RegistrationPreflightValidation.atoms_four input initStart false 2#u8 2#u8 2#u8 2#u8
+      (Or.inr rfl) (Or.inr rfl) (Or.inr rfl) (Or.inr rfl) rfl admittedGate
+    have width := RegistrationLooseWidthTrace.scan6 input values length contents
     cases minimal : values.all RegistrationLooseWidthTrace.atomMinimal with
     | false =>
       rw [minimal] at width
@@ -141,7 +141,7 @@ theorem response_total [RegistrationValidatorPrimitive.Operations] (input : Slic
 set_option backward.isDefEq.respectTransparency false in
 theorem init_some [RegistrationValidatorPrimitive.Operations] (input : Slice U8) (value : transport.initkex)
     (accepted : extraction_decode_init input = .ok (.Some value)) :
-    RegistrationSerializerInitBytes.InitShape value ∧ input.val = 136#u8 :: RegistrationSerializerInitBytes.payload value ∧ input.length ≤ 33554432 := by
+    RegistrationSerializerInitBytes.InitShape value ∧ input.val = 134#u8 :: RegistrationSerializerInitBytes.payload value ∧ input.length ≤ 33554432 := by
   obtain ⟨reply, run, facts⟩ := init_total input
   have same := RustM.ok.inj (run.symm.trans accepted)
   simpa only [same, InitResult] using facts
@@ -149,7 +149,7 @@ theorem init_some [RegistrationValidatorPrimitive.Operations] (input : Slice U8)
 set_option backward.isDefEq.respectTransparency false in
 theorem init_iff [RegistrationValidatorPrimitive.Operations] (input : Slice U8) (value : transport.initkex) :
     extraction_decode_init input = .ok (.Some value) ↔
-      RegistrationSerializerInitBytes.InitShape value ∧ input.val = 136#u8 :: RegistrationSerializerInitBytes.payload value ∧ input.length ≤ 33554432 := by
+      RegistrationSerializerInitBytes.InitShape value ∧ input.val = 134#u8 :: RegistrationSerializerInitBytes.payload value ∧ input.length ≤ 33554432 := by
   constructor
   · exact init_some input value
   · rintro ⟨shape, contents, admitted⟩
@@ -161,7 +161,7 @@ set_option backward.isDefEq.respectTransparency false in
 theorem init_none_iff [RegistrationValidatorPrimitive.Operations] (input : Slice U8) :
     extraction_decode_init input = .ok .None ↔
       ¬ ∃ value : transport.initkex, RegistrationSerializerInitBytes.InitShape value ∧
-        input.val = 136#u8 :: RegistrationSerializerInitBytes.payload value ∧ input.length ≤ 33554432 := by
+        input.val = 134#u8 :: RegistrationSerializerInitBytes.payload value ∧ input.length ≤ 33554432 := by
   constructor
   · intro rejected ⟨value, valid⟩
     have accepted := (init_iff input value).mpr valid

@@ -38,7 +38,7 @@ The results are then:
   sequence number, or under one sender identifier, and it does not open at another.
 
 The length side conditions are exactly the ones the protocol maintains: a 32-byte
-key, a 12-byte nonce, 281 bytes of associated data (spec §9), a 16-byte Poly1305 tag
+key, a 12-byte nonce, 151 bytes of associated data in current sessions, a 16-byte Poly1305 tag
 and 64-bit sequence and sender identifiers.
 -/
 
@@ -50,19 +50,24 @@ namespace Pqxdh
 /-! ## Record contexts -/
 
 /-- The length side conditions the protocol maintains for one record context: a
-32-byte message key, a 12-byte nonce, 281 bytes of associated data, and sequence
+32-byte message key, a 12-byte nonce, a fixed number of bytes of associated data, and sequence
 number and sender identifier both representable in 64 bits. -/
-structure RecordWf (mk : Bytes × Bytes) (ad : RecordAD) : Prop where
+structure RecordWfFor (width : Nat) (mk : Bytes × Bytes) (ad : RecordAD) : Prop where
   /-- The ChaCha20-Poly1305 key is 32 bytes. -/
   key : mk.1.length = 32
   /-- The ChaCha20-Poly1305 nonce is 12 bytes. -/
   nonce : mk.2.length = 12
-  /-- The session associated data is 281 bytes (spec §9). -/
-  bytes : ad.bytes.length = 281
+  /-- Both compared contexts use this exact fixed associated-data width. -/
+  bytes : ad.bytes.length = width
   /-- The wire sequence number fits in 64 bits. -/
   seq : ad.seq < 2 ^ 64
   /-- The sender identifier fits in 64 bits (spec §2.1). -/
   sid : ad.sid < 2 ^ 64
+
+/-- Current registration version 3 record contexts carry the exact151-byte transcript AD. -/
+abbrev RecordWf := RecordWfFor 151
+
+variable {width : Nat}
 
 /-- The material derived from a chain key always has the protocol's shape: a 32-byte
 key and a 12-byte nonce. -/
@@ -71,13 +76,11 @@ theorem msgMaterial_lengths (c : Crypto) (ck : Bytes) :
   refine ⟨?_, ?_⟩ <;>
     simp [msgMaterial, ratchetOut, c.hkdf_length]
 
-/-- The associated data of a record between two 32-byte identity keys is 281 bytes,
-so a session record context is well formed as soon as its sequence number and sender
-identifier are 64-bit values. -/
+/-- The historical lifecycle's identity-prefix AD has 281 bytes, so that historical record context is well formed for 64-bit sequence and sender values. Current transcript sessions instead use 151 bytes and the corresponding `RecordWf` specialization. -/
 theorem recordWf_of (c : Crypto) (ck ikSPub ikBPub : Bytes) (seq sid : ℕ)
     (hs : ikSPub.length = 32) (hb : ikBPub.length = 32)
     (hseq : seq < 2 ^ 64) (hsid : sid < 2 ^ 64) :
-    RecordWf (msgMaterial c ck) ⟨assocData ikSPub ikBPub, seq, sid⟩ :=
+    RecordWfFor 281 (msgMaterial c ck) ⟨assocData ikSPub ikBPub, seq, sid⟩ :=
   ⟨(msgMaterial_lengths c ck).1, (msgMaterial_lengths c ck).2,
     assocData_length hs hb, hseq, hsid⟩
 
@@ -85,14 +88,14 @@ theorem recordWf_of (c : Crypto) (ck ikSPub ikBPub : Bytes) (seq sid : ℕ)
 associated data has the protocol's length and its sequence number and sender
 identifier are 64-bit values. -/
 theorem recordWf_msgMaterial (c : Crypto) (ck : Bytes) {ad : RecordAD}
-    (hb : ad.bytes.length = 281) (hseq : ad.seq < 2 ^ 64) (hsid : ad.sid < 2 ^ 64) :
-    RecordWf (msgMaterial c ck) ad :=
+    (hb : ad.bytes.length = width) (hseq : ad.seq < 2 ^ 64) (hsid : ad.sid < 2 ^ 64) :
+    RecordWfFor width (msgMaterial c ck) ad :=
   ⟨(msgMaterial_lengths c ck).1, (msgMaterial_lengths c ck).2, hb, hseq, hsid⟩
 
 /-- The same for the key the receive ratchet derives for an arbitrary index. -/
 theorem recordWf_msgKeyAt (c : Crypto) (ck : Bytes) (i : ℕ) {ad : RecordAD}
-    (hb : ad.bytes.length = 281) (hseq : ad.seq < 2 ^ 64) (hsid : ad.sid < 2 ^ 64) :
-    RecordWf (Ratchet.msgKeyAt (ratchetCrypto c) ck i) ad :=
+    (hb : ad.bytes.length = width) (hseq : ad.seq < 2 ^ 64) (hsid : ad.sid < 2 ^ 64) :
+    RecordWfFor width (Ratchet.msgKeyAt (ratchetCrypto c) ck i) ad :=
   ⟨(msgMaterial_lengths c _).1, (msgMaterial_lengths c _).2, hb, hseq, hsid⟩
 
 /-- The input of the CTX commitment: `K ‖ N ‖ AD ‖ T ‖ LE64(seq) ‖ LE64(sid)`. -/
@@ -106,7 +109,7 @@ theorem ctxCommit_eq (c : Crypto) (mk : Bytes × Bytes) (ad : RecordAD) (t : Byt
 message key, the nonce, the associated data, the sequence number, the sender
 identifier and the base AEAD tag. -/
 theorem ctxPreimage_inj {mk mk' : Bytes × Bytes} {ad ad' : RecordAD} {t t' : Bytes}
-    (hw : RecordWf mk ad) (hw' : RecordWf mk' ad')
+    (hw : RecordWfFor width mk ad) (hw' : RecordWfFor width mk' ad')
     (ht : t.length = 16) (ht' : t'.length = 16)
     (h : ctxPreimage mk ad t = ctxPreimage mk' ad' t') :
     mk = mk' ∧ ad = ad' ∧ t = t' := by
@@ -150,8 +153,8 @@ collide then, at the field lengths the protocol fixes, equal commitments force t
 message key, the nonce, the associated data, the sequence number, the sender
 identifier and the base AEAD tag to agree. -/
 theorem ctxCommit_context_eq (c : Crypto) {mk mk' : Bytes × Bytes} {ad ad' : RecordAD}
-    {t : Bytes} (hnc : NoCtxCollision c mk mk' ad ad') (hw : RecordWf mk ad)
-    (hw' : RecordWf mk' ad') (ht : t.length = 16)
+    {t : Bytes} (hnc : NoCtxCollision c mk mk' ad ad') (hw : RecordWfFor width mk ad)
+    (hw' : RecordWfFor width mk' ad') (ht : t.length = 16)
     (h : ctxCommit c mk ad t = ctxCommit c mk' ad' t) :
     mk = mk' ∧ ad = ad' :=
   let e := ctxPreimage_inj hw hw' ht ht (hnc t h)
@@ -159,8 +162,8 @@ theorem ctxCommit_context_eq (c : Crypto) {mk mk' : Bytes × Bytes} {ad ad' : Re
 
 /-- Distinct contexts that do not collide produce distinct commitments. -/
 theorem ctxDistinct_of_noCtxCollision (c : Crypto) {mk mk' : Bytes × Bytes}
-    {ad ad' : RecordAD} (hnc : NoCtxCollision c mk mk' ad ad') (hw : RecordWf mk ad)
-    (hw' : RecordWf mk' ad') (hne : ¬ (mk = mk' ∧ ad = ad')) :
+    {ad ad' : RecordAD} (hnc : NoCtxCollision c mk mk' ad ad') (hw : RecordWfFor width mk ad)
+    (hw' : RecordWfFor width mk' ad') (hne : ¬ (mk = mk' ∧ ad = ad')) :
     CtxDistinct c mk mk' ad ad' := by
   intro t ht hcol
   exact hne (ctxCommit_context_eq c hnc hw hw' ht hcol)
@@ -170,7 +173,7 @@ theorem ctxDistinct_of_noCtxCollision (c : Crypto) {mk mk' : Bytes × Bytes}
 /-- **Two distinct successful openings expose a BLAKE2b collision.** The witness uses the tag parsed from the shared wire payload, so the caller need not provide an encoder-image witness for an adversarial payload. -/
 theorem openRecord_double_opening_yields_ctx_collision (c : Crypto)
     {mk mk' : Bytes × Bytes} {ad ad' : RecordAD} {b pt pt' : Bytes}
-    (hw : RecordWf mk ad) (hw' : RecordWf mk' ad')
+    (hw : RecordWfFor width mk ad) (hw' : RecordWfFor width mk' ad')
     (h : openRecord c mk ad b = some pt)
     (h' : openRecord c mk' ad' b = some pt')
     (hne : ¬ (mk = mk' ∧ ad = ad' ∧ pt = pt')) :
@@ -214,8 +217,8 @@ collide, a wire ciphertext `CT ‖ T ‖ T*` opens under at most one message key
 record context — and then to a single plaintext.  In particular the sequence number
 and the sender identifier the record was created with are determined by it. -/
 theorem openRecord_committing (c : Crypto) {mk mk' : Bytes × Bytes} {ad ad' : RecordAD}
-    {b pt pt' : Bytes} (hnc : NoCtxCollision c mk mk' ad ad') (hw : RecordWf mk ad)
-    (hw' : RecordWf mk' ad') (h : openRecord c mk ad b = some pt)
+    {b pt pt' : Bytes} (hnc : NoCtxCollision c mk mk' ad ad') (hw : RecordWfFor width mk ad)
+    (hw' : RecordWfFor width mk' ad') (h : openRecord c mk ad b = some pt)
     (h' : openRecord c mk' ad' b = some pt') :
     mk = mk' ∧ ad = ad' ∧ pt = pt' := by
   rcases hd : decodeRecord b with _ | r
@@ -257,7 +260,7 @@ theorem openRecord_relabelled (c : Crypto) {mk mk' : Bytes × Bytes} {ad ad' : R
 one sender does not open when relabelled as coming from another (spec §13). -/
 theorem openRecord_wrong_sender (c : Crypto) {mk : Bytes × Bytes} {ad : RecordAD}
     {sid' : ℕ} {pt : Bytes} (hnc : NoCtxCollision c mk mk ad { ad with sid := sid' })
-    (hw : RecordWf mk ad) (hsid : sid' < 2 ^ 64) (hne : sid' ≠ ad.sid) :
+    (hw : RecordWfFor width mk ad) (hsid : sid' < 2 ^ 64) (hne : sid' ≠ ad.sid) :
     openRecord c mk { ad with sid := sid' } (sealRecord c mk ad pt).encode = none := by
   refine openRecord_relabelled c
     (ctxDistinct_of_noCtxCollision c hnc hw ⟨hw.key, hw.nonce, hw.bytes, hw.seq, hsid⟩ ?_)
@@ -268,7 +271,7 @@ theorem openRecord_wrong_sender (c : Crypto) {mk : Bytes × Bytes} {ad : RecordA
 does not open at another (spec §13). -/
 theorem openRecord_wrong_seq (c : Crypto) {mk : Bytes × Bytes} {ad : RecordAD}
     {seq' : ℕ} {pt : Bytes} (hnc : NoCtxCollision c mk mk ad { ad with seq := seq' })
-    (hw : RecordWf mk ad) (hseq : seq' < 2 ^ 64) (hne : seq' ≠ ad.seq) :
+    (hw : RecordWfFor width mk ad) (hseq : seq' < 2 ^ 64) (hne : seq' ≠ ad.seq) :
     openRecord c mk { ad with seq := seq' } (sealRecord c mk ad pt).encode = none := by
   refine openRecord_relabelled c
     (ctxDistinct_of_noCtxCollision c hnc hw ⟨hw.key, hw.nonce, hw.bytes, hseq, hw.sid⟩ ?_)

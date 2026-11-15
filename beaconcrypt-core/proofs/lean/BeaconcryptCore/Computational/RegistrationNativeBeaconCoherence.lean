@@ -99,8 +99,7 @@ private theorem outgoing_keeps (setup : Setup base KemSK) (index : Nat) (owner :
   classical
   rcases query with (hashRequest | signRequest) | edRequest
   · exact lift_keeps _
-  · exact bind_keeps _ _ (sample_keeps _) (fun _ =>
-      bind_keeps _ _ (lift_keeps _) (fun _ => pure_keeps _))
+  · exact pure_keeps _
   · simp only [outgoing]
     split
     · exact bind_keeps _ _ (log_keeps index _ _) (fun _ => pure_keeps _)
@@ -111,7 +110,7 @@ private noncomputable def bundled (setup : Setup base KemSK) (wire : Registratio
     M n KemSK source Auxiliary (RustM (Option Pqxdh.Bytes)) := do
   let published ← simulateQ (outgoing setup source index owner)
     (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨owner.pin.binding⟩ (inputs setup owner)
-      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)
+      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)
   match published with
   | .fail error => pure (.fail error)
   | .div => pure .div
@@ -142,10 +141,10 @@ private theorem bundled_keeps (setup : Setup base KemSK) (wire : RegistrationNat
     | Ok published =>
         have native := RegistrationNativeBeaconPublication.nested_support source (outgoing setup source index owner)
           (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨owner.pin.binding⟩ (inputs setup owner)
-            ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)
+            ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)
           owners middle.1.2 env middle.2 (.ok (.Ok published)) (by simpa only [← actual] using reached)
         have valid := RegistrationBeaconInitExecutor.begin_coherent wire.encodeInit ⟨owner.pin.binding⟩ (inputs setup owner)
-          ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey published native
+          ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin published native
         simp only [actual] at continued
         exact (bind_keeps _ _ (phase_keeps index (.initSent published.pending oneTime) valid)
           (fun _ => bind_keeps _ _ (lift_keeps _) (fun _ => pure_keeps _)))

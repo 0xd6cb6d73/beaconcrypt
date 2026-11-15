@@ -27,7 +27,7 @@ theorem native (setup : Setup base KemSK) (codec : Codec Reader Response)
     (converted : RegistrationNativePlatformOrdinarySourceNative.Conversion view)
     (failure : primitives.Error) (erased : commitment.CommitmentTranscript)
     {Metadata : Type} (owner : RawCtxWholeOwner.OwnerState Metadata)
-    (plaintext : Slice U8) (sender : U64) (associated : Array U8 281#usize)
+    (plaintext : Slice U8) (sender : U64) (associated : Array U8 151#usize)
     (sameAD : owner.owner.associatedData=PqxdhRefinement.absBytes associated) :
     project owner <$> RegistrationNativePlatformExtractedSdkOrdinaryDriver.send setup codec reserve view failure erased
       owner.owner.kernel ⟨plaintext,.None,associated,owner.owner.expectedSender,sender,.Frame⟩ =

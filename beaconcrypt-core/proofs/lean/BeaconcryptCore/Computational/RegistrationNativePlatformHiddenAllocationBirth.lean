@@ -79,7 +79,7 @@ theorem create (setup : Setup base KemSK)
         simp only [selected] at continued
         obtain ⟨born, afterBorn, worldOwner, afterAppend, generated, allocated, returned⟩ :=
           RegistrationNativeBeaconBirth.append_supported setup source
-            callback edPin keyId prepared.pin prepared.credentials
+            callback edPin keyId prepared.pin
             prepared.identity prepared.prekey middle.1.1.2 middle.1.2 middle.2 result continued
         have kemKept := quiet
           (.inr (.inr (.inl .create))) middle.2 (born, afterBorn) trivial generated

@@ -22,7 +22,7 @@ local notation "physical" => RegistrationNativePlatformLorIdealPhysical.implemen
 
 inductive Allowed : (WorldSpec n).Domain → Prop where
   | coin (coin : unifSpec.Domain) : Allowed (.inr (.inl (.inl coin)))
-  | init (created : PqxdhLiveServerConstruction.Created Unit) : Allowed (.inl created)
+  | init (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) : Allowed (.inl created)
   | hash (bytes : Pqxdh.Bytes) : Allowed (.inr (.inl (.inr (.hash bytes))))
 
 private theorem map_apply {S X Y : Type} (f : X →Y) (work : StateT S (OracleComp (ServiceSpec n)) X) (before : S) :
@@ -134,10 +134,10 @@ private theorem startup_allowed (source : RegistrationNativeMldsa.Source)
     cases credential with
     | none => trivial
     | some credential =>
-      simp only [allQueriesSatisfy_query_bind_iff,effectLift]
-      exact ⟨.init _,fun _ => ⟨.hash _,fun _ => by trivial⟩⟩
+      simp only [allQueriesSatisfy_query_bind_iff]
+      exact ⟨.init _,fun _ => by trivial⟩
 
-/-- Genuine startup preserves the warm local key dictionary through constructor refusals, credential generation and the actual public pin hash. -/
+/-- Genuine startup preserves the warm local key dictionary through constructor refusals, credential generation and the actual pure full pin selection. -/
 theorem startup (source : RegistrationNativeMldsa.Source) (ensureInit : StateT Unit ProbComp Bool)
     (identityIndex : Nat) (serverKeyId : U64) (identity : PqxdhJointIdentity.PublicIdentity)
     (before : State) (result : Option (RegistrationNativeHiddenStartup.Started source) × State)

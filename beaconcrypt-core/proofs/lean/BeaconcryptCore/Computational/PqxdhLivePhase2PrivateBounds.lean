@@ -7,6 +7,7 @@ Concrete native private-root execution retains all local callback coins, other-i
 open OracleComp OracleSpec CoreModels Aeneas
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhLivePhase2PrivateBounds
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhLivePhase2PrivateRoot PqxdhKemIndCca PqxdhJointIdentity PqxdhJointKdfGame
 open PqxdhPrivateKemSource PqxdhChallengeSecretRouting PqxdhChallengeSecretQueryBounds
 open PqxdhLivePhase2Aux (Identity LocalSpec)
@@ -79,9 +80,9 @@ theorem private_owner_classes (primitives : Primitives)
     (challenge : MlKem768Ciphertext) (read : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
     (owner : RawCtxBeaconLifecycle.State Identity D (Option (OtherHandle selected)))
     (state : AuxState A × List (DecapsulationEvent Shared)) :
-    PostBounds (privateOwner primitives kem selected keys source callbacks challenge read raw owner state)
+    PostBounds (privateOwner (completedBinding := completedBinding) primitives kem selected keys source callbacks challenge read raw owner state)
       (69 * max (max qLocal 64) uDecap) (69 * bDecap) 1 1 := by
-  have clean := PqxdhBeaconPhase2RoutedBounds.owner_classes source challenge
+  have clean := PqxdhBeaconPhase2RoutedBounds.owner_classes (completedBinding := completedBinding) source challenge
     (auxiliary primitives kem selected keys source callbacks) (max (max qLocal 64) uDecap) bDecap 0
     (auxiliary_uniform primitives kem selected keys source callbacks qLocal uDecap localBound uniformBound)
     (auxiliary_base primitives kem selected keys source callbacks bDecap baseBound)
@@ -103,13 +104,13 @@ theorem ordinary_owner_queries (primitives : Primitives)
     (state : AuxState A × List (DecapsulationEvent Shared))
     (predicate : (MlKemCCAOracleSpec baseSpec).Domain → Prop) [DecidablePred predicate] (budget : Nat) :
     (simulateQ (route source challenge supplied)
-      (privateOwner primitives kem selected keys source callbacks challenge read raw owner state)).IsQueryBoundP predicate budget ↔
+      (privateOwner (completedBinding := completedBinding) primitives kem selected keys source callbacks challenge read raw owner state)).IsQueryBoundP predicate budget ↔
     (simulateQ (route source challenge supplied)
       ((simulateQ (PqxdhBeaconPhase2Routed.handles source challenge
         (auxiliary primitives kem selected keys source callbacks))
-        (PqxdhBeaconPhase2Shared.owner read raw owner)).run state.1)).IsQueryBoundP predicate budget := by
+        (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) read raw owner)).run state.1)).IsQueryBoundP predicate budget := by
   have kept := congrArg (simulateQ (route source challenge supplied))
-    (privateOwner_erase primitives kem selected keys source callbacks challenge read raw owner state)
+    (privateOwner_erase (completedBinding := completedBinding) primitives kem selected keys source callbacks challenge read raw owner state)
   rw [simulateQ_map] at kept
   rw [← kept, isQueryBoundP_map_iff]
 
@@ -128,14 +129,14 @@ theorem ordinary_owner_classes (primitives : Primitives)
     (owner : RawCtxBeaconLifecycle.State Identity D (Option (OtherHandle selected)))
     (state : AuxState A × List (DecapsulationEvent Shared)) :
     let work := simulateQ (route source challenge supplied)
-      (privateOwner primitives kem selected keys source callbacks challenge read raw owner state)
+      (privateOwner (completedBinding := completedBinding) primitives kem selected keys source callbacks challenge read raw owner state)
     work.IsQueryBoundP IsMlKemUniformQuery (69 * max (max qLocal 64) uDecap) ∧
       work.IsQueryBoundP IsMlKemBaseQuery (69 * bDecap) ∧
       work.IsQueryBoundP IsMlKemLogicalDecapsulationQuery 1 := by
   dsimp only
   simp only [ordinary_owner_queries]
   simpa only [Nat.mul_zero, Nat.zero_add] using
-    PqxdhPhase2CcaBounds.owner_classes source challenge supplied
+    PqxdhPhase2CcaBounds.owner_classes (completedBinding := completedBinding) source challenge supplied
       (auxiliary primitives kem selected keys source callbacks) (max (max qLocal 64) uDecap) bDecap 0
       (auxiliary_uniform primitives kem selected keys source callbacks qLocal uDecap localBound uniformBound)
       (auxiliary_base primitives kem selected keys source callbacks bDecap baseBound)

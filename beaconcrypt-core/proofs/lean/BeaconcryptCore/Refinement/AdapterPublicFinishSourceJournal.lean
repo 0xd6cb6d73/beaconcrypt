@@ -20,7 +20,7 @@ variable [localOps : AdapterPublicWrapperRequestMonad.LocalOperations (AdapterPu
 variable [crypto : AdapterPublicWrapperRequestMonad.CryptoOperations (AdapterPublicWrapperRustT.RustT (M n KemSK source RegistrationServerRoleBackend.State))]
 variable {E : Type}
 theorem source_journal (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire)
     (erased : commitment.CommitmentTranscript)
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (M n KemSK source RegistrationServerRoleBackend.State))
@@ -60,7 +60,7 @@ theorem source_journal (setup : PqxdhServerAuthExperiment.Setup base KemSK) (che
   rw [AdapterPublicFinishNormalized.program_journal setup wire self pending input owner scalar env]
 
 theorem source_joint (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire)
     (erased : commitment.CommitmentTranscript)
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (M n KemSK source RegistrationServerRoleBackend.State))

@@ -21,7 +21,7 @@ variable {n : Nat} {I KemSK Platform R Reply : Type} {base : OracleSpec I} {sour
 local notation "Native"=>RegistrationNativeExperiment.State n KemSK source
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK)
 variable (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : AdapterPublicWrapperStorage.Views)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 
 noncomputable def of_base {model : ProbComp (Reply×(RegistrationNativeExperiment.State n KemSK source×Platform))} (call : TotalStep (RegistrationNativePlatformExtractedSdkCarrier.Carrier (n:=n) (Platform:=Platform) (R:=R) view views setup.joint created credential) model)
     (coherent : ∀packet : {value //value∈support call.step.sample},

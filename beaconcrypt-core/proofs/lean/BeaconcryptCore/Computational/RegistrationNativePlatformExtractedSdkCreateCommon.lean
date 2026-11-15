@@ -42,7 +42,7 @@ variable [crypto : AdapterPublicWrapperRequestMonad.CryptoOperations (RustT (Sou
 variable [children : AdapterPublicWrapperRequestMonad.ChildOperations (RustT (SourceM n KemSK source Platform))]
 variable (coins : QueryImpl unifSpec (StateT Platform ProbComp)) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (checks : PqxdhServerAuthExperiment.Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (generator : rand_core.TryCryptoRng R Error) (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (kem : AdapterBeaconConstructorKem.Representation view R)
 
@@ -58,6 +58,7 @@ noncomputable def runner
 def nativeProjection (result : Result n KemSK R source) : RustM (Option Nat) ×RegistrationNativeExperiment.State n KemSK source :=
   (result.1.1.1.reply,RegistrationNativeFinishTerminalTree.assemble result.1.1.2 result.1.2 result.2)
 
+omit children in
 theorem native
     (leaves : AdapterBeaconConstructorNative.Leaves (n := n) (Auxiliary := RegistrationServerRoleBackend.State)
       coins setup checks representation created generator view kem)
@@ -83,6 +84,7 @@ def sourceProjection (result : Result n KemSK R source) :
     RustM (AdapterBeaconConstructorBody.Outcome R) ×RegistrationNativeExperiment.State n KemSK source :=
   (.ok result.1.1.1.outcome,result.1.1.1.sourceAfter)
 
+omit children in
 theorem source_body
     (leaves : AdapterBeaconConstructorNative.Leaves (n := n) (Auxiliary := RegistrationServerRoleBackend.State)
       coins setup checks representation created generator view kem)
@@ -106,6 +108,7 @@ theorem source_body
   simp only [Functor.map_map,map_pure,RegistrationNativePlatformExtractedSdkCreateReceipt.sourceWord] at mapped
   exact mapped
 
+omit children in
 theorem typed_source
     (leaves : AdapterBeaconConstructorNative.Leaves (n := n) (Auxiliary := RegistrationServerRoleBackend.State)
       coins setup checks representation created generator view kem)

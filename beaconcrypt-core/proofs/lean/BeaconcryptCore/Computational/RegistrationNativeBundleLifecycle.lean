@@ -62,16 +62,16 @@ noncomputable def publish {κ : Type} {base : OracleSpec κ}
     (fun query => RegistrationNativePlatformGenericBundle.liftLegacy RegistrationNativePlatformGenericBundle.trustedLift
       (RegistrationNativeBeaconFrontend.outgoing setup source index owner query))
     (RegistrationNativePlatformGenericBundle.encoder E) ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-    ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin owner.mldsa.publicKey
+    ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin
   terminal index owner scalar published
 
 theorem publish_work (setup : PqxdhServerAuthExperiment.Setup base KemSK) (index : Nat) (owner : Owner source)
     (scalar : PqxdhJointGapDh.ScalarBytes) : Work Allowed (publish (E := E) (n := n) setup index owner scalar) :=
   RegistrationNativePlatformFrontend.bind_work _ _ _
-    (RegistrationNativePlatformFrontend.publication_work setup index owner _ _ _ _ _) (terminal_work index owner scalar)
+    (RegistrationNativePlatformFrontend.publication_work setup index owner _ _ _ _) (terminal_work index owner scalar)
 
 variable (coins : QueryImpl unifSpec m) (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) m)
 
 omit [LawfulMonad m] in
@@ -90,7 +90,7 @@ theorem publish_interpret (index : Nat) (owner : Owner source) (scalar : PqxdhJo
         (RegistrationNativeBundleInterpretation.outgoing coins setup checks representation created writer index owner)
         (RegistrationNativeBundleInterpretation.encoder coins setup checks representation created writer)
         ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin owner.mldsa.publicKey
+        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin
       interpret (RegistrationNativePlatformExperiment.bundleHandler coins setup checks representation created source writer)
         (terminal index owner scalar published)) := by
   unfold publish

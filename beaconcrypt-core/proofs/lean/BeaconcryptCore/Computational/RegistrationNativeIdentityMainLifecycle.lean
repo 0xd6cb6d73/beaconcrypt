@@ -20,7 +20,7 @@ variable {mlSource : RegistrationNativeMldsa.Source}
 /-- Full actual native creation preserves every source failure, actual private birth and native owner append. -/
 theorem create_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (before : State n KemSK mlSource × SourceState) (owned : Owned setup.joint before) :
     Prod.map id project <$>
@@ -40,7 +40,7 @@ theorem create_source (setup : Setup base KemSK) (checks : Checks)
 /-- Full actual bundle publication retains all earlier Ed attempts, ML signing, encoding failures and owner phase changes. -/
 theorem bundle_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat)
     (before : State n KemSK mlSource × SourceState) (owned : Owned setup.joint before) :
     Prod.map id project <$>
@@ -60,7 +60,7 @@ theorem bundle_source (setup : Setup base KemSK) (checks : Checks)
 /-- Full actual finish retains early consumption, mandatory authentication, agreement, record opening, installation and every terminal failure. -/
 theorem finish_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat) (packet : Option registration.ResponsePacket)
     (before : State n KemSK mlSource × SourceState) (owned : Owned setup.joint before) :
     Prod.map id project <$>

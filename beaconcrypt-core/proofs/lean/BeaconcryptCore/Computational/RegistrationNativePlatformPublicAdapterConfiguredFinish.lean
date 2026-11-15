@@ -40,7 +40,7 @@ noncomputable local instance idleLocal :LocalOperations (RustT (StateT (Registra
 noncomputable local instance idleCrypto :CryptoOperations (RustT (StateT (RegistrationNativeExperiment.State n KemSK source×P) ProbComp)):=packedCrypto
 noncomputable local instance idleChildren :ChildOperations (RustT (StateT (RegistrationNativeExperiment.State n KemSK source×P) ProbComp)):=children
 local instance idleCodecs :Codecs (RustT (StateT (RegistrationNativeExperiment.State n KemSK source×P) ProbComp)):=AdapterPublicConcreteCodecs.codecs
-variable (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
 
 noncomputable def typed (current :Native×P) (before :Private configuration created credential current) (index :Nat) (input :Slice U8) :=
   RegistrationNativePlatformSdkFinishCoupledDispatch.step coins setup checks configuration.agreement.representation created wire

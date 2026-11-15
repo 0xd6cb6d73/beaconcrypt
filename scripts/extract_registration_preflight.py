@@ -33,6 +33,7 @@ CERTIFICATE_DESTINATION = (
 COHORT = "registration-preflight"
 ENTRIES = (
     "preflight",
+    "extraction_preflight_four",
     "primitive_argument",
     "extraction_preflight_field",
     "extraction_argument_long",
@@ -136,8 +137,8 @@ def normalize(value: bytes, name: str) -> tuple[bytes, str]:
     body = primitives.identifiers(body)
     if name == "Funs.lean":
         if (
-            body.count(UNIT_SOME_ORIGINAL) != 1
-            or body.count(UNIT_SOME_ORIGINAL + " b1 ()") != 1
+            body.count(UNIT_SOME_ORIGINAL) != 2
+            or body.count(UNIT_SOME_ORIGINAL + " b1 ()") != 2
         ):
             raise ValueError("then_some must have the exact Unit-only call signature")
         body = body.replace(UNIT_SOME_ORIGINAL, UNIT_SOME_MODEL)
@@ -226,7 +227,7 @@ def check_source(
     for name in ("Types.lean", "Funs.lean"):
         _, body = (destination / name).read_text().split(NAMESPACE)
         if name == "Funs.lean":
-            if body.count(UNIT_SOME_MODEL) != 1:
+            if body.count(UNIT_SOME_MODEL) != 2:
                 raise ValueError("missing Unit platform call")
             body = body.replace(UNIT_SOME_MODEL, UNIT_SOME_ORIGINAL)
         body = primitives.identifiers(body, reverse=True)

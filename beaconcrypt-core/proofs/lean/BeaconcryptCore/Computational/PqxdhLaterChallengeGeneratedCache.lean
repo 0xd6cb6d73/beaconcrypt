@@ -5,7 +5,10 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeGeneratedCache
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPhase1AcceptanceOracle PqxdhKemIndCca PqxdhInitializerSecrecy
 open CtxRomAuth AdaptiveCtxSharedHash PqxdhSecretInputKdf PqxdhFullSecretInputKdf
@@ -28,7 +31,7 @@ local notation "Packet" => PqxdhSourceSharedPreparation.Packet
   (PqxdhSourceSharedPreparation.LocalOutput (M := M) (P := P) (I := I) (K := K) (A := A) setup program) KemSK
 local notation "LocalPacket" => PqxdhSharedParentInput.LocalPacket (setup := setup) (M := M) (P := P) (I := I) (K := K)
     (X := X) (Response := Response) (A := A) (S := S) (B := B)
-local notation "input" => PqxdhSourceSharedInput.input setup env callbacks program post attachedVerify primitives baseImpl kem owner number ancestors disclosed
+local notation "input" => PqxdhSourceSharedInput.input (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem owner number ancestors disclosed
 abbrev Details := PqxdhLaterChallengeCapture.Details (SelectorSpec baseSpec) M P (IdentityHandle I) (DhPair setup) (KemHandle K) Bool S (B + 1)
 
 local notation "Input" => PqxdhInitialPreparedSourceInput.Input (M := M) (P := P) (I := I) (K := K) (X := X)
@@ -51,14 +54,14 @@ theorem prepared_not_used {Other : Type} (secret : KemSK) (challenge : MlKem768C
     (details : Details (setup := setup) (M := M) (P := P) (I := I) (K := K) (S := S) (B := B))
     (cache after : CtxRO.QueryCache)
     (supported : ((Sum.inr (stored, Sum.inr pending), some details), after) ∈ support
-      ((simulateQ hashImpl (PqxdhLaterChallengeSampler.prepared setup env callbacks owner number bit attachedVerify primitives baseImpl kem
+      ((simulateQ hashImpl (PqxdhLaterChallengeSampler.prepared (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks owner number bit attachedVerify primitives baseImpl kem
         secret challenge start output depth continuation)).run cache))
     (afterImpl : QueryImpl Base (StateT Other ProbComp)) (before : Other)
-    (reply : (Base).Range (PqxdhInitialOriginContext.frame
+    (reply : (Base).Range (PqxdhInitialOriginContext.frame (completedBinding := completedBinding)
       (PqxdhInitialSampledParent.marker env.source stored) env.senderId env.route env.decode pending.1).1)
     (result : (Bool × (Front × Trace)) × Other)
     (completed : result ∈ support ((simulateQ afterImpl
-      ((PqxdhInitialOriginContext.frame (PqxdhInitialSampledParent.marker env.source stored)
+      ((PqxdhInitialOriginContext.frame (completedBinding := completedBinding) (PqxdhInitialSampledParent.marker env.source stored)
         env.senderId env.route env.decode pending.1).2 reply)).run before))
     (accepted : result.1.1 = true)
     (published : ((owner, number), true) ∈ result.1.2.2.published) :
@@ -72,7 +75,7 @@ theorem prepared_not_used {Other : Type} (secret : KemSK) (challenge : MlKem768C
     obtain ⟨⟨⟨storedEq, rfl⟩, rfl⟩, rfl⟩ := same
     subst stored
     subst owner
-    exact PqxdhLaterChallengeCapturedCache.cache_not_used env0 callbacks baseImpl kem attachedVerify primitives secret challenge
+    exact PqxdhLaterChallengeCapturedCache.cache_not_used (associatedData := associatedData) (completedBinding := completedBinding) env0 callbacks baseImpl kem attachedVerify primitives secret challenge
       start output depth number position bit continuation pending details cache after sampled
       afterImpl before reply result completed accepted published
 
@@ -83,14 +86,14 @@ theorem after_not_used {Other : Type} (packet : Packet) (output : HmacBlock) (de
     (details : Details (setup := setup) (M := M) (P := P) (I := I) (K := K) (S := S) (B := B))
     (cache after : CtxRO.QueryCache)
     (supported : ((Sum.inr (stored, Sum.inr pending), some details), after) ∈ support
-      ((simulateQ hashImpl (PqxdhLaterChallengeSampler.after setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem
+      ((simulateQ hashImpl (PqxdhLaterChallengeSampler.after (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem
         ancestors disclosed packet output depth)).run cache))
     (afterImpl : QueryImpl Base (StateT Other ProbComp)) (before : Other)
-    (reply : (Base).Range (PqxdhInitialOriginContext.frame
+    (reply : (Base).Range (PqxdhInitialOriginContext.frame (completedBinding := completedBinding)
       (PqxdhInitialSampledParent.marker env.source stored) env.senderId env.route env.decode pending.1).1)
     (result : (Bool × (Front × Trace)) × Other)
     (completed : result ∈ support ((simulateQ afterImpl
-      ((PqxdhInitialOriginContext.frame (PqxdhInitialSampledParent.marker env.source stored)
+      ((PqxdhInitialOriginContext.frame (completedBinding := completedBinding) (PqxdhInitialSampledParent.marker env.source stored)
         env.senderId env.route env.decode pending.1).2 reply)).run before))
     (accepted : result.1.1 = true)
     (published : ((owner, number), true) ∈ result.1.2.2.published) :
@@ -104,7 +107,7 @@ theorem after_not_used {Other : Type} (packet : Packet) (output : HmacBlock) (de
   | pending prefixOutput ephemeral =>
       simp only [PqxdhLaterChallengeSampler.after, PqxdhSourceSharedInput.input,
         PqxdhInitialPreparedSourceInput.input, PqxdhSourceSharedPreparation.restore, PqxdhCommonSharedDispatch.restoreMode] at supported
-      exact prepared_not_used setup env callbacks owner number bit attachedVerify primitives baseImpl kem
+      exact prepared_not_used (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks owner number bit attachedVerify primitives baseImpl kem
         secretKey ciphertext _ rfl output depth position (adversary prefixOutput.context.selection.1)
         stored pending details cache after supported afterImpl before reply result completed accepted published
 
@@ -116,15 +119,15 @@ theorem run_not_used {Other : Type} (depth : Nat) (position : number.val = depth
     (details : Details (setup := setup) (M := M) (P := P) (I := I) (K := K) (S := S) (B := B))
     (after : CtxRO.QueryCache)
     (supported : (carrier, after) ∈ support ((simulateQ hashImpl
-      (PqxdhLaterChallengeSampler.run setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed depth)).run ∅))
+      (PqxdhLaterChallengeSampler.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed depth)).run ∅))
     (shape : carrier.1.2.1.1.1 = Sum.inr (stored, Sum.inr pending))
     (captured : carrier.2 = some details)
     (afterImpl : QueryImpl Base (StateT Other ProbComp)) (before : Other)
-    (reply : (Base).Range (PqxdhInitialOriginContext.frame
+    (reply : (Base).Range (PqxdhInitialOriginContext.frame (completedBinding := completedBinding)
       (PqxdhInitialSampledParent.marker env.source stored) env.senderId env.route env.decode pending.1).1)
     (result : (Bool × (Front × Trace)) × Other)
     (completed : result ∈ support ((simulateQ afterImpl
-      ((PqxdhInitialOriginContext.frame (PqxdhInitialSampledParent.marker env.source stored)
+      ((PqxdhInitialOriginContext.frame (completedBinding := completedBinding) (PqxdhInitialSampledParent.marker env.source stored)
         env.senderId env.route env.decode pending.1).2 reply)).run before))
     (accepted : result.1.1 = true)
     (published : ((owner, number), true) ∈ result.1.2.2.published) :
@@ -137,7 +140,7 @@ theorem run_not_used {Other : Type} (depth : Nat) (position : number.val = depth
   change localPacket = Sum.inr (stored, Sum.inr pending) at shape
   change metadata = some details at captured
   rw [shape, captured] at reached
-  exact after_not_used setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed
+  exact after_not_used (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed
     packet output depth position stored pending details cache after reached afterImpl before reply result completed accepted published
 
 end BeaconcryptCore.Computational.PqxdhLaterChallengeGeneratedCache

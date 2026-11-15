@@ -38,7 +38,7 @@ private theorem lower_program {J A : Type} {queries : OracleSpec J}
 theorem collect_run :
     lower localImpl (RegistrationNativeSecretWordBeaconCompiler.collect setup owner oneTime authenticated) =
       simulateQ (compiler setup implementation owner oneTime authenticated)
-        (RegistrationNativeSecretWordBeaconPrepare.prepare authenticated.pending.control () () () []) := by
+        (RegistrationNativeSecretWordBeaconPrepare.prepare (completedBinding := authenticated.binding) authenticated.control () () () []) := by
   unfold RegistrationNativeSecretWordBeaconCompiler.collect
   exact lower_program implementation _ _
 
@@ -97,7 +97,7 @@ theorem collect_atom (before after : Auxiliary Private)
       pending.collected.plain.ciphertext=authenticated.packet.public.kem_cipher_text ∧
       pending.collected.plain.server=authenticated.packet.public.identity_key ∧
       setup.source.crypto.xpkConv (absBytes pending.collected.plain.server)=some (absBytes pending.collected.plain.serverConverted) ∧
-      PqxdhPhase2DhMetadata.admitted authenticated.pending.control pending.collected.plain=some pending.metadata := by
+      PqxdhPhase2DhMetadata.admitted (completedBinding := authenticated.binding) authenticated.control pending.collected.plain=some pending.metadata := by
   rw [collect_run] at supported
   simp only [RegistrationNativeSecretWordBeaconPrepare.prepare,simulateQ_bind,StateT.run_bind,mem_support_bind_iff] at supported
   obtain ⟨⟨collected,middle⟩,called,supported⟩ := supported
@@ -106,7 +106,7 @@ theorem collect_atom (before after : Auxiliary Private)
     simp only [simulateQ_pure,StateT.run_pure,Option.bind_none,mem_support_pure_iff] at supported
     cases supported
   | some collected =>
-    cases admitted : PqxdhPhase2DhMetadata.admitted authenticated.pending.control collected.plain with
+    cases admitted : PqxdhPhase2DhMetadata.admitted (completedBinding := authenticated.binding) authenticated.control collected.plain with
     | none =>
       simp only [Option.bind_some,admitted,Option.map_none,simulateQ_pure,StateT.run_pure,mem_support_pure_iff] at supported
       cases supported

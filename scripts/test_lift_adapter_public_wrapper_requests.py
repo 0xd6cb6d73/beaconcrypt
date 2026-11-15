@@ -30,11 +30,16 @@ class PublicWrapperLiftTests(unittest.TestCase):
 
     def test_all_declarations_retained(self):
         result = lift.transform(self.source, self.bindings).decode()
-        self.assertEqual(len(self.control["definitions"]), 49)
+        self.assertEqual(len(self.control["definitions"]), 48)
         self.assertEqual(
             sum(row["mode"] == "static" for row in self.control["definitions"]), 4
         )
         self.assertEqual(result.count("AdapterPublicWrapperLiftFunction.loopFuel"), 3)
+        self.assertNotIn("beacon.Beacon.mldsa_public_key", result)
+        self.assertNotIn("PinFingerprint", result)
+        self.assertIn("def auth.server_pin", result)
+        self.assertIn("registration.ServerAdHash.request", result)
+        self.assertIn("registration.ServerAdHash.resume", result)
         self.assertIn("ChildOperations.authenticateInit", result)
         self.assertIn("ChildOperations.authenticateResponse", result)
         self.assertIn("ContainerOperations.setReserve", result)

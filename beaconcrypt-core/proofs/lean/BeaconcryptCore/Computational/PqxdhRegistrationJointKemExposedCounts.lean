@@ -90,7 +90,7 @@ theorem backend_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
       rcases service with (coin | service) | (coin | service)
       all_goals simp [poolClass]
       case inl.inr =>
-        cases service <;> first | simp | skip
+        cases service <;> try simp
         case service index call => cases call <;> simp
       case inr.inr => cases service <;> simp
     simpa only [impl, classify, ite_eq_right excluded] using lift_no_encapsulation
@@ -106,7 +106,7 @@ theorem command_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
     (budget : PqxdhRegistrationJointKemCommands.Budget)
     (certified : ∀ source, work.IsQueryBoundP
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) (state : NativeState KemSK) :
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK) :
     (commands setup codec checks identityIndex publicIdentity work owners state).IsQueryBoundP
       (IsEncapsulation (KemSK := KemSK)) (budget (.inl 3)) := by
   have bounded := PqxdhRegistrationJointRevealCosts.program_bound setup codec work budget certified owners .accept

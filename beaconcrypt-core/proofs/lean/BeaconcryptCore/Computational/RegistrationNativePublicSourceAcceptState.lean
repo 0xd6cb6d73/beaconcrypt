@@ -87,7 +87,7 @@ theorem accept_native (setup : Setup base KemSK) (codec : Codec Reader Response)
     (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
     (verify : MldsaTranscriptAuth.Verify) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (selected : Bool) (packet : registration.InitPacket) (before : State n KemSK source) :
     Prod.map id (project setup created.seed scalar) <$>
       (run setup wire route sign created.seed scalar selected

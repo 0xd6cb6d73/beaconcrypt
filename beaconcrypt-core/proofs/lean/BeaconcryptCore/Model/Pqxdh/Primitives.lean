@@ -8,7 +8,7 @@ key-establishment protocol described in `pqxdh_spec.md`.  It fixes
 
 * the byte-string representation used throughout the model (`Pqxdh.Bytes`),
 * the little-endian 64-bit encoding `Pqxdh.LE64` (spec §12),
-* the two fixed HKDF domain strings `INFO_PQ` and `INFO_R` (spec §3),
+* the exact root, initial-chain and message-ratchet HKDF domain strings `INFO_PQ`, `INFO_INIT` and `INFO_R`, with the retained AD context label `INFO_AD_R`,
 * the authenticated public-key encodings `Tag_sig`, `Tag_X` and `Tag_PQ` together
   with their parsers and the domain-separation facts they provide (spec §4),
 * the interface `Pqxdh.Crypto` of the cryptographic primitives the protocol is
@@ -67,30 +67,43 @@ theorem LE64_inj {n m : ℕ} (hn : n < 2 ^ 64) (hm : m < 2 ^ 64) (h : LE64 n = L
   have H7 := e _ _ h7
   omega
 
-/-! ## Fixed HKDF domain strings (spec §3)
+/-! ## Exact HKDF labels and retained AD context
 
-`INFO_PQ = "BeaconcryptPqxdh_CURVE25519_SHA-512_ML-KEM-768"` (46 bytes) and
-`INFO_R = "SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305"` (41 bytes), given as their
-ASCII byte encodings. -/
+The initial and message phases use separate fixed labels. The old symmetric label remains only as an AD context component. Distinct inputs or output widths are not substituted for domain separation. -/
 
-/-- The PQXDH root-derivation domain string, 46 bytes. -/
+/-- PQXDH root derivation, 46 bytes. -/
 def INFO_PQ : Bytes :=
-  [66, 101, 97, 99, 111, 110, 99, 114, 121, 112, 116, 80, 113, 120, 100, 104, 95, 67,
-   85, 82, 86, 69, 50, 53, 53, 49, 57, 95, 83, 72, 65, 45, 53, 49, 50, 95, 77, 76, 45,
-   75, 69, 77, 45, 55, 54, 56]
-
-/-- The symmetric-ratchet domain string, 41 bytes. -/
-def INFO_R : Bytes :=
-  [83, 121, 109, 82, 97, 116, 99, 104, 101, 116, 95, 72, 75, 68, 70, 95, 83, 72, 65, 45,
-   53, 49, 50, 95, 67, 72, 65, 67, 72, 65, 50, 48, 95, 80, 79, 76, 89, 49, 51, 48, 53]
+  [66, 101, 97, 99, 111, 110, 99, 114, 121, 112, 116, 80, 113, 120, 100, 104, 95, 67, 85, 82, 86, 69, 50, 53, 53, 49, 57, 95, 83, 72, 65, 45, 53, 49, 50, 95, 77, 76, 45, 75, 69, 77, 45, 55, 54, 56]
 
 theorem INFO_PQ_length : INFO_PQ.length = 46 := rfl
 
-theorem INFO_R_length : INFO_R.length = 41 := rfl
+/-- Retained AD context component; never a current KDF label, 41 bytes. -/
+def INFO_AD_R : Bytes :=
+  [83, 121, 109, 82, 97, 116, 99, 104, 101, 116, 95, 72, 75, 68, 70, 95, 83, 72, 65, 45, 53, 49, 50, 95, 67, 72, 65, 67, 72, 65, 50, 48, 95, 80, 79, 76, 89, 49, 51, 48, 53]
 
-/-- The two domain strings are distinct, so the PQXDH and ratchet expansions are
-domain separated. -/
-theorem INFO_PQ_ne_INFO_R : INFO_PQ ≠ INFO_R := by decide
+theorem INFO_AD_R_length : INFO_AD_R.length = 41 := rfl
+
+/-- Initial directional-chain derivation, 45 bytes. -/
+def INFO_INIT : Bytes :=
+  [83, 121, 109, 82, 97, 116, 99, 104, 101, 116, 73, 110, 105, 116, 95, 72, 75, 68, 70, 95, 83, 72, 65, 45, 53, 49, 50, 95, 67, 72, 65, 67, 72, 65, 50, 48, 95, 80, 79, 76, 89, 49, 51, 48, 53]
+
+theorem INFO_INIT_length : INFO_INIT.length = 45 := rfl
+
+/-- Message key/next-chain/nonce derivation, 48 bytes. -/
+def INFO_R : Bytes :=
+  [83, 121, 109, 82, 97, 116, 99, 104, 101, 116, 77, 101, 115, 115, 97, 103, 101, 95, 72, 75, 68, 70, 95, 83, 72, 65, 45, 53, 49, 50, 95, 67, 72, 65, 67, 72, 65, 50, 48, 95, 80, 79, 76, 89, 49, 51, 48, 53]
+
+theorem INFO_R_length : INFO_R.length = 48 := rfl
+
+@[simp] theorem INFO_PQ_ne_INFO_R : INFO_PQ ≠ INFO_R := by decide
+
+@[simp] theorem INFO_PQ_ne_INFO_INIT : INFO_PQ ≠ INFO_INIT := by decide
+
+@[simp] theorem INFO_INIT_ne_INFO_R : INFO_INIT ≠ INFO_R := by decide
+
+theorem INFO_AD_R_ne_INFO_INIT : INFO_AD_R ≠ INFO_INIT := by decide
+
+theorem INFO_AD_R_ne_INFO_R : INFO_AD_R ≠ INFO_R := by decide
 
 /-! ## Authenticated public-key encodings (spec §4) -/
 

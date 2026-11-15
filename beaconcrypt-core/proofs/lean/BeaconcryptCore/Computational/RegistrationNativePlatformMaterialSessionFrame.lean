@@ -13,6 +13,7 @@ namespace BeaconcryptCore.Computational.RegistrationNativePlatformMaterialSessio
 open RegistrationServerMaterialFrontend (State)
 open RegistrationNativePlatformServerMaterialFrontend
 variable {Index Encoded : Type} {spec : OracleSpec Index}
+variable (deriveAd : AdHash (OracleComp spec))
 
 private theorem finish_sessions (published : RustM (RegistrationHiddenInstall.Result Encoded)) (before : State) :
     (finish published before).2.sessions = before.sessions := by
@@ -55,14 +56,29 @@ private theorem after_result (reserve : OracleComp spec Bool) (service : Service
 private theorem after_occupancy (reserve : OracleComp spec Bool) (service : Service (OracleComp spec) Encoded)
     (control : pqxdh.ServerState) (lookup : peer.CompletionLookup) (message : RegistrationNativeRelatedFamily.Message)
     (occupied : Bool) (before after : State) (reply : Result Encoded)
-    (supported : (reply, after) ∈ support ((afterOccupancy reserve service control lookup message occupied).run before)) :
-    after.sessions = before.sessions := after_result reserve service control message _ before after reply supported
+    (supported : (reply, after) ∈ support ((afterOccupancy deriveAd reserve service control lookup message occupied).run before)) :
+    after.sessions = before.sessions := by
+  cases resumed : lookup.resume occupied with
+  | fail error | div =>
+      simp only [afterOccupancy, resumed, StateT.run_pure, mem_support_pure_iff] at supported
+      cases supported
+      rfl
+  | ok outcome => cases outcome with
+    | Err previous =>
+        simp only [afterOccupancy, resumed, StateT.run_pure, mem_support_pure_iff] at supported
+        cases supported
+        rfl
+    | Ok pending =>
+        simp only [afterOccupancy, resumed, StateT.run_bind, StateT.run_lift,
+          bind_map_left, bind_pure_comp, mem_support_bind_iff] at supported
+        obtain ⟨hashed, _queried, continued⟩ := supported
+        exact after_result reserve service control message _ before after reply continued
 
 private theorem after_pin (reserve : OracleComp spec Bool) (present : U64 → OracleComp spec Bool)
     (service : Service (OracleComp spec) Encoded) (control : pqxdh.ServerState)
     (ready : RegistrationServerReferenceRoot.Ready) (application : Slice U8)
     (current : RustM (core.option.Option session.ServerAuthenticationPin)) (before after : State) (reply : Result Encoded)
-    (supported : (reply, after) ∈ support ((afterPin reserve present service control ready application current).run before)) :
+    (supported : (reply, after) ∈ support ((afterPin deriveAd reserve present service control ready application current).run before)) :
     after.sessions = before.sessions := by
   cases current with
   | fail error | div =>
@@ -98,7 +114,7 @@ private theorem after_pin (reserve : OracleComp spec Bool) (present : U64 → Or
                   by_cases fits : RegistrationServerSdkSource.preflight application keyId = true
                   · simp only [request, ite_eq_left fits, mem_support_bind_iff] at supported
                     obtain ⟨occupied, _queried, continued⟩ := supported
-                    exact after_occupancy reserve service control selected ready.reference occupied before after reply continued
+                    exact after_occupancy deriveAd reserve service control selected ready.reference occupied before after reply continued
                   · simp only [request, ite_eq_right fits, mem_support_pure_iff] at supported
                     cases supported
                     rfl
@@ -109,14 +125,14 @@ theorem complete_sessions
     (reserve : OracleComp spec Bool) (present : U64 → OracleComp spec Bool) (service : Service (OracleComp spec) Encoded)
     (ready : RegistrationServerReferenceRoot.Ready) (application : Slice U8)
     (before after : State) (reply : Result Encoded)
-    (supported : (reply, after) ∈ support ((complete pin reserve present service ready application).run before)) :
+    (supported : (reply, after) ∈ support ((complete deriveAd pin reserve present service ready application).run before)) :
     after.sessions = before.sessions := by
   change (reply, after) ∈ support (do
     let current ← pin before.pin
-    (afterPin reserve present service before.control ready application current).run before) at supported
+    (afterPin deriveAd reserve present service before.control ready application current).run before) at supported
   rw [mem_support_bind_iff] at supported
   obtain ⟨current, _computed, continued⟩ := supported
-  exact after_pin reserve present service before.control ready application current before after reply continued
+  exact after_pin deriveAd reserve present service before.control ready application current before after reply continued
 
 
 private theorem mem_set_none (sessions : List (Option RegistrationServerReferenceRoot.Ready)) (index : Nat)
@@ -150,7 +166,7 @@ theorem build_subset
     (pin : session.ServerAuthenticationPin → OracleComp spec (RustM (core.option.Option session.ServerAuthenticationPin)))
     (reserve : OracleComp spec Bool) (present : U64 → OracleComp spec Bool) (service : Service (OracleComp spec) Encoded)
     (index : Nat) (application : Option (Slice U8)) (before after : State) (reply : Result Encoded)
-    (supported : (reply, after) ∈ support ((build pin reserve present service index application).run before))
+    (supported : (reply, after) ∈ support ((build deriveAd pin reserve present service index application).run before))
     (ready : RegistrationServerReferenceRoot.Ready) (member : some ready ∈ after.sessions) :
     some ready ∈ before.sessions := by
   unfold build at supported
@@ -172,17 +188,17 @@ theorem build_subset
             exact subset ready member
         | some application =>
             simp only [taken] at supported
-            have preserved := complete_sessions pin reserve present service selected application current after reply supported
+            have preserved := complete_sessions deriveAd pin reserve present service selected application current after reply supported
             rw [preserved] at member
             exact subset ready member
 
 
-/-- The exact four-leaf source build program has the same token-subset property before any interpreter is chosen. -/
+/-- The exact five-leaf source build program has the same token-subset property before any interpreter is chosen. -/
 theorem program_subset (index : Nat) (application : Option (Slice U8)) (before after : State)
     (reply : Result (alloc.vec.Vec U8))
     (supported : (reply, after) ∈ support ((RegistrationNativePlatformServerFrontendProgram.program index application).run before))
     (ready : RegistrationServerReferenceRoot.Ready) (member : some ready ∈ after.sessions) : some ready ∈ before.sessions :=
-  build_subset RegistrationNativePlatformServerFrontendProgram.pin RegistrationNativePlatformServerFrontendProgram.reserve
+  build_subset RegistrationNativePlatformServerFrontendProgram.adHash RegistrationNativePlatformServerFrontendProgram.pin RegistrationNativePlatformServerFrontendProgram.reserve
     RegistrationNativePlatformServerFrontendProgram.present RegistrationNativePlatformServerFrontendProgram.service
     index application before after reply supported ready member
 

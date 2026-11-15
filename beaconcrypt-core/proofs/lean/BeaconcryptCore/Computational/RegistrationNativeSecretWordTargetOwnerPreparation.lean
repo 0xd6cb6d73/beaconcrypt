@@ -47,7 +47,7 @@ theorem prepared (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire)
   let implementation := localImpl (n := n) setup wire route sign input inside provider outer false
   obtain ⟨pending, oneTime, aborted, authenticated, middle, _phase, _moved, checked, agreed⟩ :=
     RegistrationNativeSecretWordTargetOwnerOrigin.preparation implementation setup source (some packet) owner afterOwner ready before after supported
-  obtain ⟨supplied, suppliedEq, authenticatedEq⟩ :=
+  obtain ⟨supplied, suppliedEq, _digest, _completed, _completedRun, authenticatedEq⟩ :=
     RegistrationNativeSecretWordTargetOwnerAuthSource.packet implementation setup source pending (some packet) authenticated before middle checked
   have packetEq : packet = supplied := Option.some.inj suppliedEq
   subst supplied

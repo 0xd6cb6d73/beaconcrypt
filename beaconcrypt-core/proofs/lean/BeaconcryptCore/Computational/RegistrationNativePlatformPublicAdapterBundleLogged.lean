@@ -50,7 +50,7 @@ noncomputable local instance idleLocal :LocalOperations (RustT (StateT (Registra
 noncomputable local instance idleCrypto :CryptoOperations (RustT (StateT (RegistrationNativeExperiment.State n KemSK source×P) ProbComp)):=packedCrypto
 noncomputable local instance idleChildren :ChildOperations (RustT (StateT (RegistrationNativeExperiment.State n KemSK source×P) ProbComp)):=children
 
-variable (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
 local notation "auditPrivate"=>RegistrationNativePlatformPublicAdapterAuditModel.Private configuration created credential
 local notation "auditModel"=>RegistrationNativePlatformPublicAdapterAuditModel.model configuration created credential
 local notation "auditPhysical"=>RegistrationNativePlatformPublicAdapterAuditModel.physical configuration created credential
@@ -72,7 +72,7 @@ noncomputable def withCoinsAugmentation (index :Nat) (owner :RegistrationNativeB
     (note :Stage→Log) (prior :List Log) :
     RegistrationNativePlatformPublicAdapterLoggedRuntime.Augmentation
       (RegistrationNativePlatformPublicAdapterBundleStepSource.withCoins previousLocal coins setup checks configuration.agreement.representation created
-        configuration.reservePackets index owner configuration.edFailure (other (m:=CutM)) (recording (m:=CutM)) configuration.views credential self configuration.view
+        configuration.reservePackets index owner configuration.edFailure (fun _=>pure (.fail .panic)) (recording (m:=CutM)) configuration.views credential self configuration.view
         control scalar prekey oneTime kem configuration.generator stored phase before previous objects sourceSelected selected) (List Log) where
   sample:=RegistrationNativePlatformPublicAdapterBundleStageLog.runner coins setup checks configuration.agreement.representation created writer index owner note scalar before.1 previous prior
   erase:=RegistrationNativePlatformPublicAdapterBundleStageLog.runner_erase coins setup checks configuration.agreement.representation created writer index owner note scalar before.1 previous prior
@@ -87,7 +87,7 @@ noncomputable def freshAugmentation (index :Nat) (owner :RegistrationNativeBeaco
     (note :Stage→Log) (prior :List Log) :
     RegistrationNativePlatformPublicAdapterLoggedRuntime.Augmentation
       (RegistrationNativePlatformPublicAdapterBundleStepSource.fresh previousLocal coins setup checks configuration.agreement.representation created
-        configuration.reservePackets index owner configuration.edFailure (other (m:=CutM)) (recording (m:=CutM)) configuration.views credential self configuration.view
+        configuration.reservePackets index owner configuration.edFailure (fun _=>pure (.fail .panic)) (recording (m:=CutM)) configuration.views credential self configuration.view
         control prekey kem configuration.generator (RegistrationNativePlatformPublicAdapterConfiguration.generation configuration)
         stored phase before previous objects sourceSelected selected) (List Log) where
   sample:=RegistrationNativePlatformPublicAdapterBundleStageLog.freshRunner coins setup checks configuration.agreement.representation created writer index owner note before.1 previous prior
@@ -108,11 +108,11 @@ private theorem withKeys_operands (note :Stage→Log) (self :beaconcrypt_public_
     withKeys configuration created note self control prekey oneTime kem rng before previous prior=
       (fun result=>((AdapterPublicBundlePublication.install self prekey oneTime kem rng result.1.1,(result.1.2.1,result.2)),result.1.2.2)) <$>
         ((RegistrationNativePlatformPublicAdapterBundleStageLog.physical coins setup checks configuration.agreement.representation created writer note
-          owner.mldsa owner.identitySeed ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-          ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin owner.mldsa.publicKey).run (before,prior)).run previous :=by
+          owner.identitySeed ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
+          ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin).run (before,prior)).run previous :=by
   have controlSame :control=⟨owner.pin.binding⟩ :=by cases control;exact congrArg pqxdh.BeaconFresh.mk controlView
   have handlerSame :RegistrationNativePlatformPublicAdapterBundleLoggedSource.handler (n:=n) configuration created self=
-      RegistrationNativePlatformPublicAdapterBundlePublication.handler (n:=n) coins setup checks configuration.agreement.representation created writer owner.mldsa owner.identitySeed :=by
+      RegistrationNativePlatformPublicAdapterBundlePublication.handler (n:=n) coins setup checks configuration.agreement.representation created writer owner.identitySeed :=by
     let previousCrypto :CryptoOperations (RustT (StateT (Backend n KemSK) (StateT P ProbComp))):=RegistrationNativePlatformPublicAdapterUniformObserver.operations
       (RegistrationNativePlatformPublicAdapterBundleGeneration.backendUniform (n:=n) coins setup checks configuration.agreement.representation created) originalCrypto
     let :LocalOperations (RustT (StateT (Backend n KemSK) (StateT P ProbComp))):=RegistrationNativePlatformPublicAdapterBundleDictionaries.locals
@@ -120,7 +120,7 @@ private theorem withKeys_operands (note :Stage→Log) (self :beaconcrypt_public_
     let :CryptoOperations (RustT (StateT (Backend n KemSK) (StateT P ProbComp))):=RegistrationNativePlatformPublicAdapterBundleDictionaries.crypto setup configuration.view previousCrypto configuration.edFailure
     let :ChildOperations (RustT (StateT (Backend n KemSK) (StateT P ProbComp))):=RegistrationNativePlatformPublicAdapterBundleDictionaries.children coins setup checks configuration.agreement.representation created writer children
     have sourceLaw:=RegistrationNativePlatformPublicAdapterBundleDictionaries.outgoing_source coins setup checks configuration.agreement.representation created configuration.view
-      (RegistrationNativePlatformPublicAdapterLeaves.localOperations originalLocal) previousCrypto configuration.edFailure writer children self owner related.identitySecret related.mldsa
+      (RegistrationNativePlatformPublicAdapterLeaves.localOperations originalLocal) previousCrypto configuration.edFailure writer children self owner related.identitySecret
     funext query
     cases query with
     | inl query=>
@@ -130,14 +130,14 @@ private theorem withKeys_operands (note :Stage→Log) (self :beaconcrypt_public_
     | inr query=>rfl
   unfold RegistrationNativePlatformPublicAdapterBundleLoggedSource.withKeys
   rw [RegistrationNativePlatformPublicAdapterBundleStageActual.source,handlerSame,
-    related.mldsa,related.identityPublic,prekeyView,oneTimeView,kemView,related.pin,controlSame]
+    related.identityPublic,prekeyView,oneTimeView,kemView,related.pin,controlSame]
   rfl
 
 
 noncomputable abbrev step (index :Nat) (before :RegistrationNativePlatformCutJournal.State Native) (previous :P)
     (objects :Private configuration created credential (before.1,previous)) :=
   RegistrationNativePlatformPublicAdapterStrongBundle.step previousLocal coins setup checks configuration.agreement.representation created configuration.reservePackets
-    index configuration.edFailure (other (m:=CutM)) (recording (m:=CutM)) configuration.views credential configuration.view configuration.generator
+    index configuration.edFailure (fun _=>pure (.fail .panic)) (recording (m:=CutM)) configuration.views credential configuration.view configuration.generator
     (RegistrationNativePlatformPublicAdapterConfiguration.generation configuration) before previous objects
 
 noncomputable def augmentation (index :Nat) (before :RegistrationNativePlatformCutJournal.State Native) (previous :P)
@@ -160,7 +160,7 @@ noncomputable def augmentation (index :Nat) (before :RegistrationNativePlatformC
         rfl
       have callEq :step configuration created credential index before previous objects=
           RegistrationNativePlatformPublicAdapterBundleStepSource.fresh previousLocal coins setup checks configuration.agreement.representation created
-            configuration.reservePackets index owner configuration.edFailure (other (m:=CutM)) (recording (m:=CutM)) configuration.views credential self configuration.view
+            configuration.reservePackets index owner configuration.edFailure (fun _=>pure (.fail .panic)) (recording (m:=CutM)) configuration.views credential self configuration.view
             control prekey kem configuration.generator (RegistrationNativePlatformPublicAdapterConfiguration.generation configuration)
             stored phase before previous objects sourceSelected selected :=by
         unfold step RegistrationNativePlatformPublicAdapterStrongBundle.step
@@ -178,7 +178,7 @@ noncomputable def augmentation (index :Nat) (before :RegistrationNativePlatformC
       have phase :owner.phase=.freshWithCoins scalar:=Classical.choose_spec hasScalar
       have callEq :step configuration created credential index before previous objects=
           RegistrationNativePlatformPublicAdapterBundleStepSource.withCoins previousLocal coins setup checks configuration.agreement.representation created
-            configuration.reservePackets index owner configuration.edFailure (other (m:=CutM)) (recording (m:=CutM)) configuration.views credential self configuration.view
+            configuration.reservePackets index owner configuration.edFailure (fun _=>pure (.fail .panic)) (recording (m:=CutM)) configuration.views credential self configuration.view
             control scalar prekey oneTime kem configuration.generator stored phase before previous objects sourceSelected selected :=by
         unfold step RegistrationNativePlatformPublicAdapterStrongBundle.step
         exact (RegistrationNativePlatformSdkDependentCases.rec_some _ _ _ owner selected).trans
@@ -241,18 +241,18 @@ private theorem raw_active {target :ProbComp (RustM (Option Pqxdh.Bytes)×(Nativ
 
 omit [FrameDispatchFallback.Operations] in
 private theorem physical_frame (note :Stage→Log) (identity :PqxdhJointIdentity.IdentitySeed)
-    (signing :RegistrationNativeMldsa.Credential source) (control :pqxdh.BeaconFresh)
+    (control :pqxdh.BeaconFresh)
     (inputs :pqxdh.BeaconStartInputs) (oneTime :pqxdh.BeaconCoins) (pin :session.ServerAuthenticationPin)
-    (mlPublic :Std.Array U8 1952#usize) (before :Backend n KemSK×List Log) :
+    (before :Backend n KemSK×List Log) :
     Prod.map id (Prod.map RegistrationNativePlatformPublicAdapterPhysicalBackend.erase id) <$>
       (RegistrationNativePlatformPublicAdapterBundleStageLog.physical coins setup checks configuration.agreement.representation created writer note
-        signing identity control inputs oneTime pin mlPublic).run before=
+        identity control inputs oneTime pin).run before=
       (RegistrationNativePlatformPublicAdapterBundleStageLog.physical coins setup checks configuration.agreement.representation created writer note
-        signing identity control inputs oneTime pin mlPublic).run (RegistrationNativePlatformPublicAdapterPhysicalBackend.erase before.1,before.2) :=by
+        identity control inputs oneTime pin).run (RegistrationNativePlatformPublicAdapterPhysicalBackend.erase before.1,before.2) :=by
   apply RegistrationNativePlatformPublicAdapterSourceTrace.source
   intro query current
   cases query with
-  | inl query=>exact RegistrationNativePlatformPublicAdapterBundleFrame.outgoing coins setup checks configuration.agreement.representation created signing identity query current
+  | inl query=>exact RegistrationNativePlatformPublicAdapterBundleFrame.outgoing coins setup checks configuration.agreement.representation created identity query current
   | inr query=>exact RegistrationNativePlatformPublicAdapterPhysicalFrame.lift_frame (writer query) current
 
 omit [FrameDispatchFallback.Operations] in
@@ -261,14 +261,14 @@ private theorem runner_normalized (index :Nat) (owner :RegistrationNativeBeaconF
     (fun result=>(((result.1.1.1,RegistrationNativePlatformPublicAdapterPhysicalBackend.erase (backend result.1.1.2)),result.1.2),result.2)) <$>
       RegistrationNativePlatformPublicAdapterBundleStageLog.runner coins setup checks configuration.agreement.representation created writer index owner note scalar before previous prior=
       (fun result=>(((result.1.1,result.1.2.1),result.2),result.1.2.2)) <$>
-        ((RegistrationNativePlatformPublicAdapterBundleStageLog.physical coins setup checks configuration.agreement.representation created writer note owner.mldsa owner.identitySeed
-          ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner) ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin owner.mldsa.publicKey).run
+        ((RegistrationNativePlatformPublicAdapterBundleStageLog.physical coins setup checks configuration.agreement.representation created writer note owner.identitySeed
+          ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner) ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin).run
           (RegistrationNativePlatformPublicAdapterPhysicalBackend.erase (backend before),prior)).run previous :=by
   have first:=congrArg (fun tree=>(fun result=>(((result.1.1.1,RegistrationNativePlatformPublicAdapterPhysicalBackend.erase result.1.1.2),result.1.2),result.2)) <$>tree)
     (RegistrationNativePlatformPublicAdapterBundleStageLog.runner_source coins setup checks configuration.agreement.representation created writer index owner note scalar before previous prior)
   have second:=congrArg (fun work=>work.run previous)
-    (physical_frame configuration created note owner.identitySeed owner.mldsa ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin owner.mldsa.publicKey (backend before,prior))
+    (physical_frame configuration created note owner.identitySeed ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
+      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin (backend before,prior))
   have final:=congrArg (fun tree=>(fun result=>(((result.1.1,result.1.2.1),result.2),result.1.2.2)) <$>tree) second
   simp only [StateT.run_map,Functor.map_map,Prod.map,id_eq] at first final
   exact first.trans final
@@ -285,7 +285,7 @@ theorem with_coins_joint (index :Nat) (owner :RegistrationNativeBeaconFrontend.O
     (note :Stage→Log) (prior :List Log) :
     raw configuration created credential
       (RegistrationNativePlatformPublicAdapterBundleStepSource.withCoins previousLocal coins setup checks configuration.agreement.representation created
-        configuration.reservePackets index owner configuration.edFailure (other (m:=CutM)) (recording (m:=CutM)) configuration.views credential self configuration.view
+        configuration.reservePackets index owner configuration.edFailure (fun _=>pure (.fail .panic)) (recording (m:=CutM)) configuration.views credential self configuration.view
         control scalar prekey oneTime kem configuration.generator stored phase before previous objects sourceSelected selected)
       (withCoinsAugmentation configuration created credential index owner self control scalar prekey oneTime kem stored phase before previous objects sourceSelected selected note prior)=
       (fun result=>(RegistrationNativePlatformPublicAdapterBundlePhysical.finish
@@ -302,7 +302,7 @@ theorem with_coins_joint (index :Nat) (owner :RegistrationNativeBeaconFrontend.O
   have publicView:=RegistrationNativePlatformSdkStrongCarrier.one_time_public setup configuration.view configuration.views created credential
     (before.1,previous) objects index self control prekey oneTime kem scalar sourceSelected stored fields.2.2.1
   have kept:=RegistrationNativePlatformPublicAdapterBundleStepSource.with_coins_objects previousLocal coins setup checks configuration.agreement.representation created
-    configuration.reservePackets index owner configuration.edFailure (other (m:=CutM)) (recording (m:=CutM)) configuration.views credential
+    configuration.reservePackets index owner configuration.edFailure (fun _=>pure (.fail .panic)) (recording (m:=CutM)) configuration.views credential
     self configuration.view control scalar prekey oneTime kem configuration.generator stored phase before previous objects sourceSelected selected
   rw [raw_active configuration created credential (before.1,previous) objects index _ _ id (fun _=>rfl) kept]
   rw [withKeys_operands configuration created note self owner before.1.pool before.1.server.world.world.1.owners[owner.worldOwner]?
@@ -320,8 +320,8 @@ private theorem fresh_normalized (index :Nat) (owner :RegistrationNativeBeaconFr
     (note :Stage→Log) (before :Native) (previous :P) (prior :List Log) :
     (fun result=>(((result.1.1.1,RegistrationNativePlatformPublicAdapterPhysicalBackend.erase (backend result.1.1.2)),result.1.2),result.2)) <$>
       RegistrationNativePlatformPublicAdapterBundleStageLog.freshRunner coins setup checks configuration.agreement.representation created writer index owner note before previous prior=
-      RegistrationNativePlatformPublicAdapterBundleStageLog.freshPhysical coins setup checks configuration.agreement.representation created writer note owner.mldsa owner.identitySeed
-        ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner) owner.pin owner.mldsa.publicKey
+      RegistrationNativePlatformPublicAdapterBundleStageLog.freshPhysical coins setup checks configuration.agreement.representation created writer note owner.identitySeed
+        ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner) owner.pin
         (RegistrationNativePlatformPublicAdapterPhysicalBackend.erase (backend before)) previous prior :=by
   have first:=congrArg (fun work=>work.run previous)
     (RegistrationNativePlatformPublicAdapterBundleSigning.sample_source (source:=source) coins setup checks configuration.agreement.representation created PqxdhJointGapDh.sampleScalar before)
@@ -355,7 +355,7 @@ private theorem fresh_call (note :Stage→Log) (self :beaconcrypt_public_wrapper
         let realized:=(RegistrationNativePlatformPublicAdapterConfiguration.generation configuration).realize result.1.1.1.1 rng
         ((AdapterPublicBundlePublication.install self prekey realized.1 kem realized.2 result.1.1.1.2,(result.1.1.2,result.1.2)),result.2)) <$>
       RegistrationNativePlatformPublicAdapterBundleStageLog.freshPhysical coins setup checks configuration.agreement.representation created writer note
-        owner.mldsa owner.identitySeed ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner) owner.pin owner.mldsa.publicKey before previous prior :=by
+        owner.identitySeed ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner) owner.pin before previous prior :=by
   have fields:=related.phase
   simp only [AdapterPublicWrapperState.Phase,stored,phase] at fields
   unfold call
@@ -381,7 +381,7 @@ theorem fresh_joint (index :Nat) (owner :RegistrationNativeBeaconFrontend.Owner 
     (note :Stage→Log) (prior :List Log) :
     raw configuration created credential
       (RegistrationNativePlatformPublicAdapterBundleStepSource.fresh previousLocal coins setup checks configuration.agreement.representation created
-        configuration.reservePackets index owner configuration.edFailure (other (m:=CutM)) (recording (m:=CutM)) configuration.views credential self configuration.view
+        configuration.reservePackets index owner configuration.edFailure (fun _=>pure (.fail .panic)) (recording (m:=CutM)) configuration.views credential self configuration.view
         control prekey kem configuration.generator (RegistrationNativePlatformPublicAdapterConfiguration.generation configuration) stored phase before previous objects sourceSelected selected)
       (freshAugmentation configuration created credential index owner self control prekey kem stored phase before previous objects sourceSelected selected note prior)=
       (fun result=>(RegistrationNativePlatformPublicAdapterBundlePhysical.finish
@@ -396,7 +396,7 @@ theorem fresh_joint (index :Nat) (owner :RegistrationNativeBeaconFrontend.Owner 
   have fields:=related.phase
   simp only [AdapterPublicWrapperState.Phase,stored,phase] at fields
   have kept:=RegistrationNativePlatformPublicAdapterBundleStepSource.fresh_objects previousLocal coins setup checks configuration.agreement.representation created
-    configuration.reservePackets index owner configuration.edFailure (other (m:=CutM)) (recording (m:=CutM)) configuration.views credential
+    configuration.reservePackets index owner configuration.edFailure (fun _=>pure (.fail .panic)) (recording (m:=CutM)) configuration.views credential
     self configuration.view control prekey kem configuration.generator (RegistrationNativePlatformPublicAdapterConfiguration.generation configuration)
     stored phase before previous objects sourceSelected selected
   rw [raw_active configuration created credential (before.1,previous) objects index _ _ id (fun _=>rfl) kept]
@@ -480,7 +480,7 @@ private theorem plain_query (index :Nat) (before :RegistrationNativePlatformCutJ
     ((congrArg (fun tree=>RegistrationNativePlatformPublicAdapterPhysicalOrdinary.normalize <$>tree)
       (RegistrationNativePlatformPublicAdapterBundleDispatchSource.query coins setup checks configuration.agreement.representation created configuration.view
         (RegistrationNativePlatformPublicAdapterLeaves.localOperations originalLocal) configuration.edFailure configuration.reservePackets children
-        previousLocal (other (m:=CutM)) (recording (m:=CutM)) configuration.views credential index configuration.generator
+        previousLocal (fun _=>pure (.fail .panic)) (recording (m:=CutM)) configuration.views credential index configuration.generator
         (RegistrationNativePlatformPublicAdapterConfiguration.generation configuration) before previous objects)).trans
       (RegistrationNativePlatformPublicAdapterBundleNormalization.run_source coins setup checks configuration.agreement.representation created configuration.view
         (RegistrationNativePlatformPublicAdapterLeaves.localOperations originalLocal) configuration.edFailure writer children configuration.generator
@@ -533,7 +533,7 @@ theorem query (index :Nat) (before :RegistrationNativePlatformCutJournal.State N
         cases phaseEq:owner.phase <;>simp only [AdapterPublicWrapperState.Phase,stored,phaseEq] at matched
         rfl
       let active:=RegistrationNativePlatformPublicAdapterBundleStepSource.fresh previousLocal coins setup checks configuration.agreement.representation created
-            configuration.reservePackets index owner configuration.edFailure (other (m:=CutM)) (recording (m:=CutM)) configuration.views credential self configuration.view
+            configuration.reservePackets index owner configuration.edFailure (fun _=>pure (.fail .panic)) (recording (m:=CutM)) configuration.views credential self configuration.view
             control prekey kem configuration.generator (RegistrationNativePlatformPublicAdapterConfiguration.generation configuration)
             stored phase before previous objects sourceSelected selected
       let activeAug:=freshAugmentation configuration created credential index owner self control prekey kem stored phase before previous objects sourceSelected selected note prior
@@ -565,7 +565,7 @@ theorem query (index :Nat) (before :RegistrationNativePlatformCutJournal.State N
       let scalar:=Classical.choose hasScalar
       have phase :owner.phase=.freshWithCoins scalar:=Classical.choose_spec hasScalar
       let active:=RegistrationNativePlatformPublicAdapterBundleStepSource.withCoins previousLocal coins setup checks configuration.agreement.representation created
-            configuration.reservePackets index owner configuration.edFailure (other (m:=CutM)) (recording (m:=CutM)) configuration.views credential self configuration.view
+            configuration.reservePackets index owner configuration.edFailure (fun _=>pure (.fail .panic)) (recording (m:=CutM)) configuration.views credential self configuration.view
             control scalar prekey oneTime kem configuration.generator stored phase before previous objects sourceSelected selected
       let activeAug:=withCoinsAugmentation configuration created credential index owner self control scalar prekey oneTime kem stored phase before previous objects sourceSelected selected note prior
       have callEq :step configuration created credential index before previous objects=active :=by

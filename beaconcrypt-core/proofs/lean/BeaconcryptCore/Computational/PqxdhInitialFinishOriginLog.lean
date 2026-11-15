@@ -9,6 +9,7 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 open OracleComp OracleSpec
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialFinishOriginLog
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open RawCtxGenericRoleStorage PqxdhBeaconPhase2Shared PqxdhInitialGenericBeacon
 variable {Kernel Origin I D K X Response Shared Metadata : Type}
 variable {m : Type → Type*} [Monad m] [LawfulMonad m]
@@ -85,10 +86,10 @@ theorem owner_logged (mark : Secrets Shared → Origin)
     (original : RawCtxChainOwner.Calls Kernel m) (application : Response → m (Option Pqxdh.Bytes))
     (originalInitial : Secrets Shared → m (Option Kernel)) (decode : RawCtxReceive.FrameDecoder)
     (raw : Pqxdh.Bytes) (state : BeaconState Kernel I D K) (saved : Option Origin) :
-    published <$> (PqxdhInitialGenericBeacon.owner (pre.liftTarget (StateT (Option Origin) m))
+    published <$> (PqxdhInitialGenericBeacon.owner (completedBinding := completedBinding) (pre.liftTarget (StateT (Option Origin) m))
       (calls original) (fun reply => StateT.lift (application reply))
       (initial mark originalInitial) decode raw state).run saved =
-    PqxdhInitialFinishOrigin.owner mark pre original application originalInitial decode raw state := by
+    PqxdhInitialFinishOrigin.owner (completedBinding := completedBinding) mark pre original application originalInitial decode raw state := by
   unfold PqxdhInitialGenericBeacon.owner PqxdhInitialFinishOrigin.owner
   cases phase : state.beacon.phase
   case initSent control prekey oneTime kem =>
@@ -112,12 +113,12 @@ theorem owner_erase (mark : Secrets Shared → Origin)
     (original : RawCtxChainOwner.Calls Kernel m) (application : Response → m (Option Pqxdh.Bytes))
     (originalInitial : Secrets Shared → m (Option Kernel)) (decode : RawCtxReceive.FrameDecoder)
     (raw : Pqxdh.Bytes) (state : BeaconState Kernel I D K) (saved : Option Origin) :
-    Prod.fst <$> (PqxdhInitialGenericBeacon.owner (pre.liftTarget (StateT (Option Origin) m))
+    Prod.fst <$> (PqxdhInitialGenericBeacon.owner (completedBinding := completedBinding) (pre.liftTarget (StateT (Option Origin) m))
       (calls original) (fun reply => StateT.lift (application reply))
       (initial mark originalInitial) decode raw state).run saved =
-    PqxdhInitialGenericBeacon.owner pre original application originalInitial decode raw state := by
+    PqxdhInitialGenericBeacon.owner (completedBinding := completedBinding) pre original application originalInitial decode raw state := by
   have equality := congrArg (fun work => Prod.fst <$> work)
-    (owner_logged mark pre original application originalInitial decode raw state saved)
+    (owner_logged (completedBinding := completedBinding) mark pre original application originalInitial decode raw state saved)
   rw [PqxdhInitialFinishOrigin.erase] at equality
   simpa only [Functor.map_map, published] using equality
 
@@ -129,11 +130,11 @@ theorem owner_query_bound {ι : Type} {spec : OracleSpec ι} (mark : Secrets Sha
     (originalInitial : Secrets Shared → OracleComp spec (Option Kernel)) (decode : RawCtxReceive.FrameDecoder)
     (raw : Pqxdh.Bytes) (state : BeaconState Kernel I D K) (saved : Option Origin)
     (predicate : spec.Domain → Prop) [DecidablePred predicate] (budget : Nat) :
-    ((PqxdhInitialGenericBeacon.owner (pre.liftTarget (StateT (Option Origin) (OracleComp spec)))
+    ((PqxdhInitialGenericBeacon.owner (completedBinding := completedBinding) (pre.liftTarget (StateT (Option Origin) (OracleComp spec)))
       (calls original) (fun reply => StateT.lift (application reply))
       (initial mark originalInitial) decode raw state).run saved).IsQueryBoundP predicate budget ↔
-    (PqxdhInitialGenericBeacon.owner pre original application originalInitial decode raw state).IsQueryBoundP predicate budget := by
-  rw [← owner_erase mark pre original application originalInitial decode raw state saved]
+    (PqxdhInitialGenericBeacon.owner (completedBinding := completedBinding) pre original application originalInitial decode raw state).IsQueryBoundP predicate budget := by
+  rw [← owner_erase (completedBinding := completedBinding) mark pre original application originalInitial decode raw state saved]
   exact (isQueryBoundP_map_iff _ _ _).symm
 
 end BeaconcryptCore.Computational.PqxdhInitialFinishOriginLog

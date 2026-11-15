@@ -117,19 +117,21 @@ theorem server_consumed {Auxiliary : Type} (source : PqxdhJointKdfGame.FixedHkdf
     (completed : registration.ServerResponseHash)
     (supported : ((agreed, some (.ok (.Ok completed))), after) ∈ support
       ((server source primitive writer control status current availability authenticated application).run before)) :
-    completed.binding = authenticated.binding ∧
+    ∃ digest binding, authenticated.binding.complete digest = .ok binding ∧ completed.binding = binding ∧
+      BeaconcryptCore.Refinement.SessionBinding.registrationConsistent binding ∧
       ∃ selected : ratchet.concrete.SendSeal record_effects.SealFrameContext,
         completed.kernel = selected.advanced ∧ selected.sequence.val = 1 ∧
-        selected.context.associated_data = authenticated.binding.associated_data := by
+        selected.context.associated_data = binding.associated_data := by
   obtain ⟨capability, middle, _agreed, first, recorded⟩ :=
     server_cut source primitive writer control status current availability authenticated application
       before after agreed completed supported
   have binding := RegistrationAgreementExecutor.interpreted_server_binding (implementation source primitive)
     before middle control status authenticated capability first
-  obtain ⟨_pin, retained, selected, kernel, sequence, ad⟩ :=
-    RegistrationServerRecordExecutor.execute_retains source writer control current availability capability application
+  obtain ⟨_pin, digest, completedBinding, complete, retained, consistent, selected, kernel, sequence, ad⟩ :=
+    RegistrationServerRecordExecutor.execute_retains_completed_ad source writer control current availability capability application
       middle after completed recorded
-  exact ⟨retained.trans binding, selected, kernel, sequence, by simpa only [binding] using ad⟩
+  exact ⟨digest, completedBinding, by simpa only [binding] using complete,
+    retained, consistent, selected, kernel, sequence, ad⟩
 
 theorem beacon_consumed {Auxiliary : Type} (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (primitive : QueryImpl PrimitiveSpec (StateT Auxiliary ProbComp)) (writer : RawCtxMixedShared.Writer)
@@ -139,9 +141,9 @@ theorem beacon_consumed {Auxiliary : Type} (source : PqxdhJointKdfGame.FixedHkdf
     (supported : ((agreed, some (.ok (.Ok completed))), after) ∈ support
       ((beacon source primitive writer authenticated).run before)) :
     ∃ (capability : agreement.BeaconAgreement) (pending : registration.BeaconRecordAead) (plaintext : Slice Std.U8),
-      agreed = .ok (.BeaconComplete capability) ∧ capability.binding = authenticated.pending.binding ∧
+      agreed = .ok (.BeaconComplete capability) ∧ capability.binding = authenticated.binding ∧
       completed.binding = BeaconcryptCore.Refinement.RegistrationPublication.completedBinding
-        authenticated.pending.binding capability.candidate.assigned_key_id ∧
+        authenticated.binding capability.candidate.assigned_key_id ∧
       pending.agreement = capability ∧
       pending.pending.finish (.Some plaintext) = .ok (completed.kernel,
         .Some (⟨plaintext, capability.candidate.server_binding.identity_key_id, 1#u64⟩ :

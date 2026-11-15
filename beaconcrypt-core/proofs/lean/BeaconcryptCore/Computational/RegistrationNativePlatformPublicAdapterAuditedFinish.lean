@@ -41,7 +41,7 @@ noncomputable local instance idleLocal :LocalOperations (RustT (StateT (Registra
 noncomputable local instance idleCrypto :CryptoOperations (RustT (StateT (RegistrationNativeExperiment.State n KemSK source×P) ProbComp)):=packedCrypto
 noncomputable local instance idleChildren :ChildOperations (RustT (StateT (RegistrationNativeExperiment.State n KemSK source×P) ProbComp)):=children
 local instance idleCodecs :Codecs (RustT (StateT (RegistrationNativeExperiment.State n KemSK source×P) ProbComp)):=AdapterPublicConcreteCodecs.codecs
-variable (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
 local notation "auditPrivate"=>RegistrationNativePlatformPublicAdapterAuditModel.Private configuration created credential
 local notation "auditModel"=>RegistrationNativePlatformPublicAdapterAuditModel.model configuration created credential
 local notation "auditPhysical"=>RegistrationNativePlatformPublicAdapterAuditModel.physical configuration created credential

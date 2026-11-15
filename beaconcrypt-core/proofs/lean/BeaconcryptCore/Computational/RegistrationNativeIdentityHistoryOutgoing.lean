@@ -40,7 +40,7 @@ private theorem lift_modify (change : RegistrationWorldAgreementCompiler.EnvStat
 theorem program_preserves {Index : Type} {spec : OracleSpec Index}
     (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index handle : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index handle : Nat)
     (implementation : QueryImpl spec (M n KemSK Auxiliary source))
     (step : ∀ query, Preserves setup checks representation created index handle (implementation query))
     (work : OracleComp spec Value) :
@@ -53,7 +53,7 @@ theorem program_preserves {Index : Type} {spec : OracleSpec Index}
 
 theorem effect_preserves (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index handle : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index handle : Nat)
     (query : (PqxdhRecordLiftInterface.EnvEffects n).Domain) :
     Preserves (Auxiliary := Auxiliary) (source := source) setup checks representation created index handle (effect query) := by
   rw [← lift_effect]
@@ -61,14 +61,14 @@ theorem effect_preserves (setup : Setup base KemSK) (checks : Checks)
 
 theorem sample_preserves (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index handle : Nat) (work : ProbComp Value) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index handle : Nat) (work : ProbComp Value) :
     Preserves (n := n) (Auxiliary := Auxiliary) (source := source) setup checks representation created index handle (sample work) :=
   program_preserves setup checks representation created index handle _
     (fun query => effect_preserves setup checks representation created index handle (.inl query)) work
 
 theorem update_preserves (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index handle : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index handle : Nat)
     (change : RegistrationWorldAgreementCompiler.EnvState Auxiliary → RegistrationWorldAgreementCompiler.EnvState Auxiliary) :
     Preserves (n := n) (source := source) setup checks representation created index handle (updateEnv change) := by
   rw [← lift_modify]
@@ -76,7 +76,7 @@ theorem update_preserves (setup : Setup base KemSK) (checks : Checks)
 
 theorem ed_preserves (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (owner : Owner source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (owner : Owner source)
     (request : registration.Ed25519SigningRequest) :
     Preserves (n := n) (Auxiliary := Auxiliary) setup checks representation created index owner.identity.handle
       (outgoing setup source index owner (.inr request)) := by
@@ -105,7 +105,7 @@ theorem ed_preserves (setup : Setup base KemSK) (checks : Checks)
 
 theorem query_preserves (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (owner : Owner source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (owner : Owner source)
     (query : RegistrationBeaconInitExecutor.Spec.Domain) :
     Preserves (n := n) (Auxiliary := Auxiliary) setup checks representation created index owner.identity.handle
       (outgoing setup source index owner query) := by
@@ -113,22 +113,19 @@ theorem query_preserves (setup : Setup base KemSK) (checks : Checks)
   | inl query => cases query with
     | hash request => exact effect_preserves setup checks representation created index owner.identity.handle _
     | sign request payload digest =>
-        exact bind_preserves setup checks representation created index owner.identity.handle _ _
-          (sample_preserves setup checks representation created index owner.identity.handle _)
-          (fun reply => bind_preserves setup checks representation created index owner.identity.handle _ _
-            (update_preserves setup checks representation created index owner.identity.handle _)
-            (fun _ => pure_preserves setup checks representation created index owner.identity.handle reply))
+        exact pure_preserves setup checks representation created index owner.identity.handle
+          (core.option.Option.None : RegistrationSigningShared.SignReply)
   | inr request => exact ed_preserves setup checks representation created index owner request
 
-/-- The full actual Ed3, fingerprint, transcript-signing and dynamic publication controller retains synchronized histories through every return path. -/
+/-- The full actual three-Ed, request-hash and dynamic publication controller retains synchronized histories through every return path. -/
 theorem init_preserves (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (index : Nat) (owner : Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes) :
     Preserves (n := n) (Auxiliary := Auxiliary) setup checks representation created index owner.identity.handle
       (simulateQ (outgoing setup source index owner)
         (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨owner.pin.binding⟩ (inputs owner)
-          ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)) :=
+          ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)) :=
   program_preserves setup checks representation created index owner.identity.handle _
     (query_preserves setup checks representation created index owner) _
 

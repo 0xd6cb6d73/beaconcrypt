@@ -115,7 +115,7 @@ theorem step_bound (query : RegistrationNativeEntropyInterface.EnvQuery)
   simpa only [classes] using first
 include generation signing kem registrationBound peerBound bytesBound packetsBound in
 /-- The environment Frame is constructed from individual actual callback bills and the separate startup draw receipt. -/
-theorem frame (startup : ProbComp (Option (PqxdhLiveServerConstruction.Created Unit × State n KemSK ProviderState Platform source)))
+theorem frame (startup : ProbComp (Option (PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize) × State n KemSK ProviderState Platform source)))
     (startupCoins : Nat) (startupBound : startup.IsTotalQueryBound startupCoins) :
     RegistrationNativeEntropyFrame.Frame
       (RegistrationNativePlatformSelectiveEntropyEnvironment.environment setup checks canonical source credential seed scalar candidate provider

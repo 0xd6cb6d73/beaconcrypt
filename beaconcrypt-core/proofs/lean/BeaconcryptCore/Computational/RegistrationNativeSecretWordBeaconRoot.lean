@@ -32,7 +32,7 @@ noncomputable def client (authenticated : registration.AuthenticatedResponse) (p
   let reference ← PrepareSpec.query (message pending)
   pure (.ok (reference.map fun reference =>
     ⟨⟨PqxdhBeaconPhase2Shared.clearedMetadata pending.metadata,
-      authenticated.pending.binding, authenticated.packet.application⟩, reference⟩))
+      authenticated.binding, authenticated.packet.application⟩, reference⟩))
 
 /-- The concrete Beacon root capability retains its single pre-demand request and all optional refusal branches. -/
 theorem client_bound (authenticated : registration.AuthenticatedResponse) (pending : Prepared registration.AuthenticatedResponse) :

@@ -16,7 +16,7 @@ variable {source : RegistrationNativeMldsa.Source}
 
 theorem next_preserves (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (owner : Owner source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (owner : Owner source)
     (oneTime : PqxdhJointGapDh.ScalarBytes) (reply : RustM (RegistrationBeaconInitExecutor.Result Pqxdh.Bytes)) :
     Preserves (n := n) (Auxiliary := Auxiliary) setup checks representation created index owner.identity.handle
       (RegistrationNativeIdentityBundleSource.next index owner oneTime reply) := by
@@ -33,7 +33,7 @@ theorem next_preserves (setup : Setup base KemSK) (checks : Checks)
 
 theorem bundled_preserves (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (index : Nat) (owner : Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes) :
     Preserves (n := n) (Auxiliary := Auxiliary) setup checks representation created index owner.identity.handle
       (RegistrationNativeIdentityBundleSource.bundled setup wire index owner oneTime) :=
@@ -43,7 +43,7 @@ theorem bundled_preserves (setup : Setup base KemSK) (checks : Checks)
 
 theorem start_preserves (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (index : Nat) (owner : Owner source) :
     Preserves (n := n) (Auxiliary := Auxiliary) setup checks representation created index owner.identity.handle
       (RegistrationNativeIdentityBundleDispatch.start setup wire index owner) := by
@@ -64,7 +64,7 @@ theorem start_preserves (setup : Setup base KemSK) (checks : Checks)
 /-- Generated ownership, distinct handles and exact signed-message synchronization survive the complete actual bundle operation. -/
 theorem bundle_holds (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire) (index : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire) (index : Nat)
     (before : NewState n KemSK Auxiliary source) (result : RustM (Option Pqxdh.Bytes) × NewState n KemSK Auxiliary source)
     (prior : Holds setup.joint before.2.identities before.1.1)
     (supported : result ∈ support (runNew setup checks representation created

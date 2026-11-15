@@ -47,7 +47,7 @@ private theorem issued_member (before : Native) (pending : registration.BeaconPe
 variable [primitive : AdapterSealPrimitive.Operations]
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
 variable (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 variable (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
 variable (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
 variable (reserveRegistration reservePeer : StateT Platform ProbComp Bool) (erased : commitment.CommitmentTranscript)
@@ -90,7 +90,7 @@ theorem path_contents (ensureInit : StateT Unit ProbComp Bool) (identityIndex : 
         Executed impl (⟨.inr (.finish index (some packet)), beforeFinish, .ok (some application), afterFinish⟩ : Call RegistrationNativeRawAdapter.TypedSpec Whole) ∧
         Path impl afterFinish trailing final ∧ serverCall ∈ leading ∧ serverCall.query = .inr (.build serverIndex serverInput) ∧
         RegistrationServerSdkSource.take serverIndex serverCall.before.1.server = (some token, current) ∧ serverInput = some plaintext ∧
-        SourceAt serverCall receipt ∧ registration.begin_server_completion current.control pin availability token.agreement plaintext = .ok (.Ok serverInitial) ∧
+        SourceAt serverCall receipt ∧ BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission current.control pin availability token.agreement plaintext serverInitial ∧
         RegistrationServerRecordExecutor.Path serverInitial hashed ∧ hashed.candidate.server_identity_public_key = packet.public.identity_key ∧
         hashed.candidate.ephemeral_public_key = packet.public.ephemeral_key ∧ hashed.candidate.kem_ciphertext = packet.public.kem_cipher_text ∧
         hashed.ciphertext = packet.application ∧ hashed.candidate.key_id = packet.public.key_id ∧ hashed.binding.init_hash = pending.binding.init_hash ∧
@@ -114,7 +114,8 @@ theorem path_contents (ensureInit : StateT Unit ProbComp Bool) (identityIndex : 
     have samePayload : Command.payload (.server hashed) = RegistrationResponseExecutor.payload pending packet := payload.symm.trans content
     obtain ⟨identity, ephemeral, kem, ciphertext, assigned, initHash⟩ :=
       RegistrationNativeResponseStageContents.native_fields serverInitial hashed path pending packet samePayload
-    have rooted := (RegistrationNativeServerBindingReceipt.initial_root current.control pin availability token.agreement plaintext serverInitial admitted).2.2.2
+    obtain ⟨_adDigest, _completedBinding, _completedAt, _initialBinding, _application, rooted⟩ :=
+      (RegistrationNativeServerBindingReceipt.initial_root current.control pin availability token.agreement plaintext serverInitial admitted).2
     exact ⟨verified, leading, trailing, serverCall, receipt, serverIndex, serverInput, token, current, pin, plaintext, availability, serverInitial, hashed,
       split, prefixRun, finished, suffixRun, earlier, query, taken, plaintextEq, stageReceipt, admitted, path, identity, ephemeral, kem, ciphertext, assigned, initHash, rooted⟩
 

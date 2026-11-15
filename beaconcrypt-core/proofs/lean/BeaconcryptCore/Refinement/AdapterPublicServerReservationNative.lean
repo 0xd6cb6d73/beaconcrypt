@@ -36,7 +36,7 @@ noncomputable def project {R : Type} (view : AdapterPublicWrapperState.MaterialV
 noncomputable def native (coins : QueryImpl unifSpec m) {I : Type} {base : OracleSpec I}
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (authenticated : registration.AuthenticatedInit) (allocated : m AllocationReply) : NativeM (RustM (Option Nat)) := do
   let result ← StateT.lift allocated
   match result.1 with
@@ -85,7 +85,7 @@ theorem coupled {PlatformState R E I : Type} {base : OracleSpec I}
     (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (views : AdapterPublicWrapperStorage.Views)
     (model : AdapterPublicAgreementPrimitiveModel.Model (m := ProbComp) generator setup checks view)
     (entropy : AdapterPublicAgreementServerNative.Entropy model)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : beaconcrypt_public_wrapper.server.Server) (rng : R)
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit)
     (before : RegistrationNativeExperiment.State n KemSK mlSource)

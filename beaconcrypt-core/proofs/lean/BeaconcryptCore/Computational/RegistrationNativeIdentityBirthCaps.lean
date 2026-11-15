@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativeIdentityNoCreate
 import BeaconcryptCore.Computational.RegistrationNativeIdentitySourcePrepare
 
-/-! Actual native preparation requests at most one indexed Ed identity, independently of every optional ML or pin failure. Ordinary source randomness and pin hashing create none. These are structural whole-AST bills, suitable for finite multi-user routing rather than only an event-relative handle bound. -/
+/-! Actual native preparation requests at most one indexed Ed identity, after pure full-pin selection and through every indexed-identity failure. Ordinary prekey sampling creates none. These are structural whole-AST bills, suitable for finite multi-user routing rather than only an event-relative handle bound. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -41,33 +41,15 @@ theorem program_one (source : RegistrationNativeMldsa.Source) (edPin : Std.Array
     (RegistrationNativeIdentitySourcePrepare.program (n := n) (KemSK := KemSK) source edPin mlPin keyId).IsQueryBoundP
       (Creates n KemSK) 1 := by
   unfold RegistrationNativeIdentitySourcePrepare.program
-  apply isQueryBoundP_bind (n := 0) (m := 1) (coins_zero _)
-  intro generated _
-  cases generated with
-  | none => exact isQueryBoundP_pure (Creates n KemSK) _ 1
-  | some credentials =>
-      dsimp only
-      cases begun : beaconcrypt_core.registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
-      | fail error | div => exact isQueryBoundP_pure (Creates n KemSK) _ 1
-      | ok pending =>
-          simp only
-          cases requested : pending.request with
-          | fail error | div => simpa only [requested] using isQueryBoundP_pure (Creates n KemSK) _ 1
-          | ok request =>
-              simp only
-              apply isQueryBoundP_bind (n := 0) (m := 1) (hash_zero _)
-              intro digest _
-              cases resumed : pending.resume (.Some (RegistrationAuthenticationShared.digestArray digest)) with
-              | fail error | div => exact isQueryBoundP_pure (Creates n KemSK) _ 1
-              | ok result => cases result with
-                | none => exact isQueryBoundP_pure (Creates n KemSK) _ 1
-                | some pin =>
-                    apply isQueryBoundP_bind (n := 1) (m := 0) identity_one
-                    intro identity _
-                    cases identity with
-                    | none => exact isQueryBoundP_pure (Creates n KemSK) _ 0
-                    | some identity =>
-                        exact isQueryBoundP_bind (m := 0) (n := 0) (coins_zero _) (fun _ _ => isQueryBoundP_pure (Creates n KemSK) _ 0)
+  cases begun : beaconcrypt_core.registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
+  | fail error | div => exact isQueryBoundP_pure (Creates n KemSK) _ 1
+  | ok pin =>
+      apply isQueryBoundP_bind (n := 1) (m := 0) identity_one
+      intro identity _
+      cases identity with
+      | none => exact isQueryBoundP_pure (Creates n KemSK) _ 0
+      | some identity =>
+          exact isQueryBoundP_bind (m := 0) (n := 0) (coins_zero _) (fun _ _ => isQueryBoundP_pure (Creates n KemSK) _ 0)
 
 /-- The actual nested native constructor preparation has the same structural one-identity bill. -/
 theorem prepare_one (source : RegistrationNativeMldsa.Source) (edPin : Std.Array U8 32#usize)

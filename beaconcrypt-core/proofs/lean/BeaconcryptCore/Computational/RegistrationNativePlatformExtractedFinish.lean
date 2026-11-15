@@ -67,7 +67,7 @@ theorem finish_source (setup : Setup base KemSK) (source : RegistrationNativeMld
 theorem interpreted {Platform : Type} (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (source : RegistrationNativeMldsa.Source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (source : RegistrationNativeMldsa.Source)
     (index : Nat) (packet : Option registration.ResponsePacket)
     (before : RegistrationNativeExperiment.State n KemSK source) (previous : Platform) :
     ((RegistrationNativePlatformExperiment.liftNative coins (RegistrationNativeExperiment.beacon setup checks representation created

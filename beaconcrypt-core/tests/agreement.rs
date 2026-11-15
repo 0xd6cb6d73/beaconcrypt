@@ -15,8 +15,6 @@ struct InitBytes {
 	prekey: Vec<u8>,
 	one_time: Vec<u8>,
 	pq: Vec<u8>,
-	mldsa: Vec<u8>,
-	signature: Vec<u8>,
 }
 
 fn pin() -> ServerAuthenticationPin {
@@ -26,7 +24,6 @@ fn pin() -> ServerAuthenticationPin {
 			identity_key_id: 42,
 		},
 		[17; 1952],
-		[23; 64],
 	)
 }
 
@@ -42,7 +39,6 @@ fn initiation() -> (BeaconPending, InitBytes) {
 			one_time_public_key: [4; 32],
 		},
 		pin(),
-		[19; 1952],
 	);
 	loop {
 		effect = match effect {
@@ -54,8 +50,6 @@ fn initiation() -> (BeaconPending, InitBytes) {
 					prekey: view.fields.pre_key.to_vec(),
 					one_time: view.fields.one_time_key.to_vec(),
 					pq: view.fields.pq_key.to_vec(),
-					mldsa: view.fields.mldsa_public_key.to_vec(),
-					signature: view.signature.to_vec(),
 				};
 				return (ready.publish(Some(())).ok().unwrap().into_parts().0, bytes);
 			}
@@ -64,24 +58,16 @@ fn initiation() -> (BeaconPending, InitBytes) {
 				signed.extend_from_slice(pending.request().message);
 				pending.resume(Some(&signed))
 			}
-			BeaconInitEffect::FingerprintRequested(pending) => pending.resume(Some([31; 64])),
 			BeaconInitEffect::HashRequested(pending) => pending.resume(Some([37; 64])),
-			BeaconInitEffect::MldsaSigningRequested(pending) => pending.resume(Some(&[41; 3309])),
 		};
 	}
 }
 
 fn server_start(status: RegistrationStatus) -> AgreementEffect<'static> {
 	let (_, bytes) = initiation();
-	let packet = InitPacket::from_slices(
-		&bytes.identity,
-		&bytes.prekey,
-		&bytes.one_time,
-		&bytes.pq,
-		&bytes.mldsa,
-		&bytes.signature,
-	)
-	.unwrap();
+	let packet =
+		InitPacket::from_slices(&bytes.identity, &bytes.prekey, &bytes.one_time, &bytes.pq)
+			.unwrap();
 	let mut effect = registration::begin_init_authentication(pin(), packet);
 	loop {
 		effect = match effect {
@@ -94,16 +80,9 @@ fn server_start(status: RegistrationStatus) -> AgreementEffect<'static> {
 				);
 			}
 			InitAuthentication::HashRequested(pending) => pending.resume(Some([37; 64])),
-			InitAuthentication::MldsaVerificationRequested(pending) => pending.resume(true),
 			InitAuthentication::Ed25519VerificationRequested(pending) => {
 				let opened = pending.request().signed[64..].to_vec();
 				pending.resume(Some(&opened))
-			}
-			InitAuthentication::ServerFingerprintRequested(pending) => {
-				pending.resume(Some([23; 64]))
-			}
-			InitAuthentication::BeaconFingerprintRequested(pending) => {
-				pending.resume(Some([31; 64]))
 			}
 		};
 	}
@@ -124,7 +103,12 @@ fn beacon_start<'a>(identity: &'a [u8; 32], ciphertext: &'a [u8]) -> AgreementEf
 		.ok()
 		.unwrap();
 	let verify = hash.resume(Some([53; 64])).ok().unwrap();
-	agreement::begin_beacon_agreement(verify.resume(true).ok().unwrap())
+	let ad_hash = verify.resume(true).ok().unwrap();
+	let registration::HashRequest::Single(input) = ad_hash.request() else {
+		panic!("single exact AD preimage expected")
+	};
+	assert_eq!(input.len(), 2638);
+	agreement::begin_beacon_agreement(ad_hash.resume(Some([59; 64])).ok().unwrap())
 }
 
 fn root_input() -> Vec<u8> {

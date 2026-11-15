@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhDeploymentCompile
 
-/-! Record commands of the CE-3 trial (items b and c of the compile lemma). A Server record command reads exactly one peer: its identity, kernel and the Server identity enter only through the 281-byte associated data and the selected kernel, and the Server key ID is the only metadata read. A Beacon record command reads exactly the outer key ID, the established control's expected sender, the stored associated data, the kernel and the raw-attempt counter; it never reads the identity seed, the pinned Server identity or any private Phase 1 field. Hence a local copy that agrees on these values has the same reply and the same returned kernel and counter. -/
+/-! Record commands of the CE-3 trial (items b and c of the compile lemma). A Server record command reads exactly one peer through the per-peer router `MldsaServerRouting.handler`: its kernel and its installed associated data, and the Server key ID is the only metadata read. A Beacon record command reads exactly the outer key ID, the established control's expected sender, the stored associated data, the kernel and the raw-attempt counter; it never reads the identity seed, the pinned Server identity or any private Phase 1 field. Hence a local copy that agrees on these values has the same reply and the same returned kernel and counter. A copy's associated data is the answer to one forwarded BLAKE2b command on its public transcript (`PqxdhDeploymentCompile.copyData`); when that transcript is cached with the digest of the installed associated data, the command is a cache hit that changes nothing (`hash_hit`, `copyData_hit`). -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
@@ -74,9 +74,51 @@ theorem serverImpl_absent (senderId : Unit → Std.U64) (route : RawCtxServerRou
           RawCtxServerRouting.peerAssociatedData, missing, Option.bind_eq_bind, Option.bind_none, serverReject,
           rejectCount]
 
+/-- The per-peer router on an installed addressed peer is the record core on that peer under its own installed associated data, followed by publication of the returned kernel at the same key ID. -/
+theorem handler_peer (senderId : Unit → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
+    (decode : RawCtxReceive.FrameDecoder) (query : RawCtxServerMixed.SourceSpec.Domain)
+    (state : RawCtxServerRouting.State Unit PqxdhTranscriptAd.AssociatedData) (kid : Std.U64)
+    (peer : RawCtxServerRouting.Peer PqxdhTranscriptAd.AssociatedData)
+    (target : serverTarget route query = some kid) (found : state.server.peers kid = some peer) :
+    (MldsaServerRouting.handler PqxdhRefinement.absBytes senderId route decode query).run state =
+      (fun result => (result.1, (⟨RawCtxServerRouting.putPeer state.server kid peer result.2.1, result.2.2⟩ :
+        RawCtxServerRouting.State Unit PqxdhTranscriptAd.AssociatedData))) <$>
+        serverCore (senderId ()) decode kid (PqxdhRefinement.absBytes peer.metadata)
+          peer.kernel state.rawAttempts query := by
+  have metadata : state.server.metadata = () := Subsingleton.elim _ _
+  rcases query with ⟨plaintext, sent⟩ | bytes
+  · simp only [serverTarget, Option.some.injEq] at target
+    subst target
+    simp only [StateT.run, MldsaServerRouting.handler, MldsaServerRouting.send, found, MldsaServerRouting.selected,
+      RawCtxMixedOwner.ownerImpl, RawCtxMixedOwner.sendAdapter, QueryImpl.simulateQ_compose, serverCore, metadata,
+      bind_pure_comp, Functor.map_map]
+    rfl
+  · simp only [serverTarget] at target
+    simp only [StateT.run, MldsaServerRouting.handler, MldsaServerRouting.receive, target, found,
+      MldsaServerRouting.selected, RawCtxMixedOwner.ownerImpl, serverCore, bind_pure_comp, Functor.map_map]
+    rfl
+
+/-- The per-peer router rejects an absent addressed peer, or raw bytes without a header route, before any primitive call; only a raw attempt is counted. -/
+theorem handler_absent (senderId : Unit → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
+    (decode : RawCtxReceive.FrameDecoder) (query : RawCtxServerMixed.SourceSpec.Domain)
+    (state : RawCtxServerRouting.State Unit PqxdhTranscriptAd.AssociatedData)
+    (absent : ∀ kid, serverTarget route query = some kid → state.server.peers kid = none) :
+    (MldsaServerRouting.handler PqxdhRefinement.absBytes senderId route decode query).run state =
+      pure (serverReject query, ⟨state.server, rejectCount query state.rawAttempts⟩) := by
+  rcases query with ⟨plaintext, kid⟩ | bytes
+  · have missing := absent kid rfl
+    simp only [StateT.run, MldsaServerRouting.handler, MldsaServerRouting.send, missing, serverReject, rejectCount]
+  · cases target : route bytes with
+    | none => simp only [StateT.run, MldsaServerRouting.handler, MldsaServerRouting.receive, target, serverReject,
+        rejectCount]
+    | some kid =>
+        have missing := absent kid (by simpa only [serverTarget] using target)
+        simp only [StateT.run, MldsaServerRouting.handler, MldsaServerRouting.receive, target, missing, serverReject,
+          rejectCount]
+
 /-- The Beacon record core on an established owner: the whole-owner send or raw receive under the outer key ID, with the control's expected sender, the stored associated data, the kernel and the counter. -/
 noncomputable def beaconCore (sender expected : Std.U64) (decode : RawCtxReceive.FrameDecoder)
-    (associatedData : Std.Array Std.U8 281#usize) (kernel : Kernel) (raw : Nat)
+    (associatedData : Std.Array Std.U8 151#usize) (kernel : Kernel) (raw : Nat)
     (query : RawCtxMixedOwner.SourceSpec.Domain) :
     OracleComp RawCtxMixedOwner.NativeSpec (RawCtxMixedOwner.SourceSpec.Range query × (Kernel × Nat)) :=
   (fun result => (result.1, (result.2.owner.kernel, result.2.rawAttempts))) <$>
@@ -86,7 +128,7 @@ noncomputable def beaconCore (sender expected : Std.U64) (decode : RawCtxReceive
 /-- An established owner's record command is the Beacon record core; only the kernel and counter are reinstalled. It reads no identity, pinned Server identity or private Phase 1 field. -/
 theorem beaconImpl_established {I D K : Type} (decode : RawCtxReceive.FrameDecoder)
     (query : RawCtxMixedOwner.SourceSpec.Domain) (state : RawCtxBeaconLifecycle.State I D K)
-    (control : beaconcrypt_core.pqxdh.BeaconEstablished) (associatedData : Std.Array Std.U8 281#usize)
+    (control : beaconcrypt_core.pqxdh.BeaconEstablished) (associatedData : Std.Array Std.U8 151#usize)
     (kernel : Kernel) (phase : state.beacon.phase = .established control associatedData kernel) :
     (RawCtxBeaconLifecycle.beaconImpl decode query).run state =
       (fun result => (result.1, (⟨{ state.beacon with phase := .established control associatedData result.2.1 },
@@ -124,6 +166,33 @@ theorem kernel_run (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
         simp [PqxdhRegistrationJointLiveRead.value, PqxdhRegistrationJointLiveRead.localValue, phase,
           PqxdhDeploymentCompile.phaseKernel]
 
+/-- A forwarded source14 BLAKE2b command on a cached input returns the cached digest and changes nothing. -/
+theorem hash_hit (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (serverSeed : IdentitySeed) (bytes : Pqxdh.Bytes) (digest : CtxRomAuth.CtxDigest)
+    (native : PqxdhRegistrationSchedule.State KemSK) (cached : native.shared.2.ctx ((), bytes) = some digest) :
+    (simulateQ (PqxdhRegistrationJointRevealSchedule.native setup codec checks serverSeed)
+      (PqxdhDeploymentRecordCache.hashQuery bytes)).run native = pure (digest, native) := by
+  simp only [PqxdhDeploymentRecordCache.hashQuery, simulateQ_spec_query, PqxdhRegistrationJointRevealSchedule.native,
+    PqxdhRegistrationSchedule.handler, PqxdhRegistrationSchedule.onShared_run, PqxdhServerAuthNative.nativeHash,
+    CtxRomAuth.ctxRandomOracle, QueryImpl.withCaching_run_some _ cached, map_pure]
+
+/-- The copy's forwarded transcript hash on a cached transcript returns the associated data of the cached digest and changes nothing. -/
+theorem copyData_hit (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (serverSeed : IdentitySeed) (kernel : Kernel) (bytes : Pqxdh.Bytes) (digest : CtxRomAuth.CtxDigest)
+    (native : PqxdhRegistrationSchedule.State KemSK) (cached : native.shared.2.ctx ((), bytes) = some digest) :
+    (simulateQ (PqxdhRegistrationJointRevealSchedule.native setup codec checks serverSeed)
+      (PqxdhDeploymentCompile.copyData (KemSK := KemSK) (some kernel) (some bytes))).run native =
+      pure (some (PqxdhTranscriptAd.adOf digest), native) := by
+  simp only [PqxdhDeploymentCompile.copyData, simulateQ_map, StateT.run_map,
+    hash_hit setup codec checks serverSeed bytes digest native cached, map_pure]
+
+/-- Without a copied target the copy issues no command. -/
+theorem copyData_none (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (serverSeed : IdentitySeed) (transcript : Option Pqxdh.Bytes) (native : PqxdhRegistrationSchedule.State KemSK) :
+    (simulateQ (PqxdhRegistrationJointRevealSchedule.native setup codec checks serverSeed)
+      (PqxdhDeploymentCompile.copyData (KemSK := KemSK) none transcript)).run native = pure (none, native) := by
+  simp only [PqxdhDeploymentCompile.copyData, simulateQ_pure, StateT.run_pure]
+
 /-- Mapping a record program maps its result and keeps the same native poststate. -/
 theorem record_map {Result Next : Type} (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (f : Result → Next) (work : OracleComp RawCtxMixedOwner.NativeSpec Result)
@@ -147,8 +216,8 @@ theorem serverStep_run (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
       (fun result => (result.1.1.1, PqxdhDeploymentNative.produce (PqxdhDeploymentNative.serverTag query) result.1.2
         (PqxdhDeploymentNative.withServer { state with native := result.2 } result.1.1.2))) <$>
         (PqxdhDeploymentNative.record setup codec (PqxdhDeploymentNative.logged
-          ((RawCtxServerMixed.serverImpl (PqxdhDeploymentNative.senderId state) route codec.frameRead query).run
-            (PqxdhDeploymentNative.serverView state)))).run state.native := by
+          ((MldsaServerRouting.handler PqxdhRefinement.absBytes (PqxdhDeploymentNative.senderId state) route
+            codec.frameRead query).run (PqxdhDeploymentNative.serverView state)))).run state.native := by
   simp only [PqxdhDeploymentNative.serverStep, StateT.run, bind_pure_comp]
 
 /-- An unrouted compiled Server record command runs on the empty local Server and keeps only the counter. -/
@@ -159,33 +228,40 @@ theorem serverLocal_none (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
       (fun result => (result.1.1, ({ copies with serverRaw := result.1.2.rawAttempts } : PqxdhDeploymentCompile.Local).produce
         (PqxdhDeploymentNative.serverTag query) result.2)) <$>
         simulateQ (localPrimitives setup codec) (PqxdhDeploymentNative.logged
-          ((RawCtxServerMixed.serverImpl (fun _ => setup.serverKeyId) route codec.frameRead query).run
-            (PqxdhDeploymentCompile.localServer codec copies.log 0#u64 none copies.serverRaw))) := by
+          ((MldsaServerRouting.handler PqxdhRefinement.absBytes (fun _ => setup.serverKeyId) route codec.frameRead
+            query).run (PqxdhDeploymentCompile.localServer codec copies.log 0#u64 none none copies.serverRaw))) := by
   simp only [PqxdhDeploymentCompile.serverLocal, StateT.run, target, bind_pure_comp]
 
-/-- A routed compiled Server record command obtains the addressed kernel, runs on the local Server and keeps the returned kernel and counter. -/
+/-- A routed compiled Server record command obtains the addressed kernel and the copy's associated data, runs on the local Server and keeps the returned kernel and counter. -/
 theorem serverLocal_some (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (query : RawCtxServerMixed.SourceSpec.Domain)
     (copies : PqxdhDeploymentCompile.Local) (kid : Std.U64) (target : serverTarget route query = some kid) :
     (PqxdhDeploymentCompile.serverLocal setup codec route query).run copies =
       PqxdhDeploymentCompile.peerKernel copies kid >>= fun kernel =>
+        PqxdhDeploymentCompile.copyData kernel (PqxdhDeploymentCompile.peerTranscript codec copies.log kid) >>=
+          fun associatedData =>
         (fun result => (result.1.1, ({ copies with
           peers := Function.update copies.peers kid ((result.1.2.server.peers kid).map RawCtxServerRouting.Peer.kernel)
           serverRaw := result.1.2.rawAttempts } : PqxdhDeploymentCompile.Local).produce
             (PqxdhDeploymentNative.serverTag query) result.2)) <$>
           simulateQ (localPrimitives setup codec) (PqxdhDeploymentNative.logged
-            ((RawCtxServerMixed.serverImpl (fun _ => setup.serverKeyId) route codec.frameRead query).run
-              (PqxdhDeploymentCompile.localServer codec copies.log kid kernel copies.serverRaw))) := by
+            ((MldsaServerRouting.handler PqxdhRefinement.absBytes (fun _ => setup.serverKeyId) route codec.frameRead
+              query).run (PqxdhDeploymentCompile.localServer codec copies.log kid kernel associatedData copies.serverRaw))) := by
   simp only [PqxdhDeploymentCompile.serverLocal, StateT.run, target, bind_pure_comp]
 
 /-- Merging a local kernel into a peer keeps the peer identity. -/
-theorem mergePeer_identity (kernel : Option Kernel) (peer : RawCtxServerRouting.Peer Unit) :
+theorem mergePeer_identity (kernel : Option Kernel) (peer : RawCtxServerRouting.Peer PqxdhTranscriptAd.AssociatedData) :
     (PqxdhDeploymentCompile.mergePeer kernel peer).identity = peer.identity := by
   cases kernel <;> rfl
 
 /-- The kernel of a merged peer is the local kernel if one exists. -/
-theorem mergePeer_kernel (kernel : Option Kernel) (peer : RawCtxServerRouting.Peer Unit) :
+theorem mergePeer_kernel (kernel : Option Kernel) (peer : RawCtxServerRouting.Peer PqxdhTranscriptAd.AssociatedData) :
     (PqxdhDeploymentCompile.mergePeer kernel peer).kernel = kernel.getD peer.kernel := by
+  cases kernel <;> rfl
+
+/-- Merging a local kernel into a peer keeps the peer's installed associated data. -/
+theorem mergePeer_metadata (kernel : Option Kernel) (peer : RawCtxServerRouting.Peer PqxdhTranscriptAd.AssociatedData) :
+    (PqxdhDeploymentCompile.mergePeer kernel peer).metadata = peer.metadata := by
   cases kernel <;> rfl
 
 /-- Merging commutes with appending produced frames. -/
@@ -196,7 +272,7 @@ theorem merge_produce (copies : PqxdhDeploymentCompile.Local) (native : PqxdhReg
 
 /-- Merging after a cache update, a new local kernel at an installed peer and its produced frames is the native publication of that kernel at the same peer with the same frames. -/
 theorem merge_put (copies : PqxdhDeploymentCompile.Local) (native : PqxdhRegistrationSchedule.State KemSK)
-    (kid : Std.U64) (peer : RawCtxServerRouting.Peer Unit) (kernel : Kernel) (raw : Nat)
+    (kid : Std.U64) (peer : RawCtxServerRouting.Peer PqxdhTranscriptAd.AssociatedData) (kernel : Kernel) (raw : Nat)
     (cache : CtxRomAuth.CtxRO.QueryCache) (tag : PqxdhDeploymentInterface.FrameTag)
     (frames : List PqxdhDeploymentNative.Frame) (found : native.shared.2.server.server.peers kid = some peer) :
     PqxdhDeploymentCompile.merge
@@ -221,15 +297,18 @@ theorem merge_put (copies : PqxdhDeploymentCompile.Local) (native : PqxdhRegistr
   simp only [PqxdhDeploymentCompile.merge, PqxdhDeploymentNative.withServer, PqxdhDeploymentRecordCache.setCtx,
     RawCtxServerRouting.putPeer, peers, PqxdhDeploymentCompile.Local.produce, PqxdhDeploymentNative.produce]
 
-/-- Server record commands (item b of the compile lemma): when the Server key ID is the public one, every locally copied peer is installed, and every installed peer is publicly reconstructible, the compiled command run on the source14 state has, after merging, exactly the native command's reply and deployment poststate. -/
-theorem server_record (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+/-- Server record commands (item b of the compile lemma): when the Server key ID is the public one, every locally copied peer is installed, every installed peer is publicly reconstructible, and the public transcript of every installed peer is cached with the digest of its installed associated data, the compiled command run on the source14 state has, after merging, exactly the native command's reply and deployment poststate. -/
+theorem server_record_cached (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (serverSeed : IdentitySeed)
     (query : RawCtxServerMixed.SourceSpec.Domain) (copies : PqxdhDeploymentCompile.Local)
     (native : PqxdhRegistrationSchedule.State KemSK)
     (keyId : native.shared.2.server.identityKeyId = setup.serverKeyId)
     (installed : ∀ kid current, copies.peers kid = some current → native.shared.2.server.server.peers kid ≠ none)
     (visible : ∀ kid peer, native.shared.2.server.server.peers kid = some peer →
-      PqxdhDeploymentCompile.peerView codec copies.log kid = some (native.shared.2.server.server.identity, peer.identity)) :
+      PqxdhDeploymentCompile.peerView codec copies.log kid = some (native.shared.2.server.server.identity, peer.identity))
+    (cached : ∀ kid peer, native.shared.2.server.server.peers kid = some peer →
+      ∃ transcript digest, PqxdhDeploymentCompile.peerTranscript codec copies.log kid = some transcript ∧
+        native.shared.2.ctx ((), transcript) = some digest ∧ peer.metadata = PqxdhTranscriptAd.adOf digest) :
     (fun result => (result.1.1, PqxdhDeploymentCompile.merge result.1.2 result.2)) <$>
       (simulateQ (PqxdhRegistrationJointRevealSchedule.native setup codec checks serverSeed)
         ((PqxdhDeploymentCompile.serverLocal setup codec route query).run copies)).run native =
@@ -238,9 +317,9 @@ theorem server_record (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
   cases target : serverTarget route query with
   | none =>
       rw [serverLocal_none setup codec route query copies target,
-        serverImpl_absent (fun _ => setup.serverKeyId) route codec.frameRead query _
+        handler_absent (fun _ => setup.serverKeyId) route codec.frameRead query _
           (fun kid found => by simp only [target, reduceCtorEq] at found),
-        serverImpl_absent _ route codec.frameRead query _ (fun kid found => by simp only [target, reduceCtorEq] at found),
+        handler_absent _ route codec.frameRead query _ (fun kid found => by simp only [target, reduceCtorEq] at found),
         PqxdhDeploymentNative.logged_pure, PqxdhDeploymentNative.logged_pure, record_pure]
       simp only [simulateQ_pure, StateT.run_pure, map_pure]
       rfl
@@ -253,12 +332,14 @@ theorem server_record (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
             cases copied : copies.peers kid with
             | none => rfl
             | some current => exact absurd found (installed kid current copied)
-          have localAbsent : (PqxdhDeploymentCompile.localServer codec copies.log kid none copies.serverRaw).server.peers kid = none := by
+          have localAbsent : (PqxdhDeploymentCompile.localServer codec copies.log kid none none
+              copies.serverRaw).server.peers kid = none := by
             simp only [PqxdhDeploymentCompile.localServer, ite_true, Option.bind_eq_bind, Option.bind_none]
-          simp only [PqxdhDeploymentCompile.peerKernel, noCopy, reveal_run, found, Option.map_none, pure_bind]
-          rw [serverImpl_absent (fun _ => setup.serverKeyId) route codec.frameRead query _
+          simp only [PqxdhDeploymentCompile.peerKernel, noCopy, reveal_run, found, Option.map_none, pure_bind,
+            copyData_none]
+          rw [handler_absent (fun _ => setup.serverKeyId) route codec.frameRead query _
               (fun other routed => by simp only [target, Option.some.injEq] at routed; subst routed; exact localAbsent),
-            serverImpl_absent _ route codec.frameRead query _
+            handler_absent _ route codec.frameRead query _
               (fun other routed => by
                 simp only [target, Option.some.injEq] at routed
                 subst routed
@@ -276,35 +357,32 @@ theorem server_record (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
                 Option.getD_none]
             | some current => simp only [PqxdhDeploymentCompile.peerKernel, copied, simulateQ_pure, StateT.run_pure,
                 Option.getD_some]
-          rw [kernelRun, pure_bind]
+          obtain ⟨transcript, digest, transcriptEq, hit, metadata⟩ := cached kid peer found
+          rw [kernelRun, pure_bind, transcriptEq,
+            copyData_hit setup codec checks serverSeed _ transcript digest native hit, pure_bind]
           have view := visible kid peer found
           have localFound : (PqxdhDeploymentCompile.localServer codec copies.log kid
-              (some ((copies.peers kid).getD peer.kernel)) copies.serverRaw).server.peers kid =
-              some ⟨peer.identity, (copies.peers kid).getD peer.kernel, ()⟩ := by
+              (some ((copies.peers kid).getD peer.kernel)) (some (PqxdhTranscriptAd.adOf digest))
+                copies.serverRaw).server.peers kid =
+              some ⟨peer.identity, (copies.peers kid).getD peer.kernel, PqxdhTranscriptAd.adOf digest⟩ := by
             simp [PqxdhDeploymentCompile.localServer, view]
           have mergedFound : (PqxdhDeploymentNative.serverView (PqxdhDeploymentCompile.merge copies native)).server.peers kid =
               some (PqxdhDeploymentCompile.mergePeer (copies.peers kid) peer) := by
             simp [PqxdhDeploymentNative.serverView, PqxdhDeploymentCompile.merge, found]
-          rw [serverImpl_peer _ route codec.frameRead query _ kid _ target localFound,
-            serverImpl_peer _ route codec.frameRead query _ kid _ target mergedFound,
+          rw [handler_peer _ route codec.frameRead query _ kid _ target localFound,
+            handler_peer _ route codec.frameRead query _ kid _ target mergedFound,
             PqxdhDeploymentNative.logged_map, PqxdhDeploymentNative.logged_map]
-          have localIdentity : (PqxdhDeploymentCompile.localServer codec copies.log kid
-              (some ((copies.peers kid).getD peer.kernel)) copies.serverRaw).server.identity =
-              native.shared.2.server.server.identity := by
-            simp [PqxdhDeploymentCompile.localServer, view]
           have core : serverCore (PqxdhDeploymentNative.senderId (PqxdhDeploymentCompile.merge copies native) ())
               codec.frameRead kid
-              (RawCtxServerRouting.associatedBytes
-                (PqxdhDeploymentNative.serverView (PqxdhDeploymentCompile.merge copies native)).server.identity
-                (PqxdhDeploymentCompile.mergePeer (copies.peers kid) peer).identity)
+              (PqxdhRefinement.absBytes (PqxdhDeploymentCompile.mergePeer (copies.peers kid) peer).metadata)
               (PqxdhDeploymentCompile.mergePeer (copies.peers kid) peer).kernel
               (PqxdhDeploymentNative.serverView (PqxdhDeploymentCompile.merge copies native)).rawAttempts query =
               serverCore setup.serverKeyId codec.frameRead kid
-                (RawCtxServerRouting.associatedBytes native.shared.2.server.server.identity peer.identity)
+                (PqxdhRefinement.absBytes (PqxdhTranscriptAd.adOf digest))
                 ((copies.peers kid).getD peer.kernel) copies.serverRaw query := by
             simp only [PqxdhDeploymentNative.senderId, PqxdhDeploymentNative.serverView, PqxdhDeploymentCompile.merge,
-              keyId, mergePeer_identity, mergePeer_kernel]
-          rw [core, localIdentity, PqxdhDeploymentRecordCache.local_record, record_map, record_map,
+              keyId, mergePeer_metadata, mergePeer_kernel, metadata]
+          rw [core, PqxdhDeploymentRecordCache.local_record, record_map, record_map,
             PqxdhDeploymentNative.record_run, PqxdhDeploymentNative.record_run]
           simp only [Functor.map_map]
           congr 1
@@ -321,19 +399,21 @@ theorem beaconLocal_absent (setup : Setup baseSpec KemSK) (codec : Codec Reader 
       pure (PqxdhDeploymentNative.absent query, copies) := by
   simp only [PqxdhDeploymentCompile.beaconLocal, StateT.run, outside, ite_false]
 
-/-- A created owner handle obtains the owner's kernel, runs on the local owner and keeps the returned kernel and counter. -/
+/-- A created owner handle obtains the owner's kernel and the copy's associated data, runs on the local owner and keeps the returned kernel and counter. -/
 theorem beaconLocal_present (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (index : Nat)
     (query : RawCtxMixedOwner.SourceSpec.Domain) (copies : PqxdhDeploymentCompile.Local)
     (inside : index < copies.log.owners.length) :
     (PqxdhDeploymentCompile.beaconLocal setup codec index query).run copies =
       PqxdhDeploymentCompile.ownerKernel copies index >>= fun kernel =>
+        PqxdhDeploymentCompile.copyData kernel ((PqxdhDeploymentCompile.ownerView codec copies.log index).map
+          fun view => view.2.2) >>= fun associatedData =>
         (fun result => (result.1.1, ({ copies with
           owners := Function.update copies.owners index (PqxdhDeploymentCompile.phaseKernel result.1.2.beacon.phase)
           ownerRaw := Function.update copies.ownerRaw index result.1.2.rawAttempts } : PqxdhDeploymentCompile.Local).produce
             (PqxdhDeploymentNative.beaconTag index) result.2)) <$>
           simulateQ (localPrimitives setup codec) (PqxdhDeploymentNative.logged
             ((RawCtxBeaconLifecycle.beaconImpl codec.frameRead query).run
-              (PqxdhDeploymentCompile.localOwner codec copies.log index kernel (copies.ownerRaw index)))) := by
+              (PqxdhDeploymentCompile.localOwner codec copies.log index kernel associatedData (copies.ownerRaw index)))) := by
   simp only [PqxdhDeploymentCompile.beaconLocal, StateT.run, inside, ite_true, bind_pure_comp]
 
 /-- The native Beacon record command on a present owner as a mapped record program. -/
@@ -408,8 +488,8 @@ theorem mergeOwner_rawAttempts (kernel : Option Kernel) (owner : PqxdhRegistrati
   unfold PqxdhDeploymentCompile.mergeOwner
   split <;> rfl
 
-/-- Beacon record commands (item c of the compile lemma): when the log counts every created owner, every locally copied owner is established, and every established owner is publicly reconstructible, the compiled command run on the source14 state has, after merging, exactly the native command's reply and deployment poststate. -/
-theorem beacon_record (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+/-- Beacon record commands (item c of the compile lemma): when the log counts every created owner, every locally copied owner is established, and every established owner is publicly reconstructible with its public transcript cached with the digest of its established associated data, the compiled command run on the source14 state has, after merging, exactly the native command's reply and deployment poststate. -/
+theorem beacon_record_cached (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (serverSeed : IdentitySeed) (index : Nat) (query : RawCtxMixedOwner.SourceSpec.Domain)
     (copies : PqxdhDeploymentCompile.Local) (native : PqxdhRegistrationSchedule.State KemSK)
     (count : copies.log.owners.length = native.owners.length)
@@ -418,8 +498,9 @@ theorem beacon_record (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
         owner.beacon.phase = .established control associatedData kernel)
     (visible : ∀ position owner control associatedData kernel, native.owners[position]? = some owner →
       owner.beacon.phase = .established control associatedData kernel →
-      PqxdhDeploymentCompile.ownerView codec copies.log position =
-        some (owner.beacon.identityKeyId, control, associatedData)) :
+      ∃ transcript digest, PqxdhDeploymentCompile.ownerView codec copies.log position =
+        some (owner.beacon.identityKeyId, control, transcript) ∧
+        native.shared.2.ctx ((), transcript) = some digest ∧ associatedData = PqxdhTranscriptAd.adOf digest) :
     (fun result => (result.1.1, PqxdhDeploymentCompile.merge result.1.2 result.2)) <$>
       (simulateQ (PqxdhRegistrationJointRevealSchedule.native setup codec checks serverSeed)
         ((PqxdhDeploymentCompile.beaconLocal setup codec index query).run copies)).run native =
@@ -443,23 +524,26 @@ theorem beacon_record (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
             phase, PqxdhDeploymentCompile.phaseKernel, Option.getD_none]
         | some current => simp only [PqxdhDeploymentCompile.ownerKernel, copiedKernel, simulateQ_pure, StateT.run_pure,
             Option.getD_some]
-      rw [kernelRun, pure_bind]
-      have view := visible index owner control associatedData kernel found phase
+      obtain ⟨transcript, digest, view, hit, adEq⟩ := visible index owner control associatedData kernel found phase
+      subst adEq
+      rw [kernelRun, pure_bind, view, Option.map_some,
+        copyData_hit setup codec checks serverSeed _ transcript digest native hit, pure_bind]
       have localPhase : (PqxdhDeploymentCompile.localOwner codec copies.log index (some ((copies.owners index).getD kernel))
-          (copies.ownerRaw index)).beacon.phase = .established control associatedData ((copies.owners index).getD kernel) := by
+          (some (PqxdhTranscriptAd.adOf digest)) (copies.ownerRaw index)).beacon.phase =
+          .established control (PqxdhTranscriptAd.adOf digest) ((copies.owners index).getD kernel) := by
         simp only [PqxdhDeploymentCompile.localOwner, view]
       have mergedPhase : (PqxdhDeploymentCompile.mergeOwner (copies.owners index) owner).beacon.phase =
-          .established control associatedData ((copies.owners index).getD kernel) := by
+          .established control (PqxdhTranscriptAd.adOf digest) ((copies.owners index).getD kernel) := by
         cases copies.owners index <;> simp [PqxdhDeploymentCompile.mergeOwner, phase]
-      rw [beaconImpl_established codec.frameRead query _ control associatedData _ localPhase,
+      rw [beaconImpl_established codec.frameRead query _ control _ _ localPhase,
         beaconImpl_established codec.frameRead query
           ⟨(PqxdhDeploymentCompile.mergeOwner (copies.owners index) owner).beacon,
-            (PqxdhDeploymentCompile.merge copies native).ownerRaw index⟩ control associatedData _ mergedPhase]
+            (PqxdhDeploymentCompile.merge copies native).ownerRaw index⟩ control _ _ mergedPhase]
       have localKey : (PqxdhDeploymentCompile.localOwner codec copies.log index (some ((copies.owners index).getD kernel))
-          (copies.ownerRaw index)).beacon.identityKeyId = owner.beacon.identityKeyId := by
+          (some (PqxdhTranscriptAd.adOf digest)) (copies.ownerRaw index)).beacon.identityKeyId = owner.beacon.identityKeyId := by
         simp only [PqxdhDeploymentCompile.localOwner, view]
       have localRaw : (PqxdhDeploymentCompile.localOwner codec copies.log index (some ((copies.owners index).getD kernel))
-          (copies.ownerRaw index)).rawAttempts = copies.ownerRaw index := by
+          (some (PqxdhTranscriptAd.adOf digest)) (copies.ownerRaw index)).rawAttempts = copies.ownerRaw index := by
         simp only [PqxdhDeploymentCompile.localOwner, view]
       simp only [localKey, localRaw, mergeOwner_identityKeyId]
       rw [PqxdhDeploymentNative.logged_map, PqxdhDeploymentNative.logged_map, PqxdhDeploymentRecordCache.local_record, record_map, record_map, PqxdhDeploymentNative.record_run,
@@ -483,12 +567,12 @@ theorem beacon_record (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
       have kernelRun : (simulateQ (PqxdhRegistrationJointRevealSchedule.native setup codec checks serverSeed)
           (PqxdhDeploymentCompile.ownerKernel copies index)).run native = pure (none, native) := by
         simp only [PqxdhDeploymentCompile.ownerKernel, noCopy, kernel_run, found, Option.bind_some, inactivePhase]
-      rw [kernelRun, pure_bind]
+      rw [kernelRun, pure_bind, copyData_none, pure_bind]
       have mergedOwner : PqxdhDeploymentCompile.mergeOwner (copies.owners index) owner = owner := by
         rw [noCopy]
         rfl
       have localInactive : ¬ RawCtxBeaconLifecycle.Established
-          (PqxdhDeploymentCompile.localOwner codec copies.log index none (copies.ownerRaw index)).beacon.phase := by
+          (PqxdhDeploymentCompile.localOwner codec copies.log index none none (copies.ownerRaw index)).beacon.phase := by
         simp [PqxdhDeploymentCompile.localOwner, RawCtxBeaconLifecycle.Established]
       have mergedInactive : ¬ RawCtxBeaconLifecycle.Established
           (PqxdhDeploymentCompile.mergeOwner (copies.owners index) owner).beacon.phase := by
@@ -602,11 +686,11 @@ end BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.merge_put
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.server_record' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.server_record_cached' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.server_record
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.server_record_cached
 
 /-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.beaconLocal_absent' depends on axioms: [propext,
  Classical.choice,
@@ -656,8 +740,38 @@ end BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.mergeOwner_rawAttempts
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.beacon_record' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.beacon_record_cached' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.beacon_record
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.beacon_record_cached
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.handler_peer' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.handler_peer
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.handler_absent' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.handler_absent
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.hash_hit' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.hash_hit
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.copyData_hit' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.copyData_hit
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.copyData_none' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.copyData_none
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.mergePeer_metadata' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentCompileRecords.mergePeer_metadata

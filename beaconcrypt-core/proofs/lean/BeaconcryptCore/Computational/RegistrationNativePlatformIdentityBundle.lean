@@ -42,7 +42,7 @@ def originalNext (index : Nat) (owner : RegistrationNativeBeaconFrontend.Owner s
 
 /-- Actual source Ready/publication replies continue with the same native phase and owner-slot operation. -/
 theorem next_source (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (seeds : List IdentitySeed) (index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner source) (seed : IdentitySeed)
     (oneTime : PqxdhJointGapDh.ScalarBytes) (reply : Reply) :
     Related (n := n) (Auxiliary := Auxiliary) (Platform := Platform) setup checks representation created seeds
@@ -65,7 +65,7 @@ theorem next_source (setup : Setup base KemSK) (checks : Checks)
           (fun _ => RegistrationNativePlatformIdentityProgram.related_pure setup checks representation created seeds _))
 
 theorem next_keeps (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes) (reply : Reply) :
     Keeps (n := n) (Auxiliary := Auxiliary) (Platform := Platform) setup checks representation created (next index owner oneTime reply) := by
   cases reply with
@@ -87,7 +87,7 @@ noncomputable def bundled (setup : Setup base KemSK) (index : Nat) (owner : Regi
     M n KemSK Auxiliary Platform source (RustM (Option (alloc.vec.Vec U8))) := do
   let reply ← simulateQ (RegistrationNativePlatformIdentityPublication.callback setup index owner writer)
     (RegistrationNativePlatformWriter.begin E ⟨owner.pin.binding⟩ (RegistrationNativeIdentityFrontend.inputs owner)
-      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)
+      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)
   next index owner oneTime reply
 
 noncomputable def originalBundled (setup : Setup base KemSK) (index : Nat) (owner : RegistrationNativeBeaconFrontend.Owner source)
@@ -96,12 +96,12 @@ noncomputable def originalBundled (setup : Setup base KemSK) (index : Nat) (owne
     Original n KemSK Auxiliary Platform source (RustM (Option (alloc.vec.Vec U8))) := do
   let reply ← simulateQ (RegistrationNativePlatformIdentityPublication.originalCallback setup index owner writer)
     (RegistrationNativePlatformWriter.begin E ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)
+      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)
   originalNext index owner oneTime reply
 
 /-- Full selected bundle execution preserves source hash/sign/serializer and lifecycle order, including every actual failed prefix. -/
 theorem bundled_source (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (seeds : List IdentitySeed) (index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner source) (seed : IdentitySeed)
     (oneTime : PqxdhJointGapDh.ScalarBytes)
     (found : seeds[owner.identity.handle]? = some seed) (publicKey : owner.identity.publicIdentity = setup.joint.publicKeys seed)
@@ -114,7 +114,7 @@ theorem bundled_source (setup : Setup base KemSK) (checks : Checks)
     (next_source setup checks representation created seeds index owner seed oneTime)
 
 theorem bundled_keeps (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) :
     Keeps (n := n) (Auxiliary := Auxiliary) setup checks representation created (bundled setup index owner oneTime writer) :=

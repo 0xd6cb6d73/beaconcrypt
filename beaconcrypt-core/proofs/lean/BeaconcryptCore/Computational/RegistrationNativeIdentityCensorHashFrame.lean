@@ -125,7 +125,7 @@ private theorem interpret_run (joint : PqxdhJointIdentity.Primitives) (selected 
 
 /-- Actual public or hidden-template hashing preserves Mode control, the entire private key/service pool and selected target/canonical signature, while the real hash/framing and known-input journal may advance. -/
 theorem outgoing (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (selected : Nat) (placeholder : Ed25519Signature) (request : registration.HashRequest) (censored : Bool)
     (before : Full (n := n) (KemSK := KemSK) (Platform := Platform) (mlSource := mlSource))
     (result : CtxRomAuth.CtxDigest × Full (n := n) (KemSK := KemSK) (Platform := Platform) (mlSource := mlSource))

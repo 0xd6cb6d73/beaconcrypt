@@ -79,7 +79,7 @@ private theorem outgoing_safe (setup : Setup base KemSK) (index : Nat) (owner : 
   cases query with
   | inl query => cases query with
     | hash request => exact effect_safe _ trivial
-    | sign request payload digest => exact bind_safe _ _ (sample_safe _) (fun _ => bind_safe _ _ (update_safe _) (fun _ => pure_safe _))
+    | sign request payload digest => exact pure_safe _
   | inr request =>
       simp only [outgoing]
       split
@@ -121,12 +121,12 @@ private abbrev carrierMonad : Monad (Carrier (E := E) (n := n) (KemSK := KemSK) 
   bind work next := ⟨work.val >>= fun value => (next value).val, bind_free _ _ work.property (fun value => (next value).property)⟩
 
 private theorem publication_free (setup : Setup base KemSK) (index : Nat) (owner : Owner source)
-    (encode : registration.SignedInitView → M source Auxiliary (OracleComp (Spec E n KemSK)) (RustM (core.option.Option (alloc.vec.Vec U8))))
+    (encode : registration.InitView → M source Auxiliary (OracleComp (Spec E n KemSK)) (RustM (core.option.Option (alloc.vec.Vec U8))))
     (writer : ∀ packet, Safe (encode packet)) (oneTime : PqxdhJointGapDh.ScalarBytes) :
     Safe (RegistrationNativePlatformBeaconPublication.begin
       (fun query => liftLegacy trustedLift (RegistrationNativeBeaconFrontend.outgoing setup source index owner query))
       encode ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey) := by
+      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin) := by
   let _ := carrierMonad (E := E) (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (source := source)
   let _ : LawfulMonad (Carrier (E := E) (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (source := source)) := LawfulMonad.mk' _
     (fun work => by apply Subtype.ext; exact bind_pure work.val)
@@ -136,15 +136,15 @@ private theorem publication_free (setup : Setup base KemSK) (index : Nat) (owner
   have hom : Cslib.IsMonadHom (Carrier (E := E) (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (source := source)) (M source Auxiliary (OracleComp (Spec E n KemSK))) forget := .mk' (fun _ => rfl) (fun _ _ => rfl)
   let operations : QueryImpl RegistrationBeaconInitExecutor.Spec (Carrier (E := E) (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (source := source)) :=
     fun query => ⟨liftLegacy trustedLift (RegistrationNativeBeaconFrontend.outgoing setup source index owner query), legacy_free _ (Native.outgoing_safe setup index owner query)⟩
-  let encoding : registration.SignedInitView → Carrier (E := E) (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (source := source) (RustM (core.option.Option (alloc.vec.Vec U8))) := fun packet => ⟨encode packet, writer packet⟩
+  let encoding : registration.InitView → Carrier (E := E) (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (source := source) (RustM (core.option.Option (alloc.vec.Vec U8))) := fun packet => ⟨encode packet, writer packet⟩
   have kept := (RegistrationNativePlatformBeaconPublication.begin operations encoding ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey).property
-  change Safe (forget (RegistrationNativePlatformBeaconPublication.begin operations encoding _ _ _ _ _)) at kept
+      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin).property
+  change Safe (forget (RegistrationNativePlatformBeaconPublication.begin operations encoding _ _ _ _)) at kept
   rw [RegistrationNativePlatformBeaconMap.begin hom] at kept
   exact kept
 
 theorem bundle_free (setup : Setup base KemSK)
-    (encode : registration.SignedInitView → M source Auxiliary (OracleComp (Spec E n KemSK)) (RustM (core.option.Option (alloc.vec.Vec U8))))
+    (encode : registration.InitView → M source Auxiliary (OracleComp (Spec E n KemSK)) (RustM (core.option.Option (alloc.vec.Vec U8))))
     (writer : ∀ packet, Safe (encode packet)) (index : Nat) :
     Safe (RegistrationNativePlatformGenericBundle.bundle trustedLift setup source encode index) := by
   unfold RegistrationNativePlatformGenericBundle.bundle
@@ -184,7 +184,7 @@ private theorem every_query {I A : Type} {spec : OracleSpec I} (work : OracleCom
   | pure value => trivial
   | query_bind query next ih => exact (allQueriesSatisfy_query_bind_iff _ _ _).mpr ⟨trivial, ih⟩
 
-private theorem encoder_free (view : registration.SignedInitView) :
+private theorem encoder_free (view : registration.InitView) :
     Safe (RegistrationNativePlatformGenericBundle.encoder (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (source := source) E view) := by
   intro owners env
   simp only [RegistrationNativePlatformGenericBundle.encoder, RegistrationNativePlatformGenericBundle.encoderWith,

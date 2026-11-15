@@ -43,8 +43,8 @@ def registration(source, direction, auxiliary=False):
         )
         source = once(
             source,
-            "A1Pending(token,accepted_id,verified,identity,ephemeral,ciphertext,root)",
-            "A1Pending(token,accepted_id,verified,identity,ephemeral,ciphertext,root,selected_identity)",
+            "A1Pending(token,raw,accepted_id,verified,identity,ephemeral,ciphertext,root)",
+            "A1Pending(token,raw,accepted_id,verified,identity,ephemeral,ciphertext,root,selected_identity)",
         )
         call = "S2bSend2(builder,ed_public(SERVER_IDENTITY_SECRET),identity,accepted_id,assigned,root,ad,ratchet_next(server_to_beacon_chain(root)))"
         source = once(source, call, call[:-1] + ",selected_identity)")

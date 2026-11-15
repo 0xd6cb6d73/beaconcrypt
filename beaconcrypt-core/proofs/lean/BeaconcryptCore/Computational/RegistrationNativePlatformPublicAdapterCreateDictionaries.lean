@@ -32,7 +32,7 @@ variable [original : AdapterBeaconConstructorRequestMonad.Operations (RustT Prob
 variable [originalCrypto : CryptoOperations (RustT ProbComp)]
 variable (coins : QueryImpl unifSpec (StateT P ProbComp))
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (view : AdapterPublicWrapperState.MaterialView source KemSK)
 local notation "SourceM" => AdapterBeaconConstructorNative.M n KemSK source RegistrationServerRoleBackend.State (StateT P ProbComp)
 local notation "PhysicalM" => StateT (Backend n KemSK) (StateT P ProbComp)
@@ -80,7 +80,6 @@ omit [Monad m] [LawfulMonad m] in
 noncomputable def sourceLeaves
     (previous : ChildOperations (RustT SourceM)) (generator : rand_core.TryCryptoRng R Error)
     (kem : AdapterBeaconConstructorKem.Representation view R)
-    (ml : AdapterBeaconConstructorGeneration.MldsaContract generator view (RegistrationNativeMldsa.generate source))
     (signing : AdapterBeaconConstructorGeneration.EdContract generator view setup.joint PqxdhJointIdentity.sampleSeed)
     (prekey : AdapterBeaconConstructorGeneration.KxContract generator view
       (fun scalar => PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)) PqxdhJointGapDh.sampleScalar)
@@ -93,13 +92,9 @@ noncomputable def sourceLeaves
   let : CryptoOperations (RustT SourceM) := crypto view (RegistrationNativePlatformPublicAdapterCreatePrimitives.uniform coins setup checks representation created)
   let : ChildOperations (RustT SourceM) := children previous (RegistrationNativePlatformPublicAdapterCreatePrimitives.hash coins setup checks representation created)
   let uniform := RegistrationNativePlatformPublicAdapterCreatePrimitives.uniform (n:=n) (source:=source) coins setup checks representation created
-  let mappedMl := RegistrationNativePlatformPublicAdapterCreateGeneration.mldsa uniform (sourceKem coins view) generator view _ ml
   let mappedEd := RegistrationNativePlatformPublicAdapterCreateGeneration.signing uniform (sourceKem coins view) generator view setup.joint _ signing
   let mappedKx := prekeyContract setup view uniform generator prekey
-  refine {ml := ?_, ed := ?_, kx := ?_, getter := fun _ => rfl, hash := fun _ => rfl, kemOperation := ?_}
-  · refine {joint := mappedMl.joint, nativeMarginal := ?_, realize := mappedMl.realize, privateView := mappedMl.privateView, operation := mappedMl.operation}
-    intro rng
-    exact (mappedMl.nativeMarginal rng).trans (RegistrationNativePlatformPublicAdapterCreatePrimitives.sample coins setup checks representation created _)
+  refine {ed := ?_, kx := ?_, getter := fun _ => rfl, kemOperation := ?_}
   · refine {joint := mappedEd.joint, nativeMarginal := ?_, realize := mappedEd.realize, privateView := mappedEd.privateView, publicView := mappedEd.publicView, operation := mappedEd.operation}
     intro rng
     exact (mappedEd.nativeMarginal rng).trans (RegistrationNativePlatformPublicAdapterCreatePrimitives.sample coins setup checks representation created _)

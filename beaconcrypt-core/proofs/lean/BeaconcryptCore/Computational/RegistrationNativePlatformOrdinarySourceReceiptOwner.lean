@@ -141,7 +141,7 @@ theorem source_owner [primitives : AdapterSealPrimitive.Operations] [FrameDispat
     (hash : Pqxdh.Bytes → m (Option (Std.Array U8 64#usize)))
     (reserve : Nat → m (core.result.Result Unit E)) (erased : commitment.CommitmentTranscript)
     {Metadata : Type} (before : RawCtxWholeOwner.OwnerState Metadata)
-    (plaintext : Slice U8) (sender : U64) (associated : Std.Array U8 281#usize)
+    (plaintext : Slice U8) (sender : U64) (associated : Std.Array U8 151#usize)
     (sameAD : before.owner.associatedData = PqxdhRefinement.absBytes associated) (receipt : RawCtxReceive.DecodedFrame → m Unit) :
     (ownerResult before ∘ RegistrationNativePlatformOrdinarySourceReceipt.abstractOutput) <$>
       simulateQ (RegistrationNativePlatformOrdinarySourceReceipt.callbacks view failure kdf aead hash reserve erased receipt)

@@ -157,34 +157,44 @@ private theorem evaluate_fromInitial
 
 omit primitive in
 private theorem evaluate_afterOccupancy
+    (deriveAd : RegistrationNativePlatformCompletionSdk.AdHash n (M source Platform))
     (reserve : StateT (RegistrationServerFrontendCompiler.State n) (M source Platform) Bool)
     (finish : RegistrationNativePlatformCompletionSdk.Completion n (M source Platform) (alloc.vec.Vec U8))
     (control : pqxdh.ServerState) (lookup : peer.CompletionLookup) (occupied : Bool) :
-    evaluate (RegistrationNativePlatformCompletionSdk.afterOccupancy reserve finish control lookup occupied) =
-      RegistrationNativePlatformCompletionSdk.afterOccupancy (evaluate reserve)
+    evaluate (RegistrationNativePlatformCompletionSdk.afterOccupancy deriveAd reserve finish control lookup occupied) =
+      RegistrationNativePlatformCompletionSdk.afterOccupancy (fun pending => evaluate (deriveAd pending)) (evaluate reserve)
         (fun control initial => evaluate (finish control initial)) control lookup occupied := by
   unfold RegistrationNativePlatformCompletionSdk.afterOccupancy
   cases lookup.resume occupied with
   | fail error | div => exact RegistrationNativePlatformMldsaProgram.evaluate_pure _
   | ok answer => cases answer with
     | Err prior => exact RegistrationNativePlatformMldsaProgram.evaluate_pure _
-    | Ok initial =>
+    | Ok pending =>
         rw [RegistrationNativePlatformMldsaProgram.evaluate_bind]
         apply bind_congr
-        intro admitted
-        cases admitted with
-        | false => exact RegistrationNativePlatformMldsaProgram.evaluate_pure _
-        | true => exact evaluate_fromInitial source finish control initial
+        intro hashed
+        cases hashed with
+        | fail error | div => exact RegistrationNativePlatformMldsaProgram.evaluate_pure _
+        | ok answer => cases answer with
+          | Err previous => exact RegistrationNativePlatformMldsaProgram.evaluate_pure _
+          | Ok initial =>
+            rw [RegistrationNativePlatformMldsaProgram.evaluate_bind]
+            apply bind_congr
+            intro admitted
+            cases admitted with
+            | false => exact RegistrationNativePlatformMldsaProgram.evaluate_pure _
+            | true => exact evaluate_fromInitial source finish control initial
 
 omit primitive in
 private theorem evaluate_afterPin
+    (deriveAd : RegistrationNativePlatformCompletionSdk.AdHash n (M source Platform))
     (reserve : StateT (RegistrationServerFrontendCompiler.State n) (M source Platform) Bool)
     (present : U64 → StateT (RegistrationServerFrontendCompiler.State n) (M source Platform) Bool)
     (finish : RegistrationNativePlatformCompletionSdk.Completion n (M source Platform) (alloc.vec.Vec U8))
     (control : pqxdh.ServerState) (token : peer.ConsumedRegistration) (application : Slice U8)
     (pin : RustM (Option session.ServerAuthenticationPin)) :
-    evaluate (RegistrationNativePlatformCompletionSdk.afterPin reserve present finish control token application pin) =
-      RegistrationNativePlatformCompletionSdk.afterPin (evaluate reserve) (fun keyId => evaluate (present keyId))
+    evaluate (RegistrationNativePlatformCompletionSdk.afterPin deriveAd reserve present finish control token application pin) =
+      RegistrationNativePlatformCompletionSdk.afterPin (fun pending => evaluate (deriveAd pending)) (evaluate reserve) (fun keyId => evaluate (present keyId))
         (fun control initial => evaluate (finish control initial)) control token application pin := by
   unfold RegistrationNativePlatformCompletionSdk.afterPin
   cases pin with
@@ -207,18 +217,19 @@ private theorem evaluate_afterPin
                   · rw [RegistrationNativePlatformMldsaProgram.evaluate_bind]
                     apply bind_congr
                     intro occupied
-                    exact evaluate_afterOccupancy source reserve finish control lookup occupied
+                    exact evaluate_afterOccupancy source deriveAd reserve finish control lookup occupied
                   · exact RegistrationNativePlatformMldsaProgram.evaluate_pure _
 
 omit primitive in
 private theorem evaluate_complete
+    (deriveAd : RegistrationNativePlatformCompletionSdk.AdHash n (M source Platform))
     (pin : StateT (RegistrationServerFrontendCompiler.State n) (M source Platform) (RustM (Option session.ServerAuthenticationPin)))
     (reserve : StateT (RegistrationServerFrontendCompiler.State n) (M source Platform) Bool)
     (present : U64 → StateT (RegistrationServerFrontendCompiler.State n) (M source Platform) Bool)
     (finish : RegistrationNativePlatformCompletionSdk.Completion n (M source Platform) (alloc.vec.Vec U8))
     (token : peer.ConsumedRegistration) (application : Slice U8) :
-    evaluate (RegistrationNativePlatformCompletionSdk.complete pin reserve present finish token application) =
-      RegistrationNativePlatformCompletionSdk.complete (evaluate pin) (evaluate reserve) (fun keyId => evaluate (present keyId))
+    evaluate (RegistrationNativePlatformCompletionSdk.complete deriveAd pin reserve present finish token application) =
+      RegistrationNativePlatformCompletionSdk.complete (fun pending => evaluate (deriveAd pending)) (evaluate pin) (evaluate reserve) (fun keyId => evaluate (present keyId))
         (fun control initial => evaluate (finish control initial)) token application := by
   unfold RegistrationNativePlatformCompletionSdk.complete
   rw [RegistrationNativePlatformMldsaProgram.evaluate_bind]
@@ -231,17 +242,18 @@ private theorem evaluate_complete
   rw [RegistrationNativePlatformMldsaProgram.evaluate_bind]
   apply bind_congr
   intro selected
-  exact evaluate_afterPin source reserve present finish before.control token application selected
+  exact evaluate_afterPin source deriveAd reserve present finish before.control token application selected
 
 omit primitive in
 private theorem evaluate_sdk
+    (deriveAd : RegistrationNativePlatformCompletionSdk.AdHash n (M source Platform))
     (pin : StateT (RegistrationServerFrontendCompiler.State n) (M source Platform) (RustM (Option session.ServerAuthenticationPin)))
     (reserve : StateT (RegistrationServerFrontendCompiler.State n) (M source Platform) Bool)
     (present : U64 → StateT (RegistrationServerFrontendCompiler.State n) (M source Platform) Bool)
     (finish : RegistrationNativePlatformCompletionSdk.Completion n (M source Platform) (alloc.vec.Vec U8))
     (handle : Nat) (application : Option (Slice U8)) :
-    evaluate (RegistrationNativePlatformCompletionSdk.build pin reserve present finish handle application) =
-      RegistrationNativePlatformCompletionSdk.build (evaluate pin) (evaluate reserve) (fun keyId => evaluate (present keyId))
+    evaluate (RegistrationNativePlatformCompletionSdk.build deriveAd pin reserve present finish handle application) =
+      RegistrationNativePlatformCompletionSdk.build (fun pending => evaluate (deriveAd pending)) (evaluate pin) (evaluate reserve) (fun keyId => evaluate (present keyId))
         (fun control initial => evaluate (finish control initial)) handle application := by
   funext before
   simp only [evaluate, RegistrationNativePlatformCompletionSdk.build, StateT.run]
@@ -251,7 +263,7 @@ private theorem evaluate_sdk
       | none => funext previous; rfl
       | some token => cases application with
         | none => funext previous; rfl
-        | some application => exact congrFun (evaluate_complete source pin reserve present finish token application) current
+        | some application => exact congrFun (evaluate_complete source deriveAd pin reserve present finish token application) current
 
 noncomputable def build (setup : Setup base KemSK) (codec : Codec Reader Response)
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
@@ -262,12 +274,13 @@ noncomputable def build (setup : Setup base KemSK) (codec : Codec Reader Respons
     (handle : Nat) (application : Option (Slice U8)) :
     StateT (RegistrationServerFrontendCompiler.State n) (M source Platform) (RustM (Option (U64 × alloc.vec.Vec U8))) :=
   RegistrationNativePlatformCompletionSdk.build
+    (fun pending => lift (RegistrationNativePlatformCompletionSdk.nativeAdHash coins pending))
     (lift (RegistrationNativePlatformSourceBuild.pin coins))
     (lift (StateT.lift reservePeer))
     (fun keyId => lift (RegistrationNativePlatformCompletionSdk.nativePresent coins keyId))
     (finish source credential setup codec view failure allocation erased helper writer) handle application
 
-/-- The entire stateful source SDK build, including repeated pin hashing and failed publication, is an exact ML capability program. -/
+/-- The entire stateful source SDK build, including pure pin selection, actual AD hashing and failed publication, is an exact ML capability program. -/
 theorem evaluate_build (setup : Setup base KemSK) (codec : Codec Reader Response)
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))

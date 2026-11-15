@@ -196,22 +196,23 @@ theorem buildService_factor (setup : Setup baseSpec KemSK) (codec : Codec Reader
     (session : Nat) (game : GameState KemSK) (marks : Marks RootOutput) (holds : Inv (game, marks))
     (token : PqxdhServerRelatedRootConsumer.Returned) (found : game.pending session = some token) :
     ∃ other, (placeholderAt (marks.map Prod.fst) game).pending session = some other ∧
+      other.pending = token.pending ∧ other.init = token.init ∧
       buildService setup codec checks (factoredServices setup codec checks)
           (marks.map (Prod.map id (PqxdhServerAuthKeySchedule.fromRoot setup.source))) session other =
         buildService setup codec checks (nativeServices setup codec checks) marks session token := by
   rw [buildService_native]
   rcases marks with _ | ⟨index, root⟩
-  · exact ⟨token, found, rfl⟩
+  · exact ⟨token, found, rfl, rfl, rfl⟩
   · by_cases same : index = session
     · subst same
-      refine ⟨⟨PqxdhServerAuthEntryFactor.sentinel, token.pending⟩, ?_, ?_⟩
+      refine ⟨⟨PqxdhServerAuthEntryFactor.sentinel, token.pending, token.init⟩, ?_, rfl, rfl, ?_⟩
       · simp only [Option.map_some, placeholderAt, Function.update_self, found, placeholderToken]
       · have rooted : token.root = root := (holds index root rfl).2 token found
-        funext payload server
+        funext payload ad server
         simp only [Option.map_some, buildService, Prod.map_apply, id_eq, ite_true]
         rw [← rooted]
-        exact (hiddenBuild_factor setup codec checks token _ rfl payload server).symm
-    · refine ⟨token, ?_, ?_⟩
+        exact (hiddenBuild_factor setup codec checks token _ rfl payload ad server).symm
+    · refine ⟨token, ?_, rfl, rfl, ?_⟩
       · rw [Option.map_some, placeholderAt_pending_ne _ _ _ fun other equal => by
           cases equal
           exact same]
@@ -253,7 +254,19 @@ theorem buildStep_rel (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
       rw [found, support_pure, Set.mem_singleton_iff] at member
       subst member
       exact holds
-  · obtain ⟨other, projected, service⟩ := buildService_factor setup codec checks session game marks holds token found
+  · obtain ⟨other, projected, samePending, sameInit, service⟩ :=
+      buildService_factor setup codec checks session game marks holds token found
+    have kept : ∀ next : GameState KemSK, next.sessions = game.sessions →
+        next.pending = Function.update game.pending session none → Inv (next, marks) := by
+      intro next sessions pending index root marked
+      obtain ⟨below, held⟩ := holds index root marked
+      refine ⟨sessions ▸ below, fun token' found' => ?_⟩
+      rw [pending] at found'
+      by_cases same : index = session
+      · subst same
+        simp at found'
+      · simp only [Function.update_of_ne same] at found'
+        exact held token' found'
     refine ⟨?_, ?_⟩
     · change Prod.map id (proj _) <$> (match game.pending session with
           | none => Pure.pure (none, (game, marks))
@@ -262,34 +275,42 @@ theorem buildStep_rel (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
           | none => Pure.pure (none, proj _ (game, marks))
           | some token => _)
       rw [found, projected]
-      simp only [proj, placeholderAt_server_eq, placeholderAt_ctx_eq]
-      rw [service]
-      simp only [simulateQ_bind, relabelS_liftComp, simulateQ_pure, map_bind, map_pure]
-      refine bind_congr fun result => ?_
-      simp only [Prod.map_apply, id_eq]
-      rcases marks with _ | ⟨index, root⟩
-      · rfl
-      · by_cases same : index = session
-        · subst same
-          simp only [proj, Option.map_some, placeholderAt, Function.update_self, placeholderToken, Option.map_none,
-            Function.update_idem]
-        · simp only [proj, Option.map_some, placeholderAt, Function.update_of_ne same]
-          rw [Function.update_comm same]
+      simp only [proj, placeholderAt_server_eq, placeholderAt_ctx_eq, samePending]
+      rcases pre : PqxdhServerRegistrationPublication.prehash game.server token.pending payload with _ | candidate
+      · simp only [map_pure, simulateQ_pure, Prod.map_apply, id_eq]
+        rcases marks with _ | ⟨index, root⟩
+        · rfl
+        · by_cases same : index = session
+          · subst same
+            simp only [proj, Option.map_some, placeholderAt, Function.update_self, placeholderToken, Option.map_none,
+              Function.update_idem]
+          · simp only [proj, Option.map_some, placeholderAt, Function.update_of_ne same]
+            rw [Function.update_comm same]
+      · rw [service, sameInit]
+        simp only [simulateQ_bind, relabelS_liftComp, simulateQ_pure, map_bind, map_pure]
+        refine bind_congr fun hashed => bind_congr fun result => ?_
+        simp only [Prod.map_apply, id_eq]
+        rcases marks with _ | ⟨index, root⟩
+        · rfl
+        · by_cases same : index = session
+          · subst same
+            simp only [proj, Option.map_some, placeholderAt, Function.update_self, placeholderToken, Option.map_none,
+              Function.update_idem]
+          · simp only [proj, Option.map_some, placeholderAt, Function.update_of_ne same]
+            rw [Function.update_comm same]
     · intro result member
       change result ∈ support (match game.pending session with
         | none => Pure.pure (none, (game, marks))
         | some token => _ : OracleComp (SkelSpec RootOutput) _) at member
       rw [found] at member
-      simp only [mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at member
-      obtain ⟨step, -, rfl⟩ := member
-      intro index root marked
-      obtain ⟨below, held⟩ := holds index root marked
-      refine ⟨below, fun token' found' => ?_⟩
-      by_cases same : index = session
-      · subst same
-        simp at found'
-      · simp only [Function.update_of_ne same] at found'
-        exact held token' found'
+      dsimp only at member
+      split at member
+      · simp only [support_pure, Set.mem_singleton_iff] at member
+        subst member
+        exact kept _ rfl rfl
+      · simp only [mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at member
+        obtain ⟨_, -, _, -, rfl⟩ := member
+        exact kept _ rfl rfl
 
 /-- The part of the Server's accept tail after the session allocation. -/
 noncomputable def acceptBody {V : Type} (setup : Setup baseSpec KemSK) (publicIdentity : PublicIdentity) (index : Nat)

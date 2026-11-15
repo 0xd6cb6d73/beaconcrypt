@@ -26,7 +26,7 @@ theorem effects_lift (work : OracleComp (EnvEffects n) X) :
 /-- Closing the actual World-only prefix before the mutable native continuation retains the precise native poststate. -/
 theorem beacon_bind (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (work : OracleComp (EnvEffects n) X)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (work : OracleComp (EnvEffects n) X)
     (next : X → RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State Y)
     (before : RegistrationNativeExperiment.State n KemSK source) :
     (RegistrationNativeExperiment.beacon setup checks representation created

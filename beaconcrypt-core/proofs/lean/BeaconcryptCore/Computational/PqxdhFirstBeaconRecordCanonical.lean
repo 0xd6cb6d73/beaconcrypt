@@ -25,6 +25,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhFirstBeaconRecordCanonical
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 
 section Observer
 open RawCtxSelectedAuthenticationObserver AdaptiveCtxReceive CtxRomAuth
@@ -341,7 +343,7 @@ variable
     (key : CtxRomAuth.CtxKey)
 
 local notation "observer" => observed true (RawCtxUniversalDecoder.decoder read) source.crypto key
-local notation "compiled" => PqxdhSelectedPostCompiler.impl pre application initial selector aux source writer prior parent target
+local notation "compiled" => PqxdhSelectedPostCompiler.impl (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target
   nonce next sender route read
 
 /-- An evaluated family request is the observed family service followed by publication in the role front. -/
@@ -396,7 +398,7 @@ theorem finish_support (index : Fin B) (raw : Pqxdh.Bytes)
     (supported : result ∈ support (evaluate observer ((compiled (.inr (.finish index raw))).run) (state, component))) :
     ∃ inner after, (inner, after) ∈ support ((simulateQ observer ((simulateQ (PqxdhSelectedInitialOwnerCompiler.lower pre
         application initial selector aux prior parent target nonce next read)
-          (PqxdhSelectedInitialOwnerCompiler.owner raw (state.1.roles.1.2 index))).run state.2)).run component) ∧
+          (PqxdhSelectedInitialOwnerCompiler.owner (completedBinding := completedBinding) raw (state.1.roles.1.2 index))).run state.2)).run component) ∧
       result = (some inner.1.1, ((PqxdhSelectedPostCompiler.install index state.1 inner.1.2, inner.2), after)) := by
   simp only [evaluate, PqxdhSelectedPostCompiler.impl, OptionT.run_mk, StateT.run, simulateQ_map, support_map,
     ] at supported
@@ -765,7 +767,7 @@ variable
     (selector : QueryImpl (PqxdhPrivateKemSource.SelectorSpec baseSpec) (StateT (ExternalState A N C) ProbComp))
     (aux : QueryImpl PqxdhServerRegistrationPublication.AuxSpec (StateT (ExternalState A N C) ProbComp))
 
-local notation "compiled" => PqxdhSelectedPostCompiler.impl pre application initial selector aux source writer prior parent target
+local notation "compiled" => PqxdhSelectedPostCompiler.impl (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target
   nonce next sender route read
 
 /-- Every answered request of the compiled post preserves the invariant, extending the transcript by the request and its reply, given the writer premise and that no kernel reachable by the Server peer opens its first message with known material. -/
@@ -784,18 +786,18 @@ theorem inv_step (writable : ReadWritable writer read)
     Inv source writer prior parent target nonce next route read index kid key start (log ++ [⟨query, reply⟩])
       result.2.1 result.2.2 := by
   rcases query with ((request | request) | request) | request
-  · obtain ⟨familyReply, after, found, rfl⟩ := family_support pre application initial selector aux source writer prior parent
+  · obtain ⟨familyReply, after, found, rfl⟩ := family_support (completedBinding := completedBinding) pre application initial selector aux source writer prior parent
       target nonce next sender route read key request state component result supported
     rcases familyReply with _ | ⟨value, finalRoles⟩
     · cases returned
     · obtain rfl : value = reply := Option.some.inj returned
       exact inv_family source writer prior parent target nonce next sender route read index kid key start writable hidden request
         log state component inv value finalRoles after found
-  · obtain ⟨roles, localSame, same⟩ := reveal_support pre application initial selector aux source writer prior parent target nonce
+  · obtain ⟨roles, localSame, same⟩ := reveal_support (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce
       next sender route read key request state component result supported
     refine inv_quiet source writer prior parent target nonce next route read index kid key start log state component inv
       _ rfl result.2.1 result.2.2 (same ▸ inv.good) (by rw [same]) (by rw [same]; exact id) (congrArg Prod.fst roles)
-  · obtain ⟨inner, after, found, rfl⟩ := selector_support pre application initial selector aux source writer prior parent target
+  · obtain ⟨inner, after, found, rfl⟩ := selector_support (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target
       nonce next sender route read key request state component result supported
     exact inv_quiet source writer prior parent target nonce next route read index kid key start log state component inv
       _ rfl _ after (schedule_good _ _ _ _ component inv.good _ found)
@@ -804,11 +806,11 @@ theorem inv_step (writable : ReadWritable writer read)
       (fun winning => observed_won _ _ _ _ component winning _ found) rfl
   · cases request with
     | finish position raw =>
-      obtain ⟨inner, after, found, rfl⟩ := finish_support pre application initial selector aux source writer prior parent target
+      obtain ⟨inner, after, found, rfl⟩ := finish_support (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target
         nonce next sender route read key position raw state component result supported
       exact inv_quiet source writer prior parent target nonce next route read index kid key start log state component inv
         _ rfl _ after (schedule_good _ _ _ _ component inv.good _ found)
-        (observed_seals _ _ _ _ (PqxdhFirstRecordNonceStop.finish_nonseal pre application initial selector aux prior parent
+        (observed_seals _ _ _ _ (PqxdhFirstRecordNonceStop.finish_nonseal (completedBinding := completedBinding) pre application initial selector aux prior parent
           target nonce next read raw _ state.2) component _ found)
         (fun winning => observed_won _ _ _ _ component winning _ found) rfl
 
@@ -851,7 +853,7 @@ theorem inv_post (writable : ReadWritable writer read)
       rw [rest] at returned
       cases returned
     · rw [answered] at rest
-      exact ih reply _ middle.2.1 middle.2.2 (inv_step source writer prior parent target nonce next sender route read index kid
+      exact ih reply _ middle.2.1 middle.2.2 (inv_step (completedBinding := completedBinding) source writer prior parent target nonce next sender route read index kid
         key start pre application initial selector aux writable hidden query log state component inv middle first reply answered)
         result rest returned
 
@@ -877,7 +879,7 @@ theorem after_installs (calls : RawCtxChainOwner.Calls Kernel (StateT L (OracleC
     (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Pqxdh.Bytes) (kernel : Kernel) (metadata : PeerMetadata)
     (state : State Kernel Metadata PeerMetadata Consumed) (start : L)
     (result : (Option PqxdhServerRegistrationPublication.Response × State Kernel Metadata PeerMetadata Consumed) × L)
-    (supported : result ∈ support ((afterInitialization calls aux candidate authenticated kernel metadata state).run start))
+    (supported : result ∈ support ((afterInitialization (associatedData := associatedData) calls aux candidate authenticated kernel metadata state).run start))
     (response : PqxdhServerRegistrationPublication.Response) (replied : result.1.1 = some response) :
     ∃ found, result.1.2.server.peers response.keyId = some found ∧ SendMoves calls kernel found.kernel := by
   unfold afterInitialization at supported
@@ -908,7 +910,7 @@ theorem candidate_installs (calls : RawCtxChainOwner.Calls Kernel (StateT L (Ora
     (initial : RustM Kernel) (candidate : pqxdh.ServerRegistrationCandidate) (data : Option Pqxdh.Bytes) (metadata : PeerMetadata)
     (state : State Kernel Metadata PeerMetadata Consumed) (start : L)
     (result : RustM (Option PqxdhServerRegistrationPublication.Response × State Kernel Metadata PeerMetadata Consumed) × L)
-    (supported : result ∈ support ((PqxdhInitialGenericBuilder.candidate calls aux initial candidate data metadata state).run start)) :
+    (supported : result ∈ support ((PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) calls aux initial candidate data metadata state).run start)) :
     Installs calls initial result.1 := by
   intro response final replied
   unfold PqxdhInitialGenericBuilder.candidate at supported
@@ -968,7 +970,7 @@ theorem candidate_installs (calls : RawCtxChainOwner.Calls Kernel (StateT L (Ora
       rw [StateT.run_map, support_map] at rest
       obtain ⟨tail, tailFound, rfl⟩ := rest
       simp only [RustM.ok.injEq] at replied
-      obtain ⟨found, peers, moves⟩ := after_installs calls aux candidate _ kernel metadata state _ tail tailFound response
+      obtain ⟨found, peers, moves⟩ := after_installs (associatedData := associatedData) calls aux candidate _ kernel metadata state _ tail tailFound response
         (by rw [replied])
       refine ⟨found, ?_, kernel, rfl, moves⟩
       rw [replied] at peers
@@ -980,7 +982,7 @@ theorem ready_installs (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) 
     (initial : RustM Kernel) (binding : pqxdh.ServerBinding) (ready : PqxdhPrivateAcceptedRoot.Ready) (metadata : PeerMetadata)
     (state : State Kernel Metadata PeerMetadata Consumed) (start : L)
     (result : RustM (Option PqxdhServerRegistrationPublication.Response × State Kernel Metadata PeerMetadata Consumed) × L)
-    (supported : result ∈ support ((PqxdhInitialGenericBuilder.readyBuild source calls aux initial binding ready metadata
+    (supported : result ∈ support ((PqxdhInitialGenericBuilder.readyBuild (associatedData := associatedData) source calls aux initial binding ready metadata
       state).run start)) :
     Installs calls initial result.1 := by
   intro response final replied
@@ -1007,7 +1009,7 @@ theorem ready_installs (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) 
     simp only at supported
     generalize PqxdhRegistrationInputs.prepare _ _ _ _ = prepared at supported
     rcases prepared with (candidate | error) | error | _
-    · exact candidate_installs calls aux initial candidate _ metadata state start result supported response final replied
+    · exact candidate_installs (associatedData := associatedData) calls aux initial candidate _ metadata state start result supported response final replied
     · exact (stop_case _ (by simp) supported).elim
     · exact (stop_case _ (by simp) supported).elim
     · exact (stop_case _ (by simp) supported).elim
@@ -1044,7 +1046,7 @@ theorem build_installs (initialKernel : RustM RawCtxSelectedMessageReveals.Kerne
     (ready : PqxdhPrivateAcceptedRoot.Ready) (front : PqxdhSelectedPostCompiler.Front M P I D K S B) (start : Local A N C)
     (result : (RustM (Option PqxdhServerRegistrationPublication.Response) × PqxdhSelectedPostCompiler.Front M P I D K S B) ×
       Local A N C)
-    (supported : result ∈ support (((PqxdhFirstBeaconRecordCtx.compiledBuild pre application initial selector aux source writer
+    (supported : result ∈ support (((PqxdhFirstBeaconRecordCtx.compiledBuild (associatedData := associatedData) pre application initial selector aux source writer
       prior parent target nonce next sender initialKernel index metadata ready).run front).run start))
     (response : PqxdhServerRegistrationPublication.Response) (replied : result.1.1 = ok (some response)) :
     ∃ found, (result.1.2.roles.1.1 index).server.peers response.keyId = some found ∧ ∃ kernel, initialKernel = ok kernel ∧
@@ -1057,7 +1059,7 @@ theorem build_installs (initialKernel : RustM RawCtxSelectedMessageReveals.Kerne
   rcases outcome : built.1 with value | error | _
   · rw [outcome] at replied
     simp only [PqxdhSelectedFirstRecord.reinstallServer, RustM.ok.injEq] at replied ⊢
-    obtain ⟨found, peers, kernel, initialized, moves⟩ := ready_installs source _ _ initialKernel _ ready metadata _ start built reached
+    obtain ⟨found, peers, kernel, initialized, moves⟩ := ready_installs (associatedData := associatedData) source _ _ initialKernel _ ready metadata _ start built reached
       response value.2 (by rw [outcome, ← replied])
     obtain ⟨context, sent, sentFound, same⟩ := compiled_moves source writer prior parent target nonce next kernel found.kernel moves
     refine ⟨found, ?_, kernel, initialized, context, sent, sentFound, same⟩
@@ -1079,14 +1081,14 @@ theorem built_clean (key : CtxRomAuth.CtxKey) (read : RawCtxReceive.FrameDecoder
     (built : ((RustM (Option PqxdhServerRegistrationPublication.Response) × PqxdhSelectedPostCompiler.Front M P I D K S B) ×
       Local A N C) × (RawCtxSelectedAuthenticationObserver.State × AdaptiveCtxDynamicKnownKeys.SourceState))
     (supported : built ∈ support ((simulateQ (RawCtxSelectedAuthenticationObserver.observed true
-      (RawCtxUniversalDecoder.decoder read) source.crypto key) (((PqxdhFirstBeaconRecordCtx.compiledBuild pre application initial
+      (RawCtxUniversalDecoder.decoder read) source.crypto key) (((PqxdhFirstBeaconRecordCtx.compiledBuild (associatedData := associatedData) pre application initial
         selector aux source writer prior parent target nonce next sender initialKernel index metadata ready).run front).run
           start)).run component)) :
     RawCtxSelectedPlaintextOrigins.Good (RawCtxUniversalDecoder.decoder read) source.crypto key built.2 ∧
       built.2.1.seals = component.1.seals := by
   have goodBuilt := RawCtxSelectedPlaintextOrigins.schedule_good _ _ _ _ component good built supported
   refine ⟨goodBuilt, clean_seals _ _ _ component built.2 good goodBuilt ?_⟩
-  have related := PqxdhFirstBeaconRecordCtx.build_rel pre application initial selector aux source writer prior parent key target
+  have related := PqxdhFirstBeaconRecordCtx.build_rel (associatedData := associatedData) pre application initial selector aux source writer prior parent key target
     nonce next read sender initialKernel index metadata ready front known
   refine (related (start, component.2)).2 (PqxdhSelectedStateInterpreter.pair (built.1, built.2.2)) ?_
   simp only [PqxdhSelectedStateInterpreter.evaluate, StateT.run, support_map, Set.mem_image]
@@ -1522,7 +1524,7 @@ theorem input_index (owner : RawCtxProtocolReveals.Owner S (B + 1)) (number : St
     (packet : Packet (M := M) (P := P) (I := I) (K := K) (A := A) (KemSK := KemSK) setup program)
     (input : PqxdhInitialPreparedSourceInput.Input (M := M) (P := P) (I := I) (K := K) (X := X) (Response := Response) (A := A)
       (S := S) (B := B) (setup := setup))
-    (pending : PqxdhSourceSharedInput.input setup env callbacks program post0 attachedVerify primitives
+    (pending : PqxdhSourceSharedInput.input (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post0 attachedVerify primitives
       baseImpl kem owner number ancestors disclosed packet = .inr input) :
     input.index = (env0).index := by
   unfold PqxdhSourceSharedInput.input PqxdhInitialPreparedSourceInput.input at pending
@@ -1539,7 +1541,7 @@ theorem suffix_won (b : Fin (B + 1)) (writable : ReadWritable (env0).recordWrite
     (good : Good (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto key start) (empty : start.1.seals = [])
     (result : Bool × (State × SourceState))
     (supported : result ∈ support ((simulateQ (observed true (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto key)
-      (suffix setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0) (firstBeacon b)
+      (suffix (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0) (firstBeacon b)
         sample)).run start))
     (bit : result.1 = true) : won (RawCtxUniversalDecoder.decoder (env0).decode) result.2.1 = true := by
   unfold suffix at supported
@@ -1554,12 +1556,12 @@ theorem suffix_won (b : Fin (B + 1)) (writable : ReadWritable (env0).recordWrite
   simp only [simulateQ_pure, StateT.run_pure, mem_support_pure_iff] at final
   subst final
   have answered : postResult.1.1 = some true := of_decide_eq_true bit
-  have selected := input_selected setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
+  have selected := input_selected (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
     (.beacon b) 1#u64 [] [] sample.1 input pending
-  have indexed := input_index setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
+  have indexed := input_index (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
     (.beacon b) 1#u64 [] []
     sample.1 input pending
-  obtain ⟨selection, posted⟩ := input_post setup env callbacks baseImpl kem attachedVerify primitives program
+  obtain ⟨selection, posted⟩ := input_post (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program
     (canonicalPost env0 program post0) (.beacon b) 1#u64 [] [] sample.1 input pending
   rw [selected] at builtFound postFound
   obtain ⟨goodBuilt, sealsBuilt⟩ := built_clean (key := key) (read := (env0).decode)
@@ -1579,7 +1581,7 @@ theorem suffix_won (b : Fin (B + 1)) (writable : ReadWritable (env0).recordWrite
   all_goals try exact replyForged.elim
   have builtSyntactic := observed_syntactic _ _ _ _ start built builtFound
   obtain ⟨found, peersFound, kernel, initialized, context, outcome, outcomeFound, same⟩ :=
-    build_installs _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ builtSyntactic response replied
+    build_installs (associatedData := associatedData) _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ builtSyntactic response replied
   have hiddenHere := first_slot_hidden setup env callbacks b sample.2.1 sample.2.2.1 sample.2.2.2 kernel initialized context outcome outcomeFound
   rw [same] at hiddenHere
   have initialInv : Inv (baseSpec := baseSpec) (env0).source (env0).recordWriter (productionStream (env0).source.crypto) none
@@ -1594,7 +1596,7 @@ theorem suffix_won (b : Fin (B + 1)) (writable : ReadWritable (env0).recordWrite
     · rw [peersFound] at otherFound
       cases otherFound
       exact Reach.base
-  have final := inv_post _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ writable hiddenHere (post0 selection built.1.1.1) []
+  have final := inv_post (completedBinding := completedBinding) _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ writable hiddenHere (post0 selection built.1.1.1) []
     (built.1.1.2, built.1.2) built.2 initialInv (inner.1.1, (inner.1.2, inner.2)) (by
       simp only [PqxdhSelectedStateInterpreter.evaluate, support_map, Set.mem_image]
       exact ⟨inner, innerFound, rfl⟩) value returned
@@ -1644,7 +1646,7 @@ local notation "env0" => PqxdhSourceSharedPreparation.environment setup env call
 /-- In the observed run of the forwarded prelude, the two halves of the drawn initializer response are equal with probability at most `2^-256`. -/
 theorem prelude_alias (key : CtxKey) :
     Pr{let result ← ((simulateQ (observed true (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto key)
-        (simulateQ RawCtxSourceSharedRom.forward (prelude setup env callbacks baseImpl kem attachedVerify primitives program post))).run
+        (simulateQ RawCtxSourceSharedRom.forward (prelude (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post))).run
           (initialState, AdaptiveCtxDynamicKnownKeys.initialSource))}[RawCtxSendLineageCollision.InitialAlias result.1.2.1] ≤ (1 : ℝ≥0∞) / (2 ^ 256 : ℝ≥0∞) := by
   classical
   rw [← prEvent_map _ Prod.fst (fun sample : Packet (M := M) (P := P) (I := I) (K := K) (A := A) (KemSK := KemSK) setup
@@ -1652,13 +1654,13 @@ theorem prelude_alias (key : CtxKey) :
     observed_fst]
   have cached := congrArg (fun work => Prod.fst <$> work) (RawCtxSourceSharedRom.forward_cache true
     (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto key
-    (prelude setup env callbacks baseImpl kem attachedVerify primitives program post) AdaptiveCtxDynamicKnownKeys.initialSource)
+    (prelude (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post) AdaptiveCtxDynamicKnownKeys.initialSource)
   simp only [Functor.map_map] at cached
   rw [cached, prEvent_map]
   have emptyCache : AdaptiveCtxDynamicKnownKeys.initialSource.cache = ∅ := rfl
   rw [emptyCache]
   have restored := congrArg (fun work => Pr{let sample ← work}[RawCtxSendLineageCollision.InitialAlias sample.2.1])
-    (prelude_source setup env callbacks baseImpl kem attachedVerify primitives program post)
+    (prelude_source (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post)
   simp only [prEvent_map] at restored
   refine le_of_eq_of_le (Eq.trans rfl restored) ?_
   -- Stated over an abstract draw, used after generalizing `$ᵗ HmacBlock`: the concrete draw exceeds the recursion depth.
@@ -1681,7 +1683,7 @@ theorem prelude_alias (key : CtxKey) :
 theorem gap_le (post0 : PqxdhAuthenticatedRootExperiment.Post (baseSpec := baseSpec) program.Selection S (B + 1)) (b : Fin (B + 1))
     (writable : ReadWritable (env0).recordWriter (env0).decode) :
     𝒟[gapGame (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto
-      (fullClient setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
+      (fullClient (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
         (firstBeacon b))] {true} ≤ (1 : ℝ≥0∞) / (2 ^ 256 : ℝ≥0∞) := by
   rw [gap_observed, ← prEvent_eq_evalDist_singleton _ true]
   refine prEvent_bind_le_of_forall_le_of_support _ _ _ fun key _ => ?_
@@ -1689,7 +1691,7 @@ theorem gap_le (post0 : PqxdhAuthenticatedRootExperiment.Post (baseSpec := baseS
   unfold fullClient
   rw [simulateQ_bind, StateT.run_bind, bind_assoc]
   refine (true_le_guard _ _ (fun result => RawCtxSendLineageCollision.InitialAlias result.1.2.1) ?_).trans
-    (prelude_alias setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0) key)
+    (prelude_alias (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0) key)
   intro prefixResult reached separate bit found
   have good := schedule_good _ _ _ _ (initialState, AdaptiveCtxDynamicKnownKeys.initialSource) (initial_good _ _ _) prefixResult
     reached
@@ -1699,7 +1701,7 @@ theorem gap_le (post0 : PqxdhAuthenticatedRootExperiment.Post (baseSpec := baseS
   obtain ⟨result, resultFound, rfl⟩ := found
   cases returned : result.1
   · rfl
-  · have winning := suffix_won setup env callbacks baseImpl kem attachedVerify primitives program post0 b writable key
+  · have winning := suffix_won (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post0 b writable key
       prefixResult.1 separate prefixResult.2 good empty result resultFound returned
     rw [winning]
     rfl
@@ -1732,23 +1734,23 @@ theorem canonical_pending_le (post0 : PqxdhAuthenticatedRootExperiment.Post (bas
     (adapter : HasAttachedVerificationAdapter attachedVerify primitives.verify)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation kem) (hmac : HmacSha512) (correct : SourceFullCorrect (env0).source hmac)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : Forgery) :
-    (𝒟[PqxdhFirstRecordTarget.pendingActual env0 baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
-        (PqxdhInitialRootEventSecrecy.accepted env0 attachedVerify primitives program (canonicalPost env0 program post0)
+    (𝒟[PqxdhFirstRecordTarget.pendingActual (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
+        (PqxdhInitialRootEventSecrecy.accepted (associatedData := associatedData) (completedBinding := completedBinding) env0 attachedVerify primitives program (canonicalPost env0 program post0)
           target.owner target.number target.ancestors target.disclosed)] {true}).toReal ≤
-    (𝒟[compiledGame setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0) target]
+    (𝒟[compiledGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0) target]
       {true}).toReal +
-    (𝒟[stopGame setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0) target]
+    (𝒟[stopGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0) target]
       {true}).toReal +
-    PqxdhAdaptiveCoordinateSecrecy.targetLoss env0 baseImpl kem attachedVerify primitives program
+    PqxdhAdaptiveCoordinateSecrecy.targetLoss (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program
       (PqxdhFirstRecordTarget.unitPost program (canonicalPost env0 program post0)) (PqxdhFirstRecordTarget.unitTargets target)
       (PqxdhFirstRecordTarget.certificate env0 baseImpl kem program (canonicalPost env0 program post0)
         (canonicalCertificate env0 baseImpl kem program post0 c)) hmac fallback ordinaryFallback () +
-    PqxdhFirstRecordTarget.completedLoss env0 baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
+    PqxdhFirstRecordTarget.completedLoss (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
       hmac fallback ordinaryFallback := by
-  have pending := PqxdhFirstRecordTarget.pending_le env0 baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
+  have pending := PqxdhFirstRecordTarget.pending_le (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
     target position (canonicalCertificate env0 baseImpl kem program post0 c) compatible adapter functional hmac correct fallback
     ordinaryFallback
-  have ideal := pending_ideal_le setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
+  have ideal := pending_ideal_le (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
     target position
   have ideal_real := ENNReal.toReal_mono (ENNReal.add_ne_top.mpr ⟨PqxdhFirstRecordTarget.true_ne_top _,
     PqxdhFirstRecordTarget.true_ne_top _⟩) ideal
@@ -1762,24 +1764,24 @@ theorem canonical_forgery_le (post0 : PqxdhAuthenticatedRootExperiment.Post (bas
     (adapter : HasAttachedVerificationAdapter attachedVerify primitives.verify)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation kem) (hmac : HmacSha512) (correct : SourceFullCorrect (env0).source hmac)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : Forgery) :
-    (𝒟[PqxdhInitialRootEventSecrecy.actual env0 baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
+    (𝒟[PqxdhInitialRootEventSecrecy.actual (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
         (.beacon b) 1#u64 [] []] {true}).toReal -
-      (𝒟[PqxdhInitialRootEventExperiment.actual env0 baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
-        (PqxdhFirstRecordTarget.rejectAll env0 program)] {true}).toReal ≤
-    (𝒟[compiledGame setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
+      (𝒟[PqxdhInitialRootEventExperiment.actual (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
+        (PqxdhFirstRecordTarget.rejectAll (completedBinding := completedBinding) env0 program)] {true}).toReal ≤
+    (𝒟[compiledGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
       (firstBeacon b)] {true}).toReal +
-    (𝒟[stopGame setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
+    (𝒟[stopGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
       (firstBeacon b)] {true}).toReal +
-    PqxdhAdaptiveCoordinateSecrecy.targetLoss env0 baseImpl kem attachedVerify primitives program
+    PqxdhAdaptiveCoordinateSecrecy.targetLoss (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program
       (PqxdhFirstRecordTarget.unitPost program (canonicalPost env0 program post0)) (PqxdhFirstRecordTarget.unitTargets (firstBeacon b))
       (PqxdhFirstRecordTarget.certificate env0 baseImpl kem program (canonicalPost env0 program post0)
         (canonicalCertificate env0 baseImpl kem program post0 c)) hmac fallback ordinaryFallback () +
-    PqxdhFirstRecordTarget.completedLoss env0 baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
+    PqxdhFirstRecordTarget.completedLoss (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
       hmac fallback ordinaryFallback := by
-  have split := PqxdhFirstRecordTarget.target_split env0 baseImpl kem attachedVerify primitives program
+  have split := PqxdhFirstRecordTarget.target_split (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program
     (canonicalPost env0 program post0) (.beacon b) 1#u64 [] []
   rw [split, ENNReal.toReal_add (PqxdhFirstRecordTarget.true_ne_top _) (PqxdhFirstRecordTarget.true_ne_top _), add_sub_cancel_left]
-  exact canonical_pending_le setup env callbacks baseImpl kem attachedVerify primitives program post0 (firstBeacon b) rfl c
+  exact canonical_pending_le (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post0 (firstBeacon b) rfl c
     compatible adapter functional hmac correct fallback ordinaryFallback
 
 /-- The canonical proxy post makes at most the certificate's total post budget of requests. -/
@@ -1801,50 +1803,50 @@ theorem canonical_integrity_ctx
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation kem) (hmac : HmacSha512) (correct : SourceFullCorrect (env0).source hmac)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : Forgery)
     (ctxFallback : ModifiedNonceAeadForgery) (qPrelude : Nat)
-    (prepareHash : PrepareHashBudget setup env callbacks baseImpl kem attachedVerify primitives program
+    (prepareHash : PrepareHashBudget (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program
       (canonicalPost env0 program post0) qPrelude)
     (small : 1 + postTotal setup env callbacks baseImpl kem program c < 2 ^ 96) :
-    (𝒟[PqxdhInitialRootEventSecrecy.actual env0 baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
+    (𝒟[PqxdhInitialRootEventSecrecy.actual (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
         (.beacon b) 1#u64 [] []] {true}).toReal -
-      (𝒟[PqxdhInitialRootEventExperiment.actual env0 baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
-        (PqxdhFirstRecordTarget.rejectAll env0 program)] {true}).toReal ≤
-    PqxdhAdaptiveCoordinateSecrecy.targetLoss env0 baseImpl kem attachedVerify primitives program
+      (𝒟[PqxdhInitialRootEventExperiment.actual (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
+        (PqxdhFirstRecordTarget.rejectAll (completedBinding := completedBinding) env0 program)] {true}).toReal ≤
+    PqxdhAdaptiveCoordinateSecrecy.targetLoss (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program
       (PqxdhFirstRecordTarget.unitPost program (canonicalPost env0 program post0)) (PqxdhFirstRecordTarget.unitTargets (firstBeacon b))
       (PqxdhFirstRecordTarget.certificate env0 baseImpl kem program (canonicalPost env0 program post0)
         (canonicalCertificate env0 baseImpl kem program post0 c)) hmac fallback ordinaryFallback () +
-    PqxdhFirstRecordTarget.completedLoss env0 baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
+    PqxdhFirstRecordTarget.completedLoss (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
       hmac fallback ordinaryFallback +
-    (ctxLoss setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0) (firstBeacon b)
+    (ctxLoss (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0) (firstBeacon b)
       ctxFallback (qPrelude + (1 + postTotal setup env callbacks baseImpl kem program c))
       (1 + postTotal setup env callbacks baseImpl kem program c)).toReal +
     1 / 2 ^ 256 +
     (𝒟[gapGame (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto
-      (fullClient setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
+      (fullClient (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
         (firstBeacon b))] {true}).toReal +
-    (𝒟[stopGame setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
+    (𝒟[stopGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
       (firstBeacon b)] {true}).toReal := by
   have postBound := canonical_total setup env callbacks baseImpl kem program post0 c
-  have hashBound := fullClient_uses setup env callbacks baseImpl kem attachedVerify primitives program
+  have hashBound := fullClient_uses (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program
     (canonicalPost env0 program post0) (firstBeacon b) HashRoute
     (fun _ _ _ _ query state => external_no_hash _ _ _ _ _ query state) qPrelude
-    (prelude_hash setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0) qPrelude
+    (prelude_hash (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0) qPrelude
       prepareHash) _ postBound
-  have sealBound := fullClient_uses setup env callbacks baseImpl kem attachedVerify primitives program
+  have sealBound := fullClient_uses (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program
     (canonicalPost env0 program post0) (firstBeacon b) (TargetClass SourceSeal)
     (fun _ _ _ _ query state => external_no_seal _ _ _ _ _ query state) 0 (forward_no_seal _) _ postBound
-  have rawBound := fullClient_uses setup env callbacks baseImpl kem attachedVerify primitives program
+  have rawBound := fullClient_uses (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program
     (canonicalPost env0 program post0) (firstBeacon b) (TargetClass AdaptiveCtxReceive.IsRawQuery)
     (fun _ _ _ _ query state => PqxdhSelectedInitialOwnerCompiler.external_no_open _ _ _ _ _ query state) 0 (forward_no_open _) _
       postBound
   rw [Nat.zero_add] at sealBound rawBound
-  have reduced := canonical_forgery_le setup env callbacks baseImpl kem attachedVerify primitives program post0 b c
+  have reduced := canonical_forgery_le (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post0 b c
     compatible adapter functional hmac correct fallback ordinaryFallback
-  have compiled := compiled_ctx_bound setup env callbacks baseImpl kem attachedVerify primitives program
+  have compiled := compiled_ctx_bound (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program
     (canonicalPost env0 program post0) b ctxFallback _ _ _ hashBound sealBound rawBound (by omega)
   have aliasFinite : (1 : ℝ≥0∞) / (2 ^ 256 : ℝ≥0∞) ≠ ⊤ := ENNReal.div_ne_top ENNReal.one_ne_top (by positivity)
   have gapFinite := PqxdhFirstRecordTarget.true_ne_top (gapGame (RawCtxUniversalDecoder.decoder (env0).decode) (env0).source.crypto
-    (fullClient setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0) (firstBeacon b)))
-  have lossFinite := ctxLoss_ne_top setup env callbacks baseImpl kem attachedVerify primitives program
+    (fullClient (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0) (firstBeacon b)))
+  have lossFinite := ctxLoss_ne_top (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program
     (canonicalPost env0 program post0) (firstBeacon b) ctxFallback (qPrelude + (1 + postTotal setup env callbacks baseImpl kem program c))
     (1 + postTotal setup env callbacks baseImpl kem program c)
   have real := ENNReal.toReal_mono (ENNReal.add_ne_top.mpr ⟨ENNReal.add_ne_top.mpr ⟨aliasFinite, lossFinite⟩, gapFinite⟩) compiled
@@ -1865,29 +1867,29 @@ theorem first_beacon_record_integrity_canonical
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation kem) (hmac : HmacSha512) (correct : SourceFullCorrect (env0).source hmac)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : Forgery)
     (ctxFallback : ModifiedNonceAeadForgery) (qPrelude : Nat)
-    (prepareHash : PrepareHashBudget setup env callbacks baseImpl kem attachedVerify primitives program
+    (prepareHash : PrepareHashBudget (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program
       (canonicalPost env0 program post0) qPrelude)
     (small : 1 + postTotal setup env callbacks baseImpl kem program c < 2 ^ 96)
     (writable : ReadWritable env.recordWriter env.decode) :
-    (𝒟[PqxdhInitialRootEventSecrecy.actual env0 baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
+    (𝒟[PqxdhInitialRootEventSecrecy.actual (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
         (.beacon b) 1#u64 [] []] {true}).toReal -
-      (𝒟[PqxdhInitialRootEventExperiment.actual env0 baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
-        (PqxdhFirstRecordTarget.rejectAll env0 program)] {true}).toReal ≤
-    PqxdhAdaptiveCoordinateSecrecy.targetLoss env0 baseImpl kem attachedVerify primitives program
+      (𝒟[PqxdhInitialRootEventExperiment.actual (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
+        (PqxdhFirstRecordTarget.rejectAll (completedBinding := completedBinding) env0 program)] {true}).toReal ≤
+    PqxdhAdaptiveCoordinateSecrecy.targetLoss (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program
       (PqxdhFirstRecordTarget.unitPost program (canonicalPost env0 program post0)) (PqxdhFirstRecordTarget.unitTargets (firstBeacon b))
       (PqxdhFirstRecordTarget.certificate env0 baseImpl kem program (canonicalPost env0 program post0)
         (canonicalCertificate env0 baseImpl kem program post0 c)) hmac fallback ordinaryFallback () +
-    PqxdhFirstRecordTarget.completedLoss env0 baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
+    PqxdhFirstRecordTarget.completedLoss (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
       hmac fallback ordinaryFallback +
-    (ctxLoss setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0) (firstBeacon b)
+    (ctxLoss (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0) (firstBeacon b)
       ctxFallback (qPrelude + (1 + postTotal setup env callbacks baseImpl kem program c))
       (1 + postTotal setup env callbacks baseImpl kem program c)).toReal +
     1 / 2 ^ 256 + 1 / 2 ^ 256 +
-    (𝒟[stopGame setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
+    (𝒟[stopGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (canonicalPost env0 program post0)
       (firstBeacon b)] {true}).toReal := by
-  have base := canonical_integrity_ctx setup env callbacks baseImpl kem attachedVerify primitives program post0 b c
+  have base := canonical_integrity_ctx (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post0 b c
     compatible adapter functional hmac correct fallback ordinaryFallback ctxFallback qPrelude prepareHash small
-  have gap := gap_le setup env callbacks baseImpl kem attachedVerify primitives program post0 b writable
+  have gap := gap_le (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post0 b writable
   have real := ENNReal.toReal_mono (ENNReal.div_ne_top ENNReal.one_ne_top (by positivity)) gap
   have half : ((1 : ℝ≥0∞) / (2 ^ 256 : ℝ≥0∞)).toReal = 1 / 2 ^ 256 := by
     rw [ENNReal.toReal_div, ENNReal.toReal_pow]

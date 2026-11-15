@@ -64,7 +64,7 @@ abbrev EnvSpec : OracleSpec EnvQuery := fun query => CommandSpec query.val
 structure BeaconShell where
   identityKeyId : Std.U64
   control : pqxdh.BeaconEstablished
-  associatedData : Std.Array Std.U8 281#usize
+  associatedData : Std.Array Std.U8 151#usize
 
 /-- Inactive phase metadata may be updated without supplying an established kernel. -/
 inductive InactivePhase where
@@ -95,12 +95,12 @@ abbrev CapabilitySpec (n : Nat) : OracleSpec (Capability n)
 abbrev EnvEffects (n : Nat) := unifSpec + CapabilitySpec n
 
 /-- Private world requests additionally include initial Server installation and ordinary raw record calls. They are unavailable to the environment handler. -/
-abbrev WorldSpec (n : Nat) := (PqxdhLiveServerConstruction.Created Unit →ₒ Unit) +
+abbrev WorldSpec (n : Nat) := (PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize) →ₒ Unit) +
   (EnvEffects n + RecordSpec .O)
 
 /-- The environment's state is supplied only to its own handler. It receives no world-state lens. This is a typed access boundary, not an assertion that all of its adaptively learned data is statistically independent of hidden material. -/
 structure Environment (n : Nat) (E : Type) where
-  start : ProbComp (Option (PqxdhLiveServerConstruction.Created Unit × E))
+  start : ProbComp (Option (PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize) × E))
   step : QueryImpl EnvSpec (StateT E (OracleComp (EnvEffects n)))
 
 /-- Embed restricted effects into the private world's oracle sum. -/
@@ -141,7 +141,7 @@ noncomputable def program {n : Nat} {E X Reader Response : Type} (env : Environm
     (crypto : Pqxdh.Crypto) (codec : Codec Reader Response)
     (serverKid : Std.U64) (bounds : FreshBounds) (mode : Mode)
     (adversary : OracleComp (ModeSpec mode) X) :
-    OracleComp (WorldSpec n) (Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+    OracleComp (WorldSpec n) (Option (PqxdhRegistrationJointServerBirth.ClientCreated (Std.Array Std.U8 151#usize) ×
       (X × PqxdhDeploymentSecrecy.Ledger) × E)) := do
   let born ← simulateQ coinLift env.start
   match born with

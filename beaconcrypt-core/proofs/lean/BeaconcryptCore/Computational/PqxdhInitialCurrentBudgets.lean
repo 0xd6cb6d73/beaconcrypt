@@ -8,6 +8,8 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialCurrentBudgets
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhInitialCurrentAliases
 open PqxdhJointKdfGame PqxdhKemIndCca PqxdhCorrelatedExpand PqxdhCorrelatedExpandHybrid
 open PqxdhCorrelatedExtractFamily PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhInitialLegalObserver
@@ -24,15 +26,15 @@ variable {setup : StatefulPhase1Setup baseSpec}
 variable (c : PqxdhAuthenticatedRootBudgets.Certificate env baseImpl kem program post)
 
 /-- Every actual prepared mode makes at most one Server initializer plus one request per allowed Beacon finish, including every failed attempt. -/
-theorem client_initial (context : Context env kem attachedVerify primitives program post) :
-    (client env baseImpl kem attachedVerify primitives program post context).IsQueryBoundP
+theorem client_initial (context : PqxdhInitialLegalObserver.Context (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post) :
+    (PqxdhInitialCurrentAliases.client (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post context).IsQueryBoundP
       PqxdhInitialRootAliases.IsInitializer (1 + c.privatePost) := by
   cases mode : context.state with
   | completed decision => simp only [client, mode]; trivial
   | pending prepared ephemeral =>
       simp only [client, mode]
-      have bound := PqxdhInitialBuilderServiceBound.accepted_initial env baseImpl kem attachedVerify primitives program post c
-        context.secretKey (selected env kem attachedVerify primitives program post context) prepared
+      have bound := PqxdhInitialBuilderServiceBound.accepted_initial (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c
+        context.secretKey (PqxdhInitialCurrentAliases.selected (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post context) prepared
         (ready env.server env.application prepared.1.context.publicIdentity.ed25519 prepared.1.context.generated.after.publicKey
           ephemeral context.ciphertext (List.Vector.replicate 32 0))
       have same : PqxdhInitialRootAliases.IsInitializer = PqxdhInitialObserverCallbackBudgets.IsService := by
@@ -44,84 +46,84 @@ theorem client_initial (context : Context env kem attachedVerify primitives prog
 theorem primitive_bound (hmac : HmacSha512) (correct : PqxdhFullSecretInputKdf.SourceFullCorrect env.source hmac)
  :
     (uniformGame (PqxdhCorrelatedExpand.rootReduction env.source baseImpl kem
-      (protocol env kem attachedVerify primitives program post))).boolDistance
-      (consistentRandom env baseImpl kem attachedVerify primitives program post) ≤
-    (extractRealGame hmac (PqxdhInitialCurrentSecrecy.joint env baseImpl kem attachedVerify primitives program post)
-      (fullExtractReduction hmac .ratchet (PqxdhInitialCurrentSecrecy.observer env baseImpl kem attachedVerify primitives program post))).boolDistance
-      (extractUniformGame (PqxdhInitialCurrentSecrecy.joint env baseImpl kem attachedVerify primitives program post)
-        (fullExtractReduction hmac .ratchet (PqxdhInitialCurrentSecrecy.observer env baseImpl kem attachedVerify primitives program post))) +
-    (hmacPrfRealGame hmac (fullExpandReduction .ratchet
-      (PqxdhInitialCurrentSecrecy.joint env baseImpl kem attachedVerify primitives program post)
-      (PqxdhInitialCurrentSecrecy.observer env baseImpl kem attachedVerify primitives program post))).boolDistance
-      (hmacPrfRandomGame (fullExpandReduction .ratchet
-        (PqxdhInitialCurrentSecrecy.joint env baseImpl kem attachedVerify primitives program post)
-        (PqxdhInitialCurrentSecrecy.observer env baseImpl kem attachedVerify primitives program post))) +
+      (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post))).boolDistance
+      (PqxdhInitialCurrentAliases.consistentRandom (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post) ≤
+    (extractRealGame hmac (PqxdhInitialCurrentSecrecy.joint (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post)
+      (fullExtractReduction hmac .initial (PqxdhInitialCurrentSecrecy.observer (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post))).boolDistance
+      (extractUniformGame (PqxdhInitialCurrentSecrecy.joint (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post)
+        (fullExtractReduction hmac .initial (PqxdhInitialCurrentSecrecy.observer (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post))) +
+    (hmacPrfRealGame hmac (fullExpandReduction .initial
+      (PqxdhInitialCurrentSecrecy.joint (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post)
+      (PqxdhInitialCurrentSecrecy.observer (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post))).boolDistance
+      (hmacPrfRandomGame (fullExpandReduction .initial
+        (PqxdhInitialCurrentSecrecy.joint (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post)
+        (PqxdhInitialCurrentSecrecy.observer (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post))) +
       (((1 + c.privatePost : Nat) : ENNReal) / (2 ^ 256 : ENNReal)).toReal :=
-  PqxdhInitialCurrentAliases.primitive_bound env baseImpl kem attachedVerify primitives program post hmac correct
-    (1 + c.privatePost) (client_initial env baseImpl kem attachedVerify primitives program post c)
+  PqxdhInitialCurrentAliases.primitive_bound (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post hmac correct
+    (1 + c.privatePost) (client_initial (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c)
 
 noncomputable def qSample : Nat := c.qKeygen + ((c.uPre + c.qBase * c.bPre + c.qDecap * c.dPre) + c.qEncap) + 32
 noncomputable def qObserver : Nat := c.uPost + c.qBase * c.bPost + c.qDecap * c.dPost + 32 * c.privatePost
 
 /-- The exact serialized Extract sampler retains the source-derived preparation and comparison-root bill. -/
 theorem joint_uniform :
-    (PqxdhInitialCurrentSecrecy.joint env baseImpl kem attachedVerify primitives program post).IsTotalQueryBound
+    (PqxdhInitialCurrentSecrecy.joint (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post).IsTotalQueryBound
       (qSample env baseImpl kem program post c) :=
-  RawCtxInitialSecrecy.joint_bound _ _ (PqxdhInitialObserverBudgets.sample_uniform env baseImpl kem attachedVerify primitives program post c)
+  RawCtxInitialSecrecy.joint_bound _ _ (PqxdhInitialObserverBudgets.sample_uniform (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c)
 
 /-- Every supplied full comparison output invokes the same actual64 observer and its derived complete source bill. -/
-theorem observer_uniform (context : Context env kem attachedVerify primitives program post)
+theorem observer_uniform (context : PqxdhInitialLegalObserver.Context (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post)
     (output : FullOutput) :
-    (PqxdhInitialCurrentSecrecy.observer env baseImpl kem attachedVerify primitives program post context output).IsTotalQueryBound
+    (PqxdhInitialCurrentSecrecy.observer (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post context output).IsTotalQueryBound
       (qObserver env baseImpl kem program post c) :=
-  PqxdhInitialObserverBudgets.observe_uniform env baseImpl kem attachedVerify primitives program post c context _
+  PqxdhInitialObserverBudgets.observe_uniform (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c context _
 
 /-- The constructed ordinary HMAC reduction has two challenge queries and pays all source-derived sampler and observer uniform work. -/
 theorem reduction_bounds :
-    (fullExpandReduction .ratchet (PqxdhInitialCurrentSecrecy.joint env baseImpl kem attachedVerify primitives program post)
-      (PqxdhInitialCurrentSecrecy.observer env baseImpl kem attachedVerify primitives program post)).IsQueryBoundP IsHmacChallengeQuery 2 ∧
-    (fullExpandReduction .ratchet (PqxdhInitialCurrentSecrecy.joint env baseImpl kem attachedVerify primitives program post)
-      (PqxdhInitialCurrentSecrecy.observer env baseImpl kem attachedVerify primitives program post)).IsQueryBoundP
+    (fullExpandReduction .initial (PqxdhInitialCurrentSecrecy.joint (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post)
+      (PqxdhInitialCurrentSecrecy.observer (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post)).IsQueryBoundP IsHmacChallengeQuery 2 ∧
+    (fullExpandReduction .initial (PqxdhInitialCurrentSecrecy.joint (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post)
+      (PqxdhInitialCurrentSecrecy.observer (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post)).IsQueryBoundP
         PqxdhFullSecretInputKdf.IsHmacUniformQuery
           (qSample env baseImpl kem program post c + qObserver env baseImpl kem program post c) :=
   ⟨fullExpandReduction_hmac_query_bound _ _ _,
-    fullExpandReduction_uniform_query_bound _ _ _ (joint_uniform env baseImpl kem attachedVerify primitives program post c)
-      (observer_uniform env baseImpl kem attachedVerify primitives program post c)⟩
+    fullExpandReduction_uniform_query_bound _ _ _ (joint_uniform (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c)
+      (observer_uniform (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c)⟩
 
 set_option maxRecDepth 2048 in
 /-- All ordinary Extract/HMAC and full-output comparison games retain exact source-derived sampler/observer bills and separately charge their64/76/128-byte comparison work. -/
 theorem challenger_uniform (hmac : HmacSha512) :
 
-    (extractRealGame hmac (PqxdhInitialCurrentSecrecy.joint env baseImpl kem attachedVerify primitives program post) (fullExtractReduction hmac .ratchet (PqxdhInitialCurrentSecrecy.observer env baseImpl kem attachedVerify primitives program post))).IsTotalQueryBound
+    (extractRealGame hmac (PqxdhInitialCurrentSecrecy.joint (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post) (fullExtractReduction hmac .initial (PqxdhInitialCurrentSecrecy.observer (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post))).IsTotalQueryBound
         ((qSample env baseImpl kem program post c) + (qObserver env baseImpl kem program post c)) ∧
-      (extractUniformGame (PqxdhInitialCurrentSecrecy.joint env baseImpl kem attachedVerify primitives program post) (fullExtractReduction hmac .ratchet (PqxdhInitialCurrentSecrecy.observer env baseImpl kem attachedVerify primitives program post))).IsTotalQueryBound
+      (extractUniformGame (PqxdhInitialCurrentSecrecy.joint (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post) (fullExtractReduction hmac .initial (PqxdhInitialCurrentSecrecy.observer (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post))).IsTotalQueryBound
         ((qSample env baseImpl kem program post c) + (64 + (qObserver env baseImpl kem program post c))) ∧
-      (hmacPrfRealGame hmac (fullExpandReduction .ratchet (PqxdhInitialCurrentSecrecy.joint env baseImpl kem attachedVerify primitives program post) (PqxdhInitialCurrentSecrecy.observer env baseImpl kem attachedVerify primitives program post))).IsTotalQueryBound
+      (hmacPrfRealGame hmac (fullExpandReduction .initial (PqxdhInitialCurrentSecrecy.joint (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post) (PqxdhInitialCurrentSecrecy.observer (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post))).IsTotalQueryBound
         (64 + ((qSample env baseImpl kem program post c) + (qObserver env baseImpl kem program post c))) ∧
-      (hmacPrfRandomGame (fullExpandReduction .ratchet (PqxdhInitialCurrentSecrecy.joint env baseImpl kem attachedVerify primitives program post) (PqxdhInitialCurrentSecrecy.observer env baseImpl kem attachedVerify primitives program post))).IsTotalQueryBound
+      (hmacPrfRandomGame (fullExpandReduction .initial (PqxdhInitialCurrentSecrecy.joint (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post) (PqxdhInitialCurrentSecrecy.observer (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post))).IsTotalQueryBound
         ((qSample env baseImpl kem program post c) + (64 + (64 + (qObserver env baseImpl kem program post c)))) ∧
-      (independentFullGame (PqxdhInitialCurrentSecrecy.joint env baseImpl kem attachedVerify primitives program post) (PqxdhInitialCurrentSecrecy.observer env baseImpl kem attachedVerify primitives program post)).IsTotalQueryBound
+      (independentFullGame (PqxdhInitialCurrentSecrecy.joint (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post) (PqxdhInitialCurrentSecrecy.observer (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post)).IsTotalQueryBound
         ((qSample env baseImpl kem program post c) + (76 + (qObserver env baseImpl kem program post c))) := by
-  exact ⟨isTotalQueryBound_bind (joint_uniform env baseImpl kem attachedVerify primitives program post c) (fun pair => observer_uniform env baseImpl kem attachedVerify primitives program post c pair.1 _),
-    fullExtractUniform_uniform_query_bound _ _ _ _ (joint_uniform env baseImpl kem attachedVerify primitives program post c) (observer_uniform env baseImpl kem attachedVerify primitives program post c),
-    fullHmacReal_uniform_query_bound _ _ _ _ (joint_uniform env baseImpl kem attachedVerify primitives program post c) (observer_uniform env baseImpl kem attachedVerify primitives program post c),
-    fullHmacRandom_uniform_query_bound _ _ _ (joint_uniform env baseImpl kem attachedVerify primitives program post c) (observer_uniform env baseImpl kem attachedVerify primitives program post c),
-    independentFullGame_uniform_query_bound _ _ (joint_uniform env baseImpl kem attachedVerify primitives program post c) (observer_uniform env baseImpl kem attachedVerify primitives program post c)⟩
+  exact ⟨isTotalQueryBound_bind (joint_uniform (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c) (fun pair => observer_uniform (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c pair.1 _),
+    fullExtractUniform_uniform_query_bound _ _ _ _ (joint_uniform (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c) (observer_uniform (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c),
+    fullHmacReal_uniform_query_bound _ _ _ _ (joint_uniform (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c) (observer_uniform (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c),
+    fullHmacRandom_uniform_query_bound _ _ _ (joint_uniform (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c) (observer_uniform (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c),
+    independentFullGame_uniform_query_bound _ _ (joint_uniform (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c) (observer_uniform (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c)⟩
 
 /-- The explicit Extract distinguisher retains the whole current source observer bill for every supplied secret PRK. -/
-theorem extract_work (hmac : HmacSha512) (context : Context env kem attachedVerify primitives program post) (key : HmacBlock) :
-    (fullExtractReduction hmac .ratchet (PqxdhInitialCurrentSecrecy.observer env baseImpl kem attachedVerify primitives program post)
+theorem extract_work (hmac : HmacSha512) (context : PqxdhInitialLegalObserver.Context (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post) (key : HmacBlock) :
+    (fullExtractReduction hmac .initial (PqxdhInitialCurrentSecrecy.observer (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post)
       context key).IsTotalQueryBound (qObserver env baseImpl kem program post c) :=
-  observer_uniform env baseImpl kem attachedVerify primitives program post c context _
+  observer_uniform (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c context _
 
 set_option maxRecDepth 2048 in
 /-- The actual random64 initializer game pays exactly the literal64-byte response draw in addition to all current source sampler and observer work; no76-byte comparison cost is reassigned to it. -/
 theorem random_uniform :
-    (PqxdhInitialCurrentSecrecy.random env baseImpl kem attachedVerify primitives program post).IsTotalQueryBound
+    (PqxdhInitialCurrentSecrecy.random (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post).IsTotalQueryBound
       (qSample env baseImpl kem program post c + (64 + qObserver env baseImpl kem program post c)) :=
-  isTotalQueryBound_bind (PqxdhInitialObserverBudgets.sample_uniform env baseImpl kem attachedVerify primitives program post c)
+  isTotalQueryBound_bind (PqxdhInitialObserverBudgets.sample_uniform (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c)
     (fun pair => isTotalQueryBound_bind (CtxComputationalSecurity.uniformFixedBytes_isTotalQueryBound 64)
-      (fun _ => PqxdhInitialObserverBudgets.observe_uniform env baseImpl kem attachedVerify primitives program post c pair.1 _))
+      (fun _ => PqxdhInitialObserverBudgets.observe_uniform (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c pair.1 _))
 
 end BeaconcryptCore.Computational.PqxdhInitialCurrentBudgets
 

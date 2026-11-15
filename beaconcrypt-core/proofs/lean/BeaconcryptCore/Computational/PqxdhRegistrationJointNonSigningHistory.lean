@@ -6,6 +6,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhRegistrationJointNonSigningHistory
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointIdentity PqxdhJointGapDh PqxdhServerAuthExperiment PqxdhServerAuthNative
 open PqxdhRegistrationJointSigningTranscript
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response A Result : Type}
@@ -55,11 +56,11 @@ theorem finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (owner : PqxdhRegistrationSchedule.Owner KemSK) (state : PqxdhRegistrationJointFinish.State KemSK)
     (result : (Option Pqxdh.Bytes × PqxdhRegistrationSchedule.Owner KemSK) × PqxdhRegistrationJointFinish.State KemSK)
     (supported : result ∈ support ((simulateQ (PqxdhRegistrationJointFinish.annotated setup codec identityIndex kemIndex)
-      (PqxdhBeaconPhase2Publication.nativeOwner decode raw owner)).run state)) :
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw owner)).run state)) :
     messagesAt target result.2.1.1.transcript = messagesAt target state.1.1.transcript :=
   program (PqxdhRegistrationJointFinish.annotated setup codec identityIndex kemIndex)
     (fun state => state.1.1.transcript) target (finish_query setup codec identityIndex kemIndex target)
-    (PqxdhBeaconPhase2Publication.nativeOwner decode raw owner) state result supported
+    (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw owner) state result supported
 
 /-- Literal Server prefix verification and converted-DH callbacks cannot append a signature to any owner's history. -/
 theorem server_prefix (joint : Primitives) (seed : IdentitySeed) (identityIndex target : Nat)

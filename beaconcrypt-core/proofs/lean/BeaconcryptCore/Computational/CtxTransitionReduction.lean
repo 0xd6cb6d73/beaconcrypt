@@ -14,6 +14,35 @@ set_option autoImplicit false
 
 namespace BeaconcryptCore.Computational.CtxTransitionReduction
 
+/-- A successful opening of an honest seal under a distinct record context of the same fixed associated-data width exposes the two exact CTX preimages as a BLAKE2b collision. The ideal lifecycle model `Pqxdh.HonestRun` uses the historical 281-byte `Pqxdh.assocData`, so this module instantiates the width-generic `Pqxdh.openRecord_double_opening_yields_ctx_collision` instead of the 151-byte `CtxReduction` wrappers. -/
+theorem relabelled_open_yields_blake2b_collision (c : Pqxdh.Crypto) {width : ℕ}
+    {sourceMaterial targetMaterial : Pqxdh.Bytes × Pqxdh.Bytes}
+    {sourceAd targetAd : Pqxdh.RecordAD} {plaintext forgedPlaintext : Pqxdh.Bytes}
+    (hw : Pqxdh.RecordWfFor width sourceMaterial sourceAd)
+    (hw' : Pqxdh.RecordWfFor width targetMaterial targetAd)
+    (hcontext : ¬ (sourceMaterial = targetMaterial ∧ sourceAd = targetAd))
+    (hopen : Pqxdh.openRecord c targetMaterial targetAd
+      (Pqxdh.sealRecord c sourceMaterial sourceAd plaintext).encode = some forgedPlaintext) :
+    Pqxdh.ctxPreimage sourceMaterial sourceAd
+          (Pqxdh.sealRecord c sourceMaterial sourceAd plaintext).tag ≠
+        Pqxdh.ctxPreimage targetMaterial targetAd
+          (Pqxdh.sealRecord c sourceMaterial sourceAd plaintext).tag ∧
+      c.blake2b (Pqxdh.ctxPreimage sourceMaterial sourceAd
+          (Pqxdh.sealRecord c sourceMaterial sourceAd plaintext).tag) =
+        c.blake2b (Pqxdh.ctxPreimage targetMaterial targetAd
+          (Pqxdh.sealRecord c sourceMaterial sourceAd plaintext).tag) := by
+  obtain ⟨r, hdecode, hne, hhash⟩ :=
+    Pqxdh.openRecord_double_opening_yields_ctx_collision c hw hw'
+      (Pqxdh.openRecord_sealRecord c sourceMaterial sourceAd plaintext) hopen
+      (fun ⟨hmaterial, had, _⟩ => hcontext ⟨hmaterial, had⟩)
+  have htag : (Pqxdh.sealRecord c sourceMaterial sourceAd plaintext).tag.length = 16 :=
+    c.aeadSeal_tag_length _ _ _ _
+  have hcommit : (Pqxdh.sealRecord c sourceMaterial sourceAd plaintext).commit.length = 64 :=
+    c.blake2b_length _
+  rw [Pqxdh.decodeRecord_encode _ htag hcommit] at hdecode
+  cases Option.some.inj hdecode
+  exact ⟨hne, hhash⟩
+
 /-- A bounded sequence number distinct from the honest first record's sequence. -/
 structure BeaconWrongSequenceClaim where
   /-- The sequence number substituted into the honest response frame. -/
@@ -54,13 +83,13 @@ theorem beaconWrongSequenceSuccess_implies_blake2b_collision
   simp only [Pqxdh.HonestRun.response, Pqxdh.HonestRun.frame] at hkey hnonzero hopen
   have hadLength : h.ad.length = 281 :=
     Pqxdh.assocData_length (h.c.edPub_length h.ikSkS) (h.c.edPub_length h.ikSkB)
-  have hsourceWf : Pqxdh.RecordWf (Pqxdh.msgMaterial h.c h.chains.1) h.recordAD := by
+  have hsourceWf : Pqxdh.RecordWfFor 281 (Pqxdh.msgMaterial h.c h.chains.1) h.recordAD := by
     apply Pqxdh.recordWf_msgMaterial
     · simpa [Pqxdh.HonestRun.recordAD] using hadLength
     · change 1 < 2 ^ 64
       decide
     · simpa [Pqxdh.HonestRun.recordAD] using hsid
-  have htargetWf : Pqxdh.RecordWf
+  have htargetWf : Pqxdh.RecordWfFor 281
       (Ratchet.msgKeyAt (Pqxdh.ratchetCrypto h.c) h.chains.1 (claim.sequence - 1))
       ⟨h.ad, claim.sequence, h.sid⟩ := by
     apply Pqxdh.recordWf_msgKeyAt
@@ -72,9 +101,12 @@ theorem beaconWrongSequenceSuccess_implies_blake2b_collision
         h.plaintext).encode := rfl
   rw [hct] at hopen
   have hcollision :=
-    CtxReduction.successful_wrong_sequence_open_yields_blake2b_collision h.c
-      hsourceWf htargetWf
-      (by simpa [Pqxdh.HonestRun.recordAD] using claim.sequence_ne) hopen
+    relabelled_open_yields_blake2b_collision h.c hsourceWf htargetWf
+      (by
+        rintro ⟨_, had⟩
+        apply claim.sequence_ne
+        simpa [Pqxdh.HonestRun.recordAD] using (congrArg Pqxdh.RecordAD.seq had).symm)
+      hopen
   simpa only [beaconWrongSequenceCollisionInputs, Pqxdh.HonestRun.recordAD] using hcollision
 
 /-- The ideal-model reordered-record admission experiment for one fixed honest run. -/
@@ -198,8 +230,8 @@ structure BeaconCrossSessionClaim (h : Pqxdh.HonestRun) where
   sessionBytes : Pqxdh.Bytes
   /-- The plaintext placed in the foreign record. -/
   plaintext : Pqxdh.Bytes
-  /-- The foreign record context has every protocol-mandated field width. -/
-  wf : Pqxdh.RecordWf material ⟨sessionBytes, 1, h.sid⟩
+  /-- The foreign record context has every field width of the historical lifecycle model, including its 281-byte `Pqxdh.assocData` width. -/
+  wf : Pqxdh.RecordWfFor 281 material ⟨sessionBytes, 1, h.sid⟩
   /-- The honest session bytes differ from the foreign session bytes. -/
   session_ne : h.ad ≠ sessionBytes
 
@@ -239,7 +271,7 @@ theorem beaconCrossSessionSuccess_implies_blake2b_collision
     Pqxdh.HonestRun.frame, Nat.reduceSub] at hkey hnonzero hopen
   have hadLength : h.ad.length = 281 :=
     Pqxdh.assocData_length (h.c.edPub_length h.ikSkS) (h.c.edPub_length h.ikSkB)
-  have htargetWf : Pqxdh.RecordWf
+  have htargetWf : Pqxdh.RecordWfFor 281
       (Ratchet.msgKeyAt (Pqxdh.ratchetCrypto h.c) h.chains.1 0) h.recordAD := by
     apply Pqxdh.recordWf_msgKeyAt
     · simpa [Pqxdh.HonestRun.recordAD] using hadLength
@@ -247,8 +279,12 @@ theorem beaconCrossSessionSuccess_implies_blake2b_collision
       decide
     · simpa [Pqxdh.HonestRun.recordAD] using claim.wf.sid
   have hcollision :=
-    CtxReduction.successful_cross_session_open_yields_blake2b_collision h.c
-      claim.wf htargetWf claim.session_ne hopen
+    relabelled_open_yields_blake2b_collision h.c claim.wf htargetWf
+      (by
+        rintro ⟨_, had⟩
+        apply claim.session_ne
+        simpa [Pqxdh.HonestRun.recordAD] using (congrArg Pqxdh.RecordAD.bytes had).symm)
+      hopen
   simpa only [beaconCrossSessionCollisionInputs, Pqxdh.HonestRun.recordAD] using hcollision
 
 /-- The ideal-model foreign-session admission experiment for one fixed honest run. -/

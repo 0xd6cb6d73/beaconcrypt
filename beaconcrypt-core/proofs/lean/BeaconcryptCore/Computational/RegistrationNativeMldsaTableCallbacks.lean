@@ -15,7 +15,7 @@ open PqxdhServerAuthExperiment (Setup Checks)
 open RegistrationNativeMldsa (Source Credential)
 open RegistrationNativeMldsaOpaque (Pool handleSource restore)
 open RegistrationNativeMldsaMap (nativeState)
-open RegistrationNativeMldsaPoolMap (CredentialLive StateLive)
+open RegistrationNativeMldsaPoolMap (CredentialLive)
 open RegistrationNativeMldsaTableProgram (evaluate runState)
 open RegistrationNativeMldsaTableRestore (observe)
 open RegistrationNativeMldsaLiveOwners (NonCreate)
@@ -57,14 +57,14 @@ private theorem map_all {Query : Type} {queries : OracleSpec Query} {Answer Resu
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
 variable (route : RawCtxServerRouting.SenderDecoder)
 variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (credential : Credential (handleSource source)) (pool : Pool source)
 local notation "callback" => RegistrationNativeMldsaProfile.handler setup checks wire route representation created credential
 
 /-- Every reached non-creation callback issues only ordinary queries or a live named signing request. -/
 theorem valid (credentialLive : CredentialLive source pool credential)
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (allowed : NonCreate query)
-    (before : RegistrationNativeExperiment.State n KemSK (handleSource source)) (live : StateLive source pool before) :
+    (before : RegistrationNativeExperiment.State n KemSK (handleSource source)) :
     ((callback query).run before).AllQueriesSatisfy (RegistrationNativeMldsaTableSign.Valid source pool) := by
   have ordinary (work : StateT (RegistrationNativeExperiment.State n KemSK (handleSource source)) ProbComp
       (RegistrationNativeRawAdapter.TypedSpec.Range query)) :
@@ -76,7 +76,7 @@ theorem valid (credentialLive : CredentialLive source pool credential)
     | create _ _ _ => exact allowed.elim
     | bundle index =>
         exact RegistrationNativeMldsaControllerValid.Bundle.sourceBundle source pool
-          setup checks representation created wire index before live
+          setup checks representation created wire index before
     | build handle application =>
         exact map_all _ _ _ (RegistrationNativeMldsaControllerValid.Server.build source pool credential credentialLive
           setup (RegistrationNativeWire.ledgerCodec wire) checks wire.encodeResponse handle application before.server)
@@ -99,7 +99,7 @@ private theorem ordinary (fallback : Credential source) (query : RegistrationNat
 /-- Complete actual non-creation callbacks restore the unchanged native source handler, including every record and authentication failure. -/
 theorem restored (fallback : Credential source) (credentialLive : CredentialLive source pool credential)
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (allowed : NonCreate query)
-    (before : RegistrationNativeExperiment.State n KemSK (handleSource source)) (live : StateLive source pool before) :
+    (before : RegistrationNativeExperiment.State n KemSK (handleSource source)) :
     observe source fallback <$> runState source (callback query) before pool =
       (RegistrationNativeExperiment.handler setup checks wire route representation created source
         (RegistrationNativeMldsaMap.credential (restore source fallback pool) credential) query).run
@@ -111,7 +111,7 @@ theorem restored (fallback : Credential source) (credentialLive : CredentialLive
     | bundle index =>
         simp only [RegistrationNativeMldsaProfile.handler, RegistrationNativeExperiment.handler]
         exact RegistrationNativeMldsaTableRestore.bundle source fallback pool
-          setup checks wire representation created index before live
+          setup checks wire representation created index before
     | build handle application =>
         simp only [RegistrationNativeMldsaProfile.handler, RegistrationNativeExperiment.handler]
         exact RegistrationNativeMldsaTableRestore.build source fallback pool
@@ -121,81 +121,12 @@ theorem restored (fallback : Credential source) (credentialLive : CredentialLive
 /-- Non-creation callbacks retain every exact private key row, independently of optional signing replies. -/
 theorem keys (credentialLive : CredentialLive source pool credential)
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (allowed : NonCreate query)
-    (before : RegistrationNativeExperiment.State n KemSK (handleSource source)) (live : StateLive source pool before)
+    (before : RegistrationNativeExperiment.State n KemSK (handleSource source))
     (result : (RegistrationNativeRawAdapter.TypedSpec.Range query × RegistrationNativeExperiment.State n KemSK (handleSource source)) × Pool source)
     (supported : result ∈ support (runState source (callback query) before pool)) : result.2.keys = pool.keys :=
   RegistrationNativeMldsaTableRestore.program_keys source pool _
-    (valid source setup checks wire route representation created credential pool credentialLive query allowed before live) result supported
+    (valid source setup checks wire route representation created credential pool credentialLive query allowed before) result supported
 
-private theorem keys_live (initial final : Pool source) (same : final.keys = initial.keys)
-    (before : RegistrationNativeExperiment.State n KemSK (handleSource source)) (live : StateLive source initial before) :
-    StateLive source final before := by
-  intro owner member
-  obtain ⟨key, row, publicKey⟩ := live owner member
-  exact ⟨key, by rw [same]; exact row, publicKey⟩
-
-private theorem ordinary_live (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (allowed : NonCreate query)
-    (before : RegistrationNativeExperiment.State n KemSK (handleSource source)) (live : StateLive source pool before)
-    (result : (RegistrationNativeRawAdapter.TypedSpec.Range query × RegistrationNativeExperiment.State n KemSK (handleSource source)) × Pool source)
-    (supported : result ∈ support (runState source
-      (RegistrationNativeMldsaProgram.liftState
-        (RegistrationNativeExperiment.handler setup checks wire route representation created (handleSource source) credential query)) before pool)) :
-    StateLive source result.2 result.1.2 := by
-  rw [RegistrationNativeMldsaTableProgram.run_liftState, support_map] at supported
-  obtain ⟨answer, reached, same⟩ := supported
-  cases same
-  exact RegistrationNativeMldsaLiveOwners.handler source setup checks wire route representation created
-    credential pool query allowed before answer live reached
-
-/-- Every actual non-creation callback preserves reached owned handles at its final private table. -/
-theorem live (credentialLive : CredentialLive source pool credential)
-    (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (allowed : NonCreate query)
-    (before : RegistrationNativeExperiment.State n KemSK (handleSource source)) (old : StateLive source pool before)
-    (result : (RegistrationNativeRawAdapter.TypedSpec.Range query × RegistrationNativeExperiment.State n KemSK (handleSource source)) × Pool source)
-    (supported : result ∈ support (runState source (callback query) before pool)) :
-    StateLive source result.2 result.1.2 := by
-  have rows := keys source setup checks wire route representation created credential pool credentialLive query allowed before old result supported
-  have possible := evaluate_support source ((callback query).run before) pool result supported
-  cases query with
-  | inl coin => exact ordinary_live source setup checks wire route representation created credential pool (.inl coin) trivial before old result supported
-  | inr query => cases query with
-    | create _ _ _ => exact allowed.elim
-    | bundle index =>
-        exact keys_live source pool result.2 rows result.1.2
-          (RegistrationNativeMldsaBundleOwnership.sourceBundle_live source pool setup checks wire representation created
-            index before result.1 old possible)
-    | build handle application =>
-        simp only [RegistrationNativeMldsaProfile.handler, RegistrationNativeMldsaProfile.server, StateT.run, support_map] at possible
-        obtain ⟨answer, _reached, same⟩ := possible
-        have retained : before.beacons = result.1.2.beacons := congrArg (fun pair => pair.2.beacons) same
-        apply keys_live source pool result.2 rows result.1.2
-        change RegistrationNativeMldsaPoolMap.OwnersLive source pool result.1.2.beacons
-        rw [← retained]
-        exact old
-    | accept packet =>
-        simp only [RegistrationNativeMldsaProfile.handler] at supported
-        exact ordinary_live source setup checks wire route representation created credential pool (.inr (.accept packet)) trivial before old result supported
-    | finish index packet =>
-        simp only [RegistrationNativeMldsaProfile.handler] at supported
-        exact ordinary_live source setup checks wire route representation created credential pool (.inr (.finish index packet)) trivial before old result supported
-    | hmac key message =>
-        simp only [RegistrationNativeMldsaProfile.handler] at supported
-        exact ordinary_live source setup checks wire route representation created credential pool (.inr (.hmac key message)) trivial before old result supported
-    | hash bytes =>
-        simp only [RegistrationNativeMldsaProfile.handler] at supported
-        exact ordinary_live source setup checks wire route representation created credential pool (.inr (.hash bytes)) trivial before old result supported
-    | serverSend keyId plaintext =>
-        simp only [RegistrationNativeMldsaProfile.handler] at supported
-        exact ordinary_live source setup checks wire route representation created credential pool (.inr (.serverSend keyId plaintext)) trivial before old result supported
-    | serverRaw raw =>
-        simp only [RegistrationNativeMldsaProfile.handler] at supported
-        exact ordinary_live source setup checks wire route representation created credential pool (.inr (.serverRaw raw)) trivial before old result supported
-    | beaconSend index plaintext =>
-        simp only [RegistrationNativeMldsaProfile.handler] at supported
-        exact ordinary_live source setup checks wire route representation created credential pool (.inr (.beaconSend index plaintext)) trivial before old result supported
-    | beaconRaw index raw =>
-        simp only [RegistrationNativeMldsaProfile.handler] at supported
-        exact ordinary_live source setup checks wire route representation created credential pool (.inr (.beaconRaw index raw)) trivial before old result supported
 end BeaconcryptCore.Computational.RegistrationNativeMldsaTableCallbacks
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaTableCallbacks.evaluate_support' depends on axioms: [propext,
@@ -221,9 +152,3 @@ end BeaconcryptCore.Computational.RegistrationNativeMldsaTableCallbacks
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaTableCallbacks.keys
-
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaTableCallbacks.live' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaTableCallbacks.live

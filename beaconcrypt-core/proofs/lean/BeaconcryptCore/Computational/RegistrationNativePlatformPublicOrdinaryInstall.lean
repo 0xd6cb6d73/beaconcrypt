@@ -101,6 +101,8 @@ variable (helper : QueryImpl (BeaconcryptCore.Refinement.AdapterRecordHelperRequ
 variable (implementation : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
 
 
+attribute [local irreducible] RegistrationNativePlatformServerOpenControl.accept
+
 private theorem handler_zero (role : Role) (query : RegistrationNativeRawAdapter.TypedSpec.Domain)
     (ordinary : ¬ RegistrationNativePublicCaps.IsMaterial query) (before : State source Platform) :
     ((handler (n := n) setup checks wire source sign selectedOwner selectedAccept publicPrekey view failure allocation

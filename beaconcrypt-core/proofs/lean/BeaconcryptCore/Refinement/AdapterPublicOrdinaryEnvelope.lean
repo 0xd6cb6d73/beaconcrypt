@@ -79,7 +79,7 @@ theorem status_some (kernel : beaconcrypt_core.ratchet.concrete.ConcreteRatchetK
   simp only [lift_ok, pure_bind]
 
 
-def prepareSend (bytes : Slice U8) (target sender : U64) (ad : Array U8 281#usize)
+def prepareSend (bytes : Slice U8) (target sender : U64) (ad : Array U8 151#usize)
     (kernel : beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel) :
     RustM (core.option.Option beaconcrypt_core.record_effects.SealFrameContext) := do
   let empty ← core.slice.Slice.is_empty bytes
@@ -123,7 +123,7 @@ variable [PublicWrapperPlatform.Material] [PublicWrapperPlatform.Platform] [Publ
 variable [AdapterPublicOrdinaryRequestMonad.Operations (RustT m)]
 
 omit [PublicWrapperPlatform.Material] in
-theorem send_frame (bytes : Slice U8) (target sender : U64) (ad : Array U8 281#usize)
+theorem send_frame (bytes : Slice U8) (target sender : U64) (ad : Array U8 151#usize)
     (kernel : beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel) :
     beaconcrypt_public_ordinary_request.ratchet.encrypt_message_with_ratchet (m := RustT m)
       bytes target sender ad (manager kernel) =
@@ -175,7 +175,7 @@ theorem send_frame (bytes : Slice U8) (target sender : U64) (ad : Array U8 281#u
   simp only [pure_bind]
 
 omit [PublicWrapperPlatform.Material] in
-theorem receive_payload (ciphertext : Slice U8) (sequence sender : U64) (ad : Array U8 281#usize)
+theorem receive_payload (ciphertext : Slice U8) (sequence sender : U64) (ad : Array U8 151#usize)
     (kernel : beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel) :
     beaconcrypt_public_ordinary_request.ratchet.decrypt_payload_with_ratchet (m := RustT m)
       ciphertext sequence sender ad (manager kernel) =
@@ -195,7 +195,7 @@ theorem receive_payload (ciphertext : Slice U8) (sequence sender : U64) (ad : Ar
   simp only [pure_bind]
 
 omit [PublicWrapperPlatform.Material] in
-theorem receive_frame (bytes : Slice U8) (sender : U64) (ad : Array U8 281#usize)
+theorem receive_frame (bytes : Slice U8) (sender : U64) (ad : Array U8 151#usize)
     (kernel : beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel) :
     beaconcrypt_public_ordinary_request.ratchet.decrypt_message_with_ratchet (m := RustT m)
       bytes sender ad (manager kernel) =

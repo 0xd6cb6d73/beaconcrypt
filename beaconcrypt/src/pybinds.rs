@@ -704,10 +704,6 @@ impl Beacon {
 			.map_err(|error| PyValueError::new_err(error.to_string()))
 	}
 
-	fn mldsa_public_key(&self) -> Vec<u8> {
-		self._0.mldsa_public_key().to_vec()
-	}
-
 	/// Begin the beacon registration process. The output buffer should be sent as-is over the network.
 	fn generate_registration(&mut self) -> Option<Vec<u8>> {
 		self._0.get_registration_bundle()

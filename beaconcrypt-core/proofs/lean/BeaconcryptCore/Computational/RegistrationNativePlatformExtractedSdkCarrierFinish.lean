@@ -61,7 +61,7 @@ def update (before : Objects (n:=n) (KemSK:=KemSK) (Platform:=Platform) (source:
   {before with beacons:=Function.update before.beacons index (some returned.2),snapshot:=.environment environment sourceAfter}
 variable (coins : QueryImpl unifSpec (StateT Platform ProbComp))
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (view : AdapterPublicWrapperState.MaterialView source KemSK) (containers : AdapterPublicWrapperStorage.Views)
 variable (credential : RegistrationNativeMldsa.Credential source)
 noncomputable def put (wire : RegistrationNativeWire.Wire) (current : Native ×Platform)

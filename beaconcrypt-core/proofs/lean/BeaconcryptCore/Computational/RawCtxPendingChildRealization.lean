@@ -29,7 +29,7 @@ theorem child_address (context : Context M P I D K Result S B) (parent : FullOut
     PqxdhRefinement.absBytes,
     Function.comp_def, Refinement.ProtocolComposition.absByte_concreteByte]
   have info : List.map PqxdhRefinement.absByte ratchet.SYM_RATCHET_INFO.val = Pqxdh.INFO_R := by
-    simpa only [PqxdhRefinement.absBytes, pqxdh.SYM_RATCHET_INFO] using PqxdhRefinement.absBytes_SYM_RATCHET_INFO
+    simpa only [PqxdhRefinement.absBytes, ratchet.SYM_RATCHET_INFO] using PqxdhRefinement.absBytes_SYM_RATCHET_INFO
   rw [info]
   rfl
 

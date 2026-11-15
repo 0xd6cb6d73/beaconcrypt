@@ -12,6 +12,8 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option maxHeartbeats 400000
 namespace BeaconcryptCore.Computational.PqxdhAuthenticatedEvolvingSecrecy
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhChallengeSecretRouting
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf
 open PqxdhKemIndCca PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma
@@ -23,7 +25,7 @@ variable {setup : StatefulPhase1Setup baseSpec}
     (attachedVerify : Ed25519PublicKey → Pqxdh.Bytes → Option Pqxdh.Bytes) (primitives : Primitives)
     (program : Program baseSpec setup.Context S (B + 1)) (post : Post (baseSpec := baseSpec) program.Selection S (B + 1))
     (selected : RawCtxProtocolReveals.Owner S (B + 1)) (number : Std.U64) (ancestors disclosed : List RatchetChain)
-local notation "actualPrior" => PqxdhInitialPreparedSourceInput.prior env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed
+local notation "actualPrior" => PqxdhInitialPreparedSourceInput.prior (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed
 
 /-- Every pending outcome of the actual preparation retains the original target record position, without conditioning the sampler. -/
 theorem prior_position (input : PqxdhInitialPreparedSourceInput.Input (M := M) (P := P) (I := I) (K := K) (X := X)
@@ -45,13 +47,13 @@ local notation "v" => PqxdhInitialPreparedSourceCaps.selectorCap env baseImpl ke
 local notation "k" => PqxdhInitialPreparedSourceCaps.knownCap env baseImpl kem program post c disclosed
 
 noncomputable def ideal : ProbComp Bool :=
-  PqxdhInitialSourceAliases.consistent env.source env.recordWriter env.senderId env.route env.decode actualPrior number.val
+  PqxdhInitialSourceAliases.consistent (associatedData := associatedData) (completedBinding := completedBinding) env.source env.recordWriter env.senderId env.route env.decode actualPrior number.val
 
 noncomputable def loss (hmac : HmacSha512) (fallback : PqxdhDynamicIdentityRouting.DynamicForgery)
     (ordinaryFallback : PqxdhJointIdentity.Forgery) : ℝ :=
-  PqxdhInitialRootEventSecrecy.loss env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed q hmac fallback ordinaryFallback +
-    PqxdhEvolvingChainComposition.initialLoss env.source env.recordWriter env.senderId env.route env.decode actualPrior hmac +
-    PqxdhEvolvingChainComposition.chainLoss env.source env.recordWriter env.senderId env.route env.decode actualPrior q k (number.val - 1) hmac +
+  PqxdhInitialRootEventSecrecy.loss (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed q hmac fallback ordinaryFallback +
+    PqxdhEvolvingChainComposition.initialLoss (associatedData := associatedData) (completedBinding := completedBinding) env.source env.recordWriter env.senderId env.route env.decode actualPrior hmac +
+    PqxdhEvolvingChainComposition.chainLoss (associatedData := associatedData) (completedBinding := completedBinding) env.source env.recordWriter env.senderId env.route env.decode actualPrior q k (number.val - 1) hmac +
     ((1 + (7 + q * 67) : Nat) : ENNReal).toReal / (2 ^ 256 : ℝ)
 
 /-- The actual authenticated source event reaches the ordered selected chain experiment using only primitive/interface contracts and the original source caller certificate. Every observer resource premise and input distribution is discharged by actual preparation. -/
@@ -61,26 +63,26 @@ theorem coordinate_bound (positive : 0 < number.val)
     (functional : FunctionalDecapsulation kem)
     (hmac : HmacSha512) (correct : SourceFullCorrect env.source hmac)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : PqxdhJointIdentity.Forgery) :
-    (PqxdhInitialRootEventSecrecy.actual env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed).boolDistance
-      (PqxdhInitialSourceSampled.game env.source env.recordWriter env.senderId env.route env.decode actualPrior number.val) ≤
-    PqxdhInitialRootEventSecrecy.loss env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed q hmac fallback ordinaryFallback +
-      PqxdhEvolvingChainComposition.initialLoss env.source env.recordWriter env.senderId env.route env.decode actualPrior hmac +
-      PqxdhEvolvingChainComposition.chainLoss env.source env.recordWriter env.senderId env.route env.decode actualPrior q k (number.val - 1) hmac := by
-  have rootBound := PqxdhInitialRootEventSecrecy.bound env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed
+    (PqxdhInitialRootEventSecrecy.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed).boolDistance
+      (PqxdhInitialSourceSampled.game (associatedData := associatedData) (completedBinding := completedBinding) env.source env.recordWriter env.senderId env.route env.decode actualPrior number.val) ≤
+    PqxdhInitialRootEventSecrecy.loss (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed q hmac fallback ordinaryFallback +
+      PqxdhEvolvingChainComposition.initialLoss (associatedData := associatedData) (completedBinding := completedBinding) env.source env.recordWriter env.senderId env.route env.decode actualPrior hmac +
+      PqxdhEvolvingChainComposition.chainLoss (associatedData := associatedData) (completedBinding := completedBinding) env.source env.recordWriter env.senderId env.route env.decode actualPrior q k (number.val - 1) hmac := by
+  have rootBound := PqxdhInitialRootEventSecrecy.bound (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed
     c q (PqxdhInitialPreparedSourceCaps.post_total env baseImpl kem program post c) compatible adapter functional hmac correct.root fallback ordinaryFallback
-  have chainBound := PqxdhEvolvingChainComposition.initial_evolving_bound env.source env.recordWriter env.senderId env.route env.decode actualPrior
+  have chainBound := PqxdhEvolvingChainComposition.initial_evolving_bound (associatedData := associatedData) (completedBinding := completedBinding) env.source env.recordWriter env.senderId env.route env.decode actualPrior
     q u u v c.qAux k
-    (PqxdhInitialPreparedSourceCaps.supported_caps env baseImpl kem attachedVerify primitives program post c selected number ancestors disclosed)
+    (PqxdhInitialPreparedSourceCaps.supported_caps (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c selected number ancestors disclosed)
     (number.val - 1) hmac correct (by
       intro input supported
-      rw [prior_position env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed input supported]
+      rw [prior_position (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed input supported]
       omega)
   have order : number.val - 1 + 1 = number.val := by omega
   rw [order] at chainBound
   have result := (ProbComp.boolDistance_triangle
-    (PqxdhInitialRootEventSecrecy.actual env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed)
-    (PqxdhInitialPreparedSourceInput.uniformRoot env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed)
-    (PqxdhInitialSourceSampled.game env.source env.recordWriter env.senderId env.route env.decode actualPrior number.val)).trans
+    (PqxdhInitialRootEventSecrecy.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed)
+    (PqxdhInitialPreparedSourceInput.uniformRoot (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed)
+    (PqxdhInitialSourceSampled.game (associatedData := associatedData) (completedBinding := completedBinding) env.source env.recordWriter env.senderId env.route env.decode actualPrior number.val)).trans
       (add_le_add rootBound chainBound)
   simpa only [add_assoc] using result
 
@@ -91,17 +93,17 @@ theorem bound (positive : 0 < number.val)
     (functional : FunctionalDecapsulation kem)
     (hmac : HmacSha512) (correct : SourceFullCorrect env.source hmac)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : PqxdhJointIdentity.Forgery) :
-    (PqxdhInitialRootEventSecrecy.actual env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed).boolDistance
-      (ideal env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed) ≤
-    loss env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed c hmac fallback ordinaryFallback := by
-  have sourceBound := coordinate_bound env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed c
+    (PqxdhInitialRootEventSecrecy.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed).boolDistance
+      (ideal (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed) ≤
+    loss (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed c hmac fallback ordinaryFallback := by
+  have sourceBound := coordinate_bound (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed c
     positive compatible adapter functional hmac correct fallback ordinaryFallback
-  have aliasBound := PqxdhInitialAliasPrepared.bound env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed
+  have aliasBound := PqxdhInitialAliasPrepared.bound (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed
     number.val q (PqxdhInitialPreparedSourceCaps.post_total env baseImpl kem program post c)
   exact (ProbComp.boolDistance_triangle
-    (PqxdhInitialRootEventSecrecy.actual env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed)
-    (PqxdhInitialSourceSampled.game env.source env.recordWriter env.senderId env.route env.decode actualPrior number.val)
-    (ideal env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed)).trans
+    (PqxdhInitialRootEventSecrecy.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed)
+    (PqxdhInitialSourceSampled.game (associatedData := associatedData) (completedBinding := completedBinding) env.source env.recordWriter env.senderId env.route env.decode actualPrior number.val)
+    (ideal (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed)).trans
       (add_le_add sourceBound aliasBound)
 
 end BeaconcryptCore.Computational.PqxdhAuthenticatedEvolvingSecrecy

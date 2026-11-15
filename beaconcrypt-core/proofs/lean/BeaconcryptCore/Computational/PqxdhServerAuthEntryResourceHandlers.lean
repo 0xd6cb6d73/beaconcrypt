@@ -32,16 +32,23 @@ theorem build_step_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader 
     (services : Services Response τ) (serviceBound : ServiceUniform services)
     (index : Nat) (payload : Option Pqxdh.Bytes) (state : FlatState KemSK τ) :
     ((buildStep setup codec checks services index payload).run state).IsTotalQueryBound
-      (64 * slotWeight (state.1.pending index)) := by
+      (128 * slotWeight (state.1.pending index)) := by
   unfold buildStep
   simp only [StateT.run]
   cases token : state.1.pending index with
   | none => trivial
   | some pending =>
-      simp only [slotWeight, Nat.mul_one, bind_pure_comp, IsTotalQueryBound, isQueryBound_map_iff]
-      split_ifs
-      · exact serviceBound.build pending payload state.1.server ([], state.1.ctx)
-      · exact build_uniform setup codec checks pending.pending pending.root payload state.1.server ([], state.1.ctx)
+      simp only [slotWeight, Nat.mul_one]
+      split
+      · trivial
+      · apply isTotalQueryBound_bind (n₁ := 64) (n₂ := 64)
+        · exact CtxComputationalSecurity.ctxRandomOracle_total_query_bound _ state.1.ctx
+        · intro hashed
+          simp only [bind_pure_comp, IsTotalQueryBound, isQueryBound_map_iff]
+          split_ifs
+          · exact serviceBound.build pending payload _ state.1.server ([], hashed.2)
+          · exact build_uniform (PqxdhTranscriptAd.adOf hashed.1) setup codec checks pending.pending pending.root
+              payload state.1.server ([], hashed.2)
 
 /-- Only the active original finish phase pays decapsulation, one root-table lookup and one complete raw opening. Every refusal and failed final check remains counted. -/
 theorem finish_step_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -49,28 +56,35 @@ theorem finish_step_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader
     (services : Services Response τ) (serviceBound : ServiceUniform services)
     (caps : KemCaps) (bounded : KemBound setup caps) (raw : Pqxdh.Bytes) (state : FlatState KemSK τ) :
     ((finishStep setup codec publicValue beaconSeed services raw).run state).IsTotalQueryBound
-      ((caps.decapsCost + 128) * PqxdhServerAuthGapDh.initSentFlag state.1) := by
+      ((caps.decapsCost + 192) * PqxdhServerAuthGapDh.initSentFlag state.1) := by
   simp only [finishStep, StateT.run]
   cases phase : state.1.beacon.beacon.phase with
   | initSent control prekey oneTime kem =>
       simp only [PqxdhServerAuthGapDh.initSentFlag, phase, Nat.mul_one]
-      apply isTotalQueryBound_bind (n₁ := caps.decapsCost) (n₂ := 128)
-      · rw [StateT.run', IsTotalQueryBound, isQueryBound_map_iff]
-        exact beacon_prefix_uniform setup codec beaconSeed caps bounded control _ oneTime kem raw ()
-      · intro prepared
-        cases prepared with
-        | none => trivial
-        | some pending =>
-            apply isTotalQueryBound_bind (n₁ := 64) (n₂ := 64) (serviceBound.derive _ state.2.2)
-            rintro ⟨reply, table⟩
-            cases reply with
-            | rejected => trivial
-            | root root =>
-                simp only [bind_pure_comp, IsTotalQueryBound, isQueryBound_map_iff]
-                exact beacon_after_uniform setup codec pending _ ((), state.1.ctx)
-            | hidden =>
-                simp only [bind_pure_comp, IsTotalQueryBound, isQueryBound_map_iff]
-                exact serviceBound.after pending ((), state.1.ctx)
+      split
+      · rw [show caps.decapsCost + 192 = 64 + (caps.decapsCost + 128) by omega]
+        apply isTotalQueryBound_bind (n₁ := 64) (n₂ := caps.decapsCost + 128)
+        · exact CtxComputationalSecurity.ctxRandomOracle_total_query_bound _ state.1.ctx
+        · intro hashed
+          apply isTotalQueryBound_bind (n₁ := caps.decapsCost) (n₂ := 128)
+          · rw [StateT.run', IsTotalQueryBound, isQueryBound_map_iff]
+            exact beacon_prefix_uniform (completedBinding := PqxdhTranscriptAd.completedOf control hashed.1)
+              setup codec beaconSeed caps bounded control _ oneTime kem raw ()
+          · intro prepared
+            cases prepared with
+            | none => trivial
+            | some pending =>
+                apply isTotalQueryBound_bind (n₁ := 64) (n₂ := 64) (serviceBound.derive _ state.2.2)
+                rintro ⟨reply, table⟩
+                cases reply with
+                | rejected => trivial
+                | root root =>
+                    simp only [bind_pure_comp, IsTotalQueryBound, isQueryBound_map_iff]
+                    exact beacon_after_uniform setup codec pending _ ((), hashed.2)
+                | hidden =>
+                    simp only [bind_pure_comp, IsTotalQueryBound, isQueryBound_map_iff]
+                    exact serviceBound.after pending ((), hashed.2)
+      · trivial
   | _ => trivial
 
 /-- Public HMAC evaluations remain real outside the approved Extract-domain interface; inside it, the complete service pays its table cap. -/

@@ -21,7 +21,7 @@ private def embed (before : State n mlSource)
 private theorem lift_query (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (before : State n mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (before : State n mlSource)
     (query : (RegistrationNativeKemInterface.Spec RegistrationNativeKemInterface.OtherSpec KemSK).Domain)
     (state : RegistrationServerRoleBackend.State × PqxdhLiveKemBirth.Pool KemSK) :
     Prod.map id (embed before) <$>
@@ -44,7 +44,7 @@ private theorem lift_query (setup : Setup base KemSK) (codec : Codec Reader Resp
 private theorem lift_program (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (before : State n mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (before : State n mlSource)
     (work : OracleComp (RegistrationNativeKemInterface.Spec RegistrationNativeKemInterface.OtherSpec KemSK) Value)
     (state : RegistrationServerRoleBackend.State × PqxdhLiveKemBirth.Pool KemSK) :
     Prod.map id (embed before) <$>
@@ -74,7 +74,7 @@ private theorem backend_full (setup : Setup base KemSK) (checks : Checks)
 theorem primitive_program (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp RegistrationAgreementShared.PrimitiveSpec Value)
     (before : State n mlSource) (pool : PqxdhLiveKemBirth.Pool KemSK) :
     (simulateQ (RegistrationNativeKemServerInterface.source setup codec checks route verify representation created)

@@ -9,6 +9,8 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option maxRecDepth 2048
 namespace BeaconcryptCore.Computational.PqxdhInitialSourceFirstSecrecy
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf
 open PqxdhInitialSourceInitialSecrecy (Input Context)
 open PqxdhInitialSourceHalf RawCtxInitialSentinelSampler
@@ -23,17 +25,17 @@ private theorem target_source (target : RootOutput) :
     RawCtxSelectedParentPrivatePatch.targetAddress target = FixedHkdfDomain.ratchet.address target.toList :=
   PqxdhInitialNativeLineageCheck.request_concrete target
 
-noncomputable def observer := PqxdhInitialHalfSecrecy.observer source writer (mark (extra := extra)
+noncomputable def observer := PqxdhInitialHalfSecrecy.observer (associatedData := associatedData) (completedBinding := completedBinding) source writer (mark (extra := extra)
   (M := M) (P := P) (I := I) (D := D) (K := K) (X := X) (Response := Response) (A := A) (N := N) (S := S) (B := B) source)
   sender route decode (view source)
-noncomputable def aliasTester := PqxdhInitialHalfSecrecy.aliasTester source writer (mark (extra := extra)
+noncomputable def aliasTester := PqxdhInitialHalfSecrecy.aliasTester (associatedData := associatedData) (completedBinding := completedBinding) source writer (mark (extra := extra)
   (M := M) (P := P) (I := I) (D := D) (K := K) (X := X) (Response := Response) (A := A) (N := N) (S := S) (B := B) source)
   sender route decode (view source)
 
 /-- The actual initial64 experiment and the constructed ordinary full76 reduction have the same complete source observation, in either adaptively selected direction and on completed branches. -/
 theorem actual_source (prior : ProbComp (Context extra M P I D K X Response A N S B)) :
-    𝒟[PqxdhInitialSourceSampled.game source writer sender route decode prior 0] =
-    𝒟[PqxdhInitialHalfSecrecy.actual source writer (mark source) sender route decode (view source) prior address] := by
+    𝒟[PqxdhInitialSourceSampled.game (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode prior 0] =
+    𝒟[PqxdhInitialHalfSecrecy.actual (associatedData := associatedData) (completedBinding := completedBinding) source writer (mark source) sender route decode (view source) prior address] := by
   simp only [PqxdhInitialSourceSampled.game, PqxdhInitialHalfSecrecy.actual,
     RawCtxSelectedParentCandidates.sample, bind_assoc, pure_bind]
   apply evalDist_bind_congr
@@ -45,22 +47,22 @@ theorem actual_source (prior : ProbComp (Context extra M P I D K X Response A N 
         (OracleComp.EvalDistEq.bind_const ($ᵗ FullOutput) (pure decision)).symm).evalDist_eq
   | inr input =>
       have sampled := initial_observed (second input.selected) (fun other target =>
-        PqxdhInitialSourceInitialSecrecy.sourceGame source writer sender route decode input zeroRoot
+        PqxdhInitialSourceInitialSecrecy.sourceGame (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode input zeroRoot
           (RawCtxSelectedInitialConstructor.response64 (join (second input.selected) other target)) 0)
       simp only [join_parts] at sampled
       refine sampled.evalDist_eq.trans ?_
       apply evalDist_bind_congr
       intro output
       simpa only [address, RawCtxSelectedParentEntry.fromOutput, RawCtxInitialSentinel.entry, RawCtxInitialSentinel.sentinel,
-        target_source] using congrArg evalDist (real_native source writer sender route decode input
+        target_source] using congrArg evalDist (PqxdhInitialSourceHalf.real_native (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode input
         (PqxdhOrderedChainHybrids.material output).1 (PqxdhOrderedChainHybrids.nextChain output)
         (PqxdhOrderedChainHybrids.material output).2)
 
 /-- The adjacent stage uses the identical full initializer distribution and draws only the first selected full76 child; every original source effect and the complete publication/freshness event remain inside the equality. -/
 theorem random_source (prior : ProbComp (Context extra M P I D K X Response A N S B))
     (positive : ∀ input, Sum.inr input ∈ support prior → 0 < input.number.val) :
-    𝒟[PqxdhInitialSourceSampled.game source writer sender route decode prior 1] =
-    𝒟[PqxdhInitialHalfSecrecy.random source writer (mark source) sender route decode (view source) prior address] := by
+    𝒟[PqxdhInitialSourceSampled.game (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode prior 1] =
+    𝒟[PqxdhInitialHalfSecrecy.random (associatedData := associatedData) (completedBinding := completedBinding) source writer (mark source) sender route decode (view source) prior address] := by
   simp only [PqxdhInitialSourceSampled.game, PqxdhInitialHalfSecrecy.random,
     RawCtxSelectedParentCandidates.sample, bind_assoc, pure_bind]
   apply evalDist_bind_congr_of_support
@@ -73,13 +75,13 @@ theorem random_source (prior : ProbComp (Context extra M P I D K X Response A N 
           (OracleComp.EvalDistEq.bind_const ($ᵗ FullOutput) (pure decision))).symm).evalDist_eq
   | inr input =>
       have sampled := initial_observed (second input.selected) (fun other target =>
-        PqxdhInitialSourceInitialSecrecy.sourceGame source writer sender route decode input zeroRoot
+        PqxdhInitialSourceInitialSecrecy.sourceGame (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode input zeroRoot
           (RawCtxSelectedInitialConstructor.response64 (join (second input.selected) other target)) 1)
       simp only [join_parts] at sampled
       refine sampled.evalDist_eq.trans ?_
       apply evalDist_bind_congr
       intro output
-      exact random_native source writer sender route decode input (positive input supported)
+      exact PqxdhInitialSourceHalf.random_native (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode input (positive input supported)
         (PqxdhOrderedChainHybrids.material output).1 (PqxdhOrderedChainHybrids.nextChain output)
         (PqxdhOrderedChainHybrids.material output).2
 

@@ -3,7 +3,7 @@ import BeaconcryptCore.Computational.RegistrationNativeResponseCiphertext
 import BeaconcryptCore.Computational.RegistrationBoundKeySchedule
 import BeaconcryptCore.PanicFreedom.RegistrationTrivial
 import BeaconcryptCore.Computational.RegistrationServerRecordExecutor
-import BeaconcryptCore.Computational.PqxdhServerAuthNegativeControl
+import BeaconcryptCore.Refinement.RegistrationAd
 
 /-! The actual admitted Server initializer retains its pending registration ciphertext. Arbitrary primitive callbacks in the native record and publication trees cannot change that encoded ciphertext. -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -17,30 +17,13 @@ namespace BeaconcryptCore.Computational.RegistrationNativeResponseCipherCandidat
 theorem initial_ciphertext (control : pqxdh.ServerState) (current : session.ServerAuthenticationPin)
     (availability : pqxdh.KeyIdAvailability) (agreement : agreement.ServerAgreement) (application : Slice Std.U8)
     (initial : registration.ServerInitialKdf)
-    (actual : registration.begin_server_completion control current availability agreement application = .ok (.Ok initial)) :
+    (actual : BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission control current availability agreement application initial) :
     initial.candidate.kem_ciphertext = agreement.pending.kem_ciphertext := by
-  obtain ⟨empty, emptyRun⟩ : ∃ result, core.slice.Slice.is_empty application = .ok result := ⟨_, rfl⟩
-  obtain ⟨matched, matchRun⟩ := BeaconcryptCore.PanicFreedom.SessionBinding.RegistrationBinding_matches_server_total
-    agreement.binding current
-  obtain ⟨prepared, prepareRun⟩ := BeaconcryptCore.PanicFreedom.server_prepare_commit_ok control agreement.pending
-    current.binding availability
-  cases prepared with
-  | Err error =>
-      cases empty <;> cases matched <;>
-        simp [registration.begin_server_completion, session.ServerAuthenticationPin.impl.binding,
-          emptyRun, matchRun, prepareRun] at actual
-  | Ok candidate =>
-      obtain ⟨pending, pendingRun⟩ :=
-        BeaconcryptCore.PanicFreedom.Structural.pqxdh_concrete_start_server_candidate_ratchet_kdf_total
-          candidate agreement.root.bytes
-      cases empty <;> cases matched
-      all_goals simp only [registration.begin_server_completion, session.ServerAuthenticationPin.impl.binding,
-        ratchet.RatchetChain.as_bytes, emptyRun, matchRun, prepareRun, pendingRun, bind_tc_ok,
-        Bool.false_eq_true, ite_false, ite_true, RustM.ok.injEq, core.result.Result.Ok.injEq,
-        reduceCtorEq] at actual
-      cases actual
-      exact (PqxdhServerAuthNegativeControl.prepare_commit_fields control agreement.pending
-        current.binding availability candidate prepareRun).2.2.2.2.1
+  obtain ⟨_, _, _, _, _, prepared⟩ :=
+    BeaconcryptCore.Refinement.RegistrationAd.server_admission_binding
+      control current availability agreement application initial actual
+  exact (BeaconcryptCore.Refinement.RegistrationAd.server_prepare_fields
+    control agreement.pending current.binding availability initial.candidate prepared).2.2.2.2
 
 /-- The complete native record tree retains its admitted candidate's public KEM ciphertext. -/
 theorem record_ciphertext (initial : registration.ServerInitialKdf) (completed : registration.ServerResponseHash)

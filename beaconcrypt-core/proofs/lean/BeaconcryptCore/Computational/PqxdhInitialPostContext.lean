@@ -9,6 +9,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.refined ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialPostContext
+variable (completedBinding : session.CompletedRegistrationBinding)
 open PqxdhInitialPendingPost RawCtxSelectedFamilyContext
 variable {ι M P I D K X Response Shared Result : Type} {extra : OracleSpec ι} {S B : Nat}
 
@@ -26,6 +27,7 @@ inductive Context (extra : OracleSpec ι) (M P I D K Result : Type) (S B : Nat) 
         ((RawCtxProtocolReveals.SourceSpec S B).Range request) S B)
   | finish (index : Fin B) (before : NativeFront M P I D K S B)
       (control : pqxdh.BeaconInitSent) (candidate : pqxdh.BeaconRegistrationCandidate)
+      (associatedData : Array Std.U8 151#usize)
       (outside : Option Pqxdh.Bytes → OracleComp (PostSpec extra S B) Result)
       (inner : OwnerContext Unit (core.option.Option RawCtxWholeOwner.Decrypted))
 
@@ -38,9 +40,10 @@ def knownFront (before : NativeFront M P I D K S B) : LabelFront M P I D K S B :
 
 noncomputable def finishResult {Chain : Type} (index : Fin B) (before : Front Chain M P I D K S B)
     (control : pqxdh.BeaconInitSent) (candidate : pqxdh.BeaconRegistrationCandidate)
+    (associatedData : Array Std.U8 151#usize)
     (result : core.option.Option RawCtxWholeOwner.Decrypted × RawCtxChainOwner.State (KernelOf Chain) Unit) :
     Option Pqxdh.Bytes × Front Chain M P I D K S B :=
-  let staged := PqxdhInitialGenericBeacon.afterOpening candidate result.2.kernel result.1
+  let staged := PqxdhInitialGenericBeacon.afterOpening candidate associatedData result.2.kernel result.1
   let published := PqxdhInitialGenericBeacon.finish control (before.roles.1.2 index) staged
   (published.1, PqxdhInitialPendingPost.install index before published.2)
 
@@ -51,13 +54,13 @@ noncomputable def frame (sender : M → Std.U64) (route : RawCtxServerRouting.Se
       let saved := RawCtxSelectedFamilyContext.frame sender route decode inner
       ⟨.inl saved.1, fun reply => do
         let result ← simulateQ liveForward (saved.2 reply)
-        (simulateQ (compiler sender route decode) (outside result.1)).run { before with roles := result.2 }⟩
-  | .finish index before control candidate outside inner =>
+        (simulateQ (PqxdhInitialPendingPost.compiler (completedBinding := completedBinding) sender route decode) (outside result.1)).run { before with roles := result.2 }⟩
+  | .finish index before control candidate associatedData outside inner =>
       let saved := ownerFrame candidate.server_binding.identity_key_id decode inner
       ⟨.inl (.inl saved.1), fun reply => do
         let result ← simulateQ primitiveForward (saved.2 reply)
-        let finished := finishResult index before control candidate result
-        (simulateQ (compiler sender route decode) (outside finished.1)).run finished.2⟩
+        let finished := finishResult index before control candidate associatedData result
+        (simulateQ (PqxdhInitialPendingPost.compiler (completedBinding := completedBinding) sender route decode) (outside finished.1)).run finished.2⟩
 
 noncomputable def stopped (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
     (decode : RawCtxReceive.FrameDecoder) (context : Context extra M P I D K Result S B)
@@ -67,15 +70,15 @@ noncomputable def stopped (sender : M → Std.U64) (route : RawCtxServerRouting.
   match context with
   | .record _ before outside inner => do
       let result ← simulateQ liveForward (RawCtxSelectedFamilyContext.stopped sender route decode inner material)
-      (simulateQ (compiler sender route decode) (outside result.1)).run { knownFront before with roles := result.2 }
-  | .finish index before control candidate outside inner => do
+      (simulateQ (PqxdhInitialPendingPost.compiler (completedBinding := completedBinding) sender route decode) (outside result.1)).run { knownFront before with roles := result.2 }
+  | .finish index before control candidate associatedData outside inner => do
       let result ← simulateQ primitiveForward (ownerStopped candidate.server_binding.identity_key_id decode inner material)
-      let finished := finishResult index (knownFront before) control candidate result
-      (simulateQ (compiler sender route decode) (outside finished.1)).run finished.2
+      let finished := finishResult index (knownFront before) control candidate associatedData result
+      (simulateQ (PqxdhInitialPendingPost.compiler (completedBinding := completedBinding) sender route decode) (outside finished.1)).run finished.2
 
 def address : Context extra M P I D K Result S B → PqxdhJointKdf.JointKdfAddress
   | .record _ _ _ inner => RawCtxSelectedFamilyContext.address inner
-  | .finish _ _ _ _ _ inner => ownerAddress inner
+  | .finish _ _ _ _ _ _ inner => ownerAddress inner
 
 def queryAddress : (Base extra RatchetChain I D K X Response Shared S B).Domain →
     Option PqxdhJointKdf.JointKdfAddress
@@ -85,12 +88,12 @@ def queryAddress : (Base extra RatchetChain I D K X Response Shared S B).Domain 
 /-- Each carried outer descriptor names exactly the actual private input in its complete source continuation. -/
 theorem frame_address (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
     (decode : RawCtxReceive.FrameDecoder) (context : Context extra M P I D K Result S B) :
-    queryAddress (extra := extra) (frame (X := X) (Response := Response) (Shared := Shared) sender route decode context).1 =
+    queryAddress (extra := extra) (frame (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared) sender route decode context).1 =
       some (address context) := by
   cases context with
   | record request before outside inner =>
       exact RawCtxSelectedFamilyContext.frame_address sender route decode inner
-  | finish index before control candidate outside inner => cases inner <;> rfl
+  | finish index before control candidate associatedData outside inner => cases inner <;> rfl
 
 end BeaconcryptCore.Computational.PqxdhInitialPostContext
 

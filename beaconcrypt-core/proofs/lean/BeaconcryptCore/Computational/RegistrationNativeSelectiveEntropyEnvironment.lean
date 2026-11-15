@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeSelectiveEntropyBackend
 import BeaconcryptCore.Computational.RegistrationNativeHiddenEnvironmentRaw
-import BeaconcryptCore.Computational.RegistrationNativeEntropyInitialized
+import BeaconcryptCore.Computational.RegistrationNativeEntropyInterface
 
 /-! The selective restricted environment retains actual frontend metadata, selected material44, cached nonselected known108 outputs, opaque KEM state and signing receipts. Only the selected hidden64 record seeds and their kernels remain private to the shared World; ordinary known output material stays environment-owned. Actual effectful startup is supplied separately, and initialized entropy statements never invoke this environment's pure-start field. -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -33,7 +33,7 @@ noncomputable def environment (setup : Setup base KemSK) (checks : Checks) (wire
     (source : RegistrationNativeMldsa.Source) (credential : RegistrationNativeMldsa.Credential source)
     (seed : PqxdhJointIdentity.IdentitySeed) (scalar : PqxdhJointGapDh.ScalarBytes)
     (candidate : PqxdhKemIndCca.MlKemSharedSecret) (provider : Provider KemSK ProviderState) (selectedOwner selectedAccept : Nat)
-    (startup : ProbComp (Option (PqxdhLiveServerConstruction.Created Unit × State n KemSK ProviderState source))) :
+    (startup : ProbComp (Option (PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize) × State n KemSK ProviderState source))) :
     RegistrationNativeEntropyInterface.Environment n (State n KemSK ProviderState source) :=
   ⟨startup, step setup checks wire source credential seed scalar candidate provider selectedOwner selectedAccept⟩
 

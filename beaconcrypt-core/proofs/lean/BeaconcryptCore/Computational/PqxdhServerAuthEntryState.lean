@@ -28,11 +28,12 @@ structure ProtocolRel (root : RootOutput) (marks : Marks) (left right : GameStat
   sessions : left.sessions = right.sessions
   pending : ∀ index, left.pending index = (right.pending index).map (restoreToken root (marks index))
   ghost : eraseGhost left.ghost = eraseGhost right.ghost
+  beaconInit : left.beaconInit = right.beaconInit
 
 /-- With no marks, the original complete state is related to itself for every proposed challenge root. -/
 theorem ProtocolRel.initial (root : RootOutput) (state : GameState KemSK) :
     ProtocolRel root (fun _ => false) state state := by
-  refine ⟨rfl, rfl, rfl, rfl, ?_, rfl⟩
+  refine ⟨rfl, rfl, rfl, rfl, ?_, rfl, rfl⟩
   intro index
   cases state.pending index <;> rfl
 
@@ -71,7 +72,7 @@ theorem ProtocolRel.touch (root : RootOutput) (marks : Marks) (left right : Game
     ProtocolRel root marks
       { left with ghost := { left.ghost with touches := left.ghost.touches ++ [first] } }
       { right with ghost := { right.ghost with touches := right.ghost.touches ++ [second] } } := by
-  refine ⟨related.ctx, related.server, related.beacon, related.sessions, related.pending, ?_⟩
+  refine ⟨related.ctx, related.server, related.beacon, related.sessions, related.pending, ?_, related.beaconInit⟩
   rw [eraseGhost_touch, eraseGhost_touch, related.ghost, same]
 
 /-- The original source prefix writes the same consumed-registration state and advances the same attempt counter in both runs. -/
@@ -80,7 +81,7 @@ theorem ProtocolRel.prefix (root : RootOutput) (marks : Marks) (left right : Gam
     ProtocolRel root marks
       { left with sessions := left.sessions + 1, server := { left.server with consumed := consumed } }
       { right with sessions := right.sessions + 1, server := { right.server with consumed := consumed } } := by
-  refine ⟨related.ctx, ?_, related.beacon, congrArg (· + 1) related.sessions, related.pending, related.ghost⟩
+  refine ⟨related.ctx, ?_, related.beacon, congrArg (· + 1) related.sessions, related.pending, related.ghost, related.beaconInit⟩
   rw [related.server]
 
 /-- The source root consumer and the hidden-label consumer return the same optional token index and preserve all protocol fields under marked-token reconstruction. -/
@@ -99,7 +100,7 @@ theorem ProtocolRel.derive (setup : Setup baseSpec KemSK) (publicValue : PublicC
   | rejected =>
       exact ⟨rfl, ProtocolRel.touch _ marks left right related _ _ rfl⟩
   | root value =>
-      refine ⟨rfl, related.ctx, ?_, related.beacon, related.sessions, ?_, ?_⟩
+      refine ⟨rfl, related.ctx, ?_, related.beacon, related.sessions, ?_, ?_, related.beaconInit⟩
       · dsimp only [afterDerive, Reply.materialize, Reply.value]
         rw [related.server]
       · intro other
@@ -111,7 +112,7 @@ theorem ProtocolRel.derive (setup : Setup baseSpec KemSK) (publicValue : PublicC
       · dsimp only [afterDerive, Reply.materialize, Reply.value]
         rw [eraseGhost_touch, eraseGhost_touch, related.ghost]
   | hidden =>
-      refine ⟨rfl, related.ctx, ?_, related.beacon, related.sessions, ?_, ?_⟩
+      refine ⟨rfl, related.ctx, ?_, related.beacon, related.sessions, ?_, ?_, related.beaconInit⟩
       · dsimp only [afterDerive, Reply.materialize, Reply.value]
         rw [related.server]
       · intro other
@@ -128,7 +129,7 @@ theorem ProtocolRel.derive (setup : Setup baseSpec KemSK) (publicValue : PublicC
 theorem ProtocolRel.context (root : RootOutput) (marks : Marks) (left right : GameState KemSK)
     (related : ProtocolRel root marks left right) (cache : CtxRomAuth.CtxRO.QueryCache) :
     ProtocolRel root marks { left with ctx := cache } { right with ctx := cache } :=
-  ⟨rfl, related.server, related.beacon, related.sessions, related.pending, related.ghost⟩
+  ⟨rfl, related.server, related.beacon, related.sessions, related.pending, related.ghost, related.beaconInit⟩
 
 /-- Actual response settlement, token consumption and the complete successful-seal trailer preserve the relation. -/
 theorem ProtocolRel.build (root : RootOutput) (marks : Marks) (left right : GameState KemSK)
@@ -136,7 +137,7 @@ theorem ProtocolRel.build (root : RootOutput) (marks : Marks) (left right : Game
     (result : RustM (Option PqxdhServerRegistrationPublication.Response × ServerState) × SealState) :
     (afterBuild session left result).1 = (afterBuild session right result).1 ∧
       ProtocolRel root marks (afterBuild session left result).2 (afterBuild session right result).2 := by
-  refine ⟨?_, rfl, ?_, related.beacon, related.sessions, ?_, ?_⟩
+  refine ⟨?_, rfl, ?_, related.beacon, related.sessions, ?_, ?_, related.beaconInit⟩
   · dsimp only [afterBuild]
     rw [related.server]
   · dsimp only [afterBuild]
@@ -155,7 +156,7 @@ theorem ProtocolRel.finish (root : RootOutput) (marks : Marks) (left right : Gam
     (staged : Option PqxdhBeaconPhase2Publication.Staged) :
     (finishOutcome control left staged).1 = (finishOutcome control right staged).1 ∧
       ProtocolRel root marks (finishOutcome control left staged).2 (finishOutcome control right staged).2 := by
-  refine ⟨?_, related.ctx, related.server, ?_, related.sessions, related.pending, ?_⟩
+  refine ⟨?_, related.ctx, related.server, ?_, related.sessions, related.pending, ?_, related.beaconInit⟩
   · dsimp only [finishOutcome]
     rw [related.beacon]
   · dsimp only [finishOutcome]
@@ -193,8 +194,8 @@ noncomputable def sourceHiddenServices (setup : Setup baseSpec KemSK) (codec : C
     (checks : Checks) (context : Context KemSK) (root : RootOutput) : Services Response HiddenTable where
   derive := hiddenDerive setup.hmac setup.joint setup.dh context.seed context.scalar
   table := hiddenPublic
-  hiddenBuild token payload server := simulateQ (tailImpl setup codec checks)
-    (PqxdhServerRegistrationPublication.build setup.source token.pending root payload () server)
+  hiddenBuild token payload ad server := simulateQ (tailImpl setup codec checks)
+    (PqxdhServerRegistrationPublication.build (associatedData := ad) setup.source token.pending root payload ad server)
   hiddenAfter pending := simulateQ (beaconNative setup codec)
     (PqxdhPhase2DhRootConsumer.afterRoot codec.frameRead pending (PqxdhRootTableInitialization.rootArray root))
 

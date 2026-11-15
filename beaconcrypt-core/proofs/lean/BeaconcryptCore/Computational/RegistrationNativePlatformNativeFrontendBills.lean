@@ -125,14 +125,25 @@ private theorem lifted_effects_bound (qSign qKem : Nat) (kind : EffectKind)
   exact effects_to_local_bound qSign qKem kind _ cap (bounded before)
 omit primitive in
 private theorem pin_bound (kind : EffectKind) (current : session.ServerAuthenticationPin) :
-    Bounded kind (RegistrationNativePlatformServerRestrictedService.pin (n := n) (Platform := Platform) current) (hashCost kind) := by
+    Bounded kind (RegistrationNativePlatformServerRestrictedService.pin (n := n) (Platform := Platform) current) 0 := by
   unfold RegistrationNativePlatformServerRestrictedService.pin
-  have query := effect_bound (n := n) (S := RegistrationNativePlatformBoundCompiler.PublicState Platform) kind
-    (.inr (.hash (PqxdhRefinement.absBytes current.public_key)))
-  have hash : Bounded kind (effect (n := n) (Platform := RegistrationNativePlatformBoundCompiler.PublicState Platform)
-      (.inr (.hash (PqxdhRefinement.absBytes current.public_key)))) (hashCost kind) := by
-    cases kind <;> simpa [envCost, effectKind, hashCost] using query
-  simpa only [Nat.add_zero] using bind_bound kind _ _ (hashCost kind) 0 hash (fun _ => pure_bound kind _ 0)
+  exact pure_bound kind _ 0
+omit primitive in
+private theorem adHash_bound (kind : EffectKind) (pending : registration.ServerAdHash) :
+    Bounded kind (RegistrationNativePlatformServerRestrictedService.adHash (n := n) (Platform := Platform) pending) (hashCost kind) := by
+  unfold RegistrationNativePlatformServerRestrictedService.adHash RegistrationServerAdHash.runWith
+  cases pending.request with
+  | fail error | div => exact pure_bound kind _ _
+  | ok request =>
+    have query := effect_bound (n := n) (S := RegistrationNativePlatformBoundCompiler.PublicState Platform) kind
+      (.inr (.hash (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request)))
+    have hash : Bounded kind (effect (n := n) (Platform := RegistrationNativePlatformBoundCompiler.PublicState Platform)
+        (.inr (.hash (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request)))) (hashCost kind) := by
+      cases kind <;> simpa [envCost, effectKind, hashCost] using query
+    rw [← Nat.add_zero (hashCost kind)]
+    apply bind_bound kind _ _ (hashCost kind) 0 _ (fun _ => pure_bound kind _ 0)
+    rw [← Nat.add_zero (hashCost kind)]
+    exact bind_bound kind _ _ (hashCost kind) 0 hash (fun _ => pure_bound kind _ 0)
 omit primitive in
 def buildCost (qSign : Nat) (kind : EffectKind) := (coinCost 108 kind + branchCost qSign kind + hashCost kind + adminCost kind) * 4
 
@@ -148,7 +159,9 @@ private theorem target_bound (qKem : Nat) (kind : EffectKind) (reservePeer : Sta
     ((RegistrationNativePlatformServerFrontendCompiler.target source view failure allocation erased helper sign writer reservePeer query).run before)) _
   cases query with
   | pin current =>
-    exact weighted_mono _ _ _ _ (lifted_effects_bound qSign qKem kind _ _ (pin_bound kind current) before) (by omega)
+    exact weighted_mono _ _ _ _ (lifted_effects_bound qSign qKem kind _ _ (pin_bound kind current) before) (Nat.zero_le _)
+  | adHash pending =>
+    exact weighted_mono _ _ _ _ (lifted_effects_bound qSign qKem kind _ _ (adHash_bound kind pending) before) (by omega)
   | reserve =>
     have reserved : Bounded kind (RegistrationNativePlatformBoundCompiler.liftPlatform
         (RegistrationNativePlatformEffectCompiler.compile (n := n) reservePeer)) 0 := by
@@ -182,7 +195,7 @@ private theorem target_bound (qKem : Nat) (kind : EffectKind) (reservePeer : Sta
 
 variable {I : Type} {base : OracleSpec I}
 include signing in
-/-- The literal corrected public Server build has concrete old/global coin/hash/admin costs from its source material demand, publication, pin and installation leaves. P sampler effects are billed separately. -/
+/-- The literal corrected public Server build has concrete old/global coin/hash/admin costs from its source material demand, publication, AD hash and installation leaves; pure pin selection pays nothing. P sampler effects are billed separately. -/
 theorem build_bound (setup : PqxdhServerAuthExperiment.Setup base KemSK) (qKem : Nat) (kind : EffectKind)
     (reservePeer : StateT Platform ProbComp Bool) (handle : Nat) (application : Option (Slice U8))
     (identitySource : RegistrationNativeMldsa.Source) (before : RegistrationNativePlatformPublicFrontend.State identitySource Platform) :
@@ -193,19 +206,29 @@ theorem build_bound (setup : PqxdhServerAuthExperiment.Setup base KemSK) (qKem :
   let impl := (RegistrationNativePlatformPublicFrontend.buildEmbedding (n := n) (KemSK := KemSK)).mapStateTBase
     (RegistrationNativePlatformServerFrontendCompiler.target setup.source view failure allocation erased helper sign writer reservePeer)
   let stepCost := coinCost 108 kind + branchCost qSign kind + hashCost kind + adminCost kind
-  have typed := weighted_indicator (fun _ => True) stepCost
+  have typed := weighted_indicator RegistrationNativePlatformServerFrontendRequestBounds.NonPin stepCost
     ((RegistrationNativePlatformServerFrontendProgram.program handle application).run before.1.server) 4
-    ((isQueryBoundP_true_iff _ _).mpr (RegistrationNativePlatformServerFrontendRequestBounds.program handle application before.1.server))
-  have freeBound := weighted_run (fun _ => stepCost) (localBill (n := n) (KemSK := KemSK) qSign qKem kind) impl
+    (RegistrationNativePlatformServerFrontendRequestBounds.program_nonpin handle application before.1.server)
+  have freeBound := weighted_run (fun query => if RegistrationNativePlatformServerFrontendRequestBounds.NonPin query then stepCost else 0)
+    (localBill (n := n) (KemSK := KemSK) qSign qKem kind) impl
     ((RegistrationNativePlatformServerFrontendProgram.program handle application).run before.1.server) (stepCost * 4)
-    (before.1.environment.receipts, before.2) (by simpa only [ite_true] using typed)
-    (target_bound (n := n) (KemSK := KemSK) setup.source view failure allocation helper writer sign qSign signing erased qKem kind reservePeer)
+    (before.1.environment.receipts, before.2) typed
+    (fun query current => by
+      cases query with
+      | pin selected =>
+        change Weighted _ (simulateQ (RegistrationNativePlatformPublicFrontend.buildEmbedding (KemSK := KemSK))
+          ((RegistrationNativePlatformServerFrontendCompiler.target setup.source view failure allocation erased helper sign writer reservePeer
+            (.pin selected)).run current)) _
+        exact lifted_effects_bound qSign qKem kind _ 0 (pin_bound kind selected) current
+      | _ =>
+        simpa only [RegistrationNativePlatformServerFrontendRequestBounds.NonPin, ite_true] using
+          target_bound (n := n) (KemSK := KemSK) setup.source view failure allocation helper writer sign qSign signing erased qKem kind reservePeer _ current)
   dsimp only [impl] at freeBound
   rw [← QueryImpl.simulateQ_mapStateTBase_run] at freeBound
   exact freeBound
 
 omit primitive in
-/-- Displayed conservative native/global build costs: material108 and at most three charged signing allowances inside four literal frontend leaves. -/
+/-- Displayed conservative native/global build costs: material108 and at most three charged signing allowances inside four charged non-pin literal frontend leaves. -/
 theorem build_cost (count : Nat) (kind : EffectKind) :
     buildCost count kind = match kind with
       | .coin => 4 * (108 + 3 * count)

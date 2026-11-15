@@ -43,7 +43,7 @@ production offsets. -/
 theorem build_commitment_transcript_call_mut
     (key : Std.Array Std.U8 32#usize)
     (nonce : Std.Array Std.U8 12#usize)
-    (associatedData : Std.Array Std.U8 281#usize)
+    (associatedData : Std.Array Std.U8 151#usize)
     (tag : Std.Array Std.U8 16#usize)
     (sequenceBytes senderBytes : Std.Array Std.U8 8#usize)
     (index : Std.Usize) :
@@ -58,34 +58,34 @@ theorem build_commitment_transcript_call_mut
           index - 32#usize >>= fun offset => Std.Array.index_usize nonce offset >>= fun byte =>
             ok (byte, ((key, nonce, associatedData, tag, sequenceBytes, senderBytes) :
               commitment.build_commitment_transcript.closure))
-        else if index < 325#usize then
+        else if index < 195#usize then
           index - 44#usize >>= fun offset =>
             Std.Array.index_usize associatedData offset >>= fun byte =>
               ok (byte, ((key, nonce, associatedData, tag, sequenceBytes, senderBytes) :
                 commitment.build_commitment_transcript.closure))
-        else if index < 341#usize then
-          index - 325#usize >>= fun offset => Std.Array.index_usize tag offset >>= fun byte =>
+        else if index < 211#usize then
+          index - 195#usize >>= fun offset => Std.Array.index_usize tag offset >>= fun byte =>
             ok (byte, ((key, nonce, associatedData, tag, sequenceBytes, senderBytes) :
               commitment.build_commitment_transcript.closure))
-        else if index < 349#usize then
-          index - 341#usize >>= fun offset =>
+        else if index < 219#usize then
+          index - 211#usize >>= fun offset =>
             Std.Array.index_usize sequenceBytes offset >>= fun byte =>
               ok (byte, ((key, nonce, associatedData, tag, sequenceBytes, senderBytes) :
                 commitment.build_commitment_transcript.closure))
         else
-          index - 349#usize >>= fun offset =>
+          index - 219#usize >>= fun offset =>
             Std.Array.index_usize senderBytes offset >>= fun byte =>
               ok (byte, ((key, nonce, associatedData, tag, sequenceBytes, senderBytes) :
                 commitment.build_commitment_transcript.closure))) := by
   rfl
 
 /-- **Extracted commitment transcript refinement.** The current generated builder
-returns exactly the ideal 357-byte CTX preimage in key, nonce, associated-data, tag,
+returns exactly the ideal 227-byte CTX preimage in key, nonce, associated-data, tag,
 sequence, and sender order. -/
 theorem build_commitment_transcript_abs
     (key : Std.Array Std.U8 32#usize)
     (nonce : Std.Array Std.U8 12#usize)
-    (associatedData : Std.Array Std.U8 281#usize)
+    (associatedData : Std.Array Std.U8 151#usize)
     (tag : Std.Array Std.U8 16#usize)
     (sequence senderId : Std.U64) :
     ∃ transcript : commitment.CommitmentTranscript,
@@ -99,19 +99,19 @@ theorem build_commitment_transcript_abs
   have hlen :
       (Pqxdh.ctxPreimage (absBytes key, absBytes nonce)
         ⟨absBytes associatedData, sequence.val, senderId.val⟩ (absBytes tag)).length =
-          (357#usize).val := by
+          (227#usize).val := by
     simp [Pqxdh.ctxPreimage]
-  have hcall : ∀ i, i < (357#usize).val →
+  have hcall : ∀ i, i < (227#usize).val →
       commitment.build_commitment_transcript.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
           ((key, nonce, associatedData, tag, sequenceBytes, senderBytes) :
             commitment.build_commitment_transcript.closure)
           ⟨BitVec.ofNat _ i⟩ =
         ok ((if i < 32 then key.val[i]!
           else if i < 44 then nonce.val[i - 32]!
-          else if i < 325 then associatedData.val[i - 44]!
-          else if i < 341 then tag.val[i - 325]!
-          else if i < 349 then sequenceBytes.val[i - 341]!
-          else senderBytes.val[i - 349]!),
+          else if i < 195 then associatedData.val[i - 44]!
+          else if i < 211 then tag.val[i - 195]!
+          else if i < 219 then sequenceBytes.val[i - 211]!
+          else senderBytes.val[i - 219]!),
           ((key, nonce, associatedData, tag, sequenceBytes, senderBytes) :
             commitment.build_commitment_transcript.closure)) := by
     intro i hi
@@ -121,7 +121,7 @@ theorem build_commitment_transcript_abs
     have hlt : ∀ k : Std.Usize, ((⟨BitVec.ofNat _ i⟩ : Std.Usize) < k) ↔ i < k.val := by
       intro k
       rw [Std.UScalar.lt_equiv, hval]
-    have hi357 : i < 357 := by simpa using hi
+    have hi227 : i < 227 := by simpa using hi
     rw [build_commitment_transcript_call_mut]
     by_cases h32 : i < 32
     · rw [ite_eq_left ((hlt 32#usize).mpr (by simpa using h32)),
@@ -151,10 +151,10 @@ theorem build_commitment_transcript_abs
           omega), h1]
         simp only [ite_eq_right h32, ite_eq_left h44]
         rfl
-      · by_cases h325 : i < 325
+      · by_cases h195 : i < 195
         · rw [ite_eq_right (fun hc => h32 (by simpa using (hlt 32#usize).mp hc)),
             ite_eq_right (fun hc => h44 (by simpa using (hlt 44#usize).mp hc)),
-            ite_eq_left ((hlt 325#usize).mpr (by simpa using h325))]
+            ite_eq_left ((hlt 195#usize).mpr (by simpa using h195))]
           have hsub : (44#usize).val ≤ (⟨BitVec.ofNat _ i⟩ : Std.Usize).val := by
             rw [hval]
             simp
@@ -170,118 +170,118 @@ theorem build_commitment_transcript_abs
             rw [h1]
             simp
             omega), h1]
-          simp only [ite_eq_right h32, ite_eq_right h44, ite_eq_left h325]
+          simp only [ite_eq_right h32, ite_eq_right h44, ite_eq_left h195]
           rfl
-        · by_cases h341 : i < 341
+        · by_cases h211 : i < 211
           · rw [ite_eq_right (fun hc => h32 (by simpa using (hlt 32#usize).mp hc)),
               ite_eq_right (fun hc => h44 (by simpa using (hlt 44#usize).mp hc)),
-              ite_eq_right (fun hc => h325 (by simpa using (hlt 325#usize).mp hc)),
-              ite_eq_left ((hlt 341#usize).mpr (by simpa using h341))]
-            have hsub : (325#usize).val ≤ (⟨BitVec.ofNat _ i⟩ : Std.Usize).val := by
+              ite_eq_right (fun hc => h195 (by simpa using (hlt 195#usize).mp hc)),
+              ite_eq_left ((hlt 211#usize).mpr (by simpa using h211))]
+            have hsub : (195#usize).val ≤ (⟨BitVec.ofNat _ i⟩ : Std.Usize).val := by
               rw [hval]
               simp
               omega
             rw [usize_sub_eq _ _ hsub]
-            rw [show (⟨BitVec.ofNat _ i⟩ : Std.Usize).val - (325#usize).val = i - 325 by
+            rw [show (⟨BitVec.ofNat _ i⟩ : Std.Usize).val - (195#usize).val = i - 195 by
               rw [hval]
               simp]
-            have h1 : (⟨BitVec.ofNat _ (i - 325)⟩ : Std.Usize).val = i - 325 :=
-              usize_mk_val (i - 325) (by omega)
+            have h1 : (⟨BitVec.ofNat _ (i - 195)⟩ : Std.Usize).val = i - 195 :=
+              usize_mk_val (i - 195) (by omega)
             simp only [bind_tc_ok]
             rw [index_usize_eq tag _ (by
               rw [h1]
               simp
               omega), h1]
-            simp only [ite_eq_right h32, ite_eq_right h44, ite_eq_right h325, ite_eq_left h341]
+            simp only [ite_eq_right h32, ite_eq_right h44, ite_eq_right h195, ite_eq_left h211]
             rfl
-          · by_cases h349 : i < 349
+          · by_cases h219 : i < 219
             · rw [ite_eq_right (fun hc => h32 (by simpa using (hlt 32#usize).mp hc)),
                 ite_eq_right (fun hc => h44 (by simpa using (hlt 44#usize).mp hc)),
-                ite_eq_right (fun hc => h325 (by simpa using (hlt 325#usize).mp hc)),
-                ite_eq_right (fun hc => h341 (by simpa using (hlt 341#usize).mp hc)),
-                ite_eq_left ((hlt 349#usize).mpr (by simpa using h349))]
-              have hsub : (341#usize).val ≤ (⟨BitVec.ofNat _ i⟩ : Std.Usize).val := by
+                ite_eq_right (fun hc => h195 (by simpa using (hlt 195#usize).mp hc)),
+                ite_eq_right (fun hc => h211 (by simpa using (hlt 211#usize).mp hc)),
+                ite_eq_left ((hlt 219#usize).mpr (by simpa using h219))]
+              have hsub : (211#usize).val ≤ (⟨BitVec.ofNat _ i⟩ : Std.Usize).val := by
                 rw [hval]
                 simp
                 omega
               rw [usize_sub_eq _ _ hsub]
-              rw [show (⟨BitVec.ofNat _ i⟩ : Std.Usize).val - (341#usize).val = i - 341 by
+              rw [show (⟨BitVec.ofNat _ i⟩ : Std.Usize).val - (211#usize).val = i - 211 by
                 rw [hval]
                 simp]
-              have h1 : (⟨BitVec.ofNat _ (i - 341)⟩ : Std.Usize).val = i - 341 :=
-                usize_mk_val (i - 341) (by omega)
+              have h1 : (⟨BitVec.ofNat _ (i - 211)⟩ : Std.Usize).val = i - 211 :=
+                usize_mk_val (i - 211) (by omega)
               simp only [bind_tc_ok]
               rw [index_usize_eq sequenceBytes _ (by
                 rw [h1]
                 simp
                 omega), h1]
-              simp only [ite_eq_right h32, ite_eq_right h44, ite_eq_right h325, ite_eq_right h341, ite_eq_left h349]
+              simp only [ite_eq_right h32, ite_eq_right h44, ite_eq_right h195, ite_eq_right h211, ite_eq_left h219]
               rfl
             · rw [ite_eq_right (fun hc => h32 (by simpa using (hlt 32#usize).mp hc)),
                 ite_eq_right (fun hc => h44 (by simpa using (hlt 44#usize).mp hc)),
-                ite_eq_right (fun hc => h325 (by simpa using (hlt 325#usize).mp hc)),
-                ite_eq_right (fun hc => h341 (by simpa using (hlt 341#usize).mp hc)),
-                ite_eq_right (fun hc => h349 (by simpa using (hlt 349#usize).mp hc))]
-              have hsub : (349#usize).val ≤ (⟨BitVec.ofNat _ i⟩ : Std.Usize).val := by
+                ite_eq_right (fun hc => h195 (by simpa using (hlt 195#usize).mp hc)),
+                ite_eq_right (fun hc => h211 (by simpa using (hlt 211#usize).mp hc)),
+                ite_eq_right (fun hc => h219 (by simpa using (hlt 219#usize).mp hc))]
+              have hsub : (219#usize).val ≤ (⟨BitVec.ofNat _ i⟩ : Std.Usize).val := by
                 rw [hval]
                 simp
                 omega
               rw [usize_sub_eq _ _ hsub]
-              rw [show (⟨BitVec.ofNat _ i⟩ : Std.Usize).val - (349#usize).val = i - 349 by
+              rw [show (⟨BitVec.ofNat _ i⟩ : Std.Usize).val - (219#usize).val = i - 219 by
                 rw [hval]
                 simp]
-              have h1 : (⟨BitVec.ofNat _ (i - 349)⟩ : Std.Usize).val = i - 349 :=
-                usize_mk_val (i - 349) (by omega)
+              have h1 : (⟨BitVec.ofNat _ (i - 219)⟩ : Std.Usize).val = i - 219 :=
+                usize_mk_val (i - 219) (by omega)
               simp only [bind_tc_ok]
               rw [index_usize_eq senderBytes _ (by
                 rw [h1]
                 simp
                 omega), h1]
-              simp only [ite_eq_right h32, ite_eq_right h44, ite_eq_right h325, ite_eq_right h341, ite_eq_right h349]
+              simp only [ite_eq_right h32, ite_eq_right h44, ite_eq_right h195, ite_eq_right h211, ite_eq_right h219]
               rfl
-  have hbyte : ∀ i, i < (357#usize).val →
+  have hbyte : ∀ i, i < (227#usize).val →
       absByte (if i < 32 then key.val[i]!
         else if i < 44 then nonce.val[i - 32]!
-        else if i < 325 then associatedData.val[i - 44]!
-        else if i < 341 then tag.val[i - 325]!
-        else if i < 349 then sequenceBytes.val[i - 341]!
-        else senderBytes.val[i - 349]!) =
+        else if i < 195 then associatedData.val[i - 44]!
+        else if i < 211 then tag.val[i - 195]!
+        else if i < 219 then sequenceBytes.val[i - 211]!
+        else senderBytes.val[i - 219]!) =
       (Pqxdh.ctxPreimage (absBytes key, absBytes nonce)
         ⟨absBytes associatedData, sequence.val, senderId.val⟩ (absBytes tag))[i]! := by
     intro i hi
-    have hi357 : i < 357 := by simpa using hi
+    have hi227 : i < 227 := by simpa using hi
     rw [Pqxdh.ctxPreimage,
-      getElem!_append2 _ _ 349 (by simp),
-      getElem!_append2 _ _ 341 (by simp),
-      getElem!_append2 _ _ 325 (by simp),
+      getElem!_append2 _ _ 219 (by simp),
+      getElem!_append2 _ _ 211 (by simp),
+      getElem!_append2 _ _ 195 (by simp),
       getElem!_append2 _ _ 44 (by simp),
       getElem!_append2 _ _ 32 (by simp)]
     by_cases h32 : i < 32
     · simp only [ite_eq_left h32, ite_eq_left (show i < 44 by omega),
-        ite_eq_left (show i < 325 by omega), ite_eq_left (show i < 341 by omega),
-        ite_eq_left (show i < 349 by omega)]
+        ite_eq_left (show i < 195 by omega), ite_eq_left (show i < 211 by omega),
+        ite_eq_left (show i < 219 by omega)]
       exact (absBytes_getElem! key i (by simp; omega)).symm
     · by_cases h44 : i < 44
-      · simp only [ite_eq_right h32, ite_eq_left h44, ite_eq_left (show i < 325 by omega),
-          ite_eq_left (show i < 341 by omega), ite_eq_left (show i < 349 by omega)]
+      · simp only [ite_eq_right h32, ite_eq_left h44, ite_eq_left (show i < 195 by omega),
+          ite_eq_left (show i < 211 by omega), ite_eq_left (show i < 219 by omega)]
         exact (absBytes_getElem! nonce (i - 32) (by simp; omega)).symm
-      · by_cases h325 : i < 325
-        · simp only [ite_eq_right h32, ite_eq_right h44, ite_eq_left h325,
-            ite_eq_left (show i < 341 by omega), ite_eq_left (show i < 349 by omega)]
+      · by_cases h195 : i < 195
+        · simp only [ite_eq_right h32, ite_eq_right h44, ite_eq_left h195,
+            ite_eq_left (show i < 211 by omega), ite_eq_left (show i < 219 by omega)]
           exact (absBytes_getElem! associatedData (i - 44) (by simp; omega)).symm
-        · by_cases h341 : i < 341
-          · simp only [ite_eq_right h32, ite_eq_right h44, ite_eq_right h325, ite_eq_left h341,
-              ite_eq_left (show i < 349 by omega)]
-            exact (absBytes_getElem! tag (i - 325) (by simp; omega)).symm
-          · by_cases h349 : i < 349
-            · simp only [ite_eq_right h32, ite_eq_right h44, ite_eq_right h325, ite_eq_right h341, ite_eq_left h349]
+        · by_cases h211 : i < 211
+          · simp only [ite_eq_right h32, ite_eq_right h44, ite_eq_right h195, ite_eq_left h211,
+              ite_eq_left (show i < 219 by omega)]
+            exact (absBytes_getElem! tag (i - 195) (by simp; omega)).symm
+          · by_cases h219 : i < 219
+            · simp only [ite_eq_right h32, ite_eq_right h44, ite_eq_right h195, ite_eq_right h211, ite_eq_left h219]
               rw [← hsequenceAbs]
-              exact (absBytes_getElem! sequenceBytes (i - 341) (by simp; omega)).symm
-            · simp only [ite_eq_right h32, ite_eq_right h44, ite_eq_right h325, ite_eq_right h341, ite_eq_right h349]
+              exact (absBytes_getElem! sequenceBytes (i - 211) (by simp; omega)).symm
+            · simp only [ite_eq_right h32, ite_eq_right h44, ite_eq_right h195, ite_eq_right h211, ite_eq_right h219]
               rw [← hsenderAbs]
-              exact (absBytes_getElem! senderBytes (i - 349) (by simp; omega)).symm
+              exact (absBytes_getElem! senderBytes (i - 219) (by simp; omega)).symm
   obtain ⟨bytes, hfrom, habs⟩ :=
-    from_fn_absBytes (F := commitment.build_commitment_transcript.closure) 357#usize
+    from_fn_absBytes (F := commitment.build_commitment_transcript.closure) 227#usize
       commitment.build_commitment_transcript.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8
       ((key, nonce, associatedData, tag, sequenceBytes, senderBytes) :
         commitment.build_commitment_transcript.closure) _ _ hlen hcall hbyte

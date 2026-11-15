@@ -2,9 +2,8 @@
 import BeaconcryptCore.Computational.RegistrationNativePlatformSourceSeal
 import BeaconcryptCore.Computational.RegistrationNativePlatformSourceAccept
 import BeaconcryptCore.Computational.RegistrationNativeTokenSource
-import BeaconcryptCore.Computational.RegistrationNativePlatformHashReceipt
 
-/-! Complete actual source response build only consumes existing tokens. Allocation, source writer, reservation, pin hashing and later failed publication/install retain the real table effects; no successful completion or source-state equality premise is supplied. -/
+/-! Complete actual source response build only consumes existing tokens. Allocation, source writer, reservation, pure pin selection and actual AD hashing and later failed publication/install retain the real table effects; no successful completion or source-state equality premise is supplied. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -80,32 +79,43 @@ private theorem fromInitial (finish : Completion n (StateT Platform ProbComp) En
   unfold RegistrationNativePlatformCompletionSdk.fromInitial
   exact bind_keeps serverCache _ _ (world _) (commit)
 
+variable (deriveAd : RegistrationNativePlatformCompletionSdk.AdHash n (StateT Platform ProbComp))
+
 /-- Every occupancy and reservation branch preserves cache extension through the actual source continuation. -/
-private theorem afterOccupancy (reserve : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) Bool)
+private theorem afterOccupancy
+    (derived : ∀ pending, Keeps serverCache (deriveAd pending)) (reserve : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) Bool)
     (reserved : Keeps serverCache reserve) (finish : Completion n (StateT Platform ProbComp) Encoded)
     (control : pqxdh.ServerState) (lookup : peer.CompletionLookup) (occupied : Bool) :
-    Keeps serverCache (RegistrationNativePlatformCompletionSdk.afterOccupancy reserve finish control lookup occupied) := by
+    Keeps serverCache (RegistrationNativePlatformCompletionSdk.afterOccupancy deriveAd reserve finish control lookup occupied) := by
   unfold RegistrationNativePlatformCompletionSdk.afterOccupancy
   cases lookup.resume occupied with
   | fail error | div => exact pure_keeps serverCache _
   | ok answer => cases answer with
     | Err prior => exact pure_keeps serverCache _
-    | Ok initial =>
-      apply bind_keeps serverCache _ _ reserved
-      intro admitted
-      cases admitted with
-      | false => exact pure_keeps serverCache _
-      | true => exact fromInitial finish control initial
+    | Ok pending =>
+      apply bind_keeps serverCache _ _ (derived pending)
+      intro hashed
+      cases hashed with
+      | fail error | div => exact pure_keeps serverCache _
+      | ok answer => cases answer with
+        | Err previous => exact pure_keeps serverCache _
+        | Ok initial =>
+          apply bind_keeps serverCache _ _ reserved
+          intro admitted
+          cases admitted with
+          | false => exact pure_keeps serverCache _
+          | true => exact fromInitial finish control initial
 
 /-- Actual pin, lookup and preflight failures retain all earlier cache entries. -/
-private theorem afterPin (reserve : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) Bool)
+private theorem afterPin
+    (derived : ∀ pending, Keeps serverCache (deriveAd pending)) (reserve : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) Bool)
     (reserved : Keeps serverCache reserve)
     (present : U64 → StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) Bool)
     (presence : ∀ keyId, Keeps serverCache (present keyId))
     (finish : Completion n (StateT Platform ProbComp) Encoded)
     (control : pqxdh.ServerState) (token : peer.ConsumedRegistration) (application : Slice U8)
     (pin : RustM (core.option.Option session.ServerAuthenticationPin)) :
-    Keeps serverCache (RegistrationNativePlatformCompletionSdk.afterPin reserve present finish control token application pin) := by
+    Keeps serverCache (RegistrationNativePlatformCompletionSdk.afterPin deriveAd reserve present finish control token application pin) := by
   unfold RegistrationNativePlatformCompletionSdk.afterPin
   cases pin with
   | fail error | div => exact pure_keeps serverCache _
@@ -125,7 +135,7 @@ private theorem afterPin (reserve : StateT (RegistrationServerFrontendCompiler.S
             dsimp only
             split
             · exact bind_keeps serverCache _ _ (presence keyId)
-                (afterOccupancy reserve reserved finish control lookup)
+                (afterOccupancy (derived := derived) (deriveAd := deriveAd) reserve reserved finish control lookup)
             · exact pure_keeps serverCache _
 
 private theorem get_keeps : Keeps (serverCache (n := n))
@@ -137,6 +147,7 @@ private theorem get_keeps : Keeps (serverCache (n := n))
 
 /-- The complete source SDK control read and pin execution preserve cache extension. -/
 private theorem complete
+    (derived : ∀ pending, Keeps serverCache (deriveAd pending))
     (pin : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) (RustM (core.option.Option session.ServerAuthenticationPin)))
     (pinned : Keeps serverCache pin)
     (reserve : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) Bool)
@@ -144,12 +155,12 @@ private theorem complete
     (present : U64 → StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) Bool)
     (presence : ∀ keyId, Keeps serverCache (present keyId)) (finish : Completion n (StateT Platform ProbComp) Encoded)
     (token : peer.ConsumedRegistration) (application : Slice U8) :
-    Keeps serverCache (RegistrationNativePlatformCompletionSdk.complete pin reserve present finish token application) := by
+    Keeps serverCache (RegistrationNativePlatformCompletionSdk.complete deriveAd pin reserve present finish token application) := by
   unfold RegistrationNativePlatformCompletionSdk.complete
   apply bind_keeps serverCache _ _ (get_keeps)
   intro before
   exact bind_keeps serverCache _ _ pinned
-    (fun selected => afterPin reserve reserved present presence finish before.control token application selected)
+    (fun selected => afterPin (derived := derived) (deriveAd := deriveAd) reserve reserved present presence finish before.control token application selected)
 
 private def take (handle : Nat) : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) (Option peer.ConsumedRegistration) :=
   fun before => pure (RegistrationServerSdkSource.take handle before)
@@ -165,10 +176,10 @@ private theorem build_shape
     (reserve : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) Bool)
     (present : U64 → StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) Bool)
     (finish : Completion n (StateT Platform ProbComp) Encoded) (handle : Nat) (application : Option (Slice U8)) :
-    RegistrationNativePlatformCompletionSdk.build pin reserve present finish handle application = (do
+    RegistrationNativePlatformCompletionSdk.build deriveAd pin reserve present finish handle application = (do
       let token ← take handle
       match token, application with
-      | some token, some application => RegistrationNativePlatformCompletionSdk.complete pin reserve present finish token application
+      | some token, some application => RegistrationNativePlatformCompletionSdk.complete deriveAd pin reserve present finish token application
       | _, _ => pure (.ok none)) := by
   funext before previous
   simp only [RegistrationNativePlatformCompletionSdk.build, take, bind_apply, pure_apply, pure_bind, StateT.run]
@@ -177,6 +188,7 @@ private theorem build_shape
 
 /-- All actual moved-token build branches preserve the shared cache through failed reservation, publication and installation. -/
 private theorem build
+    (derived : ∀ pending, Keeps serverCache (deriveAd pending))
     (pin : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) (RustM (core.option.Option session.ServerAuthenticationPin)))
     (pinned : Keeps serverCache pin)
     (reserve : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) Bool)
@@ -184,7 +196,7 @@ private theorem build
     (present : U64 → StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) Bool)
     (presence : ∀ keyId, Keeps serverCache (present keyId)) (finish : Completion n (StateT Platform ProbComp) Encoded)
     (handle : Nat) (application : Option (Slice U8)) :
-    Keeps serverCache (RegistrationNativePlatformCompletionSdk.build pin reserve present finish handle application) := by
+    Keeps serverCache (RegistrationNativePlatformCompletionSdk.build deriveAd pin reserve present finish handle application) := by
   rw [build_shape]
   apply bind_keeps serverCache _ _ (take_keeps handle)
   intro token
@@ -192,7 +204,7 @@ private theorem build
   | none => exact pure_keeps serverCache _
   | some token => cases application with
     | none => exact pure_keeps serverCache _
-    | some application => exact complete pin pinned reserve reserved present presence finish token application
+    | some application => exact complete (derived := derived) (deriveAd := deriveAd) pin pinned reserve reserved present presence finish token application
 end BeaconcryptCore.Computational.RegistrationNativePlatformTokenBuild.SDK
 
 
@@ -221,6 +233,9 @@ private theorem reserve_keeps (work : StateT Platform ProbComp Value) :
 private theorem present_keeps (coins : QueryImpl unifSpec (StateT Platform ProbComp)) (keyId : U64) :
     SDK.Keeps (SDK.serverCache (n := n)) (RegistrationNativePlatformCompletionSdk.nativePresent coins keyId) := SDK.world _
 
+private theorem adHash_keeps (coins : QueryImpl unifSpec (StateT Platform ProbComp)) (pending : registration.ServerAdHash) :
+    SDK.Keeps (SDK.serverCache (n := n)) (RegistrationNativePlatformCompletionSdk.nativeAdHash coins pending) := SDK.world _
+
 /-- Complete actual source response build preserves its configured pin on every failure and success, for arbitrary actual completion and external state. -/
 theorem build [primitive : AdapterSealPrimitive.Operations]
     (coins : QueryImpl unifSpec (StateT Platform ProbComp)) (setup : Setup base KemSK) (codec : Codec Reader Response)
@@ -234,7 +249,7 @@ theorem build [primitive : AdapterSealPrimitive.Operations]
     (result : (RustM (Option (U64 × alloc.vec.Vec U8)) × RegistrationServerFrontendCompiler.State n) × Platform)
     (supported : result ∈ support (((RegistrationNativePlatformSourceSeal.build coins setup codec view failure allocation erased reservePeer sign helper writer handle application).run before).run previous)) :
     ∀ token, RegistrationNativeTokenSource.Present token result.1.2 → RegistrationNativeTokenSource.Present token before := by
-  apply SDK.build _ (pin_keeps coins) _ (reserve_keeps reservePeer) _ (present_keeps coins) _ handle application before previous result supported
+  apply SDK.build _ (adHash_keeps coins) _ (pin_keeps coins) _ (reserve_keeps reservePeer) _ (present_keeps coins) _ handle application before previous result supported
 
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformTokenBuild

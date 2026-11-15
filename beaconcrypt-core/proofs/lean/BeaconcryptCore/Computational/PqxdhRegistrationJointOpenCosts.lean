@@ -91,9 +91,9 @@ theorem serviceCost_pool (query : (Spec KemSK).Domain) (kind : Kind) :
     serviceCost kind (poolClass (KemSK := KemSK) query) =
       (if poolClass (KemSK := KemSK) query = kind then 1 else 0) := by
   rcases query with (coin | request) | (coin | request)
-  all_goals first | rfl | skip
+  all_goals try rfl
   case inl.inr =>
-    cases request <;> first | rfl | skip
+    cases request <;> try rfl
     case service index call => cases call <;> rfl
   case inr.inr => cases request <;> rfl
 
@@ -162,7 +162,7 @@ theorem command_program (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
     (budget : PqxdhRegistrationJointRevealCosts.SourceKind → Nat)
     (certified : ∀ source, program.IsQueryBoundP
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) (state : NativeState KemSK)
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK)
     (kind : Kind) (nonuniform : kind ≠ .uniform) :
     ((PqxdhRegistrationJointOpenBackend.compile setup codec checks identityIndex publicIdentity
       (simulateQ (PqxdhRegistrationJointRevealSchedule.client setup codec) program) owners).run state).IsQueryBoundP

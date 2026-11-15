@@ -8,6 +8,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialEvaluatedPost
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhKemIndCca PqxdhPhase2SourceAux PqxdhPhase1AcceptanceOracle
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhPrivateKemSource PqxdhCorrelatedExtractFamily
 open PqxdhInitialRootLabelService PqxdhInitialGenericProtocolBuilder PqxdhCorrelatedExpand
@@ -43,7 +44,7 @@ noncomputable def handler : QueryImpl (PqxdhPhase2SourceScheduler.Spec baseSpec 
     ((labelledFull fixed (QueryImpl.ofLift unifSpec ProbComp) selected
       (RawCtxSelectedInitialConstructor.response64 (RawCtxInitialSentinelSampler.join second other target))).mapStateTBase
         (PqxdhInitialCurrentPost.selector attachedVerify primitives count baseImpl kem secret challenge))
-    (PqxdhInitialCurrentBeacon.owner attachedVerify primitives count fixed localImpl baseImpl kem secret challenge
+    (PqxdhInitialCurrentBeacon.owner (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl baseImpl kem secret challenge
       prior entry selected second other writer (RawCtxSelectedParentCalls.childResponse prior entry target) decode)
 
 /-- The actual evaluated current source continuation has this complete retained-slot distribution, including the root cache, private identity state, every optional reply and original operation order. -/
@@ -53,11 +54,11 @@ theorem source
       (PqxdhGeneratedBeaconState.IdentityHandle I) D (PqxdhGeneratedBeaconState.KemHandle K) A (BareState count) S B) :
     simulateQ (labelledFull fixed (QueryImpl.ofLift unifSpec ProbComp) selected
       (RawCtxSelectedInitialConstructor.response64 (RawCtxInitialSentinelSampler.join second other target)))
-      ((simulateQ (PqxdhInitialPrivateBeacon.target attachedVerify primitives count fixed (retainedKdf prior entry target)
+      ((simulateQ (PqxdhInitialPrivateBeacon.target (completedBinding := completedBinding) attachedVerify primitives count fixed (retainedKdf prior entry target)
         localImpl writer sender route decode baseImpl kem secret challenge) client).run
           (PqxdhInitialGenericPost.native (RawCtxSelectedChain.nativeKernel (RawCtxFreshChainCut.concreteChain target)) state)) =
       Prod.map id (PqxdhInitialGenericPost.native (RawCtxSelectedChain.nativeKernel (RawCtxFreshChainCut.concreteChain target))) <$>
-        (simulateQ (handler attachedVerify primitives count fixed localImpl writer sender route decode baseImpl kem secret challenge
+        (simulateQ (handler (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl writer sender route decode baseImpl kem secret challenge
           prior entry selected second other target) client).run state := by
   rw [← PqxdhInitialCurrentPost.source, PqxdhInitialPostInterpretation.native_schedule]
   unfold handler
@@ -68,7 +69,7 @@ theorem source
   · intro raw before
     funext ambient
     simp only [PqxdhInitialPostInterpretation.work, PqxdhInitialCurrentPost.owner, QueryImpl.simulateQ_mapStateTBase_run]
-    exact congrFun (PqxdhInitialCurrentBeacon.source_owner attachedVerify primitives count fixed localImpl baseImpl kem secret challenge prior entry selected second other target writer decode raw before) ambient
+    exact congrFun (PqxdhInitialCurrentBeacon.source_owner (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl baseImpl kem secret challenge prior entry selected second other target writer decode raw before) ambient
 
 end Current
 end BeaconcryptCore.Computational.PqxdhInitialEvaluatedPost

@@ -1,9 +1,9 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeInterface
-import BeaconcryptCore.Computational.CborProductionBoundary
+import BeaconcryptCore.Computational.CborNativeFrame
 import BeaconcryptCore.Computational.RegistrationWorldServerPublication
 
-/-! The native byte adapter has all six Init fields and the actual dynamically signed response view. Its byte decoders/encoders are the explicit functional SDK codec boundary: the Rust parsers live in beaconcrypt-parse outside the extracted core. The adapter checks the complete 32 MiB bound before calling either decoder. It never replaces native verification with a parsing verdict or supplies an ML signature from a legacy writer. -/
+/-! The native byte adapter has all four remaining Init fields and the actual dynamically signed response view. Its byte decoders/encoders are the explicit functional SDK codec boundary: the Rust parsers live in beaconcrypt-parse outside the extracted core. The adapter checks the complete 32 MiB bound before calling either decoder. It never replaces native verification with a parsing verdict or supplies an ML signature from a legacy writer. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core PqxdhRefinement
@@ -12,16 +12,15 @@ namespace BeaconcryptCore.Computational.RegistrationNativeWire
 
 structure Wire where
   decodeInit : Pqxdh.Bytes → Option registration.InitPacket
-  encodeInit : registration.SignedInitView → core.option.Option Pqxdh.Bytes
+  encodeInit : registration.InitView → core.option.Option Pqxdh.Bytes
   decodeResponse : Pqxdh.Bytes → Option registration.ResponsePacket
   encodeResponse : registration.SignedResponseView → core.option.Option Pqxdh.Bytes
   parseFrame : Pqxdh.Bytes → Option CborProductionBoundary.NativeFrame
   frameWrite : RawCtxMixedShared.Writer
 
-/-- All six decoded fixed-width fields are preserved. This is the actual core InitPacket constructor. -/
-def initPacket (view : registration.SignedInitView) : registration.InitPacket :=
-  ⟨view.fields.identity_key, view.fields.pre_key, view.fields.one_time_key, view.fields.pq_key,
-    view.fields.mldsa_public_key, view.signature⟩
+/-- All four decoded fixed-width fields are preserved. This is the actual core InitPacket constructor. -/
+def initPacket (view : registration.InitView) : registration.InitPacket :=
+  ⟨view.fields.identity_key, view.fields.pre_key, view.fields.one_time_key, view.fields.pq_key⟩
 
 def responsePacket (view : registration.SignedResponseView) : registration.ResponsePacket :=
   ⟨⟨view.identity_key, view.ephemeral_key, view.kem_cipher_text, view.key_id⟩,
@@ -74,10 +73,12 @@ theorem read_response_oversized (wire : Wire) (bytes : Pqxdh.Bytes)
     (oversized : CborSizing.maxMessageSize < bytes.length) : readResponse wire bytes = none := by
   simp only [readResponse, Nat.not_le.mpr oversized, ite_false]
 
-/-- Fixed-width typed Init fields cannot accidentally omit the ML public key or signature. -/
-theorem init_packet_fields (view : registration.SignedInitView) :
-    (initPacket view).mldsa_public_key = view.fields.mldsa_public_key ∧
-      (initPacket view).signature = view.signature := ⟨rfl, rfl⟩
+/-- Fixed-width typed Init fields retain the exact four received key buffers. -/
+theorem init_packet_fields (view : registration.InitView) :
+    (initPacket view).identity_key = view.fields.identity_key ∧
+      (initPacket view).pre_key = view.fields.pre_key ∧
+      (initPacket view).one_time_key = view.fields.one_time_key ∧
+      (initPacket view).pq_key = view.fields.pq_key := ⟨rfl, rfl, rfl, rfl⟩
 
 /-- Native pin parsing accepts exactly its required byte width, rather than interpreting an extended pin as the original 32-byte ED pin. -/
 theorem parse_mldsa_pin_width (bytes : Pqxdh.Bytes) : (parseMldsaPin bytes).isSome = decide (bytes.length = 1952) := by

@@ -10,6 +10,7 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 open OracleComp OracleSpec
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhBeaconPostClosure
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhBeaconSingleInitialization PqxdhBeaconPhase2Shared
 variable {Kernel M P I D K X Response Shared A N Result : Type} {S B : Nat}
 
@@ -37,15 +38,15 @@ theorem successful_closed {State : Type}
     (initial : Secrets Shared → StateT State ProbComp (Option Kernel)) (decode : RawCtxReceive.FrameDecoder)
     (raw : Pqxdh.Bytes) (entry : RawCtxGenericRoleStorage.BeaconState Kernel I D K) (before : State)
     (result : (Option Pqxdh.Bytes × RawCtxGenericRoleStorage.BeaconState Kernel I D K) × State)
-    (supported : result ∈ support ((PqxdhInitialGenericBeacon.owner pre calls application initial decode raw entry).run before))
+    (supported : result ∈ support ((PqxdhInitialGenericBeacon.owner (completedBinding := completedBinding) pre calls application initial decode raw entry).run before))
     (success : result.1.1.isSome = true) : Closed result.1.2 := by
   have erased := congrArg (fun work : StateT State ProbComp _ => work.run before)
-    (PqxdhInitialFinishOrigin.erase (fun _ => ()) pre calls application initial decode raw entry)
+    (PqxdhInitialFinishOrigin.erase (completedBinding := completedBinding) (fun _ => ()) pre calls application initial decode raw entry)
   rw [← erased, StateT.run_map, support_map] at supported
   obtain ⟨finished, reached, rfl⟩ := supported
-  have present := (PqxdhInitialFinishOrigin.published (fun _ => ()) pre calls application initial decode raw entry before finished reached).trans success
+  have present := (PqxdhInitialFinishOrigin.published (completedBinding := completedBinding) (fun _ => ()) pre calls application initial decode raw entry before finished reached).trans success
   obtain ⟨origin, recorded⟩ := Option.isSome_iff_exists.mp present
-  exact marker_closed (fun _ => ()) pre calls application initial decode raw entry before finished reached origin recorded
+  exact marker_closed (completedBinding := completedBinding) (fun _ => ()) pre calls application initial decode raw entry before finished reached origin recorded
 
 section Post
 variable {ι : Type} {extra : OracleSpec ι}
@@ -64,7 +65,7 @@ variable
 noncomputable def post : QueryImpl (PqxdhInitialGenericPost.Spec extra S B)
     (StateT (PqxdhInitialGenericPost.State Kernel M P I D K A N S B) ProbComp) :=
   PqxdhInitialGenericPost.post (PqxdhInitialGenericRecords.records calls publicCalls reader sender route decode)
-    selector (PqxdhInitialGenericBeacon.owner pre finishCalls application initial decode)
+    selector (PqxdhInitialGenericBeacon.owner (completedBinding := completedBinding) pre finishCalls application initial decode)
 
 set_option backward.isDefEq.respectTransparency false in
 /-- Any original post request preserves the selected terminal Beacon, including repeated finish attempts and selector calls with arbitrary effects on their private state. -/
@@ -72,7 +73,7 @@ theorem step_closed (query : (PqxdhInitialGenericPost.Spec extra S B).Domain)
     (entry : PqxdhInitialGenericPost.State Kernel M P I D K A N S B) (selected : Fin B)
     (closed : Closed (entry.1.roles.1.2 selected))
     (result : (PqxdhInitialGenericPost.Spec extra S B).Range query × PqxdhInitialGenericPost.State Kernel M P I D K A N S B)
-    (supported : result ∈ support ((post calls publicCalls reader sender route decode selector pre finishCalls application initial query).run entry)) :
+    (supported : result ∈ support ((post (completedBinding := completedBinding) calls publicCalls reader sender route decode selector pre finishCalls application initial query).run entry)) :
     Closed (result.2.1.roles.1.2 selected) := by
   rcases query with (query | query) | ⟨index, raw⟩
   case inl.inl =>
@@ -88,7 +89,7 @@ theorem step_closed (query : (PqxdhInitialGenericPost.Spec extra S B).Domain)
     obtain ⟨reply, reached, rfl⟩ := supported
     by_cases same : selected = index
     · subst selected
-      rw [original_closed pre finishCalls application initial decode raw (entry.1.roles.1.2 index) closed] at reached
+      rw [original_closed (completedBinding := completedBinding) pre finishCalls application initial decode raw (entry.1.roles.1.2 index) closed] at reached
       change reply ∈ support (pure ((none, entry.1.roles.1.2 index), (entry.1.primitive, entry.2))) at reached
       simp only [mem_support_pure_iff] at reached
       subst reply
@@ -100,7 +101,7 @@ theorem schedule_closed (client : OracleComp (PqxdhInitialGenericPost.Spec extra
     (entry : PqxdhInitialGenericPost.State Kernel M P I D K A N S B) (selected : Fin B)
     (closed : Closed (entry.1.roles.1.2 selected))
     (result : Result × PqxdhInitialGenericPost.State Kernel M P I D K A N S B)
-    (supported : result ∈ support ((simulateQ (post calls publicCalls reader sender route decode selector pre finishCalls application initial) client).run entry)) :
+    (supported : result ∈ support ((simulateQ (post (completedBinding := completedBinding) calls publicCalls reader sender route decode selector pre finishCalls application initial) client).run entry)) :
     Closed (result.2.1.roles.1.2 selected) := by
   induction client using OracleComp.inductionOn generalizing entry result with
   | pure value =>
@@ -111,7 +112,7 @@ theorem schedule_closed (client : OracleComp (PqxdhInitialGenericPost.Spec extra
       simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind, mem_support_bind_iff] at supported
       obtain ⟨reply, head, tail⟩ := supported
       exact ih reply.1 reply.2
-        (step_closed calls publicCalls reader sender route decode selector pre finishCalls application initial query entry selected closed reply head)
+        (step_closed (completedBinding := completedBinding) calls publicCalls reader sender route decode selector pre finishCalls application initial query entry selected closed reply head)
         result tail
 
 /-- The same actual successful finish cannot be followed by a second installation at that Beacon after any original adaptive post schedule. The intervening schedule includes attempts at every Beacon and arbitrary selector work. -/
@@ -119,20 +120,20 @@ theorem no_second (raw laterRaw : Pqxdh.Bytes)
     (entry : PqxdhInitialGenericPost.State Kernel M P I D K A N S B) (selected : Fin B)
     (first : (Option Pqxdh.Bytes × RawCtxGenericRoleStorage.BeaconState Kernel I D K) ×
       (RawCtxSharedPrimitive.SharedState A × N))
-    (firstSupported : first ∈ support ((PqxdhInitialGenericBeacon.owner pre finishCalls application initial decode raw
+    (firstSupported : first ∈ support ((PqxdhInitialGenericBeacon.owner (completedBinding := completedBinding) pre finishCalls application initial decode raw
       (entry.1.roles.1.2 selected)).run (entry.1.primitive, entry.2)))
     (success : first.1.1.isSome = true)
     (client : OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result)
     (result : Result × PqxdhInitialGenericPost.State Kernel M P I D K A N S B)
-    (supported : result ∈ support ((simulateQ (post calls publicCalls reader sender route decode selector pre finishCalls application initial) client).run
+    (supported : result ∈ support ((simulateQ (post (completedBinding := completedBinding) calls publicCalls reader sender route decode selector pre finishCalls application initial) client).run
       (PqxdhInitialGenericPost.installed selected entry first).2)) :
-    PqxdhInitialGenericBeacon.owner pre finishCalls application initial decode laterRaw (result.2.1.roles.1.2 selected) =
+    PqxdhInitialGenericBeacon.owner (completedBinding := completedBinding) pre finishCalls application initial decode laterRaw (result.2.1.roles.1.2 selected) =
       pure (none, result.2.1.roles.1.2 selected) := by
   apply original_closed
-  apply schedule_closed calls publicCalls reader sender route decode selector pre finishCalls application initial client
+  apply schedule_closed (completedBinding := completedBinding) calls publicCalls reader sender route decode selector pre finishCalls application initial client
     (PqxdhInitialGenericPost.installed selected entry first).2 selected _ result supported
   simpa only [PqxdhInitialGenericPost.installed, PqxdhInitialGenericProtocol.finishInstall, Function.update_self] using
-    successful_closed pre finishCalls application initial decode raw (entry.1.roles.1.2 selected)
+    successful_closed (completedBinding := completedBinding) pre finishCalls application initial decode raw (entry.1.roles.1.2 selected)
       (entry.1.primitive, entry.2) first firstSupported success
 
 end Post

@@ -21,7 +21,7 @@ variable [primitives : AdapterSealPrimitive.Operations]
 variable {n : Nat} {I KemSK Platform E : Type} {base : OracleSpec I} {source : RegistrationNativeMldsa.Source}
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
 variable (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 variable (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitives.Error)
 variable (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
 variable (reserveRegistration reservePeer : StateT Platform ProbComp Bool)
@@ -42,6 +42,9 @@ private theorem ambient_keys (query : TypedSpec.Domain) (before : Full n KemSK P
     (reached : result ∈ support ((interpret setup.joint (ambient query)).run before)) :
     keys result.2.1.1.beacons = keys before.1.1.beacons :=
   congrArg keys (RegistrationNativePlatformIdentityCtxKeyPrefix.ordinary_keys setup.joint _ before result reached)
+
+attribute [local irreducible] RegistrationNativePlatformIdentityCtxDispatch.step
+  RegistrationNativePlatformIdentityMainAmbient.command
 
 /-- Every nonconstructor callback preserves each immutable owner tuple at the same position. -/
 theorem handler_keys (query : TypedSpec.Domain) (allowed : NotCreate query)

@@ -18,20 +18,20 @@ abbrev State := RegistrationNativePlatformExtractedSdkOrdinaryDriver.State
 abbrev M (Platform : Type) := RegistrationNativePlatformExtractedSdkOrdinaryDriver.M Platform
 
 noncomputable def replies (setup : Setup base KemSK) (codec : Codec Reader Response)
-    (erased : Array U8 357#usize) :
+    (erased : Array U8 227#usize) :
     QueryImpl AdapterRecordRequestMonad.Spec (StateT Primitive ProbComp) :=
   AdapterRecordNativeRepresentation.typed (RegistrationNativeExtractedReceive.primitives setup codec) ∘ₛ
     AdapterRecordStatefulReceive.native erased
 
 noncomputable def primitive (setup : Setup base KemSK) (codec : Codec Reader Response)
-    (erased : Array U8 357#usize) (effect : record_effects.RecordReceiveEffect) :
+    (erased : Array U8 227#usize) (effect : record_effects.RecordReceiveEffect) :
     StateT Primitive ProbComp (RustM AdapterRecordStatefulReceive.Result) :=
   simulateQ (replies setup codec erased)
     (AdapterRecordStatefulReceive.drive (RecordEffectsReceiveRank.rank effect + 2) effect).run
 
 noncomputable def receivedPrimitive (setup : Setup base KemSK) (codec : Codec Reader Response)
-    (erased : Array U8 357#usize) (kernel : ratchet.concrete.ConcreteRatchetKernel)
-    (sequence : U64) (payload : Slice U8) (ad : Array U8 281#usize) (sender : U64) :
+    (erased : Array U8 227#usize) (kernel : ratchet.concrete.ConcreteRatchetKernel)
+    (sequence : U64) (payload : Slice U8) (ad : Array U8 151#usize) (sender : U64) :
     StateT Primitive ProbComp (RustM AdapterRecordStatefulReceive.Result) :=
   simulateQ (replies setup codec erased)
     (AdapterRecordStatefulReceive.receive kernel sequence payload ad sender).run
@@ -40,13 +40,13 @@ def liftPrimitive {A : Type} (work : StateT Primitive ProbComp A) : M Platform A
   StateT.lift ((fun result => (result.1,(result.2,before.2))) <$> work.run before.1)
 
 noncomputable def effect (setup : Setup base KemSK) (codec : Codec Reader Response)
-    (erased : Array U8 357#usize) (pending : record_effects.RecordReceiveEffect) :
+    (erased : Array U8 227#usize) (pending : record_effects.RecordReceiveEffect) :
     M Platform (RustM AdapterRecordStatefulReceive.Result) :=
   liftPrimitive (primitive setup codec erased pending)
 
 noncomputable def received (setup : Setup base KemSK) (codec : Codec Reader Response)
-    (erased : Array U8 357#usize) (kernel : ratchet.concrete.ConcreteRatchetKernel)
-    (sequence : U64) (payload : Slice U8) (ad : Array U8 281#usize) (sender : U64) :
+    (erased : Array U8 227#usize) (kernel : ratchet.concrete.ConcreteRatchetKernel)
+    (sequence : U64) (payload : Slice U8) (ad : Array U8 151#usize) (sender : U64) :
     M Platform (RustM AdapterRecordStatefulReceive.Result) :=
   liftPrimitive (receivedPrimitive setup codec erased kernel sequence payload ad sender)
 
@@ -69,8 +69,8 @@ theorem lift_map {A B : Type} (change : A → B) (work : StateT Primitive ProbCo
 
 theorem received_native (setup : Setup base KemSK) (codec : Codec Reader Response)
     (length : RegistrationNativeExtractedReceive.AeadLength setup.source.crypto)
-    (erased : Array U8 357#usize) (kernel : ratchet.concrete.ConcreteRatchetKernel)
-    (sequence : U64) (payload : Slice U8) (ad : Array U8 281#usize) (sender : U64) :
+    (erased : Array U8 227#usize) (kernel : ratchet.concrete.ConcreteRatchetKernel)
+    (sequence : U64) (payload : Slice U8) (ad : Array U8 151#usize) (sender : U64) :
     (fun result => AdapterRecordReceive.decodeResult <$> result) <$>
       receivedPrimitive setup codec erased kernel sequence payload ad sender =
     simulateQ (RegistrationNativeExtractedReceive.primitives setup codec)
@@ -99,7 +99,7 @@ theorem received_projection (kernel : ratchet.concrete.ConcreteRatchetKernel)
 
 noncomputable def model (setup : Setup base KemSK) (codec : Codec Reader Response)
     (raw : Pqxdh.Bytes) (kernel : ratchet.concrete.ConcreteRatchetKernel) (sequence : U64)
-    (payload : Slice U8) (ad : Array U8 281#usize) (sender : U64) :
+    (payload : Slice U8) (ad : Array U8 151#usize) (sender : U64) :
     StateT Primitive ProbComp RecordEffectsReceiveProgram.Result :=
   let frame : RawCtxReceive.DecodedFrame := ⟨sequence,sender,RawCtxNativeFramePrelude.sliceBytes payload⟩
   simulateQ (RegistrationNativeExtractedReceive.primitives setup codec)
@@ -112,9 +112,9 @@ noncomputable def model (setup : Setup base KemSK) (codec : Codec Reader Respons
 
 theorem received_model (setup : Setup base KemSK) (codec : Codec Reader Response)
     (length : RegistrationNativeExtractedReceive.AeadLength setup.source.crypto)
-    (erased : Array U8 357#usize) (raw : Pqxdh.Bytes)
+    (erased : Array U8 227#usize) (raw : Pqxdh.Bytes)
     (kernel : ratchet.concrete.ConcreteRatchetKernel) (sequence : U64)
-    (payload : Slice U8) (ad : Array U8 281#usize) (sender : U64) :
+    (payload : Slice U8) (ad : Array U8 151#usize) (sender : U64) :
     (fun result => AdapterRecordReceive.decodeResult <$> result) <$>
       receivedPrimitive setup codec erased kernel sequence payload ad sender =
         .ok <$> model setup codec raw kernel sequence payload ad sender := by
@@ -129,9 +129,9 @@ theorem received_model (setup : Setup base KemSK) (codec : Codec Reader Response
 
 theorem received_model_lift (setup : Setup base KemSK) (codec : Codec Reader Response)
     (length : RegistrationNativeExtractedReceive.AeadLength setup.source.crypto)
-    (erased : Array U8 357#usize) (raw : Pqxdh.Bytes)
+    (erased : Array U8 227#usize) (raw : Pqxdh.Bytes)
     (kernel : ratchet.concrete.ConcreteRatchetKernel) (sequence : U64)
-    (payload : Slice U8) (ad : Array U8 281#usize) (sender : U64) :
+    (payload : Slice U8) (ad : Array U8 151#usize) (sender : U64) :
     (fun result => AdapterRecordReceive.decodeResult <$> result) <$>
       received (Platform := Platform) setup codec erased kernel sequence payload ad sender =
         .ok <$> liftPrimitive (model setup codec raw kernel sequence payload ad sender) := by
@@ -142,9 +142,9 @@ theorem received_model_lift (setup : Setup base KemSK) (codec : Codec Reader Res
 
 theorem received_normal (setup : Setup base KemSK) (codec : Codec Reader Response)
     (length : RegistrationNativeExtractedReceive.AeadLength setup.source.crypto)
-    (erased : Array U8 357#usize) (raw : Pqxdh.Bytes)
+    (erased : Array U8 227#usize) (raw : Pqxdh.Bytes)
     (kernel : ratchet.concrete.ConcreteRatchetKernel) (sequence : U64)
-    (payload : Slice U8) (ad : Array U8 281#usize) (sender : U64)
+    (payload : Slice U8) (ad : Array U8 151#usize) (sender : U64)
     (before after : Primitive) (reply : RustM AdapterRecordStatefulReceive.Result)
     (supported : (reply,after) ∈ support
       ((receivedPrimitive setup codec erased kernel sequence payload ad sender).run before)) :
@@ -175,8 +175,8 @@ theorem received_normal (setup : Setup base KemSK) (codec : Codec Reader Respons
       cases normal
 
 theorem begin_effect (setup : Setup base KemSK) (codec : Codec Reader Response)
-    (erased : Array U8 357#usize) (kernel : ratchet.concrete.ConcreteRatchetKernel)
-    (sequence : U64) (payload : Slice U8) (ad : Array U8 281#usize) (sender : U64) :
+    (erased : Array U8 227#usize) (kernel : ratchet.concrete.ConcreteRatchetKernel)
+    (sequence : U64) (payload : Slice U8) (ad : Array U8 151#usize) (sender : U64) :
     received (Platform := Platform) setup codec erased kernel sequence payload ad sender =
       (do
         let pending ← (AdapterRecordRequestMonad.liftRust

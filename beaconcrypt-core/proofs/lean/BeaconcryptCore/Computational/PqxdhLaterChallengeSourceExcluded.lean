@@ -6,7 +6,10 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeSourceExcluded
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPhase1AcceptanceOracle PqxdhKemIndCca PqxdhInitializerSecrecy
 open CtxRomAuth AdaptiveCtxSharedHash PqxdhSecretInputKdf PqxdhFullSecretInputKdf
@@ -48,7 +51,7 @@ theorem evaluated_not_inside {OtherA OtherN OtherC : Type} (depth : Nat) (positi
     (details : PqxdhLaterChallengeGeneratedExcluded.Details (setup := setup) (M := M) (P := P) (I := I) (K := K) (S := S) (B := B))
     (after : CtxRO.QueryCache)
     (supported : (carrier, after) ∈ support ((simulateQ hashImpl
-      (PqxdhLaterChallengeGeneratedContinuation.run setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed depth)).run ∅))
+      (PqxdhLaterChallengeGeneratedContinuation.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed depth)).run ∅))
     (shape : carrier.1.1.2.1.1.1 = Sum.inr (stored, Sum.inr pending))
     (captured : carrier.1.2 = some details)
     (prior : RawCtxSelectedParentTable.Prior) (entry : RawCtxSelectedParentEntry.Entry)
@@ -61,20 +64,20 @@ theorem evaluated_not_inside {OtherA OtherN OtherC : Type} (depth : Nat) (positi
     (result : (Bool × (PqxdhInitialPostContext.NativeFront M P (IdentityHandle I) (DhPair setup) (KemHandle K) S (B + 1) × PqxdhInitialOriginPost.Trace Bool S (B + 1))) × PqxdhInitialNativeRetained.RetainedState OtherA OtherN OtherC)
     (completed : result ∈ support ((simulateQ (PqxdhInitialNativeRetained.retained env.source env.recordWriter
       (RawCtxSelectedMessageDriver.privateTable prior (some entry) target full) external)
-      (PqxdhInitialOriginContext.resume (PqxdhInitialSampledParent.marker env.source stored)
+      (PqxdhInitialOriginContext.resume (completedBinding := completedBinding) (PqxdhInitialSampledParent.marker env.source stored)
         env.senderId env.route env.decode pending.1
-        (PqxdhInitialParentBuilderContext.reply env.senderId env.route env.decode pending.1.original
+        (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) env.senderId env.route env.decode pending.1.original
           (RawCtxSelectedParentEntry.realize entry target)))).run before))
     (accepted : result.1.1 = true)
     (published : ((owner, number), true) ∈ result.1.2.2.published) :
     PqxdhLaterChallengeSavedClassification.phase (some details) ≠ .inside := by
   have erased : (carrier.1, after) ∈ support ((simulateQ hashImpl
-      (PqxdhLaterChallengeSampler.run setup env callbacks program adversary owner number bit attachedVerify primitives
+      (PqxdhLaterChallengeSampler.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify primitives
         baseImpl kem ancestors disclosed depth)).run ∅) := by
-    rw [← PqxdhLaterChallengeGeneratedContinuation.run_erase setup env callbacks program adversary owner number bit attachedVerify
+    rw [← PqxdhLaterChallengeGeneratedContinuation.run_erase (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify
       primitives baseImpl kem ancestors disclosed depth, simulateQ_map, StateT.run_map, support_map]
     exact ⟨(carrier, after), supported, rfl⟩
-  exact PqxdhLaterChallengeGeneratedExcluded.run_not_inside setup env callbacks program adversary owner number bit attachedVerify
+  exact PqxdhLaterChallengeGeneratedExcluded.run_not_inside (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify
     primitives baseImpl kem ancestors disclosed depth position carrier.1 stored pending details after erased shape captured
     prior entry target full external atParent before result completed accepted published
 
@@ -86,7 +89,7 @@ theorem source_not_inside (depth : Nat) (position : number.val = depth + 2)
     (details : PqxdhLaterChallengeGeneratedChronology.Details (setup := setup) (M := M) (P := P) (I := I) (K := K) (S := S) (B := B))
     (after : CtxRO.QueryCache)
     (supported : (result, after) ∈ support ((simulateQ hashImpl
-      (PqxdhLaterChallengeGeneratedContinuation.run setup env callbacks program adversary owner number bit attachedVerify primitives
+      (PqxdhLaterChallengeGeneratedContinuation.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify primitives
         baseImpl kem ancestors disclosed depth)).run ∅))
     (shape : result.1.1.2.1.1.1 = Sum.inr (stored, Sum.inr pending)) (captured : result.1.2 = some details)
     (prior : Prior) (key target : RootOutput) (nonce : NonceOutput) (next : RootOutput)
@@ -95,18 +98,18 @@ theorem source_not_inside (depth : Nat) (position : number.val = depth + 2)
     (admitted : PqxdhInitialDescriptorScope.Valid env.decode pending.1)
     (state : RawCtxSelectedReceiveCompiler.State (Local A (BareState 1) RootOracle.QueryCache))
     (finalState : Traced M P (IdentityHandle I) (DhPair setup) (KemHandle K) A (BareState 1) RootOracle.QueryCache S (B + 1))
-    (completed : (some true, finalState) ∈ support (PqxdhLaterSavedPostComparison.original pre application initial selector aux env.source
+    (completed : (some true, finalState) ∈ support (PqxdhLaterSavedPostComparison.original (completedBinding := completedBinding) pre application initial selector aux env.source
       env.recordWriter prior key target nonce next (PqxdhInitialSampledParent.marker env.source stored) env.senderId env.route env.decode
       qPost pending.1 material fits state))
     (published : ((owner, number), true) ∈ (tracedProj key finalState).1.2.published) :
     PqxdhLaterChallengeSavedClassification.phase (some details) ≠ .inside := by
-  apply evaluated_not_inside setup env callbacks program adversary owner number bit attachedVerify
+  apply evaluated_not_inside (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify
     primitives baseImpl kem ancestors disclosed depth position result stored pending details after supported shape captured
     prior ⟨PqxdhInitialBuilderContext.address pending.1.original, material⟩ target
     (RawCtxSelectedMessageKdf.response key nonce next) (lifted pre application initial selector aux) rfl
     (retainedOf (RawCtxSelectedReceiveCompiler.project state))
     ((true, (tracedProj key finalState).1), retainedOf (tracedProj key finalState).2) _ rfl published
-  exact PqxdhLaterSavedFrameJoin.original_frame_support pre application initial selector aux env.source env.recordWriter prior key target
+  exact PqxdhLaterSavedFrameJoin.original_frame_support (completedBinding := completedBinding) pre application initial selector aux env.source env.recordWriter prior key target
     nonce next (PqxdhInitialSampledParent.marker env.source stored) env.senderId env.route env.decode qPost pending.1 material fits state
     admitted true finalState completed
 
@@ -118,7 +121,7 @@ theorem generated_not_inside (depth : Nat) (position : number.val = depth + 2)
     (details : PqxdhLaterChallengeGeneratedChronology.Details (setup := setup) (M := M) (P := P) (I := I) (K := K) (S := S) (B := B))
     (after : CtxRO.QueryCache)
     (supported : (result, after) ∈ support ((simulateQ hashImpl
-      (PqxdhLaterChallengeGeneratedContinuation.run setup env callbacks program adversary owner number bit attachedVerify primitives
+      (PqxdhLaterChallengeGeneratedContinuation.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify primitives
         baseImpl kem ancestors disclosed depth)).run ∅))
     (shape : result.1.1.2.1.1.1 = Sum.inr (stored, Sum.inr pending)) (captured : result.1.2 = some details)
     (prior : Prior) (key target : RootOutput) (nonce : NonceOutput) (next : RootOutput)
@@ -128,15 +131,15 @@ theorem generated_not_inside (depth : Nat) (position : number.val = depth + 2)
       (PqxdhRecordConfidentialityChallenge.post adversary owner number bit))
     (state : RawCtxSelectedReceiveCompiler.State (Local A (BareState 1) RootOracle.QueryCache))
     (finalState : Traced M P (IdentityHandle I) (DhPair setup) (KemHandle K) A (BareState 1) RootOracle.QueryCache S (B + 1))
-    (completed : (some true, finalState) ∈ support (PqxdhLaterSavedPostComparison.original pre application initial selector aux env.source
+    (completed : (some true, finalState) ∈ support (PqxdhLaterSavedPostComparison.original (completedBinding := completedBinding) pre application initial selector aux env.source
       env.recordWriter prior key target nonce next (PqxdhInitialSampledParent.marker env.source stored) env.senderId env.route env.decode
       qPost pending.1 material fits state))
     (published : ((owner, number), true) ∈ (tracedProj key finalState).1.2.published) :
     PqxdhLaterChallengeSavedClassification.phase (some details) ≠ .inside :=
-  source_not_inside setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed
+  source_not_inside (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed
     pre application initial selector aux depth position result stored pending details after supported shape captured prior key target nonce next
     qPost material fits
-    (PqxdhLaterChallengeGeneratedFrame.generated_scope setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed
+    (PqxdhLaterChallengeGeneratedFrame.generated_scope (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed
       depth result stored pending after supported shape certificate).2 state finalState completed published
 
 end BeaconcryptCore.Computational.PqxdhLaterChallengeSourceExcluded

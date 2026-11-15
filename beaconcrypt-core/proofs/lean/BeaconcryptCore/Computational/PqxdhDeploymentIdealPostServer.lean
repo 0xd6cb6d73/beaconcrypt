@@ -281,7 +281,8 @@ variable (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (route :
 
 /-- The upper layers on a raw accept: the skeleton's raw accept with its encapsulation exposed. -/
 theorem upperLayer_accept (raw : Pqxdh.Bytes)
-    (state : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × SkelState KemSK Output) :
+    (state : (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate)) ×
+      SkelState KemSK Output) :
     (upperLayer setup codec checks created.server.server.metadata.identityIndex created.publicIdentity t.kem.val
         p.challenge (factoredServices setup codec checks) (.inl (.inr (.accept raw)))).run state =
       (fun result => (result.1, (state.1, result.2))) <$>
@@ -461,15 +462,27 @@ theorem build_real (session : ℕ) (payload : Option Pqxdh.Bytes) (native : Nati
   · have cleanFound : (clean native.2).pending session = some token := found
     simp only [PqxdhRegistrationJointKemPostSkeleton.buildStep, cleanFound]
     rw [buildService_real setup codec checks _ marks session (real (by simp [found]))]
-    simp only [PqxdhServerAuthNative.native_bind_run, PqxdhServerAuthNative.nativeCoins,
-      PqxdhServerAuthNative.nativeSet, bind_pure_comp, simulateQ_map, StateT.run_map,
-      PqxdhDeploymentIdealPostItem.tableLayer_lift, Functor.map_map, PqxdhServerAuthNative.native_map_run,
-      PqxdhServerAuthNative.localState, map_pure, PqxdhRegistrationJointKemPostSkeleton.nativeResponse]
-    rfl
+    simp only [PqxdhServerAuthNative.nativeSet, bind_pure_comp, PqxdhRegistrationJointKemPostSkeleton.nativeResponse]
+    have server : (clean native.2).server = native.2.server := rfl
+    rw [server]
+    cases PqxdhServerRegistrationPublication.prehash native.2.server token.pending payload with
+    | none =>
+        simp only [simulateQ_pure, StateT.run_pure, PqxdhServerAuthNative.native_map_run]
+        rfl
+    | some candidate =>
+        simp only [simulateQ_bind, StateT.run_bind, PqxdhDeploymentIdealPostItem.tableLayer_lift, bind_map_left,
+          simulateQ_map, StateT.run_map, map_bind, Functor.map_map, PqxdhServerAuthNative.native_bind_run,
+          PqxdhServerAuthNative.nativeHash, PqxdhServerAuthNative.nativeCoins, PqxdhServerAuthNative.native_map_run,
+          PqxdhServerAuthNative.localState, pure_bind, map_pure]
+        refine bind_congr fun hashed => ?_
+        rw [← bind_pure_comp]
+        refine bind_congr fun result => ?_
+        rfl
 
 /-- The upper layers on a build: the skeleton's build on its state. -/
 theorem upperLayer_build (session : ℕ) (payload : Option Pqxdh.Bytes)
-    (state : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × SkelState KemSK Output) :
+    (state : (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate)) ×
+      SkelState KemSK Output) :
     (upperLayer setup codec checks created.server.server.metadata.identityIndex created.publicIdentity t.kem.val
         p.challenge (factoredServices setup codec checks) (.inl (.inr (.build session payload)))).run state =
       (fun result => (result.1, (state.1, result.2))) <$> simulateQ (fwd (T := TSpec Output) (coinLift (KemSK := KemSK)))

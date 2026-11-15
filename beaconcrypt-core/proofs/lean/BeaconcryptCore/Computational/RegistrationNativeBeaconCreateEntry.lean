@@ -21,12 +21,12 @@ noncomputable def register (setup : Setup base KemSK)
     M n KemSK source Auxiliary (RustM (Option Nat)) := do
   let worldOwner ← effect (.inr (.appendOwner keyId edPin .fresh))
   let owners ← get
-  set (owners ++ [RegistrationNativeBeaconBirth.owner setup source prepared.pin prepared.credentials prepared.identity prepared.prekey born worldOwner])
+  set (owners ++ [RegistrationNativeBeaconBirth.owner setup source prepared.pin prepared.identity prepared.prekey born worldOwner])
   pure (.ok (some owners.length))
 
 theorem append_program (setup : Setup base KemSK) (edPin : Std.Array U8 32#usize) (keyId : U64)
     (prepared : Prepared source) :
-    (appendBorn (n := n) setup source edPin keyId prepared.pin prepared.credentials prepared.identity prepared.prekey : M n KemSK source Auxiliary _) =
+    (appendBorn (n := n) setup source edPin keyId prepared.pin prepared.identity prepared.prekey : M n KemSK source Auxiliary _) =
     (do
       let born ← kem (.inr (.inl .create))
       register setup edPin keyId prepared born) := rfl
@@ -62,7 +62,7 @@ theorem register_run (implementation : QueryImpl (Trusted n KemSK) m)
     ((RegistrationNativePlatformGenericBundle.liftLegacy implementation (register setup edPin keyId prepared born)).run owners).run env = (do
       let worldOwner ← implementation (.inl (.inr (.appendOwner keyId edPin .fresh)))
       pure ((.ok (some owners.length), owners ++
-        [RegistrationNativeBeaconBirth.owner setup source prepared.pin prepared.credentials prepared.identity prepared.prekey born worldOwner]), env)) := by
+        [RegistrationNativeBeaconBirth.owner setup source prepared.pin prepared.identity prepared.prekey born worldOwner]), env)) := by
   change simulateQ implementation (((register setup edPin keyId prepared born).run owners).run env) = _
   simp only [register, effect, StateT.run_bind, StateT.run_lift, StateT.run_get,
     StateT.run_map, StateT.run_set, Functor.map_map, map_pure,

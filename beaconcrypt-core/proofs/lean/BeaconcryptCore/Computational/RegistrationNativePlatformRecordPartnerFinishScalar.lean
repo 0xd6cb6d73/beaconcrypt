@@ -150,12 +150,12 @@ theorem collect_handle (owner : RegistrationBeaconReferenceCompiler.SelectedOwne
       (RegistrationNativeSecretWordBeaconCompiler.collect setup owner oneTime authenticated) =
       simulateQ (fun query => lower (scalarLocal setup implementation scalar)
         (RegistrationNativeSecretWordBeaconCompiler.prefixImpl setup owner oneTime authenticated query))
-        (RegistrationNativeSecretWordBeaconPrepare.prepare authenticated.pending.control () () () []) := by
+        (RegistrationNativeSecretWordBeaconPrepare.prepare (completedBinding := authenticated.binding) authenticated.control () () () []) := by
     unfold RegistrationNativeSecretWordBeaconCompiler.collect
     exact RegistrationNativePlatformLorIdealStateLift.simulate (scalarLocal setup implementation scalar) _ _
   rw [equation] at supported
-  have collectedAt := RegistrationNativeSecretWordAtomOwnerCollector.prepare_receipt _
-    authenticated.pending.control () () () [] before after pending supported
+  have collectedAt := RegistrationNativeSecretWordAtomOwnerCollector.prepare_receipt (completedBinding := authenticated.binding) _
+    authenticated.control () () () [] before after pending supported
   obtain ⟨header, first, second, word, _earlier, called, same⟩ :=
     RegistrationNativeSecretWordAtomOwnerCollector.collect_receipt _ () () () [] before after pending.collected collectedAt
   have sameWord : word = Word.atom := same.symm.trans atom

@@ -56,7 +56,7 @@ theorem pool (setup : Setup base KemSK) (handle : Nat) (ciphertext : MlKem768Cip
 
 /-- The original globally counted native interpreter preserves the same actual table-row decapsulation witness. -/
 theorem trusted (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (handle : Nat) (ciphertext : MlKem768Ciphertext) (shared : MlKemSharedSecret)
     (before after : RegistrationNativeExperiment.State n KemSK source)
     (supported : (some shared, after) ∈ support
@@ -83,7 +83,7 @@ theorem trusted (setup : Setup base KemSK) (checks : Checks)
 
 /-- The actual lowered Beacon primitive gets a decapsulation from its own private table handle, without substituting another key. -/
 theorem primitive (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (owner : Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (ciphertext : Std.Array U8 1088#usize) (shared : Std.Array U8 32#usize)
     (before after : Local n KemSK source)
@@ -120,7 +120,7 @@ theorem primitive (setup : Setup base KemSK) (checks : Checks)
 
 /-- Decapsulation at the actual agreement callback retains the same table-row witness after its ordinary request-ledger append. -/
 theorem agreement (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (owner : Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (ciphertext : Std.Array U8 1088#usize) (shared : Std.Array U8 32#usize)
     (before after : Local n KemSK source)

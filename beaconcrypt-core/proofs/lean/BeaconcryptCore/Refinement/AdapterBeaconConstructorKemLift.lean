@@ -18,7 +18,7 @@ variable {m : Type → Type} [Monad m] [LawfulMonad m]
 variable [material : PublicWrapperPlatform.Material] [primitive : AdapterInitEdPrimitive.Operations]
 
 noncomputable def implementation (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit) :
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     QueryImpl (Trusted n KemSK) (StateT (AdapterBeaconConstructorKem.Native n KemSK source) m) :=
   fun query => RegistrationNativePlatformInterpret.state coins
     (RegistrationNativeExperiment.trusted setup checks representation created source query)
@@ -30,7 +30,7 @@ noncomputable def joint (coins : QueryImpl unifSpec m) (setup : Setup base KemSK
   StateT.lift (StateT.lift (AdapterBeaconConstructorKem.joint coins setup view model rng))
 
 theorem native (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (view : AdapterPublicWrapperState.MaterialView source KemSK) (model : AdapterBeaconConstructorKem.Representation view R) (rng : R) :
     AdapterBeaconConstructorKem.Receipt.born <$> joint (n := n) (Auxiliary := Auxiliary) coins setup view model rng =
       RegistrationNativePlatformGenericBundle.liftLegacy (implementation coins setup checks representation created)

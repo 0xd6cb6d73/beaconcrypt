@@ -48,7 +48,7 @@ theorem agreement_program (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSourc
 
 /-- Actual SDK replay lookup and collected source agreement have no hash cache dependence. -/
 theorem agree (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit)
     (cache : RegistrationNativePlatformCtxBackend.Cache) (before : RegistrationServerFrontendCompiler.State n) :
     Prod.map id (replace cache) <$> (RegistrationServerNativeSource.agree setup checks representation created packet authenticated).run before =
@@ -59,7 +59,7 @@ theorem agree (setup : Setup base KemSK) (checks : Checks)
   simpa only [RegistrationServerNativeSource.agree, StateT.run, Functor.map_map, replace, Prod.map_def, id_eq] using mapped
 
 /-- The literal one-use token insertion changes no cache or signing receipt coordinate. -/
-theorem retain (created : PqxdhLiveServerConstruction.Created Unit) (accepted : agreement.ServerAgreement)
+theorem retain (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (accepted : agreement.ServerAgreement)
     (cache : RegistrationNativePlatformCtxBackend.Cache) (before : RegistrationServerFrontendCompiler.State n) :
     Prod.map id (replace cache) <$> (RegistrationServerNativeSource.retain created accepted).run before =
       (RegistrationServerNativeSource.retain created accepted).run (replace cache before) := by

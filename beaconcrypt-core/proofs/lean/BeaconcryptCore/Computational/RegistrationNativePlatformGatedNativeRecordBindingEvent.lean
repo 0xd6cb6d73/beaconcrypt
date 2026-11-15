@@ -25,7 +25,7 @@ theorem initialized_conflict (modes : Label n → KeyMode) (ideal : ∀ label, m
     (env : RegistrationNativeEntropyInterface.Environment n E)
     (reserve : Nat → StateT E ProbComp (core.result.Result Unit Failure)) (serverKid : U64) (bounds : FreshBounds)
     (mode : Mode) (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value)
-    (created : PqxdhLiveServerConstruction.Created Unit) (initial : E) (shell : CborRecordWorldClient.Shell)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (initial : E) (shell : CborRecordWorldClient.Shell)
     (control : PqxdhRecordLiftProtocol.Control n) (safe : PqxdhRecordLiftProtocolHistory.Safe control)
     (secret : CtxPrivate n) (result : RegistrationNativeEntropyRun.Result n E Value)
     (supported : result ∈ support (RegistrationNativePlatformGatedNativeEntropy.run modes replace setup codec route env reserve serverKid bounds mode work

@@ -5,7 +5,9 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengePrefixLog
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhInitialBeaconAmbient
 variable {ι I D K X Response Shared A N C Result : Type} {extra : OracleSpec ι} {S B : Nat}
 variable (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer) (stage : Nat)
@@ -23,7 +25,7 @@ variable (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin)
   (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
 local notation "Full" => (PqxdhInitialPendingPost.Front RatchetChain M P I D K S B ×
   PqxdhInitialOriginPost.Trace Origin S B) × Backend
-local notation "postImpl" => PqxdhLaterChallengeCutChronology.postImpl mark sender route decode impl
+local notation "postImpl" => PqxdhLaterChallengeCutChronology.postImpl (completedBinding := completedBinding) mark sender route decode impl
 
 /-- Every complete original Post callback retains all prior private inputs, including failed or repeated finish attempts. -/
 theorem step_monotone (query : (PqxdhInitialGenericPost.Spec extra S B).Domain)
@@ -58,7 +60,7 @@ theorem reaches_monotone (owner : RawCtxProtocolReveals.Owner S B) (number : Std
       exact List.Subset.refl _
   | later query next current before step rest final after actual tail ih =>
       exact List.Subset.trans
-        (program_monotone source writer stage pre application initial selector aux mark sender route decode
+        (program_monotone (completedBinding := completedBinding) source writer stage pre application initial selector aux mark sender route decode
           _ before step actual) ih
 
 end BeaconcryptCore.Computational.PqxdhLaterChallengePrefixLog

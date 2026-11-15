@@ -33,11 +33,11 @@ variable (previousLocal : LocalOperations (RustT (StateT (RegistrationNativePlat
   (RegistrationNativeExperiment.State n KemSK source)) (StateT Platform ProbComp))))
 variable (coins : QueryImpl unifSpec (StateT Platform ProbComp))
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (reservePackets : Usize →StateT Platform ProbComp (core.result.Result Unit E))
 local notation "packetWriter" => RegistrationNativePlatformConcreteSource.writer reservePackets
 variable (index : Nat) (owner : RegistrationNativeBeaconFrontend.Owner source) (failure : ed.Error)
-variable (other : QueryImpl AdapterInitAuthenticationRequestMonad.Spec (StateT (RegistrationNativePlatformCutJournal.State (RegistrationNativeExperiment.State n KemSK source)) (StateT Platform ProbComp)))
+variable (other : QueryImpl AdapterPublicWrapperChildren.AuthenticationSpec (StateT (RegistrationNativePlatformCutJournal.State (RegistrationNativeExperiment.State n KemSK source)) (StateT Platform ProbComp)))
 variable (recording : QueryImpl AdapterRecordRequestMonad.Spec (StateT (RegistrationNativePlatformCutJournal.State (RegistrationNativeExperiment.State n KemSK source)) (StateT Platform ProbComp)))
 
 variable (containersView : AdapterPublicWrapperStorage.Views) (credential : RegistrationNativeMldsa.Credential source)
@@ -58,8 +58,7 @@ noncomputable abbrev withCoins {R Error : Type} (self : beaconcrypt_public_wrapp
     coins setup checks representation created packetWriter view index owner self previousLocal
   letI : CryptoOperations (RustT CutM):=RegistrationNativePlatformPublicAdapterBundleInstrumentation.crypto
     coins setup checks representation created packetWriter view index owner self previousCrypto failure
-  RegistrationNativePlatformSdkStrongBundleSteps.withCoins coins setup checks representation created reservePackets index owner failure
-    (RegistrationNativePlatformPublicAdapterBundleInstrumentation.fallback (n:=n) coins setup checks representation created owner) other recording containersView credential
+  RegistrationNativePlatformSdkStrongBundleSteps.withCoins coins setup checks representation created reservePackets index owner failure other recording containersView credential
     self view
     (RegistrationNativePlatformPublicAdapterBundleInstrumentation.getters coins setup checks representation created packetWriter view index owner self previousLocal previousCrypto failure)
     (RegistrationNativePlatformPublicAdapterBundleInstrumentation.leaves coins setup checks representation created packetWriter view index owner self previousLocal previousCrypto failure)
@@ -81,8 +80,7 @@ noncomputable abbrev fresh {R Error : Type} (self : beaconcrypt_public_wrapper.b
     coins setup checks representation created packetWriter view index owner self previousLocal
   letI : CryptoOperations (RustT CutM):=RegistrationNativePlatformPublicAdapterBundleInstrumentation.crypto
     coins setup checks representation created packetWriter view index owner self previousCrypto failure
-  RegistrationNativePlatformSdkStrongBundleSteps.fresh coins setup checks representation created reservePackets index owner failure
-    (RegistrationNativePlatformPublicAdapterBundleInstrumentation.fallback (n:=n) coins setup checks representation created owner) other recording containersView credential
+  RegistrationNativePlatformSdkStrongBundleSteps.fresh coins setup checks representation created reservePackets index owner failure other recording containersView credential
     self view
     (RegistrationNativePlatformPublicAdapterBundleInstrumentation.getters coins setup checks representation created packetWriter view index owner self previousLocal previousCrypto failure)
     (RegistrationNativePlatformPublicAdapterBundleInstrumentation.leaves coins setup checks representation created packetWriter view index owner self previousLocal previousCrypto failure)
@@ -130,8 +128,7 @@ theorem with_coins_source {R Error : Type} (self : beaconcrypt_public_wrapper.be
   have law:=RegistrationNativePlatformPublicAdapterBundleSource.with_coins_projection coins setup checks representation created view physicalLocal
     (RegistrationNativePlatformPublicAdapterUniformObserver.operations
       (RegistrationNativePlatformPublicAdapterBundleGeneration.backendUniform (n:=n) coins setup checks representation created) original)
-    failure packetWriter physicalChildren generator self objects.base.objects.rng index owner
-    (RegistrationNativePlatformPublicAdapterBundleInstrumentation.fallback (n:=n) coins setup checks representation created owner) other recording
+    failure packetWriter physicalChildren generator self objects.base.objects.rng index owner other recording
     (RegistrationNativePlatformPublicAdapterBundleInstrumentation.getters coins setup checks representation created packetWriter view index owner self previousLocal previousCrypto failure)
     (RegistrationNativePlatformPublicAdapterBundleInstrumentation.leaves coins setup checks representation created packetWriter view index owner self previousLocal previousCrypto failure)
     control scalar prekey oneTime kem stored phase publicView before previous related selected

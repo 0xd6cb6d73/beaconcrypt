@@ -59,7 +59,7 @@ set_option maxRecDepth 4096 in
 theorem handler_keeps (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (query : TypedSpec.Domain) (ordinary : Ordinary query) (before : State n KemSK mlSource)
     (result : TypedSpec.Range query × State n KemSK mlSource)
     (reached : result ∈ support

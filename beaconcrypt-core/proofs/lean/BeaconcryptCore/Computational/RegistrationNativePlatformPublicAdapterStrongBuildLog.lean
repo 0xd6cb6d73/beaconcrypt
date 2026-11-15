@@ -44,7 +44,7 @@ noncomputable def augment {R Log : Type}
 (originalContainers : ContainerOperations (RustT Base))
 (previousChildren : ChildOperations (RustT SourceM))
 (view : MaterialView mlSource KemSK) (views : Views)
-(created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+(created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
 (current : Native×Platform)
 (before : RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views created credential current)
 (token : beaconcrypt_public_wrapper.server.RegistrationOutput) (data : core.option.Option (Slice U8))

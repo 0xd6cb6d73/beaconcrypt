@@ -8,6 +8,7 @@ open RustM beaconcrypt_core PqxdhRefinement
 set_option autoImplicit false
 
 namespace BeaconcryptCore.Computational.PqxdhServerAuthBuildSource
+variable (associatedData : Std.Array Std.U8 151#usize)
 open PqxdhSecretInputKdf PqxdhJointKdfGame
 open PqxdhServerAuthBuildProgram PqxdhServerAuthBuildProgramBounds
 open PqxdhServerAuthCtxCalls (Residual)
@@ -144,18 +145,18 @@ theorem compiled_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
     (server : PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed)
     (state : State Log) (empty : state.2.selected.1.usedNonces = []) :
     (fun result => (some result.1, result.2)) <$>
-        (PqxdhServerAuthLoggedSendFactor.factored (fun entry _ _ => pure (entry, .None))
+        (PqxdhServerAuthLoggedSendFactor.factored (associatedData := associatedData) (fun entry _ _ => pure (entry, .None))
           (PqxdhServerAuthLoggedSendFactor.loggedPrim setup codec checks) setup.source
           (PqxdhServerAuthLoggedSendFactor.loggedAux setup codec checks)
           (PqxdhServerAuthCtxMaterial.factor (PqxdhServerAuthCtxMaterial.output key rest))
           pending data metadata server).run (project state) =
       Prod.map id project <$>
         (evaluate setup.source key read
-          (compiled setup.source codec checks rest pending data metadata server).run).run state := by
+          (compiled (associatedData := associatedData) setup.source codec checks rest pending data metadata server).run).run state := by
   rw [program_logged]
   have same := bounded_source setup codec checks key read
-    (program setup.source rest pending data metadata server) 1
-    (program_bound setup.source rest pending data metadata server) (by omega) state (fun _ => empty)
+    (program (associatedData := associatedData) setup.source rest pending data metadata server) 1
+    (program_bound (associatedData := associatedData) setup.source rest pending data metadata server) (by omega) state (fun _ => empty)
   rw [← evaluated_program] at same
   exact same
 

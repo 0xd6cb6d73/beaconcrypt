@@ -31,10 +31,9 @@ variable [localOps : LocalOperations (RustT m)] [crypto : CryptoOperations (Rust
 variable [children : ChildOperations (RustT m)]
 
 omit material platform primitive localOps crypto children [LawfulMonad m] [Monad m] in
-def packet (view : registration.SignedInitView) : beaconcrypt_parse.transport.initkex :=
+def packet (view : registration.InitView) : beaconcrypt_parse.transport.initkex :=
   ⟨Array.to_slice view.fields.identity_key, Array.to_slice view.fields.pre_key,
-    Array.to_slice view.fields.one_time_key, Array.to_slice view.fields.pq_key,
-    Array.to_slice view.fields.mldsa_public_key, Array.to_slice view.signature⟩
+    Array.to_slice view.fields.one_time_key, Array.to_slice view.fields.pq_key⟩
 
 def publish {R : Type} (self : beaconcrypt_public_wrapper.beacon.Beacon)
     (prekey oneTime : beaconcrypt_crypto.crypto_kx.KeyPair) (kem : beaconcrypt_crypto.crypto_kem.mlkem768.KeyPair)
@@ -59,13 +58,13 @@ def withKeys {R : Type} (self : beaconcrypt_public_wrapper.beacon.Beacon) (contr
   let kemPublic ← crypto.kemPublicBytes kem.public_key
   let oneTimePublic ← crypto.kxPublicBytes oneTime.public_key
   let identity ← crypto.edPublicBytes self.identity_key.public_key
-  let mldsa ← localOps.auth_MldsaIdentity_public_key self.authentication.identity
   let effect ← liftRust (registration.begin_beacon_init control ⟨identity, prekeyPublic, kemPublic⟩
-    ⟨oneTimePublic⟩ self.authentication.server_pin mldsa)
+    ⟨oneTimePublic⟩ self.authentication.server_pin)
   let ready ← beaconcrypt_public_request.beacon._proof_beacon_init_ready_loop effect self
   publish self prekey oneTime kem rng ready
 
 -- The complete checked source body, specialized only by its literal stored FreshWithCoins variant.
+omit platform localOps in
 theorem with_coins {R Error : Type} (rngType : rand_core.TryCryptoRng R Error)
     (self : beaconcrypt_public_wrapper.beacon.Beacon) (rng : R) (control : pqxdh.BeaconFresh)
     (prekey oneTime : beaconcrypt_crypto.crypto_kx.KeyPair) (kem : beaconcrypt_crypto.crypto_kem.mlkem768.KeyPair)
@@ -74,7 +73,6 @@ theorem with_coins {R Error : Type} (rngType : rand_core.TryCryptoRng R Error)
       withKeys (m := m) self control prekey oneTime kem rng := by
   simp only [beaconcrypt_public_request.beacon.Beacon.get_registration_bundle_with_rng, state,
     call_apply, call_result, withKeys, beaconcrypt_public_request.beacon.Beacon.identity_pk,
-    beaconcrypt_public_request.beacon.Beacon.mldsa_public_key,
     beaconcrypt_public_request.beacon._proof_beacon_init_ready, lift_ok, pure_bind]
   apply bind_congr
   intro prekeyPublic
@@ -84,8 +82,6 @@ theorem with_coins {R Error : Type} (rngType : rand_core.TryCryptoRng R Error)
   intro oneTimePublic
   apply bind_congr
   intro identity
-  apply bind_congr
-  intro mldsa
   apply bind_congr
   intro effect
   apply bind_congr
@@ -121,6 +117,7 @@ def generated {R Error : Type} (rngType : rand_core.TryCryptoRng R Error)
   | .Err _ => pure (.None, self, after)
   | .Ok oneTime => withKeys self control prekey oneTime kem after
 
+omit platform localOps in
 theorem fresh {R Error : Type} (rngType : rand_core.TryCryptoRng R Error)
     (self : beaconcrypt_public_wrapper.beacon.Beacon) (rng : R) (control : pqxdh.BeaconFresh)
     (prekey : beaconcrypt_crypto.crypto_kx.KeyPair) (kem : beaconcrypt_crypto.crypto_kem.mlkem768.KeyPair)
@@ -142,8 +139,7 @@ theorem fresh {R Error : Type} (rngType : rand_core.TryCryptoRng R Error)
         core.option.Option.Insts.CoreOpsTry_traitTryTOptionInfallible.branch,
         core.option.Option.as_ref, lift_ok, pure_bind, withKeys,
         beaconcrypt_public_request.beacon.Beacon.identity_pk,
-        beaconcrypt_public_request.beacon.Beacon.mldsa_public_key,
-        beaconcrypt_public_request.beacon._proof_beacon_init_ready, call_apply, call_result]
+            beaconcrypt_public_request.beacon._proof_beacon_init_ready, call_apply, call_result]
       apply bind_congr
       intro prekeyPublic
       apply bind_congr
@@ -152,8 +148,6 @@ theorem fresh {R Error : Type} (rngType : rand_core.TryCryptoRng R Error)
       intro oneTimePublic
       apply bind_congr
       intro identity
-      apply bind_congr
-      intro mldsa
       apply bind_congr
       intro effect
       apply bind_congr
@@ -188,6 +182,7 @@ def program {R Error : Type} (rngType : rand_core.TryCryptoRng R Error)
   | .FreshWithCoins control prekey oneTime kem => withKeys self control prekey oneTime kem rng
   | _ => pure (.None, self, rng)
 
+omit platform localOps in
 /-- All stored phases and every source primitive/serializer failure are retained in the factored actual body. -/
 theorem source {R Error : Type} (rngType : rand_core.TryCryptoRng R Error)
     (self : beaconcrypt_public_wrapper.beacon.Beacon) (rng : R) :

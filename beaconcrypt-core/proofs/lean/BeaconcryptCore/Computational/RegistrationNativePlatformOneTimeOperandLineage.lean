@@ -16,8 +16,8 @@ open BeaconcryptCore.Refinement.RegistrationSigning
 open RegistrationNativePlatformWriter (Spec cryptoLift init)
 open RegistrationNativePlatformBeaconPublication
 variable {E : Type}
-attribute [local irreducible] registration.BeaconInitHash.resume registration.BeaconFingerprint.resume
-  registration.BeaconMldsaSigning.resume registration.BeaconEd25519Signing.resume registration.begin_beacon_init
+attribute [local irreducible] registration.BeaconInitHash.resume
+  registration.BeaconEd25519Signing.resume registration.begin_beacon_init
 
 def UsesMessage (message : Pqxdh.Bytes) : (Spec E).Domain → Prop
   | .inl (.inr request) => RegistrationNativeIdentitySigningRole.oneTime (TranscriptAuthParts.absSlice request.message) = true →
@@ -25,12 +25,12 @@ def UsesMessage (message : Pqxdh.Bytes) : (Spec E).Domain → Prop
   | _ => True
 
 private theorem begin_started (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs)
-    (coins : pqxdh.BeaconCoins) (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize)
+    (coins : pqxdh.BeaconCoins) (pin : session.ServerAuthenticationPin)
     (started : pqxdh.BeaconStart) (built : pqxdh.beacon_start control inputs coins = .ok started)
     (pending : registration.BeaconEd25519Signing)
-    (begun : registration.begin_beacon_init control inputs coins pin mldsa = .ok (.Ed25519SigningRequested pending)) :
+    (begun : registration.begin_beacon_init control inputs coins pin = .ok (.Ed25519SigningRequested pending)) :
     pending.state.started = started := by
-  obtain ⟨actual, actualRun, exactBegin⟩ := BeaconcryptCore.Refinement.RegistrationSigningContinuations.begin_beacon_init_exact control inputs coins pin mldsa
+  obtain ⟨actual, actualRun, exactBegin⟩ := BeaconcryptCore.Refinement.RegistrationSigningContinuations.begin_beacon_init_exact control inputs coins pin
   have same : actual = started := RustM.ok.inj (actualRun.symm.trans built)
   subst actual
   rw [exactBegin] at begun
@@ -94,20 +94,6 @@ private theorem ready_allowed (message : Pqxdh.Bytes) (pending : registration.Be
   apply continue_allowed
   intro view
   exact allQueriesSatisfy_bind (writer_allowed message _) (fun _ => trivial)
-private theorem signing_allowed (message : Pqxdh.Bytes)
-    (payload : MldsaTranscriptAuth.Payload) (digest : CtxRomAuth.CtxDigest)
-    (pending : registration.BeaconMldsaSigning) :
-    (fromSigning (cryptoLift (E := E)) (init E) payload digest pending).AllQueriesSatisfy (UsesMessage (E := E) message) := by
-  unfold fromSigning
-  apply continue_allowed
-  intro request
-  simp only [cryptoLift, allQueriesSatisfy_query_bind_iff, UsesMessage]
-  refine ⟨trivial, fun signature => ?_⟩
-  apply continue_allowed
-  intro effect
-  cases effect with
-  | Ready selected => exact ready_allowed message selected
-  | _ => trivial
 private theorem hash_allowed (message : Pqxdh.Bytes) (pending : registration.BeaconInitHash) :
     (fromHash (cryptoLift (E := E)) (init E) pending).AllQueriesSatisfy (UsesMessage (E := E) message) := by
   unfold fromHash
@@ -118,21 +104,8 @@ private theorem hash_allowed (message : Pqxdh.Bytes) (pending : registration.Bea
   apply continue_allowed
   intro effect
   cases effect with
-  | MldsaSigningRequested selected => exact signing_allowed message _ _ selected
+  | Ready selected => exact ready_allowed message selected
   | _ => trivial
-private theorem fingerprint_allowed (message : Pqxdh.Bytes) (pending : registration.BeaconFingerprint) :
-    (fromFingerprint (cryptoLift (E := E)) (init E) pending).AllQueriesSatisfy (UsesMessage (E := E) message) := by
-  unfold fromFingerprint
-  apply continue_allowed
-  intro request
-  simp only [cryptoLift, allQueriesSatisfy_query_bind_iff, UsesMessage]
-  refine ⟨trivial, fun digest => ?_⟩
-  apply continue_allowed
-  intro effect
-  cases effect with
-  | HashRequested selected => exact hash_allowed message selected
-  | _ => trivial
-
 /-- Every actual Ed continuation uses the original one-time message on precisely its one-time signing role, under arbitrary returned attachments. -/
 theorem ed_allowed (message : Pqxdh.Bytes) (pending : registration.BeaconEd25519Signing)
     (tagged : RegistrationNativeIdentitySigningRole.Tagged pending.state.started)
@@ -152,24 +125,24 @@ theorem ed_allowed (message : Pqxdh.Bytes) (pending : registration.BeaconEd25519
         rw [resume_started pending next reply actual]
         exact lineage
       exact ed_allowed message next nextTagged nextLineage
-    | FingerprintRequested next => exact fingerprint_allowed message next
+    | HashRequested next => exact hash_allowed message next
     | _ => trivial
 termination_by RegistrationBeaconInitExecutor.edRank pending
 decreasing_by exact RegistrationBeaconInitExecutor.ed_rank pending reply next actual
 
 /-- The literal source begin derives that same message lineage from the actual tuple construction, retaining rejected pins and every later failed writer. -/
 theorem begin_allowed (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs)
-    (coins : pqxdh.BeaconCoins) (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize)
+    (coins : pqxdh.BeaconCoins) (pin : session.ServerAuthenticationPin)
     (started : pqxdh.BeaconStart) (built : pqxdh.beacon_start control inputs coins = .ok started)
     (tagged : RegistrationNativeIdentitySigningRole.Tagged started) :
-    (RegistrationNativePlatformWriter.begin E control inputs coins pin mldsa).AllQueriesSatisfy
+    (RegistrationNativePlatformWriter.begin E control inputs coins pin).AllQueriesSatisfy
       (UsesMessage (E := E) (PqxdhRefinement.absBytes started.message.one_time_key)) := by
   unfold RegistrationNativePlatformWriter.begin RegistrationNativePlatformBeaconPublication.begin
-  cases begun : registration.begin_beacon_init control inputs coins pin mldsa with
+  cases begun : registration.begin_beacon_init control inputs coins pin with
   | fail error | div => trivial
   | ok effect => cases effect with
     | Ed25519SigningRequested pending =>
-      have retained := begin_started control inputs coins pin mldsa started built pending begun
+      have retained := begin_started control inputs coins pin started built pending begun
       exact ed_allowed _ pending (retained ▸ tagged) (by rw [retained])
     | _ => trivial
 end BeaconcryptCore.Computational.RegistrationNativePlatformOneTimeOperandLineage

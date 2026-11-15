@@ -137,8 +137,12 @@ theorem growsN_build (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
   refine growsN_bind (a := 0) (b := 0) (growsN_local _) fun state => ?_
   split
   · exact growsN_pure none
-  · exact growsN_bind (a := 0) (b := 0) (growsN_coins _) fun _ =>
-      growsN_bind (a := 0) (b := 0) (growsN_local _) fun _ => growsN_pure _
+  · split
+    · exact growsN_bind (a := 0) (b := 0) (growsN_local _) fun _ => growsN_pure _
+    · exact growsN_bind (a := 0) (b := 0) (growsN_hash _) fun _ =>
+        growsN_bind (a := 0) (b := 0) (growsN_local _) fun _ =>
+          growsN_bind (a := 0) (b := 0) (growsN_coins _) fun _ =>
+            growsN_bind (a := 0) (b := 0) (growsN_local _) fun _ => growsN_pure _
 
 theorem growsN_loggedRoot (hmac : PqxdhSecretInputKdf.HmacSha512) (index : Nat)
     (input : PqxdhServerRootPreparation.Inputs Reader PqxdhJointGapDh.ScalarBytes PqxdhBeaconPhase2Preparation.Word32)
@@ -327,9 +331,10 @@ theorem tail_root (decode : RawCtxReceive.FrameDecoder) (prepared : PqxdhBeaconP
   | some root => exact afterRoot_rootless decode prepared root
 
 /-- The native Beacon owner makes at most one root request. -/
-theorem owner_root {I D K X : Type} (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
-    (state : PqxdhBeaconPhase2Preparation.State I D K) :
-    (PqxdhBeaconPhase2Publication.owner (X := X) (Response := Response) decode raw state).IsQueryBoundP
+theorem owner_root {I D K X : Type} (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+    (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes) (state : PqxdhBeaconPhase2Preparation.State I D K) :
+    (PqxdhBeaconPhase2Publication.owner (completedBinding := completedBinding) (X := X) (Response := Response) decode
+      raw state).IsQueryBoundP
       (fun query => rootFull query = true) 1 := by
   unfold PqxdhBeaconPhase2Publication.owner
   split
@@ -355,7 +360,7 @@ theorem simulate_one_root {I D K X : Type} (input : beaconcrypt_core.pqxdh.RootK
     PqxdhBeaconPhase2Publication.nativeTailLift, simulateQ_spec_query]
   exact query_one _ _
 
-theorem simulate_initial {I D K X : Type} (request : beaconcrypt_core.ratchet.SymmetricRatchetKdfRequest) :
+theorem simulate_initial {I D K X : Type} (request : beaconcrypt_core.ratchet.InitialRatchetKdfRequest) :
     (PqxdhBeaconPhase2Publication.nativeAdapter (I := I) (D := D) (K := K) (X := X) (Response := Response)
       (.inr (.inr (.initial request)))).IsQueryBoundP (fun query => rootNative query = true) 0 := by
   simp only [PqxdhBeaconPhase2Publication.nativeAdapter, PqxdhBeaconPhase2Publication.nativeTailAdapter,
@@ -370,11 +375,12 @@ theorem simulate_application {I D K X : Type} (response : Response) :
   exact query_free _ _ (by simp [rootNative])
 
 /-- The expanded native Beacon owner makes at most one root request. -/
-theorem nativeOwner_root {I D K X : Type} (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
-    (state : PqxdhBeaconPhase2Preparation.State I D K) :
-    (PqxdhBeaconPhase2Publication.nativeOwner (X := X) (Response := Response) decode raw state).IsQueryBoundP
+theorem nativeOwner_root {I D K X : Type} (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+    (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes) (state : PqxdhBeaconPhase2Preparation.State I D K) :
+    (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) (X := X) (Response := Response)
+      decode raw state).IsQueryBoundP
       (fun query => rootNative query = true) 1 := by
-  refine IsQueryBoundP.simulateQ_of_step (owner_root decode raw state) (fun query root => ?_) (fun query root => ?_)
+  refine IsQueryBoundP.simulateQ_of_step (owner_root completedBinding decode raw state) (fun query root => ?_) (fun query root => ?_)
   · rcases query with query | (query | (input | request | response))
     · simp [rootFull] at root
     · simp [rootFull] at root
@@ -394,12 +400,14 @@ theorem nativeOwner_root {I D K X : Type} (decode : RawCtxReceive.FrameDecoder) 
     · exact simulate_application response
 
 /-- The compiled native Beacon owner makes at most one root request. -/
-theorem compiled_root (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (raw : Pqxdh.Bytes)
+theorem compiled_root (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding) (raw : Pqxdh.Bytes)
     (owner : PqxdhRegistrationJointBundle.Owner) :
     (simulateQ (PqxdhRegistrationJointFinishCompiler.compiler setup codec)
-      (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw owner)).IsQueryBoundP
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw
+        owner)).IsQueryBoundP
         (fun query => rootFinish (KemSK := KemSK) (Response := Response) query = true) 1 := by
-  refine IsQueryBoundP.simulateQ_of_step (nativeOwner_root codec.frameRead raw owner) (fun query root => ?_)
+  refine IsQueryBoundP.simulateQ_of_step (nativeOwner_root completedBinding codec.frameRead raw owner) (fun query root => ?_)
     (fun query root => ?_)
   · rcases query with query | query
     · simp [rootNative] at root
@@ -421,26 +429,36 @@ theorem pool_free {α : Type} (work : OracleComp (PqxdhLiveKemBirth.Spec KemSK) 
 
 /-- A source Beacon finish makes at most one native table request: its root request. -/
 theorem finish_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (address : Nat)
-    (raw : Pqxdh.Bytes) (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) :
+    (raw : Pqxdh.Bytes) (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry ×
+      (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) :
     ((PqxdhRegistrationJointServiceSchedule.finish setup codec address raw).run owners).IsQueryBoundP
       (NativeKind (KemSK := KemSK) (Response := Response)) 1 := by
   simp only [PqxdhRegistrationJointServiceSchedule.finish, StateT.run]
   split
   · trivial
   · rw [isQueryBoundP_map_iff]
-    refine IsQueryBoundP.simulateQ_of_step (compiled_root setup codec raw _) (fun query root => ?_)
-      (fun query root => ?_)
-    · exact query_one _ _
-    · refine query_free _ _ ?_
-      rcases query with query | (query | query)
-      · simp [NativeKind]
-      · simp [NativeKind]
-      · cases query <;> simp_all [rootFinish, NativeKind]
+    unfold PqxdhRegistrationJointServiceSchedule.finishOwner
+    split
+    · split
+      · rw [isQueryBoundP_query_bind_iff]
+        refine ⟨Or.inl (by simp [NativeKind]), fun digest => ?_⟩
+        simp only [NativeKind, ↓reduceIte]
+        refine IsQueryBoundP.simulateQ_of_step (compiled_root setup codec _ raw _) (fun query root => ?_)
+          (fun query root => ?_)
+        · exact query_one _ _
+        · refine query_free _ _ ?_
+          rcases query with query | (query | query)
+          · simp [NativeKind]
+          · simp [NativeKind]
+          · cases query <;> simp_all [rootFinish, NativeKind]
+      · trivial
+    · trivial
 
 /-- Every source request makes at most one native table request, and only if it is a table request of the source. -/
 theorem client_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (query : (PqxdhRegistrationJointRevealSchedule.Spec KemSK).Domain)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) :
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry ×
+      (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) :
     ((PqxdhRegistrationJointRevealSchedule.client setup codec query).run owners).IsQueryBoundP
       (NativeKind (KemSK := KemSK) (Response := Response)) (if TableKind query then 1 else 0) := by
   rcases query with (coin | request) | read
@@ -527,7 +545,8 @@ variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response X : Type}
 theorem commands_cut (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (work : OracleComp (SourceSpec KemSK) X) (n : ℕ)
     (bounded : work.IsQueryBoundP (TableKind (KemSK := KemSK)) n) (index : Nat)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) (state : NativeState KemSK) :
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry ×
+      (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK) :
     ∀ reached ∈ support (PqxdhRegistrationJointKemEncapsulation.commands setup codec checks identityIndex publicIdentity
         (PqxdhRegistrationJointAcceptCut.scan work index) owners state), ∀ raw next,
       reached.1.1 = .pending raw next → ∃ c : ℕ, keyCount reached.2 ≤ keyCount state + c ∧ c + 1 ≤ n ∧
@@ -542,7 +561,8 @@ theorem commands_cut (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
         (PqxdhRegistrationJointAcceptCut.scan work index)).run (owners, state)) := by
     rw [composed, support_map]
     exact ⟨reached, member, rfl⟩
-  have step : ∀ query (current : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × NativeState KemSK),
+  have step : ∀ query (current : (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry ×
+      (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) × NativeState KemSK),
       ∀ result ∈ support ((compose (PqxdhRegistrationJointRevealSchedule.client setup codec)
         (PqxdhRegistrationJointKemEncapsulation.impl setup codec checks identityIndex publicIdentity) query).run current),
       keyCount result.2.2 ≤ keyCount current.2 + ((if TableKind query then 1 else 0 : ℕ) : ℕ∞) := by
@@ -598,7 +618,8 @@ def FitsCut (n : ℕ) : OpaqueCut Reader KemSK X R → Prop
 theorem opaqueScan_fits (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × PqxdhRegistrationJointAcceptCutTag.Tag → R)
     (work : OracleComp (SourceSpec KemSK) X) (n : ℕ) (bounded : work.IsQueryBoundP (TableKind (KemSK := KemSK)) n)
-    (index : Nat) (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) (state : NativeState KemSK)
+    (index : Nat) (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry ×
+      (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK)
     (empty : keyCount state = 0) :
     ∀ cut ∈ support (opaqueScan (Reader := Reader) setup codec checks identityIndex publicIdentity observe work index
       owners state), FitsCut n cut := by
@@ -665,7 +686,8 @@ theorem sourcePreOpaque_fits (setup : Setup baseSpec KemSK) (codec : Codec Reade
     · simp only [Fits]
     · simp only [Fits]
       have scanReached := support_option _ _ _ cut result.2 (by rw [← cutCase]; exact resultReached)
-      exact opaqueScan_fits setup codec checks _ _ _ work n bounded index [] _ (initial_keys created) cut scanReached
+      exact opaqueScan_fits setup codec checks _ _ _ work n bounded index ([], fun _ => none) _ (initial_keys created) cut
+        scanReached
 
 /-- Every outcome of G1's prefix for the KEM-ideal branch has a fitting active context, and its table cache is the cache of that context. -/
 theorem sharedStart_fits (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)

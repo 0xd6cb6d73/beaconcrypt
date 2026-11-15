@@ -79,7 +79,8 @@ theorem good_records (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
   all_goals intro good
   all_goals exact ⟨⟨good.nativeGood.keyId, good.nativeGood.installed, good.nativeGood.serverVisible,
     good.nativeGood.count, good.nativeGood.copied, good.nativeGood.owners,
-    good.nativeGood.pending, good.nativeGood.accepts⟩, good.lastId⟩
+    good.nativeGood.pending, good.nativeGood.accepts, good.nativeGood.peers, good.nativeGood.pendingInit⟩,
+    good.lastId⟩
 
 theorem good_selected (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (decode : RawCtxReceive.FrameDecoder) (write : RawCtxMixedShared.Writer) (query : Spec.Domain)

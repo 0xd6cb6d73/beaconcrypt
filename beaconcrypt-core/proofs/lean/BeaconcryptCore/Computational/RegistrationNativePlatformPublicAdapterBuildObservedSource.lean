@@ -75,7 +75,7 @@ noncomputable def encoder (writer :QueryImpl (AdapterRegistrationWriterRequestMo
 omit material platform ed primitive [PublicWrapperPlatform.Allocator] [PublicWrapperPlatform.LocalOperations] [PublicWrapperPlatform.ContainerOperations] in
 theorem initial_callback (coins :QueryImpl unifSpec Base)
     (setup :PqxdhServerAuthExperiment.Setup base KemSK) (codec :PqxdhServerAuthExperiment.Codec Reader Response)
-    (request :ratchet.SymmetricRatchetKdfRequest) :
+    (request :ratchet.InitialRatchetKdfRequest) :
     RegistrationNativePlatformPublicAdapterSealBackend.records (n:=n) coins setup codec (.initialKdf request)=
       (fun bytes=>core.option.Option.Some (⟨bytes⟩ :pqxdh.concrete.InitialRatchetKdfResponse)) <$>
         RegistrationNativePlatformPublicAdapterBuildBackend.initial (P:=P) setup request :=by

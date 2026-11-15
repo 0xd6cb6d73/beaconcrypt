@@ -5,7 +5,7 @@ import BeaconcryptCore.Refinement.RatchetReceiveIdeal
 import BeaconcryptCore.Refinement.RatchetRoleReachability
 import BeaconcryptCore.Refinement.RepresentationBridge
 
-/-! Composition of extracted registration preparation, role initialization, and first-record processing. The drivers in this module sequence the public extracted phases; they do not assert that the surrounding Rust adapter implements this sequencing. -/
+/-! Historical abstract composition of registration metadata preparation, role initialization, and first-record processing. The historical driver explicitly supplies the older identity-prefix model AD; current registration version 3 instead uses the source-owned SessionTranscript/RegistrationInitial/SessionBinding hash continuation. These drivers do not assert that the current Rust adapter implements their sequencing or AD choice. -/
 
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
@@ -22,8 +22,8 @@ namespace BeaconcryptCore.Refinement.ProtocolComposition
 
 /-- The initial primitive returns the 64-byte HKDF result for the exact root and label requested by the extracted core. -/
 def InitialKdfLaw (c : Pqxdh.Crypto) (execute : InitialKdfInterpreter) : Prop :=
-  ∀ root, absBytes (execute { input := root, info := ratchet.SYM_RATCHET_INFO }).bytes =
-    c.hkdf (absBytes root) Pqxdh.INFO_R 64
+  ∀ root, absBytes (execute { input := root, info := ratchet.INITIAL_RATCHET_INFO }).bytes =
+    c.hkdf (absBytes root) Pqxdh.INFO_INIT 64
 
 /-- Root derivation interprets the exact validated transcript assembled by the extracted PQXDH core. -/
 def RootKdfLaw (c : Pqxdh.Crypto)
@@ -44,8 +44,8 @@ theorem initializeBeacon_refines {AD PT CT : Type}
         ⟨kernel.refined.send_chain, 0⟩ ⟨kernel.refined.receive_chain, 0, []⟩ kernel := by
   obtain ⟨pending, kernel, hstart, hresume, _, _, hsend, hreceive, hkernel⟩ :=
     beaconStartResume_refines c cr root (absBytes root)
-      (execute { input := root, info := ratchet.SYM_RATCHET_INFO }) rfl
-      (by simpa only [InitialResponseRefines, beaconPending, absBytes_ratchetSymmetricInfo] using hlaw root)
+      (execute { input := root, info := ratchet.INITIAL_RATCHET_INFO }) rfl
+      (by simpa only [InitialResponseRefines, beaconPending, absBytes_ratchetInitialInfo] using hlaw root)
   have hpending : pending = beaconPending root :=
     RustM.ok.inj (hstart.symm.trans (pqxdh.concrete.start_beacon_ratchet_kdf_exact root))
   exact ⟨kernel, by simpa only [initializeBeacon_eq, hpending] using hresume, hsend, hreceive, hkernel⟩
@@ -64,14 +64,14 @@ theorem initializeServer_refines {AD PT CT : Type}
         ⟨kernel.refined.send_chain, 0⟩ ⟨kernel.refined.receive_chain, 0, []⟩ kernel := by
   obtain ⟨pending, kernel, hstart, hresume, _, _, hsend, hreceive, hkernel⟩ :=
     serverStartResume_refines c cr root (absBytes root)
-      (execute { input := root, info := ratchet.SYM_RATCHET_INFO }) rfl
-      (by simpa only [InitialResponseRefines, serverPending, absBytes_ratchetSymmetricInfo] using hlaw root)
+      (execute { input := root, info := ratchet.INITIAL_RATCHET_INFO }) rfl
+      (by simpa only [InitialResponseRefines, serverPending, absBytes_ratchetInitialInfo] using hlaw root)
   have hpending : pending = serverPending root :=
     RustM.ok.inj (hstart.symm.trans (pqxdh.concrete.start_server_ratchet_kdf_exact root))
   exact ⟨kernel, by simpa only [initializeServer_eq, hpending] using hresume, hsend, hreceive, hkernel⟩
 
-/-- Successful preparation constructs the exact transcript, association bytes, binding, and identifier consumed by later initialization and authentication. -/
-theorem prepareBeacon_refines (state : pqxdh.BeaconInitSent) (inputs : pqxdh.BeaconFinishInputs)
+/-- Successful pure preparation preserves root-input and identity metadata. Final record AD is a separate current source phase. -/
+theorem prepareBeacon_metadata_refines (state : pqxdh.BeaconInitSent) (inputs : pqxdh.BeaconFinishInputs)
     (hidentity : absBytes state.expected_server_binding.identity_public_key =
       absBytes inputs.response_server_identity)
     (hnonzero : Pqxdh.dhNonZero (absDHs inputs.shared_secrets)) :
@@ -79,16 +79,17 @@ theorem prepareBeacon_refines (state : pqxdh.BeaconInitSent) (inputs : pqxdh.Bea
       pqxdh.beacon_prepare_finish state inputs = ok (core.result.Result.Ok candidate) ∧
       candidate.server_binding = state.expected_server_binding ∧
       candidate.assigned_key_id = inputs.assigned_key_id ∧
-      absBytes candidate.associated_data = Pqxdh.assocData
-        (absBytes state.expected_server_binding.identity_public_key) (absBytes state.beacon_identity_public_key) ∧
       absBytes candidate.root_key_input.bytes = Pqxdh.ikmOf (absDHs inputs.shared_secrets)
         (absBytes inputs.shared_secrets.kem_shared_secret) := by
   obtain ⟨root, hroot, hrootBytes⟩ := (build_root_key_input_abs inputs.shared_secrets).1 hnonzero
-  obtain ⟨ad, had, hadBytes⟩ := build_associated_data_abs
-    state.expected_server_binding.identity_public_key state.beacon_identity_public_key
-  exact ⟨⟨state.expected_server_binding, inputs.assigned_key_id, root, ad⟩,
-    by simp [pqxdh.beacon_prepare_finish, array_eq_abs, hidentity, hroot, had],
-    rfl, rfl, hadBytes, hrootBytes⟩
+  exact ⟨⟨state.expected_server_binding, inputs.assigned_key_id, root⟩,
+    by simp [pqxdh.beacon_prepare_finish, array_eq_abs, hidentity, hroot],
+    rfl, rfl, hrootBytes⟩
+
+/-- Explicit context of the historical abstract driver, never a current candidate's record AD. -/
+def historicalBeaconAD (state : pqxdh.BeaconInitSent) : Pqxdh.Bytes :=
+  Pqxdh.assocData (absBytes state.expected_server_binding.identity_public_key)
+    (absBytes state.beacon_identity_public_key)
 
 /-- Exact conversion back to an extracted byte, used only by the driver to pass authenticated plaintext bytes to the extracted binding check. -/
 def concreteByte (byte : UInt8) : Std.U8 := ⟨byte.toBitVec⟩
@@ -152,7 +153,7 @@ def completeBeacon
       else
         let initialized ← initializeBeaconCandidate candidate (derive candidate.root_key_input) initial
         let (next, plaintext) ← receiveNext execute initialized target ()
-          (receiveIdealOpenReply cr ⟨absBytes candidate.associated_data, target.val, sender.val⟩ ciphertext)
+          (receiveIdealOpenReply cr ⟨historicalBeaconAD state, target.val, sender.val⟩ ciphertext)
         match plaintext with
         | .None => ok (.error .badRecord)
         | .Some plaintext =>
@@ -253,8 +254,8 @@ theorem completeBeacon_refines (c : Pqxdh.Crypto)
   · have hid : response.identityKey = absBytes state.expected_server_binding.identity_public_key :=
       hboundary.responseIdentity.symm.trans hidentity.symm
     by_cases hnonzero : Pqxdh.dhNonZero (absDHs inputs.shared_secrets)
-    · obtain ⟨candidate, hprepare, hbinding, hkid, had, htranscript⟩ :=
-        prepareBeacon_refines state inputs hidentity hnonzero
+    · obtain ⟨candidate, hprepare, hbinding, hkid, htranscript⟩ :=
+        prepareBeacon_metadata_refines state inputs hidentity hnonzero
       by_cases hsender : sender = candidate.server_binding.identity_key_id
       · have hsenderModel : response.appFrame.keyId = state.expected_server_binding.identity_key_id.val := by
           rw [← hboundary.senderId, hsender, hbinding]
@@ -271,17 +272,17 @@ theorem completeBeacon_refines (c : Pqxdh.Crypto)
           obtain ⟨initialized, next, send, receive, hinit, hrecv, hpost, hsend, hreceive⟩ :=
             initialize_receive_refines c initial execute hinitial hstep (derive candidate.root_key_input)
               target (Nat.pos_of_ne_zero hzero)
-              ⟨absBytes candidate.associated_data, target.val, sender.val⟩ response.appFrame.cipherText
-          have hadModel : absBytes candidate.associated_data =
+              ⟨historicalBeaconAD state, target.val, sender.val⟩ response.appFrame.cipherText
+          have hadModel : historicalBeaconAD state =
               Pqxdh.assocData (absBytes state.expected_server_binding.identity_public_key) (c.edPub ikSk) := by
-            rw [had, hboundary.beaconIdentity]
+            rw [historicalBeaconAD, hboundary.beaconIdentity]
           have hmodel : Pqxdh.beaconFinish c
                 (.initSent (absBinding state.expected_server_binding) ikSk preSk otSk kemSk) response =
               idealFinishRecord (absBinding state.expected_server_binding) ikSk response.keyId target.val
-                (absBytes candidate.associated_data) (mapSend send)
+                (historicalBeaconAD state) (mapSend send)
                 (Ratchet.recvStep (Pqxdh.ratchetCrypto c)
                   ⟨(Pqxdh.rootChains c (absBytes (derive candidate.root_key_input))).1, 0, []⟩
-                  ⟨absBytes candidate.associated_data, target.val, sender.val⟩
+                  ⟨historicalBeaconAD state, target.val, sender.val⟩
                   ⟨target.val - 1, response.appFrame.cipherText⟩) := by
             simp only [Pqxdh.beaconFinish, hboundary.decapsulation, absBinding,
               ite_eq_right (not_ne_iff.mpr hid), hboundary.conversion,
@@ -291,7 +292,7 @@ theorem completeBeacon_refines (c : Pqxdh.Crypto)
             rfl
           cases hopened : Ratchet.recvStep (Pqxdh.ratchetCrypto c)
               ⟨(Pqxdh.rootChains c (absBytes (derive candidate.root_key_input))).1, 0, []⟩
-              ⟨absBytes candidate.associated_data, target.val, sender.val⟩
+              ⟨historicalBeaconAD state, target.val, sender.val⟩
               ⟨target.val - 1, response.appFrame.cipherText⟩ with
           | mk result received =>
             cases result with

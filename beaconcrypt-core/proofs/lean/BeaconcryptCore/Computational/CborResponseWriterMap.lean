@@ -7,6 +7,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.CborResponseWriterMap
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhServerRegistrationPublication
 variable {Metadata PeerMetadata Consumed PrimitiveState : Type}
 
@@ -39,10 +40,10 @@ theorem after_map (encode : Pqxdh.Bytes → Pqxdh.Bytes)
     (metadata : PeerMetadata) (state : State Metadata PeerMetadata Consumed)
     (primitive : PrimitiveState) :
     (simulateQ (writer encode implementation)
-      (afterInitialization candidate authenticated kernel metadata state)).run primitive =
+      (PqxdhServerRegistrationPublication.afterInitialization (associatedData := associatedData) candidate authenticated kernel metadata state)).run primitive =
       (fun result => (outcome encode result.1, result.2)) <$>
         (simulateQ implementation
-          (afterInitialization candidate authenticated kernel metadata state)).run primitive := by
+          (PqxdhServerRegistrationPublication.afterInitialization (associatedData := associatedData) candidate authenticated kernel metadata state)).run primitive := by
   simp only [afterInitialization, simulateQ_bind, StateT.run_bind, send_unchanged,
     map_bind]
   apply bind_congr
@@ -67,9 +68,9 @@ theorem candidate_map (encode : Pqxdh.Bytes → Pqxdh.Bytes)
     (root : PqxdhSecretInputKdf.RootOutput) (data : Option Pqxdh.Bytes)
     (metadata : PeerMetadata) (state : State Metadata PeerMetadata Consumed)
     (primitive : PrimitiveState) :
-    (simulateQ (writer encode implementation) (candidateTail source candidate root data metadata state)).run primitive =
+    (simulateQ (writer encode implementation) (PqxdhServerRegistrationPublication.candidateTail (associatedData := associatedData) source candidate root data metadata state)).run primitive =
       (fun result => (outcome encode <$> result.1, result.2)) <$>
-        (simulateQ implementation (candidateTail source candidate root data metadata state)).run primitive := by
+        (simulateQ implementation (PqxdhServerRegistrationPublication.candidateTail (associatedData := associatedData) source candidate root data metadata state)).run primitive := by
   simp only [candidateTail, simulateQ_bind, simulateQ_spec_query, writer, StateT.run_bind,
     map_bind]
   apply bind_congr
@@ -108,9 +109,9 @@ theorem build_map (encode : Pqxdh.Bytes → Pqxdh.Bytes)
     (root : PqxdhSecretInputKdf.RootOutput) (data : Option Pqxdh.Bytes)
     (metadata : PeerMetadata) (state : State Metadata PeerMetadata Consumed)
     (primitive : PrimitiveState) :
-    (simulateQ (writer encode implementation) (build source pending root data metadata state)).run primitive =
+    (simulateQ (writer encode implementation) (PqxdhServerRegistrationPublication.build (associatedData := associatedData) source pending root data metadata state)).run primitive =
       (fun result => (outcome encode <$> result.1, result.2)) <$>
-        (simulateQ implementation (build source pending root data metadata state)).run primitive := by
+        (simulateQ implementation (PqxdhServerRegistrationPublication.build (associatedData := associatedData) source pending root data metadata state)).run primitive := by
   unfold build
   cases first : pqxdh.server_next_key_id state.control <;>
     simp only [continueRust, simulateQ_pure, StateT.run_pure, map_pure]
@@ -125,7 +126,7 @@ theorem build_map (encode : Pqxdh.Bytes → Pqxdh.Bytes)
       case ok preparedResult =>
         cases preparedResult <;>
           simp only [simulateQ_pure, StateT.run_pure, map_pure] <;> try rfl
-        exact candidate_map encode implementation source _ root data metadata state primitive
+        exact candidate_map (associatedData := associatedData) encode implementation source _ root data metadata state primitive
 
 end BeaconcryptCore.Computational.CborResponseWriterMap
 

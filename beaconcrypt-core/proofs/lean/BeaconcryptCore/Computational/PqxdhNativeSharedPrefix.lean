@@ -2,6 +2,7 @@ import BeaconcryptCore.Computational.RawCtxSharedPrefixScan
 import BeaconcryptCore.Computational.PqxdhInitialNativeInitializer
 
 /-!
+This generic post-hash source suffix is parameterized by explicit public AD151 and a completed binding. Its state and cache equations preserve those supplied contexts; the current registration hash phase and its admission receipts are established by the actual Registration modules, rather than by this suffix alone.
 The literal audited native prefix executes through the shared hash interface. All source-local preparation, selector, application and allocation callbacks carry their full non-ROM state. The initializer is its original retained root-cache computation. The hash cache is exclusively executed by the forwarded native record/public backend; no callback is supplied an independently writable hash cache.
 -/
 open CoreModels Aeneas
@@ -10,6 +11,8 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 open OracleComp OracleSpec
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhNativeSharedPrefix
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+variable (associatedData : Std.Array Std.U8 151#usize)
 open CtxRomAuth AdaptiveCtxSharedHash PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhInitialBeaconAmbient
 variable {ι I D K X Response Shared A N C : Type} {extra : OracleSpec ι} {S B : Nat}
 
@@ -214,15 +217,15 @@ noncomputable def carried (depth : Nat) (state : Local A N C) :=
   RawCtxSharedPrefixScan.scan PqxdhInitialForwardPost.selected (selected depth)
     (fun query state chosen => native_selection depth query (attach state ∅) chosen)
     (compiler source writer stage pre application initial selector aux)
-    (PqxdhInitialNativeCarried.code source mark sender route decode execution)
-    (PqxdhInitialOriginForwardBuilder.program_covered source mark execution.origin sender route decode
+    (PqxdhInitialNativeCarried.code (associatedData := associatedData) (completedBinding := completedBinding) source mark sender route decode execution)
+    (PqxdhInitialOriginForwardBuilder.program_covered (associatedData := associatedData) (completedBinding := completedBinding) source mark execution.origin sender route decode
       execution.initial execution.index execution.metadata execution.ready execution.outside execution.before execution.trace) state
 
 /-- The complete literal source first-builder and adaptive post prefix execute through the shared ROM, retaining the actual saved descriptor, all private state, logs, caches, candidates and source order. -/
 theorem carried_source (depth : Nat) (state : Local A N C) (cache : CtxRO.QueryCache) :
     RawCtxSharedPrefixScan.restore attach <$>
-      (simulateQ hashImpl (carried source writer stage pre application initial selector aux mark sender route decode execution depth state)).run cache =
-      PqxdhInitialNativeAuditCarried.carried source writer (fun request => localLift (pre request))
+      (simulateQ hashImpl (carried (associatedData := associatedData) (completedBinding := completedBinding) source writer stage pre application initial selector aux mark sender route decode execution depth state)).run cache =
+      PqxdhInitialNativeAuditCarried.carried (associatedData := associatedData) (completedBinding := completedBinding) source writer (fun request => localLift (pre request))
         (fun reply => localLift (application reply)) (fun secrets => localLift (initial secrets))
         (fun request => localLift (selector request)) (fun request => localLift (aux request))
         mark sender route decode execution depth stage (attach state cache) := by

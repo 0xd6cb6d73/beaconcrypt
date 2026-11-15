@@ -35,7 +35,8 @@ noncomputable def handler (coins :QueryImpl unifSpec Base) (setup :PqxdhServerAu
     (writer :QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) Base)
     (view :AdapterPublicWrapperState.MaterialView mlSource KemSK)
     (original :ContainerOperations (RustT Base)) :QueryImpl RegistrationNativePlatformPublicAdapterBuildProgram.Spec M
-  | .inl self=>RegistrationNativePlatformPublicAdapterBuildPrefixPrimitives.pin coins sign view self
+  | .inl (.inl self)=>RegistrationNativePlatformPublicAdapterBuildPrefixPrimitives.pin coins sign view self
+  | .inl (.inr request)=>RegistrationNativePlatformPublicAdapterBuildPrefixPrimitives.hash coins sign request
   | .inr (.inl (known,identifier))=>StateT.lift
       (original.mapContains core.U64.Insts.CoreCmpEq core.U64.Insts.CoreHashHash
         beaconcrypt_public_request.collections.KeyedHasher.Insts.CoreHashBuildHasherSipHasher13
@@ -140,11 +141,14 @@ theorem query_source (coins :QueryImpl unifSpec Base) (setup :PqxdhServerAuthExp
     (AdapterPublicServerCompletionNative.outgoing coins sign) previousChildren coins setup codec erased
     (AdapterPublicServerCompletionNative.writer writer)
   cases query with
-  | inl self=>
-    exact RegistrationNativePlatformPublicAdapterBuildPrefixPrimitives.pin_source coins sign setup codec view originalLocal previousCrypto
-      (AdapterPublicServerRecordNative.children
-        (fun {A} (work :StateT Local Base A)=>AdapterPublicServerCompletionNative.inCut work)
-        previousChildren coins setup codec erased) writer self before
+  | inl query=>cases query with
+    | inl self=>
+      exact RegistrationNativePlatformPublicAdapterBuildPrefixPrimitives.pin_source coins sign setup codec view originalLocal previousCrypto
+        (AdapterPublicServerRecordNative.children
+          (fun {A} (work :StateT Local Base A)=>AdapterPublicServerCompletionNative.inCut work)
+          previousChildren coins setup codec erased) writer self before
+    | inr request=>
+      exact RegistrationNativePlatformPublicAdapterBuildPrefixPrimitives.hash_source coins sign setup codec request before
   | inr query=>cases query with
     | inl pair=>exact RegistrationNativePlatformPublicAdapterBuildPrefixPrimitives.contains_source original pair.1 pair.2 before
     | inr query=>cases query with

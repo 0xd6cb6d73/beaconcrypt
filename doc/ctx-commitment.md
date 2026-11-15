@@ -6,7 +6,7 @@ The binding result, random-oracle integrity/privacy results, raw-input extension
 
 ## Construction
 
-For a ChaCha20-Poly1305-IETF key `K`, nonce `N`, 281-byte beaconcrypt associated data `A`, plaintext `M`, sequence `S`, and sender key identifier `I`, let `(C, T) = AEAD.Seal(K, N, A, M)`, where `C` is the ciphertext core and `T` is the 16-byte Poly1305 tag.
+For a ChaCha20-Poly1305-IETF key `K`, nonce `N`, 151-byte beaconcrypt associated data `A`, plaintext `M`, sequence `S`, and sender key identifier `I`, let `(C, T) = AEAD.Seal(K, N, A, M)`, where `C` is the ciphertext core and `T` is the 16-byte Poly1305 tag.
 Production computes the 64-byte outer value and protected payload as follows:
 
 ```text
@@ -15,9 +15,9 @@ U = BLAKE2b-512(X)
 R = C || T || U
 ```
 
-The transcript `X` is exactly 357 bytes: 32 bytes of key, 12 bytes of nonce, 281 bytes of associated data, 16 bytes of AEAD tag, and two eight-byte integers. Current AD includes the ordered 64-byte hashes of the Server and Beacon ML-DSA public keys after the 153-byte classical identity/label prefix.
-The fixed-width builder is [`build_commitment_transcript`](../beaconcrypt-core/src/commitment.rs#L55). Core record requests retain the selected fields, and the native [`execute_commitment_hash`](../beaconcrypt/src/ratchet.rs#L491) interpreter passes the transcript to unkeyed 64-byte `generichash` and clears its copied bytes after the hash attempt.
-The native [`execute_record_send`](../beaconcrypt/src/ratchet.rs#L546) and [`execute_record_receive`](../beaconcrypt/src/ratchet.rs#L579) interpreters execute the core's seal/open requests and retain the `C || T || U` layout. The production crypto backend is RustCrypto/Dalek through `beaconcrypt-crypto`; the helper named `build_commitment` in `ratchet.rs` is test-only.
+The current transcript `X` is exactly 227 bytes: 32 bytes of key, 12 bytes of nonce, 151 bytes of associated data, 16 bytes of AEAD tag, and two eight-byte integers. AD151 is the fixed 87-byte protocol context followed by the 64-byte BLAKE2b session transcript hash. That hash binds the exact four attached Init fields and the response Server identity key, ephemeral key, KEM ciphertext and LE64 assigned ID. There is no Beacon ML-DSA key or ML-key fingerprint in the current AD. The former identity-based AD281/CTX357 construction is a historical profile, not an alternative current encoding.
+The fixed-width builder is [`build_commitment_transcript`](../beaconcrypt-core/src/commitment.rs#L56). Core record requests retain the selected fields, and the native [`execute_commitment_hash`](../beaconcrypt/src/ratchet.rs#L493) interpreter passes the transcript to unkeyed 64-byte `generichash` and clears its copied bytes after the hash attempt.
+The native [`execute_record_send`](../beaconcrypt/src/ratchet.rs#L541) and [`execute_record_receive`](../beaconcrypt/src/ratchet.rs#L574) interpreters execute the core's seal/open requests and retain the `C || T || U` layout. The production crypto backend is RustCrypto/Dalek through `beaconcrypt-crypto`; the helper named `build_commitment` in `ratchet.rs` is test-only.
 The checked Lean [`CommitmentSurface`](../beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/CommitmentSurface.lean) module proves the exact per-byte layout, proves `encode_u64_le_is_injective`, and proves `production_commitment_input_is_injective`, so equality of two extracted production transcripts implies equality of all six semantic fields `(K, N, A, T, S, I)`.
 
 This is a modification of Chan and Rogaway's [CTX transform](https://eprint.iacr.org/2022/1260.pdf).
@@ -55,7 +55,7 @@ The checked declarations below distinguish the extracted implementation from the
 | Two distinct accepted explanations yield a collision on the actual production inputs | [`ctx_distinct_openings_imply_hash_collision`](../beaconcrypt-core/proofs/lean/BeaconcryptCore/Refinement/CommitmentSurface.lean#L90) |
 | Ideal-model misattribution and one-shot full commitment reduce to collision finding with factor one | [`ctxMisattributionAdvantage_le_blake2b_cr`](../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/CtxReduction.lean#L94) and [`ctxFullCommitmentAdvantage_le_blake2b_cr`](../beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/CtxReduction.lean#L201) |
 
-The Lean extracted-code theorem `ctx_distinct_openings_imply_hash_collision` quantifies over arbitrary pure 357-to-64-byte `hash` and AEAD-open functions.
+The Lean extracted-code theorem `ctx_distinct_openings_imply_hash_collision` quantifies over arbitrary pure 227-to-64-byte `hash` and AEAD-open functions.
 It fixes the same ciphertext core `C` and outer value `U` for both accepted openings, while each opening supplies its own 16-byte tag, used in that opening's AEAD check and hash transcript; the two tags `T` and `T'` may therefore differ, and one received production payload `C || T || U` is the special case `T = T'`.
 It allows the base AEAD to open that ciphertext core under unequal keys or contexts, and treats semantic differences in `K`, `N`, `A`, `S`, `I`, or `M` as a distinct explanation.
 For two such accepted explanations, let:
@@ -173,7 +173,7 @@ The [shared-cache integrity/replay hybrids](https://github.com/0xd6cb6d73/beacon
 
 The common deployment experiment supplies the modeled key-schedule, CTX/AEAD, freshness, target-selection and record-execution composition under its listed contracts. It includes actual optional-plaintext observation and cache/replay/rollback behavior in the applicable mode. The record lifts `PqxdhRecordLift.ctx_lift`, `record_lift` and `PqxdhRecordLiftComposition.record_auth_lift`, and the classical/later production-boundary theorems, are delivered within that profile; see the composition ledger and the computational claim map.
 
-These are separate computational theorems, not a computational-soundness transfer of every ProVerif verdict. Their production boundary retains abstract codec, primitive and source-transcription contracts. The classical logical projection does not include complete composition of the current mandatory ML-DSA authentication guards and actual ML-key fingerprints. Current AD281/CTX357 extraction and focused ML-authentication results do not supply that final native/global bridge.
+These are separate computational theorems, not a computational-soundness transfer of every ProVerif verdict. Their production boundary retains abstract codec, primitive and source-transcription contracts. Historical identity-based classical deployment instantiations do not establish the current session-transcript AD hash phase or mandatory Server ML-DSA authentication. Generic post-hash mathematical suffixes may take an explicit public AD151 value; this alone does not derive the per-session value produced by the actual handshake. Current AD151/CTX227 extraction and focused authentication/source results retain that distinction and do not by themselves supply a complete global native security composition. The component probability bounds above retain their stated assumptions and coefficients; changing the fixed input width does not turn historical whole-deployment claims into current ones.
 
 ## Supplementary symbolic negative control
 

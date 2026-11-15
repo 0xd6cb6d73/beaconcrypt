@@ -24,7 +24,7 @@ variable [primitive : AdapterSealPrimitive.Operations]
 /-- One response signing stage in the strict prefix before this exact successful finish, with equal Root, complementary initializers and reached unsigned binding/application contents. This non-injective partner need not finish publication or installation. -/
 def Partner (crypto : Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMaterial AD PT CT)
     (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp)) (erased : commitment.CommitmentTranscript)
     (rawAllocation : alloc.vec.Vec U8 → Usize → StateT Platform ProbComp (RustM (core.result.Result Unit E)))
@@ -45,7 +45,7 @@ def Partner (crypto : Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMateria
 /-- Every protected successful finish for every owner in this one actual execution has those same-run staged contents. -/
 def AllOwners (crypto : Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMaterial AD PT CT)
     (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp)) (erased : commitment.CommitmentTranscript)
     (rawAllocation : alloc.vec.Vec U8 → Usize → StateT Platform ProbComp (RustM (core.result.Result Unit E)))

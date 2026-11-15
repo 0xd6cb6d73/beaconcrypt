@@ -103,7 +103,7 @@ theorem beacon (setup :PqxdhServerAuthExperiment.Setup base KemSK) (wire :Regist
 
 variable [AdapterInitEdPrimitive.Operations]
 theorem raw_server (setup :PqxdhServerAuthExperiment.Setup base KemSK) (checks :PqxdhServerAuthExperiment.Checks)
-    (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created Unit)
+    (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential :RegistrationNativeMldsa.Credential source) (view :RegistrationNativePlatformSourceSeal.KeyView)
     (failure :primitive.Error) (allocation :RegistrationNativePlatformSourceSeal.Allocation E Base)
     (reserveRegistration reservePeer :Base Bool) (reserveFrame :Nat →Base (core.result.Result Unit E))
@@ -121,7 +121,7 @@ theorem raw_server (setup :PqxdhServerAuthExperiment.Setup base KemSK) (checks :
   rfl
 
 theorem raw_beacon (setup :PqxdhServerAuthExperiment.Setup base KemSK) (checks :PqxdhServerAuthExperiment.Checks)
-    (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created Unit)
+    (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential :RegistrationNativeMldsa.Credential source) (view :RegistrationNativePlatformSourceSeal.KeyView)
     (failure :primitive.Error) (allocation :RegistrationNativePlatformSourceSeal.Allocation E Base)
     (reserveRegistration reservePeer :Base Bool) (reserveFrame :Nat →Base (core.result.Result Unit E))

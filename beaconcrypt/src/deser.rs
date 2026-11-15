@@ -343,14 +343,14 @@ impl<'de> Deserialize<'de> for RatchetManager {
 struct RemotePrincipalData {
 	pk: Vec<u8>,
 	ratchet: RatchetManager,
-	mldsa_public_key_hash: SecretBytes<64>,
+	session_transcript_hash: SecretBytes<64>,
 }
 
 #[cfg(feature = "server")]
 struct DeserializedRemote {
 	pk: crypto_sign::PublicKey,
 	ratchet: RatchetManager,
-	mldsa_public_key_hash: [u8; 64],
+	session_transcript_hash: [u8; 64],
 }
 
 #[cfg(feature = "server")]
@@ -367,7 +367,7 @@ impl<'de> Deserialize<'de> for DeserializedRemote {
 		Ok(Self {
 			pk,
 			ratchet: data.ratchet,
-			mldsa_public_key_hash: *data.mldsa_public_key_hash.0,
+			session_transcript_hash: *data.session_transcript_hash.0,
 		})
 	}
 }
@@ -383,8 +383,7 @@ pub(crate) fn deserialize_row_peer(
 		pin.binding(),
 		key_id,
 		*remote.pk.as_bytes(),
-		*pin.fingerprint(),
-		remote.mldsa_public_key_hash,
+		remote.session_transcript_hash,
 	);
 	Some(EstablishedRemote::new(remote.pk, remote.ratchet, binding))
 }
@@ -443,8 +442,6 @@ pub(crate) fn deserialize_server_state(state: &str) -> Option<DeserializedServer
 		identity_public_key: *keypair.public_key.as_bytes(),
 		identity_key_id: identity_key_kid,
 	};
-	let server_fingerprint =
-		*crate::auth::fingerprint_pin(server_binding, mldsa_identity.public_key())?.fingerprint();
 	let mut restored_known_ids = map_with_key(keypair.secret_key.as_bytes());
 	restored_known_ids.try_reserve(known_ids.len()).ok()?;
 	restored_known_ids.extend(known_ids.into_iter().map(|(key_id, remote)| {
@@ -452,8 +449,7 @@ pub(crate) fn deserialize_server_state(state: &str) -> Option<DeserializedServer
 			server_binding,
 			key_id,
 			*remote.pk.as_bytes(),
-			server_fingerprint,
-			remote.mldsa_public_key_hash,
+			remote.session_transcript_hash,
 		);
 		(
 			key_id,
@@ -644,7 +640,6 @@ mod tests {
 			},
 			8,
 			*remote.public_key.as_bytes(),
-			crate::auth::public_key_hash(&server.mldsa_public_key()).unwrap(),
 			[0x35; 64],
 		);
 		let peer = serde_json::to_value(EstablishedRemote::new(
@@ -681,9 +676,14 @@ mod tests {
 			legacy_peer["known_ids"][key_id]
 				.as_object_mut()
 				.unwrap()
-				.remove("mldsa_public_key_hash");
+				.remove("session_transcript_hash");
+			assert!(deserialize_server_state(&legacy_peer.to_string()).is_none());
+			legacy_peer["known_ids"][key_id]["mldsa_public_key_hash"] = json!(vec![0x35; 64]);
 			assert!(deserialize_server_state(&legacy_peer.to_string()).is_none());
 		}
+		let mut extra_fingerprint = state;
+		extra_fingerprint["known_ids"]["8"]["mldsa_public_key_hash"] = json!(vec![0x35; 64]);
+		assert!(deserialize_server_state(&extra_fingerprint.to_string()).is_none());
 	}
 
 	#[cfg(feature = "server")]
@@ -694,13 +694,19 @@ mod tests {
 		let second_hash = [0x3b; 64];
 		let mut expected = server_value_with_peers();
 		expected["mldsa_identity_seed"] = json!(seed.to_vec());
-		expected["known_ids"]["8"]["mldsa_public_key_hash"] = json!(first_hash.to_vec());
-		expected["known_ids"]["9"]["mldsa_public_key_hash"] = json!(second_hash.to_vec());
+		expected["known_ids"]["8"]["session_transcript_hash"] = json!(first_hash.to_vec());
+		expected["known_ids"]["9"]["session_transcript_hash"] = json!(second_hash.to_vec());
 
 		let restored = deserialize_server_state(&expected.to_string()).unwrap();
 		assert_eq!(restored.5.to_seed().as_slice(), &seed);
-		assert_eq!(restored.3[&8].mldsa_public_key_hash(), &first_hash);
-		assert_eq!(restored.3[&9].mldsa_public_key_hash(), &second_hash);
+		assert_eq!(restored.3[&8].session_transcript_hash(), &first_hash);
+		assert_eq!(restored.3[&9].session_transcript_hash(), &second_hash);
+		for (key_id, hash) in [(8, first_hash), (9, second_hash)] {
+			let ad = restored.3[&key_id].binding().associated_data();
+			assert_eq!(ad.len(), 151);
+			assert_eq!(&ad[..87], b"BeaconcryptPqxdh_CURVE25519_SHA-512_ML-KEM-768SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305");
+			assert_eq!(&ad[87..], &hash);
+		}
 		let canonical = reserialize_server(&restored);
 		assert_eq!(serde_json::from_str::<Value>(&canonical).unwrap(), expected);
 		assert_eq!(
@@ -733,15 +739,15 @@ mod tests {
 		for length in [0, 63, 65] {
 			let mut state = server_value_with_peers();
 			state["mldsa_identity_seed"] = json!(vec![0x40; 32]);
-			state["known_ids"]["8"]["mldsa_public_key_hash"] = json!(vec![0x41; length]);
-			state["known_ids"]["9"]["mldsa_public_key_hash"] = json!(vec![0x42; 64]);
+			state["known_ids"]["8"]["session_transcript_hash"] = json!(vec![0x41; length]);
+			state["known_ids"]["9"]["session_transcript_hash"] = json!(vec![0x42; 64]);
 			assert!(deserialize_server_state(&state.to_string()).is_none());
 		}
 		let mut state = serialized_server_value(9);
 		state["mldsa_identity_seed"] = Value::Null;
 		assert!(deserialize_server_state(&state.to_string()).is_none());
 		let mut state = server_value_with_peers();
-		state["known_ids"]["8"]["mldsa_public_key_hash"] = Value::Null;
+		state["known_ids"]["8"]["session_transcript_hash"] = Value::Null;
 		assert!(deserialize_server_state(&state.to_string()).is_none());
 	}
 

@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Refinement.AdapterServerConstructorInitialized
+import BeaconcryptCore.Refinement.AdapterServerConstructorGeneration
 open CoreModels Aeneas OracleComp OracleSpec
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -56,14 +57,14 @@ local notation "edSample"  =>  PqxdhRecordLiftWorld.sampled (n:=n) (AdapterServe
 local notation "mlSample"  =>  PqxdhRecordLiftWorld.sampled (n:=n) (RegistrationNativeMldsa.generate mlSource)
 variable (ed : AdapterServerConstructorJoint.EdContract generator view setup.joint
   (PqxdhRecordLiftWorld.sampled (n:=n) (AdapterServerConstructorStartup.edCore ensureInit)))
-variable (ml : AdapterBeaconConstructorGeneration.MldsaContract generator view
+variable (ml : AdapterServerConstructorGeneration.MldsaContract generator view
   (PqxdhRecordLiftWorld.sampled (n:=n) (RegistrationNativeMldsa.generate mlSource)))
 variable (edGetter : ∀key,(crypto.edPublicBytes key).run=pure (.ok (view.edPublic key)))
 variable (mlGetter : ∀identity,(localOps.auth_MldsaIdentity_public_key identity).run=pure (.ok (view.mldsa identity).publicKey))
-variable (hashLeaf : ∀request,(children.executeHash request).run=RegistrationNativeServerPinRecompute.nativeHash request)
 
-include views objects ed ml edGetter mlGetter hashLeaf
+include views objects ed ml edGetter mlGetter
 
+omit children in
 theorem native_program (identityIndex : Nat) (identifier : U64) (rng : R) :
     nativeView <$>run setup view identityIndex identifier generator rng=(do
       let prepared←AdapterServerConstructorStartup.keys (n:=n) mlSource ensureInit
@@ -90,14 +91,15 @@ theorem native_program (identityIndex : Nat) (identifier : U64) (rng : R) :
     simp only [bind_pure_comp]
     rw [StateT.run_map]
     exact AdapterServerConstructorInitialized.native setup generator view views objects edSample ed mlSample ml
-      identityIndex identifier prepared nextRng before edGetter mlGetter hashLeaf
+      identityIndex identifier prepared nextRng before edGetter mlGetter
 
+omit children in
 theorem native (identityIndex : Nat) (identifier : U64) (rng : R) :
     nativeView <$>game setup view identityIndex identifier generator rng=
       RegistrationNativeExperiment.start (n:=n) setup mlSource ensureInit identityIndex identifier := by
   rw [AdapterServerConstructorStartup.native]
   have law:=congrArg (fun work => Prod.fst <$>work.run PqxdhRecordLiftWorld.initial)
-    (native_program setup generator view views objects ensureInit ed ml edGetter mlGetter hashLeaf identityIndex identifier rng)
+    (native_program setup generator view views objects ensureInit ed ml edGetter mlGetter identityIndex identifier rng)
   have matched (generated : Option (AdapterServerConstructorJoint.Prepared mlSource)×World) :
       Prod.fst <$> (match generated.1 with
         | none => (pure none : M (Option (RegistrationNativeExperiment.Initial n KemSK mlSource)))

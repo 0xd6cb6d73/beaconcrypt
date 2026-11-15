@@ -8,6 +8,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialPendingAmbient
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhInitialBeaconAmbient PqxdhInitialPendingPost
 variable {Chain M P I D K A N C Result : Type} {S B : Nat}
 
@@ -61,7 +62,7 @@ theorem step
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (query : (PqxdhInitialGenericPost.Spec extra S B).Domain)
     (before : PqxdhInitialPostPacking.Full Chain M P I D K A N S B) :
-    (((PqxdhInitialPendingPost.interpreted
+    (((PqxdhInitialPendingPost.interpreted (completedBinding := completedBinding)
         (fun request => lift (N := N) (C := C) (primitive request))
         (fun request => lift (N := N) (C := C) (reader request))
         pre application initial (selectorLift selector) sender route decode).flattenStateT query).run before) =
@@ -69,7 +70,7 @@ theorem step
         (cacheLive (C := C) (RawCtxGenericFamilyLive.impl
           (RawCtxGenericOwnerInterpretation.interpretedCalls primitive RawCtxPendingOwnerQueries.calls)
           (fun request => simulateQ primitive (RawCtxPendingOwnerQueries.publicForward request)) reader sender route decode))
-        selector (PqxdhInitialGenericBeacon.owner pre
+        selector (PqxdhInitialGenericBeacon.owner (completedBinding := completedBinding) pre
           (RawCtxGenericOwnerInterpretation.interpretedCalls (fun request => lift (N := N) (C := C) (primitive request))
             RawCtxPendingOwnerQueries.calls) application initial decode) query).run before := by
   rcases query with (query | query) | query
@@ -112,7 +113,7 @@ theorem step
     | finish index raw =>
       simp only [QueryImpl.flattenStateT, interpreted, PqxdhInitialPostPacking.separated,
         StateT.run, StateT.mk, bind_pure_comp]
-      let work := (PqxdhInitialGenericBeacon.owner pre
+      let work := (PqxdhInitialGenericBeacon.owner (completedBinding := completedBinding) pre
         (RawCtxGenericOwnerInterpretation.interpretedCalls (fun request => lift (N := N) (C := C) (primitive request))
           RawCtxPendingOwnerQueries.calls) application initial decode raw (before.1.roles.1.2 index)).run before.2
       change (fun x => (x.1.1, x.1.2, x.2)) <$>
@@ -137,16 +138,16 @@ theorem schedule
       (PqxdhInitialPostPacking.record (cacheLive (C := C) (RawCtxGenericFamilyLive.impl
         (RawCtxGenericOwnerInterpretation.interpretedCalls primitive RawCtxPendingOwnerQueries.calls)
         (fun request => simulateQ primitive (RawCtxPendingOwnerQueries.publicForward request)) reader sender route decode)))
-      selector (PqxdhInitialGenericBeacon.owner pre
+      selector (PqxdhInitialGenericBeacon.owner (completedBinding := completedBinding) pre
         (RawCtxGenericOwnerInterpretation.interpretedCalls (fun request => lift (N := N) (C := C) (primitive request))
           RawCtxPendingOwnerQueries.calls) application initial decode)) client).run (PqxdhInitialPostPacking.pack before) =
     (fun result => (result.1.1, PqxdhInitialPostPacking.pack (result.1.2, result.2))) <$>
       (simulateQ (handler (fun request => lift (N := N) (C := C) (primitive request))
         (fun request => lift (N := N) (C := C) (reader request)) pre application initial
-        (selectorLift selector) aux) ((simulateQ (compiler sender route decode) client).run before.1)).run before.2 := by
+        (selectorLift selector) aux) ((simulateQ (PqxdhInitialPendingPost.compiler (completedBinding := completedBinding) sender route decode) client).run before.1)).run before.2 := by
   rw [PqxdhInitialPostPacking.schedule, program_interpretation]
   have handlers :
-      (PqxdhInitialPendingPost.interpreted (P := P)
+      (PqxdhInitialPendingPost.interpreted (completedBinding := completedBinding) (P := P)
         (fun request => lift (N := N) (C := C) (primitive request))
         (fun request => lift (N := N) (C := C) (reader request))
         pre application initial (selectorLift selector) sender route decode).flattenStateT =
@@ -154,11 +155,11 @@ theorem schedule
         (cacheLive (C := C) (RawCtxGenericFamilyLive.impl
           (RawCtxGenericOwnerInterpretation.interpretedCalls primitive RawCtxPendingOwnerQueries.calls)
           (fun request => simulateQ primitive (RawCtxPendingOwnerQueries.publicForward request)) reader sender route decode))
-        selector (PqxdhInitialGenericBeacon.owner pre
+        selector (PqxdhInitialGenericBeacon.owner (completedBinding := completedBinding) pre
           (RawCtxGenericOwnerInterpretation.interpretedCalls (fun request => lift (N := N) (C := C) (primitive request))
             RawCtxPendingOwnerQueries.calls) application initial decode) := by
     funext query state
-    exact step primitive reader pre application initial selector sender route decode query state
+    exact step (completedBinding := completedBinding) primitive reader pre application initial selector sender route decode query state
   rw [← handlers, simulateQ_flattenStateT_run]
   simp only [bind_pure_comp, Functor.map_map, Prod.map, id_eq]
 

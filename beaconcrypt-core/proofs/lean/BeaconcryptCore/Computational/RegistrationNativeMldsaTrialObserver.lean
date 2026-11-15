@@ -1,6 +1,5 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeMldsaCandidate
-import BeaconcryptCore.Computational.RegistrationNativeInitFinal
 import BeaconcryptCore.Computational.RegistrationNativeResponseFinish
 
 /-! A deterministic observer inspects the actual completed typed accept/finish callback, its displayed public authentication operands and retained shared cache. It selects only a matching challenge public key with native weak message freshness, using the actual prior unsigned signing prefix. No secret credential is read and no future signing history is used. -/
@@ -58,10 +57,6 @@ def trial (query : RegistrationNativeRawAdapter.TypedSpec.Domain)
     (before : RegistrationNativeExperiment.State n KemSK source)
     (reply : RegistrationNativeRawAdapter.TypedSpec.Range query) : Option Trial :=
   match query with
-  | .inr (.accept packet) => match reply with
-    | .ok (some _) => some (RegistrationAuthenticationNative.trial true before.server.pin packet
-        (RegistrationSigningShared.historyFor (absBytes packet.mldsa_public_key) (RegistrationNativeMldsaShared.nativeProject before)))
-    | _ => none
   | .inr (.finish index (some packet)) => match reply with
     | .ok (some _) => match before.beacons[index]? with
       | some owner => match owner.phase with
@@ -82,15 +77,6 @@ theorem trial_history (query : RegistrationNativeRawAdapter.TypedSpec.Domain)
   cases query with
   | inl coin => cases selected
   | inr query => cases query with
-    | accept packet =>
-        cases reply with
-        | fail error | div => cases selected
-        | ok option => cases option with
-          | none => cases selected
-          | some session =>
-              simp only [trial, Option.some.injEq] at selected
-              subst candidate
-              rfl
     | finish index packet =>
         cases packet with
         | none => cases selected

@@ -35,7 +35,7 @@ private theorem compose_stable {S V : Type} (first second : S → S)
   exact initial.trans following
 
 private theorem agree (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit) :
     Stable (serverProject (n := n)) (RegistrationServerNativeSource.agree setup checks representation created packet authenticated) := by
   change Stable (fun before => RegistrationNativeKemServerState.maskServer (RegistrationServerMaterialSourceState.nativeView before)) _
@@ -43,7 +43,7 @@ private theorem agree (setup : Setup base KemSK) (checks : Checks)
     (RegistrationNativeServerViewAccept.agree_input setup checks representation created packet authenticated)
     (RegistrationNativeKemWorldAgreement.native_agree_input setup checks representation created packet authenticated)
 
-private theorem retain (created : PqxdhLiveServerConstruction.Created Unit) (accepted : agreement.ServerAgreement) :
+private theorem retain (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (accepted : agreement.ServerAgreement) :
     Stable (serverProject (n := n)) (RegistrationServerNativeSource.retain created accepted) := by
   change Stable (fun before => RegistrationNativeKemServerState.maskServer (RegistrationServerMaterialSourceState.nativeView before)) _
   exact compose_stable RegistrationServerMaterialSourceState.nativeView RegistrationNativeKemServerState.maskServer (fun _ => rfl) _
@@ -123,7 +123,7 @@ private theorem read_count : Correct (source := source) (serverProject (n := n))
 attribute [local irreducible] RegistrationServerNativeSource.agree RegistrationServerNativeSource.retain
 
 private theorem after_shape (setup : Setup base KemSK) (checks : Checks) (reserve : StateT Platform ProbComp Bool)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit) :
     RegistrationNativePlatformServerSdk.afterAuthentication (n := n) RegistrationNativePlatformMldsaProgram.coins setup checks (StateT.lift reserve)
       representation created packet authenticated = (do
@@ -147,7 +147,7 @@ private theorem after_shape (setup : Setup base KemSK) (checks : Checks) (reserv
   congr 1
 
 private theorem after_count (setup : Setup base KemSK) (checks : Checks) (reserve : StateT Platform ProbComp Bool)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit) :
     Correct (source := source) (serverProject (n := n))
       (RegistrationNativePlatformMldsaProgram.lift
@@ -185,7 +185,7 @@ private theorem after_count (setup : Setup base KemSK) (checks : Checks) (reserv
 
 private theorem afterPin_count (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (reserve : StateT Platform ProbComp Bool) (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (pin : RustM (core.option.Option session.ServerAuthenticationPin)) :
     Correct (source := source) (serverProject (n := n))
       (RegistrationNativePlatformMldsaProgram.lift
@@ -219,7 +219,7 @@ private theorem afterPin_count (setup : Setup base KemSK) (codec : Codec Reader 
 /-- Actual source accept retains its repeated pin hash, reservation failure and all reached mandatory-authentication/agreement outcomes under both count equations. -/
 theorem accept (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (reserve : StateT Platform ProbComp Bool) (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) :
     Correct (source := source) (serverProject (n := n))
       (RegistrationNativePlatformMldsaProgram.lift

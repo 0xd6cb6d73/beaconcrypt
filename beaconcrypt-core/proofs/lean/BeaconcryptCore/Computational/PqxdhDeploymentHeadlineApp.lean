@@ -21,6 +21,7 @@ Premises: `FunctionalDecapsulation setup.kem`, `Phase1ReadBack`, `Phase2ReadBack
 open OracleComp OracleSpec ENNReal
 
 set_option autoImplicit false
+set_option warningAsError true
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentHeadlineApp
 open PqxdhServerAuthExperiment (Setup Codec Checks)
@@ -41,7 +42,7 @@ theorem fresh_final (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     (adversary : OracleComp (ModeSpec .P) X) (budget : Budget) (g : Fin budget.accept × Fin budget.capacity)
     (runtime : A) (appClaim : X → Option (Nat × Pqxdh.Bytes)) :
     𝒟[PqxdhRecordLiftIdeal.freshEvent appClaim <$> (ctxView <$> idealRecords setup codec route
-        (PqxdhDeploymentIdealEnv.envGD setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
+        (PqxdhDeploymentIdealEnv.envGD   setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
         setup.serverKeyId bounds .P adversary)] {true} ≤ ((2 ^ bounds.min : ℕ) : ℝ≥0∞)⁻¹ := by
   rw [Functor.map_map]
   exact PqxdhRecordLiftFresh.idealRecords_fresh setup codec route setup.serverKeyId bounds 2 _ adversary appClaim
@@ -59,7 +60,7 @@ theorem ce_app_target (setup : Setup baseSpec KemSK)
     (appClaim : X → Option (Nat × Pqxdh.Bytes)) (g : Fin budget.accept × Fin budget.capacity) :
     𝒟[(fun outcome => decide (happens (appEvent setup.source.crypto codec setup.serverKeyId budget appClaim) outcome =
         true ∧ designated setup.source.crypto codec setup.serverKeyId budget (appHandle appClaim) outcome = some g)) <$>
-      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds .P adversary).run runtime] {true} ≤
+      (PqxdhDeploymentSecrecy.game   setup codec checks route ensureInit 0 bounds .P adversary).run runtime] {true} ≤
       ENNReal.ofReal (kemLoss setup codec checks route ensureInit bounds .P adversary budget
         (appEvent setup.source.crypto codec setup.serverKeyId budget appClaim) (appHandle appClaim) g runtime) +
       ENNReal.ofReal (slotLoss setup codec checks route ensureInit bounds .P adversary budget
@@ -69,19 +70,19 @@ theorem ce_app_target (setup : Setup baseSpec KemSK)
         (slotted setup codec budget (appEvent setup.source.crypto codec setup.serverKeyId budget appClaim)
           (appHandle appClaim) g) +
       ((2 ^ bounds.min : ℕ) : ℝ≥0∞)⁻¹ := by
-  have chain := PqxdhDeploymentHeadlineAnomaly.chain_beta setup functional codec checks route ensureInit phase1 phase2
+  have chain := PqxdhDeploymentHeadlineAnomaly.chain_beta   setup functional codec checks route ensureInit phase1 phase2
     correct bounds .P adversary budget respects (appEvent setup.source.crypto codec setup.serverKeyId budget appClaim)
     (appHandle appClaim) g runtime
-  have lift := PqxdhDeploymentHeadlineChain.records_le setup codec checks route correct caps bounded ensureInit qInit
+  have lift := PqxdhDeploymentHeadlineChain.records_le   setup codec checks route correct caps bounded ensureInit qInit
     initBound bounds .P adversary budget respects g runtime fallback
     (slotted setup codec budget (appEvent setup.source.crypto codec setup.serverKeyId budget appClaim)
       (appHandle appClaim) g)
   have hit := PqxdhDeploymentHeadlineContain.chance_mono
     (ctxView <$> idealRecords setup codec route
-      (PqxdhDeploymentIdealEnv.envGD setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
+      (PqxdhDeploymentIdealEnv.envGD   setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
       setup.serverKeyId bounds .P adversary) _ _
     (PqxdhDeploymentHeadlineContain.app_hit setup codec budget appClaim g)
-  have final := fresh_final setup codec checks route ensureInit bounds adversary budget g runtime appClaim
+  have final := fresh_final   setup codec checks route ensureInit bounds adversary budget g runtime appClaim
   calc _ ≤ _ := chain
     _ ≤ ((((2 ^ bounds.min : ℕ) : ℝ≥0∞)⁻¹ +
           recLoss setup codec checks route ensureInit bounds .P adversary budget g runtime fallback caps qInit
@@ -107,7 +108,7 @@ theorem ce_app (setup : Setup baseSpec KemSK)
     (respects : budget.Respects adversary) (runtime : A) (fallback : CtxNonceAeadIntCtxt.ModifiedNonceAeadForgery)
     (appClaim : X → Option (Nat × Pqxdh.Bytes)) :
     𝒟[(fun outcome => happens (appEvent setup.source.crypto codec setup.serverKeyId budget appClaim) outcome) <$>
-      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds .P adversary).run runtime] {true} ≤
+      (PqxdhDeploymentSecrecy.game   setup codec checks route ensureInit 0 bounds .P adversary).run runtime] {true} ≤
       ∑ g : Fin budget.accept × Fin budget.create,
         (ENNReal.ofReal (kemLoss setup codec checks route ensureInit bounds .P adversary budget
             (appEvent setup.source.crypto codec setup.serverKeyId budget appClaim) (appHandle appClaim)
@@ -120,10 +121,10 @@ theorem ce_app (setup : Setup baseSpec KemSK)
             caps qInit (slotted setup codec budget (appEvent setup.source.crypto codec setup.serverKeyId budget appClaim)
               (appHandle appClaim) (g.1, g.2.castSucc)) +
           ((2 ^ bounds.min : ℕ) : ℝ≥0∞)⁻¹) := by
-  rw [PqxdhDeploymentHeadlineChain.split_named setup codec checks route ensureInit phase1 phase2 bounds .P adversary
+  rw [PqxdhDeploymentHeadlineChain.split_named   setup codec checks route ensureInit phase1 phase2 bounds .P adversary
     budget respects _ _ runtime (PqxdhDeploymentHeadlineEvents.app_named setup.source.crypto codec setup.serverKeyId
       budget appClaim)]
-  exact Finset.sum_le_sum fun g _ => ce_app_target setup functional codec checks route ensureInit phase1 phase2 correct
+  exact Finset.sum_le_sum fun g _ => ce_app_target   setup functional codec checks route ensureInit phase1 phase2 correct
     caps bounded qInit initBound bounds adversary budget respects runtime fallback appClaim (g.1, g.2.castSucc)
 
 /-- **CE-APP on a Server peer, per target** (design-v2 section 4.4, `ce_app_server`): in mode P, the probability that the deployment experiment ends with the Server-side CE-APP win and its claim designating `g` is at most `kemLoss + slotLoss + recLoss_g(dec_g ∧ ISs_g) + 2^-min`, with no anomaly term. -/
@@ -140,7 +141,7 @@ theorem ce_app_server_target (setup : Setup baseSpec KemSK)
     𝒟[(fun outcome => decide (happens (appPeerEvent setup.source.crypto codec setup.serverKeyId budget appClaim)
         outcome = true ∧
         designated setup.source.crypto codec setup.serverKeyId budget (appHandle appClaim) outcome = some g)) <$>
-      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds .P adversary).run runtime] {true} ≤
+      (PqxdhDeploymentSecrecy.game   setup codec checks route ensureInit 0 bounds .P adversary).run runtime] {true} ≤
       ENNReal.ofReal (kemLoss setup codec checks route ensureInit bounds .P adversary budget
         (appPeerEvent setup.source.crypto codec setup.serverKeyId budget appClaim) (appHandle appClaim) g runtime) +
       ENNReal.ofReal (slotLoss setup codec checks route ensureInit bounds .P adversary budget
@@ -149,19 +150,19 @@ theorem ce_app_server_target (setup : Setup baseSpec KemSK)
         (serverSlotted setup codec budget (appPeerEvent setup.source.crypto codec setup.serverKeyId budget appClaim)
           (appHandle appClaim) g) +
       ((2 ^ bounds.min : ℕ) : ℝ≥0∞)⁻¹ := by
-  have chain := PqxdhDeploymentHeadlineChain.chain_server setup functional codec checks route ensureInit phase1 phase2
+  have chain := PqxdhDeploymentHeadlineChain.chain_server   setup functional codec checks route ensureInit phase1 phase2
     correct bounds .P adversary budget respects
     (appPeerEvent setup.source.crypto codec setup.serverKeyId budget appClaim) (appHandle appClaim) g runtime
-  have lift := PqxdhDeploymentHeadlineChain.records_le setup codec checks route correct caps bounded ensureInit qInit
+  have lift := PqxdhDeploymentHeadlineChain.records_le   setup codec checks route correct caps bounded ensureInit qInit
     initBound bounds .P adversary budget respects g runtime fallback
     (serverSlotted setup codec budget (appPeerEvent setup.source.crypto codec setup.serverKeyId budget appClaim)
       (appHandle appClaim) g)
   have hit := PqxdhDeploymentHeadlineContain.chance_mono
     (ctxView <$> idealRecords setup codec route
-      (PqxdhDeploymentIdealEnv.envGD setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
+      (PqxdhDeploymentIdealEnv.envGD   setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
       setup.serverKeyId bounds .P adversary) _ _
     (PqxdhDeploymentHeadlineContain.app_peer_hit setup codec budget appClaim g)
-  have final := fresh_final setup codec checks route ensureInit bounds adversary budget g runtime appClaim
+  have final := fresh_final   setup codec checks route ensureInit bounds adversary budget g runtime appClaim
   calc _ ≤ _ := chain
     _ ≤ ((((2 ^ bounds.min : ℕ) : ℝ≥0∞)⁻¹ +
           recLoss setup codec checks route ensureInit bounds .P adversary budget g runtime fallback caps qInit
@@ -186,7 +187,7 @@ theorem ce_app_server (setup : Setup baseSpec KemSK)
     (respects : budget.Respects adversary) (runtime : A) (fallback : CtxNonceAeadIntCtxt.ModifiedNonceAeadForgery)
     (appClaim : X → Option (Nat × Pqxdh.Bytes)) :
     𝒟[(fun outcome => happens (appPeerEvent setup.source.crypto codec setup.serverKeyId budget appClaim) outcome) <$>
-      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds .P adversary).run runtime] {true} ≤
+      (PqxdhDeploymentSecrecy.game   setup codec checks route ensureInit 0 bounds .P adversary).run runtime] {true} ≤
       ∑ g : Fin budget.accept × Fin budget.create,
         (ENNReal.ofReal (kemLoss setup codec checks route ensureInit bounds .P adversary budget
             (appPeerEvent setup.source.crypto codec setup.serverKeyId budget appClaim) (appHandle appClaim)
@@ -199,10 +200,10 @@ theorem ce_app_server (setup : Setup baseSpec KemSK)
               (appPeerEvent setup.source.crypto codec setup.serverKeyId budget appClaim) (appHandle appClaim)
               (g.1, g.2.castSucc)) +
           ((2 ^ bounds.min : ℕ) : ℝ≥0∞)⁻¹) := by
-  rw [PqxdhDeploymentHeadlineChain.split_named setup codec checks route ensureInit phase1 phase2 bounds .P adversary
+  rw [PqxdhDeploymentHeadlineChain.split_named   setup codec checks route ensureInit phase1 phase2 bounds .P adversary
     budget respects _ _ runtime (PqxdhDeploymentHeadlineEvents.appPeer_named setup.source.crypto codec
       setup.serverKeyId budget appClaim)]
-  exact Finset.sum_le_sum fun g _ => ce_app_server_target setup functional codec checks route ensureInit phase1 phase2
+  exact Finset.sum_le_sum fun g _ => ce_app_server_target   setup functional codec checks route ensureInit phase1 phase2
     correct caps bounded qInit initBound bounds adversary budget respects runtime fallback appClaim (g.1, g.2.castSucc)
 
 end BeaconcryptCore.Computational.PqxdhDeploymentHeadlineApp

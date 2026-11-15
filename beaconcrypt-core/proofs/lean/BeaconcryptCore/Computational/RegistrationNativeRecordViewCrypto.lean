@@ -5,6 +5,7 @@ import BeaconcryptCore.Computational.RegistrationNativeRecordPackage
 open OracleComp OracleSpec CoreModels Aeneas ENNReal
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
+set_option warningAsError true
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativeRecordViewCrypto
 open PqxdhRecordLiftInterface (WorldSpec)

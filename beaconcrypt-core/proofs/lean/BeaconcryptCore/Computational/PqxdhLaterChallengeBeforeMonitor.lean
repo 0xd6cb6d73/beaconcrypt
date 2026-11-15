@@ -6,7 +6,9 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeBeforeMonitor
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhJointKdfGame PqxdhNativeSharedPrefix
 open RawCtxSelectedParentTable RawCtxSelectedParentEntry PqxdhFirstRecordConfidentiality
 variable {ι M P I D K X Response Shared A N C : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -55,19 +57,19 @@ theorem resume_pre (owner : RawCtxProtocolReveals.Owner S B) (number : Std.U64)
       PqxdhInitialBuilderContext.address details.callback.original) :
     Pre (fun a b => a = b) (fun result => PqxdhLaterChallengeMonitor.Dead result.2)
       (fun result => PqxdhLaterChallengeMonitor.Dead result.2)
-      (PqxdhLaterChallengeSavedMonitor.resume pre application initial selector aux source writer prior target nonce next sender route read
+      (PqxdhLaterChallengeSavedMonitor.resume (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next sender route read
         mark monitor owner number false details material qPost fits localState none)
-      (PqxdhLaterChallengeSavedMonitor.resume pre application initial selector aux source writer prior target nonce next sender route read
+      (PqxdhLaterChallengeSavedMonitor.resume (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next sender route read
         mark monitor owner number true details material qPost fits localState none) := by
   unfold PqxdhLaterChallengeSavedMonitor.resume
   apply pre_bind_refl
   intro completed actual
   rcases completed with ⟨_ | ⟨reply, current⟩, after⟩
   · exact Pre.pure rfl
-  · have stillUnused := PqxdhLaterSavedCompilerSupport.complete_returns pre application initial selector aux source writer prior target
+  · have stillUnused := PqxdhLaterSavedCompilerSupport.complete_returns (completedBinding := completedBinding) pre application initial selector aux source writer prior target
       nonce next sender route read mark monitor (fun result => result.2.pair = none) qPost details.callback material fits unused
       localState (reply, current) after actual
-    exact pre_map (PqxdhLaterChallengeMonitor.program_pre pre application initial selector aux source writer prior
+    exact pre_map (PqxdhLaterChallengeMonitor.program_pre (completedBinding := completedBinding) pre application initial selector aux source writer prior
       ⟨PqxdhInitialBuilderContext.address details.callback.original, material⟩ target nonce next sender route read mark monitor
       owner number (details.request.next reply) current stillUnused after separate)
       _ _ (fun _ _ same => by rw [same]) (fun _ dead => dead) (fun _ dead => dead)
@@ -83,12 +85,12 @@ theorem cut_unused {State : Type} (owner : RawCtxProtocolReveals.Owner S B) (num
     (state reached : State)
     (cut : RawCtxForwardScan.Cut.pending details.callback reached ∈ support
       (RawCtxForwardScan.scan PqxdhInitialOriginForwardPost.selected selected selection impl
-        (PqxdhInitialOriginForwardPost.program mark sender route read
+        (PqxdhInitialOriginForwardPost.program (completedBinding := completedBinding) mark sender route read
           ((PqxdhRecordConfidentialityChallenge.handler owner number bit details.request.query).run details.request.before) front trace)
-        (PqxdhInitialOriginForwardPost.program_covered mark sender route read
+        (PqxdhInitialOriginForwardPost.program_covered (completedBinding := completedBinding) mark sender route read
           ((PqxdhRecordConfidentialityChallenge.handler owner number bit details.request.query).run details.request.before) front trace) state)) :
     PqxdhLaterSavedOutsideSupport.Returns (fun result => result.2.pair = none) details.callback :=
-  PqxdhLaterSavedOutsideSupport.scan_returns (fun result => result.2.pair = none) mark sender route read selected selection impl _
+  PqxdhLaterSavedOutsideSupport.scan_returns (completedBinding := completedBinding) (fun result => result.2.pair = none) mark sender route read selected selection impl _
     (callback_unused owner number bit details classified) front trace state reached details.callback cut
 
 end BeaconcryptCore.Computational.PqxdhLaterChallengeBeforeMonitor

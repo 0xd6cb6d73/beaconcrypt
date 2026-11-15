@@ -10,6 +10,7 @@ open RustM beaconcrypt_core ratchet ratchet.refined ratchet.concrete
 set_option autoImplicit false
 
 namespace BeaconcryptCore.Computational.PqxdhServerAuthCtxNative
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhSecretInputKdf PqxdhJointKdfGame
 open PqxdhServerAuthExperiment (Setup Codec Checks)
 open RawCtxSelectedReceiveCompiler (State project)
@@ -169,12 +170,12 @@ theorem tail_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
 theorem build_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (key : RootOutput) (read : RawCtxReceive.FrameDecoder)
     (pending : pqxdh.PendingServerRegistration) (root : RootOutput) (payload : Option Pqxdh.Bytes)
-    (server : PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes))
+    (server : PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes))
     (state : State (List RawCtxSourceSend.SealContext)) :
     (simulateQ (PqxdhServerAuthExperiment.tailImpl setup codec checks)
-      (PqxdhServerRegistrationPublication.build setup.source pending root payload () server)).run (project state) =
+      (PqxdhServerRegistrationPublication.build (associatedData := associatedData) setup.source pending root payload associatedData server)).run (project state) =
       Prod.map id project <$> (evaluate setup.source key read (simulateQ (tail setup.source codec checks)
-        (PqxdhServerRegistrationPublication.build setup.source pending root payload () server))).run state :=
+        (PqxdhServerRegistrationPublication.build (associatedData := associatedData) setup.source pending root payload associatedData server))).run state :=
   program setup.source key read (tail setup.source codec checks) (PqxdhServerAuthExperiment.tailImpl setup codec checks)
     (tail_source setup codec checks key read) _ state
 

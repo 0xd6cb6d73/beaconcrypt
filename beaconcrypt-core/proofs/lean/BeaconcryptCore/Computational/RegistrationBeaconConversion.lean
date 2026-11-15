@@ -39,10 +39,12 @@ theorem aux_conversion {Auxiliary : Type} (source : PqxdhJointKdfGame.FixedHkdfS
       subst word
       exact RegistrationPublicConversion.convert_sound source.crypto key converted reply
 
+variable (completedBinding : session.CompletedRegistrationBinding)
+
 theorem admitted_server (control : pqxdh.BeaconInitSent)
     (collected : PqxdhPhase2GapDhSource.Inputs registration.AuthenticatedResponse)
     (metadata : PqxdhBeaconPhase2Shared.Metadata)
-    (accepted : PqxdhPhase2DhMetadata.admitted control collected = some metadata) :
+    (accepted : PqxdhPhase2DhMetadata.admitted (completedBinding := completedBinding) control collected = some metadata) :
     absBytes collected.server = absBytes control.expected_server_binding.identity_public_key := by
   classical
   by_cases equal : absBytes control.expected_server_binding.identity_public_key = absBytes collected.server
@@ -63,11 +65,11 @@ theorem collected_conversion {Auxiliary : Type} (crypto : Pqxdh.Crypto)
     (supported : (some collected, after) ∈ support
       ((simulateQ (PqxdhPhase2GapDhSource.prefixImpl domain aux visit)
         (PqxdhPhase2GapDhSource.collect () () () [])).run before))
-    (accepted : PqxdhPhase2DhMetadata.admitted control collected = some metadata) :
+    (accepted : PqxdhPhase2DhMetadata.admitted (completedBinding := completedBinding) control collected = some metadata) :
     PqxdhPhase2GapDhSource.peer collected.serverConverted = (joint.publicKeys seed).convertedX25519 := by
   have actual := PqxdhPhase2GapDhSource.collect_conversion domain crypto aux conversion visit
     () () () [] before after collected supported
-  rw [admitted_server control collected metadata accepted, pin] at actual
+  rw [admitted_server (completedBinding := completedBinding) control collected metadata accepted, pin] at actual
   have expected := PqxdhJointIdentity.jointPublic_conversion crypto joint secretOfSeed wiring seed
   rw [expected] at actual
   apply List.Vector.toList_injective
@@ -85,7 +87,7 @@ theorem reached_conversion {Auxiliary : Type} (crypto : Pqxdh.Crypto)
     (before after : Auxiliary) (pending : PqxdhPhase2DhMetadata.Prepared registration.AuthenticatedResponse)
     (supported : (some pending, after) ∈ support
       ((simulateQ (PqxdhPhase2GapDhSource.prefixImpl domain aux visit)
-        (PqxdhPhase2DhMetadata.prepare control () () () [])).run before)) :
+        (PqxdhPhase2DhMetadata.prepare (completedBinding := completedBinding) control () () () [])).run before)) :
     PqxdhPhase2GapDhSource.peer pending.collected.serverConverted = (joint.publicKeys seed).convertedX25519 := by
   simp only [PqxdhPhase2DhMetadata.prepare, simulateQ_bind, StateT.run_bind, mem_support_bind_iff] at supported
   obtain ⟨⟨collected, middle⟩, first, last⟩ := supported
@@ -93,7 +95,7 @@ theorem reached_conversion {Auxiliary : Type} (crypto : Pqxdh.Crypto)
   | none => simp only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff, Prod.mk.injEq,
       Option.bind_none, Option.some_ne_none, false_and] at last
   | some collected =>
-      cases accepted : PqxdhPhase2DhMetadata.admitted control collected with
+      cases accepted : PqxdhPhase2DhMetadata.admitted (completedBinding := completedBinding) control collected with
       | none => simp only [accepted, Option.map_none, Option.bind_some, simulateQ_pure, StateT.run_pure,
           support_pure, Set.mem_singleton_iff, Prod.mk.injEq, Option.some_ne_none, false_and] at last
       | some metadata =>
@@ -101,7 +103,7 @@ theorem reached_conversion {Auxiliary : Type} (crypto : Pqxdh.Crypto)
             support_pure, Set.mem_singleton_iff, Prod.mk.injEq, Option.some.injEq] at last
           have pendingEq : (⟨collected, metadata⟩ : PqxdhPhase2DhMetadata.Prepared registration.AuthenticatedResponse) = pending := last.1.symm
           subst pending
-          exact collected_conversion crypto joint dh domain secretOfSeed wiring seed aux conversion visit control
+          exact collected_conversion (completedBinding := completedBinding) crypto joint dh domain secretOfSeed wiring seed aux conversion visit control
             pin before middle collected metadata first accepted
 
 end BeaconcryptCore.Computational.RegistrationBeaconConversion

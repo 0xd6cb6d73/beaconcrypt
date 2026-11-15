@@ -24,7 +24,7 @@ namespace beaconcrypt_record_send
 variable [beaconcrypt_record_send.ratchet.Operations]
 
 /-- [beaconcrypt::ratchet::execute_record_send::{impl core::ops::function::FnOnce<(beaconcrypt_core::record_effects::SealedRecord<alloc::vec::Vec<u8>>,), beaconcrypt::shared::Encrypted> for beaconcrypt::ratchet::execute_record_send::closure}::call_once]:
-    Source: 'beaconcrypt/src/ratchet.rs', lines 565:19-569:9 -/
+    Source: 'beaconcrypt/src/ratchet.rs', lines 569:19-573:9 -/
 def
   ratchet.execute_record_send.closure.Insts.CoreOpsFunctionFnOnceTupleSealedRecordVecU8Encrypted.call_once
   (_c : ratchet.execute_record_send.closure)
@@ -40,7 +40,7 @@ def
     }
 
 /-- Trait implementation: [beaconcrypt::ratchet::execute_record_send::{impl core::ops::function::FnOnce<(beaconcrypt_core::record_effects::SealedRecord<alloc::vec::Vec<u8>>,), beaconcrypt::shared::Encrypted> for beaconcrypt::ratchet::execute_record_send::closure}]
-    Source: 'beaconcrypt/src/ratchet.rs', lines 565:19-569:9 -/
+    Source: 'beaconcrypt/src/ratchet.rs', lines 569:19-573:9 -/
 @[reducible]
 def
   ratchet.execute_record_send.closure.Insts.CoreOpsFunctionFnOnceTupleSealedRecordVecU8Encrypted
@@ -52,7 +52,7 @@ def
 }
 
 /-- [beaconcrypt::ratchet::execute_record_send]:
-    Source: 'beaconcrypt/src/ratchet.rs', lines 537:0-571:1 -/
+    Source: 'beaconcrypt/src/ratchet.rs', lines 541:0-575:1 -/
 def ratchet.execute_record_send
   (kernel : beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel)
   (context : beaconcrypt_core.record_effects.SealFrameContext) :

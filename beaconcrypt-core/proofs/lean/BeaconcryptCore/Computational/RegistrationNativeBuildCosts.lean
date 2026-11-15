@@ -133,7 +133,7 @@ theorem raw_bound (initial : RegistrationBoundKeySchedule.PublicInitial)
     · intro query
       cases query with
       | write request => cases request <;> simp [Weighted, RegistrationRawSealBridge.nativeAdapter, isQueryBound_query_iff]
-      | rootKdf request | initialKdf request | ratchetKdf request | hash request | «seal» request | openAead request =>
+      | rootKdf request | initialKdf request | ratchetKdf request | adHash request | hash request | «seal» request | openAead request =>
           simp [Weighted, RegistrationRawSealBridge.nativeAdapter, isQueryBound_query_iff]
   · intro query
     exact RegistrationNativeWeightedContext.query_bound _ _
@@ -364,6 +364,22 @@ theorem occupancy_bound (keyId : U64) (qSign : Nat) (kind : EffectKind) :
     (fun query => serviceCost (n := n) qSign query kind) (.inr (.inr (.inr (.peerPresent keyId))))
   cases kind <;> simpa [RegistrationServerMaterialFrontend.effect, serviceCost, commonCost, envCost, effectKind, adminCost] using query
 
+private theorem ad_hash_bound (pending : registration.ServerAdHash) (qSign : Nat) (kind : EffectKind) :
+    Weighted (fun query => serviceCost (n := n) qSign query kind)
+      (RegistrationServerMaterialFrontend.adHash pending) (hashCost kind) := by
+  unfold RegistrationServerMaterialFrontend.adHash
+  cases pending.request with
+  | fail error | div => trivial
+  | ok request =>
+      apply weighted_bind _ _ _ (hashCost kind) 0
+      · have query := RegistrationNativeWeightedContext.query_bound
+          (fun query => serviceCost (n := n) qSign query kind)
+          (.inr (.inr (.inr (.hash (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request)))))
+        cases kind <;>
+          simpa [RegistrationServerMaterialFrontend.effect, serviceCost, commonCost, envCost, effectKind, hashCost] using query
+      · intro digest
+        trivial
+
 theorem finish_bound (result : RustM (RegistrationNativePairedServerService.Result Pqxdh.Bytes))
     (before : RegistrationServerMaterialFrontend.State) (qSign : Nat) (kind : EffectKind) :
     Weighted (fun query => serviceCost (n := n) qSign query kind)
@@ -380,7 +396,7 @@ theorem complete_bound (wire : RegistrationNativeWire.Wire) (reservePeer : Bool)
     (before : RegistrationServerMaterialFrontend.State) (qSign : Nat) (kind : EffectKind) :
     Weighted (fun query => serviceCost (n := n) qSign query kind)
       ((RegistrationServerMaterialFrontend.complete wire reservePeer ready application).run before)
-      (adminCost kind + postCost qSign kind) := by
+      (adminCost kind + (hashCost kind + postCost qSign kind)) := by
   simp only [RegistrationServerMaterialFrontend.complete, StateT.run]
   cases lookupEq : peer.begin_completion_lookup before.control before.pin (RegistrationServerMaterialFrontend.token ready) application with
   | fail error => trivial
@@ -395,7 +411,7 @@ theorem complete_bound (wire : RegistrationNativeWire.Wire) (reservePeer : Bool)
         | ok keyId =>
             dsimp only
             split
-            · apply weighted_bind _ _ _ (adminCost kind) (postCost qSign kind) (occupancy_bound keyId qSign kind)
+            · apply weighted_bind _ _ _ (adminCost kind) (hashCost kind + postCost qSign kind) (occupancy_bound keyId qSign kind)
               intro occupied
               cases resumed : lookup.resume occupied with
               | fail error => trivial
@@ -404,12 +420,20 @@ theorem complete_bound (wire : RegistrationNativeWire.Wire) (reservePeer : Bool)
                 | Err previous => trivial
                 | Ok selected =>
                     dsimp only
-                    split
-                    · apply weighted_bind _ _ _ (postCost qSign kind) 0
-                      · exact admitted_bound _ _ _ _ qSign kind
-                      · intro published
-                        exact finish_bound published before qSign kind
-                    · trivial
+                    apply weighted_bind _ _ _ (hashCost kind) (postCost qSign kind) (ad_hash_bound selected qSign kind)
+                    intro hashed
+                    cases hashed with
+                    | fail error | div => trivial
+                    | ok completion => cases completion with
+                      | Err previous => trivial
+                      | Ok initial =>
+                        dsimp only
+                        split
+                        · apply weighted_bind _ _ _ (postCost qSign kind) 0
+                          · exact admitted_bound _ _ _ _ qSign kind
+                          · intro published
+                            exact finish_bound published before qSign kind
+                        · trivial
             · trivial
 
 theorem build_source_bound (wire : RegistrationNativeWire.Wire) (reservePeer : Bool)
@@ -417,7 +441,7 @@ theorem build_source_bound (wire : RegistrationNativeWire.Wire) (reservePeer : B
     (qSign : Nat) (kind : EffectKind) :
     Weighted (fun query => serviceCost (n := n) qSign query kind)
       ((RegistrationServerMaterialFrontend.build wire reservePeer handle application).run before)
-      (adminCost kind + postCost qSign kind) := by
+      (adminCost kind + (hashCost kind + postCost qSign kind)) := by
   simp only [RegistrationServerMaterialFrontend.build, StateT.run]
   cases taken : RegistrationServerMaterialFrontend.take handle before with
   | mk selected current =>
@@ -430,7 +454,7 @@ theorem build_source_bound (wire : RegistrationNativeWire.Wire) (reservePeer : B
 
 def bill (qSign : Nat) : EffectKind → Nat
   | .coin => 108 + qSign
-  | .hash => 4
+  | .hash => 5
   | .administrative => 2
 
 theorem server_bound (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
@@ -444,7 +468,7 @@ theorem server_bound (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
       (bill qSign kind) := by
   have bounded := service_program_bound (n := n) (KemSK := KemSK) source wire sign qSign qKem signing
     ((RegistrationServerMaterialFrontend.build wire checks.reservePeer handle application).run before) env kind
-    (adminCost kind + postCost qSign kind) (build_source_bound wire checks.reservePeer handle application before qSign kind)
+    (adminCost kind + (hashCost kind + postCost qSign kind)) (build_source_bound wire checks.reservePeer handle application before qSign kind)
   exact weighted_mono _ _ _ _ bounded (by cases kind <;> simp [bill, postCost, coinCost, hashCost, adminCost])
 
 set_option maxRecDepth 4096 in

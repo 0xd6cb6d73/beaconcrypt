@@ -1,7 +1,7 @@
 import BeaconcryptCore.Computational.RawCtxSelectedInitialTable
 
 /-!
-The original receive and send programs run over one retained initial first32 entry and the entire prior lookup. Both current chain fields, staged material, context and complete shared primitive effects are preserved. The labeled KDF handler explicitly retains a target parameter: a known callback at the initializer root reconstructs the target as first32 material. The separate InitialTable.initializerQuery/step_before interface identifies that case; these exact source equations do not pretend it is target-free. Actual initial64 uses the shared prefix and does not manufacture an initialization nonce.
+The original receive and send programs run over one retained initial first32 entry and the entire prior lookup. Both current chain fields, staged material, context and complete shared primitive effects are preserved. The labeled KDF handler retains a target parameter and generic exact-address dispatch. At the actual initial45 address, message48 callbacks cannot reach that coordinate. Actual initial64 uses its initial-domain prefix and does not manufacture an initialization nonce.
 -/
 
 open CoreModels Aeneas

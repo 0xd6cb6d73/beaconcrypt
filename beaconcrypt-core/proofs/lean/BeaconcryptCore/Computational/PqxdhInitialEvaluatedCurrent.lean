@@ -9,6 +9,8 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialEvaluatedCurrent
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhKemIndCca PqxdhCorrelatedExpand PqxdhPhase2SourceAux
 open PqxdhPhase1AcceptanceOracle PqxdhEd25519EufCma PqxdhJointIdentity PqxdhPrivateKemSource
 open PqxdhCorrelatedExtractFamily PqxdhInitialRootLabelService PqxdhSecretInputKdf
@@ -23,17 +25,17 @@ variable {setup : StatefulPhase1Setup baseSpec}
     (attachedVerify : Ed25519PublicKey → Pqxdh.Bytes → Option Pqxdh.Bytes) (primitives : Primitives)
     (program : Program baseSpec setup.Context S (B + 1)) (post : Post (baseSpec := baseSpec) program.Selection S (B + 1))
     (secret : KemSK) (selected : Message)
-    (prepared : PqxdhPrivateRootSource.Prepared setup (driver env.toDriverEnvironment program).State)
+    (prepared : PqxdhPrivateRootSource.Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)
     (ready : Ready) (prior : RawCtxSelectedParentTable.Prior) (entry : RawCtxSelectedParentEntry.Entry)
     (second : Bool) (other target : RootOutput)
 
 noncomputable def accepted : StateT RootOracle.QueryCache ProbComp Bool := fun cache => do
-  let result ← (build env.source (RawCtxSelectedParentCalls.labelCalls env.source env.recordWriter prior entry
+  let result ← (build (associatedData := associatedData) env.source (RawCtxSelectedParentCalls.labelCalls env.source env.recordWriter prior entry
       (RawCtxSelectedParentCalls.childResponse prior entry target)) env.aux
       (RawCtxInitialSentinelSampler.labelInitial second false other) env.senderId env.index env.metadata
       (PqxdhInitialBuilderCut.eraseRoot ready)).run
         (PqxdhInitialGenericProtocol.fromNative PqxdhInitialSelectedBuilder.knownKernel prepared.1.context.selection.2)
-  (Prod.fst <$> (simulateQ (PqxdhInitialEvaluatedPost.handler attachedVerify primitives 1 env.source env.localImpl
+  (Prod.fst <$> (simulateQ (PqxdhInitialEvaluatedPost.handler (completedBinding := completedBinding) attachedVerify primitives 1 env.source env.localImpl
       env.recordWriter env.senderId env.route env.decode baseImpl kem secret ready.ciphertext prior entry selected second other target)
       (post prepared.1.context.selection.1 result.1)).run (result.2, prepared.2)).run cache
 
@@ -42,16 +44,16 @@ set_option backward.isDefEq.respectTransparency false in
 theorem source :
     simulateQ (labelledFull env.source (QueryImpl.ofLift unifSpec ProbComp) selected
       (RawCtxSelectedInitialConstructor.response64 (RawCtxInitialSentinelSampler.join second other target)))
-      (PqxdhInitialPrivateCurrent.accepted env (retainedKdf prior entry target) baseImpl kem attachedVerify primitives
+      (PqxdhInitialPrivateCurrent.accepted (associatedData := associatedData) (completedBinding := completedBinding) env (retainedKdf prior entry target) baseImpl kem attachedVerify primitives
         program post secret selected prepared ready) =
-      accepted env baseImpl kem attachedVerify primitives program post secret selected prepared ready prior entry second other target := by
+      accepted (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post secret selected prepared ready prior entry second other target := by
   funext cache
   change StateT.run (simulateQ (labelledFull env.source (QueryImpl.ofLift unifSpec ProbComp) selected
     (RawCtxSelectedInitialConstructor.response64 (RawCtxInitialSentinelSampler.join second other target)))
-      (PqxdhInitialPrivateCurrent.accepted env (retainedKdf prior entry target) baseImpl kem attachedVerify primitives
+      (PqxdhInitialPrivateCurrent.accepted (associatedData := associatedData) (completedBinding := completedBinding) env (retainedKdf prior entry target) baseImpl kem attachedVerify primitives
         program post secret selected prepared ready)) cache = _
   rw [PqxdhInitialPrivateCurrent.accepted_response]
-  have built := selected_build env.source env.recordWriter prior entry target env.aux
+  have built := selected_build (associatedData := associatedData) env.source env.recordWriter prior entry target env.aux
     (RawCtxInitialSentinelSampler.labelInitial second false other) env.senderId env.index env.metadata
     (PqxdhInitialBuilderCut.eraseRoot ready)
     (PqxdhInitialGenericProtocol.fromNative PqxdhInitialSelectedBuilder.knownKernel prepared.1.context.selection.2)
@@ -60,7 +62,7 @@ theorem source :
   unfold accepted
   apply bind_congr
   intro result
-  have mapped := PqxdhInitialEvaluatedPost.source attachedVerify primitives 1 env.source env.localImpl
+  have mapped := PqxdhInitialEvaluatedPost.source (completedBinding := completedBinding) attachedVerify primitives 1 env.source env.localImpl
     env.recordWriter env.senderId env.route env.decode baseImpl kem secret ready.ciphertext prior entry selected second other target
     (post prepared.1.context.selection.1 result.1) (result.2, prepared.2)
   have observed := congrArg (fun work => (Prod.fst <$> work).run cache) mapped

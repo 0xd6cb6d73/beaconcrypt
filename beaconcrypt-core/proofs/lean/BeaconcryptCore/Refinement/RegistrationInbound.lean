@@ -40,14 +40,17 @@ def edProgress (before : registration.InitEd25519Verification)
             next.pq_key.val = bytes.val) ∨
          (before.stage = .PreKey ∧ next.stage = .OneTimeKey ∧ next.pre_key.val = bytes.val ∧
             next.pq_key = before.pq_key))
-  | .ServerFingerprintRequested next =>
+  | .Accepted next =>
       ∃ bytes, opened = .Some bytes ∧ bytes.val = (edSignedBytes before).drop 64 ∧
-        before.stage = .OneTimeKey ∧ next.state = before.state ∧
+        before.stage = .OneTimeKey ∧
         ∃ key : Std.Array Std.U8 34#usize, key.val = bytes.val ∧
           pqxdh.validate_init_kex {
-            identity_key := before.state.packet.identity_key,
+            identity_key := before.state.fields.identity_key,
             prekey := before.pre_key, one_time_key := key, pq_key := before.pq_key } =
-            ok (.Ok next.registration)
+            ok (.Ok next.registration) ∧
+          next.binding.server_pin = before.state.server_pin ∧
+          next.binding.init_hash = before.state.init_hash ∧
+          next.binding.init_fields = before.state.fields
   | _ => False
 
 /-- Every Ed reply, including a malformed or mismatched opened slice, returns normally. -/
@@ -61,7 +64,7 @@ theorem init_ed_resume_refines (before : registration.InitEd25519Verification)
       init_ed_request_exact before
     obtain ⟨suffix, suffixRun, suffixBytes⟩ := attached_suffix_exact request.signed requestLength
     simp only [registration.InitEd25519Verification.resume, requestRun, bind_tc_ok,
-      suffixRun, core.Shared1A.Insts.CoreCmpPartialEqShared0B.ne,
+      suffixRun, authentication.OwnedInitFields.fields, bind_tc_ok, core.Shared1A.Insts.CoreCmpPartialEqShared0B.ne,
       slice_ne_exact]
     split_ifs with mismatch
     · exact ⟨_, rfl, trivial⟩
@@ -74,56 +77,24 @@ theorem init_ed_resume_refines (before : registration.InitEd25519Verification)
         | Err error => simp_all [edProgress]
         | Ok oneTime =>
           obtain ⟨verified, verifiedRun⟩ := BeaconcryptCore.PanicFreedom.validate_init_kex_ok
-            { identity_key := before.state.packet.identity_key, prekey := before.pre_key,
+            { identity_key := before.state.fields.identity_key, prekey := before.pre_key,
               one_time_key := oneTime, pq_key := before.pq_key }
-          cases verified <;> simp_all [pqxdh.InitKex.from_encoded, edProgress]
+          cases verified <;> simp_all [pqxdh.InitKex.from_encoded, edProgress, session.RegistrationBinding.new]
           exact ⟨oneTime, smallBytes.1, verifiedRun⟩
       case PqKey => cases large <;> simp_all [edProgress]
 
-/-- Authentication creates final bound AD while retaining all authenticated registration fields. -/
-theorem init_beacon_fingerprint_exact (before : registration.InitBeaconFingerprint)
-    (fingerprint : Std.Array Std.U8 64#usize) :
-    ∃ accepted : registration.AuthenticatedInit,
-      before.resume (.Some fingerprint) = ok (.Accepted accepted) ∧
-      accepted.registration = before.registration ∧
-      accepted.binding.server_pin = before.server_pin ∧
+/-- Accepted requests retain exact fields, request digest and pin; no final AD exists at this phase. -/
+theorem accepted_request_retained (before : registration.InitEd25519Verification)
+    (opened : core.option.Option (Slice Std.U8)) (accepted : registration.AuthenticatedInit)
+    (returned : before.resume opened = ok (.Accepted accepted)) :
+    accepted.binding.server_pin = before.state.server_pin ∧
       accepted.binding.init_hash = before.state.init_hash ∧
-      accepted.binding.beacon_identity_public_key = before.registration.beacon_identity_public_key ∧
-      accepted.binding.beacon_fingerprint = fingerprint ∧
-      BeaconcryptCore.Refinement.SessionBinding.registrationConsistent accepted.binding := by
-  obtain ⟨binding, bindingRun, pin, digest, identity, fp, ad⟩ :=
-    BeaconcryptCore.Refinement.SessionBinding.registration_new_refines before.server_pin
-      before.state.init_hash before.registration.beacon_identity_public_key fingerprint
-  refine ⟨⟨before.registration, binding⟩, ?_, rfl, pin, digest, identity, fp, ?_⟩
-  · simp [registration.InitBeaconFingerprint.resume,
-      pqxdh.VerifiedInitKex.impl.beacon_identity_public_key, bindingRun]
-  · simpa [BeaconcryptCore.Refinement.SessionBinding.registrationConsistent, pin, identity, fp] using ad
-
-/-- The selected server ML fingerprint changes only that fingerprint slot. -/
-theorem init_server_fingerprint_exact (before : registration.InitServerFingerprint)
-    (fingerprint : Std.Array Std.U8 64#usize) :
-    ∃ next : registration.InitBeaconFingerprint,
-      before.resume (.Some fingerprint) = ok (.BeaconFingerprintRequested next) ∧
-      next.state = before.state ∧ next.registration = before.registration ∧
-      next.server_pin.binding = before.state.server_pin.binding ∧
-      next.server_pin.public_key = before.state.server_pin.public_key ∧
-      next.server_pin.fingerprint = fingerprint :=
-  ⟨_, rfl, rfl, rfl, rfl, rfl, rfl⟩
-
-/-- Missing fingerprints stop authentication before a capability can be returned. -/
-theorem missing_fingerprint_rejects (server : registration.InitServerFingerprint)
-    (beacon : registration.InitBeaconFingerprint) :
-    server.resume .None = ok .Rejected ∧ beacon.resume .None = ok .Rejected :=
-  ⟨rfl, rfl⟩
-
-/-- The two fingerprint requests hash the complete retained ML public keys. -/
-theorem fingerprint_requests_exact (server : registration.InitServerFingerprint)
-    (beacon : registration.InitBeaconFingerprint) :
-    ∃ serverRequest beaconRequest,
-      server.request = ok serverRequest ∧ beacon.request = ok beaconRequest ∧
-      hashBytes serverRequest = absBytes server.state.server_pin.public_key ∧
-      hashBytes beaconRequest = absBytes beacon.state.packet.mldsa_public_key :=
-  ⟨_, _, rfl, rfl, rfl, rfl⟩
+      accepted.binding.init_fields = before.state.fields := by
+  obtain ⟨result, run, progress⟩ := init_ed_resume_refines before opened
+  have same : result = .Accepted accepted := RustM.ok.inj (run.symm.trans returned)
+  subst result
+  obtain ⟨bytes, _, _, _, key, _, _, pin, digest, fields⟩ := progress
+  exact ⟨pin, digest, fields⟩
 
 end BeaconcryptCore.Refinement.RegistrationInbound
 
@@ -137,23 +108,9 @@ end BeaconcryptCore.Refinement.RegistrationInbound
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Refinement.RegistrationInbound.init_ed_resume_refines
-/-- info: 'BeaconcryptCore.Refinement.RegistrationInbound.init_beacon_fingerprint_exact' depends on axioms: [propext,
+
+/-- info: 'BeaconcryptCore.Refinement.RegistrationInbound.accepted_request_retained' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Refinement.RegistrationInbound.init_beacon_fingerprint_exact
-/-- info: 'BeaconcryptCore.Refinement.RegistrationInbound.init_server_fingerprint_exact' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Refinement.RegistrationInbound.init_server_fingerprint_exact
-/-- info: 'BeaconcryptCore.Refinement.RegistrationInbound.missing_fingerprint_rejects' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Refinement.RegistrationInbound.missing_fingerprint_rejects
-/-- info: 'BeaconcryptCore.Refinement.RegistrationInbound.fingerprint_requests_exact' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Refinement.RegistrationInbound.fingerprint_requests_exact
+#print axioms BeaconcryptCore.Refinement.RegistrationInbound.accepted_request_retained

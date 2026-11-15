@@ -63,7 +63,7 @@ theorem program_input (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
 theorem native_agree_input (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (checks : PqxdhServerAuthExperiment.Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (authenticated : registration.AuthenticatedInit) (before : RegistrationServerFrontendCompiler.State n) :
     Prod.map id RegistrationNativeKemServerState.maskServer <$>
         (RegistrationServerNativeSource.agree setup checks representation created packet authenticated).run before =
@@ -78,7 +78,7 @@ theorem native_agree_input (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     RegistrationNativeKemServerState.maskServer, mask, Function.comp_def] using law
 
 /-- Native replay insertion and one-use handle retention preserve their exact result while leaving all counted World operations untouched. -/
-theorem native_retain_input (created : PqxdhLiveServerConstruction.Created Unit)
+theorem native_retain_input (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (accepted : agreement.ServerAgreement) (before : RegistrationServerFrontendCompiler.State n) :
     Prod.map id RegistrationNativeKemServerState.maskServer <$>
         (RegistrationServerNativeSource.retain created accepted).run before =

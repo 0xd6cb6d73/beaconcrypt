@@ -11,6 +11,8 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhInitialPreparedResources
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf
 open PqxdhInitialBeaconAmbient PqxdhInitialSupportedCertificate
 variable {ι M P I D K X Response Shared A N C Result Origin : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -26,22 +28,22 @@ variable (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writ
   (execution : PqxdhInitialNativeCarried.Execution extra M P I D K Result Origin S B)
   (depth : Nat) (state : PqxdhInitialNativeAudit.State A N C)
 
-local notation "prepared" => PqxdhInitialPreparedParent.prepare source writer pre application initializer selector aux
+local notation "prepared" => PqxdhInitialPreparedParent.prepare (completedBinding := completedBinding) (associatedData := associatedData) source writer pre application initializer selector aux
   mark sender route decode observe execution depth state
-local notation "sourceRun" => PqxdhInitialNativeAuditCarried.carried source writer pre application initializer selector aux
+local notation "sourceRun" => PqxdhInitialNativeAuditCarried.carried (completedBinding := completedBinding) (associatedData := associatedData) source writer pre application initializer selector aux
   mark sender route decode execution depth (depth + 1) state
 
 def pending (input : RawCtxSupportedSample.Pending prepared) : Supported sourceRun :=
-  ⟨input.val, ((PqxdhInitialPreparedParent.supported_pending source writer pre application initializer selector aux
+  ⟨input.val, ((PqxdhInitialPreparedParent.supported_pending (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux
     mark sender route decode observe execution depth state input.val.2 input.val.1).mp input.property).1⟩
 
 noncomputable def sample : ProbComp (Bool ⊕ Supported sourceRun) :=
-  Sum.map id (pending source writer pre application initializer selector aux mark sender route decode observe execution depth state) <$>
+  Sum.map id (pending (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode observe execution depth state) <$>
     RawCtxSupportedSample.sum prepared
 
 /-- Forgetting only the proof annotation returns the exact original prepared source sampler, with the same common bits and complete reached states. -/
 theorem sample_erase : Sum.map id Subtype.val <$>
-    sample source writer pre application initializer selector aux mark sender route decode observe execution depth state = prepared := by
+    sample (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode observe execution depth state = prepared := by
   rw [sample, Functor.map_map]
   convert RawCtxSupportedSample.sum_erase prepared using 1
   congr 1
@@ -52,7 +54,7 @@ theorem sample_erase : Sum.map id Subtype.val <$>
 /-- Original common and pending source continuations receive exactly the same runtime value after the support annotation. -/
 theorem sample_run {Result' : Type}
     (next : Bool ⊕ PqxdhInitialPreparedParent.Pending extra M P I D K Result Origin A N C S B → ProbComp Result') :
-    (sample source writer pre application initializer selector aux mark sender route decode observe execution depth state >>=
+    (sample (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode observe execution depth state >>=
       fun value => next (Sum.map id Subtype.val value)) = prepared >>= next := by
   rw [← bind_map_left, sample_erase]
 
@@ -63,22 +65,22 @@ theorem sample_uniform (qPost qObserve : Nat)
     (costs : PqxdhInitialParentObserverBudgets.Costs)
     (callbacks : PqxdhInitialParentObserverBudgets.ExternalUniform costs pre application initializer selector aux)
     (observeBound : ∀ result, (observe result).IsTotalQueryBound qObserve) :
-    (sample source writer pre application initializer selector aux mark sender route decode observe execution depth state).IsTotalQueryBound
+    (sample (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode observe execution depth state).IsTotalQueryBound
       (PqxdhInitialAuditedResources.uniformBudget costs qPost + qObserve) := by
   apply (isQueryBound_map_iff _ (Sum.map id Subtype.val) _ _ _).mp
   rw [sample_erase]
-  exact PqxdhInitialPreparedParent.prepare_uniform source writer pre application initializer selector aux mark sender route decode observe
+  exact PqxdhInitialPreparedParent.prepare_uniform (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode observe
     execution depth qPost qObserve bounded costs callbacks observeBound state
 
 
 /-- Every supported pending result still has the actual missing private entry; proof annotation does not add cached or unreachable branches. -/
 theorem sample_missing (input : Supported sourceRun)
     (supported : Sum.inr input ∈ support
-      (sample source writer pre application initializer selector aux mark sender route decode observe execution depth state)) :
+      (sample (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode observe execution depth state)) :
     input.val.2.1.1.1.2.1 (PqxdhInitialBuilderContext.address input.val.1.original) = none := by
-  apply ((PqxdhInitialPreparedParent.supported_pending source writer pre application initializer selector aux
+  apply ((PqxdhInitialPreparedParent.supported_pending (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux
     mark sender route decode observe execution depth state input.val.2 input.val.1).mp ?_).2
-  rw [← sample_erase source writer pre application initializer selector aux mark sender route decode observe execution depth state,
+  rw [← sample_erase (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode observe execution depth state,
     support_map]
   exact ⟨Sum.inr input, supported, rfl⟩
 
@@ -94,11 +96,11 @@ theorem pending_resources (qPost : Nat)
       PqxdhInitialParentStoppedHop.Trace M P I D K A N C Result Origin S B → Prop)
     (context : Supported sourceRun × RawCtxSelectedParentEntry.Entry) (output : FullOutput) :
     let next := continuation source pre application initializer selector aux sourceRun disclosed remaining event
-    let work := PqxdhInitialParentStoppedHop.observed source writer mark sender route decode next context output
+    let work := PqxdhInitialParentStoppedHop.observed (completedBinding := completedBinding) source writer mark sender route decode next context output
     work.IsTotalQueryBound ((2 * (255 + qPost * 67) + (remaining + 1)) * costs.cap) ∧
       ∀ result, result ∈ support work → (PqxdhInitialParentStoppedHop.candidates result).length ≤
         priorBudget execution qPost state disclosed + 3 * (2 * (255 + qPost * 67) + (remaining + 1)) :=
-  observer_resources source writer pre application initializer selector aux mark sender route decode execution depth (depth + 1)
+  PqxdhInitialSupportedCertificate.observer_resources (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode execution depth (depth + 1)
     qPost state bounded disclosed remaining costs callbacks event context output
 
 private theorem target_address (target : RootOutput) :
@@ -106,7 +108,7 @@ private theorem target_address (target : RootOutput) :
   change (⟨_, (RawCtxSelectedQueryTrace.rootVector (RawCtxFreshChainCut.concreteChain target)).toList⟩ : JointKdfAddress) = _
   rw [RawCtxSelectedQueryTrace.rootVector_concrete]
   exact congrArg (fun info => (⟨info, target.toList⟩ : JointKdfAddress))
-    (by simpa only [RawCtxChainSend.nativeRequest, FixedHkdfDomain.info, pqxdh.SYM_RATCHET_INFO] using PqxdhRefinement.absBytes_SYM_RATCHET_INFO)
+    (by simpa only [RawCtxChainSend.nativeRequest, FixedHkdfDomain.info, ratchet.SYM_RATCHET_INFO] using PqxdhRefinement.absBytes_SYM_RATCHET_INFO)
 
 
 /-- The pending branch retains its exact source parent address; the common branch has no source parent and uses an unused fixed comparison address. -/
@@ -117,8 +119,8 @@ def address : Bool ⊕ Supported sourceRun → JointKdfAddress
 /-- The current parent input receives its own exact full76-draw collision charge. It is not assumed to appear in an earlier query or disclosure list. -/
 theorem parent_collision :
     Pr{let pair ← (RawCtxSelectedParentCandidates.sample
-        (sample source writer pre application initializer selector aux mark sender route decode observe execution depth state)
-        (address source writer pre application initializer selector aux mark sender route decode execution depth state))}[RawCtxSelectedParentPrivatePatch.targetAddress pair.2 = pair.1.2.address] ≤
+        (sample (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode observe execution depth state)
+        (address (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode execution depth state))}[RawCtxSelectedParentPrivatePatch.targetAddress pair.2 = pair.1.2.address] ≤
       (2 ^ 256 : ENNReal)⁻¹ := by
   unfold RawCtxSelectedParentCandidates.sample
   have split : ∀ {Context Value : Type} (prior : ProbComp Context) (draw : Context → ProbComp Value)
@@ -126,7 +128,7 @@ theorem parent_collision :
       (∀ context, Pr{let y ← draw context}[q y] ≤ ε) → Pr{let y ← prior >>= draw}[q y] ≤ ε :=
     fun prior draw q ε h => prEvent_bind_le_of_forall_le prior draw q h
   refine split _ _ _ _ fun context => ?_
-  have bound := RawCtxFirstParentRisk.full_inputs [address source writer pre application initializer selector aux mark sender route decode execution depth state context]
+  have bound := RawCtxFirstParentRisk.full_inputs [address (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode execution depth state context]
   simp only [List.length_singleton, Nat.cast_one, one_mul] at bound
   generalize sampled : ($ᵗ FullOutput : ProbComp FullOutput) = block at bound ⊢
   rw [bind_pure_comp _ block, prEvent_map]

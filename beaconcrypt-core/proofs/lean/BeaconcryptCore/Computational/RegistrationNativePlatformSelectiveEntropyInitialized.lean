@@ -45,7 +45,7 @@ theorem initialized_source
       (CborRawRecordOriginFlatten.interpret service codec route
         (RegistrationNativeHiddenStartup.start (n := n) setup source ensureInit identityIndex serverKeyId (setup.joint.publicKeys seed))
         CborRecordWorldClient.initial PqxdhRecordLiftProtocol.initialControl secret))
-    (startup : ProbComp (Option (PqxdhLiveServerConstruction.Created Unit × State n KemSK ProviderState Platform source)))
+    (startup : ProbComp (Option (PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize) × State n KemSK ProviderState Platform source)))
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value) :
     let initial : RegistrationNativePlatformHiddenAllocationCore.State n Platform

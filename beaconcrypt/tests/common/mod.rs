@@ -30,14 +30,12 @@ pub fn encode_response(response: KexResponse<'_>) -> Vec<u8> {
 
 // Hand-author canonical CBOR so malformed-length fixtures bypass the strict encoders.
 pub fn encode_unchecked_init(init: InitKex<'_>) -> Vec<u8> {
-	let mut output = vec![0x88, 2, 0];
+	let mut output = vec![0x86, 3, 0];
 	for field in [
 		init.identity_key,
 		init.pre_key,
 		init.one_time_key,
 		init.pq_key,
-		init.mldsa_public_key,
-		init.signature,
 	] {
 		append_byte_string(&mut output, field);
 	}
@@ -45,7 +43,7 @@ pub fn encode_unchecked_init(init: InitKex<'_>) -> Vec<u8> {
 }
 
 pub fn encode_unchecked_response(response: KexResponse<'_>) -> Vec<u8> {
-	let mut output = vec![0x88, 2, 1];
+	let mut output = vec![0x88, 3, 1];
 	for field in [
 		response.identity_key,
 		response.ephemeral_key,

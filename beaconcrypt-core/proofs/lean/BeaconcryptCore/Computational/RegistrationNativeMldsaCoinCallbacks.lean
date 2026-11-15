@@ -28,7 +28,7 @@ def bill (qKeygen qEncap qDecap : Nat) (kind : Fin 12) : Nat :=
   | 1 => 128 + qKeygen
   | 2 => 416
   | 3 => RegistrationNativeMldsaCoinAccept.bill qEncap
-  | 4 => 448
+  | 4 => 512
   | 5 => 192 + 9 * qDecap
   | 6 => 0
   | _ => 64
@@ -38,7 +38,7 @@ def allowance (qKeygen qEncap qDecap : Nat) : Nat :=
 
 /-- The finite class allowance is an explicit polynomial in the three concrete KEM primitive draw caps. -/
 theorem allowance_eq (qKeygen qEncap qDecap : Nat) :
-    allowance qKeygen qEncap qDecap = 2305 + qKeygen + 9 * qEncap + 9 * qDecap := by
+    allowance qKeygen qEncap qDecap = 2369 + qKeygen + 9 * qEncap + 9 * qDecap := by
   simp [allowance, bill, Fin.sum_univ_succ, RegistrationNativeMldsaCoinAccept.bill]
   omega
 
@@ -48,7 +48,7 @@ private theorem bill_le (qKeygen qEncap qDecap : Nat) (kind : Fin 12) :
 
 theorem nonfinish (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential source)
     (kem : RegistrationNativeKemSourceBills.Caps setup) (query : RegistrationNativeRawAdapter.TypedSpec.Domain)
     (excluded : RegistrationNativeRawAdapter.kind query ≠ (5 : Fin 12))
     (before : RegistrationNativeExperiment.State n KemSK source) :
@@ -69,7 +69,7 @@ theorem nonfinish (setup : Setup base KemSK) (checks : Checks) (wire : Registrat
           kem.encapsulate kem.encapsulate_bound packet before
     | build index application =>
         change ((fun result => (result.1, { before with server := result.2 })) <$>
-          (RegistrationNativeMldsaServer.build source credential setup (RegistrationNativeWire.ledgerCodec wire) checks wire.encodeResponse index application).run before.server).IsQueryBoundP IsCoin 448
+          (RegistrationNativeMldsaServer.build source credential setup (RegistrationNativeWire.ledgerCodec wire) checks wire.encodeResponse index application).run before.server).IsQueryBoundP IsCoin 512
         simpa only [isQueryBoundP_map_iff] using
           RegistrationNativeMldsaCoinServer.build source credential setup (RegistrationNativeWire.ledgerCodec wire) checks wire.encodeResponse index application before.server
     | finish index packet => exact (excluded rfl).elim
@@ -100,7 +100,7 @@ theorem nonfinish (setup : Setup base KemSK) (checks : Checks) (wire : Registrat
 /-- Every actual free native callback, including finish, has the derived finite ordinary-uniform allowance under narrow concrete KEM primitive receipts. -/
 theorem handler (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential source)
     (kem : RegistrationNativeKemSourceBills.Caps setup) (query : RegistrationNativeRawAdapter.TypedSpec.Domain)
     (before : RegistrationNativeExperiment.State n KemSK source) :
     ((RegistrationNativeMldsaProfile.handler setup checks wire route representation created credential query).run before).IsQueryBoundP IsCoin

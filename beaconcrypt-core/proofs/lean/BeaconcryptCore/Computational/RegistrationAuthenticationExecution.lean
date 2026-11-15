@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationAuthenticationExecutor
 
-/-! Every successful executor trace consists of actual extracted continuation equations. The entry-point theorem then supplies the existing seven-gate authentication guarantee for every actual primitive interpretation. -/
+/-! Every successful executor trace consists of actual extracted continuation equations. The entry-point theorem then supplies the existing four-callback classical request-validation guarantee for every actual primitive interpretation. -/
 
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
@@ -31,27 +31,6 @@ theorem step_sound (initial : registration.InitAuthentication) (event : Event)
           pure (edge (.hash reply) (before.resume reply))) (some (event, after)) supported
       exact (query_edge_support (.hash request) Event.hash before.resume event after called).elim
         fun reply facts => facts.1 ▸ Step.hash before reply after facts.2
-  | MldsaVerificationRequested before =>
-      obtain ⟨request, _, called⟩ := continueWith_support before.request
-        (fun request => do
-          let reply ← (Spec.query (.mldsa request) : OracleComp Spec _)
-          pure (edge (.mldsa reply) (before.resume reply))) (some (event, after)) supported
-      exact (query_edge_support (.mldsa request) Event.mldsa before.resume event after called).elim
-        fun reply facts => facts.1 ▸ Step.mldsa before reply after facts.2
-  | ServerFingerprintRequested before =>
-      obtain ⟨request, _, called⟩ := continueWith_support before.request
-        (fun request => do
-          let reply ← (Spec.query (.hash request) : OracleComp Spec _)
-          pure (edge (.serverFingerprint reply) (before.resume reply))) (some (event, after)) supported
-      exact (query_edge_support (.hash request) Event.serverFingerprint before.resume event after called).elim
-        fun reply facts => facts.1 ▸ Step.serverFingerprint before reply after facts.2
-  | BeaconFingerprintRequested before =>
-      obtain ⟨request, _, called⟩ := continueWith_support before.request
-        (fun request => do
-          let reply ← (Spec.query (.hash request) : OracleComp Spec _)
-          pure (edge (.beaconFingerprint reply) (before.resume reply))) (some (event, after)) supported
-      exact (query_edge_support (.hash request) Event.beaconFingerprint before.resume event after called).elim
-        fun reply facts => facts.1 ▸ Step.beaconFingerprint before reply after facts.2
   | Accepted accepted => simp [step] at supported
   | Rejected => simp [step] at supported
 
@@ -95,20 +74,20 @@ theorem begin_sound (pin : session.ServerAuthenticationPin) (packet : registrati
     Executes pin packet events final := by
   unfold begin at supported
   obtain ⟨initial, started, executed⟩ := continueWith_support
-    (registration.begin_init_authentication pin packet) (execute 8) (events, final) supported
-  exact ⟨initial, started, execute_sound 8 initial events final executed⟩
+    (registration.begin_init_authentication pin packet) (execute 5) (events, final) supported
+  exact ⟨initial, started, execute_sound 5 initial events final executed⟩
 
-theorem begin_accepted_requires_gates (pin : session.ServerAuthenticationPin)
+theorem begin_accepted_classical_checks (pin : session.ServerAuthenticationPin)
     (packet : registration.InitPacket) (events : List Event) (accepted : registration.AuthenticatedInit)
     (supported : .ok (events, .Accepted accepted) ∈ support (begin pin packet)) :
-    Gates packet events := by
-  exact accepted_requires_gates pin packet events accepted
+    ValidatedRequestHistory packet events := by
+  exact accepted_requires_classical_checks pin packet events accepted
     (begin_sound pin packet events (.Accepted accepted) supported)
 
 theorem begin_accepted_callback_count (pin : session.ServerAuthenticationPin)
     (packet : registration.InitPacket) (events : List Event) (accepted : registration.AuthenticatedInit)
     (supported : .ok (events, .Accepted accepted) ∈ support (begin pin packet)) :
-    events.length = 7 := by
+    events.length = 4 := by
   exact accepted_callback_count pin packet events accepted
     (begin_sound pin packet events (.Accepted accepted) supported)
 
@@ -125,17 +104,30 @@ theorem simulated_begin_sound {State : Type}
   rw [StateT.run'_eq, support_map]
   exact Set.mem_image_of_mem Prod.fst supported
 
-theorem simulated_begin_accepted_requires_gates {State : Type}
+theorem simulated_begin_accepted_classical_checks {State : Type}
     (implementation : QueryImpl Spec (StateT State ProbComp))
     (pin : session.ServerAuthenticationPin) (packet : registration.InitPacket)
     (events : List Event) (accepted : registration.AuthenticatedInit) (before after : State)
     (supported : (.ok (events, .Accepted accepted), after) ∈ support
       ((simulateQ implementation (begin pin packet)).run before)) :
-    Gates packet events ∧ events.length = 7 := by
+    ValidatedRequestHistory packet events ∧ events.length = 4 := by
   have execution := simulated_begin_sound implementation pin packet events (.Accepted accepted)
     before after supported
-  exact ⟨accepted_requires_gates pin packet events accepted execution,
+  exact ⟨accepted_requires_classical_checks pin packet events accepted execution,
     accepted_callback_count pin packet events accepted execution⟩
+
+/-- A supported native execution retains the actual entry pin, signed fields and request-hash reply. -/
+theorem simulated_begin_accepted_request_provenance {State : Type}
+    (implementation : QueryImpl Spec (StateT State ProbComp))
+    (pin : session.ServerAuthenticationPin) (packet : registration.InitPacket)
+    (events : List Event) (accepted : registration.AuthenticatedInit) (before after : State)
+    (supported : (.ok (events, .Accepted accepted), after) ∈ support
+      ((simulateQ implementation (begin pin packet)).run before)) :
+    accepted.binding.server_pin = pin ∧
+      accepted.binding.init_fields = BeaconcryptCore.Refinement.RegistrationAuthentication.ownedFields packet ∧
+      ∃ tail, events = .hash (.Some accepted.binding.init_hash) :: tail :=
+  accepted_request_provenance pin packet events accepted
+    (simulated_begin_sound implementation pin packet events (.Accepted accepted) before after supported)
 
 end BeaconcryptCore.Computational.RegistrationAuthenticationExecutor
 
@@ -157,11 +149,11 @@ end BeaconcryptCore.Computational.RegistrationAuthenticationExecutor
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationAuthenticationExecutor.begin_sound
 
-/-- info: 'BeaconcryptCore.Computational.RegistrationAuthenticationExecutor.begin_accepted_requires_gates' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.RegistrationAuthenticationExecutor.begin_accepted_classical_checks' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationAuthenticationExecutor.begin_accepted_requires_gates
+#print axioms BeaconcryptCore.Computational.RegistrationAuthenticationExecutor.begin_accepted_classical_checks
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationAuthenticationExecutor.begin_accepted_callback_count' depends on axioms: [propext,
  Classical.choice,
@@ -175,8 +167,14 @@ end BeaconcryptCore.Computational.RegistrationAuthenticationExecutor
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationAuthenticationExecutor.simulated_begin_sound
 
-/-- info: 'BeaconcryptCore.Computational.RegistrationAuthenticationExecutor.simulated_begin_accepted_requires_gates' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.RegistrationAuthenticationExecutor.simulated_begin_accepted_classical_checks' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationAuthenticationExecutor.simulated_begin_accepted_requires_gates
+#print axioms BeaconcryptCore.Computational.RegistrationAuthenticationExecutor.simulated_begin_accepted_classical_checks
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationAuthenticationExecutor.simulated_begin_accepted_request_provenance' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationAuthenticationExecutor.simulated_begin_accepted_request_provenance

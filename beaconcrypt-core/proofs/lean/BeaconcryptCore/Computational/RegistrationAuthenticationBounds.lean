@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationAuthenticationCompiler
 
-/-! Structural resource bounds for the actual native authentication executor, including every failed getter and rejected continuation. The conservative entry-point bill counts eight fuel steps; the separate acceptance theorem still derives the exact seven actual callbacks. -/
+/-! Structural resource bounds for the actual native authentication executor, including every failed getter and rejected continuation. The conservative entry-point bill counts five fuel steps; the separate acceptance theorem still derives the exact four actual callbacks. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -60,21 +60,21 @@ theorem execute_bound (fuel : Nat) (state : registration.InitAuthentication) :
 
 attribute [local irreducible] execute registration.begin_init_authentication
 
-/-- Native Init authentication never exceeds its actual eight-step source executor. -/
+/-- Native Init authentication never exceeds its actual five-step source executor. -/
 theorem begin_bound (pin : session.ServerAuthenticationPin) (packet : registration.InitPacket) :
-    (begin pin packet).IsTotalQueryBound 8 :=
-  continue_bound (registration.begin_init_authentication pin packet) _ 8 (execute_bound 8)
+    (begin pin packet).IsTotalQueryBound 5 :=
+  continue_bound (registration.begin_init_authentication pin packet) _ 5 (execute_bound 5)
 
-/-- The compiled entry point has at most eight shared-cache hash calls and no explicit coin or administrative call. -/
+/-- The compiled entry point has at most five shared-cache hash calls and no explicit coin or administrative call. -/
 theorem program_bound (crypto : Pqxdh.Crypto) (verify : MldsaTranscriptAuth.Verify)
     (pin : session.ServerAuthenticationPin) (packet : registration.InitPacket) (kind : EffectKind) :
     (RegistrationAuthenticationCompiler.program (n := n) crypto verify pin packet).IsQueryBoundP
-      (fun query => effectKind query = kind) (if kind = .hash then 8 else 0) := by
+      (fun query => effectKind query = kind) (if kind = .hash then 5 else 0) := by
   unfold RegistrationAuthenticationCompiler.program
   by_cases selected : kind = .hash
   · subst kind
     simp only [ite_true]
-    apply RawCtxSourceOpen.simulate_bound _ (fun _ => True) _ _ 8
+    apply RawCtxSourceOpen.simulate_bound _ (fun _ => True) _ _ 5
       ((isQueryBoundP_true_iff _ _).mpr (begin_bound pin packet))
     intro query
     simpa only [ite_true] using RegistrationAuthenticationCompiler.callback_bound (n := n) crypto verify query .hash

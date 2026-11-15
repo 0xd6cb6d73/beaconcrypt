@@ -37,7 +37,7 @@ theorem simultaneous (crypto : Ratchet.Crypto ratchet.RatchetChain ratchet.Ratch
     ∃ serverCall ∈ calls, ∃ handle token current plaintext availability serverInitial hashed,
       serverCall.query = .inr (.build handle (some plaintext)) ∧
       RegistrationServerSdkSource.take handle serverCall.before.server = (some token, current) ∧
-      registration.begin_server_completion current.control current.pin availability token.agreement plaintext = .ok (.Ok serverInitial) ∧
+      BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission current.control current.pin availability token.agreement plaintext serverInitial ∧
       RegistrationServerRecordExecutor.Path serverInitial hashed ∧ Outcome crypto setup.source token serverInitial pending application := by
   obtain ⟨_leading, trailing, _split, _beforePath, executed, afterPath⟩ := actual.member
     (⟨.inr (.finish index (some packet)), beforeFinish, .ok (some application), afterFinish⟩ : Call RegistrationNativeRawAdapter.TypedSpec Native) member

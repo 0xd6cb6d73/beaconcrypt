@@ -7,7 +7,10 @@ open OracleComp OracleSpec CoreModels Aeneas OracleComp.ProgramLogic.Relational
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeEarlyCertified
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPhase1AcceptanceOracle PqxdhKemIndCca PqxdhInitializerSecrecy
 open CtxRomAuth AdaptiveCtxSharedHash PqxdhSecretInputKdf PqxdhFullSecretInputKdf
@@ -59,17 +62,17 @@ noncomputable def continuation (q : Nat) (bit : Bool) (result : Certified setup 
       (X := X) (Response := Response) (A := A) (KemSK := KemSK) q) :
     OracleComp AdaptiveCtxDynamicKnownKeys.Spec Bool :=
   match PqxdhLaterChallengeRandomEarly.sourceKey setup program (result.1, ∅) with
-  | none => PqxdhLaterChallengeBeforeUnguarded.client setup env callbacks program owner number attachedVerify primitives baseImpl kem (1 + q) bit
+  | none => PqxdhLaterChallengeBeforeUnguarded.client (completedBinding := completedBinding) setup env callbacks program owner number attachedVerify primitives baseImpl kem (1 + q) bit
       (PqxdhLaterChallengeGeneratedBeforeObservation.beforeKey setup program (result.1, ∅))
       (PqxdhLaterChallengeBeforeUnguarded.key_fits setup program owner number q result.1 ∅ result.2)
-  | some payload => PqxdhLaterChallengeBuilderConsumer.client setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem
+  | some payload => PqxdhLaterChallengeBuilderConsumer.client (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem
       (1 + q) bit (some payload)
 
 /-- Removing the old before resource guard leaves the exact complete two-branch source continuation and every oracle call unchanged. -/
 theorem continuation_eq (q : Nat) (bit : Bool) (result : Certified setup program owner number (M := M) (P := P) (I := I) (K := K)
       (X := X) (Response := Response) (A := A) (KemSK := KemSK) q) :
-    continuation setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem q bit result =
-    PqxdhLaterChallengeEarlyCompiled.continuation setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem
+    continuation (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem q bit result =
+    PqxdhLaterChallengeEarlyCompiled.continuation (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem
       (1 + q) bit result.1 ∅ := by
   cases key : PqxdhLaterChallengeRandomEarly.sourceKey setup program (result.1, ∅) <;>
     simp only [continuation, PqxdhLaterChallengeEarlyCompiled.continuation, key,
@@ -80,21 +83,21 @@ noncomputable def compiled (depth : Nat) (budget : PqxdhPhase2SourceSchedulerBou
     (bounded : PqxdhRecordConfidentialityChallenge.AdvBounded program owner adversary budget)
     (prefixBit continuationBit : Bool) : OracleComp AdaptiveCtxDynamicKnownKeys.Spec Bool := do
   let result ← simulateQ RawCtxSourceSharedRom.forward
-    (PqxdhLaterChallengeGeneratedFits.certified setup env callbacks program adversary owner number prefixBit
+    (PqxdhLaterChallengeGeneratedFits.certified (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number prefixBit
       attachedVerify primitives baseImpl kem ancestors disclosed depth budget bounded)
-  continuation setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem
+  continuation (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem
     (FinitePartitionQueryBounds.bill (fun _ => 1) budget) continuationBit result
 
 /-- The executable source certificate erases to the exact complete two-bit program, preserving both Builder and before callbacks, full source prefix, state and all oracle calls. -/
 theorem compiled_eq (depth : Nat) (budget : PqxdhPhase2SourceSchedulerBounds.Budget)
     (bounded : PqxdhRecordConfidentialityChallenge.AdvBounded program owner adversary budget)
     (prefixBit continuationBit : Bool) :
-    compiled setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+    compiled (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
       depth budget bounded prefixBit continuationBit =
-    PqxdhLaterChallengeEarlyCompiled.client setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem
+    PqxdhLaterChallengeEarlyCompiled.client (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem
       ancestors disclosed depth (1 + FinitePartitionQueryBounds.bill (fun _ => 1) budget) prefixBit continuationBit := by
   have erased := congrArg (simulateQ RawCtxSourceSharedRom.forward)
-    (PqxdhLaterChallengeGeneratedFits.certified_erase setup env callbacks program adversary owner number prefixBit
+    (PqxdhLaterChallengeGeneratedFits.certified_erase (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number prefixBit
       attachedVerify primitives baseImpl kem ancestors disclosed depth budget bounded)
   rw [simulateQ_map] at erased
   unfold compiled PqxdhLaterChallengeEarlyCompiled.client
@@ -104,12 +107,12 @@ theorem compiled_eq (depth : Nat) (budget : PqxdhPhase2SourceSchedulerBounds.Bud
 /-- The actual guard-free source reduction, including initial Builder and later before callbacks, has equal true probability in the two complete ordinary random worlds. -/
 theorem random (depth : Nat) (budget : PqxdhPhase2SourceSchedulerBounds.Budget)
     (bounded : PqxdhRecordConfidentialityChallenge.AdvBounded program owner adversary budget) :
-    𝒟[Prod.fst <$> (simulateQ impl (compiled setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+    𝒟[Prod.fst <$> (simulateQ impl (compiled (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
       depth budget bounded false false)).run randomInitial] {true} =
-    𝒟[Prod.fst <$> (simulateQ impl (compiled setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+    𝒟[Prod.fst <$> (simulateQ impl (compiled (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
       depth budget bounded true true)).run randomInitial] {true} := by
   rw [compiled_eq, compiled_eq]
-  exact PqxdhLaterChallengeEarlyCompiled.random setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem
+  exact PqxdhLaterChallengeEarlyCompiled.random (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem
     ancestors disclosed depth (1 + FinitePartitionQueryBounds.bill (fun _ => 1) budget)
 
 end BeaconcryptCore.Computational.PqxdhLaterChallengeEarlyCertified

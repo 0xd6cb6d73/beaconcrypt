@@ -40,20 +40,52 @@ def created (setup : Setup baseSpec KemSK) (pin : PqxdhBeaconPhase2Preparation.W
 def create (setup : Setup baseSpec KemSK) (pin : PqxdhBeaconPhase2Preparation.Word32) (keyId : Std.U64) : StateT (State KemSK) ProbComp Nat :=
   fun state => created setup pin keyId state <$> PqxdhRegistrationJointCreation.material setup
 
-/-- Missing analysis entries never change native behavior. Under the proved invariant, the present receipt is updated with the exact same source attempt, before observing writer success. -/
+/-- The attempt trace together with the Phase 1 bundle the scheduler retains (`PqxdhRegistrationJointBundle.traceLog`), on the same one-time draw. -/
+def traceLog (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (index : Nat)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) (pool : PqxdhDynamicIdentityPool.SourceState)
+    (attempts : List Phase1KeyTuple) (logged : Option Phase1Candidate) :
+    ProbComp ((PqxdhRegistrationJointAttemptTrace.NativeResult KemSK × List Phase1KeyTuple) × Option Phase1Candidate) :=
+  match owner.beacon.phase with
+  | .fresh _ _ _ => (fun scalar => (PqxdhRegistrationJointAttemptTrace.after setup codec index owner (some scalar) pool attempts,
+      PqxdhRegistrationJointBundle.afterLog setup codec owner (some scalar) logged)) <$> sampleScalar
+  | .freshWithCoins _ _ _ _ => pure (PqxdhRegistrationJointAttemptTrace.after setup codec index owner none pool attempts,
+      PqxdhRegistrationJointBundle.afterLog setup codec owner none logged)
+  | _ => pure ((((none, owner), pool), attempts), logged)
+
+/-- Forgetting the retained bundle recovers the attempt trace. -/
+theorem traceLog_trace (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (index : Nat)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) (pool : PqxdhDynamicIdentityPool.SourceState)
+    (attempts : List Phase1KeyTuple) (logged : Option Phase1Candidate) :
+    Prod.fst <$> traceLog setup codec index owner pool attempts logged =
+      PqxdhRegistrationJointAttemptTrace.trace setup codec index owner pool attempts := by
+  cases phase : owner.beacon.phase <;>
+    simp only [traceLog, PqxdhRegistrationJointAttemptTrace.trace, phase, Functor.map_map, map_pure]
+
+/-- Forgetting the attempts recovers the logged native trace of the scheduler. -/
+theorem traceLog_log (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (index : Nat)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) (pool : PqxdhDynamicIdentityPool.SourceState)
+    (attempts : List Phase1KeyTuple) (logged : Option Phase1Candidate) :
+    (fun result => (result.1.1, result.2)) <$> traceLog setup codec index owner pool attempts logged =
+      PqxdhRegistrationJointBundle.traceLog setup codec index owner pool logged := by
+  cases phase : owner.beacon.phase <;>
+    simp only [traceLog, PqxdhRegistrationJointBundle.traceLog, phase, Functor.map_map, map_pure,
+      PqxdhRegistrationJointAttemptTrace.after]
+
+/-- Missing analysis entries never change native behavior. Under the proved invariant, the present receipt is updated with the exact same source attempt, before observing writer success. The retained Phase 1 bundle is updated exactly as by the scheduler. -/
 def bundle (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (address : Nat) :
     StateT (State KemSK) ProbComp (Option Pqxdh.Bytes) := fun state =>
   match state.1.owners[address]? with
   | none => pure (none, state)
   | some entry =>
-      (fun result => (result.1.1.1,
+      (fun result => (result.1.1.1.1,
         { state.1 with
-          pool := (result.1.2, state.1.pool.2),
-          owners := state.1.owners.set address { entry with owner := result.1.1.2 } },
+          pool := (result.1.1.2, state.1.pool.2),
+          owners := state.1.owners.set address { entry with owner := result.1.1.1.2 },
+          inits := Function.update state.1.inits address result.2 },
         Function.update state.2 entry.identityIndex ((state.2 entry.identityIndex).map fun receipt =>
-          { receipt with attempts := result.2 }))) <$>
-        PqxdhRegistrationJointAttemptTrace.trace setup codec entry.identityIndex entry.owner state.1.pool.1
-          (((state.2 entry.identityIndex).map Receipt.attempts).getD [])
+          { receipt with attempts := result.1.2 }))) <$>
+        traceLog setup codec entry.identityIndex entry.owner state.1.pool.1
+          (((state.2 entry.identityIndex).map Receipt.attempts).getD []) (state.1.inits address)
 
 /-- Every other actual source operation retains its entire native return state and leaves the historical constructor/attempt bookkeeping unchanged. -/
 def lift (work : StateT (PqxdhRegistrationJointSchedule.State KemSK) ProbComp Result) : StateT (State KemSK) ProbComp Result :=
@@ -75,12 +107,13 @@ theorem bundle_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
     simp only [bundle, PqxdhRegistrationJointSchedule.bundle, StateT.run, found, map_pure, Functor.map_map]
   case some entry =>
     simpa only [Functor.map_map] using congrArg
-      (fun work => (fun result : PqxdhRegistrationJointAttemptTrace.NativeResult KemSK =>
-        (result.1.1, { state.1 with
-          pool := (result.2, state.1.pool.2),
-          owners := state.1.owners.set address { entry with owner := result.1.2 } })) <$> work)
-      (PqxdhRegistrationJointAttemptTrace.trace_source setup codec entry.identityIndex entry.owner state.1.pool.1
-        (((state.2 entry.identityIndex).map Receipt.attempts).getD []))
+      (fun work => (fun result : PqxdhRegistrationJointAttemptTrace.NativeResult KemSK × Option Phase1Candidate =>
+        (result.1.1.1, { state.1 with
+          pool := (result.1.2, state.1.pool.2),
+          owners := state.1.owners.set address { entry with owner := result.1.1.2 },
+          inits := Function.update state.1.inits address result.2 })) <$> work)
+      (traceLog_log setup codec entry.identityIndex entry.owner state.1.pool.1
+        (((state.2 entry.identityIndex).map Receipt.attempts).getD []) (state.1.inits address))
 
 /-- Receipt creation is bookkeeping on the same actual constructor draw and complete native state. -/
 theorem create_source (setup : Setup baseSpec KemSK) (pin : PqxdhBeaconPhase2Preparation.Word32)
@@ -155,3 +188,13 @@ end BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptLedger
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptLedger.program_source
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptLedger.traceLog_trace' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptLedger.traceLog_trace
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptLedger.traceLog_log' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointAttemptLedger.traceLog_log

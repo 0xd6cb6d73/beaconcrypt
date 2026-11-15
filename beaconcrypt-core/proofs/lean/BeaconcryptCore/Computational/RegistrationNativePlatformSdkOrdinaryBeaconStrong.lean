@@ -19,7 +19,7 @@ variable [ed : AdapterInitEdPrimitive.Operations]
 noncomputable def put (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (view : AdapterPublicWrapperState.MaterialView mlSource KemSK)
     (containers : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (current : Native ×Platform) (before : StrongCarrier (R:=R) setup view containers created credential current)
     (logical : Nat) (owner : RegistrationNativeBeaconFrontend.Owner mlSource) (selected : current.1.beacons[logical]?=some owner)
     (self : beaconcrypt_public_wrapper.beacon.Beacon) (sourceSelected : before.base.objects.beacons logical=some self)

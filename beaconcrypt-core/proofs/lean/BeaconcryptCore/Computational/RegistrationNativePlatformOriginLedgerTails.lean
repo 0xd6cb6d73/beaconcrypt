@@ -37,7 +37,7 @@ theorem complete (env : RegistrationNativeEntropyInterface.Environment n Platfor
     (crypto : Pqxdh.Crypto) (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
     (serverKeyId : U64) (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value)
-    (created : PqxdhLiveServerConstruction.Created Unit) (initial : Platform)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (initial : Platform)
     (shell : CborRecordWorldClient.Shell) (control : PqxdhRecordLiftProtocol.Control n) :
     HasTails (RegistrationNativeEntropyPort.State Platform) Failure
       ((simulateQ (PqxdhRecordLiftProtocol.handler codec.frameRead route)
@@ -61,7 +61,7 @@ theorem program (env : RegistrationNativeEntropyInterface.Environment n Platform
     (crypto : Pqxdh.Crypto) (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
     (serverKeyId : U64) (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value)
-    (created : PqxdhLiveServerConstruction.Created Unit) (initial : Platform) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (initial : Platform) :
     HasTails (RegistrationNativeEntropyPort.State Platform) Failure
       (RegistrationNativeRecordOriginProgram.program codec route
         (RegistrationNativePlatformGatedNativeEntropy.program env reserve crypto codec serverKeyId bounds mode work created initial)) := by

@@ -2,13 +2,14 @@
 import BeaconcryptCore.Computational.PqxdhBoundaryRecordSend
 import BeaconcryptCore.Computational.PqxdhRegistrationSchedule
 
-/-! The real Server build executor over the original tail interface, retaining exact optional writer effects and existing seal logging. -/
+/-! The classical post-hash Server build executor over the original tail interface, retaining exact optional writer effects and existing seal logging under the same explicit public AD. Actual Native transcript hashing and full Server-pin admission are handled by the corresponding current controller/source receipts. -/
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 open OracleComp OracleSpec
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhBoundaryRegistrationBuild
+variable (associatedData : Std.Array Std.U8 151#usize)
 open PqxdhRefinement RawCtxSourceSend
 open PqxdhServerRegistrationPublication (TailSpec)
 
@@ -54,7 +55,7 @@ noncomputable def executeAfterInitialization
     (kernel : ConcreteRatchetKernel) (metadata : PeerMetadata)
     (state : State Metadata PeerMetadata Consumed) :
     OracleComp TailSpec (RustM (Option Response × State Metadata PeerMetadata Consumed)) := do
-  let sent ← executeSend kernel (firstContext candidate authenticated)
+  let sent ← executeSend kernel (firstContext candidate associatedData authenticated)
   RawCtxInterpretedOpening.bindResult sent fun result => do
     let _ ← TailSpec.query (.inr (.erase authenticated))
     match result.2 with
@@ -71,9 +72,9 @@ theorem after_initialization_exact
     (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Pqxdh.Bytes)
     (kernel : ConcreteRatchetKernel) (metadata : PeerMetadata)
     (state : State Metadata PeerMetadata Consumed) :
-    executeAfterInitialization candidate authenticated kernel metadata state =
-      (fun result => ok result) <$> afterInitialization candidate authenticated kernel metadata state := by
-  simp only [executeAfterInitialization, send_exact, afterInitialization, bind_map_left,
+    executeAfterInitialization (associatedData := associatedData) candidate authenticated kernel metadata state =
+      (fun result => ok result) <$> PqxdhServerRegistrationPublication.afterInitialization (associatedData := associatedData) candidate authenticated kernel metadata state := by
+  simp only [executeAfterInitialization, send_exact, PqxdhServerRegistrationPublication.afterInitialization, bind_map_left,
     PqxdhOpenBridges.bindResult_ok, map_bind]
   apply bind_congr
   intro sent
@@ -108,16 +109,16 @@ noncomputable def executeCandidate (setup : Setup baseSpec KemSK)
           let allocated ← TailSpec.query (.inr (.reservePlaintext (8 + plaintext.length)))
           if !allocated then pure (ok (none, state)) else
             continueRust candidate.key_id_binding fun binding =>
-              executeAfterInitialization candidate (absBytes binding.bytes ++ plaintext) kernel metadata state
+              executeAfterInitialization (associatedData := associatedData) candidate (absBytes binding.bytes ++ plaintext) kernel metadata state
         else pure (ok (none, state))
 
 /-- The candidate executor is the original source program; the initializer remains real local work rather than an invented observable query. -/
 theorem candidate_exact (setup : Setup baseSpec KemSK)
     (candidate : pqxdh.ServerRegistrationCandidate) (root : PqxdhSecretInputKdf.RootOutput)
     (data : Option Pqxdh.Bytes) (metadata : PeerMetadata) (state : State Metadata PeerMetadata Consumed) :
-    executeCandidate setup candidate root data metadata state =
-      candidateTail setup.source candidate root data metadata state := by
-  simp only [executeCandidate, candidateTail, after_initialization_exact]
+    executeCandidate (associatedData := associatedData) setup candidate root data metadata state =
+      PqxdhServerRegistrationPublication.candidateTail (associatedData := associatedData) setup.source candidate root data metadata state := by
+  simp only [executeCandidate, PqxdhServerRegistrationPublication.candidateTail, after_initialization_exact]
 
 /-- The extracted next-ID, occupancy and candidate-preparation operations precede the candidate executor; every diagnostic or ordinary rejection retains its original branch. -/
 noncomputable def executeBuild (setup : Setup baseSpec KemSK)
@@ -134,15 +135,15 @@ noncomputable def executeBuild (setup : Setup baseSpec KemSK)
           ⟨state.server.identity, state.identityKeyId⟩ availability) fun prepared =>
           match prepared with
           | .Err _ => pure (ok (none, state))
-          | .Ok candidate => executeCandidate setup candidate root data metadata state
+          | .Ok candidate => executeCandidate (associatedData := associatedData) setup candidate root data metadata state
 
 /-- The complete Server builder is equal before interpretation, retaining supplied root, all calls, optional writer results and returned Server state. -/
 theorem build_exact (setup : Setup baseSpec KemSK)
     (pending : pqxdh.PendingServerRegistration) (root : PqxdhSecretInputKdf.RootOutput)
     (data : Option Pqxdh.Bytes) (metadata : PeerMetadata) (state : State Metadata PeerMetadata Consumed) :
-    executeBuild setup pending root data metadata state =
-      build setup.source pending root data metadata state := by
-  simp only [executeBuild, build, candidate_exact]
+    executeBuild (associatedData := associatedData) setup pending root data metadata state =
+      PqxdhServerRegistrationPublication.build (associatedData := associatedData) setup.source pending root data metadata state := by
+  simp only [executeBuild, PqxdhServerRegistrationPublication.build, candidate_exact]
   rfl
 
 /-- Any complete stateful interpretation and continuation retains the original build program, including native callback transcripts, private logs and all failure poststates. -/
@@ -152,8 +153,8 @@ theorem build_complete {PrimitiveState Result κ : Type} {base : OracleSpec κ}
     (root : PqxdhSecretInputKdf.RootOutput) (data : Option Pqxdh.Bytes)
     (metadata : PeerMetadata) (state : State Metadata PeerMetadata Consumed) (primitive : PrimitiveState)
     (next : RustM (Option Response × State Metadata PeerMetadata Consumed) × PrimitiveState → OracleComp base Result) :
-    (simulateQ handler (executeBuild setup pending root data metadata state)).run primitive >>= next =
-      (simulateQ handler (build setup.source pending root data metadata state)).run primitive >>= next := by
+    (simulateQ handler (executeBuild (associatedData := associatedData) setup pending root data metadata state)).run primitive >>= next =
+      (simulateQ handler (PqxdhServerRegistrationPublication.build (associatedData := associatedData) setup.source pending root data metadata state)).run primitive >>= next := by
   rw [build_exact]
 
 /-- The actual native sealing endpoint before its successful-result log update, exposing the real AEAD, shared hash and optional inner writer requests. -/
@@ -197,12 +198,12 @@ theorem after_initialization_failure {PrimitiveState κ : Type} {base : OracleSp
     (kernel : ConcreteRatchetKernel) (metadata : PeerMetadata)
     (state after : State Metadata PeerMetadata Consumed) (primitive final : PrimitiveState)
     (supported : (ok (none, after), final) ∈ support ((simulateQ handler
-      (executeAfterInitialization candidate authenticated kernel metadata state)).run primitive)) :
+      (executeAfterInitialization (associatedData := associatedData) candidate authenticated kernel metadata state)).run primitive)) :
     after = state := by
   rw [after_initialization_exact, simulateQ_map, StateT.run_map] at supported
   simp only [support_map, Set.mem_image, Prod.mk.injEq, RustM.ok.injEq] at supported
   obtain ⟨⟨actual, result⟩, originalSupport, rfl, rfl⟩ := supported
-  obtain ⟨sent, afterSend, afterErase, _, _, outcome⟩ := afterInitialization_support handler
+  obtain ⟨sent, afterSend, afterErase, _, _, outcome⟩ := PqxdhServerRegistrationPublication.afterInitialization_support (associatedData := associatedData) handler
     candidate authenticated kernel metadata state primitive ((none, after), _) originalSupport
   cases hs : sent.2 with
   | none =>

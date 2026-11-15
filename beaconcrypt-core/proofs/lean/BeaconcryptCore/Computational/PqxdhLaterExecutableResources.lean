@@ -9,6 +9,8 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option maxHeartbeats 500000
 namespace BeaconcryptCore.Computational.PqxdhLaterExecutableResources
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPhase1AcceptanceOracle PqxdhKemIndCca PqxdhInitializerSecrecy
 open CtxRomAuth AdaptiveCtxSharedHash PqxdhSecretInputKdf PqxdhFullSecretInputKdf
@@ -64,7 +66,7 @@ open PqxdhLaterExecutableCompletion in
 /-- The full executable sampled suffix pays the actual source certificate on every branch; common decisions retain their original Boolean and no continuation cost is omitted. -/
 theorem suffix_uniform (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl kem program post)
     (result : PqxdhLaterExecutableCertificates.Certified (setup := setup) (M := M) (P := P) (I := I) (K := K) (X := X) (Response := Response) (A := A) (KemSK := KemSK) (S := S) (B := B) (PqxdhInitialPreparedSourceCaps.postCap (PqxdhSourceSharedPreparation.environment setup env callbacks ∅) baseImpl kem program post c)) :
-    (suffix setup env callbacks program post attachedVerify primitives baseImpl kem c result).IsQueryBoundP
+    (suffix (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem c result).IsQueryBoundP
       AdaptiveCtxDynamicKnownBounds.UniformRoute (tailAllowance setup env callbacks program post baseImpl kem c) := by
   unfold suffix
   split
@@ -74,7 +76,7 @@ theorem suffix_uniform (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseI
     let fits : PqxdhInitialOriginCertificates.Fits (PqxdhInitialPreparedSourceCaps.postCap env0 baseImpl kem program post c) pending.1 := by
       simpa only [PqxdhLaterExecutableCertificates.PacketFits, shape] using result.property
     simpa only [bind_pure_comp, isQueryBoundP_map_iff, tailAllowance] using
-      PqxdhLaterSavedUniformBounds.complete_cost
+      PqxdhLaterSavedUniformBounds.complete_cost (completedBinding := completedBinding)
       (PqxdhPreparedPrefixCallbacks.preparation attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem result.val.1.1 result.val.1.2)
       (PqxdhPreparedPrefixCallbacks.application attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem result.val.1.1 result.val.1.2)
       (initialLocal (A := A) (N := BareState 1) (env0).source start.1.selectedMessage zeroRoot (PqxdhInitialSampledParent.response start))
@@ -92,16 +94,16 @@ theorem suffix_uniform (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseI
 open PqxdhLaterExecutableCompletion in
 /-- The complete executable adds its fully paid continuation to the original complete prefix allowance, including cached continuations and all pre-key draws. -/
 theorem client_uniform (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl kem program post) (depth qUniform : Nat)
-    (bounded : (PqxdhLaterSharedMessagePrefix.run setup env callbacks program post attachedVerify primitives baseImpl kem
+    (bounded : (PqxdhLaterSharedMessagePrefix.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem
       selected number ancestors disclosed depth).IsQueryBoundP (HashClass false) qUniform) :
-    (client setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth).IsQueryBoundP
+    (client (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth).IsQueryBoundP
       AdaptiveCtxDynamicKnownBounds.UniformRoute (qUniform + (tailAllowance setup env callbacks program post baseImpl kem c)) := by
-  rw [← PqxdhLaterSavedSampler.run_erase setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed depth,
-    ← PqxdhLaterExecutableCertificates.certified_erase env callbacks baseImpl kem attachedVerify primitives program post selected number ancestors disclosed c depth,
+  rw [← PqxdhLaterSavedSampler.run_erase (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed depth,
+    ← PqxdhLaterExecutableCertificates.certified_erase (associatedData := associatedData) (completedBinding := completedBinding) env callbacks baseImpl kem attachedVerify primitives program post selected number ancestors disclosed c depth,
     isQueryBoundP_map_iff, isQueryBoundP_map_iff] at bounded
   unfold client
   apply isQueryBoundP_bind (m := tailAllowance setup env callbacks program post baseImpl kem c) ?_
-    (fun result _ => suffix_uniform setup env callbacks program post attachedVerify primitives baseImpl kem c result)
+    (fun result _ => suffix_uniform (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem c result)
   simp only [RawCtxSourceSharedRom.forward, QueryImpl.simulateQ_compose]
   apply RawCtxSelectedSealConsumer.lifted_bound
   change (simulateQ AdaptiveCtxSharedTarget.forward _).IsQueryBoundP AdaptiveCtxQueryBounds.SourceUniform qUniform

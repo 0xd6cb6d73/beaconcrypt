@@ -78,7 +78,7 @@ theorem finish_native (setup : Setup base KemSK) (mlSource : RegistrationNativeM
 noncomputable def handler (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (mlSource : RegistrationNativeMldsa.Source) (credential : RegistrationNativeMldsa.Credential mlSource) :
     QueryImpl RegistrationNativeRawAdapter.TypedSpec (RegistrationNativeExperiment.M n KemSK mlSource)
   | .inr (.finish index packet) => RegistrationNativeExperiment.beacon setup checks representation created
@@ -89,7 +89,7 @@ noncomputable def handler (setup : Setup base KemSK) (checks : Checks) (wire : W
 theorem handler_native (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (mlSource : RegistrationNativeMldsa.Source) (credential : RegistrationNativeMldsa.Credential mlSource) :
     handler (n := n) setup checks wire route representation created mlSource credential =
       RegistrationNativeExperiment.handler setup checks wire route representation created mlSource credential := by
@@ -101,7 +101,7 @@ theorem handler_native (setup : Setup base KemSK) (checks : Checks) (wire : Wire
 noncomputable def run (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (mlSource : RegistrationNativeMldsa.Source) (credential : RegistrationNativeMldsa.Credential mlSource)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value)
@@ -113,7 +113,7 @@ noncomputable def run (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
 theorem run_native (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (mlSource : RegistrationNativeMldsa.Source) (credential : RegistrationNativeMldsa.Credential mlSource)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value)

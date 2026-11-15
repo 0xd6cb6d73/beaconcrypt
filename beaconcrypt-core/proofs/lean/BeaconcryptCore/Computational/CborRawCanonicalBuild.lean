@@ -2,12 +2,14 @@
 import BeaconcryptCore.Computational.CborRawRegistrationBuild
 import BeaconcryptCore.Computational.CborTaggedBuild
 
-/-! Registration has a pure internal frame representation; its real outer response writer remains optional. The internal writer is bounded by complete CBOR frame size. Native writer success is never assumed, and record writers are left to the split compiler. -/
+/-! The pointwise posthash AD151 registration suffix has a pure internal frame representation; its real outer response writer remains optional. The internal writer is bounded by complete CBOR frame size. Native writer success is never assumed, and record writers are left to the split compiler. -/
 open CoreModels Aeneas OracleComp OracleSpec
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.CborRawCanonicalBuild
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhServerAuthExperiment (Setup Codec Checks)
 open PqxdhServerRegistrationPublication
 variable {ι KemSK Reader Response : Type} {baseSpec : OracleSpec ι}
@@ -44,7 +46,7 @@ theorem canonical_written (frame : RawCtxReceive.DecodedFrame)
 
 /-- A supported protected payload fits its internal first frame whenever the native outer response was admitted. This uses only the existing AEAD body-length law. -/
 theorem first_frame_fits (crypto : Pqxdh.Crypto) (lengths : RawCtxSourcePublication.BodyLength crypto)
-    (input : RawCtxSourceSend.SealInput) (valid : input.context.associatedData.length = 281)
+    (input : RawCtxSourceSend.SealInput) (valid : input.context.associatedData.length = 151)
     (first : input.sequence = 1#u64) (assigned : Nat)
     (admitted : CborSizing.responseLen (input.context.plaintext.length + 80) assigned ≤ CborSizing.maxMessageSize)
     (cache after : CtxRomAuth.CtxRO.QueryCache) (record : CtxRomAuth.CtxRomRecord)
@@ -65,7 +67,7 @@ theorem shared_seal_render {Auxiliary : Type} (crypto : Pqxdh.Crypto)
     (lengths : RawCtxSourcePublication.BodyLength crypto)
     (kdf : QueryImpl RawCtxSharedPrimitive.KdfSpec
       (StateT (RawCtxSharedPrimitive.SharedState Auxiliary) ProbComp))
-    (input : RawCtxSourceSend.SealInput) (valid : input.context.associatedData.length = 281)
+    (input : RawCtxSourceSend.SealInput) (valid : input.context.associatedData.length = 151)
     (first : input.sequence = 1#u64) (assigned : Nat)
     (admitted : CborSizing.responseLen (input.context.plaintext.length + 80) assigned ≤ CborSizing.maxMessageSize)
     (auxiliary : Auxiliary) (cache : CtxRomAuth.CtxRO.QueryCache) :
@@ -115,7 +117,7 @@ theorem log_map {S : Type} (encode : Pqxdh.Bytes → Pqxdh.Bytes)
 
 theorem tail_seal_render (setup : Setup baseSpec KemSK) (wire : Codec Reader Response) (checks : Checks)
     (lengths : RawCtxSourcePublication.BodyLength setup.source.crypto) (sender : Std.U64)
-    (input : RawCtxSourceSend.SealInput) (valid : input.context.associatedData.length = 281)
+    (input : RawCtxSourceSend.SealInput) (valid : input.context.associatedData.length = 151)
     (first : input.sequence = 1#u64) (assigned : Nat)
     (admitted : CborSizing.responseLen (input.context.plaintext.length + 80) assigned ≤ CborSizing.maxMessageSize)
     (state : RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext)) :
@@ -164,7 +166,7 @@ theorem send_program_run {PrimitiveState : Type}
 theorem send_render (setup : Setup baseSpec KemSK) (wire : Codec Reader Response) (checks : Checks)
     (lengths : RawCtxSourcePublication.BodyLength setup.source.crypto) (sender : Std.U64)
     (kernel : ratchet.concrete.ConcreteRatchetKernel) (zero : kernel.refined.control.send_sequence = 0#u64)
-    (context : RawCtxSourceSend.SealContext) (valid : context.associatedData.length = 281)
+    (context : RawCtxSourceSend.SealContext) (valid : context.associatedData.length = 151)
     (assigned : Nat)
     (admitted : CborSizing.responseLen (context.plaintext.length + 80) assigned ≤ CborSizing.maxMessageSize)
     (state : RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext)) :
@@ -209,16 +211,19 @@ theorem after_raw (setup : Setup baseSpec KemSK) (wire : Codec Reader Response) 
     (candidate : pqxdh.ServerRegistrationCandidate) (pinned : candidate.server_identity_key_id = sender)
     (root : PqxdhSecretInputKdf.RootOutput) (kernel : ratchet.concrete.ConcreteRatchetKernel)
     (initialized : PqxdhRootTableInitialization.initialKernelRun setup.source false root = ok kernel)
-    (authenticated : Pqxdh.Bytes) (valid : (PqxdhRefinement.absBytes candidate.associated_data).length = 281)
+    (authenticated : Pqxdh.Bytes)
     (assigned : Nat)
     (admitted : CborSizing.responseLen (authenticated.length + 80) assigned ≤ CborSizing.maxMessageSize)
-    (server : State Unit Unit (List Pqxdh.Bytes))
+    (server : State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes))
     (state : RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext)) :
     (simulateQ (PqxdhServerAuthExperiment.tailImpl setup
       (CborRegistrationCodec.normalize (canonical wire) sender) checks)
-      (afterInitialization candidate authenticated kernel () server)).run state =
+      (PqxdhServerRegistrationPublication.afterInitialization (associatedData := associatedData) candidate authenticated kernel associatedData server)).run state =
       (simulateQ (PqxdhServerAuthExperiment.tailImpl setup (CborRegistrationCodec.raw wire) checks)
-        (afterInitialization candidate authenticated kernel () server)).run state := by
+        (PqxdhServerRegistrationPublication.afterInitialization (associatedData := associatedData) candidate authenticated kernel associatedData server)).run state := by
+  have valid : (firstContext (associatedData := associatedData) candidate authenticated).associatedData.length = 151 := by
+    simp only [firstContext, PqxdhRefinement.absBytes_length]
+    rfl
   obtain ⟨initial, run, _, _, refines⟩ :=
     PqxdhRootTableInitialization.initialize_refines setup.source PqxdhServerAuthExperiment.unitRatchet false root
   have same : initial = kernel := RustM.ok.inj (run.symm.trans initialized)
@@ -227,8 +232,8 @@ theorem after_raw (setup : Setup baseSpec KemSK) (wire : Codec Reader Response) 
     change kernel.refined.control.send_sequence.val = 0
     rw [← same]
     exact refines.sendSequence
-  simp only [afterInitialization, simulateQ_bind, StateT.run_bind]
-  rw [send_render setup wire checks lengths sender kernel zero (firstContext candidate authenticated)
+  simp only [PqxdhServerRegistrationPublication.afterInitialization, simulateQ_bind, StateT.run_bind]
+  rw [send_render setup wire checks lengths sender kernel zero (firstContext (associatedData := associatedData) candidate authenticated)
     valid assigned admitted state]
   simp only [bind_map_left]
   apply bind_congr_of_forall_mem_support
@@ -240,7 +245,7 @@ theorem after_raw (setup : Setup baseSpec KemSK) (wire : Codec Reader Response) 
   | some encrypted =>
     obtain ⟨digest, metadata, _, written, _⟩ := PqxdhServerAuthNegativeControl.tail_send setup
       (CborRegistrationCodec.raw wire) checks root kernel initialized
-      (firstContext candidate authenticated) state.1 state.2 sent actual encrypted present
+      (firstContext (associatedData := associatedData) candidate authenticated) state.1 state.2 sent actual encrypted present
     have sequence : encrypted.sequence = 1#u64 := congrArg RawCtxSourceSend.Encrypted.sequence metadata
     have width : encrypted.ciphertext.length = authenticated.length + 80 := by
       simp only [CborRegistrationCodec.raw, RawCtxSourceSeal.frame, Option.some.injEq] at written
@@ -275,14 +280,14 @@ theorem candidate_raw (setup : Setup baseSpec KemSK) (wire : Codec Reader Respon
     (root : PqxdhSecretInputKdf.RootOutput) (data : Option Pqxdh.Bytes) (assigned : Nat)
     (admitted : CborSizing.responseLen ((data.getD registrationWitness).length + 88) assigned ≤
       CborSizing.maxMessageSize)
-    (server : State Unit Unit (List Pqxdh.Bytes))
+    (server : State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes))
     (state : RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext)) :
     (simulateQ (PqxdhServerAuthExperiment.tailImpl setup
       (CborRegistrationCodec.normalize (canonical wire) sender) checks)
-      (candidateTail setup.source candidate root data () server)).run state =
+      (PqxdhServerRegistrationPublication.candidateTail (associatedData := associatedData) setup.source candidate root data associatedData server)).run state =
       (simulateQ (PqxdhServerAuthExperiment.tailImpl setup (CborRegistrationCodec.raw wire) checks)
-        (candidateTail setup.source candidate root data () server)).run state := by
-  simp only [candidateTail, simulateQ_bind, simulateQ_spec_query, StateT.run_bind,
+        (PqxdhServerRegistrationPublication.candidateTail (associatedData := associatedData) setup.source candidate root data associatedData server)).run state := by
+  simp only [PqxdhServerRegistrationPublication.candidateTail, simulateQ_bind, simulateQ_spec_query, StateT.run_bind,
     PqxdhServerAuthNegativeControl.tailImpl_aux, PqxdhServerAuthExperiment.tailAux,
     StateT.run_pure, pure_bind]
   cases checks.beaconIdentity candidate.beacon_identity_public_key <;>
@@ -296,12 +301,12 @@ theorem candidate_raw (setup : Setup baseSpec KemSK) (wire : Codec Reader Respon
   cases initialized : Refinement.ServerTransactionRefinement.initializeCandidate candidate
       (PqxdhRootTableInitialization.rootArray root)
       (PqxdhRootTableInitialization.initialResponse setup.source.crypto) <;>
-    simp only [continueRust, simulateQ_pure, StateT.run_pure] <;> try rfl
+    simp only [continueRust, simulateQ_pure, StateT.run_pure]
   case ok kernel =>
     have initial : PqxdhRootTableInitialization.initialKernelRun setup.source false root = ok kernel :=
       (PqxdhServerRegistrationPublication.candidate_initialization setup.source candidate root).symm.trans initialized
-    split <;> (try simp only [simulateQ_pure, StateT.run_pure]) <;> try rfl
-    split <;> (try simp only [simulateQ_pure, StateT.run_pure]) <;> try rfl
+    split <;> (try simp only [simulateQ_pure, StateT.run_pure])
+    split <;> (try simp only [simulateQ_pure, StateT.run_pure])
     simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind,
       PqxdhServerAuthNegativeControl.tailImpl_aux, PqxdhServerAuthExperiment.tailAux,
       StateT.run_pure, pure_bind]
@@ -309,11 +314,11 @@ theorem candidate_raw (setup : Setup baseSpec KemSK) (wire : Codec Reader Respon
       simp only [Bool.not_false, Bool.not_true, Bool.false_eq_true, ite_true, ite_false,
         simulateQ_pure, StateT.run_pure]
     cases bindingEq : candidate.key_id_binding <;>
-      simp only [simulateQ_pure, StateT.run_pure] <;> try rfl
+      simp only [simulateQ_pure, StateT.run_pure]
     case ok binding =>
       simp only [simulateQ_map, StateT.run_map]
-      rw [after_raw setup wire checks lengths parser sender candidate pinned root kernel initial _
-        (by simp) assigned (by
+      rw [after_raw (associatedData := associatedData) setup wire checks lengths parser sender candidate pinned root kernel initial _
+        assigned (by
           have total : (PqxdhRefinement.absBytes binding.bytes ++ data.getD registrationWitness).length + 80 =
               (data.getD registrationWitness).length + 88 := by
             have width := (authenticated_length binding (data.getD registrationWitness)).1
@@ -327,29 +332,29 @@ theorem build_raw (setup : Setup baseSpec KemSK) (wire : Codec Reader Response) 
     (root : PqxdhSecretInputKdf.RootOutput) (data : Option Pqxdh.Bytes) (assigned : Nat)
     (admitted : CborSizing.responseLen ((data.getD registrationWitness).length + 88) assigned ≤
       CborSizing.maxMessageSize)
-    (server : State Unit Unit (List Pqxdh.Bytes))
+    (server : State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes))
     (state : RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext)) :
     (simulateQ (PqxdhServerAuthExperiment.tailImpl setup
       (CborRegistrationCodec.normalize (canonical wire) server.identityKeyId) checks)
-      (build setup.source pending root data () server)).run state =
+      (PqxdhServerRegistrationPublication.build (associatedData := associatedData) setup.source pending root data associatedData server)).run state =
       (simulateQ (PqxdhServerAuthExperiment.tailImpl setup (CborRegistrationCodec.raw wire) checks)
-        (build setup.source pending root data () server)).run state := by
+        (PqxdhServerRegistrationPublication.build (associatedData := associatedData) setup.source pending root data associatedData server)).run state := by
   unfold build
   cases next : pqxdh.server_next_key_id server.control <;>
-    simp only [continueRust, simulateQ_pure, StateT.run_pure] <;> try rfl
+    simp only [continueRust, simulateQ_pure, StateT.run_pure]
   case ok result =>
-    cases result <;> simp only [simulateQ_pure, StateT.run_pure] <;> try rfl
+    cases result <;> simp only [simulateQ_pure, StateT.run_pure]
     case Ok key =>
       cases prepared : pqxdh.server_prepare_commit server.control pending
           ⟨server.server.identity, server.identityKeyId⟩
           (if (server.server.peers key).isSome then .Occupied else .Available) <;>
-        simp only [simulateQ_pure, StateT.run_pure] <;> try rfl
+        simp only [simulateQ_pure, StateT.run_pure]
       case ok result =>
-        cases result <;> simp only [simulateQ_pure, StateT.run_pure] <;> try rfl
+        cases result <;> simp only [simulateQ_pure, StateT.run_pure]
         case Ok candidate =>
-          obtain ⟨_, _, pinned, _, _, _⟩ := PqxdhServerAuthNegativeControl.prepare_commit_fields
+          obtain ⟨_, _, pinned, _, _⟩ := PqxdhServerAuthNegativeControl.prepare_commit_fields
             server.control pending ⟨server.server.identity, server.identityKeyId⟩ _ candidate prepared
-          exact candidate_raw setup wire checks lengths parser server.identityKeyId candidate pinned root data assigned
+          exact candidate_raw (associatedData := associatedData) setup wire checks lengths parser server.identityKeyId candidate pinned root data assigned
             admitted server state
 
 /-- The full moved-token build retains pending-token consumption, installed peers, counters, commitment cache and private seal log on every outcome. -/
@@ -365,10 +370,16 @@ theorem native_build_raw (setup : Setup baseSpec KemSK) (wire : Codec Reader Res
   cases found : state.2.pending session
   case none => rfl
   case some token =>
-    simp only [PqxdhServerAuthNative.native_bind_run, PqxdhServerAuthNative.nativeCoins,
-      PqxdhServerAuthNative.nativeSet, bind_pure_comp,
-      PqxdhServerAuthNative.native_map_run, PqxdhServerAuthNative.localState,
-      build_raw setup wire checks lengths parser token.pending token.root data assigned admitted]
+    cases guard : prehash state.2.server token.pending data
+    case none => simp only [guard]
+    case some candidate =>
+      simp only [guard, PqxdhServerAuthNative.native_bind_run, PqxdhServerAuthNative.nativeHash, bind_map_left]
+      apply bind_congr
+      intro hashed
+      simp only [PqxdhServerAuthNative.nativeGet, PqxdhServerAuthNative.localState,
+        PqxdhServerAuthNative.nativeCoins, PqxdhServerAuthNative.nativeSet, pure_bind, bind_map_left,
+        build_raw (PqxdhTranscriptAd.adOf hashed.1) setup wire checks lengths parser token.pending token.root data
+          assigned admitted]
 
 end BeaconcryptCore.Computational.CborRawCanonicalBuild
 

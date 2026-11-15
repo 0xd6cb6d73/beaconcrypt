@@ -1,1 +1,1 @@
-pub const ASSOCIATED_DATA_SIZE: usize = 281;
+pub const ASSOCIATED_DATA_SIZE: usize = 151;

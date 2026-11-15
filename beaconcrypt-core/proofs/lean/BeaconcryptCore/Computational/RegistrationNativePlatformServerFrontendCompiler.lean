@@ -49,6 +49,7 @@ noncomputable def target (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource
     (reserve : StateT Platform ProbComp Bool) :
     QueryImpl RegistrationNativePlatformServerFrontendProgram.Spec (StateT (PublicState Platform) (OracleComp (Spec n)))
   | .pin current => liftEffects (RegistrationNativePlatformServerRestrictedService.pin current)
+  | .adHash pending => liftEffects (RegistrationNativePlatformServerRestrictedService.adHash pending)
   | .reserve => liftEffects (RegistrationNativePlatformBoundCompiler.liftPlatform (RegistrationNativePlatformEffectCompiler.compile reserve))
   | .present keyId => liftEffects (RegistrationNativePlatformEffectCompiler.effect (.inr (.peerPresent keyId)))
   | .service control initial message => service source view failure allocation erased helper sign writer control initial message
@@ -78,6 +79,10 @@ omit primitive in
 private theorem lift_apply {S V : Type} {q : Type → Type} [Monad q] [LawfulMonad q]
     (work : q V) (before : S) :
     (StateT.lift work : StateT S q V) before = (fun value => (value, before)) <$> work := bind_pure_comp _ _
+
+omit primitive in
+private theorem pure_apply {S V : Type} {q : Type → Type} [Monad q] (value : V) (before : S) :
+    (pure value : StateT S q V) before = pure (value, before) := rfl
 
 private theorem service_run (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
@@ -110,6 +115,7 @@ noncomputable def actual (setup : Setup base KemSK) (codec : Codec Reader Respon
     (reserve : StateT Platform ProbComp Bool) (roots : RegistrationServerReferenceRestore.Roots) :
     QueryImpl RegistrationNativePlatformServerFrontendProgram.Spec (StateT (Local n) (StateT Platform ProbComp))
   | .pin current => RegistrationNativePlatformServerMaterialState.pin RegistrationNativePlatformMldsaProgram.coins current
+  | .adHash pending => RegistrationNativePlatformServerMaterialState.adHash RegistrationNativePlatformMldsaProgram.coins pending
   | .reserve => StateT.lift reserve
   | .present keyId => RegistrationNativePlatformServerCompletion.capability RegistrationNativePlatformMldsaProgram.coins (.peerPresent keyId)
   | .service control initial message => RegistrationNativePlatformServerMaterialState.service RegistrationNativePlatformMldsaProgram.coins setup codec
@@ -201,6 +207,46 @@ private theorem effect_source (effect : (PqxdhRecordLiftInterface.EnvEffects n).
       StateT.run, lift_apply, map_apply, simulateQ_map, simulateQ_spec_query, Functor.map_map, Prod.map, id_eq]
   all_goals rfl
 
+private theorem adHash_query (setup : Setup base KemSK) (codec : Codec Reader Response)
+    (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
+    (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
+    (erased : commitment.CommitmentTranscript)
+    (helper : QueryImpl (BeaconcryptCore.Refinement.AdapterRecordHelperRequestMonad.Spec E) (StateT Platform ProbComp))
+    (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
+    (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
+    (reserve : StateT Platform ProbComp Bool) (roots : RegistrationServerReferenceRestore.Roots)
+    (pending : registration.ServerAdHash) (state : Local n × Platform) :
+    Prod.map id strip <$> ((actual setup codec view failure allocation erased helper sign writer reserve roots).flattenStateT (.adHash pending)).run state =
+      (closed setup.source view failure allocation erased helper sign writer reserve roots (.adHash pending)).run (strip state) := by
+  cases requested : pending.request with
+  | fail error | div =>
+    simp only [actual, closed, target, liftEffects, QueryImpl.flattenStateT,
+      RegistrationNativePlatformServerMaterialState.adHash, RegistrationNativePlatformServerCompletion.adHash,
+      RegistrationNativePlatformServerCompletion.adHashWith, RegistrationNativePlatformServerRestrictedService.adHash,
+      RegistrationServerAdHash.runWith, requested,
+      StateT.run, StateT.mk, pure_apply, map_pure, simulateQ_pure, Prod.map, id_eq, strip]
+  | ok request =>
+    have native := effect_source (.inr (.hash (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request))) state
+    have mapped := congrArg (fun action => (fun result =>
+      (pending.resume (.Some (RegistrationAuthenticationShared.digestArray result.1)), result.2)) <$> action) native
+    have capability_same :
+        RegistrationNativePlatformServerCompletion.capability (n := n)
+          (Auxiliary := RegistrationServerRoleBackend.State) (m := StateT Platform ProbComp)
+          RegistrationNativePlatformMldsaProgram.coins (.hash (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request)) =
+        RegistrationNativePlatformPairedServerService.nativeEffects RegistrationNativePlatformMldsaProgram.coins
+          (.inr (.hash (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request))) := rfl
+    convert mapped using 1 <;>
+      simp only [actual, closed, target, liftEffects, effects_program, QueryImpl.flattenStateT,
+        RegistrationNativePlatformServerMaterialState.adHash, RegistrationNativePlatformServerCompletion.adHash,
+        RegistrationNativePlatformServerCompletion.adHashWith, RegistrationNativePlatformServerRestrictedService.adHash,
+        RegistrationServerAdHash.runWith, requested, RegistrationNativePlatformWorldEffectView.close,
+        StateT.run, StateT.mk, bind_apply, map_apply, simulateQ_map,
+        bind_pure_comp,
+        StateT.monad_pure_def, StateT.pure, capability_same,
+
+        Functor.map_map, Prod.map, id_eq, strip]
+    all_goals rfl
+
 private theorem present_query (setup : Setup base KemSK) (codec : Codec Reader Response)
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
@@ -264,6 +310,7 @@ private theorem query (setup : Setup base KemSK) (codec : Codec Reader Response)
     Prod.map id strip <$> ((actual setup codec view failure allocation erased helper sign writer reserve roots).flattenStateT request).run state =
       (closed setup.source view failure allocation erased helper sign writer reserve roots request).run (strip state) := by
   cases request with
+  | adHash pending => exact adHash_query setup codec view failure allocation erased helper sign writer reserve roots pending state
   | pin current => exact pin_query setup codec view failure allocation erased helper sign writer reserve roots current state
   | reserve => exact reserve_query setup codec view failure allocation erased helper sign writer reserve roots state
   | present keyId => exact present_query setup codec view failure allocation erased helper sign writer reserve roots keyId state
@@ -296,6 +343,7 @@ private theorem actual_program (setup : Setup base KemSK) (codec : Codec Reader 
     simulateQ (actual (n := n) setup codec view failure allocation erased helper sign writer reserve roots)
       ((RegistrationNativePlatformServerFrontendProgram.program handle application).run before) =
       (RegistrationNativePlatformServerMaterialFrontend.build
+        (RegistrationNativePlatformServerMaterialState.adHash RegistrationNativePlatformMldsaProgram.coins)
         (RegistrationNativePlatformServerMaterialState.pin RegistrationNativePlatformMldsaProgram.coins)
         (StateT.lift reserve)
         (fun keyId => RegistrationNativePlatformServerCompletion.capability RegistrationNativePlatformMldsaProgram.coins (.peerPresent keyId))
@@ -319,6 +367,7 @@ theorem build (setup : Setup base KemSK) (codec : Codec Reader Response)
     (before : Local n) (previous : Platform) :
     (fun result => (result.1.1, strip (result.1.2, result.2))) <$>
       (((RegistrationNativePlatformServerMaterialFrontend.build
+        (RegistrationNativePlatformServerMaterialState.adHash RegistrationNativePlatformMldsaProgram.coins)
         (RegistrationNativePlatformServerMaterialState.pin RegistrationNativePlatformMldsaProgram.coins)
         (StateT.lift reserve)
         (fun keyId => RegistrationNativePlatformServerCompletion.capability RegistrationNativePlatformMldsaProgram.coins (.peerPresent keyId))

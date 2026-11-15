@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.CborRegistrationCodec
+import BeaconcryptCore.Computational.CborNativeFrame
 import BeaconcryptCore.Computational.CborCommandFilter
 import BeaconcryptCore.Computational.PqxdhBoundaryDeploymentStep
 
@@ -14,27 +15,6 @@ namespace BeaconcryptCore.Computational.CborProductionBoundary
 open PqxdhServerAuthExperiment (Setup Codec Checks)
 open PqxdhDeploymentInterface (Spec)
 variable {ι KemSK Reader Response : Type} {baseSpec : OracleSpec ι}
-
-/-- The native decoder has already validated the complete deterministic-CBOR array and borrowed its byte string. -/
-structure NativeFrame where
-  sequence : Std.U64
-  sender : Std.U64
-  payload : Slice Std.U8
-
-def nativeReader (parse : Pqxdh.Bytes → Option NativeFrame) :
-    RawCtxNativeFramePrelude.Reader NativeFrame NativeFrame where
-  readMessage raw := if raw.length ≤ CborSizing.maxMessageSize then
-    (fun frame => (frame, Slice.new Std.U8)) <$> parse raw else none
-  root := some
-  keyId := NativeFrame.sender
-  sequence := NativeFrame.sequence
-  payload frame := some frame.payload
-
-def decoded (frame : NativeFrame) : RawCtxReceive.DecodedFrame :=
-  ⟨frame.sequence, frame.sender, RawCtxNativeFramePrelude.sliceBytes frame.payload⟩
-
-def frameDecoder (parse : Pqxdh.Bytes → Option NativeFrame) : RawCtxReceive.FrameDecoder :=
-  CborTransport.boundedDecoder (fun raw => decoded <$> parse raw)
 
 /-- Bound native registration parsing and use the complete transport frame decoder. -/
 def wireCodec (wire : Codec Reader Response) (parse : Pqxdh.Bytes → Option NativeFrame) :
@@ -125,7 +105,7 @@ noncomputable def normalizedBaseHandler (setup : Setup baseSpec KemSK) (wire : C
       (nativeReader parse)) checks (RawCtxFrameDecoding.sender (nativeReader parse).model) seed query
 
 noncomputable def normalizedBaseSource (setup : Setup baseSpec KemSK) (wire : Codec Reader Response)
-    (parse : Pqxdh.Bytes → Option NativeFrame) (erased : Std.Array Std.U8 357#usize)
+    (parse : Pqxdh.Bytes → Option NativeFrame) (erased : Std.Array Std.U8 227#usize)
     (checks : Checks) (seed : PqxdhJointIdentity.IdentitySeed) :
     PqxdhBoundaryProgram.Step Spec (PqxdhDeploymentNative.State KemSK) :=
   fun query state => PqxdhBoundaryDeploymentStep.sourceStep setup
@@ -137,7 +117,7 @@ noncomputable def normalizedHandler (setup : Setup baseSpec KemSK) (wire : Codec
   CborCommandFilter.handler allowed reject (normalizedBaseHandler setup wire parse checks seed)
 
 noncomputable def normalizedSource (setup : Setup baseSpec KemSK) (wire : Codec Reader Response)
-    (parse : Pqxdh.Bytes → Option NativeFrame) (erased : Std.Array Std.U8 357#usize)
+    (parse : Pqxdh.Bytes → Option NativeFrame) (erased : Std.Array Std.U8 227#usize)
     (checks : Checks) (seed : PqxdhJointIdentity.IdentitySeed) :
     PqxdhBoundaryProgram.Step Spec (PqxdhDeploymentNative.State KemSK) :=
   CborCommandFilter.source allowed reject (normalizedBaseSource setup wire parse erased checks seed)
@@ -150,7 +130,7 @@ noncomputable def baseHandler (setup : Setup baseSpec KemSK) (wire : Codec Reade
       (nativeReader parse)) checks (RawCtxFrameDecoding.sender (nativeReader parse).model) seed query
 
 noncomputable def baseSource (setup : Setup baseSpec KemSK) (wire : Codec Reader Response)
-    (parse : Pqxdh.Bytes → Option NativeFrame) (erased : Std.Array Std.U8 357#usize)
+    (parse : Pqxdh.Bytes → Option NativeFrame) (erased : Std.Array Std.U8 227#usize)
     (checks : Checks) (seed : PqxdhJointIdentity.IdentitySeed) :
     PqxdhBoundaryProgram.Step Spec (PqxdhDeploymentNative.State KemSK) :=
   fun query state => PqxdhBoundaryDeploymentStep.sourceStep setup
@@ -162,14 +142,14 @@ noncomputable def handler (setup : Setup baseSpec KemSK) (wire : Codec Reader Re
   CborCommandFilter.handler allowed reject (baseHandler setup wire parse checks seed)
 
 noncomputable def source (setup : Setup baseSpec KemSK) (wire : Codec Reader Response)
-    (parse : Pqxdh.Bytes → Option NativeFrame) (erased : Std.Array Std.U8 357#usize)
+    (parse : Pqxdh.Bytes → Option NativeFrame) (erased : Std.Array Std.U8 227#usize)
     (checks : Checks) (seed : PqxdhJointIdentity.IdentitySeed) :
     PqxdhBoundaryProgram.Step Spec (PqxdhDeploymentNative.State KemSK) :=
   CborCommandFilter.source allowed reject (baseSource setup wire parse erased checks seed)
 
 /-- Dynamic per-owner registration normalization preserves the original per-command model equality at every complete state. -/
 theorem base_step_exact (setup : Setup baseSpec KemSK) (wire : Codec Reader Response)
-    (parse : Pqxdh.Bytes → Option NativeFrame) (erased : Std.Array Std.U8 357#usize)
+    (parse : Pqxdh.Bytes → Option NativeFrame) (erased : Std.Array Std.U8 227#usize)
     (checks : Checks) (seed : PqxdhJointIdentity.IdentitySeed)
     (query : Spec.Domain) (state : PqxdhDeploymentNative.State KemSK) :
     baseSource setup wire parse erased checks seed query state =
@@ -180,7 +160,7 @@ theorem base_step_exact (setup : Setup baseSpec KemSK) (wire : Codec Reader Resp
 
 /-- Exact admission runs on both sides before the native primitive callbacks, with complete moved-token rejection effects. -/
 theorem step_exact (setup : Setup baseSpec KemSK) (wire : Codec Reader Response)
-    (parse : Pqxdh.Bytes → Option NativeFrame) (erased : Std.Array Std.U8 357#usize)
+    (parse : Pqxdh.Bytes → Option NativeFrame) (erased : Std.Array Std.U8 227#usize)
     (checks : Checks) (seed : PqxdhJointIdentity.IdentitySeed)
     (query : Spec.Domain) (state : PqxdhDeploymentNative.State KemSK) :
     source setup wire parse erased checks seed query state =
@@ -189,7 +169,7 @@ theorem step_exact (setup : Setup baseSpec KemSK) (wire : Codec Reader Response)
 
 /-- Complete adaptive operational composition includes every oversized command and every returned state. -/
 theorem execute_exact {X : Type} (setup : Setup baseSpec KemSK) (wire : Codec Reader Response)
-    (parse : Pqxdh.Bytes → Option NativeFrame) (erased : Std.Array Std.U8 357#usize)
+    (parse : Pqxdh.Bytes → Option NativeFrame) (erased : Std.Array Std.U8 227#usize)
     (checks : Checks) (seed : PqxdhJointIdentity.IdentitySeed) (work : OracleComp Spec X)
     (state : PqxdhDeploymentNative.State KemSK) :
     PqxdhBoundaryProgram.execute (source setup wire parse erased checks seed) work state =

@@ -35,7 +35,7 @@ theorem borrowed_plaintext (reply : Option Pqxdh.Bytes) :
       split <;> rfl
 
 theorem initial (setup : PqxdhServerAuthExperiment.Setup base KemSK) (wire : RegistrationNativeWire.Wire)
-    (erased : commitment.CommitmentTranscript) (request : ratchet.SymmetricRatchetKdfRequest) :
+    (erased : commitment.CommitmentTranscript) (request : ratchet.InitialRatchetKdfRequest) :
     RegistrationNativeRecordJournal.unlogged (n := n) (source := source) (Auxiliary := Auxiliary) setup wire (.initialKdf request) =
       (fun bytes => core.option.Option.Some (⟨bytes⟩ : pqxdh.concrete.InitialRatchetKdfResponse)) <$>
         (primitives setup erased).initial request := by

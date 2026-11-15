@@ -131,8 +131,7 @@ theorem outgoing_preserves (setup : PqxdhServerAuthExperiment.Setup base KemSK) 
   | inl query => cases query with
     | hash request => exact lift_preserves _ _
     | sign request payload digest =>
-        exact bind_preserves _ _ _ (sample_preserves _ _) (fun _ =>
-          bind_preserves _ _ _ (lift_preserves _ _) (fun _ => pure_preserves _ _))
+        exact pure_preserves _ _
   | inr request =>
       classical
       by_cases matching : request.public_key = PqxdhRootTableInitialization.rootArray owner.identity.publicIdentity.ed25519

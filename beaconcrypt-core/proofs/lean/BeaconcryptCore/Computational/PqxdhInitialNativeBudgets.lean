@@ -13,6 +13,8 @@ open OracleComp OracleSpec
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhInitialNativeBudgets
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame RawCtxSelectiveChainGame
 variable {ι M P I D K X Response Shared A N C Result Origin : Type} {extra : OracleSpec ι} {S B : Nat}
 
@@ -257,10 +259,10 @@ theorem source_uniform (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
     (qPost : Nat) (sourceBound : ∀ reply, (execution.outside reply).IsTotalQueryBound qPost)
     (state : PqxdhInitialNativeLog.State A N C) :
     ((simulateQ (PqxdhInitialNativeLog.handler source writer stage external)
-      (PqxdhInitialNativeCarried.original (X := X) (Response := Response) source mark sender route decode execution)).run state).IsTotalQueryBound
+      (PqxdhInitialNativeCarried.original (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response) source mark sender route decode execution)).run state).IsTotalQueryBound
       ((7 + qPost * 67) * callbackCap budget) := by
   apply program_uniform source writer stage external budget bounded _ (7 + qPost * 67) _ state
-  exact PqxdhInitialOriginPost.sequence_total source execution.initial mark execution.origin sender route decode
+  exact PqxdhInitialOriginPost.sequence_total (associatedData := associatedData) (completedBinding := completedBinding) source execution.initial mark execution.origin sender route decode
     execution.index execution.metadata execution.ready execution.outside qPost sourceBound (execution.before, execution.trace)
 
 /-- The actual executable carried predecessor sampler pays no more than its literal complete original source execution, including every retained external callback. -/
@@ -273,13 +275,13 @@ theorem carried_uniform (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxM
     (execution : PqxdhInitialNativeCarried.Execution extra M P I D K Result Origin S B)
     (qPost : Nat) (sourceBound : ∀ reply, (execution.outside reply).IsTotalQueryBound qPost)
     (state : PqxdhInitialNativeLog.State A N C) :
-    (PqxdhInitialNativeCarried.carried source writer mark sender route decode execution depth stage external state).IsTotalQueryBound
+    (PqxdhInitialNativeCarried.carried (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth stage external state).IsTotalQueryBound
       ((7 + qPost * 67) * callbackCap budget) := by
   apply IsTotalQueryBound.of_bind_left (ob := fun cut =>
     RawCtxPendingMixedPrefix.finish (PqxdhInitialNativeLog.handler source writer stage external)
-      (RawCtxForwardScan.pack (PqxdhInitialOriginContext.frame (X := X) (Response := Response) mark sender route decode) cut))
+      (RawCtxForwardScan.pack (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode) cut))
   rw [PqxdhInitialNativeCarried.carried_finish]
-  exact source_uniform source writer stage external budget bounded mark sender route decode execution qPost sourceBound state
+  exact source_uniform (associatedData := associatedData) (completedBinding := completedBinding) source writer stage external budget bounded mark sender route decode execution qPost sourceBound state
 
 noncomputable def initializer (source : FixedHkdfSha512NoSaltSource)
     (selected : PqxdhCorrelatedExtractFamily.Message) (previousRoot : PqxdhSecretInputKdf.RootOutput)

@@ -69,13 +69,25 @@ theorem finish_history (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
   simp only [finishStep, StateT.run] at supported
   cases phase : state.1.beacon.beacon.phase with
   | initSent control prekey oneTime kem =>
-      simp only [phase, mem_support_bind_iff] at supported
-      obtain ⟨prepared, _, supported⟩ := supported
+      simp only [phase] at supported
+      split at supported
+      rotate_left
+      · simp only [support_pure, Set.mem_singleton_iff] at supported
+        subst supported
+        exact History.transport state.1
+          { state.1 with beacon := (PqxdhBeaconPhase2Publication.finish control state.1.beacon none).2 } history
+          (fun active => by
+            obtain ⟨control', prekey', oneTime', kem', after⟩ := active
+            exact (finish_phase control state.1.beacon none control' prekey' oneTime' kem' after).elim)
+          rfl (List.prefix_refl _) (List.prefix_refl _)
+      simp only [mem_support_bind_iff] at supported
+      obtain ⟨hashed, _, prepared, _, supported⟩ := supported
       cases found : prepared with
       | none =>
           simp only [found, support_pure, Set.mem_singleton_iff] at supported
           subst supported
-          exact History.finishNone control state.1 history
+          exact History.finishNone control _
+            (History.transport state.1 _ history (fun active => active) rfl (List.prefix_refl _) (List.prefix_refl _))
       | some pending =>
           simp only [found, mem_support_bind_iff] at supported
           obtain ⟨derived, _, supported⟩ := supported
@@ -83,7 +95,7 @@ theorem finish_history (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
           | rejected =>
               simp only [reply, support_pure, Set.mem_singleton_iff] at supported
               subst supported
-              exact History.finishTouched control state.1 history shape ⟨control, prekey, oneTime, kem, phase⟩ _ state.1.ctx none
+              exact History.finishTouched control state.1 history shape ⟨control, prekey, oneTime, kem, phase⟩ _ hashed.2 none
           | root root =>
               simp only [reply, mem_support_bind_iff] at supported
               obtain ⟨staged, _, supported⟩ := supported
@@ -153,11 +165,16 @@ theorem skeleton_history (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
               subst supported
               exact history
           | some token =>
-              simp only [found, mem_support_bind_iff] at supported
-              obtain ⟨built, _, supported⟩ := supported
-              simp only [support_pure, Set.mem_singleton_iff] at supported
-              subst supported
-              exact History.transport state.1 _ history (fun active => active) rfl (List.prefix_refl _) ⟨_, rfl⟩
+              simp only [found] at supported
+              split at supported
+              · simp only [support_pure, Set.mem_singleton_iff] at supported
+                subst supported
+                exact History.transport state.1 _ history (fun active => active) rfl (List.prefix_refl _) (List.prefix_refl _)
+              · simp only [mem_support_bind_iff] at supported
+                obtain ⟨hashed, _, built, _, supported⟩ := supported
+                simp only [support_pure, Set.mem_singleton_iff] at supported
+                subst supported
+                exact History.transport state.1 _ history (fun active => active) rfl (List.prefix_refl _) ⟨_, rfl⟩
       | finish raw =>
           exact finish_history setup codec publicValue beaconSeed services raw state shape history result supported
       | hmac key bytes =>
@@ -258,45 +275,74 @@ theorem History.input (setup : Setup baseSpec KemSK) (context : Context KemSK)
   obtain ⟨_, message, _, _, first, later⟩ := history.first game snap found
   simp only [beaconInput, first, later]
 
+/-- The log fields of `Grows` (touch and seal prefixes, retained acceptance, session counter) without its cache field: a generic hidden service may replace the component cache, so source steps over arbitrary services are stated with this relation. -/
+structure Logs (before after : GameState KemSK) : Prop where
+  touches : before.ghost.touches <+: after.ghost.touches
+  seals : before.ghost.seals <+: after.ghost.seals
+  acceptance : ∀ snap, before.ghost.acceptance = some snap → after.ghost.acceptance = some snap
+  sessions : before.sessions ≤ after.sessions
+
+/-- `Logs` is reflexive. -/
+theorem Logs.refl (state : GameState KemSK) : Logs state state :=
+  ⟨List.prefix_refl _, List.prefix_refl _, fun _ found => found, le_refl _⟩
+
+/-- `Logs` is transitive. -/
+theorem Logs.trans {first second third : GameState KemSK} (left : Logs first second)
+    (right : Logs second third) : Logs first third :=
+  ⟨left.touches.trans right.touches, left.seals.trans right.seals,
+    fun snap found => right.acceptance snap (left.acceptance snap found), left.sessions.trans right.sessions⟩
+
+/-- Every `Grows` step is a `Logs` step. -/
+theorem logs_of_grows {before after : GameState KemSK} (grown : Grows before after) : Logs before after :=
+  ⟨grown.touches, grown.seals, grown.acceptance, grown.sessions⟩
+
 /-- The concrete final acceptance observer preserves previous observations and both current logs. -/
 theorem finish_grows (control : pqxdh.BeaconInitSent) (game : GameState KemSK)
     (staged : Option PqxdhBeaconPhase2Publication.Staged) :
     Grows game (finishOutcome control game staged).2 := by
-  refine ⟨?_, ?_, fun snap found => Ghost.accept_keeps _ _ snap found, le_refl _⟩
+  refine ⟨?_, ?_, fun snap found => Ghost.accept_keeps _ _ snap found, le_refl _, le_rfl⟩
   · rw [finishOutcome_touches]
   · change game.ghost.seals <+: (game.ghost.accept _).seals
     rw [Ghost.accept_seals]
 
-/-- Touching the reached Beacon derivation and finishing retain the exact earlier source history. -/
-theorem finishTouched_grows (control : pqxdh.BeaconInitSent) (game : GameState KemSK)
+/-- Touching the reached Beacon derivation and finishing at any component cache retain the exact earlier source logs and acceptance. -/
+theorem finishTouched_logs (control : pqxdh.BeaconInitSent) (game : GameState KemSK)
     (message : PqxdhJointDhExtractFamily.Message) (cache : CtxRomAuth.CtxRO.QueryCache)
     (staged : Option PqxdhBeaconPhase2Publication.Staged) :
-    Grows game (finishOutcome control { game with
+    Logs game (finishOutcome control { game with
       ctx := cache
       ghost := { game.ghost with touches := game.ghost.touches ++ [.beacon message] } } staged).2 := by
-  exact (show Grows game { game with
+  exact (show Logs game { game with
       ctx := cache
       ghost := { game.ghost with touches := game.ghost.touches ++ [.beacon message] } } from
       ⟨⟨_, rfl⟩, List.prefix_refl _, (fun _ found => found), le_refl _⟩).trans
-    (finish_grows control _ staged)
+    (logs_of_grows (finish_grows control _ staged))
 
 /-- Every complete raw finish retains earlier touch/seal entries and an existing accepted observation. -/
-theorem finish_step_grows (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+theorem finish_step_logs (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (publicValue : PublicChallenge) (beaconSeed : IdentitySeed) (services : Services Response τ)
     (raw : Pqxdh.Bytes) (state : FlatState KemSK τ)
     (result : Option Pqxdh.Bytes × FlatState KemSK τ)
     (supported : result ∈ support ((finishStep setup codec publicValue beaconSeed services raw).run state)) :
-    Grows state.1 result.2.1 := by
+    Logs state.1 result.2.1 := by
   simp only [finishStep, StateT.run] at supported
   cases phase : state.1.beacon.beacon.phase with
   | initSent control prekey oneTime kem =>
-      simp only [phase, mem_support_bind_iff] at supported
-      obtain ⟨prepared, _, supported⟩ := supported
+      simp only [phase] at supported
+      split at supported
+      rotate_left
+      · simp only [support_pure, Set.mem_singleton_iff] at supported
+        subst supported
+        exact ⟨List.prefix_refl _, List.prefix_refl _, fun _ found => found, le_refl _⟩
+      simp only [mem_support_bind_iff] at supported
+      obtain ⟨hashed, _, prepared, _, supported⟩ := supported
       cases found : prepared with
       | none =>
           simp only [found, support_pure, Set.mem_singleton_iff] at supported
           subst supported
-          exact finish_grows control state.1 none
+          exact (show Logs state.1 { state.1 with ctx := hashed.2 } from
+              ⟨List.prefix_refl _, List.prefix_refl _, fun _ found => found, le_refl _⟩).trans
+            (logs_of_grows (finish_grows control _ none))
       | some pending =>
           simp only [found, mem_support_bind_iff] at supported
           obtain ⟨derived, _, supported⟩ := supported
@@ -304,36 +350,36 @@ theorem finish_step_grows (setup : Setup baseSpec KemSK) (codec : Codec Reader R
           | rejected =>
               simp only [reply, support_pure, Set.mem_singleton_iff] at supported
               subst supported
-              exact finishTouched_grows control state.1 _ state.1.ctx none
+              exact finishTouched_logs control _ _ hashed.2 none
           | root root =>
               simp only [reply, mem_support_bind_iff] at supported
               obtain ⟨staged, _, supported⟩ := supported
               simp only [support_pure, Set.mem_singleton_iff] at supported
               subst supported
-              exact finishTouched_grows control state.1 _ staged.2.2 staged.1
+              exact finishTouched_logs control _ _ staged.2.2 staged.1
           | hidden =>
               simp only [reply, mem_support_bind_iff] at supported
               obtain ⟨staged, _, supported⟩ := supported
               simp only [support_pure, Set.mem_singleton_iff] at supported
               subst supported
-              exact finishTouched_grows control state.1 _ staged.2.2 staged.1
+              exact finishTouched_logs control _ _ staged.2.2 staged.1
   | _ =>
       simp only [phase, support_pure, Set.mem_singleton_iff] at supported
       subst supported
-      exact Grows.refl state.1
+      exact Logs.refl state.1
 
 /-- The actual complete source API only appends logs and never overwrites an accepted observation; the actual session-attempt counter never decreases. -/
-theorem skeleton_grows (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+theorem skeleton_logs (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (publicValue : PublicChallenge) (beaconSeed : IdentitySeed) (services : Services Response τ)
     (query : ServerAuthSpec.Domain) (state : FlatState KemSK τ)
     (result : ServerAuthSpec.Range query × FlatState KemSK τ)
     (supported : result ∈ support ((skeleton setup codec checks publicValue beaconSeed services query).run state)) :
-    Grows state.1 result.2.1 := by
+    Logs state.1 result.2.1 := by
   cases query with
   | inl coin =>
       simp only [skeleton, StateT.run, support_map, Set.mem_image] at supported
       obtain ⟨value, _, rfl⟩ := supported
-      exact Grows.refl state.1
+      exact Logs.refl state.1
   | inr query =>
       cases query with
       | accept raw =>
@@ -360,15 +406,20 @@ theorem skeleton_grows (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
           | none =>
               simp only [found, support_pure, Set.mem_singleton_iff] at supported
               subst supported
-              exact Grows.refl state.1
+              exact Logs.refl state.1
           | some token =>
-              simp only [found, mem_support_bind_iff] at supported
-              obtain ⟨built, _, supported⟩ := supported
-              simp only [support_pure, Set.mem_singleton_iff] at supported
-              subst supported
-              exact ⟨List.prefix_refl _, ⟨_, rfl⟩, (fun _ found => found), le_refl _⟩
+              simp only [found] at supported
+              split at supported
+              · simp only [support_pure, Set.mem_singleton_iff] at supported
+                subst supported
+                exact ⟨List.prefix_refl _, List.prefix_refl _, fun _ found => found, le_refl _⟩
+              · simp only [mem_support_bind_iff] at supported
+                obtain ⟨hashed, _, built, _, supported⟩ := supported
+                simp only [support_pure, Set.mem_singleton_iff] at supported
+                subst supported
+                exact ⟨List.prefix_refl _, ⟨_, rfl⟩, (fun _ found => found), le_refl _⟩
       | finish raw =>
-          exact finish_step_grows setup codec publicValue beaconSeed services raw state result supported
+          exact finish_step_logs setup codec publicValue beaconSeed services raw state result supported
       | hmac key bytes =>
           simp only [skeleton, hmacStep, StateT.run] at supported
           split_ifs at supported with inside
@@ -378,7 +429,7 @@ theorem skeleton_grows (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
             exact ⟨⟨_, rfl⟩, List.prefix_refl _, (fun _ found => found), le_refl _⟩
           · simp only [support_pure, Set.mem_singleton_iff] at supported
             subst supported
-            exact Grows.refl state.1
+            exact Logs.refl state.1
       | hash bytes =>
           simp only [skeleton, hashStep, StateT.run, mem_support_bind_iff] at supported
           obtain ⟨read, _, supported⟩ := supported
@@ -388,15 +439,15 @@ theorem skeleton_grows (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
       | reveal key =>
           simp only [skeleton, StateT.run, support_pure, Set.mem_singleton_iff] at supported
           subst supported
-          exact Grows.refl state.1
+          exact Logs.refl state.1
 
 /-- Actual one-shot selection and sticky refusal retain the exact monotone source observations. -/
-theorem handler_grows (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+theorem handler_logs (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (context : Context KemSK) (Q : Nat) (j : Fin (Q + 1)) (services : Services Response HiddenTable)
     (query : ServerAuthSpec.Domain) (state : HiddenState KemSK)
     (result : ServerAuthSpec.Range query × HiddenState KemSK)
     (supported : result ∈ support ((hiddenHandler setup codec checks context Q j services query).run state)) :
-    Grows state.1.1 result.2.1.1 := by
+    Logs state.1.1 result.2.1.1 := by
   simp only [hiddenHandler, StateT.run, support_map, Set.mem_image] at supported
   obtain ⟨middle, supported, rfl⟩ := supported
   rw [keepHiddenBad_game]
@@ -405,18 +456,18 @@ theorem handler_grows (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
   all_goals
     simp only [latch, StateT.run, support_map, Set.mem_image] at supported
     obtain ⟨step, supported, rfl⟩ := supported
-    exact skeleton_grows setup codec checks (context.publicValue setup) context.beaconSeed _ query state.1 step supported
+    exact skeleton_logs setup codec checks (context.publicValue setup) context.beaconSeed _ query state.1 step supported
 
 /-- Every adaptive source suffix preserves previous source receipts and the existing acceptance. -/
-theorem program_grows {α : Type} (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+theorem program_logs {α : Type} (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (context : Context KemSK) (Q : Nat) (j : Fin (Q + 1))
     (services : Services Response HiddenTable) (program : OracleComp ServerAuthSpec α)
     (state : HiddenState KemSK) (result : α × HiddenState KemSK)
     (supported : result ∈ support ((simulateQ (hiddenHandler setup codec checks context Q j services) program).run state)) :
-    Grows state.1.1 result.2.1.1 := by
-  exact run_rel _ (fun (before after : HiddenState KemSK) => Grows before.1.1 after.1.1)
-    (fun state => Grows.refl state.1.1) (fun _ _ _ first second => first.trans second)
-    (fun query before after reached => handler_grows setup codec checks context Q j services query before after reached)
+    Logs state.1.1 result.2.1.1 := by
+  exact run_rel _ (fun (before after : HiddenState KemSK) => Logs before.1.1 after.1.1)
+    (fun state => Logs.refl state.1.1) (fun _ _ _ first second => first.trans second)
+    (fun query before after reached => handler_logs setup codec checks context Q j services query before after reached)
     program state result supported
 
 /-- Later source traffic cannot change W1/W2 once the actual accepted observation has been recorded. -/
@@ -428,7 +479,7 @@ theorem accepted_suffix {α : Type} (setup : Setup baseSpec KemSK) (codec : Code
     (supported : result ∈ support ((simulateQ (hiddenHandler setup codec checks context Q j services) program).run state)) :
     (W1 setup context.seed context.scalar result.2.1.1.ghost ∨ W2 setup context.seed context.scalar result.2.1.1.ghost) ↔
       (W1 setup context.seed context.scalar state.1.1.ghost ∨ W2 setup context.seed context.scalar state.1.1.ghost) := by
-  have kept := (program_grows setup codec checks context Q j services program state result supported).acceptance snap accepted
+  have kept := (program_logs setup codec checks context Q j services program state result supported).acceptance snap accepted
   simp only [W1, W2, kept, accepted]
 
 end BeaconcryptCore.Computational.PqxdhServerAuthCtxAcceptanceHistory
@@ -498,36 +549,51 @@ end BeaconcryptCore.Computational.PqxdhServerAuthCtxAcceptanceHistory
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhServerAuthCtxAcceptanceHistory.History.input
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthCtxAcceptanceHistory.Logs.refl' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthCtxAcceptanceHistory.Logs.refl
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthCtxAcceptanceHistory.Logs.trans' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthCtxAcceptanceHistory.Logs.trans
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthCtxAcceptanceHistory.logs_of_grows' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthCtxAcceptanceHistory.logs_of_grows
 /-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthCtxAcceptanceHistory.finish_grows' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhServerAuthCtxAcceptanceHistory.finish_grows
-/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthCtxAcceptanceHistory.finishTouched_grows' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthCtxAcceptanceHistory.finishTouched_logs' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhServerAuthCtxAcceptanceHistory.finishTouched_grows
-/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthCtxAcceptanceHistory.finish_step_grows' depends on axioms: [propext,
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthCtxAcceptanceHistory.finishTouched_logs
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthCtxAcceptanceHistory.finish_step_logs' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhServerAuthCtxAcceptanceHistory.finish_step_grows
-/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthCtxAcceptanceHistory.skeleton_grows' depends on axioms: [propext,
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthCtxAcceptanceHistory.finish_step_logs
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthCtxAcceptanceHistory.skeleton_logs' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhServerAuthCtxAcceptanceHistory.skeleton_grows
-/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthCtxAcceptanceHistory.handler_grows' depends on axioms: [propext,
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthCtxAcceptanceHistory.skeleton_logs
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthCtxAcceptanceHistory.handler_logs' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhServerAuthCtxAcceptanceHistory.handler_grows
-/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthCtxAcceptanceHistory.program_grows' depends on axioms: [propext,
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthCtxAcceptanceHistory.handler_logs
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthCtxAcceptanceHistory.program_logs' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhServerAuthCtxAcceptanceHistory.program_grows
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthCtxAcceptanceHistory.program_logs
 /-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthCtxAcceptanceHistory.accepted_suffix' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/

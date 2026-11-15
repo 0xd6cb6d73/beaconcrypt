@@ -42,7 +42,7 @@ class ProvenanceChecks(unittest.TestCase):
         CHECKER.validate_targets()
         result = CHECKER.THEORY.audit()
         self.assertEqual(len(result["reductions"]), 28)
-        self.assertEqual(len(result["data_constructors"]), 44)
+        self.assertEqual(len(result["data_constructors"]), 48)
         self.assertEqual(
             [t.cls for t in CHECKER.TARGETS],
             ["security"] * 3 + ["witness"] + ["negative-control"] * 2,

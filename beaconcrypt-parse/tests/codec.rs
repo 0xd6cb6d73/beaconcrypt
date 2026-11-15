@@ -34,8 +34,6 @@ fn init_bytes(value: InitKex<'_>) -> Vec<u8> {
 		value.pre_key.len(),
 		value.one_time_key.len(),
 		value.pq_key.len(),
-		value.mldsa_public_key.len(),
-		value.signature.len(),
 	])
 	.unwrap();
 	let mut out = vec![0; expected];
@@ -64,8 +62,6 @@ const INIT_IDENTITY: [u8; 33] = [0x11; 33];
 const INIT_PREKEY: [u8; 98] = [0x22; 98];
 const INIT_ONE_TIME: [u8; 98] = [0x33; 98];
 const INIT_PQ: [u8; 1249] = [0x44; 1249];
-const INIT_MLDSA_PUBLIC: [u8; 1952] = [0x88; 1952];
-const INIT_SIGNATURE: [u8; 3309] = [0x99; 3309];
 const RESPONSE_IDENTITY: [u8; 32] = [0x55; 32];
 const RESPONSE_EPHEMERAL: [u8; 32] = [0x66; 32];
 const RESPONSE_KEM: [u8; 1088] = [0x77; 1088];
@@ -77,8 +73,6 @@ fn valid_init() -> InitKex<'static> {
 		pre_key: &INIT_PREKEY,
 		one_time_key: &INIT_ONE_TIME,
 		pq_key: &INIT_PQ,
-		mldsa_public_key: &INIT_MLDSA_PUBLIC,
-		signature: &INIT_SIGNATURE,
 	}
 }
 
@@ -115,14 +109,12 @@ fn append_bytes(wire: &mut Vec<u8>, bytes: &[u8]) {
 }
 
 fn independent_init(value: InitKex<'_>) -> Vec<u8> {
-	let mut wire = vec![0x88, 2, 0];
+	let mut wire = vec![0x86, 3, 0];
 	for bytes in [
 		value.identity_key,
 		value.pre_key,
 		value.one_time_key,
 		value.pq_key,
-		value.mldsa_public_key,
-		value.signature,
 	] {
 		append_bytes(&mut wire, bytes);
 	}
@@ -130,7 +122,7 @@ fn independent_init(value: InitKex<'_>) -> Vec<u8> {
 }
 
 fn independent_response(value: KexResponse<'_>) -> Vec<u8> {
-	let mut wire = vec![0x88, 2, 1];
+	let mut wire = vec![0x88, 3, 1];
 	for bytes in [
 		value.identity_key,
 		value.ephemeral_key,
@@ -163,7 +155,7 @@ impl Kind {
 	fn byte_fields(self) -> &'static [usize] {
 		match self {
 			Self::Frame => &[5],
-			Self::Init => &[3, 38, 138, 238, 1490, 3445],
+			Self::Init => &[3, 38, 138, 238],
 			Self::Response => &[3, 37, 71, 1162, 1164],
 		}
 	}
@@ -171,14 +163,7 @@ impl Kind {
 	fn byte_field_lengths(self) -> &'static [(usize, usize)] {
 		match self {
 			Self::Frame => &[(5, 0)],
-			Self::Init => &[
-				(3, 33),
-				(38, 98),
-				(138, 98),
-				(238, 1249),
-				(1490, 1952),
-				(3445, 3309),
-			],
+			Self::Init => &[(3, 33), (38, 98), (138, 98), (238, 1249)],
 			Self::Response => &[(3, 32), (37, 32), (71, 1088), (1162, 0), (1164, 3309)],
 		}
 	}
@@ -229,18 +214,17 @@ fn hand_authored_cbor_matches_the_schema_and_encoder() {
 
 	let init = valid_init();
 	let wire = independent_init(init);
-	assert_eq!(&wire[..5], &[0x88, 2, 0, 0x58, 33]);
+	assert_eq!(&wire[..5], &[0x86, 3, 0, 0x58, 33]);
 	assert_eq!(&wire[38..40], &[0x58, 98]);
 	assert_eq!(&wire[138..140], &[0x58, 98]);
 	assert_eq!(&wire[238..241], &[0x59, 4, 0xe1]);
-	assert_eq!(&wire[1490..1493], &[0x59, 7, 0xa0]);
-	assert_eq!(&wire[3445..3448], &[0x59, 0x0c, 0xed]);
+	assert_eq!(wire.len(), 1490);
 	assert!(decode_init(&wire) == Some(init));
 	assert_eq!(init_bytes(init), wire);
 
 	let response = valid_response(&[0x40], 42);
 	let wire = independent_response(response);
-	assert_eq!(&wire[..5], &[0x88, 2, 1, 0x58, 32]);
+	assert_eq!(&wire[..5], &[0x88, 3, 1, 0x58, 32]);
 	assert_eq!(&wire[71..74], &[0x59, 4, 0x40]);
 	assert_eq!(&wire[1162..1169], &[0x41, 0x40, 0x18, 42, 0x59, 0x0c, 0xed]);
 	assert_eq!(&wire[1169..], RESPONSE_SIGNATURE);
@@ -356,29 +340,26 @@ fn wrong_version_type_arity_and_major_types_are_rejected() {
 }
 
 #[test]
-fn previous_registration_wire_and_missing_authentication_fields_are_rejected() {
+fn previous_registration_wire_and_extra_beacon_credentials_are_rejected() {
 	let init = independent_init(valid_init());
 	let response = independent_response(valid_response(&[], 0));
-	for (kind, wire, unsigned_end, old_arity) in [
-		(Kind::Init, &init, 1490, 0x86),
-		(Kind::Response, &response, 1164, 0x87),
-	] {
-		let mut old = wire[..unsigned_end].to_vec();
-		old[0] = old_arity;
-		old[1] = 1;
-		kind.reject("unsigned registration version 1", &old);
-		old[1] = 2;
-		kind.reject("registration version 2 without authentication fields", &old);
-		let mut old_version = wire.clone();
-		old_version[1] = 1;
-		kind.reject(
-			"version 1 with version 2 authentication fields",
-			&old_version,
-		);
+	for (kind, wire) in [(Kind::Init, &init), (Kind::Response, &response)] {
+		for version in [1, 2] {
+			let mut old = wire.clone();
+			old[1] = version;
+			kind.reject("previous registration version", &old);
+		}
 	}
-	let mut missing_signature = init[..3445].to_vec();
+	let mut credential = init.clone();
+	credential[0] = 0x88;
+	append_bytes(&mut credential, &[0; 1952]);
+	append_bytes(&mut credential, &[0; 3309]);
+	Kind::Init.reject("removed Beacon credential fields", &credential);
+	credential[1] = 2;
+	Kind::Init.reject("legacy credential-bearing request", &credential);
+	let mut missing_signature = response[..1164].to_vec();
 	missing_signature[0] = 0x87;
-	Kind::Init.reject("request without ML-DSA signature", &missing_signature);
+	Kind::Response.reject("response without Server signature", &missing_signature);
 	let mut unexpected_field = response.clone();
 	unexpected_field[0] = 0x89;
 	append_bytes(&mut unexpected_field, &[]);
@@ -536,8 +517,6 @@ fn parsers_borrow_every_byte_string_from_the_input() {
 		value.pre_key,
 		value.one_time_key,
 		value.pq_key,
-		value.mldsa_public_key,
-		value.signature,
 	] {
 		assert_borrowed(&init, field);
 	}
@@ -587,8 +566,8 @@ fn insufficient_output_capacity_returns_zero_and_exact_capacity_succeeds() {
 
 #[test]
 fn complete_encoded_limit_is_inclusive_and_oversized_encoders_do_not_write() {
-	// Both authentication fields count toward the same complete-message budget.
-	assert_eq!(init_bytes(valid_init()).len(), 6757);
+	// All four request fields count toward the complete-message budget.
+	assert_eq!(init_bytes(valid_init()).len(), 1490);
 	let mut wire = vec![0xa5; MAX_MESSAGE_SIZE + 1];
 	for kind in [Kind::Frame, Kind::Response] {
 		for oversized in [false, true] {
@@ -596,7 +575,7 @@ fn complete_encoded_limit_is_inclusive_and_oversized_encoders_do_not_write() {
 			let (mut prefix, tail) = match kind {
 				Kind::Frame => (vec![0x85, 1, 2, 0, 0, 0x5a], 0),
 				Kind::Response => {
-					let mut prefix = vec![0x88, 2, 1];
+					let mut prefix = vec![0x88, 3, 1];
 					for field in [
 						&RESPONSE_IDENTITY[..],
 						&RESPONSE_EPHEMERAL[..],
@@ -678,15 +657,13 @@ fn complete_encoded_limit_is_inclusive_and_oversized_encoders_do_not_write() {
 
 #[test]
 fn fixed_registration_field_lengths_reject_one_short_and_one_long_wire_inputs() {
-	for field in 0..6 {
+	for field in 0..4 {
 		for adjustment in [-1isize, 1] {
 			let mut values = [
 				&INIT_IDENTITY[..],
 				&INIT_PREKEY[..],
 				&INIT_ONE_TIME[..],
 				&INIT_PQ[..],
-				&INIT_MLDSA_PUBLIC[..],
-				&INIT_SIGNATURE[..],
 			];
 			let malformed = vec![0x5a; values[field].len().checked_add_signed(adjustment).unwrap()];
 			values[field] = &malformed;
@@ -695,8 +672,6 @@ fn fixed_registration_field_lengths_reject_one_short_and_one_long_wire_inputs() 
 				pre_key: values[1],
 				one_time_key: values[2],
 				pq_key: values[3],
-				mldsa_public_key: values[4],
-				signature: values[5],
 			});
 			assert!(
 				decode_init(&wire).is_none(),
@@ -735,15 +710,13 @@ fn fixed_registration_field_lengths_reject_one_short_and_one_long_encoder_inputs
 	let mut output = [0u8; 8192];
 	assert!(encode_init(valid_init(), &mut output) > 0);
 	assert!(encode_response(valid_response(&[], 0), &mut output) > 0);
-	for field in 0..6 {
+	for field in 0..4 {
 		for adjustment in [-1isize, 1] {
 			let mut values = [
 				&INIT_IDENTITY[..],
 				&INIT_PREKEY[..],
 				&INIT_ONE_TIME[..],
 				&INIT_PQ[..],
-				&INIT_MLDSA_PUBLIC[..],
-				&INIT_SIGNATURE[..],
 			];
 			let malformed = vec![0x5a; values[field].len().checked_add_signed(adjustment).unwrap()];
 			values[field] = &malformed;
@@ -754,8 +727,6 @@ fn fixed_registration_field_lengths_reject_one_short_and_one_long_encoder_inputs
 						pre_key: values[1],
 						one_time_key: values[2],
 						pq_key: values[3],
-						mldsa_public_key: values[4],
-						signature: values[5],
 					},
 					&mut output
 				),

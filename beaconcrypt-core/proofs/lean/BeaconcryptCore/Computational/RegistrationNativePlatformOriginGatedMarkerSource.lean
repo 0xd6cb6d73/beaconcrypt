@@ -72,7 +72,7 @@ theorem program_entryFacts {Value : Type}
     (nativeReserve : Nat → StateT E ProbComp (core.result.Result Unit Failure))
     (serverKid : U64) (bounds : FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value)
-    (created : PqxdhLiveServerConstruction.Created Unit) (before : E)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (before : E)
     (shell : CborRecordWorldClient.Shell) (control : PqxdhRecordLiftProtocol.Control n) (secret : CtxPrivate n × Bool)
     (safe : PqxdhRecordLiftProtocolHistory.Safe control)
     (result : ((RegistrationNativeEntropyRun.Outcome E Value × CborRecordWorldClient.Shell) × PqxdhRecordLiftProtocol.Control n) × (CtxPrivate n × Bool))

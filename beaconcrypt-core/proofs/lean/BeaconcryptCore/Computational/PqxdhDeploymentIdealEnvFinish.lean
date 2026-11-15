@@ -200,7 +200,7 @@ noncomputable def finishedEnv (e : EnvState KemSK SplitBk) (owner : ℕ) (shared
     (after : PqxdhRegistrationSchedule.Owner KemSK) (backend : SplitBk) : EnvState KemSK SplitBk :=
   { e with
     snap := PqxdhDeploymentLater.snapshotAt e.snap e.native.owners (some owner)
-    native := strip ⟨shared, e.native.owners.set owner after⟩
+    native := strip ⟨shared, e.native.owners.set owner after, e.native.inits⟩
     backend := backend }
 
 /-- The source commit of a finish with a staged result, published by the real owner effect (an abort, or the known install of an established owner), the backend unchanged. -/
@@ -244,17 +244,23 @@ noncomputable def groupEnv (owner : ℕ) (control : beaconcrypt_core.pqxdh.Beaco
       | some root => simulateQ (knownFwd setup codec) (PqxdhBeaconPhase2Shared.afterRoot codec.frameRead pending root) >>=
           fun staged => commitEnv e owner control before r.2 staged
 
-/-- Owner k's challenge finish in capability form (design-v2 section 6.1): the addressed owner's preparation with the challenge handle (`PqxdhDeploymentIdealSteps.preparationCE`, its coins as coin effects), then the commit of no staged result or the grouped finish request (`groupEnv`). Every finish is preceded by the LQ-F snapshot of the owner. -/
+/-- Owner k's challenge finish in capability form (design-v2 section 6.1, on the hashed owner finish of design §4.3/§4.5): for an owner in the `initSent` phase with its retained Phase 1 bundle and a decodable response, the registration transcript is one forwarded `.hash`, then the addressed owner's preparation at the completed binding of its digest with the challenge handle (`PqxdhDeploymentIdealSteps.preparationCE`, its coins as coin effects), then the commit of no staged result or the grouped finish request (`groupEnv`); an undecodable response (or a missing bundle) commits the abort before hashing. Every finish is preceded by the LQ-F snapshot of the owner. -/
 noncomputable def finishChallengeEnv (p : Params KemSK count) (owner : ℕ) (raw : Pqxdh.Bytes) :
     StateT (EnvState KemSK SplitBk) (OracleComp (EnvEffects 2)) (Option Pqxdh.Bytes) := fun e =>
   match e.native.owners[owner]? with
   | some before => match before.beacon.phase with
       | .initSent control prekey oneTime kem =>
-          coins (simulateQ (preparationCE setup codec p.challenge) (PqxdhBeaconPhase2Shared.prepare control
-            before.beacon.identity prekey oneTime kem raw)) >>= fun prepared =>
-            match prepared with
-            | none => commitEnv e owner control before e.native.shared none
-            | some pending => groupEnv setup codec owner control before e pending
+          match e.native.inits owner, PqxdhServerAuthExperiment.responseOf codec raw with
+          | some init, some response =>
+              PqxdhDeploymentEnvironment.request (.hash (PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf init)
+                response)) >>= fun digest =>
+              coins (simulateQ (preparationCE setup codec p.challenge) (PqxdhBeaconPhase2Shared.prepare
+                (completedBinding := PqxdhTranscriptAd.completedOf control digest) control before.beacon.identity prekey
+                  oneTime kem raw)) >>= fun prepared =>
+                match prepared with
+                | none => commitEnv e owner control before e.native.shared none
+                | some pending => groupEnv setup codec owner control before e pending
+          | _, _ => commitEnv e owner control before e.native.shared none
       | _ => pure (none, { e with snap := PqxdhDeploymentLater.snapshotAt e.snap e.native.owners (some owner) })
   | none => pure (none, { e with snap := PqxdhDeploymentLater.snapshotAt e.snap e.native.owners (some owner) })
 
@@ -314,14 +320,16 @@ theorem group_native (pending : Pending Response) (s : NativeState KemSK) (slots
     simp only [StateLens.lift, StateT.run, StateLens.fst, Functor.map_map]
 
 /-- Owner k's grouped native finish in front of the lazy service, from an owner in the `initSent` phase: the preparation with the challenge handle, then the commit of no staged result or of the grouped finish request's result. -/
-theorem owner_native (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (raw : Pqxdh.Bytes)
+theorem owner_native (challenge : PqxdhKemIndCca.MlKem768Ciphertext)
+    (binding : beaconcrypt_core.session.CompletedRegistrationBinding) (raw : Pqxdh.Bytes)
     (before : PqxdhRegistrationSchedule.Owner KemSK) (control : beaconcrypt_core.pqxdh.BeaconInitSent)
     (prekey oneTime : PqxdhJointGapDh.ScalarBytes) (kem : PqxdhKemIndCca.MlKem768PublicKey × KemSK)
     (phase : before.beacon.phase = .initSent control prekey oneTime kem) (s : NativeState KemSK) (slots : SlotState) :
     (onPair lazyDummy (simulateQ (PqxdhDeploymentIdealSteps.ownerImplCE setup codec (erasedHidden setup codec checks)
-        challenge) (PqxdhDeploymentIdealSteps.groupedOwnerCE (Response := Response) raw before))).run ((s, none), slots) =
-      simulateQ (preparationCE setup codec challenge) (PqxdhBeaconPhase2Shared.prepare control before.beacon.identity
-        prekey oneTime kem raw) >>= fun prepared =>
+        challenge) (PqxdhDeploymentIdealSteps.groupedOwnerCE (Response := Response) binding raw before))).run
+        ((s, none), slots) =
+      simulateQ (preparationCE setup codec challenge) (PqxdhBeaconPhase2Shared.prepare (completedBinding := binding) control
+        before.beacon.identity prekey oneTime kem raw) >>= fun prepared =>
         match prepared with
         | none => pure (PqxdhBeaconPhase2Publication.finish control before none, ((s, none), slots))
         | some pending => (fun r => (PqxdhBeaconPhase2Publication.finish control before r.1, r.2)) <$>
@@ -341,35 +349,65 @@ theorem owner_native (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (raw : Pqxd
   · rename_i notInitSent
     exact absurd phase (notInitSent control prekey oneTime kem)
 
-/-- Owner k's challenge finish in front of the lazy service, from a registration state whose owner k is in the `initSent` phase: the grouped native finish of the owner on the shared state, its returned owner reinstalled. -/
+/-- Owner k's hashed grouped native finish in front of the lazy service, from an owner in the `initSent` phase: with its retained Phase 1 bundle and a decodable response, the transcript hash on the shared CTX cache, then the grouped native owner at the completed binding of the digest (`owner_native`); otherwise the abort, before hashing. -/
+theorem hashed_native (challenge : PqxdhKemIndCca.MlKem768Ciphertext)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (before : PqxdhRegistrationSchedule.Owner KemSK) (control : beaconcrypt_core.pqxdh.BeaconInitSent)
+    (prekey oneTime : PqxdhJointGapDh.ScalarBytes) (kem : PqxdhKemIndCca.MlKem768PublicKey × KemSK)
+    (phase : before.beacon.phase = .initSent control prekey oneTime kem) (s : NativeState KemSK) (slots : SlotState) :
+    (onPair lazyDummy (PqxdhDeploymentIdealSteps.hashedOwnerCE setup codec (erasedHidden setup codec checks) challenge
+        retained raw before)).run ((s, none), slots) =
+      match retained, PqxdhServerAuthExperiment.responseOf codec raw with
+      | some init, some response =>
+          (CtxRomAuth.ctxRandomOracle ((), PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf init) response)).run
+            s.2.ctx >>= fun hashed =>
+          (onPair lazyDummy (simulateQ (PqxdhDeploymentIdealSteps.ownerImplCE setup codec (erasedHidden setup codec checks)
+            challenge) (PqxdhDeploymentIdealSteps.groupedOwnerCE (Response := Response)
+              (PqxdhTranscriptAd.completedOf control hashed.1) raw before))).run
+            (((s.1, { s.2 with ctx := hashed.2 }), none), slots)
+      | _, _ => pure (PqxdhBeaconPhase2Publication.finish control before none, ((s, none), slots)) := by
+  unfold PqxdhDeploymentIdealSteps.hashedOwnerCE
+  simp only [phase]
+  rcases retained with _ | init
+  · rw [onPair_pure, StateT.run_pure]
+    rfl
+  rcases decoded : PqxdhServerAuthExperiment.responseOf codec raw with _ | response
+  · rw [onPair_pure, StateT.run_pure]
+    rfl
+  dsimp only
+  change (onPair lazyDummy (PqxdhDeploymentIdealErase.hashStep (KemSK := KemSK) _ >>= _)).run _ = _
+  rw [onPair_bind, StateT.run_bind, PqxdhDeploymentIdealErase.hashStep_onSlots, onPair_onSlots]
+  simp only [StateLens.lift, StateT.run, StateLens.fst, Functor.map_map, bind_map_left,
+    PqxdhServerAuthNative.nativeHash]
+
+/-- Owner k's challenge finish in front of the lazy service, from a registration state whose owner k is in the `initSent` phase: the hashed grouped native finish of the owner at its retained Phase 1 bundle on the shared state, its returned owner reinstalled. -/
 theorem challenge_native (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (owner : ℕ) (raw : Pqxdh.Bytes)
     (sched : PqxdhRegistrationSchedule.State KemSK) (before : PqxdhRegistrationSchedule.Owner KemSK)
     (owned : sched.owners[owner]? = some before) (slots : SlotState) :
     (onPair lazyDummy (PqxdhDeploymentIdealSteps.finishChallenge setup codec (erasedHidden setup codec checks) challenge
         owner raw)).run ((sched, none), slots) =
-      (fun r => (r.1.1, ((({ shared := r.2.1.1, owners := sched.owners.set owner r.1.2 } :
+      (fun r => (r.1.1, ((({ sched with shared := r.2.1.1, owners := sched.owners.set owner r.1.2 } :
           PqxdhRegistrationSchedule.State KemSK), r.2.1.2), r.2.2))) <$>
-        (onPair lazyDummy (simulateQ (PqxdhDeploymentIdealSteps.ownerImplCE setup codec (erasedHidden setup codec checks)
-          challenge) (PqxdhDeploymentIdealSteps.groupedOwnerCE (Response := Response) raw before))).run
-            ((sched.shared, none), slots) := by
-  rw [PqxdhDeploymentIdealErase.onPair_dispatch _ _ (fun st => st.1.owners[owner]?)
+        (onPair lazyDummy (PqxdhDeploymentIdealSteps.hashedOwnerCE setup codec (erasedHidden setup codec checks)
+          challenge (sched.inits owner) raw before)).run ((sched.shared, none), slots) := by
+  rw [PqxdhDeploymentIdealErase.onPair_dispatch _ _ (fun st => (st.1.owners[owner]?, st.1.inits owner))
     (PqxdhDeploymentIdealErase.challengeBranch setup codec (erasedHidden setup codec checks) challenge owner raw)
     (PqxdhDeploymentIdealKernel.finishChallenge_branch setup codec _ challenge owner raw)]
   simp only [owned]
   exact PqxdhDeploymentIdealErase.onPair_focus lazyDummy
     (PqxdhDeploymentIdealErase.challengeBranch setup codec (erasedHidden setup codec checks) challenge owner raw
-      (some before))
-    (simulateQ (PqxdhDeploymentIdealSteps.ownerImplCE setup codec (erasedHidden setup codec checks) challenge)
-      (PqxdhDeploymentIdealSteps.groupedOwnerCE (Response := Response) raw before))
+      (some before, sched.inits owner))
+    (PqxdhDeploymentIdealSteps.hashedOwnerCE setup codec (erasedHidden setup codec checks) challenge (sched.inits owner)
+      raw before)
     (fun st => (st.1.shared, st.2))
-    (fun st b q => (b.1, (({ shared := q.1, owners := st.1.owners.set owner b.2 } :
+    (fun st b q => (b.1, (({ st.1 with shared := q.1, owners := st.1.owners.set owner b.2 } :
       PqxdhRegistrationSchedule.State KemSK), q.2))) (fun _ => rfl) ((sched, none), slots)
 
 /-- The extended state after owner k's challenge finish, before its hidden install: the new shared state and owner, the LQ-F snapshot, the allocator, material and seed table after the run, and the Beacon install ghost set to the recorded coordinates when the owner ends established. -/
 def finishedX (x : PqxdhDeploymentBackend.XState KemSK SplitBk 2) (owner : ℕ) (shared : NativeState KemSK)
     (after : PqxdhRegistrationSchedule.Owner KemSK) (recorded : Option Coord) (slots : SlotState) :
     PqxdhDeploymentBackend.XState KemSK SplitBk 2 :=
-  ⟨{ x.base with native := ⟨shared, x.base.native.owners.set owner after⟩ },
+  ⟨{ x.base with native := ⟨shared, x.base.native.owners.set owner after, x.base.native.inits⟩ },
     (slots.2.1, (slots.1, { x.backend.2.2 with
       beacon := if establishedAt (x.base.native.owners.set owner after) owner then recorded.or x.backend.2.2.beacon
         else x.backend.2.2.beacon })),
@@ -387,15 +425,25 @@ theorem slotRun_finish_hidden (t : Target count) (p : Params KemSK count)
     (phase : before.beacon.phase = .initSent control prekey oneTime kem) :
     (PqxdhDeploymentIdealKernel.slotRunX lazyDummy (PqxdhDeploymentIdealKernel.finishStepC setup codec checks route t p
         (erasedHidden setup codec checks) created owner raw)).run x =
-      simulateQ (preparationCE setup codec p.challenge) (PqxdhBeaconPhase2Shared.prepare control before.beacon.identity
-        prekey oneTime kem raw) >>= fun prepared =>
-        match prepared with
-        | none => pure (((PqxdhBeaconPhase2Publication.finish control before none).1, none),
-            finishedX x owner x.base.native.shared (PqxdhBeaconPhase2Publication.finish control before none).2 none
-              (x.backend.2.1, (x.backend.1, x.seeds)))
-        | some pending => (fun r => (((PqxdhBeaconPhase2Publication.finish control before r.1).1, r.2.1.2),
-            finishedX x owner r.2.1.1 (PqxdhBeaconPhase2Publication.finish control before r.1).2 r.2.1.2 r.2.2)) <$>
-            groupNative setup codec pending x.base.native.shared (x.backend.2.1, (x.backend.1, x.seeds)) := by
+      match x.base.native.inits owner, PqxdhServerAuthExperiment.responseOf codec raw with
+      | some init, some response =>
+        (CtxRomAuth.ctxRandomOracle ((), PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf init) response)).run
+          x.base.native.shared.2.ctx >>= fun hashed =>
+        simulateQ (preparationCE setup codec p.challenge) (PqxdhBeaconPhase2Shared.prepare
+          (completedBinding := PqxdhTranscriptAd.completedOf control hashed.1) control before.beacon.identity
+          prekey oneTime kem raw) >>= fun prepared =>
+          match prepared with
+          | none => pure (((PqxdhBeaconPhase2Publication.finish control before none).1, none),
+              finishedX x owner (x.base.native.shared.1, { x.base.native.shared.2 with ctx := hashed.2 })
+                (PqxdhBeaconPhase2Publication.finish control before none).2 none
+                (x.backend.2.1, (x.backend.1, x.seeds)))
+          | some pending => (fun r => (((PqxdhBeaconPhase2Publication.finish control before r.1).1, r.2.1.2),
+              finishedX x owner r.2.1.1 (PqxdhBeaconPhase2Publication.finish control before r.1).2 r.2.1.2 r.2.2)) <$>
+              groupNative setup codec pending (x.base.native.shared.1, { x.base.native.shared.2 with ctx := hashed.2 })
+                (x.backend.2.1, (x.backend.1, x.seeds))
+      | _, _ => pure (((PqxdhBeaconPhase2Publication.finish control before none).1, none),
+          finishedX x owner x.base.native.shared (PqxdhBeaconPhase2Publication.finish control before none).2 none
+            (x.backend.2.1, (x.backend.1, x.seeds))) := by
   have chosen' : (PqxdhDeploymentIdealKeys.detachX x).backend.active = true ∧ owner = t.kem.val ∧
       PqxdhDeploymentIdealSteps.initSentAt (PqxdhDeploymentIdealKeys.detachX x).base.native.owners owner = true := chosen
   have shape : ∀ y : PqxdhDeploymentBackend.XState KemSK IdealCore 2,
@@ -426,7 +474,18 @@ theorem slotRun_finish_hidden (t : Target count) (p : Params KemSK count)
         (Option Pqxdh.Bytes × Option Coord) × PqxdhDeploymentBackend.XState KemSK IdealCore 2)) shape]
   simp only []
   rw [challenge_native setup codec checks p.challenge owner raw (PqxdhDeploymentIdealKeys.detachX x).base.native before owned,
-    owner_native setup codec checks p.challenge raw before control prekey oneTime kem phase]
+    hashed_native setup codec checks p.challenge _ raw before control prekey oneTime kem phase]
+  change _ <$> (_ <$> (_ <$> (match x.base.native.inits owner, PqxdhServerAuthExperiment.responseOf codec raw with
+    | some init, some response => _
+    | _, _ => _ : ProbComp ((Option Pqxdh.Bytes × PqxdhRegistrationSchedule.Owner KemSK) ×
+      ((NativeState KemSK × Option Coord) × SlotState))))) = _
+  rcases x.base.native.inits owner with _ | init
+  · simp only [map_pure]; rfl
+  rcases PqxdhServerAuthExperiment.responseOf codec raw with _ | response
+  · simp only [map_pure]; rfl
+  simp only [map_bind]
+  refine bind_congr fun hashed => ?_
+  rw [owner_native setup codec checks p.challenge _ raw before control prekey oneTime kem phase]
   simp only [map_bind, Functor.map_map]
   refine bind_congr fun prepared => ?_
   cases prepared with
@@ -506,7 +565,7 @@ theorem countFree_groupEnv (owner : ℕ) (control : beaconcrypt_core.pqxdh.Beaco
     · exact countFree_commitEnv _ _ _ _ _ _
     · exact countFree_bind (countFree_noAdmin _ (knownFwd_noAdmin setup codec _)) fun _ => countFree_commitEnv _ _ _ _ _ _
 
-/-- Owner k's challenge finish in capability form from an owner in the `initSent` phase, run by the World with its counts forgotten: the preparation's coins, then the World run of the commit or the grouped finish request from the counts-free World. -/
+/-- Owner k's challenge finish in capability form from an owner in the `initSent` phase, run by the World with its counts forgotten: with the owner's retained Phase 1 bundle and a decodable response, the forwarded transcript hash on the World's CTX cache, the preparation's coins at the completed binding of the digest, then the World run of the commit or the grouped finish request from the counts-free World with the cache after the hash; otherwise the World run of the commit of the abort from the counts-free World. -/
 theorem finishChallenge_effects (p : Params KemSK count) (owner : ℕ) (raw : Pqxdh.Bytes) (e : EnvState KemSK SplitBk)
     (w : PqxdhRecordLiftWorld.State 2) (before : PqxdhRegistrationSchedule.Owner KemSK)
     (control : beaconcrypt_core.pqxdh.BeaconInitSent) (prekey oneTime : PqxdhJointGapDh.ScalarBytes)
@@ -514,27 +573,53 @@ theorem finishChallenge_effects (p : Params KemSK count) (owner : ℕ) (raw : Pq
     (phase : before.beacon.phase = .initSent control prekey oneTime kem) :
     Prod.map id uncount <$> (simulateQ PqxdhRecordLiftWorld.effects
         ((finishChallengeEnv setup codec p owner raw).run e)).run w =
-      simulateQ (preparationCE setup codec p.challenge) (PqxdhBeaconPhase2Shared.prepare control before.beacon.identity
-        prekey oneTime kem raw) >>= fun prepared =>
-        Prod.map id uncount <$> (simulateQ PqxdhRecordLiftWorld.effects (match prepared with
-          | none => commitEnv e owner control before e.native.shared none
-          | some pending => groupEnv setup codec owner control before e pending)).run (withCache w w.primitive.2) := by
-  have program : (finishChallengeEnv setup codec p owner raw).run e =
-      coins (simulateQ (preparationCE setup codec p.challenge) (PqxdhBeaconPhase2Shared.prepare control
-        before.beacon.identity prekey oneTime kem raw)) >>= fun prepared =>
-        match prepared with
-        | none => commitEnv e owner control before e.native.shared none
-        | some pending => groupEnv setup codec owner control before e pending := by
+      match e.native.inits owner, PqxdhServerAuthExperiment.responseOf codec raw with
+      | some init, some response =>
+        (CtxRomAuth.ctxRandomOracle ((), PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf init) response)).run
+          w.primitive.2 >>= fun hashed =>
+        simulateQ (preparationCE setup codec p.challenge) (PqxdhBeaconPhase2Shared.prepare
+          (completedBinding := PqxdhTranscriptAd.completedOf control hashed.1) control before.beacon.identity
+          prekey oneTime kem raw) >>= fun prepared =>
+          Prod.map id uncount <$> (simulateQ PqxdhRecordLiftWorld.effects (match prepared with
+            | none => commitEnv e owner control before e.native.shared none
+            | some pending => groupEnv setup codec owner control before e pending)).run (withCache w hashed.2)
+      | _, _ => Prod.map id uncount <$> (simulateQ PqxdhRecordLiftWorld.effects
+          (commitEnv e owner control before e.native.shared none)).run (withCache w w.primitive.2) := by
+  have shape : (finishChallengeEnv setup codec p owner raw).run e =
+      match e.native.inits owner, PqxdhServerAuthExperiment.responseOf codec raw with
+      | some init, some response =>
+          PqxdhDeploymentEnvironment.request (.hash (PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf init)
+            response)) >>= fun digest =>
+          coins (simulateQ (preparationCE setup codec p.challenge) (PqxdhBeaconPhase2Shared.prepare
+            (completedBinding := PqxdhTranscriptAd.completedOf control digest) control before.beacon.identity prekey
+              oneTime kem raw)) >>= fun prepared =>
+            match prepared with
+            | none => commitEnv e owner control before e.native.shared none
+            | some pending => groupEnv setup codec owner control before e pending
+      | _, _ => commitEnv e owner control before e.native.shared none := by
     change (match e.native.owners[owner]? with
       | some before => _
       | none => _) = _
     rw [owned]
     simp only [phase]
-  rw [program, effects_then_free ctxAdmin _ (coins_noAdmin _) _ (fun prepared => by
+  rw [shape]
+  rcases e.native.inits owner with _ | init
+  · exact countFree_commitEnv _ _ _ _ _ _ w
+  rcases PqxdhServerAuthExperiment.responseOf codec raw with _ | response
+  · exact countFree_commitEnv _ _ _ _ _ _ w
+  dsimp only
+  rw [← bind_assoc, effects_then_free ctxAdmin _ ?noAdmin _ (fun prepared => by
     cases prepared with
     | none => exact countFree_commitEnv _ _ _ _ _ _
-    | some pending => exact countFree_groupEnv setup codec _ _ _ _ _) w,
-    PqxdhDeploymentEnvironment.ctxEffects_coins, bind_map_left]
+    | some pending => exact countFree_groupEnv setup codec _ _ _ _ _) w]
+  · rw [simulateQ_bind, StateT.run_bind, bind_assoc]
+    simp only [PqxdhDeploymentEnvironment.request, simulateQ_query, OracleQuery.input_query, OracleQuery.cont_query,
+      id_map]
+    refine bind_congr fun hashed => ?_
+    rw [PqxdhDeploymentEnvironment.ctxEffects_coins, bind_map_left]
+  · refine isQueryBoundP_bind (n := 0) (m := 0) ?_ fun digest _ => coins_noAdmin _
+    simpa only [reduceCtorEq, ite_false] using
+      PqxdhDeploymentEnvironment.request_hash_bound (n := 2) _ .administrative
 
 /-- A read of coordinates in front of the lazy service with room or a hit: the slot of the coordinates is allocated and the value is a material joined with the dummy seed. -/
 theorem lazyRead_support (coords : Coord) (state : SlotState) (room : state.1.2 < 2) :
@@ -565,10 +650,11 @@ theorem establishedAt_set (owners : List (PqxdhRegistrationSchedule.Owner KemSK)
 /-- Stripping does not see the kernel of an established owner. -/
 theorem strip_setOwnerKernel (shared : NativeState KemSK) (owners : List (PqxdhRegistrationSchedule.Owner KemSK))
     (index : ℕ) (owner : PqxdhRegistrationSchedule.Owner KemSK)
-    (first second : beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel) :
-    strip (⟨shared, owners.set index (PqxdhDeploymentIdealKernel.setOwnerKernel owner first)⟩ :
+    (first second : beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel)
+    (inits : ℕ → Option PqxdhEd25519EufCma.Phase1Candidate) :
+    strip (⟨shared, owners.set index (PqxdhDeploymentIdealKernel.setOwnerKernel owner first), inits⟩ :
         PqxdhRegistrationSchedule.State KemSK) =
-      strip ⟨shared, owners.set index (PqxdhDeploymentIdealKernel.setOwnerKernel owner second)⟩ := by
+      strip ⟨shared, owners.set index (PqxdhDeploymentIdealKernel.setOwnerKernel owner second), inits⟩ := by
   have key : PqxdhDeploymentEnvironment.stripOwner (PqxdhDeploymentIdealKernel.setOwnerKernel owner first) =
       PqxdhDeploymentEnvironment.stripOwner (PqxdhDeploymentIdealKernel.setOwnerKernel owner second) := by
     unfold PqxdhDeploymentIdealKernel.setOwnerKernel PqxdhDeploymentEnvironment.stripOwner
@@ -593,7 +679,7 @@ theorem hiddenOwnerEffect_abort (j : PqxdhRecordLiftInterface.Slot 2) (index : �
 theorem hiddenOwnerEffect_establish (j : PqxdhRecordLiftInterface.Slot 2) (index : ℕ)
     (before after : PqxdhRegistrationSchedule.Owner KemSK)
     (initSent : PqxdhDeploymentEnvironment.inactiveTag before.beacon.phase = some .initSent)
-    (control : beaconcrypt_core.pqxdh.BeaconEstablished) (associatedData : Std.Array Std.U8 281#usize)
+    (control : beaconcrypt_core.pqxdh.BeaconEstablished) (associatedData : PqxdhTranscriptAd.AssociatedData)
     (kernel : beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel)
     (established : after.beacon.phase = .established control associatedData kernel) :
     PqxdhDeploymentEnvironment.hiddenOwnerEffect (n := 2) j index before after =
@@ -672,7 +758,7 @@ theorem commit_case (created : PqxdhLiveServerConstruction.Created Unit) (owner 
         (simulateQ PqxdhRecordLiftWorld.effects (commitEnv e owner control before shared staged)).run (withCache w cache)) =
       (fun r => (r.1.1, r.2)) <$> PqxdhDeploymentIdealDefer.beaconInstall owner
         (((PqxdhBeaconPhase2Publication.finish control before staged).1, none),
-          finishedX (merge e w) owner (shared.1, serverGame (MldsaLegacyServerRouting.forgetServer world.records.server) e.native.shared.2.server.identityKeyId
+          finishedX (merge e w) owner (shared.1, serverGame world.records.server e.native.shared.2.server.identityKeyId
             { shared.2 with ctx := cache }) (PqxdhBeaconPhase2Publication.finish control before staged).2 none
             ((merge e w).backend.2.1, ((merge e w).backend.1, (merge e w).seeds))) := by
   have inactive : ¬ RawCtxBeaconLifecycle.Established before.beacon.phase := by
@@ -688,7 +774,7 @@ theorem commit_case (created : PqxdhLiveServerConstruction.Created Unit) (owner 
       (PqxdhBeaconPhase2Publication.finish control before staged).2 >>= fun _ =>
         pure ((PqxdhBeaconPhase2Publication.finish control before staged).1,
           { PqxdhDeploymentEnvironmentReal.snapFinish e owner with native := strip ⟨shared, e.native.owners.set owner
-            (PqxdhBeaconPhase2Publication.finish control before staged).2⟩ }))).run (withCache w cache)) = _
+            (PqxdhBeaconPhase2Publication.finish control before staged).2, e.native.inits⟩ }))).run (withCache w cache)) = _
   rw [run, map_pure]
   change pure (_, merge _ (uncount w')) = pure _
   rw [merge_uncount, merged]
@@ -816,23 +902,46 @@ theorem finishChallenge_outcome (p : Params KemSK count) (owner : ℕ) (raw : Pq
           (PqxdhBeaconPhase2Publication.finish control before staged).2 e.backend),
             uncount { withCache w cache with owners := w.owners.set owner phase })) ∨
       (∃ (pending : Pending Response) (coords : Coord) (read : PqxdhServerAuthKeySchedule.Output × SlotState)
-          (j : PqxdhRecordLiftInterface.Slot 2),
+          (j : PqxdhRecordLiftInterface.Slot 2) (cache : CtxRomAuth.CtxRO.QueryCache),
         read ∈ support ((slotImpl lazyDummy (.inr coords)).run (e.backend.2.1, (e.backend.1, ∅))) ∧
         read.2.1.1 coords = some j ∧
         result ∈ support (Prod.map id uncount <$> (simulateQ PqxdhRecordLiftWorld.effects
           ((fun committed => (committed.1, finishedEnv e owner e.native.shared committed.2
             (hiddenBackend e owner committed.2 coords read.2))) <$>
             PqxdhDeploymentEnvironment.finishSplitEnv setup codec (PqxdhDeploymentHiddenLayout.splitOutput read.1).1 j
-              owner control before (embed pending))).run (withCache w w.primitive.2))) := by
+              owner control before (embed pending))).run (withCache w cache))) := by
   have initSent : PqxdhDeploymentEnvironment.inactiveTag before.beacon.phase = some .initSent := by rw [phase]; rfl
   intro result supported
-  rw [finishChallenge_effects setup codec p owner raw e w before control prekey oneTime kem owned phase,
-    mem_support_bind_iff] at supported
-  obtain ⟨prepared, _, supported⟩ := supported
-  rcases prepared with _ | pending
-  · exact Or.inl ⟨e.native.shared, none, w.primitive.2, commit_outcome e owner control before e.native.shared none w
+  rw [finishChallenge_effects setup codec p owner raw e w before control prekey oneTime kem owned phase] at supported
+  have aborted : result ∈ support (Prod.map id uncount <$> (simulateQ PqxdhRecordLiftWorld.effects
+      (commitEnv e owner control before e.native.shared none)).run (withCache w w.primitive.2)) →
+      (∃ shared staged cache phase, shared.2 = e.native.shared.2 ∧
+        PqxdhDeploymentEnvironmentJoin.stripPhase phase = PqxdhDeploymentEnvironmentJoin.stripPhase
+          (PqxdhRecordLiftBeacon.projectPhase (PqxdhBeaconPhase2Publication.finish control before staged).2.beacon) ∧
+        PqxdhDeploymentEnvironmentJoin.fillOwner (some phase) (PqxdhBeaconPhase2Publication.finish control before staged).2 =
+          (PqxdhBeaconPhase2Publication.finish control before staged).2 ∧
+        result = (((PqxdhBeaconPhase2Publication.finish control before staged).1, finishedEnv e owner shared
+          (PqxdhBeaconPhase2Publication.finish control before staged).2 e.backend),
+            uncount { withCache w cache with owners := w.owners.set owner phase })) := fun supported =>
+    ⟨e.native.shared, none, w.primitive.2, commit_outcome e owner control before e.native.shared none w
       w.primitive.2 initSent worldPhase result supported |>.choose, rfl,
       (commit_outcome e owner control before e.native.shared none w w.primitive.2 initSent worldPhase result
+        supported).choose_spec⟩
+  rcases hI : e.native.inits owner with _ | init
+  · simp only [hI] at supported
+    exact Or.inl (aborted supported)
+  rcases hR : PqxdhServerAuthExperiment.responseOf codec raw with _ | response
+  · simp only [hI, hR] at supported
+    exact Or.inl (aborted supported)
+  simp only [hI, hR] at supported
+  rw [mem_support_bind_iff] at supported
+  obtain ⟨hashed, _, supported⟩ := supported
+  rw [mem_support_bind_iff] at supported
+  obtain ⟨prepared, _, supported⟩ := supported
+  rcases prepared with _ | pending
+  · exact Or.inl ⟨e.native.shared, none, hashed.2, commit_outcome e owner control before e.native.shared none w
+      hashed.2 initSent worldPhase result supported |>.choose, rfl,
+      (commit_outcome e owner control before e.native.shared none w hashed.2 initSent worldPhase result
         supported).choose_spec⟩
   · simp only [] at supported
     unfold groupEnv at supported
@@ -847,18 +956,18 @@ theorem finishChallenge_outcome (p : Params KemSK count) (owner : ℕ) (raw : Pq
             · exact countFree_commitEnv _ _ _ _ _ _) _,
           PqxdhDeploymentEnvironment.ctxEffects_coins, bind_map_left, mem_support_bind_iff] at supported
         obtain ⟨read, member, final⟩ := supported
-        rw [show withCache (withCache w w.primitive.2) (withCache w w.primitive.2).primitive.2 =
-          withCache w w.primitive.2 from rfl] at final
+        rw [show withCache (withCache w hashed.2) (withCache w hashed.2).primitive.2 =
+          withCache w hashed.2 from rfl] at final
         split at final
         · rename_i j allocated
-          exact Or.inr ⟨pending, _, read, j, member, allocated, final⟩
-        · exact Or.inl ⟨e.native.shared, none, w.primitive.2, (commit_outcome e owner control before e.native.shared none
-            w w.primitive.2 initSent worldPhase result final).choose, rfl,
-            (commit_outcome e owner control before e.native.shared none w w.primitive.2 initSent worldPhase result
+          exact Or.inr ⟨pending, _, read, j, hashed.2, member, allocated, final⟩
+        · exact Or.inl ⟨e.native.shared, none, hashed.2, (commit_outcome e owner control before e.native.shared none
+            w hashed.2 initSent worldPhase result final).choose, rfl,
+            (commit_outcome e owner control before e.native.shared none w hashed.2 initSent worldPhase result
               final).choose_spec⟩
-      · exact Or.inl ⟨e.native.shared, none, w.primitive.2, (commit_outcome e owner control before e.native.shared none
-          w w.primitive.2 initSent worldPhase result supported).choose, rfl,
-          (commit_outcome e owner control before e.native.shared none w w.primitive.2 initSent worldPhase result
+      · exact Or.inl ⟨e.native.shared, none, hashed.2, (commit_outcome e owner control before e.native.shared none
+          w hashed.2 initSent worldPhase result supported).choose, rfl,
+          (commit_outcome e owner control before e.native.shared none w hashed.2 initSent worldPhase result
             supported).choose_spec⟩
     · rw [sharedEq] at supported
       simp only [] at supported
@@ -883,7 +992,7 @@ theorem finishChallenge_outcome (p : Params KemSK count) (owner : ℕ) (raw : Pq
       rw [program, PqxdhDeploymentEnvironmentReal.effects_then_free PqxdhDeploymentEnvironmentReal.ctxAdmin _ ?noAdmin _
         (fun v => countFree_commitEnv _ _ _ _ _ _) _, mem_support_bind_iff] at supported
       · obtain ⟨⟨⟨shared, staged⟩, cache⟩, member, final⟩ := supported
-        rw [show withCache (withCache w w.primitive.2) cache = withCache w cache from rfl] at final
+        rw [show withCache (withCache w hashed.2) cache = withCache w cache from rfl] at final
         have game : shared.2 = e.native.shared.2 := by
           rw [simulateQ_bind, StateT.run_bind, PqxdhDeploymentEnvironment.ctxEffects_coins, bind_map_left,
             mem_support_bind_iff] at member
@@ -947,18 +1056,37 @@ theorem finishChallenge_law (t : Target count) (p : Params KemSK count) (created
   rw [slotRun_finish_hidden setup codec route checks t p created owner raw (merge e w) before control prekey oneTime kem
     chosenM ownedM phase, law_uncount, finishChallenge_effects setup codec p owner raw e w before control prekey oneTime kem
       owned phase]
-  simp only [map_bind, bind_assoc]
-  refine bind_congr fun prepared => ?_
   have sharedM : (merge e w).base.native.shared = (e.native.shared.1, PqxdhDeploymentEnvironmentReal.serverGame
-      (MldsaLegacyServerRouting.forgetServer world.records.server) e.native.shared.2.server.identityKeyId { e.native.shared.2 with ctx := w.primitive.2 }) := by
+      world.records.server e.native.shared.2.server.identityKeyId { e.native.shared.2 with ctx := w.primitive.2 }) := by
     rw [show (merge e w).base.native = PqxdhDeploymentEnvironmentJoin.fill w e.native from rfl, fill_some w world found]
     rfl
+  rw [show (merge e w).base.native.inits owner = e.native.inits owner from rfl]
+  rcases e.native.inits owner with _ | init
+  · simp only [pure_bind]
+    rw [sharedM]
+    exact commit_case created owner e w good world found before control prekey oneTime kem owned phase
+      e.native.shared rfl w.primitive.2 none
+  rcases PqxdhServerAuthExperiment.responseOf codec raw with _ | response
+  · simp only [pure_bind]
+    rw [sharedM]
+    exact commit_case created owner e w good world found before control prekey oneTime kem owned phase
+      e.native.shared rfl w.primitive.2 none
+  dsimp only
+  rw [show (merge e w).base.native.shared.2.ctx = w.primitive.2 by rw [sharedM]; rfl]
+  simp only [map_bind, bind_assoc]
+  refine bind_congr fun hashed => ?_
+  have sharedH : ((merge e w).base.native.shared.1, { (merge e w).base.native.shared.2 with ctx := hashed.2 }) =
+      (e.native.shared.1, PqxdhDeploymentEnvironmentReal.serverGame world.records.server
+        e.native.shared.2.server.identityKeyId { e.native.shared.2 with ctx := hashed.2 }) := by
+    rw [sharedM]
+    rfl
+  refine bind_congr fun prepared => ?_
   cases prepared with
   | none =>
       simp only [pure_bind]
-      rw [sharedM]
+      rw [sharedH]
       exact commit_case created owner e w good world found before control prekey oneTime kem owned phase
-        e.native.shared rfl w.primitive.2 none
+        e.native.shared rfl hashed.2 none
   | some pending =>
       simp only []
       unfold groupEnv groupNative
@@ -997,29 +1125,29 @@ theorem finishChallenge_law (t : Target count) (p : Params KemSK count) (created
             (finishSplitFwd_noAdmin setup codec _ _) _ (fun staged => countFree_bind (countFree_hiddenOwnerEffect _ _ _ _)
               fun _ => countFree_pure _) _]
           have fac := PqxdhDeploymentSplitFactor.finishSplit_factor (n := 2) setup codec PqxdhDeploymentEnvironmentReal.ctxAdmin
-            (PqxdhDeploymentHiddenLayout.splitOutput read.1).1 (embed pending) w.primitive.2
+            (PqxdhDeploymentHiddenLayout.splitOutput read.1).1 (embed pending) hashed.2
           have fwd : (simulateQ (ctxEffects PqxdhDeploymentEnvironmentReal.ctxAdmin)
               (PqxdhDeploymentEnvironment.finishSplitFwd (n := 2) setup codec (PqxdhDeploymentHiddenLayout.splitOutput
-                read.1).1 (embed pending))).run w.primitive.2 =
+                read.1).1 (embed pending))).run hashed.2 =
               (fun r => (r.1.map (PqxdhDeploymentHiddenSplit.withKernel PqxdhDeploymentHiddenSplit.placeholderKernel),
                 r.2.2)) <$> (PqxdhDeploymentHiddenEntry.finishErasedSvc setup codec
                   (PqxdhDeploymentHiddenLayout.splitOutput read.1).1 PqxdhDeploymentHiddenSplit.dummySeed
-                    (embed pending)).run ((), w.primitive.2) := by
+                    (embed pending)).run ((), hashed.2) := by
             have mapped := congrArg (fun work => (fun r => (r.1, r.2.2)) <$> work) fac
             simp only [Functor.map_map] at mapped
             rw [← id_map ((simulateQ (ctxEffects PqxdhDeploymentEnvironmentReal.ctxAdmin)
               (PqxdhDeploymentEnvironment.finishSplitFwd (n := 2) setup codec (PqxdhDeploymentHiddenLayout.splitOutput
-                read.1).1 (embed pending))).run w.primitive.2)]
+                read.1).1 (embed pending))).run hashed.2)]
             refine mapped.symm.trans ?_
             unfold PqxdhDeploymentHiddenSplit.finishSplit
             rw [StateT.run_map, Functor.map_map]
-          rw [show (withCache (withCache w w.primitive.2) (withCache w w.primitive.2).primitive.2).primitive.2 =
-            w.primitive.2 from rfl, fwd, sharedM, dummy]
+          rw [show (withCache (withCache w hashed.2) (withCache w hashed.2).primitive.2).primitive.2 =
+            hashed.2 from rfl, fwd, sharedH, dummy]
           change _ = (fun result => (result.1, (e.native.shared.1, { (PqxdhDeploymentEnvironmentReal.serverGame
-            (MldsaLegacyServerRouting.forgetServer world.records.server) e.native.shared.2.server.identityKeyId { e.native.shared.2 with ctx := w.primitive.2 })
+            world.records.server e.native.shared.2.server.identityKeyId { e.native.shared.2 with ctx := hashed.2 })
               with ctx := result.2.2 }))) <$> (PqxdhDeploymentHiddenEntry.finishErasedSvc setup codec
                 (PqxdhDeploymentHiddenLayout.splitOutput read.1).1 PqxdhDeploymentHiddenSplit.dummySeed
-                  (embed pending)).run ((), w.primitive.2) >>= _
+                  (embed pending)).run ((), hashed.2) >>= _
           rw [map_bind, bind_map_left, bind_map_left]
           refine bind_congr fun staged => ?_
           simp only [PqxdhDeploymentIdealKernel.finish_withKernel]
@@ -1050,7 +1178,7 @@ theorem finishChallenge_law (t : Target count) (p : Params KemSK count) (created
               cases afterPhase : (PqxdhBeaconPhase2Publication.finish control before staged.1).2.beacon.phase <;>
                 simp only [afterPhase, PqxdhDeploymentEnvironment.inactiveTag, reduceCtorEq, Option.some.injEq] at aborted
               rfl
-            rw [show withCache (withCache (withCache w w.primitive.2) (withCache w w.primitive.2).primitive.2) staged.2.2 =
+            rw [show withCache (withCache (withCache w hashed.2) (withCache w hashed.2).primitive.2) staged.2.2 =
               withCache w staged.2.2 from rfl]
             rw [unkerneled, hiddenOwnerEffect_abort j owner before _ initSentTag aborted,
               PqxdhDeploymentEnvironmentReal.effects_issue_then,
@@ -1071,7 +1199,7 @@ theorem finishChallenge_law (t : Target count) (p : Params KemSK count) (created
             refine Prod.ext rfl ?_
             change PqxdhDeploymentBackend.XState.mk (merge { PqxdhDeploymentEnvironmentReal.snapFinish e owner with
               native := strip ⟨e.native.shared, e.native.owners.set owner
-                (PqxdhBeaconPhase2Publication.finish control before staged.1).2⟩ }
+                (PqxdhBeaconPhase2Publication.finish control before staged.1).2, e.native.inits⟩ }
               (uncount { withCache w staged.2.2 with owners := w.owners.set owner (.inactive .aborted) })).base _ _ _ _ = _
             rw [baseEq]
             have belowM : owner < (merge e w).base.native.owners.length := by
@@ -1106,7 +1234,7 @@ theorem finishChallenge_law (t : Target count) (p : Params KemSK count) (created
                 | .established _ _ _ => true
                 | _ => false) = true := by
               rw [kernelPhase]
-            rw [show withCache (withCache (withCache w w.primitive.2) (withCache w w.primitive.2).primitive.2) staged.2.2 =
+            rw [show withCache (withCache (withCache w hashed.2) (withCache w hashed.2).primitive.2) staged.2.2 =
               withCache w staged.2.2 from rfl]
             rw [hiddenOwnerEffect_establish j owner before _ initSentTag control' associatedData _ (kernelPhase _),
               PqxdhDeploymentEnvironmentReal.effects_issue_then,
@@ -1150,7 +1278,7 @@ theorem finishChallenge_law (t : Target count) (p : Params KemSK count) (created
             change PqxdhDeploymentBackend.XState.mk (merge { PqxdhDeploymentEnvironmentReal.snapFinish e owner with
               native := strip ⟨e.native.shared, e.native.owners.set owner (PqxdhDeploymentIdealKernel.setOwnerKernel
                 (PqxdhBeaconPhase2Publication.finish control before staged.1).2
-                  PqxdhDeploymentHiddenSplit.placeholderKernel)⟩ }
+                  PqxdhDeploymentHiddenSplit.placeholderKernel), e.native.inits⟩ }
               (uncount { withCache w staged.2.2 with owners := w.owners.set owner (.established
                 ⟨(PqxdhBeaconPhase2Publication.finish control before staged.1).2.beacon.identityKeyId, control',
                   associatedData⟩ (PqxdhRecordLiftWorld.kernel .beacon seed)) })).base _ _ _ _ = _
@@ -1164,9 +1292,9 @@ theorem finishChallenge_law (t : Target count) (p : Params KemSK count) (created
             rw [show (merge e w).base.native = PqxdhDeploymentEnvironmentJoin.fill w e.native from rfl, snapshotAt_fill]
             rfl
         · simp only [map_pure, pure_bind]
-          rw [sharedM]
+          rw [sharedH]
           exact commit_case created owner e w good world found before control prekey oneTime kem owned phase
-            e.native.shared rfl w.primitive.2 none
+            e.native.shared rfl hashed.2 none
       · simp only []
         have program : (coins ((PqxdhRegistrationJointBeaconOpaqueFinish.markedRoot setup.hmac
             (List.Vector.replicate 32 0) pending.root).run e.native.shared) >>= fun r =>
@@ -1188,12 +1316,12 @@ theorem finishChallenge_law (t : Target count) (p : Params KemSK count) (created
           · simp only [bind_map_left]
         rw [program, PqxdhDeploymentEnvironmentReal.effects_then_free PqxdhDeploymentEnvironmentReal.ctxAdmin _ ?noAdmin _
           (fun v => countFree_commitEnv _ _ _ _ _ _) _]
-        · rw [show (withCache w w.primitive.2).primitive.2 = w.primitive.2 from rfl, simulateQ_bind, StateT.run_bind,
-            PqxdhDeploymentEnvironment.ctxEffects_coins, bind_map_left, map_bind, sharedM]
+        · rw [show (withCache w hashed.2).primitive.2 = hashed.2 from rfl, simulateQ_bind, StateT.run_bind,
+            PqxdhDeploymentEnvironment.ctxEffects_coins, bind_map_left, map_bind, sharedH]
           unfold PqxdhDeploymentIdealErase.knownWork
           rw [StateT.run_bind, markedRoot_game setup.hmac _ pending.root e.native.shared
-            (PqxdhDeploymentEnvironmentReal.serverGame (MldsaLegacyServerRouting.forgetServer world.records.server) e.native.shared.2.server.identityKeyId
-              { e.native.shared.2 with ctx := w.primitive.2 })]
+            (PqxdhDeploymentEnvironmentReal.serverGame world.records.server e.native.shared.2.server.identityKeyId
+              { e.native.shared.2 with ctx := hashed.2 })]
           simp only [map_bind, Functor.map_map, bind_assoc, bind_map_left]
           apply OracleComp.bind_congr_of_forall_mem_support
           rintro ⟨root, family', game'⟩ member
@@ -1208,14 +1336,14 @@ theorem finishChallenge_law (t : Target count) (p : Params KemSK count) (created
           rcases root with _ | root
           · simp only [simulateQ_pure, StateT.run_pure, pure_bind]
             have h := commit_case created owner e w good world found before control prekey oneTime kem owned phase
-              (family', e.native.shared.2) rfl w.primitive.2 none
+              (family', e.native.shared.2) rfl hashed.2 none
             rw [Functor.map_map] at h
             exact h
           · simp only [simulateQ_map, StateT.run_map, bind_map_left]
-            change _ = (fun res => (res.1, (family', { (PqxdhDeploymentEnvironmentReal.serverGame (MldsaLegacyServerRouting.forgetServer world.records.server)
-              e.native.shared.2.server.identityKeyId { e.native.shared.2 with ctx := w.primitive.2 }) with
+            change _ = (fun res => (res.1, (family', { (PqxdhDeploymentEnvironmentReal.serverGame world.records.server
+              e.native.shared.2.server.identityKeyId { e.native.shared.2 with ctx := hashed.2 }) with
                 ctx := res.2.2 }))) <$> (simulateQ (PqxdhRegistrationJointKemPostSkeleton.tailNative setup codec)
-                  (PqxdhBeaconPhase2Shared.afterRoot codec.frameRead pending root)).run ((), w.primitive.2) >>= _
+                  (PqxdhBeaconPhase2Shared.afterRoot codec.frameRead pending root)).run ((), hashed.2) >>= _
             rw [knownFwd_factor setup codec PqxdhDeploymentEnvironmentReal.ctxAdmin, Functor.map_map, bind_map_left]
             refine bind_congr fun staged => ?_
             have h := commit_case created owner e w good world found before control prekey oneTime kem owned phase
@@ -1256,11 +1384,11 @@ theorem finishChallenge_keeps (created : PqxdhLiveServerConstruction.Created Uni
   intro result supported
   rcases finishChallenge_outcome setup codec p owner raw e w before control prekey oneTime kem owned phase worldPhase
     result supported with ⟨shared, staged, cache, worldPhase', game, consistent, selfFill, rfl⟩ |
-      ⟨pending, coords, read, j, _, _, hidden⟩
+      ⟨pending, coords, read, j, cache₀, _, _, hidden⟩
   · exact (PqxdhDeploymentIdealEnvReal.finish_merge_set created owner e w good world found
       (PqxdhBeaconPhase2Publication.finish control before staged).1 (PqxdhBeaconPhase2Publication.finish control before
         staged).2 shared game cache worldPhase' below consistent selfFill).2
-  · rcases hiddenFinish_outcome setup codec e owner control before pending coords read j w w.primitive.2 initSent
+  · rcases hiddenFinish_outcome setup codec e owner control before pending coords read j w cache₀ initSent
       worldPhase (unused j) result hidden with ⟨staged, cache, ⟨aborted, rfl⟩ | ⟨control', associatedData, kernel, seed,
         table, established, _, _, rfl⟩⟩
     · have abortedPhase : PqxdhRecordLiftBeacon.projectPhase (PqxdhBeaconPhase2Publication.finish control before
@@ -1272,7 +1400,7 @@ theorem finishChallenge_keeps (created : PqxdhLiveServerConstruction.Created Uni
         (PqxdhBeaconPhase2Publication.finish control before staged).1 (PqxdhBeaconPhase2Publication.finish control before
           staged).2 e.native.shared rfl cache (.inactive .aborted)
         below (by rw [abortedPhase]) (PqxdhDeploymentEnvironmentReal.fillOwner_inactive .aborted _)).2
-      exact ⟨kept.stripped, kept.createdEq, kept.server, kept.ownersLength, kept.owners, kept.legacyAD⟩
+      exact ⟨kept.stripped, kept.createdEq, kept.server, kept.ownersLength, kept.owners⟩
     · have kernelPhase : (PqxdhDeploymentIdealKernel.setOwnerKernel (PqxdhBeaconPhase2Publication.finish control before
           staged).2 (PqxdhRecordLiftWorld.kernel .beacon seed)).beacon.phase =
             .established control' associatedData (PqxdhRecordLiftWorld.kernel .beacon seed) := by
@@ -1297,12 +1425,14 @@ theorem finishChallenge_keeps (created : PqxdhLiveServerConstruction.Created Uni
           rw [kernelId] at self
           exact self)).2
       have nativeEq : strip (⟨e.native.shared, e.native.owners.set owner (PqxdhDeploymentIdealKernel.setOwnerKernel
-          (PqxdhBeaconPhase2Publication.finish control before staged).2 (PqxdhRecordLiftWorld.kernel .beacon seed))⟩ :
+          (PqxdhBeaconPhase2Publication.finish control before staged).2 (PqxdhRecordLiftWorld.kernel .beacon seed)),
+          e.native.inits⟩ :
             PqxdhRegistrationSchedule.State KemSK) =
-          strip ⟨e.native.shared, e.native.owners.set owner (PqxdhBeaconPhase2Publication.finish control before staged).2⟩ := by
+          strip ⟨e.native.shared, e.native.owners.set owner (PqxdhBeaconPhase2Publication.finish control before staged).2,
+            e.native.inits⟩ := by
         simp only [strip, List.map_set, stripOwner_setOwnerKernel]
       rw [nativeEq] at kept
-      exact ⟨kept.stripped, kept.createdEq, kept.server, kept.ownersLength, kept.owners, kept.legacyAD⟩
+      exact ⟨kept.stripped, kept.createdEq, kept.server, kept.ownersLength, kept.owners⟩
 
 /-- Owner k's challenge finish in capability form splits the final split form's challenge finish: the reassembled law is the split form's (exactly) and admissibility is kept, from an admissible joint state whose selected accept was active, whose owner k is in the `initSent` phase, whose allocator has room and whose World holds no Beacon marker. -/
 theorem finishChallenge_splits (t : Target count) (p : Params KemSK count)
@@ -1590,3 +1720,8 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvFinish.finishChallen
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvFinish.finishChallenge_splits
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvFinish.hashed_native' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvFinish.hashed_native

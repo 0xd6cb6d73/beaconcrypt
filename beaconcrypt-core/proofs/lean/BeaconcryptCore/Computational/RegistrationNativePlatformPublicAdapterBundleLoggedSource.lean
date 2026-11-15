@@ -49,7 +49,7 @@ noncomputable local instance idleLocal :LocalOperations (RustT (StateT (Registra
 noncomputable local instance idleCrypto :CryptoOperations (RustT (StateT (RegistrationNativeExperiment.State n KemSK source×P) ProbComp)):=packedCrypto
 noncomputable local instance idleChildren :ChildOperations (RustT (StateT (RegistrationNativeExperiment.State n KemSK source×P) ProbComp)):=children
 
-variable (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
 local notation "auditPrivate"=>RegistrationNativePlatformPublicAdapterAuditModel.Private configuration created credential
 local notation "auditModel"=>RegistrationNativePlatformPublicAdapterAuditModel.model configuration created credential
 local notation "auditPhysical"=>RegistrationNativePlatformPublicAdapterAuditModel.physical configuration created credential
@@ -78,7 +78,7 @@ noncomputable def handler (self :beaconcrypt_public_wrapper.beacon.Beacon) :Quer
   fun query=>match query with
   | .inl query=>AdapterPublicInitPublication.outgoing
       (AdapterPublicBundleMaterial.PublicationLeaves.hash (self:=self) (leaves (n:=n) configuration created self))
-      (AdapterPublicBundleMaterial.PublicationLeaves.sign (self:=self) (leaves (n:=n) configuration created self))
+
       (AdapterPublicInitPublication.edMethod (configuration.view.edPublic self.identity_key.public_key)
         (AdapterPublicBundleMaterial.PublicationLeaves.edSign (self:=self) (leaves (n:=n) configuration created self))) query
   | .inr query=>StateT.lift (writer query)
@@ -94,7 +94,7 @@ noncomputable def withKeys (note :Stage→Log) (self :beaconcrypt_public_wrapper
       control ⟨configuration.view.edPublic self.identity_key.public_key,configuration.view.kxPublic prekey.public_key,
         RegistrationNativeBeaconFrontend.pqArray (configuration.view.kemPublic kem.public_key)⟩
       ⟨configuration.view.kxPublic oneTime.public_key⟩ self.authentication.server_pin
-      (configuration.view.mldsa self.authentication.identity).publicKey (before,prior)).run previous
+      (before,prior)).run previous
 
 omit [FrameDispatchFallback.Operations] in
 private theorem withKeys_unlogged (self :beaconcrypt_public_wrapper.beacon.Beacon)
@@ -110,7 +110,7 @@ private theorem withKeys_unlogged (self :beaconcrypt_public_wrapper.beacon.Beaco
             ⟨configuration.view.edPublic self.identity_key.public_key,configuration.view.kxPublic prekey.public_key,
               RegistrationNativeBeaconFrontend.pqArray (configuration.view.kemPublic kem.public_key)⟩
             ⟨configuration.view.kxPublic oneTime.public_key⟩ self.authentication.server_pin
-            (configuration.view.mldsa self.authentication.identity).publicKey) :=by
+           ) :=by
   let :LocalOperations (RustT M):=localSource
   let :CryptoOperations (RustT M):=cryptoSource
   let :ChildOperations (RustT M):=childrenSource
@@ -119,13 +119,13 @@ private theorem withKeys_unlogged (self :beaconcrypt_public_wrapper.beacon.Beaco
     (configuration.view.kxPublic prekey.public_key) (configuration.view.kxPublic oneTime.public_key)
     (configuration.view.edPublic self.identity_key.public_key)
     (RegistrationNativeBeaconFrontend.pqArray (configuration.view.kemPublic kem.public_key))
-    (configuration.view.mldsa self.authentication.identity).publicKey
+
     (AdapterPublicBundleMaterial.PublicationLeaves.edSign (self:=self) (leaves (n:=n) configuration created self))
     (AdapterPublicBundleMaterial.PublicationLeaves.hash (self:=self) (leaves (n:=n) configuration created self))
-    (AdapterPublicBundleMaterial.PublicationLeaves.sign (self:=self) (leaves (n:=n) configuration created self))
-    rfl rfl rfl rfl rfl (fun _=>rfl) (fun _=>rfl) (fun _=>rfl)]
+
+    rfl rfl rfl rfl (fun _=>rfl) (fun _=>rfl)]
   rw [RegistrationNativePlatformWriter.begin_interpret]
-  have encoded : (fun signed :registration.SignedInitView=>(ChildOperations.encodeInit (m:=RustT M) (AdapterPublicBundleBody.packet signed)).run)=
+  have encoded : (fun signed :registration.InitView=>(ChildOperations.encodeInit (m:=RustT M) (AdapterPublicBundleBody.packet signed)).run)=
       (fun signed=>simulateQ (fun query=>StateT.lift (writer query))
         (AdapterRegistrationWriterRequestExtraction.encodeInit (E:=E) (m:=AdapterRegistrationWriterRequestMonad.Program E)
           (RegistrationNativePlatformWriter.initPacket signed)).run) :=by
@@ -158,7 +158,7 @@ theorem withKeys_erase (note :Stage→Log) (self :beaconcrypt_public_wrapper.bea
         ⟨configuration.view.edPublic self.identity_key.public_key,configuration.view.kxPublic prekey.public_key,
           RegistrationNativeBeaconFrontend.pqArray (configuration.view.kemPublic kem.public_key)⟩
         ⟨configuration.view.kxPublic oneTime.public_key⟩ self.authentication.server_pin
-        (configuration.view.mldsa self.authentication.identity).publicKey) (before,prior))
+       ) (before,prior))
   have same:=congrArg (fun tree=>(fun result=>(AdapterPublicBundlePublication.install self prekey oneTime kem rng result.1.1,(result.1.2,result.2))) <$>tree) erased
   simpa only [StateT.run_map,Functor.map_map,Prod.map,id_eq] using same
 

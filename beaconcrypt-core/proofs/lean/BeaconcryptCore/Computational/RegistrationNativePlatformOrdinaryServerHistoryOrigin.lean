@@ -32,7 +32,7 @@ open RegistrationNativePlatformServerHistoryOrigin (SourceAt)
 variable [primitive : AdapterSealPrimitive.Operations]
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
 variable (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 variable (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
 variable (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
 variable (reserveRegistration reservePeer : StateT Platform ProbComp Bool)
@@ -110,7 +110,7 @@ private theorem call_origin (call : Call RegistrationNativeRawAdapter.TypedSpec 
         · have changed : history after.1.server ≠ history before.1.server := by
             intro same
             exact prior (same ▸ raw)
-          obtain ⟨token, current, pin, plaintext, taken, input, availability, initial, hashed, digest, signature, admitted, path, appended⟩ :=
+          obtain ⟨token, current, pin, plaintext, taken, input, availability, initial, hashed, digest, signature, admitted, path, appended, _adCut⟩ :=
             RegistrationNativePlatformServerIssuance.typed coins setup checks (RegistrationNativePlatformOrdinaryExperiment.canonicalWire wire) route representation created credential view failure allocation erased
               reserveRegistration reservePeer helper writer index application before.1 after.1 before.2 after.2 reply supported changed
           have added : receipt ∈ history before.1.server ++ [⟨⟨hashed.binding.server_pin.public_key, Command.payload (.server hashed), RegistrationSigningTrace.replyBytes signature⟩, digest⟩] :=

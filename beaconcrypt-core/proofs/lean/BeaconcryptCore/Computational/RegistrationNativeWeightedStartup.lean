@@ -42,7 +42,7 @@ theorem fresh_bytes (setup : Setup base KemSK) (checks : Checks) (wire : Registr
     (candidate : PqxdhKemIndCca.MlKemSharedSecret) (provider : Provider KemSK ProviderState) (selectedOwner selectedAccept : Nat) (serverKeyId : U64)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (work : OracleComp (RegistrationNativeInterface.ModeSpec .P) Value)
     (claim : Value → Option (Nat × Pqxdh.Bytes)) (targetBudget : PqxdhDeploymentInterface.Budget)
-    (target : Target targetBudget) (created : PqxdhLiveServerConstruction.Created Unit)
+    (target : Target targetBudget) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (before : State n KemSK ProviderState source) (shell : CborRecordWorldClient.Shell)
     (control : PqxdhRecordLiftProtocol.Control n) (secret : CtxPrivate n)
     (valid : RegistrationNativeSelectiveAllocationJoint.Holds (((before, shell), control), secret)) :

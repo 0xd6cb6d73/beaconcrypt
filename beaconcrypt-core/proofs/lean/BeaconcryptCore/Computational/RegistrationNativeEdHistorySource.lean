@@ -43,7 +43,7 @@ theorem create_fixed (setup : Setup base KemSK) (source : RegistrationNativeMlds
         cases continued
         simpa only [same] using prior
     | some prepared =>
-        change result ∈ support (((appendBorn setup source edPin keyId prepared.pin prepared.credentials
+        change result ∈ support (((appendBorn setup source edPin keyId prepared.pin
           prepared.identity prepared.prekey).run beforeOwners).run beforeEnv) at continued
         rw [RegistrationNativeBeaconBirth.append_program] at continued
         simp only [mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at continued
@@ -60,7 +60,7 @@ theorem create_fixed (setup : Setup base KemSK) (source : RegistrationNativeMlds
 /-- Any locally proved owner-history invariant transfers through the actual source wrapper with its full reached primitive/World state. -/
 theorem source_preserves (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (source : RegistrationNativeMldsa.Source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (source : RegistrationNativeMldsa.Source)
     {Value : Type} (work : M n KemSK source RegistrationServerRoleBackend.State Value)
     (invariant : State source → Prop) (law : Preserves invariant work)
     (before : RegistrationNativeExperiment.State n KemSK source)
@@ -83,7 +83,7 @@ theorem source_preserves (setup : Setup base KemSK) (checks : Checks)
 
 theorem source_create_fixed (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (source : RegistrationNativeMldsa.Source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (source : RegistrationNativeMldsa.Source)
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (before : RegistrationNativeExperiment.State n KemSK source)
     (result : RustM (Option Nat) × RegistrationNativeExperiment.State n KemSK source)
@@ -94,7 +94,7 @@ theorem source_create_fixed (setup : Setup base KemSK) (checks : Checks)
 
 theorem source_bundle_fixed (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (source : RegistrationNativeMldsa.Source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (source : RegistrationNativeMldsa.Source)
     (wire : RegistrationNativeWire.Wire) (index : Nat)
     (before : RegistrationNativeExperiment.State n KemSK source)
     (result : RustM (Option Pqxdh.Bytes) × RegistrationNativeExperiment.State n KemSK source)
@@ -106,7 +106,7 @@ theorem source_bundle_fixed (setup : Setup base KemSK) (checks : Checks)
 
 theorem source_finish_fixed (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (source : RegistrationNativeMldsa.Source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (source : RegistrationNativeMldsa.Source)
     (wire : RegistrationNativeWire.Wire) (index : Nat) (packet : Option registration.ResponsePacket)
     (before : RegistrationNativeExperiment.State n KemSK source)
     (result : RustM (Option Pqxdh.Bytes) × RegistrationNativeExperiment.State n KemSK source)

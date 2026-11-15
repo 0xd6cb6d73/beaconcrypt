@@ -553,7 +553,7 @@ def outline_parse_checks(source, name):
                 "helper_return_type": "(bool,[Iterator;1])",
             }
         )
-    if len(changes) != 7:
+    if len(changes) != (5 if name == "parse_initkex" else 7):
         raise ValueError("unexpected parser check count " + str(len(changes)))
     prepared = body
     for left, right, replacement in reversed(changes):
@@ -1067,7 +1067,7 @@ def outline_serializer_field_sizes(source):
                     "return_type": "usize",
                 }
             )
-        if len(changes) != (6 if function == "serialize_initkex" else 4):
+        if len(changes) != 4:
             raise ValueError("serializer fixed-field-size roster changed")
         for left, right, replacement in reversed(changes):
             body = body[:left] + replacement + body[right:]

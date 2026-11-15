@@ -13,7 +13,7 @@ open AdapterRecordRequestMonad (LiftRust)
 open AdapterRecordSendRequestMonad
 variable {m : Type → Type} [Monad m] [LiftRust m] [Operations m]
 
--- Extracted input SHA-256: c70e13b9230d78c04f6b05d2f46d1b2d9822431b018c1f4abaed9d91a9921fa0
+-- Extracted input SHA-256: 2e0290b1bf5babe81dc3d2734e77f4a2799864e8bd9e6742447904d68515b907
 -- Transformation SHA-256: 91422265f5a3d421e1bf46fae170bc271010354268a4474f51c914f82ccf6e37
 def execute
   (kernel : beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel)

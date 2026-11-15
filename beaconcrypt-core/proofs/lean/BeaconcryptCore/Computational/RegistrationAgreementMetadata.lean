@@ -11,15 +11,19 @@ set_option autoImplicit false
 
 namespace BeaconcryptCore.Computational.RegistrationAgreementExecutor
 
-def inputBinding : agreement.AgreementInput → session.RegistrationBinding
-  | .Server _ _ _ binding => binding
-  | .Beacon _ binding _ _ => binding
+inductive RetainedBinding where
+  | server (binding : session.RegistrationBinding)
+  | beacon (binding : session.CompletedRegistrationBinding)
 
-def candidateBinding : agreement.AgreementCandidate → session.RegistrationBinding
-  | .Server _ binding => binding
-  | .Beacon _ binding _ => binding
+def inputBinding : agreement.AgreementInput → RetainedBinding
+  | .Server _ _ _ binding => .server binding
+  | .Beacon _ binding _ _ => .beacon binding
 
-def Retains (binding : session.RegistrationBinding) : agreement.AgreementEffect → Prop
+def candidateBinding : agreement.AgreementCandidate → RetainedBinding
+  | .Server _ binding => .server binding
+  | .Beacon _ binding _ => .beacon binding
+
+def Retains (binding : RetainedBinding) : agreement.AgreementEffect → Prop
   | .Rejected _ => True
   | .ConvertPublic pending => inputBinding pending.state.input = binding
   | .ConvertSecret pending => inputBinding pending.state.input = binding
@@ -28,10 +32,10 @@ def Retains (binding : session.RegistrationBinding) : agreement.AgreementEffect 
   | .Decapsulate pending => inputBinding pending.state.input = binding
   | .Dh pending => inputBinding pending.state.input = binding
   | .RootKdf pending => candidateBinding pending.candidate = binding
-  | .ServerComplete completed => completed.binding = binding
-  | .BeaconComplete completed => completed.binding = binding
+  | .ServerComplete completed => .server completed.binding = binding
+  | .BeaconComplete completed => .beacon completed.binding = binding
 
-theorem reject_retains (state : agreement.AgreementState) (binding : session.RegistrationBinding)
+theorem reject_retains (state : agreement.AgreementState) (binding : RetainedBinding)
     (final : agreement.AgreementEffect) (actual : state.reject = .ok final) : Retains binding final := by
   rw [BeaconcryptCore.Refinement.KeyAgreement.rejection_refines] at actual
   cases RustM.ok.inj actual
@@ -72,7 +76,7 @@ theorem finish_dh_retains (state : agreement.AgreementState) (final : agreement.
           cases RustM.ok.inj actual
           trivial
 
-theorem step_retains (binding : session.RegistrationBinding) {initial final : agreement.AgreementEffect}
+theorem step_retains (binding : RetainedBinding) {initial final : agreement.AgreementEffect}
     (edge : Step initial final) (prior : Retains binding initial) : Retains binding final := by
   cases edge with
   | convertPublic pending request reply final requested resumed =>
@@ -149,7 +153,7 @@ theorem step_retains (binding : session.RegistrationBinding) {initial final : ag
   | server => exact prior
   | beacon => exact prior
 
-theorem run_retains (binding : session.RegistrationBinding) {initial final : agreement.AgreementEffect}
+theorem run_retains (binding : RetainedBinding) {initial final : agreement.AgreementEffect}
     (run : Run initial final) (prior : Retains binding initial) : Retains binding final := by
   induction run with
   | refl => exact prior
@@ -158,7 +162,7 @@ theorem run_retains (binding : session.RegistrationBinding) {initial final : agr
 theorem server_entry_retains (control : pqxdh.ServerState) (status : pqxdh.RegistrationStatus)
     (authenticated : registration.AuthenticatedInit) (initial : agreement.AgreementEffect)
     (actual : agreement.begin_server_agreement control status authenticated = .ok initial) :
-    Retains authenticated.binding initial := by
+    Retains (.server authenticated.binding) initial := by
   cases status with
   | Consumed =>
       rw [(BeaconcryptCore.Refinement.KeyAgreement.server_entry_refines control authenticated).1] at actual
@@ -172,29 +176,29 @@ theorem server_entry_retains (control : pqxdh.ServerState) (status : pqxdh.Regis
 
 theorem beacon_entry_retains (authenticated : registration.AuthenticatedResponse) (initial : agreement.AgreementEffect)
     (actual : agreement.begin_beacon_agreement authenticated = .ok initial) :
-    Retains authenticated.pending.binding initial := by
-  by_cases identityId : authenticated.pending.control.expected_server_binding.identity_key_id =
-    authenticated.pending.binding.server_pin.binding.identity_key_id
-  · by_cases identityKey : absBytes authenticated.pending.control.expected_server_binding.identity_public_key =
-      absBytes authenticated.pending.binding.server_pin.binding.identity_public_key
+    Retains (.beacon authenticated.binding) initial := by
+  by_cases identityId : authenticated.control.expected_server_binding.identity_key_id =
+    authenticated.binding.server_pin.binding.identity_key_id
+  · by_cases identityKey : absBytes authenticated.control.expected_server_binding.identity_public_key =
+      absBytes authenticated.binding.server_pin.binding.identity_public_key
     · simp [agreement.begin_beacon_agreement, registration.AuthenticatedResponse.into_parts,
-        pqxdh.BeaconInitSent.impl.expected_server_binding, session.RegistrationBinding.impl.server_pin,
+        pqxdh.BeaconInitSent.impl.expected_server_binding, session.CompletedRegistrationBinding.impl.server_pin,
         session.ServerAuthenticationPin.impl.binding, core.Array.Insts.CoreCmpPartialEqArray.ne,
         array_eq_abs, agreement.AgreementState.new, ratchet.RatchetChain.from_bytes,
         pqxdh.beacon_abort_init, identityId, identityKey] at actual
       subst initial
       rfl
     · simp [agreement.begin_beacon_agreement, registration.AuthenticatedResponse.into_parts,
-        pqxdh.BeaconInitSent.impl.expected_server_binding, session.RegistrationBinding.impl.server_pin,
+        pqxdh.BeaconInitSent.impl.expected_server_binding, session.CompletedRegistrationBinding.impl.server_pin,
         session.ServerAuthenticationPin.impl.binding, core.Array.Insts.CoreCmpPartialEqArray.ne,
         array_eq_abs, pqxdh.beacon_abort_init, identityId, identityKey] at actual
       subst initial
       trivial
-  · have unequal : authenticated.pending.control.expected_server_binding.identity_key_id.val ≠
-        authenticated.pending.binding.server_pin.binding.identity_key_id.val :=
+  · have unequal : authenticated.control.expected_server_binding.identity_key_id.val ≠
+        authenticated.binding.server_pin.binding.identity_key_id.val :=
       fun same => identityId (UScalar.eq_of_val_eq same)
     simp [agreement.begin_beacon_agreement, registration.AuthenticatedResponse.into_parts,
-      pqxdh.BeaconInitSent.impl.expected_server_binding, session.RegistrationBinding.impl.server_pin,
+      pqxdh.BeaconInitSent.impl.expected_server_binding, session.CompletedRegistrationBinding.impl.server_pin,
       session.ServerAuthenticationPin.impl.binding, pqxdh.beacon_abort_init, unequal] at actual
     subst initial
     trivial
@@ -204,13 +208,15 @@ theorem server_binding (control : pqxdh.ServerState) (status : pqxdh.Registratio
     (supported : .ok (.ServerComplete completed) ∈ support (server control status authenticated)) :
     completed.binding = authenticated.binding := by
   obtain ⟨initial, started, ran⟩ := server_sound control status authenticated _ supported
-  exact run_retains authenticated.binding ran (server_entry_retains control status authenticated initial started)
+  exact RetainedBinding.server.inj (run_retains (.server authenticated.binding) ran
+    (server_entry_retains control status authenticated initial started))
 
 theorem beacon_binding (authenticated : registration.AuthenticatedResponse) (completed : agreement.BeaconAgreement)
     (supported : .ok (.BeaconComplete completed) ∈ support (beacon authenticated)) :
-    completed.binding = authenticated.pending.binding := by
+    completed.binding = authenticated.binding := by
   obtain ⟨initial, started, ran⟩ := beacon_sound authenticated _ supported
-  exact run_retains authenticated.pending.binding ran (beacon_entry_retains authenticated initial started)
+  exact RetainedBinding.beacon.inj (run_retains (.beacon authenticated.binding) ran
+    (beacon_entry_retains authenticated initial started))
 
 theorem interpreted_server_binding {State : Type}
     (implementation : QueryImpl Spec (StateT State ProbComp)) (before after : State)
@@ -229,7 +235,7 @@ theorem interpreted_beacon_binding {State : Type}
     (authenticated : registration.AuthenticatedResponse) (completed : agreement.BeaconAgreement)
     (supported : (.ok (.BeaconComplete completed), after) ∈ support
       ((simulateQ implementation (beacon authenticated)).run before)) :
-    completed.binding = authenticated.pending.binding := by
+    completed.binding = authenticated.binding := by
   apply beacon_binding authenticated completed
   apply OracleComp.support_simulateQ_run'_subset implementation _ before
   rw [StateT.run'_eq, support_map]

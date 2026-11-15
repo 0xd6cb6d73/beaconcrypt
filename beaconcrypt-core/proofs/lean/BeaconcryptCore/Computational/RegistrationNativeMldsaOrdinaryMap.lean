@@ -190,11 +190,11 @@ theorem abort_natural (mapping : Map left right) (current : RegistrationNativeBe
 set_option backward.isDefEq.respectTransparency false in
 theorem appendBorn_natural (mapping : Map left right) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (edPin : Std.Array Std.U8 32#usize) (keyId : Std.U64) (pin : session.ServerAuthenticationPin)
-    (credential : RegistrationNativeMldsa.Credential left) (identity : PqxdhJointIdentity.IdentitySeed)
+    (identity : PqxdhJointIdentity.IdentitySeed)
     (prekey : PqxdhJointGapDh.ScalarBytes) :
     Natural (n := n) (Auxiliary := Auxiliary) mapping id
-      (RegistrationNativeBeaconFrontend.appendBorn setup left edPin keyId pin credential identity prekey)
-      (RegistrationNativeBeaconFrontend.appendBorn setup right edPin keyId pin (RegistrationNativeMldsaMap.credential mapping credential) identity prekey) := by
+      (RegistrationNativeBeaconFrontend.appendBorn setup left edPin keyId pin identity prekey)
+      (RegistrationNativeBeaconFrontend.appendBorn setup right edPin keyId pin identity prekey) := by
   intro before env
   simp only [RegistrationNativeBeaconFrontend.appendBorn, RegistrationNativeBeaconFrontend.kem,
     RegistrationNativeBeaconFrontend.effect, StateT.run_bind, StateT.run_lift, StateT.run_get,

@@ -40,25 +40,12 @@ private theorem continue_keeps {Input : Type} (action : RustM Input)
   cases action with
   | fail error | div => exact pure_keeps _
   | ok value => exact law value
-private theorem ready_keeps (encode : registration.SignedInitView → PWork (n := n) (KemSK := KemSK) (source := source) (Platform := Platform) (RustM (core.option.Option Encoded)))
+private theorem ready_keeps (encode : registration.InitView → PWork (n := n) (KemSK := KemSK) (source := source) (Platform := Platform) (RustM (core.option.Option Encoded)))
     (law : ∀ view, Keeps (encode view)) (pending : registration.BeaconInitReady) : Keeps (ready encode pending) := by
   unfold ready
   exact continue_keeps _ _ fun view => bind_keeps _ _ (law view) fun _ => pure_keeps _
-private theorem signing_keeps (impl : QueryImpl RegistrationBeaconInitExecutor.Spec (PWork (n := n) (KemSK := KemSK) (source := source) (Platform := Platform)))
-    (encode : registration.SignedInitView → PWork (n := n) (KemSK := KemSK) (source := source) (Platform := Platform) (RustM (core.option.Option Encoded)))
-    (queries : ∀ query, Keeps (impl query)) (encoding : ∀ view, Keeps (encode view))
-    (payload : MldsaTranscriptAuth.Payload) (digest : CtxRomAuth.CtxDigest) (pending : registration.BeaconMldsaSigning) :
-    Keeps (fromSigning impl encode payload digest pending) := by
-  unfold fromSigning
-  apply continue_keeps _ _
-  intro request
-  apply bind_keeps _ _ (queries _)
-  intro signature
-  apply continue_keeps _ _
-  intro effect
-  cases effect <;> first | exact pure_keeps _ | exact ready_keeps encode encoding _
 private theorem hash_keeps (impl : QueryImpl RegistrationBeaconInitExecutor.Spec (PWork (n := n) (KemSK := KemSK) (source := source) (Platform := Platform)))
-    (encode : registration.SignedInitView → PWork (n := n) (KemSK := KemSK) (source := source) (Platform := Platform) (RustM (core.option.Option Encoded)))
+    (encode : registration.InitView → PWork (n := n) (KemSK := KemSK) (source := source) (Platform := Platform) (RustM (core.option.Option Encoded)))
     (queries : ∀ query, Keeps (impl query)) (encoding : ∀ view, Keeps (encode view))
     (pending : registration.BeaconInitHash) : Keeps (fromHash impl encode pending) := by
   unfold fromHash
@@ -68,21 +55,9 @@ private theorem hash_keeps (impl : QueryImpl RegistrationBeaconInitExecutor.Spec
   intro digest
   apply continue_keeps _ _
   intro effect
-  cases effect <;> first | exact pure_keeps _ | exact signing_keeps impl encode queries encoding _ _ _
-private theorem fingerprint_keeps (impl : QueryImpl RegistrationBeaconInitExecutor.Spec (PWork (n := n) (KemSK := KemSK) (source := source) (Platform := Platform)))
-    (encode : registration.SignedInitView → PWork (n := n) (KemSK := KemSK) (source := source) (Platform := Platform) (RustM (core.option.Option Encoded)))
-    (queries : ∀ query, Keeps (impl query)) (encoding : ∀ view, Keeps (encode view))
-    (pending : registration.BeaconFingerprint) : Keeps (fromFingerprint impl encode pending) := by
-  unfold fromFingerprint
-  apply continue_keeps _ _
-  intro request
-  apply bind_keeps _ _ (queries _)
-  intro digest
-  apply continue_keeps _ _
-  intro effect
-  cases effect <;> first | exact pure_keeps _ | exact hash_keeps impl encode queries encoding _
+  cases effect <;> first | exact pure_keeps _ | exact ready_keeps encode encoding _
 private theorem ed_keeps (impl : QueryImpl RegistrationBeaconInitExecutor.Spec (PWork (n := n) (KemSK := KemSK) (source := source) (Platform := Platform)))
-    (encode : registration.SignedInitView → PWork (n := n) (KemSK := KemSK) (source := source) (Platform := Platform) (RustM (core.option.Option Encoded)))
+    (encode : registration.InitView → PWork (n := n) (KemSK := KemSK) (source := source) (Platform := Platform) (RustM (core.option.Option Encoded)))
     (queries : ∀ query, Keeps (impl query)) (encoding : ∀ view, Keeps (encode view))
     (pending : registration.BeaconEd25519Signing) : Keeps (fromEd impl encode pending) := by
   rw [fromEd.eq_def]
@@ -95,18 +70,18 @@ private theorem ed_keeps (impl : QueryImpl RegistrationBeaconInitExecutor.Spec (
   | ok effect => cases effect with
     | Rejected previous => exact pure_keeps _
     | Ed25519SigningRequested next => exact ed_keeps impl encode queries encoding next
-    | FingerprintRequested selected => exact fingerprint_keeps impl encode queries encoding selected
+    | HashRequested selected => exact hash_keeps impl encode queries encoding selected
     | _ => exact pure_keeps _
 termination_by RegistrationBeaconInitExecutor.edRank pending
 decreasing_by exact RegistrationBeaconInitExecutor.ed_rank pending reply next resumed
 
 /-- Every actual source publication stage preserves owner metadata under arbitrary crypto/writer replies, including failure and recursive Ed-signing stages. -/
 private theorem publication (impl : QueryImpl RegistrationBeaconInitExecutor.Spec (PWork (n := n) (KemSK := KemSK) (source := source) (Platform := Platform)))
-    (encode : registration.SignedInitView → PWork (n := n) (KemSK := KemSK) (source := source) (Platform := Platform) (RustM (core.option.Option Encoded)))
+    (encode : registration.InitView → PWork (n := n) (KemSK := KemSK) (source := source) (Platform := Platform) (RustM (core.option.Option Encoded)))
     (queries : ∀ query, Keeps (impl query)) (encoding : ∀ view, Keeps (encode view))
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize) :
-    Keeps (begin impl encode control inputs coins pin mldsa) := by
+    (pin : session.ServerAuthenticationPin) :
+    Keeps (begin impl encode control inputs coins pin) := by
   unfold begin
   apply continue_keeps _ _
   intro effect
@@ -114,7 +89,7 @@ private theorem publication (impl : QueryImpl RegistrationBeaconInitExecutor.Spe
 
 private theorem native_source (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : M n KemSK source RegistrationServerRoleBackend.State V)
     (before after : Local n KemSK source) (previous next : Platform) (value : V)
     (supported : ((value, after), next) ∈ support (((RegistrationNativePlatformBundleLower.native coins setup checks representation created work).run before).run previous)) :
@@ -135,7 +110,7 @@ private theorem native_source (coins : QueryImpl unifSpec (StateT Platform ProbC
 
 private theorem outgoing_keeps (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (owner : Owner source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (owner : Owner source)
     (query : RegistrationBeaconInitExecutor.Spec.Domain) :
     Keeps (RegistrationNativePlatformBundleLower.native (n := n) coins setup checks representation created
       (RegistrationNativeBeaconFrontend.outgoing setup source index owner query)) := by
@@ -148,7 +123,7 @@ private theorem outgoing_keeps (coins : QueryImpl unifSpec (StateT Platform Prob
   exact law actual
 
 private theorem encoder_keeps
-    (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) (view : registration.SignedInitView) :
+    (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) (view : registration.InitView) :
     Keeps (RegistrationNativePlatformInitWriterFrame.encoder (n := n) (KemSK := KemSK) (source := source) writer view) := by
   intro before previous result supported
   rw [RegistrationNativePlatformInitWriterFrame.encoder_frame] at supported
@@ -159,7 +134,7 @@ private theorem encoder_keeps
 /-- Complete actual source publication preserves every owner's exact phase through all primitive and writer outcomes. -/
 theorem outgoing (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (index : Nat) (owner : Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (before : Local n KemSK source) (previous : Platform)
@@ -167,7 +142,7 @@ theorem outgoing (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (supported : result ∈ support (((RegistrationNativePlatformInitTupleCache.program coins setup checks representation created writer index owner oneTime).run before).run previous)) :
     phases result.1.2.1 = phases before.1 :=
   publication _ _ (outgoing_keeps coins setup checks representation created index owner) (encoder_keeps writer)
-    _ _ _ _ _ before previous result supported
+    _ _ _ _ before previous result supported
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformPublicationPhases
 

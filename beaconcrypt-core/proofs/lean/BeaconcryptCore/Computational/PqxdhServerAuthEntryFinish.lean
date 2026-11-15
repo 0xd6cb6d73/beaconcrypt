@@ -15,6 +15,95 @@ open PqxdhServerAuthExperiment PqxdhSecretInputKdf PqxdhJointKdfGame
 
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response : Type}
 
+/-- The hashed branch of the flattened finish after the transcript hash, for a given completed binding: the Beacon's preparation, its touch, one table read for its root derivation, then the native continuation on a root or the service's continuation on a hidden reply, and the final checks. -/
+noncomputable def stagedStep {τ : Type} (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (publicValue : PqxdhJointGapDh.PublicChallenge) (beaconSeed : PqxdhJointIdentity.IdentitySeed) (svc : Services Response τ)
+    (completed : beaconcrypt_core.session.CompletedRegistrationBinding) (control : pqxdh.BeaconInitSent)
+    (oneTime : Unit ⊕ PqxdhJointGapDh.ScalarBytes) (kem : KemSK) (raw : Pqxdh.Bytes) :
+    StateT (FlatState KemSK τ) ProbComp (Option Pqxdh.Bytes) :=
+  fun state => do
+    let prepared ← (beaconPrefix completed setup codec beaconSeed control
+      state.1.beacon.beacon.identity oneTime kem raw).run' ()
+    match prepared with
+    | none =>
+        let outcome := finishOutcome control state.1 none
+        pure (outcome.1, (outcome.2, state.2))
+    | some pending => do
+        let message := PqxdhJointDhExtractRoot.beaconMessage publicValue pending.collected
+        let game : GameState KemSK := { state.1 with ghost := { state.1.ghost with
+          touches := state.1.ghost.touches ++ [Touch.beacon message] } }
+        let derived ← (svc.derive message).run state.2.2
+        match derived.1 with
+        | .rejected =>
+            let outcome := finishOutcome control game none
+            pure (outcome.1, (outcome.2, state.2.1, derived.2))
+        | .root root => do
+            let staged ← (simulateQ (beaconNative setup codec)
+              (PqxdhPhase2DhRootConsumer.afterRoot codec.frameRead pending
+                (PqxdhRootTableInitialization.rootArray root))).run ((), game.ctx)
+            let outcome := finishOutcome control { game with ctx := staged.2.2 } staged.1
+            pure (outcome.1, (outcome.2, state.2.1, derived.2))
+        | .hidden => do
+            let staged ← (svc.hiddenAfter pending).run ((), game.ctx)
+            let outcome := finishOutcome control { game with ctx := staged.2.2 } staged.1
+            pure (outcome.1, (outcome.2, state.2.1, derived.2))
+
+/-- The flattened finish splits into the transcript hash on the shared cache followed by `stagedStep` at the completed binding of the digest; an InitSent Beacon without a retained bundle or with an undecodable Phase 2 aborts before any hash, and every other phase answers nothing. -/
+theorem finishStep_hashed {τ : Type} (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (publicValue : PqxdhJointGapDh.PublicChallenge) (beaconSeed : PqxdhJointIdentity.IdentitySeed) (svc : Services Response τ)
+    (raw : Pqxdh.Bytes) (state : FlatState KemSK τ) :
+    (finishStep setup codec publicValue beaconSeed svc raw).run state =
+      match state.1.beacon.beacon.phase with
+      | .initSent control _ oneTime kem =>
+        match state.1.beaconInit, responseOf codec raw with
+        | some init, some response => do
+            let hashed ← (CtxRomAuth.ctxRandomOracle ((), PqxdhTranscriptAd.transcript
+              (PqxdhTranscriptAd.initOf init) response)).run state.1.ctx
+            (stagedStep setup codec publicValue beaconSeed svc (PqxdhTranscriptAd.completedOf control hashed.1)
+              control oneTime kem raw).run ({ state.1 with ctx := hashed.2 }, state.2)
+        | _, _ =>
+            pure ((PqxdhBeaconPhase2Publication.finish control state.1.beacon none).1,
+              ({ state.1 with beacon := (PqxdhBeaconPhase2Publication.finish control state.1.beacon none).2 },
+                state.2))
+      | _ => pure (none, state) := by
+  unfold finishStep
+  dsimp only [StateT.run]
+  cases state.1.beacon.beacon.phase <;> try rfl
+
+/-- An InitSent Beacon that aborts before the transcript hash keeps the entry relation. -/
+theorem EntryRel.finishAbort (setup : Setup baseSpec KemSK) (context : Context KemSK)
+    (Q : Nat) (j : Fin (Q + 1)) (prk : HmacBlock) (left : EntryState KemSK) (right : HiddenState KemSK)
+    (related : EntryRel (Reader := Reader) (Response := Response) setup context Q j prk left right)
+    (control : pqxdh.BeaconInitSent) (chosen : Bool)
+    (invariant : SourceInvariant (Reader := Reader) (Response := Response) setup context
+      ({ left.1.1 with beacon := (PqxdhBeaconPhase2Publication.finish control left.1.1.beacon none).2 }, left.1.2)) :
+    (PqxdhBeaconPhase2Publication.finish control left.1.1.beacon none).1 =
+        (PqxdhBeaconPhase2Publication.finish control right.1.1.beacon none).1 ∧
+      EntryRel (Reader := Reader) (Response := Response) setup context Q j prk
+        (({ left.1.1 with beacon := (PqxdhBeaconPhase2Publication.finish control left.1.1.beacon none).2 }, left.1.2),
+          left.2 || chosen)
+        (({ right.1.1 with beacon := (PqxdhBeaconPhase2Publication.finish control right.1.1.beacon none).2 },
+          right.1.2), right.2 || chosen) :=
+  ⟨congrArg (fun beacon => (PqxdhBeaconPhase2Publication.finish control beacon none).1) related.protocol.beacon,
+    invariant, ⟨related.protocol.ctx, related.protocol.server,
+      congrArg (fun beacon => (PqxdhBeaconPhase2Publication.finish control beacon none).2) related.protocol.beacon,
+      related.protocol.sessions, related.protocol.pending, related.protocol.ghost, related.protocol.beaconInit⟩,
+    related.cache, congrArg (· || chosen) related.flag,
+    fun flag => related.unselected (Bool.or_eq_false_iff.mp flag).1,
+    related.selected, related.below, related.marked, related.good, related.clean⟩
+
+/-- The transcript hash replaces the common cache of both related states and keeps the entry relation. -/
+theorem EntryRel.hashed (setup : Setup baseSpec KemSK) (context : Context KemSK)
+    (Q : Nat) (j : Fin (Q + 1)) (prk : HmacBlock) (left : EntryState KemSK) (right : HiddenState KemSK)
+    (related : EntryRel (Reader := Reader) (Response := Response) setup context Q j prk left right)
+    (cache : CtxRomAuth.CtxRO.QueryCache) :
+    EntryRel (Reader := Reader) (Response := Response) setup context Q j prk
+      (({ left.1.1 with ctx := cache }, left.1.2), left.2) (({ right.1.1 with ctx := cache }, right.1.2), right.2) :=
+  ⟨⟨inv_ctx _ _ related.source.1, related.source.2.1, related.source.2.2⟩,
+    ⟨rfl, related.protocol.server, related.protocol.beacon, related.protocol.sessions,
+      related.protocol.pending, related.protocol.ghost, related.protocol.beaconInit⟩, related.cache,
+    related.flag, related.unselected, related.selected, related.below, related.marked, related.good, related.clean⟩
+
 /-- A failed preparation still executes the exact finish and operation latch. -/
 theorem EntryRel.finishPlain (setup : Setup baseSpec KemSK) (context : Context KemSK)
     (Q : Nat) (j : Fin (Q + 1)) (prk : HmacBlock) (left : EntryState KemSK) (right : HiddenState KemSK)
@@ -87,6 +176,77 @@ open PqxdhServerAuthExperiment PqxdhSecretInputKdf PqxdhJointKdfGame
 
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response : Type}
 
+/-- The hashed branch of `finish_ordinary_coupling`: the old coupling after the transcript hash, for any completed binding. -/
+theorem staged_ordinary_coupling (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (checks : Checks) (context : Context KemSK) (Q : Nat) (j : Fin (Q + 1)) (prk : HmacBlock)
+    (raw : Pqxdh.Bytes) (chosen : Bool) (left : EntryState KemSK) (right : HiddenState KemSK)
+    (related : EntryRel (Reader := Reader) (Response := Response) setup context Q j prk left right) (completed : beaconcrypt_core.session.CompletedRegistrationBinding) (control : pqxdh.BeaconInitSent)
+    (oneTime : Unit ⊕ PqxdhJointGapDh.ScalarBytes) (kem : KemSK) :
+    RelTriple
+      ((fun result => (result.1, result.2, left.2 || chosen)) <$>
+        (stagedStep setup codec (context.publicValue setup) context.beaconSeed
+          (realServices context.seed context.scalar setup codec checks) completed control oneTime kem raw).run left.1)
+      ((fun result => (result.1, result.2, right.2 || chosen)) <$>
+        (stagedStep setup codec (context.publicValue setup) context.beaconSeed
+          (sourceHiddenServices setup codec checks context (expandRoot setup.hmac prk)) completed control oneTime kem raw).run right.1)
+      (QueryPost (Reader := Reader) (Response := Response) setup context Q j prk) := by
+  simp only [stagedStep, StateT.run]
+  rw [related.protocol.beacon]
+  simp only [map_bind]
+  refine relTriple_bind (relTriple_refl _) fun prepared other same => ?_
+  subst other
+  cases prepared with
+  | none =>
+      simp only [map_pure]
+      apply relTriple_pure_pure
+      exact Or.inl ⟨(ProtocolRel.finish _ _ _ _ related.protocol control none).1,
+        fun invariant => EntryRel.finishPlain setup context Q j prk left right related control none chosen invariant⟩
+  | some pending =>
+      simp only [realServices, sourceHiddenServices, related.cache]
+      have reconstructed := hiddenDerive_source setup.hmac setup.joint setup.dh context.seed context.scalar prk
+        (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected) right.1.2.2
+      simp only [StateT.run] at reconstructed
+      rw [← reconstructed]
+      simp only [bind_map_left, map_bind]
+      refine relTriple_bind (relTriple_with_support _ _ Eq (relTriple_refl _)) fun read other paired => ?_
+      rcases paired with ⟨same, supported, _⟩
+      subst other
+      have kept := hiddenDerive_keeps setup context.seed context.scalar
+        (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected)
+        right.1.2.2 related.clean read supported
+      have post : ∀ cache staged, QueryPost (Reader := Reader) (Response := Response) setup context Q j prk
+          ((finishAfterInput control left.1.1
+            (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected) cache staged).1,
+            (((finishAfterInput control left.1.1
+              (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected) cache staged).2,
+              left.1.2.1, read.2.fill prk), left.2 || chosen))
+          ((finishAfterInput control right.1.1
+            (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected) cache staged).1,
+            (((finishAfterInput control right.1.1
+              (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected) cache staged).2,
+              right.1.2.1, read.2), right.2 || chosen)) := by
+        intro cache staged
+        refine Or.inl ⟨(ProtocolRel.finish _ _ _ _ (ProtocolRel.context _ _ _ _
+          (ProtocolRel.touch _ _ _ _ related.protocol _ _ rfl) cache) control staged).1, fun invariant => ?_⟩
+        apply EntryRel.finishDerived setup context Q j prk left right related control _ cache staged chosen read.2
+          (fun flag => kept.1.trans (related.unselected (Bool.or_eq_false_iff.mp flag).1))
+          (fun bytes found => kept.1.trans found) ?_ (kept.2.1.trans related.good) kept.2.2 invariant
+        intro bytes found
+        apply selectedAt_prefix setup context.seed context.scalar Q j left.1.1.ghost _ bytes
+          ⟨[Touch.beacon (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected)], ?_⟩
+          (related.selected bytes (kept.1 ▸ found))
+        simp only [finishAfterInput, finishOutcome_touches, finishTouched]
+      cases reply : read.1 <;> simp only [Reply.materialize]
+      · simp only [map_pure]
+        apply relTriple_pure_pure
+        simpa only [finishAfterInput, finishTouched, related.protocol.beacon, related.protocol.ctx] using
+          post right.1.1.ctx none
+      all_goals
+        simp only [bind_pure_comp, Functor.map_map, related.protocol.ctx]
+        apply relTriple_map_same
+        intro staged _
+        simpa only [finishAfterInput, finishTouched, related.protocol.beacon] using post staged.2.2 staged.1
+
 /-- An ordinary finish preserves the complete source prefix, optional root reply and actual staged result. -/
 theorem finish_ordinary_coupling (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (context : Context KemSK) (Q : Nat) (j : Fin (Q + 1)) (prk : HmacBlock)
@@ -100,64 +260,37 @@ theorem finish_ordinary_coupling (setup : Setup baseSpec KemSK) (codec : Codec R
         (finishStep setup codec (context.publicValue setup) context.beaconSeed
           (sourceHiddenServices setup codec checks context (expandRoot setup.hmac prk)) raw).run right.1)
       (QueryPost (Reader := Reader) (Response := Response) setup context Q j prk) := by
-  simp only [finishStep, StateT.run]
-  rw [related.protocol.beacon]
+  have phaseLeft : left.1.1.beacon.beacon.phase = right.1.1.beacon.beacon.phase := by
+    rw [related.protocol.beacon]
+  rw [finishStep_hashed, finishStep_hashed, phaseLeft]
   cases phase : right.1.1.beacon.beacon.phase with
   | initSent control prekey oneTime kem =>
-      simp only [map_bind]
-      refine relTriple_bind (relTriple_refl _) fun prepared other same => ?_
-      subst other
-      cases prepared with
-      | none =>
-          simp only [map_pure]
-          apply relTriple_pure_pure
-          exact Or.inl ⟨(ProtocolRel.finish _ _ _ _ related.protocol control none).1,
-            fun invariant => EntryRel.finishPlain setup context Q j prk left right related control none chosen invariant⟩
-      | some pending =>
-          simp only [realServices, sourceHiddenServices, related.cache]
-          have reconstructed := hiddenDerive_source setup.hmac setup.joint setup.dh context.seed context.scalar prk
-            (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected) right.1.2.2
-          simp only [StateT.run] at reconstructed
-          rw [← reconstructed]
-          simp only [bind_map_left, map_bind]
-          refine relTriple_bind (relTriple_with_support _ _ Eq (relTriple_refl _)) fun read other paired => ?_
-          rcases paired with ⟨same, supported, _⟩
+      simp only
+      split
+      · next _ _ init response leftInit leftResponse =>
+        split
+        · next _ _ init' response' rightInit rightResponse =>
+          rw [leftResponse] at rightResponse
+          cases rightResponse
+          rw [related.protocol.beaconInit, rightInit] at leftInit
+          cases leftInit
+          rw [related.protocol.ctx]
+          simp only [map_bind]
+          refine relTriple_bind (relTriple_refl _) fun hashed other same => ?_
           subst other
-          have kept := hiddenDerive_keeps setup context.seed context.scalar
-            (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected)
-            right.1.2.2 related.clean read supported
-          have post : ∀ cache staged, QueryPost (Reader := Reader) (Response := Response) setup context Q j prk
-              ((finishAfterInput control left.1.1
-                (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected) cache staged).1,
-                (((finishAfterInput control left.1.1
-                  (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected) cache staged).2,
-                  left.1.2.1, read.2.fill prk), left.2 || chosen))
-              ((finishAfterInput control right.1.1
-                (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected) cache staged).1,
-                (((finishAfterInput control right.1.1
-                  (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected) cache staged).2,
-                  right.1.2.1, read.2), right.2 || chosen)) := by
-            intro cache staged
-            refine Or.inl ⟨(ProtocolRel.finish _ _ _ _ (ProtocolRel.context _ _ _ _
-              (ProtocolRel.touch _ _ _ _ related.protocol _ _ rfl) cache) control staged).1, fun invariant => ?_⟩
-            apply EntryRel.finishDerived setup context Q j prk left right related control _ cache staged chosen read.2
-              (fun flag => kept.1.trans (related.unselected (Bool.or_eq_false_iff.mp flag).1))
-              (fun bytes found => kept.1.trans found) ?_ (kept.2.1.trans related.good) kept.2.2 invariant
-            intro bytes found
-            apply selectedAt_prefix setup context.seed context.scalar Q j left.1.1.ghost _ bytes
-              ⟨[Touch.beacon (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected)], ?_⟩
-              (related.selected bytes (kept.1 ▸ found))
-            simp only [finishAfterInput, finishOutcome_touches, finishTouched]
-          cases reply : read.1 <;> simp only [Reply.materialize]
-          · simp only [map_pure]
-            apply relTriple_pure_pure
-            simpa only [finishAfterInput, finishTouched, related.protocol.beacon, related.protocol.ctx] using
-              post right.1.1.ctx none
-          all_goals
-            simp only [bind_pure_comp, Functor.map_map, related.protocol.ctx]
-            apply relTriple_map_same
-            intro staged _
-            simpa only [finishAfterInput, finishTouched, related.protocol.beacon] using post staged.2.2 staged.1
+          exact staged_ordinary_coupling setup codec checks context Q j prk raw chosen _ _
+            (EntryRel.hashed setup context Q j prk left right related hashed.2) _ control oneTime kem
+        · next _ _ rightNone =>
+          exact (rightNone init response (related.protocol.beaconInit ▸ leftInit) leftResponse).elim
+      · next _ _ leftNone =>
+        split
+        · next _ _ init' response' rightInit rightResponse =>
+          exact (leftNone init' response' (related.protocol.beaconInit.trans rightInit) rightResponse).elim
+        · simp only [map_pure]
+          apply relTriple_pure_pure
+          exact Or.inl ⟨congrArg (fun beacon => (PqxdhBeaconPhase2Publication.finish control beacon none).1)
+              related.protocol.beacon,
+            fun invariant => (EntryRel.finishAbort setup context Q j prk left right related control chosen invariant).2⟩
   | _ =>
       simp only [map_pure]
       apply relTriple_pure_pure
@@ -181,6 +314,115 @@ open PqxdhServerAuthExperiment PqxdhSecretInputKdf PqxdhJointKdfGame
 
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response : Type}
 
+/-- The hashed branch of `finish_selected_coupling`, for any completed binding. -/
+theorem staged_selected_coupling (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (checks : Checks) (context : Context KemSK) (Q : Nat) (j : Fin (Q + 1)) (prk : HmacBlock)
+    (raw : Pqxdh.Bytes) (left : EntryState KemSK) (right : HiddenState KemSK)
+    (related : EntryRel (Reader := Reader) (Response := Response) setup context Q j prk left right)
+    (before : left.2 = false) (last : j.val = Q) (completed : beaconcrypt_core.session.CompletedRegistrationBinding)
+    (control : pqxdh.BeaconInitSent) (prekey oneTime : Unit ⊕ PqxdhJointGapDh.ScalarBytes) (kem : KemSK)
+    (phase : right.1.1.beacon.beacon.phase = .initSent control prekey oneTime kem) :
+    RelTriple
+      ((fun result => (result.1, result.2, left.2 || true)) <$>
+        (stagedStep setup codec (context.publicValue setup) context.beaconSeed
+          (programmedServices context.seed context.scalar setup codec checks prk) completed control oneTime kem raw).run left.1)
+      ((fun result => (result.1, result.2, right.2 || true)) <$>
+        (stagedStep setup codec (context.publicValue setup) context.beaconSeed
+          (selectingServices setup context
+            (sourceHiddenServices setup codec checks context (expandRoot setup.hmac prk))) completed control oneTime kem raw).run right.1)
+      (QueryPost (Reader := Reader) (Response := Response) setup context Q j prk) := by
+  have unselected := related.unselected (related.flag ▸ before)
+  have cache : left.1.2.2 = right.1.2.2.cache := by
+    simpa only [HiddenTable.fill, unselected] using related.cache
+  simp only [stagedStep, StateT.run]
+  rw [related.protocol.beacon]
+  have active : InitSent left.1.1 := by
+    refine ⟨control, prekey, oneTime, kem, ?_⟩
+    rw [related.protocol.beacon]
+    exact phase
+  simp only [map_bind]
+  refine relTriple_bind (relTriple_refl _) fun prepared other same => ?_
+  subst other
+  cases prepared with
+  | none =>
+      simp only [map_pure]
+      apply relTriple_pure_pure
+      exact Or.inl ⟨(ProtocolRel.finish _ _ _ _ related.protocol control none).1,
+        fun invariant => EntryRel.finishPlain setup context Q j prk left right related control none true invariant⟩
+  | some pending =>
+      have selectedInput : ∀ bytes, rootInput setup context.seed context.scalar
+          (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected) = some bytes →
+          ∀ cache staged, SelectedAt setup context.seed context.scalar Q j
+            (finishAfterInput control left.1.1
+              (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected) cache staged).2.ghost bytes := by
+        intro bytes rooted nextCache staged
+        simp only [SelectedAt, last, Nat.lt_irrefl, ↓reduceIte, finishAfterInput, finishOutcome_touches,
+          finishTouched, beaconInput]
+        rw [firstBeacon_after _ [] _ (related.source.1.clean active)]
+        exact rooted
+      simp only [programmedServices, realServices, selectingServices, programmedDerive, selectHidden,
+        StateT.run, cache]
+      cases rooted : PqxdhJointDhExtractFamily.input setup.joint setup.dh context.seed context.scalar
+          (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected) with
+      | none =>
+          simp only [pure_bind, map_pure]
+          apply relTriple_pure_pure
+          refine Or.inl ⟨?_, fun invariant => ?_⟩
+          · simpa only [finishTouched, related.protocol.beacon, related.protocol.ctx] using
+              (ProtocolRel.finish _ _ _ _ (ProtocolRel.context _ _ _ _
+                (ProtocolRel.touch _ _ _ _ related.protocol _ _ rfl) right.1.1.ctx) control none).1
+          · have kept := EntryRel.finishDerived setup context Q j prk left right related control
+              (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected)
+              right.1.1.ctx none true right.1.2.2
+              (fun _ => unselected) (fun _ found => found)
+              (fun other found => by rw [unselected] at found; cases found) related.good related.clean
+              (by simpa only [finishAfterInput, finishTouched, related.protocol.beacon, related.protocol.ctx,
+                HiddenTable.fill, unselected] using invariant)
+            simpa only [finishAfterInput, finishTouched, related.protocol.beacon, related.protocol.ctx,
+              HiddenTable.fill, unselected] using kept
+      | some bytes =>
+          cases hit : right.1.2.2.cache bytes with
+          | none =>
+              simp only [programmedRead, hit, map_pure, pure_bind, sourceHiddenServices, related.protocol.ctx,
+                bind_pure_comp, Functor.map_map]
+              apply relTriple_map_same
+              intro staged _
+              refine Or.inl ⟨?_, fun invariant => ?_⟩
+              · simpa only [finishTouched, related.protocol.beacon] using
+                  (ProtocolRel.finish _ _ _ _ (ProtocolRel.context _ _ _ _
+                    (ProtocolRel.touch _ _ _ _ related.protocol _ _ rfl) staged.2.2) control staged.1).1
+              · have kept := EntryRel.finishDerived setup context Q j prk left right related control
+                  (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected)
+                  staged.2.2 staged.1 true { right.1.2.2 with hidden := some bytes }
+                  (fun flag => by simp only [Bool.or_true, Bool.true_eq_false] at flag)
+                  (fun other found => by rw [unselected] at found; cases found)
+                  (fun other found => by cases Option.some.inj found; exact selectedInput bytes rooted _ _)
+                  related.good (fun other found => by cases Option.some.inj found; exact hit)
+                  (by simpa only [finishAfterInput, finishTouched, related.protocol.beacon, HiddenTable.fill] using invariant)
+                simpa only [finishAfterInput, finishTouched, related.protocol.beacon, HiddenTable.fill] using kept
+          | some value =>
+              simp only [programmedRead, hit, map_pure, pure_bind, bind_pure_comp, Functor.map_map]
+              refine relTriple_post_mono (relTriple_support _ _
+                (fun result => SelectedBad setup context.seed context.scalar Q j result.2.1.1.ghost)
+                (fun result => result.2.1.2.2.bad = true) ?_ ?_)
+                (fun _ _ pair => Or.inr pair)
+              · intro result supported
+                simp only [support_map, Set.mem_image] at supported
+                obtain ⟨staged, _, rfl⟩ := supported
+                have lastIndex : j = Fin.last Q := Fin.ext last
+                rw [lastIndex]
+                apply beacon_cache_refusal setup context.seed context.scalar (context.publicValue setup) Q
+                  left.1.1 left.1.2.2 _ bytes related.source.1 related.source.2.2 active
+                · simp only [cache, hit, ne_eq, reduceCtorEq, not_false_eq_true]
+                · refine ⟨[Touch.beacon (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected)], ?_⟩
+                  simp only [finishOutcome_touches]
+                · simpa only [← lastIndex, SelectedAt, finishAfterInput, finishOutcome_touches, finishTouched] using
+                    selectedInput bytes rooted staged.2.2 staged.1
+              · intro result supported
+                simp only [support_pure, Set.mem_singleton_iff] at supported
+                subst supported
+                rfl
+
 /-- The designated Beacon finish preserves all source opening and publication effects, selecting only its actual fresh root input or refusing an input already owned in the source log. -/
 theorem finish_selected_coupling (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (context : Context KemSK) (Q : Nat) (j : Fin (Q + 1)) (prk : HmacBlock)
@@ -196,99 +438,38 @@ theorem finish_selected_coupling (setup : Setup baseSpec KemSK) (codec : Codec R
           (selectingServices setup context
             (sourceHiddenServices setup codec checks context (expandRoot setup.hmac prk))) raw).run right.1)
       (QueryPost (Reader := Reader) (Response := Response) setup context Q j prk) := by
-  have unselected := related.unselected (related.flag ▸ before)
-  have cache : left.1.2.2 = right.1.2.2.cache := by
-    simpa only [HiddenTable.fill, unselected] using related.cache
-  simp only [finishStep, StateT.run]
-  rw [related.protocol.beacon]
+  have phaseLeft : left.1.1.beacon.beacon.phase = right.1.1.beacon.beacon.phase := by
+    rw [related.protocol.beacon]
+  rw [finishStep_hashed, finishStep_hashed, phaseLeft]
   cases phase : right.1.1.beacon.beacon.phase with
   | initSent control prekey oneTime kem =>
-      have active : InitSent left.1.1 := by
-        refine ⟨control, prekey, oneTime, kem, ?_⟩
-        rw [related.protocol.beacon]
-        exact phase
-      simp only [map_bind]
-      refine relTriple_bind (relTriple_refl _) fun prepared other same => ?_
-      subst other
-      cases prepared with
-      | none =>
-          simp only [map_pure]
+      simp only
+      split
+      · next _ _ init response leftInit leftResponse =>
+        split
+        · next _ _ init' response' rightInit rightResponse =>
+          rw [leftResponse] at rightResponse
+          cases rightResponse
+          rw [related.protocol.beaconInit, rightInit] at leftInit
+          cases leftInit
+          rw [related.protocol.ctx]
+          simp only [map_bind]
+          refine relTriple_bind (relTriple_refl _) fun hashed other same => ?_
+          subst other
+          exact staged_selected_coupling setup codec checks context Q j prk raw _ _
+            (EntryRel.hashed setup context Q j prk left right related hashed.2) before last _ control prekey oneTime kem
+            phase
+        · next _ _ rightNone =>
+          exact (rightNone init response (related.protocol.beaconInit ▸ leftInit) leftResponse).elim
+      · next _ _ leftNone =>
+        split
+        · next _ _ init' response' rightInit rightResponse =>
+          exact (leftNone init' response' (related.protocol.beaconInit.trans rightInit) rightResponse).elim
+        · simp only [map_pure]
           apply relTriple_pure_pure
-          exact Or.inl ⟨(ProtocolRel.finish _ _ _ _ related.protocol control none).1,
-            fun invariant => EntryRel.finishPlain setup context Q j prk left right related control none true invariant⟩
-      | some pending =>
-          have selectedInput : ∀ bytes, rootInput setup context.seed context.scalar
-              (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected) = some bytes →
-              ∀ cache staged, SelectedAt setup context.seed context.scalar Q j
-                (finishAfterInput control left.1.1
-                  (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected) cache staged).2.ghost bytes := by
-            intro bytes rooted nextCache staged
-            simp only [SelectedAt, last, Nat.lt_irrefl, ↓reduceIte, finishAfterInput, finishOutcome_touches,
-              finishTouched, beaconInput]
-            rw [firstBeacon_after _ [] _ (related.source.1.clean active)]
-            exact rooted
-          simp only [programmedServices, realServices, selectingServices, programmedDerive, selectHidden,
-            StateT.run, cache]
-          cases rooted : PqxdhJointDhExtractFamily.input setup.joint setup.dh context.seed context.scalar
-              (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected) with
-          | none =>
-              simp only [pure_bind, map_pure]
-              apply relTriple_pure_pure
-              refine Or.inl ⟨?_, fun invariant => ?_⟩
-              · simpa only [finishTouched, related.protocol.beacon, related.protocol.ctx] using
-                  (ProtocolRel.finish _ _ _ _ (ProtocolRel.context _ _ _ _
-                    (ProtocolRel.touch _ _ _ _ related.protocol _ _ rfl) right.1.1.ctx) control none).1
-              · have kept := EntryRel.finishDerived setup context Q j prk left right related control
-                  (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected)
-                  right.1.1.ctx none true right.1.2.2
-                  (fun _ => unselected) (fun _ found => found)
-                  (fun other found => by rw [unselected] at found; cases found) related.good related.clean
-                  (by simpa only [finishAfterInput, finishTouched, related.protocol.beacon, related.protocol.ctx,
-                    HiddenTable.fill, unselected] using invariant)
-                simpa only [finishAfterInput, finishTouched, related.protocol.beacon, related.protocol.ctx,
-                  HiddenTable.fill, unselected] using kept
-          | some bytes =>
-              cases hit : right.1.2.2.cache bytes with
-              | none =>
-                  simp only [programmedRead, hit, map_pure, pure_bind, sourceHiddenServices, related.protocol.ctx,
-                    bind_pure_comp, Functor.map_map]
-                  apply relTriple_map_same
-                  intro staged _
-                  refine Or.inl ⟨?_, fun invariant => ?_⟩
-                  · simpa only [finishTouched, related.protocol.beacon] using
-                      (ProtocolRel.finish _ _ _ _ (ProtocolRel.context _ _ _ _
-                        (ProtocolRel.touch _ _ _ _ related.protocol _ _ rfl) staged.2.2) control staged.1).1
-                  · have kept := EntryRel.finishDerived setup context Q j prk left right related control
-                      (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected)
-                      staged.2.2 staged.1 true { right.1.2.2 with hidden := some bytes }
-                      (fun flag => by simp only [Bool.or_true, Bool.true_eq_false] at flag)
-                      (fun other found => by rw [unselected] at found; cases found)
-                      (fun other found => by cases Option.some.inj found; exact selectedInput bytes rooted _ _)
-                      related.good (fun other found => by cases Option.some.inj found; exact hit)
-                      (by simpa only [finishAfterInput, finishTouched, related.protocol.beacon, HiddenTable.fill] using invariant)
-                    simpa only [finishAfterInput, finishTouched, related.protocol.beacon, HiddenTable.fill] using kept
-              | some value =>
-                  simp only [programmedRead, hit, map_pure, pure_bind, bind_pure_comp, Functor.map_map]
-                  refine relTriple_post_mono (relTriple_support _ _
-                    (fun result => SelectedBad setup context.seed context.scalar Q j result.2.1.1.ghost)
-                    (fun result => result.2.1.2.2.bad = true) ?_ ?_)
-                    (fun _ _ pair => Or.inr pair)
-                  · intro result supported
-                    simp only [support_map, Set.mem_image] at supported
-                    obtain ⟨staged, _, rfl⟩ := supported
-                    have lastIndex : j = Fin.last Q := Fin.ext last
-                    rw [lastIndex]
-                    apply beacon_cache_refusal setup context.seed context.scalar (context.publicValue setup) Q
-                      left.1.1 left.1.2.2 _ bytes related.source.1 related.source.2.2 active
-                    · simp only [cache, hit, ne_eq, reduceCtorEq, not_false_eq_true]
-                    · refine ⟨[Touch.beacon (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected)], ?_⟩
-                      simp only [finishOutcome_touches]
-                    · simpa only [← lastIndex, SelectedAt, finishAfterInput, finishOutcome_touches, finishTouched] using
-                        selectedInput bytes rooted staged.2.2 staged.1
-                  · intro result supported
-                    simp only [support_pure, Set.mem_singleton_iff] at supported
-                    subst supported
-                    rfl
+          exact Or.inl ⟨congrArg (fun beacon => (PqxdhBeaconPhase2Publication.finish control beacon none).1)
+              related.protocol.beacon,
+            fun invariant => (EntryRel.finishAbort setup context Q j prk left right related control true invariant).2⟩
   | _ =>
       simp only [map_pure]
       apply relTriple_pure_pure
@@ -370,3 +551,28 @@ end BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor.finish_step_coupling
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor.finishStep_hashed' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor.finishStep_hashed
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor.EntryRel.finishAbort' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor.EntryRel.finishAbort
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor.EntryRel.hashed' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor.EntryRel.hashed
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor.staged_ordinary_coupling' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor.staged_ordinary_coupling
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor.staged_selected_coupling' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor.staged_selected_coupling

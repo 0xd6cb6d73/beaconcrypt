@@ -12,7 +12,7 @@ open AdapterRecordHelperRequestMonad
 open AdapterRecordRequestMonad (LiftRust)
 variable {E : Type} {m : Type → Type} [Monad m] [LiftRust m] [Operations E m]
 
--- Extracted input SHA-256: b20ed1cc69c82bae2e108a35489620dea2c5722602385ec592712b7a0c90382b
+-- Extracted input SHA-256: 3f4351353ff89fb0315cf53907dabd3f4088b60337d2ce32770b2702349ac66c
 -- Transformation SHA-256: 0ac76259388812e77a6659efb4962168726b8069654035f44b1187c2d2971370
 
 def raw

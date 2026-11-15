@@ -5,13 +5,15 @@ import BeaconcryptCore.Refinement.RegistrationSigningHistory
 import BeaconcryptCore.Refinement.RegistrationPublication
 
 /-!
-Outgoing ML signing starts at the actual extracted hash capabilities. The request getter, digest continuation, selected ML request and signing/publication continuations are the extracted operations. Hashes use the record/authentication CTX cache. Private receipts record every reached signing call before its continuation, including a missing signature and later publication failure. The signing function is the explicit primitive implementation, with no unforgeability or desired-simulation premise.
+Server response ML signing starts at the actual extracted hash capabilities. The request getter, digest continuation, selected ML request and signing/publication continuations are the extracted operations. Hashes use the record/authentication CTX cache. Private receipts record every reached signing call before its continuation, including a missing signature and later publication failure. The signing function is the explicit primitive implementation, with no unforgeability or desired-simulation premise.
 -/
 
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core PqxdhRefinement
 set_option autoImplicit false
+set_option maxRecDepth 2048
+set_option warningAsError true
 
 namespace BeaconcryptCore.Computational.RegistrationSigningShared
 
@@ -36,9 +38,7 @@ abbrev Spec : OracleSpec Request
   | .sign _ _ _ => SignReply
 
 inductive Stage where
-  | beacon (pending : registration.BeaconMldsaSigning)
   | server (pending : registration.ServerResponseSigning)
-  | beaconStopped (effect : registration.BeaconInitEffect)
   | serverStopped (state : pqxdh.ServerState)
 
 def continueWith {Input Result : Type} (result : RustM Input)
@@ -51,30 +51,11 @@ def continueWith {Input Result : Type} (result : RustM Input)
 /-- Resume exactly the source hash continuation using its actual shared-oracle digest. -/
 def resumeHash (command : Command) (digest : CtxDigest) : RustM Stage := do
   match command with
-  | .beacon hashing =>
-    let next ← hashing.resume (.Some (RegistrationAuthenticationShared.digestArray digest))
-    match next with
-    | .MldsaSigningRequested pending => ok (.beacon pending)
-    | other => ok (.beaconStopped other)
   | .server hashing =>
     let next ← hashing.resume (.Some (RegistrationAuthenticationShared.digestArray digest))
     match next with
     | .Ok pending => ok (.server pending)
     | .Err state => ok (.serverStopped state)
-
-/-- The reached Beacon request signs the exact returned shared digest with the source key, role and context. -/
-theorem resume_beacon_request (hashing : registration.BeaconInitHash) (digest : CtxDigest) :
-    ∃ pending request, resumeHash (.beacon hashing) digest = ok (.beacon pending) ∧
-      pending.request = ok request ∧ request.public_key = hashing.state.beacon_mldsa ∧
-      request.role = .Beacon ∧ absBytes request.context = Pqxdh.TranscriptAuth.signingContext ∧
-      absBytes request.input = Pqxdh.TranscriptAuth.signatureInput .beacon digest.toList :=
-  match BeaconcryptCore.Refinement.RegistrationSigningContinuations.beacon_init_hash_some_exact
-    hashing (RegistrationAuthenticationShared.digestArray digest) with
-  | ⟨pending, resumed, _state, _fingerprint, _digest, request, requested, key, role,
-      _context, contextBytes, message⟩ =>
-    ⟨pending, request, by simp only [resumeHash, resumed, bind_tc_ok],
-      requested, key, role, contextBytes,
-      by simpa only [RegistrationAuthenticationShared.digest_array_bytes] using message⟩
 
 /-- The reached Server request signs the exact returned shared digest with the source pinned key and context. -/
 theorem resume_server_request (hashing : registration.ServerResponseHash) (digest : CtxDigest) :
@@ -93,13 +74,9 @@ theorem resume_server_request (hashing : registration.ServerResponseHash) (diges
 def submit {Encoded : Type} (command : Command) (digest : CtxDigest) (stage : Stage)
     (encoded : core.option.Option Encoded) : OracleComp Spec (RustM (DispatchResult Encoded)) :=
   match stage with
-  | .beacon pending => continueWith pending.request fun request => do
-      let reply ← Spec.query (.sign request command.payload digest)
-      pure (submitBeacon pending command.payload (fun _ => reply) encoded)
   | .server pending => continueWith pending.request fun request => do
       let reply ← Spec.query (.sign request command.payload digest)
       pure (submitServer pending command.payload (fun _ => reply) encoded)
-  | .beaconStopped effect => pure (ok ⟨none, .beaconStopped effect⟩)
   | .serverStopped state => pure (ok ⟨none, .serverStopped state⟩)
 
 /-- No signing request occurs before the source hash request and its actual extracted continuation. -/
@@ -168,19 +145,6 @@ theorem hash_cached_state (sign : registration.MldsaSigningRequest → ProbComp 
     same.symm ▸ cached_extend state.1 state.2 inner.2
       (MldsaSharedAuthentication.query_cached (hashBytes request) state.2 inner queried).1 cached
 
-/-- Beacon signing preserves the receipt even if source signature validation or final publication rejects. -/
-theorem submit_beacon_run {Encoded : Type} (sign : registration.MldsaSigningRequest → ProbComp SignReply)
-    (command : Command) (digest : CtxDigest) (pending : registration.BeaconMldsaSigning)
-    (encoded : core.option.Option Encoded) (state : State) :
-    (simulateQ (implementation sign) (submit command digest (.beacon pending) encoded)).run state =
-      (fun reply => (submitBeacon pending command.payload (fun _ => reply) encoded,
-        (state.1 ++ [⟨⟨pending.state.beacon_mldsa, command.payload, replyBytes reply⟩, digest⟩], state.2))) <$>
-        sign (beaconRequest pending) := by
-  simp only [submit, registration.BeaconMldsaSigning.request, continueWith,
-    bind_pure_comp, simulateQ_map, simulateQ_spec_query, StateT.run, map_state_apply,
-    implementation, Functor.map_map, beaconRequest, Prod.map, id_eq]
-
-
 private theorem server_request (pending : registration.ServerResponseSigning) :
     pending.request = ok (serverRequest pending) := rfl
 
@@ -212,13 +176,6 @@ theorem submit_cached {Encoded : Type} (sign : registration.MldsaSigningRequest 
     (supported : result ∈ support ((simulateQ (implementation sign) (submit command digest stage encoded)).run state)) :
     Cached result.2 :=
   match stage with
-  | .beacon pending =>
-    match OracleComp.mem_support_map_peel _ (sign (beaconRequest pending))
-      ((congrArg (fun work => result ∈ support work)
-        (submit_beacon_run sign command digest pending encoded state)).mp supported) with
-    | ⟨reply, _possible, same⟩ =>
-      same.symm ▸ cached_append state ⟨⟨pending.state.beacon_mldsa, command.payload, replyBytes reply⟩, digest⟩
-        cached reached
   | .server pending =>
     match OracleComp.mem_support_map_peel _ (sign (serverRequest pending))
       ((congrArg (fun work => result ∈ support work)
@@ -226,7 +183,6 @@ theorem submit_cached {Encoded : Type} (sign : registration.MldsaSigningRequest 
     | ⟨reply, _possible, same⟩ =>
       same.symm ▸ cached_append state
         ⟨⟨pending.binding.server_pin.public_key, command.payload, replyBytes reply⟩, digest⟩ cached reached
-  | .beaconStopped _effect => pure_cached _ state cached result supported
   | .serverStopped _previous => pure_cached _ state cached result supported
 
 private theorem continue_cached {Input Output : Type}
@@ -354,11 +310,6 @@ theorem run_history_cached {Encoded Result : Type} (source : PqxdhJointKdfGame.F
 
 end BeaconcryptCore.Computational.RegistrationSigningShared
 
-/-- info: 'BeaconcryptCore.Computational.RegistrationSigningShared.resume_beacon_request' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationSigningShared.resume_beacon_request
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationSigningShared.resume_server_request' depends on axioms: [propext,
  Classical.choice,
@@ -402,11 +353,6 @@ end BeaconcryptCore.Computational.RegistrationSigningShared
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationSigningShared.hash_cached
 
-/-- info: 'BeaconcryptCore.Computational.RegistrationSigningShared.submit_beacon_run' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationSigningShared.submit_beacon_run
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationSigningShared.submit_server_run' depends on axioms: [propext,
  Classical.choice,

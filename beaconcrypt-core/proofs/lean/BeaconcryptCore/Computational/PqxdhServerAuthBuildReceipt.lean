@@ -8,6 +8,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.refined ratchet.concrete PqxdhRefinement
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhServerAuthBuildReceipt
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhJointKdfGame
 open PqxdhServerAuthCtxCalls (Chain Material Kernel Residual)
 open PqxdhServerAuthBuildProgram
@@ -56,8 +57,8 @@ open PqxdhInitialGenericPublication (State)
 theorem after_context (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
     (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Pqxdh.Bytes)
     (entry : Kernel) (metadata : PeerMetadata) (state : State Kernel Metadata PeerMetadata Consumed)
-    (allowed : RawCtxSourceSend.SealContext → Prop) (valid : allowed (firstContext candidate authenticated)) :
-    (PqxdhInitialGenericPublication.afterInitialization
+    (allowed : RawCtxSourceSend.SealContext → Prop) (valid : allowed (firstContext candidate associatedData authenticated)) :
+    (PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData)
       (PqxdhServerAuthCtxBuildSettlement.calls (fun entry _ _ => pure (entry, .None)) source rest sealQuery)
       auxQuery candidate authenticated entry metadata state).IsQueryBoundP (Forbidden allowed) 0 := by
   unfold PqxdhInitialGenericPublication.afterInitialization
@@ -76,7 +77,7 @@ theorem after_context (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
 theorem candidate_bound (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
     (initial : RustM Kernel) (candidate : pqxdh.ServerRegistrationCandidate) (data : Option Pqxdh.Bytes)
     (metadata : PeerMetadata) (state : State Kernel Metadata PeerMetadata Consumed) :
-    (PqxdhInitialGenericBuilder.candidate
+    (PqxdhInitialGenericBuilder.candidate (associatedData := associatedData)
       (PqxdhServerAuthCtxBuildSettlement.calls (fun entry _ _ => pure (entry, .None)) source rest sealQuery)
       auxQuery initial candidate data metadata state).IsQueryBoundP (Forbidden KeyIdBound) 0 := by
   unfold PqxdhInitialGenericBuilder.candidate
@@ -101,8 +102,8 @@ theorem candidate_bound (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
         case ok bytes =>
           rw [isQueryBoundP_map_iff]
           simpa [Forbidden] using
-            after_context source rest candidate _ entry metadata state KeyIdBound
-              (PqxdhPhase2LocalMatching.firstContext_bound candidate bytes binding
+            after_context (associatedData := associatedData) source rest candidate _ entry metadata state KeyIdBound
+              (PqxdhPhase2LocalMatching.firstContext_bound (associatedData := associatedData) candidate bytes binding
                 (data.getD registrationWitness)).1
         all_goals trivial
       · trivial
@@ -112,7 +113,7 @@ theorem candidate_bound (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
 theorem build_bound (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
     (initial : RustM Kernel) (pending : pqxdh.PendingServerRegistration) (data : Option Pqxdh.Bytes)
     (metadata : PeerMetadata) (state : State Kernel Metadata PeerMetadata Consumed) :
-    (PqxdhServerAuthSendFactor.genericBuild
+    (PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData)
       (PqxdhServerAuthCtxBuildSettlement.calls (fun entry _ _ => pure (entry, .None)) source rest sealQuery)
       auxQuery initial pending data metadata state).IsQueryBoundP (Forbidden KeyIdBound) 0 := by
   unfold PqxdhServerAuthSendFactor.genericBuild
@@ -128,7 +129,7 @@ theorem build_bound (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
       case ok value =>
         cases value with
         | Err => trivial
-        | Ok candidate => exact candidate_bound source rest initial candidate data metadata state
+        | Ok candidate => exact candidate_bound (associatedData := associatedData) source rest initial candidate data metadata state
       all_goals trivial
   all_goals trivial
 
@@ -136,9 +137,9 @@ theorem build_bound (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
 theorem program_bound (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
     (pending : pqxdh.PendingServerRegistration) (data : Option Pqxdh.Bytes)
     (metadata : PeerMetadata) (state : PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed) :
-    (program source rest pending data metadata state).IsQueryBoundP (Forbidden KeyIdBound) 0 := by
+    (program (associatedData := associatedData) source rest pending data metadata state).IsQueryBoundP (Forbidden KeyIdBound) 0 := by
   rw [program, isQueryBoundP_map_iff]
-  exact build_bound source rest _ pending data metadata _
+  exact build_bound (associatedData := associatedData) source rest _ pending data metadata _
 
 open CtxRomAuth
 open RawCtxSelectedAuthenticationObserver (monitor)
@@ -297,10 +298,10 @@ theorem compiled_receipts (source : FixedHkdfSha512NoSaltSource) (codec : Codec 
     (beforeLog afterLog : Log) (before after : RawCtxSelectedAuthenticationObserver.State)
     (result : Option (RustM (Option Response × PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed)))
     (supported : ((result, afterLog), after) ∈ support
-      (monitor ((compiled source codec checks rest pending data metadata state).run.run beforeLog) before)) :
+      (monitor ((compiled (associatedData := associatedData) source codec checks rest pending data metadata state).run.run beforeLog) before)) :
     beforeLog.IsPrefix afterLog ∧ Receipts codec.frameWrite before.seals afterLog after := by
-  exact interpreted_receipts source codec checks (program source rest pending data metadata state)
-    (program_bound source rest pending data metadata state) beforeLog afterLog before after before.seals
+  exact interpreted_receipts source codec checks (program (associatedData := associatedData) source rest pending data metadata state)
+    (program_bound (associatedData := associatedData) source rest pending data metadata state) beforeLog afterLog before after before.seals
     (fun _ member => Or.inl member) result supported
 
 /-- An actually decoded accepted match cannot select the failed-frame-writer alternative. The same source context is logged and fixes all accepted registration fields. No wire-byte canonicity or session identity follows from this local match. -/
@@ -308,9 +309,9 @@ theorem matched_receipt (writer : RawCtxMixedShared.Writer) (read : RawCtxReceiv
     (writable : PqxdhFirstBeaconRecordCanonical.ReadWritable writer read)
     (candidate : pqxdh.BeaconRegistrationCandidate) (kernel : ConcreteRatchetKernel)
     (staged : PqxdhBeaconPhase2Publication.Staged)
-    (success : PqxdhBeaconPhase2Publication.afterOpening candidate kernel (.Some staged.opened) = some staged)
+    (success : PqxdhBeaconPhase2Publication.afterOpening candidate associatedData kernel (.Some staged.opened) = some staged)
     (bytes : Pqxdh.Bytes) (target : CtxUnclaimedAcceptance.Target)
-    (delivery : PqxdhPhase2LocalMatching.LocalTarget read bytes candidate staged.opened target)
+    (delivery : PqxdhPhase2LocalMatching.LocalTarget (associatedData := associatedData) read bytes candidate staged.opened target)
     (entry : CtxSuccessfulSeal) (same : target.toLegacy.sameFullTupleAsSuccessfulSeal entry)
     (plaintext : staged.opened.plaintext = entry.input.plaintext)
     (log : Log) (context : RawCtxSourceSend.SealContext) (sequence : Std.U64)
@@ -318,9 +319,9 @@ theorem matched_receipt (writer : RawCtxMixedShared.Writer) (read : RawCtxReceiv
     context ∈ log ∧
       PqxdhPhase2LocalMatching.acceptedFields staged = PqxdhPhase2LocalMatching.sealedFields context := by
   obtain ⟨records, seq, sender, publication⟩ := origin
-  obtain ⟨encoded, written⟩ := PqxdhServerAuthFinishReceipt.matched_writable writer read writable bytes
+  obtain ⟨encoded, written⟩ := PqxdhServerAuthFinishReceipt.matched_writable (associatedData := associatedData) writer read writable bytes
     candidate staged.opened target delivery entry same sequence context.senderId seq sender
-  refine ⟨?_, PqxdhServerAuthFinishReceipt.matched_fields candidate kernel staged success read bytes target
+  refine ⟨?_, PqxdhServerAuthFinishReceipt.matched_fields (associatedData := associatedData) candidate kernel staged success read bytes target
     delivery entry same plaintext context records bound⟩
   exact publication.resolve_left (by rw [written]; exact Option.some_ne_none encoded)
 

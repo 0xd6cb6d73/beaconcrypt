@@ -306,7 +306,7 @@ theorem serverStep_commutes (query : RawCtxServerMixed.SourceSpec.Domain) :
     Commutes nativeCtxLens (PqxdhDeploymentNative.serverStep (KemSK := KemSK) setup codec route query) := by
   refine commutes_focus nativeCtxLens scheduleCtxLens _ (fun s => s.native)
     (fun s => PqxdhDeploymentNative.record setup codec (PqxdhDeploymentNative.logged
-      ((RawCtxServerMixed.serverImpl (PqxdhDeploymentNative.senderId s) route codec.frameRead query).run
+      ((MldsaServerRouting.handler PqxdhRefinement.absBytes (PqxdhDeploymentNative.senderId s) route codec.frameRead query).run
         (PqxdhDeploymentNative.serverView s))))
     (fun s b r => (b.1.1, PqxdhDeploymentNative.produce (PqxdhDeploymentNative.serverTag query) b.2
       (PqxdhDeploymentNative.withServer { s with native := r } b.1.2)))
@@ -483,38 +483,52 @@ theorem callbacks_commutes (query : (PqxdhBeaconPhase2Publication.NativeSpec Pqx
     · exact LazyOracleDiscard.commutes_lift gameLens _ _
         (beaconNative_commutes setup codec (.inr (.application response)))
 
-/-- The registration finish of a present owner, with that owner fixed. -/
-noncomputable def ownerFinish (index : Nat) (raw : Pqxdh.Bytes) (owner : PqxdhRegistrationSchedule.Owner KemSK) :
+/-- The hashed owner finish of the scheduler (`PqxdhRegistrationSchedule.ownerFinish`) commutes with completions of the CTX cache: its transcript hash is one query of the cache and every finish callback commutes. -/
+theorem scheduleOwnerFinish_commutes (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) :
+    Commutes gameCtxLens (PqxdhRegistrationSchedule.ownerFinish setup codec retained raw owner) := by
+  unfold PqxdhRegistrationSchedule.ownerFinish
+  split
+  · split
+    · refine LazyOracleDiscard.commutes_bind _ ?_ fun digest =>
+        LazyOracleDiscard.commutes_simulateQ _ _ (callbacks_commutes setup codec) _
+      rw [nativeHash_query]
+      exact LazyOracleDiscard.commutes_query _ _
+    · exact LazyOracleDiscard.commutes_pure _ _
+  · exact LazyOracleDiscard.commutes_pure _ _
+
+/-- The registration finish of a present owner, with that owner and its retained Phase 1 bundle fixed. -/
+noncomputable def ownerFinish (index : Nat) (raw : Pqxdh.Bytes) (owner : PqxdhRegistrationSchedule.Owner KemSK)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) :
     PqxdhRegistrationSchedule.Game KemSK (Option Pqxdh.Bytes) := do
-  let result ← PqxdhRegistrationSchedule.onShared (simulateQ (PqxdhRegistrationSchedule.callbacks setup codec)
-    (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw owner))
+  let result ← PqxdhRegistrationSchedule.onShared (PqxdhRegistrationSchedule.ownerFinish setup codec retained raw owner)
   modify fun current => { current with owners := current.owners.set index result.2 }
   pure result.1
 
-/-- M5: the native registration finish commutes with completions of the CTX cache: the owner slot is a frame, the finish-time receive and every other callback commute, and reinstalling the returned owner is a frame. -/
+/-- M5: the native registration finish commutes with completions of the CTX cache: the owner slot and its retained bundle are a frame, the transcript hash, the finish-time receive and every other callback commute, and reinstalling the returned owner is a frame. -/
 theorem finish_commutes (index : Nat) (raw : Pqxdh.Bytes) :
     Commutes scheduleCtxLens (PqxdhRegistrationSchedule.finish (KemSK := KemSK) setup codec index raw) := by
-  refine commutes_dispatch scheduleCtxLens _ (fun s => s.owners[index]?) (fun _ _ => rfl)
+  refine commutes_dispatch scheduleCtxLens _ (fun s => (s.owners[index]?, s.inits index)) (fun _ _ => rfl)
     (fun found => match found with
-      | none => pure none
-      | some owner => ownerFinish setup codec index raw owner)
+      | (none, _) => pure none
+      | (some owner, retained) => ownerFinish setup codec index raw owner retained)
     (fun s => ?_) (fun found => ?_)
   · rcases found : s.owners[index]? with _ | owner
     · simp only [PqxdhRegistrationSchedule.finish, StateT.run_bind, StateT.run_get, pure_bind, found]
     · simp only [PqxdhRegistrationSchedule.finish, StateT.run_bind, StateT.run_get, pure_bind, found]
       rfl
-  · cases found with
-    | none => exact LazyOracleDiscard.commutes_pure _ _
-    | some owner =>
-        refine LazyOracleDiscard.commutes_bind _ (LazyOracleDiscard.commutes_lift scheduleLens gameCtxLens _
-          (LazyOracleDiscard.commutes_simulateQ _ _ (callbacks_commutes setup codec) _)) (fun result => ?_)
-        refine LazyOracleDiscard.commutes_bind _ ?_ (fun _ => LazyOracleDiscard.commutes_pure _ _)
-        exact LazyOracleDiscard.commutes_frame _ _ fun s c => by
-          simp only [StateT.run_modify, map_pure]
-          rfl
+  · rcases found with ⟨_ | owner, retained⟩
+    · exact LazyOracleDiscard.commutes_pure _ _
+    · refine LazyOracleDiscard.commutes_bind _ (LazyOracleDiscard.commutes_lift scheduleLens gameCtxLens _
+          (scheduleOwnerFinish_commutes setup codec retained raw owner)) (fun result => ?_)
+      refine LazyOracleDiscard.commutes_bind _ ?_ (fun _ => LazyOracleDiscard.commutes_pure _ _)
+      exact LazyOracleDiscard.commutes_frame _ _ fun s c => by
+        simp only [StateT.run_modify, map_pure]
+        rfl
 
-/-- The native build of a session with a present pending token, in focused form: the logged response tail on the seal log and the CTX cache, then the installation of its result. -/
-noncomputable def tokenBuild (session : Nat) (payload : Option Pqxdh.Bytes) (token : PqxdhServerRelatedRootConsumer.Returned) :
+/-- The native build of a session with a present pending token after its transcript hash, in focused form: the logged response tail at the hashed AD on the seal log and the CTX cache, then the installation of its result. -/
+noncomputable def tokenBuild (session : Nat) (payload : Option Pqxdh.Bytes) (token : PqxdhServerRelatedRootConsumer.Returned)
+    (ad : PqxdhTranscriptAd.AssociatedData) :
     NativeGame KemSK (Option PqxdhServerRegistrationPublication.Response) := fun s =>
   (fun r => ((PqxdhServerAuthExperiment.settle s.2.server r.1).1, (s.1, { s.2 with
       pending := Function.update s.2.pending session none
@@ -522,32 +536,49 @@ noncomputable def tokenBuild (session : Nat) (payload : Option Pqxdh.Bytes) (tok
       ctx := r.2.2
       ghost := { s.2.ghost with seals := s.2.ghost.seals ++ r.2.1.map (fun context => (session, context)) } }))) <$>
     (simulateQ (PqxdhServerAuthExperiment.tailImpl setup codec checks)
-      (PqxdhServerRegistrationPublication.build setup.source token.pending token.root payload () s.2.server)).run
-        ([], s.2.ctx)
+      (PqxdhServerRegistrationPublication.build (associatedData := ad) setup.source token.pending token.root payload ad
+        s.2.server)).run ([], s.2.ctx)
 
-/-- M5: the native registration build commutes with completions of the CTX cache: the pending token is a frame, the logged response tail commutes, and the installation is a frame. -/
+/-- M5: the native registration build commutes with completions of the CTX cache: the pending token and the pre-hash guard read no cache, the rejected token's consumption is a frame, the transcript hash is one query of the cache, the logged response tail commutes, and the installation is a frame. -/
 theorem nativeBuild_commutes (session : Nat) (payload : Option Pqxdh.Bytes) :
     Commutes gameCtxLens (PqxdhServerAuthNative.nativeBuild (KemSK := KemSK) setup codec checks session payload) := by
-  refine commutes_dispatch gameCtxLens _ (fun s => s.2.pending session) (fun _ _ => rfl)
+  refine commutes_dispatch gameCtxLens _ (fun s => (s.2.pending session).map fun token =>
+      (token, PqxdhServerRegistrationPublication.prehash s.2.server token.pending payload)) (fun _ _ => rfl)
     (fun found => match found with
       | none => pure none
-      | some token => tokenBuild setup codec checks session payload token)
+      | some (_, none) => PqxdhServerAuthNative.localState fun game =>
+          (none, { game with pending := Function.update game.pending session none })
+      | some (token, some candidate) => do
+          let digest ← PqxdhServerAuthNative.nativeHash (PqxdhTranscriptAd.transcript
+            (PqxdhTranscriptAd.initOf token.init) (PqxdhTranscriptAd.serverResponse candidate))
+          tokenBuild setup codec checks session payload token (PqxdhTranscriptAd.adOf digest))
     (fun s => ?_) (fun found => ?_)
   · change (PqxdhServerAuthNative.nativeGet >>= _).run s = _
     rw [nativeGet_bind]
     rcases found : s.2.pending session with _ | token
     · rfl
-    · change (PqxdhServerAuthNative.nativeCoins _ >>= _).run s = _
-      rw [nativeCoins_bind]
-      simp only [tokenBuild, StateT.run, map_eq_bind_pure_comp]
-      rfl
-  · cases found with
-    | none => exact LazyOracleDiscard.commutes_pure _ _
-    | some token =>
-        refine commutes_focus gameCtxLens (PqxdhDeploymentHiddenEntry.sharedLens (List RawCtxSourceSend.SealContext)) _
+    · rcases pre : PqxdhServerRegistrationPublication.prehash s.2.server token.pending payload with _ | candidate
+      · simp only [Option.map, pre]
+        rfl
+      · simp only [Option.map, pre]
+        refine congrArg (fun k => StateT.run (PqxdhServerAuthNative.nativeHash _ >>= k) s) (funext fun digest => ?_)
+        funext current
+        change (PqxdhServerAuthNative.nativeGet >>= _).run current = _
+        rw [nativeGet_bind]
+        rw [nativeCoins_bind]
+        simp only [tokenBuild, StateT.run, map_eq_bind_pure_comp]
+        rfl
+  · rcases found with _ | ⟨token, _ | candidate⟩
+    · exact LazyOracleDiscard.commutes_pure _ _
+    · exact LazyOracleDiscard.commutes_frame _ _ fun s c => rfl
+    · refine LazyOracleDiscard.commutes_bind _ ?_ fun digest => ?_
+      · rw [nativeHash_query]
+        exact LazyOracleDiscard.commutes_query _ _
+      · refine commutes_focus gameCtxLens (PqxdhDeploymentHiddenEntry.sharedLens (List RawCtxSourceSend.SealContext)) _
           (fun s => ([], s.2.ctx))
           (fun s => simulateQ (PqxdhServerAuthExperiment.tailImpl setup codec checks)
-            (PqxdhServerRegistrationPublication.build setup.source token.pending token.root payload () s.2.server))
+            (PqxdhServerRegistrationPublication.build (associatedData := PqxdhTranscriptAd.adOf digest) setup.source
+              token.pending token.root payload (PqxdhTranscriptAd.adOf digest) s.2.server))
           (fun s b r => ((PqxdhServerAuthExperiment.settle s.2.server b).1, (s.1, { s.2 with
             pending := Function.update s.2.pending session none
             server := (PqxdhServerAuthExperiment.settle s.2.server b).2
@@ -766,27 +797,28 @@ theorem realBundle_commutes_ctx (created : PqxdhLiveServerConstruction.Created U
   refine LazyOracleDiscard.commutes_lift (StateLens.fst _ _) nativeCtxLens _
     (LazyOracleDiscard.commutes_lift nativeLens _ _ ?_)
   show Commutes scheduleCtxLens (PqxdhRegistrationSchedule.bundle setup codec owner)
-  refine commutes_dispatch scheduleCtxLens _ (fun s => s.owners[owner]?) (fun _ _ => rfl)
+  refine commutes_dispatch scheduleCtxLens _ (fun s => (s.owners[owner]?, s.inits owner)) (fun _ _ => rfl)
     (fun found => match found with
-      | none => pure none
-      | some current => do
-          let result ← StateT.lift (simulateQ (PqxdhRegistrationSchedule.bundleCallbacks setup codec
+      | (none, _) => pure none
+      | (some current, retained) => do
+          let result ← StateT.lift ((simulateQ (PqxdhRegistrationSchedule.bundleLogCallbacks setup codec
             current.beacon.identity) (PqxdhLivePhase1Bundle.bundle (PqxdhRegistrationSchedule.projection setup owner)
-              current))
-          modify fun state => { state with owners := state.owners.set owner result.2 }
-          pure result.1)
+              current)).run retained)
+          modify fun state => { state with
+            owners := state.owners.set owner result.1.2
+            inits := Function.update state.inits owner result.2 }
+          pure result.1.1)
     (fun s => ?_) (fun found => ?_)
   · rcases found : s.owners[owner]? with _ | current
     · simp only [PqxdhRegistrationSchedule.bundle, StateT.run_bind, StateT.run_get, pure_bind, found]
     · simp only [PqxdhRegistrationSchedule.bundle, StateT.run_bind, StateT.run_get, pure_bind, found]
-  · cases found with
-    | none => exact LazyOracleDiscard.commutes_pure _ _
-    | some current =>
-        refine LazyOracleDiscard.commutes_bind _ (commutes_lift_comp _ _) fun result => ?_
-        refine LazyOracleDiscard.commutes_bind _ ?_ (fun _ => LazyOracleDiscard.commutes_pure _ _)
-        exact LazyOracleDiscard.commutes_frame _ _ fun s c => by
-          simp only [StateT.run_modify, map_pure]
-          rfl
+  · rcases found with ⟨_ | current, retained⟩
+    · exact LazyOracleDiscard.commutes_pure _ _
+    · refine LazyOracleDiscard.commutes_bind _ (commutes_lift_comp _ _) fun result => ?_
+      refine LazyOracleDiscard.commutes_bind _ ?_ (fun _ => LazyOracleDiscard.commutes_pure _ _)
+      exact LazyOracleDiscard.commutes_frame _ _ fun s c => by
+        simp only [StateT.run_modify, map_pure]
+        rfl
 
 /-- The real public HMAC commutes with completions of the CTX cache. -/
 theorem realHmac_commutes_ctx (created : PqxdhLiveServerConstruction.Created Unit)
@@ -1210,3 +1242,8 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentBackend.realHandler_commutes
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentBackend.realHandler_commutes_ctx
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentBackend.scheduleOwnerFinish_commutes' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentBackend.scheduleOwnerFinish_commutes

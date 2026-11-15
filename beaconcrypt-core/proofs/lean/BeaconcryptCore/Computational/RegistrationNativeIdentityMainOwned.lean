@@ -49,7 +49,7 @@ theorem ordinary_owned (joint : PqxdhJointIdentity.Primitives)
 
 private theorem beacon_owned (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeIdentityFrontend.M n KemSK RegistrationServerRoleBackend.State mlSource Value)
     (preserves : ∀ current env prior next,
       RegistrationNativeIdentityRealization.Owned setup.joint prior.identities current →
@@ -73,7 +73,7 @@ private theorem beacon_owned (setup : Setup base KemSK) (checks : Checks)
 /-- Complete actual creation derives new ownership and preserves all prior generated credentials. -/
 theorem create_owned (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (before : State n KemSK mlSource × SourceState)
     (result : RustM (Option Nat) × (State n KemSK mlSource × SourceState)) (owned : Owned setup.joint before)
@@ -88,7 +88,7 @@ theorem create_owned (setup : Setup base KemSK) (checks : Checks)
 /-- Every actual outgoing bundle outcome preserves the generated credential invariant. -/
 theorem bundle_owned (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire) (index : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire) (index : Nat)
     (before : State n KemSK mlSource × SourceState)
     (result : RustM (Option Pqxdh.Bytes) × (State n KemSK mlSource × SourceState)) (owned : Owned setup.joint before)
     (reached : result ∈ support ((interpret setup.joint (RegistrationNativeIdentityMain.beacon setup checks representation created
@@ -102,7 +102,7 @@ theorem bundle_owned (setup : Setup base KemSK) (checks : Checks)
 /-- Every actual terminal finish path preserves ownership, including failed authentication, open or insertion. -/
 theorem finish_owned (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire) (index : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire) (index : Nat)
     (packet : Option registration.ResponsePacket) (before : State n KemSK mlSource × SourceState)
     (result : RustM (Option Pqxdh.Bytes) × (State n KemSK mlSource × SourceState)) (owned : Owned setup.joint before)
     (reached : result ∈ support ((interpret setup.joint (RegistrationNativeIdentityMain.beacon setup checks representation created

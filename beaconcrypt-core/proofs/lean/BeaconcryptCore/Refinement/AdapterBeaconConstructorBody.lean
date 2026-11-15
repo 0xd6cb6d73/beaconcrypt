@@ -38,7 +38,7 @@ def reject {R : Type} (rng : R) : RustT m (Outcome R) := pure (.Err (), rng)
 def withKeys {R Error : Type} (generator : rand_core.TryCryptoRng R Error)
     (identifier : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicKey)
     (binding : pqxdh.ServerBinding) (pin : session.ServerAuthenticationPin)
-    (identity : beaconcrypt_public_wrapper.auth.MldsaIdentity) (rng : R) : RustT m (Outcome R) := do
+    (rng : R) : RustT m (Outcome R) := do
   let (signing, rng1) ← generators.edGenerate generator rng
   match signing with
   | .Err _ => reject rng1
@@ -51,21 +51,17 @@ def withKeys {R Error : Type} (generator : rand_core.TryCryptoRng R Error)
       let (kem, rng3) ← generators.kemGenerate generator rng2
       match kem with
       | .Err _ => reject rng3
-      | .Ok kem => pure (.Ok ⟨signing, identifier, .Fresh control prekey kem, serverId, ⟨identity, pin⟩⟩, rng3)
+      | .Ok kem => pure (.Ok ⟨signing, identifier, .Fresh control prekey kem, serverId, ⟨pin⟩⟩, rng3)
 
 def withInputs {R Error : Type} (generator : rand_core.TryCryptoRng R Error)
     (identifier : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicKey)
     (mldsa : Std.Array U8 1952#usize) (rng : R) : RustT m (Outcome R) := do
   let publicKey ← crypto.edPublicBytes serverId
   let binding : pqxdh.ServerBinding := ⟨publicKey, identifier⟩
-  let (identity, rng1) ← generators.mldsaGenerate generator rng
-  match identity with
-  | .Err _ => reject rng1
-  | .Ok identity =>
-    let pin ← beaconcrypt_public_request.auth.fingerprint_pin (m := RustT m) binding mldsa
-    match pin with
-    | .None => reject rng1
-    | .Some pin => withKeys generator identifier serverId binding pin identity rng1
+  let pin ← beaconcrypt_public_request.auth.server_pin (m := RustT m) binding mldsa
+  match pin with
+  | .None => reject rng
+  | .Some pin => withKeys generator identifier serverId binding pin rng
 
 def source {R Error : Type} (generator : rand_core.TryCryptoRng R Error)
     (identifier : U64) (identityKey mldsaKey : Slice U8) (rng : R) : RustT m (Outcome R) := do
@@ -79,6 +75,7 @@ def source {R Error : Type} (generator : rand_core.TryCryptoRng R Error)
       (fun key => withInputs generator identifier serverId key rng)
       (fun _ => reject rng)
 
+omit children in
 theorem body {R Error : Type} (generator : rand_core.TryCryptoRng R Error)
     (identifier : U64) (identityKey mldsaKey : Slice U8) (rng : R) :
     beaconcrypt_constructor_request.beacon.Beacon.try_new_with_rng (m := RustT m) generator identifier identityKey mldsaKey rng =
@@ -118,34 +115,28 @@ theorem body {R Error : Type} (generator : rand_core.TryCryptoRng R Error)
       apply bind_congr
       intro publicKey
       apply bind_congr
-      rintro ⟨identity, nextRng⟩
-      cases identity with
-      | Err error => cases error; simp [reject, lift_ok, core.convert.From.Blanket.from]
-      | Ok identity =>
-        simp only [lift_ok, pure_bind]
+      intro pin
+      cases pin with
+      | none => simp [core.option.Option.ok_or, reject, lift_ok, core.convert.From.Blanket.from]
+      | some pin =>
+        simp only [core.option.Option.ok_or, lift_ok, pure_bind, withKeys]
         apply bind_congr
-        intro pin
-        cases pin with
-        | none => simp [core.option.Option.ok_or, reject, lift_ok, core.convert.From.Blanket.from]
-        | some pin =>
-          simp only [core.option.Option.ok_or, lift_ok, pure_bind, withKeys]
+        rintro ⟨signing, nextRng⟩
+        cases signing with
+        | Err error => simp [reject, lift_ok, core.convert.From.Blanket.from]
+        | Ok signing =>
+          simp only [lift_ok, pure_bind]
           apply bind_congr
-          rintro ⟨signing, nextRng⟩
-          cases signing with
+          intro control
+          apply bind_congr
+          rintro ⟨prekey, nextRng⟩
+          cases prekey with
           | Err error => simp [reject, lift_ok, core.convert.From.Blanket.from]
-          | Ok signing =>
+          | Ok prekey =>
             simp only [lift_ok, pure_bind]
             apply bind_congr
-            intro control
-            apply bind_congr
-            rintro ⟨prekey, nextRng⟩
-            cases prekey with
-            | Err error => simp [reject, lift_ok, core.convert.From.Blanket.from]
-            | Ok prekey =>
-              simp only [lift_ok, pure_bind]
-              apply bind_congr
-              rintro ⟨kem, nextRng⟩
-              cases kem <;> simp [reject, lift_ok, core.convert.From.Blanket.from]
+            rintro ⟨kem, nextRng⟩
+            cases kem <;> simp [reject, lift_ok, core.convert.From.Blanket.from]
 
 end BeaconcryptCore.Refinement.AdapterBeaconConstructorBody
 

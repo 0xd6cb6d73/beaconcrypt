@@ -5,6 +5,10 @@ free CONTROL_EPHEMERAL:bitstring.
 free CONTROL_CT:bitstring.
 free CONTROL_ROOT:bitstring.
 free CONTROL_PAYLOAD:bitstring.
+(* Signed request fields of the supplied control request; transcript AD151 hashes them. *)
+free CONTROL_PREKEY:bitstring.
+free CONTROL_ONE_TIME:bitstring.
+free CONTROL_PQ:bitstring.
 query owner:bitstring,token:bitstring,before:nat,next:nat,assigned:key_id,plaintext:bitstring,frame:bitstring,response:bitstring;
  event(RegistrationResponsePublished(owner,token,before,next,assigned,plaintext,frame,response)).
 query owner:bitstring,token:bitstring,assigned:key_id,plaintext:bitstring,frame:bitstring;

@@ -14,10 +14,16 @@ set_option maxHeartbeats 1000000
 namespace BeaconcryptCore.Refinement.RegistrationPublication
 
 /-- Finish retains every authenticated metadata field and the complete populated AD. -/
-def completedBinding (binding : session.RegistrationBinding) (assignedId : Std.U64) :
+def completedBinding (binding : session.CompletedRegistrationBinding) (assignedId : Std.U64) :
     session.SessionBinding :=
   ⟨binding.server_pin.binding, assignedId, binding.beacon_identity_public_key,
-    binding.server_pin.fingerprint, binding.beacon_fingerprint, binding.associated_data⟩
+    binding.session_transcript_hash, binding.associated_data⟩
+
+/-- Exact public request bytes become pending metadata only on successful publication. -/
+def publishedBinding (ready : registration.BeaconInitReady) : session.RegistrationBinding :=
+  ⟨ready.state.server_pin, ready.init_hash,
+    ⟨ready.state.started.message.identity_key, ready.state.pre_key,
+      ready.state.one_time_key, ready.state.pq_key⟩⟩
 
 /-- No pending capability is published on encoding failure; success transfers the same control, binding and encoded output. -/
 theorem beacon_publication_refines {Encoded : Type} (ready : registration.BeaconInitReady)
@@ -25,7 +31,7 @@ theorem beacon_publication_refines {Encoded : Type} (ready : registration.Beacon
     ready.publish encoded = ok (match encoded with
       | .None => .Err ready.state.original_control
       | .Some output => .Ok
-        ⟨⟨ready.state.started.state, ready.binding⟩, output⟩) := by
+        ⟨⟨ready.state.started.state, publishedBinding ready⟩, output⟩) := by
   cases encoded <;> rfl
 
 /-- Encoding failure returns the exact previous server control; success publishes the same kernel, completed binding and bytes. -/
@@ -140,7 +146,7 @@ theorem server_seal_retention_refines (self : registration.ServerRecordWrite)
   repeat first | split | exact ⟨_, rfl, rfl⟩
   simp only [bind_tc_ok]
   repeat first | split | exact ⟨_, rfl, rfl⟩
-  simp only [bind_tc_ok, session.RegistrationBinding.impl.init_hash,
+  simp only [bind_tc_ok, session.CompletedRegistrationBinding.impl.init_hash,
     pqxdh.ServerRegistrationCandidate.impl.server_identity_public_key,
     pqxdh.ServerRegistrationCandidate.impl.ephemeral_public_key,
     pqxdh.ServerRegistrationCandidate.impl.kem_ciphertext,

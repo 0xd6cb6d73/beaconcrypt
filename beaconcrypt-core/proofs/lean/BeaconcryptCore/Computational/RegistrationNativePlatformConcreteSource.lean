@@ -53,14 +53,14 @@ theorem serializer_source (sequence sender : U64) (parts : Std.Array (Slice U8) 
   rw [source]
 
 /-- Literal Init request interpretation preserves every public reservation failure and returned platform state. -/
-theorem init_writer (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E)) (view : registration.SignedInitView) :
+theorem init_writer (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E)) (view : registration.InitView) :
     simulateQ (writer reserve)
       (AdapterRegistrationWriterRequestExtraction.encodeInit
         (E := E) (m := AdapterRegistrationWriterRequestMonad.Program E)
         (RegistrationNativePlatformWriter.initPacket view)).run =
       (fun allocation => (RustM.ok (match allocation with
         | .Err _ => core.option.Option.None
-        | .Ok _ => .Some (RegistrationNativeSourceWriterReadback.initVector view)))) <$> reserve 6757#usize := by
+        | .Ok _ => .Some (RegistrationNativeSourceWriterReadback.initVector view)))) <$> reserve 1490#usize := by
   exact RegistrationNativeSourceWriterReadback.init_source reserve RegistrationNativeConcreteCodec.serializerBranches view
 
 /-- Response size refusal is checked before allocation, and every admitted reservation failure remains observable. -/

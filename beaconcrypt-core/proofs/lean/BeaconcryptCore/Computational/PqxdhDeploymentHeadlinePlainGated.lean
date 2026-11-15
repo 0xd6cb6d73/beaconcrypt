@@ -11,12 +11,13 @@ CE-12 P2b restated every frozen headline whose bound carries the anomaly term `�
 - `ce_or_plain_s2b_target_billed`, `ce_or_plain_s2b_billed`: the s2b origin failure or plaintext failure, per target and summed (`kemLoss`, `slotLoss` and `authLoss_g` at the combined event and claim; `β_g` and `publicationTerm budget` are the same terms as in `ce_or_s2b`).
 - `ce_plain_every_s2b_billed`: the every-production reading, with the bound of `ce_plain_s2b`.
 
-The fields of `TargetBills` are quantified over every event, claim and target (`kem`, `slot`, `auth`) and over every target (`beta`), so they cover the terms at the plaintext event, the combined event and their claims; `beta` is `ptc_bills` at the deployment adversary. The bounds are the step-3 theorems' own, with the same premises; `target_bills` takes only binders the source theorems already have (`SourceFullCorrect`, `KemBound`, the initializer's query bound, `budget.Respects adversary`, the runtime and the AEAD forgery fallback), so no premise is added. The step-2 and step-3 forms without `β_g` (`ce_pin_b2s`, `ce_or_pin_b2s`, `ce_plain_b2s`, `ce_or_plain_b2s`, `ce_plain_every_b2s` and `ce_or_fields_b2s`, each with its per-target form where it has one) are not restated, as P2b did not restate `ce_or_b2s`: the bills of their terms (`kemLoss`, `slotLoss`, `authLoss_g`) are the fields `kem`, `slot` and `auth` of the same `target_bills`. No assumption or contract is added. No `PqxdhBoundary*` module is imported.
+The fields of `TargetBills` are quantified over every event, claim and target (`kem`, `slot`, `auth`) and over every target (`beta`), so they cover the terms at the plaintext event, the combined event and their claims; `beta` is `ptc_bills` at the deployment adversary. The bounds are the step-3 theorems' own, with the same premises; `target_bills` takes only binders the source theorems already have (`SourceFullCorrect`, `KemBound`, the initializer's query bound, `budget.Respects adversary`, the runtime and the AEAD forgery fallback), so no premise is added. The step-2 and step-3 forms without `β_g` (`ce_pin_b2s`, `ce_or_pin_b2s`, `ce_plain_b2s`, `ce_or_plain_b2s`, `ce_plain_every_b2s` and `ce_or_fields_b2s`, each with its per-target form where it has one) are not restated, as P2b did not restate `ce_or_b2s`: the bills of their terms (`kemLoss`, `slotLoss`, `authLoss_g`) are the fields `kem`, `slot` and `auth` of the same `target_bills`. The all-fields b2s row additionally carries the proved transcript-cache birthday term; this statistical term requires no reduction query bill. No assumption or contract is added. No `PqxdhBoundary*` module is imported.
 -/
 
 open OracleComp OracleSpec ENNReal
 
 set_option autoImplicit false
+set_option warningAsError true
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePlainGated
 open PqxdhDeploymentHeadlinePlain

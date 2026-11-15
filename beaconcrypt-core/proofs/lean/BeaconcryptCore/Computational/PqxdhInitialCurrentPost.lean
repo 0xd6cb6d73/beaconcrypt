@@ -9,6 +9,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialCurrentPost
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhKemIndCca PqxdhPhase2SourceAux PqxdhPhase1AcceptanceOracle
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhPrivateKemSource
 variable {ι M P I D K X Response A KemSK Result : Type} {baseSpec : OracleSpec ι} {S B : Nat}
@@ -41,7 +42,7 @@ noncomputable def owner
     (raw : Pqxdh.Bytes)
     (before : RawCtxBeaconLifecycle.State (PqxdhGeneratedBeaconState.IdentityHandle I) D (PqxdhGeneratedBeaconState.KemHandle K)) :=
   simulateQ (PqxdhInitialPrivateBeacon.compiler attachedVerify primitives count fixed kdf localImpl baseImpl kem secret challenge)
-    (PqxdhInitialFusedOwner.owner decode raw before)
+    (PqxdhInitialFusedOwner.owner (completedBinding := completedBinding) decode raw before)
 
 /-- The decomposed whole scheduler is exactly the original current private-KDF target, including its complete private identity interpreter and source optional replies. -/
 theorem source
@@ -56,8 +57,8 @@ theorem source
     PqxdhInitialGenericPost.nativePost (P := P) (S := S) (B := B)
       (records fixed writer kdf sender route decode)
       (selector attachedVerify primitives count baseImpl kem secret challenge)
-      (owner attachedVerify primitives count fixed kdf localImpl baseImpl kem secret challenge decode) =
-      PqxdhInitialPrivateBeacon.target attachedVerify primitives count fixed kdf localImpl writer sender route decode baseImpl kem secret challenge := by
+      (owner (completedBinding := completedBinding) attachedVerify primitives count fixed kdf localImpl baseImpl kem secret challenge decode) =
+      PqxdhInitialPrivateBeacon.target (completedBinding := completedBinding) attachedVerify primitives count fixed kdf localImpl writer sender route decode baseImpl kem secret challenge := by
   funext query state
   rcases query with (query | query) | query
   case inl.inl =>
@@ -85,8 +86,8 @@ theorem program
     (state : PqxdhPhase2PostScheduler.State (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B) count) :
     (simulateQ (PqxdhInitialGenericPost.nativePost (records fixed writer kdf sender route decode)
       (selector attachedVerify primitives count baseImpl kem secret challenge)
-      (owner attachedVerify primitives count fixed kdf localImpl baseImpl kem secret challenge decode)) client).run state =
-      (simulateQ (PqxdhInitialPrivateBeacon.target attachedVerify primitives count fixed kdf localImpl writer sender route decode
+      (owner (completedBinding := completedBinding) attachedVerify primitives count fixed kdf localImpl baseImpl kem secret challenge decode)) client).run state =
+      (simulateQ (PqxdhInitialPrivateBeacon.target (completedBinding := completedBinding) attachedVerify primitives count fixed kdf localImpl writer sender route decode
         baseImpl kem secret challenge) client).run state := by
   rw [source]
 

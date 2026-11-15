@@ -6,7 +6,9 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeSuffix
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhJointKdfGame PqxdhNativeSharedPrefix
 open RawCtxSelectedParentTable RawCtxSelectedParentEntry PqxdhFirstRecordConfidentiality
 variable {ι M P I D K X Response Shared A N C : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -32,12 +34,12 @@ set_option backward.isDefEq.respectTransparency false in
 theorem adv_run (owner : RawCtxProtocolReveals.Owner S B) (number : Std.U64) (bit : Bool)
     (query : (ConfPostSpec extra S B).Domain) (current : PqxdhRecordConfidentialityChallenge.State)
     (before : InsState M P I D K A N C S B) :
-    runStepper (handler pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
+    runStepper (handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
       owner number bit (.inl query)) current before =
     (fun result => (result.1.map (fun reply =>
       (PqxdhRecordConfidentialityChallenge.screen current query reply,
         PqxdhRecordConfidentialityChallenge.observe owner number current query reply)), result.2)) <$>
-      ((insImpl pre application initial selector aux source writer prior (some parent) target nonce next sender route read mark monitor
+      ((insImpl (completedBinding := completedBinding) pre application initial selector aux source writer prior (some parent) target nonce next sender route read mark monitor
         query).run).run before := by
   simp only [runStepper, handler, StateT.run, PqxdhRecordConfidentialityChallenge.handler, bind_pure_comp,
     simulateQ_map, simulateQ_spec_query, OptionT.run_map]
@@ -75,14 +77,14 @@ theorem step_twin (owner : RawCtxProtocolReveals.Owner S B) (number : Std.U64)
     (paired : current.pair = some (left, right)) (alive : ¬ Dead before) :
     Twin left right (fun a b => a = b ∧ ∀ reply after, a.1 = some (reply, after) → after.pair = some (left, right))
       (fun result => Dead result.2) (fun result => Dead result.2)
-      (runStepper (handler pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
+      (runStepper (handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
         owner number false query) current before)
-      (runStepper (handler pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
+      (runStepper (handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
         owner number true query) current before) := by
   rcases query with request | ⟨x0, x1⟩
-  · rw [adv_run pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
+  · rw [adv_run (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
       owner number false request current before,
-      adv_run pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
+      adv_run (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
       owner number true request current before]
     rcases request with (record | ext) | ⟨index, raw⟩
     · refine twin_of_stable owner number left right _ current paired _ ?_
@@ -142,7 +144,7 @@ theorem step_twin (owner : RawCtxProtocolReveals.Owner S B) (number : Std.U64)
 /-- The existing selected-finish-opening flag remains raised through every complete retained-parent Post callback. -/
 theorem ins_flag (query : (ConfPostSpec extra S B).Domain) (before : InsState M P I D K A N C S B)
     (raised : Dead before) (result : Option ((ConfPostSpec extra S B).Range query) × InsState M P I D K A N C S B)
-    (supported : result ∈ support (((insImpl pre application initial selector aux source writer prior (some parent) target nonce next
+    (supported : result ∈ support (((insImpl (completedBinding := completedBinding) pre application initial selector aux source writer prior (some parent) target nonce next
       sender route read mark monitor query).run).run before)) : Dead result.2 := by
   rcases query with (record | ext) | ⟨index, raw⟩
   · simp only [insImpl, OptionT.run_mk, StateT.run, support_map, Set.mem_image] at supported
@@ -161,7 +163,7 @@ theorem program_flag {Result : Type} (work : OracleComp (ConfPostSpec extra S B)
     (before : InsState M P I D K A N C S B) (raised : Dead before)
     (result : Option Result × InsState M P I D K A N C S B)
     (supported : result ∈ support (((simulateQ
-      (insImpl pre application initial selector aux source writer prior (some parent) target nonce next sender route read mark monitor)
+      (insImpl (completedBinding := completedBinding) pre application initial selector aux source writer prior (some parent) target nonce next sender route read mark monitor)
       work).run).run before)) : Dead result.2 := by
   induction work using OracleComp.inductionOn generalizing before with
   | pure value =>
@@ -172,7 +174,7 @@ theorem program_flag {Result : Type} (work : OracleComp (ConfPostSpec extra S B)
       simp only [simulateQ_bind, simulateQ_spec_query, OptionT.run_bind, Option.elimM, StateT.run_bind,
         mem_support_bind_iff] at supported
       obtain ⟨step, member, supported⟩ := supported
-      have kept := ins_flag pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
+      have kept := ins_flag (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
         query before raised step member
       rcases step with ⟨_ | reply, after⟩
       · rw [supported]
@@ -184,9 +186,9 @@ theorem query_flag (owner : RawCtxProtocolReveals.Owner S B) (number : Std.U64) 
     (query : (AdvSpec extra S B).Domain) (current : PqxdhRecordConfidentialityChallenge.State)
     (before : InsState M P I D K A N C S B) (raised : Dead before)
     (result : Option ((AdvSpec extra S B).Range query × PqxdhRecordConfidentialityChallenge.State) × InsState M P I D K A N C S B)
-    (supported : result ∈ support (runStepper (handler pre application initial selector aux source writer prior parent target nonce next
+    (supported : result ∈ support (runStepper (handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next
       sender route read mark monitor owner number bit query) current before)) : Dead result.2 := by
-  exact program_flag pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
+  exact program_flag (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
     ((PqxdhRecordConfidentialityChallenge.handler owner number bit query).run current) before raised result supported
 
 /-- Every complete adaptive continuation after the accepted challenge retains equal full views until a selected raw opening inside a finish. There is no bound on the continuation's schedule or assumption about successful replies. -/
@@ -195,15 +197,15 @@ theorem after_twin {Result : Type} (owner : RawCtxProtocolReveals.Owner S B) (nu
     (current : PqxdhRecordConfidentialityChallenge.State) (before : InsState M P I D K A N C S B)
     (paired : current.pair = some (left, right)) (alive : ¬ Dead before) :
     Twin left right (fun a b => a = b) (fun result => Dead result.2) (fun result => Dead result.2)
-      (runStepper (simulateQ (handler pre application initial selector aux source writer prior parent target nonce next sender route read mark
+      (runStepper (simulateQ (handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark
         monitor owner number false) work) current before)
-      (runStepper (simulateQ (handler pre application initial selector aux source writer prior parent target nonce next sender route read mark
+      (runStepper (simulateQ (handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark
         monitor owner number true) work) current before) := by
   exact twin_run_inv left right _ _ Dead (fun current => current.pair = some (left, right))
-    (step_twin pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
+    (step_twin (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
       owner number left right)
-    (query_flag pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor owner number false)
-    (query_flag pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor owner number true)
+    (query_flag (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor owner number false)
+    (query_flag (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor owner number true)
     work current before paired alive
 
 /-- The literal selected challenge and its entire reply-dependent continuation are twin, retaining the full wrapper and private state. The operational input condition belongs to this reached request; an earlier or later matching counter is not substituted for it. -/
@@ -216,13 +218,13 @@ theorem challenge_then_twin {Result : Type} (owner : RawCtxProtocolReveals.Owner
       RawCtxSelectedPendingCut.requestAddress kernel.send_chain = RawCtxSelectedParentPrivatePatch.targetAddress target)
     (separate : RawCtxSelectedParentPrivatePatch.targetAddress target ≠ parent.address) :
     Twin left right (fun a b => a = b) (fun result => Dead result.2) (fun result => Dead result.2)
-      (runStepper (simulateQ (handler pre application initial selector aux source writer prior parent target nonce next sender route read mark
+      (runStepper (simulateQ (handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark
         monitor owner number false) ((liftM ((AdvSpec extra S B).query (.inr (left, right)))) >>= continuation)) current before)
-      (runStepper (simulateQ (handler pre application initial selector aux source writer prior parent target nonce next sender route read mark
+      (runStepper (simulateQ (handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark
         monitor owner number true) ((liftM ((AdvSpec extra S B).query (.inr (left, right)))) >>= continuation)) current before) := by
   rw [simulateQ_bind, simulateQ_bind, simulateQ_spec_query, simulateQ_spec_query, runStepper_bind, runStepper_bind]
   refine twin_bind left right
-    (PqxdhLaterChallengeTwin.challenge_twin pre application initial selector aux source writer prior parent target nonce next sender route read
+    (PqxdhLaterChallengeTwin.challenge_twin (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read
       mark monitor owner number left right equal current unused before selected separate) ?_
     (fun _ impossible => impossible.elim) (fun _ impossible => impossible.elim)
   rintro result _ ⟨rfl, paired⟩
@@ -231,12 +233,12 @@ theorem challenge_then_twin {Result : Type} (owner : RawCtxProtocolReveals.Owner
   · by_cases raised : Dead after
     · apply Twin.dead
       · exact runStepper_dead _ Dead
-          (query_flag pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor owner number false)
+          (query_flag (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor owner number false)
           (continuation reply) current' after raised
       · exact runStepper_dead _ Dead
-          (query_flag pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor owner number true)
+          (query_flag (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor owner number true)
           (continuation reply) current' after raised
-    · exact after_twin pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
+    · exact after_twin (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
         owner number left right (continuation reply) current' after (paired reply current' rfl) raised
 
 /-- The original target decision restricted to the explicit complement of the selected-finish-opening flag. This is an observed event; the executed callbacks are unchanged. -/
@@ -251,7 +253,7 @@ noncomputable def selectedClient (owner : RawCtxProtocolReveals.Owner S B) (numb
     (current : PqxdhRecordConfidentialityChallenge.State) (before : InsState M P I D K A N C S B) :
     OracleComp AdaptiveCtxDynamicKnownKeys.Spec Bool :=
   observed number <$> runStepper
-    (simulateQ (handler pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
+    (simulateQ (handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
       owner number bit) ((liftM ((AdvSpec extra S B).query (.inr (left, right)))) >>= continuation)) current before
 
 /-- In the existing ordinary random view, the actual selected challenge and arbitrary continuation have identical restricted target probability for both plaintexts. This statement retains the reached input and parent-separation conditions and the explicit finish-opening event restriction. -/
@@ -265,15 +267,15 @@ theorem random_challenge (owner : RawCtxProtocolReveals.Owner S B) (number : Std
     (separate : RawCtxSelectedParentPrivatePatch.targetAddress target ≠ parent.address) :
     𝒟[AdaptiveCtxPrivacyGuard.randomView (RawCtxUniversalDecoder.decoder read)
       (AdaptiveCtxDynamicKnownKeys.decisionClient source.crypto
-        (selectedClient pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
+        (selectedClient (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
           owner number false left right continuation current before))] {true} =
     𝒟[AdaptiveCtxPrivacyGuard.randomView (RawCtxUniversalDecoder.decoder read)
       (AdaptiveCtxDynamicKnownKeys.decisionClient source.crypto
-        (selectedClient pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
+        (selectedClient (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
           owner number true left right continuation current before))] {true} := by
   apply randomView_twin left right _ source.crypto equal
   refine twin_map left right
-    (challenge_then_twin pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
+    (challenge_then_twin (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
       owner number left right equal continuation current unused before selected separate) _ _
     (fun _ _ same => congrArg _ same) ?_ ?_
   all_goals intro result flagged

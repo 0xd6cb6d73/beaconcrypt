@@ -12,6 +12,7 @@ set_option maxRecDepth 4096
 namespace BeaconcryptCore.Refinement.AdapterBeaconConstructorRequestMonad
 variable [BeaconcryptCore.Refinement.PublicWrapperPlatform.Material]
 variable [primitive : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations]
+/-- Shared constructor requests: only the Server controller uses ML generation. -/
 class Operations (m : Type → Type) where
   mldsaGenerate {R E : Type} : rand_core.TryCryptoRng R E → R → m
     (core.result.Result beaconcrypt_public_wrapper.auth.MldsaIdentity Unit × R)
@@ -36,7 +37,7 @@ variable [BeaconcryptCore.Refinement.AdapterBeaconConstructorRequestMonad.Operat
 variable [BeaconcryptCore.Refinement.AdapterPublicWrapperRequestMonad.CryptoOperations m]
 variable [BeaconcryptCore.Refinement.AdapterPublicWrapperRequestMonad.ChildOperations m]
 /-- [beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::try_new_with_rng]:
-    Source: 'beaconcrypt/src/beacon.rs', lines 102:4-134:5
+    Source: 'beaconcrypt/src/beacon.rs', lines 101:4-132:5
     Visibility: public -/
 def beacon.Beacon.try_new_with_rng
   {R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :
@@ -63,90 +64,78 @@ def beacon.Beacon.try_new_with_rng
     match cf1 with
     | core.ops.control_flow.ControlFlow.Continue val1 =>
       let a ← (BeaconcryptCore.Refinement.AdapterPublicWrapperRequestMonad.CryptoOperations.edPublicBytes (m := m)) val
-      let (r4, rng1) ←
-        (BeaconcryptCore.Refinement.AdapterBeaconConstructorRequestMonad.Operations.mldsaGenerate (m := m)) rand_coreTryCryptoRngInst rng
+      let o ←
+        (beaconcrypt_public_request.auth.server_pin (m := m))
+          { identity_public_key := a, identity_key_id := server_kid } val1
+      let r4 ← (BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) core.option.Option.ok_or) o ()
       let cf2 ← (BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) core.result.Result.Insts.CoreOpsTry_traitTry.branch) r4
       match cf2 with
       | core.ops.control_flow.ControlFlow.Continue val2 =>
-        let o ←
-          (beaconcrypt_public_request.auth.fingerprint_pin (m := m))
-            { identity_public_key := a, identity_key_id := server_kid } val1
-        let r5 ← (BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) core.option.Option.ok_or) o ()
-        let cf3 ← (BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) core.result.Result.Insts.CoreOpsTry_traitTry.branch) r5
+        let (r5, rng1) ←
+          (BeaconcryptCore.Refinement.AdapterBeaconConstructorRequestMonad.Operations.edGenerate (m := m))
+            rand_coreTryCryptoRngInst rng
+        let r6 ←
+          (BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) core.result.Result.map_err)
+            (beaconcrypt_constructor.beacon.Beacon.try_new_with_rng.closure_2.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError
+            rand_coreTryCryptoRngInst) r5 ()
+        let cf3 ← (BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) core.result.Result.Insts.CoreOpsTry_traitTry.branch) r6
         match cf3 with
         | core.ops.control_flow.ControlFlow.Continue val3 =>
-          let (r6, rng2) ←
-            (BeaconcryptCore.Refinement.AdapterBeaconConstructorRequestMonad.Operations.edGenerate (m := m))
+          let bf ←
+            (BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) beaconcrypt_core.pqxdh.BeaconFresh.new)
+              { identity_public_key := a, identity_key_id := server_kid }
+          let (r7, rng2) ←
+            (BeaconcryptCore.Refinement.AdapterPublicWrapperRequestMonad.CryptoOperations.kxGenerate (m := m))
               rand_coreTryCryptoRngInst rng1
-          let r7 ←
+          let r8 ←
             (BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) core.result.Result.map_err)
-              (beaconcrypt_constructor.beacon.Beacon.try_new_with_rng.closure_2.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError
-              rand_coreTryCryptoRngInst) r6 ()
-          let cf4 ← (BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) core.result.Result.Insts.CoreOpsTry_traitTry.branch) r7
+              (beaconcrypt_constructor.beacon.Beacon.try_new_with_rng.closure_3.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError
+              rand_coreTryCryptoRngInst) r7 ()
+          let cf4 ← (BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) core.result.Result.Insts.CoreOpsTry_traitTry.branch) r8
           match cf4 with
           | core.ops.control_flow.ControlFlow.Continue val4 =>
-            let bf ←
-              (BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) beaconcrypt_core.pqxdh.BeaconFresh.new)
-                { identity_public_key := a, identity_key_id := server_kid }
-            let (r8, rng3) ←
-              (BeaconcryptCore.Refinement.AdapterPublicWrapperRequestMonad.CryptoOperations.kxGenerate (m := m))
+            let (r9, rng3) ←
+              (BeaconcryptCore.Refinement.AdapterBeaconConstructorRequestMonad.Operations.kemGenerate (m := m))
                 rand_coreTryCryptoRngInst rng2
-            let r9 ←
+            let r10 ←
               (BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) core.result.Result.map_err)
-                (beaconcrypt_constructor.beacon.Beacon.try_new_with_rng.closure_3.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError
-                rand_coreTryCryptoRngInst) r8 ()
-            let cf5 ← (BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) core.result.Result.Insts.CoreOpsTry_traitTry.branch) r9
+                (beaconcrypt_constructor.beacon.Beacon.try_new_with_rng.closure_4.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError
+                rand_coreTryCryptoRngInst) r9 ()
+            let cf5 ← (BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) core.result.Result.Insts.CoreOpsTry_traitTry.branch) r10
             match cf5 with
             | core.ops.control_flow.ControlFlow.Continue val5 =>
-              let (r10, rng4) ←
-                (BeaconcryptCore.Refinement.AdapterBeaconConstructorRequestMonad.Operations.kemGenerate (m := m))
-                  rand_coreTryCryptoRngInst rng3
-              let r11 ←
-                (BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) core.result.Result.map_err)
-                  (beaconcrypt_constructor.beacon.Beacon.try_new_with_rng.closure_4.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError
-                  rand_coreTryCryptoRngInst) r10 ()
-              let cf6 ←
-                (BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) core.result.Result.Insts.CoreOpsTry_traitTry.branch) r11
-              match cf6 with
-              | core.ops.control_flow.ControlFlow.Continue val6 =>
-                pure (core.result.Result.Ok
-                  {
-                    identity_key := val4,
-                    identity_key_kid := server_kid,
-                    state := (beacon.BeaconState.Fresh bf val5 val6),
-                    server_id := val,
-                    authentication := { identity := val2, server_pin := val3 }
-                  }, rng4)
-              | core.ops.control_flow.ControlFlow.Break residual =>
-                let r12 ←
-                  (fun T conversion residual => BeaconcryptCore.Refinement.AdapterRecordRequestMonad.liftRust (m := m) (core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual T conversion residual))
-                    beacon.Beacon (core.convert.From.Blanket error.KeyGenError)
-                    residual
-                pure (r12, rng4)
+              pure (core.result.Result.Ok
+                {
+                  identity_key := val3,
+                  identity_key_kid := server_kid,
+                  state := (beacon.BeaconState.Fresh bf val4 val5),
+                  server_id := val,
+                  authentication := { server_pin := val2 }
+                }, rng3)
             | core.ops.control_flow.ControlFlow.Break residual =>
-              let r10 ←
+              let r11 ←
                 (fun T conversion residual => BeaconcryptCore.Refinement.AdapterRecordRequestMonad.liftRust (m := m) (core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual T conversion residual))
                   beacon.Beacon (core.convert.From.Blanket error.KeyGenError)
                   residual
-              pure (r10, rng3)
+              pure (r11, rng3)
           | core.ops.control_flow.ControlFlow.Break residual =>
-            let r8 ←
+            let r9 ←
               (fun T conversion residual => BeaconcryptCore.Refinement.AdapterRecordRequestMonad.liftRust (m := m) (core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual T conversion residual))
                 beacon.Beacon (core.convert.From.Blanket error.KeyGenError)
                 residual
-            pure (r8, rng2)
+            pure (r9, rng2)
         | core.ops.control_flow.ControlFlow.Break residual =>
-          let r6 ←
+          let r7 ←
             (fun T conversion residual => BeaconcryptCore.Refinement.AdapterRecordRequestMonad.liftRust (m := m) (core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual T conversion residual))
               beacon.Beacon (core.convert.From.Blanket error.KeyGenError)
               residual
-          pure (r6, rng1)
+          pure (r7, rng1)
       | core.ops.control_flow.ControlFlow.Break residual =>
         let r5 ←
           (fun T conversion residual => BeaconcryptCore.Refinement.AdapterRecordRequestMonad.liftRust (m := m) (core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual T conversion residual))
             beacon.Beacon (core.convert.From.Blanket error.KeyGenError)
             residual
-        pure (r5, rng1)
+        pure (r5, rng)
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r4 ←
         (fun T conversion residual => BeaconcryptCore.Refinement.AdapterRecordRequestMonad.liftRust (m := m) (core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual T conversion residual))
@@ -160,7 +149,7 @@ def beacon.Beacon.try_new_with_rng
 
 
 /-- [beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::try_new]:
-    Source: 'beaconcrypt/src/beacon.rs', lines 88:4-99:5
+    Source: 'beaconcrypt/src/beacon.rs', lines 87:4-98:5
     Visibility: public -/
 def beacon.Beacon.try_new
   (server_kid : Std.U64) (server_id_pk : Slice Std.U8)
@@ -175,7 +164,7 @@ def beacon.Beacon.try_new
 
 
 /-- [beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::new]:
-    Source: 'beaconcrypt/src/beacon.rs', lines 81:4-84:5
+    Source: 'beaconcrypt/src/beacon.rs', lines 80:4-83:5
     Visibility: public -/
 def beacon.Beacon.new
   (server_kid : Std.U64) (server_id_pk : Slice Std.U8)

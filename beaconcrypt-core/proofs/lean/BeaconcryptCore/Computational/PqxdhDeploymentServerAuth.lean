@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthChain
 
-/-! Theorem CE-A1, the initial-response origin of every Beacon in the common deployment experiment (CE-8, plan section 10). `reduction c` is `R_c`: the frozen compiled program under the embedding at creation index `c`, journaling its own ServerAuth queries; `serverAuthAdversary c` discards its return value. `a1_le_ordered` bounds the probability of CE-A1 at `c` (`A1At`) by the probability of the common authentication failure of `R_c` in the ordered Server-authentication game: CE-COMPILE (`compile_full_game`), the constructor's initialization gate and generated seed against the game's seed draw (`generated_order`), and `PqxdhDeploymentServerAuthChain.seed_bound` for every seed. `a1_bound` adds the existing complete Server-authentication bound with its reduction bills (`common_authentication_with_resources`) for `R_c`, with `R_c`'s query caps (`ReductionCaps`) as a premise. For a budget-respecting adversary, CE-A1 can occur only below `qCreate` (`a1_range`), so the exact union over the `qCreate` creation indices gives `a1_sum`. `A1NoFailure` is CE-A1 on runs with `NoBundleFailure_c` (option (b) of plan section 19), which implies `A1At` (`noFailure_a1At`). The matching relation is public: a session matches owner `c` when an accept returned it on bytes whose raw candidate the source attached verification accepts with the identity key and key tuple of `c`'s first published bundle, and a build of it returned the decoded record that `c` accepted, both before the acceptance. It is weaker than the plan's eleven-field common session: the Server-authentication common event implies it on the same run (`PqxdhDeploymentServerAuthChain.root_failure`), not conversely; in particular it states no root agreement and nothing about the KEM ciphertext or the ephemeral key of the accepted response. `PinnedMatchAt` adds the Server-identity conjunct of CE-5's `PqxdhDeploymentTranscript.Linked`: the matching build response reads back, with the Phase 2 reader, `c`'s pin as the Server identity. `A1NoPinnedMatch` is `A1NoFailure` with this matching; it contains `A1NoFailure` on every outcome (`noFailure_noPinnedMatch`) and coincides with it on every outcome of the experiment (`noPinnedMatch_noFailure`, from `build_pin`: every successful build response of the experiment carries the constructed Server's identity key). `ce_a1` is stated for `A1NoPinnedMatch`, so the matching of the headline is pinned to the Server identity. The KEM-ciphertext conjunct of `Linked` is not part of the matching, and by an informal argument (a negative control, not a Lean statement) it is not provable at the CE-A1 bound: no term of the Server-authentication bound is a KEM-security advantage, and with a KEM whose decapsulation ignores the ciphertext, an adversary that relays a session's build response to a Beacon with only the ciphertext replaced makes the Beacon derive the same key and accept, so the session still matches it with the pin while no build response carries the Beacon's ciphertext. By plan section 30 the ciphertext link moves to the Beacon-side symbolic-eligibility corollary of CE-12, which is planned to charge its own term `ε_ct`, planned to be bounded by a per-pair IND-CCA reduction (an existing assumption) plus a statistical term for the ideal world; that term is stated on root inputs, so CE-12 must also connect the public pinned match to ServerAuth's ghost `Partner`. CE-5's `designate` keeps its ciphertext-equality conjunct, so CE-9 is unaffected. The injectivity of the matching across Beacons is a separate statement (`PqxdhDeploymentServerAuthInjectiveGame`). -/
+/-! Theorem CE-A1, the initial-response origin of every Beacon in the common deployment experiment (CE-8, plan section 10). `reduction c` is `R_c`: the frozen compiled program under the embedding at creation index `c`, journaling its own ServerAuth queries; `serverAuthAdversary c` discards its return value. `a1_le_ordered` bounds the probability of CE-A1 at `c` (`A1At`) by the probability of the common authentication failure of `R_c` in the ordered Server-authentication game: CE-COMPILE (`compile_full_game`), the constructor's initialization gate and generated seed against the game's seed draw (`generated_order`), and `PqxdhDeploymentServerAuthChain.seed_bound` for every seed. `a1_bound` adds the existing complete Server-authentication bound, which ends with the proved transcript-hash collision term (`serverAuthBound_eq`), with its reduction bills (`common_authentication_with_resources`) for `R_c`, with `R_c`'s query caps (`ReductionCaps`) as a premise. For a budget-respecting adversary, CE-A1 can occur only below `qCreate` (`a1_range`), so the exact union over the `qCreate` creation indices gives `a1_sum`. `A1NoFailure` is CE-A1 on runs with `NoBundleFailure_c` (option (b) of plan section 19), which implies `A1At` (`noFailure_a1At`). The matching relation is public: a session matches owner `c` when an accept returned it on bytes whose raw candidate the source attached verification accepts with the identity key and key tuple of `c`'s first published bundle, and a build of it returned the decoded record that `c` accepted, both before the acceptance. It is weaker than the plan's eleven-field common session: the Server-authentication common event implies it on the same run (`PqxdhDeploymentServerAuthChain.root_failure`), not conversely; in particular it states no root agreement and nothing about the KEM ciphertext or the ephemeral key of the accepted response. `PinnedMatchAt` adds the Server-identity conjunct of CE-5's `PqxdhDeploymentTranscript.Linked`: the matching build response reads back, with the Phase 2 reader, `c`'s pin as the Server identity. `A1NoPinnedMatch` is `A1NoFailure` with this matching; it contains `A1NoFailure` on every outcome (`noFailure_noPinnedMatch`) and coincides with it on every outcome of the experiment (`noPinnedMatch_noFailure`, from `build_pin`: every successful build response of the experiment carries the constructed Server's identity key). `ce_a1` is stated for `A1NoPinnedMatch`, so the matching of the headline is pinned to the Server identity. The KEM-ciphertext conjunct of `Linked` is not part of the matching and is not claimed here. An earlier informal negative control (not a Lean statement) relayed a session's build response to a Beacon with only the ciphertext replaced; it no longer applies, because the ciphertext is part of the hashed registration transcript, so the replacement changes the Beacon's associated data. No statement of this module uses that observation. By plan section 30 the ciphertext link moves to the Beacon-side symbolic-eligibility corollary of CE-12, which is planned to charge its own term `ε_ct`, planned to be bounded by a per-pair IND-CCA reduction (an existing assumption) plus a statistical term for the ideal world; that term is stated on root inputs, so CE-12 must also connect the public pinned match to ServerAuth's ghost `Partner`. CE-5's `designate` keeps its ciphertext-equality conjunct, so CE-9 is unaffected. The injectivity of the matching across Beacons is a separate statement (`PqxdhDeploymentServerAuthInjectiveGame`). -/
 open OracleComp OracleSpec CoreModels Aeneas ENNReal
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
@@ -98,7 +98,7 @@ theorem a1_le_ordered (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
       refine prEvent_congr_of_support _ _ _ fun result _ => ?_
       exact a1At_merge setup codec c _ result _
 
-/-- The ServerAuth bound of `R_c`: the Gap-DH advantage of the scanning extractor, the accept-collision term, the record and schedule losses of every record coordinate and the joint-use signature advantage, each of the reductions constructed from `R_c`. -/
+/-- The ServerAuth bound of `R_c`: the Gap-DH advantage of the scanning extractor, the accept-collision term, the record and schedule losses of every record coordinate, the joint-use signature advantage, each of the reductions constructed from `R_c`, and the transcript-hash collision term `PqxdhServerAuthTranscriptCollision.term Q qHash` (the proved birthday bound `C(qHash + 2Q + 2, 2)/2^512` on the BLAKE2b cache of the Server-authentication run, which now computes each session's associated data from the hash of its registration transcript). -/
 noncomputable def serverAuthBound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (caps : KemCaps) (adversary : Adversary) (qCoin Q qH qHash : Nat) (fallback : ModifiedNonceAeadForgery)
     (signatureFallback : PqxdhJointIdentity.Forgery) : ℝ :=
@@ -110,7 +110,25 @@ noncomputable def serverAuthBound (setup : Setup baseSpec KemSK) (codec : Codec 
     PqxdhServerAuthObservedSchedule.scheduleLoss setup codec checks adversary false Q j
       (PqxdhServerAuthSessionRecord.observers codec Q j)) +
   (PqxdhJointIdentity.advantage setup.joint
-    (PqxdhServerAuthJointIdentityEuf.reduction setup codec checks adversary signatureFallback)).toReal
+    (PqxdhServerAuthJointIdentityEuf.reduction setup codec checks adversary signatureFallback)).toReal +
+  PqxdhServerAuthTranscriptCollision.term Q qHash
+
+/-- The named bound unfolded: it contains the transcript-hash collision term `PqxdhServerAuthTranscriptCollision.term Q qHash` as its last summand. -/
+theorem serverAuthBound_eq (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (caps : KemCaps) (adversary : Adversary) (qCoin Q qH qHash : Nat) (fallback : ModifiedNonceAeadForgery)
+    (signatureFallback : PqxdhJointIdentity.Forgery) :
+    serverAuthBound setup codec checks caps adversary qCoin Q qH qHash fallback signatureFallback =
+      (serverGapDhAdvantage setup.source.crypto setup.joint setup.secretOfSeed setup.wiring
+        (PqxdhJointGapDh.extractor (scanClient setup codec checks adversary qH))).toReal +
+      (Q.choose 2 : ℝ) * 64 / (2 ^ 256 : ℝ) +
+      ∑ j : Fin (Q + 1), (PqxdhServerAuthPublicationLoss.recordLoss setup codec checks adversary Q j fallback
+        (entryReductionBudget caps qCoin Q qHash qH + 76) +
+        PqxdhServerAuthObservedSchedule.scheduleLoss setup codec checks adversary false Q j
+          (PqxdhServerAuthSessionRecord.observers codec Q j)) +
+      (PqxdhJointIdentity.advantage setup.joint
+        (PqxdhServerAuthJointIdentityEuf.reduction setup codec checks adversary signatureFallback)).toReal +
+      PqxdhServerAuthTranscriptCollision.term Q qHash :=
+  rfl
 
 /-- The query caps of `R_c` that the Server-authentication theorem charges: accepts, random-oracle HMACs, BLAKE2b queries, coins, all queries and finishes. -/
 structure ReductionCaps (work : AuthInput → OracleComp ServerAuthSpec X) (qCoin Q qH qHash qTotal qFinish : Nat) : Prop where
@@ -549,6 +567,12 @@ end BeaconcryptCore.Computational.PqxdhDeploymentServerAuth
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuth.a1_le_ordered
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuth.serverAuthBound_eq' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuth.serverAuthBound_eq
 
 /-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuth.a1_bound' depends on axioms: [propext,
  Classical.choice,

@@ -25,12 +25,12 @@ theorem born_owned (joint : PqxdhJointIdentity.Primitives) (before : State n Kem
 /-- Every supported successful identity/prekey source suffix returns its actually generated source-owned credential. -/
 theorem suffix_owned (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
-    (credentials : RegistrationNativeMldsa.Credential source) (pin : session.ServerAuthenticationPin)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
+    (pin : session.ServerAuthenticationPin)
     (before after : State n KemSK) (prepared : RegistrationNativeIdentityFrontend.Prepared source)
     (supported : (.ok (some prepared), after) ∈ support
       ((simulateQ (implementation (mlSource := source) setup checks representation created)
-        (RegistrationNativeIdentitySourceSuffix.exposed credentials pin)).run before)) :
+        (RegistrationNativeIdentitySourceSuffix.exposed (source := source) pin)).run before)) :
     ∃ value, RegistrationNativeIdentityCallbacks.Owns setup.joint after.identities prepared.identity value := by
   simp only [RegistrationNativeIdentitySourceSuffix.exposed, simulateQ_bind, StateT.run_bind] at supported
   rw [RegistrationNativeIdentitySourceBirth.create_source, bind_map_left, mem_support_bind_iff] at supported

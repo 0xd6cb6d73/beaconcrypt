@@ -57,7 +57,7 @@ noncomputable def complete {R : Type}
     (previousLocal : LocalOperations (RustT SourceM))
     (previousChildren : ChildOperations (RustT SourceM))
     (view : MaterialView mlSource KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (current : Native×Platform)
     (before : RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views created credential current)
     (token : beaconcrypt_public_wrapper.server.RegistrationOutput) (data : core.option.Option (Slice U8))
@@ -89,7 +89,7 @@ noncomputable def complete {R : Type}
       (RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views created credential)
       (RegistrationNativePlatformPackedState.pack
         (RegistrationNativePlatformExperiment.server
-          (RegistrationNativePlatformCompletionSdk.complete (RegistrationNativePlatformSourceBuild.pin coins)
+          (RegistrationNativePlatformCompletionSdk.complete (RegistrationNativePlatformCompletionSdk.nativeAdHash coins) (RegistrationNativePlatformSourceBuild.pin coins)
             (admitted <$>StateT.lift allocated) (RegistrationNativePlatformCompletionSdk.nativePresent coins)
             (RegistrationNativePlatformExtractedSdkServer.Build.sourceFinish coins setup codec keyView failure
               (RegistrationNativePlatformExtractedSdkBuildNormal.allocation allocate)

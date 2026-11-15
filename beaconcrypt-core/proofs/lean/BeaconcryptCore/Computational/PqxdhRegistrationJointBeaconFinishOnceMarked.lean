@@ -54,12 +54,13 @@ theorem collect_shared (handler : QueryImpl (PqxdhBeaconPhase2Shared.Spec I D K 
   exact replies _ _ (by assumption) _ rfl
 
 /-- The handle of a prepared root is a reply of the decapsulation request for the owner's KEM handle, for every interpreter. -/
-theorem prepare_shared (handler : QueryImpl (PqxdhBeaconPhase2Shared.Spec I D K X Response Shared) (OracleComp spec))
+theorem prepare_shared (binding : beaconcrypt_core.session.CompletedRegistrationBinding)
+    (handler : QueryImpl (PqxdhBeaconPhase2Shared.Spec I D K X Response Shared) (OracleComp spec))
     (good : Shared → Prop) (control : beaconcrypt_core.pqxdh.BeaconInitSent) (identity : I) (prekey oneTime : D) (kem : K)
     (raw : Pqxdh.Bytes)
     (replies : ∀ ciphertext, ∀ reply ∈ support (handler (.decapsulate ciphertext kem)), ∀ shared, reply = some shared →
       good shared) :
-    ∀ result ∈ support (simulateQ handler (PqxdhBeaconPhase2Shared.prepare control identity prekey oneTime kem raw)),
+    ∀ result ∈ support (simulateQ handler (PqxdhBeaconPhase2Shared.prepare (completedBinding := binding) control identity prekey oneTime kem raw)),
       ∀ prepared, result = some prepared → good prepared.root.shared := by
   intro result member prepared found
   unfold PqxdhBeaconPhase2Shared.prepare at member
@@ -75,7 +76,7 @@ theorem prepare_shared (handler : QueryImpl (PqxdhBeaconPhase2Shared.Spec I D K 
         mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at member
       obtain ⟨_, -, member⟩ := member
       rw [member] at found
-      cases admitted : PqxdhBeaconPhase2Shared.admitted control inputs with
+      cases admitted : PqxdhBeaconPhase2Shared.admitted (completedBinding := binding) control inputs with
       | none => simp [admitted] at found
       | some metadata =>
           simp only [admitted, Option.map_some, Option.some.injEq] at found
@@ -121,8 +122,9 @@ theorem skelImpl_marked (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
 
 /-- A grouped finish of an owner makes a request with the challenge marker only if the owner is in phase `initSent` with the selected KEM creation index, and then at most one. -/
 theorem groupedOwner_marked (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (selected : Nat)
-    (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (raw : Pqxdh.Bytes) (state : PqxdhRegistrationJointBundle.Owner) :
-    (simulateQ (groupedCompiler setup codec selected challenge) (groupedOwner (Response := Response) raw state)).IsQueryBoundP
+    (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (binding : beaconcrypt_core.session.CompletedRegistrationBinding)
+    (raw : Pqxdh.Bytes) (state : PqxdhRegistrationJointBundle.Owner) :
+    (simulateQ (groupedCompiler setup codec selected challenge) (groupedOwner (Response := Response) binding raw state)).IsQueryBoundP
       (fun query => markedGroup (KemSK := KemSK) query = true) (if awaits selected state then 1 else 0) := by
   have pool : ∀ query, (groupedCompiler (KemSK := KemSK) setup codec selected challenge (.inl query)).IsQueryBoundP
       (fun query => markedGroup (KemSK := KemSK) query = true) 0 := fun query =>
@@ -131,7 +133,7 @@ theorem groupedOwner_marked (setup : Setup baseSpec KemSK) (codec : Codec Reader
   by_cases holds : awaits selected state = true
   · simp only [holds, ite_true]
     refine IsQueryBoundP.simulateQ_of_step
-      (PqxdhRegistrationJointKemRomSplit.groupedOwner_bound raw state) (fun query owner => ?_) (fun query owner => ?_)
+      (PqxdhRegistrationJointKemRomSplit.groupedOwner_bound binding raw state) (fun query owner => ?_) (fun query owner => ?_)
     · rcases query with query | query
       · simp [PqxdhRegistrationJointKemRomSplit.ownerGroup] at owner
       · exact query_one _ _
@@ -156,7 +158,7 @@ theorem groupedOwner_marked (setup : Setup baseSpec KemSK) (codec : Codec Reader
         | none => trivial
         | some prepared =>
             rw [← QueryImpl.simulateQ_compose] at reached
-            have known := prepare_shared _ (fun shared => shared ≠ .challenge) control state.beacon.identity prekey oneTime
+            have known := prepare_shared binding _ (fun shared => shared ≠ .challenge) control state.beacon.identity prekey oneTime
               kem raw (fun ciphertext reply member shared found => by
                 rw [QueryImpl.apply_compose, simulateQ_spec_query] at member
                 have inner := simulate_support _ _ member
@@ -179,14 +181,31 @@ theorem groupedOwner_marked (setup : Setup baseSpec KemSK) (codec : Codec Reader
             | known secret => simp [markedGroup, marker]
     · trivial
 
+/-- The grouped hashed owner finish (`groupedHashed`) makes a request with the challenge marker only if the owner is in phase `initSent` with the selected KEM creation index, and then at most one: its transcript hash is a pool request. -/
+theorem groupedHashed_marked (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (selected : Nat)
+    (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (retained : Option PqxdhEd25519EufCma.Phase1Candidate)
+    (raw : Pqxdh.Bytes) (state : PqxdhRegistrationJointBundle.Owner) :
+    (groupedHashed setup codec selected challenge retained raw state).IsQueryBoundP
+      (fun query => markedGroup (KemSK := KemSK) (Response := Response) query = true)
+      (if awaits selected state then 1 else 0) := by
+  unfold groupedHashed
+  split
+  · split
+    · rw [isQueryBoundP_query_bind_iff]
+      refine ⟨Or.inl (by simp [markedGroup]), fun digest => ?_⟩
+      simp only [markedGroup, Bool.false_eq_true, ite_false]
+      exact groupedOwner_marked setup codec selected challenge _ raw state
+    · exact isQueryBoundP_pure _ _ _
+  · exact isQueryBoundP_pure _ _ _
+
 /-- Every source request of the grouped client makes a request with the challenge marker only if it is a Beacon finish of an owner in phase `initSent` with the selected KEM creation index, and then at most one. -/
 theorem groupedClient_marked (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (selected : Nat)
     (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (query : (PqxdhRegistrationJointRevealSchedule.Spec KemSK).Domain)
-    (owners : List EncodedEntry) :
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) :
     ((groupedClient setup codec selected challenge query).run owners).IsQueryBoundP
       (fun query => markedGroup (KemSK := KemSK) (Response := Response) query = true)
       (match FinishAt query with
-        | some request => finishMark selected owners request.1
+        | some request => finishMark selected owners.1 request.1
         | none => 0) := by
   have lifted : ∀ {α : Type} (work : PqxdhRegistrationJointServiceSchedule.Client KemSK Response α),
       ((liftGrouped work).run owners).IsQueryBoundP
@@ -198,12 +217,12 @@ theorem groupedClient_marked (setup : Setup baseSpec KemSK) (codec : Codec Reade
   · cases request with
     | finish address raw =>
         simp only [groupedClient, groupedFinish, StateT.run, FinishAt, finishMark]
-        cases found : owners[address]? with
+        cases found : owners.1[address]? with
         | none => trivial
         | some entry =>
             simp only []
             rw [isQueryBoundP_map_iff]
-            exact groupedOwner_marked setup codec selected challenge raw entry.2.2
+            exact groupedHashed_marked setup codec selected challenge _ raw entry.2.2
     | _ => exact lifted _
   · exact lifted _
 
@@ -240,3 +259,8 @@ end BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconFinishOnce
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconFinishOnce.groupedClient_marked
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconFinishOnce.groupedHashed_marked' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconFinishOnce.groupedHashed_marked

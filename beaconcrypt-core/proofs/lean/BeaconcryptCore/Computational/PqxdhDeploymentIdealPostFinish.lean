@@ -8,8 +8,8 @@ The middle source handler answers a finish that is not owner k's challenge finis
 
 - Naturality: the opaque preparation and collection (`PqxdhBeaconPhase2Shared.prepare`, `collect`) commute with relabelling the handle type (`MapCalls`, `collect_map`, `admitted_map`, `prepare_map`), and decapsulate only with the owner's own key (`collect_free`, `prepare_free`).
 - Grouping: `groupH` interprets the grouped owner's interface by an interpretation of the opaque owner's interface, and `owner_grouped` equates the opaque owner with the grouped owner under it.
-- Known handles: item 2's marked preparation answers with known handles away from the selected challenge decapsulation (`preparationKnown`, `prepSecret`, `targetPrep`, `markedPrep_known`, `markedPrep_bounds`, `known_calls`); `handlesKnown` and `known_fullCalls` give the full callback conditions of item 2's `PqxdhBeaconPhase2Shared.owner_realization` for the source's native finish callbacks; `tail_known` is the grouped tail with known handles; `middle_finish` is the annotated source finish at a present owner as the grouped owner under `groupH handlesKnown`, from item 2's ownership invariant.
-- The stack: `stackRun` (with `stackRun_pure`, `stackRun_bind`), `skel_groupedPool`, `lowerEC_run`, `stack_prep` (a preparation without the selected challenge decapsulation, from a prefix pool), `splitT_ctx`, `splitT_group_known`, `stack_known` and `owner_stack`: a grouped owner that is not waiting for Phase 2 with the selected KEM key, through item 2's layers, is the grouped owner under `groupH handlesKnown` on the source state, projected to item 2's view.
+- Known handles: item 2's marked preparation answers with known handles away from the selected challenge decapsulation (`preparationKnown`, `prepSecret`, `targetPrep`, `markedPrep_known`, `markedPrep_bounds`, `known_calls`); `handlesKnown` and `known_fullCalls` give the full callback conditions of item 2's `PqxdhBeaconPhase2Shared.owner_realization` for the source's native finish callbacks; `tail_known` is the grouped tail with known handles; `hashedKnown` is the hashed owner finish (the transcript hash on the shared BLAKE2b cache, then the grouped owner under `groupH handlesKnown` at the digest's completed binding); `middle_finish` is the annotated source finish at a present owner as `hashedKnown` on its retained bundle, from item 2's ownership invariant.
+- The stack: `stackRun` (with `stackRun_pure`, `stackRun_bind`), `skel_groupedPool`, `lowerEC_run`, `stack_prep` (a preparation without the selected challenge decapsulation, from a prefix pool), `splitT_ctx`, `splitT_group_known`, `stack_known` and `owner_stack`: a grouped owner that is not waiting for Phase 2 with the selected KEM key, through item 2's layers, is the grouped owner under `groupH handlesKnown` on the source state, projected to item 2's view; `splitT_hash`, `stack_hash` and `hashed_stack` add the transcript hash request of the grouped hashed owner (`PqxdhRegistrationJointKemPostSkeleton.groupedHashed`).
 - The step: `upperLayer_finish`, `upperLayer_finish_none` and `step_finish`, with hypotheses that the finish is not owner k's challenge finish, item 2's ownership invariant, a prefix KEM pool, and that the addressed owner, if its KEM index is the selected one, is not in the initSent phase (not waiting for Phase 2). The last hypothesis is about the addressed owner only; other owners, owner k included, may be in any phase.
 
 These are program equalities. They charge nothing and make no security claim.
@@ -81,18 +81,20 @@ theorem collect_map {m : Type → Type} [Monad m] [LawfulMonad m] (f : S₁ → 
   all_goals simp only [Option.elim, simulateQ_pure, map_pure, Option.map]
 
 /-- Admission does not read the decapsulation handle. -/
-theorem admitted_map (f : S₁ → S₂) (control : beaconcrypt_core.pqxdh.BeaconInitSent) (inputs : Inputs Response S₁) :
-    admitted control (mapInputs f inputs) = admitted control inputs := by
+theorem admitted_map (f : S₁ → S₂) (binding : beaconcrypt_core.session.CompletedRegistrationBinding)
+    (control : beaconcrypt_core.pqxdh.BeaconInitSent) (inputs : Inputs Response S₁) :
+    admitted binding control (mapInputs f inputs) = admitted binding control inputs := by
   simp only [admitted, mapInputs, mapSecrets, PqxdhBeaconPhase2Shared.nonzero]
   congr
 
 /-- The opaque preparation is natural in the handle type. -/
 theorem prepare_map {m : Type → Type} [Monad m] [LawfulMonad m] (f : S₁ → S₂)
     (source : QueryImpl (Spec I D K X Response S₁) m) (target : QueryImpl (Spec I D K X Response S₂) m)
-    (calls : MapCalls f source target) (control : beaconcrypt_core.pqxdh.BeaconInitSent) (identity : I)
+    (calls : MapCalls f source target) (binding : beaconcrypt_core.session.CompletedRegistrationBinding)
+    (control : beaconcrypt_core.pqxdh.BeaconInitSent) (identity : I)
     (prekey oneTime : D) (kem : K) (raw : PqxdhBeaconPhase2Preparation.Bytes) :
-    simulateQ target (prepare control identity prekey oneTime kem raw) =
-      Option.map (mapPrepared f) <$> simulateQ source (prepare control identity prekey oneTime kem raw) := by
+    simulateQ target (prepare binding control identity prekey oneTime kem raw) =
+      Option.map (mapPrepared f) <$> simulateQ source (prepare binding control identity prekey oneTime kem raw) := by
   simp only [prepare, simulateQ_bind, collect_map f source target calls, bind_map_left, map_bind]
   refine bind_congr fun inputs => ?_
   rcases inputs with _ | inputs
@@ -101,7 +103,7 @@ theorem prepare_map {m : Type → Type} [Monad m] [LawfulMonad m] (f : S₁ → 
       admitted_map]
     rw [show (mapInputs f inputs).secrets = mapSecrets f inputs.secrets from rfl, calls.eraseShared]
     refine bind_congr fun _ => ?_
-    rcases admitted control inputs with _ | metadata
+    rcases admitted binding control inputs with _ | metadata
     · rfl
     · rfl
 
@@ -125,10 +127,10 @@ theorem collect_free {Shared : Type} (bad : Query I D K X Response Shared → Pr
 
 /-- The opaque preparation decapsulates only with the owner's KEM key. -/
 theorem prepare_free {Shared : Type} (bad : Query I D K X Response Shared → Prop) [DecidablePred bad]
-    (control : beaconcrypt_core.pqxdh.BeaconInitSent) (identity : I) (prekey oneTime : D) (kem : K)
+    (binding : beaconcrypt_core.session.CompletedRegistrationBinding) (control : beaconcrypt_core.pqxdh.BeaconInitSent) (identity : I) (prekey oneTime : D) (kem : K)
     (raw : PqxdhBeaconPhase2Preparation.Bytes)
     (shaped : ∀ query, bad query → ∃ ciphertext key, query = .decapsulate ciphertext key ∧ key ≠ kem) :
-    (prepare (Response := Response) (X := X) control identity prekey oneTime kem raw).IsQueryBoundP bad 0 := by
+    (prepare (Response := Response) (X := X) binding control identity prekey oneTime kem raw).IsQueryBoundP bad 0 := by
   unfold prepare
   rw [show (0 : ℕ) = 0 + 0 from rfl]
   refine isQueryBoundP_bind (collect_free (Response := Response) (X := X) bad identity prekey oneTime kem raw shaped)
@@ -159,10 +161,10 @@ noncomputable def groupH (handles : QueryImpl (PqxdhBeaconPhase2Shared.FullSpec 
 
 /-- The opaque owner and the grouped owner have the same interpretation. -/
 theorem owner_grouped (handles : QueryImpl (PqxdhBeaconPhase2Shared.FullSpec Identity PqxdhJointGapDh.ScalarBytes Key ℕ
-    Response Shared) m) (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
+    Response Shared) m) (decode : RawCtxReceive.FrameDecoder) (binding : beaconcrypt_core.session.CompletedRegistrationBinding) (raw : Pqxdh.Bytes)
     (state : PqxdhRegistrationJointBundle.Owner) :
-    simulateQ handles (PqxdhBeaconPhase2Shared.owner decode raw state) =
-      simulateQ (groupH handles decode) (groupedOwner raw state) := by
+    simulateQ handles (PqxdhBeaconPhase2Shared.owner binding decode raw state) =
+      simulateQ (groupH handles decode) (groupedOwner binding raw state) := by
   unfold PqxdhBeaconPhase2Shared.owner groupedOwner
   rcases phase : state.beacon.phase with _ | _ | ⟨control, prekey, oneTime, kem⟩ | _ | _
   all_goals try simp only [simulateQ_pure]
@@ -438,7 +440,22 @@ theorem tail_known (pending : PqxdhRegistrationJointKemPostSkeleton.Pending Resp
         (PqxdhRegistrationJointKemPostSkeleton.tailNative setup codec query)) (fun _ => rfl) (fun _ => rfl)
       (fun _ => rfl), simulate_nativeCtx]
 
-/-- Item 2's annotated source finish of a present owner, encoded: the grouped owner on the encoded owner under the known-handle callbacks, from the source's private pools and native state (through item 2's `PqxdhRegistrationJointServiceSchedule.finish_source`, `PqxdhRegistrationJointFinishCompiler.program_interpreted`, `PqxdhBeaconPhase2Shared.owner_realization` and `owner_grouped`). -/
+/-- The hashed owner finish on the source's private pools and native state: an InitSent owner with a retained bundle and a decodable response hashes its transcript on the shared BLAKE2b cache, then runs the grouped owner under the known-handle callbacks at the completed binding of the digest; abort and inactive branches are those of `PqxdhRegistrationJointServiceSchedule.finishOwner`. -/
+noncomputable def hashedKnown (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationJointBundle.Owner) :
+    StateT (PqxdhRegistrationJointFinish.State KemSK) ProbComp (Option Pqxdh.Bytes × PqxdhRegistrationJointBundle.Owner) :=
+  match owner.beacon.phase with
+  | .initSent control _ _ _ =>
+    match retained, PqxdhServerAuthExperiment.responseOf codec raw with
+    | some init, some response => do
+        let digest ← onNative (PqxdhServerAuthNative.nativeHash
+          (PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf init) response))
+        simulateQ (groupH (handlesKnown setup codec candidate) codec.frameRead)
+          (PqxdhRegistrationJointKemPostSkeleton.groupedOwner (PqxdhTranscriptAd.completedOf control digest) raw owner)
+    | _, _ => pure (none, PqxdhBeaconPhase2Preparation.abort control owner)
+  | _ => pure (none, owner)
+
+/-- Item 2's annotated source finish of a present owner, encoded: the hashed owner finish under the known-handle callbacks on the encoded owner and its retained bundle, from the source's private pools and native state (through item 2's `PqxdhRegistrationJointServiceSchedule.finish_source`, `PqxdhRegistrationJointFinishCompiler.program_interpreted`, `PqxdhBeaconPhase2Shared.owner_realization` and `owner_grouped`, at the completed binding of the transcript digest). -/
 theorem middle_finish (checks : Checks) (seed : PqxdhJointIdentity.IdentitySeed) (address : ℕ) (raw : Pqxdh.Bytes)
     (state : PqxdhRegistrationJointSchedule.State KemSK) (owned : PqxdhRegistrationJointSchedule.Invariant state)
     (entry : PqxdhRegistrationJointOwnership.Entry KemSK) (found : state.owners[address]? = some entry) :
@@ -447,22 +464,34 @@ theorem middle_finish (checks : Checks) (seed : PqxdhJointIdentity.IdentitySeed)
       (fun result => (result.1.1, (⟨result.2.1, result.2.2, (state.owners.map
           (PqxdhRegistrationJointGeneratedFinish.encodeEntry setup)).set address
             ((PqxdhRegistrationJointGeneratedFinish.encodeEntry setup entry).1,
-              (PqxdhRegistrationJointGeneratedFinish.encodeEntry setup entry).2.1, result.1.2)⟩ :
+              (PqxdhRegistrationJointGeneratedFinish.encodeEntry setup entry).2.1, result.1.2), state.inits⟩ :
             PqxdhRegistrationJointGeneratedFinish.EncodedState KemSK))) <$>
-        (simulateQ (groupH (handlesKnown setup codec candidate) codec.frameRead)
-          (PqxdhRegistrationJointKemPostSkeleton.groupedOwner raw
-            (PqxdhRegistrationJointGeneratedFinish.encodeEntry setup entry).2.2)).run (state.pool, state.shared) := by
-  rw [← PqxdhRegistrationJointServiceSchedule.finish_source setup codec checks seed address raw state owned,
-    ← owner_grouped, ← PqxdhBeaconPhase2Shared.owner_realization _ _ _ (known_fullCalls setup codec candidate)]
+        (hashedKnown setup codec candidate (state.inits address) raw
+          (PqxdhRegistrationJointGeneratedFinish.encodeEntry setup entry).2.2).run (state.pool, state.shared) := by
+  have known : ∀ (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (owner : PqxdhRegistrationJointBundle.Owner),
+      simulateQ (PqxdhRegistrationJointServiceSchedule.impl setup codec checks seed)
+        (PqxdhRegistrationJointServiceSchedule.finishOwner setup codec retained raw owner) =
+        hashedKnown setup codec candidate retained raw owner := by
+    intro retained owner
+    unfold PqxdhRegistrationJointServiceSchedule.finishOwner hashedKnown
+    rcases owner.beacon.phase with _ | _ | ⟨control, prekey, oneTime, kem⟩ | _ | _
+    all_goals try simp only [simulateQ_pure]
+    rcases retained with _ | init <;> rcases PqxdhServerAuthExperiment.responseOf codec raw with _ | response
+    all_goals try simp only [simulateQ_pure]
+    simp only [simulateQ_bind, simulateQ_spec_query, PqxdhRegistrationJointServiceSchedule.finish_program,
+      PqxdhRegistrationJointFinishCompiler.program_interpreted]
+    refine bind_congr fun digest => ?_
+    rw [PqxdhBeaconPhase2Shared.owner_realization (calls := known_fullCalls setup codec candidate), owner_grouped]
+  rw [← PqxdhRegistrationJointServiceSchedule.finish_source setup codec checks seed address raw state owned]
   have encoded : (PqxdhRegistrationJointGeneratedFinish.encodeState setup state).owners[address]? =
       some (PqxdhRegistrationJointGeneratedFinish.encodeEntry setup entry) := by
     simp [PqxdhRegistrationJointGeneratedFinish.encodeState, List.getElem?_map, found]
   simp only [PqxdhRegistrationJointServiceSchedule.execute, StateT.run, PqxdhRegistrationJointServiceSchedule.finish,
-    encoded, simulateQ_map, PqxdhRegistrationJointServiceSchedule.finish_program,
-    PqxdhRegistrationJointFinishCompiler.program_interpreted]
-  change (fun result => _) <$> StateT.run ((fun result => _) <$> _) _ = (fun result => _) <$> StateT.run _ _
+    encoded, simulateQ_map, known]
+  change _ <$> StateT.run ((fun result => _) <$> hashedKnown setup codec candidate _ raw _) _ =
+    _ <$> StateT.run (hashedKnown setup codec candidate (state.inits address) raw _) _
   rw [StateT.run_map, Functor.map_map]
-  rfl
+  simp only [PqxdhRegistrationJointGeneratedFinish.encodeState]
 
 end Known
 
@@ -702,20 +731,21 @@ theorem stack_known (candidate : MlKemSharedSecret) (pending : PqxdhRegistration
   simp only [Prod.map, id_eq, eraseServiceC, PqxdhRegistrationJointKemObserverFree.eraseJoint_idem]
 
 /-- A grouped Beacon owner whose KEM key is not the selected one, through item 2's layers from a state that projects the source's private pools and native state, is the owner under the known-handle callbacks on the source's state, projected. -/
-theorem owner_stack (candidate : MlKemSharedSecret) (raw : Pqxdh.Bytes) (owner : PqxdhRegistrationJointBundle.Owner)
+theorem owner_stack (candidate : MlKemSharedSecret) (binding : beaconcrypt_core.session.CompletedRegistrationBinding)
+    (raw : Pqxdh.Bytes) (owner : PqxdhRegistrationJointBundle.Owner)
     (fresh : ∀ control prekey oneTime kem, owner.beacon.phase = .initSent control prekey oneTime kem → kem.2 ≠ t.kem.val)
     (joint : PqxdhDynamicIdentityPool.SourceState) (pool : PqxdhLiveKemBirth.Pool KemSK)
     (prefixed : PqxdhDeploymentIdealPoolSource.PoolPrefix (p.pool t) pool)
     (native : PqxdhServerAuthNative.NativeState KemSK) (marks : PqxdhRegistrationJointKemPostSkeleton.Marks Output)
     (slots : SlotState) :
-    stackRun setup codec checks t p created (PqxdhRegistrationJointKemPostSkeleton.groupedOwner raw owner)
+    stackRun setup codec checks t p created (PqxdhRegistrationJointKemPostSkeleton.groupedOwner binding raw owner)
         (PqxdhRegistrationJointKemPostSkeleton.clean native.2, marks)
         (eraseServiceC ((joint, PqxdhDeploymentIdealPoolSource.routerOf pool), (native.1.cache, slots))) =
       (fun result => (some (result.1, (PqxdhRegistrationJointKemPostSkeleton.clean result.2.2.2, marks)),
           eraseServiceC ((result.2.1.1, PqxdhDeploymentIdealPoolSource.routerOf result.2.1.2),
             (result.2.2.1.cache, slots)))) <$>
         (simulateQ (groupH (handlesKnown setup codec candidate) codec.frameRead)
-          (PqxdhRegistrationJointKemPostSkeleton.groupedOwner raw owner)).run ((joint, pool), native) := by
+          (PqxdhRegistrationJointKemPostSkeleton.groupedOwner binding raw owner)).run ((joint, pool), native) := by
   unfold PqxdhRegistrationJointKemPostSkeleton.groupedOwner
   rcases phase : owner.beacon.phase with _ | _ | ⟨control, prekey, oneTime, kem⟩ | _ | _
   all_goals dsimp only
@@ -724,9 +754,9 @@ theorem owner_stack (candidate : MlKemSharedSecret) (raw : Pqxdh.Bytes) (owner :
     simp only [simulateQ_pure, StateT.run_pure, map_pure]
   case initSent =>
     have notSelected := fresh control prekey oneTime kem phase
-    have free : (prepare control owner.beacon.identity prekey oneTime kem raw :
+    have free : (prepare binding control owner.beacon.identity prekey oneTime kem raw :
         OracleComp (PreSpec Response) _).IsQueryBoundP (targetPrep t.kem.val p.challenge) 0 :=
-      prepare_free _ control _ _ _ kem raw fun query hit => by
+      prepare_free _ binding control _ _ _ kem raw fun query hit => by
         cases query with
         | decapsulate ciphertext key => exact ⟨ciphertext, key, rfl, fun same => notSelected (same ▸ hit.1)⟩
         | _ => exact hit.elim
@@ -740,7 +770,8 @@ theorem owner_stack (candidate : MlKemSharedSecret) (raw : Pqxdh.Bytes) (owner :
       simp only [QueryImpl.apply_compose, simulateQ_spec_query]
       rfl
     rw [inl, PqxdhRegistrationJointFinish.pool_program,
-      prepare_map PqxdhPhase2DecapsulationRouting.Shared.known _ _ (known_calls setup codec) control owner.beacon.identity prekey oneTime kem raw,
+      prepare_map PqxdhPhase2DecapsulationRouting.Shared.known _ _ (known_calls setup codec) binding control
+        owner.beacon.identity prekey oneTime kem raw,
       StateT.run_map]
     simp only [Functor.map_map, bind_map_left, map_bind]
     refine bind_congr fun result => ?_
@@ -765,6 +796,91 @@ theorem owner_stack (candidate : MlKemSharedSecret) (raw : Pqxdh.Bytes) (owner :
       rw [stackRun_pure]
       simp only [simulateQ_pure, StateT.run_pure, map_pure]
       rfl
+
+/-- The native BLAKE2b request splits into the skeleton's game-state hash. -/
+theorem splitT_hash (bytes : Pqxdh.Bytes) :
+    PqxdhDeploymentIdealPostServer.SplitT (KemSK := KemSK) (PqxdhServerAuthNative.nativeHash bytes)
+      (PqxdhRegistrationJointKemPostSkeleton.gameStep (PqxdhRegistrationJointKemPostSkeleton.hashGame bytes)) := by
+  intro native marks slots
+  rw [PqxdhRegistrationJointKemPostSkeleton.gameStep_run, simulateQ_map, StateT.run_map,
+    PqxdhDeploymentIdealPostItem.tableLayer_lift]
+  simp only [PqxdhRegistrationJointKemPostSkeleton.hashGame, PqxdhServerAuthNative.nativeHash, StateT.run,
+    Functor.map_map]
+  rfl
+
+/-- The public transcript hash request of a grouped hashed owner through item 2's layers is the native BLAKE2b request on the native state, with the router state kept and the table counters erased. -/
+theorem stack_hash (bytes : Pqxdh.Bytes) (joint : PqxdhDynamicIdentityPool.SourceState)
+    (pool : PqxdhLiveKemBirth.Pool KemSK) (native : PqxdhServerAuthNative.NativeState KemSK)
+    (marks : PqxdhRegistrationJointKemPostSkeleton.Marks Output) (slots : SlotState) :
+    ((simulateQ (lowerEC setup t p) ((simulateQ (skelImpl setup codec checks created.server.server.metadata.identityIndex
+        created.publicIdentity (factoredServices setup codec checks))
+        ((PqxdhRegistrationJointKemPostSkeleton.GSpec KemSK Response).query (.inl (.inr (.hash bytes))))).run
+          (PqxdhRegistrationJointKemPostSkeleton.clean native.2, marks))).run).run
+        (eraseServiceC ((joint, PqxdhDeploymentIdealPoolSource.routerOf pool), (native.1.cache, slots))) =
+      (fun result => (some (result.1, (PqxdhRegistrationJointKemPostSkeleton.clean result.2.2, marks)),
+          eraseServiceC ((joint, PqxdhDeploymentIdealPoolSource.routerOf pool), (result.2.1.cache, slots)))) <$>
+        (PqxdhServerAuthNative.nativeHash bytes).run native := by
+  rw [simulateQ_spec_query,
+    show (skelImpl setup codec checks created.server.server.metadata.identityIndex created.publicIdentity
+      (factoredServices setup codec checks) (.inl (.inr (.hash bytes)))).run
+        (PqxdhRegistrationJointKemPostSkeleton.clean native.2, marks) =
+      simulateQ (fwd (T := TSpec Output) (coinLift (KemSK := KemSK)))
+        ((PqxdhRegistrationJointKemPostSkeleton.gameStep (V := Output)
+          (PqxdhRegistrationJointKemPostSkeleton.hashGame bytes)).run
+          (PqxdhRegistrationJointKemPostSkeleton.clean native.2, marks)) from rfl,
+    lowerEC_run,
+    show PqxdhDeploymentIdealPostSim.eraseService ((joint, PqxdhDeploymentIdealPoolSource.routerOf pool),
+      (native.1.cache, slots)) = (PqxdhRegistrationJointKemObserverFree.eraseJoint
+        (joint, PqxdhDeploymentIdealPoolSource.routerOf pool), (native.1.cache, slots)) from rfl,
+    PqxdhDeploymentIdealPostSteps.lowerE_native setup t p _ _ (by
+      simp only [PqxdhDeploymentIdealPostSim.eraseService, Prod.map, PqxdhRegistrationJointKemObserverFree.eraseJoint_idem,
+        id_eq]),
+    splitT_hash bytes native marks slots]
+  simp only [Functor.map_map]
+  refine congrArg (fun f => f <$> _) (funext fun result => ?_)
+  simp only [Prod.map, id_eq, eraseServiceC, PqxdhRegistrationJointKemObserverFree.eraseJoint_idem]
+
+/-- A grouped hashed owner whose KEM key is not the selected one, through item 2's layers from a state that projects the source's private pools and native state, is the hashed owner under the known-handle callbacks on the source's state (`hashedKnown`), projected: the transcript hash is the native BLAKE2b request (`stack_hash`), and the grouped owner at the digest's completed binding follows `owner_stack`. -/
+theorem hashed_stack (candidate : MlKemSharedSecret) (retained : Option PqxdhEd25519EufCma.Phase1Candidate)
+    (raw : Pqxdh.Bytes) (owner : PqxdhRegistrationJointBundle.Owner)
+    (fresh : ∀ control prekey oneTime kem, owner.beacon.phase = .initSent control prekey oneTime kem → kem.2 ≠ t.kem.val)
+    (joint : PqxdhDynamicIdentityPool.SourceState) (pool : PqxdhLiveKemBirth.Pool KemSK)
+    (prefixed : PqxdhDeploymentIdealPoolSource.PoolPrefix (p.pool t) pool)
+    (native : PqxdhServerAuthNative.NativeState KemSK) (marks : PqxdhRegistrationJointKemPostSkeleton.Marks Output)
+    (slots : SlotState) :
+    ((simulateQ (lowerEC setup t p) ((simulateQ (skelImpl setup codec checks created.server.server.metadata.identityIndex
+        created.publicIdentity (factoredServices setup codec checks))
+        (PqxdhRegistrationJointKemPostSkeleton.groupedHashed setup codec t.kem.val p.challenge retained raw owner)).run
+          (PqxdhRegistrationJointKemPostSkeleton.clean native.2, marks))).run).run
+        (eraseServiceC ((joint, PqxdhDeploymentIdealPoolSource.routerOf pool), (native.1.cache, slots))) =
+      (fun result => (some (result.1, (PqxdhRegistrationJointKemPostSkeleton.clean result.2.2.2, marks)),
+          eraseServiceC ((result.2.1.1, PqxdhDeploymentIdealPoolSource.routerOf result.2.1.2),
+            (result.2.2.1.cache, slots)))) <$>
+        (hashedKnown setup codec candidate retained raw owner).run ((joint, pool), native) := by
+  unfold PqxdhRegistrationJointKemPostSkeleton.groupedHashed hashedKnown
+  rcases phase : owner.beacon.phase with _ | _ | ⟨control, prekey, oneTime, kem⟩ | _ | _
+  all_goals dsimp only
+  case fresh | freshWithCoins | established | aborted =>
+    simp only [simulateQ_pure, StateT.run_pure, OptionT.run_pure, map_pure]
+  case initSent =>
+    rcases retained with _ | init <;> rcases PqxdhServerAuthExperiment.responseOf codec raw with _ | response
+    all_goals dsimp only
+    case some.some =>
+      simp only [simulateQ_bind, StateT.run_bind, OptionT.run_bind, Option.elimM]
+      rw [stack_hash setup codec checks t p created _ joint pool native marks slots]
+      change _ = _ <$> ((fun result => (result.1, ((joint, pool), result.2))) <$> (PqxdhServerAuthNative.nativeHash
+        (PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf init) response)).run native >>= _)
+      simp only [bind_map_left, map_bind]
+      refine bind_congr fun hashed => ?_
+      simp only [Option.elim_some]
+      have stack := owner_stack setup codec checks t p created candidate
+        (PqxdhTranscriptAd.completedOf control hashed.1) raw owner fresh joint pool prefixed hashed.2 marks slots
+      unfold stackRun at stack
+      rw [← QueryImpl.simulateQ_compose] at stack
+      rw [← QueryImpl.simulateQ_compose]
+      exact stack
+    all_goals
+      simp only [simulateQ_pure, StateT.run_pure, OptionT.run_pure, map_pure]
 
 end Stack
 
@@ -793,17 +909,18 @@ theorem sourceMid_finish (owner : ℕ) (raw : Pqxdh.Bytes) (m : Mid KemSK)
   simp only [real, Bool.false_eq_true, ↓reduceIte]
   rfl
 
-/-- The upper layers on a finish at a present address: the grouped owner through the skeleton, then the owner reinstalled. -/
+/-- The upper layers on a finish at a present address: the grouped hashed owner (on the owner's retained bundle) through the skeleton, then the owner reinstalled. -/
 theorem upperLayer_finish (owner : ℕ) (raw : Pqxdh.Bytes) (entry : PqxdhRegistrationJointGeneratedFinish.EncodedEntry)
-    (state : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × SkelState KemSK Output)
-    (found : state.1[owner]? = some entry) :
+    (state : (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate)) ×
+      SkelState KemSK Output)
+    (found : state.1.1[owner]? = some entry) :
     (upperLayer setup codec checks created.server.server.metadata.identityIndex created.publicIdentity t.kem.val
         p.challenge (factoredServices setup codec checks) (.inl (.inr (.finish owner raw)))).run state =
-      (fun result => (result.1.1, (state.1.set owner (entry.1, entry.2.1, result.1.2), result.2))) <$>
+      (fun result => (result.1.1, ((state.1.1.set owner (entry.1, entry.2.1, result.1.2), state.1.2), result.2))) <$>
         (simulateQ (PqxdhRegistrationJointKemPostSkeleton.skelImpl setup codec checks
           created.server.server.metadata.identityIndex created.publicIdentity (factoredServices setup codec checks))
-          (simulateQ (PqxdhRegistrationJointKemPostSkeleton.groupedCompiler setup codec t.kem.val p.challenge)
-            (PqxdhRegistrationJointKemPostSkeleton.groupedOwner raw entry.2.2))).run state.2 := by
+          (PqxdhRegistrationJointKemPostSkeleton.groupedHashed setup codec t.kem.val p.challenge (state.1.2 owner) raw
+            entry.2.2)).run state.2 := by
   rcases state with ⟨owners, skel⟩
   simp only [upperLayer, QueryImpl.flattenStateT, QueryImpl.mapStateTBase, StateT.run_mk,
     PqxdhRegistrationJointKemPostSkeleton.groupedClient]
@@ -814,8 +931,9 @@ theorem upperLayer_finish (owner : ℕ) (raw : Pqxdh.Bytes) (entry : PqxdhRegist
 
 /-- The upper layers on a finish at an absent address: nothing happens. -/
 theorem upperLayer_finish_none (owner : ℕ) (raw : Pqxdh.Bytes)
-    (state : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × SkelState KemSK Output)
-    (missing : state.1[owner]? = none) :
+    (state : (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate)) ×
+      SkelState KemSK Output)
+    (missing : state.1.1[owner]? = none) :
     (upperLayer setup codec checks created.server.server.metadata.identityIndex created.publicIdentity t.kem.val
         p.challenge (factoredServices setup codec checks) (.inl (.inr (.finish owner raw)))).run state =
       pure (none, state) := by
@@ -841,13 +959,14 @@ theorem step_finish (owner : ℕ) (raw : Pqxdh.Bytes) (m : Mid KemSK)
       (PqxdhDeploymentIdealPostSteps.encodeMid_clean setup m),
     sourceMid_finish setup codec route checks t p created owner raw m real]
   rcases found : m.joint.owners[owner]? with _ | entry
-  · have missing : (encodeMid setup m).1.1[owner]? = none := by
+  · have missing : (encodeMid setup m).1.1.1[owner]? = none := by
       simp [encodeMid, PqxdhRegistrationJointGeneratedFinish.encodeState, List.getElem?_map, found]
     rw [upperLayer_finish_none setup codec checks t p created owner raw _ missing, map_pure, simulateQ_pure]
     simp only [PqxdhRegistrationJointSchedule.finish, found, StateT.run]
     simp only [OptionT.run_pure, map_pure]
     rfl
-  · have present : (encodeMid setup m).1.1[owner]? = some (PqxdhRegistrationJointGeneratedFinish.encodeEntry setup entry) := by
+  · have present : (encodeMid setup m).1.1.1[owner]? =
+        some (PqxdhRegistrationJointGeneratedFinish.encodeEntry setup entry) := by
       simp [encodeMid, PqxdhRegistrationJointGeneratedFinish.encodeState, List.getElem?_map, found]
     have fresh : ∀ control prekey oneTime kem,
         (PqxdhRegistrationJointGeneratedFinish.encodeEntry setup entry).2.2.beacon.phase =
@@ -862,17 +981,18 @@ theorem step_finish (owner : ℕ) (raw : Pqxdh.Bytes) (m : Mid KemSK)
     have start : (encodeMidC setup m).2 = eraseServiceC ((m.joint.pool.1,
         PqxdhDeploymentIdealPoolSource.routerOf m.joint.pool.2), (m.joint.shared.1.cache, (m.backend.2.1, m.backend.1))) := by
       simp only [encodeMidC, encodeMid, eraseServiceC, Prod.map, PqxdhRegistrationJointKemObserverFree.eraseJoint_idem]
-    have stack := owner_stack setup codec checks t p created (List.Vector.replicate 32 0) raw _ fresh m.joint.pool.1
-      m.joint.pool.2 prefixed m.joint.shared (PqxdhDeploymentIdealPostSteps.skelMarks m) (m.backend.2.1, m.backend.1)
+    have stack := hashed_stack setup codec checks t p created (List.Vector.replicate 32 0) (m.joint.inits owner) raw _
+      fresh m.joint.pool.1 m.joint.pool.2 prefixed m.joint.shared (PqxdhDeploymentIdealPostSteps.skelMarks m)
+      (m.backend.2.1, m.backend.1)
     rw [← start] at stack
-    unfold stackRun at stack
     have middle := middle_finish setup codec (List.Vector.replicate 32 0) checks created.seed owner raw m.joint owned
       entry found
     rw [upperLayer_finish setup codec checks t p created owner raw _ _ present, Functor.map_map, simulateQ_map,
       OptionT.run_map, StateT.run_map]
     erw [stack]
     refine Eq.trans ?_ (?_ : (fun result : _ × PqxdhRegistrationJointGeneratedFinish.EncodedState KemSK =>
-        (some (result.1, (result.2.owners, (clean result.2.shared.2, PqxdhDeploymentIdealPostSteps.skelMarks m))),
+        (some (result.1, ((result.2.owners, result.2.inits),
+            (clean result.2.shared.2, PqxdhDeploymentIdealPostSteps.skelMarks m))),
           eraseServiceC ((result.2.pool.1, PqxdhDeploymentIdealPoolSource.routerOf result.2.pool.2),
             (result.2.shared.1.cache, (m.backend.2.1, m.backend.1))))) <$>
         ((fun result => (result.1, PqxdhRegistrationJointGeneratedFinish.encodeState setup result.2)) <$>
@@ -1120,3 +1240,18 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.step_finish'
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.step_finish
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.splitT_hash' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.splitT_hash
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.stack_hash' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.stack_hash
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.hashed_stack' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealPostFinish.hashed_stack

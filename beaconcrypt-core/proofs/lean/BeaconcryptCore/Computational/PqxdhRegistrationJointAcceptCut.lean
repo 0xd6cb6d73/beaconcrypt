@@ -43,10 +43,10 @@ theorem scan_finish (work : OracleComp (Spec KemSK) Result) (index : Nat) :
     · change ((((Spec KemSK).query (.inl (.inl coin)) : OracleComp (Spec KemSK) _) >>= fun answer => scan (next answer) index) >>= finish) = _
       simp only [bind_assoc, ih]
     · cases request
-      all_goals first
-        | change ((((Spec KemSK).query _ : OracleComp (Spec KemSK) _) >>= fun answer => scan (next answer) index) >>= finish) = _
+      all_goals
+        try
+          change ((((Spec KemSK).query _ : OracleComp (Spec KemSK) _) >>= fun answer => scan (next answer) index) >>= finish) = _
           simp only [bind_assoc, ih]
-        | skip
       cases index with
       | zero => rfl
       | succ index =>

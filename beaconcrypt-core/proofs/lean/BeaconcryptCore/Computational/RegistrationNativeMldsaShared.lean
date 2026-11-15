@@ -3,7 +3,7 @@ import BeaconcryptCore.Computational.RegistrationNativeExperiment
 import BeaconcryptCore.Computational.RegistrationBeaconInitHistory
 import BeaconcryptCore.Computational.RegistrationNativeScalarSource
 
-/-! Actual native outgoing Init callbacks retain the same chronological ML signing receipts and shared CTX cache as the shared signing interpreter. The projection forgets private counters, local phases and Ed histories; it never creates an independent cache or resets the native World. -/
+/-! Actual native outgoing Init callbacks preserve the existing Server signing receipts and extend the shared CTX cache only through their request transcript hash. The projection forgets private counters, local phases and Ed histories; it never creates an independent cache or resets the native World. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -27,7 +27,7 @@ def project (before : Local n KemSK source) : RegistrationSigningShared.State :=
 
 noncomputable def lower (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State Value) :
     StateT (Local n KemSK source) ProbComp Value := fun before =>
   (fun result => (result.1.1.1, (result.1.1.2, (result.1.2, result.2)))) <$>
@@ -55,7 +55,7 @@ private theorem state_modify_apply {S : Type} {m : Type → Type} [Monad m]
 
 private theorem lower_pure (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (value : Value) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (value : Value) :
     lower (n := n) (source := source) setup checks representation created (pure value) = pure value := by
   apply StateT.ext
   intro before
@@ -63,7 +63,7 @@ private theorem lower_pure (setup : Setup base KemSK) (checks : Checks)
 
 private theorem lower_bind (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State Value)
     (next : Value → RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State Next) :
     lower setup checks representation created (work >>= next) =
@@ -84,8 +84,8 @@ noncomputable def edReply (setup : Setup base KemSK) (owner : Owner source)
 
 noncomputable def implementation (setup : Setup base KemSK) (owner : Owner source) :
     QueryImpl RegistrationBeaconInitExecutor.Spec (StateT RegistrationSigningShared.State ProbComp)
-  | .inl query => RegistrationSigningShared.implementation
-      (RegistrationNativeMldsa.owned source owner.mldsa) query
+  | .inl (.hash request) => RegistrationSigningShared.implementation (fun _ => pure .None) (.hash request)
+  | .inl (.sign _ _ _) => pure .None
   | .inr request => pure (edReply setup owner request)
 
 private theorem coin_project (draw : ProbComp Value) (before : PqxdhRecordLiftWorld.State n) :
@@ -102,10 +102,10 @@ private theorem coin_project (draw : ProbComp Value) (before : PqxdhRecordLiftWo
   simp only [Functor.map_map, StateT.run] at coins
   exact erased.trans coins
 
-/-- The native callback projection retains its literal hash/signature reply and actual owned ML credential. -/
+/-- The native callback projection retains its literal hash/signature reply and unchanged Server signing history. -/
 theorem outgoing (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (owner : Owner source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (owner : Owner source)
     (query : RegistrationBeaconInitExecutor.Spec.Domain) (before : Local n KemSK source) :
     Prod.map id project <$>
         (lower setup checks representation created
@@ -128,30 +128,9 @@ theorem outgoing (setup : Setup base KemSK) (checks : Checks)
           RegistrationWorldAuthentication.project, project,
           StateT.run, Functor.map_map, Prod.map, id_eq]; rfl
     | sign request payload digest =>
-        simp only [RegistrationNativeBeaconFrontend.outgoing, RegistrationNativeScalarSource.sample_effects,
-          lower, StateT.run, state_bind_apply, state_lift_apply, state_map_apply,
-          RegistrationNativeBeaconFrontend.updateEnv, state_modify_apply,
-          bind_pure_comp, Functor.map_map, simulateQ_map,
-          Prod.map, id_eq, map_pure,
-          implementation, RegistrationSigningShared.implementation, project]
-        have restriction : RegistrationNativeExperiment.trusted (n := n) setup checks representation created source ∘ₛ
-            RegistrationBeaconReferenceNativeRecord.environment (n := n) (KemSK := KemSK) =
-            RegistrationBeaconReferenceNativeEffects.native setup checks representation created := by
-          funext selected
-          simp only [QueryImpl.apply_compose, RegistrationBeaconReferenceNativeRecord.environment,
-            simulateQ_spec_query, RegistrationBeaconReferenceNativeEffects.native]
-        rw [← QueryImpl.simulateQ_compose, restriction]
-        have closed := RegistrationBeaconReferenceNativeEffects.program setup checks representation created
-          (simulateQ RegistrationWorldCoinCompiler.envCoin (RegistrationNativeMldsa.owned source owner.mldsa request))
-          before.2.2
-        simp only [StateT.run] at closed
-        rw [closed]
-        have law := congrArg (fun work => (fun result => (result.1,
-          (before.2.1.receipts ++ [RegistrationSigningShared.Receipt.mk
-            ⟨request.public_key, payload, BeaconcryptCore.Refinement.RegistrationSigningTrace.replyBytes result.1⟩ digest],
-            result.2))) <$> work)
-          (coin_project (RegistrationNativeMldsa.owned source owner.mldsa request) before.2.2.server.world.world.1)
-        convert law using 1 <;> simp only [Functor.map_map, Prod.map, id_eq, RegistrationBeaconReferenceNativeEffects.embed]; rfl
+        rw [RegistrationNativeBeaconFrontend.outgoing, lower_pure]
+        simp only [implementation, StateT.run, state_pure_apply, map_pure]
+        rfl
   | inr request =>
       simp only [RegistrationNativeBeaconFrontend.outgoing, implementation, edReply]
       split <;> simp only [lower, RegistrationNativeBeaconFrontend.logEd,
@@ -160,7 +139,7 @@ theorem outgoing (setup : Setup base KemSK) (checks : Checks)
 
 private theorem lower_program (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (owner : Owner source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (owner : Owner source)
     (work : OracleComp RegistrationBeaconInitExecutor.Spec Value) :
     lower (n := n) setup checks representation created
         (simulateQ (RegistrationNativeBeaconFrontend.outgoing setup source index owner) work) =
@@ -174,7 +153,7 @@ private theorem lower_program (setup : Setup base KemSK) (checks : Checks)
 /-- Complete native Init continuations retain the identical joint ML attempt history and shared cache. -/
 theorem program (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (owner : Owner source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (owner : Owner source)
     (work : OracleComp RegistrationBeaconInitExecutor.Spec Value) (before : Local n KemSK source) :
     Prod.map id project <$>
         (lower setup checks representation created
@@ -184,57 +163,53 @@ theorem program (setup : Setup base KemSK) (checks : Checks)
   exact OracleComp.map_run_simulateQ_eq_of_query_map_eq _ _ project
     (outgoing setup checks representation created index owner) work before
 
-private def forget (before : RegistrationBeaconInitShared.State Unit) : RegistrationSigningShared.State := before.2.2
-
-private theorem forget_query (setup : Setup base KemSK) (owner : Owner source)
-    (query : RegistrationBeaconInitExecutor.Spec.Domain) (before : RegistrationBeaconInitShared.State Unit) :
-    Prod.map id forget <$>
-        (RegistrationBeaconInitShared.implementation (RegistrationNativeMldsa.owned source owner.mldsa)
-          (fun request => pure (edReply setup owner request)) query).run before =
-      (implementation setup owner query).run (forget before) := by
+/-- Every actual callback preserves earlier Server signing receipts; no Beacon signing leaf exists. -/
+private theorem query_cached (setup : Setup base KemSK) (owner : Owner source)
+    (query : RegistrationBeaconInitExecutor.Spec.Domain) (before : RegistrationSigningShared.State)
+    (cached : RegistrationSigningShared.Cached before)
+    (result : RegistrationBeaconInitExecutor.Spec.Range query × RegistrationSigningShared.State)
+    (supported : result ∈ support ((implementation setup owner query).run before)) :
+    RegistrationSigningShared.Cached result.2 := by
   cases query with
-  | inl query => simp only [RegistrationBeaconInitShared.implementation, implementation,
-      forget, StateT.run, Functor.map_map, Prod.map, id_eq, Prod.mk.eta]; exact id_map _
-  | inr request => simp only [RegistrationBeaconInitShared.implementation, implementation,
-      forget, StateT.run, state_pure_apply, map_pure, Prod.map, id_eq]
+  | inl shared => cases shared with
+    | hash request => exact RegistrationSigningShared.hash_cached_state (fun _ => pure .None) request before cached result supported
+    | sign request payload digest =>
+        simp only [implementation, StateT.run_pure, mem_support_pure_iff] at supported
+        cases supported
+        exact cached
+  | inr request =>
+      simp only [implementation, StateT.run_pure, mem_support_pure_iff] at supported
+      cases supported
+      exact cached
 
-private theorem forget_program (setup : Setup base KemSK) (owner : Owner source)
-    (work : OracleComp RegistrationBeaconInitExecutor.Spec Value) (before : RegistrationBeaconInitShared.State Unit) :
-    Prod.map id forget <$>
-        (simulateQ (RegistrationBeaconInitShared.implementation (RegistrationNativeMldsa.owned source owner.mldsa)
-          (fun request => pure (edReply setup owner request))) work).run before =
-      (simulateQ (implementation setup owner) work).run (forget before) :=
-  OracleComp.map_run_simulateQ_eq_of_query_map_eq _ _ forget (forget_query setup owner) work before
+private theorem program_cached (setup : Setup base KemSK) (owner : Owner source)
+    (work : OracleComp RegistrationBeaconInitExecutor.Spec Value) (before : RegistrationSigningShared.State)
+    (cached : RegistrationSigningShared.Cached before)
+    (result : Value × RegistrationSigningShared.State)
+    (supported : result ∈ support ((simulateQ (implementation setup owner) work).run before)) :
+    RegistrationSigningShared.Cached result.2 := by
+  exact OracleComp.simulateQ_run_preserves_inv_of_query (implementation setup owner)
+    RegistrationSigningShared.Cached (query_cached setup owner) work before cached result supported
 
-/-- Native Init signing preserves validity of every chronological ML receipt, including failed replies and failed publication. -/
+/-- Native Init execution preserves validity of every chronological ML receipt, including failed replies and failed publication. -/
 theorem begin_cached (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (owner : Owner source)
-    (encode : registration.SignedInitView → core.option.Option Value)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (owner : Owner source)
+    (encode : registration.InitView → core.option.Option Value)
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array Std.U8 1952#usize)
+    (pin : session.ServerAuthenticationPin)
     (before : Local n KemSK source) (cached : RegistrationSigningShared.Cached (project before))
     (result : RustM (RegistrationBeaconInitExecutor.Result Value) × Local n KemSK source)
     (supported : result ∈ support ((lower setup checks representation created
       (simulateQ (RegistrationNativeBeaconFrontend.outgoing setup source index owner)
-        (RegistrationBeaconInitExecutor.begin encode control inputs coins pin mldsa))).run before)) :
+        (RegistrationBeaconInitExecutor.begin encode control inputs coins pin))).run before)) :
     RegistrationSigningShared.Cached (project result.2) := by
   have projected : (result.1, project result.2) ∈ support
       ((simulateQ (implementation setup owner)
-        (RegistrationBeaconInitExecutor.begin encode control inputs coins pin mldsa)).run (project before)) := by
+        (RegistrationBeaconInitExecutor.begin encode control inputs coins pin)).run (project before)) := by
     rw [← program setup checks representation created index owner _ before, support_map]
     exact ⟨result, supported, rfl⟩
-  have joined := forget_program setup owner
-    (RegistrationBeaconInitExecutor.begin encode control inputs coins pin mldsa) ((), ([], project before))
-  simp only [forget] at joined
-  rw [← joined, support_map] at projected
-  obtain ⟨full, possible, same⟩ := projected
-  have valid := RegistrationBeaconInitHistory.begin_cached
-    (RegistrationNativeMldsa.owned source owner.mldsa) (fun request => pure (edReply setup owner request))
-    encode control inputs coins pin mldsa ((), ([], project before)) cached full possible
-  change RegistrationSigningShared.Cached (forget full.2) at valid
-  rw [← show forget full.2 = project result.2 from congrArg Prod.snd same]
-  exact valid
+  exact program_cached setup owner _ (project before) cached _ projected
 
 def nativeProject (before : RegistrationNativeExperiment.State n KemSK source) : RegistrationSigningShared.State :=
   (before.server.world.world.2, before.server.world.world.1.primitive.2)
@@ -245,7 +220,7 @@ def close (before : Local n KemSK source) : RegistrationNativeExperiment.State n
 
 private theorem source_lower (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State Value)
     (before : RegistrationNativeExperiment.State n KemSK source) :
     (RegistrationNativeExperiment.beacon setup checks representation created work).run before =
@@ -257,7 +232,7 @@ private theorem source_lower (setup : Setup base KemSK) (checks : Checks)
 /-- The original native wrapper of outgoing Init uses the same cache/history projection after restoring its entire local state. -/
 theorem source_program (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (owner : Owner source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (owner : Owner source)
     (work : OracleComp RegistrationBeaconInitExecutor.Spec Value)
     (before : RegistrationNativeExperiment.State n KemSK source) :
     Prod.map id nativeProject <$>
@@ -274,20 +249,20 @@ theorem source_program (setup : Setup base KemSK) (checks : Checks)
 /-- Every actual native Init outcome preserves the chronological digest receipts under the original source wrapper. -/
 theorem source_begin_cached (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (owner : Owner source)
-    (encode : registration.SignedInitView → core.option.Option Value)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (owner : Owner source)
+    (encode : registration.InitView → core.option.Option Value)
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array Std.U8 1952#usize)
+    (pin : session.ServerAuthenticationPin)
     (before : RegistrationNativeExperiment.State n KemSK source)
     (cached : RegistrationSigningShared.Cached (nativeProject before))
     (result : RustM (RegistrationBeaconInitExecutor.Result Value) × RegistrationNativeExperiment.State n KemSK source)
     (supported : result ∈ support ((RegistrationNativeExperiment.beacon setup checks representation created
       (simulateQ (RegistrationNativeBeaconFrontend.outgoing setup source index owner)
-        (RegistrationBeaconInitExecutor.begin encode control inputs coins pin mldsa))).run before)) :
+        (RegistrationBeaconInitExecutor.begin encode control inputs coins pin))).run before)) :
     RegistrationSigningShared.Cached (nativeProject result.2) := by
   rw [source_lower, support_map] at supported
   obtain ⟨observed, possible, same⟩ := supported
-  have valid := begin_cached setup checks representation created index owner encode control inputs coins pin mldsa
+  have valid := begin_cached setup checks representation created index owner encode control inputs coins pin
     (before.beacons, (RegistrationWorldAgreementCompiler.erase before.server.world, before)) cached observed possible
   have equal : project observed.2 = nativeProject result.2 := by
     rw [← same]

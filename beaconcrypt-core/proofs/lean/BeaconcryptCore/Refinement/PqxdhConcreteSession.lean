@@ -13,7 +13,7 @@ set_option maxHeartbeats 1000000
 
 namespace BeaconcryptCore.Refinement.PqxdhConcreteSession
 
-abbrev InitialKdfInterpreter := ratchet.SymmetricRatchetKdfRequest → pqxdh.concrete.InitialRatchetKdfResponse
+abbrev InitialKdfInterpreter := ratchet.InitialRatchetKdfRequest → pqxdh.concrete.InitialRatchetKdfResponse
 
 /-- Execute the extracted beacon initialization phases with a fixed pure response interpreter. -/
 def initializeBeacon (root : Std.Array Std.U8 32#usize) (execute : InitialKdfInterpreter) :
@@ -29,12 +29,12 @@ def initializeServer (root : Std.Array Std.U8 32#usize) (execute : InitialKdfInt
 
 theorem initializeBeacon_eq (root : Std.Array Std.U8 32#usize) (execute : InitialKdfInterpreter) :
     initializeBeacon root execute = pqxdh.concrete.resume_initial_ratchet_kdf (beaconPending root)
-      (execute { input := root, info := ratchet.SYM_RATCHET_INFO }) := by
+      (execute { input := root, info := ratchet.INITIAL_RATCHET_INFO }) := by
   simp [initializeBeacon, pqxdh.concrete.start_beacon_ratchet_kdf_exact, beaconPending]
 
 theorem initializeServer_eq (root : Std.Array Std.U8 32#usize) (execute : InitialKdfInterpreter) :
     initializeServer root execute = pqxdh.concrete.resume_initial_ratchet_kdf (serverPending root)
-      (execute { input := root, info := ratchet.SYM_RATCHET_INFO }) := by
+      (execute { input := root, info := ratchet.INITIAL_RATCHET_INFO }) := by
   simp [initializeServer, pqxdh.concrete.start_server_ratchet_kdf_exact, serverPending]
 
 /-- Both roles have reachable ideal receive states, exact live material correspondence, and sending chains derived from their fixed opposite origins. -/
@@ -54,12 +54,12 @@ theorem initial_kernels_refine {AD PT CT : Type}
     (root : Std.Array Std.U8 32#usize) (execute : InitialKdfInterpreter) :
     ∃ beaconOrigin serverOrigin beacon server,
       initializeBeacon root execute = ok beacon ∧ initializeServer root execute = ok server ∧
-      ChainBytesRefines beaconOrigin (secondHalf (execute { input := root, info := ratchet.SYM_RATCHET_INFO }).bytes) ∧
-      ChainBytesRefines serverOrigin (firstHalf (execute { input := root, info := ratchet.SYM_RATCHET_INFO }).bytes) ∧
+      ChainBytesRefines beaconOrigin (secondHalf (execute { input := root, info := ratchet.INITIAL_RATCHET_INFO }).bytes) ∧
+      ChainBytesRefines serverOrigin (firstHalf (execute { input := root, info := ratchet.INITIAL_RATCHET_INFO }).bytes) ∧
       ratchet.concrete.KernelRefines cr serverOrigin ⟨beaconOrigin, 0⟩ ⟨serverOrigin, 0, []⟩ beacon ∧
       ratchet.concrete.KernelRefines cr beaconOrigin ⟨serverOrigin, 0⟩ ⟨beaconOrigin, 0, []⟩ server := by
   obtain ⟨left, right, hleft, hright, hleftBytes, hrightBytes⟩ :=
-    initialHalves_exact (execute { input := root, info := ratchet.SYM_RATCHET_INFO }).bytes
+    initialHalves_exact (execute { input := root, info := ratchet.INITIAL_RATCHET_INFO }).bytes
   obtain ⟨beacon, hbeacon, hbeaconRefines⟩ := concreteKernelNew_refines_initial cr ⟨right⟩ ⟨left⟩
   obtain ⟨server, hserver, hserverRefines⟩ := concreteKernelNew_refines_initial cr ⟨left⟩ ⟨right⟩
   refine ⟨⟨right⟩, ⟨left⟩, beacon, server, ?_, ?_, hrightBytes, hleftBytes, hbeaconRefines, hserverRefines⟩

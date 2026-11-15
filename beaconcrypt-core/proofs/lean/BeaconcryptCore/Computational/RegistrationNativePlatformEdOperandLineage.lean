@@ -16,8 +16,8 @@ open BeaconcryptCore.Refinement.RegistrationSigning
 open RegistrationNativePlatformWriter (Spec cryptoLift init)
 open RegistrationNativePlatformBeaconPublication
 variable {E : Type}
-attribute [local irreducible] registration.BeaconInitHash.resume registration.BeaconFingerprint.resume
-  registration.BeaconMldsaSigning.resume registration.BeaconEd25519Signing.resume registration.begin_beacon_init
+attribute [local irreducible] registration.BeaconInitHash.resume
+  registration.BeaconEd25519Signing.resume registration.begin_beacon_init
 
 def UsesKey (key : Std.Array U8 32#usize) : (Spec E).Domain → Prop
   | .inl (.inr request) => request.public_key = key
@@ -25,11 +25,11 @@ def UsesKey (key : Std.Array U8 32#usize) : (Spec E).Domain → Prop
 
 /-- The actual source begin retains exactly its supplied public identity in the first Ed state. -/
 theorem begin_identity (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs)
-    (coins : pqxdh.BeaconCoins) (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize)
+    (coins : pqxdh.BeaconCoins) (pin : session.ServerAuthenticationPin)
     (pending : registration.BeaconEd25519Signing)
-    (begun : registration.begin_beacon_init control inputs coins pin mldsa = .ok (.Ed25519SigningRequested pending)) :
+    (begun : registration.begin_beacon_init control inputs coins pin = .ok (.Ed25519SigningRequested pending)) :
     pending.state.beacon_identity = inputs.identity_public_key := by
-  obtain ⟨started, _built, exactBegin⟩ := BeaconcryptCore.Refinement.RegistrationSigningContinuations.begin_beacon_init_exact control inputs coins pin mldsa
+  obtain ⟨started, _built, exactBegin⟩ := BeaconcryptCore.Refinement.RegistrationSigningContinuations.begin_beacon_init_exact control inputs coins pin
   rw [exactBegin] at begun
   split at begun
   · cases begun
@@ -73,20 +73,6 @@ private theorem ready_allowed (key : Std.Array U8 32#usize) (pending : registrat
   apply continue_allowed
   intro view
   exact allQueriesSatisfy_bind (writer_allowed key _) (fun _ => trivial)
-private theorem signing_allowed (key : Std.Array U8 32#usize)
-    (payload : MldsaTranscriptAuth.Payload) (digest : CtxRomAuth.CtxDigest)
-    (pending : registration.BeaconMldsaSigning) :
-    (fromSigning (cryptoLift (E := E)) (init E) payload digest pending).AllQueriesSatisfy (UsesKey (E := E) key) := by
-  unfold fromSigning
-  apply continue_allowed
-  intro request
-  simp only [cryptoLift, allQueriesSatisfy_query_bind_iff, UsesKey]
-  refine ⟨trivial, fun signature => ?_⟩
-  apply continue_allowed
-  intro effect
-  cases effect with
-  | Ready selected => exact ready_allowed key selected
-  | _ => trivial
 private theorem hash_allowed (key : Std.Array U8 32#usize) (pending : registration.BeaconInitHash) :
     (fromHash (cryptoLift (E := E)) (init E) pending).AllQueriesSatisfy (UsesKey (E := E) key) := by
   unfold fromHash
@@ -97,21 +83,8 @@ private theorem hash_allowed (key : Std.Array U8 32#usize) (pending : registrati
   apply continue_allowed
   intro effect
   cases effect with
-  | MldsaSigningRequested selected => exact signing_allowed key _ _ selected
+  | Ready selected => exact ready_allowed key selected
   | _ => trivial
-private theorem fingerprint_allowed (key : Std.Array U8 32#usize) (pending : registration.BeaconFingerprint) :
-    (fromFingerprint (cryptoLift (E := E)) (init E) pending).AllQueriesSatisfy (UsesKey (E := E) key) := by
-  unfold fromFingerprint
-  apply continue_allowed
-  intro request
-  simp only [cryptoLift, allQueriesSatisfy_query_bind_iff, UsesKey]
-  refine ⟨trivial, fun digest => ?_⟩
-  apply continue_allowed
-  intro effect
-  cases effect with
-  | HashRequested selected => exact hash_allowed key selected
-  | _ => trivial
-
 /-- All actual Ed retries use the original state's public identity, for arbitrary returned signatures and later failures. -/
 theorem ed_allowed (key : Std.Array U8 32#usize) (pending : registration.BeaconEd25519Signing)
     (lineage : pending.state.beacon_identity = key) :
@@ -125,22 +98,22 @@ theorem ed_allowed (key : Std.Array U8 32#usize) (pending : registration.BeaconE
   | ok effect => cases effect with
     | Ed25519SigningRequested next =>
       exact ed_allowed key next ((resume_identity pending next reply actual).trans lineage)
-    | FingerprintRequested next => exact fingerprint_allowed key next
+    | HashRequested next => exact hash_allowed key next
     | _ => trivial
 termination_by RegistrationBeaconInitExecutor.edRank pending
 decreasing_by exact RegistrationBeaconInitExecutor.ed_rank pending reply next actual
 
 /-- The literal source writer begin uses only its supplied identity operand, including every failed signature and stateful serializer path. -/
 theorem begin_allowed (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs)
-    (coins : pqxdh.BeaconCoins) (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize) :
-    (RegistrationNativePlatformWriter.begin E control inputs coins pin mldsa).AllQueriesSatisfy
+    (coins : pqxdh.BeaconCoins) (pin : session.ServerAuthenticationPin) :
+    (RegistrationNativePlatformWriter.begin E control inputs coins pin).AllQueriesSatisfy
       (UsesKey (E := E) inputs.identity_public_key) := by
   unfold RegistrationNativePlatformWriter.begin RegistrationNativePlatformBeaconPublication.begin
-  cases begun : registration.begin_beacon_init control inputs coins pin mldsa with
+  cases begun : registration.begin_beacon_init control inputs coins pin with
   | fail error | div => trivial
   | ok effect => cases effect with
     | Ed25519SigningRequested pending =>
-      exact ed_allowed inputs.identity_public_key pending (begin_identity control inputs coins pin mldsa pending begun)
+      exact ed_allowed inputs.identity_public_key pending (begin_identity control inputs coins pin pending begun)
     | _ => trivial
 
 /-- The exact owner-captured Writer.begin used by the actual dynamic bundle passes that owner's Ed public key on every signing leaf. -/
@@ -148,9 +121,9 @@ theorem owner {I KemSK : Type} {base : OracleSpec I} {source : RegistrationNativ
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (owner : RegistrationNativeIdentityFrontend.Owner source)
     (oneTime : PqxdhJointGapDh.ScalarBytes) :
     (RegistrationNativePlatformWriter.begin E ⟨owner.pin.binding⟩ (RegistrationNativeIdentityFrontend.inputs owner)
-      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey).AllQueriesSatisfy
+      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin).AllQueriesSatisfy
       (UsesKey (E := E) (PqxdhRootTableInitialization.rootArray owner.identity.publicIdentity.ed25519)) := by
-  exact begin_allowed _ _ _ _ _
+  exact begin_allowed _ _ _ _
 end BeaconcryptCore.Computational.RegistrationNativePlatformEdOperandLineage
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformEdOperandLineage.begin_identity' depends on axioms: [propext,

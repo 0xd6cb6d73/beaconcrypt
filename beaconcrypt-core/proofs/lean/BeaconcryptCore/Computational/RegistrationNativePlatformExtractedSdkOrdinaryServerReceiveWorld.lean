@@ -17,11 +17,11 @@ open RegistrationNativePlatformExtractedSdkOrdinaryDriver (State)
 variable {n : Nat} {Platform E I KemSK : Type} {base : OracleSpec I}
 
 def owner (server : PqxdhRecordLiftWorld.Server) (key : U64)
-    (peer : RawCtxServerRouting.Peer (Array U8 281#usize)) : RawCtxWholeOwner.OwnerState Unit :=
+    (peer : RawCtxServerRouting.Peer (Array U8 151#usize)) : RawCtxWholeOwner.OwnerState Unit :=
   ⟨MldsaServerRouting.selected PqxdhRefinement.absBytes key peer,server.records.rawAttempts⟩
 
 def finish (before : PqxdhRecordLiftWorld.State n) (server : PqxdhRecordLiftWorld.Server) (key : U64)
-    (peer : RawCtxServerRouting.Peer (Array U8 281#usize))
+    (peer : RawCtxServerRouting.Peer (Array U8 151#usize))
     (result : (((Option RawCtxWholeOwner.Decrypted ×RawCtxWholeOwner.OwnerState Unit) ×State) ×Platform)) :
     ((Option RawCtxWholeOwner.Decrypted ×PqxdhRecordLiftWorld.State n) ×Platform) :=
   ((result.1.1.1,PqxdhRecordLiftWorld.produce (PqxdhDeploymentNative.serverTag (.inr [])) result.1.2.2
@@ -30,7 +30,7 @@ def finish (before : PqxdhRecordLiftWorld.State n) (server : PqxdhRecordLiftWorl
                  primitive:=result.1.2.1}),result.2)
 
 def project (before : PqxdhRecordLiftWorld.State n) (server : PqxdhRecordLiftWorld.Server) (key : U64)
-    (peer : RawCtxServerRouting.Peer (Array U8 281#usize))
+    (peer : RawCtxServerRouting.Peer (Array U8 151#usize))
     (result : ((RustM AdapterRecordStatefulReceive.Result ×State) ×Platform)) :=
   finish before server key peer
     ((RegistrationNativePlatformExtractedSdkOrdinaryReceiveCommon.project (owner server key peer) result.1.1,result.1.2),result.2)
@@ -72,10 +72,10 @@ theorem model_source (setup : Setup base KemSK)
 
 theorem world (setup : Setup base KemSK)
     (reserve : Nat →StateT Platform ProbComp (core.result.Result Unit E))
-    (length : RegistrationNativeExtractedReceive.AeadLength setup.source.crypto) (erased : Array U8 357#usize)
+    (length : RegistrationNativeExtractedReceive.AeadLength setup.source.crypto) (erased : Array U8 227#usize)
     (route : RawCtxServerRouting.SenderDecoder)
     (before : PqxdhRecordLiftWorld.State n) (previous : Platform) (server : PqxdhRecordLiftWorld.Server)
-    (key : U64) (peer : RawCtxServerRouting.Peer (Array U8 281#usize)) (bytes : Slice U8)
+    (key : U64) (peer : RawCtxServerRouting.Peer (Array U8 151#usize)) (bytes : Slice U8)
     (present : before.server=some server) (selected : server.records.server.peers key=some peer)
     (routed : route (TranscriptAuthParts.absSlice bytes)=some key) :
     project before server key peer <$>
@@ -97,8 +97,8 @@ theorem world (setup : Setup base KemSK)
     (simulateQ RawCtxMixedOwner.receiveAdapter
       ((RawCtxWholeOwner.rawReceive (ledgerCodec RegistrationNativeConcreteCodec.wire).frameRead (TranscriptAuthParts.absSlice bytes)).run (owner server key peer)))
   let first:=fun result : Option RawCtxWholeOwner.Decrypted ×RawCtxWholeOwner.OwnerState Unit=>
-    (result.1,(⟨RawCtxServerRouting.putPeer server.records.server key peer result.2.owner.kernel,result.2.rawAttempts⟩ : RawCtxServerRouting.State Unit (Array U8 281#usize)))
-  let last:=fun result : ((Option RawCtxWholeOwner.Decrypted ×RawCtxServerRouting.State Unit (Array U8 281#usize)) ×State)=>
+    (result.1,(⟨RawCtxServerRouting.putPeer server.records.server key peer result.2.owner.kernel,result.2.rawAttempts⟩ : RawCtxServerRouting.State Unit (Array U8 151#usize)))
+  let last:=fun result : ((Option RawCtxWholeOwner.Decrypted ×RawCtxServerRouting.State Unit (Array U8 151#usize)) ×State)=>
     (result.1.1,PqxdhRecordLiftWorld.produce (PqxdhDeploymentNative.serverTag (.inr (TranscriptAuthParts.absSlice bytes))) result.2.2
       {before with server:=some {server with records:=result.1.2},primitive:=result.2.1})
   change _=((last <$> ((first <$>work).run (before.primitive,[]))).run previous)
@@ -111,10 +111,10 @@ theorem world (setup : Setup base KemSK)
 
 theorem guarded (setup : Setup base KemSK)
     (reserve : Nat →StateT Platform ProbComp (core.result.Result Unit E))
-    (length : RegistrationNativeExtractedReceive.AeadLength setup.source.crypto) (erased : Array U8 357#usize)
+    (length : RegistrationNativeExtractedReceive.AeadLength setup.source.crypto) (erased : Array U8 227#usize)
     (route : RawCtxServerRouting.SenderDecoder)
     (before : PqxdhRecordLiftWorld.State n) (previous : Platform) (server : PqxdhRecordLiftWorld.Server)
-    (key : U64) (peer : RawCtxServerRouting.Peer (Array U8 281#usize)) (bytes : Slice U8)
+    (key : U64) (peer : RawCtxServerRouting.Peer (Array U8 151#usize)) (bytes : Slice U8)
     (present : before.server=some server) (selected : server.records.server.peers key=some peer)
     (routed : route (TranscriptAuthParts.absSlice bytes)=some key) :
     project before server key peer <$>

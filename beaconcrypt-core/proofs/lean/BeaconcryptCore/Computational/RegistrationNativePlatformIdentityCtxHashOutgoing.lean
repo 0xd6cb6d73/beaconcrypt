@@ -33,7 +33,7 @@ private theorem map_apply {S A B : Type} {m : Type → Type} [Monad m] [LawfulMo
 
 /-- Full true-counter source normalization of the actual current hash leaf. -/
 theorem outgoing (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (request : registration.HashRequest) (before : RegistrationNativeIdentityMain.State n KemSK source × Platform) :
     (RegistrationNativePlatformIdentityCtxMain.beacon setup checks representation created
       (RegistrationNativePlatformIdentityProgram.native

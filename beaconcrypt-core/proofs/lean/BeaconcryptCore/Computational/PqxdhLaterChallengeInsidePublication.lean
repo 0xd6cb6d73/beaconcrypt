@@ -6,14 +6,16 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeInsidePublication
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhInitialPostContext PqxdhRecordConfidentialityChallenge PqxdhFirstRecordConfidentiality
 variable {ι M P I D K X Response Shared : Type} {extra : OracleSpec ι} {S B : Nat}
 variable (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Bool)
     (sender : M → U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
 local notation "Snapshot" => NativeFront M P I D K S B × PqxdhInitialOriginPost.Trace Bool S B
-local notation "sourceImpl" => PqxdhInitialOriginPost.compiler (extra := extra) (X := X) (Response := Response) mark sender route decode
+local notation "sourceImpl" => PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) (extra := extra) (X := X) (Response := Response) mark sender route decode
 
 private theorem used_target (before after : State) (kept : Kept before after)
     (used : before.pair.isSome) (number : U64) (target : Target number after) : Target number before := by
@@ -28,7 +30,7 @@ theorem outside_target (owner : RawCtxProtocolReveals.Owner S B) (number : U64) 
     (used : before.pair.isSome) (accepted : result.1 = true) :
     Target number before ∧
       (((owner, number), true) ∈ result.2.2.published ↔ ((owner, number), true) ∈ ambient.2.published) := by
-  have publication := PqxdhLaterChallengeRemainderPublication.wrapped_publication
+  have publication := PqxdhLaterChallengeRemainderPublication.wrapped_publication (completedBinding := completedBinding)
     mark sender route decode owner number bit client before ambient result supported used accepted
   simp only [PqxdhLaterChallengeCapture.wrapped, simulateQ_map, StateT.run_map, support_map] at supported
   obtain ⟨final, actual, rfl⟩ := supported
@@ -53,12 +55,12 @@ private theorem send_origin (owner : RawCtxProtocolReveals.Owner S B) (plaintext
     before.2.installed owner = some true := by
   cases owner with
   | server index peer =>
-      exact ((PqxdhLaterChallengeRemainderPublication.step_publication (X := X) (Response := Response) mark sender route decode
+      exact ((PqxdhLaterChallengeRemainderPublication.step_publication (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode
         (sendRequest (extra := extra) (.server index peer) plaintext) before result
         (by simpa only [send, sendRequest, simulateQ_spec_query] using supported)
         (.server index peer, number)).mp published |>.resolve_left absent).2
   | beacon index =>
-      exact ((PqxdhLaterChallengeRemainderPublication.step_publication (X := X) (Response := Response) mark sender route decode
+      exact ((PqxdhLaterChallengeRemainderPublication.step_publication (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode
         (sendRequest (extra := extra) (.beacon index) plaintext) before result
         (by simpa only [send, sendRequest, simulateQ_spec_query] using supported)
         (.beacon index, number)).mp published |>.resolve_left absent).2
@@ -74,7 +76,7 @@ private theorem challenge_facts (owner : RawCtxProtocolReveals.Owner S B) (numbe
   rw [challenge_step owner number bit left right equal current unused,
     simulateQ_map, StateT.run_map, support_map] at supported
   obtain ⟨actual, reached, rfl⟩ := supported
-  exact ⟨rfl, fun published => send_origin mark sender route decode owner (if bit then right else left)
+  exact ⟨rfl, fun published => send_origin (completedBinding := completedBinding) mark sender route decode owner (if bit then right else left)
     before actual reached number absent published⟩
 
 /-- An actual admitted inside callback chooses its wrapper pair, and any newly marked target publication reads the marker installed at that same pre-request frontend. -/
@@ -95,7 +97,7 @@ theorem inside_facts (owner : RawCtxProtocolReveals.Owner S B) (number : U64) (b
       rcases query with request | ⟨left, right⟩
       · simp only [PqxdhLaterChallengeSavedClassification.phase, used, reduceCtorEq] at classified
       · by_cases equal : left.length = right.length
-        · exact challenge_facts mark sender route decode owner number bit left right equal current used
+        · exact challenge_facts (completedBinding := completedBinding) mark sender route decode owner number bit left right equal current used
             before result supported absent
         · simp only [PqxdhLaterChallengeSavedClassification.phase, used, equal, ite_false, reduceCtorEq] at classified
 
@@ -110,40 +112,40 @@ theorem inside_finish {Local Other : Type}
     (ambient : Snapshot) (state reached : Local)
     (cut : RawCtxForwardScan.Cut.pending details.callback reached ∈ support
       (RawCtxForwardScan.scan PqxdhInitialOriginForwardPost.selected selected selection impl
-        (PqxdhInitialOriginForwardPost.program mark sender route decode
+        (PqxdhInitialOriginForwardPost.program (completedBinding := completedBinding) mark sender route decode
           ((handler owner number bit details.request.query).run details.request.before) ambient.1 ambient.2)
-        (PqxdhInitialOriginForwardPost.program_covered mark sender route decode
+        (PqxdhInitialOriginForwardPost.program_covered (completedBinding := completedBinding) mark sender route decode
           ((handler owner number bit details.request.query).run details.request.before) ambient.1 ambient.2) state))
     (afterImpl : QueryImpl (Base extra RatchetChain I D K X Response Shared S B) (StateT Other ProbComp))
     (before : Other)
     (reply : (Base extra RatchetChain I D K X Response Shared S B).Range
-      (PqxdhInitialOriginContext.frame mark sender route decode details.callback).1)
+      (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode details.callback).1)
     (result : (Bool × Snapshot) × Other)
     (completed : result ∈ support ((simulateQ afterImpl
-      ((PqxdhInitialOriginContext.frame mark sender route decode details.callback).2 reply >>=
-        PqxdhLaterChallengeCapture.resumeOutside mark sender route decode
+      ((PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode details.callback).2 reply >>=
+        PqxdhLaterChallengeCapture.resumeOutside (completedBinding := completedBinding) mark sender route decode
           (fun reply => PqxdhLaterChallengeCapture.wrapped owner number bit (details.request.next reply.1) reply.2))).run before))
     (absent : ((owner, number), true) ∉ ambient.2.published)
     (accepted : result.1.1 = true) (published : ((owner, number), true) ∈ result.1.2.2.published) :
     ∃ middle : (((AdvSpec extra S B).Range details.request.query × State) × Snapshot) × Other,
       middle ∈ support ((simulateQ afterImpl
-        ((PqxdhInitialOriginContext.frame mark sender route decode details.callback).2 reply)).run before) ∧
+        ((PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode details.callback).2 reply)).run before) ∧
       Target number middle.1.1.2 ∧ ambient.2.installed owner = some true := by
   simp only [simulateQ_bind, StateT.run_bind, mem_support_bind_iff] at completed
   obtain ⟨middle, callback, outside⟩ := completed
-  have source := PqxdhLaterChallengeRemainderSupport.source_support mark sender route decode selected selection impl
+  have source := PqxdhLaterChallengeRemainderSupport.source_support (completedBinding := completedBinding) mark sender route decode selected selection impl
     ((handler owner number bit details.request.query).run details.request.before) ambient.1 ambient.2
     state reached details.callback cut afterImpl before reply middle callback
-  have facts := inside_facts mark sender route decode owner number bit details classified ambient middle.1 source absent
+  have facts := inside_facts (completedBinding := completedBinding) mark sender route decode owner number bit details classified ambient middle.1 source absent
   have later : result.1 ∈ support ((simulateQ sourceImpl
       (PqxdhLaterChallengeCapture.wrapped owner number bit (details.request.next middle.1.1.1) middle.1.1.2)).run middle.1.2) := by
     apply support_simulateQ_run'_subset afterImpl _ middle.2
     simpa only [PqxdhLaterChallengeCapture.resumeOutside, StateT.run'_eq, support_map, Set.mem_image] using
       (show ∃ value ∈ support ((simulateQ afterImpl
-        (PqxdhLaterChallengeCapture.resumeOutside mark sender route decode
+        (PqxdhLaterChallengeCapture.resumeOutside (completedBinding := completedBinding) mark sender route decode
           (fun reply => PqxdhLaterChallengeCapture.wrapped owner number bit (details.request.next reply.1) reply.2)
           middle.1)).run middle.2), value.1 = result.1 from ⟨result, outside, rfl⟩)
-  have event := outside_target mark sender route decode owner number bit (details.request.next middle.1.1.1)
+  have event := outside_target (completedBinding := completedBinding) mark sender route decode owner number bit (details.request.next middle.1.1.1)
     middle.1.1.2 middle.1.2 result.1 later facts.1 accepted
   exact ⟨middle, callback, event.1, facts.2 (event.2.mp published)⟩
 

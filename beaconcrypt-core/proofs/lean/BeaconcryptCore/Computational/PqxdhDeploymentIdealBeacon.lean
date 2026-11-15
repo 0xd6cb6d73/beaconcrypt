@@ -676,8 +676,9 @@ theorem world_beacon (t : Target count) (ensureInit : StateT A ProbComp Bool) (i
     have initial := PqxdhDeploymentEnvironment.start_initial setup ensureInit identityIndex runtime _ created start
       startedAt
     subst initial
-    exact ⟨_, rfl, PqxdhDeploymentIdealEnv.idealInv_start t created,
-      PqxdhDeploymentIdealProvenance.prov_initial t created, beacon_initial codec t p created⟩
+    exact ⟨_, rfl, PqxdhDeploymentIdealEnv.start_noPeer setup ensureInit identityIndex runtime _ created _ startedAt,
+      PqxdhDeploymentIdealEnv.idealInv_start t _, PqxdhDeploymentIdealProvenance.prov_initial t _,
+      beacon_initial codec t p _⟩
 
 /-- `ideal_slots_prefix` (design-v2 section 7.1, the prefix-closed form of the converse): under `Phase1ReadBack` and `Phase2ReadBack`, on every outcome of the provenance-annotated record world with the ideal environment of a target and for every prefix of its final transcript, a Server peer that designates the target on the prefix holds slot 0 in the final provenance annotation (L3 on the prefix), and when owner `k` designates the target on the prefix, it holds a slot in the final provenance annotation or its designating finish was made before the selected raw accept (L4 on the prefix). The designation's transcript facts (accept, bundle, build and finish entries) persist in the final transcript, where the provenance invariants and the key facts hold; designation itself is not monotone in the transcript (a smaller owner or session can become eligible later), so the statement is about the designation computed on the prefix. -/
 theorem ideal_slots_prefix (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)

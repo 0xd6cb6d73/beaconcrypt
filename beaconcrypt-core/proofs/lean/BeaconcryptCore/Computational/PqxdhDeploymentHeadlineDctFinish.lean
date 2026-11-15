@@ -11,8 +11,8 @@ import BeaconcryptCore.Computational.PqxdhDeploymentIdealBeacon
 A successful Beacon finish (`beaconcrypt/src/beacon.rs`, `finish_registration`) derives its root from the R1 table (route R1: the zero-salt Extract of the root key input as a lazily sampled table), starts the initial ratchet from the root alone and opens the registration record at sequence one. This module shows, on the native source schedule, that a successful finish tail leaves an R1 entry `v` and the frame's commitment cached at an input keyed by `seqKey setup v` (`PqxdhDeploymentHeadlineDctReceive`).
 
 - R1 growth. `R1Grows before after`: every R1 entry of `before` is in `after`. Every native callback of the Beacon finish keeps or extends the R1 table (`callbacks_grows`, with `sourceRoot_read`: the root callback reads the table at the root key input and returns the root of the value read).
-- The real finish. `tail_keyed`: on the source schedule's Beacon tail (`PqxdhBeaconPhase2Publication.tail` under `PqxdhRegistrationSchedule.callbacks`), a successful tail leaves the R1 entry of its root key input and the frame of its application input committed under the sequence-one key of that entry (`tail_supported`, `afterRoot_supported`, `afterOpening_success`, `PqxdhDeploymentRecordKernels.finish_receive`, `whole_keyed`, `factor_key`). `owner_keyed` lifts it to the native owner (`owner_success`, `prepare_origin`, `collect_inputs`: the prepared response is the Phase 2 reading of the input bytes) and `scheduleFinish_keyed` to the schedule's finish (`finish_source`): the frame is the one that `PqxdhServerAuthRecordPublicationEvent.frame` reads from the finish input.
-- The known-root branch of owner k's challenge finish. `consumer_keyed`: the related-root consumer's tail on the actual Beacon tail interpreter (`PqxdhServerAuthBeaconFactor.beacon_afterRoot_run` to the factored tail, `PqxdhPhase2LocalMatching.consumer_opening` and `raw_success` for sequence one, `factored_keyed`). `groupNative_keyed`: item 2's native grouped answer `groupNativeN` reads the R1 table through the private root interpreter `markedRoot` (the source root callback on the same table) and runs that tail (`afterRoot_embed`). `prepareCE_facts`: with the challenge handle, a prepared finish carries the Phase 2 reading of its input, and carries the challenge marker only when its ciphertext is the challenge ciphertext (`preparationCE`'s `if`; amendment A1/A3 of the design). `finishChallenge_keyed`: owner k's challenge finish on an input that is not `ChallengeRead` is answered by the known-root branch (`groupCE_known`), with the same conclusion as the real finish (`keepLift_run` for the state-keeping preparation).
+- The real finish. `tail_keyed`: on the source schedule's Beacon tail (`PqxdhBeaconPhase2Publication.tail` under `PqxdhRegistrationSchedule.callbacks`), a successful tail leaves the R1 entry of its root key input and the frame of its application input committed under the sequence-one key of that entry (`tail_supported`, `afterRoot_supported`, `afterOpening_success`, `PqxdhDeploymentRecordKernels.finish_receive`, `whole_keyed`, `factor_key`). `owner_keyed` lifts it to the native owner (`owner_success`, `prepare_origin`, `collect_inputs`: the prepared response is the Phase 2 reading of the input bytes) and `ownerFinish_keyed` carries the actual retained-Init transcript-hash prefix into `scheduleFinish_keyed` (`finish_source`): the frame is the one that `PqxdhServerAuthRecordPublicationEvent.frame` reads from the finish input.
+- The known-root branch of owner k's challenge finish. `consumer_keyed`: the related-root consumer's tail on the actual Beacon tail interpreter (`PqxdhServerAuthBeaconFactor.beacon_afterRoot_run` to the factored tail, `PqxdhPhase2LocalMatching.consumer_opening` and `raw_success` for sequence one, `factored_keyed`). `groupNative_keyed`: item 2's native grouped answer `groupNativeN` reads the R1 table through the private root interpreter `markedRoot` (the source root callback on the same table) and runs that tail (`afterRoot_embed`). `prepareCE_facts`: with the challenge handle, a prepared finish carries the Phase 2 reading of its input, and carries the challenge marker only when its ciphertext is the challenge ciphertext (`preparationCE`'s `if`; amendment A1/A3 of the design). `finishChallenge_keyed`: owner k's challenge finish on an input that is not `ChallengeRead` is answered by the known-root branch (`groupCE_known`), with the same conclusion as the real finish (`keepLift_run` for the state-keeping preparation). The actual hash prefix is retained before `groupedOwnerCE_keyed`; missing Init, decode rejection and every inactive phase keep their original optional failure outcomes.
 
 Support facts only; no assumption is used.
 -/
@@ -21,6 +21,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 
 set_option autoImplicit false
+set_option warningAsError true
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctFinish
 open PqxdhServerAuthExperiment (Setup Codec)
@@ -144,7 +145,7 @@ theorem tail_keyed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
     exact run_callbacks_grows setup codec _ intermediate _ after
   obtain ⟨initial, initialState, raw, appState, received, initialMember, appMember, rawMember, finalEq, opening⟩ :=
     PqxdhBeaconPhase2Publication.afterRoot_supported _ codec.frameRead prepared _ intermediate final staged after
-  obtain ⟨openedReply, sequenceOne, _, _⟩ := PqxdhBeaconPhase2Publication.afterOpening_success _ _ _ staged opening
+  obtain ⟨openedReply, sequenceOne, _, _⟩ := PqxdhBeaconPhase2Publication.afterOpening_success (associatedData := prepared.binding.associated_data) _ _ _ staged opening
   have value : initial = RawCtxSourceHkdf.initialResponse setup.source.crypto
       (PqxdhInitialRatchetComplementarity.beaconPending
         (PqxdhRootTableInitialization.rootArray (PqxdhSecretInputKdf.expandRoot setup.hmac v))).request := by
@@ -169,7 +170,7 @@ theorem tail_keyed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
       Prod.mk.injEq] at appMember
     exact appMember.1.symm
   have projected := PqxdhDeploymentRecordKernels.finish_receive setup codec ((RawCtxWholeOwner.rawReceive codec.frameRead
-    raw).run (PqxdhBeaconPhase2Publication.localOwner (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate)
+    raw).run (PqxdhBeaconPhase2Publication.localOwner (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate) prepared.binding.associated_data
       (PqxdhBeaconPhase2Publication.normalInitial (PqxdhInitialRatchetComplementarity.beaconPending
         (PqxdhRootTableInitialization.rootArray (PqxdhSecretInputKdf.expandRoot setup.hmac v)))
         (RawCtxSourceHkdf.initialResponse setup.source.crypto (PqxdhInitialRatchetComplementarity.beaconPending
@@ -177,7 +178,7 @@ theorem tail_keyed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
     appState
   have member : (received.1, PqxdhDeploymentRecordKernels.cacheOf received.2) ∈ support (RawCtxWholeOwner.rawGame
       (RawCtxReceiveConsumption.receiveNative setup.source) codec.frameRead raw
-      (PqxdhBeaconPhase2Publication.localOwner (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate)
+      (PqxdhBeaconPhase2Publication.localOwner (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate) prepared.binding.associated_data
         (PqxdhBeaconPhase2Publication.normalInitial (PqxdhInitialRatchetComplementarity.beaconPending
           (PqxdhRootTableInitialization.rootArray (PqxdhSecretInputKdf.expandRoot setup.hmac v)))
           (RawCtxSourceHkdf.initialResponse setup.source.crypto (PqxdhInitialRatchetComplementarity.beaconPending
@@ -186,7 +187,7 @@ theorem tail_keyed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
     unfold RawCtxWholeOwner.rawGame
     rw [← projected, support_map]
     exact ⟨received, rawMember, rfl⟩
-  obtain ⟨frame, decoded, keyed⟩ := PqxdhDeploymentHeadlineDctReceive.whole_keyed setup codec codec.frameRead raw _
+  obtain ⟨frame, decoded, keyed⟩ := PqxdhDeploymentHeadlineDctReceive.whole_keyed prepared.binding.associated_data setup codec codec.frameRead raw _
     (PqxdhSecretInputKdf.expandRoot setup.hmac v) _ _ member staged.opened openedReply sequenceOne
   rw [PqxdhDeploymentHeadlineDctReceive.factor_key] at keyed
   refine ⟨v, raw, frame, grows _ _ cached, application, decoded, ?_⟩
@@ -194,11 +195,11 @@ theorem tail_keyed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
   exact keyed
 
 /-- The source native Beacon owner: a successful finish on bytes `raw` leaves an R1 entry `v` and the frame that the public Phase 2 reading of `raw` gives committed in the final CTX cache under the sequence-one key of `v`. -/
-theorem owner_keyed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (raw : Pqxdh.Bytes)
+theorem owner_keyed (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding) (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (raw : Pqxdh.Bytes)
     (owner : PqxdhRegistrationSchedule.Owner KemSK) (shared : NativeState KemSK)
     (result : (Option Pqxdh.Bytes × PqxdhRegistrationSchedule.Owner KemSK) × NativeState KemSK)
     (supported : result ∈ support ((simulateQ (PqxdhRegistrationSchedule.callbacks setup codec)
-      (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw owner)).run shared))
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw owner)).run shared))
     (plaintext : Pqxdh.Bytes) (replied : result.1.1 = some plaintext) :
     ∃ u v frame, result.2.1.cache u = some v ∧ PqxdhServerAuthRecordPublicationEvent.frame codec raw = some frame ∧
       KeyedCommit frame result.2.2.ctx (seqKey setup v).toList := by
@@ -207,7 +208,7 @@ theorem owner_keyed (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   subst replied
   rw [PqxdhBeaconPhase2Publication.nativeOwner, ← QueryImpl.simulateQ_compose] at supported
   obtain ⟨control, prekey, oneTime, kem, prepared, intermediate, staged, _, prepareSupport, tailSupport,
-    _, _, _, _⟩ := PqxdhBeaconPhase2Publication.owner_success _ codec.frameRead raw plaintext owner next
+    _, _, _, _⟩ := PqxdhBeaconPhase2Publication.owner_success (completedBinding := completedBinding) _ codec.frameRead raw plaintext owner next
       shared final supported
   have handlerEq : (fun query => (PqxdhRegistrationSchedule.callbacks setup codec ∘ₛ
       PqxdhBeaconPhase2Publication.nativeAdapter) (.inl query)) =
@@ -217,7 +218,7 @@ theorem owner_keyed (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     rfl
   rw [handlerEq] at prepareSupport
   obtain ⟨inputs, middle, collected, _, _, responseEq, _, _⟩ :=
-    PqxdhBeaconPhase2Preparation.prepare_origin _ control owner.beacon.identity prekey oneTime kem raw shared
+    PqxdhBeaconPhase2Preparation.prepare_origin (completedBinding := completedBinding) _ control owner.beacon.identity prekey oneTime kem raw shared
       intermediate prepared prepareSupport
   obtain ⟨decoded, _⟩ := PqxdhDeploymentCompileFootprint.collect_inputs setup codec owner.beacon.identity prekey
     oneTime kem raw shared inputs middle collected
@@ -226,6 +227,28 @@ theorem owner_keyed (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   refine ⟨_, v, frame, cached, ?_, keyed⟩
   simp only [PqxdhServerAuthRecordPublicationEvent.frame, decoded, ← responseEq, application, frameDecoded,
     Option.bind_eq_bind, Option.bind_some]
+
+/-- The actual retained-Init transcript hash precedes native finish; every successful source result retains the native tail's keyed commitment. -/
+theorem ownerFinish_keyed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) (shared : NativeState KemSK)
+    (result : (Option Pqxdh.Bytes × PqxdhRegistrationSchedule.Owner KemSK) × NativeState KemSK)
+    (supported : result ∈ support ((PqxdhRegistrationSchedule.ownerFinish setup codec retained raw owner).run shared))
+    (plaintext : Pqxdh.Bytes) (replied : result.1.1 = some plaintext) :
+    ∃ u v frame, result.2.1.cache u = some v ∧ PqxdhServerAuthRecordPublicationEvent.frame codec raw = some frame ∧
+      KeyedCommit frame result.2.2.ctx (seqKey setup v).toList := by
+  unfold PqxdhRegistrationSchedule.ownerFinish at supported
+  split at supported
+  · split at supported
+    · simp only [StateT.run_bind, mem_support_bind_iff] at supported
+      obtain ⟨hashed, _hashSupport, nativeSupport⟩ := supported
+      exact owner_keyed _ setup codec raw owner hashed.2 result nativeSupport plaintext replied
+    · simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
+      subst result
+      cases replied
+  · simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
+    subst result
+    cases replied
 
 /-- The source schedule's finish: a successful finish of an owner on bytes `raw` leaves an R1 entry `v` and the frame that the public Phase 2 reading of `raw` gives committed in the final CTX cache under the sequence-one key of `v`. -/
 theorem scheduleFinish_keyed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (index : ℕ)
@@ -246,7 +269,7 @@ theorem scheduleFinish_keyed (setup : Setup baseSpec KemSK) (codec : Codec Reade
       change result ∈ support (PqxdhRegistrationSchedule.finish setup codec index raw state) at supported
       rw [PqxdhRegistrationSchedule.finish_source setup codec index raw state owner found, support_map] at supported
       obtain ⟨reached, member, rfl⟩ := supported
-      exact owner_keyed setup codec raw owner state.shared reached member plaintext replied
+      exact ownerFinish_keyed setup codec (state.inits index) raw owner state.shared reached member plaintext replied
 
 /-! ### The related-root consumer's tail (the known-root branch) -/
 
@@ -272,7 +295,7 @@ theorem consumer_keyed (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
       pending).response) : StateT (RawCtxSharedPrimitive.SharedState Unit) ProbComp _).run initialState) at appMember
     rw [StateT.run_pure, support_pure, Set.mem_singleton_iff, Prod.mk.injEq] at appMember
     exact appMember.1.symm
-  obtain ⟨_, sequenceOne, _, _⟩ := PqxdhBeaconPhase2Publication.afterOpening_success _ _ _ staged staging
+  obtain ⟨_, sequenceOne, _, _⟩ := PqxdhBeaconPhase2Publication.afterOpening_success (associatedData := pending.metadata.completed.associated_data) _ _ _ staged staging
   obtain ⟨frame, _, input', plaintext, _, decoded, _, _, _, sequence, _, messageEq, _⟩ :=
     RawCtxOwnerProvenance.raw_success _ codec.frameRead raw _ application received rawMember staged.opened reply
   have frameOne : frame.sequence = 1#u64 := by
@@ -323,13 +346,13 @@ theorem groupNative_keyed (setup : Setup baseSpec KemSK) (codec : Codec Reader R
 /-! ### Owner k's preparation with the challenge handle -/
 
 /-- Owner k's preparation with the challenge handle (`preparationCE`): a prepared finish carries the response that the Phase 2 reader gives on the input bytes, and it carries the challenge marker only when that response's ciphertext is the challenge ciphertext (`ChallengeRead`): the marker is answered only on the challenge ciphertext, every other ciphertext gives a known decapsulation result. -/
-theorem prepareCE_facts (challenge : PqxdhKemIndCca.MlKem768Ciphertext)
+theorem prepareCE_facts (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding) (challenge : PqxdhKemIndCca.MlKem768Ciphertext)
     (control : beaconcrypt_core.pqxdh.BeaconInitSent) (identity : PqxdhJointIdentity.IdentitySeed)
     (prekey oneTime : PqxdhJointGapDh.ScalarBytes) (kem : PqxdhKemIndCca.MlKem768PublicKey × KemSK)
     (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (raw : Pqxdh.Bytes)
     (pending : PqxdhRegistrationJointKemPostSkeleton.Pending Response)
     (member : some pending ∈ support (simulateQ (PqxdhDeploymentIdealSteps.preparationCE (Response := Response) setup
-      codec challenge) (PqxdhBeaconPhase2Shared.prepare control identity prekey oneTime kem raw))) :
+      codec challenge) (PqxdhBeaconPhase2Shared.prepare (completedBinding := completedBinding) control identity prekey oneTime kem raw))) :
     codec.read2 raw = some pending.response ∧
       (pending.root.shared = .challenge → PqxdhDeploymentIdealBeacon.ChallengeRead codec challenge raw) := by
   simp only [PqxdhBeaconPhase2Shared.prepare, simulateQ_bind, mem_support_bind_iff] at member
@@ -384,6 +407,80 @@ theorem keepLift_run {κ σ α : Type} {spec : OracleSpec κ} (impl : QueryImpl 
         mem_support_bind_iff]
       exact ⟨reply', OracleComp.mem_support_of_mem_support_liftComp _ _ _ replied, inner⟩
 
+/-- A grouped native owner at its actual per-call binding leaves the same sequence-one keyed commitment on every nonchallenge success. -/
+theorem groupedOwnerCE_keyed (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+    (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (hidden : PqxdhServerAuthKeySchedule.Output → PqxdhRegistrationJointKemPostSkeleton.Hidden Response)
+    (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) (shared : NativeState KemSK)
+    (recorded : Option PqxdhDeploymentIdealSlots.Coord)
+    (result : (Option Pqxdh.Bytes × PqxdhRegistrationSchedule.Owner KemSK) ×
+      (NativeState KemSK × Option PqxdhDeploymentIdealSlots.Coord))
+    (supported : result ∈ support ((simulateQ (PqxdhDeploymentIdealSteps.ownerImplCE setup codec hidden challenge)
+      (PqxdhDeploymentIdealSteps.groupedOwnerCE (Response := Response) completedBinding raw owner)).run (shared, recorded)))
+    (reply : Pqxdh.Bytes) (replied : result.1.1 = some reply)
+    (other : ¬ PqxdhDeploymentIdealBeacon.ChallengeRead codec challenge raw) :
+    ∃ u v frame, result.2.1.1.cache u = some v ∧
+      PqxdhServerAuthRecordPublicationEvent.frame codec raw = some frame ∧
+      KeyedCommit frame result.2.1.2.ctx (seqKey setup v).toList := by
+  unfold PqxdhDeploymentIdealSteps.groupedOwnerCE at supported
+  split at supported
+  · rename_i control prekey oneTime kem _
+    simp only [simulateQ_bind, StateT.run_bind, mem_support_bind_iff] at supported
+    obtain ⟨⟨prepared, afterPrep⟩, prepMember, supported⟩ := supported
+    rw [← QueryImpl.simulateQ_compose] at prepMember
+    have liftEq : (PqxdhDeploymentIdealSteps.ownerImplCE setup codec hidden challenge ∘ₛ
+        (fun query => ((PqxdhDeploymentIdealSteps.OwnerSpecCE KemSK Response).query (.inl query) :
+          OracleComp (PqxdhDeploymentIdealSteps.OwnerSpecCE KemSK Response) _))) =
+        keepLift (PqxdhDeploymentIdealSteps.preparationCE setup codec challenge) := by
+      funext query
+      simp only [QueryImpl.apply_compose, simulateQ_spec_query, PqxdhDeploymentIdealSteps.ownerImplCE]
+      rfl
+    rw [liftEq] at prepMember
+    obtain ⟨stateEq, prepSupport⟩ := keepLift_run _ _ _ _ prepMember
+    simp only at stateEq prepSupport supported
+    subst stateEq
+    cases prepared with
+    | none =>
+        simp only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
+        rw [supported, PqxdhDeploymentIdealBeaconFacts.finish_none] at replied
+        cases replied
+    | some pending =>
+        obtain ⟨readEq, marker⟩ := prepareCE_facts completedBinding challenge control owner.beacon.identity prekey oneTime kem setup
+          codec raw pending prepSupport
+        simp only [simulateQ_bind, simulateQ_spec_query, simulateQ_pure, StateT.run_bind, StateT.run_pure,
+          mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at supported
+        obtain ⟨⟨staged, afterGroup⟩, groupMember, rfl⟩ := supported
+        cases staged with
+        | none =>
+            rw [PqxdhDeploymentIdealBeaconFacts.finish_none] at replied
+            cases replied
+        | some staged =>
+            cases knownShared : pending.root.shared with
+            | challenge => exact absurd (marker knownShared) other
+            | known secret =>
+                change (some staged, afterGroup) ∈ support ((PqxdhDeploymentIdealSteps.groupCE setup codec hidden
+                  pending).run (shared, recorded)) at groupMember
+                rw [PqxdhDeploymentIdealSteps.groupCE_known setup codec hidden pending secret knownShared, support_map]
+                  at groupMember
+                obtain ⟨native, nativeMember, same⟩ := groupMember
+                have nativeMember' := OracleComp.mem_support_of_mem_support_liftComp _ _ _ nativeMember
+                have stagedEq : native.1 = some staged := congrArg Prod.fst same
+                have afterEq : afterGroup = (native.2, recorded) := (congrArg Prod.snd same).symm
+                obtain ⟨u, v, raw', frame, cached, application, decoded, keyed⟩ :=
+                  groupNative_keyed setup codec _ pending shared native.2 staged
+                    (by rw [← stagedEq]; exact nativeMember')
+                refine ⟨u, v, frame, ?_, ?_, ?_⟩
+                · rw [afterEq]
+                  exact cached
+                · simp only [PqxdhServerAuthRecordPublicationEvent.frame, readEq, application, decoded,
+                    Option.bind_eq_bind, Option.bind_some]
+                · rw [afterEq]
+                  exact keyed
+  · simp only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
+    rw [supported] at replied
+    cases replied
+
 /-- Owner k's challenge finish (`finishChallenge`) on an input that is not `ChallengeRead`: a successful finish leaves an R1 entry `v` and the frame of the Phase 2 reading of the input committed in the final CTX cache under the sequence-one key of `v`. Only the challenge ciphertext gets the challenge marker (`prepareCE_facts`), so the grouped request is answered by the known-root branch (`groupCE_known`, `groupNative_keyed`). -/
 theorem finishChallenge_keyed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (hidden : PqxdhServerAuthKeySchedule.Output → PqxdhRegistrationJointKemPostSkeleton.Hidden Response)
@@ -400,78 +497,41 @@ theorem finishChallenge_keyed (setup : Setup baseSpec KemSK) (codec : Codec Read
   change result ∈ support (match state.owners[index]? with
     | none => pure (none, (state, recorded))
     | some owner => do
-        let result ← (simulateQ (PqxdhDeploymentIdealSteps.ownerImplCE setup codec hidden challenge)
-          (PqxdhDeploymentIdealSteps.groupedOwnerCE (Response := Response) raw owner)).run (state.shared, recorded)
-        pure (result.1.1, (({ shared := result.2.1, owners := state.owners.set index result.1.2 } :
-          PqxdhRegistrationSchedule.State KemSK), result.2.2))) at supported
+        let result ← (PqxdhDeploymentIdealSteps.hashedOwnerCE setup codec hidden challenge
+          (state.inits index) raw owner).run (state.shared, recorded)
+        pure (result.1.1, ({ state with shared := result.2.1, owners := state.owners.set index result.1.2 },
+          result.2.2))) at supported
   cases found : state.owners[index]? with
   | none =>
-      rw [found] at supported
-      simp only [support_pure, Set.mem_singleton_iff] at supported
-      subst supported
+      simp only [found, support_pure, Set.mem_singleton_iff] at supported
+      subst result
       cases replied
   | some owner =>
-      rw [found] at supported
-      simp only [mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at supported
+      simp only [found, mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at supported
       obtain ⟨ownerResult, ownerMember, rfl⟩ := supported
       simp only at replied
-      unfold PqxdhDeploymentIdealSteps.groupedOwnerCE at ownerMember
-      split at ownerMember
-      · rename_i control prekey oneTime kem _
-        simp only [simulateQ_bind, StateT.run_bind, mem_support_bind_iff] at ownerMember
-        obtain ⟨⟨prepared, afterPrep⟩, prepMember, ownerMember⟩ := ownerMember
-        rw [← QueryImpl.simulateQ_compose] at prepMember
-        have liftEq : (PqxdhDeploymentIdealSteps.ownerImplCE setup codec hidden challenge ∘ₛ
-            (fun query => ((PqxdhDeploymentIdealSteps.OwnerSpecCE KemSK Response).query (.inl query) :
-              OracleComp (PqxdhDeploymentIdealSteps.OwnerSpecCE KemSK Response) _))) =
-            keepLift (PqxdhDeploymentIdealSteps.preparationCE setup codec challenge) := by
-          funext query
-          simp only [QueryImpl.apply_compose, simulateQ_spec_query, PqxdhDeploymentIdealSteps.ownerImplCE]
-          rfl
-        rw [liftEq] at prepMember
-        obtain ⟨stateEq, prepSupport⟩ := keepLift_run _ _ _ _ prepMember
-        simp only at stateEq prepSupport ownerMember
-        subst stateEq
-        cases prepared with
-        | none =>
-            simp only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] at ownerMember
-            rw [ownerMember, PqxdhDeploymentIdealBeaconFacts.finish_none] at replied
-            cases replied
-        | some pending =>
-            obtain ⟨readEq, marker⟩ := prepareCE_facts challenge control owner.beacon.identity prekey oneTime kem setup
-              codec raw pending prepSupport
-            simp only [simulateQ_bind, simulateQ_spec_query, simulateQ_pure, StateT.run_bind, StateT.run_pure,
-              mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at ownerMember
-            obtain ⟨⟨staged, afterGroup⟩, groupMember, rfl⟩ := ownerMember
-            cases staged with
-            | none =>
-                rw [PqxdhDeploymentIdealBeaconFacts.finish_none] at replied
-                cases replied
-            | some staged =>
-                cases shared : pending.root.shared with
-                | challenge => exact absurd (marker shared) other
-                | known secret =>
-                    change (some staged, afterGroup) ∈ support ((PqxdhDeploymentIdealSteps.groupCE setup codec hidden
-                      pending).run (state.shared, recorded)) at groupMember
-                    rw [PqxdhDeploymentIdealSteps.groupCE_known setup codec hidden pending secret shared, support_map]
-                      at groupMember
-                    obtain ⟨native, nativeMember, same⟩ := groupMember
-                    have nativeMember' := OracleComp.mem_support_of_mem_support_liftComp _ _ _ nativeMember
-                    have stagedEq : native.1 = some staged := congrArg Prod.fst same
-                    have afterEq : afterGroup = (native.2, recorded) := (congrArg Prod.snd same).symm
-                    obtain ⟨u, v, raw', frame, cached, application, decoded, keyed⟩ :=
-                      groupNative_keyed setup codec _ pending state.shared native.2 staged
-                        (by rw [← stagedEq]; exact nativeMember')
-                    refine ⟨u, v, frame, ?_, ?_, ?_⟩
-                    · rw [afterEq]
-                      exact cached
-                    · simp only [PqxdhServerAuthRecordPublicationEvent.frame, readEq, application, decoded,
-                        Option.bind_eq_bind, Option.bind_some]
-                    · rw [afterEq]
-                      exact keyed
-      · simp only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] at ownerMember
-        rw [ownerMember] at replied
+      unfold PqxdhDeploymentIdealSteps.hashedOwnerCE at ownerMember
+      cases phase : owner.beacon.phase <;> simp only [phase] at ownerMember
+      all_goals try {
+        simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at ownerMember
+        subst ownerResult
+        cases replied }
+      cases retained : state.inits index with
+      | none =>
+        simp only [retained, StateT.run_pure, support_pure, Set.mem_singleton_iff] at ownerMember
+        subst ownerResult
         cases replied
+      | some init =>
+        cases decoded : PqxdhServerAuthExperiment.responseOf codec raw with
+        | none =>
+          simp only [retained, decoded, StateT.run_pure, support_pure, Set.mem_singleton_iff] at ownerMember
+          subst ownerResult
+          cases replied
+        | some response =>
+          simp only [retained, decoded, StateT.run_bind, mem_support_bind_iff] at ownerMember
+          obtain ⟨hashed, _hashSupport, groupedSupport⟩ := ownerMember
+          exact groupedOwnerCE_keyed _ setup codec hidden challenge raw owner hashed.2.1 hashed.2.2
+            ownerResult groupedSupport reply replied other
 
 end BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctFinish
 
@@ -580,3 +640,19 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctFinish.finishChal
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctFinish.finishChallenge_keyed
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctFinish.ownerFinish_keyed' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctFinish.ownerFinish_keyed
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctFinish.groupedOwnerCE_keyed' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctFinish.groupedOwnerCE_keyed

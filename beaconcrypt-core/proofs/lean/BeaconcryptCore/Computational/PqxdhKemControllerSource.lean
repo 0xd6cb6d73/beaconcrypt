@@ -9,6 +9,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhKemControllerSource
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhKemCoordinateController
 open PqxdhBeaconPhase2Preparation (Bytes Word32)
 variable {Reader E I D X Response A Result : Type}
@@ -30,7 +31,7 @@ def server (raw : Bytes) : OracleComp (ControlledSpec Reader E I D X Response)
 noncomputable def beacon (raw : Bytes) (owner : PqxdhBeaconPhase2Preparation.State I D Handle) :
     OracleComp (ControlledSpec Reader E I D X Response)
       (Option (PqxdhBeaconPhase2Preparation.Prepared Response) × PqxdhBeaconPhase2Preparation.State I D Handle) :=
-  simulateQ compiler (simulateQ beaconLift (PqxdhBeaconPhase2Preparation.owner raw owner))
+  simulateQ compiler (simulateQ beaconLift (PqxdhBeaconPhase2Preparation.owner (completedBinding := completedBinding) raw owner))
 
 set_option backward.isDefEq.respectTransparency false in
 /-- Every original Server prefix result and complete interpreter poststate feed the same evaluated continuation after erasing only the added disclosure audit. -/
@@ -55,9 +56,9 @@ theorem beacon_source
     (native : QueryImpl (NativeSpec Reader E I D X Response) (StateT A ProbComp))
     (raw : Bytes) (owner : PqxdhBeaconPhase2Preparation.State I D Handle) (state : State A)
     (next : (Option (PqxdhBeaconPhase2Preparation.Prepared Response) × PqxdhBeaconPhase2Preparation.State I D Handle) × A → ProbComp Result) :
-    ((simulateQ (impl (concrete native) native) (beacon raw owner)).run state >>= fun result =>
+    ((simulateQ (impl (concrete native) native) (beacon (completedBinding := completedBinding) raw owner)).run state >>= fun result =>
       next (result.1, result.2.1)) =
-        ((simulateQ (fun query => native (.inr query)) (PqxdhBeaconPhase2Preparation.owner raw owner)).run state.1 >>= next) := by
+        ((simulateQ (fun query => native (.inr query)) (PqxdhBeaconPhase2Preparation.owner (completedBinding := completedBinding) raw owner)).run state.1 >>= next) := by
   rw [beacon, continuation_source]
   congr 1
   rw [← QueryImpl.simulateQ_compose]

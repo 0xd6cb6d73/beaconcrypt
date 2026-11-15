@@ -35,13 +35,13 @@ theorem literal (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     exact ⟨(((.ok (some prepared),leadingOwners),leadingEnv),middle),earlier,rfl⟩
   have unchanged:=RegistrationNativeKemBirthOwners.prepare_owners edPin mlPin keyId owners environment _ reached
   obtain ⟨born,afterBorn,worldOwner,final,_generated,_allocated,returned⟩ :=
-    RegistrationNativeBeaconBirth.append_supported setup source implementation edPin keyId prepared.pin prepared.credentials
+    RegistrationNativeBeaconBirth.append_supported setup source implementation edPin keyId prepared.pin
       prepared.identity prepared.prekey leadingOwners leadingEnv middle _ appended
   have same : index=leadingOwners.length := Option.some.inj (RustM.ok.inj (congrArg (fun result=>result.1.1.1) returned))
   exact same.trans (congrArg List.length unchanged)
 
 theorem native (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (before after : RegistrationNativeExperiment.State n KemSK source) (index : Nat)
     (supported : (.ok (some index),after)∈support
@@ -57,7 +57,7 @@ theorem native (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : Pq
 
 theorem platform (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (before after : RegistrationNativeExperiment.State n KemSK source) (previous next : Platform) (index : Nat)
     (supported : ((.ok (some index),after),next)∈support

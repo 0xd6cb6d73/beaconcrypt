@@ -30,6 +30,43 @@ theorem keysAt_record (audit : Audit) (address index selected : Nat) (reply : Op
   · simp [keysAt, Audit.record, same]
   · simp [keysAt, Audit.record, same]
 
+private theorem annotated_finish_messages (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (identityIndex kemIndex target : Nat) (retained : Option Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) (state : PqxdhRegistrationJointFinish.State KemSK)
+    (result : (Option Pqxdh.Bytes × PqxdhRegistrationSchedule.Owner KemSK) ×
+      PqxdhRegistrationJointFinish.State KemSK)
+    (supported : result ∈ support ((PqxdhRegistrationJointFinish.annotatedFinish setup codec identityIndex kemIndex
+      retained raw owner).run state)) :
+    messagesAt target result.2.1.1.transcript = messagesAt target state.1.1.transcript := by
+  cases phase : owner.beacon.phase <;>
+    simp only [PqxdhRegistrationJointFinish.annotatedFinish, phase] at supported
+  all_goals try { rw [StateT.run_pure, mem_support_pure_iff] at supported; cases supported; rfl }
+  case initSent control prekey oneTime kem =>
+    cases retained with
+    | none =>
+      change result ∈ support (pure ((none, PqxdhBeaconPhase2Preparation.abort control owner), state)) at supported
+      rw [mem_support_pure_iff] at supported
+      cases supported
+      rfl
+    | some init =>
+      cases decoded : PqxdhServerAuthExperiment.responseOf codec raw with
+      | none =>
+        simp only [decoded, StateT.run_pure, mem_support_pure_iff] at supported
+        cases supported
+        rfl
+      | some response =>
+        simp only [decoded] at supported
+        rw [StateT.run_bind, mem_support_bind_iff] at supported
+        obtain ⟨hashed, hashSupport, nativeSupport⟩ := supported
+        have keeps : hashed.2.1 = state.1 := by
+          simp only [PqxdhRegistrationJointFinish.onNative, StateT.run, support_map] at hashSupport
+          obtain ⟨answer, _, rfl⟩ := hashSupport
+          rfl
+        have preserved := PqxdhRegistrationJointNonSigningHistory.finish
+          (completedBinding := PqxdhTranscriptAd.completedOf control hashed.1) setup codec identityIndex kemIndex target
+          codec.frameRead raw owner hashed.2 result nativeSupport
+        simpa only [keeps] using preserved
+
 /-- Every other literal source command preserves all successful signing messages. -/
 theorem source_nonbundle_messages (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (seed : IdentitySeed) (serverIndex : Nat)
@@ -65,8 +102,8 @@ theorem source_nonbundle_messages (setup : Setup baseSpec KemSK) (codec : Codec 
           PqxdhRegistrationJointSchedule.handler, PqxdhRegistrationJointSchedule.finish,
           StateT.run, found, support_map, Set.mem_image] at supported
         obtain ⟨reached, reachedMember, rfl⟩ := supported
-        exact PqxdhRegistrationJointNonSigningHistory.finish setup codec entry.identityIndex entry.kemIndex
-          selected codec.frameRead raw entry.owner (state.pool, state.shared) reached reachedMember
+        exact annotated_finish_messages setup codec entry.identityIndex entry.kemIndex selected (state.inits address)
+          raw entry.owner (state.pool, state.shared) reached reachedMember
     all_goals
       exact (PqxdhDeploymentSigningHistory.quiet_step setup codec checks seed serverIndex _ rfl
         state result supported).messages selected

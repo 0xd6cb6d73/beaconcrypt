@@ -52,6 +52,41 @@ theorem phase1_history (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
   split <;> simp only [simulateQ_pure, StateT.run_pure, map_pure]
 
 
+set_option backward.isDefEq.respectTransparency false in
+/-- The logged Phase1 compiler retains the complete logged source output (written bytes, Beacon state and retained bundle) and appends exactly the same three real signing events, including on writer refusal. -/
+theorem loggedPhase1_history (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (seed : IdentitySeed) (publicValue : PublicChallenge) (oneTime : ScalarBytes)
+    (kemPk : PqxdhKemIndCca.MlKem768PublicKey) (kemSk : KemSK) (history : History) :
+    (simulateQ (jointImpl setup.joint seed)
+      (loggedPhase1 setup codec (setup.joint.publicKeys seed) publicValue oneTime kemPk kemSk)).run history =
+    (fun result => (result, history ++ signingEvents setup.joint seed
+      ⟨publicValue.prekey, setup.dh.publicKey oneTime, kemPk⟩)) <$>
+        phase1Logged setup codec seed publicValue oneTime kemPk kemSk := by
+  rw [phase1Logged_eq]
+  simp only [loggedPhase1, PqxdhLivePhase1Bundle.bundle, freshBeacon,
+    simulateQ_bind, simulateQ_spec_query, signingLogImpl, signingImpl, StateT.run_bind, StateT.run_lift]
+  simp only [simulateQ_pure, StateT.run_pure, pure_bind, PqxdhLivePhase1Bundle.afterGenerated,
+    PqxdhBeaconPhase1Publication.prepare, Option.map_some, publicProjection, PqxdhLivePhase1Bundle.signing,
+    PqxdhJointPhase1SourceWriter.signingProgram, simulateQ_bind, simulateQ_spec_query, signingLogImpl, signingImpl,
+    simulateQ_map, StateT.run_bind, StateT.run_map, StateT.run_lift, bind_assoc]
+  rw [sign_run]
+  simp only [map_pure, pure_bind, simulateQ_bind, simulateQ_spec_query, signingLogImpl, signingImpl,
+    simulateQ_map, StateT.run_bind, StateT.run_map, StateT.run_lift, bind_assoc]
+  rw [sign_run]
+  simp only [map_pure, pure_bind, simulateQ_bind, simulateQ_spec_query, simulateQ_pure, signingLogImpl, signingImpl,
+    simulateQ_map, StateT.run_bind, StateT.run_map, StateT.run_pure, StateT.run_lift, bind_assoc]
+  rw [sign_run]
+  simp only [map_pure, pure_bind, Option.map_some]
+  simp only [PqxdhLivePhase1Bundle.writing, PqxdhBeaconPhase1Publication.afterSigning,
+    PqxdhBeaconPhase1Publication.prepare, phase1Bundle, signingEvents, List.append_assoc, List.cons_append,
+    List.nil_append]
+  simp only [Option.map_some, simulateQ_bind, simulateQ_spec_query, signingLogImpl, StateT.run_bind]
+  rcases written : codec.write1 (phase1Bundle setup publicValue seed oneTime kemPk) with _ | bytes <;>
+    simp only [phase1Bundle] at written <;>
+    simp only [written, StateT.run, simulateQ_pure, Option.isSome_none, Option.isSome_some, Bool.false_eq_true,
+      ↓reduceIte]
+  all_goals rfl
+
 /-- The exact subset of joint requests that issue a signature. -/
 def IsSign : AdversarySpec.Domain → Prop
   | .inr (.sign _) => True
@@ -101,22 +136,26 @@ theorem prefix_quiet (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
   all_goals first | exact auxiliary_quiet setup codec _ | trivial
 
 /-- The entire original preparation, including every rejection and locally interpreted KEM query, makes no signing request. -/
-theorem prepare_quiet (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+theorem prepare_quiet (completedBinding : session.CompletedRegistrationBinding)
+    (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (scalar : ScalarBytes) (control : pqxdh.BeaconInitSent) (identity : Unit)
     (oneTime : Unit ⊕ ScalarBytes) (kem : KemSK) (raw : Pqxdh.Bytes) :
-    (prepare setup codec scalar control identity oneTime kem raw).IsQueryBoundP IsSign 0 := by
+    (prepare completedBinding setup codec scalar control identity oneTime kem raw).IsQueryBoundP IsSign 0 := by
   simp only [prepare, StateT.run'_eq, isQueryBoundP_map_iff]
   exact (isQueryBoundP_false _ 0).simulateQ_run_StateT_of_step
     (fun query state => by simpa only [ite_false] using prefix_quiet setup codec scalar query state) ()
 
 /-- The full native stage continues locally after preparation and adds no signing capability. -/
-theorem stage_quiet (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+theorem stage_quiet (completedBinding : session.CompletedRegistrationBinding)
+    (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (serverSeed : IdentitySeed) (scalar : ScalarBytes) (control : pqxdh.BeaconInitSent)
     (identity : Unit) (oneTime : Unit ⊕ ScalarBytes) (kem : KemSK) (raw : Pqxdh.Bytes)
     (state : PqxdhServerAuthNative.NativeState KemSK) :
-    ((stage setup codec serverSeed scalar control identity oneTime kem raw).run state).IsQueryBoundP IsSign 0 := by
+    ((stage completedBinding setup codec serverSeed scalar control identity oneTime kem raw).run state).IsQueryBoundP
+      IsSign 0 := by
   simp only [stage, StateT.run]
-  apply isQueryBoundP_bind (n := 0) (m := 0) (prepare_quiet setup codec scalar control identity oneTime kem raw)
+  apply isQueryBoundP_bind (n := 0) (m := 0)
+    (prepare_quiet completedBinding setup codec scalar control identity oneTime kem raw)
   rintro (_ | original) _
   · trivial
   · exact coins_quiet _
@@ -129,10 +168,14 @@ theorem finish_quiet (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
   simp only [finish, StateT.run]
   cases state.2.beacon.beacon.phase <;> simp only [isQueryBoundP_pure]
   rename_i control prekey oneTime kem
-  apply isQueryBoundP_bind (n := 0) (m := 0)
-    (stage_quiet setup codec serverSeed scalar control state.2.beacon.beacon.identity oneTime kem raw state)
-  intro result _
-  trivial
+  split
+  · apply isQueryBoundP_bind (n := 0) (m := 0) (coins_quiet _)
+    intro hashed _
+    apply isQueryBoundP_bind (n := 0) (m := 0)
+      (stage_quiet _ setup codec serverSeed scalar control hashed.2.2.beacon.beacon.identity oneTime kem raw hashed.2)
+    intro result _
+    trivial
+  · trivial
 
 set_option backward.isDefEq.respectTransparency false in
 /-- No exposed native API callback can issue a target signature after Phase1. -/
@@ -185,14 +228,14 @@ theorem execution_history {Result : Type} (setup : Setup baseSpec KemSK) (codec 
     (serverSeed beaconSeed : IdentitySeed) (scalar oneTime : ScalarBytes)
     (keys : PqxdhKemIndCca.MlKem768PublicKey × KemSK)
     (work : AuthInput → OracleComp ServerAuthSpec Result) (history : History)
-    (result : ((Option Pqxdh.Bytes × RawCtxBeaconLifecycle.State Unit (Unit ⊕ ScalarBytes) KemSK) ×
-      (Result × PqxdhServerAuthNative.NativeState KemSK)) × History)
+    (result : (((Option Pqxdh.Bytes × RawCtxBeaconLifecycle.State Unit (Unit ⊕ ScalarBytes) KemSK) ×
+      Option Phase1Candidate) × (Result × PqxdhServerAuthNative.NativeState KemSK)) × History)
     (supported : result ∈ support ((simulateQ (jointImpl setup.joint beaconSeed)
       (execution setup codec checks serverSeed scalar oneTime keys work (setup.joint.publicKeys beaconSeed))).run history)) :
     signedMessages result.2 = signedMessages history ++
       [prekeyMessage (setup.dh.publicKey scalar), oneTimeMessage (setup.dh.publicKey oneTime), pqMessage keys.1] := by
   simp only [execution, simulateQ_bind, simulateQ_pure, StateT.run_bind, StateT.run_pure,
-    phase1_history, bind_map_left, mem_support_bind_iff, mem_support_pure_iff] at supported
+    loggedPhase1_history, bind_map_left, mem_support_bind_iff, mem_support_pure_iff] at supported
   obtain ⟨published, _, middle, reached, rfl⟩ := supported
   simpa [signedMessages, signingEvents, List.filterMap_append, PqxdhJointGapDh.challenge] using
     quiet_history setup.joint beaconSeed _ (program_quiet setup codec checks serverSeed scalar _ _) _ middle reached
@@ -220,6 +263,11 @@ end BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityLog
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityLog.phase1_history
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityLog.loggedPhase1_history' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityLog.loggedPhase1_history
 /-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityLog.simulate_quiet' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/

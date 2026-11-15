@@ -207,7 +207,7 @@ theorem accept_bound (setup : Setup base KemSK) (checks : Checks) (verify : Mlds
   apply weighted_mono _ _ ((if kind = .hash then 8 else 0) + coinCost (32 + qKem) kind) _
   · apply weighted_bind _ _ _ (if kind = .hash then 8 else 0) (coinCost (32 + qKem) kind)
     · exact effects_bound qSign qKem kind _ _
-        (RegistrationAuthenticationBounds.program_bound setup.source.crypto verify before.pin packet kind)
+        ((RegistrationAuthenticationBounds.program_bound setup.source.crypto verify before.pin packet kind).mono (by cases kind <;> simp))
     · intro reply
       cases reply with
       | fail error => trivial

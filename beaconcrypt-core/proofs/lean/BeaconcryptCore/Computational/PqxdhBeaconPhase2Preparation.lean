@@ -3,6 +3,9 @@ import BeaconcryptCore.PanicFreedom.Pqxdh
 import BeaconcryptCore.Computational.FinitePartitionQueryBounds
 
 /-!
+
+This agreement suffix takes a completed registration binding as an explicit entry input and retains it separately from the core candidate. Its source agreement equations do not establish Server signature verification, the reached transcript-hash effect, or compatibility of an arbitrary supplied binding; current entry callers must provide the actual authenticated/hash-completed receipt.
+
 This private adapter follows the native InitSent Phase2 path up to the root-derivation continuation. Optional packed decoding and typed field conversions precede the two identity conversions, actual optional decapsulation and four ordered DH calls. The assigned-ID getter follows those calls. The extracted beacon_prepare_finish runs before the explicit shared-secret erasure callback, including its rejection branch. The application ciphertext getter is deliberately deferred until after root derivation and initial ratchet construction, as in the native adapter.
 
 All callback arguments, optional replies and complete interpreter state remain in this private computation. Identity, KEM and converted-identity secret representations are arbitrary handles; no secret is an adversarial oracle reply. Ordinary preparation failure terminally aborts InitSent and resets the outer identity key ID to the pinned Server ID. Inactive phases reject unchanged. This stage supplies no authentication, successful plaintext, codec, library, memory-erasure or challenge-routing assumption. Its subsequent private continuation must still implement root processing, exact raw sequence-one reception, binding and native publication.
@@ -13,6 +16,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhBeaconPhase2Preparation
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 
 abbrev Bytes := Pqxdh.Bytes
 abbrev Word32 := Std.Array Std.U8 32#usize
@@ -56,6 +60,7 @@ structure Prepared (Response : Type) where
   ciphertext : Ciphertext
   ephemeral : Word32
   candidate : pqxdh.BeaconRegistrationCandidate
+  binding : session.CompletedRegistrationBinding
 
 variable {I D K X Response : Type}
 
@@ -92,7 +97,7 @@ noncomputable def afterInputs (control : pqxdh.BeaconInitSent) (inputs : Inputs 
   let _ ← (Spec I D K X Response).query (.eraseShared inputs.finishInputs.shared_secrets)
   pure (match prepared with
     | .Err _ => none
-    | .Ok candidate => some ⟨inputs.response, inputs.ciphertext, inputs.ephemeral, candidate⟩)
+    | .Ok candidate => some ⟨inputs.response, inputs.ciphertext, inputs.ephemeral, candidate, completedBinding⟩)
 
 /-- The private pre-root stage executes only the source-selected callbacks and original extracted preparation. -/
 noncomputable def prepare (control : pqxdh.BeaconInitSent) (identity : I) (prekey oneTime : D)
@@ -100,7 +105,7 @@ noncomputable def prepare (control : pqxdh.BeaconInitSent) (identity : I) (preke
   let inputs ← collect identity prekey oneTime kem raw
   match inputs with
   | none => pure none
-  | some inputs => afterInputs control inputs
+  | some inputs => afterInputs (completedBinding := completedBinding) control inputs
 
 /-- Native abort resets the outer key ID as well as discarding the InitSent private phase fields. -/
 def abort (control : pqxdh.BeaconInitSent) (state : State I D K) : State I D K :=
@@ -113,7 +118,7 @@ noncomputable def owner (raw : Bytes) (state : State I D K) :
     OracleComp (Spec I D K X Response) (Option (Prepared Response) × State I D K) :=
   match state.beacon.phase with
   | .initSent control prekey oneTime kem => do
-      let prepared ← prepare control state.beacon.identity prekey oneTime kem raw
+      let prepared ← prepare (completedBinding := completedBinding) control state.beacon.identity prekey oneTime kem raw
       pure (prepared, if prepared.isSome then state else abort control state)
   | _ => pure (none, state)
 
@@ -121,7 +126,7 @@ noncomputable def owner (raw : Bytes) (state : State I D K) :
 noncomputable def continueWith {Result : Type} (raw : Bytes) (state : State I D K)
     (next : Option (Prepared Response) → State I D K → OracleComp (Spec I D K X Response) Result) :
     OracleComp (Spec I D K X Response) Result := do
-  let result ← owner raw state
+  let result ← owner (completedBinding := completedBinding) raw state
   next result.1 result.2
 
 /-- Native abort changes exactly the phase and outer key ID, using the extracted abort control. -/
@@ -138,7 +143,7 @@ theorem abort_fields (control : pqxdh.BeaconInitSent) (state : State I D K) :
 theorem owner_inactive (raw : Bytes) (state : State I D K)
     (inactive : ∀ control prekey oneTime kem,
       state.beacon.phase ≠ .initSent control prekey oneTime kem) :
-    owner (X := X) (Response := Response) raw state = pure (none, state) := by
+    owner (completedBinding := completedBinding) (X := X) (Response := Response) raw state = pure (none, state) := by
   cases phase : state.beacon.phase with
   | initSent control prekey oneTime kem => exact False.elim (inactive _ _ _ _ phase)
   | _ => simp only [owner, phase]
@@ -148,11 +153,11 @@ theorem afterInputs_complete {A Result : Type}
     (handler : QueryImpl (Spec I D K X Response) (StateT A ProbComp))
     (control : pqxdh.BeaconInitSent) (inputs : Inputs Response) (auxiliary : A)
     (next : Option (Prepared Response) × A → ProbComp Result) :
-    (simulateQ handler (afterInputs control inputs)).run auxiliary >>= next =
+    (simulateQ handler (afterInputs (completedBinding := completedBinding) control inputs)).run auxiliary >>= next =
       (handler (.eraseShared inputs.finishInputs.shared_secrets)).run auxiliary >>= fun result =>
         next ((match normalPrepare control inputs.finishInputs with
           | .Err _ => none
-          | .Ok candidate => some ⟨inputs.response, inputs.ciphertext, inputs.ephemeral, candidate⟩), result.2) := by
+          | .Ok candidate => some ⟨inputs.response, inputs.ciphertext, inputs.ephemeral, candidate, completedBinding⟩), result.2) := by
   simp only [afterInputs, simulateQ_bind, simulateQ_spec_query, StateT.run_bind,
     simulateQ_pure, StateT.run_pure, bind_assoc, pure_bind]
 
@@ -163,8 +168,8 @@ theorem owner_complete {A Result : Type}
     (prekey oneTime : D) (kem : K)
     (active : state.beacon.phase = .initSent control prekey oneTime kem) (auxiliary : A)
     (next : (Option (Prepared Response) × State I D K) × A → ProbComp Result) :
-    (simulateQ handler (owner raw state)).run auxiliary >>= next =
-      (simulateQ handler (prepare control state.beacon.identity prekey oneTime kem raw)).run auxiliary >>=
+    (simulateQ handler (owner (completedBinding := completedBinding) raw state)).run auxiliary >>= next =
+      (simulateQ handler (prepare (completedBinding := completedBinding) control state.beacon.identity prekey oneTime kem raw)).run auxiliary >>=
         fun result => next ((result.1, if result.1.isSome then state else abort control state), result.2) := by
   simp only [owner, active, simulateQ_bind, simulateQ_pure, StateT.run_bind,
     StateT.run_pure, bind_assoc, pure_bind]
@@ -174,8 +179,8 @@ theorem continueWith_complete {A Result : Type}
     (handler : QueryImpl (Spec I D K X Response) (StateT A ProbComp))
     (raw : Bytes) (state : State I D K) (auxiliary : A)
     (next : Option (Prepared Response) → State I D K → OracleComp (Spec I D K X Response) Result) :
-    (simulateQ handler (continueWith raw state next)).run auxiliary =
-      (simulateQ handler (owner raw state)).run auxiliary >>= fun result =>
+    (simulateQ handler (continueWith (completedBinding := completedBinding) raw state next)).run auxiliary =
+      (simulateQ handler (owner (completedBinding := completedBinding) raw state)).run auxiliary >>= fun result =>
         (simulateQ handler (next result.1.1 result.1.2)).run result.2 := by
   simp only [continueWith, simulateQ_bind, StateT.run_bind]
 
@@ -184,7 +189,7 @@ theorem afterInputs_origin {A : Type}
     (handler : QueryImpl (Spec I D K X Response) (StateT A ProbComp))
     (control : pqxdh.BeaconInitSent) (inputs : Inputs Response) (auxiliary final : A)
     (prepared : Prepared Response)
-    (supported : (some prepared, final) ∈ support ((simulateQ handler (afterInputs control inputs)).run auxiliary)) :
+    (supported : (some prepared, final) ∈ support ((simulateQ handler (afterInputs (completedBinding := completedBinding) control inputs)).run auxiliary)) :
     pqxdh.beacon_prepare_finish control inputs.finishInputs = ok (.Ok prepared.candidate) ∧
     prepared.response = inputs.response ∧ prepared.ciphertext = inputs.ciphertext ∧
     prepared.ephemeral = inputs.ephemeral := by
@@ -205,11 +210,11 @@ theorem prepare_origin {A : Type}
     (control : pqxdh.BeaconInitSent) (identity : I) (prekey oneTime : D) (kem : K) (raw : Bytes)
     (auxiliary final : A) (prepared : Prepared Response)
     (supported : (some prepared, final) ∈ support
-      ((simulateQ handler (prepare control identity prekey oneTime kem raw)).run auxiliary)) :
+      ((simulateQ handler (prepare (completedBinding := completedBinding) control identity prekey oneTime kem raw)).run auxiliary)) :
     ∃ inputs intermediate,
       (some inputs, intermediate) ∈ support
         ((simulateQ handler (collect identity prekey oneTime kem raw)).run auxiliary) ∧
-      (some prepared, final) ∈ support ((simulateQ handler (afterInputs control inputs)).run intermediate) ∧
+      (some prepared, final) ∈ support ((simulateQ handler (afterInputs (completedBinding := completedBinding) control inputs)).run intermediate) ∧
       pqxdh.beacon_prepare_finish control inputs.finishInputs = ok (.Ok prepared.candidate) ∧
       prepared.response = inputs.response ∧ prepared.ciphertext = inputs.ciphertext ∧
       prepared.ephemeral = inputs.ephemeral := by
@@ -221,17 +226,17 @@ theorem prepare_origin {A : Type}
         Prod.mk.injEq, Option.some_ne_none, false_and] at finished
   | some inputs =>
       exact ⟨inputs, intermediate, collected, finished,
-        afterInputs_origin handler control inputs intermediate final prepared finished⟩
+        afterInputs_origin (completedBinding := completedBinding) handler control inputs intermediate final prepared finished⟩
 
 /-- A successful owner preparation keeps the complete original InitSent owner and the actual private callback result. -/
 theorem owner_success {A : Type}
     (handler : QueryImpl (Spec I D K X Response) (StateT A ProbComp))
     (raw : Bytes) (state next : State I D K) (auxiliary final : A) (prepared : Prepared Response)
-    (supported : ((some prepared, next), final) ∈ support ((simulateQ handler (owner raw state)).run auxiliary)) :
+    (supported : ((some prepared, next), final) ∈ support ((simulateQ handler (owner (completedBinding := completedBinding) raw state)).run auxiliary)) :
     next = state ∧ ∃ control prekey oneTime kem,
       state.beacon.phase = .initSent control prekey oneTime kem ∧
       (some prepared, final) ∈ support
-        ((simulateQ handler (prepare control state.beacon.identity prekey oneTime kem raw)).run auxiliary) := by
+        ((simulateQ handler (prepare (completedBinding := completedBinding) control state.beacon.identity prekey oneTime kem raw)).run auxiliary) := by
   cases active : state.beacon.phase with
   | initSent control prekey oneTime kem =>
       simp only [owner, active, simulateQ_bind, StateT.run_bind, mem_support_bind_iff,
@@ -261,11 +266,11 @@ theorem collect_bound (identity : I) (prekey oneTime : D) (kem : K) (raw : Bytes
 theorem owner_failure {A : Type}
     (handler : QueryImpl (Spec I D K X Response) (StateT A ProbComp))
     (raw : Bytes) (state next : State I D K) (auxiliary final : A)
-    (supported : ((none, next), final) ∈ support ((simulateQ handler (owner raw state)).run auxiliary)) :
+    (supported : ((none, next), final) ∈ support ((simulateQ handler (owner (completedBinding := completedBinding) raw state)).run auxiliary)) :
     match state.beacon.phase with
     | .initSent control prekey oneTime kem =>
         next = abort control state ∧ (none, final) ∈ support
-          ((simulateQ handler (prepare control state.beacon.identity prekey oneTime kem raw)).run auxiliary)
+          ((simulateQ handler (prepare (completedBinding := completedBinding) control state.beacon.identity prekey oneTime kem raw)).run auxiliary)
     | _ => next = state ∧ final = auxiliary := by
   cases active : state.beacon.phase with
   | initSent control prekey oneTime kem =>
@@ -284,7 +289,7 @@ theorem owner_failure {A : Type}
 
 /-- The core-result stage performs exactly one ordinary shared-secret erasure callback on either outcome. -/
 theorem afterInputs_bound (control : pqxdh.BeaconInitSent) (inputs : Inputs Response) :
-    (afterInputs (I := I) (D := D) (K := K) (X := X) control inputs).IsTotalQueryBound 1 := by
+    (afterInputs (completedBinding := completedBinding) (I := I) (D := D) (K := K) (X := X) control inputs).IsTotalQueryBound 1 := by
   unfold afterInputs
   rw [isTotalQueryBound_query_bind_iff]
   exact ⟨by decide, fun _ => by trivial⟩
@@ -292,29 +297,29 @@ theorem afterInputs_bound (control : pqxdh.BeaconInitSent) (inputs : Inputs Resp
 /-- Thirteen typed callbacks suffice for the original pre-root branch, including the erasure after preparation errors. -/
 theorem prepare_bound (control : pqxdh.BeaconInitSent) (identity : I) (prekey oneTime : D)
     (kem : K) (raw : Bytes) :
-    (prepare (X := X) (Response := Response) control identity prekey oneTime kem raw).IsTotalQueryBound 13 := by
+    (prepare (completedBinding := completedBinding) (X := X) (Response := Response) control identity prekey oneTime kem raw).IsTotalQueryBound 13 := by
   unfold prepare
   apply isTotalQueryBound_bind (collect_bound identity prekey oneTime kem raw) (n₂ := 1)
   intro result
   cases result with
   | none => trivial
-  | some inputs => exact afterInputs_bound control inputs
+  | some inputs => exact afterInputs_bound (completedBinding := completedBinding) control inputs
 
 /-- The outer inactive/abort/publication dispatch adds no primitive callback to the same thirteen-call allowance. -/
 theorem owner_bound (raw : Bytes) (state : State I D K) :
-    (owner (X := X) (Response := Response) raw state).IsTotalQueryBound 13 := by
+    (owner (completedBinding := completedBinding) (X := X) (Response := Response) raw state).IsTotalQueryBound 13 := by
   cases active : state.beacon.phase with
   | initSent control prekey oneTime kem =>
       simp only [owner, active, bind_pure_comp, IsTotalQueryBound, isQueryBound_map_iff]
-      exact prepare_bound control state.beacon.identity prekey oneTime kem raw
+      exact prepare_bound (completedBinding := completedBinding) control state.beacon.identity prekey oneTime kem raw
   | _ => simp only [owner, active]; trivial
 
 /-- Any complete private continuation pays its own allowance after the original pre-root work and actual owner update. -/
 theorem continueWith_bound {Result : Type} (raw : Bytes) (state : State I D K)
     (next : Option (Prepared Response) → State I D K → OracleComp (Spec I D K X Response) Result)
     (qNext : Nat) (bounded : ∀ prepared nextState, (next prepared nextState).IsTotalQueryBound qNext) :
-    (continueWith raw state next).IsTotalQueryBound (13 + qNext) := by
-  exact isTotalQueryBound_bind (owner_bound raw state) (fun result => bounded result.1 result.2)
+    (continueWith (completedBinding := completedBinding) raw state next).IsTotalQueryBound (13 + qNext) := by
+  exact isTotalQueryBound_bind (owner_bound (completedBinding := completedBinding) raw state) (fun result => bounded result.1 result.2)
 
 /-- Actual private callback work is charged in the same stateful execution, with no resource transport through evaluated equality. -/
 theorem owner_interpreted_bound {A ι : Type} {base : OracleSpec ι}
@@ -322,11 +327,11 @@ theorem owner_interpreted_bound {A ι : Type} {base : OracleSpec ι}
     (predicate : base.Domain → Prop) [DecidablePred predicate]
     (qCall : Nat) (bounded : ∀ query auxiliary, ((handler query).run auxiliary).IsQueryBoundP predicate qCall)
     (raw : Bytes) (state : State I D K) (auxiliary : A) :
-    ((simulateQ handler (owner raw state)).run auxiliary).IsQueryBoundP predicate (13 * qCall) := by
+    ((simulateQ handler (owner (completedBinding := completedBinding) raw state)).run auxiliary).IsQueryBoundP predicate (13 * qCall) := by
   have bound := FinitePartitionQueryBounds.weighted_bound (fun (_ : (Spec I D K X Response).Domain) => ())
-    (fun _ => qCall) (fun _ => 13) handler predicate (owner raw state)
+    (fun _ => qCall) (fun _ => 13) handler predicate (owner (completedBinding := completedBinding) raw state)
     (fun kind => by cases kind; simpa only [IsTotalQueryBound, IsQueryBoundP, not_true_eq_false,
-      false_or, ite_true] using owner_bound (X := X) (Response := Response) raw state)
+      false_or, ite_true] using owner_bound (completedBinding := completedBinding) (X := X) (Response := Response) raw state)
     (fun query current => bounded query current) auxiliary
   simpa only [Finset.univ_unique, Finset.sum_singleton, Nat.mul_comm] using bound
 

@@ -5,6 +5,7 @@ import BeaconcryptCore.Computational.CborRawRecordOriginFlatten
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.CborRawRecordOriginProjection
 open PqxdhRecordLiftInterface (Environment WorldSpec coinLift)
 open PqxdhRecordLiftProtocol (ServiceSpec Control initialControl)
@@ -48,7 +49,7 @@ theorem startup_project (service : QueryImpl (ServiceSpec n) (StateT S ProbComp)
 /-- Server installation retains the literal public cursor initialization and the full original private service execution. -/
 theorem install_eq (service : QueryImpl (ServiceSpec n) (StateT S ProbComp))
     (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
-    (created : PqxdhLiveServerConstruction.Created Unit) (shell : CborRecordWorldClient.Shell)
+    (created : PqxdhLiveServerConstruction.Created (Aeneas.Std.Array Aeneas.Std.U8 151#usize)) (shell : CborRecordWorldClient.Shell)
     (control : Control n) (secret : S) :
     install service codec route created shell control secret =
       (fun result => ((CborRecordWorldClient.next (show (WorldSpec n).Domain from .inl created) () shell, result.1.2), result.2)) <$>
@@ -62,7 +63,7 @@ theorem install_eq (service : QueryImpl (ServiceSpec n) (StateT S ProbComp))
 /-- Dropping only the cursor from installation preserves all original Protocol and private fields. -/
 theorem install_project (service : QueryImpl (ServiceSpec n) (StateT S ProbComp))
     (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
-    (created : PqxdhLiveServerConstruction.Created Unit) (shell : CborRecordWorldClient.Shell)
+    (created : PqxdhLiveServerConstruction.Created (Aeneas.Std.Array Aeneas.Std.U8 151#usize)) (shell : CborRecordWorldClient.Shell)
     (control : Control n) (secret : S) :
     (fun result => (result.1.2, result.2)) <$> install service codec route created shell control secret =
       (fun result => (result.1.2, result.2)) <$>

@@ -33,7 +33,7 @@ theorem saved (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
       (PqxdhRegistrationJointOpenUniform.total caps budget) (budget (.inl 3)) := by
   have bills (created : PqxdhRegistrationJointServerBirth.ClientCreated Unit) :=
     commands setup codec checks caps bounded created.server.server.metadata.identityIndex created.publicIdentity
-      client budget certified [] (PqxdhRegistrationJointInitializedAccept.initial created)
+      client budget certified ([], fun _ => none) (PqxdhRegistrationJointInitializedAccept.initial created)
   constructor
   · exact pre_bound setup codec checks ensureInit supplied client runtime count selected occurrence context.1
       _ _ (fun created => (bills created).creates) context.2.val context.2.property

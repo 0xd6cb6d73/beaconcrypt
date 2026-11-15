@@ -27,6 +27,9 @@ variable {n : Nat} {ι KemSK Platform E Value : Type} {base : OracleSpec ι} {so
 local notation "Client" => State n source
 local notation "Native" => RegistrationNativeExperiment.State n KemSK source
 
+attribute [local irreducible] RegistrationNativePlatformKemCountedHandler.handler
+  RegistrationNativePlatformExperiment.handler RegistrationNativePlatformKemCountedProgram.execute
+
 def world (work : RegistrationNativePlatformOrdinaryWorld.M n Platform Value) : StateT Client (StateT Platform ProbComp) Value :=
   fun before => (fun result => (result.1, RegistrationNativeKemCountedTrusted.withWorld before result.2)) <$> work.run before.server.world.world.1
 
@@ -47,7 +50,7 @@ noncomputable def record (setup : Setup base KemSK) (wire : Wire)
 
 noncomputable def handler (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitives.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
     (reserveRegistration reservePeer : StateT Platform ProbComp Bool)
@@ -121,7 +124,7 @@ private theorem record_source (setup : Setup base KemSK) (wire : Wire)
 
 theorem query_source (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitives.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
     (reserveRegistration reservePeer : StateT Platform ProbComp Bool)
@@ -140,16 +143,51 @@ theorem query_source (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
         (RegistrationNativePlatformOrdinaryExperiment.canonicalWire wire) route representation created credential view failure allocation
           reserveRegistration reservePeer erased helper implementation (.inl query) before previous
   | inr command =>
-      cases command <;> first
-        | exact record_source setup wire reserveFrame route _ before previous
-        | exact RegistrationNativePlatformKemCountedHandler.query_source setup checks
-            (RegistrationNativePlatformOrdinaryExperiment.canonicalWire wire) route representation created credential view failure allocation
-              reserveRegistration reservePeer erased helper implementation _ before previous
+      cases command with
+      | serverSend keyId plaintext => exact record_source setup wire reserveFrame route _ before previous
+      | serverRaw raw => exact record_source setup wire reserveFrame route _ before previous
+      | beaconSend owner plaintext => exact record_source setup wire reserveFrame route _ before previous
+      | beaconRaw owner raw => exact record_source setup wire reserveFrame route _ before previous
+      | create edPin mlPin keyId =>
+          exact (RegistrationNativePlatformKemCountedHandler.query_source (n := n) (Platform := Platform) (E := E) (source := source)
+              setup checks (RegistrationNativePlatformOrdinaryExperiment.canonicalWire wire) route representation created
+              credential view failure allocation reserveRegistration reservePeer erased helper implementation
+              (.inr (.create edPin mlPin keyId)) before previous)
+      | bundle owner =>
+          exact (RegistrationNativePlatformKemCountedHandler.query_source (n := n) (Platform := Platform) (E := E) (source := source)
+              setup checks (RegistrationNativePlatformOrdinaryExperiment.canonicalWire wire) route representation created
+              credential view failure allocation reserveRegistration reservePeer erased helper implementation
+              (.inr (.bundle owner)) before previous)
+      | accept packet =>
+          exact (RegistrationNativePlatformKemCountedHandler.query_source (n := n) (Platform := Platform) (E := E) (source := source)
+              setup checks (RegistrationNativePlatformOrdinaryExperiment.canonicalWire wire) route representation created
+              credential view failure allocation reserveRegistration reservePeer erased helper implementation
+              (.inr (.accept packet)) before previous)
+      | build session application =>
+          exact (RegistrationNativePlatformKemCountedHandler.query_source (n := n) (Platform := Platform) (E := E) (source := source)
+              setup checks (RegistrationNativePlatformOrdinaryExperiment.canonicalWire wire) route representation created
+              credential view failure allocation reserveRegistration reservePeer erased helper implementation
+              (.inr (.build session application)) before previous)
+      | finish owner packet =>
+          exact (RegistrationNativePlatformKemCountedHandler.query_source (n := n) (Platform := Platform) (E := E) (source := source)
+              setup checks (RegistrationNativePlatformOrdinaryExperiment.canonicalWire wire) route representation created
+              credential view failure allocation reserveRegistration reservePeer erased helper implementation
+              (.inr (.finish owner packet)) before previous)
+      | hmac key message =>
+          exact (RegistrationNativePlatformKemCountedHandler.query_source (n := n) (Platform := Platform) (E := E) (source := source)
+              setup checks (RegistrationNativePlatformOrdinaryExperiment.canonicalWire wire) route representation created
+              credential view failure allocation reserveRegistration reservePeer erased helper implementation
+              (.inr (.hmac key message)) before previous)
+      | hash bytes =>
+          exact (RegistrationNativePlatformKemCountedHandler.query_source (n := n) (Platform := Platform) (E := E) (source := source)
+              setup checks (RegistrationNativePlatformOrdinaryExperiment.canonicalWire wire) route representation created
+              credential view failure allocation reserveRegistration reservePeer erased helper implementation
+              (.inr (.hash bytes)) before previous)
 
 /-- Arbitrary typed adaptive source work retains the same native client, external platform, full private rows and all actual source counters. -/
 theorem program_source (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitives.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
     (reserveRegistration reservePeer : StateT Platform ProbComp Bool)
@@ -177,7 +215,7 @@ theorem program_source (setup : Setup base KemSK) (checks : Checks) (wire : Wire
 /-- Reassembling the complete private KEM state yields the literal corrected typed source program. -/
 theorem native_source (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitives.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
     (reserveRegistration reservePeer : StateT Platform ProbComp Bool)

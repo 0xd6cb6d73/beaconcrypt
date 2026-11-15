@@ -37,7 +37,7 @@ noncomputable def stage (setup : Setup base KemSK) (domain : PqxdhPhase2GapDhSou
     StateT (Shared n KemSK) (OracleComp RootSpec) (RustM agreement.AgreementEffect) := do
   let pending ← simulateQ (PqxdhPhase2GapDhSource.prefixImpl domain
     (RegistrationBeaconRootInterpreter.auxImpl (backend setup) authenticated) visit)
-    (PqxdhPhase2DhMetadata.prepare authenticated.pending.control () () () [])
+    (PqxdhPhase2DhMetadata.prepare (completedBinding := authenticated.binding) authenticated.control () () () [])
   match pending with
   | none => pure (.ok (RegistrationBeaconAgreementRoot.rejected authenticated))
   | some pending => simulateQ rootLift (RegistrationBeaconRelatedRoot.client publicValue authenticated pending)
@@ -133,9 +133,9 @@ theorem world_exact (setup : Setup base KemSK) (domain : PqxdhPhase2GapDhSource.
 theorem world_native (setup : Setup base KemSK)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
     (seed : IdentitySeed) (scalar : ScalarBytes) (authenticated : registration.AuthenticatedResponse)
-    (pin : absBytes authenticated.pending.control.expected_server_binding.identity_public_key =
+    (pin : absBytes authenticated.control.expected_server_binding.identity_public_key =
       (setup.joint.publicKeys seed).ed25519.toList)
-    (coherent : authenticated.pending.control.expected_server_binding = authenticated.pending.binding.server_pin.binding)
+    (coherent : authenticated.control.expected_server_binding = authenticated.binding.server_pin.binding)
     (before : RegistrationWorldRoot.FullState n (RegistrationBeaconRoleBackend.State KemSK)) :
     Prod.map id Prod.snd <$>
       (interpret (family setup.hmac setup.joint setup.dh seed scalar)

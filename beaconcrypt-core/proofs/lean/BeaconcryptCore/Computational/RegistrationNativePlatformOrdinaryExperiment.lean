@@ -54,7 +54,7 @@ noncomputable def record (setup : Setup base KemSK) (wire : Wire)
 noncomputable def handler [primitives : AdapterSealPrimitive.Operations]
     (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (source : RegistrationNativeMldsa.Source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (source : RegistrationNativeMldsa.Source)
     (credential : RegistrationNativeMldsa.Credential source)
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitives.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
@@ -73,7 +73,7 @@ noncomputable def handler [primitives : AdapterSealPrimitive.Operations]
 noncomputable def run [primitives : AdapterSealPrimitive.Operations]
     (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (source : RegistrationNativeMldsa.Source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (source : RegistrationNativeMldsa.Source)
     (credential : RegistrationNativeMldsa.Credential source)
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitives.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))

@@ -6,6 +6,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhRegistrationJointFinishCompiler
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhRefinement PqxdhJointIdentity PqxdhJointGapDh PqxdhServerAuthExperiment PqxdhServerAuthNative
 open PqxdhRegistrationJointFinish (State onPool onNative)
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response Result : Type}
@@ -102,17 +103,17 @@ theorem prepare_queries (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
     (prekey oneTime : ScalarBytes) (keys : PqxdhRegistrationJointBundle.Key) (raw : Pqxdh.Bytes) (kind : Kind) :
     (simulateQ (poolLift (Response := Response))
       (simulateQ (PqxdhRegistrationJointPreparation.compiler setup codec)
-        (PqxdhBeaconPhase2Preparation.prepare control identity prekey oneTime keys raw))).IsQueryBoundP
+        (PqxdhBeaconPhase2Preparation.prepare (completedBinding := completedBinding) control identity prekey oneTime keys raw))).IsQueryBoundP
       (fun query => classify (KemSK := KemSK) query = kind) (preCap kind) := by
   rw [pool_queries]
   cases kind with
   | none =>
       simpa only [classify, reduceCtorEq, preCap] using isQueryBoundP_false
         (simulateQ (PqxdhRegistrationJointPreparation.compiler setup codec)
-        (PqxdhBeaconPhase2Preparation.prepare control identity prekey oneTime keys raw)) 0
+        (PqxdhBeaconPhase2Preparation.prepare (completedBinding := completedBinding) control identity prekey oneTime keys raw)) 0
   | some kind =>
       simpa only [classify, Option.some.injEq, preCap] using
-        PqxdhRegistrationJointPreparationCosts.compiler_prepare_classes setup codec control identity prekey oneTime keys raw kind
+        PqxdhRegistrationJointPreparationCosts.compiler_prepare_classes (completedBinding := completedBinding) setup codec control identity prekey oneTime keys raw kind
 
 end BeaconcryptCore.Computational.PqxdhRegistrationJointFinishCompiler
 

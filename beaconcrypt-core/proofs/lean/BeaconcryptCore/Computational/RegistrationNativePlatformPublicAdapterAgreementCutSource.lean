@@ -21,7 +21,7 @@ local notation "Env"=>EnvState RegistrationServerRoleBackend.State
 local notation "Lower"=>RegistrationNativeBeaconPhaseCommutation.Lower n KemSK RegistrationServerRoleBackend.State
 variable (coins :QueryImpl unifSpec (StateT P ProbComp))
 variable (setup :PqxdhServerAuthExperiment.Setup base KemSK) (checks :PqxdhServerAuthExperiment.Checks)
-variable (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created Unit)
+variable (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 
 theorem lower (work :Lower A) (owners :List (Owner source)) (env :Env) (before :Native) (previous :P)
     (value :A) (nextEnv :Env) (after :Native) (next :P)
@@ -113,7 +113,7 @@ theorem authenticated (wire :RegistrationNativeWire.Wire) (pending :registration
       ((RegistrationNativeMldsaShared.lower setup checks representation created
         (simulateQ (RegistrationNativeBeaconFrontend.authentication setup source)
           (RegistrationResponseExecutor.begin pending (.Some packet)))).run before)) :
-    authenticated=⟨pending,packet⟩ :=by
+    ∃ adDigest, authenticated=RegistrationResponseExecutor.acceptedResponse pending packet adDigest :=by
   have projected :(.ok (.Ok authenticated),RegistrationNativeMldsaShared.project after)∈support
       ((RegistrationResponseExecutor.execute setup.source.crypto source.verify wire.frameWrite
         (RawCtxSourceHkdf.kdfImpl setup.source) pending (.Some packet)).run (RegistrationNativeMldsaShared.project before)) :=by

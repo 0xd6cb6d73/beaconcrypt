@@ -40,7 +40,6 @@ theorem original_other (setup : Setup base KemSK) (owner : Owner source) (first 
           RegistrationNativeBeaconFrontend.primitive, RegistrationNativeIdentityFrontend.restore,
           RegistrationNativeKemInterface.beacon, simulateQ_pure, simulateQ_map,
           simulateQ_spec_query, RegistrationNativeBeaconFrontend.sample]
-      all_goals rfl
   | convertSecret role =>
       cases role
       all_goals first

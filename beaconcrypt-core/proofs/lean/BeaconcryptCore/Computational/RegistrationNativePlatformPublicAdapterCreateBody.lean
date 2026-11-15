@@ -26,7 +26,7 @@ variable [original : AdapterBeaconConstructorRequestMonad.Operations (RustT Prob
 variable [originalCrypto : CryptoOperations (RustT ProbComp)]
 variable (coins : QueryImpl unifSpec (StateT P ProbComp))
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (view : AdapterPublicWrapperState.MaterialView mlSource KemSK)
 local notation "SourceM" => AdapterBeaconConstructorNative.M n KemSK mlSource RegistrationServerRoleBackend.State (StateT P ProbComp)
 local notation "PhysicalM" => StateT (Backend n KemSK) (StateT P ProbComp)
@@ -46,30 +46,28 @@ noncomputable def physical (previous : ChildOperations (RustT PhysicalM)) (gener
   AdapterBeaconConstructorBody.withInputs (m:=PhysicalM) generator keyId serverId mlPin rng
 
 variable (generator : rand_core.TryCryptoRng R Error) (kem : AdapterBeaconConstructorKem.Representation view R)
-variable (ml : AdapterBeaconConstructorGeneration.MldsaContract generator view (RegistrationNativeMldsa.generate mlSource))
 variable (signing : AdapterBeaconConstructorGeneration.EdContract generator view setup.joint PqxdhJointIdentity.sampleSeed)
 variable (prekey : AdapterBeaconConstructorGeneration.KxContract generator view
   (fun scalar => PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)) PqxdhJointGapDh.sampleScalar)
 variable (kemContract : RegistrationNativePlatformPublicAdapterCreateKem.Contract view setup kem generator)
 
 noncomputable def outcome (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicKey) :=
-  AdapterBeaconConstructorJoint.sourceResult generator view _ ml setup.joint _ signing _ _ prekey keyId serverId
+  AdapterBeaconConstructorJoint.sourceResult generator view setup.joint _ signing _ _ prekey keyId serverId
 
 include kemContract in
 theorem source_tree (previous : ChildOperations (RustT SourceM))
     (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicKey) (mlPin : Std.Array U8 1952#usize) (rng : R) :
     source coins setup checks representation created view previous generator keyId serverId mlPin rng = RustT.lift
-      (outcome setup view generator ml signing prekey keyId serverId <$>
-        simulateQ (RegistrationNativePlatformPublicAdapterCreateJointPhysical.sourceHandler coins setup checks representation created view kem ml.joint signing.joint prekey.joint)
+      (outcome setup view generator signing prekey keyId serverId <$>
+        simulateQ (RegistrationNativePlatformPublicAdapterCreateJointPhysical.sourceHandler coins setup checks representation created view kem signing.joint prekey.joint)
           (RegistrationNativePlatformPublicAdapterCreateProgram.program (view.edPublic serverId) mlPin keyId rng)) := by
   let : AdapterBeaconConstructorRequestMonad.Operations (RustT SourceM) := RegistrationNativePlatformPublicAdapterCreateDictionaries.sourceGenerators coins setup checks representation created view
   let : CryptoOperations (RustT SourceM) := RegistrationNativePlatformPublicAdapterCreateDictionaries.crypto view (RegistrationNativePlatformPublicAdapterCreatePrimitives.uniform coins setup checks representation created)
   let : ChildOperations (RustT SourceM) := RegistrationNativePlatformPublicAdapterCreateDictionaries.children previous (RegistrationNativePlatformPublicAdapterCreatePrimitives.hash coins setup checks representation created)
-  let leaves := RegistrationNativePlatformPublicAdapterCreateDictionaries.sourceLeaves coins setup checks representation created view previous generator kem ml signing prekey kemContract
+  let leaves := RegistrationNativePlatformPublicAdapterCreateDictionaries.sourceLeaves coins setup checks representation created view previous generator kem signing prekey kemContract
   have law := AdapterBeaconConstructorNative.source_body coins setup checks representation created generator view kem leaves keyId serverId mlPin rng
   unfold AdapterBeaconConstructorNative.joint at law
-  rw [← RegistrationNativePlatformPublicAdapterCreateProgram.joint_source generator view _ leaves.ml setup.joint _ leaves.ed _ _ leaves.kx
-    (fun request => AdapterBeaconConstructorNative.lift coins setup checks representation created (RegistrationNativeBeaconFrontend.hash request))
+  rw [← RegistrationNativePlatformPublicAdapterCreateProgram.joint_source generator view setup.joint _ leaves.ed _ _ leaves.kx
     (AdapterBeaconConstructorKemLift.joint coins setup view kem) (view.edPublic serverId) mlPin keyId rng] at law
   exact law
 
@@ -77,27 +75,24 @@ include kemContract in
 theorem physical_tree (previous : ChildOperations (RustT PhysicalM))
     (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicKey) (mlPin : Std.Array U8 1952#usize) (rng : R) :
     physical coins setup checks representation created view previous generator keyId serverId mlPin rng = RustT.lift
-      (outcome setup view generator ml signing prekey keyId serverId <$>
-        simulateQ (RegistrationNativePlatformPublicAdapterCreateJointPhysical.handler coins setup checks representation created view kem ml.joint signing.joint prekey.joint)
+      (outcome setup view generator signing prekey keyId serverId <$>
+        simulateQ (RegistrationNativePlatformPublicAdapterCreateJointPhysical.handler coins setup checks representation created view kem signing.joint prekey.joint)
           (RegistrationNativePlatformPublicAdapterCreateProgram.program (view.edPublic serverId) mlPin keyId rng)) := by
   let uniform := RegistrationNativePlatformPublicAdapterBundleGeneration.backendUniform (n:=n) coins setup checks representation created
   let : AdapterBeaconConstructorRequestMonad.Operations (RustT PhysicalM) := RegistrationNativePlatformPublicAdapterCreateDictionaries.physicalGenerators coins setup checks representation created view
   let : CryptoOperations (RustT PhysicalM) := RegistrationNativePlatformPublicAdapterCreateDictionaries.crypto view uniform
   let : ChildOperations (RustT PhysicalM) := RegistrationNativePlatformPublicAdapterCreateDictionaries.children previous (RegistrationNativePlatformPublicAdapterCreateJointPhysical.hash coins setup checks representation created)
-  let mappedMl := RegistrationNativePlatformPublicAdapterCreateGeneration.mldsa uniform (RegistrationNativePlatformPublicAdapterCreateKem.physical view coins) generator view _ ml
   let mappedEd := RegistrationNativePlatformPublicAdapterCreateGeneration.signing uniform (RegistrationNativePlatformPublicAdapterCreateKem.physical view coins) generator view setup.joint _ signing
   let mappedKx := RegistrationNativePlatformPublicAdapterCreateDictionaries.prekeyContract setup view uniform generator prekey
-  have law := AdapterBeaconConstructorJoint.source_program generator view _ mappedMl setup.joint _ mappedEd _ _ mappedKx
-    (RegistrationNativePlatformPublicAdapterCreateJointPhysical.hash coins setup checks representation created)
+  have law := AdapterBeaconConstructorJoint.source_program generator view setup.joint _ mappedEd _ _ mappedKx
     (RegistrationNativePlatformPublicAdapterCreateKemPhysical.joint view coins setup kem) keyId serverId mlPin rng
-    (by rfl) (by intro; rfl)
+    (by rfl)
     (RegistrationNativePlatformPublicAdapterCreateKemPhysical.operation view coins setup kem generator kemContract)
-  rw [← RegistrationNativePlatformPublicAdapterCreateProgram.joint_source generator view _ mappedMl setup.joint _ mappedEd _ _ mappedKx
-    (RegistrationNativePlatformPublicAdapterCreateJointPhysical.hash coins setup checks representation created)
+  rw [← RegistrationNativePlatformPublicAdapterCreateProgram.joint_source generator view setup.joint _ mappedEd _ _ mappedKx
     (RegistrationNativePlatformPublicAdapterCreateKemPhysical.joint view coins setup kem) (view.edPublic serverId) mlPin keyId rng] at law
   exact law
 
-include ml signing prekey kemContract in
+include signing prekey kemContract in
 theorem body_source (sourcePrevious : ChildOperations (RustT SourceM))
     (physicalPrevious : ChildOperations (RustT PhysicalM))
     (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicKey) (mlPin : Std.Array U8 1952#usize) (rng : R)
@@ -105,14 +100,14 @@ theorem body_source (sourcePrevious : ChildOperations (RustT SourceM))
     Prod.map id backend <$> (RegistrationNativePlatformExtractedSdkCreate.close
       (source coins setup checks representation created view sourcePrevious generator keyId serverId mlPin rng).run).run before =
     (physical coins setup checks representation created view physicalPrevious generator keyId serverId mlPin rng).run.run (backend before) := by
-  rw [source_tree coins setup checks representation created view generator kem ml signing prekey kemContract,
-    physical_tree coins setup checks representation created view generator kem ml signing prekey kemContract]
+  rw [source_tree coins setup checks representation created view generator kem signing prekey kemContract,
+    physical_tree coins setup checks representation created view generator kem signing prekey kemContract]
   have law := RegistrationNativePlatformPublicAdapterCreateJointPhysical.program_source
-    coins setup checks representation created view kem ml.joint signing.joint prekey.joint
-    (RegistrationNativePlatformPublicAdapterCreateProgram.program (view.edPublic serverId) mlPin keyId rng)
+    coins setup checks representation created view kem signing.joint prekey.joint
+    (RegistrationNativePlatformPublicAdapterCreateProgram.program (source:=mlSource) (view.edPublic serverId) mlPin keyId rng)
     ((before.beacons,RegistrationWorldAgreementCompiler.erase before.server.world),before)
   rw [RegistrationNativePlatformPublicAdapterCreatePrimitives.flatten_source] at law
-  have observed := congrArg (fun work => Prod.map (fun value => RustM.ok (outcome setup view generator ml signing prekey keyId serverId value)) id <$> work) law
+  have observed := congrArg (fun work => Prod.map (fun value => RustM.ok (outcome setup view generator signing prekey keyId serverId value)) id <$> work) law
   have initial : RegistrationNativePlatformPublicAdapterCreatePrimitives.project
       ((before.beacons,RegistrationWorldAgreementCompiler.erase before.server.world),before) = backend before := by
     unfold RegistrationNativePlatformPublicAdapterCreatePrimitives.project

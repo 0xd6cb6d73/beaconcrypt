@@ -14,7 +14,6 @@ open PqxdhServerAuthExperiment (Setup)
 open RegistrationNativeMldsa (Source Credential)
 open RegistrationNativeMldsaOpaque (Pool handleSource restore birth Live)
 open RegistrationNativeMldsaMap (nativeState)
-open RegistrationNativeMldsaPoolMap (StateLive)
 open RegistrationNativeMldsaTableProgram (evaluate runState)
 variable {n : Nat} {ι KemSK : Type} {base : OracleSpec ι}
 variable (source : Source)
@@ -93,7 +92,7 @@ theorem initialized (setup : Setup base KemSK) (ensureInit : StateT Unit ProbCom
     (supported : result ∈ support (evaluate source
       (RegistrationNativeMldsaCreation.start setup ensureInit identityIndex serverKeyId) {}))
     (initial : RegistrationNativeExperiment.Initial n KemSK (handleSource source)) (member : initial ∈ result.1) :
-    ∃ key, Live source result.2 initial.credential key ∧ StateLive source result.2 initial.state := by
+    ∃ key, Live source result.2 initial.credential key := by
   simp only [RegistrationNativeMldsaCreation.start, evaluate_bind,
     RegistrationNativeMldsaTableProgram.ordinary, mem_support_bind_iff] at supported
   obtain ⟨constructor, drawn, continued⟩ := supported
@@ -143,8 +142,7 @@ theorem initialized (setup : Setup base KemSK) (ensureInit : StateT Unit ProbCom
                 cases finished
                 simp only [Option.mem_some_iff] at member
                 cases member
-                exact ⟨key, RegistrationNativeMldsaOpaque.birth_live source {} key count,
-                  RegistrationNativeMldsaPoolMap.owners_empty source _⟩
+                exact ⟨key, RegistrationNativeMldsaOpaque.birth_live source {} key count⟩
 
 end BeaconcryptCore.Computational.RegistrationNativeMldsaTableStart
 

@@ -34,42 +34,32 @@ variable [beaconcrypt.auth.Operations]
 variable [BeaconcryptCore.Refinement.RegistrationWriterPrimitive.Operations]
 variable [BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations]
 
-/-- [beaconcrypt::auth::fingerprint_pin]:
-    Source: 'beaconcrypt/src/auth.rs', lines 182:0-189:1 -/
-def auth.fingerprint_pin
+/-- [beaconcrypt::auth::server_pin]:
+    Source: 'beaconcrypt/src/auth.rs', lines 173:0-180:1 -/
+def auth.server_pin
   (binding : beaconcrypt_core.pqxdh.ServerBinding)
   (public_key : Array Std.U8 1952#usize) :
   RustM (core.option.Option beaconcrypt_core.session.ServerAuthenticationPin)
   := do
-  let pending ←
-    beaconcrypt_core.registration.begin_server_pin binding public_key
-  let hr ← beaconcrypt_core.registration.PinFingerprint.request pending
-  let fingerprint ← auth.execute_hash hr
-  beaconcrypt_core.registration.PinFingerprint.resume pending fingerprint
-
-/-- [beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::mldsa_public_key]:
-    Source: 'beaconcrypt/src/beacon.rs', lines 136:4-138:5
-    Visibility: public -/
-def beacon.Beacon.mldsa_public_key
-  (self : beacon.Beacon) : RustM (Array Std.U8 1952#usize) := do
-  auth.MldsaIdentity.public_key self.authentication.identity
+  let sap ← beaconcrypt_core.registration.begin_server_pin binding public_key
+  ok (core.option.Option.Some sap)
 
 /-- [beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::identity_pk]:
-    Source: 'beaconcrypt/src/beacon.rs', lines 143:4-145:5
+    Source: 'beaconcrypt/src/beacon.rs', lines 137:4-139:5
     Visibility: public -/
 def beacon.Beacon.identity_pk
   (self : beacon.Beacon) : RustM beaconcrypt_crypto.crypto_sign.PublicKey := do
   ok self.identity_key.public_key
 
 /-- [beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::identity_sk]:
-    Source: 'beaconcrypt/src/beacon.rs', lines 146:4-148:5
+    Source: 'beaconcrypt/src/beacon.rs', lines 140:4-142:5
     Visibility: public -/
 def beacon.Beacon.identity_sk
   (self : beacon.Beacon) : RustM beaconcrypt_crypto.crypto_sign.SecretKey := do
   ok self.identity_key.secret_key
 
 /-- [beaconcrypt::beacon::_proof_beacon_init_ready]: loop body 0:
-    Source: 'beaconcrypt/src/beacon.rs', lines 794:4-825:1 -/
+    Source: 'beaconcrypt/src/beacon.rs', lines 778:4-798:1 -/
 @[rust_loop_body]
 def beacon._proof_beacon_init_ready_loop.body
   (beacon1 : beacon.Beacon)
@@ -107,37 +97,17 @@ def beacon._proof_beacon_init_ready_loop.body
       let effect1 ←
         beaconcrypt_core.registration.BeaconEd25519Signing.resume pending o
       ok (cont effect1)
-  | beaconcrypt_core.registration.BeaconInitEffect.FingerprintRequested pending
-    =>
-    let hr ← beaconcrypt_core.registration.BeaconFingerprint.request pending
-    let fingerprint ← auth.execute_hash hr
-    let effect1 ←
-      beaconcrypt_core.registration.BeaconFingerprint.resume pending
-        fingerprint
-    ok (cont effect1)
   | beaconcrypt_core.registration.BeaconInitEffect.HashRequested pending =>
     let hr ← beaconcrypt_core.registration.BeaconInitHash.request pending
     let hash ← auth.execute_hash hr
     let effect1 ←
       beaconcrypt_core.registration.BeaconInitHash.resume pending hash
     ok (cont effect1)
-  | beaconcrypt_core.registration.BeaconInitEffect.MldsaSigningRequested
-    pending =>
-    let msr ←
-      beaconcrypt_core.registration.BeaconMldsaSigning.request pending
-    let signature ←
-      auth.MldsaIdentity.sign_requested beacon1.authentication.identity msr
-    let o ←
-      core.option.Option.as_deref (alloc.vec.Vec.Insts.CoreOpsDerefDerefSlice
-        Std.U8) signature
-    let effect1 ←
-      beaconcrypt_core.registration.BeaconMldsaSigning.resume pending o
-    ok (cont effect1)
   | beaconcrypt_core.registration.BeaconInitEffect.Ready ready =>
     ok (done (core.option.Option.Some ready))
 
 /-- [beaconcrypt::beacon::_proof_beacon_init_ready]: loop 0:
-    Source: 'beaconcrypt/src/beacon.rs', lines 794:4-825:1 -/
+    Source: 'beaconcrypt/src/beacon.rs', lines 778:4-798:1 -/
 @[rust_loop]
 def beacon._proof_beacon_init_ready_loop
   (effect : beaconcrypt_core.registration.BeaconInitEffect)
@@ -149,7 +119,7 @@ def beacon._proof_beacon_init_ready_loop
     effect
 
 /-- [beaconcrypt::beacon::_proof_beacon_init_ready]:
-    Source: 'beaconcrypt/src/beacon.rs', lines 789:0-825:1 -/
+    Source: 'beaconcrypt/src/beacon.rs', lines 773:0-798:1 -/
 @[reducible]
 def beacon._proof_beacon_init_ready
   (beacon1 : beacon.Beacon)
@@ -159,7 +129,7 @@ def beacon._proof_beacon_init_ready
   beacon._proof_beacon_init_ready_loop effect beacon1
 
 /-- [beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::get_registration_bundle_with_rng]:
-    Source: 'beaconcrypt/src/beacon.rs', lines 367:4-465:5
+    Source: 'beaconcrypt/src/beacon.rs', lines 361:4-456:5
     Visibility: public -/
 def beacon.Beacon.get_registration_bundle_with_rng
   {R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :
@@ -189,7 +159,6 @@ def beacon.Beacon.get_registration_bundle_with_rng
           beaconcrypt_crypto.crypto_kx.PublicKey.as_bytes val1.public_key
         let pk ← beacon.Beacon.identity_pk self
         let a ← beaconcrypt_crypto.crypto_sign.PublicKey.as_bytes pk
-        let a1 ← beacon.Beacon.mldsa_public_key self
         let effect ←
           beaconcrypt_core.registration.begin_beacon_init control
             {
@@ -197,7 +166,7 @@ def beacon.Beacon.get_registration_bundle_with_rng
               prekey_public_key := prekey_public,
               pq_public_key := pq_public
             } { one_time_public_key := onetime_public }
-            self.authentication.server_pin a1
+            self.authentication.server_pin
         let o2 ← beacon._proof_beacon_init_ready self effect
         let cf2 ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o2
         match cf2 with
@@ -208,17 +177,13 @@ def beacon.Beacon.get_registration_bundle_with_rng
           let s1 ← lift (Array.to_slice message.fields.pre_key)
           let s2 ← lift (Array.to_slice message.fields.one_time_key)
           let s3 ← lift (Array.to_slice message.fields.pq_key)
-          let s4 ← lift (Array.to_slice message.fields.mldsa_public_key)
-          let s5 ← lift (Array.to_slice message.signature)
           let buffer ←
             wire.encode_init
               {
                 identity_key := s,
                 pre_key := s1,
                 one_time_key := s2,
-                pq_key := s3,
-                mldsa_public_key := s4,
-                signature := s5
+                pq_key := s3
               }
           let r1 ←
             beaconcrypt_core.registration.BeaconInitReady.publish val2 buffer
@@ -309,7 +274,6 @@ def beacon.Beacon.get_registration_bundle_with_rng
       beaconcrypt_crypto.crypto_kx.PublicKey.as_bytes onetime_key.public_key
     let pk ← beacon.Beacon.identity_pk self
     let a ← beaconcrypt_crypto.crypto_sign.PublicKey.as_bytes pk
-    let a1 ← beacon.Beacon.mldsa_public_key self
     let effect ←
       beaconcrypt_core.registration.begin_beacon_init control
         {
@@ -317,7 +281,7 @@ def beacon.Beacon.get_registration_bundle_with_rng
           prekey_public_key := prekey_public,
           pq_public_key := pq_public
         } { one_time_public_key := onetime_public }
-        self.authentication.server_pin a1
+        self.authentication.server_pin
     let o ← beacon._proof_beacon_init_ready self effect
     let cf ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o
     match cf with
@@ -327,17 +291,9 @@ def beacon.Beacon.get_registration_bundle_with_rng
       let s1 ← lift (Array.to_slice message.fields.pre_key)
       let s2 ← lift (Array.to_slice message.fields.one_time_key)
       let s3 ← lift (Array.to_slice message.fields.pq_key)
-      let s4 ← lift (Array.to_slice message.fields.mldsa_public_key)
-      let s5 ← lift (Array.to_slice message.signature)
       let buffer ←
         wire.encode_init
-          {
-            identity_key := s,
-            pre_key := s1,
-            one_time_key := s2,
-            pq_key := s3,
-            mldsa_public_key := s4,
-            signature := s5
+          { identity_key := s, pre_key := s1, one_time_key := s2, pq_key := s3
           }
       let r ←
         beaconcrypt_core.registration.BeaconInitReady.publish val buffer
@@ -409,7 +365,7 @@ def beacon.Beacon.get_registration_bundle_with_rng
   | beacon.BeaconState.Aborted _ => ok (core.option.Option.None, self, rng)
 
 /-- [beaconcrypt::ratchet::{beaconcrypt::ratchet::RatchetKernelSlot}::new]:
-    Source: 'beaconcrypt/src/ratchet.rs', lines 133:4-137:5 -/
+    Source: 'beaconcrypt/src/ratchet.rs', lines 137:4-141:5 -/
 def ratchet.RatchetKernelSlot.new
   (kernel : beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel) :
   RustM ratchet.RatchetKernelSlot
@@ -417,7 +373,7 @@ def ratchet.RatchetKernelSlot.new
   ok { kernel := (core.option.Option.Some kernel) }
 
 /-- [beaconcrypt::ratchet::{beaconcrypt::ratchet::RatchetManager}::from_kernel]:
-    Source: 'beaconcrypt/src/ratchet.rs', lines 198:4-202:5 -/
+    Source: 'beaconcrypt/src/ratchet.rs', lines 202:4-206:5 -/
 def ratchet.RatchetManager.from_kernel
   (refined : beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel) :
   RustM ratchet.RatchetManager
@@ -426,7 +382,7 @@ def ratchet.RatchetManager.from_kernel
   ok { refined := rks }
 
 /-- Trait implementation: [beaconcrypt::pqxdh::{impl rand_core::TryRng<beaconcrypt_crypto::CryptoError> for beaconcrypt::pqxdh::NoEntropy}]
-    Source: 'beaconcrypt/src/pqxdh.rs', lines 197:0-211:1 -/
+    Source: 'beaconcrypt/src/pqxdh.rs', lines 180:0-194:1 -/
 @[reducible]
 def pqxdh.NoEntropy.Insts.Rand_coreTryRngCryptoError : rand_core.TryRng
   pqxdh.NoEntropy beaconcrypt_crypto.CryptoError := {
@@ -438,7 +394,7 @@ def pqxdh.NoEntropy.Insts.Rand_coreTryRngCryptoError : rand_core.TryRng
 }
 
 /-- Trait implementation: [beaconcrypt::pqxdh::{impl rand_core::TryCryptoRng<beaconcrypt_crypto::CryptoError> for beaconcrypt::pqxdh::NoEntropy}]
-    Source: 'beaconcrypt/src/pqxdh.rs', lines 214:0-214:54 -/
+    Source: 'beaconcrypt/src/pqxdh.rs', lines 197:0-197:54 -/
 @[reducible]
 def pqxdh.NoEntropy.Insts.Rand_coreTryCryptoRngCryptoError :
   rand_core.TryCryptoRng pqxdh.NoEntropy beaconcrypt_crypto.CryptoError := {
@@ -446,7 +402,7 @@ def pqxdh.NoEntropy.Insts.Rand_coreTryCryptoRngCryptoError :
 }
 
 /-- [beaconcrypt::pqxdh::execute_agreement::{impl core::ops::function::Fn<(), core::option::Option<[u8; 32usize]>> for beaconcrypt::pqxdh::execute_agreement::closure#8<'_0, '_1, R, Clause0_Clause0_Error>}::call]:
-    Source: 'beaconcrypt/src/pqxdh.rs', lines 169:28-176:17 -/
+    Source: 'beaconcrypt/src/pqxdh.rs', lines 152:28-159:17 -/
 def
   pqxdh.execute_agreement.closure_8.Insts.CoreOpsFunctionFnTupleOptionArrayU832.call
   {R : Type} {Clause0_Clause0_Error : Type} (_rand_coreTryCryptoRngInst :
@@ -491,7 +447,7 @@ def
       (Array Std.U8 32#usize) residual
 
 /-- [beaconcrypt::pqxdh::execute_agreement::{impl core::ops::function::FnOnce<(&'_ beaconcrypt_crypto::crypto_kx::SecretKey,), core::option::Option<[u8; 32usize]>> for beaconcrypt::pqxdh::execute_agreement::closure#7<'_0, R, Clause0_Clause0_Error>}::call_once]:
-    Source: 'beaconcrypt/src/pqxdh.rs', lines 162:81-164:21 -/
+    Source: 'beaconcrypt/src/pqxdh.rs', lines 145:81-147:21 -/
 def
   pqxdh.execute_agreement.closure_7.Insts.CoreOpsFunctionFnOnceTupleSharedSecretKeyOptionArrayU832.call_once
   {R : Type} {Clause0_Clause0_Error : Type} (_rand_coreTryCryptoRngInst :
@@ -507,7 +463,7 @@ def
   core.result.Result.ok r
 
 /-- Trait implementation: [beaconcrypt::pqxdh::execute_agreement::{impl core::ops::function::FnOnce<(&'_ beaconcrypt_crypto::crypto_kx::SecretKey,), core::option::Option<[u8; 32usize]>> for beaconcrypt::pqxdh::execute_agreement::closure#7<'_0, R, Clause0_Clause0_Error>}]
-    Source: 'beaconcrypt/src/pqxdh.rs', lines 162:81-164:21 -/
+    Source: 'beaconcrypt/src/pqxdh.rs', lines 145:81-147:21 -/
 @[reducible]
 def
   pqxdh.execute_agreement.closure_7.Insts.CoreOpsFunctionFnOnceTupleSharedSecretKeyOptionArrayU832
@@ -522,7 +478,7 @@ def
 }
 
 /-- [beaconcrypt::pqxdh::execute_agreement::{impl core::ops::function::FnOnce<(&'_ beaconcrypt_crypto::crypto_kx::SecretKey,), core::option::Option<[u8; 32usize]>> for beaconcrypt::pqxdh::execute_agreement::closure#6<'_0, R, Clause0_Clause0_Error>}::call_once]:
-    Source: 'beaconcrypt/src/pqxdh.rs', lines 159:78-161:21 -/
+    Source: 'beaconcrypt/src/pqxdh.rs', lines 142:78-144:21 -/
 def
   pqxdh.execute_agreement.closure_6.Insts.CoreOpsFunctionFnOnceTupleSharedSecretKeyOptionArrayU832.call_once
   {R : Type} {Clause0_Clause0_Error : Type} (_rand_coreTryCryptoRngInst :
@@ -538,7 +494,7 @@ def
   core.result.Result.ok r
 
 /-- Trait implementation: [beaconcrypt::pqxdh::execute_agreement::{impl core::ops::function::FnOnce<(&'_ beaconcrypt_crypto::crypto_kx::SecretKey,), core::option::Option<[u8; 32usize]>> for beaconcrypt::pqxdh::execute_agreement::closure#6<'_0, R, Clause0_Clause0_Error>}]
-    Source: 'beaconcrypt/src/pqxdh.rs', lines 159:78-161:21 -/
+    Source: 'beaconcrypt/src/pqxdh.rs', lines 142:78-144:21 -/
 @[reducible]
 def
   pqxdh.execute_agreement.closure_6.Insts.CoreOpsFunctionFnOnceTupleSharedSecretKeyOptionArrayU832
@@ -553,7 +509,7 @@ def
 }
 
 /-- [beaconcrypt::pqxdh::execute_agreement::{impl core::ops::function::FnOnce<(&'_ beaconcrypt_crypto::crypto_kx::KeyPair,), core::option::Option<[u8; 32usize]>> for beaconcrypt::pqxdh::execute_agreement::closure#5<'_0, R, Clause0_Clause0_Error>}::call_once]:
-    Source: 'beaconcrypt/src/pqxdh.rs', lines 156:88-158:21 -/
+    Source: 'beaconcrypt/src/pqxdh.rs', lines 139:88-141:21 -/
 def
   pqxdh.execute_agreement.closure_5.Insts.CoreOpsFunctionFnOnceTupleSharedKeyPairOptionArrayU832.call_once
   {R : Type} {Clause0_Clause0_Error : Type} (_rand_coreTryCryptoRngInst :
@@ -570,7 +526,7 @@ def
   core.result.Result.ok r
 
 /-- Trait implementation: [beaconcrypt::pqxdh::execute_agreement::{impl core::ops::function::FnOnce<(&'_ beaconcrypt_crypto::crypto_kx::KeyPair,), core::option::Option<[u8; 32usize]>> for beaconcrypt::pqxdh::execute_agreement::closure#5<'_0, R, Clause0_Clause0_Error>}]
-    Source: 'beaconcrypt/src/pqxdh.rs', lines 156:88-158:21 -/
+    Source: 'beaconcrypt/src/pqxdh.rs', lines 139:88-141:21 -/
 @[reducible]
 def
   pqxdh.execute_agreement.closure_5.Insts.CoreOpsFunctionFnOnceTupleSharedKeyPairOptionArrayU832
@@ -585,7 +541,7 @@ def
 }
 
 /-- [beaconcrypt::pqxdh::execute_agreement::{impl core::ops::function::FnOnce<(&'_ zeroize::Zeroizing<[u8; 32usize]>,), core::option::Option<[u8; 32usize]>> for beaconcrypt::pqxdh::execute_agreement::closure#4<'_0, R, Clause0_Clause0_Error>}::call_once]:
-    Source: 'beaconcrypt/src/pqxdh.rs', lines 153:84-155:21 -/
+    Source: 'beaconcrypt/src/pqxdh.rs', lines 136:84-138:21 -/
 def
   pqxdh.execute_agreement.closure_4.Insts.CoreOpsFunctionFnOnceTupleSharedZeroizingArrayU832OptionArrayU832.call_once
   {R : Type} {Clause0_Clause0_Error : Type} (_rand_coreTryCryptoRngInst :
@@ -604,7 +560,7 @@ def
   core.result.Result.ok r
 
 /-- Trait implementation: [beaconcrypt::pqxdh::execute_agreement::{impl core::ops::function::FnOnce<(&'_ zeroize::Zeroizing<[u8; 32usize]>,), core::option::Option<[u8; 32usize]>> for beaconcrypt::pqxdh::execute_agreement::closure#4<'_0, R, Clause0_Clause0_Error>}]
-    Source: 'beaconcrypt/src/pqxdh.rs', lines 153:84-155:21 -/
+    Source: 'beaconcrypt/src/pqxdh.rs', lines 136:84-138:21 -/
 @[reducible]
 def
   pqxdh.execute_agreement.closure_4.Insts.CoreOpsFunctionFnOnceTupleSharedZeroizingArrayU832OptionArrayU832
@@ -619,7 +575,7 @@ def
 }
 
 /-- [beaconcrypt::pqxdh::execute_agreement::{impl core::ops::function::Fn<(), core::option::Option<[u8; 32usize]>> for beaconcrypt::pqxdh::execute_agreement::closure#3<'_0, '_1, '_2, '_3, R, Clause0_Clause0_Error>}::call]:
-    Source: 'beaconcrypt/src/pqxdh.rs', lines 141:30-147:17 -/
+    Source: 'beaconcrypt/src/pqxdh.rs', lines 124:30-130:17 -/
 def
   pqxdh.execute_agreement.closure_3.Insts.CoreOpsFunctionFnTupleOptionArrayU832.call
   {R : Type} {Clause0_Clause0_Error : Type} (_rand_coreTryCryptoRngInst :
@@ -663,7 +619,7 @@ def
       (Array Std.U8 32#usize) residual
 
 /-- [beaconcrypt::pqxdh::execute_agreement::{impl core::ops::function::FnMut<(), core::option::Option<([u8; 1088usize], [u8; 32usize])>> for beaconcrypt::pqxdh::execute_agreement::closure#2<'_0, '_1, '_2, R, Clause0_Clause0_Error>}::call_mut]:
-    Source: 'beaconcrypt/src/pqxdh.rs', lines 131:30-137:17 -/
+    Source: 'beaconcrypt/src/pqxdh.rs', lines 114:30-120:17 -/
 def
   pqxdh.execute_agreement.closure_2.Insts.CoreOpsFunctionFnMutTupleOptionPairArrayU81088ArrayU832.call_mut
   {R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :
@@ -723,7 +679,7 @@ def
     ok (o1, c, back)
 
 /-- [beaconcrypt::pqxdh::execute_agreement::{impl core::ops::function::FnOnce<(&'_ beaconcrypt_crypto::crypto_kx::KeyPair,), [u8; 32usize]> for beaconcrypt::pqxdh::execute_agreement::closure#1<R, Clause0_Clause0_Error>}::call_once]:
-    Source: 'beaconcrypt/src/pqxdh.rs', lines 127:25-127:57 -/
+    Source: 'beaconcrypt/src/pqxdh.rs', lines 110:25-110:57 -/
 def
   pqxdh.execute_agreement.closure_1.Insts.CoreOpsFunctionFnOnceTupleSharedKeyPairArrayU832.call_once
   {R : Type} {Clause0_Clause0_Error : Type} (_rand_coreTryCryptoRngInst :
@@ -735,7 +691,7 @@ def
   beaconcrypt_crypto.crypto_kx.PublicKey.as_bytes tupled_args.public_key
 
 /-- Trait implementation: [beaconcrypt::pqxdh::execute_agreement::{impl core::ops::function::FnOnce<(&'_ beaconcrypt_crypto::crypto_kx::KeyPair,), [u8; 32usize]> for beaconcrypt::pqxdh::execute_agreement::closure#1<R, Clause0_Clause0_Error>}]
-    Source: 'beaconcrypt/src/pqxdh.rs', lines 127:25-127:57 -/
+    Source: 'beaconcrypt/src/pqxdh.rs', lines 110:25-110:57 -/
 @[reducible]
 def
   pqxdh.execute_agreement.closure_1.Insts.CoreOpsFunctionFnOnceTupleSharedKeyPairArrayU832
@@ -749,7 +705,7 @@ def
 }
 
 /-- [beaconcrypt::pqxdh::execute_agreement::{impl core::ops::function::FnOnce<(beaconcrypt_crypto::crypto_sign::PublicKey,), core::option::Option<[u8; 32usize]>> for beaconcrypt::pqxdh::execute_agreement::closure<R, Clause0_Clause0_Error>}::call_once]:
-    Source: 'beaconcrypt/src/pqxdh.rs', lines 114:30-114:84 -/
+    Source: 'beaconcrypt/src/pqxdh.rs', lines 97:30-97:84 -/
 def
   pqxdh.execute_agreement.closure.Insts.CoreOpsFunctionFnOnceTuplePublicKeyOptionArrayU832.call_once
   {R : Type} {Clause0_Clause0_Error : Type} (_rand_coreTryCryptoRngInst :
@@ -762,7 +718,7 @@ def
   core.result.Result.ok r
 
 /-- Trait implementation: [beaconcrypt::pqxdh::execute_agreement::{impl core::ops::function::FnOnce<(beaconcrypt_crypto::crypto_sign::PublicKey,), core::option::Option<[u8; 32usize]>> for beaconcrypt::pqxdh::execute_agreement::closure<R, Clause0_Clause0_Error>}]
-    Source: 'beaconcrypt/src/pqxdh.rs', lines 114:30-114:84 -/
+    Source: 'beaconcrypt/src/pqxdh.rs', lines 97:30-97:84 -/
 @[reducible]
 def
   pqxdh.execute_agreement.closure.Insts.CoreOpsFunctionFnOnceTuplePublicKeyOptionArrayU832
@@ -777,7 +733,7 @@ def
 }
 
 /-- [beaconcrypt::pqxdh::execute_agreement]: loop body 0:
-    Source: 'beaconcrypt/src/pqxdh.rs', lines 106:4-180:5 -/
+    Source: 'beaconcrypt/src/pqxdh.rs', lines 89:4-163:5 -/
 @[rust_loop_body]
 def pqxdh.execute_agreement_loop.body
   {R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :
@@ -905,7 +861,7 @@ def pqxdh.execute_agreement_loop.body
     ok (done (effect, rng))
 
 /-- [beaconcrypt::pqxdh::execute_agreement]: loop 0:
-    Source: 'beaconcrypt/src/pqxdh.rs', lines 106:4-180:5 -/
+    Source: 'beaconcrypt/src/pqxdh.rs', lines 89:4-163:5 -/
 @[rust_loop]
 def pqxdh.execute_agreement_loop
   {R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :
@@ -929,7 +885,7 @@ def pqxdh.execute_agreement_loop
     (effect, rng, local_identity, server_ephemeral)
 
 /-- [beaconcrypt::pqxdh::execute_agreement]:
-    Source: 'beaconcrypt/src/pqxdh.rs', lines 96:0-181:1 -/
+    Source: 'beaconcrypt/src/pqxdh.rs', lines 79:0-164:1 -/
 @[reducible]
 def pqxdh.execute_agreement
   {R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :
@@ -943,7 +899,7 @@ def pqxdh.execute_agreement
     keys.beacon_kem rng core.option.Option.None core.option.Option.None
 
 /-- [beaconcrypt::pqxdh::execute_beacon_agreement]:
-    Source: 'beaconcrypt/src/pqxdh.rs', lines 186:0-191:1 -/
+    Source: 'beaconcrypt/src/pqxdh.rs', lines 169:0-174:1 -/
 def pqxdh.execute_beacon_agreement
   (effect : beaconcrypt_core.agreement.AgreementEffect)
   (keys : pqxdh.RegistrationKeys) :
@@ -955,7 +911,7 @@ def pqxdh.execute_beacon_agreement
   ok ae
 
 /-- Trait implementation: [beaconcrypt::beacon::{impl beaconcrypt::beacon::ProviderBeacon for beaconcrypt::beacon::Beacon}::finish_registration::{impl core::ops::function::FnOnce<(beaconcrypt_parse::transport::kexresponse<'_>,), core::option::Option<beaconcrypt_core::registration::ResponsePacket<'_>>> for beaconcrypt::beacon::{impl beaconcrypt::beacon::ProviderBeacon for beaconcrypt::beacon::Beacon}::finish_registration::closure}]
-    Source: 'beaconcrypt/src/beacon.rs', lines 492:53-501:9 -/
+    Source: 'beaconcrypt/src/beacon.rs', lines 483:53-492:9 -/
 @[reducible]
 def
   beacon.ProviderBeaconBeacon.finish_registration.closure.Insts.CoreOpsFunctionFnOnceTuplekexresponseOptionResponsePacket
@@ -968,7 +924,7 @@ def
 }
 
 /-- [beaconcrypt::beacon::{impl beaconcrypt::beacon::ProviderBeacon for beaconcrypt::beacon::Beacon}::finish_registration]: loop body 0:
-    Source: 'beaconcrypt/src/beacon.rs', lines 537:8-582:9
+    Source: 'beaconcrypt/src/beacon.rs', lines 528:8-573:9
     Visibility: public -/
 @[rust_loop_body]
 def
@@ -1046,7 +1002,7 @@ def
         control))
 
 /-- [beaconcrypt::beacon::{impl beaconcrypt::beacon::ProviderBeacon for beaconcrypt::beacon::Beacon}::finish_registration]: loop 0:
-    Source: 'beaconcrypt/src/beacon.rs', lines 537:8-582:9
+    Source: 'beaconcrypt/src/beacon.rs', lines 528:8-573:9
     Visibility: public -/
 @[rust_loop]
 def
@@ -1062,7 +1018,7 @@ def
     effect
 
 /-- [beaconcrypt::beacon::{impl beaconcrypt::beacon::ProviderBeacon for beaconcrypt::beacon::Beacon}::finish_registration]:
-    Source: 'beaconcrypt/src/beacon.rs', lines 474:4-583:5
+    Source: 'beaconcrypt/src/beacon.rs', lines 465:4-574:5
     Visibility: public -/
 def beacon.Beacon.Insts.BeaconcryptBeaconProviderBeacon.finish_registration
   (self : beacon.Beacon) (bytes : Slice Std.U8) :
@@ -1131,9 +1087,9 @@ def beacon.Beacon.Insts.BeaconcryptBeaconProviderBeacon.finish_registration
           =>
           let pending2 ←
             beaconcrypt_core.registration.begin_beacon_completion agreement
-          let srkr ←
+          let irkr ←
             beaconcrypt_core.registration.BeaconInitialKdf.request pending2
-          let a ← ratchet.initial_ratchet_hkdf srkr
+          let a ← ratchet.initial_ratchet_hkdf irkr
           let response ←
             beaconcrypt_core.pqxdh.concrete.InitialRatchetKdfResponse.from_bytes
               a
@@ -1170,7 +1126,7 @@ def collections.KeyedHasher.Insts.CoreHashBuildHasherSipHasher13 :
 }
 
 /-- Trait implementation: [beaconcrypt::pqxdh::{impl beaconcrypt::shared::SignaturePk for beaconcrypt_crypto::crypto_sign::PublicKey}]
-    Source: 'beaconcrypt/src/pqxdh.rs', lines 35:0-35:46 -/
+    Source: 'beaconcrypt/src/pqxdh.rs', lines 26:0-26:46 -/
 @[reducible]
 def beaconcrypt_crypto.crypto_sign.PublicKey.Insts.BeaconcryptSharedSignaturePk
   : shared.SignaturePk beaconcrypt_crypto.crypto_sign.PublicKey := {
@@ -1194,7 +1150,7 @@ def server.Server.mldsa_public_key
   auth.MldsaIdentity.public_key si.mldsa_identity
 
 /-- [beaconcrypt::server::{beaconcrypt::server::Server}::identity_pk]:
-    Source: 'beaconcrypt/src/server.rs', lines 258:4-260:5
+    Source: 'beaconcrypt/src/server.rs', lines 253:4-255:5
     Visibility: public -/
 def server.Server.identity_pk
   (self : server.Server) : RustM beaconcrypt_crypto.crypto_sign.PublicKey := do
@@ -1202,7 +1158,7 @@ def server.Server.identity_pk
   ok si.identity_key.public_key
 
 /-- [beaconcrypt::server::{beaconcrypt::server::Server}::identity_key_kid]:
-    Source: 'beaconcrypt/src/server.rs', lines 255:4-257:5
+    Source: 'beaconcrypt/src/server.rs', lines 250:4-252:5
     Visibility: public -/
 def server.Server.identity_key_kid (self : server.Server) : RustM Std.U64 := do
   let si ← alloc.sync.Arc.Insts.CoreOpsDerefDeref.deref self.identity
@@ -1218,10 +1174,10 @@ def server.Server.authentication_pin
   let a ← beaconcrypt_crypto.crypto_sign.PublicKey.as_bytes pk
   let i ← server.Server.identity_key_kid self
   let a1 ← server.Server.mldsa_public_key self
-  auth.fingerprint_pin { identity_public_key := a, identity_key_id := i } a1
+  auth.server_pin { identity_public_key := a, identity_key_id := i } a1
 
 /-- [beaconcrypt::server::{beaconcrypt::server::Server}::identity_sk]:
-    Source: 'beaconcrypt/src/server.rs', lines 261:4-263:5
+    Source: 'beaconcrypt/src/server.rs', lines 256:4-258:5
     Visibility: public -/
 def server.Server.identity_sk
   (self : server.Server) : RustM beaconcrypt_crypto.crypto_sign.SecretKey := do
@@ -1229,7 +1185,7 @@ def server.Server.identity_sk
   ok si.identity_key.secret_key
 
 /-- [beaconcrypt::server::{beaconcrypt::server::Server}::authenticate_registration_lookup]:
-    Source: 'beaconcrypt/src/server.rs', lines 542:4-562:5 -/
+    Source: 'beaconcrypt/src/server.rs', lines 532:4-550:5 -/
 def server.Server.authenticate_registration_lookup
   (self : server.Server) (buffer : Slice Std.U8) :
   RustM (core.option.Option beaconcrypt_core.peer.RegistrationLookup)
@@ -1240,7 +1196,7 @@ def server.Server.authenticate_registration_lookup
   | core.ops.control_flow.ControlFlow.Continue i =>
     let o1 ←
       beaconcrypt_core.registration.InitPacket.from_slices i.identity_key
-        i.pre_key i.one_time_key i.pq_key i.mldsa_public_key i.signature
+        i.pre_key i.one_time_key i.pq_key
     let cf1 ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o1
     match cf1 with
     | core.ops.control_flow.ControlFlow.Continue val =>
@@ -1269,7 +1225,7 @@ def server.Server.authenticate_registration_lookup
       beaconcrypt_core.peer.RegistrationLookup residual
 
 /-- [beaconcrypt::server::{beaconcrypt::server::Server}::get_shared_secret_from_lookup_with_rng]:
-    Source: 'beaconcrypt/src/server.rs', lines 565:4-602:5 -/
+    Source: 'beaconcrypt/src/server.rs', lines 553:4-590:5 -/
 def server.Server.get_shared_secret_from_lookup_with_rng
   {R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :
   rand_core.TryCryptoRng R Clause0_Clause0_Error) (self : server.Server)
@@ -2055,7 +2011,7 @@ def shared.EstablishedRemote.from_peer
   ok { pk, peer := p }
 
 /-- Trait implementation: [beaconcrypt::server::{impl beaconcrypt::server::ProviderServer for beaconcrypt::server::Server}::build_registration_response::{impl core::ops::function::FnOnce<(&'_ (alloc::vec::Vec<u8>, [u8; 16usize]),), (&'_ [u8], [u8; 16usize])> for beaconcrypt::server::{impl beaconcrypt::server::ProviderServer for beaconcrypt::server::Server}::build_registration_response::closure}]
-    Source: 'beaconcrypt/src/server.rs', lines 640:50-640:87 -/
+    Source: 'beaconcrypt/src/server.rs', lines 630:50-630:87 -/
 @[reducible]
 def
   server.ProviderServerServer.build_registration_response.closure.Insts.CoreOpsFunctionFnOnceTupleSharedPairVecU8ArrayU816PairSharedSliceU8ArrayU816
@@ -2068,7 +2024,7 @@ def
 }
 
 /-- [beaconcrypt::server::{impl beaconcrypt::server::ProviderServer for beaconcrypt::server::Server}::build_registration_response]:
-    Source: 'beaconcrypt/src/server.rs', lines 611:4-681:5
+    Source: 'beaconcrypt/src/server.rs', lines 599:4-671:5
     Visibility: public -/
 def
   server.Server.Insts.BeaconcryptServerProviderServer.build_registration_response
@@ -2109,151 +2065,154 @@ def
         let cf3 ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o3
         match cf3 with
         | core.ops.control_flow.ControlFlow.Continue val2 =>
-          let (r2, hm) ←
-            hashbrown.map.HashMap.try_reserve core.U64.Insts.CoreCmpEq
-              core.U64.Insts.CoreHashHash
-              collections.KeyedHasher.Insts.CoreHashBuildHasherSipHasher13
-              hashbrown.alloc.inner.Global.Insts.HashbrownAllocInnerAllocator
-              self.known_ids 1#usize
+          let hr ← beaconcrypt_core.registration.ServerAdHash.request val2
+          let hash ← auth.execute_hash hr
+          let r2 ←
+            beaconcrypt_core.registration.ServerAdHash.resume val2 hash
           let o4 ← core.result.Result.ok r2
           let cf4 ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o4
           match cf4 with
-          | core.ops.control_flow.ControlFlow.Continue _ =>
-            let srkr ←
-              beaconcrypt_core.registration.ServerInitialKdf.request val2
-            let a ← ratchet.initial_ratchet_hkdf srkr
-            let response ←
-              beaconcrypt_core.pqxdh.concrete.InitialRatchetKdfResponse.from_bytes
-                a
-            let r3 ←
-              beaconcrypt_core.registration.ServerInitialKdf.resume val2
-                (core.option.Option.Some response)
+          | core.ops.control_flow.ControlFlow.Continue val3 =>
+            let (r3, hm) ←
+              hashbrown.map.HashMap.try_reserve core.U64.Insts.CoreCmpEq
+                core.U64.Insts.CoreHashHash
+                collections.KeyedHasher.Insts.CoreHashBuildHasherSipHasher13
+                hashbrown.alloc.inner.Global.Insts.HashbrownAllocInnerAllocator
+                self.known_ids 1#usize
             let o5 ← core.result.Result.ok r3
             let cf5 ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o5
             match cf5 with
-            | core.ops.control_flow.ControlFlow.Continue val3 =>
-              let srkr1 ←
-                beaconcrypt_core.registration.ServerInitialSeal.request val3
-              let response1 ← ratchet.ratchet_hkdf srkr1
+            | core.ops.control_flow.ControlFlow.Continue _ =>
+              let irkr ←
+                beaconcrypt_core.registration.ServerInitialKdf.request val3
+              let a ← ratchet.initial_ratchet_hkdf irkr
+              let response ←
+                beaconcrypt_core.pqxdh.concrete.InitialRatchetKdfResponse.from_bytes
+                  a
               let r4 ←
-                beaconcrypt_core.registration.ServerInitialSeal.resume val3
-                  (core.option.Option.Some response1)
+                beaconcrypt_core.registration.ServerInitialKdf.resume val3
+                  (core.option.Option.Some response)
               let o6 ← core.result.Result.ok r4
               let cf6 ←
                 core.option.Option.Insts.CoreOpsTry_traitTry.branch o6
               match cf6 with
               | core.ops.control_flow.ControlFlow.Continue val4 =>
-                let asr ←
-                  beaconcrypt_core.registration.ServerRecordAead.request val4
-                let detached ← ratchet.execute_seal_request asr
-                let o7 ← core.option.Option.as_ref detached
-                let detached_view ←
-                  core.option.Option.map
-                    server.ProviderServerServer.build_registration_response.closure.Insts.CoreOpsFunctionFnOnceTupleSharedPairVecU8ArrayU816PairSharedSliceU8ArrayU816
-                    o7 ()
+                let srkr ←
+                  beaconcrypt_core.registration.ServerInitialSeal.request val4
+                let response1 ← ratchet.ratchet_hkdf srkr
                 let r5 ←
-                  beaconcrypt_core.registration.ServerRecordAead.resume val4
-                    detached_view
-                let o8 ← core.result.Result.ok r5
+                  beaconcrypt_core.registration.ServerInitialSeal.resume val4
+                    (core.option.Option.Some response1)
+                let o7 ← core.result.Result.ok r5
                 let cf7 ←
-                  core.option.Option.Insts.CoreOpsTry_traitTry.branch o8
+                  core.option.Option.Insts.CoreOpsTry_traitTry.branch o7
                 match cf7 with
                 | core.ops.control_flow.ControlFlow.Continue val5 =>
-                  let (ct, transcript_mut_back) ←
-                    beaconcrypt_core.registration.ServerRecordCommitment.transcript_mut
-                      val5
-                  let (commitment, ct1) ← ratchet.execute_commitment_hash ct
-                  let val6 := transcript_mut_back ct1
+                  let asr ←
+                    beaconcrypt_core.registration.ServerRecordAead.request val5
+                  let detached ← ratchet.execute_seal_request asr
+                  let o8 ← core.option.Option.as_ref detached
+                  let detached_view ←
+                    core.option.Option.map
+                      server.ProviderServerServer.build_registration_response.closure.Insts.CoreOpsFunctionFnOnceTupleSharedPairVecU8ArrayU816PairSharedSliceU8ArrayU816
+                      o8 ()
                   let r6 ←
-                    beaconcrypt_core.registration.ServerRecordCommitment.resume
-                      val6 commitment
+                    beaconcrypt_core.registration.ServerRecordAead.resume val5
+                      detached_view
                   let o9 ← core.result.Result.ok r6
                   let cf8 ←
                     core.option.Option.Insts.CoreOpsTry_traitTry.branch o9
                   match cf8 with
-                  | core.ops.control_flow.ControlFlow.Continue val7 =>
-                    let rwr ←
-                      beaconcrypt_core.registration.ServerRecordWrite.request
-                        val7
-                    let ciphertext ← ratchet.execute_write_request rwr
-                    let o10 ←
-                      core.option.Option.as_deref
-                        (alloc.vec.Vec.Insts.CoreOpsDerefDerefSlice Std.U8)
-                        ciphertext
+                  | core.ops.control_flow.ControlFlow.Continue val6 =>
+                    let (ct, transcript_mut_back) ←
+                      beaconcrypt_core.registration.ServerRecordCommitment.transcript_mut
+                        val6
+                    let (commitment, ct1) ←
+                      ratchet.execute_commitment_hash ct
+                    let val7 := transcript_mut_back ct1
                     let r7 ←
-                      beaconcrypt_core.registration.ServerRecordWrite.resume
-                        val7 o10
-                    let o11 ← core.result.Result.ok r7
+                      beaconcrypt_core.registration.ServerRecordCommitment.resume
+                        val7 commitment
+                    let o10 ← core.result.Result.ok r7
                     let cf9 ←
-                      core.option.Option.Insts.CoreOpsTry_traitTry.branch o11
+                      core.option.Option.Insts.CoreOpsTry_traitTry.branch o10
                     match cf9 with
                     | core.ops.control_flow.ControlFlow.Continue val8 =>
-                      let hr ←
-                        beaconcrypt_core.registration.ServerResponseHash.request
+                      let rwr ←
+                        beaconcrypt_core.registration.ServerRecordWrite.request
                           val8
-                      let hash ← auth.execute_hash hr
+                      let ciphertext ← ratchet.execute_write_request rwr
+                      let o11 ←
+                        core.option.Option.as_deref
+                          (alloc.vec.Vec.Insts.CoreOpsDerefDerefSlice Std.U8)
+                          ciphertext
                       let r8 ←
-                        beaconcrypt_core.registration.ServerResponseHash.resume
-                          val8 hash
+                        beaconcrypt_core.registration.ServerRecordWrite.resume
+                          val8 o11
                       let o12 ← core.result.Result.ok r8
                       let cf10 ←
                         core.option.Option.Insts.CoreOpsTry_traitTry.branch o12
                       match cf10 with
                       | core.ops.control_flow.ControlFlow.Continue val9 =>
-                        let si ←
-                          alloc.sync.Arc.Insts.CoreOpsDerefDeref.deref
-                            self.identity
-                        let msr ←
-                          beaconcrypt_core.registration.ServerResponseSigning.request
+                        let hr1 ←
+                          beaconcrypt_core.registration.ServerResponseHash.request
                             val9
-                        let signature ←
-                          auth.MldsaIdentity.sign_requested si.mldsa_identity
-                            msr
-                        let o13 ←
-                          core.option.Option.as_deref
-                            (alloc.vec.Vec.Insts.CoreOpsDerefDerefSlice Std.U8)
-                            signature
+                        let hash1 ← auth.execute_hash hr1
                         let r9 ←
-                          beaconcrypt_core.registration.ServerResponseSigning.resume
-                            val9 o13
-                        let o14 ← core.result.Result.ok r9
+                          beaconcrypt_core.registration.ServerResponseHash.resume
+                            val9 hash1
+                        let o13 ← core.result.Result.ok r9
                         let cf11 ←
                           core.option.Option.Insts.CoreOpsTry_traitTry.branch
-                            o14
+                            o13
                         match cf11 with
                         | core.ops.control_flow.ControlFlow.Continue val10 =>
-                          let message ←
-                            beaconcrypt_core.registration.ServerResponseReady.message
+                          let si ←
+                            alloc.sync.Arc.Insts.CoreOpsDerefDeref.deref
+                              self.identity
+                          let msr ←
+                            beaconcrypt_core.registration.ServerResponseSigning.request
                               val10
-                          let s ← lift (Array.to_slice message.identity_key)
-                          let s1 ←
-                            lift (Array.to_slice message.ephemeral_key)
-                          let s2 ←
-                            lift (Array.to_slice message.kem_cipher_text)
-                          let s3 ← lift (Array.to_slice message.signature)
-                          let buffer ←
-                            wire.encode_response
-                              {
-                                identity_key := s,
-                                ephemeral_key := s1,
-                                kem_cipher_text := s2,
-                                app_cipher_text :=
-                                  message.application_ciphertext,
-                                key_id := message.key_id,
-                                signature := s3
-                              }
+                          let signature ←
+                            auth.MldsaIdentity.sign_requested si.mldsa_identity
+                              msr
+                          let o14 ←
+                            core.option.Option.as_deref
+                              (alloc.vec.Vec.Insts.CoreOpsDerefDerefSlice
+                              Std.U8) signature
                           let r10 ←
-                            beaconcrypt_core.registration.ServerResponseReady.publish
-                              val10 buffer
+                            beaconcrypt_core.registration.ServerResponseSigning.resume
+                              val10 o14
                           let o15 ← core.result.Result.ok r10
                           let cf12 ←
                             core.option.Option.Insts.CoreOpsTry_traitTry.branch
                               o15
                           match cf12 with
                           | core.ops.control_flow.ControlFlow.Continue val11 =>
+                            let message ←
+                              beaconcrypt_core.registration.ServerResponseReady.message
+                                val11
+                            let s ←
+                              lift (Array.to_slice message.identity_key)
+                            let s1 ←
+                              lift (Array.to_slice message.ephemeral_key)
+                            let s2 ←
+                              lift (Array.to_slice message.kem_cipher_text)
+                            let s3 ← lift (Array.to_slice message.signature)
+                            let buffer ←
+                              wire.encode_response
+                                {
+                                  identity_key := s,
+                                  ephemeral_key := s1,
+                                  kem_cipher_text := s2,
+                                  app_cipher_text :=
+                                    message.application_ciphertext,
+                                  key_id := message.key_id,
+                                  signature := s3
+                                }
                             let r11 ←
-                              beaconcrypt_core.peer.begin_peer_insert
-                                self.control val11
+                              beaconcrypt_core.registration.ServerResponseReady.publish
+                                val11 buffer
                             let o16 ← core.result.Result.ok r11
                             let cf13 ←
                               core.option.Option.Insts.CoreOpsTry_traitTry.branch
@@ -2261,20 +2220,9 @@ def
                             match cf13 with
                             | core.ops.control_flow.ControlFlow.Continue val12
                               =>
-                              let remote_kid ←
-                                beaconcrypt_core.peer.PeerInsert.request val12
-                              let (peer, finish) ←
-                                beaconcrypt_core.peer.PeerInsert.into_parts
-                                  val12
-                              let sb ←
-                                BeaconcryptCore.Refinement.PublicWrapperPlatform.peerBinding peer
-                              let a1 ←
-                                BeaconcryptCore.Refinement.PublicWrapperPlatform.beaconIdentity
-                                  sb
-                              let s4 ← lift (Array.to_slice a1)
                               let r12 ←
-                                beaconcrypt_crypto.crypto_sign.PublicKey.from_bytes
-                                  s4
+                                beaconcrypt_core.peer.begin_peer_insert
+                                  self.control val12
                               let o17 ← core.result.Result.ok r12
                               let cf14 ←
                                 core.option.Option.Insts.CoreOpsTry_traitTry.branch
@@ -2282,98 +2230,128 @@ def
                               match cf14 with
                               | core.ops.control_flow.ControlFlow.Continue
                                 val13 =>
-                                let (e, entry_back) ←
-                                  hashbrown.map.HashMap.entry
-                                    core.U64.Insts.CoreCmpEq
-                                    core.U64.Insts.CoreHashHash
-                                    collections.KeyedHasher.Insts.CoreHashBuildHasherSipHasher13
-                                    hashbrown.alloc.inner.Global.Insts.HashbrownAllocInnerAllocator
-                                    hm remote_kid
-                                match e with
-                                | hashbrown.map.Entry.Occupied _ =>
-                                  let r13 ←
-                                    beaconcrypt_core.peer.PublicationFinish.finish
-                                      finish false
-                                  let o18 ← core.result.Result.ok r13
-                                  let cf15 ←
-                                    core.option.Option.Insts.CoreOpsTry_traitTry.branch
-                                      o18
-                                  match cf15 with
-                                  | core.ops.control_flow.ControlFlow.Continue
-                                    val14 =>
-                                    let (next_control, remote_kid1, buffer1)
-                                      ←
-                                      beaconcrypt_core.peer.PublishedPeer.into_parts
-                                        val14
-                                    let hm1 := entry_back e
-                                    ok (core.option.Option.Some
-                                      {
-                                        serialized := buffer1,
-                                        kid := remote_kid1
-                                      },
-                                      {
-                                        self
-                                          with
-                                          control := next_control,
-                                          known_ids := hm1
-                                      })
-                                  | core.ops.control_flow.ControlFlow.Break
-                                    residual =>
-                                    let o19 ←
-                                      core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual
-                                        server.RegResponse residual
-                                    let hm1 := entry_back e
-                                    ok (o19, { self with known_ids := hm1 })
-                                | hashbrown.map.Entry.Vacant entry =>
-                                  let er ←
-                                    shared.EstablishedRemote.from_peer
-                                      beaconcrypt_crypto.crypto_sign.PublicKey.Insts.BeaconcryptSharedSignaturePk
-                                      val13 peer
-                                  let (er1, insert_back) ←
-                                    hashbrown.map.VacantEntry.insert
-                                      hashbrown.alloc.inner.Global.Insts.HashbrownAllocInnerAllocator
+                                let remote_kid ←
+                                  beaconcrypt_core.peer.PeerInsert.request
+                                    val13
+                                let (peer, finish) ←
+                                  beaconcrypt_core.peer.PeerInsert.into_parts
+                                    val13
+                                let sb ←
+                                  BeaconcryptCore.Refinement.PublicWrapperPlatform.peerBinding peer
+                                let a1 ←
+                                  BeaconcryptCore.Refinement.PublicWrapperPlatform.beaconIdentity
+                                  sb
+                                let s4 ← lift (Array.to_slice a1)
+                                let r13 ←
+                                  beaconcrypt_crypto.crypto_sign.PublicKey.from_bytes
+                                    s4
+                                let o18 ← core.result.Result.ok r13
+                                let cf15 ←
+                                  core.option.Option.Insts.CoreOpsTry_traitTry.branch
+                                    o18
+                                match cf15 with
+                                | core.ops.control_flow.ControlFlow.Continue
+                                  val14 =>
+                                  let (e, entry_back) ←
+                                    hashbrown.map.HashMap.entry
+                                      core.U64.Insts.CoreCmpEq
                                       core.U64.Insts.CoreHashHash
                                       collections.KeyedHasher.Insts.CoreHashBuildHasherSipHasher13
-                                      entry er
-                                  let r13 ←
-                                    beaconcrypt_core.peer.PublicationFinish.finish
-                                      finish true
-                                  let o18 ← core.result.Result.ok r13
-                                  let cf15 ←
-                                    core.option.Option.Insts.CoreOpsTry_traitTry.branch
-                                      o18
-                                  match cf15 with
-                                  | core.ops.control_flow.ControlFlow.Continue
-                                    val14 =>
-                                    let (next_control, remote_kid1, buffer1)
-                                      ←
-                                      beaconcrypt_core.peer.PublishedPeer.into_parts
-                                        val14
-                                    let entry1 := insert_back er1
-                                    let hm1 :=
-                                      entry_back (hashbrown.map.Entry.Vacant
-                                        entry1)
-                                    ok (core.option.Option.Some
-                                      {
-                                        serialized := buffer1,
-                                        kid := remote_kid1
-                                      },
-                                      {
-                                        self
-                                          with
-                                          control := next_control,
-                                          known_ids := hm1
-                                      })
-                                  | core.ops.control_flow.ControlFlow.Break
-                                    residual =>
-                                    let o19 ←
-                                      core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual
-                                        server.RegResponse residual
-                                    let entry1 := insert_back er1
-                                    let hm1 :=
-                                      entry_back (hashbrown.map.Entry.Vacant
-                                        entry1)
-                                    ok (o19, { self with known_ids := hm1 })
+                                      hashbrown.alloc.inner.Global.Insts.HashbrownAllocInnerAllocator
+                                      hm remote_kid
+                                  match e with
+                                  | hashbrown.map.Entry.Occupied _ =>
+                                    let r14 ←
+                                      beaconcrypt_core.peer.PublicationFinish.finish
+                                        finish false
+                                    let o19 ← core.result.Result.ok r14
+                                    let cf16 ←
+                                      core.option.Option.Insts.CoreOpsTry_traitTry.branch
+                                        o19
+                                    match cf16 with
+                                    |
+                                      core.ops.control_flow.ControlFlow.Continue
+                                      val15 =>
+                                      let (next_control, remote_kid1, buffer1)
+                                        ←
+                                        beaconcrypt_core.peer.PublishedPeer.into_parts
+                                          val15
+                                      let hm1 := entry_back e
+                                      ok (core.option.Option.Some
+                                        {
+                                          serialized := buffer1,
+                                          kid := remote_kid1
+                                        },
+                                        {
+                                          self
+                                            with
+                                            control := next_control,
+                                            known_ids := hm1
+                                        })
+                                    | core.ops.control_flow.ControlFlow.Break
+                                      residual =>
+                                      let o20 ←
+                                        core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual
+                                          server.RegResponse residual
+                                      let hm1 := entry_back e
+                                      ok (o20, { self with known_ids := hm1 })
+                                  | hashbrown.map.Entry.Vacant entry =>
+                                    let er ←
+                                      shared.EstablishedRemote.from_peer
+                                        beaconcrypt_crypto.crypto_sign.PublicKey.Insts.BeaconcryptSharedSignaturePk
+                                        val14 peer
+                                    let (er1, insert_back) ←
+                                      hashbrown.map.VacantEntry.insert
+                                        hashbrown.alloc.inner.Global.Insts.HashbrownAllocInnerAllocator
+                                        core.U64.Insts.CoreHashHash
+                                        collections.KeyedHasher.Insts.CoreHashBuildHasherSipHasher13
+                                        entry er
+                                    let r14 ←
+                                      beaconcrypt_core.peer.PublicationFinish.finish
+                                        finish true
+                                    let o19 ← core.result.Result.ok r14
+                                    let cf16 ←
+                                      core.option.Option.Insts.CoreOpsTry_traitTry.branch
+                                        o19
+                                    match cf16 with
+                                    |
+                                      core.ops.control_flow.ControlFlow.Continue
+                                      val15 =>
+                                      let (next_control, remote_kid1, buffer1)
+                                        ←
+                                        beaconcrypt_core.peer.PublishedPeer.into_parts
+                                          val15
+                                      let entry1 := insert_back er1
+                                      let hm1 :=
+                                        entry_back (hashbrown.map.Entry.Vacant
+                                          entry1)
+                                      ok (core.option.Option.Some
+                                        {
+                                          serialized := buffer1,
+                                          kid := remote_kid1
+                                        },
+                                        {
+                                          self
+                                            with
+                                            control := next_control,
+                                            known_ids := hm1
+                                        })
+                                    | core.ops.control_flow.ControlFlow.Break
+                                      residual =>
+                                      let o20 ←
+                                        core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual
+                                          server.RegResponse residual
+                                      let entry1 := insert_back er1
+                                      let hm1 :=
+                                        entry_back (hashbrown.map.Entry.Vacant
+                                          entry1)
+                                      ok (o20, { self with known_ids := hm1 })
+                                | core.ops.control_flow.ControlFlow.Break
+                                  residual =>
+                                  let o19 ←
+                                    core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual
+                                      server.RegResponse residual
+                                  ok (o19, { self with known_ids := hm })
                               | core.ops.control_flow.ControlFlow.Break
                                 residual =>
                                 let o18 ←
@@ -2392,30 +2370,30 @@ def
                                 server.RegResponse residual
                             ok (o16, { self with known_ids := hm })
                         | core.ops.control_flow.ControlFlow.Break residual =>
-                          let o15 ←
+                          let o14 ←
                             core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual
                               server.RegResponse residual
-                          ok (o15, { self with known_ids := hm })
+                          ok (o14, { self with known_ids := hm })
                       | core.ops.control_flow.ControlFlow.Break residual =>
                         let o13 ←
                           core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual
                             server.RegResponse residual
                         ok (o13, { self with known_ids := hm })
                     | core.ops.control_flow.ControlFlow.Break residual =>
-                      let o12 ←
+                      let o11 ←
                         core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual
                           server.RegResponse residual
-                      ok (o12, { self with known_ids := hm })
+                      ok (o11, { self with known_ids := hm })
                   | core.ops.control_flow.ControlFlow.Break residual =>
                     let o10 ←
                       core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual
                         server.RegResponse residual
                     ok (o10, { self with known_ids := hm })
                 | core.ops.control_flow.ControlFlow.Break residual =>
-                  let o9 ←
+                  let o8 ←
                     core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual
                       server.RegResponse residual
-                  ok (o9, { self with known_ids := hm })
+                  ok (o8, { self with known_ids := hm })
               | core.ops.control_flow.ControlFlow.Break residual =>
                 let o7 ←
                   core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual
@@ -2430,7 +2408,7 @@ def
             let o5 ←
               core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual
                 server.RegResponse residual
-            ok (o5, { self with known_ids := hm })
+            ok (o5, self)
         | core.ops.control_flow.ControlFlow.Break residual =>
           let o4 ←
             core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual

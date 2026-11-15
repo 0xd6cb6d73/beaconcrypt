@@ -9,7 +9,7 @@ import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgreeReceive
 - A counterpart production (`Production control secret handle frame ad plaintext`) is a replay-dictionary seal at a label that `handle` owns, matching `frame` (sequence, sender and complete payload, `PqxdhRecordFactsOriginReplay.Matches`), whose frame `handle` produced (it is in the tagged produced-frame log, whether or not its writer succeeded), with record AD bytes `ad` and plaintext `plaintext`.
 - `AgreeFailure codec route result`: some transcript entry is an accepted raw receive (`Entry.received` with a decryption) on a receiving handle (`PqxdhRecordLiftIdeal.receivingHandle`) that holds a hidden slot, with decoded frame `frame`, and there is no counterpart handle of that slot (`PqxdhRecordLiftIdeal.Counterpart`) with a production of `frame` whose AD bytes are both the receiving handle's and the producing handle's AD (`PqxdhDeploymentHeadlineAgreeSeal.handleAd`) and whose plaintext is the received plaintext. `agreeEvent` is its Boolean.
 - `ctxRun_agreement` is the positive pointwise form on every supported outcome of every ideal CTX world. Its proof joins the receive side (`PqxdhDeploymentHeadlineAgreeReceive.ctxRun_entryAd`: the accepted receive matches a seal with the received plaintext and the receiving handle's AD), the dictionary origin of the frozen origin facts (`PqxdhRecordFactsOriginInvariant.ctxRun_dictionary_origin`: the seal's frame was produced by a handle that owns its label, the counterpart by `counterpart_of_opposite`) and the seal side (`PqxdhDeploymentHeadlineAgreeSeal.ctxRun_sealAd`: some owner of the label has the seal's AD), with `ownsLabel_unique` (one installed handle per slot and role, `PqxdhRecordLiftOrigins.Unique`) identifying the two owners. `ctxRun_agree` is its negated form.
-- The handle-specific forms `ctxRun_peer_agreement` and `ctxRun_owner_agreement` retain the complete installed peer binding: the counterpart produced the frame with the received plaintext and `PeerBinding.associatedBytes` of the Server identity and that binding, and the owner's installed shell AD is the same AD. For legacy identity-derived bindings, `associatedBytes_inj` and `owner_pin` recover the ordered Server and Beacon identity pair through `RawCtxServerRouting.associatedBytes_exact` and `Pqxdh.assocData_inj`.
+- The handle-specific forms `ctxRun_peer_agreement` and `ctxRun_owner_agreement` retain the complete installed peer binding: the counterpart produced the frame with the received plaintext and `PeerBinding.associatedBytes` of the Server identity and that binding, and the owner's installed shell AD is the same AD. Installed ADs are now `PqxdhTranscriptAd.adOf` of the BLAKE2b digest of each session's registration transcript (design §4.1, §13), so equal owner and peer ADs no longer determine identities by injectivity: `owner_pin_transcript` turns them into equal registration transcripts when both digests are cached in one collision-free BLAKE2b cache (design §5 L1'); the identity-layout `associatedBytes_inj` (`RawCtxServerRouting.associatedBytes_exact`, `Pqxdh.assocData_inj`) is kept as a historical fact about the old 281-byte layout.
 
 Not claimed here: a statement in the common deployment experiment. The record-lift view (`PqxdhRecordLiftIdeal.View`) and the CE observation (`PqxdhDeploymentKemTransfer.Observed`) carry neither handle ADs nor seal plaintexts, so the agreement is a fact about the full ideal-world outcome; turning the b2s Server-pin and mode-O plaintext rows of design-v2 section 7.6 computational additionally needs the CE environment's AD facts (an established owner's shell AD is the builder's output on its created pin and its own identity, and the Server identity is the one its build responses carry) and a containment of the corresponding CE events in `AgreeFailure` under the chain's designation and ideal-slot facts; this is recorded as the remainder of P2b step 3. No `PqxdhBoundary*` module is imported.
 -/
@@ -87,7 +87,7 @@ theorem ctxRun_agreement (modes : Label n → KeyMode) (ideal : ∀ label, modes
     (env : Environment n E) (serverKid : Std.U64) (bounds : FreshBounds) (mode : Mode)
     (adversary : OracleComp (ModeSpec mode) X) (result : Client n E X × CtxPrivate n)
     (supported : result ∈ support (ctxRun modes replace setup codec route env serverKid bounds mode adversary))
-    (value : PqxdhRegistrationJointServerBirth.ClientCreated Unit × (X × PqxdhDeploymentSecrecy.Ledger) × E)
+    (value : PqxdhRegistrationJointServerBirth.ClientCreated _ × (X × PqxdhDeploymentSecrecy.Ledger) × E)
     (valueMember : value ∈ result.1.1) (entry : Entry) (entryMember : entry ∈ value.2.1.2.transcript)
     (receiver : Receiver) (raw : Pqxdh.Bytes) (decrypted : RawCtxWholeOwner.Decrypted) (handle : Handle)
     (slot : Slot n) (frame : PqxdhDeploymentNative.Frame)
@@ -149,14 +149,19 @@ theorem counterpart_peer (slots : Handle → Option (Slot n)) (slot : Slot n) (k
   | peer _ => exact False.elim counterpart
   | owner owner => exact ⟨owner, rfl, counterpart⟩
 
-/-- An established owner whose installed AD is a Server peer's AD carries that peer's ordered identity pair: for every ordered pair of 32-byte identities from which the extracted `build_associated_data` produces the owner's installed AD bytes, the pair is the Server identity and the peer identity. -/
-theorem owner_pin (server peer : RawCtxServerRouting.Identity) (shell : BeaconShell)
-    (same : PqxdhRefinement.absBytes shell.associatedData = RawCtxServerRouting.associatedBytes server peer)
-    (pin beacon : RawCtxServerRouting.Identity) (built : shell.associatedData = RawCtxServerRouting.associatedArray pin beacon) :
-    pin = server ∧ beacon = peer := by
-  apply associatedBytes_inj
-  rw [← same, built]
-  rfl
+/-- An established owner whose installed AD is a Server peer's installed AD, where the two ADs are `PqxdhTranscriptAd.adOf` of digests that one BLAKE2b cache holds for two registration transcripts, has the peer's registration transcript, unless that cache has a collision (the transcript-AD replacement of the retired identity-AD281 `owner_pin`, design §5 L1' and §13: the AD equality of one owner and one peer is turned into transcript equality only through the cache, never asserted across sessions). -/
+theorem owner_pin_transcript (server : RawCtxServerRouting.Identity) (binding : PeerBinding) (shell : BeaconShell)
+    (same : PqxdhRefinement.absBytes shell.associatedData = PeerBinding.associatedBytes server binding)
+    (cache : CtxRomAuth.CtxRO.QueryCache) (ownerInit peerInit : Pqxdh.SessionTranscript.InitFields)
+    (ownerResponse peerResponse : Pqxdh.SessionTranscript.ResponseFields) (ownerDigest peerDigest : CtxRomAuth.CtxDigest)
+    (ownerAd : shell.associatedData = PqxdhTranscriptAd.adOf ownerDigest)
+    (peerAd : binding.associatedData = PqxdhTranscriptAd.adOf peerDigest)
+    (ownerCached : cache (PqxdhTranscriptAd.query ownerInit ownerResponse) = some ownerDigest)
+    (peerCached : cache (PqxdhTranscriptAd.query peerInit peerResponse) = some peerDigest)
+    (collisionFree : ¬ CacheHasCollision cache) :
+    PqxdhTranscriptAd.transcript ownerInit ownerResponse = PqxdhTranscriptAd.transcript peerInit peerResponse :=
+  PqxdhTranscriptAd.transcript_eq_of_ad_eq cache ownerCached peerCached
+    (by rw [← ownerAd, ← peerAd]; exact same) collisionFree
 
 /-- AG for a Server peer receive: its counterpart is an established Beacon owner holding the slot that produced the decoded frame from a seal with the received plaintext and the complete installed peer-binding AD, and the owner's installed shell AD is that AD. -/
 theorem ctxRun_peer_agreement (modes : Label n → KeyMode) (ideal : ∀ label, modes label ≠ .real)
@@ -165,7 +170,7 @@ theorem ctxRun_peer_agreement (modes : Label n → KeyMode) (ideal : ∀ label, 
     (env : Environment n E) (serverKid : Std.U64) (bounds : FreshBounds) (mode : Mode)
     (adversary : OracleComp (ModeSpec mode) X) (result : Client n E X × CtxPrivate n)
     (supported : result ∈ support (ctxRun modes replace setup codec route env serverKid bounds mode adversary))
-    (value : PqxdhRegistrationJointServerBirth.ClientCreated Unit × (X × PqxdhDeploymentSecrecy.Ledger) × E)
+    (value : PqxdhRegistrationJointServerBirth.ClientCreated _ × (X × PqxdhDeploymentSecrecy.Ledger) × E)
     (valueMember : value ∈ result.1.1) (entry : Entry) (entryMember : entry ∈ value.2.1.2.transcript)
     (raw : Pqxdh.Bytes) (decrypted : RawCtxWholeOwner.Decrypted) (keyId : Std.U64) (slot : Slot n)
     (frame : PqxdhDeploymentNative.Frame)
@@ -212,7 +217,7 @@ theorem ctxRun_owner_agreement (modes : Label n → KeyMode) (ideal : ∀ label,
     (env : Environment n E) (serverKid : Std.U64) (bounds : FreshBounds) (mode : Mode)
     (adversary : OracleComp (ModeSpec mode) X) (result : Client n E X × CtxPrivate n)
     (supported : result ∈ support (ctxRun modes replace setup codec route env serverKid bounds mode adversary))
-    (value : PqxdhRegistrationJointServerBirth.ClientCreated Unit × (X × PqxdhDeploymentSecrecy.Ledger) × E)
+    (value : PqxdhRegistrationJointServerBirth.ClientCreated _ × (X × PqxdhDeploymentSecrecy.Ledger) × E)
     (valueMember : value ∈ result.1.1) (entry : Entry) (entryMember : entry ∈ value.2.1.2.transcript)
     (owner : Nat) (raw : Pqxdh.Bytes) (decrypted : RawCtxWholeOwner.Decrypted) (slot : Slot n)
     (frame : PqxdhDeploymentNative.Frame)
@@ -323,13 +328,6 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgree.counterpart_pe
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgree.counterpart_peer
 
-/--
-info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgree.owner_pin' depends on axioms: [propext,
- Classical.choice,
- Quot.sound]
--/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgree.owner_pin
 
 /--
 info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgree.ctxRun_peer_agreement' depends on axioms: [propext,
@@ -376,3 +374,8 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgree.idealRecords_a
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgree.idealRecords_agree_zero
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgree.owner_pin_transcript' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineAgree.owner_pin_transcript

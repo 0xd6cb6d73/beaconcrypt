@@ -15,8 +15,8 @@ open AdapterAuthenticationRequestMonad
 open AdapterRecordRequestMonad (LiftRust)
 variable {m : Type → Type} [Monad m] [LiftRust m] [Operations m]
 
--- Extracted input SHA-256: 074922bfaa3cc4651dc6a870cad35d80fb3cff2caecac90d7c2ae07460643d70
--- Transformation SHA-256: 7ef463540cfc94c5779d7def4469a4b001c552dbc89755cf9fdf52902167fe5e
+-- Extracted input SHA-256: b8fa8c9f866d96fbbc92e8e951dd8d1356f7049afe0dedc394adab5995034c2a
+-- Transformation SHA-256: dd0cf1e9e1aef93c8e4288cffdba0115729812b1cace2ebf6c5f58ddcabcbeac
 def authenticate
   (pending : beaconcrypt_core.registration.BeaconPending)
   (packet : core.option.Option beaconcrypt_core.registration.ResponsePacket) :
@@ -37,8 +37,17 @@ def authenticate
       let mvr ←
         Lifted.verifyRequest val1
       let verified ← Operations.verify mvr
-      Lifted.verifyResume val1
-        verified
+      let r2 ←
+        Lifted.verifyResume val1
+          verified
+      let cf2 ← Lifted.branch r2
+      match cf2 with
+      | core.ops.control_flow.ControlFlow.Continue val2 =>
+        let hr1 ← Lifted.adHashRequest val2
+        let digest1 ← Operations.hash hr1
+        Lifted.adHashResume val2 digest1
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        Lifted.fromResidual residual
     | core.ops.control_flow.ControlFlow.Break residual =>
       Lifted.fromResidual residual
   | core.ops.control_flow.ControlFlow.Break residual =>

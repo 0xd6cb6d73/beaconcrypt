@@ -226,16 +226,29 @@ theorem buildOracle_ciphertext (setup : Setup baseSpec KemSK) (codec : Codec Rea
       subst member
       cases returned
   | some token =>
-      simp only [found, StateT.run_bind, mem_support_bind_iff] at member
-      obtain ⟨built, lifted, member⟩ := member
-      obtain ⟨builtMember, same⟩ := PqxdhServerAuthExperiment.liftCoins_mem _ _ _ lifted
-      simp only [same, StateT.run_set, StateT.run_pure, support_pure, Set.mem_singleton_iff] at member
-      obtain ⟨_, rfl, rfl⟩ := member
-      obtain ⟨candidate, _, _, frameBytes, _, _, _, _, carried, _, _, _, _, _, written, _⟩ :=
-        PqxdhServerAuthNegativeControl.build_published setup codec checks token.pending token.root payload game.server
-          game.ctx built.1 builtMember response returned
-      exact ⟨token, rfl, ⟨candidate.key_id, candidate.ephemeral_public_key, candidate.server_identity_public_key,
-        candidate.kem_ciphertext, frameBytes⟩, written, carried⟩
+      cases passed : PqxdhServerRegistrationPublication.prehash game.server token.pending payload with
+      | none =>
+          simp only [found, passed, StateT.run_bind, StateT.run_set, pure_bind, StateT.run_pure, support_pure,
+            Set.mem_singleton_iff] at member
+          subst member
+          cases returned
+      | some prepared =>
+          simp only [found, passed, StateT.run_bind, mem_support_bind_iff] at member
+          obtain ⟨⟨digest, hashed⟩, hashing, member⟩ := member
+          obtain ⟨cache, rfl⟩ := PqxdhServerAuthExperiment.hashOracle_step _ game _ hashing
+          obtain ⟨_, current, member⟩ := member
+          rw [StateT.run_get, support_pure, Set.mem_singleton_iff] at current
+          subst current
+          obtain ⟨built, lifted, member⟩ := member
+          obtain ⟨builtMember, same⟩ := PqxdhServerAuthExperiment.liftCoins_mem _ _ _ lifted
+          simp only [same, StateT.run_set, StateT.run_pure, support_pure, Set.mem_singleton_iff] at member
+          obtain ⟨_, rfl, rfl⟩ := member
+          obtain ⟨candidate, _, _, frameBytes, _, _, _, _, carried, _, _, _, _, written, _⟩ :=
+            PqxdhServerAuthNegativeControl.build_published (PqxdhTranscriptAd.adOf digest)
+              (PqxdhTranscriptAd.adOf digest) setup codec checks token.pending token.root payload game.server
+              cache built.1 builtMember response returned
+          exact ⟨token, rfl, ⟨candidate.key_id, candidate.ephemeral_public_key, candidate.server_identity_public_key,
+            candidate.kem_ciphertext, frameBytes⟩, written, carried⟩
 
 /-- The native build's footprint on the Server: the session counter is kept, the built session's pending token is consumed, every other token is kept, and a published response carries the consumed token's ciphertext in the Phase 2 writer's fields. -/
 theorem nativeBuild_footprint (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -675,8 +688,8 @@ theorem finish_kept (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
       change inner ∈ support (PqxdhRegistrationSchedule.finish setup codec index raw native) at member
       rw [PqxdhRegistrationSchedule.finish_source setup codec index raw native owner found, support_map] at member
       obtain ⟨reached, reachedMember, rfl⟩ := member
-      obtain ⟨failed, finished⟩ := PqxdhDeploymentCompileFootprint.finish_owner setup codec raw owner native.shared reached
-        reachedMember
+      obtain ⟨_, _, failed, finished⟩ := PqxdhDeploymentCompileFootprint.ownerFinish_owner setup codec
+        (native.inits index) raw owner native.shared reached reachedMember
       have bound : index < native.owners.length := (List.getElem?_eq_some_iff.mp found).1
       refine ⟨List.length_set .., fun k next key nextFound held => ?_⟩
       by_cases same : k = index
@@ -689,7 +702,7 @@ theorem finish_kept (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
             exact ⟨owner, found, held⟩
           · rw [aborted] at held
             simp [PqxdhBeaconPhase2Preparation.abort, PqxdhDeploymentEligibility.kemPublic] at held
-        · obtain ⟨_, _, _, _, _, _, _, _, installed⟩ := finished plaintext reply
+        · obtain ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, installed⟩ := finished plaintext reply
           rw [installed] at held
           simp [PqxdhDeploymentEligibility.kemPublic] at held
       · rw [List.getElem?_set_ne (Ne.symm same)] at nextFound
@@ -932,10 +945,16 @@ theorem bundle_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
         rw [PqxdhRegistrationSchedule.bundle_source setup codec index native.native owner found, support_map]
           at inner'Member
         obtain ⟨reached, reachedMember, rfl⟩ := inner'Member
-        obtain ⟨rejected, published⟩ := PqxdhDeploymentEligibility.bundle_candidate setup codec index owner reached
-          reachedMember
+        have reachedOriginal : reached.1 ∈ support (simulateQ
+            (PqxdhRegistrationSchedule.bundleCallbacks setup codec owner.beacon.identity)
+            (PqxdhLivePhase1Bundle.bundle (PqxdhRegistrationSchedule.projection setup index) owner)) := by
+          rw [← PqxdhRegistrationSchedule.bundleLog_fst setup codec owner.beacon.identity _ (native.native.inits index)]
+          rw [support_map]
+          exact ⟨reached, reachedMember, rfl⟩
+        obtain ⟨rejected, published⟩ := PqxdhDeploymentEligibility.bundle_candidate setup codec index owner reached.1
+          reachedOriginal
         have bound : index < native.native.owners.length := (List.getElem?_eq_some_iff.mp found).1
-        rcases outcome : reached.1 with _ | bytes
+        rcases outcome : reached.1.1 with _ | bytes
         · have same := rejected outcome
           refine ⟨⟨List.length_set .., fun k next key nextFound held => ?_⟩, fun bytes _ _ returned => ?_⟩
           · by_cases atIndex : k = index

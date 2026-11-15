@@ -11,6 +11,7 @@ set_option maxRecDepth 8192
 set_option maxHeartbeats 1200000
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativePlatformHiddenAllocationOwnerFrames
+attribute [local irreducible] RegistrationNativePlatformServerOpenControl.accept
 open PqxdhServerAuthExperiment (Setup Checks)
 open RegistrationNativePlatformPublicFrontend (State)
 variable {n : Nat} {I KemSK Platform E Value : Type} {base : OracleSpec I} {source : RegistrationNativeMldsa.Source}

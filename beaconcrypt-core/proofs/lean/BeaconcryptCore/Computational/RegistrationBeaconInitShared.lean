@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationBeaconInitExecutor
 import BeaconcryptCore.Computational.RegistrationWorldSigning
 
-/-! Both outgoing Beacon hashes and its ML signing attempt use the same World cache and signing history as records and incoming authentication. The Ed backend retains its complete independent state and records every actual optional reply before its native continuation. World interpretation changes only instrumentation under the exact projection below; no desired simulation or history-preservation premise is supplied. -/
+/-! The outgoing Beacon request hash uses the common World cache. The shared signing handler remains available for Server response modules, while the current Init controller issues no ML signing query. Every Ed reply is recorded before its continuation and retains the complete primitive state. -/
 
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc

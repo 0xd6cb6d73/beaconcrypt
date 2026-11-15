@@ -7,7 +7,10 @@ open OracleComp OracleSpec CoreModels Aeneas OracleComp.ProgramLogic.Relational
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeBeforeUnguarded
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPhase1AcceptanceOracle PqxdhKemIndCca PqxdhInitializerSecrecy
 open CtxRomAuth AdaptiveCtxSharedHash PqxdhSecretInputKdf PqxdhFullSecretInputKdf
@@ -80,7 +83,7 @@ noncomputable def client (qPost : Nat) (bit : Bool) (key : Key) (valid : KeyFits
   | none, _ => pure false
   | some (credentials, start, output, details, native, parent, target, nonce, next, _), fits =>
     if RawCtxSelectedParentPrivatePatch.targetAddress target ≠ PqxdhInitialBuilderContext.address details.callback.original then
-      PqxdhLaterChallengeBeforeConsumer.decision setup <$> PqxdhLaterChallengeSavedMonitor.resume
+      PqxdhLaterChallengeBeforeConsumer.decision setup <$> PqxdhLaterChallengeSavedMonitor.resume (completedBinding := completedBinding)
         (PqxdhPreparedPrefixCallbacks.preparation attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem credentials.1 credentials.2)
         (PqxdhPreparedPrefixCallbacks.application attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem credentials.1 credentials.2)
         (initialLocal (A := A) (N := BareState 1) (env0).source start.selectedMessage zeroRoot (PqxdhInitialSampledParent.response (start, output)))
@@ -94,8 +97,8 @@ noncomputable def client (qPost : Nat) (bit : Bool) (key : Key) (valid : KeyFits
 
 /-- The source-certified executable continuation is literally the prior guarded client. The derived proof removes the resource branch without deleting any oracle call or refusal path. -/
 theorem client_eq (qPost : Nat) (bit : Bool) (key : Key) (valid : KeyFits setup program owner number qPost key) :
-    client setup env callbacks program owner number attachedVerify primitives baseImpl kem qPost bit key valid =
-    PqxdhLaterChallengeBeforeConsumer.client setup env callbacks program owner number attachedVerify primitives baseImpl kem qPost bit key := by
+    client (completedBinding := completedBinding) setup env callbacks program owner number attachedVerify primitives baseImpl kem qPost bit key valid =
+    PqxdhLaterChallengeBeforeConsumer.client (completedBinding := completedBinding) setup env callbacks program owner number attachedVerify primitives baseImpl kem qPost bit key := by
   cases key with
   | none => rfl
   | some payload =>
@@ -108,9 +111,9 @@ noncomputable def compiled (depth : Nat) (budget : PqxdhPhase2SourceSchedulerBou
     (bounded : PqxdhRecordConfidentialityChallenge.AdvBounded program owner adversary budget)
     (prefixBit continuationBit : Bool) : OracleComp AdaptiveCtxDynamicKnownKeys.Spec Bool := do
   let result ← simulateQ RawCtxSourceSharedRom.forward
-    (PqxdhLaterChallengeGeneratedFits.certified setup env callbacks program adversary owner number prefixBit
+    (PqxdhLaterChallengeGeneratedFits.certified (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number prefixBit
       attachedVerify primitives baseImpl kem ancestors disclosed depth budget bounded)
-  client setup env callbacks program owner number attachedVerify primitives baseImpl kem
+  client (completedBinding := completedBinding) setup env callbacks program owner number attachedVerify primitives baseImpl kem
     (1 + FinitePartitionQueryBounds.bill (fun _ => 1) budget) continuationBit
     (PqxdhLaterChallengeGeneratedBeforeObservation.beforeKey setup program (result.1, ∅))
     (key_fits setup program owner number _ result.1 ∅ result.2)
@@ -119,12 +122,12 @@ noncomputable def compiled (depth : Nat) (budget : PqxdhPhase2SourceSchedulerBou
 theorem compiled_eq (depth : Nat) (budget : PqxdhPhase2SourceSchedulerBounds.Budget)
     (bounded : PqxdhRecordConfidentialityChallenge.AdvBounded program owner adversary budget)
     (prefixBit continuationBit : Bool) :
-    compiled setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+    compiled (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
       depth budget bounded prefixBit continuationBit =
-    PqxdhLaterChallengeRandomCompiled.client setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem
+    PqxdhLaterChallengeRandomCompiled.client (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem
       ancestors disclosed depth (1 + FinitePartitionQueryBounds.bill (fun _ => 1) budget) prefixBit continuationBit := by
   have erased := congrArg (simulateQ RawCtxSourceSharedRom.forward)
-    (PqxdhLaterChallengeGeneratedFits.certified_erase setup env callbacks program adversary owner number prefixBit
+    (PqxdhLaterChallengeGeneratedFits.certified_erase (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number prefixBit
       attachedVerify primitives baseImpl kem ancestors disclosed depth budget bounded)
   rw [simulateQ_map] at erased
   unfold compiled PqxdhLaterChallengeRandomCompiled.client

@@ -40,7 +40,7 @@ noncomputable def run (publicPrekey : PqxdhJointIdentity.PeerEncoding) (serverKe
 /-- The actual full raw source execution retains its complete original ledger and final runtime Native/P observation in every mode. -/
 theorem run_source (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
-    (created : PqxdhLiveServerConstruction.Created Unit) (bounds : PqxdhDeploymentInterface.FreshBounds)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (bounds : PqxdhDeploymentInterface.FreshBounds)
     (mode : PqxdhDeploymentInterface.Mode) (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value)
     (front : RegistrationNativePublicFrontend.State source) (before : RegistrationNativePublicInterpreter.State n KemSK) (previous : Platform)
     (good : Good setup created.seed scalar selectedOwner ((front, previous), before)) :
@@ -66,7 +66,7 @@ theorem run_source (representation : RegistrationServerRoleBackend.ConvertedIden
 /-- Any original full-ledger decision transfers on the same actual P, without observing projected instrumentation. -/
 theorem ledger_source (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
-    (created : PqxdhLiveServerConstruction.Created Unit) (bounds : PqxdhDeploymentInterface.FreshBounds)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (bounds : PqxdhDeploymentInterface.FreshBounds)
     (mode : PqxdhDeploymentInterface.Mode) (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value)
     (front : RegistrationNativePublicFrontend.State source) (before : RegistrationNativePublicInterpreter.State n KemSK) (previous : Platform)
     (good : Good setup created.seed scalar selectedOwner ((front, previous), before))

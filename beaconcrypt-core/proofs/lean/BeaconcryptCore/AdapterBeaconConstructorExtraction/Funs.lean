@@ -41,7 +41,7 @@ def error.KeyGenError.Insts.CoreFmtDebug : core.fmt.Debug error.KeyGenError
 }
 
 /-- [beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::try_new_with_rng::{impl core::ops::function::FnOnce<(beaconcrypt_crypto::CryptoError,), beaconcrypt::error::KeyGenError> for beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::try_new_with_rng::closure#4<R, Clause0_Clause0_Error>}::call_once]:
-    Source: 'beaconcrypt/src/beacon.rs', lines 129:29-129:51 -/
+    Source: 'beaconcrypt/src/beacon.rs', lines 127:29-127:51 -/
 def
   beacon.Beacon.try_new_with_rng.closure_4.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError.call_once
   {R : Type} {Clause0_Clause0_Error : Type} (_rand_coreTryCryptoRngInst :
@@ -53,7 +53,7 @@ def
   ok ()
 
 /-- Trait implementation: [beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::try_new_with_rng::{impl core::ops::function::FnOnce<(beaconcrypt_crypto::CryptoError,), beaconcrypt::error::KeyGenError> for beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::try_new_with_rng::closure#4<R, Clause0_Clause0_Error>}]
-    Source: 'beaconcrypt/src/beacon.rs', lines 129:29-129:51 -/
+    Source: 'beaconcrypt/src/beacon.rs', lines 127:29-127:51 -/
 @[reducible]
 def
   beacon.Beacon.try_new_with_rng.closure_4.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError
@@ -67,7 +67,7 @@ def
 }
 
 /-- [beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::try_new_with_rng::{impl core::ops::function::FnOnce<(beaconcrypt_crypto::CryptoError,), beaconcrypt::error::KeyGenError> for beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::try_new_with_rng::closure#3<R, Clause0_Clause0_Error>}::call_once]:
-    Source: 'beaconcrypt/src/beacon.rs', lines 127:29-127:51 -/
+    Source: 'beaconcrypt/src/beacon.rs', lines 125:29-125:51 -/
 def
   beacon.Beacon.try_new_with_rng.closure_3.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError.call_once
   {R : Type} {Clause0_Clause0_Error : Type} (_rand_coreTryCryptoRngInst :
@@ -79,7 +79,7 @@ def
   ok ()
 
 /-- Trait implementation: [beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::try_new_with_rng::{impl core::ops::function::FnOnce<(beaconcrypt_crypto::CryptoError,), beaconcrypt::error::KeyGenError> for beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::try_new_with_rng::closure#3<R, Clause0_Clause0_Error>}]
-    Source: 'beaconcrypt/src/beacon.rs', lines 127:29-127:51 -/
+    Source: 'beaconcrypt/src/beacon.rs', lines 125:29-125:51 -/
 @[reducible]
 def
   beacon.Beacon.try_new_with_rng.closure_3.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError
@@ -93,7 +93,7 @@ def
 }
 
 /-- [beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::try_new_with_rng::{impl core::ops::function::FnOnce<(beaconcrypt_crypto::CryptoError,), beaconcrypt::error::KeyGenError> for beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::try_new_with_rng::closure#2<R, Clause0_Clause0_Error>}::call_once]:
-    Source: 'beaconcrypt/src/beacon.rs', lines 122:25-122:47 -/
+    Source: 'beaconcrypt/src/beacon.rs', lines 120:25-120:47 -/
 def
   beacon.Beacon.try_new_with_rng.closure_2.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError.call_once
   {R : Type} {Clause0_Clause0_Error : Type} (_rand_coreTryCryptoRngInst :
@@ -105,7 +105,7 @@ def
   ok ()
 
 /-- Trait implementation: [beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::try_new_with_rng::{impl core::ops::function::FnOnce<(beaconcrypt_crypto::CryptoError,), beaconcrypt::error::KeyGenError> for beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::try_new_with_rng::closure#2<R, Clause0_Clause0_Error>}]
-    Source: 'beaconcrypt/src/beacon.rs', lines 122:25-122:47 -/
+    Source: 'beaconcrypt/src/beacon.rs', lines 120:25-120:47 -/
 @[reducible]
 def
   beacon.Beacon.try_new_with_rng.closure_2.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError
@@ -119,7 +119,7 @@ def
 }
 
 /-- [beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::try_new_with_rng::{impl core::ops::function::FnOnce<(core::array::TryFromSliceError,), beaconcrypt::error::KeyGenError> for beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::try_new_with_rng::closure#1<R, Clause0_Clause0_Error>}::call_once]:
-    Source: 'beaconcrypt/src/beacon.rs', lines 110:67-110:89 -/
+    Source: 'beaconcrypt/src/beacon.rs', lines 109:67-109:89 -/
 def
   beacon.Beacon.try_new_with_rng.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorKeyGenError.call_once
   {R : Type} {Clause0_Clause0_Error : Type} (_rand_coreTryCryptoRngInst :
@@ -131,7 +131,7 @@ def
   ok ()
 
 /-- Trait implementation: [beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::try_new_with_rng::{impl core::ops::function::FnOnce<(core::array::TryFromSliceError,), beaconcrypt::error::KeyGenError> for beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::try_new_with_rng::closure#1<R, Clause0_Clause0_Error>}]
-    Source: 'beaconcrypt/src/beacon.rs', lines 110:67-110:89 -/
+    Source: 'beaconcrypt/src/beacon.rs', lines 109:67-109:89 -/
 @[reducible]
 def
   beacon.Beacon.try_new_with_rng.closure_1.Insts.CoreOpsFunctionFnOnceTupleTryFromSliceErrorKeyGenError
@@ -145,7 +145,7 @@ def
 }
 
 /-- [beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::try_new_with_rng::{impl core::ops::function::FnOnce<(beaconcrypt_crypto::CryptoError,), beaconcrypt::error::KeyGenError> for beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::try_new_with_rng::closure<R, Clause0_Clause0_Error>}::call_once]:
-    Source: 'beaconcrypt/src/beacon.rs', lines 109:69-109:91 -/
+    Source: 'beaconcrypt/src/beacon.rs', lines 108:69-108:91 -/
 def
   beacon.Beacon.try_new_with_rng.closure.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError.call_once
   {R : Type} {Clause0_Clause0_Error : Type} (_rand_coreTryCryptoRngInst :
@@ -157,7 +157,7 @@ def
   ok ()
 
 /-- Trait implementation: [beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::try_new_with_rng::{impl core::ops::function::FnOnce<(beaconcrypt_crypto::CryptoError,), beaconcrypt::error::KeyGenError> for beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::try_new_with_rng::closure<R, Clause0_Clause0_Error>}]
-    Source: 'beaconcrypt/src/beacon.rs', lines 109:69-109:91 -/
+    Source: 'beaconcrypt/src/beacon.rs', lines 108:69-108:91 -/
 @[reducible]
 def
   beacon.Beacon.try_new_with_rng.closure.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError
@@ -171,7 +171,7 @@ def
 }
 
 /-- [beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::try_new_with_rng]:
-    Source: 'beaconcrypt/src/beacon.rs', lines 102:4-134:5
+    Source: 'beaconcrypt/src/beacon.rs', lines 101:4-132:5
     Visibility: public -/
 def beacon.Beacon.try_new_with_rng
   {R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :
@@ -198,90 +198,78 @@ def beacon.Beacon.try_new_with_rng
     match cf1 with
     | core.ops.control_flow.ControlFlow.Continue val1 =>
       let a ← beaconcrypt_crypto.crypto_sign.PublicKey.as_bytes val
-      let (r4, rng1) ←
-        auth.MldsaIdentity.generate_with_rng rand_coreTryCryptoRngInst rng
+      let o ←
+        auth.server_pin
+          { identity_public_key := a, identity_key_id := server_kid } val1
+      let r4 ← core.option.Option.ok_or o ()
       let cf2 ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r4
       match cf2 with
       | core.ops.control_flow.ControlFlow.Continue val2 =>
-        let o ←
-          auth.fingerprint_pin
-            { identity_public_key := a, identity_key_id := server_kid } val1
-        let r5 ← core.option.Option.ok_or o ()
-        let cf3 ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r5
+        let (r5, rng1) ←
+          beaconcrypt_crypto.crypto_sign.KeyPair.generate_with_rng
+            rand_coreTryCryptoRngInst rng
+        let r6 ←
+          core.result.Result.map_err
+            (beacon.Beacon.try_new_with_rng.closure_2.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError
+            rand_coreTryCryptoRngInst) r5 ()
+        let cf3 ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r6
         match cf3 with
         | core.ops.control_flow.ControlFlow.Continue val3 =>
-          let (r6, rng2) ←
-            beaconcrypt_crypto.crypto_sign.KeyPair.generate_with_rng
+          let bf ←
+            beaconcrypt_core.pqxdh.BeaconFresh.new
+              { identity_public_key := a, identity_key_id := server_kid }
+          let (r7, rng2) ←
+            beaconcrypt_crypto.crypto_kx.KeyPair.generate_with_rng
               rand_coreTryCryptoRngInst rng1
-          let r7 ←
+          let r8 ←
             core.result.Result.map_err
-              (beacon.Beacon.try_new_with_rng.closure_2.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError
-              rand_coreTryCryptoRngInst) r6 ()
-          let cf4 ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r7
+              (beacon.Beacon.try_new_with_rng.closure_3.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError
+              rand_coreTryCryptoRngInst) r7 ()
+          let cf4 ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r8
           match cf4 with
           | core.ops.control_flow.ControlFlow.Continue val4 =>
-            let bf ←
-              beaconcrypt_core.pqxdh.BeaconFresh.new
-                { identity_public_key := a, identity_key_id := server_kid }
-            let (r8, rng3) ←
-              beaconcrypt_crypto.crypto_kx.KeyPair.generate_with_rng
+            let (r9, rng3) ←
+              beaconcrypt_crypto.crypto_kem.mlkem768.KeyPair.generate_with_rng
                 rand_coreTryCryptoRngInst rng2
-            let r9 ←
+            let r10 ←
               core.result.Result.map_err
-                (beacon.Beacon.try_new_with_rng.closure_3.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError
-                rand_coreTryCryptoRngInst) r8 ()
-            let cf5 ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r9
+                (beacon.Beacon.try_new_with_rng.closure_4.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError
+                rand_coreTryCryptoRngInst) r9 ()
+            let cf5 ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r10
             match cf5 with
             | core.ops.control_flow.ControlFlow.Continue val5 =>
-              let (r10, rng4) ←
-                beaconcrypt_crypto.crypto_kem.mlkem768.KeyPair.generate_with_rng
-                  rand_coreTryCryptoRngInst rng3
-              let r11 ←
-                core.result.Result.map_err
-                  (beacon.Beacon.try_new_with_rng.closure_4.Insts.CoreOpsFunctionFnOnceTupleCryptoErrorKeyGenError
-                  rand_coreTryCryptoRngInst) r10 ()
-              let cf6 ←
-                core.result.Result.Insts.CoreOpsTry_traitTry.branch r11
-              match cf6 with
-              | core.ops.control_flow.ControlFlow.Continue val6 =>
-                ok (core.result.Result.Ok
-                  {
-                    identity_key := val4,
-                    identity_key_kid := server_kid,
-                    state := (beacon.BeaconState.Fresh bf val5 val6),
-                    server_id := val,
-                    authentication := { identity := val2, server_pin := val3 }
-                  }, rng4)
-              | core.ops.control_flow.ControlFlow.Break residual =>
-                let r12 ←
-                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
-                    beacon.Beacon (core.convert.From.Blanket error.KeyGenError)
-                    residual
-                ok (r12, rng4)
+              ok (core.result.Result.Ok
+                {
+                  identity_key := val3,
+                  identity_key_kid := server_kid,
+                  state := (beacon.BeaconState.Fresh bf val4 val5),
+                  server_id := val,
+                  authentication := { server_pin := val2 }
+                }, rng3)
             | core.ops.control_flow.ControlFlow.Break residual =>
-              let r10 ←
+              let r11 ←
                 core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
                   beacon.Beacon (core.convert.From.Blanket error.KeyGenError)
                   residual
-              ok (r10, rng3)
+              ok (r11, rng3)
           | core.ops.control_flow.ControlFlow.Break residual =>
-            let r8 ←
+            let r9 ←
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
                 beacon.Beacon (core.convert.From.Blanket error.KeyGenError)
                 residual
-            ok (r8, rng2)
+            ok (r9, rng2)
         | core.ops.control_flow.ControlFlow.Break residual =>
-          let r6 ←
+          let r7 ←
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
               beacon.Beacon (core.convert.From.Blanket error.KeyGenError)
               residual
-          ok (r6, rng1)
+          ok (r7, rng1)
       | core.ops.control_flow.ControlFlow.Break residual =>
         let r5 ←
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
             beacon.Beacon (core.convert.From.Blanket error.KeyGenError)
             residual
-        ok (r5, rng1)
+        ok (r5, rng)
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r4 ←
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
@@ -294,7 +282,7 @@ def beacon.Beacon.try_new_with_rng
     ok (r2, rng)
 
 /-- [beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::try_new]:
-    Source: 'beaconcrypt/src/beacon.rs', lines 88:4-99:5
+    Source: 'beaconcrypt/src/beacon.rs', lines 87:4-98:5
     Visibility: public -/
 def beacon.Beacon.try_new
   (server_kid : Std.U64) (server_id_pk : Slice Std.U8)
@@ -308,7 +296,7 @@ def beacon.Beacon.try_new
   ok r
 
 /-- [beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::new]:
-    Source: 'beaconcrypt/src/beacon.rs', lines 81:4-84:5
+    Source: 'beaconcrypt/src/beacon.rs', lines 80:4-83:5
     Visibility: public -/
 def beacon.Beacon.new
   (server_kid : Std.U64) (server_id_pk : Slice Std.U8)

@@ -13,8 +13,8 @@ open BeaconcryptCore.Refinement RegistrationNativeSourceEncoders
 open RegistrationSerializerReachableSource AdapterRegistrationWriterRequestMonad
 variable {E : Type} {m : Type → Type} [Monad m] [LawfulMonad m]
 
-def initVector (view : registration.SignedInitView) : alloc.vec.Vec U8 :=
-  ⟨136#u8 :: RegistrationSerializerInitBytes.payload (initSyntax view), by
+def initVector (view : registration.InitView) : alloc.vec.Vec U8 :=
+  ⟨134#u8 :: RegistrationSerializerInitBytes.payload (initSyntax view), by
     rw [List.length_cons, RegistrationPublicReadback.init_payload_length _ (init_shape view)]
     scalar_tac⟩
 
@@ -29,57 +29,56 @@ theorem array_length {size : Usize} (array : Array U8 size) : array.to_slice.len
   simp only [Slice.len_val, Array.length_to_slice]
 
 set_option backward.isDefEq.respectTransparency false in
-theorem init_capacity (view : registration.SignedInitView) :
-    transport.encoded_init_len (Array.make 6#usize [(initSyntax view).identity_key.len, (initSyntax view).pre_key.len,
-      (initSyntax view).one_time_key.len, (initSyntax view).pq_key.len, (initSyntax view).mldsa_public_key.len,
-      (initSyntax view).signature.len]) = .ok (.Some 6757#usize) := by
+theorem init_capacity (view : registration.InitView) :
+    transport.encoded_init_len (Array.make 4#usize [(initSyntax view).identity_key.len, (initSyntax view).pre_key.len,
+      (initSyntax view).one_time_key.len, (initSyntax view).pq_key.len]) = .ok (.Some 1490#usize) := by
   simp only [initSyntax, array_length]
   obtain ⟨reply, run, represented⟩ := TransportSizingBridge.encoded_current_init_len_exact
   cases reply with
   | none => contradiction
   | some capacity =>
-    have value : capacity = 6757#usize := by
+    have value : capacity = 1490#usize := by
       apply UScalar.eq_of_val_eq
       exact _root_.Option.some.inj represented
     simpa only [value] using run
 
 set_option backward.isDefEq.respectTransparency false in
 theorem init_body (reserve : Usize → m (core.result.Result Unit E))
-    (other : OtherBranches) (view : registration.SignedInitView) :
+    (other : OtherBranches) (view : registration.InitView) :
     simulateQ (RegistrationSourceWriterBody.platform reserve
         (@beaconcrypt_parse.extraction_encode_init (operations other))
         (@beaconcrypt_parse.extraction_encode_response (operations other)))
-      (Lifted.writeInit (E := E) (m := Program E) 6757#usize (initSyntax view)).run =
+      (Lifted.writeInit (E := E) (m := Program E) 1490#usize (initSyntax view)).run =
       (fun allocation => (RustM.ok (match allocation with
         | .Err _ => core.option.Option.None
-        | .Ok _ => .Some (initVector view)))) <$> reserve 6757#usize := by
+        | .Ok _ => .Some (initVector view)))) <$> reserve 1490#usize := by
   obtain ⟨after, encoded, _, bytes⟩ := RegistrationNativeSourceEncoders.init_bytes other view
-    (AdapterWireVector.zeros 6757#usize) (by simp only [AdapterWireVector.zeros, Slice.length, List.length_replicate]; scalar_tac)
+    (AdapterWireVector.zeros 1490#usize) (by simp only [AdapterWireVector.zeros, Slice.length, List.length_replicate]; scalar_tac)
   have actual : @beaconcrypt_parse.extraction_encode_init (operations other) (initSyntax view)
-      (AdapterWireVector.zeros 6757#usize) = .ok (6757#usize, after) := encoded
+      (AdapterWireVector.zeros 1490#usize) = .ok (1490#usize, after) := encoded
   rw [RegistrationSourceWriterBody.init reserve _ _ _ _ _ _ actual]
-  have truncated : AdapterWireVector.take after 6757#usize = initVector view := by
+  have truncated : AdapterWireVector.take after 1490#usize = initVector view := by
     apply Subtype.ext
-    change after.val.take 6757 = _
+    change after.val.take 1490 = _
     rw [bytes]
-    have length : (136#u8 :: RegistrationSerializerInitBytes.payload (initSyntax view)).length = 6757 := by
+    have length : (134#u8 :: RegistrationSerializerInitBytes.payload (initSyntax view)).length = 1490 := by
       rw [List.length_cons, RegistrationPublicReadback.init_payload_length _ (init_shape view)]
     exact List.take_left' length
   congr 1
   funext allocation
   cases allocation <;> simp only [RegistrationSourceWriterBody.reply,
-    show ¬ (6757#usize = 0#usize) by decide, ↓reduceIte, truncated]
+    show ¬ (1490#usize = 0#usize) by decide, ↓reduceIte, truncated]
 
 set_option backward.isDefEq.respectTransparency false in
 theorem init_source (reserve : Usize → m (core.result.Result Unit E))
-    (other : OtherBranches) (view : registration.SignedInitView) :
+    (other : OtherBranches) (view : registration.InitView) :
     simulateQ (RegistrationSourceWriterBody.platform reserve
         (@beaconcrypt_parse.extraction_encode_init (operations other))
         (@beaconcrypt_parse.extraction_encode_response (operations other)))
       (AdapterRegistrationWriterRequestExtraction.encodeInit (E := E) (m := Program E) (initSyntax view)).run =
       (fun allocation => (RustM.ok (match allocation with
         | .Err _ => core.option.Option.None
-        | .Ok _ => .Some (initVector view)))) <$> reserve 6757#usize := by
+        | .Ok _ => .Some (initVector view)))) <$> reserve 1490#usize := by
   simp! only [AdapterRegistrationWriterRequestExtraction.encodeInit, Lifted.len,
     core.slice.Slice.len, rust_primitives.slice.slice_length, Lifted.initCapacity,
     Program.run_bind, Program.run_lift, simulateQ_bind, simulateQ_pure, pure_bind,
@@ -179,7 +178,7 @@ theorem response_rejected (reserve : Usize → m (core.result.Result Unit E))
       core.option.Option.Insts.CoreOpsTry_traitTryTOptionInfallible.branch,
       Lifted.fromResidual, core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual]
 
-theorem init_readback [RegistrationValidatorPrimitive.Operations] (view : registration.SignedInitView) :
+theorem init_readback [RegistrationValidatorPrimitive.Operations] (view : registration.InitView) :
     RegistrationNativePacketReadback.decodeInit (initVector view) = .ok (.Some (RegistrationNativeWire.initPacket view)) :=
   RegistrationNativePacketReadback.init_readback _ view rfl
 

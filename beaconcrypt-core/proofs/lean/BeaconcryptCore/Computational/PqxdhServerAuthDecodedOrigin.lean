@@ -6,6 +6,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete PqxdhRefinement
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhServerAuthDecodedOrigin
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhServerAuthExperiment PqxdhServerAuthCtxCalls
 open PqxdhSecretInputKdf PqxdhJointKdfGame
 variable {Reader Response : Type}
@@ -14,7 +15,7 @@ variable {Reader Response : Type}
 theorem matched_frame (read : RawCtxReceive.FrameDecoder) (bytes : Pqxdh.Bytes)
     (candidate : pqxdh.BeaconRegistrationCandidate) (opened : RawCtxWholeOwner.Decrypted)
     (target : CtxUnclaimedAcceptance.Target)
-    (delivery : PqxdhPhase2LocalMatching.LocalTarget read bytes candidate opened target)
+    (delivery : PqxdhPhase2LocalMatching.LocalTarget (associatedData := associatedData) read bytes candidate opened target)
     (entry : CtxRomAuth.CtxSuccessfulSeal)
     (same : target.toLegacy.sameFullTupleAsSuccessfulSeal entry) :
     read bytes = some ⟨opened.sequence, opened.keyId, entry.record.encode⟩ := by
@@ -38,15 +39,15 @@ theorem program_or_origin (source : FixedHkdfSha512NoSaltSource) (codec : Codec 
       ∃ (bytes : Pqxdh.Bytes) (target : CtxUnclaimedAcceptance.Target) (kernel : ConcreteRatchetKernel)
         (entry : CtxRomAuth.CtxSuccessfulSeal),
         codec.application prepared.response = some bytes ∧
-        PqxdhPhase2LocalMatching.LocalTarget codec.frameRead bytes candidate staged.opened target ∧
-        PqxdhBeaconPhase2Publication.afterOpening candidate kernel (.Some staged.opened) = some staged ∧
+        PqxdhPhase2LocalMatching.LocalTarget (associatedData := prepared.binding.associated_data) codec.frameRead bytes candidate staged.opened target ∧
+        PqxdhBeaconPhase2Publication.afterOpening candidate prepared.binding.associated_data kernel (.Some staged.opened) = some staged ∧
         entry ∈ before.1.seals ∧ target.toLegacy.sameFullTupleAsSuccessfulSeal entry ∧
         staged.opened.plaintext = entry.input.plaintext ∧
         codec.frameRead bytes = some ⟨staged.opened.sequence, staged.opened.keyId, entry.record.encode⟩ := by
   refine (PqxdhServerAuthFinishReceipt.program_or_match source codec key rest pending staged before after good supported).imp_right ?_
   rintro ⟨bytes, target, kernel, entry, application, delivery, success, member, same, plaintext⟩
   exact ⟨bytes, target, kernel, entry, application, delivery, success, member, same, plaintext,
-    matched_frame codec.frameRead bytes _ staged.opened target delivery entry same⟩
+    matched_frame (associatedData := (PqxdhPhase2DhRootConsumer.cleared pending).binding.associated_data) codec.frameRead bytes _ staged.opened target delivery entry same⟩
 
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK : Type}
 
@@ -80,12 +81,12 @@ theorem source_origin (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
   rintro ⟨raw, target, kernel, entry, application, delivery, success, member, same, plaintext, decoded⟩
   obtain ⟨index, message, reply, input, sealContext, sequence, touched, selected, derived, bound,
     records, seq, sender, publication⟩ := origins entry member
-  obtain ⟨encoded, written⟩ := PqxdhServerAuthFinishReceipt.matched_writable codec.frameWrite codec.frameRead
+  obtain ⟨encoded, written⟩ := PqxdhServerAuthFinishReceipt.matched_writable (associatedData := (PqxdhPhase2DhRootConsumer.cleared pending).binding.associated_data) codec.frameWrite codec.frameRead
     writable raw _ staged.opened target delivery entry same sequence sealContext.senderId seq sender
   exact ⟨index, message, reply, input, sealContext, entry, raw, touched, selected, derived, member,
     publication.resolve_left (fun failed => Option.some_ne_none encoded (written.symm.trans failed)),
     records, application, decoded, plaintext,
-    PqxdhServerAuthFinishReceipt.matched_fields _ kernel staged success codec.frameRead raw target
+    PqxdhServerAuthFinishReceipt.matched_fields (associatedData := (PqxdhPhase2DhRootConsumer.cleared pending).binding.associated_data) _ kernel staged success codec.frameRead raw target
       delivery entry same plaintext sealContext records bound⟩
 
 end BeaconcryptCore.Computational.PqxdhServerAuthDecodedOrigin

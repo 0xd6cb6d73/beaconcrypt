@@ -56,6 +56,7 @@ noncomputable def body (handle : Nat) (application : Option (Slice U8)) :
     StateT ServerState (StateT (PublicState Platform) (OracleComp (Spec n)))
       (RegistrationNativePlatformServerMaterialFrontend.Result (alloc.vec.Vec U8)) :=
   RegistrationNativePlatformSecretWordBuildControl.build
+    (fun pending => liftEffects (RegistrationNativePlatformServerRestrictedService.adHash pending))
     (fun current => liftEffects (RegistrationNativePlatformServerRestrictedService.pin current))
     (liftEffects (RegistrationNativePlatformBoundCompiler.liftPlatform (RegistrationNativePlatformEffectCompiler.compile reserve)))
     (fun keyId => liftEffects (RegistrationNativePlatformEffectCompiler.effect (.inr (.peerPresent keyId))))
@@ -92,7 +93,7 @@ private theorem service_source (candidate : PqxdhKemIndCca.MlKemSharedSecret)
   | none => simp only [StateT.run_pure, simulateQ_pure]
   | some choice => exact congrFun (effects_source candidate _) before
 
-/-- The new symbolic body evaluates to the exact current four-leaf source compiler, with no callback or allocator law supplied as a premise. -/
+/-- The new symbolic body evaluates to the exact current source compiler with an explicit AD-hash leaf, with no callback or allocator law supplied as a premise. -/
 theorem body_source (candidate : PqxdhKemIndCca.MlKemSharedSecret) (handle : Nat) (application : Option (Slice U8))
     (before : ServerState) (previous : PublicState Platform) :
     Prod.map (Prod.map id (ServerState.eval candidate)) id <$>
@@ -100,6 +101,7 @@ theorem body_source (candidate : PqxdhKemIndCca.MlKemSharedSecret) (handle : Nat
       (simulateQ (RegistrationNativePlatformServerFrontendCompiler.target (n := n) source view failure allocation erased helper sign writer reserve)
         ((RegistrationNativePlatformServerFrontendProgram.program handle application).run (before.eval candidate))).run previous := by
   have mapped := RegistrationNativePlatformSecretWordBuildControl.map_build
+    (fun pending => liftEffects (RegistrationNativePlatformServerRestrictedService.adHash pending))
     (fun current => liftEffects (RegistrationNativePlatformServerRestrictedService.pin current))
     (liftEffects (RegistrationNativePlatformBoundCompiler.liftPlatform (RegistrationNativePlatformEffectCompiler.compile reserve)))
     (fun keyId => liftEffects (RegistrationNativePlatformEffectCompiler.effect (.inr (.peerPresent keyId))))
@@ -109,6 +111,7 @@ theorem body_source (candidate : PqxdhKemIndCca.MlKemSharedSecret) (handle : Nat
   have mappedRun := congrArg (fun action => action.run previous) mapped
   simp only [state, StateT.run] at mappedRun
   have sourceEq := RegistrationNativePlatformSecretWordBuildControl.build_source candidate
+    (fun pending => RegistrationNativePlatformServerFrontendCompiler.liftEffects (RegistrationNativePlatformServerRestrictedService.adHash pending))
     (fun current => RegistrationNativePlatformServerFrontendCompiler.liftEffects (RegistrationNativePlatformServerRestrictedService.pin current))
     (RegistrationNativePlatformServerFrontendCompiler.liftEffects (RegistrationNativePlatformBoundCompiler.liftPlatform (RegistrationNativePlatformEffectCompiler.compile reserve)))
     (fun keyId => RegistrationNativePlatformServerFrontendCompiler.liftEffects (RegistrationNativePlatformEffectCompiler.effect (.inr (.peerPresent keyId))))
@@ -123,6 +126,7 @@ theorem body_source (candidate : PqxdhKemIndCca.MlKemSharedSecret) (handle : Nat
   have bodyEq : Prod.map (Prod.map id (ServerState.eval candidate)) id <$>
       simulateQ (realize (n := n) candidate) (((body (n := n) source view failure allocation erased helper sign writer reserve handle application).run before).run previous) =
       ((RegistrationNativePlatformServerMaterialFrontend.build
+        (fun pending => RegistrationNativePlatformServerFrontendCompiler.liftEffects (RegistrationNativePlatformServerRestrictedService.adHash pending))
         (fun current => RegistrationNativePlatformServerFrontendCompiler.liftEffects (RegistrationNativePlatformServerRestrictedService.pin current))
         (RegistrationNativePlatformServerFrontendCompiler.liftEffects (RegistrationNativePlatformBoundCompiler.liftPlatform (RegistrationNativePlatformEffectCompiler.compile reserve)))
         (fun keyId => RegistrationNativePlatformServerFrontendCompiler.liftEffects (RegistrationNativePlatformEffectCompiler.effect (.inr (.peerPresent keyId))))

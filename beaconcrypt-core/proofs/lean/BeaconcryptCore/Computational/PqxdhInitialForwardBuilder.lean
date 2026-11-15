@@ -8,6 +8,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.refined ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialForwardBuilder
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhInitialPostContext PqxdhInitialBuilderContext RawCtxForwardAnnotation
 variable {ι M P I D K X Response Shared Result : Type} {extra : OracleSpec ι} {S B : Nat}
 
@@ -25,14 +27,14 @@ noncomputable def post (sender : M → Std.U64) (route : RawCtxServerRouting.Sen
     (decode : RawCtxReceive.FrameDecoder) (client : OracleComp (PostSpec extra S B) Result)
     (before : NativeFront M P I D K S B) :
     OracleComp (Spec extra M P I D K X Response Shared Result S B) (Result × NativeFront M P I D K S B) :=
-  mapTags Sum.inl (PqxdhInitialForwardPost.program sender route decode client before)
+  mapTags Sum.inl (PqxdhInitialForwardPost.program (completedBinding := completedBinding) sender route decode client before)
 
 noncomputable def finished (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
     (decode : RawCtxReceive.FrameDecoder) (index : Fin S) (before : NativeFront M P I D K S B)
     (outside : BuildResult → OracleComp (PostSpec extra S B) Result)
     (result : RustM (Option PqxdhServerRegistrationPublication.Response × Publication M P)) :=
   let installed := PqxdhInitialPendingBuilder.reinstall index before result
-  post (X := X) (Response := Response) (Shared := Shared) sender route decode (outside installed.1) installed.2
+  post (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared) sender route decode (outside installed.1) installed.2
 
 noncomputable def publication (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
     (decode : RawCtxReceive.FrameDecoder) (index : Fin S) (before : NativeFront M P I D K S B)
@@ -42,7 +44,7 @@ noncomputable def publication (sender : M → Std.U64) (route : RawCtxServerRout
     OracleComp (Spec extra M P I D K X Response Shared Result S B) (Result × NativeFront M P I D K S B) := do
   let published ← simulateQ plain (afterSend PqxdhInitialPendingPost.auxForward candidate authenticated metadata
     (PqxdhInitialPendingBuilder.selected sender index before) result)
-  finished sender route decode index before outside (.ok published)
+  finished (completedBinding := completedBinding) sender route decode index before outside (.ok published)
 
 noncomputable def send (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
     (decode : RawCtxReceive.FrameDecoder) (index : Fin S) (before : NativeFront M P I D K S B)
@@ -50,8 +52,8 @@ noncomputable def send (sender : M → Std.U64) (route : RawCtxServerRouting.Sen
     (outside : BuildResult → OracleComp (PostSpec extra S B) Result)
     (kernel : PqxdhInitialPendingPost.KernelOf RatchetChain) :
     OracleComp (Spec extra M P I D K X Response Shared Result S B) (Result × NativeFront M P I D K S B) :=
-  match RawCtxChainSend.normalBegin kernel (PqxdhServerRegistrationPublication.firstContext candidate authenticated) with
-  | .exhausted entry _ => publication sender route decode index before candidate authenticated metadata outside (entry, none)
+  match RawCtxChainSend.normalBegin kernel (PqxdhServerRegistrationPublication.firstContext candidate associatedData authenticated) with
+  | .exhausted entry _ => publication (completedBinding := completedBinding) sender route decode index before candidate authenticated metadata outside (entry, none)
   | .requested pending => do
       let reply ← (Spec extra M P I D K X Response Shared Result S B).query
         (some (.inr ⟨index, before, metadata, candidate, authenticated, pending, outside⟩),
@@ -59,7 +61,7 @@ noncomputable def send (sender : M → Std.U64) (route : RawCtxServerRouting.Sen
       let ready := RawCtxChainSend.ready pending reply
       let sealed ← (Spec extra M P I D K X Response Shared Result S B).query
         (none, .inl (.inl (.inr (.inl (.inr ready)))))
-      publication sender route decode index before candidate authenticated metadata outside (ready.advanced, sealed)
+      publication (completedBinding := completedBinding) sender route decode index before candidate authenticated metadata outside (ready.advanced, sealed)
 
 noncomputable def candidate (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
     (decode : RawCtxReceive.FrameDecoder) (index : Fin S) (before : NativeFront M P I D K S B)
@@ -69,25 +71,25 @@ noncomputable def candidate (sender : M → Std.U64) (route : RawCtxServerRoutin
     OracleComp (Spec extra M P I D K X Response Shared Result S B) (Result × NativeFront M P I D K S B) := do
   let input := PqxdhInitialPendingBuilder.selected sender index before
   let valid ← simulateQ plain (PqxdhInitialPendingPost.auxForward (.checkIdentity pending.beacon_identity_public_key))
-  if !valid then finished sender route decode index before outside (.ok (none, input)) else do
+  if !valid then finished (completedBinding := completedBinding) sender route decode index before outside (.ok (none, input)) else do
     let reserved ← simulateQ plain (PqxdhInitialPendingPost.auxForward .reservePeer)
-    if !reserved then finished sender route decode index before outside (.ok (none, input)) else
+    if !reserved then finished (completedBinding := completedBinding) sender route decode index before outside (.ok (none, input)) else
       match initial with
-      | .fail error => finished sender route decode index before outside (.fail error)
-      | .div => finished sender route decode index before outside .div
+      | .fail error => finished (completedBinding := completedBinding) sender route decode index before outside (.fail error)
+      | .div => finished (completedBinding := completedBinding) sender route decode index before outside .div
       | .ok kernel =>
           let plaintext := data.getD PqxdhServerRegistrationPublication.registrationWitness
-          if plaintext.isEmpty then finished sender route decode index before outside (.ok (none, input))
+          if plaintext.isEmpty then finished (completedBinding := completedBinding) sender route decode index before outside (.ok (none, input))
           else if 8 + plaintext.length ≤ Usize.max then do
             let allocated ← simulateQ plain (PqxdhInitialPendingPost.auxForward (.reservePlaintext (8 + plaintext.length)))
-            if !allocated then finished sender route decode index before outside (.ok (none, input)) else
+            if !allocated then finished (completedBinding := completedBinding) sender route decode index before outside (.ok (none, input)) else
               match pending.key_id_binding with
-              | .fail error => finished sender route decode index before outside (.fail error)
-              | .div => finished sender route decode index before outside .div
+              | .fail error => finished (completedBinding := completedBinding) sender route decode index before outside (.fail error)
+              | .div => finished (completedBinding := completedBinding) sender route decode index before outside .div
               | .ok binding =>
-                  send sender route decode index before pending
+                  send (associatedData := associatedData) (completedBinding := completedBinding) sender route decode index before pending
                     (PqxdhRefinement.absBytes binding.bytes ++ plaintext) metadata outside kernel
-          else finished sender route decode index before outside (.ok (none, input))
+          else finished (completedBinding := completedBinding) sender route decode index before outside (.ok (none, input))
 
 noncomputable def used (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
     (decode : RawCtxReceive.FrameDecoder) (index : Fin S) (before : NativeFront M P I D K S B)
@@ -97,16 +99,16 @@ noncomputable def used (sender : M → Std.U64) (route : RawCtxServerRouting.Sen
     OracleComp (Spec extra M P I D K X Response Shared Result S B) (Result × NativeFront M P I D K S B) :=
   let input := PqxdhInitialPendingBuilder.selected sender index before
   match pqxdh.server_next_key_id input.control with
-  | .fail error => finished sender route decode index before outside (.fail error)
-  | .div => finished sender route decode index before outside .div
-  | .ok (.Err _) => finished sender route decode index before outside (.ok (none, input))
+  | .fail error => finished (completedBinding := completedBinding) sender route decode index before outside (.fail error)
+  | .div => finished (completedBinding := completedBinding) sender route decode index before outside .div
+  | .ok (.Err _) => finished (completedBinding := completedBinding) sender route decode index before outside (.ok (none, input))
   | .ok (.Ok next) =>
       let availability := if (input.server.peers next).isSome then pqxdh.KeyIdAvailability.Occupied else .Available
       match PqxdhRegistrationInputs.prepare input.control pending ⟨input.server.identity, input.identityKeyId⟩ availability with
-      | .fail error => finished sender route decode index before outside (.fail error)
-      | .div => finished sender route decode index before outside .div
-      | .ok (.Err _) => finished sender route decode index before outside (.ok (none, input))
-      | .ok (.Ok prepared) => candidate sender route decode index before initial prepared data metadata outside
+      | .fail error => finished (completedBinding := completedBinding) sender route decode index before outside (.fail error)
+      | .div => finished (completedBinding := completedBinding) sender route decode index before outside .div
+      | .ok (.Err _) => finished (completedBinding := completedBinding) sender route decode index before outside (.ok (none, input))
+      | .ok (.Ok prepared) => candidate (associatedData := associatedData) (completedBinding := completedBinding) sender route decode index before initial prepared data metadata outside
 
 noncomputable def program (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
@@ -116,7 +118,7 @@ noncomputable def program (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSourc
     OracleComp (Spec extra M P I D K X Response Shared Result S B) (Result × NativeFront M P I D K S B) :=
   let current := PqxdhInitialPendingBuilder.consume index ready before
   let input := PqxdhInitialPendingBuilder.selected sender index current
-  used sender route decode index current initial
+  used (associatedData := associatedData) (completedBinding := completedBinding) sender route decode index current initial
     (PqxdhAcceptedRegistration.usedReady source.crypto ⟨input.server.identity, input.identityKeyId⟩ ready)
     ready.application metadata outside
 
@@ -133,9 +135,9 @@ private theorem finished_erase (sender : M → Std.U64) (route : RawCtxServerRou
     (decode : RawCtxReceive.FrameDecoder) (index : Fin S) (before : NativeFront M P I D K S B)
     (outside : BuildResult → OracleComp (PostSpec extra S B) Result)
     (result : RustM (Option PqxdhServerRegistrationPublication.Response × Publication M P)) :
-    simulateQ erase (finished (X := X) (Response := Response) (Shared := Shared) sender route decode index before outside result) =
+    simulateQ erase (finished (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared) sender route decode index before outside result) =
       let installed := PqxdhInitialPendingBuilder.reinstall index before result
-      (simulateQ (PqxdhInitialPendingPost.compiler sender route decode) (outside installed.1)).run installed.2 := by
+      (simulateQ (PqxdhInitialPendingPost.compiler (completedBinding := completedBinding) sender route decode) (outside installed.1)).run installed.2 := by
   simp only [finished, post, erase_mapTags, PqxdhInitialForwardPost.program_erase]
 
 private theorem publication_erase (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
@@ -143,9 +145,9 @@ private theorem publication_erase (sender : M → Std.U64) (route : RawCtxServer
     (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Pqxdh.Bytes) (metadata : P)
     (outside : BuildResult → OracleComp (PostSpec extra S B) Result)
     (result : PqxdhInitialPendingPost.KernelOf RatchetChain × Option RawCtxSourceSend.Encrypted) :
-    simulateQ erase (publication (X := X) (Response := Response) (Shared := Shared)
+    simulateQ erase (publication (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
       sender route decode index before candidate authenticated metadata outside result) =
-      complete sender route decode index before candidate authenticated metadata outside result := by
+      complete (completedBinding := completedBinding) sender route decode index before candidate authenticated metadata outside result := by
   simp only [publication, complete, simulateQ_bind, plain_erase, finished_erase]
 
 set_option backward.isDefEq.respectTransparency false in
@@ -154,14 +156,14 @@ private theorem send_erase (sender : M → Std.U64) (route : RawCtxServerRouting
     (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Pqxdh.Bytes) (metadata : P)
     (outside : BuildResult → OracleComp (PostSpec extra S B) Result)
     (kernel : PqxdhInitialPendingPost.KernelOf RatchetChain) :
-    simulateQ erase (send (X := X) (Response := Response) (Shared := Shared)
+    simulateQ erase (send (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
       sender route decode index before candidate authenticated metadata outside kernel) =
       (PqxdhInitialPendingPost.calls.send kernel
-        (PqxdhServerRegistrationPublication.firstContext candidate authenticated) >>=
-          complete sender route decode index before candidate authenticated metadata outside) := by
+        (PqxdhServerRegistrationPublication.firstContext candidate associatedData authenticated) >>=
+          complete (completedBinding := completedBinding) sender route decode index before candidate authenticated metadata outside) := by
   unfold send PqxdhInitialPendingPost.calls
   simp only [RawCtxGenericOwnerInterpretation.interpretedCalls, RawCtxPendingOwnerQueries.calls]
-  cases start : RawCtxChainSend.normalBegin kernel (PqxdhServerRegistrationPublication.firstContext candidate authenticated) with
+  cases start : RawCtxChainSend.normalBegin kernel (PqxdhServerRegistrationPublication.firstContext candidate associatedData authenticated) with
   | exhausted entry context =>
       simp only [RawCtxPendingOwnerQueries.sendProgram, simulateQ_pure, pure_bind, publication_erase]
   | requested pending =>
@@ -176,7 +178,7 @@ private noncomputable def sourceFinished (sender : M → Std.U64) (route : RawCt
     (result : RustM (Option PqxdhServerRegistrationPublication.Response × Publication M P)) :
     OracleComp (Base extra RatchetChain I D K X Response Shared S B) (Result × NativeFront M P I D K S B) :=
   let installed := PqxdhInitialPendingBuilder.reinstall index before result
-  (simulateQ (PqxdhInitialPendingPost.compiler sender route decode) (outside installed.1)).run installed.2
+  (simulateQ (PqxdhInitialPendingPost.compiler (completedBinding := completedBinding) sender route decode) (outside installed.1)).run installed.2
 
 set_option backward.isDefEq.respectTransparency false in
 private theorem candidate_erase (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
@@ -184,11 +186,11 @@ private theorem candidate_erase (sender : M → Std.U64) (route : RawCtxServerRo
     (initial : RustM (PqxdhInitialPendingPost.KernelOf RatchetChain))
     (pending : pqxdh.ServerRegistrationCandidate) (data : Option Pqxdh.Bytes) (metadata : P)
     (outside : BuildResult → OracleComp (PostSpec extra S B) Result) :
-    simulateQ erase (candidate (X := X) (Response := Response) (Shared := Shared)
+    simulateQ erase (candidate (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
       sender route decode index before initial pending data metadata outside) =
-      (PqxdhInitialGenericBuilder.candidate PqxdhInitialPendingPost.calls PqxdhInitialPendingPost.auxForward
+      (PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) PqxdhInitialPendingPost.calls PqxdhInitialPendingPost.auxForward
         initial pending data metadata (PqxdhInitialPendingBuilder.selected sender index before) >>=
-          sourceFinished sender route decode index before outside) := by
+          sourceFinished (completedBinding := completedBinding) sender route decode index before outside) := by
   simp only [candidate, PqxdhInitialGenericBuilder.candidate, simulateQ_bind, plain_erase, bind_assoc]
   apply bind_congr
   intro valid
@@ -227,11 +229,11 @@ private theorem used_erase (sender : M → Std.U64) (route : RawCtxServerRouting
     (initial : RustM (PqxdhInitialPendingPost.KernelOf RatchetChain))
     (pending : PqxdhRegistrationInputs.UsedInput) (data : Option Pqxdh.Bytes) (metadata : P)
     (outside : BuildResult → OracleComp (PostSpec extra S B) Result) :
-    simulateQ erase (used (X := X) (Response := Response) (Shared := Shared)
+    simulateQ erase (used (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
       sender route decode index before initial pending data metadata outside) =
-      (PqxdhInitialGenericBuilder.usedBuild PqxdhInitialPendingPost.calls PqxdhInitialPendingPost.auxForward
+      (PqxdhInitialGenericBuilder.usedBuild (associatedData := associatedData) PqxdhInitialPendingPost.calls PqxdhInitialPendingPost.auxForward
         initial pending data metadata (PqxdhInitialPendingBuilder.selected sender index before) >>=
-          sourceFinished sender route decode index before outside) := by
+          sourceFinished (completedBinding := completedBinding) sender route decode index before outside) := by
   unfold used PqxdhInitialGenericBuilder.usedBuild
   dsimp only
   cases next : pqxdh.server_next_key_id (PqxdhInitialPendingBuilder.selected sender index before).control with
@@ -253,7 +255,7 @@ private theorem used_erase (sender : M → Std.U64) (route : RawCtxServerRouting
           | ok prepared =>
               cases prepared with
               | Err error => simp only [finished_erase, sourceFinished, pure_bind]
-              | Ok prepared => exact candidate_erase sender route decode index before initial prepared data metadata outside
+              | Ok prepared => exact candidate_erase (associatedData := associatedData) (completedBinding := completedBinding) sender route decode index before initial prepared data metadata outside
 
 /-- Removing source descriptors yields exactly the complete consumed-registration builder followed by the same original post client, before any projection of state or replies. -/
 theorem program_erase (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
@@ -261,10 +263,10 @@ theorem program_erase (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (initial : RustM (PqxdhInitialPendingPost.KernelOf RatchetChain)) (index : Fin S) (metadata : P)
     (ready : PqxdhPrivateAcceptedRoot.Ready) (outside : BuildResult → OracleComp (PostSpec extra S B) Result)
     (before : NativeFront M P I D K S B) :
-    simulateQ erase (program (X := X) (Response := Response) (Shared := Shared)
+    simulateQ erase (program (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
       source sender route decode initial index metadata ready outside before) =
-      ((PqxdhInitialPendingBuilder.build source initial sender index metadata ready).run before >>= fun result =>
-        (simulateQ (PqxdhInitialPendingPost.compiler sender route decode) (outside result.1)).run result.2) := by
+      ((PqxdhInitialPendingBuilder.build (associatedData := associatedData) source initial sender index metadata ready).run before >>= fun result =>
+        (simulateQ (PqxdhInitialPendingPost.compiler (completedBinding := completedBinding) sender route decode) (outside result.1)).run result.2) := by
   simp only [program, PqxdhInitialPendingBuilder.build, StateT.run, bind_map_left,
     PqxdhInitialGenericBuilder.readyBuild, used_erase]
   rfl
@@ -272,18 +274,18 @@ theorem program_erase (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
 private def Good (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
     (decode : RawCtxReceive.FrameDecoder)
     (client : OracleComp (Spec extra M P I D K X Response Shared Result S B) (Result × NativeFront M P I D K S B)) : Prop :=
-  Sound (PqxdhInitialBuilderContext.frame sender route decode) client ∧
+  Sound (PqxdhInitialBuilderContext.frame (completedBinding := completedBinding) sender route decode) client ∧
     RawCtxForwardCoverage.Covered PqxdhInitialForwardPost.selected client
 
 private theorem post_good (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
     (decode : RawCtxReceive.FrameDecoder) (client : OracleComp (PostSpec extra S B) Result)
     (before : NativeFront M P I D K S B) :
-    Good sender route decode (post (X := X) (Response := Response) (Shared := Shared) sender route decode client before) := by
-  have sourceSound := PqxdhInitialForwardPost.program_sound (X := X) (Response := Response) (Shared := Shared)
+    Good (completedBinding := completedBinding) sender route decode (post (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared) sender route decode client before) := by
+  have sourceSound := PqxdhInitialForwardPost.program_sound (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
     sender route decode client before
-  have sourceCovered := PqxdhInitialForwardPost.program_covered (X := X) (Response := Response) (Shared := Shared)
+  have sourceCovered := PqxdhInitialForwardPost.program_covered (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
     sender route decode client before
-  generalize source : PqxdhInitialForwardPost.program (X := X) (Response := Response) (Shared := Shared)
+  generalize source : PqxdhInitialForwardPost.program (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
     sender route decode client before = work at sourceSound sourceCovered
   unfold post
   rw [source]
@@ -298,7 +300,7 @@ private theorem post_good (sender : M → Std.U64) (route : RawCtxServerRouting.
         obtain ⟨original, found, rfl⟩ := Option.map_eq_some_iff.mp present
         change (⟨query.2, fun reply => simulateQ erase (mapTags Sum.inl (next reply))⟩ :
           PqxdhInitialPostContext.Frame extra M P I D K X Response Shared Result S B) =
-            PqxdhInitialPostContext.frame sender route decode original
+            PqxdhInitialPostContext.frame (completedBinding := completedBinding) sender route decode original
         rw [← sourceSound.1 original found]
         simp only [erase_mapTags]
         rfl
@@ -311,15 +313,15 @@ private theorem finished_good (sender : M → Std.U64) (route : RawCtxServerRout
     (decode : RawCtxReceive.FrameDecoder) (index : Fin S) (before : NativeFront M P I D K S B)
     (outside : BuildResult → OracleComp (PostSpec extra S B) Result)
     (result : RustM (Option PqxdhServerRegistrationPublication.Response × Publication M P)) :
-    Good sender route decode (finished (X := X) (Response := Response) (Shared := Shared)
-      sender route decode index before outside result) := post_good sender route decode _ _
+    Good (completedBinding := completedBinding) sender route decode (finished (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
+      sender route decode index before outside result) := post_good (completedBinding := completedBinding) sender route decode _ _
 
 private theorem aux_good (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
     (decode : RawCtxReceive.FrameDecoder) (query : PqxdhServerRegistrationPublication.AuxSpec.Domain)
     (next : PqxdhServerRegistrationPublication.AuxSpec.Range query →
       OracleComp (Spec extra M P I D K X Response Shared Result S B) (Result × NativeFront M P I D K S B))
-    (good : ∀ reply, Good sender route decode (next reply)) :
-    Good sender route decode ((simulateQ plain (PqxdhInitialPendingPost.auxForward query)) >>= next) := by
+    (good : ∀ reply, Good (completedBinding := completedBinding) sender route decode (next reply)) :
+    Good (completedBinding := completedBinding) sender route decode ((simulateQ plain (PqxdhInitialPendingPost.auxForward query)) >>= next) := by
   constructor
   · change (∀ tag, none = some tag → _) ∧ _
     constructor
@@ -334,18 +336,18 @@ private theorem publication_good (sender : M → Std.U64) (route : RawCtxServerR
     (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Pqxdh.Bytes) (metadata : P)
     (outside : BuildResult → OracleComp (PostSpec extra S B) Result)
     (result : PqxdhInitialPendingPost.KernelOf RatchetChain × Option RawCtxSourceSend.Encrypted) :
-    Good sender route decode (publication (X := X) (Response := Response) (Shared := Shared)
+    Good (completedBinding := completedBinding) sender route decode (publication (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
       sender route decode index before candidate authenticated metadata outside result) := by
   simp only [publication, afterSend, simulateQ_bind, bind_assoc]
   apply aux_good
   intro erased
   cases result.2 with
-  | none => simpa only [simulateQ_pure, pure_bind] using finished_good sender route decode index before outside (.ok (none, _))
+  | none => simpa only [simulateQ_pure, pure_bind] using finished_good (completedBinding := completedBinding) sender route decode index before outside (.ok (none, _))
   | some encrypted =>
       simp only [simulateQ_bind, bind_assoc]
       apply aux_good
       intro serialized
-      cases serialized <;> simpa only [simulateQ_pure, pure_bind] using finished_good sender route decode index before outside (.ok _)
+      cases serialized <;> simpa only [simulateQ_pure, pure_bind] using finished_good (completedBinding := completedBinding) sender route decode index before outside (.ok _)
 
 private theorem untagged_good (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
     (decode : RawCtxReceive.FrameDecoder)
@@ -353,8 +355,8 @@ private theorem untagged_good (sender : M → Std.U64) (route : RawCtxServerRout
     (unchosen : PqxdhInitialForwardPost.selected query = false)
     (next : (Base extra RatchetChain I D K X Response Shared S B).Range query →
       OracleComp (Spec extra M P I D K X Response Shared Result S B) (Result × NativeFront M P I D K S B))
-    (good : ∀ reply, Good sender route decode (next reply)) :
-    Good sender route decode (((Spec extra M P I D K X Response Shared Result S B).query (none, query) :
+    (good : ∀ reply, Good (completedBinding := completedBinding) sender route decode (next reply)) :
+    Good (completedBinding := completedBinding) sender route decode (((Spec extra M P I D K X Response Shared Result S B).query (none, query) :
       OracleComp (Spec extra M P I D K X Response Shared Result S B) _) >>= next) := by
   constructor
   · change (∀ tag, none = some tag → _) ∧ _
@@ -371,17 +373,17 @@ private theorem send_good (sender : M → Std.U64) (route : RawCtxServerRouting.
     (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Pqxdh.Bytes) (metadata : P)
     (outside : BuildResult → OracleComp (PostSpec extra S B) Result)
     (kernel : PqxdhInitialPendingPost.KernelOf RatchetChain) :
-    Good sender route decode (send (X := X) (Response := Response) (Shared := Shared)
+    Good (completedBinding := completedBinding) sender route decode (send (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
       sender route decode index before candidate authenticated metadata outside kernel) := by
   unfold send
-  cases start : RawCtxChainSend.normalBegin kernel (PqxdhServerRegistrationPublication.firstContext candidate authenticated) with
-  | exhausted entry context => exact publication_good sender route decode index before candidate authenticated metadata outside (entry, none)
+  cases start : RawCtxChainSend.normalBegin kernel (PqxdhServerRegistrationPublication.firstContext candidate associatedData authenticated) with
+  | exhausted entry context => exact publication_good (completedBinding := completedBinding) sender route decode index before candidate authenticated metadata outside (entry, none)
   | requested pending =>
-      have nextGood := fun reply => untagged_good sender route decode
+      have nextGood := fun reply => untagged_good (completedBinding := completedBinding) sender route decode
         (.inl (.inl (.inr (.inl (.inr (RawCtxChainSend.ready pending reply)))))) rfl
-        (fun sealed => publication (X := X) (Response := Response) (Shared := Shared) sender route decode
+        (fun sealed => publication (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared) sender route decode
           index before candidate authenticated metadata outside ((RawCtxChainSend.ready pending reply).advanced, sealed))
-        (fun sealed => publication_good sender route decode index before candidate authenticated metadata outside _)
+        (fun sealed => publication_good (completedBinding := completedBinding) sender route decode index before candidate authenticated metadata outside _)
       constructor
       · change (∀ tag, some (Sum.inr _) = some tag → _) ∧ _
         refine ⟨?_, fun reply => (nextGood reply).1⟩
@@ -391,7 +393,7 @@ private theorem send_good (sender : M → Std.U64) (route : RawCtxServerRouting.
           (do let sealed ← ((Spec extra M P I D K X Response Shared Result S B).query
                 (none, .inl (.inl (.inr (.inl (.inr (RawCtxChainSend.ready pending reply)))))) :
                   OracleComp (Spec extra M P I D K X Response Shared Result S B) (Option RawCtxSourceSend.Encrypted))
-              publication sender route decode index before candidate authenticated metadata outside
+              publication (completedBinding := completedBinding) sender route decode index before candidate authenticated metadata outside
                 ((RawCtxChainSend.ready pending reply).advanced, sealed))⟩ :
             PqxdhInitialPostContext.Frame extra M P I D K X Response Shared Result S B) = _
         simp only [PqxdhInitialBuilderContext.frame, builderFrame, simulateQ_bind, simulateQ_spec_query,
@@ -404,53 +406,53 @@ private theorem candidate_good (sender : M → Std.U64) (route : RawCtxServerRou
     (initial : RustM (PqxdhInitialPendingPost.KernelOf RatchetChain))
     (pending : pqxdh.ServerRegistrationCandidate) (data : Option Pqxdh.Bytes) (metadata : P)
     (outside : BuildResult → OracleComp (PostSpec extra S B) Result) :
-    Good sender route decode (candidate (X := X) (Response := Response) (Shared := Shared)
+    Good (completedBinding := completedBinding) sender route decode (candidate (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
       sender route decode index before initial pending data metadata outside) := by
   unfold candidate
   apply aux_good
   intro valid
   cases valid
-  · exact finished_good sender route decode index before outside _
+  · exact finished_good (completedBinding := completedBinding) sender route decode index before outside _
   · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
     apply aux_good
     intro reserved
     cases reserved
-    · exact finished_good sender route decode index before outside _
+    · exact finished_good (completedBinding := completedBinding) sender route decode index before outside _
     · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
       cases initial with
-      | fail error => exact finished_good sender route decode index before outside _
-      | div => exact finished_good sender route decode index before outside _
+      | fail error => exact finished_good (completedBinding := completedBinding) sender route decode index before outside _
+      | div => exact finished_good (completedBinding := completedBinding) sender route decode index before outside _
       | ok kernel =>
           dsimp only
           split
-          · exact finished_good sender route decode index before outside _
+          · exact finished_good (completedBinding := completedBinding) sender route decode index before outside _
           · split
             · apply aux_good
               intro allocated
               cases allocated
-              · exact finished_good sender route decode index before outside _
+              · exact finished_good (completedBinding := completedBinding) sender route decode index before outside _
               · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
                 cases binding : pending.key_id_binding with
-                | fail error => exact finished_good sender route decode index before outside _
-                | div => exact finished_good sender route decode index before outside _
-                | ok binding => exact send_good sender route decode index before pending _ metadata outside kernel
-            · exact finished_good sender route decode index before outside _
+                | fail error => exact finished_good (completedBinding := completedBinding) sender route decode index before outside _
+                | div => exact finished_good (completedBinding := completedBinding) sender route decode index before outside _
+                | ok binding => exact send_good (associatedData := associatedData) (completedBinding := completedBinding) sender route decode index before pending _ metadata outside kernel
+            · exact finished_good (completedBinding := completedBinding) sender route decode index before outside _
 
 private theorem used_good (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
     (decode : RawCtxReceive.FrameDecoder) (index : Fin S) (before : NativeFront M P I D K S B)
     (initial : RustM (PqxdhInitialPendingPost.KernelOf RatchetChain))
     (pending : PqxdhRegistrationInputs.UsedInput) (data : Option Pqxdh.Bytes) (metadata : P)
     (outside : BuildResult → OracleComp (PostSpec extra S B) Result) :
-    Good sender route decode (used (X := X) (Response := Response) (Shared := Shared)
+    Good (completedBinding := completedBinding) sender route decode (used (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
       sender route decode index before initial pending data metadata outside) := by
   unfold used
   dsimp only
   cases next : pqxdh.server_next_key_id (PqxdhInitialPendingBuilder.selected sender index before).control with
-  | fail error => exact finished_good sender route decode index before outside _
-  | div => exact finished_good sender route decode index before outside _
+  | fail error => exact finished_good (completedBinding := completedBinding) sender route decode index before outside _
+  | div => exact finished_good (completedBinding := completedBinding) sender route decode index before outside _
   | ok value =>
       cases value with
-      | Err error => exact finished_good sender route decode index before outside _
+      | Err error => exact finished_good (completedBinding := completedBinding) sender route decode index before outside _
       | Ok key =>
           dsimp only
           cases preparation : PqxdhRegistrationInputs.prepare
@@ -459,12 +461,12 @@ private theorem used_good (sender : M → Std.U64) (route : RawCtxServerRouting.
               (PqxdhInitialPendingBuilder.selected sender index before).identityKeyId⟩
             (if ((PqxdhInitialPendingBuilder.selected sender index before).server.peers key).isSome
               then pqxdh.KeyIdAvailability.Occupied else .Available) with
-          | fail error => exact finished_good sender route decode index before outside _
-          | div => exact finished_good sender route decode index before outside _
+          | fail error => exact finished_good (completedBinding := completedBinding) sender route decode index before outside _
+          | div => exact finished_good (completedBinding := completedBinding) sender route decode index before outside _
           | ok prepared =>
               cases prepared with
-              | Err error => exact finished_good sender route decode index before outside _
-              | Ok prepared => exact candidate_good sender route decode index before initial prepared data metadata outside
+              | Err error => exact finished_good (completedBinding := completedBinding) sender route decode index before outside _
+              | Ok prepared => exact candidate_good (associatedData := associatedData) (completedBinding := completedBinding) sender route decode index before initial prepared data metadata outside
 
 /-- Every descriptor carried before the original first ciphertext or any later post derivation names the complete actual erased source continuation. -/
 theorem program_sound (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
@@ -472,9 +474,9 @@ theorem program_sound (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (initial : RustM (PqxdhInitialPendingPost.KernelOf RatchetChain)) (index : Fin S) (metadata : P)
     (ready : PqxdhPrivateAcceptedRoot.Ready) (outside : BuildResult → OracleComp (PostSpec extra S B) Result)
     (before : NativeFront M P I D K S B) :
-    Sound (PqxdhInitialBuilderContext.frame sender route decode)
-      (program (X := X) (Response := Response) (Shared := Shared) source sender route decode initial index metadata ready outside before) :=
-  (used_good sender route decode index (PqxdhInitialPendingBuilder.consume index ready before) initial _ ready.application metadata outside).1
+    Sound (PqxdhInitialBuilderContext.frame (completedBinding := completedBinding) sender route decode)
+      (program (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared) source sender route decode initial index metadata ready outside before) :=
+  (used_good (associatedData := associatedData) (completedBinding := completedBinding) sender route decode index (PqxdhInitialPendingBuilder.consume index ready before) initial _ ready.application metadata outside).1
 
 /-- Every actual private derivation in the complete first-builder and full post program is covered under every possible callback reply. -/
 theorem program_covered (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
@@ -483,8 +485,8 @@ theorem program_covered (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (ready : PqxdhPrivateAcceptedRoot.Ready) (outside : BuildResult → OracleComp (PostSpec extra S B) Result)
     (before : NativeFront M P I D K S B) :
     RawCtxForwardCoverage.Covered PqxdhInitialForwardPost.selected
-      (program (X := X) (Response := Response) (Shared := Shared) source sender route decode initial index metadata ready outside before) :=
-  (used_good sender route decode index (PqxdhInitialPendingBuilder.consume index ready before) initial _ ready.application metadata outside).2
+      (program (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared) source sender route decode initial index metadata ready outside before) :=
+  (used_good (associatedData := associatedData) (completedBinding := completedBinding) sender route decode index (PqxdhInitialPendingBuilder.consume index ready before) initial _ ready.application metadata outside).2
 
 end BeaconcryptCore.Computational.PqxdhInitialForwardBuilder
 

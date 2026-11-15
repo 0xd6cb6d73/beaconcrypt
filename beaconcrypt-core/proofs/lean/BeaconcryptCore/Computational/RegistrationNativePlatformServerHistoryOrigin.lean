@@ -29,7 +29,7 @@ def SourceAt (call : Call RegistrationNativeRawAdapter.TypedSpec Whole) (receipt
   ∃ index application token current pin plaintext availability initial hashed,
     call.query = .inr (.build index application) ∧
     RegistrationServerSdkSource.take index call.before.1.server = (some token, current) ∧ application = some plaintext ∧
-    registration.begin_server_completion current.control pin availability token.agreement plaintext = .ok (.Ok initial) ∧
+    BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission current.control pin availability token.agreement plaintext initial ∧
     RegistrationServerRecordExecutor.Path initial hashed ∧ receipt.observation.publicKey = hashed.binding.server_pin.public_key ∧
     receipt.observation.payload = Command.payload (.server hashed) ∧
     receipt ∈ history call.after.1.server ∧ receipt ∉ history call.before.1.server
@@ -37,7 +37,7 @@ def SourceAt (call : Call RegistrationNativeRawAdapter.TypedSpec Whole) (receipt
 variable [primitive : AdapterSealPrimitive.Operations]
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
 variable (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 variable (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
 variable (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
 variable (reserveRegistration reservePeer : StateT Platform ProbComp Bool) (erased : commitment.CommitmentTranscript)
@@ -78,7 +78,7 @@ private theorem call_origin (call : Call RegistrationNativeRawAdapter.TypedSpec 
         · have changed : history after.1.server ≠ history before.1.server := by
             intro same
             exact prior (same ▸ raw)
-          obtain ⟨token, current, pin, plaintext, taken, input, availability, initial, hashed, digest, signature, admitted, path, appended⟩ :=
+          obtain ⟨token, current, pin, plaintext, taken, input, availability, initial, hashed, digest, signature, admitted, path, appended, _adCut⟩ :=
             RegistrationNativePlatformServerIssuance.typed coins setup checks wire route representation created credential view failure allocation erased
               reserveRegistration reservePeer helper writer index application before.1 after.1 before.2 after.2 reply supported changed
           have added : receipt ∈ history before.1.server ++ [⟨⟨hashed.binding.server_pin.public_key, Command.payload (.server hashed), RegistrationSigningTrace.replyBytes signature⟩, digest⟩] :=

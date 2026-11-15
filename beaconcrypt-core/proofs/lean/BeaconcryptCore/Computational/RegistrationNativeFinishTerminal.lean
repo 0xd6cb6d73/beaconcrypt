@@ -30,7 +30,7 @@ def installed (index : Nat) (owner : Owner source) (completed : registration.Com
         before.server.world.world.2)}}}
 
 theorem install (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (owner : Owner source) (completed : registration.CompletedBeacon) (before : Native)
     (ready : PqxdhRecordLiftWorld.BeaconReady before.server.world.world.1 owner.worldOwner) :
     (RegistrationNativeExperiment.beacon setup checks representation created
@@ -72,7 +72,7 @@ theorem abort_effect (index : Nat) (world : PqxdhRecordLiftWorld.State n) (ready
   rfl
 
 theorem abort_native_effect (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (before : Native) (ready : PqxdhRecordLiftWorld.BeaconReady before.server.world.world.1 index) :
     (RegistrationNativeExperiment.trusted setup checks representation created source (.inl (.inr (.advanceOwner index .aborted)))).run before =
       pure (true, {before with server := {before.server with world := {before.server.world with world :=
@@ -91,7 +91,7 @@ def aborted (index : Nat) (owner : Owner source) (control : pqxdh.BeaconAborted)
       (abortedWorld owner.worldOwner before.server.world.world.1, before.server.world.world.2)}}}
 
 theorem abort (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (owner : Owner source) (control : pqxdh.BeaconAborted) (before : Native)
     (ready : PqxdhRecordLiftWorld.BeaconReady before.server.world.world.1 owner.worldOwner) :
     (RegistrationNativeExperiment.beacon setup checks representation created (do

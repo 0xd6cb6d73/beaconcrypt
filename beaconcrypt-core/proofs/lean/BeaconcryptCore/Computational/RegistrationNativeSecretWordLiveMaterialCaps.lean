@@ -46,6 +46,15 @@ private theorem finish_free (flags : Message → Bool) (result : RustM (Registra
   | div => trivial
   | ok result => cases result <;> trivial
 
+private theorem adHash_free (flags : Message → Bool) (pending : registration.ServerAdHash) :
+    (adHash (n := n) pending).IsQueryBoundP (BadPublic flags) 0 := by
+  cases requested : pending.request with
+  | fail error | div => simp [adHash, requested]
+  | ok request =>
+      simp only [adHash, requested]
+      refine isQueryBoundP_bind (n := 0) (m := 0) ?_ (fun _ _ => isQueryBoundP_pure _ _ _)
+      simp [effect, isQueryBoundP_query_iff, BadPublic]
+
 /-- Every concrete complete path asks only for its live transient Ready reference after the actual lookup and admission gates. -/
 theorem complete_free (flags : Message → Bool) (wire : RegistrationNativeWire.Wire) (reservePeer : Bool)
     (ready : ServerReady) (application : Slice U8) (before : State) (prepared : flags ready.reference = true) :
@@ -72,13 +81,20 @@ theorem complete_free (flags : Message → Bool) (wire : RegistrationNativeWire.
                 | ok reply => cases reply with
                   | Err previous => trivial
                   | Ok selected =>
-                      simp only []
-                      split
-                      · exact isQueryBoundP_bind (n := 0) (m := 0)
-                          (admitted_free flags wire.encodeResponse before.control
-                            (RegistrationBoundKeySchedule.publicInitial selected) ready.reference prepared)
-                          (fun published _ => finish_free flags published before)
-                      · trivial
+                      refine isQueryBoundP_bind (n := 0) (m := 0) (adHash_free flags selected) ?_
+                      intro hashed _
+                      cases hashed with
+                      | fail error | div => trivial
+                      | ok reply => cases reply with
+                        | Err previous => trivial
+                        | Ok initial =>
+                            dsimp only
+                            split
+                            · exact isQueryBoundP_bind (n := 0) (m := 0)
+                                (admitted_free flags wire.encodeResponse before.control
+                                  (RegistrationBoundKeySchedule.publicInitial initial) ready.reference prepared)
+                                (fun published _ => finish_free flags published before)
+                            · trivial
             · trivial
 
 /-- Taking any actual one-use session, including cancellation and every later failure, demands only a descriptor already live in that session table. -/

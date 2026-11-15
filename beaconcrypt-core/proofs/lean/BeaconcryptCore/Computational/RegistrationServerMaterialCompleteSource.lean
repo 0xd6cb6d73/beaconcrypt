@@ -54,13 +54,22 @@ theorem literal (wire : RegistrationNativeWire.Wire) (reserve : Bool)
                 | Err previous =>
                     simp only [RegistrationServerMaterialOccupancySource.after, resumed]
                     rfl
-                | Ok initial =>
-                    cases reserve <;>
-                      simp only [RegistrationServerMaterialOccupancySource.after, resumed,
-                        RawCtxMaterialInterpretation.rust_map_ok, RegistrationPublicationKernelErasure.mapOk,
-                        RegistrationServerMaterialOccupancySource.continuation, Bool.false_eq_true, ite_true, ite_false,
-                        RegistrationServerMaterialAdmittedSource.admitted, StateT.run_bind, StateT.run_lift, StateT.run_pure,
-                        bind_pure_comp, bind_map_left]
+                | Ok pending =>
+                    simp only [RegistrationServerMaterialOccupancySource.after, resumed,
+                      RegistrationServerMaterialOccupancySource.hashThen, StateT.run_bind, StateT.run_lift,
+                      bind_pure_comp, bind_map_left]
+                    apply bind_congr
+                    intro hashed
+                    cases hashed with
+                    | fail error | div => rfl
+                    | ok result => cases result with
+                      | Err previous => rfl
+                      | Ok initial =>
+                        cases reserve <;>
+                          simp only [RawCtxMaterialInterpretation.rust_map_ok, RegistrationPublicationKernelErasure.mapOk,
+                            RegistrationServerMaterialOccupancySource.continuation, Bool.false_eq_true, ite_true, ite_false,
+                            RegistrationServerMaterialAdmittedSource.admitted, StateT.run_bind, StateT.run_lift,
+                            StateT.run_pure, bind_pure_comp, bind_map_left]
           · rfl
 
 private theorem occupancy (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire)

@@ -10,6 +10,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialParentPost
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhInitialPendingPost PqxdhInitialPostContext RawCtxSelectedParentCalls
 open RawCtxSelectedFamilyContext RawCtxGenericRoleStorage RawCtxGenericRoleFamily
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhInitialBeaconAmbient
@@ -114,10 +115,10 @@ theorem label_live : labelHandler source writer prior entry target pre applicati
 theorem step (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (query : (PostSpec extra S B).Domain) (before : LabelFront M P I D K S B) :
     simulateQ (nativeHandler source writer prior entry target pre application initial selector aux)
-      ((compiler sender route decode query).run (mapFront (nativeKernel target) before)) =
+      ((compiler (completedBinding := completedBinding) sender route decode query).run (mapFront (nativeKernel target) before)) =
       Prod.map id (mapFront (nativeKernel target)) <$> simulateQ
         (labelHandler source writer prior entry target pre application initial selector aux (childResponse prior entry target))
-        ((compiler sender route decode query).run before) := by
+        ((compiler (completedBinding := completedBinding) sender route decode query).run before) := by
   rcases query with (query | query) | query
   case inr =>
     cases query with
@@ -137,7 +138,7 @@ theorem step (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder
         intro secrets
         simp [knownInitial, Functor.map_map, Option.map_map, Function.comp_def,
           nativeKernel, knownKernel, RawCtxChainInterpretation.mapChains, RawCtxSelectedChain.interpret]
-      rw [PqxdhInitialGenericBeacon.owner_map (nativeKernel target) pre
+      rw [PqxdhInitialGenericBeacon.owner_map (completedBinding := completedBinding) (nativeKernel target) pre
         (liftCalls (labelCalls source writer prior entry (childResponse prior entry target)))
         (liftCalls (nativeCalls source writer prior entry target)) receiveLaw application
         (knownInitial initial) initial initialLaw]
@@ -162,10 +163,10 @@ theorem step (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder
 theorem program (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (client : OracleComp (PostSpec extra S B) Result) (before : LabelFront M P I D K S B) :
     simulateQ (nativeHandler source writer prior entry target pre application initial selector aux)
-      ((simulateQ (compiler sender route decode) client).run (mapFront (nativeKernel target) before)) =
+      ((simulateQ (compiler (completedBinding := completedBinding) sender route decode) client).run (mapFront (nativeKernel target) before)) =
       Prod.map id (mapFront (nativeKernel target)) <$> simulateQ
         (labelHandler source writer prior entry target pre application initial selector aux (childResponse prior entry target))
-        ((simulateQ (compiler sender route decode) client).run before) := by
+        ((simulateQ (compiler (completedBinding := completedBinding) sender route decode) client).run before) := by
   induction client using OracleComp.inductionOn generalizing before with
   | pure value => simp only [simulateQ_pure, StateT.run_pure, map_pure]; rfl
   | query_bind query next ih =>

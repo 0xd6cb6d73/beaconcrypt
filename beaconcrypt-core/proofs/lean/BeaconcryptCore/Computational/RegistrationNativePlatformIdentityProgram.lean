@@ -58,19 +58,19 @@ def externalOriginal (work : StateT Platform ProbComp Value) : Original n KemSK 
       simulateQ (externalOriginalLift (n := n) (KemSK := KemSK)) (work.run platform)
 
 noncomputable def implementation (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit) :
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     QueryImpl (Spec n KemSK) (StateT (RegistrationNativeIdentityWorld.State n KemSK) ProbComp)
   | .inl query => StateT.lift (unifSpec.query query)
   | .inr query => RegistrationNativeIdentityWorld.implementation (mlSource := source) setup checks representation created query
 
 noncomputable def originalImplementation (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit) :
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     QueryImpl (OriginalSpec n KemSK) (StateT (RegistrationNativeIdentityWorld.Context n KemSK) ProbComp)
   | .inl query => StateT.lift (unifSpec.query query)
   | .inr query => RegistrationNativeIdentityWorld.ambient (mlSource := source) setup checks representation created query
 
 noncomputable def runNew (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : M n KemSK Auxiliary Platform source Value) (before : NewState n KemSK Auxiliary source × Platform) :
     ProbComp (Value × (NewState n KemSK Auxiliary source × Platform)) :=
   (fun result => (result.1.1.1.1, (((result.1.1.1.2, result.1.1.2), result.2), result.1.2))) <$>
@@ -78,7 +78,7 @@ noncomputable def runNew (setup : Setup base KemSK) (checks : Checks)
       (((work.run before.1.1.1).run before.1.1.2).run before.2)).run before.1.2
 
 noncomputable def runOld (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : Original n KemSK Auxiliary Platform source Value) (before : OldState n KemSK Auxiliary source × Platform) :
     ProbComp (Value × (OldState n KemSK Auxiliary source × Platform)) :=
   (fun result => (result.1.1.1.1, (((result.1.1.1.2, result.1.1.2), result.2), result.1.2))) <$>
@@ -89,14 +89,14 @@ def project (seeds : List IdentitySeed) (before : NewState n KemSK Auxiliary sou
     OldState n KemSK Auxiliary source × Platform := (view seeds before.1, before.2)
 
 def Related (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (seeds : List IdentitySeed) (next : M n KemSK Auxiliary Platform source Value) (actual : Original n KemSK Auxiliary Platform source Value) : Prop :=
   ∀ before, before.1.2.identities.seeds = seeds →
     Prod.map id (project seeds) <$> runNew setup checks representation created next before =
       runOld setup checks representation created actual (project seeds before)
 
 def Keeps (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : M n KemSK Auxiliary Platform source Value) : Prop :=
   ∀ before result, result ∈ support (runNew setup checks representation created work before) →
     result.2.1.2.identities.seeds = before.1.2.identities.seeds
@@ -107,7 +107,7 @@ private theorem map_apply {State A B : Type} {m : Type → Type} [Monad m] [Lawf
 
 /-- Native subtrees retain their exact counted World and add no external-state effect. -/
 theorem native_run (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeIdentityFrontend.M n KemSK Auxiliary source Value) (before : NewState n KemSK Auxiliary source × Platform) :
     runNew setup checks representation created (native work) before =
       (fun result => (result.1, (result.2, before.2))) <$>
@@ -123,7 +123,7 @@ theorem native_run (setup : Setup base KemSK) (checks : Checks)
   rfl
 
 theorem original_run (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK source Auxiliary Value) (before : OldState n KemSK Auxiliary source × Platform) :
     runOld setup checks representation created (original work) before =
       (fun result => (result.1, (result.2, before.2))) <$>
@@ -140,7 +140,7 @@ theorem original_run (setup : Setup base KemSK) (checks : Checks)
 
 /-- Existing actual native per-leaf correspondence is lifted without any writer-purity or whole-controller premise. -/
 theorem native_related (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (seeds : List IdentitySeed)
     (next : RegistrationNativeIdentityFrontend.M n KemSK Auxiliary source Value)
     (actual : RegistrationNativeBeaconFrontend.M n KemSK source Auxiliary Value)
@@ -153,7 +153,7 @@ theorem native_related (setup : Setup base KemSK) (checks : Checks)
 
 /-- The native prefix preservation receipt retains all generated opaque rows through this lifting. -/
 theorem native_keeps (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeIdentityFrontend.M n KemSK Auxiliary source Value)
     (law : RegistrationNativeIdentitySourceSimulation.Keeps setup checks representation created work) :
     Keeps setup checks representation created (native (Platform := Platform) work) := by
@@ -178,7 +178,7 @@ private theorem lift_probability_apply {State : Type} (work : ProbComp Value) (b
 
 /-- External source effects retain the entire native counted state, while sampling exactly their actual P program. -/
 theorem external_run (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : StateT Platform ProbComp Value) (before : NewState n KemSK Auxiliary source × Platform) :
     runNew setup checks representation created (external work) before =
       (fun result => (result.1, (before.1, result.2))) <$> work.run before.2 := by
@@ -192,7 +192,7 @@ theorem external_run (setup : Setup base KemSK) (checks : Checks)
 
 /-- Original source effects have the identical external P transition and no hidden native counter mask. -/
 theorem external_original_run (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : StateT Platform ProbComp Value) (before : OldState n KemSK Auxiliary source × Platform) :
     runOld setup checks representation created (externalOriginal work) before =
       (fun result => (result.1, (before.1, result.2))) <$> work.run before.2 := by
@@ -206,7 +206,7 @@ theorem external_original_run (setup : Setup base KemSK) (checks : Checks)
 
 /-- Actual external writers and allocators preserve source realization while retaining every failure and its P poststate. -/
 theorem external_related (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (seeds : List IdentitySeed) (work : StateT Platform ProbComp Value) :
     Related (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (source := source) setup checks representation created seeds
       (external work) (externalOriginal work) := by
@@ -215,7 +215,7 @@ theorem external_related (setup : Setup base KemSK) (checks : Checks)
   rfl
 
 theorem external_keeps (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : StateT Platform ProbComp Value) :
     Keeps (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (source := source) setup checks representation created (external work) := by
   intro before result supported
@@ -226,7 +226,7 @@ theorem external_keeps (setup : Setup base KemSK) (checks : Checks)
 
 /-- Actual stateful source sequencing retains all frontend, environment, private-table and external coordinates. -/
 theorem runNew_bind (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : M n KemSK Auxiliary Platform source Value) (next : Value → M n KemSK Auxiliary Platform source Next)
     (before : NewState n KemSK Auxiliary source × Platform) :
     runNew setup checks representation created (work >>= next) before = (do
@@ -235,7 +235,7 @@ theorem runNew_bind (setup : Setup base KemSK) (checks : Checks)
   simp only [runNew, StateT.run_bind, simulateQ_bind, bind_map_left, map_bind]
 
 theorem runOld_bind (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : Original n KemSK Auxiliary Platform source Value) (next : Value → Original n KemSK Auxiliary Platform source Next)
     (before : OldState n KemSK Auxiliary source × Platform) :
     runOld setup checks representation created (work >>= next) before = (do
@@ -244,14 +244,14 @@ theorem runOld_bind (setup : Setup base KemSK) (checks : Checks)
   simp only [runOld, StateT.run_bind, simulateQ_bind, bind_map_left, map_bind]
 
 theorem related_pure (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (seeds : List IdentitySeed) (value : Value) :
     Related (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (Platform := Platform) (source := source) setup checks representation created seeds (pure value) (pure value) := by
   intro before _prior
   simp only [runNew, runOld, StateT.run_pure, simulateQ_pure, map_pure, Prod.map, id_eq]
 
 theorem keeps_pure (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (value : Value) :
     Keeps (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (Platform := Platform) (source := source) setup checks representation created (pure value) := by
   intro before result supported
@@ -261,7 +261,7 @@ theorem keeps_pure (setup : Setup base KemSK) (checks : Checks)
 
 /-- Adaptive source continuation uses the actual preceding private-row preservation receipt, including failure poststates. -/
 theorem related_bind (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (seeds : List IdentitySeed) (first : M n KemSK Auxiliary Platform source Value) (actual : Original n KemSK Auxiliary Platform source Value)
     (next : Value → M n KemSK Auxiliary Platform source Next) (oldNext : Value → Original n KemSK Auxiliary Platform source Next)
     (law : Related setup checks representation created seeds first actual) (keeps : Keeps setup checks representation created first)
@@ -280,7 +280,7 @@ theorem related_bind (setup : Setup base KemSK) (checks : Checks)
       simp only [bind_map_left, Prod.map, id_eq]
 
 theorem keeps_bind (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (first : M n KemSK Auxiliary Platform source Value) (next : Value → M n KemSK Auxiliary Platform source Next)
     (keeps : Keeps setup checks representation created first) (later : ∀ value, Keeps setup checks representation created (next value)) :
     Keeps setup checks representation created (first >>= next) := by
@@ -291,7 +291,7 @@ theorem keeps_bind (setup : Setup base KemSK) (checks : Checks)
 
 /-- A complete adaptive controller is transported from its actual per-request source laws. -/
 theorem related_program {K : Type} {spec : OracleSpec K} (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (seeds : List IdentitySeed) (next : QueryImpl spec (M n KemSK Auxiliary Platform source))
     (actual : QueryImpl spec (Original n KemSK Auxiliary Platform source))
     (law : ∀ query, Related setup checks representation created seeds (next query) (actual query))
@@ -304,7 +304,7 @@ theorem related_program {K : Type} {spec : OracleSpec K} (setup : Setup base Kem
     exact related_bind setup checks representation created seeds _ _ _ _ (law query) (keeps query) ih
 
 theorem keeps_program {K : Type} {spec : OracleSpec K} (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (next : QueryImpl spec (M n KemSK Auxiliary Platform source)) (keeps : ∀ query, Keeps setup checks representation created (next query))
     (work : OracleComp spec Value) : Keeps setup checks representation created (simulateQ next work) := by
   induction work using OracleComp.inductionOn with

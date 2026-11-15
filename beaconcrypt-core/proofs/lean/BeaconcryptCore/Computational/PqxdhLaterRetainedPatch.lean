@@ -6,7 +6,10 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterRetainedPatch
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf
 open PqxdhInitialBeaconAmbient PqxdhInitialNativeRetained RawCtxSelectedParentTable RawCtxCursorLineage
 open RawCtxSelectedParentPrivatePatch PqxdhOrderedChainHybrids
@@ -37,13 +40,13 @@ theorem frame_response (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
     (table : RawCtxKdfRequestTable.Table) (state : RetainedState A N C) (parent : FullOutput)
     (found : table (PqxdhInitialBuilderContext.address context) = some parent) :
     (retained source writer (view (productionStream source.crypto) table) external
-      (PqxdhInitialBuilderContext.frame sender route decode context).1).run state =
-        pure (PqxdhInitialParentBuilderContext.reply sender route decode context parent, state) := by
+      (PqxdhInitialBuilderContext.frame (completedBinding := completedBinding) sender route decode context).1).run state =
+        pure (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode context parent, state) := by
   let full : PqxdhInitialNativeLog.State A N C :=
     (((state.1, (table, ⟨List.Vector.replicate 32 0, 0⟩)), []), state.2)
   have actual := step_retained source writer external
-    (PqxdhInitialBuilderContext.frame sender route decode context).1 full
-  rw [PqxdhInitialNativeResponse.frame_hit source writer 0 external sender route decode context full parent found] at actual
+    (PqxdhInitialBuilderContext.frame (completedBinding := completedBinding) sender route decode context).1 full
+  rw [PqxdhInitialNativeResponse.frame_hit (completedBinding := completedBinding) source writer 0 external sender route decode context full parent found] at actual
   simpa only [map_pure, project, PqxdhInitialNativeResponse.updated, full] using actual.symm
 
 /-- The complete saved frame, including its first retained parent request, is exactly the literal original resumption with that same full parent response. -/
@@ -55,13 +58,13 @@ theorem frame_completion (source : FixedHkdfSha512NoSaltSource) (writer : RawCtx
     (table : RawCtxKdfRequestTable.Table) (state : RetainedState A N C) (parent : FullOutput)
     (found : table (PqxdhInitialBuilderContext.address context.original) = some parent) :
     RawCtxPendingMixedPrefix.finish (retained source writer (view (productionStream source.crypto) table) external)
-      (.pending (PqxdhInitialOriginContext.frame mark sender route decode context).1
-        (PqxdhInitialOriginContext.frame mark sender route decode context).2, state) =
+      (.pending (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode context).1
+        (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode context).2, state) =
     (simulateQ (retained source writer (view (productionStream source.crypto) table) external)
-      (PqxdhInitialOriginContext.resume mark sender route decode context
-        (PqxdhInitialParentBuilderContext.reply sender route decode context.original parent))).run state := by
+      (PqxdhInitialOriginContext.resume (completedBinding := completedBinding) mark sender route decode context
+        (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode context.original parent))).run state := by
   simp only [RawCtxPendingMixedPrefix.finish, PqxdhInitialOriginContext.frame,
-    frame_response source writer external sender route decode context.original table state parent found, pure_bind]
+    frame_response (completedBinding := completedBinding) source writer external sender route decode context.original table state parent found, pure_bind]
 
 local notation "Start" => PqxdhErasedParentSample.Start (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K)
   (X := X) (Response := Response) (A := A) (N := N) (S := S) (B := B)
@@ -73,21 +76,21 @@ theorem sample_one_extends (source : FixedHkdfSha512NoSaltSource) (writer : RawC
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (depth : Nat) (start : Start) (pending : Pending)
     (supported : Sum.inr pending ∈ support
-      (PqxdhErasedParentSample.sampleOne source writer sender route decode depth start))
+      (PqxdhErasedParentSample.sampleOne (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth start))
     (parent output : FullOutput)
     (safe : targetAddress (nextChain parent) ∉ pending.2.1.1.2 ++
       [PqxdhInitialBuilderContext.address pending.1.original]) :
     Extends pending.2.1.1.1.2.1
       ((PqxdhInitialNativeResponse.updated (PqxdhInitialBuilderContext.address pending.1.original)
         parent pending.2.1).1.1.2.1.cacheQuery (targetAddress (nextChain parent)) output) := by
-  have actual := (PqxdhInitialPreparedParent.supported_pending source writer _ _ _ _ _ _ sender route decode _ _
+  have actual := (PqxdhInitialPreparedParent.supported_pending (associatedData := associatedData) (completedBinding := completedBinding) source writer _ _ _ _ _ _ sender route decode _ _
     depth _ pending.2 pending.1).mp supported
   simp only [List.mem_append, List.mem_singleton, not_or] at safe
   apply parent_child_extends pending.2.1 _ parent output actual.2 ?_ safe.2
   cases found : pending.2.1.1.1.2.1 (targetAddress (nextChain parent)) with
   | none => rfl
   | some value => exact False.elim (safe.1
-      (PqxdhLaterInputAlias.sample_one_covered source writer sender route decode depth start pending supported
+      (PqxdhLaterInputAlias.sample_one_covered (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth start pending supported
         _ value found))
 
 end BeaconcryptCore.Computational.PqxdhLaterRetainedPatch

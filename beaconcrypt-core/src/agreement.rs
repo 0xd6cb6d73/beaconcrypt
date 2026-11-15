@@ -14,7 +14,7 @@ use crate::pqxdh::{
 };
 use crate::ratchet::RatchetChain;
 use crate::registration::{AuthenticatedInit, AuthenticatedResponse};
-use crate::session::RegistrationBinding;
+use crate::session::{CompletedRegistrationBinding, RegistrationBinding};
 
 /// The fixed fields of the same response whose complete transcript was verified.
 pub struct ResponsePublic {
@@ -61,7 +61,7 @@ enum AgreementInput<'a> {
 	},
 	Beacon {
 		control: BeaconInitSent,
-		binding: RegistrationBinding,
+		binding: CompletedRegistrationBinding,
 		response: ResponsePublic,
 		application_ciphertext: &'a [u8],
 	},
@@ -355,7 +355,7 @@ enum AgreementCandidate<'a> {
 	},
 	Beacon {
 		candidate: BeaconRegistrationCandidate,
-		binding: RegistrationBinding,
+		binding: CompletedRegistrationBinding,
 		application_ciphertext: &'a [u8],
 	},
 }
@@ -488,7 +488,7 @@ impl ServerAgreement {
 
 pub struct BeaconAgreement<'a> {
 	pub(crate) candidate: BeaconRegistrationCandidate,
-	pub(crate) binding: RegistrationBinding,
+	pub(crate) binding: CompletedRegistrationBinding,
 	pub(crate) root: RatchetChain,
 	pub(crate) application_ciphertext: &'a [u8],
 }

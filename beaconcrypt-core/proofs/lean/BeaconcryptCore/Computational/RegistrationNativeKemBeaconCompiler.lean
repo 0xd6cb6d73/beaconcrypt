@@ -24,7 +24,7 @@ def trusted : QueryImpl (RegistrationNativeBeaconFrontend.Trusted n KemSK)
 private theorem primitive_source (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (RegistrationNativeKemInterface.Spec RegistrationNativeKemInterface.OtherSpec KemSK).Domain)
     (before : State n mlSource) (pool : PqxdhLiveKemBirth.Pool KemSK) :
     (simulateQ (source setup codec checks route verify representation created)
@@ -52,7 +52,7 @@ private def withWorldRole (before : State n mlSource) (world : PqxdhRecordLiftWo
 
 private theorem native_canonical (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (RegistrationNativeKemInterface.Spec RegistrationNativeKemInterface.OtherSpec KemSK).Domain)
     (before : RegistrationNativeExperiment.State n KemSK mlSource) :
     Prod.map id nativeProject <$>
@@ -77,7 +77,7 @@ private theorem native_canonical (setup : Setup base KemSK) (checks : Checks)
 theorem trusted_source (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (RegistrationNativeBeaconFrontend.Trusted n KemSK).Domain)
     (before : RegistrationNativeExperiment.State n KemSK mlSource) :
     Prod.map id nativeProject <$>
@@ -103,7 +103,7 @@ theorem trusted_source (setup : Setup base KemSK) (codec : Codec Reader Response
 theorem trusted_program (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp (RegistrationNativeBeaconFrontend.Trusted n KemSK) Value)
     (before : RegistrationNativeExperiment.State n KemSK mlSource) :
     Prod.map id nativeProject <$>
@@ -117,7 +117,7 @@ theorem trusted_program (setup : Setup base KemSK) (codec : Codec Reader Respons
 private theorem get_run (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (before : State n mlSource × PqxdhLiveKemBirth.Pool KemSK) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (before : State n mlSource × PqxdhLiveKemBirth.Pool KemSK) :
     (simulateQ (source setup codec checks route verify representation created)
       RegistrationNativeKemServerInterface.get).run before =
       pure (mask before.1, (mask before.1, before.2)) := by
@@ -128,7 +128,7 @@ private theorem get_run (setup : Setup base KemSK) (codec : Codec Reader Respons
 private theorem put_run (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (before : State n mlSource × PqxdhLiveKemBirth.Pool KemSK)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (before : State n mlSource × PqxdhLiveKemBirth.Pool KemSK)
     (next : State n mlSource) :
     (simulateQ (source setup codec checks route verify representation created)
       (RegistrationNativeKemServerInterface.put next)).run before = pure ((), (mask next, before.2)) := by
@@ -151,7 +151,7 @@ noncomputable def beacon
 theorem beacon_source (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK mlSource RegistrationServerRoleBackend.State Value)
     (before : RegistrationNativeExperiment.State n KemSK mlSource) :
     Prod.map id nativeProject <$> (RegistrationNativeExperiment.beacon setup checks representation created work).run before =

@@ -1,7 +1,9 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePlatformCtxHashBoundsCalculus
 import BeaconcryptCore.Computational.RegistrationAuthenticationHashBounds
-/-! Exact physical shared-hash accounting for actual source Init acceptance: repeated pin recomputation plus the three authentication hashes. Replay lookup, platform reservation, agreement, KEM collection, one-use retention and parse-attempt instrumentation add no shared hash calls. Every optional/failure branch retains its reached full state. -/
+import BeaconcryptCore.Computational.RegistrationNativePlatformCtxAccept
+import BeaconcryptCore.Computational.RegistrationNativePlatformCtxSdkHashBounds
+/-! Conservative physical shared-hash accounting for actual source Init acceptance: the retained one-request pin allowance plus the retained three-hash authentication allowance (the source authentication now issues at most one hash, the remaining-field signing transcript). Replay lookup, platform reservation, agreement, KEM collection, one-use retention and parse-attempt instrumentation add no shared hash calls. Every optional/failure branch retains its reached full state. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -35,7 +37,7 @@ theorem callback_bound (crypto : Pqxdh.Crypto) (verify : MldsaTranscriptAuth.Ver
 attribute [local irreducible] RegistrationAuthenticationExecutor.begin
   RegistrationNativePlatformCtxAcceptAuthentication.callbacks
 
-/-- All actual Init authentication paths have at most three shared hash calls, with no successful-authentication premise. -/
+/-- All actual Init authentication paths have at most three shared hash calls, with no successful-authentication premise. The source now issues at most one (the remaining-field signing transcript hash); the exported cap 3 is retained as a conservative allowance. -/
 theorem authenticate_bound (setup : Setup base KemSK) (verify : MldsaTranscriptAuth.Verify)
     (pin : session.ServerAuthenticationPin) (packet : registration.InitPacket) :
     Bounded (RegistrationNativePlatformCtxAcceptAuthentication.authenticate (n := n) (Platform := Platform) setup verify pin packet) 3 := by
@@ -43,7 +45,7 @@ theorem authenticate_bound (setup : Setup base KemSK) (verify : MldsaTranscriptA
   exact program_bound RegistrationAuthenticationHashBounds.IsHash
     (RegistrationNativePlatformCtxAcceptAuthentication.callbacks setup.source.crypto verify)
     (callback_bound setup.source.crypto verify) _ 3
-    (RegistrationAuthenticationHashBounds.begin_bound pin packet)
+    ((RegistrationAuthenticationHashBounds.begin_bound pin packet).mono (by decide))
 
 attribute [local irreducible] RegistrationNativePlatformCtxAcceptAuthentication.authenticate
 
@@ -54,7 +56,7 @@ private theorem ordinary_bound (work : StateT (RegistrationServerFrontendCompile
   exact RegistrationNativePlatformCtxLeafHashBounds.coins _
 
 private theorem after_authentication_bound (setup : Setup base KemSK) (checks : Checks) (reserve : StateT Platform ProbComp Bool)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit) :
     Bounded (RegistrationNativePlatformCtxAcceptSdk.afterAuthentication (n := n) setup checks reserve representation created packet authenticated) 0 := by
   unfold RegistrationNativePlatformCtxAcceptSdk.afterAuthentication
@@ -80,7 +82,7 @@ attribute [local irreducible] RegistrationNativePlatformCtxAcceptSdk.afterAuthen
 
 private theorem after_pin_bound (setup : Setup base KemSK) (checks : Checks) (reserve : StateT Platform ProbComp Bool)
     (verify : MldsaTranscriptAuth.Verify) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (result : RegistrationNativeServerPinRecompute.PinReply) :
     Bounded (RegistrationNativePlatformCtxAcceptSdk.afterPin (n := n) setup checks reserve verify representation created packet result) 3 := by
   cases result with
@@ -102,7 +104,7 @@ private theorem after_pin_bound (setup : Setup base KemSK) (checks : Checks) (re
 /-- The complete actual SDK acceptance costs one repeated pin hash plus three authentication hashes. -/
 theorem sdk_bound (setup : Setup base KemSK) (checks : Checks) (reserve : StateT Platform ProbComp Bool)
     (verify : MldsaTranscriptAuth.Verify) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket) :
     Bounded (RegistrationNativePlatformCtxAcceptSdk.accept (n := n) setup checks reserve verify representation created packet) 4 := by
   unfold RegistrationNativePlatformCtxAcceptSdk.accept
   exact bind_bound _ _ 1 3 RegistrationNativePlatformCtxSdkHashBounds.pin
@@ -111,7 +113,7 @@ theorem sdk_bound (setup : Setup base KemSK) (checks : Checks) (reserve : StateT
 /-- The actual public accept attempt counter and complete Context/P lens preserve that four-hash bill. -/
 theorem accept_bound (setup : Setup base KemSK) (checks : Checks) (reserve : StateT Platform ProbComp Bool)
     (verify : MldsaTranscriptAuth.Verify) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket) :
     RegistrationNativePlatformIdentityCtxHashBoundsCore.ContextBounded
       (RegistrationNativePlatformCtxAccept.accept (n := n) setup checks reserve verify representation created packet) 4 := by
   intro before

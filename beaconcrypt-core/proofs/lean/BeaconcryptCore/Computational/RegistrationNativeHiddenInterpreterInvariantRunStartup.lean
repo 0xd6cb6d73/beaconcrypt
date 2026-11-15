@@ -16,7 +16,7 @@ variable {n : Nat} {ι KemSK ProviderState Value : Type} {base : OracleSpec ι}
 variable {source : RegistrationNativeMldsa.Source}
 
 abbrev Result (n : Nat) (KemSK ProviderState Value : Type) (source : RegistrationNativeMldsa.Source) :=
-  Option (PqxdhLiveServerConstruction.Created Unit × (Outcome Value source × State n KemSK ProviderState))
+  Option (PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize) × (Outcome Value source × State n KemSK ProviderState))
 
 def Valid (budget : PqxdhDeploymentInterface.Budget) : Result n KemSK ProviderState Value source → Prop
   | none => True

@@ -2,7 +2,7 @@ import BeaconcryptCore.Computational.PqxdhServerAuthGapDh
 import Mathlib.Tactic.FailIfNoProgress
 
 /-!
-The exact source prefixes retain generation, all three verifications, arbitrary-key encapsulation and optional decapsulation. Primitive resource contracts count both direct draws and interpreted base callbacks. The literal Phase 1 publication is deterministic after its source-ordered inputs have been sampled. These are query bounds, not primitive security or runtime claims.
+The exact source prefixes retain generation, all verification callbacks, arbitrary-key encapsulation and optional decapsulation. Primitive resource contracts count both direct draws and interpreted base callbacks. The literal Phase 1 publication is deterministic after its source-ordered inputs have been sampled. These are query bounds, not primitive security or runtime claims.
 -/
 
 open OracleComp OracleSpec ENNReal
@@ -12,6 +12,7 @@ open RustM beaconcrypt_core PqxdhRefinement
 set_option autoImplicit false
 
 namespace BeaconcryptCore.Computational.PqxdhServerAuthSourceCosts
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointIdentity PqxdhJointGapDh PqxdhServerAuthExperiment
 open PqxdhJointDhExtractRoot (RootSpec)
 
@@ -177,7 +178,7 @@ theorem server_step_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader
     (consumed : List Pqxdh.Bytes) :
     (((PqxdhServerStaticDhSource.prefixImpl setup.serverDomain (serverAux setup codec checks)
       (fun _ => pure ())) query).run consumed).IsTotalQueryBound (serverUniformCost caps (serverClass query)) := by
-  cases query <;> first | trivial | skip
+  cases query <;> try trivial
   · change (generateEphemeral setup >>= fun value => pure (value, consumed)).IsTotalQueryBound 32
     rw [bind_pure_comp, IsTotalQueryBound, isQueryBound_map_iff]
     exact generate_uniform setup
@@ -225,7 +226,7 @@ theorem beacon_collect_decaps {I D K X : Type} (identity : I) (oneTime : D) (kem
 /-- Pure source metadata admission adds no decapsulation attempt. -/
 theorem beacon_prepare_decaps {I D K X : Type} (control : pqxdh.BeaconInitSent)
     (identity : I) (oneTime : D) (kem : K) (raw : Pqxdh.Bytes) :
-    (PqxdhPhase2DhMetadata.prepare (X := X) (Response := Response) control identity oneTime kem raw).IsQueryBoundP
+    (PqxdhPhase2DhMetadata.prepare (completedBinding := completedBinding) (X := X) (Response := Response) control identity oneTime kem raw).IsQueryBoundP
       (fun query => beaconDecaps query = true) 1 := by
   unfold PqxdhPhase2DhMetadata.prepare
   exact isQueryBoundP_bind (beacon_collect_decaps identity oneTime kem raw) (m := 0) (fun _ _ => trivial)
@@ -233,11 +234,11 @@ theorem beacon_prepare_decaps {I D K X : Type} (control : pqxdh.BeaconInitSent)
 /-- Both preparation query classes include every possible reply and rejection continuation. -/
 theorem beacon_callbacks {I D K X : Type} (control : pqxdh.BeaconInitSent)
     (identity : I) (oneTime : D) (kem : K) (raw : Pqxdh.Bytes) (kind : Bool) :
-    (PqxdhPhase2DhMetadata.prepare (X := X) (Response := Response) control identity oneTime kem raw).IsQueryBoundP
+    (PqxdhPhase2DhMetadata.prepare (completedBinding := completedBinding) (X := X) (Response := Response) control identity oneTime kem raw).IsQueryBoundP
       (fun query => beaconDecaps query = kind) (if kind then 1 else 12) := by
   cases kind
-  · exact (PqxdhPhase2DhMetadata.prepare_bound control identity oneTime kem raw).isQueryBoundP
-  · exact beacon_prepare_decaps control identity oneTime kem raw
+  · exact (PqxdhPhase2DhMetadata.prepare_bound (completedBinding := completedBinding) control identity oneTime kem raw).isQueryBoundP
+  · exact beacon_prepare_decaps (completedBinding := completedBinding) control identity oneTime kem raw
 
 /-- Actual optional decapsulation pays every declared direct and interpreted base draw, including unsuccessful results. -/
 theorem decaps_uniform (setup : Setup baseSpec KemSK) (caps : KemCaps) (bounded : KemBound setup caps)
@@ -254,7 +255,7 @@ theorem beacon_step_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader
     (query : PqxdhPhase2GapDhSource.Query Unit (Unit ⊕ ScalarBytes) KemSK Unit Response) (state : Unit) :
     (((PqxdhPhase2GapDhSource.prefixImpl setup.beaconDomain (beaconAuxUnit setup codec beaconSeed)
       (fun _ => pure ())) query).run state).IsTotalQueryBound (if beaconDecaps query then caps.decapsCost else 0) := by
-  cases query <;> first | trivial | skip
+  cases query <;> try trivial
   case decapsulate ciphertext secret =>
     change (beaconAux setup codec beaconSeed (.decapsulate ciphertext secret) >>= fun value => pure (value, state)).IsTotalQueryBound caps.decapsCost
     rw [bind_pure_comp, IsTotalQueryBound, isQueryBound_map_iff]
@@ -266,19 +267,19 @@ theorem beacon_prefix_uniform (setup : Setup baseSpec KemSK) (codec : Codec Read
     (beaconSeed : IdentitySeed) (caps : KemCaps) (bounded : KemBound setup caps)
     (control : pqxdh.BeaconInitSent) (identity : Unit) (oneTime : Unit ⊕ ScalarBytes)
     (kem : KemSK) (raw : Pqxdh.Bytes) (state : Unit) :
-    ((beaconPrefix setup codec beaconSeed control identity oneTime kem raw).run state).IsTotalQueryBound caps.decapsCost := by
+    ((beaconPrefix (completedBinding := completedBinding) setup codec beaconSeed control identity oneTime kem raw).run state).IsTotalQueryBound caps.decapsCost := by
   rw [← isQueryBoundP_true_iff]
   have result := FinitePartitionQueryBounds.weighted_bound
     (beaconDecaps (I := Unit) (D := Unit ⊕ ScalarBytes) (K := KemSK) (X := Unit) (Response := Response))
     (fun kind => if kind then caps.decapsCost else 0) (fun kind => if kind then 1 else 12)
     (PqxdhPhase2GapDhSource.prefixImpl setup.beaconDomain (beaconAuxUnit setup codec beaconSeed) (fun _ => pure ()))
-    (fun _ => True) (PqxdhPhase2DhMetadata.prepare control identity oneTime kem raw)
-    (beacon_callbacks control identity oneTime kem raw)
+    (fun _ => True) (PqxdhPhase2DhMetadata.prepare (completedBinding := completedBinding) control identity oneTime kem raw)
+    (beacon_callbacks (completedBinding := completedBinding) control identity oneTime kem raw)
     (fun query state => (beacon_step_uniform setup codec beaconSeed caps bounded query state).isQueryBoundP) state
   simpa only [beaconPrefix, Fintype.sum_bool, Bool.false_eq_true, ite_true, ite_false, Nat.mul_one, Nat.zero_mul, Nat.add_zero] using result
 
 set_option backward.isDefEq.respectTransparency false in
-/-- The three actual Beacon signature callbacks use the trusted deterministic signing function; no unused dynamic coin interface is executed. -/
+/-- The actual Beacon verification callbacks use the trusted deterministic signing function; no unused dynamic coin interface is executed. -/
 theorem phase1_signing_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (beaconSeed : IdentitySeed) (oneTime : ScalarBytes) (index : Nat) (identity : PqxdhEd25519EufCma.Ed25519PublicKey)
     (keys : PqxdhEd25519EufCma.Phase1KeyTuple) :

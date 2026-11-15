@@ -25,7 +25,7 @@ PRIMARY = [
     "event(RegistrationResponsePublished(owner_3,token_1,before_1,next_1,assigned_2,plaintext_1,frame_1,response_1)) ==> assigned_2 = registration_response_identifier(next_1)",
     "event(RegistrationResponseCompleted(owner_3,token_1,before_1,after,false)) ==> after = before_1",
     "event(RegistrationResponseCompleted(owner_3,token_1,before_1,after,true)) ==> after = before_1 + 1",
-    "event(RegistrationResponseInstalled(owner_3,token_1,assigned_2,ad,send,receive)) ==> event(RegistrationResponsePrepared(owner_3,token_1,next_1,root_3,hkdf_first_32(hkdf_sha512_no_salt(root_3,symmetric_ratchet_domain)),hkdf_second_32(hkdf_sha512_no_salt(root_3,symmetric_ratchet_domain)))) && assigned_2 = registration_response_identifier(next_1) && send = hkdf_second_32(hkdf_sha512_no_salt(hkdf_first_32(hkdf_sha512_no_salt(root_3,symmetric_ratchet_domain)),symmetric_ratchet_domain)) && receive = hkdf_second_32(hkdf_sha512_no_salt(root_3,symmetric_ratchet_domain))",
+    "event(RegistrationResponseInstalled(owner_3,token_1,assigned_2,ad,send,receive)) ==> event(RegistrationResponsePrepared(owner_3,token_1,next_1,root_3,hkdf_first_32(hkdf_sha512_no_salt(root_3,initial_ratchet_domain)),hkdf_second_32(hkdf_sha512_no_salt(root_3,initial_ratchet_domain)))) && assigned_2 = registration_response_identifier(next_1) && send = hkdf_second_32(hkdf_sha512_no_salt(hkdf_first_32(hkdf_sha512_no_salt(root_3,initial_ratchet_domain)),symmetric_ratchet_domain)) && receive = hkdf_second_32(hkdf_sha512_no_salt(root_3,initial_ratchet_domain))",
     "event(RegistrationResponsePublished(owner_3,token_1,before_1,next_1,assigned_2,plaintext_1,frame_1,response_1)) ==> plaintext_1 = registration_payload(beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(sender_id_le64(assigned_2)),registration_response_nonempty(suffix))",
 ]
 
@@ -54,7 +54,7 @@ def check_source_order():
             "let next_key_id = lookup.request();",
             "registration_response_len(plaintext.len(), next_key_id)?;",
             "lookup.resume(self.known_ids.contains_key(&next_key_id))",
-            "self.known_ids.try_reserve(1)",
+            "let hash = auth::execute_hash(&pending.request()); let pending = pending.resume(hash).ok()?; self.known_ids.try_reserve(1)",
             "crate::ratchet::initial_ratchet_hkdf(pending.request())",
             "let pending = pending.resume(Some(response)).ok()?; let response = crate::ratchet::ratchet_hkdf(pending.request()); let pending = pending.resume(Some(response)).ok()?;",
             "let detached = crate::ratchet::execute_seal_request(pending.request());",
@@ -64,8 +64,7 @@ def check_source_order():
             "let pending = pending.resume(commitment).ok()?;",
             "let ciphertext = crate::ratchet::execute_write_request(pending.request());",
             "let pending = pending.resume(ciphertext.as_deref()).ok()?;",
-            "auth::execute_hash(&pending.request())",
-            "pending.resume(hash).ok()?",
+            "let hash = auth::execute_hash(&pending.request()); let pending = pending.resume(hash).ok()?; let signature = self.identity.mldsa_identity.sign_requested(&pending.request());",
             "self.identity.mldsa_identity.sign_requested(&pending.request())",
             "pending.resume(signature.as_deref()).ok()?",
             "let message = ready.message();",
@@ -92,9 +91,29 @@ def check_source_order():
             "if application.is_empty() || !agreement.binding.matches_server(current_pin)",
             "return Err(rejected);",
             "crate::pqxdh::server_prepare_commit(control, agreement.pending, current_pin.binding(), availability,)",
-            "crate::pqxdh::start_server_candidate_ratchet_kdf(&candidate, agreement.root.as_bytes())",
-            "Ok(ServerInitialKdf",
+            "agreement.binding.ad_transcript(AdResponseFields { identity_key: candidate.server_identity_public_key(), ephemeral_key: candidate.ephemeral_public_key(), kem_cipher_text: candidate.kem_ciphertext(), key_id: candidate.key_id(), })",
+            "Ok(ServerAdHash",
         ],
+    )
+    ADMISSION.source_order(
+        root,
+        "beaconcrypt-core/src/registration.rs",
+        "pub fn request(&self)",
+        ["HashRequest::Single(&self.input)"],
+        "impl<'a> ServerAdHash<'a>",
+    )
+    ADMISSION.source_order(
+        root,
+        "beaconcrypt-core/src/registration.rs",
+        "pub fn resume(",
+        [
+            "Some(digest) => digest",
+            "None => return Err(crate::pqxdh::server_abort_candidate(&self.candidate))",
+            "crate::pqxdh::start_server_candidate_ratchet_kdf(&self.candidate, self.root.as_bytes())",
+            "Ok(ServerInitialKdf",
+            "binding: self.binding.complete(digest)",
+        ],
+        "impl<'a> ServerAdHash<'a>",
     )
     ADMISSION.source_order(
         root,

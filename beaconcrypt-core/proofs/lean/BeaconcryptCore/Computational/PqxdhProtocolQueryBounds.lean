@@ -9,6 +9,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhProtocolQueryBounds
+variable (associatedData : Std.Array Std.U8 151#usize)
 open PqxdhProtocolSelector
 
 variable {ι : Type} {baseSpec : OracleSpec ι}
@@ -176,10 +177,10 @@ theorem build_uniform
     (qAux : Nat) (auxBound : ∀ query primitive, ((aux query).run primitive).IsTotalQueryBound qAux)
     (senderId : M → Std.U64) (index : Fin S) (metadata : P) (ready : PqxdhPrivateAcceptedRoot.Ready)
     (state : PqxdhRegistrationProtocolState.State M P I D K A S B) :
-    ((PqxdhRegistrationProtocolState.build source writer aux senderId index metadata ready).run state).IsTotalQueryBound
+    ((PqxdhRegistrationProtocolState.build (associatedData := associatedData) source writer aux senderId index metadata ready).run state).IsTotalQueryBound
       (64 + 5 * qAux) := by
   simp only [PqxdhRegistrationProtocolState.build, StateT.run, IsTotalQueryBound, isQueryBound_map_iff]
-  have bound := buildReady_weighted (PqxdhRegistrationProtocolState.registrationImpl source writer aux)
+  have bound := PqxdhAcceptedRegistration.buildReady_weighted (associatedData := associatedData) (PqxdhRegistrationProtocolState.registrationImpl source writer aux)
     (fun _ => True) (nativeUniformCost qAux)
     (fun query primitive => (native_uniform_step source writer aux qAux auxBound query primitive).isQueryBoundP)
     source (PqxdhRegistrationProtocolState.input senderId index metadata
@@ -262,11 +263,11 @@ theorem accepted_observer_bounds (env : Environment baseSpec M P I D K A S B)
     (output : PqxdhProtocolRegistration.Output (M := M) (P := P) (I := I) (D := D) (K := K)
       (A := A) (S := S) (B := B) setup program.Selection)
     (ready : PqxdhPrivateAcceptedRoot.Ready) :
-    ObserverBounds ((env.observer setup program post).accepted output ready) 0 0
+    ObserverBounds ((env.observer (associatedData := associatedData) setup program post).accepted output ready) 0 0
       ((64 + 5 * qAux) + (budget.1 .coin + 64 * (budget.1 .send + budget.1 .raw + budget.1 .hash))) 0 0 0 := by
   rw [Environment.observer, Environment.plan, PqxdhProtocolRegistration.accepted_run]
   apply coins_observer_bounds
-  apply isTotalQueryBound_bind (build_uniform env.parameters.source env.writer env.aux qAux auxBound
+  apply isTotalQueryBound_bind (build_uniform (associatedData := associatedData) env.parameters.source env.writer env.aux qAux auxBound
     env.senderId env.index env.metadata ready (PqxdhProtocolRegistration.reached env.initial output))
   intro result
   simpa only [IsTotalQueryBound, isQueryBound_map_iff] using
@@ -283,7 +284,7 @@ theorem completed_observer_bounds (env : Environment baseSpec M P I D K A S B)
     (output : PqxdhProtocolRegistration.Output (M := M) (P := P) (I := I) (D := D) (K := K)
       (A := A) (S := S) (B := B) setup program.Selection)
     (execution : PqxdhSourceAuthenticatedRoot.ServerExecution) :
-    ObserverBounds ((env.observer setup program post).completed output execution) 0 0
+    ObserverBounds ((env.observer (associatedData := associatedData) setup program post).completed output execution) 0 0
       ((64 + 5 * qAux) + (budget.1 .coin + 64 * (budget.1 .send + budget.1 .raw + budget.1 .hash))) 0 0 0 := by
   apply coins_observer_bounds
   apply IsTotalQueryBound.mono (n₁ := budget.1 .coin + 64 * (budget.1 .send + budget.1 .raw + budget.1 .hash))
@@ -360,18 +361,18 @@ theorem actual_uniform_ledger {KemSK : Type} (env : Environment baseSpec M P I D
     (nativeUniform : ∀ target, (ccaAmbient (env.parameters.native.encaps target)).IsQueryBoundP IsMlKemUniformQuery uNative)
     (ephemeralBase : (ccaAmbient env.parameters.ephemeralGen).IsQueryBoundP IsMlKemBaseQuery bEphemeral)
     (nativeBase : ∀ target, (ccaAmbient (env.parameters.native.encaps target)).IsQueryBoundP IsMlKemBaseQuery bNative) :
-    (env.actual baseImpl kem attachedVerify primitives setup program post).IsTotalQueryBound
+    (env.actual (associatedData := associatedData) baseImpl kem attachedVerify primitives setup program post).IsTotalQueryBound
       ((32 + ((qPrekey + (qKeygen + qOneTime)) +
         (qSource + compilerBill prefixBudget + qBase * qB + qDecap * qD))) +
         ((uEphemeral + (uNative + ((64 + 5 * qAux) +
           (postBudget.1 .coin + 64 * (postBudget.1 .send + postBudget.1 .raw + postBudget.1 .hash))))) +
           qBase * (bEphemeral + bNative))) := by
   have afterBound := PqxdhPrivateAcceptedRootBounds.nativeNext_observer_bounds kem env.parameters attachedVerify primitives setup
-    (env.observer setup program post) uEphemeral uNative bEphemeral bNative 0 0
+    (env.observer (associatedData := associatedData) setup program post) uEphemeral uNative bEphemeral bNative 0 0
     ((64 + 5 * qAux) + (postBudget.1 .coin + 64 * (postBudget.1 .send + postBudget.1 .raw + postBudget.1 .hash))) 0 0 0
     ephemeralUniform nativeUniform ephemeralBase nativeBase
-    (completed_observer_bounds env setup program post postBudget postBound qAux)
-    (accepted_observer_bounds env setup program post postBudget postBound qAux auxBound)
+    (completed_observer_bounds (associatedData := associatedData) env setup program post postBudget postBound qAux)
+    (accepted_observer_bounds (associatedData := associatedData) env setup program post postBudget postBound qAux auxBound)
   have beforeCoins : ∀ transcript, ((env.selector program).main transcript).IsQueryBoundP
       (SelectorCCA (baseSpec := baseSpec) IsMlKemUniformQuery) (compilerBill prefixBudget) := by
     intro transcript
@@ -381,7 +382,7 @@ theorem actual_uniform_ledger {KemSK : Type} (env : Environment baseSpec M P I D
     exact total.isQueryBoundP
   simpa only [Environment.actual, Nat.mul_zero, Nat.zero_add, Nat.add_zero] using
     PqxdhPrivateAcceptedRootBounds.actualGame_uniform_from_calls baseImpl kem env.parameters attachedVerify primitives setup
-      (env.selector program) (env.observer setup program post) qPrekey qKeygen qOneTime qBase qDecap 0 qSource
+      (env.selector program) (env.observer (associatedData := associatedData) setup program post) qPrekey qKeygen qOneTime qBase qDecap 0 qSource
       (compilerBill prefixBudget) qB qD _ _ 0 prekeyBound keygenBound oneTimeBound baseBound decapBound
       (fun transcript => selected_source_bound env.parameters.source env.writer env.senderId env.route env.decode
         program env.initial _ transcript 0 (noCreate transcript))

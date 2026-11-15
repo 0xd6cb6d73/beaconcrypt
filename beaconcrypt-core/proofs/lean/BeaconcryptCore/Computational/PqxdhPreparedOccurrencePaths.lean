@@ -6,6 +6,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhPreparedOccurrencePaths
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhFullSecretInputKdf PqxdhSecretInputKdf PqxdhCorrelatedExpand
 open PqxdhInitialBeaconAmbient PqxdhInitialNativeRetained RawCtxCursorLineage RawCtxSelectedParentTable
 open PqxdhPreparedPendingReplay
@@ -22,7 +24,7 @@ local notation "zeroRoot" => (List.Vector.replicate 32 0 : RootOutput)
 
 noncomputable def sampleAnnotated (start : Start) :=
   let execution := sampleExecution start
-  (PqxdhInitialInstallOccurrence.sequence (X := X) (Response := Response) source execution.initial
+  (PqxdhInitialInstallOccurrence.sequence (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response) source execution.initial
     (sampleMark start) execution.origin sender route decode execution.index execution.metadata execution.ready
       execution.outside).run ((execution.before, execution.trace), PqxdhInitialInstallOccurrence.empty)
 
@@ -30,22 +32,22 @@ noncomputable def sampleAnnotated (start : Start) :=
 theorem sample_one_paths (cr : Ratchet.Crypto RatchetChain RatchetMaterial AD PT CT)
     (depth : Nat) (start : Start) (pending : Pending)
     (supported : Sum.inr pending ∈ support
-      (PqxdhErasedParentSample.sampleOne source writer sender route decode depth start))
+      (PqxdhErasedParentSample.sampleOne (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth start))
     (table : RawCtxKdfRequestTable.Table) (larger : Extends pending.2.1.1.1.2.1 table)
     (result : PqxdhInitialNativeCarried.Final M P I D K Bool Bool S B × RetainedState A N RootOracle.QueryCache)
     (completed : result ∈ support (RawCtxPendingMixedPrefix.finish
       (retained source writer (view (productionStream source.crypto) table) (sampleExternal source start))
-      (.pending (PqxdhInitialOriginContext.frame (X := X) (Response := Response) (sampleMark start) sender route decode pending.1).1
-        (PqxdhInitialOriginContext.frame (sampleMark start) sender route decode pending.1).2, project pending.2.1))) :
+      (.pending (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) (X := X) (Response := Response) (sampleMark start) sender route decode pending.1).1
+        (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) (sampleMark start) sender route decode pending.1).2, project pending.2.1))) :
     ∃ evidence : Evidence,
       ((result.1.1, (result.1.2, evidence)), result.2) ∈ support
         ((simulateQ (retained source writer (view (productionStream source.crypto) table) (sampleExternal source start))
-          (sampleAnnotated source sender route decode start)).run
+          (sampleAnnotated (associatedData := associatedData) (completedBinding := completedBinding) source sender route decode start)).run
             (start.1.shared, (start.1.privateState, start.1.cache))) ∧
       PqxdhInitialOccurrencePaths.Holds cr (view (productionStream source.crypto) table) result.1.2.1 evidence := by
-  have replay := sample_one_replay source writer sender route decode depth start pending supported
+  have replay := sample_one_replay (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth start pending supported
     table larger result completed
-  exact PqxdhRetainedOccurrencePaths.sequence_supported source writer
+  exact PqxdhRetainedOccurrencePaths.sequence_supported (associatedData := associatedData) (completedBinding := completedBinding) source writer
     (view (productionStream source.crypto) table) start.1.selectedMessage zeroRoot
     (PqxdhInitialSampledParent.response start)
     (PqxdhInitialSourcePreparedSecrecy.pre start.1.other)

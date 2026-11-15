@@ -17,15 +17,26 @@ variable (setup : Setup base KemSK) (source : RegistrationNativeMldsa.Source)
 variable (ensureInit : StateT Unit ProbComp Bool) (qInit qGenerate : Nat)
 variable (initialized : (ensureInit.run ()).IsTotalQueryBound qInit)
 variable (generated : source.generate.IsTotalQueryBound qGenerate)
+
+/-- The actual constructor at the migrated peer-metadata type (the 151-byte AD) pays initialization plus its32-byte identity draw. -/
+private theorem constructor_bound (primitives : PqxdhJointIdentity.Primitives) (ensureInit : StateT Unit ProbComp Bool)
+    (qInit : Nat) (initialization : (ensureInit.run ()).IsTotalQueryBound qInit)
+    (identityIndex : Nat) (serverKeyId : U64) :
+    ((PqxdhLiveServerConstruction.construct (P := Std.Array Std.U8 151#usize) primitives ensureInit identityIndex serverKeyId none).run ()).IsTotalQueryBound
+      (qInit + 32) := by
+  simpa only [Option.isNone_none, ite_true] using
+    PqxdhLiveServerConstruction.construct_uniform (P := Std.Array Std.U8 151#usize) primitives ensureInit qInit
+      (fun state => by cases state; exact initialization) identityIndex serverKeyId none ()
+
 include initialized generated in
-/-- The actual startup preceding the corrected source tree pays initialization, its retained dummy identity draw, generation and one64-byte ROM cache miss. -/
+/-- The actual startup preceding the corrected source tree pays initialization, its retained dummy identity draw and generation, within the unchanged conservative64-draw allowance for the remaining steps (the current startup makes no ROM hash request). -/
 theorem public_start (identityIndex : Nat) (serverKeyId : U64) (identity : PqxdhJointIdentity.PublicIdentity)
     (before : PqxdhRecordLiftWorld.State n) :
     ((RegistrationNativePublicStartupFrame.startup setup source ensureInit identityIndex serverKeyId identity).run before).IsTotalQueryBound
       ((qInit + 32) + (qGenerate + 64)) := by
   simp only [RegistrationNativePublicStartupFrame.startup, StateT.run_bind]
   apply isTotalQueryBound_bind
-    (RegistrationNativeMldsaCoinPrimitives.sampled _ _ (RegistrationNativePrimitiveCosts.constructor_bound setup.joint ensureInit qInit initialized identityIndex serverKeyId) before)
+    (RegistrationNativeMldsaCoinPrimitives.sampled _ _ (constructor_bound setup.joint ensureInit qInit initialized identityIndex serverKeyId) before)
   rintro ⟨⟨constructed, initState⟩, world⟩
   cases built : constructed with
   | none => trivial
@@ -38,11 +49,11 @@ theorem public_start (identityIndex : Nat) (serverKeyId : U64) (identity : Pqxdh
       | some credential =>
           apply isTotalQueryBound_bind (n₁ := 0) (n₂ := 64)
           · cases present : current.server <;> simp only [PqxdhRecordLiftWorld.initializeServer, present, IsTotalQueryBound, isQueryBound_pure]
-          · intro installed
-            exact isTotalQueryBound_bind (n₂ := 0) (RegistrationNativeMldsaCoinPrimitives.hash _ installed.2) (fun _ => by trivial)
+          · intro _installed
+            trivial
 private theorem finish_bound (source : RegistrationNativeMldsa.Source) (qGenerate : Nat)
     (generated : source.generate.IsTotalQueryBound qGenerate)
-    (constructed : (Option (PqxdhLiveServerConstruction.Created Unit) × Unit) × PqxdhRecordLiftWorld.State n) :
+    (constructed : (Option (PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) × Unit) × PqxdhRecordLiftWorld.State n) :
     (RegistrationNativeSeedStart.finish (KemSK := KemSK) source constructed).IsTotalQueryBound (qGenerate + 64) := by
   simp only [RegistrationNativeSeedStart.finish]
   cases built : constructed.1.1 with
@@ -66,7 +77,7 @@ theorem seed_start (identityIndex : Nat) (serverKeyId : U64) (seed : PqxdhJointI
       ((qInit + 32) + (qGenerate + 64)) := by
   unfold RegistrationNativeSeedStart.start
   exact isTotalQueryBound_bind
-    (RegistrationNativeMldsaCoinPrimitives.sampled _ _ (RegistrationNativePrimitiveCosts.constructor_bound setup.joint ensureInit qInit initialized identityIndex serverKeyId) _)
+    (RegistrationNativeMldsaCoinPrimitives.sampled _ _ (constructor_bound setup.joint ensureInit qInit initialized identityIndex serverKeyId) _)
     (fun constructed => finish_bound (KemSK := KemSK) source qGenerate generated _)
 include initialized generated in
 /-- Original generated native startup has the same concrete cap with no whole-startup cost premise. -/
@@ -75,11 +86,11 @@ theorem native_start (identityIndex : Nat) (serverKeyId : U64) :
       ((qInit + 32) + (qGenerate + 64)) := by
   change (do
     let constructed ← (PqxdhRecordLiftWorld.sampled
-      ((PqxdhLiveServerConstruction.construct (P := Unit) setup.joint ensureInit identityIndex serverKeyId none).run ())).run
+      ((PqxdhLiveServerConstruction.construct (P := Std.Array Std.U8 151#usize) setup.joint ensureInit identityIndex serverKeyId none).run ())).run
         (PqxdhRecordLiftWorld.initial : PqxdhRecordLiftWorld.State n)
     RegistrationNativeSeedStart.finish source constructed).IsTotalQueryBound _
   exact isTotalQueryBound_bind
-    (RegistrationNativeMldsaCoinPrimitives.sampled _ _ (RegistrationNativePrimitiveCosts.constructor_bound setup.joint ensureInit qInit initialized identityIndex serverKeyId) _)
+    (RegistrationNativeMldsaCoinPrimitives.sampled _ _ (constructor_bound setup.joint ensureInit qInit initialized identityIndex serverKeyId) _)
     (fun constructed => finish_bound (KemSK := KemSK) source qGenerate generated constructed)
 end BeaconcryptCore.Computational.RegistrationNativePlatformStartupCoins
 

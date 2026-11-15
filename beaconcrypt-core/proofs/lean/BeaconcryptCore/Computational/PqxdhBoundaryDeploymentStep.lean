@@ -24,18 +24,21 @@ variable {ι KemSK Reader Response Message Root : Type} {baseSpec : OracleSpec �
 def normal {S Y : Type} (work : StateT S ProbComp Y) (state : S) : ProbComp (RustM Y × S) :=
   (fun result => (RustM.ok result.1, result.2)) <$> work.run state
 
-/-- The Phase-1 bundle source program (PB-02) on the complete deployment state: a missing owner returns `none` with the state unchanged; otherwise the owner program over the extracted unsigned builder `pqxdh.beacon_start` (`PqxdhBoundaryPhase1Buffers.coreOwnerProgram`: local Fresh coins, extracted builder, attached signatures, optional writer) runs and exactly its returned owner is reinstalled; counters, produced frames, the Server and every other owner are the entry state's. -/
+/-- The Phase-1 bundle source program (PB-02) on the complete deployment state: a missing owner returns `none` with the state unchanged; otherwise the owner program over the extracted unsigned builder `pqxdh.beacon_start` (`PqxdhBoundaryPhase1Buffers.coreOwnerLogProgram`: local Fresh coins, extracted builder, attached signatures, optional writer, and the retained Init buffers of a written bundle, which the Rust Beacon keeps for its transcript hash) runs, exactly its returned owner is reinstalled and its retained bundle recorded; counters, produced frames, the Server and every other owner are the entry state's. -/
 noncomputable def bundleSource (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (index : Nat) :
     StateT (PqxdhDeploymentNative.State KemSK) ProbComp (Option Pqxdh.Bytes) := fun state =>
   match state.native.owners[index]? with
   | none => pure (none, state)
-  | some owner => (fun result => (result.1,
-      { state with native := { state.native with owners := state.native.owners.set index result.2 } })) <$>
-    PqxdhBoundaryPhase1Buffers.coreOwnerProgram setup codec owner
+  | some owner => (fun result => (result.1.1,
+      { state with native :=
+        { state.native with
+          owners := state.native.owners.set index result.1.2
+          inits := Function.update state.native.inits index result.2 } })) <$>
+    PqxdhBoundaryPhase1Buffers.coreOwnerLogProgram setup codec owner (state.native.inits index)
 
 /-- The adaptive source step of the deployment: every command runs its published source program at the production codec `withReader codec reader` and the production route, on the complete deployment state (owners, Server, pending tokens, both caches, raw-attempt counters, produced frames). Record and finish executors are adapted with `outcome`; coins, HMAC and BLAKE2b are the CE model oracles unchanged. -/
 noncomputable def sourceStep (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 227#usize)
     (checks : Checks) (serverSeed : IdentitySeed) : Step Spec (PqxdhDeploymentNative.State KemSK)
   | .inl coin => normal (StateT.lift (unifSpec.query coin : ProbComp _))
   | .inr (.create pin keyId) => normal (PqxdhBoundaryBirth.beaconCreate setup pin keyId)
@@ -64,7 +67,7 @@ noncomputable def sourceStep (setup : Setup baseSpec KemSK) (codec : Codec Reade
 
 /-- PB-01: the source `create` step is the CE `create` command at the production instance, by the published `PqxdhBoundaryBirth.create_source` (wrong-width rejection and every admitted creation, any state). -/
 theorem step_create (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 227#usize)
     (checks : Checks) (serverSeed : IdentitySeed) (pin : Pqxdh.Bytes) (keyId : Std.U64)
     (state : PqxdhDeploymentNative.State KemSK) :
     sourceStep setup codec reader erased checks serverSeed (.inr (.create pin keyId)) state =
@@ -73,9 +76,9 @@ theorem step_create (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   simp only [sourceStep, normal, liftStep]
   rw [PqxdhBoundaryBirth.create_source]
 
-/-- PB-02: the source `bundle` step is the CE `bundle` command at the production instance, by the published `PqxdhBoundaryPhase1Native.native_bundle` and `PqxdhBoundaryPhase1Buffers.owner_core` (missing owner, every phase, writer failure). -/
+/-- PB-02: the source `bundle` step is the CE `bundle` command at the production instance, by the published `PqxdhBoundaryPhase1Native.native_bundle` and `PqxdhBoundaryPhase1Buffers.owner_core_log` (missing owner, every phase, writer failure). -/
 theorem step_bundle (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 227#usize)
     (checks : Checks) (serverSeed : IdentitySeed) (index : Nat) (state : PqxdhDeploymentNative.State KemSK) :
     sourceStep setup codec reader erased checks serverSeed (.inr (.bundle index)) state =
       liftStep (PqxdhDeploymentNative.handler setup (PqxdhBoundaryRecordPrelude.withReader codec reader) checks
@@ -86,11 +89,11 @@ theorem step_bundle (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   unfold bundleSource
   cases state.native.owners[index]? with
   | none => rfl
-  | some owner => simp only [PqxdhBoundaryPhase1Buffers.owner_core]
+  | some owner => simp only [PqxdhBoundaryPhase1Buffers.owner_core_log]
 
 /-- PB-03: the source `accept` step is the CE `accept` command at the production instance, by the published `PqxdhBoundaryRegistrationAccept.deployment_accept`. -/
 theorem step_accept (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 227#usize)
     (checks : Checks) (serverSeed : IdentitySeed) (raw : Pqxdh.Bytes) (state : PqxdhDeploymentNative.State KemSK) :
     sourceStep setup codec reader erased checks serverSeed (.inr (.accept raw)) state =
       liftStep (PqxdhDeploymentNative.handler setup (PqxdhBoundaryRecordPrelude.withReader codec reader) checks
@@ -100,7 +103,7 @@ theorem step_accept (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
 
 /-- PB-05: the source `build` step is the CE `build` command at the production instance, by the published `PqxdhBoundaryRegistrationBuildNative.deployment_build` (present and missing tokens, every rejection and both writer failures). -/
 theorem step_build (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 227#usize)
     (checks : Checks) (serverSeed : IdentitySeed) (session : Nat) (payload : Option Pqxdh.Bytes)
     (state : PqxdhDeploymentNative.State KemSK) :
     sourceStep setup codec reader erased checks serverSeed (.inr (.build session payload)) state =
@@ -111,7 +114,7 @@ theorem step_build (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
 
 /-- PB-06: the adapted source `finish` step is the CE `finish` command at the production instance, by the published `PqxdhBoundaryRegistrationFinish.native_finish_exact` and `PqxdhBoundaryProgram.outcome_ok`. -/
 theorem step_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 227#usize)
     (checks : Checks) (serverSeed : IdentitySeed) (index : Nat) (raw : Pqxdh.Bytes)
     (state : PqxdhDeploymentNative.State KemSK) :
     sourceStep setup codec reader erased checks serverSeed (.inr (.finish index raw)) state =
@@ -124,7 +127,7 @@ theorem step_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
 
 /-- PB-09: the adapted source Server-send step is the CE `serverSend` command at the production instance, by the published `PqxdhBoundaryRecordSend.handler_serverSend` and `PqxdhBoundaryProgram.outcome_ok`. -/
 theorem step_serverSend (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 227#usize)
     (checks : Checks) (serverSeed : IdentitySeed) (keyId : Std.U64) (plaintext : Pqxdh.Bytes)
     (state : PqxdhDeploymentNative.State KemSK) :
     sourceStep setup codec reader erased checks serverSeed (.inr (.serverSend keyId plaintext)) state =
@@ -137,7 +140,7 @@ theorem step_serverSend (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
 
 /-- PB-09: the adapted source Beacon-send step is the CE `beaconSend` command at the production instance, by the published `PqxdhBoundaryRecordSend.handler_beaconSend` and `PqxdhBoundaryProgram.outcome_ok`. -/
 theorem step_beaconSend (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 227#usize)
     (checks : Checks) (serverSeed : IdentitySeed) (index : Nat) (plaintext : Pqxdh.Bytes)
     (state : PqxdhDeploymentNative.State KemSK) :
     sourceStep setup codec reader erased checks serverSeed (.inr (.beaconSend index plaintext)) state =
@@ -150,7 +153,7 @@ theorem step_beaconSend (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
 
 /-- PB-07/PB-08: the adapted source raw Server-receive step is the CE `serverRaw` command at the production instance, by the published `PqxdhBoundaryRecordExecution.handler_serverRaw` and `PqxdhBoundaryProgram.outcome_ok`. -/
 theorem step_serverRaw (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 227#usize)
     (checks : Checks) (serverSeed : IdentitySeed) (raw : Pqxdh.Bytes) (state : PqxdhDeploymentNative.State KemSK) :
     sourceStep setup codec reader erased checks serverSeed (.inr (.serverRaw raw)) state =
       liftStep (PqxdhDeploymentNative.handler setup (PqxdhBoundaryRecordPrelude.withReader codec reader) checks
@@ -161,7 +164,7 @@ theorem step_serverRaw (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
 
 /-- PB-07/PB-08: the adapted source raw Beacon-receive step is the CE `beaconRaw` command at the production instance, for every owner handle, by the published `PqxdhBoundaryRecordExecution.handler_beaconRaw` and `PqxdhBoundaryProgram.outcome_ok`. -/
 theorem step_beaconRaw (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 227#usize)
     (checks : Checks) (serverSeed : IdentitySeed) (index : Nat) (raw : Pqxdh.Bytes)
     (state : PqxdhDeploymentNative.State KemSK) :
     sourceStep setup codec reader erased checks serverSeed (.inr (.beaconRaw index raw)) state =
@@ -173,7 +176,7 @@ theorem step_beaconRaw (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
 
 /-- Model oracles (classification E): adversary coins, the public HMAC (with CE's Extract-ROM point) and the BLAKE2b oracle are the CE handler's own branches, unchanged; no production code is claimed for them. -/
 theorem step_oracles (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 227#usize)
     (checks : Checks) (serverSeed : IdentitySeed) (state : PqxdhDeploymentNative.State KemSK) :
     (∀ coin, sourceStep setup codec reader erased checks serverSeed (.inl coin) state =
       liftStep (PqxdhDeploymentNative.handler setup (PqxdhBoundaryRecordPrelude.withReader codec reader) checks
@@ -188,7 +191,7 @@ theorem step_oracles (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
 
 /-- PB-D per-command join: for every command of the native interface and every complete deployment state, the source step equals the lifted CE native handler at the production codec `withReader codec reader` and route `RawCtxFrameDecoding.sender reader.model`, for every `checks` (PB-14). This is the operational premise of `PqxdhBoundaryProgram.source_exact`. -/
 theorem step_exact (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 227#usize)
     (checks : Checks) (serverSeed : IdentitySeed) :
     ∀ query state, sourceStep setup codec reader erased checks serverSeed query state =
       liftStep (PqxdhDeploymentNative.handler setup (PqxdhBoundaryRecordPrelude.withReader codec reader) checks
@@ -211,7 +214,7 @@ theorem step_exact (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
 
 /-- Every supported outcome of every source step is `ok` with a supported reply and complete poststate of the CE native command; in particular the entry-state placeholder of `outcome` for `fail`/`div` is never observed. -/
 theorem step_normal (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 357#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Std.Array Std.U8 227#usize)
     (checks : Checks) (serverSeed : IdentitySeed) (query : Spec.Domain) (state : PqxdhDeploymentNative.State KemSK)
     (result : RustM (Spec.Range query) × PqxdhDeploymentNative.State KemSK)
     (supported : result ∈ support (sourceStep setup codec reader erased checks serverSeed query state)) :

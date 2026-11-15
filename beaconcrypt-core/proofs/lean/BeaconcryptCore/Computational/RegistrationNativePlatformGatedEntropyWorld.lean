@@ -19,8 +19,8 @@ variable {n : Nat} {ι KemSK Reader Response E X Failure : Type} {base : OracleS
 
 noncomputable def program (env : Environment n E) (reserve : Nat → StateT E ProbComp (core.result.Result Unit Failure)) (crypto : Pqxdh.Crypto) (codec : Codec Reader Response)
     (serverKid : Std.U64) (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X)
-    (created : PqxdhLiveServerConstruction.Created Unit) (initial : E) :
-    OracleComp (WorldSpec n) (Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (initial : E) :
+    OracleComp (WorldSpec n) (Option (PqxdhRegistrationJointServerBirth.ClientCreated (Std.Array Std.U8 151#usize) ×
       (X × PqxdhDeploymentSecrecy.Ledger) × E)) :=
   (fun result => some (PqxdhRegistrationJointServerBirth.encode created, result)) <$>
     (simulateQ (RegistrationNativePlatformGatedRecordInterface.native env reserve) (PqxdhDeploymentSecrecy.wrap crypto codec serverKid bounds (asModeO mode adversary))).run initial
@@ -28,7 +28,7 @@ noncomputable def program (env : Environment n E) (reserve : Nat → StateT E Pr
 /-- The actual post-startup full ledger has its literal World-level coupling from the reached environment state. -/
 theorem program_couple (env : Environment n E) (reserve : Nat → StateT E ProbComp (core.result.Result Unit Failure)) (crypto : Pqxdh.Crypto) (codec : Codec Reader Response)
     (serverKid : Std.U64) (bounds : FreshBounds) (adversary : OracleComp (ModeSpec .P) X)
-    (created : PqxdhLiveServerConstruction.Created Unit) (initial : E) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (initial : E) :
     Coupled WorldRel ResultRel (program env reserve crypto codec serverKid bounds .P adversary created initial)
       (program env reserve crypto codec serverKid bounds .P adversary created initial) := by
   unfold program
@@ -41,7 +41,7 @@ theorem program_couple (env : Environment n E) (reserve : Nat → StateT E ProbC
 theorem run_flat (modes : Label n → KeyMode) (replace : Pqxdh.Bytes → Pqxdh.Bytes)
     (setup : Setup base KemSK) (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
     (env : Environment n E) (reserve : Nat → StateT E ProbComp (core.result.Result Unit Failure)) (serverKid : Std.U64) (bounds : FreshBounds) (mode : Mode)
-    (adversary : OracleComp (ModeSpec mode) X) (created : PqxdhLiveServerConstruction.Created Unit)
+    (adversary : OracleComp (ModeSpec mode) X) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (state : CborRawRecordFlat.NativeState n E) :
     RegistrationNativePlatformGatedEntropyInitial.run modes replace setup codec route env reserve serverKid bounds mode adversary created state =
       (fun result => ((result.1.1.1, result.1.2), result.2)) <$>
@@ -64,7 +64,7 @@ theorem run_flat (modes : Label n → KeyMode) (replace : Pqxdh.Bytes → Pqxdh.
 /-- Equal-length plaintext replacement has the same hiding observation from the actual initialized shared CTX state. -/
 theorem hiding_replace (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (env : Environment n E) (reserve : Nat → StateT E ProbComp (core.result.Result Unit Failure)) (serverKid : Std.U64) (bounds : FreshBounds)
-    (adversary : OracleComp (ModeSpec .P) X) (created : PqxdhLiveServerConstruction.Created Unit)
+    (adversary : OracleComp (ModeSpec .P) X) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (state : CborRawRecordFlat.NativeState n E) (first second : Pqxdh.Bytes → Pqxdh.Bytes)
     (lengths : ∀ plaintext, (first plaintext).length = (second plaintext).length) :
     (fun result => hidingView (ctxView result)) <$>

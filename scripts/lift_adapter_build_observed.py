@@ -16,8 +16,8 @@ TARGET = (
     / "beaconcrypt-core/proofs/lean/BeaconcryptCore/AdapterPublicBuildObservedExtraction.lean"
 )
 NAME = "server.Server.Insts.BeaconcryptServerProviderServer.build_registration_response"
-BRANCH = "          | core.ops.control_flow.ControlFlow.Continue _ =>\n"
-END = "\n          | core.ops.control_flow.ControlFlow.Break residual =>"
+BRANCH = "            | core.ops.control_flow.ControlFlow.Continue _ =>\n"
+END = "\n            | core.ops.control_flow.ControlFlow.Break residual =>"
 
 
 def render() -> str:
@@ -30,6 +30,24 @@ def render() -> str:
     first = body.index(BRANCH) + len(BRANCH)
     last = body.index(END, first)
     cut = body[first:last]
+    prefix = body[:first]
+    for leaf in (
+        "beaconcrypt_core.registration.ServerAdHash.request",
+        "ChildOperations.executeHash",
+        "beaconcrypt_core.registration.ServerAdHash.resume",
+        "ContainerOperations.mapReserve",
+    ):
+        if prefix.count(leaf) != 1 or (
+            leaf != "ChildOperations.executeHash" and leaf in cut
+        ):
+            raise ValueError("The actual AD-hash and reserve prefix changed: " + leaf)
+    if not (
+        prefix.index("ServerAdHash.request")
+        < prefix.index("ChildOperations.executeHash")
+        < prefix.index("ServerAdHash.resume")
+        < prefix.index("ContainerOperations.mapReserve")
+    ):
+        raise ValueError("AD hashing must precede the actual peer reserve")
     expected = (
         "beaconcrypt_core.registration.ServerInitialKdf.request",
         "ratchet_initial_ratchet_hkdf",
@@ -44,7 +62,7 @@ def render() -> str:
         raise ValueError("The isolated literal Builder record subtree changed")
     body = (
         body[:first]
-        + "            completion { self with known_ids := hm } val2"
+        + "              completion { self with known_ids := hm } val3"
         + body[last:]
     )
     body = body.replace(
@@ -55,7 +73,7 @@ def render() -> str:
     variables = text[
         text.index(
             "variable [BeaconcryptCore.Refinement.PublicWrapperPlatform.Material]"
-        ) : text.index("/-- [beaconcrypt::auth::fingerprint_pin]")
+        ) : text.index("/-- [beaconcrypt::auth::server_pin]")
     ]
     digest = hashlib.sha256(text[start:stop].encode()).hexdigest()
     cut_digest = hashlib.sha256(cut.encode()).hexdigest()

@@ -8,6 +8,8 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialCurrentRootRetention
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhKemIndCca PqxdhCorrelatedExpand PqxdhCorrelatedExpandHybrid
 open PqxdhCorrelatedExtractFamily PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhInitialLegalObserver
 open PqxdhAuthenticatedRootExperiment PqxdhStatefulPhase1EufCma PqxdhPhase2GeneratedDriver
@@ -20,50 +22,50 @@ variable {setup : StatefulPhase1Setup baseSpec}
     (program : Program baseSpec setup.Context S (B + 1)) (post : Post (baseSpec := baseSpec) program.Selection S (B + 1))
 
 noncomputable def retained : ProbComp (RootOutput × Bool) := do
-  let (context, previousRoot) ← sample env baseImpl kem attachedVerify primitives program post
+  let (context, previousRoot) ← sample (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post
   let output ← $ᵗ HmacBlock
-  let decision ← observe env baseImpl kem attachedVerify primitives program post context
+  let decision ← observe (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post context
     (RawCtxSelectedInitialConstructor.response64 output)
   pure (previousRoot, decision)
 
 /-- Removing the private retained root gives the identical literal current random64 endpoint, including completed source branches. -/
-theorem erased : Prod.snd <$> retained env baseImpl kem attachedVerify primitives program post =
-    PqxdhInitialCurrentSecrecy.random env baseImpl kem attachedVerify primitives program post := by
+theorem erased : Prod.snd <$> retained (completedBinding := completedBinding) (associatedData := associatedData) env baseImpl kem attachedVerify primitives program post =
+    PqxdhInitialCurrentSecrecy.random (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post := by
   simp only [retained, PqxdhInitialCurrentSecrecy.random, map_bind, map_pure, bind_pure]
 
 /-- Either directional half is delayed after the actual preparation, previous root and opposite half, while preserving an arbitrary complete continuation rather than only a marginal key distribution. -/
 theorem complete_split
-    (second : (Context env kem attachedVerify primitives program post × RootOutput) → Bool)
-    (next : Context env kem attachedVerify primitives program post → RootOutput → HmacBlock → ProbComp Result) :
+    (second : (Context (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post × RootOutput) → Bool)
+    (next : Context (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post → RootOutput → HmacBlock → ProbComp Result) :
     EvalDistEq
-      (do let pair ← sample env baseImpl kem attachedVerify primitives program post
+      (do let pair ← sample (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post
           let output ← $ᵗ HmacBlock
           next pair.1 pair.2 output)
-      (do let pair ← sample env baseImpl kem attachedVerify primitives program post
+      (do let pair ← sample (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post
           let other ← $ᵗ RootOutput
           let target ← $ᵗ RootOutput
           next pair.1 pair.2 (RawCtxInitialSentinelSampler.join (second pair) other target)) := by
-  refine EvalDistEq.bind_right (sample env baseImpl kem attachedVerify primitives program post) (fun pair => ?_)
+  refine EvalDistEq.bind_right (sample (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post) (fun pair => ?_)
   simpa only [RawCtxInitialSentinelSampler.join_parts] using
     RawCtxInitialChildSecrecy.parts_observed (second pair)
       (fun other target => next pair.1 pair.2 (RawCtxInitialSentinelSampler.join (second pair) other target))
 
 /-- The first-child ordinary sampler contains the exact current preparation and its earlier root, plus the opposite half; only the selected half is serialized as the unavailable input. -/
 theorem joint_separated
-    (second : (Context env kem attachedVerify primitives program post × RootOutput) → Bool) :
+    (second : (Context (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post × RootOutput) → Bool) :
     EvalDistEq (RawCtxInitialChildSecrecy.joint
-      (sample env baseImpl kem attachedVerify primitives program post) second)
+      (sample (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post) second)
       (RawCtxInitialChildSecrecy.separated
-        (sample env baseImpl kem attachedVerify primitives program post)) :=
+        (sample (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post)) :=
   RawCtxInitialChildSecrecy.joint_separated _ second
 
 /-- Private root retention adds no query: the exact current source certificate still pays its preparation,64-byte response and complete observer bill. -/
 theorem retained_uniform (c : PqxdhAuthenticatedRootBudgets.Certificate env baseImpl kem program post) :
-    (retained env baseImpl kem attachedVerify primitives program post).IsTotalQueryBound
+    (retained (completedBinding := completedBinding) (associatedData := associatedData) env baseImpl kem attachedVerify primitives program post).IsTotalQueryBound
       (PqxdhInitialCurrentBudgets.qSample env baseImpl kem program post c +
         (64 + PqxdhInitialCurrentBudgets.qObserver env baseImpl kem program post c)) := by
-  have bound := PqxdhInitialCurrentBudgets.random_uniform env baseImpl kem attachedVerify primitives program post c
-  rw [← erased env baseImpl kem attachedVerify primitives program post] at bound
+  have bound := PqxdhInitialCurrentBudgets.random_uniform (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c
+  rw [← erased (completedBinding := completedBinding) (associatedData := associatedData) env baseImpl kem attachedVerify primitives program post] at bound
   simpa only [IsTotalQueryBound, isQueryBound_map_iff] using bound
 
 end BeaconcryptCore.Computational.PqxdhInitialCurrentRootRetention

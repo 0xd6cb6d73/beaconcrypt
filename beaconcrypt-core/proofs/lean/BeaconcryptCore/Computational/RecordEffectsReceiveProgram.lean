@@ -43,7 +43,7 @@ def executeAead (pending : record_effects.RecordReceiveAead) :
       pure (ok (result.1, RawCtxOwnerResult.mapReply decryptedOf result.2))
 
 /-- Hashing and equality retain the actual digest; the only mutation is explicit transcript erasure. -/
-def executeCommitment (erased : Std.Array Std.U8 357#usize)
+def executeCommitment (erased : Std.Array Std.U8 227#usize)
     (pending : record_effects.RecordReceiveCommitment) :
     OracleComp RawCtxSourceOpen.OpenSpec (RustM Result) :=
   bindResult (record_effects.RecordReceiveCommitment.transcript pending) fun transcript =>
@@ -60,7 +60,7 @@ def executeCommitment (erased : Std.Array Std.U8 357#usize)
       | .KdfRequested _ | .CommitmentRequested _ => pure .div
 
 
-def execute (erased : Std.Array Std.U8 357#usize)
+def execute (erased : Std.Array Std.U8 227#usize)
     (effect : record_effects.RecordReceiveEffect) :
     OracleComp RawCtxSourceOpen.NativeSpec (RustM Result) :=
   match effect with
@@ -79,19 +79,19 @@ termination_by rank effect
 decreasing_by exact resume_decreasing pending response next _resumed
 
 /-- Start with the actual extracted admission and composed record entrypoint. -/
-def receive (erased : Std.Array Std.U8 357#usize) (kernel : ConcreteRatchetKernel)
-    (sequence : Std.U64) (payload : Slice Std.U8) (ad : Std.Array Std.U8 281#usize)
+def receive (erased : Std.Array Std.U8 227#usize) (kernel : ConcreteRatchetKernel)
+    (sequence : Std.U64) (payload : Slice Std.U8) (ad : Std.Array Std.U8 151#usize)
     (sender : Std.U64) : OracleComp RawCtxSourceOpen.NativeSpec (RustM Result) :=
   bindResult (record_effects.begin_record_receive kernel sequence payload ad sender) (execute erased)
 
 /-- Decoding and the sender-route check retain their explicit adapter boundary. -/
-def decoded (erased : Std.Array Std.U8 357#usize) (kernel : ConcreteRatchetKernel)
+def decoded (erased : Std.Array Std.U8 227#usize) (kernel : ConcreteRatchetKernel)
     (expected : Std.U64) (frame : RawCtxReceive.DecodedFrame) (payload : Slice Std.U8)
-    (ad : Std.Array Std.U8 281#usize) : OracleComp RawCtxSourceOpen.NativeSpec (RustM Result) :=
+    (ad : Std.Array Std.U8 151#usize) : OracleComp RawCtxSourceOpen.NativeSpec (RustM Result) :=
   if frame.sender = expected then receive erased kernel frame.sequence payload ad frame.sender
   else pure (ok (kernel, .None))
 
-theorem execute_kdf (erased : Std.Array Std.U8 357#usize)
+theorem execute_kdf (erased : Std.Array Std.U8 227#usize)
     (pending : record_effects.RecordReceiveKdf) :
     execute erased (.KdfRequested pending) = (do
       let response ← RawCtxSourceOpen.NativeSpec.query (.inl pending.pending.request)

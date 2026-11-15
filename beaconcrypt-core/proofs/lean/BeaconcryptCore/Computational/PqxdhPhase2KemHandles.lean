@@ -10,6 +10,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhPhase2KemHandles
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhBeaconPhase2Preparation (Bytes State)
 variable {I D K K' X Response : Type}
 
@@ -45,8 +46,8 @@ theorem collect_map (kem : K → K') (identity : I) (prekey oneTime : D) (key : 
 theorem afterInputs_map (kem : K → K') (control : pqxdh.BeaconInitSent)
     (inputs : PqxdhBeaconPhase2Preparation.Inputs Response) :
     simulateQ (preparation (I := I) (D := D) (X := X) kem)
-      (PqxdhBeaconPhase2Preparation.afterInputs control inputs) =
-      PqxdhBeaconPhase2Preparation.afterInputs control inputs := by
+      (PqxdhBeaconPhase2Preparation.afterInputs (completedBinding := completedBinding) control inputs) =
+      PqxdhBeaconPhase2Preparation.afterInputs (completedBinding := completedBinding) control inputs := by
   simp only [PqxdhBeaconPhase2Preparation.afterInputs, simulateQ_bind, simulateQ_spec_query,
     preparation, simulateQ_pure]
 
@@ -54,8 +55,8 @@ theorem afterInputs_map (kem : K → K') (control : pqxdh.BeaconInitSent)
 theorem prepare_map (kem : K → K') (control : pqxdh.BeaconInitSent)
     (identity : I) (prekey oneTime : D) (key : K) (raw : Bytes) :
     simulateQ (preparation (X := X) (Response := Response) kem)
-      (PqxdhBeaconPhase2Preparation.prepare control identity prekey oneTime key raw) =
-      PqxdhBeaconPhase2Preparation.prepare control identity prekey oneTime (kem key) raw := by
+      (PqxdhBeaconPhase2Preparation.prepare (completedBinding := completedBinding) control identity prekey oneTime key raw) =
+      PqxdhBeaconPhase2Preparation.prepare (completedBinding := completedBinding) control identity prekey oneTime (kem key) raw := by
   simp only [PqxdhBeaconPhase2Preparation.prepare, simulateQ_bind, collect_map]
   apply bind_congr
   intro reply
@@ -98,8 +99,8 @@ theorem full_tail (kem : K → K') :
 theorem owner_map (kem : K → K') (decode : RawCtxReceive.FrameDecoder) (raw : Bytes)
     (state : State I D K) :
     (fun result => (result.1, PqxdhBeaconPhase1Publication.mapState id kem result.2)) <$>
-      simulateQ (full (X := X) (Response := Response) kem) (PqxdhBeaconPhase2Publication.owner decode raw state) =
-      PqxdhBeaconPhase2Publication.owner decode raw (PqxdhBeaconPhase1Publication.mapState id kem state) := by
+      simulateQ (full (X := X) (Response := Response) kem) (PqxdhBeaconPhase2Publication.owner (completedBinding := completedBinding) decode raw state) =
+      PqxdhBeaconPhase2Publication.owner (completedBinding := completedBinding) decode raw (PqxdhBeaconPhase1Publication.mapState id kem state) := by
   cases state with
   | mk beacon attempts =>
     cases beacon with
@@ -163,8 +164,8 @@ theorem native_adapter (kem : K → K') :
 theorem native_owner_map (kem : K → K') (decode : RawCtxReceive.FrameDecoder) (raw : Bytes)
     (state : State I D K) :
     (fun result => (result.1, PqxdhBeaconPhase1Publication.mapState id kem result.2)) <$>
-      simulateQ (native (X := X) (Response := Response) kem) (PqxdhBeaconPhase2Publication.nativeOwner decode raw state) =
-      PqxdhBeaconPhase2Publication.nativeOwner decode raw (PqxdhBeaconPhase1Publication.mapState id kem state) := by
+      simulateQ (native (X := X) (Response := Response) kem) (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw state) =
+      PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw (PqxdhBeaconPhase1Publication.mapState id kem state) := by
   simp only [PqxdhBeaconPhase2Publication.nativeOwner]
   rw [← QueryImpl.simulateQ_compose, native_adapter, QueryImpl.simulateQ_compose, ← simulateQ_map, owner_map]
 
@@ -174,10 +175,10 @@ theorem native_owner_run {Auxiliary : Type} {m : Type → Type} [Monad m] [Lawfu
     (handler : QueryImpl (PqxdhBeaconPhase2Publication.NativeSpec I D K' X Response) (StateT Auxiliary m))
     (decode : RawCtxReceive.FrameDecoder) (raw : Bytes) (state : State I D K) (auxiliary : Auxiliary) :
     (fun result => ((result.1.1, PqxdhBeaconPhase1Publication.mapState id kem result.1.2), result.2)) <$>
-      (simulateQ (handler ∘ₛ native kem) (PqxdhBeaconPhase2Publication.nativeOwner decode raw state)).run auxiliary =
-      (simulateQ handler (PqxdhBeaconPhase2Publication.nativeOwner decode raw
+      (simulateQ (handler ∘ₛ native kem) (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw state)).run auxiliary =
+      (simulateQ handler (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw
         (PqxdhBeaconPhase1Publication.mapState id kem state))).run auxiliary := by
-  rw [← native_owner_map kem decode raw state]
+  rw [← native_owner_map (completedBinding := completedBinding) kem decode raw state]
   simp only [simulateQ_map, StateT.run_map, QueryImpl.simulateQ_compose]
 
 end BeaconcryptCore.Computational.PqxdhPhase2KemHandles

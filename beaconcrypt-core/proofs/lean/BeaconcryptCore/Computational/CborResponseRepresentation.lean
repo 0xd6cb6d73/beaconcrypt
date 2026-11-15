@@ -7,6 +7,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.CborResponseRepresentation
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhBeaconPhase2Preparation (Bytes Inputs Prepared)
 variable {I D K X Response Response' : Type} {m : Type → Type} [Monad m] [LawfulMonad m]
 
@@ -14,7 +15,7 @@ def inputs (represent : Response → Response') (value : Inputs Response) : Inpu
   ⟨represent value.response, value.ciphertext, value.ephemeral, value.finishInputs⟩
 
 def prepared (represent : Response → Response') (value : Prepared Response) : Prepared Response' :=
-  ⟨represent value.response, value.ciphertext, value.ephemeral, value.candidate⟩
+  ⟨represent value.response, value.ciphertext, value.ephemeral, value.candidate, value.binding⟩
 
 structure PreparationCalls (represent : Response → Response')
     (prior : QueryImpl (PqxdhBeaconPhase2Preparation.Spec I D K X Response) m)
@@ -60,9 +61,9 @@ theorem afterInputs (represent : Response → Response')
     (next : QueryImpl (PqxdhBeaconPhase2Preparation.Spec I D K X Response') m)
     (oldRaw newRaw : Bytes) (calls : PreparationCalls represent prior next oldRaw newRaw)
     (control : pqxdh.BeaconInitSent) (value : Inputs Response) :
-    simulateQ next (PqxdhBeaconPhase2Preparation.afterInputs control (inputs represent value)) =
+    simulateQ next (PqxdhBeaconPhase2Preparation.afterInputs (completedBinding := completedBinding) control (inputs represent value)) =
       Option.map (prepared represent) <$>
-        simulateQ prior (PqxdhBeaconPhase2Preparation.afterInputs control value) := by
+        simulateQ prior (PqxdhBeaconPhase2Preparation.afterInputs (completedBinding := completedBinding) control value) := by
   simp only [PqxdhBeaconPhase2Preparation.afterInputs, inputs, simulateQ_bind,
     simulateQ_spec_query, simulateQ_pure, calls.eraseShared, map_bind]
   cases PqxdhBeaconPhase2Preparation.normalPrepare control value.finishInputs <;> simp [prepared]
@@ -72,15 +73,15 @@ theorem prepare (represent : Response → Response')
     (next : QueryImpl (PqxdhBeaconPhase2Preparation.Spec I D K X Response') m)
     (oldRaw newRaw : Bytes) (calls : PreparationCalls represent prior next oldRaw newRaw)
     (control : pqxdh.BeaconInitSent) (identity : I) (prekey oneTime : D) (kem : K) :
-    simulateQ next (PqxdhBeaconPhase2Preparation.prepare control identity prekey oneTime kem newRaw) =
+    simulateQ next (PqxdhBeaconPhase2Preparation.prepare (completedBinding := completedBinding) control identity prekey oneTime kem newRaw) =
       Option.map (prepared represent) <$>
-        simulateQ prior (PqxdhBeaconPhase2Preparation.prepare control identity prekey oneTime kem oldRaw) := by
+        simulateQ prior (PqxdhBeaconPhase2Preparation.prepare (completedBinding := completedBinding) control identity prekey oneTime kem oldRaw) := by
   simp only [PqxdhBeaconPhase2Preparation.prepare, simulateQ_bind,
     collect represent prior next oldRaw newRaw calls, map_bind, bind_map_left]
   apply bind_congr
   rintro (_ | value)
   all_goals simp only [Option.map_none, Option.map_some, simulateQ_pure, map_pure,
-    afterInputs represent prior next oldRaw newRaw calls]
+    afterInputs (completedBinding := completedBinding) represent prior next oldRaw newRaw calls]
 
 structure TailCalls (represent : Response → Response')
     (prior : QueryImpl (PqxdhBeaconPhase2Publication.TailSpec Response) m)
@@ -141,13 +142,13 @@ theorem owner (represent : Response → Response')
     (tailCalls : TailCalls represent
       (prior ∘ₛ PqxdhBeaconPhase2Publication.tailLift) (next ∘ₛ PqxdhBeaconPhase2Publication.tailLift))
     (decode : RawCtxReceive.FrameDecoder) (state : PqxdhBeaconPhase2Preparation.State I D K) :
-    simulateQ next (PqxdhBeaconPhase2Publication.owner decode newRaw state) =
-      simulateQ prior (PqxdhBeaconPhase2Publication.owner decode oldRaw state) := by
+    simulateQ next (PqxdhBeaconPhase2Publication.owner (completedBinding := completedBinding) decode newRaw state) =
+      simulateQ prior (PqxdhBeaconPhase2Publication.owner (completedBinding := completedBinding) decode oldRaw state) := by
   cases phase : state.beacon.phase <;>
     simp only [PqxdhBeaconPhase2Publication.owner, phase, simulateQ_pure]
   rename_i control prekey oneTime kem
   simp only [simulateQ_bind, ← QueryImpl.simulateQ_compose]
-  rw [prepare represent _ _ oldRaw newRaw preCalls control state.beacon.identity prekey oneTime kem]
+  rw [prepare (completedBinding := completedBinding) represent _ _ oldRaw newRaw preCalls control state.beacon.identity prekey oneTime kem]
   simp only [bind_map_left]
   apply bind_congr
   rintro (_ | value)
@@ -166,10 +167,10 @@ theorem native_owner (represent : Response → Response')
       ((prior ∘ₛ PqxdhBeaconPhase2Publication.nativeAdapter) ∘ₛ PqxdhBeaconPhase2Publication.tailLift)
       ((next ∘ₛ PqxdhBeaconPhase2Publication.nativeAdapter) ∘ₛ PqxdhBeaconPhase2Publication.tailLift))
     (decode : RawCtxReceive.FrameDecoder) (state : PqxdhBeaconPhase2Preparation.State I D K) :
-    simulateQ next (PqxdhBeaconPhase2Publication.nativeOwner decode newRaw state) =
-      simulateQ prior (PqxdhBeaconPhase2Publication.nativeOwner decode oldRaw state) := by
+    simulateQ next (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode newRaw state) =
+      simulateQ prior (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode oldRaw state) := by
   simp only [PqxdhBeaconPhase2Publication.nativeOwner, ← QueryImpl.simulateQ_compose]
-  exact owner represent _ _ oldRaw newRaw preCalls tailCalls decode state
+  exact owner (completedBinding := completedBinding) represent _ _ oldRaw newRaw preCalls tailCalls decode state
 
 end BeaconcryptCore.Computational.CborResponseRepresentation
 

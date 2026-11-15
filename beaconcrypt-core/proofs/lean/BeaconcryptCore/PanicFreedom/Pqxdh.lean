@@ -39,10 +39,6 @@ theorem untag_mlkem768_key_ok (encoded : Std.Array Std.U8 1185#usize) :
   (untag_mlkem768_key_abs encoded).elim
     (fun h => h.elim (fun key hk => ⟨.Some key, hk.1⟩)) (fun h => ⟨.None, h.1⟩)
 
-theorem build_associated_data_ok (server beacon : Std.Array Std.U8 32#usize) :
-    ∃ result, pqxdh.build_associated_data server beacon = ok result :=
-  (build_associated_data_abs server beacon).imp (fun _ h => h.1)
-
 theorem registration_id_ok (registration : pqxdh.VerifiedInitKex) :
     ∃ result, pqxdh.registration_id registration = ok result :=
   (registration_id_abs registration).imp (fun _ h => h.1)
@@ -56,7 +52,7 @@ theorem commitment_encode_u64_le_ok (value : Std.U64) :
   (commitment_encode_u64_le_abs value).imp (fun _ h => h.1)
 
 theorem build_commitment_transcript_ok (key : Std.Array Std.U8 32#usize)
-    (nonce : Std.Array Std.U8 12#usize) (associatedData : Std.Array Std.U8 281#usize)
+    (nonce : Std.Array Std.U8 12#usize) (associatedData : Std.Array Std.U8 151#usize)
     (tag : Std.Array Std.U8 16#usize) (sequence senderId : Std.U64) :
     ∃ result, commitment.build_commitment_transcript key nonce associatedData tag sequence senderId = ok result :=
   (build_commitment_transcript_abs key nonce associatedData tag sequence senderId).imp (fun _ h => h.1)
@@ -91,13 +87,11 @@ theorem validate_init_kex_ok (message : pqxdh.InitKex) :
 theorem beacon_prepare_finish_ok (state : pqxdh.BeaconInitSent)
     (inputs : pqxdh.BeaconFinishInputs) :
     ∃ result, pqxdh.beacon_prepare_finish state inputs = ok result :=
-  (build_root_key_input_ok inputs.shared_secrets).elim fun root hroot =>
-  (build_associated_data_ok state.expected_server_binding.identity_public_key
-    state.beacon_identity_public_key).elim fun _ had => by
+  (build_root_key_input_ok inputs.shared_secrets).elim fun root hroot => by
     cases root <;>
       by_cases hid : absBytes state.expected_server_binding.identity_public_key =
         absBytes inputs.response_server_identity <;>
-      simp [pqxdh.beacon_prepare_finish, array_eq_abs, hid, hroot, had]
+      simp [pqxdh.beacon_prepare_finish, array_eq_abs, hid, hroot]
 
 /-- Authentication rejects mismatching sender IDs or binding bytes without panicking. -/
 theorem authenticate_registration_key_id_binding_ok (candidate : pqxdh.BeaconRegistrationCandidate)
@@ -136,14 +130,12 @@ theorem server_prepare_commit_ok (state : pqxdh.ServerState)
     (pending : pqxdh.PendingServerRegistration) (binding : pqxdh.ServerBinding)
     (availability : pqxdh.KeyIdAvailability) :
     ∃ result, pqxdh.server_prepare_commit state pending binding availability = ok result :=
-  (server_next_key_id_ok state).elim fun id hid =>
-  (build_associated_data_ok binding.identity_public_key pending.beacon_identity_public_key).elim
-    fun _ had => by
+  (server_next_key_id_ok state).elim fun id hid => by
       cases id <;> cases availability <;>
         by_cases hsender : pending.server_binding.identity_key_id = binding.identity_key_id <;>
         by_cases hidentity : absBytes pending.server_binding.identity_public_key =
           absBytes binding.identity_public_key <;>
-        simp [pqxdh.server_prepare_commit, hsender, array_eq_abs, hidentity, hid, had]
+        simp [pqxdh.server_prepare_commit, hsender, array_eq_abs, hidentity, hid]
 
 theorem is_all_zero_ok (bytes : Std.Array Std.U8 32#usize) :
     ∃ result, pqxdh.is_all_zero bytes = ok result :=

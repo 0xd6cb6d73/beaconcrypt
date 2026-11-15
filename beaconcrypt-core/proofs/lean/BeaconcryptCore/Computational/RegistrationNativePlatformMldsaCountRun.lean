@@ -4,6 +4,7 @@ import BeaconcryptCore.Computational.RegistrationNativePlatformAcceptView
 import BeaconcryptCore.Computational.RegistrationNativePlatformFinishView
 import BeaconcryptCore.Computational.RegistrationNativePlatformMldsaCountBundle
 import BeaconcryptCore.Computational.RegistrationNativeMldsaCountCreation
+import BeaconcryptCore.Computational.RegistrationNativePlatformMldsaProfile
 
 /-! Actual corrected platform callbacks retain their complete projected Native state and external platform state under original-input and normalized ML count equations. -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -95,7 +96,7 @@ variable [primitive : AdapterSealPrimitive.Operations]
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
 variable (route : RawCtxServerRouting.SenderDecoder)
 variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 variable (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
 variable (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
 variable (reserveRegistration reservePeer : StateT Platform ProbComp Bool) (erased : commitment.CommitmentTranscript)

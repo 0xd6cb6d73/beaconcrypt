@@ -198,6 +198,35 @@ theorem serverImpl_identity (senderId : Unit → Std.U64) (route : RawCtxServerR
           obtain ⟨_, _, rfl⟩ := supported
           rfl
 
+/-- A Server record command of the per-peer router (`MldsaServerRouting.handler`, each peer under its own associated data) never changes the Server identity. -/
+theorem router_identity (senderId : Unit → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
+    (decode : RawCtxReceive.FrameDecoder) (query : RawCtxServerMixed.SourceSpec.Domain)
+    (state : RawCtxServerRouting.State Unit PqxdhTranscriptAd.AssociatedData)
+    (result : RawCtxServerMixed.SourceSpec.Range query × RawCtxServerRouting.State Unit PqxdhTranscriptAd.AssociatedData)
+    (supported : result ∈ support
+      ((MldsaServerRouting.handler PqxdhRefinement.absBytes senderId route decode query).run state)) :
+    result.2.server.identity = state.server.identity := by
+  cases target : PqxdhDeploymentCompile.serverTarget route query with
+  | none =>
+      rw [PqxdhDeploymentCompileRecords.handler_absent senderId route decode query state
+        (fun kid found => by simp only [target, reduceCtorEq] at found), support_pure,
+        Set.mem_singleton_iff] at supported
+      subst supported
+      rfl
+  | some kid =>
+      cases found : state.server.peers kid with
+      | none =>
+          rw [PqxdhDeploymentCompileRecords.handler_absent senderId route decode query state
+            (fun other routed => by simp only [target, Option.some.injEq] at routed; subst routed; exact found),
+            support_pure, Set.mem_singleton_iff] at supported
+          subst supported
+          rfl
+      | some peer =>
+          rw [PqxdhDeploymentCompileRecords.handler_peer senderId route decode query state kid peer target found,
+            support_map] at supported
+          obtain ⟨_, _, rfl⟩ := supported
+          rfl
+
 /-- A Beacon record command keeps the owner's view: an established owner stays established with the same control, and every other owner is unchanged. -/
 theorem beaconImpl_view (decode : RawCtxReceive.FrameDecoder) (query : RawCtxMixedOwner.SourceSpec.Domain)
     (state : PqxdhRegistrationSchedule.Owner KemSK)
@@ -228,7 +257,7 @@ theorem serverStep_alike (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
     Set.mem_singleton_iff] at supported
   obtain ⟨inner, member, rfl⟩ := supported
   obtain ⟨value, cache, cacheEq⟩ := record_value setup codec _ state.native inner member
-  have identity := serverImpl_identity _ route codec.frameRead query _ _ value
+  have identity := router_identity _ route codec.frameRead query _ _ value
   refine ⟨?_, by rw [owners], fun index => by rw [owners]⟩
   simp only [PqxdhDeploymentNative.produce, PqxdhDeploymentNative.withServer]
   exact identity
@@ -324,20 +353,62 @@ theorem bundle_candidate (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
       exact ⟨fun _ => rfl, fun bytes found => by simp at found⟩
 
 /-- A rejected finish aborts an InitSent owner and keeps every other owner. -/
-theorem finish_failure (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (raw : Pqxdh.Bytes)
+theorem finish_failure (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+    (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (raw : Pqxdh.Bytes)
     (owner : PqxdhRegistrationSchedule.Owner KemSK) (shared : NativeState KemSK)
     (next : PqxdhRegistrationSchedule.Owner KemSK) (final : NativeState KemSK)
     (supported : ((none, next), final) ∈ support ((simulateQ (PqxdhRegistrationSchedule.callbacks setup codec)
-      (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw owner)).run shared)) :
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw owner)).run
+        shared)) :
     match owner.beacon.phase with
     | .initSent control _ _ _ => next = PqxdhBeaconPhase2Preparation.abort control owner
     | _ => next = owner := by
   rw [PqxdhBeaconPhase2Publication.nativeOwner, ← QueryImpl.simulateQ_compose] at supported
-  have shape := PqxdhBeaconPhase2Publication.owner_failure _ codec.frameRead raw owner next shared final supported
+  have shape := PqxdhBeaconPhase2Publication.owner_failure (completedBinding := completedBinding) _ codec.frameRead raw
+    owner next shared final supported
   revert shape
   cases owner.beacon.phase with
   | initSent control prekey oneTime kem => exact id
   | _ => exact fun shape => shape.1
+
+/-- A rejected hashed owner finish (`PqxdhRegistrationSchedule.ownerFinish`) aborts an InitSent owner and keeps every other owner, whatever the retained bundle: an undecodable response or a missing bundle aborts before hashing, and a rejection after the transcript hash is a rejection of the native owner (`finish_failure`). -/
+theorem ownerFinish_failure (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) (shared : NativeState KemSK)
+    (next : PqxdhRegistrationSchedule.Owner KemSK) (final : NativeState KemSK)
+    (supported : ((none, next), final) ∈ support
+      ((PqxdhRegistrationSchedule.ownerFinish setup codec retained raw owner).run shared)) :
+    match owner.beacon.phase with
+    | .initSent control _ _ _ => next = PqxdhBeaconPhase2Preparation.abort control owner
+    | _ => next = owner := by
+  cases phase : owner.beacon.phase with
+  | initSent control prekey oneTime kem =>
+      cases retained with
+      | none =>
+          rw [PqxdhRegistrationSchedule.ownerFinish_unhashed setup codec _ raw owner control prekey oneTime kem phase
+            (Or.inl rfl), StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
+          cases supported
+          rfl
+      | some init =>
+          cases decoded : responseOf codec raw with
+          | none =>
+              rw [PqxdhRegistrationSchedule.ownerFinish_unhashed setup codec _ raw owner control prekey oneTime kem phase
+                (Or.inr decoded), StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
+              cases supported
+              rfl
+          | some fields =>
+              rw [PqxdhRegistrationSchedule.ownerFinish_hashed setup codec init raw owner control prekey oneTime kem
+                phase fields decoded, StateT.run_bind, mem_support_bind_iff] at supported
+              obtain ⟨hashed, _, member⟩ := supported
+              have shape := finish_failure (PqxdhTranscriptAd.completedOf control hashed.1) setup codec raw owner
+                hashed.2 next final member
+              rw [phase] at shape
+              exact shape
+  | _ =>
+      simp only [PqxdhRegistrationSchedule.ownerFinish, phase, StateT.run_pure, support_pure,
+        Set.mem_singleton_iff] at supported
+      cases supported
+      rfl
 
 /-- The invariant survives a step that keeps every view and the Server identity, when the new entry changes neither the created bindings nor the phases of the summary, is shaped as a build, and is shaped as a bundle for the new state. -/
 theorem agree_extend (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -505,7 +576,7 @@ theorem build_shaped (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
     PqxdhDeploymentCompileFootprint.build_footprint setup codec checks session payload _ _ reached
   rcases outcome : result.1 with _ | response
   · trivial
-  · obtain ⟨_, _, fields, _, _, _, written, identity⟩ := published response outcome
+  · obtain ⟨_, _, fields, _, _, _, _, written, identity, _⟩ := published response outcome
     exact ⟨fields, written, identity⟩
 
 /-- Every coin and command of the native handler keeps the invariant, with the command and its reply appended to the transcript. -/
@@ -616,10 +687,15 @@ theorem command_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
             rw [PqxdhRegistrationSchedule.bundle_source setup codec index state.native owner found,
               support_map] at innerMember
             obtain ⟨reached, reachedMember, rfl⟩ := innerMember
-            obtain ⟨rejected, published⟩ := bundle_candidate setup codec index owner reached reachedMember
-            rcases outcome : reached.1 with _ | bytes
+            have unlogged : reached.1 ∈ support (simulateQ (PqxdhRegistrationSchedule.bundleCallbacks setup codec
+                owner.beacon.identity) (PqxdhLivePhase1Bundle.bundle (PqxdhRegistrationSchedule.projection setup index)
+                owner)) := by
+              rw [← PqxdhRegistrationSchedule.bundleLog_fst, support_map]
+              exact ⟨reached, reachedMember, rfl⟩
+            obtain ⟨rejected, published⟩ := bundle_candidate setup codec index owner reached.1 unlogged
+            rcases outcome : reached.1.1 with _ | bytes
             · have same := rejected outcome
-              have restored : state.native.owners.set index reached.2 = state.native.owners := by
+              have restored : state.native.owners.set index reached.1.2 = state.native.owners := by
                 rw [same]
                 exact PqxdhDeploymentCompileRegistration.set_found _ _ _ found
               refine agree_extend setup codec server transcript _ _ _ agree ⟨rfl, ?_, fun position => ?_⟩ ?_ ?_ trivial
@@ -634,7 +710,7 @@ theorem command_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
                 simp only [phase, found, nativePhase] at phases
                 rw [phases]
                 rcases wasFresh with isFresh | isFresh <;> rw [isFresh] <;> rfl
-              refine agree_update setup codec server transcript state.native _ _ index owner reached.2 agree rfl found rfl
+              refine agree_update setup codec server transcript state.native _ _ index owner reached.1.2 agree rfl found rfl
                 ?_ ?_ ?_ ?_ ?_ ?_ trivial ?_
               · rw [installed]
               · rw [installed]
@@ -646,7 +722,7 @@ theorem command_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
               · simp only [PqxdhDeploymentTranscript.step, PqxdhDeploymentTranscript.stepCommand, publicFresh, ite_true]
               · simp only [PqxdhDeploymentTranscript.step, PqxdhDeploymentTranscript.stepCommand, publicFresh, ite_true,
                   installed, phaseClass]
-              · refine ⟨reached.2, ⟨setup.dh.publicKey prekey, setup.dh.publicKey oneTime, kem.1⟩, s1, s2, s3, ?_, ?_, ?_⟩
+              · refine ⟨reached.1.2, ⟨setup.dh.publicKey prekey, setup.dh.publicKey oneTime, kem.1⟩, s1, s2, s3, ?_, ?_, ?_⟩
                 · have bound : index < state.native.owners.length := (List.getElem?_eq_some_iff.mp found).1
                   simp only [List.getElem?_set_self bound]
                 · rw [installed]
@@ -679,7 +755,7 @@ theorem command_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
             simp only [phase, found, nativePhase] at phases
             have bound : index < state.native.owners.length := (List.getElem?_eq_some_iff.mp found).1
             rcases outcome : reached.1.1 with _ | plaintext
-            · have shape := finish_failure setup codec raw owner state.native.shared reached.1.2 reached.2
+            · have shape := ownerFinish_failure setup codec _ raw owner state.native.shared reached.1.2 reached.2
                 (by rw [← outcome]; exact reachedMember)
               revert shape
               cases ownerPhase : owner.beacon.phase with
@@ -712,9 +788,9 @@ theorem command_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
                   all_goals simp only [PqxdhDeploymentTranscript.step, PqxdhDeploymentTranscript.stepCommand, phases,
                     phaseClass]
                   all_goals rfl
-            · obtain ⟨control, prekey, oneTime, kem, response, kernel, ownerPhase, _, installed⟩ :=
-                (PqxdhDeploymentCompileFootprint.finish_owner setup codec raw owner state.native.shared reached
-                  reachedMember).2 plaintext outcome
+            · obtain ⟨control, prekey, oneTime, kem, response, kernel, _, _, _, ownerPhase, _, _, _, _, installed⟩ :=
+                (PqxdhDeploymentCompileFootprint.ownerFinish_owner setup codec _ raw owner state.native.shared reached
+                  reachedMember).2.2.2 plaintext outcome
               rw [ownerPhase] at phases
               refine agree_update setup codec server transcript state.native _ _ index owner reached.1.2 agree
                 identity found rfl ?_ ?_ ?_ (Or.inl ?_) ?_ ?_ trivial trivial
@@ -1151,3 +1227,13 @@ end BeaconcryptCore.Computational.PqxdhDeploymentEligibility
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentEligibility.designate_owner_native
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentEligibility.router_identity' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentEligibility.router_identity
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentEligibility.ownerFinish_failure' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentEligibility.ownerFinish_failure

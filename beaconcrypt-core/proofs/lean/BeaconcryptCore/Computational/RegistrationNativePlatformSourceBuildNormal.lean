@@ -196,6 +196,8 @@ theorem fromInitial (erased : commitment.CommitmentTranscript) (control : pqxdh.
 end Completion
 namespace Sdk
 variable {n : Nat}
+variable (deriveAd : RegistrationNativePlatformCompletionSdk.AdHash n (StateT P ProbComp))
+variable (hashed : ∀ pending, Normal (deriveAd pending))
 variable (finish : RegistrationNativePlatformCompletionSdk.Completion n (StateT P ProbComp) Encoded)
 variable (finished : ∀control pending,Normal (finish control pending))
 include finished in
@@ -217,24 +219,29 @@ private theorem initial (control : pqxdh.ServerState) (pending : registration.Se
     exact ⟨_,congrArg (fun output=>output.1.1) continued⟩
 variable (reserve : StateT (RegistrationServerFrontendCompiler.State n) (StateT P ProbComp) Bool)
 variable (present : U64→StateT (RegistrationServerFrontendCompiler.State n) (StateT P ProbComp) Bool)
-include finished in
+include hashed finished in
 private theorem afterOccupancy (control : pqxdh.ServerState) (pending : peer.CompletionLookup) (occupied : Bool) :
-    Normal (RegistrationNativePlatformCompletionSdk.afterOccupancy reserve finish control pending occupied) := by
+    Normal (RegistrationNativePlatformCompletionSdk.afterOccupancy deriveAd reserve finish control pending occupied) := by
   obtain ⟨result,resumed⟩ := BeaconcryptCore.PanicFreedom.PeerOwnership.CompletionLookup_resume_total pending occupied
   unfold RegistrationNativePlatformCompletionSdk.afterOccupancy
   rw [resumed]
   cases result with
   | Err previous => exact pure_normal _
   | Ok selected =>
-    apply bind_normal
-    intro admitted
-    cases admitted with
-    | false => exact pure_normal _
-    | true => exact initial finish finished control selected
-include finished in
+    apply bind_ok _ (hashed selected)
+    intro answer
+    cases answer with
+    | Err previous => exact pure_normal _
+    | Ok initialRecord =>
+      apply bind_normal
+      intro admitted
+      cases admitted with
+      | false => exact pure_normal _
+      | true => exact initial finish finished control initialRecord
+include hashed finished in
 private theorem afterPin (control : pqxdh.ServerState) (token : peer.ConsumedRegistration) (application : Slice U8)
     (pin : core.option.Option session.ServerAuthenticationPin) :
-    Normal (RegistrationNativePlatformCompletionSdk.afterPin reserve present finish control token application (.ok pin)) := by
+    Normal (RegistrationNativePlatformCompletionSdk.afterPin deriveAd reserve present finish control token application (.ok pin)) := by
   unfold RegistrationNativePlatformCompletionSdk.afterPin
   cases pin with
   | none => exact pure_normal _
@@ -252,37 +259,55 @@ private theorem afterPin (control : pqxdh.ServerState) (token : peer.ConsumedReg
       split
       · apply bind_normal
         intro occupied
-        exact afterOccupancy finish finished reserve control pending occupied
+        exact afterOccupancy (deriveAd := deriveAd) (hashed := hashed) finish finished reserve control pending occupied
       · exact pure_normal _
-include finished in
+include hashed finished in
 theorem complete
     (pin : StateT (RegistrationServerFrontendCompiler.State n) (StateT P ProbComp) (RustM (core.option.Option session.ServerAuthenticationPin)))
     (pinned : Normal pin) (token : peer.ConsumedRegistration) (application : Slice U8) :
-    Normal (RegistrationNativePlatformCompletionSdk.complete pin reserve present finish token application) := by
+    Normal (RegistrationNativePlatformCompletionSdk.complete deriveAd pin reserve present finish token application) := by
   unfold RegistrationNativePlatformCompletionSdk.complete
   apply bind_normal
   intro before
   apply bind_ok _ pinned
   intro value
-  exact afterPin finish finished reserve present before.control token application value
+  exact afterPin (deriveAd := deriveAd) (hashed := hashed) finish finished reserve present before.control token application value
 end Sdk
 variable {n : Nat} {I KemSK Reader Response E : Type} {base : OracleSpec I}
 theorem pin (coins : QueryImpl unifSpec (StateT P ProbComp)) :
     Normal (RegistrationNativePlatformSourceBuild.pin (n:=n) coins) := by
   intro before previous result reached
-  change result∈support (((fun localResult : RegistrationNativeServerPinRecompute.PinReply×PqxdhRecordLiftWorld.State n =>
-    (localResult.1,{before with world:={before.world with world:=(localResult.2,before.world.world.2)}})) <$>
-    simulateQ coins ((RegistrationNativeServerPinRecompute.native before.pin.binding before.pin.public_key).run before.world.world.1)).run previous) at reached
-  rw [RegistrationNativeServerPinRecompute.native_run] at reached
-  simp only [bind_pure_comp,simulateQ_map,Functor.map_map] at reached
-  change result∈support (((fun hashed=>
-    (.ok (.Some (⟨before.pin.binding,before.pin.public_key,RegistrationAuthenticationShared.digestArray hashed.1⟩ : session.ServerAuthenticationPin)),
-    {before with world:={before.world with world:=(hashed.2,before.world.world.2)}})) <$>
-    simulateQ coins ((PqxdhRecordLiftWorld.effects (.inr (.hash (PqxdhRefinement.absBytes before.pin.public_key)))).run before.world.world.1)).run previous) at reached
-  rw [StateT.run_map,support_map] at reached
-  obtain ⟨hashed,called,same⟩ := reached
+  rw [RegistrationNativePlatformSourceBuild.pin_exact] at reached
+  simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at reached
   subst result
-  exact ⟨_,rfl⟩
+  exact ⟨_, rfl⟩
+
+private theorem world_run {n : Nat}
+    (work : StateT (RegistrationServerRootCompiler.Local n) (StateT P ProbComp) A)
+    (before : RegistrationServerFrontendCompiler.State n) :
+    (RegistrationNativePlatformServerSdk.world work).run before =
+      (fun result => (result.1, { before with world := result.2 })) <$> work.run before.world := rfl
+
+/-- Actual AD hashing is normal by the owned Core request/resume totality, through arbitrary reached primitive states. -/
+theorem adHash (coins : QueryImpl unifSpec (StateT P ProbComp)) (pending : registration.ServerAdHash) :
+    Normal (RegistrationNativePlatformCompletionSdk.nativeAdHash (n := n) coins pending) := by
+  have localNormal : Normal (RegistrationNativePlatformServerCompletion.adHash (n := n) (Auxiliary := RegistrationServerRoleBackend.State) coins pending) := by
+    obtain ⟨request, requested⟩ := BeaconcryptCore.PanicFreedom.RegistrationTrivial.ServerAdHash_request_total pending
+    unfold RegistrationNativePlatformServerCompletion.adHash RegistrationNativePlatformServerCompletion.adHashWith RegistrationServerAdHash.runWith
+    rw [requested]
+    apply bind_normal
+    intro digest
+    obtain ⟨result, resumed⟩ := BeaconcryptCore.PanicFreedom.RegistrationTrivial.ServerAdHash_resume_total pending digest
+    rw [resumed]
+    exact pure_normal result
+  intro before previous result reached
+  unfold RegistrationNativePlatformCompletionSdk.nativeAdHash RegistrationNativePlatformServerSdk.adHash at reached
+  rw [world_run, StateT.run_map, support_map] at reached
+  obtain ⟨localResult, called, same⟩ := reached
+  obtain ⟨value, normal⟩ := localNormal before.world previous localResult called
+  subst result
+  exact ⟨value, normal⟩
+
 theorem finishSource
     (coins : QueryImpl unifSpec (StateT P ProbComp)) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (codec : PqxdhServerAuthExperiment.Codec Reader Response)
@@ -319,11 +344,11 @@ theorem completeSource
     (encoded : ∀view,Normal (RegistrationNativePlatformSourceBuild.encode (n:=n) writer view))
     (reserve : StateT (RegistrationServerFrontendCompiler.State n) (StateT P ProbComp) Bool)
     (token : peer.ConsumedRegistration) (application : Slice U8) :
-    Normal (RegistrationNativePlatformCompletionSdk.complete (RegistrationNativePlatformSourceBuild.pin coins)
+    Normal (RegistrationNativePlatformCompletionSdk.complete (RegistrationNativePlatformCompletionSdk.nativeAdHash coins) (RegistrationNativePlatformSourceBuild.pin coins)
       reserve (RegistrationNativePlatformCompletionSdk.nativePresent coins)
       (RegistrationNativePlatformSourceBuild.finishSource coins setup codec sealing
         (RegistrationNativePlatformSourceSeal.hash coins setup codec erased) sign helper writer) token application) := by
-  exact Sdk.complete _ (fun control pending=>finishSource coins setup codec sealing erased sign helper writer sealed written encoded control pending)
+  exact Sdk.complete (deriveAd := RegistrationNativePlatformCompletionSdk.nativeAdHash coins) (hashed := adHash coins) _ (fun control pending=>finishSource coins setup codec sealing erased sign helper writer sealed written encoded control pending)
     reserve _ _ (pin coins) token application
 end BeaconcryptCore.Computational.RegistrationNativePlatformSourceBuildNormal
 
@@ -368,3 +393,9 @@ end BeaconcryptCore.Computational.RegistrationNativePlatformSourceBuildNormal
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativePlatformSourceBuildNormal.completeSource
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformSourceBuildNormal.adHash' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformSourceBuildNormal.adHash

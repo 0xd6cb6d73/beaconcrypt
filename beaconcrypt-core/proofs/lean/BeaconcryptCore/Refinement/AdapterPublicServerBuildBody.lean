@@ -1,6 +1,5 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Refinement.AdapterPublicBundleBody
-import BeaconcryptCore.Refinement.AdapterPublicWrapperState
 import BeaconcryptCore.Computational.RegistrationNativeSourceEncoders
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
@@ -122,6 +121,12 @@ noncomputable def reserved (self : Server) (pending : registration.ServerInitial
   | .Err _ => pure (.None, current)
   | .Ok _ => record current pending
 
+/-- The actual response transcript digest is selected before the mutable peer reservation. -/
+noncomputable def adHash (self : Server) (pending : registration.ServerAdHash) : RustT m Reply := do
+  let request ← liftRust pending.request
+  let digest ← children.executeHash request
+  checked self (pending.resume digest) (reserved self)
+
 noncomputable def lookup (self : Server) (pending : peer.CompletionLookup) (plaintext : Slice U8) : RustT m Reply := do
   let identifier ← liftRust pending.request
   let size ← liftRust (CoreModels.core.slice.Slice.len plaintext)
@@ -134,7 +139,7 @@ noncomputable def lookup (self : Server) (pending : peer.CompletionLookup) (plai
       hashbrown.alloc.inner.Global.Insts.HashbrownAllocInnerAllocator
       core.U64.Insts.CoreHashHash (hashbrown.Equivalent.Blanket core.U64.Insts.CoreCmpEq
         (core.borrow.Borrow.Blanket U64)) self.known_ids identifier
-    checked self (pending.resume occupied) (reserved self)
+    checked self (pending.resume occupied) (adHash self)
 
 noncomputable def build (self : Server) (token : beaconcrypt_public_wrapper.server.RegistrationOutput)
     (data : core.option.Option (Slice U8)) : RustT m Reply := do
@@ -153,7 +158,7 @@ theorem source (self : Server) (token : beaconcrypt_public_wrapper.server.Regist
     beaconcrypt_public_request.server.Server.Insts.BeaconcryptServerProviderServer.build_registration_response
       (m := RustT m) self token data = build self token data := by
   simp only [beaconcrypt_public_request.server.Server.Insts.BeaconcryptServerProviderServer.build_registration_response,
-    build, lookup, reserved, record, sealRecord, commit, write, sign, publish, install, finish, checked,
+    build, lookup, adHash, reserved, record, sealRecord, commit, write, sign, publish, install, finish, checked,
     call_apply, call_result]
   apply bind_congr
   intro application
@@ -202,204 +207,215 @@ theorem source (self : Server) (token : beaconcrypt_public_wrapper.server.Regist
           simp only [
 
             core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual, lift_ok, pure_bind]
-        | Ok initial =>
-          simp only [
-             lift_ok, pure_bind]
+        | Ok selected =>
+          simp only [lift_ok, pure_bind]
           apply bind_congr
-          rintro ⟨allocation, known⟩
-          cases allocation with
+          intro adRequest
+          apply bind_congr
+          intro adDigest
+          apply bind_congr
+          intro adResult
+          cases adResult with
           | Err prior =>
-            simp only [
-
-              core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual, lift_ok, pure_bind]
-          | Ok unitValue =>
-            cases unitValue
-            simp only [
-               lift_ok, pure_bind]
+            simp only [core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual,
+              lift_ok, pure_bind]
+          | Ok initial =>
+            simp only [lift_ok, pure_bind]
             apply bind_congr
-            intro kdfRequest
-            apply bind_congr
-            intro initialBytes
-            apply bind_congr
-            intro initialResponse
-            apply bind_congr
-            intro initialResult
-            cases initialResult with
+            rintro ⟨allocation, known⟩
+            cases allocation with
             | Err prior =>
               simp only [
 
                 core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual, lift_ok, pure_bind]
-            | Ok initialSeal =>
+            | Ok unitValue =>
+              cases unitValue
               simp only [
                  lift_ok, pure_bind]
               apply bind_congr
-              intro sealRequest
+              intro kdfRequest
               apply bind_congr
-              intro sealResponse
+              intro initialBytes
               apply bind_congr
-              intro sealResult
-              cases sealResult with
+              intro initialResponse
+              apply bind_congr
+              intro initialResult
+              cases initialResult with
               | Err prior =>
                 simp only [
 
                   core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual, lift_ok, pure_bind]
-              | Ok aead =>
+              | Ok initialSeal =>
                 simp only [
                    lift_ok, pure_bind]
                 apply bind_congr
-                intro aeadRequest
+                intro sealRequest
                 apply bind_congr
-                intro detached
+                intro sealResponse
                 apply bind_congr
-                intro detachedReference
-                apply bind_congr
-                intro detachedView
-                apply bind_congr
-                intro aeadResult
-                cases aeadResult with
+                intro sealResult
+                cases sealResult with
                 | Err prior =>
                   simp only [
 
                     core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual, lift_ok, pure_bind]
-                | Ok committed =>
+                | Ok aead =>
                   simp only [
                      lift_ok, pure_bind]
                   apply bind_congr
-                  rintro ⟨transcript, transcriptBack⟩
+                  intro aeadRequest
                   apply bind_congr
-                  rintro ⟨digest, changedTranscript⟩
+                  intro detached
                   apply bind_congr
-                  intro committedResult
-                  cases committedResult with
+                  intro detachedReference
+                  apply bind_congr
+                  intro detachedView
+                  apply bind_congr
+                  intro aeadResult
+                  cases aeadResult with
                   | Err prior =>
                     simp only [
 
                       core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual, lift_ok, pure_bind]
-                  | Ok written =>
+                  | Ok committed =>
                     simp only [
                        lift_ok, pure_bind]
                     apply bind_congr
-                    intro writeRequest
+                    rintro ⟨transcript, transcriptBack⟩
                     apply bind_congr
-                    intro ciphertext
+                    rintro ⟨digest, changedTranscript⟩
                     apply bind_congr
-                    intro ciphertextView
-                    apply bind_congr
-                    intro writeResult
-                    cases writeResult with
+                    intro committedResult
+                    cases committedResult with
                     | Err prior =>
                       simp only [
 
                         core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual, lift_ok, pure_bind]
-                    | Ok hashed =>
+                    | Ok written =>
                       simp only [
                          lift_ok, pure_bind]
                       apply bind_congr
-                      intro hashRequest
+                      intro writeRequest
                       apply bind_congr
-                      intro digest
+                      intro ciphertext
                       apply bind_congr
-                      intro hashResult
-                      cases hashResult with
+                      intro ciphertextView
+                      apply bind_congr
+                      intro writeResult
+                      cases writeResult with
                       | Err prior =>
                         simp only [
 
                           core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual, lift_ok, pure_bind]
-                      | Ok signing =>
+                      | Ok hashed =>
                         simp only [
                            lift_ok, pure_bind]
                         apply bind_congr
-                        intro identity
+                        intro hashRequest
                         apply bind_congr
-                        intro signRequest
+                        intro digest
                         apply bind_congr
-                        intro signature
-                        apply bind_congr
-                        intro signatureView
-                        apply bind_congr
-                        intro signResult
-                        cases signResult with
+                        intro hashResult
+                        cases hashResult with
                         | Err prior =>
                           simp only [
 
                             core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual, lift_ok, pure_bind]
-                        | Ok ready =>
+                        | Ok signing =>
                           simp only [
                              lift_ok, pure_bind]
                           apply bind_congr
-                          intro message
-                          simp only [Aeneas.Std.lift, lift_ok, pure_bind,
-                            BeaconcryptCore.Computational.RegistrationNativeSourceEncoders.responseSyntax]
+                          intro identity
                           apply bind_congr
-                          intro buffer
+                          intro signRequest
                           apply bind_congr
-                          intro publishResult
-                          cases publishResult with
+                          intro signature
+                          apply bind_congr
+                          intro signatureView
+                          apply bind_congr
+                          intro signResult
+                          cases signResult with
                           | Err prior =>
                             simp only [
 
                               core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual, lift_ok, pure_bind]
-                          | Ok published =>
+                          | Ok ready =>
                             simp only [
                                lift_ok, pure_bind]
                             apply bind_congr
-                            intro insertResult
-                            cases insertResult with
+                            intro message
+                            simp only [Aeneas.Std.lift, lift_ok, pure_bind,
+                              BeaconcryptCore.Computational.RegistrationNativeSourceEncoders.responseSyntax]
+                            apply bind_congr
+                            intro buffer
+                            apply bind_congr
+                            intro publishResult
+                            cases publishResult with
                             | Err prior =>
                               simp only [
 
                                 core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual, lift_ok, pure_bind]
-                            | Ok insert =>
+                            | Ok published =>
                               simp only [
                                  lift_ok, pure_bind]
                               apply bind_congr
-                              intro remoteIdentifier
-                              apply bind_congr
-                              rintro ⟨remote, publicationFinish⟩
-                              apply bind_congr
-                              intro binding
-                              apply bind_congr
-                              intro publicBytes
-                              simp only []
-                              apply bind_congr
-                              intro publicResult
-                              cases publicResult with
+                              intro insertResult
+                              cases insertResult with
                               | Err prior =>
                                 simp only [
 
                                   core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual, lift_ok, pure_bind]
-                              | Ok publicKey =>
+                              | Ok insert =>
                                 simp only [
                                    lift_ok, pure_bind]
                                 apply bind_congr
-                                rintro ⟨entry, entryBack⟩
-                                cases entry with
-                                | Occupied occupied =>
-                                  apply bind_congr
-                                  intro finished
-                                  cases finished with
-                                  | Err prior =>
-                                    simp only [
+                                intro remoteIdentifier
+                                apply bind_congr
+                                rintro ⟨remote, publicationFinish⟩
+                                apply bind_congr
+                                intro binding
+                                apply bind_congr
+                                intro publicBytes
+                                simp only []
+                                apply bind_congr
+                                intro publicResult
+                                cases publicResult with
+                                | Err prior =>
+                                  simp only [
 
-                                      core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual, lift_ok, pure_bind]
-                                  | Ok published =>
-                                    simp only [
-                                       lift_ok, pure_bind]
-                                | Vacant vacant =>
+                                    core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual, lift_ok, pure_bind]
+                                | Ok publicKey =>
+                                  simp only [
+                                     lift_ok, pure_bind]
                                   apply bind_congr
-                                  intro remoteValue
-                                  apply bind_congr
-                                  rintro ⟨changed, insertedBack⟩
-                                  apply bind_congr
-                                  intro finished
-                                  cases finished with
-                                  | Err prior =>
-                                    simp only [
+                                  rintro ⟨entry, entryBack⟩
+                                  cases entry with
+                                  | Occupied occupied =>
+                                    apply bind_congr
+                                    intro finished
+                                    cases finished with
+                                    | Err prior =>
+                                      simp only [
 
-                                      core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual, lift_ok, pure_bind]
-                                  | Ok published =>
-                                    simp only [
-                                       lift_ok, pure_bind]
+                                        core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual, lift_ok, pure_bind]
+                                    | Ok published =>
+                                      simp only [
+                                         lift_ok, pure_bind]
+                                  | Vacant vacant =>
+                                    apply bind_congr
+                                    intro remoteValue
+                                    apply bind_congr
+                                    rintro ⟨changed, insertedBack⟩
+                                    apply bind_congr
+                                    intro finished
+                                    cases finished with
+                                    | Err prior =>
+                                      simp only [
+
+                                        core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual, lift_ok, pure_bind]
+                                    | Ok published =>
+                                      simp only [
+                                         lift_ok, pure_bind]
 end BeaconcryptCore.Refinement.AdapterPublicServerBuildBody
 
 /-- info: 'BeaconcryptCore.Refinement.AdapterPublicServerBuildBody.source' depends on axioms: [propext,

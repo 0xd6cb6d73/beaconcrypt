@@ -58,7 +58,7 @@ theorem afterAuthentication {n : Nat} {ι KemSK : Type} {base : OracleSpec ι}
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
     (reserve : StateT (RegistrationServerFrontendCompiler.State n) (OracleComp spec) Bool)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit) :
     state implementation (RegistrationNativePlatformServerSdk.afterAuthentication coins setup checks reserve
       representation created packet authenticated) =
@@ -94,7 +94,7 @@ theorem accept {n : Nat} {ι KemSK Reader Response : Type} {base : OracleSpec ι
     (reserve : StateT (RegistrationServerFrontendCompiler.State n) (OracleComp spec) Bool)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket) :
     state implementation (RegistrationNativePlatformServerSdk.accept coins setup codec checks reserve
       route verify representation created packet) =
       RegistrationNativePlatformServerSdk.accept (fun query => simulateQ implementation (coins query))

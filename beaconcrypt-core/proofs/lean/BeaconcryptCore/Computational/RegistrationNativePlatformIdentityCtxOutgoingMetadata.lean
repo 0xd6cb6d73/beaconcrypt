@@ -33,7 +33,7 @@ private def observe (result : (Value × RegistrationNativePlatformIdentityHistor
 
 /-- Equal ML requests yield the same actual Main outcome after the explicit receipt view, regardless of their private raw payload/digest annotations. -/
 theorem outgoing (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner source) (request : registration.MldsaSigningRequest)
     (left right : MldsaTranscriptAuth.Payload) (digestLeft digestRight : CtxRomAuth.CtxDigest)
     (before : RegistrationNativeIdentityMain.State n KemSK source × Platform) :

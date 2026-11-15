@@ -43,9 +43,9 @@ noncomputable def native (coins : QueryImpl unifSpec m) (setup : Setup base KemS
 
 noncomputable def source (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify) :
-    QueryImpl AdapterInitAuthenticationRequestMonad.Spec (StateT (PqxdhRecordLiftWorld.State n) m)
+    QueryImpl AdapterPublicWrapperChildren.AuthenticationSpec (StateT (PqxdhRecordLiftWorld.State n) m)
   | .hash request => .ok <$> core coins setup codec route verify (.hash request)
-  | .verifyMldsa request => .ok <$> core coins setup codec route verify (.mldsa request)
+  | .verifyResponseMldsa request => .ok <$> core coins setup codec route verify (.mldsa request)
   | .parseEd input => pure (ed.parse input)
   | .verifyEd signed key => pure (ed.verify signed key)
 
@@ -73,9 +73,9 @@ theorem opened (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (codec 
 theorem source_query (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify) (edLaws : EdFunctional setup.source.crypto)
     (query : AdapterInitAuthenticationRequestMonad.Spec.Domain) :
-    source (n := n) coins setup codec route verify query =
+    AdapterPublicWrapperChildren.initQueries (source (n := n) coins setup codec route verify) query =
       (native coins setup codec route verify edLaws ∘ₛ AdapterInitAuthenticationStateful.native) query := by
-  cases query <;> simp only [source, QueryImpl.apply_compose, AdapterInitAuthenticationStateful.native,
+  cases query <;> simp only [AdapterPublicWrapperChildren.initQueries, source, QueryImpl.apply_compose, AdapterInitAuthenticationStateful.native,
     simulateQ_map, simulateQ_spec_query, native, map_pure]
   · rw [edLaws.parseRun]
   · rw [edLaws.verifyRun]
@@ -109,12 +109,12 @@ attribute [local irreducible] AdapterInitAuthenticationSourceLoop.authenticate A
 theorem init_source (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify) (edLaws : EdFunctional setup.source.crypto)
     (pin : session.ServerAuthenticationPin) (packet : registration.InitPacket) :
-    simulateQ (source (n := n) coins setup codec route verify)
+    simulateQ (AdapterPublicWrapperChildren.initQueries (source (n := n) coins setup codec route verify))
       (AdapterInitAuthenticationSourceLoop.authenticate (m := AdapterInitAuthenticationRequestMonad.Program) pin packet).run =
       AdapterInitAuthenticationDriver.observe <$>
         simulateQ (core coins setup codec route verify) (RegistrationAuthenticationExecutor.begin pin packet) := by
   rw [AdapterInitAuthenticationSourceLoop.program_authenticate]
-  have actual : source (n := n) coins setup codec route verify =
+  have actual : AdapterPublicWrapperChildren.initQueries (source (n := n) coins setup codec route verify) =
       native coins setup codec route verify edLaws ∘ₛ AdapterInitAuthenticationStateful.native := by
     funext query
     exact source_query coins setup codec route verify edLaws query
@@ -156,7 +156,7 @@ private theorem core_program {Value : Type} (coins : QueryImpl unifSpec m) (setu
 theorem init_world (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify) (edLaws : EdFunctional setup.source.crypto)
     (pin : session.ServerAuthenticationPin) (packet : registration.InitPacket) (before : PqxdhRecordLiftWorld.State n) :
-    (simulateQ (source coins setup codec route verify)
+    (simulateQ (AdapterPublicWrapperChildren.initQueries (source coins setup codec route verify))
       (AdapterInitAuthenticationSourceLoop.authenticate (m := AdapterInitAuthenticationRequestMonad.Program) pin packet).run).run before =
       (fun result => (AdapterInitAuthenticationDriver.observe result.1, result.2)) <$>
         simulateQ coins ((RegistrationWorldAuthentication.begin setup codec route verify pin packet).run before) := by

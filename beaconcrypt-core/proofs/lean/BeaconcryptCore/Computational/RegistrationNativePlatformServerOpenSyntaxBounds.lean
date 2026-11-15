@@ -245,8 +245,7 @@ theorem pin_bound (kind : Kind) (current : session.ServerAuthenticationPin) :
       (RegistrationNativePlatformServerOpenControl.effects (protocol (n := n) (KemSK := KemSK))) current).IsQueryBoundP
       (fun query => queryKind (n := n) (KemSK := KemSK) query = kind) (if kind = .hash then 1 else 0) := by
   unfold RegistrationNativePlatformServerReferenceAccept.pin RegistrationNativeServerPinRecompute.program
-  simp only [bind_pure_comp]
-  exact hash_callback_bound (n := n) (KemSK := KemSK) kind _
+  trivial
 
 attribute [local irreducible] RegistrationAuthenticationCompiler.program
 
@@ -264,7 +263,7 @@ theorem authentication_bound (crypto : Pqxdh.Crypto) (verify : MldsaTranscriptAu
     exact RegistrationAuthenticationHashBounds.program_bound crypto verify pin packet .coin
   | hash =>
     apply OracleComp.IsQueryBoundP.of_imp (p' := fun effect => effectKind effect = .hash) (fun _ present => present)
-    exact RegistrationAuthenticationHashBounds.program_bound crypto verify pin packet .hash
+    exact (RegistrationAuthenticationHashBounds.program_bound crypto verify pin packet .hash).mono (by decide)
   | admin =>
     apply OracleComp.IsQueryBoundP.of_imp (p' := fun effect => effectKind effect = .administrative) (fun _ present => present)
     exact RegistrationAuthenticationHashBounds.program_bound crypto verify pin packet .administrative

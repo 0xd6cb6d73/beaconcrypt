@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Refinement.AdapterPublicBundleBody
-import BeaconcryptCore.Refinement.AdapterPublicWrapperState
+import BeaconcryptCore.Refinement.AdapterPublicWrapperStorage
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -38,7 +38,7 @@ noncomputable def authenticate (self : beaconcrypt_public_wrapper.server.Server)
   | .None => pure .None
   | .Some value =>
     let packet ← liftRust (registration.InitPacket.from_slices value.identity_key value.pre_key value.one_time_key
-      value.pq_key value.mldsa_public_key value.signature)
+      value.pq_key)
     match packet with
     | .None => pure .None
     | .Some packet =>

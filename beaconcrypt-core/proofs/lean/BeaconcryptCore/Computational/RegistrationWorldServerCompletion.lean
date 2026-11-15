@@ -1,6 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationWorldServerReplay
 import BeaconcryptCore.Computational.RegistrationWorldServerPublication
+import BeaconcryptCore.Computational.RegistrationServerAdHash
 
 /-! The concrete real Server completion follows native completion lookup, actual initial64/ongoing76 and raw record effects, response hash/ML signing/dynamic encoding, live-counter peer setup, actual World insertion, and native publication finish. The root-family state and replay set are outside this controller's writable state. This real source interpretation retains concrete kernels; the separate proved hidden-install compiler is used after the key-schedule hybrid and does not reclassify these known-reference operations as a protected-key theorem. -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -70,6 +71,56 @@ noncomputable def fromInitial (setup : Setup base KemSK) (codec : Codec Reader R
     (RegistrationServerRecordExecutor.fromInitial pending)
   continueResult record (publish sign encode control)
 
+/-- The actual response-dependent hash runs in the global cache before peer reservation or an initial KDF. -/
+noncomputable def adHash (pending : registration.ServerAdHash) :
+    StateT (State n Auxiliary) ProbComp
+      (RustM (core.result.Result registration.ServerInitialKdf pqxdh.ServerState)) :=
+  match pending.request with
+  | .fail error => pure (.fail error)
+  | .div => pure .div
+  | .ok request => do
+    let digest ← capability (.hash (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request))
+    pure (pending.resume (.Some (RegistrationAuthenticationShared.digestArray digest)))
+
+theorem adHash_as_runWith (pending : registration.ServerAdHash) :
+    adHash (n := n) (Auxiliary := Auxiliary) pending =
+      RegistrationServerAdHash.runWith (fun request => do
+        let digest ← capability (.hash (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request))
+        pure (.Some (RegistrationAuthenticationShared.digestArray digest))) pending := by
+  cases requested : pending.request <;> simp only [adHash, RegistrationServerAdHash.runWith, requested, bind_assoc, pure_bind]
+
+/-- Successful completion retains the exact digest actually returned by the shared hash service. -/
+theorem adHash_receipt (pending : registration.ServerAdHash) (before after : State n Auxiliary)
+    (initial : registration.ServerInitialKdf)
+    (supported : (.ok (.Ok initial), after) ∈ support ((adHash pending).run before)) :
+    ∃ digest, pending.resume (.Some digest) = .ok (.Ok initial) := by
+  rw [adHash_as_runWith] at supported
+  exact RegistrationServerAdHash.receipt _ pending before after initial supported
+
+/-- The actual shared AD hash preserves the complete Server signing history. -/
+theorem adHash_history (pending : registration.ServerAdHash) (before after : State n Auxiliary)
+    (reply : RegistrationServerAdHash.Result)
+    (supported : (reply, after) ∈ support ((adHash pending).run before)) :
+    after.world.2 = before.world.2 := by
+  rw [adHash_as_runWith] at supported
+  apply RegistrationServerAdHash.preserves _ (fun current : State n Auxiliary => current.world.2) ?_
+    pending before after reply supported
+  intro request current reply after called
+  simp only [StateT.run_bind, mem_support_bind_iff] at called
+  obtain ⟨middle, queried, returned⟩ := called
+  simp only [capability, StateT.run, support_map] at queried
+  obtain ⟨inner, _hashed, equal⟩ := queried
+  cases equal
+  simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff, Prod.mk.injEq] at returned
+  rw [returned.2]
+
+noncomputable def fromAd (setup : Setup base KemSK) (codec : Codec Reader Response)
+    (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
+    (encode : registration.SignedResponseView → core.option.Option Encoded) (control : pqxdh.ServerState)
+    (pending : registration.ServerAdHash) : StateT (State n Auxiliary) ProbComp (RustM (Result Encoded)) := do
+  let initial ← adHash pending
+  continueResult initial (fromInitial setup codec sign encode control)
+
 /-- Source exhaustion precedes occupancy lookup; the actual full owner pin and native allocator are checked before either initial-record KDF. -/
 noncomputable def server (setup : Setup base KemSK) (codec : Codec Reader Response)
     (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
@@ -80,7 +131,7 @@ noncomputable def server (setup : Setup base KemSK) (codec : Codec Reader Respon
   continueResult (peer.begin_completion_lookup control current consumed application) fun lookup =>
     continueWith lookup.request fun keyId => do
       let occupied ← capability (.peerPresent keyId)
-      continueResult (lookup.resume occupied) (fromInitial setup codec sign encode control)
+      continueResult (lookup.resume occupied) (fromAd setup codec sign encode control)
 
 /-- Retain the same related-root table/history while actual post-root primitives and peer publication update the World. -/
 noncomputable def global (setup : Setup base KemSK) (codec : Codec Reader Response)
@@ -153,3 +204,21 @@ end BeaconcryptCore.Computational.RegistrationWorldServerCompletion
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationWorldServerCompletion.global_family
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationWorldServerCompletion.adHash_as_runWith' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationWorldServerCompletion.adHash_as_runWith
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationWorldServerCompletion.adHash_receipt' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationWorldServerCompletion.adHash_receipt
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationWorldServerCompletion.adHash_history' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationWorldServerCompletion.adHash_history

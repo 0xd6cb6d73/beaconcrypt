@@ -244,8 +244,8 @@ impl Serialize for EstablishedRemote<crypto_sign::PublicKey> {
 		state.serialize_field("pk", &EncodedSignaturePublicKey(self.pk()))?;
 		state.serialize_field("ratchet", self.ratchet())?;
 		state.serialize_field(
-			"mldsa_public_key_hash",
-			&ByteBuffer(self.mldsa_public_key_hash()),
+			"session_transcript_hash",
+			&ByteBuffer(self.session_transcript_hash()),
 		)?;
 		state.end()
 	}

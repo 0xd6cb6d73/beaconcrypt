@@ -41,7 +41,7 @@ theorem world (work : StateT (PqxdhRecordLiftWorld.State n) ProbComp Value)
 /-- All actual trusted callbacks, including real indexed KEM failures and cache effects, retain the same projected native result. -/
 theorem trusted (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (RegistrationNativeBeaconFrontend.Trusted n KemSK).Domain) :
     Stable (project (source := source)) (RegistrationNativeExperiment.trusted setup checks representation created source query) := by
   cases query with
@@ -69,7 +69,7 @@ theorem trusted (setup : Setup base KemSK) (checks : Checks)
 /-- Any complete Beacon source controller preserves its exact projected result, phase, authentication history and reached mutable environment. -/
 theorem beacon (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State Value) :
     Stable project (RegistrationNativeExperiment.beacon setup checks representation created work) := by
   intro before

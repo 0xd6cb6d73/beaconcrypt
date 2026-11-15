@@ -9,6 +9,7 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 open OracleComp OracleSpec
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialFinishReceipt
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open RawCtxGenericRoleStorage PqxdhBeaconPhase2Shared PqxdhInitialGenericBeacon
 variable {Kernel Origin I D K X Response Shared : Type}
 
@@ -46,7 +47,7 @@ noncomputable def owner (mark : Secrets Shared → Origin)
     (raw : Pqxdh.Bytes) (state : BeaconState Kernel I D K) : m (Result Kernel Origin I D K Response Shared) :=
   match state.beacon.phase with
   | .initSent control prekey oneTime kem => do
-      let pending ← simulateQ pre (PqxdhBeaconPhase2Shared.prepare control state.beacon.identity prekey oneTime kem raw)
+      let pending ← simulateQ pre (PqxdhBeaconPhase2Shared.prepare (completedBinding := completedBinding) control state.beacon.identity prekey oneTime kem raw)
       match pending with
       | none => pure ((finish control state none, none), none)
       | some pending => prepared mark calls application initial decode control state pending
@@ -76,8 +77,8 @@ theorem owner_erase (mark : Secrets Shared → Origin)
     (calls : RawCtxChainOwner.Calls Kernel m) (application : Response → m (Option Pqxdh.Bytes))
     (initial : Secrets Shared → m (Option Kernel)) (decode : RawCtxReceive.FrameDecoder)
     (raw : Pqxdh.Bytes) (state : BeaconState Kernel I D K) :
-    Prod.fst <$> owner mark pre calls application initial decode raw state =
-      PqxdhInitialFinishOrigin.owner mark pre calls application initial decode raw state := by
+    Prod.fst <$> owner (completedBinding := completedBinding) mark pre calls application initial decode raw state =
+      PqxdhInitialFinishOrigin.owner (completedBinding := completedBinding) mark pre calls application initial decode raw state := by
   unfold owner PqxdhInitialFinishOrigin.owner
   cases phase : state.beacon.phase
   case initSent control prekey oneTime kem =>
@@ -149,12 +150,12 @@ theorem owner_origin {State : Type} (mark : Secrets Shared → Origin)
     (initial : Secrets Shared → StateT State ProbComp (Option Kernel)) (decode : RawCtxReceive.FrameDecoder)
     (raw : Pqxdh.Bytes) (entry : BeaconState Kernel I D K) (before : State)
     (result : Result Kernel Origin I D K Response Shared × State)
-    (supported : result ∈ support ((owner mark pre calls application initial decode raw entry).run before))
+    (supported : result ∈ support ((owner (completedBinding := completedBinding) mark pre calls application initial decode raw entry).run before))
     (receipt : Receipt Kernel Response Shared) (recorded : result.1.2 = some receipt) :
     ∃ control prekey oneTime kem, ∃ (atPrepared atInitial : State) (staged : Option (Staged Kernel)),
       entry.beacon.phase = .initSent control prekey oneTime kem ∧
       (some receipt.prepared, atPrepared) ∈ support ((simulateQ pre
-        (PqxdhBeaconPhase2Shared.prepare control entry.beacon.identity prekey oneTime kem raw)).run before) ∧
+        (PqxdhBeaconPhase2Shared.prepare (completedBinding := completedBinding) control entry.beacon.identity prekey oneTime kem raw)).run before) ∧
       (some receipt.initial, atInitial) ∈ support ((initial receipt.prepared.root).run atPrepared) ∧
       (staged, result.2) ∈ support ((afterInitial calls application decode receipt.prepared receipt.initial).run atInitial) ∧
       result.1.1 = PqxdhInitialFinishOrigin.tag (mark receipt.prepared.root) (finish control entry staged) := by
@@ -212,7 +213,7 @@ private theorem owner_initialized {State : Type} (mark : Secrets Shared → Orig
     (initial : Secrets Shared → StateT State ProbComp (Option Kernel)) (decode : RawCtxReceive.FrameDecoder)
     (raw : Pqxdh.Bytes) (entry : BeaconState Kernel I D K) (before : State)
     (result : Result Kernel Origin I D K Response Shared × State)
-    (supported : result ∈ support ((owner mark pre calls application initial decode raw entry).run before)) :
+    (supported : result ∈ support ((owner (completedBinding := completedBinding) mark pre calls application initial decode raw entry).run before)) :
     result.1.1.1.1.isSome = true → result.1.2.isSome = true := by
   unfold owner at supported
   cases phase : entry.beacon.phase
@@ -242,12 +243,12 @@ theorem published {State : Type} (mark : Secrets Shared → Origin)
     (initial : Secrets Shared → StateT State ProbComp (Option Kernel)) (decode : RawCtxReceive.FrameDecoder)
     (raw : Pqxdh.Bytes) (entry : BeaconState Kernel I D K) (before : State)
     (result : Result Kernel Origin I D K Response Shared × State)
-    (supported : result ∈ support ((owner mark pre calls application initial decode raw entry).run before)) :
+    (supported : result ∈ support ((owner (completedBinding := completedBinding) mark pre calls application initial decode raw entry).run before)) :
     (successful result.1).isSome = result.1.1.1.1.isSome := by
   cases success : result.1.1.1.1.isSome
   · simp only [successful, success, Bool.false_eq_true, ite_false, Option.isSome_none]
   · simpa only [successful, success, ite_true] using
-      owner_initialized mark pre calls application initial decode raw entry before result supported success
+      owner_initialized (completedBinding := completedBinding) mark pre calls application initial decode raw entry before result supported success
 
 /-- Private receipt bookkeeping preserves every original source query-class allowance exactly; no initializer or continuation work is declared free. -/
 theorem queries {ι : Type} {spec : OracleSpec ι} (mark : Secrets Shared → Origin)
@@ -256,9 +257,9 @@ theorem queries {ι : Type} {spec : OracleSpec ι} (mark : Secrets Shared → Or
     (initial : Secrets Shared → OracleComp spec (Option Kernel)) (decode : RawCtxReceive.FrameDecoder)
     (raw : Pqxdh.Bytes) (state : BeaconState Kernel I D K)
     (predicate : spec.Domain → Prop) [DecidablePred predicate] (budget : Nat) :
-    (owner mark pre calls application initial decode raw state).IsQueryBoundP predicate budget ↔
-      (PqxdhInitialFinishOrigin.owner mark pre calls application initial decode raw state).IsQueryBoundP predicate budget := by
-  rw [← owner_erase mark pre calls application initial decode raw state]
+    (owner (completedBinding := completedBinding) mark pre calls application initial decode raw state).IsQueryBoundP predicate budget ↔
+      (PqxdhInitialFinishOrigin.owner (completedBinding := completedBinding) mark pre calls application initial decode raw state).IsQueryBoundP predicate budget := by
+  rw [← owner_erase (completedBinding := completedBinding) mark pre calls application initial decode raw state]
   exact (isQueryBoundP_map_iff _ _ _).symm
 
 def roots (receipt : Receipt (PqxdhInitialPendingPost.KernelOf RatchetChain) Response Shared) :

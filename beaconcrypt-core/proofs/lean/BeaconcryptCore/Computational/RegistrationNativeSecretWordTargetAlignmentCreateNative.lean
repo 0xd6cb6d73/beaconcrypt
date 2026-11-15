@@ -8,6 +8,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
+set_option warningAsError true
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativeSecretWordTargetAlignmentCreateNative
 open PqxdhServerAuthExperiment (Setup)
@@ -62,7 +63,7 @@ theorem create_shape (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#
         simp only [actual] at continued
         obtain ⟨born, middle, worldOwner, after, generated, allocated, terminal⟩ :=
           RegistrationNativeBeaconBirth.append_supported setup source implementation edPin keyId
-            ready.pin ready.credentials ready.identity ready.prekey prepared.1.1.2 prepared.1.2 prepared.2 _ continued
+            ready.pin ready.identity ready.prekey prepared.1.1.2 prepared.1.2 prepared.2 _ continued
         obtain ⟨pair, reply, appended⟩ := RegistrationNativeSecretWordTargetAlignmentCreateQuery.create_step setup wire route
           sign input inside selected pairs publicKey challenge outer prepared.2 (born, middle) generated
         have allocationKeys := RegistrationNativeSecretWordTargetAlignmentCreateQuery.program_keys setup wire route sign input inside

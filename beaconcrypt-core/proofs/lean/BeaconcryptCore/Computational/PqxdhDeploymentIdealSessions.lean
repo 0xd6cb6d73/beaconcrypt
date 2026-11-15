@@ -81,10 +81,14 @@ theorem realStep_build (session : ℕ) (payload : Option Pqxdh.Bytes) (e : EnvSt
     change e.native.shared.2.pending session = none at missing
     rw [← missing, Function.update_eq_self]
   · rename_i token found
-    simp only [mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at member
-    obtain ⟨_, _, _, _, rfl⟩ := member
     change e.native.shared.2.pending session = some token at found
-    exact ⟨rfl, rfl, fun _ => by rw [found]; rfl⟩
+    split at member
+    · simp only [support_pure, Set.mem_singleton_iff] at member
+      subst member
+      exact ⟨rfl, rfl, fun replied => by cases replied⟩
+    · simp only [mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at member
+      obtain ⟨_, _, _, _, _, _, rfl⟩ := member
+      exact ⟨rfl, rfl, fun _ => by rw [found]; rfl⟩
 
 /-- Every real command other than a raw accept or a build keeps the Server's session counter and pending tokens. -/
 theorem realStep_quiet (query : PqxdhRecordLiftInterface.EnvQuery) (notAccept : ∀ raw, query.val ≠ .accept raw)
@@ -150,7 +154,7 @@ theorem realStep_quiet (query : PqxdhRecordLiftInterface.EnvQuery) (notAccept : 
         exact ⟨rfl, rfl⟩
       · simp only [mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at member
         obtain ⟨result, resultMember, _, _, rfl⟩ := member
-        have game := PqxdhDeploymentEnvironmentReal.finishFwd_game setup codec _ _ result resultMember
+        have game := PqxdhDeploymentEnvironmentReal.ownerFinishFwd_game setup codec _ _ _ _ result resultMember
         exact ⟨congrArg (fun g => g.sessions) game, congrArg (fun g => g.pending) game⟩
   | hmac key message =>
       intro v member

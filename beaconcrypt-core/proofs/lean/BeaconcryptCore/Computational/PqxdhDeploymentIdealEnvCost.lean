@@ -354,15 +354,15 @@ theorem preparationCE_step (caps : KemCaps) (bounded : KemBound setup caps)
           caps.decapsUniform caps.decapsBase (bounded.decapsUniform _ _) (bounded.decapsBase _ _)
   | _ => trivial
 
-/-- The addressed owner's preparation with the challenge handle draws at most one decapsulation's coins. -/
+/-- The addressed owner's preparation with the challenge handle draws at most one decapsulation's coins, at every completed binding. -/
 theorem preparation_cost (caps : KemCaps) (bounded : KemBound setup caps) (challenge : PqxdhKemIndCca.MlKem768Ciphertext)
-    (control : beaconcrypt_core.pqxdh.BeaconInitSent) (before : PqxdhRegistrationSchedule.Owner KemSK)
+    (binding : beaconcrypt_core.session.CompletedRegistrationBinding) (control : beaconcrypt_core.pqxdh.BeaconInitSent) (before : PqxdhRegistrationSchedule.Owner KemSK)
     (prekey oneTime : PqxdhJointGapDh.ScalarBytes) (kem : PqxdhKemIndCca.MlKem768PublicKey × KemSK) (raw : Pqxdh.Bytes) :
     (simulateQ (PqxdhDeploymentIdealSteps.preparationCE setup codec challenge) (PqxdhBeaconPhase2Shared.prepare
       (X := PqxdhJointIdentity.IdentitySeed) (Response := Response) (Shared := PqxdhPhase2DecapsulationRouting.Shared)
-      control before.beacon.identity prekey oneTime kem raw)).IsTotalQueryBound caps.decapsCost :=
+      binding control before.beacon.identity prekey oneTime kem raw)).IsTotalQueryBound caps.decapsCost :=
   total_of_wBound (wBound_simulate _ (wPrep caps) (fun _ => 1) (preparationCE_step setup codec caps bounded challenge)
-    (PqxdhRegistrationJointKemRootCosts.prepare_cost caps control _ prekey oneTime kem raw))
+    (PqxdhRegistrationJointKemRootCosts.prepare_cost caps binding control _ prekey oneTime kem raw))
 
 /-- The native root of a known decapsulation result draws at most one 64-byte Extract value. -/
 theorem markedRoot_uniform (hmac : PqxdhSecretInputKdf.HmacSha512) (candidate : PqxdhKemIndCca.MlKemSharedSecret)
@@ -443,22 +443,27 @@ theorem groupEnv_bound (owner : ℕ) (control : beaconcrypt_core.pqxdh.BeaconIni
         commitEnv_bound e owner control before _ staged kind).mono
       cases kind <;> simp
 
-/-- Owner k's challenge finish in capability form issues at most `decapsCost + 108` coin effects (its preparation's decapsulation and the grouped request), at most one BLAKE2b effect and at most one administrative effect, from every environment state. -/
+/-- Owner k's challenge finish in capability form issues at most `decapsCost + 108` coin effects (its preparation's decapsulation and the grouped request), at most two BLAKE2b effects (the forwarded transcript hash and the sequence-one opening) and at most one administrative effect, from every environment state. -/
 theorem finishChallenge_bound (caps : KemCaps) (bounded : KemBound setup caps) {count : ℕ}
     (p : PqxdhDeploymentIdealParams.Params KemSK count) (owner : ℕ) (raw : Pqxdh.Bytes)
     (e : PqxdhDeploymentEnvironment.EnvState KemSK PqxdhDeploymentIdealSteps.SplitBk) (kind : EffectKind) :
     ((PqxdhDeploymentIdealEnvFinish.finishChallengeEnv setup codec p owner raw).run e).IsQueryBoundP
-      (fun effect => effectKind effect = kind) (if kind = .coin then caps.decapsCost + 108 else 1) := by
+      (fun effect => effectKind effect = kind)
+        (if kind = .coin then caps.decapsCost + 108 else if kind = .hash then 2 else 1) := by
   change IsQueryBoundP (PqxdhDeploymentIdealEnvFinish.finishChallengeEnv setup codec p owner raw e) _ _
   unfold PqxdhDeploymentIdealEnvFinish.finishChallengeEnv
   split
   · split
-    · apply (isQueryBoundP_bind (m := if kind = .coin then 108 else 1) (PqxdhDeploymentEnvironment.coins_bound _ _
-        (preparation_cost setup codec caps bounded p.challenge _ _ _ _ _ raw) kind) fun prepared _ => ?_).mono
-        (by cases kind <;> simp)
-      split
-      · exact (commitEnv_bound e owner _ _ _ none kind).mono (by cases kind <;> simp)
-      · exact groupEnv_bound setup codec owner _ _ e _ kind
+    · split
+      · apply (isQueryBoundP_bind (m := if kind = .coin then caps.decapsCost + 108 else 1)
+          (PqxdhDeploymentEnvironment.request_hash_bound _ kind) fun digest _ => ?_).mono (by cases kind <;> simp)
+        apply (isQueryBoundP_bind (m := if kind = .coin then 108 else 1) (PqxdhDeploymentEnvironment.coins_bound _ _
+          (preparation_cost setup codec caps bounded p.challenge _ _ _ _ _ _ raw) kind) fun prepared _ => ?_).mono
+          (by cases kind <;> simp)
+        split
+        · exact (commitEnv_bound e owner _ _ _ none kind).mono (by cases kind <;> simp)
+        · exact groupEnv_bound setup codec owner _ _ e _ kind
+      all_goals exact (commitEnv_bound e owner _ _ _ none kind).mono (by cases kind <;> simp)
     · trivial
   · trivial
 
@@ -506,7 +511,7 @@ variable {ι : Type} {baseSpec : OracleSpec ι} {Reader Response : Type}
 open PqxdhRecordLiftInterface (EffectKind effectKind)
 open PqxdhDeploymentEnvironment (allowanceG baseAllowance ceFirstTouch)
 
-/-- Every command of the ideal step stays within the first-touch allowance of plan sections 31, 33 and 35 (`allowanceG (baseAllowance caps) ceFirstTouch`) at every environment state, for every effect kind: the pool create within the real create allowance, the selected accept within `140 + encapsCost` coins (the real accept's `96 + encapsCost` plus the 44 first-touch coins) including the allocator's no-room branch, the marked build within the build allowance (`PqxdhDeploymentIdealEnv.idealStep_build_bound`), owner k's challenge finish within `decapsCost + 108` coins, one BLAKE2b and one administrative effect, and every other command within its real allowance. -/
+/-- Every command of the ideal step stays within the first-touch allowance of plan sections 31, 33 and 35 (`allowanceG (baseAllowance caps) ceFirstTouch`) at every environment state, for every effect kind: the pool create within the real create allowance, the selected accept within `140 + encapsCost` coins (the real accept's `96 + encapsCost` plus the 44 first-touch coins) including the allocator's no-room branch, the marked build within the build allowance (`PqxdhDeploymentIdealEnv.idealStep_build_bound`), owner k's challenge finish within `decapsCost + 108` coins, two BLAKE2b effects (transcript hash and sequence-one opening) and one administrative effect, and every other command within its real allowance. -/
 theorem idealStep_bound (caps : KemCaps) (bounded : KemBound setup caps) {count : ℕ}
     (t : PqxdhDeploymentIdealParams.Target count) (p : PqxdhDeploymentIdealParams.Params KemSK count)
     (query : PqxdhRecordLiftInterface.EnvQuery)

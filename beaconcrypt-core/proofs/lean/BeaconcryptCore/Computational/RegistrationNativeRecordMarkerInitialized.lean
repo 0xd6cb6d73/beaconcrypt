@@ -42,7 +42,7 @@ theorem receipts (target : Label n) (modes : Label n → KeyMode) (replace : Pqx
     (setup : Setup base KemSK) (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
     (env : RegistrationNativeEntropyInterface.Environment n E) (serverKid : U64) (bounds : FreshBounds)
     (mode : Mode) (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value)
-    (created : PqxdhLiveServerConstruction.Created Unit) (initial : E) (shell : CborRecordWorldClient.Shell)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (initial : E) (shell : CborRecordWorldClient.Shell)
     (control : Control n) (safe : PqxdhRecordLiftProtocolHistory.Safe control) (secret : CtxPrivate n) (flag : Bool)
     (result : RegistrationNativeRecordServiceInitialized.Result n E (CtxPrivate n × Bool) Value)
     (supported : result ∈ support (RegistrationNativeRecordServiceInitialized.run (service target modes replace setup codec)

@@ -18,20 +18,20 @@ variable {n : Nat} {ι KemSK Value : Type} {base : OracleSpec ι}
 variable {source : RegistrationNativeMldsa.Source}
 
 noncomputable def implementation (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit) :
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     QueryImpl (Spec n KemSK) (StateT (Context n KemSK) (OracleComp DynamicSpec))
   | .inl query => StateT.lift (DynamicSpec.query (.inl query) : OracleComp DynamicSpec _)
   | .inr query => RegistrationNativeIdentityCompiler.implementation (source := source) setup checks representation created query
 
 noncomputable def compiled (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit) :
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     QueryImpl (Spec n KemSK) (StateT (Context n KemSK × SourceState) ProbComp) :=
   fun query before => (fun result => (result.1.1, (result.1.2, result.2))) <$>
     (simulateQ (lazyImpl setup.joint) ((implementation (source := source) setup checks representation created query).run before.1)).run before.2
 
 /-- Both ordinary native operations and separate external coins preserve the exact source state projection, with true native counters unchanged by external draws. -/
 theorem query_source (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (Spec n KemSK).Domain) (before : Context n KemSK × SourceState) :
     Prod.map id RegistrationNativeIdentityCompiler.project <$>
       (compiled (source := source) setup checks representation created query).run before =
@@ -52,7 +52,7 @@ theorem query_source (setup : Setup base KemSK) (checks : Checks)
 
 /-- The complete adaptive effectful opaque program has its exact ordinary joint-source execution, with its full continued state. -/
 theorem program_source (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp (Spec n KemSK) Value) (before : Context n KemSK × SourceState) :
     Prod.map id RegistrationNativeIdentityCompiler.project <$>
       (simulateQ (compiled (source := source) setup checks representation created) work).run before =
@@ -63,7 +63,7 @@ theorem program_source (setup : Setup base KemSK) (checks : Checks)
 
 /-- The interpreted callback compiler is literally the executable indexed service tree, rather than an assumed challenger/program equality. -/
 theorem compiled_program (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp (Spec n KemSK) Value) (before : Context n KemSK × SourceState) :
     (simulateQ (compiled (source := source) setup checks representation created) work).run before =
       (fun result => (result.1.1, (result.1.2, result.2))) <$>

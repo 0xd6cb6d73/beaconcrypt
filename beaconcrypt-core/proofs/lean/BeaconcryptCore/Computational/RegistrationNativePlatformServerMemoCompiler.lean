@@ -59,6 +59,7 @@ private theorem target_all (query : RegistrationNativePlatformServerFrontendProg
       (DemandBacked (n := n) memo roots) := by
   cases query with
   | pin current => exact effects_all memo roots _ before
+  | adHash pending => exact effects_all memo roots _ before
   | reserve => exact effects_all memo roots _ before
   | present keyId => exact effects_all memo roots _ before
   | service control initial message =>

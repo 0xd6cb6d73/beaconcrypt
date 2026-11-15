@@ -227,21 +227,30 @@ section Build
 variable {KemSK Response : Type}
 open PqxdhServerAuthNative (nativeGet nativeSet nativeCoins)
 
-/-- The marked Server build (design-v2 section 3.2): `PqxdhServerAuthNative.nativeBuild` with the session's response tail given by the hidden build service; the token is consumed and the seals are logged as in the native build. -/
+/-- The marked Server build (design-v2 section 3.2): `PqxdhServerAuthNative.nativeBuild` with the session's response tail given by the hidden build service at the AD of the transcript digest; a token rejected by the pre-hash guard is consumed with no hash and no tail, otherwise the transcript is hashed on the shared CTX cache, the token is consumed and the seals are logged as in the native build. -/
 noncomputable def buildHidden (hidden : Hidden Response) (session : ℕ) (payload : Option Pqxdh.Bytes) :
     NativeGame KemSK (Option PqxdhServerRegistrationPublication.Response) := do
   let state ← nativeGet
   match state.pending session with
   | none => pure none
-  | some token => do
-      let result ← nativeCoins ((hidden.hiddenBuild token payload state.server).run ([], state.ctx))
-      let settled := PqxdhServerAuthExperiment.settle state.server result.1
-      nativeSet { state with
-        pending := Function.update state.pending session none
-        server := settled.2
-        ctx := result.2.2
-        ghost := { state.ghost with seals := state.ghost.seals ++ result.2.1.map (fun context => (session, context)) } }
-      pure settled.1
+  | some token =>
+    match PqxdhServerRegistrationPublication.prehash state.server token.pending payload with
+    | none => do
+        nativeSet { state with pending := Function.update state.pending session none }
+        pure none
+    | some candidate => do
+        let digest ← PqxdhServerAuthNative.nativeHash (PqxdhTranscriptAd.transcript
+          (PqxdhTranscriptAd.initOf token.init) (PqxdhTranscriptAd.serverResponse candidate))
+        let current ← nativeGet
+        let result ← nativeCoins ((hidden.hiddenBuild token payload (PqxdhTranscriptAd.adOf digest)
+          current.server).run ([], current.ctx))
+        let settled := PqxdhServerAuthExperiment.settle current.server result.1
+        nativeSet { current with
+          pending := Function.update current.pending session none
+          server := settled.2
+          ctx := result.2.2
+          ghost := { current.ghost with seals := current.ghost.seals ++ result.2.1.map (fun context => (session, context)) } }
+        pure settled.1
 
 /-- With the native services at a root, the marked build is the native build. -/
 theorem buildHidden_native {ι : Type} {baseSpec : OracleSpec ι} {Reader : Type} (setup : Setup baseSpec KemSK)
@@ -253,7 +262,8 @@ theorem buildHidden_native {ι : Type} {baseSpec : OracleSpec ι} {Reader : Type
 
 /-- The key ID of a published peer: a build response whose key ID names a peer of the settled Server (`PqxdhDeploymentEnvironment.hiddenServerEffect` installs exactly these). -/
 def publishedKey (response : Option PqxdhServerRegistrationPublication.Response)
-    (server : PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes)) : Option Std.U64 :=
+    (server : PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes)) :
+    Option Std.U64 :=
   match response with
   | none => none
   | some response => (server.server.peers response.keyId).map fun _ => response.keyId
@@ -275,15 +285,17 @@ abbrev PreSpecCE (KemSK Response : Type) :=
 /-- The grouped native owner's interface: preparation requests and the grouped finish request. -/
 abbrev OwnerSpecCE (KemSK Response : Type) := PreSpecCE KemSK Response + GroupSpec Response
 
-/-- The native Beacon owner in grouped form (item 2's `PqxdhRegistrationJointKemPostSkeleton.groupedOwner` at the native owner type): the opaque-handle preparation, then the private root and the whole continuation after it as one request, then the source commit. -/
-noncomputable def groupedOwnerCE (raw : Pqxdh.Bytes) (state : PqxdhRegistrationSchedule.Owner KemSK) :
+/-- The native Beacon owner in grouped form (item 2's `PqxdhRegistrationJointKemPostSkeleton.groupedOwner` at the native owner type) at a completed binding (per call, design §4.8): the opaque-handle preparation, then the private root and the whole continuation after it as one request, then the source commit. -/
+noncomputable def groupedOwnerCE (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+    (raw : Pqxdh.Bytes) (state : PqxdhRegistrationSchedule.Owner KemSK) :
     OracleComp (OwnerSpecCE KemSK Response) (Option Pqxdh.Bytes × PqxdhRegistrationSchedule.Owner KemSK) :=
   match state.beacon.phase with
   | .initSent control prekey oneTime kem => do
       let prepared ← simulateQ (fun query => ((OwnerSpecCE KemSK Response).query (.inl query) :
           OracleComp (OwnerSpecCE KemSK Response) _) : QueryImpl (PreSpecCE KemSK Response)
             (OracleComp (OwnerSpecCE KemSK Response)))
-        (PqxdhBeaconPhase2Shared.prepare control state.beacon.identity prekey oneTime kem raw)
+        (PqxdhBeaconPhase2Shared.prepare (completedBinding := completedBinding) control state.beacon.identity prekey oneTime
+          kem raw)
       match prepared with
       | none => pure (PqxdhBeaconPhase2Publication.finish control state none)
       | some prepared => do
@@ -357,7 +369,24 @@ noncomputable def ownerImplCE (hidden : Output → Hidden Response) (challenge :
   | .inl query => fun s => (fun reply => (reply, s)) <$> liftS (preparationCE setup codec challenge query)
   | .inr pending => groupCE setup codec hidden pending
 
-/-- Owner k's challenge finish (design-v2 section 3.2): the addressed owner's grouped native finish under `ownerImplCE`, from the registration state and no recorded coordinates; the returned owner is reinstalled, and the coordinates of a hidden read are returned in the state. -/
+/-- The hashed grouped native owner finish (`PqxdhRegistrationSchedule.ownerFinish` in grouped form): an InitSent owner with its retained Phase 1 bundle and a decodable response hashes the transcript on the shared CTX cache and runs the grouped native owner under `ownerImplCE` at the completed binding of the digest; an undecodable response (or a missing bundle) aborts before hashing, and a non-InitSent owner answers nothing. -/
+noncomputable def hashedOwnerCE (hidden : Output → Hidden Response) (challenge : MlKem768Ciphertext)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) :
+    StateT (NativeState KemSK × Option Coord) (OracleComp SlotSpec)
+      (Option Pqxdh.Bytes × PqxdhRegistrationSchedule.Owner KemSK) :=
+  match owner.beacon.phase with
+  | .initSent control _ _ _ =>
+    match retained, PqxdhServerAuthExperiment.responseOf codec raw with
+    | some init, some response => do
+        let digest ← fun s => (fun r => (r.1, (r.2, s.2))) <$> liftS ((PqxdhServerAuthNative.nativeHash (KemSK := KemSK)
+          (PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf init) response)).run s.1)
+        simulateQ (ownerImplCE setup codec hidden challenge)
+          (groupedOwnerCE (Response := Response) (PqxdhTranscriptAd.completedOf control digest) raw owner)
+    | _, _ => pure (none, PqxdhBeaconPhase2Preparation.abort control owner)
+  | _ => pure (none, owner)
+
+/-- Owner k's challenge finish (design-v2 section 3.2): the addressed owner's hashed grouped native finish (`hashedOwnerCE`) at its retained Phase 1 bundle, from the registration state and no recorded coordinates; the returned owner is reinstalled, and the coordinates of a hidden read are returned in the state. -/
 noncomputable def finishChallenge (hidden : Output → Hidden Response) (challenge : MlKem768Ciphertext) (index : ℕ)
     (raw : Pqxdh.Bytes) :
     StateT (PqxdhRegistrationSchedule.State KemSK × Option Coord) (OracleComp SlotSpec) (Option Pqxdh.Bytes) :=
@@ -365,9 +394,10 @@ noncomputable def finishChallenge (hidden : Output → Hidden Response) (challen
     match state.1.owners[index]? with
     | none => pure (none, state)
     | some owner => do
-        let result ← (simulateQ (ownerImplCE setup codec hidden challenge)
-          (groupedOwnerCE (Response := Response) raw owner)).run (state.1.shared, state.2)
-        pure (result.1.1, ({ shared := result.2.1, owners := state.1.owners.set index result.1.2 }, result.2.2))
+        let result ← (hashedOwnerCE setup codec hidden challenge (state.1.inits index) raw owner).run
+          (state.1.shared, state.2)
+        pure (result.1.1,
+          ({ state.1 with shared := result.2.1, owners := state.1.owners.set index result.1.2 }, result.2.2))
 
 end Finish
 

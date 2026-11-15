@@ -77,7 +77,7 @@ private theorem outgoing_stable (setup : Setup base KemSK) (index : Nat) (owner 
   classical
   rcases query with (hashRequest | signRequest) | edRequest
   · exact lift_stable _
-  · exact bind_stable _ _ (sample_stable _) (fun _ => bind_stable _ _ (lift_stable _) (fun _ => pure_stable _))
+  · exact pure_stable _
   · simp only [outgoing]
     split
     · exact bind_stable _ _ (log_stable index _ _) (fun _ => pure_stable _)
@@ -154,7 +154,7 @@ private noncomputable def bundled (setup : Setup base KemSK) (wire : Registratio
     M n KemSK source Auxiliary (RustM (Option Pqxdh.Bytes)) := do
   let published ← simulateQ (outgoing setup source target owner)
     (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨owner.pin.binding⟩ (inputs setup owner)
-      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)
+      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)
   next target owner oneTime published
 
 private theorem bundled_shape (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire)
@@ -204,7 +204,7 @@ theorem source_shape (setup : Setup base KemSK) (wire : RegistrationNativeWire.W
 /-- Original native closure retains the same source phase-change alternative for every failed or successful bundle. -/
 theorem typed_shape (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (target : Nat) (before after : RegistrationNativeExperiment.State n KemSK source)
     (reply : RustM (Option Pqxdh.Bytes))
     (supported : (reply, after) ∈ support ((RegistrationNativeExperiment.handler setup checks wire route representation
@@ -239,7 +239,7 @@ private theorem pending_lookup (before after : State source) (index : Nat)
 /-- An exact pending capability after an original bundle is inherited from its prior state, or was created by this same successful bundle at its own slot. -/
 theorem typed_pending (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (target : Nat) (before after : RegistrationNativeExperiment.State n KemSK source) (reply : RustM (Option Pqxdh.Bytes))
     (supported : (reply, after) ∈ support ((RegistrationNativeExperiment.handler setup checks wire route representation
       created source credential (.inr (.bundle target))).run before))

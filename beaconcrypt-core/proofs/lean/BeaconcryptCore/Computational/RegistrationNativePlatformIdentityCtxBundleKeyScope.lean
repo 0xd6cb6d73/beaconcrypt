@@ -19,7 +19,7 @@ open RegistrationNativePlatformWriterKeyPolicy (AllowedQuery)
 open PqxdhEd25519EufCma (X25519PublicKey)
 variable {n : Nat} {I KemSK Platform E A B Q : Type} {base : OracleSpec I} {source : RegistrationNativeMldsa.Source} {queries : OracleSpec Q}
 variable (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner source)
 local notation "prekey" => PqxdhPhase2InputBytes.word owner.prekeyPublic
 local notation "pq" => owner.kemPublic
@@ -105,7 +105,7 @@ theorem bundled (scalar : PqxdhJointGapDh.ScalarBytes)
   · intro reached
     rw [RegistrationNativeIdentityCensorBundleTerminal.next_run]
     trivial
-  · apply RegistrationNativePlatformWriterKeyPolicy.begin_all prekey pq _ _ _ _ _ (setup.dh.publicKey scalar)
+  · apply RegistrationNativePlatformWriterKeyPolicy.begin_all prekey pq _ _ _ _ (setup.dh.publicKey scalar)
     · rfl
     · exact PqxdhRootTableInitialization.rootArray_bytes _
     · simp [RegistrationNativeIdentityFrontend.inputs, RegistrationNativeBeaconFrontend.pqArray, PqxdhRefinement.absBytes, List.map_map, Function.comp_def]

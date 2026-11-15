@@ -90,7 +90,7 @@ def joined (E : Type) (prefixBytes : Std.Array U8 8#usize) (application : Slice 
   simulateQ native (AdapterSealRequestMonad.Lifted.join (E := E) (m := AdapterSealRequestMonad.Program E)
     (Std.Array.make 2#usize [Std.Array.to_slice prefixBytes, application])).run
 
-def aead (E : Type) (plaintext : Slice U8) (associated : Std.Array U8 281#usize)
+def aead (E : Type) (plaintext : Slice U8) (associated : Std.Array U8 151#usize)
     (nonce : primitives.Nonce) (key : primitives.Key) : OracleComp (Spec E) (RustM Output) :=
   finish <$> ((Spec E).query (.aead plaintext (.some (Std.Array.to_slice associated)) nonce key) :
     OracleComp (Spec E) NativeReply)
@@ -106,7 +106,7 @@ def execute (E : Type) (request : record_effects.AeadSealRequest) : OracleComp (
           | .none => pure (.ok .none)
           | .some plaintext => aead E plaintext request.associated_data nonce key
 
-private def aeadProgram (E : Type) (plaintext : Slice U8) (associated : Std.Array U8 281#usize)
+private def aeadProgram (E : Type) (plaintext : Slice U8) (associated : Std.Array U8 151#usize)
     (nonce : primitives.Nonce) (key : primitives.Key) : AdapterSealRequestMonad.Program E Output := do
   let associated ← AdapterSealRequestMonad.Lifted.arraySlice associated
   let reply ← AdapterSealRequestMonad.Operations.aead (E := E) plaintext (core.option.Option.Some associated) nonce key
@@ -123,7 +123,7 @@ private def aeadProgram (E : Type) (plaintext : Slice U8) (associated : Std.Arra
       | .Break residual => AdapterSealRequestMonad.Lifted.fromResidual residual
   | .Break residual => AdapterSealRequestMonad.Lifted.fromResidual residual
 
-private theorem aead_body (E : Type) (plaintext : Slice U8) (associated : Std.Array U8 281#usize)
+private theorem aead_body (E : Type) (plaintext : Slice U8) (associated : Std.Array U8 151#usize)
     (nonce : primitives.Nonce) (key : primitives.Key) :
     simulateQ native (aeadProgram E plaintext associated nonce key).run = aead E plaintext associated nonce key := by
   unfold aeadProgram

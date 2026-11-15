@@ -18,7 +18,7 @@ attribute [local irreducible] RegistrationWorldAuthentication.begin
 /-- Actual successful authentication under the open candidate source gives the exact original public accepted tuple. -/
 theorem accepted (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (selected : Nat) (pairs : List (PqxdhKemIndCca.MlKem768PublicKey × KemSK))
     (publicKey : PqxdhKemIndCca.MlKem768PublicKey) (real : Bool)
     (packet : registration.InitPacket) (events : List BeaconcryptCore.Refinement.RegistrationAuthenticationFlow.Event)

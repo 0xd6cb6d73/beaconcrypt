@@ -7,6 +7,9 @@ import BeaconcryptCore.Computational.PqxdhRecordLiftPrefixPolicy
 open OracleComp OracleSpec
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhRecordLiftSeedPolicy
+
+/-- Current concrete AD width, elaborated independently of dependent result annotations. -/
+private abbrev RecordAd := Aeneas.Std.Array Aeneas.Std.U8 151#usize
 open PqxdhRecordLiftInterface PqxdhRecordLiftProtocol PqxdhFullSecretInputKdf
 open PqxdhRecordLiftChainState PqxdhRecordLiftChainTable
 variable {n : Nat}
@@ -659,7 +662,7 @@ theorem scan_absent {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Respons
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X)
     (target : Slot n) (coordinate : Coordinate (Slot n)) (same : coordinate.slot = target)
-    (final : PqxdhRecordLiftGlobalSeedCut.Cut n (Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+    (final : PqxdhRecordLiftGlobalSeedCut.Cut n (Option (PqxdhRegistrationJointServerBirth.ClientCreated RecordAd ×
       (X × PqxdhDeploymentSecrecy.Ledger) × E) × Control n) × Private n)
     (supported : final ∈ support ((simulateQ (PqxdhRecordLiftProtocol.interpreter (PqxdhRecordLiftChainOracle.lookup setup.source · ideal)
       setup codec) (PqxdhRecordLiftGlobalSeedCut.scan target
@@ -711,7 +714,7 @@ theorem uniform_policy {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Resp
     (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X)
     (filling : PqxdhSecretInputKdf.RootOutput) (target : Slot n) (direction : Bool)
     (real : ideal ⟨target, direction, start direction⟩ = false)
-    (finish : PqxdhRecordLiftGlobalCut.Observer (Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+    (finish : PqxdhRecordLiftGlobalCut.Observer (Option (PqxdhRegistrationJointServerBirth.ClientCreated RecordAd ×
       (X × PqxdhDeploymentSecrecy.Ledger) × E) × Control n)) :
     LazyOracleDiscard.LawEq
       (PqxdhRecordLiftGlobalSeedCut.seedUniform setup.source ideal filling setup codec target direction

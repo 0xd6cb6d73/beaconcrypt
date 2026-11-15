@@ -682,7 +682,7 @@ def transport.parse_uint (c : cbordetveraux.cbor_raw) : RustM Std.U64 := do
   | cbordetver.cbor_det_view.SimpleValue _ => fail panic
 
 /-- [beaconcrypt_parse::extraction_iterator_next_value]:
-    Source: 'beaconcrypt-parse/src/lib.rs', lines 155:0-161:1
+    Source: 'beaconcrypt-parse/src/lib.rs', lines 153:0-159:1
     Visibility: public -/
 def extraction_iterator_next_value
   (iterator : cbordetveraux.bcExtractedToken63626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f726177) :
@@ -984,7 +984,7 @@ def transport.validate_kexresponse
           let v10 ← cbordetver.cbor_det_destruct extraction_value
           match v10 with
           | cbordetver.cbor_det_view.Int64 _ res =>
-            if res = 2#u64
+            if res = 3#u64
             then
               let pi1 := index_mut_back extraction_after
               let i10 ← Array.index_usize pi1 0#usize
@@ -1578,7 +1578,7 @@ def
 }
 
 /-- [beaconcrypt_parse::transport::extraction_parse_kexresponse_check_6]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 4692:0-4703:1
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 4058:0-4069:1
     Visibility: public -/
 def transport.extraction_parse_kexresponse_check_6
   (pc60 : Array cbordetveraux.bcExtractedToken63626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f726177
@@ -1597,7 +1597,7 @@ def transport.extraction_parse_kexresponse_check_6
     ok (result, pc601)
 
 /-- [beaconcrypt_parse::transport::extraction_parse_kexresponse_check_5]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 4680:0-4691:1
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 4046:0-4057:1
     Visibility: public -/
 def transport.extraction_parse_kexresponse_check_5
   (pc50 : Array cbordetveraux.bcExtractedToken63626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f726177
@@ -1616,7 +1616,7 @@ def transport.extraction_parse_kexresponse_check_5
     ok (result, pc501)
 
 /-- [beaconcrypt_parse::transport::extraction_parse_kexresponse_check_4]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 4650:0-4679:1
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 4016:0-4045:1
     Visibility: public -/
 def transport.extraction_parse_kexresponse_check_4
   (pc40 : Array cbordetveraux.bcExtractedToken63626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f726177
@@ -1654,7 +1654,7 @@ def transport.extraction_parse_kexresponse_check_4
          ok (false, pc401)
 
 /-- [beaconcrypt_parse::transport::extraction_parse_kexresponse_check_3]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 4620:0-4649:1
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 3986:0-4015:1
     Visibility: public -/
 def transport.extraction_parse_kexresponse_check_3
   (pc30 : Array cbordetveraux.bcExtractedToken63626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f726177
@@ -1692,7 +1692,7 @@ def transport.extraction_parse_kexresponse_check_3
          ok (false, pc301)
 
 /-- [beaconcrypt_parse::transport::extraction_parse_kexresponse_check_2]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 4590:0-4619:1
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 3956:0-3985:1
     Visibility: public -/
 def transport.extraction_parse_kexresponse_check_2
   (pc20 : Array cbordetveraux.bcExtractedToken63626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f726177
@@ -1730,7 +1730,7 @@ def transport.extraction_parse_kexresponse_check_2
          ok (false, pc201)
 
 /-- [beaconcrypt_parse::transport::extraction_parse_kexresponse_check_1]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 4562:0-4589:1
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 3928:0-3955:1
     Visibility: public -/
 def transport.extraction_parse_kexresponse_check_1
   (pc10 : Array cbordetveraux.bcExtractedToken63626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f726177
@@ -1762,7 +1762,7 @@ def transport.extraction_parse_kexresponse_check_1
          ok (false, pc101)
 
 /-- [beaconcrypt_parse::transport::extraction_parse_kexresponse_check_0]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 4534:0-4561:1
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 3900:0-3927:1
     Visibility: public -/
 def transport.extraction_parse_kexresponse_check_0
   (pc : Array cbordetveraux.bcExtractedToken63626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f726177
@@ -1784,7 +1784,7 @@ def transport.extraction_parse_kexresponse_check_0
       match v10 with
       | cbordetver.cbor_det_view.Int64 _ res =>
         let pc1 := index_mut_back extraction_after
-        ok (res = 2#u64, pc1)
+        ok (res = 3#u64, pc1)
       | cbordetver.cbor_det_view.String _ _ => fail panic
       | cbordetver.cbor_det_view.Array _ => fail panic
       | cbordetver.cbor_det_view.Map _ => fail panic
@@ -1968,93 +1968,8 @@ def
   then ok true
   else ok false
 
-/-- [beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::closure::closure::{impl core::ops::function::Fn<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::closure::closure::closure}::call]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2586:28-2643:1 -/
-def
-  transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.bcSchemaRepeatedClosure5.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e5475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call
-  (c :
-  transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.bcSchemaRepeatedClosure5)
-  (tupled_args : Array
-  cbordetveraux.bcExtractedToken63626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f726177 1#usize) :
-  RustM Bool
-  := do
-  let i16 ← Array.index_usize tupled_args 0#usize
-  let is_done6 ← cbordetver.cbor_det_array_iterator_is_empty i16
-  if is_done6
-  then ok false
-  else
-    let (extraction_value, extraction_after) ←
-      extraction_iterator_next_value i16
-    let (_, index_mut_back) ← Array.index_mut_usize tupled_args 0#usize
-    let mt ← cbordetver.cbor_det_major_type extraction_value
-    if mt = 2#u8
-    then
-      let v10 ← cbordetver.cbor_det_destruct extraction_value
-      match v10 with
-      | cbordetver.cbor_det_view.Int64 _ _ => fail panic
-      | cbordetver.cbor_det_view.String _ a =>
-        let len ← core.slice.Slice.len a
-        let lo_ok ← cbordetveraux.u64_lte_sizet 3309#u64 len
-        let hi_ok ← cbordetveraux.sizet_lte_u64 len 3309#u64
-        if lo_ok
-        then
-          if hi_ok
-          then
-            let tupled_args1 := index_mut_back extraction_after
-            transport.validate_initkex.closure.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e5475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call
-              c tupled_args1
-          else ok false
-        else ok false
-      | cbordetver.cbor_det_view.Array _ => fail panic
-      | cbordetver.cbor_det_view.Map _ => fail panic
-      | cbordetver.cbor_det_view.Tagged _ _ => fail panic
-      | cbordetver.cbor_det_view.SimpleValue _ => fail panic
-    else ok false
-
-/-- [beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::closure::{impl core::ops::function::Fn<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::closure::closure}::call]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2577:28-2693:1 -/
-def
-  transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e5475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call
-  (c : transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4)
-  (tupled_args : Array
-  cbordetveraux.bcExtractedToken63626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f726177 1#usize) :
-  RustM Bool
-  := do
-  let i15 ← Array.index_usize tupled_args 0#usize
-  let is_done5 ← cbordetver.cbor_det_array_iterator_is_empty i15
-  if is_done5
-  then ok false
-  else
-    let (extraction_value, extraction_after) ←
-      extraction_iterator_next_value i15
-    let (_, index_mut_back) ← Array.index_mut_usize tupled_args 0#usize
-    let mt ← cbordetver.cbor_det_major_type extraction_value
-    if mt = 2#u8
-    then
-      let v10 ← cbordetver.cbor_det_destruct extraction_value
-      match v10 with
-      | cbordetver.cbor_det_view.Int64 _ _ => fail panic
-      | cbordetver.cbor_det_view.String _ a =>
-        let len ← core.slice.Slice.len a
-        let lo_ok ← cbordetveraux.u64_lte_sizet 1952#u64 len
-        let hi_ok ← cbordetveraux.sizet_lte_u64 len 1952#u64
-        if lo_ok
-        then
-          if hi_ok
-          then
-            let tupled_args1 := index_mut_back extraction_after
-            transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.bcSchemaRepeatedClosure5.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e5475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call
-              c tupled_args1
-          else ok false
-        else ok false
-      | cbordetver.cbor_det_view.Array _ => fail panic
-      | cbordetver.cbor_det_view.Map _ => fail panic
-      | cbordetver.cbor_det_view.Tagged _ _ => fail panic
-      | cbordetver.cbor_det_view.SimpleValue _ => fail panic
-    else ok false
-
 /-- [beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::{impl core::ops::function::Fn<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::closure}::call]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2568:28-2737:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2568:28-2618:1 -/
 def
   transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e5475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call
   (c : transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3)
@@ -2085,7 +2000,7 @@ def
           if hi_ok
           then
             let tupled_args1 := index_mut_back extraction_after
-            transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e5475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call
+            transport.validate_initkex.closure.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e5475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call
               c tupled_args1
           else ok false
         else ok false
@@ -2096,7 +2011,7 @@ def
     else ok false
 
 /-- [beaconcrypt_parse::transport::validate_initkex::closure#1::closure::{impl core::ops::function::Fn<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure}::call]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2559:28-2780:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2559:28-2661:1 -/
 def
   transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e5475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call
   (c : transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2)
@@ -2138,7 +2053,7 @@ def
     else ok false
 
 /-- [beaconcrypt_parse::transport::validate_initkex::closure#1::{impl core::ops::function::Fn<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1::closure}::call]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2551:28-2823:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2551:28-2704:1 -/
 def
   transport.validate_initkex.closure_1.closure.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e5475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call
   (c : transport.validate_initkex.closure_1.closure)
@@ -2180,7 +2095,7 @@ def
     else ok false
 
 /-- [beaconcrypt_parse::transport::validate_initkex::{impl core::ops::function::Fn<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1}::call]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2546:28-2864:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2546:28-2745:1 -/
 def
   transport.validate_initkex.closure_1.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e5475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call
   (c : transport.validate_initkex.closure_1)
@@ -2222,7 +2137,7 @@ def
     else ok false
 
 /-- [beaconcrypt_parse::transport::validate_initkex::{impl core::ops::function::Fn<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#2<'_0>}::call]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2875:28-2893:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2756:28-2774:1 -/
 def
   transport.validate_initkex.closure_2.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e5475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call
   (c : transport.validate_initkex.closure_2)
@@ -2246,7 +2161,7 @@ def
   | cbordetver.cbor_det_view.SimpleValue _ => fail panic
 
 /-- [beaconcrypt_parse::transport::validate_initkex]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2486:0-2914:1
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2486:0-2795:1
     Visibility: public -/
 def transport.validate_initkex (c : cbordetveraux.cbor_raw) : RustM Bool := do
   let ty ← cbordetver.cbor_det_major_type c
@@ -2273,7 +2188,7 @@ def transport.validate_initkex (c : cbordetveraux.cbor_raw) : RustM Bool := do
           let v10 ← cbordetver.cbor_det_destruct extraction_value
           match v10 with
           | cbordetver.cbor_det_view.Int64 _ res =>
-            if res = 2#u64
+            if res = 3#u64
             then
               let pi1 := index_mut_back extraction_after
               let i10 ← Array.index_usize pi1 0#usize
@@ -2372,7 +2287,7 @@ def
 }
 
 /-- [beaconcrypt_parse::transport::validate_initkex::{impl core::ops::function::FnMut<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1}::call_mut]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2546:28-2864:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2546:28-2745:1 -/
 def
   transport.validate_initkex.closure_1.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4d75745475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call_mut
   (state : transport.validate_initkex.closure_1)
@@ -2386,7 +2301,7 @@ def
   ok (b, state)
 
 /-- [beaconcrypt_parse::transport::validate_initkex::{impl core::ops::function::FnOnce<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1}::call_once]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2546:28-2864:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2546:28-2745:1 -/
 def
   transport.validate_initkex.closure_1.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4f6e63655475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call_once
   (c : transport.validate_initkex.closure_1)
@@ -2400,7 +2315,7 @@ def
   ok b
 
 /-- Trait implementation: [beaconcrypt_parse::transport::validate_initkex::{impl core::ops::function::FnOnce<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1}]
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2546:28-2864:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2546:28-2745:1 -/
 @[reducible]
 def
   transport.validate_initkex.closure_1.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4f6e63655475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c
@@ -2412,7 +2327,7 @@ def
 }
 
 /-- Trait implementation: [beaconcrypt_parse::transport::validate_initkex::{impl core::ops::function::FnMut<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1}]
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2546:28-2864:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2546:28-2745:1 -/
 @[reducible]
 def
   transport.validate_initkex.closure_1.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4d75745475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c
@@ -2426,7 +2341,7 @@ def
 }
 
 /-- Trait implementation: [beaconcrypt_parse::transport::validate_initkex::{impl core::ops::function::Fn<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1}]
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2546:28-2864:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2546:28-2745:1 -/
 @[reducible]
 def
   transport.validate_initkex.closure_1.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e5475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c
@@ -2440,7 +2355,7 @@ def
 }
 
 /-- [beaconcrypt_parse::transport::validate_initkex::closure#1::{impl core::ops::function::FnMut<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1::closure}::call_mut]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2551:28-2823:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2551:28-2704:1 -/
 def
   transport.validate_initkex.closure_1.closure.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4d75745475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call_mut
   (state : transport.validate_initkex.closure_1.closure)
@@ -2454,7 +2369,7 @@ def
   ok (b, state)
 
 /-- [beaconcrypt_parse::transport::validate_initkex::closure#1::{impl core::ops::function::FnOnce<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1::closure}::call_once]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2551:28-2823:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2551:28-2704:1 -/
 def
   transport.validate_initkex.closure_1.closure.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4f6e63655475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call_once
   (c : transport.validate_initkex.closure_1.closure)
@@ -2468,7 +2383,7 @@ def
   ok b
 
 /-- Trait implementation: [beaconcrypt_parse::transport::validate_initkex::closure#1::{impl core::ops::function::FnOnce<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1::closure}]
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2551:28-2823:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2551:28-2704:1 -/
 @[reducible]
 def
   transport.validate_initkex.closure_1.closure.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4f6e63655475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c
@@ -2480,7 +2395,7 @@ def
 }
 
 /-- Trait implementation: [beaconcrypt_parse::transport::validate_initkex::closure#1::{impl core::ops::function::FnMut<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1::closure}]
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2551:28-2823:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2551:28-2704:1 -/
 @[reducible]
 def
   transport.validate_initkex.closure_1.closure.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4d75745475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c
@@ -2494,7 +2409,7 @@ def
 }
 
 /-- Trait implementation: [beaconcrypt_parse::transport::validate_initkex::closure#1::{impl core::ops::function::Fn<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1::closure}]
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2551:28-2823:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2551:28-2704:1 -/
 @[reducible]
 def
   transport.validate_initkex.closure_1.closure.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e5475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c
@@ -2508,7 +2423,7 @@ def
 }
 
 /-- [beaconcrypt_parse::transport::validate_initkex::closure#1::closure::{impl core::ops::function::FnMut<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure}::call_mut]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2559:28-2780:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2559:28-2661:1 -/
 def
   transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4d75745475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call_mut
   (state : transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2)
@@ -2522,7 +2437,7 @@ def
   ok (b, state)
 
 /-- [beaconcrypt_parse::transport::validate_initkex::closure#1::closure::{impl core::ops::function::FnOnce<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure}::call_once]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2559:28-2780:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2559:28-2661:1 -/
 def
   transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4f6e63655475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call_once
   (c : transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2)
@@ -2536,7 +2451,7 @@ def
   ok b
 
 /-- Trait implementation: [beaconcrypt_parse::transport::validate_initkex::closure#1::closure::{impl core::ops::function::FnOnce<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure}]
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2559:28-2780:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2559:28-2661:1 -/
 @[reducible]
 def
   transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4f6e63655475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c
@@ -2549,7 +2464,7 @@ def
 }
 
 /-- Trait implementation: [beaconcrypt_parse::transport::validate_initkex::closure#1::closure::{impl core::ops::function::FnMut<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure}]
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2559:28-2780:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2559:28-2661:1 -/
 @[reducible]
 def
   transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4d75745475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c
@@ -2564,7 +2479,7 @@ def
 }
 
 /-- Trait implementation: [beaconcrypt_parse::transport::validate_initkex::closure#1::closure::{impl core::ops::function::Fn<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure}]
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2559:28-2780:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2559:28-2661:1 -/
 @[reducible]
 def
   transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e5475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c
@@ -2578,7 +2493,7 @@ def
 }
 
 /-- [beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::{impl core::ops::function::FnMut<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::closure}::call_mut]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2568:28-2737:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2568:28-2618:1 -/
 def
   transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4d75745475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call_mut
   (state : transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3)
@@ -2592,7 +2507,7 @@ def
   ok (b, state)
 
 /-- [beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::{impl core::ops::function::FnOnce<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::closure}::call_once]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2568:28-2737:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2568:28-2618:1 -/
 def
   transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4f6e63655475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call_once
   (c : transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3)
@@ -2606,7 +2521,7 @@ def
   ok b
 
 /-- Trait implementation: [beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::{impl core::ops::function::FnOnce<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::closure}]
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2568:28-2737:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2568:28-2618:1 -/
 @[reducible]
 def
   transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4f6e63655475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c
@@ -2619,7 +2534,7 @@ def
 }
 
 /-- Trait implementation: [beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::{impl core::ops::function::FnMut<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::closure}]
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2568:28-2737:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2568:28-2618:1 -/
 @[reducible]
 def
   transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4d75745475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c
@@ -2634,7 +2549,7 @@ def
 }
 
 /-- Trait implementation: [beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::{impl core::ops::function::Fn<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::closure}]
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2568:28-2737:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2568:28-2618:1 -/
 @[reducible]
 def
   transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e5475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c
@@ -2648,155 +2563,8 @@ def
     transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e5475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call
 }
 
-/-- [beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::closure::{impl core::ops::function::FnMut<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::closure::closure}::call_mut]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2577:28-2693:1 -/
-def
-  transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4d75745475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call_mut
-  (state :
-  transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4)
-  (args : Array cbordetveraux.bcExtractedToken63626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f726177
-  1#usize) :
-  RustM (Bool ×
-    transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4)
-  := do
-  let b ←
-    transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e5475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call
-      state args
-  ok (b, state)
-
-/-- [beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::closure::{impl core::ops::function::FnOnce<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::closure::closure}::call_once]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2577:28-2693:1 -/
-def
-  transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4f6e63655475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call_once
-  (c : transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4)
-  (a : Array cbordetveraux.bcExtractedToken63626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f726177
-  1#usize) :
-  RustM Bool
-  := do
-  let (b, _) ←
-    transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4d75745475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call_mut
-      c a
-  ok b
-
-/-- Trait implementation: [beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::closure::{impl core::ops::function::FnOnce<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::closure::closure}]
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2577:28-2693:1 -/
-@[reducible]
-def
-  transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4f6e63655475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c
-  : core.ops.function.FnOnce
-  transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4 (Array
-  cbordetveraux.bcExtractedToken63626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f726177 1#usize) Bool
-  := {
-  call_once :=
-    transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4f6e63655475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call_once
-}
-
-/-- Trait implementation: [beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::closure::{impl core::ops::function::FnMut<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::closure::closure}]
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2577:28-2693:1 -/
-@[reducible]
-def
-  transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4d75745475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c
-  : core.ops.function.FnMut
-  transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4 (Array
-  cbordetveraux.bcExtractedToken63626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f726177 1#usize) Bool
-  := {
-  FnOnceInst :=
-    transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4f6e63655475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c
-  call_mut :=
-    transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4d75745475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call_mut
-}
-
-/-- Trait implementation: [beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::closure::{impl core::ops::function::Fn<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::closure::closure}]
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2577:28-2693:1 -/
-@[reducible]
-def
-  transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e5475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c
-  : core.ops.function.Fn
-  transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4 (Array
-  cbordetveraux.bcExtractedToken63626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f726177 1#usize) Bool
-  := {
-  FnMutInst :=
-    transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4d75745475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c
-  call :=
-    transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e5475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call
-}
-
-/-- [beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::closure::closure::{impl core::ops::function::FnMut<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::closure::closure::closure}::call_mut]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2586:28-2643:1 -/
-def
-  transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.bcSchemaRepeatedClosure5.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4d75745475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call_mut
-  (state :
-  transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.bcSchemaRepeatedClosure5)
-  (args : Array cbordetveraux.bcExtractedToken63626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f726177
-  1#usize) :
-  RustM (Bool ×
-    transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.bcSchemaRepeatedClosure5)
-  := do
-  let b ←
-    transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.bcSchemaRepeatedClosure5.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e5475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call
-      state args
-  ok (b, state)
-
-/-- [beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::closure::closure::{impl core::ops::function::FnOnce<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::closure::closure::closure}::call_once]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2586:28-2643:1 -/
-def
-  transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.bcSchemaRepeatedClosure5.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4f6e63655475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call_once
-  (c :
-  transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.bcSchemaRepeatedClosure5)
-  (a : Array cbordetveraux.bcExtractedToken63626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f726177
-  1#usize) :
-  RustM Bool
-  := do
-  let (b, _) ←
-    transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.bcSchemaRepeatedClosure5.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4d75745475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call_mut
-      c a
-  ok b
-
-/-- Trait implementation: [beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::closure::closure::{impl core::ops::function::FnOnce<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::closure::closure::closure}]
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2586:28-2643:1 -/
-@[reducible]
-def
-  transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.bcSchemaRepeatedClosure5.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4f6e63655475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c
-  : core.ops.function.FnOnce
-  transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.bcSchemaRepeatedClosure5
-  (Array cbordetveraux.bcExtractedToken63626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f726177 1#usize)
-  Bool := {
-  call_once :=
-    transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.bcSchemaRepeatedClosure5.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4f6e63655475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call_once
-}
-
-/-- Trait implementation: [beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::closure::closure::{impl core::ops::function::FnMut<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::closure::closure::closure}]
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2586:28-2643:1 -/
-@[reducible]
-def
-  transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.bcSchemaRepeatedClosure5.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4d75745475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c
-  : core.ops.function.FnMut
-  transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.bcSchemaRepeatedClosure5
-  (Array cbordetveraux.bcExtractedToken63626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f726177 1#usize)
-  Bool := {
-  FnOnceInst :=
-    transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.bcSchemaRepeatedClosure5.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4f6e63655475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c
-  call_mut :=
-    transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.bcSchemaRepeatedClosure5.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4d75745475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call_mut
-}
-
-/-- Trait implementation: [beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::closure::closure::{impl core::ops::function::Fn<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::closure::closure::closure}]
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2586:28-2643:1 -/
-@[reducible]
-def
-  transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.bcSchemaRepeatedClosure5.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e5475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c
-  : core.ops.function.Fn
-  transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.bcSchemaRepeatedClosure5
-  (Array cbordetveraux.bcExtractedToken63626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f726177 1#usize)
-  Bool := {
-  FnMutInst :=
-    transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.bcSchemaRepeatedClosure5.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4d75745475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c
-  call :=
-    transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.bcSchemaRepeatedClosure5.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e5475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call
-}
-
 /-- [beaconcrypt_parse::transport::validate_initkex::{impl core::ops::function::FnMut<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#2<'_0>}::call_mut]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2875:28-2893:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2756:28-2774:1 -/
 def
   transport.validate_initkex.closure_2.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4d75745475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call_mut
   (state : transport.validate_initkex.closure_2)
@@ -2810,7 +2578,7 @@ def
   ok (b, state)
 
 /-- [beaconcrypt_parse::transport::validate_initkex::{impl core::ops::function::FnOnce<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#2<'_0>}::call_once]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2875:28-2893:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2756:28-2774:1 -/
 def
   transport.validate_initkex.closure_2.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4f6e63655475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call_once
   (c : transport.validate_initkex.closure_2)
@@ -2824,7 +2592,7 @@ def
   ok b
 
 /-- Trait implementation: [beaconcrypt_parse::transport::validate_initkex::{impl core::ops::function::FnOnce<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#2<'_0>}]
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2875:28-2893:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2756:28-2774:1 -/
 @[reducible]
 def
   transport.validate_initkex.closure_2.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4f6e63655475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c
@@ -2836,7 +2604,7 @@ def
 }
 
 /-- Trait implementation: [beaconcrypt_parse::transport::validate_initkex::{impl core::ops::function::FnMut<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#2<'_0>}]
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2875:28-2893:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2756:28-2774:1 -/
 @[reducible]
 def
   transport.validate_initkex.closure_2.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e4d75745475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c
@@ -2850,7 +2618,7 @@ def
 }
 
 /-- Trait implementation: [beaconcrypt_parse::transport::validate_initkex::{impl core::ops::function::Fn<([beaconcrypt_parse::cbordetveraux::cbor_raw_iterator__CBOR_Pulse_Raw_Type_cbor_raw<'_>; 1usize],), bool> for beaconcrypt_parse::transport::validate_initkex::closure#2<'_0>}]
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2875:28-2893:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2756:28-2774:1 -/
 @[reducible]
 def
   transport.validate_initkex.closure_2.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e5475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c
@@ -2863,84 +2631,8 @@ def
     transport.validate_initkex.closure_2.Insts.bcExtractedToken436f72654f707346756e6374696f6e466e5475706c65417272617963626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f72617731426f6f6c.call
 }
 
-/-- [beaconcrypt_parse::transport::extraction_parse_initkex_check_6]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 4503:0-4532:1
-    Visibility: public -/
-def transport.extraction_parse_initkex_check_6
-  (pc60 : Array cbordetveraux.bcExtractedToken63626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f726177
-  1#usize) (is_done5 : Bool) :
-  RustM (Bool × (Array
-    cbordetveraux.bcExtractedToken63626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f726177 1#usize))
-  := do
-  if is_done5
-  then ok (false, pc60)
-  else
-    let cricprtcr ← Array.index_usize pc60 0#usize
-    let (extraction_value, extraction_after) ←
-      extraction_iterator_next_value cricprtcr
-    let (_, index_mut_back) ← Array.index_mut_usize pc60 0#usize
-    let mt ← cbordetver.cbor_det_major_type extraction_value
-    if mt = 2#u8
-    then
-      let v14 ← cbordetver.cbor_det_destruct extraction_value
-      match v14 with
-      | cbordetver.cbor_det_view.Int64 _ _ => fail panic
-      | cbordetver.cbor_det_view.String _ a =>
-        let len ← core.slice.Slice.len a
-        let lo_ok ← cbordetveraux.u64_lte_sizet 1952#u64 len
-        let hi_ok ← cbordetveraux.sizet_lte_u64 len 1952#u64
-        if lo_ok
-        then let pc601 := index_mut_back extraction_after
-             ok (hi_ok, pc601)
-        else let pc601 := index_mut_back extraction_after
-             ok (false, pc601)
-      | cbordetver.cbor_det_view.Array _ => fail panic
-      | cbordetver.cbor_det_view.Map _ => fail panic
-      | cbordetver.cbor_det_view.Tagged _ _ => fail panic
-      | cbordetver.cbor_det_view.SimpleValue _ => fail panic
-    else let pc601 := index_mut_back extraction_after
-         ok (false, pc601)
-
-/-- [beaconcrypt_parse::transport::extraction_parse_initkex_check_5]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 4473:0-4502:1
-    Visibility: public -/
-def transport.extraction_parse_initkex_check_5
-  (pc50 : Array cbordetveraux.bcExtractedToken63626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f726177
-  1#usize) (is_done4 : Bool) :
-  RustM (Bool × (Array
-    cbordetveraux.bcExtractedToken63626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f726177 1#usize))
-  := do
-  if is_done4
-  then ok (false, pc50)
-  else
-    let cricprtcr ← Array.index_usize pc50 0#usize
-    let (extraction_value, extraction_after) ←
-      extraction_iterator_next_value cricprtcr
-    let (_, index_mut_back) ← Array.index_mut_usize pc50 0#usize
-    let mt ← cbordetver.cbor_det_major_type extraction_value
-    if mt = 2#u8
-    then
-      let v13 ← cbordetver.cbor_det_destruct extraction_value
-      match v13 with
-      | cbordetver.cbor_det_view.Int64 _ _ => fail panic
-      | cbordetver.cbor_det_view.String _ a =>
-        let len ← core.slice.Slice.len a
-        let lo_ok ← cbordetveraux.u64_lte_sizet 1249#u64 len
-        let hi_ok ← cbordetveraux.sizet_lte_u64 len 1249#u64
-        if lo_ok
-        then let pc501 := index_mut_back extraction_after
-             ok (hi_ok, pc501)
-        else let pc501 := index_mut_back extraction_after
-             ok (false, pc501)
-      | cbordetver.cbor_det_view.Array _ => fail panic
-      | cbordetver.cbor_det_view.Map _ => fail panic
-      | cbordetver.cbor_det_view.Tagged _ _ => fail panic
-      | cbordetver.cbor_det_view.SimpleValue _ => fail panic
-    else let pc501 := index_mut_back extraction_after
-         ok (false, pc501)
-
 /-- [beaconcrypt_parse::transport::extraction_parse_initkex_check_4]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 4443:0-4472:1
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 3869:0-3898:1
     Visibility: public -/
 def transport.extraction_parse_initkex_check_4
   (pc40 : Array cbordetveraux.bcExtractedToken63626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f726177
@@ -2978,7 +2670,7 @@ def transport.extraction_parse_initkex_check_4
          ok (false, pc401)
 
 /-- [beaconcrypt_parse::transport::extraction_parse_initkex_check_3]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 4413:0-4442:1
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 3839:0-3868:1
     Visibility: public -/
 def transport.extraction_parse_initkex_check_3
   (pc30 : Array cbordetveraux.bcExtractedToken63626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f726177
@@ -3016,7 +2708,7 @@ def transport.extraction_parse_initkex_check_3
          ok (false, pc301)
 
 /-- [beaconcrypt_parse::transport::extraction_parse_initkex_check_2]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 4383:0-4412:1
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 3809:0-3838:1
     Visibility: public -/
 def transport.extraction_parse_initkex_check_2
   (pc20 : Array cbordetveraux.bcExtractedToken63626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f726177
@@ -3054,7 +2746,7 @@ def transport.extraction_parse_initkex_check_2
          ok (false, pc201)
 
 /-- [beaconcrypt_parse::transport::extraction_parse_initkex_check_1]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 4355:0-4382:1
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 3781:0-3808:1
     Visibility: public -/
 def transport.extraction_parse_initkex_check_1
   (pc10 : Array cbordetveraux.bcExtractedToken63626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f726177
@@ -3086,7 +2778,7 @@ def transport.extraction_parse_initkex_check_1
          ok (false, pc101)
 
 /-- [beaconcrypt_parse::transport::extraction_parse_initkex_check_0]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 4327:0-4354:1
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 3753:0-3780:1
     Visibility: public -/
 def transport.extraction_parse_initkex_check_0
   (pc : Array cbordetveraux.bcExtractedToken63626f725f7261775f6974657261746f725f5f43424f525f50756c73655f5261775f547970655f63626f725f726177
@@ -3108,7 +2800,7 @@ def transport.extraction_parse_initkex_check_0
       match v10 with
       | cbordetver.cbor_det_view.Int64 _ res =>
         let pc1 := index_mut_back extraction_after
-        ok (res = 2#u64, pc1)
+        ok (res = 3#u64, pc1)
       | cbordetver.cbor_det_view.String _ _ => fail panic
       | cbordetver.cbor_det_view.Array _ => fail panic
       | cbordetver.cbor_det_view.Map _ => fail panic
@@ -3118,7 +2810,7 @@ def transport.extraction_parse_initkex_check_0
          ok (false, pc1)
 
 /-- [beaconcrypt_parse::transport::parse_initkex]:
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2969:0-3171:1
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2836:0-2984:1
     Visibility: public -/
 def transport.parse_initkex
   (c : cbordetveraux.cbor_raw) : RustM transport.initkex := do
@@ -3215,62 +2907,15 @@ def transport.parse_initkex
         | cbordetver.cbor_det_view.Int64 _ _ => fail panic
         | cbordetver.cbor_det_view.String _ a3 =>
           let pc50 := Array.repeat 1#usize c14
-          let i41 ← Array.index_usize pc50 0#usize
-          let is_done4 ← cbordetver.cbor_det_array_iterator_is_empty i41
-          let (extraction_result_5, extraction_after_5) ←
-            transport.extraction_parse_initkex_check_5 pc50 is_done4
-          lowstar.ignore.bcSchemaRepeatedIgnore2 extraction_result_5
-          let c15 ← Array.index_usize extraction_after_5 0#usize
-          let rlen15 ← cbordetver.cbor_det_array_iterator_length c15
-          let i6 ← core.num.U64.wrapping_sub rlen14 rlen15
-          let bcExtractedToken6330c2b735 ← cbordetver.cbor_det_array_iterator_truncate c14 i6
-          let pc6 := Array.repeat 1#usize bcExtractedToken6330c2b735
-          let cricprtcr5 ← Array.index_usize pc6 0#usize
+          let cricprtcr5 ← Array.index_usize pc50 0#usize
           let (extraction_value5, _) ←
             extraction_iterator_next_value cricprtcr5
-          let _ ← Array.index_mut_usize pc6 0#usize
+          let _ ← Array.index_mut_usize pc50 0#usize
           let v13 ← cbordetver.cbor_det_destruct extraction_value5
           match v13 with
           | cbordetver.cbor_det_view.Int64 _ _ => fail panic
           | cbordetver.cbor_det_view.String _ a4 =>
-            let pc60 := Array.repeat 1#usize c15
-            let i51 ← Array.index_usize pc60 0#usize
-            let is_done5 ← cbordetver.cbor_det_array_iterator_is_empty i51
-            let (extraction_result_6, extraction_after_6) ←
-              transport.extraction_parse_initkex_check_6 pc60 is_done5
-            lowstar.ignore.bcSchemaRepeatedIgnore2 extraction_result_6
-            let c16 ← Array.index_usize extraction_after_6 0#usize
-            let rlen16 ← cbordetver.cbor_det_array_iterator_length c16
-            let i7 ← core.num.U64.wrapping_sub rlen15 rlen16
-            let bcExtractedToken6330c2b736 ← cbordetver.cbor_det_array_iterator_truncate c15 i7
-            let pc7 := Array.repeat 1#usize bcExtractedToken6330c2b736
-            let cricprtcr6 ← Array.index_usize pc7 0#usize
-            let (extraction_value6, _) ←
-              extraction_iterator_next_value cricprtcr6
-            let _ ← Array.index_mut_usize pc7 0#usize
-            let v14 ← cbordetver.cbor_det_destruct extraction_value6
-            match v14 with
-            | cbordetver.cbor_det_view.Int64 _ _ => fail panic
-            | cbordetver.cbor_det_view.String _ a5 =>
-              let pc70 := Array.repeat 1#usize c16
-              let cricprtcr7 ← Array.index_usize pc70 0#usize
-              let (extraction_value7, _) ←
-                extraction_iterator_next_value cricprtcr7
-              let _ ← Array.index_mut_usize pc70 0#usize
-              let v15 ← cbordetver.cbor_det_destruct extraction_value7
-              match v15 with
-              | cbordetver.cbor_det_view.Int64 _ _ => fail panic
-              | cbordetver.cbor_det_view.String _ a6 =>
-                transport.initkex_right ((), ((), (a1, (a2, (a3, (a4, (a5,
-                  a6)))))))
-              | cbordetver.cbor_det_view.Array _ => fail panic
-              | cbordetver.cbor_det_view.Map _ => fail panic
-              | cbordetver.cbor_det_view.Tagged _ _ => fail panic
-              | cbordetver.cbor_det_view.SimpleValue _ => fail panic
-            | cbordetver.cbor_det_view.Array _ => fail panic
-            | cbordetver.cbor_det_view.Map _ => fail panic
-            | cbordetver.cbor_det_view.Tagged _ _ => fail panic
-            | cbordetver.cbor_det_view.SimpleValue _ => fail panic
+            transport.initkex_right ((), ((), (a1, (a2, (a3, a4)))))
           | cbordetver.cbor_det_view.Array _ => fail panic
           | cbordetver.cbor_det_view.Map _ => fail panic
           | cbordetver.cbor_det_view.Tagged _ _ => fail panic

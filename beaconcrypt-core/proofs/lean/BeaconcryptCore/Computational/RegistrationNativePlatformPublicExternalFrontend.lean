@@ -130,11 +130,22 @@ omit primitive in
 private theorem pin_zero (current : session.ServerAuthenticationPin) :
     Bounded (RegistrationNativePlatformServerRestrictedService.pin (n := n) (Platform := Platform) current) 0 := by
   unfold RegistrationNativePlatformServerRestrictedService.pin
-  apply bind_tail_zero _ _ 0
-  · intro before
-    simp [effect, StateT.run_lift, IsExternal, isQueryBoundP_query_iff]
-  · intro reply
-    exact pure_bound _ 0
+  exact pure_bound _ 0
+omit primitive in
+private theorem adHash_zero (pending : registration.ServerAdHash) :
+    Bounded (RegistrationNativePlatformServerRestrictedService.adHash (n := n) (Platform := Platform) pending) 0 := by
+  unfold RegistrationNativePlatformServerRestrictedService.adHash RegistrationServerAdHash.runWith
+  cases pending.request with
+  | fail error | div => exact pure_bound _ 0
+  | ok request =>
+    apply bind_tail_zero _ _ 0
+    · apply bind_tail_zero _ _ 0
+      · intro before
+        simp [effect, StateT.run_lift, IsExternal, isQueryBoundP_query_iff]
+      · intro digest
+        exact pure_bound _ 0
+    · intro digest
+      exact pure_bound _ 0
 
 include bytesBound packetsBound in
 private theorem target_bound (reservePeer : StateT Platform ProbComp Bool) (peerCap : Nat)
@@ -149,6 +160,7 @@ private theorem target_bound (reservePeer : StateT Platform ProbComp Bool) (peer
     ((RegistrationNativePlatformServerFrontendCompiler.target source view failure allocation erased helper sign writer reservePeer query).run before)).IsQueryBoundP _ _
   cases query with
   | pin current => exact (lifted_effects_bound _ 0 (pin_zero current) before).mono (Nat.zero_le _)
+  | adHash pending => exact (lifted_effects_bound _ 0 (adHash_zero pending) before).mono (Nat.zero_le _)
   | reserve =>
     have reserved : Bounded (RegistrationNativePlatformBoundCompiler.liftPlatform
         (RegistrationNativePlatformEffectCompiler.compile (n := n) reservePeer)) peerCap := by
@@ -175,9 +187,33 @@ private theorem target_bound (reservePeer : StateT Platform ProbComp Bool) (peer
       exact (lifted_effects_bound _ (4 * byteCap + 3 * packetCap)
         (branch_bound source view failure reserveBytes reservePackets byteCap packetCap bytesBound packetsBound sign erased control initial choice) before).mono (Nat.le_add_left _ _)
 
+omit primitive in
+/-- Selective scaling: each selected source request pays the per-request allowance and every unselected request pays nothing, retaining every reply continuation and reached state. -/
+private theorem simulate_selected {J V Q : Type} {input : OracleSpec Q} {output : OracleSpec J}
+    (counted : J → Prop) [DecidablePred counted]
+    (selected : Q → Prop) [DecidablePred selected]
+    (implementation : QueryImpl input (StateT S (OracleComp output)))
+    (stepCap : Nat) (step : ∀ query before, ((implementation query).run before).IsQueryBoundP counted stepCap)
+    (skip : ∀ query before, ¬ selected query → ((implementation query).run before).IsQueryBoundP counted 0)
+    (work : OracleComp input V) (cap : Nat) (bounded : work.IsQueryBoundP selected cap) (before : S) :
+    ((simulateQ implementation work).run before).IsQueryBoundP counted (cap * stepCap) := by
+  induction work using OracleComp.inductionOn generalizing cap before with
+  | pure value => trivial
+  | query_bind query next ih =>
+    rw [isQueryBoundP_query_bind_iff] at bounded
+    simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind]
+    by_cases chosen : selected query
+    · have positive : 0 < cap := bounded.1.resolve_left (not_not_intro chosen)
+      apply (isQueryBoundP_bind (step query before) (fun result _ => ih result.1 (cap - 1)
+        (by simpa only [chosen, ite_true] using bounded.2 result.1) result.2)).mono
+      rw [Nat.sub_one_mul, Nat.add_sub_cancel' (Nat.le_mul_of_pos_left stepCap positive)]
+    · apply (isQueryBoundP_bind (skip query before chosen) (fun result _ => ih result.1 cap
+        (by simpa only [chosen, ite_false] using bounded.2 result.1) result.2)).mono
+      rw [Nat.zero_add]
+
 variable {I : Type} {base : OracleSpec I}
 include bytesBound packetsBound in
-/-- The literal corrected public Server build has an explicit conservative external budget from its four frontend leaves and individual capacity/peer samplers. It retains one-use cancellation, failure histories and the entire reached platform state. -/
+/-- The literal corrected public Server build has an explicit conservative external budget from its four non-pin frontend leaves (pure pin selection pays nothing) and individual capacity/peer samplers. It retains one-use cancellation, failure histories and the entire reached platform state. -/
 theorem build_bound (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (reservePeer : StateT Platform ProbComp Bool) (peerCap : Nat)
     (peerBound : ∀ before, (reservePeer.run before).IsTotalQueryBound peerCap)
@@ -187,14 +223,23 @@ theorem build_bound (setup : PqxdhServerAuthExperiment.Setup base KemSK)
       (RegistrationNativePlatformPublicExternalLocal.IsLocalExternal (KemSK := KemSK))
         (4 * (peerCap + (4 * byteCap + 3 * packetCap))) := by
   simp only [RegistrationNativePlatformPublicFrontend.build, StateT.run, isQueryBoundP_map_iff]
-  have freeBound := RegistrationNativePlatformPublicExternalBuild.simulate_scaled
+  have freeBound := simulate_selected
     (RegistrationNativePlatformPublicExternalLocal.IsLocalExternal (n := n) (KemSK := KemSK))
+    RegistrationNativePlatformServerFrontendRequestBounds.NonPin
     ((RegistrationNativePlatformPublicFrontend.buildEmbedding (n := n) (KemSK := KemSK)).mapStateTBase
       (RegistrationNativePlatformServerFrontendCompiler.target setup.source view failure allocation erased helper sign writer reservePeer))
     (peerCap + (4 * byteCap + 3 * packetCap))
     (target_bound (n := n) (KemSK := KemSK) setup.source view failure reserveBytes reservePackets byteCap packetCap bytesBound packetsBound sign erased reservePeer peerCap peerBound)
+    (fun query current unselected => by
+      cases query with
+      | pin selected =>
+        change (simulateQ (RegistrationNativePlatformPublicFrontend.buildEmbedding (KemSK := KemSK))
+          ((RegistrationNativePlatformServerFrontendCompiler.target setup.source view failure allocation erased helper sign writer reservePeer
+            (.pin selected)).run current)).IsQueryBoundP _ _
+        exact lifted_effects_bound _ 0 (pin_zero selected) current
+      | _ => exact (unselected trivial).elim)
     ((RegistrationNativePlatformServerFrontendProgram.program handle application).run before.1.server)
-    4 (RegistrationNativePlatformServerFrontendRequestBounds.program handle application before.1.server)
+    4 (RegistrationNativePlatformServerFrontendRequestBounds.program_nonpin handle application before.1.server)
     (before.1.environment.receipts, before.2)
   rw [← QueryImpl.simulateQ_mapStateTBase_run] at freeBound
   exact freeBound

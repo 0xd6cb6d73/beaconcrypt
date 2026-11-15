@@ -43,7 +43,7 @@ open RegistrationNativePlatformPublicAdapterLoggedRuntime (Augmentation unchange
 open RegistrationNativePlatformPublicAdapterFinishLoggedJoint (output physicalLog)
 open RegistrationNativePlatformExtractedSdkPublic (TotalStep)
 
-variable (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential mlSource)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential mlSource)
 
 noncomputable def transport {target :ProbComp (RustM (Option Pqxdh.Bytes)×(Native×P))}
     {left right :TotalStep (Private configuration created credential) target}

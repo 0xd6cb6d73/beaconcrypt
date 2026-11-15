@@ -2,7 +2,7 @@ import BeaconcryptCore.Computational.RawCtxSourceChainHandles
 import BeaconcryptCore.Computational.RawCtxProtocolReveals
 
 /-!
-Freshness uses the finite source lineage of one selected record input. Its forbidden32-byte values are the selected material key, that input and every source root/first/next ancestor. Actual optional current-chain and skipped-key replies enter a monotone private history by value across owner names. Prior authorized disclosures remain in the history; disposed secrets are never added as new live capabilities. This is finite operational exposure bookkeeping, not unbounded public-function closure, a no-collision premise or a secrecy theorem. Public guessing and accidental aliases retain their separate computational terms.
+Freshness uses the finite source lineage of one selected record input. Its forbidden32-byte values are the selected material key, that input and every source root/initial-first/initial-second/message-first/message-next ancestor. Actual optional current-chain and skipped-key replies enter a monotone private history by value across owner names. Prior authorized disclosures remain in the history; disposed secrets are never added as new live capabilities. This is finite operational exposure bookkeeping, not unbounded public-function closure, a no-collision premise or a secrecy theorem. Public guessing and accidental aliases retain their separate computational terms.
 -/
 
 open CoreModels Aeneas
@@ -16,6 +16,8 @@ open RawCtxSourceChainHandles RawCtxProtocolReveals
 /-- Private finite provenance from the target value back to its source root. -/
 def lineage {Atom : Type} : Chain Atom → List (Chain Atom)
   | .root atom => [.root atom]
+  | .initialFirst parent => .initialFirst parent :: lineage parent
+  | .initialSecond parent => .initialSecond parent :: lineage parent
   | .first parent => .first parent :: lineage parent
   | .next parent => .next parent :: lineage parent
 

@@ -14,14 +14,16 @@ variable {ι KemSK Reader Response : Type} {baseSpec : OracleSpec ι}
 def consumeRegistration (session : Nat) (state : NativeState KemSK) : NativeState KemSK :=
   (state.1, { state.2 with pending := Function.update state.2.pending session none })
 
-theorem candidate_empty (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+theorem candidate_empty (associatedData : PqxdhTranscriptAd.AssociatedData)
+    (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (candidate : pqxdh.ServerRegistrationCandidate)
     (root : PqxdhSecretInputKdf.RootOutput)
-    (server : PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes))
+    (server : PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes))
     (state : RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext)) :
     (fun result => (PqxdhServerAuthExperiment.settle server result.1, result.2)) <$>
       ((simulateQ (PqxdhServerAuthExperiment.tailImpl setup codec checks)
-        (PqxdhServerRegistrationPublication.candidateTail setup.source candidate root (some []) () server)).run state) =
+        (PqxdhServerRegistrationPublication.candidateTail (associatedData := associatedData) setup.source candidate root
+          (some []) associatedData server)).run state) =
       pure ((none, server), state) := by
   simp only [PqxdhServerRegistrationPublication.candidateTail, simulateQ_bind, simulateQ_spec_query,
     StateT.run_bind, PqxdhServerAuthNegativeControl.tailImpl_aux, PqxdhServerAuthExperiment.tailAux,
@@ -39,14 +41,16 @@ theorem candidate_empty (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
       (PqxdhRootTableInitialization.initialResponse setup.source.crypto) <;>
     simp only [PqxdhServerRegistrationPublication.continueRust, simulateQ_pure, StateT.run_pure, map_pure]
 
-theorem build_empty (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+theorem build_empty (associatedData : PqxdhTranscriptAd.AssociatedData)
+    (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (pending : pqxdh.PendingServerRegistration)
     (root : PqxdhSecretInputKdf.RootOutput)
-    (server : PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes))
+    (server : PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes))
     (state : RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext)) :
     (fun result => (PqxdhServerAuthExperiment.settle server result.1, result.2)) <$>
       ((simulateQ (PqxdhServerAuthExperiment.tailImpl setup codec checks)
-        (PqxdhServerRegistrationPublication.build setup.source pending root (some []) () server)).run state) =
+        (PqxdhServerRegistrationPublication.build (associatedData := associatedData) setup.source pending root
+          (some []) associatedData server)).run state) =
       pure ((none, server), state) := by
   unfold PqxdhServerRegistrationPublication.build
   cases next : pqxdh.server_next_key_id server.control <;>
@@ -61,7 +65,17 @@ theorem build_empty (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     simp only [simulateQ_pure, StateT.run_pure, map_pure]
   rename_i prepared
   cases prepared <;> simp only [simulateQ_pure, StateT.run_pure, map_pure]
-  exact candidate_empty setup codec checks _ root server state
+  exact candidate_empty associatedData setup codec checks _ root server state
+
+/-- The pure pre-hash guard rejects an empty application (`beaconcrypt-core/src/registration.rs:877`), so an empty build never reaches the transcript hash. -/
+theorem prehash_empty {Metadata PeerMetadata Consumed : Type}
+    (server : PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed)
+    (pending : pqxdh.PendingServerRegistration) :
+    PqxdhServerRegistrationPublication.prehash server pending (some []) = none := by
+  unfold PqxdhServerRegistrationPublication.prehash
+  split
+  · simp only [Option.getD_some, List.isEmpty_nil, ite_true, ite_self]
+  · rfl
 
 /-- An empty build consumes exactly its addressed token and leaves the complete primitive state unchanged. -/
 theorem native_build_empty (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -73,23 +87,8 @@ theorem native_build_empty (setup : Setup baseSpec KemSK) (codec : Codec Reader 
   case none =>
     simp only [native_pure_run, consumeRegistration, ← found, Function.update_eq_self]
   case some token =>
-    simp only [native_bind_run, nativeCoins, nativeSet, bind_pure_comp]
-    simp only [native_map_run, PqxdhServerAuthNative.localState, map_pure,
-      bind_pure_comp, Functor.map_map]
-    let complete := fun result :
-        ((Option PqxdhServerRegistrationPublication.Response ×
-          PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes)) ×
-          RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext)) =>
-      (result.1.1, (state.1, { state.2 with
-        ctx := result.2.2
-        server := result.1.2
-        pending := Function.update state.2.pending session none
-        ghost := { state.2.ghost with
-          seals := state.2.ghost.seals ++ (result.2.1.map fun context => (session, context)) } }))
-    simpa only [complete, Functor.map_map, Function.comp_def, Prod.map_apply, id_eq,
-      map_pure, List.map_nil, List.append_nil, consumeRegistration] using
-      congrArg (fun work => complete <$> work)
-        (build_empty setup codec checks token.pending token.root state.2.server ([], state.2.ctx))
+    simp only [prehash_empty, native_bind_run, nativeSet, PqxdhServerAuthNative.localState,
+      native_pure_run, consumeRegistration, pure_bind]
 
 /-- The deployment lift preserves owners, raw counters and produced frames while consuming the moved token. -/
 theorem deployment_build_empty (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -125,3 +124,8 @@ end BeaconcryptCore.Computational.CborAdmissionSubstitution
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.CborAdmissionSubstitution.deployment_build_empty
+/-- info: 'BeaconcryptCore.Computational.CborAdmissionSubstitution.prehash_empty' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CborAdmissionSubstitution.prehash_empty

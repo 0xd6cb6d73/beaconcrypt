@@ -26,7 +26,7 @@ variable (source : Source)
 
 def Safe (credential : Credential (handleSource source)) (fallback : Credential source) (before : State source cap n KemSK Platform) : Prop :=
   RegistrationNativeMldsaProtectedInvariant.Holds source credential fallback (before.1.1, before.2.2) ∧
-    RegistrationNativeServerPinRecompute.Cached before.1.1.server.pin (RegistrationNativeWorldCache.cache before.1.1) ∧
+    before.1.1.server.pin.public_key = credential.publicKey ∧
     ∀ index : Fin cap, RegistrationNativeMldsaGhostRows.Safe source index.val (before.2.1 index, before.2.2)
 
 def observe (index : Fin cap) : RegistrationNativeMldsaStop.Observer (spec := RegistrationNativeRawAdapter.TypedSpec)
@@ -46,7 +46,7 @@ instance : DecidablePred cost := fun query => inferInstanceAs (Decidable (Regist
 
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : Credential (handleSource source))
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential (handleSource source))
 variable [primitive : AdapterSealPrimitive.Operations]
 variable (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
 variable (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))

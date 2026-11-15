@@ -8,6 +8,7 @@ The actual generated/native source execution reaches the consistent private root
 open OracleComp OracleSpec
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhGeneratedBeaconKdf
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma
 open PqxdhGeneratedBeaconSelector PqxdhGeneratedBeaconExperiment
 variable {ι : Type} {baseSpec : OracleSpec ι} {M P I K A : Type} {S B : Nat}
@@ -31,22 +32,22 @@ theorem authenticated_family_bound {KemSK : Type} {setup : StatefulPhase1Setup b
       (PqxdhProtocolSelector.SelectorClass (PqxdhPrivateKemQueryBounds.SelectorSource (baseSpec := baseSpec) PqxdhPrivatePhase1Prefix.Creating)) 0)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : Forgery)
     (post : Post program.Selection S (B + 1)) :
-    (actual env baseImpl kem attachedVerify primitives program post).boolDistance
+    (actual (associatedData := associatedData) env baseImpl kem attachedVerify primitives program post).boolDistance
       (PqxdhCorrelatedExtractFamily.randomGame
         (PqxdhCorrelatedExtractFamily.reduction env.source hmac baseImpl kem
-          (protocol env kem attachedVerify primitives program post))) ≤
+          (protocol (associatedData := associatedData) env kem attachedVerify primitives program post))) ≤
       (advantage primitives (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
         (driver env.toEnvironment program) fallback ordinaryFallback)).toReal +
       (kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl (PqxdhInitializerSecrecy.kemAmbientImpl baseImpl))
         (PqxdhChallengeSecretRouting.reduction env.source kem
-          (protocol env kem attachedVerify primitives program post)).toINDCCA).toReal +
+          (protocol (associatedData := associatedData) env kem attachedVerify primitives program post)).toINDCCA).toReal +
       PqxdhCorrelatedExtractFamily.advantage hmac
         (PqxdhCorrelatedExtractFamily.reduction env.source hmac baseImpl kem
-          (protocol env kem attachedVerify primitives program post)) := by
-  have authenticated := authenticated_bound env baseImpl kem compatible functional correct
+          (protocol (associatedData := associatedData) env kem attachedVerify primitives program post)) := by
+  have authenticated := authenticated_bound (associatedData := associatedData) env baseImpl kem compatible functional correct
     attachedVerify primitives adapter program noSign noCreate fallback ordinaryFallback post
   have extracted := PqxdhCorrelatedExtractFamily.correlated_advantage_eq env.source hmac sourceCorrect
-    baseImpl kem (protocol env kem attachedVerify primitives program post)
+    baseImpl kem (protocol (associatedData := associatedData) env kem attachedVerify primitives program post)
   exact (ProbComp.boolDistance_triangle _ _ _).trans
     (add_le_add authenticated (le_of_eq extracted))
 
@@ -70,34 +71,34 @@ theorem authenticated_uniform_roots_bound {KemSK : Type} {setup : StatefulPhase1
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : Forgery)
     (post : Post program.Selection S (B + 1)) (q : Nat)
     (rootBound : (PqxdhCorrelatedExpand.rootReduction env.source baseImpl kem
-      (protocol env kem attachedVerify primitives program post)).IsQueryBoundP
+      (protocol (associatedData := associatedData) env kem attachedVerify primitives program post)).IsQueryBoundP
         PqxdhCorrelatedExpandHybrid.IsRoot q) :
-    (actual env baseImpl kem attachedVerify primitives program post).boolDistance
+    (actual (associatedData := associatedData) env baseImpl kem attachedVerify primitives program post).boolDistance
       (PqxdhCorrelatedExpandHybrid.uniformGame
         (PqxdhCorrelatedExpand.rootReduction env.source baseImpl kem
-          (protocol env kem attachedVerify primitives program post))) ≤
+          (protocol (associatedData := associatedData) env kem attachedVerify primitives program post))) ≤
       (advantage primitives (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
         (driver env.toEnvironment program) fallback ordinaryFallback)).toReal +
       (kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl (PqxdhInitializerSecrecy.kemAmbientImpl baseImpl))
         (PqxdhChallengeSecretRouting.reduction env.source kem
-          (protocol env kem attachedVerify primitives program post)).toINDCCA).toReal +
+          (protocol (associatedData := associatedData) env kem attachedVerify primitives program post)).toINDCCA).toReal +
       PqxdhCorrelatedExtractFamily.advantage hmac
         (PqxdhCorrelatedExtractFamily.reduction env.source hmac baseImpl kem
-          (protocol env kem attachedVerify primitives program post)) +
+          (protocol (associatedData := associatedData) env kem attachedVerify primitives program post)) +
       ∑ index ∈ Finset.range q,
         (PqxdhSecretInputKdf.hmacPrfRealGame hmac
           (PqxdhCorrelatedExpandHybrid.indexedReduction hmac
             (PqxdhCorrelatedExpand.rootReduction env.source baseImpl kem
-              (protocol env kem attachedVerify primitives program post)) index)).boolDistance
+              (protocol (associatedData := associatedData) env kem attachedVerify primitives program post)) index)).boolDistance
           (PqxdhSecretInputKdf.hmacPrfRandomGame
             (PqxdhCorrelatedExpandHybrid.indexedReduction hmac
               (PqxdhCorrelatedExpand.rootReduction env.source baseImpl kem
-                (protocol env kem attachedVerify primitives program post)) index)) := by
-  have family := authenticated_family_bound env baseImpl kem compatible functional correct hmac sourceCorrect
+                (protocol (associatedData := associatedData) env kem attachedVerify primitives program post)) index)) := by
+  have family := authenticated_family_bound (associatedData := associatedData) env baseImpl kem compatible functional correct hmac sourceCorrect
     attachedVerify primitives adapter program noSign noCreate fallback ordinaryFallback post
   have expanded := PqxdhCorrelatedExpandHybrid.expanded_uniform_bound hmac
     (PqxdhCorrelatedExpand.rootReduction env.source baseImpl kem
-      (protocol env kem attachedVerify primitives program post)) q rootBound
+      (protocol (associatedData := associatedData) env kem attachedVerify primitives program post)) q rootBound
   rw [← PqxdhCorrelatedExpand.reduction_expanded_eq env.source hmac baseImpl kem] at expanded
   exact (ProbComp.boolDistance_triangle _ _ _).trans (add_le_add family expanded)
 
@@ -113,19 +114,19 @@ theorem native_root_query_bound {KemSK : Type} {setup : StatefulPhase1Setup base
     (qAux : Nat)
     (auxBound : ∀ query primitive, ((env.aux query).run primitive).IsTotalQueryBound qAux) :
     (PqxdhCorrelatedExpand.rootReduction env.source baseImpl kem
-      (protocol env kem attachedVerify primitives program post)).IsQueryBoundP
+      (protocol (associatedData := associatedData) env kem attachedVerify primitives program post)).IsQueryBoundP
         PqxdhCorrelatedExpandHybrid.IsRoot 1 := by
   have resumed := PqxdhGeneratedRootQueryBounds.rootProtocol_resume_bounds kem env.parameters
-    attachedVerify primitives setup (driver env.toEnvironment program) (observer env program post)
+    attachedVerify primitives setup (driver env.toEnvironment program) (observer (associatedData := associatedData) env program post)
     0 0 ((64 + 5 * qAux) + (budget.1 .coin + 64 * (budget.1 .send + budget.1 .raw + budget.1 .hash))) 0 0 0
-    (PqxdhGeneratedBeaconQueryBounds.accepted_observer_bounds env program post budget postBound qAux auxBound)
+    (PqxdhGeneratedBeaconQueryBounds.accepted_observer_bounds (associatedData := associatedData) env program post budget postBound qAux auxBound)
   unfold PqxdhCorrelatedExpand.rootReduction
   simpa only [Nat.zero_add] using isQueryBoundP_bind
     (PqxdhCorrelatedExpandQueryBounds.rootCoins_roots
       (PqxdhCorrelatedExtractFamily.prepare baseImpl kem
-        (protocol env kem attachedVerify primitives program post))) (fun prepared _ => by
+        (protocol (associatedData := associatedData) env kem attachedVerify primitives program post))) (fun prepared _ => by
       unfold PqxdhCorrelatedExpand.rootResume
-      cases initial : (protocol env kem attachedVerify primitives program post).initialCoordinates
+      cases initial : (protocol (associatedData := associatedData) env kem attachedVerify primitives program post).initialCoordinates
         prepared.publicKey prepared.ciphertext prepared.state with
       | none =>
           simp only [pure_bind]
@@ -161,30 +162,30 @@ theorem authenticated_native_root_bound {KemSK : Type} {setup : StatefulPhase1Se
     (postBound : ∀ choice response, RawCtxRevealBudgets.Bounded (post choice response) budget)
     (qAux : Nat)
     (auxBound : ∀ query primitive, ((env.aux query).run primitive).IsTotalQueryBound qAux) :
-    (actual env baseImpl kem attachedVerify primitives program post).boolDistance
+    (actual (associatedData := associatedData) env baseImpl kem attachedVerify primitives program post).boolDistance
       (PqxdhCorrelatedExpandHybrid.uniformGame
         (PqxdhCorrelatedExpand.rootReduction env.source baseImpl kem
-          (protocol env kem attachedVerify primitives program post))) ≤
+          (protocol (associatedData := associatedData) env kem attachedVerify primitives program post))) ≤
       (advantage primitives (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
         (driver env.toEnvironment program) fallback ordinaryFallback)).toReal +
       (kem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl (PqxdhInitializerSecrecy.kemAmbientImpl baseImpl))
         (PqxdhChallengeSecretRouting.reduction env.source kem
-          (protocol env kem attachedVerify primitives program post)).toINDCCA).toReal +
+          (protocol (associatedData := associatedData) env kem attachedVerify primitives program post)).toINDCCA).toReal +
       PqxdhCorrelatedExtractFamily.advantage hmac
         (PqxdhCorrelatedExtractFamily.reduction env.source hmac baseImpl kem
-          (protocol env kem attachedVerify primitives program post)) +
+          (protocol (associatedData := associatedData) env kem attachedVerify primitives program post)) +
         (PqxdhSecretInputKdf.hmacPrfRealGame hmac
           (PqxdhCorrelatedExpandHybrid.indexedReduction hmac
             (PqxdhCorrelatedExpand.rootReduction env.source baseImpl kem
-              (protocol env kem attachedVerify primitives program post)) 0)).boolDistance
+              (protocol (associatedData := associatedData) env kem attachedVerify primitives program post)) 0)).boolDistance
           (PqxdhSecretInputKdf.hmacPrfRandomGame
             (PqxdhCorrelatedExpandHybrid.indexedReduction hmac
               (PqxdhCorrelatedExpand.rootReduction env.source baseImpl kem
-                (protocol env kem attachedVerify primitives program post)) 0)) := by
-  simpa only [Finset.sum_range_one] using authenticated_uniform_roots_bound env baseImpl kem compatible
+                (protocol (associatedData := associatedData) env kem attachedVerify primitives program post)) 0)) := by
+  simpa only [Finset.sum_range_one] using authenticated_uniform_roots_bound (associatedData := associatedData) env baseImpl kem compatible
     functional correct hmac sourceCorrect attachedVerify primitives adapter program noSign noCreate
     fallback ordinaryFallback post 1
-    (native_root_query_bound env baseImpl kem attachedVerify primitives program post budget postBound qAux auxBound)
+    (native_root_query_bound (associatedData := associatedData) env baseImpl kem attachedVerify primitives program post budget postBound qAux auxBound)
 
 end BeaconcryptCore.Computational.PqxdhGeneratedBeaconKdf
 

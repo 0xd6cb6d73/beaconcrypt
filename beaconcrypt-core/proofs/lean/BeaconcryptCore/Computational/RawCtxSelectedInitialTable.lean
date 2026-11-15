@@ -3,7 +3,7 @@ import BeaconcryptCore.Computational.RawCtxSelectedChain
 import BeaconcryptCore.Computational.RawCtxKdfRequestTable
 
 /-!
-One initial first32 coordinate is omitted from the retained full76 entry, while its other directional chain and optional analysis nonce remain present. The full retained lookup preserves every prior address. Both actual initial64 and subsequent76 derivations use the same ratchet domain: a known private input equal to the initializer root therefore reconstructs the selected first32 as material, and must not be declared target-free. The explicit initializerQuery flag identifies this case for separate ancestor/alias accounting. Only full76 comparison bookkeeping uses the nonce; no actual64 initializer nonce is invented.
+One initial first32 coordinate is omitted from the retained full76 entry, while its other directional chain and optional analysis nonce remain present. The full retained lookup preserves every prior address. Actual initial64 and subsequent76 derivations use distinct domains. The generic initializerQuery flag retains exact address comparison for arbitrary retained entries; its specialization to the initial domain is false for every message callback. Only full76 comparison bookkeeping uses the nonce; no actual64 initializer nonce is invented.
 -/
 
 open CoreModels Aeneas
@@ -54,7 +54,7 @@ theorem step_before (prior : Prior) (entry : Entry) (left right : RootOutput)
   | hidden => rfl
   | known chain => simp_all [initializerQuery, step, nativeStep, lookup]
 
-/-- An original source entry reconstructs every real fixed-HKDF response, with the same shared ratchet domain. -/
+/-- An original source entry reconstructs every real fixed-HKDF response, at the same exact input and domain. -/
 theorem lookup_source (source : FixedHkdfSha512NoSaltSource) (address request : JointKdfAddress) :
     lookup (productionStream source.crypto) (fromOutput address (productionStream source.crypto address))
       (JointKdfProjection.first32.project (productionStream source.crypto address)) request =

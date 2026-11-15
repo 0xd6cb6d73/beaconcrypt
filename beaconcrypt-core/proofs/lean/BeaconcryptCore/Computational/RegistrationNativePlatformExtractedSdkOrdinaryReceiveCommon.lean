@@ -17,8 +17,8 @@ open RegistrationNativePlatformExtractedSdkOrdinaryReceiveDriver (Primitive Stat
 variable {Platform E I KemSK Reader Response Metadata A B : Type} {base : OracleSpec I}
 
 noncomputable def sample (setup : Setup base KemSK) (codec : Codec Reader Response)
-    (erased : Array U8 357#usize) (kernel : ratchet.concrete.ConcreteRatchetKernel)
-    (expected : U64) (ad : Array U8 281#usize) (bytes : Slice U8) :
+    (erased : Array U8 227#usize) (kernel : ratchet.concrete.ConcreteRatchetKernel)
+    (expected : U64) (ad : Array U8 151#usize) (bytes : Slice U8) :
     M Platform (RustM AdapterRecordStatefulReceive.Result) :=
   match AdapterPublicOrdinaryEnvelope.prepareReceive bytes expected with
   | .ok (some view) => RegistrationNativePlatformExtractedSdkOrdinaryReceiveDriver.received setup codec erased kernel view.sequence view.ciphertext ad view.sender
@@ -80,9 +80,9 @@ private theorem program (setup : Setup base KemSK) (codec : Codec Reader Respons
 
 theorem received (setup : Setup base KemSK) (codec : Codec Reader Response)
     (length : RegistrationNativeExtractedReceive.AeadLength setup.source.crypto)
-    (erased : Array U8 357#usize) (raw : Pqxdh.Bytes)
+    (erased : Array U8 227#usize) (raw : Pqxdh.Bytes)
     (owner : RawCtxWholeOwner.OwnerState Metadata) (sequence : U64) (payload : Slice U8)
-    (ad : Array U8 281#usize) (sender : U64) :
+    (ad : Array U8 151#usize) (sender : U64) :
     project owner <$>RegistrationNativePlatformExtractedSdkOrdinaryReceiveDriver.received (Platform:=Platform) setup codec erased owner.owner.kernel sequence payload ad sender=
       RawCtxWholeOwner.publish owner <$>liftPrimitive
         (RegistrationNativePlatformExtractedSdkOrdinaryReceiveDriver.model setup codec raw owner.owner.kernel sequence payload ad sender) := by
@@ -105,8 +105,8 @@ private theorem parse_empty (bytes : Slice U8)
 theorem native (setup : Setup base KemSK)
     (reserve : Nat →StateT Platform ProbComp (core.result.Result Unit E))
     (length : RegistrationNativeExtractedReceive.AeadLength setup.source.crypto)
-    (erased : Array U8 357#usize) (owner : RawCtxWholeOwner.OwnerState Metadata)
-    (ad : Array U8 281#usize) (sameAD : owner.owner.associatedData=PqxdhRefinement.absBytes ad) (bytes : Slice U8) :
+    (erased : Array U8 227#usize) (owner : RawCtxWholeOwner.OwnerState Metadata)
+    (ad : Array U8 151#usize) (sameAD : owner.owner.associatedData=PqxdhRefinement.absBytes ad) (bytes : Slice U8) :
     project owner <$>sample setup (RegistrationNativeWire.ledgerCodec RegistrationNativeConcreteCodec.wire)
       erased owner.owner.kernel owner.owner.expectedSender ad bytes=
     simulateQ (RegistrationNativePlatformOrdinarySourceJournal.native setup (RegistrationNativeWire.ledgerCodec RegistrationNativeConcreteCodec.wire) reserve)
@@ -161,8 +161,8 @@ theorem native (setup : Setup base KemSK)
 
 theorem normal (setup : Setup base KemSK) (codec : Codec Reader Response)
     (length : RegistrationNativeExtractedReceive.AeadLength setup.source.crypto)
-    (erased : Array U8 357#usize) (kernel : ratchet.concrete.ConcreteRatchetKernel)
-    (expected : U64) (ad : Array U8 281#usize) (bytes : Slice U8)
+    (erased : Array U8 227#usize) (kernel : ratchet.concrete.ConcreteRatchetKernel)
+    (expected : U64) (ad : Array U8 151#usize) (bytes : Slice U8)
     (before after : State) (previous next : Platform) (reply : RustM AdapterRecordStatefulReceive.Result)
     (supported : ((reply,after),next)∈support
       (((sample setup codec erased kernel expected ad bytes).run before).run previous)) :

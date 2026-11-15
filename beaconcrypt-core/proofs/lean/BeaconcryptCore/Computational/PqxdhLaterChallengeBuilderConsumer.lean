@@ -7,7 +7,9 @@ open OracleComp OracleSpec CoreModels Aeneas OracleComp.ProgramLogic.Relational
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeBuilderConsumer
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPhase1AcceptanceOracle PqxdhKemIndCca PqxdhInitializerSecrecy
 open CtxRomAuth AdaptiveCtxSharedHash PqxdhSecretInputKdf PqxdhFullSecretInputKdf
@@ -70,7 +72,7 @@ noncomputable def client (qPost : Nat) (bit : Bool) (key : Key) : OracleComp Ada
     | .inr saved =>
       let normalized := PqxdhLaterChallengeSavedMonitor.builderOnly saved callback.trace callback.origin
       if RawCtxSelectedParentPrivatePatch.targetAddress target ≠ PqxdhInitialBuilderContext.address normalized.original then
-        PqxdhLaterChallengeBeforeConsumer.decision setup <$> PqxdhLaterChallengeSavedMonitor.builderResume
+        PqxdhLaterChallengeBeforeConsumer.decision setup <$> PqxdhLaterChallengeSavedMonitor.builderResume (completedBinding := completedBinding)
           (PqxdhPreparedPrefixCallbacks.preparation attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem credentials.1 credentials.2)
           (PqxdhPreparedPrefixCallbacks.application attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem credentials.1 credentials.2)
           (initialLocal (A := A) (N := BareState 1) (env0).source start.selectedMessage zeroRoot (PqxdhInitialSampledParent.response (start, output)))
@@ -85,8 +87,8 @@ noncomputable def client (qPost : Nat) (bit : Bool) (key : Key) : OracleComp Ada
 /-- The initial Builder executes one identical callback and enters its real selected wrapper from the unused initial state. The monitored pair is identical until an explicit terminal event. -/
 theorem client_pre (qPost : Nat) (key : Key) :
     Pre (fun a b => a = b) (fun a => a = false) (fun b => b = false)
-      (client setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem qPost false key)
-      (client setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem qPost true key) := by
+      (client (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem qPost false key)
+      (client (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem qPost true key) := by
   classical
   rcases key with _ | ⟨credentials, start, output, ⟨original, trace, origin⟩, native, parent, target, nonce, next, selection⟩
   · exact Pre.pure rfl
@@ -99,7 +101,7 @@ theorem client_pre (qPost : Nat) (key : Key) :
         simp only [client]
         split
         · rename_i separate
-          have paired := PqxdhLaterChallengeSavedMonitor.builder_pre
+          have paired := PqxdhLaterChallengeSavedMonitor.builder_pre (completedBinding := completedBinding)
             (PqxdhPreparedPrefixCallbacks.preparation attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem credentials.1 credentials.2)
             (PqxdhPreparedPrefixCallbacks.application attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem credentials.1 credentials.2)
             (initialLocal (A := A) (N := BareState 1) (env0).source start.selectedMessage zeroRoot (PqxdhInitialSampledParent.response (start, output)))
@@ -118,13 +120,13 @@ theorem client_pre (qPost : Nat) (key : Key) :
 /-- The complete Builder continuation has the same true probability from any one full ordinary random state, preserving all backend histories and refusal mass. -/
 theorem client_random (qPost : Nat) (key : Key) (state : RandomState) :
     𝒟[Prod.fst <$> (simulateQ (confRandomImpl (RawCtxUniversalDecoder.decoder env.decode) env.source.crypto)
-      (client setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem qPost false key)).run state] {true} =
+      (client (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem qPost false key)).run state] {true} =
     𝒟[Prod.fst <$> (simulateQ (confRandomImpl (RawCtxUniversalDecoder.decoder env.decode) env.source.crypto)
-      (client setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem qPost true key)).run state] {true} := by
+      (client (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem qPost true key)).run state] {true} := by
   rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map]
   exact pre_event (confRandomImpl (RawCtxUniversalDecoder.decoder env.decode) env.source.crypto)
     (fun m0 m1 => identRandom m0 m1)
-    (client_pre setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem qPost key)
+    (client_pre (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem qPost key)
     (fun a => a = true) (fun b => b = true) (fun a b same => by rw [same])
     (fun a dead => by simp [dead]) (fun b dead => by simp [dead])
     (fun m0 m1 equal => random_compatible m0 m1 (RawCtxUniversalDecoder.decoder env.decode) env.source.crypto equal) state

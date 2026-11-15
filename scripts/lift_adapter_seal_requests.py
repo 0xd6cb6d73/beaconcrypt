@@ -21,7 +21,7 @@ SOURCE = Path(
 DESTINATION = Path(
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/AdapterSealRequestExtraction.lean"
 )
-SOURCE_SHA256 = "03d6db0d076ba17e7dcb166c36a854b262749f3ba90f2f8b4ec7b2b6af5a71fb"
+SOURCE_SHA256 = "272e32d556079a09fbcfce9fb23911d3e1fa1235d7c0f60ef93b8bf2d5d5ae4a"
 BODY_SHA256 = "71a84866fa3749a498053bcb4729b4aaeea1d37f954eb9a1e1605c106acf3a43"
 DECLARATION = "def ratchet.execute_seal_request\n"
 REPLACEMENTS = [

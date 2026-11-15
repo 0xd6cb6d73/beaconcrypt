@@ -3,6 +3,7 @@ import BeaconcryptCore.Computational.PqxdhServerAuthSessionRecordProbability
 /-! Source-order joint authentication of the accepted seal fields and the decoded record in an earlier successful owner response. -/
 open OracleComp OracleSpec ENNReal
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhServerAuthSessionRecord
 open PqxdhServerAuthExperiment PqxdhServerAuthEntryFactor PqxdhServerAuthSourceCosts
 open PqxdhServerAuthBodyCosts PqxdhServerAuthGapDh PqxdhServerAuthAssumptions

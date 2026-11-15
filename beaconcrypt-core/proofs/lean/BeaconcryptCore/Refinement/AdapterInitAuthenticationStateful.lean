@@ -40,7 +40,6 @@ abbrev NativeSpec := RegistrationAuthenticationExecutor.Spec + EdSpec
 /-- Parse and attached opening remain two distinct dynamic calls in the actual source order. -/
 def native : QueryImpl Spec (OracleComp NativeSpec)
   | .hash request => .ok <$> NativeSpec.query (.inl (.hash request))
-  | .verifyMldsa request => .ok <$> NativeSpec.query (.inl (.mldsa request))
   | .parseEd bytes => .ok <$> NativeSpec.query (.inr (.parse bytes))
   | .verifyEd signed publicKey => .ok <$> NativeSpec.query (.inr (.open signed publicKey))
 
@@ -51,7 +50,7 @@ def opened (request : registration.Ed25519VerificationRequest) :
   | .Err _ => pure .None
   | .Ok key => NativeSpec.query (.inr (.open request.signed key))
 
-/-- The maintained callback executor sees the same source Ed parse/open sequence; hash and ML requests are retained literally. -/
+/-- The maintained callback executor sees the same source Ed parse/open sequence; hash requests are retained literally; the shared response-only ML request remains outside this Init path. -/
 def abstractNative : QueryImpl RegistrationAuthenticationExecutor.Spec (OracleComp NativeSpec)
   | .hash request => NativeSpec.query (.inl (.hash request))
   | .mldsa request => NativeSpec.query (.inl (.mldsa request))
@@ -126,22 +125,6 @@ theorem body_source (state : registration.InitAuthentication) :
           cases resumed : pending.resume reply <;>
             simp only [Lifted.hashResume, resumed, Program.run_lift,
               simulateQ_pure, pure_bind, map_pure, RegistrationAuthenticationExecutor.edge, control]
-  | MldsaVerificationRequested pending =>
-      cases requested : pending.request with
-      | fail error | div =>
-          simp only [AdapterInitAuthenticationRequestExtraction.body, Lifted.mldsaRequest, requested,
-            interpret_bind, interpret_lift, pure_bind, RegistrationAuthenticationExecutor.step,
-            RegistrationAuthenticationExecutor.continueWith, simulateQ_pure, map_pure, control]
-      | ok request =>
-          simp only [AdapterInitAuthenticationRequestExtraction.body, Lifted.mldsaRequest, requested, pure_bind, Operations.verifyMldsa, interpret, Program.run_bind, Program.run_lift, Program.run_pure, Program.query,
-            simulateQ_spec_query, native, RegistrationAuthenticationExecutor.step,
-            RegistrationAuthenticationExecutor.continueWith, simulateQ_bind, simulateQ_pure,
-            abstractNative, bind_map_left, map_bind]
-          apply bind_congr
-          intro reply
-          cases resumed : pending.resume reply <;>
-            simp only [Lifted.mldsaResume, resumed, Program.run_lift,
-              simulateQ_pure, pure_bind, map_pure, RegistrationAuthenticationExecutor.edge, control]
   | Ed25519VerificationRequested pending =>
       cases requested : pending.request with
       | fail error | div =>
@@ -157,38 +140,6 @@ theorem body_source (state : registration.InitAuthentication) :
           intro reply
           cases resumed : pending.resume reply <;>
             simp only [Lifted.asDeref, AdapterOptionDeref.byte_vector, Lifted.edResume, resumed, Program.run_lift, Program.run_pure, interpret,
-              simulateQ_pure, pure_bind, map_pure, RegistrationAuthenticationExecutor.edge, control]
-  | ServerFingerprintRequested pending =>
-      cases requested : pending.request with
-      | fail error | div =>
-          simp only [AdapterInitAuthenticationRequestExtraction.body, Lifted.serverRequest, requested,
-            interpret_bind, interpret_lift, pure_bind, RegistrationAuthenticationExecutor.step,
-            RegistrationAuthenticationExecutor.continueWith, simulateQ_pure, map_pure, control]
-      | ok request =>
-          simp only [AdapterInitAuthenticationRequestExtraction.body, Lifted.serverRequest, requested, pure_bind, Operations.hash, interpret, Program.run_bind, Program.run_lift, Program.run_pure, Program.query,
-            simulateQ_spec_query, native, RegistrationAuthenticationExecutor.step,
-            RegistrationAuthenticationExecutor.continueWith, simulateQ_bind, simulateQ_pure,
-            abstractNative, bind_map_left, map_bind]
-          apply bind_congr
-          intro reply
-          cases resumed : pending.resume reply <;>
-            simp only [Lifted.serverResume, resumed, Program.run_lift,
-              simulateQ_pure, pure_bind, map_pure, RegistrationAuthenticationExecutor.edge, control]
-  | BeaconFingerprintRequested pending =>
-      cases requested : pending.request with
-      | fail error | div =>
-          simp only [AdapterInitAuthenticationRequestExtraction.body, Lifted.beaconRequest, requested,
-            interpret_bind, interpret_lift, pure_bind, RegistrationAuthenticationExecutor.step,
-            RegistrationAuthenticationExecutor.continueWith, simulateQ_pure, map_pure, control]
-      | ok request =>
-          simp only [AdapterInitAuthenticationRequestExtraction.body, Lifted.beaconRequest, requested, pure_bind, Operations.hash, interpret, Program.run_bind, Program.run_lift, Program.run_pure, Program.query,
-            simulateQ_spec_query, native, RegistrationAuthenticationExecutor.step,
-            RegistrationAuthenticationExecutor.continueWith, simulateQ_bind, simulateQ_pure,
-            abstractNative, bind_map_left, map_bind]
-          apply bind_congr
-          intro reply
-          cases resumed : pending.resume reply <;>
-            simp only [Lifted.beaconResume, resumed, Program.run_lift,
               simulateQ_pure, pure_bind, map_pure, RegistrationAuthenticationExecutor.edge, control]
 
 end BeaconcryptCore.Refinement.AdapterInitAuthenticationStateful

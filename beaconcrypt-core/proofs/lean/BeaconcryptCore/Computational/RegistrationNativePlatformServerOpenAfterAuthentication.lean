@@ -21,7 +21,7 @@ variable {m : Type → Type} [Monad m] [LawfulMonad m]
 
 private theorem sdk_run (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (checks : Checks)
     (reserve : m Bool) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (authenticated : registration.AuthenticatedInit) (before : RegistrationServerFrontendCompiler.State n) :
     (RegistrationNativePlatformServerSdk.afterAuthentication coins setup checks (StateT.lift reserve)
       representation created packet authenticated).run before =
@@ -58,7 +58,7 @@ theorem native (coins : QueryImpl unifSpec m)
     (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (remember : Extra → Message → Option RootOutput → Extra)
     (services : RegistrationNativeKemReferenceEffects.Callbacks n KemSK Extra)
     (demand : QueryImpl (Message →ₒ Option (RegistrationNativePairedChoice.Choice n)) (StateT (Private n KemSK Extra) m))

@@ -12,6 +12,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhBeaconPhase2Routed
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhBeaconPhase2Preparation (Bytes Word32 Ciphertext)
 open PqxdhKemIndCca PqxdhJointKdfGame PqxdhInitializerSecrecy
 open PqxdhChallengeSecretRouting PqxdhPhase2DecapsulationRouting
@@ -29,7 +30,7 @@ inductive AuxQuery (I D K X Response : Type) where
   | dhIdentity : X → Word32 → AuxQuery I D K X Response
   | assignedId : Response → AuxQuery I D K X Response
   | localDecapsulation : Ciphertext → K → AuxQuery I D K X Response
-  | initial : ratchet.SymmetricRatchetKdfRequest → AuxQuery I D K X Response
+  | initial : ratchet.InitialRatchetKdfRequest → AuxQuery I D K X Response
   | application : Response → AuxQuery I D K X Response
   | raw : RawCtxSourceOpen.NativeSpec.Domain → AuxQuery I D K X Response
 
@@ -268,11 +269,11 @@ theorem owner_actual
     (decode : RawCtxReceive.FrameDecoder) (raw : Bytes)
     (state : PqxdhBeaconPhase2Preparation.State I D (Option K)) (auxiliary : Auxiliary) :
     (simulateQ (native source kem secret challenge aux)
-      (PqxdhBeaconPhase2Publication.nativeOwner decode raw state)).run auxiliary =
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw state)).run auxiliary =
         simulateQ (actualImpl source kem secret challenge)
           ((simulateQ (handles source challenge aux)
-            (PqxdhBeaconPhase2Shared.owner decode raw state)).run auxiliary) := by
-  rw [PqxdhBeaconPhase2Shared.owner_realization _ _ _
+            (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) decode raw state)).run auxiliary) := by
+  rw [PqxdhBeaconPhase2Shared.owner_realization (completedBinding := completedBinding) _ _ _
     (full_calls source kem secret challenge supplied agreement aux)]
   exact (simulateQ_StateT_compose (handles source challenge aux) (actualImpl source kem secret challenge)
     (actualHandles source kem secret challenge aux) (fun _ _ => rfl) _ auxiliary).symm
@@ -289,11 +290,11 @@ theorem owner_continuation {Result : Type}
     (next : ((Option Bytes × PqxdhBeaconPhase2Preparation.State I D (Option K)) × Auxiliary) →
       OracleComp (LocalPostSpec baseSpec) Result) :
     ((simulateQ (native source kem secret challenge aux)
-      (PqxdhBeaconPhase2Publication.nativeOwner decode raw state)).run auxiliary >>=
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw state)).run auxiliary >>=
         fun result => simulateQ (actualImpl source kem secret challenge) (next result)) =
       simulateQ (actualImpl source kem secret challenge)
-        ((simulateQ (handles source challenge aux) (PqxdhBeaconPhase2Shared.owner decode raw state)).run auxiliary >>= next) := by
-  rw [owner_actual source kem secret challenge supplied agreement aux, simulateQ_bind]
+        ((simulateQ (handles source challenge aux) (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) decode raw state)).run auxiliary >>= next) := by
+  rw [owner_actual (completedBinding := completedBinding) source kem secret challenge supplied agreement aux, simulateQ_bind]
 
 /-- The same Phase2 execution is simulated through the ordinary postchallenge CCA interface, with the challenge blocked on its public decapsulation channel. -/
 theorem owner_reduction
@@ -305,12 +306,12 @@ theorem owner_reduction
     (decode : RawCtxReceive.FrameDecoder) (raw : Bytes)
     (state : PqxdhBeaconPhase2Preparation.State I D (Option K)) (auxiliary : Auxiliary) :
     (simulateQ (native source kem secret challenge aux)
-      (PqxdhBeaconPhase2Publication.nativeOwner decode raw state)).run auxiliary =
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw state)).run auxiliary =
         simulateQ (publicImpl kem secret challenge)
           (simulateQ (route source challenge supplied)
             ((simulateQ (handles source challenge aux)
-              (PqxdhBeaconPhase2Shared.owner decode raw state)).run auxiliary)) := by
-  rw [owner_actual source kem secret challenge supplied agreement aux,
+              (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) decode raw state)).run auxiliary)) := by
+  rw [owner_actual (completedBinding := completedBinding) source kem secret challenge supplied agreement aux,
     route_complete source kem secret challenge supplied agreement]
 
 /-- Existing functional decapsulation and recipient correctness at the actual generated support discharge the complete source equation. -/
@@ -328,11 +329,11 @@ theorem owner_supported
     (decode : RawCtxReceive.FrameDecoder) (raw : Bytes)
     (state : PqxdhBeaconPhase2Preparation.State I D (Option K)) (auxiliary : Auxiliary) :
     (simulateQ (native source kem secret challenge aux)
-      (PqxdhBeaconPhase2Publication.nativeOwner decode raw state)).run auxiliary =
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw state)).run auxiliary =
         simulateQ (actualImpl source kem secret challenge)
           ((simulateQ (handles source challenge aux)
-            (PqxdhBeaconPhase2Shared.owner decode raw state)).run auxiliary) :=
-  owner_actual source kem secret challenge supplied
+            (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) decode raw state)).run auxiliary) :=
+  owner_actual (completedBinding := completedBinding) source kem secret challenge supplied
     (honest_decapsulation_program baseImpl kem functional correct generated encapsulated)
       aux decode raw state auxiliary
 

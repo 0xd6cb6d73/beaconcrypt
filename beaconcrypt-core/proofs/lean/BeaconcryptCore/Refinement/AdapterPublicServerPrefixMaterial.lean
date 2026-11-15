@@ -41,7 +41,7 @@ theorem project_world (view : AdapterPublicWrapperState.MaterialView mlSource Ke
     simp only [restore_world]
 
 theorem related_world (view : AdapterPublicWrapperState.MaterialView mlSource KemSK)
-    (views : AdapterPublicWrapperStorage.Views) (created : PqxdhLiveServerConstruction.Created Unit)
+    (views : AdapterPublicWrapperStorage.Views) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential mlSource) (self : beaconcrypt_public_wrapper.server.Server)
     (before : RegistrationNativeExperiment.State n KemSK mlSource)
     (related : AdapterPublicWrapperState.Server view views created credential self before.server)
@@ -59,12 +59,9 @@ theorem pin_server (binding : pqxdh.ServerBinding) (publicKey : Std.Array U8 195
     (supported : (reply, after) ∈ support ((RegistrationNativeServerPinRecompute.native binding publicKey).run before)) :
     after.server = before.server := by
   rw [RegistrationNativeServerPinRecompute.native_run] at supported
-  simp only [mem_support_bind_iff] at supported
-  obtain ⟨⟨digest, current⟩, called, returned⟩ := supported
-  simp only [support_pure, Set.mem_singleton_iff] at returned
-  have same := congrArg Prod.snd returned
-  cases same
-  exact AdapterPublicServerAuthenticationFrame.hash_server _ before after digest called
+  simp only [support_pure, Set.mem_singleton_iff] at supported
+  cases supported
+  rfl
 
 end BeaconcryptCore.Refinement.AdapterPublicServerPrefixMaterial
 

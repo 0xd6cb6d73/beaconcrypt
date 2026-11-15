@@ -6,7 +6,9 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeSavedMonitor
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhJointKdfGame PqxdhNativeSharedPrefix
 open RawCtxSelectedParentTable RawCtxSelectedParentEntry PqxdhFirstRecordConfidentiality
 variable {ι M P I D K X Response Shared A N C Value Result : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -65,13 +67,13 @@ theorem complete_append
     (callbackFits : PqxdhInitialOriginCertificates.Fits qCallback context)
     (fits : PqxdhInitialOriginCertificates.Fits qPost (PqxdhLaterChallengeCapture.append outside context))
     (localState : Local A N C) :
-    PqxdhLaterSavedPostCompiler.complete pre application initial selector aux source writer prior target nonce next mark
+    PqxdhLaterSavedPostCompiler.complete (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next mark
       sender route read monitor qPost (PqxdhLaterChallengeCapture.append outside context) material fits localState = (do
-    let result ← PqxdhLaterSavedPostCompiler.complete pre application initial selector aux source writer prior target nonce next mark
+    let result ← PqxdhLaterSavedPostCompiler.complete (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next mark
       sender route read monitor qCallback context material callbackFits localState
     match result.1 with
     | none => pure (none, result.2)
-    | some value => ((simulateQ (insImpl pre application initial selector aux source writer prior
+    | some value => ((simulateQ (insImpl (completedBinding := completedBinding) pre application initial selector aux source writer prior
         (some ⟨PqxdhInitialBuilderContext.address context.original, material⟩) target nonce next sender route read mark monitor)
         (outside value)).run).run result.2) := by
   unfold PqxdhLaterSavedPostCompiler.complete
@@ -84,10 +86,10 @@ theorem complete_append
 theorem wrapped_run (parent : Entry) (owner : RawCtxProtocolReveals.Owner S B) (number : Std.U64) (bit : Bool)
     (work : OracleComp (AdvSpec extra S B) Bool) (current : PqxdhRecordConfidentialityChallenge.State)
     (before : InsState M P I D K A N C S B) :
-    ((simulateQ (insImpl pre application initial selector aux source writer prior (some parent) target nonce next sender route read mark monitor)
+    ((simulateQ (insImpl (completedBinding := completedBinding) pre application initial selector aux source writer prior (some parent) target nonce next sender route read mark monitor)
       (PqxdhLaterChallengeCapture.wrapped owner number bit work current)).run).run before =
     (fun result => (result.1.map (PqxdhRecordConfidentialityChallenge.output number), result.2)) <$>
-      runStepper (simulateQ (PqxdhLaterChallengeTwin.handler pre application initial selector aux source writer prior parent target nonce next
+      runStepper (simulateQ (PqxdhLaterChallengeTwin.handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next
         sender route read mark monitor owner number bit) work) current before := by
   unfold PqxdhLaterChallengeCapture.wrapped
   rw [simulateQ_map, PqxdhLaterChallengeTwin.program]
@@ -101,13 +103,13 @@ noncomputable def resume (owner : RawCtxProtocolReveals.Owner S B) (number : Std
     (localState : Local A N C) (choice : Option Bool) :
     OracleComp AdaptiveCtxDynamicKnownKeys.Spec
       (Option Bool × PqxdhLaterChallengeMonitor.State M P I D K A N C S B) := do
-  let callback ← PqxdhLaterSavedPostCompiler.complete pre application initial selector aux source writer prior target nonce next mark
+  let callback ← PqxdhLaterSavedPostCompiler.complete (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next mark
     sender route read monitor qPost details.callback material fits localState
   match callback.1 with
   | none => pure (none, (callback.2, choice))
   | some (reply, current) =>
     (fun result => (result.1.map (PqxdhRecordConfidentialityChallenge.output number), result.2)) <$>
-      runStepper (simulateQ (PqxdhLaterChallengeMonitor.handler pre application initial selector aux source writer prior
+      runStepper (simulateQ (PqxdhLaterChallengeMonitor.handler (completedBinding := completedBinding) pre application initial selector aux source writer prior
         ⟨PqxdhInitialBuilderContext.address details.callback.original, material⟩ target nonce next sender route read mark monitor
         owner number bit) (details.request.next reply)) current (callback.2, choice)
 
@@ -120,20 +122,20 @@ theorem resume_erase (owner : RawCtxProtocolReveals.Owner S B) (number : Std.U64
     (callbackFits : PqxdhInitialOriginCertificates.Fits qPost details.callback)
     (fits : PqxdhInitialOriginCertificates.Fits qPost context)
     (localState : Local A N C) (choice : Option Bool) :
-    Prod.map id Prod.fst <$> resume pre application initial selector aux source writer prior target nonce next sender route read mark monitor
+    Prod.map id Prod.fst <$> resume (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next sender route read mark monitor
       owner number bit details material qPost callbackFits localState choice =
-    PqxdhLaterSavedPostCompiler.complete pre application initial selector aux source writer prior target nonce next mark sender route read monitor
+    PqxdhLaterSavedPostCompiler.complete (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next mark sender route read monitor
       qPost context material fits localState := by
   change context = PqxdhLaterChallengeCapture.append
     (fun result => PqxdhLaterChallengeCapture.wrapped owner number bit (details.request.next result.1) result.2) details.callback at joined
   subst context
-  rw [complete_append pre application initial selector aux source writer prior target nonce next sender route read mark monitor _ details.callback material qPost qPost callbackFits fits localState]
+  rw [complete_append (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next sender route read mark monitor _ details.callback material qPost qPost callbackFits fits localState]
   simp only [resume, map_bind]
   refine bind_congr fun callback => ?_
   rcases callback with ⟨_ | ⟨reply, current⟩, after⟩
   case none => rfl
   simp only [wrapped_run, Functor.map_map]
-  rw [← PqxdhLaterChallengeMonitor.program_source pre application initial selector aux source writer prior
+  rw [← PqxdhLaterChallengeMonitor.program_source (completedBinding := completedBinding) pre application initial selector aux source writer prior
     ⟨PqxdhInitialBuilderContext.address details.callback.original, material⟩ target nonce next sender route read mark monitor
     owner number bit (details.request.next reply) current (after, choice), Functor.map_map]
   rfl
@@ -149,11 +151,11 @@ theorem resume_budget {Budget : Type} (owner : RawCtxProtocolReveals.Owner S B) 
     (localState : Local A N C) (choice : Option Bool)
     (budget : Budget) (allowed : AdaptiveCtxDynamicKnownKeys.Spec.Domain → Budget → Prop)
     (cost : AdaptiveCtxDynamicKnownKeys.Spec.Domain → Budget → Budget) :
-    (resume pre application initial selector aux source writer prior target nonce next sender route read mark monitor
+    (resume (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next sender route read mark monitor
       owner number bit details material qPost callbackFits localState choice).IsQueryBound budget allowed cost ↔
-    (PqxdhLaterSavedPostCompiler.complete pre application initial selector aux source writer prior target nonce next mark sender route read monitor
+    (PqxdhLaterSavedPostCompiler.complete (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next mark sender route read monitor
       qPost context material fits localState).IsQueryBound budget allowed cost := by
-  rw [← resume_erase pre application initial selector aux source writer prior target nonce next sender route read mark monitor
+  rw [← resume_erase (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next sender route read mark monitor
     owner number bit details context joined material qPost callbackFits fits localState choice, isQueryBound_map_iff]
 
 /-- The callback-only form of an actual saved Builder keeps every source field, its trace and origin. Only the explicit outside continuation becomes `pure`; no function is recovered. -/
@@ -188,13 +190,13 @@ noncomputable def builderResume (owner : RawCtxProtocolReveals.Owner S B) (numbe
     (fits : PqxdhInitialOriginCertificates.Fits qPost callback) (localState : Local A N C) :
     OracleComp AdaptiveCtxDynamicKnownKeys.Spec
       (Option Bool × PqxdhLaterChallengeMonitor.State M P I D K A N C S B) := do
-  let built ← PqxdhLaterSavedPostCompiler.complete pre application initial selector aux source writer prior target nonce next mark
+  let built ← PqxdhLaterSavedPostCompiler.complete (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next mark
     sender route read monitor qPost callback material fits localState
   match built.1 with
   | none => pure (none, (built.2, none))
   | some reply =>
     (fun result => (result.1.map (PqxdhRecordConfidentialityChallenge.output number), result.2)) <$>
-      runStepper (simulateQ (PqxdhLaterChallengeMonitor.handler pre application initial selector aux source writer prior
+      runStepper (simulateQ (PqxdhLaterChallengeMonitor.handler (completedBinding := completedBinding) pre application initial selector aux source writer prior
         ⟨PqxdhInitialBuilderContext.address callback.original, material⟩ target nonce next sender route read mark monitor
         owner number bit) (work reply)) PqxdhRecordConfidentialityChallenge.initial (built.2, none)
 
@@ -208,23 +210,23 @@ theorem builder_erase (owner : RawCtxProtocolReveals.Owner S B) (number : Std.U6
     (material : PqxdhOrderedChainHybrids.Material) (qPost : Nat)
     (callbackFits : PqxdhInitialOriginCertificates.Fits qPost (builderOnly saved context.trace context.origin))
     (fits : PqxdhInitialOriginCertificates.Fits qPost context) (localState : Local A N C) :
-    Prod.map id Prod.fst <$> builderResume pre application initial selector aux source writer prior target nonce next sender route read
+    Prod.map id Prod.fst <$> builderResume (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next sender route read
       mark monitor owner number bit work (builderOnly saved context.trace context.origin) material qPost callbackFits localState =
-    PqxdhLaterSavedPostCompiler.complete pre application initial selector aux source writer prior target nonce next mark sender route read
+    PqxdhLaterSavedPostCompiler.complete (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next mark sender route read
       monitor qPost context material fits localState := by
   have joined := builder_append context saved same
   rw [outside] at joined
   revert fits
   rw [← joined]
   intro fits
-  rw [complete_append pre application initial selector aux source writer prior target nonce next sender route read mark monitor
+  rw [complete_append (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next sender route read mark monitor
     _ (builderOnly saved context.trace context.origin) material qPost qPost callbackFits fits localState]
   simp only [builderResume, map_bind]
   refine bind_congr fun built => ?_
   rcases built with ⟨_ | reply, after⟩
   case none => rfl
   simp only [wrapped_run, Functor.map_map]
-  rw [← PqxdhLaterChallengeMonitor.program_source pre application initial selector aux source writer prior
+  rw [← PqxdhLaterChallengeMonitor.program_source (completedBinding := completedBinding) pre application initial selector aux source writer prior
     ⟨PqxdhInitialBuilderContext.address (builderOnly saved context.trace context.origin).original, material⟩ target nonce next sender
     route read mark monitor owner number bit (work reply) PqxdhRecordConfidentialityChallenge.initial (after, none), Functor.map_map]
   rfl
@@ -241,12 +243,12 @@ theorem builder_budget {Budget : Type} (owner : RawCtxProtocolReveals.Owner S B)
     (fits : PqxdhInitialOriginCertificates.Fits qPost context) (localState : Local A N C)
     (budget : Budget) (allowed : AdaptiveCtxDynamicKnownKeys.Spec.Domain → Budget → Prop)
     (cost : AdaptiveCtxDynamicKnownKeys.Spec.Domain → Budget → Budget) :
-    (builderResume pre application initial selector aux source writer prior target nonce next sender route read mark monitor
+    (builderResume (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next sender route read mark monitor
       owner number bit work (builderOnly saved context.trace context.origin) material qPost callbackFits localState).IsQueryBound
       budget allowed cost ↔
-    (PqxdhLaterSavedPostCompiler.complete pre application initial selector aux source writer prior target nonce next mark sender route read
+    (PqxdhLaterSavedPostCompiler.complete (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next mark sender route read
       monitor qPost context material fits localState).IsQueryBound budget allowed cost := by
-  rw [← builder_erase pre application initial selector aux source writer prior target nonce next sender route read mark monitor
+  rw [← builder_erase (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next sender route read mark monitor
     owner number bit work context saved same outside material qPost callbackFits fits localState, isQueryBound_map_iff]
 
 /-- In the two ordinary worlds, the Builder resume runs one identical callback and then the monitored adversary from the unused initial wrapper state. The pair is twin until the explicit private events; the inherited target-versus-parent address inequality stays a hypothesis. -/
@@ -259,16 +261,16 @@ theorem builder_pre (owner : RawCtxProtocolReveals.Owner S B) (number : Std.U64)
       PqxdhInitialBuilderContext.address callback.original) :
     Pre (fun a b => a = b) (fun result => PqxdhLaterChallengeMonitor.Dead result.2)
       (fun result => PqxdhLaterChallengeMonitor.Dead result.2)
-      (builderResume pre application initial selector aux source writer prior target nonce next sender route read mark monitor
+      (builderResume (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next sender route read mark monitor
         owner number false work callback material qPost fits localState)
-      (builderResume pre application initial selector aux source writer prior target nonce next sender route read mark monitor
+      (builderResume (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next sender route read mark monitor
         owner number true work callback material qPost fits localState) := by
   unfold builderResume
   apply pre_bind_refl
   intro built _
   rcases built with ⟨_ | reply, after⟩
   · exact Pre.pure rfl
-  · exact pre_map (PqxdhLaterChallengeMonitor.program_pre pre application initial selector aux source writer prior
+  · exact pre_map (PqxdhLaterChallengeMonitor.program_pre (completedBinding := completedBinding) pre application initial selector aux source writer prior
       ⟨PqxdhInitialBuilderContext.address callback.original, material⟩ target nonce next sender route read mark monitor
       owner number (work reply) PqxdhRecordConfidentialityChallenge.initial rfl after separate)
       _ _ (fun _ _ same => by rw [same]) (fun _ dead => dead) (fun _ dead => dead)

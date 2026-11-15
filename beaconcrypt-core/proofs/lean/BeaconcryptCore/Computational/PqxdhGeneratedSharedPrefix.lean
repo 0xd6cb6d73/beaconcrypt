@@ -10,6 +10,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhGeneratedSharedPrefix
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPhase1AcceptanceOracle PqxdhKemIndCca
 open PqxdhInitializerSecrecy CtxRomAuth AdaptiveCtxSharedHash
@@ -57,7 +58,7 @@ noncomputable def run (index : Nat) (publicIdentity : PublicIdentity) (generated
     (start setup (PqxdhSourceAuxiliary.phase1 callbacks) index publicIdentity generated env.binding
       (PqxdhGeneratedBeaconSelector.bundle transcript) (withCache setup env.initial ∅))
   let selected ← (simulateQ
-    (PqxdhOrdinarySharedScheduler.compiler attachedVerify primitives count env.source env.recordWriter env.senderId env.route env.decode env.localImpl baseImpl kem secret)
+    (PqxdhOrdinarySharedScheduler.compiler (completedBinding := completedBinding) attachedVerify primitives count env.source env.recordWriter env.senderId env.route env.decode env.localImpl baseImpl kem secret)
     (program.main (started.1.map (fun bytes => ⟨transcript, bytes⟩)))).run
       (PqxdhOrdinarySharedScheduler.separate (PqxdhPhase2OldSource.packState started.2 identities))
   pure (selected.1.1, (selected.1.2, selected.2))
@@ -67,10 +68,10 @@ set_option backward.isDefEq.respectTransparency false in
 theorem source (index : Nat) (publicIdentity : PublicIdentity) (generated : Generated setup Unit)
     (transcript : Phase1PublicTranscript setup.Context) (identities : BareState count) (cache : CtxRO.QueryCache) :
     (fun result => (result.1.1, (result.1.2.1, PqxdhOrdinarySharedScheduler.attach result.1.2.2 result.2))) <$>
-      (simulateQ hashImpl (PqxdhGeneratedSharedPrefix.run setup env callbacks program attachedVerify primitives count baseImpl kem secret
+      (simulateQ hashImpl (PqxdhGeneratedSharedPrefix.run (completedBinding := completedBinding) setup env callbacks program attachedVerify primitives count baseImpl kem secret
         index publicIdentity generated transcript identities)).run cache =
       evalKem baseImpl kem secret
-        (PqxdhPhase2GeneratedDriver.ordinaryRun (environment setup env callbacks cache) program attachedVerify primitives count
+        (PqxdhPhase2GeneratedDriver.ordinaryRun (completedBinding := completedBinding) (environment setup env callbacks cache) program attachedVerify primitives count
           index publicIdentity generated transcript identities) := by
   simp only [PqxdhGeneratedSharedPrefix.run, PqxdhPhase2GeneratedDriver.ordinaryRun,
     simulateQ_bind, StateT.run_bind, map_bind, simulateQ_pure, StateT.run_pure, map_pure,
@@ -81,7 +82,7 @@ theorem source (index : Nat) (publicIdentity : PublicIdentity) (generated : Gene
   simp only [bind_map_left]
   apply bind_congr
   intro started
-  have original := PqxdhOrdinarySharedScheduler.program attachedVerify primitives count env.source env.recordWriter
+  have original := PqxdhOrdinarySharedScheduler.program (completedBinding := completedBinding) attachedVerify primitives count env.source env.recordWriter
     env.senderId env.route env.decode env.localImpl baseImpl kem secret
     (program.main (started.1.map (fun bytes => ⟨transcript, bytes⟩)))
     (PqxdhOrdinarySharedScheduler.separate (PqxdhPhase2OldSource.packState started.2 identities)) cache

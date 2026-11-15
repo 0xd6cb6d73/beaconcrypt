@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeMldsaShared
+import BeaconcryptCore.Computational.RegistrationNativeMldsaRoleSyntax
 import BeaconcryptCore.Computational.RegistrationWorldServerPublication
 import BeaconcryptCore.Refinement.RegistrationSigningContinuations
 
@@ -31,110 +32,19 @@ def BeaconQuery : RegistrationBeaconInitExecutor.Spec.Domain → Prop
 
 namespace Beacon
 open RegistrationBeaconInitExecutor
-attribute [local irreducible] registration.BeaconInitHash.resume registration.BeaconFingerprint.resume
-  registration.BeaconMldsaSigning.resume registration.begin_beacon_init
 
-private theorem continue_all {Input : Type} (action : RustM Input)
-    (next : Input → OracleComp Spec (RustM (Result Encoded)))
-    (good : ∀ value, AllQueriesSatisfy (next value) BeaconQuery) :
-    AllQueriesSatisfy (continueWith action next) BeaconQuery := by
-  cases action with
-  | ok value => exact good value
-  | fail error => trivial
-  | div => trivial
-
-private theorem ready_all (encode : registration.SignedInitView → core.option.Option Encoded)
-    (pending : registration.BeaconInitReady) : AllQueriesSatisfy (ready encode pending) BeaconQuery := by
-  unfold ready
-  exact continue_all _ _ (fun _ => by trivial)
-
-private theorem signing_all (encode : registration.SignedInitView → core.option.Option Encoded)
-    (payload : MldsaTranscriptAuth.Payload) (digest : CtxRomAuth.CtxDigest) (pending : registration.BeaconMldsaSigning)
-    (request : registration.MldsaSigningRequest) (requested : pending.request = .ok request)
-    (correct : Correct request payload digest) : AllQueriesSatisfy (fromSigning encode payload digest pending) BeaconQuery := by
-  unfold fromSigning
-  rw [requested]
-  change AllQueriesSatisfy (do
-    let signature ← (Spec.query (.inl (.sign request payload digest)) : OracleComp Spec RegistrationSigningShared.SignReply)
-    continueWith (pending.resume signature) fun effect => match effect with
-      | .Rejected previous => pure (.ok (.Err previous))
-      | .Ready selected => ready encode selected
-      | _ => pure .div) BeaconQuery
-  rw [allQueriesSatisfy_query_bind_iff]
-  refine ⟨correct, fun _ => ?_⟩
-  apply continue_all
-  intro effect
-  cases effect with
-  | Ready selected => exact ready_all encode selected
-  | _ => trivial
-
-/-- Every ML request reached after the actual Init hash has exactly that returned digest, Beacon role and native FIPS context. -/
-theorem hash_all (encode : registration.SignedInitView → core.option.Option Encoded)
-    (pending : registration.BeaconInitHash) : AllQueriesSatisfy (fromHash encode pending) BeaconQuery := by
-  obtain ⟨request, requested, _bytes⟩ :=
-    BeaconcryptCore.Refinement.RegistrationSigningTrace.command_request_exact (.beacon pending)
-  change pending.request = .ok request at requested
-  unfold fromHash
-  rw [requested]
-  change AllQueriesSatisfy (do
-    let digest ← (Spec.query (.inl (.hash request)) : OracleComp Spec CtxRomAuth.CtxDigest)
-    continueWith (pending.resume (.Some (RegistrationAuthenticationShared.digestArray digest))) fun effect =>
-      match effect with
-      | .Rejected previous => pure (.ok (.Err previous))
-      | .MldsaSigningRequested selected => fromSigning encode ⟨.beacon, hashBytes request⟩ digest selected
-      | _ => pure .div) BeaconQuery
-  rw [allQueriesSatisfy_query_bind_iff]
-  refine ⟨trivial, fun digest => ?_⟩
-  obtain ⟨selected, resumed, _state, _fingerprint, _hash, signing, signed, _key, role, _context, contextBytes, inputBytes⟩ :=
-    BeaconcryptCore.Refinement.RegistrationSigningContinuations.beacon_init_hash_some_exact pending
-      (RegistrationAuthenticationShared.digestArray digest)
-  rw [resumed]
-  apply signing_all encode _ digest selected signing signed
-  refine ⟨?_, contextBytes, ?_⟩
-  · simp only [role, TranscriptAuthInputsRefinement.absRole]
-  · simpa only [RegistrationAuthenticationShared.digest_array_bytes] using inputBytes
-
-private theorem fingerprint_all (encode : registration.SignedInitView → core.option.Option Encoded)
-    (pending : registration.BeaconFingerprint) : AllQueriesSatisfy (fromFingerprint encode pending) BeaconQuery := by
-  unfold fromFingerprint
-  apply continue_all
-  intro request
-  rw [allQueriesSatisfy_query_bind_iff]
-  refine ⟨trivial, fun _ => ?_⟩
-  apply continue_all
-  intro effect
-  cases effect with
-  | HashRequested selected => exact hash_all encode selected
-  | _ => trivial
-
-/-- Optional Ed failures and all three attached-signing stages retain complete ML-request alignment at every later reached native leaf. -/
-theorem ed_all (encode : registration.SignedInitView → core.option.Option Encoded)
-    (pending : registration.BeaconEd25519Signing) : AllQueriesSatisfy (fromEd encode pending) BeaconQuery := by
-  rw [fromEd.eq_def]
-  apply continue_all
-  intro request
-  rw [allQueriesSatisfy_query_bind_iff]
-  refine ⟨trivial, fun reply => ?_⟩
-  cases actual : pending.resume reply with
-  | fail error | div => trivial
-  | ok effect => cases effect with
-    | Ed25519SigningRequested next => exact ed_all encode next
-    | FingerprintRequested selected => exact fingerprint_all encode selected
-    | _ => trivial
-termination_by edRank pending
-decreasing_by exact ed_rank pending reply next actual
-
-/-- The whole actual outgoing Init program is aligned without a publication-success premise. -/
-theorem begin_all (encode : registration.SignedInitView → core.option.Option Encoded)
+/-- The outgoing Init has no ML request; shared request alignment is therefore vacuous on this actor. -/
+theorem begin_all (encode : registration.InitView → core.option.Option Encoded)
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize) :
-    AllQueriesSatisfy (begin encode control inputs coins pin mldsa) BeaconQuery := by
-  unfold begin
-  apply continue_all
-  intro effect
-  cases effect with
-  | Ed25519SigningRequested selected => exact ed_all encode selected
-  | _ => trivial
+    (pin : session.ServerAuthenticationPin) :
+    AllQueriesSatisfy (begin encode control inputs coins pin) BeaconQuery := by
+  apply (RegistrationNativeMldsaRoleSyntax.begin_all encode control inputs coins pin).mono
+  intro query allowed
+  cases query with
+  | inl shared => cases shared with
+    | hash _ => trivial
+    | sign _ _ _ => exact False.elim allowed
+  | inr _ => trivial
 end Beacon
 
 namespace Server
@@ -208,16 +118,6 @@ theorem cached_message (request : registration.MldsaSigningRequest) (payload : M
   exact correct.2.2
 
 end BeaconcryptCore.Computational.RegistrationNativeMldsaRequestAlignment
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaRequestAlignment.Beacon.hash_all' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaRequestAlignment.Beacon.hash_all
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaRequestAlignment.Beacon.ed_all' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaRequestAlignment.Beacon.ed_all
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaRequestAlignment.Beacon.begin_all' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/

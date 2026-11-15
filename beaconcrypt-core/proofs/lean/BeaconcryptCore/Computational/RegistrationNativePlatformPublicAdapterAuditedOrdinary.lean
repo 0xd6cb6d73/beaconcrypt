@@ -33,7 +33,7 @@ local notation "coins"=>RegistrationNativePlatformMldsaProgram.coins
 open RegistrationNativePlatformExtractedSdkPublic (TotalStep)
 open RegistrationNativePlatformSdkOrdinaryBeaconSelected (raw)
 local notation "N"=>RegistrationNativeExperiment.State n KemSK source×P
-variable (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
 local notation "objects"=>RegistrationNativePlatformPublicAdapterDispatcherCore.Private configuration created credential
 local notation "typed"=>RegistrationNativePlatformPublicAdapterAuditModel.typed configuration created credential
 local notation "auditPrivate"=>RegistrationNativePlatformPublicAdapterAuditModel.Private configuration created credential

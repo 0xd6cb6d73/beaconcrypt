@@ -29,7 +29,7 @@ theorem constructor_kem (setup : Setup baseSpec KemSK) (ensureInit : StateT A Pr
 def finish (created : ClientCreated Unit) (runtime : A)
     (result : Option (PqxdhRegistrationJointKemCommands.Outcome KemSK Result) × PqxdhLiveKemBirth.State KemSK) :
     Option (PqxdhRegistrationJointInitializedSchedule.Outcome KemSK Result) × State KemSK A :=
-  (result.1.map (fun answer => (created, answer.1.1, ⟨result.2, answer.2, answer.1.2⟩)), (result.2, runtime))
+  (result.1.map (fun answer => (created, answer.1.1, ⟨result.2, answer.2, answer.1.2.1, answer.1.2.2⟩)), (result.2, runtime))
 
 /-- Complete monitored source commands after the actual initializer. The reserved selected key remains in the private interpreter and does not become a client argument. -/
 noncomputable def commands (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -40,7 +40,7 @@ noncomputable def commands (setup : Setup baseSpec KemSK) (codec : Codec Reader 
   finish created runtime <$> (Prod.map id (PqxdhDynamicKemJointSource.project pairs) <$>
     (((simulateQ (PqxdhDynamicKemJointSource.normal setup.baseImpl setup.joint setup.kem selected pairs)
       (PqxdhRegistrationJointKemCommands.program setup codec checks created.server.server.metadata.identityIndex
-        created.publicIdentity client [] (PqxdhRegistrationJointInitializedAccept.initial created))).run).run
+        created.publicIdentity client ([], fun _ => none) (PqxdhRegistrationJointInitializedAccept.initial created))).run).run
           (joint, PqxdhDynamicKemRouter.empty)))
 
 /-- Reserve one chosen creation and every remaining bounded creation after literal Server initialization. Ordinary initialization failure remains unchanged. -/
@@ -80,7 +80,7 @@ theorem initialized (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     simp only [PqxdhRegistrationJointOpenBackend.execute, PqxdhRegistrationJointOpenBackend.run,
       PqxdhRegistrationJointInitializedSchedule.initial, Functor.map_map]
     have source := PqxdhRegistrationJointKemCommands.selected_source setup codec checks
-      created.server.server.metadata.identityIndex created.publicIdentity client budget certified []
+      created.server.server.metadata.identityIndex created.publicIdentity client budget certified ([], fun _ => none)
       (PqxdhRegistrationJointInitializedAccept.initial created) after.1.1 count selected room
     have mapped := source.map (finish created after.2)
     simpa only [Functor.map_map, map_bind, finish, Option.map_some,

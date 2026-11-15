@@ -3,7 +3,7 @@ import BeaconcryptCore.Computational.RegistrationNativeIdentityCommonSource
 import BeaconcryptCore.Computational.RegistrationBeaconReferenceNativeOwner
 
 /-! The indexed identity frontend reuses the exact original first-record callbacks. Their existing owner-independence theorem justifies the empty-roster adapter; no owner metadata, record request, current Env or World effect is discarded by the source correspondence. -/
-open OracleComp OracleSpec CoreModels
+open OracleComp OracleSpec CoreModels Aeneas
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativeIdentityRecordSource
@@ -23,12 +23,11 @@ private theorem liftOld_lift
   simp only [RegistrationNativeIdentityFrontend.liftOld, liftAmbient, StateT.run_lift,
     StateT.run_map, bind_pure_comp, Functor.map_map,
     id_map']
-  all_goals rfl
 
 /-- Each actual first-record query uses the original source primitive and retains all request logs and reached World state. -/
 theorem query_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List PqxdhJointIdentity.IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List PqxdhJointIdentity.IdentitySeed)
     (wire : RegistrationNativeWire.Wire) (query : RegistrationRecordPrimitives.Spec.Domain) :
     Related (n := n) (Auxiliary := Auxiliary) (source := source) setup checks representation created seeds
       (RegistrationNativeIdentityFrontend.record setup wire query) (RegistrationNativeBeaconFrontend.record setup wire query) := by
@@ -39,7 +38,7 @@ theorem query_source (setup : Setup base KemSK) (checks : Checks)
 
 theorem query_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (query : RegistrationRecordPrimitives.Spec.Domain) :
     Keeps (n := n) (Auxiliary := Auxiliary) (source := source) setup checks representation created
       (RegistrationNativeIdentityFrontend.record setup wire query) := by
@@ -51,7 +50,7 @@ theorem query_keeps (setup : Setup base KemSK) (checks : Checks)
 /-- The complete native sequence-one opening controller has the same optional results, consumed kernel, mutable Env and World. -/
 theorem program_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List PqxdhJointIdentity.IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List PqxdhJointIdentity.IdentitySeed)
     (wire : RegistrationNativeWire.Wire) (work : OracleComp RegistrationRecordPrimitives.Spec Value) :
     Related (n := n) (Auxiliary := Auxiliary) (source := source) setup checks representation created seeds
       (simulateQ (RegistrationNativeIdentityFrontend.record setup wire) work)
@@ -62,7 +61,7 @@ theorem program_source (setup : Setup base KemSK) (checks : Checks)
 
 theorem program_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (work : OracleComp RegistrationRecordPrimitives.Spec Value) :
     Keeps (n := n) (Auxiliary := Auxiliary) (source := source) setup checks representation created
       (simulateQ (RegistrationNativeIdentityFrontend.record setup wire) work) :=

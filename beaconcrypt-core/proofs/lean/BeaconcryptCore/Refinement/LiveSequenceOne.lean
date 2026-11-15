@@ -757,7 +757,7 @@ theorem live_commit_binding (candidate : beaconcrypt_core.pqxdh.BeaconRegistrati
     · cases committed
     · simp_all
 
-/-- The actual first-opening poststate and extracted plaintext commitment seed every subsequent mixed trace with the committed binding and unchanged associated data. -/
+/-- Given the completed session binding for this committed control, its authoritative AD and the actual first-opening poststate seed every subsequent mixed trace. AD is not reconstructed from candidate identities. -/
 theorem live_authenticated_client
     {AD PT CT SendContext ReceiveContext SendOutput PrimitiveState Result : Type}
     {ι : Type} {base : OracleSpec ι}
@@ -767,7 +767,11 @@ theorem live_authenticated_client
       StateT PrimitiveState (OracleComp base) (Option SendOutput))
     (opening : ratchet.RatchetMaterial → Nat → ReceiveContext →
       StateT PrimitiveState (OracleComp base) (Option Pqxdh.Bytes))
-    (candidate : beaconcrypt_core.pqxdh.BeaconRegistrationCandidate) (sender : Std.U64)
+    (candidate : beaconcrypt_core.pqxdh.BeaconRegistrationCandidate)
+    (binding : beaconcrypt_core.session.SessionBinding)
+    (boundControl : binding.server_binding = candidate.server_binding ∧
+      binding.assigned_key_id = candidate.assigned_key_id)
+    (sender : Std.U64)
     (plaintext : Pqxdh.Bytes) (established : beaconcrypt_core.pqxdh.BeaconEstablished)
     (pinned : sender = candidate.server_binding.identity_key_id)
     (committed : BeaconcryptCore.Refinement.ProtocolComposition.commitPlaintext candidate sender plaintext =
@@ -782,23 +786,23 @@ theorem live_authenticated_client
     (client : OracleComp (LiveSpec SendContext ReceiveContext SendOutput Pqxdh.Bytes) Result)
     (result : Result × (ConcreteRatchetKernel × PrimitiveState))
     (continued : result ∈ support ((simulateQ (liveSourceImpl execute sealing opening) client).run (first, afterFirst))) :
-    let session := (established, PqxdhRefinement.absBytes candidate.associated_data)
+    let session := (established, PqxdhRefinement.absBytes binding.associated_data)
     ∃ transcript after,
       LiveSourceTrace execute sealing opening (first, afterFirst) transcript result.2 ∧
       LiveRepresents result.2.1 after ∧
       LiveTrace (withInterpreter cr execute) sealing opening
         (liveCommittedToken (withInterpreter cr execute) session kernel, afterFirst)
         transcript (after, result.2.2) ∧
-      after.context = (⟨candidate.server_binding, candidate.assigned_key_id⟩,
-        PqxdhRefinement.absBytes candidate.associated_data) := by
+      after.context = (⟨binding.server_binding, binding.assigned_key_id⟩,
+        PqxdhRefinement.absBytes binding.associated_data) := by
   have metadata := (live_commit_binding candidate sender plaintext established pinned committed).1
   have bootstrap := (live_sequence_one cr execute sealing opening root initial
-    (established, PqxdhRefinement.absBytes candidate.associated_data) context kernel initialized
+    (established, PqxdhRefinement.absBytes binding.associated_data) context kernel initialized
     primitive afterFirst first plaintext firstActual).1
   obtain ⟨transcript, after, sourceTrace, represented, processTrace⟩ :=
     live_supported_client cr execute sealing opening client (first, afterFirst) _ bootstrap result continued
   exact ⟨transcript, after, sourceTrace, represented, processTrace,
-    by simpa only [liveCommittedToken, metadata] using processTrace.session⟩
+    by simpa only [liveCommittedToken, metadata, boundControl.1, boundControl.2] using processTrace.session⟩
 
 end beaconcrypt_core.ratchet.concrete
 

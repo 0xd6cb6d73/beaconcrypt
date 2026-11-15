@@ -215,7 +215,7 @@ theorem initial_complete
     (attachedVerify : Ed25519PublicKey → Pqxdh.Bytes → Option Pqxdh.Bytes)
     (primitives : Primitives) (count : Nat) (source : FixedHkdfSha512NoSaltSource)
     (localImpl : QueryImpl (LocalSpec I D K X Response) (StateT A ProbComp))
-    (request : ratchet.SymmetricRatchetKdfRequest) (state : SharedState A × BareState count) :
+    (request : ratchet.InitialRatchetKdfRequest) (state : SharedState A × BareState count) :
     (borrowedAux (baseSpec := baseSpec) attachedVerify primitives count source localImpl (.initial request)).run state =
       pure (RawCtxSourceHkdf.initialResponse source.crypto request, state) := by
   rfl

@@ -8,6 +8,8 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option maxHeartbeats 500000
 namespace BeaconcryptCore.Computational.PqxdhLaterExecutableCompletion
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPhase1AcceptanceOracle PqxdhKemIndCca PqxdhInitializerSecrecy
 open CtxRomAuth AdaptiveCtxSharedHash PqxdhSecretInputKdf PqxdhFullSecretInputKdf
@@ -46,7 +48,7 @@ noncomputable def suffix (c : PqxdhAuthenticatedRootBudgets.Certificate env0 bas
   | .inr (start, .inr pending) => do
     let fits : PqxdhInitialOriginCertificates.Fits (PqxdhInitialPreparedSourceCaps.postCap (PqxdhSourceSharedPreparation.environment setup env callbacks ∅) baseImpl kem program post c) pending.1 := by
       simpa only [PqxdhLaterExecutableCertificates.PacketFits, shape] using result.property
-    let completed ← PqxdhLaterSavedPostCompiler.complete
+    let completed ← PqxdhLaterSavedPostCompiler.complete (completedBinding := completedBinding)
       (PqxdhPreparedPrefixCallbacks.preparation attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem result.val.1.1 result.val.1.2)
       (PqxdhPreparedPrefixCallbacks.application attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem result.val.1.1 result.val.1.2)
       (initialLocal (A := A) (N := BareState 1) (env0).source start.1.selectedMessage zeroRoot (PqxdhInitialSampledParent.response start))
@@ -63,9 +65,9 @@ noncomputable def client (c : PqxdhAuthenticatedRootBudgets.Certificate env0 bas
     (Output (setup := setup) (M := M) (P := P) (I := I) (K := K) (X := X) (Response := Response)
       (A := A) (KemSK := KemSK) (S := S) (B := B)) := do
   let result ← simulateQ RawCtxSourceSharedRom.forward
-    (PqxdhLaterExecutableCertificates.certified env callbacks baseImpl kem attachedVerify primitives program post
+    (PqxdhLaterExecutableCertificates.certified (associatedData := associatedData) (completedBinding := completedBinding) env callbacks baseImpl kem attachedVerify primitives program post
       selected number ancestors disclosed c depth)
-  suffix setup env callbacks program post attachedVerify primitives baseImpl kem c result
+  suffix (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem c result
 
 local instance : MeasurableSpace
     (Output (setup := setup) (M := M) (P := P) (I := I) (K := K) (X := X) (Response := Response)
@@ -74,25 +76,25 @@ local instance : MeasurableSpace
 /-- The ordinary selected-key game has exactly the complete source distribution with the key sampled after the actual shared-ROM prefix. The law includes the full continuation and component state. -/
 theorem key_order (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl kem program post) (depth : Nat) :
     𝒟[AdaptiveCtxDynamicKnownKeys.sourceGame true (RawCtxUniversalDecoder.decoder env.decode) env.source.crypto
-      (client setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth)] =
+      (client (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth)] =
     𝒟[(do
       let result ← (simulateQ AdaptiveCtxSharedTarget.sharedImpl
-        (PqxdhLaterExecutableCertificates.certified env callbacks baseImpl kem attachedVerify primitives program post
+        (PqxdhLaterExecutableCertificates.certified (associatedData := associatedData) (completedBinding := completedBinding) env callbacks baseImpl kem attachedVerify primitives program post
           selected number ancestors disclosed c depth)).run (∅, [])
       let key ← $ᵗ CtxKey
       (simulateQ (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder env.decode) env.source.crypto key)
-        (suffix setup env callbacks program post attachedVerify primitives baseImpl kem c result.1)).run
+        (suffix (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem c result.1)).run
           (RawCtxSourceSharedRom.install AdaptiveCtxDynamicKnownKeys.initialSource result.2))] := by
   exact (RawCtxPrefixKeyOrder.source_game true (RawCtxUniversalDecoder.decoder env.decode) env.source.crypto _ _).evalDist_eq
 
 /-- The complete sampled saved continuation counts every attempted selected seal, raw opening and public hash before any refusal. Source-local uniform and native primitive work remain separate ledger classes. -/
 theorem suffix_bills (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl kem program post)
     (result : PqxdhLaterExecutableCertificates.Certified (setup := setup) (M := M) (P := P) (I := I) (K := K) (X := X) (Response := Response) (A := A) (KemSK := KemSK) (S := S) (B := B) (PqxdhInitialPreparedSourceCaps.postCap (PqxdhSourceSharedPreparation.environment setup env callbacks ∅) baseImpl kem program post c)) :
-    (suffix setup env callbacks program post attachedVerify primitives baseImpl kem c result).IsQueryBoundP
+    (suffix (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem c result).IsQueryBoundP
       (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxQueryBounds.SourceSeal) (1 + (PqxdhInitialPreparedSourceCaps.postCap (PqxdhSourceSharedPreparation.environment setup env callbacks ∅) baseImpl kem program post c)) ∧
-    (suffix setup env callbacks program post attachedVerify primitives baseImpl kem c result).IsQueryBoundP
+    (suffix (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem c result).IsQueryBoundP
       (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxReceive.IsRawQuery) (1 + (PqxdhInitialPreparedSourceCaps.postCap (PqxdhSourceSharedPreparation.environment setup env callbacks ∅) baseImpl kem program post c)) ∧
-    (suffix setup env callbacks program post attachedVerify primitives baseImpl kem c result).IsQueryBoundP
+    (suffix (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem c result).IsQueryBoundP
       AdaptiveCtxDynamicKnownBounds.HashRoute (1 + (PqxdhInitialPreparedSourceCaps.postCap (PqxdhSourceSharedPreparation.environment setup env callbacks ∅) baseImpl kem program post c)) := by
   unfold suffix
   split
@@ -102,7 +104,7 @@ theorem suffix_bills (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImp
     let fits : PqxdhInitialOriginCertificates.Fits (PqxdhInitialPreparedSourceCaps.postCap (PqxdhSourceSharedPreparation.environment setup env callbacks ∅) baseImpl kem program post c) pending.1 := by
       simpa only [PqxdhLaterExecutableCertificates.PacketFits, shape] using result.property
     simpa only [bind_pure_comp, isQueryBoundP_map_iff] using
-      PqxdhLaterSavedPostBounds.component_bills
+      PqxdhLaterSavedPostBounds.component_bills (completedBinding := completedBinding)
       (PqxdhPreparedPrefixCallbacks.preparation attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem result.val.1.1 result.val.1.2)
       (PqxdhPreparedPrefixCallbacks.application attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem result.val.1.1 result.val.1.2)
       (initialLocal (A := A) (N := BareState 1) (env0).source start.1.selectedMessage zeroRoot (PqxdhInitialSampledParent.response start))
@@ -115,30 +117,30 @@ theorem suffix_bills (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImp
 
 /-- The enclosing original source preparation adds no selected seal or raw opening. The complete arbitrary-position client has the same explicit selected request caps. -/
 theorem client_record_bills (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl kem program post) (depth : Nat) :
-    (client setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth).IsQueryBoundP
+    (client (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth).IsQueryBoundP
       (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxQueryBounds.SourceSeal) (1 + (PqxdhInitialPreparedSourceCaps.postCap (PqxdhSourceSharedPreparation.environment setup env callbacks ∅) baseImpl kem program post c)) ∧
-    (client setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth).IsQueryBoundP
+    (client (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth).IsQueryBoundP
       (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxReceive.IsRawQuery) (1 + (PqxdhInitialPreparedSourceCaps.postCap (PqxdhSourceSharedPreparation.environment setup env callbacks ∅) baseImpl kem program post c)) := by
   constructor
   · unfold client
     simpa only [Nat.zero_add] using isQueryBoundP_bind (PqxdhFirstBeaconRecordCtx.forward_no_seal _)
-      (fun result _ => (suffix_bills setup env callbacks program post attachedVerify primitives baseImpl kem c result).1)
+      (fun result _ => (suffix_bills (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem c result).1)
   · unfold client
     simpa only [Nat.zero_add] using isQueryBoundP_bind (PqxdhFirstBeaconRecordCtx.forward_no_open _)
-      (fun result _ => (suffix_bills setup env callbacks program post attachedVerify primitives baseImpl kem c result).2.1)
+      (fun result _ => (suffix_bills (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem c result).2.1)
 
 /-- Every earlier source hash is retained, including complete cached continuations; only the original post allowance and one saved request are added after that prefix. -/
 theorem client_hash (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl kem program post) (depth qHash : Nat)
-    (bounded : (PqxdhLaterSharedMessagePrefix.run setup env callbacks program post attachedVerify primitives baseImpl kem
+    (bounded : (PqxdhLaterSharedMessagePrefix.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem
       selected number ancestors disclosed depth).IsQueryBoundP (HashClass true) qHash) :
-    (client setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth).IsQueryBoundP
+    (client (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth).IsQueryBoundP
       AdaptiveCtxDynamicKnownBounds.HashRoute (qHash + (1 + (PqxdhInitialPreparedSourceCaps.postCap (PqxdhSourceSharedPreparation.environment setup env callbacks ∅) baseImpl kem program post c))) := by
-  rw [← PqxdhLaterSavedSampler.run_erase setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed depth,
-    ← PqxdhLaterExecutableCertificates.certified_erase env callbacks baseImpl kem attachedVerify primitives program post selected number ancestors disclosed c depth,
+  rw [← PqxdhLaterSavedSampler.run_erase (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed depth,
+    ← PqxdhLaterExecutableCertificates.certified_erase (associatedData := associatedData) (completedBinding := completedBinding) env callbacks baseImpl kem attachedVerify primitives program post selected number ancestors disclosed c depth,
     isQueryBoundP_map_iff, isQueryBoundP_map_iff] at bounded
   unfold client
   apply isQueryBoundP_bind (m := 1 + (PqxdhInitialPreparedSourceCaps.postCap (PqxdhSourceSharedPreparation.environment setup env callbacks ∅) baseImpl kem program post c)) ?_
-    (fun result _ => (suffix_bills setup env callbacks program post attachedVerify primitives baseImpl kem c result).2.2)
+    (fun result _ => (suffix_bills (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem c result).2.2)
   simp only [RawCtxSourceSharedRom.forward, QueryImpl.simulateQ_compose]
   apply RawCtxSelectedSealConsumer.lifted_bound
   change (simulateQ AdaptiveCtxSharedTarget.forward _).IsQueryBoundP AdaptiveCtxQueryBounds.SourceHash qHash

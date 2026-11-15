@@ -58,7 +58,7 @@ def expected(root: Path = ROOT) -> tuple[dict[str, str], dict]:
         row["signature"] + "{" + row["body"] + "}" for row in originals
     )
     prepared, boundaries = normalization.outline_serializer_field_sizes(fragments)
-    if len(boundaries) != 10:
+    if len(boundaries) != 8:
         raise ValueError("fixed field-boundary roster drift")
     for row in boundaries:
         row["lean_boundary"] = (

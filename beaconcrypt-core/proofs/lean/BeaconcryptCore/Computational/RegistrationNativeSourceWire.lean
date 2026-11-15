@@ -22,9 +22,9 @@ def encodedBytes (result : RustM (Usize × Slice U8)) : core.option.Option Pqxdh
   | .ok (written, after) => if written = 0#usize then .None else .Some (after.val.map absByte)
   | _ => .None
 
-def encodeInit (other : OtherBranches) (view : registration.SignedInitView) : core.option.Option Pqxdh.Bytes :=
+def encodeInit (other : OtherBranches) (view : registration.InitView) : core.option.Option Pqxdh.Bytes :=
   encodedBytes (RegistrationNativeSourceEncoders.encodeInit other view
-    (buffer 6757 (by scalar_tac)))
+    (buffer 1490 (by scalar_tac)))
 
 def encodeResponse (other : OtherBranches) (view : registration.SignedResponseView) : core.option.Option Pqxdh.Bytes :=
   if admitted : RegistrationSerializerResponseBytes.totalLength (responseSyntax view) ≤ CborSizing.maxMessageSize then
@@ -59,16 +59,16 @@ def wire [RegistrationValidatorPrimitive.Operations] (other : OtherBranches)
   parseFrame := parseFrame
   frameWrite := frameWrite
 
-theorem init_encoded (other : OtherBranches) (view : registration.SignedInitView) :
-    encodeInit other view = .Some ((136#u8 :: RegistrationSerializerInitBytes.payload (initSyntax view)).map absByte) := by
-  let output := buffer 6757 (by scalar_tac)
+theorem init_encoded (other : OtherBranches) (view : registration.InitView) :
+    encodeInit other view = .Some ((134#u8 :: RegistrationSerializerInitBytes.payload (initSyntax view)).map absByte) := by
+  let output := buffer 1490 (by scalar_tac)
   obtain ⟨after, encoded, _, bytes⟩ := RegistrationNativeSourceEncoders.init_bytes other view output (by simp only [output, buffer, Slice.length, List.length_replicate, Nat.le_refl])
-  have afterBytes : after.val = 136#u8 :: RegistrationSerializerInitBytes.payload (initSyntax view) := by
+  have afterBytes : after.val = 134#u8 :: RegistrationSerializerInitBytes.payload (initSyntax view) := by
     simpa only [output, buffer, List.drop_replicate, Nat.sub_self, List.replicate_zero, List.append_nil] using bytes
   unfold encodeInit
   change encodedBytes (RegistrationNativeSourceEncoders.encodeInit other view output) = _
   rw [encoded]
-  simp only [encodedBytes, afterBytes, show ¬ (6757#usize = 0#usize) by decide, ↓reduceIte]
+  simp only [encodedBytes, afterBytes, show ¬ (1490#usize = 0#usize) by decide, ↓reduceIte]
 
 theorem response_encoded (other : OtherBranches) (view : registration.SignedResponseView)
     (admitted : RegistrationSerializerResponseBytes.totalLength (responseSyntax view) ≤ CborSizing.maxMessageSize) :
@@ -101,9 +101,9 @@ theorem init_readback [RegistrationValidatorPrimitive.Operations]
   rw [init_encoded] at encoded
   injection encoded with same
   subst bytes
-  have length : ((136#u8 :: RegistrationSerializerInitBytes.payload (initSyntax view)).map absByte).length = 6757 := by
+  have length : ((134#u8 :: RegistrationSerializerInitBytes.payload (initSyntax view)).map absByte).length = 1490 := by
     simp only [List.length_map, List.length_cons, RegistrationPublicReadback.init_payload_length _ (init_shape view)]
-  have admitted : ((136#u8 :: RegistrationSerializerInitBytes.payload (initSyntax view)).map absByte).length ≤ CborSizing.maxMessageSize := by rw [length]; decide
+  have admitted : ((134#u8 :: RegistrationSerializerInitBytes.payload (initSyntax view)).map absByte).length ≤ CborSizing.maxMessageSize := by rw [length]; decide
   simp only [RegistrationNativeWire.readInit, wire, admitted, ↓reduceIte]
   rw [decodeInit, dite_eq_left admitted]
   rw [RegistrationNativePacketReadback.init_readback _ view (FrameCodecReadBack.concrete_abs_bytes _)]

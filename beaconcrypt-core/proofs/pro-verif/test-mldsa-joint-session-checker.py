@@ -53,16 +53,16 @@ class ExactJointSessionGate(unittest.TestCase):
         self.check(self.text)
 
     def test_security_witness_and_actual_control_rosters_are_complete(self):
-        self.assertEqual(len(CHECKER.PRIMARY), 14)
-        self.assertEqual(CHECKER.VERDICTS, ("true",) * 8 + ("false",) * 6)
+        self.assertEqual(len(CHECKER.PRIMARY), 16)
+        self.assertEqual(CHECKER.VERDICTS, ("true",) * 7 + ("false",) * 9)
         self.assertEqual(
             [(name, position) for name, _, position, _, _ in CHECKER.CONTROLS],
             [
-                ("without-init-verifier-origin", 0),
-                ("without-response-verifier-origin", 1),
-                ("without-response-verifier-session", 2),
-                ("without-init-verifier-secrecy", 5),
-                ("without-response-verifier-secrecy", 7),
+                ("without-response-verifier-origin", 0),
+                ("without-response-verifier-session", 1),
+                ("without-response-verifier-secrecy", 6),
+                ("with-selected-kem-secret-compromise", 4),
+                ("with-server-signing-key-compromise", 0),
             ],
         )
 
@@ -275,13 +275,21 @@ class ExactJointSessionGate(unittest.TestCase):
                 path.write_text(original)
             auth = directory / "mldsa-auth.pvl"
             original = auth.read_text()
-            for principal in ("server_ml", "agent_ml"):
-                auth.write_text(
-                    CHECKER.exact_replace(
-                        original, "blake2b512(" + principal + ")", "mldsa_zero()"
-                    )
+            for field in (
+                "encoded_identity",
+                "signed_prekey",
+                "signed_one_time",
+                "signed_pq",
+                "ephemeral",
+                "kem",
+            ):
+                start = original.index(
+                    "    encoded_identity, signed_prekey, signed_one_time, signed_pq,"
                 )
-                with self.subTest(principal=principal), self.assertRaises(ValueError):
+                body = original[start:]
+                changed = CHECKER.exact_replace(body, field + ",", "mldsa_zero(),")
+                auth.write_text(original[:start] + changed)
+                with self.subTest(field=field), self.assertRaises(ValueError):
                     CHECKER.validate_models(directory)
             auth.write_text(original)
 

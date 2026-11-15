@@ -89,7 +89,7 @@ theorem native_outgoing (setup : Setup base KemSK) (index : Nat) (owner : Owner 
   | inl query => cases query with
     | hash request => exact effect _
     | sign request payload digest =>
-      exact native_bind _ _ (sample _) (fun reply => native_bind _ _ (update _) (fun _ => native_pure reply))
+      exact native_pure _
   | inr request =>
     simp only [RegistrationNativeIdentityFrontend.outgoing]
     split

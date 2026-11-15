@@ -20,9 +20,11 @@ structure State (KemSK : Type) where
   shared : NativeState KemSK
   next : Nat
   cell : Nat → Option (Source.Owner KemSK)
+  /-- The source scheduler's retained Phase 1 bundles (`PqxdhRegistrationSchedule.State.inits`), carried unchanged. -/
+  inits : Nat → Option PqxdhEd25519EufCma.Phase1Candidate
 
 def encode (state : Source.State KemSK) : State KemSK :=
-  ⟨state.shared, state.owners.length, fun index => state.owners[index]?⟩
+  ⟨state.shared, state.owners.length, fun index => state.owners[index]?, state.inits⟩
 
 def replace (state : State KemSK) (index : Nat) (owner : Source.Owner KemSK) : State KemSK :=
   { state with cell := fun selected => if selected = index then some owner else state.cell selected }
@@ -72,16 +74,21 @@ def atOwner {Result : Type} (index : Nat)
   | some owner => (fun result => (result.1.1,
       replace { state with shared := result.2 } index result.1.2)) <$> work owner state.shared
 
+/-- The selected worker runs the source owner finish (`PqxdhRegistrationSchedule.ownerFinish`: transcript hash of the cell's retained Phase 1 bundle, then the complete native owner). -/
 noncomputable def finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (index : Nat) (raw : Pqxdh.Bytes) : Game KemSK (Option Pqxdh.Bytes) :=
-  atOwner index fun owner => simulateQ (PqxdhRegistrationSchedule.callbacks setup codec)
-    (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw owner)
+    (index : Nat) (raw : Pqxdh.Bytes) : Game KemSK (Option Pqxdh.Bytes) := fun state =>
+  atOwner index (fun owner => PqxdhRegistrationSchedule.ownerFinish setup codec (state.inits index) raw owner) state
 
+/-- The selected worker runs the logged source bundle and retains a successfully written bundle at its address. -/
 def bundle (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (index : Nat) : Game KemSK (Option Pqxdh.Bytes) :=
-  atOwner index fun owner => StateT.lift (simulateQ
-    (PqxdhRegistrationSchedule.bundleCallbacks setup codec owner.beacon.identity)
-    (PqxdhLivePhase1Bundle.bundle (PqxdhRegistrationSchedule.projection setup index) owner))
+    (index : Nat) : Game KemSK (Option Pqxdh.Bytes) := fun state =>
+  match state.cell index with
+  | none => pure (none, state)
+  | some owner => (fun result => (result.1.1,
+      { replace state index result.1.2 with inits := Function.update state.inits index result.2 })) <$>
+      (simulateQ (PqxdhRegistrationSchedule.bundleLogCallbacks setup codec owner.beacon.identity)
+        (PqxdhLivePhase1Bundle.bundle (PqxdhRegistrationSchedule.projection setup index) owner)).run
+          (state.inits index)
 
 /-- The same generators run at the same request position and in the same order; the only different operation is the proved live-cell allocation. -/
 noncomputable def create (setup : Setup baseSpec KemSK) (pin : Word32) (keyId : Std.U64) :
@@ -123,16 +130,18 @@ theorem bundle_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
   | none =>
       simp only [PqxdhRegistrationSchedule.bundle, StateT.run_bind, StateT.run_get, pure_bind,
         found, StateT.run_pure, map_pure]
-      simp only [bundle, atOwner, encode, StateT.run, found]
+      simp only [bundle, encode, StateT.run, found]
   | some owner =>
       change bundle setup codec index (encode state) =
         (fun result => (result.1, encode result.2)) <$>
           PqxdhRegistrationSchedule.bundle setup codec index state
       rw [PqxdhRegistrationSchedule.bundle_source setup codec index state owner found]
-      simp only [bundle, atOwner, encode, found, StateT.lift, bind_pure_comp, Functor.map_map]
+      simp only [bundle, encode, found, Functor.map_map]
       congr 1
-      exact funext fun result => Prod.ext rfl
-        (encode_replace state index result.2 (List.getElem?_eq_some_iff.mp found).1).symm
+      exact funext fun result => Prod.ext rfl (by
+        have replaced := encode_replace state index result.1.2 (List.getElem?_eq_some_iff.mp found).1
+        simp only [encode] at replaced
+        rw [← replaced])
 
 /-- Both interpreters execute identity, prekey and KEM generation in source order, then return the same old public allocation index with the complete encoded state. -/
 theorem create_source (setup : Setup baseSpec KemSK) (pin : Word32) (keyId : Std.U64)
@@ -198,9 +207,13 @@ theorem program_source {Result : Type} (setup : Setup baseSpec KemSK) (codec : C
 
 /-- The cell encoding discards no source state: equal encodings have the same complete shared state and every original owner, including all private fields and instrumentation. -/
 theorem encode_injective : Function.Injective (encode (KemSK := KemSK)) := by
-  intro first second same
-  exact congrArg₂ PqxdhRegistrationSchedule.State.mk (congrArg State.shared same)
-    (List.ext_getElem? fun index => congrArg (fun state => state.cell index) same)
+  intro ⟨firstShared, firstOwners, firstInits⟩ ⟨secondShared, secondOwners, secondInits⟩ same
+  have owners : firstOwners = secondOwners :=
+    List.ext_getElem? fun index => congrArg (fun state => state.cell index) same
+  have shared : firstShared = secondShared := congrArg State.shared same
+  have inits : firstInits = secondInits := congrArg State.inits same
+  subst owners shared inits
+  rfl
 
 end BeaconcryptCore.Computational.PqxdhRegistrationCells
 

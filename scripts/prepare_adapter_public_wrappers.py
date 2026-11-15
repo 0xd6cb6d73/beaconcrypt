@@ -22,7 +22,7 @@ import shutil
 
 from registration_codec_normalization import close, mask
 
-BEACON_LOOP_SHA256 = "fc816e6aabb2192209722867be2199c450adb4f5cbf5d992c1dfa7035d1ef5ca"
+BEACON_LOOP_SHA256 = "d63c59d9e331b085cf28e1e591af76624defdfcd98af1a06785cef2b0ea5e832"
 DH_SELECTION_SHA256 = "3203fc86d6d3efa27ac19233e31d607179f22b2e16640b0767fd1c3535630274"
 RUST_CHANGED = ("beaconcrypt/src/beacon.rs", "beaconcrypt/src/pqxdh.rs")
 MEMBERS = (

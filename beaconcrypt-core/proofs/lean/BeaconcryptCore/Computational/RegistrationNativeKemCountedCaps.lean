@@ -88,7 +88,7 @@ theorem call_bound (kind : Kind) (query : (RegistrationNativeKemCountedCapabilit
 
 theorem trusted_bound (kind : Kind) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (checks : PqxdhServerAuthExperiment.Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (RegistrationNativeBeaconFrontend.Trusted n KemSK).Domain) :
     Bounded kind (if RegistrationNativeBeaconKemCaps.NativeCounted kind query then 1 else 0)
       (RegistrationNativeKemCountedTrusted.implementation (source := source) setup checks representation created query) := by
@@ -113,7 +113,7 @@ theorem trusted_bound (kind : Kind) (setup : PqxdhServerAuthExperiment.Setup bas
 
 theorem primitive_bound (kind : Kind) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (checks : PqxdhServerAuthExperiment.Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (query : RegistrationAgreementShared.PrimitiveRequest) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (query : RegistrationAgreementShared.PrimitiveRequest) :
     Bounded kind (if counted kind query.toRequest then 1 else 0)
       (RegistrationNativeKemCountedServerPrimitive.program (n := n) (source := source) setup checks representation created query) :=
   simulate_bound kind (RegistrationNativeKemCallBounds.Counted kind) _
@@ -122,7 +122,7 @@ theorem primitive_bound (kind : Kind) (setup : PqxdhServerAuthExperiment.Setup b
 
 theorem core_bound (kind : Kind) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (checks : PqxdhServerAuthExperiment.Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (query : RegistrationAgreementExecutor.Request) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (query : RegistrationAgreementExecutor.Request) :
     Bounded kind (if counted kind query then 1 else 0)
       (RegistrationNativeKemCountedServerPrimitive.core (n := n) (source := source) setup checks representation created query) := by
   cases query with
@@ -131,7 +131,7 @@ theorem core_bound (kind : Kind) (setup : PqxdhServerAuthExperiment.Setup base K
 
 theorem agreement_bound (kind : Kind) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (checks : PqxdhServerAuthExperiment.Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (query : RegistrationAgreementExecutor.Request) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (query : RegistrationAgreementExecutor.Request) :
     Bounded kind (if counted kind query then 1 else 0)
       (RegistrationNativeKemCountedServerPrimitive.agreement (n := n) (source := source) setup checks representation created query) := by
   unfold RegistrationNativeKemCountedServerPrimitive.agreement
@@ -141,14 +141,14 @@ theorem agreement_bound (kind : Kind) (setup : PqxdhServerAuthExperiment.Setup b
 
 theorem server_program (kind : Kind) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (checks : PqxdhServerAuthExperiment.Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (work : OracleComp RegistrationAgreementExecutor.Spec A)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (work : OracleComp RegistrationAgreementExecutor.Spec A)
     (cap : Nat) (bounded : work.IsQueryBoundP (counted kind) cap) :
     Bounded kind cap (simulateQ (RegistrationNativeKemCountedServerPrimitive.agreement (n := n) (source := source) setup checks representation created) work) :=
   simulate_bound kind (counted kind) _ (agreement_bound kind setup checks representation created) work cap bounded
 
 theorem agree_one (kind : Kind) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (checks : PqxdhServerAuthExperiment.Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (authenticated : registration.AuthenticatedInit) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (authenticated : registration.AuthenticatedInit) :
     Bounded kind 1 (RegistrationNativeKemCountedServerPrimitive.agree (n := n) (source := source) setup checks representation created authenticated) := by
   unfold RegistrationNativeKemCountedServerPrimitive.agree
   apply bind_bound kind _ _ 0 1
@@ -163,7 +163,7 @@ theorem agree_one (kind : Kind) (setup : PqxdhServerAuthExperiment.Setup base Ke
     · exact RegistrationAgreementKemBounds.server kind before.server.control .Fresh authenticated
 theorem beacon_program (kind : Kind) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (checks : PqxdhServerAuthExperiment.Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State A)
     (cap : Nat) (bounded : RegistrationNativeBeaconKemCaps.Bounded
       (RegistrationNativeBeaconKemCaps.NativeCounted kind) cap work) :
@@ -180,7 +180,7 @@ theorem beacon_program (kind : Kind) (setup : PqxdhServerAuthExperiment.Setup ba
 
 theorem finish_one (kind : Kind) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (checks : PqxdhServerAuthExperiment.Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (index : Nat) (packet : Option registration.ResponsePacket) :
     Bounded kind 1 (RegistrationNativeKemCountedBeacon.program (n := n) (source := source) setup checks representation created
       (RegistrationNativePlatformBeaconFinish.finish setup source wire index packet)) :=

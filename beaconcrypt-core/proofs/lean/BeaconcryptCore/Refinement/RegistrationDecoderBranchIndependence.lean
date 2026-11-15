@@ -30,7 +30,7 @@ theorem det_of_checks [RegistrationValidatorPrimitive.Operations] (input : Slice
 set_option backward.isDefEq.respectTransparency false in
 theorem init_det [RegistrationValidatorPrimitive.Operations] (input : Slice U8)
     (accepted : registration_validator_primitive.preflightSlice input initStart
-      ((Array.repeat 6#usize 2#u8).to_slice) = .ok (.Some ())) :
+      ((Array.repeat 4#usize 2#u8).to_slice) = .ok (.Some ())) :
     cbor_validate_det input = widthResult input := by
   obtain ⟨raw, sorted⟩ := RegistrationPreflightValidation.init_checks input accepted
   exact det_of_checks input raw sorted
@@ -46,7 +46,7 @@ theorem response_det [RegistrationValidatorPrimitive.Operations] (input : Slice 
 set_option backward.isDefEq.respectTransparency false in
 theorem init_schema_independent (left right : RegistrationValidatorPrimitive.Operations) (input : Slice U8)
     (accepted : registration_validator_primitive.preflightSlice input initStart
-      ((Array.repeat 6#usize 2#u8).to_slice) = .ok (.Some ())) :
+      ((Array.repeat 4#usize 2#u8).to_slice) = .ok (.Some ())) :
     @transport.validate_and_parse_initkex left input = @transport.validate_and_parse_initkex right input := by
   have same := (@init_det left input accepted).trans (@init_det right input accepted).symm
   simp only [transport.validate_and_parse_initkex, cbordetver.cbor_det_parse, same]
@@ -62,10 +62,10 @@ theorem response_schema_independent (left right : RegistrationValidatorPrimitive
 set_option backward.isDefEq.respectTransparency false in
 theorem init_independent (left right : RegistrationValidatorPrimitive.Operations) (input : Slice U8) :
     @extraction_decode_init left input = @extraction_decode_init right input := by
-  obtain ⟨result, run⟩ := RegistrationPreflightTotal.complete_total input initStart 2#u8 2#u8 2#u8 2#u8 2#u8 2#u8
+  obtain ⟨result, run⟩ := RegistrationPreflightTotal.complete_total_four input initStart 2#u8 2#u8 2#u8 2#u8
   have gate : registration_validator_primitive.preflightSlice input initStart
-      ((Array.repeat 6#usize 2#u8).to_slice) = .ok result := by
-    rw [RegistrationPublicDecoderControl.preflight_array, ← init_kinds_source]
+      ((Array.repeat 4#usize 2#u8).to_slice) = .ok result := by
+    rw [RegistrationPublicDecoderControl.preflight_array_four, ← init_kinds_source]
     exact run
   cases result with
   | none =>

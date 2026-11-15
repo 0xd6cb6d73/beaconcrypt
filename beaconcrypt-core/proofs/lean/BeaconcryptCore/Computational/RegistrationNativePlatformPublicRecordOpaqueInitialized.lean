@@ -59,7 +59,7 @@ theorem startup_cold {n : Nat} (identity : PqxdhJointIdentity.PublicIdentity)
     | none => simp only [born, StateT.run_pure, mem_support_pure_iff] at supported; cases supported
     | some credential =>
       simp only [born, StateT.run_bind, mem_support_bind_iff] at supported
-      obtain ⟨installed, _initialized, digest, _hashed, supported⟩ := supported
+      obtain ⟨installed, _initialized, supported⟩ := supported
       rw [StateT.run_pure, mem_support_pure_iff] at supported
       cases supported
       exact ⟨rfl, rfl, rfl⟩

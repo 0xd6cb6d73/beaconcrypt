@@ -1,18 +1,15 @@
 (* SPDX-License-Identifier: 0BSD *)
 
-query agent_ml: bitstring, server_ml: bitstring, init_hash: bitstring, classical_init: bitstring;
-  event(MldsaHonestInitAccepted(agent_ml, server_ml, init_hash, classical_init)) ==>
-  event(MldsaInitSigned(agent_ml, server_ml, init_hash, classical_init)).
 query server_ml: bitstring, init_hash: bitstring, response: bitstring;
   event(MldsaResponseAccepted(server_ml, init_hash, response)) ==>
   event(MldsaResponseSigned(server_ml, init_hash, response)).
+query event(MldsaRequestAdmitted()).
+query event(MldsaCopiedClassicalAccepted()).
 query event(MldsaHonestResponseVerified()).
-query event(MldsaOwnedKeyAccepted()).
-query event(MldsaCompromisedAgentAccepted()).
 query event(MldsaCompromisedServerAccepted()).
 query event(MldsaAdOpened()).
-query event(MldsaWrongServerAdOpened()).
-query event(MldsaWrongAgentAdOpened()).
+query event(MldsaWrongResponseAdOpened()).
+query event(MldsaWrongInitAdOpened()).
 query event(MldsaWrongRoleAccepted()).
 query event(MldsaWrongContextAccepted()).
 query event(MldsaWrongRequestAccepted()).

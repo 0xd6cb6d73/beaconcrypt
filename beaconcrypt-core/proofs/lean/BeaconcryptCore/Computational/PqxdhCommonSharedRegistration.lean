@@ -8,6 +8,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhCommonSharedRegistration
+variable (associatedData : Std.Array Std.U8 151#usize)
 open PqxdhJointKdfGame CtxRomAuth AdaptiveCtxSharedHash
 variable {M P I D K A Result : Type} {S B : Nat}
 variable (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
@@ -73,7 +74,7 @@ noncomputable def build (sender : M → Std.U64) (index : Fin S) (metadata : P) 
   let selected := PqxdhRegistrationProtocolState.input sender index metadata current
   let result ← (simulateQ (compiler source writer callbacks)
     (simulateQ PqxdhServerRegistrationPublication.nativeAdapter
-      (PqxdhAcceptedRegistration.buildReady source selected.binding ready metadata selected.state))).run current.primitive.1
+      (PqxdhAcceptedRegistration.buildReady (associatedData := associatedData) source selected.binding ready metadata selected.state))).run current.primitive.1
   pure (PqxdhRegistrationProtocolState.reinstall index current (result.1, (result.2, ∅)))
 
 set_option backward.isDefEq.respectTransparency false in
@@ -81,12 +82,12 @@ set_option backward.isDefEq.respectTransparency false in
 theorem build_source (sender : M → Std.U64) (index : Fin S) (metadata : P) (ready : PqxdhPrivateAcceptedRoot.Ready)
     (state : PqxdhRegistrationProtocolState.State M P I D K A S B) (cache : CtxRO.QueryCache) :
     (fun result => (result.1.1, withCache result.1.2 result.2)) <$>
-      (simulateQ hashImpl (build source writer callbacks sender index metadata ready state)).run cache =
-      (PqxdhRegistrationProtocolState.build source writer (PqxdhSourceAuxiliary.server callbacks) sender index metadata ready).run
+      (simulateQ hashImpl (build (associatedData := associatedData) source writer callbacks sender index metadata ready state)).run cache =
+      (PqxdhRegistrationProtocolState.build (associatedData := associatedData) source writer (PqxdhSourceAuxiliary.server callbacks) sender index metadata ready).run
         (withCache state cache) := by
   have original := program source writer callbacks
     (simulateQ PqxdhServerRegistrationPublication.nativeAdapter
-      (PqxdhAcceptedRegistration.buildReady source
+      (PqxdhAcceptedRegistration.buildReady (associatedData := associatedData) source
         (PqxdhRegistrationProtocolState.input sender index metadata
           (PqxdhRegistrationProtocolState.consume index ready (withCache state ∅))).binding
         ready metadata (PqxdhRegistrationProtocolState.input sender index metadata

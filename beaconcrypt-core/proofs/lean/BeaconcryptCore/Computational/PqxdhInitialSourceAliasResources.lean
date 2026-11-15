@@ -9,6 +9,8 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhInitialSourceAliasResources
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily
 open PqxdhInitialSourceInitialSecrecy PqxdhInitialSourceFirstResources PqxdhInitialNativeBudgets
 open PqxdhInitialObserverCallbackBudgets
@@ -67,13 +69,13 @@ theorem program_coins {Result : Type} (input : SourceInput)
 /-- The first shared initializer lookup adds no ordinary coin; all complete original source work is charged before interpreting initializer misses. -/
 theorem client_coins (input : SourceInput)
     (caps : Caps input qPost qCheck qKnown qPre qApplication qSelector qAux) (stage : Nat) :
-    (PqxdhInitialSourceAliases.client source writer sender route decode stage (.inr input)).IsQueryBoundP IsCoin U := by
+    (PqxdhInitialSourceAliases.client (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode stage (.inr input)).IsQueryBoundP IsCoin U := by
   apply (isQueryBoundP_map_iff _ _ _).mpr
   unfold PqxdhInitialSourceAliasCompiler.client
   refine (isQueryBoundP_bind (m := U) (show OracleComp.IsQueryBoundP (PqxdhInitialLabelCompiler.Spec.query (.inr (.family input.selectedMessage)) : OracleComp PqxdhInitialLabelCompiler.Spec _) IsCoin 0 by simp [IsCoin]) ?_).mono ?_
   · intro response _
     apply program_coins source writer qPost qCheck qKnown qPre qApplication qSelector qAux input caps stage _ (7 + qPost * 67)
-    exact PqxdhInitialOriginPost.sequence_total source _ _ _ sender route decode input.index input.metadata _ input.post qPost caps.postBound _
+    exact PqxdhInitialOriginPost.sequence_total (associatedData := associatedData) (completedBinding := completedBinding) source _ _ _ sender route decode input.index input.metadata _ input.post qPost caps.postBound _
   · omega
 
 variable (prior : ProbComp (Context extra M P I D K X Response A N S B))
@@ -84,7 +86,7 @@ theorem cut_uniform
     (stage : Nat) (cut : PqxdhInitialAliasBound.Cut (Bool ⊕ {input : Input extra M P I D K X Response A N S B // Sum.inr input ∈ support prior})) :
     (PqxdhInitialAliasBound.right source
       (fun context => PqxdhInitialSourceAliases.selected (PqxdhInitialSourceAliases.erase prior context))
-      (fun context => PqxdhInitialSourceAliases.client source writer sender route decode stage (PqxdhInitialSourceAliases.erase prior context)) cut).IsTotalQueryBound
+      (fun context => PqxdhInitialSourceAliases.client (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode stage (PqxdhInitialSourceAliases.erase prior context)) cut).IsTotalQueryBound
       (U + 32 * (1 + (7 + qPost * 67))) := by
   unfold PqxdhInitialAliasBound.right
   apply (isQueryBound_map_iff _ _ _ _ _).mpr
@@ -92,19 +94,19 @@ theorem cut_uniform
   apply PqxdhInitialAliasQueryBounds.program source _ cut.1.2 _ _ U (1 + (7 + qPost * 67))
   · cases context : cut.1.1 with
     | inl decision => trivial
-    | inr input => exact client_coins source writer sender route decode qPost qCheck qKnown qPre qApplication qSelector qAux input.val (caps input.val input.property) stage
+    | inr input => exact client_coins (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode qPost qCheck qKnown qPre qApplication qSelector qAux input.val (caps input.val input.property) stage
   · cases context : cut.1.1 with
     | inl decision => trivial
     | inr input =>
       apply (isQueryBoundP_congr_pred (p := IsService) (p' := PqxdhInitialRootAliases.IsInitializer)
         (fun query => by cases query <;> simp [IsService, PqxdhInitialRootAliases.IsInitializer])).mpr
-      exact PqxdhInitialSourceAliases.client_initial source writer sender route decode stage input.val qPost (caps input.val input.property).postBound
+      exact PqxdhInitialSourceAliases.client_initial (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode stage input.val qPost (caps input.val input.property).postBound
 
 /-- The value-consistent final source endpoint pays the complete actual preparation, independent root32, shared64 response, original callback work and all initializer cache misses. -/
 theorem consistent_uniform
     (caps : ∀ input : Input extra M P I D K X Response A N S B, Sum.inr input ∈ support prior → Caps input qPost qCheck qKnown qPre qApplication qSelector qAux)
     (stage qPrior : Nat) (bounded : prior.IsTotalQueryBound qPrior) :
-    (PqxdhInitialSourceAliases.consistent source writer sender route decode prior stage).IsTotalQueryBound
+    (PqxdhInitialSourceAliases.consistent (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode prior stage).IsTotalQueryBound
       ((qPrior + (32 + 64)) + (U + 32 * (1 + (7 + qPost * 67)))) := by
   unfold PqxdhInitialSourceAliases.consistent PqxdhInitialAliasEvent.rightGame
   apply isTotalQueryBound_bind
@@ -121,7 +123,7 @@ theorem consistent_uniform
       exact CtxComputationalSecurity.uniformFixedBytes_isTotalQueryBound 64
   · intro cut
     apply (isQueryBound_map_iff _ _ _ _ _).mpr
-    exact cut_uniform source writer sender route decode qPost qCheck qKnown qPre qApplication qSelector qAux prior caps stage cut
+    exact cut_uniform (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode qPost qCheck qKnown qPre qApplication qSelector qAux prior caps stage cut
 
 end BeaconcryptCore.Computational.PqxdhInitialSourceAliasResources
 /-- info: 'BeaconcryptCore.Computational.PqxdhInitialSourceAliasResources.step_coins' depends on axioms: [propext,

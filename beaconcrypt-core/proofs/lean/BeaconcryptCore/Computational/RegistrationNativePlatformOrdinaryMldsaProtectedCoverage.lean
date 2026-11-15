@@ -24,38 +24,18 @@ open RegistrationNativePlatformMldsaProgram (coins)
 variable {n : Nat} {E Platform ι KemSK : Type} {base : OracleSpec ι}
 variable (source : Source)
 variable [primitive : AdapterSealPrimitive.Operations]
-attribute [local irreducible] RegistrationNativePlatformOrdinaryExperiment.handler RegistrationSigningShared.historyFor RegistrationAuthenticationNative.trial
+attribute [local irreducible] RegistrationNativePlatformOrdinaryExperiment.handler RegistrationSigningShared.historyFor
 
 section Actual
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
 variable (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : Credential (handleSource source))
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential (handleSource source))
 variable (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
 variable (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
 variable (reserveRegistration reservePeer : StateT Platform ProbComp Bool)
     (reserveFrame : Nat → StateT Platform ProbComp (core.result.Result Unit E)) (erased : commitment.CommitmentTranscript)
 variable (helper : QueryImpl (AdapterRecordHelperRequestMonad.Spec E) (StateT Platform ProbComp))
 variable (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
-
-/-- The actual protected Beacon-key Init failure chooses its earlier generated row and same-cut ordinary candidate, or the actual shared-cache collision. -/
-theorem accept (fallback : Credential source) (packet : registration.InitPacket)
-    (before after : State (n := n) (KemSK := KemSK) (Platform := Platform) source) (handle : Nat)
-    (safe : Safe source credential fallback before)
-    (owner : RegistrationNativeBeaconFrontend.Owner (handleSource source)) (owned : owner ∈ before.1.1.beacons)
-    (keyProtected : packet.mldsa_public_key = owner.mldsa.publicKey)
-    (supported : (.ok (some handle), after) ∈ support
-      ((callback source setup checks wire route representation created credential view failure allocation
-        reserveRegistration reservePeer reserveFrame erased helper writer (.inr (.accept packet))).run before))
-    (absent : ¬ MldsaTranscriptAuth.Issued (RegistrationAuthenticationNative.trial true before.1.1.server.pin packet
-      (RegistrationSigningShared.historyFor (PqxdhRefinement.absBytes packet.mldsa_public_key)
-        (RegistrationNativeMldsaShared.nativeProject before.1.1)))) :
-    CacheHasCollision after.1.1.server.world.world.1.primitive.2 ∨
-      ∃ ordinal, ordinal < before.2.attempts ∧ BornKey source before.2 ordinal owner.mldsa.publicKey ∧
-        ∃ forgery, observe source owner.mldsa.publicKey (.inr (.accept packet)) before (.ok (some handle)) after = some forgery ∧
-          Good source owner.mldsa.publicKey after forgery := by
-  exact RegistrationNativePlatformMldsaProtectedCoverage.accept source setup checks
-    (RegistrationNativePlatformOrdinaryExperiment.canonicalWire wire) route representation created credential view failure allocation
-    reserveRegistration reservePeer erased helper writer fallback packet before after handle safe owner owned keyProtected supported absent
 
 /-- The actual corrected protected pending-Server response failure chooses its earlier generated Server row at the same callback cut. -/
 theorem finish (fallback : Credential source) (index : Nat) (owner : RegistrationNativeBeaconFrontend.Owner (handleSource source))
@@ -82,11 +62,6 @@ theorem finish (fallback : Credential source) (index : Nat) (owner : Registratio
 end Actual
 end BeaconcryptCore.Computational.RegistrationNativePlatformOrdinaryMldsaProtectedCoverage
 
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformOrdinaryMldsaProtectedCoverage.accept' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformOrdinaryMldsaProtectedCoverage.accept
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformOrdinaryMldsaProtectedCoverage.finish' depends on axioms: [propext,
  Classical.choice,

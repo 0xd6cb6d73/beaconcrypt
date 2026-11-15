@@ -49,7 +49,7 @@ theorem source_address (target : RootOutput) :
     RawCtxKdfRequestTable.address (RawCtxChainSend.nativeRequest (concreteChain target)) =
       FixedHkdfDomain.ratchet.address target.toList := by
   have info : absBytes ratchet.SYM_RATCHET_INFO = Pqxdh.INFO_R := by
-    simpa only [pqxdh.SYM_RATCHET_INFO] using absBytes_SYM_RATCHET_INFO
+    simpa only [ratchet.SYM_RATCHET_INFO] using absBytes_SYM_RATCHET_INFO
   simp [RawCtxKdfRequestTable.address, RawCtxChainSend.nativeRequest, FixedHkdfDomain.address,
     concreteChain, absBytes, List.map_map, Function.comp_def]
   exact info

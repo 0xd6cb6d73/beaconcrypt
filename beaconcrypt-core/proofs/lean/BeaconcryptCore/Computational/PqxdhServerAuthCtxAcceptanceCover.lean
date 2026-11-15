@@ -151,8 +151,32 @@ theorem active_finish_cover (setup : Setup baseSpec KemSK) (codec : Codec Reader
       (initial : RawCtxSelectedAuthenticationObserver.State × AdaptiveCtxDynamicKnownKeys.SourceState) :=
     observed_coins setup.source key codec.frameRead work initial
   simp only [StateT.run] at runCoins
-  simp only [PqxdhServerAuthCtxFinish.finish, StateT.run, phase, simulateQ_bind,
-    runBind, runCoins, bind_map_left, mem_support_bind_iff] at supported
+  simp only [PqxdhServerAuthCtxFinish.finish, StateT.run, phase] at supported
+  split at supported
+  rotate_left
+  · simp only [simulateQ_pure] at supported
+    change result ∈ support (StateT.run (pure _) before) at supported
+    simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
+    subst supported
+    rcases failed with ⟨snap, captured, _⟩ | ⟨snap, captured, _⟩ <;> simp [fresh] at captured
+  rename_i init response
+  have liftBind : ∀ {β : Type} (x : OracleComp AdaptiveCtxDynamicKnownKeys.Spec CtxRomAuth.CtxDigest)
+      (f : CtxRomAuth.CtxDigest → PqxdhServerAuthCtxState.Program KemSK β) (s : PqxdhServerAuthCtxState.Local KemSK),
+      (StateT.lift x >>= f) s = x >>= fun digest => f digest s := by
+    intro β x f s
+    change StateT.run _ s = _
+    simp only [StateT.run_bind, StateT.run_lift, bind_assoc, pure_bind]
+    rfl
+  simp only [PqxdhServerAuthCtxState.hash, liftBind, simulateQ_bind, runBind, mem_support_bind_iff] at supported
+  obtain ⟨hashed, hashReached, supported⟩ := supported
+  have hashOrigins := PqxdhServerAuthCtxObserverHistory.origins_quiet setup context codec key _
+    (by simp [PqxdhServerAuthCtxAmbient.hash, AdaptiveCtxDynamicKnownBounds.TargetClass,
+      AdaptiveCtxQueryBounds.SourceSeal])
+    state.1.1.ghost state.1.1.ghost state.1.2.2.hidden state.1.2.2.hidden before hashed
+    invariant.origins (List.prefix_refl _) (List.prefix_refl _) (fun _ found => found) hashReached
+  have hashGood := RawCtxSelectedPlaintextOrigins.schedule_good _ _ _ _ before invariant.good _ hashReached
+  simp only [PqxdhServerAuthCtxFinish.staged, simulateQ_bind, runBind, runCoins, bind_map_left,
+    mem_support_bind_iff] at supported
   obtain ⟨prepared, _, supported⟩ := supported
   cases prepared with
   | none =>
@@ -173,7 +197,7 @@ theorem active_finish_cover (setup : Setup baseSpec KemSK) (codec : Codec Reader
         (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected)
         state.1.2.2 derived.2 root (by rw [← reply]; exact reached)
       apply Or.inr
-      apply known_ordinary setup codec context key control pending root _ result.1.2 _ before result.2 result.1.1 supported
+      apply known_ordinary setup codec context key control pending root _ result.1.2 _ hashed.2 result.2 result.1.1 supported
       refine ⟨bytes, ?_, occupied⟩
       change beaconInput setup context.seed context.scalar
         (state.1.1.ghost.touches ++ [Touch.beacon _]) = some bytes
@@ -184,9 +208,9 @@ theorem active_finish_cover (setup : Setup baseSpec KemSK) (codec : Codec Reader
       apply Or.inl
       exact PqxdhServerAuthCtxOrigin.touched_event setup codec context key rest pending control select state
         result.1.2 (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected)
-        derived.2 result.1.1 before result.2
-        (derive_origins setup codec context select state before.1 invariant.origins unselected _ derived reached)
-        writable invariant.good fresh clean (by rw [← reply]; exact reached) supported failed
+        derived.2 result.1.1 hashed.2 result.2
+        (derive_origins setup codec context select state hashed.2.1 hashOrigins unselected _ derived reached)
+        writable hashGood fresh clean (by rw [← reply]; exact reached) supported failed
 
 /-- The complete finish capability preserves acceptance coverage through all actual source phases, including rejection without a new Beacon attempt. -/
 theorem finish_cover (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -255,11 +279,16 @@ theorem skeleton_acceptance (setup : Setup baseSpec KemSK) (codec : Codec Reader
         subst supported
         rfl
       | some token =>
-        simp only [pending, mem_support_bind_iff] at supported
-        obtain ⟨built, _, supported⟩ := supported
-        simp only [support_pure, Set.mem_singleton_iff] at supported
-        subst supported
-        rfl
+        simp only [pending] at supported
+        split at supported
+        · simp only [support_pure, Set.mem_singleton_iff] at supported
+          subst supported
+          rfl
+        · simp only [mem_support_bind_iff] at supported
+          obtain ⟨hashed, _, built, _, supported⟩ := supported
+          simp only [support_pure, Set.mem_singleton_iff] at supported
+          subst supported
+          rfl
     | finish raw => exact (notFinish raw rfl).elim
     | hmac key bytes =>
       simp only [skeleton, hmacStep, StateT.run] at supported
@@ -321,7 +350,7 @@ theorem quiet_handler_cover (setup : Setup baseSpec KemSK) (codec : Codec Reader
   have accepted := handler_acceptance setup codec checks context
     (factorServices setup codec checks context (PqxdhServerAuthCtxMaterial.output key rest)) Q j query notFinish
     (PqxdhServerAuthCtxState.project (state, before.2)) _ reached
-  have grown := PqxdhServerAuthCtxAcceptanceHistory.handler_grows setup codec checks context Q j
+  have grown := PqxdhServerAuthCtxAcceptanceHistory.handler_logs setup codec checks context Q j
     (factorServices setup codec checks context (PqxdhServerAuthCtxMaterial.output key rest)) query
     (PqxdhServerAuthCtxState.project (state, before.2)) _ reached
   have retained := (PqxdhServerAuthCtxChronology.handler_history setup codec checks context

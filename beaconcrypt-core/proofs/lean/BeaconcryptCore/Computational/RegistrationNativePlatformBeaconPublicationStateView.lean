@@ -21,11 +21,11 @@ private abbrev carrierMonad (view : S → S) (idem : ∀ before, view (view befo
 /-- Individual actual operation laws compose through the literal effectful publication controller, including all later writer and source-resume branches. -/
 theorem begin (view : S → S) (idem : ∀ before, view (view before) = view before)
     (impl : QueryImpl RegistrationBeaconInitExecutor.Spec (StateT S m))
-    (encode : registration.SignedInitView → StateT S m (RustM (core.option.Option Encoded)))
+    (encode : registration.InitView → StateT S m (RustM (core.option.Option Encoded)))
     (leaves : ∀ query, Stable view (impl query)) (writer : ∀ packet, Stable view (encode packet))
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize) :
-    Stable view (RegistrationNativePlatformBeaconPublication.begin impl encode control inputs coins pin mldsa) := by
+    (pin : session.ServerAuthenticationPin) :
+    Stable view (RegistrationNativePlatformBeaconPublication.begin impl encode control inputs coins pin) := by
   let _ := carrierMonad (m := m) view idem
   let _ : LawfulMonad (Carrier view m) := LawfulMonad.mk' _
     (fun work => by apply Subtype.ext; exact bind_pure work.val)
@@ -35,9 +35,9 @@ theorem begin (view : S → S) (idem : ∀ before, view (view before) = view bef
   have hom : Cslib.IsMonadHom (Carrier view m) (StateT S m) forget :=
     .mk' (fun _ => rfl) (fun _ _ => rfl)
   let operations : QueryImpl RegistrationBeaconInitExecutor.Spec (Carrier view m) := fun query => ⟨impl query, leaves query⟩
-  let encoding : registration.SignedInitView → Carrier view m (RustM (core.option.Option Encoded)) := fun packet => ⟨encode packet, writer packet⟩
-  have kept := (RegistrationNativePlatformBeaconPublication.begin operations encoding control inputs coins pin mldsa).property
-  change Stable view (forget (RegistrationNativePlatformBeaconPublication.begin operations encoding control inputs coins pin mldsa)) at kept
+  let encoding : registration.InitView → Carrier view m (RustM (core.option.Option Encoded)) := fun packet => ⟨encode packet, writer packet⟩
+  have kept := (RegistrationNativePlatformBeaconPublication.begin operations encoding control inputs coins pin).property
+  change Stable view (forget (RegistrationNativePlatformBeaconPublication.begin operations encoding control inputs coins pin)) at kept
   rw [RegistrationNativePlatformBeaconMap.begin hom] at kept
   exact kept
 end BeaconcryptCore.Computational.RegistrationNativePlatformBeaconPublicationStateView

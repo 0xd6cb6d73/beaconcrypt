@@ -340,10 +340,10 @@ theorem compile_later_game (setup : Setup baseSpec KemSK) (codec : Codec Reader 
   apply bind_congr_of_forall_mem_support
   rintro ⟨_ | created, after⟩ born
   · simp only [map_pure, mergeLater, Option.map_none]
-  · obtain ⟨sender, peers⟩ := PqxdhDeploymentCompileGame.construct_fields setup.joint ensureInit identityIndex
+  · obtain ⟨sender, _⟩ := PqxdhDeploymentCompileGame.construct_fields setup.joint ensureInit identityIndex
       setup.serverKeyId runtime created after born
     have compiled := compile_later_native setup codec checks route created.seed phase1 phase2 bounds mode first second
-      (PqxdhRegistrationSchedule.initial created) sender peers rfl (fun _ => rfl)
+      (PqxdhRegistrationSchedule.initial created) sender (fun _ => rfl) rfl (fun _ => rfl)
     simp only [PqxdhDeploymentNative.initial]
     rw [← compiled, Functor.map_map, Functor.map_map]
     rfl
@@ -470,6 +470,8 @@ theorem serverLocal_log (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
       rw [PqxdhDeploymentCompileRecords.serverLocal_some setup codec route query copies kid target,
         mem_support_bind_iff] at supported
       obtain ⟨_, _, supported⟩ := supported
+      rw [mem_support_bind_iff] at supported
+      obtain ⟨_, _, supported⟩ := supported
       rw [support_map] at supported
       obtain ⟨_, _, rfl⟩ := supported
       rfl
@@ -482,6 +484,8 @@ theorem beaconLocal_log (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
   by_cases inside : index < copies.log.owners.length
   · rw [PqxdhDeploymentCompileRecords.beaconLocal_present setup codec index query copies inside,
       mem_support_bind_iff] at supported
+    obtain ⟨_, _, supported⟩ := supported
+    rw [mem_support_bind_iff] at supported
     obtain ⟨_, _, supported⟩ := supported
     rw [support_map] at supported
     obtain ⟨_, _, rfl⟩ := supported

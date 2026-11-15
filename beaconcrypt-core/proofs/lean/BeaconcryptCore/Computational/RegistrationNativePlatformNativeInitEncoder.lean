@@ -45,7 +45,7 @@ private theorem native_lift (implementation : QueryImpl (AdapterRegistrationWrit
       bind_assoc,pure_bind]
 
 /-- The actual native encoder is the same concrete writer with the entire native state carried unchanged. -/
-theorem encoder_source (view : registration.SignedInitView)
+theorem encoder_source (view : registration.InitView)
     (owners : RegistrationNativeBeaconFrontend.State source) (env : RegistrationWorldAgreementCompiler.EnvState Auxiliary)
     (before : RegistrationNativeExperiment.State n KemSK source × Platform) :
     (((RegistrationNativePlatformGenericBundle.encoderWith (writer reserve) view).run owners).run env).run before =
@@ -62,7 +62,7 @@ theorem encoder_source (view : registration.SignedInitView)
   simp only [StateT.run,pack,lift_apply,map_apply,Functor.map_map,Prod.map_def,id_eq]
 
 /-- Any successful source-native Init vector has exact concrete bytes, including arbitrary prior private/platform state. -/
-theorem encoder (view : registration.SignedInitView)
+theorem encoder (view : registration.InitView)
     (owners : RegistrationNativeBeaconFrontend.State source) (env : RegistrationWorldAgreementCompiler.EnvState Auxiliary)
     (before : RegistrationNativeExperiment.State n KemSK source × Platform)
     (result : ((RustM (core.option.Option (alloc.vec.Vec U8)) × RegistrationNativeBeaconFrontend.State source) ×

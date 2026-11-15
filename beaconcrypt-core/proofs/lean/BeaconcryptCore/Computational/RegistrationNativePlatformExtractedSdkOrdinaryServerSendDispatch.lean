@@ -33,7 +33,7 @@ variable (keyView : RegistrationNativePlatformSourceSeal.KeyView)
 variable (converted : RegistrationNativePlatformOrdinarySourceNative.Conversion keyView)
 variable (failure : primitives.Error) (erased : commitment.CommitmentTranscript) (route : RawCtxServerRouting.SenderDecoder)
 variable (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (views : Views)
-variable (created : PqxdhLiveServerConstruction.Created Unit)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (credential : RegistrationNativeMldsa.Credential mlSource)
 
 noncomputable def step (current : Native ×Platform)

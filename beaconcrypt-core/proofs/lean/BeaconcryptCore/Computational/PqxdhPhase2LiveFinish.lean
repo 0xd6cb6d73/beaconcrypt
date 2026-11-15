@@ -10,6 +10,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhPhase2LiveFinish
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhBeaconPhase2Preparation (Bytes)
 
 variable {M P I D K X Response A : Type} {S B : Nat}
@@ -55,7 +56,7 @@ noncomputable def finishImpl {m : Type → Type} [Monad m]
     QueryImpl (FinishSpec B) (StateT (LiveState) m) :=
   fun request => StateT.mk fun state => match request with
   | .finish index raw => do
-      let result ← (simulateQ native (PqxdhBeaconPhase2Publication.nativeOwner decode raw (state.roles.1.2 index))).run state.primitive
+      let result ← (simulateQ native (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw (state.roles.1.2 index))).run state.primitive
       pure (result.1.1, install index state result.1.2 result.2)
 
 noncomputable def liveImpl {m : Type → Type} [Monad m]
@@ -64,7 +65,7 @@ noncomputable def liveImpl {m : Type → Type} [Monad m]
     (native : QueryImpl (NativeSpec (I := I) (D := D) (K := K) (X := X) (Response := Response)) (StateT (Shared (A := A)) m))
     (decode : RawCtxReceive.FrameDecoder) : QueryImpl (Spec S B) (StateT LiveState m)
   | .inl query => old query
-  | .inr query => finishImpl native decode query
+  | .inr query => finishImpl (completedBinding := completedBinding) native decode query
 
 /-- Concrete old requests use the unchanged source services and their existing reveal history. -/
 noncomputable def sourceImpl
@@ -72,23 +73,23 @@ noncomputable def sourceImpl
     (senderId : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (native : QueryImpl (NativeSpec (I := I) (D := D) (K := K) (X := X) (Response := Response)) (StateT (Shared (A := A)) ProbComp)) :
     QueryImpl (Spec S B) (StateT (LiveState) ProbComp) :=
-  liveImpl (PqxdhRegistrationProtocolState.sourceImpl source writer senderId route decode) native decode
+  liveImpl (completedBinding := completedBinding) (PqxdhRegistrationProtocolState.sourceImpl source writer senderId route decode) native decode
 
 /-- Interpreting native callbacks preserves the complete actual owner installation and shared primitive state. -/
 theorem finish_interpretation {ι : Type} {base : OracleSpec ι} {m : Type → Type} [Monad m] [LawfulMonad m]
     (interpret : QueryImpl base m)
     (native : QueryImpl (NativeSpec (I := I) (D := D) (K := K) (X := X) (Response := Response))
       (StateT (Shared (A := A)) (OracleComp base))) (decode : RawCtxReceive.FrameDecoder) :
-    interpret.mapStateTBase (finishImpl (M := M) (P := P) (S := S) (B := B) native decode) =
-      finishImpl (interpret.mapStateTBase native) decode := by
+    interpret.mapStateTBase (finishImpl (completedBinding := completedBinding) (M := M) (P := P) (S := S) (B := B) native decode) =
+      finishImpl (completedBinding := completedBinding) (interpret.mapStateTBase native) decode := by
   funext query state
   cases query with
   | finish index raw =>
     change simulateQ interpret (do
-      let result ← (simulateQ native (PqxdhBeaconPhase2Publication.nativeOwner decode raw (state.roles.1.2 index))).run state.primitive
+      let result ← (simulateQ native (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw (state.roles.1.2 index))).run state.primitive
       pure (result.1.1, install index state result.1.2 result.2)) = (do
       let result ← (simulateQ (interpret.mapStateTBase native)
-        (PqxdhBeaconPhase2Publication.nativeOwner decode raw (state.roles.1.2 index))).run state.primitive
+        (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw (state.roles.1.2 index))).run state.primitive
       pure (result.1.1, install index state result.1.2 result.2))
     simp only [bind_pure_comp, simulateQ_map, QueryImpl.simulateQ_mapStateTBase_run]
 
@@ -99,12 +100,12 @@ theorem live_interpretation {ι : Type} {base : OracleSpec ι} {m : Type → Typ
       (StateT (LiveState) (OracleComp base)))
     (native : QueryImpl (NativeSpec (I := I) (D := D) (K := K) (X := X) (Response := Response))
       (StateT (Shared (A := A)) (OracleComp base))) (decode : RawCtxReceive.FrameDecoder) :
-    interpret.mapStateTBase (liveImpl old native decode) =
-      liveImpl (interpret.mapStateTBase old) (interpret.mapStateTBase native) decode := by
+    interpret.mapStateTBase (liveImpl (completedBinding := completedBinding) old native decode) =
+      liveImpl (completedBinding := completedBinding) (interpret.mapStateTBase old) (interpret.mapStateTBase native) decode := by
   funext query
   cases query with
   | inl query => rfl
-  | inr query => exact congrFun (finish_interpretation interpret native decode) query
+  | inr query => exact congrFun (finish_interpretation (completedBinding := completedBinding) interpret native decode) query
 
 /-- The arbitrary adaptive continuation preserves its exact result and full live state, including the common cache. -/
 theorem live_schedule {ι : Type} {base : OracleSpec ι} {m : Type → Type} [Monad m] [LawfulMonad m] {Result : Type}
@@ -114,8 +115,8 @@ theorem live_schedule {ι : Type} {base : OracleSpec ι} {m : Type → Type} [Mo
     (native : QueryImpl (NativeSpec (I := I) (D := D) (K := K) (X := X) (Response := Response))
       (StateT (Shared (A := A)) (OracleComp base))) (decode : RawCtxReceive.FrameDecoder)
     (client : OracleComp (Spec S B) Result) (state : LiveState) :
-    simulateQ interpret ((simulateQ (liveImpl old native decode) client).run state) =
-      (simulateQ (liveImpl (interpret.mapStateTBase old) (interpret.mapStateTBase native) decode) client).run state := by
+    simulateQ interpret ((simulateQ (liveImpl (completedBinding := completedBinding) old native decode) client).run state) =
+      (simulateQ (liveImpl (completedBinding := completedBinding) (interpret.mapStateTBase old) (interpret.mapStateTBase native) decode) client).run state := by
   rw [QueryImpl.simulateQ_mapStateTBase_run, live_interpretation]
 
 /-- Existing source operations execute their original handler, including its actual tick or reveal note. -/
@@ -124,7 +125,7 @@ theorem source_old
     (senderId : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (native : QueryImpl (NativeSpec (I := I) (D := D) (K := K) (X := X) (Response := Response)) (StateT (Shared (A := A)) ProbComp))
     (query : (RawCtxProtocolReveals.SourceSpec S B).Domain) :
-    sourceImpl (P := P) source writer senderId route decode native (.inl query) =
+    sourceImpl (completedBinding := completedBinding) (P := P) source writer senderId route decode native (.inl query) =
       PqxdhRegistrationProtocolState.sourceImpl source writer senderId route decode query := rfl
 
 /-- Finish uses the actual selected live owner and then installs its complete optional outcome. -/
@@ -133,9 +134,9 @@ theorem source_finish
     (senderId : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (native : QueryImpl (NativeSpec (I := I) (D := D) (K := K) (X := X) (Response := Response)) (StateT (Shared (A := A)) ProbComp))
     (index : Fin B) (raw : Bytes) (state : LiveState) :
-    (sourceImpl source writer senderId route decode native (.inr (.finish index raw))).run state =
+    (sourceImpl (completedBinding := completedBinding) source writer senderId route decode native (.inr (.finish index raw))).run state =
       (do
-        let result ← (simulateQ native (PqxdhBeaconPhase2Publication.nativeOwner decode raw (state.roles.1.2 index))).run state.primitive
+        let result ← (simulateQ native (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw (state.roles.1.2 index))).run state.primitive
         pure (result.1.1, install index state result.1.2 result.2)) := rfl
 
 /-- Native Phase2's internal raw opening does not increment the outer record-attempt counter, on either successful or failed completion. -/
@@ -144,17 +145,17 @@ theorem native_raw_attempts
     (decode : RawCtxReceive.FrameDecoder) (raw : Bytes) (state next : RawCtxBeaconLifecycle.State I D K)
     (primitive final : Shared (A := A)) (reply : Option Bytes)
     (present : ((reply, next), final) ∈ support
-      ((simulateQ native (PqxdhBeaconPhase2Publication.nativeOwner decode raw state)).run primitive)) :
+      ((simulateQ native (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw state)).run primitive)) :
     next.rawAttempts = state.rawAttempts := by
   cases reply with
   | none =>
-      have failed := PqxdhBeaconPhase2Publication.native_failure native decode raw state next primitive final present
+      have failed := PqxdhBeaconPhase2Publication.native_failure (completedBinding := completedBinding) native decode raw state next primitive final present
       cases active : state.beacon.phase <;> simp only [active] at failed
       case initSent control prekey oneTime kem => rw [failed]; rfl
       all_goals rw [failed.1]
   | some plaintext =>
       obtain ⟨staged, _, _, published⟩ :=
-        PqxdhBeaconPhase2Publication.native_success native decode raw plaintext state next primitive final present
+        PqxdhBeaconPhase2Publication.native_success (completedBinding := completedBinding) native decode raw plaintext state next primitive final present
       exact (congrArg (fun result => result.2.rawAttempts) published).symm
 
 /-- Every supported finish result retains its exact native execution witness and unchanged outer raw-attempt counter. -/
@@ -162,16 +163,16 @@ theorem finish_supported
     (native : QueryImpl (NativeSpec (I := I) (D := D) (K := K) (X := X) (Response := Response)) (StateT (Shared (A := A)) ProbComp))
     (decode : RawCtxReceive.FrameDecoder) (index : Fin B) (raw : Bytes) (state : LiveState)
     (result : Option Bytes × LiveState)
-    (present : result ∈ support ((finishImpl native decode (.finish index raw)).run state)) :
+    (present : result ∈ support ((finishImpl (completedBinding := completedBinding) native decode (.finish index raw)).run state)) :
     ∃ updated primitive,
       ((result.1, updated), primitive) ∈ support
-        ((simulateQ native (PqxdhBeaconPhase2Publication.nativeOwner decode raw (state.roles.1.2 index))).run state.primitive) ∧
+        ((simulateQ native (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw (state.roles.1.2 index))).run state.primitive) ∧
       result.2 = install index state updated primitive ∧
       updated.rawAttempts = (state.roles.1.2 index).rawAttempts := by
   simp only [finishImpl, StateT.run_mk, bind_pure_comp, support_map] at present
   obtain ⟨⟨⟨reply, updated⟩, primitive⟩, supported, rfl⟩ := present
   exact ⟨updated, primitive, supported, rfl,
-    native_raw_attempts native decode raw _ _ _ _ reply supported⟩
+    native_raw_attempts (completedBinding := completedBinding) native decode raw _ _ _ _ reply supported⟩
 
 /-- Each finish call retains the actual native 69-callback upper bound, including inactive attempts and work before sequence-one rejection. -/
 theorem finish_query_bound {ι : Type} {base : OracleSpec ι}
@@ -180,11 +181,11 @@ theorem finish_query_bound {ι : Type} {base : OracleSpec ι}
     (predicate : base.Domain → Prop) [DecidablePred predicate] (qCall : Nat)
     (bounded : ∀ query primitive, ((native query).run primitive).IsQueryBoundP predicate qCall)
     (request : (FinishSpec B).Domain) (state : LiveState) :
-    ((finishImpl native decode request).run state).IsQueryBoundP predicate (69 * qCall) := by
+    ((finishImpl (completedBinding := completedBinding) native decode request).run state).IsQueryBoundP predicate (69 * qCall) := by
   cases request with
   | finish index raw =>
     simp only [finishImpl, StateT.run_mk, bind_pure_comp, isQueryBoundP_map_iff]
-    exact PqxdhBeaconPhase2Bounds.native_interpreted_bound native predicate qCall bounded decode raw _ _
+    exact PqxdhBeaconPhase2Bounds.native_interpreted_bound (completedBinding := completedBinding) native predicate qCall bounded decode raw _ _
 
 /-- Original operations and finish attempts have separate all-reply source caps; finish work is never derived from a record-attempt counter. -/
 theorem live_query_bound {ι : Type} {base : OracleSpec ι} {Result : Type}
@@ -197,7 +198,7 @@ theorem live_query_bound {ι : Type} {base : OracleSpec ι} {Result : Type}
     (client : OracleComp (Spec S B) Result)
     (oldCount : client.IsQueryBoundP (fun query => query.isRight = false) qOld)
     (finishCount : client.IsQueryBoundP (fun query => query.isRight = true) qFinish) (state : LiveState) :
-    ((simulateQ (liveImpl old native decode) client).run state).IsQueryBoundP predicate
+    ((simulateQ (liveImpl (completedBinding := completedBinding) old native decode) client).run state).IsQueryBoundP predicate
       (qOldCost * qOld + 69 * qCall * qFinish) := by
   let cost : Bool → Nat := fun finish => if finish then 69 * qCall else qOldCost
   let budget : Bool → Nat := fun finish => if finish then qFinish else qOld
@@ -206,13 +207,13 @@ theorem live_query_bound {ι : Type} {base : OracleSpec ι} {Result : Type}
     cases kind
     · exact oldCount
     · exact finishCount
-  have step : ∀ query state, (((liveImpl old native decode) query).run state).IsQueryBoundP predicate (cost query.isRight) := by
+  have step : ∀ query state, (((liveImpl (completedBinding := completedBinding) old native decode) query).run state).IsQueryBoundP predicate (cost query.isRight) := by
     intro query state
     cases query with
     | inl query => exact oldCost query state
-    | inr query => exact finish_query_bound native decode predicate qCall nativeCost query state
+    | inr query => exact finish_query_bound (completedBinding := completedBinding) native decode predicate qCall nativeCost query state
   have counted := FinitePartitionQueryBounds.weighted_bound (fun query => query.isRight) cost budget
-    (liveImpl old native decode) predicate client bounded step state
+    (liveImpl (completedBinding := completedBinding) old native decode) predicate client bounded step state
   simpa only [Fintype.sum_bool, cost, budget, Bool.false_eq_true, ite_false, ite_true, Nat.add_comm] using counted
 
 /-- Every original source operation preserves registration fields and advances the existing history exactly once. -/
@@ -244,7 +245,7 @@ theorem source_step_history
     (senderId : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (native : QueryImpl (NativeSpec (I := I) (D := D) (K := K) (X := X) (Response := Response)) (StateT (Shared (A := A)) ProbComp))
     (query : (Spec S B).Domain) (state : LiveState) (result : (Spec S B).Range query × LiveState)
-    (present : result ∈ support ((sourceImpl source writer senderId route decode native query).run state)) :
+    (present : result ∈ support ((sourceImpl (completedBinding := completedBinding) source writer senderId route decode native query).run state)) :
     result.2.controls = state.controls ∧ result.2.consumed = state.consumed ∧
     result.2.roles.2.position = state.roles.2.position + 1 ∧
     ∃ suffix, result.2.roles.2.observations = state.roles.2.observations ++ suffix ∧ suffix.length ≤ 1 := by
@@ -253,7 +254,7 @@ theorem source_step_history
   | inr query =>
       cases query with
       | finish index raw =>
-        obtain ⟨updated, primitive, _, equal, _⟩ := finish_supported native decode index raw state result present
+        obtain ⟨updated, primitive, _, equal, _⟩ := finish_supported (completedBinding := completedBinding) native decode index raw state result present
         rw [equal]
         exact ⟨rfl, rfl, rfl, [], by simp [install, RawCtxProtocolReveals.tick]⟩
 
@@ -264,7 +265,7 @@ theorem source_schedule_history {Result : Type}
     (native : QueryImpl (NativeSpec (I := I) (D := D) (K := K) (X := X) (Response := Response)) (StateT (Shared (A := A)) ProbComp))
     (client : OracleComp (Spec S B) Result) (budget : Nat) (bounded : client.IsTotalQueryBound budget)
     (state : LiveState) (result : Result × LiveState)
-    (present : result ∈ support ((simulateQ (sourceImpl source writer senderId route decode native) client).run state)) :
+    (present : result ∈ support ((simulateQ (sourceImpl (completedBinding := completedBinding) source writer senderId route decode native) client).run state)) :
     result.2.controls = state.controls ∧ result.2.consumed = state.consumed ∧
     result.2.roles.2.position ≤ state.roles.2.position + budget ∧
     ∃ suffix, result.2.roles.2.observations = state.roles.2.observations ++ suffix ∧ suffix.length ≤ budget := by
@@ -278,7 +279,7 @@ theorem source_schedule_history {Result : Type}
       rw [simulateQ_bind, simulateQ_spec_query, StateT.run_bind, mem_support_bind_iff] at present
       obtain ⟨reply, supported, continued⟩ := present
       obtain ⟨controlsStep, consumedStep, positionStep, firstLog, prefixEq, prefixLength⟩ :=
-        source_step_history source writer senderId route decode native query state reply supported
+        source_step_history (completedBinding := completedBinding) source writer senderId route decode native query state reply supported
       obtain ⟨controlsTail, consumedTail, positionTail, tailLog, tailEq, tailLength⟩ :=
         ih reply.1 (budget - 1) (bounded.2 reply.1) reply.2 result continued
       refine ⟨controlsTail.trans controlsStep, consumedTail.trans consumedStep, by omega,
@@ -297,11 +298,11 @@ theorem live_invariant {Result : Type}
       result ∈ support ((old query).run state) → invariant result.2)
     (finishPreserves : ∀ index raw state result, invariant state →
       result ∈ support ((simulateQ native
-        (PqxdhBeaconPhase2Publication.nativeOwner decode raw (state.roles.1.2 index))).run state.primitive) →
+        (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw (state.roles.1.2 index))).run state.primitive) →
       invariant (install index state result.1.2 result.2))
     (client : OracleComp (Spec S B) Result) (state : LiveState) (before : invariant state)
     (result : Result × LiveState)
-    (present : result ∈ support ((simulateQ (liveImpl old native decode) client).run state)) :
+    (present : result ∈ support ((simulateQ (liveImpl (completedBinding := completedBinding) old native decode) client).run state)) :
     invariant result.2 := by
   induction client using OracleComp.inductionOn generalizing state result with
   | pure value =>
@@ -318,7 +319,7 @@ theorem live_invariant {Result : Type}
           cases query with
           | finish index raw =>
             obtain ⟨updated, primitive, nativeSupported, equal, _⟩ :=
-              finish_supported native decode index raw state reply supported
+              finish_supported (completedBinding := completedBinding) native decode index raw state reply supported
             rw [equal]
             exact finishPreserves index raw state ((reply.1, updated), primitive) before nativeSupported
       exact ih reply.1 reply.2 preserved result continued

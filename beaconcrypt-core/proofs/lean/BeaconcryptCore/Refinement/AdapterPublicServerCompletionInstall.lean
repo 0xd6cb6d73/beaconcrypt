@@ -22,10 +22,15 @@ omit material platform in
 theorem initial_parsed (control : pqxdh.ServerState) (pin : session.ServerAuthenticationPin)
     (availability : pqxdh.KeyIdAvailability) (token : beaconcrypt_public_wrapper.server.RegistrationOutput)
     (application : Slice U8) (initial : registration.ServerInitialKdf)
-    (began : registration.begin_server_completion control pin availability token.registration.agreement application = .ok (.Ok initial))
+    (began : BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission control pin availability token.registration.agreement application initial)
     (parsed : AdapterPublicServerToken.ParsedToken token) :
     AdapterPublicServerToken.ParsedKey initial.binding.beacon_identity_public_key := by
-  rw [RegistrationServerRecordExecutor.initial_binding control pin availability token.registration.agreement application initial began]
+  obtain ⟨key, copied, parsed⟩ := parsed
+  obtain ⟨digest, binding, completed, same, _consistent, _candidate⟩ := RegistrationAd.server_admission_binding
+    control pin availability token.registration.agreement application initial began
+  have exactCopy := SessionBinding.complete_identity token.registration.agreement.binding digest binding completed
+  have equal : key = binding.beacon_identity_public_key := RustM.ok.inj (copied.symm.trans exactCopy)
+  rw [same, ← equal]
   exact parsed
 
 omit material platform in
@@ -46,7 +51,7 @@ variable {State : Type} [containers : ContainerOperations (RustT (StateT State P
 variable {mldsaSource : RegistrationNativeMldsa.Source} {KemSK : Type} {n : Nat}
 
 theorem source (view : MaterialView mldsaSource KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mldsaSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mldsaSource)
     (self : beaconcrypt_public_wrapper.server.Server) (native : RegistrationServerFrontendCompiler.State n)
     (related : Server view views created credential self native)
     (record : QueryImpl RegistrationRecordPrimitives.Spec (StateT State ProbComp))

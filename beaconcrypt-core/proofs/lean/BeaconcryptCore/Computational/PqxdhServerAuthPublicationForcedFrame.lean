@@ -8,6 +8,8 @@ open RustM beaconcrypt_core PqxdhRefinement
 set_option autoImplicit false
 
 namespace BeaconcryptCore.Computational.PqxdhServerAuthPublicationForcedFrame
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open CtxRomAuth PqxdhFullSecretInputKdf
 open RawCtxSelectedMessageSealing RawCtxSelectedMessageKey
 
@@ -138,9 +140,9 @@ theorem after_pure (codec : Codec Reader WireResponse) (checks : Checks)
     (driver : RawCtxChainOwner.Calls K Compiler) (candidate : pqxdh.ServerRegistrationCandidate)
     (authenticated : Pqxdh.Bytes) (kernel : K) (metadata : PeerMetadata)
     (state : PqxdhInitialGenericPublication.State K Metadata PeerMetadata Consumed) :
-    PqxdhInitialGenericPublication.afterInitialization driver (plainAux codec checks)
+    PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) driver (plainAux codec checks)
       candidate authenticated kernel metadata state =
-      finish codec candidate metadata state <$> driver.send kernel (firstContext candidate authenticated) := by
+      finish codec candidate metadata state <$> driver.send kernel (firstContext (associatedData := associatedData) candidate authenticated) := by
   simp only [PqxdhInitialGenericPublication.afterInitialization, map_eq_bind_pure_comp]
   refine bind_congr fun ⟨advanced, encrypted⟩ => ?_
   simp only [plainAux, PqxdhServerAuthCtxNative.aux, OptionT.lift_pure, pure_bind]
@@ -155,10 +157,10 @@ theorem after_mask (source : FixedHkdfSha512NoSaltSource) (codec : Codec Reader 
     (checks : Checks) (rest : Residual) (candidate : pqxdh.ServerRegistrationCandidate)
     (authenticated : Pqxdh.Bytes) (kernel : Kernel) (metadata : PeerMetadata)
     (state : PqxdhInitialGenericPublication.State Kernel Metadata PeerMetadata Consumed) (before : Log) :
-    (PqxdhInitialGenericPublication.afterInitialization (calls source writer rest) (plainAux codec checks)
+    (PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) (calls source writer rest) (plainAux codec checks)
       candidate authenticated kernel metadata state).run.run before =
       (fun result => (result.1.map (fun _ => (none, state)), before)) <$>
-        (PqxdhInitialGenericPublication.afterInitialization (calls source codec.frameWrite rest) (plainAux codec checks)
+        (PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) (calls source codec.frameWrite rest) (plainAux codec checks)
           candidate authenticated kernel metadata state).run.run before := by
   rw [after_pure, after_pure]
   simp only [OptionT.run_map, StateT.run_map]
@@ -183,10 +185,10 @@ theorem candidate_mask (source : FixedHkdfSha512NoSaltSource) (codec : Codec Rea
     (checks : Checks) (rest : Residual) (initial : RustM Kernel)
     (candidate : pqxdh.ServerRegistrationCandidate) (data : Option Pqxdh.Bytes) (metadata : PeerMetadata)
     (state : PqxdhInitialGenericPublication.State Kernel Metadata PeerMetadata Consumed) (before : Log) :
-    (PqxdhInitialGenericBuilder.candidate (calls source writer rest) (plainAux codec checks)
+    (PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) (calls source writer rest) (plainAux codec checks)
       initial candidate data metadata state).run.run before =
       (fun result => (suppressNative state result.1, before)) <$>
-        (PqxdhInitialGenericBuilder.candidate (calls source codec.frameWrite rest) (plainAux codec checks)
+        (PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) (calls source codec.frameWrite rest) (plainAux codec checks)
           initial candidate data metadata state).run.run before := by
   simp only [PqxdhInitialGenericBuilder.candidate, plain_aux,
     PqxdhServerAuthPublicationWriter.auxValue, pure_bind]
@@ -230,10 +232,10 @@ theorem build_mask (source : FixedHkdfSha512NoSaltSource) (codec : Codec Reader 
     (checks : Checks) (rest : Residual) (initial : RustM Kernel)
     (pending : pqxdh.PendingServerRegistration) (data : Option Pqxdh.Bytes) (metadata : PeerMetadata)
     (state : PqxdhInitialGenericPublication.State Kernel Metadata PeerMetadata Consumed) (before : Log) :
-    (PqxdhServerAuthSendFactor.genericBuild (calls source writer rest) (plainAux codec checks)
+    (PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData) (calls source writer rest) (plainAux codec checks)
       initial pending data metadata state).run.run before =
       (fun result => (suppressNative state result.1, before)) <$>
-        (PqxdhServerAuthSendFactor.genericBuild (calls source codec.frameWrite rest) (plainAux codec checks)
+        (PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData) (calls source codec.frameWrite rest) (plainAux codec checks)
           initial pending data metadata state).run.run before := by
   unfold PqxdhServerAuthSendFactor.genericBuild
   cases next : pqxdh.server_next_key_id state.control <;>
@@ -253,7 +255,7 @@ theorem build_mask (source : FixedHkdfSha512NoSaltSource) (codec : Codec Reader 
         | ok value =>
             cases value with
             | Err error => rfl
-            | Ok candidate => exact candidate_mask source codec checks rest initial candidate data metadata state before
+            | Ok candidate => exact candidate_mask (associatedData := associatedData) source codec checks rest initial candidate data metadata state before
 
 /-- Only the selected reference callback uses this codec; ordinary and public source callbacks retain the original codec. -/
 def referenceCodec (codec : Codec Reader WireResponse) : Codec Reader WireResponse :=
@@ -270,11 +272,11 @@ theorem compiled_run (source : FixedHkdfSha512NoSaltSource) (codec : Codec Reade
     (checks : Checks) (rest : Residual) (pending : pqxdh.PendingServerRegistration)
     (data : Option Pqxdh.Bytes) (metadata : PeerMetadata)
     (state : PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed) (before : Log) :
-    (PqxdhServerAuthBuildProgram.compiled source codec checks rest pending data metadata state).run.run before =
+    (PqxdhServerAuthBuildProgram.compiled (associatedData := associatedData) source codec checks rest pending data metadata state).run.run before =
       (fun result => ((fun reply => Prod.map id
         (PqxdhInitialGenericPublication.native PqxdhServerAuthCtxBuildSettlement.resolve) <$> reply) <$> result.1,
         result.2)) <$>
-        (PqxdhServerAuthSendFactor.genericBuild (calls source codec.frameWrite rest) (plainAux codec checks)
+        (PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData) (calls source codec.frameWrite rest) (plainAux codec checks)
           (PqxdhServerAuthCtxCalls.initial false rest.2.2) pending data metadata
           (PqxdhServerAuthCtxBuildSettlement.embed state)).run.run before := by
   unfold PqxdhServerAuthBuildProgram.compiled PqxdhServerAuthBuildProgram.compiler
@@ -287,14 +289,14 @@ theorem compiled_mask (source : FixedHkdfSha512NoSaltSource) (codec : Codec Read
     (checks : Checks) (rest : Residual) (pending : pqxdh.PendingServerRegistration)
     (data : Option Pqxdh.Bytes) (metadata : PeerMetadata)
     (state : PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed) (before : Log) :
-    (PqxdhServerAuthBuildProgram.compiled source (referenceCodec codec) checks rest pending data metadata state).run.run before =
+    (PqxdhServerAuthBuildProgram.compiled (associatedData := associatedData) source (referenceCodec codec) checks rest pending data metadata state).run.run before =
       (fun result => (suppressNative state result.1, before)) <$>
-        (PqxdhServerAuthBuildProgram.compiled source codec checks rest pending data metadata state).run.run before := by
+        (PqxdhServerAuthBuildProgram.compiled (associatedData := associatedData) source codec checks rest pending data metadata state).run.run before := by
   rw [compiled_run, compiled_run, reference_aux]
   change (fun result => ((fun reply => Prod.map id
     (PqxdhInitialGenericPublication.native PqxdhServerAuthCtxBuildSettlement.resolve) <$> reply) <$> result.1,
     result.2)) <$>
-    (PqxdhServerAuthSendFactor.genericBuild (calls source writer rest) (plainAux codec checks)
+    (PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData) (calls source writer rest) (plainAux codec checks)
       (PqxdhServerAuthCtxCalls.initial false rest.2.2) pending data metadata
       (PqxdhServerAuthCtxBuildSettlement.embed state)).run.run before = _
   rw [build_mask]
@@ -317,8 +319,8 @@ theorem compiled_budget_iff {Budget : Type} (source : FixedHkdfSha512NoSaltSourc
     (state : PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed) (before : Log)
     (budget : Budget) (canQuery : AdaptiveCtxDynamicKnownKeys.Spec.Domain → Budget → Prop)
     (cost : AdaptiveCtxDynamicKnownKeys.Spec.Domain → Budget → Budget) :
-    ((PqxdhServerAuthBuildProgram.compiled source (referenceCodec codec) checks rest pending data metadata state).run.run before).IsQueryBound budget canQuery cost ↔
-      ((PqxdhServerAuthBuildProgram.compiled source codec checks rest pending data metadata state).run.run before).IsQueryBound budget canQuery cost := by
+    ((PqxdhServerAuthBuildProgram.compiled (associatedData := associatedData) source (referenceCodec codec) checks rest pending data metadata state).run.run before).IsQueryBound budget canQuery cost ↔
+      ((PqxdhServerAuthBuildProgram.compiled (associatedData := associatedData) source codec checks rest pending data metadata state).run.run before).IsQueryBound budget canQuery cost := by
   rw [compiled_mask, isQueryBound_map_iff]
 
 end BeaconcryptCore.Computational.PqxdhServerAuthPublicationForcedFrame

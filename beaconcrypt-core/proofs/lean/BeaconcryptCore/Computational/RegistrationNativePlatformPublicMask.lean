@@ -128,14 +128,8 @@ theorem outgoing (setup : PqxdhServerAuthExperiment.Setup base KemSK)
       (RegistrationNativeBeaconFrontend.outgoing (Auxiliary := Auxiliary) setup source index owner query)) := by
   rcases query with (hashRequest | signRequest) | edRequest
   · exact legacy_lift selected scalar publicPrekey implementation _
-  · rw [RegistrationNativeBeaconFrontend.outgoing, RegistrationNativePlatformGenericBundle.liftLegacy_bind]
-    apply bind_equivariant selected scalar publicPrekey _ _ (legacy_sample selected scalar publicPrekey implementation _)
-    intro reply
-    rw [RegistrationNativePlatformGenericBundle.liftLegacy_bind]
-    apply bind_equivariant selected scalar publicPrekey _ _ (legacy_lift selected scalar publicPrekey implementation _)
-    intro changed
-    rw [RegistrationNativePlatformGenericBundle.liftLegacy_pure]
-    exact pure_equivariant selected scalar publicPrekey reply
+  · rw [RegistrationNativeBeaconFrontend.outgoing, RegistrationNativePlatformGenericBundle.liftLegacy_pure]
+    exact pure_equivariant selected scalar publicPrekey _
   · simp only [RegistrationNativeBeaconFrontend.outgoing]
     split
     · rw [RegistrationNativePlatformGenericBundle.liftLegacy_bind]

@@ -38,7 +38,8 @@ theorem source (self :Server) (token :beaconcrypt_public_wrapper.server.Registra
     AdapterPublicBuildObservedRequest.run (m:=RustT m) completion self token data=
       AdapterPublicServerBuildWithRecord.build (fun current initial=>(completion current initial).run) self token data :=by
   simp only [AdapterPublicBuildObservedRequest.run,AdapterPublicServerBuildWithRecord.build,
-    AdapterPublicServerBuildWithRecord.lookup,AdapterPublicServerBuildWithRecord.reserved,
+    AdapterPublicServerBuildWithRecord.lookup,AdapterPublicServerBuildWithRecord.adHash,
+    AdapterPublicServerBuildWithRecord.reserved,
     AdapterPublicServerBuildBody.checked,call_apply,call_result]
   apply bind_congr
   intro application
@@ -91,16 +92,30 @@ theorem source (self :Server) (token :beaconcrypt_public_wrapper.server.Registra
           simp only [
              lift_ok, pure_bind]
           apply bind_congr
-          rintro ⟨allocation, known⟩
-          cases allocation with
+          intro request
+          apply bind_congr
+          intro digest
+          apply bind_congr
+          intro resumed
+          cases resumed with
           | Err prior =>
             simp only [
 
               core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual, lift_ok, pure_bind]
-          | Ok unitValue =>
-            cases unitValue
+          | Ok selected =>
             simp only [
                lift_ok, pure_bind]
+            apply bind_congr
+            rintro ⟨allocation, known⟩
+            cases allocation with
+            | Err prior =>
+              simp only [
+
+                core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual, lift_ok, pure_bind]
+            | Ok unitValue =>
+              cases unitValue
+              simp only [
+                 lift_ok, pure_bind]
 
 omit completion in
 theorem literal (self :Server) (token :beaconcrypt_public_wrapper.server.RegistrationOutput)

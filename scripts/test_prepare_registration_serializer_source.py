@@ -32,7 +32,7 @@ class RegistrationSerializerPreparationTests(unittest.TestCase):
         outputs, manifest = preparation.expected()
         original = (preparation.ROOT / preparation.TRANSPORT).read_text()
         self.assertTrue(outputs[preparation.SUPPLEMENT].startswith(original))
-        self.assertEqual(len(manifest["field_boundaries"]), 10)
+        self.assertEqual(len(manifest["field_boundaries"]), 8)
         self.assertTrue(manifest["generated_rust_files_unchanged"])
         self.assertTrue(manifest["original_generated_bodies_unchanged"])
         self.assertFalse(manifest["source_correspondence_proved"])

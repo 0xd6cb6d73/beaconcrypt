@@ -135,37 +135,19 @@ theorem agreement_safe (setup : Setup base KemSK) (owner : Owner source) (oneTim
 private theorem prepare_safe (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64) :
     Safe (prepare (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) source edPin mlPin keyId) := by
   unfold prepare
-  apply bind_safe _ _ (sample_safe _)
-  intro generated
-  cases generated with
-  | none => exact pure_safe _
-  | some credentials =>
-      dsimp only
-      cases begun : registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
-      | fail error | div => simpa only [begun] using (pure_safe (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (source := source) _)
-      | ok pending =>
-          simp only
-          cases requested : pending.request with
-          | fail error | div => simpa only [requested] using (pure_safe (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (source := source) _)
-          | ok request =>
-              simp only
-              apply bind_safe _ _ (effect_safe _)
-              intro digest
-              cases resumed : pending.resume (.Some (RegistrationAuthenticationShared.digestArray digest)) with
-              | fail error | div => simpa only [resumed] using (pure_safe (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (source := source) _)
-              | ok result => cases result with
-                | none => exact pure_safe _
-                | some pin =>
-                    have allowedCreate : AllQueriesSatisfy
-                        (RegistrationNativeIdentityInterface.create (Ambient n KemSK)) (Allowed n KemSK) := by
-                      unfold RegistrationNativeIdentityInterface.create
-                      apply mapped _ _ (Allowed n KemSK)
-                      exact (allQueriesSatisfy_query_iff (spec := Trusted n KemSK) (.inr .create) (Allowed n KemSK)).mpr trivial
-                    apply bind_safe _ _ (lift_safe (source := source) _ allowedCreate)
-                    intro identity
-                    cases identity with
-                    | none => exact pure_safe _
-                    | some identity => exact bind_safe _ _ (sample_safe _) (fun _ => pure_safe _)
+  cases begun : registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
+  | fail error | div => exact pure_safe _
+  | ok pin =>
+      have allowedCreate : AllQueriesSatisfy
+          (RegistrationNativeIdentityInterface.create (Ambient n KemSK)) (Allowed n KemSK) := by
+        unfold RegistrationNativeIdentityInterface.create
+        apply mapped _ _ (Allowed n KemSK)
+        exact (allQueriesSatisfy_query_iff (spec := Trusted n KemSK) (.inr .create) (Allowed n KemSK)).mpr trivial
+      apply bind_safe _ _ (lift_safe (source := source) _ allowedCreate)
+      intro identity
+      cases identity with
+      | none => exact pure_safe _
+      | some identity => exact bind_safe _ _ (sample_safe _) (fun _ => pure_safe _)
 
 /-- Every actual native constructor path contains zero indexed Ed signing calls. -/
 theorem create_safe (setup : Setup base KemSK) (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64) :

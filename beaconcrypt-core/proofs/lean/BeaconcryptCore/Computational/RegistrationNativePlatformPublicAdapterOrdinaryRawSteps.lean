@@ -25,7 +25,7 @@ variable [PublicWrapperPlatform.LocalOperations] [PublicWrapperPlatform.Containe
 variable [AdapterPublicOrdinaryPlatform.LookupOperations]
 variable [primitives : AdapterSealPrimitive.Operations] [FrameDispatchFallback.Operations]
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (credential : RegistrationNativeMldsa.Credential mlSource)
 variable (keyView : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitives.Error)
 variable (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT P ProbComp))

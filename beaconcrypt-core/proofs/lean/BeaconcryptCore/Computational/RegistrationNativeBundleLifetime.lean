@@ -16,7 +16,7 @@ variable {n : Nat} {I KemSK E Platform : Type} {base : OracleSpec I} {source : R
 local notation "Native" => RegistrationNativeExperiment.State n KemSK source
 variable (coins : QueryImpl unifSpec (StateT Platform ProbComp))
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
 
 noncomputable def tree (index : Nat) (owner : Owner source) (scalar : PqxdhJointGapDh.ScalarBytes) :
@@ -27,7 +27,7 @@ noncomputable def tree (index : Nat) (owner : Owner source) (scalar : PqxdhJoint
       (fun query => RegistrationNativePlatformGenericBundle.liftLegacy RegistrationNativePlatformGenericBundle.trustedLift
         (RegistrationNativeBeaconFrontend.outgoing setup source index owner query))
       (RegistrationNativePlatformGenericBundle.encoder E) ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin owner.mldsa.publicKey)
+      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin)
 
 theorem tree_lower (index : Nat) (owner : Owner source) (scalar : PqxdhJointGapDh.ScalarBytes) :
     tree (n := n) coins setup checks representation created writer index owner scalar =
@@ -35,9 +35,9 @@ theorem tree_lower (index : Nat) (owner : Owner source) (scalar : PqxdhJointGapD
         (RegistrationNativeBundleInterpretation.outgoing coins setup checks representation created writer index owner)
         (RegistrationNativeBundleInterpretation.encoder coins setup checks representation created writer)
         ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin owner.mldsa.publicKey := by
+        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin := by
   unfold tree
-  exact RegistrationNativeBundleInterpretation.publication coins setup checks representation created writer index owner _ _ _ _ _
+  exact RegistrationNativeBundleInterpretation.publication coins setup checks representation created writer index owner _ _ _ _
 
 noncomputable def sample : RegistrationNativePlatformExperiment.M n KemSK source (StateT Platform ProbComp) PqxdhJointGapDh.ScalarBytes :=
   RegistrationNativePlatformFrontend.interpret

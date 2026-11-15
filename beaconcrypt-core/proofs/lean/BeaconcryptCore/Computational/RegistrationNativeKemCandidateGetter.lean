@@ -49,7 +49,7 @@ def Receipt (setup : Setup base KemSK) (checks : Checks) (wire : Wire) (serverKe
 /-- Actual canonical broad APP success in the candidate observation supplies the original session and its literal selected SDK getter receiving that same observation's candidate. -/
 theorem selected_getter (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (readback : RegistrationNativeWire.InitReadBack wire) (bounds : FreshBounds) (mode : Mode)
     (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value) (budget : Budget)
     (target : Fin budget.accept × Fin budget.capacity) (claim : Value → Option (Nat × Pqxdh.Bytes))

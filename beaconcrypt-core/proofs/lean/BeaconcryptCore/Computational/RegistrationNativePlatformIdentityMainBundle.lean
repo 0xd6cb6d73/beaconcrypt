@@ -22,7 +22,7 @@ variable {n : Nat} {ι KemSK Platform E : Type} {base : OracleSpec ι}
 variable {source : RegistrationNativeMldsa.Source}
 
 variable (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
 
 noncomputable def bundle (index : Nat) : M n KemSK Platform source (RustM (Option Pqxdh.Bytes)) :=

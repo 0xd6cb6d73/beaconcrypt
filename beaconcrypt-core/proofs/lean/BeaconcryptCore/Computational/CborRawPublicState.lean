@@ -37,7 +37,7 @@ theorem server_local_log (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
   | some keyId =>
       simp only [PqxdhDeploymentCompile.serverLocal, StateT.run, target, mem_support_bind_iff,
         bind_pure_comp, support_map] at supported
-      obtain ⟨kernel, _, inner, _, rfl⟩ := supported
+      obtain ⟨kernel, _, associatedData, _, inner, _, rfl⟩ := supported
       rfl
 
 theorem beacon_local_log (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -48,7 +48,7 @@ theorem beacon_local_log (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
   by_cases inside : index < copies.log.owners.length
   · simp only [PqxdhDeploymentCompile.beaconLocal, StateT.run, inside, ite_true,
       mem_support_bind_iff, bind_pure_comp, support_map] at supported
-    obtain ⟨kernel, _, inner, _, rfl⟩ := supported
+    obtain ⟨kernel, _, associatedData, _, inner, _, rfl⟩ := supported
     rfl
   · simp only [PqxdhDeploymentCompile.beaconLocal, StateT.run, inside, ite_false,
       support_pure, Set.mem_singleton_iff] at supported

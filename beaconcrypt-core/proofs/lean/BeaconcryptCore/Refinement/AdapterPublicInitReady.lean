@@ -79,29 +79,20 @@ def step (beacon : beaconcrypt_public_wrapper.beacon.Beacon) (effect : registrat
       let reply ← ed beacon request
       let next ← liftRust (pending.resume reply)
       pure (.cont next)
-  | .FingerprintRequested pending =>
-      let request ← liftRust pending.request
-      let reply ← children.executeHash request
-      let next ← liftRust (pending.resume reply)
-      pure (.cont next)
   | .HashRequested pending =>
       let request ← liftRust pending.request
       let reply ← children.executeHash request
       let next ← liftRust (pending.resume reply)
       pure (.cont next)
-  | .MldsaSigningRequested pending =>
-      let request ← liftRust pending.request
-      let signature ← localOps.auth_MldsaIdentity_sign_requested beacon.authentication.identity request
-      let borrowed ← liftRust (core.option.Option.as_deref (alloc.vec.Vec.Insts.CoreOpsDerefDerefSlice U8) signature)
-      let next ← liftRust (pending.resume borrowed)
-      pure (.cont next)
 
+omit platform localOps in
 theorem body_source (beacon : beaconcrypt_public_wrapper.beacon.Beacon) (effect : registration.BeaconInitEffect) :
     beaconcrypt_public_request.beacon._proof_beacon_init_ready_loop.body (m := RustT m) beacon effect =
       step beacon effect := by
   cases effect <;> simp only [beaconcrypt_public_request.beacon._proof_beacon_init_ready_loop.body, step, ed,
     bind_assoc, branch_bind] <;> rfl
 
+omit platform localOps in
 theorem loop_source (beacon : beaconcrypt_public_wrapper.beacon.Beacon) (effect : registration.BeaconInitEffect) :
     beaconcrypt_public_request.beacon._proof_beacon_init_ready_loop (m := RustT m) effect beacon =
       AdapterPublicWrapperLiftFunction.loopFuel (AdapterPublicInitSourceLoop.rank effect + 1) (step beacon) effect := by

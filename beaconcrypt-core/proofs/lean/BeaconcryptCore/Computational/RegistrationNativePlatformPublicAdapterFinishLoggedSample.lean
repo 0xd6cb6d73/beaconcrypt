@@ -26,7 +26,7 @@ noncomputable def nativeResult (self :beaconcrypt_public_wrapper.beacon.Beacon) 
 
 theorem native (coins :QueryImpl unifSpec (StateT P ProbComp))
     (setup :PqxdhServerAuthExperiment.Setup base KemSK) (checks :PqxdhServerAuthExperiment.Checks)
-    (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created Unit)
+    (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire :RegistrationNativeWire.Wire) (note :Stage→Log) (self :beaconcrypt_public_wrapper.beacon.Beacon)
     (pending :registration.BeaconPending) (input :Slice U8) (owner :Owner mlSource) (scalar :PqxdhJointGapDh.ScalarBytes)
     (before :Native) (previous :P) (past :List Log) :
@@ -50,7 +50,7 @@ theorem native (coins :QueryImpl unifSpec (StateT P ProbComp))
 
 theorem platform (coins :QueryImpl unifSpec (StateT P ProbComp))
     (setup :PqxdhServerAuthExperiment.Setup base KemSK) (checks :PqxdhServerAuthExperiment.Checks)
-    (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created Unit)
+    (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire :RegistrationNativeWire.Wire) (note :Stage→Log) (self :beaconcrypt_public_wrapper.beacon.Beacon)
     (pending :registration.BeaconPending) (input :Slice U8) (owner :Owner mlSource) (scalar :PqxdhJointGapDh.ScalarBytes)
     (before :Native) (previous :P) (past :List Log) :

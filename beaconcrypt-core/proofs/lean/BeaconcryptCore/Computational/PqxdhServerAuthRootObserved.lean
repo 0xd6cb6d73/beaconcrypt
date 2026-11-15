@@ -118,10 +118,10 @@ theorem source_bad (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
   rw [game_changed]
   simp only [sampledBad, contextSample, PqxdhServerAuthJointIdentityEuf.sourceBad, bind_assoc, pure_bind]
   exact PqxdhServerAuthNative.constructor_order setup fun seed scalar beaconSeed oneTime keys => do
-    let published ← phase1Run setup codec beaconSeed (challenge setup.joint setup.dh seed scalar)
+    let logged ← phase1Logged setup codec beaconSeed (challenge setup.joint setup.dh seed scalar)
       oneTime keys.1 keys.2
     let result ← PqxdhServerAuthJointIdentityEuf.nativeCapture setup codec checks adversary
-      ⟨seed, scalar, beaconSeed, oneTime, keys, published⟩
+      ⟨seed, scalar, beaconSeed, oneTime, keys, logged.1, logged.2⟩
     pure (PqxdhServerAuthJointIdentityEuf.changed setup.joint (setup.joint.publicKeys beaconSeed)
       result.honest (PqxdhServerAuthJointIdentityEuf.candidates codec result.journal))
 
@@ -133,9 +133,9 @@ noncomputable def orderedGame (setup : Setup baseSpec KemSK) (codec : Codec Read
   let scalar ← PqxdhJointGapDh.sampleScalar
   let keys ← simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl) setup.kem.keygen
   let oneTime ← PqxdhJointGapDh.sampleScalar
-  let published ← phase1Run setup codec beaconSeed (challenge setup.joint setup.dh seed scalar)
+  let logged ← phase1Logged setup codec beaconSeed (challenge setup.joint setup.dh seed scalar)
     oneTime keys.1 keys.2
-  let context : Context KemSK := ⟨seed, scalar, beaconSeed, oneTime, keys, published⟩
+  let context : Context KemSK := ⟨seed, scalar, beaconSeed, oneTime, keys, logged.1, logged.2⟩
   let result ← execution setup codec checks context (adversary (contextInput setup revealSeed context))
   pure ⟨context, .targetPhase1, result.1.2, result.2⟩
 
@@ -148,9 +148,9 @@ theorem observation_order {Result : Type} [MeasurableSpace Result]
   simp only [PqxdhServerAuthRootExecution.game, PqxdhServerAuthPhase1Generation.sample, contextSample,
     orderedGame, map_bind, map_pure, bind_assoc, pure_bind]
   exact PqxdhServerAuthNative.constructor_order setup fun seed scalar beaconSeed oneTime keys => do
-    let published ← phase1Run setup codec beaconSeed (challenge setup.joint setup.dh seed scalar)
+    let logged ← phase1Logged setup codec beaconSeed (challenge setup.joint setup.dh seed scalar)
       oneTime keys.1 keys.2
-    let context : Context KemSK := ⟨seed, scalar, beaconSeed, oneTime, keys, published⟩
+    let context : Context KemSK := ⟨seed, scalar, beaconSeed, oneTime, keys, logged.1, logged.2⟩
     let result ← execution setup codec checks context (adversary (contextInput setup revealSeed context))
     pure (observe ⟨context, .targetPhase1, result.1.2, result.2⟩)
 

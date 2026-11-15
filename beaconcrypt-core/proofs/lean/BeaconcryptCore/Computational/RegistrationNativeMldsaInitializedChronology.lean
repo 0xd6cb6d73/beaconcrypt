@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativeMldsaTableStart
 import BeaconcryptCore.Computational.RegistrationNativeMldsaRunChronology
 
-/-! Actual effectful startup creates no ML signing attempt before the adversary begins. The original constructor, real source generation and native pin hash retain their actual counts/cache; successful startup has empty private and native signing logs. -/
+/-! Actual effectful startup creates no ML signing attempt before the adversary begins. The original constructor and real Server source generation retain their actual counts/cache, while full pin selection is pure; successful startup has empty private and native signing logs. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -19,43 +19,18 @@ open RegistrationNativeMldsaTableProgram (evaluate runState)
 open RegistrationNativeMldsaChronology (Aligned)
 variable {Value : Type} {n : Nat} {Auxiliary ι KemSK : Type} {base : OracleSpec ι}
 
-private theorem capability_receipts (query : PqxdhRecordLiftInterface.Capability n)
-    (before : RegistrationWorldAgreement.State n Auxiliary)
-    (result : (PqxdhRecordLiftInterface.CapabilitySpec n).Range query × RegistrationWorldAgreement.State n Auxiliary)
-    (supported : result ∈ support ((RegistrationWorldServerCompletion.capability query).run before)) :
-    result.2.world.2 = before.world.2 := by
-  simp only [RegistrationWorldServerCompletion.capability, StateT.run, support_map] at supported
-  obtain ⟨inner, _possible, same⟩ := supported
-  cases same
-  rfl
 private theorem initializePin_receipts (binding : pqxdh.ServerBinding) (publicKey : Std.Array U8 1952#usize)
     (before : RegistrationWorldServerReplay.Global n Auxiliary)
     (result : RustM (core.option.Option session.ServerAuthenticationPin) × RegistrationWorldServerReplay.Global n Auxiliary)
     (supported : result ∈ support ((RegistrationWorldServerFrontend.initializePin binding publicKey).run before)) :
     result.2.2.world.2 = before.2.world.2 := by
-  simp only [RegistrationWorldServerFrontend.initializePin, StateT.run] at supported
-  cases started : registration.begin_server_pin binding publicKey with
-  | fail error | div =>
-      simp only [started, support_pure, Set.mem_singleton_iff] at supported
-      cases supported
-      rfl
-  | ok pending =>
-      simp only [started] at supported
-      cases requested : pending.request with
-      | fail error | div =>
-          simp only [requested, support_pure, Set.mem_singleton_iff] at supported
-          cases supported
-          rfl
-      | ok request =>
-          simp only [requested, mem_support_bind_iff] at supported
-          obtain ⟨hashed, queried, returned⟩ := supported
-          have retained := capability_receipts (.hash (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request)) before.2 hashed queried
-          simp only [support_pure, Set.mem_singleton_iff] at returned
-          cases returned
-          exact retained
+  simp only [RegistrationWorldServerFrontend.initializePin, StateT.run,
+    support_pure, Set.mem_singleton_iff] at supported
+  cases supported
+  rfl
 
-/-- The actual Server initializer's pin hash retains its source-created empty native signing history. -/
-theorem world_start (created : PqxdhLiveServerConstruction.Created Unit) (publicKey : Std.Array U8 1952#usize)
+/-- The actual Server initializer's pure full pin retains its source-created empty native signing history. -/
+theorem world_start (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (publicKey : Std.Array U8 1952#usize)
     (auxiliary : Auxiliary) (before after : PqxdhRecordLiftWorld.State n)
     (native : RegistrationWorldServerFrontend.State n Auxiliary)
     (supported : (.ok (.Some native), after) ∈ support

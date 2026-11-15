@@ -50,6 +50,15 @@ private theorem finish_free (memo : Memo) (roots : Roots)
   | div => trivial
   | ok published => cases published <;> trivial
 
+private theorem adHash_free (memo : Memo) (roots : Roots) (pending : registration.ServerAdHash) :
+    (RegistrationServerMaterialFrontend.adHash (n := n) pending).AllQueriesSatisfy (Prepared memo roots) := by
+  unfold RegistrationServerMaterialFrontend.adHash
+  cases requested : pending.request with
+  | fail error | div => trivial
+  | ok request =>
+      simp only [RegistrationServerMaterialFrontend.effect, allQueriesSatisfy_query_bind_iff]
+      exact ⟨trivial, fun _ => trivial⟩
+
 /-- An admitted completion asks only for the descriptor whose actual private root was prepared. -/
 theorem complete_prepared (memo : Memo) (roots : Roots)
     (wire : RegistrationNativeWire.Wire) (reservePeer : Bool) (ready : Ready)
@@ -77,13 +86,20 @@ theorem complete_prepared (memo : Memo) (roots : Roots)
             | div => trivial
             | ok completionResult => cases completionResult with
               | Err previous => trivial
-              | Ok initial =>
-                  simp only []
-                  split
-                  · exact allQueriesSatisfy_bind (admitted_prepared memo roots wire before.control
-                      (RegistrationBoundKeySchedule.publicInitial initial) ready.reference stored)
-                      (fun published => finish_free memo roots published before)
-                  · trivial
+              | Ok pending =>
+                  apply allQueriesSatisfy_bind (adHash_free memo roots pending)
+                  intro hashed
+                  cases hashed with
+                  | fail error | div => trivial
+                  | ok hashed => cases hashed with
+                    | Err previous => trivial
+                    | Ok initial =>
+                        simp only []
+                        split
+                        · exact allQueriesSatisfy_bind (admitted_prepared memo roots wire before.control
+                            (RegistrationBoundKeySchedule.publicInitial initial) ready.reference stored)
+                            (fun published => finish_free memo roots published before)
+                        · trivial
           · trivial
 
 /-- Every actual build demand is backed by the internal live-session and functional memo receipts, including moved-handle and cancellation branches. -/

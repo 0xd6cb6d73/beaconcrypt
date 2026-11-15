@@ -19,9 +19,10 @@ open BeaconcryptCore.Refinement.ProtocolComposition (concreteByte)
 
 inductive Request where
   | rootKdf (request : pqxdh.RootKeyInput)
-  | initialKdf (request : ratchet.SymmetricRatchetKdfRequest)
+  | initialKdf (request : ratchet.InitialRatchetKdfRequest)
   | ratchetKdf (request : ratchet.SymmetricRatchetKdfRequest)
   | seal (request : record_effects.AeadSealRequest)
+  | adHash (request : registration.HashRequest)
   | hash (request : commitment.CommitmentTranscript)
   | write (request : record_effects.RecordWriteRequest)
   | openAead (request : record.AeadRequest)
@@ -31,7 +32,7 @@ abbrev Spec : OracleSpec Request
   | .initialKdf _ => core.option.Option pqxdh.concrete.InitialRatchetKdfResponse
   | .ratchetKdf _ => core.option.Option ratchet.RatchetKdfResponse
   | .seal _ => core.option.Option (Slice Std.U8 × Std.Array Std.U8 16#usize)
-  | .hash _ => core.option.Option (Std.Array Std.U8 64#usize)
+  | .adHash _ | .hash _ => core.option.Option (Std.Array Std.U8 64#usize)
   | .write _ | .openAead _ => core.option.Option (Slice Std.U8)
 
 def plaintextBytes : record_effects.SealPlaintextRequest → Pqxdh.Bytes
@@ -73,6 +74,7 @@ def callbacks (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) :
   | .seal request => do
       let result ← MldsaSharedNative.recordLift (.inr (.inl (sealInput request)))
       pure (sealedBytes result)
+  | .adHash request => RegistrationAuthenticationShared.callbacks source.crypto noMldsa (.hash request)
   | .hash transcript =>
       RegistrationAuthenticationShared.callbacks source.crypto noMldsa
         (.hash (.Single (Std.Array.to_slice transcript.bytes)))
@@ -98,7 +100,7 @@ theorem root_exact {Auxiliary : Type} (source : PqxdhJointKdfGame.FixedHkdfSha51
   rfl
 
 theorem initial_exact {Auxiliary : Type} (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
-    (writer : RawCtxMixedShared.Writer) (request : ratchet.SymmetricRatchetKdfRequest)
+    (writer : RawCtxMixedShared.Writer) (request : ratchet.InitialRatchetKdfRequest)
     (state : RawCtxSharedPrimitive.SharedState Auxiliary) :
     (implementation source writer (.initialKdf request)).run state =
       pure (.Some (RawCtxSourceHkdf.initialResponse source.crypto request), state) := by
@@ -120,6 +122,16 @@ theorem hash_exact {Auxiliary : Type} (source : PqxdhJointKdfGame.FixedHkdfSha51
         (ctxRandomOracle ((), absBytes request.bytes)).run state.2 := by
   exact RegistrationAuthenticationShared.hash_exact source.crypto noMldsa writer (RawCtxSourceHkdf.kdfImpl source)
     (.Single (Std.Array.to_slice request.bytes)) state
+
+/-- Response-dependent transcript hashing uses the same actual cache and selected request bytes. -/
+theorem ad_hash_exact {Auxiliary : Type} (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
+    (writer : RawCtxMixedShared.Writer) (request : registration.HashRequest)
+    (state : RawCtxSharedPrimitive.SharedState Auxiliary) :
+    (implementation source writer (.adHash request)).run state =
+      (fun result => (.Some (RegistrationAuthenticationShared.digestArray result.1), (state.1, result.2))) <$>
+        (ctxRandomOracle ((), BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request)).run state.2 := by
+  exact RegistrationAuthenticationShared.hash_exact source.crypto noMldsa writer (RawCtxSourceHkdf.kdfImpl source)
+    request state
 
 /-- Native initial-record programs preserve the common cache on every path, including failure. -/
 theorem program_cache_persists {Auxiliary Output : Type}

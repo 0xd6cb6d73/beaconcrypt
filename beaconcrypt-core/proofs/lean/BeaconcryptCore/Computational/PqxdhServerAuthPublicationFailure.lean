@@ -11,6 +11,7 @@ open PqxdhServerAuthExperiment PqxdhServerAuthEntryFactor PqxdhServerAuthCtxStat
 open PqxdhJointKdfGame PqxdhServerAuthCtxCalls
 open PqxdhServerAuthCtxBuild (Outcome Log Response)
 open PqxdhServerAuthPublicationGhost (project)
+variable (associatedData : PqxdhTranscriptAd.AssociatedData)
 variable {ι KemSK Reader WireResponse Result : Type} {baseSpec : OracleSpec ι}
 
 /-- The unannotated actual builder's optional native rejection keeps the entire old Server. This follows from the reached writer trace, without a total-writer premise. -/
@@ -18,13 +19,13 @@ theorem native_rejection (source : FixedHkdfSha512NoSaltSource) (codec : Codec R
     (checks : Checks) (rest : Residual) (pending : pqxdh.PendingServerRegistration)
     (payload : Option Pqxdh.Bytes) (server rejected : ServerState) (before after : Log)
     (supported : (some (.ok (none, rejected)), after) ∈ support
-      ((PqxdhServerAuthBuildProgram.compiled source codec checks rest pending payload () server).run.run before)) :
+      ((PqxdhServerAuthBuildProgram.compiled associatedData source codec checks rest pending payload associatedData server).run.run before)) :
     rejected = server := by
-  rw [← PqxdhServerAuthPublicationTrace.compiled_erase source codec checks rest pending payload () server (before, [])] at supported
+  rw [← PqxdhServerAuthPublicationTrace.compiled_erase (associatedData := associatedData) source codec checks rest pending payload associatedData server (before, [])] at supported
   simp only [support_map, Set.mem_image] at supported
   obtain ⟨⟨reply, log, trace⟩, actual, equal⟩ := supported
   cases (congrArg Prod.fst equal : reply = some (.ok (none, rejected)))
-  exact PqxdhServerAuthPublicationWriter.compiled_rejection source codec checks rest pending payload () server rejected (before, []) (log, trace) actual
+  exact PqxdhServerAuthPublicationWriter.compiled_rejection (associatedData := associatedData) source codec checks rest pending payload associatedData server rejected (before, []) (log, trace) actual
 
 /-- The reference changes only the native result and the local source log. Every component query is run in the shared program before this pure map. -/
 def mask (state : Local KemSK) (result : Option Outcome × Log) : Option Outcome × Log :=
@@ -41,7 +42,7 @@ theorem post_rejection (source : FixedHkdfSha512NoSaltSource) (codec : Codec Rea
     (payload : Option Pqxdh.Bytes) (session : Nat) (state : Local KemSK)
     (result : Option Outcome × Log)
     (supported : result ∈ support
-      ((PqxdhServerAuthBuildProgram.compiled source codec checks rest pending payload () state.1.1.server).run.run []))
+      ((PqxdhServerAuthBuildProgram.compiled associatedData source codec checks rest pending payload associatedData state.1.1.server).run.run []))
     (rejected : (PqxdhServerAuthCtxBuild.post session state result).1 = some none) :
     Prod.map id PqxdhServerAuthPublicationGhost.project (pair session state result).1 =
       Prod.map id PqxdhServerAuthPublicationGhost.project (pair session state result).2 := by
@@ -52,7 +53,7 @@ theorem post_rejection (source : FixedHkdfSha512NoSaltSource) (codec : Codec Rea
     | div => rfl
     | ok value =>
       rcases value with ⟨_ | response, server⟩
-      · rw [native_rejection source codec checks rest pending payload state.1.1.server server [] log supported]
+      · rw [native_rejection associatedData source codec checks rest pending payload state.1.1.server server [] log supported]
         rfl
       · change some (some response) = some none at rejected
         cases Option.some.inj rejected
@@ -63,15 +64,16 @@ noncomputable def selected (source : FixedHkdfSha512NoSaltSource) (codec : Codec
     (token : PqxdhServerRelatedRootConsumer.Returned) (payload : Option Pqxdh.Bytes)
     (state : Local KemSK) :=
   pair session state <$>
-    (PqxdhServerAuthBuildProgram.compiled source codec checks rest token.pending payload () state.1.1.server).run.run []
+    (PqxdhServerAuthBuildProgram.compiled associatedData source codec checks rest token.pending payload associatedData state.1.1.server).run.run []
 
 /-- The first projection is the entire original selected callback, including actual optional reply and complete source settlement. -/
 theorem selected_actual (source : FixedHkdfSha512NoSaltSource) (codec : Codec Reader WireResponse)
     (checks : Checks) (rest : Residual) (session : Nat)
     (token : PqxdhServerRelatedRootConsumer.Returned) (payload : Option Pqxdh.Bytes)
     (state : Local KemSK) :
-    Prod.fst <$> selected source codec checks rest session token payload state =
-      (PqxdhServerAuthCtxBuild.selected source codec checks rest session token payload state.1.1.server).run.run state := by
+    Prod.fst <$> selected associatedData source codec checks rest session token payload state =
+      (PqxdhServerAuthCtxBuild.selected associatedData source codec checks rest session token payload
+        state.1.1.server).run.run state := by
   simp only [selected, Functor.map_map, pair, PqxdhServerAuthCtxBuild.selected,
     PqxdhServerAuthCtxBuild.after, OptionT.run_mk, StateT.run]
 
@@ -80,8 +82,8 @@ theorem selected_reference (source : FixedHkdfSha512NoSaltSource) (codec : Codec
     (checks : Checks) (rest : Residual) (session : Nat)
     (token : PqxdhServerRelatedRootConsumer.Returned) (payload : Option Pqxdh.Bytes)
     (state : Local KemSK) :
-    Prod.snd <$> selected source codec checks rest session token payload state =
-      (PqxdhServerAuthCtxBuild.selected source (PqxdhServerAuthPublicationForcedFrame.referenceCodec codec)
+    Prod.snd <$> selected associatedData source codec checks rest session token payload state =
+      (PqxdhServerAuthCtxBuild.selected associatedData source (PqxdhServerAuthPublicationForcedFrame.referenceCodec codec)
         checks rest session token payload state.1.1.server).run.run state := by
   simp only [selected, PqxdhServerAuthCtxBuild.selected, PqxdhServerAuthCtxBuild.after,
     OptionT.run_mk, Functor.map_map]
@@ -93,13 +95,13 @@ theorem selected_rejection (source : FixedHkdfSha512NoSaltSource) (codec : Codec
     (checks : Checks) (rest : Residual) (session : Nat)
     (token : PqxdhServerRelatedRootConsumer.Returned) (payload : Option Pqxdh.Bytes)
     (state : Local KemSK) (result : (Option (Option Response) × Local KemSK) × (Option (Option Response) × Local KemSK))
-    (supported : result ∈ support (selected source codec checks rest session token payload state))
+    (supported : result ∈ support (selected associatedData source codec checks rest session token payload state))
     (rejected : result.1.1 = some none) :
     Prod.map id PqxdhServerAuthPublicationGhost.project result.1 =
       Prod.map id PqxdhServerAuthPublicationGhost.project result.2 := by
   simp only [selected, support_map, Set.mem_image] at supported
   obtain ⟨actual, reached, rfl⟩ := supported
-  exact post_rejection source codec checks rest token.pending payload session state actual reached rejected
+  exact post_rejection associatedData source codec checks rest token.pending payload session state actual reached rejected
 
 /-- One execution of the original lookup and complete callback supplies both public-result views. Ordinary builders and missing tokens use identical settlements. -/
 noncomputable def build (source : FixedHkdfSha512NoSaltSource) (codec : Codec Reader WireResponse)
@@ -108,31 +110,68 @@ noncomputable def build (source : FixedHkdfSha512NoSaltSource) (codec : Codec Re
       ((Option (Option Response) × Local KemSK) × (Option (Option Response) × Local KemSK)) :=
   match state.1.1.pending session with
   | none => pure ((some none, state), (some none, state))
-  | some token => if state.1.2.1 session then selected source codec checks rest session token payload state
+  | some token =>
+    match PqxdhServerRegistrationPublication.prehash state.1.1.server token.pending payload with
+    | none =>
+      let after : Local KemSK :=
+        (({ state.1.1 with pending := Function.update state.1.1.pending session none }, state.1.2), state.2)
+      pure ((some none, after), (some none, after))
+    | some candidate => do
+      let digest ← PqxdhServerAuthCtxAmbient.hash (PqxdhTranscriptAd.transcript
+        (PqxdhTranscriptAd.initOf token.init) (PqxdhTranscriptAd.serverResponse candidate))
+      if state.1.2.1 session then
+        selected (PqxdhTranscriptAd.adOf digest) source codec checks rest session token payload state
       else (fun result => (result, result)) <$>
-        (PqxdhServerAuthCtxBuild.known source codec checks session token payload state.1.1.server).run.run state
+        (PqxdhServerAuthCtxBuild.known (PqxdhTranscriptAd.adOf digest) source codec checks session token payload
+          state.1.1.server).run.run state
 
 /-- The full paired build's first projection is the original actual source callback. -/
 theorem build_actual (source : FixedHkdfSha512NoSaltSource) (codec : Codec Reader WireResponse)
     (checks : Checks) (rest : Residual) (session : Nat) (payload : Option Pqxdh.Bytes) (state : Local KemSK) :
     Prod.fst <$> build source codec checks rest session payload state =
       (PqxdhServerAuthCtxBuild.build source codec checks rest session payload).run.run state := by
+  have liftBind : ∀ {β : Type} (x : OracleComp AdaptiveCtxDynamicKnownKeys.Spec CtxRomAuth.CtxDigest)
+      (f : CtxRomAuth.CtxDigest → PqxdhServerAuthCtxState.Program KemSK β) (s : Local KemSK),
+      (StateT.lift x >>= f) s = x >>= fun digest => f digest s := by
+    intro β x f s
+    change StateT.run _ s = _
+    simp only [StateT.run_bind, StateT.run_lift, bind_assoc, pure_bind]
+    rfl
   simp only [build, PqxdhServerAuthCtxBuild.build, OptionT.run_mk, StateT.run]
   cases state.1.1.pending session <;> simp only [map_pure]
-  split_ifs
-  · exact selected_actual source codec checks rest session _ payload state
-  · simp only [Functor.map_map, id_map']
+  rename_i token
+  cases pre : PqxdhServerRegistrationPublication.prehash state.1.1.server token.pending payload <;>
+    simp only [map_pure]
+  · simp only [PqxdhServerAuthCtxState.hash, liftBind, map_bind]
+    refine bind_congr fun digest => ?_
+    rcases Bool.eq_false_or_eq_true (state.1.2.1 session) with marked | marked <;>
+      simp only [marked, Bool.false_eq_true, ↓reduceIte]
+    · exact selected_actual _ source codec checks rest session _ payload state
+    · simp only [Functor.map_map, id_map']
 
 /-- The other complete build projection is the mixed reference, retaining the original ordinary codec and absent-token behavior. -/
 theorem build_reference (source : FixedHkdfSha512NoSaltSource) (codec : Codec Reader WireResponse)
     (checks : Checks) (rest : Residual) (session : Nat) (payload : Option Pqxdh.Bytes) (state : Local KemSK) :
     Prod.snd <$> build source codec checks rest session payload state =
       (PqxdhServerAuthPublicationReference.build source codec checks rest session payload).run.run state := by
+  have liftBind : ∀ {β : Type} (x : OracleComp AdaptiveCtxDynamicKnownKeys.Spec CtxRomAuth.CtxDigest)
+      (f : CtxRomAuth.CtxDigest → PqxdhServerAuthCtxState.Program KemSK β) (s : Local KemSK),
+      (StateT.lift x >>= f) s = x >>= fun digest => f digest s := by
+    intro β x f s
+    change StateT.run _ s = _
+    simp only [StateT.run_bind, StateT.run_lift, bind_assoc, pure_bind]
+    rfl
   simp only [build, PqxdhServerAuthPublicationReference.build, OptionT.run_mk, StateT.run]
   cases state.1.1.pending session <;> simp only [map_pure]
-  split_ifs
-  · exact selected_reference source codec checks rest session _ payload state
-  · simp only [Functor.map_map, id_map']
+  rename_i token
+  cases pre : PqxdhServerRegistrationPublication.prehash state.1.1.server token.pending payload <;>
+    simp only [map_pure]
+  · simp only [PqxdhServerAuthCtxState.hash, liftBind, map_bind]
+    refine bind_congr fun digest => ?_
+    rcases Bool.eq_false_or_eq_true (state.1.2.1 session) with marked | marked <;>
+      simp only [marked, Bool.false_eq_true, ↓reduceIte]
+    · exact selected_reference _ source codec checks rest session _ payload state
+    · simp only [Functor.map_map, id_map']
 
 /-- Actual optional rejection in the full lookup/selected/ordinary dispatch preserves identical projected poststates in the coupled run. -/
 theorem build_rejection (source : FixedHkdfSha512NoSaltSource) (codec : Codec Reader WireResponse)
@@ -145,11 +184,15 @@ theorem build_rejection (source : FixedHkdfSha512NoSaltSource) (codec : Codec Re
   unfold build at supported
   split at supported
   · simp_all only [mem_support_pure_iff]
-  · split_ifs at supported
-    · exact selected_rejection source codec checks rest session _ payload state result supported rejected
-    · simp only [support_map, Set.mem_image] at supported
-      obtain ⟨actual, _, rfl⟩ := supported
-      rfl
+  · split at supported
+    · simp_all only [mem_support_pure_iff]
+    · simp only [mem_support_bind_iff] at supported
+      obtain ⟨digest, _, supported⟩ := supported
+      split_ifs at supported
+      · exact selected_rejection _ source codec checks rest session _ payload state result supported rejected
+      · simp only [support_map, Set.mem_image] at supported
+        obtain ⟨actual, _, rfl⟩ := supported
+        rfl
 
 /-- Both API views share the identical query and complete source callback; only the selected native result is mapped differently. -/
 noncomputable def route (setup : Setup baseSpec KemSK) (codec : Codec Reader WireResponse)

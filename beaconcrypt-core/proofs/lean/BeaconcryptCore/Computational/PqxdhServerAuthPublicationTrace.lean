@@ -8,6 +8,7 @@ open RustM beaconcrypt_core ratchet ratchet.concrete PqxdhRefinement
 set_option autoImplicit false
 
 namespace BeaconcryptCore.Computational.PqxdhServerAuthPublicationTrace
+variable (associatedData : Std.Array Std.U8 151#usize)
 open PqxdhServerAuthBuildProgram (Spec Log)
 open PqxdhServerAuthExperiment (Codec Checks)
 open PqxdhJointKdfGame
@@ -85,7 +86,7 @@ noncomputable def compiled (source : FixedHkdfSha512NoSaltSource) (codec : Codec
     {Metadata PeerMetadata Consumed : Type} (metadata : PeerMetadata)
     (state : PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed) :=
   simulateQ (compiler source codec checks)
-    (PqxdhServerAuthBuildProgram.program source rest pending data metadata state)
+    (PqxdhServerAuthBuildProgram.program (associatedData := associatedData) source rest pending data metadata state)
 
 /-- Every observed query erases to the identical original query program and full original local result. -/
 theorem query_erase (source : FixedHkdfSha512NoSaltSource) (codec : Codec Reader WireResponse)
@@ -126,8 +127,8 @@ theorem compiled_erase (source : FixedHkdfSha512NoSaltSource) (codec : Codec Rea
     (pending : pqxdh.PendingServerRegistration) (data : Option Pqxdh.Bytes)
     {Metadata PeerMetadata Consumed : Type} (metadata : PeerMetadata)
     (state : PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed) (before : State) :
-    project <$> (compiled source codec checks rest pending data metadata state).run.run before =
-      (PqxdhServerAuthBuildProgram.compiled source codec checks rest pending data metadata state).run.run before.1 :=
+    project <$> (compiled (associatedData := associatedData) source codec checks rest pending data metadata state).run.run before =
+      (PqxdhServerAuthBuildProgram.compiled (associatedData := associatedData) source codec checks rest pending data metadata state).run.run before.1 :=
   observe_program (PqxdhServerAuthBuildProgram.compiler source codec checks) observation _ before
 
 /-- Adding private callback observations preserves every source component query certificate exactly; it adds neither queries nor an unbilled callback. -/
@@ -137,9 +138,9 @@ theorem compiled_bound_iff (source : FixedHkdfSha512NoSaltSource) (codec : Codec
     {Metadata PeerMetadata Consumed : Type} (metadata : PeerMetadata)
     (state : PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed) (before : State)
     (predicate : AdaptiveCtxDynamicKnownKeys.Spec.Domain → Prop) [DecidablePred predicate] (bound : Nat) :
-    ((compiled source codec checks rest pending data metadata state).run.run before).IsQueryBoundP predicate bound ↔
-      ((PqxdhServerAuthBuildProgram.compiled source codec checks rest pending data metadata state).run.run before.1).IsQueryBoundP predicate bound := by
-  rw [← compiled_erase source codec checks rest pending data metadata state before, isQueryBoundP_map_iff]
+    ((compiled (associatedData := associatedData) source codec checks rest pending data metadata state).run.run before).IsQueryBoundP predicate bound ↔
+      ((PqxdhServerAuthBuildProgram.compiled (associatedData := associatedData) source codec checks rest pending data metadata state).run.run before.1).IsQueryBoundP predicate bound := by
+  rw [← compiled_erase (associatedData := associatedData) source codec checks rest pending data metadata state before, isQueryBoundP_map_iff]
 
 /-- The caller supplies an occurrence coordinate; this annotation does not infer it from keys, frames or byte equality. A completed trailer is emitted before the original API reply is returned, including an optional component refusal. -/
 inductive Annotation where
@@ -176,7 +177,7 @@ noncomputable def annotated (source : FixedHkdfSha512NoSaltSource) (codec : Code
       PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed)) × Log) := do
   let _ ← AnnotatedSpec.query (.inr (.beginBuild coordinate))
   let outcome ← simulateQ liftDynamic
-    ((compiled source codec checks rest pending data metadata state).run.run (before, []))
+    ((compiled (associatedData := associatedData) source codec checks rest pending data metadata state).run.run (before, []))
   let _ ← AnnotatedSpec.query (.inr (.completedBuild coordinate outcome.2.2))
   pure (project outcome)
 
@@ -186,11 +187,11 @@ theorem annotated_erase (source : FixedHkdfSha512NoSaltSource) (codec : Codec Re
     (coordinate : Nat) (pending : pqxdh.PendingServerRegistration) (data : Option Pqxdh.Bytes)
     {Metadata PeerMetadata Consumed : Type} (metadata : PeerMetadata)
     (state : PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed) (before : Log) :
-    simulateQ erase (annotated source codec checks rest coordinate pending data metadata state before) =
-      (PqxdhServerAuthBuildProgram.compiled source codec checks rest pending data metadata state).run.run before := by
+    simulateQ erase (annotated (associatedData := associatedData) source codec checks rest coordinate pending data metadata state before) =
+      (PqxdhServerAuthBuildProgram.compiled (associatedData := associatedData) source codec checks rest pending data metadata state).run.run before := by
   simp only [annotated, simulateQ_bind, simulateQ_spec_query, erase, pure_bind,
     erase_lift, simulateQ_map, map_pure, bind_pure_comp]
-  exact compiled_erase source codec checks rest pending data metadata state (before, [])
+  exact compiled_erase (associatedData := associatedData) source codec checks rest pending data metadata state (before, [])
 
 end BeaconcryptCore.Computational.PqxdhServerAuthPublicationTrace
 

@@ -15,19 +15,17 @@ open PqxdhServerAuthExperiment (Setup Checks)
 open RegistrationNativeMldsa (Source Credential)
 open RegistrationNativeMldsaOpaque (Pool handleSource restore Live)
 open RegistrationNativeMldsaMap (nativeState)
-open RegistrationNativeMldsaPoolMap (StateLive)
 open RegistrationNativePlatformMldsaTableProgram (runState)
 open RegistrationNativePlatformMldsaTableRestore (observe)
 variable {n : Nat} {KemSK Platform ι : Type} {base : OracleSpec ι}
 variable (source : Source) (setup : Setup base KemSK) (checks : Checks)
 variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
 
 /-- Actual successful and failed creation restores the complete native result and unchanged external state. -/
 theorem restored (fallback : Credential source) (pool : Pool source)
-    (before : RegistrationNativeExperiment.State n KemSK (handleSource source)) (previous : Platform)
-    (live : StateLive source pool before) :
+    (before : RegistrationNativeExperiment.State n KemSK (handleSource source)) (previous : Platform) :
     observe source fallback <$> runState source
       (RegistrationNativePlatformMldsaProgram.inject
         (RegistrationNativeMldsaCreation.create setup checks representation created edPin mlPin keyId)) before previous pool =
@@ -38,22 +36,8 @@ theorem restored (fallback : Credential source) (pool : Pool source)
   rw [RegistrationNativePlatformMldsaTableProgram.run_inject]
   have same := congrArg (fun action => (fun result => (result, previous)) <$> action)
     (RegistrationNativeMldsaTableCreation.restored source fallback pool setup checks representation created
-      edPin mlPin keyId before live)
+      edPin mlPin keyId before)
   simpa only [Functor.map_map, observe, RegistrationNativeMldsaTableRestore.observe] using same
-
-/-- Every actual creation retains previous live owners and its actual generated owner in the reached extended table. -/
-theorem live (pool : Pool source)
-    (before : RegistrationNativeExperiment.State n KemSK (handleSource source)) (previous : Platform)
-    (old : StateLive source pool before)
-    (result : ((RustM (Option Nat) × RegistrationNativeExperiment.State n KemSK (handleSource source)) × Platform) × Pool source)
-    (supported : result ∈ support (runState source
-      (RegistrationNativePlatformMldsaProgram.inject
-        (RegistrationNativeMldsaCreation.create setup checks representation created edPin mlPin keyId)) before previous pool)) :
-    StateLive source result.2 result.1.1.2 := by
-  rw [RegistrationNativePlatformMldsaTableProgram.run_inject, support_map] at supported
-  obtain ⟨original, reached, rfl⟩ := supported
-  exact RegistrationNativeMldsaTableCreation.live source pool setup checks representation created
-    edPin mlPin keyId before old original reached
 
 /-- The actual Server key row survives every owner-generation attempt, including failed creation suffixes. -/
 theorem key_live (pool : Pool source)
@@ -76,11 +60,6 @@ end BeaconcryptCore.Computational.RegistrationNativePlatformMldsaTableCreation
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativePlatformMldsaTableCreation.restored
 
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformMldsaTableCreation.live' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformMldsaTableCreation.live
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformMldsaTableCreation.key_live' depends on axioms: [propext,
  Classical.choice,

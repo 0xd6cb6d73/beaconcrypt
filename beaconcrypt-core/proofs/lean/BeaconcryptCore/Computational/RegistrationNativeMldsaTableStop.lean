@@ -14,7 +14,6 @@ set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativeMldsaTableStop
 open PqxdhServerAuthExperiment (Setup Checks)
 open RegistrationNativeMldsaOpaque (Pool handleSource Live)
-open RegistrationNativeMldsaPoolMap (StateLive)
 open RegistrationNativeMldsaChronology (Aligned)
 open RegistrationNativeMldsaTableProgram (runState)
 open RegistrationNativeMldsaEuf (PublicKey Forgery Valid Fresh)
@@ -25,14 +24,13 @@ abbrev State := RegistrationNativeExperiment.State n KemSK (handleSource source)
 structure Safe (credential : RegistrationNativeMldsa.Credential (handleSource source))
     (fallback : RegistrationNativeMldsa.Credential source) (before : State (n := n) (KemSK := KemSK) source) : Prop where
   server : Live source before.2 credential fallback
-  owners : StateLive source before.2 before.1
   aligned : Aligned before.2.signing (RegistrationNativeMldsaShared.nativeProject before.1).1
   cached : RegistrationSigningShared.Cached (RegistrationNativeMldsaShared.nativeProject before.1)
 
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
 variable (route : RawCtxServerRouting.SenderDecoder)
 variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (credential : RegistrationNativeMldsa.Credential (handleSource source))
 
 noncomputable def callback : QueryImpl RegistrationNativeRawAdapter.TypedSpec
@@ -59,13 +57,11 @@ theorem step_safe (fallback : RegistrationNativeMldsa.Credential source)
   obtain ⟨inner, possible, same⟩ := supported
   cases same
   exact ⟨RegistrationNativeMldsaTableHandler.server_live source setup checks wire route representation created credential fallback
-      before.2 safe.server query before.1 safe.owners inner possible,
-    RegistrationNativeMldsaTableHandler.live source setup checks wire route representation created credential fallback
-      before.2 safe.server query before.1 safe.owners inner possible,
+      before.2 safe.server query before.1 inner possible,
     RegistrationNativeMldsaRunChronology.handler source setup checks wire route representation created credential query
       before.1 before.2 inner safe.aligned possible,
     RegistrationNativeMldsaTableCallbackInvariant.cached source setup checks wire route representation created credential fallback query
-      before.1 before.2 safe.server safe.owners safe.cached inner possible⟩
+      before.1 before.2 safe.server safe.cached inner possible⟩
 
 private theorem nonsigning_of_selected (publicKey : PublicKey) (query : RegistrationNativeRawAdapter.TypedSpec.Domain)
     (before after : State (n := n) (KemSK := KemSK) source)
@@ -164,9 +160,9 @@ theorem initialized (ensureInit : StateT Unit ProbComp Bool) (identityIndex : Na
       (RegistrationNativeMldsaCreation.start setup ensureInit identityIndex serverKeyId) {}))
     (initial : RegistrationNativeExperiment.Initial n KemSK (handleSource source)) (member : initial ∈ started.1) :
     ∃ fallback, Safe source initial.credential fallback (initial.state, started.2) := by
-  obtain ⟨fallback, server, owners⟩ := RegistrationNativeMldsaTableStart.initialized source setup ensureInit identityIndex
+  obtain ⟨fallback, server⟩ := RegistrationNativeMldsaTableStart.initialized source setup ensureInit identityIndex
     serverKeyId started startup initial member
-  refine ⟨fallback, server, owners,
+  refine ⟨fallback, server,
     RegistrationNativeMldsaInitializedChronology.aligned source setup ensureInit identityIndex serverKeyId started startup initial member, ?_⟩
   intro receipt included
   have empty := (RegistrationNativeMldsaInitializedChronology.initialized source setup ensureInit identityIndex serverKeyId

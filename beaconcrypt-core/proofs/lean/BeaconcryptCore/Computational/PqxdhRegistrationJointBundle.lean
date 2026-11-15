@@ -61,6 +61,39 @@ def trace (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (identi
   | .freshWithCoins _ _ _ _ => pure (after setup codec identityIndex owner none pool)
   | _ => pure ((none, owner), pool)
 
+/-- The Phase 1 bundle the scheduler retains after `after`: the signed candidate when the writer accepts it, otherwise the previously retained bundle (`PqxdhRegistrationSchedule.bundleLogCallbacks`). -/
+def afterLog (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) (generated : Option ScalarBytes)
+    (logged : Option PqxdhEd25519EufCma.Phase1Candidate) : Option PqxdhEd25519EufCma.Phase1Candidate :=
+  match prepare owner generated with
+  | none => logged
+  | some prepared =>
+    let identity := (setup.joint.publicKeys owner.beacon.identity).ed25519
+    let keys : PqxdhEd25519EufCma.Phase1KeyTuple :=
+      ⟨setup.dh.publicKey prepared.prekey, setup.dh.publicKey prepared.oneTime, prepared.kem.1⟩
+    let candidate := signedCandidate setup.joint owner.beacon.identity identity keys
+    if (codec.write1 candidate).isSome then some candidate else logged
+
+/-- `trace` together with the retained Phase 1 bundle (`trace_log`). -/
+def traceLog (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (identityIndex : Nat)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) (pool : PqxdhDynamicIdentityPool.SourceState)
+    (logged : Option PqxdhEd25519EufCma.Phase1Candidate) :
+    ProbComp (((Option Pqxdh.Bytes × PqxdhRegistrationSchedule.Owner KemSK) × PqxdhDynamicIdentityPool.SourceState) ×
+      Option PqxdhEd25519EufCma.Phase1Candidate) :=
+  match owner.beacon.phase with
+  | .fresh _ _ _ => (fun scalar => (after setup codec identityIndex owner (some scalar) pool,
+      afterLog setup codec owner (some scalar) logged)) <$> sampleScalar
+  | .freshWithCoins _ _ _ _ => pure (after setup codec identityIndex owner none pool, afterLog setup codec owner none logged)
+  | _ => pure (((none, owner), pool), logged)
+
+/-- Forgetting the retained bundle recovers the original trace. -/
+theorem trace_log (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (identityIndex : Nat)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) (pool : PqxdhDynamicIdentityPool.SourceState)
+    (logged : Option PqxdhEd25519EufCma.Phase1Candidate) :
+    Prod.fst <$> traceLog setup codec identityIndex owner pool logged = trace setup codec identityIndex owner pool := by
+  unfold traceLog trace
+  split <;> simp only [Functor.map_map, map_pure]
+
 set_option backward.isDefEq.respectTransparency false in
 /-- The handle client returns the exact mapped native owner and complete updated private signing state, retaining all auxiliary KEM, cache and scheduler state. -/
 theorem client_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -109,6 +142,38 @@ theorem native_after (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
   split <;> simp_all
 
 set_option backward.isDefEq.respectTransparency false in
+/-- The logged native callback run returns the same result as `native_after` and retains exactly `afterLog`. -/
+theorem native_after_log (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (ownerAddress identityIndex : Nat) (owner : PqxdhRegistrationSchedule.Owner KemSK)
+    (generated : Option ScalarBytes) (pool : PqxdhDynamicIdentityPool.SourceState)
+    (logged : Option PqxdhEd25519EufCma.Phase1Candidate) :
+    (simulateQ (PqxdhRegistrationSchedule.bundleLogCallbacks setup codec owner.beacon.identity)
+      (PqxdhLivePhase1Bundle.afterGenerated (PqxdhRegistrationSchedule.projection setup ownerAddress) generated owner)).run logged =
+        pure ((after setup codec identityIndex owner generated pool).1, afterLog setup codec owner generated logged) := by
+  unfold PqxdhLivePhase1Bundle.afterGenerated after afterLog
+  cases prepared : prepare owner generated <;> simp only [simulateQ_pure, simulateQ_bind, StateT.run_pure]
+  simp only [PqxdhLivePhase1Bundle.signing, signingProgram, simulateQ_bind,
+    simulateQ_spec_query, simulateQ_pure, PqxdhRegistrationSchedule.bundleLogCallbacks,
+    PqxdhRegistrationSchedule.bundleCallbacks, StateT.run_bind, StateT.run_lift, StateT.run_pure,
+    pure_bind, Option.map_some, PqxdhLivePhase1Bundle.writing, afterSigning, prepared,
+    PqxdhRegistrationSchedule.projection, signedCandidate]
+  split <;> split <;> (try simp_all [StateT.run]) <;> rfl
+
+set_option backward.isDefEq.respectTransparency false in
+/-- The logged native bundle run is `traceLog` with the pool forgotten. -/
+theorem native_bundle_log (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (ownerAddress identityIndex : Nat) (owner : PqxdhRegistrationSchedule.Owner KemSK)
+    (pool : PqxdhDynamicIdentityPool.SourceState) (logged : Option PqxdhEd25519EufCma.Phase1Candidate) :
+    (simulateQ (PqxdhRegistrationSchedule.bundleLogCallbacks setup codec owner.beacon.identity)
+      (PqxdhLivePhase1Bundle.bundle (PqxdhRegistrationSchedule.projection setup ownerAddress) owner)).run logged =
+        (fun result => (result.1.1, result.2)) <$> traceLog setup codec identityIndex owner pool logged := by
+  cases phase : owner.beacon.phase <;> simp only [PqxdhLivePhase1Bundle.bundle, traceLog, phase,
+    simulateQ_bind, simulateQ_spec_query, simulateQ_pure, PqxdhRegistrationSchedule.bundleLogCallbacks,
+    PqxdhRegistrationSchedule.bundleCallbacks, StateT.run_bind, StateT.run_lift, StateT.run_pure,
+    native_after_log setup codec ownerAddress identityIndex owner _ pool,
+    bind_pure_comp, Functor.map_map, map_pure]
+
+set_option backward.isDefEq.respectTransparency false in
 /-- Complete native bundle execution uses precisely the same local draw as the indexed client, with the full source owner retained on every branch. -/
 theorem native_bundle (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (ownerAddress identityIndex : Nat) (owner : PqxdhRegistrationSchedule.Owner KemSK)
@@ -127,11 +192,13 @@ theorem native_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
     (owner : PqxdhRegistrationSchedule.Owner KemSK) (pool : PqxdhDynamicIdentityPool.SourceState)
     (found : state.owners[ownerAddress]? = some owner) :
     (PqxdhRegistrationSchedule.bundle setup codec ownerAddress).run state =
-      (fun result => (result.1.1, { state with owners := state.owners.set ownerAddress result.1.2 })) <$>
-        trace setup codec identityIndex owner pool := by
+      (fun result => (result.1.1.1,
+        { state with owners := state.owners.set ownerAddress result.1.1.2,
+                     inits := Function.update state.inits ownerAddress result.2 })) <$>
+        traceLog setup codec identityIndex owner pool (state.inits ownerAddress) := by
   change PqxdhRegistrationSchedule.bundle setup codec ownerAddress state = _
   rw [PqxdhRegistrationSchedule.bundle_source setup codec ownerAddress state owner found,
-    native_bundle setup codec ownerAddress identityIndex owner pool, Functor.map_map]
+    native_bundle_log setup codec ownerAddress identityIndex owner pool, Functor.map_map]
 
 /-- Every complete source continuation receives the exact public reply, all owner states and the same shared caches. -/
 theorem native_continuation (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -140,8 +207,10 @@ theorem native_continuation (setup : Setup baseSpec KemSK) (codec : Codec Reader
     (found : state.owners[ownerAddress]? = some owner)
     (next : Option Pqxdh.Bytes × PqxdhRegistrationSchedule.State KemSK → ProbComp Result) :
     ((PqxdhRegistrationSchedule.bundle setup codec ownerAddress).run state >>= next) =
-      (trace setup codec identityIndex owner pool >>= fun result =>
-        next (result.1.1, { state with owners := state.owners.set ownerAddress result.1.2 })) := by
+      (traceLog setup codec identityIndex owner pool (state.inits ownerAddress) >>= fun result =>
+        next (result.1.1.1,
+          { state with owners := state.owners.set ownerAddress result.1.1.2,
+                       inits := Function.update state.inits ownerAddress result.2 })) := by
   rw [native_source setup codec ownerAddress identityIndex state owner pool found, bind_map_left]
 
 /-- The exact handle-client equation remains valid for any continuation observing all its private state and prior history. -/
@@ -263,3 +332,18 @@ end BeaconcryptCore.Computational.PqxdhRegistrationJointBundle
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointBundle.after_seeds
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationJointBundle.trace_log' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointBundle.trace_log
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationJointBundle.native_after_log' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointBundle.native_after_log
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationJointBundle.native_bundle_log' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointBundle.native_bundle_log

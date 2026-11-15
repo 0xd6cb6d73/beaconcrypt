@@ -8,6 +8,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
+set_option warningAsError true
 set_option quotPrecheck false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativeG3NativeTargetStartup
@@ -32,7 +33,7 @@ private theorem start_pin (setup : Setup base KemSK) (source : RegistrationNativ
       | none => simp only [sampled, mem_support_pure_iff] at continued; cases continued
       | some credential =>
           simp only [sampled, mem_support_bind_iff] at continued
-          obtain ⟨installed, _installed, digest, _hashed, returned⟩ := continued
+          obtain ⟨installed, _installed, returned⟩ := continued
           simp only [mem_support_pure_iff, Option.some.injEq] at returned
           cases returned
           exact PqxdhRootTableInitialization.rootArray_bytes identity.ed25519

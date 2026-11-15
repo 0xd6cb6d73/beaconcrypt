@@ -119,6 +119,9 @@ theorem program_frame (setup : Setup base KemSK) (wire : RegistrationNativeWire.
     exact (ih middle.1.1 (allowed.2 middle.1.1) middle.1.2 middle.2 result last).trans
       (query_frame setup wire route sign seed scalar reserve query allowed.1 before previous middle first)
 
+-- The Server pin is now selected purely (no fingerprint hash query), so elaboration-time whnf of the concrete OPEN accept program would evaluate `begin_server_pin`; keep the program opaque to the elaborator here. Proof terms are unchanged and kernel-checked.
+attribute [local irreducible] RegistrationNativePlatformServerOpenControl.accept
+
 /-- The zero-other bill of the literal corrected accept syntax discharges the permitted-request condition without a caller frame premise. -/
 theorem syntax_pool (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder)

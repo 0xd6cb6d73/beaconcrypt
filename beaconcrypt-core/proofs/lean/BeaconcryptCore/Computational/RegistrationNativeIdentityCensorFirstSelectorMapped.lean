@@ -70,7 +70,7 @@ private theorem mapped (implementation : QueryImpl Old (StateT State ProbComp)) 
 
 variable {n : Nat} {I KemSK Platform E : Type} {base : OracleSpec I} {source : RegistrationNativeMldsa.Source}
 variable (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (selected index : Nat) (placeholder : Ed25519Signature) (masked : Bool) (wanted : Pqxdh.Bytes)
 variable (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
 local notation "NativeState" => RegistrationNativeIdentityMain.State n KemSK source × Platform

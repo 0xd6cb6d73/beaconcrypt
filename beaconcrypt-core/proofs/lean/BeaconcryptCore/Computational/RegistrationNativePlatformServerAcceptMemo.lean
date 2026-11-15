@@ -183,7 +183,7 @@ private theorem after_pin [MemoStore Extra] (coins : QueryImpl unifSpec (StateT 
             | Accepted authenticated =>
                 exact after_authentication coins setup checks seed scalar services demand publication reserve packet authenticated
                   handle _ after atAfterAuthentication next continued
-            | Rejected | HashRequested _ | MldsaVerificationRequested _ | Ed25519VerificationRequested _ | ServerFingerprintRequested _ | BeaconFingerprintRequested _ =>
+            | Rejected | HashRequested _ | Ed25519VerificationRequested _ =>
                 simp only [RegistrationNativePlatformServerOpenControl.close_pure, StateT.run_pure, mem_support_pure_iff] at continued
                 cases continued
 

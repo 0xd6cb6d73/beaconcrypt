@@ -18,7 +18,7 @@ variable {ι KemSK Reader Response : Type} {base : OracleSpec ι} {n : Nat}
 attribute [local irreducible] RegistrationWorldAuthentication.begin
   RegistrationAuthenticationShared.begin RegistrationAuthenticationExecutor.begin
 
-/-- Reading actual six-field native bytes selects their original four classical public fields for the CE designation. -/
+/-- Reading actual four-field native bytes selects their original four classical public fields for the CE designation. -/
 theorem candidate_read (wire : RegistrationNativeWire.Wire) (raw : Pqxdh.Bytes) (packet : registration.InitPacket)
     (decoded : RegistrationNativeWire.readInit wire raw = some packet) :
     PqxdhDeploymentTranscript.candidateOf (RegistrationNativeWire.ledgerCodec wire) raw =

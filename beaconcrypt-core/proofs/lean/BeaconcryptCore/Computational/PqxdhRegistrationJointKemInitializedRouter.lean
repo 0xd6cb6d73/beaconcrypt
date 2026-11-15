@@ -31,7 +31,7 @@ noncomputable def pre (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
       (simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl) setup.kem.keygen) count)
     (fun result => (result.1.map (fun answer => (created, answer)), result.2, born.2.2)) <$>
       PqxdhRegistrationJointKemRouting.pre setup codec checks created.server.server.metadata.identityIndex
-        created.publicIdentity client [] (PqxdhRegistrationJointInitializedAccept.initial created) selected.val
+        created.publicIdentity client ([], fun _ => none) (PqxdhRegistrationJointInitializedAccept.initial created) selected.val
         (PqxdhDynamicKemRouter.selectedReservation selected target others) (born.2.1.1, PqxdhDynamicKemRouter.empty)
 
 /-- Mathematical source interpretation of the same initializer, local reservation and complete command schedule, stopped only at the selected-secret disclosure. The chosen secret occurs only here and in the CCA interpreter. -/
@@ -51,7 +51,7 @@ noncomputable def stopped (setup : Setup baseSpec KemSK) (codec : Codec Reader R
     (fun result => (result.1.map (fun answer => (created, answer)), result.2, born.2.2)) <$>
       (((simulateQ (PqxdhDynamicKemJointRouter.stopped setup.baseImpl setup.joint setup.kem selected.val
         (List.ofFn (selected.insertNth chosen others)))
-        (program setup codec checks created.server.server.metadata.identityIndex created.publicIdentity client []
+        (program setup codec checks created.server.server.metadata.identityIndex created.publicIdentity client ([], fun _ => none)
           (PqxdhRegistrationJointInitializedAccept.initial created))).run).run
             (born.2.1.1, PqxdhDynamicKemRouter.empty))
 
@@ -82,7 +82,7 @@ theorem source (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (c
     intro others
     simp only [simulateQ_map]
     have same := PqxdhRegistrationJointKemRouting.pre_source setup codec checks
-      created.server.server.metadata.identityIndex created.publicIdentity client []
+      created.server.server.metadata.identityIndex created.publicIdentity client ([], fun _ => none)
       (PqxdhRegistrationJointInitializedAccept.initial created) selected.val
       (List.ofFn (selected.insertNth chosen others)) chosen.1 chosen.2
       (by simpa only [List.nil_append, List.length_nil, Nat.zero_add, Prod.mk.eta] using PqxdhLiveKemSelection.selected_index [] selected chosen others)

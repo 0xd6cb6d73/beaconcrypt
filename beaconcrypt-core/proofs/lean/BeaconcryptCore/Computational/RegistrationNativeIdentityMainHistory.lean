@@ -50,7 +50,7 @@ theorem ordinary_inv (joint : PqxdhJointIdentity.Primitives)
 
 private theorem beacon_inv (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeIdentityFrontend.M n KemSK RegistrationServerRoleBackend.State mlSource Value)
     (preserves : ∀ current env prior next,
       Holds setup.joint prior.identities current → ReservedEmpty prior.identities →
@@ -77,7 +77,7 @@ private theorem beacon_inv (setup : Setup base KemSK) (checks : Checks)
 /-- Actual complete opaque-identity creation establishes the new generated history and retains every older owner's history. -/
 theorem create_inv (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (before : State n KemSK mlSource × SourceState)
     (result : RustM (Option Nat) × (State n KemSK mlSource × SourceState)) (prior : Inv setup.joint before)
@@ -92,7 +92,7 @@ theorem create_inv (setup : Setup base KemSK) (checks : Checks)
 /-- Whole outgoing execution retains every attempted indexed signature, including packing or final publication failure. -/
 theorem bundle_inv (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire) (index : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire) (index : Nat)
     (before : State n KemSK mlSource × SourceState)
     (result : RustM (Option Pqxdh.Bytes) × (State n KemSK mlSource × SourceState)) (prior : Inv setup.joint before)
     (supported : result ∈ support ((interpret setup.joint (RegistrationNativeIdentityMain.beacon setup checks representation created
@@ -108,7 +108,7 @@ theorem bundle_inv (setup : Setup base KemSK) (checks : Checks)
 /-- Whole incoming finish retains the same signing history through terminal abort and consumed-kernel installation. -/
 theorem finish_inv (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire) (index : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire) (index : Nat)
     (packet : Option registration.ResponsePacket) (before : State n KemSK mlSource × SourceState)
     (result : RustM (Option Pqxdh.Bytes) × (State n KemSK mlSource × SourceState)) (prior : Inv setup.joint before)
     (supported : result ∈ support ((interpret setup.joint (RegistrationNativeIdentityMain.beacon setup checks representation created

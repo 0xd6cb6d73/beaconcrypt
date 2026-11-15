@@ -18,7 +18,7 @@ open PqxdhServerAuthExperiment (Setup Checks)
 variable {n cap : Nat} {ι KemSK V : Type} {base : OracleSpec ι}
 variable (source : Source) (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : Credential (handleSource source))
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential (handleSource source))
 
 noncomputable def handler : QueryImpl RegistrationNativeRawAdapter.TypedSpec
     (StateT (RegistrationNativeMldsaTableStop.State (n := n) (KemSK := KemSK) source × Bool) ProbComp) := by

@@ -13,14 +13,15 @@ namespace BeaconcryptCore.Computational.RegistrationBeaconPublicDescriptor
 def clear (descriptor : RegistrationBeaconBoundSource.PublicAgreement) : RegistrationBeaconBoundSource.PublicAgreement :=
   {descriptor with candidate := PqxdhBeaconPhase2Publication.clearedCandidate descriptor.candidate}
 
-theorem fields (descriptor : RegistrationBeaconBoundSource.PublicAgreement) :
+/-- The candidate no longer carries associated data; the complete AD151 is retained only in the unchanged completed binding. -/
+theorem fields_metadata (descriptor : RegistrationBeaconBoundSource.PublicAgreement) :
     (clear descriptor).candidate.server_binding = descriptor.candidate.server_binding ∧
     (clear descriptor).candidate.assigned_key_id = descriptor.candidate.assigned_key_id ∧
-    (clear descriptor).candidate.associated_data = descriptor.candidate.associated_data ∧
     (clear descriptor).candidate.root_key_input =
-      (PqxdhBeaconPhase2Shared.clearedMetadata (PqxdhBeaconPhase2Shared.candidateMetadata descriptor.candidate)).root_key_input ∧
+      (PqxdhBeaconPhase2Shared.clearedMetadata
+        (PqxdhBeaconPhase2Shared.candidateMetadata descriptor.binding descriptor.candidate)).root_key_input ∧
     (clear descriptor).binding = descriptor.binding ∧ (clear descriptor).application = descriptor.application := by
-  exact ⟨rfl, rfl, rfl, rfl, rfl, rfl⟩
+  exact ⟨rfl, rfl, rfl, rfl, rfl⟩
 
 theorem program (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (descriptor : RegistrationBeaconBoundSource.PublicAgreement) (output : PqxdhServerAuthKeySchedule.Output) :
@@ -40,7 +41,7 @@ theorem known {n : Nat} {m : Type → Type} [Monad m] [LawfulMonad m]
 theorem post_root {n : Nat} {ι KemSK Auxiliary : Type} {base : OracleSpec ι}
     {source : RegistrationNativeMldsa.Source}
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (wire : RegistrationNativeWire.Wire)
-    (erased : Std.Array U8 357#usize) (index : Nat) (owner : RegistrationNativeBeaconFrontend.Owner source)
+    (erased : Std.Array U8 227#usize) (index : Nat) (owner : RegistrationNativeBeaconFrontend.Owner source)
     (descriptor : RegistrationBeaconBoundSource.PublicAgreement) (root : PqxdhSecretInputKdf.RootOutput) :
     RegistrationBeaconChargedNative.postRoot (n := n) (Auxiliary := Auxiliary) setup wire index owner
       (RegistrationBeaconBoundSource.atRoot descriptor root) = (do
@@ -56,11 +57,11 @@ theorem post_root {n : Nat} {ι KemSK Auxiliary : Type} {base : OracleSpec ι}
   rw [RegistrationBeaconChargedNative.post_root setup wire erased index owner descriptor root]
   simp only [known]
 
-/-- info: 'BeaconcryptCore.Computational.RegistrationBeaconPublicDescriptor.fields' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.RegistrationBeaconPublicDescriptor.fields_metadata' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationBeaconPublicDescriptor.fields
+#print axioms BeaconcryptCore.Computational.RegistrationBeaconPublicDescriptor.fields_metadata
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationBeaconPublicDescriptor.program' depends on axioms: [propext,
  Classical.choice,

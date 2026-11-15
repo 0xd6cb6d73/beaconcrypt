@@ -69,6 +69,39 @@ theorem trace_after (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     simp [trace, PqxdhRegistrationJointAttemptTrace.trace,
       PqxdhRegistrationJointAttemptTrace.after, phase]
 
+/-- The same monitored one-time draw also retains the actual signed Init on a successful write. -/
+def traceLogged (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (address index : Nat)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) (pool : PqxdhDynamicIdentityPool.SourceState)
+    (audit : Audit) (logged : Option Phase1Candidate) :
+    ProbComp ((NativeResult KemSK × Audit) × Option Phase1Candidate) :=
+  let after (generated : Option ScalarBytes) :=
+    let native := PqxdhRegistrationJointBundle.after setup codec index owner generated pool
+    ((native, audit.record address index native.1.1
+      (PqxdhRegistrationJointAttemptTrace.issued setup owner generated)),
+      PqxdhRegistrationJointBundle.afterLog setup codec owner generated logged)
+  match owner.beacon.phase with
+  | .fresh _ _ _ => (after ∘ some) <$> sampleScalar
+  | .freshWithCoins _ _ _ _ => pure (after none)
+  | _ => pure ((((none, owner), pool), audit.record address index none []), logged)
+
+/-- Erasing the retained Init preserves the complete original occurrence audit. -/
+theorem traceLogged_trace (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (address index : Nat)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) (pool : PqxdhDynamicIdentityPool.SourceState)
+    (audit : Audit) (logged : Option Phase1Candidate) :
+    Prod.fst <$> traceLogged setup codec address index owner pool audit logged =
+      trace setup codec address index owner pool audit := by
+  cases phase : owner.beacon.phase <;>
+    simp [traceLogged, trace_after, phase]
+
+/-- Erasing only the occurrence audit recovers the source scheduler's exact retained-Init trace. -/
+theorem traceLogged_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (address index : Nat)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) (pool : PqxdhDynamicIdentityPool.SourceState)
+    (audit : Audit) (logged : Option Phase1Candidate) :
+    (fun result => (result.1.1, result.2)) <$> traceLogged setup codec address index owner pool audit logged =
+      PqxdhRegistrationJointBundle.traceLog setup codec index owner pool logged := by
+  cases phase : owner.beacon.phase <;>
+    simp [traceLogged, PqxdhRegistrationJointBundle.traceLog, phase]
+
 abbrev State (KemSK : Type) := PqxdhRegistrationJointSchedule.State KemSK × Audit
 
 /-- Missing and inactive owners still consume their global public bundle-call ordinal. -/
@@ -77,10 +110,12 @@ def bundle (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
   match state.1.owners[address]? with
   | none => pure (none, (state.1, state.2.record address 0 none []))
   | some entry =>
-    (fun result => (result.1.1.1, ({ state.1 with
-      pool := (result.1.2, state.1.pool.2),
-      owners := state.1.owners.set address { entry with owner := result.1.1.2 } }, result.2))) <$>
-        trace setup codec address entry.identityIndex entry.owner state.1.pool.1 state.2
+    (fun result => (result.1.1.1.1, ({ state.1 with
+      pool := (result.1.1.2, state.1.pool.2),
+      owners := state.1.owners.set address { entry with owner := result.1.1.1.2 },
+      inits := Function.update state.1.inits address result.2 }, result.1.2))) <$>
+        traceLogged setup codec address entry.identityIndex entry.owner state.1.pool.1 state.2
+          (state.1.inits address)
 
 /-- Forgetting only the audit recovers the exact existing source scheduler bundle operation. -/
 theorem bundle_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -91,7 +126,8 @@ theorem bundle_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
   | none => simp [bundle, PqxdhRegistrationJointSchedule.bundle, StateT.run, found]
   | some entry =>
     simp only [bundle, PqxdhRegistrationJointSchedule.bundle, StateT.run, found, Functor.map_map]
-    rw [← trace_source setup codec address entry.identityIndex entry.owner state.1.pool.1 state.2]
+    rw [← traceLogged_source setup codec address entry.identityIndex entry.owner state.1.pool.1 state.2
+      (state.1.inits address)]
     simp only [Functor.map_map]
 
 def onSource (work : StateT (PqxdhRegistrationJointSchedule.State KemSK) ProbComp Result) :
@@ -178,3 +214,15 @@ end BeaconcryptCore.Computational.PqxdhDeploymentPublicationSuppressionTrace
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentPublicationSuppressionTrace.program_source
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentPublicationSuppressionTrace.traceLogged_trace' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentPublicationSuppressionTrace.traceLogged_trace
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentPublicationSuppressionTrace.traceLogged_source' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentPublicationSuppressionTrace.traceLogged_source

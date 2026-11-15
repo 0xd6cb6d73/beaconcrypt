@@ -36,7 +36,7 @@ def initialProject (request : InitialRequest) (output : PqxdhFullSecretInputKdf.
 def compiler : QueryImpl Spec (OracleComp RawCtxNativeKdfFamily.FamilySpec)
   | .inl request => RawCtxNativeKdfFamily.compiler request
   | .inr request => initialProject request <$>
-      RawCtxNativeKdfFamily.FamilySpec.query (.inr (address ⟨request.2, ratchet.SYM_RATCHET_INFO⟩))
+      RawCtxNativeKdfFamily.FamilySpec.query (.inr (RawCtxKdfRequestTable.initialAddress ⟨request.2, ratchet.INITIAL_RATCHET_INFO⟩))
 
 noncomputable def sourceImpl {Auxiliary : Type} (source : FixedHkdfSha512NoSaltSource)
     (writer : RawCtxMixedShared.Writer) : QueryImpl Spec (StateT (RawCtxSharedPrimitive.SharedState Auxiliary) ProbComp)
@@ -45,7 +45,7 @@ noncomputable def sourceImpl {Auxiliary : Type} (source : FixedHkdfSha512NoSaltS
 
 /-- The complete response executes the original extracted initializer at its supplied root. -/
 theorem initial_projection (source : FixedHkdfSha512NoSaltSource) (request : InitialRequest) :
-    initialProject request (productionStream source.crypto (address ⟨request.2, ratchet.SYM_RATCHET_INFO⟩)) =
+    initialProject request (productionStream source.crypto (RawCtxKdfRequestTable.initialAddress ⟨request.2, ratchet.INITIAL_RATCHET_INFO⟩)) =
       initialReply source request := by
   rcases request with ⟨role, root⟩
   cases role <;> simp [initialProject, initialReply, initializeBeacon_eq, initializeServer_eq,

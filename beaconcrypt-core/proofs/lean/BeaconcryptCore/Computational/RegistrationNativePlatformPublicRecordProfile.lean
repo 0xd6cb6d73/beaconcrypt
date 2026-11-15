@@ -65,7 +65,7 @@ theorem fixed_source (representation : RegistrationServerRoleBackend.ConvertedId
   | none => rfl
   | some started =>
     have good := RegistrationNativePlatformPublicSourceGood.start setup source seed scalar ensureInit identityIndex serverKeyId selectedOwner started after previous supported
-    let created : PqxdhLiveServerConstruction.Created Unit :=
+    let created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize) :=
       PqxdhLiveServerConstruction.initialized setup.joint identityIndex serverKeyId .generated seed
     have actual := RegistrationNativePlatformPublicWorldObservation.record_source setup checks wire route started.credential selectedOwner selectedAccept scalar view failure allocation
       reserveRegistration reservePeer reserveFrame erased helper writer representation correct created bounds mode

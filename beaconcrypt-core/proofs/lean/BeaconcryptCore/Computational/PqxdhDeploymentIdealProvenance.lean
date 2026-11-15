@@ -568,53 +568,65 @@ theorem finishChallenge_owner (p : Params KemSK count) (owner : ℕ) (raw : Pqxd
   · rename_i before _
     split
     · rename_i control prekey oneTime kem _
-      rw [show (0 : ℕ) = 0 + 0 from rfl]
-      refine isQueryBoundP_bind (owner_of_noAdmin owner _ (PqxdhDeploymentEnvironmentReal.coins_noAdmin _))
-        fun prepared _ => ?_
       split
-      · exact commitEnv_owner e owner control before _ none
-      · unfold PqxdhDeploymentIdealEnvFinish.groupEnv
+      · rw [show (0 : ℕ) = 0 + 0 from rfl]
+        refine isQueryBoundP_bind (owner_of_noAdmin owner _ (by
+          simpa using PqxdhDeploymentEnvironment.request_hash_bound (n := 2) _ PqxdhRecordLiftInterface.EffectKind.administrative))
+          fun digest _ => ?_
+        rw [show (0 : ℕ) = 0 + 0 from rfl]
+        refine isQueryBoundP_bind (owner_of_noAdmin owner _ (PqxdhDeploymentEnvironmentReal.coins_noAdmin _))
+          fun prepared _ => ?_
         split
-        · split
+        · exact commitEnv_owner e owner control before _ none
+        · unfold PqxdhDeploymentIdealEnvFinish.groupEnv
+          split
+          · split
+            · rw [show (0 : ℕ) = 0 + 0 from rfl]
+              refine isQueryBoundP_bind (owner_of_noAdmin owner _ (PqxdhDeploymentEnvironmentReal.coins_noAdmin _))
+                fun read _ => ?_
+              split
+              · rename_i j _
+                rw [isQueryBoundP_map_iff]
+                unfold PqxdhDeploymentEnvironment.finishSplitEnv
+                rw [show (0 : ℕ) = 0 + 0 from rfl]
+                refine isQueryBoundP_bind (owner_of_noAdmin owner _
+                  (PqxdhDeploymentIdealEnvFinish.finishSplitFwd_noAdmin setup codec _ _)) fun staged _ => ?_
+                rw [show (0 : ℕ) = 0 + 0 from rfl]
+                exact isQueryBoundP_bind (hiddenOwnerEffect_owner j owner before _) fun _ _ => trivial
+              · exact commitEnv_owner e owner control before _ none
+            · exact commitEnv_owner e owner control before _ none
           · rw [show (0 : ℕ) = 0 + 0 from rfl]
             refine isQueryBoundP_bind (owner_of_noAdmin owner _ (PqxdhDeploymentEnvironmentReal.coins_noAdmin _))
-              fun read _ => ?_
+              fun r _ => ?_
             split
-            · rename_i j _
-              rw [isQueryBoundP_map_iff]
-              unfold PqxdhDeploymentEnvironment.finishSplitEnv
-              rw [show (0 : ℕ) = 0 + 0 from rfl]
-              refine isQueryBoundP_bind (owner_of_noAdmin owner _
-                (PqxdhDeploymentIdealEnvFinish.finishSplitFwd_noAdmin setup codec _ _)) fun staged _ => ?_
-              rw [show (0 : ℕ) = 0 + 0 from rfl]
-              exact isQueryBoundP_bind (hiddenOwnerEffect_owner j owner before _) fun _ _ => trivial
             · exact commitEnv_owner e owner control before _ none
-          · exact commitEnv_owner e owner control before _ none
-        · rw [show (0 : ℕ) = 0 + 0 from rfl]
-          refine isQueryBoundP_bind (owner_of_noAdmin owner _ (PqxdhDeploymentEnvironmentReal.coins_noAdmin _))
-            fun r _ => ?_
-          split
-          · exact commitEnv_owner e owner control before _ none
-          · rw [show (0 : ℕ) = 0 + 0 from rfl]
-            exact isQueryBoundP_bind (owner_of_noAdmin owner _
-              (PqxdhDeploymentIdealEnvFinish.knownFwd_noAdmin setup codec _)) fun staged _ =>
-                commitEnv_owner e owner control before _ staged
+            · rw [show (0 : ℕ) = 0 + 0 from rfl]
+              exact isQueryBoundP_bind (owner_of_noAdmin owner _
+                (PqxdhDeploymentIdealEnvFinish.knownFwd_noAdmin setup codec _)) fun staged _ =>
+                  commitEnv_owner e owner control before _ staged
+      all_goals exact commitEnv_owner e owner control before _ none
     all_goals trivial
   · trivial
 
-/-- The marked build reading the cached material, at an allocated slot with a pending token and a cached material: the forwarded split build, then the hidden install of the settled build, then the built environment state. -/
+/-- The marked build reading the cached material, at an allocated slot with a pending token and a cached material: the pre-hash guard (a rejection consumes the token with no effect), otherwise the forwarded transcript hash, the forwarded split build at the AD of its digest, then the hidden install of the settled build, then the built environment state. -/
 theorem buildCached_program (session : ℕ) (payload : Option Pqxdh.Bytes) (coords : PqxdhDeploymentIdealSlots.Coord)
     (e : EnvState KemSK SplitBk) (j : PqxdhRecordLiftInterface.Slot 2) (token : PqxdhServerRelatedRootConsumer.Returned)
     (material : PqxdhDeploymentHiddenLayout.Material) (allocated : e.backend.2.1.1 coords = some j)
     (pending : e.native.shared.2.pending session = some token) (cached : e.backend.1 j = some material) :
     (PqxdhDeploymentIdealEnv.buildCachedEnv setup codec checks session payload coords).run e =
-      (PqxdhDeploymentEnvironment.buildSplitFwd (n := 2) setup codec checks material token payload
-        e.native.shared.2.server).run [] >>= fun value =>
-        PqxdhDeploymentEnvironment.hiddenServerEffect j
-          (PqxdhServerAuthExperiment.settle e.native.shared.2.server value.1) >>= fun _ =>
-            pure ((PqxdhServerAuthExperiment.settle e.native.shared.2.server value.1).1,
-              PqxdhDeploymentIdealEnvBuild.builtEnv e session coords e.backend.1
-                (PqxdhServerAuthExperiment.settle e.native.shared.2.server value.1, value.2)) := by
+      match PqxdhServerRegistrationPublication.prehash e.native.shared.2.server token.pending payload with
+      | none => pure (none, PqxdhDeploymentIdealEnvBuild.builtEnv e session coords e.backend.1
+          ((none, e.native.shared.2.server), []))
+      | some candidate =>
+        PqxdhDeploymentEnvironment.request (.hash (PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf token.init)
+          (PqxdhTranscriptAd.serverResponse candidate))) >>= fun digest =>
+        (PqxdhDeploymentEnvironment.buildSplitFwd (n := 2) setup codec checks material token payload
+          (PqxdhTranscriptAd.adOf digest) e.native.shared.2.server).run [] >>= fun value =>
+          PqxdhDeploymentEnvironment.hiddenServerEffect j
+            (PqxdhServerAuthExperiment.settle e.native.shared.2.server value.1) >>= fun _ =>
+              pure ((PqxdhServerAuthExperiment.settle e.native.shared.2.server value.1).1,
+                PqxdhDeploymentIdealEnvBuild.builtEnv e session coords e.backend.1
+                  (PqxdhServerAuthExperiment.settle e.native.shared.2.server value.1, value.2)) := by
   change (match e.backend.2.1.1 coords, e.native.shared.2.pending session with
     | some j, some token => _
     | _, _ => _) = _
@@ -623,8 +635,12 @@ theorem buildCached_program (session : ℕ) (payload : Option Pqxdh.Bytes) (coor
     | some material => _
     | none => _) = _
   rw [cached]
-  simp only [PqxdhDeploymentEnvironment.buildSplitEnv, StateT.run_bind, StateT.run_lift, StateT.run_pure, bind_assoc,
-    pure_bind]
+  dsimp only
+  cases PqxdhServerRegistrationPublication.prehash e.native.shared.2.server token.pending payload with
+  | none => rfl
+  | some candidate =>
+      simp only [PqxdhDeploymentEnvironment.buildSplitEnv, StateT.run_bind, StateT.run_lift, StateT.run_pure, bind_assoc,
+        pure_bind]
 
 /-- The marked build in the provenance-annotated World, at an allocated slot with a pending token and a cached material: the annotation invariant is kept, the Beacon origins are kept, and a Server origin changes only at the key ID of the Server install ghost set at the marked coordinates. -/
 theorem buildCached_origins (session : ℕ) (payload : Option Pqxdh.Bytes) (coords : PqxdhDeploymentIdealSlots.Coord)
@@ -637,16 +653,32 @@ theorem buildCached_origins (session : ℕ) (payload : Option Pqxdh.Bytes) (coor
       AnnInv result.2.1 result.2.2 ∧ result.2.2.owners = o.owners ∧
         ∀ keyId, result.2.2.peers keyId ≠ o.peers keyId → result.1.2.backend.2.2.peer = some (keyId, coords) := by
   intro result member
-  rw [buildCached_program setup codec checks session payload coords e j token material allocated pending cached,
-    simulateQ_bind, StateT.run_bind, mem_support_bind_iff] at member
-  obtain ⟨value, valueMember, member⟩ := member
-  have free : ((PqxdhDeploymentEnvironment.buildSplitFwd (n := 2) setup codec checks material token payload
-      e.native.shared.2.server).run []).IsQueryBoundP (fun query => hiddenEffect query = true) 0 := by
+  rw [buildCached_program setup codec checks session payload coords e j token material allocated pending cached]
+    at member
+  split at member
+  · rw [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] at member
+    subst member
+    exact ⟨holds, rfl, fun keyId changed => absurd rfl changed⟩
+  rw [simulateQ_bind, StateT.run_bind, mem_support_bind_iff] at member
+  obtain ⟨hashed, hashedMember, member⟩ := member
+  have hashFree : ∀ bytes : Pqxdh.Bytes, (PqxdhDeploymentEnvironment.request (n := 2) (.hash bytes)).IsQueryBoundP
+      (fun query => hiddenEffect query = true) 0 := fun bytes => by
     rw [hiddenEffect_two]
     exact PqxdhDeploymentIdealEnvFacts.hiddenFree_of_noAdmin _
-      (PqxdhDeploymentIdealEnvBuild.buildSplitFwd_noAdmin setup codec checks material token payload _ [])
-  obtain ⟨valueHolds, valueSame⟩ := PqxdhDeploymentIdealOrigins.aRun_free setup codec route _ free w o holds value
+      (by simpa using (PqxdhDeploymentEnvironment.request_hash_bound (n := 2) bytes .administrative))
+  obtain ⟨hashHolds, hashSame⟩ := PqxdhDeploymentIdealOrigins.aRun_free setup codec route _ (hashFree _) w o holds hashed
+    hashedMember
+  rw [simulateQ_bind, StateT.run_bind, mem_support_bind_iff] at member
+  obtain ⟨value, valueMember, member⟩ := member
+  have free : ((PqxdhDeploymentEnvironment.buildSplitFwd (n := 2) setup codec checks material token payload
+      (PqxdhTranscriptAd.adOf hashed.1) e.native.shared.2.server).run []).IsQueryBoundP
+        (fun query => hiddenEffect query = true) 0 := by
+    rw [hiddenEffect_two]
+    exact PqxdhDeploymentIdealEnvFacts.hiddenFree_of_noAdmin _
+      (PqxdhDeploymentIdealEnvBuild.buildSplitFwd_noAdmin setup codec checks material token payload _ _ [])
+  obtain ⟨valueHolds, valueSame⟩ := PqxdhDeploymentIdealOrigins.aRun_free setup codec route _ free _ _ hashHolds value
     valueMember
+  rw [hashSame] at valueSame
   rw [simulateQ_bind, StateT.run_bind, mem_support_bind_iff] at member
   obtain ⟨effected, effectedMember, member⟩ := member
   rw [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] at member
@@ -671,7 +703,7 @@ theorem buildCached_origins (session : ℕ) (payload : Option Pqxdh.Bytes) (coor
       subst effectedMember
       rw [simulateQ_spec_query] at installedMember
       have keeps := (PqxdhDeploymentIdealOrigins.aEffects_keeps setup codec route
-        (.inr (.installServer response.keyId peer.identity (.hidden j))) value.2.1 value.2.2 valueHolds
+        (.inr (.installServer response.keyId ⟨peer.identity, peer.metadata⟩ (.hidden j))) value.2.1 value.2.2 valueHolds
         installed installedMember).1
       rw [PqxdhDeploymentIdealOrigins.aEffects_run, support_map] at installedMember
       obtain ⟨inner, _, rfl⟩ := installedMember
@@ -720,7 +752,7 @@ theorem buildCached_reply (created : PqxdhLiveServerConstruction.Created Unit) (
       ((PqxdhDeploymentIdealEnvBuild.buildHiddenEnv setup codec checks session payload coords).run e)).run w) := by
     rw [support_map]
     exact ⟨result, member, rfl⟩
-  obtain ⟨cache, log, _, ⟨replyNone, envEq, _⟩ | ⟨response, candidate, _, _, keyEq, _, _, _, _, replied, envEq, _⟩⟩ :=
+  obtain ⟨cache, log, _, ⟨replyNone, envEq, _⟩ | ⟨response, candidate, _, _, ad, keyEq, _, _, _, _, replied, envEq, _⟩⟩ :=
     PqxdhDeploymentIdealEnvFacts.buildHidden_exact setup codec checks created session payload coords e w good j token
       allocated pending unused world found _ mapped
   · dsimp only at replyNone envEq
@@ -730,7 +762,7 @@ theorem buildCached_reply (created : PqxdhLiveServerConstruction.Created Unit) (
   · dsimp only at replied envEq
     rw [envEq]
     have peerAt := (PqxdhServerRegistrationPublication.publish_fields e.native.shared.2.server candidate
-      PqxdhDeploymentHiddenSplit.placeholderKernel ()).1
+      PqxdhDeploymentHiddenSplit.placeholderKernel ad).1
     refine ⟨rfl, rfl, (PqxdhDeploymentIdealEnvFacts.builtEnv_move e session coords cache _).2,
       Or.inr ⟨response, replied, ?_⟩⟩
     simp [PqxdhDeploymentIdealEnvBuild.builtEnv, PqxdhDeploymentIdealSteps.publishedKey, keyEq, peerAt]
@@ -1058,7 +1090,8 @@ theorem world_provG (t : Target count) (p : Params KemSK count) (ensureInit : St
   intro created start started
   have initial := PqxdhDeploymentEnvironment.start_initial setup ensureInit identityIndex runtime _ created start started
   subst initial
-  exact ⟨_, rfl, PqxdhDeploymentIdealEnv.idealInv_start t created, prov_initial t created⟩
+  exact ⟨_, rfl, PqxdhDeploymentIdealEnv.start_noPeer setup ensureInit identityIndex runtime _ created _ started,
+    PqxdhDeploymentIdealEnv.idealInv_start t _, prov_initial t _⟩
 
 /-- The provenance invariant on every outcome of the provenance-annotated record world with the ideal environment of a target (`envGD`, the challenger's parameters drawn at startup), at the drawn parameters' environment state, together with `Good` and `IdealInv`. -/
 theorem world_prov (t : Target count) (ensureInit : StateT A ProbComp Bool) (identityIndex : ℕ) (runtime : A)
@@ -1098,7 +1131,8 @@ theorem world_prov (t : Target count) (ensureInit : StateT A ProbComp Bool) (ide
     have initial := PqxdhDeploymentEnvironment.start_initial setup ensureInit identityIndex runtime _ created start
       startedAt
     subst initial
-    exact ⟨_, rfl, PqxdhDeploymentIdealEnv.idealInv_start t created, prov_initial t created⟩
+    exact ⟨_, rfl, PqxdhDeploymentIdealEnv.start_noPeer setup ensureInit identityIndex runtime _ created _ startedAt,
+      PqxdhDeploymentIdealEnv.idealInv_start t _, prov_initial t _⟩
 
 /-- Every outcome of the record world is the erasure of an outcome of the provenance-annotated record world. -/
 theorem annotated_cover {E : Type} (env : PqxdhRecordLiftInterface.Environment 2 E) (serverKid : Std.U64)

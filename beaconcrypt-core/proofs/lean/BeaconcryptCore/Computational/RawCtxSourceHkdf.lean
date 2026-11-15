@@ -37,7 +37,7 @@ theorem response_law (c : Pqxdh.Crypto) : KdfLaw c (response c) := by
   intro chain
   rw [response_bytes]
   have info : absBytes ratchet.SYM_RATCHET_INFO = Pqxdh.INFO_R := by
-    simpa only [pqxdh.SYM_RATCHET_INFO] using absBytes_SYM_RATCHET_INFO
+    exact absBytes_SYM_RATCHET_INFO
   rw [info]
   rfl
 
@@ -58,34 +58,29 @@ theorem response_stream (source : FixedHkdfSha512NoSaltSource) (request : Symmet
   rfl
 
 /-- The initial source response uses the same function at its actual 64-byte output width. -/
-def initialResponse (c : Pqxdh.Crypto) (request : SymmetricRatchetKdfRequest) :
+def initialResponse (c : Pqxdh.Crypto) (request : InitialRatchetKdfRequest) :
     pqxdh.concrete.InitialRatchetKdfResponse :=
   ⟨⟨(c.hkdf (absBytes request.input) (absBytes request.info) 64).map concreteByte,
     by simp [c.hkdf_length]⟩⟩
 
-/-- The 64-byte initialization adapter retains the whole requested HKDF output. -/
-theorem initialResponse_bytes (c : Pqxdh.Crypto) (request : SymmetricRatchetKdfRequest) :
+/-- The 64-byte initialization adapter retains its actual requested input and initial45 label. -/
+theorem initialResponse_bytes (c : Pqxdh.Crypto) (request : InitialRatchetKdfRequest) :
     absBytes (initialResponse c request).bytes =
       c.hkdf (absBytes request.input) (absBytes request.info) 64 := by
   simp [initialResponse, absBytes, List.map_map, Function.comp_def]
 
-/-- The exact initial-response law is derived from the same supplied source function. -/
+/-- The actual initial-label source response satisfies the initial primitive contract. -/
 theorem initialResponse_law (c : Pqxdh.Crypto) : InitialKdfLaw c (initialResponse c) := by
   intro root
-  rw [initialResponse_bytes]
-  have info : absBytes ratchet.SYM_RATCHET_INFO = Pqxdh.INFO_R := by
-    simpa only [pqxdh.SYM_RATCHET_INFO] using absBytes_SYM_RATCHET_INFO
-  rw [info]
+  rw [initialResponse_bytes, absBytes_INITIAL_RATCHET_INFO]
 
-/-- Source initial and ongoing calls keep the ordinary same-stream prefix correlation; no independent key material is sampled. -/
+/-- Prefix consistency remains within the initial45 address; it does not equate initial and message outputs. -/
 theorem initialResponse_prefix (source : FixedHkdfSha512NoSaltSource)
     (input : Std.Array Std.U8 32#usize) :
-    absBytes (initialResponse source.crypto ⟨input, ratchet.SYM_RATCHET_INFO⟩).bytes =
-      (absBytes (response source.crypto ⟨input, ratchet.SYM_RATCHET_INFO⟩).bytes).take 64 := by
-  rw [initialResponse_bytes, response_bytes]
-  have info : absBytes ratchet.SYM_RATCHET_INFO = Pqxdh.INFO_R := by
-    simpa only [pqxdh.SYM_RATCHET_INFO] using absBytes_SYM_RATCHET_INFO
-  simpa only [info] using source.prefixConsistent.ratchetPrefix (absBytes input)
+    absBytes (initialResponse source.crypto ⟨input, ratchet.INITIAL_RATCHET_INFO⟩).bytes =
+      (streamBytes (productionStream source.crypto (PqxdhJointKdf.initialAddress (absBytes input)))).take 64 := by
+  rw [initialResponse_bytes, absBytes_INITIAL_RATCHET_INFO]
+  exact source.prefixConsistent.initialPrefix (absBytes input)
 
 /-- The root wrapper uses the same fixed functional source at the actual validated 192-byte input. -/
 def rootResponse (c : Pqxdh.Crypto) (input : pqxdh.RootKeyInput) : Std.Array Std.U8 32#usize :=

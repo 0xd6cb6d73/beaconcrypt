@@ -11,7 +11,10 @@ open OracleComp OracleSpec CoreModels Aeneas OracleComp.ProgramLogic.Relational
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeRandomEarly
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPhase1AcceptanceOracle PqxdhKemIndCca PqxdhInitializerSecrecy
 open CtxRomAuth AdaptiveCtxSharedHash PqxdhSecretInputKdf PqxdhFullSecretInputKdf
@@ -165,7 +168,7 @@ theorem encoded_related (packet : Packet) (start : Input) (output : HmacBlock) (
 /-- The full actual generated-carrier relation implies equality of its complete Builder observation, including all private source context/material and the complementary None outcome. -/
 theorem related_key (first second : Bool)
     (left right : (Carrier × Option program.Selection) × RandomState)
-    (related : PqxdhLaterChallengeRandomSampler.CarriedRelated setup env callbacks program adversary owner number
+    (related : PqxdhLaterChallengeRandomSampler.CarriedRelated (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number
       attachedVerify primitives baseImpl kem ancestors disclosed first second left right) :
     builderKey setup program left = builderKey setup program right := by
   rcases related with ⟨beforeLeft, beforeRight, output, parent, nonce, next, leftAfter, rightAfter, packets, collected, rfl, rfl⟩
@@ -183,16 +186,16 @@ noncomputable def earlyKey (result : (Carrier × Option program.Selection) × Ra
 /-- One coupling preserves both early observations simultaneously in the full generated random distribution; this is stronger than equality of their separate marginal laws. -/
 theorem carried (depth : Nat) (first second : Bool) (state : RandomState) :
     RelTriple
-      (earlyKey setup program <$> (simulateQ backend (PqxdhLaterChallengeGeneratedContinuation.run setup env callbacks program adversary owner number first attachedVerify primitives baseImpl kem ancestors disclosed depth)).run state)
-      (earlyKey setup program <$> (simulateQ backend (PqxdhLaterChallengeGeneratedContinuation.run setup env callbacks program adversary owner number second attachedVerify primitives baseImpl kem ancestors disclosed depth)).run state)
+      (earlyKey setup program <$> (simulateQ backend (PqxdhLaterChallengeGeneratedContinuation.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number first attachedVerify primitives baseImpl kem ancestors disclosed depth)).run state)
+      (earlyKey setup program <$> (simulateQ backend (PqxdhLaterChallengeGeneratedContinuation.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number second attachedVerify primitives baseImpl kem ancestors disclosed depth)).run state)
       Eq := by
   apply relTriple_map
-  apply relTriple_post_mono (PqxdhLaterChallengeRandomSampler.carried setup env callbacks program adversary owner number
+  apply relTriple_post_mono (PqxdhLaterChallengeRandomSampler.carried (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number
     attachedVerify primitives baseImpl kem ancestors disclosed depth first second state)
   intro left right related
-  exact Prod.ext (related_key setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem
+  exact Prod.ext (related_key (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem
     ancestors disclosed first second left right related)
-    (PqxdhLaterChallengeRandomBefore.related_key setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem
+    (PqxdhLaterChallengeRandomBefore.related_key (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem
       ancestors disclosed first second left right related)
 
 /-- The Builder payload is a source-level observation; the public dictionary is only a metadata coordinate, not an installed component state. -/

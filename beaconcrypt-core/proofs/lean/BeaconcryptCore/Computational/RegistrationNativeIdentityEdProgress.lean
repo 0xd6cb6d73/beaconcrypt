@@ -29,7 +29,12 @@ def afterCopy (before : registration.BeaconEd25519Signing) (signed : Slice U8) :
   | .PqKey => do
       let copied ← core.Array.Insts.CoreConvertTryFromShared0SliceTryFromSliceError.try_from 1249#usize core.U8.Insts.CoreMarkerCopy signed
       match copied with
-      | .Ok bytes => pure (.FingerprintRequested ⟨{before.state with pq_key := bytes}⟩)
+      | .Ok bytes => do
+          let state := {before.state with pq_key := bytes}
+          let input ← authentication.build_init_transcript
+            ⟨state.started.message.identity_key, state.pre_key, state.one_time_key, state.pq_key⟩
+            state.server_pin.binding.identity_key_id state.server_pin.binding.identity_public_key state.server_pin.public_key
+          pure (.HashRequested ⟨state,input⟩)
       | .Err _ => pure (.Rejected before.state.original_control)
 
 private theorem matched (before : registration.BeaconEd25519Signing) (signed : Slice U8)
@@ -48,8 +53,10 @@ private theorem matched (before : registration.BeaconEd25519Signing) (signed : S
       exact values.trans (matching.2.trans requestShape.2.2.symm)
   simp only [registration.BeaconEd25519Signing.resume, suffixRun, requestRun,
     RegistrationBytePrimitives.optional_slice_ne_exact, tail, ne_eq, not_true_eq_false,
-    decide_false, bind_tc_ok, Bool.false_eq_true, ite_false, afterCopy]
-  rfl
+    decide_false, bind_tc_ok, Bool.false_eq_true, ite_false, afterCopy,
+    registration.BeaconInitState.fields, pqxdh.InitKex.impl.identity_key,
+    session.ServerAuthenticationPin.impl.binding, session.ServerAuthenticationPin.impl.public_key]
+  cases before.stage <;> rfl
 
 private theorem copied (size : Usize) (signed : Slice U8) (width : signed.val.length = size.val) :
     ∃ bytes : Std.Array U8 size,
@@ -82,15 +89,21 @@ theorem one_time (before : registration.BeaconEd25519Signing) (signed : Slice U8
   simp only [afterCopy, stage, run, bind_tc_ok]
   rfl
 
-/-- The actual PQ stage reaches fingerprinting with all returned bytes and every other source field retained. -/
+/-- The actual PQ stage reaches the canonical request hash with all returned bytes and every other source field retained. -/
 theorem pq_key (before : registration.BeaconEd25519Signing) (signed : Slice U8)
     (stage : before.stage = .PqKey) (matching : replyTailMatches before (.Some signed)) (width : signed.val.length = 1249) :
-    ∃ next, before.resume (.Some signed) = .ok (.FingerprintRequested next) ∧
+    ∃ next, before.resume (.Some signed) = .ok (.HashRequested next) ∧
       next.state.pq_key.val = signed.val ∧ {next.state with pq_key := before.state.pq_key} = before.state := by
   obtain ⟨bytes, run, values⟩ := copied 1249#usize signed width
-  refine ⟨⟨{before.state with pq_key := bytes}⟩, ?_, values, rfl⟩
+  let state := {before.state with pq_key := bytes}
+  obtain ⟨input,inputRun,_⟩ := TranscriptAuthRefinement.build_init_transcript_abs
+    ⟨state.started.message.identity_key,state.pre_key,state.one_time_key,state.pq_key⟩
+    state.server_pin.binding.identity_key_id state.server_pin.binding.identity_public_key state.server_pin.public_key
+  refine ⟨⟨state,input⟩, ?_, values, rfl⟩
   rw [matched before signed matching]
   simp only [afterCopy, stage, run, bind_tc_ok]
+  dsimp only [state] at inputRun
+  rw [inputRun]
   rfl
 
 end BeaconcryptCore.Computational.RegistrationNativeIdentityEdProgress

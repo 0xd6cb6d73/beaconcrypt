@@ -366,6 +366,91 @@ fn rollback_and_unknown_commit_never_retain_tentative_cache_or_lose_the_receipt(
 }
 
 #[test]
+fn consumed_registration_stays_rejected_across_cached_reopen_and_cache_clearing() {
+	let directory = tempfile::tempdir().unwrap();
+	let path = directory.path().join("state.sqlite");
+	let owner = create(&path);
+	let lineage = owner.lineage();
+	let (mut server, trace) = cached(&path, lineage, 2);
+	let mut beacon = Beacon::try_new(
+		server.identity_key_kid(),
+		server.identity_pk().as_bytes(),
+		&server.mldsa_public_key(),
+	)
+	.unwrap();
+	let request = beacon.get_registration_bundle().unwrap();
+	let response = server
+		.register_beacon(&request, Some(b"cached registration"))
+		.unwrap()
+		.unwrap();
+	assert_eq!(
+		beacon.finish_registration(&response.serialized).unwrap(),
+		b"cached registration"
+	);
+	beacon
+		.decrypt_message(
+			&server
+				.encrypt_message(b"warm", response.kid)
+				.unwrap()
+				.unwrap()
+				.ciphertext,
+		)
+		.unwrap();
+	assert_eq!(server.cached_peer_count(), 1);
+	trace.take_counts();
+	let committed = rows(&path);
+	assert!(
+		server
+			.register_beacon(&request, Some(b"warm replay"))
+			.unwrap()
+			.is_none()
+	);
+	assert_eq!(rows(&path), committed);
+	assert_eq!(trace.take_counts().2, 0);
+	assert_eq!(server.cached_peer_count(), 1);
+	drop(server);
+
+	let (mut server, trace) = cached(&path, lineage, 2);
+	for clear in [false, true] {
+		if clear {
+			server.clear_cache();
+		}
+		assert!(
+			server
+				.register_beacon(&request, Some(b"reopened replay"))
+				.unwrap()
+				.is_none()
+		);
+		assert_eq!(rows(&path), committed);
+		assert_eq!(trace.take_counts().2, 0);
+	}
+	let frame = beacon.encrypt_message(b"after cached reopen").unwrap();
+	assert_eq!(
+		server
+			.decrypt_message(&frame.ciphertext)
+			.unwrap()
+			.unwrap()
+			.plaintext,
+		b"after cached reopen"
+	);
+	assert_eq!(server.cached_peer_count(), 1);
+	assert!(
+		server
+			.register_beacon(&request, Some(b"replay with a warm peer"))
+			.unwrap()
+			.is_none()
+	);
+	let mut owner = owner;
+	assert!(
+		owner
+			.register_beacon(&request, Some(b"uncached replay"))
+			.unwrap()
+			.is_none()
+	);
+	assert_eq!(register(&mut owner).1, response.kid + 1);
+}
+
+#[test]
 fn concurrent_cached_workers_publish_one_successor() {
 	let directory = tempfile::tempdir().unwrap();
 	let path = directory.path().join("state.sqlite");

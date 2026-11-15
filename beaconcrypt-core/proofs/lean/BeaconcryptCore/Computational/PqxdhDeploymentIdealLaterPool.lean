@@ -17,6 +17,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 
 set_option autoImplicit false
+set_option warningAsError true
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterPool
 open PqxdhServerAuthExperiment (Setup Codec Checks)
@@ -325,9 +326,9 @@ noncomputable def executeWithL {Result : Type}
     (identityIndex : ℕ) (publicIdentity : PqxdhJointIdentity.PublicIdentity)
     (work : OracleComp (PqxdhDeploymentLaterServerSource.Spec KemSK) Result) (state : EncodedState KemSK) (log : Log) :
     ProbComp (Result × (EncodedState KemSK × Log)) :=
-  (fun result => (result.1.1.1, (⟨result.2, result.1.2, result.1.1.2.1⟩, result.1.1.2.2))) <$>
+  (fun result => (result.1.1.1, (⟨result.2, result.1.2, result.1.1.2.1.1, result.1.1.2.1.2⟩, result.1.1.2.2))) <$>
     (simulateQ service (simulateQ (PqxdhRegistrationJointKemEncapsulation.actual setup)
-      (PqxdhDeploymentLaterServerCommands.run setup codec checks identityIndex publicIdentity work state.owners log
+      (PqxdhDeploymentLaterServerCommands.run setup codec checks identityIndex publicIdentity work (state.owners, state.inits) log
         state.shared))).run state.pool
 
 /-- Sequencing for `executeWithL`. -/
@@ -370,7 +371,7 @@ theorem generic_reservedL (seed : IdentitySeed) (identityIndex : ℕ) (pairs : L
   change _ <$> (simulateQ (reservedAt setup pairs) (simulateQ (PqxdhRegistrationJointKemEncapsulation.actual setup)
     (StateT.run ((fun result => (result.1, (result.2, log))) <$> simulateQ (PqxdhRegistrationJointKemEncapsulation.impl
       setup codec checks identityIndex (setup.joint.publicKeys seed)) (StateT.run
-        (PqxdhRegistrationJointRevealSchedule.client setup codec query) (encodeState setup state).owners))
+        (PqxdhRegistrationJointRevealSchedule.client setup codec query) ((encodeState setup state).owners, (encodeState setup state).inits)))
       (encodeState setup state).shared))).run (encodeState setup state).pool = _
   rw [StateT.run_map, simulateQ_map, PqxdhRegistrationJointKemEncapsulation.program_actual, simulateQ_map,
     StateT.run_map, Functor.map_map]
@@ -397,12 +398,12 @@ theorem accept_reservedL (seed : IdentitySeed) (identityIndex : ℕ) (pairs : Li
       (fun result => (result.1, (encodeState setup result.2.1, result.2.2))) <$>
         (sourcePoolL setup codec checks seed identityIndex pairs (.inl (.inr (.accept raw)))).run (state, log) := by
   have noCreate := PqxdhDeploymentLaterServerReserve.step_source setup codec checks identityIndex
-    (setup.joint.publicKeys seed) (.inl (.inr (.accept raw))) ((encodeState setup state).owners, log)
+    (setup.joint.publicKeys seed) (.inl (.inr (.accept raw))) (((encodeState setup state).owners, (encodeState setup state).inits), log)
     (encodeState setup state).shared
   rw [PqxdhDeploymentLaterServerReserve.flat_run, isQueryBoundP_map_iff] at noCreate
   replace noCreate : (simulateQ (PqxdhRegistrationJointKemEncapsulation.actual setup)
       (((PqxdhDeploymentLaterServerCommands.impl setup codec checks identityIndex (setup.joint.publicKeys seed)
-        (.inl (.inl (.inr (.accept raw))))).run ((encodeState setup state).owners, log)).run
+        (.inl (.inl (.inr (.accept raw))))).run (((encodeState setup state).owners, (encodeState setup state).inits), log)).run
           (encodeState setup state).shared)).IsQueryBoundP (PqxdhLiveKemReservation.IsCreate (KemSK := KemSK)) 0 := by
     simpa [PqxdhRegistrationJointRevealCosts.sourceKind, PqxdhRegistrationSchedule.sourceKind] using noCreate
   have actual : executeWithL setup codec checks (reservedAt setup pairs) identityIndex (setup.joint.publicKeys seed)
@@ -499,36 +500,36 @@ theorem kemCommands_stoppedL {Result : Type} (selected : ℕ) (seed : IdentitySe
     ((simulateQ (PqxdhDynamicKemJointRouter.stopped setup.baseImpl setup.joint setup.kem selected pairs)
         (simulateQ (PqxdhRegistrationJointKemEncapsulation.actual setup)
           (PqxdhDeploymentLaterServerCommands.run setup codec checks identityIndex (setup.joint.publicKeys seed)
-            (simulateQ PqxdhDeploymentLaterServerSource.embed program) (encodeState setup state).owners log
+            (simulateQ PqxdhDeploymentLaterServerSource.embed program) ((encodeState setup state).owners, (encodeState setup state).inits) log
             state.shared))).run).run (state.pool.1, PqxdhDeploymentIdealPoolSource.routerOf state.pool.2) =
-      (fun result => (some ((result.1, ((encodeState setup result.2.1).owners, result.2.2)), result.2.1.shared),
+      (fun result => (some ((result.1, (((encodeState setup result.2.1).owners, (encodeState setup result.2.1).inits), result.2.2)), result.2.1.shared),
           (result.2.1.pool.1, PqxdhDeploymentIdealPoolSource.routerOf result.2.1.pool.2))) <$>
         (simulateQ (sourcePoolL setup codec checks seed identityIndex pairs) program).run (state, log) := by
   have classical : ∀ (predicate : (PqxdhLiveKemBirth.Spec KemSK).Domain → Prop) [DecidablePred predicate] (cap : ℕ),
       (PqxdhRegistrationJointKemCommands.program setup codec checks identityIndex (setup.joint.publicKeys seed) program
-        (encodeState setup state).owners state.shared).IsQueryBoundP predicate cap →
+        ((encodeState setup state).owners, (encodeState setup state).inits) state.shared).IsQueryBoundP predicate cap →
       (simulateQ (PqxdhRegistrationJointKemEncapsulation.actual setup)
         (PqxdhDeploymentLaterServerCommands.run setup codec checks identityIndex (setup.joint.publicKeys seed)
-          (simulateQ PqxdhDeploymentLaterServerSource.embed program) (encodeState setup state).owners log
+          (simulateQ PqxdhDeploymentLaterServerSource.embed program) ((encodeState setup state).owners, (encodeState setup state).inits) log
           state.shared)).IsQueryBoundP predicate cap := by
     intro predicate _ cap bound
     rw [← PqxdhRegistrationJointKemEncapsulation.commands_actual, ← PqxdhDeploymentLaterServerCommands.commands_embed
-      setup codec checks identityIndex (setup.joint.publicKeys seed) program (encodeState setup state).owners log,
+      setup codec checks identityIndex (setup.joint.publicKeys seed) program ((encodeState setup state).owners, (encodeState setup state).inits) log,
       PqxdhDeploymentLaterServerCommands.commands, simulateQ_map, isQueryBoundP_map_iff] at bound
     exact bound
   have creations := classical _ _ (PqxdhRegistrationJointKemCommands.creations setup codec checks identityIndex
-    (setup.joint.publicKeys seed) program budget certified (encodeState setup state).owners state.shared)
+    (setup.joint.publicKeys seed) program budget certified ((encodeState setup state).owners, (encodeState setup state).inits) state.shared)
   have reveals := PqxdhRegistrationJointOpenCosts.command_program setup codec checks identityIndex
-    (setup.joint.publicKeys seed) program budget certified (encodeState setup state).owners state.shared .other
+    (setup.joint.publicKeys seed) program budget certified ((encodeState setup state).owners, (encodeState setup state).inits) state.shared .other
     (by decide)
   simp only [PqxdhRegistrationJointOpenCosts.privateTotal, unreadIdentity, unreadKem] at reveals
   rw [PqxdhDeploymentIdealPoolSource.stopped_program setup selected pairs _ _ creations (classical _ _ reveals)
     state.pool.1 state.pool.2 prefixed room]
-  have key : (fun result => (result.1.1.1, ((⟨result.2, result.1.2, result.1.1.2.1⟩ : EncodedState KemSK),
+  have key : (fun result => (result.1.1.1, ((⟨result.2, result.1.2, result.1.1.2.1.1, result.1.1.2.1.2⟩ : EncodedState KemSK),
       result.1.1.2.2))) <$> (simulateQ (reservedAt setup pairs) (simulateQ
         (PqxdhRegistrationJointKemEncapsulation.actual setup) (PqxdhDeploymentLaterServerCommands.run setup codec checks
           identityIndex (setup.joint.publicKeys seed) (simulateQ PqxdhDeploymentLaterServerSource.embed program)
-          (encodeState setup state).owners log state.shared))).run (state.pool.1, state.pool.2) =
+          ((encodeState setup state).owners, (encodeState setup state).inits) log state.shared))).run (state.pool.1, state.pool.2) =
       (fun result => (result.1, (encodeState setup result.2.1, result.2.2))) <$>
         (simulateQ (sourcePoolL setup codec checks seed identityIndex pairs) program).run (state, log) :=
     program_reservedL setup codec checks seed identityIndex pairs program state log owned
@@ -538,16 +539,16 @@ theorem kemCommands_stoppedL {Result : Type} (selected : ℕ) (seed : IdentitySe
         Option ((Result × PqxdhDeploymentLaterServerCommands.Local) × PqxdhServerAuthNative.NativeState KemSK) ×
           PqxdhDynamicKemJointSource.State KemSK) =
       ((fun result : Result × (EncodedState KemSK × Log) =>
-        ((some ((result.1, (result.2.1.owners, result.2.2)), result.2.1.shared),
+        ((some ((result.1, ((result.2.1.owners, result.2.1.inits), result.2.2)), result.2.1.shared),
           (result.2.1.pool.1, PqxdhDeploymentIdealPoolSource.routerOf result.2.1.pool.2)) :
           Option ((Result × PqxdhDeploymentLaterServerCommands.Local) × PqxdhServerAuthNative.NativeState KemSK) ×
             PqxdhDynamicKemJointSource.State KemSK)) ∘
-        (fun result => (result.1.1.1, ((⟨result.2, result.1.2, result.1.1.2.1⟩ : EncodedState KemSK),
+        (fun result => (result.1.1.1, ((⟨result.2, result.1.2, result.1.1.2.1.1, result.1.1.2.1.2⟩ : EncodedState KemSK),
           result.1.1.2.2)))) r := fun _ => rfl
   refine (congrArg (fun φ => φ <$> (simulateQ (reservedAt setup pairs) (simulateQ
     (PqxdhRegistrationJointKemEncapsulation.actual setup) (PqxdhDeploymentLaterServerCommands.run setup codec checks
       identityIndex (setup.joint.publicKeys seed) (simulateQ PqxdhDeploymentLaterServerSource.embed program)
-      (encodeState setup state).owners log state.shared))).run (state.pool.1, state.pool.2)) (funext shape)).trans ?_
+      ((encodeState setup state).owners, (encodeState setup state).inits) log state.shared))).run (state.pool.1, state.pool.2)) (funext shape)).trans ?_
   rw [comp_map, key, Functor.map_map]
   rfl
 

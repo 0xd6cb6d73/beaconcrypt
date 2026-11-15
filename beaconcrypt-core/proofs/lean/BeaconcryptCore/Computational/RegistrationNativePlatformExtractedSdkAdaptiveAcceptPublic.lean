@@ -42,7 +42,7 @@ noncomputable def step {E R Error : Type} (coins : QueryImpl unifSpec (StateT Pl
     (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (views : AdapterPublicWrapperStorage.Views)
     (model : AdapterPublicAgreementPrimitiveModel.Model (m := ProbComp) generator setup checks view)
     (entropy : AdapterPublicAgreementServerNative.Entropy model)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : beaconcrypt_public_wrapper.server.Server) (input : Slice U8) (rng : R)
     (before : RegistrationNativeExperiment.State n KemSK mlSource)
     (related : AdapterPublicWrapperState.Server view views created credential self before.server)

@@ -44,6 +44,32 @@ private theorem trace_failure_owner (setup : Setup baseSpec KemSK) (codec : Code
   · rw [failed] at published
     cases published
 
+private theorem trace_failure_log (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (index : Nat)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) (pool : PqxdhDynamicIdentityPool.SourceState)
+    (logged : Option Phase1Candidate) (result : PqxdhRegistrationJointAttemptTrace.NativeResult KemSK × Option Phase1Candidate)
+    (supported : result ∈ support (PqxdhRegistrationJointBundle.traceLog setup codec index owner pool logged))
+    (failed : result.1.1.1 = none) : result.2 = logged := by
+  have afterFailed (generated : Option PqxdhJointGapDh.ScalarBytes)
+      (failure : (PqxdhRegistrationJointBundle.after setup codec index owner generated pool).1.1 = none) :
+      PqxdhRegistrationJointBundle.afterLog setup codec owner generated logged = logged := by
+    unfold PqxdhRegistrationJointBundle.after at failure
+    unfold PqxdhRegistrationJointBundle.afterLog
+    cases prepared : PqxdhBeaconPhase1Publication.prepare owner generated with
+    | none => rfl
+    | some prepared =>
+      simp only [prepared] at failure ⊢
+      split at failure <;> simp_all
+  cases phase : owner.beacon.phase <;>
+    simp only [PqxdhRegistrationJointBundle.traceLog, phase, support_map, Set.mem_image,
+      support_pure, Set.mem_singleton_iff] at supported
+  case fresh =>
+    obtain ⟨scalar, _, rfl⟩ := supported
+    exact afterFailed (some scalar) failed
+  case freshWithCoins =>
+    subst result
+    exact afterFailed none failed
+  all_goals subst result; rfl
+
 /-- A failed actual bundle preserves every physical native field. Its only possible private change is the retained identity signing transcript. -/
 theorem bundle_failure_rollback (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (address : Nat)
     (state : State KemSK) (result : Option Pqxdh.Bytes × State KemSK)
@@ -58,19 +84,32 @@ theorem bundle_failure_rollback (setup : Setup baseSpec KemSK) (codec : Codec Re
     simp only [bundle, StateT.run, found, support_map, Set.mem_image] at supported
     obtain ⟨returned, member, same⟩ := supported
     subst result
-    have original : returned.1 ∈ support (PqxdhRegistrationJointBundle.trace setup codec entry.identityIndex
+    have audited : returned.1 ∈ support (trace setup codec address entry.identityIndex entry.owner
+        state.1.pool.1 state.2) := by
+      rw [← traceLogged_trace setup codec address entry.identityIndex entry.owner state.1.pool.1 state.2
+        (state.1.inits address), support_map]
+      exact ⟨returned, member, rfl⟩
+    have original : returned.1.1 ∈ support (PqxdhRegistrationJointBundle.trace setup codec entry.identityIndex
         entry.owner state.1.pool.1) := by
       rw [← trace_source setup codec address entry.identityIndex entry.owner state.1.pool.1 state.2, support_map]
+      exact ⟨returned.1, audited, rfl⟩
+    have logged : (returned.1.1, returned.2) ∈ support
+        (PqxdhRegistrationJointBundle.traceLog setup codec entry.identityIndex entry.owner state.1.pool.1
+          (state.1.inits address)) := by
+      rw [← traceLogged_source setup codec address entry.identityIndex entry.owner state.1.pool.1 state.2
+        (state.1.inits address), support_map]
       exact ⟨returned, member, rfl⟩
-    have sameOwner := trace_failure_owner setup codec entry.identityIndex entry.owner state.1.pool.1 returned.1 original failed
+    have sameLog := trace_failure_log setup codec entry.identityIndex entry.owner state.1.pool.1
+      (state.1.inits address) (returned.1.1, returned.2) logged failed
+    have sameOwner := trace_failure_owner setup codec entry.identityIndex entry.owner state.1.pool.1 returned.1.1 original failed
     have sameSeeds := PqxdhRegistrationJointServerSchedule.bundle_seeds setup codec entry.identityIndex entry.owner
-      state.1.pool.1 returned.1 original
-    change (⟨((⟨returned.1.2.seeds, []⟩ : PqxdhDynamicIdentityPool.SourceState), state.1.pool.2),
-      state.1.shared, state.1.owners.set address { entry with owner := returned.1.1.2 }⟩ :
-      PqxdhRegistrationJointSchedule.State KemSK) = _
-    rw [sameOwner, sameSeeds,
+      state.1.pool.1 returned.1.1 original
+    change (⟨((⟨returned.1.1.2.seeds, []⟩ : PqxdhDynamicIdentityPool.SourceState), state.1.pool.2),
+      state.1.shared, state.1.owners.set address { entry with owner := returned.1.1.1.2 },
+      Function.update state.1.inits address returned.2⟩ : PqxdhRegistrationJointSchedule.State KemSK) = _
+    rw [sameOwner, sameSeeds, sameLog,
       show ({ entry with owner := entry.owner } : PqxdhRegistrationJointOwnership.Entry KemSK) = entry from rfl,
-      set_same state.1.owners address entry found]
+      set_same state.1.owners address entry found, Function.update_eq_self]
     rfl
 
 private theorem short_list_option (tuples : List Phase1KeyTuple) (bounded : tuples.length ≤ 1) :
@@ -97,8 +136,13 @@ theorem bundle_record (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
     simp only [bundle, StateT.run, found, support_map, Set.mem_image] at supported
     obtain ⟨returned, member, same⟩ := supported
     subst result
+    have original : returned.1 ∈ support (trace setup codec address entry.identityIndex entry.owner
+        state.1.pool.1 state.2) := by
+      rw [← traceLogged_trace setup codec address entry.identityIndex entry.owner state.1.pool.1 state.2
+        (state.1.inits address), support_map]
+      exact ⟨returned, member, rfl⟩
     obtain ⟨tuples, bounded, recorded⟩ := PqxdhDeploymentPublicationAuditBounds.trace_record setup codec address
-      entry.identityIndex entry.owner state.1.pool.1 state.2 returned member
+      entry.identityIndex entry.owner state.1.pool.1 state.2 returned.1 original
     obtain ⟨keys, sameKeys⟩ := short_list_option tuples bounded
     exact ⟨entry.identityIndex, keys, sameKeys ▸ recorded⟩
 

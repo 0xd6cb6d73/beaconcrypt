@@ -1,6 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeMldsaLiveOwners
 import BeaconcryptCore.Computational.RegistrationNativeMldsaBundle
+import BeaconcryptCore.Computational.RegistrationNativeOwnerFields
 
 /-! Reified bundles preserve complete immutable owner metadata for every private capability reply, including arbitrary optional signature and private count. This support proof does not evaluate the named signing leaf through the opaque source's dummy closed signer. -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -62,7 +63,7 @@ private theorem simulate_keeps {Query : Type} {queries : OracleSpec Query}
 
 private theorem native_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : M n KemSK source RegistrationServerRoleBackend.State Value) (law : SourceKeeps work) :
     Keeps (RegistrationNativeMldsaBundle.native setup checks representation created work) := by
   intro before result supported
@@ -139,38 +140,23 @@ private theorem source_phase (index : Nat) (phase : Phase) :
 /-- Every reified outgoing Init callback retains the complete working owner metadata for all capability replies and private counts. -/
 theorem outgoing (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (owner : Owner source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (owner : Owner source)
     (query : RegistrationBeaconInitExecutor.Spec.Domain) (before : Local n KemSK source)
     (result : RegistrationBeaconInitExecutor.Spec.Range query × Local n KemSK source)
     (supported : result ∈ support
       ((RegistrationNativeMldsaBundle.outgoing setup checks representation created index owner query).run before)) :
     result.2.1.map metadata = before.1.map metadata := by
-  cases query with
-  | inl query => cases query with
-    | hash request =>
-        apply native_keeps setup checks representation created _ ?_ before result supported
-        intro owners env reached possible
-        have law := RegistrationNativeOwnerFields.outgoing_metadata (n := n) setup source index owner
-          (RegistrationBeaconInitExecutor.Spec.query (.inl (.hash request))) owners env reached
-        simp only [simulateQ_spec_query] at law
-        exact law possible
-    | sign request payload digest =>
-        simp only [RegistrationNativeMldsaBundle.outgoing, StateT.run, bind_pure_comp, support_map] at supported
-        obtain ⟨reply, _possible, same⟩ := supported
-        cases same
-        rfl
-  | inr request =>
-      apply native_keeps setup checks representation created _ ?_ before result supported
-      intro owners env reached possible
-      have law := RegistrationNativeOwnerFields.outgoing_metadata (n := n) setup source index owner
-        (RegistrationBeaconInitExecutor.Spec.query (.inr request)) owners env reached
-      simp only [simulateQ_spec_query] at law
-      exact law possible
+  apply native_keeps setup checks representation created _ ?_ before result supported
+  intro owners env reached possible
+  have law := RegistrationNativeOwnerFields.outgoing_metadata (n := n) setup source index owner
+    (RegistrationBeaconInitExecutor.Spec.query query) owners env reached
+  simp only [simulateQ_spec_query] at law
+  exact law possible
 
 /-- Arbitrary complete native Init continuations preserve owner metadata even under arbitrary reified private signer replies. -/
 theorem program (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (owner : Owner source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (owner : Owner source)
     (work : OracleComp RegistrationBeaconInitExecutor.Spec Value) (before : Local n KemSK source)
     (result : Value × Local n KemSK source)
     (supported : result ∈ support
@@ -180,7 +166,7 @@ theorem program (setup : Setup base KemSK) (checks : Checks)
 
 private theorem afterPublished_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (owner : Owner source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (owner : Owner source)
     (oneTime : PqxdhJointGapDh.ScalarBytes) (published : RustM (RegistrationBeaconInitExecutor.Result Pqxdh.Bytes)) :
     Keeps (RegistrationNativeMldsaBundle.afterPublished (n := n) setup checks representation created index owner oneTime published) := by
   cases published with
@@ -196,7 +182,7 @@ private theorem afterPublished_keeps (setup : Setup base KemSK) (checks : Checks
 /-- The entire reified bundle preserves all immutable native owner fields on every success or failure path. -/
 theorem bundle (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (before : Local n KemSK source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (before : Local n KemSK source)
     (result : RustM (Option Pqxdh.Bytes) × Local n KemSK source)
     (supported : result ∈ support ((RegistrationNativeMldsaBundle.bundle setup checks wire representation created index).run before)) :
     result.2.1.map metadata = before.1.map metadata := by
@@ -221,7 +207,7 @@ theorem bundle (setup : Setup base KemSK) (checks : Checks) (wire : Registration
 /-- Closing the reified bundle restores the same complete old owner metadata into the original native envelope. -/
 theorem sourceBundle (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat)
     (before : RegistrationNativeExperiment.State n KemSK source)
     (result : RustM (Option Pqxdh.Bytes) × RegistrationNativeExperiment.State n KemSK source)
     (supported : result ∈ support
@@ -231,36 +217,6 @@ theorem sourceBundle (setup : Setup base KemSK) (checks : Checks) (wire : Regist
   obtain ⟨inner, possible, same⟩ := supported
   cases same
   exact bundle setup checks wire representation created index _ inner possible
-
-/-- Arbitrary reified signing replies retain all already-reached live working owners at the same private table. -/
-theorem program_live (actual : RegistrationNativeMldsa.Source) (pool : RegistrationNativeMldsaOpaque.Pool actual)
-    (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat)
-    (owner : Owner (RegistrationNativeMldsaOpaque.handleSource actual))
-    (work : OracleComp RegistrationBeaconInitExecutor.Spec Value)
-    (before : Local n KemSK (RegistrationNativeMldsaOpaque.handleSource actual))
-    (result : Value × Local n KemSK (RegistrationNativeMldsaOpaque.handleSource actual))
-    (live : RegistrationNativeMldsaPoolMap.OwnersLive actual pool before.1)
-    (supported : result ∈ support
-      ((simulateQ (RegistrationNativeMldsaBundle.outgoing setup checks representation created index owner) work).run before)) :
-    RegistrationNativeMldsaPoolMap.OwnersLive actual pool result.2.1 :=
-  RegistrationNativeMldsaLiveOwners.metadata_live actual pool before.1 result.2.1
-    (program setup checks representation created index owner work before result supported) live
-
-/-- The full reified bundle preserves live ML owner handles without evaluating any named capability reply through a dummy closed signer. -/
-theorem sourceBundle_live (actual : RegistrationNativeMldsa.Source) (pool : RegistrationNativeMldsaOpaque.Pool actual)
-    (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat)
-    (before : RegistrationNativeExperiment.State n KemSK (RegistrationNativeMldsaOpaque.handleSource actual))
-    (result : RustM (Option Pqxdh.Bytes) × RegistrationNativeExperiment.State n KemSK (RegistrationNativeMldsaOpaque.handleSource actual))
-    (live : RegistrationNativeMldsaPoolMap.StateLive actual pool before)
-    (supported : result ∈ support
-      ((RegistrationNativeMldsaBundle.sourceBundle setup checks wire representation created index).run before)) :
-    RegistrationNativeMldsaPoolMap.StateLive actual pool result.2 :=
-  RegistrationNativeMldsaLiveOwners.metadata_live actual pool before.beacons result.2.beacons
-    (sourceBundle setup checks wire representation created index before result supported) live
 
 end BeaconcryptCore.Computational.RegistrationNativeMldsaBundleOwnership
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaBundleOwnership.outgoing' depends on axioms: [propext,
@@ -283,14 +239,3 @@ end BeaconcryptCore.Computational.RegistrationNativeMldsaBundleOwnership
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaBundleOwnership.sourceBundle
-
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaBundleOwnership.program_live' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaBundleOwnership.program_live
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaBundleOwnership.sourceBundle_live' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaBundleOwnership.sourceBundle_live

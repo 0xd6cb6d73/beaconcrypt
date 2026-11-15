@@ -12,7 +12,7 @@ set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativePlatformSdkBuildCut
 open RegistrationServerFrontendCompiler (State)
 open RegistrationServerRootCompiler (Local)
-open RegistrationNativePlatformCompletionSdk (Completion)
+open RegistrationNativePlatformCompletionSdk (AdHash Completion)
 variable {n : Nat} {Platform Encoded : Type}
 
 private theorem state_pure_apply {S X : Type} {m : Type → Type} [Monad m]
@@ -23,6 +23,7 @@ private theorem state_map_apply {S X Y : Type} {m : Type → Type} [Monad m] [La
     (f <$> work) state = Prod.map f id <$> work state := bind_pure_comp _ _
 
 structure Cut
+    (deriveAd : AdHash n (StateT Platform ProbComp))
     (pin : StateT (State n) (StateT Platform ProbComp) (RustM (Option session.ServerAuthenticationPin)))
     (reserve : StateT (State n) (StateT Platform ProbComp) Bool)
     (present : U64 → StateT (State n) (StateT Platform ProbComp) Bool)
@@ -40,6 +41,9 @@ structure Cut
   occupied : Bool
   located : State n
   lookupPlatform : Platform
+  pendingAd : registration.ServerAdHash
+  hashed : State n
+  hashPlatform : Platform
   initial : registration.ServerInitialKdf
   reserved : State n
   reservePlatform : Platform
@@ -52,8 +56,9 @@ structure Cut
   keyRequested : lookup.request = .ok keyId
   preflight : RegistrationServerSdkSource.preflight plaintext keyId = true
   occupancyCalled : ((occupied, located), lookupPlatform) ∈ support (((present keyId).run pinnedState).run pinPlatform)
-  occupancyResumed : lookup.resume occupied = .ok (.Ok initial)
-  reserveCalled : ((true, reserved), reservePlatform) ∈ support ((reserve.run located).run lookupPlatform)
+  occupancyResumed : lookup.resume occupied = .ok (.Ok pendingAd)
+  adHashCalled : ((.ok (.Ok initial), hashed), hashPlatform) ∈ support (((deriveAd pendingAd).run located).run lookupPlatform)
+  reserveCalled : ((true, reserved), reservePlatform) ∈ support ((reserve.run hashed).run hashPlatform)
   finishCalled : ((.ok (.Ok published), completed), next) ∈ support (((finish current.control initial).run reserved.world).run reservePlatform)
   assignedExact : published.key_id = assigned
   encodedExact : published.encoded = encoded
@@ -91,6 +96,7 @@ private theorem fromInitial_cut
 
 /-- Literal success of the complete SDK build supplies every actual reached source prefix and completion call. -/
 theorem build
+    (deriveAd : AdHash n (StateT Platform ProbComp))
     (pin : StateT (State n) (StateT Platform ProbComp) (RustM (Option session.ServerAuthenticationPin)))
     (reserve : StateT (State n) (StateT Platform ProbComp) Bool)
     (present : U64 → StateT (State n) (StateT Platform ProbComp) Bool)
@@ -98,8 +104,8 @@ theorem build
     (handle : Nat) (application : Option (Slice U8)) (assigned : U64) (encoded : Encoded)
     (before after : State n) (previous next : Platform)
     (supported : ((.ok (some (assigned, encoded)), after), next) ∈ support
-      (((RegistrationNativePlatformCompletionSdk.build pin reserve present finish handle application).run before).run previous)) :
-    Nonempty (Cut pin reserve present finish handle application assigned encoded before after previous next) := by
+      (((RegistrationNativePlatformCompletionSdk.build deriveAd pin reserve present finish handle application).run before).run previous)) :
+    Nonempty (Cut deriveAd pin reserve present finish handle application assigned encoded before after previous next) := by
   simp only [RegistrationNativePlatformCompletionSdk.build, StateT.run] at supported
   cases taken : RegistrationServerSdkSource.take handle before with
   | mk selected current =>
@@ -111,7 +117,7 @@ theorem build
           | none => simp [state_pure_apply] at supported
           | some plaintext =>
               change ((.ok (some (assigned, encoded)), after), next) ∈ support
-                (((RegistrationNativePlatformCompletionSdk.complete pin reserve present finish token plaintext).run current).run previous) at supported
+                (((RegistrationNativePlatformCompletionSdk.complete deriveAd pin reserve present finish token plaintext).run current).run previous) at supported
               simp only [RegistrationNativePlatformCompletionSdk.complete, StateT.run_bind, StateT.run_get,
                 pure_bind] at supported
               rw [mem_support_bind_iff] at supported
@@ -145,20 +151,28 @@ theorem build
                                 | fail error | div => simp [resumed, StateT.run_pure] at continued
                                 | ok result => cases result with
                                   | Err prior => simp [resumed, StateT.run_pure] at continued
-                                  | Ok initial =>
+                                  | Ok pendingAd =>
                                       rw [resumed] at continued
                                       dsimp only at continued
                                       simp only [StateT.run_bind, mem_support_bind_iff] at continued
-                                      obtain ⟨⟨⟨admitted, reserved⟩, reservePlatform⟩, reserveCalled, continued⟩ := continued
-                                      cases admitted with
-                                      | false => simp [StateT.run_pure] at continued
-                                      | true =>
-                                          obtain ⟨published, completed, finishCalled, assignedEq, encodedEq, stateEq⟩ :=
-                                            fromInitial_cut finish current.control initial assigned encoded reserved after reservePlatform next continued
-                                          exact ⟨⟨token, current, plaintext, pinned, pinnedState, pinPlatform, lookup, keyId,
-                                            occupied, located, lookupPlatform, initial, reserved, reservePlatform, published, completed,
-                                            taken, rfl, pinCalled, started, requested, preflight, occupancyCalled, resumed,
-                                            reserveCalled, finishCalled, assignedEq, encodedEq, stateEq⟩⟩
+                                      obtain ⟨⟨⟨hashReply, hashed⟩, hashPlatform⟩, hashCalled, continued⟩ := continued
+                                      cases hashReply with
+                                      | fail error | div => simp [StateT.run_pure] at continued
+                                      | ok result => cases result with
+                                        | Err prior => simp [StateT.run_pure] at continued
+                                        | Ok initial =>
+                                          simp only [StateT.run_bind, mem_support_bind_iff] at continued
+                                          obtain ⟨⟨⟨admitted, reserved⟩, reservePlatform⟩, reserveCalled, continued⟩ := continued
+                                          cases admitted with
+                                          | false => simp [StateT.run_pure] at continued
+                                          | true =>
+                                              obtain ⟨published, completed, finishCalled, assignedEq, encodedEq, stateEq⟩ :=
+                                                fromInitial_cut finish current.control initial assigned encoded reserved after reservePlatform next continued
+                                              exact ⟨⟨token, current, plaintext, pinned, pinnedState, pinPlatform, lookup, keyId,
+                                                occupied, located, lookupPlatform, pendingAd, hashed, hashPlatform,
+                                                initial, reserved, reservePlatform, published, completed,
+                                                taken, rfl, pinCalled, started, requested, preflight, occupancyCalled, resumed, hashCalled,
+                                                reserveCalled, finishCalled, assignedEq, encodedEq, stateEq⟩⟩
                               next rejected => simp [StateT.run_pure] at continued
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformSdkBuildCut

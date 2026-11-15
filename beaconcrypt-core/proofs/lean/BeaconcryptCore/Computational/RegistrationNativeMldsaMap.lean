@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativePublicFrontend
 import BeaconcryptCore.Computational.RegistrationNativeExperiment
 
-/-! A source key map replaces only the private ML signing-key representation. Every public key, pin, phase, identity, scalar, KEM handle, World owner and chronological receipt remains literal. Primitive leaf laws transport generation and complete signing requests without assuming key injectivity, key provenance or a protocol security conclusion. -/
+/-! A source key map replaces only the private Server ML signing-key representation. Beacon owner and pending-view conversions retag the source context and contain no ML secret. Every public key, pin, phase, identity, scalar, KEM handle, World owner and chronological receipt remains literal. Primitive leaf laws transport generation and complete signing requests without assuming key injectivity, key provenance or a protocol security conclusion. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
@@ -17,18 +17,18 @@ structure Map (left right : Source) where
 def credential (mapping : Map left right) (current : Credential left) : Credential right :=
   ⟨current.publicKey, mapping.key current.secret⟩
 
-def owner (mapping : Map left right) (current : RegistrationNativeBeaconFrontend.Owner left) : RegistrationNativeBeaconFrontend.Owner right :=
-  ⟨current.pin, credential mapping current.mldsa, current.identitySeed, current.prekeyScalar, current.prekeyPublic,
+def owner (_ : Map left right) (current : RegistrationNativeBeaconFrontend.Owner left) : RegistrationNativeBeaconFrontend.Owner right :=
+  ⟨current.pin, current.identitySeed, current.prekeyScalar, current.prekeyPublic,
     current.kemHandle, current.kemPublic, current.worldOwner, current.phase, current.edHistory⟩
 
 def owners (mapping : Map left right) (current : RegistrationNativeBeaconFrontend.State left) : RegistrationNativeBeaconFrontend.State right :=
   current.map (owner mapping)
 
-def prepared (mapping : Map left right) (current : RegistrationNativeBeaconFrontend.Prepared left) : RegistrationNativeBeaconFrontend.Prepared right :=
-  ⟨credential mapping current.credentials, current.pin, current.identity, current.prekey⟩
+def prepared (_ : Map left right) (current : RegistrationNativeBeaconFrontend.Prepared left) : RegistrationNativeBeaconFrontend.Prepared right :=
+  ⟨current.pin, current.identity, current.prekey⟩
 
-def selectedOwner (mapping : Map left right) (current : RegistrationBeaconReferenceCompiler.SelectedOwner left) : RegistrationBeaconReferenceCompiler.SelectedOwner right :=
-  ⟨current.pin, credential mapping current.mldsa, current.identitySeed, current.prekeyPublic,
+def selectedOwner (_ : Map left right) (current : RegistrationBeaconReferenceCompiler.SelectedOwner left) : RegistrationBeaconReferenceCompiler.SelectedOwner right :=
+  ⟨current.pin, current.identitySeed, current.prekeyPublic,
     current.kemHandle, current.kemPublic, current.worldOwner, current.phase, current.edHistory⟩
 
 def publicOwner (mapping : Map left right) (current : RegistrationNativePublicOwners.Owner left) : RegistrationNativePublicOwners.Owner right :=

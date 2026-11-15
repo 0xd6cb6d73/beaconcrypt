@@ -56,7 +56,7 @@ private theorem uniform_keeps (joint : PqxdhJointIdentity.Primitives) (selected 
     (RegistrationNativeIdentityCensorMldsaOutgoingSource.uniform_frame joint selected placeholder censored _ (allowed before.1.1) before.1.2 before.2 returned reached)
 
 variable (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (selected index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner mlSource) (placeholder : Ed25519Signature)
 variable (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E))
 local notation "Main" => RegistrationNativePlatformIdentityCtxMain.beacon (n := n) (Platform := Platform) (source := mlSource) setup checks representation created
@@ -76,7 +76,7 @@ private theorem crypto_keeps (censored : Bool) (query : RegistrationSigningShare
     exact congrArg (fun state => state.1.active)
       (RegistrationNativeIdentityCensorMldsaOutgoingSource.frame setup checks representation created selected index owner request placeholder censored payload digest before result possible)
 
-private theorem encoder_keeps (censored : Bool) (fields : registration.SignedInitView) : Keeps (encoder(censored) fields) :=
+private theorem encoder_keeps (censored : Bool) (fields : registration.InitView) : Keeps (encoder(censored) fields) :=
   uniform_keeps setup.joint selected placeholder censored _
     (fun before => RegistrationNativeIdentityCensorExternalSource.coin_only setup checks representation created _ before)
 
@@ -86,20 +86,6 @@ private theorem ready_keeps (censored : Bool) (pending : registration.BeaconInit
   apply continue_keeps
   intro fields
   exact bind_keeps _ _ (encoder_keeps setup checks representation created selected placeholder reserve censored fields) (fun _ => pure_keeps _)
-
-private theorem signing_keeps (censored : Bool) (payload : MldsaTranscriptAuth.Payload) (digest : CtxRomAuth.CtxDigest)
-    (pending : registration.BeaconMldsaSigning) :
-    Keeps (RegistrationNativePlatformBeaconPublication.fromSigning (callback(censored)) (encoder(censored)) payload digest pending) := by
-  unfold RegistrationNativePlatformBeaconPublication.fromSigning
-  apply continue_keeps
-  intro request
-  apply bind_keeps _ _ (crypto_keeps setup checks representation created selected index owner placeholder censored _)
-  intro signature
-  apply continue_keeps
-  intro effect
-  cases effect with
-  | Ready next => exact ready_keeps setup checks representation created selected placeholder reserve censored next
-  | _ => exact pure_keeps _
 
 private theorem hash_keeps (censored : Bool) (pending : registration.BeaconInitHash) :
     Keeps (RegistrationNativePlatformBeaconPublication.fromHash (callback(censored)) (encoder(censored)) pending) := by
@@ -111,25 +97,15 @@ private theorem hash_keeps (censored : Bool) (pending : registration.BeaconInitH
   apply continue_keeps
   intro effect
   cases effect with
-  | MldsaSigningRequested next => exact signing_keeps setup checks representation created selected index owner placeholder reserve censored _ digest next
+  | Ready next => exact ready_keeps setup checks representation created selected placeholder reserve censored next
   | _ => exact pure_keeps _
 
-/-- All actual fingerprint/hash/ML/writer outcomes preserve the current public source-selection flag, including every rejection and failed allocation. -/
-theorem fingerprint (censored : Bool) (pending : registration.BeaconFingerprint)
+/-- The current request-hash/Ready/writer suffix preserves the selected source flag. -/
+theorem request_hash (censored : Bool) (pending : registration.BeaconInitHash)
     (before : FullState) (result : RustM (RegistrationBeaconInitExecutor.Result (alloc.vec.Vec U8)) × FullState)
-    (possible : result ∈ support ((RegistrationNativePlatformBeaconPublication.fromFingerprint (callback(censored)) (encoder(censored)) pending).run before)) :
-    result.2.1.2.active = before.1.2.active := by
-  apply (show Keeps (RegistrationNativePlatformBeaconPublication.fromFingerprint (callback(censored)) (encoder(censored)) pending) from ?_) before result possible
-  unfold RegistrationNativePlatformBeaconPublication.fromFingerprint
-  apply continue_keeps
-  intro request
-  apply bind_keeps _ _ (crypto_keeps setup checks representation created selected index owner placeholder censored _)
-  intro digest
-  apply continue_keeps
-  intro effect
-  cases effect with
-  | HashRequested next => exact hash_keeps setup checks representation created selected index owner placeholder reserve censored next
-  | _ => exact pure_keeps _
+    (possible : result ∈ support ((RegistrationNativePlatformBeaconPublication.fromHash (callback(censored)) (encoder(censored)) pending).run before)) :
+    result.2.1.2.active = before.1.2.active :=
+  hash_keeps setup checks representation created selected index owner placeholder reserve censored pending before result possible
 
 /-- After selection, the source's role-separated PQ service and every later original publication branch keep the selected callback active. -/
 theorem pq (censored : Bool) (pending : registration.BeaconEd25519Signing) (stage : pending.stage = .PqKey)
@@ -156,8 +132,8 @@ theorem pq (censored : Bool) (pending : registration.BeaconEd25519Signing) (stag
     subst result
     exact active
   case Ed25519SigningRequested next => exact facts.2.elim
-  case FingerprintRequested next =>
-    exact (fingerprint setup checks representation created selected index owner placeholder reserve censored next middle result later).trans active
+  case HashRequested next =>
+    exact (request_hash setup checks representation created selected index owner placeholder reserve censored next middle result later).trans active
 
 private theorem selected_current (censored : Bool) (request : registration.Ed25519SigningRequest)
     (before : FullState) (seed : PqxdhJointIdentity.IdentitySeed)
@@ -223,11 +199,11 @@ theorem one_time (censored : Bool) (pending : registration.BeaconEd25519Signing)
     (PqxdhRefinement.absBytes pending.state.started.message.one_time_key) rfl tagged.2.1 result possible
 
 end BeaconcryptCore.Computational.RegistrationNativeIdentityCensorActiveTail
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeIdentityCensorActiveTail.fingerprint' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeIdentityCensorActiveTail.request_hash' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeIdentityCensorActiveTail.fingerprint
+#print axioms BeaconcryptCore.Computational.RegistrationNativeIdentityCensorActiveTail.request_hash
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativeIdentityCensorActiveTail.pq' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/

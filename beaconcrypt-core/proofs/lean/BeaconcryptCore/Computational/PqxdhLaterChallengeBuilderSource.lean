@@ -7,7 +7,10 @@ open OracleComp OracleSpec CoreModels Aeneas OracleComp.ProgramLogic.Relational
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeBuilderSource
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPhase1AcceptanceOracle PqxdhKemIndCca PqxdhInitializerSecrecy
 open CtxRomAuth AdaptiveCtxSharedHash PqxdhSecretInputKdf PqxdhFullSecretInputKdf
@@ -68,7 +71,7 @@ theorem whole_original (bit : Bool) (selection : program.Selection)
 /-- An actual generated initial-Builder cut supplies the original selection and literal outside continuation used by the executable consumer. This is a support consequence, not a conditional distribution or probability assertion. -/
 theorem generated_whole (bit : Bool) (depth : Nat) (result : Carrier × Option program.Selection)
     (stored : Input × HmacBlock) (pending : Pending)
-    (supported : result ∈ support (PqxdhLaterChallengeGeneratedContinuation.run
+    (supported : result ∈ support (PqxdhLaterChallengeGeneratedContinuation.run (associatedData := associatedData) (completedBinding := completedBinding)
       setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed depth))
     (shape : result.1.1.2.1.1.1 = Sum.inr (stored, Sum.inr pending))
     (initialCut : result.1.2 = none) :
@@ -77,7 +80,7 @@ theorem generated_whole (bit : Bool) (depth : Nat) (result : Carrier × Option p
       pending.1.original = .inr saved ∧
       whole setup program adversary owner number bit selection { saved with outside := pure }
         pending.1.trace pending.1.origin = pending.1 := by
-  obtain ⟨selection, selected, post, continued⟩ := PqxdhLaterChallengeGeneratedContinuation.run_capture
+  obtain ⟨selection, selected, post, continued⟩ := PqxdhLaterChallengeGeneratedContinuation.run_capture (associatedData := associatedData) (completedBinding := completedBinding)
     setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed depth result stored pending supported shape
   simp only [PqxdhLaterChallengeBuilderContinuation.Continuation, initialCut] at continued
   rcases continued with ⟨saved, same, outside⟩

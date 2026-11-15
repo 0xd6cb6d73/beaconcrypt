@@ -41,11 +41,11 @@ variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response : Type}
 /-- The factored hidden-entry services at a 108-byte value: the fields of `PqxdhServerAuthEntryFactor.factorServices` (plan section 18). -/
 noncomputable def factoredHidden (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (value : Output) : Hidden Response where
-  hiddenBuild token payload server := PqxdhServerAuthLoggedSendFactor.factored
+  hiddenBuild token payload ad server := PqxdhServerAuthLoggedSendFactor.factored (associatedData := ad)
     (fun entry _ _ => pure (entry, .None))
     (PqxdhServerAuthLoggedSendFactor.loggedPrim setup codec checks) setup.source
     (PqxdhServerAuthLoggedSendFactor.loggedAux setup codec checks)
-    (PqxdhServerAuthCtxMaterial.factor value) token.pending payload () server
+    (PqxdhServerAuthCtxMaterial.factor value) token.pending payload ad server
   hiddenAfter pending := PqxdhServerAuthBeaconFactor.factored
     (PqxdhServerAuthBeaconFactor.nativePrim setup codec)
     (fun entry _ => pure (entry, none)) setup.source (fun response => pure (codec.application response))
@@ -77,15 +77,18 @@ theorem hiddenAfter_factor (setup : Setup baseSpec KemSK) (codec : Codec Reader 
 /-- The native response tail of a session whose pending token holds a root is the factored response tail at that root's 108-byte output, on any token with the same pending Registration. -/
 theorem hiddenBuild_factor (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (token other : PqxdhServerRelatedRootConsumer.Returned) (same : other.pending = token.pending)
-    (payload : Option Pqxdh.Bytes) (server : PqxdhServerAuthEntryFactor.ServerState) :
-    nativeResponse setup codec checks token payload server =
+    (payload : Option Pqxdh.Bytes) (ad : PqxdhTranscriptAd.AssociatedData)
+    (server : PqxdhServerAuthEntryFactor.ServerState) :
+    nativeResponse setup codec checks token payload ad server =
       (factoredHidden setup codec checks (PqxdhServerAuthKeySchedule.fromRoot setup.source token.root)).hiddenBuild
-        other payload server := by
+        other payload ad server := by
   change simulateQ (tailImpl setup codec checks)
-      (PqxdhServerRegistrationPublication.build setup.source token.pending token.root payload () server) = _
-  rw [PqxdhServerAuthLoggedSendFactor.logged_server_send_factor setup codec checks (fun entry _ _ => pure (entry, .None)),
+      (PqxdhServerRegistrationPublication.build (associatedData := ad) setup.source token.pending token.root payload ad
+        server) = _
+  rw [PqxdhServerAuthLoggedSendFactor.logged_server_send_factor (associatedData := ad) setup codec checks
+      (fun entry _ _ => pure (entry, .None)),
     ← PqxdhServerAuthCtxMaterial.factor_source]
-  change _ = PqxdhServerAuthLoggedSendFactor.factored _ _ _ _ _ other.pending payload () server
+  change _ = PqxdhServerAuthLoggedSendFactor.factored (associatedData := ad) _ _ _ _ _ other.pending payload ad server
   rw [same]
 
 end Services
@@ -99,7 +102,7 @@ variable {KemSK : Type}
 /-- A pending token with the placeholder root. -/
 def placeholderToken (token : Option PqxdhServerRelatedRootConsumer.Returned) :
     Option PqxdhServerRelatedRootConsumer.Returned :=
-  token.map fun token => ⟨PqxdhServerAuthEntryFactor.sentinel, token.pending⟩
+  token.map fun token => ⟨PqxdhServerAuthEntryFactor.sentinel, token.pending, token.init⟩
 
 /-- The game state with the pending token of the marked session holding the placeholder root. -/
 def placeholderAt (marked : Option Nat) (game : GameState KemSK) : GameState KemSK :=
@@ -144,12 +147,12 @@ theorem placeholderAt_sessions_eq (marked : Option Nat) (game : GameState KemSK)
   cases marked <;> rfl
 
 theorem placeholderAt_server (marked : Option Nat) (game : GameState KemSK)
-    (server : PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes)) :
+    (server : PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes)) :
     placeholderAt marked { game with server := server } = { placeholderAt marked game with server := server } := by
   cases marked <;> rfl
 
 theorem placeholderAt_sessions (marked : Option Nat) (game : GameState KemSK) (sessions : Nat)
-    (server : PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes)) :
+    (server : PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes)) :
     placeholderAt marked { game with sessions := sessions, server := server } =
       { placeholderAt marked game with sessions := sessions, server := server } := by
   cases marked <;> rfl

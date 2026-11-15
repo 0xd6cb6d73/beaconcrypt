@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativePlatformSigningJournal
 import BeaconcryptCore.Computational.RegistrationNativePlatformBeaconPublication
 import BeaconcryptCore.Computational.RegistrationNativePlatformServerPublication
-/-! A private source hash-cut journal for arbitrary stateful signing interpreters. The actual stateful Beacon and Server publication stages recover their unsigned ML payload and digest from the preceding private chronological hash cut. Source request-only signing equals the explicit native metadata-bearing signing call through arbitrary effectful serialization, including all later failures and complete shared poststates. No codec law, encoder purity, hash-cache inversion or caller-provided transcript-alignment premise is used. -/
+/-! A private source hash-cut journal for arbitrary stateful signing interpreters. The actual stateful Server publication recovers its unsigned ML payload and digest from the preceding private chronological hash cut; Beacon publication retains its three Ed signatures and final hash without an ML operation. Source request-only signing equals the explicit native metadata-bearing signing call through arbitrary effectful serialization, including all later failures and complete shared poststates. No codec law, encoder purity, hash-cache inversion or caller-provided transcript-alignment premise is used. -/
 open CoreModels Aeneas OracleComp OracleSpec
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -15,9 +15,8 @@ namespace BeaconcryptCore.Computational.RegistrationNativePlatformCutJournal
 open BeaconcryptCore.Refinement.RegistrationInputs (hashBytes)
 open RegistrationNativePlatformSigningJournal (Cut)
 variable {S : Type} {Encoded : Type} {m : Type → Type} [Monad m] [LawfulMonad m]
-attribute [local irreducible] registration.BeaconFingerprint.resume registration.BeaconFingerprint.request
-  registration.BeaconInitHash.resume registration.BeaconInitHash.request
-  registration.BeaconMldsaSigning.resume registration.BeaconMldsaSigning.request
+attribute [local irreducible] registration.BeaconInitHash.request
+  registration.BeaconInitHash.resume
   registration.BeaconEd25519Signing.resume registration.BeaconEd25519Signing.request
   registration.ServerResponseHash.resume registration.ServerResponseHash.request
   registration.ServerResponseSigning.resume registration.ServerResponseSigning.request
@@ -59,7 +58,8 @@ theorem hash_run (request : registration.HashRequest) (before : State S) :
 def extended (impl : QueryImpl RegistrationSigningShared.Spec (StateT (State S) m))
     (ed : registration.Ed25519SigningRequest → StateT (State S) m RegistrationSigningShared.SignReply) :
     QueryImpl RegistrationBeaconInitExecutor.Spec (StateT (State S) m)
-  | .inl query => impl query
+  | .inl (.hash request) => impl (.hash request)
+  | .inl (.sign _ _ _) => pure .None
   | .inr request => ed request
 
 omit [LawfulMonad m] in
@@ -74,48 +74,13 @@ private theorem sign_aligned (request : registration.MldsaSigningRequest)
   rfl
 
 omit [LawfulMonad m] in
-private theorem beacon_signing
-    (ed : registration.Ed25519SigningRequest → StateT (State S) m RegistrationSigningShared.SignReply)
-    (encode : registration.SignedInitView → StateT (State S) m (RustM (core.option.Option Encoded)))
-    (pending : registration.BeaconMldsaSigning) (payload : MldsaTranscriptAuth.Payload) (digest : CtxRomAuth.CtxDigest)
-    (cut : Cut) (aligned : ∀ request, pending.request = .ok request → cut.payload request.role = payload)
-    (sameDigest : cut.digest = digest) (before : S) :
-    (RegistrationNativePlatformBeaconPublication.fromSigning (extended (source impl fallback) ed) encode payload digest pending).run
-      (before, some cut) =
-    (RegistrationNativePlatformBeaconPublication.fromSigning (extended (forward impl) ed) encode payload digest pending).run
-      (before, some cut) := by
-  unfold RegistrationNativePlatformBeaconPublication.fromSigning
-  cases requested : pending.request with
-  | fail error | div => rfl
-  | ok request =>
-      simp only [RegistrationNativePlatformBeaconPublication.continueWith, extended, StateT.run_bind]
-      rw [sign_aligned impl fallback request payload digest cut (aligned request requested) sameDigest]
-
 theorem beacon_hash
     (ed : registration.Ed25519SigningRequest → StateT (State S) m RegistrationSigningShared.SignReply)
-    (encode : registration.SignedInitView → StateT (State S) m (RustM (core.option.Option Encoded)))
+    (encode : registration.InitView → StateT (State S) m (RustM (core.option.Option Encoded)))
     (pending : registration.BeaconInitHash) (before : State S) :
     (RegistrationNativePlatformBeaconPublication.fromHash (extended (source impl fallback) ed) encode pending).run before =
       (RegistrationNativePlatformBeaconPublication.fromHash (extended (forward impl) ed) encode pending).run before := by
-  obtain ⟨request, requested, transcript⟩ := BeaconcryptCore.Refinement.RegistrationSigningTrace.command_request_exact (.beacon pending)
-  change pending.request = .ok request at requested
-  unfold RegistrationNativePlatformBeaconPublication.fromHash
-  rw [requested]
-  simp only [RegistrationNativePlatformBeaconPublication.continueWith, extended, source, forward,
-    StateT.run_bind]
-  rw [hash_run]
-  simp only [bind_map_left]
-  apply bind_congr
-  intro result
-  obtain ⟨signing, resumed, _state, _fingerprint, _digest, selected, selectedRun, _key, role, _context, _contextBytes, _input⟩ :=
-    BeaconcryptCore.Refinement.RegistrationSigningContinuations.beacon_init_hash_some_exact pending (RegistrationAuthenticationShared.digestArray result.1)
-  rw [resumed]
-  simp only
-  apply beacon_signing impl fallback ed encode signing ⟨.beacon, hashBytes request⟩ result.1 _ _ rfl result.2
-  intro other otherRun
-  have same : other = selected := RustM.ok.inj (otherRun.symm.trans selectedRun)
-  subst other
-  simp only [Cut.payload, role, TranscriptAuthInputsRefinement.absRole]
+  rfl
 
 omit [LawfulMonad m] in
 private theorem server_signing
@@ -157,28 +122,10 @@ theorem server
   subst selected
   rfl
 
-theorem beacon_fingerprint
-    (ed : registration.Ed25519SigningRequest → StateT (State S) m RegistrationSigningShared.SignReply)
-    (encode : registration.SignedInitView → StateT (State S) m (RustM (core.option.Option Encoded)))
-    (pending : registration.BeaconFingerprint) (before : State S) :
-    (RegistrationNativePlatformBeaconPublication.fromFingerprint (extended (source impl fallback) ed) encode pending).run before =
-      (RegistrationNativePlatformBeaconPublication.fromFingerprint (extended (forward impl) ed) encode pending).run before := by
-  unfold RegistrationNativePlatformBeaconPublication.fromFingerprint
-  cases requested : pending.request with
-  | fail error | div => rfl
-  | ok request =>
-      simp only [RegistrationNativePlatformBeaconPublication.continueWith, extended, source, forward, StateT.run_bind]
-      apply bind_congr
-      intro result
-      obtain ⟨hashing, resumed, _state, _fingerprint, _request⟩ :=
-        BeaconcryptCore.Refinement.RegistrationSigningContinuations.beacon_fingerprint_some_exact pending
-          (RegistrationAuthenticationShared.digestArray result.1)
-      rw [resumed]
-      exact beacon_hash impl fallback ed encode hashing result.2
-
+omit [LawfulMonad m] in
 theorem beacon_ed
     (ed : registration.Ed25519SigningRequest → StateT (State S) m RegistrationSigningShared.SignReply)
-    (encode : registration.SignedInitView → StateT (State S) m (RustM (core.option.Option Encoded)))
+    (encode : registration.InitView → StateT (State S) m (RustM (core.option.Option Encoded)))
     (pending : registration.BeaconEd25519Signing) (before : State S) :
     (RegistrationNativePlatformBeaconPublication.fromEd (extended (source impl fallback) ed) encode pending).run before =
       (RegistrationNativePlatformBeaconPublication.fromEd (extended (forward impl) ed) encode pending).run before := by
@@ -194,14 +141,15 @@ theorem beacon_ed
       | fail error | div => rfl
       | ok effect => cases effect with
         | Ed25519SigningRequested next => exact beacon_ed ed encode next result.2
-        | FingerprintRequested next => exact beacon_fingerprint impl fallback ed encode next result.2
+        | HashRequested next => exact beacon_hash impl fallback ed encode next result.2
         | _ => rfl
 termination_by RegistrationBeaconInitExecutor.edRank pending
 decreasing_by exact RegistrationBeaconInitExecutor.ed_rank pending result.1 next resumed
 
+omit [LawfulMonad m] in
 private theorem beacon_start
     (ed : registration.Ed25519SigningRequest → StateT (State S) m RegistrationSigningShared.SignReply)
-    (encode : registration.SignedInitView → StateT (State S) m (RustM (core.option.Option Encoded)))
+    (encode : registration.InitView → StateT (State S) m (RustM (core.option.Option Encoded)))
     (action : RustM registration.BeaconInitEffect) (before : State S) :
     (RegistrationNativePlatformBeaconPublication.continueWith (Encoded := Encoded) (m := StateT (State S) m) action (fun effect => match effect with
       | .Rejected previous => pure (.ok (.Err previous))
@@ -232,14 +180,15 @@ private theorem beacon_start
   exact congrArg (fun next => (RegistrationNativePlatformBeaconPublication.continueWith
     (Encoded := Encoded) (m := StateT (State S) m) action next).run before) same
 
+omit [LawfulMonad m] in
 theorem beacon_begin
     (ed : registration.Ed25519SigningRequest → StateT (State S) m RegistrationSigningShared.SignReply)
-    (encode : registration.SignedInitView → StateT (State S) m (RustM (core.option.Option Encoded)))
+    (encode : registration.InitView → StateT (State S) m (RustM (core.option.Option Encoded)))
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (scalar : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize) (before : State S) :
-    (RegistrationNativePlatformBeaconPublication.begin (extended (source impl fallback) ed) encode control inputs scalar pin mldsa).run before =
-      (RegistrationNativePlatformBeaconPublication.begin (extended (forward impl) ed) encode control inputs scalar pin mldsa).run before := by
-  exact beacon_start impl fallback ed encode (registration.begin_beacon_init control inputs scalar pin mldsa) before
+    (pin : session.ServerAuthenticationPin) (before : State S) :
+    (RegistrationNativePlatformBeaconPublication.begin (extended (source impl fallback) ed) encode control inputs scalar pin).run before =
+      (RegistrationNativePlatformBeaconPublication.begin (extended (forward impl) ed) encode control inputs scalar pin).run before := by
+  exact beacon_start impl fallback ed encode (registration.begin_beacon_init control inputs scalar pin) before
 end BeaconcryptCore.Computational.RegistrationNativePlatformCutJournal
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformCutJournal.hash_run' depends on axioms: [propext,
@@ -260,11 +209,6 @@ end BeaconcryptCore.Computational.RegistrationNativePlatformCutJournal
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativePlatformCutJournal.server
 
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformCutJournal.beacon_fingerprint' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformCutJournal.beacon_fingerprint
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformCutJournal.beacon_ed' depends on axioms: [propext,
  Classical.choice,

@@ -117,32 +117,14 @@ private theorem prepare_stable (placeholder : Ed25519Signature)
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64) :
     Stable placeholder (RegistrationNativeIdentityFrontend.prepare (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) source edPin mlPin keyId) := by
   unfold RegistrationNativeIdentityFrontend.prepare
-  apply bind_stable placeholder _ _ (sample_stable placeholder _)
-  intro generated
-  cases generated with
-  | none => exact pure_stable placeholder _
-  | some credentials =>
-    dsimp only
-    cases begun : registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
-    | fail error | div => simpa only [begun] using (pure_stable (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (source := source) placeholder _)
-    | ok pending =>
-      simp only
-      cases requested : pending.request with
-      | fail error | div => simpa only [requested] using (pure_stable (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (source := source) placeholder _)
-      | ok request =>
-        simp only
-        apply bind_stable placeholder _ _ (effect_stable placeholder _)
-        intro digest
-        cases resumed : pending.resume (.Some (RegistrationAuthenticationShared.digestArray digest)) with
-        | fail error | div => simpa only [resumed] using (pure_stable (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (source := source) placeholder _)
-        | ok result => cases result with
-          | none => exact pure_stable placeholder _
-          | some pin =>
-            apply bind_stable placeholder _ _ (lift_stable placeholder _)
-            intro identity
-            cases identity with
-            | none => exact pure_stable placeholder _
-            | some identity => exact bind_stable placeholder _ _ (sample_stable placeholder _) (fun _ => pure_stable placeholder _)
+  cases begun : registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
+  | fail error | div => exact pure_stable placeholder _
+  | ok pin =>
+    apply bind_stable placeholder _ _ (lift_stable placeholder _)
+    intro identity
+    cases identity with
+    | none => exact pure_stable placeholder _
+    | some identity => exact bind_stable placeholder _ _ (sample_stable placeholder _) (fun _ => pure_stable placeholder _)
 
 private theorem append_stable (placeholder : Ed25519Signature) (born : Owner source)
     (fixed : RegistrationNativeIdentityHistoryView.owner placeholder born = born) :

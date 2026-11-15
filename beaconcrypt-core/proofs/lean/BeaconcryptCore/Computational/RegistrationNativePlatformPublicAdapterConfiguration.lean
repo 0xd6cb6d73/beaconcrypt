@@ -5,6 +5,7 @@ import BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterAcce
 import BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterOrdinaryRawSteps
 import BeaconcryptCore.Computational.RegistrationNativePlatformSdkFinishPhysical
 import BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterInitialization
+import BeaconcryptCore.Refinement.AdapterServerConstructorGeneration
 /-! The concrete public adapter is configured only by original primitive operations, their individual functional/sampling contracts and standard collection leaves. No callback, source-profile, security-event or complete local correspondence is a field. The same configuration is independent of startup's sampled Server identity and credential. -/
 open CoreModels Aeneas OracleComp OracleSpec
 open Aeneas.Std hiding namespace core alloc
@@ -37,7 +38,7 @@ structure Configuration (setup : PqxdhServerAuthExperiment.Setup base KemSK) (ch
   agreement : AdapterPublicAgreementPrimitiveModel.Model (m:=ProbComp) generator setup checks view
   entropy : AdapterPublicAgreementServerNative.Entropy agreement
   kem : AdapterBeaconConstructorKem.Representation view R
-  mlGeneration : AdapterBeaconConstructorGeneration.MldsaContract generator view (RegistrationNativeMldsa.generate source)
+  mlGeneration : AdapterServerConstructorGeneration.MldsaContract generator view (RegistrationNativeMldsa.generate source)
   edGeneration : AdapterBeaconConstructorGeneration.EdContract generator view setup.joint PqxdhJointIdentity.sampleSeed
   prekeyGeneration : AdapterBeaconConstructorGeneration.KxContract generator view
     (fun scalar=>PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)) PqxdhJointGapDh.sampleScalar

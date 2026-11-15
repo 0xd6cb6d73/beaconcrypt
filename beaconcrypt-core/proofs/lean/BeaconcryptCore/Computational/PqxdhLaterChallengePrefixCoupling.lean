@@ -3,7 +3,10 @@ import BeaconcryptCore.Computational.PqxdhLaterChallengeBuilderCoupling
 /-! Instantiate the full-pair scan relation at the actual shared source compiler and concrete prepared input, retaining the executed shared cache and every private field. -/
 open OracleComp OracleSpec OracleComp.ProgramLogic.Relational
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengePrefixCoupling
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 section Shared
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
@@ -30,14 +33,14 @@ variable (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (writer : RawC
 theorem shared (state : Local A N C) (cache : CtxRO.QueryCache) :
     RelTriple
       (RawCtxSharedPrefixScan.restore attach <$>
-        (simulateQ hashImpl (sharedCarried mark origin sender route read index before trace source writer stage
+        (simulateQ hashImpl (sharedCarried (associatedData := associatedData) (completedBinding := completedBinding) mark origin sender route read index before trace source writer stage
           pre application initializer selector aux initial metadata ready owner number first adversary depth state)).run cache)
       (RawCtxSharedPrefixScan.restore attach <$>
-        (simulateQ hashImpl (sharedCarried mark origin sender route read index before trace source writer stage
+        (simulateQ hashImpl (sharedCarried (associatedData := associatedData) (completedBinding := completedBinding) mark origin sender route read index before trace source writer stage
           pre application initializer selector aux initial metadata ready owner number second adversary depth state)).run cache)
       (PqxdhLaterChallengeBuilderCoupling.Related owner number first second adversary) := by
   rw [PqxdhLaterChallengeCutChronology.shared_source, PqxdhLaterChallengeCutChronology.shared_source]
-  exact PqxdhLaterChallengeBuilderCoupling.coupled mark origin sender route read index before trace source initial metadata ready
+  exact PqxdhLaterChallengeBuilderCoupling.coupled (associatedData := associatedData) (completedBinding := completedBinding) mark origin sender route read index before trace source initial metadata ready
     _ _ _ owner number first second adversary (attach state cache)
 
 end Shared
@@ -77,11 +80,11 @@ theorem prepared (start : Input) (output : HmacBlock) (depth : Nat)
       (PqxdhFirstRecordConfidentiality.AdvSpec (SelectorSpec baseSpec) S (B + 1)) Bool) (cache : CtxRO.QueryCache) :
     RelTriple
       (RawCtxSharedPrefixScan.restore attach <$> (simulateQ hashImpl
-        (capturedPrefix original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number first adversary)).run cache)
+        (capturedPrefix (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number first adversary)).run cache)
       (RawCtxSharedPrefixScan.restore attach <$> (simulateQ hashImpl
-        (capturedPrefix original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number second adversary)).run cache)
+        (capturedPrefix (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number second adversary)).run cache)
       (PqxdhLaterChallengeBuilderCoupling.Related owner number first second adversary) := by
-  apply shared
+  apply shared (associatedData := associatedData) (completedBinding := completedBinding)
 
 end Prepared
 end BeaconcryptCore.Computational.PqxdhLaterChallengePrefixCoupling

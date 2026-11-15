@@ -6,9 +6,9 @@ import BeaconcryptCore.Refinement.TranscriptAuthParts
 import BeaconcryptCore.Model.Pqxdh.TranscriptAuth
 
 /-!
-The complete production extraction's authentication builders refine the exact unsigned byte transcripts. Hashing and ML-DSA remain external primitives.
+The complete production extraction's authentication builders refine the exact remaining-field byte transcripts. Hashing and ML-DSA remain external primitives.
 
-The same current extraction supplies the generic byte/scalar lemmas, LE64 helper and AD281/CTX357 refinements. The separately generated authentication cohort remains a reproducibility check.
+The same current extraction supplies the generic byte/scalar lemmas, LE64 helper and AD151/CTX227 refinements. The separately generated authentication cohort remains a reproducibility check.
 -/
 
 open CoreModels Aeneas
@@ -30,7 +30,6 @@ def absInit (fields : authentication.InitFields) : TranscriptAuth.InitFields whe
   preKey := absBytes fields.pre_key
   oneTimeKey := absBytes fields.one_time_key
   pqKey := absBytes fields.pq_key
-  mldsaPublicKey := absBytes fields.mldsa_public_key
 
 def absResponse (fields : authentication.ResponseFields) : TranscriptAuth.ResponseFields where
   identityKey := absBytes fields.identity_key
@@ -76,14 +75,14 @@ private theorem init_closure_list (fields : authentication.InitFields)
     (serverId : Std.Array Std.U8 8#usize) (serverEd : Std.Array Std.U8 32#usize)
     (serverMldsa : Std.Array Std.U8 1952#usize)
     (identityLength signedLength pqLength : Std.Array Std.U8 8#usize)
-    (index : Nat) (bound : index < 5495) :
+    (index : Nat) (bound : index < 3543) :
     let closure : authentication.build_init_transcript.closure :=
-      (serverId, serverEd, fields.identity_key, fields.pre_key, fields.one_time_key,
-        fields.pq_key, fields.mldsa_public_key, serverMldsa, identityLength, signedLength, pqLength)
+      (serverId, serverEd, serverMldsa, identityLength, fields.identity_key, fields.pre_key, fields.one_time_key,
+        fields.pq_key, signedLength, pqLength)
     authentication.build_init_transcript.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
         closure ⟨BitVec.ofNat _ index⟩ =
       ok ((authentication.INIT_DOMAIN.val ++ serverId.val ++ serverEd.val ++
-        fields.mldsa_public_key.val ++ serverMldsa.val ++ identityLength.val ++
+        serverMldsa.val ++ identityLength.val ++
         fields.identity_key.val ++ signedLength.val ++ fields.pre_key.val ++ signedLength.val ++
         fields.one_time_key.val ++ pqLength.val ++ fields.pq_key.val)[index]!, closure) := by
   have value := usize_mk_val index (by omega)
@@ -93,13 +92,12 @@ private theorem init_closure_list (fields : authentication.InitFields)
   dsimp only [Std.UScalarTy.numBits] at value
   norm_num only [Std.UScalar.ofNatCore_val_eq]
   rcases (show index < 41 ∨ (41 ≤ index ∧ index < 49) ∨ (49 ≤ index ∧ index < 81) ∨
-      (81 ≤ index ∧ index < 2033) ∨ (2033 ≤ index ∧ index < 3985) ∨
-      (3985 ≤ index ∧ index < 3993) ∨ (3993 ≤ index ∧ index < 4026) ∨
-      (4026 ≤ index ∧ index < 4034) ∨ (4034 ≤ index ∧ index < 4132) ∨
-      (4132 ≤ index ∧ index < 4140) ∨ (4140 ≤ index ∧ index < 4238) ∨
-      (4238 ≤ index ∧ index < 4246) ∨ 4246 ≤ index by omega) with
+      (81 ≤ index ∧ index < 2033) ∨ (2033 ≤ index ∧ index < 2041) ∨
+      (2041 ≤ index ∧ index < 2074) ∨ (2074 ≤ index ∧ index < 2082) ∨
+      (2082 ≤ index ∧ index < 2180) ∨ (2180 ≤ index ∧ index < 2188) ∨
+      (2188 ≤ index ∧ index < 2286) ∨ (2286 ≤ index ∧ index < 2294) ∨ 2294 ≤ index by omega) with
     region | region | region | region | region | region | region | region | region |
-      region | region | region | region
+      region | region | region
   all_goals repeat' first | rw [ite_eq_left (by omega)] | rw [ite_eq_right (by omega)]
   all_goals try erw [index_sub_eq]
   all_goals norm_num only [value, Std.UScalar.ofNatCore_val_eq]
@@ -120,15 +118,15 @@ theorem build_init_transcript_abs (fields : authentication.InitFields) (serverId
   obtain ⟨signedLength, signedSuccess, signedAbs⟩ := encode_u64_le_abs 98#u64
   obtain ⟨pqLength, pqSuccess, pqAbs⟩ := encode_u64_le_abs 1249#u64
   let bytes := authentication.INIT_DOMAIN.val ++ serverBytes.val ++ serverEd.val ++
-    fields.mldsa_public_key.val ++ serverMldsa.val ++ identityLength.val ++
+    serverMldsa.val ++ identityLength.val ++
     fields.identity_key.val ++ signedLength.val ++ fields.pre_key.val ++ signedLength.val ++
     fields.one_time_key.val ++ pqLength.val ++ fields.pq_key.val
-  have width : bytes.length = (5495#usize).val := by
+  have width : bytes.length = (3543#usize).val := by
     norm_num only [bytes, List.length_append, Std.Array.length_eq, Std.UScalar.ofNatCore_val_eq]
-  obtain ⟨output, success, contents⟩ := from_fn_list 5495#usize
+  obtain ⟨output, success, contents⟩ := from_fn_list 3543#usize
     authentication.build_init_transcript.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8
-    (serverBytes, serverEd, fields.identity_key, fields.pre_key, fields.one_time_key,
-      fields.pq_key, fields.mldsa_public_key, serverMldsa, identityLength, signedLength, pqLength)
+    (serverBytes, serverEd, serverMldsa, identityLength, fields.identity_key, fields.pre_key, fields.one_time_key,
+      fields.pq_key, signedLength, pqLength)
     bytes width (fun index bound => init_closure_list fields serverBytes serverEd serverMldsa
       identityLength signedLength pqLength index
       (by simpa only [Std.UScalar.ofNatCore_val_eq] using bound))

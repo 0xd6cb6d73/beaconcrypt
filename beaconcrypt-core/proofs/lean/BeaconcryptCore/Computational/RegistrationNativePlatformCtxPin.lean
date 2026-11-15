@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePlatformCtxLocal
 import BeaconcryptCore.Computational.RegistrationNativePlatformServerMaterialState
-/-! The literal repeated Server pin hash and source capability leaves share the explicit CTX interpreter. Full counters, current Local/receipt state and public platform state are retained. -/
+/-! Pure Server pin selection and actual source capability leaves share the explicit CTX interpreter. Pin selection performs no primitive query; capability operations retain full counters, current Local/receipt state and public platform state. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -17,10 +17,9 @@ open RegistrationNativePlatformCtxLocal (realize attach)
 open RegistrationNativePlatformCtxCacheFrame (replace)
 variable {n : Nat} {Auxiliary Platform : Type}
 
-noncomputable def pin (current : session.ServerAuthenticationPin) :
-    StateT (State n Auxiliary) (OracleComp Spec) RegistrationNativeServerPinRecompute.PinReply := do
-  let digest ← RegistrationNativePlatformCtxLocal.effects (.inr (.hash (PqxdhRefinement.absBytes current.public_key)))
-  pure (.ok (.Some ⟨current.binding, current.public_key, RegistrationAuthenticationShared.digestArray digest⟩))
+def pin (current : session.ServerAuthenticationPin) :
+    StateT (State n Auxiliary) (OracleComp Spec) RegistrationNativeServerPinRecompute.PinReply :=
+  pure (.ok (.Some current))
 
 private theorem state_map_apply {S X Y : Type} {m : Type → Type} [Monad m] [LawfulMonad m]
     (f : X → Y) (work : StateT S m X) (before : S) :
@@ -43,19 +42,15 @@ theorem pin_source (current : session.ServerAuthenticationPin)
     Prod.map id realize <$> (interpret (privateWork (pin current))).run before =
       (RegistrationAgreementNestedState.flatten
         (RegistrationNativePlatformServerMaterialState.pin RegistrationNativePlatformMldsaProgram.coins current)).run (realize before) := by
-  have source := RegistrationNativePlatformCtxLocal.effects_source
-    (.inr (.hash (PqxdhRefinement.absBytes current.public_key))) before
-  rw [RegistrationNativePlatformCtxRunner.private_run] at source ⊢
-  have nativeRun := RegistrationNativeServerPinRecompute.native_run current.binding current.public_key (realize before).1.world.1
-  simp only [StateT.run, realize, attach, replace] at nativeRun
-  have mapped := congrArg (fun action => (fun (result : CtxRomAuth.CtxDigest ×
-      (State n RegistrationServerRoleBackend.State × Platform)) =>
-    ((.ok (.Some (⟨current.binding, current.public_key, RegistrationAuthenticationShared.digestArray result.1⟩ : session.ServerAuthenticationPin)) : RegistrationNativeServerPinRecompute.PinReply), result.2)) <$> action) source
-  simpa only [pin, RegistrationNativePlatformServerMaterialState.pin,
-    nativeRun, RegistrationAgreementNestedState.flatten,
-    StateT.run, state_bind_apply, state_pure_apply, bind_pure_comp, simulateQ_map,
-    RegistrationNativePlatformMldsaProgram.lift_coins, state_map_apply, state_lift_apply,
-    Functor.map_map, realize, attach, replace, Prod.map_def, id_eq] using mapped
+  rw [RegistrationNativePlatformCtxRunner.private_run]
+  simp only [pin, RegistrationNativePlatformServerMaterialState.pin,
+    RegistrationAgreementNestedState.flatten, StateT.run, state_pure_apply,
+    simulateQ_pure, map_pure, RegistrationNativePlatformMldsaProgram.lift_coins,
+    state_map_apply, state_lift_apply, bind_pure_comp,
+    Functor.map_map, realize, attach, replace, Prod.map_def, id_eq]
+  rw [show RegistrationNativeServerPinRecompute.native (n := n) current.binding current.public_key = pure (.ok (.Some current)) from by cases current; rfl]
+  rfl
+
 theorem capability_source (query : (PqxdhRecordLiftInterface.CapabilitySpec n).Domain)
     (before : Full (State n Auxiliary) Platform) :
     Prod.map id realize <$> (interpret (privateWork (RegistrationNativePlatformCtxLocal.effects (.inr query)))).run before =

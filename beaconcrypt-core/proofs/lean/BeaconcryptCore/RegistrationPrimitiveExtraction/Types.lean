@@ -254,14 +254,12 @@ structure transport.kexresponse where
   signature : Slice Std.U8
 
 /-- [beaconcrypt_parse::transport::initkex]
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2911:0-2919:1
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2806:0-2812:1
     Visibility: public -/
 structure transport.initkex where
   identity_key : Slice Std.U8
   pre_key : Slice Std.U8
   one_time_key : Slice Std.U8
   pq_key : Slice Std.U8
-  mldsa_public_key : Slice Std.U8
-  signature : Slice Std.U8
 
 end beaconcrypt_parse

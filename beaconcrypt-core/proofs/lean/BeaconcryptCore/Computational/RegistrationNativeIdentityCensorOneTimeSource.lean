@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeIdentityCensorReply
 
-/-! The two actual one-time continuations receive their canonical and placeholder replies from the same reached private source call. Both retain the chronological canonical service receipt before running the original PQ/fingerprint/hash/ML/Init6757 writer suffix. Only failed-publication observations are compared; a successful public publication removes this selected tuple failure and is not equated as a complete pending state. -/
+/-! The two actual one-time continuations receive their canonical and placeholder replies from the same reached private source call. Both retain the chronological canonical service receipt before running the original PQ-Ed/hash/Ready/Init1490 writer suffix. Only failed-publication observations are compared; a successful public publication removes this selected tuple failure and is not equated as a complete pending state. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core PqxdhRefinement
@@ -34,7 +34,7 @@ noncomputable def resumed (hash : Option Pqxdh.Bytes → StateT (State × Platfo
   | .ok (.Ed25519SigningRequested next) => RegistrationNativePlatformBeaconPublication.fromEd
       (RegistrationNativeIdentityPublicationPair.callbacks hash sign ed)
       (RegistrationNativeSourceWriterFailureView.writer reserve other) next
-  | .ok (.FingerprintRequested next) => RegistrationNativePlatformBeaconPublication.fromFingerprint
+  | .ok (.HashRequested next) => RegistrationNativePlatformBeaconPublication.fromHash
       (RegistrationNativeIdentityPublicationPair.callbacks hash sign ed)
       (RegistrationNativeSourceWriterFailureView.writer reserve other) next
   | .ok _ => pure .div

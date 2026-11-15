@@ -22,24 +22,23 @@ variable [BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform]
 variable [BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations]
 
 /-- [beaconcrypt::beacon::RegistrationAuthentication]
-    Source: 'beaconcrypt/src/beacon.rs', lines 19:0-22:1 -/
+    Source: 'beaconcrypt/src/beacon.rs', lines 19:0-21:1 -/
 structure beacon.RegistrationAuthentication where
-  identity : auth.MldsaIdentity
   server_pin : beaconcrypt_core.session.ServerAuthenticationPin
 
 /-- [beaconcrypt::ratchet::RatchetKernelSlot]
-    Source: 'beaconcrypt/src/ratchet.rs', lines 128:0-130:1 -/
+    Source: 'beaconcrypt/src/ratchet.rs', lines 132:0-134:1 -/
 structure ratchet.RatchetKernelSlot where
   kernel : core.option.Option
     beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel
 
 /-- [beaconcrypt::ratchet::RatchetManager]
-    Source: 'beaconcrypt/src/ratchet.rs', lines 185:0-188:1 -/
+    Source: 'beaconcrypt/src/ratchet.rs', lines 189:0-192:1 -/
 structure ratchet.RatchetManager where
   refined : ratchet.RatchetKernelSlot
 
 /-- [beaconcrypt::beacon::BeaconState]
-    Source: 'beaconcrypt/src/beacon.rs', lines 34:0-60:1 -/
+    Source: 'beaconcrypt/src/beacon.rs', lines 33:0-59:1 -/
 @[discriminant isize]
 inductive beacon.BeaconState where
 | Fresh :
@@ -67,7 +66,7 @@ inductive beacon.BeaconState where
 | Aborted : beaconcrypt_core.pqxdh.BeaconAborted → beacon.BeaconState
 
 /-- [beaconcrypt::beacon::Beacon]
-    Source: 'beaconcrypt/src/beacon.rs', lines 63:0-69:1
+    Source: 'beaconcrypt/src/beacon.rs', lines 62:0-68:1
     Visibility: public -/
 structure beacon.Beacon where
   identity_key : beaconcrypt_crypto.crypto_sign.KeyPair
@@ -77,74 +76,74 @@ structure beacon.Beacon where
   authentication : beacon.RegistrationAuthentication
 
 /-- [beaconcrypt::pqxdh::NoEntropy]
-    Source: 'beaconcrypt/src/pqxdh.rs', lines 194:0-194:17 -/
+    Source: 'beaconcrypt/src/pqxdh.rs', lines 177:0-177:17 -/
 @[reducible]
 def pqxdh.NoEntropy := Unit
 
 /-- [beaconcrypt::pqxdh::execute_agreement::closure#8]
-    Source: 'beaconcrypt/src/pqxdh.rs', lines 169:28-176:17 -/
+    Source: 'beaconcrypt/src/pqxdh.rs', lines 152:28-159:17 -/
 @[reducible]
 def pqxdh.execute_agreement.closure_8 (_R : Type) (_Clause0_Clause0_Error : Type)
   :=
   beaconcrypt_core.agreement.RootKdfPending
 
 /-- [beaconcrypt::pqxdh::execute_agreement::closure#7]
-    Source: 'beaconcrypt/src/pqxdh.rs', lines 162:81-164:21 -/
+    Source: 'beaconcrypt/src/pqxdh.rs', lines 145:81-147:21 -/
 @[reducible]
 def pqxdh.execute_agreement.closure_7 (_R : Type) (_Clause0_Clause0_Error : Type)
   :=
   Array Std.U8 32#usize
 
 /-- [beaconcrypt::pqxdh::execute_agreement::closure#6]
-    Source: 'beaconcrypt/src/pqxdh.rs', lines 159:78-161:21 -/
+    Source: 'beaconcrypt/src/pqxdh.rs', lines 142:78-144:21 -/
 @[reducible]
 def pqxdh.execute_agreement.closure_6 (_R : Type) (_Clause0_Clause0_Error : Type)
   :=
   Array Std.U8 32#usize
 
 /-- [beaconcrypt::pqxdh::execute_agreement::closure#5]
-    Source: 'beaconcrypt/src/pqxdh.rs', lines 156:88-158:21 -/
+    Source: 'beaconcrypt/src/pqxdh.rs', lines 139:88-141:21 -/
 @[reducible]
 def pqxdh.execute_agreement.closure_5 (_R : Type) (_Clause0_Clause0_Error : Type)
   :=
   Array Std.U8 32#usize
 
 /-- [beaconcrypt::pqxdh::execute_agreement::closure#4]
-    Source: 'beaconcrypt/src/pqxdh.rs', lines 153:84-155:21 -/
+    Source: 'beaconcrypt/src/pqxdh.rs', lines 136:84-138:21 -/
 @[reducible]
 def pqxdh.execute_agreement.closure_4 (_R : Type) (_Clause0_Clause0_Error : Type)
   :=
   Array Std.U8 32#usize
 
 /-- [beaconcrypt::pqxdh::execute_agreement::closure#3]
-    Source: 'beaconcrypt/src/pqxdh.rs', lines 141:30-147:17 -/
+    Source: 'beaconcrypt/src/pqxdh.rs', lines 124:30-130:17 -/
 def pqxdh.execute_agreement.closure_3 (_R : Type) (_Clause0_Clause0_Error : Type)
   :=
   beaconcrypt_core.agreement.DecapsulationPending × core.option.Option
   beaconcrypt_crypto.crypto_kem.mlkem768.SecretKey
 
 /-- [beaconcrypt::pqxdh::execute_agreement::closure#2]
-    Source: 'beaconcrypt/src/pqxdh.rs', lines 131:30-137:17 -/
+    Source: 'beaconcrypt/src/pqxdh.rs', lines 114:30-120:17 -/
 def pqxdh.execute_agreement.closure_2 (R : Type) (_Clause0_Clause0_Error : Type)
   :=
   beaconcrypt_core.agreement.EncapsulationPending × R
 
 /-- [beaconcrypt::pqxdh::execute_agreement::closure#1]
-    Source: 'beaconcrypt/src/pqxdh.rs', lines 127:25-127:57 -/
+    Source: 'beaconcrypt/src/pqxdh.rs', lines 110:25-110:57 -/
 @[reducible]
 def pqxdh.execute_agreement.closure_1 (_R : Type) (_Clause0_Clause0_Error : Type)
   :=
 Unit
 
 /-- [beaconcrypt::pqxdh::execute_agreement::closure]
-    Source: 'beaconcrypt/src/pqxdh.rs', lines 114:30-114:84 -/
+    Source: 'beaconcrypt/src/pqxdh.rs', lines 97:30-97:84 -/
 @[reducible]
 def pqxdh.execute_agreement.closure (_R : Type) (_Clause0_Clause0_Error : Type)
   :=
 Unit
 
 /-- [beaconcrypt::pqxdh::RegistrationKeys]
-    Source: 'beaconcrypt/src/pqxdh.rs', lines 89:0-94:1 -/
+    Source: 'beaconcrypt/src/pqxdh.rs', lines 72:0-77:1 -/
 structure pqxdh.RegistrationKeys where
   identity_secret : beaconcrypt_crypto.crypto_sign.SecretKey
   beacon_prekey : core.option.Option beaconcrypt_crypto.crypto_kx.SecretKey
@@ -153,7 +152,7 @@ structure pqxdh.RegistrationKeys where
     beaconcrypt_crypto.crypto_kem.mlkem768.SecretKey
 
 /-- [beaconcrypt::beacon::{impl beaconcrypt::beacon::ProviderBeacon for beaconcrypt::beacon::Beacon}::finish_registration::closure]
-    Source: 'beaconcrypt/src/beacon.rs', lines 492:53-501:9 -/
+    Source: 'beaconcrypt/src/beacon.rs', lines 483:53-492:9 -/
 @[reducible]
 def beacon.ProviderBeaconBeacon.finish_registration.closure := Unit
 
@@ -203,7 +202,7 @@ structure server.RegistrationOutput where
   registration_id : Array Std.U8 64#usize
 
 /-- [beaconcrypt::server::{impl beaconcrypt::server::ProviderServer for beaconcrypt::server::Server}::build_registration_response::closure]
-    Source: 'beaconcrypt/src/server.rs', lines 640:50-640:87 -/
+    Source: 'beaconcrypt/src/server.rs', lines 630:50-630:87 -/
 @[reducible]
 def server.ProviderServerServer.build_registration_response.closure := Unit
 

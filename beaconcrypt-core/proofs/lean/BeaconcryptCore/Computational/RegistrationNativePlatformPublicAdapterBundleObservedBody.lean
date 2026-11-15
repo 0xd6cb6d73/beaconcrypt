@@ -35,11 +35,11 @@ noncomputable def shared :QueryImpl RegistrationSigningShared.Spec M :=
   RegistrationNativePlatformCutJournal.source (fun query=>recorded implementation observation (.inl (.inl query))) fallback
 
 @[instance_reducible] noncomputable def locals :LocalOperations (RustT M) :=
-  {previousLocal with
-    auth_MldsaIdentity_public_key:=fun identity=>pure (view.mldsa identity).publicKey
-    auth_MldsaIdentity_sign_requested:=fun _identity request=>⟨RustM.ok <$>
-      (AdapterPublicBundleNative.vector <$>
-        RegistrationNativePlatformCutJournal.sign (fun query=>recorded implementation observation (.inl (.inl query))) fallback request)⟩}
+  let _ := view
+  let _ := implementation
+  let _ := observation
+  let _ := fallback
+  previousLocal
 
 @[instance_reducible] noncomputable def crypto :CryptoOperations (RustT M) :=
   {previousCrypto with
@@ -134,24 +134,20 @@ theorem source {R :Type} (self :beaconcrypt_public_wrapper.beacon.Beacon) (contr
           ⟨view.edPublic self.identity_key.public_key,view.kxPublic prekey.public_key,
             RegistrationNativeBeaconFrontend.pqArray (view.kemPublic kem.public_key)⟩
           ⟨view.kxPublic oneTime.public_key⟩ self.authentication.server_pin
-          (view.mldsa self.authentication.identity).publicKey before :=by
+          before :=by
   let :LocalOperations (RustT M):=locals view implementation observation fallback previousLocal
   let :CryptoOperations (RustT M):=crypto view previousCrypto edSign
   let :ChildOperations (RustT M):=children implementation observation previousChildren
   unfold withKeys
   rw [AdapterPublicBundlePublication.withKeys self control prekey oneTime kem rng
     (view.kxPublic prekey.public_key) (view.kxPublic oneTime.public_key) (view.edPublic self.identity_key.public_key)
-    (RegistrationNativeBeaconFrontend.pqArray (view.kemPublic kem.public_key)) (view.mldsa self.authentication.identity).publicKey
+    (RegistrationNativeBeaconFrontend.pqArray (view.kemPublic kem.public_key))
     (fun message=>edSign message self.identity_key.secret_key)
     (RegistrationNativePlatformCutJournal.hash (fun query=>recorded implementation observation (.inl (.inl query))))
-    (fun request=>AdapterPublicBundleNative.vector <$>
-      RegistrationNativePlatformCutJournal.sign (fun query=>recorded implementation observation (.inl (.inl query))) fallback request)
-    rfl rfl rfl rfl rfl (fun _=>rfl) (fun _=>rfl) (fun _=>rfl)]
+    rfl rfl rfl rfl (fun _=>rfl) (fun _=>rfl)]
   have outgoing :AdapterPublicInitPublication.outgoing
       (RegistrationNativePlatformCutJournal.hash (fun query=>recorded implementation observation (.inl (.inl query))))
-      (fun request=>AdapterPublicBundleNative.vector <$>
-        RegistrationNativePlatformCutJournal.sign (fun query=>recorded implementation observation (.inl (.inl query))) fallback request)
-      (AdapterPublicInitPublication.edMethod (view.edPublic self.identity_key.public_key)
+        (AdapterPublicInitPublication.edMethod (view.edPublic self.identity_key.public_key)
         (fun message=>edSign message self.identity_key.secret_key))=
       RegistrationNativePlatformCutJournal.extended (shared implementation observation fallback)
         (fun request=>RegistrationNativePlatformCutJournal.liftNative (recorded implementation observation (.inl (.inr request)))) :=by
@@ -159,15 +155,10 @@ theorem source {R :Type} (self :beaconcrypt_public_wrapper.beacon.Beacon) (contr
     cases query with
     | inl query=>cases query with
       | hash request=>rfl
-      | sign request payload digest=>
-        simp only [AdapterPublicInitPublication.outgoing,Functor.map_map]
-        have same :(fun reply=>AdapterPublicInitPublication.borrowed (AdapterPublicBundleNative.vector reply))=id:=
-          funext AdapterPublicBundleNative.borrowed_vector
-        rw [same,id_map]
-        rfl
+      | sign request payload digest=>rfl
     | inr request=>exact edLeaf request
   rw [outgoing]
-  have encoded :(fun signed :registration.SignedInitView=>(ChildOperations.encodeInit (m:=RustT M) (AdapterPublicBundleBody.packet signed)).run)=
+  have encoded :(fun signed :registration.InitView=>(ChildOperations.encodeInit (m:=RustT M) (AdapterPublicBundleBody.packet signed)).run)=
       (fun signed=>simulateQ (fun query=>RegistrationNativePlatformCutJournal.liftNative (recorded implementation observation (.inr query)))
         (AdapterRegistrationWriterRequestExtraction.encodeInit (E:=E) (m:=AdapterRegistrationWriterRequestMonad.Program E)
           (RegistrationNativePlatformWriter.initPacket signed)).run) :=by
@@ -177,11 +168,11 @@ theorem source {R :Type} (self :beaconcrypt_public_wrapper.beacon.Beacon) (contr
   have fallbackSame:=(RegistrationNativePlatformPublicAdapterBundleStageCut.actual (recorded implementation observation) fallback
     control ⟨view.edPublic self.identity_key.public_key,view.kxPublic prekey.public_key,
       RegistrationNativeBeaconFrontend.pqArray (view.kemPublic kem.public_key)⟩
-    ⟨view.kxPublic oneTime.public_key⟩ self.authentication.server_pin (view.mldsa self.authentication.identity).publicKey).symm.trans
+    ⟨view.kxPublic oneTime.public_key⟩ self.authentication.server_pin).symm.trans
       (RegistrationNativePlatformPublicAdapterBundleStageCut.actual (recorded implementation observation) (fun _=>pure .None)
         control ⟨view.edPublic self.identity_key.public_key,view.kxPublic prekey.public_key,
           RegistrationNativeBeaconFrontend.pqArray (view.kemPublic kem.public_key)⟩
-        ⟨view.kxPublic oneTime.public_key⟩ self.authentication.server_pin (view.mldsa self.authentication.identity).publicKey)
+        ⟨view.kxPublic oneTime.public_key⟩ self.authentication.server_pin)
   unfold RegistrationNativePlatformPublicAdapterBundleStageActual.publication
   simp only [StateT.run_map,bind_pure_comp,Functor.map_map]
   dsimp only [shared,children]

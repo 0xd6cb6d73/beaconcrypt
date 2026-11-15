@@ -89,7 +89,7 @@ theorem beacon_payload_admission_refines (pending : registration.BeaconRecordAea
       Nat.not_le.mpr longEnough, splitRun, convertedRun, pqxdh.authenticate_registration_key_id_binding,
       pqxdh.BeaconRegistrationCandidate.key_id_binding, expectedRun, array_eq_abs,
       boundBytes, expectedBytes, sender, bytes, pqxdh.AuthenticatedBeaconRegistration.assigned_key_id,
-      session.RegistrationBinding.finish, pqxdh.beacon_commit, completedBeacon, completedBinding,
+      session.CompletedRegistrationBinding.finish, pqxdh.beacon_commit, completedBeacon, completedBinding,
       applicationPart]
 
 
@@ -170,10 +170,11 @@ theorem server_commitment_transcript_lens_refines (pending : registration.Server
   ⟨_, _, rfl, rfl, fun _ => ⟨rfl, rfl, rfl, rfl⟩⟩
 
 /-- Every missing server primitive or writer reply returns that exact phase's previous control. -/
-theorem missing_server_replies_retain_control (initial : registration.ServerInitialKdf)
+theorem missing_server_replies_retain_control (ad : registration.ServerAdHash) (initial : registration.ServerInitialKdf)
     (step : registration.ServerInitialSeal) (aead : registration.ServerRecordAead)
     (commitment1 : registration.ServerRecordCommitment) (written : registration.ServerRecordWrite)
     (hashed : registration.ServerResponseHash) (signing : registration.ServerResponseSigning) :
+    ad.resume .None = ok (.Err ad.candidate.previous_state) ∧
     initial.resume .None = ok (.Err initial.candidate.previous_state) ∧
     step.resume .None = ok (.Err step.state.candidate.previous_state) ∧
     aead.resume .None = ok (.Err aead.state.candidate.previous_state) ∧
@@ -181,7 +182,7 @@ theorem missing_server_replies_retain_control (initial : registration.ServerInit
     written.resume .None = ok (.Err written.state.candidate.previous_state) ∧
     hashed.resume .None = ok (.Err hashed.candidate.previous_state) ∧
     signing.resume .None = ok (.Err signing.candidate.previous_state) := by
-  simp [registration.ServerInitialKdf.resume, registration.ServerInitialSeal.resume,
+  simp [registration.ServerAdHash.resume, registration.ServerInitialKdf.resume, registration.ServerInitialSeal.resume,
     registration.ServerRecordAead.resume, registration.ServerRecordCommitment.resume,
     registration.ServerRecordWrite.resume, registration.ServerResponseHash.resume,
     registration.ServerResponseSigning.resume, RecordEffects.seal_aead_missing_exact,
@@ -252,7 +253,7 @@ theorem server_kdf_prefix_refines (pending : registration.ServerInitialKdf)
   · simp [registration.ServerInitialKdf.resume, pqxdh.server_abort_candidate,
       kernelRun, pqxdh.ServerRegistrationCandidate.impl.key_id,
       pqxdh.ServerRegistrationCandidate.impl.server_identity_key_id,
-      session.RegistrationBinding.impl.associated_data, contextRun, recordRun, next]
+      session.CompletedRegistrationBinding.impl.associated_data, contextRun, recordRun, next]
   · simpa [sendZero] using sequence
 
 /-- The actual first record KDF reply retains the initial context and sequence while selecting its own material and advanced kernel. -/

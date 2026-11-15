@@ -47,13 +47,14 @@ abbrev PreSpec (Response : Type) := PqxdhBeaconPhase2Shared.Spec Identity Scalar
 abbrev OwnerSpec (Response : Type) := PreSpec Response + GroupSpec Response
 
 /-- The opaque-handle Beacon owner `PqxdhBeaconPhase2Shared.owner` with its private root request and the continuation after it sent as one grouped request. The preparation, the phase check, every rejection and the final publication are those of the owner. -/
-noncomputable def groupedOwner (raw : Pqxdh.Bytes) (state : PqxdhRegistrationJointBundle.Owner) :
+noncomputable def groupedOwner (binding : beaconcrypt_core.session.CompletedRegistrationBinding) (raw : Pqxdh.Bytes)
+    (state : PqxdhRegistrationJointBundle.Owner) :
     OracleComp (OwnerSpec Response) (Option Pqxdh.Bytes × PqxdhRegistrationJointBundle.Owner) :=
   match state.beacon.phase with
   | .initSent control prekey oneTime kem => do
       let prepared ← simulateQ (fun query => ((OwnerSpec Response).query (.inl query) : OracleComp (OwnerSpec Response) _) :
           QueryImpl (PreSpec Response) (OracleComp (OwnerSpec Response)))
-        (PqxdhBeaconPhase2Shared.prepare control state.beacon.identity prekey oneTime kem raw)
+        (PqxdhBeaconPhase2Shared.prepare (completedBinding := binding) control state.beacon.identity prekey oneTime kem raw)
       match prepared with
       | none => pure (PqxdhBeaconPhase2Publication.finish control state none)
       | some prepared => do
@@ -71,15 +72,31 @@ noncomputable def groupedCompiler (setup : Setup baseSpec KemSK) (codec : Codec 
   | .inl query => simulateQ groupedPoolLift (markedPreparation setup codec selected challenge query)
   | .inr pending => (GSpec KemSK Response).query (.inr pending)
 
-/-- The grouped Beacon finish: the grouped owner in place of the opaque-handle owner, with the same owner lookup and reinstallation. -/
+/-- The grouped hashed owner finish: the hashed owner finish of `PqxdhRegistrationJointBeaconOpaqueFinish.markedOwner` (one public transcript `hash` request for an InitSent owner with a retained bundle and a decodable response) with the grouped owner in place of the opaque-handle owner at the completed binding of the digest; abort and inactive branches are unchanged. -/
+noncomputable def groupedHashed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (selected : Nat)
+    (challenge : MlKem768Ciphertext) (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationJointBundle.Owner) :
+    OracleComp (GSpec KemSK Response) (Option Pqxdh.Bytes × PqxdhRegistrationJointBundle.Owner) :=
+  match owner.beacon.phase with
+  | .initSent control _ _ _ =>
+    match retained, responseOf codec raw with
+    | some init, some response => do
+        let digest ← (GSpec KemSK Response).query
+          (.inl (.inr (.hash (PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf init) response))))
+        simulateQ (groupedCompiler setup codec selected challenge)
+          (groupedOwner (PqxdhTranscriptAd.completedOf control digest) raw owner)
+    | _, _ => pure (none, PqxdhBeaconPhase2Preparation.abort control owner)
+  | _ => pure (none, owner)
+
+/-- The grouped Beacon finish: the grouped hashed owner finish in place of the marked owner finish, with the same owner lookup, retained bundle and reinstallation. -/
 noncomputable def groupedFinish (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (selected : Nat)
     (challenge : MlKem768Ciphertext) (address : Nat) (raw : Pqxdh.Bytes) :
-    StateT (List EncodedEntry) (OracleComp (GSpec KemSK Response)) (Option Pqxdh.Bytes) := fun owners =>
-  match owners[address]? with
-  | none => pure (none, owners)
+    StateT (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (OracleComp (GSpec KemSK Response)) (Option Pqxdh.Bytes) := fun state =>
+  match state.1[address]? with
+  | none => pure (none, state)
   | some entry =>
-    (fun result => (result.1, owners.set address (entry.1, entry.2.1, result.2))) <$>
-      simulateQ (groupedCompiler setup codec selected challenge) (groupedOwner raw entry.2.2)
+    (fun result => (result.1, (state.1.set address (entry.1, entry.2.1, result.2), state.2))) <$>
+      groupedHashed setup codec selected challenge (state.2 address) raw entry.2.2
 
 /-- Lift a source client step to the grouped interface. -/
 def groupedLift : QueryImpl (PqxdhRegistrationJointServiceSchedule.Spec KemSK Response)
@@ -88,14 +105,14 @@ def groupedLift : QueryImpl (PqxdhRegistrationJointServiceSchedule.Spec KemSK Re
 
 /-- A source client step on the grouped interface. -/
 def liftGrouped {α : Type} (work : PqxdhRegistrationJointServiceSchedule.Client KemSK Response α) :
-    StateT (List EncodedEntry) (OracleComp (GSpec KemSK Response)) α :=
+    StateT (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (OracleComp (GSpec KemSK Response)) α :=
   fun owners => simulateQ groupedLift (work.run owners)
 
 /-- The source client with the grouped Beacon finish; every other request is the source's. -/
 noncomputable def groupedClient (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (selected : Nat)
     (challenge : MlKem768Ciphertext) :
     QueryImpl (PqxdhRegistrationJointRevealSchedule.Spec KemSK)
-      (StateT (List EncodedEntry) (OracleComp (GSpec KemSK Response)))
+      (StateT (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (OracleComp (GSpec KemSK Response)))
   | .inl (.inr (.finish address raw)) => groupedFinish setup codec selected challenge address raw
   | query => liftGrouped (PqxdhRegistrationJointRevealSchedule.client setup codec query)
 
@@ -278,12 +295,13 @@ theorem tail_grouped (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
 /-- The erased marked backend on the compiled opaque-handle owner equals the erased grouped backend on the compiled grouped owner. -/
 theorem owner_grouped (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (candidate : MlKemSharedSecret) (selected : Nat)
-    (challenge : MlKem768Ciphertext) (raw : Pqxdh.Bytes) (state : PqxdhRegistrationJointBundle.Owner) :
+    (challenge : MlKem768Ciphertext) (binding : beaconcrypt_core.session.CompletedRegistrationBinding) (raw : Pqxdh.Bytes)
+    (state : PqxdhRegistrationJointBundle.Owner) :
     simulateQ (eraseImpl eraseObservers (markedImpl setup codec checks identityIndex publicIdentity candidate))
         (simulateQ (markedCompiler setup codec selected challenge)
-          (PqxdhBeaconPhase2Shared.owner codec.frameRead raw state)) =
+          (PqxdhBeaconPhase2Shared.owner (completedBinding := binding) codec.frameRead raw state)) =
       simulateQ (eraseImpl eraseObservers (groupedImpl setup codec checks identityIndex publicIdentity candidate))
-        (simulateQ (groupedCompiler setup codec selected challenge) (groupedOwner raw state)) := by
+        (simulateQ (groupedCompiler setup codec selected challenge) (groupedOwner binding raw state)) := by
   have pool : ∀ {α : Type} (work : OracleComp (PqxdhLiveKemBirth.Spec KemSK) α),
       simulateQ (eraseImpl eraseObservers (markedImpl setup codec checks identityIndex publicIdentity candidate))
           (simulateQ (markedPoolLift (Response := Response)) work) =
@@ -319,27 +337,51 @@ theorem owner_grouped (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
         candidate selected challenge pending, simulateQ_spec_query, groupedCompiler]
       rfl
 
-/-- The marked Beacon finish and the grouped Beacon finish have the same erased interpretation. -/
+/-- The marked owner finish and the grouped hashed owner finish have the same erased interpretation: the transcript `hash` request is the same source request on both sides, and the owners then agree at the completed binding of its digest (`owner_grouped`). -/
+theorem hashed_grouped (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (identityIndex : Nat) (publicIdentity : PublicIdentity) (candidate : MlKemSharedSecret) (selected : Nat)
+    (challenge : MlKem768Ciphertext) (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationJointBundle.Owner) :
+    simulateQ (eraseImpl eraseObservers (markedImpl setup codec checks identityIndex publicIdentity candidate))
+        (markedOwner setup codec selected challenge retained raw owner) =
+      simulateQ (eraseImpl eraseObservers (groupedImpl setup codec checks identityIndex publicIdentity candidate))
+        (groupedHashed setup codec selected challenge retained raw owner) := by
+  unfold markedOwner groupedHashed
+  rcases owner with ⟨⟨identity, keyId, pin, phase⟩, slot⟩
+  cases phase with
+  | initSent control prekey oneTime kem =>
+      cases retained with
+      | none => simp
+      | some init =>
+          cases responseOf codec raw with
+          | none => simp
+          | some response =>
+              simp only [simulateQ_bind, simulateQ_query, OracleQuery.input_query, OracleQuery.cont_query, id_map]
+              refine bind_congr fun digest => ?_
+              exact owner_grouped setup codec checks identityIndex publicIdentity candidate selected challenge _ raw _
+  | _ => simp
+
+/-- The marked Beacon finish and the grouped Beacon finish have the same erased interpretation, for every owner list and retained bundles. -/
 theorem finish_grouped (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (candidate : MlKemSharedSecret) (selected : Nat)
     (challenge : MlKem768Ciphertext) (address : Nat) (raw : Pqxdh.Bytes)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) :
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) :
     simulateQ (eraseImpl eraseObservers (markedImpl setup codec checks identityIndex publicIdentity candidate))
         ((markedFinish setup codec selected challenge address raw).run owners) =
       simulateQ (eraseImpl eraseObservers (groupedImpl setup codec checks identityIndex publicIdentity candidate))
         ((groupedFinish setup codec selected challenge address raw).run owners) := by
   simp only [markedFinish, groupedFinish, StateT.run]
-  cases owners[address]? with
+  cases owners.1[address]? with
   | none => simp
   | some entry =>
       simp only [simulateQ_map]
-      rw [owner_grouped]
+      rw [hashed_grouped]
 
 /-- Every step of the marked client and of the grouped client has the same erased interpretation. -/
 theorem client_grouped (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (candidate : MlKemSharedSecret) (selected : Nat)
     (challenge : MlKem768Ciphertext) (query : (PqxdhRegistrationJointRevealSchedule.Spec KemSK).Domain)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) :
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) :
     simulateQ (eraseImpl eraseObservers (markedImpl setup codec checks identityIndex publicIdentity candidate))
         ((markedClient setup codec selected challenge query).run owners) =
       simulateQ (eraseImpl eraseObservers (groupedImpl setup codec checks identityIndex publicIdentity candidate))
@@ -386,7 +428,7 @@ noncomputable def groupedResume (setup : Setup baseSpec KemSK) (codec : Codec Re
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)
     (value : PqxdhServerRootPreparation.Verified Reader)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)
-    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry)
+    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))
     (next : Option Nat → OracleComp (SourceSpec KemSK) X) (selected : Nat)
     (ciphertext : MlKem768Ciphertext) (candidate : MlKemSharedSecret) :
     OracleComp (PqxdhRegistrationJointKemEncapsulation.Spec KemSK) (Outcome KemSK R) := do
@@ -402,7 +444,7 @@ theorem resume_grouped (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)
     (value : PqxdhServerRootPreparation.Verified Reader)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)
-    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry)
+    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))
     (next : Option Nat → OracleComp (SourceSpec KemSK) X) (selected : Nat)
     (ciphertext : MlKem768Ciphertext) (candidate : MlKemSharedSecret) :
     simulateQ (actual setup) (markedResume setup codec checks identityIndex publicIdentity observe raw value ephemeral
@@ -577,3 +619,8 @@ end BeaconcryptCore.Computational.PqxdhRegistrationJointKemPostSkeleton
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointKemPostSkeleton.opaqueBranch_grouped
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationJointKemPostSkeleton.hashed_grouped' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointKemPostSkeleton.hashed_grouped

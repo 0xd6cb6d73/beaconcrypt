@@ -19,30 +19,27 @@ LIBRARIES = (
 )
 MODEL_FILES = LIBRARIES + ("mldsa-joint-session.pvl", "mldsa-joint-session.pv")
 MODEL_SHA256 = {
-    "production-transcript-interface.pvl": "0993f0933677e37aa61ed9b52a3d7dfcfc884e982fb7d76b199c177be74b74de",
-    "crypto.pvl": "af940d6fe6959644aa9712715cc730d1990e6b954bca0de8c7015262e7371b16",
-    "extraction/lib.pvl": "c47011ed155a109d72ea99771ac08fcd5c30ca51cd3d705be6b3997a7a67deb6",
-    "environment.pvl": "aef86503f38f04850fa9057c6f8fc2a634aeef390141fc364a7c79daf833be1d",
-    "mldsa-auth.pvl": "09c409113e49aa61f4f7d777d30f3778a743ccab7a47cf9d7c506b146d29e403",
+    "production-transcript-interface.pvl": "b302b3f87e6215f0ed1c3439df6ba3dd1aab6a086e9a7ee3ab6fb98182f1f308",
+    "crypto.pvl": "1c56f4c67c8d5c0193acf3fc9d1570aa729b2b1ecc05418cca3e47f0afa1a0ef",
+    "extraction/lib.pvl": "9b092c36ee8b8e25fb8a1be6c6934210c243cbd87249acf36d0e2fa2c4417608",
+    "environment.pvl": "5b99e3dde14e824f625ff07c30d52ae797048b63d0fe5131391e026b02b57979",
+    "mldsa-auth.pvl": "f0327d648099b035b4e374467ee31f038a2a884f51fe980719b90372d18f1f05",
     "quantum-capabilities.pvl": "215da20adfe2ec160ee1793e2a1041f826755126c13f5634eda59bfdf09f88cd",
-    "mldsa-joint-session.pvl": "0feea2541f66026068d05799d0a1a5329ccfd2e60fd7f0978088f7280c7b958b",
-    "mldsa-joint-session.pv": "51f1803f6090bd87807d480341811de458c57b6e808d956242e8751f8630562a",
+    "mldsa-joint-session.pvl": "334ed8242f5d693aa10e8dabdca5dd5fb678086b59bd2d15defafc3489ef4fe2",
+    "mldsa-joint-session.pv": "d9e910cc562620b0ca2f619400279ec12bfd4a00443b34fd9f8bafd43a8619e2",
 }
 
 PRIMARY = (
-    "event(JointInitAccepted(agent_ml,server_ml,init_hash,classical_init)) && "
-    "event(JointProtectedBeacon(agent_ml)) ==> "
-    "event(JointInitSigned(agent_ml,server_ml,init_hash,classical_init))",
     "event(JointResponseVerified(server_ml,init_hash,response)) ==> "
     "event(JointResponseSigned(server_ml,init_hash,response))",
-    "event(JointBeaconCompleted(agent_ml,server_ml,init_hash,response,root,ad,assigned,initial)) ==> "
-    "event(JointServerCommitted(agent_ml,server_ml,init_hash,response,root,ad,assigned,initial))",
-    "event(JointRecordReceived(agent_ml,server_ml,init_hash,root,ad,server_to_beacon,seq,sender,receiver,plaintext)) && "
-    "event(JointProtectedBeacon(agent_ml)) ==> "
-    "event(JointRecordSent(agent_ml,server_ml,init_hash,root,ad,server_to_beacon,seq,sender,receiver,plaintext))",
-    "event(JointRecordReceived(agent_ml,server_ml,init_hash,root,ad,beacon_to_server,seq,sender,receiver,plaintext)) && "
-    "event(JointProtectedBeacon(agent_ml)) ==> "
-    "event(JointRecordSent(agent_ml,server_ml,init_hash,root,ad,beacon_to_server,seq,sender,receiver,plaintext))",
+    "event(JointBeaconCompleted(request,server_ml,init_hash,response,root,ad,assigned,initial)) ==> "
+    "event(JointServerCommitted(request,server_ml,init_hash,response,root,ad,assigned,initial))",
+    "event(JointRecordReceived(request,server_ml,init_hash,root,ad,server_to_beacon,seq,sender,receiver,plaintext)) && "
+    "event(JointSessionCreated(request)) ==> "
+    "event(JointRecordSent(request,server_ml,init_hash,root,ad,server_to_beacon,seq,sender,receiver,plaintext))",
+    "event(JointRecordReceived(request,server_ml,init_hash,root,ad,beacon_to_server,seq,sender,receiver,plaintext)) && "
+    "event(JointSessionCreated(request)) ==> "
+    "event(JointRecordSent(request,server_ml,init_hash,root,ad,beacon_to_server,seq,sender,receiver,plaintext))",
     "not attacker(MLDSA_JOINT_INITIAL[])",
     "not attacker(MLDSA_JOINT_SERVER_RECORD[])",
     "not attacker(MLDSA_JOINT_BEACON_RECORD[])",
@@ -50,19 +47,17 @@ PRIMARY = (
     "not event(JointServerRecordOpened)",
     "not event(JointBeaconRecordOpened)",
     "not event(JointOwnedAccepted)",
+    "not event(JointCopiedKemAccepted)",
+    "not attacker(MLDSA_JOINT_OWNED_INITIAL[])",
+    "not attacker(MLDSA_JOINT_OWNED_RECORD[])",
     "not event(JointReplayRejected)",
     "not event(JointClassicalRecovered)",
 )
-VERDICTS = ("true",) * 8 + ("false",) * 6
+VERDICTS = ("true",) * 7 + ("false",) * 9
 VARIABLE = re.compile(
-    r"\b(?:agent_ml|server_ml|init_hash|classical_init|response|root|ad|assigned|initial|"
+    r"\b(?:request|server_ml|init_hash|response|root|ad|assigned|initial|"
     r"seq|sender|receiver|plaintext)(?:_[0-9]+)?\b(?!\s*\()"
 )
-INIT_VERIFIER = (
-    "let verified_init_input = mldsa_verify(candidate_signature,\n"
-    "    candidate_ml, mldsa_signing_context()) in"
-)
-INIT_BYPASS = "let verified_init_input = mldsa_beacon_input(candidate_hash) in"
 RESPONSE_VERIFIER = (
     "let verified_response_input = mldsa_verify(response_signature,\n"
     "    server_ml, mldsa_signing_context()) in"
@@ -72,39 +67,39 @@ RESPONSE_BYPASS = (
 )
 CONTROLS = (
     (
-        "without-init-verifier-origin",
-        "mldsa-joint-session.pvl",
-        0,
-        INIT_VERIFIER,
-        INIT_BYPASS,
-    ),
-    (
         "without-response-verifier-origin",
         "mldsa-joint-session.pvl",
-        1,
+        0,
         RESPONSE_VERIFIER,
         RESPONSE_BYPASS,
     ),
     (
         "without-response-verifier-session",
         "mldsa-joint-session.pvl",
-        2,
+        1,
         RESPONSE_VERIFIER,
         RESPONSE_BYPASS,
-    ),
-    (
-        "without-init-verifier-secrecy",
-        "mldsa-joint-session.pvl",
-        5,
-        INIT_VERIFIER,
-        INIT_BYPASS,
     ),
     (
         "without-response-verifier-secrecy",
         "mldsa-joint-session.pvl",
-        7,
+        6,
         RESPONSE_VERIFIER,
         RESPONSE_BYPASS,
+    ),
+    (
+        "with-selected-kem-secret-compromise",
+        "mldsa-joint-session.pvl",
+        4,
+        "event JointSessionCreated(selected_init);",
+        "event JointSessionCreated(selected_init);\n  out(mldsa_joint_public_keys, pq_secret);",
+    ),
+    (
+        "with-server-signing-key-compromise",
+        "mldsa-joint-session.pvl",
+        0,
+        "let server_ml = mldsa_public(server_ml_secret) in\n  let beacon_ed = ed_public(identity_secret) in",
+        "let server_ml = mldsa_public(server_ml_secret) in\n  out(mldsa_joint_public_keys, server_ml_secret);\n  let beacon_ed = ed_public(identity_secret) in",
     ),
 )
 

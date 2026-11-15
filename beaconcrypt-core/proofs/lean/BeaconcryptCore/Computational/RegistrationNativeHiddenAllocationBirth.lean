@@ -66,7 +66,7 @@ theorem create (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire)
         simp only [selected] at continued
         obtain ⟨born, afterBorn, worldOwner, afterAppend, generated, allocated, returned⟩ :=
           RegistrationNativeBeaconBirth.append_supported setup source
-            (callback setup wire sign seed scalar provider service codec route) edPin keyId prepared.pin prepared.credentials
+            (callback setup wire sign seed scalar provider service codec route) edPin keyId prepared.pin
             prepared.identity prepared.prekey middle.1.1.2 middle.1.2 middle.2 result continued
         have kemKept := RegistrationNativeHiddenAllocationRuntime.query_noappend setup wire sign seed scalar provider service codec route
           (.inr (.inr (.inl .create))) middle.2 (born, afterBorn) trivial generated

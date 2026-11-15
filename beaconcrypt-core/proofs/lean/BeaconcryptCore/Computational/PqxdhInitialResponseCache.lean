@@ -2,7 +2,7 @@ import BeaconcryptCore.Computational.PqxdhInitialRootContext
 import BeaconcryptCore.Computational.RawCtxSelectedInitialConstructor
 
 /-!
-The common private initializer service records complete64-byte replies under the exact original request. Both source orientations therefore reuse the same reply. Real-source memoization is operationally exact and does not change public HKDF. A separate uniform64 service is only an explicit comparison interface: no assumption says it is secure for arbitrary source inputs, and same-address evolving76 responses must preserve the shared prefix in any consumer.
+The common private initializer service records complete64-byte replies under the exact original request. Both source orientations therefore reuse the same reply. Real-source memoization is operationally exact and does not change public HKDF. A separate uniform64 service is only an explicit comparison interface: no assumption says it is secure for arbitrary source inputs, and message-step requests use their separate48-byte domain and do not share this initializer address.
 -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
@@ -12,7 +12,7 @@ namespace BeaconcryptCore.Computational.PqxdhInitialResponseCache
 open PqxdhInitialResponseService PqxdhSecretInputKdf PqxdhJointKdfGame
 variable {ι Result : Type} {base : OracleSpec ι}
 
-noncomputable local instance : DecidableEq SymmetricRatchetKdfRequest := Classical.decEq _
+noncomputable local instance : DecidableEq InitialRatchetKdfRequest := Classical.decEq _
 
 abbrev Table := InitialSpec.QueryCache
 
@@ -26,7 +26,7 @@ theorem consistent_empty (fixed : FixedHkdfSha512NoSaltSource) : Consistent fixe
 
 /-- Recording the exact source reply preserves every earlier complete request/reply binding. -/
 theorem consistent_record (fixed : FixedHkdfSha512NoSaltSource) (table : Table)
-    (consistent : Consistent fixed table) (request : SymmetricRatchetKdfRequest) :
+    (consistent : Consistent fixed table) (request : InitialRatchetKdfRequest) :
     Consistent fixed (table.cacheQuery request (RawCtxSourceHkdf.initialResponse fixed.crypto request)) := by
   intro previous response found
   by_cases same : previous = request
@@ -42,7 +42,7 @@ noncomputable def memo (fixed : FixedHkdfSha512NoSaltSource) :
 
 /-- Complete initializer hits and misses return exactly the original deterministic source reply and preserve the entire private cache. -/
 theorem memo_step (fixed : FixedHkdfSha512NoSaltSource) (table : Table)
-    (consistent : Consistent fixed table) (request : SymmetricRatchetKdfRequest) :
+    (consistent : Consistent fixed table) (request : InitialRatchetKdfRequest) :
     (memo (base := base) fixed request).run table =
       pure (RawCtxSourceHkdf.initialResponse fixed.crypto request,
         table.cacheQuery request (RawCtxSourceHkdf.initialResponse fixed.crypto request)) := by
@@ -94,7 +94,7 @@ noncomputable def uniform : QueryImpl InitialSpec (StateT Table ProbComp) :=
 
 set_option backward.isDefEq.respectTransparency false in
 /-- A fresh comparison initializer samples exactly64 bytes and stores the complete original reply once at its actual request. -/
-theorem uniform_miss (table : Table) (request : SymmetricRatchetKdfRequest)
+theorem uniform_miss (table : Table) (request : InitialRatchetKdfRequest)
     (absent : table request = none) :
     (uniform request).run table = (do
       let output ← $ᵗ HmacBlock
@@ -112,14 +112,14 @@ theorem uniform_miss (table : Table) (request : SymmetricRatchetKdfRequest)
 
 set_option backward.isDefEq.respectTransparency false in
 /-- Every repeated request reuses its earlier complete64-byte reply and draws no new bytes. -/
-theorem uniform_hit (table : Table) (request : SymmetricRatchetKdfRequest)
+theorem uniform_hit (table : Table) (request : InitialRatchetKdfRequest)
     (response : pqxdh.concrete.InitialRatchetKdfResponse) (present : table request = some response) :
     (uniform request).run table = pure (response, table) := by
   exact QueryImpl.withCaching_run_some _ present
 
 set_option maxRecDepth 10000 in
 /-- The comparison's uniform-query bill is zero on a hit and64 on a miss; request comparisons, memo work and reply conversion are explicit local operations. -/
-theorem uniform_bound (table : Table) (request : SymmetricRatchetKdfRequest) :
+theorem uniform_bound (table : Table) (request : InitialRatchetKdfRequest) :
     ((uniform request).run table).IsTotalQueryBound (if (table request).isSome then 0 else 64) := by
   cases found : table request with
   | none =>

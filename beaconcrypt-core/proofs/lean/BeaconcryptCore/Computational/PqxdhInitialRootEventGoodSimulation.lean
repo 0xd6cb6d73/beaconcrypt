@@ -10,6 +10,8 @@ The selected secret key remains private interpreter context. The ordinary CCA re
 open OracleComp OracleSpec
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialRootEventGoodSimulation
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhKemIndCca PqxdhInitializerSecrecy PqxdhJointKdfGame PqxdhChallengeSecretRouting
 open PqxdhStatefulPhase1EufCma PqxdhEd25519EufCma PqxdhJointIdentity PqxdhPrivateRootSource
 open PqxdhPhase2GeneratedDriver PqxdhInitialRootEventExperiment PqxdhPrivateAcceptedRoot
@@ -22,31 +24,31 @@ variable {setup : StatefulPhase1Setup baseSpec}
     (attachedVerify : Ed25519PublicKey → Pqxdh.Bytes → Option Pqxdh.Bytes) (primitives : Primitives)
     (program : Program baseSpec setup.Context S (B + 1))
     (post : Post (baseSpec := baseSpec) program.Selection S (B + 1))
-    (accepted : PqxdhPrivateRootSource.Prepared setup (driver env.toDriverEnvironment program).State → Ready → OracleComp (LocalPostSpec baseSpec) Bool)
+    (accepted : PqxdhPrivateRootSource.Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State → Ready → OracleComp (LocalPostSpec baseSpec) Bool)
 
 /-- The complete actual continuation equals the constructed ordinary routed continuation on one good functional decapsulation result. -/
 theorem nativeAfter_routed (publicKey : PqxdhKemIndCca.MlKem768PublicKey) (secretKey : KemSK)
-    (mode : Mode setup (driver env.toDriverEnvironment program).State)
+    (mode : Mode setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)
     (ciphertext : MlKem768Ciphertext) (shared : MlKemSharedSecret)
     (agreement : kem.decaps secretKey ciphertext = pure (some shared)) :
-    nativeAfter env baseImpl kem attachedVerify primitives program post accepted publicKey secretKey mode ciphertext shared =
+    nativeAfter (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post accepted publicKey secretKey mode ciphertext shared =
       PqxdhAuthenticatedRootEndpoint.routedAfter env.source baseImpl kem
-        (protocol env kem attachedVerify primitives program post accepted) publicKey secretKey mode ciphertext shared := by
+        (protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post accepted) publicKey secretKey mode ciphertext shared := by
   cases mode with
   | completed decision =>
     simp only [nativeAfter, PqxdhAuthenticatedRootEndpoint.routedAfter, protocol, PqxdhAuthenticatedRootExperiment.protocol, simulateQ_pure]
   | pending prepared ephemeral =>
     simp only [nativeAfter, PqxdhAuthenticatedRootEndpoint.routedAfter, protocol, PqxdhAuthenticatedRootExperiment.protocol, Option.map_some]
-    exact nativeAccepted_reduction env baseImpl kem attachedVerify primitives program post accepted
+    exact nativeAccepted_reduction (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post accepted
       secretKey prepared _ shared agreement
 
 /-- Actual mode dispatch and complete native postchallenge simulation discharge the endpoint obligation on every supported good sample. No additional preservation or acceptance premise remains. -/
 theorem goodSimulation (functional : FunctionalDecapsulation kem) :
     PqxdhAuthenticatedRootEndpoint.GoodSimulation env.source baseImpl kem functional
-      (protocol env kem attachedVerify primitives program post accepted)
-      (nativeAfter env baseImpl kem attachedVerify primitives program post accepted) := by
+      (protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post accepted)
+      (nativeAfter (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post accepted) := by
   intro keys _ state _ pair _ good
-  exact nativeAfter_routed env baseImpl kem attachedVerify primitives program post accepted
+  exact nativeAfter_routed (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post accepted
     keys.1 keys.2 state pair.1 pair.2
     ((functional.exact keys.2 pair.1).trans (congrArg pure good))
 

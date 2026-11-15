@@ -7,7 +7,7 @@ import BeaconcryptCore.Computational.PqxdhDeploymentEnvironmentJoin
 CE-11b's ideal environment for a target `g` draws the challenger's parameters `p` (`PqxdhDeploymentIdealParams.drawParams`) as startup coins of the environment, before the actual Server constructor, and keeps them in its backend (design-v2 section 6.1, `envGD`). Then every record-lift reduction for the target samples `p` itself, and the native side is the challenger's draw followed by the common deployment experiment with the registration handler at `p` (the shape of `CE.idealGame g`). `PqxdhDeploymentEnvironmentJoin.join` covers environments whose startup is exactly the Server constructor; this module extends it to a startup that draws first.
 
 - `worldRest` is the record world's open program after the startup (the private Server initialization and the wrapped adversary under the environment's native dispatch), so that `PqxdhRecordLiftInterface.program` is the counted startup followed by `worldRest` (`program_rest`).
-- `join_from` is `join` from any World state whose counts alone differ from the initial World (`PqxdhDeploymentEnvironmentJoin.uncount`), which is where the World stands after counted startup coins.
+- `join_from` is `join` from any World state whose counts alone differ from the initial World (`PqxdhDeploymentEnvironmentJoin.uncount`), which is where the World stands after counted startup coins. As in `join`, the World's private initialization receives the constructed Server at the supplied AD151 peer-metadata type (the actual constructor installs no peer), and the native side runs on that Server with its peer metadata forgotten (`construct_erase`, `start_imported`); no AD is derived from identities.
 - `join_draw`: if the environment's startup is a draw `draw` followed by the actual Server constructor with the initial backend `init p`, and for every drawn `p` an admissibility predicate `inv p` is stable, holds at the constructed Server's initial environment state and the initialized fresh World, and the environment splits the registration handler `reg p` relative to `inv p`, then the draw followed by the common deployment experiment with `init p` and `reg p` has the law of the record world with that environment, at the full reassembled state. `join_draw_observed` and `join_draw_analysis` are its observed and analysis projections.
 - A parameter in the backend: `paramReg`, `paramStep` and `paramInv` turn families of registration handlers, environment steps and admissibility predicates indexed by a parameter into one handler, step and predicate that read the parameter from the backend (`withX`, `withE` add it, `dropX`, `dropE` remove it). The parameterized step splits the parameterized handler when each member does (`splits_param`, `stable_param`), and the experiment with the parameterized handler and the parameter in the initial backend is the experiment with the handler at that parameter (`gameWith_param`, through `handlerWith_param` and `simulateQ_embed`). `paramEnv` draws the parameter at startup and keeps it in the backend; `join_param` is C1 for it: the draw followed by the common deployment experiment with the registration handler at the drawn parameter has the law of the record world with `paramEnv`. This is the form CE-11b's `envGD` instantiates with the challenger's draws.
 
@@ -30,12 +30,14 @@ open LazyOracleDiscard (LawEq)
 
 variable {KemSK : Type} {n : Nat}
 
+private abbrev RecordAd := Std.Array Std.U8 151#usize
+
 /-- The record world's open program after the startup: on a constructed Server, its private initialization and the wrapped adversary under the environment's native dispatch. -/
 noncomputable def worldRest {E X Reader Response : Type} (env : Environment n E) (crypto : Pqxdh.Crypto)
     (codec : Codec Reader Response) (serverKid : Std.U64) (bounds : PqxdhDeploymentInterface.FreshBounds)
     (mode : PqxdhDeploymentInterface.Mode) (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X)
-    (born : Option (PqxdhLiveServerConstruction.Created Unit × E)) :
-    OracleComp (WorldSpec n) (Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+    (born : Option (PqxdhLiveServerConstruction.Created RecordAd × E)) :
+    OracleComp (WorldSpec n) (Option (PqxdhRegistrationJointServerBirth.ClientCreated RecordAd ×
       (X × PqxdhDeploymentSecrecy.Ledger) × E)) :=
   match born with
   | none => pure none
@@ -56,6 +58,37 @@ theorem program_rest {E X Reader Response : Type} (env : Environment n E) (crypt
   unfold PqxdhRecordLiftInterface.program worldRest
   refine bind_congr fun born => ?_
   rcases born with _ | ⟨created, initial⟩ <;> rfl
+
+/-- The actual constructor at the supplied peer metadata type, with its peer metadata forgotten, is the actual constructor at `Unit` (the same statement as the private `PqxdhDeploymentEnvironmentJoin.construct_erase`). -/
+private theorem construct_erase {ι A : Type} {baseSpec : OracleSpec ι} (setup : Setup baseSpec KemSK)
+    (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (runtime : A) :
+    (fun result => (result.1.map PqxdhDeploymentEnvironment.eraseCreatedMetadata, result.2)) <$>
+      ((PqxdhLiveServerConstruction.construct (P := RecordAd) setup.joint ensureInit identityIndex setup.serverKeyId none).run runtime) =
+      ((PqxdhLiveServerConstruction.construct (P := Unit) setup.joint ensureInit identityIndex setup.serverKeyId none).run runtime) := by
+  simp only [PqxdhLiveServerConstruction.construct, StateT.run, map_bind]
+  refine bind_congr fun ready => ?_
+  split <;> simp only [map_pure, Option.map_none, Option.map_some, Functor.map_map,
+    PqxdhDeploymentEnvironment.eraseCreatedMetadata_initialized]
+
+/-- The World's private initialization with a Server constructed at startup is `initialized` at the constructed Server with its peer metadata forgotten: the actual constructor installs no peer, so no AD is attached or derived. -/
+private theorem start_imported {ι A Bk : Type} {baseSpec : OracleSpec ι} (setup : Setup baseSpec KemSK)
+    (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (runtime : A)
+    (init : PqxdhLiveServerConstruction.Created Unit → Bk)
+    (created : PqxdhLiveServerConstruction.Created RecordAd) (state : EnvState KemSK Bk)
+    (supported : some (created, state) ∈ support (PqxdhDeploymentEnvironment.start setup ensureInit identityIndex runtime init))
+    (w : PqxdhRecordLiftWorld.State n) :
+    ({ w with server := some (PqxdhRecordLiftWorld.importedServer created) } : PqxdhRecordLiftWorld.State n) =
+      initialized (PqxdhDeploymentEnvironment.eraseCreatedMetadata created) w := by
+  simp only [PqxdhDeploymentEnvironment.start, support_map, Set.mem_image] at supported
+  obtain ⟨⟨result, after⟩, constructed, same⟩ := supported
+  cases result with
+  | none => cases same
+  | some made =>
+      simp only [Option.map_some, Option.some.injEq, Prod.mk.injEq] at same
+      obtain ⟨rfl, _⟩ := same
+      obtain ⟨seed, rfl, _⟩ := PqxdhLiveServerConstruction.construct_origin setup.joint ensureInit identityIndex
+        setup.serverKeyId none runtime after made constructed
+      rfl
 
 section Draw
 variable {Bk : Type} {ι : Type} {baseSpec : OracleSpec ι} {Reader Response A X : Type}
@@ -79,17 +112,23 @@ theorem join_from (init : PqxdhLiveServerConstruction.Created Unit → Bk)
           worldRest env setup.source.crypto codec setup.serverKeyId bounds mode adversary)).run w₀) := by
   let wrapped := PqxdhDeploymentSecrecy.wrap setup.source.crypto codec setup.serverKeyId bounds
     (PqxdhDeploymentInterface.asModeO mode adversary)
-  let native : Option (PqxdhLiveServerConstruction.Created Unit × EnvState KemSK Bk) →
+  let native : Option (PqxdhLiveServerConstruction.Created RecordAd × EnvState KemSK Bk) →
       ProbComp (Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × X × PqxdhDeploymentSecrecy.Ledger ×
         PqxdhDeploymentBackend.XState KemSK Bk n)) := fun born => match born with
     | none => pure none
-    | some (created, _) => (fun result => some (PqxdhRegistrationJointServerBirth.encode created, result.1.1,
-        result.1.2, result.2)) <$> (simulateQ (PqxdhDeploymentBackend.handlerWith setup codec route (reg created))
-          wrapped).run (PqxdhDeploymentBackend.xinitial created (init created))
+    | some (created, _) =>
+        let retained := PqxdhDeploymentEnvironment.eraseCreatedMetadata created
+        (fun result => some (PqxdhRegistrationJointServerBirth.encode retained, result.1.1,
+        result.1.2, result.2)) <$> (simulateQ (PqxdhDeploymentBackend.handlerWith setup codec route (reg retained))
+          wrapped).run (PqxdhDeploymentBackend.xinitial retained (init retained))
   -- the native game is the constructor followed by `native`
   have nativeSide : (gameWith setup codec route init reg ensureInit identityIndex bounds mode adversary).run' runtime =
       PqxdhDeploymentEnvironment.start setup ensureInit identityIndex runtime init >>= native := by
     simp only [gameWith, PqxdhDeploymentEnvironment.start, StateT.run', StateT.run, map_bind, bind_map_left]
+    have erased := construct_erase setup ensureInit identityIndex runtime
+    simp only [StateT.run] at erased
+    rw [← erased]
+    simp only [bind_map_left]
     refine bind_congr fun constructed => ?_
     cases constructed.1 <;> simp only [map_pure, Functor.map_map, Option.map_none, Option.map_some, native]
     rfl
@@ -121,21 +160,23 @@ theorem join_from (init : PqxdhLiveServerConstruction.Created Unit → Bk)
   rcases step with ⟨_ | ⟨created, initialEnv⟩, w⟩
   · simp only [worldRest, simulateQ_pure, StateT.run_pure, map_pure, joined, Option.map_none]
     exact LawEq.refl _
-  · have initialEq := PqxdhDeploymentEnvironment.start_initial setup ensureInit identityIndex runtime init created
+  · have imported := start_imported setup ensureInit identityIndex runtime init created initialEnv started w
+    have initialEq := PqxdhDeploymentEnvironment.start_initial setup ensureInit identityIndex runtime init created
       initialEnv started
     subst initialEq
+    let retained := PqxdhDeploymentEnvironment.eraseCreatedMetadata created
     have vacant : w.server = none := congrArg PqxdhRecordLiftWorld.State.server fresh
     have initRun : (PqxdhRecordLiftWorld.handler setup codec route (.inl created)).run w =
-        pure ((), initialized created w) := by
+        pure ((), initialized retained w) := by
       change PqxdhRecordLiftWorld.initializeServer created w = _
-      simp only [PqxdhRecordLiftWorld.initializeServer, vacant]
+      simp only [PqxdhRecordLiftWorld.initializeServer, vacant, imported]
       rfl
-    have joinedRun := (run_join setup codec route env (reg created) created inv stable (splits created) wrapped
-      (PqxdhDeploymentEnvironment.envInitial created (init created)) (initialized created w)
-      (good_initial created (init created) w fresh)
-      (stable _ _ _ (initialized_view created w fresh) (startInv created))).map
-        (fun result => some (PqxdhRegistrationJointServerBirth.encode created, result.1.1, result.1.2, result.2))
-    rw [merge_initial created (init created) w fresh, Functor.map_map] at joinedRun
+    have joinedRun := (run_join setup codec route env (reg retained) retained inv stable (splits retained) wrapped
+      (PqxdhDeploymentEnvironment.envInitial retained (init retained)) (initialized retained w)
+      (good_initial retained (init retained) w fresh)
+      (stable _ _ _ (initialized_view retained w fresh) (startInv retained))).map
+        (fun result => some (PqxdhRegistrationJointServerBirth.encode retained, result.1.1, result.1.2, result.2))
+    rw [merge_initial retained (init retained) w fresh, Functor.map_map] at joinedRun
     dsimp only [worldRest]
     rw [simulateQ_bind, StateT.run_bind, simulateQ_spec_query, initRun, pure_bind]
     simp only [bind_pure_comp, simulateQ_map, StateT.run_map, Functor.map_map]
@@ -275,8 +316,8 @@ theorem merge_withE (p : P) (e : EnvState KemSK Bk) (w : PqxdhRecordLiftWorld.St
 theorem good_withE (created : PqxdhLiveServerConstruction.Created Unit) (p : P) (e : EnvState KemSK Bk)
     (w : PqxdhRecordLiftWorld.State n) :
     PqxdhDeploymentEnvironmentJoin.Good created (withE p e) w ↔ PqxdhDeploymentEnvironmentJoin.Good created e w :=
-  ⟨fun good => ⟨good.stripped, good.createdEq, good.server, good.ownersLength, good.owners, good.legacyAD⟩,
-    fun good => ⟨good.stripped, good.createdEq, good.server, good.ownersLength, good.owners, good.legacyAD⟩⟩
+  ⟨fun good => ⟨good.stripped, good.createdEq, good.server, good.ownersLength, good.owners⟩,
+    fun good => ⟨good.stripped, good.createdEq, good.server, good.ownersLength, good.owners⟩⟩
 
 /-- The parameterized predicate of stable predicates is stable. -/
 theorem stable_param (inv : P → EnvState KemSK Bk → PqxdhRecordLiftWorld.State n → Prop) (stable : ∀ p, Stable (inv p)) :

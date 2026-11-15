@@ -30,6 +30,7 @@ def wCrypto : Pqxdh.Crypto :=
 
 theorem w_prefix : PqxdhJointKdf.ProductionHkdfPrefixConsistent wCrypto :=
   ⟨fun input => hkdfOf_prefix toyHmac input _ 32 (by omega),
+    fun input => hkdfOf_prefix toyHmac input _ 64 (by omega),
     fun input => hkdfOf_prefix toyHmac input _ 64 (by omega)⟩
 
 def wSecret : IdentitySeed → List.Vector UInt8 64 := fun _ => List.Vector.replicate 64 0

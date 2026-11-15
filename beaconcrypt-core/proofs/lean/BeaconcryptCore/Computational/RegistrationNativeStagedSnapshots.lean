@@ -46,7 +46,7 @@ theorem stop_public {sessions owners : Nat} (endpoint : Endpoints sessions owner
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
 variable (route : RawCtxServerRouting.SenderDecoder)
 variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 variable (bounds : FreshBounds)
 
 noncomputable def handler := RegistrationNativeFullCompiler.handler setup.source.crypto wire

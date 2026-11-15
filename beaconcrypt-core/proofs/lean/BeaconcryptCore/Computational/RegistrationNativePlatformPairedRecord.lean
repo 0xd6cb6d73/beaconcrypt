@@ -23,7 +23,7 @@ variable [primitive : AdapterSealPrimitive.Operations]
 /-- One actual source Platform record and one actual successful Beacon record on the same response bytes derive full contents agreement. -/
 theorem run (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (view : RegistrationNativePlatformSourceSeal.KeyView) (correct : view.Correct) (failure : primitive.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
     (erased : commitment.CommitmentTranscript)

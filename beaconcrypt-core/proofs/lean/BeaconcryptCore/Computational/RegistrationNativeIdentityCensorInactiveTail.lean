@@ -6,7 +6,7 @@ import BeaconcryptCore.Computational.RegistrationNativePlatformIdentityCtxOrdina
 import BeaconcryptCore.Computational.RegistrationNativeIdentityCensorPublicHashSource
 import BeaconcryptCore.Computational.RegistrationNativeIdentityCensorHashFrame
 
-/-! Before selection, inactive routing preserves the original public fingerprint and Init hash source. The actual role-separated PQ request retains inactivity into the complete native ML/writer continuation. -/
+/-! Before selection, inactive routing preserves the original Init request-hash source. The actual role-separated PQ Ed25519 request retains inactivity into the complete hash and writer continuation. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -20,31 +20,29 @@ open PqxdhEd25519EufCma (Ed25519Signature)
 open RegistrationNativeIdentityCensorEdOutgoingSource (Full interpret)
 open RegistrationNativeIdentityCensorRealSigning (NoHash)
 variable {n : Nat} {I KemSK Platform E A B : Type} {base : OracleSpec I} {mlSource : RegistrationNativeMldsa.Source}
-attribute [local irreducible] registration.BeaconFingerprint.resume registration.BeaconInitHash.resume registration.BeaconMldsaSigning.resume
+attribute [local irreducible] registration.BeaconInitHash.resume
 
 variable (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner mlSource)
-variable (writer : registration.SignedInitView → StateT Platform ProbComp (RustM (core.option.Option (alloc.vec.Vec U8))))
+variable (writer : registration.InitView → StateT Platform ProbComp (RustM (core.option.Option (alloc.vec.Vec U8))))
 local notation "Main" => RegistrationNativePlatformIdentityCtxMain.beacon (n := n) (Platform := Platform) (source := mlSource) setup checks representation created
 local notation "callback" => (fun query => Main (RegistrationNativePlatformIdentityProgram.native
   (RegistrationNativeIdentityFrontend.outgoing (n := n) (Auxiliary := RegistrationServerRoleBackend.State) setup mlSource index owner query)))
 local notation "encoder" => (fun fields => Main (RegistrationNativePlatformIdentityProgram.external (writer fields)))
 
 private def hashNext {m : Type → Type} [Monad m]
-    (impl : QueryImpl RegistrationBeaconInitExecutor.Spec m)
-    (encode : registration.SignedInitView → m (RustM (core.option.Option (alloc.vec.Vec U8))))
-    (pending : registration.BeaconInitHash) (request : registration.HashRequest) (digest : CtxRomAuth.CtxDigest) :
+    (encode : registration.InitView → m (RustM (core.option.Option (alloc.vec.Vec U8))))
+    (pending : registration.BeaconInitHash) (digest : CtxRomAuth.CtxDigest) :
     m (RustM (RegistrationBeaconInitExecutor.Result (alloc.vec.Vec U8))) :=
   RegistrationNativePlatformBeaconPublication.continueWith
     (pending.resume (.Some (RegistrationAuthenticationShared.digestArray digest))) fun effect =>
       match effect with
       | .Rejected previous => pure (.ok (.Err previous))
-      | .MldsaSigningRequested next => RegistrationNativePlatformBeaconPublication.fromSigning impl encode
-          ⟨.beacon, BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request⟩ digest next
+      | .Ready next => RegistrationNativePlatformBeaconPublication.ready encode next
       | _ => pure .div
 
-/-- Inactive Init hashing and the complete ML/writer suffix have the same original source marginal. -/
+/-- Inactive Init hashing and the complete Ready/writer suffix have the same original source marginal. -/
 theorem hash (selected : Nat) (placeholder : Ed25519Signature)
     (pending : registration.BeaconInitHash) (request : registration.HashRequest) (requested : pending.request = .ok request)
     (before : Full (n := n) (KemSK := KemSK) (Platform := Platform) (mlSource := mlSource))
@@ -71,81 +69,20 @@ theorem hash (selected : Nat) (placeholder : Ed25519Signature)
   apply bind_congr
   rintro ⟨digest, after⟩
   change Prod.map id RegistrationNativeIdentityCensorActualHashSource.project <$>
-    (hashNext (fun query => interpret setup.joint selected placeholder false (callback query))
-      (fun fields => interpret setup.joint selected placeholder false (encoder fields)) pending request digest).run after =
-    (hashNext (fun query => RegistrationNativePlatformIdentityCtxMain.interpret setup.joint (callback query))
-      (fun fields => RegistrationNativePlatformIdentityCtxMain.interpret setup.joint (encoder fields)) pending request digest).run
+    (hashNext (fun fields => interpret setup.joint selected placeholder false (encoder fields)) pending digest).run after =
+    (hashNext (fun fields => RegistrationNativePlatformIdentityCtxMain.interpret setup.joint (encoder fields)) pending digest).run
         (RegistrationNativeIdentityCensorActualHashSource.project after)
   unfold hashNext
   cases resumed : pending.resume (.Some (RegistrationAuthenticationShared.digestArray digest)) with
   | fail error | div =>
     simp only [RegistrationNativePlatformBeaconPublication.continueWith, StateT.run_pure, map_pure, Prod.map_apply, id_eq]
   | ok effect => cases effect with
-    | MldsaSigningRequested next =>
-      exact RegistrationNativeIdentityCensorRealTail.signing setup checks representation created index owner writer selected placeholder
-        ⟨.beacon, BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request⟩ digest next after
+    | Ready next =>
+      exact RegistrationNativeIdentityCensorRealTail.ready setup checks representation created writer selected placeholder next after
     | _ =>
       simp only [RegistrationNativePlatformBeaconPublication.continueWith, StateT.run_pure, map_pure, Prod.map_apply, id_eq]
 
-private def fingerprintNext {m : Type → Type} [Monad m]
-    (impl : QueryImpl RegistrationBeaconInitExecutor.Spec m)
-    (encode : registration.SignedInitView → m (RustM (core.option.Option (alloc.vec.Vec U8))))
-    (pending : registration.BeaconFingerprint) (digest : CtxRomAuth.CtxDigest) :
-    m (RustM (RegistrationBeaconInitExecutor.Result (alloc.vec.Vec U8))) :=
-  RegistrationNativePlatformBeaconPublication.continueWith
-    (pending.resume (.Some (RegistrationAuthenticationShared.digestArray digest))) fun effect =>
-      match effect with
-      | .Rejected previous => pure (.ok (.Err previous))
-      | .HashRequested next => RegistrationNativePlatformBeaconPublication.fromHash impl encode next
-      | _ => pure .div
-
-/-- The actual public fingerprint preserves inactivity into every successful Init hash continuation. -/
-theorem fingerprint (selected : Nat) (placeholder : Ed25519Signature)
-    (pending : registration.BeaconFingerprint)
-    (before : Full (n := n) (KemSK := KemSK) (Platform := Platform) (mlSource := mlSource))
-    (inactive : before.1.2.active = false) :
-    Prod.map id RegistrationNativeIdentityCensorActualHashSource.project <$>
-      (RegistrationNativePlatformBeaconPublication.fromFingerprint
-        (fun query => interpret setup.joint selected placeholder false (callback query))
-        (fun fields => interpret setup.joint selected placeholder false (encoder fields)) pending).run before =
-      (RegistrationNativePlatformBeaconPublication.fromFingerprint
-        (fun query => RegistrationNativePlatformIdentityCtxMain.interpret setup.joint (callback query))
-        (fun fields => RegistrationNativePlatformIdentityCtxMain.interpret setup.joint (encoder fields)) pending).run
-          (RegistrationNativeIdentityCensorActualHashSource.project before) := by
-  obtain ⟨request, requested, bytes, _routed⟩ := RegistrationNativeIdentityHashRoute.fingerprint pending
-  have width : (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request).length = 1952 := by
-    rw [bytes, PqxdhRefinement.absBytes_length]
-    rfl
-  simp only [RegistrationNativePlatformBeaconPublication.fromFingerprint, requested, RegistrationNativePlatformBeaconPublication.continueWith,
-    StateT.run_bind, map_bind]
-  have current := RegistrationNativeIdentityCensorPublicHashSource.fingerprint setup checks representation created selected placeholder request before width
-  change Prod.map id RegistrationNativeIdentityCensorActualHashSource.project <$>
-    (interpret setup.joint selected placeholder false (callback (.inl (.hash request)))).run before =
-    (RegistrationNativePlatformIdentityCtxMain.interpret setup.joint (callback (.inl (.hash request)))).run
-      (RegistrationNativeIdentityCensorActualHashSource.project before) at current
-  rw [← current, bind_map_left]
-  apply bind_congr_of_forall_mem_support
-  rintro ⟨digest, after⟩ reached
-  have frame := RegistrationNativeIdentityCensorHashFrame.outgoing setup checks representation created selected placeholder request false before (digest, after) reached
-  have stillInactive : after.1.2.active = false := (congrArg (fun value => value.1.active) frame).trans inactive
-  change Prod.map id RegistrationNativeIdentityCensorActualHashSource.project <$>
-    (fingerprintNext (fun query => interpret setup.joint selected placeholder false (callback query))
-      (fun fields => interpret setup.joint selected placeholder false (encoder fields)) pending digest).run after =
-    (fingerprintNext (fun query => RegistrationNativePlatformIdentityCtxMain.interpret setup.joint (callback query))
-      (fun fields => RegistrationNativePlatformIdentityCtxMain.interpret setup.joint (encoder fields)) pending digest).run
-        (RegistrationNativeIdentityCensorActualHashSource.project after)
-  unfold fingerprintNext
-  cases resumed : pending.resume (.Some (RegistrationAuthenticationShared.digestArray digest)) with
-  | fail error | div =>
-    simp only [RegistrationNativePlatformBeaconPublication.continueWith, StateT.run_pure, map_pure, Prod.map_apply, id_eq]
-  | ok effect => cases effect with
-    | HashRequested next =>
-      obtain ⟨nextRequest, nextRequested, _bytes, _route⟩ := RegistrationNativeIdentityHashRoute.transcript next
-      exact hash setup checks representation created index owner writer selected placeholder next nextRequest nextRequested after stillInactive
-    | _ =>
-      simp only [RegistrationNativePlatformBeaconPublication.continueWith, StateT.run_pure, map_pure, Prod.map_apply, id_eq]
-
-/-- Before selection, the actual PQ signing request forwards its optional reply and retains the complete original fingerprint/hash/writer marginal. -/
+/-- Before selection, the actual PQ signing request forwards its optional reply and retains the complete original hash/writer marginal. -/
 theorem pq (selected : Nat) (placeholder : Ed25519Signature)
     (pending : registration.BeaconEd25519Signing) (stage : pending.stage = .PqKey)
     (tagged : RegistrationNativeIdentitySigningRole.Tagged pending.state.started)
@@ -178,8 +115,9 @@ theorem pq (selected : Nat) (placeholder : Ed25519Signature)
   cases effect <;> simp only [BeaconcryptCore.Refinement.RegistrationSigning.EdReplyTransition, stage] at facts
   case Rejected previous => simp only [StateT.run_pure, map_pure, Prod.map_apply, id_eq]
   case Ed25519SigningRequested next => exact facts.2.elim
-  case FingerprintRequested next =>
-    exact fingerprint setup checks representation created index owner writer selected placeholder next after stillInactive
+  case HashRequested next =>
+    obtain ⟨request,requested,_bytes,_route⟩ := RegistrationNativeIdentityHashRoute.transcript next
+    exact hash setup checks representation created index owner writer selected placeholder next request requested after stillInactive
 
 end BeaconcryptCore.Computational.RegistrationNativeIdentityCensorInactiveTail
 
@@ -189,11 +127,6 @@ end BeaconcryptCore.Computational.RegistrationNativeIdentityCensorInactiveTail
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativeIdentityCensorInactiveTail.hash
 
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeIdentityCensorInactiveTail.fingerprint' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeIdentityCensorInactiveTail.fingerprint
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativeIdentityCensorInactiveTail.pq' depends on axioms: [propext,
  Classical.choice,

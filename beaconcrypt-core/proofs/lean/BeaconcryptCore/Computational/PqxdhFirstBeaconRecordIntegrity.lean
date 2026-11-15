@@ -12,6 +12,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhFirstBeaconRecordIntegrity
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 
 section Transcript
 variable {ι : Type} {baseSpec : OracleSpec ι} {S B : Nat}
@@ -388,7 +390,7 @@ def startOf (built : Built M P I D K A N S B) : PqxdhSelectedPostCompiler.Full M
 
 /-- The selected first Server builder of the first-record run. -/
 noncomputable def firstBuild : ProbComp (Built M P I D K A N S B) :=
-  (selectedBuild pre application initial selector aux source writer (productionStream source.crypto) none key
+  (PqxdhSelectedFirstRecord.selectedBuild (associatedData := associatedData) pre application initial selector aux source writer (productionStream source.crypto) none key
     (PqxdhInitialSourceExperiment.root source previousRoot response64 selected) nonce next sender
     (initialKernel response64) index metadata ready (initialFront before)).run (initialShared shared privateState cache store)
 
@@ -396,16 +398,16 @@ noncomputable def firstBuild : ProbComp (Built M P I D K A N S B) :=
 noncomputable def compiledPost (built : Built M P I D K A N S B) :=
   (PqxdhSelectedStateInterpreter.evaluate
     (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder decode) source.crypto key)
-    (simulateQ (PqxdhSelectedPostCompiler.impl pre application initial selector aux source writer (productionStream source.crypto) none
+    (simulateQ (PqxdhSelectedPostCompiler.impl (completedBinding := completedBinding) pre application initial selector aux source writer (productionStream source.crypto) none
       (PqxdhInitialSourceExperiment.root source previousRoot response64 selected) nonce next sender route decode)
       (post built.1.1)).run).run (startOf built)
 
 /-- The compiled first-record game: the post client did not stop and returned `true`. -/
 noncomputable def compiledRun : ProbComp Bool := do
-  let built ← firstBuild pre application initial selector aux source writer previousRoot response64 sender index metadata ready
+  let built ← firstBuild (associatedData := associatedData) pre application initial selector aux source writer previousRoot response64 sender index metadata ready
     before selected shared privateState cache store key nonce next
   (fun result => decide (result.1 = some true)) <$>
-    compiledPost pre application initial selector aux source writer previousRoot response64 sender route decode post selected key nonce next built
+    compiledPost (completedBinding := completedBinding) pre application initial selector aux source writer previousRoot response64 sender route decode post selected key nonce next built
 
 /-- The selected chain and the listed ancestors are not among the chains known from `disclosed` and from the reveal history of the source state. -/
 def Undisclosed (target : RootOutput) (ancestors disclosed : List RatchetChain)
@@ -421,12 +423,12 @@ noncomputable instance undisclosedDecidable (target : RootOutput) (ancestors dis
 
 /-- The restricted stop game: the augmented post run reached an exact selected-nonce stop, and at the end of that run the selected chain and the listed ancestors were still undisclosed. -/
 noncomputable def stopRun (ancestors disclosed : List RatchetChain) : ProbComp Bool := do
-  let built ← firstBuild pre application initial selector aux source writer previousRoot response64 sender index metadata ready
+  let built ← firstBuild (associatedData := associatedData) pre application initial selector aux source writer previousRoot response64 sender index metadata ready
     before selected shared privateState cache store key nonce next
   (fun result => result.2.2 && decide (Undisclosed (PqxdhInitialSourceExperiment.root source previousRoot response64 selected)
       ancestors disclosed (PqxdhSelectedPostCompiler.project result.2.1))) <$>
     (simulateQ (RawCtxSelectedFamilyNonceCoupling.marked
-      (PqxdhSelectedPostCompiler.augmented pre application initial selector aux source writer (productionStream source.crypto) none key
+      (PqxdhSelectedPostCompiler.augmented (completedBinding := completedBinding) pre application initial selector aux source writer (productionStream source.crypto) none key
         (PqxdhInitialSourceExperiment.root source previousRoot response64 selected) nonce next sender route decode)
       (PqxdhSelectedPostCompiler.Stops (extra := extra) (productionStream source.crypto) none
         (PqxdhInitialSourceExperiment.root source previousRoot response64 selected) nonce next sender))
@@ -442,32 +444,32 @@ theorem post_le_full (prior : Prior) (parent : Option RawCtxSelectedParentEntry.
     (work : OracleComp (PqxdhInitialGenericPost.Spec extra S B) Bool)
     (start : PqxdhSelectedPostCompiler.Full M P I D K A N RootOracle.QueryCache S B) :
     𝒟[(fun result => decide (result.1 = some true ∧ RawCtxSelectedMessageFreshness.hidden result.2.1.roles.2 = false)) <$>
-      (simulateQ (PqxdhSelectedPostDisclosure.normal pre application initial selector aux source writer prior parent key
+      (simulateQ (PqxdhSelectedPostDisclosure.normal (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key
         target nonce next sender route decode)
         (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run (PqxdhSelectedPostCompiler.project start)] {true} ≤
     𝒟[(fun result => decide (result.1 = some true)) <$>
       (PqxdhSelectedStateInterpreter.evaluate
         (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder decode) source.crypto key)
-        (simulateQ (PqxdhSelectedPostCompiler.impl pre application initial selector aux source writer prior parent
+        (simulateQ (PqxdhSelectedPostCompiler.impl (completedBinding := completedBinding) pre application initial selector aux source writer prior parent
           target nonce next sender route decode) work).run).run start] {true} +
     𝒟[(fun result => result.2.2) <$>
       (simulateQ (RawCtxSelectedFamilyNonceCoupling.marked
-        (PqxdhSelectedPostCompiler.augmented pre application initial selector aux source writer prior parent key
+        (PqxdhSelectedPostCompiler.augmented (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key
           target nonce next sender route decode)
         (PqxdhSelectedPostCompiler.Stops (extra := extra) prior parent target nonce next sender))
         (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run (start, false)] {true} := by
-  have good := PqxdhSelectedPostDisclosure.event_good pre application initial selector aux source writer prior parent key
+  have good := PqxdhSelectedPostDisclosure.event_good (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key
     target nonce next sender route decode (RawCtxSelectedFamilyNonceCoupling.optionalClient work) (PqxdhSelectedPostCompiler.project start)
     (fun result => result.1 = some true)
   simp only [PqxdhSelectedPostDisclosure.Good] at good
   rw [setOf_bool, setOf_bool] at good
   rw [good]
   refine (map_mono _ _ (fun result => decide (result.1 = some true)) (fun result holds => by simp_all)).trans ?_
-  have distance := PqxdhSelectedPostCompiler.source_distance pre application initial selector aux source writer
+  have distance := PqxdhSelectedPostCompiler.source_distance (completedBinding := completedBinding) pre application initial selector aux source writer
     prior parent key target nonce next sender route decode work start
   refine ((map_le_tvDist _ (Prod.map id PqxdhSelectedPostCompiler.project <$> (PqxdhSelectedStateInterpreter.evaluate
         (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder decode) source.crypto key)
-        (simulateQ (PqxdhSelectedPostCompiler.impl pre application initial selector aux source writer prior parent
+        (simulateQ (PqxdhSelectedPostCompiler.impl (completedBinding := completedBinding) pre application initial selector aux source writer prior parent
           target nonce next sender route decode) work).run).run start)
     (fun result : Option Bool × PqxdhSelectedPostCompiler.SourceState M P I D K A N RootOracle.QueryCache S B =>
       decide (result.1 = some true))).trans ?_)
@@ -486,21 +488,21 @@ theorem post_le_undisclosed (prior : Prior) (parent : Option RawCtxSelectedParen
     [DecidablePred undisclosed] :
     𝒟[(fun result => decide (result.1 = some true ∧ RawCtxSelectedMessageFreshness.hidden result.2.1.roles.2 = false ∧
         undisclosed result.2)) <$>
-      (simulateQ (PqxdhSelectedPostDisclosure.normal pre application initial selector aux source writer prior parent key
+      (simulateQ (PqxdhSelectedPostDisclosure.normal (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key
         target nonce next sender route decode)
         (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run (PqxdhSelectedPostCompiler.project start)] {true} ≤
     𝒟[(fun result => decide (result.1 = some true)) <$>
       (PqxdhSelectedStateInterpreter.evaluate
         (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder decode) source.crypto key)
-        (simulateQ (PqxdhSelectedPostCompiler.impl pre application initial selector aux source writer prior parent
+        (simulateQ (PqxdhSelectedPostCompiler.impl (completedBinding := completedBinding) pre application initial selector aux source writer prior parent
           target nonce next sender route decode) work).run).run start] {true} +
     𝒟[(fun result => result.2.2 && decide (undisclosed (PqxdhSelectedPostCompiler.project result.2.1))) <$>
       (simulateQ (RawCtxSelectedFamilyNonceCoupling.marked
-        (PqxdhSelectedPostCompiler.augmented pre application initial selector aux source writer prior parent key
+        (PqxdhSelectedPostCompiler.augmented (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key
           target nonce next sender route decode)
         (PqxdhSelectedPostCompiler.Stops (extra := extra) prior parent target nonce next sender))
         (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run (start, false)] {true} := by
-  have good := PqxdhSelectedPostDisclosure.event_good pre application initial selector aux source writer prior parent key
+  have good := PqxdhSelectedPostDisclosure.event_good (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key
     target nonce next sender route decode (RawCtxSelectedFamilyNonceCoupling.optionalClient work) (PqxdhSelectedPostCompiler.project start)
     (fun result => result.1 = some true ∧ undisclosed result.2)
   simp only [PqxdhSelectedPostDisclosure.Good] at good
@@ -510,22 +512,22 @@ theorem post_le_undisclosed (prior : Prior) (parent : Option RawCtxSelectedParen
   rw [good]
   refine (map_mono _ _ (fun result => decide (result.1 = some true ∧ undisclosed result.2))
     (fun result holds => by simp_all)).trans ?_
-  rw [← PqxdhSelectedPostCompiler.augmented_program pre application initial selector aux source writer prior parent key target
+  rw [← PqxdhSelectedPostCompiler.augmented_program (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target
       nonce next sender route decode work start,
     ← RawCtxSelectedFamilyNonceCoupling.marked_client
-      (PqxdhSelectedPostCompiler.augmented pre application initial selector aux source writer prior parent key
+      (PqxdhSelectedPostCompiler.augmented (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key
         target nonce next sender route decode)
       (PqxdhSelectedPostCompiler.Stops (extra := extra) prior parent target nonce next sender)
       (RawCtxSelectedFamilyNonceCoupling.optionalClient work) (start, false),
     Functor.map_map, Functor.map_map,
     PqxdhSelectedPostCompiler.evaluated_program,
     ← RawCtxSelectedFamilyNonceCoupling.marked_client
-      (PqxdhSelectedPostCompiler.evaluated pre application initial selector aux source writer prior parent key
+      (PqxdhSelectedPostCompiler.evaluated (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key
         target nonce next sender route decode)
       (PqxdhSelectedPostCompiler.Stops (extra := extra) prior parent target nonce next sender)
       (RawCtxSelectedFamilyNonceCoupling.optionalClient work) (start, false),
     Functor.map_map]
-  refine (restricted_le _ _ _ (PqxdhSelectedPostCompiler.augmented_nonstop pre application initial selector aux source writer
+  refine (restricted_le _ _ _ (PqxdhSelectedPostCompiler.augmented_nonstop (completedBinding := completedBinding) pre application initial selector aux source writer
     prior parent key target nonce next sender route decode) (RawCtxSelectedFamilyNonceCoupling.optionalClient work) start
     (fun result => decide (result.1 = some true ∧ undisclosed (PqxdhSelectedPostCompiler.project result.2)))).trans ?_
   refine add_le_add (map_mono _ _ _ fun result holds => by simp_all) (map_mono _ _ _ fun result holds => by simp_all)
@@ -534,20 +536,20 @@ theorem post_le_undisclosed (prior : Prior) (parent : Option RawCtxSelectedParen
 theorem post_le (ancestors disclosed : List RatchetChain) (built : Built M P I D K A N S B) :
     𝒟[(fun result => decide (result.1 = some true ∧ RawCtxSelectedMessageFreshness.hidden result.2.1.roles.2 = false ∧
         Undisclosed (PqxdhInitialSourceExperiment.root source previousRoot response64 selected) ancestors disclosed result.2)) <$>
-      (simulateQ (PqxdhSelectedPostDisclosure.normal pre application initial selector aux source writer (productionStream source.crypto) none key
+      (simulateQ (PqxdhSelectedPostDisclosure.normal (completedBinding := completedBinding) pre application initial selector aux source writer (productionStream source.crypto) none key
         (PqxdhInitialSourceExperiment.root source previousRoot response64 selected) nonce next sender route decode)
         (RawCtxSelectedFamilyNonceCoupling.optionalClient (post built.1.1))).run (built.1.2, built.2)] {true} ≤
     𝒟[(fun result => decide (result.1 = some true)) <$>
-      compiledPost pre application initial selector aux source writer previousRoot response64 sender route decode post selected key nonce next built] {true} +
+      compiledPost (completedBinding := completedBinding) pre application initial selector aux source writer previousRoot response64 sender route decode post selected key nonce next built] {true} +
     𝒟[(fun result => result.2.2 && decide (Undisclosed (PqxdhInitialSourceExperiment.root source previousRoot response64 selected)
         ancestors disclosed (PqxdhSelectedPostCompiler.project result.2.1))) <$>
       (simulateQ (RawCtxSelectedFamilyNonceCoupling.marked
-        (PqxdhSelectedPostCompiler.augmented pre application initial selector aux source writer (productionStream source.crypto) none key
+        (PqxdhSelectedPostCompiler.augmented (completedBinding := completedBinding) pre application initial selector aux source writer (productionStream source.crypto) none key
           (PqxdhInitialSourceExperiment.root source previousRoot response64 selected) nonce next sender route decode)
         (PqxdhSelectedPostCompiler.Stops (extra := extra) (productionStream source.crypto) none
           (PqxdhInitialSourceExperiment.root source previousRoot response64 selected) nonce next sender))
         (RawCtxSelectedFamilyNonceCoupling.optionalClient (post built.1.1))).run (startOf built, false)] {true} :=
-  post_le_undisclosed pre application initial selector aux source writer sender route decode key nonce next
+  post_le_undisclosed (completedBinding := completedBinding) pre application initial selector aux source writer sender route decode key nonce next
     (productionStream source.crypto) none (PqxdhInitialSourceExperiment.root source previousRoot response64 selected)
     (post built.1.1) (startOf built)
     (Undisclosed (PqxdhInitialSourceExperiment.root source previousRoot response64 selected) ancestors disclosed)
@@ -556,11 +558,11 @@ theorem post_le (ancestors disclosed : List RatchetChain) (built : Built M P I D
 theorem first_le (number : Std.U64) (position : number.val = 1) (ancestors disclosed : List RatchetChain) :
     𝒟[(fun result => PqxdhInitialSourceRandom.decision source previousRoot response64 selected
         (RawCtxSelectedMessageKdf.response key nonce next) number ancestors disclosed (nativeView key result)) <$>
-      firstRun pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode
+      PqxdhSelectedFirstRecord.firstRun (associatedData := associatedData) (completedBinding := completedBinding) pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode
         index metadata ready post before selected shared privateState cache store key nonce next] {true} ≤
-    𝒟[compiledRun pre application initial selector aux source writer previousRoot response64 sender route decode index metadata ready
+    𝒟[compiledRun (associatedData := associatedData) (completedBinding := completedBinding) pre application initial selector aux source writer previousRoot response64 sender route decode index metadata ready
       post before selected shared privateState cache store key nonce next] {true} +
-    𝒟[stopRun pre application initial selector aux source writer previousRoot response64 sender route decode index metadata ready
+    𝒟[stopRun (associatedData := associatedData) (completedBinding := completedBinding) pre application initial selector aux source writer previousRoot response64 sender route decode index metadata ready
       post before selected shared privateState cache store key nonce next ancestors disclosed] {true} := by
   refine (map_mono _ _ (fun result => decide (result.1 = some true ∧
     RawCtxSelectedMessageFreshness.hidden result.2.1.1.roles.2 = false ∧
@@ -570,25 +572,25 @@ theorem first_le (number : Std.U64) (position : number.val = 1) (ancestors discl
       ancestors disclosed result).mp holds
     rw [decide_eq_true_eq]
     exact ⟨characterized.1.1, characterized.2.1, characterized.2.2.1⟩
-  · have erase := selectedRun_erase pre application initial selector aux source writer (productionStream source.crypto) none key
+  · have erase := PqxdhSelectedFirstRecord.selectedRun_erase (associatedData := associatedData) (completedBinding := completedBinding) pre application initial selector aux source writer (productionStream source.crypto) none key
       (PqxdhInitialSourceExperiment.root source previousRoot response64 selected) nonce next sender route decode
       (PqxdhInitialSelectedOrigin.mark source selectedMessage) (initialKernel response64) index metadata ready post
       (initialFront before) (initialShared shared privateState cache store)
     have projected : (fun result : Option Bool × Traced M P I D K A N RootOracle.QueryCache S B => decide (result.1 = some true ∧
         RawCtxSelectedMessageFreshness.hidden result.2.1.1.roles.2 = false ∧
         Undisclosed (PqxdhInitialSourceExperiment.root source previousRoot response64 selected) ancestors disclosed result.2.1)) <$>
-        firstRun pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode
+        PqxdhSelectedFirstRecord.firstRun (associatedData := associatedData) (completedBinding := completedBinding) pre application initial selector aux source writer selectedMessage previousRoot response64 sender route decode
           index metadata ready post before selected shared privateState cache store key nonce next =
         (fun result => decide (result.1 = some true ∧ RawCtxSelectedMessageFreshness.hidden result.2.1.roles.2 = false ∧
           Undisclosed (PqxdhInitialSourceExperiment.root source previousRoot response64 selected) ancestors disclosed result.2)) <$>
-          (Prod.map id Prod.fst <$> selectedRun pre application initial selector aux source writer (productionStream source.crypto) none key
+          (Prod.map id Prod.fst <$> PqxdhSelectedFirstRecord.selectedRun (associatedData := associatedData) (completedBinding := completedBinding) pre application initial selector aux source writer (productionStream source.crypto) none key
             (PqxdhInitialSourceExperiment.root source previousRoot response64 selected) nonce next sender route decode
             (PqxdhInitialSelectedOrigin.mark source selectedMessage) (initialKernel response64) index metadata ready post
             (initialFront before) (initialShared shared privateState cache store)) := by
       rw [Functor.map_map]
       rfl
     rw [projected, erase, map_bind]
-    exact true_bind_le _ _ _ _ fun built => post_le pre application initial selector aux source writer previousRoot response64
+    exact true_bind_le _ _ _ _ fun built => post_le (completedBinding := completedBinding) pre application initial selector aux source writer previousRoot response64
       sender route decode post selected key nonce next ancestors disclosed built
 
 end Generic
@@ -616,12 +618,12 @@ def emptyStore : RawCtxSelectiveChainGame.Store := (∅, ⟨List.Vector.replicat
 
 /-- The compiled continuation of one prepared context: completed preparations give `false`; a pending preparation runs the selected first Server builder and the executable CTX post client with the prepared callbacks of its own KEM secret and challenge. -/
 noncomputable def compiledObserve (target : Target S (B + 1))
-    (context : PqxdhInitialLegalObserver.Context env0 kem attachedVerify primitives program post)
+    (context : PqxdhInitialLegalObserver.Context (associatedData := associatedData) (completedBinding := completedBinding) env0 kem attachedVerify primitives program post)
     (initialBlock : HmacBlock) (nonce : NonceOutput) (chain key : RootOutput) : ProbComp Bool :=
-  match PqxdhInitialPreparedSourceInput.input env0 baseImpl kem attachedVerify primitives program post context
+  match PqxdhInitialPreparedSourceInput.input (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program post context
       target.owner target.number target.ancestors target.disclosed with
   | .inl _ => pure false
-  | .inr input => compiledRun
+  | .inr input => compiledRun (associatedData := associatedData) (completedBinding := completedBinding)
       (PqxdhPreparedPrefixCallbacks.preparation attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem
         context.secretKey context.ciphertext)
       (PqxdhPreparedPrefixCallbacks.application attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem
@@ -637,12 +639,12 @@ noncomputable def compiledObserve (target : Target S (B + 1))
 
 /-- The stop continuation of one prepared context: completed preparations give `false`; a pending preparation runs the selected first Server builder and reports whether the augmented post run reached an exact selected-nonce stop while, at its end, the selected chain and the target's ancestors were still undisclosed. -/
 noncomputable def stopObserve (target : Target S (B + 1))
-    (context : PqxdhInitialLegalObserver.Context env0 kem attachedVerify primitives program post)
+    (context : PqxdhInitialLegalObserver.Context (associatedData := associatedData) (completedBinding := completedBinding) env0 kem attachedVerify primitives program post)
     (initialBlock : HmacBlock) (nonce : NonceOutput) (chain key : RootOutput) : ProbComp Bool :=
-  match PqxdhInitialPreparedSourceInput.input env0 baseImpl kem attachedVerify primitives program post context
+  match PqxdhInitialPreparedSourceInput.input (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program post context
       target.owner target.number target.ancestors target.disclosed with
   | .inl _ => pure false
-  | .inr input => stopRun
+  | .inr input => stopRun (associatedData := associatedData) (completedBinding := completedBinding)
       (PqxdhPreparedPrefixCallbacks.preparation attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem
         context.secretKey context.ciphertext)
       (PqxdhPreparedPrefixCallbacks.application attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem
@@ -661,28 +663,28 @@ noncomputable def stopObserve (target : Target S (B + 1))
 /-- The compiled first-record game: the actual preparation, the shared64 block, the selected nonce and next chain, then the selected key, then the compiled continuation. -/
 noncomputable def compiledGame (target : Target S (B + 1)) : ProbComp Bool := do
   let context ← PqxdhCorrelatedExtractFamily.prepare baseImpl kem
-    (PqxdhAuthenticatedRootExperiment.protocol env0 kem attachedVerify primitives program post)
+    (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env0 kem attachedVerify primitives program post)
   let initialBlock ← $ᵗ HmacBlock
   let nonce ← $ᵗ NonceOutput
   let chain ← $ᵗ RootOutput
   let key ← $ᵗ RootOutput
-  compiledObserve setup env callbacks baseImpl kem attachedVerify primitives program post target context initialBlock nonce chain key
+  compiledObserve (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post target context initialBlock nonce chain key
 
 /-- The explicit restricted stop game `stopMass`: the same samples, then the event that the augmented post run reached an exact selected-nonce stop and, at its end, the selected chain and the target's ancestors were still undisclosed. -/
 noncomputable def stopGame (target : Target S (B + 1)) : ProbComp Bool := do
   let context ← PqxdhCorrelatedExtractFamily.prepare baseImpl kem
-    (PqxdhAuthenticatedRootExperiment.protocol env0 kem attachedVerify primitives program post)
+    (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env0 kem attachedVerify primitives program post)
   let initialBlock ← $ᵗ HmacBlock
   let nonce ← $ᵗ NonceOutput
   let chain ← $ᵗ RootOutput
   let key ← $ᵗ RootOutput
-  stopObserve setup env callbacks baseImpl kem attachedVerify primitives program post target context initialBlock nonce chain key
+  stopObserve (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post target context initialBlock nonce chain key
 
 /-- The pending source-observer mass of the first-record key-last endpoint is dominated by the compiled first-record game plus the explicit restricted stop game. -/
 theorem pending_ideal_le (target : Target S (B + 1)) (position : target.number.val = 1) :
-    𝒟[PqxdhFirstRecordTarget.pendingIdeal env0 baseImpl kem attachedVerify primitives program post target] {true} ≤
-    𝒟[compiledGame setup env callbacks baseImpl kem attachedVerify primitives program post target] {true} +
-    𝒟[stopGame setup env callbacks baseImpl kem attachedVerify primitives program post target] {true} := by
+    𝒟[PqxdhFirstRecordTarget.pendingIdeal (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program post target] {true} ≤
+    𝒟[compiledGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post target] {true} +
+    𝒟[stopGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post target] {true} := by
   unfold PqxdhFirstRecordTarget.pendingIdeal PqxdhAdaptiveMessageKeySource.firstPrepare compiledGame stopGame
   rw [PqxdhFirstRecordTarget.mapPost_choose]
   simp only [bind_assoc, pure_bind, PqxdhFirstRecordTarget.unitTargets, PqxdhInitialPreparedSourceInput.prior, bind_map_left]
@@ -703,10 +705,10 @@ theorem pending_ideal_le (target : Target S (B + 1)) (position : target.number.v
     simp only [PqxdhInitialPreparedSourceInput.input, hstate, PqxdhAdaptiveMessageKeySource.firstObserve,
       PqxdhAdaptiveFirstMaterial.observe]
     change 𝒟[PqxdhInitialSourceRandom.decision _ _ _ _ (RawCtxSelectedMessageKdf.response key nonce chain) _ _ _ <$>
-      PqxdhInitialSourceRandom.randomRun _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ (RawCtxSelectedMessageKdf.response key nonce chain)] {true} ≤ _
-    rw [randomRun_prepared setup env callbacks ∅ baseImpl kem attachedVerify primitives context.secretKey context.ciphertext,
+      PqxdhInitialSourceRandom.randomRun (associatedData := associatedData) (completedBinding := completedBinding) _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ (RawCtxSelectedMessageKdf.response key nonce chain)] {true} ≤ _
+    rw [randomRun_prepared (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks ∅ baseImpl kem attachedVerify primitives context.secretKey context.ciphertext,
       Functor.map_map]
-    exact first_le _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ position _ _
+    exact first_le (associatedData := associatedData) (completedBinding := completedBinding) _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ position _ _
 
 
 /-- The pending forgery mass of the fixed first-record source experiment with the forgery proxy post (eligible, accepted, published and fresh, `post0` true and the Server-peer first-record forgery) is at most the compiled first-record game, plus the explicit restricted stop game, plus the first-record target loss and the completed-branch root loss of C1, each the advantage of its constructed reduction. -/
@@ -717,20 +719,20 @@ theorem pending_forgery_le (post0 : PqxdhAuthenticatedRootExperiment.Post (baseS
     (adapter : HasAttachedVerificationAdapter attachedVerify primitives.verify)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation kem) (hmac : HmacSha512) (correct : SourceFullCorrect (env0).source hmac)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : Forgery) :
-    (𝒟[PqxdhFirstRecordTarget.pendingActual env0 baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0)
-        (PqxdhInitialRootEventSecrecy.accepted env0 attachedVerify primitives program (forgeryPost env0 program post0)
+    (𝒟[PqxdhFirstRecordTarget.pendingActual (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0)
+        (PqxdhInitialRootEventSecrecy.accepted (associatedData := associatedData) (completedBinding := completedBinding) env0 attachedVerify primitives program (forgeryPost env0 program post0)
           target.owner target.number target.ancestors target.disclosed)] {true}).toReal ≤
-    (𝒟[compiledGame setup env callbacks baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0) target] {true}).toReal +
-    (𝒟[stopGame setup env callbacks baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0) target] {true}).toReal +
-    PqxdhAdaptiveCoordinateSecrecy.targetLoss env0 baseImpl kem attachedVerify primitives program
+    (𝒟[compiledGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0) target] {true}).toReal +
+    (𝒟[stopGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0) target] {true}).toReal +
+    PqxdhAdaptiveCoordinateSecrecy.targetLoss (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program
       (PqxdhFirstRecordTarget.unitPost program (forgeryPost env0 program post0)) (PqxdhFirstRecordTarget.unitTargets target)
       (PqxdhFirstRecordTarget.certificate env0 baseImpl kem program (forgeryPost env0 program post0)
         (certificate env0 baseImpl kem program post0 c)) hmac fallback ordinaryFallback () +
-    PqxdhFirstRecordTarget.completedLoss env0 baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0)
+    PqxdhFirstRecordTarget.completedLoss (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0)
       hmac fallback ordinaryFallback := by
-  have pending := PqxdhFirstRecordTarget.pending_le env0 baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0)
+  have pending := PqxdhFirstRecordTarget.pending_le (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0)
     target position (certificate env0 baseImpl kem program post0 c) compatible adapter functional hmac correct fallback ordinaryFallback
-  have ideal := pending_ideal_le setup env callbacks baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0)
+  have ideal := pending_ideal_le (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0)
     target position
   have ideal_real := ENNReal.toReal_mono (ENNReal.add_ne_top.mpr ⟨PqxdhFirstRecordTarget.true_ne_top _,
     PqxdhFirstRecordTarget.true_ne_top _⟩) ideal
@@ -748,24 +750,24 @@ theorem first_beacon_forgery_le (post0 : PqxdhAuthenticatedRootExperiment.Post (
     (adapter : HasAttachedVerificationAdapter attachedVerify primitives.verify)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation kem) (hmac : HmacSha512) (correct : SourceFullCorrect (env0).source hmac)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : Forgery) :
-    (𝒟[PqxdhInitialRootEventSecrecy.actual env0 baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0)
+    (𝒟[PqxdhInitialRootEventSecrecy.actual (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0)
         (.beacon b) 1#u64 [] []] {true}).toReal -
-      (𝒟[PqxdhInitialRootEventExperiment.actual env0 baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0)
-        (PqxdhFirstRecordTarget.rejectAll env0 program)] {true}).toReal ≤
-    (𝒟[compiledGame setup env callbacks baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0)
+      (𝒟[PqxdhInitialRootEventExperiment.actual (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0)
+        (PqxdhFirstRecordTarget.rejectAll (completedBinding := completedBinding) env0 program)] {true}).toReal ≤
+    (𝒟[compiledGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0)
       (firstBeacon b)] {true}).toReal +
-    (𝒟[stopGame setup env callbacks baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0)
+    (𝒟[stopGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0)
       (firstBeacon b)] {true}).toReal +
-    PqxdhAdaptiveCoordinateSecrecy.targetLoss env0 baseImpl kem attachedVerify primitives program
+    PqxdhAdaptiveCoordinateSecrecy.targetLoss (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program
       (PqxdhFirstRecordTarget.unitPost program (forgeryPost env0 program post0)) (PqxdhFirstRecordTarget.unitTargets (firstBeacon b))
       (PqxdhFirstRecordTarget.certificate env0 baseImpl kem program (forgeryPost env0 program post0)
         (certificate env0 baseImpl kem program post0 c)) hmac fallback ordinaryFallback () +
-    PqxdhFirstRecordTarget.completedLoss env0 baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0)
+    PqxdhFirstRecordTarget.completedLoss (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0)
       hmac fallback ordinaryFallback := by
-  have split := PqxdhFirstRecordTarget.target_split env0 baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0)
+  have split := PqxdhFirstRecordTarget.target_split (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0)
     (.beacon b) 1#u64 [] []
   rw [split, ENNReal.toReal_add (PqxdhFirstRecordTarget.true_ne_top _) (PqxdhFirstRecordTarget.true_ne_top _), add_sub_cancel_left]
-  exact pending_forgery_le setup env callbacks baseImpl kem attachedVerify primitives program post0 (firstBeacon b) rfl c
+  exact pending_forgery_le (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post0 (firstBeacon b) rfl c
     compatible adapter functional hmac correct fallback ordinaryFallback
 
 end Prepared

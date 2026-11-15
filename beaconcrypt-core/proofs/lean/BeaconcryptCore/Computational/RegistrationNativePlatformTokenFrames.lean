@@ -2,6 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativePlatformTokenBuild
 import BeaconcryptCore.Computational.RegistrationNativePlatformExperiment
 import BeaconcryptCore.Computational.RegistrationNativeTokenCacheTrace
+import BeaconcryptCore.Computational.RegistrationNativePlatformHashReceipt
 
 /-! Stateful source Init generation and every corrected callback outside accept cannot create private Server tokens. Actual source writer, allocation and reservation effects are retained, and build only consumes the original source-table entry. -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -24,7 +25,7 @@ private theorem map_apply {S X Y : Type} {m : Type → Type} [Monad m] [LawfulMo
 
 private theorem step (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (query : (RegistrationNativePlatformGenericBundle.Spec E n KemSK).Domain)
     (before after : Native) (previous next : Platform)
@@ -44,7 +45,7 @@ private theorem step (coins : QueryImpl unifSpec (StateT Platform ProbComp))
 
 private theorem program (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (work : OracleComp (RegistrationNativePlatformGenericBundle.Spec E n KemSK) Value)
     (before after : Native) (previous next : Platform) (reply : Value)
@@ -64,7 +65,7 @@ private theorem program (coins : QueryImpl unifSpec (StateT Platform ProbComp))
 /-- Complete actual source bundle generation retains the literal private Server token table through every writer outcome. -/
 theorem bundle (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) (index : Nat)
     (before after : Native) (previous next : Platform) (reply : RustM (Option Pqxdh.Bytes))
     (supported : ((reply, after), next) ∈ support
@@ -82,7 +83,7 @@ attribute [local irreducible] RegistrationNativeExperiment.handler
 theorem handler (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
     (reserveRegistration reservePeer : StateT Platform ProbComp Bool) (erased : commitment.CommitmentTranscript)

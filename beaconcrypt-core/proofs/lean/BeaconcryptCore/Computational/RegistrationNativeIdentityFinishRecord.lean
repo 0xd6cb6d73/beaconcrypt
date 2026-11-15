@@ -17,7 +17,7 @@ variable {source : RegistrationNativeMldsa.Source}
 
 theorem abort_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List IdentitySeed)
     (owner : Owner source) (seed : IdentitySeed) :
     Related (n := n) (Auxiliary := Auxiliary) setup checks representation created seeds
       (RegistrationNativeIdentityFrontend.abort owner)
@@ -29,7 +29,7 @@ theorem abort_source (setup : Setup base KemSK) (checks : Checks)
 
 theorem abort_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (owner : Owner source) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (owner : Owner source) :
     Keeps (n := n) (Auxiliary := Auxiliary) setup checks representation created (RegistrationNativeIdentityFrontend.abort owner) :=
   keeps_bind setup checks representation created _ _
     (RegistrationNativeIdentityCommonSource.effect_keeps setup checks representation created _)
@@ -37,7 +37,7 @@ theorem abort_keeps (setup : Setup base KemSK) (checks : Checks)
 
 theorem abort_value_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List IdentitySeed)
     (owner : Owner source) (seed : IdentitySeed) (value : Value) :
     Related (n := n) (Auxiliary := Auxiliary) setup checks representation created seeds
       (RegistrationNativeIdentityFrontend.abort owner *> pure value)
@@ -48,7 +48,7 @@ theorem abort_value_source (setup : Setup base KemSK) (checks : Checks)
 
 theorem abort_value_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (owner : Owner source) (value : Value) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (owner : Owner source) (value : Value) :
     Keeps (n := n) (Auxiliary := Auxiliary) setup checks representation created
       (RegistrationNativeIdentityFrontend.abort owner *> pure value) := by
   simpa only [seqRight_eq_bind] using keeps_bind setup checks representation created _ _
@@ -84,7 +84,7 @@ noncomputable def original (index : Nat) (owner : RegistrationNativeBeaconFronte
 /-- The actual consumed sequence-one kernel, populated AD and native phase are installed with precisely the original source effects. -/
 theorem after_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List IdentitySeed)
     (index : Nat) (owner : Owner source) (seed : IdentitySeed) (reply : RustM RegistrationBeaconRecordExecutor.Result) :
     Related (n := n) (Auxiliary := Auxiliary) setup checks representation created seeds
       (after index owner reply) (original index (RegistrationNativeIdentityFrontend.restore seed owner) reply) := by
@@ -107,7 +107,7 @@ theorem after_source (setup : Setup base KemSK) (checks : Checks)
 
 theorem after_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (owner : Owner source) (reply : RustM RegistrationBeaconRecordExecutor.Result) :
     Keeps (n := n) (Auxiliary := Auxiliary) setup checks representation created (after index owner reply) := by
   cases reply with

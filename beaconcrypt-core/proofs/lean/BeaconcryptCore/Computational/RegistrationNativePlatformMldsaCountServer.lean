@@ -209,6 +209,30 @@ private theorem present (keyId : U64) :
   rw [RegistrationNativePlatformCompletionSdk.nativePresent, lift_world]
   exact RegistrationNativePlatformMldsaCountSdk.world _ (capability (.peerPresent keyId))
 
+private theorem local_adHash (pending : registration.ServerAdHash) :
+    Correct (source := source) (Platform := Platform) (localProject (n := n) (Auxiliary := Auxiliary))
+      (RegistrationNativePlatformMldsaProgram.lift
+        (RegistrationNativePlatformServerCompletion.adHash RegistrationNativePlatformMldsaProgram.coins pending)) := by
+  unfold RegistrationNativePlatformServerCompletion.adHash RegistrationNativePlatformServerCompletion.adHashWith
+    RegistrationServerAdHash.runWith
+  cases pending.request with
+  | fail error | div =>
+    rw [lift_pure]
+    exact RegistrationNativePlatformMldsaCountRules.pure localProject local_idempotent _
+  | ok request =>
+    simp only [bind_assoc,pure_bind,lift_bind,lift_pure]
+    apply RegistrationNativePlatformMldsaCountRules.bind localProject _ _ (capability _)
+    intro digest
+    exact RegistrationNativePlatformMldsaCountRules.pure localProject local_idempotent _
+
+/-- The actual transcript hash retains both source count equations and its complete reached state. -/
+theorem adHash (pending : registration.ServerAdHash) :
+    Correct (source := source) (Platform := Platform) (serverProject (n := n))
+      (RegistrationNativePlatformMldsaProgram.lift
+        (RegistrationNativePlatformCompletionSdk.nativeAdHash (m := StateT Platform ProbComp) RegistrationNativePlatformMldsaProgram.coins pending)) := by
+  rw [RegistrationNativePlatformCompletionSdk.nativeAdHash,RegistrationNativePlatformServerSdk.adHash,lift_world]
+  exact RegistrationNativePlatformMldsaCountSdk.world _ (local_adHash pending)
+
 
 open PqxdhServerAuthExperiment (Setup Codec)
 variable {ι KemSK Reader Response : Type} {base : OracleSpec ι}
@@ -234,7 +258,7 @@ theorem finish (setup : Setup base KemSK) (codec : Codec Reader Response)
     | Err prior => exact RegistrationNativePlatformMldsaCountRules.pure localProject local_idempotent _
     | Ok hashed => exact afterRecord credential writer control hashed
 
-/-- Literal corrected source build has both original and normalized free count equations, with its real pin charge and complete Native/platform poststates. -/
+/-- Literal current source build has both count equations, with its real AD-hash effect and complete native/platform poststates. -/
 theorem build (setup : Setup base KemSK) (codec : Codec Reader Response)
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
@@ -244,7 +268,9 @@ theorem build (setup : Setup base KemSK) (codec : Codec Reader Response)
     (handle : Nat) (application : Option (Slice U8)) :
     Correct serverProject (RegistrationNativePlatformMldsaServer.build (n := n) source credential setup codec view failure allocation erased reservePeer helper writer handle application) := by
   unfold RegistrationNativePlatformMldsaServer.build
-  exact RegistrationNativePlatformMldsaCountSdk.build _
+  exact RegistrationNativePlatformMldsaCountSdk.build
+    (fun pending => RegistrationNativePlatformMldsaProgram.lift
+      (RegistrationNativePlatformCompletionSdk.nativeAdHash RegistrationNativePlatformMldsaProgram.coins pending)) adHash _
     (RegistrationNativePlatformMldsaCountRules.closed serverProject _
       (RegistrationNativePlatformPinView.pin RegistrationNativePlatformMldsaProgram.coins)) _
     (RegistrationNativePlatformMldsaCountRules.external serverProject
@@ -276,3 +302,9 @@ end BeaconcryptCore.Computational.RegistrationNativePlatformMldsaCountServer
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativePlatformMldsaCountServer.build
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformMldsaCountServer.adHash' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformMldsaCountServer.adHash

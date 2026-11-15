@@ -33,6 +33,29 @@ theorem phase1_signing (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
     all_goals simp_all only [PqxdhLivePhase1Bundle.IsKind, signingImpl, isQueryBoundP_pure,
       not_true_eq_false]
 
+set_option backward.isDefEq.respectTransparency false in
+/-- The logged live Phase1 program (the bundle retained by its writer callback) invokes at most the same three joint signature requests under every possible returned signature and writer outcome. -/
+theorem loggedPhase1_signing (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (target : PublicIdentity) (publicValue : PublicChallenge) (oneTime : ScalarBytes)
+    (kemPk : PqxdhKemIndCca.MlKem768PublicKey) (kemSk : KemSK) :
+    (loggedPhase1 setup codec target publicValue oneTime kemPk kemSk).IsQueryBoundP IsSign 3 := by
+  unfold loggedPhase1
+  have source := PqxdhLivePhase1Bundle.bundle_bound
+    (publicProjection setup publicValue target kemPk) (freshBeacon setup publicValue kemSk) .signing
+  simp only [reduceCtorEq, ite_false, ite_true, Nat.add_zero, Nat.zero_add] at source
+  apply source.simulateQ_run_StateT_of_step
+  intro query state
+  rcases query with gen | ((coin | request) | bundle)
+  · simp [signingLogImpl, signingImpl, StateT.run_lift, PqxdhLivePhase1Bundle.IsKind]
+  · simp [signingLogImpl, signingImpl, StateT.run_lift, PqxdhLivePhase1Bundle.IsKind]
+  · cases request with
+    | create => simp [signingLogImpl, signingImpl, StateT.run_lift, PqxdhLivePhase1Bundle.IsKind]
+    | service index service =>
+      cases service <;> simp [signingLogImpl, signingImpl, StateT.run_lift, PqxdhLivePhase1Bundle.IsKind, IsSign]
+    | reveal index => simp [signingLogImpl, signingImpl, StateT.run_lift, PqxdhLivePhase1Bundle.IsKind]
+  · change (pure _ : OracleComp AdversarySpec _).IsQueryBoundP IsSign _
+    exact isQueryBoundP_pure _ _ _
+
 /-- The full adaptive source execution spends at most three signing requests, including arbitrary successful and failed native finishes. -/
 theorem execution_signing {Result : Type} (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (serverSeed : IdentitySeed) (scalar oneTime : ScalarBytes)
@@ -40,7 +63,7 @@ theorem execution_signing {Result : Type} (setup : Setup baseSpec KemSK) (codec 
     (work : AuthInput → OracleComp ServerAuthSpec Result) (target : PublicIdentity) :
     (execution setup codec checks serverSeed scalar oneTime keys work target).IsQueryBoundP IsSign 3 := by
   unfold execution
-  refine isQueryBoundP_bind (n := 3) (m := 0) (phase1_signing setup codec target _ oneTime keys.1 keys.2) ?_
+  refine isQueryBoundP_bind (n := 3) (m := 0) (loggedPhase1_signing setup codec target _ oneTime keys.1 keys.2) ?_
   intro published _
   exact isQueryBoundP_bind (n := 0) (m := 0) (program_quiet setup codec checks serverSeed scalar _ _) (fun _ _ => trivial)
 
@@ -94,6 +117,11 @@ end BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityResources
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityResources.phase1_signing
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityResources.loggedPhase1_signing' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityResources.loggedPhase1_signing
 /-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityResources.execution_signing' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/

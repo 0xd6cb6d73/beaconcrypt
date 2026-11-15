@@ -134,6 +134,12 @@ theorem eval_fromInitial (setup : Setup base KemSK) (codec : Codec Reader Respon
   simp only [fromInitial, RegistrationNativeMldsaProgram.eval_bind, eval_world, eval_completionFromInitial,
     RegistrationNativeMldsaProgram.eval_liftState, RegistrationServerSdkSource.fromInitial]
 
+/-- The actual response-dependent AD hash is ordinary shared-World work; it never queries the Server ML key table. -/
+noncomputable def adHash (pending : registration.ServerAdHash) :
+    StateT (RegistrationServerFrontendCompiler.State n) (OracleComp (Spec source))
+      (RustM (core.result.Result registration.ServerInitialKdf pqxdh.ServerState)) :=
+  liftState (RegistrationServerSdkSource.adHash pending)
+
 noncomputable def afterOccupancy (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (encode : registration.SignedResponseView → core.option.Option Pqxdh.Bytes)
     (control : pqxdh.ServerState) (lookup : peer.CompletionLookup) (occupied : Bool) :
@@ -142,7 +148,13 @@ noncomputable def afterOccupancy (setup : Setup base KemSK) (codec : Codec Reade
   | .fail error => pure (.fail error)
   | .div => pure .div
   | .ok (.Err _) => pure (.ok none)
-  | .ok (.Ok pending) => if checks.reservePeer then fromInitial source credential setup codec encode control pending else pure (.ok none)
+  | .ok (.Ok pending) => do
+      let hashed ← adHash source pending
+      match hashed with
+      | .fail error => pure (.fail error)
+      | .div => pure .div
+      | .ok (.Err _) => pure (.ok none)
+      | .ok (.Ok initial) => if checks.reservePeer then fromInitial source credential setup codec encode control initial else pure (.ok none)
 
 theorem eval_afterOccupancy (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (encode : registration.SignedResponseView → core.option.Option Pqxdh.Bytes)
@@ -156,9 +168,17 @@ theorem eval_afterOccupancy (setup : Setup base KemSK) (codec : Codec Reader Res
   | ok result => cases result with
     | Err previous => exact RegistrationNativeMldsaProgram.eval_pure _
     | Ok pending =>
-        cases reserved : checks.reservePeer with
-        | false => simp only [Bool.false_eq_true, ite_false, RegistrationNativeMldsaProgram.eval_pure]
-        | true => simp only [ite_true, eval_fromInitial]
+        simp only [RegistrationNativeMldsaProgram.eval_bind, adHash, RegistrationNativeMldsaProgram.eval_liftState]
+        congr 1
+        funext hashed
+        cases hashed with
+        | fail error | div => exact RegistrationNativeMldsaProgram.eval_pure _
+        | ok result => cases result with
+          | Err previous => exact RegistrationNativeMldsaProgram.eval_pure _
+          | Ok initial =>
+              cases reserved : checks.reservePeer with
+              | false => simp only [Bool.false_eq_true, ite_false, RegistrationNativeMldsaProgram.eval_pure]
+              | true => simp only [ite_true, eval_fromInitial]
 
 noncomputable def complete (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (encode : registration.SignedResponseView → core.option.Option Pqxdh.Bytes)

@@ -13,7 +13,7 @@ variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Auxiliary Reader Response
 
 /-- The dynamic source objects, raw-attempt ghosts, produced frames and complete shared primitive state. Whole owner values retain inactive source fields; no finite role index is imposed. -/
 structure State (KemSK Auxiliary : Type) where
-  server : RawCtxServerRouting.State Unit Unit
+  server : RawCtxServerRouting.State Unit PqxdhTranscriptAd.AssociatedData
   owners : List (PqxdhRegistrationSchedule.Owner KemSK)
   ownerRaw : Nat → Nat
   produced : List (FrameTag × RawCtxReceive.DecodedFrame)
@@ -84,7 +84,7 @@ noncomputable def serverStep
     (query : RawCtxServerMixed.SourceSpec.Domain) :
     StateT (State KemSK Auxiliary) ProbComp (RawCtxServerMixed.SourceSpec.Range query) := fun state => do
   let result ← (simulateQ primitive (PqxdhDeploymentNative.logged
-    ((RawCtxServerMixed.serverImpl (fun _ => sender) route decode query).run state.server))).run state.primitive
+    ((MldsaServerRouting.handler PqxdhRefinement.absBytes (fun _ => sender) route decode query).run state.server))).run state.primitive
   pure (result.1.1.1, produce (PqxdhDeploymentNative.serverTag query) result.1.2
     { state with server := result.1.1.2, primitive := result.2 })
 

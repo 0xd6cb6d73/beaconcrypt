@@ -9,6 +9,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete PqxdhRefinement
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialBuilderQueryBounds
+variable (associatedData : Std.Array Std.U8 151#usize)
 open PqxdhServerRegistrationPublication PqxdhAcceptedRegistration PqxdhInitialBuilderCut
 
 /-- Each actual candidate callback class has cap one for every initializer result, including diagnostic failure and divergence. -/
@@ -16,9 +17,9 @@ theorem candidate_bound {Metadata PeerMetadata Consumed : Type}
     (initial : RustM ConcreteRatchetKernel) (pending : pqxdh.ServerRegistrationCandidate)
     (data : Option Bytes) (metadata : PeerMetadata)
     (state : State Metadata PeerMetadata Consumed) (kind : CallKind) :
-    (candidate initial pending data metadata state).IsQueryBoundP (fun query => callKind query = kind) 1 := by
+    (PqxdhInitialBuilderCut.candidate (associatedData := associatedData) initial pending data metadata state).IsQueryBoundP (fun query => callKind query = kind) 1 := by
   obtain ⟨binding, hbinding, _⟩ := candidate_binding pending
-  simp only [candidate, hbinding, continueRust]
+  simp only [PqxdhInitialBuilderCut.candidate, hbinding, continueRust]
   rw [isQueryBoundP_query_bind_iff]
   refine ⟨Or.inr (by decide), fun valid => ?_⟩
   cases valid
@@ -41,7 +42,7 @@ theorem candidate_bound {Metadata PeerMetadata Consumed : Type}
     cases allocated
     all_goals try exact isQueryBoundP_pure _ _ _
     simp only [Bool.not_true, Bool.false_eq_true, ite_false, isQueryBoundP_map_iff]
-    apply (afterInitialization_bound pending _ _ metadata state kind).mono
+    apply (PqxdhServerRegistrationPublication.afterInitialization_bound (associatedData := associatedData) pending _ _ metadata state kind).mono
     cases kind <;> simp [callKind, auxKind, afterAllowance]
 
 /-- Pure diagnostic control adds no callback before the exact original continuation. -/
@@ -58,22 +59,22 @@ theorem used_bound {Metadata PeerMetadata Consumed : Type}
     (initial : RustM ConcreteRatchetKernel) (pending : PqxdhRegistrationInputs.UsedInput)
     (data : Option Bytes) (metadata : PeerMetadata)
     (state : State Metadata PeerMetadata Consumed) (kind : CallKind) :
-    (usedBuild initial pending data metadata state).IsQueryBoundP (fun query => callKind query = kind) 1 := by
+    (PqxdhInitialBuilderCut.usedBuild (associatedData := associatedData) initial pending data metadata state).IsQueryBoundP (fun query => callKind query = kind) 1 := by
   apply continue_bound
   rintro (_ | next)
   all_goals try exact isQueryBoundP_pure _ _ _
   apply continue_bound
   rintro (prepared | _)
-  all_goals first | exact candidate_bound initial _ data metadata state kind | exact isQueryBoundP_pure _ _ _
+  all_goals first | exact candidate_bound (associatedData := associatedData) initial _ data metadata state kind | exact isQueryBoundP_pure _ _ _
 
 /-- All factored accepted-root callbacks retain their source one-call cap independently of the initializer answer. -/
 theorem ready_bound {Metadata PeerMetadata Consumed : Type}
     (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (initial : RustM ConcreteRatchetKernel)
     (binding : pqxdh.ServerBinding) (ready : PqxdhPrivateAcceptedRoot.Ready) (metadata : PeerMetadata)
     (state : State Metadata PeerMetadata Consumed) (kind : CallKind) :
-    (readyBuild source initial binding ready metadata state).IsQueryBoundP
+    (PqxdhInitialBuilderCut.readyBuild (associatedData := associatedData) source initial binding ready metadata state).IsQueryBoundP
       (fun query => callKind query = kind) 1 :=
-  used_bound initial _ ready.application metadata state kind
+  used_bound (associatedData := associatedData) initial _ ready.application metadata state kind
 
 /-- The native partition names exactly the original callback predicates. -/
 theorem native_class (kind : NativeKind) (query : NativeSpec.Domain) :
@@ -88,20 +89,20 @@ theorem native_partition {Metadata PeerMetadata Consumed : Type}
     (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (initial : RustM ConcreteRatchetKernel)
     (binding : pqxdh.ServerBinding) (ready : PqxdhPrivateAcceptedRoot.Ready) (metadata : PeerMetadata)
     (state : State Metadata PeerMetadata Consumed) (kind : NativeKind) :
-    (simulateQ nativeAdapter (readyBuild source initial binding ready metadata state)).IsQueryBoundP
+    (simulateQ nativeAdapter (PqxdhInitialBuilderCut.readyBuild (associatedData := associatedData) source initial binding ready metadata state)).IsQueryBoundP
       (fun query => nativeKind query = kind) 1 := by
   apply (isQueryBoundP_congr_pred (p' := nativePredicate kind) (native_class kind)).mpr
   cases kind
   all_goals first
-    | exact native_kdf_bound _ 1 (ready_bound source initial binding ready metadata state .kdf)
-    | exact native_seal_bound _ 1 (ready_bound source initial binding ready metadata state .seal) .aead
-    | exact native_seal_bound _ 1 (ready_bound source initial binding ready metadata state .seal) .hash
-    | exact native_seal_bound _ 1 (ready_bound source initial binding ready metadata state .seal) .writer
-    | exact native_aux_bound _ 1 .identity (ready_bound source initial binding ready metadata state .identity)
-    | exact native_aux_bound _ 1 .peerReserve (ready_bound source initial binding ready metadata state .peerReserve)
-    | exact native_aux_bound _ 1 .plaintextReserve (ready_bound source initial binding ready metadata state .plaintextReserve)
-    | exact native_aux_bound _ 1 .erase (ready_bound source initial binding ready metadata state .erase)
-    | exact native_aux_bound _ 1 .writer (ready_bound source initial binding ready metadata state .writer)
+    | exact native_kdf_bound _ 1 (ready_bound (associatedData := associatedData) source initial binding ready metadata state .kdf)
+    | exact native_seal_bound _ 1 (ready_bound (associatedData := associatedData) source initial binding ready metadata state .seal) .aead
+    | exact native_seal_bound _ 1 (ready_bound (associatedData := associatedData) source initial binding ready metadata state .seal) .hash
+    | exact native_seal_bound _ 1 (ready_bound (associatedData := associatedData) source initial binding ready metadata state .seal) .writer
+    | exact native_aux_bound _ 1 .identity (ready_bound (associatedData := associatedData) source initial binding ready metadata state .identity)
+    | exact native_aux_bound _ 1 .peerReserve (ready_bound (associatedData := associatedData) source initial binding ready metadata state .peerReserve)
+    | exact native_aux_bound _ 1 .plaintextReserve (ready_bound (associatedData := associatedData) source initial binding ready metadata state .plaintextReserve)
+    | exact native_aux_bound _ 1 .erase (ready_bound (associatedData := associatedData) source initial binding ready metadata state .erase)
+    | exact native_aux_bound _ 1 .writer (ready_bound (associatedData := associatedData) source initial binding ready metadata state .writer)
 
 /-- Each interpreted callback pays its stated primitive cost; the arbitrary initializer result does not conceal any native work. -/
 theorem weighted_bound {Metadata PeerMetadata Consumed PrimitiveState ι : Type} {base : OracleSpec ι}
@@ -112,9 +113,9 @@ theorem weighted_bound {Metadata PeerMetadata Consumed PrimitiveState ι : Type}
     (binding : pqxdh.ServerBinding) (ready : PqxdhPrivateAcceptedRoot.Ready) (metadata : PeerMetadata)
     (state : State Metadata PeerMetadata Consumed) (primitive : PrimitiveState) :
     ((simulateQ impl (simulateQ nativeAdapter
-      (readyBuild source initial binding ready metadata state))).run primitive).IsQueryBoundP predicate (∑ kind, cost kind) := by
+      (PqxdhInitialBuilderCut.readyBuild (associatedData := associatedData) source initial binding ready metadata state))).run primitive).IsQueryBoundP predicate (∑ kind, cost kind) := by
   simpa only [Nat.mul_one] using FinitePartitionQueryBounds.weighted_bound nativeKind cost (fun _ => 1)
-    impl predicate _ (native_partition source initial binding ready metadata state) step primitive
+    impl predicate _ (native_partition (associatedData := associatedData) source initial binding ready metadata state) step primitive
 
 open PqxdhProtocolQueryBounds
 
@@ -126,10 +127,10 @@ theorem protocol_uniform {M P I D K A : Type} {S B : Nat}
     (qAux : Nat) (auxBound : ∀ query primitive, ((aux query).run primitive).IsTotalQueryBound qAux)
     (senderId : M → Std.U64) (index : Fin S) (metadata : P) (ready : PqxdhPrivateAcceptedRoot.Ready)
     (state : PqxdhRegistrationProtocolState.State M P I D K A S B) :
-    ((protocolBuild source writer initial aux senderId index metadata ready).run state).IsTotalQueryBound
+    ((PqxdhInitialBuilderCut.protocolBuild (associatedData := associatedData) source writer initial aux senderId index metadata ready).run state).IsTotalQueryBound
       (64 + 5 * qAux) := by
-  simp only [protocolBuild, StateT.run, IsTotalQueryBound, isQueryBound_map_iff]
-  have bound := weighted_bound (PqxdhRegistrationProtocolState.registrationImpl source writer aux)
+  simp only [PqxdhInitialBuilderCut.protocolBuild, StateT.run, IsTotalQueryBound, isQueryBound_map_iff]
+  have bound := weighted_bound (associatedData := associatedData) (PqxdhRegistrationProtocolState.registrationImpl source writer aux)
     (fun _ => True) (nativeUniformCost qAux)
     (fun query primitive => (native_uniform_step source writer aux qAux auxBound query primitive).isQueryBoundP)
     source initial (PqxdhRegistrationProtocolState.input senderId index metadata
@@ -153,9 +154,9 @@ theorem observer_uniform
     (auxBound : ∀ query primitive, ((aux query).run primitive).IsTotalQueryBound qAux)
     (outsideBound : ∀ context result, (outside context result).IsTotalQueryBound qOutside)
     (context : Context) (initial : RawCtxInitialSecrecy.Pair) :
-    (PqxdhInitialBuilderSecrecy.observer source writer aux senderId index metadata ready state outside context initial).IsTotalQueryBound
+    (PqxdhInitialBuilderSecrecy.observer (associatedData := associatedData) source writer aux senderId index metadata ready state outside context initial).IsTotalQueryBound
       ((64 + 5 * qAux) + qOutside) := by
-  exact isTotalQueryBound_bind (protocol_uniform source writer initial.1 aux qAux auxBound senderId index metadata
+  exact isTotalQueryBound_bind (protocol_uniform (associatedData := associatedData) source writer initial.1 aux qAux auxBound senderId index metadata
     (eraseRoot (ready context)) (state context)) (fun result => outsideBound context result)
 
 open PqxdhSecretInputKdf PqxdhFullSecretInputKdf
@@ -171,13 +172,13 @@ theorem reduction_queries
     (qSample qAux qOutside : Nat) (sampleBound : sample.IsTotalQueryBound qSample)
     (auxBound : ∀ query primitive, ((aux query).run primitive).IsTotalQueryBound qAux)
     (outsideBound : ∀ context result, (outside context result).IsTotalQueryBound qOutside) :
-    let observe := PqxdhInitialBuilderSecrecy.observer source writer aux senderId index metadata ready state outside
-    (fullExpandReduction .ratchet (RawCtxInitialSecrecy.joint sample) (RawCtxInitialSecrecy.observer observe)).IsQueryBoundP
+    let observe := PqxdhInitialBuilderSecrecy.observer (associatedData := associatedData) source writer aux senderId index metadata ready state outside
+    (fullExpandReduction .initial (RawCtxInitialSecrecy.joint sample) (RawCtxInitialSecrecy.observer observe)).IsQueryBoundP
         IsHmacChallengeQuery 2 ∧
-      (fullExpandReduction .ratchet (RawCtxInitialSecrecy.joint sample) (RawCtxInitialSecrecy.observer observe)).IsQueryBoundP
+      (fullExpandReduction .initial (RawCtxInitialSecrecy.joint sample) (RawCtxInitialSecrecy.observer observe)).IsQueryBoundP
         PqxdhFullSecretInputKdf.IsHmacUniformQuery (qSample + ((64 + 5 * qAux) + qOutside)) := by
   exact RawCtxInitialSecrecy.reduction_bounds sample _ qSample _ sampleBound
-    (observer_uniform source writer aux senderId index metadata ready state outside qAux qOutside auxBound outsideBound)
+    (observer_uniform (associatedData := associatedData) source writer aux senderId index metadata ready state outside qAux qOutside auxBound outsideBound)
 
 set_option maxRecDepth 2048 in
 /-- Each challenger world pays its own random bytes plus the same concrete first-send and outside bill; the comparison full 76-byte draw is not assigned to the source initializer. -/
@@ -192,16 +193,16 @@ theorem challenger_queries
     (auxBound : ∀ query primitive, ((aux query).run primitive).IsTotalQueryBound qAux)
     (outsideBound : ∀ context result, (outside context result).IsTotalQueryBound qOutside) :
     let observe := RawCtxInitialSecrecy.observer
-      (PqxdhInitialBuilderSecrecy.observer source writer aux senderId index metadata ready state outside)
+      (PqxdhInitialBuilderSecrecy.observer (associatedData := associatedData) source writer aux senderId index metadata ready state outside)
     let joint := RawCtxInitialSecrecy.joint sample
     let qObserve := (64 + 5 * qAux) + qOutside
-    (extractRealGame hmac joint (fullExtractReduction hmac .ratchet observe)).IsTotalQueryBound (qSample + qObserve) ∧
-      (extractUniformGame joint (fullExtractReduction hmac .ratchet observe)).IsTotalQueryBound (qSample + (64 + qObserve)) ∧
-      (hmacPrfRealGame hmac (fullExpandReduction .ratchet joint observe)).IsTotalQueryBound (64 + (qSample + qObserve)) ∧
-      (hmacPrfRandomGame (fullExpandReduction .ratchet joint observe)).IsTotalQueryBound (qSample + (64 + (64 + qObserve))) ∧
+    (extractRealGame hmac joint (fullExtractReduction hmac .initial observe)).IsTotalQueryBound (qSample + qObserve) ∧
+      (extractUniformGame joint (fullExtractReduction hmac .initial observe)).IsTotalQueryBound (qSample + (64 + qObserve)) ∧
+      (hmacPrfRealGame hmac (fullExpandReduction .initial joint observe)).IsTotalQueryBound (64 + (qSample + qObserve)) ∧
+      (hmacPrfRandomGame (fullExpandReduction .initial joint observe)).IsTotalQueryBound (qSample + (64 + (64 + qObserve))) ∧
       (independentFullGame joint observe).IsTotalQueryBound (qSample + (76 + qObserve)) := by
   exact RawCtxInitialSecrecy.challenger_uniform hmac sample _ qSample _ sampleBound
-    (observer_uniform source writer aux senderId index metadata ready state outside qAux qOutside auxBound outsideBound)
+    (observer_uniform (associatedData := associatedData) source writer aux senderId index metadata ready state outside qAux qOutside auxBound outsideBound)
 
 set_option maxRecDepth 2048 in
 /-- The actual randomized initializer pays exactly its 64-byte draw plus the derived original builder and explicit outside sampling budgets. -/
@@ -216,10 +217,10 @@ theorem random_queries
     (auxBound : ∀ query primitive, ((aux query).run primitive).IsTotalQueryBound qAux)
     (outsideBound : ∀ context result, (outside context result).IsTotalQueryBound qOutside) :
     (RawCtxInitialSecrecy.random sample
-      (PqxdhInitialBuilderSecrecy.observer source writer aux senderId index metadata ready state outside)).IsTotalQueryBound
+      (PqxdhInitialBuilderSecrecy.observer (associatedData := associatedData) source writer aux senderId index metadata ready state outside)).IsTotalQueryBound
       (qSample + (64 + ((64 + 5 * qAux) + qOutside))) := by
   exact RawCtxInitialSecrecy.random_uniform sample _ qSample _ sampleBound
-    (observer_uniform source writer aux senderId index metadata ready state outside qAux qOutside auxBound outsideBound)
+    (observer_uniform (associatedData := associatedData) source writer aux senderId index metadata ready state outside qAux qOutside auxBound outsideBound)
 
 end BeaconcryptCore.Computational.PqxdhInitialBuilderQueryBounds
 /-- info: 'BeaconcryptCore.Computational.PqxdhInitialBuilderQueryBounds.candidate_bound' depends on axioms: [propext,

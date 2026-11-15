@@ -94,7 +94,7 @@ def output (reply : core.option.Option beaconcrypt_public_wrapper.server.RegResp
 
 theorem install (coins : QueryImpl unifSpec m)
     (view : MaterialView mlSource KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : beaconcrypt_public_wrapper.server.Server) (before : RegistrationServerFrontendCompiler.State n)
     (related : Server view views created credential self before)
     (published : registration.PublishedServerResponse (alloc.vec.Vec U8))
@@ -128,13 +128,13 @@ def project (result : RustM AdapterPublicServerBuildBody.Reply) : RustM (Option 
   match result with | .fail error => .fail error | .div => .div | .ok (reply, _) => .ok (output reply)
 
 def Returned (view : MaterialView mlSource KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (result : RustM AdapterPublicServerBuildBody.Reply) (after : RegistrationServerFrontendCompiler.State n) : Prop :=
   match result with | .fail _ | .div => True | .ok (_, current) => Server view views created credential current after
 
 theorem publication (coins : QueryImpl unifSpec m)
     (view : MaterialView mlSource KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : beaconcrypt_public_wrapper.server.Server) (before : RegistrationServerFrontendCompiler.State n)
     (related : Server view views created credential self before)
     (initial : registration.ServerInitialKdf)

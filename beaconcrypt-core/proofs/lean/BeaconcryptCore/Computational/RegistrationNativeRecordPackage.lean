@@ -2,10 +2,11 @@
 import BeaconcryptCore.Computational.RegistrationNativeSelectiveEntropyStartup
 import BeaconcryptCore.Computational.CborRawRecordLiftCrypto
 
-/-! Exact packaging of an actual native World program for the arbitrary-client record reductions. The native transcript is retained alongside its literal original private ledger; no startup, pin hash, callback or failure branch is replaced. The observation contains the complete native result and the existing permitted record view, and has no private interpreter-state argument. -/
+/-! Exact packaging of an actual native World program for the arbitrary-client record reductions. The native transcript is retained alongside its literal original private ledger; no startup, callback or failure branch is replaced. The observation contains the complete native result and the existing permitted record view, and has no private interpreter-state argument. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
+set_option warningAsError true
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativeRecordPackage
 open PqxdhRecordLiftInterface (WorldSpec)
@@ -14,7 +15,7 @@ open RegistrationNativeEntropyRun (Outcome)
 variable {n : Nat} {E Value Reader Response First Second : Type}
 variable {ι KemSK : Type} {base : OracleSpec ι}
 
-abbrev Extra (E : Type) := PqxdhRegistrationJointServerBirth.ClientCreated Unit × List RegistrationNativeInterface.Entry × E
+abbrev Extra (E : Type) := PqxdhRegistrationJointServerBirth.ClientCreated (Std.Array U8 151#usize) × List RegistrationNativeInterface.Entry × E
 
 def encode (native : Outcome E Value) : PqxdhRecordLiftLaterWorlds.Outcome (Extra E) Value :=
   native.map fun born => (born.1, (born.2.1.1, born.2.1.2.ledger), (born.1, born.2.1.2.transcript, born.2.2))

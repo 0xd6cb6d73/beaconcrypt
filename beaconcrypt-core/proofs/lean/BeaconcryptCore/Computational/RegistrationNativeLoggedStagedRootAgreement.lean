@@ -21,7 +21,7 @@ variable {n count : Nat} {ι KemSK V Value : Type} {base : OracleSpec ι} {sourc
 variable {κ : Type} {spec : OracleSpec κ}
 
 private theorem lower_simulate (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (implementation : QueryImpl spec (M n KemSK source RegistrationServerRoleBackend.State)) (work : OracleComp spec V) :
     lower setup checks representation created (simulateQ implementation work) =
       simulateQ (fun query => lower setup checks representation created (implementation query)) work := by
@@ -32,7 +32,7 @@ private theorem lower_simulate (setup : Setup base KemSK) (checks : Checks)
 /-- Actual logged collectors give equal Root bytes unless their own finite-recipient execution's common marker fired. No perfect correctness or desired Root equality is assumed. -/
 theorem root_or_marker (setup : Setup base KemSK) (checks : Checks)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp (RegistrationNativeKemCountedProgram.Spec KemSK) Value)
     (result : RegistrationNativeKemRecipientLogSource.Result KemSK Value count)
     (supported : result ∈ support (RegistrationNativeKemRecipientLogSource.experiment setup functional work count))
@@ -47,7 +47,7 @@ theorem root_or_marker (setup : Setup base KemSK) (checks : Checks)
       beacon_one_time_public_key := rootArray (setup.dh.publicKey oneTime),
       beacon_pq_public_key := RegistrationNativeBeaconFrontend.pqArray owner.kemPublic })
     (authenticated : registration.AuthenticatedResponse)
-    (coherent : authenticated.pending.control.expected_server_binding = authenticated.pending.binding.server_pin.binding)
+    (coherent : authenticated.control.expected_server_binding = authenticated.binding.server_pin.binding)
     (completed : agreement.BeaconAgreement) (before after : Local n KemSK source)
     (beaconAgreed : (.ok (.BeaconComplete completed), after) ∈ support
       ((lower setup checks representation created
@@ -84,7 +84,7 @@ theorem root_or_marker (setup : Setup base KemSK) (checks : Checks)
       result.1 target row matchedKem (ciphertext.trans ciphertextEq) matchedIdentity matchedPrekey matchedOneTime serverIdentity (ephemeral.trans ephemeralEq)
   rcases secret with kemEq | bad
   · have serverBytes := receipt.nativeInput.bytes
-    have beaconBytes := RegistrationNativeAgreementInputReceipt.beacon_bytes authenticated.pending.control beaconInput original prepared
+    have beaconBytes := RegistrationNativeAgreementInputReceipt.beacon_bytes authenticated.control beaconInput original prepared
     have sameBytes : absBytes receipt.nativeInput.original.root_key_input.bytes = absBytes original.root_key_input.bytes := by
       rw [serverBytes, beaconBytes, firstEq, secondEq, thirdEq, fourthEq, kemEq]
     have nativeBytes : receipt.nativeInput.original.root_key_input.bytes = original.root_key_input.bytes := by

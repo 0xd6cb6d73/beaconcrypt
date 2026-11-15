@@ -36,7 +36,8 @@ open PqxdhDeploymentEnvironmentReal (withCache ctxAdmin coins_noAdmin effects_co
   fill_append_owner good_server uncount_good fill_set matched_set fill_inactive map_congr_support shared_run shared_fill
   shared_good Bundled bundle_shape Built build_shape ownerEffect_same ownerChange_set ownerEffect_publish
   established_terminal worldCopies override_world installed_world override_publish run_support finishFwd_noAdmin
-  finishFwd_game Finished finish_shape ownerEffect_abort ownerEffect_establish fillOwner_self
+  finishFwd_game ownerFinishFwd_noAdmin ownerFinishFwd_game ownerFinishFwd_terminal ownerFinishFwd_frame
+  ownerFinish_factor ownerFinish_nframe ownerFinishFwd_shape Finished finish_shape ownerEffect_abort ownerEffect_establish fillOwner_self
   onNative_run onShared_run create_run hmac_frame accept_frame bundle_run_missing bundle_run_found builtNative builtGame
   nativeBuild_run builtNative_quiet snapFinish finishedState)
 open PqxdhDeploymentIdealSteps (realRegAt createPool createReg)
@@ -149,7 +150,7 @@ theorem create_keeps (pin : Pqxdh.Bytes) (keyId : Std.U64) (e : EnvState KemSK B
     obtain ⟨identity, _, prekey, _, keys, _, rfl⟩ := member
     obtain ⟨world, found, sender, identity', peers⟩ := good_server created e w good
     refine uncount_good created _ _ (good_intro created _ _ _ world rfl good.createdEq found sender identity' peers ?_
-      (matched_append w _ (good_matched created e w good) good.ownersLength _ rfl) (good.legacyAD world found))
+      (matched_append w _ (good_matched created e w good) good.ownersLength _ rfl))
     simp only [List.length_append, List.length_singleton, good.ownersLength]
 
 /-- The real environment's public HMAC, run by the World with its counts forgotten: the native HMAC on the environment's shared state, the World unchanged. -/
@@ -275,7 +276,7 @@ theorem bundleStep_effects (index : Nat) (e : EnvState KemSK Bk) (w : PqxdhRecor
   rfl
 
 /-- One outcome of a bundle at a present owner that is not established: the World's phase change, the reassembled state and admissibility. -/
-theorem bundle_outcome (index : Nat) (e : EnvState KemSK Bk) (w : PqxdhRecordLiftWorld.State n) (good : Good created e w)
+private theorem bundle_outcome_base (index : Nat) (e : EnvState KemSK Bk) (w : PqxdhRecordLiftWorld.State n) (good : Good created e w)
     (owner : PqxdhRegistrationSchedule.Owner KemSK) (owned : e.native.owners[index]? = some owner)
     (inactive : ¬ RawCtxBeaconLifecycle.Established owner.beacon.phase) (reply : Option Pqxdh.Bytes)
     (after : PqxdhRegistrationSchedule.Owner KemSK) (shape : Bundled owner after) :
@@ -314,7 +315,6 @@ theorem bundle_outcome (index : Nat) (e : EnvState KemSK Bk) (w : PqxdhRecordLif
         obtain ⟨_, atIndex⟩ := List.getElem?_eq_some_iff.mp owned
         rw [← atIndex, List.set_getElem_self]]
       exact good_intro created _ e.native w world rfl good.createdEq found sender identity peers good.ownersLength matched
-        (good.legacyAD world found)
   · subst published
     have legal : PqxdhRecordLiftWorld.LegalAdvance tag .initSent := by
       have tags : PqxdhDeploymentEnvironment.inactiveTag owner.beacon.phase = some tag := by
@@ -338,7 +338,30 @@ theorem bundle_outcome (index : Nat) (e : EnvState KemSK Bk) (w : PqxdhRecordLif
       simp only [w']
       rw [fill_set _ _ index _ _ below good.ownersLength, fillOwner_inactive]
     · exact good_intro created _ _ w' world rfl good.createdEq found sender identity peers
-        (by simp only [w', List.length_set, good.ownersLength]) matched' (good.legacyAD world found)
+        (by simp only [w', List.length_set, good.ownersLength]) matched'
+
+/-- One outcome of a bundle at a present owner that is not established, with the retained Phase 1 bundles `inits` of the run: the World's phase change, the reassembled state and admissibility. -/
+theorem bundle_outcome (index : Nat) (e : EnvState KemSK Bk) (w : PqxdhRecordLiftWorld.State n) (good : Good created e w)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) (owned : e.native.owners[index]? = some owner)
+    (inactive : ¬ RawCtxBeaconLifecycle.Established owner.beacon.phase) (reply : Option Pqxdh.Bytes)
+    (after : PqxdhRegistrationSchedule.Owner KemSK) (inits : Nat → Option PqxdhEd25519EufCma.Phase1Candidate)
+    (shape : Bundled owner after) :
+    ∃ w', Prod.map id uncount <$> (simulateQ PqxdhRecordLiftWorld.effects
+        (PqxdhDeploymentEnvironment.ownerChange index e.native.owners (e.native.owners.set index after) >>= fun _ =>
+          pure (reply, { e with native := strip { e.native with owners := e.native.owners.set index after, inits := inits } }))).run
+          (uncount w) =
+        pure ((reply, { e with native := strip { e.native with owners := e.native.owners.set index after, inits := inits } }), uncount w') ∧
+      merge { e with native := strip { e.native with owners := e.native.owners.set index after, inits := inits } } w' =
+        { merge e w with base := { (merge e w).base with native :=
+          { fill w e.native with owners := (fill w e.native).owners.set index after, inits := inits } } } ∧
+      Good created { e with native := strip { e.native with owners := e.native.owners.set index after, inits := inits } } w' := by
+  have good' : Good created { e with native := { e.native with inits := inits } } w :=
+    ⟨(show PqxdhDeploymentEnvironment.strip { e.native with inits := inits } =
+        { PqxdhDeploymentEnvironment.strip e.native with inits := inits } from rfl).trans
+      (congrArg (fun native : PqxdhRegistrationSchedule.State KemSK => { native with inits := inits }) good.stripped),
+      good.createdEq, good.server, good.ownersLength, good.owners⟩
+  exact bundle_outcome_base created index { e with native := { e.native with inits := inits } } w good' owner owned
+    inactive reply after shape
 
 /-- The bundle of the real environment splits the real registration handler. -/
 theorem bundle_law (index : Nat) (e : EnvState KemSK Bk) (w : PqxdhRecordLiftWorld.State n) (good : Good created e w) :
@@ -383,8 +406,9 @@ theorem bundle_law (index : Nat) (e : EnvState KemSK Bk) (w : PqxdhRecordLiftWor
           bind_map_left, map_bind, Functor.map_map, map_eq_bind_pure_comp]
         apply OracleComp.bind_congr_of_forall_mem_support
         intro result member
-        obtain ⟨w', run, merged, _⟩ := bundle_outcome created index e w good owner owned established result.1 result.2
-          (bundle_shape _ owner result (PqxdhDeploymentEnvironment.support_simulateQ_subset _ _ member))
+        obtain ⟨w', run, merged, _⟩ := bundle_outcome created index e w good owner owned established result.1.1 result.1.2
+          (Function.update e.native.inits index result.2)
+          (bundle_shape _ owner result.1 (run_support _ _ _ _ member))
         dsimp only
         rw [run, map_pure]
         dsimp only
@@ -429,23 +453,32 @@ theorem bundle_keeps (index : Nat) (e : EnvState KemSK Bk) (w : PqxdhRecordLiftW
         exact uncount_good created e w good
       · rw [bundle_run_found setup codec index _ owner owned, support_map] at member
         obtain ⟨bundled, bundledMember, rfl⟩ := member
-        obtain ⟨w', run, _, kept⟩ := bundle_outcome created index e w good owner owned established bundled.1 bundled.2
-          (bundle_shape _ owner bundled (PqxdhDeploymentEnvironment.support_simulateQ_subset _ _ bundledMember))
+        obtain ⟨w', run, _, kept⟩ := bundle_outcome created index e w good owner owned established bundled.1.1 bundled.1.2
+          (Function.update e.native.inits index bundled.2)
+          (bundle_shape _ owner bundled.1 (run_support _ _ _ _ bundledMember))
         dsimp only at final
         rw [run, support_pure, Set.mem_singleton_iff] at final
         subst final
         exact uncount_good created _ _ kept
 
-/-- The real environment's Server build, run by the World with its counts forgotten: the forwarded build read through `ctxEffects` on the World's cache, then the publication of the settled build in the World. -/
+/-- The real environment's Server build, run by the World with its counts forgotten: a rejected pre-hash guard consumes the token with no effect; otherwise the forwarded transcript hash and build read through `ctxEffects` on the World's cache, then the publication of the settled build in the World. -/
 theorem buildStep_effects (session : Nat) (payload : Option Pqxdh.Bytes) (e : EnvState KemSK Bk)
     (w : PqxdhRecordLiftWorld.State n) :
     Prod.map id uncount <$> (simulateQ PqxdhRecordLiftWorld.effects
         ((PqxdhDeploymentEnvironment.realStep (n := n) setup codec checks ⟨.build session payload, trivial⟩).run e)).run w =
       match e.native.shared.2.pending session with
       | none => pure ((none, e), uncount w)
-      | some token => (simulateQ (ctxEffects ctxAdmin) ((simulateQ (PqxdhDeploymentEnvironment.tailFwd (n := n) setup codec
-            checks) (PqxdhServerRegistrationPublication.build setup.source token.pending token.root payload ()
-              e.native.shared.2.server)).run [])).run w.primitive.2 >>= fun result =>
+      | some token =>
+        match PqxdhServerRegistrationPublication.prehash e.native.shared.2.server token.pending payload with
+        | none => pure ((none, { e with native := strip { e.native with shared := (e.native.shared.1,
+            { e.native.shared.2 with pending := Function.update e.native.shared.2.pending session none }) } }), uncount w)
+        | some candidate =>
+          (CtxRomAuth.ctxRandomOracle ((), PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf token.init)
+              (PqxdhTranscriptAd.serverResponse candidate))).run w.primitive.2 >>= fun hashed =>
+          (simulateQ (ctxEffects ctxAdmin) ((simulateQ (PqxdhDeploymentEnvironment.tailFwd (n := n) setup codec
+            checks) (PqxdhServerRegistrationPublication.build (associatedData := PqxdhTranscriptAd.adOf hashed.1)
+              setup.source token.pending token.root payload (PqxdhTranscriptAd.adOf hashed.1)
+              e.native.shared.2.server)).run [])).run hashed.2 >>= fun result =>
           Prod.map id uncount <$> (simulateQ PqxdhRecordLiftWorld.effects
             (PqxdhDeploymentEnvironment.serverEffect (PqxdhServerAuthExperiment.settle e.native.shared.2.server result.1.1) >>=
               fun _ => pure ((PqxdhServerAuthExperiment.settle e.native.shared.2.server result.1.1).1,
@@ -458,16 +491,28 @@ theorem buildStep_effects (session : Nat) (payload : Option Pqxdh.Bytes) (e : En
   · simp only [simulateQ_pure, StateT.run_pure, map_pure]
     rfl
   · dsimp only
-    rw [effects_then_free ctxAdmin _ ?noAdmin _ (fun result => countFree_bind (countFree_serverEffect _)
-      fun _ => countFree_pure _) w]
-    · rfl
-    · simpa only [reduceCtorEq, ite_false] using PqxdhDeploymentEnvironment.build_fwd_bound (n := n) setup codec checks
-        token.pending token.root payload e.native.shared.2.server [] .administrative
+    rcases pre : PqxdhServerRegistrationPublication.prehash e.native.shared.2.server token.pending payload with _ | candidate
+    · simp only [simulateQ_pure, StateT.run_pure, map_pure]
+      rfl
+    · dsimp only
+      rw [← bind_assoc]
+      rw [effects_then_free ctxAdmin _ ?noAdmin _ (fun result => countFree_bind (countFree_serverEffect _)
+        fun _ => countFree_pure _) w]
+      · rw [simulateQ_bind, StateT.run_bind, bind_assoc]
+        simp only [PqxdhDeploymentEnvironment.request, simulateQ_query, OracleQuery.input_query, OracleQuery.cont_query,
+          id_map]
+        refine bind_congr fun hashed => ?_
+        rfl
+      · refine isQueryBoundP_bind (n := 0) (m := 0) ?_ fun digest _ => ?_
+        · simpa only [reduceCtorEq, ite_false] using
+            PqxdhDeploymentEnvironment.request_hash_bound (n := n) _ .administrative
+        · simpa only [reduceCtorEq, ite_false] using PqxdhDeploymentEnvironment.build_fwd_bound (n := n) setup codec checks
+            token.pending token.root payload (PqxdhTranscriptAd.adOf digest) e.native.shared.2.server [] .administrative
 
 /-- The game state of the reassembled state as CE-3's override of the environment's Server record. -/
 theorem frameGame_server (e : EnvState KemSK Bk) (w : PqxdhRecordLiftWorld.State n) (good : Good created e w)
     (world : PqxdhRecordLiftWorld.Server) (found : w.server = some world) :
-    (frameGame w.primitive.2 (MldsaLegacyServerRouting.forgetServer world.records.server) e.native.shared.2.server.identityKeyId e.native.shared.2).server =
+    (frameGame w.primitive.2 world.records.server e.native.shared.2.server.identityKeyId e.native.shared.2).server =
       PqxdhDeploymentCompileRegistration.overrideServer (worldCopies world) e.native.shared.2.server := by
   obtain ⟨world', found', _, identity, peers⟩ := good.server
   rw [found] at found'
@@ -479,18 +524,18 @@ theorem frameGame_server (e : EnvState KemSK Bk) (w : PqxdhRecordLiftWorld.State
 theorem build_merge (session : Nat) (e : EnvState KemSK Bk) (w : PqxdhRecordLiftWorld.State n) (good : Good created e w)
     (world : PqxdhRecordLiftWorld.Server) (found : w.server = some world)
     (rust : RustM (Option PqxdhServerRegistrationPublication.Response ×
-      PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes)))
+      PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes)))
     (log : List RawCtxSourceSend.SealContext) (cache : CtxRomAuth.CtxRO.QueryCache) (world' : PqxdhRecordLiftWorld.Server)
     (raw' : world'.records.rawAttempts = world.records.rawAttempts)
     (override : PqxdhDeploymentCompileRegistration.overrideServer (worldCopies world)
       (PqxdhServerAuthExperiment.settle e.native.shared.2.server rust).2 =
-        { (PqxdhServerAuthExperiment.settle e.native.shared.2.server rust).2 with server := (MldsaLegacyServerRouting.forgetServer world'.records.server) })
+        { (PqxdhServerAuthExperiment.settle e.native.shared.2.server rust).2 with server := world'.records.server })
     (keyId' : (PqxdhServerAuthExperiment.settle e.native.shared.2.server rust).2.identityKeyId =
       e.native.shared.2.server.identityKeyId) :
     merge { e with native := strip (builtNative e.native session (rust, log)) }
         (uncount { withCache w cache with server := some world' }) =
       { merge e w with base := { (merge e w).base with native := { fill w e.native with shared := (e.native.shared.1,
-        builtGame (frameGame w.primitive.2 (MldsaLegacyServerRouting.forgetServer world.records.server) e.native.shared.2.server.identityKeyId e.native.shared.2)
+        builtGame (frameGame w.primitive.2 world.records.server e.native.shared.2.server.identityKeyId e.native.shared.2)
           session (PqxdhDeploymentCompileRegistration.mapBuilt (worldCopies world) rust, (log, cache))) } } } := by
   have serverEq := frameGame_server created e w good world found
   have settled := PqxdhDeploymentCompileRegistration.settle_override (worldCopies world) e.native.shared.2.server rust
@@ -513,9 +558,9 @@ theorem withCache_server (w : PqxdhRecordLiftWorld.State n) (cache : CtxRomAuth.
 theorem build_outcome (session : Nat) (e : EnvState KemSK Bk) (w : PqxdhRecordLiftWorld.State n) (good : Good created e w)
     (world : PqxdhRecordLiftWorld.Server) (found : w.server = some world)
     (rust : RustM (Option PqxdhServerRegistrationPublication.Response ×
-      PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes)))
-    (built : Built e.native.shared.2.server () rust) (log : List RawCtxSourceSend.SealContext)
-    (cache : CtxRomAuth.CtxRO.QueryCache) :
+      PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes)))
+    (ad : PqxdhTranscriptAd.AssociatedData) (built : Built e.native.shared.2.server ad rust)
+    (log : List RawCtxSourceSend.SealContext) (cache : CtxRomAuth.CtxRO.QueryCache) :
     ∃ world', Prod.map id uncount <$> (simulateQ PqxdhRecordLiftWorld.effects
         (PqxdhDeploymentEnvironment.serverEffect (PqxdhServerAuthExperiment.settle e.native.shared.2.server rust) >>= fun _ =>
           pure ((PqxdhServerAuthExperiment.settle e.native.shared.2.server rust).1,
@@ -526,7 +571,7 @@ theorem build_outcome (session : Nat) (e : EnvState KemSK Bk) (w : PqxdhRecordLi
       world'.records.rawAttempts = world.records.rawAttempts ∧
       PqxdhDeploymentCompileRegistration.overrideServer (worldCopies world)
           (PqxdhServerAuthExperiment.settle e.native.shared.2.server rust).2 =
-        { (PqxdhServerAuthExperiment.settle e.native.shared.2.server rust).2 with server := (MldsaLegacyServerRouting.forgetServer world'.records.server) } ∧
+        { (PqxdhServerAuthExperiment.settle e.native.shared.2.server rust).2 with server := world'.records.server } ∧
       (PqxdhServerAuthExperiment.settle e.native.shared.2.server rust).2.identityKeyId =
         e.native.shared.2.server.identityKeyId ∧
       Good created { e with native := strip (builtNative e.native session (rust, log)) }
@@ -550,7 +595,7 @@ theorem build_outcome (session : Nat) (e : EnvState KemSK Bk) (w : PqxdhRecordLi
       world'.records.rawAttempts = world.records.rawAttempts ∧
       PqxdhDeploymentCompileRegistration.overrideServer (worldCopies world)
           (PqxdhServerAuthExperiment.settle e.native.shared.2.server rust).2 =
-        { (PqxdhServerAuthExperiment.settle e.native.shared.2.server rust).2 with server := (MldsaLegacyServerRouting.forgetServer world'.records.server) } ∧
+        { (PqxdhServerAuthExperiment.settle e.native.shared.2.server rust).2 with server := world'.records.server } ∧
       (PqxdhServerAuthExperiment.settle e.native.shared.2.server rust).2.identityKeyId =
         e.native.shared.2.server.identityKeyId ∧
       Good created { e with native := strip (builtNative e.native session (rust, log)) }
@@ -566,7 +611,6 @@ theorem build_outcome (session : Nat) (e : EnvState KemSK Bk) (w : PqxdhRecordLi
     · rw [settledServer, override_world world _ identity peersRaw]
     · have native := builtNative_quiet e.native session rust log settledServer
       refine good_intro created _ (builtNative e.native session (rust, log)) _ world rfl good.createdEq rfl ?_ ?_ ?_ ?_ ?_
-        (good.legacyAD world found)
       · rw [native]; exact sender
       · rw [native]; exact identity
       · rw [native]; exact peers
@@ -582,19 +626,17 @@ theorem build_outcome (session : Nat) (e : EnvState KemSK Bk) (w : PqxdhRecordLi
       cases hworld : world.records.server.peers candidate.key_id with
       | none => rfl
       | some peer => rw [hworld] at mapped; cases mapped
-    refine ⟨installPeer world candidate.key_id candidate.beacon_identity_public_key kernel, ?_, rfl, ?_, rfl, ?_⟩
-    · have peerFound : (PqxdhServerRegistrationPublication.publish e.native.shared.2.server candidate kernel ()).server.peers
-          response.keyId = some ⟨candidate.beacon_identity_public_key, kernel, ()⟩ := by
+    refine ⟨installPeer world candidate.key_id candidate.beacon_identity_public_key kernel ad, ?_, rfl, ?_, rfl, ?_⟩
+    · have peerFound : (PqxdhServerRegistrationPublication.publish e.native.shared.2.server candidate kernel ad).server.peers
+          response.keyId = some ⟨candidate.beacon_identity_public_key, kernel, ad⟩ := by
         rw [keyEq]
-        exact (PqxdhServerRegistrationPublication.publish_fields _ candidate kernel ()).1
+        exact (PqxdhServerRegistrationPublication.publish_fields _ candidate kernel ad).1
       simp only [PqxdhServerAuthExperiment.settle, PqxdhDeploymentEnvironment.serverEffect, peerFound]
-      rw [effects_issue_then, keyEq, effects_installServer candidate.key_id _ kernel (withCache w cache) world
+      rw [effects_issue_then, keyEq, effects_installServer candidate.key_id _ kernel ad (withCache w cache) world
         (by simp only [withCache, found]) vacantWorld, map_pure]
-    · exact override_publish world _ identity peersRaw candidate kernel vacantWorld
-    · refine good_intro created _ _ _ (installPeer world candidate.key_id candidate.beacon_identity_public_key kernel)
+    · exact override_publish world _ identity peersRaw candidate kernel ad vacantWorld
+    · refine good_intro created _ _ _ (installPeer world candidate.key_id candidate.beacon_identity_public_key kernel ad)
         rfl good.createdEq rfl sender identity (fun keyId => ?_) good.ownersLength matched
-        (MldsaLegacyServerRouting.legacy_insert world.records.server candidate.key_id
-          candidate.beacon_identity_public_key kernel (good.legacyAD world found))
       simp only [builtNative, PqxdhServerAuthExperiment.settle, installPeer, PqxdhServerRegistrationPublication.publish]
       by_cases same : keyId = candidate.key_id
       · subst same
@@ -615,9 +657,9 @@ theorem build_law (session : Nat) (payload : Option Pqxdh.Bytes) (e : EnvState K
   rw [law_uncount, buildStep_effects, realRegAt_quiet setup codec checks route created _ (fun raw same => by cases same)]
   simp only [PqxdhDeploymentNative.handler, onNative_run, PqxdhRegistrationSchedule.handler, onShared_run, Functor.map_map]
   rw [show (merge e w).base.native = fill w e.native from rfl,
-    show (fill w e.native).shared = (e.native.shared.1, frameGame w.primitive.2 (MldsaLegacyServerRouting.forgetServer world.records.server)
+    show (fill w e.native).shared = (e.native.shared.1, frameGame w.primitive.2 world.records.server
       e.native.shared.2.server.identityKeyId e.native.shared.2) by rw [fill_some w world found], nativeBuild_run]
-  have pendingEq : (frameGame w.primitive.2 (MldsaLegacyServerRouting.forgetServer world.records.server) e.native.shared.2.server.identityKeyId
+  have pendingEq : (frameGame w.primitive.2 world.records.server e.native.shared.2.server.identityKeyId
       e.native.shared.2).pending session = e.native.shared.2.pending session := rfl
   rw [pendingEq]
   rcases pending : e.native.shared.2.pending session with _ | token
@@ -625,18 +667,37 @@ theorem build_law (session : Nat) (payload : Option Pqxdh.Bytes) (e : EnvState K
     simp only [merge, fill_some w world found]
     rfl
   · dsimp only
-    rw [frameGame_server created e w good world found, PqxdhDeploymentCompileRegistration.build_override setup.source
-      (worldCopies world) token.pending token.root payload _ (installed_world world _ peersRaw), simulateQ_map,
-      StateT.run_map, PqxdhDeploymentEnvironment.tail_factor ctxAdmin setup codec checks]
-    rw [show (frameGame w.primitive.2 (MldsaLegacyServerRouting.forgetServer world.records.server) e.native.shared.2.server.identityKeyId e.native.shared.2).ctx =
+    have preEq : PqxdhServerRegistrationPublication.prehash (frameGame w.primitive.2 world.records.server
+        e.native.shared.2.server.identityKeyId e.native.shared.2).server token.pending payload =
+        PqxdhServerRegistrationPublication.prehash e.native.shared.2.server token.pending payload := by
+      rw [frameGame_server created e w good world found, PqxdhDeploymentCompileRegistration.prehash_override]
+    rw [preEq]
+    rcases pre : PqxdhServerRegistrationPublication.prehash e.native.shared.2.server token.pending payload with
+      _ | candidate
+    · simp only [map_pure, merge_uncount]
+      have filled := fill_strip w world found { e.native with shared := (e.native.shared.1, { e.native.shared.2 with
+        pending := Function.update e.native.shared.2.pending session none }) } (good_matched created e w good)
+      simp only [merge, filled, fill_some w world found]
+      rfl
+    dsimp only
+    rw [show (frameGame w.primitive.2 world.records.server e.native.shared.2.server.identityKeyId e.native.shared.2).ctx =
       w.primitive.2 from rfl, map_bind]
+    conv_rhs => rw [map_bind]
+    refine bind_congr fun hashed => ?_
+    rw [frameGame_server created e w good world found, PqxdhDeploymentCompileRegistration.build_override
+      (PqxdhTranscriptAd.adOf hashed.1) setup.source (worldCopies world) token.pending token.root payload _ _
+      (installed_world world _ peersRaw), simulateQ_map,
+      StateT.run_map, PqxdhDeploymentEnvironment.tail_factor ctxAdmin setup codec checks]
+    rw [map_bind]
     conv_rhs => simp only [Functor.map_map]; rw [map_eq_bind_pure_comp]
     apply OracleComp.bind_congr_of_forall_mem_support
     rintro ⟨⟨rust, log⟩, cache⟩ member
-    have built : Built e.native.shared.2.server () rust :=
-      build_shape setup.source token.pending token.root payload () e.native.shared.2.server rust
-        (run_support _ _ [] (rust, log) (run_support _ _ w.primitive.2 ((rust, log), cache) member))
-    obtain ⟨world', run, raw', override, keyId', _⟩ := build_outcome created session e w good world found rust built log cache
+    have built : Built e.native.shared.2.server (PqxdhTranscriptAd.adOf hashed.1) rust :=
+      build_shape (PqxdhTranscriptAd.adOf hashed.1) setup.source token.pending token.root payload
+        (PqxdhTranscriptAd.adOf hashed.1) e.native.shared.2.server rust
+        (run_support _ _ [] (rust, log) (run_support _ _ hashed.2 ((rust, log), cache) member))
+    obtain ⟨world', run, raw', override, keyId', _⟩ := build_outcome created session e w good world found rust
+      (PqxdhTranscriptAd.adOf hashed.1) built log cache
     rw [run, map_pure]
     dsimp only [Function.comp]
     rw [build_merge created session e w good world found rust log cache world' raw' override keyId',
@@ -657,14 +718,28 @@ theorem build_keeps (session : Nat) (payload : Option Pqxdh.Bytes) (e : EnvState
     simp only [support_pure, Set.mem_singleton_iff] at supported
     subst supported
     exact uncount_good created e w good
-  · intro result supported
+  · dsimp only
+    rcases pre : PqxdhServerRegistrationPublication.prehash e.native.shared.2.server token.pending payload with
+      _ | candidate
+    · intro result supported
+      simp only [support_pure, Set.mem_singleton_iff] at supported
+      subst supported
+      obtain ⟨world₁, found₁, sender, identity, peers⟩ := good_server created e w good
+      exact uncount_good created _ _ (good_intro created _ { e.native with shared := (e.native.shared.1,
+        { e.native.shared.2 with pending := Function.update e.native.shared.2.pending session none }) } w world₁ rfl
+        good.createdEq found₁ sender identity peers good.ownersLength (good_matched created e w good))
+    intro result supported
     dsimp only at supported
     rw [mem_support_bind_iff] at supported
+    obtain ⟨hashed, _, supported⟩ := supported
+    rw [mem_support_bind_iff] at supported
     obtain ⟨⟨⟨rust, log⟩, cache⟩, member, final⟩ := supported
-    have built : Built e.native.shared.2.server () rust :=
-      build_shape setup.source token.pending token.root payload () e.native.shared.2.server rust
-        (run_support _ _ [] (rust, log) (run_support _ _ w.primitive.2 ((rust, log), cache) member))
-    obtain ⟨world', run, _, _, _, kept⟩ := build_outcome created session e w good world found rust built log cache
+    have built : Built e.native.shared.2.server (PqxdhTranscriptAd.adOf hashed.1) rust :=
+      build_shape (PqxdhTranscriptAd.adOf hashed.1) setup.source token.pending token.root payload
+        (PqxdhTranscriptAd.adOf hashed.1) e.native.shared.2.server rust
+        (run_support _ _ [] (rust, log) (run_support _ _ hashed.2 ((rust, log), cache) member))
+    obtain ⟨world', run, _, _, _, kept⟩ := build_outcome created session e w good world found rust
+      (PqxdhTranscriptAd.adOf hashed.1) built log cache
     dsimp only at final
     rw [run, support_pure, Set.mem_singleton_iff] at final
     subst final
@@ -676,13 +751,12 @@ theorem finishStep_effects (index : Nat) (raw : Pqxdh.Bytes) (e : EnvState KemSK
         ((PqxdhDeploymentEnvironment.realStep (n := n) setup codec checks ⟨.finish index raw, trivial⟩).run e)).run w =
       match e.native.owners[index]? with
       | none => pure ((none, snapFinish e index), uncount w)
-      | some before => (simulateQ (ctxEffects ctxAdmin) ((simulateQ (PqxdhDeploymentEnvironment.callbacksFwd (n := n) setup
-            codec) (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw before)).run e.native.shared)).run
-              w.primitive.2 >>= fun result =>
+      | some before => (simulateQ (ctxEffects ctxAdmin) ((PqxdhDeploymentEnvironment.ownerFinishFwd (n := n) setup
+            codec (e.native.inits index) raw before).run e.native.shared)).run w.primitive.2 >>= fun result =>
           Prod.map id uncount <$> (simulateQ PqxdhRecordLiftWorld.effects
             (PqxdhDeploymentEnvironment.ownerEffect index before result.1.1.2 >>= fun _ =>
               pure (result.1.1.1, { snapFinish e index with
-                native := strip ⟨result.1.2, e.native.owners.set index result.1.1.2⟩ }))).run (withCache w result.2) := by
+                native := strip ⟨result.1.2, e.native.owners.set index result.1.1.2, e.native.inits⟩ }))).run (withCache w result.2) := by
   change Prod.map id uncount <$> (simulateQ PqxdhRecordLiftWorld.effects
     (PqxdhDeploymentEnvironment.finishStep (n := n) setup codec index raw (snapFinish e index))).run w = _
   unfold PqxdhDeploymentEnvironment.finishStep
@@ -691,7 +765,7 @@ theorem finishStep_effects (index : Nat) (raw : Pqxdh.Bytes) (e : EnvState KemSK
   · simp only [snapFinish, owned, simulateQ_pure, StateT.run_pure, map_pure]
     rfl
   · simp only [snapFinish, owned]
-    rw [effects_then_free ctxAdmin _ (finishFwd_noAdmin setup codec _ _) _ (fun result => countFree_bind
+    rw [effects_then_free ctxAdmin _ (ownerFinishFwd_noAdmin setup codec _ _ _ _) _ (fun result => countFree_bind
       (countFree_ownerEffect _ _ _) fun _ => countFree_pure _) w]
 
 /-- The native finish on the reassembled state at an owner that is not established: the forwarded owner finish on the environment's shared state, read through `ctxEffects` on the World's cache, with the World's routing record filled in. -/
@@ -700,27 +774,24 @@ theorem finish_native_run (index : Nat) (raw : Pqxdh.Bytes) (e : EnvState KemSK 
     (before : PqxdhRegistrationSchedule.Owner KemSK) (owned : e.native.owners[index]? = some before)
     (inactive : ¬ RawCtxBeaconLifecycle.Established before.beacon.phase) :
     (PqxdhRegistrationSchedule.finish setup codec index raw).run (fill w e.native) =
-      (fun result => (result.1.1.1, finishedState (fill w e.native).owners (MldsaLegacyServerRouting.forgetServer world.records.server)
+      (fun result => (result.1.1.1, finishedState (fill w e.native).owners e.native.inits world.records.server
           e.native.shared.2.server.identityKeyId index result)) <$>
-        (simulateQ (ctxEffects ctxAdmin) ((simulateQ (PqxdhDeploymentEnvironment.callbacksFwd (n := n) setup codec)
-          (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw before)).run e.native.shared)).run
-            w.primitive.2 := by
+        (simulateQ (ctxEffects ctxAdmin) ((PqxdhDeploymentEnvironment.ownerFinishFwd (n := n) setup codec
+          (e.native.inits index) raw before).run e.native.shared)).run w.primitive.2 := by
   obtain ⟨_, _, _, filledOwner⟩ := fill_inactive w _ (good_matched created e w good) index before owned inactive
   have filled : (fill w e.native).owners[index]? = some before := by
     simp only [fill, List.getElem?_mapIdx, owned, Option.map_some, filledOwner]
   rw [show (PqxdhRegistrationSchedule.finish setup codec index raw).run (fill w e.native) =
     PqxdhRegistrationSchedule.finish setup codec index raw (fill w e.native) from rfl,
     PqxdhRegistrationSchedule.finish_source setup codec index raw _ before filled]
-  rw [show (fill w e.native).shared = (e.native.shared.1, serverGame (MldsaLegacyServerRouting.forgetServer world.records.server)
+  rw [show (fill w e.native).shared = (e.native.shared.1, serverGame world.records.server
       e.native.shared.2.server.identityKeyId { e.native.shared.2 with ctx := w.primitive.2 }) by
     rw [fill_some w world found]; rfl]
-  rw [nframe_simulateQ _ _ (fun query => callbacks_nframe setup codec (MldsaLegacyServerRouting.forgetServer world.records.server)
-      e.native.shared.2.server.identityKeyId query) _ _ _,
-    PqxdhDeploymentEnvironment.owner_factor (n := n) ctxAdmin setup codec raw before,
+  rw [ownerFinish_nframe setup codec world.records.server e.native.shared.2.server.identityKeyId _ raw before _ _,
     show ((e.native.shared.1, { e.native.shared.2 with ctx := w.primitive.2 }) : NativeState KemSK) =
       PqxdhDeploymentBackend.gameCtxLens.set e.native.shared w.primitive.2 from rfl,
-    PqxdhDeploymentEnvironment.frame_program _ _ (PqxdhDeploymentEnvironment.callbacksFwd_frame setup codec),
-    simulateQ_map, StateT.run_map]
+    ownerFinish_factor setup codec (n := n) ctxAdmin,
+    ownerFinishFwd_frame setup codec, simulateQ_map, StateT.run_map]
   simp only [Functor.map_map]
   rfl
 
@@ -731,12 +802,12 @@ theorem finish_merge_set (index : Nat) (e : EnvState KemSK Bk) (w : PqxdhRecordL
     (cache : CtxRomAuth.CtxRO.QueryCache) (phase : PqxdhRecordLiftBeacon.Phase) (below : index < e.native.owners.length)
     (consistent : stripPhase phase = stripPhase (PqxdhRecordLiftBeacon.projectPhase after.beacon))
     (selfFill : fillOwner (some phase) after = after) :
-    merge { snapFinish e index with native := strip ⟨shared, e.native.owners.set index after⟩ }
+    merge { snapFinish e index with native := strip ⟨shared, e.native.owners.set index after, e.native.inits⟩ }
         (uncount { withCache w cache with owners := w.owners.set index phase }) =
       { merge e w with
-        base := { (merge e w).base with native := finishedState (fill w e.native).owners (MldsaLegacyServerRouting.forgetServer world.records.server) e.native.shared.2.server.identityKeyId index (((reply, after), shared), cache) }
+        base := { (merge e w).base with native := finishedState (fill w e.native).owners e.native.inits world.records.server e.native.shared.2.server.identityKeyId index (((reply, after), shared), cache) }
         snap := (snapFinish e index).snap } ∧
-      Good created { snapFinish e index with native := strip ⟨shared, e.native.owners.set index after⟩ }
+      Good created { snapFinish e index with native := strip ⟨shared, e.native.owners.set index after, e.native.inits⟩ }
         (uncount { withCache w cache with owners := w.owners.set index phase }) := by
   obtain ⟨_, found', sender, identity, peers⟩ := good_server created e w good
   rw [found] at found'
@@ -747,15 +818,15 @@ theorem finish_merge_set (index : Nat) (e : EnvState KemSK Bk) (w : PqxdhRecordL
     matched_set (withCache w cache) _ (good_matched created e w good) index after phase belowWorld consistent
   constructor
   · have filled := fill_strip (uncount { withCache w cache with owners := w.owners.set index phase }) world found
-      ⟨shared, e.native.owners.set index after⟩ matched
+      ⟨shared, e.native.owners.set index after, e.native.inits⟩ matched
     simp only [merge, filled]
     rw [fill_some (uncount { withCache w cache with owners := w.owners.set index phase }) world found,
       fill_some w world found]
     simp only [uncount, withCache, finishedState, game]
     rw [fill_set _ _ index after phase below good.ownersLength, selfFill]
     rfl
-  · refine good_intro created _ ⟨shared, e.native.owners.set index after⟩ _ world rfl good.createdEq found ?_ ?_ ?_
-      (by simp only [uncount, withCache, List.length_set, good.ownersLength]) matched (good.legacyAD world found)
+  · refine good_intro created _ ⟨shared, e.native.owners.set index after, e.native.inits⟩ _ world rfl good.createdEq found ?_ ?_ ?_
+      (by simp only [uncount, withCache, List.length_set, good.ownersLength]) matched
     · simp only [game]; exact sender
     · simp only [game]; exact identity
     · simp only [game]; exact peers
@@ -768,17 +839,17 @@ theorem finish_outcome (index : Nat) (e : EnvState KemSK Bk) (w : PqxdhRecordLif
     (cache : CtxRomAuth.CtxRO.QueryCache) (shape : Finished before after) (game : shared.2 = e.native.shared.2) :
     ∃ w', Prod.map id uncount <$> (simulateQ PqxdhRecordLiftWorld.effects
         (PqxdhDeploymentEnvironment.ownerEffect index before after >>= fun _ =>
-          pure (reply, { snapFinish e index with native := strip ⟨shared, e.native.owners.set index after⟩ }))).run
+          pure (reply, { snapFinish e index with native := strip ⟨shared, e.native.owners.set index after, e.native.inits⟩ }))).run
           (withCache w cache) =
-        pure ((reply, { snapFinish e index with native := strip ⟨shared, e.native.owners.set index after⟩ }), uncount w') ∧
-      merge { snapFinish e index with native := strip ⟨shared, e.native.owners.set index after⟩ } w' =
+        pure ((reply, { snapFinish e index with native := strip ⟨shared, e.native.owners.set index after, e.native.inits⟩ }), uncount w') ∧
+      merge { snapFinish e index with native := strip ⟨shared, e.native.owners.set index after, e.native.inits⟩ } w' =
         { merge e w with
-          base := { (merge e w).base with native := finishedState (fill w e.native).owners (MldsaLegacyServerRouting.forgetServer world.records.server) e.native.shared.2.server.identityKeyId index (((reply, after), shared), cache) }
+          base := { (merge e w).base with native := finishedState (fill w e.native).owners e.native.inits world.records.server e.native.shared.2.server.identityKeyId index (((reply, after), shared), cache) }
           snap := (snapFinish e index).snap } ∧
-      Good created { snapFinish e index with native := strip ⟨shared, e.native.owners.set index after⟩ } (uncount w') := by
+      Good created { snapFinish e index with native := strip ⟨shared, e.native.owners.set index after, e.native.inits⟩ } (uncount w') := by
   have below : index < e.native.owners.length := (List.getElem?_eq_some_iff.mp owned).1
   obtain ⟨tag, worldPhase, projected, _⟩ := fill_inactive w _ (good_matched created e w good) index before owned inactive
-  rcases shape with same | ⟨initSent, aborted | ⟨control, associatedData, kernel, established⟩⟩
+  rcases shape with same | ⟨initSent, aborted | ⟨control, recordAd, kernel, established⟩⟩
   · subst same
     have unchanged : { withCache w cache with owners := w.owners.set index (.inactive tag) } = withCache w cache := by
       obtain ⟨_, atIndex⟩ := List.getElem?_eq_some_iff.mp worldPhase
@@ -813,12 +884,12 @@ theorem finish_outcome (index : Nat) (e : EnvState KemSK Bk) (w : PqxdhRecordLif
       exact projected.symm
     subst tagEq
     obtain ⟨merged, kept⟩ := finish_merge_set created index e w good world found reply after shared game cache
-      (.established ⟨after.beacon.identityKeyId, control, associatedData⟩ kernel) below
+      (.established ⟨after.beacon.identityKeyId, control, recordAd⟩ kernel) below
       (by simp only [PqxdhRecordLiftBeacon.projectPhase, established])
-      (fillOwner_self after control associatedData kernel established)
-    refine ⟨{ withCache w cache with owners := w.owners.set index (.established ⟨after.beacon.identityKeyId, control, associatedData⟩ kernel) }, ?_,
+      (fillOwner_self after control recordAd kernel established)
+    refine ⟨{ withCache w cache with owners := w.owners.set index (.established ⟨after.beacon.identityKeyId, control, recordAd⟩ kernel) }, ?_,
       by rw [merge_uncount] at merged; exact merged, kept⟩
-    rw [ownerEffect_establish index before after initSent control associatedData kernel established, effects_issue_then,
+    rw [ownerEffect_establish index before after initSent control recordAd kernel established, effects_issue_then,
       effects_installBeacon index _ kernel (withCache w cache) worldPhase, map_pure]
     rfl
 
@@ -845,12 +916,12 @@ theorem finish_law (index : Nat) (raw : Pqxdh.Bytes) (e : EnvState KemSK Bk) (w 
       rw [show (PqxdhRegistrationSchedule.finish setup codec index raw).run (fill w e.native) =
           pure (none, fill w e.native) from
         PqxdhRegistrationSchedule.terminal_finish setup codec index raw _ _ filled terminal',
-        PqxdhRegistrationSchedule.terminal_native codec.frameRead raw before terminal]
+        ownerFinishFwd_terminal setup codec _ raw before terminal]
       simp only [simulateQ_pure, StateT.run_pure, pure_bind, ownerEffect_same, map_pure]
       have unchanged : e.native.owners.set index before = e.native.owners := by
         obtain ⟨_, atIndex⟩ := List.getElem?_eq_some_iff.mp owned
         rw [← atIndex, List.set_getElem_self]
-      simp only [unchanged, show (⟨e.native.shared, e.native.owners⟩ : PqxdhRegistrationSchedule.State KemSK) =
+      simp only [unchanged, show (⟨e.native.shared, e.native.owners, e.native.inits⟩ : PqxdhRegistrationSchedule.State KemSK) =
         e.native from rfl, show strip e.native = e.native from good.stripped]
       rfl
     · rw [finish_native_run setup codec created index raw e w good world found before owned established, map_bind]
@@ -859,8 +930,8 @@ theorem finish_law (index : Nat) (raw : Pqxdh.Bytes) (e : EnvState KemSK Bk) (w 
       rintro ⟨⟨⟨reply, after⟩, shared⟩, cache⟩ member
       have forwarded := run_support _ _ w.primitive.2 _ member
       have shape : Finished before after :=
-        finish_shape codec.frameRead raw before (reply, after) (run_support _ _ e.native.shared _ forwarded)
-      have game : shared.2 = e.native.shared.2 := finishFwd_game setup codec _ e.native.shared _ forwarded
+        ownerFinishFwd_shape setup codec _ raw before e.native.shared _ forwarded
+      have game : shared.2 = e.native.shared.2 := ownerFinishFwd_game setup codec _ raw before e.native.shared _ forwarded
       obtain ⟨w', run, merged, _⟩ := finish_outcome created index e w good world found before owned established reply after
         shared cache shape game
       rw [run, map_pure]
@@ -881,14 +952,14 @@ theorem finish_keeps (index : Nat) (raw : Pqxdh.Bytes) (e : EnvState KemSK Bk) (
   · intro result supported
     simp only [support_pure, Set.mem_singleton_iff] at supported
     subst supported
-    exact uncount_good created _ w ⟨good.1, good.2, good.3, good.4, good.5, good.legacyAD⟩
+    exact uncount_good created _ w ⟨good.1, good.2, good.3, good.4, good.5⟩
   · intro result supported
     dsimp only at supported
     rw [mem_support_bind_iff] at supported
     obtain ⟨⟨⟨⟨reply, after⟩, shared⟩, cache⟩, member, final⟩ := supported
     by_cases established : RawCtxBeaconLifecycle.Established before.beacon.phase
     · obtain ⟨terminal, _⟩ := established_terminal (w.owners[index]?) before established
-      rw [PqxdhRegistrationSchedule.terminal_native codec.frameRead raw before terminal] at member
+      rw [ownerFinishFwd_terminal setup codec _ raw before terminal] at member
       simp only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff, Prod.mk.injEq] at member
       obtain ⟨⟨⟨replyEq, afterEq⟩, sharedEq⟩, cacheEq⟩ := member
       subst replyEq sharedEq cacheEq
@@ -899,13 +970,13 @@ theorem finish_keeps (index : Nat) (raw : Pqxdh.Bytes) (e : EnvState KemSK Bk) (
       have unchanged : e.native.owners.set index before = e.native.owners := by
         obtain ⟨_, atIndex⟩ := List.getElem?_eq_some_iff.mp owned
         rw [← atIndex, List.set_getElem_self]
-      simp only [unchanged, show (⟨e.native.shared, e.native.owners⟩ : PqxdhRegistrationSchedule.State KemSK) =
+      simp only [unchanged, show (⟨e.native.shared, e.native.owners, e.native.inits⟩ : PqxdhRegistrationSchedule.State KemSK) =
         e.native from rfl, show strip e.native = e.native from good.stripped]
-      exact uncount_good created _ _ ⟨good.1, good.2, good.3, good.4, good.5, good.legacyAD⟩
+      exact uncount_good created _ _ ⟨good.1, good.2, good.3, good.4, good.5⟩
     · have forwarded := run_support _ _ w.primitive.2 _ member
       have shape : Finished before after :=
-        finish_shape codec.frameRead raw before (reply, after) (run_support _ _ e.native.shared _ forwarded)
-      have game : shared.2 = e.native.shared.2 := finishFwd_game setup codec _ e.native.shared _ forwarded
+        ownerFinishFwd_shape setup codec _ raw before e.native.shared _ forwarded
+      have game : shared.2 = e.native.shared.2 := ownerFinishFwd_game setup codec _ raw before e.native.shared _ forwarded
       obtain ⟨w', run, _, kept⟩ := finish_outcome created index e w good world found before owned established reply after
         shared cache shape game
       dsimp only at final
@@ -1105,7 +1176,7 @@ theorem createPool_keeps (pool : List (Pair KemSK)) (pin : Pqxdh.Bytes) (keyId :
     obtain ⟨identity, _, prekey, _, keys, _, rfl⟩ := member
     obtain ⟨world, found, sender, identity', peers⟩ := good_server created e w good
     refine uncount_good created _ _ (good_intro created _ _ _ world rfl good.createdEq found sender identity' peers ?_
-      (matched_append w _ (good_matched created e w good) good.ownersLength _ rfl) (good.legacyAD world found))
+      (matched_append w _ (good_matched created e w good) good.ownersLength _ rfl))
     simp only [List.length_append, List.length_singleton, good.ownersLength]
 
 /-- The pool create in capability form splits the ideal registration's create command: the reassembled law is the command's (exactly) and admissibility is kept. -/

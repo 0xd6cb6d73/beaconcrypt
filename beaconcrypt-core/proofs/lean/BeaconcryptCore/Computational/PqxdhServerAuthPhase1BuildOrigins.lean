@@ -1,3 +1,5 @@
+import BeaconcryptCore.Computational.PqxdhServerAuthPublicationBuildJournal
+import BeaconcryptCore.Computational.PqxdhServerAuthPublicationOccurrence
 import BeaconcryptCore.Computational.PqxdhServerAuthPhase1Origins
 
 /-! The actual consumed builder token retains its earlier verified Phase1 occurrence. -/
@@ -77,7 +79,7 @@ def BeforeBuild (journal : QueryLog ServerAuthSpec) (index : Nat) (payload : Opt
       (query : ServerAuthSpec.Domain) × ServerAuthSpec.Range query) ∈ earlier
 
 /-- The actual successful builder occurrence joins its own consumed token's earlier verified acceptance to every retained selected record's exact response writers. -/
-theorem public_records (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+theorem public_records_transcript (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (context : Context KemSK) (rest : PqxdhServerAuthCtxCalls.Residual)
     (key : RootOutput) (Q : Nat) (j : Fin (Q + 1)) (work : OracleComp ServerAuthSpec Result)
     (oldJournal : QueryLog ServerAuthSpec) (state : Local KemSK × Option Nat) (before : Observed)
@@ -95,10 +97,13 @@ theorem public_records (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
     (published : (⟨.inr (.build index payload), some response⟩ :
       (query : ServerAuthSpec.Domain) × ServerAuthSpec.Range query) ∈ journal)
     (marked : result.1.2.1.1.2.1 index = true) :
-    ∃ (token : PqxdhServerRelatedRootConsumer.Returned) (server : ServerState) (raw : Pqxdh.Bytes),
+    ∃ (token : PqxdhServerRelatedRootConsumer.Returned) (server : ServerState) (raw : Pqxdh.Bytes)
+      (digest : CtxRomAuth.CtxDigest),
       TokenReceipt setup codec checks (context.publicValue setup) raw token ∧
       BeforeBuild (oldJournal ++ journal) index payload response raw ∧
-      ∀ entry ∈ result.2.1.seals, PqxdhServerAuthPublicationBuiltRecord.At codec token.pending payload server response entry := by
+      ∀ entry ∈ result.2.1.seals,
+        PqxdhServerAuthPublicationBuiltRecord.At (PqxdhTranscriptAd.adOf digest) codec token.pending payload server response
+          entry := by
   induction work using OracleComp.inductionOn generalizing oldJournal state before result answer journal with
   | pure value =>
       change result ∈ support (pure ((some (value, []), state), before)) at supported
@@ -131,12 +136,13 @@ theorem public_records (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
                 cases querySame
                 have valueSame : some response = value := eq_of_heq (Sigma.mk.inj_iff.mp head).2
                 subst value
-                obtain ⟨token, present, records⟩ := PqxdhServerAuthPublicationBuildJournal.successful_suffix setup codec checks context rest key Q j index payload
+                obtain ⟨token, digest, present, records⟩ :=
+                  PqxdhServerAuthPublicationBuildJournal.successful_suffix_transcript setup codec checks context rest key Q j index payload
                   state before reserved allocated response middle reached returned
                   (PqxdhServerAuthApiJournal.record (next (some response))) last continued
                   (tailAnswer, tailJournal) tailReply marked
                 obtain ⟨raw, accepted, receipt⟩ := origins index token present
-                exact ⟨token, state.1.1.1.server, raw, receipt,
+                exact ⟨token, state.1.1.1.server, raw, digest, receipt,
                   ⟨oldJournal, tailJournal, by rw [journalSame], accepted⟩, records⟩
               · have actual := PqxdhServerAuthPublicationRecordReserve.observed_support setup.source codec.frameRead key _ before middle reached
                 have footprint := PqxdhServerAuthPublicationJournalClean.stopped_footprint setup codec checks context rest Q j query
@@ -157,7 +163,7 @@ theorem public_records (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
                   last continued tailAnswer tailJournal tailReply tail marked
 
 /-- Literal empty pending and observer histories discharge every provenance, allocation and reservation premise of the consumed-token join. -/
-theorem initial_records (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+theorem initial_records_transcript (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (adversary : Adversary) (context : Context KemSK) (rest : PqxdhServerAuthCtxCalls.Residual)
     (key : RootOutput) (Q : Nat) (j : Fin (Q + 1))
     (result : (Option (Unit × QueryLog ServerAuthSpec) × (Local KemSK × Option Nat)) × Observed)
@@ -170,12 +176,15 @@ theorem initial_records (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
     (published : (⟨.inr (.build index payload), some response⟩ :
       (query : ServerAuthSpec.Domain) × ServerAuthSpec.Range query) ∈ journal)
     (marked : result.1.2.1.1.2.1 index = true) :
-    ∃ (token : PqxdhServerRelatedRootConsumer.Returned) (server : ServerState) (raw : Pqxdh.Bytes),
+    ∃ (token : PqxdhServerRelatedRootConsumer.Returned) (server : ServerState) (raw : Pqxdh.Bytes)
+      (digest : CtxRomAuth.CtxDigest),
       TokenReceipt setup codec checks (context.publicValue setup) raw token ∧
       BeforeBuild journal index payload response raw ∧
-      ∀ entry ∈ result.2.1.seals, PqxdhServerAuthPublicationBuiltRecord.At codec token.pending payload server response entry := by
+      ∀ entry ∈ result.2.1.seals,
+        PqxdhServerAuthPublicationBuiltRecord.At (PqxdhTranscriptAd.adOf digest) codec token.pending payload server response
+          entry := by
   simpa only [List.nil_append] using
-    public_records setup codec checks context rest key Q j (adversary (contextInput setup false context))
+    public_records_transcript setup codec checks context rest key Q j (adversary (contextInput setup false context))
       [] (PqxdhServerAuthCtxReserve.initial setup context).1 _
       (PqxdhServerAuthPublicationRecordReserve.initial_reserved setup context)
       (by intro index token found; cases found)
@@ -184,7 +193,7 @@ theorem initial_records (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
       result supported () journal normal index payload response published marked
 
 /-- An actual accepted owner with a successful build has either the existing ordinary observer win or the same consumed token's earlier verification and exact response-writer receipt. -/
-theorem accepted_records (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+theorem accepted_records_transcript (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (adversary : Adversary) (context : Context KemSK) (rest : PqxdhServerAuthCtxCalls.Residual)
     (key : RootOutput) (Q : Nat) (j : Fin (Q + 1))
     (writable : PqxdhFirstBeaconRecordCanonical.ReadWritable codec.frameWrite codec.frameRead)
@@ -203,15 +212,17 @@ theorem accepted_records (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
       (query : ServerAuthSpec.Domain) × ServerAuthSpec.Range query) ∈ journal) :
     RawCtxSelectedAuthenticationObserver.won (RawCtxUniversalDecoder.decoder codec.frameRead) result.2.1 = true ∨
       PqxdhServerAuthPublicationOccurrence.ReceiptAt setup codec context j.val snap result.2.1 ∧
-      ∃ (token : PqxdhServerRelatedRootConsumer.Returned) (server : ServerState) (raw : Pqxdh.Bytes),
+      ∃ (token : PqxdhServerRelatedRootConsumer.Returned) (server : ServerState) (raw : Pqxdh.Bytes)
+      (digest : CtxRomAuth.CtxDigest),
         TokenReceipt setup codec checks (context.publicValue setup) raw token ∧
         BeforeBuild journal j.val payload response raw ∧
         ∀ entry ∈ result.2.1.seals,
-          PqxdhServerAuthPublicationBuiltRecord.At codec token.pending payload server response entry := by
+          PqxdhServerAuthPublicationBuiltRecord.At (PqxdhTranscriptAd.adOf digest) codec token.pending payload server response
+            entry := by
   rcases PqxdhServerAuthPublicationOccurrence.journal_receipt setup codec checks adversary context rest key Q j writable
     result supported journal normal snap accepted owned notBad unique with won | ⟨_, receipt⟩
   · exact Or.inl won
-  · exact Or.inr ⟨receipt, initial_records setup codec checks adversary context rest key Q j result supported journal normal
+  · exact Or.inr ⟨receipt, initial_records_transcript setup codec checks adversary context rest key Q j result supported journal normal
       j.val payload response published
       (PqxdhServerAuthPublicationBuildJournal.receipt_marked setup codec checks adversary context rest key Q j result supported
         journal normal snap accepted owned unique receipt)⟩
@@ -230,20 +241,20 @@ end BeaconcryptCore.Computational.PqxdhServerAuthPhase1BuildOrigins
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhServerAuthPhase1BuildOrigins.stopped_origins
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthPhase1BuildOrigins.public_records' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthPhase1BuildOrigins.public_records_transcript' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhServerAuthPhase1BuildOrigins.public_records
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthPhase1BuildOrigins.public_records_transcript
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthPhase1BuildOrigins.initial_records' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthPhase1BuildOrigins.initial_records_transcript' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhServerAuthPhase1BuildOrigins.initial_records
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthPhase1BuildOrigins.initial_records_transcript
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthPhase1BuildOrigins.accepted_records' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthPhase1BuildOrigins.accepted_records_transcript' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhServerAuthPhase1BuildOrigins.accepted_records
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthPhase1BuildOrigins.accepted_records_transcript

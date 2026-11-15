@@ -1,6 +1,7 @@
 import VCVio.OracleComp.QueryTracking.QueryBound.Partition
 import BeaconcryptCore.Computational.PqxdhServerAuthCtxBuild
 import BeaconcryptCore.Computational.PqxdhServerAuthEntryResourceHandlers
+import BeaconcryptCore.Computational.PqxdhServerAuthCtxStateBounds
 
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
@@ -10,6 +11,7 @@ namespace BeaconcryptCore.Computational.PqxdhServerAuthCtxBuildBounds
 open PqxdhServerAuthExperiment PqxdhServerAuthEntryFactor PqxdhServerAuthCtxState
 open PqxdhServerAuthCtxBuild PqxdhServerAuthSourceCosts PqxdhServerAuthGapDh
 open PqxdhSecretInputKdf PqxdhJointKdfGame PqxdhServerAuthPendingBudget
+variable (associatedData : PqxdhTranscriptAd.AssociatedData)
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader WireResponse : Type}
 
 /-- The reached selected builder retains its complete one-call ledger through native settlement, optional response failure and outer component refusal. -/
@@ -17,98 +19,123 @@ theorem selected_bills (source : FixedHkdfSha512NoSaltSource) (codec : Codec Rea
     (checks : Checks) (rest : PqxdhServerAuthCtxCalls.Residual) (session : Nat)
     (token : PqxdhServerRelatedRootConsumer.Returned) (payload : Option Pqxdh.Bytes)
     (server : ServerState) (state : Local KemSK) :
-    ((selected source codec checks rest session token payload server).run.run state).IsTotalQueryBound 1 ∧
-    ((selected source codec checks rest session token payload server).run.run state).IsQueryBoundP
+    ((selected associatedData source codec checks rest session token payload server).run.run state).IsTotalQueryBound 1 ∧
+    ((selected associatedData source codec checks rest session token payload server).run.run state).IsQueryBoundP
       (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxQueryBounds.SourceSeal) 1 ∧
-    ((selected source codec checks rest session token payload server).run.run state).IsQueryBoundP AdaptiveCtxDynamicKnownBounds.HashRoute 1 ∧
-    ((selected source codec checks rest session token payload server).run.run state).IsQueryBoundP
+    ((selected associatedData source codec checks rest session token payload server).run.run state).IsQueryBoundP AdaptiveCtxDynamicKnownBounds.HashRoute 1 ∧
+    ((selected associatedData source codec checks rest session token payload server).run.run state).IsQueryBoundP
       (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxReceive.IsRawQuery) 0 ∧
-    ((selected source codec checks rest session token payload server).run.run state).IsQueryBoundP AdaptiveCtxDynamicKnownBounds.UniformRoute 0 := by
+    ((selected associatedData source codec checks rest session token payload server).run.run state).IsQueryBoundP AdaptiveCtxDynamicKnownBounds.UniformRoute 0 := by
   simpa only [selected, after, OptionT.run_mk, StateT.run, IsTotalQueryBound,
     isQueryBound_map_iff, isQueryBoundP_map_iff] using
-    And.intro (PqxdhServerAuthBuildProgramBounds.compiled_bound source codec checks rest token.pending payload () server [])
-      (PqxdhServerAuthBuildProgramBounds.compiled_bills source codec checks rest token.pending payload () server [])
+    And.intro (PqxdhServerAuthBuildProgramBounds.compiled_bound associatedData source codec checks rest token.pending payload
+      associatedData server [])
+      (PqxdhServerAuthBuildProgramBounds.compiled_bills associatedData source codec checks rest token.pending payload
+      associatedData server [])
 
 /-- The actual ordinary builder forwards only its single attempted shared hash. Local KDF, AEAD, validation and writers remain in the original program. -/
 theorem known_bills (source : FixedHkdfSha512NoSaltSource) (codec : Codec Reader WireResponse)
     (checks : Checks) (session : Nat) (token : PqxdhServerRelatedRootConsumer.Returned)
     (payload : Option Pqxdh.Bytes) (server : ServerState) (state : Local KemSK) :
-    ((known source codec checks session token payload server).run.run state).IsTotalQueryBound 1 ∧
-    ((known source codec checks session token payload server).run.run state).IsQueryBoundP AdaptiveCtxDynamicKnownBounds.HashRoute 1 ∧
-    ((known source codec checks session token payload server).run.run state).IsQueryBoundP
+    ((known associatedData source codec checks session token payload server).run.run state).IsTotalQueryBound 1 ∧
+    ((known associatedData source codec checks session token payload server).run.run state).IsQueryBoundP AdaptiveCtxDynamicKnownBounds.HashRoute 1 ∧
+    ((known associatedData source codec checks session token payload server).run.run state).IsQueryBoundP
       (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxQueryBounds.SourceSeal) 0 ∧
-    ((known source codec checks session token payload server).run.run state).IsQueryBoundP
+    ((known associatedData source codec checks session token payload server).run.run state).IsQueryBoundP
       (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxReceive.IsRawQuery) 0 ∧
-    ((known source codec checks session token payload server).run.run state).IsQueryBoundP AdaptiveCtxDynamicKnownBounds.UniformRoute 0 := by
-  have hash : ((known source codec checks session token payload server).run.run state).IsQueryBoundP
+    ((known associatedData source codec checks session token payload server).run.run state).IsQueryBoundP AdaptiveCtxDynamicKnownBounds.UniformRoute 0 := by
+  have hash : ((known associatedData source codec checks session token payload server).run.run state).IsQueryBoundP
       AdaptiveCtxDynamicKnownBounds.HashRoute 1 := by
     simpa only [known, after, OptionT.run_mk, StateT.run, isQueryBoundP_map_iff] using
-      PqxdhServerAuthCtxNativeBounds.build_hash source codec checks token.pending token.root payload server []
-  have onlyHash : ((known source codec checks session token payload server).run.run state).IsQueryBoundP
+      PqxdhServerAuthCtxNativeBounds.build_hash associatedData source codec checks token.pending token.root payload
+        server []
+  have onlyHash : ((known associatedData source codec checks session token payload server).run.run state).IsQueryBoundP
       (fun query => ¬ AdaptiveCtxDynamicKnownBounds.HashRoute query) 0 := by
     simpa only [known, after, OptionT.run_mk, StateT.run, isQueryBoundP_map_iff] using
-      PqxdhServerAuthCtxNativeBounds.build_only_hash source codec checks token.pending token.root payload server []
+      PqxdhServerAuthCtxNativeBounds.build_only_hash associatedData source codec checks token.pending token.root
+        payload server []
   refine ⟨?_, hash, PqxdhServerAuthCtxNativeBounds.only_hash_other _ onlyHash⟩
   simpa only [Nat.add_zero] using isTotalQueryBound_of_partition _
     AdaptiveCtxDynamicKnownBounds.HashRoute (fun query => ¬ AdaptiveCtxDynamicKnownBounds.HashRoute query)
     (fun _ => Iff.rfl) 1 0 hash onlyHash
 
-/-- Actual pending-token lookup and the session mark select the entire concrete callback bill, retaining work before optional refusal. -/
+/-- Actual pending-token lookup, the pure pre-hash guard and the session mark select the entire concrete callback bill: the component's transcript hash, then the selected or ordinary builder at the AD of the digest, retaining work before optional refusal. -/
 theorem build_query_bound (source : FixedHkdfSha512NoSaltSource) (codec : Codec Reader WireResponse)
     (checks : Checks) (rest : PqxdhServerAuthCtxCalls.Residual) (session : Nat)
     (payload : Option Pqxdh.Bytes) (predicate : AdaptiveCtxDynamicKnownKeys.Spec.Domain → Prop)
-    [DecidablePred predicate] (selectedBill knownBill : Nat)
-    (selectedBound : ∀ token server (state : Local KemSK),
-      ((selected source codec checks rest session token payload server).run.run state).IsQueryBoundP predicate selectedBill)
-    (knownBound : ∀ token server (state : Local KemSK),
-      ((known source codec checks session token payload server).run.run state).IsQueryBoundP predicate knownBill)
+    [DecidablePred predicate] (hashBill selectedBill knownBill : Nat)
+    (hashBound : ∀ bytes (state : Local KemSK),
+      ((PqxdhServerAuthCtxState.hash bytes).run state).IsQueryBoundP predicate hashBill)
+    (selectedBound : ∀ ad token server (state : Local KemSK),
+      ((selected ad source codec checks rest session token payload server).run.run state).IsQueryBoundP predicate
+        selectedBill)
+    (knownBound : ∀ ad token server (state : Local KemSK),
+      ((known ad source codec checks session token payload server).run.run state).IsQueryBoundP predicate knownBill)
     (state : Local KemSK) :
     ((build source codec checks rest session payload).run.run state).IsQueryBoundP predicate
-      ((if state.1.2.1 session then selectedBill else knownBill) * slotWeight (state.1.1.pending session)) := by
+      ((hashBill + if state.1.2.1 session then selectedBill else knownBill) * slotWeight (state.1.1.pending session)) := by
   simp only [build, OptionT.run_mk, StateT.run]
   cases found : state.1.1.pending session with
   | none => trivial
   | some token =>
       simp only [slotWeight, Nat.mul_one]
-      split_ifs
-      · exact selectedBound token _ state
-      · exact knownBound token _ state
+      split
+      · trivial
+      · change (StateT.run (PqxdhServerAuthCtxState.hash _ >>= _) state).IsQueryBoundP predicate _
+        rw [StateT.run_bind]
+        apply isQueryBoundP_bind (hashBound _ _)
+        intro digest _
+        split_ifs
+        · exact selectedBound _ token _ digest.2
+        · exact knownBound _ token _ digest.2
 
-/-- The original marked pending token pays the only possible selected seal; all builds retain their exact hash and zero raw/uniform component classes. -/
+/-- The original marked pending token pays the only possible selected seal; all builds retain their transcript hash and builder hash and zero raw/uniform component classes. -/
 theorem build_bills (source : FixedHkdfSha512NoSaltSource) (codec : Codec Reader WireResponse)
     (checks : Checks) (rest : PqxdhServerAuthCtxCalls.Residual) (session : Nat)
     (payload : Option Pqxdh.Bytes) (state : Local KemSK) :
-    ((build source codec checks rest session payload).run.run state).IsTotalQueryBound (slotWeight (state.1.1.pending session)) ∧
+    ((build source codec checks rest session payload).run.run state).IsTotalQueryBound
+      (2 * slotWeight (state.1.1.pending session)) ∧
     ((build source codec checks rest session payload).run.run state).IsQueryBoundP
       (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxQueryBounds.SourceSeal)
       (if state.1.2.1 session then slotWeight (state.1.1.pending session) else 0) ∧
     ((build source codec checks rest session payload).run.run state).IsQueryBoundP AdaptiveCtxDynamicKnownBounds.HashRoute
-      (slotWeight (state.1.1.pending session)) ∧
+      (2 * slotWeight (state.1.1.pending session)) ∧
     ((build source codec checks rest session payload).run.run state).IsQueryBoundP
       (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxReceive.IsRawQuery) 0 ∧
     ((build source codec checks rest session payload).run.run state).IsQueryBoundP AdaptiveCtxDynamicKnownBounds.UniformRoute 0 := by
   refine ⟨?_, ?_, ?_, ?_, ?_⟩
   · apply (isQueryBoundP_true_iff _ _).1
-    simpa only [ite_self, Nat.one_mul] using build_query_bound source codec checks rest session payload
-      (fun _ => True) 1 1
-      (fun token server state => (isQueryBoundP_true_iff _ _).2 (selected_bills source codec checks rest session token payload server state).1)
-      (fun token server state => (isQueryBoundP_true_iff _ _).2 (known_bills source codec checks session token payload server state).1) state
-  · simpa only [ite_mul, Nat.one_mul, Nat.zero_mul] using build_query_bound source codec checks rest session payload
-      (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxQueryBounds.SourceSeal) 1 0
-      (fun token server state => (selected_bills source codec checks rest session token payload server state).2.1)
-      (fun token server state => (known_bills source codec checks session token payload server state).2.2.1) state
-  · simpa only [ite_self, Nat.one_mul] using build_query_bound source codec checks rest session payload
-      AdaptiveCtxDynamicKnownBounds.HashRoute 1 1
-      (fun token server state => (selected_bills source codec checks rest session token payload server state).2.2.1)
-      (fun token server state => (known_bills source codec checks session token payload server state).2.1) state
-  · simpa only [ite_self, Nat.zero_mul] using build_query_bound source codec checks rest session payload
-      (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxReceive.IsRawQuery) 0 0
-      (fun token server state => (selected_bills source codec checks rest session token payload server state).2.2.2.1)
-      (fun token server state => (known_bills source codec checks session token payload server state).2.2.2.1) state
-  · simpa only [ite_self, Nat.zero_mul] using build_query_bound source codec checks rest session payload
-      AdaptiveCtxDynamicKnownBounds.UniformRoute 0 0
-      (fun token server state => (selected_bills source codec checks rest session token payload server state).2.2.2.2)
-      (fun token server state => (known_bills source codec checks session token payload server state).2.2.2.2) state
+    simpa only [ite_self] using build_query_bound source codec checks rest session payload
+      (fun _ => True) 1 1 1
+      (fun bytes state => (isQueryBoundP_true_iff _ _).2 (PqxdhServerAuthCtxState.hash_bound bytes state))
+      (fun ad token server state => (isQueryBoundP_true_iff _ _).2
+        (selected_bills ad source codec checks rest session token payload server state).1)
+      (fun ad token server state => (isQueryBoundP_true_iff _ _).2
+        (known_bills ad source codec checks session token payload server state).1) state
+  · simpa only [Nat.zero_add, ite_mul, Nat.one_mul, Nat.zero_mul] using build_query_bound source codec checks rest
+      session payload (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxQueryBounds.SourceSeal) 0 1 0
+      (fun bytes state => (PqxdhServerAuthCtxStateBounds.hash_bills bytes state).2.1)
+      (fun ad token server state => (selected_bills ad source codec checks rest session token payload server state).2.1)
+      (fun ad token server state => (known_bills ad source codec checks session token payload server state).2.2.1) state
+  · simpa only [ite_self] using build_query_bound source codec checks rest session payload
+      AdaptiveCtxDynamicKnownBounds.HashRoute 1 1 1
+      (fun bytes state => (PqxdhServerAuthCtxStateBounds.hash_bills bytes state).1)
+      (fun ad token server state => (selected_bills ad source codec checks rest session token payload server state).2.2.1)
+      (fun ad token server state => (known_bills ad source codec checks session token payload server state).2.1) state
+  · simpa only [ite_self, Nat.add_zero, Nat.zero_mul] using build_query_bound source codec checks rest session payload
+      (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxReceive.IsRawQuery) 0 0 0
+      (fun bytes state => (PqxdhServerAuthCtxStateBounds.hash_bills bytes state).2.2.1)
+      (fun ad token server state =>
+        (selected_bills ad source codec checks rest session token payload server state).2.2.2.1)
+      (fun ad token server state => (known_bills ad source codec checks session token payload server state).2.2.2.1)
+      state
+  · simpa only [ite_self, Nat.add_zero, Nat.zero_mul] using build_query_bound source codec checks rest session payload
+      AdaptiveCtxDynamicKnownBounds.UniformRoute 0 0 0
+      (fun bytes state => (PqxdhServerAuthCtxStateBounds.hash_bills bytes state).2.2.2)
+      (fun ad token server state =>
+        (selected_bills ad source codec checks rest session token payload server state).2.2.2.2)
+      (fun ad token server state => (known_bills ad source codec checks session token payload server state).2.2.2.2)
+      state
 
 /-- Literal native settlement consumes the reached pending token and preserves all allocation, Beacon, mark and designation fields. -/
 theorem complete_footprint (session : Nat) (payload : Option Pqxdh.Bytes) (state : Local KemSK)
@@ -157,9 +184,17 @@ theorem build_footprint (source : FixedHkdfSha512NoSaltSource) (codec : Codec Re
       exact ⟨fun _ => ⟨rfl, rfl, by rw [← found, Function.update_eq_self]⟩, rfl, rfl⟩
   | some token =>
       simp only [found] at supported
-      split_ifs at supported
-      · exact after_footprint session payload _ state result supported
-      · exact after_footprint session payload _ state result supported
+      split at supported
+      · simp only [support_pure, Set.mem_singleton_iff] at supported
+        subst supported
+        exact ⟨fun _ => ⟨rfl, rfl, rfl⟩, rfl, rfl⟩
+      · change result ∈ support (StateT.run (PqxdhServerAuthCtxState.hash _ >>= _) state) at supported
+        rw [StateT.run_bind, mem_support_bind_iff] at supported
+        obtain ⟨hashed, hashRun, supported⟩ := supported
+        rw [PqxdhServerAuthCtxStateBounds.hash_state _ state hashed hashRun] at supported
+        split_ifs at supported
+        · exact after_footprint session payload _ state result supported
+        · exact after_footprint session payload _ state result supported
 
 /-- The full interpreted source bill retains the shared commitment sampling. The unused-endpoint condition is precisely the existing operational source-comparison condition, needed only for a reached marked token. -/
 theorem build_evaluated_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader WireResponse)
@@ -169,7 +204,7 @@ theorem build_evaluated_uniform (setup : Setup baseSpec KemSK) (codec : Codec Re
       state.2.selected.1.usedNonces = []) :
     ((evaluate setup.source key codec.frameRead
       (build setup.source codec checks rest session payload).run).run state).IsTotalQueryBound
-      (64 * slotWeight (state.1.1.1.pending session)) := by
+      (128 * slotWeight (state.1.1.1.pending session)) := by
   have bill := build_step_uniform setup codec checks
     (factorServices setup codec checks context (PqxdhServerAuthCtxMaterial.output key rest))
     (factor_services_uniform setup codec checks context _) session payload
@@ -178,7 +213,7 @@ theorem build_evaluated_uniform (setup : Setup baseSpec KemSK) (codec : Codec Re
   have mapped : (Prod.map id PqxdhServerAuthCtxState.project <$>
       (evaluate setup.source key codec.frameRead
         (build setup.source codec checks rest session payload).run).run state).IsTotalQueryBound
-          (64 * slotWeight (state.1.1.1.pending session)) := by
+          (128 * slotWeight (state.1.1.1.pending session)) := by
     rw [same]
     simpa only [IsTotalQueryBound, isQueryBound_map_iff, PqxdhServerAuthCtxState.project,
       restore, restoreFlat] using bill

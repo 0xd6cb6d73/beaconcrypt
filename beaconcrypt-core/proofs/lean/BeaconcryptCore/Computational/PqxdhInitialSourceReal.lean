@@ -9,6 +9,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialSourceReal
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily
 open PqxdhInitialBeaconAmbient PqxdhInitialSourceExperiment
 variable {ι M P I D K X Response A N : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -27,12 +29,12 @@ variable (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writ
 /-- The entire actual stage-zero cache, including entries reached by failed or repeated requests, has exactly the real fixed-HKDF lookup. -/
 theorem final_lookup
     (result : (Bool × PqxdhInitialOriginPostPath.Snapshot M P I D K S B) × PqxdhInitialOriginPostPath.State A N)
-    (supported : result ∈ support (run source writer selectedMessage previousRoot response64 other sender route decode
+    (supported : result ∈ support (PqxdhInitialSourceExperiment.run (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
       index metadata ready post before selected shared privateState cache 0)) :
     RawCtxSelectedParentTable.view (productionStream source.crypto) result.2.1.1.2.1 = productionStream source.crypto := by
   exact (PqxdhInitialNativeRetained.final_view source writer 0
     (PqxdhInitialOriginFinishPath.withInitial source selectedMessage previousRoot response64 other)
-    (PqxdhInitialNativeCarried.original source (PqxdhInitialSelectedOrigin.mark source selectedMessage)
+    (PqxdhInitialNativeCarried.original (associatedData := associatedData) (completedBinding := completedBinding) source (PqxdhInitialSelectedOrigin.mark source selectedMessage)
       sender route decode (execution response64 index metadata ready post before))
     (initialState (root source previousRoot response64 selected) shared privateState cache) (Nat.zero_le _)
     result supported).trans rfl
@@ -48,43 +50,43 @@ noncomputable def decision (number : Std.U64) (ancestors disclosed : List Ratche
 /-- Observing the actual stage-zero publication and freshness before removing private instrumentation equals observing the fixed source lineage afterward. -/
 theorem decision_source (number : Std.U64) (ancestors disclosed : List RatchetChain)
     (result : (Bool × PqxdhInitialOriginPostPath.Snapshot M P I D K S B) × PqxdhInitialOriginPostPath.State A N)
-    (supported : result ∈ support (run source writer selectedMessage previousRoot response64 other sender route decode
+    (supported : result ∈ support (PqxdhInitialSourceExperiment.run (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
       index metadata ready post before selected shared privateState cache 0)) :
     PqxdhInitialPublishedEvent.sourceDecision source (root source previousRoot response64 selected)
       selected number ancestors disclosed result =
       decision source previousRoot response64 selected number ancestors disclosed
         (result.1, PqxdhInitialNativeRetained.project result.2) := by
   unfold PqxdhInitialPublishedEvent.sourceDecision PqxdhInitialPublishedEvent.sourceEvent decision
-  rw [final_lookup source writer selectedMessage previousRoot response64 other sender route decode index metadata ready
+  rw [final_lookup (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode index metadata ready
       post before selected shared privateState cache result supported]
 
 noncomputable def realRun :=
   (simulateQ (PqxdhInitialNativeRetained.retained source writer (productionStream source.crypto)
     (PqxdhInitialOriginFinishPath.withInitial source selectedMessage previousRoot response64 other))
-    (PqxdhInitialNativeCarried.original source (PqxdhInitialSelectedOrigin.mark source selectedMessage)
+    (PqxdhInitialNativeCarried.original (associatedData := associatedData) (completedBinding := completedBinding) source (PqxdhInitialSelectedOrigin.mark source selectedMessage)
       sender route decode (execution response64 index metadata ready post before))).run
       (shared, (privateState, cache))
 
 /-- The same complete source observation is executable against the fixed function without any private analysis cache. -/
 theorem game_source (number : Std.U64) (ancestors disclosed : List RatchetChain) :
-    game source writer selectedMessage previousRoot response64 other sender route decode index metadata ready post before
+    PqxdhInitialSourceExperiment.game (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode index metadata ready post before
       selected number ancestors disclosed shared privateState cache 0 =
     decision source previousRoot response64 selected number ancestors disclosed <$>
-      realRun source writer selectedMessage previousRoot response64 other sender route decode index metadata ready
+      realRun (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode index metadata ready
         post before shared privateState cache := by
   have erased := PqxdhInitialNativeRetained.retained_run source writer 0
     (PqxdhInitialOriginFinishPath.withInitial source selectedMessage previousRoot response64 other)
-    (PqxdhInitialNativeCarried.original source (PqxdhInitialSelectedOrigin.mark source selectedMessage)
+    (PqxdhInitialNativeCarried.original (associatedData := associatedData) (completedBinding := completedBinding) source (PqxdhInitialSelectedOrigin.mark source selectedMessage)
       sender route decode (execution response64 index metadata ready post before))
     (initialState (root source previousRoot response64 selected) shared privateState cache) (Nat.zero_le _)
   change (fun result => (result.1, PqxdhInitialNativeRetained.project result.2)) <$>
-    run source writer selectedMessage previousRoot response64 other sender route decode index metadata ready post before
+    PqxdhInitialSourceExperiment.run (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode index metadata ready post before
       selected shared privateState cache 0 =
-    realRun source writer selectedMessage previousRoot response64 other sender route decode index metadata ready post before
+    realRun (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode index metadata ready post before
       shared privateState cache at erased
   rw [← erased, game, Functor.map_map, ← bind_pure_comp, ← bind_pure_comp]
   exact bind_congr_of_forall_mem_support _ (fun result supported =>
-    congrArg pure (decision_source source writer selectedMessage previousRoot response64 other sender route decode
+    congrArg pure (decision_source (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
       index metadata ready post before selected shared privateState cache number ancestors disclosed result supported))
 
 end BeaconcryptCore.Computational.PqxdhInitialSourceReal

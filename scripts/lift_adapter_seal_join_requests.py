@@ -17,7 +17,7 @@ DESTINATION = Path(
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/AdapterSealJoinRequestExtraction.lean"
 )
 DECLARATION = "ratchet._proof_join_seal_two"
-REVIEWED_SOURCE = "55711814d9022d49895d68c585632a85e965d582335c25696154115df6e15718"
+REVIEWED_SOURCE = "ab4e352dae7b2b70bee57afeba8cd1d47d7258aec0a4e4ee1dad5dc81154935c"
 REVIEWED_BODY = "3ca438b3b267def851b65116c7397eb900b58be7882acc51f2003d7e6d0f92c7"
 REPLACEMENTS = [
     (

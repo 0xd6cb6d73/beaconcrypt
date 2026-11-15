@@ -16,7 +16,7 @@ open PqxdhServerAuthExperiment (Setup Checks)
 open RegistrationNativePlatformPackedState (pack)
 variable {n : Nat} {I KemSK Platform E : Type} {base : OracleSpec I} {source : RegistrationNativeMldsa.Source}
 variable (coins : QueryImpl unifSpec (StateT Platform ProbComp)) (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E))
 local notation "Native" => RegistrationNativeExperiment.State n KemSK source
 local notation "concrete" => RegistrationNativePlatformConcreteSource.writer reserve
@@ -26,7 +26,7 @@ noncomputable def handler : QueryImpl (RegistrationNativePlatformGenericBundle.S
 noncomputable def trusted : QueryImpl (RegistrationNativeBeaconFrontend.Trusted n KemSK) (StateT (Native × Platform) ProbComp) :=
   fun query => pack (RegistrationNativePlatformExperiment.trusted coins setup checks representation created source query)
 
-private theorem encoding (view : registration.SignedInitView) (bytes : alloc.vec.Vec U8)
+private theorem encoding (view : registration.InitView) (bytes : alloc.vec.Vec U8)
     (possible : RegistrationNativePlatformPublicationSupport.Possible
       (RegistrationNativePlatformGenericBundle.encoderWith (source := source) (Auxiliary := RegistrationServerRoleBackend.State) writer view) (.ok (.Some bytes))) :
     core.option.Option.Some (RegistrationNativeSourceWriterReadback.initVector view) = .Some bytes := by

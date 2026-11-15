@@ -127,6 +127,51 @@ theorem owner_core (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
   simp only [PqxdhBoundaryPhase1Native.owner_source_order, prepared_result_core, coreOwnerProgram]
   cases owner.beacon.phase <;> rfl
 
+/-- The Phase 1 bundle retained after the extracted builder: the attached-signature candidate over the extracted unsigned buffers exactly when the literal writer accepts it, otherwise the previously retained bundle. -/
+def corePreparedLog (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (generated : Option PqxdhJointGapDh.ScalarBytes) (owner : Owner KemSK)
+    (logged : Option PqxdhEd25519EufCma.Phase1Candidate) : Option PqxdhEd25519EufCma.Phase1Candidate :=
+  match PqxdhBeaconPhase1Publication.prepare owner generated with
+  | none => logged
+  | some prepared =>
+      match pqxdh.beacon_start prepared.control (inputs setup owner prepared) (coins setup prepared) with
+      | .ok out => if (codec.write1 (signedOutput setup owner out)).isSome then some (signedOutput setup owner out)
+          else logged
+      | _ => logged
+
+/-- The native retained bundle equals the one retained after the literal extracted builder, including every preparation and writer failure. -/
+theorem prepared_log_core (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (generated : Option PqxdhJointGapDh.ScalarBytes) (owner : Owner KemSK)
+    (logged : Option PqxdhEd25519EufCma.Phase1Candidate) :
+    PqxdhRegistrationJointBundle.afterLog setup codec owner generated logged =
+      corePreparedLog setup codec generated owner logged := by
+  cases chosen : PqxdhBeaconPhase1Publication.prepare owner generated with
+  | none => simp only [PqxdhRegistrationJointBundle.afterLog, corePreparedLog, chosen]
+  | some prepared =>
+      obtain ⟨out, built, control, identity, prekey, oneTime, pq⟩ := core_build setup owner prepared
+      simp only [PqxdhRegistrationJointBundle.afterLog, corePreparedLog, chosen, built, signedOutput, identity, prekey,
+        oneTime, pq]
+      rfl
+
+/-- `coreOwnerProgram` together with the retained Phase 1 bundle of the extracted-builder path, starting from the previously retained bundle. -/
+def coreOwnerLogProgram (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (owner : Owner KemSK) (logged : Option PqxdhEd25519EufCma.Phase1Candidate) :
+    ProbComp ((Option Pqxdh.Bytes × Owner KemSK) × Option PqxdhEd25519EufCma.Phase1Candidate) :=
+  match owner.beacon.phase with
+  | .fresh _ _ _ => (fun generated => (corePreparedResult setup codec (some generated) owner,
+        corePreparedLog setup codec (some generated) owner logged)) <$> PqxdhJointGapDh.sampleScalar
+  | .freshWithCoins _ _ _ _ => pure (corePreparedResult setup codec none owner,
+      corePreparedLog setup codec none owner logged)
+  | _ => pure ((none, owner), logged)
+
+/-- The logged native owner execution is obtained by literally running the extracted unsigned builder, with the same retained bundle. -/
+theorem owner_core_log (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (index : Nat) (owner : Owner KemSK) (logged : Option PqxdhEd25519EufCma.Phase1Candidate) :
+    PqxdhBoundaryPhase1Native.ownerLogProgram setup codec index owner logged =
+      coreOwnerLogProgram setup codec owner logged := by
+  simp only [PqxdhBoundaryPhase1Native.owner_log_order, prepared_result_core, prepared_log_core, coreOwnerLogProgram]
+  cases owner.beacon.phase <;> rfl
+
 /-- CE's actual full-state bundle handler consumes the extracted unsigned builder, original attached signatures, literal optional writer and exact reinstallation before any continuation. -/
 theorem native_core_continuation (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (serverSeed : PqxdhJointIdentity.IdentitySeed)
@@ -135,10 +180,13 @@ theorem native_core_continuation (setup : Setup baseSpec KemSK) (codec : Codec R
     (PqxdhDeploymentNative.handler setup codec checks route serverSeed (.inr (.bundle index))).run state >>= next =
       match state.native.owners[index]? with
       | none => next (none, state)
-      | some owner => coreOwnerProgram setup codec owner >>= fun result =>
-          next (result.1, { state with native := { state.native with owners := state.native.owners.set index result.2 } }) := by
+      | some owner => coreOwnerLogProgram setup codec owner (state.native.inits index) >>= fun result =>
+          next (result.1.1, { state with native :=
+            { state.native with
+              owners := state.native.owners.set index result.1.2
+              inits := Function.update state.native.inits index result.2 } }) := by
   rw [PqxdhBoundaryPhase1Native.native_bundle]
-  cases state.native.owners[index]? <;> simp only [owner_core, ← bind_pure_comp, bind_assoc, pure_bind]
+  cases state.native.owners[index]? <;> simp only [owner_core_log, ← bind_pure_comp, bind_assoc, pure_bind]
 
 end BeaconcryptCore.Computational.PqxdhBoundaryPhase1Buffers
 
@@ -183,3 +231,13 @@ end BeaconcryptCore.Computational.PqxdhBoundaryPhase1Buffers
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhBoundaryPhase1Buffers.native_core_continuation
+/-- info: 'BeaconcryptCore.Computational.PqxdhBoundaryPhase1Buffers.prepared_log_core' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhBoundaryPhase1Buffers.prepared_log_core
+/-- info: 'BeaconcryptCore.Computational.PqxdhBoundaryPhase1Buffers.owner_core_log' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhBoundaryPhase1Buffers.owner_core_log

@@ -58,8 +58,12 @@ theorem bundle_armed (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
     simpa only [Armed, next_fixed state.2 none armed.1] using armed
   case some entry =>
     obtain ⟨reached, member, rfl⟩ := supported
+    have original : reached.1 ∈ support (trace setup codec entry.identityIndex entry.owner state.1.pool.1 state.2) := by
+      rw [← PqxdhDeploymentPublicationSuppressionLogged.traceLogged_fst setup codec entry.identityIndex
+        entry.owner state.1.pool.1 state.2 (state.1.inits address), support_map]
+      exact ⟨reached, member, rfl⟩
     obtain ⟨fresh, selection⟩ := trace_fresh setup codec entry.identityIndex entry.owner state.1.pool.1 state.2 target
-      armed.1 armed.2.1 armed.2.2 reached member
+      armed.1 armed.2.1 armed.2.2 reached.1 original
     exact ⟨by simpa only [selection] using armed.1, by simpa only [selection] using armed.2.1, fresh⟩
 
 /-- Outside a bundle, the complete modified source callback is the original indexed source callback with unchanged selection bookkeeping. -/

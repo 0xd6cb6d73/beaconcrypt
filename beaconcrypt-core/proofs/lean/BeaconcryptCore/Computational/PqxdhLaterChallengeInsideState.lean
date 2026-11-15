@@ -6,7 +6,9 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeInsideState
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhInitialPostContext RawCtxForwardTags PqxdhFirstRecordConfidentiality
 variable {ι M P I D K X Response Shared Result Origin : Type} {extra : OracleSpec ι} {S B : Nat}
 
@@ -37,7 +39,7 @@ private theorem challenge_shape (mark : PqxdhBeaconPhase2Shared.Secrets Shared �
     (owner : RawCtxProtocolReveals.Owner S B) (number : Std.U64) (bit : Bool) (left right : Pqxdh.Bytes)
     (equal : left.length = right.length) (current : PqxdhRecordConfidentialityChallenge.State)
     (unused : current.pair = none) (before : NativeFront M P I D K S B) (trace : PqxdhInitialOriginPost.Trace Origin S B) :
-    All (FromRecord (LiveApplicationObservation.sendRequest owner (if bit then right else left)) before trace) (PqxdhInitialOriginForwardPost.program (X := X) (Response := Response) mark sender route decode
+    All (FromRecord (LiveApplicationObservation.sendRequest owner (if bit then right else left)) before trace) (PqxdhInitialOriginForwardPost.program (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode
       ((PqxdhRecordConfidentialityChallenge.handler (extra := extra) owner number bit (.inr (left, right))).run current) before trace) := by
   rw [PqxdhRecordConfidentialityChallenge.challenge_step owner number bit left right equal current unused]
   rw [← bind_pure_comp]
@@ -60,7 +62,7 @@ theorem inside_shape (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin) 
     (details : PqxdhLaterChallengeCapture.Details extra M P I D K Origin S B)
     (classified : PqxdhLaterChallengeSavedClassification.phase (some details) = .inside)
     (before : NativeFront M P I D K S B) (trace : PqxdhInitialOriginPost.Trace Origin S B) :
-    All (FromChallenge owner bit details.request.query before trace) (PqxdhInitialOriginForwardPost.program (X := X) (Response := Response) mark sender route decode
+    All (FromChallenge owner bit details.request.query before trace) (PqxdhInitialOriginForwardPost.program (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode
       ((PqxdhRecordConfidentialityChallenge.handler owner number bit details.request.query).run details.request.before) before trace) := by
   rcases details with ⟨⟨query, current, next⟩, callback⟩
   cases used : current.pair with
@@ -69,7 +71,7 @@ theorem inside_shape (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin) 
       rcases query with request | ⟨left, right⟩
       · simp only [PqxdhLaterChallengeSavedClassification.phase, used, reduceCtorEq] at classified
       · by_cases equal : left.length = right.length
-        · apply RawCtxForwardTags.mono _ _ _ _ (challenge_shape mark sender route decode owner number bit left right equal current used before trace)
+        · apply RawCtxForwardTags.mono _ _ _ _ (challenge_shape (completedBinding := completedBinding) mark sender route decode owner number bit left right equal current used before trace)
           exact fun _ actual => ⟨left, right, rfl, equal, actual⟩
         · simp only [PqxdhLaterChallengeSavedClassification.phase, used, equal, ite_false, reduceCtorEq] at classified
 
@@ -85,13 +87,13 @@ theorem cut_shape {State : Type} (mark : PqxdhBeaconPhase2Shared.Secrets Shared 
     (front : NativeFront M P I D K S B) (trace : PqxdhInitialOriginPost.Trace Origin S B) (state reached : State)
     (cut : RawCtxForwardScan.Cut.pending details.callback reached ∈ support
       (RawCtxForwardScan.scan PqxdhInitialOriginForwardPost.selected selected selection impl
-        (PqxdhInitialOriginForwardPost.program mark sender route decode
+        (PqxdhInitialOriginForwardPost.program (completedBinding := completedBinding) mark sender route decode
           ((PqxdhRecordConfidentialityChallenge.handler owner number bit details.request.query).run details.request.before) front trace)
-        (PqxdhInitialOriginForwardPost.program_covered mark sender route decode
+        (PqxdhInitialOriginForwardPost.program_covered (completedBinding := completedBinding) mark sender route decode
           ((PqxdhRecordConfidentialityChallenge.handler owner number bit details.request.query).run details.request.before) front trace) state)) :
     FromChallenge owner bit details.request.query front trace details.callback := by
   exact scan_all PqxdhInitialOriginForwardPost.selected selected selection impl (FromChallenge owner bit details.request.query front trace) _ _
-    (inside_shape mark sender route decode owner number bit details classified front trace) state reached details.callback cut
+    (inside_shape (completedBinding := completedBinding) mark sender route decode owner number bit details classified front trace) state reached details.callback cut
 
 private theorem admitted_address (kernel : RawCtxPendingOwnerQueries.Kernel RatchetChain)
     (context : RawCtxSourceSend.SealContext)
@@ -229,7 +231,7 @@ private theorem challenge_address (mark : PqxdhBeaconPhase2Shared.Secrets Shared
     (owner : RawCtxProtocolReveals.Owner S B) (number : Std.U64) (bit : Bool) (left right : Pqxdh.Bytes)
     (equal : left.length = right.length) (current : PqxdhRecordConfidentialityChallenge.State)
     (unused : current.pair = none) (before : NativeFront M P I D K S B) (trace : PqxdhInitialOriginPost.Trace Origin S B) :
-    All (AtAddress owner before) (PqxdhInitialOriginForwardPost.program (X := X) (Response := Response) mark sender route decode
+    All (AtAddress owner before) (PqxdhInitialOriginForwardPost.program (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode
       ((PqxdhRecordConfidentialityChallenge.handler (extra := extra) owner number bit (.inr (left, right))).run current) before trace) := by
   rw [PqxdhRecordConfidentialityChallenge.challenge_step owner number bit left right equal current unused]
   rw [← bind_pure_comp]
@@ -245,7 +247,7 @@ theorem inside_address (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin
     (details : PqxdhLaterChallengeCapture.Details extra M P I D K Origin S B)
     (classified : PqxdhLaterChallengeSavedClassification.phase (some details) = .inside)
     (before : NativeFront M P I D K S B) (trace : PqxdhInitialOriginPost.Trace Origin S B) :
-    All (AtAddress owner before) (PqxdhInitialOriginForwardPost.program (X := X) (Response := Response) mark sender route decode
+    All (AtAddress owner before) (PqxdhInitialOriginForwardPost.program (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode
       ((PqxdhRecordConfidentialityChallenge.handler owner number bit details.request.query).run details.request.before) before trace) := by
   rcases details with ⟨⟨query, current, next⟩, callback⟩
   cases used : current.pair with
@@ -254,7 +256,7 @@ theorem inside_address (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin
       rcases query with request | ⟨left, right⟩
       · simp only [PqxdhLaterChallengeSavedClassification.phase, used, reduceCtorEq] at classified
       · by_cases equal : left.length = right.length
-        · exact challenge_address mark sender route decode owner number bit left right equal current used before trace
+        · exact challenge_address (completedBinding := completedBinding) mark sender route decode owner number bit left right equal current used before trace
         · simp only [PqxdhLaterChallengeSavedClassification.phase, used, equal, ite_false, reduceCtorEq] at classified
 
 /-- The supported inside-callback cut has the actual pre-request send-chain address; no sampled or reconstructed owner is substituted. -/
@@ -269,13 +271,13 @@ theorem cut_address {State : Type} (mark : PqxdhBeaconPhase2Shared.Secrets Share
     (front : NativeFront M P I D K S B) (trace : PqxdhInitialOriginPost.Trace Origin S B) (state reached : State)
     (cut : RawCtxForwardScan.Cut.pending details.callback reached ∈ support
       (RawCtxForwardScan.scan PqxdhInitialOriginForwardPost.selected selected selection impl
-        (PqxdhInitialOriginForwardPost.program mark sender route decode
+        (PqxdhInitialOriginForwardPost.program (completedBinding := completedBinding) mark sender route decode
           ((PqxdhRecordConfidentialityChallenge.handler owner number bit details.request.query).run details.request.before) front trace)
-        (PqxdhInitialOriginForwardPost.program_covered mark sender route decode
+        (PqxdhInitialOriginForwardPost.program_covered (completedBinding := completedBinding) mark sender route decode
           ((PqxdhRecordConfidentialityChallenge.handler owner number bit details.request.query).run details.request.before) front trace) state)) :
     AtAddress owner front details.callback := by
   exact scan_all PqxdhInitialOriginForwardPost.selected selected selection impl (AtAddress owner front) _ _
-    (inside_address mark sender route decode owner number bit details classified front trace) state reached details.callback cut
+    (inside_address (completedBinding := completedBinding) mark sender route decode owner number bit details classified front trace) state reached details.callback cut
 
 /-- Full material interpretation preserves the monitor selected-input predicate; it changes no sending-chain field. -/
 theorem selected_projection {A N C : Type} (key target : PqxdhSecretInputKdf.RootOutput)

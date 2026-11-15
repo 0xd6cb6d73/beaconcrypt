@@ -10,6 +10,7 @@ open RustM beaconcrypt_core ratchet ratchet.refined ratchet.concrete
 open OracleComp OracleSpec
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhSelectedMessageBuilder
+variable (associatedData : Std.Array Std.U8 151#usize)
 open PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhJointKdfGame
 open RawCtxSelectedMessageKey RawCtxSelectedMessageReveals RawCtxSelectedMessageDriver
 open RawCtxSelectedMessageKdf RawCtxSelectedParentTable RawCtxSelectedParentEntry
@@ -37,15 +38,15 @@ theorem ready_source
     simulateQ (PqxdhInitialGenericPublication.nativeImpl
       (RawCtxFunctionalFamily.native source writer (privateTable prior parent target (response key nonce next))) aux)
       (simulateQ PqxdhServerRegistrationPublication.nativeAdapter
-        (PqxdhInitialBuilderCut.readyBuild source (nativeKernel key <$> initial) binding ready metadata
+        (PqxdhInitialBuilderCut.readyBuild (associatedData := associatedData) source (nativeKernel key <$> initial) binding ready metadata
           (PqxdhInitialGenericPublication.native (nativeKernel key) state))) =
       Functor.map (Prod.map id (PqxdhInitialGenericPublication.native (nativeKernel key))) <$>
-        PqxdhInitialGenericBuilder.readyBuild source
+        PqxdhInitialGenericBuilder.readyBuild (associatedData := associatedData) source
           (RawCtxSelectedMessageFamily.calls
             (receiveServices source writer prior parent key target nonce next)
             (sendServices source writer prior parent key target nonce next) parent target nonce next)
           aux initial binding ready metadata state :=
-  PqxdhInitialGenericBuilder.ready_native source (nativeKernel key) _ _ aux
+  PqxdhInitialGenericBuilder.ready_native (associatedData := associatedData) source (nativeKernel key) _ _ aux
     (send_source source writer prior parent key target nonce next) initial binding ready metadata state
 
 end BeaconcryptCore.Computational.PqxdhSelectedMessageBuilder

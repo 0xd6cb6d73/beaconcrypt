@@ -21,6 +21,7 @@ open beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 
 namespace BeaconcryptCore.Computational.PqxdhRecordLiftIdeal
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhRecordLiftInterface
 open PqxdhDeploymentInterface (Mode ModeSpec FreshBounds FrameTag Budget Handle Receiver)
 open PqxdhServerAuthExperiment (Setup Codec)
@@ -32,7 +33,7 @@ variable {n : Nat} {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response
 
 /-- The completed client result of the compiled program: the constructed Server's public data, the adversary's output with the world-owned ledger and the environment's own state, and the key-free record control. -/
 abbrev Client (n : Nat) (E X : Type) :=
-  Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × (X × PqxdhDeploymentSecrecy.Ledger) × E) ×
+  Option (PqxdhRegistrationJointServerBirth.ClientCreated (Std.Array Std.U8 151#usize) × (X × PqxdhDeploymentSecrecy.Ledger) × E) ×
     PqxdhRecordLiftProtocol.Control n
 
 /-- The slot of the hidden kernel installed on a Server peer key ID, read from the actual stored record object. -/
@@ -170,7 +171,7 @@ noncomputable def hiddenOpening (seeds : PqxdhRecordLiftChainTable.Seeds (Slot n
           (PqxdhRecordLiftChainTable.chain seeds table) pending) with
     | none => pure .None
     | some input =>
-      if width : input.context.associatedData.length = 281 then
+      if width : input.context.associatedData.length = 151 then
         RawCtxSharedOpeningConsumer.apiReply input.sequence input.context <$>
           ((KeyedSpec n).query (input.material, .inr (RawCtxUniversalDecoder.pack
             (RawCtxUniversalDecoder.envelope (materialAt table input.material).2 input.context width))) :
@@ -187,7 +188,7 @@ noncomputable def hiddenSealing (writer : RawCtxMixedShared.Writer) (table : Pqx
     (replace : Pqxdh.Bytes → Pqxdh.Bytes) (pending : PqxdhRecordLiftProtocol.Sealing n) :
     StateT PqxdhRecordLiftLoggedAdapters.Frames (OracleComp (KeyedSpec n)) (Option RawCtxSourceSend.Encrypted) :=
   fun frames =>
-  if width : (replaceContext replace pending.context).associatedData.length = 281 then do
+  if width : (replaceContext replace pending.context).associatedData.length = 151 then do
     let reply ← ((KeyedSpec n).query (pending.material, .inl (.inr (.inr
       (RawCtxSelectedMessageSealing.selectedInput (materialAt table pending.material).2 pending.sequence
         (replaceContext replace pending.context) width)))) : OracleComp (KeyedSpec n) (Option CtxRomRecord))
@@ -1033,7 +1034,7 @@ theorem hiddenOpening_malformed (seeds : PqxdhRecordLiftChainTable.Seeds (Slot n
 /-- A hidden sealing with an associated datum of the wrong width makes no keyed request, logs no frame and returns none, as the source sealing does. -/
 theorem hiddenSealing_narrow (writer : RawCtxMixedShared.Writer) (table : PqxdhRecordLiftChainTable.Table (Slot n))
     (replace : Pqxdh.Bytes → Pqxdh.Bytes) (pending : PqxdhRecordLiftProtocol.Sealing n)
-    (frames : PqxdhRecordLiftLoggedAdapters.Frames) (narrow : pending.context.associatedData.length ≠ 281) :
+    (frames : PqxdhRecordLiftLoggedAdapters.Frames) (narrow : pending.context.associatedData.length ≠ 151) :
     (hiddenSealing writer table replace pending).run frames = pure (none, frames) :=
   dite_eq_right_of_eq_false (eq_false narrow)
 

@@ -43,7 +43,7 @@ private theorem joint_simulate {I S : Type} {spec : OracleSpec I}
 
 private theorem lower_simulate {I : Type} {spec : OracleSpec I}
     (setup : Setup base KemSK) (checks : Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (impl : QueryImpl spec (M n KemSK source RegistrationServerRoleBackend.State)) (work : OracleComp spec Value) :
     lower setup checks representation created (simulateQ impl work) =
       simulateQ (fun query => lower setup checks representation created (impl query)) work := by
@@ -54,7 +54,7 @@ private theorem lower_simulate {I : Type} {spec : OracleSpec I}
 
 private theorem native_program {I : Type} {spec : OracleSpec I}
     (coins : QueryImpl unifSpec (StateT Platform ProbComp)) (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (impl : QueryImpl spec (M n KemSK source RegistrationServerRoleBackend.State)) (work : OracleComp spec Value)
     (before after : Local n KemSK source) (previous next : Platform) (value : Value)
     (supported : ((value, after), next) ∈ support (((simulateQ (fun query => RegistrationNativePlatformBundleLower.native coins setup checks
@@ -71,7 +71,7 @@ private theorem native_program {I : Type} {spec : OracleSpec I}
 
 noncomputable def program (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (index : Nat) (owner : Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes) :
     StateT (Local n KemSK source) (StateT Platform ProbComp) (RustM (RegistrationBeaconInitExecutor.Result (alloc.vec.Vec U8))) :=
@@ -79,20 +79,20 @@ noncomputable def program (coins : QueryImpl unifSpec (StateT Platform ProbComp)
     (fun query => RegistrationNativePlatformBundleLower.native coins setup checks representation created
       (RegistrationNativeBeaconFrontend.outgoing setup source index owner query))
     (RegistrationNativePlatformInitWriterFrame.encoder writer) ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-    ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey
+    ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin
 
 
 /-- Literal effectful source success derives the complete original public tuple, exact pending digest and cached unsigned preimage at the actual source final state. -/
 theorem outgoing (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (index : Nat) (owner : Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (published : registration.PublishedBeaconInit (alloc.vec.Vec U8)) (before after : Local n KemSK source) (previous next : Platform)
     (supported : ((.ok (.Ok published), after), next) ∈ support
       (((program (n := n) coins setup checks representation created writer index owner oneTime).run before).run previous)) :
-    ∃ started pending fingerprint atFingerprint digest, ∃ signedView : registration.SignedInitView,
-      ∃ encodedView : registration.SignedInitView, ∃ atWriter : Platform,
+    ∃ started pending hashing atHash digest, ∃ signedView : registration.InitView,
+      ∃ encodedView : registration.InitView, ∃ atWriter : Platform,
       pqxdh.beacon_start ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
         ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ = .ok started ∧
       pqxdh.validate_init_kex started.message = .ok (.Ok {
@@ -101,17 +101,18 @@ theorem outgoing (coins : QueryImpl unifSpec (StateT Platform ProbComp))
         beacon_one_time_public_key := PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime),
         beacon_pq_public_key := RegistrationNativeBeaconFrontend.pqArray owner.kemPublic }) ∧
       RegistrationNativeInitTupleSource.EdLead (RegistrationNativeMldsaShared.implementation setup owner)
-        pending (project before) fingerprint atFingerprint ∧
+        pending (project before) hashing atHash ∧
       RegistrationNativeInitTupleSource.Fixed started owner.pin
-        (PqxdhRootTableInitialization.rootArray (setup.joint.publicKeys owner.identitySeed).ed25519) owner.mldsa.publicKey fingerprint.state ∧
-      RegistrationNativeInitTupleSource.Attached started fingerprint.state ∧
-      RegistrationNativeInitTupleSource.FingerprintCut (RegistrationNativeMldsaShared.implementation setup owner)
-        (fun _ => .Some published.encoded) fingerprint atFingerprint published (project after) ∧
-      (project after).2 ((), (RegistrationNativeInitStageContents.sourcePayload fingerprint.state).transcript) = some digest ∧
+        (PqxdhRootTableInitialization.rootArray (setup.joint.publicKeys owner.identitySeed).ed25519) hashing.state ∧
+      RegistrationNativeInitTupleSource.Attached started hashing.state ∧
+      RegistrationNativeInitTupleSource.HashCut (RegistrationNativeMldsaShared.implementation setup owner)
+        (fun _ => .Some published.encoded) hashing atHash published (project after) ∧
+      (project after).2 ((), (RegistrationNativeInitStageContents.sourcePayload hashing.state).transcript) = some digest ∧
       published.pending.binding.init_hash = RegistrationAuthenticationShared.digestArray digest ∧
-      published.pending.control = fingerprint.state.started.state ∧ published.pending.binding.server_pin = fingerprint.state.server_pin ∧
-      published.pending.binding.beacon_identity_public_key = fingerprint.state.beacon_identity ∧
-      signedView.fields = RegistrationSigningContinuations.retainedFields fingerprint.state ∧
+      published.pending.control = hashing.state.started.state ∧ published.pending.binding.server_pin = hashing.state.server_pin ∧
+      published.pending.binding.init_fields.identity_key = hashing.state.started.message.identity_key ∧
+      signedView.fields = RegistrationSigningContinuations.retainedFields hashing.state ∧
+      published.pending.binding.init_fields = RegistrationNativeInitTupleSource.ownedFields hashing.state ∧
       ((.ok (some published.encoded), after), next) ∈ support
         (((RegistrationNativePlatformInitWriterFrame.encoder writer encodedView).run after).run atWriter) := by
   let impl : QueryImpl RegistrationBeaconInitExecutor.Spec (StateT (Local n KemSK source) (StateT Platform ProbComp)) := fun query =>
@@ -124,14 +125,14 @@ theorem outgoing (coins : QueryImpl unifSpec (StateT Platform ProbComp))
   obtain ⟨atEncoder, replay, encodedView, encoded⟩ := RegistrationNativePlatformPublicationReplay.begin_replay
     (fun query => joint (impl query)) (fun view => joint (RegistrationNativePlatformInitWriterFrame.encoder writer view))
       ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey published
+      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin published
       (before, previous) (after, next) member
   rw [← joint_simulate] at replay
   have nested := (RegistrationNativePlatformRawFrame.joint_support _ (.ok (.Ok published) : RustM (RegistrationBeaconInitExecutor.Result (alloc.vec.Vec U8))) before atEncoder.1 previous atEncoder.2).mp replay
   have native := native_program coins setup checks representation created
     (RegistrationNativeBeaconFrontend.outgoing setup source index owner)
     (RegistrationBeaconInitExecutor.begin (fun _ => .Some published.encoded) ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)
+      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)
     before atEncoder.1 previous atEncoder.2 (.ok (.Ok published)) nested
   have writerSupport := (RegistrationNativePlatformRawFrame.joint_support _ (.ok (some published.encoded) : RustM (Option (alloc.vec.Vec U8))) atEncoder.1 after atEncoder.2 next).mp encoded
   have framed := writerSupport
@@ -143,19 +144,19 @@ theorem outgoing (coins : QueryImpl unifSpec (StateT Platform ProbComp))
       ((simulateQ (RegistrationNativeMldsaShared.implementation setup owner)
         (RegistrationBeaconInitExecutor.begin (fun _ => .Some published.encoded) ⟨owner.pin.binding⟩
           (RegistrationNativeBeaconFrontend.inputs setup owner) ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩
-          owner.pin owner.mldsa.publicKey)).run (project before)) := by
+          owner.pin)).run (project before)) := by
     rw [← RegistrationNativeMldsaShared.program setup checks representation created index owner _ before, support_map]
     exact ⟨(.ok (.Ok published), atEncoder.1), native, rfl⟩
   rw [← afterEq] at projected
-  obtain ⟨started, pending, fingerprint, atFingerprint, began, validated, _requested, leading, fixed, attached, cut⟩ :=
+  obtain ⟨started, pending, hashing, atHash, began, validated, _requested, leading, fixed, attached, cut⟩ :=
     RegistrationNativeInitTupleSource.begin_receipt (RegistrationNativeMldsaShared.implementation setup owner) (fun _ => .Some published.encoded)
       ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey published
+      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin published
       (project before) (project after) projected
-  obtain ⟨digest, signedView, cached, initHash, control, pin, identity, _encode, fields⟩ :=
-    RegistrationNativeInitTupleCache.fingerprint_cached setup owner (fun _ => .Some published.encoded) fingerprint atFingerprint published (project after) cut
-  refine ⟨started, pending, fingerprint, atFingerprint, digest, signedView, encodedView, atEncoder.2,
-    began, validated, leading, fixed, attached, cut, cached, initHash, control, pin, identity, fields, ?_⟩
+  obtain ⟨digest, signedView, cached, initHash, control, pin, identity, _encode, fields, retained⟩ :=
+    RegistrationNativeInitTupleCache.hash_cached setup owner (fun _ => .Some published.encoded) hashing atHash published (project after) cut
+  refine ⟨started, pending, hashing, atHash, digest, signedView, encodedView, atEncoder.2,
+    began, validated, leading, fixed, attached, cut, cached, initHash, control, pin, identity, fields, retained, ?_⟩
   simpa only [afterEq] using writerSupport
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformInitTupleCache

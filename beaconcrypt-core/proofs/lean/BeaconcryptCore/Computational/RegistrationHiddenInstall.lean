@@ -119,7 +119,7 @@ theorem installed_fields (keyId : U64) (binding : PeerBinding) (slot : Slot n)
     (supported : (true, after) ∈ support
       ((PqxdhRecordLiftWorld.installServer keyId binding (.hidden slot)).run before)) :
     ∃ (seed : PqxdhRecordLiftSeed.Seed) (server : PqxdhRecordLiftWorld.Server)
-        (peer : RawCtxServerRouting.Peer (Std.Array U8 281#usize)),
+        (peer : RawCtxServerRouting.Peer (Std.Array U8 151#usize)),
       after.server = some server ∧ server.records.server.peers keyId = some peer ∧
       peer.identity = binding.identity ∧ peer.kernel = PqxdhRecordLiftWorld.kernel .server seed ∧
       peer.metadata = binding.associatedArray server.records.server.identity ∧
@@ -145,7 +145,7 @@ theorem installed_cached_kernel (keyId : U64) (binding : PeerBinding) (slot : Sl
     (cached : before.seeds.1 slot = some seed)
     (supported : (true, after) ∈ support
       ((PqxdhRecordLiftWorld.installServer keyId binding (.hidden slot)).run before)) :
-    ∃ (server : PqxdhRecordLiftWorld.Server) (peer : RawCtxServerRouting.Peer (Std.Array U8 281#usize)),
+    ∃ (server : PqxdhRecordLiftWorld.Server) (peer : RawCtxServerRouting.Peer (Std.Array U8 151#usize)),
       after.server = some server ∧ server.records.server.peers keyId = some peer ∧
       peer.kernel = PqxdhRecordLiftWorld.kernel .server seed ∧
       peer.metadata = binding.associatedArray server.records.server.identity := by

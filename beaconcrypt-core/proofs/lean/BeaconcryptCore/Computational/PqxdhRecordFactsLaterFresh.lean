@@ -32,7 +32,7 @@ theorem post_couple (modes : Label n → KeyMode) (setup : Setup baseSpec KemSK)
     (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder) (env : Environment n E)
     (bounds : FreshBounds) (reveal : E → R) (second : X → R → OracleComp PostSpec Out)
     (claim : Out → Option (Nat × Pqxdh.Bytes)) (index length : Nat) (offsets : Fin length → Fin 256)
-    (created : PqxdhRegistrationJointServerBirth.ClientCreated Unit)
+    (created : PqxdhRegistrationJointServerBirth.ClientCreated (Std.Array Std.U8 151#usize))
     (firstResult secondResult : X × Ledger × NativeState n E)
     (related : SimRel (FreshRelated bounds index (extend offsets)) (FreshEscaped index) (FreshEscaped index)
       firstResult secondResult) :

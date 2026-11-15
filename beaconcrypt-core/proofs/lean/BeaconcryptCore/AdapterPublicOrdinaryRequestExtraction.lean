@@ -39,7 +39,7 @@ variable [BeaconcryptCore.Refinement.PublicWrapperPlatform.ContainerOperations]
 variable {m : Type → Type} [Monad m]
 variable [BeaconcryptCore.Refinement.AdapterRecordRequestMonad.LiftRust m]
 variable [Operations m]
--- Extracted body SHA-256: 48cf03f72ffd6dfc28bd9f631cc5b81a6870caeaa3b9ff24de62596c09ef457e
+-- Extracted body SHA-256: 6d8fb198b50cc1b9ec4842e5041ab300e4ed0a642a927ea3c11afb2ffa62ba13
 /-- [beaconcrypt::wire::frame_len]:
     Source: 'beaconcrypt/src/wire.rs', lines 46:0-48:1 -/
 def wire.frame_len
@@ -49,7 +49,7 @@ def wire.frame_len
   (BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) beaconcrypt_core.transport.protected_frame_len) plaintext_len sequence sender
 
 /-- [beaconcrypt::ratchet::{impl core::ops::deref::Deref<beaconcrypt_core::ratchet::concrete::ConcreteRatchetKernel> for beaconcrypt::ratchet::RatchetKernelSlot}::deref]:
-    Source: 'beaconcrypt/src/ratchet.rs', lines 162:4-166:5
+    Source: 'beaconcrypt/src/ratchet.rs', lines 166:4-170:5
     Visibility: public -/
 def
   ratchet.RatchetKernelSlot.Insts.CoreOpsDerefDerefConcreteRatchetKernel.deref
@@ -61,7 +61,7 @@ def
     "a ratchet kernel is absent only while its synchronous effect is running" BeaconcryptCore.Refinement.AdapterPublicOrdinaryString.slot_bound)
 
 /-- [beaconcrypt::ratchet::{beaconcrypt::ratchet::RatchetManager}::status]:
-    Source: 'beaconcrypt/src/ratchet.rs', lines 204:4-210:5 -/
+    Source: 'beaconcrypt/src/ratchet.rs', lines 208:4-214:5 -/
 def ratchet.RatchetManager.status
   (self : ratchet.RatchetManager) : m ratchet.RatchetStatus := do
   let crk ←
@@ -78,7 +78,7 @@ def ratchet.RatchetManager.status
   pure { send_sequence := i, receive_sequence := i1, receive_cache_len := i2 }
 
 /-- [beaconcrypt::ratchet::{beaconcrypt::ratchet::RatchetKernelSlot}::put]:
-    Source: 'beaconcrypt/src/ratchet.rs', lines 145:4-151:5 -/
+    Source: 'beaconcrypt/src/ratchet.rs', lines 149:4-155:5 -/
 def ratchet.RatchetKernelSlot.put
   (self : ratchet.RatchetKernelSlot)
   (kernel : beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel) :
@@ -89,7 +89,7 @@ def ratchet.RatchetKernelSlot.put
   pure { kernel := (core.option.Option.Some kernel) }
 
 /-- [beaconcrypt::ratchet::{beaconcrypt::ratchet::RatchetKernelSlot}::take]:
-    Source: 'beaconcrypt/src/ratchet.rs', lines 139:4-143:5 -/
+    Source: 'beaconcrypt/src/ratchet.rs', lines 143:4-147:5 -/
 def ratchet.RatchetKernelSlot.take
   (self : ratchet.RatchetKernelSlot) :
   m (beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel ×
@@ -109,10 +109,10 @@ def ratchet.RatchetStatus.impl.send_sequence
   pure self.send_sequence
 
 /-- [beaconcrypt::ratchet::encrypt_with_ratchet]:
-    Source: 'beaconcrypt/src/ratchet.rs', lines 431:0-456:1 -/
+    Source: 'beaconcrypt/src/ratchet.rs', lines 435:0-460:1 -/
 def ratchet.encrypt_with_ratchet
   (bytes : Slice Std.U8) (target_kid : Std.U64) (sender_kid : Std.U64)
-  (associated_data : Array Std.U8 281#usize)
+  (associated_data : Array Std.U8 151#usize)
   (ratchet1 : ratchet.RatchetManager) (frame_encoding : Bool) :
   m ((core.option.Option shared.Encrypted) × ratchet.RatchetManager)
   := do
@@ -162,10 +162,10 @@ def ratchet.encrypt_with_ratchet
       pure (sealed, { refined := rks1 })
 
 /-- [beaconcrypt::ratchet::encrypt_message_with_ratchet]:
-    Source: 'beaconcrypt/src/ratchet.rs', lines 414:0-429:1 -/
+    Source: 'beaconcrypt/src/ratchet.rs', lines 418:0-433:1 -/
 def ratchet.encrypt_message_with_ratchet
   (bytes : Slice Std.U8) (target_kid : Std.U64) (sender_kid : Std.U64)
-  (associated_data : Array Std.U8 281#usize)
+  (associated_data : Array Std.U8 151#usize)
   (ratchet1 : ratchet.RatchetManager) :
   m ((core.option.Option shared.Encrypted) × ratchet.RatchetManager)
   := do
@@ -173,7 +173,7 @@ def ratchet.encrypt_message_with_ratchet
     ratchet1 true
 
 /-- [beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::encrypt_message]:
-    Source: 'beaconcrypt/src/beacon.rs', lines 198:4-215:5
+    Source: 'beaconcrypt/src/beacon.rs', lines 192:4-209:5
     Visibility: public -/
 def beacon.Beacon.encrypt_message
   (self : beacon.Beacon) (b : Slice Std.U8) :
@@ -198,10 +198,10 @@ def beacon.Beacon.encrypt_message
   | beacon.BeaconState.Aborted _ => pure (core.option.Option.None, self)
 
 /-- [beaconcrypt::ratchet::decrypt_payload_with_ratchet]:
-    Source: 'beaconcrypt/src/ratchet.rs', lines 635:0-652:1 -/
+    Source: 'beaconcrypt/src/ratchet.rs', lines 639:0-656:1 -/
 def ratchet.decrypt_payload_with_ratchet
   (ciphertext : Slice Std.U8) (key_seq : Std.U64) (kid : Std.U64)
-  (associated_data : Array Std.U8 281#usize)
+  (associated_data : Array Std.U8 151#usize)
   (ratchet1 : ratchet.RatchetManager) :
   m ((core.option.Option shared.Decrypted) × ratchet.RatchetManager)
   := do
@@ -214,7 +214,7 @@ def ratchet.decrypt_payload_with_ratchet
   pure (opened, { refined := rks1 })
 
 /-- [beaconcrypt::ratchet::decode_crypto_frame]:
-    Source: 'beaconcrypt/src/ratchet.rs', lines 350:0-352:1 -/
+    Source: 'beaconcrypt/src/ratchet.rs', lines 354:0-356:1 -/
 def ratchet.decode_crypto_frame
   (data : Slice Std.U8) :
   m (core.option.Option beaconcrypt_parse.frame.Frame)
@@ -222,10 +222,10 @@ def ratchet.decode_crypto_frame
   (BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) beaconcrypt_parse.decode_frame) data
 
 /-- [beaconcrypt::ratchet::decrypt_message_with_ratchet]:
-    Source: 'beaconcrypt/src/ratchet.rs', lines 610:0-633:1 -/
+    Source: 'beaconcrypt/src/ratchet.rs', lines 614:0-637:1 -/
 def ratchet.decrypt_message_with_ratchet
   (data : Slice Std.U8) (expected_sender_kid : Std.U64)
-  (associated_data : Array Std.U8 281#usize)
+  (associated_data : Array Std.U8 151#usize)
   (ratchet1 : ratchet.RatchetManager) :
   m ((core.option.Option shared.Decrypted) × ratchet.RatchetManager)
   := do
@@ -257,7 +257,7 @@ def ratchet.decrypt_message_with_ratchet
       pure (o1, ratchet1)
 
 /-- [beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::decrypt_message]:
-    Source: 'beaconcrypt/src/beacon.rs', lines 226:4-241:5
+    Source: 'beaconcrypt/src/beacon.rs', lines 220:4-235:5
     Visibility: public -/
 def beacon.Beacon.decrypt_message
   (self : beacon.Beacon) (b : Slice Std.U8) :
@@ -291,14 +291,14 @@ def collections.KeyedHasher.Insts.CoreHashBuildHasherSipHasher13 :
 }
 
 /-- Trait implementation: [beaconcrypt::pqxdh::{impl beaconcrypt::shared::SignaturePk for beaconcrypt_crypto::crypto_sign::PublicKey}]
-    Source: 'beaconcrypt/src/pqxdh.rs', lines 35:0-35:46 -/
+    Source: 'beaconcrypt/src/pqxdh.rs', lines 26:0-26:46 -/
 @[reducible]
 def beaconcrypt_crypto.crypto_sign.PublicKey.Insts.BeaconcryptSharedSignaturePk
   : shared.SignaturePk beaconcrypt_crypto.crypto_sign.PublicKey := {
 }
 
 /-- [beaconcrypt::ratchet::{beaconcrypt::ratchet::RatchetManager}::send_sequence]:
-    Source: 'beaconcrypt/src/ratchet.rs', lines 317:4-319:5 -/
+    Source: 'beaconcrypt/src/ratchet.rs', lines 321:4-323:5 -/
 def ratchet.RatchetManager.send_sequence
   (self : ratchet.RatchetManager) : m Std.U64 := do
   let crk ←
@@ -307,7 +307,7 @@ def ratchet.RatchetManager.send_sequence
   (BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel.send_sequence) crk
 
 /-- [beaconcrypt::ratchet::encrypted_frame_sender]:
-    Source: 'beaconcrypt/src/ratchet.rs', lines 355:0-357:1 -/
+    Source: 'beaconcrypt/src/ratchet.rs', lines 359:0-361:1 -/
 def ratchet.encrypted_frame_sender
   (data : Slice Std.U8) : m (core.option.Option Std.U64) := do
   let o ← ratchet.decode_crypto_frame data
@@ -331,7 +331,7 @@ def server.ReceiveTransition.into_option
     pure (core.option.Option.Some output)
 
 /-- [beaconcrypt::server::{beaconcrypt::server::Server}::identity_key_kid]:
-    Source: 'beaconcrypt/src/server.rs', lines 255:4-257:5
+    Source: 'beaconcrypt/src/server.rs', lines 250:4-252:5
     Visibility: public -/
 def server.Server.identity_key_kid (self : server.Server) : m Std.U64 := do
   let si ← (BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) alloc.sync.Arc.Insts.CoreOpsDerefDeref.deref) self.identity
@@ -352,7 +352,7 @@ def shared.EstablishedRemote.ratchet_mut
   pure (rm, back)
 
 /-- [beaconcrypt::server::{beaconcrypt::server::Server}::ratchet_manager_mut]:
-    Source: 'beaconcrypt/src/server.rs', lines 363:4-368:5 -/
+    Source: 'beaconcrypt/src/server.rs', lines 353:4-358:5 -/
 def server.Server.ratchet_manager_mut
   (self : server.Server) (k : Std.U64) :
   m ((core.option.Option ratchet.RatchetManager) × (core.option.Option
@@ -398,10 +398,10 @@ def shared.EstablishedRemote.binding
   (BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) BeaconcryptCore.Refinement.PublicWrapperPlatform.peerBinding) self.peer
 
 /-- [beaconcrypt::server::{beaconcrypt::server::Server}::associated_data]:
-    Source: 'beaconcrypt/src/server.rs', lines 369:4-371:5 -/
+    Source: 'beaconcrypt/src/server.rs', lines 359:4-361:5 -/
 def server.Server.associated_data
   (self : server.Server) (k : Std.U64) :
-  m (core.option.Option (Array Std.U8 281#usize))
+  m (core.option.Option (Array Std.U8 151#usize))
   := do
   let o ←
     Operations.get core.U64.Insts.CoreCmpEq
@@ -422,10 +422,10 @@ def server.Server.associated_data
     pure (core.option.Option.Some a)
   | core.ops.control_flow.ControlFlow.Break residual =>
     (BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual)
-      (Array Std.U8 281#usize) residual
+      (Array Std.U8 151#usize) residual
 
 /-- [beaconcrypt::server::{beaconcrypt::server::Server}::encrypt_message]:
-    Source: 'beaconcrypt/src/server.rs', lines 373:4-380:5
+    Source: 'beaconcrypt/src/server.rs', lines 363:4-370:5
     Visibility: public -/
 def server.Server.encrypt_message
   (self : server.Server) (b : Slice Std.U8) (k : Std.U64) :
@@ -454,7 +454,7 @@ def server.Server.encrypt_message
     pure (o1, self)
 
 /-- [beaconcrypt::server::{beaconcrypt::server::Server}::decrypt_message_transition]:
-    Source: 'beaconcrypt/src/server.rs', lines 427:4-444:5 -/
+    Source: 'beaconcrypt/src/server.rs', lines 417:4-434:5 -/
 def server.Server.decrypt_message_transition
   (self : server.Server) (b : Slice Std.U8) :
   m ((server.ReceiveTransition shared.Decrypted) × server.Server)
@@ -487,7 +487,7 @@ def server.Server.decrypt_message_transition
           pure (server.ReceiveTransition.Accepted decrypted, self1)
 
 /-- [beaconcrypt::server::{beaconcrypt::server::Server}::decrypt_message]:
-    Source: 'beaconcrypt/src/server.rs', lines 423:4-425:5
+    Source: 'beaconcrypt/src/server.rs', lines 413:4-415:5
     Visibility: public -/
 def server.Server.decrypt_message
   (self : server.Server) (b : Slice Std.U8) :

@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePlatformIdentityFrontendHashBounds
-/-! The actual native constructor has one shared pin hash. ML generation, indexed Ed/KEM birth, scalar sampling and owner bookkeeping retain their real samplers and outcomes without additional shared CTX calls. -/
+/-! The actual native constructor stays within its one-hash cap. Its fixed-size Server pin is validated without a shared hash (no Beacon ML-DSA generation remains), and indexed Ed/KEM birth, scalar sampling and owner bookkeeping retain their real samplers and outcomes without shared CTX calls; the exported cap 1 keeps the original pin-hash cell as an over-approximation. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -21,38 +21,21 @@ private theorem identity_create_bound :
   apply lift_free_bound
   simp [RegistrationNativeIdentityInterface.create, IsHash]
 
-/-- Literal native preparation hashes its supplied Server pin once through every optional failure and generated-key reply. -/
+/-- Literal native preparation stays within one shared hash through every optional failure and generated-key reply (it now issues none: the fixed-size Server pin is validated without hashing). -/
 theorem prepare_bound (source : RegistrationNativeMldsa.Source) (edPin : Std.Array U8 32#usize)
     (mlPin : Std.Array U8 1952#usize) (keyId : U64) :
     Bounded (RegistrationNativeIdentityFrontend.prepare (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) source edPin mlPin keyId) 1 := by
   unfold RegistrationNativeIdentityFrontend.prepare
-  apply bind_bound _ _ 0 1 (sample_bound _)
-  intro optional
-  cases optional with
-  | none => exact pure_bound _ _
-  | some credentials =>
-    cases registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
-    | fail error | div => exact pure_bound _ _
-    | ok pending =>
-      simp only
-      cases pending.request with
-      | fail error | div => exact pure_bound _ _
-      | ok request =>
-        simp only
-        apply bind_bound _ _ 1 0 (hash_bound request)
-        intro digest
-        cases pending.resume (.Some (RegistrationAuthenticationShared.digestArray digest)) with
-        | fail error | div => exact pure_bound _ _
-        | ok pin => cases pin with
-          | none => exact pure_bound _ _
-          | some pin =>
-            simp only
-            apply bind_bound _ _ 0 0 identity_create_bound
-            intro generated
-            cases generated with
-            | none => exact pure_bound _ _
-            | some identity =>
-              exact bind_bound _ _ 0 0 (sample_bound _) (fun _ => pure_bound _ _)
+  cases registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
+  | fail error | div => exact pure_bound _ _
+  | ok pin =>
+    simp only
+    apply bind_bound _ _ 0 1 identity_create_bound
+    intro generated
+    cases generated with
+    | none => exact pure_bound _ _
+    | some identity =>
+      exact bind_bound _ _ 0 1 (sample_bound _) (fun _ => pure_bound _ _)
 
 /-- Actual source creation retains the complete pin/generation/owner-append path with at most one shared hash. -/
 theorem create_bound (setup : Setup base KemSK) (source : RegistrationNativeMldsa.Source)

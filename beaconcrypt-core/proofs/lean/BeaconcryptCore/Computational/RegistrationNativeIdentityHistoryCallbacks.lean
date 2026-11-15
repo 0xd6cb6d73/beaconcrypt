@@ -28,7 +28,7 @@ private theorem lift_old (work : StateT (RegistrationWorldAgreementCompiler.EnvS
 
 theorem readonly_preserves (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index handle : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index handle : Nat)
     (work : StateT (RegistrationWorldAgreementCompiler.EnvState Auxiliary) (OracleComp (Ambient n KemSK)) Value) :
     Preserves (source := source) setup checks representation created index handle (liftOld (StateT.lift work)) := by
   rw [lift_old]
@@ -46,7 +46,7 @@ theorem static_signed (pool : PqxdhDynamicIdentityPool.SourceState) (identity se
 
 private theorem run_double_lift (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (work : OracleComp (Trusted n KemSK) Value)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (work : OracleComp (Trusted n KemSK) Value)
     (before : RegistrationNativeIdentitySourceSimulation.NewState n KemSK Auxiliary source) :
     runNew setup checks representation created (StateT.lift (StateT.lift work)) before =
       (fun result => (result.1, ((before.1.1, before.1.2), result.2))) <$>
@@ -55,7 +55,7 @@ private theorem run_double_lift (setup : Setup base KemSK) (checks : Checks)
 
 theorem dh_preserves (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (owner : Owner source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (owner : Owner source)
     (peer : PqxdhBeaconPhase2Preparation.Word32) :
     Preserves (n := n) (Auxiliary := Auxiliary) (source := source) setup checks representation created index owner.identity.handle
       (StateT.lift (StateT.lift (RegistrationNativeIdentityCallbacks.dh (Ambient n KemSK) owner.identity peer))) := by
@@ -81,7 +81,7 @@ theorem dh_preserves (setup : Setup base KemSK) (checks : Checks)
 
 theorem authentication_preserves (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index handle : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index handle : Nat)
     (query : RegistrationAuthenticationExecutor.Request) :
     Preserves (n := n) (Auxiliary := Auxiliary) (source := source) setup checks representation created index handle
       (authentication setup source query) := by
@@ -94,7 +94,7 @@ theorem authentication_preserves (setup : Setup base KemSK) (checks : Checks)
 
 theorem agreement_preserves (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (owner : Owner source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (owner : Owner source)
     (oneTime : PqxdhJointGapDh.ScalarBytes) (query : RegistrationAgreementExecutor.Request) :
     Preserves (n := n) (Auxiliary := Auxiliary) setup checks representation created index owner.identity.handle
       (agreement setup owner oneTime query) := by
@@ -125,7 +125,7 @@ theorem agreement_preserves (setup : Setup base KemSK) (checks : Checks)
 
 theorem record_preserves (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index handle : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index handle : Nat)
     (wire : RegistrationNativeWire.Wire) (query : RegistrationRecordPrimitives.Spec.Domain) :
     Preserves (n := n) (Auxiliary := Auxiliary) (source := source) setup checks representation created index handle
       (record setup wire query) := by

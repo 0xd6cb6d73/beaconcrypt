@@ -51,7 +51,7 @@ noncomputable local instance idleLocal :LocalOperations (RustT (StateT (Registra
 noncomputable local instance idleCrypto :CryptoOperations (RustT (StateT (RegistrationNativeExperiment.State n KemSK source×P) ProbComp)):=packedCrypto
 noncomputable local instance idleChildren :ChildOperations (RustT (StateT (RegistrationNativeExperiment.State n KemSK source×P) ProbComp)):=children
 
-variable (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
 local notation "auditPrivate"=>RegistrationNativePlatformPublicAdapterAuditModel.Private configuration created credential
 local notation "auditModel"=>RegistrationNativePlatformPublicAdapterAuditModel.model configuration created credential
 local notation "auditPhysical"=>RegistrationNativePlatformPublicAdapterAuditModel.physical configuration created credential
@@ -108,7 +108,7 @@ private theorem with_coins (index :Nat) (owner :RegistrationNativeBeaconFrontend
     (sourceSelected :objects.base.objects.beacons index=some self) (selected :before.1.beacons[index]?=some owner)
     (prior :Events) (aligned :RegistrationNativePlatformPublicAdapterBundleSigningDelta.Aligned (before.1,prior)):
     Preserves configuration created credential (RegistrationNativePlatformPublicAdapterBundleStepSource.withCoins previousLocal coins setup checks configuration.agreement.representation created
-      configuration.reservePackets index owner configuration.edFailure (other (m:=CutM)) (recording (m:=CutM)) configuration.views credential self configuration.view
+      configuration.reservePackets index owner configuration.edFailure (fun _=>pure (.fail .panic)) (recording (m:=CutM)) configuration.views credential self configuration.view
       control scalar prekey oneTime kem configuration.generator stored phase before previous objects sourceSelected selected)
       (withCoinsAugmentation configuration created credential index owner self control scalar prekey oneTime kem stored phase before previous objects sourceSelected selected RegistrationNativePlatformPublicAdapterSourceEvents.Event.stage prior) :=by
     intro result supported
@@ -127,7 +127,7 @@ private theorem fresh (index :Nat) (owner :RegistrationNativeBeaconFrontend.Owne
     (sourceSelected :objects.base.objects.beacons index=some self) (selected :before.1.beacons[index]?=some owner)
     (prior :Events) (aligned :RegistrationNativePlatformPublicAdapterBundleSigningDelta.Aligned (before.1,prior)):
     Preserves configuration created credential (RegistrationNativePlatformPublicAdapterBundleStepSource.fresh previousLocal coins setup checks configuration.agreement.representation created
-      configuration.reservePackets index owner configuration.edFailure (other (m:=CutM)) (recording (m:=CutM)) configuration.views credential self configuration.view
+      configuration.reservePackets index owner configuration.edFailure (fun _=>pure (.fail .panic)) (recording (m:=CutM)) configuration.views credential self configuration.view
       control prekey kem configuration.generator (RegistrationNativePlatformPublicAdapterConfiguration.generation configuration) stored phase before previous objects sourceSelected selected)
       (freshAugmentation configuration created credential index owner self control prekey kem stored phase before previous objects sourceSelected selected RegistrationNativePlatformPublicAdapterSourceEvents.Event.stage prior) :=by
     intro result supported
@@ -168,7 +168,7 @@ theorem preserves (index :Nat) (before :RegistrationNativePlatformCutJournal.Sta
         cases phaseEq:owner.phase <;>simp only [AdapterPublicWrapperState.Phase,stored,phaseEq] at matched
         rfl
       let active:=RegistrationNativePlatformPublicAdapterBundleStepSource.fresh previousLocal coins setup checks configuration.agreement.representation created
-            configuration.reservePackets index owner configuration.edFailure (other (m:=CutM)) (recording (m:=CutM)) configuration.views credential self configuration.view
+            configuration.reservePackets index owner configuration.edFailure (fun _=>pure (.fail .panic)) (recording (m:=CutM)) configuration.views credential self configuration.view
             control prekey kem configuration.generator (RegistrationNativePlatformPublicAdapterConfiguration.generation configuration)
             stored phase before previous objects sourceSelected selected
       let activeAug:=freshAugmentation configuration created credential index owner self control prekey kem stored phase before previous objects sourceSelected selected RegistrationNativePlatformPublicAdapterSourceEvents.Event.stage prior
@@ -195,7 +195,7 @@ theorem preserves (index :Nat) (before :RegistrationNativePlatformCutJournal.Sta
       let scalar:=Classical.choose hasScalar
       have phase :owner.phase=.freshWithCoins scalar:=Classical.choose_spec hasScalar
       let active:=RegistrationNativePlatformPublicAdapterBundleStepSource.withCoins previousLocal coins setup checks configuration.agreement.representation created
-            configuration.reservePackets index owner configuration.edFailure (other (m:=CutM)) (recording (m:=CutM)) configuration.views credential self configuration.view
+            configuration.reservePackets index owner configuration.edFailure (fun _=>pure (.fail .panic)) (recording (m:=CutM)) configuration.views credential self configuration.view
             control scalar prekey oneTime kem configuration.generator stored phase before previous objects sourceSelected selected
       let activeAug:=withCoinsAugmentation configuration created credential index owner self control scalar prekey oneTime kem stored phase before previous objects sourceSelected selected RegistrationNativePlatformPublicAdapterSourceEvents.Event.stage prior
       have callEq :step configuration created credential index before previous objects=active :=by

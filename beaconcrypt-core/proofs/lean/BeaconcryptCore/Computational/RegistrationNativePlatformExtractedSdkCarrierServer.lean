@@ -52,7 +52,7 @@ private theorem append_tokens (tokens : Nat→Option beaconcrypt_public_wrapper.
       simpa only [absent] using prior index
 
 theorem tokens_returned (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (before : Objects (n:=n) (KemSK:=KemSK) (Platform:=Platform) (source:=source) R)
     (oldSessions : List (Option peer.ConsumedRegistration)) (prior : TokenTable before.tokens oldSessions)
     (count : before.nextSession=oldSessions.length) (word : AdapterPublicServerAgreementReceipt.Word R)
@@ -88,7 +88,7 @@ theorem tokens_returned (view : AdapterPublicWrapperState.MaterialView source Ke
       exact append_tokens before.tokens oldSessions prior token consumed tokenMaterial
 
 theorem count_returned (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (before : Objects (n:=n) (KemSK:=KemSK) (Platform:=Platform) (source:=source) R)
     (oldSessions : List (Option peer.ConsumedRegistration)) (count : before.nextSession=oldSessions.length)
     (word : AdapterPublicServerAgreementReceipt.Word R) (reply : Option Nat) (after : Native)
@@ -114,7 +114,7 @@ theorem count_returned (view : AdapterPublicWrapperState.MaterialView source Kem
       simp only [sessions,List.length_append,List.length_singleton,count]
 
 noncomputable def acceptPut (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created Unit)
+    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential source) (current : Native×Platform)
     (before : RegistrationNativePlatformExtractedSdkCarrier.Carrier (R:=R) view views joint created credential current)
     (word : AdapterPublicServerAgreementReceipt.Word R) (reply : Option Nat) (after : Native) (next : Platform)
@@ -138,7 +138,7 @@ noncomputable def acceptPut (view : AdapterPublicWrapperState.MaterialView sourc
   exact before.ownerCount.trans (congrArg List.length owners).symm
 
 theorem acceptPut_objects (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created Unit)
+    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential source) (current : Native×Platform)
     (before : RegistrationNativePlatformExtractedSdkCarrier.Carrier (R:=R) view views joint created credential current)
     (word : AdapterPublicServerAgreementReceipt.Word R) (reply : Option Nat) (after : Native) (next : Platform)
@@ -157,7 +157,7 @@ def buildUpdate (before : Objects (n:=n) (KemSK:=KemSK) (Platform:=Platform) (so
   {before with server:=self,snapshot:=snapshot}
 
 noncomputable def buildPut (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created Unit)
+    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential source) (current : Native×Platform)
     (before : RegistrationNativePlatformExtractedSdkCarrier.Carrier (R:=R) view views joint created credential current)
     (self : beaconcrypt_public_wrapper.server.Server) (after : Native) (next : Platform)
@@ -187,7 +187,7 @@ noncomputable def buildPut (view : AdapterPublicWrapperState.MaterialView source
     exact before.ownerCount.trans (congrArg List.length owners).symm
 
 theorem buildPut_objects (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created Unit)
+    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential source) (current : Native×Platform)
     (before : RegistrationNativePlatformExtractedSdkCarrier.Carrier (R:=R) view views joint created credential current)
     (self : beaconcrypt_public_wrapper.server.Server) (after : Native) (next : Platform)

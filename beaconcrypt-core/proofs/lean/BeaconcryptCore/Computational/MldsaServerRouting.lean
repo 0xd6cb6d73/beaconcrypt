@@ -77,7 +77,7 @@ noncomputable def registrationStep
     (sender : Metadata → Std.U64) (route : SenderDecoder)
     (decode : RawCtxReceive.FrameDecoder) :
     QueryImpl RawCtxServerMixed.SourceSpec
-      (StateT (ServerState Metadata session.RegistrationBinding × Primitive) (OracleComp base)) :=
+      (StateT (ServerState Metadata session.CompletedRegistrationBinding × Primitive) (OracleComp base)) :=
   sourceStep (fun binding => PqxdhRefinement.absBytes binding.associated_data)
     primitives sender route decode
 

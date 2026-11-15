@@ -1,3 +1,4 @@
+import BeaconcryptCore.Computational.PqxdhServerAuthApiJournal
 import BeaconcryptCore.Computational.PqxdhServerAuthPhase1Receipt
 
 /-! Original acceptance journal and verified-field provenance for live pending tokens. -/
@@ -66,10 +67,9 @@ theorem skeleton_origins (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
   case inr.accept => exact accept_origins setup codec checks publicValue services journal raw state result supported origins
   all_goals apply preserve setup codec checks publicValue journal _ state.1 result.2.1 origins
   all_goals intro other token found
-  all_goals first
+  all_goals try first
     | exact (congrFun footprint.2.2 other).symm.trans found
     | exact (congrFun footprint.2.1 other).symm.trans found
-    | skip
   by_cases same : other = index
   · simp only [footprint.2.2, same, Function.update_self, reduceCtorEq] at found
   · simpa only [footprint.2.2, Function.update_of_ne same] using found

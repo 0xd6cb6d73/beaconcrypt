@@ -17,7 +17,7 @@ variable [material : PublicWrapperPlatform.Material] [platform : PublicWrapperPl
 variable [ed : AdapterInitEdPrimitive.Operations]
 
 def peers (views : Views) (self : beaconcrypt_public_wrapper.server.Server) :
-    U64 →Option (RawCtxServerRouting.Peer (Std.Array U8 281#usize)) :=
+    U64 →Option (RawCtxServerRouting.Peer (Std.Array U8 151#usize)) :=
   fun key=>(views.peer self.known_ids key).bind peerView
 
 def server (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : Views)
@@ -26,7 +26,7 @@ def server (view : AdapterPublicWrapperState.MaterialView source KemSK) (views :
   ⟨identity.identity_key_kid,⟨⟨view.edPublic identity.identity_key.public_key,peers views self,()⟩,rawAttempts⟩⟩
 
 theorem related {n : Nat} (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (self : beaconcrypt_public_wrapper.server.Server) (native : RegistrationServerFrontendCompiler.State n)
     (held : AdapterPublicWrapperState.Server view views created credential self native) :
     ∃records,native.world.world.1.server=some records ∧ server view views self records.records.rawAttempts=records := by
@@ -89,7 +89,7 @@ def install {n : Nat} (view : AdapterPublicWrapperState.MaterialView source KemS
   {native with world:={native.world with world:=({native.world.world.1 with server:=some (server view views self rawAttempts)},native.world.world.2)}}
 
 theorem restored_material {n : Nat} (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (self : beaconcrypt_public_wrapper.server.Server) (native : RegistrationServerFrontendCompiler.State n)
     (held : AdapterPublicWrapperState.Server view views created credential self native)
     (key : U64) (remote : Remote ed.PublicKey) (back : Option (Remote ed.PublicKey) →PeerMap)

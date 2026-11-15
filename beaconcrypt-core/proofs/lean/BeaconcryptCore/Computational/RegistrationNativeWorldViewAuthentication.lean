@@ -81,7 +81,7 @@ private def withWorld (before : RegistrationServerFrontendCompiler.State n) (wor
 
 private theorem authenticate_run (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (before : RegistrationServerFrontendCompiler.State n) :
     (RegistrationServerNativeSource.authenticate setup codec route verify created packet).run before =
       (fun result => (result.1, withWorld before result.2)) <$>
@@ -94,7 +94,7 @@ private theorem authenticate_run (setup : Setup base KemSK) (codec : Codec Reade
 /-- The SDK's actual private authentication wrapper has the same complete projected output, including its retained control, replay/session tables, shared cache and all logs. -/
 theorem native_auth_input (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (before : RegistrationServerFrontendCompiler.State n) :
     Prod.map id RegistrationServerMaterialSourceState.nativeView <$>
         (RegistrationServerNativeSource.authenticate setup codec route verify created packet).run before =

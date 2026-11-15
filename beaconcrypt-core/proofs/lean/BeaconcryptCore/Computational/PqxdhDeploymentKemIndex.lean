@@ -19,8 +19,8 @@ theorem positional_set (state : PqxdhRegistrationJointSchedule.State KemSK) (pos
     (address : Nat) (entry : PqxdhRegistrationJointOwnership.Entry KemSK)
     (found : state.owners[address]? = some entry) (owner : PqxdhRegistrationSchedule.Owner KemSK)
     (pool : PqxdhRegistrationJointPreparation.Pool KemSK) (keys : pool.2.keys = state.pool.2.keys)
-    (shared : NativeState KemSK) :
-    Positional ⟨pool, shared, state.owners.set address { entry with owner := owner }⟩ := by
+    (shared : NativeState KemSK) (inits : Nat → Option PqxdhEd25519EufCma.Phase1Candidate) :
+    Positional ⟨pool, shared, state.owners.set address { entry with owner := owner }, inits⟩ := by
   refine ⟨?_, fun index other otherFound => ?_⟩
   · show pool.2.keys.length = (state.owners.set address { entry with owner := owner }).length
     rw [keys, List.length_set]
@@ -66,11 +66,13 @@ theorem accept_keys (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   exact prefixKeys _ reached reachedMember
 
 /-- A finish keeps the KEM key list. -/
-theorem finish_keys (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (identityIndex kemIndex : Nat)
+theorem finish_keys (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+    (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (identityIndex kemIndex : Nat)
     (raw : Pqxdh.Bytes) (owner : PqxdhRegistrationSchedule.Owner KemSK) (state : PqxdhRegistrationJointFinish.State KemSK)
     (result : (Option Pqxdh.Bytes × PqxdhRegistrationSchedule.Owner KemSK) × PqxdhRegistrationJointFinish.State KemSK)
     (supported : result ∈ support ((simulateQ (PqxdhRegistrationJointFinish.annotated setup codec identityIndex kemIndex)
-      (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw owner)).run state)) :
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw owner)).run
+        state)) :
     result.2.1.2.keys = state.1.2.keys := by
   refine OracleComp.simulateQ_run_preserves_inv_of_query (spec' := unifSpec) _
     (fun current => current.1.2.keys = state.1.2.keys) ?_ _ state rfl result supported
@@ -96,6 +98,31 @@ theorem finish_keys (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
       Set.mem_image] at member
     obtain ⟨_, _, rfl⟩ := member
     exact currentKeys
+
+/-- A hashed owner finish (`PqxdhRegistrationJointFinish.annotatedFinish`) keeps the KEM key list: the transcript hash touches only the shared state and the native owner runs as in `finish_keys`. -/
+theorem annotatedFinish_keys (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (identityIndex kemIndex : Nat)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) (state : PqxdhRegistrationJointFinish.State KemSK)
+    (result : (Option Pqxdh.Bytes × PqxdhRegistrationSchedule.Owner KemSK) × PqxdhRegistrationJointFinish.State KemSK)
+    (supported : result ∈ support ((PqxdhRegistrationJointFinish.annotatedFinish setup codec identityIndex kemIndex
+      retained raw owner).run state)) :
+    result.2.1.2.keys = state.1.2.keys := by
+  unfold PqxdhRegistrationJointFinish.annotatedFinish at supported
+  cases phase : owner.beacon.phase <;> simp only [phase, StateT.run_pure, mem_support_pure_iff] at supported
+  case initSent control prekey oneTime kem =>
+    cases retained <;> cases decoded : responseOf codec raw <;>
+      simp only [decoded, StateT.run_pure, mem_support_pure_iff] at supported
+    case some.some init response =>
+      rw [StateT.run_bind, mem_support_bind_iff] at supported
+      obtain ⟨hashed, hashMember, member⟩ := supported
+      simp only [PqxdhRegistrationJointFinish.onNative, StateT.run, support_map, Set.mem_image] at hashMember
+      obtain ⟨value, _, rfl⟩ := hashMember
+      exact finish_keys (PqxdhTranscriptAd.completedOf control value.1) setup codec identityIndex kemIndex raw owner
+        (state.1, value.2) result member
+    all_goals subst supported
+    all_goals rfl
+  all_goals subst supported
+  all_goals rfl
 
 /-- Every annotated source step keeps the positional invariant. -/
 theorem positional_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -151,7 +178,8 @@ theorem positional_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
           · rename_i entry found
             simp only [support_map, Set.mem_image] at supported
             obtain ⟨traced, _, rfl⟩ := supported
-            exact positional_set state positional address entry found traced.1.2 _ rfl state.shared
+            exact positional_set state positional address entry found traced.1.1.2 _ rfl state.shared
+              (Function.update state.inits address traced.2)
       | accept raw =>
           simp only [PqxdhRegistrationJointServerSchedule.source, PqxdhRegistrationJointServerSchedule.onBackend,
             StateT.run, support_map, Set.mem_image] at supported
@@ -171,8 +199,8 @@ theorem positional_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
             simp only [support_map, Set.mem_image] at supported
             obtain ⟨finished, finishedMember, rfl⟩ := supported
             exact positional_set state positional address entry found finished.1.2 finished.2.1
-              (finish_keys setup codec entry.identityIndex entry.kemIndex raw entry.owner (state.pool, state.shared)
-                finished finishedMember) finished.2.2
+              (annotatedFinish_keys setup codec entry.identityIndex entry.kemIndex _ raw entry.owner
+                (state.pool, state.shared) finished finishedMember) finished.2.2 _
       | hmac key message => exact sharedKept _ result supported
       | hash bytes => exact sharedKept _ result supported
       | reveal keyId => exact sharedKept _ result supported
@@ -278,3 +306,8 @@ end BeaconcryptCore.Computational.PqxdhDeploymentKemIndex
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentKemIndex.owner_kemIndex
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentKemIndex.annotatedFinish_keys' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentKemIndex.annotatedFinish_keys

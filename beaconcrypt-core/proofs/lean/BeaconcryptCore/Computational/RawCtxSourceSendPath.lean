@@ -80,7 +80,7 @@ private theorem chain_address (chain : RatchetChain) :
     address (RawCtxChainSend.nativeRequest chain) =
       RawCtxFirstParentRisk.inputAddress (RawCtxSelectedQueryTrace.rootVector chain) := by
   have info : PqxdhRefinement.absBytes ratchet.SYM_RATCHET_INFO = Pqxdh.INFO_R := by
-    simpa only [pqxdh.SYM_RATCHET_INFO] using PqxdhRefinement.absBytes_SYM_RATCHET_INFO
+    simpa only [ratchet.SYM_RATCHET_INFO] using PqxdhRefinement.absBytes_SYM_RATCHET_INFO
   exact congrArg (fun domain => (⟨domain, PqxdhRefinement.absBytes chain.bytes⟩ : JointKdfAddress)) info
 
 set_option backward.isDefEq.respectTransparency false in

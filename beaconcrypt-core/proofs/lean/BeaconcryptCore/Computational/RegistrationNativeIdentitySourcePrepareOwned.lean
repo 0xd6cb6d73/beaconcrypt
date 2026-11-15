@@ -17,7 +17,7 @@ variable {source : RegistrationNativeMldsa.Source}
 /-- The actual shared-prefix preparation program returns only source-generated owned credentials on success. -/
 theorem program_owned (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (before after : State n KemSK) (prepared : RegistrationNativeIdentityFrontend.Prepared source)
     (supported : (.ok (some prepared), after) ∈ support
@@ -34,13 +34,13 @@ theorem program_owned (setup : Setup base KemSK) (checks : Checks)
   | ok reply => cases reply with
     | none => simp [RegistrationNativeIdentitySourceCommon.afterExposed, simulateQ_pure, StateT.run_pure] at continued
     | some base =>
-        exact RegistrationNativeIdentitySourceOwnership.suffix_owned setup checks representation created base.1 base.2
+        exact RegistrationNativeIdentitySourceOwnership.suffix_owned setup checks representation created base
           ⟨current, before.identities⟩ after prepared continued
 
 /-- Actual source preparation, including its full nested local state, derives the returned credential's source ownership. -/
 theorem prepare_owned (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (current afterOwners : RegistrationNativeIdentityFrontend.State source)
     (env afterEnv : RegistrationWorldAgreementCompiler.EnvState RegistrationServerRoleBackend.State)
@@ -59,7 +59,7 @@ theorem prepare_owned (setup : Setup base KemSK) (checks : Checks)
 /-- Preparation keeps the entire existing public owner roster on every actual source outcome. -/
 theorem prepare_roster (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (current : RegistrationNativeIdentityFrontend.State source)
     (env : RegistrationWorldAgreementCompiler.EnvState RegistrationServerRoleBackend.State)

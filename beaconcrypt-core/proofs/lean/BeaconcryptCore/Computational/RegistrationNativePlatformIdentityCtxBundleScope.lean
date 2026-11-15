@@ -149,7 +149,7 @@ theorem bundle (setup : Setup base KemSK) (index : Nat)
 
 /-- The actual source publication and terminal state commit distribute through Main without an unrestricted ambient monad-hom premise. -/
 theorem bundled_fold (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (owner : Owner source) (scalar : PqxdhJointGapDh.ScalarBytes)
     (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) :
     RegistrationNativePlatformIdentityCtxMain.beacon (n := n) setup checks representation created
@@ -157,7 +157,7 @@ theorem bundled_fold (setup : Setup base KemSK) (checks : Checks)
       (do let reply ← RegistrationNativePlatformIdentityCtxMain.beacon setup checks representation created
             (simulateQ (RegistrationNativePlatformIdentityPublication.callback (n := n) (Auxiliary := RegistrationServerRoleBackend.State) setup index owner writer)
               (RegistrationNativePlatformWriter.begin E ⟨owner.pin.binding⟩ (RegistrationNativeIdentityFrontend.inputs owner)
-                ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin owner.mldsa.publicKey))
+                ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin))
           RegistrationNativePlatformIdentityCtxMain.beacon setup checks representation created
             (RegistrationNativePlatformIdentityBundle.next index owner scalar reply)) := by
   unfold RegistrationNativePlatformIdentityBundle.bundled
@@ -166,7 +166,7 @@ theorem bundled_fold (setup : Setup base KemSK) (checks : Checks)
 
 /-- Reading the actual owner roster closes and reopens the native environment exactly; no physical service query or P effect is introduced. -/
 theorem get_source (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit) :
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     RegistrationNativePlatformIdentityCtxMain.beacon (n := n) (source := source) (Platform := Platform) setup checks representation created
       get = (fun before => pure (before.1.beacons, before) : RegistrationNativePlatformIdentityCtxMain.M n KemSK Platform source (RegistrationNativeIdentityFrontend.State source)) := by
   funext before
@@ -178,7 +178,7 @@ theorem get_source (setup : Setup base KemSK) (checks : Checks)
 
 /-- Actual owner lookup can be performed in Main before the unchanged optional scalar/start program, including missing handles and every rejected phase. -/
 theorem bundle_fold (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) :
     RegistrationNativePlatformIdentityCtxMain.beacon (n := n) (source := source) setup checks representation created
       (RegistrationNativePlatformIdentityBundleRun.bundle setup index writer) =

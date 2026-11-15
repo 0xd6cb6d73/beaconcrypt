@@ -13,23 +13,33 @@ namespace BeaconcryptCore.Computational.PqxdhBoundaryRegistrationBuildNative
 open PqxdhBoundaryRegistrationBuild PqxdhServerAuthExperiment PqxdhServerAuthNative
 variable {Reader Response KemSK ι : Type} {baseSpec : OracleSpec ι}
 
-/-- The original native token wrapper with only its build program replaced by the equal extracted executor. -/
+/-- The original native token wrapper (pre-hash rejection, transcript hash, build at the AD of the digest) with only its build program replaced by the equal extracted executor. -/
 noncomputable def executeNativeBuild (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (session : Nat) (payload : Option Pqxdh.Bytes) :
     NativeGame KemSK (Option PqxdhServerRegistrationPublication.Response) := do
   let state ← nativeGet
   match state.pending session with
   | none => pure none
-  | some token => do
-      let result ← nativeCoins ((simulateQ (tailImpl setup codec checks)
-        (executeBuild setup token.pending token.root payload () state.server)).run ([], state.ctx))
-      let settled := settle state.server result.1
-      nativeSet { state with
-        pending := Function.update state.pending session none
-        server := settled.2
-        ctx := result.2.2
-        ghost := { state.ghost with seals := state.ghost.seals ++ result.2.1.map (fun context => (session, context)) } }
-      pure settled.1
+  | some token =>
+    match PqxdhServerRegistrationPublication.prehash state.server token.pending payload with
+    | none => do
+        nativeSet { state with pending := Function.update state.pending session none }
+        pure none
+    | some candidate => do
+        let digest ← nativeHash (PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf token.init)
+          (PqxdhTranscriptAd.serverResponse candidate))
+        let current ← nativeGet
+        let ad := PqxdhTranscriptAd.adOf digest
+        let result ← nativeCoins ((simulateQ (tailImpl setup codec checks)
+          (executeBuild (associatedData := ad) setup token.pending token.root payload ad current.server)).run
+            ([], current.ctx))
+        let settled := settle current.server result.1
+        nativeSet { current with
+          pending := Function.update current.pending session none
+          server := settled.2
+          ctx := result.2.2
+          ghost := { current.ghost with seals := current.ghost.seals ++ result.2.1.map (fun context => (session, context)) } }
+        pure settled.1
 
 /-- The complete native build computation retains the existing token consumption, full shared cache and literal successful-inner-seal log. -/
 theorem native_exact (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -38,28 +48,43 @@ theorem native_exact (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
   simp only [executeNativeBuild, nativeBuild, build_exact]
   rfl
 
-/-- A present pending token runs the complete extracted builder and settles exactly its returned Server state, primitive cache and seal log, preserving every other native field. -/
+/-- A present pending token whose pre-hash fails is removed with no other effect; otherwise the transcript hash runs on the shared cache and the complete extracted builder at the AD of the digest settles exactly its returned Server state, primitive cache and seal log, preserving every other native field. -/
 theorem native_present (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (session : Nat) (payload : Option Pqxdh.Bytes) (state : NativeState KemSK)
     (token : PqxdhServerRelatedRootConsumer.Returned) (found : state.2.pending session = some token) :
     (executeNativeBuild setup codec checks session payload).run state =
-      (fun result =>
-        let settled := settle state.2.server result.1
-        (settled.1, (state.1, { state.2 with
-          pending := Function.update state.2.pending session none
-          server := settled.2
-          ctx := result.2.2
-          ghost := { state.2.ghost with seals := state.2.ghost.seals ++ result.2.1.map (fun context => (session, context)) } }))) <$>
-      (simulateQ (tailImpl setup codec checks)
-        (executeBuild setup token.pending token.root payload () state.2.server)).run ([], state.2.ctx) := by
+      match PqxdhServerRegistrationPublication.prehash state.2.server token.pending payload with
+      | none => pure (none, (state.1, { state.2 with pending := Function.update state.2.pending session none }))
+      | some candidate =>
+        (nativeHash (PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf token.init)
+          (PqxdhTranscriptAd.serverResponse candidate))).run state >>= fun hashed =>
+        (fun result =>
+          let settled := settle hashed.2.2.server result.1
+          (settled.1, (hashed.2.1, { hashed.2.2 with
+            pending := Function.update hashed.2.2.pending session none
+            server := settled.2
+            ctx := result.2.2
+            ghost := { hashed.2.2.ghost with
+              seals := hashed.2.2.ghost.seals ++ result.2.1.map (fun context => (session, context)) } }))) <$>
+        (simulateQ (tailImpl setup codec checks)
+          (executeBuild (associatedData := PqxdhTranscriptAd.adOf hashed.1) setup token.pending token.root payload
+            (PqxdhTranscriptAd.adOf hashed.1) hashed.2.2.server)).run ([], hashed.2.2.ctx) := by
   change executeNativeBuild setup codec checks session payload state = _
   unfold executeNativeBuild
   rw [nativeGet_bind, found]
   dsimp only
-  rw [nativeCoins_bind, map_eq_bind_pure_comp]
-  apply bind_congr
-  intro result
-  rfl
+  cases PqxdhServerRegistrationPublication.prehash state.2.server token.pending payload with
+  | none => rfl
+  | some candidate =>
+    dsimp only
+    change (nativeHash _ state >>= fun hashed => _) = _
+    apply bind_congr
+    rintro ⟨digest, after⟩
+    dsimp only
+    rw [nativeGet_bind, nativeCoins_bind, map_eq_bind_pure_comp]
+    apply bind_congr
+    intro result
+    rfl
 
 /-- A missing token produces no response and changes no field, cache or log. -/
 theorem native_missing (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -85,9 +110,15 @@ theorem token_consumed (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
     exact found
   | some token =>
     rw [native_present setup codec checks session payload state token found] at supported
-    simp only [support_map, Set.mem_image] at supported
-    obtain ⟨actual, _, rfl⟩ := supported
-    simp only [Function.update_self]
+    cases prehashed : PqxdhServerRegistrationPublication.prehash state.2.server token.pending payload with
+    | none =>
+      simp only [prehashed, support_pure, Set.mem_singleton_iff] at supported
+      subst result
+      simp only [Function.update_self]
+    | some candidate =>
+      simp only [prehashed, mem_support_bind_iff, support_map, Set.mem_image] at supported
+      obtain ⟨hashed, _, actual, _, rfl⟩ := supported
+      simp only [Function.update_self]
 
 /-- The exact extracted executor is the build branch of the original shared registration scheduler; owner records and the original root-family state remain intact. -/
 theorem scheduler_build (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -120,10 +151,10 @@ theorem deployment_complete {Result : Type} (setup : Setup baseSpec KemSK)
   simp only [PqxdhDeploymentNative.onNative, PqxdhRegistrationSchedule.onShared, StateT.run]
   simp only [map_eq_bind_pure_comp, bind_assoc, Function.comp_apply, pure_bind]
 
-/-- The existing actual native build budget transfers unchanged: at most one 64-byte CTX table miss, with zero draws on a hit. Real initializer, HKDF, AEAD, writer and local work are separate from this uniform-query count. -/
+/-- The actual native build budget transfers unchanged: at most one 64-byte transcript-hash miss and one 64-byte CTX table miss, with zero draws on hits. Real initializer, HKDF, AEAD, writer and local work are separate from this uniform-query count. -/
 theorem native_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (session : Nat) (payload : Option Pqxdh.Bytes) (state : NativeState KemSK) :
-    ((executeNativeBuild setup codec checks session payload).run state).IsTotalQueryBound 64 := by
+    ((executeNativeBuild setup codec checks session payload).run state).IsTotalQueryBound 128 := by
   rw [native_exact]
   exact PqxdhServerAuthNativeUniformCosts.native_build_uniform setup codec checks session payload state
 

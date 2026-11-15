@@ -64,7 +64,7 @@ theorem assemble (views : Views) (leaves : Leaves views) (identifier : U64)
 omit m [Monad m] [LawfulMonad m] in
 theorem identity {source : RegistrationNativeMldsa.Source} {KemSK : Type}
     (view : MaterialView source KemSK) (views : Views) (leaves : Leaves views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (signing : beaconcrypt_crypto.crypto_sign.KeyPair) (identity : beaconcrypt_public_wrapper.auth.MldsaIdentity)
     (edPublic : view.edPublic signing.public_key=created.server.server.identity)
     (edPrivate : view.edSecret signing.secret_key=created.seed)

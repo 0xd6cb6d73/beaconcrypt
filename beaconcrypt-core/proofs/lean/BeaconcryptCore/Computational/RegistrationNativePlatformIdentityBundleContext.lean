@@ -19,7 +19,7 @@ variable {n : Nat} {ι KemSK Platform E Value Next Auxiliary : Type} {base : Ora
 variable {source : RegistrationNativeMldsa.Source}
 
 variable (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 
 noncomputable def runBase (work : StateT Platform (OracleComp (OriginalSpec n KemSK)) Value) :
     StateT (Context n KemSK × Platform) ProbComp Value := fun before =>

@@ -1,8 +1,9 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationWorldServerCompletion
+import BeaconcryptCore.Computational.RegistrationServerAdHash
 import BeaconcryptCore.Computational.RegistrationNativePlatformServerPublication
 
-/-! Effectful response writing is threaded through the actual logical native completion, after its existing first-record source controller and before actual peer installation. Ordinary source randomness is interpreted in the same outer monad as platform actions, and the native Local state retains its World and complete signing history. The record codec remains the original explicit boundary here; this module does not yet replace its pure frame writer or the deployed wrapper's repeated pin hash. -/
+/-! The actual response-dependent AD hash runs before initial record construction and peer reservation. Effectful response writing follows the first-record source controller and precedes peer installation. Ordinary randomness shares the outer monad with platform actions, and the native Local state retains its World and complete Server signing history. The record codec remains an explicit boundary. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -83,6 +84,19 @@ noncomputable def capability (coins : QueryImpl unifSpec m) :
 noncomputable def records (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (codec : Codec Reader Response) :
     QueryImpl RegistrationRecordPrimitives.Spec (StateT (State n Auxiliary) m) :=
   fun query => liftNative coins (RegistrationWorldRecords.handler setup codec query)
+
+/-- Arbitrary actual hash replies are consumed by the owned core continuation before record initialization. -/
+def adHashWith (hash : registration.HashRequest → m (core.option.Option (Std.Array U8 64#usize)))
+    (pending : registration.ServerAdHash) :
+    m (RustM (core.result.Result registration.ServerInitialKdf pqxdh.ServerState)) :=
+  RegistrationServerAdHash.runWith hash pending
+
+noncomputable def adHash (coins : QueryImpl unifSpec m) (pending : registration.ServerAdHash) :
+    StateT (State n Auxiliary) m
+      (RustM (core.result.Result registration.ServerInitialKdf pqxdh.ServerState)) :=
+  adHashWith (fun request => do
+    let digest ← capability coins (.hash (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request))
+    pure (.Some (RegistrationAuthenticationShared.digestArray digest))) pending
 
 def fromInitialWith
     (record : QueryImpl RegistrationRecordPrimitives.Spec m)
@@ -175,6 +189,18 @@ theorem fromInitialWith_interpret {κ : Type} {spec : OracleSpec κ}
   apply congrArg (continueResult published)
   funext ready
   exact installWith_interpret implementation capability control ready
+
+/-- The ordinary random interpreter preserves the selected AD hash and its exact continuation. -/
+theorem adHash_pure (pending : registration.ServerAdHash) :
+    adHash (n := n) (Auxiliary := Auxiliary) (QueryImpl.id' unifSpec) pending =
+      RegistrationWorldServerCompletion.adHash pending := by
+  have capability_id : capability (n := n) (Auxiliary := Auxiliary) (QueryImpl.id' unifSpec) =
+      RegistrationWorldServerCompletion.capability := by
+    funext query
+    exact liftNative_id _
+  unfold adHash adHashWith RegistrationServerAdHash.runWith
+  rw [capability_id]
+  cases requested : pending.request <;> simp only [RegistrationWorldServerCompletion.adHash, requested, bind_assoc, pure_bind]
 
 theorem installWith_native (control : pqxdh.ServerState) (published : registration.PublishedServerResponse Encoded) :
     installWith (RegistrationWorldServerCompletion.capability (n := n) (Auxiliary := Auxiliary)) control published =
@@ -287,3 +313,9 @@ end BeaconcryptCore.Computational.RegistrationNativePlatformServerCompletion
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativePlatformServerCompletion.fromInitial_pure
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformServerCompletion.adHash_pure' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformServerCompletion.adHash_pure

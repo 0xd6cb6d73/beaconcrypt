@@ -9,6 +9,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhBeaconPhase2SharedBounds
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhBeaconPhase2Shared
 open PqxdhBeaconPhase2Preparation (Bytes Word32 State)
 open PqxdhBeaconPhase2Bounds (simulate_total)
@@ -26,21 +27,21 @@ theorem collect_bound {I D K X Response Shared : Type} (identity : I) (prekey on
 
 /-- Temporary shared-output erasure remains one actual effect on either core admission outcome. -/
 theorem afterInputs_bound {I D K X Response Shared : Type} (control : pqxdh.BeaconInitSent) (inputs : Inputs Response Shared) :
-    (afterInputs (I := I) (D := D) (K := K) (X := X) control inputs).IsTotalQueryBound 1 := by
-  unfold afterInputs
+    (PqxdhBeaconPhase2Shared.afterInputs (completedBinding := completedBinding) (I := I) (D := D) (K := K) (X := X) control inputs).IsTotalQueryBound 1 := by
+  unfold PqxdhBeaconPhase2Shared.afterInputs
   rw [isTotalQueryBound_query_bind_iff]
   exact ⟨by decide, fun _ => by trivial⟩
 
 /-- The complete pre-root collection and admission cost at most thirteen callbacks without any successful-reply premise. -/
 theorem prepare_bound {I D K X Response Shared : Type} (control : pqxdh.BeaconInitSent)
     (identity : I) (prekey oneTime : D) (kem : K) (raw : Bytes) :
-    (prepare (X := X) (Response := Response) (Shared := Shared) control identity prekey oneTime kem raw).IsTotalQueryBound 13 := by
-  unfold prepare
+    (PqxdhBeaconPhase2Shared.prepare (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared) control identity prekey oneTime kem raw).IsTotalQueryBound 13 := by
+  unfold PqxdhBeaconPhase2Shared.prepare
   apply isTotalQueryBound_bind (collect_bound identity prekey oneTime kem raw) (n₂ := 1)
   intro result
   cases result with
   | none => trivial
-  | some inputs => exact afterInputs_bound control inputs
+  | some inputs => exact afterInputs_bound (completedBinding := completedBinding) control inputs
 
 /-- The exact post-root program retains the initial64/app queries and at most 51 KDF plus one hash and one AEAD call. -/
 theorem afterRoot_bound {Response Shared : Type} (decode : RawCtxReceive.FrameDecoder)
@@ -73,12 +74,12 @@ theorem tail_bound {Response Shared : Type} (decode : RawCtxReceive.FrameDecoder
 /-- Every active or inactive native-shaped Phase2 call retains the complete 69-callback bound without materializing the opaque secret. -/
 theorem owner_bound {I D K X Response Shared : Type} (decode : RawCtxReceive.FrameDecoder)
     (raw : Bytes) (state : State I D K) :
-    (owner (X := X) (Response := Response) (Shared := Shared) decode raw state).IsTotalQueryBound 69 := by
+    (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared) decode raw state).IsTotalQueryBound 69 := by
   cases active : state.beacon.phase with
   | initSent control prekey oneTime kem =>
-      simp only [owner, active]
+      simp only [PqxdhBeaconPhase2Shared.owner, active]
       apply isTotalQueryBound_bind (n₁ := 13) (n₂ := 56)
-      · apply simulate_total preLift _ 13 (prepare_bound _ _ _ _ _ _)
+      · apply simulate_total preLift _ 13 (prepare_bound (completedBinding := completedBinding) _ _ _ _ _ _)
         intro query
         exact (isQueryBoundP_true_iff _ _).mp
           ((isQueryBoundP_query_iff (spec := FullSpec I D K X Response Shared) (p := fun _ => True) (.inl query) 1).mpr (by decide))
@@ -91,7 +92,7 @@ theorem owner_bound {I D K X Response Shared : Type} (decode : RawCtxReceive.Fra
             intro query
             exact (isQueryBoundP_true_iff _ _).mp
               ((isQueryBoundP_query_iff (spec := FullSpec I D K X Response Shared) (p := fun _ => True) (.inr query) 1).mpr (by decide))
-  | _ => simp only [owner, active]; trivial
+  | _ => simp only [PqxdhBeaconPhase2Shared.owner, active]; trivial
 
 /-- Every selected underlying callback bill is charged on the actual opaque implementation, without access to a byte realization. -/
 theorem interpreted_bound {I D K X Response Shared Auxiliary ι : Type} {base : OracleSpec ι}
@@ -99,8 +100,8 @@ theorem interpreted_bound {I D K X Response Shared Auxiliary ι : Type} {base : 
     (predicate : base.Domain → Prop) [DecidablePred predicate] (qCall : Nat)
     (step : ∀ query auxiliary, ((handler query).run auxiliary).IsQueryBoundP predicate qCall)
     (decode : RawCtxReceive.FrameDecoder) (raw : Bytes) (state : State I D K) (auxiliary : Auxiliary) :
-    ((simulateQ handler (owner decode raw state)).run auxiliary).IsQueryBoundP predicate (69 * qCall) :=
-  PqxdhBeaconPhase2Bounds.interpreted_total_bound handler predicate qCall 69 step _ (owner_bound decode raw state) auxiliary
+    ((simulateQ handler (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) decode raw state)).run auxiliary).IsQueryBoundP predicate (69 * qCall) :=
+  PqxdhBeaconPhase2Bounds.interpreted_total_bound handler predicate qCall 69 step _ (owner_bound (completedBinding := completedBinding) decode raw state) auxiliary
 
 /-- A following private computation retains the complete actual owner and callback poststate and pays its own selected query allowance. -/
 theorem continuation_bound {I D K X Response Shared Auxiliary Result ι : Type} {base : OracleSpec ι}
@@ -110,9 +111,9 @@ theorem continuation_bound {I D K X Response Shared Auxiliary Result ι : Type} 
     (decode : RawCtxReceive.FrameDecoder) (raw : Bytes) (state : State I D K) (auxiliary : Auxiliary)
     (next : Option Bytes → State I D K → Auxiliary → OracleComp base Result)
     (nextBound : ∀ reply nextState current, (next reply nextState current).IsQueryBoundP predicate qNext) :
-    ((simulateQ handler (owner decode raw state)).run auxiliary >>= fun result =>
+    ((simulateQ handler (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) decode raw state)).run auxiliary >>= fun result =>
       next result.1.1 result.1.2 result.2).IsQueryBoundP predicate (69 * qCall + qNext) :=
-  isQueryBoundP_bind (interpreted_bound handler predicate qCall step decode raw state auxiliary)
+  isQueryBoundP_bind (interpreted_bound (completedBinding := completedBinding) handler predicate qCall step decode raw state auxiliary)
     (fun result _ => nextBound result.1.1 result.1.2 result.2)
 
 def isDecapsulation {I D K X Response Shared : Type} : Query I D K X Response Shared → Bool
@@ -140,15 +141,15 @@ theorem collect_decapsulation {I D K X Response Shared : Type} (identity : I) (p
 /-- Core admission and temporary erasure cannot introduce another decapsulation. -/
 theorem prepare_decapsulation {I D K X Response Shared : Type} (control : pqxdh.BeaconInitSent)
     (identity : I) (prekey oneTime : D) (kem : K) (raw : Bytes) :
-    (prepare (X := X) (Response := Response) (Shared := Shared) control identity prekey oneTime kem raw).IsQueryBoundP
+    (PqxdhBeaconPhase2Shared.prepare (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared) control identity prekey oneTime kem raw).IsQueryBoundP
       (fun query => isDecapsulation query = true) 1 := by
-  unfold prepare
+  unfold PqxdhBeaconPhase2Shared.prepare
   apply isQueryBoundP_bind (collect_decapsulation identity prekey oneTime kem raw) (m := 0)
   intro reply _
   cases reply with
   | none => trivial
   | some inputs =>
-      unfold afterInputs
+      unfold PqxdhBeaconPhase2Shared.afterInputs
       rw [isQueryBoundP_query_bind_iff]
       simp only [isDecapsulation, Bool.false_eq_true, not_false_eq_true, true_or, ite_false, true_and]
       intro erased
@@ -190,13 +191,13 @@ theorem owner_selected_bound {I D K X Response Shared : Type}
     (predicate : (FullSpec I D K X Response Shared).Domain → Prop) [DecidablePred predicate]
     (qPre qTail : Nat)
     (preBound : ∀ control identity prekey oneTime kem raw,
-      (prepare control identity prekey oneTime kem raw).IsQueryBoundP (fun query => predicate (.inl query)) qPre)
+      (PqxdhBeaconPhase2Shared.prepare (completedBinding := completedBinding) control identity prekey oneTime kem raw).IsQueryBoundP (fun query => predicate (.inl query)) qPre)
     (tailBound : ∀ decode pending, (tail decode pending).IsQueryBoundP (fun query => predicate (.inr query)) qTail)
     (decode : RawCtxReceive.FrameDecoder) (raw : Bytes) (state : State I D K) :
-    (owner decode raw state).IsQueryBoundP predicate (qPre + qTail) := by
+    (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) decode raw state).IsQueryBoundP predicate (qPre + qTail) := by
   cases active : state.beacon.phase with
   | initSent control prekey oneTime kem =>
-      simp only [owner, active]
+      simp only [PqxdhBeaconPhase2Shared.owner, active]
       apply isQueryBoundP_bind (n := qPre) (m := qTail)
       · apply RawCtxSourceOpen.simulate_bound preLift (fun query => predicate (.inl query)) predicate _ qPre
           (preBound _ _ _ _ _ _)
@@ -213,7 +214,7 @@ theorem owner_selected_bound {I D K X Response Shared : Type}
             intro query
             exact (isQueryBoundP_query_iff (spec := FullSpec I D K X Response Shared) (p := predicate) (.inr query) _).mpr
               (by split_ifs <;> simp_all)
-  | _ => simp only [owner, active]; trivial
+  | _ => simp only [PqxdhBeaconPhase2Shared.owner, active]; trivial
 
 def decapsulationCall {I D K X Response Shared : Type} : (FullSpec I D K X Response Shared).Domain → Bool
   | .inl query => isDecapsulation query
@@ -226,22 +227,22 @@ def rootCall {I D K X Response Shared : Type} : (FullSpec I D K X Response Share
 /-- The actual opaque owner reaches at most one original decapsulation site, even when later DH, root or opening work rejects. -/
 theorem owner_decapsulation {I D K X Response Shared : Type} (decode : RawCtxReceive.FrameDecoder)
     (raw : Bytes) (state : State I D K) :
-    (owner (X := X) (Response := Response) (Shared := Shared) decode raw state).IsQueryBoundP
+    (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared) decode raw state).IsQueryBoundP
       (fun query => decapsulationCall query = true) 1 := by
-  apply owner_selected_bound _ 1 0
+  apply owner_selected_bound (completedBinding := completedBinding) _ 1 0
   · intro control identity prekey oneTime kem raw
-    exact prepare_decapsulation control identity prekey oneTime kem raw
+    exact prepare_decapsulation (completedBinding := completedBinding) control identity prekey oneTime kem raw
   · intro decode pending
     simpa only [decapsulationCall, Bool.false_eq_true] using isQueryBoundP_false (tail decode pending) 0
 
 /-- Every active, rejected, repeated or inactive attempt has at most one private root call; no accepted-sequence premise shortens the earlier work. -/
 theorem owner_root {I D K X Response Shared : Type} (decode : RawCtxReceive.FrameDecoder)
     (raw : Bytes) (state : State I D K) :
-    (owner (X := X) (Response := Response) (Shared := Shared) decode raw state).IsQueryBoundP
+    (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared) decode raw state).IsQueryBoundP
       (fun query => rootCall query = true) 1 := by
-  apply owner_selected_bound _ 0 1
+  apply owner_selected_bound (completedBinding := completedBinding) _ 0 1
   · intro control identity prekey oneTime kem raw
-    simpa only [rootCall, Bool.false_eq_true] using isQueryBoundP_false (prepare control identity prekey oneTime kem raw) 0
+    simpa only [rootCall, Bool.false_eq_true] using isQueryBoundP_false (PqxdhBeaconPhase2Shared.prepare (completedBinding := completedBinding) control identity prekey oneTime kem raw) 0
   · intro decode pending
     exact tail_root decode pending
 

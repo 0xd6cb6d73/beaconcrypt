@@ -52,13 +52,11 @@ private theorem pin_phase (current : session.ServerAuthenticationPin) (before : 
     (result : RegistrationNativeServerPinRecompute.PinReply × Private)
     (supported : result ∈ support ((RegistrationNativePlatformServerReferenceAccept.pin effects current).run before)) :
     (kem result.2).2 = (kem before).2 := by
-  rw [RegistrationNativePlatformSecretWordTargetOpenLift.pin,StateT.run_map,support_map] at supported
-  obtain ⟨hashed,called,equal⟩ := supported
-  have unchanged := effects_phase setup selected pairs publicKey challenge implementation kem input contract
-    (((PqxdhRecordLiftInterface.EnvEffects n).query (.inr (.hash (PqxdhRefinement.absBytes current.public_key)))) : OracleComp (PqxdhRecordLiftInterface.EnvEffects n) _) before hashed
-    (by simpa only [simulateQ_spec_query] using called)
-  cases equal
-  exact unchanged
+  rw [RegistrationNativePlatformSecretWordTargetOpenLift.pin] at supported
+  simp only [StateT.run_pure, mem_support_pure_iff] at supported
+  cases supported
+  exact effects_phase setup selected pairs publicKey challenge implementation kem input contract
+    (pure ()) before ((), before) (by simp)
 
 omit contract in
 private theorem lifted_run (work : StateT Private ProbComp A) (before : State Private) :

@@ -26,7 +26,7 @@ def analysisDecision (guess : Value → Bool)
   projection.1.elim false fun finished => guess finished.1
 
 def HiddenTests (crypto : Pqxdh.Crypto) (wire : RegistrationNativeWire.Wire) (serverKeyId : U64)
-    (finished : PqxdhRegistrationJointServerBirth.ClientCreated Unit × (Value × RegistrationNativeLedger.State) × E)
+    (finished : PqxdhRegistrationJointServerBirth.ClientCreated (Std.Array U8 151#usize) × (Value × RegistrationNativeLedger.State) × E)
     (slots : PqxdhDeploymentInterface.Handle → Option (PqxdhRecordLiftInterface.Slot n)) : Prop :=
   finished.2.1.2.ledger.test.isSome ∧ RegistrationNativeLorCanonical.OnTests crypto wire serverKeyId
     finished.2.1.2.ledger.transcript (fun handle => (slots handle).isSome)
@@ -113,7 +113,7 @@ theorem initialized_lor (setup : Setup base KemSK) (wire : RegistrationNativeWir
     (route : RawCtxServerRouting.SenderDecoder) (env : RegistrationNativeEntropyInterface.Environment n E)
     (serverKeyId : U64) (bounds : PqxdhDeploymentInterface.FreshBounds) (budget : PqxdhDeploymentInterface.Budget)
     (work : OracleComp (RegistrationNativeInterface.ModeSpec .P) Value) (filter : RegistrationNativeLorEvents.Filter Value) (guess : Value → Bool)
-    (target : Fin budget.accept × Fin budget.capacity) (created : PqxdhLiveServerConstruction.Created Unit) (initial : E)
+    (target : Fin budget.accept × Fin budget.capacity) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (initial : E)
     (shell : CborRecordWorldClient.Shell) (control : PqxdhRecordLiftProtocol.Control n) (secret : PqxdhRecordLiftIdeal.CtxPrivate n) :
     𝒟[winning setup.source.crypto wire serverKeyId budget filter guess target <$>
       RegistrationNativeEntropyInitialized.run (fun _ => .random) id setup (RegistrationNativeWire.ledgerCodec wire)

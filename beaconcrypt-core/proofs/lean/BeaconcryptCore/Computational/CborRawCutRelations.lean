@@ -5,6 +5,7 @@ import BeaconcryptCore.Computational.CborRawInitializedCut
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.CborRawCutRelations
 open PqxdhServerAuthExperiment (Setup Codec Checks)
 open PqxdhDeploymentInterface (Spec)
@@ -65,16 +66,19 @@ theorem cut_prefix {Y : Type} (pool : PqxdhRegistrationJointPreparation.Pool Kem
   have creations := PqxdhRegistrationJointKemCommands.creations setup (CborRawCompile.sourceCodec wire parse) checks
     created.server.server.metadata.identityIndex (setup.joint.publicKeys created.seed)
     (CborRawCompile.compile setup wire parse (scanCE work t.accept)) budget certified'
-    (PqxdhRegistrationJointGeneratedFinish.encodeState setup (sourceInit created pool)).owners
+    ((PqxdhRegistrationJointGeneratedFinish.encodeState setup (sourceInit created pool)).owners,
+      (PqxdhRegistrationJointGeneratedFinish.encodeState setup (sourceInit created pool)).inits)
     (sourceInit created pool).shared
   have image := PqxdhDeploymentIdealPoolSource.kemCommands_reserved setup (CborRawCompile.sourceCodec wire parse) checks created.seed
     created.server.server.metadata.identityIndex (p.pool t)
     (CborRawCompile.compile setup wire parse (scanCE work t.accept)) (sourceInit created pool) owned
-  have mapped : (((reached.1, (PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2).owners),
+  have mapped : (((reached.1, ((PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2).owners,
+        (PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2).inits)),
       reached.2.shared), reached.2.pool) ∈ support ((simulateQ (PqxdhDeploymentIdealPoolSource.reservedAt setup (p.pool t))
         (PqxdhRegistrationJointKemCommands.program setup (CborRawCompile.sourceCodec wire parse) checks created.server.server.metadata.identityIndex
           (setup.joint.publicKeys created.seed) (CborRawCompile.compile setup wire parse (scanCE work t.accept))
-          (PqxdhRegistrationJointGeneratedFinish.encodeState setup (sourceInit created pool)).owners
+          ((PqxdhRegistrationJointGeneratedFinish.encodeState setup (sourceInit created pool)).owners,
+      (PqxdhRegistrationJointGeneratedFinish.encodeState setup (sourceInit created pool)).inits)
           (sourceInit created pool).shared)).run (sourceInit created pool).pool) := by
     rw [image, support_map]
     exact ⟨reached, member, rfl⟩

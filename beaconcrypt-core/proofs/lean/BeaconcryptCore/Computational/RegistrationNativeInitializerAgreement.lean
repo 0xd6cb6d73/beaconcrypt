@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeInitializerFields
+import BeaconcryptCore.Computational.RawCtxSourceHkdf
 
 /-! The actual source initializer pending values compute complementary native role kernels from a common derived root and the concrete fixed-source initial KDF. This is a local functional composition; the initialized path wrapper supplies root equality separately. -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -20,14 +21,14 @@ theorem kernels {AD PT CT : Type}
     (control : pqxdh.ServerState) (pin : session.ServerAuthenticationPin) (availability : pqxdh.KeyIdAvailability)
     (serverCapability : agreement.ServerAgreement) (beaconCapability : agreement.BeaconAgreement) (application : Slice U8)
     (serverInitial : registration.ServerInitialKdf) (beaconInitial : registration.BeaconInitialKdf)
-    (serverStarted : registration.begin_server_completion control pin availability serverCapability application = .ok (.Ok serverInitial))
+    (serverStarted : BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission control pin availability serverCapability application serverInitial)
     (beaconStarted : registration.begin_beacon_completion beaconCapability = .ok beaconInitial)
     (sameRoot : serverCapability.root.bytes = beaconCapability.root.bytes) :
     ∃ beaconOrigin serverOrigin beaconKernel serverKernel,
       pqxdh.concrete.resume_initial_ratchet_kdf beaconInitial.pending
-        (RawCtxSourceHkdf.initialResponse source.crypto ⟨beaconCapability.root.bytes, ratchet.SYM_RATCHET_INFO⟩) = .ok beaconKernel ∧
+        (RawCtxSourceHkdf.initialResponse source.crypto ⟨beaconCapability.root.bytes, ratchet.INITIAL_RATCHET_INFO⟩) = .ok beaconKernel ∧
       pqxdh.concrete.resume_initial_ratchet_kdf serverInitial.pending
-        (RawCtxSourceHkdf.initialResponse source.crypto ⟨serverCapability.root.bytes, ratchet.SYM_RATCHET_INFO⟩) = .ok serverKernel ∧
+        (RawCtxSourceHkdf.initialResponse source.crypto ⟨serverCapability.root.bytes, ratchet.INITIAL_RATCHET_INFO⟩) = .ok serverKernel ∧
       ConcreteSession crypto beaconOrigin serverOrigin beaconKernel serverKernel ∧
       beaconKernel.refined.send_chain = serverKernel.refined.receive_chain ∧
       beaconKernel.refined.receive_chain = serverKernel.refined.send_chain ∧

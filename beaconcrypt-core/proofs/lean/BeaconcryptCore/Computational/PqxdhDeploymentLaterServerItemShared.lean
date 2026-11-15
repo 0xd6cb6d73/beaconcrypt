@@ -13,6 +13,7 @@ Proof. `opaqueBranchL_grouped`: the router-free logged branch of `PqxdhDeploymen
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
+set_option warningAsError true
 set_option maxRecDepth 100000
 namespace BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemShared
 open PqxdhKemIndCca PqxdhInitializerSecrecy PqxdhServerAuthExperiment PqxdhJointIdentity
@@ -100,7 +101,7 @@ noncomputable def groupedResumeL (setup : Setup baseSpec KemSK) (codec : Codec R
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)
     (value : PqxdhServerRootPreparation.Verified Reader)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)
-    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry) (log : Log)
+    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log)
     (next : Option Nat → OracleComp (PqxdhDeploymentLaterServerSource.Spec KemSK) X) (selected : Nat)
     (ciphertext : MlKem768Ciphertext) (candidate : MlKemSharedSecret) :
     OracleComp (PqxdhRegistrationJointKemEncapsulation.Spec KemSK) ((R × Local) × NativeState KemSK) := do
@@ -118,7 +119,7 @@ theorem resume_groupedL (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)
     (value : PqxdhServerRootPreparation.Verified Reader)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)
-    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry) (log : Log)
+    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log)
     (next : Option Nat → OracleComp (PqxdhDeploymentLaterServerSource.Spec KemSK) X) (selected : Nat)
     (ciphertext : MlKem768Ciphertext) (candidate : MlKemSharedSecret) :
     simulateQ (PqxdhRegistrationJointKemEncapsulation.actual setup)
@@ -272,7 +273,7 @@ theorem groupedResumeL_split (setup : Setup baseSpec KemSK) (codec : Codec Reade
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)
     (value : PqxdhServerRootPreparation.Verified Reader)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)
-    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry) (log : Log)
+    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log)
     (next : Option Nat → OracleComp (PqxdhDeploymentLaterServerSource.Spec KemSK) X) (selected : Nat)
     (ciphertext : MlKem768Ciphertext) (candidate : MlKemSharedSecret) :
     groupedResumeL setup codec checks identityIndex publicIdentity observe raw value ephemeral consumed native owners

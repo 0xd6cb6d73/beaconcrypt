@@ -141,7 +141,7 @@ def view (before : Full (n := n) (KemSK := KemSK) (Platform := Platform) (mlSour
 
 section Actual
 variable (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (selected index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner mlSource) (request : registration.MldsaSigningRequest)
 variable (placeholder : Ed25519Signature)
 local notation "action(" payload "," digest ")" => RegistrationNativePlatformIdentityCtxMain.beacon setup checks representation created

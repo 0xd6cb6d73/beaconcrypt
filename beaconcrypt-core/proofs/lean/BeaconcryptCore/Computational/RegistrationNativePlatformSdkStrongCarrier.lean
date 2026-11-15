@@ -25,14 +25,14 @@ def OtkPublic (publicKey : PqxdhJointGapDh.ScalarBytes→Std.Array U8 32#usize)
 
 structure StrongCarrier (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (current : Native×Platform) where
   base : Carrier (R:=R) view views setup.joint created credential current
   otkPublic : OtkPublic (fun scalar=>PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)) view base.objects.beacons
 
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK)
 variable (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : AdapterPublicWrapperStorage.Views)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 
 noncomputable def empty (current : Native×Platform) (objects : Carrier (R:=R) view views setup.joint created credential current)
     (missing : current.1.beacons=[]) : StrongCarrier (R:=R) setup view views created credential current := by

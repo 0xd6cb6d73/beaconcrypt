@@ -17,8 +17,8 @@ The script verifies the archive checksum and invokes `cddl.exe --rust --mname Tr
 | --- | ---: | --- |
 | `cbordetver.rs` | 20,416 | `e60e27d58b3fe7eeaca202e9751b596c88884b4a76d5bf57a345a21861066d6c` |
 | `cbordetveraux.rs` | 194,647 | `36420e78b9feed0a4c4a1b6a57b28aeba16ae38be9c61f5ff8165fa088ac3589` |
-| `transport.rs` | 242,620 | `218245bef2baa287d6d2a77f6013fe7d78c887b4416a88756618240ad83e3fa8` |
+| `transport.rs` | 200,745 | `c271a30fe4aa35fb90782c7cec8755c50148fdab139fa7e1eadafd5e4b373b66` |
 
-The registration version `2` schema adds a fixed 1,952-byte ML-DSA-65 public key and fixed 3,309-byte signature to requests, and a fixed 3,309-byte signature to responses. Regeneration for this schema changed only `transport.rs`; both imported generic CBOR runtime files retain the hashes above. Data-frame schema and encoding are unchanged. Review the generated diff together with the schema and the independent codec fixtures.
+The registration version `3` schema removes the Beacon ML-DSA public key and signature from requests while retaining the fixed 3,309-byte Server signature in responses. The request is now a six-element CBOR array containing version, kind, and the four remaining key buffers; its complete encoding is 1,490 bytes. Regeneration changed only `transport.rs`; both imported generic CBOR runtime files retain the hashes above. Data-frame schema and encoding are unchanged. Review the generated diff together with the schema and the independent codec fixtures.
 
 Generation verifies the schema-specific F* module against shipped prechecked dependencies. This does not prove extracted Rust, handwritten wrappers, the compiler, or end-to-end protocol behavior.

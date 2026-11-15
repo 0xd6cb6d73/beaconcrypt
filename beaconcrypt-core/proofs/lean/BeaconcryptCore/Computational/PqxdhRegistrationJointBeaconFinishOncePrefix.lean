@@ -46,9 +46,9 @@ noncomputable def preTop (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
     (preLow setup codec checks identityIndex publicIdentity router)
 
 /-- The potential of the prefix: the owners holding the selected KEM index, plus one while the router has not yet handed it out. -/
-def prePotential (selected : Nat) (state : List EncodedEntry × (NativeState KemSK × PqxdhDynamicKemJointSource.State KemSK)) :
+def prePotential (selected : Nat) (state : (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) × (NativeState KemSK × PqxdhDynamicKemJointSource.State KemSK)) :
     Nat :=
-  ownerCount selected state.1 + pending selected (created state.2.2)
+  ownerCount selected state.1.1 + pending selected (created state.2.2)
 
 /-- A private-pool request of the source backend reaches the router unchanged, with the native state kept. -/
 theorem preLow_pool (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -82,14 +82,14 @@ theorem preLow_mono (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
 /-- A raw `create` of the source client keeps the prefix potential. -/
 theorem pre_create (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (selected : Nat) (counts : CountsCreates pool)
-    (pin : PqxdhBeaconPhase2Preparation.Word32) (keyId : Std.U64) (owners : List EncodedEntry)
+    (pin : PqxdhBeaconPhase2Preparation.Word32) (keyId : Std.U64) (owners : (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)))
     (native : NativeState KemSK) (lower : PqxdhDynamicKemJointSource.State KemSK) :
     ∀ result ∈ support (((simulateQ (preLow setup codec checks identityIndex publicIdentity
         (PqxdhDynamicKemJointRouter.combine coins primitives pool))
         ((PqxdhRegistrationJointRevealSchedule.client setup codec (.inl (.inr (.create pin keyId)))).run owners)).run).run
           (native, lower)), ∀ value, result.1 = some value →
-      ownerCount selected value.2 + pending selected (created result.2.2) ≤
-        ownerCount selected owners + pending selected (created lower) := by
+      ownerCount selected value.2.1 + pending selected (created result.2.2) ≤
+        ownerCount selected owners.1 + pending selected (created lower) := by
   intro result member value found
   rw [create_run, simulateQ_map, OptionT.run_map, StateT.run_map, ← QueryImpl.simulateQ_compose,
     option_lift_state (PqxdhDynamicKemJointRouter.combine coins primitives pool) _ (fun query extra below => by
@@ -118,7 +118,7 @@ theorem pre_create (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
 theorem pre_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (selected : Nat) (counts : CountsCreates pool)
     (query : (PqxdhRegistrationJointRevealSchedule.Spec KemSK).Domain)
-    (state : List EncodedEntry × (NativeState KemSK × PqxdhDynamicKemJointSource.State KemSK)) :
+    (state : (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) × (NativeState KemSK × PqxdhDynamicKemJointSource.State KemSK)) :
     ∀ result ∈ support (((preTop setup codec checks identityIndex publicIdentity
         (PqxdhDynamicKemJointRouter.combine coins primitives pool) query).run).run state),
       prePotential selected result.2 ≤ prePotential selected state := by
@@ -152,7 +152,7 @@ theorem pre_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) 
 theorem pre_run (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (selected : Nat) (counts : CountsCreates pool) {α : Type}
     (work : OracleComp (PqxdhRegistrationJointRevealSchedule.Spec KemSK) α)
-    (state : List EncodedEntry × (NativeState KemSK × PqxdhDynamicKemJointSource.State KemSK)) :
+    (state : (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) × (NativeState KemSK × PqxdhDynamicKemJointSource.State KemSK)) :
     ∀ result ∈ support (((simulateQ (preTop setup codec checks identityIndex publicIdentity
         (PqxdhDynamicKemJointRouter.combine coins primitives pool)) work).run).run state),
       prePotential selected result.2 ≤ prePotential selected state :=
@@ -164,14 +164,14 @@ theorem pre_run (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (
 /-- The source commands interpreted by the actual encapsulator and a KEM router do not increase the prefix potential. -/
 theorem commands_once (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (selected : Nat) (counts : CountsCreates pool) {α : Type}
-    (work : OracleComp (SourceSpec KemSK) α) (owners : List EncodedEntry) (native : NativeState KemSK)
+    (work : OracleComp (SourceSpec KemSK) α) (owners : (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))) (native : NativeState KemSK)
     (lower : PqxdhDynamicKemJointSource.State KemSK) :
     ∀ result ∈ support (((simulateQ (PqxdhDynamicKemJointRouter.combine coins primitives pool)
         (simulateQ (PqxdhRegistrationJointKemEncapsulation.actual setup)
           (PqxdhRegistrationJointKemEncapsulation.commands setup codec checks identityIndex publicIdentity work owners
             native))).run).run lower), ∀ reached, result.1 = some reached →
-      ownerCount selected reached.1.2 + pending selected (created result.2) ≤
-        ownerCount selected owners + pending selected (created lower) := by
+      ownerCount selected reached.1.2.1 + pending selected (created result.2) ≤
+        ownerCount selected owners.1 + pending selected (created lower) := by
   intro result member reached found
   rw [PqxdhRegistrationJointKemEncapsulation.commands, PqxdhRegistrationJointKemEncapsulation.program_actual,
     composeOpt_run, composeOpt_run, Functor.map_map, support_map] at member
@@ -195,15 +195,15 @@ variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response A X R : T
 /-- An active cut reached by the explicit opaque scan under the stopped router keeps the prefix potential of its start. -/
 theorem opaqueScan_once (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × PqxdhRegistrationJointAcceptCutTag.Tag → R)
-    (work : OracleComp (SourceSpec KemSK) X) (index : Nat) (owners : List EncodedEntry) (native : NativeState KemSK)
+    (work : OracleComp (SourceSpec KemSK) X) (index : Nat) (owners : (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))) (native : NativeState KemSK)
     (selected : Nat) (pairs : List (MlKem768PublicKey × KemSK)) (lower : PqxdhDynamicKemJointSource.State KemSK) :
     ∀ result ∈ support (((simulateQ (PqxdhDynamicKemJointRouter.stopped setup.baseImpl setup.joint setup.kem selected
         pairs) (opaqueScan (Reader := Reader) setup codec checks identityIndex publicIdentity observe work index owners
           native)).run).run lower),
       ∀ raw value ephemeral consumed native' owners' next,
         result.1 = some (.pending raw value ephemeral consumed native' owners' next) →
-        ownerCount selected owners' + pending selected (created result.2) ≤
-          ownerCount selected owners + pending selected (created lower) := by
+        ownerCount selected owners'.1 + pending selected (created result.2) ≤
+          ownerCount selected owners.1 + pending selected (created lower) := by
   have counts : CountsCreates (PqxdhDynamicKemRouter.source setup.baseImpl setup.kem selected pairs) :=
     source_counts _ _ _ _
   have mono : StepMono (PqxdhDynamicKemJointRouter.stopped setup.baseImpl setup.joint setup.kem selected pairs) created :=
@@ -274,7 +274,7 @@ theorem sourcePreOpaque_once (setup : Setup baseSpec KemSK) (codec : Codec Reade
     · rcases cut with outcome | ⟨raw, value, ephemeral, consumed, native, owners, next⟩
       · simp only [KemOnce]
       · simp only [KemOnce]
-        have := opaqueScan_once setup codec checks _ _ _ work index [] _ selected.val _ _ result resultReached raw value
+        have := opaqueScan_once setup codec checks _ _ _ work index ([], fun _ => none) _ selected.val _ _ result resultReached raw value
           ephemeral consumed native owners next cutCase
         have start : pending selected.val (created (born.2.1.1, PqxdhDynamicKemRouter.empty (KemSK := KemSK))) = 1 := by
           have zero : (PqxdhDynamicKemRouter.empty (KemSK := KemSK)).created = 0 := rfl

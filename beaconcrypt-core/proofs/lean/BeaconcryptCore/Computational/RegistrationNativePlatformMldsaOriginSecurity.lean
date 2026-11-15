@@ -59,17 +59,17 @@ theorem bad_game (ensureInit : StateT Unit ProbComp Bool) (identityIndex : Nat) 
   | none => simp only [current, RegistrationNativeMldsaTableStart.restored, Option.bind_none, RegistrationNativePlatformMldsaInitializedCover.badContinued]
   | some initial =>
       have member : initial ∈ initialized.1 := by rw [current]; rfl
-      obtain ⟨key, server, owners⟩ := RegistrationNativeMldsaTableStart.initialized source setup ensureInit identityIndex serverKid initialized supported initial member
+      obtain ⟨key, server⟩ := RegistrationNativeMldsaTableStart.initialized source setup ensureInit identityIndex serverKid initialized supported initial member
       simp only [RegistrationNativeMldsaTableStart.restored, current, Option.bind_some, server.1, Option.map_some,
         RegistrationNativeMldsaMap.initial_public, RegistrationNativePlatformMldsaInitializedCover.badContinued]
       simp only [RegistrationNativeMldsaMap.initial,
         RegistrationNativeMldsaOpaque.restore_live source key initialized.2 initial.credential key server]
       have same := congrArg (fun distribution => (fun result => result.2.2) <$> distribution)
         (RegistrationNativePlatformMldsaOriginSource.program source setup checks wire route representation initial.created view failure allocation reserveRegistration reservePeer erased helper writer initial.credential key
-          (adversary initial.public) (((initial.state, previous), initialized.2), false) server owners)
+          (adversary initial.public) (((initial.state, previous), initialized.2), false) server)
       simpa only [Functor.map_map, Prod.map, id_eq, RegistrationNativePlatformMldsaOriginSource.project] using same.symm
 
-private theorem callback_program (created : PqxdhLiveServerConstruction.Created Unit)
+private theorem callback_program (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential (RegistrationNativeMldsaOpaque.handleSource source))
     (work : OracleComp RegistrationNativeRawAdapter.TypedSpec V)
     (before : RegistrationNativeExperiment.State n KemSK (RegistrationNativeMldsaOpaque.handleSource source))
@@ -106,14 +106,14 @@ theorem collision_game (ensureInit : StateT Unit ProbComp Bool) (identityIndex :
   | none => simp only [current, RegistrationNativeMldsaTableStart.restored, Option.bind_none, RegistrationNativePlatformMldsaInitializedCover.collisionContinued]
   | some initial =>
       have member : initial ∈ initialized.1 := by rw [current]; rfl
-      obtain ⟨key, server, owners⟩ := RegistrationNativeMldsaTableStart.initialized source setup ensureInit identityIndex serverKid initialized supported initial member
+      obtain ⟨key, server⟩ := RegistrationNativeMldsaTableStart.initialized source setup ensureInit identityIndex serverKid initialized supported initial member
       simp only [RegistrationNativeMldsaTableStart.restored, current, Option.bind_some, server.1, Option.map_some,
         RegistrationNativeMldsaMap.initial_public, RegistrationNativePlatformMldsaInitializedCover.collisionContinued]
       simp only [RegistrationNativeMldsaMap.initial,
         RegistrationNativeMldsaOpaque.restore_live source key initialized.2 initial.credential key server]
       have same := congrArg (fun distribution => (fun result => decide (CacheHasCollision result.1.2.server.world.world.1.primitive.2)) <$> distribution)
         (RegistrationNativePlatformMldsaTableRun.program source setup checks wire route representation initial.created initial.credential key
-          view failure allocation reserveRegistration reservePeer erased helper writer (adversary initial.public) initial.state previous initialized.2 server owners)
+          view failure allocation reserveRegistration reservePeer erased helper writer (adversary initial.public) initial.state previous initialized.2 server)
       have callback := callback_program source setup checks wire route representation view failure allocation reserveRegistration reservePeer erased helper writer initial.created initial.credential
         (adversary initial.public) initial.state previous initialized.2
       rw [callback]

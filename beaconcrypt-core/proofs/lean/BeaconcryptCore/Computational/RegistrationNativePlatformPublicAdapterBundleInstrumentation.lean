@@ -17,7 +17,7 @@ variable [material : PublicWrapperPlatform.Material] [platform : PublicWrapperPl
 variable [ed : AdapterInitEdPrimitive.Operations]
 variable (coins : QueryImpl unifSpec (StateT P ProbComp))
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT P ProbComp))
 variable (view : AdapterPublicWrapperState.MaterialView source KemSK)
 variable (index : Nat) (owner : RegistrationNativeBeaconFrontend.Owner source)
@@ -25,23 +25,16 @@ variable (self : beaconcrypt_public_wrapper.beacon.Beacon)
 local notation "Native"=>RegistrationNativeExperiment.State n KemSK source
 local notation "M"=>StateT (RegistrationNativePlatformCutJournal.State Native) (StateT P ProbComp)
 
-noncomputable def fallback (request : registration.MldsaSigningRequest) :
-    StateT (RegistrationNativeExperiment.State n KemSK source) (StateT P ProbComp) RegistrationSigningShared.SignReply :=
-  RegistrationNativePlatformExperiment.liftNative coins
-    (RegistrationNativeExperiment.beacon setup checks representation created
-      (RegistrationNativeBeaconFrontend.sample (n:=n) (KemSK:=KemSK) (mldsaSource:=source) (Auxiliary:=RegistrationServerRoleBackend.State)
-        (RegistrationNativeMldsa.owned source owner.mldsa request)))
-
-@[instance_reducible] noncomputable def locals (previous : LocalOperations (RustT M)) : LocalOperations (RustT M) := by
-  classical
-  exact {previous with
-    auth_MldsaIdentity_public_key:=fun identity=>pure (view.mldsa identity).publicKey
-    auth_MldsaIdentity_sign_requested:=fun identity request=>
-      if identity=self.authentication.identity then
-        ⟨RustM.ok <$>AdapterPublicBundleNative.sign
-          (AdapterPublicBundlePrimitives.signing coins setup checks representation created writer index owner)
-          (fallback (n:=n) coins setup checks representation created owner) request⟩
-      else previous.auth_MldsaIdentity_sign_requested identity request}
+@[instance_reducible] noncomputable def locals
+    (_coins : QueryImpl unifSpec (StateT P ProbComp))
+    (setup : PqxdhServerAuthExperiment.Setup base KemSK) (_checks : PqxdhServerAuthExperiment.Checks)
+    (_representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
+    (_created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
+    (_writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT P ProbComp))
+    (_view : AdapterPublicWrapperState.MaterialView source KemSK)
+    (_index : Nat) (_owner : RegistrationNativeBeaconFrontend.Owner source)
+    (_self : beaconcrypt_public_wrapper.beacon.Beacon)
+    (previous : LocalOperations (RustT M)) : LocalOperations (RustT M) := previous
 
 @[instance_reducible] noncomputable def crypto (previous : CryptoOperations (RustT M)) (failure : ed.Error) : CryptoOperations (RustT M) := by
   classical
@@ -64,13 +57,13 @@ theorem getters :
     AdapterPublicBundleMaterial.Getters (m:=M) view := by
   let : LocalOperations (RustT M):=locals coins setup checks representation created writer view index owner self previousLocal
   let : CryptoOperations (RustT M):=crypto coins setup checks representation created writer view index owner self previousCrypto failure
-  exact {ed:=fun _=>rfl,kx:=fun _=>rfl,kem:=fun _=>rfl,mldsa:=fun _=>rfl}
+  exact {ed:=fun _=>rfl,kx:=fun _=>rfl,kem:=fun _=>rfl}
 
 theorem leaves :
     let : LocalOperations (RustT M):=locals coins setup checks representation created writer view index owner self previousLocal
     let : CryptoOperations (RustT M):=crypto coins setup checks representation created writer view index owner self previousCrypto failure
     AdapterPublicBundleSourceExecution.Leaves (n:=n) coins setup checks representation created writer index owner failure
-      (fallback (n:=n) coins setup checks representation created owner) self := by
+      self := by
   let : LocalOperations (RustT M):=locals coins setup checks representation created writer view index owner self previousLocal
   let : CryptoOperations (RustT M):=crypto coins setup checks representation created writer view index owner self previousCrypto failure
   classical
@@ -80,13 +73,6 @@ theorem leaves :
       (⟨RustM.ok <$>RegistrationNativePlatformCutErasure.liftWorld
         (AdapterPublicBundlePrimitives.sign coins setup checks representation created writer index owner failure message)⟩ : RustT M _)
       else previousCrypto.edSign message self.identity_key.secret_key).run=_
-    rw [ite_eq_left rfl]
-  · intro request
-    change (if self.authentication.identity=self.authentication.identity then
-      (⟨RustM.ok <$>AdapterPublicBundleNative.sign
-        (AdapterPublicBundlePrimitives.signing coins setup checks representation created writer index owner)
-        (fallback (n:=n) coins setup checks representation created owner) request⟩ : RustT M _)
-      else previousLocal.auth_MldsaIdentity_sign_requested self.authentication.identity request).run=_
     rw [ite_eq_left rfl]
 
 variable [original : CryptoOperations (RustT ProbComp)]

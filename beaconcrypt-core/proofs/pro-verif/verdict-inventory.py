@@ -227,7 +227,15 @@ def expected_verdicts(directory=HERE):
         for i, line in enumerate(driver.EXPOSED, 1)
     )
     driver = module("check-phase2-x25519-alias", directory)
-    for target, status in (("canonical", "true"), ("alias", "false")):
+    # Transcript AD151 binds the aliased ephemeral bytes (alias is now true); the
+    # counterfactual environment omitting only that field reproduces the alias
+    # counterexamples.
+    for target, status in (
+        ("canonical", "true"),
+        ("alias", "true"),
+        ("ad-omits-ephemeral-canonical", "true"),
+        ("ad-omits-ephemeral-alias", "false"),
+    ):
         queries = re.findall(
             r"\bquery\b.*?\.", driver.selected_queries(directory), re.S
         )

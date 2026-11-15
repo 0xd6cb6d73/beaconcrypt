@@ -21,7 +21,7 @@ noncomputable def native (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource
 
 /-- The actual initial64 source reply is evaluated locally, retaining every hash request for the shared World. -/
 theorem initial_source (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
-    (writer : RawCtxMixedShared.Writer) (request : SymmetricRatchetKdfRequest) :
+    (writer : RawCtxMixedShared.Writer) (request : InitialRatchetKdfRequest) :
     native (n := n) source writer (.initialKdf request) =
       pure (.Some (RawCtxSourceHkdf.initialResponse source.crypto request)) := rfl
 
@@ -41,7 +41,7 @@ theorem initial_supplied (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource
         (supplied initial (PqxdhSecretInputKdf.first32 (initializer source root))
           (RawCtxSelectedInitialSecond.secondChain (initializer source root)) (fromRoot source root).1) := by
   have initialRequested : initial.request =
-      .ok ⟨PqxdhRootTableInitialization.rootArray root, SYM_RATCHET_INFO⟩ := by
+      .ok ⟨PqxdhRootTableInitialization.rootArray root, INITIAL_RATCHET_INFO⟩ := by
     simp only [registration.ServerInitialKdf.request, role,
       pqxdh.concrete.InitialRatchetKdfPending.impl.request, PqxdhInitialRatchetComplementarity.serverPending]
   obtain ⟨next, initialRun, nextRequested⟩ := RegistrationBoundSource.next_request initial _ role

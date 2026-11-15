@@ -16,7 +16,7 @@ variable {n : Nat} {ι KemSK Reader Response : Type} {base : OracleSpec ι}
 private theorem state_pure_apply {S X : Type} {m : Type → Type} [Monad m]
     (value : X) (state : S) : (pure value : StateT S m X) state = pure (value, state) := rfl
 
-theorem initialize_frame (created : PqxdhLiveServerConstruction.Created Unit)
+theorem initialize_frame (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (before : State n) (cache : (SeedSpec n).QueryCache) :
     (PqxdhRecordLiftWorld.initializeServer created).run (lens.set before cache) =
       Prod.map id (fun after => lens.set after cache) <$> (PqxdhRecordLiftWorld.initializeServer created).run before := by

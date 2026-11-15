@@ -37,15 +37,15 @@ theorem initial (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs)
 
 def EffectTagged : registration.BeaconInitEffect → Prop
   | .Ed25519SigningRequested next => Tagged next.state.started
-  | .FingerprintRequested next => Tagged next.state.started
+  | .HashRequested next => Tagged next.state.started
   | _ => True
 
 /-- The literal Core begin either rejects or enters signing with the actual source tag invariant. -/
 theorem begin (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize) :
-    ∃ effect, registration.begin_beacon_init control inputs coins pin mldsa = .ok effect ∧ EffectTagged effect := by
+    (pin : session.ServerAuthenticationPin) :
+    ∃ effect, registration.begin_beacon_init control inputs coins pin = .ok effect ∧ EffectTagged effect := by
   obtain ⟨started, startedRun, tagged⟩ := initial control inputs coins
-  obtain ⟨actual, actualRun, begun⟩ := RegistrationSigningContinuations.begin_beacon_init_exact control inputs coins pin mldsa
+  obtain ⟨actual, actualRun, begun⟩ := RegistrationSigningContinuations.begin_beacon_init_exact control inputs coins pin
   have same : actual = started := RustM.ok.inj (actualRun.symm.trans startedRun)
   subst actual
   rw [begun]
@@ -88,7 +88,7 @@ theorem preserved (pending : registration.BeaconEd25519Signing) (tagged : Tagged
       rw [retained]
       exact tagged
     case PqKey => exact False.elim facts.2
-  case FingerprintRequested next =>
+  case HashRequested next =>
     have retained := congrArg registration.BeaconInitState.started facts.2.2.2
     change next.state.started = pending.state.started at retained
     change Tagged next.state.started

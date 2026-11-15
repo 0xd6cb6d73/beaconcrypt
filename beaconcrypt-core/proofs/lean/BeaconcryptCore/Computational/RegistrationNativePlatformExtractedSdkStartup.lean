@@ -4,6 +4,7 @@ import BeaconcryptCore.Computational.RegistrationNativePlatformExtractedSdkIniti
 import BeaconcryptCore.Refinement.AdapterServerConstructorRetained
 import BeaconcryptCore.Refinement.AdapterServerConstructorKeyFrame
 import BeaconcryptCore.Refinement.AdapterServerConstructorMaterial
+import BeaconcryptCore.Refinement.AdapterServerConstructorGeneration
 open CoreModels Aeneas OracleComp OracleSpec
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -39,14 +40,13 @@ local notation "edSample"   =>   PqxdhRecordLiftWorld.sampled (n:=n) (AdapterSer
 local notation "mlSample"   =>   PqxdhRecordLiftWorld.sampled (n:=n) (RegistrationNativeMldsa.generate mlSource)
 variable (ed : AdapterServerConstructorJoint.EdContract generator view setup.joint
   (PqxdhRecordLiftWorld.sampled (n:=n) (AdapterServerConstructorStartup.edCore ensureInit)))
-variable (ml : AdapterBeaconConstructorGeneration.MldsaContract generator view
+variable (ml : AdapterServerConstructorGeneration.MldsaContract generator view
   (PqxdhRecordLiftWorld.sampled (n:=n) (RegistrationNativeMldsa.generate mlSource)))
 include views objects ed ml
 
 variable (edGetter : ∀key,(crypto.edPublicBytes key).run=pure (.ok (view.edPublic key)))
 variable (mlGetter : ∀identity,(localOps.auth_MldsaIdentity_public_key identity).run=pure (.ok (view.mldsa identity).publicKey))
-variable (hashLeaf : ∀request,(children.executeHash request).run=RegistrationNativeServerPinRecompute.nativeHash request)
-include edGetter mlGetter hashLeaf
+include edGetter mlGetter
 
 variable {Platform : Type}
 
@@ -58,18 +58,19 @@ noncomputable def carrier (identityIndex : Nat) (identifier : U64) (rng : R)
     (returned : receipt.ready=some ready) :
     RegistrationNativePlatformExtractedSdkCarrier.Carrier (R:=R) view views setup.joint ready.initial.created ready.initial.credential
       (ready.initial.state,previous) := by
-  have derived:=AdapterServerConstructorReady.material setup generator view views objects ensureInit ed ml edGetter mlGetter hashLeaf
+  have derived:=AdapterServerConstructorReady.material setup generator view views objects ensureInit ed ml edGetter mlGetter
     identityIndex identifier rng receipt ready supported returned
   exact RegistrationNativePlatformExtractedSdkInitialCarrier.ready view views setup.joint ready previous
     derived.1 derived.2.1 derived.2.2.1 derived.2.2.2
 
+omit children in
 theorem source_fields (identityIndex : Nat) (identifier : U64) (rng : R)
     (receipt : Receipt n KemSK R mlSource)
     (ready : AdapterServerConstructorInitialized.Ready n KemSK R mlSource)
     (previous : Platform)
     (supported : receipt∈support (game setup view identityIndex identifier generator rng))
     (returned : receipt.ready=some ready) :
-    let objects:=carrier setup generator view views objects ensureInit ed ml edGetter mlGetter hashLeaf identityIndex identifier rng receipt ready previous supported returned
+    let objects:=carrier setup generator view views objects ensureInit ed ml edGetter mlGetter identityIndex identifier rng receipt ready previous supported returned
     objects.objects.server=ready.stored ∧objects.objects.rng=ready.rng ∧
     objects.objects.beacons=(fun _ =>none) ∧objects.objects.tokens=(fun _ =>none) ∧
     objects.objects.nextOwner=0 ∧objects.objects.nextSession=0 ∧

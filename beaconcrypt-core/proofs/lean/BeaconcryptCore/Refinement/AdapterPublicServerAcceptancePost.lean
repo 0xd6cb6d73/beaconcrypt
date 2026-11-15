@@ -29,6 +29,9 @@ variable [containers : ContainerOperations (RustT (StateT (RegistrationNativeExp
 local notation "Native" => RegistrationNativeExperiment.State n KemSK mlSource
 local notation "NativeM" => StateT Native (StateT PlatformState ProbComp)
 
+attribute [local irreducible] AdapterPublicServerAuthenticationPrefix.program
+  AdapterPublicServerLookupReceipt.program
+
 theorem source {E R Error : Type} (coins : QueryImpl unifSpec (StateT PlatformState ProbComp))
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (codec : PqxdhServerAuthExperiment.Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
@@ -38,7 +41,7 @@ theorem source {E R Error : Type} (coins : QueryImpl unifSpec (StateT PlatformSt
     (generator : rand_core.TryCryptoRng R Error) (self : beaconcrypt_public_wrapper.server.Server)
     (input : Slice U8) (rng : R)
     (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (before after : Native) (related : AdapterPublicWrapperState.Server view views created credential self before.server)
     (edGetter : ∀ key, (@CryptoOperations.edPublicBytes material ed (RustT NativeM)
       (AdapterPublicAgreementNativePlatformInterpreter.operations coins original) key).run = pure (.ok (view.edPublic key)))
@@ -110,7 +113,7 @@ theorem actual {E R Error : Type} (coins : QueryImpl unifSpec (StateT PlatformSt
     (generator : rand_core.TryCryptoRng R Error) (self : beaconcrypt_public_wrapper.server.Server)
     (input : Slice U8) (rng : R)
     (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (before after : Native) (related : AdapterPublicWrapperState.Server view views created credential self before.server)
     (edGetter : ∀ key, (@CryptoOperations.edPublicBytes material ed (RustT NativeM)
       (AdapterPublicAgreementNativePlatformInterpreter.operations coins original) key).run = pure (.ok (view.edPublic key)))

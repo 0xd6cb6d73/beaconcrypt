@@ -70,7 +70,7 @@ def validated {Message Root : Type} (reader : Reader Message Root)
 
 /-- Pure payload access and sender validation commute, with the actual native AD width. -/
 theorem sourceFrame_eq_validated {Message Root : Type} (reader : Reader Message Root)
-    (expected : Std.U64) (ad raw : Pqxdh.Bytes) (had : ad.length = 281) :
+    (expected : Std.U64) (ad raw : Pqxdh.Bytes) (had : ad.length = 151) :
     sourceFrame reader expected raw = validated reader expected ad raw := by
   unfold sourceFrame validated decode
   split <;> simp_all only
@@ -213,7 +213,7 @@ noncomputable def sourceReceive {Message Root Metadata : Type} (reader : Reader 
 /-- The complete source prelude feeds exactly the existing owner program and all its private callbacks. -/
 theorem sourceReceive_exact {Message Root Metadata : Type} (reader : Reader Message Root)
     (raw : Pqxdh.Bytes) (state : RawCtxWholeOwner.OwnerState Metadata)
-    (had : state.owner.associatedData.length = 281) :
+    (had : state.owner.associatedData.length = 151) :
     sourceReceive reader raw state = RawCtxWholeOwner.rawReceive (decode reader) raw state := by
   have hframe := sourcePrepared_frame reader state.owner.expectedSender raw
   rw [sourceFrame_eq_validated reader state.owner.expectedSender state.owner.associatedData raw had]
@@ -263,7 +263,7 @@ theorem sourceGame_exact {Message Root Metadata PrimitiveState : Type}
     (impl : QueryImpl RawCtxWholeOwner.PrimitiveSpec (StateT PrimitiveState (OracleComp base)))
     (reader : Reader Message Root) (raw : Pqxdh.Bytes)
     (state : RawCtxWholeOwner.OwnerState Metadata) (primitive : PrimitiveState)
-    (had : state.owner.associatedData.length = 281) :
+    (had : state.owner.associatedData.length = 151) :
     sourceGame impl reader raw state primitive =
       RawCtxWholeOwner.rawGame impl (decode reader) raw state primitive := by
   simp only [sourceGame, sourceReceive_exact reader raw state had, RawCtxWholeOwner.rawGame]
@@ -275,15 +275,22 @@ theorem sourceGame_ready_slot {Message Root Metadata PrimitiveState : Type}
     (impl : QueryImpl RawCtxWholeOwner.PrimitiveSpec (StateT PrimitiveState (OracleComp base)))
     (reader : Reader Message Root) (raw : Pqxdh.Bytes)
     (state : RawCtxWholeOwner.OwnerState Metadata) (primitive : PrimitiveState)
-    (had : state.owner.associatedData.length = 281) :
+    (had : state.owner.associatedData.length = 151) :
     RawCtxNativeSlot.rawGame impl (decode reader) raw (RawCtxNativeSlot.ready state) primitive =
       (fun result => ((.ok result.1.1, RawCtxNativeSlot.ready result.1.2), result.2)) <$>
         sourceGame impl reader raw state primitive := by
   rw [sourceGame_exact impl reader raw state primitive had, RawCtxNativeSlot.rawGame_ready]
 
-/-- Server framing and lookup use the same source reader contract before the selected source receive. -/
+/-- Current Server routing reads the complete AD from the selected installed peer metadata. -/
+noncomputable def peerSessionData {Metadata PeerMetadata : Type}
+    (associatedData : PeerMetadata → Std.Array Std.U8 151#usize)
+    (server : RawCtxServerRouting.Server Metadata PeerMetadata) (kid : Std.U64) : Option Pqxdh.Bytes :=
+  (server.peers kid).map fun peer => PqxdhRefinement.absBytes (associatedData peer.metadata)
+
+/-- Server framing and both same-entry lookups use explicit current session metadata before the source receive. -/
 noncomputable def sourceServerGame {Message Root Metadata PeerMetadata PrimitiveState : Type}
     {ι : Type} {base : OracleSpec ι}
+    (associatedData : PeerMetadata → Std.Array Std.U8 151#usize)
     (impl : QueryImpl RawCtxWholeOwner.PrimitiveSpec (StateT PrimitiveState (OracleComp base)))
     (reader : Reader Message Root) (raw : Pqxdh.Bytes)
     (state : RawCtxServerRouting.State Metadata PeerMetadata) (primitive : PrimitiveState) :
@@ -292,7 +299,7 @@ noncomputable def sourceServerGame {Message Root Metadata PeerMetadata Primitive
   match sender reader raw with
   | none => pure ((.None, { state with rawAttempts := state.rawAttempts + 1 }), primitive)
   | some kid =>
-      match RawCtxServerRouting.peerAssociatedData state.server kid with
+      match peerSessionData associatedData state.server kid with
       | none => pure ((.None, { state with rawAttempts := state.rawAttempts + 1 }), primitive)
       | some ad =>
           match state.server.peers kid with
@@ -304,27 +311,53 @@ noncomputable def sourceServerGame {Message Root Metadata PeerMetadata Primitive
                 ⟨RawCtxServerRouting.putPeer state.server kid peer result.1.2.owner.kernel,
                   result.1.2.rawAttempts⟩), result.2)
 
-/-- Both source parses, exact same-entry AD and full map publication instantiate the checked server game. -/
-theorem sourceServerGame_exact {Message Root Metadata PeerMetadata PrimitiveState : Type}
+/-- The decoded whole-owner game uses the same exact metadata projection and complete Server publication. -/
+noncomputable def decodedServerGame {Message Root Metadata PeerMetadata PrimitiveState : Type}
     {ι : Type} {base : OracleSpec ι}
+    (associatedData : PeerMetadata → Std.Array Std.U8 151#usize)
     (impl : QueryImpl RawCtxWholeOwner.PrimitiveSpec (StateT PrimitiveState (OracleComp base)))
     (reader : Reader Message Root) (raw : Pqxdh.Bytes)
     (state : RawCtxServerRouting.State Metadata PeerMetadata) (primitive : PrimitiveState) :
-    sourceServerGame impl reader raw state primitive =
-      RawCtxServerRouting.rawGame impl (sender reader) (decode reader) raw state primitive := by
-  unfold sourceServerGame RawCtxServerRouting.rawGame
+    OracleComp base ((core.option.Option RawCtxWholeOwner.Decrypted ×
+      RawCtxServerRouting.State Metadata PeerMetadata) × PrimitiveState) :=
+  match sender reader raw with
+  | none => pure ((.None, { state with rawAttempts := state.rawAttempts + 1 }), primitive)
+  | some kid =>
+      match peerSessionData associatedData state.server kid with
+      | none => pure ((.None, { state with rawAttempts := state.rawAttempts + 1 }), primitive)
+      | some ad =>
+          match state.server.peers kid with
+          | none => pure ((.None, { state with rawAttempts := state.rawAttempts + 1 }), primitive)
+          | some peer => do
+              let result ← RawCtxWholeOwner.rawGame impl (decode reader) raw
+                ⟨RawCtxServerRouting.selectedOwner kid ad peer, state.rawAttempts⟩ primitive
+              pure ((result.1.1,
+                ⟨RawCtxServerRouting.putPeer state.server kid peer result.1.2.owner.kernel,
+                  result.1.2.rawAttempts⟩), result.2)
+
+/-- Exact source decoding preserves the installed AD151, same-entry map selection and complete primitive poststate. -/
+theorem sourceServerGame_exact {Message Root Metadata PeerMetadata PrimitiveState : Type}
+    {ι : Type} {base : OracleSpec ι}
+    (associatedData : PeerMetadata → Std.Array Std.U8 151#usize)
+    (impl : QueryImpl RawCtxWholeOwner.PrimitiveSpec (StateT PrimitiveState (OracleComp base)))
+    (reader : Reader Message Root) (raw : Pqxdh.Bytes)
+    (state : RawCtxServerRouting.State Metadata PeerMetadata) (primitive : PrimitiveState) :
+    sourceServerGame associatedData impl reader raw state primitive =
+      decodedServerGame associatedData impl reader raw state primitive := by
+  unfold sourceServerGame decodedServerGame
   cases sender reader raw
   · rfl
   · rename_i kid
     dsimp only
-    cases had : RawCtxServerRouting.peerAssociatedData state.server kid
-    · rfl
-    · rename_i ad
-      obtain ⟨peer, hpeer, rfl⟩ := RawCtxServerRouting.peerAssociatedData_some state.server kid ad had
-      simp only [hpeer, sourceGame_exact impl reader raw
-        ⟨RawCtxServerRouting.selectedOwner kid
-          (RawCtxServerRouting.associatedBytes state.server.identity peer.identity) peer, state.rawAttempts⟩ primitive
-        (RawCtxServerRouting.associatedBytes_length state.server.identity peer.identity)]
+    cases hpeer : state.server.peers kid
+    · simp only [peerSessionData, hpeer, Option.map_none]
+    · rename_i peer
+      have width : (PqxdhRefinement.absBytes (associatedData peer.metadata)).length = 151 := by
+        simpa [PqxdhRefinement.absBytes] using (associatedData peer.metadata).property
+      simp only [peerSessionData, hpeer, Option.map_some,
+        sourceGame_exact impl reader raw
+          ⟨RawCtxServerRouting.selectedOwner kid
+            (PqxdhRefinement.absBytes (associatedData peer.metadata)) peer, state.rawAttempts⟩ primitive width]
 
 end BeaconcryptCore.Computational.RawCtxFrameDecoding
 

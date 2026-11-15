@@ -3,7 +3,7 @@ import BeaconcryptCore.Computational.RegistrationNativeMldsaNoGenerate
 import BeaconcryptCore.Computational.RegistrationNativeMldsaStoppedSource
 import BeaconcryptCore.Computational.RegistrationNativeIdentityProfileCreateCaps
 
-/-! Actual named ML generation has a syntactic attempt bill independent of primitive coin counts or optional key-generation success. Startup calls generation once; only typed create can call it later. Bundle/build and every other original callback are generation-free on all reply paths. -/
+/-! Actual named ML generation has a syntactic attempt bill independent of primitive coin counts or optional key-generation success. Only Server startup calls generation. Beacon creation makes no named ML request. Bundle/build and every other original callback are generation-free on all reply paths. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -41,18 +41,21 @@ private theorem generated (accounting : RegistrationNativeMldsaCapability.Accoun
     ((RegistrationNativeMldsaProgram.call (source := source) accounting .generate).run before).IsQueryBoundP IsGenerate 1 := by
   simp [RegistrationNativeMldsaProgram.call, StateT.run, IsGenerate, RegistrationNativeMldsaNoGenerate.Allowed]
 
-/-- Every native create has at most one actual named generation attempt, before all source pin/hash/KEM work and failures. -/
-theorem create (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+/-- Current Beacon construction makes no ML generation request. -/
+theorem create_no_generate (setup : Setup base KemSK) (checks : Checks)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (before : RegistrationNativeExperiment.State n KemSK source) :
-    ((RegistrationNativeMldsaCreation.create setup checks representation created edPin mlPin keyId).run before).IsQueryBoundP IsGenerate 1 := by
-  simp only [RegistrationNativeMldsaCreation.create, StateT.run_bind]
-  apply isQueryBoundP_bind (m := 0)
-  · simpa only [RegistrationNativeMldsaCreation.world, StateT.run, isQueryBoundP_map_iff] using
-      generated (source := source) .environment before.server.world.world.1
-  · intro middle _
-    exact lifted _ middle.2
+    ((RegistrationNativeMldsaCreation.create setup checks representation created edPin mlPin keyId).run before).IsQueryBoundP IsGenerate 0 :=
+  lifted _ before
+
+/-- The existing coarse resource ceiling is implied by the exact zero-generation source result. -/
+theorem create (setup : Setup base KemSK) (checks : Checks)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
+    (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
+    (before : RegistrationNativeExperiment.State n KemSK source) :
+    ((RegistrationNativeMldsaCreation.create setup checks representation created edPin mlPin keyId).run before).IsQueryBoundP IsGenerate 1 :=
+  (create_no_generate setup checks representation created edPin mlPin keyId before).mono (Nat.zero_le 1)
 
 /-- Actual startup attempts generation at most once, including constructor rejection and every generated-key failure branch. -/
 theorem start (setup : Setup base KemSK) (ensureInit : StateT Unit ProbComp Bool) (identityIndex : Nat) (serverKid : U64) :
@@ -79,10 +82,10 @@ private theorem no_generate (work : OracleComp (Spec source) Value)
     work.IsQueryBoundP IsGenerate 0 :=
   (isQueryBoundP_zero_iff work (RegistrationNativeMldsaNoGenerate.Allowed source)).mpr safe
 
-/-- The actual native callback bills generation only to create; all other typed callbacks, including bundle/build, have zero generation. -/
+/-- The former per-create ceiling remains a conservative resource upper bound. Actual Beacon creation has zero generation, as create_no_generate establishes. -/
 theorem handler (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential source)
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (before : RegistrationNativeExperiment.State n KemSK source) :
     ((RegistrationNativeMldsaProfile.handler setup checks wire route representation created credential query).run before).IsQueryBoundP
       IsGenerate (if RegistrationNativeRawAdapter.kind query = (1 : Fin 12) then 1 else 0) := by
@@ -99,10 +102,45 @@ theorem handler (setup : Setup base KemSK) (checks : Checks) (wire : Registratio
           checks wire.encodeResponse index application before.server)
     | _ => exact lifted _ before
 
+/-- After the single Server startup generation, every current typed callback makes zero ML generation requests. -/
+theorem handler_no_generate (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
+    (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential source)
+    (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (before : RegistrationNativeExperiment.State n KemSK source) :
+    ((RegistrationNativeMldsaProfile.handler setup checks wire route representation created credential query).run before).IsQueryBoundP
+      IsGenerate 0 := by
+  cases query with
+  | inl coin => exact lifted _ before
+  | inr query => cases query with
+    | create edPin mlPin keyId => exact create_no_generate setup checks representation created edPin mlPin keyId before
+    | bundle index => exact no_generate _ (RegistrationNativeMldsaNoGenerate.Bundle.sourceBundle source setup checks representation created wire index before)
+    | build index application =>
+      change ((fun result => (result.1, { before with server := result.2 })) <$>
+        (RegistrationNativeMldsaServer.build source credential setup (RegistrationNativeWire.ledgerCodec wire) checks wire.encodeResponse index application).run before.server).IsQueryBoundP IsGenerate 0
+      simpa only [isQueryBoundP_map_iff] using
+        no_generate _ (RegistrationNativeMldsaNoGenerate.Server.build source credential setup (RegistrationNativeWire.ledgerCodec wire)
+          checks wire.encodeResponse index application before.server)
+    | _ => exact lifted _ before
+
+/-- Arbitrary adaptive post-startup execution cannot generate any further ML key. -/
+theorem program_no_generate (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
+    (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential source)
+    (work : OracleComp RegistrationNativeRawAdapter.TypedSpec Value)
+    (before : RegistrationNativeExperiment.State n KemSK source) :
+    ((simulateQ (RegistrationNativeMldsaProfile.handler setup checks wire route representation created credential) work).run before).IsQueryBoundP IsGenerate 0 := by
+  induction work using OracleComp.inductionOn generalizing before with
+  | pure value => trivial
+  | query_bind query next ih =>
+      rw [simulateQ_bind, simulateQ_spec_query, StateT.run_bind]
+      exact isQueryBoundP_bind (n := 0) (m := 0)
+        (handler_no_generate setup checks wire route representation created credential query before)
+        (fun result _ => ih result.1 result.2)
+
 /-- Every adaptive typed source run inherits its literal create-attempt cap as a named ML generation cap. -/
 theorem program (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential source)
     (work : OracleComp RegistrationNativeRawAdapter.TypedSpec Value) (cap : Nat)
     (bounded : work.IsQueryBoundP (fun query => RegistrationNativeRawAdapter.kind query = (1 : Fin 12)) cap)
     (before : RegistrationNativeExperiment.State n KemSK source) :
@@ -116,7 +154,7 @@ theorem program (setup : Setup base KemSK) (checks : Checks) (wire : Registratio
 /-- First-candidate stopping cannot add named generation attempts; the same typed create cap applies for arbitrary fixed post-stop replies. -/
 theorem stopped {Candidate : Type} (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential source)
     (observe : RegistrationNativeMldsaStop.Observer (spec := RegistrationNativeRawAdapter.TypedSpec)
       (State := RegistrationNativeExperiment.State n KemSK source) (Candidate := Candidate))
     (defaultReply : (query : RegistrationNativeRawAdapter.TypedSpec.Domain) → RegistrationNativeRawAdapter.TypedSpec.Range query)
@@ -145,7 +183,7 @@ theorem stopped {Candidate : Type} (setup : Setup base KemSK) (checks : Checks) 
 /-- The literal full native compiler supplies exactly the original raw adversary create budget to named generation. -/
 theorem run (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential source)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value) (budget : PqxdhDeploymentInterface.Budget)
     (bounded : RegistrationNativeInterface.Respects budget work) (before : RegistrationNativeExperiment.State n KemSK source) :
@@ -192,3 +230,21 @@ end BeaconcryptCore.Computational.RegistrationNativeMldsaGenerateBounds
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaGenerateBounds.run
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaGenerateBounds.create_no_generate' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaGenerateBounds.create_no_generate
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaGenerateBounds.handler_no_generate' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaGenerateBounds.handler_no_generate
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaGenerateBounds.program_no_generate' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaGenerateBounds.program_no_generate

@@ -36,18 +36,9 @@ fn register(server: &mut Server, beacon: &mut Beacon, message: &[u8]) -> (Vec<u8
 	(init, response.serialized, response.kid)
 }
 
-fn fingerprint(key: &[u8]) -> Vec<u8> {
-	crypto_generichash::generichash(key, None, 64).unwrap()
-}
-
 fn legacy_init(init: InitKex<'_>) -> Vec<u8> {
-	let mut encoded = common::encode_unchecked_init(InitKex {
-		mldsa_public_key: &[],
-		signature: &[],
-		..init
-	});
-	encoded.truncate(encoded.len() - 2);
-	encoded[..3].copy_from_slice(&[0x86, 1, 0]);
+	let mut encoded = common::encode_unchecked_init(init);
+	encoded[1] = 2;
 	encoded
 }
 
@@ -106,49 +97,48 @@ fn assert_rejected_commit_preserves_protocol_state(
 }
 
 #[test]
-fn signed_registration_binds_both_public_keys_in_associated_data_and_exchanges_records() {
+fn registration_uses_exact_transcript_context_and_exchanges_records() {
 	let mut server = server();
 	let mut beacon = beacon(&server);
-	let server_key = server.mldsa_public_key();
-	let beacon_key = beacon.mldsa_public_key();
-	assert_ne!(server_key, beacon_key);
 	let (init, response, kid) = register(&mut server, &mut beacon, b"authenticated welcome");
-	assert!(init.starts_with(&[0x88, 2, 0]));
-	assert!(response.starts_with(&[0x88, 2, 1]));
-	let decoded_init = common::decode_init(&init).unwrap();
-	let decoded_response = common::decode_response(&response).unwrap();
-	assert_eq!(decoded_init.mldsa_public_key, beacon_key);
-	assert_eq!(decoded_init.signature.len(), MLDSA_SIGNATURE_LEN);
-	assert_eq!(decoded_response.signature.len(), MLDSA_SIGNATURE_LEN);
-	assert_eq!(common::encode_unchecked_init(decoded_init), init);
-	assert_eq!(common::encode_response(decoded_response), response);
+	assert_eq!(init.len(), 1490);
+	assert!(init.starts_with(&[0x86, 3, 0]));
+	assert!(response.starts_with(&[0x88, 3, 1]));
+	let request = common::decode_init(&init).unwrap();
+	let reply = common::decode_response(&response).unwrap();
+	assert_eq!(reply.signature.len(), MLDSA_SIGNATURE_LEN);
+	assert_eq!(common::encode_unchecked_init(request), init);
+	assert_eq!(common::encode_response(reply), response);
+	let mut preimage = Vec::new();
+	for field in [
+		request.identity_key,
+		request.pre_key,
+		request.one_time_key,
+		request.pq_key,
+		reply.identity_key,
+		reply.ephemeral_key,
+		reply.kem_cipher_text,
+	] {
+		preimage.extend_from_slice(field);
+	}
+	preimage.extend_from_slice(&kid.to_le_bytes());
+	assert_eq!(preimage.len(), 2638);
+	let hash = crypto_generichash::generichash(&preimage, None, 64).unwrap();
 	let ad = beacon.associated_data().unwrap();
-	let base = beaconcrypt_core::pqxdh::build_associated_data(
-		*server.identity_pk().as_bytes(),
-		*beacon.identity_pk().as_bytes(),
-	);
-	assert_eq!(ad.len(), 281);
-	assert_eq!(&ad[..153], &base[..153]);
-	assert_eq!(&ad[153..217], fingerprint(&server_key));
-	assert_eq!(&ad[217..281], fingerprint(&beacon_key));
+	assert_eq!(ad.len(), 151);
 	assert_eq!(
-		server.mldsa_public_key_hash_by_kid(kid).unwrap().as_slice(),
-		fingerprint(&beacon_key)
+		&ad[..87],
+		b"BeaconcryptPqxdh_CURVE25519_SHA-512_ML-KEM-768SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305"
 	);
+	assert_eq!(&ad[87..], hash);
 	let encrypted = server.encrypt_message(b"server to beacon", kid).unwrap();
 	assert_eq!(
-		beacon
-			.decrypt_message(&encrypted.ciphertext)
-			.unwrap()
-			.plaintext,
+		beacon.decrypt_message(&encrypted).unwrap().plaintext,
 		b"server to beacon"
 	);
 	let encrypted = beacon.encrypt_message(b"beacon to server").unwrap();
 	assert_eq!(
-		server
-			.decrypt_message(&encrypted.ciphertext)
-			.unwrap()
-			.plaintext,
+		server.decrypt_message(&encrypted).unwrap().plaintext,
 		b"beacon to server"
 	);
 	assert!(beacon.finish_registration(&response).is_none());
@@ -156,7 +146,7 @@ fn signed_registration_binds_both_public_keys_in_associated_data_and_exchanges_r
 }
 
 #[test]
-fn every_init_field_and_mldsa_key_is_authenticated_before_server_state_changes() {
+fn every_init_field_is_classically_authenticated_before_server_state_changes() {
 	let mut server = persistent_server(&[8; 32]);
 	let mut beacon = Beacon::new(
 		SERVER_KID,
@@ -180,20 +170,9 @@ fn every_init_field_and_mldsa_key_is_authenticated_before_server_state_changes()
 			pre_key: &altered[1],
 			one_time_key: &altered[2],
 			pq_key: &altered[3],
-			mldsa_public_key: decoded.mldsa_public_key,
-			signature: decoded.signature,
 		}));
 	}
-	candidates.push(common::encode_unchecked_init(InitKex {
-		mldsa_public_key: &MldsaIdentity::from_seed([9; 32]).public_key(),
-		..decoded
-	}));
-	let mut bad_signature = decoded.signature.to_vec();
-	bad_signature[0] ^= 1;
-	candidates.push(common::encode_unchecked_init(InitKex {
-		signature: &bad_signature,
-		..decoded
-	}));
+
 	for candidate in candidates {
 		let before = server.snapshot().unwrap();
 		assert!(server.get_shared_secret(&candidate).unwrap().is_none());
@@ -214,21 +193,17 @@ fn every_init_field_and_mldsa_key_is_authenticated_before_server_state_changes()
 }
 
 #[test]
-fn a_beacon_pinned_to_another_mldsa_server_key_cannot_consume_a_registration() {
-	let mut server = persistent_server(&[8; 32]);
+fn wrong_server_pin_allows_server_registration_but_aborts_beacon_finish() {
+	let mut server = server();
 	let wrong_key = MldsaIdentity::from_seed([9; 32]).public_key();
 	let mut wrong = Beacon::new(SERVER_KID, server.identity_pk().as_bytes(), &wrong_key);
 	let init = wrong.get_registration_bundle().unwrap();
-	let before = server.snapshot().unwrap();
-	assert!(server.get_shared_secret(&init).unwrap().is_none());
-	assert_rejected_commit_preserves_protocol_state(&before, &server.snapshot().unwrap());
-	let mut correct = Beacon::new(
-		SERVER_KID,
-		server.identity_pk().as_bytes(),
-		&server.mldsa_public_key(),
-	);
-	let init = correct.get_registration_bundle().unwrap();
-	assert!(server.get_shared_secret(&init).unwrap().is_some());
+	let accepted = server.get_shared_secret(&init).unwrap();
+	let response = server.build_registration_response(accepted, None).unwrap();
+	assert!(wrong.finish_registration(&response.serialized).is_none());
+	assert!(wrong.ratchet_status().is_none());
+	assert!(wrong.finish_registration(&response.serialized).is_none());
+	assert!(server.get_shared_secret(&init).is_none());
 }
 
 #[test]
@@ -333,7 +308,7 @@ fn signatures_cannot_be_replayed_between_registration_transcripts() {
 }
 
 #[test]
-fn unsigned_and_malformed_init_cbor_is_rejected_without_consuming_the_original() {
+fn legacy_and_malformed_init_cbor_is_rejected_without_consuming_the_original() {
 	let mut server = persistent_server(&[8; 32]);
 	let mut beacon = Beacon::new(
 		SERVER_KID,
@@ -345,27 +320,17 @@ fn unsigned_and_malformed_init_cbor_is_rejected_without_consuming_the_original()
 	let old_cbor = legacy_init(decoded);
 	let mut old_envelope = b"beaconcrypt/ml-dsa-65/v1\0".to_vec();
 	old_envelope.push(0);
-	old_envelope.extend_from_slice(decoded.mldsa_public_key);
-	old_envelope.extend_from_slice(decoded.signature);
 	old_envelope.extend_from_slice(&old_cbor);
 	let mut candidates = vec![old_cbor, old_envelope, Vec::new(), init[..1].to_vec()];
 	candidates.push(init[..init.len() - 1].to_vec());
-	for length in [0, MLDSA_SIGNATURE_LEN - 1, MLDSA_SIGNATURE_LEN + 1] {
-		let mut signature = decoded.signature.to_vec();
-		signature.resize(length, 0);
+	for length in [0, 32, 34] {
+		let identity = vec![1; length];
 		candidates.push(common::encode_unchecked_init(InitKex {
-			signature: &signature,
+			identity_key: &identity,
 			..decoded
 		}));
 	}
-	for length in [0, MLDSA_PUBLIC_KEY_LEN - 1, MLDSA_PUBLIC_KEY_LEN + 1] {
-		let mut public_key = decoded.mldsa_public_key.to_vec();
-		public_key.resize(length, 0);
-		candidates.push(common::encode_unchecked_init(InitKex {
-			mldsa_public_key: &public_key,
-			..decoded
-		}));
-	}
+
 	let mut wrong_kind = init.clone();
 	wrong_kind[2] = 1;
 	candidates.push(wrong_kind);
@@ -373,7 +338,7 @@ fn unsigned_and_malformed_init_cbor_is_rejected_without_consuming_the_original()
 	wrong_version[1] = 1;
 	candidates.push(wrong_version);
 	let mut wrong_array = init.clone();
-	wrong_array[0] = 0x87;
+	wrong_array[0] = 0x88;
 	candidates.push(wrong_array);
 	let mut trailing = init.clone();
 	trailing.push(0);

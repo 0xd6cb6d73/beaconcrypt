@@ -63,7 +63,7 @@ theorem finish_source (setup : Setup base KemSK) (wire : RegistrationNativeWire.
     (coherent : ∀ pending oneTime, owner.phase = .initSent pending oneTime →
       pending.control.expected_server_binding = pending.binding.server_pin.binding)
     (env : EnvState RegistrationServerRoleBackend.State)
-    (erased : Std.Array U8 357#usize) (before : Private n KemSK) :
+    (erased : Std.Array U8 227#usize) (before : Private n KemSK) :
     Prod.map (restorePublic owner.prekeyScalar) drop <$>
       (simulateQ (implementation setup wire route sign seed selectedScalar)
         (simulateQ (adapt setup localScalar)

@@ -24,7 +24,7 @@ theorem private_address (chain : RatchetChain) :
       ratchetAddress (PqxdhRefinement.absBytes chain.bytes) := by
   change (⟨PqxdhRefinement.absBytes ratchet.SYM_RATCHET_INFO, PqxdhRefinement.absBytes chain.bytes⟩ : JointKdfAddress) = _
   have info : PqxdhRefinement.absBytes ratchet.SYM_RATCHET_INFO = Pqxdh.INFO_R := by
-    simpa only [pqxdh.SYM_RATCHET_INFO] using PqxdhRefinement.absBytes_SYM_RATCHET_INFO
+    simpa only [ratchet.SYM_RATCHET_INFO] using PqxdhRefinement.absBytes_SYM_RATCHET_INFO
   exact congrArg (fun domain => (⟨domain, PqxdhRefinement.absBytes chain.bytes⟩ : JointKdfAddress)) info
 
 /-- No actual private ratchet query can access the analysis marker; this uses only distinct literal domain labels. -/

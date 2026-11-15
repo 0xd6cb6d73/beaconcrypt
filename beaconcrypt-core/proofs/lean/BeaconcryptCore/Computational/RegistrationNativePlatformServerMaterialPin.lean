@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePlatformServerMaterialOccupancy
-/-! Actual repeated pin hashing, complete-message preflight and live peer occupancy are preserved before root-reference material demand. The private interpretation reconstructs the consumed token while retaining every reached shared state and source failure. -/
+/-! Actual pure pin selection, complete-message preflight, live peer occupancy and transcript-AD hashing are preserved before root-reference material demand. The private interpretation reconstructs the consumed token while retaining every reached shared state and source failure. -/
 open OracleComp OracleSpec CoreModels Aeneas beaconcrypt_core
 open Aeneas.Std hiding namespace core alloc
 open RustM
@@ -35,7 +35,7 @@ private theorem world_run {A : Type} (work : StateT (Local n) m A) (current : Re
     (RegistrationNativePlatformServerSdk.world work).run current =
       (fun result => (result.1, { current with world := result.2 })) <$> work.run current.world := rfl
 
-/-- Recomputing a pin uses the same native hash before every public lookup; restoring a private token affects neither admission nor the reached occupancy/reservation effects. -/
+/-- Pure full-pin selection precedes each public lookup; restoring a private token affects neither admission nor the reached occupancy/reservation effects. -/
 theorem after_pin (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (codec : Codec Reader Response)
     (sealing : record_effects.AeadSealRequest → StateT (Local n) m
       (RustM (core.option.Option (Slice U8 × Std.Array U8 16#usize))))
@@ -47,10 +47,10 @@ theorem after_pin (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (cod
     (roots : Roots) (control : pqxdh.ServerState) (ready : RegistrationServerReferenceRoot.Ready)
     (application : Slice U8) (current : RustM (core.option.Option session.ServerAuthenticationPin)) (before : State n) :
     Prod.map id (restore roots) <$>
-      (close (RegistrationNativePlatformServerMaterialFrontend.afterPin (StateT.lift reserve)
+      (close (RegistrationNativePlatformServerMaterialFrontend.afterPin (RegistrationNativePlatformServerMaterialState.adHash coins) (StateT.lift reserve)
         (fun keyId => RegistrationNativePlatformServerCompletion.capability coins (.peerPresent keyId))
         (service coins setup codec sealing hash signing helper writer roots) control ready application current)).run before =
-      (RegistrationNativePlatformCompletionSdk.afterPin (StateT.lift reserve)
+      (RegistrationNativePlatformCompletionSdk.afterPin (RegistrationNativePlatformCompletionSdk.nativeAdHash coins) (StateT.lift reserve)
         (RegistrationNativePlatformCompletionSdk.nativePresent coins)
         (RegistrationNativePlatformSourceBuild.finishSource coins setup codec sealing hash signing helper writer)
         control (RegistrationServerReferenceRestore.token roots ready) application current).run (restore roots before) := by
@@ -110,10 +110,11 @@ theorem complete (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (code
     (roots : Roots) (ready : RegistrationServerReferenceRoot.Ready) (application : Slice U8) (before : State n) :
     Prod.map id (restore roots) <$>
       (close (RegistrationNativePlatformServerMaterialFrontend.complete
+        (RegistrationNativePlatformServerMaterialState.adHash coins)
         (RegistrationNativePlatformServerMaterialState.pin coins) (StateT.lift reserve)
         (fun keyId => RegistrationNativePlatformServerCompletion.capability coins (.peerPresent keyId))
         (service coins setup codec sealing hash signing helper writer roots) ready application)).run before =
-      (RegistrationNativePlatformCompletionSdk.complete (RegistrationNativePlatformSourceBuild.pin coins)
+      (RegistrationNativePlatformCompletionSdk.complete (RegistrationNativePlatformCompletionSdk.nativeAdHash coins) (RegistrationNativePlatformSourceBuild.pin coins)
         (StateT.lift reserve) (RegistrationNativePlatformCompletionSdk.nativePresent coins)
         (RegistrationNativePlatformSourceBuild.finishSource coins setup codec sealing hash signing helper writer)
         (RegistrationServerReferenceRestore.token roots ready) application).run (restore roots before) := by
@@ -138,6 +139,7 @@ theorem build (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (codec :
     (roots : Roots) (handle : Nat) (application : Option (Slice U8)) (before : State n) :
     Prod.map id (restore roots) <$>
       (close (RegistrationNativePlatformServerMaterialFrontend.build
+        (RegistrationNativePlatformServerMaterialState.adHash coins)
         (RegistrationNativePlatformServerMaterialState.pin coins) (StateT.lift reserve)
         (fun keyId => RegistrationNativePlatformServerCompletion.capability coins (.peerPresent keyId))
         (service coins setup codec sealing hash signing helper writer roots) handle application)).run before =
@@ -158,6 +160,7 @@ theorem build (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (codec :
       | some application =>
         change Prod.map id (restore roots) <$>
           (close (RegistrationNativePlatformServerMaterialFrontend.complete
+            (RegistrationNativePlatformServerMaterialState.adHash coins)
             (RegistrationNativePlatformServerMaterialState.pin coins) (StateT.lift reserve)
             (fun keyId => RegistrationNativePlatformServerCompletion.capability coins (.peerPresent keyId))
             (service coins setup codec sealing hash signing helper writer roots) ready application)).run (current, before.2) = _

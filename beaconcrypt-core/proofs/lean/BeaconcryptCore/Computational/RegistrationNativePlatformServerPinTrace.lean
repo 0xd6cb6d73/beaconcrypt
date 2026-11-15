@@ -3,7 +3,7 @@ import BeaconcryptCore.Computational.RegistrationNativePlatformServerPinFields
 import BeaconcryptCore.Computational.RegistrationNativePlatformHandlerCache
 import BeaconcryptCore.Computational.RegistrationNativeServerPinCached
 
-/-! The configured Server pin is immutable in the actual corrected source callbacks, including effectful Init publication and assigned-ID finish. Its initial actual fingerprint-cache receipt therefore remains a reached invariant on the shared source cache. -/
+/-! The configured Server pin is immutable in the actual corrected source callbacks, including effectful Init publication and assigned-ID finish. Actual constructor field provenance therefore remains true at every reached source cut; selecting the pin performs no hash query. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -14,8 +14,10 @@ set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativePlatformServerPinTrace
 open BeaconcryptCore.Refinement
 open PqxdhServerAuthExperiment (Setup Checks)
-open RegistrationNativeWorldCache (cache)
+open RegistrationNativeServerPinCached (Configured)
+variable (referenceBinding : pqxdh.ServerBinding) (referencePublicKey : Std.Array U8 1952#usize)
 variable {n : Nat} {E Platform Value ι KemSK : Type} {base : OracleSpec ι} {source : RegistrationNativeMldsa.Source}
+attribute [local irreducible] RegistrationNativePlatformSourceAccept.accept
 
 private def Keeps (work : StateT (RegistrationNativeExperiment.State n KemSK source) (StateT Platform ProbComp) Value) : Prop :=
   ∀ before previous result, result ∈ support ((work.run before).run previous) → result.1.2.server.pin = before.server.pin
@@ -50,7 +52,7 @@ private theorem server (work : StateT (RegistrationServerFrontendCompiler.State 
 
 private theorem bundle_query (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (query : (RegistrationNativePlatformGenericBundle.Spec E n KemSK).Domain) :
     Keeps (RegistrationNativePlatformExperiment.bundleHandler coins setup checks representation created source writer query) := by
@@ -75,7 +77,7 @@ private theorem pure_apply {S X : Type} {m : Type → Type} [Monad m]
 
 private theorem bundle (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) (index : Nat) :
     Keeps (RegistrationNativePlatformExperiment.bundle (n := n) coins setup checks representation created source writer index) := by
   intro before previous result supported
@@ -89,7 +91,7 @@ variable [primitive : AdapterSealPrimitive.Operations]
 variable (coins : QueryImpl unifSpec (StateT Platform ProbComp))
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
 variable (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 variable (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
 variable (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
 variable (reserveRegistration reservePeer : StateT Platform ProbComp Bool) (erased : commitment.CommitmentTranscript)
@@ -141,31 +143,29 @@ theorem program_pin (work : OracleComp RegistrationNativeRawAdapter.TypedSpec Va
     reserveRegistration reservePeer erased helper writer) work before previous result supported
 
 
-/-- The stored pin's actual fingerprint receipt survives every corrected callback, including failed source allocation and publication. -/
-theorem handler_cached (query : RegistrationNativeRawAdapter.TypedSpec.Domain)
+/-- The exact configured pin fields survive every corrected callback, including failed source allocation and publication. -/
+theorem handler_configured (query : RegistrationNativeRawAdapter.TypedSpec.Domain)
     (before : RegistrationNativeExperiment.State n KemSK source) (previous : Platform)
-    (cached : RegistrationNativeServerPinRecompute.Cached before.server.pin (cache before))
+    (cached : Configured before.server.pin referenceBinding referencePublicKey)
     (result : (RegistrationNativeRawAdapter.TypedSpec.Range query × RegistrationNativeExperiment.State n KemSK source) × Platform)
     (supported : result ∈ support (((RegistrationNativePlatformExperiment.handler coins setup checks wire route representation created source credential
       view failure allocation reserveRegistration reservePeer erased helper writer query).run before).run previous)) :
-    RegistrationNativeServerPinRecompute.Cached result.1.2.server.pin (cache result.1.2) := by
+    Configured result.1.2.server.pin referenceBinding referencePublicKey := by
   rw [handler_pin coins setup checks wire route representation created credential view failure allocation reserveRegistration reservePeer erased helper writer query before previous result supported]
-  exact RegistrationNativeServerPinCached.extend _ _ _ cached
-    (RegistrationNativePlatformHandlerCache.handler coins setup checks wire route representation created credential view failure allocation reserveRegistration reservePeer erased helper writer query before previous result supported)
+  exact cached
 
-/-- Every actual reached typed continuation retains the same stored pin cache receipt. -/
-theorem program_cached (work : OracleComp RegistrationNativeRawAdapter.TypedSpec Value)
+/-- Every reached typed continuation retains the same configured pin fields. -/
+theorem program_configured (work : OracleComp RegistrationNativeRawAdapter.TypedSpec Value)
     (before : RegistrationNativeExperiment.State n KemSK source) (previous : Platform)
-    (cached : RegistrationNativeServerPinRecompute.Cached before.server.pin (cache before))
+    (cached : Configured before.server.pin referenceBinding referencePublicKey)
     (result : (Value × RegistrationNativeExperiment.State n KemSK source) × Platform)
     (supported : result ∈ support (((simulateQ (RegistrationNativePlatformExperiment.handler coins setup checks wire route representation created source credential
       view failure allocation reserveRegistration reservePeer erased helper writer) work).run before).run previous)) :
-    RegistrationNativeServerPinRecompute.Cached result.1.2.server.pin (cache result.1.2) := by
+    Configured result.1.2.server.pin referenceBinding referencePublicKey := by
   rw [program_pin coins setup checks wire route representation created credential view failure allocation reserveRegistration reservePeer erased helper writer work before previous result supported]
-  exact RegistrationNativeServerPinCached.extend _ _ _ cached
-    (RegistrationNativePlatformHandlerCache.program coins setup checks wire route representation created credential view failure allocation reserveRegistration reservePeer erased helper writer work before previous result supported)
+  exact cached
 
-/-- The pin-hit receipt at each actual corrected source cut follows from real generated startup and the literal adaptive program. -/
+/-- The configured public fields at each reached source cut follow from actual startup and the literal adaptive program. -/
 theorem initialized (ensureInit : StateT Unit ProbComp Bool) (identityIndex : Nat) (serverKeyId : U64)
     (initial : RegistrationNativeExperiment.Initial n KemSK source)
     (started : some initial ∈ support (RegistrationNativeExperiment.start setup source ensureInit identityIndex serverKeyId))
@@ -173,9 +173,13 @@ theorem initialized (ensureInit : StateT Unit ProbComp Bool) (identityIndex : Na
     (result : (Value × RegistrationNativeExperiment.State n KemSK source) × Platform)
     (supported : result ∈ support (((simulateQ (RegistrationNativePlatformExperiment.handler coins setup checks wire route representation initial.created source initial.credential
       view failure allocation reserveRegistration reservePeer erased helper writer) work).run initial.state).run previous)) :
-    RegistrationNativeServerPinRecompute.Cached result.1.2.server.pin (cache result.1.2) :=
-  program_cached coins setup checks wire route representation initial.created initial.credential view failure allocation reserveRegistration reservePeer erased helper writer work initial.state previous
-    (RegistrationNativeServerPinCached.start setup ensureInit identityIndex serverKeyId initial started) result supported
+    Configured result.1.2.server.pin
+      ⟨initial.created.server.server.identity, initial.created.server.server.metadata.sender⟩ initial.credential.publicKey :=
+  program_configured
+    (referenceBinding := ⟨initial.created.server.server.identity, initial.created.server.server.metadata.sender⟩)
+    (referencePublicKey := initial.credential.publicKey)
+    coins setup checks wire route representation initial.created initial.credential view failure allocation reserveRegistration reservePeer erased helper writer work initial.state previous
+    (RegistrationNativeServerPinCached.start_fields setup ensureInit identityIndex serverKeyId initial started) result supported
 
 section Table
 variable (realSource : RegistrationNativeMldsa.Source)
@@ -184,52 +188,53 @@ variable (realSource : RegistrationNativeMldsa.Source)
     (live : RegistrationNativeMldsaOpaque.Live realSource pool opaqueCredential fallback)
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain)
     (before : RegistrationNativeExperiment.State n KemSK (RegistrationNativeMldsaOpaque.handleSource realSource)) (previous : Platform)
-    (owners : RegistrationNativeMldsaPoolMap.StateLive realSource pool before)
     (result : ((RegistrationNativeRawAdapter.TypedSpec.Range query × RegistrationNativeExperiment.State n KemSK (RegistrationNativeMldsaOpaque.handleSource realSource)) × Platform) × RegistrationNativeMldsaOpaque.Pool realSource)
     (supported : result ∈ support (RegistrationNativePlatformMldsaTableProgram.runState realSource
       (RegistrationNativePlatformMldsaProfile.handler setup checks wire route representation created opaqueCredential view failure allocation
         reserveRegistration reservePeer erased helper writer query) before previous pool))
 
-include supported live owners
+include supported live
 
 private theorem restored : RegistrationNativePlatformMldsaTableRestore.observe realSource fallback result ∈ support
       (((RegistrationNativePlatformExperiment.handler RegistrationNativePlatformMldsaProgram.coins setup checks wire route representation created realSource fallback
         view failure allocation reserveRegistration reservePeer erased helper writer query).run
           (RegistrationNativeMldsaMap.nativeState (RegistrationNativeMldsaOpaque.restore realSource fallback pool) before)).run previous) := by
   rw [← RegistrationNativePlatformMldsaTableHandler.restored realSource setup checks wire route representation created opaqueCredential
-    view failure allocation reserveRegistration reservePeer erased helper writer fallback pool live query before previous owners, support_map]
+    view failure allocation reserveRegistration reservePeer erased helper writer fallback pool live query before previous, support_map]
   exact ⟨result, supported, rfl⟩
 
 /-- Actual private-table key restoration leaves the configured Server pin literal across every corrected callback. -/
 theorem table_pin : result.1.1.2.server.pin = before.server.pin :=
   handler_pin RegistrationNativePlatformMldsaProgram.coins setup checks wire route representation created fallback view failure allocation reserveRegistration reservePeer erased helper writer query _ previous _
-    (restored setup checks wire route representation created view failure allocation reserveRegistration reservePeer erased helper writer realSource opaqueCredential fallback pool live query before previous owners result supported)
+    (restored setup checks wire route representation created view failure allocation reserveRegistration reservePeer erased helper writer realSource opaqueCredential fallback pool live query before previous result supported)
 
-/-- The reached stored-pin cache invariant transports through the actual true-count table without any desired source equality or security premise. -/
-theorem table_cached (prior : RegistrationNativeServerPinRecompute.Cached before.server.pin (cache before)) :
-    RegistrationNativeServerPinRecompute.Cached result.1.1.2.server.pin (cache result.1.1.2) :=
-  handler_cached RegistrationNativePlatformMldsaProgram.coins setup checks wire route representation created fallback view failure allocation reserveRegistration reservePeer erased helper writer query _ previous prior _
-    (restored setup checks wire route representation created view failure allocation reserveRegistration reservePeer erased helper writer realSource opaqueCredential fallback pool live query before previous owners result supported)
+/-- Configured pin-field provenance transports through the actual table with every returned source state retained. -/
+theorem table_configured (prior : Configured before.server.pin referenceBinding referencePublicKey) :
+    Configured result.1.1.2.server.pin referenceBinding referencePublicKey := by
+  rw [table_pin setup checks wire route representation created view failure allocation reserveRegistration reservePeer erased helper writer realSource opaqueCredential fallback pool live query before previous result supported]
+  exact prior
+
 end Table
 
 omit primitive in
-/-- Actual source table startup establishes the stored pin receipt before the first corrected callback. -/
+/-- Actual source table startup establishes the configured binding and complete ML public key. -/
 theorem table_initialized (realSource : RegistrationNativeMldsa.Source) (ensureInit : StateT Unit ProbComp Bool)
     (identityIndex : Nat) (serverKeyId : U64)
     (started : Option (RegistrationNativeExperiment.Initial n KemSK (RegistrationNativeMldsaOpaque.handleSource realSource)) × RegistrationNativeMldsaOpaque.Pool realSource)
     (startup : started ∈ support (RegistrationNativeMldsaTableProgram.evaluate realSource
       (RegistrationNativeMldsaCreation.start setup ensureInit identityIndex serverKeyId) {}))
     (initial : RegistrationNativeExperiment.Initial n KemSK (RegistrationNativeMldsaOpaque.handleSource realSource)) (member : initial ∈ started.1) :
-    RegistrationNativeServerPinRecompute.Cached initial.state.server.pin (cache initial.state) := by
+    Configured initial.state.server.pin
+      ⟨initial.created.server.server.identity, initial.created.server.server.metadata.sender⟩ initial.credential.publicKey := by
   obtain ⟨fallback, live, _owners⟩ := RegistrationNativeMldsaTableStart.initialized realSource setup ensureInit identityIndex serverKeyId started startup initial member
   let actualInitial := RegistrationNativeMldsaMap.initial (RegistrationNativeMldsaOpaque.restore realSource fallback started.2) initial
   have actual : some actualInitial ∈ support (RegistrationNativeExperiment.start setup realSource ensureInit identityIndex serverKeyId) := by
     rw [← RegistrationNativeMldsaTableStart.start realSource setup ensureInit identityIndex serverKeyId, support_map]
     refine ⟨started, startup, ?_⟩
     have selected : started.1 = some initial := member
-    simp only [RegistrationNativeMldsaTableStart.restored, selected, Option.bind_some, live.1, Option.map_some]
+    simp only [RegistrationNativeMldsaTableStart.restored, selected, Option.bind_some, live, Option.map_some]
     rfl
-  exact RegistrationNativeServerPinCached.start setup ensureInit identityIndex serverKeyId actualInitial actual
+  exact RegistrationNativeServerPinCached.start_fields setup ensureInit identityIndex serverKeyId actualInitial actual
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformServerPinTrace
 
@@ -245,17 +250,17 @@ end BeaconcryptCore.Computational.RegistrationNativePlatformServerPinTrace
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativePlatformServerPinTrace.program_pin
 
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformServerPinTrace.handler_cached' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformServerPinTrace.handler_configured' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformServerPinTrace.handler_cached
+#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformServerPinTrace.handler_configured
 
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformServerPinTrace.program_cached' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformServerPinTrace.program_configured' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformServerPinTrace.program_cached
+#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformServerPinTrace.program_configured
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformServerPinTrace.initialized' depends on axioms: [propext,
  Classical.choice,
@@ -269,11 +274,11 @@ end BeaconcryptCore.Computational.RegistrationNativePlatformServerPinTrace
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativePlatformServerPinTrace.table_pin
 
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformServerPinTrace.table_cached' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformServerPinTrace.table_configured' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformServerPinTrace.table_cached
+#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformServerPinTrace.table_configured
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformServerPinTrace.table_initialized' depends on axioms: [propext,
  Classical.choice,

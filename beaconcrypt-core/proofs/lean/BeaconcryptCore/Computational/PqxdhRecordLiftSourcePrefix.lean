@@ -6,6 +6,9 @@ import BeaconcryptCore.Computational.PqxdhRecordLiftMaskedReads
 open OracleComp OracleSpec CoreModels Aeneas
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhRecordLiftSourcePrefix
+
+/-- Current AD151, elaborated independently of dependent result annotations. -/
+private abbrev RecordAd := Aeneas.Std.Array Aeneas.Std.U8 151#usize
 open PqxdhRecordLiftProtocol PqxdhRecordLiftFirstLookup PqxdhRecordLiftFirstLookupPrefix
 open PqxdhRecordLiftAvailability PqxdhRecordLiftInterface
 open PqxdhRecordLiftChainState PqxdhRecordLiftChainTable
@@ -94,7 +97,7 @@ theorem pending_program {ι KemSK Reader Response E X : Type} {baseSpec : Oracle
     (mode : PqxdhDeploymentInterface.Mode) (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X)
     (parent : Coordinate (Slot n))
     (next : Unit → OracleComp (ServiceSpec n)
-      (Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+      (Option (PqxdhRegistrationJointServerBirth.ClientCreated RecordAd ×
         (X × PqxdhDeploymentSecrecy.Ledger) × E) × Control n)) (after : Private n)
     (supported : (Cut.pending next, after) ∈ support ((simulateQ
       (interpreter (PqxdhRecordLiftMixedWorld.policy setup.source ideal) setup codec)
@@ -131,12 +134,12 @@ theorem sampled_program {ι KemSK Reader Response E X : Type} {baseSpec : Oracle
     (env : Environment n E) (serverKid : Std.U64) (bounds : PqxdhDeploymentInterface.FreshBounds)
     (mode : PqxdhDeploymentInterface.Mode) (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X)
     (parent : Coordinate (Slot n))
-    (result : { result : Cut n (Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+    (result : { result : Cut n (Option (PqxdhRegistrationJointServerBirth.ClientCreated RecordAd ×
       (X × PqxdhDeploymentSecrecy.Ledger) × E) × Control n) × Private n // result.2.chain parent = none })
     (supported : result ∈ support (sampledPrefix setup.source ideal setup codec parent
       (PqxdhRecordLiftProtocol.program env setup.source.crypto codec route serverKid bounds mode adversary)))
     (next : Unit → OracleComp (ServiceSpec n)
-      (Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+      (Option (PqxdhRegistrationJointServerBirth.ClientCreated RecordAd ×
         (X × PqxdhDeploymentSecrecy.Ledger) × E) × Control n)) (pending : result.val.1 = .pending next) :
     Closed result.val.2.chain ∧ Available result.val.2.chain parent ∧ result.val.2.chain parent = none ∧
       ∀ child, PqxdhRecordLiftMaskedReads.Reads child parent → result.val.2.chain child = none :=

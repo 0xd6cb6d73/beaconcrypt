@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativeHiddenInterpreter
 import BeaconcryptCore.Computational.RegistrationNativePublicStartup
 
-/-! The thin native World client performs its literal runtime/classical dummy constructor and local ML generation, then imports the public Server and hashes its actual ML public pin through that same World before the first adversary command. This effectful startup is explicit: it is not identified with the older pure-ProbComp Environment.start interface. Source/table coupling and the arbitrary-start entropy theorem must target this actual AST. -/
+/-! The thin native World client performs its literal runtime/classical dummy constructor and local ML generation, then imports the public Server and retains its exact configured full ML public pin without a hash query before the first adversary command. Runtime initialization and both genuine Server key samplers retain their original World effects. Source/table coupling and the arbitrary-start entropy theorem must target this actual AST. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core PqxdhRefinement
@@ -14,14 +14,16 @@ open PqxdhRecordLiftInterface (WorldSpec coinLift effectLift)
 variable {n : Nat} {ι KemSK ProviderState Value : Type} {base : OracleSpec ι}
 
 structure Started (source : RegistrationNativeMldsa.Source) where
-  created : PqxdhLiveServerConstruction.Created Unit
+  created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)
   native : RegistrationNativePublicStartup.Started source
+
+private abbrev PeerMetadata := Std.Array U8 151#usize
 
 noncomputable def start (setup : Setup base KemSK) (source : RegistrationNativeMldsa.Source)
     (ensureInit : StateT Unit ProbComp Bool) (identityIndex : Nat) (serverKeyId : U64)
     (identity : PqxdhJointIdentity.PublicIdentity) : OracleComp (WorldSpec n) (Option (Started source)) := do
   let constructed ← simulateQ coinLift
-    ((PqxdhLiveServerConstruction.construct (P := Unit) setup.joint ensureInit identityIndex serverKeyId none).run ())
+    ((PqxdhLiveServerConstruction.construct (P := PeerMetadata) setup.joint ensureInit identityIndex serverKeyId none).run ())
   match constructed.1 with
   | none => pure none
   | some _ =>
@@ -31,10 +33,9 @@ noncomputable def start (setup : Setup base KemSK) (source : RegistrationNativeM
       | some credential =>
           let created := RegistrationServerStartup.publicCreated identity identityIndex serverKeyId
           let _ ← (WorldSpec n).query (.inl created)
-          let digest ← effectLift (.inr (.hash (absBytes credential.publicKey)))
           let pin : session.ServerAuthenticationPin :=
             ⟨⟨PqxdhRootTableInitialization.rootArray identity.ed25519, serverKeyId⟩,
-              credential.publicKey, RegistrationAuthenticationShared.digestArray digest⟩
+              credential.publicKey⟩
           let frontend : RegistrationNativePublicFrontend.State source :=
             ⟨RegistrationServerMaterialFrontend.initial created.control pin, [],
               ⟨RegistrationServerRoleBackend.empty, [], [], []⟩, 0⟩
@@ -58,7 +59,7 @@ theorem start_fields (setup : Setup base KemSK) (source : RegistrationNativeMlds
       | none => simp only [sampled, mem_support_pure_iff] at continued; cases continued
       | some credential =>
           simp only [sampled, mem_support_bind_iff] at continued
-          obtain ⟨installed, _installed, digest, _hashed, returned⟩ := continued
+          obtain ⟨installed, _installed, returned⟩ := continued
           simp only [mem_support_pure_iff, Option.some.injEq] at returned
           cases returned
           exact ⟨rfl, rfl, rfl, rfl⟩

@@ -55,8 +55,8 @@ LINTERS = (
 )
 POLICY = "set_option autoImplicit false\nset_option warningAsError true\n"
 REVIEWED_BODIES = {
-    "Types.lean": "3fe36d9750c486ec56d95d7205e16786eeff2d169becaf3527a270225807c718",
-    "Funs.lean": "75039df3eeb51278359e6c37739740c87cb2dad6ca67a8078c22d09ecb70c4b9",
+    "Types.lean": "c2dbc5f16516a86aacac5a2b357412590e70d3ddc5ed9f38270bfd4a63f41136",
+    "Funs.lean": "608547954a3f2a7b0c4eb0a69a5ea7c50d0a46a4896f02c216e06b0d597cf242",
 }
 TRANSFORMATION = {
     "warning_header": list(LINTERS),
@@ -71,7 +71,6 @@ PLATFORM_SIGNATURES = {
 }
 EXTERNAL_SIGNATURES = {
     "auth.execute_hash": "beaconcrypt_core.registration.HashRequest → RustM (core.option.Option (Array Std.U8 64#usize))",
-    "auth.verify_requested": "beaconcrypt_core.registration.MldsaVerificationRequest → RustM Bool",
 }
 
 

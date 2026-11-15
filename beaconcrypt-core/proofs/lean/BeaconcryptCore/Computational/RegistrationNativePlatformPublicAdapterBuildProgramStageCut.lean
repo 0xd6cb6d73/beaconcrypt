@@ -1,4 +1,5 @@
 -- SPDX-License-Identifier: 0BSD
+import BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterBuildAdProgramCut
 import BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterBuildSigningDelta
 import BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterSourceLogCrossing
 import BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterBuildInitialScope
@@ -74,7 +75,7 @@ theorem call (self :beaconcrypt_public_wrapper.server.Server) (token :beaconcryp
       RegistrationNativeStageTrace.Path (actual (R:=R) coins setup codec keyView failure allocation helper erased sign writer view originalLocal original previousCrypto previousChildren fallback) call.after trailing ((result.1.1.2,result.2),result.1.2) ∧
       ∃current initial,call.query=.inr (.inr (.inr (current,initial))) ∧current.control=self.control ∧
       (∃pin availability application,
-        registration.begin_server_completion self.control pin availability token.registration.agreement application=.ok (.Ok initial)) ∧
+        BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission self.control pin availability token.registration.agreement application initial) ∧
       ∃emitted,call.after.1.2=call.before.1.2++emitted ∧
         RegistrationNativePlatformPublicAdapterSourceEvents.Event.stage (Stage.sign request payload digest signature)∈emitted :=by
   have packed :(result.1.1.1,((result.1.1.2,result.2),result.1.2))∈support
@@ -130,6 +131,84 @@ theorem call (self :beaconcrypt_public_wrapper.server.Server) (token :beaconcryp
         exact ⟨pair.1,pair.2,rfl,allowed.1,allowed.2,emitted,logEq,seen⟩
 
 
+/-- The same emitted complete leaf retains the actual earlier AD hash request/reply and its full same-run state path, including later publication failure. -/
+theorem call_with_ad (self :beaconcrypt_public_wrapper.server.Server) (token :beaconcrypt_public_wrapper.server.RegistrationOutput)
+    (data :core.option.Option (Slice U8)) (before :Cut) (previous :P) (prior :Events)
+    (result :(((Word×Cut)×P)×Events))
+    (supported :result∈support (RegistrationNativePlatformPublicAdapterBuildProgramStages.sample
+      RegistrationNativePlatformPublicAdapterSourceEvents.Event.stage coins setup codec keyView failure allocation helper erased sign writer view originalLocal original previousCrypto previousChildren fallback self token data before previous prior))
+    (suffix :List Stage) (observed :result.2=prior++suffix.map RegistrationNativePlatformPublicAdapterSourceEvents.Event.stage)
+    (request :registration.MldsaSigningRequest) (payload :MldsaTranscriptAuth.Payload)
+    (digest :CtxRomAuth.CtxDigest) (signature :RegistrationSigningShared.SignReply)
+    (present :Stage.sign request payload digest signature∈suffix) :
+    ∃(leading trailing :List (RegistrationNativeStageTrace.Call RegistrationNativePlatformPublicAdapterBuildProgram.Spec ((Cut×Events)×P)))
+      (call :RegistrationNativeStageTrace.Call RegistrationNativePlatformPublicAdapterBuildProgram.Spec ((Cut×Events)×P)),
+      RegistrationNativeStageTrace.Path (actual (R:=R) coins setup codec keyView failure allocation helper erased sign writer view originalLocal original previousCrypto previousChildren fallback) ((before,prior),previous) leading call.before ∧
+      RegistrationNativeStageTrace.Executed (actual (R:=R) coins setup codec keyView failure allocation helper erased sign writer view originalLocal original previousCrypto previousChildren fallback) call ∧
+      RegistrationNativeStageTrace.Path (actual (R:=R) coins setup codec keyView failure allocation helper erased sign writer view originalLocal original previousCrypto previousChildren fallback) call.after trailing ((result.1.1.2,result.2),result.1.2) ∧
+      ∃current initial,call.query=.inr (.inr (.inr (current,initial))) ∧current.control=self.control ∧
+      (∃pin availability application,
+        BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission self.control pin availability token.registration.agreement application initial) ∧
+      ∃(ad : RegistrationNativePlatformPublicAdapterBuildAdProgramCut.HashCut
+          (actual (R:=R) coins setup codec keyView failure allocation helper erased sign writer view originalLocal original previousCrypto previousChildren fallback)
+          token self.control initial ((before,prior),previous))
+        (between : List (RegistrationNativeStageTrace.Call RegistrationNativePlatformPublicAdapterBuildProgram.Spec ((Cut×Events)×P))),
+        RegistrationNativeStageTrace.Path
+          (actual (R:=R) coins setup codec keyView failure allocation helper erased sign writer view originalLocal original previousCrypto previousChildren fallback)
+          ad.afterHash between call.before ∧
+      ∃emitted,call.after.1.2=call.before.1.2++emitted ∧
+        RegistrationNativePlatformPublicAdapterSourceEvents.Event.stage (Stage.sign request payload digest signature)∈emitted :=by
+  have packed :(result.1.1.1,((result.1.1.2,result.2),result.1.2))∈support
+      ((simulateQ (actual (R:=R) coins setup codec keyView failure allocation helper erased sign writer view originalLocal original previousCrypto previousChildren fallback) (RegistrationNativePlatformPublicAdapterBuildProgram.program self token data)).run ((before,prior),previous)) :=by
+    simp only [RegistrationNativePlatformPublicAdapterBuildProgramStages.sample,support_map] at supported
+    obtain ⟨inner,called,same⟩:=supported
+    cases same
+    unfold actual
+    rw [←RegistrationNativePlatformPackedState.simulate_pack]
+    simp only [RegistrationNativePlatformPackedState.pack,StateT.run,support_map]
+    exact ⟨inner,called,rfl⟩
+  have appends :∀(query :RegistrationNativePlatformPublicAdapterBuildProgram.Spec.Domain) (current :(Cut×Events)×P)
+      (outcome :RegistrationNativePlatformPublicAdapterBuildProgram.Spec.Range query×((Cut×Events)×P)),outcome∈support (((actual (R:=R) coins setup codec keyView failure allocation helper erased sign writer view originalLocal original previousCrypto previousChildren fallback) query).run current)→
+      ∃emitted,outcome.2.1.2=current.1.2++emitted :=by
+    intro query current outcome called
+    simp only [actual,RegistrationNativePlatformPackedState.pack,StateT.run,support_map] at called
+    obtain ⟨raw,supported,same⟩:=called
+    cases same
+    obtain ⟨middle,observed⟩:=RegistrationNativePlatformPublicAdapterBuildSigningDelta.query_delta coins setup codec keyView failure allocation helper erased sign writer view originalLocal original previousCrypto previousChildren fallback query current.1 current.2 raw supported
+    exact ⟨middle.map RegistrationNativePlatformPublicAdapterSourceEvents.Event.stage,observed⟩
+  have quiet :∀(query :RegistrationNativePlatformPublicAdapterBuildProgram.Spec.Domain),¬¬RegistrationNativePlatformPublicAdapterBuildReceiptFrame.Prefix query→∀(current :(Cut×Events)×P)
+      (outcome :RegistrationNativePlatformPublicAdapterBuildProgram.Spec.Range query×((Cut×Events)×P)),
+      outcome∈support (((actual (R:=R) coins setup codec keyView failure allocation helper erased sign writer view originalLocal original previousCrypto previousChildren fallback) query).run current)→ outcome.2.1.2=current.1.2 :=by
+    classical
+    intro query permitted current outcome called
+    simp only [actual,RegistrationNativePlatformPackedState.pack,StateT.run,support_map] at called
+    obtain ⟨raw,supported,same⟩:=called
+    cases same
+    exact RegistrationNativePlatformPublicAdapterBuildSigningDelta.prefix_log coins setup codec keyView failure allocation helper erased sign writer view originalLocal original previousCrypto previousChildren fallback query (not_not.mp permitted) current.1 current.2 raw supported
+
+  have prefixQuiet : ∀ (query : Spec.Domain),
+      RegistrationNativePlatformPublicAdapterBuildAdProgramCut.Prefix query →
+      ∀ (current : (Cut×Events)×P) (outcome : Spec.Range query × ((Cut×Events)×P)),
+        outcome ∈ support (((actual (R:=R) coins setup codec keyView failure allocation helper erased sign writer view originalLocal original previousCrypto previousChildren fallback) query).run current) →
+        outcome.2.1.2 = current.1.2 := by
+    intro query permitted current outcome called
+    exact quiet query (not_not.mpr permitted) current outcome called
+  obtain ⟨leading,trailing,call,beforePath,called,afterPath,current,initial,queryEq,controlEq,
+      ad,between,betweenPath,emitted,logEq,seen⟩ :=
+    RegistrationNativePlatformPublicAdapterBuildAdProgramCut.program_call
+      (actual (R:=R) coins setup codec keyView failure allocation helper erased sign writer view originalLocal original previousCrypto previousChildren fallback)
+      (fun current => current.1.2) prefixQuiet appends self token data ((before,prior),previous)
+      (result.1.1.1,((result.1.1.2,result.2),result.1.2)) packed
+      (suffix.map RegistrationNativePlatformPublicAdapterSourceEvents.Event.stage) observed
+      (RegistrationNativePlatformPublicAdapterSourceEvents.Event.stage (Stage.sign request payload digest signature))
+      (List.mem_map.mpr ⟨_,present,rfl⟩)
+  obtain ⟨actualDigest,_present,completed⟩ :=
+    RegistrationServerAdHash.resumed_digest ad.pending ad.digest initial ad.resumed
+  exact ⟨leading,trailing,call,beforePath,called,afterPath,current,initial,queryEq,controlEq,
+    ⟨ad.pin,ad.availability,ad.application,ad.pending,actualDigest,ad.selected,completed⟩,
+    ad,between,betweenPath,emitted,logEq,seen⟩
+
+
 theorem complete_cut (current :beaconcrypt_public_wrapper.server.Server) (initial :registration.ServerInitialKdf)
     (before :Cut) (previous :P) (prior suffix :Events)
     (result :((Publication×RustM AdapterPublicServerBuildBody.Reply)×(Cut×Events))×P)
@@ -180,3 +259,9 @@ end BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterBuildPr
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterBuildProgramStageCut.complete_cut
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterBuildProgramStageCut.call_with_ad' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterBuildProgramStageCut.call_with_ad

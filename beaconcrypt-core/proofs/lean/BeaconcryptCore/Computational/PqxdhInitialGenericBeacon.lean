@@ -11,19 +11,20 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 open OracleComp OracleSpec
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialGenericBeacon
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open RawCtxGenericRoleStorage PqxdhBeaconPhase2Shared
 variable {Kernel Other I D K Response Shared : Type}
 
 structure Staged (Kernel : Type) where
   authenticated : pqxdh.AuthenticatedBeaconRegistration
-  associatedData : Array Std.U8 281#usize
+  associatedData : Array Std.U8 151#usize
   kernel : Kernel
   opened : RawCtxWholeOwner.Decrypted
 
 def mapStaged (interpret : Kernel → Other) (staged : Staged Kernel) : Staged Other :=
   ⟨staged.authenticated, staged.associatedData, interpret staged.kernel, staged.opened⟩
 
-noncomputable def afterOpening (candidate : pqxdh.BeaconRegistrationCandidate) (kernel : Kernel)
+noncomputable def afterOpening (candidate : pqxdh.BeaconRegistrationCandidate) (associatedData : Array Std.U8 151#usize) (kernel : Kernel)
     (reply : core.option.Option RawCtxWholeOwner.Decrypted) : Option (Staged Kernel) :=
   match reply with
   | .None => none
@@ -33,11 +34,11 @@ noncomputable def afterOpening (candidate : pqxdh.BeaconRegistrationCandidate) (
         match PqxdhBeaconPhase2Publication.normalAuthenticate candidate opened.keyId
           (BeaconcryptCore.Refinement.ProtocolComposition.plaintextBinding opened.plaintext length) with
         | .Err _ => none
-        | .Ok authenticated => some ⟨authenticated, candidate.associated_data, kernel, opened⟩
+        | .Ok authenticated => some ⟨authenticated, associatedData, kernel, opened⟩
       else none
 
-def localOwner (candidate : pqxdh.BeaconRegistrationCandidate) (kernel : Kernel) : RawCtxChainOwner.State Kernel Unit :=
-  ⟨kernel, candidate.server_binding.identity_key_id, PqxdhRefinement.absBytes candidate.associated_data, (), 0⟩
+def localOwner (candidate : pqxdh.BeaconRegistrationCandidate) (associatedData : Array Std.U8 151#usize) (kernel : Kernel) : RawCtxChainOwner.State Kernel Unit :=
+  ⟨kernel, candidate.server_binding.identity_key_id, PqxdhRefinement.absBytes associatedData, (), 0⟩
 
 def abort (control : pqxdh.BeaconInitSent) (state : BeaconState Kernel I D K) : BeaconState Kernel I D K :=
   { state with beacon := { state.beacon with
@@ -65,8 +66,8 @@ noncomputable def finish (control : pqxdh.BeaconInitSent) (state : BeaconState K
 
 /-- Changing the private kernel representation preserves the original sequence-one, plaintext-prefix and authentication branches exactly. -/
 theorem opening_map (interpret : Kernel → Other) (candidate : pqxdh.BeaconRegistrationCandidate)
-    (kernel : Kernel) (reply : core.option.Option RawCtxWholeOwner.Decrypted) :
-    afterOpening candidate (interpret kernel) reply = (afterOpening candidate kernel reply).map (mapStaged interpret) := by
+    (associatedData : Array Std.U8 151#usize) (kernel : Kernel) (reply : core.option.Option RawCtxWholeOwner.Decrypted) :
+    afterOpening candidate associatedData (interpret kernel) reply = (afterOpening candidate associatedData kernel reply).map (mapStaged interpret) := by
   cases reply with
   | none => rfl
   | some opened =>
@@ -98,8 +99,8 @@ noncomputable def afterInitial (calls : RawCtxChainOwner.Calls Kernel m)
   match raw with
   | none => pure none
   | some raw => do
-      let result ← (RawCtxChainOwner.rawReceive calls decode raw).run (localOwner (clearedMetadata pending.metadata) kernel)
-      pure (afterOpening (clearedMetadata pending.metadata) result.2.kernel result.1)
+      let result ← (RawCtxChainOwner.rawReceive calls decode raw).run (localOwner (clearedMetadata pending.metadata) pending.metadata.associatedData kernel)
+      pure (afterOpening (clearedMetadata pending.metadata) pending.metadata.associatedData result.2.kernel result.1)
 
 noncomputable def tail (calls : RawCtxChainOwner.Calls Kernel m)
     (application : Response → m (Option Pqxdh.Bytes)) (initialImpl : Secrets Shared → m (Option Kernel))
@@ -116,7 +117,7 @@ noncomputable def owner {X : Type}
     (raw : Pqxdh.Bytes) (state : BeaconState Kernel I D K) : m (Option Pqxdh.Bytes × BeaconState Kernel I D K) :=
   match state.beacon.phase with
   | .initSent control prekey oneTime kem => do
-      let prepared ← simulateQ pre (PqxdhBeaconPhase2Shared.prepare control state.beacon.identity prekey oneTime kem raw)
+      let prepared ← simulateQ pre (PqxdhBeaconPhase2Shared.prepare (completedBinding := completedBinding) control state.beacon.identity prekey oneTime kem raw)
       match prepared with
       | none => pure (finish control state none)
       | some prepared => do
@@ -142,13 +143,13 @@ theorem afterInitial_map (interpret : Kernel → Other) (calls : RawCtxChainOwne
   | none => simp only [map_pure, Option.map_none]
   | some raw =>
       dsimp only
-      rw [show localOwner (clearedMetadata pending.metadata) (interpret kernel) =
-        RawCtxGenericOwnerMap.mapOwner interpret (localOwner (clearedMetadata pending.metadata) kernel) from rfl,
+      rw [show localOwner (clearedMetadata pending.metadata) pending.metadata.associatedData (interpret kernel) =
+        RawCtxGenericOwnerMap.mapOwner interpret (localOwner (clearedMetadata pending.metadata) pending.metadata.associatedData kernel) from rfl,
         RawCtxGenericOwnerMap.raw_map interpret calls otherCalls receiveMap]
       simp only [bind_map_left, map_bind, map_pure]
       apply bind_congr
       intro result
-      exact congrArg pure (opening_map interpret _ _ _)
+      exact congrArg pure (opening_map interpret _ _ _ _)
 
 /-- The optional private initializer remains in source order, and its entire application/receive continuation maps the kernel representation. -/
 theorem tail_map (interpret : Kernel → Other) (calls : RawCtxChainOwner.Calls Kernel m)
@@ -180,8 +181,8 @@ theorem owner_map {X : Type} (interpret : Kernel → Other)
     (otherInitial : Secrets Shared → m (Option Other))
     (initialMap : ∀ secrets, otherInitial secrets = Option.map interpret <$> initialImpl secrets)
     (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes) (state : BeaconState Kernel I D K) :
-    owner pre otherCalls application otherInitial decode raw (mapBeacon interpret state) =
-      Prod.map id (mapBeacon interpret) <$> owner pre calls application initialImpl decode raw state := by
+    owner (completedBinding := completedBinding) pre otherCalls application otherInitial decode raw (mapBeacon interpret state) =
+      Prod.map id (mapBeacon interpret) <$> owner (completedBinding := completedBinding) pre calls application initialImpl decode raw state := by
   unfold owner
   simp only [mapBeacon]
   cases phase : state.beacon.phase

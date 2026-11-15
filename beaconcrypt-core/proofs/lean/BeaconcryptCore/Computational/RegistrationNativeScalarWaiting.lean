@@ -20,7 +20,7 @@ def Away (selected : Nat) (query : TypedSpec.Domain) (before : State n KemSK sou
 /-- Every callback away from selected creation is literally the ordinary native source callback. -/
 theorem away_handler (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (selected : Nat) (scalar : PqxdhJointGapDh.ScalarBytes) (query : TypedSpec.Domain)
     (before : State n KemSK source) (away : Away selected query before) :
     (RegistrationNativeScalarEager.handler setup checks wire route representation created source credential selected scalar query).run before =
@@ -28,15 +28,17 @@ theorem away_handler (setup : Setup base KemSK) (checks : Checks) (wire : Regist
   cases query with
   | inl coin => rfl
   | inr command =>
-      cases command <;> try rfl
-      case create edPin mlPin keyId =>
+      cases command with
+      | create edPin mlPin keyId =>
         exact RegistrationNativeScalarOrdinary.handler setup checks wire route representation created credential
           selected scalar _ before (away edPin mlPin keyId rfl)
+      | bundle _ | accept _ | build _ _ | finish _ _ | hmac _ _ | hash _
+      | serverSend _ _ | serverRaw _ | beaconSend _ _ | beaconRaw _ _ => rfl
 
 /-- An actual callback away from the selected birth leaves its target waiting, including every rejected native path. -/
 theorem away_short (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (selected : Nat) (query : TypedSpec.Domain) (before : State n KemSK source)
     (result : TypedSpec.Range query × State n KemSK source) (short : before.beacons.length ≤ selected)
     (away : Away selected query before)
@@ -53,7 +55,7 @@ theorem away_short (setup : Setup base KemSK) (checks : Checks) (wire : Registra
 /-- The actual counted scalar draw preserves the whole existing owner roster. -/
 theorem sample_owners (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (before : State n KemSK source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (before : State n KemSK source)
     (result : PqxdhJointGapDh.ScalarBytes × State n KemSK source)
     (supported : result ∈ support ((RegistrationNativeExperiment.beacon setup checks representation created
       (RegistrationNativeBeaconFrontend.sample PqxdhJointGapDh.sampleScalar)).run before)) :
@@ -66,7 +68,7 @@ theorem sample_owners (setup : Setup base KemSK) (checks : Checks)
 /-- A successful final native birth crosses the selected roster position after its unchanged counted dummy draw. -/
 theorem birth_done (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (selected : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (selected : Nat)
     (edPin : Std.Array U8 32#usize) (keyId : U64) (prepared : RegistrationNativeBeaconFrontend.Prepared source)
     (scalar : PqxdhJointGapDh.ScalarBytes) (before : State n KemSK source) (chosen : before.beacons.length = selected)
     (drawn : PqxdhJointGapDh.ScalarBytes × State n KemSK source)
@@ -74,7 +76,7 @@ theorem birth_done (setup : Setup base KemSK) (checks : Checks)
       (RegistrationNativeBeaconFrontend.sample PqxdhJointGapDh.sampleScalar)).run before))
     (born : RustM (Option Nat) × State n KemSK source)
     (bornSupport : born ∈ support ((RegistrationNativeExperiment.beacon setup checks representation created
-      (RegistrationNativeBeaconFrontend.appendBorn setup source edPin keyId prepared.pin prepared.credentials prepared.identity scalar)).run drawn.2)) :
+      (RegistrationNativeBeaconFrontend.appendBorn setup source edPin keyId prepared.pin prepared.identity scalar)).run drawn.2)) :
     selected < born.2.beacons.length := by
   have same := sample_owners setup checks representation created before drawn drawnSupport
   have counted := RegistrationNativeScalarRoster.born_length setup checks representation created edPin keyId prepared scalar drawn.2 born bornSupport

@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeIdentityOutgoingSource
 
-/-! Bundle publication uses the actual current-owner phase update after the complete outgoing source controller. Failed Ed/ML signing and encoding retain earlier history/World effects; successful publication advances the same native owner without replacing its reached signing history. -/
+/-! Bundle publication uses the actual current-owner phase update after the complete outgoing source controller. Failed Ed signing, shared hashing and encoding retain earlier history/World effects; successful publication advances the same native owner without replacing its reached signing history. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -17,7 +17,7 @@ variable {source : RegistrationNativeMldsa.Source}
 
 theorem phase_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List IdentitySeed)
     (index : Nat) (phase : RegistrationNativeBeaconFrontend.Phase) :
     Related (n := n) (Auxiliary := Auxiliary) (source := source) setup checks representation created seeds
       (RegistrationNativeIdentityFrontend.updatePhase index phase)
@@ -28,7 +28,7 @@ theorem phase_source (setup : Setup base KemSK) (checks : Checks)
 
 theorem phase_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (phase : RegistrationNativeBeaconFrontend.Phase) :
     Keeps (n := n) (Auxiliary := Auxiliary) (source := source) setup checks representation created
       (RegistrationNativeIdentityFrontend.updatePhase index phase) :=
@@ -59,7 +59,7 @@ def original (index : Nat) (owner : RegistrationNativeBeaconFrontend.Owner sourc
 
 theorem next_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List IdentitySeed)
     (index : Nat) (owner : Owner source) (seed : IdentitySeed) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (reply : RustM (RegistrationBeaconInitExecutor.Result Pqxdh.Bytes)) :
     Related (n := n) (Auxiliary := Auxiliary) setup checks representation created seeds
@@ -79,7 +79,7 @@ theorem next_source (setup : Setup base KemSK) (checks : Checks)
 
 theorem next_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (owner : Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (reply : RustM (RegistrationBeaconInitExecutor.Result Pqxdh.Bytes)) :
     Keeps (n := n) (Auxiliary := Auxiliary) setup checks representation created (next index owner oneTime reply) := by
@@ -100,7 +100,7 @@ noncomputable def bundled (setup : Setup base KemSK) (wire : RegistrationNativeW
   let result ← simulateQ (RegistrationNativeIdentityFrontend.outgoing setup source index owner)
     (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨owner.pin.binding⟩
       (RegistrationNativeIdentityFrontend.inputs owner)
-      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)
+      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)
   next index owner oneTime result
 
 noncomputable def oldBundled (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire)
@@ -109,13 +109,13 @@ noncomputable def oldBundled (setup : Setup base KemSK) (wire : RegistrationNati
   let result ← simulateQ (RegistrationNativeBeaconFrontend.outgoing setup source index owner)
     (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨owner.pin.binding⟩
       (RegistrationNativeBeaconFrontend.inputs setup owner)
-      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)
+      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)
   original index owner oneTime result
 
 /-- The full successful or failed publication stage is the exact original native source stage under the privately generated credential. -/
 theorem bundled_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List IdentitySeed)
     (wire : RegistrationNativeWire.Wire) (index : Nat) (owner : Owner source) (seed : IdentitySeed)
     (oneTime : PqxdhJointGapDh.ScalarBytes)
     (found : seeds[owner.identity.handle]? = some seed)
@@ -130,7 +130,7 @@ theorem bundled_source (setup : Setup base KemSK) (checks : Checks)
 
 theorem bundled_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat) (owner : Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes) :
     Keeps (n := n) (Auxiliary := Auxiliary) setup checks representation created (bundled setup wire index owner oneTime) :=
   keeps_bind setup checks representation created _ _

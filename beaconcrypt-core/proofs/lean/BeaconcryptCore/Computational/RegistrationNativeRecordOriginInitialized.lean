@@ -20,7 +20,7 @@ theorem initialized_prefixes (modes : Label n → KeyMode) (ideal : ∀ label, m
     (route : RawCtxServerRouting.SenderDecoder) (readback : PqxdhServerAuthNegativeControl.FrameReadBack codec)
     (env : RegistrationNativeEntropyInterface.Environment n E) (serverKid : Std.U64) (bounds : FreshBounds)
     (mode : Mode) (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value)
-    (created : PqxdhLiveServerConstruction.Created Unit) (initial : E) (shell : CborRecordWorldClient.Shell)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (initial : E) (shell : CborRecordWorldClient.Shell)
     (control : PqxdhRecordLiftProtocol.Control n) (safe : PqxdhRecordLiftProtocolHistory.Safe control)
     (secret : CtxPrivate n) (empty : ∀ label, (secret.keys label).1.successfulSeals = []) (result : RegistrationNativeEntropyRun.Result n E Value)
     (supported : result ∈ support (RegistrationNativeEntropyInitialized.run modes replace setup codec route env serverKid bounds mode work

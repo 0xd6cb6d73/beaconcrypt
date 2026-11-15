@@ -11,20 +11,20 @@ open beaconcrypt_parse RegistrationSerializerReachableSource
 
 theorem init [RegistrationValidatorPrimitive.Operations]
     (other : OtherBranches) (value : transport.initkex) (output : Slice U8)
-    (shape : RegistrationSerializerInitBytes.InitShape value) (room : 6757 ≤ output.length) :
+    (shape : RegistrationSerializerInitBytes.InitShape value) (room : 1490 ≤ output.length) :
     ∃ after front spare,
-      @extraction_encode_init (operations other) value output = .ok (6757#usize, after) ∧
+      @extraction_encode_init (operations other) value output = .ok (1490#usize, after) ∧
       after.length = output.length ∧
-      core.slice.Slice.split_at after 6757#usize = .ok (front, spare) ∧
-      front.val = 136#u8 :: RegistrationSerializerInitBytes.payload value ∧
-      spare.val = output.val.drop 6757 ∧
+      core.slice.Slice.split_at after 1490#usize = .ok (front, spare) ∧
+      front.val = 134#u8 :: RegistrationSerializerInitBytes.payload value ∧
+      spare.val = output.val.drop 1490 ∧
       extraction_decode_init front = .ok (.Some value) := by
   obtain ⟨after, encoded, length, bytes⟩ := RegistrationSerializerInitBytes.public_bytes other value output shape room
-  have position : (6757#usize).val = (136#u8 :: RegistrationSerializerInitBytes.payload value).length := by
+  have position : (1490#usize).val = (134#u8 :: RegistrationSerializerInitBytes.payload value).length := by
     simp only [List.length_cons, RegistrationPublicReadback.init_payload_length value shape]
     scalar_tac
   obtain ⟨front, spare, split, frontBytes, spareBytes⟩ := RegistrationHeaderJump.split_prefix
-    after 6757#usize _ _ bytes position
+    after 1490#usize _ _ bytes position
   exact ⟨after, front, spare, encoded, length, split, frontBytes, spareBytes,
     RegistrationPublicReadback.decode_init front value frontBytes shape⟩
 

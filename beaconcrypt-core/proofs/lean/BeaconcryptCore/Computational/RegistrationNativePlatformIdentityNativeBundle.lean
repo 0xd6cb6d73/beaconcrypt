@@ -59,7 +59,7 @@ private theorem lift_apply {S A : Type} {m : Type → Type} [Monad m] [LawfulMon
   rw [bind_pure_comp]
 
 variable (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
 
 noncomputable def target : QueryImpl (RegistrationNativePlatformGenericBundle.Spec E n KemSK)

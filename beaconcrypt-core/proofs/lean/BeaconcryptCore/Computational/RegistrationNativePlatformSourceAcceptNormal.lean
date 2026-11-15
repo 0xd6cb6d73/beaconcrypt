@@ -43,22 +43,10 @@ private theorem auth_step (state : registration.InitAuthentication)
     obtain ⟨request,requested⟩:=PanicFreedom.RegistrationTrivial.InitHash_request_total pending
     simp only [RegistrationAuthenticationExecutor.step,requested,RegistrationAuthenticationExecutor.continueWith] at supported
     exact auth_edge _ _ _ (PanicFreedom.Registration.InitHash_resume_total pending) result supported
-  | MldsaVerificationRequested pending=>
-    obtain ⟨request,requested⟩:=PanicFreedom.RegistrationTrivial.InitMldsaVerification_request_total pending
-    simp only [RegistrationAuthenticationExecutor.step,requested,RegistrationAuthenticationExecutor.continueWith] at supported
-    exact auth_edge _ _ _ (PanicFreedom.Registration.InitMldsaVerification_resume_total pending) result supported
   | Ed25519VerificationRequested pending=>
     obtain ⟨request,requested⟩:=PanicFreedom.Registration.InitEd25519Verification_request_total pending
     simp only [RegistrationAuthenticationExecutor.step,requested,RegistrationAuthenticationExecutor.continueWith] at supported
     exact auth_edge _ _ _ (PanicFreedom.Registration.InitEd25519Verification_resume_total pending) result supported
-  | ServerFingerprintRequested pending=>
-    obtain ⟨request,requested⟩:=PanicFreedom.RegistrationTrivial.InitServerFingerprint_request_total pending
-    simp only [RegistrationAuthenticationExecutor.step,requested,RegistrationAuthenticationExecutor.continueWith] at supported
-    exact auth_edge _ _ _ (PanicFreedom.RegistrationTrivial.InitServerFingerprint_resume_total pending) result supported
-  | BeaconFingerprintRequested pending=>
-    obtain ⟨request,requested⟩:=PanicFreedom.RegistrationTrivial.InitBeaconFingerprint_request_total pending
-    simp only [RegistrationAuthenticationExecutor.step,requested,RegistrationAuthenticationExecutor.continueWith] at supported
-    exact auth_edge _ _ _ (PanicFreedom.Registration.InitBeaconFingerprint_resume_total pending) result supported
   | Accepted accepted=>exact pure_normal none result supported
   | Rejected=>exact pure_normal none result supported
 private theorem auth_execute (fuel : Nat) (state : registration.InitAuthentication)
@@ -86,7 +74,7 @@ theorem authentication (pin : session.ServerAuthenticationPin) (packet : registr
     (supported : result∈support (RegistrationAuthenticationExecutor.begin pin packet)) : Normal result := by
   obtain ⟨state,started⟩:=PanicFreedom.Registration.begin_init_authentication_total pin packet
   simp only [RegistrationAuthenticationExecutor.begin,started,RegistrationAuthenticationExecutor.continueWith] at supported
-  exact auth_execute 8 state result supported
+  exact auth_execute 5 state result supported
 private theorem agree_query (query : RegistrationAgreementExecutor.Spec.Domain)
     (resume : RegistrationAgreementExecutor.Spec.Range query→RustM agreement.AgreementEffect)
     (total : ∀reply,∃next,resume reply=.ok next) (result : RustM agreement.AgreementEffect)
@@ -168,7 +156,7 @@ private theorem auth_world (setup : Setup base KemSK) (codec : Codec Reader Resp
   rw [←QueryImpl.simulateQ_compose] at supported
   exact authentication pin packet result.1 (source_supported _ _ before result supported)
 private theorem agree_native (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit)
     (before : RegistrationServerFrontendCompiler.State n)
     (result : RustM agreement.AgreementEffect×RegistrationServerFrontendCompiler.State n)
@@ -177,7 +165,7 @@ private theorem agree_native (setup : Setup base KemSK) (checks : Checks)
   simp only [RegistrationServerNativeSource.agree,StateT.run,support_map] at supported
   obtain ⟨inner,called,rfl⟩:=supported
   exact agreement before.control authenticated before.consumed inner.1 (source_supported _ _ before.world inner called)
-private theorem retain_native (created : PqxdhLiveServerConstruction.Created Unit) (accepted : agreement.ServerAgreement)
+private theorem retain_native (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (accepted : agreement.ServerAgreement)
     (before : RegistrationServerFrontendCompiler.State n)
     (result : RustM (Option Nat)×RegistrationServerFrontendCompiler.State n)
     (supported : result∈support ((RegistrationServerNativeSource.retain created accepted).run before)) : Normal result.1 := by
@@ -216,9 +204,8 @@ theorem pin (coins : QueryImpl unifSpec (StateT Platform ProbComp))
   obtain ⟨inner,called,rfl⟩:=supported
   have native:=source_supported coins _ previous inner called
   rw [RegistrationNativeServerPinRecompute.native_run] at native
-  simp only [mem_support_bind_iff,support_pure,Set.mem_singleton_iff] at native
-  obtain ⟨hashed,_hash,returned⟩:=native
-  exact ⟨_,congrArg Prod.fst returned⟩
+  simp only [support_pure,Set.mem_singleton_iff] at native
+  exact ⟨_,congrArg Prod.fst native⟩
 private theorem pure_state (value : A) (before : S) (previous : Platform)
     (result : (RustM A×S)×Platform)
     (supported : result∈support (((pure (.ok value) : StateT S (StateT Platform ProbComp) (RustM A)).run before).run previous)) :
@@ -228,7 +215,7 @@ private theorem pure_state (value : A) (before : S) (previous : Platform)
 /-- Replay refusal and arbitrary Boolean registration reservation preserve normal returns. -/
 theorem afterAuthentication (coins : QueryImpl unifSpec (StateT Platform ProbComp)) (setup : Setup base KemSK) (checks : Checks)
     (reserve : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) Bool)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit)
     (before : RegistrationServerFrontendCompiler.State n) (previous : Platform)
     (result : (RustM (Option Nat)×RegistrationServerFrontendCompiler.State n)×Platform)
@@ -257,7 +244,7 @@ private theorem after_pin (coins : QueryImpl unifSpec (StateT Platform ProbComp)
     (codec : Codec Reader Response) (checks : Checks)
     (reserve : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) Bool)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (optional : core.option.Option session.ServerAuthenticationPin)
     (before : RegistrationServerFrontendCompiler.State n) (previous : Platform)
     (result : (RustM (Option Nat)×RegistrationServerFrontendCompiler.State n)×Platform)
@@ -277,7 +264,7 @@ private theorem after_pin (coins : QueryImpl unifSpec (StateT Platform ProbComp)
 theorem accept (coins : QueryImpl unifSpec (StateT Platform ProbComp)) (setup : Setup base KemSK)
     (codec : Codec Reader Response) (checks : Checks) (reserve : StateT Platform ProbComp Bool)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (before : RegistrationServerFrontendCompiler.State n) (previous : Platform)
     (result : (RustM (Option Nat)×RegistrationServerFrontendCompiler.State n)×Platform)
     (supported : result∈support (((RegistrationNativePlatformSourceAccept.accept coins setup codec checks reserve route verify representation created packet).run before).run previous)) :
@@ -293,7 +280,7 @@ theorem extracted_accept [ed : AdapterInitEdPrimitive.Operations]
     (coins : QueryImpl unifSpec (StateT Platform ProbComp)) (setup : Setup base KemSK)
     (codec : Codec Reader Response) (checks : Checks) (reserve : StateT Platform ProbComp Bool)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (functional : RegistrationNativePlatformAuthentication.EdFunctional setup.source.crypto)
     (packet : registration.InitPacket) (before : RegistrationServerFrontendCompiler.State n) (previous : Platform)
     (result : (RustM (Option Nat)×RegistrationServerFrontendCompiler.State n)×Platform)
@@ -313,7 +300,7 @@ theorem dispatch [ed : AdapterInitEdPrimitive.Operations] {source : Registration
     (coins : QueryImpl unifSpec (StateT Platform ProbComp)) (setup : Setup base KemSK)
     (codec : Codec Reader Response) (checks : Checks) (reserve : StateT Platform ProbComp Bool)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (functional : RegistrationNativePlatformAuthentication.EdFunctional setup.source.crypto)
     (input : Slice U8) (before : RegistrationNativeExperiment.State n KemSK source) (previous : Platform)
     (result : (RustM (Option Nat)×RegistrationNativeExperiment.State n KemSK source)×Platform)

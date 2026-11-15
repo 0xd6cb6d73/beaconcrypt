@@ -18,7 +18,7 @@ open RegistrationNativeWire (Wire ledgerCodec)
 variable {ι KemSK Value : Type} {base : OracleSpec ι} {n : Nat}
 
 /-- The exact existing owner-to-World address selection surrounds the source-selected guarded record service. -/
-noncomputable def record (setup : Setup base KemSK) (wire : Wire) (erased : Array Std.U8 357#usize)
+noncomputable def record (setup : Setup base KemSK) (wire : Wire) (erased : Array Std.U8 227#usize)
     (route : RawCtxServerRouting.SenderDecoder) (query : RecordQuery)
     (mlSource : RegistrationNativeMldsa.Source) : RegistrationNativeExperiment.M n KemSK mlSource ((PqxdhRecordLiftInterface.RecordSpec .O).Range query) :=
   match query with
@@ -35,7 +35,7 @@ noncomputable def record (setup : Setup base KemSK) (wire : Wire) (erased : Arra
 /-- The complete native record interface retains all owner addresses, returned values and protocol/primitive states. -/
 theorem record_native (setup : Setup base KemSK) (wire : Wire)
     (length : RegistrationNativeExtractedReceive.AeadLength setup.source.crypto)
-    (erased : Array Std.U8 357#usize) (route : RawCtxServerRouting.SenderDecoder)
+    (erased : Array Std.U8 227#usize) (route : RawCtxServerRouting.SenderDecoder)
     (query : RecordQuery) (mlSource : RegistrationNativeMldsa.Source) :
     record (n := n) setup wire erased route query mlSource =
       RegistrationNativeExperiment.record setup wire route query mlSource := by
@@ -45,9 +45,9 @@ theorem record_native (setup : Setup base KemSK) (wire : Wire)
 
 /-- Every native finish uses extracted response authentication, and every ordinary raw receive uses the extracted receive loop. -/
 noncomputable def handler (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
-    (erased : Array Std.U8 357#usize) (route : RawCtxServerRouting.SenderDecoder)
+    (erased : Array Std.U8 227#usize) (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (mlSource : RegistrationNativeMldsa.Source) (credential : RegistrationNativeMldsa.Credential mlSource) :
     QueryImpl RegistrationNativeRawAdapter.TypedSpec (RegistrationNativeExperiment.M n KemSK mlSource)
   | .inr (.serverSend keyId plaintext) => record setup wire erased route (.inl (.inl (plaintext, keyId))) mlSource
@@ -59,9 +59,9 @@ noncomputable def handler (setup : Setup base KemSK) (checks : Checks) (wire : W
 /-- Callback equality preserves the same shared primitive caches, counters, private kernels, owner maps and optional-failure poststates through one deployment. -/
 theorem handler_native (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (length : RegistrationNativeExtractedReceive.AeadLength setup.source.crypto)
-    (erased : Array Std.U8 357#usize) (route : RawCtxServerRouting.SenderDecoder)
+    (erased : Array Std.U8 227#usize) (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (mlSource : RegistrationNativeMldsa.Source) (credential : RegistrationNativeMldsa.Credential mlSource) :
     handler (n := n) setup checks wire erased route representation created mlSource credential =
       RegistrationNativeExperiment.handler setup checks wire route representation created mlSource credential := by
@@ -85,9 +85,9 @@ theorem handler_native (setup : Setup base KemSK) (checks : Checks) (wire : Wire
       | hash bytes => exact auth
 
 noncomputable def run (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
-    (erased : Array Std.U8 357#usize) (route : RawCtxServerRouting.SenderDecoder)
+    (erased : Array Std.U8 227#usize) (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (mlSource : RegistrationNativeMldsa.Source) (credential : RegistrationNativeMldsa.Credential mlSource)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value)
@@ -98,9 +98,9 @@ noncomputable def run (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
 /-- Every adaptive native execution retains its complete joint result and state under the source-controller interpretation. -/
 theorem run_native (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (length : RegistrationNativeExtractedReceive.AeadLength setup.source.crypto)
-    (erased : Array Std.U8 357#usize) (route : RawCtxServerRouting.SenderDecoder)
+    (erased : Array Std.U8 227#usize) (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (mlSource : RegistrationNativeMldsa.Source) (credential : RegistrationNativeMldsa.Credential mlSource)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value)
@@ -111,7 +111,7 @@ theorem run_native (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     handler_native setup checks wire length erased route representation created mlSource credential]
 
 noncomputable def profile (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
-    (erased : Array Std.U8 357#usize) (route : RawCtxServerRouting.SenderDecoder)
+    (erased : Array Std.U8 227#usize) (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
     (mlSource : RegistrationNativeMldsa.Source) (ensureInit : StateT Unit ProbComp Bool)
     (identityIndex : Nat) (serverKeyId : U64) (bounds : PqxdhDeploymentInterface.FreshBounds)
@@ -127,7 +127,7 @@ noncomputable def profile (setup : Setup base KemSK) (checks : Checks) (wire : W
 /-- Actual extracted controller refinements occur in this theorem's dependency chain. The distribution equality covers the unchanged mandatory-ML native profile, original ledger, constructor outcomes and all later callbacks; no security conclusion or source-distribution equation is supplied as a premise. -/
 theorem profile_native (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (length : RegistrationNativeExtractedReceive.AeadLength setup.source.crypto)
-    (erased : Array Std.U8 357#usize) (route : RawCtxServerRouting.SenderDecoder)
+    (erased : Array Std.U8 227#usize) (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
     (mlSource : RegistrationNativeMldsa.Source) (ensureInit : StateT Unit ProbComp Bool)
     (identityIndex : Nat) (serverKeyId : U64) (bounds : PqxdhDeploymentInterface.FreshBounds)

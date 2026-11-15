@@ -24,7 +24,7 @@ private theorem continueWith_hom {Input : Type} (action : RustM Input)
     F (continueWith action next) = continueWith action (fun value => F (next value)) := by
   cases action <;> first | rfl | exact hom.map_pure _
 
-theorem ready (encode : registration.SignedInitView → left (RustM (core.option.Option Encoded)))
+theorem ready (encode : registration.InitView → left (RustM (core.option.Option Encoded)))
     (pending : registration.BeaconInitReady) :
     F (RegistrationNativePlatformBeaconPublication.ready encode pending) =
       RegistrationNativePlatformBeaconPublication.ready (fun view => F (encode view)) pending := by
@@ -36,25 +36,8 @@ theorem ready (encode : registration.SignedInitView → left (RustM (core.option
   apply bind_congr
   intro encoded
   exact hom.map_pure _
-theorem signing (impl : QueryImpl Spec left)
-    (encode : registration.SignedInitView → left (RustM (core.option.Option Encoded)))
-    (payload : MldsaTranscriptAuth.Payload) (digest : CtxRomAuth.CtxDigest)
-    (pending : registration.BeaconMldsaSigning) :
-    F (fromSigning impl encode payload digest pending) =
-      fromSigning (fun query => F (impl query)) (fun view => F (encode view)) payload digest pending := by
-  unfold fromSigning
-  rw [continueWith_hom hom]
-  apply congrArg (continueWith pending.request)
-  funext request
-  rw [hom.map_bind]
-  apply bind_congr
-  intro signature
-  rw [continueWith_hom hom]
-  apply congrArg (continueWith (pending.resume signature))
-  funext effect
-  cases effect <;> first | exact ready hom encode _ | exact hom.map_pure _
 theorem hash (impl : QueryImpl Spec left)
-    (encode : registration.SignedInitView → left (RustM (core.option.Option Encoded)))
+    (encode : registration.InitView → left (RustM (core.option.Option Encoded)))
     (pending : registration.BeaconInitHash) :
     F (fromHash impl encode pending) =
       fromHash (fun query => F (impl query)) (fun view => F (encode view)) pending := by
@@ -68,25 +51,9 @@ theorem hash (impl : QueryImpl Spec left)
   rw [continueWith_hom hom]
   apply congrArg (continueWith (pending.resume (.Some (RegistrationAuthenticationShared.digestArray digest))))
   funext effect
-  cases effect <;> first | exact signing hom impl encode _ _ _ | exact hom.map_pure _
-theorem fingerprint (impl : QueryImpl Spec left)
-    (encode : registration.SignedInitView → left (RustM (core.option.Option Encoded)))
-    (pending : registration.BeaconFingerprint) :
-    F (fromFingerprint impl encode pending) =
-      fromFingerprint (fun query => F (impl query)) (fun view => F (encode view)) pending := by
-  unfold fromFingerprint
-  rw [continueWith_hom hom]
-  apply congrArg (continueWith pending.request)
-  funext request
-  rw [hom.map_bind]
-  apply bind_congr
-  intro digest
-  rw [continueWith_hom hom]
-  apply congrArg (continueWith (pending.resume (.Some (RegistrationAuthenticationShared.digestArray digest))))
-  funext effect
-  cases effect <;> first | exact hash hom impl encode _ | exact hom.map_pure _
+  cases effect <;> first | exact ready hom encode _ | exact hom.map_pure _
 theorem ed (impl : QueryImpl Spec left)
-    (encode : registration.SignedInitView → left (RustM (core.option.Option Encoded)))
+    (encode : registration.InitView → left (RustM (core.option.Option Encoded)))
     (pending : registration.BeaconEd25519Signing) :
     F (fromEd impl encode pending) =
       fromEd (fun query => F (impl query)) (fun view => F (encode view)) pending := by
@@ -103,21 +70,21 @@ theorem ed (impl : QueryImpl Spec left)
   | ok effect =>
     cases effect with
     | Ed25519SigningRequested next => exact ed impl encode next
-    | FingerprintRequested next => exact fingerprint hom impl encode next
+    | HashRequested next => exact hash hom impl encode next
     | _ => exact hom.map_pure _
 termination_by edRank pending
 decreasing_by exact ed_rank pending reply next resumed
 
 theorem begin (impl : QueryImpl Spec left)
-    (encode : registration.SignedInitView → left (RustM (core.option.Option Encoded)))
+    (encode : registration.InitView → left (RustM (core.option.Option Encoded)))
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array Std.U8 1952#usize) :
-    F (RegistrationNativePlatformBeaconPublication.begin impl encode control inputs coins pin mldsa) =
+    (pin : session.ServerAuthenticationPin) :
+    F (RegistrationNativePlatformBeaconPublication.begin impl encode control inputs coins pin) =
       RegistrationNativePlatformBeaconPublication.begin (fun query => F (impl query))
-        (fun view => F (encode view)) control inputs coins pin mldsa := by
+        (fun view => F (encode view)) control inputs coins pin := by
   unfold RegistrationNativePlatformBeaconPublication.begin
   rw [continueWith_hom hom]
-  apply congrArg (continueWith (registration.begin_beacon_init control inputs coins pin mldsa))
+  apply congrArg (continueWith (registration.begin_beacon_init control inputs coins pin))
   funext effect
   cases effect <;> first | exact ed hom impl encode _ | exact hom.map_pure _
 end BeaconcryptCore.Computational.RegistrationNativePlatformBeaconMap
@@ -128,11 +95,6 @@ end BeaconcryptCore.Computational.RegistrationNativePlatformBeaconMap
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativePlatformBeaconMap.ready
 
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformBeaconMap.signing' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformBeaconMap.signing
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformBeaconMap.hash' depends on axioms: [propext,
  Classical.choice,
@@ -140,11 +102,6 @@ end BeaconcryptCore.Computational.RegistrationNativePlatformBeaconMap
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativePlatformBeaconMap.hash
 
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformBeaconMap.fingerprint' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformBeaconMap.fingerprint
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformBeaconMap.ed' depends on axioms: [propext,
  Classical.choice,

@@ -28,7 +28,7 @@ structure Safe (credential : RegistrationNativeMldsa.Credential (handleSource so
     (fallback : RegistrationNativeMldsa.Credential source)
     (before : State (n := n) (KemSK := KemSK) (Platform := Platform) source) : Prop extends
     RegistrationNativeMldsaTableStop.Safe source credential fallback (core source before) where
-  pinned : RegistrationNativeServerPinRecompute.Cached before.1.1.server.pin (RegistrationNativeWorldCache.cache before.1.1)
+  pinned : before.1.1.server.pin.public_key = credential.publicKey
   provenance : RegistrationNativeMldsaBirthProvenance.Provenance source before.2
 
 /-- Actual table startup derives every initial live-key, signing/cache, immutable-pin and birth-provenance field. -/
@@ -40,14 +40,14 @@ theorem initialized (setup : Setup base KemSK) (ensureInit : StateT Unit ProbCom
     (previous : Platform) : ∃ fallback, Safe source initial.credential fallback ((initial.state, previous), started.2) := by
   obtain ⟨fallback, good⟩ := RegistrationNativeMldsaProtectedInvariant.initialized source setup ensureInit identityIndex serverKeyId started startup initial member
   exact ⟨fallback, good.safe,
-    RegistrationNativePlatformServerPinTrace.table_initialized setup source ensureInit identityIndex serverKeyId started startup initial member,
+    (RegistrationNativePlatformServerPinTrace.table_initialized setup source ensureInit identityIndex serverKeyId started startup initial member).2,
     good.provenance⟩
 
 
 variable [primitive : AdapterSealPrimitive.Operations]
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
 variable (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential (handleSource source))
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential (handleSource source))
 variable (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
 variable (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
 variable (reserveRegistration reservePeer : StateT Platform ProbComp Bool) (erased : commitment.CommitmentTranscript)
@@ -91,15 +91,14 @@ private theorem step_core (fallback : RegistrationNativeMldsa.Credential source)
   simp only [RegistrationNativePlatformMldsaTableCallback.callback, StateT.run, support_map] at supported
   obtain ⟨inner, reached, same⟩ := supported
   cases same
-  refine ⟨⟨?_, ?_, ?_, cached⟩, ?_, ?_⟩
+  refine ⟨⟨?_, ?_, cached⟩, ?_, ?_⟩
   · exact RegistrationNativePlatformMldsaTableHandler.server_live source setup checks wire route representation created credential view failure allocation reserveRegistration reservePeer erased helper writer
-      fallback before.2 safe.server query before.1.1 before.1.2 safe.owners inner reached
-  · exact RegistrationNativePlatformMldsaTableHandler.live source setup checks wire route representation created credential view failure allocation reserveRegistration reservePeer erased helper writer
-      before.2 ⟨fallback, safe.server⟩ query before.1.1 before.1.2 safe.owners inner reached
+      fallback before.2 safe.server query before.1.1 before.1.2 inner reached
   · exact RegistrationNativePlatformMldsaRunChronology.handler source setup checks wire route representation created credential view failure allocation
       reserveRegistration reservePeer erased helper writer query before.1.1 before.1.2 before.2 inner safe.aligned reached
-  · exact RegistrationNativePlatformServerPinTrace.table_cached setup checks wire route representation created view failure allocation reserveRegistration reservePeer erased helper writer
-      source credential fallback before.2 safe.server query before.1.1 before.1.2 safe.owners inner reached safe.pinned
+  · exact (congrArg session.ServerAuthenticationPin.public_key
+      (RegistrationNativePlatformServerPinTrace.table_pin setup checks wire route representation created view failure allocation reserveRegistration reservePeer erased helper writer
+        source credential fallback before.2 safe.server query before.1.1 before.1.2 inner reached)).trans safe.pinned
   · exact evaluated source _ before.2 safe.provenance inner reached
 
 
@@ -118,7 +117,7 @@ theorem step_safe (fallback : RegistrationNativeMldsa.Credential source)
   obtain ⟨inner, reached, same⟩ := supported
   cases same
   exact RegistrationNativePlatformMldsaTableCached.cached source setup checks wire route representation created credential fallback view failure allocation
-    reserveRegistration reservePeer erased helper writer query before.1.1 before.1.2 before.2 safe.server safe.owners safe.cached inner reached
+    reserveRegistration reservePeer erased helper writer query before.1.1 before.1.2 before.2 safe.server safe.cached inner reached
 
 /-- The actual selected incoming cut produces an ordinary valid candidate fresh against its literal same-cut final table signing prefix. -/
 theorem captured (publicKey : PublicKey) (fallback : RegistrationNativeMldsa.Credential source)

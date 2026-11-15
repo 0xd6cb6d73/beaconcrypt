@@ -22,7 +22,7 @@ attribute [local irreducible] RegistrationServerOpenReferenceCompiler.accept Reg
 theorem accept_source (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential source) (selectedOwner selectedAccept : Nat)
     (publicPrekey : PqxdhJointIdentity.PeerEncoding) (packet : registration.InitPacket) (before : State n KemSK source) :
     Prod.map id (fun after => project (RegistrationNativePublicSourceState.roots setup created.seed scalar) scalar after.1 after.2) <$>
@@ -65,7 +65,7 @@ theorem accept_source (setup : Setup base KemSK) (checks : Checks) (wire : Regis
 /-- An actual live build executes the native SDK entry with the same original one-use, signature, codec and publication failures. -/
 theorem build_source (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential source) (selectedOwner selectedAccept : Nat)
     (publicPrekey : PqxdhJointIdentity.PeerEncoding) (handle : Nat) (application : Option (Slice U8))
     (before : State n KemSK source) (live : Live before.1 before.2)

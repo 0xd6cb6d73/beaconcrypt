@@ -19,6 +19,7 @@ open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 
 namespace BeaconcryptCore.Computational.PqxdhRecordLiftLaterWorlds
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhRecordLiftInterface PqxdhRecordLiftIdeal
 open PqxdhDeploymentInterface (Mode ModeSpec FreshBounds Budget)
 open PqxdhDeploymentLater (PostSpec PostBudget)
@@ -31,7 +32,7 @@ variable {n : Nat} {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response
 
 /-- The result shape of the frozen run-phase program and of the two-phase program. -/
 abbrev Outcome (E X : Type) :=
-  Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × (X × PqxdhDeploymentSecrecy.Ledger) × E)
+  Option (PqxdhRegistrationJointServerBirth.ClientCreated (Std.Array Std.U8 151#usize) × (X × PqxdhDeploymentSecrecy.Ledger) × E)
 
 /-- The chain world with selector `ideal` for an arbitrary adaptive World client of the frozen result shape. -/
 noncomputable def chainsOf (ideal : Label n → Bool) (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -139,7 +140,7 @@ theorem laterReal_game :
 
 /-- The run-phase record-event view of a compiled run: the Server's public data, the world-owned ledger, the tagged produced frames and the raw-attempt counters. -/
 def runEventView (result : PqxdhRecordLiftProtocol.RunResult n E X) :
-    Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × PqxdhDeploymentSecrecy.Ledger ×
+    Option (PqxdhRegistrationJointServerBirth.ClientCreated (Std.Array Std.U8 151#usize) × PqxdhDeploymentSecrecy.Ledger ×
       List (PqxdhDeploymentInterface.FrameTag × PqxdhDeploymentNative.Frame) × PqxdhRecordLiftWorld.RawCounters) :=
   result.1.1.map fun value => (value.1, value.2.1.2, result.2.produced, PqxdhRecordLiftProtocol.rawCounters result.1.2)
 
@@ -156,7 +157,7 @@ theorem runEventView_eq (result : PqxdhRecordLiftProtocol.RunResult n E X) :
 
 /-- **Run-phase events carry over.** Every event of `runEventView` (the Server's public data, the ledger, the produced frames and the raw-attempt counters) has the same law in the all-real later world as in the run-phase real world of `first`: the post phase changes none of them (`PqxdhRecordLiftLater.run_event`). A run-phase fact about an event expressed in this projection, for example a CE-level origin or authentication event of that form, therefore holds unchanged in the later game. The record-lift events `UnpublishedAccept`, `UnproducedAccept` and `CrossAccept` are not covered: they also read `View.slots`, which the post phase can extend with new installs, and no slot-monotonicity argument is proved. No later origin or authentication claim is made. -/
 theorem laterReal_event
-    (event : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × PqxdhDeploymentSecrecy.Ledger ×
+    (event : Option (PqxdhRegistrationJointServerBirth.ClientCreated (Std.Array Std.U8 151#usize) × PqxdhDeploymentSecrecy.Ledger ×
       List (PqxdhDeploymentInterface.FrameTag × PqxdhDeploymentNative.Frame) × PqxdhRecordLiftWorld.RawCounters) → Bool) :
     𝒟[(event ∘ runEventView) <$> laterRealChains setup codec route env serverKid bounds mode reveal first second] =
       𝒟[(event ∘ runEventView) <$> realChains setup codec route env serverKid bounds mode first] := by

@@ -19,6 +19,7 @@ Premises: `FunctionalDecapsulation setup.kem`, `Phase1ReadBack`, `Phase2ReadBack
 open OracleComp OracleSpec ENNReal
 
 set_option autoImplicit false
+set_option warningAsError true
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentHeadlineUks
 open PqxdhServerAuthExperiment (Setup Codec Checks)
@@ -43,13 +44,13 @@ theorem cross_final (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (respects : budget.Respects adversary)
     (g : Fin budget.accept × Fin budget.capacity) (runtime : A) :
     𝒟[PqxdhRecordLiftIdeal.crossEvent codec route <$> (ctxView <$> idealAuth setup codec route
-        (PqxdhDeploymentIdealEnv.envGD setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
+        (PqxdhDeploymentIdealEnv.envGD   setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
         setup.serverKeyId bounds mode adversary)] {true} ≤ bindingTerm (inputG caps qInit budget bounds) := by
   rw [Functor.map_map]
   exact (PqxdhRecordFactsBindingGlobal.bindingTarget setup codec route setup.serverKeyId bounds frameReadBack
-    (PqxdhDeploymentIdealEnv.envGD setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
+    (PqxdhDeploymentIdealEnv.envGD   setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
     (PqxdhDeploymentHeadlineChain.startupG caps qInit budget) (allowanceG (baseAllowance caps) ceFirstTouch)
-    (PqxdhDeploymentIdealFrame.frame_idealD setup codec checks caps bounded (Target.ofCE budget g) ensureInit qInit
+    (PqxdhDeploymentIdealFrame.frame_idealD   setup codec checks caps bounded (Target.ofCE budget g) ensureInit qInit
       initBound 0 runtime) mode adversary budget respects).1
 
 /-- **CE-UKS, receiver side, per target** (design-v2 section 4.3): the probability that the deployment experiment ends with a receiver-side UKS failure whose first witness entry's receiving Server peer designates `g` is at most `kemLoss + slotLoss + authLoss_g(dec_g ∧ ISs_g) + bindingTerm BI_g`; no anomaly term. -/
@@ -66,7 +67,7 @@ theorem ce_uks_b2s_target (setup : Setup baseSpec KemSK)
     𝒟[(fun outcome => decide (happens (uksReceiverEvent setup.source.crypto codec setup.serverKeyId budget route)
         outcome = true ∧ designated setup.source.crypto codec setup.serverKeyId budget
           (uksReceiverClaim setup.source.crypto codec setup.serverKeyId budget route) outcome = some g)) <$>
-      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime] {true} ≤
+      (PqxdhDeploymentSecrecy.game   setup codec checks route ensureInit 0 bounds mode adversary).run runtime] {true} ≤
       ENNReal.ofReal (kemLoss setup codec checks route ensureInit bounds mode adversary budget
         (uksReceiverEvent setup.source.crypto codec setup.serverKeyId budget route)
         (uksReceiverClaim setup.source.crypto codec setup.serverKeyId budget route) g runtime) +
@@ -77,20 +78,20 @@ theorem ce_uks_b2s_target (setup : Setup baseSpec KemSK)
         (serverSlotted setup codec budget (uksReceiverEvent setup.source.crypto codec setup.serverKeyId budget route)
           (uksReceiverClaim setup.source.crypto codec setup.serverKeyId budget route) g) +
       bindingTerm (inputG caps qInit budget bounds) := by
-  have chain := PqxdhDeploymentHeadlineChain.chain_server setup functional codec checks route ensureInit phase1 phase2
+  have chain := PqxdhDeploymentHeadlineChain.chain_server   setup functional codec checks route ensureInit phase1 phase2
     correct bounds mode adversary budget respects
     (uksReceiverEvent setup.source.crypto codec setup.serverKeyId budget route)
     (uksReceiverClaim setup.source.crypto codec setup.serverKeyId budget route) g runtime
-  have lift := PqxdhDeploymentHeadlineChain.auth_le setup codec checks route correct caps bounded ensureInit qInit
+  have lift := PqxdhDeploymentHeadlineChain.auth_le   setup codec checks route correct caps bounded ensureInit qInit
     initBound bounds mode adversary budget respects g runtime fallback
     (serverSlotted setup codec budget (uksReceiverEvent setup.source.crypto codec setup.serverKeyId budget route)
       (uksReceiverClaim setup.source.crypto codec setup.serverKeyId budget route) g)
   have hit := PqxdhDeploymentHeadlineContain.chance_mono
     (ctxView <$> idealAuth setup codec route
-      (PqxdhDeploymentIdealEnv.envGD setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
+      (PqxdhDeploymentIdealEnv.envGD   setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
       setup.serverKeyId bounds mode adversary) _ _
     (PqxdhDeploymentHeadlineContain.uks_receiver setup codec budget route g)
-  have final := cross_final setup codec checks route caps bounded ensureInit qInit initBound frameReadBack bounds
+  have final := cross_final   setup codec checks route caps bounded ensureInit qInit initBound frameReadBack bounds
     mode adversary budget respects g runtime
   calc _ ≤ _ := chain
     _ ≤ ((bindingTerm (inputG caps qInit budget bounds) +
@@ -118,7 +119,7 @@ theorem ce_uks_b2s (setup : Setup baseSpec KemSK)
     (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (respects : budget.Respects adversary) (runtime : A)
     (fallback : CtxNonceAeadIntCtxt.ModifiedNonceAeadForgery) :
     𝒟[(fun outcome => happens (uksReceiverEvent setup.source.crypto codec setup.serverKeyId budget route) outcome) <$>
-      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime] {true} ≤
+      (PqxdhDeploymentSecrecy.game   setup codec checks route ensureInit 0 bounds mode adversary).run runtime] {true} ≤
       ∑ g : Fin budget.accept × Fin budget.create,
         (ENNReal.ofReal (kemLoss setup codec checks route ensureInit bounds mode adversary budget
             (uksReceiverEvent setup.source.crypto codec setup.serverKeyId budget route)
@@ -131,10 +132,10 @@ theorem ce_uks_b2s (setup : Setup baseSpec KemSK)
               (uksReceiverEvent setup.source.crypto codec setup.serverKeyId budget route)
               (uksReceiverClaim setup.source.crypto codec setup.serverKeyId budget route) (g.1, g.2.castSucc)) +
           bindingTerm (inputG caps qInit budget bounds)) := by
-  rw [PqxdhDeploymentHeadlineChain.split_named setup codec checks route ensureInit phase1 phase2 bounds mode adversary
+  rw [PqxdhDeploymentHeadlineChain.split_named   setup codec checks route ensureInit phase1 phase2 bounds mode adversary
     budget respects _ _ runtime (PqxdhDeploymentHeadlineEvents.uksReceiver_named setup.source.crypto codec
       setup.serverKeyId budget route)]
-  exact Finset.sum_le_sum fun g _ => ce_uks_b2s_target setup functional codec checks route ensureInit phase1 phase2
+  exact Finset.sum_le_sum fun g _ => ce_uks_b2s_target   setup functional codec checks route ensureInit phase1 phase2
     correct caps bounded qInit initBound frameReadBack bounds mode adversary budget respects runtime fallback
     (g.1, g.2.castSucc)
 
@@ -152,7 +153,7 @@ theorem ce_uks_sender_target (setup : Setup baseSpec KemSK)
     𝒟[(fun outcome => decide (happens (uksSenderEvent setup.source.crypto codec setup.serverKeyId budget route)
         outcome = true ∧ designated setup.source.crypto codec setup.serverKeyId budget
           (uksSenderClaim setup.source.crypto codec setup.serverKeyId budget route) outcome = some g)) <$>
-      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime] {true} ≤
+      (PqxdhDeploymentSecrecy.game   setup codec checks route ensureInit 0 bounds mode adversary).run runtime] {true} ≤
       ENNReal.ofReal (kemLoss setup codec checks route ensureInit bounds mode adversary budget
         (uksSenderEvent setup.source.crypto codec setup.serverKeyId budget route)
         (uksSenderClaim setup.source.crypto codec setup.serverKeyId budget route) g runtime) +
@@ -164,20 +165,20 @@ theorem ce_uks_sender_target (setup : Setup baseSpec KemSK)
         (slotted setup codec budget (uksSenderEvent setup.source.crypto codec setup.serverKeyId budget route)
           (uksSenderClaim setup.source.crypto codec setup.serverKeyId budget route) g) +
       bindingTerm (inputG caps qInit budget bounds) := by
-  have chain := PqxdhDeploymentHeadlineAnomaly.chain_beta setup functional codec checks route ensureInit phase1 phase2
+  have chain := PqxdhDeploymentHeadlineAnomaly.chain_beta   setup functional codec checks route ensureInit phase1 phase2
     correct bounds mode adversary budget respects
     (uksSenderEvent setup.source.crypto codec setup.serverKeyId budget route)
     (uksSenderClaim setup.source.crypto codec setup.serverKeyId budget route) g runtime
-  have lift := PqxdhDeploymentHeadlineChain.auth_le setup codec checks route correct caps bounded ensureInit qInit
+  have lift := PqxdhDeploymentHeadlineChain.auth_le   setup codec checks route correct caps bounded ensureInit qInit
     initBound bounds mode adversary budget respects g runtime fallback
     (slotted setup codec budget (uksSenderEvent setup.source.crypto codec setup.serverKeyId budget route)
       (uksSenderClaim setup.source.crypto codec setup.serverKeyId budget route) g)
   have hit := PqxdhDeploymentHeadlineContain.chance_mono
     (ctxView <$> idealAuth setup codec route
-      (PqxdhDeploymentIdealEnv.envGD setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
+      (PqxdhDeploymentIdealEnv.envGD   setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
       setup.serverKeyId bounds mode adversary) _ _
     (PqxdhDeploymentHeadlineContain.uks_sender setup codec budget route g)
-  have final := cross_final setup codec checks route caps bounded ensureInit qInit initBound frameReadBack bounds
+  have final := cross_final   setup codec checks route caps bounded ensureInit qInit initBound frameReadBack bounds
     mode adversary budget respects g runtime
   calc _ ≤ _ := chain
     _ ≤ (((bindingTerm (inputG caps qInit budget bounds) +
@@ -206,7 +207,7 @@ theorem ce_uks_sender (setup : Setup baseSpec KemSK)
     (adversary : OracleComp (ModeSpec mode) X) (budget : Budget) (respects : budget.Respects adversary) (runtime : A)
     (fallback : CtxNonceAeadIntCtxt.ModifiedNonceAeadForgery) :
     𝒟[(fun outcome => happens (uksSenderEvent setup.source.crypto codec setup.serverKeyId budget route) outcome) <$>
-      (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds mode adversary).run runtime] {true} ≤
+      (PqxdhDeploymentSecrecy.game   setup codec checks route ensureInit 0 bounds mode adversary).run runtime] {true} ≤
       ∑ g : Fin budget.accept × Fin budget.create,
         (ENNReal.ofReal (kemLoss setup codec checks route ensureInit bounds mode adversary budget
             (uksSenderEvent setup.source.crypto codec setup.serverKeyId budget route)
@@ -220,10 +221,10 @@ theorem ce_uks_sender (setup : Setup baseSpec KemSK)
               (uksSenderEvent setup.source.crypto codec setup.serverKeyId budget route)
               (uksSenderClaim setup.source.crypto codec setup.serverKeyId budget route) (g.1, g.2.castSucc)) +
           bindingTerm (inputG caps qInit budget bounds)) := by
-  rw [PqxdhDeploymentHeadlineChain.split_named setup codec checks route ensureInit phase1 phase2 bounds mode adversary
+  rw [PqxdhDeploymentHeadlineChain.split_named   setup codec checks route ensureInit phase1 phase2 bounds mode adversary
     budget respects _ _ runtime (PqxdhDeploymentHeadlineEvents.uksSender_named setup.source.crypto codec
       setup.serverKeyId budget route)]
-  exact Finset.sum_le_sum fun g _ => ce_uks_sender_target setup functional codec checks route ensureInit phase1 phase2
+  exact Finset.sum_le_sum fun g _ => ce_uks_sender_target   setup functional codec checks route ensureInit phase1 phase2
     correct caps bounded qInit initBound frameReadBack bounds mode adversary budget respects runtime fallback
     (g.1, g.2.castSucc)
 

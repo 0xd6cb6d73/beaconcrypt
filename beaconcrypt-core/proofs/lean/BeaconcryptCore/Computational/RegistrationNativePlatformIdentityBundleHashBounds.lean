@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativePlatformIdentityOutgoingHashBounds
 import BeaconcryptCore.Computational.RegistrationNativePlatformBeaconPublicationHashBounds
 import BeaconcryptCore.Computational.RegistrationNativePlatformIdentityBundleRun
-/-! Actual dynamic-writer owner lookup, optional scalar sampling and publication have two shared hash calls. Every failed source prefix and P writer result remains in the literal controller; no published-bundle assumption or whole-handler bill is required. -/
+/-! Actual dynamic-writer owner lookup, optional scalar sampling and publication stay within a conservative two-call shared hash allowance (the literal publication issues at most the one request-transcript hash). Every failed source prefix and P writer result remains in the literal controller; no published-bundle assumption or whole-handler bill is required. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -49,14 +49,14 @@ private theorem next_bound (oneTime : PqxdhJointGapDh.ScalarBytes) (reply : Regi
         · intro _
           exact pure_bound _ _
 
-/-- The actual source publication and every reached lifecycle continuation use at most two shared hashes. -/
+/-- The actual source publication and every reached lifecycle continuation use at most two shared hashes (a retained conservative allowance over the single actual publication hash). -/
 theorem bundled_bound (oneTime : PqxdhJointGapDh.ScalarBytes) :
     Bounded (RegistrationNativePlatformIdentityBundle.bundled (n := n) (Auxiliary := Auxiliary) setup index owner oneTime writer) 2 := by
   unfold RegistrationNativePlatformIdentityBundle.bundled
   apply bind_bound _ _ 2 0
   · exact program_bound (RegistrationNativePlatformBeaconPublicationHashBounds.IsHash (E := E)) _
       (callback_bound setup index owner writer) _ 2
-      (RegistrationNativePlatformBeaconPublicationHashBounds.begin_bound _ _ _ _ _)
+      ((RegistrationNativePlatformBeaconPublicationHashBounds.begin_bound _ _ _ _).mono (by decide))
   · intro reply
     exact next_bound index owner oneTime reply
 

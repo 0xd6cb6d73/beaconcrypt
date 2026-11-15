@@ -27,7 +27,7 @@ variable {setup :PqxdhServerAuthExperiment.Setup base KemSK} {checks :PqxdhServe
 variable (configuration :RegistrationNativePlatformPublicAdapterConfiguration.Configuration
   (P:=P) (E:=E) (R:=R) (Error:=Error) (source:=source) setup checks)
 variable {Value :Type}
-variable (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
 local notation "Private"=>RegistrationNativePlatformPublicAdapterAuditLowModel.Private (n:=n) configuration created credential
 local notation "physical"=>RegistrationNativePlatformPublicAdapterAuditLowModel.physical (n:=n) configuration created credential
 local notation "Log"=>RegistrationNativePlatformPublicAdapterSourceEvents.Log n KemSK R P
@@ -44,6 +44,20 @@ local notation "children"=>RegistrationNativePlatformPublicAdapterDispatcherCore
 local notation "NativeP"=>RegistrationNativeExperiment.State n KemSK source×P
 open RegistrationNativePlatformPublicAdapterConfiguredBuildLog
 local notation "Response"=>Option PqxdhServerRegistrationPublication.Response
+omit material platform ed primitives [PublicWrapperPlatform.Allocator] [PublicWrapperPlatform.LocalOperations]
+  [PublicWrapperPlatform.ContainerOperations] [PublicWrapperPlatform.CryptoOperations]
+  [AdapterPublicOrdinaryPlatform.LookupOperations] [FrameDispatchFallback.Operations] originalGenerators originalCrypto in
+private def cut_control {Platform Auxiliary : Type} (implementation : QueryImpl unifSpec (StateT Platform ProbComp))
+    (token : peer.ConsumedRegistration) (pin : session.ServerAuthenticationPin) (availability : pqxdh.KeyIdAvailability)
+    (application : Slice U8) (initial : registration.ServerInitialKdf) (cache : CtxRomAuth.CtxRO.QueryCache)
+    {left right : pqxdh.ServerState} (same : left = right)
+    (cut : RegistrationNativePlatformPublicAdapterBuildAdCut.Cut (n:=n) (Platform:=Platform) (Auxiliary:=Auxiliary)
+      implementation token left pin availability application initial cache) :
+    RegistrationNativePlatformPublicAdapterBuildAdCut.Cut (n:=n) (Platform:=Platform) (Auxiliary:=Auxiliary)
+      implementation token right pin availability application initial cache := by
+  cases same
+  exact cut
+
 theorem sample (handle :Nat) (payload :Option (Slice U8)) (before :RegistrationNativePlatformExtractedSdkPublic.State Private) (prior :Log)
     (result :(RegistrationNativePlatformPublicAdapterDispatcher.calls configuration created credential (.inl (.inr (.build handle payload))) before.1 before.2).step.Packet×Log)
     (supported :result∈support (RegistrationNativePlatformPublicAdapterLoggedBuild.augmentation configuration created credential handle payload before prior).sample)
@@ -56,7 +70,11 @@ theorem sample (handle :Nat) (payload :Option (Slice U8)) (before :RegistrationN
         (pin :session.ServerAuthenticationPin) (availability :pqxdh.KeyIdAvailability) (application :Slice U8),
       before.2.base.objects.tokens handle=some token ∧
       RegistrationServerSdkSource.take handle before.1.1.1.server=(some token.registration,current) ∧
-      registration.begin_server_completion current.control pin availability token.registration.agreement application=.ok (.Ok initial) ∧
+      BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission current.control pin availability token.registration.agreement application initial ∧
+      Nonempty (RegistrationNativePlatformPublicAdapterBuildAdCut.Cut (n:=n) (Platform:=P) (Auxiliary:=RegistrationServerRoleBackend.State)
+        coins token.registration current.control pin availability application initial
+        (RegistrationNativeWorldCache.cache
+          ((RegistrationNativePlatformPublicAdapterDispatcher.calls configuration created credential (.inl (.inr (.build handle payload))) before.1 before.2).step.native result.1).2.1.1)) ∧
       RegistrationServerRecordExecutor.Path initial hashed ∧
       RegistrationNativePlatformSourceFinishContents.RecordCut (n:=n) coins setup
         (RegistrationNativePlatformOrdinaryExperiment.canonicalWire RegistrationNativeConcreteCodec.wire) configuration.keyView configuration.sealFailure
@@ -75,7 +93,7 @@ theorem sample (handle :Nat) (payload :Option (Slice U8)) (before :RegistrationN
     configuration.view configuration.views setup.joint created credential before.1.1 before.2.base handle token stored
   have taken:RegistrationServerSdkSource.take handle before.1.1.1.server=(some token.registration,(AdapterPublicServerBuildOwnership.moved handle before.1.1.1).server):=
     (AdapterPublicServerBuildOwnership.move token consumed before.1.1.1 handle related live).1
-  obtain ⟨initial,hashed,pin,availability,application,started,path,cut,recorded,payloadEq,key⟩:=
+  obtain ⟨initial,hashed,pin,availability,application,started,⟨adCut⟩,path,cut,recorded,payloadEq,key⟩:=
     RegistrationNativePlatformPublicAdapterStrongBuildRecordStage.sample coins setup
       (RegistrationNativePlatformOrdinaryExperiment.canonicalWire RegistrationNativeConcreteCodec.wire)
       configuration.keyView configuration.converted configuration.sealFailure configuration.allocateJoin configuration.reserveFrame configuration.erased configuration.reservePackets
@@ -88,9 +106,10 @@ theorem sample (handle :Nat) (payload :Option (Slice U8)) (before :RegistrationN
       prior packet.captured packet.supported suffix (logEq.trans observed) request candidate digest signature present
   have controlEq:moved.base.objects.server.control=(AdapterPublicServerBuildOwnership.moved handle before.1.1.1).server.control:=moved.base.server.control
   rw [controlEq] at started
-  refine ⟨token,_,initial,hashed,pin,availability,application,stored,taken,started,path,?_,recorded,payloadEq,key⟩
+  have adCut := cut_control coins token.registration pin availability application initial _ controlEq adCut
   have cacheEq:=congrArg (fun current:NativeP=>RegistrationNativeWorldCache.cache current.1) nativeEq
-  exact cacheEq ▸cut
+  exact ⟨token,_,initial,hashed,pin,availability,application,stored,taken,started,
+    ⟨cacheEq ▸adCut⟩,path,cacheEq ▸cut,recorded,payloadEq,key⟩
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterBuildCallbackRecordStage
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterBuildCallbackRecordStage.sample' depends on axioms: [propext,

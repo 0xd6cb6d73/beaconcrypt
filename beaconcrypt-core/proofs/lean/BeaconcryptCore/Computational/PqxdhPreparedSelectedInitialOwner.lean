@@ -11,6 +11,7 @@ open OracleComp OracleSpec
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhPreparedSelectedInitialOwner
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhNativeSharedPrefix PqxdhInitialBeaconAmbient PqxdhSelectedCallbackCompiler
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily
 open PqxdhPhase2SourceAux PqxdhEd25519EufCma PqxdhJointIdentity PqxdhPhase1AcceptanceOracle
@@ -39,7 +40,7 @@ noncomputable def owner (prior : Prior) (parent : Option Entry) (target : RootOu
     (raw : Pqxdh.Bytes)
     (before : PqxdhSelectedInitialOwnerCompiler.Beacon (PqxdhGeneratedBeaconState.IdentityHandle I) D (PqxdhGeneratedBeaconState.KemHandle K)) :=
   simulateQ (PqxdhSelectedInitialOwnerCompiler.lower pre application initial selector aux prior parent target nonce next read)
-    (PqxdhSelectedInitialOwnerCompiler.owner raw before)
+    (PqxdhSelectedInitialOwnerCompiler.owner (completedBinding := completedBinding) raw before)
 
 noncomputable def sourceExternal := PqxdhSelectedInitialOwnerCompiler.sourceExternal pre application initial selector aux
 
@@ -54,16 +55,16 @@ theorem source_owner (writer : RawCtxMixedShared.Writer) (prior : Prior) (parent
         RawCtxSelectedReceiveCompiler.project result.2)) <$>
       (PqxdhSelectedStateInterpreter.evaluate
         (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder read) source.crypto key)
-        (owner attachedVerify primitives count source localImpl baseImpl kem secret challenge selectedMessage previousRoot response callbacks
+        (owner (completedBinding := completedBinding) attachedVerify primitives count source localImpl baseImpl kem secret challenge selectedMessage previousRoot response callbacks
           prior parent target nonce next read raw before)).run state =
-      (PqxdhInitialGenericBeacon.owner
+      (PqxdhInitialGenericBeacon.owner (completedBinding := completedBinding)
         (fun query => sourceExternal attachedVerify primitives count source localImpl baseImpl kem secret challenge selectedMessage previousRoot response callbacks (.inl query))
         (PqxdhSelectedMessageBeacon.nativeCalls source writer prior parent key target nonce next)
         (fun reply => sourceExternal attachedVerify primitives count source localImpl baseImpl kem secret challenge selectedMessage previousRoot response callbacks (.inr (.inl reply)))
         (fun secrets => sourceExternal attachedVerify primitives count source localImpl baseImpl kem secret challenge selectedMessage previousRoot response callbacks (.inr (.inr (.inl secrets)))) read raw
         (RawCtxGenericRoleStorage.mapBeacon (PqxdhSelectedMessageBeacon.interpretKernel key) before)).run
           (RawCtxSelectedReceiveCompiler.project state) :=
-  PqxdhSelectedInitialOwnerCompiler.compiled_owner pre application initial selector aux source writer prior parent key target nonce next read raw before state
+  PqxdhSelectedInitialOwnerCompiler.compiled_owner (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next read raw before state
 
 /-- The native owner comparison uses the actual original audited source callbacks on the complete attached state, including every private/root effect and initializer candidate append. -/
 theorem external_source (writer : RawCtxMixedShared.Writer) (stage S B : Nat)

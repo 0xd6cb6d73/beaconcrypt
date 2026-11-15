@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativeRecordOriginProgram
 import BeaconcryptCore.Computational.PqxdhRecordFactsOriginAmbient
 
-/-! Actual native initialization performs constructor coins, ML generation, public Server import and the real ML-pin hash in one cache, while retaining every private record dictionary and writer log exactly. No initialized cache is reset or sampled in a separate pure startup. -/
+/-! Actual native initialization performs constructor coins, Server ML generation and public Server import, while retaining every private record dictionary and writer log exactly. No initialized cache is reset or sampled in a separate pure startup. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
@@ -26,7 +26,7 @@ private theorem coins (work : ProbComp Value) : (simulateQ (coinLift (n := n)) w
     simp only [simulateQ_bind, simulateQ_spec_query, coinLift]
     exact (allQueriesSatisfy_query_bind_iff _ _ _).mpr ⟨trivial, ih⟩
 
-/-- The original initialization AST exposes only the actual coins, public Server import and shared pin hash. -/
+/-- The original initialization AST exposes only the actual coins and public Server import. -/
 theorem allowed (setup : Setup base KemSK) (source : RegistrationNativeMldsa.Source)
     (ensureInit : StateT Unit ProbComp Bool) (identityIndex : Nat) (serverKid : U64)
     (identity : PqxdhJointIdentity.PublicIdentity) :
@@ -46,8 +46,7 @@ theorem allowed (setup : Setup base KemSK) (source : RegistrationNativeMldsa.Sou
       apply allQueriesSatisfy_bind ((allQueriesSatisfy_query_iff (spec := WorldSpec n)
         (.inl (RegistrationServerStartup.publicCreated identity identityIndex serverKid)) Allowed).mpr trivial)
       intro installed
-      exact allQueriesSatisfy_bind ((allQueriesSatisfy_query_iff (spec := WorldSpec n)
-        (.inr (.inl (.inr (.hash (PqxdhRefinement.absBytes credential.publicKey))))) Allowed).mpr trivial) (fun _ => trivial)
+      trivial
 
 private theorem oracle_map_apply {Index S A B : Type} {spec : OracleSpec Index}
     (observe : A → B) (work : StateT S (OracleComp spec) A) (before : S) :

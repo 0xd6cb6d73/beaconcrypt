@@ -47,7 +47,7 @@ theorem source
 (fallback : registration.MldsaSigningRequest → NativeM RegistrationSigningShared.SignReply)
 
     (view : MaterialView mlSource KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : Server) (before after : Cut) (related : AdapterPublicWrapperState.Server view views created credential self before.1.server)
     (initial : registration.ServerInitialKdf) (previous : initial.candidate.previous_state = self.control)
     (parsed : AdapterPublicServerToken.ParsedKey initial.binding.beacon_identity_public_key)

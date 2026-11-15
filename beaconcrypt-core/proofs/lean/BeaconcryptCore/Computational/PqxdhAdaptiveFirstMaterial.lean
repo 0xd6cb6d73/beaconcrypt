@@ -7,6 +7,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhAdaptiveFirstMaterial
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhAdaptiveTargetPost PqxdhAdaptiveAcceptedResult PqxdhAdaptiveCommonResult
 open PqxdhAdaptiveGeneratedResult PqxdhInitializerSecrecy PqxdhChallengeSecretRouting
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhHiddenRoot PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily
@@ -27,7 +29,7 @@ variable [DecidableEq Choice]
 variable (c : PqxdhAuthenticatedRootBudgets.Certificate env baseImpl kem program (mapPost post Prod.snd))
 
 variable (selected : Choice)
-local notation "sourcePrior" => PqxdhInitialPreparedSourceInput.prior env baseImpl kem attachedVerify primitives program
+local notation "sourcePrior" => PqxdhInitialPreparedSourceInput.prior (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program
   (mapPost post (choose selected)) (Target.owner (targets selected)) (Target.number (targets selected))
   (Target.ancestors (targets selected)) (Target.disclosed (targets selected))
 
@@ -45,7 +47,7 @@ noncomputable def observe
   | .inr input =>
     let response := RawCtxSelectedInitialConstructor.response64 initial
     PqxdhInitialSourceRandom.decision env.source zeroRoot response input.selected output input.number input.ancestors input.disclosed <$>
-      PqxdhInitialSourceRandom.randomRun env.source env.recordWriter input.selectedMessage zeroRoot response input.other
+      PqxdhInitialSourceRandom.randomRun (associatedData := associatedData) (completedBinding := completedBinding) env.source env.recordWriter input.selectedMessage zeroRoot response input.other
         env.senderId env.route env.decode input.index input.metadata {input.ready with root := zeroRoot} input.post input.before
         input.selected input.shared input.privateState input.cache output
 
@@ -54,12 +56,12 @@ noncomputable def ideal : ProbComp Bool := do
   let context ← sourcePrior
   let initial ← $ᵗ HmacBlock
   let output ← $ᵗ PqxdhFullSecretInputKdf.FullOutput
-  observe env context initial output
+  observe (associatedData := associatedData) (completedBinding := completedBinding) env context initial output
 
 /-- For record one, the source private table is actually empty and the exact original source publication/freshness event sees the complete independent full76 draw. No miss or final-event equality premise is supplied. -/
 theorem source (position : (targets selected).number.val = 1) :
-    𝒟[PqxdhAdaptiveCoordinateSecrecy.targetIdeal env baseImpl kem attachedVerify primitives program post targets selected] =
-      𝒟[ideal env baseImpl kem attachedVerify primitives program post targets selected] := by
+    𝒟[PqxdhAdaptiveCoordinateSecrecy.targetIdeal (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post targets selected] =
+      𝒟[ideal (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post targets selected] := by
   unfold PqxdhAdaptiveCoordinateSecrecy.targetIdeal PqxdhInitialSourceSampled.game ideal
   rw [position]
   apply evalDist_bind_congr_of_support
@@ -72,11 +74,11 @@ theorem source (position : (targets selected).number.val = 1) :
     exact (OracleComp.EvalDistEq.bind_const ($ᵗ PqxdhFullSecretInputKdf.FullOutput) (pure decision)).symm
   | inr input =>
     have positive : 0 < input.number.val := by
-      rw [PqxdhAuthenticatedEvolvingSecrecy.prior_position env baseImpl kem attachedVerify primitives program
+      rw [PqxdhAuthenticatedEvolvingSecrecy.prior_position (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program
         (mapPost post (choose selected)) (targets selected).owner (targets selected).number
         (targets selected).ancestors (targets selected).disclosed input supported, position]
       norm_num
-    exact PqxdhInitialSourceRandom.game_source env.source env.recordWriter input.selectedMessage zeroRoot
+    exact PqxdhInitialSourceRandom.game_source (associatedData := associatedData) (completedBinding := completedBinding) env.source env.recordWriter input.selectedMessage zeroRoot
       (RawCtxSelectedInitialConstructor.response64 initial) input.other env.senderId env.route env.decode input.index input.metadata
       {input.ready with root := zeroRoot} input.post input.before input.selected input.shared input.privateState input.cache
       input.number positive input.ancestors input.disclosed
@@ -88,13 +90,13 @@ theorem bound (position : (targets selected).number.val = 1)
     (functional : FunctionalDecapsulation kem)
     (hmac : HmacSha512) (correct : PqxdhFullSecretInputKdf.SourceFullCorrect env.source hmac)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : PqxdhJointIdentity.Forgery) :
-    (choose selected <$> PqxdhAdaptiveNativeResult.actual env baseImpl kem attachedVerify primitives program post targets).boolDistance
-      (ideal env baseImpl kem attachedVerify primitives program post targets selected) ≤
-    PqxdhAdaptiveCoordinateSecrecy.targetLoss env baseImpl kem attachedVerify primitives program post targets c hmac fallback ordinaryFallback selected := by
-  have result := PqxdhAdaptiveCoordinateSecrecy.target_bound env baseImpl kem attachedVerify primitives program post targets c
+    (choose selected <$> PqxdhAdaptiveNativeResult.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post targets).boolDistance
+      (ideal (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post targets selected) ≤
+    PqxdhAdaptiveCoordinateSecrecy.targetLoss (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post targets c hmac fallback ordinaryFallback selected := by
+  have result := PqxdhAdaptiveCoordinateSecrecy.target_bound (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post targets c
     selected (by omega) compatible adapter functional hmac correct fallback ordinaryFallback
   simpa only [ProbComp.boolDistance,
-    source env baseImpl kem attachedVerify primitives program post targets selected position] using result
+    source (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post targets selected position] using result
 
 end BeaconcryptCore.Computational.PqxdhAdaptiveFirstMaterial
 

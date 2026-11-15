@@ -112,7 +112,7 @@ def AllowedBundle {E : Type} : (RegistrationNativePlatformGenericBundle.Spec E n
 omit implementation permitted in
 theorem bundle_atomic {E : Type} (coins : QueryImpl unifSpec m)
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) m) :
     Atomic (RegistrationNativePlatformExperiment.bundleHandler (n := n) coins setup checks representation created source writer) (AllowedBundle (E := E) (n := n) (KemSK := KemSK)) := by
   intro query allowed owners env before
@@ -164,7 +164,7 @@ theorem lifted_work (work : OracleComp queries A) (allowed : work.AllQueriesSati
   exact allQueriesSatisfy_bind allowed (fun _ => allQueriesSatisfy_pure _ _)
 
 omit implementation permitted [Monad m] [LawfulMonad m] in
-theorem encoder_work {E : Type} (view : registration.SignedInitView) :
+theorem encoder_work {E : Type} (view : registration.InitView) :
     Work (AllowedBundle (E := E) (n := n) (KemSK := KemSK))
       (RegistrationNativePlatformGenericBundle.encoder (n := n) (KemSK := KemSK) (source := source) (Auxiliary := RegistrationServerRoleBackend.State) E view) := by
   unfold RegistrationNativePlatformGenericBundle.encoder RegistrationNativePlatformGenericBundle.encoderWith
@@ -207,12 +207,12 @@ theorem joint_work {E : Type} (setup : PqxdhServerAuthExperiment.Setup base KemS
 omit implementation permitted [Monad m] [LawfulMonad m] in
 theorem publication_tree {E : Type} (setup : PqxdhServerAuthExperiment.Setup base KemSK) (index : Nat) (owner : Owner source)
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize) :
-    simulateQ (joint (n := n) (E := E) setup index owner) (RegistrationNativePlatformWriter.begin E control inputs coins pin mldsa) =
+    (pin : session.ServerAuthenticationPin) :
+    simulateQ (joint (n := n) (E := E) setup index owner) (RegistrationNativePlatformWriter.begin E control inputs coins pin) =
       RegistrationNativePlatformBeaconPublication.begin
         (fun query => RegistrationNativePlatformGenericBundle.liftLegacy RegistrationNativePlatformGenericBundle.trustedLift
           (RegistrationNativeBeaconFrontend.outgoing setup source index owner query))
-        (RegistrationNativePlatformGenericBundle.encoder E) control inputs coins pin mldsa := by
+        (RegistrationNativePlatformGenericBundle.encoder E) control inputs coins pin := by
   rw [RegistrationNativePlatformWriter.begin_interpret]
   simp only [joint, double_simulate]
   rfl
@@ -220,13 +220,13 @@ theorem publication_tree {E : Type} (setup : PqxdhServerAuthExperiment.Setup bas
 omit implementation permitted [Monad m] [LawfulMonad m] in
 theorem publication_work {E : Type} (setup : PqxdhServerAuthExperiment.Setup base KemSK) (index : Nat) (owner : Owner source)
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize) :
+    (pin : session.ServerAuthenticationPin) :
     Work (AllowedBundle (E := E) (n := n) (KemSK := KemSK))
       (RegistrationNativePlatformBeaconPublication.begin
         (fun query => RegistrationNativePlatformGenericBundle.liftLegacy RegistrationNativePlatformGenericBundle.trustedLift
           (RegistrationNativeBeaconFrontend.outgoing setup source index owner query))
-        (RegistrationNativePlatformGenericBundle.encoder E) control inputs coins pin mldsa) := by
-  rw [← publication_tree setup index owner control inputs coins pin mldsa]
+        (RegistrationNativePlatformGenericBundle.encoder E) control inputs coins pin) := by
+  rw [← publication_tree setup index owner control inputs coins pin]
   exact simulate_work _ _ (joint_work setup index owner) _
 
 
@@ -238,7 +238,7 @@ def publicBytes (reply : RustM (Option (alloc.vec.Vec U8))) : RustM (Option Pqxd
 omit implementation permitted in
 theorem actual_bundle {E : Type} (coins : QueryImpl unifSpec m)
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) m) (index : Nat) :
     RegistrationNativePlatformExperiment.bundle (n := n) coins setup checks representation created source writer index =
       publicBytes <$> interpret (RegistrationNativePlatformExperiment.bundleHandler coins setup checks representation created source writer)

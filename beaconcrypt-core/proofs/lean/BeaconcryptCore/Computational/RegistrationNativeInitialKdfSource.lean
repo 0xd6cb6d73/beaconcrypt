@@ -17,7 +17,7 @@ variable {n : Nat} {ι KemSK Auxiliary : Type} {base : OracleSpec ι} {source : 
 
 /-- The actual optional initial getter is the fixed native source result, after its literal request-marker append. -/
 theorem record_initial (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire)
-    (request : ratchet.SymmetricRatchetKdfRequest) :
+    (request : ratchet.InitialRatchetKdfRequest) :
     RegistrationNativeBeaconFrontend.record (n := n) (mldsaSource := source) (Auxiliary := Auxiliary) setup wire (.initialKdf request) =
       (do RegistrationNativeBeaconFrontend.updateEnv fun env => {env with recordRequests := env.recordRequests ++ [RegistrationWorldAgreement.recordCall (.initialKdf request)]}
           pure (.Some (RawCtxSourceHkdf.initialResponse setup.source.crypto request))) := by
@@ -30,8 +30,8 @@ theorem record_initial (setup : Setup base KemSK) (wire : RegistrationNativeWire
 
 /-- Every reached lowered initial callback has this actual source reply, without a state-reset or reply-simulation premise. -/
 theorem beacon_reply (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
-    (request : ratchet.SymmetricRatchetKdfRequest) (before after : Local n KemSK source)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
+    (request : ratchet.InitialRatchetKdfRequest) (before after : Local n KemSK source)
     (answer : RegistrationRecordPrimitives.Spec.Range (.initialKdf request))
     (supported : (answer, after) ∈ support ((lower setup checks representation created
       (RegistrationNativeBeaconFrontend.record setup wire (.initialKdf request))).run before)) :

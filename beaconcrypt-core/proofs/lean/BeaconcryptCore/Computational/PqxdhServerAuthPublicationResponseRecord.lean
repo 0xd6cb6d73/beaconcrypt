@@ -7,6 +7,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core PqxdhRefinement
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhServerAuthPublicationResponseRecord
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhJointKdfGame PqxdhFullSecretInputKdf CtxRomAuth
 open PqxdhServerAuthExperiment (Codec Checks)
 open PqxdhServerAuthPublicationTrace (Event Trace)
@@ -17,7 +18,7 @@ variable {Reader WireResponse Result : Type}
 /-- A produced selected record and the actual optional native sealing reply belong to one recorded callback. -/
 def Origin (writer : RawCtxMixedShared.Writer) (trace : Trace) (entry : CtxSuccessfulSeal) : Prop :=
   ∃ (pending : PqxdhServerAuthCtxSend.Pending) (reply : Option (Option RawCtxSourceSend.Encrypted))
-    (nonce : NonceOutput) (width : pending.context.associatedData.length = 281) (record : CtxRomRecord),
+    (nonce : NonceOutput) (width : pending.context.associatedData.length = 151) (record : CtxRomRecord),
     Event.seal pending reply ∈ trace ∧ pending.material = .hidden nonce ∧
     entry = ⟨selectedInput nonce pending.sequence pending.context width, record⟩ ∧
     reply = some ((writer ⟨pending.sequence, pending.context.senderId, record.encode⟩).map
@@ -122,7 +123,7 @@ theorem Origin.single_success (writer : RawCtxMixedShared.Writer)
     (fields : PqxdhServerRegistrationPublication.ResponseFields) (bytes : Pqxdh.Bytes)
     (entry : CtxSuccessfulSeal)
     (origin : Origin writer [.seal pending (some (some encrypted)), .write fields (some (some bytes))] entry) :
-    ∃ (nonce : NonceOutput) (width : pending.context.associatedData.length = 281),
+    ∃ (nonce : NonceOutput) (width : pending.context.associatedData.length = 151),
       pending.material = .hidden nonce ∧
       entry.input = selectedInput nonce pending.sequence pending.context width ∧
       writer ⟨pending.sequence, pending.context.senderId, entry.record.encode⟩ = some encrypted.ciphertext := by
@@ -152,7 +153,7 @@ theorem compiled_records (source : FixedHkdfSha512NoSaltSource) (codec : Codec R
     (before after : RawCtxSelectedAuthenticationObserver.State)
     (response : PqxdhServerRegistrationPublication.Response)
     (supported : ((some (.ok (some response, published)), afterTrace), after) ∈ support
-      (monitor ((PqxdhServerAuthPublicationTrace.compiled source codec checks rest pending data metadata state).run.run
+      (monitor ((PqxdhServerAuthPublicationTrace.compiled (associatedData := associatedData) source codec checks rest pending data metadata state).run.run
         (beforeLog, [])) before)) :
     ∃ (key : Std.U64) (candidate : pqxdh.ServerRegistrationCandidate)
       (binding : pqxdh.RegistrationKeyIdBinding) (sealed : PqxdhServerAuthCtxSend.Pending)
@@ -161,32 +162,32 @@ theorem compiled_records (source : FixedHkdfSha512NoSaltSource) (codec : Codec R
       pqxdh.server_prepare_commit state.control pending ⟨state.server.identity, state.identityKeyId⟩
         (if (state.server.peers key).isSome then .Occupied else .Available) = .ok (.Ok candidate) ∧
       candidate.key_id_binding = .ok binding ∧
-      sealed.context = PqxdhServerRegistrationPublication.firstContext candidate
+      sealed.context = PqxdhServerRegistrationPublication.firstContext candidate associatedData
         (absBytes binding.bytes ++ data.getD PqxdhServerRegistrationPublication.registrationWitness) ∧
       codec.write2 (PqxdhServerRegistrationPublication.responseFields candidate encrypted) = some response.serialized ∧
       response.keyId = candidate.key_id ∧
       published = PqxdhServerRegistrationPublication.publish state candidate
         (PqxdhServerAuthCtxBuildSettlement.resolve sealed.advanced) metadata ∧
       ∀ entry ∈ after.seals, entry ∈ before.seals ∨
-        ∃ (nonce : NonceOutput) (width : sealed.context.associatedData.length = 281),
+        ∃ (nonce : NonceOutput) (width : sealed.context.associatedData.length = 151),
           sealed.material = .hidden nonce ∧
           entry.input = selectedInput nonce sealed.sequence sealed.context width ∧
           codec.frameWrite ⟨sealed.sequence, sealed.context.senderId, entry.record.encode⟩ = some encrypted.ciphertext := by
   have rawSupport : (some (.ok (some response, published)), afterTrace) ∈ support
-      ((PqxdhServerAuthPublicationTrace.compiled source codec checks rest pending data metadata state).run.run
+      ((PqxdhServerAuthPublicationTrace.compiled (associatedData := associatedData) source codec checks rest pending data metadata state).run.run
         (beforeLog, [])) := by
     rw [← RawCtxSelectedAuthenticationObserver.monitor_erase
-      ((PqxdhServerAuthPublicationTrace.compiled source codec checks rest pending data metadata state).run.run
+      ((PqxdhServerAuthPublicationTrace.compiled (associatedData := associatedData) source codec checks rest pending data metadata state).run.run
         (beforeLog, [])) before, support_map]
     exact ⟨((some (.ok (some response, published)), afterTrace), after), supported, rfl⟩
   obtain ⟨key, candidate, binding, sealed, encrypted, next, prepared, bound,
       contextSame, _, traceSame, written, keySame, publishedSame⟩ :=
-    PqxdhServerAuthPublicationResponseReceipt.compiled_receipt source codec checks rest pending data metadata
+    PqxdhServerAuthPublicationResponseReceipt.compiled_receipt (associatedData := associatedData) source codec checks rest pending data metadata
       state published (beforeLog, []) afterTrace response rawSupport
   refine ⟨key, candidate, binding, sealed, encrypted, next, prepared, bound,
     contextSame, written, keySame, publishedSame, ?_⟩
   have origins := (program_receipts source codec checks
-    (PqxdhServerAuthBuildProgram.program source rest pending data metadata state)
+    (PqxdhServerAuthBuildProgram.program (associatedData := associatedData) source rest pending data metadata state)
     (beforeLog, []) afterTrace before after _ supported).2
   intro entry found
   rcases origins entry found with old | origin
@@ -198,15 +199,15 @@ theorem compiled_records (source : FixedHkdfSha512NoSaltSource) (codec : Codec R
 theorem matched_frame (read : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
     (candidate : pqxdh.BeaconRegistrationCandidate) (opened : RawCtxWholeOwner.Decrypted)
     (target : CtxUnclaimedAcceptance.Target)
-    (delivery : PqxdhPhase2LocalMatching.LocalTarget read raw candidate opened target)
+    (delivery : PqxdhPhase2LocalMatching.LocalTarget (associatedData := associatedData) read raw candidate opened target)
     (entry : CtxSuccessfulSeal) (same : target.toLegacy.sameFullTupleAsSuccessfulSeal entry)
     (pending : PqxdhServerAuthCtxSend.Pending) (nonce : NonceOutput)
-    (width : pending.context.associatedData.length = 281)
+    (width : pending.context.associatedData.length = 151)
     (input : entry.input = selectedInput nonce pending.sequence pending.context width) :
     read raw = some ⟨pending.sequence, pending.context.senderId, entry.record.encode⟩ := by
-  have decoded := PqxdhServerAuthDecodedOrigin.matched_frame read raw candidate opened target delivery entry same
+  have decoded := PqxdhServerAuthDecodedOrigin.matched_frame (associatedData := associatedData) read raw candidate opened target delivery entry same
   have ad := same.2.1.symm.trans
-    (PqxdhPhase2LocalMatching.localTarget_context read raw candidate opened target delivery).1
+    (PqxdhPhase2LocalMatching.localTarget_context (associatedData := associatedData) read raw candidate opened target delivery).1
   rw [input] at ad
   have sequence : pending.sequence = opened.sequence :=
     UScalar.eq_of_val_eq (congrArg (fun value => value.seq) ad)

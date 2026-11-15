@@ -3,6 +3,7 @@ import BeaconcryptCore.Computational.RegistrationNativePlatformIdentityCtxAmbien
 import BeaconcryptCore.Computational.RegistrationNativePlatformIdentityCtxLifecycleHashBounds
 import BeaconcryptCore.Computational.RegistrationNativePlatformIdentityFinishHashBounds
 import BeaconcryptCore.Computational.FinitePartitionQueryBounds
+import BeaconcryptCore.Computational.RegistrationNativePlatformIdentityCtxTyped
 /-! Concrete physical shared-hash budgets for every actual current-runtime typed callback and the original full public command compiler. These bounds retain all optional failures, native/P poststates and all-reply adaptive continuations. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
@@ -20,7 +21,7 @@ variable [primitives : AdapterSealPrimitive.Operations]
 variable {n : Nat} {I KemSK Platform E : Type} {base : OracleSpec I} {source : RegistrationNativeMldsa.Source}
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
 variable (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 variable (keys : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitives.Error)
 variable (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
 variable (reserveRegistration reservePeer : StateT Platform ProbComp Bool)
@@ -36,7 +37,8 @@ def cost (kind : Fin 12) : Nat :=
   match kind.val with
   | 0 | 6 => 0
   | 1 => 1
-  | 2 | 5 => 2
+  | 2 => 2
+  | 5 => 3
   | 3 => 4
   | 4 => 10
   | _ => 1
@@ -45,17 +47,17 @@ omit primitives in
 /-- The finite weighted API bill exposes every command multiplicity and charges no public coins or HMAC as shared hashes. -/
 theorem bill_eq (budget : Fin 12 → Nat) :
     (∑ kind, cost kind * budget kind) =
-      budget 1 + 2 * budget 2 + 4 * budget 3 + 10 * budget 4 + 2 * budget 5 +
+      budget 1 + 2 * budget 2 + 4 * budget 3 + 10 * budget 4 + 3 * budget 5 +
         budget 7 + budget 8 + budget 9 + budget 10 + budget 11 := by
   simp [Fin.sum_univ_succ, cost, Nat.add_assoc]
 
 omit primitives in
-/-- The complete corrected assigned-ID finish has its one response and one first-record hash. -/
+/-- The complete corrected assigned-ID finish has its response-transcript, record-AD and first-record hashes. -/
 theorem finish_bound (index : Nat) (packet : Option registration.ResponsePacket) :
     Bounded (RegistrationNativePlatformIdentityCtxLifecycle.finish (n := n) setup checks representation created
-      (RegistrationNativePlatformOrdinaryExperiment.canonicalWire wire) index packet : RegistrationNativePlatformIdentityCtxMain.M n KemSK Platform source _) 2 :=
-  RegistrationNativePlatformIdentityCtxFrontendHashBounds.beacon_bound setup checks representation created _ 2
-    (RegistrationNativePlatformIdentitySourceHashBounds.native_bound _ 2
+      (RegistrationNativePlatformOrdinaryExperiment.canonicalWire wire) index packet : RegistrationNativePlatformIdentityCtxMain.M n KemSK Platform source _) 3 :=
+  RegistrationNativePlatformIdentityCtxFrontendHashBounds.beacon_bound setup checks representation created _ 3
+    (RegistrationNativePlatformIdentitySourceHashBounds.native_bound _ 3
       (RegistrationNativePlatformIdentityFinishHashBounds.finish_bound setup _ index packet))
 
 attribute [local irreducible] RegistrationNativePlatformIdentityCtxDispatch.step

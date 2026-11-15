@@ -40,7 +40,7 @@ theorem source {R E : Type} (coins : QueryImpl unifSpec (StateT PlatformState Pr
     (generator : rand_core.TryCryptoRng R E) (self : beaconcrypt_public_wrapper.server.Server)
     (control : pqxdh.ServerState) (authenticated : registration.AuthenticatedInit) (rng : R)
     (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (before after : Native) (related : AdapterPublicWrapperState.Server view views created credential self before.server)
     (allocated : StateT PlatformState ProbComp AllocationReply)
     (operation : (AdapterPublicServerAcceptBody.setReserve

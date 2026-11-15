@@ -6,7 +6,7 @@ import BeaconcryptCore.Computational.RegistrationNativeIdentityCensorNormalizedI
 import BeaconcryptCore.Computational.RegistrationNativeIdentityIssuedOriginalFinite
 import BeaconcryptCore.Computational.RegistrationNativePlatformIdentityCtxCanonicalWire
 import BeaconcryptCore.Computational.RegistrationNativePlatformIdentityCtxInitial
-/-! The original initialized concrete mandatory-ML runtime satisfies unsigned-tuple publication strictly before acceptance, under its original broad final-owner event. The explicit bound consists only of named ordinary joint weak-EUF advantages: every primitive client samples independent startup and auxiliary material inside E. The causal source/selector/ROM/history connection is derived, with all failed attempts and later callbacks retained. This does not claim exact six-field or randomized ML-signature byte origin. -/
+/-! The initialized concrete runtime with mandatory Server response authentication satisfies Init-tuple publication strictly before acceptance, under its original broad final-owner event. The explicit bound consists only of named ordinary joint weak-EUF advantages: every primitive client samples independent startup and auxiliary material inside E. The causal source/selector/ROM/history connection is derived, with all failed attempts and later callbacks retained. This does not claim exact four-field attached-signature byte origin. -/
 open OracleComp OracleSpec CoreModels Aeneas ENNReal
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false

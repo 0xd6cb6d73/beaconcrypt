@@ -225,12 +225,6 @@ func (s *Server) MLDSAPublicKey() ([]byte, error) {
 	return r.data, wasmCryptoError(err)
 }
 
-// MLDSAPublicKey returns the beacon's ML-DSA-65 authentication key.
-func (b *Beacon) MLDSAPublicKey() ([]byte, error) {
-	r, err := b.wasmCall(24, 0, nil)
-	return r.data, err
-}
-
 func (b *Beacon) GenerateRegistration() ([]byte, error) {
 	r, err := b.wasmCall(4, 0, nil)
 	return r.data, err

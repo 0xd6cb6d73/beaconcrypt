@@ -48,13 +48,13 @@ private theorem set_twice {Element : Type} (items : List Element) (index : Nat) 
 /-- Actual roster lookup supplies pending coherence, and the source finish preserves all unselected owners, failures and World effects under the selected public view. -/
 theorem finish_source (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential source)
     (owners : RegistrationNativeBeaconFrontend.State source) (index : Nat) (owner : Owner source)
     (found : owners[index]? = some owner) (coherent : RegistrationNativeBeaconCoherence.Holds owners)
     (packet : Option registration.ResponsePacket) (env : EnvState RegistrationServerRoleBackend.State)
     (before : RegistrationBeaconReferenceNativeInterpreter.State n KemSK source)
-    (sameScalar : owner.prekeyScalar = scalar) (erased : Std.Array U8 357#usize) :
+    (sameScalar : owner.prekeyScalar = scalar) (erased : Std.Array U8 227#usize) :
     rebuild index owners <$>
       (RegistrationBeaconReferenceNativeCompletion.drop <$>
         (simulateQ (RegistrationBeaconReferenceNativeInterpreter.implementation setup checks wire representation created scalar credential)

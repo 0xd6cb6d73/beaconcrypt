@@ -121,18 +121,19 @@ theorem initial_complete {Result : Type} (setup : Setup baseSpec KemSK) (codec :
     (next : pqxdh.concrete.InitialRatchetKdfResponse × NativeState KemSK → ProbComp Result) :
     (PqxdhRegistrationSchedule.callbacks setup codec (.inr (.inr
       (.initial (PqxdhInitialRatchetComplementarity.beaconPending root).request)))).run state >>= next =
-      next (RawCtxSourceHkdf.initialResponse setup.source.crypto ⟨root, ratchet.SYM_RATCHET_INFO⟩, state) := by
+      next (RawCtxSourceHkdf.initialResponse setup.source.crypto ⟨root, ratchet.INITIAL_RATCHET_INFO⟩, state) := by
   rfl
 
-/-- The concrete initial reply has the same 64-byte prefix as the real 76-byte ratchet response at that input and label; projections are not independent samples. -/
+/-- The concrete initial reply is the initial45 stream's 64-byte prefix, preserving both complete caches and every native field. -/
 theorem initial_prefix (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (root : Word32) (state : NativeState KemSK) :
     (fun result => (absBytes result.1.bytes, result.2)) <$>
       (PqxdhRegistrationSchedule.callbacks setup codec (.inr (.inr
         (.initial (PqxdhInitialRatchetComplementarity.beaconPending root).request)))).run state =
-      pure ((absBytes (RawCtxSourceHkdf.response setup.source.crypto ⟨root, ratchet.SYM_RATCHET_INFO⟩).bytes).take 64, state) := by
+      pure ((PqxdhJointKdf.streamBytes (PqxdhJointKdf.productionStream setup.source.crypto
+        (PqxdhJointKdf.initialAddress (absBytes root)))).take 64, state) := by
   change (pure (absBytes (RawCtxSourceHkdf.initialResponse setup.source.crypto
-    ⟨root, ratchet.SYM_RATCHET_INFO⟩).bytes, state) : ProbComp (Pqxdh.Bytes × NativeState KemSK)) = _
+    ⟨root, ratchet.INITIAL_RATCHET_INFO⟩).bytes, state) : ProbComp (Pqxdh.Bytes × NativeState KemSK)) = _
   rw [RawCtxSourceHkdf.initialResponse_prefix]
 
 end BeaconcryptCore.Computational.PqxdhBoundaryRoot

@@ -4,7 +4,7 @@ import BeaconcryptCore.Computational.RegistrationNativeIdentityCensorStaleSource
 import BeaconcryptCore.Computational.RegistrationNativeIdentityCensorEdForwardSource
 import BeaconcryptCore.Computational.RegistrationNativeIdentityCensorFirstSource
 
-/-! A stale selected one-time message declines selection and forwards the exact honest signature. The complete original source marginal then follows through the inactive actual PQ/fingerprint/hash/writer tail. -/
+/-! A stale selected one-time message declines selection and forwards the exact honest signature. The complete original source marginal then follows through the inactive actual PQ-Ed/hash/writer tail. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -20,9 +20,9 @@ open BeaconcryptCore.Refinement
 variable {n : Nat} {I KemSK Platform : Type} {base : OracleSpec I} {mlSource : RegistrationNativeMldsa.Source}
 attribute [local irreducible] registration.BeaconEd25519Signing.resume
 variable (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner mlSource)
-variable (writer : registration.SignedInitView → StateT Platform ProbComp (RustM (core.option.Option (alloc.vec.Vec U8))))
+variable (writer : registration.InitView → StateT Platform ProbComp (RustM (core.option.Option (alloc.vec.Vec U8))))
 local notation "Main" => RegistrationNativePlatformIdentityCtxMain.beacon (n := n) (Platform := Platform) (source := mlSource) setup checks representation created
 local notation "callback" => (fun query => Main (RegistrationNativePlatformIdentityProgram.native
   (RegistrationNativeIdentityFrontend.outgoing (n := n) (Auxiliary := RegistrationServerRoleBackend.State) setup mlSource index owner query)))

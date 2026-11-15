@@ -2,9 +2,8 @@
 import BeaconcryptCore.AdapterPublicWrapperExtraction.Funs
 import BeaconcryptCore.AdapterPublicOrdinaryExtraction.Funs
 import BeaconcryptCore.PanicFreedom.AdapterNormal
-import BeaconcryptCore.PanicFreedom.AdapterConstructors
 
-/-! Native public getters, structural peer lenses, and populated-slot construction. The only contracts concern the actual ML-DSA public-key, Ed25519 public-byte and hash leaves. -/
+/-! Native public getters, structural peer lenses, and populated-slot construction. The only contracts concern the actual ML-DSA public-key, Ed25519 public-byte leaves. -/
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -25,8 +24,11 @@ omit platform in
 structure Contracts : Prop where
   mldsaPublic : ∀ identity, Normal (localOps.auth_MldsaIdentity_public_key identity)
   edPublicBytes : ∀ key, Normal (crypto.edPublicBytes key)
-  hash : ∀ request, Normal (authentication.hash request)
 
+
+omit material platform primitive localOps crypto authentication in
+theorem server_pin_total (binding : pqxdh.ServerBinding) (publicKey : Array U8 1952#usize) :
+    ∃ result, auth.server_pin binding publicKey = ok result := ⟨_, rfl⟩
 
 omit platform localOps crypto authentication in
 theorem beacon_identity_pk_total (self : beacon.Beacon) :
@@ -90,12 +92,11 @@ theorem established_remote_binding_total {Pk : Type} (signature : shared.Signatu
     (self : shared.EstablishedRemote Pk) :
     ∃ result, beaconcrypt_public_ordinary.shared.EstablishedRemote.binding signature self = ok result := ⟨_, rfl⟩
 
-theorem beacon_mldsa_public_key_total (contracts : Contracts) (self : beacon.Beacon) :
-    ∃ result, beacon.Beacon.mldsa_public_key self = ok result := contracts.mldsaPublic self.authentication.identity
-
+omit authentication in
 theorem server_mldsa_public_key_total (contracts : Contracts) (self : server.Server) :
     ∃ result, server.Server.mldsa_public_key self = ok result := contracts.mldsaPublic (platform.arcView self.identity).mldsa_identity
 
+omit authentication in
 theorem server_authentication_pin_total (contracts : Contracts) (self : server.Server) :
     ∃ result, server.Server.authentication_pin self = ok result := by
   unfold server.Server.authentication_pin
@@ -103,9 +104,9 @@ theorem server_authentication_pin_total (contracts : Contracts) (self : server.S
     alloc.sync.Arc.Insts.CoreOpsDerefDeref.deref, bind_tc_ok]
   obtain ⟨keyBytes, keyBytesEq⟩ := contracts.edPublicBytes (platform.arcView self.identity).identity_key.public_key
   obtain ⟨mldsaKey, mldsaKeyEq⟩ := contracts.mldsaPublic (platform.arcView self.identity).mldsa_identity
-  simpa only [beaconcrypt_crypto.crypto_sign.PublicKey.as_bytes, keyBytesEq,
-    auth.MldsaIdentity.public_key, mldsaKeyEq, bind_tc_ok] using
-    AdapterConstructors.fingerprint_pin_total contracts.hash
-      { identity_public_key := keyBytes, identity_key_id := (platform.arcView self.identity).identity_key_kid } mldsaKey
+  refine ⟨.Some ⟨⟨keyBytes, (platform.arcView self.identity).identity_key_kid⟩, mldsaKey⟩, ?_⟩
+  simp only [beaconcrypt_crypto.crypto_sign.PublicKey.as_bytes, keyBytesEq,
+    auth.MldsaIdentity.public_key, mldsaKeyEq, auth.server_pin,
+    registration.begin_server_pin, session.ServerAuthenticationPin.new, bind_tc_ok]
 
 end BeaconcryptCore.PanicFreedom.AdapterPublicTrivial

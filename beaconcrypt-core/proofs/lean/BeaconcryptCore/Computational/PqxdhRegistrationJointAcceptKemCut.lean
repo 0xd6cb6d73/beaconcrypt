@@ -33,7 +33,7 @@ noncomputable def tagged (observe : X × Tag → R) (raw : Pqxdh.Bytes)
 noncomputable def exposeAt (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R)
     (work : OracleComp (SourceSpec KemSK) X) (index : Nat)
-    (owners : List EncodedEntry) (state : NativeState KemSK) :
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK) :
     OracleComp (PqxdhRegistrationJointKemEncapsulation.Spec KemSK) (Outcome KemSK R) := do
   let reached ← hide setup (commands setup codec checks identityIndex publicIdentity
     (PqxdhRegistrationJointAcceptCut.scan work index) owners state)
@@ -50,7 +50,7 @@ noncomputable def rawResume (setup : Setup baseSpec KemSK) (codec : Codec Reader
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)
     (value : PqxdhServerRootPreparation.Verified Reader)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)
-    (consumed : List Pqxdh.Bytes) (state : NativeState KemSK) (owners : List EncodedEntry)
+    (consumed : List Pqxdh.Bytes) (state : NativeState KemSK) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))
     (next : Option Nat → OracleComp (SourceSpec KemSK) X) (reply : PqxdhRegistrationJointKemCut.Reply) :
     OracleComp (PqxdhRegistrationJointKemEncapsulation.Spec KemSK) (Outcome KemSK R) := do
   let input ← (PqxdhRegistrationJointKemSourceSuffix.suffix setup codec checks identityIndex raw value
@@ -132,7 +132,7 @@ theorem support_simulate {κ κ' : Type} {spec : OracleSpec κ} {target : Oracle
 /-- Every outcome of the exposed command compiler carries a result of the original client program. -/
 theorem commands_support (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (work : OracleComp (SourceSpec KemSK) Result)
-    (owners : List EncodedEntry) (state : NativeState KemSK) (outcome : Outcome KemSK Result)
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK) (outcome : Outcome KemSK Result)
     (reached : outcome ∈ support (commands setup codec checks identityIndex publicIdentity work owners state)) :
     outcome.1.1 ∈ support work := by
   have client : outcome.1 ∈ support
@@ -262,7 +262,7 @@ theorem tail_none (setup : Setup baseSpec KemSK) (publicIdentity : PublicIdentit
 theorem exposeAt_scan (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R)
     (work : OracleComp (SourceSpec KemSK) X) (index : Nat)
-    (owners : List EncodedEntry) (state : NativeState KemSK) :
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK) :
     PqxdhRegistrationJointKemCut.scan setup
       (exposeAt setup codec checks identityIndex publicIdentity observe work index owners state) 0 =
       simulateQ (actual setup) (commands setup codec checks identityIndex publicIdentity
@@ -306,7 +306,7 @@ theorem accept_scan (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
 theorem exposeAt_commands (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R)
     (work : OracleComp (SourceSpec KemSK) X) (index : Nat)
-    (owners : List EncodedEntry) (state : NativeState KemSK) :
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK) :
     simulateQ (actual setup) (exposeAt setup codec checks identityIndex publicIdentity observe work index owners state) =
       simulateQ (actual setup) (commands setup codec checks identityIndex publicIdentity
         (observe <$> PqxdhRegistrationJointAcceptCutTag.tag work index) owners state) := by
@@ -331,7 +331,7 @@ theorem exposeAt_commands (setup : Setup baseSpec KemSK) (codec : Codec Reader R
 theorem exposeAt_actual (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R)
     (work : OracleComp (SourceSpec KemSK) X) (index : Nat)
-    (owners : List EncodedEntry) (state : NativeState KemSK) :
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK) :
     simulateQ (actual setup) (exposeAt setup codec checks identityIndex publicIdentity observe work index owners state) =
       PqxdhRegistrationJointKemCommands.program setup codec checks identityIndex publicIdentity
         (observe <$> PqxdhRegistrationJointAcceptCutTag.tag work index) owners state :=
@@ -342,7 +342,7 @@ theorem exposeAt_actual (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
 theorem rawCut_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R)
     (work : OracleComp (SourceSpec KemSK) X) (index : Nat)
-    (owners : List EncodedEntry) (state : NativeState KemSK) :
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK) :
     (PqxdhRegistrationJointKemCut.scan setup
       (exposeAt setup codec checks identityIndex publicIdentity observe work index owners state) 0 >>=
         PqxdhRegistrationJointKemCut.finish setup) =
@@ -354,7 +354,7 @@ theorem rawCut_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
 theorem exposeAt_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R)
     (work : OracleComp (SourceSpec KemSK) X) (index : Nat)
-    (owners : List EncodedEntry) (state : NativeState KemSK) :
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK) :
     (exposeAt setup codec checks identityIndex publicIdentity observe work index owners state).IsQueryBoundP
       (IsEncapsulation (KemSK := KemSK)) 1 := by
   unfold exposeAt
@@ -372,7 +372,7 @@ theorem exposeAt_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
 theorem rawCut_shape (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R)
     (work : OracleComp (SourceSpec KemSK) X) (index : Nat)
-    (owners : List EncodedEntry) (state : NativeState KemSK)
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK)
     (request : PqxdhRegistrationJointKemCut.Request)
     (resume : PqxdhRegistrationJointKemCut.Reply →
       OracleComp (PqxdhRegistrationJointKemEncapsulation.Spec KemSK) (Outcome KemSK R))
@@ -422,7 +422,7 @@ theorem rawCut_shape (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
 theorem accepted_reached (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R)
     (work : OracleComp (SourceSpec KemSK) X) (index : Nat)
-    (owners : List EncodedEntry) (state : NativeState KemSK) (outcome : Outcome KemSK R)
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK) (outcome : Outcome KemSK R)
     (reached : .complete outcome ∈ support (PqxdhRegistrationJointKemCut.scan setup
       (exposeAt setup codec checks identityIndex publicIdentity observe work index owners state) 0)) :
     ∃ result tag, outcome.1.1 = observe (result, tag) ∧ PqxdhRegistrationJointAcceptCutTag.accepted tag = false := by

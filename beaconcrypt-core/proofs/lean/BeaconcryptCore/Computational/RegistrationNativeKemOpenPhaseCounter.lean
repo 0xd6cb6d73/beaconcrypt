@@ -17,7 +17,7 @@ def Safe (parsed : Nat) (state : State n mlSource KemSK) : Prop := counter state
 
 variable (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
   (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-  (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+  (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
   (selected : Nat) (pairs : List (PqxdhKemIndCca.MlKem768PublicKey × KemSK))
   (publicKey : PqxdhKemIndCca.MlKem768PublicKey) (real : Bool) (parsed : Nat)
 local notation "provider" => implementation (n := n) setup checks wire route representation created credential selected pairs publicKey real

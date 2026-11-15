@@ -17,7 +17,7 @@ noncomputable def rawScan (setup : Setup baseSpec KemSK) (codec : Codec Reader R
     (decision : X → Bool) (work : OracleComp (SourceSpec KemSK) X) (index : Nat) (created : ClientCreated Unit) :=
   PqxdhRegistrationJointKemCut.scan setup
     (PqxdhRegistrationJointAcceptKemCut.exposeAt setup codec checks created.server.server.metadata.identityIndex
-      created.publicIdentity (PqxdhRegistrationJointAcceptCutTag.decideTag decision) work index []
+      created.publicIdentity (PqxdhRegistrationJointAcceptCutTag.decideTag decision) work index ([], fun _ => none)
       (PqxdhRegistrationJointInitializedAccept.initial created)) 0
 
 /-- The executable prephase at the raw-accept ordinal: actual initialization, all local reservations and the source command prefix up to the encapsulation of the selected raw accept. Every constructor branch, including failure, is handled exactly as in `KemChallenge.pre`. -/

@@ -82,7 +82,7 @@ omit [LawfulMonad m] in
 noncomputable def bundle {ι : Type} {base : OracleSpec ι}
     (implementation : QueryImpl (Trusted n KemSK) m)
     (setup : Setup base KemSK) (source : RegistrationNativeMldsa.Source)
-    (encode : registration.SignedInitView → M source Auxiliary m (RustM (core.option.Option Encoded)))
+    (encode : registration.InitView → M source Auxiliary m (RustM (core.option.Option Encoded)))
     (index : Nat) : M source Auxiliary m (RustM (Option Encoded)) := do
   let owners ← get
   match owners[index]? with
@@ -101,7 +101,7 @@ noncomputable def bundle {ι : Type} {base : OracleSpec ι}
       let published ← RegistrationNativePlatformBeaconPublication.begin
         (fun query => liftLegacy implementation (RegistrationNativeBeaconFrontend.outgoing setup source index owner query))
         encode ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey
+        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin
       match published with
       | .fail error => pure (.fail error)
       | .div => pure .div
@@ -124,14 +124,14 @@ def writerLift {E : Type} : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistr
 omit [LawfulMonad m] in
 def encoderWith {E : Type}
     (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) m)
-    (view : registration.SignedInitView) :
+    (view : registration.InitView) :
     M source Auxiliary m (RustM (core.option.Option (alloc.vec.Vec U8))) :=
   StateT.lift (StateT.lift (simulateQ writer
     (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestExtraction.encodeInit
       (E := E) (m := BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Program E)
       (RegistrationNativePlatformWriter.initPacket view)).run))
 
-def encoder (E : Type) (view : registration.SignedInitView) :
+def encoder (E : Type) (view : registration.InitView) :
     M source Auxiliary (OracleComp (Spec E n KemSK)) (RustM (core.option.Option (alloc.vec.Vec U8))) :=
   encoderWith writerLift view
 
@@ -161,7 +161,7 @@ private theorem base_writer {E : Type} (implementation : QueryImpl (Spec E n Kem
   exact simulateQ_spec_query implementation (.inr query)
 
 private theorem evaluate_encoder {E : Type} (implementation : QueryImpl (Spec E n KemSK) m)
-    (view : registration.SignedInitView) :
+    (view : registration.InitView) :
     evaluate (source := source) (Auxiliary := Auxiliary) implementation (encoder E view) =
       encoderWith (fun query => implementation (.inr query)) view := by
   funext owners environment
@@ -179,7 +179,7 @@ private theorem evaluate_get {κ : Type} {spec : OracleSpec.{0, 0} κ} (implemen
   rfl
 
 theorem bundle_id {ι : Type} {base : OracleSpec ι} (setup : Setup base KemSK) (source : RegistrationNativeMldsa.Source)
-    (encode : registration.SignedInitView → RegistrationNativeBeaconFrontend.M n KemSK source Auxiliary
+    (encode : registration.InitView → RegistrationNativeBeaconFrontend.M n KemSK source Auxiliary
       (RustM (core.option.Option Encoded))) (index : Nat) :
     bundle (QueryImpl.id' (Trusted n KemSK)) setup source encode index =
       RegistrationNativePlatformBundle.bundle setup source encode index := by

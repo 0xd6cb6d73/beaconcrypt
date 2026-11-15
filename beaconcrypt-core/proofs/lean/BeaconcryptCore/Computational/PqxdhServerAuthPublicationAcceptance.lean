@@ -53,8 +53,10 @@ theorem program_receipt (source : FixedHkdfSha512NoSaltSource) (codec : Codec Re
         (kernel : ConcreteRatchetKernel) (entry : CtxSuccessfulSeal),
         codec.application prepared.response = some bytes ∧
         RawCtxUniversalDecoder.decoder codec.frameRead componentBytes = some target ∧
-        PqxdhPhase2LocalMatching.LocalTarget codec.frameRead bytes candidate staged.opened target ∧
-        PqxdhBeaconPhase2Publication.afterOpening candidate kernel (.Some staged.opened) = some staged ∧
+        PqxdhPhase2LocalMatching.LocalTarget (associatedData := prepared.binding.associated_data) codec.frameRead
+          bytes candidate staged.opened target ∧
+        PqxdhBeaconPhase2Publication.afterOpening (associatedData := prepared.binding.associated_data) candidate kernel
+          (.Some staged.opened) = some staged ∧
         ⟨componentBytes, some staged.opened.plaintext, before.1.seals⟩ ∈ after.1.attempts ∧
         entry ∈ before.1.seals ∧ target.toLegacy.sameFullTupleAsSuccessfulSeal entry ∧
         staged.opened.plaintext = entry.input.plaintext := by
@@ -132,9 +134,12 @@ theorem local_receipt (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
   · exact Or.inl winning
   · obtain ⟨index, message, reply, bytes, sealContext, sequence, touched, hiddenInput, input, bound,
       records, seq, sender, publication⟩ := origins entry member
-    obtain ⟨encoded, written⟩ := PqxdhServerAuthFinishReceipt.matched_writable codec.frameWrite codec.frameRead
+    obtain ⟨encoded, written⟩ := PqxdhServerAuthFinishReceipt.matched_writable
+      (associatedData := (PqxdhPhase2DhRootConsumer.cleared pending).binding.associated_data) codec.frameWrite codec.frameRead
       writable raw _ staged.opened target delivery entry same sequence sealContext.senderId seq sender
-    have fields := PqxdhServerAuthFinishReceipt.matched_fields _ kernel staged success codec.frameRead raw target
+    have fields := PqxdhServerAuthFinishReceipt.matched_fields
+      (associatedData := (PqxdhPhase2DhRootConsumer.cleared pending).binding.associated_data) _ kernel staged success
+      codec.frameRead raw target
       delivery entry same plaintext sealContext records bound
     have acceptedFields : sealed sealContext = Accepted.ofStaged staged := by
       have sameFields := congrArg (fun value : Std.U64 × Pqxdh.Bytes × Pqxdh.Bytes =>
@@ -259,8 +264,32 @@ theorem active_finish_cover (setup : Setup baseSpec KemSK) (codec : Codec Reader
       (initial : RawCtxSelectedAuthenticationObserver.State × AdaptiveCtxDynamicKnownKeys.SourceState) :=
     PqxdhServerAuthCtxAcceptanceCover.observed_coins setup.source key codec.frameRead work initial
   simp only [StateT.run] at runCoins
-  simp only [PqxdhServerAuthCtxFinish.finish, StateT.run, phase, simulateQ_bind,
-    runBind, runCoins, bind_map_left, mem_support_bind_iff] at supported
+  simp only [PqxdhServerAuthCtxFinish.finish, StateT.run, phase] at supported
+  split at supported
+  rotate_left
+  · simp only [simulateQ_pure] at supported
+    change result ∈ support (StateT.run (pure _) before) at supported
+    simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
+    subst supported
+    simp [fresh] at captured
+  rename_i init response
+  have liftBind : ∀ {β : Type} (x : OracleComp AdaptiveCtxDynamicKnownKeys.Spec CtxRomAuth.CtxDigest)
+      (f : CtxRomAuth.CtxDigest → PqxdhServerAuthCtxState.Program KemSK β) (s : PqxdhServerAuthCtxState.Local KemSK),
+      (StateT.lift x >>= f) s = x >>= fun digest => f digest s := by
+    intro β x f s
+    change StateT.run _ s = _
+    simp only [StateT.run_bind, StateT.run_lift, bind_assoc, pure_bind]
+    rfl
+  simp only [PqxdhServerAuthCtxState.hash, liftBind, simulateQ_bind, runBind, mem_support_bind_iff] at supported
+  obtain ⟨hashed, hashReached, supported⟩ := supported
+  have hashOrigins := PqxdhServerAuthCtxObserverHistory.origins_quiet setup context codec key _
+    (by simp [PqxdhServerAuthCtxAmbient.hash, AdaptiveCtxDynamicKnownBounds.TargetClass,
+      AdaptiveCtxQueryBounds.SourceSeal])
+    state.1.1.ghost state.1.1.ghost state.1.2.2.hidden state.1.2.2.hidden before hashed
+    invariant.origins (List.prefix_refl _) (List.prefix_refl _) (fun _ found => found) hashReached
+  have hashGood := RawCtxSelectedPlaintextOrigins.schedule_good _ _ _ _ before invariant.good _ hashReached
+  simp only [PqxdhServerAuthCtxFinish.staged, simulateQ_bind, runBind, runCoins, bind_map_left,
+    mem_support_bind_iff] at supported
   obtain ⟨prepared, _, supported⟩ := supported
   cases prepared with
   | none =>
@@ -277,14 +306,14 @@ theorem active_finish_cover (setup : Setup baseSpec KemSK) (codec : Codec Reader
       exact rejected_cover setup codec context control
         (PqxdhServerAuthCtxFinish.touched state
           (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected) derived.2)
-        fresh before.1 snap captured
+        fresh hashed.2.1 snap captured
     | root root =>
       simp only [reply] at supported
       obtain ⟨bytes, input, occupied⟩ := PqxdhServerAuthCtxChronology.table_root setup context select
         (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected)
         state.1.2.2 derived.2 root (by rw [← reply]; exact reached)
       apply Or.inr ∘ Or.inl
-      apply PqxdhServerAuthCtxAcceptanceCover.known_ordinary setup codec context key control pending root _ result.1.2 _ before result.2 result.1.1 supported
+      apply PqxdhServerAuthCtxAcceptanceCover.known_ordinary setup codec context key control pending root _ result.1.2 _ hashed.2 result.2 result.1.1 supported
       refine ⟨bytes, ?_, occupied⟩
       change beaconInput setup context.seed context.scalar
         (state.1.1.ghost.touches ++ [Touch.beacon _]) = some bytes
@@ -292,13 +321,13 @@ theorem active_finish_cover (setup : Setup baseSpec KemSK) (codec : Codec Reader
       exact input
     | hidden =>
       simp only [reply] at supported
-      exact selected_cover setup codec context key rest pending control _ result.1.2 result.1.1 before result.2
-        (PqxdhServerAuthCtxAcceptanceCover.derive_origins setup codec context select state before.1
-          invariant.origins unselected _ derived reached)
+      exact selected_cover setup codec context key rest pending control _ result.1.2 result.1.1 hashed.2 result.2
+        (PqxdhServerAuthCtxAcceptanceCover.derive_origins setup codec context select state hashed.2.1
+          hashOrigins unselected _ derived reached)
         (PqxdhServerAuthCtxOrigin.touched_input setup context select state
           (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected)
           derived.2 clean (by rw [← reply]; exact reached))
-        writable invariant.good fresh supported snap captured
+        writable hashGood fresh supported snap captured
 
 /-- The complete finish capability preserves acceptance coverage through all actual source phases, including rejection without a new Beacon attempt. -/
 theorem finish_cover (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -348,7 +377,7 @@ theorem quiet_handler_cover (setup : Setup baseSpec KemSK) (codec : Codec Reader
   have accepted := PqxdhServerAuthCtxAcceptanceCover.handler_acceptance setup codec checks context
     (factorServices setup codec checks context (PqxdhServerAuthCtxMaterial.output key rest)) Q j query notFinish
     (PqxdhServerAuthCtxState.project (state, before.2)) _ reached
-  have grown := PqxdhServerAuthCtxAcceptanceHistory.handler_grows setup codec checks context Q j
+  have grown := PqxdhServerAuthCtxAcceptanceHistory.handler_logs setup codec checks context Q j
     (factorServices setup codec checks context (PqxdhServerAuthCtxMaterial.output key rest)) query
     (PqxdhServerAuthCtxState.project (state, before.2)) _ reached
   have retained := (PqxdhServerAuthCtxChronology.handler_history setup codec checks context

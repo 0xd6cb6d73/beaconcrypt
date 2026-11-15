@@ -9,6 +9,7 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 open OracleComp OracleSpec
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialOriginNativeContext
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhInitialPendingPost PqxdhInitialPostContext PqxdhInitialParentPost PqxdhInitialOriginPost
 open RawCtxSelectedParentCalls RawCtxSelectedParentEntry RawCtxSelectedFamilyContext
 open RawCtxGenericRoleStorage RawCtxGenericRoleFamily PqxdhJointKdfGame PqxdhSecretInputKdf
@@ -74,11 +75,11 @@ theorem complete_map (entry : Entry) (target : RootOutput)
     (outside : PqxdhInitialBuilderContext.BuildResult → OracleComp (PostSpec extra S B) Result)
     (result : KernelOf RawCtxSelectedChain.Slot × Option RawCtxSourceSend.Encrypted) :
     simulateQ (nativeHandler source writer prior entry target pre application initial selector aux)
-      (PqxdhInitialOriginContext.complete mark sender route decode index (mapFront (nativeKernel target) before)
+      (PqxdhInitialOriginContext.complete (completedBinding := completedBinding) mark sender route decode index (mapFront (nativeKernel target) before)
         trace origin candidate authenticated metadata outside (Prod.map (nativeKernel target) id result)) =
     Prod.map id (Prod.map (mapFront (nativeKernel target)) id) <$> simulateQ
       (labelHandler source writer prior entry target pre application initial selector aux (childResponse prior entry target))
-      (PqxdhInitialOriginContext.complete mark sender route decode index before trace origin candidate authenticated metadata outside result) := by
+      (PqxdhInitialOriginContext.complete (completedBinding := completedBinding) mark sender route decode index before trace origin candidate authenticated metadata outside result) := by
   simp only [PqxdhInitialOriginContext.complete, PqxdhInitialBuilderContext.afterSend, simulateQ_bind, map_bind]
   simp only [auxForward, nativeHandler, labelHandler, bind_assoc, Prod.map_def, id_eq]
   apply bind_congr
@@ -88,7 +89,7 @@ theorem complete_map (entry : Entry) (target : RootOutput)
     simp only [simulateQ_pure, pure_bind, PqxdhInitialPendingBuilder.reinstall, selected_map, install_map,
       built_trace_map]
     simpa only [nativeHandler, labelHandler, Prod.map_def, id_eq] using
-      (PqxdhInitialOriginPostMap.program source writer prior entry target pre application initial selector aux
+      (PqxdhInitialOriginPostMap.program (completedBinding := completedBinding) source writer prior entry target pre application initial selector aux
         mark sender route decode (outside (.ok none))
         (PqxdhInitialPendingBuilder.install index before (PqxdhInitialPendingBuilder.selected sender index before),
           PqxdhInitialOriginContext.builtTrace trace origin
@@ -103,7 +104,7 @@ theorem complete_map (entry : Entry) (target : RootOutput)
       simp only [simulateQ_pure, pure_bind, PqxdhInitialPendingBuilder.reinstall, selected_map, install_map,
         built_trace_map]
       simpa only [nativeHandler, labelHandler, Prod.map_def, id_eq] using
-        (PqxdhInitialOriginPostMap.program source writer prior entry target pre application initial selector aux
+        (PqxdhInitialOriginPostMap.program (completedBinding := completedBinding) source writer prior entry target pre application initial selector aux
           mark sender route decode (outside (.ok none))
           (PqxdhInitialPendingBuilder.install index before (PqxdhInitialPendingBuilder.selected sender index before),
             PqxdhInitialOriginContext.builtTrace trace origin
@@ -112,7 +113,7 @@ theorem complete_map (entry : Entry) (target : RootOutput)
       simp only [simulateQ_pure, pure_bind, PqxdhInitialPendingBuilder.reinstall, selected_map, publish_map,
         install_map, built_trace_map]
       simpa only [nativeHandler, labelHandler, Prod.map_def, id_eq] using
-        (PqxdhInitialOriginPostMap.program source writer prior entry target pre application initial selector aux
+        (PqxdhInitialOriginPostMap.program (completedBinding := completedBinding) source writer prior entry target pre application initial selector aux
           mark sender route decode (outside (.ok (some ⟨bytes, candidate.key_id⟩)))
           (PqxdhInitialPendingBuilder.install index before
               (PqxdhInitialGenericPublication.publish (PqxdhInitialPendingBuilder.selected sender index before) candidate result.1 metadata),
@@ -128,15 +129,15 @@ theorem post_cut (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin)
     (trace : Trace Origin S B) (origin : Option Origin) (output : FullOutput) :
     simulateQ (nativeHandler source writer prior (fromOutput (PqxdhInitialPostContext.address context) output)
       (nextChain output) pre application initial selector aux)
-      (PqxdhInitialOriginContext.resume mark sender route decode ⟨.inl context, trace, origin⟩
-        (PqxdhInitialParentContext.reply sender route decode context output)) =
+      (PqxdhInitialOriginContext.resume (completedBinding := completedBinding) mark sender route decode ⟨.inl context, trace, origin⟩
+        (PqxdhInitialParentContext.reply (completedBinding := completedBinding) sender route decode context output)) =
     Prod.map id (Prod.map (mapFront (nativeKernel (nextChain output))) id) <$> simulateQ
       (labelHandler source writer prior (fromOutput (PqxdhInitialPostContext.address context) output)
         (nextChain output) pre application initial selector aux
         (childResponse prior (fromOutput (PqxdhInitialPostContext.address context) output) (nextChain output)))
-      (PqxdhInitialOriginContext.stopped mark sender route decode ⟨.inl context, trace, origin⟩ (material output)) := by
+      (PqxdhInitialOriginContext.stopped (completedBinding := completedBinding) mark sender route decode ⟨.inl context, trace, origin⟩ (material output)) := by
   cases context with
-  | finish index before control candidate outside inner =>
+  | finish index before control candidate associatedData outside inner =>
     simp only [PqxdhInitialOriginContext.resume, PqxdhInitialOriginContext.stopped, PqxdhInitialParentContext.reply,
       PqxdhInitialPostContext.address, simulateQ_bind, ← QueryImpl.simulateQ_compose,
       PqxdhInitialParentContext.native_primitive, PqxdhInitialParentContext.label_primitive]
@@ -145,14 +146,14 @@ theorem post_cut (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin)
     simp only [bind_map_left, map_bind]
     apply bind_congr
     intro result
-    have finished := PqxdhInitialParentContext.finish_map (nextChain output) index (knownFront before) control candidate result
+    have finished := PqxdhInitialParentContext.finish_map (nextChain output) index (knownFront before) control candidate associatedData result
     rw [known_front] at finished
     rw [finished]
-    exact PqxdhInitialOriginPostMap.program source writer prior (fromOutput (ownerAddress inner) output)
+    exact PqxdhInitialOriginPostMap.program (completedBinding := completedBinding) source writer prior (fromOutput (ownerAddress inner) output)
       (nextChain output) pre application initial selector aux mark sender route decode
-      (outside (finishResult index (knownFront before) control candidate result).1)
-      ((finishResult index (knownFront before) control candidate result).2,
-        PqxdhInitialOriginContext.finishedTrace trace origin index (finishResult index (knownFront before) control candidate result).1)
+      (outside (finishResult index (knownFront before) control candidate associatedData result).1)
+      ((finishResult index (knownFront before) control candidate associatedData result).2,
+        PqxdhInitialOriginContext.finishedTrace trace origin index (finishResult index (knownFront before) control candidate associatedData result).1)
   | record request before outside inner =>
     simp only [PqxdhInitialOriginContext.resume, PqxdhInitialOriginContext.stopped, PqxdhInitialParentContext.reply,
       PqxdhInitialPostContext.address, simulateQ_bind, ← QueryImpl.simulateQ_compose,
@@ -161,7 +162,7 @@ theorem post_cut (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin)
     simp only [bind_map_left, map_bind]
     apply bind_congr
     intro result
-    exact PqxdhInitialOriginPostMap.program source writer prior (fromOutput (RawCtxSelectedFamilyContext.address inner) output)
+    exact PqxdhInitialOriginPostMap.program (completedBinding := completedBinding) source writer prior (fromOutput (RawCtxSelectedFamilyContext.address inner) output)
       (nextChain output) pre application initial selector aux mark sender route decode (outside result.1)
       ({ knownFront before with roles := result.2 }, record trace request result.1)
 
@@ -172,13 +173,13 @@ theorem frame_cut (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin)
     (context : PqxdhInitialOriginContext.Context extra M P I D K Result Origin S B) (output : FullOutput) :
     simulateQ (nativeHandler source writer prior (fromOutput (PqxdhInitialBuilderContext.address context.original) output)
       (nextChain output) pre application initial selector aux)
-      ((PqxdhInitialOriginContext.frame mark sender route decode context).2
-        (PqxdhInitialParentBuilderContext.reply sender route decode context.original output)) =
+      ((PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode context).2
+        (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode context.original output)) =
     Prod.map id (Prod.map (mapFront (nativeKernel (nextChain output))) id) <$> simulateQ
       (labelHandler source writer prior (fromOutput (PqxdhInitialBuilderContext.address context.original) output)
         (nextChain output) pre application initial selector aux
         (childResponse prior (fromOutput (PqxdhInitialBuilderContext.address context.original) output) (nextChain output)))
-      (PqxdhInitialOriginContext.stopped mark sender route decode context (material output)) := by
+      (PqxdhInitialOriginContext.stopped (completedBinding := completedBinding) mark sender route decode context (material output)) := by
   rcases context with ⟨original, trace, origin⟩
   cases original with
   | inr context =>
@@ -209,7 +210,7 @@ theorem frame_cut (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin)
       simulateQ (nativeHandler source writer prior
         (fromOutput (RawCtxSelectedPendingCut.requestAddress context.pending.request) output) (nextChain output)
         pre application initial selector aux)
-        (PqxdhInitialOriginContext.complete mark sender route decode context.index context.before trace origin context.candidate context.authenticated
+        (PqxdhInitialOriginContext.complete (completedBinding := completedBinding) mark sender route decode context.index context.before trace origin context.candidate context.authenticated
           context.metadata context.outside
           ((RawCtxChainSend.ready context.pending
             (RawCtxInterpretedReceive.decodeResponse (RawCtxKdfRequestTable.fullResponse output))).advanced, encrypted))) =
@@ -219,19 +220,19 @@ theorem frame_cut (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin)
             (fromOutput (RawCtxSelectedPendingCut.requestAddress context.pending.request) output) (nextChain output)
             pre application initial selector aux
             (childResponse prior (fromOutput (RawCtxSelectedPendingCut.requestAddress context.pending.request) output) (nextChain output)))
-            (PqxdhInitialOriginContext.complete mark sender route decode context.index (knownFront context.before) trace origin context.candidate context.authenticated
+            (PqxdhInitialOriginContext.complete (completedBinding := completedBinding) mark sender route decode context.index (knownFront context.before) trace origin context.candidate context.authenticated
               context.metadata context.outside ((RawCtxSelectedPendingCut.sendStop context.pending (material output)).advanced, encrypted)))
     rw [sealing]
     simp only [map_bind]
     apply bind_congr
     intro encrypted
     rw [advanced]
-    simpa only [known_front, Prod.map_apply, id_eq] using complete_map source writer prior pre application initial selector aux
+    simpa only [known_front, Prod.map_apply, id_eq] using complete_map (completedBinding := completedBinding) source writer prior pre application initial selector aux
       (fromOutput (RawCtxSelectedPendingCut.requestAddress context.pending.request) output) (nextChain output)
       mark sender route decode context.index (knownFront context.before) trace origin context.candidate context.authenticated
       context.metadata context.outside ((RawCtxSelectedPendingCut.sendStop context.pending (material output)).advanced, encrypted)
   | inl context =>
-    exact post_cut source writer prior pre application initial selector aux
+    exact post_cut (completedBinding := completedBinding) source writer prior pre application initial selector aux
       mark sender route decode context trace origin output
 
 
@@ -242,13 +243,13 @@ theorem frame_run (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin)
     (state : RawCtxSharedPrimitive.SharedState A × N) (cache : C) :
     ((simulateQ (nativeHandler source writer prior (fromOutput (PqxdhInitialBuilderContext.address context.original) output)
       (nextChain output) pre application initial selector aux)
-      ((PqxdhInitialOriginContext.frame mark sender route decode context).2
-        (PqxdhInitialParentBuilderContext.reply sender route decode context.original output))).run state).run cache =
+      ((PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode context).2
+        (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode context.original output))).run state).run cache =
     (fun result => ((Prod.map id (Prod.map (mapFront (nativeKernel (nextChain output))) id) result.1.1, result.1.2), result.2)) <$>
       ((simulateQ (labelHandler source writer prior (fromOutput (PqxdhInitialBuilderContext.address context.original) output)
         (nextChain output) pre application initial selector aux
         (childResponse prior (fromOutput (PqxdhInitialBuilderContext.address context.original) output) (nextChain output)))
-        (PqxdhInitialOriginContext.stopped mark sender route decode context (material output))).run state).run cache := by
+        (PqxdhInitialOriginContext.stopped (completedBinding := completedBinding) mark sender route decode context (material output))).run state).run cache := by
   rw [frame_cut]
   rw [StateT.run_map, StateT.run_map]
 

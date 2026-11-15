@@ -8,7 +8,7 @@ import BeaconcryptCore.Computational.VCVioForwardProbabilityTheory
 # PQXDH joint-HKDF projection collisions
 
 This module separates the canonical identity of each source-visible projection from its byte
-value. Repeating one identity, including the required initial/step aliases at one exact ratchet
+value. Repeating one identity, within each exact input/domain/position address rather than across the distinct initial/message
 address, is intentional cache equality. A collision is bad only when two distinct visible
 identities have the same value.
 
@@ -445,7 +445,7 @@ def SourceKdfSpec : OracleSpec SourceKdfQuery
 /-- The canonical stream address used by one source call. -/
 def SourceKdfQuery.address : SourceKdfQuery → JointKdfAddress
   | .root input => FixedHkdfDomain.pqxdh.address input
-  | .initial input => FixedHkdfDomain.ratchet.address input
+  | .initial input => FixedHkdfDomain.initial.address input
   | .step input => FixedHkdfDomain.ratchet.address input
   | .project query => query.address
 
@@ -517,8 +517,8 @@ def SourceProjectionLog.recordOutput (log : SourceProjectionLog)
       ⟨⟨firstCoord (FixedHkdfDomain.pqxdh.address input), output⟩ :: log.observations32,
         log.observations12⟩
   | .initial input =>
-      ⟨⟨secondCoord (FixedHkdfDomain.ratchet.address input), output.2⟩ ::
-          ⟨firstCoord (FixedHkdfDomain.ratchet.address input), output.1⟩ ::
+      ⟨⟨secondCoord (FixedHkdfDomain.initial.address input), output.2⟩ ::
+          ⟨firstCoord (FixedHkdfDomain.initial.address input), output.1⟩ ::
             log.observations32,
         log.observations12⟩
   | .step input =>
@@ -550,17 +550,19 @@ def SourceProjectionLog.recordOutput (log : SourceProjectionLog)
 def SourceProjectionLog.HasCollision (log : SourceProjectionLog) : Prop :=
   Bad32 log.observations32 ∨ Bad12 log.observations12
 
-/-- Initial-left and step-key calls at equal input have the same canonical first identity. -/
-theorem initial_firstCoord_eq_step_firstCoord (input : Pqxdh.Bytes) :
-    firstCoord (SourceKdfQuery.initial input).address =
+/-- Initial-left and message-key projections have distinct canonical addresses, including equal inputs. -/
+theorem initial_firstCoord_ne_step_firstCoord (input : Pqxdh.Bytes) :
+    firstCoord (SourceKdfQuery.initial input).address ≠
       firstCoord (SourceKdfQuery.step input).address := by
-  rfl
+  intro same
+  exact initialAddress_ne_ratchetAddress input input (congrArg Coord32.address same)
 
-/-- Initial-right and step-next calls at equal input have the same canonical second identity. -/
-theorem initial_secondCoord_eq_step_secondCoord (input : Pqxdh.Bytes) :
-    secondCoord (SourceKdfQuery.initial input).address =
+/-- Initial-right and message-next projections have distinct canonical addresses, including equal inputs. -/
+theorem initial_secondCoord_ne_step_secondCoord (input : Pqxdh.Bytes) :
+    secondCoord (SourceKdfQuery.initial input).address ≠
       secondCoord (SourceKdfQuery.step input).address := by
-  rfl
+  intro same
+  exact initialAddress_ne_ratchetAddress input input (congrArg Coord32.address same)
 
 /-- The root and ratchet first projections remain distinct identities at all inputs. -/
 theorem root_firstCoord_ne_ratchet_firstCoord (rootInput ratchetInput : Pqxdh.Bytes) :
@@ -878,7 +880,7 @@ def sourceKdfCoordinateForwardImpl :
     | .inr (.root input) =>
         queryFirstCoord (FixedHkdfDomain.pqxdh.address input)
     | .inr (.initial input) =>
-        queryInitialCoords (FixedHkdfDomain.ratchet.address input)
+        queryInitialCoords (FixedHkdfDomain.initial.address input)
     | .inr (.step input) =>
         queryStepCoords (FixedHkdfDomain.ratchet.address input)
     | .inr (.project ⟨input, domain, .first32⟩) =>
@@ -1192,7 +1194,7 @@ theorem sourceKdfCoordinateForwardImpl_first_step
     · change (queryFirstCoord (FixedHkdfDomain.pqxdh.address input)).IsQueryBoundP
         IsProjectionFirstQuery 1
       exact queryFirstCoord_first_bound _
-    · change (queryInitialCoords (FixedHkdfDomain.ratchet.address input)).IsQueryBoundP
+    · change (queryInitialCoords (FixedHkdfDomain.initial.address input)).IsQueryBoundP
         IsProjectionFirstQuery 1
       exact queryInitialCoords_first_bound _
     · change (queryStepCoords (FixedHkdfDomain.ratchet.address input)).IsQueryBoundP
@@ -1219,7 +1221,7 @@ theorem sourceKdfCoordinateForwardImpl_second_step
     · change (queryFirstCoord (FixedHkdfDomain.pqxdh.address input)).IsQueryBoundP
         IsProjectionSecondQuery 0
       exact queryFirstCoord_second_bound _
-    · change (queryInitialCoords (FixedHkdfDomain.ratchet.address input)).IsQueryBoundP
+    · change (queryInitialCoords (FixedHkdfDomain.initial.address input)).IsQueryBoundP
         IsProjectionSecondQuery 1
       exact queryInitialCoords_second_bound _
     · change (queryStepCoords (FixedHkdfDomain.ratchet.address input)).IsQueryBoundP
@@ -1246,7 +1248,7 @@ theorem sourceKdfCoordinateForwardImpl_nonce_step
     · change (queryFirstCoord (FixedHkdfDomain.pqxdh.address input)).IsQueryBoundP
         IsProjectionNonceQuery 0
       exact queryFirstCoord_nonce_bound _
-    · change (queryInitialCoords (FixedHkdfDomain.ratchet.address input)).IsQueryBoundP
+    · change (queryInitialCoords (FixedHkdfDomain.initial.address input)).IsQueryBoundP
         IsProjectionNonceQuery 0
       exact queryInitialCoords_nonce_bound _
     · change (queryStepCoords (FixedHkdfDomain.ratchet.address input)).IsQueryBoundP
@@ -3522,9 +3524,9 @@ theorem sourceKdfEagerCoordinateObservationForwardImpl_initial_run
     (input : Pqxdh.Bytes) (log : SourceProjectionLog) :
     (sourceKdfEagerCoordinateObservationForwardImpl
       (.inr (.initial input))).run log = (do
-        let first ← queryFirstCoord (FixedHkdfDomain.ratchet.address input)
-        let second ← querySecondCoord (FixedHkdfDomain.ratchet.address input)
-        let _ ← queryNonceCoord (FixedHkdfDomain.ratchet.address input)
+        let first ← queryFirstCoord (FixedHkdfDomain.initial.address input)
+        let second ← querySecondCoord (FixedHkdfDomain.initial.address input)
+        let _ ← queryNonceCoord (FixedHkdfDomain.initial.address input)
         pure ((first, second), log.recordOutput (.initial input) (first, second))) := by
   rw [sourceKdfEagerCoordinateObservationForwardImpl_source_run]
   simp [jointKdfStreamEagerCoordinateForwardImpl, queryStepCoords,
@@ -3605,8 +3607,8 @@ theorem sourceKdfEagerCoordinateObservationForwardImpl_project_nonce_run
 @[simp] theorem sourceKdfCoordinateObservationForwardImpl_initial_run
     (input : Pqxdh.Bytes) (log : SourceProjectionLog) :
     (sourceKdfCoordinateObservationForwardImpl (.inr (.initial input))).run log = (do
-      let first ← queryFirstCoord (FixedHkdfDomain.ratchet.address input)
-      let second ← querySecondCoord (FixedHkdfDomain.ratchet.address input)
+      let first ← queryFirstCoord (FixedHkdfDomain.initial.address input)
+      let second ← querySecondCoord (FixedHkdfDomain.initial.address input)
       pure ((first, second), log.recordOutput (.initial input) (first, second))) := by
   rfl
 
@@ -3759,7 +3761,7 @@ theorem evalSPMF_sourceKdfEager_initial_bind_eq_deferred
           (.inr (.initial input))).run log >>= continuation)).run' cache) := by
   rw [sourceKdfEagerCoordinateObservationForwardImpl_initial_run,
     sourceKdfCoordinateObservationForwardImpl_initial_run]
-  let address := FixedHkdfDomain.ratchet.address input
+  let address := FixedHkdfDomain.initial.address input
   let next : Projection32Value × Projection32Value →
       OracleComp ProjectionCoordChallengeSpec alpha :=
     fun output => continuation (output,
@@ -4370,7 +4372,7 @@ theorem projectionCoordVisibleTrace_comp_sourceKdfCoordinateForwardImpl :
             queryFirstCoord (FixedHkdfDomain.pqxdh.address input)
       unfold queryFirstCoord
       exact run_simulateQ_projectionCoordVisibleTrace_query32 _ log
-    · let address := FixedHkdfDomain.ratchet.address input
+    · let address := FixedHkdfDomain.initial.address input
       change (simulateQ projectionCoordVisibleTraceForwardImpl
           (queryInitialCoords address)).run log =
         (fun output => (output,
@@ -4807,30 +4809,13 @@ theorem sourceKdfStreamObservationForwardImpl_stream_bound_step
       OracleComp.isQueryBoundP_query_iff]
     simp [IsFixedHkdfSha512StreamQuery]
 
-/-- Every source-shaped call uses one of the two exact production address images. -/
+/-- Every source-shaped call uses one of the three exact production address images. -/
 theorem sourceKdfQuery_address_not_untyped (query : SourceKdfQuery) :
     ¬IsFixedHkdfSha512UntypedStreamQuery (.inr query.address) := by
   rcases query with input | input | input | ⟨input, domain, projection⟩
-  · simp only [SourceKdfQuery.address, FixedHkdfDomain.address_pqxdh,
-      IsFixedHkdfSha512UntypedStreamQuery, not_and_or]
-    exact Or.inl (not_not_intro rfl)
-  · simp only [SourceKdfQuery.address, FixedHkdfDomain.address_ratchet,
-      IsFixedHkdfSha512UntypedStreamQuery, not_and_or]
-    exact Or.inr (not_not_intro rfl)
-  · simp only [SourceKdfQuery.address, FixedHkdfDomain.address_ratchet,
-      IsFixedHkdfSha512UntypedStreamQuery, not_and_or]
-    exact Or.inr (not_not_intro rfl)
-  · cases domain with
-    | pqxdh =>
-        simp only [SourceKdfQuery.address, JointKdfViewQuery.address,
-          FixedHkdfDomain.address_pqxdh,
-          IsFixedHkdfSha512UntypedStreamQuery, not_and_or]
-        exact Or.inl (not_not_intro rfl)
-    | ratchet =>
-        simp only [SourceKdfQuery.address, JointKdfViewQuery.address,
-          FixedHkdfDomain.address_ratchet,
-          IsFixedHkdfSha512UntypedStreamQuery, not_and_or]
-        exact Or.inr (not_not_intro rfl)
+  all_goals try cases domain
+  all_goals simp [SourceKdfQuery.address, JointKdfViewQuery.address,
+    IsFixedHkdfSha512UntypedStreamQuery, rootAddress, initialAddress, ratchetAddress]
 
 /-- No observation-forwarding step emits a raw stream address outside the exact `INFO_PQ` and
 `INFO_R` production images. -/

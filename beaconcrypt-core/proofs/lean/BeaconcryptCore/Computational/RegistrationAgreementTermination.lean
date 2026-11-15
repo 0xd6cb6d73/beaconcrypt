@@ -205,12 +205,12 @@ private theorem server_entry_rank (control : pqxdh.ServerState) (status : pqxdh.
 
 private theorem beacon_entry_rank (authenticated : registration.AuthenticatedResponse) (initial : agreement.AgreementEffect)
     (actual : agreement.begin_beacon_agreement authenticated = .ok initial) : rank initial ≤ 9 := by
-  by_cases identityId : authenticated.pending.control.expected_server_binding.identity_key_id =
-    authenticated.pending.binding.server_pin.binding.identity_key_id
-  · by_cases identityKey : absBytes authenticated.pending.control.expected_server_binding.identity_public_key =
-      absBytes authenticated.pending.binding.server_pin.binding.identity_public_key
+  by_cases identityId : authenticated.control.expected_server_binding.identity_key_id =
+    authenticated.binding.server_pin.binding.identity_key_id
+  · by_cases identityKey : absBytes authenticated.control.expected_server_binding.identity_public_key =
+      absBytes authenticated.binding.server_pin.binding.identity_public_key
     · simp [agreement.begin_beacon_agreement, registration.AuthenticatedResponse.into_parts,
-        pqxdh.BeaconInitSent.impl.expected_server_binding, session.RegistrationBinding.impl.server_pin,
+        pqxdh.BeaconInitSent.impl.expected_server_binding, session.CompletedRegistrationBinding.impl.server_pin,
         session.ServerAuthenticationPin.impl.binding, core.Array.Insts.CoreCmpPartialEqArray.ne,
         array_eq_abs, agreement.AgreementState.new, ratchet.RatchetChain.from_bytes,
         pqxdh.beacon_abort_init, identityId, identityKey] at actual
@@ -218,16 +218,16 @@ private theorem beacon_entry_rank (authenticated : registration.AuthenticatedRes
       change 8 ≤ 9
       decide
     · simp [agreement.begin_beacon_agreement, registration.AuthenticatedResponse.into_parts,
-        pqxdh.BeaconInitSent.impl.expected_server_binding, session.RegistrationBinding.impl.server_pin,
+        pqxdh.BeaconInitSent.impl.expected_server_binding, session.CompletedRegistrationBinding.impl.server_pin,
         session.ServerAuthenticationPin.impl.binding, core.Array.Insts.CoreCmpPartialEqArray.ne,
         array_eq_abs, pqxdh.beacon_abort_init, identityId, identityKey] at actual
       subst initial
       exact Nat.zero_le 9
-  · have unequal : authenticated.pending.control.expected_server_binding.identity_key_id.val ≠
-        authenticated.pending.binding.server_pin.binding.identity_key_id.val :=
+  · have unequal : authenticated.control.expected_server_binding.identity_key_id.val ≠
+        authenticated.binding.server_pin.binding.identity_key_id.val :=
       fun same => identityId (UScalar.eq_of_val_eq same)
     simp [agreement.begin_beacon_agreement, registration.AuthenticatedResponse.into_parts,
-      pqxdh.BeaconInitSent.impl.expected_server_binding, session.RegistrationBinding.impl.server_pin,
+      pqxdh.BeaconInitSent.impl.expected_server_binding, session.CompletedRegistrationBinding.impl.server_pin,
       session.ServerAuthenticationPin.impl.binding, pqxdh.beacon_abort_init, unequal] at actual
     subst initial
     exact Nat.zero_le 9

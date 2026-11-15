@@ -13,9 +13,12 @@ open beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 
 namespace BeaconcryptCore.Computational.PqxdhRecordLiftWorldCompiler
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhRecordLiftInterface
 open PqxdhRecordLiftChainState (Coordinate)
 variable {n : Nat}
+
+private abbrev RecordAd := Std.Array Std.U8 151#usize
 
 abbrev Label (n : Nat) := Coordinate (Slot n)
 abbrev LabeledKernel (n : Nat) := PqxdhRecordLiftChainState.Kernel (Slot n) (Label n)
@@ -54,7 +57,7 @@ inductive Phase (n : Nat) where
 
 noncomputable def Peer.erase (interpret : Interpretation n)
     (serverIdentity : RawCtxServerRouting.Identity) (peer : Peer n) :
-    RawCtxServerRouting.Peer (Std.Array Std.U8 281#usize) :=
+    RawCtxServerRouting.Peer (Std.Array Std.U8 151#usize) :=
   ⟨peer.identity, peer.kernel.erase interpret, peer.binding.associatedArray serverIdentity⟩
 
 noncomputable def Server.erase (interpret : Interpretation n) (server : Server n) : PqxdhRecordLiftWorld.Server :=
@@ -192,8 +195,8 @@ theorem chain_extension_agrees (state : State n)
     (seedExtension_agrees state left right hleft hright coordinate.slot present)
 
 /-- Private constructor peers supplied by the environment are caller-known source kernels. -/
-def Peer.fromKnown (peer : RawCtxServerRouting.Peer (Std.Array Std.U8 281#usize)) : Peer n :=
-  ⟨⟨peer.identity, some peer.metadata⟩, .known peer.kernel⟩
+def Peer.fromKnown (peer : RawCtxServerRouting.Peer (Std.Array Std.U8 151#usize)) : Peer n :=
+  ⟨⟨peer.identity, peer.metadata⟩, .known peer.kernel⟩
 
 def Server.fromKnown (server : PqxdhRecordLiftWorld.Server) : Server n :=
   ⟨server.sender, server.records.server.identity,
@@ -201,7 +204,7 @@ def Server.fromKnown (server : PqxdhRecordLiftWorld.Server) : Server n :=
 
 /-- Importing a known peer neither changes nor invents any native field. -/
 theorem known_peer_erasure (interpret : Interpretation n) {serverIdentity : RawCtxServerRouting.Identity}
-    (peer : RawCtxServerRouting.Peer (Std.Array Std.U8 281#usize)) :
+    (peer : RawCtxServerRouting.Peer (Std.Array Std.U8 151#usize)) :
     Peer.erase interpret serverIdentity (Peer.fromKnown peer) = peer := by
   cases peer with
   | mk identity kernel metadata => rfl
@@ -230,7 +233,7 @@ theorem known_server_origins (server : PqxdhRecordLiftWorld.Server) (keyId : Std
     simp [Server.fromKnown, found, Peer.fromKnown, StoredKernel.origin]
 
 /-- The same private constructor handoff, importing its existing source peers as caller-known kernels. Duplicate initialization cannot reset any field. -/
-noncomputable def initializeServer (created : PqxdhLiveServerConstruction.Created Unit) :
+noncomputable def initializeServer (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     StateT (State n) ProbComp Unit := fun state => match state.server with
   | some _ => pure ((), state)
   | none => pure ((), { state with server := some (Server.fromKnown
@@ -238,7 +241,7 @@ noncomputable def initializeServer (created : PqxdhLiveServerConstruction.Create
 
 /-- Private initialization has exactly the original complete World effect and keeps the reply-derived provenance unchanged. -/
 theorem initialize_erasure (interpret : Interpretation n)
-    (created : PqxdhLiveServerConstruction.Created Unit) (state : State n) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (state : State n) :
     Prod.map id (erase interpret) <$> (initializeServer created).run state =
       (fun result => (result.1, (result.2, origins state))) <$>
         (PqxdhRecordLiftWorld.initializeServer created).run (erase interpret state).1 := by
@@ -463,7 +466,7 @@ theorem peer_interpretation_agrees (state : State n)
     Peer.erase (interpret left state.chain) serverIdentity peer =
       Peer.erase (interpret right state.chain) serverIdentity peer :=
   congrArg (fun kernel => (⟨peer.identity, kernel, peer.binding.associatedArray serverIdentity⟩ :
-        RawCtxServerRouting.Peer (Std.Array Std.U8 281#usize)))
+        RawCtxServerRouting.Peer (Std.Array Std.U8 151#usize)))
     (stored_interpretation_agrees state left right hleft hright peer.kernel scopeOK)
 
 theorem server_interpretation_agrees (state : State n)
@@ -1029,7 +1032,7 @@ theorem sampled_world {Y : Type} (work : ProbComp Y) (state : State n) :
   rfl
 
 /-- The private constructor handoff preserves the complete World server initialization. -/
-theorem initialize_world (created : PqxdhLiveServerConstruction.Created Unit) (state : State n) :
+theorem initialize_world (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (state : State n) :
     Prod.map id world <$> (initializeServer created).run state =
       (PqxdhRecordLiftWorld.initializeServer created).run (world state) := by
   cases found : state.server <;>
@@ -1039,7 +1042,7 @@ theorem initialize_world (created : PqxdhLiveServerConstruction.Created Unit) (s
   rfl
 
 /-- Constructor-supplied peers are known kernels, so initialization establishes their scope without a secret assumption. -/
-theorem initialize_scoped (created : PqxdhLiveServerConstruction.Created Unit) (state : State n)
+theorem initialize_scoped (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (state : State n)
     (scopeOK : Scoped state) (result : Unit × State n)
     (supported : result ∈ support ((initializeServer created).run state)) : Scoped result.2 := by
   simp only [initializeServer, StateT.run] at supported
@@ -1376,7 +1379,7 @@ theorem ready_append (state : State n) (phase : InactivePhase) (ready : Ready st
       trivial
 
 /-- The private constructor's caller-known peers impose no artificial hidden-kernel certificate. -/
-theorem initialize_ready (created : PqxdhLiveServerConstruction.Created Unit) (state : State n)
+theorem initialize_ready (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (state : State n)
     (ready : Ready state) (result : Unit × State n)
     (supported : result ∈ support ((initializeServer created).run state)) : Ready result.2 := by
   simp only [initializeServer, StateT.run] at supported
@@ -1517,7 +1520,7 @@ theorem installServer_tableGood (source : PqxdhJointKdfGame.FixedHkdfSha512NoSal
         exact good
 
 theorem initialize_tableGood (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
-    (created : PqxdhLiveServerConstruction.Created Unit) (state : State n) (good : TableGood source state)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (state : State n) (good : TableGood source state)
     (result : Unit × State n) (supported : result ∈ support ((initializeServer created).run state)) :
     TableGood source result.2 := by
   simp only [initializeServer, StateT.run] at supported
@@ -2334,19 +2337,19 @@ theorem beaconStep_erasure {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader 
 
 
 noncomputable def sourceServerOwner (server : PqxdhRecordLiftWorld.Server) (keyId : Std.U64)
-    (peer : RawCtxServerRouting.Peer (Std.Array Std.U8 281#usize)) : RawCtxWholeOwner.OwnerState Unit :=
+    (peer : RawCtxServerRouting.Peer (Std.Array Std.U8 151#usize)) : RawCtxWholeOwner.OwnerState Unit :=
   ⟨MldsaServerRouting.selected PqxdhRefinement.absBytes keyId peer, server.records.rawAttempts⟩
 
 def sourceServerPublish {Reply : Type} (server : PqxdhRecordLiftWorld.Server) (keyId : Std.U64)
-    (peer : RawCtxServerRouting.Peer (Std.Array Std.U8 281#usize)) (result : Reply × RawCtxWholeOwner.OwnerState Unit) :
-    Reply × RawCtxServerRouting.State Unit (Std.Array Std.U8 281#usize) :=
+    (peer : RawCtxServerRouting.Peer (Std.Array Std.U8 151#usize)) (result : Reply × RawCtxWholeOwner.OwnerState Unit) :
+    Reply × RawCtxServerRouting.State Unit (Std.Array Std.U8 151#usize) :=
   (result.1, ⟨RawCtxServerRouting.putPeer server.records.server keyId peer result.2.owner.kernel, result.2.rawAttempts⟩)
 
 
 /-- Original Server send selects the same whole-owner call and reinstalls its exact result in the original peer map. -/
 theorem source_server_send (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (plaintext : Pqxdh.Bytes) (server : PqxdhRecordLiftWorld.Server)
-    (keyId : Std.U64) (peer : RawCtxServerRouting.Peer (Std.Array Std.U8 281#usize))
+    (keyId : Std.U64) (peer : RawCtxServerRouting.Peer (Std.Array Std.U8 151#usize))
     (selected : server.records.server.peers keyId = some peer) :
     (MldsaServerRouting.handler PqxdhRefinement.absBytes (fun _ => server.sender) route decode (.inl (plaintext, keyId))).run server.records =
       sourceServerPublish server keyId peer <$>
@@ -2358,7 +2361,7 @@ theorem source_server_send (route : RawCtxServerRouting.SenderDecoder) (decode :
 /-- Original header routing and AD lookup select the same peer before invoking the complete raw owner operation. -/
 theorem source_server_raw (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (raw : Pqxdh.Bytes) (server : PqxdhRecordLiftWorld.Server)
-    (keyId : Std.U64) (peer : RawCtxServerRouting.Peer (Std.Array Std.U8 281#usize))
+    (keyId : Std.U64) (peer : RawCtxServerRouting.Peer (Std.Array Std.U8 151#usize))
     (selected : server.records.server.peers keyId = some peer) (routed : route raw = some keyId) :
     (MldsaServerRouting.handler PqxdhRefinement.absBytes (fun _ => server.sender) route decode (.inr raw)).run server.records =
       sourceServerPublish server keyId peer <$>
@@ -2371,7 +2374,7 @@ theorem source_server_raw (route : RawCtxServerRouting.SenderDecoder) (decode : 
 
 def worldServerPublish {Reply : Type} (tag : PqxdhDeploymentInterface.FrameTag)
     (state : PqxdhRecordLiftWorld.State n) (server : PqxdhRecordLiftWorld.Server)
-    (keyId : Std.U64) (peer : RawCtxServerRouting.Peer (Std.Array Std.U8 281#usize))
+    (keyId : Std.U64) (peer : RawCtxServerRouting.Peer (Std.Array Std.U8 151#usize))
     (result : (Reply × RawCtxWholeOwner.OwnerState Unit) ×
       (PqxdhRecordLiftWorld.Primitive × List PqxdhDeploymentNative.Frame)) : Reply × PqxdhRecordLiftWorld.State n :=
   (result.1.1, PqxdhRecordLiftWorld.produce tag result.2.2
@@ -2416,7 +2419,7 @@ theorem world_server_selected {ι : Type} {baseSpec : OracleSpec ι} {KemSK Read
     (codec : PqxdhServerAuthExperiment.Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
     (query : RawCtxServerMixed.SourceSpec.Domain) (state : PqxdhRecordLiftWorld.State n)
     (server : PqxdhRecordLiftWorld.Server) (existing : state.server = some server)
-    (keyId : Std.U64) (peer : RawCtxServerRouting.Peer (Std.Array Std.U8 281#usize))
+    (keyId : Std.U64) (peer : RawCtxServerRouting.Peer (Std.Array Std.U8 151#usize))
     (work : OracleComp RawCtxMixedOwner.NativeSpec (RawCtxServerMixed.SourceSpec.Range query × RawCtxWholeOwner.OwnerState Unit))
     (selected : (MldsaServerRouting.handler PqxdhRefinement.absBytes (fun _ => server.sender) route codec.frameRead query).run server.records =
       sourceServerPublish server keyId peer <$> work) :
@@ -2508,7 +2511,7 @@ theorem world_server_pure {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader R
     (codec : PqxdhServerAuthExperiment.Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
     (query : RawCtxServerMixed.SourceSpec.Domain) (state : PqxdhRecordLiftWorld.State n)
     (server : PqxdhRecordLiftWorld.Server) (existing : state.server = some server)
-    (reply : RawCtxServerMixed.SourceSpec.Range query) (after : RawCtxServerRouting.State Unit (Std.Array Std.U8 281#usize))
+    (reply : RawCtxServerMixed.SourceSpec.Range query) (after : RawCtxServerRouting.State Unit (Std.Array Std.U8 151#usize))
     (source : (MldsaServerRouting.handler PqxdhRefinement.absBytes (fun _ => server.sender) route codec.frameRead query).run server.records = pure (reply, after)) :
     (PqxdhRecordLiftWorld.serverStep setup codec route query).run state =
       pure (reply, { state with server := some { server with records := after } }) := by
@@ -2951,7 +2954,7 @@ theorem run_good {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response E
     (codec : PqxdhServerAuthExperiment.Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
     (env : Environment n E) (serverKid : Std.U64) (bounds : PqxdhDeploymentInterface.FreshBounds)
     (mode : PqxdhDeploymentInterface.Mode) (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X)
-    (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+    (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated RecordAd ×
       (X × PqxdhDeploymentSecrecy.Ledger) × E) × State n)
     (supported : result ∈ support (run (realPolicy setup codec) setup codec route env serverKid bounds mode adversary)) :
     Good setup.source result.2 :=
@@ -2959,7 +2962,7 @@ theorem run_good {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response E
     initial (initial_good setup.source) result supported
 
 /-- The analysis result exposes exactly the existing CE ledger and produced-frame projection, without private coordinates or seeds. -/
-def observed {E X : Type} (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+def observed {E X : Type} (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated RecordAd ×
     (X × PqxdhDeploymentSecrecy.Ledger) × E) × State n) :=
   result.1.map fun value => (value.2.1.1, value.2.1.2, result.2.produced)
 
@@ -2967,11 +2970,11 @@ def rawCounters (state : State n) : PqxdhRecordLiftWorld.RawCounters :=
   ⟨(state.server.map Server.rawAttempts).getD 0, state.ownerRaw⟩
 
 /-- The integrity analysis projection adds only the exact source raw-attempt ghosts to the permitted ledger/produced projection. -/
-def analysis {E X : Type} (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+def analysis {E X : Type} (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated RecordAd ×
     (X × PqxdhDeploymentSecrecy.Ledger) × E) × State n) :=
   result.1.map fun value => (value.2.1.1, value.2.1.2, result.2.produced, rawCounters result.2)
 
-theorem observed_erasure {E X : Type} (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+theorem observed_erasure {E X : Type} (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated RecordAd ×
     (X × PqxdhDeploymentSecrecy.Ledger) × E) × State n) :
     observed result = PqxdhRecordLiftWorld.observed (Prod.map id world result) := rfl
 
@@ -2979,7 +2982,7 @@ theorem rawCounters_erasure (state : State n) : rawCounters state = PqxdhRecordL
   cases existing : state.server <;> simp only [rawCounters, PqxdhRecordLiftWorld.rawCounters,
     world, project, erase, existing, Option.map_none, Option.map_some, Server.erase]
 
-theorem analysis_erasure {E X : Type} (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+theorem analysis_erasure {E X : Type} (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated RecordAd ×
     (X × PqxdhDeploymentSecrecy.Ledger) × E) × State n) :
     analysis result = PqxdhRecordLiftWorld.analysis (Prod.map id world result) := by
   simp only [analysis, PqxdhRecordLiftWorld.analysis, Prod.map, id_eq, rawCounters_erasure]

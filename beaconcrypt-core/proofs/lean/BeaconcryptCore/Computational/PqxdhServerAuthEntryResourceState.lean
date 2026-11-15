@@ -69,11 +69,16 @@ theorem buildStep_resources (setup : Setup baseSpec KemSK) (codec : Codec Reader
       subst supported
       exact ⟨rfl, rfl, by rw [← found, Function.update_eq_self]⟩
   | some token =>
-      simp only [found, mem_support_bind_iff] at supported
-      obtain ⟨built, _, supported⟩ := supported
-      simp only [support_pure, Set.mem_singleton_iff] at supported
-      subst supported
-      exact ⟨rfl, rfl, rfl⟩
+      simp only [found] at supported
+      split at supported
+      · simp only [support_pure, Set.mem_singleton_iff] at supported
+        subst supported
+        exact ⟨rfl, rfl, rfl⟩
+      · simp only [mem_support_bind_iff] at supported
+        obtain ⟨hashed, _, built, _, supported⟩ := supported
+        simp only [support_pure, Set.mem_singleton_iff] at supported
+        subst supported
+        exact ⟨rfl, rfl, rfl⟩
 
 /-- Final registration checks exhaust the Beacon finish opportunity on every result and leave all Server pending handles intact. -/
 theorem finishOutcome_resources (control : pqxdh.BeaconInitSent) (game : GameState KemSK)
@@ -95,8 +100,16 @@ theorem finishStep_resources (setup : Setup baseSpec KemSK) (codec : Codec Reade
   simp only [finishStep, StateT.run] at supported
   cases phase : state.1.beacon.beacon.phase with
   | initSent control prekey oneTime kem =>
-      simp only [phase, mem_support_bind_iff] at supported
-      obtain ⟨prepared, _, supported⟩ := supported
+      simp only [phase] at supported
+      split at supported
+      rotate_left
+      · simp only [support_pure, Set.mem_singleton_iff] at supported
+        subst supported
+        refine ⟨rfl, rfl, initSentFlag_zero _ ?_⟩
+        rintro ⟨control', prekey', oneTime', kem', phase'⟩
+        exact finish_phase control state.1.beacon none control' prekey' oneTime' kem' phase'
+      simp only [mem_support_bind_iff] at supported
+      obtain ⟨hashed, _, prepared, _, supported⟩ := supported
       cases found : prepared with
       | none =>
           simp only [found, support_pure, Set.mem_singleton_iff] at supported

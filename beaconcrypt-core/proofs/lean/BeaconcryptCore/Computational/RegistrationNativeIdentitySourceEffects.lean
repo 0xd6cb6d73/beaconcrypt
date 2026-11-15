@@ -21,7 +21,7 @@ def withWorld (before : Context n KemSK) (world : PqxdhRecordLiftWorld.State n) 
 /-- Every adaptive ordinary World-effect program preserves the complete context envelope and actual underlying World execution. -/
 theorem program (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (work : OracleComp (EnvEffects n) Value)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (work : OracleComp (EnvEffects n) Value)
     (before : Context n KemSK) :
     (simulateQ (ambient (mlSource := source) setup checks representation created)
       (simulateQ RegistrationBeaconReferenceNativeRecord.environment work)).run before =
@@ -44,7 +44,7 @@ theorem program (setup : Setup base KemSK) (checks : Checks)
 /-- Ordinary constructor coins keep their original Env and uniform charges on the same context. -/
 theorem coins (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (work : ProbComp Value)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (work : ProbComp Value)
     (before : Context n KemSK) :
     (simulateQ (ambient (mlSource := source) setup checks representation created)
       (simulateQ RegistrationBeaconReferenceNativeRecord.environment
@@ -56,7 +56,7 @@ theorem coins (setup : Setup base KemSK) (checks : Checks)
 /-- An ordinary source seed draw reaches the exact same context as indexed generated identity birth. -/
 theorem seed (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (before : Context n KemSK) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (before : Context n KemSK) :
     (simulateQ (ambient (mlSource := source) setup checks representation created)
       (simulateQ RegistrationBeaconReferenceNativeRecord.environment
         (simulateQ RegistrationWorldCoinCompiler.envCoin PqxdhJointIdentity.sampleSeed))).run before =

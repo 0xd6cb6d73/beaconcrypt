@@ -16,7 +16,7 @@ variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response Result : 
 /-- Executable prechallenge source command wrapper with no separate selected-secret argument. The source comparison supplies the redacted reservation; other private keys remain local at their exact creation positions. -/
 noncomputable def pre (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (client : OracleComp (SourceSpec KemSK) Result)
-    (owners : List EncodedEntry) (native : NativeState KemSK) (selected : Nat)
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (native : NativeState KemSK) (selected : Nat)
     (reservation : PqxdhDynamicKemRouter.Reservation KemSK) (state : State KemSK) :=
   (((simulateQ (PqxdhDynamicKemJointRouter.pre setup.joint setup.kem selected reservation)
     (program setup codec checks identityIndex publicIdentity client owners native)).run).run state)
@@ -24,7 +24,7 @@ noncomputable def pre (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
 /-- Executable postchallenge command wrapper. The supplied KEM candidate is used only inside the source client; all selected nonchallenge decapsulation queries still use the ordinary CCA interface. -/
 noncomputable def post (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (client : OracleComp (SourceSpec KemSK) Result)
-    (owners : List EncodedEntry) (native : NativeState KemSK) (selected : Nat)
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (native : NativeState KemSK) (selected : Nat)
     (reservation : PqxdhDynamicKemRouter.Reservation KemSK) (state : State KemSK)
     (challenge : MlKem768Ciphertext) (candidate : MlKemSharedSecret) :=
   (((simulateQ (PqxdhDynamicKemJointRouter.post setup.joint setup.kem selected reservation challenge candidate)
@@ -33,7 +33,7 @@ noncomputable def post (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
 /-- The complete real prechallenge wrapper is exactly the stopped actual source program, including native/owner poststate and all identity/KEM histories. Only the mathematical CCA interpreter receives the selected secret. -/
 theorem pre_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (client : OracleComp (SourceSpec KemSK) Result)
-    (owners : List EncodedEntry) (native : NativeState KemSK) (selected : Nat)
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (native : NativeState KemSK) (selected : Nat)
     (pairs : List (MlKem768PublicKey × KemSK)) (target : MlKem768PublicKey) (secret : KemSK)
     (present : pairs[selected]? = some (target, secret)) (state : State KemSK) :
     PqxdhPrivateKemSource.evalKem setup.baseImpl setup.kem secret
@@ -50,7 +50,7 @@ theorem post_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     (correct : MlKem768RecipientCorrectness setup.kem
       (PqxdhInitializerSecrecy.runtimeOfImpl (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl)))
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (client : OracleComp (SourceSpec KemSK) Result)
-    (owners : List EncodedEntry) (native : NativeState KemSK) (selected : Nat)
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (native : NativeState KemSK) (selected : Nat)
     (pairs : List (MlKem768PublicKey × KemSK)) (target : MlKem768PublicKey) (secret : KemSK)
     (present : pairs[selected]? = some (target, secret)) (state : State KemSK)
     (generated : (target, secret) ∈ support (simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl) setup.kem.keygen))
@@ -69,7 +69,7 @@ theorem post_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
 /-- For the concrete source command program, an actual successful selected-KEM disclosure is exactly the freshness stop. Missing or future handles retain their ordinary optional rejection and do not trigger it. Every event may inspect the complete returned command and private state. -/
 theorem fresh_pre_event (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (client : OracleComp (SourceSpec KemSK) Result)
-    (owners : List EncodedEntry) (native : NativeState KemSK) (selected : Nat)
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (native : NativeState KemSK) (selected : Nat)
     (pairs : List (MlKem768PublicKey × KemSK)) (target : MlKem768PublicKey) (secret : KemSK)
     (present : pairs[selected]? = some (target, secret)) (joint : PqxdhDynamicIdentityPool.SourceState)
     (event : Option (Outcome KemSK Result) × State KemSK → Prop) :
@@ -88,7 +88,7 @@ theorem pre_decapsulations (setup : Setup baseSpec KemSK) (codec : Codec Reader 
     (budget : Budget)
     (certified : ∀ source, client.IsQueryBoundP
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))
-    (owners : List EncodedEntry) (native : NativeState KemSK) (selected : Nat)
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (native : NativeState KemSK) (selected : Nat)
     (reservation : PqxdhDynamicKemRouter.Reservation KemSK) (state : State KemSK) :
     (pre setup codec checks identityIndex publicIdentity client owners native selected reservation state).IsQueryBoundP
       IsMlKemLogicalDecapsulationQuery (budget (.inl 5)) :=
@@ -103,7 +103,7 @@ theorem post_decapsulations (setup : Setup baseSpec KemSK) (codec : Codec Reader
     (budget : Budget)
     (certified : ∀ source, client.IsQueryBoundP
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))
-    (owners : List EncodedEntry) (native : NativeState KemSK) (selected : Nat)
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (native : NativeState KemSK) (selected : Nat)
     (reservation : PqxdhDynamicKemRouter.Reservation KemSK) (state : State KemSK)
     (challenge : MlKem768Ciphertext) (candidate : MlKemSharedSecret) :
     (post setup codec checks identityIndex publicIdentity client owners native selected reservation state challenge candidate).IsQueryBoundP

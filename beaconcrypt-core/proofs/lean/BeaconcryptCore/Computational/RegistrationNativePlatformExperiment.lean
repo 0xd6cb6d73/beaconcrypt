@@ -35,7 +35,7 @@ def server {source : RegistrationNativeMldsa.Source}
 
 noncomputable def trusted (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (source : RegistrationNativeMldsa.Source) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (source : RegistrationNativeMldsa.Source) :
     QueryImpl (RegistrationNativeBeaconFrontend.Trusted n KemSK) (M n KemSK source m) :=
   fun query => liftNative coins (RegistrationNativeExperiment.trusted setup checks representation created source query)
 
@@ -46,7 +46,7 @@ def writer {source : RegistrationNativeMldsa.Source}
 
 noncomputable def bundleHandler (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (source : RegistrationNativeMldsa.Source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (source : RegistrationNativeMldsa.Source)
     (implementation : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) m) :
     QueryImpl (RegistrationNativePlatformGenericBundle.Spec E n KemSK) (M n KemSK source m)
   | .inl query => trusted coins setup checks representation created source query
@@ -54,7 +54,7 @@ noncomputable def bundleHandler (coins : QueryImpl unifSpec m) (setup : Setup ba
 
 noncomputable def bundle (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (source : RegistrationNativeMldsa.Source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (source : RegistrationNativeMldsa.Source)
     (implementation : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) m) (index : Nat) :
     M n KemSK source m (RustM (Option Pqxdh.Bytes)) := fun before => do
   let result ← (simulateQ (bundleHandler coins setup checks representation created source implementation)
@@ -69,7 +69,7 @@ noncomputable def bundle (coins : QueryImpl unifSpec m) (setup : Setup base KemS
 
 noncomputable def handler (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (source : RegistrationNativeMldsa.Source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (source : RegistrationNativeMldsa.Source)
     (credential : RegistrationNativeMldsa.Credential source)
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitives.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E m)
@@ -94,7 +94,7 @@ noncomputable def handler (coins : QueryImpl unifSpec m) (setup : Setup base Kem
 
 noncomputable def run (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (source : RegistrationNativeMldsa.Source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (source : RegistrationNativeMldsa.Source)
     (credential : RegistrationNativeMldsa.Credential source)
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitives.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E m)
@@ -160,7 +160,7 @@ private theorem server_interpret (implementation : QueryImpl spec m) {source : R
 omit primitives in
 private theorem bundleHandler_interpret (implementation : QueryImpl spec m) (coins : QueryImpl unifSpec (OracleComp spec))
     (setup : Setup base KemSK) (checks : Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (source : RegistrationNativeMldsa.Source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (source : RegistrationNativeMldsa.Source)
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (OracleComp spec))
     (query : (RegistrationNativePlatformGenericBundle.Spec E n KemSK).Domain) :
     state implementation (bundleHandler coins setup checks representation created source writer query) =
@@ -173,7 +173,7 @@ private theorem bundleHandler_interpret (implementation : QueryImpl spec m) (coi
 omit primitives in
 theorem bundle_interpret (implementation : QueryImpl spec m) (coins : QueryImpl unifSpec (OracleComp spec))
     (setup : Setup base KemSK) (checks : Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (source : RegistrationNativeMldsa.Source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (source : RegistrationNativeMldsa.Source)
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (OracleComp spec)) (index : Nat) :
     state implementation (bundle (n := n) coins setup checks representation created source writer index) =
       bundle (fun query => simulateQ implementation (coins query)) setup checks representation created source
@@ -196,7 +196,7 @@ theorem bundle_interpret (implementation : QueryImpl spec m) (coins : QueryImpl 
 theorem handler_interpret (implementation : QueryImpl spec m) (coins : QueryImpl unifSpec (OracleComp spec))
     (setup : Setup base KemSK) (checks : Checks) (wire : Wire) (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (source : RegistrationNativeMldsa.Source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (source : RegistrationNativeMldsa.Source)
     (credential : RegistrationNativeMldsa.Credential source)
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitives.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E (OracleComp spec))
@@ -237,7 +237,7 @@ theorem handler_interpret (implementation : QueryImpl spec m) (coins : QueryImpl
 theorem program_interpret (implementation : QueryImpl spec m) (coins : QueryImpl unifSpec (OracleComp spec))
     (setup : Setup base KemSK) (checks : Checks) (wire : Wire) (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (source : RegistrationNativeMldsa.Source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (source : RegistrationNativeMldsa.Source)
     (credential : RegistrationNativeMldsa.Credential source)
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitives.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E (OracleComp spec))
@@ -257,7 +257,7 @@ theorem program_interpret (implementation : QueryImpl spec m) (coins : QueryImpl
 theorem run_interpret (implementation : QueryImpl spec m) (coins : QueryImpl unifSpec (OracleComp spec))
     (setup : Setup base KemSK) (checks : Checks) (wire : Wire) (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (source : RegistrationNativeMldsa.Source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (source : RegistrationNativeMldsa.Source)
     (credential : RegistrationNativeMldsa.Credential source)
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitives.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E (OracleComp spec))

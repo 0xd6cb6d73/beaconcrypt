@@ -1,6 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeRecordHashReceipt
 import BeaconcryptCore.Computational.RegistrationNativeServerRecordTrace
+import BeaconcryptCore.Computational.RegistrationNativeServerRecordIssuance
 
 /-! Every actual issued first-record source cut retains its exact commitment preimage and digest in the same later cache anchor. The actual writer continuation supplies the cache extension after hashing, so no final-cache membership is assumed. -/
 open OracleComp OracleSpec CoreModels Aeneas

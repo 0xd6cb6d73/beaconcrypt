@@ -7,6 +7,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhRegistrationJointPreparation
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhRefinement PqxdhJointIdentity PqxdhJointGapDh PqxdhServerAuthExperiment
 open PqxdhRegistrationJointBundle (Identity Key)
 open PqxdhBeaconPhase2Preparation (Word32)
@@ -198,10 +199,10 @@ theorem prepare_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
     (identityOwned : pool.1.seeds[identityIndex]? = some seed)
     (kemOwned : pool.2.keys[kemIndex]? = some keys) :
     (simulateQ (interpreted setup codec)
-      (PqxdhBeaconPhase2Preparation.prepare control (PqxdhRegistrationJointBundle.identityMap setup identityIndex seed)
+      (PqxdhBeaconPhase2Preparation.prepare (completedBinding := completedBinding) control (PqxdhRegistrationJointBundle.identityMap setup identityIndex seed)
         prekey oneTime (PqxdhRegistrationJointBundle.keyMap kemIndex keys) raw)).run pool =
       (simulateQ (annotated setup codec identityIndex kemIndex)
-        (PqxdhBeaconPhase2Preparation.prepare control seed prekey oneTime keys raw)).run pool := by
+        (PqxdhBeaconPhase2Preparation.prepare (completedBinding := completedBinding) control seed prekey oneTime keys raw)).run pool := by
   simp only [PqxdhBeaconPhase2Preparation.prepare, simulateQ_bind, StateT.run_bind]
   rw [collect_source setup codec identityIndex kemIndex seed prekey oneTime keys raw pool identityOwned kemOwned]
   apply bind_congr
@@ -221,11 +222,11 @@ theorem prepare_continuation (setup : Setup baseSpec KemSK) (codec : Codec Reade
     (kemOwned : pool.2.keys[kemIndex]? = some keys)
     (next : Option (PqxdhBeaconPhase2Preparation.Prepared Response) × Pool KemSK → ProbComp Result) :
     ((simulateQ (interpreted setup codec)
-      (PqxdhBeaconPhase2Preparation.prepare control (PqxdhRegistrationJointBundle.identityMap setup identityIndex seed)
+      (PqxdhBeaconPhase2Preparation.prepare (completedBinding := completedBinding) control (PqxdhRegistrationJointBundle.identityMap setup identityIndex seed)
         prekey oneTime (PqxdhRegistrationJointBundle.keyMap kemIndex keys) raw)).run pool >>= next) =
       ((simulateQ (annotated setup codec identityIndex kemIndex)
-        (PqxdhBeaconPhase2Preparation.prepare control seed prekey oneTime keys raw)).run pool >>= next) := by
-  rw [prepare_source setup codec identityIndex kemIndex seed prekey oneTime keys control raw pool identityOwned kemOwned]
+        (PqxdhBeaconPhase2Preparation.prepare (completedBinding := completedBinding) control seed prekey oneTime keys raw)).run pool >>= next) := by
+  rw [prepare_source (completedBinding := completedBinding) setup codec identityIndex kemIndex seed prekey oneTime keys control raw pool identityOwned kemOwned]
 
 /-- Only the analysis histories are erased in the literal source result equation. No parser, conversion, KEM, DH, admission or erasure callback is replaced by a success premise. -/
 theorem prepare_original (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -235,11 +236,11 @@ theorem prepare_original (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
     (identityOwned : pool.1.seeds[identityIndex]? = some seed)
     (kemOwned : pool.2.keys[kemIndex]? = some keys) :
     Prod.fst <$> (simulateQ (interpreted setup codec)
-      (PqxdhBeaconPhase2Preparation.prepare control (PqxdhRegistrationJointBundle.identityMap setup identityIndex seed)
+      (PqxdhBeaconPhase2Preparation.prepare (completedBinding := completedBinding) control (PqxdhRegistrationJointBundle.identityMap setup identityIndex seed)
         prekey oneTime (PqxdhRegistrationJointBundle.keyMap kemIndex keys) raw)).run pool =
       simulateQ (PqxdhRegistrationSchedule.preparation setup codec)
-        (PqxdhBeaconPhase2Preparation.prepare control seed prekey oneTime keys raw) := by
-  rw [prepare_source setup codec identityIndex kemIndex seed prekey oneTime keys control raw pool identityOwned kemOwned,
+        (PqxdhBeaconPhase2Preparation.prepare (completedBinding := completedBinding) control seed prekey oneTime keys raw) := by
+  rw [prepare_source (completedBinding := completedBinding) setup codec identityIndex kemIndex seed prekey oneTime keys control raw pool identityOwned kemOwned,
     annotated_program_erase]
 
 

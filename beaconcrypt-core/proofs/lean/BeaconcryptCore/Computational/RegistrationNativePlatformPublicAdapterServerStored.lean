@@ -14,7 +14,7 @@ variable {n : Nat} {KemSK R P : Type} {source : RegistrationNativeMldsa.Source}
 variable [material : PublicWrapperPlatform.Material] [platform : PublicWrapperPlatform.Platform]
 variable [ed : AdapterInitEdPrimitive.Operations]
 theorem stored (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created Unit)
+    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential source)
     (current : RegistrationNativeExperiment.State n KemSK source×P)
     (before : RegistrationNativePlatformExtractedSdkCarrier.Carrier (R:=R) view views joint created credential current) :
@@ -30,7 +30,7 @@ theorem stored (view : AdapterPublicWrapperState.MaterialView source KemSK) (vie
   rw [row,Option.map_some,Option.getD_some,related]
 
 theorem replace (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created Unit)
+    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential source)
     (current : RegistrationNativeExperiment.State n KemSK source×P)
     (before : RegistrationNativePlatformExtractedSdkCarrier.Carrier (R:=R) view views joint created credential current) :

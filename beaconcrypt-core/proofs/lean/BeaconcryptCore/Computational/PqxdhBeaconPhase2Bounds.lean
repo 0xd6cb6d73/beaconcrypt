@@ -11,6 +11,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhBeaconPhase2Bounds
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhBeaconPhase2Preparation (Bytes Word32 State Prepared)
 open PqxdhBeaconPhase2Publication
 
@@ -148,12 +149,12 @@ theorem tail_bound {Response : Type} (decode : RawCtxReceive.FrameDecoder)
 /-- The complete active native policy has 68 logical callbacks; all failed initial sequence attempts retain their actual work. -/
 theorem owner_bound {I D K X Response : Type} (decode : RawCtxReceive.FrameDecoder)
     (raw : Bytes) (state : State I D K) :
-    (owner (X := X) (Response := Response) decode raw state).IsTotalQueryBound 68 := by
+    (PqxdhBeaconPhase2Publication.owner (completedBinding := completedBinding) (X := X) (Response := Response) decode raw state).IsTotalQueryBound 68 := by
   cases active : state.beacon.phase with
   | initSent control prekey oneTime kem =>
       simp only [owner, active]
       apply isTotalQueryBound_bind (n₁ := 13) (n₂ := 55)
-      · apply simulate_total preLift _ 13 (PqxdhBeaconPhase2Preparation.prepare_bound _ _ _ _ _ _)
+      · apply simulate_total preLift _ 13 (PqxdhBeaconPhase2Preparation.prepare_bound (completedBinding := completedBinding) _ _ _ _ _ _)
         intro query
         exact (isQueryBoundP_true_iff _ _).mp
           ((isQueryBoundP_query_iff (spec := FullSpec I D K X Response) (p := fun _ => True) (.inl query) 1).mpr (by decide))
@@ -191,8 +192,8 @@ theorem native_afterRoot_bound {Response : Type} (decode : RawCtxReceive.FrameDe
       | none => pure none
       | some raw => do
         let result ← simulateQ rawLift ((RawCtxWholeOwner.rawReceive decode raw).run
-          (localOwner (clearedCandidate prepared.candidate) (normalInitial (PqxdhInitialRatchetComplementarity.beaconPending root) response)))
-        pure (afterOpening (clearedCandidate prepared.candidate) result.2.owner.kernel result.1))).IsTotalQueryBound 55
+          (localOwner (clearedCandidate prepared.candidate) prepared.binding.associated_data (normalInitial (PqxdhInitialRatchetComplementarity.beaconPending root) response)))
+        pure (afterOpening (clearedCandidate prepared.candidate) prepared.binding.associated_data result.2.owner.kernel result.1))).IsTotalQueryBound 55
   rw [isTotalQueryBound_query_bind_iff]
   refine ⟨by decide, fun response => ?_⟩
   rw [isTotalQueryBound_query_bind_iff]
@@ -237,13 +238,13 @@ theorem native_tail_lift {I D K X Response Result : Type} (client : OracleComp (
 /-- The complete expanded native Phase2 program retains its full 69-callback allowance under every optional reply. -/
 theorem native_owner_bound {I D K X Response : Type} (decode : RawCtxReceive.FrameDecoder)
     (raw : Bytes) (state : State I D K) :
-    (nativeOwner (X := X) (Response := Response) decode raw state).IsTotalQueryBound 69 := by
+    (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) (X := X) (Response := Response) decode raw state).IsTotalQueryBound 69 := by
   cases active : state.beacon.phase with
   | initSent control prekey oneTime kem =>
       simp only [nativeOwner, owner, active, simulateQ_bind]
       apply isTotalQueryBound_bind (n₁ := 13) (n₂ := 56)
       · rw [← QueryImpl.simulateQ_compose]
-        apply simulate_total _ _ 13 (PqxdhBeaconPhase2Preparation.prepare_bound _ _ _ _ _ _)
+        apply simulate_total _ _ 13 (PqxdhBeaconPhase2Preparation.prepare_bound (completedBinding := completedBinding) _ _ _ _ _ _)
         intro query
         simp only [QueryImpl.apply_compose, preLift]
         change (simulateQ nativeAdapter (liftM ((FullSpec I D K X Response).query (.inl query)))).IsTotalQueryBound 1
@@ -281,8 +282,8 @@ theorem native_interpreted_bound {I D K X Response A ι : Type} {base : OracleSp
     (predicate : base.Domain → Prop) [DecidablePred predicate] (qCall : Nat)
     (step : ∀ query auxiliary, ((handler query).run auxiliary).IsQueryBoundP predicate qCall)
     (decode : RawCtxReceive.FrameDecoder) (raw : Bytes) (state : State I D K) (auxiliary : A) :
-    ((simulateQ handler (nativeOwner decode raw state)).run auxiliary).IsQueryBoundP predicate (69 * qCall) :=
-  interpreted_total_bound handler predicate qCall 69 step _ (native_owner_bound decode raw state) auxiliary
+    ((simulateQ handler (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw state)).run auxiliary).IsQueryBoundP predicate (69 * qCall) :=
+  interpreted_total_bound handler predicate qCall 69 step _ (native_owner_bound (completedBinding := completedBinding) decode raw state) auxiliary
 
 /-- A private continuation starts from the actual optional result, complete updated owner and primitive poststate, and pays its own selected allowance. -/
 theorem native_continuation_bound {I D K X Response A Result ι : Type} {base : OracleSpec ι}
@@ -292,9 +293,9 @@ theorem native_continuation_bound {I D K X Response A Result ι : Type} {base : 
     (decode : RawCtxReceive.FrameDecoder) (raw : Bytes) (state : State I D K) (auxiliary : A)
     (next : Option Bytes → State I D K → A → OracleComp base Result)
     (nextBound : ∀ reply nextState current, (next reply nextState current).IsQueryBoundP predicate qNext) :
-    ((simulateQ handler (nativeOwner decode raw state)).run auxiliary >>= fun result =>
+    ((simulateQ handler (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw state)).run auxiliary >>= fun result =>
       next result.1.1 result.1.2 result.2).IsQueryBoundP predicate (69 * qCall + qNext) :=
-  isQueryBoundP_bind (native_interpreted_bound handler predicate qCall step decode raw state auxiliary)
+  isQueryBoundP_bind (native_interpreted_bound (completedBinding := completedBinding) handler predicate qCall step decode raw state auxiliary)
     (fun result _ => nextBound result.1.1 result.1.2 result.2)
 
 end BeaconcryptCore.Computational.PqxdhBeaconPhase2Bounds

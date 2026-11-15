@@ -5,8 +5,11 @@ open OracleComp OracleSpec CoreModels Aeneas ENNReal
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 set_option maxRecDepth 2048
 namespace BeaconcryptCore.Computational.PqxdhLaterExecutableInputAlias
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhLaterInputAlias
 section Actual
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
@@ -47,16 +50,16 @@ theorem collision_cache (result : Carrier) (cache : CtxRO.QueryCache) :
 theorem certified_collision (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl kem program post) (depth : Nat) :
     𝒟[(fun result => carrierCollision setup result.1.val) <$>
       ((simulateQ AdaptiveCtxSharedHash.hashImpl
-        (PqxdhLaterExecutableCertificates.certified env callbacks baseImpl kem attachedVerify primitives program post
+        (PqxdhLaterExecutableCertificates.certified (associatedData := associatedData) (completedBinding := completedBinding) env callbacks baseImpl kem attachedVerify primitives program post
           selected number ancestors disclosed c depth)).run ∅)] {true} ≤
       ((8 + PqxdhInitialPreparedSourceCaps.postCap env0 baseImpl kem program post c * 67 : Nat) : ℝ≥0∞) *
         (2 ^ 256 : ℝ≥0∞)⁻¹ := by
-  have bound := prepared_collision env.source env.recordWriter env.senderId env.route env.decode depth
+  have bound := prepared_collision (associatedData := associatedData) (completedBinding := completedBinding) env.source env.recordWriter env.senderId env.route env.decode depth
     (PqxdhInitialPreparedSourceCaps.postCap env0 baseImpl kem program post c)
-    (PqxdhInitialPreparedSourceInput.prior env0 baseImpl kem attachedVerify primitives program post selected number ancestors disclosed)
-    (fun input reached => (PqxdhInitialPreparedSourceCaps.supported_caps env0 baseImpl kem attachedVerify primitives program post c
+    (PqxdhInitialPreparedSourceInput.prior (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program post selected number ancestors disclosed)
+    (fun input reached => (PqxdhInitialPreparedSourceCaps.supported_caps (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program post c
       selected number ancestors disclosed input reached).postBound)
-  rw [← PqxdhLaterExecutableCertificates.certified_source env callbacks baseImpl kem attachedVerify primitives program post
+  rw [← PqxdhLaterExecutableCertificates.certified_source (associatedData := associatedData) (completedBinding := completedBinding) env callbacks baseImpl kem attachedVerify primitives program post
     selected number ancestors disclosed c depth] at bound
   simpa only [Functor.map_map, collision_cache] using bound
 
@@ -66,13 +69,13 @@ theorem component_prefix_collision (c : PqxdhAuthenticatedRootBudgets.Certificat
     𝒟[(fun result => carrierCollision setup result.1.val) <$>
       ((simulateQ (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder env.decode) env.source.crypto key)
         (simulateQ RawCtxSourceSharedRom.forward
-          (PqxdhLaterExecutableCertificates.certified env callbacks baseImpl kem attachedVerify primitives program post
+          (PqxdhLaterExecutableCertificates.certified (associatedData := associatedData) (completedBinding := completedBinding) env callbacks baseImpl kem attachedVerify primitives program post
             selected number ancestors disclosed c depth))).run AdaptiveCtxDynamicKnownKeys.initialSource)] {true} ≤
       ((8 + PqxdhInitialPreparedSourceCaps.postCap env0 baseImpl kem program post c * 67 : Nat) : ℝ≥0∞) *
         (2 ^ 256 : ℝ≥0∞)⁻¹ := by
-  have bound := certified_collision setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth
+  have bound := certified_collision (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth
   have source := RawCtxSourceSharedRom.forward_cache true (RawCtxUniversalDecoder.decoder env.decode) env.source.crypto key
-    (PqxdhLaterExecutableCertificates.certified env callbacks baseImpl kem attachedVerify primitives program post
+    (PqxdhLaterExecutableCertificates.certified (associatedData := associatedData) (completedBinding := completedBinding) env callbacks baseImpl kem attachedVerify primitives program post
       selected number ancestors disclosed c depth) AdaptiveCtxDynamicKnownKeys.initialSource
   simp only [RawCtxPrefixKeyOrder.initial_cache] at source
   rw [← source] at bound
@@ -89,7 +92,7 @@ noncomputable def outputCollision : Output → Bool
 theorem suffix_collision (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl kem program post)
     (result : PqxdhLaterExecutableCertificates.Certified (setup := setup) (M := M) (P := P) (I := I) (K := K) (X := X) (Response := Response) (A := A) (KemSK := KemSK) (S := S) (B := B) (PqxdhInitialPreparedSourceCaps.postCap (PqxdhSourceSharedPreparation.environment setup env callbacks ∅) baseImpl kem program post c))
     (out : Output)
-    (supported : out ∈ support (PqxdhLaterExecutableCompletion.suffix setup env callbacks program post attachedVerify primitives baseImpl kem c result))
+    (supported : out ∈ support (PqxdhLaterExecutableCompletion.suffix (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem c result))
     (hit : outputCollision setup out = true) : carrierCollision setup result.val = true := by
   unfold PqxdhLaterExecutableCompletion.suffix at supported
   split at supported
@@ -108,7 +111,7 @@ theorem suffix_collision (c : PqxdhAuthenticatedRootBudgets.Certificate env0 bas
 theorem client_collision (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl kem program post) (depth : Nat) :
     𝒟[(fun final => outputCollision setup final.1) <$>
       AdaptiveCtxDynamicKnownKeys.sourceGame true (RawCtxUniversalDecoder.decoder env.decode) env.source.crypto
-        (PqxdhLaterExecutableCompletion.client setup env callbacks program post attachedVerify primitives baseImpl kem
+        (PqxdhLaterExecutableCompletion.client (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem
           selected number ancestors disclosed c depth)] {true} ≤ ((8 + PqxdhInitialPreparedSourceCaps.postCap env0 baseImpl kem program post c * 67 : Nat) : ℝ≥0∞) *
         (2 ^ 256 : ℝ≥0∞)⁻¹ := by
   simp only [AdaptiveCtxDynamicKnownKeys.sourceGame, PqxdhLaterExecutableCompletion.client,
@@ -116,7 +119,7 @@ theorem client_collision (c : PqxdhAuthenticatedRootBudgets.Certificate env0 bas
   rw [← prEvent_eq_evalDist_singleton _ true]
   apply prEvent_bind_le_of_forall_le_of_support
   intro key keySupported
-  have prefixBound := component_prefix_collision setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth key
+  have prefixBound := component_prefix_collision (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth key
   rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map] at prefixBound
   apply le_trans ?_ prefixBound
   apply prEvent_bind_le_prEvent_of_support
@@ -125,7 +128,7 @@ theorem client_collision (c : PqxdhAuthenticatedRootBudgets.Certificate env0 bas
   apply (OracleComp.prEvent_eq_zero_iff _ _).mpr
   intro final reached hit
   apply absent
-  apply suffix_collision setup env callbacks program post attachedVerify primitives baseImpl kem c result.1 final.1 ?_ hit
+  apply suffix_collision (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem c result.1 final.1 ?_ hit
   apply support_simulateQ_run'_subset (AdaptiveCtxDynamicKnownKeys.sourceImpl true
     (RawCtxUniversalDecoder.decoder env.decode) env.source.crypto key) _ result.2
   rw [StateT.run'_eq, support_map]
@@ -151,7 +154,7 @@ theorem certified_safe (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseI
       (PqxdhInitialPreparedSourceCaps.postCap env0 baseImpl kem program post c))
     (cache : CtxRO.QueryCache)
     (supported : (result, cache) ∈ support ((simulateQ hashImpl
-      (PqxdhLaterExecutableCertificates.certified env callbacks baseImpl kem attachedVerify primitives program post
+      (PqxdhLaterExecutableCertificates.certified (associatedData := associatedData) (completedBinding := completedBinding) env callbacks baseImpl kem attachedVerify primitives program post
         selected number ancestors disclosed c depth)).run ∅))
     (start : Input × HmacBlock) (pending : Pending)
     (shape : result.val.2.1.1.1 = .inr (start, .inr pending))
@@ -160,14 +163,14 @@ theorem certified_safe (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseI
       RawCtxSelectedParentPrivatePatch.targetAddress result.val.2.1.2 ≠ result.val.2.1.1.2.address ∧
       RawCtxSelectedParentPrivatePatch.targetAddress result.val.2.1.2 ∉ pending.2.inputs := by
   have sampled : PqxdhLaterSharedMessagePrefix.restore setup result.val.2 cache ∈ support
-      (PqxdhErasedParentMaterial.prepare env.source env.recordWriter env.senderId env.route env.decode depth
-        (PqxdhInitialPreparedSourceInput.prior env0 baseImpl kem attachedVerify primitives program post selected number ancestors disclosed)) := by
-    rw [← PqxdhLaterExecutableCertificates.certified_source env callbacks baseImpl kem attachedVerify primitives program post
+      (PqxdhErasedParentMaterial.prepare (associatedData := associatedData) (completedBinding := completedBinding) env.source env.recordWriter env.senderId env.route env.decode depth
+        (PqxdhInitialPreparedSourceInput.prior (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program post selected number ancestors disclosed)) := by
+    rw [← PqxdhLaterExecutableCertificates.certified_source (associatedData := associatedData) (completedBinding := completedBinding) env callbacks baseImpl kem attachedVerify primitives program post
       selected number ancestors disclosed c depth, support_map]
     exact ⟨(result, cache), supported, rfl⟩
-  apply material_safe env.source env.recordWriter env.senderId env.route env.decode depth
+  apply material_safe (associatedData := associatedData) (completedBinding := completedBinding) env.source env.recordWriter env.senderId env.route env.decode depth
     (PqxdhInitialPreparedSourceCaps.postCap env0 baseImpl kem program post c) _
-    (fun input reached => (PqxdhInitialPreparedSourceCaps.supported_caps env0 baseImpl kem attachedVerify primitives program post c
+    (fun input reached => (PqxdhInitialPreparedSourceCaps.supported_caps (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program post c
       selected number ancestors disclosed input reached).postBound)
     (PqxdhLaterSharedMessagePrefix.restore setup result.val.2 cache) sampled start
     (pending.1, attach pending.2 cache)

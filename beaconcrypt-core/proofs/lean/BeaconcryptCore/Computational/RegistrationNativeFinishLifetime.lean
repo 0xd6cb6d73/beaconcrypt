@@ -18,7 +18,7 @@ variable {n : Nat} {I KemSK : Type} {base : OracleSpec I} {source : Registration
 local notation "Native" => RegistrationNativeExperiment.State n KemSK source
 
 noncomputable def tree (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (pending : registration.BeaconPending) (packet : Option registration.ResponsePacket)
     (owner : Owner source) (scalar : PqxdhJointGapDh.ScalarBytes) (before : Native) :=
   (simulateQ (RegistrationNativeExperiment.trusted setup checks representation created source)
@@ -26,7 +26,7 @@ noncomputable def tree (setup : PqxdhServerAuthExperiment.Setup base KemSK) (che
       (RegistrationWorldAgreementCompiler.erase before.server.world))).run before
 
 theorem program (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat) (owner : Owner source) (pending : registration.BeaconPending)
     (scalar : PqxdhJointGapDh.ScalarBytes) (packet : Option registration.ResponsePacket) (before : Native)
     (selected : before.beacons[index]? = some owner) (phase : owner.phase = .initSent pending scalar) :
@@ -46,7 +46,7 @@ theorem program (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : P
   rfl
 
 theorem complete (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat) (owner : Owner source) (pending : registration.BeaconPending)
     (scalar : PqxdhJointGapDh.ScalarBytes) (packet : Option registration.ResponsePacket) (before : Native)
     (selected : before.beacons[index]? = some owner) (phase : owner.phase = .initSent pending scalar)
@@ -79,7 +79,7 @@ variable [material : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material] 
 
 theorem source_ready (view : BeaconcryptCore.Refinement.AdapterPublicWrapperState.MaterialView source KemSK)
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat) (self : beaconcrypt_public_wrapper.beacon.Beacon) (owner : Owner source)
     (pending : registration.BeaconPending) (prekey oneTime : beaconcrypt_crypto.crypto_kx.KeyPair)
     (kem : beaconcrypt_crypto.crypto_kem.mlkem768.KeyPair) (scalar : PqxdhJointGapDh.ScalarBytes)

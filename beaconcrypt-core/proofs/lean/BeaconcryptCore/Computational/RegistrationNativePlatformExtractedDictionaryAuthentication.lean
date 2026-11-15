@@ -47,7 +47,7 @@ local notation "compiled" => (fun publicValue : RegistrationNativeExperiment.Pub
 
 local notation "Native"=>RegistrationNativeExperiment.State n KemSK source
 
-noncomputable def handler (created : PqxdhLiveServerConstruction.Created Unit)
+noncomputable def handler (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential source) :
     QueryImpl RegistrationNativeRawAdapter.TypedSpec (StateT ((Native×Platform)×Bool) ProbComp) := by
   classical
@@ -63,7 +63,7 @@ variable (sealLength : RegistrationNativePlatformOrdinarySourceWorld.AeadLength 
     (edFunctional : RegistrationNativePlatformAuthentication.EdFunctional setup.source.crypto)
 
 include sealLength openLength converted edFunctional in
-theorem handler_source (created : PqxdhLiveServerConstruction.Created Unit)
+theorem handler_source (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential source) :
     handler (n:=n) setup checks route representation source view failure allocation reserveRegistration reservePeer reserveFrame erased reserveBytes reservePackets created credential=
       RegistrationNativePlatformOrdinaryMldsaOriginSource.handler source setup checks wire route representation created view failure allocation

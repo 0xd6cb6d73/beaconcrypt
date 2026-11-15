@@ -19,7 +19,7 @@ variable {n : Nat} {ι KemSK : Type} {base : OracleSpec ι} {source : Registrati
 /-- Successful original lower-level finish supplies its actual initial capability and consumed kernel using the root derived from the matched earlier token. -/
 theorem finish (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (owner : Owner source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (owner : Owner source)
     (original : registration.BeaconPending) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (index : Nat) (packet : registration.ResponsePacket) (application : Pqxdh.Bytes)
     (before after : Local n KemSK source)
@@ -36,10 +36,11 @@ theorem finish (setup : Setup base KemSK) (checks : Checks) (wire : Registration
     (ciphertext : packet.public.kem_cipher_text = token.agreement.pending.kem_ciphertext)
     (correct : RegistrationNativePairedCoordinates.RecipientCorrect setup) :
     ∃ (capability : agreement.BeaconAgreement) (established : registration.CompletedBeacon)
-      (initial : registration.BeaconInitialKdf) (aead : registration.BeaconRecordAead) (plaintext : Slice U8),
+      (initial : registration.BeaconInitialKdf) (aead : registration.BeaconRecordAead) (plaintext : Slice U8)
+      (adDigest : CtxRomAuth.CtxDigest),
       token.agreement.root.bytes = capability.root.bytes ∧
-      capability.binding = original.binding ∧
-      established.binding = BeaconcryptCore.Refinement.RegistrationPublication.completedBinding original.binding capability.candidate.assigned_key_id ∧
+      capability.binding = RegistrationResponseExecutor.completedBinding original adDigest ∧
+      established.binding = BeaconcryptCore.Refinement.RegistrationPublication.completedBinding (RegistrationResponseExecutor.completedBinding original adDigest) capability.candidate.assigned_key_id ∧
       registration.begin_beacon_completion capability = .ok initial ∧ initial.agreement = capability ∧
       BeaconcryptCore.Refinement.RegistrationReachability.BeaconRecordReachable initial (.AeadRequested aead) ∧
       aead.agreement = capability ∧
@@ -62,21 +63,23 @@ theorem finish (setup : Setup base KemSK) (checks : Checks) (wire : Registration
   obtain ⟨_digest, same, _verified, _receipts, _earlier, _cached⟩ := RegistrationResponseExecutor.accepted_receipt
     setup.source.crypto source.verify wire.frameWrite (RawCtxSourceHkdf.kdfImpl setup.source) original packet
     (project (RegistrationNativeResponseFinish.consumed before index aborted)) (project middle) authenticated projected
+  obtain ⟨adDigest, same⟩ := same
   subst authenticated
   obtain ⟨generatedPool, owned⟩ := RegistrationNativeLowerGenerated.owner setup checks representation created before.1 owner
     (List.mem_of_getElem? found) _ (RegistrationNativeResponseFinish.consumed before index aborted) middle _ prior called
   obtain ⟨capability, established, agreed, recorded, _installed, agreedSupport, recordSupport, _inserted, returned⟩ :=
     RegistrationNativeCompletionReceipt.completion_cut setup checks representation created wire index owner oneTime
-      ⟨original, packet⟩ middle after application continued
+      (RegistrationResponseExecutor.acceptedResponse original packet adDigest) middle after application continued
   have rootEq := RegistrationNativeStagedRootAgreement.root setup checks wire route representation created owner oneTime
-    token pin cache serverReceipt ⟨original, packet⟩ coherent capability middle agreed agreedSupport
+    token pin cache serverReceipt (RegistrationResponseExecutor.acceptedResponse original packet adDigest)
+    (by simpa only [RegistrationResponseExecutor.acceptedResponse, RegistrationResponseExecutor.completedBinding_pin] using coherent) capability middle agreed agreedSupport
     generatedPool owned prekey serverIdentity ephemeral ciphertext correct
   have binding := RegistrationNativeCompletionReceipt.binding setup checks representation created owner oneTime
-    ⟨original, packet⟩ capability middle agreed agreedSupport
+    (RegistrationResponseExecutor.acceptedResponse original packet adDigest) capability middle agreed agreedSupport
   obtain ⟨metadata, initial, aead, plaintext, started, initialSame, reached, sameAgreement, kernel, message⟩ :=
     RegistrationNativeCompletionReceipt.record_consumed setup checks representation created wire capability established agreed recorded recordSupport
-  exact ⟨capability, established, initial, aead, plaintext, rootEq, binding,
-    by simpa only [binding] using metadata, started, initialSame, reached, sameAgreement, kernel, message, returned⟩
+  exact ⟨capability, established, initial, aead, plaintext, adDigest, rootEq, binding,
+    by simpa only [binding, RegistrationResponseExecutor.acceptedResponse] using metadata, started, initialSame, reached, sameAgreement, kernel, message, returned⟩
 
 end BeaconcryptCore.Computational.RegistrationNativeFinishRootReceipt
 

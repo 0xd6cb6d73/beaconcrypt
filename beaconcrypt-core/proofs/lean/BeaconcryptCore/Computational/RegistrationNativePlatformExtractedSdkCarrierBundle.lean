@@ -72,7 +72,7 @@ private theorem active (view : AdapterPublicWrapperState.MaterialView source Kem
 
 variable (coins : QueryImpl unifSpec (StateT Platform ProbComp))
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
 variable (view : AdapterPublicWrapperState.MaterialView source KemSK) (containers : AdapterPublicWrapperStorage.Views)
 variable (credential : RegistrationNativeMldsa.Credential source)

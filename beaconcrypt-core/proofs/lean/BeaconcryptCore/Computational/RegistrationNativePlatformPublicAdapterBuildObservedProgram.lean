@@ -215,15 +215,11 @@ theorem pin_source
   let :LocalOperations (RustT SourceM):=locals view original
   let :CryptoOperations (RustT SourceM):=crypto view previousCrypto
   let :ChildOperations (RustT SourceM):=children coins sign writer previous
-  rw [AdapterPublicWrapperPin.server_program self _ _ (hash coins sign) rfl rfl (fun _=>rfl)]
-  have same:=OracleComp.map_run_simulateQ_eq_of_query_map_eq (hash coins sign)
-    (fun request=>lift (Log:=Log) (RegistrationNativePlatformPublicAdapterBuildPrefixPrimitives.hash coins sign request))
-    Prod.fst (hash_source coins sign)
-    (RegistrationNativeServerPinRecompute.program
-      ⟨view.edPublic (platform.arcView self.identity).identity_key.public_key,(platform.arcView self.identity).identity_key_kid⟩
-      (view.mldsa (platform.arcView self.identity).mldsa_identity).publicKey) before
-  rw [lift_program] at same
-  exact same
+  rw [AdapterPublicWrapperPin.server_program self _ _ rfl rfl]
+  simp only [RegistrationNativePlatformPublicAdapterBuildPrefixPrimitives.pin,
+    RegistrationNativeServerPinRecompute.program, simulateQ_pure, StateT.run_pure,
+    map_pure, Prod.map, id_eq]
+  rfl
 
 theorem query_source    (note :Stage → Log) (coins :QueryImpl unifSpec Base)
     (setup :PqxdhServerAuthExperiment.Setup base KemSK) (codec :PqxdhServerAuthExperiment.Codec Reader Response)
@@ -249,7 +245,9 @@ theorem query_source    (note :Stage → Log) (coins :QueryImpl unifSpec Base)
   let :ContainerOperations (RustT SourceM):=RegistrationNativePlatformPublicAdapterLeaves.containerOperations containers
   unfold handler
   cases query with
-  | inl self=>exact pin_source coins sign writer view original previousCrypto previous self before
+  | inl operation=>cases operation with
+    | inl self=>exact pin_source coins sign writer view original previousCrypto previous self before
+    | inr request=>exact hash_source coins sign request before
   | inr query=>cases query with
     | inl pair=>
       let work:=(containers.mapContains core.U64.Insts.CoreCmpEq core.U64.Insts.CoreHashHash

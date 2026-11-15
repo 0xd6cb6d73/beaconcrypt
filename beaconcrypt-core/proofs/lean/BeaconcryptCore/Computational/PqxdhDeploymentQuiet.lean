@@ -135,12 +135,14 @@ theorem quiet_accept (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
   exact prefixQuiet _ quiet reached reachedMember
 
 /-- A finish records only its decapsulation and static DH requests. -/
-theorem quiet_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (identityIndex kemIndex : Nat)
+theorem quiet_finish (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+    (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (identityIndex kemIndex : Nat)
     (raw : Pqxdh.Bytes) (owner : PqxdhRegistrationSchedule.Owner KemSK) (state : PqxdhRegistrationJointFinish.State KemSK)
     (quiet : Quiet state.1)
     (result : (Option Pqxdh.Bytes × PqxdhRegistrationSchedule.Owner KemSK) × PqxdhRegistrationJointFinish.State KemSK)
     (supported : result ∈ support ((simulateQ (PqxdhRegistrationJointFinish.annotated setup codec identityIndex kemIndex)
-      (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw owner)).run state)) :
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw owner)).run
+        state)) :
     Quiet result.2.1 := by
   refine OracleComp.simulateQ_run_preserves_inv_of_query (spec' := unifSpec) _ (fun current => Quiet current.1) ?_ _
     state quiet result supported
@@ -169,6 +171,32 @@ theorem quiet_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
       Set.mem_image] at member
     obtain ⟨_, _, rfl⟩ := member
     exact currentQuiet
+
+/-- A hashed owner finish (`PqxdhRegistrationJointFinish.annotatedFinish`) records only its decapsulation and static DH requests: the transcript hash touches only the shared state and the native owner runs as in `quiet_finish`. -/
+theorem quiet_annotatedFinish (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (identityIndex kemIndex : Nat)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) (state : PqxdhRegistrationJointFinish.State KemSK)
+    (quiet : Quiet state.1)
+    (result : (Option Pqxdh.Bytes × PqxdhRegistrationSchedule.Owner KemSK) × PqxdhRegistrationJointFinish.State KemSK)
+    (supported : result ∈ support ((PqxdhRegistrationJointFinish.annotatedFinish setup codec identityIndex kemIndex
+      retained raw owner).run state)) :
+    Quiet result.2.1 := by
+  unfold PqxdhRegistrationJointFinish.annotatedFinish at supported
+  cases phase : owner.beacon.phase <;> simp only [phase, StateT.run_pure, mem_support_pure_iff] at supported
+  case initSent control prekey oneTime kem =>
+    cases retained <;> cases decoded : responseOf codec raw <;>
+      simp only [decoded, StateT.run_pure, mem_support_pure_iff] at supported
+    case some.some init response =>
+      rw [StateT.run_bind, mem_support_bind_iff] at supported
+      obtain ⟨hashed, hashMember, member⟩ := supported
+      simp only [PqxdhRegistrationJointFinish.onNative, StateT.run, support_map, Set.mem_image] at hashMember
+      obtain ⟨value, _, rfl⟩ := hashMember
+      exact quiet_finish (PqxdhTranscriptAd.completedOf control value.1) setup codec identityIndex kemIndex raw owner
+        (state.1, value.2) quiet result member
+    all_goals subst supported
+    all_goals exact quiet
+  all_goals subst supported
+  all_goals exact quiet
 
 /-- Every annotated source step other than an identity-field or KEM-field read keeps both pools quiet. -/
 theorem quiet_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -210,7 +238,12 @@ theorem quiet_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
           · rename_i entry _
             simp only [support_map, Set.mem_image] at supported
             obtain ⟨traced, tracedMember, rfl⟩ := supported
-            exact quiet_bundle setup codec entry.identityIndex entry.owner state.pool quiet traced tracedMember
+            have unlogged : traced.1 ∈ support (PqxdhRegistrationJointBundle.trace setup codec entry.identityIndex
+                entry.owner state.pool.1) := by
+              rw [← PqxdhRegistrationJointBundle.trace_log setup codec entry.identityIndex entry.owner state.pool.1
+                (state.inits address), support_map]
+              exact ⟨traced, tracedMember, rfl⟩
+            exact quiet_bundle setup codec entry.identityIndex entry.owner state.pool quiet traced.1 unlogged
       | accept raw =>
           simp only [PqxdhRegistrationJointServerSchedule.source, PqxdhRegistrationJointServerSchedule.onBackend,
             StateT.run, support_map, Set.mem_image] at supported
@@ -228,8 +261,8 @@ theorem quiet_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
           · rename_i entry _
             simp only [support_map, Set.mem_image] at supported
             obtain ⟨finished, finishedMember, rfl⟩ := supported
-            exact quiet_finish setup codec entry.identityIndex entry.kemIndex raw entry.owner (state.pool, state.shared)
-              quiet finished finishedMember
+            exact quiet_annotatedFinish setup codec entry.identityIndex entry.kemIndex _ raw entry.owner
+              (state.pool, state.shared) quiet finished finishedMember
       | hmac key message => exact sharedQuiet _ result supported
       | hash bytes => exact sharedQuiet _ result supported
       | reveal keyId => exact sharedQuiet _ result supported
@@ -563,3 +596,8 @@ end BeaconcryptCore.Computational.PqxdhDeploymentQuiet
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentQuiet.kernel_reads_unrevealed_unbudgeted
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentQuiet.quiet_annotatedFinish' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentQuiet.quiet_annotatedFinish

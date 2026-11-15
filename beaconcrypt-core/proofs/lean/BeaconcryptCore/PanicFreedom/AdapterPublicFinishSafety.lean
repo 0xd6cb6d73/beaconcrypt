@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.PanicFreedom.AdapterPublicRegistrationLoops
+import BeaconcryptCore.PanicFreedom.AdapterRecordReceive
 
 /-! Native first-record completion returns normally and installs only a populated ratchet slot. All rejected KDF, commitment and AEAD continuations return a non-established object. -/
 open CoreModels Aeneas

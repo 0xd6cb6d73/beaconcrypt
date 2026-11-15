@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativePlatformInterpret
 import Cslib.Foundations.Control.Monad.IsMonadHom
 
-/-! The complete additive stateful Server build commutes with a single common interpreter. Allocator and writer requests, ordinary random draws, signing history, record work and every failed continuation retain their complete shared poststate. This is model interpretation algebra; source codecs, containers and the deployed repeated pin fingerprint remain separate boundaries. -/
+/-! The complete additive stateful Server build commutes with a single common interpreter. Allocator and writer requests, ordinary random draws, signing history, record work and every failed continuation retain their complete shared poststate. This is model interpretation algebra; source codecs and containers remain separate boundaries. The actual registration AD hash is interpreted in the same stateful computation before reservation; pin lookup itself is pure. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -173,6 +173,24 @@ theorem local_native (implementation : QueryImpl spec m) (coins : QueryImpl unif
   funext before
   exact (QueryImpl.simulateQ_compose implementation coins (work.run before)).symm
 
+/-- The actual transcript hash and its owned digest continuation preserve every native and platform effect under the common interpreter. -/
+theorem adHash (implementation : QueryImpl spec m) (coins : QueryImpl unifSpec (OracleComp spec))
+    (pending : registration.ServerAdHash) :
+    state implementation (RegistrationNativePlatformServerCompletion.adHash (n := n) (Auxiliary := Auxiliary) coins pending) =
+      RegistrationNativePlatformServerCompletion.adHash (fun query => simulateQ implementation (coins query)) pending := by
+  unfold RegistrationNativePlatformServerCompletion.adHash RegistrationNativePlatformServerCompletion.adHashWith
+    RegistrationServerAdHash.runWith
+  cases requested : pending.request with
+  | fail error | div => exact state_pure implementation _
+  | ok request =>
+      simp only [bind_assoc, pure_bind]
+      rw [state_bind]
+      unfold RegistrationNativePlatformServerCompletion.capability
+      rw [local_native]
+      apply bind_congr
+      intro digest
+      exact state_pure implementation _
+
 /-- The actual first record, signing and effectful response writer commute jointly with the complete Local/native state. -/
 theorem fromInitial (implementation : QueryImpl spec m) (coins : QueryImpl unifSpec (OracleComp spec))
     (setup : Setup base KemSK) (codec : Codec Reader Response)
@@ -195,6 +213,14 @@ private theorem world (implementation : QueryImpl spec m)
       RegistrationNativePlatformServerSdk.world (state implementation work) := by
   funext before
   simp only [state, RegistrationNativePlatformServerSdk.world, StateT.run, simulateQ_map]
+
+/-- Lifting the actual AD callback through the Server envelope retains both complete states under interpretation. -/
+theorem sdk_adHash (implementation : QueryImpl spec m) (coins : QueryImpl unifSpec (OracleComp spec))
+    (pending : registration.ServerAdHash) :
+    state implementation (RegistrationNativePlatformServerSdk.adHash (n := n) coins pending) =
+      RegistrationNativePlatformServerSdk.adHash (fun query => simulateQ implementation (coins query)) pending := by
+  unfold RegistrationNativePlatformServerSdk.adHash
+  rw [world, adHash]
 
 omit [LawfulMonad m] in
 private theorem commit (implementation : QueryImpl spec m)
@@ -222,7 +248,7 @@ theorem sdk_fromInitial (implementation : QueryImpl spec m) (coins : QueryImpl u
   intro published
   exact commit implementation published
 
-/-- Peer reservation runs at the original post-occupancy stage and forwards its exact poststate to first-record construction. -/
+/-- The actual AD hash runs after occupancy and before peer reservation; every failed hash and reservation forwards its exact reached state. -/
 theorem afterOccupancy (implementation : QueryImpl spec m) (coins : QueryImpl unifSpec (OracleComp spec))
     (setup : Setup base KemSK) (codec : Codec Reader Response)
     (reserve : StateT (RegistrationServerFrontendCompiler.State n) (OracleComp spec) Bool)
@@ -239,12 +265,22 @@ theorem afterOccupancy (implementation : QueryImpl spec m) (coins : QueryImpl un
   | ok result => cases result with
     | Err previous => exact state_pure implementation _
     | Ok pending =>
-      rw [state_bind]
+      dsimp only
+      rw [state_bind, sdk_adHash]
       apply bind_congr
-      intro admitted
-      cases admitted with
-      | false => exact state_pure implementation _
-      | true => exact sdk_fromInitial implementation coins setup codec sign encode control pending
+      intro hashed
+      cases hashed with
+      | fail error | div => exact state_pure implementation _
+      | ok result =>
+        cases result with
+        | Err previous => exact state_pure implementation _
+        | Ok initial =>
+          rw [state_bind]
+          apply bind_congr
+          intro admitted
+          cases admitted with
+          | false => exact state_pure implementation _
+          | true => exact sdk_fromInitial implementation coins setup codec sign encode control initial
 
 /-- Complete-message preflight, occupancy, reservation and all later record/publication effects preserve their exact shared interpreter state. -/
 theorem complete (implementation : QueryImpl spec m) (coins : QueryImpl unifSpec (OracleComp spec))
@@ -409,3 +445,15 @@ end BeaconcryptCore.Computational.RegistrationNativePlatformBuildInterpret
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativePlatformBuildInterpret.build_bind
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformBuildInterpret.adHash' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformBuildInterpret.adHash
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformBuildInterpret.sdk_adHash' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformBuildInterpret.sdk_adHash

@@ -28,10 +28,8 @@ class RegistrationWriterExtraction(unittest.TestCase):
                 (extraction.DESTINATION / name).read_bytes(),
             )
 
-    def test_reject_omitted_ml_field(self):
-        changed = self.raw["Funs.lean"].replace(
-            b"init.mldsa_public_key", b"init.signature", 1
-        )
+    def test_reject_omitted_remaining_key_field(self):
+        changed = self.raw["Funs.lean"].replace(b"init.one_time_key", b"init.pq_key", 1)
         self.assertNotEqual(changed, self.raw["Funs.lean"])
         with self.assertRaises(ValueError):
             extraction.normalize(changed, "Funs.lean")

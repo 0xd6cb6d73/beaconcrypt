@@ -5,7 +5,10 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeSampleInside
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily
 open PqxdhKemIndCca PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma
 open PqxdhPhase2GeneratedDriver PqxdhAuthenticatedRootExperiment PqxdhPhase1AcceptanceOracle
@@ -41,13 +44,13 @@ def Inside (start : Input) (output : HmacBlock) (depth : Nat)
   let marker := PqxdhInitialSelectedOrigin.mark (env).source start.selectedMessage
   ∃ built backend front history ambient,
     (built, backend) ∈ support ((simulateQ impl (simulateQ RawCtxForwardAnnotation.erase
-      (PqxdhInitialOriginForwardBuilder.program (env).source marker execution.origin (env).senderId (env).route (env).decode
+      (PqxdhInitialOriginForwardBuilder.program (associatedData := associatedData) (completedBinding := completedBinding) (env).source marker execution.origin (env).senderId (env).route (env).decode
         execution.initial execution.index execution.metadata execution.ready pure execution.before execution.trace))).run
       (attach (PqxdhPreparedSharedPrefix.state original start output) cache)) ∧
     (∀ (view : _ → PqxdhFirstRecordConfidentiality.InsState M P (IdentityHandle I) (DhPair setup) (KemHandle K) A
         (BareState 1) RootOracle.QueryCache S (B + 1)) (target : RootOutput) (choice : Option Bool),
       PqxdhLaterChallengeSourceMonitor.Reaches
-        (PqxdhLaterChallengeCutChronology.postImpl marker (env).senderId (env).route (env).decode impl) view target
+        (PqxdhLaterChallengeCutChronology.postImpl (completedBinding := completedBinding) marker (env).senderId (env).route (env).decode impl) view target
         owner number bit (adversary built.1) ((PqxdhRecordConfidentialityChallenge.initial, (built.2, backend)), choice)
         ((PqxdhFirstRecordConfidentiality.AdvSpec (SelectorSpec baseSpec) S (B + 1)).query details.request.query >>= details.request.next)
         ((details.request.before, ((front, history), ambient)), choice)) ∧
@@ -55,9 +58,9 @@ def Inside (start : Input) (output : HmacBlock) (depth : Nat)
     PqxdhLaterChallengeInsideState.AtAddress owner front details.callback ∧
     RawCtxForwardScan.Cut.pending details.callback (attach pending.2 after) ∈ support
       (RawCtxForwardScan.scan PqxdhInitialForwardPost.selected (PqxdhInitialNativeAuditCarried.selected depth) (native_selection depth) impl
-        (PqxdhInitialOriginForwardPost.program marker (env).senderId (env).route (env).decode
+        (PqxdhInitialOriginForwardPost.program (completedBinding := completedBinding) marker (env).senderId (env).route (env).decode
           ((PqxdhRecordConfidentialityChallenge.handler owner number bit details.request.query).run details.request.before) front history)
-        (PqxdhInitialOriginForwardPost.program_covered marker (env).senderId (env).route (env).decode
+        (PqxdhInitialOriginForwardPost.program_covered (completedBinding := completedBinding) marker (env).senderId (env).route (env).decode
           ((PqxdhRecordConfidentialityChallenge.handler owner number bit details.request.query).run details.request.before) front history) ambient)
 
 /-- The original reached inside request supplies all frontend, address and prefix facts at one shared source witness. -/
@@ -65,16 +68,16 @@ theorem reached_inside (start : Input) (output : HmacBlock) (depth : Nat)
     (owner : RawCtxProtocolReveals.Owner S (B + 1)) (number : U64) (bit : Bool)
     (adversary : PqxdhInitialBuilderContext.BuildResult → OracleComp (PqxdhFirstRecordConfidentiality.AdvSpec (SelectorSpec baseSpec) S (B + 1)) Bool)
     (pending : Pending) (details : Details) (cache after : CtxRO.QueryCache)
-    (reached : PqxdhLaterChallengeSampleChronology.Reached original callbacks baseImpl kem attachedVerify primitives secret challenge
+    (reached : PqxdhLaterChallengeSampleChronology.Reached (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge
       start output depth owner number bit adversary pending details cache after)
     (classified : PqxdhLaterChallengeSavedClassification.phase (some details) = .inside) :
-    Inside original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number bit adversary pending details cache after := by
+    Inside (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number bit adversary pending details cache after := by
   obtain ⟨built, backend, front, history, ambient, initial, historyReached, cut⟩ := reached
   refine ⟨built, backend, front, history, ambient, initial, ?_, ?_, ?_, cut⟩
   · have unused := PqxdhLaterChallengeSampleMonitor.phase_unused details (classified ▸ PqxdhLaterChallengeSavedClassification.Phase.noConfusion)
     exact fun view target choice => PqxdhLaterChallengeSourceMonitor.source_unused _ view target owner number bit _ _ _ _ _ _ historyReached choice unused
-  · exact PqxdhLaterChallengeInsideState.cut_shape _ _ _ _ owner number bit details classified _ _ _ front history ambient _ cut
-  · exact PqxdhLaterChallengeInsideState.cut_address _ _ _ _ owner number bit details classified _ _ _ front history ambient _ cut
+  · exact PqxdhLaterChallengeInsideState.cut_shape (completedBinding := completedBinding) _ _ _ _ owner number bit details classified _ _ _ front history ambient _ cut
+  · exact PqxdhLaterChallengeInsideState.cut_address (completedBinding := completedBinding) _ _ _ _ owner number bit details classified _ _ _ front history ambient _ cut
 
 end BeaconcryptCore.Computational.PqxdhLaterChallengeSampleInside
 

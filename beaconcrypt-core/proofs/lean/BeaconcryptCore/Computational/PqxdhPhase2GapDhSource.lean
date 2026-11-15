@@ -190,20 +190,21 @@ theorem collect_continuation {joint : Primitives} (dh : DhInterface joint) (doma
   rw [collect_realization dh domain scalar aux visit, bind_map_left]
 
 /-- Original extracted preparation and erasure occur after the compiled prefix, including mismatched pinned identities. This mathematical continuation still materializes DH and is not an output simulator. -/
-theorem prepare_continuation {joint : Primitives} (dh : DhInterface joint) (domain : PublicDomain dh)
+theorem prepare_continuation (completedBinding : session.CompletedRegistrationBinding)
+    {joint : Primitives} (dh : DhInterface joint) (domain : PublicDomain dh)
     (scalar : ScalarBytes) {I D K X Response A Result : Type}
     (aux : QueryImpl (PqxdhBeaconPhase2Preparation.Spec I D K X Response) (StateT A ProbComp))
     (visit : Word32 → StateT A ProbComp Unit) (identity : I) (oneTime : D) (kem : K) (raw : Bytes)
     (control : pqxdh.BeaconInitSent) (initial : A)
     (next : Option (PqxdhBeaconPhase2Preparation.Prepared Response) × A → ProbComp Result) :
     ((simulateQ (nativeImpl dh scalar aux visit)
-      (PqxdhBeaconPhase2Preparation.prepare control identity (.inl ()) (.inr oneTime) kem raw)).run initial >>= next) =
+      (PqxdhBeaconPhase2Preparation.prepare (completedBinding := completedBinding) control identity (.inl ()) (.inr oneTime) kem raw)).run initial >>= next) =
     ((simulateQ (prefixImpl domain aux visit) (collect identity oneTime kem raw)).run initial >>=
       fun input => match input.1 with
         | none => next (none, input.2)
         | some value =>
           (simulateQ (nativeImpl dh scalar aux visit)
-            (PqxdhBeaconPhase2Preparation.afterInputs control (concreteInputs dh scalar value))).run input.2 >>= next) := by
+            (PqxdhBeaconPhase2Preparation.afterInputs (completedBinding := completedBinding) control (concreteInputs dh scalar value))).run input.2 >>= next) := by
   simp only [PqxdhBeaconPhase2Preparation.prepare, simulateQ_bind,
     collect_realization dh domain scalar aux visit, bind_map_left, StateT.run_bind, bind_assoc]
   congr 1

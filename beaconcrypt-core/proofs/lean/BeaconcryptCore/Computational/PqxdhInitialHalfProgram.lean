@@ -9,6 +9,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialHalfProgram
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf
 open PqxdhInitialBeaconAmbient PqxdhInitialHalfObserverCompiler
 open PqxdhInitialParentObserver (State)
@@ -40,7 +42,7 @@ noncomputable def baseProgram (source : FixedHkdfSha512NoSaltSource)
     (execution : Execution extra M P I D K Result Origin S B) :
     OracleComp (PqxdhInitialHalfObserverCompiler.Spec extra I D K X Response Shared) (SourceFinal M P I D K Result Origin S B) :=
   simulateQ PqxdhInitialHalfObserverCompiler.compiler
-    ((PqxdhInitialOriginPost.sequence source execution.first mark execution.origin sender route decode
+    ((PqxdhInitialOriginPost.sequence (associatedData := associatedData) (completedBinding := completedBinding) source execution.first mark execution.origin sender route decode
       execution.index execution.metadata execution.ready execution.post).run (execution.before, execution.trace))
 
 noncomputable def program (source : FixedHkdfSha512NoSaltSource)
@@ -48,7 +50,7 @@ noncomputable def program (source : FixedHkdfSha512NoSaltSource)
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (execution : Execution extra M P I D K Result Origin S B) (depth : Nat) :
     OracleComp (PqxdhInitialHalfObserverCompiler.Spec extra I D K X Response Shared) (Final M P I D K Result Origin S B) := do
-  let result ← baseProgram source mark sender route decode execution
+  let result ← baseProgram (associatedData := associatedData) (completedBinding := completedBinding) source mark sender route decode execution
   let forbidden ← checker depth
   pure (result, forbidden)
 
@@ -69,7 +71,7 @@ theorem checked_contains
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (execution : Execution extra M P I D K Result Origin S B) (depth : Nat)
     (state : Store) (result : Final M P I D K Result Origin S B × Store)
-    (supported : result ∈ support ((simulateQ backend (program source mark sender route decode execution depth)).run state)) :
+    (supported : result ∈ support ((simulateQ backend (program (associatedData := associatedData) (completedBinding := completedBinding) source mark sender route decode execution depth)).run state)) :
     RawCtxSelectedChain.Slot.hidden ∈ result.1.2 := by
   simp only [program, simulateQ_bind, StateT.run_bind, mem_support_bind_iff,
     simulateQ_pure, StateT.run_pure, mem_support_pure_iff] at supported
@@ -108,13 +110,13 @@ theorem checked_invariant
     (supported : result ∈ support ((simulateQ
       (PqxdhInitialHalfPrivateObserver.observed source writer prior entry output pre application initializer selector aux
         (RawCtxSelectedLiveTrace.nativeReader (RawCtxFreshChainCut.concreteChain target)) target)
-      (program source mark sender route decode execution depth)).run (initial disclosed execution state candidates))) :
+      (program (associatedData := associatedData) (completedBinding := completedBinding) source mark sender route decode execution depth)).run (initial disclosed execution state candidates))) :
     PqxdhInitialDisclosureState.Invariant target disclosed result.1.1.2.1.roles.2 result.2 := by
   simp only [program, simulateQ_bind, StateT.run_bind, mem_support_bind_iff,
     simulateQ_pure, StateT.run_pure, mem_support_pure_iff] at supported
   obtain ⟨completed, sourceReached, checked, checkerReached, rfl⟩ := supported
   rw [baseProgram, ← QueryImpl.simulateQ_compose] at sourceReached
-  have established := PqxdhInitialHalfDisclosure.sequence_invariant target _
+  have established := PqxdhInitialHalfDisclosure.sequence_invariant (associatedData := associatedData) (completedBinding := completedBinding) target _
     (PqxdhInitialHalfPrivateObserver.actual_rules source writer prior entry output pre application initializer selector aux target)
     disclosed source execution.first mark execution.origin sender route decode execution.index execution.metadata execution.ready execution.post
     (execution.before, execution.trace) _ (initial_invariant target disclosed execution state candidates) completed sourceReached

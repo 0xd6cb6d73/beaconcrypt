@@ -17,9 +17,9 @@ variable {m : Type → Type} [Monad m] [LawfulMonad m] {E : Type}
 def authentication (native : QueryImpl RegistrationAuthenticationExecutor.Spec m)
     (parseEd : Slice U8 → m (RustM (core.result.Result ed.PublicKey ed.Error)))
     (verifyEd : Slice U8 → ed.PublicKey → m (RustM (core.option.Option (alloc.vec.Vec U8)))) :
-    QueryImpl AdapterInitAuthenticationRequestMonad.Spec m
+    QueryImpl AdapterPublicWrapperChildren.AuthenticationSpec m
   | .hash request => RustM.ok <$> native (.hash request)
-  | .verifyMldsa request => RustM.ok <$> native (.mldsa request)
+  | .verifyResponseMldsa request => RustM.ok <$> native (.mldsa request)
   | .parseEd bytes => parseEd bytes
   | .verifyEd signed publicKey => verifyEd signed publicKey
 
@@ -46,8 +46,18 @@ theorem response (native : QueryImpl RegistrationAuthenticationExecutor.Spec m)
 
 /-- Each actual source authentication leaf is interpreted separately, including both Ed operations. -/
 def normalAuthentication (native : QueryImpl AdapterInitAuthenticationStateful.NativeSpec m) :
-    QueryImpl AdapterInitAuthenticationRequestMonad.Spec m :=
-  native ∘ₛ AdapterInitAuthenticationStateful.native
+    QueryImpl AdapterPublicWrapperChildren.AuthenticationSpec m
+  | .hash request => .ok <$> native (.inl (.hash request))
+  | .verifyResponseMldsa request => .ok <$> native (.inl (.mldsa request))
+  | .parseEd bytes => .ok <$> native (.inr (.parse bytes))
+  | .verifyEd signed publicKey => .ok <$> native (.inr (.open signed publicKey))
+
+theorem init_queries (native : QueryImpl AdapterInitAuthenticationStateful.NativeSpec m) :
+    AdapterPublicWrapperChildren.initQueries (normalAuthentication native) =
+      native ∘ₛ AdapterInitAuthenticationStateful.native := by
+  funext request
+  cases request <;> simp only [AdapterPublicWrapperChildren.initQueries, normalAuthentication,
+    QueryImpl.apply_compose, AdapterInitAuthenticationStateful.native, simulateQ_map, simulateQ_spec_query]
 
 /-- The full extracted Init authentication child compiles to the native authentication controller with the literal Ed parse/open sequence. -/
 theorem init (native : QueryImpl AdapterInitAuthenticationStateful.NativeSpec m)
@@ -58,12 +68,18 @@ theorem init (native : QueryImpl AdapterInitAuthenticationStateful.NativeSpec m)
       AdapterInitAuthenticationDriver.observe <$>
         simulateQ (native ∘ₛ AdapterInitAuthenticationStateful.abstractNative)
           (RegistrationAuthenticationExecutor.begin pin packet) := by
-  rw [AdapterPublicWrapperChildren.init_run, normalAuthentication, QueryImpl.simulateQ_compose,
+  rw [AdapterPublicWrapperChildren.init_run, init_queries, QueryImpl.simulateQ_compose,
     AdapterInitAuthenticationSourceLoop.program_authenticate]
   change simulateQ native (AdapterInitAuthenticationStateful.interpret (AdapterInitAuthenticationDriver.authenticate pin packet)) = _
   rw [AdapterInitAuthenticationDriver.source, simulateQ_map, QueryImpl.simulateQ_compose]
 
 end BeaconcryptCore.Refinement.AdapterPublicWrapperChildNative
+
+/-- info: 'BeaconcryptCore.Refinement.AdapterPublicWrapperChildNative.init_queries' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.AdapterPublicWrapperChildNative.init_queries
 /-- info: 'BeaconcryptCore.Refinement.AdapterPublicWrapperChildNative.response_queries' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/

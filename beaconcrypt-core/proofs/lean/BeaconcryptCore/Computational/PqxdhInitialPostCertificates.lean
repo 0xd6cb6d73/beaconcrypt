@@ -10,6 +10,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.refined ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialPostCertificates
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhInitialPostContext RawCtxForwardTags
 variable {ι M P I D K X Response Shared Result : Type} {extra : OracleSpec ι} {S B : Nat}
 
@@ -18,7 +19,7 @@ def LiveQuiet {Value : Type} : RawCtxSelectedFamilyContext.Context M P I D K Val
 
 def Fits (qPost : Nat) : PqxdhInitialPostContext.Context extra M P I D K Result S B → Prop
   | .record _ _ outside inner => (∀ reply, (outside reply).IsTotalQueryBound qPost) ∧ LiveQuiet inner
-  | .finish _ _ _ _ outside inner => (∀ reply, (outside reply).IsTotalQueryBound qPost) ∧ RawCtxQuietOwnerTails.Quiet inner
+  | .finish _ _ _ _ _ outside inner => (∀ reply, (outside reply).IsTotalQueryBound qPost) ∧ RawCtxQuietOwnerTails.Quiet inner
 
 /-- Increasing only the original remaining post allowance preserves the carried quiet completion certificate. -/
 theorem fits_mono (small large : Nat) (below : small ≤ large)
@@ -97,7 +98,7 @@ private theorem finish_fits (decode : RawCtxReceive.FrameDecoder)
       OracleComp (PqxdhInitialForwardPost.Spec extra M P I D K X Response Shared Result S B) (Result × NativeFront M P I D K S B))
     (qPost : Nat) (bounded : ∀ reply, (outside reply).IsTotalQueryBound qPost)
     (later : ∀ reply updated, All (Fits qPost) (after reply updated)) :
-    All (Fits qPost) (PqxdhInitialForwardPost.finish decode index raw before outside after) := by
+    All (Fits qPost) (PqxdhInitialForwardPost.finish (completedBinding := completedBinding) decode index raw before outside after) := by
   unfold PqxdhInitialForwardPost.finish
   cases phase : (before.roles.1.2 index).beacon.phase
   case initSent control prekey oneTime kem =>
@@ -122,7 +123,7 @@ private theorem finish_fits (decode : RawCtxReceive.FrameDecoder)
                 · unfold PqxdhInitialForwardPost.ownerLift
                   apply lift_all RawCtxQuietOwnerTails.Quiet (Fits qPost)
                     (fun inner => PqxdhInitialPostContext.Context.finish index before control
-                      (PqxdhBeaconPhase2Shared.clearedMetadata prepared.metadata) outside inner)
+                      (PqxdhBeaconPhase2Shared.clearedMetadata prepared.metadata) prepared.metadata.associatedData outside inner)
                     (fun inner valid => ⟨bounded, valid⟩)
                   apply lift_all RawCtxQuietOwnerTails.Quiet RawCtxQuietOwnerTails.Quiet id (fun _ valid => valid)
                   apply RawCtxForwardOwnerCertificates.program_quiet
@@ -134,14 +135,14 @@ private theorem finish_fits (decode : RawCtxReceive.FrameDecoder)
 theorem program_fits (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
     (decode : RawCtxReceive.FrameDecoder) (client : OracleComp (PostSpec extra S B) Result)
     (qPost : Nat) (bounded : client.IsTotalQueryBound qPost) (before : NativeFront M P I D K S B) :
-    All (Fits qPost) (PqxdhInitialForwardPost.program (X := X) (Response := Response) (Shared := Shared)
+    All (Fits qPost) (PqxdhInitialForwardPost.program (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
       sender route decode client before) := by
   induction client using OracleComp.inductionOn generalizing qPost before with
   | pure value => trivial
   | query_bind request outside ih =>
       rw [isTotalQueryBound_query_bind_iff] at bounded
       have later : ∀ reply (updated : NativeFront M P I D K S B), All (Fits qPost)
-          (PqxdhInitialForwardPost.program (X := X) (Response := Response) (Shared := Shared)
+          (PqxdhInitialForwardPost.program (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
             sender route decode (outside reply) updated) := by
         intro reply updated
         exact mono _ _ (fits_mono (qPost - 1) qPost (Nat.sub_le _ _)) _
@@ -153,7 +154,7 @@ theorem program_fits (sender : M → Std.U64) (route : RawCtxServerRouting.Sende
       · exact plain_fits _ _ qPost (fun reply => later reply before)
       · cases request with
         | finish index raw =>
-            exact finish_fits decode index raw before outside _ qPost
+            exact finish_fits (completedBinding := completedBinding) decode index raw before outside _ qPost
               (fun reply => (bounded.2 reply).mono (Nat.sub_le _ _)) later
 
 /-- A supported executable full-post scan returns its own resource-certified descriptor; no equal-frame replacement or bounded ambient continuation is assumed. -/
@@ -167,12 +168,12 @@ theorem carried_fits {State : Type}
     (initial reached : State) (context : PqxdhInitialPostContext.Context extra M P I D K Result S B)
     (supported : RawCtxForwardScan.Cut.pending context reached ∈ support
       (RawCtxForwardScan.scan PqxdhInitialForwardPost.selected chosen selection impl
-        (PqxdhInitialForwardPost.program sender route decode client before)
-        (PqxdhInitialForwardPost.program_covered sender route decode client before) initial)) :
+        (PqxdhInitialForwardPost.program (completedBinding := completedBinding) sender route decode client before)
+        (PqxdhInitialForwardPost.program_covered (completedBinding := completedBinding) sender route decode client before) initial)) :
     Fits qPost context :=
   scan_all PqxdhInitialForwardPost.selected chosen selection impl (Fits qPost) _
-    (PqxdhInitialForwardPost.program_covered sender route decode client before)
-    (program_fits sender route decode client qPost bounded before) initial reached context supported
+    (PqxdhInitialForwardPost.program_covered (completedBinding := completedBinding) sender route decode client before)
+    (program_fits (completedBinding := completedBinding) sender route decode client qPost bounded before) initial reached context supported
 
 end BeaconcryptCore.Computational.PqxdhInitialPostCertificates
 

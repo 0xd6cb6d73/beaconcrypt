@@ -36,8 +36,8 @@ noncomputable def afterInitial (decode : RawCtxReceive.FrameDecoder) (pending : 
   | none => pure none
   | some raw => do
       let result ← simulateQ rawLift (simulateQ RawCtxSourceOpen.nativeAdapter
-        ((RawCtxWholeOwner.rawReceive decode raw).run (PqxdhBeaconPhase2Publication.localOwner (clearedMetadata pending.metadata) kernel)))
-      pure (PqxdhBeaconPhase2Publication.afterOpening (clearedMetadata pending.metadata) result.2.owner.kernel result.1)
+        ((RawCtxWholeOwner.rawReceive decode raw).run (PqxdhBeaconPhase2Publication.localOwner (clearedMetadata pending.metadata) pending.metadata.associatedData kernel)))
+      pure (PqxdhBeaconPhase2Publication.afterOpening (clearedMetadata pending.metadata) pending.metadata.associatedData result.2.owner.kernel result.1)
 
 noncomputable def tail (decode : RawCtxReceive.FrameDecoder) (pending : Prepared Response Shared) :
     OracleComp (Spec Response Shared) (Option PqxdhBeaconPhase2Publication.Staged) := do

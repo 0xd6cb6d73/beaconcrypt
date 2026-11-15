@@ -22,7 +22,7 @@ def observe (result : (((Value × RegistrationNativeIdentityFrontend.State sourc
 
 /-- The same private source projection restores actual bundle execution without assuming ownership or history facts about a later reconstructed state. -/
 theorem bundle_source (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) (index : Nat)
     (current : RegistrationNativeIdentityFrontend.State source) (env : RegistrationWorldAgreementCompiler.EnvState Auxiliary)
     (previous : Platform) (before : RegistrationNativeIdentityWorld.State n KemSK)

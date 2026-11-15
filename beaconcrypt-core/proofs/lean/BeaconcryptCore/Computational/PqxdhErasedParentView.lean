@@ -6,6 +6,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhErasedParentView
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf
 open PqxdhInitialBeaconAmbient PqxdhInitialSupportedCertificate RawCtxSelectedParentEntry
 variable {ι M P I D K X Response Shared A N C : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -48,16 +50,16 @@ noncomputable def view : PqxdhInitialCommonSecrecy.View
 
 variable (execution : PqxdhInitialNativeCarried.Execution extra M P I D K Bool Bool S B)
     (depth : Nat) (state : PqxdhInitialNativeAudit.State A N C)
-local notation "sourceRun" => PqxdhInitialNativeAuditCarried.carried source writer pre application initializer selector aux
+local notation "sourceRun" => PqxdhInitialNativeAuditCarried.carried (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux
   mark sender route decode execution depth (depth + 1) state
 
 set_option maxRecDepth 8192 in
 /-- The complete native source event and continuation factor through the retained descriptor/state; no final event equality is assumed. -/
 theorem native_erase (context : (Bool ⊕ Supported sourceRun) × Entry) (target : RootOutput) (output : FullOutput) :
-    PqxdhInitialCommonSecrecy.native source writer mark sender route decode
-      (PqxdhInitialSourceSecrecyResources.view source writer pre application initializer selector aux mark sender route decode
+    PqxdhInitialCommonSecrecy.native (completedBinding := completedBinding) source writer mark sender route decode
+      (PqxdhInitialSourceSecrecyResources.view (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode
         execution depth state root ancestors disclosed selected number remaining) context target output =
-    PqxdhInitialCommonSecrecy.native source writer mark sender route decode
+    PqxdhInitialCommonSecrecy.native (completedBinding := completedBinding) source writer mark sender route decode
       (view source pre application initializer selector aux root ancestors disclosed selected number remaining)
       (Sum.map id Subtype.val context.1, context.2) target output := by
   rcases context with ⟨common | pending, entry⟩ <;> rfl

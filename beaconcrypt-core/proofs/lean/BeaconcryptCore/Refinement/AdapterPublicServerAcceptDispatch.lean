@@ -43,7 +43,7 @@ theorem entry_run {A : Type} (input : Slice U8) (work : NativeM A) (before : Nat
 
 omit [PublicWrapperPlatform.Allocator] [PublicWrapperPlatform.LocalOperations] [PublicWrapperPlatform.ContainerOperations] original in
 theorem material_retained (view : AdapterPublicWrapperState.MaterialView mlSource KemSK)
-    (views : AdapterPublicWrapperStorage.Views) (created : PqxdhLiveServerConstruction.Created Unit)
+    (views : AdapterPublicWrapperStorage.Views) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential mlSource) (self : beaconcrypt_public_wrapper.server.Server)
     (before : Native) (related : AdapterPublicWrapperState.Server view views created credential self before.server)
     (input : Slice U8) :
@@ -56,7 +56,7 @@ noncomputable def native (coins : QueryImpl unifSpec (StateT PlatformState ProbC
     (checks : PqxdhServerAuthExperiment.Checks) (reserve : (StateT PlatformState ProbComp) Bool)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (input : Slice U8) : NativeM (RustM (Option Nat)) :=
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (input : Slice U8) : NativeM (RustM (Option Nat)) :=
   match RegistrationNativeConcreteCodec.wire.decodeInit (TranscriptAuthParts.absSlice input) with
   | none => pure (.ok none)
   | some packet => do
@@ -70,7 +70,7 @@ theorem native_run (coins : QueryImpl unifSpec (StateT PlatformState ProbComp))
     (checks : PqxdhServerAuthExperiment.Checks) (reserve : (StateT PlatformState ProbComp) Bool)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (input : Slice U8) (before : Native) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (input : Slice U8) (before : Native) :
     (native coins setup codec checks reserve route verify representation created input).run before =
       (AdapterPublicServerAcceptanceNative.accept coins setup codec checks reserve route verify representation created input).run (charged input before) := by
   unfold native charged AdapterPublicServerAcceptanceNative.accept
@@ -86,7 +86,7 @@ theorem coupled {E R Error : Type} (coins : QueryImpl unifSpec (StateT PlatformS
     (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (views : AdapterPublicWrapperStorage.Views)
     (model : AdapterPublicAgreementPrimitiveModel.Model (m := ProbComp) generator setup checks view)
     (entropy : AdapterPublicAgreementServerNative.Entropy model)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : beaconcrypt_public_wrapper.server.Server) (input : Slice U8) (rng : R)
     (before : RegistrationNativeExperiment.State n KemSK mlSource)
     (related : AdapterPublicWrapperState.Server view views created credential self before.server)
@@ -145,7 +145,7 @@ theorem typed [primitive : AdapterSealPrimitive.Operations] {E : Type}
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
     (wire : RegistrationNativeWire.Wire) (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT PlatformState ProbComp))
     (reserveRegistration reservePeer : (StateT PlatformState ProbComp) Bool) (erased : commitment.CommitmentTranscript)
@@ -175,7 +175,7 @@ theorem post {E R Error : Type} (coins : QueryImpl unifSpec (StateT PlatformStat
     (generator : rand_core.TryCryptoRng R Error) (self : beaconcrypt_public_wrapper.server.Server)
     (input : Slice U8) (rng : R)
     (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (before after : Native) (related : AdapterPublicWrapperState.Server view views created credential self before.server)
     (edGetter : ∀ key, (@CryptoOperations.edPublicBytes material ed (RustT NativeM)
       (AdapterPublicAgreementNativePlatformInterpreter.operations coins original) key).run = pure (.ok (view.edPublic key)))
@@ -212,7 +212,7 @@ theorem parsed {E R Error : Type} (coins : QueryImpl unifSpec (StateT PlatformSt
     (generator : rand_core.TryCryptoRng R Error) (self : beaconcrypt_public_wrapper.server.Server)
     (input : Slice U8) (rng : R)
     (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (before after : Native) (related : AdapterPublicWrapperState.Server view views created credential self before.server)
     (edGetter : ∀ key, (@CryptoOperations.edPublicBytes material ed (RustT NativeM)
       (AdapterPublicAgreementNativePlatformInterpreter.operations coins original) key).run = pure (.ok (view.edPublic key)))

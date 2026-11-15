@@ -1,5 +1,6 @@
 import BeaconcryptCore.PanicFreedom.Pqxdh
 import BeaconcryptCore.Refinement.PqxdhConcreteSession
+import BeaconcryptCore.Refinement.TranscriptAuthInputs
 
 /-! Direct semantic counterparts of the raw-byte F* PQXDH lemmas. These statements require no primitive or ideal-protocol representation assumptions beyond their explicit data premises. -/
 
@@ -124,21 +125,17 @@ theorem beacon_response_identity_mismatch_is_rejected
   simp [pqxdh.beacon_prepare_finish, byte_array_eq_of_ne _ _ hne]
 
 /-- The exact candidate or propagated root error, for every raw input with the pinned response key. -/
-theorem beacon_successful_finish_preserves_binding_and_ad
+theorem beacon_finish_preserves_root_and_binding_metadata
     (state : pqxdh.BeaconInitSent) (inputs : pqxdh.BeaconFinishInputs)
     (hidentity : state.expected_server_binding.identity_public_key = inputs.response_server_identity) :
-    ∃ rootResult ad,
+    ∃ rootResult,
       pqxdh.build_root_key_input inputs.shared_secrets = ok rootResult ∧
-      pqxdh.build_associated_data state.expected_server_binding.identity_public_key
-        state.beacon_identity_public_key = ok ad ∧
       pqxdh.beacon_prepare_finish state inputs = ok (match rootResult with
-        | .Ok root => .Ok { server_binding := state.expected_server_binding, assigned_key_id := inputs.assigned_key_id, root_key_input := root, associated_data := ad }
+        | .Ok root => .Ok { server_binding := state.expected_server_binding, assigned_key_id := inputs.assigned_key_id, root_key_input := root }
         | .Err err => .Err err) :=
   (PanicFreedom.build_root_key_input_ok inputs.shared_secrets).elim fun rootResult hroot =>
-  (PanicFreedom.build_associated_data_ok state.expected_server_binding.identity_public_key
-      state.beacon_identity_public_key).elim fun ad had =>
-  ⟨rootResult, ad, hroot, had, by
-    cases rootResult <;> simp [pqxdh.beacon_prepare_finish, array_eq_abs, ← hidentity, hroot, had]⟩
+  ⟨rootResult, hroot, by cases rootResult <;>
+    simp [pqxdh.beacon_prepare_finish, array_eq_abs, ← hidentity, hroot]⟩
 
 /-- An exact assigned-ID prefix and pinned sender authenticate the unchanged candidate. -/
 theorem exact_key_id_binding_authenticates (candidate : pqxdh.BeaconRegistrationCandidate) :
@@ -227,19 +224,16 @@ theorem occupied_server_key_id_is_rejected (state : pqxdh.ServerState)
 theorem available_server_key_id_candidate_shape (state : pqxdh.ServerState)
     (pending : pqxdh.PendingServerRegistration) (current : pqxdh.ServerBinding)
     (hne : state.last_key_id ≠ core.num.U64.MAX) (hbinding : pending.server_binding = current) :
-    ∃ next ad,
+    ∃ next,
       pqxdh.server_next_key_id state = ok (.Ok next) ∧ next.val = state.last_key_id.val + 1 ∧
-      pqxdh.build_associated_data current.identity_public_key pending.beacon_identity_public_key = ok ad ∧
       pqxdh.server_prepare_commit state pending current .Available = ok (.Ok {
         previous_state := state, next_state := { last_key_id := next }, key_id := next,
         beacon_identity_public_key := pending.beacon_identity_public_key,
         server_identity_public_key := current.identity_public_key,
         server_identity_key_id := current.identity_key_id,
-        ephemeral_public_key := pending.ephemeral_public_key, kem_ciphertext := pending.kem_ciphertext,
-        associated_data := ad }) :=
+        ephemeral_public_key := pending.ephemeral_public_key, kem_ciphertext := pending.kem_ciphertext }) :=
   (next_server_key_id_success state hne).elim fun next hn =>
-  (PanicFreedom.build_associated_data_ok current.identity_public_key pending.beacon_identity_public_key).elim fun ad had =>
-    ⟨next, ad, hn.1, hn.2, had, by simp [pqxdh.server_prepare_commit, hbinding, array_eq_abs, hn.1, had]⟩
+    ⟨next, hn.1, hn.2, by simp [pqxdh.server_prepare_commit, hbinding, array_eq_abs, hn.1]⟩
 
 theorem chain_size_cast : Std.UScalar.cast .U8 32#usize = 32#u8 :=
   Std.UScalar.eq_of_val_eq (by simp_scalar)
@@ -269,11 +263,11 @@ theorem honest_roles_build_the_same_root_eq (beacon server : pqxdh.PqxdhSharedSe
     pqxdh.build_root_key_input beacon = pqxdh.build_root_key_input server :=
   congrArg pqxdh.build_root_key_input (by cases beacon; cases server; simp_all)
 
-theorem honest_roles_build_the_same_associated_data_eq
-    (serverKey serverKey' beaconKey beaconKey' : Std.Array Std.U8 32#usize)
-    (hserver : serverKey = serverKey') (hbeacon : beaconKey = beaconKey') :
-    pqxdh.build_associated_data serverKey beaconKey = pqxdh.build_associated_data serverKey' beaconKey' := by
-  simp only [hserver, hbeacon]
+/-- Current context assembly is deterministic in the complete transcript hash. -/
+theorem matching_transcript_hashes_assemble_same_ad_eq
+    (left right : Std.Array Std.U8 64#usize) (same : left = right) :
+    authentication.assemble_associated_data left = authentication.assemble_associated_data right := by
+  simp only [same]
 
 /-- Successful preparation derives the response-identity check and preserves every candidate input. -/
 theorem beacon_prepare_finish_success_shape (state : pqxdh.BeaconInitSent)
@@ -282,12 +276,8 @@ theorem beacon_prepare_finish_success_shape (state : pqxdh.BeaconInitSent)
     state.expected_server_binding.identity_public_key = inputs.response_server_identity ∧
     candidate.server_binding = state.expected_server_binding ∧
     candidate.assigned_key_id = inputs.assigned_key_id ∧
-    pqxdh.build_root_key_input inputs.shared_secrets = ok (.Ok candidate.root_key_input) ∧
-    pqxdh.build_associated_data state.expected_server_binding.identity_public_key
-      state.beacon_identity_public_key = ok candidate.associated_data :=
-  (PanicFreedom.build_root_key_input_ok inputs.shared_secrets).elim fun rootResult hroot =>
-  (PanicFreedom.build_associated_data_ok state.expected_server_binding.identity_public_key
-      state.beacon_identity_public_key).elim fun ad had => by
+    pqxdh.build_root_key_input inputs.shared_secrets = ok (.Ok candidate.root_key_input) :=
+  (PanicFreedom.build_root_key_input_ok inputs.shared_secrets).elim fun rootResult hroot => by
     by_cases hi : absBytes state.expected_server_binding.identity_public_key = absBytes inputs.response_server_identity
     · cases rootResult <;> simp_all [pqxdh.beacon_prepare_finish, array_eq_abs, bytes_eq_of_abs_eq hi]
       simp [← hsuccess]
@@ -350,8 +340,8 @@ theorem valid_shared_secrets_iff (secrets : pqxdh.PqxdhSharedSecrets) :
       Pqxdh.dhNonZero (absDHs secrets) := by
   simp [is_all_zero_abs, Pqxdh.dhNonZero, absDHs]
 
-/-- Complete raw registration execution under only the F* byte-agreement, pinned identity, nonzero-DH, and non-exhaustion premises. All successful phase equations are conclusions. -/
-theorem conditional_honest_run_correspondence
+/-- Pure registration metadata execution under byte-agreement, pinned identity, nonzero-DH, and non-exhaustion premises. AD is produced by the separate current transcript-hash continuation and is not a candidate field. -/
+theorem conditional_honest_metadata_correspondence
     (beaconState : pqxdh.BeaconInitSent) (serverState : pqxdh.ServerState)
     (registration : pqxdh.VerifiedInitKex) (binding : pqxdh.ServerBinding)
     (coins : pqxdh.ServerCoins) (beaconSecrets serverSecrets : pqxdh.PqxdhSharedSecrets)
@@ -367,7 +357,7 @@ theorem conditional_honest_run_correspondence
       pqxdh.server_prepare_commit serverState pending binding .Available = ok (.Ok serverCandidate) ∧
       beaconCandidate.server_binding = binding ∧ serverCandidate.server_identity_public_key = binding.identity_public_key ∧
       serverCandidate.server_identity_key_id = binding.identity_key_id ∧
-      beaconCandidate.root_key_input = pending.root_key_input ∧ beaconCandidate.associated_data = serverCandidate.associated_data ∧
+      beaconCandidate.root_key_input = pending.root_key_input ∧
       beaconCandidate.assigned_key_id = serverCandidate.key_id ∧ serverCandidate.key_id = next ∧
       pqxdh.BeaconRegistrationCandidate.key_id_binding beaconCandidate = ok idPrefix ∧
       pqxdh.ServerRegistrationCandidate.key_id_binding serverCandidate = ok idPrefix ∧
@@ -377,16 +367,15 @@ theorem conditional_honest_run_correspondence
       authenticated.candidate = beaconCandidate ∧ pqxdh.beacon_commit authenticated = ok established ∧
       pqxdh.server_commit serverCandidate = ok (serverCandidate.next_state, peer) ∧
       established.server_binding = binding ∧ established.assigned_key_id = peer.key_id ∧
-      peer.identity_public_key = beaconState.beacon_identity_public_key ∧ peer.associated_data = beaconCandidate.associated_data ∧
+      peer.identity_public_key = beaconState.beacon_identity_public_key ∧
       serverCandidate.previous_state = serverState ∧ serverCandidate.next_state.last_key_id = next := by
   subst serverSecrets
   exact ((build_root_key_input_abs beaconSecrets).1 hvalid).elim fun root hr =>
     (next_server_key_id_success serverState hcounter).elim fun next hn =>
-    (PanicFreedom.build_associated_data_ok binding.identity_public_key beaconState.beacon_identity_public_key).elim fun ad had =>
     (PanicFreedom.registration_id_ok registration).elim fun registrationId hregistration =>
     (PanicFreedom.registration_key_id_binding_ok next).elim fun idPrefix hprefix =>
     let beaconCandidate : pqxdh.BeaconRegistrationCandidate := {
-      server_binding := binding, assigned_key_id := next, root_key_input := root, associated_data := ad }
+      server_binding := binding, assigned_key_id := next, root_key_input := root }
     let pending : pqxdh.PendingServerRegistration := {
       server_binding := binding, registration_id := registrationId,
       beacon_identity_public_key := beaconState.beacon_identity_public_key,
@@ -395,14 +384,14 @@ theorem conditional_honest_run_correspondence
       previous_state := serverState, next_state := { last_key_id := next }, key_id := next,
       beacon_identity_public_key := beaconState.beacon_identity_public_key,
       server_identity_public_key := binding.identity_public_key, server_identity_key_id := binding.identity_key_id,
-      ephemeral_public_key := coins.ephemeral_public_key, kem_ciphertext := coins.kem_ciphertext, associated_data := ad }
+      ephemeral_public_key := coins.ephemeral_public_key, kem_ciphertext := coins.kem_ciphertext }
     ⟨next, beaconCandidate, pending, serverCandidate, idPrefix, { candidate := beaconCandidate },
       { server_binding := binding, assigned_key_id := next },
-      { key_id := next, identity_public_key := beaconState.beacon_identity_public_key, associated_data := ad }, by
+      { key_id := next, identity_public_key := beaconState.beacon_identity_public_key }, by
       simp [beaconCandidate, pending, serverCandidate, pqxdh.beacon_prepare_finish, pqxdh.server_accept,
         pqxdh.validate_registration_status, pqxdh.server_prepare_commit, pqxdh.authenticate_registration_key_id_binding,
         pqxdh.BeaconRegistrationCandidate.key_id_binding, pqxdh.ServerRegistrationCandidate.key_id_binding,
-        pqxdh.beacon_commit, pqxdh.server_commit, ← hpin, hidentity, hr.1, hn.1, hn.2, had, hregistration, hprefix,
+        pqxdh.beacon_commit, pqxdh.server_commit, ← hpin, hidentity, hr.1, hn.1, hn.2, hregistration, hprefix,
         array_eq_abs, pqxdh.BeaconRegistrationCandidate.ratchet_initialization,
         pqxdh.ServerRegistrationCandidate.ratchet_initialization, pqxdh.BEACON_RATCHETS, pqxdh.SERVER_RATCHETS,
         pqxdh.RATCHET_CHAIN_SIZE, ratchet.RATCHET_CHAIN_SIZE, lift, chain_size_cast]⟩
@@ -416,13 +405,12 @@ theorem honest_roles_build_the_same_root (beacon server : pqxdh.PqxdhSharedSecre
   (PanicFreedom.build_root_key_input_ok beacon).elim fun result hr =>
     ⟨result, hr, (honest_roles_build_the_same_root_eq beacon server h1 h2 h3 h4 hpq).symm.trans hr⟩
 
-theorem honest_roles_build_the_same_associated_data
-    (serverKey serverKey' beaconKey beaconKey' : Std.Array Std.U8 32#usize)
-    (hserver : serverKey = serverKey') (hbeacon : beaconKey = beaconKey') :
-    ∃ ad, pqxdh.build_associated_data serverKey beaconKey = ok ad ∧
-      pqxdh.build_associated_data serverKey' beaconKey' = ok ad :=
-  (PanicFreedom.build_associated_data_ok serverKey beaconKey).elim fun ad had =>
-    ⟨ad, had, (honest_roles_build_the_same_associated_data_eq _ _ _ _ hserver hbeacon).symm.trans had⟩
+theorem matching_transcript_hashes_assemble_same_ad
+    (left right : Std.Array Std.U8 64#usize) (same : left = right) :
+    ∃ ad, authentication.assemble_associated_data left = ok ad ∧
+      authentication.assemble_associated_data right = ok ad :=
+  (TranscriptAuthInputsRefinement.assemble_associated_data_abs left).elim fun ad built =>
+    ⟨ad, built.1, (matching_transcript_hashes_assemble_same_ad_eq left right same).symm.trans built.1⟩
 
 /-- The expected prefix is produced internally; every different authenticated byte prefix is rejected. -/
 theorem mismatched_key_id_binding_is_rejected (candidate : pqxdh.BeaconRegistrationCandidate)

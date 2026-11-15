@@ -255,9 +255,9 @@ theorem bundle_swaps (index : ℕ) (old new : KemSK) (owner : ℕ) :
     simp only [support_pure, Set.mem_singleton_iff] at member
     subst member
     exact held
-  · have natural : ∀ secret : KemSK, simulateQ (PqxdhRegistrationSchedule.bundleCallbacks setup codec o.beacon.identity)
+  · have natural : ∀ secret : KemSK, simulateQ (PqxdhRegistrationSchedule.bundleLogCallbacks setup codec o.beacon.identity)
         (PqxdhLivePhase1Bundle.bundle (PqxdhRegistrationSchedule.projection setup owner) (swapOwner secret o)) =
-        (fun r => (r.1, swapOwner secret r.2)) <$> simulateQ (PqxdhRegistrationSchedule.bundleCallbacks setup codec
+        (fun r => (r.1, swapOwner secret r.2)) <$> simulateQ (PqxdhRegistrationSchedule.bundleLogCallbacks setup codec
           o.beacon.identity) (PqxdhLivePhase1Bundle.bundle (PqxdhRegistrationSchedule.projection setup owner) o) := by
       intro secret
       rw [← simulateQ_map]
@@ -273,8 +273,8 @@ theorem bundle_swaps (index : ℕ) (old new : KemSK) (owner : ℕ) :
           Prod.map id (swapSched owner new) <$> PqxdhRegistrationSchedule.bundle setup codec owner s
         rw [PqxdhRegistrationSchedule.bundle_source setup codec owner _ _ found',
           PqxdhRegistrationSchedule.bundle_source setup codec owner _ _ found]
-        change _ <$> simulateQ (PqxdhRegistrationSchedule.bundleCallbacks setup codec o.beacon.identity) _ = _
-        rw [natural, Functor.map_map, Functor.map_map]
+        change _ <$> (simulateQ (PqxdhRegistrationSchedule.bundleLogCallbacks setup codec o.beacon.identity) _).run (s.inits owner) = _
+        rw [natural, StateT.run_map, Functor.map_map, Functor.map_map]
         refine congrArg (fun f => f <$> _) (funext fun r => ?_)
         simp only [Prod.map, id_eq, swapSched]
         rw [modify_set_same]
@@ -284,7 +284,7 @@ theorem bundle_swaps (index : ℕ) (old new : KemSK) (owner : ℕ) :
         obtain ⟨r', member', rfl⟩ := member
         have fixed := natural old
         rw [held o found] at fixed
-        rw [fixed, support_map] at member'
+        rw [fixed, StateT.run_map, support_map] at member'
         obtain ⟨r'', -, rfl⟩ := member'
         intro o' found''
         have bound : owner < s.owners.length := (List.getElem?_eq_some_iff.mp found).1
@@ -306,7 +306,7 @@ theorem bundle_swaps (index : ℕ) (old new : KemSK) (owner : ℕ) :
         rw [PqxdhRegistrationSchedule.bundle_source setup codec owner _ _ found, support_map] at member
         obtain ⟨r', -, rfl⟩ := member
         intro o' found''
-        change (s.owners.set owner r'.2)[index]? = some o' at found''
+        change (s.owners.set owner r'.1.2)[index]? = some o' at found''
         rw [List.getElem?_set_ne same] at found''
         exact held o' found''
 
@@ -390,14 +390,14 @@ theorem serverStep_swaps (index : ℕ) (old new : KemSK) (query : RawCtxServerMi
       (fun result => (result.1.1.1, PqxdhDeploymentNative.produce (PqxdhDeploymentNative.serverTag query) result.1.2
         (PqxdhDeploymentNative.withServer { t with native := result.2 } result.1.1.2))) <$>
         (PqxdhDeploymentNative.record setup codec (PqxdhDeploymentNative.logged
-          ((RawCtxServerMixed.serverImpl (PqxdhDeploymentNative.senderId t) route codec.frameRead query).run
+          ((MldsaServerRouting.handler PqxdhRefinement.absBytes (PqxdhDeploymentNative.senderId t) route codec.frameRead query).run
             (PqxdhDeploymentNative.serverView t)))).run t.native := fun t => by
     change (do let result ← _; pure _) = _
     rw [map_eq_bind_pure_comp]
     rfl
   obtain ⟨recorded, keeps⟩ := onShared_swaps index old new (PqxdhServerAuthNative.nativeCtx (simulateQ
     (PqxdhDeploymentNative.primitives setup codec) (PqxdhDeploymentNative.logged
-      ((RawCtxServerMixed.serverImpl (PqxdhDeploymentNative.senderId s) route codec.frameRead query).run
+      ((MldsaServerRouting.handler PqxdhRefinement.absBytes (PqxdhDeploymentNative.senderId s) route codec.frameRead query).run
         (PqxdhDeploymentNative.serverView s))))) s.native held
   have sender : PqxdhDeploymentNative.senderId (swapNative index new s) = PqxdhDeploymentNative.senderId s := rfl
   have view : PqxdhDeploymentNative.serverView (swapNative index new s) = PqxdhDeploymentNative.serverView s := rfl
@@ -794,6 +794,7 @@ end Split
 
 section Count
 variable {I D K X Response : Type}
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 
 /-- Whether a request of the opaque Phase 2 preparation interface is a KEM decapsulation. -/
 def isDecapsulate : (PqxdhBeaconPhase2Preparation.Spec I D K X Response).Domain → Bool
@@ -817,7 +818,7 @@ theorem collect_decapsulate (identity : I) (prekey oneTime : D) (kem : K) (raw :
 /-- The opaque preparation decapsulates at most once: the collection once, the core preparation and erasure never. -/
 theorem prepare_decapsulate (control : beaconcrypt_core.pqxdh.BeaconInitSent) (identity : I) (prekey oneTime : D)
     (kem : K) (raw : PqxdhBeaconPhase2Preparation.Bytes) :
-    (PqxdhBeaconPhase2Preparation.prepare (X := X) (Response := Response) control identity prekey oneTime kem
+    (PqxdhBeaconPhase2Preparation.prepare (completedBinding := completedBinding) (X := X) (Response := Response) control identity prekey oneTime kem
       raw).IsQueryBoundP (fun query => isDecapsulate query = true) 1 := by
   unfold PqxdhBeaconPhase2Preparation.prepare
   rw [show (1 : ℕ) = 1 + 0 from rfl]
@@ -837,18 +838,18 @@ def isDecapsulateNative :
 /-- The native owner program decapsulates at most once: only its preparation decapsulates, and only once. -/
 theorem nativeOwner_decapsulate (decode : RawCtxReceive.FrameDecoder) (raw : PqxdhBeaconPhase2Preparation.Bytes)
     (state : PqxdhBeaconPhase2Preparation.State I D K) :
-    (PqxdhBeaconPhase2Publication.nativeOwner (X := X) (Response := Response) decode raw state).IsQueryBoundP
+    (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) (X := X) (Response := Response) decode raw state).IsQueryBoundP
       (fun query => isDecapsulateNative query = true) 1 := by
   let isDecapsulateFull : (PqxdhBeaconPhase2Publication.FullSpec I D K X Response).Domain → Bool
     | .inl query => isDecapsulate query
     | .inr _ => false
-  have owner : (PqxdhBeaconPhase2Publication.owner (X := X) (Response := Response) decode raw state).IsQueryBoundP
+  have owner : (PqxdhBeaconPhase2Publication.owner (completedBinding := completedBinding) (X := X) (Response := Response) decode raw state).IsQueryBoundP
       (fun query => isDecapsulateFull query = true) 1 := by
     unfold PqxdhBeaconPhase2Publication.owner
     split
     · refine isQueryBoundP_bind (p := fun query => isDecapsulateFull query = true) (n := 1) (m := 0) ?_
         fun prepared _ => ?_
-      · refine (prepare_decapsulate _ _ _ _ _ raw).simulateQ_of_step (fun query decap => ?_) (fun query other => ?_)
+      · refine (prepare_decapsulate (completedBinding := completedBinding) _ _ _ _ _ raw).simulateQ_of_step (fun query decap => ?_) (fun query other => ?_)
         · simp [PqxdhBeaconPhase2Publication.preLift, isQueryBoundP_query_iff]
         · simp only [PqxdhBeaconPhase2Publication.preLift]
           rw [isQueryBoundP_query_iff]

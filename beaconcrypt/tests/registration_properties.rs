@@ -90,7 +90,6 @@ fn authenticate_response(server: &Server, init: &[u8], response: &[u8]) -> Vec<u
 			pre_key: init.pre_key.try_into().unwrap(),
 			one_time_key: init.one_time_key.try_into().unwrap(),
 			pq_key: init.pq_key.try_into().unwrap(),
-			mldsa_public_key: init.mldsa_public_key.try_into().unwrap(),
 		},
 		server.identity_key_kid(),
 		server.identity_pk().as_bytes(),

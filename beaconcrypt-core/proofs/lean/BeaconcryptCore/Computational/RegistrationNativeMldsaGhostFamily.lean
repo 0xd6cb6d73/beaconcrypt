@@ -80,7 +80,7 @@ def nativeState (before : State source cap n KemSK) : RegistrationNativeMldsaTab
 
 noncomputable def callback (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : Credential (handleSource source)) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential (handleSource source)) :
     QueryImpl RegistrationNativeRawAdapter.TypedSpec (StateT (State source cap n KemSK) ProbComp) := fun query before =>
   (fun result => (result.1.1.1, (result.1.1.2, (result.1.2, result.2)))) <$>
     RegistrationNativeMldsaTableProgram.evaluate source
@@ -93,7 +93,7 @@ private theorem map_apply {S A B : Type} (f : A → B) (work : StateT S ProbComp
 /-- Each native family coordinate executes the literal original single-ordinal tracked callback on the same true-count private table. -/
 theorem callback_coordinate (index : Fin cap) (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : Credential (handleSource source))
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential (handleSource source))
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (before : State source cap n KemSK) :
     (fun result => (result.1, coordinateState source index result.2)) <$>
       (callback source setup checks wire route representation created credential query).run before =
@@ -111,7 +111,7 @@ theorem callback_coordinate (index : Fin cap) (setup : Setup base KemSK) (checks
 /-- The joint finite family erases to the actual complete original native callback, without resetting any private source state. -/
 theorem callback_erase (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : Credential (handleSource source))
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential (handleSource source))
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (before : State source cap n KemSK) :
     (fun result => (result.1, nativeState source result.2)) <$>
       (callback source setup checks wire route representation created credential query).run before =
@@ -127,7 +127,7 @@ theorem callback_erase (setup : Setup base KemSK) (checks : Checks) (wire : Regi
 /-- All actual finite selected-row invariants are retained simultaneously by one complete native callback. -/
 theorem callback_rows (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : Credential (handleSource source))
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential (handleSource source))
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (before : State source cap n KemSK)
     (rows : ∀ index : Fin cap, RegistrationNativeMldsaGhostRows.Safe source index.val (before.2.1 index, before.2.2))
     (result : RegistrationNativeRawAdapter.TypedSpec.Range query × State source cap n KemSK)

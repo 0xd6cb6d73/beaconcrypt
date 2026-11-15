@@ -4,7 +4,7 @@
 // Native integration tests separately execute the real signature, KEM, DH, KDF and record operations.
 
 use beaconcrypt_core::agreement::{self, AgreementEffect};
-use beaconcrypt_core::authentication::{AuthRole, SIGNING_CONTEXT, build_signature_input};
+use beaconcrypt_core::authentication::{AuthRole, build_signature_input};
 use beaconcrypt_core::pqxdh::{
 	BeaconCoins, BeaconFresh, BeaconStartInputs, InitialRatchetKdfResponse, KeyIdAvailability,
 	RegistrationStatus, ServerBinding, ServerState,
@@ -12,7 +12,7 @@ use beaconcrypt_core::pqxdh::{
 use beaconcrypt_core::ratchet::{ConcreteRatchetKernel, RatchetKdfResponse};
 use beaconcrypt_core::record_effects as records;
 use beaconcrypt_core::registration::{self as registration, *};
-use beaconcrypt_core::session::{RegistrationBinding, ServerAuthenticationPin, SessionBinding};
+use beaconcrypt_core::session::{ServerAuthenticationPin, SessionBinding};
 
 fn hash_parts(request: HashRequest<'_>) -> Vec<&[u8]> {
 	match request {
@@ -29,7 +29,7 @@ fn server_binding() -> ServerBinding {
 }
 
 fn pin() -> ServerAuthenticationPin {
-	ServerAuthenticationPin::new(server_binding(), [17; 1952], [23; 64])
+	ServerAuthenticationPin::new(server_binding(), [17; 1952])
 }
 
 struct InitBytes {
@@ -37,21 +37,11 @@ struct InitBytes {
 	prekey: Vec<u8>,
 	one_time: Vec<u8>,
 	pq: Vec<u8>,
-	mldsa: Vec<u8>,
-	signature: Vec<u8>,
 }
 
 impl InitBytes {
 	fn packet(&self) -> InitPacket<'_> {
-		InitPacket::from_slices(
-			&self.identity,
-			&self.prekey,
-			&self.one_time,
-			&self.pq,
-			&self.mldsa,
-			&self.signature,
-		)
-		.unwrap()
+		InitPacket::from_slices(&self.identity, &self.prekey, &self.one_time, &self.pq).unwrap()
 	}
 }
 
@@ -68,7 +58,6 @@ fn start(reject_at: Option<usize>) -> Result<(BeaconPending, InitBytes), BeaconF
 			one_time_public_key: [4; 32],
 		},
 		pin(),
-		[19; 1952],
 	);
 	let mut position = 0;
 	loop {
@@ -81,8 +70,6 @@ fn start(reject_at: Option<usize>) -> Result<(BeaconPending, InitBytes), BeaconF
 					prekey: view.fields.pre_key.to_vec(),
 					one_time: view.fields.one_time_key.to_vec(),
 					pq: view.fields.pq_key.to_vec(),
-					mldsa: view.fields.mldsa_public_key.to_vec(),
-					signature: view.signature.to_vec(),
 				};
 				let (pending, ()) = ready
 					.publish((reject_at != Some(position)).then_some(()))?
@@ -97,23 +84,10 @@ fn start(reject_at: Option<usize>) -> Result<(BeaconPending, InitBytes), BeaconF
 				signed.extend_from_slice(request.message);
 				pending.resume((reject_at != Some(position)).then_some(signed.as_slice()))
 			}
-			BeaconInitEffect::FingerprintRequested(pending) => {
-				assert_eq!(hash_parts(pending.request()), [&[19; 1952][..]]);
-				pending.resume((reject_at != Some(position)).then_some([31; 64]))
-			}
+
 			BeaconInitEffect::HashRequested(pending) => {
-				assert_eq!(hash_parts(pending.request())[0].len(), 5495);
+				assert_eq!(hash_parts(pending.request())[0].len(), 3543);
 				pending.resume((reject_at != Some(position)).then_some([37; 64]))
-			}
-			BeaconInitEffect::MldsaSigningRequested(pending) => {
-				let request = pending.request();
-				assert_eq!(request.public_key, &[19; 1952]);
-				assert_eq!(request.context, SIGNING_CONTEXT);
-				assert_eq!(
-					request.input,
-					&build_signature_input(AuthRole::Beacon, &[37; 64])
-				);
-				pending.resume((reject_at != Some(position)).then_some(&[41; 3309][..]))
 			}
 		};
 		position += 1;
@@ -130,34 +104,19 @@ fn authenticate(bytes: &InitBytes, reject_at: Option<usize>) -> Option<Authentic
 			InitAuthentication::HashRequested(pending) => {
 				pending.resume((reject_at != Some(position)).then_some([37; 64]))
 			}
-			InitAuthentication::MldsaVerificationRequested(pending) => {
-				assert_eq!(pending.request().public_key, &[19; 1952]);
-				assert_eq!(
-					pending.request().input,
-					&build_signature_input(AuthRole::Beacon, &[37; 64])
-				);
-				pending.resume(reject_at != Some(position))
-			}
+
 			InitAuthentication::Ed25519VerificationRequested(pending) => {
 				let request = pending.request();
 				assert_eq!(request.public_key, &[29; 32]);
 				let expected = match position {
-					2 => &bytes.pq,
-					3 => &bytes.prekey,
-					4 => &bytes.one_time,
+					1 => &bytes.pq,
+					2 => &bytes.prekey,
+					3 => &bytes.one_time,
 					_ => panic!("unexpected Ed verification"),
 				};
 				assert_eq!(request.signed, expected);
 				let opened = request.signed[64..].to_vec();
 				pending.resume((reject_at != Some(position)).then_some(opened.as_slice()))
-			}
-			InitAuthentication::ServerFingerprintRequested(pending) => {
-				assert_eq!(hash_parts(pending.request())[0], &[17; 1952]);
-				pending.resume((reject_at != Some(position)).then_some([23; 64]))
-			}
-			InitAuthentication::BeaconFingerprintRequested(pending) => {
-				assert_eq!(hash_parts(pending.request())[0], &[19; 1952]);
-				pending.resume((reject_at != Some(position)).then_some([31; 64]))
 			}
 		};
 		position += 1;
@@ -194,7 +153,7 @@ fn server_agreement() -> agreement::ServerAgreement {
 	agreement
 }
 
-fn server_kdf() -> ServerInitialKdf<'static> {
+fn server_ad_hash() -> ServerAdHash<'static> {
 	registration::begin_server_completion(
 		ServerState::new(42),
 		&pin(),
@@ -203,6 +162,13 @@ fn server_kdf() -> ServerInitialKdf<'static> {
 		b"application",
 	)
 	.unwrap()
+}
+
+fn server_kdf() -> ServerInitialKdf<'static> {
+	let pending = server_ad_hash();
+	let input = hash_parts(pending.request()).concat();
+	assert_eq!(input, expected_preimage(43));
+	pending.resume(Some(digest(&input))).unwrap()
 }
 
 fn server_seal() -> ServerInitialSeal<'static> {
@@ -221,15 +187,40 @@ fn digest(bytes: &[u8]) -> [u8; 64] {
 	output
 }
 
-fn expected_ad() -> [u8; 281] {
-	*RegistrationBinding::new(pin(), [37; 64], [29; 32], [31; 64]).associated_data()
+fn expected_preimage(assigned: u64) -> Vec<u8> {
+	let (_, bytes) = start(None).unwrap();
+	let mut output = [
+		&bytes.identity[..],
+		&bytes.prekey,
+		&bytes.one_time,
+		&bytes.pq,
+	]
+	.concat();
+	output.extend_from_slice(&[11; 32]);
+	output.extend_from_slice(&[25; 32]);
+	output.extend_from_slice(&[33; 1088]);
+	output.extend_from_slice(&assigned.to_le_bytes());
+	assert_eq!(output.len(), 2638);
+	output
+}
+
+fn expected_ad_for(assigned: u64) -> [u8; 151] {
+	let mut output =
+		b"BeaconcryptPqxdh_CURVE25519_SHA-512_ML-KEM-768SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305"
+			.to_vec();
+	output.extend_from_slice(&digest(&expected_preimage(assigned)));
+	output.try_into().unwrap()
+}
+
+fn expected_ad() -> [u8; 151] {
+	expected_ad_for(43)
 }
 
 fn step_response() -> RatchetKdfResponse {
 	RatchetKdfResponse::from_bytes([7; 76])
 }
 
-fn tag(key: &[u8; 32], nonce: &[u8; 12], ad: &[u8; 281], plaintext: &[u8]) -> [u8; 16] {
+fn tag(key: &[u8; 32], nonce: &[u8; 12], ad: &[u8; 151], plaintext: &[u8]) -> [u8; 16] {
 	let hash = digest(&[key.as_slice(), nonce.as_slice(), ad.as_slice(), plaintext].concat());
 	std::array::from_fn(|index| {
 		hash[index] ^ hash[index + 16] ^ hash[index + 32] ^ hash[index + 48]
@@ -239,7 +230,12 @@ fn tag(key: &[u8; 32], nonce: &[u8; 12], ad: &[u8; 281], plaintext: &[u8]) -> [u
 fn seal_primitive(request: records::AeadSealRequest<'_>) -> (Vec<u8>, [u8; 16]) {
 	assert_eq!(request.key, &[7; 32]);
 	assert_eq!(request.nonce, &[7; 12]);
-	assert_eq!(request.associated_data, &expected_ad());
+
+	let assigned = match &request.plaintext {
+		records::SealPlaintextRequest::Single(_) => 43,
+		records::SealPlaintextRequest::Prefixed { prefix, .. } => u64::from_le_bytes(**prefix),
+	};
+	assert_eq!(request.associated_data, &expected_ad_for(assigned));
 	let plaintext = match request.plaintext {
 		records::SealPlaintextRequest::Single(application) => application.to_vec(),
 		records::SealPlaintextRequest::Prefixed {
@@ -282,11 +278,14 @@ fn commitment_hash(
 	hash
 }
 
-fn assert_initial_commitment(transcript: &beaconcrypt_core::commitment::CommitmentTranscript) {
+fn assert_initial_commitment(
+	transcript: &beaconcrypt_core::commitment::CommitmentTranscript,
+	assigned: u64,
+) {
 	let bytes = transcript.as_bytes();
 	assert_eq!(&bytes[..32], &[7; 32]);
 	assert_eq!(&bytes[32..44], &[7; 12]);
-	assert_eq!(&bytes[44..325], &expected_ad());
+	assert_eq!(&bytes[44..195], &expected_ad_for(assigned));
 	assert_eq!(
 		&bytes[bytes.len() - 16..bytes.len() - 8],
 		&1u64.to_le_bytes()
@@ -322,7 +321,7 @@ fn with_server_writer<'application, Output>(
 	assert_eq!(application, b"application");
 	let (body, tag) = seal_primitive(aead.request());
 	let mut commitment = aead.resume(Some((&body, tag))).unwrap();
-	assert_initial_commitment(commitment.transcript());
+	assert_initial_commitment(commitment.transcript(), assigned);
 	let hash = commitment_hash(commitment.transcript_mut());
 	let writer = commitment.resume(Some(hash)).unwrap();
 	action(writer)
@@ -341,7 +340,7 @@ fn server_hash(ciphertext: &[u8]) -> ServerResponseHash<'_> {
 
 #[test]
 fn initial_signing_and_serialization_failures_return_the_original_fresh_binding() {
-	for position in 0..7 {
+	for position in 0..5 {
 		let Err(fresh) = start(Some(position)) else {
 			panic!("failure must reject")
 		};
@@ -352,7 +351,7 @@ fn initial_signing_and_serialization_failures_return_the_original_fresh_binding(
 #[test]
 fn every_request_authentication_failure_prevents_an_agreement_capability() {
 	let (_, bytes) = start(None).unwrap();
-	for position in 0..7 {
+	for position in 0..4 {
 		assert!(authenticate(&bytes, Some(position)).is_none());
 	}
 	let accepted = authenticate(&bytes, None).unwrap();
@@ -450,6 +449,9 @@ fn delayed_response_uses_the_current_counter_and_publishes_only_after_serializat
 		b"application",
 	)
 	.unwrap();
+	let input = hash_parts(pending.request()).concat();
+	assert_eq!(input, expected_preimage(100));
+	let pending = pending.resume(Some(digest(&input))).unwrap();
 	let pending = pending
 		.resume(Some(InitialRatchetKdfResponse::from_bytes([1; 64])))
 		.unwrap();
@@ -472,8 +474,11 @@ fn delayed_response_uses_the_current_counter_and_publishes_only_after_serializat
 	assert_eq!(binding.assigned_key_id(), 100);
 	assert_eq!(binding.server_binding(), server_binding());
 	assert_eq!(binding.beacon_identity_public_key(), &[29; 32]);
-	assert_eq!(binding.server_fingerprint(), &[23; 64]);
-	assert_eq!(binding.beacon_fingerprint(), &[31; 64]);
+	assert_eq!(
+		binding.session_transcript_hash(),
+		&digest(&expected_preimage(100))
+	);
+	assert_eq!(binding.associated_data(), &expected_ad_for(100));
 	assert_eq!(kernel.send_sequence(), 1);
 	assert_eq!(kernel.receive_sequence(), 0);
 }
@@ -501,7 +506,10 @@ fn beacon_agreement(ciphertext: &[u8]) -> agreement::BeaconAgreement<'_> {
 		pending.request().input,
 		&build_signature_input(AuthRole::Server, &[53; 64])
 	);
-	let authenticated = pending.resume(true).unwrap();
+	let pending = pending.resume(true).unwrap();
+	let input = hash_parts(pending.request()).concat();
+	assert_eq!(input, expected_preimage(43));
+	let authenticated = pending.resume(Some(digest(&input))).unwrap();
 	let AgreementEffect::BeaconComplete(agreement) =
 		agreement(agreement::begin_beacon_agreement(authenticated))
 	else {
@@ -548,7 +556,7 @@ fn complete_beacon(
 			}
 			BeaconInitialOpen::CommitmentRequested(mut pending) => {
 				trace.hashes += 1;
-				assert_initial_commitment(pending.transcript());
+				assert_initial_commitment(pending.transcript(), 43);
 				let actual = commitment_hash(pending.transcript_mut());
 				let matches = !matches!(failure, Some(ReceiveFailure::Hash))
 					&& &actual == pending.supplied_commitment();
@@ -627,6 +635,74 @@ fn every_response_authentication_failure_returns_the_retained_terminal_binding()
 }
 
 #[test]
+fn transcript_hash_failures_cannot_supply_placeholder_ad_or_establish_either_role() {
+	let state = server_ad_hash()
+		.resume(None)
+		.err()
+		.expect("Server AD hash failure must reject");
+	assert_eq!(state.last_key_id(), 42);
+	let ciphertext = [53; 99];
+	let (pending, _) = start(None).unwrap();
+	let hash =
+		registration::begin_response_authentication(pending, Some(response_packet(&ciphertext)))
+			.unwrap();
+	let verification = hash.resume(Some([53; 64])).unwrap();
+	let ad_hash = verification.resume(true).unwrap();
+	assert_eq!(
+		hash_parts(ad_hash.request()).concat(),
+		expected_preimage(43)
+	);
+	let aborted = ad_hash
+		.resume(None)
+		.err()
+		.expect("Beacon AD hash failure must abort");
+	assert_eq!(aborted.server_key_id(), 42);
+}
+
+#[test]
+fn owned_request_fields_preserve_attached_signatures_through_server_authentication() {
+	let (_, mut bytes) = start(None).unwrap();
+	// The deterministic verifier checks attached-message admission separately; signature bytes remain public transcript bytes.
+	bytes.prekey[0] = 0xa3;
+	bytes.one_time[63] = 0x7c;
+	bytes.pq[31] = 0x91;
+	let expected = [
+		&bytes.identity[..],
+		&bytes.prekey,
+		&bytes.one_time,
+		&bytes.pq,
+	]
+	.concat();
+	let accepted = authenticate(&bytes, None).unwrap();
+	// Drop the packet before agreement and AD construction to exercise owned retention.
+	drop(bytes);
+	let AgreementEffect::ServerComplete(agreement) = agreement(agreement::begin_server_agreement(
+		ServerState::new(42),
+		RegistrationStatus::Fresh,
+		accepted,
+	)) else {
+		panic!("agreement should succeed")
+	};
+	let pending = registration::begin_server_completion(
+		ServerState::new(42),
+		&pin(),
+		KeyIdAvailability::Available,
+		agreement,
+		b"application",
+	)
+	.unwrap();
+	let input = hash_parts(pending.request()).concat();
+	assert_eq!(&input[..1478], expected);
+	assert_ne!(input, expected_preimage(43));
+	let initial = pending.resume(Some(digest(&input))).unwrap();
+	let seal = initial
+		.resume(Some(InitialRatchetKdfResponse::from_bytes([1; 64])))
+		.unwrap();
+	let aead = seal.resume(Some(step_response())).unwrap();
+	assert_eq!(&aead.request().associated_data[87..], &digest(&input));
+}
+
+#[test]
 fn initial_open_admission_checks_the_complete_plaintext_and_publishes_its_actual_kernel() {
 	let ciphertext = server_ciphertext();
 	let mut valid = 43u64.to_le_bytes().to_vec();
@@ -700,25 +776,13 @@ fn initial_open_admission_checks_the_complete_plaintext_and_publishes_its_actual
 #[test]
 fn fixed_width_packet_admission_rejects_short_and_long_fields_before_verification() {
 	let (_, bytes) = start(None).unwrap();
-	let good = [
-		&bytes.identity,
-		&bytes.prekey,
-		&bytes.one_time,
-		&bytes.pq,
-		&bytes.mldsa,
-		&bytes.signature,
-	];
-	for field in 0..6 {
+	let good = [&bytes.identity, &bytes.prekey, &bytes.one_time, &bytes.pq];
+	for field in 0..4 {
 		for width in [0, good[field].len() - 1, good[field].len() + 1] {
 			let changed = vec![0; width];
 			let mut fields = good.map(|field| field.as_slice());
 			fields[field] = &changed;
-			assert!(
-				InitPacket::from_slices(
-					fields[0], fields[1], fields[2], fields[3], fields[4], fields[5]
-				)
-				.is_none()
-			);
+			assert!(InitPacket::from_slices(fields[0], fields[1], fields[2], fields[3]).is_none());
 		}
 	}
 	let good = [vec![11; 32], vec![25; 32], vec![33; 1088], vec![41; 3309]];

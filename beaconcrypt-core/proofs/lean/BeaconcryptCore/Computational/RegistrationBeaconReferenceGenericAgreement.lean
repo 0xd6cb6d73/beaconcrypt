@@ -104,7 +104,7 @@ noncomputable def stage (setup : Setup base KemSK)
     (authenticated : registration.AuthenticatedResponse) :
     StateT (Plain Auxiliary Private) ProbComp (RustM agreement.AgreementEffect) := do
   let pending ← simulateQ (prefixHandler setup trusted owner oneTime authenticated)
-    (PqxdhPhase2DhMetadata.prepare authenticated.pending.control () () () [])
+    (PqxdhPhase2DhMetadata.prepare (completedBinding := authenticated.binding) authenticated.control () () () [])
   match pending with
   | none => pure (.ok (RegistrationBeaconAgreementRoot.rejected authenticated))
   | some pending => simulateQ (family implementation) (RegistrationNativeBeaconRootSource.client authenticated pending)
@@ -125,7 +125,7 @@ theorem stage_project (setup : Setup base KemSK)
       (stage setup trusted owner oneTime implementation authenticated).run (dropCache before) := by
   have collected := OracleComp.map_run_simulateQ_eq_of_query_map_eq _ _ dropCache
     (prefix_query setup trusted owner oneTime authenticated)
-    (PqxdhPhase2DhMetadata.prepare authenticated.pending.control () () () []) before
+    (PqxdhPhase2DhMetadata.prepare (completedBinding := authenticated.binding) authenticated.control () () () []) before
   simp only [RegistrationNativeBeaconRootStage.stage, stage, StateT.run_bind, map_bind]
   rw [← collected, bind_map_left]
   apply bind_congr
@@ -140,7 +140,7 @@ theorem stage_native (setup : Setup base KemSK)
     (seed : PqxdhJointIdentity.IdentitySeed) (scalar : PqxdhJointGapDh.ScalarBytes)
     (owner : SelectedOwner mlSource) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (authenticated : registration.AuthenticatedResponse)
-    (coherent : authenticated.pending.control.expected_server_binding = authenticated.pending.binding.server_pin.binding)
+    (coherent : authenticated.control.expected_server_binding = authenticated.binding.server_pin.binding)
     (before : Plain Auxiliary Private) :
     Prod.map id Prod.snd <$>
       (stage setup trusted owner oneTime
@@ -162,7 +162,7 @@ theorem framed_collect (setup : Setup base KemSK)
     (owner : SelectedOwner mlSource) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (authenticated : registration.AuthenticatedResponse) (before : Plain Auxiliary Private) :
     (simulateQ (prefixHandler setup trusted owner oneTime authenticated)
-      (PqxdhPhase2DhMetadata.prepare authenticated.pending.control () () () [])).run before =
+      (PqxdhPhase2DhMetadata.prepare (completedBinding := authenticated.binding) authenticated.control () () () [])).run before =
       (fun result => (result.1, (before.1, result.2))) <$>
         (lower (Auxiliary := Auxiliary) setup trusted
           (RegistrationBeaconReferenceCompiler.trustedCollect setup owner oneTime authenticated)).run before.2 := by
@@ -173,7 +173,7 @@ theorem framed_collect (setup : Setup base KemSK)
         (RegistrationBeaconRootInterpreter.auxImpl (RegistrationBeaconReferenceCompiler.trustedBackend setup owner oneTime) authenticated)
         RegistrationBeaconReferenceCompiler.trustedVisit query))
     (prefixHandler setup trusted owner oneTime authenticated) embed
-    (fun _ _ => rfl) (PqxdhPhase2DhMetadata.prepare authenticated.pending.control () () () []) before.2
+    (fun _ _ => rfl) (PqxdhPhase2DhMetadata.prepare (completedBinding := authenticated.binding) authenticated.control () () () []) before.2
   rw [← RegistrationBeaconReferenceGenericStage.lower_program] at framed
   simpa only [RegistrationBeaconReferenceCompiler.trustedCollect, embed, Prod.map_def, id_eq] using framed.symm
 

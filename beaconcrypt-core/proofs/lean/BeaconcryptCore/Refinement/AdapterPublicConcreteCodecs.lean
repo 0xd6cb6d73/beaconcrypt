@@ -48,7 +48,7 @@ def initPacket (input : Slice U8) : RustT m (Option registration.InitPacket) := 
   match parsed with
   | .none => pure .none
   | .some value => liftRust (registration.InitPacket.from_slices value.identity_key value.pre_key
-      value.one_time_key value.pq_key value.mldsa_public_key value.signature)
+      value.one_time_key value.pq_key)
 
 attribute [local irreducible] beaconcrypt_parse.extraction_decode_init
 
@@ -61,7 +61,7 @@ theorem init_packet (input : Slice U8) :
     match parsed with
     | .none => (pure .none : RustT m (Option registration.InitPacket))
     | .some value => liftRust (registration.InitPacket.from_slices value.identity_key value.pre_key
-        value.one_time_key value.pq_key value.mldsa_public_key value.signature)).run = _
+        value.one_time_key value.pq_key)).run = _
   simp only [RustT.run_bind, RustT.run_liftRust, pure_bind]
   cases parsedRun : @beaconcrypt_parse.extraction_decode_init RegistrationNativeConcreteCodec.decoderOperations input with
   | fail error | div => rfl

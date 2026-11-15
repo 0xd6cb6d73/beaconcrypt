@@ -26,13 +26,13 @@ def Signed (key : X25519PublicKey) (state : registration.BeaconInitState) : Prop
   (absBytes state.one_time_key).drop 64 = oneTimeMessage key
 
 /-- An actual successful writer invocation and the exact signed one-time payload it received. -/
-def PublishedKey (encode : registration.SignedInitView → core.option.Option Encoded)
+def PublishedKey (encode : registration.InitView → core.option.Option Encoded)
     (key : X25519PublicKey) (published : registration.PublishedBeaconInit Encoded) : Prop :=
   ∃ view, encode view = .Some published.encoded ∧
     (absBytes view.fields.one_time_key).drop 64 = oneTimeMessage key
 
 attribute [local irreducible] RegistrationBeaconInitExecutor.begin
-  registration.BeaconInitHash.resume registration.BeaconFingerprint.resume
+  registration.BeaconInitHash.resume
 
 private theorem continue_support {Input : Type} (action : RustM Input)
     (next : Input → OracleComp Spec (RustM (Result Encoded)))
@@ -92,8 +92,8 @@ private theorem ed_started (key : X25519PublicKey)
 
 private theorem ed_signed (key : X25519PublicKey)
     (pending : registration.BeaconEd25519Signing) (reply : RegistrationSigningShared.SignReply)
-    (next : registration.BeaconFingerprint) (prior : Started key pending)
-    (actual : pending.resume reply = .ok (.FingerprintRequested next)) : Signed key next.state := by
+    (next : registration.BeaconInitHash) (prior : Started key pending)
+    (actual : pending.resume reply = .ok (.HashRequested next)) : Signed key next.state := by
   obtain ⟨effect, resumed, progress⟩ := RegistrationSigning.ed_resume_refines pending reply
   have same := RustM.ok.inj (resumed.symm.trans actual)
   subst effect
@@ -103,7 +103,7 @@ private theorem ed_signed (key : X25519PublicKey)
   have signed := congrArg (fun state : registration.BeaconInitState => (absBytes state.one_time_key).drop 64) kept
   exact signed.trans original
 
-private theorem ready_key (encode : registration.SignedInitView → core.option.Option Encoded)
+private theorem ready_key (encode : registration.InitView → core.option.Option Encoded)
     (key : X25519PublicKey) (pending : registration.BeaconInitReady)
     (published : registration.PublishedBeaconInit Encoded) (prior : Signed key pending.state)
     (supported : .ok (.Ok published) ∈ support (ready encode pending)) : PublishedKey encode key published := by
@@ -115,35 +115,20 @@ private theorem ready_key (encode : registration.SignedInitView → core.option.
     rfl
   simp only [support_pure, Set.mem_singleton_iff] at returned
   cases encoded : encode view with
-  | none => simp [registration.BeaconInitReady.publish, encoded] at returned
-  | some bytes =>
-      simp only [registration.BeaconInitReady.publish, encoded, RustM.ok.injEq,
-        core.result.Result.Ok.injEq] at returned
+  | none =>
+      rw [encoded,RegistrationSigningContinuations.failed_publication_preserves_fresh] at returned
       cases returned
-      exact ⟨view, encoded, by simpa only [fields, Signed] using prior⟩
-
-private theorem signing_key (encode : registration.SignedInitView → core.option.Option Encoded)
-    (key : X25519PublicKey) (payload : MldsaTranscriptAuth.Payload) (digest : CtxRomAuth.CtxDigest)
-    (pending : registration.BeaconMldsaSigning) (published : registration.PublishedBeaconInit Encoded)
-    (prior : Signed key pending.state)
-    (supported : .ok (.Ok published) ∈ support (fromSigning encode payload digest pending)) :
-    PublishedKey encode key published := by
-  obtain ⟨request, _, called⟩ := continue_support pending.request _ published supported
-  simp only [mem_support_bind_iff] at called
-  obtain ⟨signature, _, continued⟩ := called
-  obtain ⟨effect, resumed, continued⟩ := continue_support (pending.resume signature) _ published continued
-  cases signature with
-  | none => cases resumed; simp at continued
-  | some signature =>
-      obtain ⟨actual, actualRun, facts⟩ := RegistrationSigningContinuations.beacon_mldsa_signature_exact pending signature
-      have same := RustM.ok.inj (actualRun.symm.trans resumed)
+  | some bytes =>
+      obtain ⟨actual,ran,_control,_pin,_hash,_identity,_pre,_one,_pq,output⟩ :=
+        RegistrationSigningContinuations.publication_retains_exact_request pending bytes
+      have same : actual = published := by
+        have current := returned
+        rw [encoded] at current
+        simpa using ran.symm.trans current.symm
       subst actual
-      cases effect with
-      | Ready selected =>
-          exact ready_key encode key selected published (facts.2.1 ▸ prior) continued
-      | _ => simp at continued
+      exact ⟨view,output ▸ encoded,by simpa only [fields,Signed] using prior⟩
 
-private theorem hash_key (encode : registration.SignedInitView → core.option.Option Encoded)
+private theorem hash_key (encode : registration.InitView → core.option.Option Encoded)
     (key : X25519PublicKey) (pending : registration.BeaconInitHash)
     (published : registration.PublishedBeaconInit Encoded) (prior : Signed key pending.state)
     (supported : .ok (.Ok published) ∈ support (fromHash encode pending)) : PublishedKey encode key published := by
@@ -156,24 +141,9 @@ private theorem hash_key (encode : registration.SignedInitView → core.option.O
     pending (RegistrationAuthenticationShared.digestArray digest)
   rw [actual] at resumed
   cases resumed
-  exact signing_key encode key _ digest next published (retained ▸ prior) continued
+  exact ready_key encode key next published (retained ▸ prior) continued
 
-private theorem fingerprint_key (encode : registration.SignedInitView → core.option.Option Encoded)
-    (key : X25519PublicKey) (pending : registration.BeaconFingerprint)
-    (published : registration.PublishedBeaconInit Encoded) (prior : Signed key pending.state)
-    (supported : .ok (.Ok published) ∈ support (fromFingerprint encode pending)) : PublishedKey encode key published := by
-  obtain ⟨request, _, called⟩ := continue_support pending.request _ published supported
-  simp only [mem_support_bind_iff] at called
-  obtain ⟨digest, _, continued⟩ := called
-  obtain ⟨effect, resumed, continued⟩ := continue_support
-    (pending.resume (.Some (RegistrationAuthenticationShared.digestArray digest))) _ published continued
-  obtain ⟨next, actual, retained, _⟩ := RegistrationSigningContinuations.beacon_fingerprint_some_exact
-    pending (RegistrationAuthenticationShared.digestArray digest)
-  rw [actual] at resumed
-  cases resumed
-  exact hash_key encode key next published (retained ▸ prior) continued
-
-private theorem ed_key (encode : registration.SignedInitView → core.option.Option Encoded)
+private theorem ed_key (encode : registration.InitView → core.option.Option Encoded)
     (key : X25519PublicKey) (pending : registration.BeaconEd25519Signing)
     (published : registration.PublishedBeaconInit Encoded) (prior : Started key pending)
     (supported : .ok (.Ok published) ∈ support (fromEd encode pending)) : PublishedKey encode key published := by
@@ -188,26 +158,26 @@ private theorem ed_key (encode : registration.SignedInitView → core.option.Opt
     | Ed25519SigningRequested next =>
         rw [actual] at continued
         exact ed_key encode key next published (ed_started key pending reply next prior actual) continued
-    | FingerprintRequested next =>
+    | HashRequested next =>
         rw [actual] at continued
-        exact fingerprint_key encode key next published (ed_signed key pending reply next prior actual) continued
+        exact hash_key encode key next published (ed_signed key pending reply next prior actual) continued
     | _ => rw [actual] at continued; simp at continued
 termination_by edRank pending
 decreasing_by exact ed_rank pending reply next actual
 
 /-- Every successful actual outgoing controller encoded its original one-time input after the real Ed3, fingerprint, Init hash and ML-signing stages. -/
-theorem begin_key (encode : registration.SignedInitView → core.option.Option Encoded)
+theorem begin_key (encode : registration.InitView → core.option.Option Encoded)
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize)
+    (pin : session.ServerAuthenticationPin)
     (published : registration.PublishedBeaconInit Encoded)
-    (supported : .ok (.Ok published) ∈ support (begin encode control inputs coins pin mldsa)) :
+    (supported : .ok (.Ok published) ∈ support (begin encode control inputs coins pin)) :
     PublishedKey encode (PqxdhPhase2InputBytes.word coins.one_time_public_key) published := by
   unfold RegistrationBeaconInitExecutor.begin at supported
   obtain ⟨effect, actual, continued⟩ := continue_support
-    (registration.begin_beacon_init control inputs coins pin mldsa) _ published supported
+    (registration.begin_beacon_init control inputs coins pin) _ published supported
   obtain ⟨started, startedRun, validated, _, _⟩ := PqxdhSurface.beacon_start_validates control inputs coins
   obtain ⟨other, otherRun, beginRun⟩ := RegistrationSigningContinuations.begin_beacon_init_exact
-    control inputs coins pin mldsa
+    control inputs coins pin
   have same := RustM.ok.inj (startedRun.symm.trans otherRun)
   subst other
   rw [beginRun] at actual
@@ -219,19 +189,19 @@ theorem begin_key (encode : registration.SignedInitView → core.option.Option E
 
 /-- Stateful interpretation retains the same successful writer receipt without any primitive-correctness or signing-origin assumption. -/
 theorem simulated_key {State : Type} (implementation : QueryImpl Spec (StateT State ProbComp))
-    (encode : registration.SignedInitView → core.option.Option Encoded)
+    (encode : registration.InitView → core.option.Option Encoded)
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize)
+    (pin : session.ServerAuthenticationPin)
     (published : registration.PublishedBeaconInit Encoded) (before after : State)
     (supported : (.ok (.Ok published), after) ∈ support
-      ((simulateQ implementation (begin encode control inputs coins pin mldsa)).run before)) :
+      ((simulateQ implementation (begin encode control inputs coins pin)).run before)) :
     PublishedKey encode (PqxdhPhase2InputBytes.word coins.one_time_public_key) published := by
-  apply begin_key encode control inputs coins pin mldsa published
-  apply OracleComp.support_simulateQ_run'_subset implementation (begin encode control inputs coins pin mldsa) before
+  apply begin_key encode control inputs coins pin published
+  apply OracleComp.support_simulateQ_run'_subset implementation (begin encode control inputs coins pin) before
   rw [StateT.run'_eq, support_map]
   exact Set.mem_image_of_mem Prod.fst supported
 
-/-- Actual successful publication and the explicit native six-field readback contract recover the same generated PQ field from public bytes. -/
+/-- Actual successful publication and the explicit native four-field readback contract recover the same generated PQ field from public bytes. -/
 theorem decoded_key (wire : RegistrationNativeWire.Wire) (readback : RegistrationNativeWire.InitReadBack wire)
     (key : X25519PublicKey) (published : registration.PublishedBeaconInit Pqxdh.Bytes)
     (receipt : PublishedKey wire.encodeInit key published) :

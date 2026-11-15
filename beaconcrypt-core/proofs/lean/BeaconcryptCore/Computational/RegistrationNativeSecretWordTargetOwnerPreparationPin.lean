@@ -49,7 +49,7 @@ theorem prepared (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire)
   let implementation := localImpl (n := n) setup wire route sign input inside provider outer false
   obtain ⟨pending, oneTime, aborted, authenticated, middle, phase, _moved, checked, agreed⟩ :=
     RegistrationNativeSecretWordTargetOwnerOrigin.preparation implementation setup source (some packet) owner afterOwner ready before after supported
-  obtain ⟨supplied, suppliedEq, authenticatedEq⟩ :=
+  obtain ⟨supplied, suppliedEq, _digest, _completed, _completedRun, authenticatedEq⟩ :=
     RegistrationNativeSecretWordTargetOwnerAuthSource.packet implementation setup source pending (some packet) authenticated before middle checked
   have packetEq : packet = supplied := Option.some.inj suppliedEq
   subst supplied
@@ -57,7 +57,7 @@ theorem prepared (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire)
     RegistrationNativeSecretWordTargetOwnerOrigin.agreement implementation setup owner oneTime authenticated ready middle after agreed
   have fields := RegistrationNativeSecretWordTargetOwnerCollectedAtom.collect setup wire route sign input inside selected pairs publicKey challenge outer
     owner oneTime authenticated middle reached collected handle (by rw [authenticatedEq]; exact ciphertext) called
-  have collectedPin := (PqxdhPhase2DhMetadata.admitted_fields authenticated.pending.control
+  have collectedPin := (PqxdhPhase2DhMetadata.admitted_fields (completedBinding := authenticated.binding) authenticated.control
     collected.collected.plain collected.metadata fields.2.2.2.2.2).1
   rw [authenticatedEq] at collectedPin
   rw [pendingPin pending oneTime phase] at collectedPin

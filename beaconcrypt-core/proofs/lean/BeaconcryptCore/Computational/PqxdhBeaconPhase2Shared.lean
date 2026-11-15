@@ -1,7 +1,7 @@
 import BeaconcryptCore.Computational.PqxdhBeaconPhase2Bounds
 
 /-!
-Private Phase2 requests retain an opaque decapsulation result before the original ordered DH callbacks. The pending root carries those actual DH values and the opaque shared-secret handle; it never publishes a byte realization or a dummy root. Core control and associated data depend only on the original identity and DH checks. The same native tail starts after the private root callback, where the actual candidate root bytes have already been cleared.
+Private Phase2 requests retain an opaque decapsulation result before the original ordered DH callbacks. The pending root carries those actual DH values and the opaque shared-secret handle; it never publishes a byte realization or a dummy root. The classical agreement control depends on the original identity and DH checks. Complete AD151 comes only from the explicitly supplied completed registration binding; this model does not construct it from those classical checks. The same native tail starts after the private root callback, where the actual candidate root bytes have already been cleared.
 
 A fixed handle interpretation appears only in the mathematical realization law. It is not available to a public adversary or a selected-key reduction. Concrete challenge routing and cryptographic bounds remain separate; the interface must preserve the full callback state and every optional rejection. The typed codec, native primitive and physical erasure contracts from the original Phase2 adapter remain explicit. Only live state and its authorized compromise interfaces are in scope; storage, snapshots and restoration are excluded.
 -/
@@ -12,6 +12,7 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 open BeaconcryptCore.Refinement
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhBeaconPhase2Shared
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhBeaconPhase2Preparation (Bytes Word32 Ciphertext State)
 open PqxdhRefinement
 
@@ -43,19 +44,18 @@ def concreteInputs {Response Shared : Type} (interpret : Shared → Word32) (inp
 structure Metadata where
   binding : pqxdh.ServerBinding
   assigned : Std.U64
-  associatedData : Std.Array Std.U8 281#usize
+  completed : session.CompletedRegistrationBinding
+
+def Metadata.associatedData (metadata : Metadata) : Std.Array Std.U8 151#usize :=
+  metadata.completed.associated_data
 
 def candidateMetadata (candidate : pqxdh.BeaconRegistrationCandidate) : Metadata :=
-  ⟨candidate.server_binding, candidate.assigned_key_id, candidate.associated_data⟩
+  ⟨candidate.server_binding, candidate.assigned_key_id, completedBinding⟩
 
 def optionalMetadata (result : core.result.Result pqxdh.BeaconRegistrationCandidate pqxdh.RegistrationError) : Option Metadata :=
   match result with
   | .Err _ => none
-  | .Ok candidate => some (candidateMetadata candidate)
-
-noncomputable def associatedData (control : pqxdh.BeaconInitSent) : Std.Array Std.U8 281#usize :=
-  (BeaconcryptCore.PanicFreedom.build_associated_data_ok control.expected_server_binding.identity_public_key
-    control.beacon_identity_public_key).choose
+  | .Ok candidate => some (candidateMetadata (completedBinding := completedBinding) candidate)
 
 def nonzero {Shared : Type} (secrets : Secrets Shared) : Prop :=
   Pqxdh.dhNonZero (absBytes secrets.dh1, absBytes secrets.dh2, absBytes secrets.dh3, absBytes secrets.dh4)
@@ -65,24 +65,21 @@ noncomputable def admitted {Response Shared : Type} (control : pqxdh.BeaconInitS
   classical
   exact if absBytes control.expected_server_binding.identity_public_key = absBytes inputs.serverIdentity then
     if nonzero inputs.secrets then
-      some ⟨control.expected_server_binding, inputs.assigned, associatedData control⟩
+      some ⟨control.expected_server_binding, inputs.assigned, completedBinding⟩
     else none
   else none
 
-/-- Actual core acceptance and metadata depend on identity and the four DH values, independently of the opaque shared-secret interpretation. -/
+/-- Classical core agreement metadata is independent of the opaque shared-secret interpretation. The supplied completed binding is retained unchanged; this equation does not establish its authentication or hash provenance. -/
 theorem admitted_exact {Response Shared : Type} (interpret : Shared → Word32)
     (control : pqxdh.BeaconInitSent) (inputs : Inputs Response Shared) :
-    optionalMetadata (PqxdhBeaconPhase2Preparation.normalPrepare control (concreteInputs interpret inputs).finishInputs) =
-      admitted control inputs := by
+    optionalMetadata (completedBinding := completedBinding) (PqxdhBeaconPhase2Preparation.normalPrepare control (concreteInputs interpret inputs).finishInputs) =
+      admitted (completedBinding := completedBinding) control inputs := by
   classical
   have actual := PqxdhBeaconPhase2Preparation.normalPrepare_exact control (concreteInputs interpret inputs).finishInputs
   by_cases identity : absBytes control.expected_server_binding.identity_public_key = absBytes inputs.serverIdentity
   · by_cases dh : nonzero inputs.secrets
     · obtain ⟨root, rootEq, _⟩ := (build_root_key_input_abs (concreteSecrets interpret inputs.secrets)).1 dh
-      have adEq : pqxdh.build_associated_data control.expected_server_binding.identity_public_key
-          control.beacon_identity_public_key = ok (associatedData control) :=
-        (BeaconcryptCore.PanicFreedom.build_associated_data_ok _ _).choose_spec
-      simp [concreteInputs, pqxdh.beacon_prepare_finish, array_eq_abs, identity, rootEq, adEq] at actual
+      simp [concreteInputs, pqxdh.beacon_prepare_finish, array_eq_abs, identity, rootEq] at actual
       simp only [concreteInputs, ← actual, optionalMetadata, candidateMetadata, admitted, identity, dh, ite_true]
     · have rootEq := (build_root_key_input_abs (concreteSecrets interpret inputs.secrets)).2 dh
       simp [concreteInputs, pqxdh.beacon_prepare_finish, array_eq_abs, identity, rootEq] at actual
@@ -187,23 +184,23 @@ def prepared {Response Shared : Type} (inputs : Inputs Response Shared) (metadat
 def ReadyRel {Response Shared : Type} (interpret : Shared → Word32)
     (native : PqxdhBeaconPhase2Preparation.Prepared Response) (handles : Prepared Response Shared) : Prop :=
   native.response = handles.response ∧ native.ciphertext = handles.ciphertext ∧ native.ephemeral = handles.ephemeral ∧
-    candidateMetadata native.candidate = handles.metadata ∧
+    candidateMetadata (completedBinding := native.binding) native.candidate = handles.metadata ∧
     pqxdh.build_root_key_input (concreteSecrets interpret handles.root) = ok (.Ok native.candidate.root_key_input)
 
 /-- The actual successful core result internally supplies the full pending-root relation. -/
 theorem prepared_related {Response Shared : Type} (interpret : Shared → Word32)
     (control : pqxdh.BeaconInitSent) (inputs : Inputs Response Shared) (candidate : pqxdh.BeaconRegistrationCandidate)
     (actual : PqxdhBeaconPhase2Preparation.normalPrepare control (concreteInputs interpret inputs).finishInputs = .Ok candidate) :
-    ReadyRel interpret ⟨inputs.response, inputs.ciphertext, inputs.ephemeral, candidate⟩
-      (prepared inputs (candidateMetadata candidate)) := by
+    ReadyRel interpret ⟨inputs.response, inputs.ciphertext, inputs.ephemeral, candidate, completedBinding⟩
+      (prepared inputs (candidateMetadata (completedBinding := completedBinding) candidate)) := by
   have shape := PqxdhSurface.beacon_prepare_finish_success_shape control (concreteInputs interpret inputs).finishInputs
     candidate ((PqxdhBeaconPhase2Preparation.normalPrepare_exact _ _).trans (congrArg ok actual))
-  exact ⟨rfl, rfl, rfl, rfl, shape.2.2.2.1⟩
+  exact ⟨rfl, rfl, rfl, rfl, shape.2.2.2⟩
 
 /-- The original admission runs before temporary-secret erasure on either outcome; only copied root coordinates enter the continuation. -/
 noncomputable def afterInputs {I D K X Response Shared : Type} (control : pqxdh.BeaconInitSent)
     (inputs : Inputs Response Shared) : OracleComp (Spec I D K X Response Shared) (Option (Prepared Response Shared)) := do
-  let metadata := admitted control inputs
+  let metadata := admitted (completedBinding := completedBinding) control inputs
   let _ ← (Spec I D K X Response Shared).query (.eraseShared inputs.secrets)
   pure (metadata.map (prepared inputs))
 
@@ -213,7 +210,7 @@ noncomputable def prepare {I D K X Response Shared : Type} (control : pqxdh.Beac
   let inputs ← collect identity prekey oneTime kem raw
   match inputs with
   | none => pure none
-  | some inputs => afterInputs control inputs
+  | some inputs => afterInputs (completedBinding := completedBinding) control inputs
 
 /-- Both optional preparation outcomes continue from the same erasure poststate; success supplies the derived full root relation. -/
 theorem afterInputs_continuation {I D K X Response Shared Result : Type} {m : Type → Type}
@@ -225,21 +222,21 @@ theorem afterInputs_continuation {I D K X Response Shared Result : Type} {m : Ty
     (nextHandles : Option (Prepared Response Shared) → m Result)
     (rejected : nextNative none = nextHandles none)
     (accepted : ∀ original pending, ReadyRel interpret original pending → nextNative (some original) = nextHandles (some pending)) :
-    (simulateQ native (PqxdhBeaconPhase2Preparation.afterInputs control (concreteInputs interpret inputs)) >>= nextNative) =
-      (simulateQ handles (afterInputs control inputs) >>= nextHandles) := by
+    (simulateQ native (PqxdhBeaconPhase2Preparation.afterInputs (completedBinding := completedBinding) control (concreteInputs interpret inputs)) >>= nextNative) =
+      (simulateQ handles (afterInputs (completedBinding := completedBinding) control inputs) >>= nextHandles) := by
   simp only [PqxdhBeaconPhase2Preparation.afterInputs, afterInputs, simulateQ_bind,
     simulateQ_spec_query, simulateQ_pure, bind_assoc, pure_bind, concreteInputs]
   rw [calls.eraseShared]
   apply bind_congr
   intro erased
-  have metadataEq := (admitted_exact interpret control inputs).symm
+  have metadataEq := (admitted_exact (completedBinding := completedBinding) interpret control inputs).symm
   cases actual : PqxdhBeaconPhase2Preparation.normalPrepare control (concreteInputs interpret inputs).finishInputs with
   | Err error =>
       simp only [actual, optionalMetadata] at metadataEq
       simp only [concreteInputs] at actual
       simpa only [actual, metadataEq, Option.map_none] using rejected
   | Ok candidate =>
-      have related := prepared_related interpret control inputs candidate actual
+      have related := prepared_related (completedBinding := completedBinding) interpret control inputs candidate actual
       simp only [actual, optionalMetadata] at metadataEq
       simp only [concreteInputs] at actual
       simpa only [actual, metadataEq, Option.map_some] using accepted _ _ related
@@ -254,8 +251,8 @@ theorem prepare_continuation {I D K X Response Shared Result : Type} {m : Type �
     (nextHandles : Option (Prepared Response Shared) → m Result)
     (rejected : nextNative none = nextHandles none)
     (accepted : ∀ original pending, ReadyRel interpret original pending → nextNative (some original) = nextHandles (some pending)) :
-    (simulateQ native (PqxdhBeaconPhase2Preparation.prepare control identity prekey oneTime kem raw) >>= nextNative) =
-      (simulateQ handles (prepare control identity prekey oneTime kem raw) >>= nextHandles) := by
+    (simulateQ native (PqxdhBeaconPhase2Preparation.prepare (completedBinding := completedBinding) control identity prekey oneTime kem raw) >>= nextNative) =
+      (simulateQ handles (prepare (completedBinding := completedBinding) control identity prekey oneTime kem raw) >>= nextHandles) := by
   simp only [PqxdhBeaconPhase2Preparation.prepare, prepare, simulateQ_bind, bind_assoc]
   rw [collect_realization interpret native handles calls, bind_map_left]
   apply bind_congr
@@ -264,12 +261,12 @@ theorem prepare_continuation {I D K X Response Shared Result : Type} {m : Type �
   | none => simpa only [Option.map_none, simulateQ_pure, pure_bind] using rejected
   | some inputs =>
       simpa only [Option.map_some] using
-        afterInputs_continuation interpret native handles calls control inputs nextNative nextHandles rejected accepted
+        afterInputs_continuation (completedBinding := completedBinding) interpret native handles calls control inputs nextNative nextHandles rejected accepted
 
 /-- This is the actual candidate representation after root-input clearing, containing no opaque handle or recovered shared bytes. -/
 def clearedMetadata (metadata : Metadata) : pqxdh.BeaconRegistrationCandidate :=
   ⟨metadata.binding, metadata.assigned,
-    ⟨⟨List.replicate 192 0#u8, by simp only [List.length_replicate]; rfl⟩⟩, metadata.associatedData⟩
+    ⟨⟨List.replicate 192 0#u8, by simp only [List.length_replicate]; rfl⟩⟩⟩
 
 /-- Once root processing has finished, the source candidate is exactly the rootless metadata with its original input bytes cleared. -/
 theorem cleared_related {Response Shared : Type} (interpret : Shared → Word32)
@@ -281,7 +278,7 @@ theorem cleared_related {Response Shared : Type} (interpret : Shared → Word32)
 
 inductive AuxQuery (Response Shared : Type) where
   | root : Secrets Shared → AuxQuery Response Shared
-  | initial : SymmetricRatchetKdfRequest → AuxQuery Response Shared
+  | initial : InitialRatchetKdfRequest → AuxQuery Response Shared
   | application : Response → AuxQuery Response Shared
 
 abbrev AuxSpec (Response Shared : Type) : OracleSpec (AuxQuery Response Shared)
@@ -306,8 +303,8 @@ noncomputable def afterRoot {Response Shared : Type} (decode : RawCtxReceive.Fra
   | none => pure none
   | some raw => do
       let result ← simulateQ rawLift (simulateQ RawCtxSourceOpen.nativeAdapter
-        ((RawCtxWholeOwner.rawReceive decode raw).run (PqxdhBeaconPhase2Publication.localOwner (clearedMetadata pending.metadata) kernel)))
-      pure (PqxdhBeaconPhase2Publication.afterOpening (clearedMetadata pending.metadata) result.2.owner.kernel result.1)
+        ((RawCtxWholeOwner.rawReceive decode raw).run (PqxdhBeaconPhase2Publication.localOwner (clearedMetadata pending.metadata) pending.metadata.associatedData kernel)))
+      pure (PqxdhBeaconPhase2Publication.afterOpening (clearedMetadata pending.metadata) pending.metadata.associatedData result.2.owner.kernel result.1)
 
 /-- The private root callback consumes copied coordinates once, without repeating decapsulation or exposing the opaque shared handle. -/
 noncomputable def tail {Response Shared : Type} (decode : RawCtxReceive.FrameDecoder)
@@ -357,13 +354,17 @@ theorem afterRoot_realization {Response Shared : Type} {m : Type → Type} [Mona
       simulateQ native (PqxdhBeaconPhase2Publication.nativeTailAdapter (.inr query)) = native (.inr query) :=
     simulateQ_spec_query native (.inr query)
   have responseEq : original.response = pending.response := related.1
+  have completedEq : original.binding = pending.metadata.completed :=
+    congrArg Metadata.completed related.2.2.2.1
+  have adEq : original.binding.associated_data = pending.metadata.associatedData :=
+    congrArg session.CompletedRegistrationBinding.associated_data completedEq
   have applicationEq : native (.inr (.application original.response)) = handles (.inr (.application pending.response)) := by
     rw [← responseEq]
     exact calls.application _
 
   unfold PqxdhBeaconPhase2Publication.afterRoot PqxdhBeaconPhase2Publication.initialRun afterRoot
   simp only [bind_assoc, pure_bind, simulateQ_bind, simulateQ_spec_query, auxiliary,
-    calls.initial, applicationEq, cleared_related interpret original pending related]
+    calls.initial, applicationEq, adEq, cleared_related interpret original pending related]
   apply bind_congr
   intro response
   apply bind_congr
@@ -411,7 +412,7 @@ noncomputable def owner {I D K X Response Shared : Type} (decode : RawCtxReceive
     (raw : Bytes) (state : State I D K) : OracleComp (FullSpec I D K X Response Shared) (Option Bytes × State I D K) :=
   match state.beacon.phase with
   | .initSent control prekey oneTime kem => do
-      let prepared ← simulateQ preLift (prepare control state.beacon.identity prekey oneTime kem raw)
+      let prepared ← simulateQ preLift (prepare (completedBinding := completedBinding) control state.beacon.identity prekey oneTime kem raw)
       match prepared with
       | none => pure (PqxdhBeaconPhase2Publication.finish control state none)
       | some prepared => do
@@ -433,8 +434,8 @@ theorem owner_realization {I D K X Response Shared : Type} {m : Type → Type} [
     (native : QueryImpl (PqxdhBeaconPhase2Publication.NativeSpec I D K X Response) m)
     (handles : QueryImpl (FullSpec I D K X Response Shared) m) (calls : FullCalls interpret native handles)
     (decode : RawCtxReceive.FrameDecoder) (raw : Bytes) (state : State I D K) :
-    simulateQ native (PqxdhBeaconPhase2Publication.nativeOwner decode raw state) =
-      simulateQ handles (owner decode raw state) := by
+    simulateQ native (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw state) =
+      simulateQ handles (owner (completedBinding := completedBinding) decode raw state) := by
   have nPre : (native ∘ₛ PqxdhBeaconPhase2Publication.nativeAdapter) ∘ₛ PqxdhBeaconPhase2Publication.preLift =
       fun query => native (.inl query) := by
     funext query
@@ -463,7 +464,7 @@ theorem owner_realization {I D K X Response Shared : Type} {m : Type → Type} [
   | initSent control prekey oneTime kem =>
       simp only [PqxdhBeaconPhase2Publication.owner, owner, active, simulateQ_bind,
         ← QueryImpl.simulateQ_compose, nPre, hPre]
-      apply prepare_continuation interpret _ _ calls.preparation control state.beacon.identity prekey oneTime kem raw
+      apply prepare_continuation (completedBinding := completedBinding) interpret _ _ calls.preparation control state.beacon.identity prekey oneTime kem raw
       · simp only [simulateQ_pure]
       · intro original pending related
         simp only [simulateQ_bind, simulateQ_pure, ← QueryImpl.simulateQ_compose, nTail, hTail]
@@ -481,9 +482,9 @@ theorem owner_continuation {I D K X Response Shared Auxiliary Result : Type}
     (calls : FullCalls interpret native handles) (decode : RawCtxReceive.FrameDecoder)
     (raw : Bytes) (state : State I D K) (auxiliary : Auxiliary)
     (next : (Option Bytes × State I D K) × Auxiliary → ProbComp Result) :
-    (simulateQ native (PqxdhBeaconPhase2Publication.nativeOwner decode raw state)).run auxiliary >>= next =
-      (simulateQ handles (owner decode raw state)).run auxiliary >>= next := by
-  rw [owner_realization interpret native handles calls]
+    (simulateQ native (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw state)).run auxiliary >>= next =
+      (simulateQ handles (owner (completedBinding := completedBinding) decode raw state)).run auxiliary >>= next := by
+  rw [owner_realization (completedBinding := completedBinding) interpret native handles calls]
 
 /-- Exact program equality transfers every underlying selective query budget without discarding callback effects or recomputation work. -/
 theorem owner_query_bounds {I D K X Response Shared Auxiliary ι : Type} {spec : OracleSpec ι}
@@ -493,9 +494,9 @@ theorem owner_query_bounds {I D K X Response Shared Auxiliary ι : Type} {spec :
     (calls : FullCalls interpret native handles) (decode : RawCtxReceive.FrameDecoder)
     (raw : Bytes) (state : State I D K) (auxiliary : Auxiliary)
     (predicate : spec.Domain → Prop) [DecidablePred predicate] (budget : Nat) :
-    ((simulateQ native (PqxdhBeaconPhase2Publication.nativeOwner decode raw state)).run auxiliary).IsQueryBoundP predicate budget ↔
-      ((simulateQ handles (owner decode raw state)).run auxiliary).IsQueryBoundP predicate budget := by
-  rw [owner_realization interpret native handles calls]
+    ((simulateQ native (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw state)).run auxiliary).IsQueryBoundP predicate budget ↔
+      ((simulateQ handles (owner (completedBinding := completedBinding) decode raw state)).run auxiliary).IsQueryBoundP predicate budget := by
+  rw [owner_realization (completedBinding := completedBinding) interpret native handles calls]
 
 /-- Successful opaque-shared execution derives the original sequence-one gate, binding length and exact native kernel publication from the same supported run. -/
 theorem owner_success {I D K X Response Shared Auxiliary : Type}
@@ -504,11 +505,11 @@ theorem owner_success {I D K X Response Shared Auxiliary : Type}
     (handles : QueryImpl (FullSpec I D K X Response Shared) (StateT Auxiliary ProbComp))
     (calls : FullCalls interpret native handles) (decode : RawCtxReceive.FrameDecoder)
     (raw plaintext : Bytes) (state next : State I D K) (auxiliary final : Auxiliary)
-    (supported : ((some plaintext, next), final) ∈ support ((simulateQ handles (owner decode raw state)).run auxiliary)) :
+    (supported : ((some plaintext, next), final) ∈ support ((simulateQ handles (owner (completedBinding := completedBinding) decode raw state)).run auxiliary)) :
     ∃ staged, staged.opened.sequence = 1#u64 ∧ 8 < staged.opened.plaintext.length ∧
       PqxdhBeaconPhase2Publication.publish state staged = (plaintext, next) := by
-  rw [← owner_realization interpret native handles calls] at supported
-  exact PqxdhBeaconPhase2Publication.native_success native decode raw plaintext state next auxiliary final supported
+  rw [← owner_realization (completedBinding := completedBinding) interpret native handles calls] at supported
+  exact PqxdhBeaconPhase2Publication.native_success (completedBinding := completedBinding) native decode raw plaintext state next auxiliary final supported
 
 /-- Failed active execution retains the same terminal abort and complete primitive effects; inactive execution changes neither state. -/
 theorem owner_failure {I D K X Response Shared Auxiliary : Type}
@@ -517,12 +518,66 @@ theorem owner_failure {I D K X Response Shared Auxiliary : Type}
     (handles : QueryImpl (FullSpec I D K X Response Shared) (StateT Auxiliary ProbComp))
     (calls : FullCalls interpret native handles) (decode : RawCtxReceive.FrameDecoder)
     (raw : Bytes) (state next : State I D K) (auxiliary final : Auxiliary)
-    (supported : ((none, next), final) ∈ support ((simulateQ handles (owner decode raw state)).run auxiliary)) :
+    (supported : ((none, next), final) ∈ support ((simulateQ handles (owner (completedBinding := completedBinding) decode raw state)).run auxiliary)) :
     match state.beacon.phase with
     | .initSent control _ _ _ => next = PqxdhBeaconPhase2Preparation.abort control state
     | _ => next = state ∧ final = auxiliary := by
-  rw [← owner_realization interpret native handles calls] at supported
-  exact PqxdhBeaconPhase2Publication.native_failure native decode raw state next auxiliary final supported
+  rw [← owner_realization (completedBinding := completedBinding) interpret native handles calls] at supported
+  exact PqxdhBeaconPhase2Publication.native_failure (completedBinding := completedBinding) native decode raw state next auxiliary final supported
+
+/-- Admission and preparation use the completed binding only as carried metadata: two completed bindings with the same `associated_data` give admitted metadata and prepared pending roots that differ only in the `completed` field, with equal `Metadata.associatedData`. -/
+theorem binding_ad_only {I D K X Response Shared : Type}
+    (left right : session.CompletedRegistrationBinding)
+    (same : left.associated_data = right.associated_data)
+    (control : pqxdh.BeaconInitSent) (inputs : Inputs Response Shared)
+    (identity : I) (prekey oneTime : D) (kem : K) (raw : Bytes) :
+    (admitted (completedBinding := left) control inputs).map
+        (fun metadata => { metadata with completed := right }) =
+      admitted (completedBinding := right) control inputs ∧
+    (admitted (completedBinding := left) control inputs).map Metadata.associatedData =
+      (admitted (completedBinding := right) control inputs).map Metadata.associatedData ∧
+    Option.map (fun pending : Prepared Response Shared =>
+        { pending with metadata := { pending.metadata with completed := right } }) <$>
+        prepare (completedBinding := left) (X := X) control identity prekey oneTime kem raw =
+      prepare (completedBinding := right) (X := X) control identity prekey oneTime kem raw ∧
+    Option.map (fun pending : Prepared Response Shared => pending.metadata.associatedData) <$>
+        prepare (completedBinding := left) (X := X) control identity prekey oneTime kem raw =
+      Option.map (fun pending : Prepared Response Shared => pending.metadata.associatedData) <$>
+        prepare (completedBinding := right) (X := X) control identity prekey oneTime kem raw := by
+  have relabel : ∀ inputs : Inputs Response Shared,
+      (admitted (completedBinding := left) control inputs).map
+          (fun metadata => { metadata with completed := right }) =
+        admitted (completedBinding := right) control inputs := by
+    intro inputs
+    unfold admitted
+    split_ifs <;> rfl
+  have adEq : ∀ inputs : Inputs Response Shared,
+      (admitted (completedBinding := left) control inputs).map Metadata.associatedData =
+        (admitted (completedBinding := right) control inputs).map Metadata.associatedData := by
+    intro inputs
+    unfold admitted
+    split_ifs <;> first | rfl | exact congrArg some same
+  refine ⟨relabel inputs, adEq inputs, ?_, ?_⟩
+  · simp only [prepare, map_bind]
+    apply bind_congr
+    intro collected
+    cases collected with
+    | none => simp only [map_pure, Option.map_none]
+    | some collected =>
+        simp only [afterInputs, map_bind, map_pure, Option.map_map]
+        rw [← relabel collected, Option.map_map]
+        rfl
+  · simp only [prepare, map_bind]
+    apply bind_congr
+    intro collected
+    cases collected with
+    | none => simp only [map_pure, Option.map_none]
+    | some collected =>
+        simp only [afterInputs, map_bind, map_pure, Option.map_map]
+        congr 2
+        funext _
+        congr 1
+        exact adEq collected
 
 end BeaconcryptCore.Computational.PqxdhBeaconPhase2Shared
 
@@ -609,3 +664,9 @@ end BeaconcryptCore.Computational.PqxdhBeaconPhase2Shared
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhBeaconPhase2Shared.owner_failure
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhBeaconPhase2Shared.binding_ad_only' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhBeaconPhase2Shared.binding_ad_only

@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "source_sha256": "298a7e5bd2bc791c7467dae998fd8ad0ce8d48a6acb8d60224602e343a9fc7df",
+  "source_sha256": "54370a28a090adf9d2ea380be000a2c4e8afe2e8eb28be875b0f3210808b3eb7",
   "definitions": [
     {
-      "name": "auth.fingerprint_pin",
-      "sha256": "8ebdec646d5d50ae944a4c16b820aa18bb8d1e4af3209e81685bb912bea7dcfb",
+      "name": "auth.server_pin",
+      "sha256": "6344d71065c063e59c2f4b0941a1648331ea2a75e7ae8617facc9f9667dc24b5",
       "mode": "body",
       "signature": [
         {
@@ -14,55 +14,21 @@
         }
       ],
       "body": [
-        {
-          "before": "auth.execute_hash",
-          "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperRequestMonad.ChildOperations.executeHash (m := m))",
-          "count": 1
-        },
-        {
-          "before": "beaconcrypt_core.registration.PinFingerprint.request",
-          "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) beaconcrypt_core.registration.PinFingerprint.request)",
-          "count": 1
-        },
-        {
-          "before": "beaconcrypt_core.registration.PinFingerprint.resume",
-          "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) beaconcrypt_core.registration.PinFingerprint.resume)",
-          "count": 1
-        },
         {
           "before": "beaconcrypt_core.registration.begin_server_pin",
           "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) beaconcrypt_core.registration.begin_server_pin)",
           "count": 1
-        }
-      ]
-    },
-    {
-      "name": "beacon.Beacon.mldsa_public_key",
-      "sha256": "4a7762f48c51b6e2ab7be531b2446811bde485a7a0ce2ae95baae59fed0f9bba",
-      "mode": "body",
-      "signature": [
-        {
-          "before": "RustM",
-          "after": "m",
-          "count": 1
         },
         {
-          "before": "beacon.Beacon",
-          "after": "beaconcrypt_public_wrapper.beacon.Beacon",
-          "count": 1
-        }
-      ],
-      "body": [
-        {
-          "before": "auth.MldsaIdentity.public_key",
-          "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperRequestMonad.LocalOperations.auth_MldsaIdentity_public_key (m := m))",
+          "before": "ok",
+          "after": "pure",
           "count": 1
         }
       ]
     },
     {
       "name": "beacon.Beacon.identity_pk",
-      "sha256": "624f5a16d1caa8449d208bc0f17c443a27cc45d055c91b9292397955a295f535",
+      "sha256": "c8e0d4c0bc826f76f688205dbe590b40ede77b22c99ccdb4c4be29d3b733189a",
       "mode": "body",
       "signature": [
         {
@@ -86,7 +52,7 @@
     },
     {
       "name": "beacon.Beacon.identity_sk",
-      "sha256": "51121f1c41982f4d32773c23a75c4a0601b1d283c1bda1f281f3c139f9144109",
+      "sha256": "9adc6e2726c10b3404719caff0b073a91a88812c3f103a3ab15d86730e8efd2e",
       "mode": "body",
       "signature": [
         {
@@ -110,7 +76,7 @@
     },
     {
       "name": "beacon._proof_beacon_init_ready_loop.body",
-      "sha256": "b9f1ca6e414fdb10efdd015c16c38f3f19cba29f6a8afb5154b67573fd36100f",
+      "sha256": "8e9242c84db1e31e5ba5d7953f9343114c64c1ef90705693994dd3b4fe633054",
       "mode": "body",
       "signature": [
         {
@@ -126,14 +92,9 @@
       ],
       "body": [
         {
-          "before": "auth.MldsaIdentity.sign_requested",
-          "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperRequestMonad.LocalOperations.auth_MldsaIdentity_sign_requested (m := m))",
-          "count": 1
-        },
-        {
           "before": "auth.execute_hash",
           "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperRequestMonad.ChildOperations.executeHash (m := m))",
-          "count": 2
+          "count": 1
         },
         {
           "before": "beacon.Beacon.identity_pk",
@@ -156,16 +117,6 @@
           "count": 2
         },
         {
-          "before": "beaconcrypt_core.registration.BeaconFingerprint.request",
-          "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) beaconcrypt_core.registration.BeaconFingerprint.request)",
-          "count": 1
-        },
-        {
-          "before": "beaconcrypt_core.registration.BeaconFingerprint.resume",
-          "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) beaconcrypt_core.registration.BeaconFingerprint.resume)",
-          "count": 1
-        },
-        {
           "before": "beaconcrypt_core.registration.BeaconInitHash.request",
           "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) beaconcrypt_core.registration.BeaconInitHash.request)",
           "count": 1
@@ -173,16 +124,6 @@
         {
           "before": "beaconcrypt_core.registration.BeaconInitHash.resume",
           "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) beaconcrypt_core.registration.BeaconInitHash.resume)",
-          "count": 1
-        },
-        {
-          "before": "beaconcrypt_core.registration.BeaconMldsaSigning.request",
-          "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) beaconcrypt_core.registration.BeaconMldsaSigning.request)",
-          "count": 1
-        },
-        {
-          "before": "beaconcrypt_core.registration.BeaconMldsaSigning.resume",
-          "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) beaconcrypt_core.registration.BeaconMldsaSigning.resume)",
           "count": 1
         },
         {
@@ -203,7 +144,7 @@
         {
           "before": "core.option.Option.as_deref",
           "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) CoreModels.core.option.Option.as_deref)",
-          "count": 3
+          "count": 2
         },
         {
           "before": "core.result.Result.ok",
@@ -213,13 +154,13 @@
         {
           "before": "ok",
           "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) Aeneas.Std.RustM.ok)",
-          "count": 7
+          "count": 5
         }
       ]
     },
     {
       "name": "beacon._proof_beacon_init_ready_loop",
-      "sha256": "22e0d38d7a87b2b4241c15d10e602289c7fe079a543db9e8ec3fbffacab1f820",
+      "sha256": "83b1f9fc553b1870791f880d3fa0e0c60acfe31b81d4099ba1f10388aacddff1",
       "mode": "body",
       "signature": [
         {
@@ -248,7 +189,7 @@
     },
     {
       "name": "beacon._proof_beacon_init_ready",
-      "sha256": "2f284cc9a1d544ce80d64a57e4e923d89bcc7ecbd089f93cfa1fe0e06082d41f",
+      "sha256": "92f45410c6d7095a77985132fa4ac5456c1748db83d9904da5f509a2e6da7473",
       "mode": "body",
       "signature": [
         {
@@ -272,7 +213,7 @@
     },
     {
       "name": "beacon.Beacon.get_registration_bundle_with_rng",
-      "sha256": "7f16aa5458a8fbaa7d0803f7c2b0b38735b32807343564de02588b1178f164d2",
+      "sha256": "fad5dc228e6ebac3fb40270e270acbe549d3f60c12cc194cc95ed5e9267374a6",
       "mode": "body",
       "signature": [
         {
@@ -290,11 +231,6 @@
         {
           "before": "beacon.Beacon.identity_pk",
           "after": "beaconcrypt_public_request.beacon.Beacon.identity_pk",
-          "count": 2
-        },
-        {
-          "before": "beacon.Beacon.mldsa_public_key",
-          "after": "beaconcrypt_public_request.beacon.Beacon.mldsa_public_key",
           "count": 2
         },
         {
@@ -405,7 +341,7 @@
         {
           "before": "lift",
           "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) Aeneas.Std.lift)",
-          "count": 12
+          "count": 8
         },
         {
           "before": "ok",
@@ -421,7 +357,7 @@
     },
     {
       "name": "ratchet.RatchetKernelSlot.new",
-      "sha256": "dfcbc3cb12ffe9a200c7613276d66c1c574c5237aeee56e6d690c62231e48d58",
+      "sha256": "8a2216c611f16ae846fe9e279855ea186230b9532115aeff55d5af25db7b52a7",
       "mode": "body",
       "signature": [
         {
@@ -445,7 +381,7 @@
     },
     {
       "name": "ratchet.RatchetManager.from_kernel",
-      "sha256": "b68bf8c31debcec5720ef451dd07c90a7179d369b1505128c181892a7cb69826",
+      "sha256": "0195b38f39081f625601bf5a11962077d9bac9fbe2e25ee710be0ac6edcecaaa",
       "mode": "body",
       "signature": [
         {
@@ -474,21 +410,21 @@
     },
     {
       "name": "pqxdh.NoEntropy.Insts.Rand_coreTryRngCryptoError",
-      "sha256": "c4f35c04cfbf4658155e34fb02d487f18ca13ff304f78d845606cadc87d47e87",
+      "sha256": "a47e50f76dc0dfab227242094e059df3b747f9b60be0217ceb5031f3e4003158",
       "mode": "static",
       "signature": [],
       "body": []
     },
     {
       "name": "pqxdh.NoEntropy.Insts.Rand_coreTryCryptoRngCryptoError",
-      "sha256": "d733dfa6a70e0f7a66b51dc54f67bc1ac53ac84f8a7bf5e9c6b1045dd634e533",
+      "sha256": "ef048629ee06609e5949a22c98d92094ab49fcf49a8a5ab35a21f3ce1a24eb5b",
       "mode": "static",
       "signature": [],
       "body": []
     },
     {
       "name": "pqxdh.execute_agreement.closure_8.Insts.CoreOpsFunctionFnTupleOptionArrayU832.call",
-      "sha256": "6844a1d2d15035b0dc193a105efe241d83cfa58bc65f9fceed436d84136cd52b",
+      "sha256": "8b90650b35e1589c053a7df7d791fe94c5f0491840bc6db5c0ec452a7cf45d20",
       "mode": "body",
       "signature": [
         {
@@ -562,7 +498,7 @@
     },
     {
       "name": "pqxdh.execute_agreement.closure_7.Insts.CoreOpsFunctionFnOnceTupleSharedSecretKeyOptionArrayU832.call_once",
-      "sha256": "81372ec46b4174040a197c3ce7e69a436305dfd04bca5441aa1a39a422c7029c",
+      "sha256": "d302cfbc7df225ce19c8b8d7dbcddd4992c2add2baeae56f05ee4347b30f7255",
       "mode": "body",
       "signature": [
         {
@@ -606,7 +542,7 @@
     },
     {
       "name": "pqxdh.execute_agreement.closure_7.Insts.CoreOpsFunctionFnOnceTupleSharedSecretKeyOptionArrayU832",
-      "sha256": "d1fcf205f51233140d40bd38024fcc4c16bc7083964cdcc2c634e3fe1e149d21",
+      "sha256": "7c739333975680618e43898ca257c434b4f609340a39aea181c1ada4fa3034fe",
       "mode": "body",
       "signature": [
         {
@@ -630,7 +566,7 @@
     },
     {
       "name": "pqxdh.execute_agreement.closure_6.Insts.CoreOpsFunctionFnOnceTupleSharedSecretKeyOptionArrayU832.call_once",
-      "sha256": "0851f855cb520032bff8fda54c6fed47004c4bdf8bff5a9409bb516de30e93ba",
+      "sha256": "59857fda82e260f6ddd5b9282e2c72ec9f4d348a340c7436b9e4761bac558f7a",
       "mode": "body",
       "signature": [
         {
@@ -674,7 +610,7 @@
     },
     {
       "name": "pqxdh.execute_agreement.closure_6.Insts.CoreOpsFunctionFnOnceTupleSharedSecretKeyOptionArrayU832",
-      "sha256": "bbfc4dee4f8f04bb93176ac09fb5840a0c591ff11dbd56e8747d7e3a7647ca2e",
+      "sha256": "03017c6c649bd772a8a4304be8a133794918aab71caf0d2bd706f8d3084f9298",
       "mode": "body",
       "signature": [
         {
@@ -698,7 +634,7 @@
     },
     {
       "name": "pqxdh.execute_agreement.closure_5.Insts.CoreOpsFunctionFnOnceTupleSharedKeyPairOptionArrayU832.call_once",
-      "sha256": "f855489e6bd1c867717b93771d234f1a24d97c996afcf28d95ad648b279ee210",
+      "sha256": "8e502bf802050131340d05fc1ee9abbea7384d8a4f9527b6e3746ec2720f2587",
       "mode": "body",
       "signature": [
         {
@@ -742,7 +678,7 @@
     },
     {
       "name": "pqxdh.execute_agreement.closure_5.Insts.CoreOpsFunctionFnOnceTupleSharedKeyPairOptionArrayU832",
-      "sha256": "6d3fd075e244933a7eaee860734694a76f2cf53d442d3919eba3e1c88dc53976",
+      "sha256": "37d2c0049f6039dc8e2dc41f556cc02c4c5b79f63f3249fc3a945e0143be4257",
       "mode": "body",
       "signature": [
         {
@@ -766,7 +702,7 @@
     },
     {
       "name": "pqxdh.execute_agreement.closure_4.Insts.CoreOpsFunctionFnOnceTupleSharedZeroizingArrayU832OptionArrayU832.call_once",
-      "sha256": "6107be4202848644b42db0dbb35c87b2da13dfb81a483434467e25508d3c9510",
+      "sha256": "4ccbf5d35bef1f14c04fe32ada5cfe890dcfb7b3085b1db89aa1712af4dad079",
       "mode": "body",
       "signature": [
         {
@@ -810,7 +746,7 @@
     },
     {
       "name": "pqxdh.execute_agreement.closure_4.Insts.CoreOpsFunctionFnOnceTupleSharedZeroizingArrayU832OptionArrayU832",
-      "sha256": "138b56bea07c1a946f6b77ac3f90284997bde9d555d94cbb9a49c86e08592df9",
+      "sha256": "42052d3aff05a691c861ef9a60bd926c92d3158e55f168f308ffc05883fb8b25",
       "mode": "body",
       "signature": [
         {
@@ -834,7 +770,7 @@
     },
     {
       "name": "pqxdh.execute_agreement.closure_3.Insts.CoreOpsFunctionFnTupleOptionArrayU832.call",
-      "sha256": "8a2df85f8d5722b10f235116dc7665745ecf6f252fb24b3cb3307f01d4277a25",
+      "sha256": "730674e7b1394822602fc345e08caa07f4e9ec21502c20dfe5d91cc3ca31fe02",
       "mode": "body",
       "signature": [
         {
@@ -898,7 +834,7 @@
     },
     {
       "name": "pqxdh.execute_agreement.closure_2.Insts.CoreOpsFunctionFnMutTupleOptionPairArrayU81088ArrayU832.call_mut",
-      "sha256": "1537229775b9b06c13184df9d00c932305d2a5dd6fefd238f01cf2bcaff7a4ad",
+      "sha256": "2288b776589355c53df0e3771513105bd5449ba90a2f969435affcf0b6516d81",
       "mode": "body",
       "signature": [
         {
@@ -967,7 +903,7 @@
     },
     {
       "name": "pqxdh.execute_agreement.closure_1.Insts.CoreOpsFunctionFnOnceTupleSharedKeyPairArrayU832.call_once",
-      "sha256": "f7e9b1f1e9dab817e7a092e476acee9802008085d6bcf03b70ebb3ac607b911f",
+      "sha256": "8979daadcee9b5d47b3294c0728a69e9890fad7b88b866787b3f3626a94ffe5a",
       "mode": "body",
       "signature": [
         {
@@ -991,7 +927,7 @@
     },
     {
       "name": "pqxdh.execute_agreement.closure_1.Insts.CoreOpsFunctionFnOnceTupleSharedKeyPairArrayU832",
-      "sha256": "2f0de8da2c8089dd61c43f77f48db529fb832bc56062145768798c3e9c02f113",
+      "sha256": "91344bd72d58bcfa61be0ec6ac5aaaabc9a7bf10045740d4b56637c22f1cad98",
       "mode": "body",
       "signature": [
         {
@@ -1015,7 +951,7 @@
     },
     {
       "name": "pqxdh.execute_agreement.closure.Insts.CoreOpsFunctionFnOnceTuplePublicKeyOptionArrayU832.call_once",
-      "sha256": "1e705e2698dcc55e18732ec7a02cca07d66e95620b67fd7f047fe1632f065576",
+      "sha256": "6e87b995e5f9aefb0b465e89153c1750abe05ccfecc254888f230760536032d7",
       "mode": "body",
       "signature": [
         {
@@ -1044,7 +980,7 @@
     },
     {
       "name": "pqxdh.execute_agreement.closure.Insts.CoreOpsFunctionFnOnceTuplePublicKeyOptionArrayU832",
-      "sha256": "b36b6babcef48f5765230902fd60cdd859bde8fd25eff35380a0f64463904c4b",
+      "sha256": "824d45f6ba86594641f1f88defaf63488947fedac2070bdc74bb9b6c2e9152e1",
       "mode": "body",
       "signature": [
         {
@@ -1068,7 +1004,7 @@
     },
     {
       "name": "pqxdh.execute_agreement_loop.body",
-      "sha256": "e6a08e89d2d2a35a4d530a1c3320c2a5f084e4c00a40043417c446caa9ace3d4",
+      "sha256": "23c8d095a572fe56608a4ba6ced700a5ef074e04f889bce58c53b703accf8593",
       "mode": "body",
       "signature": [
         {
@@ -1232,7 +1168,7 @@
     },
     {
       "name": "pqxdh.execute_agreement_loop",
-      "sha256": "7cdcbb19895be21cf351771142439236afaf2af89d6d3a0bc0a4036e1714bb32",
+      "sha256": "12ee50251b658d74c3759cd14377377e9c0a359b83b28850170a17d6970d9c4e",
       "mode": "body",
       "signature": [
         {
@@ -1256,7 +1192,7 @@
     },
     {
       "name": "pqxdh.execute_agreement",
-      "sha256": "52ea6ae44df98f390c5c3a49a07927ac9c530fa68b863221fbe9619beb7e57f8",
+      "sha256": "3f7086e1988516fbac00f1c971509c1163660c2a4e0e4c6a3f7662c68c75bdce",
       "mode": "body",
       "signature": [
         {
@@ -1280,7 +1216,7 @@
     },
     {
       "name": "pqxdh.execute_beacon_agreement",
-      "sha256": "c45f175df40fd2c054bef79629f74b33f96d16a4274bcbd48a16602d13cba9d5",
+      "sha256": "d92a3fab5d085fdd47a3fe64125bb9bd121b3cb53177731d3d713f5fe9af0896",
       "mode": "body",
       "signature": [
         {
@@ -1314,7 +1250,7 @@
     },
     {
       "name": "beacon.ProviderBeaconBeacon.finish_registration.closure.Insts.CoreOpsFunctionFnOnceTuplekexresponseOptionResponsePacket",
-      "sha256": "71c25a7cb26a6134e3c9fda1633f2e279368a6a81c2d1a9bde3167d2f2172e4c",
+      "sha256": "9c634497814a46829950678a497b2b9423caf3f8ae59f7073d73294edbfe6511",
       "mode": "body",
       "signature": [
         {
@@ -1338,7 +1274,7 @@
     },
     {
       "name": "beacon.Beacon.Insts.BeaconcryptBeaconProviderBeacon.finish_registration_loop.body",
-      "sha256": "67c5d54ebcea0ba3e73bc3b27c1b957c1d9d1cdb261004e500682ee6dc06177d",
+      "sha256": "bc933a83fb3daf8e4a3a24f6f96eda8fbbbf34b464b4df1141332555f44b0871",
       "mode": "body",
       "signature": [
         {
@@ -1457,7 +1393,7 @@
     },
     {
       "name": "beacon.Beacon.Insts.BeaconcryptBeaconProviderBeacon.finish_registration_loop",
-      "sha256": "933e4b7a7eb2fcb8fe3063649106111b7bd2313365672d80df02c0739c86c8b9",
+      "sha256": "4111d809031871df62da46f7a755d104c351a5a75e4b52ddcf181f3e73aefd73",
       "mode": "body",
       "signature": [
         {
@@ -1486,7 +1422,7 @@
     },
     {
       "name": "beacon.Beacon.Insts.BeaconcryptBeaconProviderBeacon.finish_registration",
-      "sha256": "435cfdfe9bd82506faa8ca7e696dfd4776dbb5d4f9a14d21a869779ce0cb2291",
+      "sha256": "f22853273dac6106eeec91aef1acc17e9b279aea5c2f0e6e0bb56e75d8e9539a",
       "mode": "body",
       "signature": [
         {
@@ -1617,7 +1553,7 @@
     },
     {
       "name": "beaconcrypt_crypto.crypto_sign.PublicKey.Insts.BeaconcryptSharedSignaturePk",
-      "sha256": "74734a556b257de451ef9d4c9577a933290edc96f2d3b487cd4ee1dd9993b347",
+      "sha256": "97038666fc09a624c792967a81c21d5cfc345c7fa77f7d5c21cc4479bf5b1c72",
       "mode": "static",
       "signature": [],
       "body": []
@@ -1672,7 +1608,7 @@
     },
     {
       "name": "server.Server.identity_pk",
-      "sha256": "4b7dd7c73e19078137f91a3ed0f9bfbf807c3d194b7ecd36b6c3d1fb6dcec952",
+      "sha256": "7f7ce47592b98ea4f827579aaa86c8ace274d2f80fe248e4aa1f006189a2c31d",
       "mode": "body",
       "signature": [
         {
@@ -1701,7 +1637,7 @@
     },
     {
       "name": "server.Server.identity_key_kid",
-      "sha256": "bf6e7b820986d63605fbdfb31efc322c4d7999903baebb1146dcae53ba9b9f65",
+      "sha256": "d311ae4d5f62bbdc86b9bbd66e74e96dcc0089752abff6761b086baea33cabc4",
       "mode": "body",
       "signature": [
         {
@@ -1730,7 +1666,7 @@
     },
     {
       "name": "server.Server.authentication_pin",
-      "sha256": "f593b74601e03ed22daa75a9c7ffbd5d9537ff2b8d92c670984d41ddb46927ff",
+      "sha256": "67417ed1eef01894c83e81dca8fbce5af1b01b54947be8992152f85e145068d2",
       "mode": "body",
       "signature": [
         {
@@ -1746,8 +1682,8 @@
       ],
       "body": [
         {
-          "before": "auth.fingerprint_pin",
-          "after": "beaconcrypt_public_request.auth.fingerprint_pin",
+          "before": "auth.server_pin",
+          "after": "beaconcrypt_public_request.auth.server_pin",
           "count": 1
         },
         {
@@ -1774,7 +1710,7 @@
     },
     {
       "name": "server.Server.identity_sk",
-      "sha256": "9301ac4441b667b86502db780aeabe83b3836989f4f23ba90fc0540c490d877b",
+      "sha256": "3e7f4ca132d835c2f7c9e5f67e43beed214343140e7858416e80c50d7208315e",
       "mode": "body",
       "signature": [
         {
@@ -1803,7 +1739,7 @@
     },
     {
       "name": "server.Server.authenticate_registration_lookup",
-      "sha256": "f800e45bcc99cbeeac407545077b45d9c1c5d1f5adc70b63eb381feaff46ac44",
+      "sha256": "c4364cf94515a5eaed3b0f54607bb5166bd77244569696d8fceb64333c2a9b29",
       "mode": "body",
       "signature": [
         {
@@ -1862,7 +1798,7 @@
     },
     {
       "name": "server.Server.get_shared_secret_from_lookup_with_rng",
-      "sha256": "788747db79b3d447e8ca568412b9c7b0f3a02668e8b60fbb55bf3cf5140ef963",
+      "sha256": "0ad903fd9bfbc5597d502878086c97c1ac861f3afb407425ca1ef1dd2a28c6ef",
       "mode": "body",
       "signature": [
         {
@@ -2039,7 +1975,7 @@
     },
     {
       "name": "server.ProviderServerServer.build_registration_response.closure.Insts.CoreOpsFunctionFnOnceTupleSharedPairVecU8ArrayU816PairSharedSliceU8ArrayU816",
-      "sha256": "3f16b5470c1f936e68b7465c2ff6e84ca26a44d8fcae82304ef7d42cdfc6bb69",
+      "sha256": "26832c6d944c1d917dd91e427d518b30b74ac6856cb71e20e28adeae4669d452",
       "mode": "body",
       "signature": [
         {
@@ -2063,7 +1999,7 @@
     },
     {
       "name": "server.Server.Insts.BeaconcryptServerProviderServer.build_registration_response",
-      "sha256": "b9a066e41b4006eaa2a2615ddd0b8132c71548a36517cea7ab2b07c7419e98f5",
+      "sha256": "2483c5905bc057bca960635e6ffe778a19f1b693208e97a71d2892cc4110341c",
       "mode": "body",
       "signature": [
         {
@@ -2111,7 +2047,7 @@
         {
           "before": "auth.execute_hash",
           "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperRequestMonad.ChildOperations.executeHash (m := m))",
-          "count": 1
+          "count": 2
         },
         {
           "before": "beaconcrypt_core.peer.CompletionLookup.request",
@@ -2261,12 +2197,12 @@
         {
           "before": "core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual",
           "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) CoreModels.core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual)",
-          "count": 17
+          "count": 18
         },
         {
           "before": "core.option.Option.Insts.CoreOpsTry_traitTry.branch",
           "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) CoreModels.core.option.Option.Insts.CoreOpsTry_traitTry.branch)",
-          "count": 17
+          "count": 18
         },
         {
           "before": "core.option.Option.as_deref",
@@ -2286,7 +2222,7 @@
         {
           "before": "core.result.Result.ok",
           "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) CoreModels.core.result.Result.ok)",
-          "count": 15
+          "count": 16
         },
         {
           "before": "core.slice.Slice.len",
@@ -2321,7 +2257,7 @@
         {
           "before": "ok",
           "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) Aeneas.Std.RustM.ok)",
-          "count": 19
+          "count": 20
         },
         {
           "before": "ratchet.execute_commitment_hash",
@@ -2356,7 +2292,7 @@
         {
           "before": "server.RegResponse",
           "after": "beaconcrypt_public_wrapper.server.RegResponse",
-          "count": 17
+          "count": 18
         },
         {
           "before": "server.Server.authentication_pin",
@@ -2381,6 +2317,16 @@
         {
           "before": "wire.encode_response",
           "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperRequestMonad.ChildOperations.encodeResponse (m := m))",
+          "count": 1
+        },
+        {
+          "before": "beaconcrypt_core.registration.ServerAdHash.request",
+          "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) beaconcrypt_core.registration.ServerAdHash.request)",
+          "count": 1
+        },
+        {
+          "before": "beaconcrypt_core.registration.ServerAdHash.resume",
+          "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) beaconcrypt_core.registration.ServerAdHash.resume)",
           "count": 1
         }
       ]

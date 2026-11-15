@@ -217,7 +217,7 @@ open PqxdhServerAuthExperiment (Setup Checks)
 variable {I E : Type} {base : OracleSpec I}
 /-- The actual captured bundle's selected message equals the one-time field of its literal started tuple, including all failed writer and optional-signature paths. -/
 theorem bundled (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner mlSource) (scalar : PqxdhJointGapDh.ScalarBytes)
     (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (started : beaconcrypt_core.pqxdh.BeaconStart)

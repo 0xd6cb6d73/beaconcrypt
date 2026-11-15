@@ -58,40 +58,20 @@ theorem kem_bound (query : (RegistrationNativeKemInterface.Spec RegistrationNati
 theorem prepare_free (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64) :
     Bounded Born 0 (RegistrationNativeBeaconFrontend.prepare (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) source edPin mlPin keyId) := by
   unfold RegistrationNativeBeaconFrontend.prepare
-  apply bind_bound _ _ _ 0 0 (sample_free _)
-  intro generated
-  cases generated with
-  | none => exact pure_bound _ 0 _
-  | some credentials =>
+  cases registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
+  | fail error | div =>
+      exact pure_bound Born 0 _
+  | ok pin =>
       simp only
-      cases registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
-      | fail error | div =>
-          exact pure_bound Born 0 _
-      | ok pending =>
-          simp only
-          cases pending.request with
-          | fail error | div =>
-              exact pure_bound Born 0 _
-          | ok request =>
-              simp only
-              apply bind_bound Born _ _ 0 0 (effect_free _)
-              intro digest
-              cases pending.resume (.Some (RegistrationAuthenticationShared.digestArray digest)) with
-              | fail error | div =>
-                  exact pure_bound Born 0 _
-              | ok optional =>
-                  cases optional with
-                  | none => exact pure_bound Born 0 _
-                  | some pin =>
-                      apply bind_bound Born _ _ 0 0 (sample_free _)
-                      intro identity
-                      exact bind_bound Born _ _ 0 0 (sample_free _) (fun _ => pure_bound Born 0 _)
+      apply bind_bound Born _ _ 0 0 (sample_free _)
+      intro identity
+      exact bind_bound Born _ _ 0 0 (sample_free _) (fun _ => pure_bound Born 0 _)
 
 theorem appendBorn (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (edPin : Std.Array U8 32#usize) (keyId : U64) (pin : session.ServerAuthenticationPin)
-    (credentials : RegistrationNativeMldsa.Credential source) (identity : PqxdhJointIdentity.IdentitySeed)
+    (identity : PqxdhJointIdentity.IdentitySeed)
     (prekey : PqxdhJointGapDh.ScalarBytes) :
-    Bounded Born 1 (RegistrationNativeBeaconFrontend.appendBorn (n := n) (Auxiliary := Auxiliary) setup source edPin keyId pin credentials identity prekey) := by
+    Bounded Born 1 (RegistrationNativeBeaconFrontend.appendBorn (n := n) (Auxiliary := Auxiliary) setup source edPin keyId pin identity prekey) := by
   unfold RegistrationNativeBeaconFrontend.appendBorn
   apply bind_bound _ _ _ 1 0 (kem_bound _)
   intro born
@@ -119,7 +99,7 @@ theorem create (setup : PqxdhServerAuthExperiment.Setup base KemSK)
   | fail error | div => exact pure_bound _ 1 _
   | ok prepared => cases prepared with
     | none => exact pure_bound _ 1 _
-    | some prepared => exact appendBorn setup edPin keyId prepared.pin prepared.credentials prepared.identity prepared.prekey
+    | some prepared => exact appendBorn setup edPin keyId prepared.pin prepared.identity prepared.prekey
 end BeaconcryptCore.Computational.RegistrationNativeBeaconKemBirthCaps
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativeBeaconKemBirthCaps.effect_free' depends on axioms: [propext,
  Classical.choice,

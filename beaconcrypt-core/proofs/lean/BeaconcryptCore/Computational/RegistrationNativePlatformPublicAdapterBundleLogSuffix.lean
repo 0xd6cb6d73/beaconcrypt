@@ -50,7 +50,7 @@ variable {I E :Type} {base :OracleSpec I} {mlSource :RegistrationNativeMldsa.Sou
 local notation "Native"=>RegistrationNativeExperiment.State n KemSK mlSource
 variable (coins :QueryImpl unifSpec (StateT P ProbComp))
 variable (setup :PqxdhServerAuthExperiment.Setup base KemSK) (checks :PqxdhServerAuthExperiment.Checks)
-variable (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created Unit)
+variable (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (writer :QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT P ProbComp))
 variable (index :Nat) (owner :RegistrationNativeBeaconFrontend.Owner mlSource)
 
@@ -102,7 +102,7 @@ noncomputable local instance idleLocal :LocalOperations (BeaconcryptCore.Refinem
 noncomputable local instance idleCrypto :CryptoOperations (BeaconcryptCore.Refinement.AdapterPublicWrapperRustT.RustT (StateT (RegistrationNativeExperiment.State n KemSK source×P) ProbComp)):=packedCrypto
 noncomputable local instance idleChildren :ChildOperations (BeaconcryptCore.Refinement.AdapterPublicWrapperRustT.RustT (StateT (RegistrationNativeExperiment.State n KemSK source×P) ProbComp)):=children
 
-variable (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
 local notation "auditPrivate"=>RegistrationNativePlatformPublicAdapterAuditModel.Private configuration created credential
 local notation "auditModel"=>RegistrationNativePlatformPublicAdapterAuditModel.model configuration created credential
 local notation "auditPhysical"=>RegistrationNativePlatformPublicAdapterAuditModel.physical configuration created credential
@@ -166,7 +166,7 @@ theorem stages (index :Nat) (before :RegistrationNativePlatformCutJournal.State 
         cases phaseEq:owner.phase <;>simp only [AdapterPublicWrapperState.Phase,stored,phaseEq] at matched
         rfl
       let active:=RegistrationNativePlatformPublicAdapterBundleStepSource.fresh previousLocal coins setup checks configuration.agreement.representation created
-            configuration.reservePackets index owner configuration.edFailure (other (m:=CutM)) (recording (m:=CutM)) configuration.views credential self configuration.view
+            configuration.reservePackets index owner configuration.edFailure (fun _=>pure (.fail .panic)) (recording (m:=CutM)) configuration.views credential self configuration.view
             control prekey kem configuration.generator (RegistrationNativePlatformPublicAdapterConfiguration.generation configuration)
             stored phase before previous objects sourceSelected selected
       let activeAug:=freshAugmentation configuration created credential index owner self control prekey kem stored phase before previous objects sourceSelected selected RegistrationNativePlatformPublicAdapterSourceEvents.Event.stage prior
@@ -194,7 +194,7 @@ theorem stages (index :Nat) (before :RegistrationNativePlatformCutJournal.State 
       let scalar:=Classical.choose hasScalar
       have phase :owner.phase=.freshWithCoins scalar:=Classical.choose_spec hasScalar
       let active:=RegistrationNativePlatformPublicAdapterBundleStepSource.withCoins previousLocal coins setup checks configuration.agreement.representation created
-            configuration.reservePackets index owner configuration.edFailure (other (m:=CutM)) (recording (m:=CutM)) configuration.views credential self configuration.view
+            configuration.reservePackets index owner configuration.edFailure (fun _=>pure (.fail .panic)) (recording (m:=CutM)) configuration.views credential self configuration.view
             control scalar prekey oneTime kem configuration.generator stored phase before previous objects sourceSelected selected
       let activeAug:=withCoinsAugmentation configuration created credential index owner self control scalar prekey oneTime kem stored phase before previous objects sourceSelected selected RegistrationNativePlatformPublicAdapterSourceEvents.Event.stage prior
       have callEq :step configuration created credential index before previous objects=active :=by

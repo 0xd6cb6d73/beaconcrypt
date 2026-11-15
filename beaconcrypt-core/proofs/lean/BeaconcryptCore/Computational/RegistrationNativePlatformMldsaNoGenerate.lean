@@ -77,7 +77,10 @@ theorem build (setup : Setup base KemSK) (codec : Codec Reader Response)
     (handle : Nat) (application : Option (Slice U8)) :
     Safe (Allowed source) (RegistrationNativePlatformMldsaServer.build (n := n) source credential setup codec view failure allocation erased reservePeer helper writer handle application) := by
   unfold RegistrationNativePlatformMldsaServer.build
-  exact RegistrationNativePlatformSdkQuerySafety.build (Allowed source) _ (ordinary _) _ (ordinary _)
+  exact RegistrationNativePlatformSdkQuerySafety.build (Allowed source)
+    (fun pending => RegistrationNativePlatformMldsaProgram.lift
+      (RegistrationNativePlatformCompletionSdk.nativeAdHash RegistrationNativePlatformMldsaProgram.coins pending))
+    (fun _ => ordinary _) _ (ordinary _) _ (ordinary _)
     _ (fun _ => ordinary _) _ (finish source credential setup codec view failure allocation erased helper writer) handle application
 end Server
 
@@ -86,7 +89,7 @@ open RegistrationNativeBeaconFrontend (Owner)
 open RegistrationNativeMldsaShared (Local)
 variable (setup : Setup base KemSK) (checks : Checks)
 variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 
 theorem outgoing (index : Nat) (owner : Owner source) (query : RegistrationBeaconInitExecutor.Spec.Domain) :
     Safe (Allowed source) (RegistrationNativePlatformMldsaBundle.outgoing (n := n) (Platform := Platform) setup checks representation created index owner query) := by
@@ -95,7 +98,7 @@ theorem outgoing (index : Nat) (owner : Owner source) (query : RegistrationBeaco
     (RegistrationNativeMldsaNoGenerate.Bundle.outgoing source setup checks representation created index owner query)
 
 theorem bundle
-    (encode : registration.SignedInitView → RegistrationNativePlatformBundleLower.Front n KemSK source (StateT Platform ProbComp) (RustM (Option Encoded)))
+    (encode : registration.InitView → RegistrationNativePlatformBundleLower.Front n KemSK source (StateT Platform ProbComp) (RustM (Option Encoded)))
     (index : Nat) :
     Safe (Allowed source) (RegistrationNativePlatformMldsaBundle.bundle setup checks representation created encode index) := by
   unfold RegistrationNativePlatformMldsaBundle.bundle
@@ -111,7 +114,7 @@ theorem bundle
         intro oneTime
         apply bind_safe (Allowed source) _ _
           (RegistrationNativePlatformQuerySafety.Beacon.begin (Allowed source) _
-            (outgoing setup checks representation created index owner) _ (fun _ => ordinary _) _ _ _ _ _)
+            (outgoing setup checks representation created index owner) _ (fun _ => ordinary _) _ _ _ _)
         intro published
         cases published with
         | fail error | div => exact pure_safe (Allowed source) _

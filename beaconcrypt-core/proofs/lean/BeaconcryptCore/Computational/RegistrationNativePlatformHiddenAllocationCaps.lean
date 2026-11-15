@@ -88,6 +88,9 @@ variable (reserveFrame : Nat → StateT Platform ProbComp (core.result.Result Un
 variable (helper : QueryImpl (BeaconcryptCore.Refinement.AdapterRecordHelperRequestMonad.Spec E) (StateT Platform ProbComp))
 variable (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
 
+attribute [local irreducible] RegistrationNativePlatformServerOpenSyntax.accept
+  RegistrationNativePlatformServerOpenControl.afterPin
+
 /-- Every literal non-create public callback retains the no-append source capability predicate. -/
 theorem frontend (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (before : State source Platform)
     (quiet : RegistrationNativeRawAdapter.kind query ≠ 1) :

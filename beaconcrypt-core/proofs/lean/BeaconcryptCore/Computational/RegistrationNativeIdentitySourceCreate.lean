@@ -22,7 +22,7 @@ noncomputable def append (setup : Setup base KemSK) (source : RegistrationNative
   let worldOwner ← RegistrationNativeIdentityFrontend.effect (.inr (.appendOwner keyId edPin .fresh))
   let current ← get
   let owner : RegistrationNativeIdentityFrontend.Owner source :=
-    ⟨prepared.pin, prepared.credentials, prepared.identity, prepared.prekey,
+    ⟨prepared.pin, prepared.identity, prepared.prekey,
       PqxdhRootTableInitialization.rootArray (setup.dh.publicKey prepared.prekey), born.1, born.2, worldOwner, .fresh, []⟩
   set (current ++ [owner])
   pure (.ok (some current.length))
@@ -47,7 +47,7 @@ theorem append_program (setup : Setup base KemSK) (source : RegistrationNativeMl
         let born ← ((Ambient n KemSK).query (.inr (.inr (.inl .create))) : OracleComp (Ambient n KemSK) (Nat × PqxdhKemIndCca.MlKem768PublicKey))
         let worldOwner ← ((Ambient n KemSK).query (.inl (.inr (.appendOwner keyId edPin .fresh))) : OracleComp (Ambient n KemSK) Nat)
         let owner : RegistrationNativeIdentityFrontend.Owner source :=
-          ⟨prepared.pin, prepared.credentials, prepared.identity, prepared.prekey,
+          ⟨prepared.pin, prepared.identity, prepared.prekey,
             PqxdhRootTableInitialization.rootArray (setup.dh.publicKey prepared.prekey), born.1, born.2, worldOwner, .fresh, []⟩
         pure ((.ok (some current.length), current ++ [owner]), env)) := by
   simp only [append, RegistrationNativeIdentityFrontend.kem, RegistrationNativeIdentityFrontend.effect,
@@ -58,7 +58,7 @@ theorem append_program (setup : Setup base KemSK) (source : RegistrationNativeMl
 /-- The actual indexed-birth suffix realizes the complete original source owner append, retaining its full current World, Env and context. -/
 theorem append_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (source : RegistrationNativeMldsa.Source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (source : RegistrationNativeMldsa.Source)
     (edPin : Std.Array U8 32#usize) (keyId : U64) (prepared : Prepared source)
     (current : RegistrationNativeIdentityFrontend.State source)
     (env : RegistrationWorldAgreementCompiler.EnvState RegistrationServerRoleBackend.State) (before : State n KemSK) :
@@ -66,7 +66,7 @@ theorem append_source (setup : Setup base KemSK) (checks : Checks)
       (simulateQ (implementation (mlSource := source) setup checks representation created)
         (((append setup source edPin keyId prepared).run current).run env)).run before =
       (simulateQ (ambient (mlSource := source) setup checks representation created)
-        (((RegistrationNativeBeaconFrontend.appendBorn setup source edPin keyId prepared.pin prepared.credentials
+        (((RegistrationNativeBeaconFrontend.appendBorn setup source edPin keyId prepared.pin
           (RegistrationNativeIdentityRealization.seedFor before.identities prepared.identity) prepared.prekey).run
             (owners before.identities current)).run env)).run before.context := by
   rw [append_program, RegistrationNativeIdentitySourceFrame.ambient_program, RegistrationNativeBeaconBirth.append_program]

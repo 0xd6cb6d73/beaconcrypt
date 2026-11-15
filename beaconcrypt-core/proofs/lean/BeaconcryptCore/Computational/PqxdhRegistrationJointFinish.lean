@@ -7,6 +7,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhRegistrationJointFinish
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhRefinement PqxdhJointIdentity PqxdhJointGapDh PqxdhServerAuthExperiment PqxdhServerAuthNative
 open PqxdhRegistrationJointPreparation (Pool)
 open PqxdhRegistrationJointBundle (Identity Key encode identityMap keyMap)
@@ -85,7 +86,7 @@ noncomputable def run {I D K X : Type} {m : Type → Type} [Monad m] [LawfulMona
     (owner : PqxdhBeaconPhase2Preparation.State I D K) : m (Option Pqxdh.Bytes × PqxdhBeaconPhase2Preparation.State I D K) :=
   match owner.beacon.phase with
   | .initSent control prekey oneTime kem => do
-      let prepared ← simulateQ pre (PqxdhBeaconPhase2Preparation.prepare control owner.beacon.identity prekey oneTime kem raw)
+      let prepared ← simulateQ pre (PqxdhBeaconPhase2Preparation.prepare (completedBinding := completedBinding) control owner.beacon.identity prekey oneTime kem raw)
       match prepared with
       | none => pure (PqxdhBeaconPhase2Publication.finish control owner none)
       | some prepared => do
@@ -99,8 +100,8 @@ theorem native_run {I D K X : Type} {m : Type → Type} [Monad m] [LawfulMonad m
     (handler : QueryImpl (PqxdhBeaconPhase2Publication.NativeSpec I D K X Response) m)
     (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
     (owner : PqxdhBeaconPhase2Preparation.State I D K) :
-    simulateQ handler (PqxdhBeaconPhase2Publication.nativeOwner decode raw owner) =
-      run (fun query => handler (.inl query)) (fun query => handler (.inr query)) decode raw owner := by
+    simulateQ handler (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw owner) =
+      run (completedBinding := completedBinding) (fun query => handler (.inl query)) (fun query => handler (.inr query)) decode raw owner := by
   have pre : (handler ∘ₛ PqxdhBeaconPhase2Publication.nativeAdapter) ∘ₛ PqxdhBeaconPhase2Publication.preLift =
       fun query => handler (.inl query) := by
     funext query
@@ -133,10 +134,10 @@ theorem owner_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
     (kemOwned : ∀ control prekey oneTime keys, owner.beacon.phase = .initSent control prekey oneTime keys →
       state.1.2.keys[kemIndex]? = some keys) :
     (simulateQ (callbacks setup codec)
-      (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw (encode setup identityIndex kemIndex owner))).run state =
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw (encode setup identityIndex kemIndex owner))).run state =
       (fun result => ((result.1.1, encode setup identityIndex kemIndex result.1.2), result.2)) <$>
         (simulateQ (annotated setup codec identityIndex kemIndex)
-          (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw owner)).run state := by
+          (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw owner)).run state := by
   rw [native_run, native_run]
   have mappedPhase : (encode setup identityIndex kemIndex owner).beacon.phase =
       PqxdhBeaconPhase1Publication.mapPhase (keyMap kemIndex) owner.beacon.phase := rfl
@@ -145,7 +146,7 @@ theorem owner_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
   simp only [callbacks, annotated, StateT.run_bind, pool_program, bind_map_left, map_bind]
   rw [show (encode setup identityIndex kemIndex owner).beacon.identity =
     identityMap setup identityIndex owner.beacon.identity from rfl]
-  rw [PqxdhRegistrationJointPreparation.prepare_source setup codec identityIndex kemIndex
+  rw [PqxdhRegistrationJointPreparation.prepare_source (completedBinding := completedBinding) setup codec identityIndex kemIndex
     owner.beacon.identity _ _ _ _ raw state.1 identityOwned (kemOwned _ _ _ _ phase)]
   apply bind_congr
   rintro ⟨_ | prepared, pool⟩
@@ -194,32 +195,62 @@ theorem owner_original (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
       state.1.2.keys[kemIndex]? = some keys) :
     (fun result => (result.1, result.2.2)) <$>
       (simulateQ (callbacks setup codec)
-        (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw (encode setup identityIndex kemIndex owner))).run state =
+        (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw (encode setup identityIndex kemIndex owner))).run state =
       (fun result => ((result.1.1, encode setup identityIndex kemIndex result.1.2), result.2)) <$>
         (simulateQ (PqxdhRegistrationSchedule.callbacks setup codec)
-          (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw owner)).run state.2 := by
-  rw [owner_source setup codec identityIndex kemIndex owner raw state identityOwned kemOwned]
+          (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw owner)).run state.2 := by
+  rw [owner_source (completedBinding := completedBinding) setup codec identityIndex kemIndex owner raw state identityOwned kemOwned]
   have erased := congrArg (fun work =>
     (fun result => ((result.1.1, encode setup identityIndex kemIndex result.1.2), result.2)) <$> work)
     (annotated_program_erase setup codec identityIndex kemIndex
-      (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw owner) state)
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw owner) state)
   simpa only [Functor.map_map] using erased
 
-/-- A present public owner slot executes the same annotated native owner and reinstalls precisely its returned state, preserving every other owner and both actual shared caches. -/
+/-- The scheduler's owner finish (`PqxdhRegistrationSchedule.ownerFinish`) with private service histories: the same transcript hash on the shared cache, then the annotated native owner at the completed binding of the digest. -/
+noncomputable def annotatedFinish (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (identityIndex kemIndex : Nat) (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) :
+    StateT (State KemSK) ProbComp (Option Pqxdh.Bytes × PqxdhRegistrationSchedule.Owner KemSK) :=
+  match owner.beacon.phase with
+  | .initSent control _ _ _ =>
+    match retained, responseOf codec raw with
+    | some init, some response => do
+        let digest ← onNative (nativeHash (PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf init) response))
+        simulateQ (annotated setup codec identityIndex kemIndex)
+          (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := PqxdhTranscriptAd.completedOf control digest)
+            codec.frameRead raw owner)
+    | _, _ => pure (none, PqxdhBeaconPhase2Preparation.abort control owner)
+  | _ => pure (none, owner)
+
+/-- Forgetting the private service histories recovers the scheduler's owner finish with its complete shared state. -/
+theorem annotatedFinish_erase (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (identityIndex kemIndex : Nat) (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) (state : State KemSK) :
+    (fun result => (result.1, result.2.2)) <$>
+      (annotatedFinish setup codec identityIndex kemIndex retained raw owner).run state =
+        (PqxdhRegistrationSchedule.ownerFinish setup codec retained raw owner).run state.2 := by
+  unfold annotatedFinish PqxdhRegistrationSchedule.ownerFinish
+  cases phase : owner.beacon.phase <;> simp only [StateT.run_pure, map_pure]
+  case initSent control prekey oneTime kem =>
+    cases retained <;> cases decoded : responseOf codec raw <;> simp only [StateT.run_pure, map_pure]
+    rw [StateT.run_bind, StateT.run_bind, onNative_run, bind_map_left, map_bind]
+    exact bind_congr fun hashed => annotated_program_erase setup codec identityIndex kemIndex _ _
+
+/-- A present public owner slot executes the same annotated hashed owner finish with its retained Phase 1 bundle and reinstalls precisely its returned state, preserving every other owner, the retained bundles and both actual shared caches. -/
 theorem finish_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (ownerAddress identityIndex kemIndex : Nat) (raw : Pqxdh.Bytes)
     (state : PqxdhRegistrationSchedule.State KemSK) (pool : Pool KemSK)
     (owner : PqxdhRegistrationSchedule.Owner KemSK) (found : state.owners[ownerAddress]? = some owner) :
     (PqxdhRegistrationSchedule.finish setup codec ownerAddress raw).run state =
       (fun result => (result.1.1,
-        ({ shared := result.2.2, owners := state.owners.set ownerAddress result.1.2 } : PqxdhRegistrationSchedule.State KemSK))) <$>
-      (simulateQ (annotated setup codec identityIndex kemIndex)
-        (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw owner)).run (pool, state.shared) := by
+        ({ state with shared := result.2.2, owners := state.owners.set ownerAddress result.1.2 } :
+          PqxdhRegistrationSchedule.State KemSK))) <$>
+      (annotatedFinish setup codec identityIndex kemIndex (state.inits ownerAddress) raw owner).run (pool, state.shared) := by
   rw [show (PqxdhRegistrationSchedule.finish setup codec ownerAddress raw).run state =
     PqxdhRegistrationSchedule.finish setup codec ownerAddress raw state from rfl,
     PqxdhRegistrationSchedule.finish_source setup codec ownerAddress raw state owner found]
-  rw [← annotated_program_erase setup codec identityIndex kemIndex
-    (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw owner) (pool, state.shared), Functor.map_map]
+  rw [← annotatedFinish_erase setup codec identityIndex kemIndex (state.inits ownerAddress) raw owner
+    (pool, state.shared), Functor.map_map]
 
 /-- Any full source continuation receives the exact public reply, all reinstalled owners and complete shared state from the same annotated execution. -/
 theorem finish_continuation (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -228,9 +259,9 @@ theorem finish_continuation (setup : Setup baseSpec KemSK) (codec : Codec Reader
     (owner : PqxdhRegistrationSchedule.Owner KemSK) (found : state.owners[ownerAddress]? = some owner)
     (next : Option Pqxdh.Bytes × PqxdhRegistrationSchedule.State KemSK → ProbComp Result) :
     ((PqxdhRegistrationSchedule.finish setup codec ownerAddress raw).run state >>= next) =
-      ((simulateQ (annotated setup codec identityIndex kemIndex)
-        (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw owner)).run (pool, state.shared) >>= fun result =>
-          next (result.1.1, { shared := result.2.2, owners := state.owners.set ownerAddress result.1.2 })) := by
+      ((annotatedFinish setup codec identityIndex kemIndex (state.inits ownerAddress) raw owner).run
+        (pool, state.shared) >>= fun result =>
+          next (result.1.1, { state with shared := result.2.2, owners := state.owners.set ownerAddress result.1.2 })) := by
   rw [finish_source setup codec ownerAddress identityIndex kemIndex raw state pool owner found, bind_map_left]
 
 /-- The indexed client equality retains any continuation on its complete mapped owner, private service pools and native shared poststate. -/
@@ -242,11 +273,11 @@ theorem owner_continuation (setup : Setup baseSpec KemSK) (codec : Codec Reader 
       state.1.2.keys[kemIndex]? = some keys)
     (next : (Option Pqxdh.Bytes × PqxdhRegistrationJointBundle.Owner) × State KemSK → ProbComp Result) :
     ((simulateQ (callbacks setup codec)
-      (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw (encode setup identityIndex kemIndex owner))).run state >>= next) =
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw (encode setup identityIndex kemIndex owner))).run state >>= next) =
       ((simulateQ (annotated setup codec identityIndex kemIndex)
-        (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw owner)).run state >>= fun result =>
+        (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw owner)).run state >>= fun result =>
           next ((result.1.1, encode setup identityIndex kemIndex result.1.2), result.2)) := by
-  rw [owner_source setup codec identityIndex kemIndex owner raw state identityOwned kemOwned, bind_map_left]
+  rw [owner_source (completedBinding := completedBinding) setup codec identityIndex kemIndex owner raw state identityOwned kemOwned, bind_map_left]
 
 /-- Native preparation and tail callbacks preserve every private service slot; only actual service histories and primitive caches may change. -/
 theorem annotated_query_slots (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -299,14 +330,14 @@ theorem owner_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
     (kemOwned : ∀ control prekey oneTime keys, owner.beacon.phase = .initSent control prekey oneTime keys →
       state.1.2.keys[kemIndex]? = some keys) :
     ((simulateQ (callbacks setup codec)
-      (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw (encode setup identityIndex kemIndex owner))).run state).IsTotalQueryBound
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw (encode setup identityIndex kemIndex owner))).run state).IsTotalQueryBound
       (69 * max 64 (caps.decapsUniform + caps.baseUniform * caps.decapsBase)) := by
-  rw [owner_source setup codec identityIndex kemIndex owner raw state identityOwned kemOwned,
+  rw [owner_source (completedBinding := completedBinding) setup codec identityIndex kemIndex owner raw state identityOwned kemOwned,
     IsTotalQueryBound, isQueryBound_map_iff]
   exact (isQueryBoundP_true_iff _ _).mp
     ((annotated_program_queries setup codec identityIndex kemIndex
-      (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw owner) state (fun _ => True) _).mpr
-        (PqxdhRegistrationSchedule.owner_uniform setup codec caps bounded raw owner state.2).isQueryBoundP)
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw owner) state (fun _ => True) _).mpr
+        (PqxdhRegistrationSchedule.owner_uniform (completedBinding := completedBinding) setup codec caps bounded raw owner state.2).isQueryBoundP)
 
 end BeaconcryptCore.Computational.PqxdhRegistrationJointFinish
 
@@ -399,3 +430,8 @@ end BeaconcryptCore.Computational.PqxdhRegistrationJointFinish
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointFinish.owner_uniform
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationJointFinish.annotatedFinish_erase' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointFinish.annotatedFinish_erase

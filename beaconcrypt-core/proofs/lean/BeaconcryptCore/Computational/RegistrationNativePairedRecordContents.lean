@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePairedRecordApplication
+import BeaconcryptCore.Computational.RegistrationNativeServerRecordHashSource
 
 /-! Source cuts alone supply all actual record traces, metadata, source-built transcripts and same-cache commitment receipts required for complete first-record contents agreement. No supplied transcript-field equality, root equality, sampled reply equality or perfect recipient-correctness premise is needed. -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -16,7 +17,7 @@ variable {n : Nat} {ι KemSK : Type} {base : OracleSpec ι} {source : Registrati
 
 /-- Actual issued Server record and successful native Beacon first-record completion on the same response bytes agree on complete AD, sender, assigned ID, application and populated binding outside their actual later shared-cache collision event. -/
 theorem run (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (serverInitial : registration.ServerInitialKdf) (hashed : registration.ServerResponseHash)
     (capability : agreement.BeaconAgreement) (completed : registration.CompletedBeacon)
     (before after : Local n KemSK source) (cache : CtxRomAuth.CtxRO.QueryCache)

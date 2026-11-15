@@ -46,7 +46,7 @@ variable [crypto : AdapterPublicWrapperRequestMonad.CryptoOperations (RustT (Sou
 variable [children : AdapterPublicWrapperRequestMonad.ChildOperations (RustT (SourceM n KemSK source Platform))]
 variable (coins : QueryImpl unifSpec (StateT Platform ProbComp)) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (checks : PqxdhServerAuthExperiment.Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (generator : rand_core.TryCryptoRng R Error) (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (kem : AdapterBeaconConstructorKem.Representation view R)
 
@@ -73,6 +73,7 @@ noncomputable def program
   let captured ← AdapterBeaconConstructorNative.joint coins setup checks representation created generator view kem leaves (view.edPublic serverId) mlPin keyId rng
   commit coins setup checks representation created generator view kem leaves keyId serverId captured
 
+omit children in
 theorem erases
     (leaves : AdapterBeaconConstructorNative.Leaves (n := n) (Auxiliary := RegistrationServerRoleBackend.State)
       coins setup checks representation created generator view kem)
@@ -100,6 +101,7 @@ abbrev Result (n : Nat) (KemSK R : Type) (source : RegistrationNativeMldsa.Sourc
 def sourceWord (result : Result n KemSK R source) : AdapterBeaconConstructorBody.Outcome R ×RegistrationNativeExperiment.State n KemSK source :=
   (result.1.1.1.outcome,result.1.1.1.sourceAfter)
 
+omit children in
 theorem commit_source
     (leaves : AdapterBeaconConstructorNative.Leaves (n := n) (Auxiliary := RegistrationServerRoleBackend.State)
       coins setup checks representation created generator view kem)

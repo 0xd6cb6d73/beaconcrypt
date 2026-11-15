@@ -108,7 +108,7 @@ theorem native_shape (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#
       simp only [actual] at continued
       obtain ⟨born,middle,worldOwner,after,generated,allocated,terminal⟩ :=
         RegistrationNativeBeaconBirth.append_supported setup source (trusted implementation) edPin keyId
-          ready.pin ready.credentials ready.identity ready.prekey prepared.1.1.2 prepared.1.2 prepared.2 _ continued
+          ready.pin ready.identity ready.prekey prepared.1.1.2 prepared.1.2 prepared.2 _ continued
       obtain ⟨pair,reply,appended,_marker⟩ := native_birth setup selected pairs publicKey challenge implementation kem input contract prepared.2 (born,middle) generated
       have allocationKeys := native_keys setup selected pairs publicKey challenge implementation kem input contract
         ((RegistrationNativeBeaconFrontend.Trusted n KemSK).query (.inl (.inr (.appendOwner keyId edPin .fresh))) : OracleComp (RegistrationNativeBeaconFrontend.Trusted n KemSK) Nat)

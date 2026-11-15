@@ -14,19 +14,11 @@ namespace BeaconcryptCore.Computational.RegistrationNativeMldsaOriginEvent
 open RegistrationNativeMldsa (Source Credential)
 open RegistrationNativeMldsaMap (Map credential owner owners nativeState)
 variable {n : Nat} {KemSK : Type}
-attribute [local irreducible] RegistrationSigningShared.historyFor RegistrationAuthenticationNative.trial
+attribute [local irreducible] RegistrationSigningShared.historyFor
 
 inductive Bad (source : Source) (server : Credential source) :
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain) → RegistrationNativeExperiment.State n KemSK source →
       RegistrationNativeRawAdapter.TypedSpec.Range query → Prop where
-  | accept (packet : registration.InitPacket) (session : Nat)
-      (before : RegistrationNativeExperiment.State n KemSK source)
-      (current : RegistrationNativeBeaconFrontend.Owner source)
-      (owned : current ∈ before.beacons) (keyProtected : packet.mldsa_public_key = current.mldsa.publicKey)
-      (absent : ¬ MldsaTranscriptAuth.Issued (RegistrationAuthenticationNative.trial true before.server.pin packet
-        (RegistrationSigningShared.historyFor (PqxdhRefinement.absBytes packet.mldsa_public_key)
-          (RegistrationNativeMldsaShared.nativeProject before)))) :
-      Bad source server (.inr (.accept packet)) before (.ok (some session))
   | finish (index : Nat) (packet : registration.ResponsePacket) (application : Pqxdh.Bytes)
       (before : RegistrationNativeExperiment.State n KemSK source)
       (current : RegistrationNativeBeaconFrontend.Owner source)
@@ -46,10 +38,6 @@ theorem mapped {left right : Source} (mapping : Map left right) (server : Creden
   constructor
   · intro bad
     cases bad with
-    | accept packet session _ current owned keyProtected absent =>
-        obtain ⟨original, member, same⟩ := List.mem_map.mp owned
-        subst current
-        exact .accept packet session before original member keyProtected absent
     | finish index packet application _ current pending oneTime found phase keyProtected absent =>
         change (owners mapping before.beacons)[index]? = some current at found
         rw [RegistrationNativeMldsaMap.owners_lookup] at found
@@ -61,9 +49,6 @@ theorem mapped {left right : Source} (mapping : Map left right) (server : Creden
             exact .finish index packet application before original pending oneTime prior phase keyProtected absent
   · intro bad
     cases bad with
-    | accept packet session _ current owned keyProtected absent =>
-        exact .accept packet session (nativeState mapping before) (owner mapping current)
-          (List.mem_map.mpr ⟨current, owned, rfl⟩) keyProtected absent
     | finish index packet application _ current pending oneTime found phase keyProtected absent =>
         have lookup : (owners mapping before.beacons)[index]? = some (owner mapping current) := by
           simp only [RegistrationNativeMldsaMap.owners_lookup, found, Option.map_some]
@@ -79,12 +64,10 @@ theorem table (source : Source) (server : Credential (RegistrationNativeMldsaOpa
   constructor
   · intro bad
     cases bad with
-    | accept packet session before current owned keyProtected absent => exact .accept packet session _ current owned keyProtected absent
     | finish index packet application before current pending oneTime found phase keyProtected absent =>
         exact .finish index packet application _ current pending oneTime found phase keyProtected absent
   · intro bad
     cases bad with
-    | accept packet session _ current owned keyProtected absent => exact .accept packet session before current owned keyProtected absent
     | finish index packet application _ current pending oneTime found phase keyProtected absent =>
         exact .finish index packet application before current pending oneTime found phase keyProtected absent
 

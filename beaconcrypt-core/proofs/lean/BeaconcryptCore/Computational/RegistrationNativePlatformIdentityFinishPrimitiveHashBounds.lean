@@ -1,8 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePlatformIdentityFrontendHashBounds
-import BeaconcryptCore.Computational.RegistrationNativePlatformIdentityFinishRun
 import BeaconcryptCore.Computational.RegistrationNativeIdentityAgreementShape
-/-! Individual literal SDK agreement and record callbacks preserve their actual primitive/random effects. Only the explicit record commitment request enters the physical shared Env hash backend; indexed KEM, local identity DH, root KDF and bookkeeping do not. The temporary old primitive adapter is checked structurally at these individual source bodies, with no whole-controller equality premise. -/
+/-! Individual literal SDK agreement and record callbacks preserve their actual primitive/random effects. Both explicit record AD and commitment hash requests enter the physical shared Env hash backend; indexed KEM, local identity DH, root KDF and bookkeeping do not. The temporary old primitive adapter is checked structurally at these individual source bodies, with no whole-controller equality premise. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -132,8 +131,10 @@ theorem agreement_bound (setup : Setup base KemSK) (owner : Owner source) (oneTi
         simp [RegistrationNativeIdentityCallbacks.dh, RegistrationNativeIdentityInterface.staticDh, IsHash]
     | convertPublic key | generate role | encapsulate key | decapsulate ciphertext | root request => exact False.elim (ordinary trivial)
 
+/-- Every shared transcript AD or commitment hash is counted at its actual Env request. The literal post-hash Beacon suffix emits no adHash request; the full dictionary bound still covers it. -/
 def IsRecordHash : RegistrationRecordPrimitives.Request → Prop
   | .hash _ => True
+  | .adHash _ => True
   | _ => False
 instance : DecidablePred IsRecordHash := fun query => by cases query <;> simp only [IsRecordHash] <;> infer_instance
 
@@ -150,9 +151,14 @@ private theorem old_record (setup : Setup base KemSK) (wire : RegistrationNative
         let digest ← RegistrationNativeBeaconFrontend.hash (.Single (Std.Array.to_slice transcript.bytes))
         pure (core.option.Option.Some (RegistrationAuthenticationShared.digestArray digest))) 1
       exact old_bind _ _ 1 0 (old_effect _) (fun _ => old_pure _ _)
+  | adHash request =>
+      change OldBounded (do
+        let digest ← RegistrationNativeBeaconFrontend.hash request
+        pure (core.option.Option.Some (RegistrationAuthenticationShared.digestArray digest))) 1
+      exact old_bind _ _ 1 0 (old_effect _) (fun _ => old_pure _ _)
   | rootKdf request | initialKdf request | ratchetKdf request | «seal» request | write request | openAead request => exact old_sample _
 
-/-- The actual record interpreter charges only its literal commitment hash and preserves all other source primitive effects at zero shared-hash cost. -/
+/-- The full actual record interpreter charges both transcript AD and commitment hash requests while preserving every other source primitive effect. -/
 theorem record_bound (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire) (query : RegistrationRecordPrimitives.Request) :
     Bounded (RegistrationNativeIdentityFrontend.record (n := n) (Auxiliary := Auxiliary) (source := source) setup wire query)
       (if IsRecordHash query then 1 else 0) := lift_old _ _ (old_record setup wire query)

@@ -69,7 +69,7 @@ noncomputable def originalBundle (setup : Setup base KemSK) (index : Nat)
 
 /-- Actual supplied or sampled one-time material is used on both sides; all other phases reject without a writer call. -/
 theorem start_source (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (seeds : List IdentitySeed) (index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner source) (seed : IdentitySeed)
     (found : seeds[owner.identity.handle]? = some seed) (publicKey : owner.identity.publicIdentity = setup.joint.publicKeys seed)
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) :
@@ -92,7 +92,7 @@ theorem start_source (setup : Setup base KemSK) (checks : Checks)
       (related_pure (n := n) (Auxiliary := Auxiliary) (source := source) (Platform := Platform) setup checks representation created seeds (.ok none : RustM (Option (alloc.vec.Vec U8))))
 
 theorem start_keeps (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner source)
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) :
     Keeps (n := n) (Auxiliary := Auxiliary) setup checks representation created (start setup index owner writer) := by
@@ -112,7 +112,7 @@ theorem start_keeps (setup : Setup base KemSK) (checks : Checks)
 
 /-- The full effectful bundle uses the actual private generated row selected by owner lookup, preserving every other owner and the complete continued native/P state. -/
 theorem bundle_source (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (seeds : List IdentitySeed) (index : Nat)
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (before : RegistrationNativeIdentitySourceSimulation.NewState n KemSK Auxiliary source × Platform)
@@ -140,7 +140,7 @@ theorem bundle_source (setup : Setup base KemSK) (checks : Checks)
       selected, nativeFound] using actual
 
 theorem bundle_keeps (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) :
     Keeps (n := n) (Auxiliary := Auxiliary) (source := source) setup checks representation created (bundle setup index writer) := by
   intro before result supported

@@ -1,4 +1,5 @@
 -- SPDX-License-Identifier: 0BSD
+import BeaconcryptCore.Computational.PqxdhEnvironmentForward
 import BeaconcryptCore.Computational.RegistrationNativeSecretWordPendingPinNative
 import BeaconcryptCore.Computational.RegistrationNativePlatformPublicationPendingPin
 import BeaconcryptCore.Computational.RegistrationNativePlatformBundleCoherence
@@ -109,8 +110,7 @@ private theorem source_outgoing_keeps (setup : Setup base KemSK) (index : Nat) (
   classical
   rcases query with (hashRequest | signRequest) | edRequest
   · exact source_lift_keeps _
-  · exact source_bind_keeps _ _ (source_sample_keeps _) (fun _ =>
-      source_bind_keeps _ _ (source_lift_keeps _) (fun _ => source_pure_keeps _))
+  · exact source_pure_keeps _
   · simp only [outgoing]
     split
     · exact source_bind_keeps _ _ (source_log_keeps index _ _) (fun _ => source_pure_keeps _)
@@ -167,25 +167,12 @@ private theorem continue_keeps {Input : Type} (action : RustM Input)
   cases action with
   | fail error | div => exact pure_keeps (Invariant := Invariant) _
   | ok value => exact law value
-private theorem ready_keeps (encode : registration.SignedInitView → G source Auxiliary target (RustM (core.option.Option Encoded)))
+private theorem ready_keeps (encode : registration.InitView → G source Auxiliary target (RustM (core.option.Option Encoded)))
     (law : ∀ view, Keeps (Invariant := Invariant) (encode view)) (pending : registration.BeaconInitReady) : Keeps (Invariant := Invariant) (ready encode pending) := by
   unfold ready
   exact continue_keeps (Invariant := Invariant) _ _ fun view => bind_keeps (Invariant := Invariant) _ _ (law view) fun _ => pure_keeps (Invariant := Invariant) _
-private theorem signing_keeps (impl : QueryImpl RegistrationBeaconInitExecutor.Spec (G source Auxiliary target))
-    (encode : registration.SignedInitView → G source Auxiliary target (RustM (core.option.Option Encoded)))
-    (queries : ∀ query, Keeps (Invariant := Invariant) (impl query)) (encoding : ∀ view, Keeps (Invariant := Invariant) (encode view))
-    (payload : MldsaTranscriptAuth.Payload) (digest : CtxRomAuth.CtxDigest) (pending : registration.BeaconMldsaSigning) :
-    Keeps (Invariant := Invariant) (fromSigning impl encode payload digest pending) := by
-  unfold fromSigning
-  apply continue_keeps (Invariant := Invariant) _ _
-  intro request
-  apply bind_keeps (Invariant := Invariant) _ _ (queries _)
-  intro signature
-  apply continue_keeps (Invariant := Invariant) _ _
-  intro effect
-  cases effect <;> first | exact pure_keeps (Invariant := Invariant) _ | exact ready_keeps (Invariant := Invariant) encode encoding _
 private theorem hash_keeps (impl : QueryImpl RegistrationBeaconInitExecutor.Spec (G source Auxiliary target))
-    (encode : registration.SignedInitView → G source Auxiliary target (RustM (core.option.Option Encoded)))
+    (encode : registration.InitView → G source Auxiliary target (RustM (core.option.Option Encoded)))
     (queries : ∀ query, Keeps (Invariant := Invariant) (impl query)) (encoding : ∀ view, Keeps (Invariant := Invariant) (encode view))
     (pending : registration.BeaconInitHash) : Keeps (Invariant := Invariant) (fromHash impl encode pending) := by
   unfold fromHash
@@ -195,21 +182,9 @@ private theorem hash_keeps (impl : QueryImpl RegistrationBeaconInitExecutor.Spec
   intro digest
   apply continue_keeps (Invariant := Invariant) _ _
   intro effect
-  cases effect <;> first | exact pure_keeps (Invariant := Invariant) _ | exact signing_keeps (Invariant := Invariant) impl encode queries encoding _ _ _
-private theorem fingerprint_keeps (impl : QueryImpl RegistrationBeaconInitExecutor.Spec (G source Auxiliary target))
-    (encode : registration.SignedInitView → G source Auxiliary target (RustM (core.option.Option Encoded)))
-    (queries : ∀ query, Keeps (Invariant := Invariant) (impl query)) (encoding : ∀ view, Keeps (Invariant := Invariant) (encode view))
-    (pending : registration.BeaconFingerprint) : Keeps (Invariant := Invariant) (fromFingerprint impl encode pending) := by
-  unfold fromFingerprint
-  apply continue_keeps (Invariant := Invariant) _ _
-  intro request
-  apply bind_keeps (Invariant := Invariant) _ _ (queries _)
-  intro digest
-  apply continue_keeps (Invariant := Invariant) _ _
-  intro effect
-  cases effect <;> first | exact pure_keeps (Invariant := Invariant) _ | exact hash_keeps (Invariant := Invariant) impl encode queries encoding _
+  cases effect <;> first | exact pure_keeps (Invariant := Invariant) _ | exact ready_keeps (Invariant := Invariant) encode encoding _
 private theorem ed_keeps (impl : QueryImpl RegistrationBeaconInitExecutor.Spec (G source Auxiliary target))
-    (encode : registration.SignedInitView → G source Auxiliary target (RustM (core.option.Option Encoded)))
+    (encode : registration.InitView → G source Auxiliary target (RustM (core.option.Option Encoded)))
     (queries : ∀ query, Keeps (Invariant := Invariant) (impl query)) (encoding : ∀ view, Keeps (Invariant := Invariant) (encode view))
     (pending : registration.BeaconEd25519Signing) : Keeps (Invariant := Invariant) (fromEd impl encode pending) := by
   rw [fromEd.eq_def]
@@ -222,18 +197,18 @@ private theorem ed_keeps (impl : QueryImpl RegistrationBeaconInitExecutor.Spec (
   | ok effect => cases effect with
     | Rejected previous => exact pure_keeps (Invariant := Invariant) _
     | Ed25519SigningRequested next => exact ed_keeps impl encode queries encoding next
-    | FingerprintRequested selected => exact fingerprint_keeps (Invariant := Invariant) impl encode queries encoding selected
+    | HashRequested selected => exact hash_keeps (Invariant := Invariant) impl encode queries encoding selected
     | _ => exact pure_keeps (Invariant := Invariant) _
 termination_by RegistrationBeaconInitExecutor.edRank pending
 decreasing_by exact RegistrationBeaconInitExecutor.ed_rank pending reply next resumed
 
 /-- Every actual source publication stage preserves owner metadata under arbitrary crypto/writer replies, including failure and recursive Ed-signing stages. -/
 private theorem publication (impl : QueryImpl RegistrationBeaconInitExecutor.Spec (G source Auxiliary target))
-    (encode : registration.SignedInitView → G source Auxiliary target (RustM (core.option.Option Encoded)))
+    (encode : registration.InitView → G source Auxiliary target (RustM (core.option.Option Encoded)))
     (queries : ∀ query, Keeps (Invariant := Invariant) (impl query)) (encoding : ∀ view, Keeps (Invariant := Invariant) (encode view))
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize) :
-    Keeps (Invariant := Invariant) (begin impl encode control inputs coins pin mldsa) := by
+    (pin : session.ServerAuthenticationPin) :
+    Keeps (Invariant := Invariant) (begin impl encode control inputs coins pin) := by
   unfold begin
   apply continue_keeps (Invariant := Invariant) _ _
   intro effect
@@ -242,11 +217,11 @@ private theorem publication (impl : QueryImpl RegistrationBeaconInitExecutor.Spe
 
 private noncomputable def bundled (impl : QueryImpl (Trusted n KemSK) (OracleComp target))
     (setup : Setup base KemSK)
-    (encode : registration.SignedInitView → G source Auxiliary target (RustM (core.option.Option Encoded)))
+    (encode : registration.InitView → G source Auxiliary target (RustM (core.option.Option Encoded)))
     (index : Nat) (owner : Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes) :
     G source Auxiliary target (RustM (Option Encoded)) := do
   let published ← begin (fun query => RegistrationNativePlatformGenericBundle.liftLegacy impl (outgoing setup source index owner query))
-    encode ⟨owner.pin.binding⟩ (inputs setup owner) ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey
+    encode ⟨owner.pin.binding⟩ (inputs setup owner) ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin
   match published with
   | .fail error => pure (.fail error)
   | .div => pure .div
@@ -264,7 +239,7 @@ private theorem legacy_modify (impl : QueryImpl (Trusted n KemSK) (OracleComp ta
 
 private theorem bundled_keeps (impl : QueryImpl (Trusted n KemSK) (OracleComp target))
     (setup : Setup base KemSK)
-    (encode : registration.SignedInitView → G source Auxiliary target (RustM (core.option.Option Encoded)))
+    (encode : registration.InitView → G source Auxiliary target (RustM (core.option.Option Encoded)))
     (encoding : ∀ view, Keeps (Invariant := Holds) (encode view))
     (encoding_metadata : ∀ view owners env result, result ∈ support (((encode view).run owners).run env) →
       result.1.2.map RegistrationNativeOwnerFields.metadata = owners.map RegistrationNativeOwnerFields.metadata)
@@ -277,7 +252,7 @@ private theorem bundled_keeps (impl : QueryImpl (Trusted n KemSK) (OracleComp ta
   simp only [bundled, StateT.run_bind, mem_support_bind_iff] at supported
   obtain ⟨middle, called, continued⟩ := supported
   have retained := (publication _ _ (fun query => legacy_keeps impl _ (source_outgoing_keeps setup index owner query))
-    encoding _ _ _ _ _) owners env middle prior called
+    encoding _ _ _ _) owners env middle prior called
   cases actual : middle.1.1 with
   | fail error | div =>
     simp only [actual, StateT.run_pure, mem_support_pure_iff] at continued
@@ -291,7 +266,7 @@ private theorem bundled_keeps (impl : QueryImpl (Trusted n KemSK) (OracleComp ta
     | Ok published =>
       have metadata : middle.1.2.map RegistrationNativeOwnerFields.metadata = owners.map RegistrationNativeOwnerFields.metadata := by
         apply (publication (Invariant := fun current => current.map RegistrationNativeOwnerFields.metadata = owners.map RegistrationNativeOwnerFields.metadata)
-          _ _ ?_ ?_ _ _ _ _ _) owners env middle rfl called
+          _ _ ?_ ?_ _ _ _ _) owners env middle rfl called
         · intro query
           apply legacy_keeps (Invariant := fun current => current.map RegistrationNativeOwnerFields.metadata = owners.map RegistrationNativeOwnerFields.metadata) impl _
           intro current environment reached valid possible
@@ -303,7 +278,7 @@ private theorem bundled_keeps (impl : QueryImpl (Trusted n KemSK) (OracleComp ta
       obtain ⟨current, currentFound, currentMetadata⟩ := Option.map_eq_some_iff.mp same
       have pin : current.pin.binding = owner.pin.binding := congrArg (fun owner => owner.pin.binding) currentMetadata
       have expected := RegistrationNativePlatformPublicationPendingPin.begin_coherent _ encode ⟨owner.pin.binding⟩
-        (inputs setup owner) ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey
+        (inputs setup owner) ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin
         published owners middle.1.2 env middle.2 (by simpa only [← actual] using called)
       have installed : Holds (middle.1.2.set index {current with phase:=.initSent published.pending oneTime}) := by
         intro selected member
@@ -315,11 +290,11 @@ private theorem bundled_keeps (impl : QueryImpl (Trusted n KemSK) (OracleComp ta
       exact (bind_keeps (Invariant := Holds) _ _ (legacy_keeps impl _ (source_lift_keeps _)) (fun _ => pure_keeps _))
         (middle.1.2.set index {current with phase:=.initSent published.pending oneTime}) middle.2 result installed continued
 
-private theorem encoder_keeps {E : Type} (view : registration.SignedInitView) :
+private theorem encoder_keeps {E : Type} (view : registration.InitView) :
     Keeps (Invariant := Holds) (RegistrationNativePlatformGenericBundle.encoder (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (source := source) E view) :=
   lift_keeps _
 
-private theorem encoder_metadata {E : Type} (view : registration.SignedInitView)
+private theorem encoder_metadata {E : Type} (view : registration.InitView)
     (owners : State source) (env : EnvState Auxiliary)
     (result : (RustM (core.option.Option (alloc.vec.Vec U8)) × State source) × EnvState Auxiliary)
     (possible : result ∈ support (((RegistrationNativePlatformGenericBundle.encoder (n := n) (KemSK := KemSK) E view).run owners).run env)) :

@@ -70,9 +70,9 @@ theorem collect_handle (owner : SelectedOwner source) (oneTime : PqxdhJointGapDh
           (.decapsulate ciphertext ())).run first) ∧
       ∃ pair,(kem first.2).1.keys[owner.kemHandle]?=some pair := by
   rw [RegistrationNativePlatformLorSourceOwnerCollect.collect_run] at supported
-  have collectedAt := RegistrationNativeSecretWordAtomOwnerCollector.prepare_receipt
+  have collectedAt := RegistrationNativeSecretWordAtomOwnerCollector.prepare_receipt (completedBinding := authenticated.binding)
     (RegistrationNativePlatformLorSourceOwnerCollect.compiler setup implementation owner oneTime authenticated)
-    authenticated.pending.control () () () [] before after pending supported
+    authenticated.control () () () [] before after pending supported
   obtain ⟨header,first,second,word,_earlier,called,same⟩ :=
     RegistrationNativeSecretWordAtomOwnerCollector.collect_receipt _ () () () [] before after pending.collected collectedAt
   have equal : word=Word.atom := same.symm.trans atom

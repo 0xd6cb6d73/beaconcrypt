@@ -26,7 +26,7 @@ variable (configuration :RegistrationNativePlatformPublicAdapterConfiguration.Co
   (P:=P) (E:=E) (R:=R) (Error:=Error) (source:=source) setup checks)
 local notation "coins"=>RegistrationNativePlatformMldsaProgram.coins
 
-variable (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
 variable (current :RegistrationNativeExperiment.State n KemSK source×P)
 variable (before :RegistrationNativePlatformPublicAdapterDispatcherCore.Private configuration created credential current)
 

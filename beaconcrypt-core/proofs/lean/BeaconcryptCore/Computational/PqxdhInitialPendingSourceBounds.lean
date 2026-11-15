@@ -10,6 +10,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialPendingSourceBounds
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhInitialPendingPost PqxdhBeaconPhase2Bounds
 variable {ι Chain M P I D K X Response Shared Result : Type} {extra : OracleSpec ι} {S B : Nat}
 
@@ -98,14 +100,14 @@ theorem tail_total (decode : RawCtxReceive.FrameDecoder)
 /-- Every attempted Beacon finish reserves thirteen preparation callbacks and fifty-four initializer/application/receive callbacks, including every rejection branch. -/
 theorem owner_total (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
     (state : RawCtxGenericRoleStorage.BeaconState (KernelOf Chain) I D K) :
-    (PqxdhInitialGenericBeacon.owner preForward
+    (PqxdhInitialGenericBeacon.owner (completedBinding := completedBinding) preForward
       (calls (extra := extra) (X := X) (Response := Response) (Shared := Shared) (S := S) (B := B))
       applicationForward initialForward decode raw state).IsTotalQueryBound 67 := by
   cases active : state.beacon.phase with
   | initSent control prekey oneTime kem =>
       simp only [PqxdhInitialGenericBeacon.owner, active]
       apply isTotalQueryBound_bind (n₁ := 13) (n₂ := 54)
-      · exact simulate_total preForward _ 13 (PqxdhPhase2SharedBounds.prepare_total _ _ _ _ _ _) (fun _ => one_query _)
+      · exact simulate_total preForward _ 13 (PqxdhPhase2SharedBounds.prepare_total (completedBinding := completedBinding) _ _ _ _ _ _) (fun _ => one_query _)
       · intro pending
         cases pending with
         | none => trivial
@@ -118,7 +120,7 @@ theorem owner_total (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
 theorem step_total (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
     (decode : RawCtxReceive.FrameDecoder) (query : (PqxdhInitialGenericPost.Spec extra S B).Domain)
     (before : Front Chain M P I D K S B) :
-    ((compiler (X := X) (Response := Response) (Shared := Shared) sender route decode query).run before).IsTotalQueryBound 67 := by
+    ((compiler (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared) sender route decode query).run before).IsTotalQueryBound 67 := by
   rcases query with (query | query) | query
   · simp only [compiler, StateT.run, bind_pure_comp, IsTotalQueryBound, isQueryBound_map_iff]
     exact (simulate_total liveForward _ 52 (live_total sender route decode query before.roles) (fun _ => one_query _)).mono (by decide)
@@ -127,22 +129,22 @@ theorem step_total (sender : M → Std.U64) (route : RawCtxServerRouting.SenderD
   · cases query with
     | finish index raw =>
         simp only [compiler, StateT.run, bind_pure_comp, IsTotalQueryBound, isQueryBound_map_iff]
-        exact owner_total decode raw (before.roles.1.2 index)
+        exact owner_total (completedBinding := completedBinding) decode raw (before.roles.1.2 index)
 
 /-- An arbitrary adaptive original post client retains its full schedule and pays sixty-seven callbacks per admitted source query. -/
 theorem program_total (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
     (decode : RawCtxReceive.FrameDecoder) (client : OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result)
     (qPost : Nat) (bounded : client.IsTotalQueryBound qPost) (before : Front Chain M P I D K S B) :
-    ((simulateQ (compiler (X := X) (Response := Response) (Shared := Shared) sender route decode) client).run before).IsTotalQueryBound (qPost * 67) := by
+    ((simulateQ (compiler (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared) sender route decode) client).run before).IsTotalQueryBound (qPost * 67) := by
   apply (isQueryBoundP_true_iff _ _).mp
   exact interpreted_total_bound _ (fun _ => True) 67 qPost
-    (fun query state => (step_total sender route decode query state).isQueryBoundP) client bounded before
+    (fun query state => (step_total (completedBinding := completedBinding) sender route decode query state).isQueryBoundP) client bounded before
 
 /-- The complete first-send publication tail reserves the derivation, sealing, erasure and serialization callbacks. -/
 theorem publication_total (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Pqxdh.Bytes)
     (kernel : KernelOf Chain) (metadata : P)
     (state : PqxdhInitialGenericPublication.State (KernelOf Chain) M P (List Pqxdh.Bytes)) :
-    (PqxdhInitialGenericPublication.afterInitialization
+    (PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData)
       (calls (extra := extra) (I := I) (D := D) (K := K) (X := X) (Response := Response) (Shared := Shared) (S := S) (B := B))
       auxForward candidate authenticated kernel metadata state).IsTotalQueryBound 4 := by
   unfold PqxdhInitialGenericPublication.afterInitialization
@@ -161,7 +163,7 @@ theorem publication_total (candidate : pqxdh.ServerRegistrationCandidate) (authe
 theorem candidate_total (initial : RustM (KernelOf Chain)) (candidate : pqxdh.ServerRegistrationCandidate)
     (data : Option Pqxdh.Bytes) (metadata : P)
     (state : PqxdhInitialGenericPublication.State (KernelOf Chain) M P (List Pqxdh.Bytes)) :
-    (PqxdhInitialGenericBuilder.candidate
+    (PqxdhInitialGenericBuilder.candidate (associatedData := associatedData)
       (calls (extra := extra) (I := I) (D := D) (K := K) (X := X) (Response := Response) (Shared := Shared) (S := S) (B := B))
       auxForward initial candidate data metadata state).IsTotalQueryBound 7 := by
   unfold PqxdhInitialGenericBuilder.candidate
@@ -193,7 +195,7 @@ theorem candidate_total (initial : RustM (KernelOf Chain)) (candidate : pqxdh.Se
                 | div => trivial
                 | ok binding =>
                     simp only [IsTotalQueryBound, isQueryBound_map_iff]
-                    exact publication_total candidate _ kernel metadata state
+                    exact publication_total (associatedData := associatedData) candidate _ kernel metadata state
             · trivial
 
 private theorem continue_total {α β κ : Type} {spec : OracleSpec κ}
@@ -208,7 +210,7 @@ theorem ready_total (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (initial : RustM (KernelOf Chain)) (binding : pqxdh.ServerBinding)
     (ready : PqxdhPrivateAcceptedRoot.Ready) (metadata : P)
     (state : PqxdhInitialGenericPublication.State (KernelOf Chain) M P (List Pqxdh.Bytes)) :
-    (PqxdhInitialGenericBuilder.readyBuild source
+    (PqxdhInitialGenericBuilder.readyBuild (associatedData := associatedData) source
       (calls (extra := extra) (I := I) (D := D) (K := K) (X := X) (Response := Response) (Shared := Shared) (S := S) (B := B))
       auxForward initial binding ready metadata state).IsTotalQueryBound 7 := by
   unfold PqxdhInitialGenericBuilder.readyBuild PqxdhInitialGenericBuilder.usedBuild
@@ -217,16 +219,16 @@ theorem ready_total (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
   all_goals try trivial
   apply continue_total
   rintro (prepared | _)
-  all_goals first | exact candidate_total initial _ ready.application metadata state | trivial
+  all_goals first | exact candidate_total (associatedData := associatedData) initial _ ready.application metadata state | trivial
 
 /-- The complete consumed-registration builder has seven pending callbacks, preserving every reinstall and error branch. -/
 theorem builder_total (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (initial : RustM (KernelOf Chain)) (sender : M → Std.U64) (index : Fin S) (metadata : P)
     (ready : PqxdhPrivateAcceptedRoot.Ready) (before : Front Chain M P I D K S B) :
-    ((PqxdhInitialPendingBuilder.build (extra := extra) (X := X) (Response := Response) (Shared := Shared)
+    ((PqxdhInitialPendingBuilder.build (associatedData := associatedData) (extra := extra) (X := X) (Response := Response) (Shared := Shared)
       source initial sender index metadata ready).run before).IsTotalQueryBound 7 := by
   simp only [PqxdhInitialPendingBuilder.build, StateT.run, IsTotalQueryBound, isQueryBound_map_iff]
-  exact ready_total source initial _ ready metadata _
+  exact ready_total (associatedData := associatedData) source initial _ ready metadata _
 
 /-- The single complete accepted source retains its first response and every adaptive post request with an explicit all-reply callback bill. -/
 theorem sequence_total (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
@@ -236,11 +238,11 @@ theorem sequence_total (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (post : RustM (Option PqxdhServerRegistrationPublication.Response) → OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result)
     (qPost : Nat) (bounded : ∀ reply, (post reply).IsTotalQueryBound qPost)
     (before : Front Chain M P I D K S B) :
-    ((PqxdhInitialPendingAccepted.sequence (X := X) (Response := Response) (Shared := Shared)
+    ((PqxdhInitialPendingAccepted.sequence (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
       source initial sender route decode index metadata ready post).run before).IsTotalQueryBound (7 + qPost * 67) := by
   simp only [PqxdhInitialPendingAccepted.sequence, StateT.run_bind]
-  exact isTotalQueryBound_bind (builder_total source initial sender index metadata ready before)
-    (fun result => program_total sender route decode (post result.1) qPost (bounded result.1) result.2)
+  exact isTotalQueryBound_bind (builder_total (associatedData := associatedData) source initial sender index metadata ready before)
+    (fun result => program_total (completedBinding := completedBinding) sender route decode (post result.1) qPost (bounded result.1) result.2)
 
 end BeaconcryptCore.Computational.PqxdhInitialPendingSourceBounds
 

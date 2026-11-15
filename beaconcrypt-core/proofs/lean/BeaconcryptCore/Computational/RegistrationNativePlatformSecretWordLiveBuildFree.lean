@@ -48,15 +48,36 @@ private theorem afterResult_free (predicate : spec.Domain → Prop) [DecidablePr
         simp only [ite_true, StateT.run_bind, StateT.run_lift, bind_pure_comp, bind_map_left]
         exact bind_free predicate _ _ (serviceFree control initial reference prepared) (fun _ => pure_free predicate _)
 
+private theorem afterOccupancy_free (predicate : spec.Domain → Prop) [DecidablePred predicate]
+    (flags : Message → Bool) (deriveAd : RegistrationNativePlatformServerMaterialFrontend.AdHash (M World spec))
+    (reserve : M World spec Bool) (service : Service (M World spec) Encoded)
+    (deriveAdFree : ∀ pending, Free predicate (deriveAd pending)) (reserveFree : Free predicate reserve)
+    (serviceFree : ∀ control initial reference, flags reference = true → Free predicate (service control initial reference))
+    (control : pqxdh.ServerState) (lookup : peer.CompletionLookup) (reference : Message)
+    (prepared : flags reference = true) (occupied : Bool) (before : ServerState) :
+    Free predicate ((afterOccupancy deriveAd reserve service control lookup reference occupied).run before) := by
+  unfold afterOccupancy
+  cases lookup.resume occupied with
+  | fail error | div => exact pure_free predicate _
+  | ok result => cases result with
+    | Err previous => exact pure_free predicate _
+    | Ok pending =>
+      simp only [StateT.run_bind, StateT.run_lift, bind_pure_comp, bind_map_left]
+      apply bind_free predicate _ _ (deriveAdFree pending)
+      intro hashed
+      exact afterResult_free predicate flags reserve service reserveFree serviceFree control reference prepared _ before
+
 private theorem afterPin_free (predicate : spec.Domain → Prop) [DecidablePred predicate]
-    (flags : Message → Bool) (reserve : M World spec Bool) (present : U64 → M World spec Bool)
+    (flags : Message → Bool) (deriveAd : RegistrationNativePlatformServerMaterialFrontend.AdHash (M World spec))
+    (reserve : M World spec Bool) (present : U64 → M World spec Bool)
     (service : Service (M World spec) Encoded)
+    (deriveAdFree : ∀ pending, Free predicate (deriveAd pending))
     (reserveFree : Free predicate reserve) (presentFree : ∀ keyId, Free predicate (present keyId))
     (serviceFree : ∀ control initial reference, flags reference = true → Free predicate (service control initial reference))
     (control : pqxdh.ServerState) (ready : ServerReady) (application : Slice U8)
     (prepared : flags ready.reference = true)
     (current : RustM (core.option.Option session.ServerAuthenticationPin)) (before : ServerState) :
-    Free predicate ((afterPin reserve present service control ready application current).run before) := by
+    Free predicate ((afterPin deriveAd reserve present service control ready application current).run before) := by
   cases current with
   | fail error | div => exact pure_free predicate _
   | ok current => cases current with
@@ -78,18 +99,21 @@ private theorem afterPin_free (predicate : spec.Domain → Prop) [DecidablePred 
             split
             · apply bind_free predicate (present keyId) _ (presentFree keyId)
               intro occupied
-              exact afterResult_free predicate flags reserve service reserveFree serviceFree control ready.reference prepared _ before
+              exact afterOccupancy_free predicate flags deriveAd reserve service deriveAdFree reserveFree serviceFree
+                control lookup ready.reference prepared occupied before
             · exact pure_free predicate _
 
 /-- Arbitrary stateful prefix services and a name-preserving material service give zero unprepared demands after the actual one-use take. -/
 theorem control_free (predicate : spec.Domain → Prop) [DecidablePred predicate] (flags : Message → Bool)
+    (deriveAd : RegistrationNativePlatformServerMaterialFrontend.AdHash (M World spec))
     (pin : session.ServerAuthenticationPin → M World spec (RustM (core.option.Option session.ServerAuthenticationPin)))
     (reserve : M World spec Bool) (present : U64 → M World spec Bool) (service : Service (M World spec) Encoded)
+    (deriveAdFree : ∀ pending, Free predicate (deriveAd pending))
     (pinFree : ∀ current, Free predicate (pin current)) (reserveFree : Free predicate reserve)
     (presentFree : ∀ keyId, Free predicate (present keyId))
     (serviceFree : ∀ control initial reference, flags reference = true → Free predicate (service control initial reference))
     (handle : Nat) (application : Option (Slice U8)) (before : ServerState) (live : Live before flags) :
-    Free predicate ((build pin reserve present service handle application).run before) := by
+    Free predicate ((build deriveAd pin reserve present service handle application).run before) := by
   have receipt := RegistrationNativeSecretWordLiveSessions.take_live handle before flags live
   simp only [build, StateT.run]
   rcases taken : RegistrationNativeSecretWordServerMaterial.take handle before with ⟨selected, current⟩
@@ -102,7 +126,7 @@ theorem control_free (predicate : spec.Domain → Prop) [DecidablePred predicate
       simp only [complete, StateT.run]
       apply bind_free predicate (pin current.pin) _ (pinFree current.pin)
       intro currentPin
-      exact afterPin_free predicate flags reserve present service reserveFree presentFree serviceFree current.control
+      exact afterPin_free predicate flags deriveAd reserve present service deriveAdFree reserveFree presentFree serviceFree current.control
         ready application (receipt.2 ready rfl) currentPin current
 
 section Actual
@@ -154,8 +178,8 @@ theorem body_free (flags : Message → Bool) (handle : Nat) (application : Optio
     (live : Live before flags) :
     (((RegistrationNativePlatformSecretWordBuild.body (n := n) source view failure allocation erased helper sign writer reserve
       handle application).run before).run previous).IsQueryBoundP (Bad flags) 0 := by
-  exact control_free (Bad flags) flags _ _ _ _
-    (fun _ => effects_free flags _) (effects_free flags _) (fun _ => effects_free flags _)
+  exact control_free (Bad flags) flags _ _ _ _ _
+    (fun _ => effects_free flags _) (fun _ => effects_free flags _) (effects_free flags _) (fun _ => effects_free flags _)
     (fun control initial reference prepared => service_free source view failure allocation erased helper sign writer flags
       control initial reference prepared) handle application before live previous
 end Actual

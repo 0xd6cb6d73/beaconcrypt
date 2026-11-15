@@ -3,7 +3,7 @@ import BeaconcryptCore.Computational.RegistrationNativeMldsaNoSign
 import BeaconcryptCore.Computational.RegistrationNativeInitFinal
 import BeaconcryptCore.Computational.RegistrationNativeMldsaCreation
 
-/-! All original native callbacks outside outgoing ML publication retain the literal prior ML receipt list. Creation suffixes use only ordinary source operations after their named generation leaf; incoming finish and authentication cannot fabricate a signing receipt. -/
+/-! The named ordinary native callbacks retain the literal prior Server ML receipt list. Beacon creation selects its full Server pin purely and uses ordinary identity/KEM source operations; incoming finish and authentication cannot fabricate a signing receipt. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -25,7 +25,7 @@ def receipts (before : RegistrationNativeExperiment.State n KemSK source) := bef
 /-- A local controller with no ML receipt operation restores exactly its literal prior global prefix. -/
 theorem beacon (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : M n KemSK source RegistrationServerRoleBackend.State Value) (law : Holds work)
     (before : RegistrationNativeExperiment.State n KemSK source)
     (result : Value × RegistrationNativeExperiment.State n KemSK source)
@@ -91,7 +91,7 @@ private theorem state_pure_apply {S A : Type} {m : Type → Type} [Monad m]
 theorem accept (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (before : RegistrationServerFrontendCompiler.State n)
     (result : RustM (Option Nat) × RegistrationServerFrontendCompiler.State n)
     (supported : result ∈ support ((RegistrationServerSdkSource.accept setup codec checks route source.verify representation created packet).run before)) :
@@ -128,7 +128,7 @@ def NonSigning : RegistrationNativeRawAdapter.TypedSpec.Domain → Prop
 theorem handler (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (allowed : NonSigning query)
     (before : RegistrationNativeExperiment.State n KemSK source)
     (result : RegistrationNativeRawAdapter.TypedSpec.Range query × RegistrationNativeExperiment.State n KemSK source)
@@ -205,33 +205,17 @@ private theorem set_holds (owners : RegistrationNativeBeaconFrontend.State sourc
   cases supported
   rfl
 
-/-- The actual post-generation creation suffix has no signing callback; all original preflight, fingerprint, identity, KEM-birth and owner-allocation outcomes retain the earlier ML prefix. -/
-theorem createSuffix (setup : Setup base KemSK) (edPin : Std.Array U8 32#usize)
-    (mlPin : Std.Array U8 1952#usize) (keyId : Std.U64)
-    (generated : Option (RegistrationNativeMldsa.Credential source)) :
-    Holds (RegistrationNativeMldsaCreation.createSuffix (n := n) setup edPin mlPin keyId generated) := by
-  have prepareLaw : Holds (RegistrationNativeMldsaCreation.afterGenerated (n := n) (KemSK := KemSK) edPin mlPin keyId generated) := by
-    unfold RegistrationNativeMldsaCreation.afterGenerated
-    cases generated with
-    | none => exact pure_holds _
-    | some credential =>
-        dsimp only
-        cases registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
-        | fail error | div => exact pure_holds _
-        | ok pending =>
-            dsimp only
-            cases pending.request with
-            | fail error | div => exact pure_holds _
-            | ok request =>
-                apply bind_holds _ _ (trusted_holds _)
-                intro digest
-                cases pending.resume (.Some (RegistrationAuthenticationShared.digestArray digest)) with
-                | fail error | div => exact pure_holds _
-                | ok option => cases option with
-                  | none => exact pure_holds _
-                  | some pin => exact bind_holds _ _ (sample_holds _) (fun _ =>
-                      bind_holds _ _ (sample_holds _) (fun _ => pure_holds _))
-  unfold RegistrationNativeMldsaCreation.createSuffix
+/-- Current construction has no signing callback; pure pin selection and ordinary identity/KEM work preserve all prior Server receipts. -/
+theorem create (setup : Setup base KemSK) (edPin : Std.Array U8 32#usize)
+    (mlPin : Std.Array U8 1952#usize) (keyId : Std.U64) :
+    Holds (RegistrationNativeBeaconFrontend.create (n := n) (Auxiliary := RegistrationServerRoleBackend.State) setup source edPin mlPin keyId) := by
+  have prepareLaw : Holds (RegistrationNativeBeaconFrontend.prepare (n := n) (KemSK := KemSK) (Auxiliary := RegistrationServerRoleBackend.State) source edPin mlPin keyId) := by
+    unfold RegistrationNativeBeaconFrontend.prepare
+    cases registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
+    | fail error | div => exact pure_holds _
+    | ok pin => exact bind_holds _ _ (sample_holds _) (fun _ =>
+        bind_holds _ _ (sample_holds _) (fun _ => pure_holds _))
+  unfold RegistrationNativeBeaconFrontend.create
   apply bind_holds _ _ prepareLaw
   intro prepared
   cases prepared with
@@ -251,17 +235,16 @@ theorem createSuffix (setup : Setup base KemSK) (edPin : Std.Array U8 32#usize)
         exact pure_holds _
 
 /-- Closing that same actual suffix preserves its literal complete native global signing prefix. -/
-theorem source_createSuffix (setup : Setup base KemSK) (checks : Checks)
+theorem source_create (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (edPin : Std.Array U8 32#usize)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (edPin : Std.Array U8 32#usize)
     (mlPin : Std.Array U8 1952#usize) (keyId : Std.U64)
-    (generated : Option (RegistrationNativeMldsa.Credential source))
     (before : RegistrationNativeExperiment.State n KemSK source)
     (result : RustM (Option Nat) × RegistrationNativeExperiment.State n KemSK source)
     (supported : result ∈ support ((RegistrationNativeExperiment.beacon setup checks representation created
-      (RegistrationNativeMldsaCreation.createSuffix setup edPin mlPin keyId generated)).run before)) :
+      (RegistrationNativeBeaconFrontend.create setup source edPin mlPin keyId)).run before)) :
     receipts result.2 = receipts before :=
-  beacon setup checks representation created _ (createSuffix setup edPin mlPin keyId generated) before result supported
+  beacon setup checks representation created _ (create setup edPin mlPin keyId) before result supported
 
 end BeaconcryptCore.Computational.RegistrationNativeMldsaReceiptPreservation
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaReceiptPreservation.beacon' depends on axioms: [propext,
@@ -295,13 +278,13 @@ end BeaconcryptCore.Computational.RegistrationNativeMldsaReceiptPreservation
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaReceiptPreservation.handler
 
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaReceiptPreservation.createSuffix' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaReceiptPreservation.create' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaReceiptPreservation.createSuffix
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaReceiptPreservation.source_createSuffix' depends on axioms: [propext,
+#print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaReceiptPreservation.create
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaReceiptPreservation.source_create' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaReceiptPreservation.source_createSuffix
+#print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaReceiptPreservation.source_create

@@ -22,10 +22,11 @@ variable [generators : AdapterBeaconConstructorRequestMonad.Operations (RustT (M
 variable [crypto : AdapterPublicWrapperRequestMonad.CryptoOperations (RustT (M n KemSK source Auxiliary m))]
 variable [children : AdapterPublicWrapperRequestMonad.ChildOperations (RustT (M n KemSK source Auxiliary m))]
 variable (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (view : AdapterPublicWrapperState.MaterialView source KemSK) (kem : AdapterBeaconConstructorKem.Representation view Unit)
 variable (leaves : Leaves (n := n) (Auxiliary := Auxiliary) coins setup checks representation created standard.os view kem)
 
+omit children in
 theorem try_new (keyId : U64) (identityKey mldsaKey : Slice U8) :
     beaconcrypt_constructor_request.beacon.Beacon.try_new (m := RustT (M n KemSK source Auxiliary m)) keyId identityKey mldsaKey =
       Prod.fst <$> AdapterBeaconConstructorNative.sourceAll coins setup checks representation created standard.os view kem leaves keyId identityKey mldsaKey () := by
@@ -34,6 +35,7 @@ theorem try_new (keyId : U64) (identityKey mldsaKey : Slice U8) :
   rw [AdapterBeaconConstructorNative.source_all coins setup checks representation created standard.os view kem leaves]
   simp only [bind_pure_comp]
 
+omit children in
 theorem new_entry (keyId : U64) (identityKey mldsaKey : Slice U8) :
     beaconcrypt_constructor_request.beacon.Beacon.new (m := RustT (M n KemSK source Auxiliary m)) keyId identityKey mldsaKey = (do
       let result ← Prod.fst <$> AdapterBeaconConstructorNative.sourceAll coins setup checks representation created standard.os view kem leaves keyId identityKey mldsaKey ()

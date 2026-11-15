@@ -27,7 +27,7 @@ def embed (before : Context n KemSK) : RegistrationNativeExperiment.State n KemS
 
 noncomputable def ambient (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     QueryImpl (Ambient n KemSK) (StateT (Context n KemSK) ProbComp) := fun query before =>
   Prod.map id project <$>
     (RegistrationNativeExperiment.trusted setup checks representation created mlSource query).run (embed before)
@@ -35,7 +35,7 @@ noncomputable def ambient (setup : Setup base KemSK) (checks : Checks)
 /-- Removing the source's private Beacon roster has no effect on an actual native ambient primitive operation. -/
 theorem ambient_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (query : (Ambient n KemSK).Domain)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (query : (Ambient n KemSK).Domain)
     (before : RegistrationNativeExperiment.State n KemSK mlSource) :
     Prod.map id project <$>
       (RegistrationNativeExperiment.trusted setup checks representation created mlSource query).run before =
@@ -51,7 +51,7 @@ structure State (n : Nat) (KemSK : Type) where
 
 noncomputable def implementation (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     QueryImpl (Trusted n KemSK) (StateT (State n KemSK) ProbComp)
   | .inl query => fun before =>
       (fun result => (result.1, { before with context := result.2 })) <$>
@@ -68,7 +68,7 @@ noncomputable def implementation (setup : Setup base KemSK) (checks : Checks)
 /-- An actual indexed native identity creation publishes precisely the seed sampled privately at that call and appends it at its generated index. -/
 theorem create_generated (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (before : State n KemSK)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (before : State n KemSK)
     (result : Option (Nat × PqxdhJointIdentity.PublicIdentity) × State n KemSK)
     (reached : result ∈ support ((implementation (mlSource := mlSource) setup checks representation created
       (.inr .create)).run before)) :
@@ -94,7 +94,7 @@ theorem create_generated (setup : Setup base KemSK) (checks : Checks)
 /-- Native signing and static-DH services use their stored seed, retain the exact attempted query/reply and leave every unrelated World/context field unchanged. -/
 theorem service_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (handle : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (handle : Nat)
     (request : PqxdhJointIdentity.JointSpec.Domain) (before : State n KemSK) :
     (implementation (mlSource := mlSource) setup checks representation created (.inr (.service handle request))).run before =
       (let reply := (before.identities.seeds[handle]?).map (fun seed => PqxdhJointIdentity.primitiveReply setup.joint seed request)

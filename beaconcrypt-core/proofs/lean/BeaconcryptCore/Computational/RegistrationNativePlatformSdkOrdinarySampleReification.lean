@@ -41,7 +41,7 @@ omit material platform ed in
 theorem send_sample (setup : Setup base KemSK) (codec : Codec Reader Response)
     (reserve : Nat →StateT Platform ProbComp (core.result.Result Unit E))
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitives.Error)
-    (erased : commitment.CommitmentTranscript) (target sender : U64) (associated : Array U8 281#usize)
+    (erased : commitment.CommitmentTranscript) (target sender : U64) (associated : Array U8 151#usize)
     (kernel : ratchet.concrete.ConcreteRatchetKernel) (bytes : Slice U8) :
     Compatible (RegistrationNativePlatformExtractedSdkOrdinarySendOperands.sample setup codec reserve view failure erased
       target sender associated kernel bytes) := by
@@ -54,8 +54,8 @@ theorem send_sample (setup : Setup base KemSK) (codec : Codec Reader Response)
 
 omit material platform ed primitives [FrameDispatchFallback.Operations] in
 theorem received (setup : Setup base KemSK) (codec : Codec Reader Response)
-    (erased : Array U8 357#usize) (kernel : ratchet.concrete.ConcreteRatchetKernel)
-    (sequence : U64) (payload : Slice U8) (associated : Array U8 281#usize) (sender : U64) :
+    (erased : Array U8 227#usize) (kernel : ratchet.concrete.ConcreteRatchetKernel)
+    (sequence : U64) (payload : Slice U8) (associated : Array U8 151#usize) (sender : U64) :
     Compatible (RegistrationNativePlatformExtractedSdkOrdinaryReceiveDriver.received (Platform:=Platform) setup codec erased kernel sequence payload associated sender) := by
   intro before
   funext previous
@@ -73,8 +73,8 @@ theorem received (setup : Setup base KemSK) (codec : Codec Reader Response)
 
 omit material platform ed primitives [FrameDispatchFallback.Operations] in
 theorem receive_sample (setup : Setup base KemSK) (codec : Codec Reader Response)
-    (erased : Array U8 357#usize) (kernel : ratchet.concrete.ConcreteRatchetKernel)
-    (target : U64) (associated : Array U8 281#usize) (bytes : Slice U8) :
+    (erased : Array U8 227#usize) (kernel : ratchet.concrete.ConcreteRatchetKernel)
+    (target : U64) (associated : Array U8 151#usize) (bytes : Slice U8) :
     Compatible (RegistrationNativePlatformExtractedSdkOrdinaryReceiveCommon.sample (Platform:=Platform) setup codec erased kernel target associated bytes) := by
   unfold RegistrationNativePlatformExtractedSdkOrdinaryReceiveCommon.sample
   cases AdapterPublicOrdinaryEnvelope.prepareReceive bytes target with

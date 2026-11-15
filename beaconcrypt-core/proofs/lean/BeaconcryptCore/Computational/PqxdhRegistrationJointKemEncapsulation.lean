@@ -139,7 +139,8 @@ theorem program_actual (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
 noncomputable def commands (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity)
     (work : OracleComp (PqxdhRegistrationJointKemCommands.SourceSpec KemSK) Result)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) (state : NativeState KemSK) :
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))
+    (state : NativeState KemSK) :
     OracleComp (Spec KemSK) (PqxdhRegistrationJointKemCommands.Outcome KemSK Result) :=
   (simulateQ (impl setup codec checks identityIndex publicIdentity)
     ((simulateQ (PqxdhRegistrationJointRevealSchedule.client setup codec) work).run owners)).run state
@@ -148,7 +149,8 @@ noncomputable def commands (setup : Setup baseSpec KemSK) (codec : Codec Reader 
 theorem commands_actual (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity)
     (work : OracleComp (PqxdhRegistrationJointKemCommands.SourceSpec KemSK) Result)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) (state : NativeState KemSK) :
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))
+    (state : NativeState KemSK) :
     simulateQ (actual setup) (commands setup codec checks identityIndex publicIdentity work owners state) =
       PqxdhRegistrationJointKemCommands.program setup codec checks identityIndex publicIdentity work owners state :=
   program_actual setup codec checks identityIndex publicIdentity _ state

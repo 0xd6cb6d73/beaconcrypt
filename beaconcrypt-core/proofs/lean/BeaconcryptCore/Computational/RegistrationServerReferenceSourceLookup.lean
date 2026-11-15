@@ -38,8 +38,8 @@ theorem request_root (lookup : peer.CompletionLookup) (root : RootOutput) :
 
 /-- Native pin/occupancy admission and every public initial field are independent of the restored private root. -/
 theorem resume_public (lookup : peer.CompletionLookup) (root : RootOutput) (occupied : Bool) :
-    mapOk RegistrationBoundKeySchedule.publicInitial <$> (withRoot lookup root).resume occupied =
-      mapOk RegistrationBoundKeySchedule.publicInitial <$> lookup.resume occupied := by
+    mapOk RegistrationBoundKeySchedule.publicAd <$> (withRoot lookup root).resume occupied =
+      mapOk RegistrationBoundKeySchedule.publicAd <$> lookup.resume occupied := by
   let descriptor : RegistrationBoundGate.PublicAgreement :=
     ⟨lookup.registration.agreement.pending, lookup.registration.agreement.binding⟩
   have original : lookup.registration.agreement = RegistrationBoundGate.atRoot descriptor
@@ -50,10 +50,10 @@ theorem resume_public (lookup : peer.CompletionLookup) (root : RootOutput) (occu
       simp only [RegistrationBoundGate.atRoot, RegistrationBoundSource.root_value_array]
     exact restored lookup.registration.agreement
   have gates (availability : pqxdh.KeyIdAvailability) :
-      mapOk RegistrationBoundKeySchedule.publicInitial <$>
+      mapOk RegistrationBoundKeySchedule.publicAd <$>
         registration.begin_server_completion lookup.control lookup.pin availability
           (RegistrationBoundGate.atRoot descriptor root) lookup.application =
-        mapOk RegistrationBoundKeySchedule.publicInitial <$>
+        mapOk RegistrationBoundKeySchedule.publicAd <$>
           registration.begin_server_completion lookup.control lookup.pin availability
             lookup.registration.agreement lookup.application := by
     have first := RegistrationBoundGate.gate_root lookup.control lookup.pin availability descriptor lookup.application root
@@ -64,15 +64,23 @@ theorem resume_public (lookup : peer.CompletionLookup) (root : RootOutput) (occu
   cases occupied <;> simp only [peer.CompletionLookup.resume, Bool.false_eq_true, ite_false, ite_true, bind_tc_ok]
   all_goals exact gates _
 
-/-- A reached source initializer has the actual Server initial64 role and the restored root bytes. -/
+/-- The reached initializer requires both the actual lookup result and the successful AD-hash continuation. -/
 theorem resume_role (lookup : peer.CompletionLookup) (root : RootOutput) (occupied : Bool)
+    (pending : registration.ServerAdHash) (digest : Std.Array U8 64#usize)
     (initial : registration.ServerInitialKdf)
-    (actual : (withRoot lookup root).resume occupied = .ok (.Ok initial)) :
+    (selected : (withRoot lookup root).resume occupied = .ok (.Ok pending))
+    (completed : pending.resume (.Some digest) = .ok (.Ok initial)) :
     initial.pending = PqxdhInitialRatchetComplementarity.serverPending
       (PqxdhRootTableInitialization.rootArray root) := by
-  cases occupied <;>
-    simp only [peer.CompletionLookup.resume, Bool.false_eq_true, ite_false, ite_true, bind_tc_ok] at actual
-  all_goals exact RegistrationSeedKernel.server_pending _ _ _ _ _ initial actual
+  have actual : BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission lookup.control lookup.pin
+      (if occupied then .Occupied else .Available) (withRoot lookup root).registration.agreement lookup.application initial := by
+    exact ⟨pending, digest, by
+      cases occupied <;> simpa only [peer.CompletionLookup.resume, withRoot, Bool.false_eq_true, ite_false, ite_true, bind_tc_ok] using selected,
+      completed⟩
+  have role := BeaconcryptCore.Refinement.RegistrationAd.server_admission_pending
+    lookup.control lookup.pin (if occupied then .Occupied else .Available)
+      (withRoot lookup root).registration.agreement lookup.application initial actual
+  simpa only [withRoot] using role
 
 end BeaconcryptCore.Computational.RegistrationServerReferenceSourceLookup
 

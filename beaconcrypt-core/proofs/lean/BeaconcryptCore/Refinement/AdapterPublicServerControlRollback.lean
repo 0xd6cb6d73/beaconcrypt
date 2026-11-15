@@ -196,6 +196,17 @@ private theorem reserved_safe (self : Server) (pending : registration.ServerInit
   | Ok unitValue => exact record_safe { self with known_ids := known } pending
 
 omit crypto in
+private theorem adHash_safe (self : Server) (pending : registration.ServerAdHash) :
+    Safe (State := State) self.control (adHash self pending) := by
+  unfold adHash
+  apply bind_safe
+  intro request
+  apply bind_safe
+  intro digest
+  apply checked_safe
+  exact reserved_safe self
+
+omit crypto in
 private theorem lookup_safe (self : Server) (pending : peer.CompletionLookup) (plaintext : Slice U8) :
     Safe (State := State) self.control (lookup self pending plaintext) := by
   unfold lookup
@@ -211,7 +222,7 @@ private theorem lookup_safe (self : Server) (pending : peer.CompletionLookup) (p
     apply bind_safe
     intro occupied
     apply checked_safe
-    exact reserved_safe self
+    exact adHash_safe self
 
 theorem build (self : Server) (token : beaconcrypt_public_wrapper.server.RegistrationOutput)
     (data : core.option.Option (Slice U8)) : Safe (State := State) self.control (AdapterPublicServerBuildBody.build self token data) := by

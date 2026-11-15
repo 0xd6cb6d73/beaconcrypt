@@ -1,6 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationBoundPublication
-import BeaconcryptCore.Computational.PqxdhDeploymentEnvironment
+import BeaconcryptCore.Computational.PqxdhEnvironmentForward
+import BeaconcryptCore.Computational.PqxdhDeploymentHiddenEntry
 
 /-! The actual bound record and ML publication program compiles into the existing environment effects: deterministic source HKDF, AEAD and optional writing remain real local work, every CTX hash uses the same World hash capability, and every ML signing draw uses the existing coin effects. The chronological attempt receipt is appended before any subsequent native continuation can reject. Factoring is proved query by query and then for arbitrary adaptive programs. -/
 

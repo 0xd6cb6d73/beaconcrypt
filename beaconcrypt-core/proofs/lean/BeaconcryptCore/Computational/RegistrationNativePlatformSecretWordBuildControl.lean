@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativePlatformSecretWordOpen
 import BeaconcryptCore.Computational.RegistrationNativePlatformServerFrontendProgram
 import Cslib.Foundations.Control.Monad.IsMonadHom
-/-! Symbolic one-use Server build follows the corrected four-leaf source controller. It retains moved handles, cancellation, repeated pin hashing, occupancy, effectful reservation and every source failure. The representation theorem uses only equality of the individual admitted service call; the concrete checked service dictionary is instantiated separately. -/
+/-! Symbolic one-use Server build follows pure pin selection, occupancy, owned transcript-AD hashing, reservation and material demand in source order. It retains moved handles, cancellation and every source failure. The representation theorem uses only equality of the individual admitted service call; the concrete checked service dictionary is instantiated separately. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -13,7 +13,7 @@ set_option maxHeartbeats 1200000
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativePlatformSecretWordBuildControl
 open RegistrationNativeSecretWordMessage (Message ServerReady ServerState)
-open RegistrationNativePlatformServerMaterialFrontend (Result)
+open RegistrationNativePlatformServerMaterialFrontend (Result AdHash)
 variable {m : Type → Type} [Monad m] [LawfulMonad m] {Encoded : Type}
 
 abbrev Service (m : Type → Type) (Encoded : Type) := pqxdh.ServerState →
@@ -41,13 +41,19 @@ def afterResult (reserve : m Bool) (service : Service m Encoded) (control : pqxd
         fun before => pure (finish published before)
       else pure (.ok none)
 
-def afterOccupancy (reserve : m Bool) (service : Service m Encoded) (control : pqxdh.ServerState)
+def afterOccupancy (deriveAd : AdHash m) (reserve : m Bool) (service : Service m Encoded) (control : pqxdh.ServerState)
     (lookup : peer.CompletionLookup) (reference : Message) (occupied : Bool) :
     StateT ServerState m (Result Encoded) :=
-  afterResult reserve service control reference
-    (RegistrationPublicationKernelErasure.mapOk RegistrationBoundKeySchedule.publicInitial <$> lookup.resume occupied)
+  match lookup.resume occupied with
+  | .fail error => pure (.fail error)
+  | .div => pure .div
+  | .ok (.Err _) => pure (.ok none)
+  | .ok (.Ok pending) => do
+      let hashed ← StateT.lift (deriveAd pending)
+      afterResult reserve service control reference
+        (RegistrationPublicationKernelErasure.mapOk RegistrationBoundKeySchedule.publicInitial <$> hashed)
 
-def afterPin (reserve : m Bool) (present : U64 → m Bool) (service : Service m Encoded)
+def afterPin (deriveAd : AdHash m) (reserve : m Bool) (present : U64 → m Bool) (service : Service m Encoded)
     (control : pqxdh.ServerState) (ready : ServerReady) (application : Slice U8)
     (current : RustM (core.option.Option session.ServerAuthenticationPin)) : StateT ServerState m (Result Encoded) := fun before =>
   match current with
@@ -63,25 +69,26 @@ def afterPin (reserve : m Bool) (present : U64 → m Bool) (service : Service m 
       | .div => pure (.div, before)
       | .ok keyId => if RegistrationServerSdkSource.preflight application keyId then do
           let occupied ← present keyId
-          (afterOccupancy reserve service control lookup ready.reference occupied).run before
+          (afterOccupancy deriveAd reserve service control lookup ready.reference occupied).run before
         else pure (.ok none, before)
 
-def complete (pin : session.ServerAuthenticationPin → m (RustM (core.option.Option session.ServerAuthenticationPin)))
+def complete (deriveAd : AdHash m) (pin : session.ServerAuthenticationPin → m (RustM (core.option.Option session.ServerAuthenticationPin)))
     (reserve : m Bool) (present : U64 → m Bool) (service : Service m Encoded)
     (ready : ServerReady) (application : Slice U8) : StateT ServerState m (Result Encoded) := fun before => do
   let current ← pin before.pin
-  (afterPin reserve present service before.control ready application current).run before
+  (afterPin deriveAd reserve present service before.control ready application current).run before
 
-def build (pin : session.ServerAuthenticationPin → m (RustM (core.option.Option session.ServerAuthenticationPin)))
+def build (deriveAd : AdHash m) (pin : session.ServerAuthenticationPin → m (RustM (core.option.Option session.ServerAuthenticationPin)))
     (reserve : m Bool) (present : U64 → m Bool) (service : Service m Encoded)
     (handle : Nat) (application : Option (Slice U8)) : StateT ServerState m (Result Encoded) := fun before =>
   match RegistrationNativeSecretWordServerMaterial.take handle before with
   | (none, current) => pure (.ok none, current)
   | (some ready, current) => match application with
     | none => pure (.ok none, current)
-    | some application => (complete pin reserve present service ready application).run current
+    | some application => (complete deriveAd pin reserve present service ready application).run current
 
 variable (candidate : PqxdhKemIndCca.MlKemSharedSecret)
+    (deriveAd : AdHash m)
     (pin : session.ServerAuthenticationPin → m (RustM (core.option.Option session.ServerAuthenticationPin)))
     (reserve : m Bool) (present : U64 → m Bool)
     (nativeService : RegistrationNativePlatformServerMaterialFrontend.Service m Encoded) (wordService : Service m Encoded)
@@ -121,11 +128,29 @@ private theorem afterResult_source (control : pqxdh.ServerState) (reference : Me
         simpa only [StateT.run, map_pure] using congrArg (fun value => (pure value : m _)) (finish_source candidate result before).symm
 
 include service_source in
+private theorem afterOccupancy_source (control : pqxdh.ServerState) (lookup : peer.CompletionLookup)
+    (reference : Message) (occupied : Bool) (before : ServerState) :
+    (RegistrationNativePlatformServerMaterialFrontend.afterOccupancy deriveAd reserve nativeService control
+      lookup (RegistrationNativeSecretWordMessage.eval candidate reference) occupied).run (before.eval candidate) =
+      Prod.map id (ServerState.eval candidate) <$>
+        (afterOccupancy deriveAd reserve wordService control lookup reference occupied).run before := by
+  unfold RegistrationNativePlatformServerMaterialFrontend.afterOccupancy afterOccupancy
+  cases lookup.resume occupied with
+  | fail error | div => simp only [StateT.run_pure, map_pure, Prod.map_def, id_eq]
+  | ok result => cases result with
+    | Err previous => simp only [StateT.run_pure, map_pure, Prod.map_def, id_eq]
+    | Ok pending =>
+      simp only [StateT.run_bind, StateT.run_lift, bind_pure_comp, bind_map_left, map_bind]
+      apply bind_congr
+      intro hashed
+      exact afterResult_source candidate reserve nativeService wordService service_source control reference _ before
+
+include service_source in
 private theorem afterPin_source (control : pqxdh.ServerState) (ready : ServerReady) (application : Slice U8)
     (current : RustM (core.option.Option session.ServerAuthenticationPin)) (before : ServerState) :
-    (RegistrationNativePlatformServerMaterialFrontend.afterPin reserve present nativeService control
+    (RegistrationNativePlatformServerMaterialFrontend.afterPin deriveAd reserve present nativeService control
       (ready.eval candidate) application current).run (before.eval candidate) =
-      Prod.map id (ServerState.eval candidate) <$> (afterPin reserve present wordService control ready application current).run before := by
+      Prod.map id (ServerState.eval candidate) <$> (afterPin deriveAd reserve present wordService control ready application current).run before := by
   cases current with
   | fail error | div => simp only [RegistrationNativePlatformServerMaterialFrontend.afterPin, afterPin, StateT.run, map_pure, Prod.map_def, id_eq]
   | ok current => cases current with
@@ -147,14 +172,15 @@ private theorem afterPin_source (control : pqxdh.ServerState) (ready : ServerRea
             · simp only [fits, ite_true, map_bind]
               apply bind_congr
               intro occupied
-              exact afterResult_source candidate reserve nativeService wordService service_source control ready.reference _ before
+              exact afterOccupancy_source candidate deriveAd reserve nativeService wordService service_source
+                control lookup ready.reference occupied before
             · simp only [fits, Bool.false_eq_true, ite_false, map_pure, Prod.map_def, id_eq]
 
 include service_source in
 /-- The corrected moved-token build commutes with reference evaluation under its individual admitted service relation; cancellation and every failure retain the exact source state. -/
 theorem build_source (handle : Nat) (application : Option (Slice U8)) (before : ServerState) :
-    (RegistrationNativePlatformServerMaterialFrontend.build pin reserve present nativeService handle application).run (before.eval candidate) =
-      Prod.map id (ServerState.eval candidate) <$> (build pin reserve present wordService handle application).run before := by
+    (RegistrationNativePlatformServerMaterialFrontend.build deriveAd pin reserve present nativeService handle application).run (before.eval candidate) =
+      Prod.map id (ServerState.eval candidate) <$> (build deriveAd pin reserve present wordService handle application).run before := by
   have moved := RegistrationNativeSecretWordServerMaterial.take_eval candidate handle before
   simp only [RegistrationNativePlatformServerMaterialFrontend.build, build, StateT.run]
   rcases actual : RegistrationNativeSecretWordServerMaterial.take handle before with ⟨selected, current⟩
@@ -169,7 +195,7 @@ theorem build_source (handle : Nat) (application : Option (Slice U8)) (before : 
         map_bind, ServerState.eval]
       apply bind_congr
       intro pinReply
-      exact afterPin_source candidate reserve present nativeService wordService service_source current.control ready application pinReply current
+      exact afterPin_source candidate deriveAd reserve present nativeService wordService service_source current.control ready application pinReply current
 
 section Mapping
 variable {k : Type → Type} [Monad k] [LawfulMonad k]
@@ -200,10 +226,27 @@ private theorem map_afterResult (control : pqxdh.ServerState) (reference : Messa
         intro result
         exact hom.map_pure _
 
+private theorem map_afterOccupancy (control : pqxdh.ServerState) (lookup : peer.CompletionLookup)
+    (reference : Message) (occupied : Bool) (before : ServerState) :
+    F ((afterOccupancy deriveAd reserve wordService control lookup reference occupied).run before) =
+      (afterOccupancy (fun pending => F (deriveAd pending)) (F reserve)
+        (fun control initial message => F (wordService control initial message)) control lookup reference occupied).run before := by
+  unfold afterOccupancy
+  cases lookup.resume occupied with
+  | fail error | div => exact hom.map_pure _
+  | ok result => cases result with
+    | Err previous => exact hom.map_pure _
+    | Ok pending =>
+      simp only [StateT.run_bind, StateT.run_lift, bind_pure_comp, bind_map_left]
+      rw [hom.map_bind]
+      apply bind_congr
+      intro hashed
+      exact map_afterResult reserve wordService hom control reference _ before
+
 private theorem map_afterPin (control : pqxdh.ServerState) (ready : ServerReady) (application : Slice U8)
     (current : RustM (core.option.Option session.ServerAuthenticationPin)) (before : ServerState) :
-    F ((afterPin reserve present wordService control ready application current).run before) =
-      (afterPin (F reserve) (fun keyId => F (present keyId))
+    F ((afterPin deriveAd reserve present wordService control ready application current).run before) =
+      (afterPin (fun pending => F (deriveAd pending)) (F reserve) (fun keyId => F (present keyId))
         (fun control initial message => F (wordService control initial message)) control ready application current).run before := by
   cases current with
   | fail error | div => exact hom.map_pure _
@@ -226,14 +269,14 @@ private theorem map_afterPin (control : pqxdh.ServerState) (ready : ServerReady)
               rw [hom.map_bind]
               apply bind_congr
               intro occupied
-              exact map_afterResult reserve wordService hom control ready.reference _ before
+              exact map_afterOccupancy deriveAd reserve wordService hom control lookup ready.reference occupied before
             · simp only [fits, Bool.false_eq_true, ite_false]
               exact hom.map_pure _
 
 /-- The corrected symbolic controller commutes with any monad homomorphism, preserving the returned one-use state and every leaf's complete effects. -/
 theorem map_build (handle : Nat) (application : Option (Slice U8)) (before : ServerState) :
-    F ((build pin reserve present wordService handle application).run before) =
-      (build (fun current => F (pin current)) (F reserve) (fun keyId => F (present keyId))
+    F ((build deriveAd pin reserve present wordService handle application).run before) =
+      (build (fun pending => F (deriveAd pending)) (fun current => F (pin current)) (F reserve) (fun keyId => F (present keyId))
         (fun control initial message => F (wordService control initial message)) handle application).run before := by
   simp only [build, StateT.run]
   rcases RegistrationNativeSecretWordServerMaterial.take handle before with ⟨selected, current⟩
@@ -246,7 +289,7 @@ theorem map_build (handle : Nat) (application : Option (Slice U8)) (before : Ser
       rw [hom.map_bind]
       apply bind_congr
       intro pinReply
-      exact map_afterPin reserve present wordService hom current.control ready application pinReply current
+      exact map_afterPin deriveAd reserve present wordService hom current.control ready application pinReply current
 end Mapping
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformSecretWordBuildControl

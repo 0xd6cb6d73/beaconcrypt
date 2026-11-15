@@ -1,4 +1,4 @@
-import BeaconcryptCore.Computational.PqxdhServerAuthPublicationIdentity
+import BeaconcryptCore.Computational.PqxdhServerAuthEntryResourceState
 import BeaconcryptCore.Computational.PqxdhRegistrationAdmission
 import BeaconcryptCore.Computational.PqxdhJointPhase1Reports
 
@@ -38,7 +38,6 @@ theorem verify_receipt (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
     | (simp only [simulateQ_bind, simulateQ_spec_query, simulateQ_pure, prefixImpl,
         serverAux, StateT.run_pure, pure_bind, Option.bind_eq_bind, Option.bind, Option.pure_def, support_pure, Set.mem_singleton_iff,
         Prod.mk.injEq, Option.some.injEq, reduceCtorEq, false_and] at supported)
-    | contradiction
   all_goals simp_all [Decoded, PqxdhJointPhase1Reports.sourceAccept]
 
 /-- Successful generation, encapsulation and conversion retain the same raw-reader and verified signed-field receipt. -/
@@ -95,7 +94,8 @@ theorem accept_receipt (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
       (some input, consumed) ∈ support ((serverPrefix setup codec checks raw).run state.1.server.consumed) ∧
       (reply, table) ∈ support ((services.derive (PqxdhServerRelatedRootInput.message input)).run state.2.2) ∧
       reply.value = some root ∧
-      after.1.pending index = some ⟨root, PqxdhServerClearedRoot.pending (binding setup publicValue) input⟩ ∧
+      after.1.pending index = some ⟨root, PqxdhServerClearedRoot.pending (binding setup publicValue) input,
+        input.verified.candidate⟩ ∧
       Decoded codec raw input.verified ∧
       PqxdhJointPhase1Reports.sourceAccept (fun identity => setup.source.crypto.verify identity.toList)
         input.verified.candidate = some (input.verified.identity, input.verified.keys) := by
@@ -148,7 +148,8 @@ theorem pending_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
       (index = state.1.sessions ∧ result.1 = some index ∧ ∃ input consumed reply table root,
         (some input, consumed) ∈ support ((serverPrefix setup codec checks raw).run state.1.server.consumed) ∧
         (reply, table) ∈ support ((services.derive (PqxdhServerRelatedRootInput.message input)).run state.2.2) ∧
-        reply.value = some root ∧ token = ⟨root, PqxdhServerClearedRoot.pending (binding setup publicValue) input⟩ ∧
+        reply.value = some root ∧ token = ⟨root, PqxdhServerClearedRoot.pending (binding setup publicValue) input,
+        input.verified.candidate⟩ ∧
         Decoded codec raw input.verified ∧
         PqxdhJointPhase1Reports.sourceAccept (fun identity => setup.source.crypto.verify identity.toList)
           input.verified.candidate = some (input.verified.identity, input.verified.keys)) := by

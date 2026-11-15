@@ -57,7 +57,7 @@ noncomputable local instance idleLocal :LocalOperations (RustT (StateT (Registra
 noncomputable local instance idleCrypto :CryptoOperations (RustT (StateT (RegistrationNativeExperiment.State n KemSK source×P) ProbComp)):=packedCrypto
 noncomputable local instance idleChildren :ChildOperations (RustT (StateT (RegistrationNativeExperiment.State n KemSK source×P) ProbComp)):=children
 
-variable (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
 local notation "auditPrivate"=>RegistrationNativePlatformPublicAdapterAuditModel.Private configuration created credential
 local notation "auditModel"=>RegistrationNativePlatformPublicAdapterAuditModel.model configuration created credential
 local notation "auditPhysical"=>RegistrationNativePlatformPublicAdapterAuditModel.physical configuration created credential
@@ -86,7 +86,7 @@ noncomputable def handler (self :beaconcrypt_public_wrapper.beacon.Beacon) :Quer
   fun query=>match query with
   | .inl query=>AdapterPublicInitPublication.outgoing
       (AdapterPublicBundleMaterial.PublicationLeaves.hash (self:=self) (leaves (n:=n) configuration created self))
-      (AdapterPublicBundleMaterial.PublicationLeaves.sign (self:=self) (leaves (n:=n) configuration created self))
+
       (AdapterPublicInitPublication.edMethod (configuration.view.edPublic self.identity_key.public_key)
         (AdapterPublicBundleMaterial.PublicationLeaves.edSign (self:=self) (leaves (n:=n) configuration created self))) query
   | .inr query=>StateT.lift (writer query)
@@ -107,11 +107,6 @@ noncomputable def uniform :QueryImpl unifSpec ObservedM:=fun query=>liftBackend
 noncomputable def observedEdSign (message :Slice U8) (key :beaconcrypt_crypto.crypto_sign.SecretKey) :
     ObservedM (core.result.Result (alloc.vec.Vec U8) ed.Error):=
   liftBackend (RegistrationNativePlatformPublicAdapterBundleDictionaries.edSign (n:=n) (P:=P) setup configuration.view configuration.edFailure message key)
-
-noncomputable def fallback (self :beaconcrypt_public_wrapper.beacon.Beacon) (request :registration.MldsaSigningRequest) :
-    StateT (Backend n KemSK×List Log) Base RegistrationSigningShared.SignReply:=
-  AdapterPublicInitPublication.borrowed <$>liftLog
-    (RegistrationNativePlatformPublicAdapterBundleDictionaries.sign coins setup checks configuration.agreement.representation created configuration.view self.authentication.identity request)
 
 noncomputable def observe (note :Stage→Log) (query :(RegistrationNativePlatformWriter.Spec E).Domain)
     (reply :(RegistrationNativePlatformWriter.Spec E).Range query) :List Log:=
@@ -158,7 +153,7 @@ noncomputable def withKeys (note :Stage→Log) (self :beaconcrypt_public_wrapper
     ProbComp ((RustM (RegistrationNativePlatformPublicAdapterBundlePhysical.Word R)×(Backend n KemSK×P))×List Log) :=
   (fun result=>((result.1.1,(result.1.2.1.1,result.2)),result.1.2.1.2)) <$>
     ((RegistrationNativePlatformPublicAdapterBundleObservedBody.withKeys configuration.view (handler configuration created self) (observe note)
-      (fallback configuration created self) observedLocal observedPreviousCrypto observedChildren (observedEdSign configuration)
+      (fun _=>pure .None) observedLocal observedPreviousCrypto observedChildren (observedEdSign configuration)
       self control prekey oneTime kem rng).run ((before,prior),none)).run previous
 
 noncomputable def call (note :Stage→Log) (self :beaconcrypt_public_wrapper.beacon.Beacon)
@@ -166,7 +161,7 @@ noncomputable def call (note :Stage→Log) (self :beaconcrypt_public_wrapper.bea
     ProbComp ((RustM (RegistrationNativePlatformPublicAdapterBundlePhysical.Word R)×(Backend n KemSK×P))×List Log) :=
   (fun result=>((result.1.1,(result.1.2.1.1,result.2)),result.1.2.1.2)) <$>
     ((RegistrationNativePlatformPublicAdapterBundleObservedBody.call configuration.view (handler configuration created self) (observe note)
-      (fallback configuration created self) observedLocal observedPreviousCrypto observedChildren (observedEdSign configuration)
+      (fun _=>pure .None) observedLocal observedPreviousCrypto observedChildren (observedEdSign configuration)
       configuration.generator self rng).run ((before,prior),none)).run previous
 
 omit [FrameDispatchFallback.Operations] in
@@ -180,9 +175,9 @@ theorem withKeys_source (note :Stage→Log) (self :beaconcrypt_public_wrapper.be
           control ⟨configuration.view.edPublic self.identity_key.public_key,configuration.view.kxPublic prekey.public_key,
             RegistrationNativeBeaconFrontend.pqArray (configuration.view.kemPublic kem.public_key)⟩
           ⟨configuration.view.kxPublic oneTime.public_key⟩ self.authentication.server_pin
-          (configuration.view.mldsa self.authentication.identity).publicKey (before,prior)).run previous :=by
+          (before,prior)).run previous :=by
   have actual:=RegistrationNativePlatformPublicAdapterBundleObservedBody.source configuration.view (handler configuration created self) (observe note)
-    (fallback configuration created self) observedLocal observedPreviousCrypto observedChildren (observedEdSign configuration)
+    (fun _=>pure .None) observedLocal observedPreviousCrypto observedChildren (observedEdSign configuration)
     self control prekey oneTime kem rng (ed_leaf configuration created note self) (before,prior)
   have observed:=congrArg (fun computation=>(fun result=>((result.1.1,(result.1.2.1,result.2)),result.1.2.2)) <$>computation.run previous) actual
   simp only [StateT.run_map,Functor.map_map] at observed

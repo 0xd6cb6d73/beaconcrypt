@@ -53,7 +53,7 @@ theorem native
 
     (previousChildren : ChildOperations (RustT SourceM))
     (view : MaterialView mlSource KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : Server) (before : Cut) (related : AdapterPublicWrapperState.Server view views created credential self before.1.server)
     (token : beaconcrypt_public_wrapper.server.RegistrationOutput) (data : core.option.Option (Slice U8))
     (consumed : peer.ConsumedRegistration) (handle : Nat)
@@ -108,11 +108,11 @@ theorem native
     simp only [StateT.run_map, StateT.run_lift, map_bind, bind_map_left, map_pure]
   rw [reserveLift]
   change _ = (RegistrationNativePlatformExperiment.server
-    (RegistrationNativePlatformCompletionSdk.build (RegistrationNativePlatformSourceBuild.pin coins)
+    (RegistrationNativePlatformCompletionSdk.build (RegistrationNativePlatformCompletionSdk.nativeAdHash coins) (RegistrationNativePlatformSourceBuild.pin coins)
       (StateT.lift (admitted <$> allocated)) (RegistrationNativePlatformCompletionSdk.nativePresent coins)
       (finish coins setup codec keyView failure allocation helper erased sign writer) handle (some (application data)))).run before.1
   simp only [AdapterPublicServerSourceLens.server_run]
-  rw [AdapterPublicServerBuildOwnership.build_live _ _ _ _ token consumed before.1 handle tokenRelated live (application data)]
+  rw [AdapterPublicServerBuildOwnership.build_live _ _ _ _ _ token consumed before.1 handle tokenRelated live (application data)]
   rfl
 
 

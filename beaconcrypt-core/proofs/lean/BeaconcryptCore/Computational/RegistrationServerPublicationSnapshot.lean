@@ -18,7 +18,7 @@ abbrev Spec (Encoded : Type) : OracleSpec Request
   | .signing request => RegistrationSigningShared.Spec.Range request
   | .encoding _ => RustM (core.option.Option Encoded)
 
-def Post {Encoded : Type} (candidate : pqxdh.ServerRegistrationCandidate) (binding : session.RegistrationBinding)
+def Post {Encoded : Type} (candidate : pqxdh.ServerRegistrationCandidate) (binding : session.CompletedRegistrationBinding)
     (kernel : ratchet.concrete.ConcreteRatchetKernel) :
     RustM (RegistrationWorldServerPublication.Result Encoded) → Prop
   | .fail _ | .div => True

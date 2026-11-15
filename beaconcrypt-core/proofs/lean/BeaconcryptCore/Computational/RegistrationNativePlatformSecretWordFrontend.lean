@@ -109,7 +109,7 @@ theorem ordinary [primitive : BeaconcryptCore.Refinement.AdapterSealPrimitive.Op
       RegistrationNativePlatformSecretWordOrdinary.handler setup source selectedOwner publicPrekey reserveFrame writer query := by
   cases query with
   | inl coin => rfl
-  | inr query => cases query <;> first | rfl | exact allowed.elim
+  | inr query => cases query <;> first | exact allowed.elim | rfl
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformSecretWordFrontend
 

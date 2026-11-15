@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeServerReceipt
+import BeaconcryptCore.Refinement.RegistrationAd
 
 /-! The original Server completion carries the taken token's actual root into its actual initial capability. Response hash/sign/encoding preserves the full native SessionBinding, rather than its two-field record-world projection. -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -37,33 +38,34 @@ theorem lookup_fields (control : pqxdh.ServerState) (pin : session.ServerAuthent
 theorem initial_root (control : pqxdh.ServerState) (pin : session.ServerAuthenticationPin)
     (availability : pqxdh.KeyIdAvailability) (capability : agreement.ServerAgreement)
     (application : Slice U8) (initial : registration.ServerInitialKdf)
-    (actual : registration.begin_server_completion control pin availability capability application = .ok (.Ok initial)) :
+    (actual : BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission control pin availability capability application initial) :
     BeaconcryptCore.Refinement.SessionBinding.sameServerPin capability.binding.server_pin pin ∧
-      initial.binding = capability.binding ∧ initial.application = application ∧
+      ∃ digest binding, capability.binding.complete digest = .ok binding ∧ initial.binding = binding ∧
+      initial.application = application ∧
       pqxdh.concrete.start_server_candidate_ratchet_kdf initial.candidate capability.root.bytes = .ok initial.pending := by
+  obtain ⟨pending, digest, selected, resumed⟩ := actual
+  have admitted : BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission control pin availability capability application initial :=
+    ⟨pending, digest, selected, resumed⟩
   have pinSame : BeaconcryptCore.Refinement.SessionBinding.sameServerPin capability.binding.server_pin pin := by
     by_contra changed
-    rw [BeaconcryptCore.Refinement.RegistrationPublication.server_owner_rejects control pin availability capability application changed] at actual
-    cases actual
-  refine ⟨pinSame, ?_⟩
-  obtain ⟨empty, emptyRun⟩ : ∃ result, core.slice.Slice.is_empty application = .ok result := ⟨_, rfl⟩
-  obtain ⟨matched, matchRun⟩ := BeaconcryptCore.PanicFreedom.SessionBinding.RegistrationBinding_matches_server_total
-    capability.binding pin
-  obtain ⟨prepared, prepareRun⟩ := BeaconcryptCore.PanicFreedom.server_prepare_commit_ok control capability.pending pin.binding availability
-  cases prepared with
-  | Err error =>
-      cases empty <;> cases matched <;>
-        simp [registration.begin_server_completion, session.ServerAuthenticationPin.impl.binding,
-          emptyRun, matchRun, prepareRun] at actual
-  | Ok candidate =>
-      obtain ⟨pending, pendingRun⟩ := BeaconcryptCore.PanicFreedom.Structural.pqxdh_concrete_start_server_candidate_ratchet_kdf_total
-        candidate capability.root.bytes
-      cases empty <;> cases matched
-      all_goals simp only [registration.begin_server_completion, session.ServerAuthenticationPin.impl.binding,
-        ratchet.RatchetChain.as_bytes, emptyRun, matchRun, prepareRun, pendingRun, bind_tc_ok,
-        Bool.false_eq_true, ite_false, ite_true, RustM.ok.injEq, core.result.Result.Ok.injEq, reduceCtorEq] at actual
-      cases actual
-      exact ⟨rfl, rfl, pendingRun⟩
+    rw [BeaconcryptCore.Refinement.RegistrationPublication.server_owner_rejects control pin availability capability application changed] at selected
+    cases selected
+  obtain ⟨reply, binding, complete, sameBinding, _consistent, _prepared⟩ :=
+    BeaconcryptCore.Refinement.RegistrationAd.server_admission_binding
+      control pin availability capability application initial admitted
+  obtain ⟨next, ran, _candidate, sameApplication, _hash, _consistent⟩ :=
+    BeaconcryptCore.Refinement.RegistrationAd.server_digest_completes_binding pending digest
+  have nextSame : next = initial := by simpa using ran.symm.trans resumed
+  have origin := BeaconcryptCore.Refinement.RegistrationAd.server_ad_origin
+    control pin availability capability application pending selected
+  refine ⟨pinSame, reply, binding, complete, sameBinding, ?_, ?_⟩
+  · exact (nextSame ▸ sameApplication).trans origin.2.2.1
+  · rw [BeaconcryptCore.Refinement.RegistrationAd.server_admission_pending
+      control pin availability capability application initial admitted]
+    simpa only [pqxdh.concrete.start_server_candidate_ratchet_kdf,
+      pqxdh.ServerRegistrationCandidate.ratchet_initialization,
+      pqxdh.concrete.start_server_ratchet_kdf, PqxdhInitialRatchetComplementarity.serverPending] using
+      pqxdh.concrete.start_server_ratchet_kdf_exact capability.root.bytes
 
 namespace Publication
 open RegistrationWorldServerPublication

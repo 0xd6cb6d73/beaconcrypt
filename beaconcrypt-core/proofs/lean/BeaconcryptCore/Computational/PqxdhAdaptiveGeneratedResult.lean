@@ -9,6 +9,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhAdaptiveGeneratedResult
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhAdaptiveTargetPost PqxdhAdaptiveAcceptedResult PqxdhAdaptiveCommonResult
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhHiddenRoot PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily
 open PqxdhKemIndCca PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma
@@ -26,26 +28,26 @@ variable {setup : StatefulPhase1Setup baseSpec}
 
 def rejected : Decision Choice := (none, false)
 
-noncomputable def common : PqxdhAdaptiveCommonResult.Continuation setup (driver env.toDriverEnvironment program).State (Decision Choice) where
+noncomputable def common : PqxdhAdaptiveCommonResult.Continuation setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State (Decision Choice) where
   completed output _ := match output with
     | none => pure rejected
     | some output => simulateQ PqxdhAuthenticatedRootExperiment.selectorLift (Prod.fst <$>
-        (simulateQ (PqxdhPhase2SourceScheduler.compiler env.source env.recordWriter env.senderId env.route env.decode env.localImpl)
+        (simulateQ (PqxdhPhase2SourceScheduler.compiler (completedBinding := completedBinding) env.source env.recordWriter env.senderId env.route env.decode env.localImpl)
           (post output.context.selection.1 (ok none))).run output.context.selection.2)
   accepted output ready := match output with
     | none => pure rejected
     | some output => do
         let result ← PqxdhProtocolRegistration.coins
-          ((PqxdhRegistrationProtocolState.build env.source env.recordWriter env.aux env.senderId
+          ((PqxdhRegistrationProtocolState.build (associatedData := associatedData) env.source env.recordWriter env.aux env.senderId
             env.index env.metadata ready).run output.context.selection.2)
         simulateQ PqxdhAuthenticatedRootExperiment.selectorLift (Prod.fst <$>
-          (simulateQ (PqxdhPhase2SourceScheduler.compiler env.source env.recordWriter env.senderId env.route env.decode env.localImpl)
+          (simulateQ (PqxdhPhase2SourceScheduler.compiler (completedBinding := completedBinding) env.source env.recordWriter env.senderId env.route env.decode env.localImpl)
             (post output.context.selection.1 result.1)).run result.2)
 
 /-- Target filtering leaves every common/ineligible candidate on its complete original source path, including the same final post decision. -/
 theorem common_map [DecidableEq Choice] (selected : Choice) :
-    PqxdhAdaptiveCommonResult.project (common env program post) (choose selected) =
-      PqxdhAuthenticatedRootExperiment.commonObserver env program (mapPost post (choose selected)) := by
+    PqxdhAdaptiveCommonResult.project (common (associatedData := associatedData) (completedBinding := completedBinding) env program post) (choose selected) =
+      PqxdhAuthenticatedRootExperiment.commonObserver (associatedData := associatedData) (completedBinding := completedBinding) env program (mapPost post (choose selected)) := by
   apply congrArg₂ PqxdhPrivateAcceptedRoot.Continuation.mk
   · funext output execution
     cases output <;> simp only [common,

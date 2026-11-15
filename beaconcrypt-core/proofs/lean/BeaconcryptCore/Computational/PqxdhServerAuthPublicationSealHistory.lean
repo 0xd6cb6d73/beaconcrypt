@@ -6,6 +6,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core PqxdhRefinement
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhServerAuthPublicationSealHistory
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open CtxRomAuth PqxdhJointKdfGame PqxdhFullSecretInputKdf
 open RawCtxSelectedMessageSealing
 open PqxdhServerAuthPublicationTrace (AnnotatedSpec erase)
@@ -93,7 +94,7 @@ theorem sealing_provenance (crypto : Pqxdh.Crypto) (writer : RawCtxMixedShared.W
         (RawCtxSelectedSealConsumer.sealing crypto writer (PqxdhServerAuthCtxSend.sealing pending)))).run before))
     (entry : CtxSuccessfulSeal) (found : entry ∈ produced after) :
     entry ∈ produced before ∨
-      ∃ (nonce : NonceOutput) (width : pending.context.associatedData.length = 281) (record : CtxRomRecord),
+      ∃ (nonce : NonceOutput) (width : pending.context.associatedData.length = 151) (record : CtxRomRecord),
         pending.material = .hidden nonce ∧
         entry = ⟨selectedInput nonce pending.sequence pending.context width, record⟩ ∧
         result = some ((writer ⟨pending.sequence, pending.context.senderId, record.encode⟩).map
@@ -129,7 +130,7 @@ theorem annotated_receipts (source : FixedHkdfSha512NoSaltSource) (codec : Codec
     (result : Option (RustM (Option PqxdhServerRegistrationPublication.Response ×
       PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed)))
     (supported : ((result, afterLog), after) ∈ support ((simulateQ journalImpl
-      (PqxdhServerAuthPublicationTrace.annotated source codec checks rest coordinate pending data metadata state beforeLog)).run before)) :
+      (PqxdhServerAuthPublicationTrace.annotated (associatedData := associatedData) source codec checks rest coordinate pending data metadata state beforeLog)).run before)) :
     beforeLog.IsPrefix afterLog ∧
       ∀ entry ∈ produced after, entry ∈ produced before ∨ ∃ context sequence,
         PqxdhPhase2LocalMatching.KeyIdBound context ∧
@@ -137,7 +138,7 @@ theorem annotated_receipts (source : FixedHkdfSha512NoSaltSource) (codec : Codec
   let observer : RawCtxSelectedAuthenticationObserver.State := ⟨produced before, []⟩
   have projected : ((result, afterLog), produced after) ∈ support
       ((fun reply => (reply.1, produced reply.2)) <$> (simulateQ journalImpl
-        (PqxdhServerAuthPublicationTrace.annotated source codec checks rest coordinate pending data metadata state beforeLog)).run before) := by
+        (PqxdhServerAuthPublicationTrace.annotated (associatedData := associatedData) source codec checks rest coordinate pending data metadata state beforeLog)).run before) := by
     rw [support_map]
     exact ⟨((result, afterLog), after), supported, rfl⟩
   rw [journal_monitor _ before observer rfl, PqxdhServerAuthPublicationTrace.annotated_erase,
@@ -145,7 +146,7 @@ theorem annotated_receipts (source : FixedHkdfSha512NoSaltSource) (codec : Codec
   obtain ⟨actual, reached, same⟩ := projected
   have replySame : actual.1 = (result, afterLog) := congrArg Prod.fst same
   have sealsSame : actual.2.seals = produced after := congrArg Prod.snd same
-  have receipts := PqxdhServerAuthBuildReceipt.compiled_receipts source codec checks rest
+  have receipts := PqxdhServerAuthBuildReceipt.compiled_receipts (associatedData := associatedData) source codec checks rest
     pending data metadata state beforeLog actual.1.2 observer actual.2 actual.1.1 reached
   rw [replySame] at receipts
   exact ⟨receipts.1, fun entry found => receipts.2 entry (by rw [sealsSame]; exact found)⟩

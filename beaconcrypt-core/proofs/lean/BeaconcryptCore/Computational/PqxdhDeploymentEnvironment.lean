@@ -2,6 +2,7 @@
 import BeaconcryptCore.Computational.PqxdhRecordLiftLater
 import BeaconcryptCore.Computational.PqxdhDeploymentHiddenSplit
 import BeaconcryptCore.Computational.PqxdhDeploymentSeedSplit
+import BeaconcryptCore.Computational.PqxdhEnvironmentForward
 import BeaconcryptCore.Computational.PqxdhDeploymentBackend
 import BeaconcryptCore.Computational.PqxdhRegistrationScheduleResources
 import BeaconcryptCore.Computational.PqxdhServerAuthTailCosts
@@ -11,13 +12,13 @@ import BeaconcryptCore.Computational.PqxdhServerAuthTailCosts
 
 The common deployment experiment's registration (create, bundle, accept, build, finish and the public HMAC) as an environment of the record-lift capability boundary (`PqxdhRecordLiftInterface.Environment`): every coin is a coin effect of the record world, every BLAKE2b query of the registration is the world's `.hash` capability on the one shared CTX cache, and every record-relevant change is an administrative capability (a new inactive owner, a phase advance, a Server or Beacon installation). The environment answers no record command, holds no secrecy ledger and has no capability that reads a seed, a kernel or the cache itself (BLAKE2b answers come only through `.hash`).
 
-**State (commitment reply-final 4.4, critique M6).** `EnvState` keeps the registration state with every record coordinate stripped (`strip`): every Server peer kernel and every established owner kernel is `PqxdhDeploymentHiddenSplit.placeholderKernel` and the CTX cache is empty; besides, it holds the registration handler's backend, the LQ-F ghosts (the finish snapshot and the Server ephemeral log) and the environment's own copy of the constructed Server. Every environment step commits a stripped state (`realStep_stripped`). `start` is the actual Server constructor at a fixed runtime, mapped to `Option (Created Unit × EnvState)` (v1-check ack C.3; `start_created`, `start_initial`), with `qInit + 32` coins (`start_bound`).
+**State (commitment reply-final 4.4, critique M6).** `EnvState` keeps the registration state with every record coordinate stripped (`strip`): every Server peer kernel and every established owner kernel is `PqxdhDeploymentHiddenSplit.placeholderKernel` and the CTX cache is empty; besides, it holds the registration handler's backend, the LQ-F ghosts (the finish snapshot and the Server ephemeral log) and the environment's own copy of the constructed Server. Every environment step commits a stripped state (`realStep_stripped`). `start` is the actual Server constructor at a fixed runtime, mapped to `Option (Created AD151 × EnvState)` with only peer metadata forgotten in its internal constructor view (v1-check ack C.3; `start_created`, `start_initial`), with `qInit + 32` coins (`start_bound`).
 
 **Capability form.** `primFwd`, `tailFwd` and `callbacksFwd` are the source primitives, the Server's logged response tail and the Beacon finish callbacks with the BLAKE2b request forwarded; `realStep` is the intended capability form of the LQ-F registration handler (`PqxdhDeploymentBackend.realReg`), the published peer and the established owner installed with their known kernels (`serverEffect`, `ownerEffect`), and `envReal` is the real environment (cuttable validation, critique m12); that `realStep` reproduces `realReg` command by command (the per-command splits behind `c1_real`) is not proved here. The capability-form factoring (`factor_program`, `tail_factor`, `owner_factor`) shows that the native build tail and the native finish are their forwarded forms with the forwarded BLAKE2b queries answered by the lazy CTX oracle on the cache (`ctxEffects`).
 
-**C2a.** `allowanceG core firstTouch` adds the 44 coins of a slot's environment material at the first-touch classes, which for CE-11 are the accept and the finish (`ceFirstTouch`, plan section 35). `frame_real` frames the real environment by `baseAllowance` (one BLAKE2b query at build and at finish, at most one administrative capability per command), and `frame_wrapped` frames every environment that obtains first-touch material through `touch` before a core step by `allowanceG`. The split hidden wrappers in capability form, `buildSplitEnv` and `finishSplitEnv` (intended forms of `PqxdhDeploymentHiddenSplit.buildSplit` and `finishSplit`; their factoring against those forms is not proved here), issue no coin, at most one `.hash` and at most one administrative capability, the hidden installation `installServer keyId identity (.hidden j)` or `installBeacon owner shell (.hidden j)` or the abort (`buildSplit_env_cost`, `finishSplit_env_cost`). The single-install ingredients are `buildStep_consumes`, `buildStep_idle`, `finishStep_terminal` and `finishStep_retry`.
+**C2a.** `allowanceG core firstTouch` adds the 44 coins of a slot's environment material at the first-touch classes, which for CE-11 are the accept and the finish (`ceFirstTouch`, plan section 35). `frame_real` frames the real environment by `baseAllowance` (two BLAKE2b queries at build and at finish: the transcript hash and the sequence-one record hash, at most one administrative capability per command), and `frame_wrapped` frames every environment that obtains first-touch material through `touch` before a core step by `allowanceG`. The split hidden wrappers in capability form, `buildSplitEnv` and `finishSplitEnv` (intended forms of `PqxdhDeploymentHiddenSplit.buildSplit` and `finishSplit`; their factoring against those forms is not proved here), issue no coin, at most one `.hash` and at most one administrative capability, the hidden installation `installServer keyId identity (.hidden j)` or `installBeacon owner shell (.hidden j)` or the abort (`buildSplit_env_cost`, `finishSplit_env_cost`). The single-install ingredients are `buildStep_consumes`, `buildStep_idle`, `finishStep_terminal` and `finishStep_retry`.
 
-**C4 (plan sections 31 and 33).** `capsG B allowance` has shared-hash cap `qHash + S + R + envTotal(.hash)`; `c4_instance` instantiates `PqxdhRecordLiftWorldBudget.run_hash` and `run_kdf`, `c4_closed` gives `qHash + S + R + qBuild + qFinish` and `S + 51 R` for the one-hash-at-build-and-finish pattern, `c4_later` and `c4_later_closed` add the post-phase BLAKE2b budget through `PqxdhRecordLiftLater.run_hash`, and `c4_real` is the real instance.
+**C4 (plan sections 31 and 33).** `capsG B allowance` has shared-hash cap `qHash + S + R + envTotal(.hash)`; `c4_instance` instantiates `PqxdhRecordLiftWorldBudget.run_hash` and `run_kdf`, `c4_closed` gives `qHash + S + R + 2 qBuild + 2 qFinish` and `S + 51 R` for the transcript-and-record-hash pattern at build and finish, `c4_later` and `c4_later_closed` add the post-phase BLAKE2b budget through `PqxdhRecordLiftLater.run_hash`, and `c4_real` is the real instance.
 
 These are definitions, equalities of programs and resource bounds. No security, secrecy or authentication claim is made here.
 -/
@@ -27,8 +28,10 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete PqxdhRefinement
 
 set_option autoImplicit false
+set_option warningAsError true
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentEnvironment
+private abbrev RecordAd := Std.Array Std.U8 151#usize
 open PqxdhServerAuthExperiment (Setup Codec Checks GameState)
 open PqxdhServerAuthNative (NativeState NativeGame)
 open PqxdhRecordLiftInterface (Slot Capability CapabilitySpec EnvEffects EnvQuery EnvSpec Environment EffectKind
@@ -42,18 +45,19 @@ variable {KemSK : Type}
 /-- An owner with its record coordinate stripped: an established kernel is the placeholder. -/
 noncomputable def stripOwner (owner : PqxdhRegistrationSchedule.Owner KemSK) : PqxdhRegistrationSchedule.Owner KemSK :=
   match owner.beacon.phase with
-  | .established control associatedData _ =>
-      { owner with beacon := { owner.beacon with phase := .established control associatedData placeholderKernel } }
+  | .established control recordAd _ =>
+      { owner with beacon := { owner.beacon with phase := .established control recordAd placeholderKernel } }
   | _ => owner
 
-/-- The legacy registration view forgets peer metadata and replaces its record kernel by the placeholder; actual AD coherence is retained separately by the join invariant. -/
+/-- A Server peer with its record kernel replaced by the placeholder; its identity and its own public metadata (the per-session AD151 the build installed, design §4.3/§4.5) are kept. -/
 noncomputable def stripPeer {PeerMetadata : Type}
-    (peer : RawCtxServerRouting.Peer PeerMetadata) : RawCtxServerRouting.Peer Unit :=
-  ⟨peer.identity, placeholderKernel, ()⟩
+    (peer : RawCtxServerRouting.Peer PeerMetadata) : RawCtxServerRouting.Peer PeerMetadata :=
+  ⟨peer.identity, placeholderKernel, peer.metadata⟩
 
 /-- The registration state with every record coordinate stripped (commitment reply-final 4.4, critique M6): every Server peer kernel and every established owner kernel is the placeholder, and the CTX cache is empty. -/
 noncomputable def strip (state : PqxdhRegistrationSchedule.State KemSK) : PqxdhRegistrationSchedule.State KemSK :=
-  { shared := (state.shared.1, { state.shared.2 with
+  { state with
+    shared := (state.shared.1, { state.shared.2 with
       ctx := ∅
       server := { state.shared.2.server with server := { state.shared.2.server.server with
         peers := fun keyId => (state.shared.2.server.server.peers keyId).map stripPeer } } })
@@ -61,6 +65,25 @@ noncomputable def strip (state : PqxdhRegistrationSchedule.State KemSK) : PqxdhR
 
 /-- A registration state holds no record coordinate. -/
 def Stripped (state : PqxdhRegistrationSchedule.State KemSK) : Prop := strip state = state
+
+/-- Forget only peer metadata in the internal legacy constructor view, retaining every identity, kernel, counter, origin and control field. -/
+def eraseCreatedMetadata {PeerMetadata : Type} (created : PqxdhLiveServerConstruction.Created PeerMetadata) :
+    PqxdhLiveServerConstruction.Created Unit :=
+  { seed := created.seed
+    publicIdentity := created.publicIdentity
+    server := { created.server with server := { created.server.server with
+      peers := fun keyId => (created.server.server.peers keyId).map
+        (fun peer => ⟨peer.identity, peer.kernel, ()⟩) } }
+    control := created.control
+    consumed := created.consumed
+    origin := created.origin }
+
+/-- Actual fresh constructor initialization commutes with forgetting only its peer metadata type. -/
+theorem eraseCreatedMetadata_initialized {PeerMetadata : Type} (primitives : PqxdhJointIdentity.Primitives)
+    (identityIndex : Nat) (sender : Std.U64) (origin : PqxdhLiveServerConstruction.Origin)
+    (seed : PqxdhJointIdentity.IdentitySeed) :
+    eraseCreatedMetadata (PqxdhLiveServerConstruction.initialized (P := PeerMetadata) primitives identityIndex sender origin seed) =
+      PqxdhLiveServerConstruction.initialized (P := Unit) primitives identityIndex sender origin seed := rfl
 
 /-- The environment state: the stripped registration state, the backend of the registration handler, the LQ-F ghosts (finish snapshot and Server ephemeral log) and the environment's own copy of the constructed Server. -/
 structure EnvState (KemSK Bk : Type) where
@@ -84,8 +107,9 @@ variable {ι : Type} {baseSpec : OracleSpec ι} {Bk A : Type} (setup : Setup bas
 /-- The environment's startup (v1-check ack C.3): the actual Server constructor with a generated seed at a fixed runtime, the final runtime dropped, and the initial environment state of the constructed Server. -/
 noncomputable def start (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (runtime : A)
     (init : PqxdhLiveServerConstruction.Created Unit → Bk) :
-    ProbComp (Option (PqxdhLiveServerConstruction.Created Unit × EnvState KemSK Bk)) :=
-  (fun born => born.1.map fun created => (created, envInitial created (init created))) <$>
+    ProbComp (Option (PqxdhLiveServerConstruction.Created RecordAd × EnvState KemSK Bk)) :=
+  (fun born => born.1.map fun created =>
+    (created, envInitial (eraseCreatedMetadata created) (init (eraseCreatedMetadata created)))) <$>
     (PqxdhLiveServerConstruction.construct setup.joint ensureInit identityIndex setup.serverKeyId none).run runtime
 
 end Start
@@ -94,22 +118,6 @@ end Start
 
 section Tools
 variable {n : Nat}
-
-/-- One coin of a registration computation as a coin effect of the record world. -/
-def coinFx : QueryImpl unifSpec (OracleComp (EnvEffects n)) :=
-  fun coin => ((EnvEffects n).query (.inl coin) : OracleComp (EnvEffects n) _)
-
-/-- A probabilistic registration computation with its coins as coin effects. -/
-def coins {α : Type} (work : ProbComp α) : OracleComp (EnvEffects n) α := simulateQ coinFx work
-
-/-- One capability request. -/
-def request (capability : Capability n) : OracleComp (EnvEffects n) ((CapabilitySpec n).Range capability) :=
-  ((EnvEffects n).query (.inr capability) : OracleComp (EnvEffects n) _)
-
-/-- A capability request whose reply is not used. -/
-def issue (capability : Capability n) : OracleComp (EnvEffects n) Unit := do
-  let _ ← request capability
-  pure ()
 
 /-- Run a registration step that changes no record coordinate on the environment's registration state, its coins as coin effects. -/
 noncomputable def onEnv {Bk α : Type} (step : PqxdhRegistrationSchedule.Game KemSK α) :
@@ -123,19 +131,6 @@ end Tools
 section Forward
 variable {n : Nat} {ι : Type} {baseSpec : OracleSpec ι} {Reader Response : Type}
   (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
-
-/-- The source primitives (real HKDF, BLAKE2b, AEAD opening) with the BLAKE2b request forwarded to the world's shared cache as a `.hash` capability; HKDF and opening are the source's deterministic functions. -/
-def primFwd (c : Pqxdh.Crypto) (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) :
-    QueryImpl RawCtxSourceOpen.NativeSpec (OracleComp (EnvEffects n))
-  | .inl request => pure (RawCtxSourceHkdf.response source.crypto request)
-  | .inr (.inl bytes) => (fun digest : CtxRomAuth.CtxDigest => some digest.toList) <$> request (.hash bytes)
-  | .inr (.inr input) => pure (RawCtxSourceOpen.baseOpen c input)
-
-/-- The record primitives of the Server build (HKDF, AEAD seal, BLAKE2b, frame writer) with the BLAKE2b request forwarded. -/
-def sharedFwd (c : Pqxdh.Crypto) (writer : RawCtxMixedShared.Writer)
-    (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) :
-    QueryImpl RawCtxMixedOwner.NativeSpec (OracleComp (EnvEffects n)) :=
-  primFwd c source ∘ₛ RawCtxMixedShared.sharedAdapter c writer
 
 /-- The auxiliary callbacks of the Server's response tail, as constant replies. -/
 def tailAuxFwd : QueryImpl PqxdhServerRegistrationPublication.AuxSpec (OracleComp (EnvEffects n))
@@ -197,20 +192,21 @@ def inactiveTag {D K : Type} : RawCtxBeaconLifecycle.Phase D K ConcreteRatchetKe
 def ownerEffect (index : Nat) (before after : PqxdhRegistrationSchedule.Owner KemSK) : OracleComp (EnvEffects n) Unit :=
   match before.beacon.phase, after.beacon.phase with
   | .established _ _ _, _ => pure ()
-  | _, .established control associatedData kernel =>
-      issue (.installBeacon index ⟨after.beacon.identityKeyId, control, associatedData⟩ (.known kernel))
+  | _, .established control recordAd kernel =>
+      issue (.installBeacon index ⟨after.beacon.identityKeyId, control, recordAd⟩ (.known kernel))
   | previous, current => match inactiveTag current with
       | some tag => if inactiveTag previous = some tag then pure () else issue (.advanceOwner index tag)
       | none => pure ()
 
 /-- The capability that publishes a Server build to the record world: the peer the build published, at the key ID of its response, is installed with its known kernel. -/
 def serverEffect (settled : Option PqxdhServerRegistrationPublication.Response ×
-    PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes)) : OracleComp (EnvEffects n) Unit :=
+    PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes)) :
+    OracleComp (EnvEffects n) Unit :=
   match settled.1 with
   | none => pure ()
   | some response => match settled.2.server.peers response.keyId with
       | none => pure ()
-      | some peer => issue (.installServer response.keyId peer.identity (.known peer.kernel))
+      | some peer => issue (.installServer response.keyId ⟨peer.identity, peer.metadata⟩ (.known peer.kernel))
 
 /-- `create`: the public pin parse, then the native owner construction with its coins as coin effects and the new inactive owner appended in the world. -/
 noncomputable def createStep (pin : Pqxdh.Bytes) (keyId : Std.U64) :
@@ -241,36 +237,60 @@ noncomputable def acceptStep (raw : Pqxdh.Bytes) : StateT (EnvState KemSK Bk) (O
     coins ((PqxdhRegistrationSchedule.onShared
       (PqxdhDeploymentLaterServerNative.acceptLogged setup codec checks state.created.seed raw)).run state.native)
 
-/-- `build`: the native Server build (`PqxdhServerAuthNative.nativeBuild`) with the BLAKE2b request forwarded; the published peer is installed in the world with its known kernel and kept in the environment with the placeholder kernel, and the CTX cache is not touched. -/
+/-- `build`: the native Server build (`PqxdhServerAuthNative.nativeBuild`) with both BLAKE2b requests forwarded: a token rejected by the pre-hash guard is consumed with no effect; otherwise the registration transcript of the token's retained Phase 1 bundle and the candidate's response is one forwarded `.hash`, and the response tail runs at the AD of its digest (design §4.3, §4.5). The published peer is installed in the world with its known kernel and its own AD and kept in the environment with the placeholder kernel; accesses to the world's shared CTX cache occur only through the forwarded `.hash` capability. -/
 noncomputable def buildStep (session : Nat) (payload : Option Pqxdh.Bytes) :
     StateT (EnvState KemSK Bk) (OracleComp (EnvEffects n)) (Option PqxdhServerRegistrationPublication.Response) :=
   fun state =>
     let game := state.native.shared.2
     match game.pending session with
     | none => pure (none, state)
-    | some token => do
-        let result ← (simulateQ (tailFwd setup codec checks)
-          (PqxdhServerRegistrationPublication.build setup.source token.pending token.root payload () game.server)).run []
-        let settled := PqxdhServerAuthExperiment.settle game.server result.1
-        serverEffect settled
-        let native : PqxdhRegistrationSchedule.State KemSK := { state.native with shared := (state.native.shared.1, { game with
-          pending := Function.update game.pending session none
-          server := settled.2
-          ghost := { game.ghost with seals := game.ghost.seals ++ result.2.map (fun context => (session, context)) } }) }
-        pure (settled.1, { state with native := strip native })
+    | some token =>
+      match PqxdhServerRegistrationPublication.prehash game.server token.pending payload with
+      | none =>
+          let native : PqxdhRegistrationSchedule.State KemSK := { state.native with shared := (state.native.shared.1,
+            { game with pending := Function.update game.pending session none }) }
+          pure (none, { state with native := strip native })
+      | some candidate => do
+          let digest ← request (.hash (PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf token.init)
+            (PqxdhTranscriptAd.serverResponse candidate)))
+          let result ← (simulateQ (tailFwd setup codec checks)
+            (PqxdhServerRegistrationPublication.build (associatedData := PqxdhTranscriptAd.adOf digest) setup.source
+              token.pending token.root payload (PqxdhTranscriptAd.adOf digest) game.server)).run []
+          let settled := PqxdhServerAuthExperiment.settle game.server result.1
+          serverEffect settled
+          let native : PqxdhRegistrationSchedule.State KemSK := { state.native with shared := (state.native.shared.1,
+            { game with
+              pending := Function.update game.pending session none
+              server := settled.2
+              ghost := { game.ghost with seals := game.ghost.seals ++ result.2.map (fun context => (session, context)) } }) }
+          pure (settled.1, { state with native := strip native })
 
-/-- `finish`: the native owner finish (`PqxdhRegistrationSchedule.finish`) with every coin a coin effect and the BLAKE2b request forwarded; the owner's change is published (installation of an established owner with its known kernel, or the abort) and the owner is kept with the placeholder kernel. -/
+/-- The owner finish of the scheduler (`PqxdhRegistrationSchedule.ownerFinish`) with every coin a coin effect and both BLAKE2b requests forwarded: an InitSent owner with its retained Phase 1 bundle and a decodable response forwards the transcript as one `.hash` and runs the native owner at the completed binding of its digest; an undecodable response (or a missing bundle) aborts before hashing, and a non-InitSent owner answers nothing. -/
+noncomputable def ownerFinishFwd (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) :
+    StateT (NativeState KemSK) (OracleComp (EnvEffects n)) (Option Pqxdh.Bytes × PqxdhRegistrationSchedule.Owner KemSK) :=
+  match owner.beacon.phase with
+  | .initSent control _ _ _ =>
+    match retained, PqxdhServerAuthExperiment.responseOf codec raw with
+    | some init, some response => do
+        let digest ← StateT.lift (request (.hash (PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf init) response)))
+        simulateQ (callbacksFwd setup codec)
+          (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := PqxdhTranscriptAd.completedOf control digest)
+            codec.frameRead raw owner)
+    | _, _ => pure (none, PqxdhBeaconPhase2Preparation.abort control owner)
+  | _ => pure (none, owner)
+
+/-- `finish`: the native owner finish (`PqxdhRegistrationSchedule.finish`) with every coin a coin effect and both BLAKE2b requests forwarded (`ownerFinishFwd` at the owner's retained Phase 1 bundle); the owner's change is published (installation of an established owner with its known kernel, or the abort) and the owner is kept with the placeholder kernel. -/
 noncomputable def finishStep (owner : Nat) (raw : Pqxdh.Bytes) :
     StateT (EnvState KemSK Bk) (OracleComp (EnvEffects n)) (Option Pqxdh.Bytes) :=
   fun state =>
     match state.native.owners[owner]? with
     | none => pure (none, state)
     | some before => do
-        let result ← (simulateQ (callbacksFwd setup codec)
-          (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw before)).run state.native.shared
+        let result ← (ownerFinishFwd setup codec (state.native.inits owner) raw before).run state.native.shared
         ownerEffect owner before result.1.2
         let native : PqxdhRegistrationSchedule.State KemSK :=
-          ⟨result.2, state.native.owners.set owner result.1.2⟩
+          ⟨result.2, state.native.owners.set owner result.1.2, state.native.inits⟩
         pure (result.1.1, { state with native := strip native })
 
 /-- `hmac`: the native public HMAC with its coins as coin effects. -/
@@ -323,7 +343,7 @@ theorem stripOwner_idem (owner : PqxdhRegistrationSchedule.Owner KemSK) : stripO
 
 /-- Stripping a peer twice strips it once. -/
 theorem stripPeer_comp {PeerMetadata : Type} :
-    stripPeer (PeerMetadata := Unit) ∘ stripPeer (PeerMetadata := PeerMetadata) =
+    stripPeer (PeerMetadata := PeerMetadata) ∘ stripPeer (PeerMetadata := PeerMetadata) =
       stripPeer (PeerMetadata := PeerMetadata) := rfl
 
 /-- Stripping owners twice strips them once. -/
@@ -359,9 +379,9 @@ theorem start_created (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat
 /-- Every startup outcome is the initial environment state of its constructed Server. -/
 theorem start_initial (ensureInit : StateT A ProbComp Bool) (identityIndex : Nat) (runtime : A)
     (init : PqxdhLiveServerConstruction.Created Unit → Bk)
-    (created : PqxdhLiveServerConstruction.Created Unit) (state : EnvState KemSK Bk)
+    (created : PqxdhLiveServerConstruction.Created RecordAd) (state : EnvState KemSK Bk)
     (supported : some (created, state) ∈ support (start setup ensureInit identityIndex runtime init)) :
-    state = envInitial created (init created) := by
+    state = envInitial (eraseCreatedMetadata created) (init (eraseCreatedMetadata created)) := by
   simp only [start, support_map, Set.mem_image] at supported
   obtain ⟨born, _, same⟩ := supported
   cases hb : born.1 with
@@ -376,7 +396,7 @@ theorem start_bound (ensureInit : StateT A ProbComp Bool) (qInit : Nat)
     (initBound : ∀ state, (ensureInit.run state).IsTotalQueryBound qInit) (identityIndex : Nat) (runtime : A)
     (init : PqxdhLiveServerConstruction.Created Unit → Bk) :
     (start setup ensureInit identityIndex runtime init).IsTotalQueryBound (qInit + 32) := by
-  have bound := PqxdhLiveServerConstruction.construct_uniform (P := Unit) setup.joint ensureInit qInit initBound identityIndex
+  have bound := PqxdhLiveServerConstruction.construct_uniform (P := RecordAd) setup.joint ensureInit qInit initBound identityIndex
     setup.serverKeyId none runtime
   simpa only [start, IsTotalQueryBound, isQueryBound_map_iff, Option.isNone_none, ite_true] using bound
 
@@ -412,6 +432,17 @@ theorem issue_bound (capability : Capability n) (kind : EffectKind) :
   · exact Or.inr (by simp only [same, ite_true, Nat.one_pos])
   · exact Or.inl fun found => same found.symm
 
+/-- One forwarded BLAKE2b request is one BLAKE2b effect and nothing else. -/
+theorem request_hash_bound (bytes : Pqxdh.Bytes) (kind : EffectKind) :
+    (request (n := n) (.hash bytes)).IsQueryBoundP (fun effect => effectKind effect = kind)
+      (if kind = .hash then 1 else 0) := by
+  unfold request
+  rw [isQueryBoundP_query_iff]
+  intro same
+  simp only [effectKind] at same
+  subst same
+  simp
+
 /-- A capability request that is not a BLAKE2b query is one administrative effect. -/
 theorem issue_admin (capability : Capability n) (notHash : ∀ bytes, capability ≠ .hash bytes) (kind : EffectKind) :
     (issue capability).IsQueryBoundP (fun effect => effectKind effect = kind)
@@ -438,7 +469,8 @@ theorem ownerEffect_bound (index : Nat) (before after : PqxdhRegistrationSchedul
 
 /-- Publishing a Server build issues at most one administrative effect and nothing else. -/
 theorem serverEffect_bound (settled : Option PqxdhServerRegistrationPublication.Response ×
-    PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes)) (kind : EffectKind) :
+    PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes))
+    (kind : EffectKind) :
     (serverEffect (n := n) settled).IsQueryBoundP (fun effect => effectKind effect = kind)
       (if kind = .administrative then 1 else 0) := by
   unfold serverEffect
@@ -468,34 +500,35 @@ theorem allowanceG_other (core : Fin 14 → EffectKind → Nat) (firstTouch : Fi
 def baseAllowance (caps : PqxdhServerAuthSourceCosts.KemCaps) : Fin 14 → EffectKind → Nat
   | kind, .coin => ![0, 64 + caps.keygenCost, 32, 96 + caps.encapsCost, 0, 69 * max 64 caps.decapsCost, 64,
       0, 0, 0, 0, 0, 0, 0] kind
-  | kind, .hash => if kind = 4 ∨ kind = 5 then 1 else 0
+  | kind, .hash => if kind = 4 ∨ kind = 5 then 2 else 0
   | kind, .administrative => if kind = 1 ∨ kind = 2 ∨ kind = 4 ∨ kind = 5 then 1 else 0
 
 /-- The CE-11 caps (plan section 31): the outer budget and the shared-hash cap `qHash + S + R + envTotal(.hash)`. -/
 def capsG (B : PqxdhDeploymentInterface.Budget) (allowance : Fin 14 → EffectKind → Nat) : PqxdhRecordLiftInterface.Caps :=
   ⟨B, B.hash + B.sends + B.receives + PqxdhRecordLiftInterface.Caps.envTotal ⟨B, 0⟩ allowance .hash⟩
 
-/-- An allowance with one BLAKE2b query at build and at finish and none elsewhere has the environment hash total `qBuild + qFinish`. -/
+/-- An allowance with two BLAKE2b queries at build and at finish (the transcript hash and the sequence-one record hash, design §4.3/§10) and none elsewhere has the environment hash total `2 qBuild + 2 qFinish`. -/
 theorem envTotal_hash (B : PqxdhDeploymentInterface.Budget) (sharedHash : Nat) (allowance : Fin 14 → EffectKind → Nat)
-    (hashes : ∀ kind, allowance kind .hash = if kind = 4 ∨ kind = 5 then 1 else 0) :
-    PqxdhRecordLiftInterface.Caps.envTotal ⟨B, sharedHash⟩ allowance .hash = B.build + B.finish := by
+    (hashes : ∀ kind, allowance kind .hash = if kind = 4 ∨ kind = 5 then 2 else 0) :
+    PqxdhRecordLiftInterface.Caps.envTotal ⟨B, sharedHash⟩ allowance .hash = 2 * B.build + 2 * B.finish := by
   simp only [PqxdhRecordLiftInterface.Caps.envTotal, hashes, Fin.sum_univ_succ, Fin.sum_univ_zero,
     PqxdhDeploymentInterface.Budget.cap]
   simp
+  omega
 
-/-- The shared-hash cap of the CE-11 caps is `qHash + S + R + qBuild + qFinish` (plan section 31). -/
+/-- The shared-hash cap of the CE-11 caps is `qHash + S + R + 2 qBuild + 2 qFinish` (plan section 31; two BLAKE2b queries per build and per finish, design §10). -/
 theorem capsG_sharedHash (B : PqxdhDeploymentInterface.Budget) (allowance : Fin 14 → EffectKind → Nat)
-    (hashes : ∀ kind, allowance kind .hash = if kind = 4 ∨ kind = 5 then 1 else 0) :
-    (capsG B allowance).sharedHash = B.hash + B.sends + B.receives + B.build + B.finish := by
+    (hashes : ∀ kind, allowance kind .hash = if kind = 4 ∨ kind = 5 then 2 else 0) :
+    (capsG B allowance).sharedHash = B.hash + B.sends + B.receives + 2 * B.build + 2 * B.finish := by
   simp only [capsG, envTotal_hash B 0 allowance hashes, Nat.add_assoc]
 
 /-- The derivation allowance of the CE-11 caps is the frozen `sends + 51 * receives`. -/
 theorem capsG_derivations (B : PqxdhDeploymentInterface.Budget) (allowance : Fin 14 → EffectKind → Nat) :
     (capsG B allowance).derivations = B.sends + 51 * B.receives := rfl
 
-/-- The real allowance has one BLAKE2b query at build and at finish and none elsewhere. -/
+/-- The real allowance has two BLAKE2b queries at build and at finish (transcript and sequence-one record hash) and none elsewhere. -/
 theorem baseAllowance_hash (caps : PqxdhServerAuthSourceCosts.KemCaps) (kind : Fin 14) :
-    baseAllowance caps kind .hash = if kind = 4 ∨ kind = 5 then 1 else 0 := rfl
+    baseAllowance caps kind .hash = if kind = 4 ∨ kind = 5 then 2 else 0 := rfl
 
 /-- The real allowance of the post-phase HMAC class (class 6) is one Extract-table value and nothing else (plan section 33: coin 64, hash 0, administrative 0). -/
 theorem baseAllowance_six (caps : PqxdhServerAuthSourceCosts.KemCaps) (kind : EffectKind) :
@@ -509,8 +542,8 @@ theorem allowanceG_six (core : Fin 14 → EffectKind → Nat) (kind : EffectKind
 
 /-- The CE first-touch allowance over any core with that BLAKE2b pattern keeps it. -/
 theorem allowanceG_hash (core : Fin 14 → EffectKind → Nat) (firstTouch : Fin 14 → Bool)
-    (hashes : ∀ kind, core kind .hash = if kind = 4 ∨ kind = 5 then 1 else 0) (kind : Fin 14) :
-    allowanceG core firstTouch kind .hash = if kind = 4 ∨ kind = 5 then 1 else 0 := by
+    (hashes : ∀ kind, core kind .hash = if kind = 4 ∨ kind = 5 then 2 else 0) (kind : Fin 14) :
+    allowanceG core firstTouch kind .hash = if kind = 4 ∨ kind = 5 then 2 else 0 := by
   rw [allowanceG_other core firstTouch kind .hash (by simp only [ne_eq, reduceCtorEq, not_false_eq_true]), hashes]
 
 section C4
@@ -532,16 +565,16 @@ theorem c4_instance (env : Environment n E) (startupCoins : Nat) (allowance : Fi
       PqxdhRecordLiftWorldBudget.run_kdf setup codec route env serverKid bounds mode (capsG B allowance) adversary
         respects result supported⟩
 
-/-- C4 in closed form for an allowance with one BLAKE2b query at build and at finish: `qHash + S + R + qBuild + qFinish` and `S + 51 R`. -/
+/-- C4 in closed form for an allowance with two BLAKE2b queries at build and at finish: `qHash + S + R + 2 qBuild + 2 qFinish` and `S + 51 R`. -/
 theorem c4_closed (env : Environment n E) (startupCoins : Nat) (allowance : Fin 14 → EffectKind → Nat)
     (framed : PqxdhRecordLiftInterface.Frame env startupCoins allowance)
-    (hashes : ∀ kind, allowance kind .hash = if kind = 4 ∨ kind = 5 then 1 else 0) (serverKid : Std.U64)
+    (hashes : ∀ kind, allowance kind .hash = if kind = 4 ∨ kind = 5 then 2 else 0) (serverKid : Std.U64)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (B : PqxdhDeploymentInterface.Budget) (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X)
     (respects : B.Respects adversary) :
     ∀ result ∈ support (PqxdhRecordLiftWorld.run setup codec route env serverKid bounds mode adversary),
       result.2.primitive.1.effects .hash + result.2.primitive.1.native .hash ≤
-          B.hash + B.sends + B.receives + B.build + B.finish ∧
+          B.hash + B.sends + B.receives + 2 * B.build + 2 * B.finish ∧
         result.2.primitive.1.native .kdf ≤ B.sends + 51 * B.receives := by
   intro result supported
   have bound := c4_instance setup codec route env startupCoins allowance framed serverKid bounds mode B adversary
@@ -574,10 +607,10 @@ theorem c4_later {Out R : Type} (env : Environment n E) (startupCoins : Nat) (al
   rw [shared]
   exact ⟨hashes, kdf⟩
 
-/-- Later-mode C4 in closed form: `qHash + S + R + qBuild + qFinish + qHash₂` and `S + 51 R`. -/
+/-- Later-mode C4 in closed form: `qHash + S + R + 2 qBuild + 2 qFinish + qHash₂` and `S + 51 R`. -/
 theorem c4_later_closed {Out R : Type} (env : Environment n E) (startupCoins : Nat)
     (allowance : Fin 14 → EffectKind → Nat) (framed : PqxdhRecordLiftInterface.Frame env startupCoins allowance)
-    (hashes : ∀ kind, allowance kind .hash = if kind = 4 ∨ kind = 5 then 1 else 0)
+    (hashes : ∀ kind, allowance kind .hash = if kind = 4 ∨ kind = 5 then 2 else 0)
     (serverKid : Std.U64) (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (B : PqxdhDeploymentInterface.Budget) (post : PqxdhDeploymentLater.PostBudget) (reveal : E → R)
     (first : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X)
@@ -585,7 +618,7 @@ theorem c4_later_closed {Out R : Type} (env : Environment n E) (startupCoins : N
     (respects : B.Respects first) (laterRespects : ∀ output disclosed, post.Respects (second output disclosed)) :
     ∀ result ∈ support (PqxdhRecordLiftLater.run setup codec route env serverKid bounds mode reveal first second),
       result.2.primitive.1.effects .hash + result.2.primitive.1.native .hash ≤
-          B.hash + B.sends + B.receives + B.build + B.finish + post.hash ∧
+          B.hash + B.sends + B.receives + 2 * B.build + 2 * B.finish + post.hash ∧
         result.2.primitive.1.native .kdf ≤ B.sends + 51 * B.receives := by
   intro result supported
   have bound := c4_later setup codec route env startupCoins allowance framed (by rw [hashes]; decide) serverKid bounds
@@ -654,18 +687,21 @@ theorem regFwd_bound (query : PqxdhServerRegistrationPublication.NativeSpec.Doma
     trivial
   · cases request <;> simp only [regFwd, tailAuxFwd] <;> trivial
 
-/-- The forwarded Server build issues no coin, at most one BLAKE2b effect (its sequence-one seal) and no administrative effect. -/
+/-- The forwarded Server build at a supplied AD (the peer metadata it installs) issues no coin, at most one BLAKE2b effect (its sequence-one seal) and no administrative effect. -/
 theorem build_fwd_bound (pending : pqxdh.PendingServerRegistration) (root : PqxdhSecretInputKdf.RootOutput)
-    (payload : Option Pqxdh.Bytes) (server : PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes))
+    (payload : Option Pqxdh.Bytes) (ad : PqxdhTranscriptAd.AssociatedData)
+    (server : PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes))
     (log : List RawCtxSourceSend.SealContext) (kind : EffectKind) :
     ((simulateQ (tailFwd (n := n) setup codec checks)
-      (PqxdhServerRegistrationPublication.build setup.source pending root payload () server)).run log).IsQueryBoundP
+      (PqxdhServerRegistrationPublication.build (associatedData := ad) setup.source pending root payload ad
+        server)).run log).IsQueryBoundP
         (fun effect => effectKind effect = kind) (if kind = .hash then 1 else 0) := by
   rw [← isQueryBoundP_map_iff _ Prod.fst, tailFwd_forget, nativeTailFwd_compose]
   by_cases hash : kind = .hash
   · simp only [hash, ite_true]
     apply RawCtxSourceOpen.simulate_bound _ (fun query => PqxdhServerAuthTailCosts.registrationHash query = true) _ _ 1
-      ((PqxdhServerRegistrationPublication.native_build_bounds setup.source pending root payload () server).2.1 .hash)
+      ((PqxdhServerRegistrationPublication.native_build_bounds (associatedData := ad) setup.source pending root payload ad
+        server).2.1 .hash)
     intro query
     have step := regFwd_bound (n := n) setup codec checks query .hash
     simp only [true_and] at step
@@ -732,10 +768,11 @@ theorem tail_hash_bound (decode : RawCtxReceive.FrameDecoder) (prepared : PqxdhB
   | none => simp only [simulateQ_pure]; trivial
   | some root => exact afterRoot_hash_bound decode prepared root
 
-/-- The native Beacon finish issues at most one BLAKE2b request, whatever its raw input and owner. -/
-theorem owner_hash_bound (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
-    (state : PqxdhBeaconPhase2Preparation.State I D K) :
-    (PqxdhBeaconPhase2Publication.nativeOwner (X := X) (Response := Response) decode raw state).IsQueryBoundP
+/-- The native Beacon finish issues at most one BLAKE2b request, whatever its completed binding, raw input and owner. -/
+theorem owner_hash_bound (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+    (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes) (state : PqxdhBeaconPhase2Preparation.State I D K) :
+    (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) (X := X) (Response := Response)
+      decode raw state).IsQueryBoundP
       (fun query => ownerHash query = true) 1 := by
   cases active : state.beacon.phase with
   | initSent control prekey oneTime kem =>
@@ -834,22 +871,24 @@ theorem callbacksFwd_bound (caps : PqxdhServerAuthSourceCosts.KemCaps) (bounded 
           simp only [callbacksFwd, PqxdhPhase2DhRootConsumer.withRoot, StateT.run_lift, beaconFwd, pure_bind]
           trivial
 
-/-- The forwarded Beacon finish issues at most `69 * max 64 decaps` coin effects, at most one BLAKE2b effect (its sequence-one opening) and no administrative effect. -/
+/-- The forwarded native Beacon owner at a completed binding issues at most `69 * max 64 decaps` coin effects, at most one BLAKE2b effect (its sequence-one opening) and no administrative effect. -/
 theorem finish_fwd_bound (caps : PqxdhServerAuthSourceCosts.KemCaps) (bounded : PqxdhServerAuthSourceCosts.KemBound setup caps)
+    (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
     (raw : Pqxdh.Bytes) (owner : PqxdhRegistrationSchedule.Owner KemSK) (state : NativeState KemSK) (kind : EffectKind) :
     ((simulateQ (callbacksFwd (n := n) setup codec)
-      (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw owner)).run state).IsQueryBoundP
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw
+        owner)).run state).IsQueryBoundP
         (fun effect => effectKind effect = kind)
         (if kind = .coin then 69 * max 64 caps.decapsCost else if kind = .hash then 1 else 0) := by
   by_cases coin : kind = .coin
   · subst coin
     simp only [ite_true]
-    exact PqxdhBeaconPhase2Bounds.native_interpreted_bound _ _ _ (fun query current => by
+    exact PqxdhBeaconPhase2Bounds.native_interpreted_bound (completedBinding := completedBinding) _ _ _ (fun query current => by
       simpa only [ite_true] using callbacksFwd_bound setup codec caps bounded query current .coin) _ _ _ _
   · by_cases hash : kind = .hash
     · subst hash
       simp only [reduceCtorEq, ite_false, ite_true]
-      refine IsQueryBoundP.simulateQ_run_of_step (owner_hash_bound _ _ _) (fun query found current => ?_)
+      refine IsQueryBoundP.simulateQ_run_of_step (owner_hash_bound completedBinding _ _ _) (fun query found current => ?_)
         (fun query missing current => ?_) state
       · have step := callbacksFwd_bound (n := n) setup codec caps bounded query current .hash
         simp only [reduceCtorEq, ite_false, true_and] at step
@@ -858,11 +897,29 @@ theorem finish_fwd_bound (caps : PqxdhServerAuthSourceCosts.KemCaps) (bounded : 
         simp only [reduceCtorEq, ite_false, true_and] at step
         simpa only [missing, Bool.false_eq_true, ite_false] using step
     · simp only [coin, hash, ite_false]
-      have bound := PqxdhBeaconPhase2Bounds.native_interpreted_bound (callbacksFwd (n := n) setup codec)
+      have bound := PqxdhBeaconPhase2Bounds.native_interpreted_bound (completedBinding := completedBinding)
+        (callbacksFwd (n := n) setup codec)
         (fun effect => effectKind effect = kind) 0 (fun query current => by
           simpa only [coin, hash, false_and, ite_false] using callbacksFwd_bound setup codec caps bounded query current kind)
         codec.frameRead raw owner state
       simpa only [Nat.mul_zero] using bound
+
+/-- The forwarded owner finish issues at most `69 * max 64 decaps` coin effects, at most two BLAKE2b effects (the forwarded transcript and the sequence-one opening) and no administrative effect; an aborted or inactive owner issues nothing. -/
+theorem ownerFinishFwd_bound (caps : PqxdhServerAuthSourceCosts.KemCaps)
+    (bounded : PqxdhServerAuthSourceCosts.KemBound setup caps) (retained : Option PqxdhEd25519EufCma.Phase1Candidate)
+    (raw : Pqxdh.Bytes) (owner : PqxdhRegistrationSchedule.Owner KemSK) (state : NativeState KemSK) (kind : EffectKind) :
+    ((ownerFinishFwd (n := n) setup codec retained raw owner).run state).IsQueryBoundP
+        (fun effect => effectKind effect = kind)
+        (if kind = .coin then 69 * max 64 caps.decapsCost else if kind = .hash then 2 else 0) := by
+  unfold ownerFinishFwd
+  split
+  · split
+    · simp only [StateT.run_bind, StateT.run_lift, bind_assoc, pure_bind]
+      apply (isQueryBoundP_bind (request_hash_bound _ kind) fun hashed _ =>
+        finish_fwd_bound setup codec caps bounded _ raw owner state kind).mono
+      cases kind <;> simp
+    · trivial
+  · trivial
 
 end FinishBounds
 
@@ -894,9 +951,13 @@ theorem buildStep_consumes (session : Nat) (payload : Option Pqxdh.Bytes) (state
     simp only [support_pure, Set.mem_singleton_iff] at supported
     subst supported
     exact absent
-  · simp only [mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at supported
-    obtain ⟨_, _, _, _, rfl⟩ := supported
-    simp only [strip_pending, Function.update_self]
+  · split at supported
+    · simp only [support_pure, Set.mem_singleton_iff] at supported
+      subst supported
+      simp only [strip_pending, Function.update_self]
+    · simp only [mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at supported
+      obtain ⟨_, _, _, _, _, _, rfl⟩ := supported
+      simp only [strip_pending, Function.update_self]
 
 /-- A build at a session without a pending token issues no effect and changes nothing. -/
 theorem buildStep_idle (session : Nat) (payload : Option Pqxdh.Bytes) (state : EnvState KemSK Bk)
@@ -912,33 +973,23 @@ theorem finishStep_retry (owner : Nat) (raw : Pqxdh.Bytes) (state : EnvState Kem
     (found : state.native.owners[owner]? = some before) (terminal : PqxdhRegistrationSchedule.Terminal before) :
     (finishStep (n := n) setup codec owner raw).run state = pure (none, state) := by
   change finishStep setup codec owner raw state = _
+  have unhashed : ownerFinishFwd (n := n) setup codec (state.native.inits owner) raw before = pure (none, before) := by
+    unfold PqxdhRegistrationSchedule.Terminal at terminal
+    unfold ownerFinishFwd
+    cases phase : before.beacon.phase <;> simp only [phase] at terminal ⊢
   unfold finishStep
-  simp only [found, PqxdhRegistrationSchedule.terminal_native codec.frameRead raw before terminal, simulateQ_pure,
-    StateT.run_pure, pure_bind]
+  simp only [found, unhashed, StateT.run_pure, pure_bind]
   have quiet : ownerEffect (n := n) owner before before = pure () := by
     unfold PqxdhRegistrationSchedule.Terminal at terminal
     unfold ownerEffect
     cases phase : before.beacon.phase <;> simp only [phase] at terminal ⊢
     · simp only [inactiveTag, ite_true]
-  have same : (⟨state.native.shared, state.native.owners.set owner before⟩ : PqxdhRegistrationSchedule.State KemSK) =
-      state.native := by
+  have same : (⟨state.native.shared, state.native.owners.set owner before, state.native.inits⟩ :
+      PqxdhRegistrationSchedule.State KemSK) = state.native := by
     obtain ⟨below, element⟩ := List.getElem?_eq_some_iff.mp found
     rw [← element, List.set_getElem_self]
   simp only [quiet, pure_bind, same]
   rw [show strip state.native = state.native from stripped]
-
-/-- A stateless simulation only shrinks the support. -/
-theorem support_simulateQ_subset {ι₁ ι₂ α : Type} {spec₁ : OracleSpec ι₁} {spec₂ : OracleSpec ι₂}
-    (impl : QueryImpl spec₁ (OracleComp spec₂)) (work : OracleComp spec₁ α) :
-    support (simulateQ impl work) ⊆ support work := by
-  induction work using OracleComp.inductionOn with
-  | pure value => simp only [simulateQ_pure, support_pure, subset_refl]
-  | query_bind query next ih =>
-      intro result supported
-      simp only [simulateQ_query_bind, mem_support_bind_iff] at supported
-      obtain ⟨reply, _, member⟩ := supported
-      rw [mem_support_bind_iff]
-      exact ⟨reply, mem_support_query query reply, ih reply member⟩
 
 /-- A finish from an initSent owner leaves the owner terminal on every outcome (`PqxdhRegistrationSchedule.finish_terminal`), kept with its kernel stripped. -/
 theorem finishStep_terminal (owner : Nat) (raw : Pqxdh.Bytes) (state : EnvState KemSK Bk)
@@ -953,29 +1004,38 @@ theorem finishStep_terminal (owner : Nat) (raw : Pqxdh.Bytes) (state : EnvState 
   unfold finishStep at supported
   simp only [found, mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at supported
   obtain ⟨inner, member, _, _, rfl⟩ := supported
-  have reached : inner.1 ∈ support (PqxdhBeaconPhase2Publication.nativeOwner (X := PqxdhJointIdentity.IdentitySeed)
-      (Response := Response) codec.frameRead raw before) := by
-    apply OracleComp.support_simulateQ_run'_subset (callbacksFwd (n := n) setup codec) _ state.native.shared
-    rw [StateT.run'_eq, support_map]
-    exact ⟨inner, member, rfl⟩
-  have shape : ∃ staged, inner.1 = PqxdhBeaconPhase2Publication.finish control before staged := by
-    have sourced := support_simulateQ_subset _ _ reached
-    simp only [PqxdhBeaconPhase2Publication.owner, active, mem_support_bind_iff] at sourced
-    obtain ⟨prepared, _, rest⟩ := sourced
-    cases prepared with
-    | none =>
-        simp only [support_pure, Set.mem_singleton_iff] at rest
-        exact ⟨none, rest⟩
-    | some prepared =>
-        simp only [mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at rest
-        obtain ⟨staged, _, same⟩ := rest
-        exact ⟨staged, same⟩
-  obtain ⟨staged, same⟩ := shape
+  have terminal : PqxdhRegistrationSchedule.Terminal inner.1.2 := by
+    unfold ownerFinishFwd at member
+    simp only [active] at member
+    split at member
+    · rename_i init response _ _
+      simp only [StateT.run_bind, StateT.run_lift, mem_support_bind_iff] at member
+      obtain ⟨hashed, _, member⟩ := member
+      have reached : inner.1 ∈ support (PqxdhBeaconPhase2Publication.nativeOwner
+          (completedBinding := PqxdhTranscriptAd.completedOf control hashed.1) (X := PqxdhJointIdentity.IdentitySeed)
+          (Response := Response) codec.frameRead raw before) := by
+        apply OracleComp.support_simulateQ_run'_subset (callbacksFwd (n := n) setup codec) _ hashed.2
+        rw [StateT.run'_eq, support_map]
+        exact ⟨inner, member, rfl⟩
+      have sourced := support_simulateQ_subset _ _ reached
+      simp only [PqxdhBeaconPhase2Publication.owner, active, mem_support_bind_iff] at sourced
+      obtain ⟨prepared, _, rest⟩ := sourced
+      cases prepared with
+      | none =>
+          simp only [support_pure, Set.mem_singleton_iff] at rest
+          rw [rest]
+          exact PqxdhRegistrationSchedule.finish_terminal control before none
+      | some prepared =>
+          simp only [mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at rest
+          obtain ⟨staged, _, same⟩ := rest
+          rw [same]
+          exact PqxdhRegistrationSchedule.finish_terminal control before staged
+    · simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at member
+      subst member
+      simp [PqxdhBeaconPhase2Preparation.abort, PqxdhRegistrationSchedule.Terminal]
   obtain ⟨below, _⟩ := List.getElem?_eq_some_iff.mp found
-  refine ⟨inner.1.2, ?_, ?_⟩
-  · simp only [strip, List.getElem?_map, List.getElem?_set_self below, Option.map_some]
-  · rw [same]
-    exact PqxdhRegistrationSchedule.finish_terminal control before staged
+  refine ⟨inner.1.2, ?_, terminal⟩
+  simp only [strip, List.getElem?_map, List.getElem?_set_self below, Option.map_some]
 
 end Once
 
@@ -983,6 +1043,8 @@ end Once
 
 section GenericBuild
 variable {ι₀ : Type} {spec₀ : OracleSpec ι₀} (p : ι₀ → Prop) [DecidablePred p]
+/- The generic builder is the lower AD-parametric layer (design §4.8): these bounds hold at every supplied AD. -/
+variable (associatedData : Std.Array Std.U8 151#usize)
 
 /-- The first-send publication of the generic builder issues its send's effects and nothing more (`PqxdhServerAuthEntryFactor.generic_after_uniform`, for any counted effect). -/
 theorem generic_after_bound {K σ Metadata PeerMetadata Consumed : Type}
@@ -993,7 +1055,8 @@ theorem generic_after_bound {K σ Metadata PeerMetadata Consumed : Type}
     (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Pqxdh.Bytes) (kernel : K)
     (metadata : PeerMetadata) (server : PqxdhInitialGenericPublication.State K Metadata PeerMetadata Consumed)
     (state : σ) :
-    ((PqxdhInitialGenericPublication.afterInitialization calls aux candidate authenticated kernel metadata server).run
+    ((PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) calls aux candidate authenticated
+      kernel metadata server).run
       state).IsQueryBoundP p cost := by
   simp only [PqxdhInitialGenericPublication.afterInitialization, StateT.run_bind]
   apply (isQueryBoundP_bind (m := 0) (sendBound _ _ state) ?_).mono (by omega)
@@ -1015,7 +1078,8 @@ theorem generic_candidate_bound {K σ Metadata PeerMetadata Consumed : Type}
     (initial : RustM K) (candidate : pqxdh.ServerRegistrationCandidate) (data : Option Pqxdh.Bytes)
     (metadata : PeerMetadata) (server : PqxdhInitialGenericPublication.State K Metadata PeerMetadata Consumed)
     (state : σ) :
-    ((PqxdhInitialGenericBuilder.candidate calls aux initial candidate data metadata server).run state).IsQueryBoundP
+    ((PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) calls aux initial candidate data metadata
+      server).run state).IsQueryBoundP
       p cost := by
   simp only [PqxdhInitialGenericBuilder.candidate, StateT.run_bind]
   apply (isQueryBoundP_bind (n := 0) (m := cost) (auxBound (.checkIdentity _) state) ?_).mono (by omega)
@@ -1048,11 +1112,11 @@ theorem generic_candidate_bound {K σ Metadata PeerMetadata Consumed : Type}
                     | fail error => trivial
                     | div => trivial
                     | ok binding =>
-                        change ((ok <$> PqxdhInitialGenericPublication.afterInitialization calls aux candidate
+                        change ((ok <$> PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) calls aux candidate
                           (absBytes binding.bytes ++ data.getD PqxdhServerRegistrationPublication.registrationWitness)
                           kernel metadata server).run allocatedState).IsQueryBoundP p cost
                         rw [StateT.run_map, isQueryBoundP_map_iff]
-                        exact generic_after_bound p calls aux cost sendBound auxBound candidate _ kernel metadata server
+                        exact generic_after_bound p associatedData calls aux cost sendBound auxBound candidate _ kernel metadata server
                           allocatedState
               · trivial
 
@@ -1065,7 +1129,8 @@ theorem generic_build_bound {K σ Metadata PeerMetadata Consumed : Type}
     (initial : RustM K) (pending : pqxdh.PendingServerRegistration) (data : Option Pqxdh.Bytes)
     (metadata : PeerMetadata) (server : PqxdhInitialGenericPublication.State K Metadata PeerMetadata Consumed)
     (state : σ) :
-    ((PqxdhServerAuthSendFactor.genericBuild calls aux initial pending data metadata server).run state).IsQueryBoundP
+    ((PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData) calls aux initial pending data metadata
+      server).run state).IsQueryBoundP
       p cost := by
   unfold PqxdhServerAuthSendFactor.genericBuild
   cases pqxdh.server_next_key_id server.control with
@@ -1085,7 +1150,7 @@ theorem generic_build_bound {K σ Metadata PeerMetadata Consumed : Type}
               cases prepared with
               | Err error => trivial
               | Ok candidate =>
-                  exact generic_candidate_bound p calls aux cost sendBound auxBound initial candidate data metadata
+                  exact generic_candidate_bound p associatedData calls aux cost sendBound auxBound initial candidate data metadata
                     server state
 
 end GenericBuild
@@ -1136,16 +1201,16 @@ theorem tailFwd_bound (query : PqxdhServerRegistrationPublication.TailSpec.Domai
 
 /-- The intended capability form of the split hidden build `PqxdhDeploymentHiddenSplit.buildSplit`, with the BLAKE2b request forwarded: the factored Server build at the environment material and the dummy seed on the forwarded logged tail, publishing the placeholder kernel. Its factoring against `buildSplit` is not proved here; only the cost of `buildSplitEnv`, which runs it, is (`buildSplit_env_cost`). -/
 noncomputable def buildSplitFwd (material : PqxdhDeploymentHiddenLayout.Material)
-    (token : PqxdhServerRelatedRootConsumer.Returned) (payload : Option Pqxdh.Bytes)
+    (token : PqxdhServerRelatedRootConsumer.Returned) (payload : Option Pqxdh.Bytes) (ad : PqxdhTranscriptAd.AssociatedData)
     (server : PqxdhServerAuthEntryFactor.ServerState) :
     StateT (List RawCtxSourceSend.SealContext) (OracleComp (EnvEffects n))
       (RustM (Option PqxdhServerRegistrationPublication.Response × PqxdhServerAuthEntryFactor.ServerState)) :=
   Functor.map (PqxdhDeploymentHiddenSplit.replaceRaw placeholderKernel) <$>
-    PqxdhServerAuthLoggedSendFactor.factored (fun entry _ _ => pure (entry, .None))
+    PqxdhServerAuthLoggedSendFactor.factored (associatedData := ad) (fun entry _ _ => pure (entry, .None))
       (fun query => tailFwd setup codec checks (.inl query)) setup.source
       (fun query => tailFwd setup codec checks (.inr query))
       (PqxdhServerAuthCtxMaterial.factor (PqxdhDeploymentHiddenLayout.joinOutput material
-        PqxdhDeploymentHiddenSplit.dummySeed)) token.pending payload () server
+        PqxdhDeploymentHiddenSplit.dummySeed)) token.pending payload ad server
 
 /-- The hidden install of a split build: the published peer, at the key ID of the response, installed in the world with the World's Server kernel of the slot. -/
 def hiddenServerEffect (slot : Slot n) (settled : Option PqxdhServerRegistrationPublication.Response ×
@@ -1154,15 +1219,15 @@ def hiddenServerEffect (slot : Slot n) (settled : Option PqxdhServerRegistration
   | none => pure ()
   | some response => match settled.2.server.peers response.keyId with
       | none => pure ()
-      | some peer => issue (.installServer response.keyId peer.identity (.hidden slot))
+      | some peer => issue (.installServer response.keyId ⟨peer.identity, peer.metadata⟩ (.hidden slot))
 
 /-- The split hidden build of a slot in capability form: the forwarded split build, settled as the native build settles it, then the hidden install of the published peer. -/
 noncomputable def buildSplitEnv (material : PqxdhDeploymentHiddenLayout.Material) (slot : Slot n)
-    (token : PqxdhServerRelatedRootConsumer.Returned) (payload : Option Pqxdh.Bytes)
+    (token : PqxdhServerRelatedRootConsumer.Returned) (payload : Option Pqxdh.Bytes) (ad : PqxdhTranscriptAd.AssociatedData)
     (server : PqxdhServerAuthEntryFactor.ServerState) :
     StateT (List RawCtxSourceSend.SealContext) (OracleComp (EnvEffects n))
       (Option PqxdhServerRegistrationPublication.Response × PqxdhServerAuthEntryFactor.ServerState) := do
-  let result ← buildSplitFwd setup codec checks material token payload server
+  let result ← buildSplitFwd setup codec checks material token payload ad server
   let settled := PqxdhServerAuthExperiment.settle server result
   StateT.lift (hiddenServerEffect slot settled)
   pure settled
@@ -1185,8 +1250,8 @@ def hiddenOwnerEffect (slot : Slot n) (index : Nat) (before after : PqxdhRegistr
     OracleComp (EnvEffects n) Unit :=
   match before.beacon.phase, after.beacon.phase with
   | .established _ _ _, _ => pure ()
-  | _, .established control associatedData _ =>
-      issue (.installBeacon index ⟨after.beacon.identityKeyId, control, associatedData⟩ (.hidden slot))
+  | _, .established control recordAd _ =>
+      issue (.installBeacon index ⟨after.beacon.identityKeyId, control, recordAd⟩ (.hidden slot))
   | previous, current => match inactiveTag current with
       | some tag => if inactiveTag previous = some tag then pure () else issue (.advanceOwner index tag)
       | none => pure ()
@@ -1237,14 +1302,14 @@ theorem loggedFwd_send_bound (challenge : RatchetKdfResponse) (entry : RawCtxSel
 
 /-- The split hidden build of a slot in capability form issues no coin, at most one BLAKE2b effect (its sequence-one seal) and at most one administrative effect (the hidden Server install, `installServer keyId identity (.hidden slot)`); like every environment program it has no capability that reads a seed or a kernel. -/
 theorem buildSplit_env_cost (material : PqxdhDeploymentHiddenLayout.Material) (slot : Slot n)
-    (token : PqxdhServerRelatedRootConsumer.Returned) (payload : Option Pqxdh.Bytes)
+    (token : PqxdhServerRelatedRootConsumer.Returned) (payload : Option Pqxdh.Bytes) (ad : PqxdhTranscriptAd.AssociatedData)
     (server : PqxdhServerAuthEntryFactor.ServerState) (log : List RawCtxSourceSend.SealContext) (kind : EffectKind) :
-    ((buildSplitEnv setup codec checks material slot token payload server).run log).IsQueryBoundP
+    ((buildSplitEnv setup codec checks material slot token payload ad server).run log).IsQueryBoundP
       (fun effect => effectKind effect = kind) (if kind = .coin then 0 else 1) := by
-  have factored : ((buildSplitFwd (n := n) setup codec checks material token payload server).run log).IsQueryBoundP
+  have factored : ((buildSplitFwd (n := n) setup codec checks material token payload ad server).run log).IsQueryBoundP
       (fun effect => effectKind effect = kind) (if kind = .hash then 1 else 0) := by
     simp only [buildSplitFwd, PqxdhServerAuthLoggedSendFactor.factored, StateT.run_map, isQueryBoundP_map_iff]
-    exact generic_build_bound _ _ _ _ (fun entry context current => loggedFwd_send_bound setup codec checks _ entry
+    exact generic_build_bound _ ad _ _ _ (fun entry context current => loggedFwd_send_bound setup codec checks _ entry
       context current kind) (fun query current => by
         have bound := tailFwd_bound (n := n) setup codec checks (.inr query) current kind
         cases query <;> simpa only [PqxdhServerRegistrationPublication.callKind, PqxdhServerRegistrationPublication.auxKind,
@@ -1312,102 +1377,7 @@ section Factoring
 variable {n : Nat}
 open LazyOracleDiscard (StateLens CacheLens)
 
-/-- The CTX reading of the environment's effects on a cache: coins are uniform draws, `.hash` is the lazy CTX oracle on the cache, and the administrative capabilities are answered by `admin` (any interpretation; the forwarded primitives issue none). -/
-noncomputable def ctxEffects (admin : QueryImpl (CapabilitySpec n) (StateT CtxRomAuth.CtxRO.QueryCache ProbComp)) :
-    QueryImpl (EnvEffects n) (StateT CtxRomAuth.CtxRO.QueryCache ProbComp)
-  | .inl coin => StateT.lift (unifSpec.query coin : ProbComp _)
-  | .inr (.hash bytes) => CtxRomAuth.ctxRandomOracle ((), bytes)
-  | .inr capability => admin capability
-
 variable (admin : QueryImpl (CapabilitySpec n) (StateT CtxRomAuth.CtxRO.QueryCache ProbComp))
-
-/-- Coin effects read back as the original coins, with the cache unchanged. -/
-theorem ctxEffects_coins {α : Type} (work : ProbComp α) (cache : CtxRomAuth.CtxRO.QueryCache) :
-    (simulateQ (ctxEffects admin) (coins (n := n) work)).run cache = (fun value => (value, cache)) <$> work := by
-  unfold coins
-  induction work using OracleComp.inductionOn with
-  | pure value => simp only [simulateQ_pure, StateT.run_pure, map_pure]
-  | query_bind query next ih =>
-      simp only [simulateQ_bind, simulateQ_query, OracleQuery.input_query, OracleQuery.cont_query, id_map,
-        StateT.run_bind, map_bind, coinFx]
-      simp only [ctxEffects, StateT.run_lift, bind_assoc, pure_bind]
-      refine bind_congr fun coin => ?_
-      exact ih coin
-
-/-- A forwarded step that never reads or writes the focused cache coordinate of its state, at the program level. -/
-theorem frame_program {σ ι' α : Type} {spec' : OracleSpec ι'} (lens : CacheLens CtxRomAuth.CtxRO σ)
-    (fwd : QueryImpl spec' (StateT σ (OracleComp (EnvEffects n))))
-    (frame : ∀ query state cache, (fwd query).run (lens.set state cache) =
-      (fun result => (result.1, lens.set result.2 cache)) <$> (fwd query).run state)
-    (work : OracleComp spec' α) (state : σ) (cache : CtxRomAuth.CtxRO.QueryCache) :
-    (simulateQ fwd work).run (lens.set state cache) =
-      (fun result => (result.1, lens.set result.2 cache)) <$> (simulateQ fwd work).run state := by
-  induction work using OracleComp.inductionOn generalizing state with
-  | pure value => simp only [simulateQ_pure, StateT.run_pure, map_pure]
-  | query_bind query next ih =>
-      simp only [simulateQ_bind, simulateQ_query, OracleQuery.input_query, OracleQuery.cont_query, id_map,
-        StateT.run_bind, map_bind, frame, bind_map_left, ih]
-
-/-- Generic capability-form factoring: if every native step is its forwarded step with the forwarded BLAKE2b queries answered by the lazy CTX oracle on the focused cache, and the forwarded steps never touch that coordinate, then every native program is its forwarded program read through `ctxEffects`. -/
-theorem factor_program {σ ι' α : Type} {spec' : OracleSpec ι'} (lens : CacheLens CtxRomAuth.CtxRO σ)
-    (native : QueryImpl spec' (StateT σ ProbComp)) (fwd : QueryImpl spec' (StateT σ (OracleComp (EnvEffects n))))
-    (frame : ∀ query state cache, (fwd query).run (lens.set state cache) =
-      (fun result => (result.1, lens.set result.2 cache)) <$> (fwd query).run state)
-    (step : ∀ query state, (native query).run state =
-      (fun result => (result.1.1, lens.set result.1.2 result.2)) <$>
-        (simulateQ (ctxEffects admin) ((fwd query).run state)).run (lens.get state))
-    (work : OracleComp spec' α) (state : σ) :
-    (simulateQ native work).run state =
-      (fun result => (result.1.1, lens.set result.1.2 result.2)) <$>
-        (simulateQ (ctxEffects admin) ((simulateQ fwd work).run state)).run (lens.get state) := by
-  induction work using OracleComp.inductionOn generalizing state with
-  | pure value =>
-      simp only [simulateQ_pure, StateT.run_pure, map_pure, lens.set_get]
-  | query_bind query next ih =>
-      simp only [simulateQ_bind, simulateQ_query, OracleQuery.input_query, OracleQuery.cont_query, id_map,
-        StateT.run_bind, step, bind_map_left, ih, map_bind]
-      refine bind_congr fun result => ?_
-      rw [lens.get_set, frame_program lens fwd frame, simulateQ_map, StateT.run_map, Functor.map_map]
-      congr 1
-      funext final
-      simp only [lens.set_set]
-
-section Primitives
-variable {Auxiliary : Type}
-
-/-- The shared source primitives are the forwarded primitives read through `ctxEffects`, with the auxiliary state kept. -/
-theorem primFwd_factor (c : Pqxdh.Crypto) (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
-    (query : RawCtxSourceOpen.NativeSpec.Domain) (auxiliary : Auxiliary) (cache : CtxRomAuth.CtxRO.QueryCache) :
-    (RawCtxSharedPrimitive.nativeImpl c (RawCtxSourceHkdf.kdfImpl source) query).run (auxiliary, cache) =
-      (fun result => (result.1, (auxiliary, result.2))) <$>
-        (simulateQ (ctxEffects admin) (primFwd (n := n) c source query)).run cache := by
-  rcases query with request | (bytes | input)
-  · simp only [primFwd, simulateQ_pure, StateT.run_pure, map_pure]
-    exact RawCtxSourceHkdf.kdf_step source request (auxiliary, cache)
-  · change (do
-        let result ← (CtxRomAuth.ctxRandomOracle ((), bytes)).run cache
-        pure (some result.1.toList, (auxiliary, result.2))) = _
-    simp only [primFwd, simulateQ_map, request, simulateQ_spec_query, ctxEffects, StateT.run_map, Functor.map_map,
-      bind_pure_comp]
-  · simp only [primFwd, simulateQ_pure, StateT.run_pure, map_pure]
-    rfl
-
-/-- Generic stateless factoring: native steps on (auxiliary, cache) that are forwarded steps read through `ctxEffects` with the auxiliary state kept give the same for every program. -/
-theorem factor_stateless {ι' α : Type} {spec' : OracleSpec ι'}
-    (native : QueryImpl spec' (StateT (RawCtxSharedPrimitive.SharedState Auxiliary) ProbComp))
-    (fwd : QueryImpl spec' (OracleComp (EnvEffects n)))
-    (step : ∀ query auxiliary cache, (native query).run (auxiliary, cache) =
-      (fun result => (result.1, (auxiliary, result.2))) <$> (simulateQ (ctxEffects admin) (fwd query)).run cache)
-    (work : OracleComp spec' α) (auxiliary : Auxiliary) (cache : CtxRomAuth.CtxRO.QueryCache) :
-    (simulateQ native work).run (auxiliary, cache) =
-      (fun result => (result.1, (auxiliary, result.2))) <$> (simulateQ (ctxEffects admin) (simulateQ fwd work)).run cache := by
-  induction work using OracleComp.inductionOn generalizing cache with
-  | pure value => simp only [simulateQ_pure, StateT.run_pure, map_pure]
-  | query_bind query next ih =>
-      simp only [simulateQ_bind, simulateQ_query, OracleQuery.input_query, OracleQuery.cont_query, id_map,
-        StateT.run_bind, step, bind_map_left, ih, map_bind]
-
-end Primitives
 
 section Registration
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response Auxiliary : Type}
@@ -1572,12 +1542,15 @@ theorem callbacks_step
         rfl
 
 /-- Capability-form factoring of the Beacon finish: the native owner finish on the shared native state is the forwarded finish read through `ctxEffects` on its CTX cache. -/
-theorem owner_factor (raw : Pqxdh.Bytes) (owner : PqxdhRegistrationSchedule.Owner KemSK) (state : NativeState KemSK) :
+theorem owner_factor (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) (state : NativeState KemSK) :
     (simulateQ (PqxdhRegistrationSchedule.callbacks setup codec)
-      (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw owner)).run state =
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw owner)).run
+        state =
       (fun result => (result.1.1, PqxdhDeploymentBackend.gameCtxLens.set result.1.2 result.2)) <$>
         (simulateQ (ctxEffects admin) ((simulateQ (callbacksFwd (n := n) setup codec)
-          (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw owner)).run state)).run state.2.ctx :=
+          (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw
+            owner)).run state)).run state.2.ctx :=
   factor_program admin PqxdhDeploymentBackend.gameCtxLens _ _ (callbacksFwd_frame setup codec)
     (callbacks_step admin setup codec) _ state
 
@@ -1662,7 +1635,7 @@ theorem acceptStep_bound (caps : PqxdhServerAuthSourceCosts.KemCaps) (bounded : 
     kind).mono
   cases kind <;> simp [baseAllowance]
 
-/-- `build` stays within the real allowance of class 4: no coin, the sequence-one BLAKE2b query and the peer installation. -/
+/-- `build` stays within the real allowance of class 4: no coin, the forwarded transcript hash and the sequence-one BLAKE2b query, and the peer installation. -/
 theorem buildStep_bound (caps : PqxdhServerAuthSourceCosts.KemCaps) (session : Nat) (payload : Option Pqxdh.Bytes) (state : EnvState KemSK Bk) (kind : EffectKind) :
     ((buildStep (n := n) setup codec checks session payload).run state).IsQueryBoundP
       (fun effect => effectKind effect = kind) (baseAllowance caps 4 kind) := by
@@ -1671,12 +1644,15 @@ theorem buildStep_bound (caps : PqxdhServerAuthSourceCosts.KemCaps) (session : N
   dsimp only
   split
   · trivial
-  · apply (isQueryBoundP_bind (build_fwd_bound setup codec checks _ _ payload _ [] kind)
-      fun result _ => isQueryBoundP_bind (m := 0) (serverEffect_bound _ kind)
-        fun _ _ => isQueryBoundP_pure _ _ _).mono
-    cases kind <;> simp [baseAllowance]
+  · split
+    · trivial
+    · apply (isQueryBoundP_bind (request_hash_bound _ kind) fun digest _ =>
+        isQueryBoundP_bind (build_fwd_bound setup codec checks _ _ payload _ _ [] kind)
+          fun result _ => isQueryBoundP_bind (m := 0) (serverEffect_bound _ kind)
+            fun _ _ => isQueryBoundP_pure _ _ _).mono
+      cases kind <;> simp [baseAllowance]
 
-/-- `finish` stays within the real allowance of class 5: the decapsulation and Extract-table coins within the 69-callback bound, at most one BLAKE2b query and the installation or the abort. -/
+/-- `finish` stays within the real allowance of class 5: the decapsulation and Extract-table coins within the 69-callback bound, at most two BLAKE2b queries (the forwarded transcript and the sequence-one opening) and the installation or the abort. -/
 theorem finishStep_bound (caps : PqxdhServerAuthSourceCosts.KemCaps) (bounded : PqxdhServerAuthSourceCosts.KemBound setup caps)
     (owner : Nat) (raw : Pqxdh.Bytes) (state : EnvState KemSK Bk) (kind : EffectKind) :
     ((finishStep (n := n) setup codec owner raw).run state).IsQueryBoundP
@@ -1685,7 +1661,7 @@ theorem finishStep_bound (caps : PqxdhServerAuthSourceCosts.KemCaps) (bounded : 
   unfold finishStep
   split
   · trivial
-  · apply (isQueryBoundP_bind (finish_fwd_bound setup codec caps bounded raw _ _ kind)
+  · apply (isQueryBoundP_bind (ownerFinishFwd_bound setup codec caps bounded _ raw _ _ kind)
       fun result _ => isQueryBoundP_bind (m := 0) (ownerEffect_bound _ _ _ kind)
         fun _ _ => isQueryBoundP_pure _ _ _).mono
     cases kind <;> simp [baseAllowance]
@@ -1767,7 +1743,7 @@ theorem touch_bound (table : LazyOracleDiscard.CacheLens (PqxdhDeploymentSeedSpl
   exact coins_bound _ 44 (materialQuery_bound table slot state.backend) kind
 
 /-- C2a for a first-touch material wrapper (plan sections 31 and 35): if the startup draws at most `startupCoins` coins, every core step stays within the core allowance of its class whatever material it receives, and the wrapper touches a slot only at first-touch classes, then the wrapped environment is framed by `allowanceG core firstTouch`. The slot is computed from the command and the pre-state before the core step; an environment whose slot is known only inside the step (for example a first-touch allocator keyed by a coordinate the finish computes) proves `PqxdhRecordLiftInterface.Frame env startupCoins (allowanceG core firstTouch)` directly instead. -/
-theorem frame_wrapped (start : ProbComp (Option (PqxdhLiveServerConstruction.Created Unit × EnvState KemSK Bk)))
+theorem frame_wrapped (start : ProbComp (Option (PqxdhLiveServerConstruction.Created RecordAd × EnvState KemSK Bk)))
     (startupCoins : Nat) (startBound : start.IsTotalQueryBound startupCoins)
     (table : LazyOracleDiscard.CacheLens (PqxdhDeploymentSeedSplit.MaterialSpec n) Bk)
     (slotOf : EnvQuery → EnvState KemSK Bk → Option (Slot n))
@@ -1850,9 +1826,13 @@ theorem realStep_stripped (query : EnvQuery) (state : EnvState KemSK Bk) (stripp
       · simp only [support_pure, Set.mem_singleton_iff] at supported
         subst supported
         exact stripped
-      · simp only [mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at supported
-        obtain ⟨_, _, _, _, rfl⟩ := supported
-        exact strip_stripped _
+      · split at supported
+        · simp only [support_pure, Set.mem_singleton_iff] at supported
+          subst supported
+          exact strip_stripped _
+        · simp only [mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at supported
+          obtain ⟨_, _, _, _, _, _, rfl⟩ := supported
+          exact strip_stripped _
   | finish owner raw =>
       change result ∈ support (finishStep setup codec owner raw (snapped _ state)) at supported
       unfold finishStep at supported
@@ -1880,11 +1860,11 @@ theorem frame_real {n : Nat} {ι : Type} {baseSpec : OracleSpec ι} {Reader Resp
     (identityIndex : Nat) (runtime : A) :
     PqxdhRecordLiftInterface.Frame (envReal (n := n) setup codec checks ensureInit identityIndex runtime) (qInit + 32)
       (baseAllowance caps) :=
-  ⟨start_bound setup ensureInit qInit initBound identityIndex runtime _,
+  ⟨start_bound setup ensureInit qInit initBound identityIndex runtime (fun _ => ()),
     fun query state kind => realStep_bound setup codec checks caps bounded query state kind⟩
 
 
-/-- C4 for the real environment (cuttable validation): every outcome of the record world with the real environment has its BLAKE2b routes within `qHash + S + R + qBuild + qFinish` and its record derivations within `S + 51 R`. -/
+/-- C4 for the real environment (cuttable validation): every outcome of the record world with the real environment has its BLAKE2b routes within `qHash + S + R + 2 qBuild + 2 qFinish` and its record derivations within `S + 51 R`. -/
 theorem c4_real {n : Nat} {ι : Type} {baseSpec : OracleSpec ι} {Reader Response A X : Type}
     (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder)
@@ -1896,7 +1876,7 @@ theorem c4_real {n : Nat} {ι : Type} {baseSpec : OracleSpec ι} {Reader Respons
     ∀ result ∈ support (PqxdhRecordLiftWorld.run setup codec route
         (envReal (n := n) setup codec checks ensureInit identityIndex runtime) setup.serverKeyId bounds mode adversary),
       result.2.primitive.1.effects .hash + result.2.primitive.1.native .hash ≤
-          B.hash + B.sends + B.receives + B.build + B.finish ∧
+          B.hash + B.sends + B.receives + 2 * B.build + 2 * B.finish ∧
         result.2.primitive.1.native .kdf ≤ B.sends + 51 * B.receives :=
   c4_closed setup codec route _ (qInit + 32) (baseAllowance caps)
     (frame_real setup codec checks caps bounded ensureInit qInit initBound identityIndex runtime)
@@ -2232,13 +2212,6 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironment.finishStep_retry
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironment.finishStep_retry
 
-/--
-info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironment.support_simulateQ_subset' depends on axioms: [propext,
- Classical.choice,
- Quot.sound]
--/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironment.support_simulateQ_subset
 
 /--
 info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironment.finishStep_terminal' depends on axioms: [propext,
@@ -2312,45 +2285,10 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironment.finishSplit_env_
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironment.finishSplit_env_cost
 
-/--
-info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironment.ctxEffects_coins' depends on axioms: [propext,
- Classical.choice,
- Quot.sound]
--/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironment.ctxEffects_coins
 
-/--
-info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironment.frame_program' depends on axioms: [propext,
- Classical.choice,
- Quot.sound]
--/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironment.frame_program
 
-/--
-info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironment.factor_program' depends on axioms: [propext,
- Classical.choice,
- Quot.sound]
--/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironment.factor_program
 
-/--
-info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironment.primFwd_factor' depends on axioms: [propext,
- Classical.choice,
- Quot.sound]
--/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironment.primFwd_factor
 
-/--
-info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironment.factor_stateless' depends on axioms: [propext,
- Classical.choice,
- Quot.sound]
--/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironment.factor_stateless
 
 /--
 info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironment.registration_factor' depends on axioms: [propext,
@@ -2551,3 +2489,19 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironment.c4_real' depends
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironment.c4_real
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironment.eraseCreatedMetadata_initialized' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironment.eraseCreatedMetadata_initialized
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironment.request_hash_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironment.request_hash_bound
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentEnvironment.ownerFinishFwd_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentEnvironment.ownerFinishFwd_bound

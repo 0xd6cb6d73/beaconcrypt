@@ -1,8 +1,9 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeIdentityCensorExternalSource
 import BeaconcryptCore.Computational.RegistrationNativeIdentityCensorTemplatePair
+import BeaconcryptCore.Computational.RegistrationNativeIdentityReadyFailure
 
-/-! The literal native ML-to-Ready suffix closes on the actual private real/censored source and concrete Init writer. Only the failed-publication observation and stored-log projection are compared; successful encoded payloads remain distinct. -/
+/-! The literal native request-hash-to-Ready suffix closes on the actual private real/censored source and concrete Init writer. Only the failed-publication observation and stored-log projection are compared; successful encoded payloads remain distinct. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -47,7 +48,7 @@ private theorem bind_pair {S A B C : Type} (project : S → S) (observe : B → 
 
 section Actual
 variable (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (selected index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner mlSource) (placeholder : Ed25519Signature)
 variable (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E))
 local notation "Main" => RegistrationNativePlatformIdentityCtxMain.beacon (n := n) (Platform := Platform) (source := mlSource) setup checks representation created
@@ -60,10 +61,10 @@ local notation "action(" query ")" => Main (RegistrationNativePlatformIdentityPr
 local notation "callback(" censored ")" => (fun query => source(censored, action(query)))
 local notation "encoder(" censored ")" => (fun fields => source(censored, external (RegistrationNativeIdentityCensorConcreteWriter.encode reserve fields)))
 
-private theorem encode_left (fields : registration.SignedInitView) : encoder(false) fields = fullWriter fields :=
+private theorem encode_left (fields : registration.InitView) : encoder(false) fields = fullWriter fields :=
   RegistrationNativeIdentityCensorExternalSource.writer setup.joint selected placeholder false setup checks representation created reserve fields
 
-private theorem encode_right (fields : registration.SignedInitView) : encoder(true) fields = fullWriter fields := by
+private theorem encode_right (fields : registration.InitView) : encoder(true) fields = fullWriter fields := by
   change source(true, external (RegistrationNativeIdentityCensorConcreteWriter.encode reserve fields)) = fullWriter fields
   rw [RegistrationNativeIdentityCensorExternalSource.writer]
   have same : (fun size => source(true, external (reserve size))) = fullReserve := by
@@ -71,44 +72,13 @@ private theorem encode_right (fields : registration.SignedInitView) : encoder(tr
     exact (RegistrationNativeIdentityCensorExternalSource.source_equal setup.joint selected placeholder setup checks representation created (reserve size)).symm
   rw [same]
 
-private theorem writer_stable (fields : registration.SignedInitView) :
+private theorem writer_stable (fields : registration.InitView) :
     RegistrationNativePlatformViewStable.Stable (view placeholder) (fullWriter fields) := by
   rw [← encode_left setup checks representation created selected placeholder reserve fields]
   exact RegistrationNativeIdentityCensorExternalSource.stable setup.joint selected placeholder false setup checks representation created _
 
-private theorem tail_stable (pending : registration.BeaconMldsaSigning) (signature : RegistrationSigningShared.SignReply) :
-    RegistrationNativePlatformViewStable.Stable (view placeholder)
-      (RegistrationNativeIdentitySigningPair.tail fullReserve RegistrationNativeConcreteCodec.serializerBranches pending signature) := by
-  unfold RegistrationNativeIdentitySigningPair.tail
-  cases result : pending.resume signature with
-  | fail error | div => exact RegistrationNativePlatformViewStable.pure_stable _ (RegistrationNativeIdentityCensorOutgoingView.view_idempotent placeholder) _
-  | ok effect =>
-    cases effect with
-    | Rejected previous => exact RegistrationNativePlatformViewStable.pure_stable _ (RegistrationNativeIdentityCensorOutgoingView.view_idempotent placeholder) _
-    | Ready ready =>
-      change RegistrationNativePlatformViewStable.Stable (view placeholder)
-        (RegistrationNativePlatformBeaconPublication.ready fullWriter ready)
-      obtain ⟨fields, message⟩ := BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconInitReady_message_total ready
-      simp only [RegistrationNativePlatformBeaconPublication.ready, RegistrationNativePlatformBeaconPublication.continueWith, message]
-      exact RegistrationNativePlatformViewStable.bind_stable _ _ _
-        (writer_stable setup checks representation created selected placeholder reserve fields)
-        (fun _ => RegistrationNativePlatformViewStable.pure_stable _ (RegistrationNativeIdentityCensorOutgoingView.view_idempotent placeholder) _)
-    | _ => exact RegistrationNativePlatformViewStable.pure_stable _ (RegistrationNativeIdentityCensorOutgoingView.view_idempotent placeholder) _
-
-private theorem current (request : registration.MldsaSigningRequest)
-    (left right : MldsaTranscriptAuth.Payload) (digestLeft digestRight : CtxRomAuth.CtxDigest)
-    (before : Full (n := n) (KemSK := KemSK) (Platform := Platform) (mlSource := mlSource)) :
-    Prod.map id (view placeholder) <$> (callback(false) (.inl (.sign request left digestLeft))).run before =
-      Prod.map id (view placeholder) <$> (callback(true) (.inl (.sign request right digestRight))).run before := by
-  have same := congrArg (fun distribution => Prod.map id (RegistrationNativeIdentityCensorEdOutgoingSource.view placeholder) <$> distribution)
-    (RegistrationNativeIdentityCensorMldsaOutgoingSource.outgoing setup checks representation created selected index owner request placeholder left right digestLeft digestRight before)
-  simpa only [Functor.map_map, RegistrationNativeIdentityCensorEdOutgoingSource.view,
-    RegistrationNativeIdentityCensorMldsaOutgoingSource.view, view, RegistrationNativePlatformIdentityCtxTypedJointView.view,
-    RegistrationNativePlatformIdentityCtxTypedJointView.commute, Prod.map_def, id_eq] using same
-
-
 private abbrev TailSpec := RegistrationBeaconInitExecutor.Spec +
-  (registration.SignedInitView →ₒ RustM (core.option.Option (alloc.vec.Vec U8)))
+  (registration.InitView →ₒ RustM (core.option.Option (alloc.vec.Vec U8)))
 private noncomputable def dictionary (censored : Bool) : QueryImpl TailSpec
     (StateT (Full (n := n) (KemSK := KemSK) (Platform := Platform) (mlSource := mlSource)) ProbComp)
   | .inl query => callback(censored) query
@@ -134,33 +104,7 @@ theorem ed_stable (censored : Bool) (pending : registration.BeaconEd25519Signing
   rw [RegistrationNativePlatformBeaconPublication.ed_interpret] at same
   simpa only [simulateQ_spec_query, dictionary] using same
 
-/-- Actual equal ML requests and original paired resumes have identical failed-publication/native-view/private/P distribution with the concrete runtime writer. -/
-theorem signing (left right : registration.BeaconMldsaSigning) (paired : RegistrationNativeIdentitySigningPair.Same left right)
-    (payloadLeft payloadRight : MldsaTranscriptAuth.Payload) (digestLeft digestRight : CtxRomAuth.CtxDigest)
-    (before : Full (n := n) (KemSK := KemSK) (Platform := Platform) (mlSource := mlSource)) :
-    Prod.map RegistrationNativeIdentityReadyFailure.observe (view placeholder) <$>
-      (RegistrationNativePlatformBeaconPublication.fromSigning (callback(false)) (encoder(false)) payloadLeft digestLeft left).run before =
-    Prod.map RegistrationNativeIdentityReadyFailure.observe (view placeholder) <$>
-      (RegistrationNativePlatformBeaconPublication.fromSigning (callback(true)) (encoder(true)) payloadRight digestRight right).run before := by
-  have writersLeft : encoder(false) = fullWriter := funext (encode_left setup checks representation created selected placeholder reserve)
-  have writersRight : encoder(true) = fullWriter := funext (encode_right setup checks representation created selected placeholder reserve)
-  rw [writersLeft, writersRight, RegistrationNativeIdentitySigningPair.factor, RegistrationNativeIdentitySigningPair.factor]
-  have requested := RegistrationNativeIdentitySigningPair.request left right paired
-  rw [← requested]
-  cases actual : left.request with
-  | fail error | div => rfl
-  | ok request =>
-    simp only [RegistrationNativePlatformBeaconPublication.continueWith]
-    apply bind_pair (view placeholder) RegistrationNativeIdentityReadyFailure.observe
-    · exact current setup checks representation created selected index owner placeholder request payloadLeft payloadRight digestLeft digestRight
-    · exact tail_stable setup checks representation created selected placeholder reserve left
-    · exact tail_stable setup checks representation created selected placeholder reserve right
-    · intro signature state
-      have same := congrArg (fun distribution => Prod.map id (view placeholder) <$> distribution)
-        (RegistrationNativeIdentitySigningPair.failure fullReserve RegistrationNativeConcreteCodec.serializerBranches left right paired signature state)
-      simpa only [Functor.map_map, Prod.map_def, id_eq] using same
-
-/-- The two actual internal unsigned-Init requests use the same private template and current reply before entering the checked actual ML/writer suffix. -/
+/-- The two actual internal attached-signature Init requests use the same private template and current reply before entering the current Ready/writer suffix. -/
 theorem hash (left right : registration.BeaconInitHash) (paired : RegistrationNativeIdentityHashPair.Same left right)
     (requestLeft requestRight : registration.HashRequest)
     (requestedLeft : left.request = .ok requestLeft) (requestedRight : right.request = .ok requestRight)
@@ -187,16 +131,16 @@ theorem hash (left right : registration.BeaconInitHash) (paired : RegistrationNa
   obtain ⟨nextLeft, nextRight, resumedLeft, resumedRight, same⟩ := RegistrationNativeIdentityHashPair.hash left right paired
     (RegistrationAuthenticationShared.digestArray result.1)
   simp only [resumedLeft, resumedRight]
-  exact signing setup checks representation created selected index owner placeholder reserve nextLeft nextRight same _ _ _ _ result.2
+  have writersLeft : encoder(false) = fullWriter := funext (encode_left setup checks representation created selected placeholder reserve)
+  have writersRight : encoder(true) = fullWriter := funext (encode_right setup checks representation created selected placeholder reserve)
+  rw [writersLeft,writersRight]
+  have result := congrArg (fun distribution => Prod.map id (view placeholder) <$> distribution)
+    (RegistrationNativeIdentityReadyFailure.independent fullReserve RegistrationNativeConcreteCodec.serializerBranches nextLeft nextRight same result.2)
+  simpa only [Functor.map_map,Prod.map_def,id_eq] using result
 
 end Actual
 end BeaconcryptCore.Computational.RegistrationNativeIdentityCensorMldsaSuffix
 
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeIdentityCensorMldsaSuffix.signing' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeIdentityCensorMldsaSuffix.signing
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativeIdentityCensorMldsaSuffix.hash' depends on axioms: [propext,
  Classical.choice,

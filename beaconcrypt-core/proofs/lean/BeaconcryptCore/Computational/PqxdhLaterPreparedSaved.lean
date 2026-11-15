@@ -8,6 +8,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhLaterPreparedSaved
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPhase1AcceptanceOracle PqxdhKemIndCca
 open CtxRomAuth AdaptiveCtxSharedHash PqxdhSecretInputKdf PqxdhFullSecretInputKdf
@@ -22,7 +24,7 @@ variable (setup : StatefulPhase1Setup baseSpec)
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
     (selected : RawCtxProtocolReveals.Owner S (B + 1)) (number : Std.U64) (ancestors disclosed : List RatchetChain)
 local notation "env0" => PqxdhSourceSharedPreparation.environment setup env callbacks ∅
-local notation "prior" => PqxdhInitialPreparedSourceInput.prior env0 baseImpl kem attachedVerify primitives program post selected number ancestors disclosed
+local notation "prior" => PqxdhInitialPreparedSourceInput.prior (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program post selected number ancestors disclosed
 local notation "MaterialContext" => PqxdhErasedParentMaterial.MaterialContext (extra := SelectorSpec baseSpec) (M := M) (P := P)
     (I := IdentityHandle I) (D := DhPair setup) (K := KemHandle K) (X := X ⊕ PqxdhPhase2JointIdentity.Converted)
     (Response := Response) (A := A) (N := BareState 1) (S := S) (B := B + 1)
@@ -32,28 +34,28 @@ local notation "LocalContext" => PqxdhLaterSharedMessagePrefix.LocalContext (set
 /-- The literal prepared material sampler supplies both descriptor certificates and its exact parent address, consuming the original source Post budget. -/
 theorem prepared_scope (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl kem program post)
     (depth : Nat) (context : MaterialContext)
-    (supported : context ∈ support (PqxdhErasedParentMaterial.prepare env.source env.recordWriter env.senderId env.route env.decode depth prior)) :
+    (supported : context ∈ support (PqxdhErasedParentMaterial.prepare (associatedData := associatedData) (completedBinding := completedBinding) env.source env.recordWriter env.senderId env.route env.decode depth prior)) :
     PqxdhLaterSavedSupport.PacketFits (PqxdhInitialPreparedSourceCaps.postCap env0 baseImpl kem program post c) context.1.1.1 ∧
     PqxdhPreparedDescriptorScope.PacketValid env.decode context.1.1.1 ∧
     context.1.1.2.address = PqxdhErasedParentSample.address context.1.1.1 := by
-  apply PqxdhLaterSavedSupport.material_scope env.source env.recordWriter env.senderId env.route env.decode depth
+  apply PqxdhLaterSavedSupport.material_scope (associatedData := associatedData) (completedBinding := completedBinding) env.source env.recordWriter env.senderId env.route env.decode depth
     (PqxdhInitialPreparedSourceCaps.postCap env0 baseImpl kem program post c) prior _ context supported
   intro input reached
-  exact (PqxdhInitialPreparedSourceCaps.supported_caps env0 baseImpl kem attachedVerify primitives program post c
+  exact (PqxdhInitialPreparedSourceCaps.supported_caps (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program post c
     selected number ancestors disclosed input reached).postBound
 
 /-- The executed complete prefix supplies these same facts while retaining the ROM cache actually reached by preparation and every common or cached branch. -/
 theorem executed_scope (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl kem program post)
     (depth : Nat) (result : LocalContext × CtxRO.QueryCache)
     (supported : result ∈ support ((simulateQ hashImpl
-      (PqxdhLaterSharedMessagePrefix.run setup env callbacks program post attachedVerify primitives baseImpl kem
+      (PqxdhLaterSharedMessagePrefix.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem
         selected number ancestors disclosed depth)).run ∅)) :
     let context := PqxdhLaterSharedMessagePrefix.restore setup result.1 result.2
     PqxdhLaterSavedSupport.PacketFits (PqxdhInitialPreparedSourceCaps.postCap env0 baseImpl kem program post c) context.1.1.1 ∧
     PqxdhPreparedDescriptorScope.PacketValid env.decode context.1.1.1 ∧
     context.1.1.2.address = PqxdhErasedParentSample.address context.1.1.1 := by
-  apply prepared_scope setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth
-  rw [← PqxdhLaterSharedMessagePrefix.source setup env callbacks program post attachedVerify primitives baseImpl kem
+  apply prepared_scope (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth
+  rw [← PqxdhLaterSharedMessagePrefix.source (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem
     selected number ancestors disclosed depth]
   rw [support_map]
   exact ⟨result, supported, rfl⟩

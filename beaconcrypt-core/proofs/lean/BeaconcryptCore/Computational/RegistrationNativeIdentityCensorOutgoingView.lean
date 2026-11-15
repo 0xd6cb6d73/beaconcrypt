@@ -29,7 +29,7 @@ theorem view_idempotent (placeholder : Ed25519Signature)
 
 /-- Each literal outgoing Ed/hash/ML leaf derives both previous-log dependency laws from its actual body. -/
 theorem native_query (placeholder : Ed25519Signature) (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner mlSource) (query : RegistrationBeaconInitExecutor.Spec.Domain) :
     RegistrationNativePlatformIdentityCtxTypedJointView.Stable placeholder
       (RegistrationNativePlatformIdentityCtxMain.beacon (Platform := Platform) setup checks representation created
@@ -65,7 +65,7 @@ theorem interpreted (joint : PqxdhJointIdentity.Primitives) (selected : Nat) (pl
 /-- The actual outgoing callbacks retain their derived old-log law through every optional source reply and physical CTX operation. -/
 theorem query (joint : PqxdhJointIdentity.Primitives) (selected : Nat) (placeholder : Ed25519Signature) (censored : Bool)
     (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner mlSource) (request : RegistrationBeaconInitExecutor.Spec.Domain) :
     RegistrationNativePlatformViewStable.Stable (view placeholder)
       (interpret joint selected placeholder censored

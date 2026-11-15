@@ -14,7 +14,7 @@ open RegistrationSchemaIteratorReadback RegistrationSchemaViews RegistrationSche
 
 structure Stages (value : transport.kexresponse) (payload : Slice U8) where
   size0 : U8
-  first : Transition payload (uint size0 2#u64)
+  first : Transition payload (uint size0 3#u64)
   size1 : U8
   second : Transition first.tail (uint size1 1#u64)
   size2 : U8
@@ -36,7 +36,7 @@ theorem stages (value : transport.kexresponse) (payload : Slice U8)
     (contents : payload.val = RegistrationSerializerResponseBytes.payload value) :
     Nonempty (Stages value payload) := by
   have whole : payload.val = atomsBytes (responseAtoms value) := by rw [response_bytes]; exact contents
-  obtain ⟨size0, first, firstBytes⟩ := uint_transition payload 2#u64
+  obtain ⟨size0, first, firstBytes⟩ := uint_transition payload 3#u64
     (atomsBytes [ .uint 1#u64, .bytes value.identity_key, .bytes value.ephemeral_key, .bytes value.kem_cipher_text, .bytes value.app_cipher_text, .uint value.key_id, .bytes value.signature ]) (by simpa only [responseAtoms, atomsBytes, atomBytes] using whole)
   obtain ⟨size1, second, secondBytes⟩ := uint_transition first.tail 1#u64
     (atomsBytes [ .bytes value.identity_key, .bytes value.ephemeral_key, .bytes value.kem_cipher_text, .bytes value.app_cipher_text, .uint value.key_id, .bytes value.signature ]) (by simpa only [responseAtoms, atomsBytes, atomBytes] using firstBytes)

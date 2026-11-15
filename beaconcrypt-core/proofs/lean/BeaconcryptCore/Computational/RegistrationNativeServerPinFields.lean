@@ -51,7 +51,7 @@ private theorem raw_world_keeps (before : State n) (work : ProbComp (Value × Pq
 
 private theorem authenticate_keeps (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket) :
     Keeps (n := n) (RegistrationServerNativeSource.authenticate setup codec route verify created packet) := by
   intro before result supported
   apply raw_world_keeps before
@@ -63,7 +63,7 @@ private theorem authenticate_keeps (setup : Setup base KemSK) (codec : Codec Rea
 
 private theorem agree_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (authenticated : registration.AuthenticatedInit) :
     Keeps (n := n) (RegistrationServerNativeSource.agree setup checks representation created packet authenticated) := by
   intro before result supported
@@ -71,7 +71,7 @@ private theorem agree_keeps (setup : Setup base KemSK) (checks : Checks)
   obtain ⟨inner, _reached, rfl⟩ := supported
   rfl
 
-private theorem retain_keeps (created : PqxdhLiveServerConstruction.Created Unit) (accepted : agreement.ServerAgreement) :
+private theorem retain_keeps (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (accepted : agreement.ServerAgreement) :
     Keeps (n := n) (RegistrationServerNativeSource.retain (n := n) created accepted) := by
   intro before result supported
   simp only [RegistrationServerNativeSource.retain, RegistrationServerNativeSource.sourceStep,
@@ -86,7 +86,7 @@ private theorem retain_keeps (created : PqxdhLiveServerConstruction.Created Unit
 
 private theorem after_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (authenticated : registration.AuthenticatedInit) :
     Keeps (n := n) (RegistrationServerSdkSource.afterAuthentication setup checks representation created packet authenticated) := by
   intro before result supported
@@ -110,7 +110,7 @@ private theorem after_keeps (setup : Setup base KemSK) (checks : Checks)
 theorem accept_pin (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (before : State n) (result : RustM (Option Nat) × State n)
     (supported : result ∈ support ((RegistrationServerSdkSource.accept setup codec checks route verify representation created packet).run before)) :
     result.2.pin = before.pin := by
@@ -149,13 +149,22 @@ private theorem occupancy_keeps (setup : Setup base KemSK) (codec : Codec Reader
     (control : pqxdh.ServerState) (lookup : peer.CompletionLookup) (occupied : Bool) :
     Keeps (n := n) (RegistrationServerSdkSource.afterOccupancy setup codec checks sign encode control lookup occupied) := by
   unfold RegistrationServerSdkSource.afterOccupancy
-  split
-  · exact pure_keeps _
-  · exact pure_keeps _
-  · exact pure_keeps _
-  · split
-    · exact initial_keeps setup codec sign encode control _
-    · exact pure_keeps _
+  cases lookup.resume occupied with
+  | fail error | div => exact pure_keeps _
+  | ok resumed => cases resumed with
+    | Err prior => exact pure_keeps _
+    | Ok pending =>
+      apply bind_keeps (RegistrationServerSdkSource.adHash pending) _ (world_keeps (RegistrationWorldServerCompletion.adHash pending))
+      intro hashed
+      cases hashed with
+      | fail error | div => exact pure_keeps _
+      | ok result => cases result with
+        | Err prior => exact pure_keeps _
+        | Ok initial =>
+          change Keeps (if checks.reservePeer then RegistrationServerSdkSource.fromInitial setup codec sign encode control initial else pure (.ok none))
+          split
+          · exact initial_keeps setup codec sign encode control initial
+          · exact pure_keeps _
 
 private theorem complete_keeps (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)

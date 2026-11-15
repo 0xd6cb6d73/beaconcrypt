@@ -25,7 +25,7 @@ theorem observed_seals (real : Bool) (decode : AdaptiveCtxReceive.RawDecoder)
     mem_support_bind_iff, mem_support_pure_iff] at supported
   obtain ⟨reply, _, rfl⟩ := supported
   rcases query with (((coin | (hash | input)) | raw) | known) <;>
-    first | exact retained | skip
+    try exact retained
   cases reply.1 <;> simp only [RawCtxSelectedAuthenticationObserver.step]
   · exact retained
   · exact fun entry member => List.mem_cons_of_mem _ (retained member)
@@ -58,7 +58,7 @@ theorem handler_retained (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
   · obtain ⟨answer, _, reached⟩ := PqxdhServerAuthCtxObserverHistory.handler_source_support setup codec checks context
       rest key Q j query state before ready result supported
     exact Or.inr (Or.inl ⟨bytes, beaconInput_prefix setup context.seed context.scalar _ _ bytes input
-      (PqxdhServerAuthCtxAcceptanceHistory.handler_grows setup codec checks context Q j
+      (PqxdhServerAuthCtxAcceptanceHistory.handler_logs setup codec checks context Q j
         (factorServices setup codec checks context (PqxdhServerAuthCtxMaterial.output key rest)) query
         (PqxdhServerAuthCtxState.project (state, before.2)) _ reached).touches,
       (PqxdhServerAuthCtxChronology.handler_history setup codec checks context

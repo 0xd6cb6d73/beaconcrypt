@@ -807,8 +807,14 @@ fn beacon_rejects_registration_response_from_wrong_server() {
 
 	let phase_1 = beacon.get_registration_bundle().unwrap();
 	assert!(expected_server.get_shared_secret(&phase_1).is_some());
+	let accepted = wrong_server.get_shared_secret(&phase_1).unwrap();
+	let response = wrong_server
+		.build_registration_response(accepted, None)
+		.unwrap();
+	assert!(beacon.finish_registration(&response.serialized).is_none());
+	assert!(beacon.ratchet_status().is_none());
+	assert!(beacon.associated_data().is_none());
 	assert!(wrong_server.get_shared_secret(&phase_1).is_none());
-	assert_eq!(wrong_server.server_kid(), SERVER_KID);
 }
 
 #[test]
@@ -1475,10 +1481,8 @@ fn registration_request_field_lengths_reject_before_consuming_replay_material() 
 		init.pre_key,
 		init.one_time_key,
 		init.pq_key,
-		init.mldsa_public_key,
-		init.signature,
 	];
-	assert_eq!(fields.map(<[u8]>::len), [33, 98, 98, 1_249, 1_952, 3_309]);
+	assert_eq!(fields.map(<[u8]>::len), [33, 98, 98, 1_249]);
 	assert_eq!(common::encode_unchecked_init(init), original);
 	for field in 0..fields.len() {
 		for length in [fields[field].len() - 1, fields[field].len() + 1] {
@@ -1489,8 +1493,6 @@ fn registration_request_field_lengths_reject_before_consuming_replay_material() 
 				pre_key: &changed[1],
 				one_time_key: &changed[2],
 				pq_key: &changed[3],
-				mldsa_public_key: &changed[4],
-				signature: &changed[5],
 			});
 			assert!(
 				decode_init(&candidate).is_none(),
@@ -1547,7 +1549,7 @@ fn registration_response_field_length_rejection_is_terminal() {
 }
 
 #[test]
-fn mldsa_rejects_changed_prekeys_even_with_valid_ed25519_signatures() {
+fn pinned_response_digest_rejects_request_substitution_with_valid_ed25519_signatures() {
 	use beaconcrypt_core::pqxdh::{KEM_TYPE_X25519, KEY_ROLE_PREKEY};
 	use beaconcrypt_crypto::{crypto_kx, crypto_sign};
 
@@ -1572,8 +1574,6 @@ fn mldsa_rejects_changed_prekeys_even_with_valid_ed25519_signatures() {
 			pre_key: &signed_prekey,
 			one_time_key: init.one_time_key,
 			pq_key: init.pq_key,
-			mldsa_public_key: init.mldsa_public_key,
-			signature: init.signature,
 		},
 		&mut changed,
 	);
@@ -1584,9 +1584,11 @@ fn mldsa_rejects_changed_prekeys_even_with_valid_ed25519_signatures() {
 	assert_eq!(changed_init.identity_key, init.identity_key);
 	assert_eq!(changed_init.one_time_key, init.one_time_key);
 
-	// The original remains usable after rejecting material with no valid ML-DSA transcript signature.
-	assert!(server.get_shared_secret(&changed).is_none());
-	assert!(server.get_shared_secret(&original).is_some());
+	// Arbitrary valid registrations are admitted, but the original Beacon retains its exact request digest.
+	let accepted = server.get_shared_secret(&changed).unwrap();
+	let response = server.build_registration_response(accepted, None).unwrap();
+	assert!(beacon.finish_registration(&response.serialized).is_none());
+	assert!(beacon.ratchet_status().is_none());
 	assert!(server.get_shared_secret(&changed).is_none());
 	assert!(server.get_shared_secret(&original).is_none());
 }

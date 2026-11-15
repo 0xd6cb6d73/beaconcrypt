@@ -3,7 +3,7 @@ import BeaconcryptCore.Computational.RegistrationNativeIdentityWorld
 import BeaconcryptCore.Computational.RegistrationNativeEnvSampling
 
 /-! The generated-identity client executes ordinary native effects in its public auxiliary World and forwards identity creation, signing and static DH to the existing indexed joint service. Actual identity key-generation contributes exactly 32 original World coins. Private identity seeds never occur in the executable compiler state. Uniform-query observations in the joint game's analysis transcript are removed only by the explicit source projection. -/
-open OracleComp OracleSpec CoreModels
+open OracleComp OracleSpec CoreModels Aeneas
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativeIdentityCompiler
@@ -21,7 +21,7 @@ def advance (before : Context n KemSK) : Context n KemSK :=
 
 noncomputable def implementation (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     QueryImpl (RegistrationNativeIdentityFrontend.Trusted n KemSK)
       (StateT (Context n KemSK) (OracleComp DynamicSpec))
   | .inl query => fun before => simulateQ coins
@@ -44,7 +44,7 @@ def project (before : Context n KemSK × SourceState) : RegistrationNativeIdenti
 
 noncomputable def compiled (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     QueryImpl (RegistrationNativeIdentityFrontend.Trusted n KemSK)
       (StateT (Context n KemSK × SourceState) ProbComp) := fun query before =>
   (fun result => (result.1.1, (result.1.2, result.2))) <$>
@@ -91,7 +91,7 @@ private theorem sampled_create (primitives : PqxdhJointIdentity.Primitives)
 
 private theorem compiled_create (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (before : Context n KemSK × SourceState) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (before : Context n KemSK × SourceState) :
     (compiled (source := source) setup checks representation created (.inr .create)).run before =
       (fun seed => ((createdReply setup.joint before.2 seed).1,
         (advance before.1, (createdReply setup.joint before.2 seed).2))) <$> PqxdhJointIdentity.sampleSeed := by
@@ -103,7 +103,7 @@ private theorem compiled_create (setup : Setup base KemSK) (checks : Checks)
 
 private theorem native_create (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (before : RegistrationNativeIdentityWorld.State n KemSK) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (before : RegistrationNativeIdentityWorld.State n KemSK) :
     (RegistrationNativeIdentityWorld.implementation (mlSource := source) setup checks representation created (.inr .create)).run before =
       (fun seed => ((createdReply setup.joint before.identities seed).1,
         (⟨advance before.context, (createdReply setup.joint before.identities seed).2⟩ :
@@ -120,7 +120,7 @@ private theorem native_create (setup : Setup base KemSK) (checks : Checks)
 
 private theorem compiled_service (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (handle : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (handle : Nat)
     (request : PqxdhJointIdentity.JointSpec.Domain) (before : Context n KemSK × SourceState) :
     (compiled (source := source) setup checks representation created (.inr (.service handle request))).run before =
       (let answer := (before.2.seeds[handle]?).map (fun seed => PqxdhJointIdentity.primitiveReply setup.joint seed request)
@@ -133,7 +133,7 @@ private theorem compiled_service (setup : Setup base KemSK) (checks : Checks)
 
 private theorem compiled_reveal (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (handle : Nat) (before : Context n KemSK × SourceState) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (handle : Nat) (before : Context n KemSK × SourceState) :
     (compiled (source := source) setup checks representation created (.inr (.reveal handle))).run before =
       pure (before.2.seeds[handle]?, (before.1, record (.inr (.reveal handle)) before.2.seeds[handle]? before.2)) := by
   change (fun result => (result.1.1, (result.1.2, result.2))) <$>
@@ -144,7 +144,7 @@ private theorem compiled_reveal (setup : Setup base KemSK) (checks : Checks)
 
 private theorem native_reveal (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (handle : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (handle : Nat)
     (before : RegistrationNativeIdentityWorld.State n KemSK) :
     (RegistrationNativeIdentityWorld.implementation (mlSource := source) setup checks representation created (.inr (.reveal handle))).run before =
       pure (before.identities.seeds[handle]?, { before with
@@ -156,7 +156,7 @@ private theorem native_reveal (setup : Setup base KemSK) (checks : Checks)
 /-- Every public compiler operation recovers the actual same-World identity source after removing only the joint game's additional uniform-query transcript observations. -/
 theorem query_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (RegistrationNativeIdentityFrontend.Trusted n KemSK).Domain)
     (before : Context n KemSK × SourceState) :
     Prod.map id project <$>
@@ -194,7 +194,7 @@ theorem query_source (setup : Setup base KemSK) (checks : Checks)
 /-- The concrete compiler preserves the complete continued same-World source execution for every adaptive native identity program. -/
 theorem program_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp (RegistrationNativeIdentityFrontend.Trusted n KemSK) Value)
     (before : Context n KemSK × SourceState) :
     Prod.map id project <$>
@@ -206,7 +206,7 @@ theorem program_source (setup : Setup base KemSK) (checks : Checks)
 /-- The concrete query interpreter is exactly the ordinary indexed joint-service game run on the executable compiler's continued program and public auxiliary state. -/
 theorem compiled_program (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp (RegistrationNativeIdentityFrontend.Trusted n KemSK) Value)
     (before : Context n KemSK × SourceState) :
     (simulateQ (compiled (source := source) setup checks representation created) work).run before =

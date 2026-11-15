@@ -101,29 +101,22 @@ private theorem hash_zero (kind : Kind) (request : registration.HashRequest) :
     Bounded (n := n) (KemSK := KemSK) (source := source) (Auxiliary := Auxiliary) kind 0
       (RegistrationNativeBeaconFrontend.hash request) := effect_zero kind _
 
-/-- All actual constructor preflights, ML generation, fingerprint and classical draws occur before indexed KEM birth and have zero private KEM cost. -/
+/-- All actual constructor preflights (the fixed-size Server pin) and classical identity and prekey draws occur before indexed KEM birth and have zero private KEM cost. -/
 theorem prepare_zero (kind : Kind) (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64) :
     Bounded (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) kind 0
       (RegistrationNativeBeaconFrontend.prepare source edPin mlPin keyId) := by
   unfold RegistrationNativeBeaconFrontend.prepare
-  apply bind_zero kind _ _ (sample_zero kind _)
-  intro generated
-  cases generated with
-  | none => exact pure_bound kind 0 _
-  | some credentials =>
-      repeat first
-        | exact pure_bound kind 0 _
-        | split
-        | (apply bind_zero kind _ _ (hash_zero kind _); intro digest)
-        | (apply bind_zero kind _ _ (sample_zero kind _); intro sampled)
+  repeat first
+    | exact pure_bound kind 0 _
+    | split
+    | (apply bind_zero kind _ _ (sample_zero kind _); intro sampled)
 
 /-- The real constructor suffix has exactly one possible private birth and no secret-reveal operation. -/
 theorem append_bound (setup : PqxdhServerAuthExperiment.Setup base KemSK) (kind : Kind)
     (edPin : Std.Array U8 32#usize) (keyId : U64) (pin : session.ServerAuthenticationPin)
-    (credential : RegistrationNativeMldsa.Credential source)
     (identity : PqxdhJointIdentity.IdentitySeed) (prekey : PqxdhJointGapDh.ScalarBytes) :
     Bounded (n := n) (Auxiliary := Auxiliary) kind (if kind = .birth then 1 else 0)
-      (RegistrationNativeBeaconFrontend.appendBorn setup source edPin keyId pin credential identity prekey) := by
+      (RegistrationNativeBeaconFrontend.appendBorn setup source edPin keyId pin identity prekey) := by
   intro owners environment
   cases kind <;>
     simp [RegistrationNativeBeaconFrontend.appendBorn, RegistrationNativeBeaconFrontend.kem,
@@ -143,14 +136,14 @@ theorem create_bound (setup : PqxdhServerAuthExperiment.Setup base KemSK) (kind 
   | fail error | div => exact pure_bound kind _ _
   | ok prepared => cases prepared with
     | none => exact pure_bound kind _ _
-    | some prepared => exact append_bound setup kind edPin keyId prepared.pin prepared.credentials prepared.identity prepared.prekey
+    | some prepared => exact append_bound setup kind edPin keyId prepared.pin prepared.identity prepared.prekey
 
 private theorem map_zero (kind : Kind) (project : Value → Result) (work : M n KemSK source Auxiliary Value)
     (bounded : Bounded kind 0 work) : Bounded kind 0 (project <$> work) := by
   rw [map_eq_bind_pure_comp]
   exact bind_zero kind work _ bounded (fun _ => pure_bound kind 0 _)
 
-/-- Actual native Init signing, fingerprinting and stateful signing receipts perform no private KEM access. -/
+/-- Actual native Init hashing and Ed25519 signing perform no private KEM access; the shared ML-DSA sign request is unreachable for the Beacon and returns `None`. -/
 theorem outgoing_zero (setup : PqxdhServerAuthExperiment.Setup base KemSK) (kind : Kind)
     (index : Nat) (owner : Owner source) (query : RegistrationBeaconInitExecutor.Spec.Domain) :
     Bounded (n := n) (Auxiliary := Auxiliary) kind 0
@@ -161,9 +154,7 @@ theorem outgoing_zero (setup : PqxdhServerAuthExperiment.Setup base KemSK) (kind
     | hash request => exact hash_zero kind request
     | sign request payload digest =>
         unfold RegistrationNativeBeaconFrontend.outgoing
-        apply bind_zero kind _ _ (sample_zero kind _)
-        intro reply
-        exact bind_zero kind _ _ (env_zero kind _) (fun _ => pure_bound kind 0 _)
+        exact pure_bound kind 0 _
   | inr request =>
       simp only [RegistrationNativeBeaconFrontend.outgoing]
       split
@@ -179,7 +170,7 @@ private noncomputable def bundled (setup : PqxdhServerAuthExperiment.Setup base 
   let published ← simulateQ (RegistrationNativeBeaconFrontend.outgoing setup source index owner)
     (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨owner.pin.binding⟩
       (RegistrationNativeBeaconFrontend.inputs setup owner)
-      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)
+      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)
   match published with
   | .fail error => pure (.fail error)
   | .div => pure .div

@@ -51,7 +51,7 @@ open RegistrationNativePlatformPublicAdapterLoggedRuntime (Augmentation unchange
 open RegistrationNativePlatformPublicAdapterFinishLoggedJoint (output physicalLog)
 open RegistrationNativePlatformExtractedSdkPublic (TotalStep)
 
-variable (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential mlSource)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential mlSource)
 
 open RegistrationNativePlatformPublicAdapterFinishLoggedDispatch (augmentation transport)
 
@@ -75,12 +75,12 @@ theorem cut (before:RegistrationNativePlatformExtractedSdkPublic.State AuditPriv
     (application:Pqxdh.Bytes)
     (success:((RegistrationNativePlatformPublicAdapterDispatcher.calls configuration created credential (.inl (.inr (.finish index input))) before.1 before.2).step.native result.1).1=some application) :
     ∃owner scalar,∃reached:(RegistrationNativePlatformExtractedSdkFinish.BodyResult n KemSK mlSource×P)×Events,
-      ∃initial completed,∃middle agreed recorded:Local n KemSK mlSource,
+      ∃initial completed adDigest,∃middle agreed recorded:Local n KemSK mlSource,
       before.1.1.1.beacons[index]?=some owner ∧owner.phase=.initSent pending scalar ∧
       reached∈support (RegistrationNativePlatformPublicAdapterFinishLoggedFactor.sample setup wire Event.stage coins checks
         configuration.agreement.representation created pending (AdapterPublicFinishLifetime.packet input) owner scalar before.1.1.1 before.1.1.2 past) ∧
       HEq result reached ∧result.2=past++[Event.stage (.beaconFirstRecord initial (.ok (.Ok completed)))] ∧
-      (.ok (.Ok (⟨pending,packet⟩:registration.AuthenticatedResponse)),middle)∈support
+      (.ok (.Ok ((RegistrationResponseExecutor.acceptedResponse pending packet adDigest):registration.AuthenticatedResponse)),middle)∈support
         ((lower setup checks configuration.agreement.representation created
           (simulateQ (RegistrationNativeBeaconFrontend.authentication setup mlSource)
             (RegistrationResponseExecutor.begin pending (.Some packet)))).run
@@ -89,7 +89,7 @@ theorem cut (before:RegistrationNativePlatformExtractedSdkPublic.State AuditPriv
       (.ok (.BeaconComplete initial.agreement),agreed)∈support
         ((lower setup checks configuration.agreement.representation created
           (simulateQ (RegistrationNativeBeaconFrontend.agreement setup owner scalar)
-            (RegistrationAgreementExecutor.beacon ⟨pending,packet⟩))).run middle) ∧
+            (RegistrationAgreementExecutor.beacon (RegistrationResponseExecutor.acceptedResponse pending packet adDigest)))).run middle) ∧
       (.ok (.Ok completed),recorded)∈support
         ((lower setup checks configuration.agreement.representation created
           (simulateQ (RegistrationNativeBeaconFrontend.record setup wire)
@@ -116,14 +116,15 @@ theorem cut (before:RegistrationNativePlatformExtractedSdkPublic.State AuditPriv
     before.1.1.1 before.1.1.2 (.ok (.Ok authenticated)) authEnv authState.1 authState.2 authCalled
   have fixed:=RegistrationNativePlatformPublicAdapterAgreementCutSource.authenticated setup checks configuration.agreement.representation created
     wire pending packet _ _ authenticated authentication
+  obtain ⟨adDigest, fixed⟩ := fixed
   subst authenticated
   have agreementRun:=RegistrationNativePlatformPublicAdapterAgreementCutSource.agreement coins setup checks configuration.agreement.representation created
-    owner scalar (RegistrationAgreementExecutor.beacon ⟨pending,packet⟩) owners authEnv authState.1 authState.2
+    owner scalar (RegistrationAgreementExecutor.beacon (RegistrationResponseExecutor.acceptedResponse pending packet adDigest)) owners authEnv authState.1 authState.2
     (.ok (.BeaconComplete initial.agreement)) agreeEnv agreeState.1 agreeState.2 agreeCalled
   have recordRun:=RegistrationNativePlatformPublicAdapterAgreementCutSource.record coins setup checks configuration.agreement.representation created
     wire (RegistrationBeaconRecordExecutor.fromInitial initial) owners agreeEnv agreeState.1 agreeState.2
     (.ok (.Ok completed)) reached.1.1.1.2 reached.1.1.2 reached.1.2 recordCalled
-  refine ⟨owner,scalar,reached,initial,completed,(owners,(authEnv,authState.1)),(owners,(agreeEnv,agreeState.1)),
+  refine ⟨owner,scalar,reached,initial,completed,adDigest,(owners,(authEnv,authState.1)),(owners,(agreeEnv,agreeState.1)),
     (owners,(reached.1.1.1.2,reached.1.1.2)),selected,phase,called,samePacket,sameLog.trans emitted,authentication,agreementRun,recordRun,started,appEq.symm,?_⟩
   rw [nativeEq]
   change RegistrationNativeWorldCache.cache reached.1.1.2≤RegistrationNativeWorldCache.cache

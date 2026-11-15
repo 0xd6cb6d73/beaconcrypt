@@ -24,7 +24,7 @@ set_option maxRecDepth 2048 in
 structure Call (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (transcript : List Entry) (parsed session : Nat) where
   before : List Entry
   raw : Pqxdh.Bytes
@@ -74,7 +74,7 @@ theorem start_counter (setup : Setup base KemSK) (source : RegistrationNativeMld
 private theorem raw_success (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (raw : Pqxdh.Bytes) (packet : registration.InitPacket) (session : Nat)
     (first last : State n KemSK mlSource) (read : RegistrationNativeWire.readInit wire raw = some packet)
     (supported : (some session, last) ∈ support
@@ -98,7 +98,7 @@ private theorem raw_success (setup : Setup base KemSK) (checks : Checks) (wire :
 theorem call_of_accept (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (bounds : FreshBounds) (mode : Mode) (work : OracleComp (ModeSpec mode) Value)
     (before : State n KemSK mlSource) (zero : before.parsedAccepts = 0)
     (observed : Observed Value (State n KemSK mlSource))

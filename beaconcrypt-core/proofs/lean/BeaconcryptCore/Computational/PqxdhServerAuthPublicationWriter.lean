@@ -8,6 +8,7 @@ open RustM beaconcrypt_core PqxdhRefinement
 set_option autoImplicit false
 
 namespace BeaconcryptCore.Computational.PqxdhServerAuthPublicationWriter
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhJointKdfGame
 open PqxdhServerAuthExperiment (Codec Checks)
 open PqxdhServerAuthPublicationTrace (Compiler Event Trace)
@@ -35,9 +36,9 @@ theorem after_run {K : Type} (source : FixedHkdfSha512NoSaltSource)
     (authenticated : Pqxdh.Bytes) (kernel : K) (metadata : PeerMetadata)
     (state : PqxdhInitialGenericPublication.State K Metadata PeerMetadata Consumed)
     (before : PqxdhServerAuthPublicationTrace.State) :
-    (PqxdhInitialGenericPublication.afterInitialization calls (aux source codec checks)
+    (PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) calls (aux source codec checks)
       candidate authenticated kernel metadata state).run.run before = (do
-      let (sent, afterSend) ← (calls.send kernel (firstContext candidate authenticated)).run.run before
+      let (sent, afterSend) ← (calls.send kernel (firstContext candidate associatedData authenticated)).run.run before
       match sent with
       | none => pure (none, afterSend)
       | some (advanced, encrypted) =>
@@ -133,14 +134,14 @@ theorem after_shape (source : FixedHkdfSha512NoSaltSource) (codec : Codec Reader
     (state : PqxdhInitialGenericPublication.State Kernel Metadata PeerMetadata Consumed)
     (before after : PqxdhServerAuthPublicationTrace.State)
     (result : Option (Option Response × PqxdhInitialGenericPublication.State Kernel Metadata PeerMetadata Consumed))
-    (supported : (result, after) ∈ support ((PqxdhInitialGenericPublication.afterInitialization
+    (supported : (result, after) ∈ support ((PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData)
       (calls source codec checks rest) (aux source codec checks)
       candidate authenticated kernel metadata state).run.run before)) :
     Shape codec metadata state before after (RustM.ok <$> result) := by
   rw [after_run, mem_support_bind_iff] at supported
   obtain ⟨⟨sent, afterSend⟩, reached, supported⟩ := supported
   have retained := send_writes source codec checks rest kernel
-    (firstContext candidate authenticated) before afterSend sent reached
+    (firstContext candidate associatedData authenticated) before afterSend sent reached
   cases sent with
   | none =>
       simp only [support_pure, Set.mem_singleton_iff] at supported
@@ -199,7 +200,7 @@ theorem candidate_shape (source : FixedHkdfSha512NoSaltSource) (codec : Codec Re
     (state : PqxdhInitialGenericPublication.State Kernel Metadata PeerMetadata Consumed)
     (before after : PqxdhServerAuthPublicationTrace.State)
     (result : Option (RustM (Option Response × PqxdhInitialGenericPublication.State Kernel Metadata PeerMetadata Consumed)))
-    (supported : (result, after) ∈ support ((PqxdhInitialGenericBuilder.candidate
+    (supported : (result, after) ∈ support ((PqxdhInitialGenericBuilder.candidate (associatedData := associatedData)
       (calls source codec checks rest) (aux source codec checks)
       initial candidate data metadata state).run.run before)) :
     Shape codec metadata state before after result := by
@@ -264,7 +265,7 @@ theorem candidate_shape (source : FixedHkdfSha512NoSaltSource) (codec : Codec Re
                     simp only [binding, OptionT.run_map, StateT.run_map, support_map] at supported
                     obtain ⟨⟨reply, stateAfter⟩, reached, same⟩ := supported
                     cases same
-                    exact after_shape source codec checks rest candidate _ kernel metadata state before stateAfter reply reached
+                    exact after_shape (associatedData := associatedData) source codec checks rest candidate _ kernel metadata state before stateAfter reply reached
             · simp only [fits, ite_false, OptionT.run_pure, StateT.run_pure,
                 support_pure, Set.mem_singleton_iff] at supported
               cases supported
@@ -277,7 +278,7 @@ theorem build_shape (source : FixedHkdfSha512NoSaltSource) (codec : Codec Reader
     (state : PqxdhInitialGenericPublication.State Kernel Metadata PeerMetadata Consumed)
     (before after : PqxdhServerAuthPublicationTrace.State)
     (result : Option (RustM (Option Response × PqxdhInitialGenericPublication.State Kernel Metadata PeerMetadata Consumed)))
-    (supported : (result, after) ∈ support ((PqxdhServerAuthSendFactor.genericBuild
+    (supported : (result, after) ∈ support ((PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData)
       (calls source codec checks rest) (aux source codec checks)
       initial pending data metadata state).run.run before)) :
     Shape codec metadata state before after result := by
@@ -324,7 +325,7 @@ theorem build_shape (source : FixedHkdfSha512NoSaltSource) (codec : Codec Reader
                   exact Or.inl ⟨rfl, rfl, rfl⟩
               | Ok candidate =>
                   simp only [prepared] at supported
-                  exact candidate_shape source codec checks rest initial candidate data metadata state before after result supported
+                  exact candidate_shape (associatedData := associatedData) source codec checks rest initial candidate data metadata state before after result supported
 
 /-- Projecting private kernel representation preserves the complete native optional rejection condition. -/
 theorem unpublished_map {S T : Type} (f : S → T) (state : S)
@@ -378,7 +379,7 @@ theorem compiled_shape (source : FixedHkdfSha512NoSaltSource) (codec : Codec Rea
     (before after : PqxdhServerAuthPublicationTrace.State)
     (result : Option (RustM (Option Response × PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed)))
     (supported : (result, after) ∈ support
-      ((PqxdhServerAuthPublicationTrace.compiled source codec checks rest pending data metadata state).run.run before)) :
+      ((PqxdhServerAuthPublicationTrace.compiled (associatedData := associatedData) source codec checks rest pending data metadata state).run.run before)) :
     NativeShape codec metadata state before after result := by
   have handler : PqxdhServerAuthPublicationTrace.compiler source codec checks =
       PqxdhServerAuthBuildProgram.impl
@@ -391,7 +392,7 @@ theorem compiled_shape (source : FixedHkdfSha512NoSaltSource) (codec : Codec Rea
   simp only [OptionT.run_map, StateT.run_map, support_map] at supported
   obtain ⟨⟨original, originalAfter⟩, reached, same⟩ := supported
   cases same
-  have shape := build_shape source codec checks rest (PqxdhServerAuthCtxCalls.initial false rest.2.2)
+  have shape := build_shape (associatedData := associatedData) source codec checks rest (PqxdhServerAuthCtxCalls.initial false rest.2.2)
     pending data metadata (PqxdhServerAuthCtxBuildSettlement.embed state) before originalAfter original reached
   have native := shape_native PqxdhServerAuthCtxBuildSettlement.resolve codec metadata _ before originalAfter original shape
   have collapse : PqxdhInitialGenericPublication.native PqxdhServerAuthCtxBuildSettlement.resolve
@@ -444,11 +445,11 @@ theorem compiled_publication_iff (source : FixedHkdfSha512NoSaltSource) (codec :
     (before after : PqxdhServerAuthPublicationTrace.State)
     (result : Option (RustM (Option Response × PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed)))
     (supported : (result, after) ∈ support
-      ((PqxdhServerAuthPublicationTrace.compiled source codec checks rest pending data metadata state).run.run before)) :
+      ((PqxdhServerAuthPublicationTrace.compiled (associatedData := associatedData) source codec checks rest pending data metadata state).run.run before)) :
     (∃ response published, result = some (.ok (some response, published))) ↔
       ∃ fields bytes, writes after.2 = writes before.2 ++ [(fields, some (some bytes))] :=
   shape_publication_iff codec metadata state before after result
-    (compiled_shape source codec checks rest pending data metadata state before after result supported)
+    (compiled_shape (associatedData := associatedData) source codec checks rest pending data metadata state before after result supported)
 
 /-- Actual successful publication retains the precise response bytes, assigned ID, writer arguments and advanced peer installation. -/
 theorem compiled_success (source : FixedHkdfSha512NoSaltSource) (codec : Codec Reader WireResponse)
@@ -457,14 +458,14 @@ theorem compiled_success (source : FixedHkdfSha512NoSaltSource) (codec : Codec R
     (state published : PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed)
     (before after : PqxdhServerAuthPublicationTrace.State) (response : Response)
     (supported : (some (.ok (some response, published)), after) ∈ support
-      ((PqxdhServerAuthPublicationTrace.compiled source codec checks rest pending data metadata state).run.run before)) :
+      ((PqxdhServerAuthPublicationTrace.compiled (associatedData := associatedData) source codec checks rest pending data metadata state).run.run before)) :
     ∃ (candidate : pqxdh.ServerRegistrationCandidate) (advanced : ratchet.concrete.ConcreteRatchetKernel)
       (encrypted : RawCtxSourceSend.Encrypted),
       codec.write2 (responseFields candidate encrypted) = some response.serialized ∧
       response.keyId = candidate.key_id ∧
       published = PqxdhServerRegistrationPublication.publish state candidate advanced metadata ∧
       writes after.2 = writes before.2 ++ [(responseFields candidate encrypted, some (some response.serialized))] := by
-  rcases compiled_shape source codec checks rest pending data metadata state before after _ supported with
+  rcases compiled_shape (associatedData := associatedData) source codec checks rest pending data metadata state before after _ supported with
     ⟨_, quiet⟩ | ⟨candidate, advanced, encrypted, same, returned⟩
   · have impossible : (some response : Option Response) = none := quiet.1
     cases impossible
@@ -484,9 +485,9 @@ theorem compiled_rejection (source : FixedHkdfSha512NoSaltSource) (codec : Codec
     (state rejected : PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed)
     (before after : PqxdhServerAuthPublicationTrace.State)
     (supported : (some (.ok (none, rejected)), after) ∈ support
-      ((PqxdhServerAuthPublicationTrace.compiled source codec checks rest pending data metadata state).run.run before)) :
+      ((PqxdhServerAuthPublicationTrace.compiled (associatedData := associatedData) source codec checks rest pending data metadata state).run.run before)) :
     rejected = state := by
-  rcases compiled_shape source codec checks rest pending data metadata state before after _ supported with
+  rcases compiled_shape (associatedData := associatedData) source codec checks rest pending data metadata state before after _ supported with
     ⟨_, quiet⟩ | ⟨candidate, advanced, encrypted, _, returned⟩
   · exact quiet.2
   · cases written : codec.write2 (responseFields candidate encrypted) with

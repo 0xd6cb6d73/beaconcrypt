@@ -121,6 +121,7 @@ theorem source (coins : QueryImpl unifSpec (StateT Platform ProbComp))
       (((RegistrationNativePlatformSourceSeal.build coins setup codec view failure allocation erased reservePeer sign helper writer
         handle application).run before).run previous)) :
     ∃ cut : RegistrationNativePlatformSdkBuildCut.Cut
+      (RegistrationNativePlatformCompletionSdk.nativeAdHash coins)
       (RegistrationNativePlatformSourceBuild.pin coins) (StateT.lift reservePeer)
       (RegistrationNativePlatformCompletionSdk.nativePresent coins)
       (RegistrationNativePlatformSourceBuild.finishSource coins setup codec
@@ -139,6 +140,7 @@ theorem source (coins : QueryImpl unifSpec (StateT Platform ProbComp))
       ((.ok (.Ok cut.published), cut.completed), next) ∈ support
         (((afterRecord coins sign writer cut.current.control hashed).run current).run platform) := by
   obtain ⟨cut⟩ := RegistrationNativePlatformSdkBuildCut.build
+    (RegistrationNativePlatformCompletionSdk.nativeAdHash coins)
     (RegistrationNativePlatformSourceBuild.pin coins) (StateT.lift reservePeer)
     (RegistrationNativePlatformCompletionSdk.nativePresent coins)
     (RegistrationNativePlatformSourceBuild.finishSource coins setup codec

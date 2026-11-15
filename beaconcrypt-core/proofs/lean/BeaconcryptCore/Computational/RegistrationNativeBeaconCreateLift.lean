@@ -7,7 +7,7 @@ set_option autoImplicit false
 set_option warningAsError true
 set_option maxRecDepth 4096
 set_option backward.isDefEq.respectTransparency false
-/-! Whole native creation is the literal lifted ML/hash/Ed/X25519 prefix, one indexed KEM call, and owner registration. Prefix normality is reduced from the fixed Core pin controller, rather than assumed as a constructor law. -/
+/-! Whole native creation is the literal lifted fixed-pin/Ed/X25519 prefix, one indexed KEM call, and owner registration. Prefix normality is reduced from the fixed Core pin controller, rather than assumed as a constructor law. -/
 namespace BeaconcryptCore.Computational.RegistrationNativeBeaconCreateLift
 open RegistrationNativeBeaconFrontend
 open PqxdhServerAuthExperiment (Setup)
@@ -18,14 +18,9 @@ variable {m : Type → Type} [Monad m] [LawfulMonad m]
 noncomputable def prepared (implementation : QueryImpl (Trusted n KemSK) m)
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64) :
     RegistrationNativePlatformGenericBundle.M source Auxiliary m (Option (Prepared source)) := do
-  let generated ← RegistrationNativePlatformGenericBundle.liftLegacy implementation (sample (RegistrationNativeMldsa.generate source))
-  match generated with
-  | none => pure none
-  | some credentials =>
-    let digest ← RegistrationNativePlatformGenericBundle.liftLegacy implementation (hash (.Single (Std.Array.to_slice mlPin)))
-    let identity ← RegistrationNativePlatformGenericBundle.liftLegacy implementation (sample PqxdhJointIdentity.sampleSeed)
-    let prekey ← RegistrationNativePlatformGenericBundle.liftLegacy implementation (sample PqxdhJointGapDh.sampleScalar)
-    pure (some ⟨credentials, RegistrationNativeBeaconCreateProgram.pin edPin mlPin keyId digest, identity, prekey⟩)
+  let identity ← RegistrationNativePlatformGenericBundle.liftLegacy implementation (sample PqxdhJointIdentity.sampleSeed)
+  let prekey ← RegistrationNativePlatformGenericBundle.liftLegacy implementation (sample PqxdhJointGapDh.sampleScalar)
+  pure (some ⟨RegistrationNativeBeaconCreateProgram.pin edPin mlPin keyId, identity, prekey⟩)
 
 theorem prepare (implementation : QueryImpl (Trusted n KemSK) m)
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64) :
@@ -33,12 +28,7 @@ theorem prepare (implementation : QueryImpl (Trusted n KemSK) m)
         (RegistrationNativeBeaconFrontend.prepare source edPin mlPin keyId : M n KemSK source Auxiliary _) =
       RustM.ok <$> prepared implementation edPin mlPin keyId := by
   rw [RegistrationNativeBeaconCreateProgram.prepare_lift]
-  simp only [prepared, map_bind]
-  apply bind_congr
-  intro generated
-  cases generated with
-  | none => simp only [map_pure]
-  | some credential => simp only [map_bind, map_pure]
+  simp only [prepared, map_bind, map_pure]
 
 theorem create (implementation : QueryImpl (Trusted n KemSK) m)
     (setup : Setup base KemSK) (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64) :

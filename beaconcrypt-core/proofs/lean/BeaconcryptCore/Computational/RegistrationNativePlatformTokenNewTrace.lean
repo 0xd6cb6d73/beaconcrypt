@@ -36,7 +36,7 @@ variable [primitive : BeaconcryptCore.Refinement.AdapterSealPrimitive.Operations
 variable (coins : QueryImpl unifSpec (StateT Platform ProbComp))
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
 variable (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 variable (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
 variable (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
 variable (reserveRegistration reservePeer : StateT Platform ProbComp Bool) (erased : commitment.CommitmentTranscript)
@@ -73,14 +73,18 @@ theorem callback (call : Call RegistrationNativeRawAdapter.TypedSpec Whole) (cal
     | inl query => exact False.elim (allowed trivial)
     | inr query => cases query with
       | accept packet =>
+        have reached := RegistrationNativePlatformTokenReply.accept coins setup (RegistrationNativeWire.ledgerCodec wire) checks
+          reserveRegistration route source.verify representation created packet before.1.server before.2
         simp only [RegistrationNativePlatformExperiment.handler, StateT.run_bind, StateT.run_modify, pure_bind] at actual
+        -- Keep the concrete accept program opaque: definitional checks below must never evaluate its transcript hashing.
+        generalize RegistrationNativePlatformSourceAccept.accept coins setup (RegistrationNativeWire.ledgerCodec wire) checks
+          reserveRegistration route source.verify representation created packet = work at reached actual
         simp only [RegistrationNativePlatformExperiment.server, StateT.run, map_apply, support_map] at actual
         obtain ⟨⟨⟨result, current⟩, platform⟩, supported, same⟩ := actual
         have stateEq : current = after.1.server := congrArg (fun result => result.1.2.server) same
         have replyEq : result = reply := congrArg (fun result => result.1.1) same
         have currentPresent : Present token current := by simpa only [stateEq] using present
-        rcases RegistrationNativePlatformTokenReply.accept coins setup (RegistrationNativeWire.ledgerCodec wire) checks reserveRegistration route source.verify
-          representation created packet before.1.server before.2 ((result, current), platform) supported token currentPresent with old | ⟨handle, returned⟩
+        rcases reached ((result, current), platform) supported token currentPresent with old | ⟨handle, returned⟩
         · exact False.elim (empty old)
         · change result = .ok (some handle) at returned
           exact ⟨packet, handle, before, after, by rw [← replyEq, returned]⟩

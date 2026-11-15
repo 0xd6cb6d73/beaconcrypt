@@ -77,16 +77,16 @@ theorem program (fallback : Credential source) (before : Pool source)
 theorem bundle (fallback : Credential source) (pool : Pool source)
     (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat)
     (before : RegistrationNativeExperiment.State n KemSK (handleSource source))
-    (live : RegistrationNativeMldsaPoolMap.StateLive source pool before) :
+    :
     observe source fallback <$> runState source
       (RegistrationNativeMldsaBundle.sourceBundle setup checks wire representation created index) before pool =
       (RegistrationNativeExperiment.beacon setup checks representation created
         (RegistrationNativeBeaconFrontend.bundle setup source wire index)).run
           (nativeState (restore source fallback pool) before) := by
   rw [runState, program source fallback pool _
-    (RegistrationNativeMldsaControllerValid.Bundle.sourceBundle source pool setup checks representation created wire index before live),
+    (RegistrationNativeMldsaControllerValid.Bundle.sourceBundle source pool setup checks representation created wire index before),
     RegistrationNativeMldsaBundleMap.sourceBundle_natural]
   exact congrFun (RegistrationNativeMldsaBundle.eval_sourceBundle setup checks wire representation created index) _
 

@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationWorldSigning
 
-/-! ML key generation and signing are explicit primitive source operations, alongside the existing context-aware verifier. Birth calls the generator and retains its exact returned public/private pair; it does not accept a caller-supplied local key. Owned signing checks that the actual native request names this generated public key and forwards its entire context, role and message to the source signer. These are executable source/ownership receipts, not an EUF assertion about an arbitrary primitive implementation. -/
+/-! ML key generation and signing are explicit primitive source operations, alongside the existing context-aware verifier. Server birth calls the generator and retains its exact returned public/private pair; it does not accept a caller-supplied local key. Owned signing checks that the actual native request names this generated public key and forwards its entire context, role and message to the source signer. These are executable source/ownership receipts, not an EUF assertion about an arbitrary primitive implementation. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open beaconcrypt_core
@@ -51,7 +51,7 @@ theorem owned_mismatch (source : Source) (credential : Credential source)
     owned source credential request = pure .None := by
   simp only [owned, ite_eq_right different]
 
-/-- The optional primitive failure precedes pin hashing or any later constructor draw. -/
+/-- The optional Server primitive failure precedes pure pin selection and every later constructor draw. -/
 theorem generation_failure (source : Source) (failed : source.generate = pure none) : generate source = pure none := by
   simp only [generate, failed, map_pure, Option.map_none]
 

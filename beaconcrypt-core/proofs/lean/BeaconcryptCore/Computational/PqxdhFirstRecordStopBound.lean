@@ -14,6 +14,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhFirstRecordStopBound
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhJointKdfGame PqxdhNativeSharedPrefix
 open RawCtxSelectedParentTable RawCtxSelectedParentEntry
 open PqxdhSelectedPostCompiler (Optional Full)
@@ -42,27 +44,27 @@ theorem kept_input_bound (client : OracleComp (Optional (PqxdhInitialGenericPost
     (kept : PqxdhSelectedPostCompiler.SourceState M P I D K A N C S B → Prop) [DecidablePred kept] :
     𝒟[(fun result => result.2.2 && decide (kept (PqxdhSelectedPostCompiler.project result.2.1))) <$>
       (simulateQ (RawCtxSelectedFamilyNonceCoupling.marked
-        (PqxdhSelectedPostCompiler.augmented pre application initial selector aux source writer prior parent key target nonce next
+        (PqxdhSelectedPostCompiler.augmented (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next
           sender route read)
         (PqxdhSelectedPostCompiler.Stops (extra := extra) prior parent target nonce next sender)) client).run (before, false)] {true} ≤
       𝒟[(fun result => decide (RawCtxSelectedSourceSendInputs.RepeatedInput target result.2.1 ∧ kept result.2.2)) <$>
-        (simulateQ (PqxdhFirstRecordNonceStop.sourceObserved pre application initial selector aux source writer prior parent key target
+        (simulateQ (PqxdhFirstRecordNonceStop.sourceObserved (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target
           nonce next sender route read) client).run ([], PqxdhSelectedPostCompiler.project before)] {true} := by
   have flags := congrArg (fun work => (fun result => result.2.2 && decide (kept (PqxdhSelectedPostCompiler.project result.2.1))) <$> work)
-    (PqxdhFirstRecordNonceStop.marked_program_erased pre application initial selector aux source writer prior parent key target
+    (PqxdhFirstRecordNonceStop.marked_program_erased (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target
       nonce next sender route read client (([], before), false))
   simp only [Functor.map_map, Prod.map_def, id_eq, PqxdhFirstRecordNonceStop.forgetHistory] at flags
   rw [← flags]
   have projected := congrArg (fun work => (fun result => decide (RawCtxSelectedSourceSendInputs.RepeatedInput target result.2.1 ∧
       kept result.2.2)) <$> work)
-    (PqxdhFirstRecordNonceStop.source_observed_program pre application initial selector aux source writer prior parent key target
+    (PqxdhFirstRecordNonceStop.source_observed_program (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target
       nonce next sender route read client ([], before))
   simp only [Functor.map_map, Prod.map_def, id_eq, PqxdhFirstRecordNonceStop.projectObserved] at projected
   rw [← projected]
   have histories := congrArg (fun work => (fun result => decide (RawCtxSelectedSourceSendInputs.RepeatedInput target result.2.1 ∧
       kept (PqxdhSelectedPostCompiler.project result.2.2))) <$> work)
     (RawCtxSelectedFamilyNonceCoupling.marked_client
-      (PqxdhFirstRecordNonceStop.observed pre application initial selector aux source writer prior parent key target nonce next
+      (PqxdhFirstRecordNonceStop.observed (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next
         sender route read)
       (PqxdhFirstRecordNonceStop.observedStops (extra := extra) prior parent target nonce next sender) client (([], before), false))
   simp only [Functor.map_map, Prod.map_def, id_eq] at histories
@@ -71,7 +73,7 @@ theorem kept_input_bound (client : OracleComp (Optional (PqxdhInitialGenericPost
   simp only [decide_eq_true_eq, Bool.and_eq_true]
   apply prEvent_mono_of_support
   intro result supported holds
-  have consistent := PqxdhFirstRecordNonceStop.marked_program_consistent pre application initial selector aux source writer
+  have consistent := PqxdhFirstRecordNonceStop.marked_program_consistent (completedBinding := completedBinding) pre application initial selector aux source writer
     prior parent key target nonce next sender route read client (([], before), false) result supported
     ⟨RawCtxSelectedSendTrace.tracked_empty before.2 empty, fun _ impossible => False.elim (List.not_mem_nil impossible),
       fun impossible => False.elim (Bool.false_ne_true impossible)⟩
@@ -114,23 +116,23 @@ variable
 
 /-- The source-only restricted repetition run: after the selected first Server builder, the history-extended original source post (no CTX component, no selected-nonce ledger) runs from the builder's front and local state, and the event is that two ordered sealing positions of its history use the exact selected sending chain while, at its end, the selected chain and the listed ancestors are still undisclosed. -/
 noncomputable def sourceStopRun (ancestors disclosed : List RatchetChain) : ProbComp Bool := do
-  let built ← firstBuild pre application initial selector aux source writer previousRoot response64 sender index metadata ready
+  let built ← firstBuild (associatedData := associatedData) pre application initial selector aux source writer previousRoot response64 sender index metadata ready
     before selected shared privateState cache store key nonce next
   (fun result => decide (RawCtxSelectedSourceSendInputs.RepeatedInput (PqxdhInitialSourceExperiment.root source previousRoot response64 selected)
       result.2.1 ∧ Undisclosed (PqxdhInitialSourceExperiment.root source previousRoot response64 selected) ancestors disclosed result.2.2)) <$>
-    (simulateQ (PqxdhFirstRecordNonceStop.sourceObserved pre application initial selector aux source writer (productionStream source.crypto) none key
+    (simulateQ (PqxdhFirstRecordNonceStop.sourceObserved (completedBinding := completedBinding) pre application initial selector aux source writer (productionStream source.crypto) none key
       (PqxdhInitialSourceExperiment.root source previousRoot response64 selected) nonce next sender route decode)
       (RawCtxSelectedFamilyNonceCoupling.optionalClient (post built.1.1))).run ([], (built.1.2, built.2))
 
 /-- The restricted stop run of `PqxdhFirstBeaconRecordIntegrity` is at most the source-only restricted repetition run, pointwise in every sample. -/
 theorem stop_le (ancestors disclosed : List RatchetChain) :
-    𝒟[stopRun pre application initial selector aux source writer previousRoot response64 sender route decode index metadata ready
+    𝒟[stopRun (associatedData := associatedData) (completedBinding := completedBinding) pre application initial selector aux source writer previousRoot response64 sender route decode index metadata ready
       post before selected shared privateState cache store key nonce next ancestors disclosed] {true} ≤
-    𝒟[sourceStopRun pre application initial selector aux source writer previousRoot response64 sender route decode index metadata ready
+    𝒟[sourceStopRun (completedBinding := completedBinding) (associatedData := associatedData) pre application initial selector aux source writer previousRoot response64 sender route decode index metadata ready
       post before selected shared privateState cache store key nonce next ancestors disclosed] {true} := by
   unfold stopRun sourceStopRun
   refine bind_le _ _ _ fun built => ?_
-  exact kept_input_bound pre application initial selector aux source writer (productionStream source.crypto) none key
+  exact kept_input_bound (completedBinding := completedBinding) pre application initial selector aux source writer (productionStream source.crypto) none key
     (PqxdhInitialSourceExperiment.root source previousRoot response64 selected) nonce next sender route decode
     (RawCtxSelectedFamilyNonceCoupling.optionalClient (post built.1.1)) (startOf built) rfl
     (Undisclosed (PqxdhInitialSourceExperiment.root source previousRoot response64 selected) ancestors disclosed)
@@ -187,12 +189,12 @@ theorem native_retains {I D K A X Response ι : Type} {base : OracleSpec ι}
     (valid : Retains state.beacon.phase) (auxiliary : A)
     (result : (Option Pqxdh.Bytes × RawCtxBeaconLifecycle.State I D (KemHandle K)) × A)
     (supported : result ∈ support ((simulateQ handler
-      (PqxdhBeaconPhase2Publication.nativeOwner decodeFrame raw state)).run auxiliary)) :
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decodeFrame raw state)).run auxiliary)) :
     Retains result.1.2.beacon.phase := by
   have old := (retains_iff witnessKey state).mp valid
   exact (retains_iff witnessKey result.1.2).mpr
-    ⟨PqxdhPhase2KemProvenance.native_valid handler 1 witnessKey decodeFrame raw state old.1 auxiliary result supported,
-      PqxdhPhase2KemProvenance.native_valid handler 2 witnessKey decodeFrame raw state old.2 auxiliary result supported⟩
+    ⟨PqxdhPhase2KemProvenance.native_valid (completedBinding := completedBinding) handler 1 witnessKey decodeFrame raw state old.1 auxiliary result supported,
+      PqxdhPhase2KemProvenance.native_valid (completedBinding := completedBinding) handler 2 witnessKey decodeFrame raw state old.2 auxiliary result supported⟩
 
 /-- Simulating into another oracle computation never adds outputs. -/
 private theorem support_simulation {κ μ Result : Type} {source : OracleSpec κ} {target : OracleSpec μ}
@@ -266,7 +268,7 @@ theorem compiler_step_only
     (query : (Spec baseSpec S (B + 1)).Domain) (state : State M P I D K A S (B + 1))
     (valid : OnlyFirst (fun position => (state.roles.1.2 position).beacon.phase))
     (result : (Spec baseSpec S (B + 1)).Range query × State M P I D K A S (B + 1))
-    (supported : result ∈ support ((PqxdhPhase2SourceScheduler.compiler source writer senderId route decodeFrame localImpl query).run state)) :
+    (supported : result ∈ support ((PqxdhPhase2SourceScheduler.compiler (completedBinding := completedBinding) source writer senderId route decodeFrame localImpl query).run state)) :
     OnlyFirst (fun position => (result.2.roles.1.2 position).beacon.phase) := by
   rcases query with ((record | forwarded) | finish)
   · exact source_step_only source writer senderId route decodeFrame record state valid result (support_simulation _ _ supported)
@@ -281,7 +283,7 @@ theorem compiler_step_only
       by_cases same : position = selected
       · subst position
         simpa only [PqxdhPhase2LiveFinish.install, Function.update_self] using
-          native_retains (sourceNative source localImpl) decodeFrame raw (state.roles.1.2 selected) (valid selected nonzero)
+          native_retains (completedBinding := completedBinding) (sourceNative source localImpl) decodeFrame raw (state.roles.1.2 selected) (valid selected nonzero)
             state.primitive nativeResult nativeSupported
       · simpa only [PqxdhPhase2LiveFinish.install, Function.update_of_ne same] using valid position nonzero
 
@@ -292,7 +294,7 @@ theorem compiler_only {Result : Type}
     (localImpl : QueryImpl (LocalSpec I D K X Response) (StateT A ProbComp))
     (client : OracleComp (Spec baseSpec S (B + 1)) Result) (state : State M P I D K A S (B + 1))
     (valid : OnlyFirst (fun position => (state.roles.1.2 position).beacon.phase)) (result : Result × State M P I D K A S (B + 1))
-    (supported : result ∈ support ((simulateQ (PqxdhPhase2SourceScheduler.compiler source writer senderId route decodeFrame localImpl) client).run state)) :
+    (supported : result ∈ support ((simulateQ (PqxdhPhase2SourceScheduler.compiler (completedBinding := completedBinding) source writer senderId route decodeFrame localImpl) client).run state)) :
     OnlyFirst (fun position => (result.2.roles.1.2 position).beacon.phase) := by
   induction client using OracleComp.inductionOn generalizing state result with
   | pure value =>
@@ -302,7 +304,7 @@ theorem compiler_only {Result : Type}
     simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind, mem_support_bind_iff] at supported
     obtain ⟨intermediate, first, rest⟩ := supported
     exact ih intermediate.1 intermediate.2
-      (compiler_step_only source writer senderId route decodeFrame localImpl query state valid intermediate first) result rest
+      (compiler_step_only (completedBinding := completedBinding) source writer senderId route decodeFrame localImpl query state valid intermediate first) result rest
 
 /-- Carrying an environment owner into the extended family tags its KEM handle as existing. -/
 theorem existing_retains {I D K : Type} (beacon : RawCtxBeaconLifecycle.State I D K) :
@@ -342,15 +344,15 @@ theorem driver_only {setup : PqxdhStatefulPhase1EufCma.StatefulPhase1Setup baseS
     (program : PqxdhPhase2GeneratedDriver.Program baseSpec setup.Context S (B + 1))
     (index : Nat) (publicIdentity : PqxdhJointIdentity.PublicIdentity)
     (generated : PqxdhPrivateKemSource.Generated setup Unit) (transcript : PqxdhEd25519EufCma.Phase1PublicTranscript setup.Context)
-    (result : PqxdhEd25519EufCma.Phase1Candidate × (PqxdhPhase2GeneratedDriver.driver env program).State)
-    (supported : result ∈ support ((PqxdhPhase2GeneratedDriver.driver env program).main index publicIdentity generated transcript)) :
+    (result : PqxdhEd25519EufCma.Phase1Candidate × (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env program).State)
+    (supported : result ∈ support ((PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env program).main index publicIdentity generated transcript)) :
     OnlyFirst (fun position => (result.2.2.roles.1.2 position).beacon.phase) := by
   simp only [PqxdhPhase2GeneratedDriver.driver, mem_support_bind_iff] at supported
   obtain ⟨started, startSupport, selected, selectedSupport, finalSupport⟩ := supported
   obtain rfl := OracleComp.eq_of_mem_support_pure _ finalSupport
   have initial := start_only env.phase1Writer index publicIdentity generated env.binding
     (PqxdhGeneratedBeaconSelector.bundle transcript) env.initial started (support_simulation _ _ startSupport)
-  exact compiler_only env.source env.recordWriter env.senderId env.route env.decode env.localImpl _ started.2 initial selected
+  exact compiler_only (completedBinding := completedBinding) env.source env.recordWriter env.senderId env.route env.decode env.localImpl _ started.2 initial selected
     selectedSupport
 
 /-- A pending mode of the authenticated-root dispatch carries exactly the prepared prefix it was given. -/
@@ -381,10 +383,10 @@ theorem prepare_only {KemSK : Type} {setup : PqxdhStatefulPhase1EufCma.StatefulP
     (attachedVerify : PqxdhEd25519EufCma.Ed25519PublicKey → Pqxdh.Bytes → Option Pqxdh.Bytes) (primitives : PqxdhJointIdentity.Primitives)
     (program : PqxdhPhase2GeneratedDriver.Program baseSpec setup.Context S (B + 1))
     (post : PqxdhAuthenticatedRootExperiment.Post (baseSpec := baseSpec) program.Selection S (B + 1))
-    (context : PqxdhCorrelatedExtractFamily.Prepared (PqxdhAuthenticatedRootExperiment.protocol env kem attachedVerify primitives program post) KemSK)
+    (context : PqxdhCorrelatedExtractFamily.Prepared (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post) KemSK)
     (supported : context ∈ support (PqxdhCorrelatedExtractFamily.prepare baseImpl kem
-      (PqxdhAuthenticatedRootExperiment.protocol env kem attachedVerify primitives program post)))
-    (prepared : PqxdhPrivateRootSource.Prepared setup (PqxdhPhase2GeneratedDriver.driver env.toDriverEnvironment program).State)
+      (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post)))
+    (prepared : PqxdhPrivateRootSource.Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)
     (ephemeral : List.Vector UInt8 32) (pending : context.state = .pending prepared ephemeral) :
     OnlyFirst (fun position => (prepared.1.context.selection.2.roles.1.2 position).beacon.phase) := by
   simp only [PqxdhCorrelatedExtractFamily.prepare, mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at supported
@@ -397,7 +399,7 @@ theorem prepare_only {KemSK : Type} {setup : PqxdhStatefulPhase1EufCma.StatefulP
   obtain rfl := dispatch_pending kem _ attachedVerify primitives _ prefixResult prepared ephemeral dispatched
   simp only [PqxdhGeneratedRootSource.borrowedPrefix, mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at prefixSupported
   obtain ⟨seed, _, before, _, after, _, selected, selectedSupport, rfl⟩ := prefixSupported
-  exact driver_only env.toDriverEnvironment program 0 _ _ _ selected.1 (support_state_simulation _ _ _ _ selectedSupport)
+  exact driver_only (completedBinding := completedBinding) env.toDriverEnvironment program 0 _ _ _ selected.1 (support_state_simulation _ _ _ _ selectedSupport)
 
 end KemSlots
 
@@ -423,7 +425,7 @@ theorem build_only
     (store : RawCtxSelectiveChainGame.Store) (key : RootOutput) (nonce : NonceOutput) (next : RootOutput)
     (valid : OnlyFirst (fun position => (before.roles.1.2 position).beacon.phase))
     (built : PqxdhFirstBeaconRecordIntegrity.Built M P I D (KemHandle K) A N S (B + 1))
-    (supported : built ∈ support (PqxdhFirstBeaconRecordIntegrity.firstBuild pre application initial selector aux source writer
+    (supported : built ∈ support (PqxdhFirstBeaconRecordIntegrity.firstBuild (associatedData := associatedData) pre application initial selector aux source writer
       previousRoot response64 sender index metadata ready before selected shared privateState cache store key nonce next)) :
     OnlyFirst (fun position => (built.1.2.roles.1.2 position).beacon.phase) := by
   unfold PqxdhFirstBeaconRecordIntegrity.firstBuild selectedBuild at supported
@@ -481,7 +483,7 @@ theorem prepare_unmarked {σ I D K X Response : Type}
     (never : ∀ value state (reply : Option PqxdhPhase2DecapsulationRouting.Shared × σ),
       reply ∈ support ((pre (.decapsulate value kem)).run state) → reply.1 ≠ some .challenge)
     (state : σ) (result : Option (Prepared Response PqxdhPhase2DecapsulationRouting.Shared) × σ)
-    (supported : result ∈ support ((simulateQ pre (PqxdhBeaconPhase2Shared.prepare control identity prekey oneTime kem raw)).run state))
+    (supported : result ∈ support ((simulateQ pre (PqxdhBeaconPhase2Shared.prepare (completedBinding := completedBinding) control identity prekey oneTime kem raw)).run state))
     (prepared : Prepared Response PqxdhPhase2DecapsulationRouting.Shared) (found : result.1 = some prepared) :
     PqxdhInitialSelectedOrigin.mark fixed selectedMessage prepared.root = false := by
   simp only [PqxdhBeaconPhase2Shared.prepare, simulateQ_bind, StateT.run_bind, mem_support_bind_iff] at supported
@@ -493,7 +495,7 @@ theorem prepare_unmarked {σ I D K X Response : Type}
     simp only [afterInputs, simulateQ_bind, simulateQ_spec_query, simulateQ_pure, StateT.run_bind, StateT.run_pure,
       mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at supported
     obtain ⟨_, _, rfl⟩ := supported
-    cases admitted : admitted control inputs with
+    cases admitted : admitted (completedBinding := completedBinding) control inputs with
     | none => simp [admitted] at found
     | some metadata =>
       simp only [admitted, Option.map_some, Option.some.injEq] at found
@@ -546,10 +548,10 @@ theorem existing_unmarked (attachedVerify : Ed25519PublicKey → Pqxdh.Bytes →
       PqxdhNativeSharedPrefix.ExternalState A (BareState count) PqxdhCorrelatedExpand.RootOracle.QueryCache)
     (supported : result ∈ support ((simulateQ (PqxdhPreparedPrefixCallbacks.preparation (I := I) (D := D) (X := X) (Response := Response)
       attachedVerify primitives count fixed localImpl baseImpl kem secret challenge)
-      (PqxdhBeaconPhase2Shared.prepare control identity prekey oneTime (.existing prior) raw)).run state))
+      (PqxdhBeaconPhase2Shared.prepare (completedBinding := completedBinding) control identity prekey oneTime (.existing prior) raw)).run state))
     (prepared : Prepared Response PqxdhPhase2DecapsulationRouting.Shared) (found : result.1 = some prepared) :
     PqxdhInitialSelectedOrigin.mark fixed selectedMessage prepared.root = false :=
-  prepare_unmarked _ fixed selectedMessage control identity prekey oneTime _ raw
+  prepare_unmarked (completedBinding := completedBinding) _ fixed selectedMessage control identity prekey oneTime _ raw
     (fun value current reply reached => existing_unchallenged attachedVerify primitives count fixed localImpl baseImpl kem secret
       challenge value prior current reply reached) state result supported prepared found
 
@@ -575,12 +577,12 @@ local notation "zeroRoot" => (List.Vector.replicate 32 0 : RootOutput)
 
 /-- The source-only continuation of one prepared context: completed preparations give `false`; a pending preparation runs the selected first Server builder and reports whether the history-extended original source post visited the exact selected sending chain at two ordered sealing positions while, at its end, the selected chain and the target's ancestors were still undisclosed. -/
 noncomputable def sourceStopObserve (target : Target S (B + 1))
-    (context : PqxdhInitialLegalObserver.Context env0 kem attachedVerify primitives program post)
+    (context : PqxdhInitialLegalObserver.Context (associatedData := associatedData) (completedBinding := completedBinding) env0 kem attachedVerify primitives program post)
     (initialBlock : HmacBlock) (nonce : NonceOutput) (chain key : RootOutput) : ProbComp Bool :=
-  match PqxdhInitialPreparedSourceInput.input env0 baseImpl kem attachedVerify primitives program post context
+  match PqxdhInitialPreparedSourceInput.input (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program post context
       target.owner target.number target.ancestors target.disclosed with
   | .inl _ => pure false
-  | .inr input => sourceStopRun
+  | .inr input => sourceStopRun (completedBinding := completedBinding) (associatedData := associatedData)
       (PqxdhPreparedPrefixCallbacks.preparation attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem
         context.secretKey context.ciphertext)
       (PqxdhPreparedPrefixCallbacks.application attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem
@@ -598,17 +600,17 @@ noncomputable def sourceStopObserve (target : Target S (B + 1))
 /-- The source-only restricted repetition game: the same samples as `stopGame` (actual preparation, 64-byte initializer block, selected nonce, next chain and key), then the source-only continuation. The CTX challenger and its selected-nonce ledger are gone; the key enters only as the programmed message key of the selected chain in the private derivations of the builder and of the source post. -/
 noncomputable def sourceStopGame (target : Target S (B + 1)) : ProbComp Bool := do
   let context ← PqxdhCorrelatedExtractFamily.prepare baseImpl kem
-    (PqxdhAuthenticatedRootExperiment.protocol env0 kem attachedVerify primitives program post)
+    (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env0 kem attachedVerify primitives program post)
   let initialBlock ← $ᵗ HmacBlock
   let nonce ← $ᵗ NonceOutput
   let chain ← $ᵗ RootOutput
   let key ← $ᵗ RootOutput
-  sourceStopObserve setup env callbacks baseImpl kem attachedVerify primitives program post target context initialBlock nonce chain key
+  sourceStopObserve (completedBinding := completedBinding) (associatedData := associatedData) setup env callbacks baseImpl kem attachedVerify primitives program post target context initialBlock nonce chain key
 
 /-- The restricted stop mass `stopMass` of `PqxdhFirstBeaconRecordIntegrity` is at most the source-only restricted repetition mass: two ordered sealing positions at the selected sending chain, with the selected chain and ancestors still undisclosed at the end, in the history-extended original source post after the selected first Server builder. -/
 theorem stopGame_le (target : Target S (B + 1)) :
-    𝒟[stopGame setup env callbacks baseImpl kem attachedVerify primitives program post target] {true} ≤
-    𝒟[sourceStopGame setup env callbacks baseImpl kem attachedVerify primitives program post target] {true} := by
+    𝒟[stopGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program post target] {true} ≤
+    𝒟[sourceStopGame (completedBinding := completedBinding) (associatedData := associatedData) setup env callbacks baseImpl kem attachedVerify primitives program post target] {true} := by
   unfold stopGame sourceStopGame
   refine bind_le _ _ _ fun context => ?_
   refine bind_le _ _ _ fun initialBlock => ?_
@@ -616,10 +618,10 @@ theorem stopGame_le (target : Target S (B + 1)) :
   refine bind_le _ _ _ fun chain => ?_
   refine bind_le _ _ _ fun key => ?_
   unfold stopObserve sourceStopObserve
-  cases PqxdhInitialPreparedSourceInput.input env0 baseImpl kem attachedVerify primitives program post context
+  cases PqxdhInitialPreparedSourceInput.input (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program post context
       target.owner target.number target.ancestors target.disclosed with
   | inl _ => exact le_rfl
-  | inr input => exact stop_le _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+  | inr input => exact stop_le (completedBinding := completedBinding) (associatedData := associatedData) _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 /-- First Beacon record integrity with the restricted stop term moved to the source-only run: the HB-112 actual game with the forgery proxy post, minus its constant-`false` continuation, is at most the compiled CTX game of `PqxdhFirstBeaconRecordIntegrity`, plus the source-only restricted repetition mass `sourceStopGame`, plus the first-record target loss and the completed-branch root loss, each the advantage of a constructed reduction. This is still an intermediate reduction: `compiledGame` and `sourceStopGame` are not yet bounded by assumption or statistical terms. -/
 theorem first_beacon_source_le (post0 : PqxdhAuthenticatedRootExperiment.Post (baseSpec := baseSpec) program.Selection S (B + 1))
@@ -628,34 +630,34 @@ theorem first_beacon_source_le (post0 : PqxdhAuthenticatedRootExperiment.Post (b
     (adapter : HasAttachedVerificationAdapter attachedVerify primitives.verify)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation kem) (hmac : HmacSha512) (correct : SourceFullCorrect (env0).source hmac)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : Forgery) :
-    (𝒟[PqxdhInitialRootEventSecrecy.actual env0 baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0)
+    (𝒟[PqxdhInitialRootEventSecrecy.actual (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0)
         (.beacon b) 1#u64 [] []] {true}).toReal -
-      (𝒟[PqxdhInitialRootEventExperiment.actual env0 baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0)
-        (PqxdhFirstRecordTarget.rejectAll env0 program)] {true}).toReal ≤
-    (𝒟[compiledGame setup env callbacks baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0)
+      (𝒟[PqxdhInitialRootEventExperiment.actual (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0)
+        (PqxdhFirstRecordTarget.rejectAll (completedBinding := completedBinding) env0 program)] {true}).toReal ≤
+    (𝒟[compiledGame (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0)
       (firstBeacon b)] {true}).toReal +
-    (𝒟[sourceStopGame setup env callbacks baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0)
+    (𝒟[sourceStopGame (completedBinding := completedBinding) (associatedData := associatedData) setup env callbacks baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0)
       (firstBeacon b)] {true}).toReal +
-    PqxdhAdaptiveCoordinateSecrecy.targetLoss env0 baseImpl kem attachedVerify primitives program
+    PqxdhAdaptiveCoordinateSecrecy.targetLoss (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program
       (PqxdhFirstRecordTarget.unitPost program (forgeryPost env0 program post0)) (PqxdhFirstRecordTarget.unitTargets (firstBeacon b))
       (PqxdhFirstRecordTarget.certificate env0 baseImpl kem program (forgeryPost env0 program post0)
         (certificate env0 baseImpl kem program post0 c)) hmac fallback ordinaryFallback () +
-    PqxdhFirstRecordTarget.completedLoss env0 baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0)
+    PqxdhFirstRecordTarget.completedLoss (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0)
       hmac fallback ordinaryFallback := by
-  have integrity := PqxdhFirstBeaconRecordIntegrity.first_beacon_forgery_le setup env callbacks baseImpl kem attachedVerify primitives
+  have integrity := PqxdhFirstBeaconRecordIntegrity.first_beacon_forgery_le (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks baseImpl kem attachedVerify primitives
     program post0 b c compatible adapter functional hmac correct fallback ordinaryFallback
   have moved := ENNReal.toReal_mono (PqxdhFirstRecordTarget.true_ne_top _)
-    (stopGame_le setup env callbacks baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0) (firstBeacon b))
+    (stopGame_le (completedBinding := completedBinding) (associatedData := associatedData) setup env callbacks baseImpl kem attachedVerify primitives program (forgeryPost env0 program post0) (firstBeacon b))
   linarith
 
 /-- In every supported prepared context with a pending mode, every Beacon slot of the prepared front used by the stop games, other than slot zero (the freshly generated Beacon), holds an existing KEM handle. With `build_only`, `existing_unmarked` and the post-level facts listed in the module documentation (not formalized here), only slot zero can ever be finished on the selected message, so two Beacons installing the selected chain through the selected message is excluded by handle allocation, without an environment premise. -/
 theorem front_only (target : Target S (B + 1))
-    (context : PqxdhInitialLegalObserver.Context env0 kem attachedVerify primitives program post)
+    (context : PqxdhInitialLegalObserver.Context (associatedData := associatedData) (completedBinding := completedBinding) env0 kem attachedVerify primitives program post)
     (supported : context ∈ support (PqxdhCorrelatedExtractFamily.prepare baseImpl kem
-      (PqxdhAuthenticatedRootExperiment.protocol env0 kem attachedVerify primitives program post)))
+      (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env0 kem attachedVerify primitives program post)))
     (input : PqxdhInitialPreparedSourceInput.Input (M := M) (P := P) (I := I) (K := K) (X := X) (Response := Response) (A := A)
       (S := S) (B := B) (setup := setup))
-    (prepared : PqxdhInitialPreparedSourceInput.input env0 baseImpl kem attachedVerify primitives program post context
+    (prepared : PqxdhInitialPreparedSourceInput.input (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program post context
       target.owner target.number target.ancestors target.disclosed = .inr input) :
     OnlyFirst (fun position => (input.before.roles.1.2 position).beacon.phase) := by
   unfold PqxdhInitialPreparedSourceInput.input at prepared
@@ -664,7 +666,7 @@ theorem front_only (target : Target S (B + 1))
   | pending result ephemeral =>
     simp only [pending, Sum.inr.injEq] at prepared
     subst prepared
-    have kept := prepare_only env0 baseImpl kem attachedVerify primitives program post context supported result ephemeral pending
+    have kept := prepare_only (completedBinding := completedBinding) (associatedData := associatedData) env0 baseImpl kem attachedVerify primitives program post context supported result ephemeral pending
     intro position nonzero
     exact map_retains _ _ (kept position nonzero)
 

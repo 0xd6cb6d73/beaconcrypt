@@ -4,6 +4,7 @@ import BeaconcryptCore.Computational.RegistrationNativePlatformExtractedSdkIniti
 import BeaconcryptCore.Refinement.AdapterServerConstructorRetained
 import BeaconcryptCore.Refinement.AdapterServerConstructorKeyFrame
 import BeaconcryptCore.Refinement.AdapterServerConstructorMaterial
+import BeaconcryptCore.Refinement.AdapterServerConstructorGeneration
 open CoreModels Aeneas OracleComp OracleSpec
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -39,31 +40,31 @@ local notation "edSample"   =>   PqxdhRecordLiftWorld.sampled (n:=n) (AdapterSer
 local notation "mlSample"   =>   PqxdhRecordLiftWorld.sampled (n:=n) (RegistrationNativeMldsa.generate mlSource)
 variable (ed : AdapterServerConstructorJoint.EdContract generator view setup.joint
   (PqxdhRecordLiftWorld.sampled (n:=n) (AdapterServerConstructorStartup.edCore ensureInit)))
-variable (ml : AdapterBeaconConstructorGeneration.MldsaContract generator view
+variable (ml : AdapterServerConstructorGeneration.MldsaContract generator view
   (PqxdhRecordLiftWorld.sampled (n:=n) (RegistrationNativeMldsa.generate mlSource)))
 include views objects ed ml
 
 variable (edGetter : ∀key,(crypto.edPublicBytes key).run=pure (.ok (view.edPublic key)))
 variable (mlGetter : ∀identity,(localOps.auth_MldsaIdentity_public_key identity).run=pure (.ok (view.mldsa identity).publicKey))
-variable (hashLeaf : ∀request,(children.executeHash request).run=RegistrationNativeServerPinRecompute.nativeHash request)
-include edGetter mlGetter hashLeaf
+include edGetter mlGetter
 
 variable {Platform : Type}
 
 noncomputable def sample (identityIndex : Nat) (identifier : U64) (rng : R) :=
   PFunctor.FreeM.attachSupp (game (n:=n) setup view identityIndex identifier generator rng)
 
-omit views objects ensureInit ed ml edGetter mlGetter hashLeaf in
+omit children views objects ensureInit ed ml edGetter mlGetter in
 theorem source (identityIndex : Nat) (identifier : U64) (rng : R) :
     Subtype.val <$>sample (n:=n) setup generator view identityIndex identifier rng=
       game (n:=n) setup view identityIndex identifier generator rng :=
   PFunctor.FreeM.map_attachSupp _
 
+omit children in
 theorem native (identityIndex : Nat) (identifier : U64) (rng : R) :
     (fun packet=>nativeView packet.val) <$>sample (n:=n) setup generator view identityIndex identifier rng=
       RegistrationNativeExperiment.start (n:=n) setup mlSource ensureInit identityIndex identifier := by
   have erased := congrArg (fun work =>nativeView <$>work) (source (n:=n) setup generator view identityIndex identifier rng)
-  have native := AdapterServerConstructorRunner.native setup generator view views objects ensureInit ed ml edGetter mlGetter hashLeaf identityIndex identifier rng
+  have native := AdapterServerConstructorRunner.native setup generator view views objects ensureInit ed ml edGetter mlGetter identityIndex identifier rng
   simpa only [Functor.map_map,Function.comp_def] using erased.trans native
 
 noncomputable def store (identityIndex : Nat) (identifier : U64) (rng : R) (previous : Platform)
@@ -76,7 +77,7 @@ noncomputable def store (identityIndex : Nat) (identifier : U64) (rng : R) (prev
   | none => exact PUnit.unit
   | some ready =>
       exact RegistrationNativePlatformExtractedSdkStartup.carrier setup generator view views objects ensureInit ed ml
-        edGetter mlGetter hashLeaf identityIndex identifier rng packet.val ready previous packet.property returned
+        edGetter mlGetter identityIndex identifier rng packet.val ready previous packet.property returned
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformExtractedSdkInitialized
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformExtractedSdkInitialized.source' depends on axioms: [propext,

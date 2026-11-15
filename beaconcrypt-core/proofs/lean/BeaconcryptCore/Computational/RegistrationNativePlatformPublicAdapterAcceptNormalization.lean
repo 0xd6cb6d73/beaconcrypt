@@ -73,7 +73,7 @@ theorem lookup (coins : QueryImpl unifSpec (StateT P ProbComp)) (generator : ran
 variable {I : Type} {base : OracleSpec I}
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
 variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 omit material platform ed original [PublicWrapperPlatform.Allocator] [PublicWrapperPlatform.LocalOperations] [PublicWrapperPlatform.ContainerOperations] containers in
 theorem hash (bytes : Pqxdh.Bytes) :
     Compatible (RegistrationNativePlatformPublicAdapterAuthentication.hash (n:=n) setup checks representation created bytes) :=by

@@ -50,7 +50,7 @@ private theorem authentication_query (setup : Setup base KemSK) (codec : Codec R
       exact RegistrationNativeMldsaCoinPrimitives.hash _ before
   | mldsa request | ed25519 request => trivial
 
-/-- All actual Init authentication outcomes pay at most eight source slots of64 uniform draws. -/
+/-- All actual Init authentication outcomes pay at most five source slots of 64 uniform draws, within the conservative 512-draw bill. -/
 theorem authentication (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (pin : session.ServerAuthenticationPin) (packet : registration.InitPacket) (before : PqxdhRecordLiftWorld.State n) :
@@ -59,9 +59,9 @@ theorem authentication (setup : Setup base KemSK) (codec : Codec Reader Response
   rw [← QueryImpl.simulateQ_compose]
   change ((simulateQ (RegistrationWorldAuthentication.implementation setup codec route verify)
     (RegistrationAuthenticationExecutor.begin pin packet)).run before).IsTotalQueryBound 512
-  exact simulated (RegistrationWorldAuthentication.implementation setup codec route verify) 64
+  exact (simulated (RegistrationWorldAuthentication.implementation setup codec route verify) 64
     (authentication_query setup codec route verify) (RegistrationAuthenticationExecutor.begin pin packet)
-      8 (RegistrationAuthenticationBounds.begin_bound pin packet) before
+      5 (RegistrationAuthenticationBounds.begin_bound pin packet) before).mono (by decide)
 
 private theorem agreement_query (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (seed : PqxdhJointIdentity.IdentitySeed)
@@ -127,7 +127,7 @@ private theorem world_agreement_query (setup : Setup base KemSK) (checks : Check
 
 /-- Actual source replay lookup and agreement run nine fuel steps, each with at most32 scalar draws plus the declared encapsulation cap. -/
 theorem agreement_bound (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (qEncap : Nat) (encapsulation : ∀ key, (simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl)
       (setup.kem.encaps key)).IsTotalQueryBound qEncap)
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit)

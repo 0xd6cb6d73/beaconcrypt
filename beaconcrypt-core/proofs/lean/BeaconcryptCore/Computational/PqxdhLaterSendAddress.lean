@@ -7,7 +7,10 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterSendAddress
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhOrderedChainHybrids
 open RawCtxCursorLineage RawCtxSelectiveChainGame RawCtxSelectedParentTable
 variable {AD PT CT : Type}
@@ -51,22 +54,22 @@ theorem sample_one_cursor (source : FixedHkdfSha512NoSaltSource) (writer : RawCt
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (depth : Nat) (start : Start) (pending : Pending)
     (supported : Sum.inr pending ∈ support
-      (PqxdhErasedParentSample.sampleOne source writer sender route decode depth start)) :
+      (PqxdhErasedParentSample.sampleOne (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth start)) :
     pending.2.1.1.1.2.2.depth = depth ∧
     PqxdhInitialBuilderContext.address pending.1.original = cursorAddress pending.2.1.1.1.2.2 ∧
     Lineage (PqxdhInitialSourceExperiment.root source zeroRoot (PqxdhInitialSampledParent.response start)
       start.1.selected) pending.2.1.1.1.2 := by
-  have actual := (PqxdhInitialPreparedParent.supported_pending source writer _ _ _ _ _ _ sender route decode _ _
+  have actual := (PqxdhInitialPreparedParent.supported_pending (associatedData := associatedData) (completedBinding := completedBinding) source writer _ _ _ _ _ _ sender route decode _ _
     depth _ pending.2 pending.1).mp supported
-  have native := PqxdhInitialSourcePreparedSecrecy.supported_source source writer start.1.selectedMessage
+  have native := PqxdhInitialSourcePreparedSecrecy.supported_source (associatedData := associatedData) (completedBinding := completedBinding) source writer start.1.selectedMessage
     zeroRoot (PqxdhInitialSampledParent.response start) start.1.other sender route decode start.1.index
     start.1.metadata { start.1.ready with root := zeroRoot } start.1.post start.1.before start.1.selected
     start.1.shared start.1.privateState start.1.cache depth ⟨pending, actual.1⟩
-  have cases := PqxdhInitialNativeCarried.carried_cases source writer _ sender route decode _ depth
+  have cases := PqxdhInitialNativeCarried.carried_cases (associatedData := associatedData) (completedBinding := completedBinding) source writer _ sender route decode _ depth
     (depth + 1) _ _ pending.2.1
     (PqxdhInitialSourceExperiment.initial_valid _ start.1.shared start.1.privateState start.1.cache depth).1.1
     pending.1 native
-  have invariant := PqxdhLaterCommonRisk.carried_invariants source writer _ sender route decode _ depth
+  have invariant := PqxdhLaterCommonRisk.carried_invariants (associatedData := associatedData) (completedBinding := completedBinding) source writer _ sender route decode _ depth
     (depth + 1) _ _ (PqxdhInitialSourceExperiment.initialState
       (PqxdhInitialSourceExperiment.root source zeroRoot (PqxdhInitialSampledParent.response start) start.1.selected)
       start.1.shared start.1.privateState start.1.cache)
@@ -81,20 +84,20 @@ theorem sample_one_table (source : FixedHkdfSha512NoSaltSource) (writer : RawCtx
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (depth : Nat) (start : Start) (pending : Pending)
     (supported : Sum.inr pending ∈ support
-      (PqxdhErasedParentSample.sampleOne source writer sender route decode depth start))
+      (PqxdhErasedParentSample.sampleOne (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth start))
     (parent output : FullOutput)
     (safe : RawCtxSelectedParentPrivatePatch.targetAddress (nextChain parent) ∉ pending.2.1.1.2 ++
       [PqxdhInitialBuilderContext.address pending.1.original]) :
     Extends pending.2.1.1.1.2.1
       (RawCtxRetainedFunctionalPath.table (PqxdhLaterPatchedOccurrence.patchedPrior source pending parent output)) ∧
     PqxdhLaterPatchedOccurrence.patchedPrior source pending parent output (cursorAddress pending.2.1.1.1.2.2) = parent := by
-  have cursor := sample_one_cursor source writer sender route decode depth start pending supported
+  have cursor := sample_one_cursor (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth start pending supported
   have separate : RawCtxSelectedParentPrivatePatch.targetAddress (nextChain parent) ≠
       PqxdhInitialBuilderContext.address pending.1.original :=
     fun same => safe (List.mem_append_right _ (List.mem_singleton.mpr same))
   constructor
   · intro request response found
-    have kept := PqxdhLaterRetainedPatch.sample_one_extends source writer sender route decode depth start pending
+    have kept := PqxdhLaterRetainedPatch.sample_one_extends (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth start pending
       supported parent output safe request response found
     simp only [RawCtxRetainedFunctionalPath.table, QueryCache.toFn_ofFn, PqxdhLaterPatchedOccurrence.patchedPrior,
       ← PqxdhInitialNativeParentChild.child_view source pending.2.1 _ parent output separate,
@@ -127,7 +130,7 @@ theorem marked_address (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
     (cr : Ratchet.Crypto RatchetChain RatchetMaterial AD PT CT)
     (depth : Nat) (start : Start) (pending : Pending)
     (supported : Sum.inr pending ∈ support
-      (PqxdhErasedParentSample.sampleOne source writer sender route decode depth start))
+      (PqxdhErasedParentSample.sampleOne (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth start))
     (parent output : FullOutput)
     (safe : RawCtxSelectedParentPrivatePatch.targetAddress (nextChain parent) ∉ pending.2.1.1.2 ++
       [PqxdhInitialBuilderContext.address pending.1.original])
@@ -147,8 +150,8 @@ theorem marked_address (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
   obtain ⟨initial, exactInitial, reachable⟩ := PqxdhRetainedSelectedOrigins.selected_path cr
     (PqxdhLaterPatchedOccurrence.patchedPrior source pending parent output) _ _ front origins receipts
     selected paths start.1.selected marked kernel found
-  have cursor := sample_one_cursor source writer sender route decode depth start pending supported
-  have table := sample_one_table source writer sender route decode depth start pending supported parent output safe
+  have cursor := sample_one_cursor (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth start pending supported
+  have table := sample_one_table (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth start pending supported parent output safe
   apply retained_address (PqxdhLaterPatchedOccurrence.patchedPrior source pending parent output) cr
     initial.send_chain initial.receive_chain ⟨kernel⟩ reachable pending.2.1.1.1.2 _ table.1 parent table.2
   · simpa only [cursor.1] using position
@@ -163,7 +166,7 @@ theorem completed_address (source : FixedHkdfSha512NoSaltSource) (writer : RawCt
     (cr : Ratchet.Crypto RatchetChain RatchetMaterial AD PT CT)
     (depth : Nat) (start : Start) (pending : Pending)
     (supported : Sum.inr pending ∈ support
-      (PqxdhErasedParentSample.sampleOne source writer sender route decode depth start))
+      (PqxdhErasedParentSample.sampleOne (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth start))
     (parent output : FullOutput)
     (safe : RawCtxSelectedParentPrivatePatch.targetAddress (nextChain parent) ∉ pending.2.1.1.2 ++
       [PqxdhInitialBuilderContext.address pending.1.original])
@@ -172,8 +175,8 @@ theorem completed_address (source : FixedHkdfSha512NoSaltSource) (writer : RawCt
     (completed : result ∈ support ((simulateQ
       (PqxdhInitialNativeRetained.retained source writer
         (PqxdhLaterPatchedOccurrence.patchedPrior source pending parent output) (sampleExternal source start))
-      (PqxdhInitialOriginContext.resume (PqxdhInitialSampledParent.marker source start) sender route decode pending.1
-        (PqxdhInitialParentBuilderContext.reply sender route decode pending.1.original parent))).run
+      (PqxdhInitialOriginContext.resume (completedBinding := completedBinding) (PqxdhInitialSampledParent.marker source start) sender route decode pending.1
+        (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode pending.1.original parent))).run
           (PqxdhInitialNativeRetained.project pending.2.1)))
     (marked : result.1.2.2.installed start.1.selected = some true)
     (kernel : PqxdhInitialPendingPost.KernelOf RatchetChain)
@@ -181,9 +184,9 @@ theorem completed_address (source : FixedHkdfSha512NoSaltSource) (writer : RawCt
     (position : kernel.control.send_sequence.val = depth + 1) :
     RawCtxKdfRequestTable.address (RawCtxChainSend.nativeRequest kernel.send_chain) =
       RawCtxSelectedParentPrivatePatch.targetAddress (nextChain parent) := by
-  obtain ⟨evidence, _, paths, selected⟩ := PqxdhLaterSelectedPaths.sample_one_selected source writer sender route decode
+  obtain ⟨evidence, _, paths, selected⟩ := PqxdhLaterSelectedPaths.sample_one_selected (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode
     cr depth start pending supported parent output safe result completed
-  exact marked_address source writer sender route decode cr depth start pending supported parent output safe
+  exact marked_address (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode cr depth start pending supported parent output safe
     result.1.2.1 result.1.2.2 evidence selected paths marked kernel found position
 
 
@@ -196,7 +199,7 @@ theorem material_address (source : FixedHkdfSha512NoSaltSource) (writer : RawCtx
     (cr : Ratchet.Crypto RatchetChain RatchetMaterial AD PT CT) (depth : Nat)
     (prior : ProbComp (PqxdhInitialSourceInitialSecrecy.Context extra M P I D K X Response A N S B))
     (context : MaterialContext)
-    (sampled : context ∈ support (PqxdhErasedParentMaterial.prepare source writer sender route decode depth prior))
+    (sampled : context ∈ support (PqxdhErasedParentMaterial.prepare (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth prior))
     (start : Start) (pending : Pending) (shape : context.1.1.1 = .inr (start, .inr pending))
     (safe : PqxdhLaterInputAlias.collision context = false) (output : FullOutput)
     (result : PqxdhInitialNativeCarried.Final M P I D K Bool Bool S B ×
@@ -205,8 +208,8 @@ theorem material_address (source : FixedHkdfSha512NoSaltSource) (writer : RawCtx
       (PqxdhInitialNativeRetained.retained source writer
         (PqxdhLaterPatchedOccurrence.patchedPrior source pending (RawCtxSelectedParentEntry.realize context.1.1.2 context.1.2) output)
         (sampleExternal source start))
-      (PqxdhInitialOriginContext.resume (PqxdhInitialSampledParent.marker source start) sender route decode pending.1
-        (PqxdhInitialParentBuilderContext.reply sender route decode pending.1.original
+      (PqxdhInitialOriginContext.resume (completedBinding := completedBinding) (PqxdhInitialSampledParent.marker source start) sender route decode pending.1
+        (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode pending.1.original
           (RawCtxSelectedParentEntry.realize context.1.1.2 context.1.2)))).run (PqxdhInitialNativeRetained.project pending.2.1)))
     (marked : result.1.2.2.installed start.1.selected = some true)
     (kernel : PqxdhInitialPendingPost.KernelOf RatchetChain)
@@ -227,7 +230,7 @@ theorem material_address (source : FixedHkdfSha512NoSaltSource) (writer : RawCtx
     · cases shape
     · simp only [PqxdhErasedParentSample.normalize, Sum.inr.injEq, Prod.mk.injEq] at shape
       rcases shape with ⟨rfl, rfl⟩
-      exact completed_address source writer sender route decode cr depth (input, block) reachedPending reached
+      exact completed_address (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode cr depth (input, block) reachedPending reached
         parent output (of_decide_eq_false safe) result completed marked kernel found position
 
 end BeaconcryptCore.Computational.PqxdhLaterSendAddress

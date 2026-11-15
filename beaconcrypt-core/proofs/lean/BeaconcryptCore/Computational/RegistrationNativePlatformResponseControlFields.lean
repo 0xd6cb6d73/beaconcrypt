@@ -30,6 +30,8 @@ local notation "presenceSource" => (fun keyId => RegistrationNativePlatformSecre
   (RegistrationNativePlatformEffectCompiler.effect (n := n) (Platform := PublicState Platform) (Sum.inr (PqxdhRecordLiftInterface.Capability.peerPresent keyId))))
 local notation "pinSource" => (fun current => RegistrationNativePlatformSecretWordBuild.liftEffects
   (RegistrationNativePlatformServerRestrictedService.pin (n := n) (Platform := Platform) current))
+local notation "adHashSource" => (fun pending => RegistrationNativePlatformSecretWordBuild.liftEffects
+  (RegistrationNativePlatformServerRestrictedService.adHash (n := n) (Platform := Platform) pending))
 
 omit primitive in
 private theorem pure_apply {S A : Type} {m : Type → Type} [Monad m] (value : A) (before : S) :
@@ -49,7 +51,9 @@ omit primitive in
 private theorem lookup_fields (control : pqxdh.ServerState) (current : session.ServerAuthenticationPin)
     (ready : ServerReady) (application : Slice U8) (lookup : peer.CompletionLookup)
     (begun : peer.begin_completion_lookup control current (RegistrationNativeSecretWordServerMaterial.token ready) application=.ok (.Ok lookup))
-    (occupied : Bool) (initial : registration.ServerInitialKdf) (resumed : lookup.resume occupied=.ok (.Ok initial)) :
+    (occupied : Bool) (pending : registration.ServerAdHash) (selected : lookup.resume occupied=.ok (.Ok pending))
+    (digest : Std.Array U8 64#usize) (initial : registration.ServerInitialKdf)
+    (resumed : pending.resume (.Some digest)=.ok (.Ok initial)) :
     initial.candidate.kem_ciphertext=ready.agreement.pending.kem_ciphertext ∧
     initial.candidate.server_identity_public_key=current.binding.identity_public_key := by
   obtain ⟨next,nextRun⟩ := BeaconcryptCore.PanicFreedom.server_next_key_id_ok control
@@ -60,10 +64,13 @@ private theorem lookup_fields (control : pqxdh.ServerState) (current : session.S
       (RegistrationNativeSecretWordServerMaterial.token ready) application allocated nextRun
     rw [looked] at begun
     cases begun
-    have initialized : registration.begin_server_completion control current (if occupied then .Occupied else .Available)
-        (RegistrationNativeSecretWordServerMaterial.token ready).agreement application = .ok (.Ok initial) :=
+    have prepared : registration.begin_server_completion control current (if occupied then .Occupied else .Available)
+        (RegistrationNativeSecretWordServerMaterial.token ready).agreement application = .ok (.Ok pending) :=
       (BeaconcryptCore.Refinement.PeerOwnership.completion_lookup_resume
-        (peer.CompletionLookup.mk control current (RegistrationNativeSecretWordServerMaterial.token ready) application allocated) occupied).symm.trans resumed
+        (peer.CompletionLookup.mk control current (RegistrationNativeSecretWordServerMaterial.token ready) application allocated) occupied).symm.trans selected
+    have initialized : BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission control current
+        (if occupied then .Occupied else .Available) (RegistrationNativeSecretWordServerMaterial.token ready).agreement application initial :=
+      ⟨pending, digest, prepared, resumed⟩
     exact ⟨RegistrationNativeResponseCipherCandidate.initial_ciphertext _ _ _ _ _ _ initialized,
       RegistrationNativeResponseCandidate.initial_identity _ _ _ _ _ _ initialized⟩
 
@@ -105,12 +112,35 @@ private theorem after_result (control : pqxdh.ServerState) (reference : Message)
             rw [fields.1,fields.2,encoding] at encoded
             exact encoded
 
+omit primitive in
+private theorem ad_hash_receipt (pending : registration.ServerAdHash)
+    (before after : PublicState Platform) (initial : registration.ServerInitialKdf)
+    (supported : (.ok (.Ok initial),after) ∈ support ((adHashSource pending).run before)) :
+    ∃ digest, pending.resume (.Some digest)=.ok (.Ok initial) := by
+  have possible := PqxdhDeploymentEnvironment.support_simulateQ_subset
+    (RegistrationNativePlatformSecretWordBuild.embed (n := n))
+    ((RegistrationNativePlatformServerRestrictedService.adHash pending).run before) supported
+  cases requested : pending.request with
+  | fail error | div =>
+      simp [RegistrationNativePlatformServerRestrictedService.adHash,RegistrationServerAdHash.runWith,requested] at possible
+  | ok request =>
+      simp only [RegistrationNativePlatformServerRestrictedService.adHash,RegistrationServerAdHash.runWith,
+        requested,bind_pure_comp,RegistrationNativePlatformEffectCompiler.effect] at possible
+      change (.ok (.Ok initial),after) ∈ support (do
+        let digest ← ((RegistrationNativePlatformEffectCompiler.Spec n).query
+          (.inl (.inr (.hash (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request)))) : OracleComp (RegistrationNativePlatformEffectCompiler.Spec n) _)
+        pure (pending.resume (.Some (RegistrationAuthenticationShared.digestArray digest)),before)) at possible
+      rw [mem_support_bind_iff] at possible
+      obtain ⟨digest,_called,returned⟩ := possible
+      rw [mem_support_pure_iff] at returned
+      exact ⟨RegistrationAuthenticationShared.digestArray digest,(congrArg Prod.fst returned).symm⟩
+
 private theorem after_pin (control : pqxdh.ServerState) (ready : ServerReady) (application : Slice U8)
     (current : RustM (core.option.Option session.ServerAuthenticationPin)) (identity : Std.Array U8 32#usize)
     (pinFields : ∀ pin, current=.ok (.Some pin) → pin.binding.identity_public_key=identity)
     (before after : ServerState) (previous next : PublicState Platform) (keyId : U64) (bytes : alloc.vec.Vec U8)
     (supported : ((.ok (some (keyId,bytes)),after),next) ∈ support
-      (((afterPin reserveSource presenceSource serviceSource control ready application current).run before).run previous)) :
+      (((afterPin adHashSource reserveSource presenceSource serviceSource control ready application current).run before).run previous)) :
     Fields ready.agreement.pending.kem_ciphertext identity bytes := by
   cases current with
   | fail error | div => simp [afterPin,StateT.run,pure_apply] at supported
@@ -132,29 +162,41 @@ private theorem after_pin (control : pqxdh.ServerState) (ready : ServerReady) (a
             split at supported
             · rw [bind_apply,mem_support_bind_iff] at supported
               obtain ⟨occupied,_asked,continued⟩ := supported
-              apply after_result source view failure allocation erased helper sign reservePackets reservePeer control ready.reference _
-                ready.agreement.pending.kem_ciphertext identity ?_ before after occupied.2 next keyId bytes continued
-              intro admitted initialEq
-              cases resumed : lookup.resume occupied.1 with
-              | fail error =>
-                  rw [resumed] at initialEq
-                  change (RustM.fail error : RustM (core.result.Result RegistrationBoundKeySchedule.PublicInitial pqxdh.ServerState)) = .ok (.Ok admitted) at initialEq
-                  cases initialEq
-              | div =>
-                  rw [resumed] at initialEq
-                  change (RustM.div : RustM (core.result.Result RegistrationBoundKeySchedule.PublicInitial pqxdh.ServerState)) = .ok (.Ok admitted) at initialEq
-                  cases initialEq
-              | ok selected => cases selected with
-                | Err previousControl =>
-                    rw [resumed] at initialEq
-                    change (RustM.ok (.Err previousControl) : RustM (core.result.Result RegistrationBoundKeySchedule.PublicInitial pqxdh.ServerState)) = .ok (.Ok admitted) at initialEq
-                    cases initialEq
-                | Ok initial =>
-                  rw [resumed] at initialEq
-                  change (RustM.ok (.Ok (RegistrationBoundKeySchedule.publicInitial initial)) : RustM (core.result.Result RegistrationBoundKeySchedule.PublicInitial pqxdh.ServerState)) = .ok (.Ok admitted) at initialEq
-                  cases initialEq
-                  have fields := lookup_fields control pin ready application lookup begun occupied.1 initial resumed
-                  exact ⟨fields.1,fields.2.trans pinEq⟩
+              cases selected : lookup.resume occupied.1 with
+              | fail error | div => simp [afterOccupancy,selected,pure_apply] at continued
+              | ok choice => cases choice with
+                | Err previousControl => simp [afterOccupancy,selected,pure_apply] at continued
+                | Ok pending =>
+                    simp only [afterOccupancy,selected,bind_apply,StateT.lift,bind_assoc,pure_apply,pure_bind] at continued
+                    rw [mem_support_bind_iff] at continued
+                    obtain ⟨hashed,hashSupport,recordSupport⟩ := continued
+                    apply after_result source view failure allocation erased helper sign reservePackets reservePeer control ready.reference _
+                      ready.agreement.pending.kem_ciphertext identity ?_ before after hashed.2 next keyId bytes recordSupport
+                    intro admitted initialEq
+                    cases replied : hashed.1 with
+                    | fail error =>
+                        rw [replied] at initialEq
+                        change (.fail error : RustM (core.result.Result RegistrationBoundKeySchedule.PublicInitial pqxdh.ServerState)) = .ok (.Ok admitted) at initialEq
+                        cases initialEq
+                    | div =>
+                        rw [replied] at initialEq
+                        change (RustM.div : RustM (core.result.Result RegistrationBoundKeySchedule.PublicInitial pqxdh.ServerState)) = .ok (.Ok admitted) at initialEq
+                        cases initialEq
+                    | ok reply => cases reply with
+                      | Err previousControl =>
+                          rw [replied] at initialEq
+                          change (.ok (.Err previousControl) : RustM (core.result.Result RegistrationBoundKeySchedule.PublicInitial pqxdh.ServerState)) = .ok (.Ok admitted) at initialEq
+                          cases initialEq
+                      | Ok initial =>
+                          have support : (.ok (.Ok initial),hashed.2) ∈ support ((adHashSource pending).run occupied.2) := by
+                            have packed : hashed = (.ok (.Ok initial), hashed.2) := Prod.ext replied rfl
+                            exact packed ▸ hashSupport
+                          obtain ⟨digest,resumed⟩ := ad_hash_receipt pending occupied.2 hashed.2 initial support
+                          rw [replied] at initialEq
+                          change (.ok (.Ok (RegistrationBoundKeySchedule.publicInitial initial)) : RustM (core.result.Result RegistrationBoundKeySchedule.PublicInitial pqxdh.ServerState)) = .ok (.Ok admitted) at initialEq
+                          cases initialEq
+                          have fields := lookup_fields control pin ready application lookup begun occupied.1 pending selected digest initial resumed
+                          exact ⟨fields.1,fields.2.trans pinEq⟩
             · simp [pure_apply] at supported
 
 
@@ -167,21 +209,19 @@ private theorem pin_fields (current : session.ServerAuthenticationPin)
   have possible := PqxdhDeploymentEnvironment.support_simulateQ_subset
     (RegistrationNativePlatformSecretWordBuild.embed (n := n))
     ((RegistrationNativePlatformServerRestrictedService.pin current).run before) supported
-  change (returned,after) ∈ support (do
-    let digest ← ((RegistrationNativePlatformEffectCompiler.Spec n).query (.inl (.inr (.hash (PqxdhRefinement.absBytes current.public_key)))) : OracleComp (RegistrationNativePlatformEffectCompiler.Spec n) _)
-    pure (.ok (.Some ⟨current.binding,current.public_key,RegistrationAuthenticationShared.digestArray digest⟩),before)) at possible
-  rw [mem_support_bind_iff] at possible
-  obtain ⟨digest,_drawn,same⟩ := possible
-  rw [mem_support_pure_iff] at same
-  have selected := equal.symm.trans (congrArg Prod.fst same)
+  change (returned,after) ∈ support
+    (pure (.ok (.Some current),before) : OracleComp (RegistrationNativePlatformEffectCompiler.Spec n) _) at possible
+  rw [mem_support_pure_iff] at possible
+  have selected := equal.symm.trans (congrArg Prod.fst possible)
   have pinSame := Option.some.inj (RustM.ok.inj selected)
   rw [pinSame]
+
 
 /-- Successful current source completion encodes the same consumed Ready ciphertext and the pre-call Server identity, through its actual stateful writer. -/
 theorem complete (ready : ServerReady) (application : Slice U8)
     (before after : ServerState) (previous next : PublicState Platform) (keyId : U64) (bytes : alloc.vec.Vec U8)
     (supported : ((.ok (some (keyId,bytes)),after),next) ∈ support
-      (((RegistrationNativePlatformSecretWordBuildControl.complete pinSource reserveSource presenceSource serviceSource ready application).run before).run previous)) :
+      (((RegistrationNativePlatformSecretWordBuildControl.complete adHashSource pinSource reserveSource presenceSource serviceSource ready application).run before).run previous)) :
     RegistrationNativeResponseCiphertext.EncodedFrom RegistrationNativePlatformConcreteSource.wire.encodeResponse
       ready.agreement.pending.kem_ciphertext (TranscriptAuthParts.absSlice bytes) ∧
     RegistrationNativeResponseIdentity.EncodedFrom RegistrationNativePlatformConcreteSource.wire.encodeResponse

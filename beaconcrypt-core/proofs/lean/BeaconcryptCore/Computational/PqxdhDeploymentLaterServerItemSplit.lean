@@ -15,6 +15,7 @@ R1 caveat (LQ-F upstream design-v2, section 5): the step is valid only because t
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
+set_option warningAsError true
 set_option maxRecDepth 100000
 namespace BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemSplit
 open PqxdhKemIndCca PqxdhInitializerSecrecy PqxdhServerAuthExperiment PqxdhJointIdentity
@@ -232,7 +233,7 @@ theorem client_boundL (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
 theorem commandsL_cut (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity)
     (work : OracleComp (PqxdhDeploymentLaterServerSource.Spec KemSK) X) (n : ℕ)
-    (bounded : work.IsQueryBoundP (TableKindL (KemSK := KemSK)) n) (index : Nat) (owners : List EncodedEntry)
+    (bounded : work.IsQueryBoundP (TableKindL (KemSK := KemSK)) n) (index : Nat) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))
     (log : Log) (state : NativeState KemSK) :
     ∀ reached ∈ support (PqxdhDeploymentLaterServerCommands.run setup codec checks identityIndex publicIdentity
         (PqxdhDeploymentLaterServerCommands.scan work index) owners log state), ∀ raw next,
@@ -276,7 +277,7 @@ variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response A X R : T
 /-- The completion of a rejected logged raw accept is a completed logged opaque cut. -/
 theorem rejectRunL_complete (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)
-    (next : Option Nat → OracleComp (PqxdhDeploymentLaterServerSource.Spec KemSK) X) (owners : List EncodedEntry)
+    (next : Option Nat → OracleComp (PqxdhDeploymentLaterServerSource.Spec KemSK) X) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))
     (log : Log) (state : NativeState KemSK)
     (collected : Option (PqxdhServerRootPreparation.Inputs Reader PqxdhJointGapDh.ScalarBytes
       PqxdhBeaconPhase2Preparation.Word32) × List Pqxdh.Bytes) (logged : Option PqxdhJointGapDh.ScalarBytes)
@@ -300,7 +301,7 @@ def FitsCutL (n : ℕ) : OpaqueCut Reader KemSK X R → Prop
 theorem opaqueScanL_fits (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R)
     (work : OracleComp (PqxdhDeploymentLaterServerSource.Spec KemSK) X) (n : ℕ)
-    (bounded : work.IsQueryBoundP (TableKindL (KemSK := KemSK)) n) (index : Nat) (owners : List EncodedEntry)
+    (bounded : work.IsQueryBoundP (TableKindL (KemSK := KemSK)) n) (index : Nat) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))
     (log : Log) (state : NativeState KemSK) (empty : keyCount state = 0) :
     ∀ cut ∈ support (opaqueScan (Reader := Reader) setup codec checks identityIndex publicIdentity observe work index
       owners log state), FitsCutL n cut := by
@@ -363,7 +364,7 @@ theorem sourcePreOpaqueL_fits (setup : Setup baseSpec KemSK) (codec : Codec Read
     · simp only [FitsL]
     · simp only [FitsL]
       have scanReached := support_option _ _ _ cut result.2 (by rw [← cutCase]; exact resultReached)
-      exact opaqueScanL_fits setup codec checks _ _ _ work n bounded index [] [] _ (initial_keys created) cut
+      exact opaqueScanL_fits setup codec checks _ _ _ work n bounded index ([], fun _ => none) [] _ (initial_keys created) cut
         scanReached
 
 /-- Every outcome of G1's prefix for the logged KEM-ideal branch has a fitting context, and its table cache is the cache of that context. -/
@@ -458,7 +459,7 @@ theorem skelResumeL_reads (setup : Setup baseSpec KemSK) (codec : Codec Reader R
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)
     (value : PqxdhServerRootPreparation.Verified Reader)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)
-    (consumed : List Pqxdh.Bytes) (game : GameState KemSK) (owners : List EncodedEntry) (log : Log)
+    (consumed : List Pqxdh.Bytes) (game : GameState KemSK) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log)
     (next : Option Nat → OracleComp (PqxdhDeploymentLaterServerSource.Spec KemSK) X) (selected : Nat)
     (ciphertext : MlKem768Ciphertext) (services : Services V Response) (m : ℕ)
     (bounded : ∀ reply, (next reply).IsQueryBoundP (TableKindL (KemSK := KemSK)) m) :
@@ -524,7 +525,7 @@ theorem sharedClientL_direct (setup : Setup baseSpec KemSK) (codec : Codec Reade
     · exact query_one _ _
   · rcases query with coin | (point | point)
     · exact query_free _ _ (by simp [PqxdhExtractRomHiddenSuffix.IsDirect])
-    · simp only [compileHidden, QueryImpl.add_apply_inr, QueryImpl.add_apply_inl, isQueryBoundP_map_iff]
+    · simp only [compileHidden, isQueryBoundP_map_iff]
       exact query_free _ _ (by simp [PqxdhExtractRomHiddenSuffix.IsDirect])
     · simp [directRead?] at direct
 

@@ -17,7 +17,7 @@ abbrev EnvQuery := { query : Command // IsEnvironment query }
 abbrev EnvSpec : OracleSpec EnvQuery := fun query => RegistrationNativeInterface.CommandSpec query.val
 
 structure Environment (n : Nat) (E : Type) where
-  start : ProbComp (Option (PqxdhLiveServerConstruction.Created Unit × E))
+  start : ProbComp (Option (PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize) × E))
   step : QueryImpl EnvSpec (StateT E (OracleComp (EnvEffects n)))
 
 inductive Transport where

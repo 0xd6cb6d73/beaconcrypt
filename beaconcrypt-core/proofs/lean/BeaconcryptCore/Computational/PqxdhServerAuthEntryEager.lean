@@ -102,6 +102,10 @@ theorem programmedFinish_sample (setup : Setup baseSpec KemSK) (codec : Codec Re
   dsimp only [StateT.run]
   cases phase : state.1.beacon.beacon.phase <;> simp only
   all_goals try exact (OracleComp.EvalDistEq.bind_const _ _).symm
+  split
+  case h_2 => exact (OracleComp.EvalDistEq.bind_const _ _).symm
+  refine EvalDistEq.trans ?_ (OracleComp.EvalDistEq.bind_bind_swap _ _ _)
+  refine EvalDistEq.bind_right _ fun hashed => ?_
   refine EvalDistEq.trans ?_ (OracleComp.EvalDistEq.bind_bind_swap _ _ _)
   refine EvalDistEq.bind_right _ fun prepared => ?_
   cases prepared with

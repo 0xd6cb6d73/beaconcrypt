@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Refinement.RegistrationPreflightSix
+import BeaconcryptCore.Refinement.RegistrationPreflightFour
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM
@@ -153,6 +154,42 @@ theorem complete_total (input start : Slice U8) (a0 a1 a2 a3 a4 a5 : U8) :
       BeaconcryptCore.Refinement.Transport.complete_message_size_admitted_exact,
       bind_tc_ok, Slice.len_val, admitted, decide_false, Bool.false_eq_true, ↓reduceIte]
 
+set_option backward.isDefEq.respectTransparency false in
+set_option maxRecDepth 4096 in
+theorem complete_total_four (input start : Slice U8) (a0 a1 a2 a3 : U8) :
+    ∃ result, extraction_preflight_four input start (RegistrationPreflightFour.kinds a0 a1 a2 a3) = .ok result := by
+  by_cases admitted : input.length ≤ 33554432
+  · have cap : beaconcrypt_core.transport.complete_message_size_admitted input.len = .ok true := by
+      rw [BeaconcryptCore.Refinement.Transport.complete_message_size_admitted_exact]
+      simp only [Slice.len_val, admitted, decide_true]
+    obtain ⟨r0, run0⟩ := strip_total input start
+    cases r0 with
+    | none => exact ⟨.None, by simp [extraction_preflight_four, core.slice.Slice.len, rust_primitives.slice.slice_length, cap, bind_tc_ok, core.option.Option.Insts.CoreOpsTry_traitTry.branch, core.option.Option.Insts.CoreOpsTry_traitTryTOptionInfallible.branch, run0, core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual]⟩
+    | some tail0 =>
+      obtain ⟨r1, run1⟩ := field_total tail0 a0
+      cases r1 with
+      | none => exact ⟨.None, by simp [extraction_preflight_four, core.slice.Slice.len, rust_primitives.slice.slice_length, cap, bind_tc_ok, core.option.Option.Insts.CoreOpsTry_traitTry.branch, core.option.Option.Insts.CoreOpsTry_traitTryTOptionInfallible.branch, run0, run1, RegistrationPreflightFour.kinds, Array.make, Array.index_usize, core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual]⟩
+      | some tail1 =>
+        obtain ⟨r2, run2⟩ := field_total tail1 a1
+        cases r2 with
+        | none => exact ⟨.None, by simp [extraction_preflight_four, core.slice.Slice.len, rust_primitives.slice.slice_length, cap, bind_tc_ok, core.option.Option.Insts.CoreOpsTry_traitTry.branch, core.option.Option.Insts.CoreOpsTry_traitTryTOptionInfallible.branch, run0, run1, run2, RegistrationPreflightFour.kinds, Array.make, Array.index_usize, core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual]⟩
+        | some tail2 =>
+          obtain ⟨r3, run3⟩ := field_total tail2 a2
+          cases r3 with
+          | none => exact ⟨.None, by simp [extraction_preflight_four, core.slice.Slice.len, rust_primitives.slice.slice_length, cap, bind_tc_ok, core.option.Option.Insts.CoreOpsTry_traitTry.branch, core.option.Option.Insts.CoreOpsTry_traitTryTOptionInfallible.branch, run0, run1, run2, run3, RegistrationPreflightFour.kinds, Array.make, Array.index_usize, core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual]⟩
+          | some tail3 =>
+            obtain ⟨r4, run4⟩ := field_total tail3 a3
+            cases r4 with
+            | none => exact ⟨.None, by simp [extraction_preflight_four, core.slice.Slice.len, rust_primitives.slice.slice_length, cap, bind_tc_ok, core.option.Option.Insts.CoreOpsTry_traitTry.branch, core.option.Option.Insts.CoreOpsTry_traitTryTOptionInfallible.branch, run0, run1, run2, run3, run4, RegistrationPreflightFour.kinds, Array.make, Array.index_usize, core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual]⟩
+            | some tail4 =>
+              refine ⟨if tail4.len = 0#usize then .Some () else .None, ?_⟩
+              simp [extraction_preflight_four, core.slice.Slice.len, rust_primitives.slice.slice_length, cap, bind_tc_ok, core.option.Option.Insts.CoreOpsTry_traitTry.branch, core.option.Option.Insts.CoreOpsTry_traitTryTOptionInfallible.branch, run0, run1, run2, run3, run4, RegistrationPreflightFour.kinds, Array.make, Array.index_usize, core.slice.Slice.is_empty, RegistrationCodecStandardSlices.thenSomeUnit]
+              split_ifs <;> rfl
+  · refine ⟨.None, ?_⟩
+    simp only [extraction_preflight_four, core.slice.Slice.len, rust_primitives.slice.slice_length,
+      BeaconcryptCore.Refinement.Transport.complete_message_size_admitted_exact,
+      bind_tc_ok, Slice.len_val, admitted, decide_false, Bool.false_eq_true, ↓reduceIte]
+
 end BeaconcryptCore.Refinement.RegistrationPreflightTotal
 
 /-- info: 'BeaconcryptCore.Refinement.RegistrationPreflightTotal.unpack' depends on axioms: [propext,
@@ -206,3 +243,9 @@ end BeaconcryptCore.Refinement.RegistrationPreflightTotal
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Refinement.RegistrationPreflightTotal.complete_total
+
+/-- info: 'BeaconcryptCore.Refinement.RegistrationPreflightTotal.complete_total_four' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.RegistrationPreflightTotal.complete_total_four

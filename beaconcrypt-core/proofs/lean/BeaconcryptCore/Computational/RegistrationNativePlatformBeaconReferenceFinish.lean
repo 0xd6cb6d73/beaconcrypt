@@ -53,7 +53,7 @@ noncomputable def finish (setup : Setup base KemSK) (wire : RegistrationNativeWi
 
 private theorem effects_actual (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     RegistrationNativeExperiment.trusted (n := n) setup checks representation created mlSource ∘ₛ
       RegistrationBeaconReferenceNativeRecord.environment =
       RegistrationBeaconReferenceNativeEffects.native setup checks representation created := by
@@ -63,7 +63,7 @@ private theorem effects_actual (setup : Setup base KemSK) (checks : Checks)
 
 private theorem authentication_actual (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     RegistrationNativeExperiment.trusted (n := n) setup checks representation created mlSource ∘ₛ
       (RegistrationBeaconReferenceNativeRecord.environment ∘ₛ
         RegistrationAuthenticationCompiler.callbacks setup.source.crypto mlSource.verify) =
@@ -75,14 +75,14 @@ private theorem authentication_actual (setup : Setup base KemSK) (checks : Check
 /-- The complete scalar-free finishing controller executes the actual incoming verifier, native root phase and consumed-kernel completion on the same World. Coherence and the private source scalar identify the retained native capability. -/
 theorem finish_source (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential mlSource)
     (owner : Owner mlSource) (packet : Option registration.ResponsePacket)
     (env : EnvState RegistrationServerRoleBackend.State) (before : State n KemSK mlSource)
     (sameScalar : owner.prekeyScalar = scalar)
     (coherent : ∀ pending oneTime, owner.phase = .initSent pending oneTime →
       pending.control.expected_server_binding = pending.binding.server_pin.binding)
-    (erased : Std.Array U8 357#usize) :
+    (erased : Std.Array U8 227#usize) :
     RegistrationBeaconReferenceNativeCompletion.drop <$>
       (simulateQ (implementation setup checks wire representation created scalar credential)
         (((finish setup wire mlSource packet :
@@ -126,22 +126,22 @@ theorem finish_source (setup : Setup base KemSK) (checks : Checks) (wire : Regis
                 exact RegistrationNativePlatformBeaconContinuation.abort_owner_source setup checks wire representation created scalar credential
                   owner { owner with phase := .aborted aborted } env _ (before.1, (before.2.1, afterNative))
             | Ok accepted =>
-                have retained : accepted.pending = pending := by
+                have retained : RegistrationBeaconResponseMetadata.Retained pending accepted := by
                   cases packet with
                   | none =>
-                      apply RegistrationBeaconResponseMetadata.simulated_pending
+                      apply RegistrationBeaconResponseMetadata.simulated_metadata
                         (RegistrationBeaconReferenceNativeEffects.native setup checks representation created ∘ₛ
                           RegistrationAuthenticationCompiler.callbacks setup.source.crypto mlSource.verify)
                         pending .None accepted before.2.2 afterNative
                       simpa only [QueryImpl.simulateQ_compose] using supported
                   | some value =>
-                      apply RegistrationBeaconResponseMetadata.simulated_pending
+                      apply RegistrationBeaconResponseMetadata.simulated_metadata
                         (RegistrationBeaconReferenceNativeEffects.native setup checks representation created ∘ₛ
                           RegistrationAuthenticationCompiler.callbacks setup.source.crypto mlSource.verify)
                         pending (.Some value) accepted before.2.2 afterNative
                       simpa only [QueryImpl.simulateQ_compose] using supported
-                have correct : accepted.pending.control.expected_server_binding = accepted.pending.binding.server_pin.binding := by
-                  rw [retained]
+                have correct : accepted.control.expected_server_binding = accepted.binding.server_pin.binding := by
+                  rw [retained.1, retained.2.1]
                   exact coherent pending oneTime phase
                 have actual := RegistrationNativePlatformBeaconPhase.phase_source setup checks wire representation created scalar credential
                   owner { owner with phase := .aborted aborted } oneTime env accepted correct erased
@@ -157,14 +157,14 @@ theorem finish_platform {m : Type → Type} [Monad m] [LawfulMonad m]
     (coins : QueryImpl unifSpec m)
     (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential mlSource)
     (owner : Owner mlSource) (packet : Option registration.ResponsePacket)
     (env : EnvState RegistrationServerRoleBackend.State) (before : State n KemSK mlSource)
     (sameScalar : owner.prekeyScalar = scalar)
     (coherent : ∀ pending oneTime, owner.phase = .initSent pending oneTime →
       pending.control.expected_server_binding = pending.binding.server_pin.binding)
-    (erased : Std.Array U8 357#usize) :
+    (erased : Std.Array U8 227#usize) :
     RegistrationBeaconReferenceNativeCompletion.drop <$>
       simulateQ coins ((simulateQ (implementation setup checks wire representation created scalar credential)
         (((finish setup wire mlSource packet).run (eraseOwner owner)).run env)).run before) =

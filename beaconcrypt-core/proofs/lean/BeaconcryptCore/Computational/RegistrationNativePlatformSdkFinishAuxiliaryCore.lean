@@ -103,6 +103,8 @@ private theorem record_allowed (setup :PqxdhServerAuthExperiment.Setup base KemS
     (query :RegistrationRecordPrimitives.Request) :
     AllQueriesSatisfy (RegistrationNativeRecordJournal.core (n:=n) (KemSK:=KemSK) setup wire query) (Allowed (n:=n) (KemSK:=KemSK)) :=by
   cases query with
+  | adHash request=>
+    exact allQueriesSatisfy_bind ((allQueriesSatisfy_query_iff _ _).mpr trivial) (fun _=>allQueriesSatisfy_pure _ _)
   | hash request=>
     exact allQueriesSatisfy_bind ((allQueriesSatisfy_query_iff _ _).mpr trivial) (fun _=>allQueriesSatisfy_pure _ _)
   | _=>exact coins_allowed _

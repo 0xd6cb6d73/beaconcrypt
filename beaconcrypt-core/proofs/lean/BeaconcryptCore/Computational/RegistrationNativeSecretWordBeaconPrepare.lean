@@ -10,6 +10,7 @@ namespace BeaconcryptCore.Computational.RegistrationNativeSecretWordBeaconPrepar
 open PqxdhBeaconPhase2Preparation (Bytes)
 open RegistrationNativeSecretWordBeaconCollect (Spec Input collect realize)
 variable {I D K X Response : Type}
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 
 structure Prepared (Response : Type) where
   collected : Input Response
@@ -23,13 +24,13 @@ noncomputable def prepare (control : beaconcrypt_core.pqxdh.BeaconInitSent)
     (identity : I) (oneTime : D) (kem : K) (raw : Bytes) : OracleComp (Spec I D K X Response) (Option (Prepared Response)) := do
   let collected ← collect identity oneTime kem raw
   pure (collected.bind fun value =>
-    (PqxdhPhase2DhMetadata.admitted control value.plain).map fun metadata => ⟨value, metadata⟩)
+    (PqxdhPhase2DhMetadata.admitted (completedBinding := completedBinding) control value.plain).map fun metadata => ⟨value, metadata⟩)
 
 /-- The actual entire optional preparation restores from the opaque-word program without altering metadata or any reached primitive effect. -/
 theorem prepare_realization (candidate : PqxdhKemIndCca.MlKemSharedSecret)
     (control : beaconcrypt_core.pqxdh.BeaconInitSent) (identity : I) (oneTime : D) (kem : K) (raw : Bytes) :
-    simulateQ (realize candidate) (PqxdhPhase2DhMetadata.prepare (X := X) (Response := Response) control identity oneTime kem raw) =
-      Option.map (eval candidate) <$> prepare control identity oneTime kem raw := by
+    simulateQ (realize candidate) (PqxdhPhase2DhMetadata.prepare (completedBinding := completedBinding) (X := X) (Response := Response) control identity oneTime kem raw) =
+      Option.map (eval candidate) <$> prepare (completedBinding := completedBinding) control identity oneTime kem raw := by
   simp only [PqxdhPhase2DhMetadata.prepare, prepare, simulateQ_bind,
     RegistrationNativeSecretWordBeaconCollect.collect_realization, bind_map_left, map_bind]
   apply bind_congr
@@ -46,8 +47,8 @@ theorem prepare_program {m : Type → Type} [Monad m] [LawfulMonad m]
     (implementation : QueryImpl (Spec I D K X Response) m) (candidate : PqxdhKemIndCca.MlKemSharedSecret)
     (control : beaconcrypt_core.pqxdh.BeaconInitSent) (identity : I) (oneTime : D) (kem : K) (raw : Bytes) :
     simulateQ (implementation ∘ₛ realize candidate)
-      (PqxdhPhase2DhMetadata.prepare (X := X) (Response := Response) control identity oneTime kem raw) =
-      Option.map (eval candidate) <$> simulateQ implementation (prepare control identity oneTime kem raw) := by
+      (PqxdhPhase2DhMetadata.prepare (completedBinding := completedBinding) (X := X) (Response := Response) control identity oneTime kem raw) =
+      Option.map (eval candidate) <$> simulateQ implementation (prepare (completedBinding := completedBinding) control identity oneTime kem raw) := by
   rw [QueryImpl.simulateQ_compose, prepare_realization, simulateQ_map]
 
 end BeaconcryptCore.Computational.RegistrationNativeSecretWordBeaconPrepare

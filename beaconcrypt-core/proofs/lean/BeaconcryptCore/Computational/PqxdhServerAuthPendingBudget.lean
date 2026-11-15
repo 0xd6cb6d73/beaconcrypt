@@ -113,12 +113,24 @@ theorem build_pending (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
       subst supported
       exact ⟨rfl, by rw [← hp, Function.update_eq_self]⟩
   | some token =>
-      simp only [hp, StateT.run_bind, mem_support_bind_iff] at supported
-      obtain ⟨tail, lifted, supported⟩ := supported
-      obtain ⟨_, same⟩ := liftCoins_mem _ _ _ lifted
-      simp only [same, StateT.run_set, StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
-      obtain ⟨_, rfl, rfl⟩ := supported
-      exact ⟨rfl, rfl⟩
+      simp only [hp] at supported
+      cases pre : PqxdhServerRegistrationPublication.prehash state.server token.pending payload with
+      | none =>
+          simp only [pre, StateT.run_bind, StateT.run_set, StateT.run_pure, pure_bind, support_pure,
+            Set.mem_singleton_iff] at supported
+          subst supported
+          exact ⟨rfl, rfl⟩
+      | some candidate =>
+          simp only [pre, StateT.run_bind, mem_support_bind_iff] at supported
+          obtain ⟨hashed, hashRun, supported⟩ := supported
+          obtain ⟨cache, hashedEq⟩ := hashOracle_step _ _ _ hashRun
+          simp only [StateT.run_get, support_pure, Set.mem_singleton_iff, exists_eq_left] at supported
+          obtain ⟨tail, lifted, supported⟩ := supported
+          obtain ⟨_, same⟩ := liftCoins_mem _ _ _ lifted
+          simp only [same, StateT.run_set, StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
+          obtain ⟨_, rfl, rfl⟩ := supported
+          rw [hashedEq]
+          exact ⟨rfl, rfl⟩
 
 /-- A reachable present token pays for one complete build attempt even when that attempt fails; an absent token pays zero. -/
 theorem build_pending_count (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -142,15 +154,24 @@ theorem finish_pending (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
   simp only [finishOracle, StateT.run_bind, StateT.run_get, pure_bind] at supported
   cases hphase : state.beacon.beacon.phase with
   | initSent control prekey oneTime kem =>
-      simp only [hphase, StateT.run_bind, mem_support_bind_iff] at supported
-      obtain ⟨staged, stageRun, supported⟩ := supported
-      obtain ⟨cache, extra, stagedEq, _⟩ := stage_run setup codec beaconSeed
-        publicValue control state.beacon.beacon.identity oneTime kem raw state staged stageRun
-      simp only [StateT.run_get, StateT.run_set, StateT.run_pure, support_pure,
-        Set.mem_singleton_iff] at supported
-      obtain ⟨_, rfl, _, rfl, rfl⟩ := supported
-      rw [stagedEq]
-      exact ⟨rfl, rfl⟩
+      simp only [hphase] at supported
+      split at supported
+      · rename_i init response _ _
+        simp only [StateT.run_bind, mem_support_bind_iff] at supported
+        obtain ⟨hashed, hashRun, supported⟩ := supported
+        obtain ⟨hashCache, hashedEq⟩ := hashOracle_step _ _ _ hashRun
+        simp only [StateT.run_get, support_pure, Set.mem_singleton_iff, exists_eq_left] at supported
+        obtain ⟨staged, stageRun, supported⟩ := supported
+        obtain ⟨cache, extra, stagedEq, _⟩ := stage_run (PqxdhTranscriptAd.completedOf control hashed.1) setup codec
+          beaconSeed publicValue control hashed.2.beacon.beacon.identity oneTime kem raw hashed.2 staged stageRun
+        simp only [StateT.run_set, StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
+        obtain ⟨_, rfl, _, rfl, rfl⟩ := supported
+        rw [stagedEq, hashedEq]
+        exact ⟨rfl, rfl⟩
+      · simp only [StateT.run_bind, StateT.run_set, StateT.run_pure, pure_bind, support_pure,
+          Set.mem_singleton_iff] at supported
+        subst supported
+        exact ⟨rfl, rfl⟩
   | _ =>
       simp only [hphase, StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
       subst supported
@@ -193,8 +214,9 @@ theorem handler_pending_quiet (setup : Setup baseSpec KemSK) (codec : Codec Read
 
 /-- The actual eager setup starts with no pending Server build tokens. -/
 theorem pending_initial (setup : Setup baseSpec KemSK) (publicValue : PublicChallenge)
-    (beacon : RawCtxBeaconLifecycle.State Unit (Unit ⊕ ScalarBytes) KemSK) :
-    pendingCount (initialGameState setup publicValue beacon) = 0 := by
+    (beacon : RawCtxBeaconLifecycle.State Unit (Unit ⊕ ScalarBytes) KemSK)
+    (beaconInit : Option PqxdhEd25519EufCma.Phase1Candidate) :
+    pendingCount (initialGameState setup publicValue beacon beaconInit) = 0 := by
   simp [pendingCount, pendingSlots, initialGameState]
 
 /-- The potential is unchanged by all other actual capabilities, without restricting their replies. -/

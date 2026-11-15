@@ -9,6 +9,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhSourceSharedInput
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPhase1AcceptanceOracle PqxdhKemIndCca PqxdhInitializerSecrecy
 open CtxRomAuth AdaptiveCtxSharedHash PqxdhSecretInputKdf
@@ -35,32 +37,32 @@ def restore (context : Bool ⊕ Input) (cache : CtxRO.QueryCache) : Bool ⊕ Inp
   | .inr input => .inr { input with shared := (input.shared.1, cache) }
 
 noncomputable def input (packet : Packet) : Bool ⊕ Input :=
-  PqxdhInitialPreparedSourceInput.input env0 baseImpl kem attachedVerify primitives program post
-    (PqxdhSourceSharedPreparation.restore setup env callbacks program post attachedVerify primitives kem packet ∅ ∅)
+  PqxdhInitialPreparedSourceInput.input (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program post
+    (PqxdhSourceSharedPreparation.restore (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives kem packet ∅ ∅)
     selected number ancestors disclosed
 
 /-- The interpreter restores the actual reached cache while every other source input field stays unchanged. -/
 theorem input_cache (packet : Packet) (cache : CtxRO.QueryCache) :
-    restore setup (input setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed packet) cache =
-      PqxdhInitialPreparedSourceInput.input env0 baseImpl kem attachedVerify primitives program post
-        (PqxdhSourceSharedPreparation.restore setup env callbacks program post attachedVerify primitives kem packet cache ∅)
+    restore setup (input (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed packet) cache =
+      PqxdhInitialPreparedSourceInput.input (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program post
+        (PqxdhSourceSharedPreparation.restore (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives kem packet cache ∅)
         selected number ancestors disclosed := by
   rcases packet with ⟨publicKey, secretKey, state, ciphertext⟩
   cases state <;> rfl
 
 noncomputable def run : OracleComp HashSpec (Bool ⊕ Input) :=
-  input setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed <$>
-    PqxdhSourceSharedPreparation.prepare setup env callbacks program post attachedVerify primitives baseImpl kem
+  input (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed <$>
+    PqxdhSourceSharedPreparation.prepare (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem
 
 /-- The actual root-free prior is supplied by executing the full source prefix from the ordinary empty ROM. -/
 theorem source :
     (fun result => restore setup result.1 result.2) <$>
-      (simulateQ hashImpl (run setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed)).run ∅ =
-    PqxdhInitialPreparedSourceInput.prior env0 baseImpl kem attachedVerify primitives program post selected number ancestors disclosed := by
+      (simulateQ hashImpl (run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed)).run ∅ =
+    PqxdhInitialPreparedSourceInput.prior (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program post selected number ancestors disclosed := by
   have original := congrArg (fun work =>
-    (fun context => PqxdhInitialPreparedSourceInput.input env0 baseImpl kem attachedVerify primitives program post context
+    (fun context => PqxdhInitialPreparedSourceInput.input (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program post context
       selected number ancestors disclosed) <$> work)
-    (PqxdhSourceSharedPreparation.prepare_empty setup env callbacks program post attachedVerify primitives baseImpl kem)
+    (PqxdhSourceSharedPreparation.prepare_empty (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem)
   simpa only [run, simulateQ_map, StateT.run_map, Functor.map_map, input_cache,
     PqxdhInitialPreparedSourceInput.prior] using original
 

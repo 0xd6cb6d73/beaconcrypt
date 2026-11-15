@@ -281,9 +281,9 @@ theorem receive_adapter {A : Type} (source : FixedHkdfSha512NoSaltSource) (write
   rw [← QueryImpl.simulateQ_compose, RawCtxMixedShared.shared_receive]
 
 /-- The local owner's complete initial metadata and attempt counter. -/
-def localState (candidate : pqxdh.BeaconRegistrationCandidate) (kernel : Kernel) :
+def localState (candidate : pqxdh.BeaconRegistrationCandidate) (associatedData : Std.Array Std.U8 151#usize) (kernel : Kernel) :
     RawCtxChainOwner.State Kernel Unit :=
-  ⟨kernel, candidate.server_binding.identity_key_id, absBytes candidate.associated_data, (), 0⟩
+  ⟨kernel, candidate.server_binding.identity_key_id, absBytes associatedData, (), 0⟩
 
 section Tail
 variable {m : Type → Type} [Monad m] [LawfulMonad m] {Response : Type}
@@ -311,8 +311,8 @@ noncomputable def factored (prim : QueryImpl RawCtxWholeOwner.PrimitiveSpec m)
   | none => pure none
   | some raw => do
       let result ← (RawCtxChainOwner.rawReceive (primCalls sendCall prim source value.1) decode raw).run
-        (localState candidate (initial value.2))
-      pure (PqxdhBeaconPhase2Publication.afterOpening candidate (resolve result.2.kernel) result.1)
+        (localState candidate prepared.binding.associated_data (initial value.2))
+      pure (PqxdhBeaconPhase2Publication.afterOpening candidate prepared.binding.associated_data (resolve result.2.kernel) result.1)
 
 /-- Exact post-root factorization for any complete primitive interpreter satisfying
 its real KDF callback contract; no callback state or failure effect is dropped. -/
@@ -338,12 +338,12 @@ theorem primitive_factor (prim : QueryImpl RawCtxWholeOwner.PrimitiveSpec m)
       simp only [simulateQ_bind, simulateQ_pure, ← QueryImpl.simulateQ_compose, lifted]
       rw [show PqxdhBeaconPhase2Publication.localOwner
           (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate)
-          (nativeKernel (RawCtxFreshChainCut.concreteChain (PqxdhServerAuthSendFactor.target source root))
+          prepared.binding.associated_data (nativeKernel (RawCtxFreshChainCut.concreteChain (PqxdhServerAuthSendFactor.target source root))
             (initial (PqxdhServerAuthSendFactor.other source root))) =
           RawCtxChainOwner.nativeState
             (nativeKernel (RawCtxFreshChainCut.concreteChain (PqxdhServerAuthSendFactor.target source root)))
             (localState (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate)
-              (initial (PqxdhServerAuthSendFactor.other source root))) from rfl,
+              prepared.binding.associated_data               (initial (PqxdhServerAuthSendFactor.other source root))) from rfl,
         RawCtxChainOwner.rawReceive_native _
           (primCalls sendCall prim source (PqxdhServerAuthSendFactor.factor source root).1) prim
           (primitive_receive prim source kdf _)]
@@ -352,10 +352,10 @@ theorem primitive_factor (prim : QueryImpl RawCtxWholeOwner.PrimitiveSpec m)
         raw_settlement source prim sendCall (PqxdhServerAuthSendFactor.factor source root).1
           (RawCtxFreshChainCut.concreteChain (PqxdhServerAuthSendFactor.target source root))
           (PqxdhBeaconPhase2Publication.afterOpening
-            (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate))
+            (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate) prepared.binding.associated_data)
           (fun _ _ => rfl) decode raw
           (localState (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate)
-            (initial (PqxdhServerAuthSendFactor.other source root))) ⟨_, rfl⟩ rfl
+              prepared.binding.associated_data             (initial (PqxdhServerAuthSendFactor.other source root))) ⟨_, rfl⟩ rfl
 
 end Tail
 

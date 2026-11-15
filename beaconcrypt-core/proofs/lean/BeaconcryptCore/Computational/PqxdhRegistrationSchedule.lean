@@ -4,7 +4,7 @@ import BeaconcryptCore.Computational.PqxdhRegistrationPending
 import BeaconcryptCore.Computational.PqxdhRegistrationResponse
 import BeaconcryptCore.Computational.PqxdhRegistrationBeacon
 
-/-! An operational registration scheduler runs the existing complete Server and Beacon source programs. Owner indices are public addresses, not cryptographic identities. The single live Server and dynamically created Beacons share the original Extract and CTX tables. The root slice and CTX ROM are inherited idealizations; this module supplies no cryptographic soundness or applied-pi compiler theorem. -/
+/-! An operational registration scheduler runs the existing complete Server and Beacon source programs. Owner indices are public addresses, not cryptographic identities. The single live Server and dynamically created Beacons share the original Extract and CTX tables. Each owner retains the exact Phase 1 bundle it handed to the writer, and its finish hashes the 2638-byte registration transcript (that bundle followed by the decoded response fields) with the shared BLAKE2b oracle before running the unchanged native owner at the completed binding `PqxdhTranscriptAd.completedOf control digest`, exactly where the Rust Beacon hashes (`registration.rs:320-397`). The Server builds through `PqxdhServerAuthNative.nativeBuild`, which hashes its own transcript the same way. The root slice and CTX ROM are inherited idealizations; this module supplies no cryptographic soundness or applied-pi compiler theorem. -/
 
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
@@ -23,6 +23,8 @@ abbrev Owner (KemSK : Type) := RawCtxBeaconLifecycle.State IdentitySeed ScalarBy
 structure State (KemSK : Type) where
   shared : NativeState KemSK
   owners : List (Owner KemSK)
+  /-- The Phase 1 bundle each owner last handed to `codec.write1` with a successful write (the Rust Beacon keeps these Init buffers for its transcript hash, `beacon.rs:306-334`); `none` before. -/
+  inits : Nat → Option PqxdhEd25519EufCma.Phase1Candidate
 
 abbrev Game (KemSK : Type) := StateT (State KemSK) ProbComp
 
@@ -64,15 +66,29 @@ noncomputable def callbacks (setup : Setup baseSpec KemSK) (codec : Codec Reader
   | .inl query => nativeCoins (preparation setup codec query)
   | .inr query => sourceBeaconTail setup codec query
 
-/-- Public slot lookup rejects a missing owner before all preparation and receive callbacks. A present slot executes the literal complete native owner and reinstalls only its returned owner. -/
+/-- One owner's finish on the shared native state. An InitSent owner with its retained Phase 1 bundle and a decodable response hashes the transcript of that bundle and the response's four fields on the shared BLAKE2b cache (the Rust Beacon hashes right after decoding and before agreement, `registration.rs:320-397`), then runs the literal complete native owner at `completedOf control digest`. An undecodable response (or, unreachably, a missing bundle) aborts before hashing, as the Rust does; a non-InitSent owner answers nothing and is unchanged, which is the native owner's own outcome there (`terminal_native`). -/
+noncomputable def ownerFinish (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes) (owner : Owner KemSK) :
+    NativeGame KemSK (Option Pqxdh.Bytes × Owner KemSK) :=
+  match owner.beacon.phase with
+  | .initSent control _ _ _ =>
+    match retained, responseOf codec raw with
+    | some init, some response => do
+        let digest ← nativeHash (PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf init) response)
+        simulateQ (callbacks setup codec)
+          (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := PqxdhTranscriptAd.completedOf control digest)
+            codec.frameRead raw owner)
+    | _, _ => pure (none, PqxdhBeaconPhase2Preparation.abort control owner)
+  | _ => pure (none, owner)
+
+/-- Public slot lookup rejects a missing owner before all preparation and receive callbacks. A present slot executes the owner's hashed finish (`ownerFinish`) with its retained Phase 1 bundle and reinstalls only its returned owner. -/
 noncomputable def finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (index : Nat) (raw : Pqxdh.Bytes) : Game KemSK (Option Pqxdh.Bytes) := do
   let state ← get
   match state.owners[index]? with
   | none => pure none
   | some owner => do
-      let result ← onShared (simulateQ (callbacks setup codec)
-        (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw owner))
+      let result ← onShared (ownerFinish setup codec (state.inits index) raw owner)
       modify fun current => { current with owners := current.owners.set index result.2 }
       pure result.1
 
@@ -96,17 +112,27 @@ def bundleCallbacks (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   | .inr (.inl (.inr (.reveal _))) => pure none
   | .inr (.inr bundle) => pure (codec.write1 bundle)
 
-/-- Native bundle generation and all three signatures precede optional publication; the exact returned complete owner is retained even on failure. -/
+/-- `bundleCallbacks` with the bundle handed to the writer retained exactly when the write succeeds; every other callback is unchanged (`bundleLog_fst`). -/
+def bundleLogCallbacks (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (seed : IdentitySeed) :
+    QueryImpl (PqxdhLivePhase1Bundle.Spec ScalarBytes)
+      (StateT (Option PqxdhEd25519EufCma.Phase1Candidate) ProbComp)
+  | .inl query => StateT.lift (bundleCallbacks setup codec seed (.inl query))
+  | .inr (.inl query) => StateT.lift (bundleCallbacks setup codec seed (.inr (.inl query)))
+  | .inr (.inr bundle) => fun logged =>
+      pure (codec.write1 bundle, if (codec.write1 bundle).isSome then some bundle else logged)
+
+/-- Native bundle generation and all three signatures precede optional publication; the exact returned complete owner is retained even on failure. A successfully written bundle is retained for the owner's transcript hash. -/
 def bundle (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (index : Nat) : Game KemSK (Option Pqxdh.Bytes) := do
   let state ← get
   match state.owners[index]? with
   | none => pure none
   | some owner => do
-      let result ← StateT.lift (simulateQ (bundleCallbacks setup codec owner.beacon.identity)
-        (PqxdhLivePhase1Bundle.bundle (projection setup index) owner))
-      modify fun current => { current with owners := current.owners.set index result.2 }
-      pure result.1
+      let result ← StateT.lift ((simulateQ (bundleLogCallbacks setup codec owner.beacon.identity)
+        (PqxdhLivePhase1Bundle.bundle (projection setup index) owner)).run (state.inits index))
+      modify fun current =>
+        { current with owners := current.owners.set index result.1.2, inits := Function.update current.inits index result.2 }
+      pure result.1.1
 
 /-- The post-admission constructor body draws identity, prekey and KEM in production order at this schedule position. This typed-pin operation does not establish the preceding runtime/public-key parser admission. Phase-1 one-time material is drawn only by a later bundle call. -/
 noncomputable def create (setup : Setup baseSpec KemSK) (pin : Word32) (keyId : Std.U64) :
@@ -193,19 +219,45 @@ theorem onShared_run {Result : Type} (work : NativeGame KemSK Result) (state : S
     (onShared work).run state =
       (fun result => (result.1, { state with shared := result.2 })) <$> work state.shared := rfl
 
-/-- Exact complete finish equation: a present owner runs the original native program once, then publishes precisely its returned owner and both complete shared caches. -/
+/-- Exact complete finish equation: a present owner runs its hashed finish once with its retained Phase 1 bundle, then publishes precisely its returned owner and both complete shared caches. -/
 theorem finish_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (index : Nat) (raw : Pqxdh.Bytes) (state : State KemSK) (owner : Owner KemSK)
     (found : state.owners[index]? = some owner) :
     finish setup codec index raw state =
       (fun result => (result.1.1,
-        ({ shared := result.2, owners := state.owners.set index result.1.2 } : State KemSK))) <$>
-      (simulateQ (callbacks setup codec)
-        (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw owner)).run state.shared := by
+        ({ state with shared := result.2, owners := state.owners.set index result.1.2 } : State KemSK))) <$>
+      (ownerFinish setup codec (state.inits index) raw owner).run state.shared := by
   change (finish setup codec index raw).run state = _
   simp only [finish, StateT.run_bind, StateT.run_get, pure_bind, found, onShared_run,
     StateT.run_map, StateT.run_modify, map_pure, bind_pure_comp, Functor.map_map]
   rfl
+
+/-- The hashed branch of `ownerFinish`: the transcript query on the shared cache, then the literal native owner at the completed binding of the returned digest. -/
+theorem ownerFinish_hashed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (init : PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes) (owner : Owner KemSK)
+    (control : pqxdh.BeaconInitSent) (prekey oneTime : ScalarBytes)
+    (kem : PqxdhKemIndCca.MlKem768PublicKey × KemSK)
+    (active : owner.beacon.phase = .initSent control prekey oneTime kem)
+    (response : Pqxdh.SessionTranscript.ResponseFields) (decoded : responseOf codec raw = some response) :
+    ownerFinish setup codec (some init) raw owner = (do
+      let digest ← nativeHash (PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf init) response)
+      simulateQ (callbacks setup codec)
+        (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := PqxdhTranscriptAd.completedOf control digest)
+          codec.frameRead raw owner)) := by
+  simp only [ownerFinish, active, decoded]
+
+/-- Without a decodable response (or a retained bundle) an InitSent owner aborts before any callback or hash. -/
+theorem ownerFinish_unhashed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes) (owner : Owner KemSK)
+    (control : pqxdh.BeaconInitSent) (prekey oneTime : ScalarBytes)
+    (kem : PqxdhKemIndCca.MlKem768PublicKey × KemSK)
+    (active : owner.beacon.phase = .initSent control prekey oneTime kem)
+    (unhashed : retained = none ∨ responseOf codec raw = none) :
+    ownerFinish setup codec retained raw owner = pure (none, PqxdhBeaconPhase2Preparation.abort control owner) := by
+  rcases unhashed with missing | undecodable
+  · subst missing
+    simp only [ownerFinish, active]
+  · cases retained <;> simp only [ownerFinish, active, undecodable]
 
 /-- An absent owner is an ordinary counted API rejection and performs no hidden preparation work. -/
 theorem finish_missing (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -228,14 +280,22 @@ theorem finish_terminal (control : pqxdh.BeaconInitSent) (owner : Owner KemSK)
     PqxdhBeaconPhase2Preparation.abort, Terminal]
   split_ifs <;> trivial
 
-/-- A terminal owner rejects every later registration finish as a pure source operation, before any primitive, parser or writer callback. -/
-theorem terminal_native (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
+/-- A terminal owner rejects every later registration finish as a pure source operation, before any primitive, parser or writer callback, for every completed binding. -/
+theorem terminal_native (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+    (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
     (owner : Owner KemSK) (terminal : Terminal owner) :
-    PqxdhBeaconPhase2Publication.nativeOwner (X := IdentitySeed) (Response := Response)
-      decode raw owner = pure (none, owner) := by
+    PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) (X := IdentitySeed)
+      (Response := Response) decode raw owner = pure (none, owner) := by
   cases phase : owner.beacon.phase <;>
     simp_all [Terminal, PqxdhBeaconPhase2Publication.nativeOwner,
       PqxdhBeaconPhase2Publication.owner]
+
+/-- A terminal owner's hashed finish is the same pure rejection: no hash, no callback. -/
+theorem terminal_owner (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : Owner KemSK) (terminal : Terminal owner) :
+    ownerFinish setup codec retained raw owner = pure (none, owner) := by
+  cases phase : owner.beacon.phase <;> simp_all [Terminal, ownerFinish]
 
 /-- A completed or aborted source owner cannot publish another bundle or draw/sign replacement material through the registration API. -/
 theorem terminal_bundle (setup : Setup baseSpec KemSK) (index : Nat)
@@ -249,31 +309,62 @@ theorem terminal_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
     (found : state.owners[index]? = some owner) (terminal : Terminal owner) :
     finish setup codec index raw state = pure (none, state) := by
   rw [finish_source setup codec index raw state owner found,
-    terminal_native codec.frameRead raw owner terminal]
-  simp only [simulateQ_pure, StateT.run_pure, map_pure]
+    terminal_owner setup codec (state.inits index) raw owner terminal]
+  simp only [StateT.run_pure, map_pure]
   obtain ⟨bound, atIndex⟩ := List.getElem?_eq_some_iff.mp found
   rw [← atIndex, List.set_getElem_self bound]
 
 /-- Every supported active source attempt ends in its actual established or aborted owner, regardless of raw input, primitive replies, or writer outcome. This assertion does not apply to a call before InitSent. -/
-theorem native_attempt_terminal (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+theorem native_attempt_terminal (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+    (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (raw : Pqxdh.Bytes) (owner : Owner KemSK) (control : pqxdh.BeaconInitSent)
     (prekey oneTime : ScalarBytes) (kem : PqxdhKemIndCca.MlKem768PublicKey × KemSK)
     (active : owner.beacon.phase = .initSent control prekey oneTime kem)
     (state : NativeState KemSK) (result : (Option Pqxdh.Bytes × Owner KemSK) × NativeState KemSK)
     (supported : result ∈ support ((simulateQ (callbacks setup codec)
-      (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw owner)).run state)) :
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw owner)).run state)) :
     Terminal result.1.2 := by
   rcases result with ⟨⟨reply, next⟩, final⟩
   cases reply with
   | some plaintext =>
-      obtain ⟨staged, _, _, published⟩ := PqxdhBeaconPhase2Publication.native_success
+      obtain ⟨staged, _, _, published⟩ := PqxdhBeaconPhase2Publication.native_success (completedBinding := completedBinding)
         (callbacks setup codec) codec.frameRead raw plaintext owner next state final supported
       exact (congrArg (fun value => Terminal value.2) published).mp (by trivial)
   | none =>
       have aborted : next = PqxdhBeaconPhase2Preparation.abort control owner := by
-        simpa only [active] using PqxdhBeaconPhase2Publication.native_failure
+        simpa only [active] using PqxdhBeaconPhase2Publication.native_failure (completedBinding := completedBinding)
           (callbacks setup codec) codec.frameRead raw owner next state final supported
       simp only [aborted, PqxdhBeaconPhase2Preparation.abort, Terminal]
+
+/-- Every supported hashed finish of an active owner ends in its actual established or aborted owner, including the undecodable abort before hashing. -/
+theorem owner_attempt_terminal (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate)
+    (raw : Pqxdh.Bytes) (owner : Owner KemSK) (control : pqxdh.BeaconInitSent)
+    (prekey oneTime : ScalarBytes) (kem : PqxdhKemIndCca.MlKem768PublicKey × KemSK)
+    (active : owner.beacon.phase = .initSent control prekey oneTime kem)
+    (state : NativeState KemSK) (result : (Option Pqxdh.Bytes × Owner KemSK) × NativeState KemSK)
+    (supported : result ∈ support ((ownerFinish setup codec retained raw owner).run state)) :
+    Terminal result.1.2 := by
+  cases retained with
+  | none =>
+      rw [ownerFinish_unhashed setup codec none raw owner control prekey oneTime kem active (Or.inl rfl)] at supported
+      simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
+      subst supported
+      simp only [PqxdhBeaconPhase2Preparation.abort, Terminal]
+  | some init =>
+      cases decoded : responseOf codec raw with
+      | none =>
+          rw [ownerFinish_unhashed setup codec (some init) raw owner control prekey oneTime kem active
+            (Or.inr decoded)] at supported
+          simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
+          subst supported
+          simp only [PqxdhBeaconPhase2Preparation.abort, Terminal]
+      | some response =>
+          rw [ownerFinish_hashed setup codec init raw owner control prekey oneTime kem active response decoded]
+            at supported
+          simp only [StateT.run_bind, mem_support_bind_iff] at supported
+          obtain ⟨hashed, _, reached⟩ := supported
+          exact native_attempt_terminal _ setup codec raw owner control prekey oneTime kem active hashed.2 result reached
 
 /-- An active public finish reinstalls the same reached terminal owner at its stable numeric address, including every rejection outcome. -/
 theorem finish_closes (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -287,7 +378,7 @@ theorem finish_closes (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
   rw [finish_source setup codec index raw state owner found] at supported
   simp only [support_map, Set.mem_image] at supported
   obtain ⟨reached, reach, rfl⟩ := supported
-  refine ⟨reached.1.2, ?_, native_attempt_terminal setup codec raw owner control prekey oneTime kem
+  refine ⟨reached.1.2, ?_, owner_attempt_terminal setup codec (state.inits index) raw owner control prekey oneTime kem
     active state.shared reached reach⟩
   simp only [List.getElem?_set_self', found]
   rfl
@@ -297,12 +388,33 @@ theorem bundle_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
     (index : Nat) (state : State KemSK) (owner : Owner KemSK)
     (found : state.owners[index]? = some owner) :
     bundle setup codec index state =
-      (fun result => (result.1, { state with owners := state.owners.set index result.2 })) <$>
-      simulateQ (bundleCallbacks setup codec owner.beacon.identity)
-        (PqxdhLivePhase1Bundle.bundle (projection setup index) owner) := by
+      (fun result => (result.1.1,
+        { state with owners := state.owners.set index result.1.2, inits := Function.update state.inits index result.2 })) <$>
+      (simulateQ (bundleLogCallbacks setup codec owner.beacon.identity)
+        (PqxdhLivePhase1Bundle.bundle (projection setup index) owner)).run (state.inits index) := by
   change (bundle setup codec index).run state = _
   simp only [bundle, StateT.run_bind, StateT.run_get, pure_bind, found, StateT.run_lift,
     StateT.run_map, StateT.run_modify, map_pure, bind_pure_comp, Functor.map_map]
+
+/-- The logged bundle run has the original bundle run as its first component. -/
+theorem bundleLog_fst (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (seed : IdentitySeed)
+    {α : Type} (work : OracleComp (PqxdhLivePhase1Bundle.Spec ScalarBytes) α)
+    (logged : Option PqxdhEd25519EufCma.Phase1Candidate) :
+    Prod.fst <$> (simulateQ (bundleLogCallbacks setup codec seed) work).run logged =
+      simulateQ (bundleCallbacks setup codec seed) work := by
+  induction work using OracleComp.inductionOn generalizing logged with
+  | pure value => simp
+  | query_bind query next ih =>
+      simp only [simulateQ_bind, simulateQ_query, OracleQuery.input_query, OracleQuery.cont_query, id_map,
+        StateT.run_bind, map_bind]
+      have step : Prod.fst <$> (bundleLogCallbacks setup codec seed query).run logged =
+          bundleCallbacks setup codec seed query := by
+        rcases query with query | query | bundle
+        · simp [bundleLogCallbacks, StateT.run_lift]
+        · simp [bundleLogCallbacks, StateT.run_lift]
+        · simp only [bundleLogCallbacks, StateT.run, map_pure, bundleCallbacks]
+      rw [← step, bind_map_left]
+      exact bind_congr fun result => ih result.1 result.2
 
 /-- A terminal public owner slot cannot run a later Phase-1 generator, signature, or writer callback; its entire shared state and registry are retained. -/
 theorem terminal_bundle_call (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -311,7 +423,8 @@ theorem terminal_bundle_call (setup : Setup baseSpec KemSK) (codec : Codec Reade
     bundle setup codec index state = pure (none, state) := by
   rw [bundle_source setup codec index state owner found, terminal_bundle setup index owner terminal]
   obtain ⟨bound, atIndex⟩ := List.getElem?_eq_some_iff.mp found
-  simp only [simulateQ_pure, map_pure, ← atIndex, List.set_getElem_self bound]
+  simp only [simulateQ_pure, StateT.run_pure, map_pure, ← atIndex, List.set_getElem_self bound,
+    Function.update_eq_self]
 
 /-- The full post-admission constructor runs identity, prekey and KEM generation in that order, then appends the actual fresh owner. The complete prior state and every generator reply remain in the result. -/
 theorem create_source (setup : Setup baseSpec KemSK) (pin : Word32) (keyId : Std.U64)
@@ -507,3 +620,28 @@ end BeaconcryptCore.Computational.PqxdhRegistrationSchedule
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhRegistrationSchedule.no_retry
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationSchedule.ownerFinish_hashed' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationSchedule.ownerFinish_hashed
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationSchedule.ownerFinish_unhashed' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationSchedule.ownerFinish_unhashed
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationSchedule.terminal_owner' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationSchedule.terminal_owner
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationSchedule.owner_attempt_terminal' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationSchedule.owner_attempt_terminal
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationSchedule.bundleLog_fst' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationSchedule.bundleLog_fst

@@ -21,7 +21,7 @@ abbrev Local (n : Nat) (KemSK : Type) (source : RegistrationNativeMldsa.Source) 
 
 noncomputable def lower (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : StateT (EnvState RegistrationServerRoleBackend.State)
       (OracleComp (RegistrationNativeBeaconFrontend.Trusted n KemSK)) Value) :
     StateT (Local n KemSK mlSource) ProbComp Value := fun before =>
@@ -31,7 +31,7 @@ noncomputable def lower (setup : Setup base KemSK) (checks : Checks)
 
 private theorem lower_run (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : StateT (EnvState RegistrationServerRoleBackend.State)
       (OracleComp (RegistrationNativeBeaconFrontend.Trusted n KemSK)) Value)
     (before : Local n KemSK mlSource) :
@@ -42,7 +42,7 @@ private theorem lower_run (setup : Setup base KemSK) (checks : Checks)
 
 private theorem lower_pure (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (value : Value) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (value : Value) :
     lower (n := n) (mlSource := mlSource) setup checks representation created (pure value) = pure value := by
   apply StateT.ext
   intro before
@@ -52,7 +52,7 @@ private theorem lower_pure (setup : Setup base KemSK) (checks : Checks)
 theorem lower_program {Query : Type} {spec : OracleSpec Query}
     (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (implementation : QueryImpl spec (StateT (EnvState RegistrationServerRoleBackend.State)
       (OracleComp (RegistrationNativeBeaconFrontend.Trusted n KemSK)))) (work : OracleComp spec Value) :
     lower (mlSource := mlSource) setup checks representation created (simulateQ implementation work) =
@@ -73,7 +73,7 @@ def liftCache {Auxiliary Result : Type} (work : StateT Auxiliary ProbComp Result
 
 noncomputable def primitive (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (owner : SelectedOwner mlSource) (oneTime : PqxdhJointGapDh.ScalarBytes) :
     QueryImpl RegistrationAgreementShared.PrimitiveSpec (StateT (Local n KemSK mlSource) ProbComp) := fun query =>
   lower setup checks representation created (trustedBackend setup owner oneTime query.toRequest)
@@ -81,7 +81,7 @@ noncomputable def primitive (setup : Setup base KemSK) (checks : Checks)
 /-- The concrete lowered callback is exactly the shared-source adapter, with its actual optional replies and full global state. -/
 theorem backend_shared (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (owner : SelectedOwner mlSource) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (query : RegistrationAgreementExecutor.Request) :
     liftCache (lower (n := n) setup checks representation created
@@ -122,7 +122,7 @@ private theorem cache_visit_project {Auxiliary Result : Type} (work : StateT Aux
 
 noncomputable def native (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (owner : SelectedOwner mlSource) (oneTime : PqxdhJointGapDh.ScalarBytes) :
     QueryImpl RegistrationAgreementExecutor.Spec (StateT (Local n KemSK mlSource) ProbComp) :=
   RegistrationBeaconRootInterpreter.sourceImpl setup.dh scalar
@@ -131,7 +131,7 @@ noncomputable def native (setup : Setup base KemSK) (checks : Checks)
 
 private theorem native_cache_query (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (owner : SelectedOwner mlSource) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (query : RegistrationAgreementExecutor.Request)
     (before : RawCtxSharedPrimitive.SharedState (Local n KemSK mlSource)) :
@@ -160,10 +160,10 @@ private theorem native_cache_query (setup : Setup base KemSK) (checks : Checks)
 /-- The whole native related-root stage runs on the actual full global World/private pool. Only private related-input bookkeeping and a redundant cache frame are projected. -/
 theorem stage_native (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (owner : SelectedOwner mlSource) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (authenticated : registration.AuthenticatedResponse)
-    (coherent : authenticated.pending.control.expected_server_binding = authenticated.pending.binding.server_pin.binding)
+    (coherent : authenticated.control.expected_server_binding = authenticated.binding.server_pin.binding)
     (before : RegistrationNativeBeaconRootSource.State (Local n KemSK mlSource)) :
     Prod.map id (Prod.fst ∘ Prod.snd) <$>
       (RegistrationNativeBeaconRootStage.stage setup.beaconDomain

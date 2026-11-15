@@ -17,7 +17,7 @@ open RegistrationNativeIdentityCensorEdOutgoingSource (Full interpret)
 open RegistrationNativeIdentityCensorOutgoingView (view)
 variable {n : Nat} {I KemSK Platform E A B Q : Type} {base : OracleSpec I} {spec : OracleSpec Q} {mlSource : RegistrationNativeMldsa.Source}
 variable (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (selected index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner mlSource) (placeholder : Ed25519Signature)
 variable (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E))
 local notation "Main" => RegistrationNativePlatformIdentityCtxMain.beacon (n := n) (Platform := Platform) (source := mlSource) setup checks representation created
@@ -51,14 +51,14 @@ private theorem external_program (censored : Bool) (handler : QueryImpl spec (St
     rw [simulateQ_bind, simulateQ_spec_query, external_bind, RegistrationNativeIdentityCensorSourceFold.bind_source]
     simp only [ih, simulateQ_bind, simulateQ_spec_query]
 
-/-- Literal source binding from the actual Main dictionary to the original Ed/hash/ML/Ready controller and its entire concrete stateful writer. -/
+/-- Literal source binding from the actual Main dictionary to the original three-Ed/hash/Ready controller and its entire concrete stateful writer. -/
 theorem source (censored : Bool) (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Array U8 1952#usize) :
+    (pin : session.ServerAuthenticationPin) :
     source(censored, Main (simulateQ
       (RegistrationNativePlatformIdentityPublication.callback (n := n) (Auxiliary := RegistrationServerRoleBackend.State)
         setup index owner (RegistrationNativePlatformConcreteSource.writer reserve))
-      (RegistrationNativePlatformWriter.begin E control inputs coins pin mldsa))) =
-      RegistrationNativePlatformBeaconPublication.begin (callback(censored)) (encoder(censored)) control inputs coins pin mldsa := by
+      (RegistrationNativePlatformWriter.begin E control inputs coins pin))) =
+      RegistrationNativePlatformBeaconPublication.begin (callback(censored)) (encoder(censored)) control inputs coins pin := by
   rw [RegistrationNativeIdentityCensorSourceFold.publication,
     RegistrationNativePlatformWriter.begin_interpret]
   have writer : (fun fields => simulateQ
@@ -75,7 +75,7 @@ theorem source (censored : Bool) (control : pqxdh.BeaconFresh) (inputs : pqxdh.B
 
 /-- The actual Main publication has the canonical/placeholder failed-publication coupling from the original begin gate, after the first chronological selection condition is established. -/
 theorem paired (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Array U8 1952#usize)
+    (pin : session.ServerAuthenticationPin)
     (started : pqxdh.BeaconStart) (built : pqxdh.beacon_start control inputs coins = .ok started)
     (lineage : inputs.identity_public_key = PqxdhRootTableInitialization.rootArray owner.identity.publicIdentity.ed25519)
     (before : Full (n := n) (KemSK := KemSK) (Platform := Platform) (mlSource := mlSource)) (seed : PqxdhJointIdentity.IdentitySeed)
@@ -87,27 +87,27 @@ theorem paired (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) 
     let publication := Main (simulateQ
       (RegistrationNativePlatformIdentityPublication.callback (n := n) (Auxiliary := RegistrationServerRoleBackend.State)
         setup index owner (RegistrationNativePlatformConcreteSource.writer reserve))
-      (RegistrationNativePlatformWriter.begin E control inputs coins pin mldsa))
+      (RegistrationNativePlatformWriter.begin E control inputs coins pin))
     Prod.map RegistrationNativeIdentityReadyFailure.observe (view placeholder) <$> (source(false, publication)).run before =
       Prod.map RegistrationNativeIdentityReadyFailure.observe (view placeholder) <$> (source(true, publication)).run before := by
   dsimp only
   rw [source, source]
   exact RegistrationNativeIdentityCensorPrekeySource.begin setup checks representation created selected index owner placeholder reserve
-    control inputs coins pin mldsa started built lineage before seed handle armed held sourceTarget fresh found
+    control inputs coins pin started built lineage before seed handle armed held sourceTarget fresh found
 
 /-- Actual Main closing and concrete source serialization preserve the normal-return property on every reached result, without any selection or success condition. -/
 theorem normal (censored : Bool) (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Array U8 1952#usize)
+    (pin : session.ServerAuthenticationPin)
     (before : Full (n := n) (KemSK := KemSK) (Platform := Platform) (mlSource := mlSource))
     (result : RustM (RegistrationBeaconInitExecutor.Result (alloc.vec.Vec U8)) × Full (n := n) (KemSK := KemSK) (Platform := Platform) (mlSource := mlSource))
     (possible : result ∈ support ((source(censored, Main (simulateQ
       (RegistrationNativePlatformIdentityPublication.callback (n := n) (Auxiliary := RegistrationServerRoleBackend.State)
         setup index owner (RegistrationNativePlatformConcreteSource.writer reserve))
-      (RegistrationNativePlatformWriter.begin E control inputs coins pin mldsa)))).run before)) :
+      (RegistrationNativePlatformWriter.begin E control inputs coins pin)))).run before)) :
     RegistrationNativeIdentityCensorPublicationNormal.Normal result.1 := by
   rw [source] at possible
   exact RegistrationNativeIdentityCensorPrekeySource.normal setup checks representation created selected index owner placeholder reserve
-    control inputs coins pin mldsa censored before result possible
+    control inputs coins pin censored before result possible
 
 end BeaconcryptCore.Computational.RegistrationNativeIdentityCensorPublicationSource
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativeIdentityCensorPublicationSource.source' depends on axioms: [propext,

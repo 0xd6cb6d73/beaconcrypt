@@ -11,6 +11,9 @@ set_option autoImplicit false
 
 namespace BeaconcryptCore.Computational.PqxdhRecordLiftWorldBudget
 
+/-- Current concrete AD width, elaborated independently of dependent result annotations. -/
+private abbrev RecordAd := Std.Array Std.U8 151#usize
+
 open Classical
 
 /-- Two selectively bounded request classes pay their own costs; all remaining requests cost zero. -/
@@ -363,7 +366,7 @@ theorem run_native {ι KemSK Reader Response E X : Type} {baseSpec : OracleSpec 
     (bounds : FreshBounds) (mode : Mode) (budget : Budget)
     (adversary : OracleComp (ModeSpec mode) X) (respects : budget.Respects adversary)
     (kind : RawCtxMixedOwner.CallKind)
-    (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+    (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated (RecordAd) ×
       (X × PqxdhDeploymentSecrecy.Ledger) × E) × State n)
     (supported : result ∈ support (run setup codec route env serverKid bounds mode adversary)) :
     result.2.primitive.1.native kind ≤
@@ -379,7 +382,7 @@ theorem run_kdf {ι KemSK Reader Response E X : Type} {baseSpec : OracleSpec ι}
     (route : RawCtxServerRouting.SenderDecoder) (env : Environment n E) (serverKid : Std.U64)
     (bounds : FreshBounds) (mode : Mode) (caps : Caps)
     (adversary : OracleComp (ModeSpec mode) X) (respects : caps.outer.Respects adversary)
-    (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+    (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated (RecordAd) ×
       (X × PqxdhDeploymentSecrecy.Ledger) × E) × State n)
     (supported : result ∈ support (run setup codec route env serverKid bounds mode adversary)) :
     result.2.primitive.1.native .kdf ≤ caps.derivations := by
@@ -488,7 +491,7 @@ theorem run_effects {ι KemSK Reader Response E X : Type} {baseSpec : OracleSpec
     (startupCoins : Nat) (allowance : Fin 14 → EffectKind → Nat) (framed : Frame env startupCoins allowance)
     (adversary : OracleComp (ModeSpec mode) X) (respects : caps.outer.Respects adversary)
     (kind : EffectKind)
-    (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+    (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated (RecordAd) ×
       (X × PqxdhDeploymentSecrecy.Ledger) × E) × State n)
     (supported : result ∈ support (run setup codec route env serverKid bounds mode adversary)) :
     result.2.primitive.1.effects kind ≤
@@ -504,7 +507,7 @@ theorem run_hash {ι KemSK Reader Response E X : Type} {baseSpec : OracleSpec ι
     (bounds : FreshBounds) (mode : Mode) (caps : Caps)
     (startupCoins : Nat) (allowance : Fin 14 → EffectKind → Nat) (framed : Frame env startupCoins allowance)
     (adversary : OracleComp (ModeSpec mode) X) (respects : caps.outer.Respects adversary)
-    (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+    (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated (RecordAd) ×
       (X × PqxdhDeploymentSecrecy.Ledger) × E) × State n)
     (supported : result ∈ support (run setup codec route env serverKid bounds mode adversary)) :
     result.2.primitive.1.effects .hash + result.2.primitive.1.native .hash ≤
@@ -793,7 +796,7 @@ theorem run_uniform_counts {ι KemSK Reader Response E X : Type} {baseSpec : Ora
     (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (env : Environment n E) (serverKid : Std.U64)
     (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X)
-    (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+    (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated (RecordAd) ×
       (X × PqxdhDeploymentSecrecy.Ledger) × E) × State n)
     (supported : result ∈ support (run setup codec route env serverKid bounds mode adversary)) :
     result.2.primitive.1.uniform ≤ result.2.primitive.1.effects .coin +
@@ -994,7 +997,7 @@ theorem run_seed_draws {ι KemSK Reader Response E X : Type} {baseSpec : OracleS
     (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (env : Environment n E) (serverKid : Std.U64)
     (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X)
-    (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+    (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated (RecordAd) ×
       (X × PqxdhDeploymentSecrecy.Ledger) × E) × State n)
     (supported : result ∈ support (run setup codec route env serverKid bounds mode adversary)) :
     result.2.seeds.2.draws = (cachedSlots result.2.seeds.1).card ∧ result.2.seeds.2.draws ≤ n := by
@@ -1010,7 +1013,7 @@ theorem run_uniform {ι KemSK Reader Response E X : Type} {baseSpec : OracleSpec
     (bounds : FreshBounds) (mode : Mode) (caps : Caps)
     (startupCoins : Nat) (allowance : Fin 14 → EffectKind → Nat) (framed : Frame env startupCoins allowance)
     (adversary : OracleComp (ModeSpec mode) X) (respects : caps.outer.Respects adversary)
-    (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+    (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated (RecordAd) ×
       (X × PqxdhDeploymentSecrecy.Ledger) × E) × State n)
     (supported : result ∈ support (run setup codec route env serverKid bounds mode adversary)) :
     result.2.primitive.1.uniform ≤

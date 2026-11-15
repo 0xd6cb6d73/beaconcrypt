@@ -9,16 +9,27 @@ set_option autoImplicit false
 namespace BeaconcryptCore.Computational.CborInactiveFinish
 open PqxdhServerAuthExperiment PqxdhRegistrationSchedule
 
-theorem native_inactive {I D K X Response : Type} (decode : RawCtxReceive.FrameDecoder)
+theorem native_inactive {I D K X Response : Type} (completedBinding : session.CompletedRegistrationBinding)
+    (decode : RawCtxReceive.FrameDecoder)
     (raw : Pqxdh.Bytes) (state : RawCtxBeaconLifecycle.State I D K)
     (inactive : ∀ control prekey oneTime kem, state.beacon.phase ≠ .initSent control prekey oneTime kem) :
-    PqxdhBeaconPhase2Publication.nativeOwner (X := X) (Response := Response) decode raw state =
-      pure (none, state) := by
+    PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) (X := X) (Response := Response)
+      decode raw state = pure (none, state) := by
   rw [PqxdhBeaconPhase2Publication.nativeOwner,
-    PqxdhBeaconPhase2Publication.owner_inactive decode raw state inactive]
+    PqxdhBeaconPhase2Publication.owner_inactive (completedBinding := completedBinding) decode raw state inactive]
   simp only [simulateQ_pure]
 
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response : Type}
+
+/-- A non-InitSent owner's hashed finish answers nothing, hashes nothing and keeps the owner, for every retained bundle. -/
+theorem ownerFinish_inactive (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes) (owner : Owner KemSK)
+    (inactive : ∀ control prekey oneTime kem, owner.beacon.phase ≠ .initSent control prekey oneTime kem) :
+    ownerFinish setup codec retained raw owner = pure (none, owner) := by
+  unfold ownerFinish
+  cases phase : owner.beacon.phase
+  case initSent control prekey oneTime kem => exact absurd phase (inactive control prekey oneTime kem)
+  all_goals rfl
 
 theorem schedule_inactive (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (index : Nat) (raw : Pqxdh.Bytes) (state : PqxdhRegistrationSchedule.State KemSK) (owner : Owner KemSK)
@@ -26,8 +37,8 @@ theorem schedule_inactive (setup : Setup baseSpec KemSK) (codec : Codec Reader R
     (inactive : ∀ control prekey oneTime kem, owner.beacon.phase ≠ .initSent control prekey oneTime kem) :
     PqxdhRegistrationSchedule.finish setup codec index raw state = pure (none, state) := by
   rw [finish_source setup codec index raw state owner found,
-    native_inactive codec.frameRead raw owner inactive]
-  simp only [simulateQ_pure, StateT.run_pure, map_pure]
+    ownerFinish_inactive setup codec (state.inits index) raw owner inactive]
+  simp only [StateT.run_pure, map_pure]
   obtain ⟨bound, atIndex⟩ := List.getElem?_eq_some_iff.mp found
   rw [← atIndex, List.set_getElem_self bound]
 
@@ -73,3 +84,8 @@ end BeaconcryptCore.Computational.CborInactiveFinish
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.CborInactiveFinish.deployment_inactive
+/-- info: 'BeaconcryptCore.Computational.CborInactiveFinish.ownerFinish_inactive' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CborInactiveFinish.ownerFinish_inactive

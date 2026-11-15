@@ -5,7 +5,7 @@ import BeaconcryptCore.Computational.PqxdhOpenContextBridge
 
 Audit finding F5 asks that the bridging equalities be conjuncts of the headline statements. `PqxdhOpenBridges` restates HB-111 and HB-112 with the record-opening bridge B12 as a conjunct (`authenticated_native_root_bound_bridged_open`, `authenticated_extracted_root_bound_open`, `evolving_bound_bridged_open` and `evolving_extracted_bound_open`), while the context completion of B12 and the receive-loop equalities of `PqxdhOpenContextBridge` are separate theorems. This module adds those equalities to the four restatements as one further conjunct. It adds new statements and changes no existing theorem.
 
-`ReceiveBridge` is the conjunction of three propositions. The first is `PqxdhOpenContextBridge.ContextBridge`, which bundles `opened_record_bridge`, `receive_loop_bridge` and `decoded_receive_bridge`: for the same KDF replies, the extracted `begin_receive` and `ReceiveKdf.resume` give opening capabilities with the same ratchet entry and prepared receive for the experiments' context and for the frame context admitted by the extracted `record.OpenFrameContext.from_frame`, and on that capability `PqxdhOpenBridges.executeOpen` equals the experiments' opening step; the loop transcription `executeReceiveFrom` equals the experiments' receive driver `RawCtxOwnerOracle.receive`; and the decoded-frame transcription `executeDecoded` equals the branch of `RawCtxWholeOwner.rawReceive` after decoding and before publication. These three equalities hold at the interface of `RawCtxMixedOwner.receiveAdapter`. The second conjunct is the universally quantified statement of `PqxdhOpenContextBridge.decoded_receive_native`, the decoded-frame equality at the native opening interface `RawCtxSourceOpen.nativeAdapter`, before the embedding into the receive adapter. The third is the universally quantified statement of `PqxdhOpenContextBridge.decoded_after_root`, the same equality at the interface of the HB-111 target raw-opening site `PqxdhBeaconPhase2Shared.afterRoot` (through `PqxdhBeaconPhase2Shared.rawLift`), for every `Response` and `Shared` type. The second and third conjuncts are copied verbatim from the statements of those theorems, and `receive_bridge` proves `ReceiveBridge` from `context_bridge`, `decoded_receive_native` and `decoded_after_root`. The per-effect lemma `receive_loop_native` used in the proof of `decoded_receive_native` is not bundled. The only premises inside `ReceiveBridge` are B12's representation conditions (a payload slice and a 281-byte associated-data array representing the frame), the admission of the frame context by `from_frame` for the first two parts of `ContextBridge` and, for its first part, the hypothesis that the KDF replies drive the receive with the experiments' context to an opening capability.
+`ReceiveBridge` is the conjunction of three propositions. The first is `PqxdhOpenContextBridge.ContextBridge`, which bundles `opened_record_bridge`, `receive_loop_bridge` and `decoded_receive_bridge`: for the same KDF replies, the extracted `begin_receive` and `ReceiveKdf.resume` give opening capabilities with the same ratchet entry and prepared receive for the experiments' context and for the frame context admitted by the extracted `record.OpenFrameContext.from_frame`, and on that capability `PqxdhOpenBridges.executeOpen` equals the experiments' opening step; the loop transcription `executeReceiveFrom` equals the experiments' receive driver `RawCtxOwnerOracle.receive`; and the decoded-frame transcription `executeDecoded` equals the branch of `RawCtxWholeOwner.rawReceive` after decoding and before publication. These three equalities hold at the interface of `RawCtxMixedOwner.receiveAdapter`. The second conjunct is the universally quantified statement of `PqxdhOpenContextBridge.decoded_receive_native`, the decoded-frame equality at the native opening interface `RawCtxSourceOpen.nativeAdapter`, before the embedding into the receive adapter. The third is the universally quantified statement of `PqxdhOpenContextBridge.decoded_after_root`, the same equality at the interface of the HB-111 target raw-opening site `PqxdhBeaconPhase2Shared.afterRoot` (through `PqxdhBeaconPhase2Shared.rawLift`), for every `Response` and `Shared` type. The second and third conjuncts are copied verbatim from the statements of those theorems, and `receive_bridge` proves `ReceiveBridge` from `context_bridge`, `decoded_receive_native` and `decoded_after_root`. The per-effect lemma `receive_loop_native` used in the proof of `decoded_receive_native` is not bundled. The only premises inside `ReceiveBridge` are B12's representation conditions (a payload slice and a 151-byte associated-data array representing the frame), the admission of the frame context by `from_frame` for the first two parts of `ContextBridge` and, for its first part, the hypothesis that the KDF replies drive the receive with the experiments' context to an opening capability.
 
 `authenticated_native_root_bound_bridged_receive`, `authenticated_extracted_root_bound_receive`, `evolving_bound_bridged_receive` and `evolving_extracted_bound_receive` state the statement of the corresponding `PqxdhOpenBridges` theorem, copied verbatim, conjoined with `ReceiveBridge`, at the same parameters and under the same hypotheses. Each is proved by pairing that theorem with `receive_bridge`. `ReceiveBridge` is proved without hypotheses and mentions none of the headline parameters, so the restatements add no security premise and keep the bounds of the `PqxdhOpenBridges` theorems.
 
@@ -19,6 +19,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhReceiveHeadlineBridges
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhRefinement BeaconcryptCore.Refinement.RepresentationBridge
 
 /-! ## The receive bridge -/
@@ -29,9 +31,9 @@ open PqxdhOpenContextBridge
 /-- The receive bridge: `PqxdhOpenContextBridge.ContextBridge` together with the universally quantified statements of `PqxdhOpenContextBridge.decoded_receive_native` (the decoded-frame transcription `executeDecoded` equals, wrapped in `ok`, the branch of `RawCtxWholeOwner.rawReceive` after decoding and before publication, at the native opening interface `RawCtxSourceOpen.nativeAdapter`) and `PqxdhOpenContextBridge.decoded_after_root` (the same equality at the interface of the HB-111 target raw-opening site `PqxdhBeaconPhase2Shared.afterRoot`, for every `Response` and `Shared` type), each under B12's representation conditions. -/
 def ReceiveBridge : Prop :=
   ContextBridge ∧
-  (∀ (erased : Std.Array Std.U8 357#usize) (kernel : ConcreteRatchetKernel) (expected : Std.U64)
+  (∀ (erased : Std.Array Std.U8 227#usize) (kernel : ConcreteRatchetKernel) (expected : Std.U64)
       (raw : Pqxdh.Bytes) (frame : RawCtxReceive.DecodedFrame) (associatedData : Pqxdh.Bytes)
-      (payload : Slice Std.U8) (ad : Std.Array Std.U8 281#usize),
+      (payload : Slice Std.U8) (ad : Std.Array Std.U8 151#usize),
     RawCtxNativeFramePrelude.sliceBytes payload = frame.payload →
     absBytes ad = associatedData →
     executeDecoded erased kernel expected frame payload ad =
@@ -41,9 +43,9 @@ def ReceiveBridge : Prop :=
             (RawCtxOwnerOracle.receive (Plaintext := RawCtxWholeOwner.Decrypted) kernel frame.sequence
               ⟨raw, frame, associatedData⟩)
         else pure (kernel, .None))) ∧
-  (∀ {Response Shared : Type} (erased : Std.Array Std.U8 357#usize) (kernel : ConcreteRatchetKernel)
+  (∀ {Response Shared : Type} (erased : Std.Array Std.U8 227#usize) (kernel : ConcreteRatchetKernel)
       (expected : Std.U64) (raw : Pqxdh.Bytes) (frame : RawCtxReceive.DecodedFrame)
-      (associatedData : Pqxdh.Bytes) (payload : Slice Std.U8) (ad : Std.Array Std.U8 281#usize),
+      (associatedData : Pqxdh.Bytes) (payload : Slice Std.U8) (ad : Std.Array Std.U8 151#usize),
     RawCtxNativeFramePrelude.sliceBytes payload = frame.payload →
     absBytes ad = associatedData →
     simulateQ (PqxdhBeaconPhase2Shared.rawLift (Response := Response) (Shared := Shared))
@@ -92,12 +94,12 @@ theorem authenticated_native_root_bound_bridged_receive
     (secretIdentity : M → Pqxdh.Bytes)
     (initialMatch : PqxdhProtocolServerInvariant.RootFields env.source.crypto secretIdentity
       env.senderId env.index env.server env.initial) :
-    (let p := protocol env kem attachedVerify primitives program post
-    ((actual env baseImpl kem attachedVerify primitives program post).boolDistance
+    (let p := protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post
+    ((actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post).boolDistance
       (uniformGame (rootReduction env.source baseImpl kem p)) ≤
       (PqxdhJointIdentity.advantage primitives
         (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
-          (driver env.toDriverEnvironment program) fallback ordinaryFallback)).toReal +
+          (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program) fallback ordinaryFallback)).toReal +
       Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)}[x = true].toReal +
       (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
         (PqxdhChallengeSecretRouting.reduction env.source kem p).toINDCCA).toReal +
@@ -107,17 +109,17 @@ theorem authenticated_native_root_bound_bridged_receive
         (hmacPrfRealGame hmac (indexedReduction hmac (rootReduction env.source baseImpl kem p) index)).boolDistance
           (hmacPrfRandomGame (indexedReduction hmac (rootReduction env.source baseImpl kem p) index))) ∧
     (∀ result ∈ support (PqxdhPrivateSourceCoins.privateRun attachedVerify primitives 1
-      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (driver env.toDriverEnvironment program))),
+      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program))),
       ∃ output, result.1.map PqxdhPrivateRootSource.eraseOutput = some output ∧
         PqxdhProtocolServerInvariant.RootFields env.source.crypto secretIdentity env.senderId env.index
           env.server output.context.selection.2) ∧
-    PrepareBridge ∧ CommitBridge ∧ BeaconStartBridge ∧ BeaconCommitBridge ∧ RegistrationIdBridge ∧
+    PrepareBridge (associatedData := associatedData) ∧ CommitBridge ∧ BeaconStartBridge ∧ BeaconCommitBridge ∧ RegistrationIdBridge ∧
     CommitmentTranscriptBridge ∧ SendFinishBridge ∧ FramePayloadBridge ∧
-    AcceptBridge env baseImpl kem attachedVerify primitives program post secretIdentity ∧
+    AcceptBridge (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post secretIdentity ∧
     ValidateInitBridge ∧
     OpenBridge) ∧
     ReceiveBridge :=
-  ⟨PqxdhOpenBridges.authenticated_native_root_bound_bridged_open env baseImpl kem attachedVerify primitives
+  ⟨PqxdhOpenBridges.authenticated_native_root_bound_bridged_open (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives
       program post c compatible adapter functional hmac sourceCorrect fallback ordinaryFallback secretIdentity
       initialMatch,
     receive_bridge⟩
@@ -132,12 +134,12 @@ theorem authenticated_extracted_root_bound_receive
     (secretIdentity : M → Pqxdh.Bytes)
     (initialMatch : PqxdhProtocolServerInvariant.RootFields env.source.crypto secretIdentity
       env.senderId env.index env.server env.initial) :
-    (let p := protocol env kem attachedVerify primitives program post
-    ((extractedActual env baseImpl kem attachedVerify primitives program post secretIdentity).boolDistance
+    (let p := protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post
+    ((extractedActual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post secretIdentity).boolDistance
       (uniformGame (rootReduction env.source baseImpl kem p)) ≤
       (PqxdhJointIdentity.advantage primitives
         (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
-          (driver env.toDriverEnvironment program) fallback ordinaryFallback)).toReal +
+          (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program) fallback ordinaryFallback)).toReal +
       Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)}[x = true].toReal +
       (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
         (PqxdhChallengeSecretRouting.reduction env.source kem p).toINDCCA).toReal +
@@ -147,15 +149,15 @@ theorem authenticated_extracted_root_bound_receive
         (hmacPrfRealGame hmac (indexedReduction hmac (rootReduction env.source baseImpl kem p) index)).boolDistance
           (hmacPrfRandomGame (indexedReduction hmac (rootReduction env.source baseImpl kem p) index))) ∧
     (∀ result ∈ support (PqxdhPrivateSourceCoins.privateRun attachedVerify primitives 1
-      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (driver env.toDriverEnvironment program))),
+      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program))),
       ∃ output, result.1.map PqxdhPrivateRootSource.eraseOutput = some output ∧
         PqxdhProtocolServerInvariant.RootFields env.source.crypto secretIdentity env.senderId env.index
           env.server output.context.selection.2) ∧
-    PrepareBridge ∧ CommitBridge ∧ BeaconStartBridge ∧ BeaconCommitBridge ∧ RegistrationIdBridge ∧
+    PrepareBridge (associatedData := associatedData) ∧ CommitBridge ∧ BeaconStartBridge ∧ BeaconCommitBridge ∧ RegistrationIdBridge ∧
     CommitmentTranscriptBridge ∧ SendFinishBridge ∧ FramePayloadBridge ∧ ValidateInitBridge ∧
     OpenBridge) ∧
     ReceiveBridge :=
-  ⟨PqxdhOpenBridges.authenticated_extracted_root_bound_open env baseImpl kem attachedVerify primitives
+  ⟨PqxdhOpenBridges.authenticated_extracted_root_bound_open (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives
       program post c compatible adapter functional hmac sourceCorrect fallback ordinaryFallback secretIdentity
       initialMatch,
     receive_bridge⟩
@@ -173,19 +175,19 @@ theorem evolving_bound_bridged_receive (positive : 0 < number.val)
     (secretIdentity : M → Pqxdh.Bytes)
     (initialMatch : PqxdhProtocolServerInvariant.RootFields env.source.crypto secretIdentity
       env.senderId env.index env.server env.initial) :
-    ((PqxdhInitialRootEventSecrecy.actual env baseImpl kem attachedVerify primitives program post selected number
+    ((PqxdhInitialRootEventSecrecy.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number
         ancestors disclosed).boolDistance
-      (PqxdhAuthenticatedEvolvingSecrecy.ideal env baseImpl kem attachedVerify primitives program post selected
+      (PqxdhAuthenticatedEvolvingSecrecy.ideal (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected
         number ancestors disclosed) ≤
-      PqxdhAuthenticatedEvolvingSecrecy.loss env baseImpl kem attachedVerify primitives program post selected
+      PqxdhAuthenticatedEvolvingSecrecy.loss (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected
         number ancestors disclosed c hmac fallback ordinaryFallback ∧
-    PrepareBridge ∧ CommitBridge ∧ BeaconStartBridge ∧ BeaconCommitBridge ∧ RegistrationIdBridge ∧
+    PrepareBridge (associatedData := associatedData) ∧ CommitBridge ∧ BeaconStartBridge ∧ BeaconCommitBridge ∧ RegistrationIdBridge ∧
     CommitmentTranscriptBridge ∧ SendFinishBridge ∧ FramePayloadBridge ∧ ValidateInitBridge ∧
-    EvolvingAcceptBridge env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed
+    EvolvingAcceptBridge (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed
       secretIdentity ∧
     OpenBridge) ∧
     ReceiveBridge :=
-  ⟨PqxdhOpenBridges.evolving_bound_bridged_open env baseImpl kem attachedVerify primitives program
+  ⟨PqxdhOpenBridges.evolving_bound_bridged_open (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program
       post c selected number ancestors disclosed positive compatible adapter functional hmac correct fallback
       ordinaryFallback secretIdentity initialMatch,
     receive_bridge⟩
@@ -200,17 +202,17 @@ theorem evolving_extracted_bound_receive (positive : 0 < number.val)
     (secretIdentity : M → Pqxdh.Bytes)
     (initialMatch : PqxdhProtocolServerInvariant.RootFields env.source.crypto secretIdentity
       env.senderId env.index env.server env.initial) :
-    ((extractedEvolvingActual env baseImpl kem attachedVerify primitives program post selected number ancestors
+    ((extractedEvolvingActual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors
         disclosed secretIdentity).boolDistance
-      (PqxdhAuthenticatedEvolvingSecrecy.ideal env baseImpl kem attachedVerify primitives program post selected
+      (PqxdhAuthenticatedEvolvingSecrecy.ideal (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected
         number ancestors disclosed) ≤
-      PqxdhAuthenticatedEvolvingSecrecy.loss env baseImpl kem attachedVerify primitives program post selected
+      PqxdhAuthenticatedEvolvingSecrecy.loss (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected
         number ancestors disclosed c hmac fallback ordinaryFallback ∧
-    PrepareBridge ∧ CommitBridge ∧ BeaconStartBridge ∧ BeaconCommitBridge ∧ RegistrationIdBridge ∧
+    PrepareBridge (associatedData := associatedData) ∧ CommitBridge ∧ BeaconStartBridge ∧ BeaconCommitBridge ∧ RegistrationIdBridge ∧
     CommitmentTranscriptBridge ∧ SendFinishBridge ∧ FramePayloadBridge ∧ ValidateInitBridge ∧
     OpenBridge) ∧
     ReceiveBridge :=
-  ⟨PqxdhOpenBridges.evolving_extracted_bound_open env baseImpl kem attachedVerify primitives program
+  ⟨PqxdhOpenBridges.evolving_extracted_bound_open (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program
       post c selected number ancestors disclosed positive compatible adapter functional hmac correct fallback
       ordinaryFallback secretIdentity initialMatch,
     receive_bridge⟩

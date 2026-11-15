@@ -63,7 +63,9 @@ class RosterTests(unittest.TestCase):
         target.parent.mkdir(parents=True, exist_ok=True)
         old.unlink()
         self.text = (
-            "set_option warningAsError true\n" + gate.NEGATIVE_SOURCE_VALUE_GUARD + "\n"
+            "set_option warningAsError true\n"
+            + "\n".join(gate.REVIEWED_NEGATIVE_SOURCE_GUARD_GROUPS[self.path])
+            + "\n"
         )
         target.write_text(self.text)
         (self.root / gate.LEAN_ROOT).write_text(
@@ -97,7 +99,10 @@ class RosterTests(unittest.TestCase):
             with self.subTest(module=name):
                 target = self.root / name
                 target.parent.mkdir(parents=True, exist_ok=True)
-                text = "set_option warningAsError true\n" + snippet + "\n"
+                controls = gate.REVIEWED_NEGATIVE_SOURCE_GUARD_GROUPS.get(
+                    name, (snippet,)
+                )
+                text = "set_option warningAsError true\n" + "\n".join(controls) + "\n"
                 target.write_text(text)
                 module = (
                     name.removeprefix("beaconcrypt-core/proofs/lean/")
@@ -115,6 +120,80 @@ class RosterTests(unittest.TestCase):
                     target.write_text(changed)
                     with self.assertRaises(ValueError):
                         gate.check_roster(self.root, manifest)
+
+    def test_ad_hash_phase_negative_is_required(self):
+        self.negative_source_fixture()
+        controls = gate.REVIEWED_NEGATIVE_SOURCE_GUARD_GROUPS[self.path]
+        self.assertEqual(len(controls), 3)
+        ad_phase = controls[1]
+        for changed in (
+            self.text.replace(ad_phase, ""),
+            self.text + ad_phase + "\n",
+            self.text.replace(ad_phase, ad_phase.replace("does not reach", "reaches")),
+            self.text.replace(
+                ad_phase, ad_phase.replace("state_hash_receipt", "other_receipt")
+            ),
+        ):
+            with self.subTest(changed=changed):
+                self.rejected(changed)
+
+    def test_pure_pin_does_not_satisfy_ad_source_guard(self):
+        self.negative_source_fixture()
+        control = gate.REVIEWED_NEGATIVE_SOURCE_GUARD_GROUPS[self.path][2]
+        for changed in (
+            self.text.replace(control, ""),
+            self.text + control + "\n",
+            self.text.replace(control, control.replace("does not reach", "reaches")),
+            self.text.replace(control, control.replace("pin_source", "present_source")),
+        ):
+            with self.subTest(changed=changed):
+                self.rejected(changed)
+
+    def proof_value_controls_fixture(self):
+        old = self.root / self.path
+        self.path = gate.PROOF_VALUE_GUARD_PATH
+        target = self.root / self.path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        old.unlink()
+        controls = gate.REVIEWED_NEGATIVE_SOURCE_GUARD_GROUPS[self.path]
+        self.text = "set_option warningAsError true\n" + "\n".join(controls) + "\n"
+        target.write_text(self.text)
+        (self.root / gate.LEAN_ROOT).write_text(
+            "import BeaconcryptCore.Computational.RegistrationNativeProofValueGuard\n"
+        )
+        self.manifest["artifacts"][0].update(
+            path=self.path, category="lean-control", declarations=[], guards=[]
+        )
+        return controls
+
+    def test_proof_value_controls_exact_group(self):
+        controls = self.proof_value_controls_fixture()
+        self.assertEqual(len(controls), 8)
+        self.assertIn("nestedTypeArgumentOnly", "\n".join(controls))
+        self.assertIn("wrappedIgnored", "\n".join(controls))
+        gate.check_roster(self.root, self.manifest)
+
+    def test_each_proof_value_control_is_required_exactly_once(self):
+        controls = self.proof_value_controls_fixture()
+        for control in controls:
+            for changed in (
+                self.text.replace(control, ""),
+                self.text + control + "\n",
+                self.text.replace(
+                    control, control.replace("does not reach", "reaches")
+                ),
+                self.text.replace(
+                    control, control.replace("includes [anchor]", "includes [other]")
+                ),
+            ):
+                with self.subTest(control=control, changed=changed):
+                    self.rejected(changed)
+
+    def test_proof_value_controls_are_module_scoped(self):
+        controls = gate.REVIEWED_NEGATIVE_SOURCE_GUARD_GROUPS[
+            gate.PROOF_VALUE_GUARD_PATH
+        ]
+        self.rejected(self.text + "\n".join(controls))
 
     def test_fresh_extraction_retry_preserves_prior_evidence(self):
         self.manifest["sourceChecks"] = [
@@ -154,6 +233,84 @@ class RosterTests(unittest.TestCase):
 
     def test_exact_fixture(self):
         gate.check_roster(self.root, self.manifest)
+
+    def test_single_and_multiline_dependency_comments(self):
+        for comment in (
+            "/-- info: 'endpoint' does not depend on any axioms -/",
+            "/--\ninfo: 'endpoint' does not depend on any axioms\n-/",
+            "/--\ninfo: 'endpoint' depends on axioms: [propext,\n"
+            " Classical.choice,\n Quot.sound]\n-/",
+        ):
+            with self.subTest(comment=comment):
+                text = self.text.replace(
+                    "/-- info: 'endpoint' does not depend on any axioms -/", comment
+                )
+                expected = comment + "\n#guard_msgs in\n#print axioms endpoint"
+                self.assertEqual(gate.guard_blocks(text), [expected])
+                manifest = copy.deepcopy(self.manifest)
+                manifest["artifacts"][0]["guards"] = [expected]
+                (self.root / self.path).write_text(text)
+                gate.check_roster(self.root, manifest)
+
+    def test_mixed_comment_layouts_keep_individual_guards(self):
+        extra = (
+            "theorem other : True := True.intro\n"
+            "/--\ninfo: 'other' depends on axioms: [propext, Quot.sound]\n-/\n"
+            "#guard_msgs in\n#print axioms other\n"
+        )
+        text = self.text + extra
+        blocks = gate.guard_blocks(text)
+        self.assertEqual(len(blocks), 2)
+        self.assertEqual(blocks[0], self.manifest["artifacts"][0]["guards"][0])
+        self.assertEqual(blocks[1], extra[extra.index("/--") :].rstrip())
+        manifest = copy.deepcopy(self.manifest)
+        manifest["artifacts"][0].update(
+            declarations=gate.DECLARATION.findall(text), guards=blocks
+        )
+        (self.root / self.path).write_text(text)
+        gate.check_roster(self.root, manifest)
+
+    def test_multiline_guard_requires_adjacent_complete_commands(self):
+        text = self.text.replace("/-- info:", "/--\ninfo:").replace(
+            "axioms -/", "axioms\n-/"
+        )
+        for changed in (
+            text.replace("#guard_msgs in", "#check True\n#guard_msgs in"),
+            text.replace("#print axioms", "#check True\n#print axioms"),
+            text.replace("#guard_msgs in", "/-- unrelated -/\n#guard_msgs in"),
+            text.replace("#print axioms", "/-- unrelated -/\n#print axioms"),
+            text.replace("#guard_msgs in\n", "#guard_msgs in "),
+            text.replace("#guard_msgs in", "#guard_msgs (drop warning) in"),
+            text.replace("axioms\n-/", "axioms"),
+        ):
+            with self.subTest(changed=changed):
+                self.assertEqual(gate.guard_blocks(changed), [])
+                manifest = copy.deepcopy(self.manifest)
+                manifest["artifacts"][0]["guards"] = []
+                self.rejected(changed, manifest)
+
+    def test_multiline_guard_cannot_hide_an_extra_print(self):
+        text = self.text.replace("/-- info:", "/--\ninfo:").replace(
+            "axioms -/", "axioms\n-/"
+        )
+        manifest = copy.deepcopy(self.manifest)
+        manifest["artifacts"][0]["guards"] = gate.guard_blocks(text)
+        self.rejected(text + "#print axioms unguarded\n", manifest)
+
+    def test_multiline_guard_still_requires_reviewed_axioms(self):
+        for dependency in ("[native_decide]", "[propext, unreviewed]", "[]"):
+            with self.subTest(dependency=dependency):
+                text = self.text.replace(
+                    "/-- info: 'endpoint' does not depend on any axioms -/",
+                    "/--\ninfo: 'endpoint' depends on axioms: " + dependency + "\n-/",
+                )
+                manifest = copy.deepcopy(self.manifest)
+                manifest["artifacts"][0]["guards"] = gate.guard_blocks(text)
+                self.assertEqual(len(manifest["artifacts"][0]["guards"]), 1)
+                self.rejected(text, manifest)
+
+    def test_guard_layout_change_still_requires_exact_roster_review(self):
+        self.rejected(self.text.replace("/-- info:", "/--\ninfo:"))
 
     def test_missing_import(self):
         (self.root / gate.LEAN_ROOT).write_text("")

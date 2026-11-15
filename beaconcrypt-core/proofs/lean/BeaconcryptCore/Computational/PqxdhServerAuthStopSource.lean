@@ -58,14 +58,24 @@ theorem finish_trace (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
   cases phase : state.1.1.beacon.beacon.phase with
   | initSent control prekey oneTime kem =>
       have active : InitSent state.1.1 := ⟨control, prekey, oneTime, kem, phase⟩
-      simp only [phase, mem_support_bind_iff] at supported
-      obtain ⟨prepared, _, supported⟩ := supported
+      simp only [phase] at supported
+      split at supported
+      rotate_left
+      · simp only [support_pure, Set.mem_singleton_iff] at supported
+        subst supported
+        refine TraceInvariant.keep setup context Q j state _ invariant
+          ⟨invariant.shape.touched, invariant.shape.once, ?_⟩ (List.prefix_refl _) rfl rfl
+          (fun flags => (Bool.or_eq_false_iff.mp flags).1)
+        rintro ⟨control', prekey', oneTime', kem', after⟩
+        exact absurd after (finish_phase control state.1.1.beacon none control' prekey' oneTime' kem')
+      simp only [mem_support_bind_iff] at supported
+      obtain ⟨hashed, _, prepared, _, supported⟩ := supported
       cases found : prepared with
       | none =>
           simp only [found, support_pure, Set.mem_singleton_iff] at supported
           subst supported
           apply TraceInvariant.keep setup context Q j state _ invariant
-            (Shape.finish control state.1.1 none invariant.shape.touched invariant.shape.once)
+            (Shape.finish control { state.1.1 with ctx := hashed.2 } none invariant.shape.touched invariant.shape.once)
           · rw [finishOutcome_touches]
           · rfl
           · rfl
@@ -83,7 +93,7 @@ theorem finish_trace (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
           | rejected =>
               simp only [reply, support_pure, Set.mem_singleton_iff] at supported
               subst supported
-              exact kept state.1.1.ctx none
+              exact kept hashed.2 none
           | root root =>
               simp only [reply, mem_support_bind_iff] at supported
               obtain ⟨staged, _, supported⟩ := supported
@@ -140,12 +150,18 @@ theorem skeleton_trace (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
               subst supported
               exact { invariant with unselected := fun flags => invariant.unselected (Bool.or_eq_false_iff.mp flags).1 }
           | some token =>
-              simp only [found, mem_support_bind_iff] at supported
-              obtain ⟨built, _, supported⟩ := supported
-              simp only [support_pure, Set.mem_singleton_iff] at supported
-              subst supported
-              exact TraceInvariant.keep setup context Q j state _ invariant shape (List.prefix_refl _)
-                rfl rfl (fun flags => (Bool.or_eq_false_iff.mp flags).1)
+              simp only [found] at supported
+              split at supported
+              · simp only [support_pure, Set.mem_singleton_iff] at supported
+                subst supported
+                exact TraceInvariant.keep setup context Q j state _ invariant shape (List.prefix_refl _)
+                  rfl rfl (fun flags => (Bool.or_eq_false_iff.mp flags).1)
+              · simp only [mem_support_bind_iff] at supported
+                obtain ⟨hashed, _, built, _, supported⟩ := supported
+                simp only [support_pure, Set.mem_singleton_iff] at supported
+                subst supported
+                exact TraceInvariant.keep setup context Q j state _ invariant shape (List.prefix_refl _)
+                  rfl rfl (fun flags => (Bool.or_eq_false_iff.mp flags).1)
       | hmac key bytes =>
           simp only [skeleton, hmacStep, StateT.run] at supported
           split_ifs at supported with inside
@@ -306,8 +322,14 @@ theorem finish_marks (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
   simp only [finishStep, StateT.run] at supported
   cases phase : state.1.beacon.beacon.phase with
   | initSent control prekey oneTime kem =>
-      simp only [phase, mem_support_bind_iff] at supported
-      obtain ⟨prepared, _, supported⟩ := supported
+      simp only [phase] at supported
+      split at supported
+      rotate_left
+      · simp only [support_pure, Set.mem_singleton_iff] at supported
+        subst supported
+        rfl
+      simp only [mem_support_bind_iff] at supported
+      obtain ⟨hashed, _, prepared, _, supported⟩ := supported
       cases found : prepared with
       | none =>
           simp only [found, support_pure, Set.mem_singleton_iff] at supported
@@ -368,11 +390,16 @@ theorem skeleton_marks (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
               subst supported
               rfl
           | some token =>
-              simp only [found, mem_support_bind_iff] at supported
-              obtain ⟨built, _, supported⟩ := supported
-              simp only [support_pure, Set.mem_singleton_iff] at supported
-              subst supported
-              rfl
+              simp only [found] at supported
+              split at supported
+              · simp only [support_pure, Set.mem_singleton_iff] at supported
+                subst supported
+                rfl
+              · simp only [mem_support_bind_iff] at supported
+                obtain ⟨hashed, _, built, _, supported⟩ := supported
+                simp only [support_pure, Set.mem_singleton_iff] at supported
+                subst supported
+                rfl
       | hmac key bytes =>
           simp only [skeleton, hmacStep, StateT.run] at supported
           split_ifs at supported

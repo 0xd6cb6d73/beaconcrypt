@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterInitialization
+import BeaconcryptCore.Refinement.AdapterServerConstructorGeneration
 open CoreModels Aeneas OracleComp OracleSpec
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -100,7 +101,7 @@ def initialStore (world :PqxdhRecordLiftWorld.State n)
 variable (views :AdapterPublicWrapperStorage.Views) (objects :AdapterServerConstructorObjects.Leaves views)
 variable (ensureInit :StateT Unit ProbComp Bool)
 variable (serverEd :AdapterServerConstructorJoint.EdContract generator view setup.joint (AdapterServerConstructorStartup.edCore ensureInit))
-variable (ml :AdapterBeaconConstructorGeneration.MldsaContract generator view (RegistrationNativeMldsa.generate source))
+variable (ml :AdapterServerConstructorGeneration.MldsaContract generator view (RegistrationNativeMldsa.generate source))
 variable (edGetter :∀key,originalCrypto.edPublicBytes key=pure (view.edPublic key))
 variable (mlGetter :∀identity,(originalLocal.auth_MldsaIdentity_public_key identity).run=pure (.ok (view.mldsa identity).publicKey))
 
@@ -116,7 +117,7 @@ theorem native (previous :P) (identityIndex :Nat) (identifier :U64) (rng :R) :
     (RegistrationNativePlatformPublicAdapterInitialization.mldsa (n:=n) generator view ml)
     (RegistrationNativePlatformPublicAdapterInitialization.ed_public (n:=n) view edGetter)
     (RegistrationNativePlatformPublicAdapterInitialization.ml_public (n:=n) view mlGetter previous)
-    (RegistrationNativePlatformPublicAdapterInitialization.hash (n:=n)) identityIndex identifier rng
+    identityIndex identifier rng
   have erased:=congrArg (fun computation=>(fun result=>AdapterServerConstructorRunner.nativeView result.1) <$>computation)
     (source_erasure (n:=n) setup generator view previous identityIndex identifier rng)
   simp only [Functor.map_map] at erased

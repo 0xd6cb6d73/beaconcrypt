@@ -13,9 +13,16 @@ variable [ops : BeaconcryptCore.Refinement.RegistrationValidatorPrimitive.Operat
 def utf8Correct := ops.utf8Correct
 def sortedMap := ops.sortedMap
 def preflightSlice (input start fields : Slice U8) : RustM (core.option.Option Unit) := do
-  let copied ← core.Array.Insts.CoreConvertTryFromShared0SliceTryFromSliceError.try_from
-    6#usize core.U8.Insts.CoreMarkerCopy fields
-  match copied with
-  | .Err _ => fail .panic
-  | .Ok values => beaconcrypt_parse.preflight input start values
+  if fields.length = 4 then
+    let copied ← core.Array.Insts.CoreConvertTryFromShared0SliceTryFromSliceError.try_from
+      4#usize core.U8.Insts.CoreMarkerCopy fields
+    match copied with
+    | .Err _ => fail .panic
+    | .Ok values => beaconcrypt_parse.extraction_preflight_four input start values
+  else
+    let copied ← core.Array.Insts.CoreConvertTryFromShared0SliceTryFromSliceError.try_from
+      6#usize core.U8.Insts.CoreMarkerCopy fields
+    match copied with
+    | .Err _ => fail .panic
+    | .Ok values => beaconcrypt_parse.preflight input start values
 end beaconcrypt_parse.registration_validator_primitive

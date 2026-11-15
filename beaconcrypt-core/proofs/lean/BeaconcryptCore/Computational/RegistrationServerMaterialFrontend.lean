@@ -54,6 +54,16 @@ def finish (result : RustM (RegistrationNativePairedServerService.Result Pqxdh.B
   | .ok (.Ok published) => pure (.ok (some (published.key_id, published.encoded)),
       { before with control := published.control })
 
+/-- The public reference frontend executes the actual selected AD hash before reserving a peer or demanding private material. -/
+def adHash (pending : registration.ServerAdHash) :
+    OracleComp (Spec n) (RustM (core.result.Result registration.ServerInitialKdf pqxdh.ServerState)) :=
+  match pending.request with
+  | .fail error => pure (.fail error)
+  | .div => pure .div
+  | .ok request => do
+    let digest ← effect (.inr (.hash (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request)))
+    pure (pending.resume (.Some (RegistrationAuthenticationShared.digestArray digest)))
+
 /-- The actual lookup is evaluated before preflight/occupancy and reservePeer; only an admitted native initializer asks the material service. -/
 noncomputable def complete (wire : RegistrationNativeWire.Wire) (reservePeer : Bool)
     (ready : Ready) (application : Slice U8) : StateT State (OracleComp (Spec n)) Result := fun before =>
@@ -71,12 +81,18 @@ noncomputable def complete (wire : RegistrationNativeWire.Wire) (reservePeer : B
             | .fail error => pure (.fail error, before)
             | .div => pure (.div, before)
             | .ok (.Err _) => pure (.ok none, before)
-            | .ok (.Ok selected) =>
-                if reservePeer then do
-                  let published ← RegistrationNativePairedServerService.publicAdmitted wire.encodeResponse before.control
-                    (RegistrationBoundKeySchedule.publicInitial selected) ready.reference
-                  (finish published).run before
-                else pure (.ok none, before)
+            | .ok (.Ok selected) => do
+                let hashed ← adHash selected
+                match hashed with
+                | .fail error => pure (.fail error, before)
+                | .div => pure (.div, before)
+                | .ok (.Err _) => pure (.ok none, before)
+                | .ok (.Ok initial) =>
+                  if reservePeer then do
+                    let published ← RegistrationNativePairedServerService.publicAdmitted wire.encodeResponse before.control
+                      (RegistrationBoundKeySchedule.publicInitial initial) ready.reference
+                    (finish published).run before
+                  else pure (.ok none, before)
           else pure (.ok none, before)
 
 /-- None is explicit raw-adapter cancellation. Every case first consumes the one-use handle, including oversized application and every later native failure. -/

@@ -24,11 +24,11 @@ theorem finish_reply {Send Receive Material Context Plaintext : Type}
 /-- The actual opening wrapper returns its prepared sequence. A wrong registration sequence discards only the result after executing the unchanged opening service. -/
 theorem opening_wrong (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
     (read : RawCtxReceive.FrameDecoder) (expected : Std.U64)
-    (candidate : pqxdh.BeaconRegistrationCandidate) (native : Kernel → ConcreteRatchetKernel)
+    (candidate : pqxdh.BeaconRegistrationCandidate) (associatedData : Std.Array Std.U8 151#usize) (native : Kernel → ConcreteRatchetKernel)
     (pending : RawCtxInterpretedOpening.Opening Chain Chain Material RawCtxWholeOwner.OpenContext)
     (target : Std.U64) (sequence : RawCtxInterpretedOpening.sequence pending = ok target)
     (wrong : target ≠ 1#u64) :
-    (fun reply => PqxdhBeaconPhase2Publication.afterOpening candidate
+    (fun reply => PqxdhBeaconPhase2Publication.afterOpening candidate associatedData
       (native (RawCtxChainReceive.normalFinish pending reply).1)
       (RawCtxChainReceive.normalFinish pending reply).2) <$>
         receive source rest read expected (.inr pending) =
@@ -50,11 +50,11 @@ theorem opening_wrong (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
 /-- Every actual skipped-key continuation retains its target; a wrong-sequence final observation is empty without removing any oracle effect. -/
 theorem program_wrong (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
     (read : RawCtxReceive.FrameDecoder) (expected : Std.U64)
-    (candidate : pqxdh.BeaconRegistrationCandidate) (native : Kernel → ConcreteRatchetKernel)
+    (candidate : pqxdh.BeaconRegistrationCandidate) (associatedData : Std.Array Std.U8 151#usize) (native : Kernel → ConcreteRatchetKernel)
     (target : Std.U64) (context : RawCtxWholeOwner.OpenContext)
     (effect : RawCtxChainReceive.Effect Chain Chain Material RawCtxWholeOwner.OpenContext)
     (scope : Scope target context effect) (wrong : target ≠ 1#u64) :
-    (fun result => PqxdhBeaconPhase2Publication.afterOpening candidate (native result.1) result.2) <$>
+    (fun result => PqxdhBeaconPhase2Publication.afterOpening candidate associatedData (native result.1) result.2) <$>
         simulateQ (receive source rest read expected) (RawCtxChainReceive.program effect) =
       (fun _ => none) <$> simulateQ (receive source rest read expected) (RawCtxChainReceive.program effect) := by
   generalize depth : RawCtxChainReceive.effectRank effect = rank
@@ -67,7 +67,7 @@ theorem program_wrong (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
     | openRequested pending =>
       simp only [RawCtxChainReceive.program, simulateQ_spec_query, simulateQ_map,
         bind_pure_comp, Functor.map_map]
-      exact opening_wrong source rest read expected candidate native pending target scope.1 wrong
+      exact opening_wrong source rest read expected candidate associatedData native pending target scope.1 wrong
     | kdfRequested pending =>
       simp only [RawCtxChainReceive.program, simulateQ_bind, simulateQ_spec_query, receive, pure_bind]
       exact ih _ (depth ▸ RawCtxChainReceive.normalResume_rank pending (step source rest pending.request))
@@ -76,13 +76,13 @@ theorem program_wrong (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
 /-- At the actual empty initial kernel, the post-opening registration observation is independent of every material map. Target one leaves no stored material; all other targets retain their actual receive effects before the original gate rejects them. -/
 theorem execute_material (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
     (read : RawCtxReceive.FrameDecoder) (expected : Std.U64)
-    (candidate : pqxdh.BeaconRegistrationCandidate) (first second : Material → RatchetMaterial)
+    (candidate : pqxdh.BeaconRegistrationCandidate) (associatedData : Std.Array Std.U8 151#usize) (first second : Material → RatchetMaterial)
     (send receiving : Chain) (target : Std.U64) (context : RawCtxWholeOwner.OpenContext) :
-    (fun result => PqxdhBeaconPhase2Publication.afterOpening candidate
+    (fun result => PqxdhBeaconPhase2Publication.afterOpening candidate associatedData
       (PqxdhServerAuthSendFactor.resolve (RawCtxMaterialInterpretation.mapRefined first result.1)) result.2) <$>
         simulateQ (receive source rest read expected)
           (RawCtxChainReceive.execute (PqxdhServerAuthBeaconFirstOpening.initial send receiving) target context) =
-    (fun result => PqxdhBeaconPhase2Publication.afterOpening candidate
+    (fun result => PqxdhBeaconPhase2Publication.afterOpening candidate associatedData
       (PqxdhServerAuthSendFactor.resolve (RawCtxMaterialInterpretation.mapRefined second result.1)) result.2) <$>
         simulateQ (receive source rest read expected)
           (RawCtxChainReceive.execute (PqxdhServerAuthBeaconFirstOpening.initial send receiving) target context) := by
@@ -91,12 +91,12 @@ theorem execute_material (source : FixedHkdfSha512NoSaltSource) (rest : Residual
     have same := PqxdhServerAuthBeaconFirstOpening.execute_one_material
       (receive source rest read expected) first second send receiving context
     simpa only [Functor.map_map, Prod.map_def, id_eq] using congrArg
-      (fun work => (fun result => PqxdhBeaconPhase2Publication.afterOpening candidate
+      (fun work => (fun result => PqxdhBeaconPhase2Publication.afterOpening candidate associatedData
         (PqxdhServerAuthSendFactor.resolve result.1) result.2) <$> work) same
-  · exact (program_wrong source rest read expected candidate
+  · exact (program_wrong source rest read expected candidate associatedData
       (fun entry => PqxdhServerAuthSendFactor.resolve (RawCtxMaterialInterpretation.mapRefined first entry))
       target context _ (begin_scope _ target context) one).trans
-        (program_wrong source rest read expected candidate
+        (program_wrong source rest read expected candidate associatedData
           (fun entry => PqxdhServerAuthSendFactor.resolve (RawCtxMaterialInterpretation.mapRefined second entry))
           target context _ (begin_scope _ target context) one).symm
 
@@ -104,20 +104,20 @@ theorem execute_material (source : FixedHkdfSha512NoSaltSource) (rest : Residual
 def initial (other : RootOutput) : Kernel :=
   PqxdhServerAuthBeaconFirstOpening.initial (.known (RawCtxFreshChainCut.concreteChain other)) .hidden
 
-def localState (candidate : pqxdh.BeaconRegistrationCandidate) (other : RootOutput) :
+def localState (candidate : pqxdh.BeaconRegistrationCandidate) (associatedData : Std.Array Std.U8 151#usize) (other : RootOutput) :
     RawCtxChainOwner.State Kernel Unit :=
-  ⟨initial other, candidate.server_binding.identity_key_id, absBytes candidate.associated_data, (), 0⟩
+  ⟨initial other, candidate.server_binding.identity_key_id, absBytes associatedData, (), 0⟩
 
 /-- Arbitrary raw bytes retain their parser/validation path and complete receive effects. Only the final registration observation forgets the material interpretation. -/
 theorem raw_material (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
     (read : RawCtxReceive.FrameDecoder) (bytes : Pqxdh.Bytes)
-    (candidate : pqxdh.BeaconRegistrationCandidate) (first second : Material → RatchetMaterial) :
-    (fun result => PqxdhBeaconPhase2Publication.afterOpening candidate
+    (candidate : pqxdh.BeaconRegistrationCandidate) (associatedData : Std.Array Std.U8 151#usize) (first second : Material → RatchetMaterial) :
+    (fun result => PqxdhBeaconPhase2Publication.afterOpening candidate associatedData
       (PqxdhServerAuthSendFactor.resolve (RawCtxMaterialInterpretation.mapRefined first result.2.kernel)) result.1) <$>
-        raw source rest read bytes (localState candidate rest.2.2) =
-    (fun result => PqxdhBeaconPhase2Publication.afterOpening candidate
+        raw source rest read bytes (localState candidate associatedData rest.2.2) =
+    (fun result => PqxdhBeaconPhase2Publication.afterOpening candidate associatedData
       (PqxdhServerAuthSendFactor.resolve (RawCtxMaterialInterpretation.mapRefined second result.2.kernel)) result.1) <$>
-        raw source rest read bytes (localState candidate rest.2.2) := by
+        raw source rest read bytes (localState candidate associatedData rest.2.2) := by
   unfold raw RawCtxChainOwner.rawReceive
   simp only [StateT.run]
   by_cases empty : bytes.isEmpty = true
@@ -127,36 +127,36 @@ theorem raw_material (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
     cases decoded : read bytes with
     | none => simp only [map_pure, RawCtxChainOwner.publish, PqxdhBeaconPhase2Publication.afterOpening]
     | some frame =>
-      by_cases valid : RawCtxReceive.ValidFrame (localState candidate rest.2.2).expectedSender
-          (localState candidate rest.2.2).associatedData frame
+      by_cases valid : RawCtxReceive.ValidFrame (localState candidate associatedData rest.2.2).expectedSender
+          (localState candidate associatedData rest.2.2).associatedData frame
       · simp only [valid, ite_true, bind_pure_comp, Functor.map_map, RawCtxChainOwner.publish, calls]
-        exact execute_material source rest read frame.sender candidate first second _ _ frame.sequence _
+        exact execute_material source rest read frame.sender candidate associatedData first second _ _ frame.sequence _
       · simp only [valid, ite_false, map_pure, RawCtxChainOwner.publish,
           PqxdhBeaconPhase2Publication.afterOpening]
 
 /-- The final observation uses a fixed material resolver only after the checked gate; it does not add that resolver to any primitive query. -/
-noncomputable def observe (candidate : pqxdh.BeaconRegistrationCandidate)
+noncomputable def observe (candidate : pqxdh.BeaconRegistrationCandidate) (associatedData : Std.Array Std.U8 151#usize)
     (result : core.option.Option RawCtxWholeOwner.Decrypted × RawCtxChainOwner.State Kernel Unit) :
     Option PqxdhBeaconPhase2Publication.Staged :=
-  PqxdhBeaconPhase2Publication.afterOpening candidate
+  PqxdhBeaconPhase2Publication.afterOpening candidate associatedData
     (PqxdhServerAuthCtxBuildSettlement.resolve result.2.kernel) result.1
 
 noncomputable def rawProgram (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
-    (read : RawCtxReceive.FrameDecoder) (bytes : Pqxdh.Bytes) (candidate : pqxdh.BeaconRegistrationCandidate) :=
-  observe candidate <$> raw source rest read bytes (localState candidate rest.2.2)
+    (read : RawCtxReceive.FrameDecoder) (bytes : Pqxdh.Bytes) (candidate : pqxdh.BeaconRegistrationCandidate) (associatedData : Std.Array Std.U8 151#usize) :=
+  observe candidate associatedData <$> raw source rest read bytes (localState candidate associatedData rest.2.2)
 
 /-- The actual factor-side raw owner and key-free final observation have the same staged result and entire shared cache after erasing component bookkeeping. All arbitrary-byte failure paths and returned challenger plaintext are retained. -/
 theorem raw_observation {A : Type} (source : FixedHkdfSha512NoSaltSource) (key : RootOutput)
     (rest : Residual) (read : RawCtxReceive.FrameDecoder) (bytes : Pqxdh.Bytes)
-    (candidate : pqxdh.BeaconRegistrationCandidate) (state : RawCtxSelectedReceiveCompiler.State A) :
-    ((fun result => PqxdhBeaconPhase2Publication.afterOpening candidate
+    (candidate : pqxdh.BeaconRegistrationCandidate) (associatedData : Std.Array Std.U8 151#usize) (state : RawCtxSelectedReceiveCompiler.State A) :
+    ((fun result => PqxdhBeaconPhase2Publication.afterOpening candidate associatedData
       (PqxdhServerAuthSendFactor.resolve result.2.kernel) result.1) <$>
         (RawCtxChainOwner.rawReceive (valueCalls source key rest) read bytes).run
-          (mapOwner key (localState candidate rest.2.2))).run (RawCtxSelectedReceiveCompiler.project state) =
+          (mapOwner key (localState candidate associatedData rest.2.2))).run (RawCtxSelectedReceiveCompiler.project state) =
       Prod.map id RawCtxSelectedReceiveCompiler.project <$>
         (RawCtxSelectedReceiveCompiler.evaluated source key read
-          (rawProgram source rest read bytes candidate)).run state := by
-  have equal := raw_material source rest read bytes candidate (RawCtxSelectedMessageKey.interpret key)
+          (rawProgram source rest read bytes candidate associatedData)).run state := by
+  have equal := raw_material source rest read bytes candidate associatedData (RawCtxSelectedMessageKey.interpret key)
     (RawCtxSelectedMessageKey.interpret ⟨List.replicate 32 0, by simp⟩)
   have interpreted := congrArg (fun work =>
     (RawCtxSelectedReceiveCompiler.evaluated source key read work).run state) equal
@@ -193,7 +193,7 @@ noncomputable def program (source : FixedHkdfSha512NoSaltSource) (codec : Codec 
   let candidate := PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate
   match codec.application prepared.response with
   | none => pure none
-  | some bytes => rawProgram source rest codec.frameRead bytes candidate
+  | some bytes => rawProgram source rest codec.frameRead bytes candidate prepared.binding.associated_data
 
 /-- The concrete source factor callback, including its original getter and staged state, is exactly the executable selected Beacon tail after full cache projection. No success, sequence or material-settlement premise remains. -/
 theorem program_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -214,7 +214,8 @@ theorem program_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
   | some bytes =>
     simp only [PqxdhServerAuthBeaconFactor.primCalls, native_labels, bind_pure_comp]
     exact raw_observation setup.source key rest codec.frameRead bytes
-      (PqxdhBeaconPhase2Publication.clearedCandidate (PqxdhPhase2DhRootConsumer.cleared pending).candidate) state
+      (PqxdhBeaconPhase2Publication.clearedCandidate (PqxdhPhase2DhRootConsumer.cleared pending).candidate)
+      (PqxdhPhase2DhRootConsumer.cleared pending).binding.associated_data state
 
 /-- The complete selected Beacon callback attempts at most one component call, including rejected parser, validation and opening paths. The source's local chain derivations remain in the program. -/
 theorem program_bound (source : FixedHkdfSha512NoSaltSource) (codec : Codec Reader Response)

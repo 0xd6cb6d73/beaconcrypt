@@ -22,6 +22,8 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhHypothesisWitness
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhJointKdfGame
 
 /-! ## Toy HMAC and the HKDF built from it -/
@@ -109,6 +111,7 @@ def toyCrypto : Pqxdh.Crypto where
 /-- The toy HKDF satisfies the production 32/64/76-byte prefix contract. -/
 theorem toy_prefixConsistent : PqxdhJointKdf.ProductionHkdfPrefixConsistent toyCrypto :=
   ⟨fun input => hkdfOf_prefix toyHmac input _ 32 (by omega),
+    fun input => hkdfOf_prefix toyHmac input _ 64 (by omega),
     fun input => hkdfOf_prefix toyHmac input _ 64 (by omega)⟩
 
 def toySource : FixedHkdfSha512NoSaltSource := ⟨toyCrypto, toy_prefixConsistent⟩
@@ -295,25 +298,25 @@ def toyOrdinaryFallback : PqxdhJointIdentity.Forgery := ⟨[], List.Vector.repli
 
 /-- HB-112 with every hypothesis proved: selected owner `.beacon 0`, record number `1`, no ancestors and no disclosures. -/
 theorem hb112_instance :
-    (PqxdhInitialRootEventSecrecy.actual toyEnv baseImpl toyKem toyAttachedVerify toyPrimitives toyProgram toyPost
+    (PqxdhInitialRootEventSecrecy.actual (associatedData := associatedData) (completedBinding := completedBinding) toyEnv baseImpl toyKem toyAttachedVerify toyPrimitives toyProgram toyPost
         toySelected 1#u64 [] []).boolDistance
-      (PqxdhAuthenticatedEvolvingSecrecy.ideal toyEnv baseImpl toyKem toyAttachedVerify toyPrimitives toyProgram
+      (PqxdhAuthenticatedEvolvingSecrecy.ideal (associatedData := associatedData) (completedBinding := completedBinding) toyEnv baseImpl toyKem toyAttachedVerify toyPrimitives toyProgram
         toyPost toySelected 1#u64 [] []) ≤
-    PqxdhAuthenticatedEvolvingSecrecy.loss toyEnv baseImpl toyKem toyAttachedVerify toyPrimitives toyProgram toyPost
+    PqxdhAuthenticatedEvolvingSecrecy.loss (associatedData := associatedData) (completedBinding := completedBinding) toyEnv baseImpl toyKem toyAttachedVerify toyPrimitives toyProgram toyPost
       toySelected 1#u64 [] [] toyCertificate toyHmac toyDynamicFallback toyOrdinaryFallback :=
-  PqxdhAuthenticatedEvolvingSecrecy.bound toyEnv baseImpl toyKem toyAttachedVerify toyPrimitives toyProgram toyPost
+  PqxdhAuthenticatedEvolvingSecrecy.bound (associatedData := associatedData) (completedBinding := completedBinding) toyEnv baseImpl toyKem toyAttachedVerify toyPrimitives toyProgram toyPost
     toySelected 1#u64 [] [] toyCertificate (by decide) toy_compatible toy_adapter toyFunctional toyHmac
     toy_full_correct toyDynamicFallback toyOrdinaryFallback
 
 /-- HB-111 with every hypothesis proved, including the initial `RootFields` match, so both conjuncts hold. -/
 theorem hb111_instance :
-    let p := PqxdhAuthenticatedRootExperiment.protocol toyEnv toyKem toyAttachedVerify toyPrimitives toyProgram toyPost
-    ((PqxdhAuthenticatedRootExperiment.actual toyEnv baseImpl toyKem toyAttachedVerify toyPrimitives toyProgram
+    let p := PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) toyEnv toyKem toyAttachedVerify toyPrimitives toyProgram toyPost
+    ((PqxdhAuthenticatedRootExperiment.actual (associatedData := associatedData) (completedBinding := completedBinding) toyEnv baseImpl toyKem toyAttachedVerify toyPrimitives toyProgram
         toyPost).boolDistance
       (PqxdhCorrelatedExpandHybrid.uniformGame (PqxdhCorrelatedExpand.rootReduction toyEnv.source baseImpl toyKem p)) ≤
       (PqxdhJointIdentity.advantage toyPrimitives
         (PqxdhGeneratedPhase1Prefix.privateReduction toyPrimitives baseImpl toyKem toySetup
-          (driver toyEnv.toDriverEnvironment toyProgram) toyDynamicFallback toyOrdinaryFallback)).toReal +
+          (driver (completedBinding := completedBinding) toyEnv.toDriverEnvironment toyProgram) toyDynamicFallback toyOrdinaryFallback)).toReal +
       Pr{let x ← (simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl baseImpl)
         (PqxdhKemCorrectnessError.errorExperiment toyKem))}[x = true].toReal +
       (toyKem.IND_CCA_Advantage (PqxdhInitializerSecrecy.runtimeOfImpl (PqxdhInitializerSecrecy.kemAmbientImpl baseImpl))
@@ -326,11 +329,11 @@ theorem hb111_instance :
           (hmacPrfRandomGame (PqxdhCorrelatedExpandHybrid.indexedReduction toyHmac
             (PqxdhCorrelatedExpand.rootReduction toyEnv.source baseImpl toyKem p) index))) ∧
     ∀ result ∈ support (PqxdhPrivateSourceCoins.privateRun toyAttachedVerify toyPrimitives 1
-      (PqxdhGeneratedPhase1Prefix.program baseImpl toyKem toySetup (driver toyEnv.toDriverEnvironment toyProgram))),
+      (PqxdhGeneratedPhase1Prefix.program baseImpl toyKem toySetup (driver (completedBinding := completedBinding) toyEnv.toDriverEnvironment toyProgram))),
       ∃ output, result.1.map PqxdhPrivateRootSource.eraseOutput = some output ∧
         PqxdhProtocolServerInvariant.RootFields toyEnv.source.crypto (fun _ => toyServer.ikSk) toyEnv.senderId
           toyEnv.index toyEnv.server output.context.selection.2 :=
-  PqxdhAuthenticatedRootBudgets.authenticated_native_root_bound toyEnv baseImpl toyKem toyAttachedVerify toyPrimitives
+  PqxdhAuthenticatedRootBudgets.authenticated_native_root_bound (associatedData := associatedData) (completedBinding := completedBinding) toyEnv baseImpl toyKem toyAttachedVerify toyPrimitives
     toyProgram toyPost toyCertificate toy_compatible toy_adapter toyFunctional toyHmac toy_root_correct
     toyDynamicFallback toyOrdinaryFallback (fun _ => toyServer.ikSk) toy_root_fields
 
@@ -366,7 +369,7 @@ def sourceWithKem (source : FixedHkdfSha512NoSaltSource) (kemPub : Pqxdh.Bytes �
     (encap_ss_length : ∀ pk coins, (encap pk coins).2.length = 32)
     (decap_length : ∀ sk ct ss, decap sk ct = some ss → ss.length = 32) : FixedHkdfSha512NoSaltSource :=
   ⟨withKem source.crypto kemPub encap decap decap_encap kemPub_length encap_ss_length decap_length,
-    ⟨source.prefixConsistent.rootPrefix, source.prefixConsistent.ratchetPrefix⟩⟩
+    ⟨source.prefixConsistent.rootPrefix, source.prefixConsistent.initialPrefix, source.prefixConsistent.ratchetPrefix⟩⟩
 
 /-- The HB-112 actual game is definitionally unchanged when only the KEM fields of the source primitive bundle change. -/
 theorem actual_withKem
@@ -383,12 +386,12 @@ theorem actual_withKem
     (kemPub_length : ∀ sk, (kemPub sk).length = 1184)
     (encap_ss_length : ∀ pk coins, (encap pk coins).2.length = 32)
     (decap_length : ∀ sk ct ss, decap sk ct = some ss → ss.length = 32) :
-    PqxdhInitialRootEventSecrecy.actual
+    PqxdhInitialRootEventSecrecy.actual (associatedData := associatedData) (completedBinding := completedBinding)
         { env with
           source := sourceWithKem env.source kemPub encap decap decap_encap kemPub_length encap_ss_length
             decap_length }
         baseImpl kem attachedVerify primitives program post selected number ancestors disclosed =
-      PqxdhInitialRootEventSecrecy.actual env baseImpl kem attachedVerify primitives program post selected number
+      PqxdhInitialRootEventSecrecy.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number
         ancestors disclosed := by
   rfl
 
@@ -405,12 +408,12 @@ theorem rootActual_withKem
     (kemPub_length : ∀ sk, (kemPub sk).length = 1184)
     (encap_ss_length : ∀ pk coins, (encap pk coins).2.length = 32)
     (decap_length : ∀ sk ct ss, decap sk ct = some ss → ss.length = 32) :
-    PqxdhAuthenticatedRootExperiment.actual
+    PqxdhAuthenticatedRootExperiment.actual (associatedData := associatedData) (completedBinding := completedBinding)
         { env with
           source := sourceWithKem env.source kemPub encap decap decap_encap kemPub_length encap_ss_length
             decap_length }
         baseImpl kem attachedVerify primitives program post =
-      PqxdhAuthenticatedRootExperiment.actual env baseImpl kem attachedVerify primitives program post := by
+      PqxdhAuthenticatedRootExperiment.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post := by
   rfl
 
 end KemFields

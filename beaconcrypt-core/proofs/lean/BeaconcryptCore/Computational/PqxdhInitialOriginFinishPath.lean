@@ -12,15 +12,16 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhInitialOriginFinishPath
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhInitialPendingPost PqxdhInitialNativeLog
 variable {ι Chain M P I D K X Response Shared A N C : Type} {extra : OracleSpec ι} {S B : Nat}
 
 def beaconKernel (state : RawCtxGenericRoleStorage.BeaconState (KernelOf Chain) I D K) : Option (KernelOf Chain) :=
   match state.beacon.phase with | .established _ _ kernel => some kernel | _ => none
 
-private theorem opening_kernel (candidate : pqxdh.BeaconRegistrationCandidate) (kernel : KernelOf Chain)
+private theorem opening_kernel (candidate : pqxdh.BeaconRegistrationCandidate) (associatedData : Std.Array Std.U8 151#usize) (kernel : KernelOf Chain)
     (reply : core.option.Option RawCtxWholeOwner.Decrypted) (staged : PqxdhInitialGenericBeacon.Staged (KernelOf Chain))
-    (found : PqxdhInitialGenericBeacon.afterOpening candidate kernel reply = some staged) : staged.kernel = kernel := by
+    (found : PqxdhInitialGenericBeacon.afterOpening candidate associatedData kernel reply = some staged) : staged.kernel = kernel := by
   cases reply with
   | none => cases found
   | some opened =>
@@ -90,10 +91,10 @@ theorem after_path (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedS
     simp only [simulateQ_pure, StateT.run_pure, mem_support_pure_iff] at finished
     subst result
     have preserved := PqxdhInitialNativePath.raw_path source writer stage external root decode raw
-      (PqxdhInitialGenericBeacon.localOwner (PqxdhBeaconPhase2Shared.clearedMetadata pending.metadata) kernel)
+      (PqxdhInitialGenericBeacon.localOwner (PqxdhBeaconPhase2Shared.clearedMetadata pending.metadata) pending.metadata.associatedData kernel)
       application.2 valid' received actual
     intro staged produced
-    rw [opening_kernel _ _ _ staged produced]
+    rw [opening_kernel _ _ _ _ staged produced]
     exact preserved.2
 
 /-- An unmarked finish cannot install a replacement kernel: any remaining installed kernel is the same original inactive-session kernel. -/
@@ -104,11 +105,11 @@ theorem unmarked_kernel {AuxState Origin : Type}
     (entry : RawCtxGenericRoleStorage.BeaconState (KernelOf Chain) I D K) (state : AuxState)
     (result : PqxdhInitialFinishOrigin.Result (KernelOf Chain) Origin I D K × AuxState)
     (supported : result ∈ support ((simulateQ impl
-      (PqxdhInitialFinishOrigin.owner mark preForward calls applicationForward initialForward decode raw entry)).run state))
+      (PqxdhInitialFinishOrigin.owner (completedBinding := completedBinding) mark preForward calls applicationForward initialForward decode raw entry)).run state))
     (unmarked : result.1.2 = none) (kernel : KernelOf Chain) (found : beaconKernel result.1.1.2 = some kernel) :
     beaconKernel entry = some kernel := by
   rw [PqxdhInitialOriginPost.owner_interpretation] at supported
-  have published := PqxdhInitialFinishOrigin.published mark _ _ _ _ decode raw entry state result supported
+  have published := PqxdhInitialFinishOrigin.published (completedBinding := completedBinding) mark _ _ _ _ decode raw entry state result supported
   have noReply : result.1.1.1.isSome = false := by
     rw [unmarked] at published
     exact published.symm
@@ -216,14 +217,14 @@ theorem marked_finish_path (source : FixedHkdfSha512NoSaltSource) (writer : RawC
     (result : PqxdhInitialFinishOrigin.Result (KernelOf RatchetChain) Bool I D K × State A N RootOracle.QueryCache)
     (supported : result ∈ support ((simulateQ (handler (S := S) (B := B) source writer stage
       (withInitial source selected previousRoot response other))
-      (PqxdhInitialFinishOrigin.owner (PqxdhInitialSelectedOrigin.mark source selected)
+      (PqxdhInitialFinishOrigin.owner (completedBinding := completedBinding) (PqxdhInitialSelectedOrigin.mark source selected)
         preForward calls applicationForward initialForward decode raw entry)).run state))
     (marked : result.1.2 = some true) :
     ∃ kernel, beaconKernel result.1.1.2 = some kernel ∧
       RawCtxSourceSendPath.Path (sendRoot previousRoot response) ⟨kernel⟩ result.2.1.1.2.1 := by
   rw [PqxdhInitialOriginPost.owner_interpretation] at supported
   obtain ⟨control, prekey, oneTime, kem, prepared, atTail, staged, phase, preparation, tail, finished, success, chosen⟩ :=
-    PqxdhInitialFinishOrigin.origin (PqxdhInitialSelectedOrigin.mark source selected) _ _ _ _ decode raw entry state result supported true marked
+    PqxdhInitialFinishOrigin.origin (completedBinding := completedBinding) (PqxdhInitialSelectedOrigin.mark source selected) _ _ _ _ decode raw entry state result supported true marked
   have actualTail : (staged, result.2) ∈ support ((simulateQ (handler (S := S) (B := B) source writer stage
       (withInitial source selected previousRoot response other))
       (PqxdhInitialGenericBeacon.tail calls applicationForward initialForward decode prepared)).run atTail) := by

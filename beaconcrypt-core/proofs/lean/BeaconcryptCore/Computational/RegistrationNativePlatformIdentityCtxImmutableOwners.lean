@@ -10,7 +10,8 @@ set_option maxRecDepth 16384
 set_option maxHeartbeats 1200000
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativePlatformIdentityCtxImmutableOwners
-def snapshot {source : RegistrationNativeMldsa.Source} (owner : RegistrationNativeIdentityFrontend.Owner source) :=
+def snapshot {source : RegistrationNativeMldsa.Source} (owner : RegistrationNativeIdentityFrontend.Owner source) :
+    RegistrationNativeIdentityFrontend.Owner source :=
   { owner with phase := .fresh, edHistory := [] }
 def snapshots {source : RegistrationNativeMldsa.Source} (owners : RegistrationNativeIdentityFrontend.State source) := owners.map snapshot
 end BeaconcryptCore.Computational.RegistrationNativePlatformIdentityCtxImmutableOwners
@@ -111,8 +112,7 @@ private theorem outgoing_preserves (setup : Setup base KemSK) (index : Nat) (own
   cases query with
   | inl query => cases query with
     | hash request => exact lift_preserves _
-    | sign request payload digest =>
-        exact bind_preserves _ _ (sample_preserves _) (fun _ => bind_preserves _ _ (lift_preserves _) (fun _ => pure_preserves _))
+    | sign request payload digest => exact pure_preserves _
   | inr request =>
       simp only [outgoing]
       split
@@ -378,7 +378,7 @@ private def Extends (work : RegistrationNativePlatformIdentityProgram.M n KemSK 
     snapshots current <+: snapshots result.1.1.2
 
 private theorem beacon_prefix (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativePlatformIdentityProgram.M n KemSK RegistrationServerRoleBackend.State Platform source A)
     (prefixLaw : Extends work) (before : RegistrationNativeIdentityMain.State n KemSK source × Platform)
     (result : A × (RegistrationNativeIdentityMain.State n KemSK source × Platform))
@@ -457,7 +457,7 @@ private theorem preserving_extends
   rw [same]
 
 private theorem create_prefix (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (before : RegistrationNativeIdentityMain.State n KemSK source × Platform)
     (result : RustM (Option Nat) × (RegistrationNativeIdentityMain.State n KemSK source × Platform))
@@ -467,7 +467,7 @@ private theorem create_prefix (setup : Setup base KemSK) (checks : Checks)
 
 
 private theorem bundle_prefix {E : Type} (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) (index : Nat)
     (before : RegistrationNativeIdentityMain.State n KemSK source × Platform)
     (result : RustM (Option Pqxdh.Bytes) × (RegistrationNativeIdentityMain.State n KemSK source × Platform))
@@ -484,7 +484,7 @@ private theorem bundle_prefix {E : Type} (setup : Setup base KemSK) (checks : Ch
     (preserving_extends _ (Bundle.bundle_preserves setup index writer)) before inner called
 
 private theorem finish_prefix (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat) (packet : Option registration.ResponsePacket)
     (before : RegistrationNativeIdentityMain.State n KemSK source × Platform)
     (result : RustM (Option Pqxdh.Bytes) × (RegistrationNativeIdentityMain.State n KemSK source × Platform))
@@ -526,7 +526,7 @@ variable [primitives : AdapterSealPrimitive.Operations]
 variable {E : Type}
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
 variable (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 variable (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitives.Error)
 variable (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
 variable (reserveRegistration reservePeer : StateT Platform ProbComp Bool)
@@ -543,6 +543,8 @@ private theorem ambient_prefix (query : TypedSpec.Domain)
       reserveRegistration reservePeer reserveFrame erased helper writer query).run before)) :
     snapshots before.1.beacons <+: snapshots result.2.1.beacons :=
   ordinary_prefix _ before result reached
+
+attribute [local irreducible] RegistrationNativePlatformIdentityCtxDispatch.step
 
 /-- Every literal current callback preserves the complete immutable owner snapshot in order, for arbitrary source replies and platform failures. Only phase and Ed history are omitted. -/
 theorem free_handler_prefix (query : TypedSpec.Domain)

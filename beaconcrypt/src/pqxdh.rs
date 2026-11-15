@@ -13,15 +13,6 @@ use zeroize::Zeroize;
 pub const PQXDH_INFO: &[u8; 46] = verified_pqxdh::PQXDH_INFO;
 pub const AD_SIZE: usize = verified_pqxdh::ASSOCIATED_DATA_SIZE;
 
-#[cfg(test)]
-pub(crate) fn mldsa_associated_data(
-	base: &[u8; AD_SIZE],
-	server_hash: &[u8; 64],
-	beacon_hash: &[u8; 64],
-) -> [u8; AD_SIZE] {
-	beaconcrypt_core::authentication::bind_associated_data(base, server_hash, beacon_hash)
-}
-
 const _: () = assert!(crypto_sign::PUBLICKEYBYTES == verified_pqxdh::SIGN_PUBLIC_KEY_SIZE);
 const _: () = assert!(crypto_kx::PUBLICKEYBYTES == verified_pqxdh::X25519_PUBLIC_KEY_SIZE);
 const _: () =
@@ -74,14 +65,6 @@ pub(crate) fn derive_root_key_input(
 	})();
 	input.as_mut_bytes().zeroize();
 	derived
-}
-
-#[cfg(all(test, feature = "server"))]
-pub fn build_associated_data(
-	server_id: crypto_sign::PublicKey,
-	beacon_id: crypto_sign::PublicKey,
-) -> [u8; AD_SIZE] {
-	verified_pqxdh::build_associated_data(*server_id.as_bytes(), *beacon_id.as_bytes())
 }
 
 // Backend key handles belong only to this synchronous registration interpreter.
@@ -222,8 +205,7 @@ mod tests {
 	use beaconcrypt_parse::{InitKex, decode_init};
 
 	use super::{
-		AD_SIZE, PQXDH_INFO, build_associated_data, derive_root_key_input, verified_pqxdh,
-		zeroize_shared_secrets,
+		AD_SIZE, PQXDH_INFO, derive_root_key_input, verified_pqxdh, zeroize_shared_secrets,
 	};
 	use crate::{
 		Beacon, DH_OUT_LEN, ED25519_SEED_SIZE, KDF_STATE_SIZE, ProviderBeacon, ProviderServer,
@@ -231,27 +213,8 @@ mod tests {
 		shared::{DhSecret, KemType, KexDerivedSecret, decode_kem, decode_sign},
 	};
 
-	fn authenticate_init_payload(server: &Server, decoded: InitKex<'_>) -> Vec<u8> {
-		// Re-sign the transcript so negative cases reach the classical checks.
-		let identity = crate::auth::MldsaIdentity::from_seed([0x6d; 32]);
-		let public_key = identity.public_key();
-		let decoded = InitKex {
-			mldsa_public_key: &public_key,
-			..decoded
-		};
-		let hash = crate::auth::init_transcript_hash(
-			&decoded,
-			server.identity_key_kid(),
-			server.identity_pk().as_bytes(),
-			&server.mldsa_public_key(),
-		)
-		.unwrap();
-		let signature = identity.sign(crate::auth::AuthRole::Beacon, &hash).unwrap();
-		crate::wire::encode_init(InitKex {
-			signature: &signature,
-			..decoded
-		})
-		.unwrap()
+	fn authenticate_init_payload(_server: &Server, decoded: InitKex<'_>) -> Vec<u8> {
+		crate::wire::encode_init(decoded).unwrap()
 	}
 
 	fn register(server: &mut Server, beacon: &mut Beacon) {
@@ -512,16 +475,8 @@ mod tests {
 			Some(associated_data)
 		);
 		assert_eq!(
-			&associated_data[153..217],
-			crate::auth::public_key_hash(&server.mldsa_public_key())
-				.unwrap()
-				.as_slice()
-		);
-		assert_eq!(
-			&associated_data[217..281],
-			crate::auth::public_key_hash(&beacon.mldsa_public_key())
-				.unwrap()
-				.as_slice()
+			&associated_data[..87],
+			beaconcrypt_core::authentication::AD_CONTEXT
 		);
 	}
 
@@ -622,7 +577,6 @@ mod tests {
 					pre_key: &tampered_prekey,
 					one_time_key: &tampered_onetime,
 					pq_key: &tampered_pq,
-					..registration
 				},
 			);
 
@@ -658,7 +612,6 @@ mod tests {
 					pre_key: if duplicate_prekey { &prekey } else { &onetime },
 					one_time_key: &prekey,
 					pq_key: &pq,
-					..registration
 				},
 			);
 
@@ -713,7 +666,6 @@ mod tests {
 					pre_key: &wrong_prekey,
 					one_time_key: &wrong_onetime,
 					pq_key: &wrong_pq,
-					..registration
 				},
 			);
 
@@ -788,18 +740,15 @@ mod tests {
 
 	#[test]
 	fn associated_data_has_a_stable_order_and_layout() {
-		let server = crypto_sign::KeyPair::from_seed(&[0x61; ED25519_SEED_SIZE]).unwrap();
-		let beacon = crypto_sign::KeyPair::from_seed(&[0x62; ED25519_SEED_SIZE]).unwrap();
-		let actual = build_associated_data(server.public_key.clone(), beacon.public_key.clone());
-		let mut expected = Vec::with_capacity(AD_SIZE);
-		expected.push(1);
-		expected.extend_from_slice(server.public_key.as_bytes());
-		expected.push(1);
-		expected.extend_from_slice(beacon.public_key.as_bytes());
-		expected.extend_from_slice(PQXDH_INFO);
-		expected.extend_from_slice(verified_pqxdh::SYM_RATCHET_INFO);
-		expected.resize(AD_SIZE, 0);
-		assert_eq!(actual.as_slice(), expected);
+		let digest = core::array::from_fn(|i| i as u8);
+		let actual = beaconcrypt_core::authentication::assemble_associated_data(&digest);
+		assert_eq!(&actual[..46], PQXDH_INFO);
+		assert_eq!(
+			&actual[46..87],
+			b"SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305"
+		);
+		assert_eq!(&actual[87..], &digest);
+		assert_eq!(actual.len(), AD_SIZE);
 	}
 
 	#[test]

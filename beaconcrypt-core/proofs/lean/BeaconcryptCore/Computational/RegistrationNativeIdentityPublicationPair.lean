@@ -1,8 +1,9 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeIdentityHashRoute
 import BeaconcryptCore.Computational.RegistrationNativeIdentityEdPair
+import BeaconcryptCore.Computational.RegistrationNativeIdentityReadyFailure
 
-/-! The actual Core fingerprint/hash/ML/Ready suffix runs over one symbolic hash token and public ML requests. The sampler and concrete writer may share arbitrary mutable state; both sides retain that state through every optional signing, width and writer failure. Raw ML payload metadata belongs to the separate private receipt view. This is the executable suffix coupling, not yet a whole native causal-event bound. -/
+/-! The actual Core three-Ed25519, hash and Ready suffix runs over one symbolic hash token. The sampler and concrete writer may share arbitrary mutable state; both sides retain that state through every optional signing, width and writer failure. The shared signature callback is unused by this Beacon suffix. This is the executable suffix coupling, not a whole native causal-event bound. -/
 open CoreModels Aeneas OracleComp OracleSpec
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -16,37 +17,14 @@ open RegistrationNativeIdentitySigningPair (stripState)
 open RegistrationNativeSourceWriterFailureView (writer)
 variable {E Platform : Type}
 
-/-- Only this literal publication suffix routes its unsigned-Init hash to the internal token. ML receipt metadata is not an input to the primitive signer. -/
+/-- Only this literal publication suffix routes its exact attached-signature Init hash to the internal token. The shared Server signing branch supplies no Beacon operation. -/
 def callbacks (hash : Option Pqxdh.Bytes → StateT Platform ProbComp CtxRomAuth.CtxDigest)
-    (sign : registration.MldsaSigningRequest → StateT Platform ProbComp RegistrationSigningShared.SignReply)
+    (_sign : registration.MldsaSigningRequest → StateT Platform ProbComp RegistrationSigningShared.SignReply)
     (ed : registration.Ed25519SigningRequest → StateT Platform ProbComp RegistrationSigningShared.SignReply) :
     QueryImpl RegistrationBeaconInitExecutor.Spec (StateT Platform ProbComp)
   | .inl (.hash request) => hash (RegistrationNativeIdentityHashRoute.route (RegistrationInputs.hashBytes request))
-  | .inl (.sign request _payload _digest) => sign request
+  | .inl (.sign _ _ _) => pure .None
   | .inr request => ed request
-
-/-- Every actual optional ML reply is coupled by the same primitive request and reached shared state. -/
-theorem signing (hash : Option Pqxdh.Bytes → StateT Platform ProbComp CtxRomAuth.CtxDigest)
-    (sign : registration.MldsaSigningRequest → StateT Platform ProbComp RegistrationSigningShared.SignReply)
-    (ed : registration.Ed25519SigningRequest → StateT Platform ProbComp RegistrationSigningShared.SignReply)
-    (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E))
-    (other : RegistrationSerializerReachableSource.OtherBranches) (left right : registration.BeaconMldsaSigning)
-    (same : RegistrationNativeIdentitySigningPair.Same left right)
-    (payloadLeft payloadRight : MldsaTranscriptAuth.Payload) (digestLeft digestRight : CtxRomAuth.CtxDigest) (before : Platform) :
-    Prod.map RegistrationNativeIdentityReadyFailure.observe id <$>
-      (RegistrationNativePlatformBeaconPublication.fromSigning (callbacks hash sign ed) (writer reserve other) payloadLeft digestLeft left).run before =
-    Prod.map RegistrationNativeIdentityReadyFailure.observe id <$>
-      (RegistrationNativePlatformBeaconPublication.fromSigning (callbacks hash sign ed) (writer reserve other) payloadRight digestRight right).run before := by
-  rw [RegistrationNativeIdentitySigningPair.factor, RegistrationNativeIdentitySigningPair.factor]
-  have requested := RegistrationNativeIdentitySigningPair.request left right same
-  rw [← requested]
-  cases actual : left.request with
-  | fail error | div => rfl
-  | ok request =>
-    simp only [RegistrationNativePlatformBeaconPublication.continueWith, callbacks, StateT.run_bind, map_bind]
-    apply bind_congr
-    intro result
-    exact RegistrationNativeIdentitySigningPair.failure reserve other left right same result.1 result.2
 
 /-- A single token answer drives both original hash continuations, including the same actual stateful signer and concrete source writer. -/
 theorem hash (hash : Option Pqxdh.Bytes → StateT Platform ProbComp CtxRomAuth.CtxDigest)
@@ -68,33 +46,7 @@ theorem hash (hash : Option Pqxdh.Bytes → StateT Platform ProbComp CtxRomAuth.
   obtain ⟨nextLeft, nextRight, resumedLeft, resumedRight, paired⟩ := RegistrationNativeIdentityHashPair.hash left right same
     (RegistrationAuthenticationShared.digestArray result.1)
   simp only [resumedLeft, resumedRight]
-  exact signing hash sign ed reserve other nextLeft nextRight paired _ _ _ _ result.2
-
-/-- Paired attached fields produce the same failed-publication/control/full-state distribution through the complete actual fingerprint→hash→ML→writer suffix. -/
-theorem fingerprint (hash : Option Pqxdh.Bytes → StateT Platform ProbComp CtxRomAuth.CtxDigest)
-    (sign : registration.MldsaSigningRequest → StateT Platform ProbComp RegistrationSigningShared.SignReply)
-    (ed : registration.Ed25519SigningRequest → StateT Platform ProbComp RegistrationSigningShared.SignReply)
-    (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E))
-    (other : RegistrationSerializerReachableSource.OtherBranches) (left right : registration.BeaconFingerprint)
-    (same : stripState left.state = stripState right.state) (before : Platform) :
-    Prod.map RegistrationNativeIdentityReadyFailure.observe id <$>
-      (RegistrationNativePlatformBeaconPublication.fromFingerprint (callbacks hash sign ed) (writer reserve other) left).run before =
-    Prod.map RegistrationNativeIdentityReadyFailure.observe id <$>
-      (RegistrationNativePlatformBeaconPublication.fromFingerprint (callbacks hash sign ed) (writer reserve other) right).run before := by
-  obtain ⟨requestLeft, requestedLeft, _bytesLeft, _routeLeft⟩ := RegistrationNativeIdentityHashRoute.fingerprint left
-  obtain ⟨requestRight, requestedRight, _bytesRight, _routeRight⟩ := RegistrationNativeIdentityHashRoute.fingerprint right
-  have requestEq : requestLeft = requestRight := RustM.ok.inj (requestedLeft.symm.trans
-    ((RegistrationNativeIdentityHashPair.fingerprint_request left right same).trans requestedRight))
-  subst requestRight
-  simp only [RegistrationNativePlatformBeaconPublication.fromFingerprint, requestedLeft, requestedRight,
-    RegistrationNativePlatformBeaconPublication.continueWith, callbacks, StateT.run_bind, map_bind]
-  apply bind_congr
-  intro result
-  obtain ⟨nextLeft, nextRight, resumedLeft, resumedRight, paired⟩ := RegistrationNativeIdentityHashPair.fingerprint left right same
-    (RegistrationAuthenticationShared.digestArray result.1)
-  simp only [resumedLeft, resumedRight]
-  exact RegistrationNativeIdentityPublicationPair.hash hash sign ed reserve other nextLeft nextRight paired result.2
-
+  exact RegistrationNativeIdentityReadyFailure.independent reserve other nextLeft nextRight paired result.2
 
 private theorem pq_rejected (pending : registration.BeaconEd25519Signing) (reply : RegistrationSigningShared.SignReply)
     (stage : pending.stage = .PqKey)
@@ -104,7 +56,7 @@ private theorem pq_rejected (pending : registration.BeaconEd25519Signing) (reply
   cases effect <;> simp only [RegistrationSigning.EdReplyTransition, stage] at facts
   case Rejected previous => simpa only [facts] using actual
   case Ed25519SigningRequested next => exact False.elim facts.2
-  case FingerprintRequested next =>
+  case HashRequested next =>
     cases reply with
     | none => cases facts.1
     | some signed =>
@@ -146,7 +98,7 @@ theorem pq (hash : Option Pqxdh.Bytes → StateT Platform ProbComp CtxRomAuth.Ct
       (returned ▸ admitted) (returned ▸ (matching result.1).mp admitted) width
     conv_lhs => rw [returned, resumedLeft]
     conv_rhs => rw [returned, resumedRight]
-    exact fingerprint hash sign ed reserve other nextLeft nextRight paired result.2
+    exact RegistrationNativeIdentityPublicationPair.hash hash sign ed reserve other nextLeft nextRight paired result.2
   · have invalidRight : ¬ ∃ signed, result.1 = .Some signed ∧ RegistrationSigning.replyTailMatches right result.1 ∧ signed.val.length = 1249 := by
       rintro ⟨signed, returned, admitted, width⟩
       exact valid ⟨signed, returned, (matching result.1).mpr admitted, width⟩
@@ -178,11 +130,6 @@ theorem one_time (hash : Option Pqxdh.Bytes → StateT Platform ProbComp CtxRomA
 
 end BeaconcryptCore.Computational.RegistrationNativeIdentityPublicationPair
 
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeIdentityPublicationPair.signing' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeIdentityPublicationPair.signing
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativeIdentityPublicationPair.hash' depends on axioms: [propext,
  Classical.choice,
@@ -190,11 +137,6 @@ end BeaconcryptCore.Computational.RegistrationNativeIdentityPublicationPair
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativeIdentityPublicationPair.hash
 
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeIdentityPublicationPair.fingerprint' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeIdentityPublicationPair.fingerprint
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativeIdentityPublicationPair.pq' depends on axioms: [propext,
  Classical.choice,

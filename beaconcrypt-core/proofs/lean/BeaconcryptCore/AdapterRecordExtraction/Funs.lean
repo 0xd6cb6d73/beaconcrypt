@@ -29,7 +29,7 @@ namespace beaconcrypt
 variable [beaconcrypt.ratchet.Operations]
 
 /-- [beaconcrypt::ratchet::execute_record_receive::{impl core::ops::function::FnOnce<(beaconcrypt_core::record::OpenedRecord<alloc::vec::Vec<u8>>,), beaconcrypt::shared::Decrypted> for beaconcrypt::ratchet::execute_record_receive::closure}::call_once]:
-    Source: 'beaconcrypt/src/ratchet.rs', lines 593:31-597:21 -/
+    Source: 'beaconcrypt/src/ratchet.rs', lines 597:31-601:21 -/
 def
   ratchet.execute_record_receive.closure.Insts.CoreOpsFunctionFnOnceTupleOpenedRecordVecU8Decrypted.call_once
   (c : ratchet.execute_record_receive.closure)
@@ -44,7 +44,7 @@ def
     }
 
 /-- Trait implementation: [beaconcrypt::ratchet::execute_record_receive::{impl core::ops::function::FnOnce<(beaconcrypt_core::record::OpenedRecord<alloc::vec::Vec<u8>>,), beaconcrypt::shared::Decrypted> for beaconcrypt::ratchet::execute_record_receive::closure}]
-    Source: 'beaconcrypt/src/ratchet.rs', lines 593:31-597:21 -/
+    Source: 'beaconcrypt/src/ratchet.rs', lines 597:31-601:21 -/
 @[reducible]
 def
   ratchet.execute_record_receive.closure.Insts.CoreOpsFunctionFnOnceTupleOpenedRecordVecU8Decrypted
@@ -56,7 +56,7 @@ def
 }
 
 /-- [beaconcrypt::ratchet::execute_record_receive]: loop body 0:
-    Source: 'beaconcrypt/src/ratchet.rs', lines 573:4-602:1 -/
+    Source: 'beaconcrypt/src/ratchet.rs', lines 577:4-606:1 -/
 @[rust_loop_body]
 def ratchet.execute_record_receive_loop.body
   (effect : beaconcrypt_core.record_effects.RecordReceiveEffect) :
@@ -113,7 +113,7 @@ def ratchet.execute_record_receive_loop.body
     ok (done (kernel, o1))
 
 /-- [beaconcrypt::ratchet::execute_record_receive]: loop 0:
-    Source: 'beaconcrypt/src/ratchet.rs', lines 573:4-602:1 -/
+    Source: 'beaconcrypt/src/ratchet.rs', lines 577:4-606:1 -/
 @[rust_loop]
 def ratchet.execute_record_receive_loop
   (effect : beaconcrypt_core.record_effects.RecordReceiveEffect) :
@@ -125,7 +125,7 @@ def ratchet.execute_record_receive_loop
     effect
 
 /-- [beaconcrypt::ratchet::execute_record_receive]:
-    Source: 'beaconcrypt/src/ratchet.rs', lines 570:0-602:1 -/
+    Source: 'beaconcrypt/src/ratchet.rs', lines 574:0-606:1 -/
 @[reducible]
 def ratchet.execute_record_receive
   (effect : beaconcrypt_core.record_effects.RecordReceiveEffect) :

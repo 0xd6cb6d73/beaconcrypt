@@ -20,7 +20,7 @@ abbrev Full (n : Nat) (KemSK Platform : Type) (source : RegistrationNativeMldsa.
   (State n KemSK source × Platform) × RegistrationNativePlatformIdentityCtxSource.State
 
 noncomputable def beacon (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativePlatformIdentityProgram.M n KemSK RegistrationServerRoleBackend.State Platform source Value) :
     M n KemSK Platform source Value :=
   RegistrationNativePlatformIdentityCtxCompiler.beacon RegistrationNativePlatformIdentityCtxCompiler.coins
@@ -43,7 +43,7 @@ private theorem map_apply {S A B : Type} {m : Type → Type} [Monad m] [LawfulMo
     (change <$> work) before = Prod.map change id <$> work before := StateT.run_map change work before
 
 private theorem compiled_program (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp (RegistrationNativePlatformIdentityProgram.Spec n KemSK) Value)
     (before : RegistrationNativePlatformIdentityCtxCompilerSource.Full n KemSK) :
     (simulateQ (RegistrationNativePlatformIdentityCtxCompilerSource.implementation (source := source) setup checks representation created) work).run before =
@@ -62,7 +62,7 @@ private theorem compiled_program (setup : Setup base KemSK) (checks : Checks)
 
 /-- The actual effectful source frontend closes through the same private hash/joint interpreter with every owner, Env field, native counter and external poststate retained. -/
 theorem beacon_execution (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativePlatformIdentityProgram.M n KemSK RegistrationServerRoleBackend.State Platform source Value)
     (before : Full n KemSK Platform source) :
     Prod.map id project <$> (interpret setup.joint (beacon setup checks representation created work)).run before =
@@ -86,7 +86,7 @@ theorem beacon_execution (setup : Setup base KemSK) (checks : Checks)
 
 /-- Closing the shared backend gives the same complete prior ordinary indexed Main execution after its explicit uniform-transcript projection. -/
 theorem beacon_source (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativePlatformIdentityProgram.M n KemSK RegistrationServerRoleBackend.State Platform source Value)
     (before : Full n KemSK Platform source) :
     Prod.map id project <$> (interpret setup.joint (beacon setup checks representation created work)).run before =

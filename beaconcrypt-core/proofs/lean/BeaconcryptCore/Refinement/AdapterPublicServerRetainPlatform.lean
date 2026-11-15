@@ -19,7 +19,7 @@ variable {m : Type → Type} [Monad m] [LawfulMonad m]
 local notation "NativeM" => RegistrationNativePlatformExperiment.M n KemSK source m
 
 omit material platform ed [LawfulMonad m] in
-theorem native (coins : QueryImpl unifSpec m) (created : PqxdhLiveServerConstruction.Created Unit)
+theorem native (coins : QueryImpl unifSpec m) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (before : RegistrationNativeExperiment.State n KemSK source) (completed : agreement.ServerAgreement) :
     (RegistrationNativePlatformExperiment.liftNative coins
       (RegistrationNativeExperiment.server (RegistrationServerNativeSource.retain created completed))).run before =
@@ -32,7 +32,7 @@ variable [PublicWrapperPlatform.Allocator] [PublicWrapperPlatform.LocalOperation
 variable [containers : ContainerOperations (RustT (StateT (RegistrationNativeExperiment.State n KemSK source) m))]
 
 theorem source_record (coins : QueryImpl unifSpec m) (view : AdapterPublicWrapperState.MaterialView source KemSK)
-    (views : AdapterPublicWrapperStorage.Views) (created : PqxdhLiveServerConstruction.Created Unit)
+    (views : AdapterPublicWrapperStorage.Views) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential source) (self : beaconcrypt_public_wrapper.server.Server)
     (before : RegistrationNativeExperiment.State n KemSK source) (rng : R) (completed : agreement.ServerAgreement)
     (reply : Bool × AdapterPublicWrapperStorage.ReplaySet)

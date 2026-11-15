@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterBundleStageLog
 import BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterCutLogAssociation
-/-! The actual Bundle publication uses its preceding source hash cut when signing. This instrumented source execution retains that cut and the chronological leaf log jointly. Both projections preserve the original packet; no signing metadata is reconstructed from a later native audit. -/
+/-! The actual Bundle publication retains its exact chronological source hash cut. This instrumented source execution retains that cut and the chronological leaf log jointly. Both projections preserve the original packet; no signing metadata is reconstructed from a later native audit. -/
 open CoreModels Aeneas OracleComp OracleSpec
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -71,12 +71,69 @@ theorem associate_program (implementation :QueryImpl (Spec E) (StateT S m))
         (RegistrationNativePlatformPublicAdapterCutLogAssociation.associate before) :=
   OracleComp.map_run_simulateQ_eq_of_query_map_eq _ _ _ (associate_query implementation observe) work before
 
-/-- The source request-only signing method receives exactly its preceding hash's payload and digest. The equality retains both the private cut and the actual source log. -/
+omit [LawfulMonad m] in
+private theorem publication_hash_same {Encoded : Type}
+    (left right : QueryImpl RegistrationBeaconInitExecutor.Spec m)
+    (hashes : ∀ request, left (.inl (.hash request)) = right (.inl (.hash request)))
+    (encode : registration.InitView → m (RustM (core.option.Option Encoded)))
+    (pending : registration.BeaconInitHash) :
+    RegistrationNativePlatformBeaconPublication.fromHash left encode pending =
+      RegistrationNativePlatformBeaconPublication.fromHash right encode pending := by
+  unfold RegistrationNativePlatformBeaconPublication.fromHash
+  cases requested : pending.request <;>
+    simp only [RegistrationNativePlatformBeaconPublication.continueWith]
+  case ok request => rw [hashes request]
+
+omit [LawfulMonad m] in
+private theorem publication_ed_same {Encoded : Type}
+    (left right : QueryImpl RegistrationBeaconInitExecutor.Spec m)
+    (hashes : ∀ request, left (.inl (.hash request)) = right (.inl (.hash request)))
+    (signatures : ∀ request, left (.inr request) = right (.inr request))
+    (encode : registration.InitView → m (RustM (core.option.Option Encoded)))
+    (pending : registration.BeaconEd25519Signing) :
+    RegistrationNativePlatformBeaconPublication.fromEd left encode pending =
+      RegistrationNativePlatformBeaconPublication.fromEd right encode pending := by
+  conv_lhs => rw [RegistrationNativePlatformBeaconPublication.fromEd.eq_def]
+  conv_rhs => rw [RegistrationNativePlatformBeaconPublication.fromEd.eq_def]
+  cases requested : pending.request <;>
+    simp only [RegistrationNativePlatformBeaconPublication.continueWith]
+  case ok request =>
+    rw [signatures request]
+    apply bind_congr
+    intro reply
+    cases resumed : pending.resume reply with
+    | fail error | div => rfl
+    | ok effect => cases effect with
+      | Ed25519SigningRequested next => exact publication_ed_same left right hashes signatures encode next
+      | HashRequested next => exact publication_hash_same left right hashes encode next
+      | _ => rfl
+termination_by RegistrationBeaconInitExecutor.edRank pending
+decreasing_by exact RegistrationBeaconInitExecutor.ed_rank pending reply next resumed
+
+omit [LawfulMonad m] in
+private theorem publication_begin_same {Encoded : Type}
+    (left right : QueryImpl RegistrationBeaconInitExecutor.Spec m)
+    (hashes : ∀ request, left (.inl (.hash request)) = right (.inl (.hash request)))
+    (signatures : ∀ request, left (.inr request) = right (.inr request))
+    (encode : registration.InitView → m (RustM (core.option.Option Encoded)))
+    (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (scalar : pqxdh.BeaconCoins)
+    (pin : session.ServerAuthenticationPin) :
+    RegistrationNativePlatformBeaconPublication.begin left encode control inputs scalar pin =
+      RegistrationNativePlatformBeaconPublication.begin right encode control inputs scalar pin := by
+  unfold RegistrationNativePlatformBeaconPublication.begin
+  cases started : registration.begin_beacon_init control inputs scalar pin <;>
+    simp only [RegistrationNativePlatformBeaconPublication.continueWith]
+  case ok effect =>
+    cases effect <;> first
+      | rfl
+      | exact publication_ed_same left right hashes signatures encode _
+
+/-- The actual Beacon publication retains the chronological source hash cut and log through its exact Ed-signing, hashing and writer stages. -/
 theorem actual (implementation :QueryImpl (Spec E) (StateT S m))
     (fallback :registration.MldsaSigningRequest→StateT S m RegistrationSigningShared.SignReply)
     (control :pqxdh.BeaconFresh) (inputs :pqxdh.BeaconStartInputs) (scalar :pqxdh.BeaconCoins)
-    (pin :session.ServerAuthenticationPin) (mldsa :Std.Array U8 1952#usize) :
-    simulateQ (lifted implementation) (RegistrationNativePlatformWriter.begin E control inputs scalar pin mldsa)=
+    (pin :session.ServerAuthenticationPin) :
+    simulateQ (lifted implementation) (RegistrationNativePlatformWriter.begin E control inputs scalar pin)=
       RegistrationNativePlatformBeaconPublication.begin
         (RegistrationNativePlatformCutJournal.extended
           (RegistrationNativePlatformCutJournal.source (fun query=>implementation (.inl (.inl query))) fallback)
@@ -84,15 +141,14 @@ theorem actual (implementation :QueryImpl (Spec E) (StateT S m))
         (fun signed=>simulateQ (fun query=>RegistrationNativePlatformCutJournal.liftNative (implementation (.inr query)))
           (AdapterRegistrationWriterRequestExtraction.encodeInit (E:=E) (m:=AdapterRegistrationWriterRequestMonad.Program E)
             (RegistrationNativePlatformWriter.initPacket signed)).run)
-        control inputs scalar pin mldsa :=by
+        control inputs scalar pin :=by
   rw [RegistrationNativePlatformWriter.begin_interpret]
-  have action : (fun request=>lifted implementation (.inl request))=
-      RegistrationNativePlatformCutJournal.extended
-        (RegistrationNativePlatformCutJournal.forward (fun query=>implementation (.inl (.inl query))))
-        (fun query=>RegistrationNativePlatformCutJournal.liftNative (implementation (.inl (.inr query)))) :=by
-    funext request
-    cases request <;>rfl
-  rw [action]
+  rw [publication_begin_same
+    (fun request => lifted implementation (.inl request))
+    (RegistrationNativePlatformCutJournal.extended
+      (RegistrationNativePlatformCutJournal.forward (fun query => implementation (.inl (.inl query))))
+      (fun query => RegistrationNativePlatformCutJournal.liftNative (implementation (.inl (.inr query)))))
+    (fun _ => rfl) (fun _ => rfl)]
   apply StateT.ext
   intro before
   exact (RegistrationNativePlatformCutJournal.beacon_begin
@@ -101,7 +157,7 @@ theorem actual (implementation :QueryImpl (Spec E) (StateT S m))
     (fun signed=>simulateQ (fun query=>RegistrationNativePlatformCutJournal.liftNative (implementation (.inr query)))
       (AdapterRegistrationWriterRequestExtraction.encodeInit (E:=E) (m:=AdapterRegistrationWriterRequestMonad.Program E)
         (RegistrationNativePlatformWriter.initPacket signed)).run)
-    control inputs scalar pin mldsa before).symm
+    control inputs scalar pin before).symm
 end BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterBundleStageCut
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterBundleStageCut.query_source' depends on axioms: [propext,
  Classical.choice,

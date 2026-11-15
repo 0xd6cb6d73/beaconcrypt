@@ -5,6 +5,7 @@ import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCut
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhDeploymentLaterServerReserve
 open PqxdhJointIdentity PqxdhServerAuthExperiment PqxdhServerAuthNative
 open PqxdhRegistrationJointGeneratedFinish (EncodedEntry)
@@ -94,7 +95,7 @@ theorem step_later (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
 theorem creations (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (work : OracleComp (Spec KemSK) Result) (cap : Nat)
     (bounded : work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = some (.inl 1)) cap)
-    (owners : List EncodedEntry) (log : Log) (state : NativeState KemSK) :
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log) (state : NativeState KemSK) :
     (simulateQ (actual setup) (commands setup codec checks identityIndex publicIdentity work owners log
       state)).IsQueryBoundP (PqxdhLiveKemReservation.IsCreate (KemSK := KemSK)) cap := by
   rw [commands, simulateQ_map, run_flat setup codec checks identityIndex publicIdentity work (owners, log) state,
@@ -115,7 +116,7 @@ theorem creations (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
 theorem selected_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (work : OracleComp (Spec KemSK) Result) (count : Nat)
     (bounded : work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = some (.inl 1)) (count + 1))
-    (owners : List EncodedEntry) (log : Log) (state : NativeState KemSK)
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log) (state : NativeState KemSK)
     (joint : PqxdhDynamicIdentityPool.SourceState) (selected : Fin (count + 1)) :
     EvalDistEq ((fun result => (some result.1, result.2)) <$>
       (simulateQ (PqxdhLiveKemBirth.impl setup.baseImpl setup.joint setup.kem)

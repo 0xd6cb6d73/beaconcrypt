@@ -10,7 +10,7 @@ import BeaconcryptCore.Computational.PqxdhServerAuthTailCosts
 
 CE-11b's anomaly guesser (`PqxdhDeploymentIdealAnomalyGuesser.anomalyGuesser`) runs the adversary, behind the secrecy layer (`flat`), against the native handler of the final split game `PqxdhDeploymentBackend.handlerWith (PqxdhDeploymentIdealDefer.idealSplit …)` on its own coins. `idealStep_bound` and the other component bills of `PqxdhDeploymentIdealEnvCost` bound the ideal environment's step in capability form, which `PqxdhDeploymentIdealEnv.ideal_splits` relates to the split form only in law; query bounds do not transfer along equalities in law, so this module proves the per-step bound of the split handler itself (plan sections 89 and 93 (a)), from the same premise `KemBound setup caps` and with the same component lemmas (`acceptExposed_cost` behind `acceptSelected_bound`, `preparationCE_step` and `markedRoot_uniform` behind `finishChallenge_bound`, `createPool_uniform`, `lazyDummy_bound` through `slotRun_total`).
 
-- `splitWeight caps`: the per-command uniform weight by native command class (`PqxdhDeploymentCompileBudget.commandKind`): coin 1, create `64 + keygenCost`, bundle 32, accept `140 + encapsCost`, build `108 + 64 + 64`, finish `69 · max 64 decapsCost + 64`, HMAC, BLAKE2b and the four record commands 64.
+- `splitWeight caps`: the per-command uniform weight by native command class (`PqxdhDeploymentCompileBudget.commandKind`): coin 1, create `64 + keygenCost`, bundle 32, accept `140 + encapsCost`, build `108 + 64 + 64 + 64`, finish `69 · max 64 decapsCost + 64`, HMAC, BLAKE2b and the four record commands 64.
 - `splitStep_uniform`: every step of `handlerWith (idealSplit …)` from every extended state draws at most `splitWeight caps` of its class.
 - The pieces. Native steps: `record_uniform`, `serverStep_uniform`, `beaconStep_uniform` (a record command makes at most one BLAKE2b request, 64 coins), `native_uniform` (the native deployment handler, `nativeCost`, from `PqxdhRegistrationSchedule.handler_uniform`), `later_uniform` (the LQ-F run-phase handler with the logged accept). Hidden services of `erasedHidden`: `rom_uniform`, `nativePrim_uniform`, `finishErased_uniform`, `hiddenAfter_uniform` (the hidden finish continuation: at most one opening, 64 coins), `tailImpl_uniform`, `loggedSend_uniform`, `hiddenBuild_uniform`, `buildHidden_uniform` (the marked build's response tail: at most one seal, 64 coins). Slot steps, weighted by `wSlot` (1 per coin, 108 per slot read): `slotRunX_uniform` (a slot step against the allocator in front of the lazy material service), `realRegAt_uniform`, `createReg_uniform`, `acceptStep_cost` (`140 + encapsCost`), `buildStepC_cost` (`108 + 64`), `groupCE_cost` (`108 + 64`), `ownerCE_cost`, `finishChallenge_cost` (`decapsCost + 108 + 64`), `challenge_le` (which is at most `69 · max 64 decapsCost`), `finishStepC_cost`; the hidden installs draw one 64-byte seed (`seed_uniform`, `seedQuery_uniform`, `xInstall_uniform`, `serverInstall_uniform`, `beaconInstall_uniform`); `splitBuild_uniform`, `splitFinish_uniform`.
 
@@ -22,8 +22,10 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete PqxdhRefinement
 
 set_option autoImplicit false
+set_option warningAsError true
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSplitCost
+variable (associatedData : Std.Array Std.U8 151#usize)
 open PqxdhServerAuthExperiment (Setup Codec Checks)
 open PqxdhServerAuthSourceCosts (KemCaps KemBound)
 open PqxdhDeploymentBackend (XState handlerWith)
@@ -48,19 +50,19 @@ theorem record_uniform {Result : Type} (work : OracleComp RawCtxMixedOwner.Nativ
   simp only [IsTotalQueryBound, isQueryBound_map_iff] at bound ⊢
   exact bound
 
-/-- A Server record command (send or raw receive) of the native deployment handler draws at most 64 coins: at most one BLAKE2b request (`PqxdhDeploymentCompileBudget.server_hashes`). -/
+/-- A Server record command (send or raw receive) of the native deployment handler draws at most 64 coins: at most one BLAKE2b request (`PqxdhDeploymentCompileBudget.router_hashes`). -/
 theorem serverStep_uniform (route : RawCtxServerRouting.SenderDecoder) (query : RawCtxServerMixed.SourceSpec.Domain)
     (state : PqxdhDeploymentNative.State KemSK) :
     ((PqxdhDeploymentNative.serverStep setup codec route query).run state).IsTotalQueryBound 64 := by
   have hashes := PqxdhDeploymentCompileBudget.logged_bound _ _ 1 []
-    (PqxdhDeploymentCompileBudget.server_hashes (PqxdhDeploymentNative.senderId state) route codec.frameRead query
+    (PqxdhDeploymentCompileBudget.router_hashes (PqxdhDeploymentNative.senderId state) route codec.frameRead query
       (PqxdhDeploymentNative.serverView state))
-  have kdfs : ((RawCtxServerMixed.serverImpl (PqxdhDeploymentNative.senderId state) route codec.frameRead query).run
+  have kdfs : ((MldsaServerRouting.handler PqxdhRefinement.absBytes (PqxdhDeploymentNative.senderId state) route codec.frameRead query).run
       (PqxdhDeploymentNative.serverView state)).IsQueryBoundP (fun request => RawCtxMixedOwner.callKind request = .kdf)
       51 := by
     rcases query with ⟨plaintext, kid⟩ | raw
-    · exact (RawCtxServerMixed.send_bound _ plaintext kid _ .kdf).mono (by decide)
-    · exact RawCtxServerMixed.raw_bound route codec.frameRead raw _ .kdf
+    · exact (MldsaServerRouting.send_bound PqxdhRefinement.absBytes _ plaintext kid _ .kdf).mono (by decide)
+    · exact MldsaServerRouting.raw_bound PqxdhRefinement.absBytes route codec.frameRead raw _ .kdf
   have record := record_uniform setup codec _ 51 (PqxdhDeploymentCompileBudget.logged_bound _ _ 51 [] kdfs) hashes
     state.native
   unfold PqxdhDeploymentNative.serverStep
@@ -99,7 +101,7 @@ open PqxdhDeploymentCompileBudget (commandKind)
 
 /-- The per-class uniform cost of one command of the native deployment handler (classes of `commandKind`). -/
 def nativeCost (caps : KemCaps) : Fin 12 → ℕ :=
-  ![1, 64 + caps.keygenCost, 32, 96 + caps.encapsCost, 64, 69 * max 64 caps.decapsCost, 64, 64, 64, 64, 64, 64]
+  ![1, 64 + caps.keygenCost, 32, 96 + caps.encapsCost, 128, 64 + 69 * max 64 caps.decapsCost, 64, 64, 64, 64, 64, 64]
 
 /-- A registration-scheduler step run on the native deployment state keeps its coin bound. -/
 theorem onNative_uniform {α : Type} (work : PqxdhRegistrationSchedule.Game KemSK α) (k : ℕ)
@@ -321,15 +323,15 @@ theorem hiddenBuild_uniform (value : PqxdhServerAuthKeySchedule.Output)
     (token : PqxdhServerRelatedRootConsumer.Returned) (payload : Option Pqxdh.Bytes)
     (server : PqxdhServerAuthEntryFactor.ServerState)
     (state : RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext)) :
-    (((PqxdhDeploymentIdealSteps.erasedHidden setup codec checks value).hiddenBuild token payload server).run
+    (((PqxdhDeploymentIdealSteps.erasedHidden setup codec checks value).hiddenBuild token payload associatedData server).run
       state).IsTotalQueryBound 64 := by
-  change ((PqxdhServerAuthLoggedSendFactor.factored (fun entry _ _ => pure (entry, .None))
+  change ((PqxdhServerAuthLoggedSendFactor.factored (associatedData := associatedData) (fun entry _ _ => pure (entry, .None))
     (PqxdhServerAuthLoggedSendFactor.loggedPrim setup codec checks) setup.source
     (PqxdhServerAuthLoggedSendFactor.loggedAux setup codec checks)
-    (PqxdhServerAuthCtxMaterial.factor value) token.pending payload () server).run state).IsTotalQueryBound 64
+    (PqxdhServerAuthCtxMaterial.factor value) token.pending payload associatedData server).run state).IsTotalQueryBound 64
   refine (isQueryBoundP_true_iff _ _).mp ?_
   simp only [PqxdhServerAuthLoggedSendFactor.factored, StateT.run_map, isQueryBoundP_map_iff]
-  exact PqxdhDeploymentEnvironment.generic_build_bound (fun _ => True) _ _ 64
+  exact PqxdhDeploymentEnvironment.generic_build_bound (fun _ => True) associatedData _ _ 64
     (fun entry context current => (isQueryBoundP_true_iff _ _).mpr (loggedSend_uniform setup codec checks _ entry context
       current))
     (fun query current => (isQueryBoundP_true_iff _ _).mpr ((tailImpl_uniform setup codec checks (.inr query)
@@ -407,23 +409,29 @@ theorem createReg_uniform (bounded : KemBound setup caps) {Γ : Type} {n : ℕ}
     simp only [IsTotalQueryBound, isQueryBound_map_iff] at bound ⊢
     exact bound
 
-/-- The marked build with the erased hidden services draws at most 64 coins (`hiddenBuild_uniform`). -/
+/-- The marked build draws at most 128 coins: its transcript digest and its response-tail record commitment. -/
 theorem buildHidden_uniform (value : PqxdhServerAuthKeySchedule.Output) (session : ℕ) (payload : Option Pqxdh.Bytes)
     (shared : NativeState KemSK) :
     ((PqxdhDeploymentIdealSteps.buildHidden (erasedHidden setup codec checks value) session payload).run
-      shared).IsTotalQueryBound 64 := by
-  simp only [PqxdhDeploymentIdealSteps.buildHidden, StateT.run_bind]
-  simp only [StateT.run, PqxdhServerAuthNative.nativeGet, PqxdhServerAuthNative.localState, pure_bind]
+      shared).IsTotalQueryBound (64 + 64) := by
+  simp only [PqxdhDeploymentIdealSteps.buildHidden, StateT.run, PqxdhServerAuthNative.nativeGet_bind]
   cases found : shared.2.pending session with
   | none => trivial
   | some token =>
-      change ((PqxdhServerAuthNative.nativeCoins _ >>= _).run shared).IsTotalQueryBound 64
-      simp only [StateT.run_bind, StateT.run_pure]
-      simp only [StateT.run, PqxdhServerAuthNative.nativeCoins, PqxdhServerAuthNative.nativeSet,
-        PqxdhServerAuthNative.localState, map_pure, bind_pure_comp]
-      have bound := hiddenBuild_uniform setup codec checks value token payload shared.2.server ([], shared.2.ctx)
-      simp only [IsTotalQueryBound, isQueryBound_map_iff] at bound ⊢
-      exact bound
+    cases pre : PqxdhServerRegistrationPublication.prehash shared.2.server token.pending payload with
+    | none =>
+      simp only [pre, PqxdhServerAuthNative.nativeSet_bind]
+      trivial
+    | some candidate =>
+      simp only [pre]
+      rw [PqxdhServerAuthNative.native_bind_run]
+      refine isTotalQueryBound_bind (n₂ := 64) (PqxdhServerAuthNativeUniformCosts.hash_uniform _ shared) ?_
+      intro hashed
+      simp only [PqxdhServerAuthNative.nativeGet_bind, PqxdhServerAuthNative.nativeCoins_bind,
+        PqxdhServerAuthNative.nativeSet_bind]
+      exact isTotalQueryBound_bind (n₂ := 0)
+        (hiddenBuild_uniform (associatedData := PqxdhTranscriptAd.adOf hashed.1) setup codec checks value token
+          payload hashed.2.2.server ([], hashed.2.2.ctx)) (fun _ => by trivial)
 
 /-- One 64-byte hidden seed draws 64 coins. -/
 theorem seed_uniform : ($ᵗ PqxdhRecordLiftSeed.Seed : ProbComp PqxdhRecordLiftSeed.Seed).IsTotalQueryBound 64 := by
@@ -481,15 +489,15 @@ theorem acceptStep_cost (bounded : KemBound setup caps) (t : Target count) (p : 
   · exact wBound_mono (onSlots_cost _ _ _ (realRegAt_uniform setup codec route checks caps bounded created
       ⟨.accept raw, trivial⟩ _)) (by simp [nativeCost, commandKind])
 
-/-- The build of the ideal registration with the erased hidden services costs at most `108 + 64` slot-weighted requests: the marked build's slot read and its hidden response tail, or the real build. -/
+/-- The build of the ideal registration with the erased hidden services costs at most `108 + 64 + 64` slot-weighted requests: the marked build's slot read, transcript digest and response-tail commitment, or the real build. -/
 theorem buildStepC_cost (bounded : KemBound setup caps) (created : PqxdhLiveServerConstruction.Created Unit)
     (session : ℕ) (payload : Option Pqxdh.Bytes) (x : XState KemSK IdealCore 2) :
     WBound ((PqxdhDeploymentIdealKernel.buildStepC setup codec checks route (erasedHidden setup codec checks) created
-      session payload).run x) wSlot (108 + 64) := by
+      session payload).run x) wSlot (108 + (64 + 64)) := by
   have real : WBound ((fun r => ((r.1, none), r.2)) <$> (onSlots (PqxdhDeploymentIdealSteps.realRegAt setup codec route
       checks created ⟨.build session payload, trivial⟩)).run x : OracleComp PqxdhDeploymentIdealSlots.SlotSpec
         ((Option PqxdhServerRegistrationPublication.Response × Option PqxdhDeploymentIdealSlots.Coord) ×
-          XState KemSK IdealCore 2)) wSlot (108 + 64) :=
+          XState KemSK IdealCore 2)) wSlot (108 + (64 + 64)) :=
     wBound_mono (wBound_map _ (onSlots_cost _ _ _ (realRegAt_uniform setup codec route checks caps bounded created
       ⟨.build session payload, trivial⟩ _))) (by simp [nativeCost, commandKind])
   unfold PqxdhDeploymentIdealKernel.buildStepC
@@ -503,11 +511,11 @@ theorem buildStepC_cost (bounded : KemBound setup caps) (created : PqxdhLiveServ
       simp only [StateT.run] at h
       rw [h]
       refine wBound_bind ((wBound_query _ _ _).mpr le_rfl) fun value _ => ?_
-      refine onSlots_cost _ 64 x ?_
+      refine onSlots_cost _ (64 + 64) x ?_
       rw [StateT.run_map]
       have bound := buildHidden_uniform setup codec checks value session payload x.base.native.shared
       change (_ <$> (_ <$> (PqxdhDeploymentIdealSteps.buildHidden (erasedHidden setup codec checks value) session
-        payload).run x.base.native.shared)).IsTotalQueryBound 64
+        payload).run x.base.native.shared)).IsTotalQueryBound (64 + 64)
       simp only [IsTotalQueryBound, isQueryBound_map_iff] at bound ⊢
       exact bound
     · exact real
@@ -543,17 +551,17 @@ def wOwner (caps : KemCaps) : (PqxdhDeploymentIdealSteps.OwnerSpecCE KemSK Respo
   | .inr _ => 108 + 64
 
 /-- Owner k's grouped native finish under the CE-native interpreter costs at most `decapsCost + 108 + 64` slot-weighted requests: one decapsulation in its preparation and one grouped finish request. -/
-theorem ownerCE_cost (bounded : KemBound setup caps) (challenge : PqxdhKemIndCca.MlKem768Ciphertext)
+theorem ownerCE_cost (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding) (bounded : KemBound setup caps) (challenge : PqxdhKemIndCca.MlKem768Ciphertext)
     (raw : Pqxdh.Bytes) (owner : PqxdhRegistrationSchedule.Owner KemSK)
     (s : NativeState KemSK × Option PqxdhDeploymentIdealSlots.Coord) :
     WBound ((simulateQ (PqxdhDeploymentIdealSteps.ownerImplCE setup codec (erasedHidden setup codec checks) challenge)
-      (PqxdhDeploymentIdealSteps.groupedOwnerCE raw owner)).run s) wSlot (caps.decapsCost + (108 + 64)) := by
-  have source : WBound (PqxdhDeploymentIdealSteps.groupedOwnerCE (Response := Response) raw owner) (wOwner caps)
+      (PqxdhDeploymentIdealSteps.groupedOwnerCE completedBinding raw owner)).run s) wSlot (caps.decapsCost + (108 + 64)) := by
+  have source : WBound (PqxdhDeploymentIdealSteps.groupedOwnerCE (Response := Response) completedBinding raw owner) (wOwner caps)
       (caps.decapsCost + (108 + 64)) := by
     unfold PqxdhDeploymentIdealSteps.groupedOwnerCE
     split
     · refine wBound_bind (wBound_simulate _ (PqxdhRegistrationJointKemRootCosts.wPrep caps) (wOwner caps)
-        (fun query => (wBound_query _ _ _).mpr le_rfl) (PqxdhRegistrationJointKemRootCosts.prepare_cost caps _ _ _ _ _
+        (fun query => (wBound_query _ _ _).mpr le_rfl) (PqxdhRegistrationJointKemRootCosts.prepare_cost caps completedBinding _ _ _ _ _
           raw)) fun prepared _ => ?_
       split
       · exact wBound_pure _ _ _
@@ -566,35 +574,52 @@ theorem ownerCE_cost (bounded : KemBound setup caps) (challenge : PqxdhKemIndCca
       bounded challenge query)))
   · exact groupCE_cost setup codec checks pending state
 
-/-- Owner k's challenge finish with the erased hidden services costs at most `decapsCost + 108 + 64` slot-weighted requests. -/
+/-- The grouped owner's public transcript hash adds one 64-byte draw before its existing slot-weighted finish. -/
+theorem hashedOwnerCE_cost (bounded : KemBound setup caps) (challenge : PqxdhKemIndCca.MlKem768Ciphertext)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK)
+    (state : NativeState KemSK × Option PqxdhDeploymentIdealSlots.Coord) :
+    WBound ((PqxdhDeploymentIdealSteps.hashedOwnerCE setup codec (erasedHidden setup codec checks) challenge
+      retained raw owner).run state) wSlot (64 + (caps.decapsCost + (108 + 64))) := by
+  unfold PqxdhDeploymentIdealSteps.hashedOwnerCE
+  split
+  · split
+    · rw [StateT.run_bind]
+      refine wBound_bind ?_ fun hashed _ => ?_
+      · exact wBound_map _ (liftS_cost _ 64 (PqxdhServerAuthNativeUniformCosts.hash_uniform _ state.1))
+      · exact ownerCE_cost setup codec checks caps _ bounded challenge raw owner hashed.2
+    · exact wBound_pure _ _ _
+  · exact wBound_pure _ _ _
+
+/-- Owner k's challenge finish with the erased hidden services costs at most `64 + decapsCost + 108 + 64` slot-weighted requests, including its transcript digest. -/
 theorem finishChallenge_cost (bounded : KemBound setup caps) (challenge : PqxdhKemIndCca.MlKem768Ciphertext)
     (index : ℕ) (raw : Pqxdh.Bytes)
     (state : PqxdhRegistrationSchedule.State KemSK × Option PqxdhDeploymentIdealSlots.Coord) :
     WBound ((PqxdhDeploymentIdealSteps.finishChallenge setup codec (erasedHidden setup codec checks) challenge index
-      raw).run state) wSlot (caps.decapsCost + (108 + 64)) := by
+      raw).run state) wSlot (64 + (caps.decapsCost + (108 + 64))) := by
   unfold PqxdhDeploymentIdealSteps.finishChallenge
   simp only [StateT.run]
   split
   · exact wBound_pure _ _ _
-  · rw [← Nat.add_zero (caps.decapsCost + (108 + 64))]
-    exact wBound_bind (ownerCE_cost setup codec checks caps bounded challenge raw _ _) fun _ _ => wBound_pure _ _ _
+  · rw [← Nat.add_zero (64 + (caps.decapsCost + (108 + 64)))]
+    exact wBound_bind (hashedOwnerCE_cost setup codec checks caps bounded challenge _ raw _ _) fun _ _ => wBound_pure _ _ _
 
-/-- The challenge finish is within the real finish's bill: `decapsCost + 108 + 64 ≤ 69 · max 64 decapsCost`. -/
-theorem challenge_le (caps : KemCaps) : caps.decapsCost + (108 + 64) ≤ 69 * max 64 caps.decapsCost := by
+/-- The challenge finish is within the real finish's bill: `64 + decapsCost + 108 + 64 ≤ 69 · max 64 decapsCost`. -/
+theorem challenge_le (caps : KemCaps) : 64 + (caps.decapsCost + (108 + 64)) ≤ 69 * max 64 caps.decapsCost := by
   have left := Nat.le_max_left 64 caps.decapsCost
   have right := Nat.le_max_right 64 caps.decapsCost
   omega
 
-/-- The finish of the ideal registration with the erased hidden services costs at most `69 · max 64 decapsCost` slot-weighted requests: owner k's challenge finish or the real finish. -/
+/-- The finish of the ideal registration with the erased hidden services costs at most `64 + 69 · max 64 decapsCost` slot-weighted requests, including the public transcript digest. -/
 theorem finishStepC_cost (bounded : KemBound setup caps) (t : Target count) (p : Params KemSK count)
     (created : PqxdhLiveServerConstruction.Created Unit) (owner : ℕ) (raw : Pqxdh.Bytes) (x : XState KemSK IdealCore 2) :
     WBound ((PqxdhDeploymentIdealKernel.finishStepC setup codec checks route t p (erasedHidden setup codec checks) created
-      owner raw).run x) wSlot (69 * max 64 caps.decapsCost) := by
+      owner raw).run x) wSlot (64 + 69 * max 64 caps.decapsCost) := by
   unfold PqxdhDeploymentIdealKernel.finishStepC
   simp only [StateT.run]
   split
   · unfold PqxdhDeploymentIdealKernel.finishHiddenC
-    exact wBound_mono (wBound_map _ (finishChallenge_cost setup codec checks caps bounded _ _ _ _)) (challenge_le caps)
+    exact wBound_mono (wBound_map _ (finishChallenge_cost setup codec checks caps bounded _ _ _ _)) ((challenge_le caps).trans (Nat.le_add_left _ _))
   · exact wBound_map _ (onSlots_cost _ _ _ (realRegAt_uniform setup codec route checks caps bounded created
       ⟨.finish owner raw, trivial⟩ _))
 
@@ -610,9 +635,9 @@ open PqxdhDeploymentIdealParams (Target Params)
 open PqxdhDeploymentCompileBudget (commandKind)
 open PqxdhRegistrationJointKemRootCosts (WBound)
 
-/-- The per-command uniform weight of the anomaly guesser's split handler `handlerWith (idealSplit …)`, by native command class (`PqxdhDeploymentCompileBudget.commandKind`): coin 1; create `64 + keygenCost` (the pool create); bundle 32; accept `140 + encapsCost` (the selected accept: its ephemeral, one slot read and, inactive, the logged accept's encapsulation); build `108 + 64 + 64` (the marked build's slot read, its response tail's BLAKE2b digest and the hidden Server install's seed); finish `69 · max 64 decapsCost + 64` (the real finish, which covers owner k's challenge finish, and the hidden Beacon install's seed); HMAC, BLAKE2b and the four record commands 64. -/
+/-- The per-command uniform weight of the anomaly guesser's split handler `handlerWith (idealSplit …)`, by native command class (`PqxdhDeploymentCompileBudget.commandKind`): coin 1; create `64 + keygenCost` (the pool create); bundle 32; accept `140 + encapsCost` (the selected accept: its ephemeral, one slot read and, inactive, the logged accept's encapsulation); build `108 + 64 + 64 + 64` (the marked build's slot read, transcript digest, response-tail commitment and hidden Server install's seed); finish `69 · max 64 decapsCost + 64` (the real hashed finish reports no hidden coordinates and draws no install seed; the smaller challenge branch also fits after its install seed); HMAC, BLAKE2b and the four record commands 64. -/
 def splitWeight (caps : KemCaps) : Fin 12 → ℕ :=
-  ![1, 64 + caps.keygenCost, 32, 140 + caps.encapsCost, 108 + 64 + 64, 69 * max 64 caps.decapsCost + 64, 64, 64, 64,
+  ![1, 64 + caps.keygenCost, 32, 140 + caps.encapsCost, 108 + (64 + 64) + 64, 69 * max 64 caps.decapsCost + 64, 64, 64, 64,
     64, 64, 64]
 
 /-- The hidden Server install of the final split form draws at most one seed: 64 coins. -/
@@ -633,7 +658,7 @@ theorem splitBuild_uniform (bounded : KemBound setup caps) (t : Target count) (p
     (created : PqxdhLiveServerConstruction.Created Unit) (session : ℕ) (payload : Option Pqxdh.Bytes)
     (x : XState KemSK SplitBk 2) :
     ((PqxdhDeploymentIdealDefer.idealSplit setup codec route checks t p created ⟨.build session payload, trivial⟩).run
-      x).IsTotalQueryBound (108 + 64 + 64) := by
+      x).IsTotalQueryBound (108 + (64 + 64) + 64) := by
   change ((fun r => (r.1.1, r.2)) <$> ((slotRunX lazyDummy (PqxdhDeploymentIdealKernel.buildStepC setup codec checks
     route (erasedHidden setup codec checks) created session payload)).run x >>=
       PqxdhDeploymentIdealDefer.serverInstall)).IsTotalQueryBound _
@@ -650,10 +675,42 @@ theorem splitFinish_uniform (bounded : KemBound setup caps) (t : Target count) (
   change ((fun r => (r.1.1, r.2)) <$> ((slotRunX lazyDummy (PqxdhDeploymentIdealKernel.finishStepC setup codec checks
     route t p (erasedHidden setup codec checks) created owner raw)).run x >>=
       PqxdhDeploymentIdealDefer.beaconInstall owner)).IsTotalQueryBound _
-  have bound := isTotalQueryBound_bind (slotRunX_uniform _ _ (fun y => finishStepC_cost setup codec route checks caps
-    bounded t p created owner raw y) x) (fun r => beaconInstall_uniform owner r)
-  simp only [IsTotalQueryBound, isQueryBound_map_iff] at bound ⊢
-  exact bound
+  have dispatch : (slotRunX lazyDummy (PqxdhDeploymentIdealKernel.finishStepC setup codec checks route t p
+      (erasedHidden setup codec checks) created owner raw)).run x =
+      if x.backend.2.2.active = true ∧ owner = t.kem.val ∧
+          PqxdhDeploymentIdealSteps.initSentAt x.base.native.owners owner = true then
+        (slotRunX lazyDummy (PqxdhDeploymentIdealKernel.finishHiddenC setup codec p
+          (erasedHidden setup codec checks) owner raw)).run x
+      else (fun result => ((result.1, none), result.2)) <$>
+        (slotRunX lazyDummy (onSlots (PqxdhDeploymentIdealSteps.realRegAt setup codec route checks created
+          ⟨.finish owner raw, trivial⟩))).run x := by
+    have state_map {σ α β : Type} (f : α → β) (work : StateT σ ProbComp α) (state : σ) :
+        (f <$> work) state = (fun result => (f result.1, result.2)) <$> work state := by
+      change (f <$> work).run state = (fun result => (f result.1, result.2)) <$> work.run state
+      rw [StateT.run_map]
+    unfold slotRunX
+    dsimp only [PqxdhDeploymentIdealErase.onPair, PqxdhDeploymentIdealKernel.finishStepC, StateT.run,
+      PqxdhDeploymentIdealKeys.detachX]
+    split_ifs
+    · rfl
+    · simp only [simulateQ_map, state_map, Functor.map_map]
+  rw [dispatch]
+  split
+  · have hidden : ((slotRunX lazyDummy (PqxdhDeploymentIdealKernel.finishHiddenC setup codec p
+        (erasedHidden setup codec checks) owner raw)).run x).IsTotalQueryBound
+        (64 + (caps.decapsCost + (108 + 64))) := by
+      refine slotRunX_uniform _ _ (fun y => ?_) x
+      unfold PqxdhDeploymentIdealKernel.finishHiddenC
+      exact PqxdhRegistrationJointKemRootCosts.wBound_map _ (finishChallenge_cost setup codec checks caps bounded _ _ _ _)
+    have bound := isTotalQueryBound_bind hidden (fun result => beaconInstall_uniform owner result)
+    simp only [IsTotalQueryBound, isQueryBound_map_iff]
+    exact bound.mono (by have lower := challenge_le caps; omega)
+  · rw [bind_map_left]
+    simp only [PqxdhDeploymentIdealDefer.beaconInstall, PqxdhDeploymentIdealDefer.xInstall, bind_pure_comp]
+    simp only [IsTotalQueryBound, isQueryBound_map_iff]
+    apply (slotRunX_uniform _ (64 + 69 * max 64 caps.decapsCost) (fun y => ?_) x).mono (by omega)
+    exact onSlots_cost _ _ y (realRegAt_uniform setup codec route checks caps bounded created
+      ⟨.finish owner raw, trivial⟩ y)
 
 /-- `splitStep_uniform` (design-v2 section 9): every step of the anomaly guesser's split handler `handlerWith (idealSplit …)` draws at most the weight `splitWeight caps` of its native command class, from every extended state. Premise: `KemBound setup caps`. -/
 theorem splitStep_uniform (bounded : KemBound setup caps) (t : Target count) (p : Params KemSK count)
@@ -970,3 +1027,11 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSplitCost.splitStep_
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSplitCost.splitStep_uniform
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSplitCost.hashedOwnerCE_cost' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSplitCost.hashedOwnerCE_cost

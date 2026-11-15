@@ -41,7 +41,7 @@ theorem source (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (checks
 theorem native (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (remember : Extra → Message → Option RootOutput → Extra)
     (services : RegistrationNativeKemReferenceEffects.Callbacks n KemSK Extra)
     (demand : QueryImpl (Message →ₒ Option (RegistrationNativePairedChoice.Choice n)) (StateT (Private n KemSK Extra) m))
@@ -68,7 +68,7 @@ theorem native (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (checks
     RegistrationServerReferenceSourceRetain.project, roots] using compared
 
 theorem retain_native (coins : QueryImpl unifSpec m) (roots : RegistrationServerReferenceRestore.Roots)
-    (ready : Ready) (before : State n KemSK Extra) (created : PqxdhLiveServerConstruction.Created Unit) :
+    (ready : Ready) (before : State n KemSK Extra) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     Prod.map id (project roots) <$> (close (RegistrationNativePlatformServerReferenceAccept.retain ready)).run before =
       simulateQ coins ((RegistrationServerNativeSource.retain created
         (RegistrationServerReferenceRoot.atRoot ready (roots ready.reference))).run (project roots before)) := by

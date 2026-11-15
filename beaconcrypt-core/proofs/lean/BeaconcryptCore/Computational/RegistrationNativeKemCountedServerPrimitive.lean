@@ -16,7 +16,7 @@ variable {n : Nat} {ι KemSK : Type} {base : OracleSpec ι} {source : Registrati
 
 noncomputable def program (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     QueryImpl PrimitiveSpec (StateT (State n source) (OracleComp (Spec KemSK))) := fun query =>
   simulateQ (fun request => RegistrationNativeKemCountedTrusted.implementation setup checks representation created (.inr request))
     (RegistrationNativeKemInterface.server checks query)
@@ -24,21 +24,21 @@ noncomputable def program (setup : Setup base KemSK) (checks : Checks)
 /-- The actual Server backend never invokes the private recipient decapsulation service. -/
 theorem decapsulate (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (ciphertext : core.option.Option (Std.Array U8 1088#usize)) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (ciphertext : core.option.Option (Std.Array U8 1088#usize)) :
     program (n := n) (source := source) setup checks representation created (.decapsulate ciphertext) = pure .None := by
   simp only [program, RegistrationNativeKemInterface.server, simulateQ_pure]
 
 /-- Missing public input invokes no KEM leaf. -/
 theorem missing (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     program (n := n) (source := source) setup checks representation created (.encapsulate .None) = pure .None := by
   simp only [program, RegistrationNativeKemInterface.server, simulateQ_pure]
 
 /-- A checked source encapsulation invokes exactly the indexed counted leaf and retains the original typed reply. -/
 theorem encapsulate (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (key : Std.Array U8 1184#usize) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (key : Std.Array U8 1184#usize) :
     program (n := n) (source := source) setup checks representation created (.encapsulate (.Some key)) =
       if checks.kemKey (RegistrationRootInput.pqKey key) then
         (fun result => .Some (PqxdhAcceptedRegistration.ciphertextArray result.1, PqxdhRootTableInitialization.rootArray result.2)) <$>
@@ -52,7 +52,7 @@ theorem encapsulate (setup : Setup base KemSK) (checks : Checks)
 
 noncomputable def core (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     QueryImpl RegistrationAgreementExecutor.Spec (StateT (State n source) (OracleComp (Spec KemSK)))
   | .convertPublic key => program setup checks representation created (.convertPublic key)
   | .convertSecret role => program setup checks representation created (.convertSecret role)
@@ -64,7 +64,7 @@ noncomputable def core (setup : Setup base KemSK) (checks : Checks)
 
 noncomputable def agreement (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     QueryImpl RegistrationAgreementExecutor.Spec (StateT (State n source) (OracleComp (Spec KemSK))) := fun query => do
   modify fun before => { before with server := { before.server with world := { before.server.world with
     requests := before.server.world.requests ++ RegistrationWorldAgreement.recorded query } } }
@@ -72,7 +72,7 @@ noncomputable def agreement (setup : Setup base KemSK) (checks : Checks)
 
 noncomputable def agree (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (authenticated : registration.AuthenticatedInit) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (authenticated : registration.AuthenticatedInit) :
     StateT (State n source) (OracleComp (Spec KemSK)) (RustM agreement.AgreementEffect) := do
   let before ← get
   simulateQ (agreement setup checks representation created)

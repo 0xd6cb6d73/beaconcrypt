@@ -33,7 +33,7 @@ variable [idleCodecs : AdapterPublicWrapperRequestMonad.Codecs (AdapterPublicWra
 
 omit idleLocal idleCrypto idleChildren idleCodecs [PublicWrapperPlatform.CryptoOperations] in
 private noncomputable def absent {R : Type}
-    (setup : PqxdhServerAuthExperiment.Setup base KemSK) (created : PqxdhLiveServerConstruction.Created Unit)
+    (setup : PqxdhServerAuthExperiment.Setup base KemSK) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (current : RegistrationNativeExperiment.State n KemSK source×Platform)
     (objects : RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view containersView created credential current) :
@@ -57,7 +57,7 @@ private noncomputable def absent {R : Type}
 
 noncomputable def step {R : Type} (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (containersView : AdapterPublicWrapperStorage.Views) (credential : RegistrationNativeMldsa.Credential source)
     (before : RegistrationNativeExperiment.State n KemSK source) (index : Nat) (input : Slice U8) (previous : Platform)

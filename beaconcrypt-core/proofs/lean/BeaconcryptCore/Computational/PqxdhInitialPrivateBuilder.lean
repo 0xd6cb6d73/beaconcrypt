@@ -9,6 +9,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialPrivateBuilder
+variable (associatedData : Std.Array Std.U8 151#usize)
 open PqxdhServerRegistrationPublication PqxdhSecretInputKdf PqxdhJointKdfGame
 open PqxdhInitialResponseService PqxdhInitialReplyErasure
 open PqxdhInitialRootLabelService PqxdhCorrelatedExtractFamily PqxdhCorrelatedExpand
@@ -36,16 +37,16 @@ noncomputable def protocolBuild
   let current := PqxdhRegistrationProtocolState.consume index ready state
   let selected := PqxdhRegistrationProtocolState.input senderId index metadata current
   PqxdhRegistrationProtocolState.reinstall index current <$>
-    (simulateQ (tailImpl fixed writer kdf aux) (readyBuild fixed selected.binding ready metadata selected.state)).run current.primitive
+    (simulateQ (tailImpl fixed writer kdf aux) (PqxdhInitialServiceBuilder.readyBuild (associatedData := associatedData) fixed selected.binding ready metadata selected.state)).run current.primitive
 
 
 /-- The default private record handler gives exactly the actual initializer-service builder, before all original first-send work. -/
 theorem protocol_source (fixed : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (aux : QueryImpl AuxSpec (StateT (RawCtxSharedPrimitive.SharedState A) ProbComp))
     (senderId : M → Std.U64) (index : Fin S) (metadata : P) (ready : PqxdhPrivateAcceptedRoot.Ready) :
-    protocolBuild (I := I) (D := D) (K := K) (B := B) fixed writer (RawCtxSourceHkdf.kdfImpl fixed)
+    protocolBuild (associatedData := associatedData) (I := I) (D := D) (K := K) (B := B) fixed writer (RawCtxSourceHkdf.kdfImpl fixed)
       aux senderId index metadata ready =
-      PqxdhInitialServiceBuilder.protocolBuild fixed writer aux senderId index metadata ready := rfl
+      PqxdhInitialServiceBuilder.protocolBuild (associatedData := associatedData) fixed writer aux senderId index metadata ready := rfl
 
 /-- The fixed reply interpretation preserves each original builder primitive callback, complete shared state and original random coins. -/
 theorem tail_supplied (fixed : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
@@ -87,12 +88,12 @@ theorem protocol_supplied (fixed : FixedHkdfSha512NoSaltSource) (writer : RawCtx
     (aux : QueryImpl AuxSpec (StateT (RawCtxSharedPrimitive.SharedState A) ProbComp))
     (senderId : M → Std.U64) (index : Fin S) (metadata : P) (ready : PqxdhPrivateAcceptedRoot.Ready)
     (state : PqxdhRegistrationProtocolState.State M P I D K A S B) :
-    simulateQ (supplied response) ((protocolBuild fixed writer kdf aux senderId index metadata ready).run state) =
-      (PqxdhInitialPrivateKdf.build fixed writer kdf (kernelOf false response) aux senderId index metadata
+    simulateQ (supplied response) ((protocolBuild (associatedData := associatedData) fixed writer kdf aux senderId index metadata ready).run state) =
+      (PqxdhInitialPrivateKdf.build (associatedData := associatedData) fixed writer kdf (kernelOf false response) aux senderId index metadata
         (PqxdhInitialBuilderCut.eraseRoot ready)).run state := by
   simp only [protocolBuild, PqxdhInitialPrivateKdf.build, StateT.run, simulateQ_map]
   have complete := tail_program fixed writer response kdf aux
-    (PqxdhInitialServiceBuilder.readyBuild fixed
+    (PqxdhInitialServiceBuilder.readyBuild (associatedData := associatedData) fixed
       (PqxdhRegistrationProtocolState.input senderId index metadata
         (PqxdhRegistrationProtocolState.consume index ready state)).binding ready metadata
       (PqxdhRegistrationProtocolState.input senderId index metadata
@@ -109,7 +110,7 @@ noncomputable def build (fixed : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
     (sender : M → Std.U64) (index : Fin S) (metadata : P) (selected : Message)
     (ready : PqxdhPrivateAcceptedRoot.Ready) (state : PqxdhRegistrationProtocolState.State M P I D K A S B) :=
   simulateQ (PqxdhInitialLabelBuilder.compiler selected)
-    ((protocolBuild fixed writer kdf aux sender index metadata
+    ((protocolBuild (associatedData := associatedData) fixed writer kdf aux sender index metadata
       (PqxdhInitialBuilderCut.eraseRoot ready)).run state)
 
 /-- Changing only the supplied Ready root cannot change any executable compiled builder operation or continuation. -/
@@ -119,8 +120,8 @@ theorem root_unused (fixed : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedS
     (sender : M → Std.U64) (index : Fin S) (metadata : P) (selected : Message)
     (ready : PqxdhPrivateAcceptedRoot.Ready) (root : PqxdhSecretInputKdf.RootOutput)
     (state : PqxdhRegistrationProtocolState.State M P I D K A S B) :
-    build fixed writer kdf aux sender index metadata selected { ready with root := root } state =
-      build fixed writer kdf aux sender index metadata selected ready state := rfl
+    build (associatedData := associatedData) fixed writer kdf aux sender index metadata selected { ready with root := root } state =
+      build (associatedData := associatedData) fixed writer kdf aux sender index metadata selected ready state := rfl
 
 /-- The actual root-erased compiled Server builder consumes the supplied response after its original checks and preserves first-send work and the complete protocol/shared result and root cache. -/
 theorem build_response (fixed : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
@@ -130,9 +131,9 @@ theorem build_response (fixed : FixedHkdfSha512NoSaltSource) (writer : RawCtxMix
     (ready : PqxdhPrivateAcceptedRoot.Ready) (state : PqxdhRegistrationProtocolState.State M P I D K A S B)
     (response : PqxdhInitialRootLabelService.Response) (cache : RootOracle.QueryCache) :
     (simulateQ (labelledFull fixed (QueryImpl.ofLift unifSpec ProbComp) selected response)
-      (build fixed writer kdf aux sender index metadata selected ready state)).run cache =
+      (build (associatedData := associatedData) fixed writer kdf aux sender index metadata selected ready state)).run cache =
       (fun result => (result, cache)) <$>
-        (PqxdhInitialPrivateKdf.build fixed writer kdf (kernelOf false response) aux sender index metadata
+        (PqxdhInitialPrivateKdf.build (associatedData := associatedData) fixed writer kdf (kernelOf false response) aux sender index metadata
           (PqxdhInitialBuilderCut.eraseRoot ready)).run state := by
   rw [build, PqxdhInitialLabelBuilder.response_program, protocol_supplied]
   rfl
@@ -143,8 +144,8 @@ theorem build_source (fixed : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixed
     (aux : QueryImpl AuxSpec (StateT (RawCtxSharedPrimitive.SharedState A) ProbComp))
     (sender : M → Std.U64) (index : Fin S) (metadata : P) (selected : Message)
     (ready : PqxdhPrivateAcceptedRoot.Ready) (state : PqxdhRegistrationProtocolState.State M P I D K A S B) :
-    build fixed writer (RawCtxSourceHkdf.kdfImpl fixed) aux sender index metadata selected ready state =
-      PqxdhInitialLabelBuilder.build fixed writer aux sender index metadata selected ready state := rfl
+    build (associatedData := associatedData) fixed writer (RawCtxSourceHkdf.kdfImpl fixed) aux sender index metadata selected ready state =
+      PqxdhInitialLabelBuilder.build (associatedData := associatedData) fixed writer aux sender index metadata selected ready state := rfl
 
 end BeaconcryptCore.Computational.PqxdhInitialPrivateBuilder
 

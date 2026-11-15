@@ -21,7 +21,7 @@ variable {mlSource : RegistrationNativeMldsa.Source}
 theorem accept_source (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (packet : registration.InitPacket) (before : State n KemSK mlSource × SourceState) :
     Prod.map id project <$>
       (interpret setup.joint (RegistrationNativeIdentityMain.handler setup checks wire route representation created credential
@@ -44,7 +44,7 @@ theorem accept_source (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
 theorem handler_source (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (before : State n KemSK mlSource × SourceState)
     (owned : Owned setup.joint before) :
     Prod.map id project <$>

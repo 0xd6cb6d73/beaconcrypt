@@ -76,7 +76,13 @@ theorem bundle_publications (setup : Setup baseSpec KemSK) (codec : Codec Reader
     simp only [bundle, StateT.run, found, support_map, Set.mem_image] at supported
     obtain ⟨returned, member, same⟩ := supported
     subst result
-    exact trace_publications setup codec address entry.identityIndex entry.owner state.1.pool.1 state.2 returned member
+    have original : returned.1 ∈ support (trace setup codec address entry.identityIndex entry.owner
+        state.1.pool.1 state.2) := by
+      rw [← traceLogged_trace setup codec address entry.identityIndex entry.owner state.1.pool.1 state.2
+        (state.1.inits address), support_map]
+      exact ⟨returned, member, rfl⟩
+    exact trace_publications setup codec address entry.identityIndex entry.owner state.1.pool.1 state.2
+      returned.1 original
 
 /-- One actual source query and the existing pure registration log agree on their successful publication append. -/
 theorem query_publications (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)

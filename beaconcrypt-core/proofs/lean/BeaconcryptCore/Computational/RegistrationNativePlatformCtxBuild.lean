@@ -84,7 +84,7 @@ private theorem state_pure_apply {S X : Type} {m : Type → Type} [Monad m]
 
 private theorem handler_build (checks : PqxdhServerAuthExperiment.Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (source : RegistrationNativeMldsa.Source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (source : RegistrationNativeMldsa.Source)
     (credential : RegistrationNativeMldsa.Credential source)
     (reserveRegistration reservePeer : StateT Platform ProbComp Bool)
     (reserveFrame : Nat → StateT Platform ProbComp (core.result.Result Unit E))
@@ -104,7 +104,7 @@ attribute [local irreducible] RegistrationNativePlatformIdentityMainAmbient.comm
 /-- The exact current-runtime non-Beacon build callback is obtained without public-root-reference or whole-handler premises. -/
 theorem runtime_source (checks : PqxdhServerAuthExperiment.Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (source : RegistrationNativeMldsa.Source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (source : RegistrationNativeMldsa.Source)
     (credential : RegistrationNativeMldsa.Credential source)
     (reserveRegistration reservePeer : StateT Platform ProbComp Bool)
     (reserveFrame : Nat → StateT Platform ProbComp (core.result.Result Unit E))

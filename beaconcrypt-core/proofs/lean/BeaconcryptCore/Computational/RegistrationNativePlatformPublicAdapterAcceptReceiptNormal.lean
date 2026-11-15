@@ -99,8 +99,10 @@ theorem lookup (self :beaconcrypt_public_wrapper.server.Server) (pending :peer.R
 
 variable (setup :PqxdhServerAuthExperiment.Setup base KemSK) (checks :PqxdhServerAuthExperiment.Checks)
 variable (verify :MldsaTranscriptAuth.Verify) (representation :RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created :PqxdhLiveServerConstruction.Created Unit)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 
+-- The proof only threads support membership; keep the now-pure Server pin selection opaque to elaboration-time whnf (its 1952-byte key construction otherwise exhausts the recursion depth in the linter).
+attribute [local irreducible] RegistrationNativeServerPinRecompute.program in
 theorem program (view :AdapterPublicWrapperState.MaterialView source KemSK)
     (self :beaconcrypt_public_wrapper.server.Server) (input :Slice U8) (rng :R)
     (before :Backend n KemSK) (previous :P)

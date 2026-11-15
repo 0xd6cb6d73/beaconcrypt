@@ -567,6 +567,53 @@ FORBIDDEN = (
 # any number and for any target.
 TERMINATION_WARNING = "Termination warning: "
 
+# Owner-approved per-target resource exceptions (owner decision of 2026-11-12). The
+# group limits are the --timeout and --address-space-kib arguments; the Makefile passes
+# the approved 1800 s and 10 GiB, which every other target keeps. Since the third
+# transcript-AD port pass (pvport3) every fs record AD is registration version 3
+# transcript AD151, a BLAKE2b term over the whole registration transcript, and with
+# these larger terms the three K = 3 security targets below no longer saturate within
+# the group limits. Their pvport3 diagnostic runs reproduced the expected TRUE in
+# 2495 s (A1, 11.64 GiB resident), 2635 s (s2b-C1, 9.94 GiB) and 2587 s (s2b-C3,
+# 9.38 GiB). This is a resource change only: no model, query, bound or expected verdict
+# changes. All three get 4000 s, one round value at least 1.5 times the slowest
+# diagnostic (1.5 x 2635 s = 3953 s); A1 also gets a 14 GiB (14336 MiB) address space,
+# about 1.2 times its resident peak (an 11.4 GiB cap ran out of memory near the end of
+# its saturation). Owner decision of 2026-11-13: s2b-C1 also gets the 14 GiB address
+# space, because under the 10 GiB cap it ran out of memory after 38 minutes at
+# 9.75 GiB resident, while its 4000 s / 14 GiB diagnostic reproduced the expected TRUE
+# in 2613 s at 9.94 GiB resident. A larger group limit still applies; an address-space
+# exception never adds a cap to an uncapped run.
+LIMIT_EXCEPTIONS = {
+    "A1": (4000, 14680064),
+    "s2b-C1": (4000, 14680064),
+    "s2b-C3": (4000, None),
+}
+
+
+def target_limits(target, timeout, address_space_kib):
+    """The (seconds, address-space KiB) of one target: the group limits, raised to the
+    owner-approved exception when the target is that entry of the fs manifest."""
+    exception = LIMIT_EXCEPTIONS.get(target.name)
+    if exception is None or target not in TARGETS:
+        return timeout, address_space_kib
+    seconds, space = exception
+    if space is not None and address_space_kib:
+        address_space_kib = max(address_space_kib, space)
+    return max(timeout, seconds), address_space_kib
+
+
+def validate_limit_exceptions():
+    """Every exception names exactly one K = 3 security target of the fs manifest."""
+    for name, (seconds, space) in LIMIT_EXCEPTIONS.items():
+        matches = [target for target in TARGETS if target.name == name]
+        if len(matches) != 1 or matches[0].cls != "security" or matches[0].bound != 3:
+            raise ValueError(
+                f"{name}: a limit exception names one K = 3 security target"
+            )
+        if seconds > 4000 or (space is not None and space > 14680064):
+            raise ValueError(f"{name}: limit exception above the owner-approved values")
+
 
 def log_name(target):
     """The log file of one target; R1' and R1 must not share a log."""
@@ -652,7 +699,7 @@ def validate_legacy_scope(directory=HERE):
     """Preserve the explicit projection boundary when renewing source tripwires."""
     marker = (
         "(* @beaconcrypt-fidelity-v1 legacy_profiles.scope="
-        "classical_projection:MLDSA_guards_not_globally_lifted *)"
+        "historical_classical_projection:no_current_runtime_refinement_claim *)"
     )
     if (directory / "production-transcript-interface.pvl").read_text().count(
         marker
@@ -665,6 +712,7 @@ def validate_legacy_scope(directory=HERE):
 def validate_targets(targets=TARGETS, directory=HERE):
     """Check the manifest itself: classes, bounds, libraries and query files."""
     validate_legacy_scope(directory)
+    validate_limit_exceptions()
     names = [target.name for target in targets]
     if len(set(names)) != len(names):
         raise ValueError("duplicate fs target name")
@@ -822,19 +870,23 @@ def run(proverif, targets, logdir, timeout, address_space_kib, results_path):
     rows = []
     failures = []
     for target in targets:
+        limit, space = target_limits(target, timeout, address_space_kib)
         try:
-            seconds, peak = check_target(
-                proverif, target, logdir, timeout, address_space_kib
-            )
+            seconds, peak = check_target(proverif, target, logdir, limit, space)
         except ValueError as error:
             failures.append(str(error))
             print(f"FAILED {target.name}: {error}", flush=True)
             continue
         verdict = "TRUE" if target.expected_true() else "FALSE"
         rows.append((target, verdict, seconds, peak))
+        exception = (
+            f" (owner-approved limits {limit} s, {space} KiB address space)"
+            if (limit, space) != (timeout, address_space_kib)
+            else ""
+        )
         print(
             f"{target.name}: {target.cls}, {target.bounds()}: {verdict} as expected "
-            f"in {seconds:.2f} s, peak RSS {peak} KiB",
+            f"in {seconds:.2f} s, peak RSS {peak} KiB{exception}",
             flush=True,
         )
     if results_path:
@@ -885,7 +937,12 @@ def run_logged(
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--proverif", default="proverif")
-    parser.add_argument("--timeout", type=int, default=1800, help="seconds per target")
+    parser.add_argument(
+        "--timeout",
+        type=int,
+        default=1800,
+        help="seconds per target (LIMIT_EXCEPTIONS: owner-approved exceptions)",
+    )
     parser.add_argument(
         "--address-space-kib",
         type=int,

@@ -48,7 +48,7 @@ noncomputable def jointSource (setup : Setup base KemSK) (view : AdapterPublicWr
 
 theorem native_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (view : AdapterPublicWrapperState.MaterialView source KemSK)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (model : Representation view R) (rng : R) (before : Native n KemSK source) :
     Prod.map Receipt.born id <$> (jointSource setup view model rng).run before =
     (RegistrationNativeExperiment.trusted setup checks representation created source (.inr (.inr (.inl .create)))).run before := by
@@ -73,7 +73,7 @@ noncomputable def joint (coins : QueryImpl unifSpec m) (setup : Setup base KemSK
 
 theorem native (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (view : AdapterPublicWrapperState.MaterialView source KemSK)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (model : Representation view R) (rng : R) (before : Native n KemSK source) :
     Prod.map Receipt.born id <$> (joint coins setup view model rng).run before =
     (RegistrationNativePlatformInterpret.state coins

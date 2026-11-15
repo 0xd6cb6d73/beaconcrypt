@@ -19,7 +19,7 @@ def edCore (ensureInit : StateT Unit ProbComp Bool) : ProbComp (Option PqxdhJoin
 
 theorem construct (joint : PqxdhJointIdentity.Primitives) (ensureInit : StateT Unit ProbComp Bool)
     (identityIndex : Nat) (identifier : U64) :
-    (PqxdhLiveServerConstruction.construct (P:=Unit) joint ensureInit identityIndex identifier none).run ()=
+    (PqxdhLiveServerConstruction.construct (P:=Std.Array U8 151#usize) joint ensureInit identityIndex identifier none).run ()=
       (fun seed=>(seed.map (PqxdhLiveServerConstruction.initialized joint identityIndex identifier .generated),())) <$>
         edCore ensureInit := by
   unfold PqxdhLiveServerConstruction.construct edCore

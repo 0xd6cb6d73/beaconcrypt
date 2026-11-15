@@ -12,6 +12,7 @@ namespace BeaconcryptCore.Computational.PqxdhRegistrationBuildContext
 open PqxdhServerRegistrationPublication
 
 variable {Metadata PeerMetadata Consumed Other : Type}
+variable (associatedData : Std.Array Std.U8 151#usize)
 
 /-- Change only the consumed context, retaining the entire peer map and allocation state. -/
 def mapContext (f : Consumed → Other) (state : State Metadata PeerMetadata Consumed) :
@@ -43,8 +44,8 @@ theorem publish_map (f : Consumed → Other) (state : State Metadata PeerMetadat
 theorem after_map (f : Consumed → Other) (state : State Metadata PeerMetadata Consumed)
     (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Bytes)
     (kernel : ratchet.concrete.ConcreteRatchetKernel) (metadata : PeerMetadata) :
-    afterInitialization candidate authenticated kernel metadata (mapContext f state) =
-      mapReply f <$> afterInitialization candidate authenticated kernel metadata state := by
+    afterInitialization (associatedData := associatedData) candidate authenticated kernel metadata (mapContext f state) =
+      mapReply f <$> afterInitialization (associatedData := associatedData) candidate authenticated kernel metadata state := by
   simp only [afterInitialization, map_bind]
   congr 1
   funext sent
@@ -67,8 +68,8 @@ theorem candidate_map (f : Consumed → Other) (state : State Metadata PeerMetad
     (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (candidate : pqxdh.ServerRegistrationCandidate) (root : PqxdhSecretInputKdf.RootOutput)
     (data : Option Bytes) (metadata : PeerMetadata) :
-    candidateTail source candidate root data metadata (mapContext f state) =
-      mapResult f <$> candidateTail source candidate root data metadata state := by
+    candidateTail (associatedData := associatedData) source candidate root data metadata (mapContext f state) =
+      mapResult f <$> candidateTail (associatedData := associatedData) source candidate root data metadata state := by
   simp only [candidateTail, map_bind]
   congr 1
   funext valid
@@ -96,8 +97,8 @@ theorem build_map (f : Consumed → Other) (state : State Metadata PeerMetadata 
     (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (pending : pqxdh.PendingServerRegistration) (root : PqxdhSecretInputKdf.RootOutput)
     (data : Option Bytes) (metadata : PeerMetadata) :
-    build source pending root data metadata (mapContext f state) =
-      mapResult f <$> build source pending root data metadata state := by
+    build (associatedData := associatedData) source pending root data metadata (mapContext f state) =
+      mapResult f <$> build (associatedData := associatedData) source pending root data metadata state := by
   simp only [build, mapContext]
   rw [← continue_map]
   congr 1
@@ -115,9 +116,9 @@ theorem build_interpreted {PrimitiveState ι : Type} {base : OracleSpec ι}
     (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (pending : pqxdh.PendingServerRegistration) (root : PqxdhSecretInputKdf.RootOutput)
     (data : Option Bytes) (metadata : PeerMetadata) (primitive : PrimitiveState) :
-    ((simulateQ impl (build source pending root data metadata (mapContext f state))).run primitive) =
+    ((simulateQ impl (build (associatedData := associatedData) source pending root data metadata (mapContext f state))).run primitive) =
       (fun result => (mapResult f result.1, result.2)) <$>
-        ((simulateQ impl (build source pending root data metadata state)).run primitive) := by
+        ((simulateQ impl (build (associatedData := associatedData) source pending root data metadata state)).run primitive) := by
   rw [build_map, simulateQ_map, StateT.run_map]
 
 /-- The equality quantifies over the complete continuation, including the original interpreter state. -/
@@ -129,9 +130,9 @@ theorem build_continuation {PrimitiveState Result ι : Type} {base : OracleSpec 
     (data : Option Bytes) (metadata : PeerMetadata) (primitive : PrimitiveState)
     (next : RustM (Option Response × State Metadata PeerMetadata Other) × PrimitiveState →
       OracleComp base Result) :
-    (((simulateQ impl (build source pending root data metadata (mapContext f state))).run primitive)
+    (((simulateQ impl (build (associatedData := associatedData) source pending root data metadata (mapContext f state))).run primitive)
       >>= next) =
-    (((simulateQ impl (build source pending root data metadata state)).run primitive)
+    (((simulateQ impl (build (associatedData := associatedData) source pending root data metadata state)).run primitive)
       >>= fun result => next (mapResult f result.1, result.2)) := by
   rw [build_interpreted, bind_map_left]
 
@@ -141,8 +142,8 @@ theorem build_queries (f : Consumed → Other) (state : State Metadata PeerMetad
     (pending : pqxdh.PendingServerRegistration) (root : PqxdhSecretInputKdf.RootOutput)
     (data : Option Bytes) (metadata : PeerMetadata) (select : TailSpec.Domain → Prop)
     [DecidablePred select] (bound : Nat) :
-    (build source pending root data metadata (mapContext f state)).IsQueryBoundP select bound ↔
-      (build source pending root data metadata state).IsQueryBoundP select bound := by
+    (build (associatedData := associatedData) source pending root data metadata (mapContext f state)).IsQueryBoundP select bound ↔
+      (build (associatedData := associatedData) source pending root data metadata state).IsQueryBoundP select bound := by
   rw [build_map, isQueryBoundP_map_iff]
 
 end BeaconcryptCore.Computational.PqxdhRegistrationBuildContext

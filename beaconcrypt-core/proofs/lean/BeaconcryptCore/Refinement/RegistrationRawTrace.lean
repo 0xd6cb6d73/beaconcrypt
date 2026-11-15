@@ -221,6 +221,90 @@ theorem parse (input : Slice U8) (atoms : List Atom) (size : atoms.length = 8)
     rust_primitives.slice.slice_length, cbor_parse, split_zero,
     RegistrationHeaderValidation.sub_source, RegistrationArrayRotation.sub_zero]
 
+set_option backward.isDefEq.respectTransparency false in
+theorem array6 (input : Slice U8) (atoms : List Atom) (size : atoms.length = 6)
+    (contents : input.val = encodedBytes cbor_major_type_array 6#u64 ++ atomsBytes atoms) :
+    Trace input 0#usize 1#usize input.len := by
+  have headerWidth : (writtenCount 6#u64).val = 1 := rfl
+  have minimum := atoms_length atoms
+  have lengths := congrArg List.length contents
+  simp only [List.length_append, encoded_length, headerWidth] at lengths
+  change input.length = 1 + (atomsBytes atoms).length at lengths
+  obtain ⟨afterHeader, body, afterHeaderValue⟩ := RegistrationRawItems.array_body input 0#usize 1#usize 6#u64 []
+    (atomsBytes atoms) (by simpa using contents) rfl
+    (by change 1 ≤ input.length - 0; omega) (by change 6 ≤ input.length - 0 - 1; omega)
+  have castSix : UScalar.cast .Usize 6#u64 = 6#usize := by
+    apply UScalar.eq_of_val_eq
+    rw [RegistrationHeaderCanonical.cast_value .Usize 6#u64 (by scalar_tac)]
+    rfl
+  rw [castSix, RegistrationCanonicalTrace.next_initial] at body
+  obtain ⟨final, later, finalValue⟩ := flat_trace atoms input afterHeader 6#usize
+    (encodedBytes cbor_major_type_array 6#u64) [] (by simpa using contents)
+    (by rw [afterHeaderValue, encoded_length, headerWidth]; rfl) (by simpa using size.symm)
+  have finalIsLength : final = input.len := by
+    apply UScalar.eq_of_val_eq
+    rw [finalValue, afterHeaderValue, headerWidth, Slice.len_val]
+    change 0 + 1 + (atomsBytes atoms).length = input.length
+    omega
+  rw [finalIsLength] at later
+  apply Trace.step (children := 6#usize) (by scalar_tac)
+  · simpa only [RegistrationCanonicalTrace.next_initial] using body
+  · simpa only [RegistrationCanonicalTrace.next_initial] using later
+
+set_option backward.isDefEq.respectTransparency false in
+theorem validate_raw6 (input : Slice U8) (atoms : List Atom) (size : atoms.length = 6)
+    (contents : input.val = encodedBytes cbor_major_type_array 6#u64 ++ atomsBytes atoms) :
+    validate_raw_data_item input (cell 0#usize) = .ok (true, cell input.len) := by
+  have trace := array6 input atoms size contents
+  simp only [validate_raw_data_item, show Array.repeat 1#usize = @pack Usize from rfl,
+    show Array.repeat 1#usize = @pack Bool from rfl, index_pack, bind_tc_ok, ↓reduceIte,
+    run trace, uncurry]
+set_option backward.isDefEq.respectTransparency false in
+theorem validate6 (input : Slice U8) (atoms : List Atom) (size : atoms.length = 6)
+    (contents : input.val = encodedBytes cbor_major_type_array 6#u64 ++ atomsBytes atoms) :
+    cbor_validate input = .ok input.len := by
+  simp only [cbor_validate, show Array.repeat 1#usize = @pack Usize from rfl,
+    Array.to_slice_mut, lift, bind_tc_ok, uncurry]
+  have toSlice : Array.to_slice (pack 0#usize) = cell 0#usize := rfl
+  have copyBack : Array.from_slice (pack 0#usize) (cell input.len) = pack input.len := rfl
+  rw [toSlice, validate_raw6 input atoms size contents]
+  simp only [bind_tc_ok, uncurry, ↓reduceIte, copyBack, index_pack]
+
+omit [RegistrationValidatorPrimitive.Operations] in
+theorem length_nonzero6 (input : Slice U8) (atoms : List Atom)
+    (contents : input.val = encodedBytes cbor_major_type_array 6#u64 ++ atomsBytes atoms) :
+    input.len ≠ 0#usize := by
+  have lengths := congrArg List.length contents
+  simp only [List.length_append, encoded_length] at lengths
+  have width : 0 < (writtenCount 6#u64).val := RegistrationSerializerFields.header_positive 6#u64
+  intro zero
+  have inputZero : input.length = 0 := by simpa using congrArg UScalar.val zero
+  change input.length = _ at lengths
+  omega
+
+set_option backward.isDefEq.respectTransparency false in
+theorem validate_det6 (input : Slice U8) (atoms : List Atom) (size : atoms.length = 6)
+    (contents : input.val = encodedBytes cbor_major_type_array 6#u64 ++ atomsBytes atoms) :
+    cbor_validate_det input = .ok input.len := by
+  have nonzero := length_nonzero6 input atoms contents
+  obtain ⟨widthScan, orderScan⟩ := RegistrationCanonicalTrace.scans6 input atoms size contents
+  simp only [cbor_validate_det, bcExtractedToken63626f725f76616c69646174655f646574c2b7,
+    validate6 input atoms size contents, bind_tc_ok, nonzero, ↓reduceIte, split_zero, uncurry,
+    RegistrationHeaderValidation.sub_source, RegistrationArrayRotation.sub_zero, split_full,
+    lift, beaconcrypt_parse.lowstar.ignore.bcSchemaRepeatedIgnore2, widthScan, orderScan]
+
+set_option backward.isDefEq.respectTransparency false in
+theorem parse6 (input : Slice U8) (atoms : List Atom) (size : atoms.length = 6)
+    (contents : input.val = encodedBytes cbor_major_type_array 6#u64 ++ atomsBytes atoms) :
+    beaconcrypt_parse.cbordetver.cbor_det_parse input =
+      (do let raw ← cbor_read input
+          .ok (.Some (raw, empty))) := by
+  have nonzero := length_nonzero6 input atoms contents
+  simp only [beaconcrypt_parse.cbordetver.cbor_det_parse, validate_det6 input atoms size contents,
+    bind_tc_ok, nonzero, ↓reduceIte, split_full, uncurry, core.slice.Slice.len,
+    rust_primitives.slice.slice_length, cbor_parse, split_zero,
+    RegistrationHeaderValidation.sub_source, RegistrationArrayRotation.sub_zero]
+
 end BeaconcryptCore.Refinement.RegistrationRawTrace
 
 /-- info: 'BeaconcryptCore.Refinement.RegistrationRawTrace.loop_unfold' depends on axioms: [propext, Classical.choice, Quot.sound] -/
@@ -278,3 +362,33 @@ end BeaconcryptCore.Refinement.RegistrationRawTrace
 /-- info: 'BeaconcryptCore.Refinement.RegistrationRawTrace.parse' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Refinement.RegistrationRawTrace.parse
+
+/-- info: 'BeaconcryptCore.Refinement.RegistrationRawTrace.array6' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.RegistrationRawTrace.array6
+
+/-- info: 'BeaconcryptCore.Refinement.RegistrationRawTrace.validate_raw6' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.RegistrationRawTrace.validate_raw6
+
+/-- info: 'BeaconcryptCore.Refinement.RegistrationRawTrace.validate6' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.RegistrationRawTrace.validate6
+
+/-- info: 'BeaconcryptCore.Refinement.RegistrationRawTrace.length_nonzero6' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.RegistrationRawTrace.length_nonzero6
+
+/-- info: 'BeaconcryptCore.Refinement.RegistrationRawTrace.validate_det6' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.RegistrationRawTrace.validate_det6
+
+/-- info: 'BeaconcryptCore.Refinement.RegistrationRawTrace.parse6' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.RegistrationRawTrace.parse6

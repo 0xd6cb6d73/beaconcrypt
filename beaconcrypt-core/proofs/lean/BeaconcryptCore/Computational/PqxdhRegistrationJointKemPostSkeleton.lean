@@ -112,14 +112,14 @@ theorem shared_compile {α : Type} (hmac : PqxdhSecretInputKdf.HmacSha512) (cand
   congr 2
   funext query
   rcases query with coin | (point | point)
-  · simp only [QueryImpl.apply_compose, compileHidden, QueryImpl.add_apply_inl, simulateQ_spec_query]
+  · simp only [QueryImpl.apply_compose, compileHidden, simulateQ_spec_query]
     rfl
   · apply StateT.ext
     intro current
-    simp only [QueryImpl.apply_compose, compileHidden, QueryImpl.add_apply_inr, QueryImpl.add_apply_inl,
+    simp only [QueryImpl.apply_compose, compileHidden,
       simulateQ_map, simulateQ_spec_query, StateT.run_map]
     rfl
-  · simp only [QueryImpl.apply_compose, compileHidden, QueryImpl.add_apply_inr, simulateQ_spec_query]
+  · simp only [QueryImpl.apply_compose, compileHidden, simulateQ_spec_query]
     rfl
 
 end Bottom
@@ -183,12 +183,14 @@ theorem groupedResume_split (setup : Setup baseSpec KemSK) (codec : Codec Reader
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)
     (value : PqxdhServerRootPreparation.Verified Reader)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)
-    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry)
+    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK)
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))
     (next : Option Nat → OracleComp (SourceSpec KemSK) X) (selected : Nat)
     (ciphertext : MlKem768Ciphertext) (candidate : MlKemSharedSecret) :
     groupedResume setup codec checks identityIndex publicIdentity observe raw value ephemeral consumed native owners
         next selected ciphertext candidate =
-      (fun result : ((R × List EncodedEntry) × SkelState KemSK RootOutput) × HmacOracle.QueryCache =>
+      (fun result : ((R × (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))) ×
+          SkelState KemSK RootOutput) × HmacOracle.QueryCache =>
           (result.1.1, join result.2 result.1.2)) <$>
         (simulateQ (tableAt coinsEnc (opRoot setup.hmac candidate))
           (skelResume setup codec checks identityIndex publicIdentity observe raw value ephemeral consumed native.2 owners

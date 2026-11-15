@@ -15,19 +15,18 @@ theorem prepare (control : pqxdh.ServerState) (pending : pqxdh.PendingServerRegi
     (actual : pqxdh.server_prepare_commit control pending current availability = .ok (.Ok candidate)) :
     candidate.previous_state = control := by
   obtain ⟨next, nextRun⟩ := BeaconcryptCore.PanicFreedom.server_next_key_id_ok control
-  obtain ⟨ad, adRun⟩ := BeaconcryptCore.PanicFreedom.build_associated_data_ok current.identity_public_key pending.beacon_identity_public_key
   cases next <;> cases availability
-  all_goals simp only [pqxdh.server_prepare_commit, array_eq_abs, nextRun, adRun, bind_tc_ok] at actual
+  all_goals simp only [pqxdh.server_prepare_commit, array_eq_abs, nextRun, bind_tc_ok] at actual
   all_goals split_ifs at actual <;> simp_all only [RustM.ok.injEq, core.result.Result.Ok.injEq, reduceCtorEq]
   all_goals cases actual; rfl
 
-def Retains (control : pqxdh.ServerState) : core.result.Result registration.ServerInitialKdf pqxdh.ServerState → Prop
+def Retains (control : pqxdh.ServerState) : core.result.Result registration.ServerAdHash pqxdh.ServerState → Prop
   | .Err previous => previous = control
   | .Ok pending => pending.candidate.previous_state = control
 
-theorem initial (control : pqxdh.ServerState) (pin : session.ServerAuthenticationPin)
+theorem ad_selection (control : pqxdh.ServerState) (pin : session.ServerAuthenticationPin)
     (availability : pqxdh.KeyIdAvailability) (accepted : agreement.ServerAgreement) (application : Slice U8)
-    (result : core.result.Result registration.ServerInitialKdf pqxdh.ServerState)
+    (result : core.result.Result registration.ServerAdHash pqxdh.ServerState)
     (actual : registration.begin_server_completion control pin availability accepted application = .ok result) :
     Retains control result := by
   obtain ⟨empty, emptyRun⟩ : ∃ result, core.slice.Slice.is_empty application = .ok result := ⟨_, rfl⟩
@@ -40,10 +39,15 @@ theorem initial (control : pqxdh.ServerState) (pin : session.ServerAuthenticatio
       session.ServerAuthenticationPin.impl.binding, bind_tc_ok, ↓reduceIte, RustM.ok.injEq] at actual
     all_goals cases actual; rfl
   | Ok candidate =>
-    obtain ⟨pending, pendingRun⟩ := BeaconcryptCore.PanicFreedom.Structural.pqxdh_concrete_start_server_candidate_ratchet_kdf_total candidate accepted.root.bytes
+    obtain ⟨bytes, bytesRun, _⟩ := BeaconcryptCore.Refinement.RegistrationAd.pending_transcript_exact
+      accepted.binding (BeaconcryptCore.Refinement.RegistrationAd.serverView candidate)
+    simp only [BeaconcryptCore.Refinement.RegistrationAd.serverView] at bytesRun
     cases empty <;> cases matched
     all_goals simp only [registration.begin_server_completion, emptyRun, matchRun, prepareRun,
-      session.ServerAuthenticationPin.impl.binding, ratchet.RatchetChain.as_bytes, pendingRun,
+      session.ServerAuthenticationPin.impl.binding,
+      pqxdh.ServerRegistrationCandidate.impl.server_identity_public_key,
+      pqxdh.ServerRegistrationCandidate.impl.ephemeral_public_key,
+      pqxdh.ServerRegistrationCandidate.impl.kem_ciphertext, pqxdh.ServerRegistrationCandidate.impl.key_id, bytesRun,
       bind_tc_ok, ↓reduceIte, RustM.ok.injEq] at actual
     all_goals cases actual
     all_goals first | rfl | exact prepare control accepted.pending pin.binding availability candidate prepareRun
@@ -55,8 +59,8 @@ end BeaconcryptCore.Computational.RegistrationServerCompletionSnapshot
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationServerCompletionSnapshot.prepare
 
-/-- info: 'BeaconcryptCore.Computational.RegistrationServerCompletionSnapshot.initial' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.RegistrationServerCompletionSnapshot.ad_selection' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationServerCompletionSnapshot.initial
+#print axioms BeaconcryptCore.Computational.RegistrationServerCompletionSnapshot.ad_selection

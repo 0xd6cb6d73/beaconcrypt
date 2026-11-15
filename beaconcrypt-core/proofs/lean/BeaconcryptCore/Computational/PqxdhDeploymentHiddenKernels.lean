@@ -205,8 +205,8 @@ noncomputable def factoredBody (prim : QueryImpl RawCtxWholeOwner.PrimitiveSpec 
     m (Option PqxdhBeaconPhase2Publication.Staged) := do
   let candidate := PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate
   let result ← (RawCtxChainOwner.rawReceive (PqxdhServerAuthBeaconFactor.primCalls sendCall prim source value.1)
-    decode raw).run (PqxdhServerAuthBeaconFactor.localState candidate (PqxdhServerAuthBeaconFactor.initial value.2))
-  pure (PqxdhBeaconPhase2Publication.afterOpening candidate (resolve result.2.kernel) result.1)
+    decode raw).run (PqxdhServerAuthBeaconFactor.localState candidate prepared.binding.associated_data (PqxdhServerAuthBeaconFactor.initial value.2))
+  pure (PqxdhBeaconPhase2Publication.afterOpening candidate prepared.binding.associated_data (resolve result.2.kernel) result.1)
 
 /-- The hidden Beacon finish is the application getter followed by `factoredBody`. -/
 theorem factored_body (prim : QueryImpl RawCtxWholeOwner.PrimitiveSpec m)
@@ -225,7 +225,7 @@ noncomputable def discardedInput (source : FixedHkdfSha512NoSaltSource) (decode 
     (prepared : PqxdhBeaconPhase2Preparation.Prepared Response) (value : Factor) (raw : Pqxdh.Bytes) :
     Option RawCtxWholeOwner.OpenInput :=
   let state := PqxdhServerAuthBeaconFactor.localState
-    (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate) (PqxdhServerAuthBeaconFactor.initial value.2)
+    (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate) prepared.binding.associated_data (PqxdhServerAuthBeaconFactor.initial value.2)
   if raw.isEmpty then none else
   match decode raw with
   | none => none
@@ -273,18 +273,18 @@ theorem body_discard [LawfulMonad m] (prim : QueryImpl RawCtxWholeOwner.Primitiv
         have sequenceNe : frame.sequence ≠ 1#u64 := by
           simpa only [SeqOne, decoded, decide_eq_false_iff_not] using notOne
         by_cases valid : RawCtxReceive.ValidFrame
-            (PqxdhServerAuthBeaconFactor.localState (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate)
+            (PqxdhServerAuthBeaconFactor.localState (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate) prepared.binding.associated_data
               (PqxdhServerAuthBeaconFactor.initial value.2)).expectedSender
-            (PqxdhServerAuthBeaconFactor.localState (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate)
+            (PqxdhServerAuthBeaconFactor.localState (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate) prepared.binding.associated_data
               (PqxdhServerAuthBeaconFactor.initial value.2)).associatedData frame
         · simp only [valid, ite_true, bind_assoc, pure_bind, PqxdhServerAuthBeaconFactor.primCalls,
             RawCtxChainReceive.execute, RawCtxChainOwner.publish]
           rw [program_reached]
           rcases reached_cases source value.1 (RawCtxChainReceive.normalBegin
-              (PqxdhServerAuthBeaconFactor.localState (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate)
+              (PqxdhServerAuthBeaconFactor.localState (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate) prepared.binding.associated_data
                 (PqxdhServerAuthBeaconFactor.initial value.2)).kernel frame.sequence
               ⟨raw, frame, (PqxdhServerAuthBeaconFactor.localState
-                (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate)
+                (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate) prepared.binding.associated_data
                 (PqxdhServerAuthBeaconFactor.initial value.2)).associatedData⟩) with
             ⟨entry, context, hreached⟩ | ⟨opening, hreached⟩
           · rw [hreached]
@@ -353,7 +353,7 @@ def openPoint (input : RawCtxWholeOwner.OpenInput) : Option CtxRomAuth.CtxRO.Dom
   match RawCtxFrameDecoding.fromPayload input.context.frame.payload with
   | none => none
   | some slices =>
-      if input.context.associatedData.length = 281 then some ((), RawCtxSourceOpen.hashInput input slices)
+      if input.context.associatedData.length = 151 then some ((), RawCtxSourceOpen.hashInput input slices)
       else none
 
 /-- With the native primitive interpreter, a discarded opening changes the shared state only by completing its point of the CTX cache. -/
@@ -371,7 +371,7 @@ theorem discarded_native {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Re
   | none =>
       simp only [simulateQ_pure, StateT.run_pure, map_pure, LazyOracleDiscard.StateLens.completeOpt]
   | some slices =>
-      by_cases width : input.context.associatedData.length = 281
+      by_cases width : input.context.associatedData.length = 151
       · simp only [width, ↓reduceIte]
         rw [RawCtxSourceOpen.openSlices_rom]
         simp only [simulateQ_bind, simulateQ_spec_query, simulateQ_pure, StateT.run_bind, StateT.run_pure,

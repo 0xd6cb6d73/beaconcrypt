@@ -73,7 +73,7 @@ private theorem aead_cut (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (codec : Codec Reader Response)
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
-    (plaintext : Slice U8) (associated : Std.Array U8 281#usize) (nonce : primitive.Nonce) (key : primitive.Key)
+    (plaintext : Slice U8) (associated : Std.Array U8 151#usize) (nonce : primitive.Nonce) (key : primitive.Key)
     (ciphertext : Slice U8) (tag : Std.Array U8 16#usize)
     (before after : State n Auxiliary) (previous next : Platform)
     (supported : ((.ok (some (ciphertext, tag)), after), next) ∈ support

@@ -39,12 +39,12 @@ theorem material_keys (view : AdapterPublicWrapperState.MaterialView source KemS
     (owner : Owner source) (world : Option PqxdhRecordLiftBeacon.Phase)
     (held : AdapterPublicWrapperState.Beacon view joint before self owner world) (keys : Keys before after) :
     AdapterPublicWrapperState.Beacon view joint after self owner world :=
-  ⟨held.identityPublic,held.identitySecret,held.mldsa,held.pin,held.serverPublic,held.identifier,
+  ⟨held.identityPublic,held.identitySecret,held.pin,held.serverPublic,held.identifier,
     phase_keys view before after owner self.state world held.phase keys⟩
 
 omit material ed in
 theorem trusted_keys (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (Trusted n KemSK).Domain) (before : Native) (result : (Trusted n KemSK).Range query×Native)
     (supported : result∈support ((RegistrationNativeExperiment.trusted setup checks representation created source query).run before)) :
     Keys before.pool result.2.pool := by
@@ -63,7 +63,7 @@ def Frame (before after : Native) : Prop :=
 
 omit material ed in
 private theorem safe_frame (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (Trusted n KemSK).Domain) (safe : RegistrationNativeWorldOwnerFrame.Safe query)
     (before : Native) (result : (Trusted n KemSK).Range query×Native)
     (supported : result∈support ((RegistrationNativeExperiment.trusted setup checks representation created source query).run before)) :
@@ -73,7 +73,7 @@ private theorem safe_frame (setup : PqxdhServerAuthExperiment.Setup base KemSK) 
 
 omit material ed in
 theorem query (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (Trusted n KemSK).Domain) (allowed : Allowed query)
     (before : Native) (result : (Trusted n KemSK).Range query×Native)
     (supported : result∈support ((RegistrationNativeExperiment.trusted setup checks representation created source query).run before)) :
@@ -94,7 +94,7 @@ theorem query (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : Pqx
 
 omit material ed in
 theorem program (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp (Trusted n KemSK) A) (allowed : AllQueriesSatisfy work (Allowed (n:=n) (KemSK:=KemSK)))
     (before : Native) (result : A×Native)
     (supported : result∈support ((simulateQ (RegistrationNativeExperiment.trusted setup checks representation created source) work).run before)) :
@@ -156,17 +156,13 @@ theorem prepare_safe (predicate : (Trusted n KemSK).Domain → Prop)
     (owners : RegistrationNativeBeaconFrontend.State source)
     (environment : RegistrationWorldAgreementCompiler.EnvState Auxiliary) :
     AllQueriesSatisfy (((prepare (n:=n) (KemSK:=KemSK) source edPin mlPin keyId).run owners).run environment) predicate := by
+  have _hashes := hashes
   have safe : Safe (source:=source) (Auxiliary:=Auxiliary) predicate (prepare (n:=n) (KemSK:=KemSK) source edPin mlPin keyId) := by
     rw [RegistrationNativeBeaconCreateProgram.prepare_program]
     unfold RegistrationNativeBeaconCreateProgram.program
     apply bind_safe predicate _ _ (sample_safe predicate coins _)
-    intro generated
-    cases generated with
-    | none=>exact pure_safe predicate _
-    | some credentials=>
-      exact bind_safe predicate _ _ (effect_safe predicate _ (hashes _)) fun _=>
-        bind_safe predicate _ _ (sample_safe predicate coins _) fun _=>
-          bind_safe predicate _ _ (sample_safe predicate coins _) fun _=>pure_safe predicate _
+    intro identity
+    exact bind_safe predicate _ _ (sample_safe predicate coins _) fun _=>pure_safe predicate _
   exact safe owners environment
 
 omit material ed in
@@ -194,7 +190,7 @@ end SourceSyntax
 
 omit material ed in
 theorem native (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (before : Native) (result : RustM (Option Nat)×Native)
     (supported : result∈support ((RegistrationNativeExperiment.beacon setup checks representation created
@@ -224,7 +220,7 @@ private theorem source_support {Private Value Index : Type} {spec : OracleSpec I
 
 omit material ed in
 theorem appended (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (sender : U64) (identity : Std.Array U8 32#usize) (phase : PqxdhRecordLiftInterface.InactivePhase)
     (before : Native) (result : Nat×Native)
     (supported : result∈support ((RegistrationNativeExperiment.trusted setup checks representation created source
@@ -238,7 +234,7 @@ theorem appended (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : 
 
 omit material ed in
 theorem layout_source {Auxiliary : Type} (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (owners : RegistrationNativeBeaconFrontend.State source) (environment : RegistrationWorldAgreementCompiler.EnvState Auxiliary)
     (before : Native) (allocated : before.server.world.world.1.owners.length=owners.length)
@@ -275,7 +271,7 @@ theorem layout_source {Auxiliary : Type} (setup : PqxdhServerAuthExperiment.Setu
       simp only [selected] at continued
       obtain ⟨born,afterBorn,worldOwner,afterAppend,generated,appendedAt,returned⟩:=
         RegistrationNativeBeaconBirth.append_supported setup source
-          (RegistrationNativeExperiment.trusted setup checks representation created source) edPin keyId prepared.pin prepared.credentials
+          (RegistrationNativeExperiment.trusted setup checks representation created source) edPin keyId prepared.pin
           prepared.identity prepared.prekey middle.1.1.2 middle.1.2 middle.2 result continued
       have kemSame:=RegistrationNativeWorldOwnerFrame.trusted setup checks representation created
         (.inr (.inr (.inl .create))) trivial middle.2 (born,afterBorn) generated
@@ -292,7 +288,7 @@ theorem layout_source {Auxiliary : Type} (setup : PqxdhServerAuthExperiment.Setu
 
 omit material ed in
 theorem layout (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (before : Native) (allocated : before.server.world.world.1.owners.length=before.beacons.length)
     (indexed : RegistrationNativeHiddenAllocationOwners.NativeIndexed before.beacons)
@@ -347,7 +343,7 @@ theorem old_material [PublicWrapperPlatform.Platform]
 omit material ed in
 theorem platform {P : Type} (coins : QueryImpl unifSpec (StateT P ProbComp))
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (before : Native) (previous : P) (allocated : before.server.world.world.1.owners.length=before.beacons.length)
     (indexed : RegistrationNativeHiddenAllocationOwners.NativeIndexed before.beacons)

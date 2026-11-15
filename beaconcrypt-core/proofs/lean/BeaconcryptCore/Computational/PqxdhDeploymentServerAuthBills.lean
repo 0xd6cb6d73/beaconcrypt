@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhDeploymentServerAuth
 
-/-! Bills of the deployment reductions `R_c` (CE-8). `Weights` gives, for one class of ServerAuth queries, an upper bound on the class indicator of each kind of query. One embedding step issues at most its `stepCost` in the class (`embed_weight`): a coin its coin weight; a local create the coins of the native constructor's two 32-byte draws and KEM generation (`localCreate_uniform`); a local bundle the coins of one 32-byte draw (`bundle_program_uniform`); an accept, build, HMAC, BLAKE2b or reveal its own weight; a finish the ServerAuth finish of the target, or the at most 69 callbacks of a local Beacon's finish (`native_owner_bound`), each with the decapsulation coins, one BLAKE2b query and one HMAC (`localCallbacks_weight`, `simulate_weighted`); a field read nothing. Freezing issues no new query (`freeze_bound`), and the compiled program meets the transported caps of the deployment budget (`compile_full_certified`), so `R_c` issues at most the transported sum of step costs (`reduction_weight`, closed form `sum_stepCost`). For accepts, finishes, BLAKE2b queries, random-oracle HMACs, coins and all queries this gives the caps `qAccept`, `qFinish`, `hashCap`, `romCap`, `coinCap` and `totalCap` (`reduction_caps`), and `ce_a1_billed` is theorem CE-A1 at those caps. The caps hold for every creation index `c` and every input. The HMAC, BLAKE2b and coin caps charge every local finish its full 69-callback allowance; they are upper bounds, not exact counts. -/
+/-! Bills of the deployment reductions `R_c` (CE-8). `Weights` gives, for one class of ServerAuth queries, an upper bound on the class indicator of each kind of query. One embedding step issues at most its `stepCost` in the class (`embed_weight`): a coin its coin weight; a local create the coins of the native constructor's two 32-byte draws and KEM generation (`localCreate_uniform`); a local bundle the coins of one 32-byte draw (`bundle_program_uniform`); an accept, build, HMAC, BLAKE2b or reveal its own weight; a finish the ServerAuth finish of the target, or the forwarded BLAKE2b query of a local Beacon's registration transcript (whose digest gives its associated data) followed by the at most 69 callbacks of its finish (`native_owner_bound`), each with the decapsulation coins, one BLAKE2b query and one HMAC (`localCallbacks_weight`, `simulate_weighted`); a field read nothing. Freezing issues no new query (`freeze_bound`), and the compiled program meets the transported caps of the deployment budget (`compile_full_certified`), so `R_c` issues at most the transported sum of step costs (`reduction_weight`, closed form `sum_stepCost`). For accepts, finishes, BLAKE2b queries, random-oracle HMACs, coins and all queries this gives the caps `qAccept`, `qFinish`, `hashCap`, `romCap`, `coinCap` and `totalCap` (`reduction_caps`), and `ce_a1_billed` is theorem CE-A1 at those caps. The caps hold for every creation index `c` and every input. The HMAC, BLAKE2b and coin caps charge every local finish its full 69-callback allowance; they are upper bounds, not exact counts. The transported BLAKE2b budget counts two queries per record command (the commitment hash and the forwarded transcript hash of the copy, `PqxdhDeploymentCompileCaps.transported`), so `hashCap` and `totalCap` grow by the record-command budgets and by one transcript hash per local finish. -/
 open OracleComp OracleSpec CoreModels Aeneas ENNReal
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
@@ -109,12 +109,12 @@ theorem localCreate_uniform (setup : Setup baseSpec KemSK) (caps : KemCaps) (bou
   intro prekey
   simpa only [bind_pure_comp, IsTotalQueryBound, isQueryBound_map_iff] using keygen_uniform setup caps bounded
 
-/-- The ServerAuth queries of one embedding step of each source14 kind, in a class with the given weights: a coin its coin weight; a local create the coins of two 32-byte draws and a KEM generation; a local bundle the coins of one 32-byte draw; an accept, build, HMAC, BLAKE2b or reveal its own weight; a finish the ServerAuth finish of the target or the 69 callbacks of a local Beacon's finish, each with the decapsulation coins, one BLAKE2b query and one HMAC; a field read nothing. -/
+/-- The ServerAuth queries of one embedding step of each source14 kind, in a class with the given weights: a coin its coin weight; a local create the coins of two 32-byte draws and a KEM generation; a local bundle the coins of one 32-byte draw; an accept, build, HMAC, BLAKE2b or reveal its own weight; a finish the ServerAuth finish of the target, or one BLAKE2b query of the local Beacon's registration transcript and the 69 callbacks of its finish, each with the decapsulation coins, one BLAKE2b query and one HMAC; a field read nothing. -/
 def stepCost {predicate : ServerAuthSpec.Domain → Prop} [DecidablePred predicate] (weights : Weights predicate)
     (caps : KemCaps) : SourceKind → Nat :=
   Sum.elim ![weights.coin, (64 + caps.keygenCost) * weights.coin, 32 * weights.coin, weights.accept, weights.build,
-    weights.finish + 69 * (caps.decapsCost * weights.coin + weights.hash + weights.hmac), weights.hmac, weights.hash,
-    weights.reveal] (fun _ => 0)
+    weights.finish + weights.hash + 69 * (caps.decapsCost * weights.coin + weights.hash + weights.hmac), weights.hmac,
+    weights.hash, weights.reveal] (fun _ => 0)
 
 /-- One embedding step issues at most its step cost in every weighted class. -/
 theorem embed_weight (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (caps : KemCaps)
@@ -137,9 +137,14 @@ theorem embed_weight (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
         · split
           · exact (isQueryBoundP_pure _ _ _).mono (Nat.zero_le _)
           · exact (isQueryBoundP_pure _ _ _).mono (Nat.zero_le _)
-        · rw [isQueryBoundP_map_iff]
-          exact coins_weight predicate weights _ _
-            (PqxdhRegistrationSchedule.bundle_program_uniform setup codec index _)
+        · rename_i owner _
+          rw [isQueryBoundP_map_iff]
+          refine coins_weight predicate weights _ _ ?_
+          have logged : (Prod.fst <$> PqxdhDeploymentServerAuthEmbed.localBundleLog setup codec index owner
+              (emb.inits index)).IsTotalQueryBound 32 := by
+            rw [PqxdhDeploymentServerAuthEmbed.localBundleLog_fst]
+            exact PqxdhRegistrationSchedule.bundle_program_uniform setup codec index owner
+          simpa only [IsTotalQueryBound, isQueryBound_map_iff] using logged
     | accept raw => exact lift_weight predicate (.inr (.accept raw)) weights.accept (weights.accept_le raw) emb
     | build session payload =>
         exact lift_weight predicate (.inr (.build session payload)) weights.build (weights.build_le session payload) emb
@@ -149,12 +154,30 @@ theorem embed_weight (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
         · exact (isQueryBoundP_pure _ _ _).mono (Nat.zero_le _)
         · split
           · exact (query_weight predicate (.inr (.finish raw)) weights.finish (weights.finish_le raw) _).mono
-              (Nat.le_add_right _ _)
+              (show weights.finish ≤ weights.finish + weights.hash +
+                69 * (caps.decapsCost * weights.coin + weights.hash + weights.hmac) by omega)
           · exact (isQueryBoundP_pure _ _ _).mono (Nat.zero_le _)
-        · rw [isQueryBoundP_map_iff]
-          refine (simulate_weighted _ predicate _ (localCallbacks_weight setup codec caps bounded predicate weights) _ 69
-            (PqxdhBeaconPhase2Bounds.native_owner_bound codec.frameRead raw _)).mono ?_
-          exact Nat.le_add_left _ _
+        · rename_i owner _
+          rw [isQueryBoundP_map_iff]
+          unfold PqxdhDeploymentServerAuthEmbed.localFinish
+          split
+          · split
+            · rename_i control _ _ _ _ _ _ init response _ _
+              have hashed : (forward (.hash (PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf init)
+                  response))).IsQueryBoundP predicate weights.hash := by
+                have single := query_weight predicate (.inr (.hash (PqxdhTranscriptAd.transcript
+                  (PqxdhTranscriptAd.initOf init) response))) weights.hash (weights.hash_le _) id
+                rw [id_map] at single
+                exact single
+              refine (isQueryBoundP_bind hashed fun digest _ => simulate_weighted _ predicate _
+                (localCallbacks_weight setup codec caps bounded predicate weights) _ 69
+                (PqxdhBeaconPhase2Bounds.native_owner_bound (PqxdhTranscriptAd.completedOf control digest)
+                  codec.frameRead raw _)).mono ?_
+              show _ ≤ weights.finish + weights.hash +
+                69 * (caps.decapsCost * weights.coin + weights.hash + weights.hmac)
+              omega
+            · exact (isQueryBoundP_pure _ _ _).mono (Nat.zero_le _)
+          · exact (isQueryBoundP_pure _ _ _).mono (Nat.zero_le _)
     | hmac key message =>
         exact lift_weight predicate (.inr (.hmac key message)) weights.hmac (weights.hmac_le key message) emb
     | hash bytes => exact lift_weight predicate (.inr (.hash bytes)) weights.hash (weights.hash_le bytes) emb
@@ -206,8 +229,9 @@ theorem sum_stepCost {predicate : ServerAuthSpec.Domain → Prop} [DecidablePred
       weights.coin * (budget.coin + budget.test + budget.freshBytes bounds) +
       (64 + caps.keygenCost) * weights.coin * budget.create + 32 * weights.coin * budget.bundle +
       weights.accept * budget.accept + weights.build * budget.build +
-      (weights.finish + 69 * (caps.decapsCost * weights.coin + weights.hash + weights.hmac)) * budget.finish +
-      weights.hmac * budget.hmac + weights.hash * (budget.hash + budget.sends + budget.receives + budget.test + budget.fresh) +
+      (weights.finish + weights.hash + 69 * (caps.decapsCost * weights.coin + weights.hash + weights.hmac)) * budget.finish +
+      weights.hmac * budget.hmac +
+      weights.hash * (budget.hash + 2 * (budget.sends + budget.receives + budget.test + budget.fresh)) +
       weights.reveal * (budget.serverSend + budget.serverRaw + budget.test + budget.fresh) := by
   simp [Fintype.sum_sum_type, Fin.sum_univ_succ, stepCost, PqxdhDeploymentCompileCaps.transported]
   ring
@@ -314,9 +338,9 @@ def totalWeights : Weights (fun _ : ServerAuthSpec.Domain => True) where
   hash_le _ := by simp
   reveal_le _ := by simp
 
-/-- `R_c`'s BLAKE2b cap at the transported deployment budget. -/
+/-- `R_c`'s BLAKE2b cap at the transported deployment budget: the transported BLAKE2b queries (two per record command), and per finish one transcript hash and the 69-callback allowance of a local Beacon. -/
 def hashCap (budget : Budget) : Nat :=
-  (budget.hash + budget.sends + budget.receives + budget.test + budget.fresh) + 69 * budget.finish
+  (budget.hash + 2 * (budget.sends + budget.receives + budget.test + budget.fresh)) + budget.finish + 69 * budget.finish
 
 /-- `R_c`'s random-oracle HMAC cap at the transported deployment budget. -/
 def romCap (budget : Budget) : Nat := budget.hmac + 69 * budget.finish
@@ -329,8 +353,8 @@ def coinCap (caps : KemCaps) (bounds : FreshBounds) (budget : Budget) : Nat :=
 /-- `R_c`'s total query cap at the transported deployment budget. -/
 def totalCap (caps : KemCaps) (bounds : FreshBounds) (budget : Budget) : Nat :=
   (budget.coin + budget.test + budget.freshBytes bounds) + (64 + caps.keygenCost) * budget.create + 32 * budget.bundle +
-    budget.accept + budget.build + (1 + 69 * (caps.decapsCost + 2)) * budget.finish + budget.hmac +
-    (budget.hash + budget.sends + budget.receives + budget.test + budget.fresh) +
+    budget.accept + budget.build + (1 + 1 + 69 * (caps.decapsCost + 2)) * budget.finish + budget.hmac +
+    (budget.hash + 2 * (budget.sends + budget.receives + budget.test + budget.fresh)) +
     (budget.serverSend + budget.serverRaw + budget.test + budget.fresh)
 
 /-- Bills of `R_c` from the deployment budget: for a budget-respecting adversary, `R_c` makes at most `qAccept` accepts, `qFinish` finishes, `hashCap` BLAKE2b queries, `romCap` random-oracle HMACs, `coinCap` coins and `totalCap` queries in all. -/

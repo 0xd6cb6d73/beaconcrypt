@@ -18,7 +18,7 @@ variable {n : Nat} {ι KemSK V : Type} {base : OracleSpec ι} {source : Registra
 
 /-- Every lowered actual subprogram preserves honest private-key rows for a fixed prior owner list, independently of its current local phases. -/
 theorem lower_holds (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (owners : List (Owner source)) (work : M n KemSK source RegistrationServerRoleBackend.State V)
     (before after : Local n KemSK source) (reply : V)
     (prior : RegistrationNativeKemBirthInvariant.Holds setup owners before.2.2.pool)
@@ -33,7 +33,7 @@ theorem lower_holds (setup : Setup base KemSK) (checks : Checks)
 
 /-- A captured earlier owner retains its exact honestly generated row at every reached lowered cut, including after its phase has already been consumed. -/
 theorem owner (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (owners : List (Owner source)) (selected : Owner source) (member : selected ∈ owners)
     (work : M n KemSK source RegistrationServerRoleBackend.State V) (before after : Local n KemSK source) (reply : V)
     (prior : RegistrationNativeKemBirthInvariant.Holds setup owners before.2.2.pool)

@@ -17,7 +17,7 @@ open RegistrationNativeStageTrace (Call Path Executed)
 variable {n : Nat} {ι KemSK : Type} {base : OracleSpec ι} {source : RegistrationNativeMldsa.Source}
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 local notation "Native" => RegistrationNativeExperiment.State n KemSK source
 local notation "implementation" => RegistrationNativeExperiment.handler setup checks wire route representation created source credential
 attribute [local irreducible] RegistrationNativeExperiment.handler RegistrationServerSdkSource.accept

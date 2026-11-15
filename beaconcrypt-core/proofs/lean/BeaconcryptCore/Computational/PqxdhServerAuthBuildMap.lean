@@ -8,6 +8,7 @@ open RustM beaconcrypt_core ratchet ratchet.concrete PqxdhRefinement
 set_option autoImplicit false
 
 namespace BeaconcryptCore.Computational.PqxdhServerAuthBuildMap
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhServerRegistrationPublication (AuxSpec Response registrationWitness)
 open PqxdhInitialGenericPublication (State)
 
@@ -42,10 +43,10 @@ theorem after_map (f : K → L) (left : RawCtxChainOwner.Calls K m) (right : Raw
       (fun result => (f result.1, result.2)) <$> left.send kernel context)
     (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Pqxdh.Bytes)
     (kernel : K) (metadata : PeerMetadata) (state : State K Metadata PeerMetadata Consumed) :
-    PqxdhInitialGenericPublication.afterInitialization right aux candidate authenticated (f kernel) metadata
+    PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) right aux candidate authenticated (f kernel) metadata
         (mapState f state) =
       Prod.map id (mapState f) <$>
-        PqxdhInitialGenericPublication.afterInitialization left aux candidate authenticated kernel metadata state := by
+        PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) left aux candidate authenticated kernel metadata state := by
   simp only [PqxdhInitialGenericPublication.afterInitialization, sendMap, bind_map_left, map_bind]
   refine bind_congr fun ⟨advanced, encrypted⟩ => bind_congr fun _ => ?_
   cases encrypted <;> simp only [map_pure, Prod.map_apply, id_eq, map_bind]
@@ -59,9 +60,9 @@ theorem candidate_map (f : K → L) (left : RawCtxChainOwner.Calls K m) (right :
       (fun result => (f result.1, result.2)) <$> left.send kernel context)
     (initial : RustM K) (candidate : pqxdh.ServerRegistrationCandidate) (data : Option Pqxdh.Bytes)
     (metadata : PeerMetadata) (state : State K Metadata PeerMetadata Consumed) :
-    PqxdhInitialGenericBuilder.candidate right aux (f <$> initial) candidate data metadata (mapState f state) =
+    PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) right aux (f <$> initial) candidate data metadata (mapState f state) =
       Functor.map (Prod.map id (mapState f)) <$>
-        PqxdhInitialGenericBuilder.candidate left aux initial candidate data metadata state := by
+        PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) left aux initial candidate data metadata state := by
   simp only [PqxdhInitialGenericBuilder.candidate, map_bind]
   refine bind_congr fun valid => ?_
   cases valid <;> simp only [Bool.not_false, Bool.not_true, Bool.false_eq_true, ite_true, ite_false,
@@ -82,7 +83,7 @@ theorem candidate_map (f : K → L) (left : RawCtxChainOwner.Calls K m) (right :
     cases allocated <;> simp only [Bool.not_false, Bool.not_true, Bool.false_eq_true, ite_true, ite_false,
       map_pure, RawCtxMaterialInterpretation.rust_map_ok, Prod.map_apply, id_eq]
     cases candidate.key_id_binding <;> simp only [map_pure,
-      after_map f left right aux sendMap, Functor.map_map]
+      after_map (associatedData := associatedData) f left right aux sendMap, Functor.map_map]
     all_goals rfl
   all_goals rfl
 
@@ -93,9 +94,9 @@ theorem build_map (f : K → L) (left : RawCtxChainOwner.Calls K m) (right : Raw
       (fun result => (f result.1, result.2)) <$> left.send kernel context)
     (initial : RustM K) (pending : pqxdh.PendingServerRegistration) (data : Option Pqxdh.Bytes)
     (metadata : PeerMetadata) (state : State K Metadata PeerMetadata Consumed) :
-    PqxdhServerAuthSendFactor.genericBuild right aux (f <$> initial) pending data metadata (mapState f state) =
+    PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData) right aux (f <$> initial) pending data metadata (mapState f state) =
       Functor.map (Prod.map id (mapState f)) <$>
-        PqxdhServerAuthSendFactor.genericBuild left aux initial pending data metadata state := by
+        PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData) left aux initial pending data metadata state := by
   unfold PqxdhServerAuthSendFactor.genericBuild
   change PqxdhInitialGenericBuilder.continueRust (pqxdh.server_next_key_id state.control) _ = _
   cases next : pqxdh.server_next_key_id state.control <;>
@@ -111,7 +112,7 @@ theorem build_map (f : K → L) (left : RawCtxChainOwner.Calls K m) (right : Raw
     case ok value =>
       cases value <;> simp only [map_pure]
       case Err _ => rfl
-      case Ok candidate => exact candidate_map f left right aux sendMap initial candidate data metadata state
+      case Ok candidate => exact candidate_map (associatedData := associatedData) f left right aux sendMap initial candidate data metadata state
     all_goals rfl
   all_goals rfl
 
@@ -168,7 +169,7 @@ noncomputable def materialBuild (prim : QueryImpl RawCtxSourceSend.PrimitiveSpec
     (state : PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed) :
     m (RustM (Option Response × PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed)) :=
   Functor.map (Prod.map id (PqxdhInitialGenericPublication.native PqxdhServerAuthCtxBuildSettlement.resolve)) <$>
-    PqxdhServerAuthSendFactor.genericBuild
+    PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData)
       (PqxdhServerAuthCtxBuildSettlement.calls (fun entry _ _ => pure (entry, .None))
         source rest (materialSealer prim key)) aux
       (PqxdhServerAuthCtxCalls.initial false rest.2.2) pending data metadata
@@ -179,16 +180,16 @@ theorem material_build (prim : QueryImpl RawCtxSourceSend.PrimitiveSpec m)
     (source : FixedHkdfSha512NoSaltSource) (aux : QueryImpl AuxSpec m) (key : RootOutput) (rest : Residual)
     (pending : pqxdh.PendingServerRegistration) (data : Option Pqxdh.Bytes) (metadata : PeerMetadata)
     (state : PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed) :
-    PqxdhServerAuthLoggedSendFactor.factored (fun entry _ _ => pure (entry, .None)) prim source aux
+    PqxdhServerAuthLoggedSendFactor.factored (associatedData := associatedData) (fun entry _ _ => pure (entry, .None)) prim source aux
       (PqxdhServerAuthCtxMaterial.factor (PqxdhServerAuthCtxMaterial.output key rest)) pending data metadata state =
-      materialBuild prim source aux key rest pending data metadata state := by
+      materialBuild (associatedData := associatedData) prim source aux key rest pending data metadata state := by
   unfold PqxdhServerAuthLoggedSendFactor.factored materialBuild
   rw [PqxdhServerAuthCtxCalls.initial_source false _ key, ← embed_map key state,
-    build_map (interpret key)
+    build_map (associatedData := associatedData) (interpret key)
       (PqxdhServerAuthCtxBuildSettlement.calls (fun entry _ _ => pure (entry, .None))
         source rest (materialSealer prim key)) _ aux (material_send prim source key rest)]
   simp only [Functor.map_map, Prod.map_def, id_eq, native_map]
-  exact PqxdhServerAuthCtxBuildSettlement.build_settled _ source rest (materialSealer prim key)
+  exact PqxdhServerAuthCtxBuildSettlement.build_settled (associatedData := associatedData) _ source rest (materialSealer prim key)
     aux key rest.2.2 pending data metadata state
 
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader WireResponse A : Type}

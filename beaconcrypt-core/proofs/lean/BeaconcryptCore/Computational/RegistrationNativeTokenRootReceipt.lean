@@ -19,7 +19,7 @@ attribute [local irreducible] RegistrationServerNativeSource.authenticate Regist
 variable {n : Nat} {ι KemSK : Type} {base : OracleSpec ι} {source : RegistrationNativeMldsa.Source}
 variable (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 
 /-- The source witness retains the actual collector execution and exact checked source root input/output at the agreement cut. -/
 structure Input (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit)

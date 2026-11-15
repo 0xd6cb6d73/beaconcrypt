@@ -11,8 +11,8 @@ open AdapterRegistrationWriterRequestMonad
 open AdapterRecordRequestMonad (LiftRust)
 variable {E : Type} {m : Type → Type} [Monad m] [LiftRust m] [Operations E m]
 
--- Extracted input SHA-256: a6896a3e9857686fa4bbd65547a9e16d9fe85f14a5490ac49d3e39262e9e9f82
--- Transformation SHA-256: 5914a30ceccea8fb3db1c6f5e634db29db817cf61fbb644c1ccb44caf6e8f970
+-- Extracted input SHA-256: f269274f063fc823d730e267757887efdb8fda8c2321879b6dad61ac9372a24d
+-- Transformation SHA-256: 1315cd9ad0b99a63eae7460613e0310778ea9a8e1610ff047145be0723dea9b1
 def encodeInit
   (init : beaconcrypt_parse.transport.initkex) :
   m (core.option.Option (alloc.vec.Vec Std.U8))
@@ -21,11 +21,9 @@ def encodeInit
   let i1 ← Lifted.len init.pre_key
   let i2 ← Lifted.len init.one_time_key
   let i3 ← Lifted.len init.pq_key
-  let i4 ← Lifted.len init.mldsa_public_key
-  let i5 ← Lifted.len init.signature
   let o ←
     Lifted.initCapacity
-      (Array.make 6#usize [ i, i1, i2, i3, i4, i5 ])
+      (Array.make 4#usize [ i, i1, i2, i3 ])
   let cf ← Lifted.branch o
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>

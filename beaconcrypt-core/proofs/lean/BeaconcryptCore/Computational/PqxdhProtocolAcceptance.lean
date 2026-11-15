@@ -10,6 +10,7 @@ open RustM beaconcrypt_core
 open BeaconcryptCore.Refinement.ProtocolComposition
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhProtocolAcceptance
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhEd25519EufCma PqxdhKemIndCca PqxdhHiddenRoot PqxdhSourceAuthenticatedRoot
 open PqxdhPrivateAcceptedRoot PqxdhRefinement
 open PqxdhRootTableInitialization (rootArray)
@@ -129,16 +130,16 @@ theorem accepted_builder
           { state with
             consumed := Function.update state.consumed index
               (absBytes pending.registration_id.bytes :: state.consumed index) } ∧
-      (PqxdhRegistrationProtocolState.build source writer aux senderId index metadata
+      (PqxdhRegistrationProtocolState.build (associatedData := associatedData) source writer aux senderId index metadata
         (ready server application identity keys.oneTime ephemeral ciphertext root)).run state =
-        (PqxdhRegistrationProtocolState.nativeBuild source writer aux senderId index metadata pending root application).run
+        (PqxdhRegistrationProtocolState.nativeBuild (associatedData := associatedData) source writer aux senderId index metadata pending root application).run
           { state with
             consumed := Function.update state.consumed index
               (absBytes pending.registration_id.bytes :: state.consumed index) } := by
   obtain ⟨pending, accepted, inputBytes, ridBytes⟩ := fresh_acceptance source.crypto secretIdentity senderId
     index metadata state server related identity keys ephemeral ciphertext secret fresh valid
   have used := (PqxdhRegistrationInputs.accepted_used _ _ _ _ _ _ _ pending accepted).2
-  have builder := PqxdhRegistrationProtocolState.build_native source writer aux senderId index metadata
+  have builder := PqxdhRegistrationProtocolState.build_native (associatedData := associatedData) source writer aux senderId index metadata
     (ready server application identity keys.oneTime ephemeral ciphertext root) state pending used
   refine ⟨pending, accepted, inputBytes, ?_, ?_⟩
   · simp only [PqxdhRegistrationProtocolState.consume, ready, ridBytes, related.2.2.2.2]

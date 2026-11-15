@@ -13,9 +13,11 @@ fun sched_reply(bitstring, bitstring): bitstring [data].
 fun sched_call(bitstring, bitstring): bitstring [data].
 fun sched_call_index(nat): bitstring [data].
 table sched_objects(bitstring, channel).
+(* The pending handle also retains the exact received request bytes, which
+   transcript AD151 hashes when the response is built. *)
 table sched_pending(bitstring, bitstring, bitstring, key_id,
  beaconcrypt_core__pqxdh__t_VerifiedInitKex, beaconcrypt_core__pqxdh__t_InitKex,
- bitstring, bitstring, bitstring, channel).
+ bitstring, bitstring, bitstring, bitstring, channel).
 event SchedTokenCreated(bitstring, bitstring).
 event SchedTokenConsumed(bitstring, bitstring).
 event SchedBuilt(bitstring, bitstring, bitstring, nat).
@@ -29,18 +31,20 @@ let SchedReturn(request: bitstring, reply: bitstring, lock: channel, state: chan
 let SchedTail(owner: bitstring, origin: bitstring, token: bitstring, request: bitstring,
  lock: channel, state: channel, accepts: nat, builds: nat, counter: nat,
  verified: beaconcrypt_core__pqxdh__t_VerifiedInitKex, identity: bitstring,
- ephemeral: bitstring, ciphertext: bitstring, root: bitstring, data: bitstring, failure_stage: nat, ticket_counter: nat) =
+ ephemeral: bitstring, ciphertext: bitstring, root: bitstring, raw_init: bitstring, data: bitstring, failure_stage: nat, ticket_counter: nat) =
  new tail_counter: channel; new tail_mutex: channel; new tail_reply: channel;
  let next = counter + 1 in
  (SchedResponseTail(owner, token, tail_reply, tail_mutex, tail_counter, counter, next,
-   ed_public(SERVER_IDENTITY_SECRET), SERVER_KEY_ID, identity, ephemeral, ciphertext, root, data, failure_stage)
+   ed_public(SERVER_IDENTITY_SECRET), SERVER_KEY_ID, identity, ephemeral, ciphertext, root, raw_init, data, failure_stage)
  | in(tail_reply, result: bitstring); in(tail_counter, after: nat);
    let registration_response_success(response: bitstring) = result in (
     let plaintext = registration_response_plaintext(data) in
     let assigned = fs_kid(next) in
+    let signed_init_kex(encoded_identity, signed_prekey, signed_one_time, signed_pq) = raw_init in
     event SchedBuilt(origin, owner, token, next);
     event FsServerCommitted(owner, ed_public(SERVER_IDENTITY_SECRET), identity, verified,
-     assigned, root, fs_associated_data(ed_public(SERVER_IDENTITY_SECRET), identity), plaintext);
+     assigned, root, fs_associated_data(encoded_identity, signed_prekey, signed_one_time, signed_pq,
+      ed_public(SERVER_IDENTITY_SECRET), ephemeral, ciphertext, assigned), plaintext);
     SchedReturn(request, sched_some_response(response), lock, state, accepts, builds, after, ticket_counter)
    ) else SchedReturn(request, sched_none(), lock, state, accepts, builds, after, ticket_counter)
  ).
@@ -49,7 +53,7 @@ let SchedConsume(owner: bitstring, token: bitstring, data: bitstring, failure_st
  request: bitstring, lock: channel, state: channel, accepts: nat, builds: nat, counter: nat, ticket_counter: nat, limit: nat,
  origin: bitstring, server_identity: bitstring, server_id: key_id,
  verified: beaconcrypt_core__pqxdh__t_VerifiedInitKex, core_init: beaconcrypt_core__pqxdh__t_InitKex,
- ephemeral: bitstring, ciphertext: bitstring, root: bitstring) =
+ ephemeral: bitstring, ciphertext: bitstring, root: bitstring, raw_init: bitstring) =
    event SchedTokenConsumed(owner, token);
    if counter < limit then (
    if server_identity = ed_public(SERVER_IDENTITY_SECRET) && server_id = SERVER_KEY_ID then (
@@ -60,7 +64,7 @@ let SchedConsume(owner: bitstring, token: bitstring, data: bitstring, failure_st
     else (
      let identity = registration_response_identity(core_init) in
       SchedTail(owner, origin, token, request, lock, state, accepts, builds, counter,
-       verified, identity, ephemeral, ciphertext, root, data, failure_stage, ticket_counter)
+       verified, identity, ephemeral, ciphertext, root, raw_init, data, failure_stage, ticket_counter)
      else SchedReturn(request, sched_none(), lock, state, accepts, builds, counter, ticket_counter)
     )
    ) else SchedReturn(request, sched_none(), lock, state, accepts, builds, counter, ticket_counter)
@@ -72,17 +76,17 @@ let SchedSpent(lease: channel) =
 
 let SchedSecondUse(token: bitstring, lease: channel, origin: bitstring,
  server_identity: bitstring, server_id: key_id, verified: beaconcrypt_core__pqxdh__t_VerifiedInitKex,
- core_init: beaconcrypt_core__pqxdh__t_InitKex, ephemeral: bitstring, ciphertext: bitstring, root: bitstring) =
+ core_init: beaconcrypt_core__pqxdh__t_InitKex, ephemeral: bitstring, ciphertext: bitstring, root: bitstring, raw_init: bitstring) =
  in(lease, (owner: bitstring, data: bitstring, failure_stage: nat, request: bitstring, lock: channel, state: channel, accepts: nat, builds: nat, counter: nat, ticket_counter: nat, limit: nat)) [precise];
- (SchedConsume(owner, token, data, failure_stage, request, lock, state, accepts, builds, counter, ticket_counter, limit, origin, server_identity, server_id, verified, core_init, ephemeral, ciphertext, root) | SchedSpent(lease)).
+ (SchedConsume(owner, token, data, failure_stage, request, lock, state, accepts, builds, counter, ticket_counter, limit, origin, server_identity, server_id, verified, core_init, ephemeral, ciphertext, root, raw_init) | SchedSpent(lease)).
 
 let SchedTokenService(token: bitstring, lease: channel, origin: bitstring,
  server_identity: bitstring, server_id: key_id, verified: beaconcrypt_core__pqxdh__t_VerifiedInitKex,
- core_init: beaconcrypt_core__pqxdh__t_InitKex, ephemeral: bitstring, ciphertext: bitstring, root: bitstring) =
+ core_init: beaconcrypt_core__pqxdh__t_InitKex, ephemeral: bitstring, ciphertext: bitstring, root: bitstring, raw_init: bitstring) =
  in(lease, (owner: bitstring, data: bitstring, failure_stage: nat, request: bitstring, lock: channel, state: channel, accepts: nat, builds: nat, counter: nat, ticket_counter: nat, limit: nat)) [precise];
- (SchedConsume(owner, token, data, failure_stage, request, lock, state, accepts, builds, counter, ticket_counter, limit, origin, server_identity, server_id, verified, core_init, ephemeral, ciphertext, root)
+ (SchedConsume(owner, token, data, failure_stage, request, lock, state, accepts, builds, counter, ticket_counter, limit, origin, server_identity, server_id, verified, core_init, ephemeral, ciphertext, root, raw_init)
  | if sched_reusable() then
-    SchedSecondUse(token, lease, origin, server_identity, server_id, verified, core_init, ephemeral, ciphertext, root)
+    SchedSecondUse(token, lease, origin, server_identity, server_id, verified, core_init, ephemeral, ciphertext, root, raw_init)
    else SchedSpent(lease)).
 
 let SchedAccept(owner: bitstring, raw: bitstring, failure_stage: nat, request: bitstring,
@@ -104,10 +108,10 @@ let SchedAccept(owner: bitstring, raw: bitstring, failure_stage: nat, request: b
      let token = sched_token(ticket_counter) in
      new lease: channel;
      insert sched_pending(token, owner, server_identity, SERVER_KEY_ID, verified,
-       core_init, ephemeral, ciphertext, root, lease);
+       core_init, ephemeral, ciphertext, root, raw, lease);
      event FsServerAccepted(owner, server_identity, identity, verified, rid, root);
      event SchedTokenCreated(owner, token);
-     (SchedReturn(request, sched_some_token(token), lock, state, accepts, builds, counter, ticket_counter + 1) | SchedTokenService(token, lease, owner, server_identity, SERVER_KEY_ID, verified, core_init, ephemeral, ciphertext, root))
+     (SchedReturn(request, sched_some_token(token), lock, state, accepts, builds, counter, ticket_counter + 1) | SchedTokenService(token, lease, owner, server_identity, SERVER_KEY_ID, verified, core_init, ephemeral, ciphertext, root, raw))
     ) else (
      event FsServerAcceptFailed(owner, server_identity, identity, rid);
      SchedReturn(request, sched_none(), lock, state, accepts, builds, counter, ticket_counter + 1)
@@ -121,7 +125,7 @@ let SchedBuild(owner: bitstring, token: bitstring, data: bitstring, failure_stag
  get sched_pending(=token, origin: bitstring, server_identity: bitstring, server_id: key_id,
    verified: beaconcrypt_core__pqxdh__t_VerifiedInitKex,
    core_init: beaconcrypt_core__pqxdh__t_InitKex,
-   ephemeral: bitstring, ciphertext: bitstring, root: bitstring, lease: channel) in (
+   ephemeral: bitstring, ciphertext: bitstring, root: bitstring, raw_init: bitstring, lease: channel) in (
  out(lease, (owner, data, failure_stage, request, lock, state, accepts, builds, counter, ticket_counter, limit))
  ) else SchedReturn(request, sched_none(), lock, state, accepts, builds, counter, ticket_counter).
 

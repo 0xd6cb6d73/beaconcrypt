@@ -7,7 +7,10 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengePaths
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 
 section Prefix
 variable {ι A Result : Type} {spec : OracleSpec ι}
@@ -74,7 +77,7 @@ noncomputable def sourceHandler
     QueryImpl (PqxdhInitialGenericPost.Spec extra S B) (StateT (SourceState A N M P I D K Response S B) ProbComp) :=
   fun query before => (fun result => (result.1.1, (result.1.2, result.2))) <$>
     ((simulateQ (PqxdhInitialOccurrencePaths.handler source writer prior selected root response pre application selector aux)
-      ((PqxdhInitialInstallOccurrence.compiler (PqxdhInitialSelectedOrigin.mark source selected) sender route decode query).run
+      ((PqxdhInitialInstallOccurrence.compiler (completedBinding := completedBinding) (PqxdhInitialSelectedOrigin.mark source selected) sender route decode query).run
         before.1)).run before.2)
 
 /-- Both pieces of operational provenance concern the same current state. Prior unlabelled owners remain unrestricted. -/
@@ -94,7 +97,7 @@ variable (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (writer : RawC
     (selector : QueryImpl extra (StateT (InitialState A N) ProbComp))
     (aux : QueryImpl PqxdhServerRegistrationPublication.AuxSpec (StateT (InitialState A N) ProbComp))
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
-local notation "impl" => sourceHandler source writer prior selected root response pre application selector aux sender route decode
+local notation "impl" => sourceHandler (completedBinding := completedBinding) source writer prior selected root response pre application selector aux sender route decode
 
 /-- The source's interpreted owner callbacks are exactly the retained native callbacks in the same full backend state. -/
 theorem source_calls :
@@ -142,9 +145,9 @@ theorem source_step (cr : Ratchet.Crypto RatchetChain RatchetMaterial AD PT CT)
     Valid cr prior serverInitial (PqxdhInitialRootAudit.kernel (root, response)).refined result.2 := by
   simp only [sourceHandler, StateT.run, support_map, Set.mem_image] at supported
   obtain ⟨actual, supported, rfl⟩ := supported
-  exact ⟨PqxdhRetainedSelectedOrigins.step_selected source writer prior selected root response pre application
+  exact ⟨PqxdhRetainedSelectedOrigins.step_selected (completedBinding := completedBinding) source writer prior selected root response pre application
     selector aux serverInitial sender route decode query before.1 before.2 valid.1 actual supported,
-    PqxdhInitialOccurrencePaths.step_holds source writer prior selected root response pre application
+    PqxdhInitialOccurrencePaths.step_holds (completedBinding := completedBinding) source writer prior selected root response pre application
       selector aux cr (PqxdhInitialSelectedOrigin.mark source selected) sender route decode query before.1 before.2
       valid.2 actual supported⟩
 
@@ -155,7 +158,7 @@ theorem source_program {Result : Type}
     (simulateQ impl client).run before =
       (fun result => (result.1.1, (result.1.2, result.2))) <$>
         ((simulateQ (PqxdhInitialOccurrencePaths.handler source writer prior selected root response pre application selector aux)
-          ((simulateQ (PqxdhInitialInstallOccurrence.compiler
+          ((simulateQ (PqxdhInitialInstallOccurrence.compiler (completedBinding := completedBinding)
             (PqxdhInitialSelectedOrigin.mark source selected) sender route decode) client).run before.1)).run before.2) := by
   induction client using OracleComp.inductionOn generalizing before with
   | pure value => simp only [simulateQ_pure, StateT.run_pure, map_pure]
@@ -175,7 +178,7 @@ theorem source_reaches {Result : Type} (cr : Ratchet.Crypto RatchetChain Ratchet
     (traced : PqxdhRecordConfidentialityTrace.Reaches impl owner number bit client before ambient rest current reached) :
     Valid cr prior serverInitial (PqxdhInitialRootAudit.kernel (root, response)).refined reached := by
   exact reaches_preserves impl _
-    (source_step source writer prior selected root response pre application selector aux sender route decode cr serverInitial)
+    (source_step (completedBinding := completedBinding) source writer prior selected root response pre application selector aux sender route decode cr serverInitial)
     owner number bit client rest before current ambient reached initial traced
 
 /-- The initial Builder's only possible publication is its literal first send. It cannot supply a later-position target before the challenge Post begins. -/
@@ -187,7 +190,7 @@ theorem builder_absent
       Option (PqxdhInitialBuilderReceipt.Receipt (KernelOf RatchetChain))) × Front RatchetChain M P I D K S B) × InitialState A N)
     (supported : result ∈ support ((simulateQ
       (PqxdhInitialOccurrencePaths.handler source writer prior selected root response pre application selector aux)
-      ((PqxdhInitialBuilderReceipt.build source
+      ((PqxdhInitialBuilderReceipt.build (associatedData := associatedData) source
         (ConcreteRatchetKernel.refined <$> PqxdhInitialReplyErasure.kernelOf false serverResponse)
         sender index metadata input).run entry)).run before))
     (owner : RawCtxProtocolReveals.Owner S B) (number : Std.U64) (later : 2 ≤ number.val) :
@@ -198,7 +201,7 @@ theorem builder_absent
     PqxdhInitialSourcePublication.empty result.1.2 index origin result.1.1.1 (owner, number) true recorded
       (by simp [PqxdhInitialSourcePublication.empty])
   obtain ⟨receipt, _, initialized, _, advanced, encrypted, atSend, atSent, installed, sent⟩ :=
-    PqxdhInitialReceiptPublication.build_published
+    PqxdhInitialReceiptPublication.build_published (associatedData := associatedData)
       (PqxdhInitialOccurrencePaths.handler source writer prior selected root response pre application selector aux)
       source _ sender index metadata input entry before result supported published replied
   rw [source_calls] at sent
@@ -228,7 +231,7 @@ theorem sequence_origin {Selection : Type}
       PqxdhPhase2DecapsulationRouting.Shared Bool S B) × InitialState A N)
     (supported : result ∈ support ((simulateQ
       (PqxdhInitialOccurrencePaths.handler source writer prior selected root response pre application selector aux)
-      ((PqxdhInitialInstallOccurrence.sequence source
+      ((PqxdhInitialInstallOccurrence.sequence (associatedData := associatedData) (completedBinding := completedBinding) source
         (ConcreteRatchetKernel.refined <$> PqxdhInitialReplyErasure.kernelOf false serverResponse)
         (PqxdhInitialSelectedOrigin.mark source selected) origin sender route decode index metadata input
         (PqxdhRecordConfidentialityChallenge.post adversary owner number bit selection)).run
@@ -256,12 +259,12 @@ theorem sequence_origin {Selection : Type}
   obtain ⟨current, traced, target⟩ := PqxdhRecordConfidentialityTrace.post_origin impl adversary owner number bit selection
     built.1.1.1 ambient _ actual accepted
   refine ⟨built.1.1.1, ambient, current, ?_, traced, target, fun later =>
-    builder_absent source writer prior selected root response pre application selector aux sender
+    builder_absent (associatedData := associatedData) source writer prior selected root response pre application selector aux sender
       serverResponse origin index metadata input entry before built builtSupported owner number later⟩
-  refine ⟨PqxdhRetainedSelectedOrigins.builder_selected source writer prior selected root response pre application selector aux
+  refine ⟨PqxdhRetainedSelectedOrigins.builder_selected (associatedData := associatedData) source writer prior selected root response pre application selector aux
     _ _ origin sender index metadata input entry before PqxdhInitialSourcePublication.empty
     PqxdhInitialInstallOccurrence.empty ?_ built builtSupported,
-    PqxdhInitialOccurrencePaths.builder_holds source writer prior selected root response pre application selector aux
+    PqxdhInitialOccurrencePaths.builder_holds (associatedData := associatedData) source writer prior selected root response pre application selector aux
       cr serverResponse sender index metadata input entry before built builtSupported⟩
   exact fun _ impossible => nomatch impossible
 

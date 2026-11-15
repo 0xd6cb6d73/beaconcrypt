@@ -24,7 +24,7 @@ def retain (ready : Ready) : StateT (State n) ProbComp (RustM (Option Nat)) := f
 
 /-- Native replay insertion consumes exactly the restored source token before returning the original public handle, including repeated-ID refusals. -/
 theorem retain_native (roots : Roots) (ready : Ready) (before : State n)
-    (created : PqxdhLiveServerConstruction.Created Unit) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     Prod.map id (project roots) <$> (retain ready).run before =
       (RegistrationServerNativeSource.retain created (atRoot ready (roots ready.reference))).run (project roots before) := by
   by_cases present : before.1.consumed.contains (absBytes ready.agreement.pending.registration_id.bytes) = true

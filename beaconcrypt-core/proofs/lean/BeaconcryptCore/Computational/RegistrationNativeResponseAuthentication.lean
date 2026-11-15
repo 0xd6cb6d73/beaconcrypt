@@ -32,7 +32,7 @@ private theorem state_map_apply {S X Y : Type} {m : Type → Type} [Monad m] [La
 
 theorem lower_bind (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State Value)
     (next : Value → RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State Next) :
     lower setup checks representation created (work >>= next) =
@@ -44,7 +44,7 @@ theorem lower_bind (setup : Setup base KemSK) (checks : Checks)
 
 theorem lower_pure (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (value : Value) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (value : Value) :
     lower (n := n) (source := source) setup checks representation created (pure value) = pure value := by
   apply StateT.ext
   intro before
@@ -52,7 +52,7 @@ theorem lower_pure (setup : Setup base KemSK) (checks : Checks)
 
 private theorem lower_program (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp RegistrationAuthenticationExecutor.Spec Value) :
     lower (n := n) setup checks representation created
         (simulateQ (RegistrationNativeBeaconFrontend.authentication setup source) work) =
@@ -66,7 +66,7 @@ private theorem lower_program (setup : Setup base KemSK) (checks : Checks)
 /-- Every actual native authentication callback uses its current global cache and literal verification operands. -/
 theorem query (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (selected : RegistrationAuthenticationExecutor.Spec.Domain) (before : Local n KemSK source) :
     Prod.map id project <$>
       (lower setup checks representation created
@@ -92,7 +92,7 @@ theorem query (setup : Setup base KemSK) (checks : Checks)
 /-- The complete native response controller projects to the same mandatory source controller and the same reached cache. -/
 theorem program (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (work : OracleComp RegistrationAuthenticationExecutor.Spec Value) (before : Local n KemSK source) :
     Prod.map id project <$>
       (lower setup checks representation created
@@ -103,10 +103,30 @@ theorem program (setup : Setup base KemSK) (checks : Checks)
   exact OracleComp.map_run_simulateQ_eq_of_query_map_eq _ _ project
     (query setup checks representation created wire) work before
 
+/-- Native acceptance retains both reached transcript hashes and the exact completed binding selected after pinned verification. -/
+theorem accepted_ad_receipt (setup : Setup base KemSK) (checks : Checks)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
+    (pending : registration.BeaconPending) (packet : registration.ResponsePacket)
+    (before after : Local n KemSK source) (authenticated : registration.AuthenticatedResponse)
+    (supported : (.ok (.Ok authenticated), after) ∈ support
+      ((lower setup checks representation created
+        (simulateQ (RegistrationNativeBeaconFrontend.authentication setup source)
+          (RegistrationResponseExecutor.begin pending (.Some packet)))).run before)) :
+    ∃ digest adDigest, authenticated = RegistrationResponseExecutor.acceptedResponse pending packet adDigest ∧
+      RegistrationResponseExecutor.verification source.verify pending packet digest = true ∧
+      (project after).1 = (project before).1 ∧ (project before).2 ≤ (project after).2 ∧
+      (project after).2 ((), (RegistrationResponseExecutor.payload pending packet).transcript) = some digest ∧
+      (project after).2 ((), RegistrationResponseExecutor.adPayload pending packet) = some adDigest := by
+  apply RegistrationResponseExecutor.accepted_ad_receipt setup.source.crypto source.verify wire.frameWrite
+    (RawCtxSourceHkdf.kdfImpl setup.source) pending packet (project before) (project after) authenticated
+  rw [RegistrationResponseExecutor.execute, ← program setup checks representation created wire, support_map]
+  exact Set.mem_image_of_mem (Prod.map id project) supported
+
 /-- Native response success supplies the accepted ML trial at its actual shared-cache cut. -/
 theorem accepted (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (pending : registration.BeaconPending) (packet : registration.ResponsePacket)
     (before after : Local n KemSK source) (authenticated : registration.AuthenticatedResponse)
     (supported : (.ok (.Ok authenticated), after) ∈ support
@@ -127,7 +147,7 @@ theorem accepted (setup : Setup base KemSK) (checks : Checks)
 /-- The actual native response cut gives a fresh-message ML forgery or a collision between reached cache queries. -/
 theorem origin_split (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (pending : registration.BeaconPending) (packet : registration.ResponsePacket)
     (before after : Local n KemSK source) (authenticated : registration.AuthenticatedResponse)
     (supported : (.ok (.Ok authenticated), after) ∈ support
@@ -171,6 +191,11 @@ end BeaconcryptCore.Computational.RegistrationNativeResponseAuthentication
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativeResponseAuthentication.program
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeResponseAuthentication.accepted_ad_receipt' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativeResponseAuthentication.accepted_ad_receipt
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativeResponseAuthentication.accepted' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/

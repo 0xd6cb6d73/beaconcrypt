@@ -22,7 +22,7 @@ theorem membership (views : Views) (stored : ReplaySet) (history : List Pqxdh.By
 
 theorem lookup {source : RegistrationNativeMldsa.Source} {KemSK : Type}
     (view : MaterialView source KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (self : beaconcrypt_public_wrapper.server.Server) {n : Nat} (native : RegistrationServerFrontendCompiler.State n)
     (related : Server view views created credential self native)
     (pending : peer.RegistrationLookup) (identifier : pqxdh.RegistrationId)
@@ -38,7 +38,7 @@ theorem lookup {source : RegistrationNativeMldsa.Source} {KemSK : Type}
 
 theorem fresh {source : RegistrationNativeMldsa.Source} {KemSK : Type}
     (view : MaterialView source KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (self : beaconcrypt_public_wrapper.server.Server) {n : Nat} (native : RegistrationServerFrontendCompiler.State n)
     (related : Server view views created credential self native)
     (pending : peer.RegistrationLookup) (identifier : pqxdh.RegistrationId)

@@ -4,11 +4,12 @@ import BeaconcryptCore.Computational.RegistrationNativeSelectiveHiddenStartup
 import BeaconcryptCore.Computational.RegistrationNativeSelectiveEntropyStartup
 import BeaconcryptCore.Computational.RegistrationNativeRecordPackage
 
-/-! The complete effectful selective native startup and original ledger have actual World query bills. Constructor and ML generation retain their explicit coin caps; the actual shared ML-pin hash adds one hash. Startup performs no ongoing record request. -/
+/-! The complete effectful selective native startup and original ledger have actual World query bills. Constructor and ML generation retain their explicit coin caps; the existing one-hash allowance covers its pure fixed pin construction. Startup performs no ongoing record request. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open beaconcrypt_core
 set_option autoImplicit false
+set_option warningAsError true
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativeSelectiveRecordStartup
 open PqxdhServerAuthExperiment (Setup Checks)
@@ -38,6 +39,20 @@ theorem coins_record (kind : RecordKind) (work : ProbComp Value) :
   apply (isQueryBoundP_false work 0).simulateQ_of_step
   all_goals simp [coinLift, WorldRecord, isQueryBoundP_query_iff]
 
+private theorem constructor_metadata (setup : Setup base KemSK) (ensureInit : StateT Unit ProbComp Bool)
+    (identityIndex : Nat) (serverKeyId : U64) (count : Nat)
+    (bounded : ((PqxdhLiveServerConstruction.construct (P := Unit) setup.joint ensureInit identityIndex serverKeyId none).run ()).IsTotalQueryBound count) :
+    ((PqxdhLiveServerConstruction.construct (P := Std.Array Std.U8 151#usize) setup.joint ensureInit identityIndex serverKeyId none).run ()).IsTotalQueryBound count := by
+  have erased : (fun _ => ()) <$> ((PqxdhLiveServerConstruction.construct (P := Unit) setup.joint ensureInit identityIndex serverKeyId none).run ()) =
+      (fun _ => ()) <$> ((PqxdhLiveServerConstruction.construct (P := Std.Array Std.U8 151#usize) setup.joint ensureInit identityIndex serverKeyId none).run ()) := by
+    simp only [PqxdhLiveServerConstruction.construct, StateT.run, map_bind]
+    refine bind_congr fun ready => ?_
+    split <;> simp only [Functor.map_map, map_pure]
+  have mapped : ((fun _ => ()) <$> ((PqxdhLiveServerConstruction.construct (P := Unit) setup.joint ensureInit identityIndex serverKeyId none).run ())).IsTotalQueryBound count := by
+    simpa only [IsTotalQueryBound, isQueryBound_map_iff] using bounded
+  rw [erased] at mapped
+  simpa only [IsTotalQueryBound, isQueryBound_map_iff] using mapped
+
 def startupCost (constructorCoins mlCoins : Nat) : EffectKind → Nat
   | .coin => constructorCoins + mlCoins
   | .hash => 1
@@ -50,12 +65,13 @@ theorem start_effect (setup : Setup base KemSK) (source : RegistrationNativeMlds
     (mlBound : (RegistrationNativeMldsa.generate source).IsTotalQueryBound mlCoins) (kind : EffectKind) :
     (RegistrationNativeHiddenStartup.start (n := n) setup source ensureInit identityIndex serverKeyId identity).IsQueryBoundP
       (WorldEffect kind) (startupCost constructorCoins mlCoins kind) := by
+  have constructor151 := constructor_metadata setup ensureInit identityIndex serverKeyId constructorCoins constructorBound
   have bounded :
       (RegistrationNativeHiddenStartup.start (n := n) setup source ensureInit identityIndex serverKeyId identity).IsQueryBoundP
         (WorldEffect kind) ((if kind = .coin then constructorCoins else 0) +
           ((if kind = .coin then mlCoins else 0) + (if kind = .hash then 1 else 0))) := by
     unfold RegistrationNativeHiddenStartup.start
-    apply isQueryBoundP_bind (coins_effect kind _ constructorCoins constructorBound)
+    apply isQueryBoundP_bind (coins_effect kind _ constructorCoins constructor151)
     intro constructed _
     cases built : constructed.1 with
     | none => trivial
@@ -65,7 +81,7 @@ theorem start_effect (setup : Setup base KemSK) (source : RegistrationNativeMlds
         cases sampled : generated with
         | none => trivial
         | some credential =>
-            cases kind <;> simp [WorldEffect, effectLift, PqxdhRecordLiftInterface.effectKind, isQueryBoundP_query_bind_iff]
+            cases kind <;> simp [WorldEffect]
   cases kind <;> simpa only [startupCost, ite_true, ite_false, reduceCtorEq, Nat.add_zero, Nat.zero_add] using bounded
 
 theorem start_record (setup : Setup base KemSK) (source : RegistrationNativeMldsa.Source)
@@ -83,7 +99,7 @@ theorem start_record (setup : Setup base KemSK) (source : RegistrationNativeMlds
       intro generated _
       cases sampled : generated with
       | none => trivial
-      | some credential => simp [WorldRecord, effectLift, isQueryBoundP_query_bind_iff]
+      | some credential => simp [WorldRecord]
 
 variable {source : RegistrationNativeMldsa.Source}
 

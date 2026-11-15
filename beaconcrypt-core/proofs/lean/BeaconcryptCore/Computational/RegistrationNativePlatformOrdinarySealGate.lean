@@ -42,7 +42,7 @@ theorem program (native : QueryImpl RawCtxSourceSeal.SealSpec (StateT S m))
   | none => simp only [simulateQ_pure, StateT.run_pure, gate, pure_bind]
   | some pair =>
       rcases pair with ⟨body, tag⟩
-      by_cases associated : input.context.associatedData.length = 281
+      by_cases associated : input.context.associatedData.length = 151
       · by_cases sized : tag.length = 16
         · simp only [associated, sized, ite_true, simulateQ_bind, simulateQ_spec_query, implementation,
             run_liftState, StateT.run_bind, StateT.run_lift, bind_assoc, pure_bind]

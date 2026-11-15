@@ -184,9 +184,9 @@ theorem stage_project (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (secretOfSeed : IdentitySeed → List.Vector UInt8 64) (wiring : SourceWiring source.crypto joint secretOfSeed)
     (native : QueryImpl RegistrationAgreementShared.PrimitiveSpec (StateT Auxiliary ProbComp))
     (authenticated : registration.AuthenticatedResponse)
-    (pin : absBytes authenticated.pending.control.expected_server_binding.identity_public_key =
+    (pin : absBytes authenticated.control.expected_server_binding.identity_public_key =
       (joint.publicKeys seed).ed25519.toList)
-    (coherent : authenticated.pending.control.expected_server_binding = authenticated.pending.binding.server_pin.binding)
+    (coherent : authenticated.control.expected_server_binding = authenticated.binding.server_pin.binding)
     (before : FullState n Auxiliary) :
     Prod.map id Prod.snd <$> (stage source hmac joint dh domain seed scalar native authenticated).run before =
       (simulateQ (RegistrationBeaconRootInterpreter.sourceImpl dh scalar
@@ -216,9 +216,9 @@ theorem stage_keeps (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (secretOfSeed : IdentitySeed → List.Vector UInt8 64) (wiring : SourceWiring source.crypto joint secretOfSeed)
     (native : QueryImpl RegistrationAgreementShared.PrimitiveSpec (StateT Auxiliary ProbComp))
     (authenticated : registration.AuthenticatedResponse)
-    (pin : absBytes authenticated.pending.control.expected_server_binding.identity_public_key =
+    (pin : absBytes authenticated.control.expected_server_binding.identity_public_key =
       (joint.publicKeys seed).ed25519.toList)
-    (coherent : authenticated.pending.control.expected_server_binding = authenticated.pending.binding.server_pin.binding)
+    (coherent : authenticated.control.expected_server_binding = authenticated.binding.server_pin.binding)
     (before : FullState n Auxiliary) (result : RustM agreement.AgreementEffect × FullState n Auxiliary)
     (supported : result ∈ support ((stage source hmac joint dh domain seed scalar native authenticated).run before)) :
     cacheReceipts result.2.2 = cacheReceipts before.2 := by

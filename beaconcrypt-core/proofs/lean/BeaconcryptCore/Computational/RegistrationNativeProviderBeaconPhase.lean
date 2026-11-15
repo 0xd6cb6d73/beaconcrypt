@@ -72,9 +72,9 @@ private theorem phase_source (setup : Setup base KemSK) (wire : RegistrationNati
     (provider : Provider KemSK ProviderState)
     (owner current : RegistrationNativeBeaconFrontend.Owner mlSource) (oneTime : ScalarBytes)
     (authenticated : registration.AuthenticatedResponse)
-    (coherent : authenticated.pending.control.expected_server_binding = authenticated.pending.binding.server_pin.binding)
+    (coherent : authenticated.control.expected_server_binding = authenticated.binding.server_pin.binding)
     (env : EnvState Auxiliary) (empty : env.recordRequests = [])
-    (erased : Std.Array U8 357#usize) (before : NativeState n KemSK ProviderState) :
+    (erased : Std.Array U8 227#usize) (before : NativeState n KemSK ProviderState) :
     Prod.map id drop <$>
       (simulateQ (implementation setup wire route sign seed selectedScalar provider false)
         (simulateQ (adapt setup localScalar)
@@ -150,9 +150,9 @@ theorem phase_native (setup : Setup base KemSK) (wire : RegistrationNativeWire.W
     (provider : Provider KemSK ProviderState)
     (owner current : RegistrationNativeBeaconFrontend.Owner mlSource) (oneTime : ScalarBytes)
     (authenticated : registration.AuthenticatedResponse)
-    (coherent : authenticated.pending.control.expected_server_binding = authenticated.pending.binding.server_pin.binding)
+    (coherent : authenticated.control.expected_server_binding = authenticated.binding.server_pin.binding)
     (env : EnvState Auxiliary) (empty : env.recordRequests = [])
-    (erased : Std.Array U8 357#usize) (before : NativeState n KemSK ProviderState) :
+    (erased : Std.Array U8 227#usize) (before : NativeState n KemSK ProviderState) :
     Prod.map id drop <$>
       (simulateQ (implementation setup wire route sign seed selectedScalar provider false)
         (simulateQ (adapt setup localScalar)

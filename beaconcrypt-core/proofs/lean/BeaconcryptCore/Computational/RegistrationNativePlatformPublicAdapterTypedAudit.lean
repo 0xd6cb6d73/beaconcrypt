@@ -266,3 +266,15 @@ end BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterTypedAu
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterTypedAudit.physical_transport
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterTypedAudit.journal_query' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterTypedAudit.journal_query
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterTypedAudit.flag_query' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterTypedAudit.flag_query

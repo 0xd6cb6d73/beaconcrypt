@@ -529,15 +529,22 @@ theorem realStep_cacheOrigin (setup : Setup baseSpec KemSK) (codec : Codec Reade
               subst supported
               exact origin
           | some token =>
-              simp only [found, mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at supported
-              obtain ⟨built, _, rfl⟩ := supported
-              exact origin
+              simp only [found] at supported
+              split at supported
+              · simp only [support_pure, Set.mem_singleton_iff] at supported
+                subst supported
+                exact origin
+              · simp only [mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at supported
+                obtain ⟨hashed, _, built, _, rfl⟩ := supported
+                exact origin
       | finish raw =>
           simp only [skeleton, finishStep, StateT.run] at supported
           cases phase : state.1.beacon.beacon.phase <;> simp only [phase] at supported
           all_goals try { simp only [support_pure, Set.mem_singleton_iff] at supported; subst supported; exact origin }
+          split at supported
+          case h_2 => simp only [support_pure, Set.mem_singleton_iff] at supported; subst supported; exact origin
           simp only [mem_support_bind_iff] at supported
-          obtain ⟨prepared, _, supported⟩ := supported
+          obtain ⟨hashed, _, prepared, _, supported⟩ := supported
           cases prepared with
           | none =>
               simp only [support_pure, Set.mem_singleton_iff] at supported

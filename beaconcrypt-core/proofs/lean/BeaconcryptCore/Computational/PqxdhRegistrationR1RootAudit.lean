@@ -23,9 +23,9 @@ theorem native_root (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     (invariant : GameInv Reader Response setup (context.publicValue setup) (contextState setup context)) :
     nativeOf <$> PqxdhServerAuthRootExecution.execution setup codec checks context work =
       (simulateQ (nativeHandler setup codec checks context.seed context.scalar context.beaconSeed) work).run
-        (PqxdhRegistrationR1Initial.sourceInitial setup context.seed context.scalar context.published.2) := by
+        (PqxdhRegistrationR1Initial.sourceInitial setup context.seed context.scalar context.published.2 context.beaconInit) := by
   rw [← program_native setup codec checks context.seed context.scalar context.beaconSeed work
-    (PqxdhRegistrationR1Initial.sourceInitial setup context.seed context.scalar context.published.2) invariant]
+    (PqxdhRegistrationR1Initial.sourceInitial setup context.seed context.scalar context.published.2 context.beaconInit) invariant]
   change (fun result : (Result × PqxdhServerAuthRootOccurrences.Audit KemSK) ×
     PqxdhJointDhExtractFamily.State => (result.1.1, (result.2, result.1.2.1))) <$>
       PqxdhServerAuthRootExecution.execution setup codec checks context work = _
@@ -44,10 +44,10 @@ theorem native_public (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
         PqxdhServerAuthRootExecution.execution setup codec checks context work =
       (simulateQ (nativeHandler setup codec checks context.seed context.scalar context.beaconSeed)
         (PqxdhServerAuthApiJournal.record work)).run
-          (PqxdhRegistrationR1Initial.sourceInitial setup context.seed context.scalar context.published.2) := by
+          (PqxdhRegistrationR1Initial.sourceInitial setup context.seed context.scalar context.published.2 context.beaconInit) := by
   rw [← program_native setup codec checks context.seed context.scalar context.beaconSeed
     (PqxdhServerAuthApiJournal.record work)
-    (PqxdhRegistrationR1Initial.sourceInitial setup context.seed context.scalar context.published.2) invariant]
+    (PqxdhRegistrationR1Initial.sourceInitial setup context.seed context.scalar context.published.2 context.beaconInit) invariant]
   simpa only [evaluate, PqxdhRegistrationR1Initial.sourceInitial,
     PqxdhServerAuthRootOccurrences.family, Context.publicValue, contextState, Functor.map_map] using
     congrArg (Functor.map (fun result => (result.1.1, (result.2, result.1.2))))
@@ -64,7 +64,7 @@ abbrev RootAudit (KemSK Result : Type) := Result × PqxdhServerAuthRootExecution
 /-- Forget only the extra occurrence journal and fixed generation marker from the same run. -/
 def toAudit (audit : RootAudit KemSK Result) : PqxdhRegistrationR1Initial.Audit KemSK Result :=
   ⟨⟨audit.2.context.beaconSeed, audit.2.context.scalar, audit.2.context.keys⟩,
-    audit.2.context.oneTime, audit.2.context.published,
+    audit.2.context.oneTime, audit.2.context.published, audit.2.context.beaconInit,
     (audit.1, (audit.2.primitive, audit.2.state.1))⟩
 
 /-- The actual Beacon constructor, optional first bundle and adaptive suffix in source order, with one private occurrence execution. Failed publication is retained without an admission assumption. -/
@@ -73,10 +73,10 @@ noncomputable def rootAudited (setup : Setup baseSpec KemSK) (codec : Codec Read
     ProbComp (RootAudit KemSK Result) := do
   let value ← PqxdhRegistrationJointCreation.material setup
   let oneTime ← sampleScalar
-  let published ← phase1Run setup codec value.seed
+  let logged ← phase1Logged setup codec value.seed
     (challenge setup.joint setup.dh serverSeed value.prekey) oneTime value.keys.1 value.keys.2
-  let context : Context KemSK := ⟨serverSeed, value.prekey, value.seed, oneTime, value.keys, published⟩
-  let result ← PqxdhServerAuthRootExecution.execution setup codec checks context (work published.1)
+  let context : Context KemSK := ⟨serverSeed, value.prekey, value.seed, oneTime, value.keys, logged.1, logged.2⟩
+  let result ← PqxdhServerAuthRootExecution.execution setup codec checks context (work logged.1.1)
   pure (result.1.1, ⟨context, .targetPhase1, result.1.2, result.2⟩)
 
 set_option backward.isDefEq.respectTransparency false in
@@ -92,9 +92,9 @@ theorem audited_root (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
   intro published supported
   simpa only [bind_pure_comp, Functor.map_map, nativeOf, toAudit] using
     congrArg (Functor.map (fun result =>
-      (⟨value, oneTime, published, result⟩ : PqxdhRegistrationR1Initial.Audit KemSK Result)))
-      (native_root setup codec checks ⟨serverSeed, value.prekey, value.seed, oneTime, value.keys, published⟩
-        (work published.1) (inv_initial setup codec value.seed
+      (⟨value, oneTime, published.1, published.2, result⟩ : PqxdhRegistrationR1Initial.Audit KemSK Result)))
+      (native_root setup codec checks ⟨serverSeed, value.prekey, value.seed, oneTime, value.keys, published.1, published.2⟩
+        (work published.1.1) (inv_initial setup codec value.seed
           (challenge setup.joint setup.dh serverSeed value.prekey) oneTime value.keys.1 value.keys.2
           published supported))
 
@@ -125,13 +125,13 @@ theorem journal_public (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
     simulateQ_map, StateT.run_map, bind_map_left, bind_pure_comp, Functor.map_map,
     journalAudit, toAudit, contextInput, Context.publicValue, challenge, Bool.false_eq_true, ite_false] using
     congrArg (Functor.map (fun result =>
-      (⟨value, oneTime, published,
+      (⟨value, oneTime, published.1, published.2,
         ((result.1.1, PqxdhRegistrationR1Journal.prefixLog
-          ⟨setup.joint.publicKeys serverSeed, setup.serverKeyId, published.1, none⟩ created ++
+          ⟨setup.joint.publicKeys serverSeed, setup.serverKeyId, published.1.1, none⟩ created ++
             PqxdhRegistrationR1Journal.restrictLog result.1.2), result.2)⟩ :
         PqxdhRegistrationR1Initial.Audit KemSK (Result × QueryLog PqxdhRegistrationSchedule.SurfaceSpec))))
-      (native_public setup codec checks ⟨serverSeed, value.prekey, value.seed, oneTime, value.keys, published⟩
-        (work ⟨setup.joint.publicKeys serverSeed, setup.serverKeyId, published.1, none⟩)
+      (native_public setup codec checks ⟨serverSeed, value.prekey, value.seed, oneTime, value.keys, published.1, published.2⟩
+        (work ⟨setup.joint.publicKeys serverSeed, setup.serverKeyId, published.1.1, none⟩)
         (inv_initial setup codec value.seed (challenge setup.joint setup.dh serverSeed value.prekey)
           oneTime value.keys.1 value.keys.2 published supported))
 

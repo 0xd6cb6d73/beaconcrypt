@@ -13,6 +13,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhPhase2SourceScheduler
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhPhase2SourceAux PqxdhKemIndCca PqxdhPrivateKemSource PqxdhJointKdfGame
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhPhase1AcceptanceOracle
 open PqxdhGeneratedBeaconState (IdentityHandle KemHandle)
@@ -41,7 +42,7 @@ noncomputable def compiler
     (localImpl : QueryImpl (LocalSpec I D K X Response) (StateT A ProbComp)) :
     QueryImpl (Spec baseSpec S B) (StateT (State M P I D K A S B) (OracleComp (SelectorSpec baseSpec)))
   | .inl request => PqxdhProtocolSelector.compiler source writer senderId route decode request
-  | .inr request => PqxdhPhase2LiveFinish.finishImpl (sourceNative source localImpl) decode request
+  | .inr request => PqxdhPhase2LiveFinish.finishImpl (completedBinding := completedBinding) (sourceNative source localImpl) decode request
 
 /-- The complete identity service reply updates only its original identity field in the same packed live state. -/
 def identityState {count : Nat} (state : State M P I D K (A × BareState count) S B) (identities : BareState count) :
@@ -72,7 +73,7 @@ noncomputable def ordinary
   | .inl (.inr request) => StateT.mk fun state => do
       let result ← (borrowedSelector attachedVerify primitives count request).run state.primitive.1.2
       pure (result.1, identityState state result.2)
-  | .inr request => PqxdhPhase2LiveFinish.finishImpl
+  | .inr request => PqxdhPhase2LiveFinish.finishImpl (completedBinding := completedBinding)
       (ordinaryNative attachedVerify primitives count source localImpl) decode request
 
 /-- Borrowing the native source handler and packing its actual private state yields the concrete ordinary handler. -/
@@ -103,7 +104,7 @@ noncomputable def borrowed
     QueryImpl (Spec baseSpec S B)
       (StateT (State M P I D K A S B × BareState count) (OracleComp (MlKemCCAOracleSpec baseSpec))) :=
   ((borrowedSelector attachedVerify primitives count).mapStateTBase
-    (compiler source writer senderId route decode localImpl)).flattenStateT
+    (compiler (completedBinding := completedBinding) source writer senderId route decode localImpl)).flattenStateT
 
 /-- Every concrete source request preserves its complete original reply and live state after the actual identity interpreter is installed. -/
 theorem compiler_step
@@ -113,8 +114,8 @@ theorem compiler_step
     (localImpl : QueryImpl (LocalSpec I D K X Response) (StateT A ProbComp))
     (query : (Spec baseSpec S B).Domain) (state : State M P I D K A S B) (identities : BareState count) :
     (fun result => (result.1, packState result.2.1 result.2.2)) <$>
-      (borrowed attachedVerify primitives count source writer senderId route decode localImpl query).run (state, identities) =
-      (ordinary attachedVerify primitives count source writer senderId route decode localImpl query).run
+      (borrowed (completedBinding := completedBinding) attachedVerify primitives count source writer senderId route decode localImpl query).run (state, identities) =
+      (ordinary (completedBinding := completedBinding) attachedVerify primitives count source writer senderId route decode localImpl query).run
         (packState state identities) := by
   rcases query with ((record | forwarded) | finish)
   case inl.inl =>
@@ -143,9 +144,9 @@ theorem compiler_step
   case inr =>
     change (fun result => (result.1, packState result.2.1 result.2.2)) <$>
       ((((borrowedSelector attachedVerify primitives count).mapStateTBase
-        (PqxdhPhase2LiveFinish.finishImpl (sourceNative source localImpl) decode)).flattenStateT finish).run
+        (PqxdhPhase2LiveFinish.finishImpl (completedBinding := completedBinding) (sourceNative source localImpl) decode)).flattenStateT finish).run
         (state, identities)) =
-      (PqxdhPhase2LiveFinish.finishImpl (ordinaryNative attachedVerify primitives count source localImpl)
+      (PqxdhPhase2LiveFinish.finishImpl (completedBinding := completedBinding) (ordinaryNative attachedVerify primitives count source localImpl)
         decode finish).run (packState state identities)
     rw [PqxdhPhase2LiveFinish.finish_interpretation,
       PqxdhPhase2FinishIdentity.finish_reassociate, native_reassociate]
@@ -159,12 +160,12 @@ theorem borrowed_schedule {Result : Type}
     (client : OracleComp (Spec baseSpec S B) Result)
     (state : State M P I D K A S B) (identities : BareState count) :
     (fun result => (result.1, packState result.2.1 result.2.2)) <$>
-      (simulateQ (borrowed attachedVerify primitives count source writer senderId route decode localImpl) client).run
+      (simulateQ (borrowed (completedBinding := completedBinding) attachedVerify primitives count source writer senderId route decode localImpl) client).run
         (state, identities) =
-      (simulateQ (ordinary attachedVerify primitives count source writer senderId route decode localImpl) client).run
+      (simulateQ (ordinary (completedBinding := completedBinding) attachedVerify primitives count source writer senderId route decode localImpl) client).run
         (packState state identities) := by
   exact map_run_simulateQ_eq_of_query_map_eq _ _ (fun state => packState state.1 state.2)
-    (fun query before => compiler_step attachedVerify primitives count source writer senderId route decode localImpl
+    (fun query before => compiler_step (completedBinding := completedBinding) attachedVerify primitives count source writer senderId route decode localImpl
       query before.1 before.2) client (state, identities)
 
 /-- Execute the fixed source compiler before interpreting identities; the complete original adaptive result becomes the same concrete ordinary schedule at the packed current state. -/
@@ -177,12 +178,12 @@ theorem compiler_complete {Result : Type}
     (state : State M P I D K A S B) (identities : BareState count) :
     (fun result => (result.1.1, packState result.1.2 result.2)) <$>
       (simulateQ (borrowedSelector attachedVerify primitives count)
-        ((simulateQ (compiler source writer senderId route decode localImpl) client).run state)).run identities =
-      (simulateQ (ordinary attachedVerify primitives count source writer senderId route decode localImpl) client).run
+        ((simulateQ (compiler (completedBinding := completedBinding) source writer senderId route decode localImpl) client).run state)).run identities =
+      (simulateQ (ordinary (completedBinding := completedBinding) attachedVerify primitives count source writer senderId route decode localImpl) client).run
         (packState state identities) := by
   rw [simulateQ_mapStateTBase_run_eq_map_flattenStateT]
   simpa only [Functor.map_map, borrowed] using
-    borrowed_schedule attachedVerify primitives count source writer senderId route decode localImpl client state identities
+    borrowed_schedule (completedBinding := completedBinding) attachedVerify primitives count source writer senderId route decode localImpl client state identities
 
 end BeaconcryptCore.Computational.PqxdhPhase2SourceScheduler
 

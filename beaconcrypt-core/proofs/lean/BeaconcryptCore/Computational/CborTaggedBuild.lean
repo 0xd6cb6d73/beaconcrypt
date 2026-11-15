@@ -41,7 +41,7 @@ theorem send_same {α : Type} (setup : Setup baseSpec KemSK)
   simp only [QueryImpl.compose, sendLift, simulateQ_spec_query]
   exact primitive_same setup left right checks same query
 
-theorem after_tagged (setup : Setup baseSpec KemSK) (wire : Codec Reader Response)
+theorem after_tagged (associatedData : PqxdhTranscriptAd.AssociatedData) (setup : Setup baseSpec KemSK) (wire : Codec Reader Response)
     (checks : Checks) (sender : Std.U64)
     (readBack : PqxdhServerAuthNegativeControl.FrameReadBack wire)
     (candidate : pqxdh.ServerRegistrationCandidate)
@@ -49,16 +49,16 @@ theorem after_tagged (setup : Setup baseSpec KemSK) (wire : Codec Reader Respons
     (root : PqxdhSecretInputKdf.RootOutput) (kernel : ratchet.concrete.ConcreteRatchetKernel)
     (initialized : PqxdhRootTableInitialization.initialKernelRun setup.source false root = ok kernel)
     (authenticated : Pqxdh.Bytes)
-    (state : State Unit Unit (List Pqxdh.Bytes))
+    (state : State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes))
     (primitive : RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext)) :
     (simulateQ (tailImpl setup (CborTaggedCodec.codec wire) checks)
-      (afterInitialization candidate authenticated kernel () state)).run primitive =
+      (afterInitialization (associatedData := associatedData) candidate authenticated kernel associatedData state)).run primitive =
       (fun result => (CborResponseWriterMap.outcome (CborTaggedCodec.tag sender) result.1, result.2)) <$>
         (simulateQ (tailImpl setup (CborRegistrationCodec.normalize wire sender) checks)
-          (afterInitialization candidate authenticated kernel () state)).run primitive := by
-  refine Eq.trans ?_ (CborResponseWriterMap.after_map (CborTaggedCodec.tag sender)
+          (afterInitialization (associatedData := associatedData) candidate authenticated kernel associatedData state)).run primitive := by
+  refine Eq.trans ?_ (CborResponseWriterMap.after_map (associatedData := associatedData) (CborTaggedCodec.tag sender)
     (tailImpl setup (CborRegistrationCodec.normalize wire sender) checks)
-    candidate authenticated kernel () state primitive)
+    candidate authenticated kernel associatedData state primitive)
   simp only [afterInitialization, simulateQ_bind, StateT.run_bind,
     CborResponseWriterMap.send_unchanged]
   rw [send_same setup (CborTaggedCodec.codec wire) (CborRegistrationCodec.normalize wire sender) checks rfl]
@@ -72,7 +72,7 @@ theorem after_tagged (setup : Setup baseSpec KemSK) (wire : Codec Reader Respons
   | some encrypted =>
     obtain ⟨digest, _, _, written, _⟩ := PqxdhServerAuthNegativeControl.tail_send
       setup (CborRegistrationCodec.normalize wire sender) checks root kernel initialized
-      (firstContext candidate authenticated) primitive.1 primitive.2 sent supported encrypted present
+      (firstContext candidate associatedData authenticated) primitive.1 primitive.2 sent supported encrypted present
     have parsed := (readBack _ encrypted.ciphertext written).2
     have same := CborTaggedCodec.write_tagged wire sender (responseFields candidate encrypted) _ parsed rfl pinned
     simp only [simulateQ_bind, simulateQ_spec_query, CborResponseWriterMap.writer,
@@ -81,19 +81,19 @@ theorem after_tagged (setup : Setup baseSpec KemSK) (wire : Codec Reader Respons
     rw [PqxdhServerAuthNegativeControl.tailImpl_aux]
     simp only [PqxdhServerAuthExperiment.tailAux, StateT.run_pure, map_pure, pure_bind]
     cases (CborRegistrationCodec.normalize wire sender).write2 (responseFields candidate encrypted) <;> rfl
-theorem candidate_tagged (setup : Setup baseSpec KemSK) (wire : Codec Reader Response)
+theorem candidate_tagged (associatedData : PqxdhTranscriptAd.AssociatedData) (setup : Setup baseSpec KemSK) (wire : Codec Reader Response)
     (checks : Checks) (sender : Std.U64)
     (readBack : PqxdhServerAuthNegativeControl.FrameReadBack wire)
     (candidate : pqxdh.ServerRegistrationCandidate)
     (pinned : candidate.server_identity_key_id = sender)
     (root : PqxdhSecretInputKdf.RootOutput) (data : Option Pqxdh.Bytes)
-    (state : State Unit Unit (List Pqxdh.Bytes))
+    (state : State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes))
     (primitive : RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext)) :
     (simulateQ (tailImpl setup (CborTaggedCodec.codec wire) checks)
-      (candidateTail setup.source candidate root data () state)).run primitive =
+      (candidateTail (associatedData := associatedData) setup.source candidate root data associatedData state)).run primitive =
       (fun result => (CborResponseWriterMap.outcome (CborTaggedCodec.tag sender) <$> result.1, result.2)) <$>
         (simulateQ (tailImpl setup (CborRegistrationCodec.normalize wire sender) checks)
-          (candidateTail setup.source candidate root data () state)).run primitive := by
+          (candidateTail (associatedData := associatedData) setup.source candidate root data associatedData state)).run primitive := by
   simp only [candidateTail, simulateQ_bind, simulateQ_spec_query, StateT.run_bind,
     PqxdhServerAuthNegativeControl.tailImpl_aux, PqxdhServerAuthExperiment.tailAux,
     StateT.run_pure, pure_bind]
@@ -126,21 +126,21 @@ theorem candidate_tagged (setup : Setup baseSpec KemSK) (wire : Codec Reader Res
     cases candidate.key_id_binding <;>
       simp only [simulateQ_pure, StateT.run_pure, map_pure] <;> try rfl
     simp only [simulateQ_map, StateT.run_map,
-      after_tagged setup wire checks sender readBack candidate pinned root kernel initial,
+      after_tagged associatedData setup wire checks sender readBack candidate pinned root kernel initial,
       Functor.map_map]
     rfl
 
-theorem build_tagged (setup : Setup baseSpec KemSK) (wire : Codec Reader Response)
+theorem build_tagged (associatedData : PqxdhTranscriptAd.AssociatedData) (setup : Setup baseSpec KemSK) (wire : Codec Reader Response)
     (checks : Checks) (readBack : PqxdhServerAuthNegativeControl.FrameReadBack wire)
     (pending : pqxdh.PendingServerRegistration)
     (root : PqxdhSecretInputKdf.RootOutput) (data : Option Pqxdh.Bytes)
-    (state : State Unit Unit (List Pqxdh.Bytes))
+    (state : State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes))
     (primitive : RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext)) :
     (simulateQ (tailImpl setup (CborTaggedCodec.codec wire) checks)
-      (build setup.source pending root data () state)).run primitive =
+      (build (associatedData := associatedData) setup.source pending root data associatedData state)).run primitive =
       (fun result => (CborResponseWriterMap.outcome (CborTaggedCodec.tag state.identityKeyId) <$> result.1, result.2)) <$>
         (simulateQ (tailImpl setup (CborRegistrationCodec.normalize wire state.identityKeyId) checks)
-          (build setup.source pending root data () state)).run primitive := by
+          (build (associatedData := associatedData) setup.source pending root data associatedData state)).run primitive := by
   unfold build
   cases next : pqxdh.server_next_key_id state.control <;>
     simp only [continueRust, simulateQ_pure, StateT.run_pure, map_pure] <;> try rfl
@@ -154,9 +154,10 @@ theorem build_tagged (setup : Setup baseSpec KemSK) (wire : Codec Reader Respons
       case ok result =>
         cases result <;> simp only [simulateQ_pure, StateT.run_pure, map_pure] <;> try rfl
         case Ok candidate =>
-          obtain ⟨_, _, pinned, _, _, _⟩ := PqxdhServerAuthNegativeControl.prepare_commit_fields
+          obtain ⟨_, _, pinned, _, _⟩ := PqxdhServerAuthNegativeControl.prepare_commit_fields
             state.control pending ⟨state.server.identity, state.identityKeyId⟩ _ candidate prepared
-          exact candidate_tagged setup wire checks state.identityKeyId readBack candidate pinned root data state primitive
+          exact candidate_tagged associatedData setup wire checks state.identityKeyId readBack candidate pinned root data state
+            primitive
 
 theorem native_build (setup : Setup baseSpec KemSK) (wire : Codec Reader Response)
     (checks : Checks) (readBack : PqxdhServerAuthNegativeControl.FrameReadBack wire)
@@ -171,13 +172,24 @@ theorem native_build (setup : Setup baseSpec KemSK) (wire : Codec Reader Respons
     simp only [PqxdhServerAuthNative.native_pure_run, map_pure]
     rfl
   case some token =>
-    simp only [PqxdhServerAuthNative.native_bind_run, PqxdhServerAuthNative.nativeCoins,
-      PqxdhServerAuthNative.nativeSet, bind_pure_comp,
-      PqxdhServerAuthNative.native_map_run, PqxdhServerAuthNative.localState,
-      map_pure, Functor.map_map, build_tagged setup wire checks readBack]
-    congr 1
-    funext result
-    cases result.1 <;> rfl
+    cases guard : prehash state.2.server token.pending data
+    case none =>
+      simp only [guard, PqxdhServerAuthNative.native_bind_run, PqxdhServerAuthNative.nativeSet,
+        PqxdhServerAuthNative.localState, PqxdhServerAuthNative.native_pure_run, pure_bind, map_pure]
+      rfl
+    case some candidate =>
+      simp only [guard, PqxdhServerAuthNative.native_bind_run, PqxdhServerAuthNative.nativeHash,
+        bind_map_left, map_bind]
+      apply bind_congr
+      intro hashed
+      simp only [PqxdhServerAuthNative.nativeGet, PqxdhServerAuthNative.localState,
+        PqxdhServerAuthNative.nativeCoins,
+        PqxdhServerAuthNative.nativeSet, pure_bind, bind_map_left,
+        build_tagged (PqxdhTranscriptAd.adOf hashed.1) setup wire checks readBack,
+        PqxdhServerAuthNative.native_pure_run, map_pure]
+      congr 1
+      funext result
+      cases result.1 <;> rfl
 
 theorem deployment_build (setup : Setup baseSpec KemSK) (wire : Codec Reader Response)
     (checks : Checks) (readBack : PqxdhServerAuthNegativeControl.FrameReadBack wire)

@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeMldsaSignSyntax
 
-/-! Actual free native ML capability bills. Only the complete bundle and response-build callbacks can attempt ML signing; each has one slot, including every failed optional reply, writer and installation path. Ordinary sampling and named generation have no signing slot. -/
+/-! Actual free native ML capability bills. Server response-build callbacks have one signing slot, including failed optional replies, writers and installation. Beacon Init has zero ML signing queries; the historical combined callback ceiling remains a conservative upper bound. Ordinary sampling and named generation have no signing slot. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -127,18 +127,25 @@ private theorem afterOccupancy {Reader Response : Type} (setup : Setup base KemS
   | ok result => cases result with
     | Err previous => exact pure_bound _ _
     | Ok pending =>
-        simp only
-        split
-        · exact fromInitial source credential setup codec encode control pending
-        · exact pure_bound _ _
+        apply bind_bound _ _ 0 1 (lifted _)
+        intro hashed
+        cases hashed with
+        | fail error | div => exact pure_bound _ _
+        | ok result => cases result with
+          | Err previous => exact pure_bound _ _
+          | Ok initial =>
+              simp only
+              split
+              · exact fromInitial source credential setup codec encode control initial
+              · exact pure_bound _ _
 
 private theorem complete {Reader Response : Type} (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (encode : registration.SignedResponseView → core.option.Option Pqxdh.Bytes)
     (token : peer.ConsumedRegistration) (application : Slice U8) :
     Bound (RegistrationNativeMldsaServer.complete (n := n) source credential setup codec checks encode token application) 1 := by
-  intro before
+  intro current
   simp only [RegistrationNativeMldsaServer.complete, StateT.run]
-  cases peer.begin_completion_lookup before.control before.pin token application with
+  cases peer.begin_completion_lookup current.control current.pin token application with
   | fail error | div => trivial
   | ok result => cases result with
     | Err previous => trivial
@@ -149,8 +156,9 @@ private theorem complete {Reader Response : Type} (setup : Setup base KemSK) (co
         | ok keyId =>
             simp only
             split
-            · exact isQueryBoundP_bind (world source _ 0 (lifted _) before)
-                (fun result _ => afterOccupancy source credential setup codec checks encode before.control lookup result.1 result.2)
+            · apply isQueryBoundP_bind (n := 0) (m := 1) (world source _ 0 (lifted _) current)
+              intro occupied _
+              exact afterOccupancy source credential setup codec checks encode current.control lookup occupied.1 occupied.2
             · trivial
 
 /-- The complete moved-handle response build has one ML signing slot on every source path. -/
@@ -172,25 +180,24 @@ open RegistrationNativeMldsaShared (Local)
 open RegistrationNativeBeaconFrontend (Owner)
 variable (setup : Setup base KemSK) (checks : Checks)
 variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 
 private theorem native (work : RegistrationNativeBeaconFrontend.M n KemSK source
     RegistrationServerRoleBackend.State Value) :
     Bound (RegistrationNativeMldsaBundle.native setup checks representation created work) 0 := lifted _
 
+/-- Every current Beacon callback contains no ML capability operation. -/
+theorem outgoing_no_sign (index : Nat) (owner : Owner source)
+    (query : RegistrationBeaconInitExecutor.Spec.Domain) (before : Local n KemSK source) :
+    ((RegistrationNativeMldsaBundle.outgoing setup checks representation created index owner query).run before).IsQueryBoundP IsSign 0 :=
+  native setup checks representation created _ before
+
+/-- The old coarse accounting bound follows from the actual zero-query result. -/
 theorem outgoing (index : Nat) (owner : Owner source)
     (query : RegistrationBeaconInitExecutor.Spec.Domain) (before : Local n KemSK source) :
     ((RegistrationNativeMldsaBundle.outgoing setup checks representation created index owner query).run before).IsQueryBoundP IsSign
-      (if RegistrationNativeMldsaSignSyntax.Beacon.IsSign query then 1 else 0) := by
-  cases query with
-  | inl query => cases query with
-    | hash request => exact native setup checks representation created _ before
-    | sign request payload digest =>
-        simp only [RegistrationNativeMldsaBundle.outgoing, StateT.run,
-          RegistrationNativeMldsaSignSyntax.Beacon.IsSign, ite_true]
-        exact isQueryBoundP_bind (m := 0) (signed owner.mldsa .environment request before.2.2.server.world.world.1)
-          (fun _ _ => isQueryBoundP_pure _ _ _)
-  | inr request => exact native setup checks representation created _ before
+      (if RegistrationNativeMldsaSignSyntax.Beacon.IsSign query then 1 else 0) :=
+  (outgoing_no_sign setup checks representation created index owner query before).mono (Nat.zero_le _)
 
 private theorem afterPublished (index : Nat) (owner : Owner source)
     (oneTime : PqxdhJointGapDh.ScalarBytes) (published : RustM (RegistrationBeaconInitExecutor.Result Pqxdh.Bytes)) :
@@ -207,7 +214,7 @@ private theorem afterPublished (index : Nat) (owner : Owner source)
 private theorem native_get (before : Local n KemSK source) :
     (RegistrationNativeMldsaBundle.native setup checks representation created get).run before = pure (before.1, before) := rfl
 
-/-- The complete source bundle has exactly one available ML signing slot, regardless of later publication failure. -/
+/-- The prior coarse resource ceiling follows from the current zero-ML Init controller. -/
 theorem bundle (wire : RegistrationNativeWire.Wire) (index : Nat) (before : Local n KemSK source) :
     ((RegistrationNativeMldsaBundle.bundle setup checks wire representation created index).run before).IsQueryBoundP IsSign 1 := by
   simp only [RegistrationNativeMldsaBundle.bundle, StateT.run_bind, native_get setup checks representation created, pure_bind]
@@ -219,11 +226,11 @@ theorem bundle (wire : RegistrationNativeWire.Wire) (index : Nat) (before : Loca
             let published ← simulateQ (RegistrationNativeMldsaBundle.outgoing setup checks representation created index owner)
               (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨owner.pin.binding⟩
                 (RegistrationNativeBeaconFrontend.inputs setup owner)
-                ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)
+                ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)
             RegistrationNativeMldsaBundle.afterPublished setup checks representation created index owner oneTime published).run current).IsQueryBoundP IsSign 1 := by
         rw [StateT.run_bind]
         apply isQueryBoundP_bind (m := 0)
-        · exact (RegistrationNativeMldsaSignSyntax.Beacon.begin_bound wire.encodeInit _ _ _ _ _).simulateQ_run_StateT_of_step
+        · exact ((RegistrationNativeMldsaSignSyntax.Beacon.begin_bound wire.encodeInit _ _ _ _).mono (Nat.zero_le 1)).simulateQ_run_StateT_of_step
             (outgoing setup checks representation created index owner) current
         · intro result _
           exact afterPublished setup checks representation created index owner oneTime result.1 result.2
@@ -234,7 +241,7 @@ theorem bundle (wire : RegistrationNativeWire.Wire) (index : Nat) (before : Loca
         | exact isQueryBoundP_bind (native setup checks representation created _ before)
             (fun result _ => continuation result.1 result.2)
 
-/-- The native-state lens retains the bundle's literal ML signing bound. -/
+/-- The native-state lens preserves the conservative combined callback ceiling. -/
 theorem sourceBundle (wire : RegistrationNativeWire.Wire) (index : Nat)
     (before : RegistrationNativeExperiment.State n KemSK source) :
     ((RegistrationNativeMldsaBundle.sourceBundle setup checks wire representation created index).run before).IsQueryBoundP IsSign 1 := by
@@ -246,18 +253,13 @@ private theorem generated (accounting : RegistrationNativeMldsaCapability.Accoun
     ((RegistrationNativeMldsaProgram.call (source := source) accounting .generate).run before).IsQueryBoundP IsSign 0 := by
   simp [RegistrationNativeMldsaProgram.call, StateT.run, IsSign]
 
-/-- Actual create generates a key but makes no ML signing request. -/
+/-- Actual Beacon creation performs ordinary native work with no ML capability request. -/
 theorem create (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (before : RegistrationNativeExperiment.State n KemSK source) :
     ((RegistrationNativeMldsaCreation.create setup checks representation created edPin mlPin keyId).run before).IsQueryBoundP IsSign 0 := by
-  simp only [RegistrationNativeMldsaCreation.create, StateT.run_bind]
-  apply isQueryBoundP_bind (n := 0) (m := 0)
-  · simpa only [RegistrationNativeMldsaCreation.world, StateT.run, isQueryBoundP_map_iff] using
-      generated (source := source) .environment before.server.world.world.1
-  · intro middle _
-    exact lifted _ middle.2
+  exact lifted _ before
 
 /-- Every startup outcome is ML signing-free, including constructor and generation failures. -/
 theorem start (setup : Setup base KemSK) (ensureInit : StateT Unit ProbComp Bool) (identityIndex : Nat) (serverKid : U64) :
@@ -283,10 +285,10 @@ def IsSigningCallback (query : RegistrationNativeRawAdapter.TypedSpec.Domain) : 
   RegistrationNativeRawAdapter.kind query = (2 : Fin 12) ∨ RegistrationNativeRawAdapter.kind query = (4 : Fin 12)
 instance : DecidablePred IsSigningCallback := fun _ => inferInstanceAs (Decidable (_ ∨ _))
 
-/-- Exactly bundle and build have an ML signing allowance; every other original callback is signing-free. -/
+/-- The combined historical envelope charges bundle and build; actual Beacon signing remains zero. -/
 theorem handler (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential source)
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (before : RegistrationNativeExperiment.State n KemSK source) :
     ((RegistrationNativeMldsaProfile.handler setup checks wire route representation created credential query).run before).IsQueryBoundP
       IsSign (if IsSigningCallback query then 1 else 0) := by
@@ -305,7 +307,7 @@ theorem handler (setup : Setup base KemSK) (checks : Checks) (wire : Registratio
 /-- Adaptive typed programs inherit the literal combined bundle/build callback cap. -/
 theorem program (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential source)
     (work : OracleComp RegistrationNativeRawAdapter.TypedSpec Value) (cap : Nat)
     (bounded : work.IsQueryBoundP IsSigningCallback cap) (before : RegistrationNativeExperiment.State n KemSK source) :
     ((simulateQ (RegistrationNativeMldsaProfile.handler setup checks wire route representation created credential) work).run before).IsQueryBoundP IsSign cap :=
@@ -315,7 +317,7 @@ theorem program (setup : Setup base KemSK) (checks : Checks) (wire : Registratio
 /-- First-candidate stopping preserves the actual signing-slot cap for arbitrary fixed post-stop replies. -/
 theorem stopped {Candidate : Type} (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential source)
     (observe : RegistrationNativeMldsaStop.Observer (spec := RegistrationNativeRawAdapter.TypedSpec)
       (State := RegistrationNativeExperiment.State n KemSK source) (Candidate := Candidate))
     (defaultReply : (query : RegistrationNativeRawAdapter.TypedSpec.Domain) → RegistrationNativeRawAdapter.TypedSpec.Range query)
@@ -399,3 +401,9 @@ end BeaconcryptCore.Computational.RegistrationNativeMldsaSignBounds
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaSignBounds.stopped
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaSignBounds.Bundle.outgoing_no_sign' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaSignBounds.Bundle.outgoing_no_sign

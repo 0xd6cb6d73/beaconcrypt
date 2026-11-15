@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
-import BeaconcryptCore.Computational.RegistrationNativePlatformQueryBounds
+import VCVio.OracleComp.QueryTracking.QueryBound.Basic
 /-! Packing the native and external platform state is an exact monadic change of representation. It preserves full values and both poststates under arbitrary adaptive simulation, and preserves predicate query bounds. This lets executable stopped reductions observe the full permitted pair without discarding allocation history. -/
-open CoreModels Aeneas OracleComp OracleSpec
+open OracleComp OracleSpec
 set_option autoImplicit false
 set_option warningAsError true
 set_option backward.isDefEq.respectTransparency false

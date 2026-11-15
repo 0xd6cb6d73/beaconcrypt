@@ -46,7 +46,7 @@ theorem after_project (owner current : Owner source) (result : RustM Registratio
 
 variable {ι : Type} {base : OracleSpec ι}
 theorem record_factor (setup : PqxdhServerAuthExperiment.Setup base KemSK) (wire : RegistrationNativeWire.Wire)
-    (erased : Std.Array U8 357#usize) (descriptor : RegistrationBeaconBoundSource.PublicAgreement)
+    (erased : Std.Array U8 227#usize) (descriptor : RegistrationBeaconBoundSource.PublicAgreement)
     (root : PqxdhSecretInputKdf.RootOutput) :
     simulateQ (RegistrationBeaconReferenceNativeOwner.record (n := n) (mlSource := source) (Auxiliary := Auxiliary) setup wire)
       (RegistrationBeaconRecordExecutor.begin (RegistrationBeaconBoundSource.atRoot descriptor root)) = (do
@@ -87,7 +87,7 @@ noncomputable def factored (setup : PqxdhServerAuthExperiment.Setup base KemSK) 
   after owner result
 
 theorem post_root (setup : PqxdhServerAuthExperiment.Setup base KemSK) (wire : RegistrationNativeWire.Wire)
-    (erased : Std.Array U8 357#usize) (owner current : Owner source)
+    (erased : Std.Array U8 227#usize) (owner current : Owner source)
     (descriptor : RegistrationBeaconBoundSource.PublicAgreement) (root : PqxdhSecretInputKdf.RootOutput)
     (env : EnvState Auxiliary) :
     (fun value => ((value.1.1, eraseOwner value.1.2), value.2)) <$>
@@ -111,7 +111,7 @@ theorem chosen_factored (setup : PqxdhServerAuthExperiment.Setup base KemSK) (wi
   rfl
 
 theorem known_source (setup : PqxdhServerAuthExperiment.Setup base KemSK) (wire : RegistrationNativeWire.Wire)
-    (erased : Std.Array U8 357#usize) (owner current : Owner source)
+    (erased : Std.Array U8 227#usize) (owner current : Owner source)
     (ready : RegistrationBeaconReferenceRoot.Ready) (root : PqxdhSecretInputKdf.RootOutput)
     (env : EnvState Auxiliary) :
     (fun value => ((value.1.1, eraseOwner value.1.2), value.2)) <$>

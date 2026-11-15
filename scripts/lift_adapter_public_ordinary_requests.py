@@ -11,7 +11,7 @@ import re
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = "beaconcrypt-core/proofs/lean/BeaconcryptCore/AdapterPublicOrdinaryExtraction/Funs.lean"
 DESTINATION = "beaconcrypt-core/proofs/lean/BeaconcryptCore/AdapterPublicOrdinaryRequestExtraction.lean"
-SOURCE_SHA256 = "48cf03f72ffd6dfc28bd9f631cc5b81a6870caeaa3b9ff24de62596c09ef457e"
+SOURCE_SHA256 = "6d8fb198b50cc1b9ec4842e5041ab300e4ed0a642a927ea3c11afb2ffa62ba13"
 PURE = [
     "beaconcrypt_core.transport.protected_frame_len",
     "core.option.Option.as_ref",

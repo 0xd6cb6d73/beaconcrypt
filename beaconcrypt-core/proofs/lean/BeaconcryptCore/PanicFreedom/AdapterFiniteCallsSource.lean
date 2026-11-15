@@ -146,7 +146,7 @@ theorem server_contracts {R E : Type} (generator : rand_core.TryCryptoRng R E)
   have build := AdapterPublicServerBuildSource.component_contracts response sealFallback writerFallback
   have containerLaws := AdapterPublicServerBuildSource.container_contracts contracts.containers sealFallback writerFallback
   have send := sender_contracts contracts.receive contracts.response.sealingPrimitive contracts.response.allocation sealFallback writerFallback
-  rcases contracts.authentication.publicLeaves with ⟨mldsaPublic, edPublicBytes, hash⟩
+  rcases contracts.authentication.publicLeaves with ⟨mldsaPublic, edPublicBytes⟩
   rcases contracts.replay with ⟨contains, reserve, insert⟩
   rcases contracts.lookups with ⟨get, getMut⟩
   have init := contracts.authentication.init
@@ -156,7 +156,7 @@ theorem server_contracts {R E : Type} (generator : rand_core.TryCryptoRng R E)
   let _ := AdapterPublicServerBuildSource.sourceLocalOperations localOps sealFallback writerFallback
   let _ := sourceSender sealFallback writerFallback
   have authenticationSource : AdapterRegistrationDecoderSource.AuthenticationContracts := {
-    publicLeaves := { mldsaPublic := mldsaPublic, edPublicBytes := edPublicBytes, hash := hash }
+    publicLeaves := { mldsaPublic := mldsaPublic, edPublicBytes := edPublicBytes }
     init := init }
   exact {
     authentication := AdapterRegistrationDecoderSource.authentication_contracts authenticationSource

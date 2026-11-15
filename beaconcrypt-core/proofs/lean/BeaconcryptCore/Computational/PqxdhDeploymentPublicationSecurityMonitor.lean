@@ -67,8 +67,13 @@ private theorem bundle_record (setup : Setup baseSpec KemSK) (codec : Codec Read
   | some entry =>
     simp only [bundle, StateT.run, found, support_map, Set.mem_image] at supported
     obtain ⟨returned, member, rfl⟩ := supported
+    have original : returned.1 ∈ support (trace setup codec address entry.identityIndex entry.owner
+        state.1.pool.1 state.2) := by
+      rw [← traceLogged_trace setup codec address entry.identityIndex entry.owner state.1.pool.1 state.2
+        (state.1.inits address), support_map]
+      exact ⟨returned, member, rfl⟩
     obtain ⟨tuples, bounded, recorded⟩ := PqxdhDeploymentPublicationAuditBounds.trace_record setup codec address
-      entry.identityIndex entry.owner state.1.pool.1 state.2 returned member
+      entry.identityIndex entry.owner state.1.pool.1 state.2 returned.1 original
     exact ⟨entry.identityIndex, tuples, bounded, recorded⟩
 
 /-- Every actual source query retains all previous chronological occurrences. -/

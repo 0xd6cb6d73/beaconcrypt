@@ -9,6 +9,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialSentinelPost
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhKemIndCca PqxdhCorrelatedExpand PqxdhPhase2SourceAux
 open PqxdhPhase1AcceptanceOracle PqxdhEd25519EufCma PqxdhJointIdentity PqxdhPrivateKemSource
 open PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhCorrelatedExtractFamily PqxdhCorrelatedExpandHybrid
@@ -34,17 +35,17 @@ theorem owner (writer : RawCtxMixedShared.Writer) (prior : Prior)
       (PqxdhGeneratedBeaconState.KemHandle K)) :
     PqxdhInitialPostInterpretation.work
       (labelledFull fixed (QueryImpl.ofLift unifSpec ProbComp) selected response)
-      (PqxdhInitialCurrentPost.owner attachedVerify primitives count fixed
+      (PqxdhInitialCurrentPost.owner (completedBinding := completedBinding) attachedVerify primitives count fixed
         (retainedKdf prior (RawCtxInitialSentinel.entry other extra) target)
         localImpl baseImpl kem secret challenge decode raw before) =
     PqxdhInitialPostInterpretation.work
       (labelledFull fixed (QueryImpl.ofLift unifSpec ProbComp) selected response)
-      (PqxdhInitialCurrentPost.owner attachedVerify primitives count fixed
+      (PqxdhInitialCurrentPost.owner (completedBinding := completedBinding) attachedVerify primitives count fixed
         (priorKdf prior) localImpl baseImpl kem secret challenge decode raw before) := by
   funext state
   simp only [PqxdhInitialPostInterpretation.work, PqxdhInitialCurrentPost.owner,
     QueryImpl.simulateQ_mapStateTBase_run]
-  exact congrFun (PqxdhInitialSentinelBeacon.owner_marker attachedVerify primitives count fixed
+  exact congrFun (PqxdhInitialSentinelBeacon.owner_marker (completedBinding := completedBinding) attachedVerify primitives count fixed
     localImpl baseImpl kem secret challenge selected response writer prior other target extra decode raw before) state
 
 /-- Every adaptive original post request has the same complete distribution after removing the initializer marker, including identity/CCA selectors and attempted Beacon completion. -/
@@ -54,15 +55,15 @@ theorem program (writer : RawCtxMixedShared.Writer) (prior : Prior)
     (client : OracleComp (PqxdhPhase2SourceScheduler.Spec baseSpec S B) Result)
     (state : PqxdhPhase2PostScheduler.State (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B) count) :
     simulateQ (labelledFull fixed (QueryImpl.ofLift unifSpec ProbComp) selected response)
-      ((simulateQ (PqxdhInitialPrivateBeacon.target attachedVerify primitives count fixed
+      ((simulateQ (PqxdhInitialPrivateBeacon.target (completedBinding := completedBinding) attachedVerify primitives count fixed
         (retainedKdf prior (RawCtxInitialSentinel.entry other extra) target) localImpl writer sender route decode
         baseImpl kem secret challenge) client).run state) =
     simulateQ (labelledFull fixed (QueryImpl.ofLift unifSpec ProbComp) selected response)
-      ((simulateQ (PqxdhInitialPrivateBeacon.target attachedVerify primitives count fixed
+      ((simulateQ (PqxdhInitialPrivateBeacon.target (completedBinding := completedBinding) attachedVerify primitives count fixed
         (priorKdf prior) localImpl writer sender route decode baseImpl kem secret challenge) client).run state) := by
   rw [← PqxdhInitialCurrentPost.source, ← PqxdhInitialCurrentPost.source,
     PqxdhInitialPostInterpretation.native_schedule, PqxdhInitialPostInterpretation.native_schedule]
-  simp only [owner attachedVerify primitives count fixed localImpl baseImpl kem secret challenge selected response writer]
+  simp only [owner (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl baseImpl kem secret challenge selected response writer]
   delta PqxdhInitialCurrentPost.records
   rw [PqxdhInitialSentinelRecords.records]
 

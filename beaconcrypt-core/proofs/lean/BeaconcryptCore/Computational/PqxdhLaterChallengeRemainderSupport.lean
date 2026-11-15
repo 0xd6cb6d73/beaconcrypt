@@ -3,7 +3,9 @@ import BeaconcryptCore.Computational.PqxdhLaterChallengeCapturePublication
 /-! A saved callback continuation retains its original all-reply source syntax. These support inclusions concern only logical observations of the returned value; they do not reconstruct an interpreted prefix, its cache or its probability. -/
 open OracleComp OracleSpec
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeRemainderSupport
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 
 /-- Every result of the literal saved continuation is an all-reply result of the same original program containing that dependent occurrence. -/
 theorem occurrence_support {ι Result : Type} {spec : OracleSpec.{0, 0} ι}
@@ -61,21 +63,21 @@ theorem source_support (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin
     (context : PqxdhInitialOriginContext.Context extra M P I D K Value Origin S B)
     (supported : RawCtxForwardScan.Cut.pending context reached ∈ support
       (RawCtxForwardScan.scan PqxdhInitialOriginForwardPost.selected selected selection impl
-        (PqxdhInitialOriginForwardPost.program mark sender route decode client front trace)
-        (PqxdhInitialOriginForwardPost.program_covered mark sender route decode client front trace) state))
+        (PqxdhInitialOriginForwardPost.program (completedBinding := completedBinding) mark sender route decode client front trace)
+        (PqxdhInitialOriginForwardPost.program_covered (completedBinding := completedBinding) mark sender route decode client front trace) state))
     (afterImpl : QueryImpl (Base extra RatchetChain I D K X Response Shared S B) (StateT Other ProbComp))
     (before : Other)
     (reply : (Base extra RatchetChain I D K X Response Shared S B).Range
-      (PqxdhInitialOriginContext.frame mark sender route decode context).1)
+      (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode context).1)
     (result : (Value × (NativeFront M P I D K S B × PqxdhInitialOriginPost.Trace Origin S B)) × Other)
     (completed : result ∈ support ((simulateQ afterImpl
-      ((PqxdhInitialOriginContext.frame mark sender route decode context).2 reply)).run before)) :
-    result.1 ∈ support ((simulateQ (PqxdhInitialOriginPost.compiler (X := X) (Response := Response) mark sender route decode) client).run (front, trace)) := by
+      ((PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode context).2 reply)).run before)) :
+    result.1 ∈ support ((simulateQ (PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode) client).run (front, trace)) := by
   rw [← PqxdhInitialOriginForwardPost.program_erase]
   exact pending_support PqxdhInitialOriginForwardPost.selected selected selection impl
-    (PqxdhInitialOriginContext.frame mark sender route decode) _
-    (PqxdhInitialOriginForwardPost.program_covered mark sender route decode client front trace)
-    (PqxdhInitialOriginForwardPost.program_sound mark sender route decode client front trace)
+    (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode) _
+    (PqxdhInitialOriginForwardPost.program_covered (completedBinding := completedBinding) mark sender route decode client front trace)
+    (PqxdhInitialOriginForwardPost.program_sound (completedBinding := completedBinding) mark sender route decode client front trace)
     state reached context supported afterImpl before reply result completed
 
 /-- The actual appended descriptor retains the complete outside program after its saved callback. Only all-reply output support is transported; the changed backend and its effects remain in the completed-run premise. -/
@@ -92,29 +94,29 @@ theorem appended_support (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Orig
     (context : PqxdhInitialOriginContext.Context extra M P I D K Value Origin S B)
     (supported : RawCtxForwardScan.Cut.pending context reached ∈ support
       (RawCtxForwardScan.scan PqxdhInitialOriginForwardPost.selected selected selection impl
-        (PqxdhInitialOriginForwardPost.program mark sender route decode client front trace)
-        (PqxdhInitialOriginForwardPost.program_covered mark sender route decode client front trace) state))
+        (PqxdhInitialOriginForwardPost.program (completedBinding := completedBinding) mark sender route decode client front trace)
+        (PqxdhInitialOriginForwardPost.program_covered (completedBinding := completedBinding) mark sender route decode client front trace) state))
     (afterImpl : QueryImpl (Base extra RatchetChain I D K X Response Shared S B) (StateT Other ProbComp))
     (before : Other)
     (reply : (Base extra RatchetChain I D K X Response Shared S B).Range
-      (PqxdhInitialOriginContext.frame mark sender route decode (PqxdhLaterChallengeCapture.append next context)).1)
+      (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode (PqxdhLaterChallengeCapture.append next context)).1)
     (result : (Result × (NativeFront M P I D K S B × PqxdhInitialOriginPost.Trace Origin S B)) × Other)
     (completed : result ∈ support ((simulateQ afterImpl
-      ((PqxdhInitialOriginContext.frame mark sender route decode (PqxdhLaterChallengeCapture.append next context)).2 reply)).run before)) :
-    result.1 ∈ support ((simulateQ (PqxdhInitialOriginPost.compiler (X := X) (Response := Response) mark sender route decode) (client >>= next)).run (front, trace)) := by
+      ((PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode (PqxdhLaterChallengeCapture.append next context)).2 reply)).run before)) :
+    result.1 ∈ support ((simulateQ (PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode) (client >>= next)).run (front, trace)) := by
   revert reply
-  rw [PqxdhLaterChallengeCapture.frame_append (X := X) (Response := Response) mark sender route decode next context]
+  rw [PqxdhLaterChallengeCapture.frame_append (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode next context]
   simp only [RawCtxForwardAnnotationComposition.appendFrame]
   intro reply completed
   simp only [simulateQ_bind, StateT.run_bind, mem_support_bind_iff] at completed
   obtain ⟨middle, callback, outside⟩ := completed
   simp only [simulateQ_bind, StateT.run_bind, mem_support_bind_iff]
-  refine ⟨middle.1, source_support mark sender route decode selected selection impl client front trace
+  refine ⟨middle.1, source_support (completedBinding := completedBinding) mark sender route decode selected selection impl client front trace
     state reached context supported afterImpl before reply middle callback, ?_⟩
   apply support_simulateQ_run'_subset afterImpl _ middle.2
   simpa only [PqxdhLaterChallengeCapture.resumeOutside, StateT.run'_eq, support_map, Set.mem_image] using
     (show ∃ value ∈ support ((simulateQ afterImpl
-      (PqxdhLaterChallengeCapture.resumeOutside mark sender route decode next middle.1)).run middle.2),
+      (PqxdhLaterChallengeCapture.resumeOutside (completedBinding := completedBinding) mark sender route decode next middle.1)).run middle.2),
       value.1 = result.1 from ⟨result, outside, rfl⟩)
 
 end Source

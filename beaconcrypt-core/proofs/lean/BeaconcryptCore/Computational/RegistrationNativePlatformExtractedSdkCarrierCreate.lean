@@ -119,7 +119,7 @@ variable [children : AdapterPublicWrapperRequestMonad.ChildOperations
   (AdapterPublicWrapperRustT.RustT (RegistrationNativePlatformExtractedSdkCreateReceipt.SourceM n KemSK source Platform))]
 variable (coins : QueryImpl unifSpec (StateT Platform ProbComp)) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
 variable (checks : PqxdhServerAuthExperiment.Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (generator : rand_core.TryCryptoRng R Error)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (generator : rand_core.TryCryptoRng R Error)
 variable (view : AdapterPublicWrapperState.MaterialView source KemSK) (kem : AdapterBeaconConstructorKem.Representation view R)
 variable (leaves : AdapterBeaconConstructorNative.Leaves (n:=n) (Auxiliary:=RegistrationServerRoleBackend.State)
   coins setup checks representation created generator view kem)
@@ -176,7 +176,9 @@ theorem put_objects (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.Pub
     (supported : (packet,next)∈support ((RegistrationNativePlatformExtractedSdkCreateCommon.runner coins setup checks representation created
       generator view kem leaves keyId serverId mlPin objects.objects.rng before).run previous)) :
     (put coins setup checks representation created generator view kem leaves containers credential keyId serverId mlPin before previous objects packet next supported).objects=
-      update objects.objects packet.1.1.1.outcome (.direct (packet.1.1.1.sourceAfter,next)) := rfl
+      update objects.objects packet.1.1.1.outcome (.direct (packet.1.1.1.sourceAfter,next)) := by
+  have _children := children
+  rfl
 
 noncomputable def putPacket (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicKey)
     (mlPin : Std.Array U8 1952#usize) (before : Native) (previous : Platform)
@@ -197,6 +199,7 @@ theorem putPacket_objects (keyId : U64) (serverId : beaconcrypt_crypto.crypto_si
       generator view kem leaves keyId serverId mlPin objects.objects.rng before).run previous)) :
     (putPacket coins setup checks representation created generator view kem leaves containers credential keyId serverId mlPin before previous objects packet supported).objects=
       update objects.objects packet.1.1.1.1.outcome (.direct (packet.1.1.1.1.sourceAfter,packet.2)) := by
+  have _children := children
   rcases packet with ⟨result,next⟩
   rfl
 

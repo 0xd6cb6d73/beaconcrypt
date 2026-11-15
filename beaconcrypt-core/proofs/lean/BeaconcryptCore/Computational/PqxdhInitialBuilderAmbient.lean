@@ -9,6 +9,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialBuilderAmbient
+variable (associatedData : Std.Array Std.U8 151#usize)
 open PqxdhInitialBeaconAmbient PqxdhInitialGenericBuilder
 variable {Kernel M P A N C : Type}
 
@@ -19,9 +20,9 @@ theorem after_lift
     (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Pqxdh.Bytes)
     (kernel : Kernel) (metadata : P)
     (state : PqxdhInitialGenericPublication.State Kernel M P (List Pqxdh.Bytes)) :
-    PqxdhInitialGenericPublication.afterInitialization (liftCalls (N := N) (C := C) calls)
+    PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) (liftCalls (N := N) (C := C) calls)
       (fun query => PqxdhInitialBeaconAmbient.lift (aux query)) candidate authenticated kernel metadata state =
-      PqxdhInitialBeaconAmbient.lift (PqxdhInitialGenericPublication.afterInitialization calls aux candidate authenticated kernel metadata state) := by
+      PqxdhInitialBeaconAmbient.lift (PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) calls aux candidate authenticated kernel metadata state) := by
   simp only [PqxdhInitialGenericPublication.afterInitialization, lift_bind, liftCalls]
   apply bind_congr
   rintro ⟨advanced, encrypted⟩
@@ -41,8 +42,8 @@ theorem candidate_lift
     (aux : QueryImpl PqxdhServerRegistrationPublication.AuxSpec (Base A))
     (initial : RustM Kernel) (pending : pqxdh.ServerRegistrationCandidate) (data : Option Pqxdh.Bytes)
     (metadata : P) (state : PqxdhInitialGenericPublication.State Kernel M P (List Pqxdh.Bytes)) :
-    candidate (liftCalls (N := N) (C := C) calls) (fun query => PqxdhInitialBeaconAmbient.lift (aux query)) initial pending data metadata state =
-      PqxdhInitialBeaconAmbient.lift (candidate calls aux initial pending data metadata state) := by
+    PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) (liftCalls (N := N) (C := C) calls) (fun query => PqxdhInitialBeaconAmbient.lift (aux query)) initial pending data metadata state =
+      PqxdhInitialBeaconAmbient.lift (PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) calls aux initial pending data metadata state) := by
   simp only [candidate, lift_bind]
   apply bind_congr
   intro valid
@@ -81,9 +82,9 @@ theorem ready_lift
     (aux : QueryImpl PqxdhServerRegistrationPublication.AuxSpec (Base A))
     (initial : RustM Kernel) (binding : pqxdh.ServerBinding) (ready : PqxdhPrivateAcceptedRoot.Ready)
     (metadata : P) (state : PqxdhInitialGenericPublication.State Kernel M P (List Pqxdh.Bytes)) :
-    readyBuild source (liftCalls (N := N) (C := C) calls) (fun query => PqxdhInitialBeaconAmbient.lift (aux query))
+    PqxdhInitialGenericBuilder.readyBuild (associatedData := associatedData) source (liftCalls (N := N) (C := C) calls) (fun query => PqxdhInitialBeaconAmbient.lift (aux query))
       initial binding ready metadata state =
-      PqxdhInitialBeaconAmbient.lift (readyBuild source calls aux initial binding ready metadata state) := by
+      PqxdhInitialBeaconAmbient.lift (PqxdhInitialGenericBuilder.readyBuild (associatedData := associatedData) source calls aux initial binding ready metadata state) := by
   unfold readyBuild usedBuild
   cases next : pqxdh.server_next_key_id state.control with
   | fail error => rfl
@@ -102,7 +103,7 @@ theorem ready_lift
           | ok result =>
               cases result with
               | Err error => rfl
-              | Ok candidate => exact candidate_lift calls aux initial candidate ready.application metadata state
+              | Ok candidate => exact candidate_lift (associatedData := associatedData) calls aux initial candidate ready.application metadata state
 
 end BeaconcryptCore.Computational.PqxdhInitialBuilderAmbient
 

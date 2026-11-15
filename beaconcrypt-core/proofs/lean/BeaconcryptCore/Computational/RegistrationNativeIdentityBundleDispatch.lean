@@ -47,7 +47,7 @@ noncomputable def original (setup : Setup base KemSK) (wire : RegistrationNative
 /-- Source owner dispatch preserves the original counted scalar choice and complete publication continuation. -/
 theorem start_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List PqxdhJointIdentity.IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List PqxdhJointIdentity.IdentitySeed)
     (wire : RegistrationNativeWire.Wire) (index : Nat) (owner : Owner source) (seed : PqxdhJointIdentity.IdentitySeed)
     (found : seeds[owner.identity.handle]? = some seed)
     (publicKey : owner.identity.publicIdentity = setup.joint.publicKeys seed) :
@@ -69,7 +69,7 @@ theorem start_source (setup : Setup base KemSK) (checks : Checks)
 
 theorem start_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat) (owner : Owner source) :
     Keeps (n := n) (Auxiliary := Auxiliary) setup checks representation created (start setup wire index owner) := by
   cases phase : owner.phase with

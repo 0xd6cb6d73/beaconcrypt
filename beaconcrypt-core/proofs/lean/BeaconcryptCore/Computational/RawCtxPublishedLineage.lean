@@ -46,7 +46,7 @@ theorem step_next (prior : Prior) (input : PqxdhSecretInputKdf.RootOutput) :
         (prior (RawCtxFirstParentRisk.inputAddress input))) := by
   rw [step, RawCtxFunctionalFamily.execute, RawCtxFreshChainCut.decoded_parts]
   have info : PqxdhRefinement.absBytes ratchet.SYM_RATCHET_INFO = Pqxdh.INFO_R := by
-    simpa only [pqxdh.SYM_RATCHET_INFO] using PqxdhRefinement.absBytes_SYM_RATCHET_INFO
+    simpa only [ratchet.SYM_RATCHET_INFO] using PqxdhRefinement.absBytes_SYM_RATCHET_INFO
   simp only [RawCtxKdfRequestTable.address, RawCtxChainSend.nativeRequest, info]
   change RawCtxFreshChainCut.concreteChain (PqxdhOrderedChainHybrids.nextChain
     (prior ⟨Pqxdh.INFO_R, (RawCtxSelectedQueryTrace.rootVector (RawCtxFreshChainCut.concreteChain input)).toList⟩)) = _

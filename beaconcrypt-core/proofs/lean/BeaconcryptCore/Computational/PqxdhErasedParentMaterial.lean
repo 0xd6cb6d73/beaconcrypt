@@ -7,6 +7,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhErasedParentMaterial
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf
 open PqxdhCorrelatedExpand PqxdhInitialBeaconAmbient PqxdhInitialSourceInitialSecrecy
 open RawCtxSelectedParentEntry PqxdhErasedParentSample
@@ -23,7 +25,7 @@ abbrev MaterialContext := ((LocalPacket × Entry) × RootOutput) × NonceOutput 
 noncomputable def prepare (prior : ProbComp (Context extra M P I D K X Response A N S B)) :
     ProbComp (MaterialContext (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K)
       (X := X) (Response := Response) (A := A) (N := N) (S := S) (B := B)) := do
-  let packet ← PqxdhErasedParentSample.sample source writer sender route decode depth prior
+  let packet ← PqxdhErasedParentSample.sample (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth prior
   let parent ← $ᵗ FullOutput
   let nonce ← $ᵗ NonceOutput
   let chain ← $ᵗ RootOutput
@@ -31,9 +33,9 @@ noncomputable def prepare (prior : ProbComp (Context extra M P I D K X Response 
 
 /-- Erasing unused earlier cache metadata commutes through the full material sampler. -/
 theorem prepare_normalized (prior : ProbComp (Context extra M P I D K X Response A N S B)) :
-    prepare source writer sender route decode depth prior = (do
+    prepare (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth prior = (do
       let packet ← PqxdhErasedParentSample.normalize <$>
-        PqxdhErasedParentSample.sample source writer sender route decode depth prior
+        PqxdhErasedParentSample.sample (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth prior
       let parent ← $ᵗ FullOutput
       let nonce ← $ᵗ NonceOutput
       let chain ← $ᵗ RootOutput
@@ -43,29 +45,29 @@ theorem prepare_normalized (prior : ProbComp (Context extra M P I D K X Response
 noncomputable def observe
     (context : MaterialContext (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K)
       (X := X) (Response := Response) (A := A) (N := N) (S := S) (B := B)) (key : RootOutput) : ProbComp Bool :=
-  PqxdhErasedParentSample.native source writer sender route decode 0 context.1.1 context.1.2
+  PqxdhErasedParentSample.native (completedBinding := completedBinding) source writer sender route decode 0 context.1.1 context.1.2
     (materialChainEquiv.symm ((key, context.2.1), context.2.2))
 
 noncomputable def ideal (prior : ProbComp (Context extra M P I D K X Response A N S B)) : ProbComp Bool := do
-  let context ← prepare source writer sender route decode depth prior
+  let context ← prepare (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth prior
   let key ← $ᵗ RootOutput
-  observe source writer sender route decode context key
+  observe (completedBinding := completedBinding) source writer sender route decode context key
 
 /-- The final source observer and all parent/material draws keep exactly the same probability computation after runtime erasure. -/
 theorem ideal_source (prior : ProbComp (Context extra M P I D K X Response A N S B)) :
     (do
       let pair ← RawCtxSelectedParentCandidates.sample
-        (PqxdhInitialSampledParent.sample source writer sender route decode depth prior)
-        (PqxdhInitialSampledParent.address source writer sender route decode depth)
+        (PqxdhInitialSampledParent.sample (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth prior)
+        (PqxdhInitialSampledParent.address (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth)
       let nonce ← $ᵗ NonceOutput
       let chain ← $ᵗ RootOutput
       let key ← $ᵗ RootOutput
-      PqxdhInitialSampledParent.native source writer sender route decode depth 0 pair.1 pair.2
+      PqxdhInitialSampledParent.native (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth 0 pair.1 pair.2
         (materialChainEquiv.symm ((key, nonce), chain))) =
-      ideal source writer sender route decode depth prior := by
+      ideal (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth prior := by
   unfold ideal prepare RawCtxSelectedParentCandidates.sample
   simp only [bind_assoc, pure_bind]
-  rw [← sample_erase source writer sender route decode depth]
+  rw [← sample_erase (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth]
   simp only [bind_map_left]
   apply bind_congr
   intro packet
@@ -78,9 +80,9 @@ theorem ideal_source (prior : ProbComp (Context extra M P I D K X Response A N S
   apply bind_congr
   intro key
   simp only [observe, address_erase, native_erase]
-  exact (native_normalize source writer sender route decode 0
-    (erase source writer sender route decode depth packet,
-      fromOutput (PqxdhInitialSampledParent.address source writer sender route decode depth packet) parent)
+  exact (native_normalize (completedBinding := completedBinding) source writer sender route decode 0
+    (erase (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth packet,
+      fromOutput (PqxdhInitialSampledParent.address (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth packet) parent)
     (nextChain parent) (materialChainEquiv.symm ((key, nonce), chain))).symm
 
 end BeaconcryptCore.Computational.PqxdhErasedParentMaterial

@@ -5,7 +5,10 @@ open OracleComp OracleSpec CoreModels Aeneas OracleComp.ProgramLogic.Relational
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeCollectorCoupling
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhNativeSharedPrefix RawCtxForwardScan CtxRomAuth
 
 /-- Split only the native product representation; preserve every local field and its actual ROM cache. -/
@@ -71,7 +74,7 @@ local notation "NativeCut" => PqxdhLaterChallengeBuilderCoupling.Outcome (extra 
 
 /-- The collector on the exact original local/cache representation of this native cut. Its decisions and final cache remain in the output. -/
 noncomputable def step (start : Input) (output : HmacBlock) (depth : Nat) (cut : NativeCut) :=
-  (simulateQ hashImpl (PqxdhLaterChallengePreparedCapture.collect original callbacks baseImpl kem attachedVerify primitives secret challenge
+  (simulateQ hashImpl (PqxdhLaterChallengePreparedCapture.collect (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge
     start output depth (unrestore cut).1)).run (unrestore cut).2
 
 /-- The literal completed/cached/missing collector does not read the input's outside Post field; that continuation is already stored inside its actual cut descriptor. -/
@@ -80,20 +83,20 @@ theorem collect_post (start : Input) (output : HmacBlock) (depth : Nat)
     (adversary : PqxdhInitialBuilderContext.BuildResult → OracleComp
       (PqxdhFirstRecordConfidentiality.AdvSpec (SelectorSpec baseSpec) S (B + 1)) Bool)
     (cut : CapturedCut (setup := setup) (M := M) (P := P) (I := I) (K := K) (A := A) (S := S) (B := B)) :
-    PqxdhLaterChallengePreparedCapture.collect original callbacks baseImpl kem attachedVerify primitives secret challenge
+    PqxdhLaterChallengePreparedCapture.collect (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge
       (withPost (setup := setup) start owner number bit adversary) output depth cut =
-    PqxdhLaterChallengePreparedCapture.collect original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth cut := rfl
+    PqxdhLaterChallengePreparedCapture.collect (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth cut := rfl
 
 /-- The complete original prepared run factors through the same fully reassembled native prefix and the unchanged collector. This retains all final decisions and actual cache state. -/
 theorem run_split (start : Input) (output : HmacBlock) (depth : Nat)
     (owner : RawCtxProtocolReveals.Owner S (B + 1)) (number : U64) (bit : Bool)
     (adversary : PqxdhInitialBuilderContext.BuildResult → OracleComp
       (PqxdhFirstRecordConfidentiality.AdvSpec (SelectorSpec baseSpec) S (B + 1)) Bool) (cache : CtxRO.QueryCache) :
-    (simulateQ hashImpl (PqxdhLaterChallengePreparedCapture.run original callbacks baseImpl kem attachedVerify primitives secret challenge
+    (simulateQ hashImpl (PqxdhLaterChallengePreparedCapture.run (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge
       start output depth owner number bit adversary)).run cache =
       (RawCtxSharedPrefixScan.restore attach <$> (simulateQ hashImpl
-        (capturedPrefix original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number bit adversary)).run cache) >>=
-        step original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth := by
+        (capturedPrefix (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number bit adversary)).run cache) >>=
+        step (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth := by
   simp only [PqxdhLaterChallengePreparedCapture.run, simulateQ_bind, StateT.run_bind, bind_map_left,
     step, unrestore_restore, collect_post]
 
@@ -101,9 +104,9 @@ theorem run_split (start : Input) (output : HmacBlock) (depth : Nat)
 theorem step_pending (start : Input) (output : HmacBlock) (depth : Nat) (cut : NativeCut)
     (pending : Pending) (details : Option Details) (after : CtxRO.QueryCache)
     (supported : (Sum.inr (pending, details), after) ∈ support
-      (step original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth cut)) :
+      (step (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth cut)) :
     cut = .pending (pending.1, details) (attach pending.2 after) := by
-  have same := PqxdhLaterChallengeSampleChronology.collect_evaluated original callbacks baseImpl kem attachedVerify primitives secret challenge
+  have same := PqxdhLaterChallengeSampleChronology.collect_evaluated (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge
     start output depth (unrestore cut).1 pending details (unrestore cut).2 after supported
   calc
     cut = RawCtxSharedPrefixScan.restore attach ((unrestore cut).1, (unrestore cut).2) := (restore_unrestore cut).symm
@@ -114,7 +117,7 @@ theorem step_missing (start : Input) (output : HmacBlock) (depth : Nat)
     (context : PqxdhInitialOriginContext.Context (SelectorSpec baseSpec) M P (IdentityHandle I) (DhPair setup) (KemHandle K) Bool Bool S (B + 1))
     (details : Option Details) (state : Local A (BareState 1) RootOracle.QueryCache) (cache : CtxRO.QueryCache)
     (missing : state.store.1 (PqxdhInitialBuilderContext.address context.original) = none) :
-    step original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth
+    step (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth
       (.pending (context, details) (attach state cache)) = pure (Sum.inr ((context, state), details), cache) := by
   simp only [step, unrestore, detach, attach, PqxdhLaterChallengePreparedCapture.collect,
     PqxdhPreparedSharedParent.collect, PqxdhSharedParentCollect.collect, PqxdhLaterChallengeCapture.cutMap]
@@ -127,7 +130,7 @@ theorem step_cached (start : Input) (output : HmacBlock) (depth : Nat)
     (details : Option Details) (state : Local A (BareState 1) RootOracle.QueryCache) (cache : CtxRO.QueryCache)
     (cached : state.store.1 (PqxdhInitialBuilderContext.address context.original) ≠ none)
     (result : (Bool ⊕ (Pending × Option Details)) × CtxRO.QueryCache)
-    (supported : result ∈ support (step original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth
+    (supported : result ∈ support (step (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth
       (.pending (context, details) (attach state cache)))) :
     ∃ decision, result.1 = Sum.inl decision := by
   have logical := PqxdhFirstRecordStopTagged.support_state_simulation hashImpl _ cache result supported
@@ -170,11 +173,11 @@ noncomputable def Related (owner : RawCtxProtocolReveals.Owner S (B + 1)) (numbe
 /-- The literal collector keeps every full completed/post-admission outcome in its explicit residual branch. -/
 theorem step_late (start : Input) (output : HmacBlock) (depth : Nat) (cut : NativeCut) (late : Late cut)
     (result : (Bool ⊕ (Pending × Option Details)) × CtxRO.QueryCache)
-    (supported : result ∈ support (step original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth cut)) :
+    (supported : result ∈ support (step (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth cut)) :
     Residual result := by
   rcases result with ⟨decision | ⟨pending, details⟩, after⟩
   · trivial
-  · have same := step_pending original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth cut pending details after supported
+  · have same := step_pending (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth cut pending details after supported
     rw [same] at late
     exact late
 
@@ -189,22 +192,22 @@ theorem step_same_address (start : Input) (output : HmacBlock) (depth : Nat)
     (related : PqxdhLaterChallengeBuilderCoupling.Related owner number first second adversary
       (.pending (leftContext, leftDetails) (attach state cache)) (.pending (rightContext, rightDetails) (attach state cache))) :
     RelTriple
-      (step original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth (.pending (leftContext, leftDetails) (attach state cache)))
-      (step original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth (.pending (rightContext, rightDetails) (attach state cache)))
+      (step (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth (.pending (leftContext, leftDetails) (attach state cache)))
+      (step (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth (.pending (rightContext, rightDetails) (attach state cache)))
       (Related owner number first second adversary) := by
   by_cases missing : state.store.1 (PqxdhInitialBuilderContext.address leftContext.original) = none
   · have rightMissing : state.store.1 (PqxdhInitialBuilderContext.address rightContext.original) = none := by
       rw [← same]
       exact missing
-    rw [step_missing original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth leftContext leftDetails state cache missing,
-      step_missing original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth rightContext rightDetails state cache rightMissing]
+    rw [step_missing (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth leftContext leftDetails state cache missing,
+      step_missing (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth rightContext rightDetails state cache rightMissing]
     exact relTriple_pure_pure (Or.inl ⟨_, _, rfl, rfl, related⟩)
   · have rightCached : state.store.1 (PqxdhInitialBuilderContext.address rightContext.original) ≠ none := by
       rw [← same]
       exact missing
     refine relTriple_post_mono (PqxdhFirstRecordStopTagged.product_coupling
-      (step_cached original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth leftContext leftDetails state cache missing)
-      (step_cached original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth rightContext rightDetails state cache rightCached)) ?_
+      (step_cached (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth leftContext leftDetails state cache missing)
+      (step_cached (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth rightContext rightDetails state cache rightCached)) ?_
     rintro left right ⟨⟨leftDecision, leftEq⟩, ⟨rightDecision, rightEq⟩⟩
     exact Or.inr ⟨by simp only [Residual, leftEq], by simp only [Residual, rightEq]⟩
 
@@ -215,16 +218,16 @@ theorem step_coupled (start : Input) (output : HmacBlock) (depth : Nat)
       (PqxdhFirstRecordConfidentiality.AdvSpec (SelectorSpec baseSpec) S (B + 1)) Bool)
     (left right : NativeCut)
     (related : PqxdhLaterChallengeBuilderCoupling.Related owner number first second adversary left right) :
-    RelTriple (step original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth left)
-      (step original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth right)
+    RelTriple (step (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth left)
+      (step (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth right)
       (Related owner number first second adversary) := by
   rcases related with ⟨callback, state, rfl, rfl⟩ | ⟨leftCut, rightCut, rfl, rfl, shared⟩
-  · apply step_same_address original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth
+  · apply step_same_address (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth
       owner number first second adversary _ _ _ _ (detach state).1 (detach state).2
     · simp only [PqxdhLaterChallengeSavedMonitor.append_address]
     · exact Or.inl ⟨callback, state, rfl, rfl⟩
   · rcases shared with ⟨details, state, before, rfl, rfl⟩ | ⟨leftLate, rightLate⟩
-    · apply step_same_address original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth
+    · apply step_same_address (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth
         owner number first second adversary _ _ _ _ (detach state).1 (detach state).2
       · simp only [PqxdhLaterChallengeScanCoupling.tagged, PqxdhLaterChallengeSavedMonitor.append_address]
       · exact Or.inr ⟨_, _, rfl, rfl, Or.inl ⟨details, state, before, rfl, rfl⟩⟩
@@ -233,8 +236,8 @@ theorem step_coupled (start : Input) (output : HmacBlock) (depth : Nat)
       have liftedRight : Late (PqxdhLaterChallengeBuilderCoupling.liftCut rightCut) := by
         cases rightCut <;> exact rightLate
       exact relTriple_post_mono (PqxdhFirstRecordStopTagged.product_coupling
-        (step_late original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth _ liftedLeft)
-        (step_late original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth _ liftedRight))
+        (step_late (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth _ liftedLeft)
+        (step_late (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth _ liftedRight))
         (fun _ _ both => Or.inr both)
 
 /-- The two complete original prepared runs have a coupling through their literal collector, including every initial-builder result, cached decision, missing cut, private state and reached ROM cache. -/
@@ -243,16 +246,16 @@ theorem prepared (start : Input) (output : HmacBlock) (depth : Nat)
     (adversary : PqxdhInitialBuilderContext.BuildResult → OracleComp
       (PqxdhFirstRecordConfidentiality.AdvSpec (SelectorSpec baseSpec) S (B + 1)) Bool) (cache : CtxRO.QueryCache) :
     RelTriple
-      ((simulateQ hashImpl (PqxdhLaterChallengePreparedCapture.run original callbacks baseImpl kem attachedVerify primitives secret challenge
+      ((simulateQ hashImpl (PqxdhLaterChallengePreparedCapture.run (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge
         start output depth owner number first adversary)).run cache)
-      ((simulateQ hashImpl (PqxdhLaterChallengePreparedCapture.run original callbacks baseImpl kem attachedVerify primitives secret challenge
+      ((simulateQ hashImpl (PqxdhLaterChallengePreparedCapture.run (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge
         start output depth owner number second adversary)).run cache)
       (Related owner number first second adversary) := by
   rw [run_split, run_split]
   exact relTriple_bind
-    (PqxdhLaterChallengePrefixCoupling.prepared original callbacks baseImpl kem attachedVerify primitives secret challenge
+    (PqxdhLaterChallengePrefixCoupling.prepared (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge
       start output depth owner number first second adversary cache)
-    (step_coupled original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number first second adversary)
+    (step_coupled (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number first second adversary)
 
 end Prepared
 end BeaconcryptCore.Computational.PqxdhLaterChallengeCollectorCoupling

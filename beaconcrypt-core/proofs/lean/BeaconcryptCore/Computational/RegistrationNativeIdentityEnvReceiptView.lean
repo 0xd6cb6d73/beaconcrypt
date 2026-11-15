@@ -100,7 +100,7 @@ theorem outgoing (setup : PqxdhServerAuthExperiment.Setup base KemSK) (index : N
   | inl query => cases query with
     | hash request => exact effect (.inr (.hash (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request)))
     | sign request payload digest =>
-      exact bind_stable _ _ (sample _) fun reply => bind_stable _ _ (receipt _) fun _ => pure_stable reply
+      exact pure_stable (core.option.Option.None : RegistrationSigningShared.SignReply)
   | inr request =>
     simp only [RegistrationNativeIdentityFrontend.outgoing]
     split

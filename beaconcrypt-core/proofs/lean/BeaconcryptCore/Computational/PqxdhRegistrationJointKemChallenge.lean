@@ -36,7 +36,7 @@ noncomputable def pre (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
       (PqxdhDynamicKemRouter.selectedReservation selected target others))
       (PqxdhRegistrationJointKemCut.scan setup
         (PqxdhRegistrationJointKemEncapsulation.commands setup codec checks
-          created.server.server.metadata.identityIndex created.publicIdentity client []
+          created.server.server.metadata.identityIndex created.publicIdentity client ([], fun _ => none)
           (PqxdhRegistrationJointInitializedAccept.initial created)) occurrence)).run).run
             (born.2.1.1, PqxdhDynamicKemRouter.empty))
     pure (.ready created others result.1 result.2 born.2.2)
@@ -59,7 +59,7 @@ noncomputable def sourcePre (setup : Setup baseSpec KemSK) (codec : Codec Reader
       (List.ofFn (selected.insertNth chosen others)))
       (PqxdhRegistrationJointKemCut.scan setup
         (PqxdhRegistrationJointKemEncapsulation.commands setup codec checks
-          created.server.server.metadata.identityIndex created.publicIdentity client []
+          created.server.server.metadata.identityIndex created.publicIdentity client ([], fun _ => none)
           (PqxdhRegistrationJointInitializedAccept.initial created)) occurrence)).run).run
             (born.2.1.1, PqxdhDynamicKemRouter.empty))
     pure (.ready created others result.1 result.2 born.2.2)
@@ -96,7 +96,7 @@ theorem pre_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
         PqxdhLiveKemSelection.selected_index [] selected chosen others)
       (PqxdhRegistrationJointKemCut.scan setup
         (PqxdhRegistrationJointKemEncapsulation.commands setup codec checks
-          created.server.server.metadata.identityIndex created.publicIdentity client []
+          created.server.server.metadata.identityIndex created.publicIdentity client ([], fun _ => none)
           (PqxdhRegistrationJointInitializedAccept.initial created)) occurrence)
       (after.1.1, PqxdhDynamicKemRouter.empty)
     rw [PqxdhDynamicKemRouter.selected_reservation] at same

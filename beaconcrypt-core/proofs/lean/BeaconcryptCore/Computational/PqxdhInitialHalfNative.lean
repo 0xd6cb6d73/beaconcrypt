@@ -10,6 +10,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialHalfNative
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : session.CompletedRegistrationBinding)
 open PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhJointKdfGame
 open PqxdhInitialHalfProgram PqxdhInitialBeaconAmbient
 open PqxdhInitialParentStoppedHop (Trace SourceFinal Final)
@@ -57,7 +59,7 @@ theorem checker_source (reader : RawCtxSelectedLiveTrace.Reader) (depth : Nat) :
 theorem native_projection (disclosed : List RatchetChain) (state : PqxdhInitialParentObserver.State A N C)
     (candidates : List RootOutput) :
     (fun result => (result.1, result.2.1.1)) <$>
-      PqxdhInitialHalfCheckedFreshness.nativeRun source writer prior entry pre application initializer selector aux mark sender route decode execution depth target output
+      PqxdhInitialHalfCheckedFreshness.nativeRun (associatedData := associatedData) (completedBinding := completedBinding) source writer prior entry pre application initializer selector aux mark sender route decode execution depth target output
         disclosed state candidates =
     (fun result => ((result.1, RawCtxFiniteLineageCheck.trace RawCtxFiniteLineageCheck.labelKey
       (RawCtxFiniteLineageCheck.routedStep prior entry target output) depth .hidden), result.2)) <$>
@@ -65,7 +67,7 @@ theorem native_projection (disclosed : List RatchetChain) (state : PqxdhInitialP
         pre application initializer
         selector aux
         (RawCtxSelectedLiveTrace.nativeReader (RawCtxFreshChainCut.concreteChain target)) target)
-        (baseProgram source mark sender route decode execution)).run state := by
+        (baseProgram (associatedData := associatedData) (completedBinding := completedBinding) source mark sender route decode execution)).run state := by
   rw [PqxdhInitialHalfCheckedFreshness.nativeRun, PqxdhInitialHalfPrivateObserver.observed, trace_project]
   simp only [program, simulateQ_bind, simulateQ_map, checker_source, map_pure, bind_pure_comp,
     StateT.run_map, PqxdhInitialHalfProgram.initial]
@@ -74,7 +76,7 @@ theorem native_projection (disclosed : List RatchetChain) (state : PqxdhInitialP
 theorem observation (disclosed : List RatchetChain) (state : PqxdhInitialParentObserver.State A N C)
     (candidates : List RootOutput) (observe : SourceFinal M P I D K Result Origin S B → List RawCtxSelectedChain.Slot → Bool) :
     (fun result => observe result.1.1 result.1.2) <$>
-      PqxdhInitialHalfCheckedFreshness.nativeRun source writer prior entry pre application initializer selector aux mark sender route decode execution depth target output
+      PqxdhInitialHalfCheckedFreshness.nativeRun (associatedData := associatedData) (completedBinding := completedBinding) source writer prior entry pre application initializer selector aux mark sender route decode execution depth target output
         disclosed state candidates =
     (fun result => observe result.1 (RawCtxFiniteLineageCheck.trace RawCtxFiniteLineageCheck.labelKey
       (RawCtxFiniteLineageCheck.routedStep prior entry target output) depth .hidden)) <$>
@@ -82,11 +84,11 @@ theorem observation (disclosed : List RatchetChain) (state : PqxdhInitialParentO
         pre application initializer
         selector aux
         (RawCtxSelectedLiveTrace.nativeReader (RawCtxFreshChainCut.concreteChain target)) target)
-        (baseProgram source mark sender route decode execution)).run state := by
+        (baseProgram (associatedData := associatedData) (completedBinding := completedBinding) source mark sender route decode execution)).run state := by
   have actual := congrArg
     (fun work : ProbComp (Final M P I D K Result Origin S B × PqxdhInitialParentObserver.State A N C) =>
       (fun result => observe result.1.1 result.1.2) <$> work)
-    (native_projection source writer prior entry pre application initializer selector aux mark sender route decode execution depth target output disclosed state candidates)
+    (native_projection (associatedData := associatedData) (completedBinding := completedBinding) source writer prior entry pre application initializer selector aux mark sender route decode execution depth target output disclosed state candidates)
   simpa only [Functor.map_map] using actual
 
 end BeaconcryptCore.Computational.PqxdhInitialHalfNative

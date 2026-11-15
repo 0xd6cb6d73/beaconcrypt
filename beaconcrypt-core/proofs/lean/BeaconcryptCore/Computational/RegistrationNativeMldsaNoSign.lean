@@ -112,40 +112,24 @@ private theorem record_holds (setup : Setup base KemSK) (wire : RegistrationNati
     (fun env => { env with recordRequests := env.recordRequests ++ [RegistrationWorldAgreement.recordCall query] }) (fun _ => rfl))
   intro ignored
   cases query with
-  | hash request => exact bind_holds _ _ (effect_holds _) (fun _ => pure_holds _)
+  | hash request | adHash request => exact bind_holds _ _ (effect_holds _) (fun _ => pure_holds _)
   | _ => exact sample_holds _
 
 private theorem abort_holds (owner : Owner source) :
     Holds (abort (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) owner) :=
   bind_holds _ _ (effect_holds _) (fun _ => pure_holds _)
 
-/-- Actual ML generation and all constructor failures leave the earlier signing-attempt list unchanged. -/
+/-- Pure full-pin selection, actual Ed/prekey draws and all constructor failures leave earlier Server signing attempts unchanged. -/
 theorem create (setup : Setup base KemSK) (edPin : Std.Array Std.U8 32#usize)
     (mlPin : Std.Array Std.U8 1952#usize) (keyId : Std.U64) :
     Holds (RegistrationNativeBeaconFrontend.create (n := n) (Auxiliary := Auxiliary) setup source edPin mlPin keyId) := by
   have prepareLaw : Holds (prepare (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) source edPin mlPin keyId) := by
     unfold prepare
-    apply bind_holds _ _ (sample_holds _)
-    intro generated
-    cases generated with
-    | none => exact pure_holds _
-    | some credential =>
-        dsimp only
-        cases registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
-        | fail error | div => exact pure_holds _
-        | ok pending =>
-            dsimp only
-            cases pending.request with
-            | fail error | div => exact pure_holds _
-            | ok request =>
-                apply bind_holds _ _ (effect_holds _)
-                intro digest
-                cases pending.resume (.Some (RegistrationAuthenticationShared.digestArray digest)) with
-                | fail error | div => exact pure_holds _
-                | ok option => cases option with
-                  | none => exact pure_holds _
-                  | some pin => exact bind_holds _ _ (sample_holds _) (fun _ =>
-                      bind_holds _ _ (sample_holds _) (fun _ => pure_holds _))
+    cases registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
+    | fail error | div => exact pure_holds _
+    | ok pin =>
+        exact bind_holds _ _ (sample_holds _) (fun _ =>
+          bind_holds _ _ (sample_holds _) (fun _ => pure_holds _))
   unfold RegistrationNativeBeaconFrontend.create
   apply bind_holds _ _ prepareLaw
   intro prepared
@@ -215,7 +199,7 @@ theorem finish (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire)
 /-- The actual local interpretation of a non-signing controller retains valid chronological ML receipts. -/
 theorem local_cached (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : M n KemSK source RegistrationServerRoleBackend.State Value) (noSign : Holds work)
     (before : RegistrationNativeMldsaShared.Local n KemSK source)
     (cached : RegistrationSigningShared.Cached (RegistrationNativeMldsaShared.project before))
@@ -239,7 +223,7 @@ theorem local_cached (setup : Setup base KemSK) (checks : Checks)
 
 private def Keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : M n KemSK source RegistrationServerRoleBackend.State Value) : Prop :=
   ∀ (before : RegistrationNativeMldsaShared.Local n KemSK source),
     RegistrationSigningShared.Cached (RegistrationNativeMldsaShared.project before) →
@@ -248,7 +232,7 @@ private def Keeps (setup : Setup base KemSK) (checks : Checks)
 
 private theorem noSign_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : M n KemSK source RegistrationServerRoleBackend.State Value) (noSign : Holds work) :
     Keeps setup checks representation created work :=
   local_cached setup checks representation created work noSign
@@ -259,7 +243,7 @@ private theorem state_bind_apply {S X Y : Type} {m : Type → Type} [Monad m]
 
 private theorem lower_bind (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : M n KemSK source RegistrationServerRoleBackend.State Value)
     (next : Value → M n KemSK source RegistrationServerRoleBackend.State Next) :
     RegistrationNativeMldsaShared.lower setup checks representation created (work >>= next) =
@@ -271,7 +255,7 @@ private theorem lower_bind (setup : Setup base KemSK) (checks : Checks)
 
 private theorem bind_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : M n KemSK source RegistrationServerRoleBackend.State Value)
     (next : Value → M n KemSK source RegistrationServerRoleBackend.State Next)
     (first : Keeps setup checks representation created work)
@@ -284,18 +268,18 @@ private theorem bind_keeps (setup : Setup base KemSK) (checks : Checks)
 
 private theorem begin_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (owner : Owner source)
-    (encode : registration.SignedInitView → core.option.Option Value)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (owner : Owner source)
+    (encode : registration.InitView → core.option.Option Value)
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array Std.U8 1952#usize) :
+    (pin : session.ServerAuthenticationPin) :
     Keeps (n := n) setup checks representation created
       (simulateQ (outgoing setup source index owner)
-        (RegistrationBeaconInitExecutor.begin encode control inputs coins pin mldsa)) :=
-  RegistrationNativeMldsaShared.begin_cached setup checks representation created index owner encode control inputs coins pin mldsa
+        (RegistrationBeaconInitExecutor.begin encode control inputs coins pin)) :=
+  RegistrationNativeMldsaShared.begin_cached setup checks representation created index owner encode control inputs coins pin
 
 private theorem bundle_keeps (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) :
     Keeps (n := n) setup checks representation created (bundle setup source wire index) := by
   unfold bundle
   apply bind_keeps _ _ _ _ _ _ (noSign_keeps _ _ _ _ _ get_holds)
@@ -311,7 +295,7 @@ private theorem bundle_keeps (setup : Setup base KemSK) (checks : Checks) (wire 
               | exact noSign_keeps _ _ _ _ _ (sample_holds _)
               | exact noSign_keeps _ _ _ _ _ (pure_holds _)
           · intro oneTime
-            apply bind_keeps _ _ _ _ _ _ (begin_keeps setup checks representation created index owner _ _ _ _ _ _)
+            apply bind_keeps _ _ _ _ _ _ (begin_keeps setup checks representation created index owner _ _ _ _ _)
             intro published
             cases published with
             | fail error | div => exact noSign_keeps _ _ _ _ _ (pure_holds _)
@@ -326,7 +310,7 @@ private theorem bundle_keeps (setup : Setup base KemSK) (checks : Checks) (wire 
 
 private theorem source_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : M n KemSK source RegistrationServerRoleBackend.State Value)
     (keeps : Keeps setup checks representation created work)
     (before : RegistrationNativeExperiment.State n KemSK source)
@@ -349,7 +333,7 @@ private theorem source_keeps (setup : Setup base KemSK) (checks : Checks)
 /-- The actual complete native constructor retains all earlier valid ML signing receipts. -/
 theorem source_create_cached (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array Std.U8 32#usize) (mlPin : Std.Array Std.U8 1952#usize) (keyId : Std.U64)
     (before : RegistrationNativeExperiment.State n KemSK source)
     (cached : RegistrationSigningShared.Cached (RegistrationNativeMldsaShared.nativeProject before))
@@ -360,10 +344,10 @@ theorem source_create_cached (setup : Setup base KemSK) (checks : Checks)
   source_keeps setup checks representation created _ (noSign_keeps _ _ _ _ _ (create setup edPin mlPin keyId))
     before cached result supported
 
-/-- Every failed or successful actual outgoing bundle retains valid chronological ML hash receipts, including its new signing attempt. -/
+/-- Every failed or successful actual outgoing Beacon bundle retains the same valid prior chronological Server ML hash receipts through its actual Ed signing and Init writer branches. -/
 theorem source_bundle_cached (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat)
     (before : RegistrationNativeExperiment.State n KemSK source)
     (cached : RegistrationSigningShared.Cached (RegistrationNativeMldsaShared.nativeProject before))
     (result : RustM (Option Pqxdh.Bytes) × RegistrationNativeExperiment.State n KemSK source)
@@ -376,7 +360,7 @@ theorem source_bundle_cached (setup : Setup base KemSK) (checks : Checks) (wire 
 /-- Every terminal incoming native finish retains valid prior ML receipts through all response/record gates and installation failures. -/
 theorem source_finish_cached (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (packet : Option registration.ResponsePacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (packet : Option registration.ResponsePacket)
     (before : RegistrationNativeExperiment.State n KemSK source)
     (cached : RegistrationSigningShared.Cached (RegistrationNativeMldsaShared.nativeProject before))
     (result : RustM (Option Pqxdh.Bytes) × RegistrationNativeExperiment.State n KemSK source)

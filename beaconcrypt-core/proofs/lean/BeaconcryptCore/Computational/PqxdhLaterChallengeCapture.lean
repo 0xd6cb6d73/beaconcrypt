@@ -6,6 +6,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeCapture
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhInitialPostContext PqxdhInitialOriginForwardPost RawCtxForwardAnnotation
 variable {ι M P I D K X Response Shared Origin Value Result : Type} {extra : OracleSpec ι} {S B : Nat}
 
@@ -16,8 +17,8 @@ noncomputable def append (next : Value → OracleComp (PostSpec extra S B) Resul
   ⟨match context.original with
     | .inl (.record request before outside inner) =>
         .inl (.record request before (fun reply => outside reply >>= next) inner)
-    | .inl (.finish index before control candidate outside inner) =>
-        .inl (.finish index before control candidate (fun reply => outside reply >>= next) inner)
+    | .inl (.finish index before control candidate associatedData outside inner) =>
+        .inl (.finish index before control candidate associatedData (fun reply => outside reply >>= next) inner)
     | .inr builder => .inr { builder with outside := fun reply => builder.outside reply >>= next },
     context.trace, context.origin⟩
 
@@ -28,18 +29,18 @@ noncomputable def resumeOutside (mark : PqxdhBeaconPhase2Shared.Secrets Shared �
     (result : Value × (NativeFront M P I D K S B × PqxdhInitialOriginPost.Trace Origin S B)) :
     OracleComp (Base extra RatchetChain I D K X Response Shared S B)
       (Result × (NativeFront M P I D K S B × PqxdhInitialOriginPost.Trace Origin S B)) :=
-  (simulateQ (PqxdhInitialOriginPost.compiler mark sender route read) (next result.1)).run result.2
+  (simulateQ (PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) mark sender route read) (next result.1)).run result.2
 
 /-- Appending a descriptor retains the literal pending request and the complete source continuation. -/
 theorem frame_append (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin)
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (read : RawCtxReceive.FrameDecoder)
     (next : Value → OracleComp (PostSpec extra S B) Result)
     (context : PqxdhInitialOriginContext.Context extra M P I D K Value Origin S B) :
-    PqxdhInitialOriginContext.frame (X := X) (Response := Response) mark sender route read (append next context) =
-      RawCtxForwardAnnotationComposition.appendFrame (resumeOutside mark sender route read next)
-        (PqxdhInitialOriginContext.frame mark sender route read context) := by
+    PqxdhInitialOriginContext.frame (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route read (append next context) =
+      RawCtxForwardAnnotationComposition.appendFrame (resumeOutside (completedBinding := completedBinding) mark sender route read next)
+        (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route read context) := by
   rcases context with ⟨original, trace, origin⟩
-  rcases original with (⟨request, before, outside, inner⟩ | ⟨index, before, control, candidate, outside, inner⟩) | builder
+  rcases original with (⟨request, before, outside, inner⟩ | ⟨index, before, control, candidate, associatedData, outside, inner⟩) | builder
   all_goals simp only [append, PqxdhInitialOriginContext.frame, PqxdhInitialOriginContext.resume,
     PqxdhInitialOriginContext.complete, RawCtxForwardAnnotationComposition.appendFrame,
     simulateQ_bind, StateT.run_bind, bind_assoc]
@@ -77,9 +78,9 @@ theorem program_append (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin
     (work : OracleComp (PostSpec extra S B) Value) (next : Value → OracleComp (PostSpec extra S B) Result)
     (before : NativeFront M P I D K S B) (trace : PqxdhInitialOriginPost.Trace Origin S B) :
     (do let result ← mapTags (append next)
-          (program (X := X) (Response := Response) mark sender route read work before trace)
-        program mark sender route read (next result.1) result.2.1 result.2.2) =
-      program mark sender route read (work >>= next) before trace := by
+          (program (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route read work before trace)
+        program (completedBinding := completedBinding) mark sender route read (next result.1) result.2.1 result.2.2) =
+      program (completedBinding := completedBinding) mark sender route read (work >>= next) before trace := by
   induction work using OracleComp.inductionOn generalizing before trace with
   | pure value => rfl
   | query_bind query outside ih =>
@@ -154,7 +155,7 @@ noncomputable def captured (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Or
       let result ← mapTags
         (fun context => (append (fun reply => wrapped owner number bit (next reply.1) reply.2) context,
           (⟨⟨query, current, next⟩, context⟩ : Details extra M P I D K Origin S B)))
-        (program mark sender route read
+        (program (completedBinding := completedBinding) mark sender route read
           ((PqxdhRecordConfidentialityChallenge.handler owner number bit query).run current) before trace)
       recurse result.1.1 result.1.2 result.2.1 result.2.2)
 
@@ -180,8 +181,8 @@ theorem captured_erase (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin
     (work : OracleComp (PqxdhFirstRecordConfidentiality.AdvSpec extra S B) Bool)
     (current : PqxdhRecordConfidentialityChallenge.State) (before : NativeFront M P I D K S B)
     (trace : PqxdhInitialOriginPost.Trace Origin S B) :
-    mapTags Prod.fst (captured (X := X) (Response := Response) mark sender route read owner number bit work current before trace) =
-      program mark sender route read (wrapped owner number bit work current) before trace := by
+    mapTags Prod.fst (captured (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route read owner number bit work current before trace) =
+      program (completedBinding := completedBinding) mark sender route read (wrapped owner number bit work current) before trace := by
   induction work using OracleComp.inductionOn generalizing current before trace with
   | pure value => rfl
   | query_bind query next ih =>
@@ -189,17 +190,17 @@ theorem captured_erase (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin
       let result ← mapTags
         (fun context => (append (fun reply : (PqxdhFirstRecordConfidentiality.AdvSpec extra S B).Range query × PqxdhRecordConfidentialityChallenge.State => wrapped owner number bit (next reply.1) reply.2) context,
           (⟨⟨query, current, next⟩, context⟩ : Details extra M P I D K Origin S B)))
-        (program mark sender route read
+        (program (completedBinding := completedBinding) mark sender route read
           ((PqxdhRecordConfidentialityChallenge.handler owner number bit query).run current) before trace)
-      captured mark sender route read owner number bit (next result.1.1) result.1.2 result.2.1 result.2.2) = _
+      captured (completedBinding := completedBinding) mark sender route read owner number bit (next result.1.1) result.1.2 result.2.1 result.2.2) = _
     rw [tags_bind, tags_compose]
     simp only [ih]
     change (do
       let result ← mapTags (append (fun reply : (PqxdhFirstRecordConfidentiality.AdvSpec extra S B).Range query × PqxdhRecordConfidentialityChallenge.State => wrapped owner number bit (next reply.1) reply.2))
-        (program mark sender route read
+        (program (completedBinding := completedBinding) mark sender route read
           ((PqxdhRecordConfidentialityChallenge.handler owner number bit query).run current) before trace)
-      program mark sender route read (wrapped owner number bit (next result.1.1) result.1.2) result.2.1 result.2.2) = _
-    rw [program_append mark sender route read
+      program (completedBinding := completedBinding) mark sender route read (wrapped owner number bit (next result.1.1) result.1.2) result.2.1 result.2.2) = _
+    rw [program_append (completedBinding := completedBinding) mark sender route read
       ((PqxdhRecordConfidentialityChallenge.handler owner number bit query).run current)
       (fun reply : (PqxdhFirstRecordConfidentiality.AdvSpec extra S B).Range query × PqxdhRecordConfidentialityChallenge.State => wrapped owner number bit (next reply.1) reply.2) before trace]
     simp only [wrapped, simulateQ_bind, simulateQ_spec_query, StateT.run_bind, map_bind]
@@ -225,9 +226,9 @@ theorem captured_covered (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Orig
     (current : PqxdhRecordConfidentialityChallenge.State) (before : NativeFront M P I D K S B)
     (trace : PqxdhInitialOriginPost.Trace Origin S B) :
     RawCtxForwardCoverage.Covered selected
-      (captured (X := X) (Response := Response) mark sender route read owner number bit work current before trace) := by
+      (captured (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route read owner number bit work current before trace) := by
   rw [← covered_tags Prod.fst, captured_erase]
-  exact program_covered mark sender route read _ before trace
+  exact program_covered (completedBinding := completedBinding) mark sender route read _ before trace
 
 /-- Project carried metadata only; complete decisions and the full scanner state remain literal. -/
 def cutMap {Tag Other α Local : Type} (changeTag : Tag → Other) :
@@ -291,11 +292,11 @@ theorem captured_scan {Local : Type} (mark : PqxdhBeaconPhase2Shared.Secrets Sha
     (impl : QueryImpl (Base extra RatchetChain I D K X Response Shared S B)
       (StateT Local (OracleComp AdaptiveCtxSharedHash.HashSpec))) (state : Local) :
     cutMap Prod.fst <$> RawCtxSharedPrefixScan.scan selected chosen selection impl
-      (captured mark sender route read owner number bit work current before trace)
-      (captured_covered mark sender route read owner number bit work current before trace) state =
+      (captured (completedBinding := completedBinding) mark sender route read owner number bit work current before trace)
+      (captured_covered (completedBinding := completedBinding) mark sender route read owner number bit work current before trace) state =
       RawCtxSharedPrefixScan.scan selected chosen selection impl
-        (program mark sender route read (wrapped owner number bit work current) before trace)
-        (program_covered mark sender route read _ before trace) state := by
+        (program (completedBinding := completedBinding) mark sender route read (wrapped owner number bit work current) before trace)
+        (program_covered (completedBinding := completedBinding) mark sender route read _ before trace) state := by
   rw [scan_tags]
   simp only [captured_erase]
 
@@ -319,7 +320,7 @@ theorem captured_joined (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origi
     (current : PqxdhRecordConfidentialityChallenge.State) (before : NativeFront M P I D K S B)
     (trace : PqxdhInitialOriginPost.Trace Origin S B) :
     RawCtxForwardTags.All (Joined owner number bit)
-      (captured (X := X) (Response := Response) mark sender route read owner number bit work current before trace) := by
+      (captured (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route read owner number bit work current before trace) := by
   induction work using OracleComp.inductionOn generalizing current before trace with
   | pure value => trivial
   | query_bind query next ih =>

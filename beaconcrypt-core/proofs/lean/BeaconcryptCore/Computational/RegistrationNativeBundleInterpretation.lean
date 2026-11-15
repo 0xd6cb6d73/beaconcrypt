@@ -15,7 +15,7 @@ open RegistrationNativePlatformFrontend (interpret AllowedBundle)
 variable {n : Nat} {I KemSK E A : Type} {base : OracleSpec I} {source : RegistrationNativeMldsa.Source}
 variable {m : Type → Type} [Monad m] [LawfulMonad m]
 variable (coins : QueryImpl unifSpec m) (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) m)
 local notation "Native" => RegistrationNativeExperiment.State n KemSK source
 local notation "Front" => RegistrationNativePlatformGenericBundle.M source RegistrationServerRoleBackend.State (OracleComp (RegistrationNativePlatformGenericBundle.Spec E n KemSK))
@@ -42,11 +42,11 @@ noncomputable def outgoing (index : Nat) (owner : Owner source) :
     (RegistrationNativePlatformGenericBundle.liftLegacy RegistrationNativePlatformGenericBundle.trustedLift
       (RegistrationNativeBeaconFrontend.outgoing setup source index owner query))
 
-noncomputable def encoder (view : registration.SignedInitView) : RegistrationNativePlatformExperiment.M n KemSK source m (RustM (core.option.Option (alloc.vec.Vec U8))) :=
+noncomputable def encoder (view : registration.InitView) : RegistrationNativePlatformExperiment.M n KemSK source m (RustM (core.option.Option (alloc.vec.Vec U8))) :=
   interpret (RegistrationNativePlatformExperiment.bundleHandler coins setup checks representation created source writer)
     (RegistrationNativePlatformGenericBundle.encoder E view)
 
-theorem encoder_source (view : registration.SignedInitView) :
+theorem encoder_source (view : registration.InitView) :
     encoder (n := n) (source := source) coins setup checks representation created writer view =
       (StateT.lift (simulateQ writer (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestExtraction.encodeInit
         (E := E) (m := BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Program E)
@@ -72,15 +72,15 @@ theorem encoder_source (view : registration.SignedInitView) :
 
 theorem publication (index : Nat) (owner : Owner source)
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (scalar : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize) :
+    (pin : session.ServerAuthenticationPin) :
     interpret (RegistrationNativePlatformExperiment.bundleHandler (n := n) coins setup checks representation created source writer)
       (RegistrationNativePlatformBeaconPublication.begin
         (fun query => RegistrationNativePlatformGenericBundle.liftLegacy RegistrationNativePlatformGenericBundle.trustedLift
           (RegistrationNativeBeaconFrontend.outgoing setup source index owner query))
-        (RegistrationNativePlatformGenericBundle.encoder E) control inputs scalar pin mldsa) =
+        (RegistrationNativePlatformGenericBundle.encoder E) control inputs scalar pin) =
       RegistrationNativePlatformBeaconPublication.begin (outgoing coins setup checks representation created writer index owner)
-        (encoder coins setup checks representation created writer) control inputs scalar pin mldsa := by
-  rw [← RegistrationNativePlatformFrontend.publication_tree setup index owner control inputs scalar pin mldsa,
+        (encoder coins setup checks representation created writer) control inputs scalar pin := by
+  rw [← RegistrationNativePlatformFrontend.publication_tree setup index owner control inputs scalar pin,
     RegistrationNativePlatformFrontend.simulate_interpret _ _
       (RegistrationNativePlatformFrontend.bundle_atomic coins setup checks representation created writer) _
       (RegistrationNativePlatformFrontend.joint_work setup index owner),
@@ -101,7 +101,7 @@ theorem publication (index : Nat) (owner : Owner source)
       (writerFront (n := n) (E := E) (KemSK := KemSK) (source := source) query))
       (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestExtraction.encodeInit
         (E := E) (m := BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Program E)
-        (RegistrationNativePlatformWriter.initPacket view)).run) control inputs scalar pin mldsa = _
+        (RegistrationNativePlatformWriter.initPacket view)).run) control inputs scalar pin = _
   rw [encoded]
 
 

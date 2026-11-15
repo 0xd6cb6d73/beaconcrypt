@@ -12,8 +12,8 @@ open AdapterRecordRequestMonad (LiftRust)
 variable [BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations]
 variable {m : Type → Type} [Monad m] [LiftRust m] [Operations m]
 
--- Extracted input SHA-256: 02cc869d7f8ba0c84543f3e9d99523f69781875be734ca5cb54d113bf04d537b
--- Transformation SHA-256: 060c0daccb22f785206df06c65b3fa0cf880f225b864fe4d0898675e3f3987ca
+-- Extracted input SHA-256: e50f57a96cbc7c6d99952362e6acf54a4af0a783071907f64075174eb30e379f
+-- Transformation SHA-256: 6bdde0a32697b36a9ece8c1755e29a9cefc12b6ab2ebab99925c975363006682
 def ed
   (c : beaconcrypt.auth.authenticate_init.closure) (_ : Unit) :
   m (core.option.Option (alloc.vec.Vec Std.U8))
@@ -40,15 +40,6 @@ def body
     let hash ← Operations.hash hr
     let effect1 ← Lifted.hashResume pending hash
     pure (cont effect1)
-  | beaconcrypt_core.registration.InitAuthentication.MldsaVerificationRequested
-    pending =>
-    let mvr ←
-      Lifted.mldsaRequest pending
-    let verified ← Operations.verifyMldsa mvr
-    let effect1 ←
-      Lifted.mldsaResume pending
-        verified
-    pure (cont effect1)
   |
     beaconcrypt_core.registration.InitAuthentication.Ed25519VerificationRequested
     pending =>
@@ -61,24 +52,6 @@ def body
       Lifted.asDeref opened
     let effect1 ←
       Lifted.edResume pending o
-    pure (cont effect1)
-  | beaconcrypt_core.registration.InitAuthentication.ServerFingerprintRequested
-    pending =>
-    let hr ←
-      Lifted.serverRequest pending
-    let fingerprint ← Operations.hash hr
-    let effect1 ←
-      Lifted.serverResume pending
-        fingerprint
-    pure (cont effect1)
-  | beaconcrypt_core.registration.InitAuthentication.BeaconFingerprintRequested
-    pending =>
-    let hr ←
-      Lifted.beaconRequest pending
-    let fingerprint ← Operations.hash hr
-    let effect1 ←
-      Lifted.beaconResume pending
-        fingerprint
     pure (cont effect1)
   | beaconcrypt_core.registration.InitAuthentication.Accepted authenticated =>
     pure (done (core.option.Option.Some authenticated))

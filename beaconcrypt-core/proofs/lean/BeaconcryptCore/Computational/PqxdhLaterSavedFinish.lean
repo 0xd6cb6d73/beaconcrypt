@@ -7,6 +7,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.refined ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhLaterSavedFinish
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhJointKdfGame PqxdhNativeSharedPrefix
 open RawCtxSelectedParentTable RawCtxSelectedParentEntry RawCtxSelectedMessageDriver
 open PqxdhSelectedFirstRecord
@@ -14,9 +15,10 @@ variable {ι I D K X Response Shared A N C M P Result : Type} {extra : OracleSpe
 
 noncomputable def afterOwner (index : Fin B) (before : PqxdhSelectedPostCompiler.Front M P I D K S B)
     (control : pqxdh.BeaconInitSent) (candidate : pqxdh.BeaconRegistrationCandidate)
+    (associatedData : Std.Array Std.U8 151#usize)
     (result : core.option.Option RawCtxWholeOwner.Decrypted ×
       RawCtxChainOwner.State RawCtxSelectedMessageReveals.Kernel Unit) :=
-  let staged := PqxdhInitialGenericBeacon.afterOpening candidate result.2.kernel result.1
+  let staged := PqxdhInitialGenericBeacon.afterOpening candidate associatedData result.2.kernel result.1
   let published := PqxdhInitialGenericBeacon.finish control (before.roles.1.2 index) staged
   (published.1, PqxdhSelectedPostCompiler.install index before published.2)
 
@@ -24,12 +26,13 @@ noncomputable def afterOwner (index : Fin B) (before : PqxdhSelectedPostCompiler
 theorem afterOwner_source (key : RootOutput) (index : Fin B)
     (before : PqxdhSelectedPostCompiler.Front M P I D K S B)
     (control : pqxdh.BeaconInitSent) (candidate : pqxdh.BeaconRegistrationCandidate)
+    (associatedData : Std.Array Std.U8 151#usize)
     (result : core.option.Option RawCtxWholeOwner.Decrypted ×
       RawCtxChainOwner.State RawCtxSelectedMessageReveals.Kernel Unit) :
-    PqxdhInitialPostContext.finishResult index (frontOf key before) control candidate
+    PqxdhInitialPostContext.finishResult index (frontOf key before) control candidate associatedData
       (result.1, RawCtxGenericOwnerMap.mapOwner
         (RawCtxMaterialInterpretation.mapRefined (RawCtxSelectedMessageKey.interpret key)) result.2) =
-      Prod.map id (frontOf key) (afterOwner index before control candidate result) := by
+      Prod.map id (frontOf key) (afterOwner index before control candidate associatedData result) := by
   simp only [PqxdhInitialPostContext.finishResult, afterOwner, RawCtxGenericOwnerMap.mapOwner]
   rw [PqxdhInitialGenericBeacon.opening_map
     (RawCtxMaterialInterpretation.mapRefined (RawCtxSelectedMessageKey.interpret key))]
@@ -54,6 +57,7 @@ variable
     (index : Fin B) (before : PqxdhInitialPostContext.NativeFront M P I D K S B)
     (trace : PqxdhInitialOriginPost.Trace Bool S B) (origin : Option Bool)
     (control : pqxdh.BeaconInitSent) (candidate : pqxdh.BeaconRegistrationCandidate)
+    (associatedData : Std.Array Std.U8 151#usize)
     (outside : Option Pqxdh.Bytes → OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result)
     (inner : RawCtxSelectedFamilyContext.OwnerContext Unit (core.option.Option RawCtxWholeOwner.Decrypted))
     (material : PqxdhOrderedChainHybrids.Material)
@@ -66,8 +70,8 @@ noncomputable def nativeFinish (state : RawCtxSelectedReceiveCompiler.State (Loc
     ((RawCtxSelectedFamilyContext.ownerFrame candidate.server_binding.identity_key_id read inner).2
       (RawCtxSelectedFamilyNativeContext.ownerReply candidate.server_binding.identity_key_id read inner
         (realize parent target)))).run (RawCtxSelectedReceiveCompiler.project state)
-  let finished := PqxdhInitialPostContext.finishResult index before control candidate result.1
-  (simulateQ (nativeFlat pre application initial selector aux source writer prior (some parent) key target nonce next
+  let finished := PqxdhInitialPostContext.finishResult index before control candidate associatedData result.1
+  (simulateQ (nativeFlat (completedBinding := completedBinding) pre application initial selector aux source writer prior (some parent) key target nonce next
     sender route read mark) (outside finished.1)).run
       ((finished.2, PqxdhInitialOriginContext.finishedTrace trace origin index finished.1), result.2)
 
@@ -75,9 +79,9 @@ noncomputable def selectedPendingFinish (quiet : RawCtxQuietOwnerTails.Quiet inn
     (state : RawCtxSelectedReceiveCompiler.State (Local A N C)) := do
   let result ← (RawCtxSelectedReceiveCompiler.evaluated source key read
     (RawCtxSelectedPendingOwnerCompiler.owner source writer prior target nonce next read inner material quiet)).run state
-  let finished := afterOwner index (initialFront before) control candidate result.1
+  let finished := afterOwner index (initialFront before) control candidate associatedData result.1
   Prod.map id (tracedProj key) <$>
-    (simulateQ (tracedPlain pre application initial selector aux source writer prior (some parent) key target nonce next
+    (simulateQ (tracedPlain (completedBinding := completedBinding) pre application initial selector aux source writer prior (some parent) key target nonce next
       sender route read mark) (outside finished.1)).run
         ((finished.2, RawCtxSelectedReceiveCompiler.project result.2),
           PqxdhInitialOriginContext.finishedTrace trace origin index finished.1)
@@ -86,37 +90,37 @@ noncomputable def selectedPendingFinish (quiet : RawCtxQuietOwnerTails.Quiet inn
 theorem finish_source (quiet : RawCtxQuietOwnerTails.Quiet inner)
     (admitted : RawCtxForwardOwnerScope.Valid read inner)
     (state : RawCtxSelectedReceiveCompiler.State (Local A N C)) :
-    nativeFinish pre application initial selector aux source writer prior key target nonce next mark sender route read
-      index before trace origin control candidate outside inner material state =
-    selectedPendingFinish pre application initial selector aux source writer prior key target nonce next mark sender route read
-      index before trace origin control candidate outside inner material quiet state := by
+    nativeFinish (completedBinding := completedBinding) pre application initial selector aux source writer prior key target nonce next mark sender route read
+      index before trace origin control candidate associatedData outside inner material state =
+    selectedPendingFinish (completedBinding := completedBinding) pre application initial selector aux source writer prior key target nonce next mark sender route read
+      index before trace origin control candidate associatedData outside inner material quiet state := by
   rw [nativeFinish, RawCtxSelectedPendingOwnerCompiler.owner_source source writer prior key target nonce next read
     candidate.server_binding.identity_key_id inner material state quiet admitted]
   simp only [selectedPendingFinish, bind_map_left]
   apply bind_congr
   intro result
-  have finished := afterOwner_source key index (initialFront before) control candidate result.1
+  have finished := afterOwner_source key index (initialFront before) control candidate associatedData result.1
   simp only [frontOf_initial] at finished
   rw [finished]
-  exact (post_program (P := P) (S := S) (B := B) pre application initial selector aux source writer prior
+  exact (post_program (completedBinding := completedBinding) (P := P) (S := S) (B := B) pre application initial selector aux source writer prior
     (some parent) key target nonce next sender route read mark
-    (outside (afterOwner index (initialFront before) control candidate result.1).1)
-    (((afterOwner index (initialFront before) control candidate result.1).2,
+    (outside (afterOwner index (initialFront before) control candidate associatedData result.1).1)
+    (((afterOwner index (initialFront before) control candidate associatedData result.1).2,
       RawCtxSelectedReceiveCompiler.project result.2),
       PqxdhInitialOriginContext.finishedTrace trace origin index
-        (afterOwner index (initialFront before) control candidate result.1).1)).symm
+        (afterOwner index (initialFront before) control candidate associatedData result.1).1)).symm
 
 /-- The source completion is the literal saved initial-finish descriptor with its already retained installation marker. -/
 theorem finish_resume (state : RawCtxSelectedReceiveCompiler.State (Local A N C)) :
     (fun result => (result.1.1, (result.1.2, result.2))) <$>
     (simulateQ (lowered pre application initial selector aux source writer
       (privateTable prior (some parent) target (RawCtxSelectedMessageKdf.response key nonce next)))
-      (PqxdhInitialOriginContext.resume mark sender route read
-        ⟨.inl (.finish index before control candidate outside inner), trace, origin⟩
+      (PqxdhInitialOriginContext.resume (completedBinding := completedBinding) mark sender route read
+        ⟨.inl (.finish index before control candidate associatedData outside inner), trace, origin⟩
         (RawCtxSelectedFamilyNativeContext.ownerReply candidate.server_binding.identity_key_id read inner
           (realize parent target)))).run (RawCtxSelectedReceiveCompiler.project state) =
-      nativeFinish pre application initial selector aux source writer prior key target nonce next mark sender route read
-        index before trace origin control candidate outside inner material state := by
+      nativeFinish (completedBinding := completedBinding) pre application initial selector aux source writer prior key target nonce next mark sender route read
+        index before trace origin control candidate associatedData outside inner material state := by
   simp only [PqxdhInitialOriginContext.resume, simulateQ_bind, StateT.run_bind]
   simp only [map_bind, ← QueryImpl.simulateQ_compose,
     simulateQ_mapStateTBase_run_eq_map_flattenStateT, Functor.map_map, nativeFinish, nativeFlat,
@@ -142,20 +146,20 @@ theorem retained_finish (quiet : RawCtxQuietOwnerTails.Quiet inner)
     (simulateQ (PqxdhInitialNativeRetained.retained source writer
       (privateTable prior (some parent) target (RawCtxSelectedMessageKdf.response key nonce next))
       (lifted pre application initial selector aux))
-      (PqxdhInitialOriginContext.resume mark sender route read
-        ⟨.inl (.finish index before control candidate outside inner), trace, origin⟩
+      (PqxdhInitialOriginContext.resume (completedBinding := completedBinding) mark sender route read
+        ⟨.inl (.finish index before control candidate associatedData outside inner), trace, origin⟩
         (RawCtxSelectedFamilyNativeContext.ownerReply candidate.server_binding.identity_key_id read inner
           (realize parent target)))).run
           (retainedOf (RawCtxSelectedReceiveCompiler.project state)) =
       (fun result => ((result.1, result.2.1), retainedOf result.2.2)) <$>
-        selectedPendingFinish pre application initial selector aux source writer prior key target nonce next mark sender route read
-          index before trace origin control candidate outside inner material quiet state := by
+        selectedPendingFinish (completedBinding := completedBinding) pre application initial selector aux source writer prior key target nonce next mark sender route read
+          index before trace origin control candidate associatedData outside inner material quiet state := by
   rw [← low_program pre application initial selector aux]
   have actual := congrArg (fun work => (fun result => ((result.1, result.2.1), retainedOf result.2.2)) <$> work)
-    ((finish_resume pre application initial selector aux source writer prior key target nonce next mark sender route read
-      index before trace origin control candidate outside inner material state).trans
-      (finish_source pre application initial selector aux source writer prior key target nonce next mark sender route read
-        index before trace origin control candidate outside inner material quiet admitted state))
+    ((finish_resume (completedBinding := completedBinding) pre application initial selector aux source writer prior key target nonce next mark sender route read
+      index before trace origin control candidate associatedData outside inner material state).trans
+      (finish_source (completedBinding := completedBinding) pre application initial selector aux source writer prior key target nonce next mark sender route read
+        index before trace origin control candidate associatedData outside inner material quiet admitted state))
   simpa only [Functor.map_map, Prod.map_def, id_eq] using actual
 
 end BeaconcryptCore.Computational.PqxdhLaterSavedFinish

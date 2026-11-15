@@ -21,7 +21,7 @@ def OnlyWorld : (Trusted n KemSK).Domain → Prop
   | .inr _ => False
 
  theorem query (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (effect : (PqxdhRecordLiftInterface.EnvEffects n).Domain) (before : Backend n KemSK) :
     Prod.map id erase <$> (RegistrationNativePlatformSdkFinishBackend.handler setup checks representation created (.inl effect)).run before =
       (RegistrationNativePlatformSdkFinishBackend.handler setup checks representation created (.inl effect)).run (erase before) := by
@@ -29,7 +29,7 @@ def OnlyWorld : (Trusted n KemSK).Domain → Prop
   rfl
 
  theorem query_frame (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (effect : (PqxdhRecordLiftInterface.EnvEffects n).Domain) (before : Backend n KemSK)
     (result : (PqxdhRecordLiftInterface.EnvEffects n).Range effect × Backend n KemSK)
     (supported : result∈support ((RegistrationNativePlatformSdkFinishBackend.handler setup checks representation created (.inl effect)).run before)) :
@@ -41,7 +41,7 @@ def OnlyWorld : (Trusted n KemSK).Domain → Prop
   exact ⟨rfl,RegistrationNativePlatformSdkReification.worldBackend_idempotent middle.2⟩
 
  theorem program (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp (Trusted n KemSK) A) (safe : work.AllQueriesSatisfy (OnlyWorld (n:=n) (KemSK:=KemSK))) (before : Backend n KemSK) :
     Prod.map id erase <$> (simulateQ (RegistrationNativePlatformSdkFinishBackend.handler setup checks representation created) work).run before =
       (simulateQ (RegistrationNativePlatformSdkFinishBackend.handler setup checks representation created) work).run (erase before) := by
@@ -59,7 +59,7 @@ def OnlyWorld : (Trusted n KemSK).Domain → Prop
           exact ih middle.1 (safe.2 middle.1) middle.2
 
  theorem program_frame (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp (Trusted n KemSK) A) (safe : work.AllQueriesSatisfy (OnlyWorld (n:=n) (KemSK:=KemSK)))
     (before : Backend n KemSK) (canonical : worldBackend before.world=before.world)
     (result : A × Backend n KemSK)
@@ -108,7 +108,7 @@ private theorem coins_only (work : ProbComp A) :
     (query : RegistrationRecordPrimitives.Request) :
     (RegistrationNativeRecordJournal.core (n:=n) setup wire query).AllQueriesSatisfy (OnlyWorld (n:=n) (KemSK:=KemSK)) := by
   cases query with
-  | hash transcript=>
+  | hash transcript | adHash request=>
       unfold RegistrationNativeRecordJournal.core
       exact allQueriesSatisfy_bind ((allQueriesSatisfy_query_iff _ _).mpr trivial) (fun _=>allQueriesSatisfy_pure _ _)
   | _=>exact coins_only _

@@ -13,6 +13,7 @@ open RustM beaconcrypt_core ratchet ratchet.refined ratchet.concrete PqxdhRefine
 set_option autoImplicit false
 
 namespace BeaconcryptCore.Computational.PqxdhServerAuthLoggedSendFactor
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhServerRegistrationPublication (AuxSpec TailSpec Response registrationWitness)
 open PqxdhSecretInputKdf PqxdhJointKdfGame
 open PqxdhServerAuthSendFactor (Kernel Factor Settled StateSettled known resolve embed)
@@ -39,10 +40,10 @@ theorem after_primitive (interpret : K → ConcreteRatchetKernel)
     (kernel : K) (metadata : PeerMetadata)
     (state : PqxdhInitialGenericPublication.State K Metadata PeerMetadata Consumed) :
     simulateQ (joined prim aux)
-        (PqxdhServerRegistrationPublication.afterInitialization candidate authenticated
+        (PqxdhServerRegistrationPublication.afterInitialization (associatedData := associatedData) candidate authenticated
           (interpret kernel) metadata (PqxdhInitialGenericPublication.native interpret state)) =
       Prod.map id (PqxdhInitialGenericPublication.native interpret) <$>
-        PqxdhInitialGenericPublication.afterInitialization calls aux candidate authenticated kernel metadata state := by
+        PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) calls aux candidate authenticated kernel metadata state := by
   have lifted : (joined prim aux ∘ₛ PqxdhServerRegistrationPublication.sendLift) = prim := by
     funext query
     simp only [QueryImpl.apply_compose, PqxdhServerRegistrationPublication.sendLift,
@@ -70,10 +71,10 @@ theorem candidate_primitive (interpret : K → ConcreteRatchetKernel)
     (initial : RustM K) (pending : pqxdh.ServerRegistrationCandidate) (data : Option Pqxdh.Bytes)
     (metadata : PeerMetadata) (state : PqxdhInitialGenericPublication.State K Metadata PeerMetadata Consumed) :
     simulateQ (joined prim aux)
-        (PqxdhInitialBuilderCut.candidate (interpret <$> initial) pending data metadata
+        (PqxdhInitialBuilderCut.candidate (associatedData := associatedData) (interpret <$> initial) pending data metadata
           (PqxdhInitialGenericPublication.native interpret state)) =
       Functor.map (Prod.map id (PqxdhInitialGenericPublication.native interpret)) <$>
-        PqxdhInitialGenericBuilder.candidate calls aux initial pending data metadata state := by
+        PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) calls aux initial pending data metadata state := by
   simp only [PqxdhInitialBuilderCut.candidate, PqxdhInitialGenericBuilder.candidate,
     simulateQ_bind, simulateQ_spec_query, joined, map_bind]
   refine bind_congr fun valid => ?_
@@ -98,7 +99,7 @@ theorem candidate_primitive (interpret : K → ConcreteRatchetKernel)
       ite_true, ite_false, simulateQ_pure, map_pure, RawCtxMaterialInterpretation.rust_map_ok,
       Prod.map_apply, id_eq]
     cases pending.key_id_binding <;> simp only [simulateQ_pure, map_pure, simulateQ_map,
-      after_primitive interpret calls prim aux sendRealized, Functor.map_map]
+      after_primitive (associatedData := associatedData) interpret calls prim aux sendRealized, Functor.map_map]
     all_goals rfl
   all_goals exact simulateQ_pure _ _
 
@@ -113,10 +114,10 @@ theorem build_primitive (interpret : K → ConcreteRatchetKernel)
     (initial : RustM K) (pending : pqxdh.PendingServerRegistration) (data : Option Pqxdh.Bytes)
     (metadata : PeerMetadata) (state : PqxdhInitialGenericPublication.State K Metadata PeerMetadata Consumed) :
     simulateQ (joined prim aux)
-        (PqxdhServerAuthSendFactor.cutBuild (interpret <$> initial) pending data metadata
+        (PqxdhServerAuthSendFactor.cutBuild (associatedData := associatedData) (interpret <$> initial) pending data metadata
           (PqxdhInitialGenericPublication.native interpret state)) =
       Functor.map (Prod.map id (PqxdhInitialGenericPublication.native interpret)) <$>
-        PqxdhServerAuthSendFactor.genericBuild calls aux initial pending data metadata state := by
+        PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData) calls aux initial pending data metadata state := by
   unfold PqxdhServerAuthSendFactor.cutBuild PqxdhServerAuthSendFactor.genericBuild
   change simulateQ (joined prim aux)
     (PqxdhServerRegistrationPublication.continueRust (pqxdh.server_next_key_id state.control) _) = _
@@ -137,7 +138,7 @@ theorem build_primitive (interpret : K → ConcreteRatchetKernel)
       cases value <;> simp only [simulateQ_pure, map_pure]
       case Err _ => rfl
       case Ok candidate =>
-        exact candidate_primitive interpret calls prim aux sendRealized initial candidate data metadata state
+        exact candidate_primitive (associatedData := associatedData) interpret calls prim aux sendRealized initial candidate data metadata state
     all_goals rfl
   all_goals rfl
 
@@ -195,14 +196,14 @@ theorem settle_after (candidate : pqxdh.ServerRegistrationCandidate) (authentica
     (state : PqxdhInitialGenericPublication.State Kernel Metadata PeerMetadata Consumed)
     (settled : StateSettled state) :
     Prod.map id (PqxdhInitialGenericPublication.native (nativeKernel chain)) <$>
-      PqxdhInitialGenericPublication.afterInitialization (calls receiveCall prim source challenge) aux
+      PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) (calls receiveCall prim source challenge) aux
         candidate authenticated entry metadata state =
     Prod.map id (PqxdhInitialGenericPublication.native resolve) <$>
-      PqxdhInitialGenericPublication.afterInitialization (calls receiveCall prim source challenge) aux
+      PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) (calls receiveCall prim source challenge) aux
         candidate authenticated entry metadata state := by
   have base := PqxdhServerAuthSendFactor.native_settled chain state settled
   simp only [PqxdhInitialGenericPublication.afterInitialization]
-  rcases send_shape receiveCall prim source challenge entry receive (PqxdhServerRegistrationPublication.firstContext candidate authenticated)
+  rcases send_shape receiveCall prim source challenge entry receive (PqxdhServerRegistrationPublication.firstContext candidate associatedData authenticated)
     with sent | ⟨advanced, sealing, fresh, sent⟩
   · rw [sent]
     simp only [pure_bind, map_bind, map_pure, Prod.map_apply, id_eq, base]
@@ -225,10 +226,10 @@ theorem settle_candidate (otherChain : RootOutput) (candidate : pqxdh.ServerRegi
     (state : PqxdhInitialGenericPublication.State Kernel Metadata PeerMetadata Consumed)
     (settled : StateSettled state) :
     Functor.map (Prod.map id (PqxdhInitialGenericPublication.native (nativeKernel chain))) <$>
-      PqxdhInitialGenericBuilder.candidate (calls receiveCall prim source challenge) aux
+      PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) (calls receiveCall prim source challenge) aux
         (RawCtxSelectedInitialConstructor.initial false otherChain) candidate data metadata state =
     Functor.map (Prod.map id (PqxdhInitialGenericPublication.native resolve)) <$>
-      PqxdhInitialGenericBuilder.candidate (calls receiveCall prim source challenge) aux
+      PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) (calls receiveCall prim source challenge) aux
         (RawCtxSelectedInitialConstructor.initial false otherChain) candidate data metadata state := by
   have base := PqxdhServerAuthSendFactor.native_settled chain state settled
   obtain ⟨kernel, built, receive⟩ := PqxdhServerAuthSendFactor.initial_ok otherChain
@@ -255,7 +256,7 @@ theorem settle_candidate (otherChain : RootOutput) (candidate : pqxdh.ServerRegi
             | div => simp only [map_pure]; rfl
             | ok binding =>
                 simp only [Functor.map_map]
-                have after := settle_after receiveCall prim source aux challenge chain candidate
+                have after := settle_after (associatedData := associatedData) receiveCall prim source aux challenge chain candidate
                   (absBytes binding.bytes ++ data.getD registrationWitness) kernel ⟨_, receive⟩ metadata state settled
                 have lifted := congrArg (fun work => RustM.ok <$> work) after
                 simpa only [Functor.map_map, Function.comp_def, RawCtxMaterialInterpretation.rust_map_ok] using lifted
@@ -266,10 +267,10 @@ theorem settle_generic (otherChain : RootOutput) (pending : pqxdh.PendingServerR
     (state : PqxdhInitialGenericPublication.State Kernel Metadata PeerMetadata Consumed)
     (settled : StateSettled state) :
     Functor.map (Prod.map id (PqxdhInitialGenericPublication.native (nativeKernel chain))) <$>
-      PqxdhServerAuthSendFactor.genericBuild (calls receiveCall prim source challenge) aux
+      PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData) (calls receiveCall prim source challenge) aux
         (RawCtxSelectedInitialConstructor.initial false otherChain) pending data metadata state =
     Functor.map (Prod.map id (PqxdhInitialGenericPublication.native resolve)) <$>
-      PqxdhServerAuthSendFactor.genericBuild (calls receiveCall prim source challenge) aux
+      PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData) (calls receiveCall prim source challenge) aux
         (RawCtxSelectedInitialConstructor.initial false otherChain) pending data metadata state := by
   have base := PqxdhServerAuthSendFactor.native_settled chain state settled
   unfold PqxdhServerAuthSendFactor.genericBuild
@@ -291,7 +292,7 @@ theorem settle_generic (otherChain : RootOutput) (pending : pqxdh.PendingServerR
             | Err error =>
                 simp only [map_pure, RawCtxMaterialInterpretation.rust_map_ok, Prod.map_apply, id_eq, base]
             | Ok value =>
-                exact settle_candidate receiveCall prim source aux challenge chain otherChain value data metadata state settled
+                exact settle_candidate (associatedData := associatedData) receiveCall prim source aux challenge chain otherChain value data metadata state settled
 
 end Settle
 
@@ -305,7 +306,7 @@ noncomputable def factored (receiveCall : Kernel → Std.U64 → RawCtxWholeOwne
     (metadata : PeerMetadata) (state : PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed) :
     m (RustM (Option Response × PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed)) :=
   Functor.map (Prod.map id (PqxdhInitialGenericPublication.native resolve)) <$>
-    PqxdhServerAuthSendFactor.genericBuild (calls receiveCall prim source value.1) aux
+    PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData) (calls receiveCall prim source value.1) aux
       (RawCtxSelectedInitialConstructor.initial false value.2) pending data metadata (embed state)
 
 /-- Primitive-level factorization preserves the entire result in an arbitrary lawful
@@ -317,17 +318,17 @@ theorem primitive_factor (receiveCall : Kernel → Std.U64 → RawCtxWholeOwner.
     (kdf : ∀ request, prim (.inl request) = pure (RawCtxSourceHkdf.response source.crypto request))
     (pending : pqxdh.PendingServerRegistration) (root : RootOutput) (data : Option Pqxdh.Bytes)
     (metadata : PeerMetadata) (state : PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed) :
-    simulateQ (joined prim aux) (PqxdhServerRegistrationPublication.build source pending root data metadata state) =
-      factored receiveCall prim source aux (PqxdhServerAuthSendFactor.factor source root)
+    simulateQ (joined prim aux) (PqxdhServerRegistrationPublication.build (associatedData := associatedData) source pending root data metadata state) =
+      factored (associatedData := associatedData) receiveCall prim source aux (PqxdhServerAuthSendFactor.factor source root)
         pending data metadata state := by
   rw [← PqxdhServerAuthSendFactor.cut_source, PqxdhServerAuthSendFactor.initial_factor,
     ← PqxdhServerAuthSendFactor.native_embed
       (RawCtxFreshChainCut.concreteChain (PqxdhServerAuthSendFactor.target source root)) state]
-  rw [build_primitive _ (calls receiveCall prim source (PqxdhServerAuthSendFactor.factor source root).1)
+  rw [build_primitive (associatedData := associatedData) _ (calls receiveCall prim source (PqxdhServerAuthSendFactor.factor source root).1)
     prim aux (fun entry context => PqxdhServerAuthSendFactor.prim_send_source prim source kdf
       (RawCtxFreshChainCut.concreteChain (PqxdhServerAuthSendFactor.target source root)) entry context)]
   rw [PqxdhServerAuthSendFactor.native_embed]
-  exact settle_generic receiveCall prim source aux _ _ _ pending data metadata
+  exact settle_generic (associatedData := associatedData) receiveCall prim source aux _ _ _ pending data metadata
     (embed state) (PqxdhServerAuthSendFactor.embed_settled state)
 
 end PrimitiveFactor
@@ -371,11 +372,11 @@ theorem logged_server_send_factor {Metadata PeerMetadata Consumed : Type}
     (pending : pqxdh.PendingServerRegistration) (root : RootOutput) (data : Option Pqxdh.Bytes)
     (metadata : PeerMetadata) (state : PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed) :
     simulateQ (tailImpl setup codec checks)
-        (PqxdhServerRegistrationPublication.build setup.source pending root data metadata state) =
-      factored receiveCall (loggedPrim setup codec checks) setup.source (loggedAux setup codec checks)
+        (PqxdhServerRegistrationPublication.build (associatedData := associatedData) setup.source pending root data metadata state) =
+      factored (associatedData := associatedData) receiveCall (loggedPrim setup codec checks) setup.source (loggedAux setup codec checks)
         (PqxdhServerAuthSendFactor.factor setup.source root) pending data metadata state := by
   rw [← joined_logged]
-  exact primitive_factor receiveCall _ setup.source _ (logged_kdf setup codec checks)
+  exact primitive_factor (associatedData := associatedData) receiveCall _ setup.source _ (logged_kdf setup codec checks)
     pending root data metadata state
 
 /-- Evaluating both builds from the same complete log/cache state gives the same joint
@@ -388,10 +389,10 @@ theorem logged_server_send_run {Metadata PeerMetadata Consumed : Type}
     (metadata : PeerMetadata) (state : PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed)
     (shared : RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext)) :
     (simulateQ (tailImpl setup codec checks)
-        (PqxdhServerRegistrationPublication.build setup.source pending root data metadata state)).run shared =
-      (factored receiveCall (loggedPrim setup codec checks) setup.source (loggedAux setup codec checks)
+        (PqxdhServerRegistrationPublication.build (associatedData := associatedData) setup.source pending root data metadata state)).run shared =
+      (factored (associatedData := associatedData) receiveCall (loggedPrim setup codec checks) setup.source (loggedAux setup codec checks)
         (PqxdhServerAuthSendFactor.factor setup.source root) pending data metadata state).run shared := by
-  rw [logged_server_send_factor setup codec checks receiveCall]
+  rw [logged_server_send_factor (associatedData := associatedData) setup codec checks receiveCall]
 
 end Logged
 

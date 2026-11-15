@@ -52,7 +52,7 @@ theorem response_alias (output : HmacBlock) :
 /-- The real primitive observer is the actual source initializer and both native constructors under the original joint root/context sampler. -/
 theorem real_source {Context Result : Type} (source : FixedHkdfSha512NoSaltSource)
     (sample : ProbComp (Context × RootOutput)) (resume : Continue Context Result) :
-    sourceFullGame source .ratchet (sampler sample) (observer resume) = real source sample resume := by
+    sourceFullGame source .initial (sampler sample) (observer resume) = real source sample resume := by
   simp only [sourceFullGame, sampler, bind_map_left, observer, real, PqxdhInitialCurrentSecrecy.response_prefix]
 
 /-- The ideal comparison gives the same one shared64 response to both directions and the complete original continuation. -/
@@ -84,10 +84,10 @@ theorem random_bound {Context Result : Type} (sample : ProbComp (Context × Root
 /-- Both advantages retain the exact joint root/context sampler and literal native continuation. No smallness is postulated. -/
 noncomputable def reductionLoss {Context Result : Type} (hmac : HmacSha512)
     (sample : ProbComp (Context × RootOutput)) (resume : Continue Context Result) : ℝ :=
-  (extractRealGame hmac (sampler sample) (fullExtractReduction hmac .ratchet (observer resume))).boolDistance
-    (extractUniformGame (sampler sample) (fullExtractReduction hmac .ratchet (observer resume))) +
-  (hmacPrfRealGame hmac (fullExpandReduction .ratchet (sampler sample) (observer resume))).boolDistance
-    (hmacPrfRandomGame (fullExpandReduction .ratchet (sampler sample) (observer resume)))
+  (extractRealGame hmac (sampler sample) (fullExtractReduction hmac .initial (observer resume))).boolDistance
+    (extractUniformGame (sampler sample) (fullExtractReduction hmac .initial (observer resume))) +
+  (hmacPrfRealGame hmac (fullExpandReduction .initial (sampler sample) (observer resume))).boolDistance
+    (hmacPrfRandomGame (fullExpandReduction .initial (sampler sample) (observer resume)))
 
 /-- The actual fixed-HKDF comparison pays one exact-sampler Extract advantage and one ordinary secret-key HMAC PRF advantage, with coefficient one each. -/
 theorem primitive_bound {Context Result : Type} (source : FixedHkdfSha512NoSaltSource)
@@ -96,7 +96,7 @@ theorem primitive_bound {Context Result : Type} (source : FixedHkdfSha512NoSaltS
     (real source sample resume).boolDistance (random sample resume) ≤ reductionLoss hmac sample resume := by
   have ideal := random_source sample resume
   simpa only [real_source, ProbComp.boolDistance, ideal, reductionLoss] using
-    sourceFullAdvantage_le_extract_add_hmac source hmac correct .ratchet (sampler sample) (observer resume)
+    sourceFullAdvantage_le_extract_add_hmac source hmac correct .initial (sampler sample) (observer resume)
 
 /-- The actual source initial send-alias probability is bounded only after charging its two displayed computational reductions. The final statistical term uses one shared64 response. -/
 theorem source_bound {Context Result : Type} (source : FixedHkdfSha512NoSaltSource)
@@ -135,7 +135,7 @@ theorem observer_uniform {Context Result : Type} (resume : Continue Context Resu
 
 /-- The full76 comparison makes exactly the maintained two challenge-HMAC requests while keeping every public HKDF evaluation in the original continuation. -/
 theorem hmac_queries {Context Result : Type} (sample : ProbComp (Context × RootOutput)) (resume : Continue Context Result) :
-    (fullExpandReduction .ratchet (sampler sample) (observer resume)).IsQueryBoundP IsHmacChallengeQuery 2 :=
+    (fullExpandReduction .initial (sampler sample) (observer resume)).IsQueryBoundP IsHmacChallengeQuery 2 :=
   fullExpandReduction_hmac_query_bound _ _ _
 
 /-- Local uniform work in the PRF reduction is the complete original sampler plus continuation; the two HMAC challenge calls remain a separate category. -/
@@ -143,8 +143,8 @@ theorem hmac_uniform {Context Result : Type} (sample : ProbComp (Context × Root
     (resume : Continue Context Result) (qSample qObserve : Nat)
     (sampleBound : sample.IsTotalQueryBound qSample)
     (observeBound : ∀ context response beacon server, (resume context response beacon server).IsTotalQueryBound qObserve) :
-    (fullExpandReduction .ratchet (sampler sample) (observer resume)).IsQueryBoundP IsHmacUniformQuery (qSample + qObserve) :=
-  fullExpandReduction_uniform_query_bound .ratchet (sampler sample) (observer resume)
+    (fullExpandReduction .initial (sampler sample) (observer resume)).IsQueryBoundP IsHmacUniformQuery (qSample + qObserve) :=
+  fullExpandReduction_uniform_query_bound .initial (sampler sample) (observer resume)
     (sampler_uniform sample qSample sampleBound) (observer_uniform resume qObserve observeBound)
 
 set_option maxRecDepth 2048 in
@@ -154,20 +154,20 @@ theorem game_bills {Context Result : Type} (source : FixedHkdfSha512NoSaltSource
     (sampleBound : sample.IsTotalQueryBound qSample)
     (observeBound : ∀ context response beacon server, (resume context response beacon server).IsTotalQueryBound qObserve) :
     (real source sample resume).IsTotalQueryBound (qSample + qObserve) ∧
-      (extractUniformGame (sampler sample) (fullExtractReduction hmac .ratchet (observer resume))).IsTotalQueryBound
+      (extractUniformGame (sampler sample) (fullExtractReduction hmac .initial (observer resume))).IsTotalQueryBound
         (qSample + (64 + qObserve)) ∧
-      (hmacPrfRealGame hmac (fullExpandReduction .ratchet (sampler sample) (observer resume))).IsTotalQueryBound
+      (hmacPrfRealGame hmac (fullExpandReduction .initial (sampler sample) (observer resume))).IsTotalQueryBound
         (64 + (qSample + qObserve)) ∧
-      (hmacPrfRandomGame (fullExpandReduction .ratchet (sampler sample) (observer resume))).IsTotalQueryBound
+      (hmacPrfRandomGame (fullExpandReduction .initial (sampler sample) (observer resume))).IsTotalQueryBound
         (qSample + (64 + (64 + qObserve))) ∧
       (random sample resume).IsTotalQueryBound (qSample + (64 + qObserve)) := by
   have sampled := sampler_uniform sample qSample sampleBound
   have observed := observer_uniform resume qObserve observeBound
-  refine ⟨?_, fullExtractUniform_uniform_query_bound hmac .ratchet _ _ sampled observed,
-    fullHmacReal_uniform_query_bound hmac .ratchet _ _ sampled observed,
-    fullHmacRandom_uniform_query_bound .ratchet _ _ sampled observed, ?_⟩
+  refine ⟨?_, fullExtractUniform_uniform_query_bound hmac .initial _ _ sampled observed,
+    fullHmacReal_uniform_query_bound hmac .initial _ _ sampled observed,
+    fullHmacRandom_uniform_query_bound .initial _ _ sampled observed, ?_⟩
   · rw [← real_source]
-    exact sourceFullGame_uniform_query_bound source .ratchet _ _ sampled observed
+    exact sourceFullGame_uniform_query_bound source .initial _ _ sampled observed
   · unfold random
     exact isTotalQueryBound_bind sampleBound fun pair =>
       isTotalQueryBound_bind (CtxComputationalSecurity.uniformFixedBytes_isTotalQueryBound 64) fun output => by

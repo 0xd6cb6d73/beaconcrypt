@@ -22,7 +22,7 @@ def assemble (owners : List (Owner source)) (env : EnvState RegistrationServerRo
     server := {state.server with world := RegistrationWorldAgreementCompiler.join env state.server.world.world.1}}
 
 noncomputable def execute (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (owner : Owner source) (control : pqxdh.BeaconAborted) (reply : RustM (Option registration.CompletedBeacon))
     (owners : List (Owner source)) (env : EnvState RegistrationServerRoleBackend.State) (before : Native) :
     ProbComp (RustM (Option Pqxdh.Bytes) × Native) :=
@@ -46,7 +46,7 @@ def after (index : Nat) (owner : Owner source) (control : pqxdh.BeaconAborted)
   | _ => RegistrationNativeFinishTerminal.aborted index owner control before
 
 theorem abort_tree (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (owner : Owner source) (control : pqxdh.BeaconAborted) (value : RustM (Option Pqxdh.Bytes))
     (owners : List (Owner source)) (env : EnvState RegistrationServerRoleBackend.State) (before : Native)
     (ready : PqxdhRecordLiftWorld.BeaconReady before.server.world.world.1 owner.worldOwner) :
@@ -65,7 +65,7 @@ theorem abort_tree (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks 
   rfl
 
 theorem install_tree (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (owner : Owner source) (control : pqxdh.BeaconAborted) (completed : registration.CompletedBeacon)
     (owners : List (Owner source)) (env : EnvState RegistrationServerRoleBackend.State) (before : Native)
     (ready : PqxdhRecordLiftWorld.BeaconReady before.server.world.world.1 owner.worldOwner) :
@@ -86,7 +86,7 @@ theorem install_tree (setup : PqxdhServerAuthExperiment.Setup base KemSK) (check
 
 
 theorem execute_exact (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (owner : Owner source) (control : pqxdh.BeaconAborted) (reply : RustM (Option registration.CompletedBeacon))
     (owners : List (Owner source)) (env : EnvState RegistrationServerRoleBackend.State) (before : Native)
     (ready : PqxdhRecordLiftWorld.BeaconReady before.server.world.world.1 owner.worldOwner) :

@@ -54,6 +54,11 @@ noncomputable def reserved (self : Server) (initial : registration.ServerInitial
     | .Err _ => pure (none, .ok (.None, current))
     | .Ok _ => (fun result => (some result.1, result.2)) <$> completion current initial
 
+noncomputable def adHash (self : Server) (pending : registration.ServerAdHash) : m Word :=
+  invoke (liftRust pending.request) fun request =>
+  invoke (children.executeHash request) fun digest =>
+    checked self (pending.resume digest) (reserved completion self)
+
 noncomputable def lookup (self : Server) (pending : peer.CompletionLookup) (plaintext : Slice U8) : m Word :=
   invoke (liftRust pending.request) fun identifier =>
   invoke (liftRust (CoreModels.core.slice.Slice.len plaintext)) fun size =>
@@ -66,7 +71,7 @@ noncomputable def lookup (self : Server) (pending : peer.CompletionLookup) (plai
         hashbrown.alloc.inner.Global.Insts.HashbrownAllocInnerAllocator
         core.U64.Insts.CoreHashHash (hashbrown.Equivalent.Blanket core.U64.Insts.CoreCmpEq
           (core.borrow.Borrow.Blanket U64)) self.known_ids identifier) fun occupied =>
-        checked self (pending.resume occupied) (reserved completion self)
+        checked self (pending.resume occupied) (adHash completion self)
 
 noncomputable def build (self : Server) (token : beaconcrypt_public_wrapper.server.RegistrationOutput)
     (data : core.option.Option (Slice U8)) : m Word :=
@@ -121,6 +126,30 @@ private theorem reserved_erasure
       exact matched {self with known_ids := known} initial
 
 omit crypto in
+private theorem adHash_erasure
+    (matched : ∀ current initial, Prod.snd <$> completion current initial = (AdapterPublicServerBuildBody.record (m := m) current initial).run)
+    (self : Server) (pending : registration.ServerAdHash) :
+    Prod.snd <$> adHash completion self pending = (AdapterPublicServerBuildBody.adHash (m := m) self pending).run := by
+  unfold adHash AdapterPublicServerBuildBody.adHash
+  rw [invoke_erasure, RustT.run_bind]
+  apply bind_congr
+  intro requested
+  cases requested with
+  | fail error | div => rfl
+  | ok request =>
+    simp only []
+    rw [invoke_erasure, RustT.run_bind]
+    apply bind_congr
+    intro digest
+    cases digest with
+    | fail error | div => rfl
+    | ok digest =>
+      simp only []
+      rw [checked_erasure, AdapterPublicServerRecord.checked]
+      exact congrArg (AdapterPublicServerRecord.resumeResult self (pending.resume digest))
+        (funext (fun initial => reserved_erasure completion matched self initial))
+
+omit crypto in
 private theorem lookup_erasure
     (matched : ∀ current initial, Prod.snd <$> completion current initial = (AdapterPublicServerBuildBody.record (m := m) current initial).run)
     (self : Server) (pending : peer.CompletionLookup) (plaintext : Slice U8) :
@@ -160,7 +189,7 @@ private theorem lookup_erasure
             simp only []
             rw [checked_erasure, AdapterPublicServerRecord.checked]
             exact congrArg (AdapterPublicServerRecord.resumeResult self (pending.resume occupied))
-                (funext (fun initial => reserved_erasure completion matched self initial))
+                (funext (fun selected => adHash_erasure completion matched self selected))
 
 private theorem build_erasure
     (matched : ∀ current initial, Prod.snd <$> completion current initial = (AdapterPublicServerBuildBody.record (m := m) current initial).run)

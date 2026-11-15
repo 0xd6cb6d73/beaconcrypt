@@ -8,6 +8,7 @@ import BeaconcryptCore.Computational.RegistrationNativePlatformExtractedSdkIniti
 import BeaconcryptCore.Refinement.AdapterServerConstructorRetained
 import BeaconcryptCore.Refinement.AdapterServerConstructorKeyFrame
 import BeaconcryptCore.Refinement.AdapterServerConstructorMaterial
+import BeaconcryptCore.Refinement.AdapterServerConstructorGeneration
 open CoreModels Aeneas OracleComp OracleSpec
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -43,14 +44,13 @@ local notation "edSample"   =>   PqxdhRecordLiftWorld.sampled (n:=n) (AdapterSer
 local notation "mlSample"   =>   PqxdhRecordLiftWorld.sampled (n:=n) (RegistrationNativeMldsa.generate mlSource)
 variable (ed : AdapterServerConstructorJoint.EdContract generator view setup.joint
   (PqxdhRecordLiftWorld.sampled (n:=n) (AdapterServerConstructorStartup.edCore ensureInit)))
-variable (ml : AdapterBeaconConstructorGeneration.MldsaContract generator view
+variable (ml : AdapterServerConstructorGeneration.MldsaContract generator view
   (PqxdhRecordLiftWorld.sampled (n:=n) (RegistrationNativeMldsa.generate mlSource)))
 include views objects ed ml
 
 variable (edGetter : ∀key,(crypto.edPublicBytes key).run=pure (.ok (view.edPublic key)))
 variable (mlGetter : ∀identity,(localOps.auth_MldsaIdentity_public_key identity).run=pure (.ok (view.mldsa identity).publicKey))
-variable (hashLeaf : ∀request,(children.executeHash request).run=RegistrationNativeServerPinRecompute.nativeHash request)
-include edGetter mlGetter hashLeaf
+include edGetter mlGetter
 
 variable {Platform : Type}
 
@@ -63,7 +63,7 @@ noncomputable def carrier (identityIndex : Nat) (identifier : U64) (rng : R)
     RegistrationNativePlatformPublicAdapterTokenLineage.Carrier (R:=R) setup view views ready.initial.created ready.initial.credential
       (ready.initial.state,previous) := by
   refine ⟨RegistrationNativePlatformSdkStrongInitialized.carrier setup generator view views objects ensureInit ed ml
-    edGetter mlGetter hashLeaf identityIndex identifier rng receipt ready previous supported returned, ?_⟩
+    edGetter mlGetter identityIndex identifier rng receipt ready previous supported returned, ?_⟩
   change RegistrationNativePlatformPublicAdapterTokenLineage.Parsed (fun _=>none)
   exact RegistrationNativePlatformPublicAdapterTokenLineage.empty
 

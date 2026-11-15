@@ -44,14 +44,14 @@ private theorem lower_hom : Cslib.IsMonadHom
 
 noncomputable def native (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State Value) :
     StateT (Local n KemSK source) m Value := fun before =>
   simulateQ coins ((RegistrationNativeMldsaShared.lower setup checks representation created work).run before)
 
 private theorem legacy (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State Value) :
     lower (RegistrationNativePlatformGenericBundle.liftLegacy
       (RegistrationNativePlatformExperiment.trusted coins setup checks representation created source) work) =
@@ -82,7 +82,7 @@ private theorem state_pure_apply {S X : Type} {m : Type → Type} [Monad m]
 
 private theorem owners (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     lower (get : Front n KemSK source m (RegistrationNativeBeaconFrontend.State source)) =
       native coins setup checks representation created get := by
   funext before
@@ -91,8 +91,8 @@ private theorem owners (coins : QueryImpl unifSpec m) (setup : Setup base KemSK)
 
 noncomputable def bundle (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
-    (encode : registration.SignedInitView → Front n KemSK source m (RustM (Option Encoded)))
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
+    (encode : registration.InitView → Front n KemSK source m (RustM (Option Encoded)))
     (index : Nat) : StateT (Local n KemSK source) m (RustM (Option Encoded)) := do
   let owners ← native coins setup checks representation created get
   match owners[index]? with
@@ -114,7 +114,7 @@ noncomputable def bundle (coins : QueryImpl unifSpec m) (setup : Setup base KemS
         (fun query => native coins setup checks representation created
           (RegistrationNativeBeaconFrontend.outgoing setup source index owner query))
         (fun view => lower (encode view)) ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey
+        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin
       match published with
       | .fail error => pure (.fail error)
       | .div => pure .div
@@ -129,8 +129,8 @@ noncomputable def bundle (coins : QueryImpl unifSpec m) (setup : Setup base KemS
 /-- Actual source bundle control, including failed stateful encoding, lowers to its literal owner/environment/native state. -/
 theorem bundle_source (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
-    (encode : registration.SignedInitView → Front n KemSK source m (RustM (Option Encoded)))
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
+    (encode : registration.InitView → Front n KemSK source m (RustM (Option Encoded)))
     (index : Nat) :
     lower (RegistrationNativePlatformGenericBundle.bundle
       (RegistrationNativePlatformExperiment.trusted coins setup checks representation created source)
@@ -161,7 +161,7 @@ theorem bundle_source (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) 
 
 noncomputable def sourceBundle (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     {E : Type} (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) m) (index : Nat) :
     RegistrationNativePlatformExperiment.M n KemSK source m (RustM (Option Pqxdh.Bytes)) := fun before =>
   (fun result : RustM (Option (alloc.vec.Vec U8)) × Local n KemSK source => ((do let optional ← result.1; .ok (optional.map TranscriptAuthParts.absSlice)),
@@ -174,11 +174,11 @@ noncomputable def sourceBundle (coins : QueryImpl unifSpec m) (setup : Setup bas
 /-- The complete actual source bundle, including its actual stateful writer, equals the reassociated local program. -/
 theorem sourceBundle_actual (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     {E : Type} (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) m) (index : Nat) :
     sourceBundle (n := n) (source := source) coins setup checks representation created writer index =
       RegistrationNativePlatformExperiment.bundle coins setup checks representation created source writer index := by
-  let encoder : registration.SignedInitView → Front n KemSK source m (RustM (Option (alloc.vec.Vec U8))) :=
+  let encoder : registration.InitView → Front n KemSK source m (RustM (Option (alloc.vec.Vec U8))) :=
     RegistrationNativePlatformGenericBundle.encoderWith
     (RegistrationNativePlatformExperiment.writer (n := n) (KemSK := KemSK) (source := source) writer)
   have localLaw := bundle_source coins setup checks representation created encoder index

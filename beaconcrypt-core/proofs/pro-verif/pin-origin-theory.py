@@ -22,12 +22,12 @@ THEORY = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(THEORY)
 
 TOKEN_SHA256 = {
-    "production-transcript-interface.pvl": "27b04f004249f80c071d07b046f35e8e1932dbbe8e44b4c2af39076e5dce1edf",
-    "crypto.pvl": "cf590d7c0799f077a1e1e164aa955b81a626037a58c8aa3e279add6754625323",
-    "extraction/lib.pvl": "d98c064616c17b784a6478e2fb732c5b743869405bd491bf40c73a1cf3f79403",
-    "fs-common.pvl": "fddb894e764ce90949ab5477bd8f6ee8f6def0ea34bfd0958263d6b8ca9ceb3f",
-    "fs-registration-binding.pvl": "50b006405e0a98006e2f1ebabe854b466569beed15b7338d656557bf573a679c",
-    "fs-records-b2s.pvl": "7fc2a35fefe9cfa0aa0e93a641b73523e8d1d2345baa55edf717772ad1bdaf3a",
+    "production-transcript-interface.pvl": "46f7c94e5a4ce6e63dc41cf212f40ba08e9db2acdd06805d057993146445dadb",
+    "crypto.pvl": "6e2f24249ce5a0d061676c5aa7f8762bcb77214a0a152d2b559a3ea9afa3dcc1",
+    "extraction/lib.pvl": "858836a8c5009b167e0e1ec9b7067c8d84b683d3b126ae57dca4efb6e37dfe75",
+    "fs-common.pvl": "86ba720e2790fa558957cc8b755057bc41cce7feb2d0426e5be14c51dd581cdd",
+    "fs-registration-binding.pvl": "2f3fdb8967409447053a29f75e79585172326bcb04dfa417345896025f82edfd",
+    "fs-records-b2s.pvl": "4960848b849207617d6413752874751ed4d9a2772fc26de693c297e368187654",
     "fs-records-b2s-sends.pvl": "bdab11d7acec74c06cec4acf91cc0645f1d098a75725b2563cdc105cbf372a98",
     "fs-records-b2s-sends-chosen.pvl": "2c89ae654ea2a0ddf186a3538ae03688d707193661376bdd02e3daa8f0fb99aa",
     "fs-records-b2s-receive.pvl": "804737cf522cf20cb7f68f50f7680ba99357c87581e3d1f47f44ccb2cd6224d0",

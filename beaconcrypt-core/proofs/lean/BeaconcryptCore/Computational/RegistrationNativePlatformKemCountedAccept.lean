@@ -30,7 +30,7 @@ def ordinaryServer (work : StateT Front (StateT Platform ProbComp) Value) : Stat
 
 noncomputable def afterAuthentication (setup : Setup base KemSK) (checks : Checks)
     (reserve : StateT Front (StateT Platform ProbComp) Bool)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (_packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit) : StateT Client M (RustM (Option Nat)) := do
   let before ← get
   if before.server.consumed.contains (RegistrationReplaySchedule.identifier authenticated) then pure (.ok none)
@@ -49,7 +49,7 @@ noncomputable def afterAuthentication (setup : Setup base KemSK) (checks : Check
 
 noncomputable def afterPin (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (reserve : StateT Front (StateT Platform ProbComp) Bool) (route : RawCtxServerRouting.SenderDecoder)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (pin : RustM (core.option.Option session.ServerAuthenticationPin)) : StateT Client M (RustM (Option Nat)) :=
   match pin with
   | .fail error => pure (.fail error)
@@ -65,13 +65,13 @@ noncomputable def afterPin (setup : Setup base KemSK) (codec : Codec Reader Resp
 
 noncomputable def accept (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (reserve : StateT Front (StateT Platform ProbComp) Bool) (route : RawCtxServerRouting.SenderDecoder)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) : StateT Client M (RustM (Option Nat)) := do
   let pin ← ordinaryServer (RegistrationNativePlatformSourceBuild.pin coins)
   afterPin setup codec checks reserve route representation created packet pin
 
 private theorem agree_run (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit) (before : Client) (pool : Pool KemSK) :
     RegistrationNativeKemCountedProgram.runState setup.baseImpl setup.kem
       (RegistrationNativeKemCountedServerPrimitive.agree setup checks representation created authenticated) before pool =
@@ -107,7 +107,7 @@ private theorem ordinary_server_run (setup : Setup base KemSK) (work : StateT Fr
   rw [ordinaryServer, server_run, RegistrationNativePlatformKemCountedProgram.run_lift, Functor.map_map]
 
 private theorem injected_agree_run (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit)
     (before : Client) (previous : Platform) (pool : Pool KemSK) :
     RegistrationNativePlatformKemCountedProgram.runState setup
@@ -124,7 +124,7 @@ private theorem run_get (setup : Setup base KemSK) (before : Client) (previous :
 /-- Replay, allocation, agreement failure and token retention have exactly the original source/platform poststates; only the private indexed capability is reified. -/
 theorem afterAuthentication_source (setup : Setup base KemSK) (checks : Checks)
     (reserve : StateT Front (StateT Platform ProbComp) Bool)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit)
     (before : Client) (previous : Platform) (pool : Pool KemSK) :
     RegistrationNativePlatformKemCountedProgram.runState setup
@@ -167,7 +167,7 @@ theorem afterAuthentication_source (setup : Setup base KemSK) (checks : Checks)
 /-- Actual mandatory authentication runs after the actual recomputed pin and before the indexed agreement, including all failed authentication prefixes. -/
 theorem afterPin_source (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (reserve : StateT Front (StateT Platform ProbComp) Bool) (route : RawCtxServerRouting.SenderDecoder)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (pin : RustM (core.option.Option session.ServerAuthenticationPin))
     (before : Client) (previous : Platform) (pool : Pool KemSK) :
     RegistrationNativePlatformKemCountedProgram.runState setup
@@ -208,7 +208,7 @@ theorem afterPin_source (setup : Setup base KemSK) (codec : Codec Reader Respons
 /-- The complete actual source acceptance controller has the same native, platform, private-row and draw-cost result. -/
 theorem accept_source (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (reserve : StateT Front (StateT Platform ProbComp) Bool) (route : RawCtxServerRouting.SenderDecoder)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (before : Client) (previous : Platform) (pool : Pool KemSK) :
     RegistrationNativePlatformKemCountedProgram.runState setup
       (accept setup codec checks reserve route representation created packet) before previous pool =

@@ -8,6 +8,8 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option maxHeartbeats 500000
 namespace BeaconcryptCore.Computational.PqxdhLaterExecutableSource
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPhase1AcceptanceOracle PqxdhKemIndCca PqxdhInitializerSecrecy
 open CtxRomAuth AdaptiveCtxSharedHash PqxdhSecretInputKdf PqxdhFullSecretInputKdf
@@ -42,7 +44,7 @@ noncomputable def pendingOriginal (c : PqxdhAuthenticatedRootBudgets.Certificate
       (PqxdhInitialPreparedSourceCaps.postCap env0 baseImpl kem program post c) pending.1 := by
     simpa only [PqxdhLaterExecutableCertificates.PacketFits, shape] using result.property
   exact
-  PqxdhLaterSavedPostComparison.original
+  PqxdhLaterSavedPostComparison.original (completedBinding := completedBinding)
     (PqxdhPreparedPrefixCallbacks.preparation attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem result.val.1.1 result.val.1.2)
     (PqxdhPreparedPrefixCallbacks.application attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem result.val.1.1 result.val.1.2)
     (initialLocal (A := A) (N := BareState 1) (env0).source start.1.selectedMessage zeroRoot (PqxdhInitialSampledParent.response start))
@@ -58,7 +60,7 @@ noncomputable def pendingCompiled (c : PqxdhAuthenticatedRootBudgets.Certificate
       (PqxdhInitialPreparedSourceCaps.postCap env0 baseImpl kem program post c) pending.1 := by
     simpa only [PqxdhLaterExecutableCertificates.PacketFits, shape] using result.property
   exact
-  PqxdhLaterSavedPostComparison.compiled
+  PqxdhLaterSavedPostComparison.compiled (completedBinding := completedBinding)
     (PqxdhPreparedPrefixCallbacks.preparation attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem result.val.1.1 result.val.1.2)
     (PqxdhPreparedPrefixCallbacks.application attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem result.val.1.1 result.val.1.2)
     (initialLocal (A := A) (N := BareState 1) (env0).source start.1.selectedMessage zeroRoot (PqxdhInitialSampledParent.response start))
@@ -72,22 +74,22 @@ theorem pending_native (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseI
     (shape : result.val.2.1.1.1 = .inr (start, .inr pending))
     (cache : CtxRO.QueryCache)
     (supported : (result, cache) ∈ support ((simulateQ hashImpl
-      (PqxdhLaterExecutableCertificates.certified env callbacks baseImpl kem attachedVerify primitives program post
+      (PqxdhLaterExecutableCertificates.certified (associatedData := associatedData) (completedBinding := completedBinding) env callbacks baseImpl kem attachedVerify primitives program post
         selected number ancestors disclosed c depth)).run ∅))
     (key : RootOutput) (component : AdaptiveCtxDynamicKnownKeys.SourceState) (sameCache : component.cache = cache) :
     (fun final => ((final.1, (tracedProj key final.2).1), retainedOf (tracedProj key final.2).2)) <$>
-      pendingOriginal setup env callbacks program post attachedVerify primitives baseImpl kem c result start pending shape key component =
+      pendingOriginal (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem c result start pending shape key component =
     (fun final => ((some final.1.1, final.1.2), final.2)) <$>
-      PqxdhLaterPreparedCompletion.native setup env (result.val, cache) start pending key := by
-  have actual := PqxdhLaterPreparedCompletion.source setup env callbacks program post attachedVerify primitives baseImpl kem
+      PqxdhLaterPreparedCompletion.native (completedBinding := completedBinding) setup env (result.val, cache) start pending key := by
+  have actual := PqxdhLaterPreparedCompletion.source (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem
     selected number ancestors disclosed (result.val, cache) start pending key component c depth
-    (PqxdhLaterExecutableCertificates.evaluated_support env callbacks baseImpl kem attachedVerify primitives program post
+    (PqxdhLaterExecutableCertificates.evaluated_support (associatedData := associatedData) (completedBinding := completedBinding) env callbacks baseImpl kem attachedVerify primitives program post
       selected number ancestors disclosed c depth (result, cache) supported) shape sameCache
   rw [actual]
   let fits : PqxdhInitialOriginCertificates.Fits
       (PqxdhInitialPreparedSourceCaps.postCap env0 baseImpl kem program post c) pending.1 := by
     simpa only [PqxdhLaterExecutableCertificates.PacketFits, shape] using result.property
-  have projected := PqxdhLaterSavedPostComparison.original_source
+  have projected := PqxdhLaterSavedPostComparison.original_source (completedBinding := completedBinding)
     (PqxdhPreparedPrefixCallbacks.preparation attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem result.val.1.1 result.val.1.2)
     (PqxdhPreparedPrefixCallbacks.application attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem result.val.1.1 result.val.1.2)
     (initialLocal (A := A) (N := BareState 1) (env0).source start.1.selectedMessage zeroRoot (PqxdhInitialSampledParent.response start))
@@ -103,11 +105,11 @@ theorem pending_compiled (c : PqxdhAuthenticatedRootBudgets.Certificate env0 bas
     (shape : result.val.2.1.1.1 = .inr (start, .inr pending))
     (key : RootOutput) (component : AdaptiveCtxDynamicKnownKeys.SourceState) :
     (simulateQ (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder env.decode) env.source.crypto key)
-      (PqxdhLaterExecutableCompletion.suffix setup env callbacks program post attachedVerify primitives baseImpl kem c result)).run component =
+      (PqxdhLaterExecutableCompletion.suffix (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem c result)).run component =
     (fun final => ((Sum.inr (result.val, (final.1, final.2.1)) : PqxdhLaterExecutableCompletion.Output
       (setup := setup) (M := M) (P := P) (I := I) (K := K) (X := X) (Response := Response)
       (A := A) (KemSK := KemSK) (S := S) (B := B)), final.2.2)) <$>
-      pendingCompiled setup env callbacks program post attachedVerify primitives baseImpl kem c result start pending shape key component := by
+      pendingCompiled (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem c result start pending shape key component := by
   unfold PqxdhLaterExecutableCompletion.suffix
   split
   · rename_i decision impossible

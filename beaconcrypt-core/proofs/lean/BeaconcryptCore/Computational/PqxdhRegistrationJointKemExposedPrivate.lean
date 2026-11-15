@@ -130,7 +130,7 @@ theorem command_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
     (budget : PqxdhRegistrationJointKemCommands.Budget)
     (certified : ∀ source, work.IsQueryBoundP
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) (state : NativeState KemSK)
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK)
     (kind : Kind) (nonuniform : kind ≠ .uniform) :
     (commands setup codec checks identityIndex publicIdentity work owners state).IsQueryBoundP
       (Private (KemSK := KemSK) kind) (privateTotal budget kind) := by

@@ -46,7 +46,7 @@ theorem left_unused (initial : registration.ServerInitialKdf) (root : Std.Array 
   simp only [selected, registration.ServerInitialKdf.resume, pqxdh.server_abort_candidate,
     initial_kernel initial root actual, pqxdh.ServerRegistrationCandidate.impl.key_id,
     pqxdh.ServerRegistrationCandidate.impl.server_identity_key_id,
-    session.RegistrationBinding.impl.associated_data, contextRun, bind_tc_ok]
+    session.CompletedRegistrationBinding.impl.associated_data, contextRun, bind_tc_ok]
   obtain ⟨empty, emptyRun⟩ : ∃ result, core.slice.Slice.is_empty initial.application = .ok result := ⟨_, rfl⟩
   simp only [ConcreteRatchetKernel.from_counters, ratchet.refined.RefinedRatchet.from_counters,
     ratchet.control.RatchetState.from_counters, ratchet.control.SequenceCache.empty,
@@ -68,7 +68,7 @@ theorem left_unused (initial : registration.ServerInitialKdf) (root : Std.Array 
 theorem server_left_unused (control : pqxdh.ServerState) (current : session.ServerAuthenticationPin)
     (availability : pqxdh.KeyIdAvailability) (agreement : agreement.ServerAgreement) (application : Slice Std.U8)
     (initial : registration.ServerInitialKdf)
-    (actual : registration.begin_server_completion control current availability agreement application = .ok (.Ok initial))
+    (actual : BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission control current availability agreement application initial)
     (left₁ left₂ right : PqxdhSecretInputKdf.RootOutput) (output : PqxdhFullSecretInputKdf.FullOutput) :
     selected initial (RawCtxSelectedInitialConstructor.response64 (left₁ ++ right))
         (RawCtxKdfRequestTable.fullResponse output) =

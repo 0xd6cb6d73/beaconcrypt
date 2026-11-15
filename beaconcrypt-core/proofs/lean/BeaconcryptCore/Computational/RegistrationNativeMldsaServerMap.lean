@@ -111,9 +111,18 @@ theorem afterOccupancy (mapping : Map left right) (current : Credential left)
   | ok result => cases result with
     | Err previous => exact RegistrationNativeMldsaSignMap.state_pure mapping _
     | Ok pending =>
-        cases checks.reservePeer with
-        | false => simp only [Bool.false_eq_true, ite_false, RegistrationNativeMldsaSignMap.state_pure]
-        | true => simp only [ite_true, fromInitial]
+        simp only [RegistrationNativeMldsaSignMap.state_bind, RegistrationNativeMldsaServer.adHash,
+          RegistrationNativeMldsaSignMap.state_lift]
+        congr 1
+        funext hashed
+        cases hashed with
+        | fail error | div => exact RegistrationNativeMldsaSignMap.state_pure mapping _
+        | ok result => cases result with
+          | Err previous => exact RegistrationNativeMldsaSignMap.state_pure mapping _
+          | Ok initial =>
+              cases checks.reservePeer with
+              | false => simp only [Bool.false_eq_true, ite_false, RegistrationNativeMldsaSignMap.state_pure]
+              | true => simp only [ite_true, fromInitial]
 
 private theorem transform_bind {Value Next : Type} (mapping : Map left right)
     (work : OracleComp (RegistrationNativeMldsaProgram.Spec left) Value)

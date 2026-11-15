@@ -26,7 +26,7 @@ theorem initialized (previous : Platform)
       (RegistrationNativeMldsaCreation.start setup ensureInit identityIndex serverKid) {}) := by
     rw [← RegistrationNativeMldsaFamilyStartup.erase (n := n) (cap := cap) source setup ensureInit identityIndex serverKid, support_map]
     exact ⟨((some initial, ghosts), pool), supported, rfl⟩
-  exact ⟨fallback, ⟨good.1, RegistrationNativePlatformServerPinTrace.table_initialized setup source ensureInit identityIndex serverKid (some initial, pool) original initial rfl,
+  exact ⟨fallback, ⟨good.1, (RegistrationNativePlatformServerPinTrace.table_initialized setup source ensureInit identityIndex serverKid (some initial, pool) original initial rfl).2,
     good.2⟩, attempts⟩
 end BeaconcryptCore.Computational.RegistrationNativePlatformMldsaFamilyStartup
 

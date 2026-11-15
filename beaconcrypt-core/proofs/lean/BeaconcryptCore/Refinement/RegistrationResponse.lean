@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Refinement.RegistrationInputs
-import BeaconcryptCore.PanicFreedom.RegistrationTrivial
+import BeaconcryptCore.Refinement.RegistrationAd
 
 /-! Exact incoming response transcript operands and retained pending authentication state. -/
 
@@ -9,6 +9,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core PqxdhRefinement
 
 set_option autoImplicit false
+set_option maxRecDepth 4096
 
 namespace BeaconcryptCore.Refinement.RegistrationResponse
 
@@ -100,12 +101,41 @@ theorem malformed_and_hash_failure_exact (pending : registration.BeaconPending)
       registration.ResponseHash.resume self .None = ok (.Err (abortedState self.pending)) := by
   exact ⟨rfl, rfl⟩
 
-/-- Only a successful verification reply publishes the exact retained packet and pending binding. -/
+/-- Pinned verification selects the exact retained-request and response AD preimage. A false reply aborts before that request is exposed. -/
 theorem response_mldsa_gate_exact (self : registration.ResponseMldsaVerification) (verified : Bool) :
-    registration.ResponseMldsaVerification.resume self verified =
-      if verified then ok (.Ok { pending := self.pending, packet := self.packet })
-      else ok (.Err (abortedState self.pending)) := by
-  rfl
+    ∃ next, registration.ResponseMldsaVerification.resume self verified =
+      (if verified then ok (.Ok next) else ok (.Err (abortedState self.pending))) ∧
+      next.pending = self.pending ∧ next.packet = self.packet ∧
+      absBytes next.input = RegistrationAd.preimage self.pending.binding
+        (RegistrationAd.responseView self.packet.public) := by
+  obtain ⟨next, ran, pending, packet, input⟩ := RegistrationAd.verified_response_selects_exact_ad self
+  refine ⟨next, ?_, pending, packet, input⟩
+  cases verified
+  · simp only [registration.ResponseMldsaVerification.resume, Bool.false_eq_true, ↓reduceIte,
+      registration.BeaconPending.abort, pqxdh.beacon_abort_init, abortedState, bind_tc_ok]
+  · exact ran
+
+/-- The second hash uses the full fixed2638-byte AD encoder result. -/
+theorem response_ad_hash_request_exact (self : registration.BeaconAdHash) :
+    ∃ request, self.request = ok request ∧ RegistrationInputs.hashBytes request = absBytes self.input :=
+  ⟨_, rfl, rfl⟩
+
+/-- The final authentication reply retains control, pin, request digest, packet, exact new digest and assembled AD. -/
+theorem response_ad_hash_some_exact (self : registration.BeaconAdHash)
+    (digest : Array Std.U8 64#usize) :
+    ∃ accepted, self.resume (.Some digest) = ok (.Ok accepted) ∧
+      accepted.control = self.pending.control ∧ accepted.packet = self.packet ∧
+      accepted.binding.server_pin = self.pending.binding.server_pin ∧
+      accepted.binding.init_hash = self.pending.binding.init_hash ∧
+      accepted.binding.session_transcript_hash = digest ∧
+      SessionBinding.registrationConsistent accepted.binding := by
+  obtain ⟨binding, ran, pin, initHash, identity, hash, ad⟩ :=
+    SessionBinding.complete_refines self.pending.binding digest
+  refine ⟨⟨self.pending.control, binding, self.packet⟩, ?_, rfl, rfl, pin, initHash, hash, ad⟩
+  simp [registration.BeaconAdHash.resume, ran]
+
+theorem response_ad_hash_none_exact (self : registration.BeaconAdHash) :
+    self.resume .None = ok (.Err (abortedState self.pending)) := rfl
 
 end BeaconcryptCore.Refinement.RegistrationResponse
 
@@ -138,3 +168,19 @@ end BeaconcryptCore.Refinement.RegistrationResponse
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Refinement.RegistrationResponse.response_mldsa_gate_exact
+
+/-- info: 'BeaconcryptCore.Refinement.RegistrationResponse.response_ad_hash_request_exact' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.RegistrationResponse.response_ad_hash_request_exact
+/-- info: 'BeaconcryptCore.Refinement.RegistrationResponse.response_ad_hash_some_exact' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.RegistrationResponse.response_ad_hash_some_exact
+/-- info: 'BeaconcryptCore.Refinement.RegistrationResponse.response_ad_hash_none_exact' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.RegistrationResponse.response_ad_hash_none_exact

@@ -17,6 +17,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 
 set_option autoImplicit false
+set_option warningAsError true
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterBranch
 open PqxdhServerAuthExperiment (Setup Codec Checks)
@@ -223,7 +224,7 @@ variable (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (route :
 theorem rejectRunL_complete {Z R : Type} (identityIndex : ℕ) (publicIdentity : PqxdhJointIdentity.PublicIdentity)
     (observe : Z × PqxdhRegistrationJointAcceptCutTag.Tag → R) (raw : Pqxdh.Bytes)
     (next : Option ℕ → OracleComp (PqxdhDeploymentLaterServerSource.Spec KemSK) Z)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) (log : Log)
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log)
     (state : PqxdhServerAuthNative.NativeState KemSK)
     (collected : Option (PqxdhServerRootPreparation.Inputs Reader PqxdhJointGapDh.ScalarBytes
       PqxdhBeaconPhase2Preparation.Word32) × List Pqxdh.Bytes) (logged : Option PqxdhJointGapDh.ScalarBytes)
@@ -241,7 +242,7 @@ theorem rejectRunL_complete {Z R : Type} (identityIndex : ℕ) (publicIdentity :
 /-- The logged command run of a mapped program is the run of the program with its result mapped. -/
 theorem run_map {Z W : Type} (identityIndex : ℕ) (publicIdentity : PqxdhJointIdentity.PublicIdentity) (f : Z → W)
     (work : OracleComp (PqxdhDeploymentLaterServerSource.Spec KemSK) Z)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) (log : Log)
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log)
     (state : PqxdhServerAuthNative.NativeState KemSK) :
     PqxdhDeploymentLaterServerCommands.run setup codec checks identityIndex publicIdentity (f <$> work) owners log state =
       (fun result => ((f result.1.1, result.1.2), result.2)) <$>
@@ -389,11 +390,11 @@ theorem opaqueAfterL_selected (decision : Out × (Ledger × (Snap × Local)) →
             (p.pool t)) (rejectRun setup codec checks created.server.server.metadata.identityIndex created.publicIdentity
               (PqxdhRegistrationJointAcceptCutTag.decideTag decision) raw
               (compiledNextL setup codec route second raw next reached.1.2)
-              (PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2.1).owners reached.2.2 reached.2.1.shared
+              ((PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2.1).owners, (PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2.1).inits) reached.2.2 reached.2.1.shared
               (none, pre.2) pre.1.2)).run).run
             (reached.2.1.pool.1, PqxdhDeploymentIdealPoolSource.routerOf reached.2.1.pool.2)
         | some ephemeral => pure (some (.pending raw value ephemeral pre.2 reached.2.1.shared
-            (PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2.1).owners reached.2.2
+            ((PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2.1).owners, (PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2.1).inits) reached.2.2
             (compiledNextL setup codec route second raw next reached.1.2)),
             (reached.2.1.pool.1, PqxdhDeploymentIdealPoolSource.routerOf reached.2.1.pool.2)) := by
   rcases reached with ⟨⟨cut, snap, copies⟩, joint, logAt⟩
@@ -427,7 +428,7 @@ theorem itemRestL_selected (decision : Out × (Ledger × (Snap × Local)) → Bo
         | none => pure false
         | some ephemeral => itemPostL setup codec checks t p decision
             (.ready created p.others (some (.pending raw value ephemeral pre.2 reached.2.1.shared
-              (PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2.1).owners reached.2.2
+              ((PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2.1).owners, (PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2.1).inits) reached.2.2
               (compiledNextL setup codec route second raw next reached.1.2)))
               (reached.2.1.pool.1, PqxdhDeploymentIdealPoolSource.routerOf reached.2.1.pool.2) after)) := by
   unfold itemRestL
@@ -784,7 +785,7 @@ def ActiveBranchL (ensureInit : StateT A ProbComp Bool) (bounds : FreshBounds) (
         (PqxdhDeploymentLaterServerTransfer.decision setup.source.crypto codec setup.serverKeyId budget event claim g)
         (.ready (PqxdhRegistrationJointServerBirth.encode created) p.others
           (some (.pending raw value ephemeral pre.2 reached.2.1.shared
-            (PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2.1).owners reached.2.2
+            ((PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2.1).owners, (PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2.1).inits) reached.2.2
             (compiledNextL setup codec route second raw next reached.1.2)))
           (reached.2.1.pool.1, PqxdhDeploymentIdealPoolSource.routerOf reached.2.1.pool.2) born.2.2))
       (activeCEL setup codec route checks (Target.ofCE budget g) p created

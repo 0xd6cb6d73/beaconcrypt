@@ -10,6 +10,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialSourceExperiment
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily
 open PqxdhInitialBeaconAmbient PqxdhInitialSourcePublication
 variable {ι M P I D K X Response A N : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -63,20 +65,20 @@ noncomputable def execution : PqxdhInitialNativeCarried.Execution extra M P I D 
     index, metadata, ready, post, before, empty, true⟩
 
 noncomputable def run (stage : Nat) :=
-  (PqxdhInitialSourcePublication.sequence source writer stage selectedMessage previousRoot response64 other
+  (PqxdhInitialSourcePublication.sequence (associatedData := associatedData) (completedBinding := completedBinding) source writer stage selectedMessage previousRoot response64 other
     sender route decode index metadata ready post before).run
       (initialState (root source previousRoot response64 selected) shared privateState cache)
 
 noncomputable def game (stage : Nat) : ProbComp Bool :=
   PqxdhInitialPublishedEvent.sourceDecision source (root source previousRoot response64 selected) selected number ancestors disclosed <$>
-    run source writer selectedMessage previousRoot response64 other sender route decode index metadata ready post before
+    run (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode index metadata ready post before
       selected shared privateState cache stage
 
 /-- Every experiment stage is exactly the full source execution consumed by the adjacent-hybrid sampler, with all original final fields retained. -/
 theorem run_source (stage : Nat) :
-    run source writer selectedMessage previousRoot response64 other sender route decode index metadata ready post before
+    run (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode index metadata ready post before
       selected shared privateState cache stage =
-    PqxdhInitialNativeAdjacent.run source writer (PqxdhInitialSelectedOrigin.mark source selectedMessage)
+    PqxdhInitialNativeAdjacent.run (associatedData := associatedData) (completedBinding := completedBinding) source writer (PqxdhInitialSelectedOrigin.mark source selectedMessage)
       sender route decode (execution response64 index metadata ready post before)
       (PqxdhInitialOriginFinishPath.withInitial source selectedMessage previousRoot response64 other) stage
       (initialState (root source previousRoot response64 selected) shared privateState cache) := rfl
@@ -84,23 +86,23 @@ theorem run_source (stage : Nat) :
 /-- Every accepted target record in this experiment has its whole selected-origin directional path already cached by actual source sends. -/
 theorem published_cached (stage : Nat)
     (result : (Bool × PqxdhInitialOriginPostPath.Snapshot M P I D K S B) × PqxdhInitialOriginPostPath.State A N)
-    (supported : result ∈ support (run source writer selectedMessage previousRoot response64 other sender route decode
+    (supported : result ∈ support (run (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
       index metadata ready post before selected shared privateState cache stage))
     (published : ((selected, number), true) ∈ result.1.2.2.published) :
     RawCtxSourcePublishedPath.Cached (root source previousRoot response64 selected) number result.2.1.1.2.1 :=
-  PqxdhInitialSourcePublication.publication_cached source writer stage selectedMessage previousRoot response64 other
+  PqxdhInitialSourcePublication.publication_cached (associatedData := associatedData) (completedBinding := completedBinding) source writer stage selectedMessage previousRoot response64 other
     (server source response64) (server_created source response64) selected sender route decode index metadata ready post
     before (initialState (root source previousRoot response64 selected) shared privateState cache) result supported number published
 
 /-- Adaptive publication positions are bounded by actual source callbacks from the empty log, with no assumed path length or collision-free chain. -/
 theorem published_bound (stage qPost : Nat) (bounded : ∀ reply, (post reply).IsTotalQueryBound qPost)
     (result : (Bool × PqxdhInitialOriginPostPath.Snapshot M P I D K S B) × PqxdhInitialOriginPostPath.State A N)
-    (supported : result ∈ support (run source writer selectedMessage previousRoot response64 other sender route decode
+    (supported : result ∈ support (run (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
       index metadata ready post before selected shared privateState cache stage))
     (published : ((selected, number), true) ∈ result.1.2.2.published) :
     number.val ≤ 7 + qPost * 67 := by
   simpa only [initialState, List.length_nil, Nat.zero_add] using
-    PqxdhInitialCounterPublication.publication_bound source writer stage selectedMessage previousRoot response64 other
+    PqxdhInitialCounterPublication.publication_bound (associatedData := associatedData) (completedBinding := completedBinding) source writer stage selectedMessage previousRoot response64 other
       (server source response64) (server_created source response64) selected sender route decode index metadata ready post
       qPost bounded before (initialState (root source previousRoot response64 selected) shared privateState cache)
       result supported number published
@@ -108,9 +110,9 @@ theorem published_bound (stage qPost : Nat) (bounded : ∀ reply, (post reply).I
 /-- Cache normalization for the same actual source event has coefficient one and the concrete chronological sum, with all initial validity premises discharged. -/
 theorem normalization (depth qPost : Nat) (bounded : ∀ reply, (post reply).IsTotalQueryBound qPost) :
     ENNReal.ofReal (discreteDistance
-      (game source writer selectedMessage previousRoot response64 other sender route decode index metadata ready post before
+      (game (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode index metadata ready post before
         selected number ancestors disclosed shared privateState cache (depth + 2))
-      (PqxdhInitialNativeAdjacent.normalized source writer (PqxdhInitialSelectedOrigin.mark source selectedMessage)
+      (PqxdhInitialNativeAdjacent.normalized (associatedData := associatedData) (completedBinding := completedBinding) source writer (PqxdhInitialSelectedOrigin.mark source selectedMessage)
         sender route decode (execution response64 index metadata ready post before)
         (PqxdhInitialOriginFinishPath.withInitial source selectedMessage previousRoot response64 other) depth
         (initialState (root source previousRoot response64 selected) shared privateState cache) >>=
@@ -118,7 +120,7 @@ theorem normalization (depth qPost : Nat) (bounded : ∀ reply, (post reply).IsT
             selected number ancestors disclosed result))) ≤
       ∑ j ∈ Finset.range (7 + qPost * 67), ((j + 1 : Nat) : ℝ≥0∞) * (2 ^ 256 : ℝ≥0∞)⁻¹ := by
   simpa only [game, run_source, execution, bind_pure_comp, Nat.zero_add] using
-    PqxdhInitialNativeAdjacent.normalization_after source writer (PqxdhInitialSelectedOrigin.mark source selectedMessage)
+    PqxdhInitialNativeAdjacent.normalization_after (associatedData := associatedData) (completedBinding := completedBinding) source writer (PqxdhInitialSelectedOrigin.mark source selectedMessage)
       sender route decode (execution response64 index metadata ready post before)
       (PqxdhInitialOriginFinishPath.withInitial source selectedMessage previousRoot response64 other) depth 0 qPost bounded
       (initialState (root source previousRoot response64 selected) shared privateState cache)

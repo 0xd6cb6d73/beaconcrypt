@@ -23,7 +23,7 @@ noncomputable section
 namespace beaconcrypt_parse
 
 /-- [beaconcrypt_parse::extraction_strip_prefix]:
-    Source: 'beaconcrypt-parse/src/lib.rs', lines 175:0-188:1 -/
+    Source: 'beaconcrypt-parse/src/lib.rs', lines 173:0-186:1 -/
 def extraction_strip_prefix
   (input : Slice Std.U8) («prefix» : Slice Std.U8) :
   RustM (core.option.Option (Slice Std.U8))
@@ -42,7 +42,7 @@ def extraction_strip_prefix
   else ok core.option.Option.None
 
 /-- [beaconcrypt_parse::extraction_argument_word]:
-    Source: 'beaconcrypt-parse/src/lib.rs', lines 159:0-163:1 -/
+    Source: 'beaconcrypt-parse/src/lib.rs', lines 157:0-161:1 -/
 def extraction_argument_word
   (encoded : Slice Std.U8) (width : Std.Usize) : RustM Std.U64 := do
   let word := Array.repeat 8#usize 0#u8
@@ -58,7 +58,7 @@ def extraction_argument_word
   core.num.U64.from_be_bytes word1
 
 /-- [beaconcrypt_parse::extraction_argument_long]:
-    Source: 'beaconcrypt-parse/src/lib.rs', lines 152:0-157:1 -/
+    Source: 'beaconcrypt-parse/src/lib.rs', lines 150:0-155:1 -/
 def extraction_argument_long
   (rest : Slice Std.U8) (width : Std.Usize) :
   RustM (core.option.Option (Std.U64 × (Slice Std.U8)))
@@ -110,7 +110,7 @@ def primitive_argument
         | _ => ok core.option.Option.None
 
 /-- [beaconcrypt_parse::extraction_preflight_field]:
-    Source: 'beaconcrypt-parse/src/lib.rs', lines 165:0-173:1 -/
+    Source: 'beaconcrypt-parse/src/lib.rs', lines 163:0-171:1 -/
 def extraction_preflight_field
   (remaining : Slice Std.U8) (major : Std.U8) :
   RustM (core.option.Option (Slice Std.U8))
@@ -202,6 +202,60 @@ def preflight
               | core.ops.control_flow.ControlFlow.Break residual =>
                 core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual
                   Unit residual
+            | core.ops.control_flow.ControlFlow.Break residual =>
+              core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual
+                Unit residual
+          | core.ops.control_flow.ControlFlow.Break residual =>
+            core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual
+              Unit residual
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual
+            Unit residual
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual
+          Unit residual
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual
+        Unit residual
+  else ok core.option.Option.None
+
+/-- [beaconcrypt_parse::extraction_preflight_four]:
+    Source: 'beaconcrypt-parse/src/lib.rs', lines 188:0-199:1 -/
+def extraction_preflight_four
+  (input : Slice Std.U8) («prefix» : Slice Std.U8)
+  (fields : Array Std.U8 4#usize) :
+  RustM (core.option.Option Unit)
+  := do
+  let i ← core.slice.Slice.len input
+  let b ← beaconcrypt_core.transport.complete_message_size_admitted i
+  if b
+  then
+    let o ← extraction_strip_prefix input «prefix»
+    let cf ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o
+    match cf with
+    | core.ops.control_flow.ControlFlow.Continue val =>
+      let i1 ← Array.index_usize fields 0#usize
+      let o1 ← extraction_preflight_field val i1
+      let cf1 ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o1
+      match cf1 with
+      | core.ops.control_flow.ControlFlow.Continue val1 =>
+        let i2 ← Array.index_usize fields 1#usize
+        let o2 ← extraction_preflight_field val1 i2
+        let cf2 ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o2
+        match cf2 with
+        | core.ops.control_flow.ControlFlow.Continue val2 =>
+          let i3 ← Array.index_usize fields 2#usize
+          let o3 ← extraction_preflight_field val2 i3
+          let cf3 ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o3
+          match cf3 with
+          | core.ops.control_flow.ControlFlow.Continue val3 =>
+            let i4 ← Array.index_usize fields 3#usize
+            let o4 ← extraction_preflight_field val3 i4
+            let cf4 ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o4
+            match cf4 with
+            | core.ops.control_flow.ControlFlow.Continue val4 =>
+              let b1 ← core.slice.Slice.is_empty val4
+              BeaconcryptCore.Refinement.RegistrationCodecStandardSlices.thenSomeUnit b1 ()
             | core.ops.control_flow.ControlFlow.Break residual =>
               core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual
                 Unit residual

@@ -69,6 +69,8 @@ private theorem appended (before : List (Option RegistrationNativeSecretWordMess
       have index : handle=before.length := by omega
       exact Or.inr (index ▸ returned)
 
+attribute [local irreducible] RegistrationNativePlatformSecretWordOpen.accept
+
 /-- A current typed callback can create a new surviving Ready only at its own successfully returned accept session. -/
 theorem typed_origin (query : RegistrationNativeRawAdapter.TypedSpec.Domain)
     (before : State source Platform Private)

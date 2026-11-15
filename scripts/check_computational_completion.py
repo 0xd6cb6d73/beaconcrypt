@@ -90,6 +90,50 @@ REVIEWED_NEGATIVE_SOURCE_GUARDS = {
 }
 
 
+PROOF_VALUE_GUARD_PATH = (
+    BRANCH_GUARD_DIRECTORY + "RegistrationNativeProofValueGuard.lean"
+)
+PROOF_VALUE_CONTROL_NAMESPACE = (
+    "RegistrationNativeSourceExecutionDependencyGuards.Controls."
+)
+PROOF_VALUE_CONTROL_NAMES = (
+    "ignoredApplication",
+    "binderTypeOnly",
+    "unusedLet",
+    "betaOnly",
+    "typeArgumentOnly",
+    "nestedTypeArgumentOnly",
+    "letTypeOnly",
+    "wrappedIgnored",
+)
+REVIEWED_NEGATIVE_SOURCE_GUARD_GROUPS = {
+    SOURCE_VALUE_GUARD_PATH: (
+        NEGATIVE_SOURCE_VALUE_GUARD,
+        negative_source_guard(
+            "RegistrationNativeAdHashCache.effects_hash_cached",
+            "BeaconcryptCore.Computational.RegistrationServerAdHash.state_hash_receipt",
+            "RegistrationServerAdHash.state_hash_receipt",
+        ),
+        negative_source_guard(
+            "RegistrationNativePlatformCtxSdk.pin_source",
+            "BeaconcryptCore.Computational.RegistrationNativePlatformCtxSdk.adHash_source",
+            "RegistrationNativePlatformCtxSdk.adHash_source",
+        ),
+    ),
+    PROOF_VALUE_GUARD_PATH: tuple(
+        negative_source_guard(
+            PROOF_VALUE_CONTROL_NAMESPACE + name,
+            "BeaconcryptCore.Computational." + PROOF_VALUE_CONTROL_NAMESPACE + "anchor",
+            "anchor",
+        ).replace(
+            "#guard_source_value_dependencies " + PROOF_VALUE_CONTROL_NAMESPACE + name,
+            "#guard_source_value_dependencies " + name,
+        )
+        for name in PROOF_VALUE_CONTROL_NAMES
+    ),
+}
+
+
 def fail(message: str) -> None:
     raise ValueError(message)
 
@@ -117,10 +161,13 @@ def guard_blocks(text: str) -> list[str]:
     # Start at the final documentation comment immediately before each guard.
     # Restricting the match to a single comment prevents one guard from hiding
     # unguarded print commands or another theorem's expected dependency output.
+    # Lean permits the expected info and closing delimiter on separate lines;
+    # retain the exact comment while requiring adjacent, complete command lines.
     return re.findall(
-        r"/-- info: (?:(?!-/).)* -/\s*#guard_msgs in\s*#print axioms [^\n]+",
+        r"/--[ \t\r\n]+info: (?:(?!-/).)*[ \t\r\n]+-/"
+        r"[ \t\r\n]*^#guard_msgs in$[ \t\r\n]+^#print axioms [^\r\n]+",
         text,
-        re.DOTALL,
+        re.DOTALL | re.MULTILINE,
     )
 
 
@@ -163,9 +210,16 @@ def check_roster(root: Path = ROOT, manifest: dict | None = None) -> None:
         if len(blocks) != len(re.findall(r"^#print axioms ", text, re.MULTILINE)):
             fail(f"unguarded dependency output: {name}")
         reviewed_negative = REVIEWED_NEGATIVE_SOURCE_GUARDS.get(name)
-        negative_guards = text.count(reviewed_negative) if reviewed_negative else 0
-        if negative_guards > 1:
+        reviewed_group = REVIEWED_NEGATIVE_SOURCE_GUARD_GROUPS.get(name)
+        reviewed_negatives = reviewed_group or (
+            (reviewed_negative,) if reviewed_negative else ()
+        )
+        negative_counts = [text.count(control) for control in reviewed_negatives]
+        if any(count > 1 for count in negative_counts):
             fail(f"duplicate source dependency negative control: {name}")
+        if reviewed_group and any(count != 1 for count in negative_counts):
+            fail(f"missing or changed reviewed source negative control: {name}")
+        negative_guards = sum(negative_counts)
         if len(blocks) + negative_guards != len(
             re.findall(r"^#guard_msgs in$", text, re.MULTILINE)
         ):

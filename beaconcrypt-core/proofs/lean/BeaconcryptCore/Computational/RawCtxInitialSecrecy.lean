@@ -38,19 +38,19 @@ theorem root_initializer (source : FixedHkdfSha512NoSaltSource) (role : Bool) (r
       RawCtxInitializedKdfFamily.initialReply source (role, rootBytes root) := by
   rfl
 
-/-- Serialization supplies exactly the original32-byte root and shared ratchet domain to initialization. -/
+/-- Serialization supplies exactly the original32-byte root and distinct initial45 domain to initialization. -/
 theorem root_address (root : RootOutput) :
-    RawCtxKdfRequestTable.address ⟨rootBytes root, ratchet.SYM_RATCHET_INFO⟩ =
-      FixedHkdfDomain.ratchet.address root.toList := by
-  simp [RawCtxKdfRequestTable.address, rootBytes, RawCtxFreshChainCut.concreteChain,
+    RawCtxKdfRequestTable.initialAddress ⟨rootBytes root, ratchet.INITIAL_RATCHET_INFO⟩ =
+      FixedHkdfDomain.initial.address root.toList := by
+  simp [RawCtxKdfRequestTable.initialAddress, rootBytes, RawCtxFreshChainCut.concreteChain,
     PqxdhRefinement.absBytes, List.map_map, Function.comp_def, FixedHkdfDomain.address, FixedHkdfDomain.info]
-  exact PqxdhInitialRatchetComplementarity.absBytes_ratchetSymmetricInfo
+  exact PqxdhInitialRatchetComplementarity.absBytes_ratchetInitialInfo
 
 /-- Both actual source roles consume one shared64 prefix and can be constructed without retaining the consumed root field. -/
 theorem source_pair (source : FixedHkdfSha512NoSaltSource) (root : RootOutput) :
     (PqxdhRootTableInitialization.initialKernelRun source false root,
       PqxdhRootTableInitialization.initialKernelRun source true root) =
-      pair64 (initialPrefix (productionStream source.crypto (FixedHkdfDomain.ratchet.address root.toList))) := by
+      pair64 (initialPrefix (productionStream source.crypto (FixedHkdfDomain.initial.address root.toList))) := by
   simp only [root_initializer, ← RawCtxInitializedKdfFamily.initial_projection, ← full_prefix, root_address, pair64]
   exact congrArg₂ Prod.mk (root_field_unused false _ _ _) (root_field_unused true _ _ _)
 
@@ -74,7 +74,7 @@ noncomputable def observer {Context : Type} (observe : Observer Context) : FullO
 /-- The exact source initializer game is the existing secret-input game on the serialized root and unchanged pre-expansion context. -/
 theorem actual_source {Context : Type} (source : FixedHkdfSha512NoSaltSource)
     (sample : Sampler Context) (observe : Observer Context) :
-    actual source sample observe = sourceFullGame source .ratchet (joint sample) (observer observe) := by
+    actual source sample observe = sourceFullGame source .initial (joint sample) (observer observe) := by
   simp only [actual, sourceFullGame, joint, bind_map_left, observer, source_pair]
 
 /-- The prefix-only full76 comparison has the same evaluated complete observation as the actual64 randomized initializer. -/
@@ -91,12 +91,12 @@ theorem primitive_bound {Context : Type} (source : FixedHkdfSha512NoSaltSource)
     (hmac : HmacSha512) (correct : SourceFullCorrect source hmac)
     (sample : Sampler Context) (observe : Observer Context) :
     (actual source sample observe).boolDistance (random sample observe) ≤
-      (extractRealGame hmac (joint sample) (fullExtractReduction hmac .ratchet (observer observe))).boolDistance
-        (extractUniformGame (joint sample) (fullExtractReduction hmac .ratchet (observer observe))) +
-      (hmacPrfRealGame hmac (fullExpandReduction .ratchet (joint sample) (observer observe))).boolDistance
-        (hmacPrfRandomGame (fullExpandReduction .ratchet (joint sample) (observer observe))) := by
+      (extractRealGame hmac (joint sample) (fullExtractReduction hmac .initial (observer observe))).boolDistance
+        (extractUniformGame (joint sample) (fullExtractReduction hmac .initial (observer observe))) +
+      (hmacPrfRealGame hmac (fullExpandReduction .initial (joint sample) (observer observe))).boolDistance
+        (hmacPrfRandomGame (fullExpandReduction .initial (joint sample) (observer observe))) := by
   simpa only [← actual_source, ProbComp.boolDistance, random_comparison sample observe] using
-    sourceFullAdvantage_le_extract_add_hmac source hmac correct .ratchet (joint sample) (observer observe)
+    sourceFullAdvantage_le_extract_add_hmac source hmac correct .initial (joint sample) (observer observe)
 
 /-- Serializing the root into the exact Extract sampler retains every earlier uniform query without adding a draw. -/
 theorem joint_bound {Context : Type} (sample : Sampler Context) (budget : Nat)
@@ -107,8 +107,8 @@ theorem joint_bound {Context : Type} (sample : Sampler Context) (budget : Nat)
 theorem reduction_bounds {Context : Type} (sample : Sampler Context) (observe : Observer Context)
     (qSample qObserve : Nat) (sampleBound : sample.IsTotalQueryBound qSample)
     (observeBound : ∀ context pair, (observe context pair).IsTotalQueryBound qObserve) :
-    (fullExpandReduction .ratchet (joint sample) (observer observe)).IsQueryBoundP IsHmacChallengeQuery 2 ∧
-      (fullExpandReduction .ratchet (joint sample) (observer observe)).IsQueryBoundP
+    (fullExpandReduction .initial (joint sample) (observer observe)).IsQueryBoundP IsHmacChallengeQuery 2 ∧
+      (fullExpandReduction .initial (joint sample) (observer observe)).IsQueryBoundP
         PqxdhFullSecretInputKdf.IsHmacUniformQuery (qSample + qObserve) := by
   exact ⟨fullExpandReduction_hmac_query_bound _ _ _,
     fullExpandReduction_uniform_query_bound _ _ _ (joint_bound sample qSample sampleBound)
@@ -138,13 +138,13 @@ theorem challenger_uniform {Context : Type} (hmac : HmacSha512)
     (sample : Sampler Context) (observe : Observer Context) (qSample qObserve : Nat)
     (sampleBound : sample.IsTotalQueryBound qSample)
     (observeBound : ∀ context pair, (observe context pair).IsTotalQueryBound qObserve) :
-    (extractRealGame hmac (joint sample) (fullExtractReduction hmac .ratchet (observer observe))).IsTotalQueryBound
+    (extractRealGame hmac (joint sample) (fullExtractReduction hmac .initial (observer observe))).IsTotalQueryBound
         (qSample + qObserve) ∧
-      (extractUniformGame (joint sample) (fullExtractReduction hmac .ratchet (observer observe))).IsTotalQueryBound
+      (extractUniformGame (joint sample) (fullExtractReduction hmac .initial (observer observe))).IsTotalQueryBound
         (qSample + (64 + qObserve)) ∧
-      (hmacPrfRealGame hmac (fullExpandReduction .ratchet (joint sample) (observer observe))).IsTotalQueryBound
+      (hmacPrfRealGame hmac (fullExpandReduction .initial (joint sample) (observer observe))).IsTotalQueryBound
         (64 + (qSample + qObserve)) ∧
-      (hmacPrfRandomGame (fullExpandReduction .ratchet (joint sample) (observer observe))).IsTotalQueryBound
+      (hmacPrfRandomGame (fullExpandReduction .initial (joint sample) (observer observe))).IsTotalQueryBound
         (qSample + (64 + (64 + qObserve))) ∧
       (independentFullGame (joint sample) (observer observe)).IsTotalQueryBound
         (qSample + (76 + qObserve)) := by

@@ -68,7 +68,7 @@ private theorem cap_presence (reply : core.option.Option Usize) (total : Nat)
     | none => simp only [Option.isSome_none,fits,decide_false]
     | some value => simp [Transport.absLength,Transport.messageCap,fits] at represented
 
-theorem prepare (bytes : Slice U8) (target sender : U64) (ad : Array U8 281#usize)
+theorem prepare (bytes : Slice U8) (target sender : U64) (ad : Array U8 151#usize)
     (kernel : ratchet.concrete.ConcreteRatchetKernel) :
     AdapterPublicOrdinaryEnvelope.prepareSend bytes target sender ad kernel=.ok
       (if bytes.val.isEmpty then .None else

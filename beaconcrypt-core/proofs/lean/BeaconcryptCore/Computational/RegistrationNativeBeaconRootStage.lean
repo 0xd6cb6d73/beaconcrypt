@@ -93,7 +93,7 @@ noncomputable def stage {Auxiliary : Type} {joint : Primitives} {dh : DhInterfac
     (authenticated : registration.AuthenticatedResponse) : StateT (State Auxiliary) ProbComp (RustM agreement.AgreementEffect) := do
   let pending ← simulateQ (PqxdhPhase2GapDhSource.prefixImpl domain
     (auxImpl (fun query => lift (backend query)) authenticated) (fun point => lift (visit point)))
-      (PqxdhPhase2DhMetadata.prepare authenticated.pending.control () () () [])
+      (PqxdhPhase2DhMetadata.prepare (completedBinding := authenticated.binding) authenticated.control () () () [])
   match pending with
   | none => pure (.ok (RegistrationBeaconAgreementRoot.rejected authenticated))
   | some pending => simulateQ (familyImpl family) (RegistrationNativeBeaconRootSource.client authenticated pending)
@@ -105,7 +105,7 @@ theorem stage_source {Auxiliary : Type} (source : FixedHkdfSha512NoSaltSource) (
     (primitive : QueryImpl RegistrationAgreementShared.PrimitiveSpec (StateT Auxiliary ProbComp))
     (visit : Word32 → StateT (RawCtxSharedPrimitive.SharedState Auxiliary) ProbComp Unit)
     (authenticated : registration.AuthenticatedResponse)
-    (coherent : authenticated.pending.control.expected_server_binding = authenticated.pending.binding.server_pin.binding)
+    (coherent : authenticated.control.expected_server_binding = authenticated.binding.server_pin.binding)
     (before : State Auxiliary) :
     Prod.map id Prod.snd <$>
       (stage domain (RegistrationAgreementShared.implementation source primitive) visit
@@ -115,7 +115,7 @@ theorem stage_source {Auxiliary : Type} (source : FixedHkdfSha512NoSaltSource) (
   rw [RegistrationBeaconPreparationInterpreter.beacon_source dh scalar
     (RegistrationAgreementShared.implementation source primitive) visit authenticated coherent, StateT.run_bind]
   rw [← native_program_project dh scalar (RegistrationAgreementShared.implementation source primitive) visit authenticated
-    (PqxdhBeaconPhase2Preparation.prepare authenticated.pending.control () (.inl ()) (.inr ()) () []) before,
+    (PqxdhBeaconPhase2Preparation.prepare (completedBinding := authenticated.binding) authenticated.control () (.inl ()) (.inr ()) () []) before,
     bind_map_left]
   simp only [stage, PqxdhPhase2DhMetadata.prepare, PqxdhBeaconPhase2Preparation.prepare,
     simulateQ_bind, StateT.run_bind, simulateQ_pure, StateT.run_pure, map_bind]
@@ -133,8 +133,8 @@ theorem stage_source {Auxiliary : Type} (source : FixedHkdfSha512NoSaltSource) (
     simp only [Option.bind_some, Option.map_some, PqxdhBeaconPhase2Preparation.afterInputs,
       simulateQ_bind, simulateQ_spec_query, PqxdhPhase2GapDhSource.nativeImpl, auxImpl,
       RegistrationBeaconAgreementRoot.callbacks, simulateQ_pure, StateT.run_pure, pure_bind]
-    have metadataEq := (PqxdhPhase2DhMetadata.admitted_exact dh domain scalar authenticated.pending.control collected references).symm
-    cases actual : PqxdhBeaconPhase2Preparation.normalPrepare authenticated.pending.control
+    have metadataEq := (PqxdhPhase2DhMetadata.admitted_exact (completedBinding := authenticated.binding) dh domain scalar authenticated.control collected references).symm
+    cases actual : PqxdhBeaconPhase2Preparation.normalPrepare authenticated.control
         (PqxdhPhase2GapDhSource.concreteInputs dh scalar collected).finishInputs with
     | Err error =>
         simp only [actual, PqxdhBeaconPhase2Shared.optionalMetadata] at metadataEq
@@ -142,14 +142,14 @@ theorem stage_source {Auxiliary : Type} (source : FixedHkdfSha512NoSaltSource) (
           RegistrationBeaconRootPreparation.afterPrepared, map_pure, Prod.map_apply, id_eq]
     | Ok candidate =>
         simp only [actual, PqxdhBeaconPhase2Shared.optionalMetadata] at metadataEq
-        have related := PqxdhPhase2DhMetadata.prepared_related dh scalar authenticated.pending.control collected candidate actual
+        have related := PqxdhPhase2DhMetadata.prepared_related (completedBinding := authenticated.binding) dh scalar authenticated.control collected candidate actual
         have exactRoot := RegistrationNativeBeaconRootSource.client_source source hmac dh domain seed scalar primitive authenticated
-          ⟨collected.response, collected.ciphertext, collected.ephemeral, candidate⟩
-          ⟨collected, PqxdhBeaconPhase2Shared.candidateMetadata candidate⟩ references related
+          ⟨collected.response, collected.ciphertext, collected.ephemeral, candidate, authenticated.binding⟩
+          ⟨collected, PqxdhBeaconPhase2Shared.candidateMetadata (completedBinding := authenticated.binding) candidate⟩ references related
         simp only [metadataEq, Option.map_some, Prod.map_apply, id_eq, RegistrationBeaconRootPreparation.afterPrepared]
         rw [exactRoot]
         exact RegistrationNativeBeaconRootSource.instrument_program source hmac primitive
-          ⟨collected, PqxdhBeaconPhase2Shared.candidateMetadata candidate⟩ _ after
+          ⟨collected, PqxdhBeaconPhase2Shared.candidateMetadata (completedBinding := authenticated.binding) candidate⟩ _ after
 
 end BeaconcryptCore.Computational.RegistrationNativeBeaconRootStage
 

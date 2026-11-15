@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativeIdentityBirth
 import BeaconcryptCore.Computational.RegistrationBeaconReferenceNativeOwner
 
-/-! Native Beacon operations with generated Ed25519 credentials held behind indexed joint signing/static-DH services. The executable owner state has no Ed25519 seed or converted secret. All source controller requests, optional failures, signing attempts and phase updates remain explicit; ordinary ML, prekey, one-time and KEM material is independent auxiliary state for the joint-EUF reduction. -/
+/-! Native Beacon operations with generated Ed25519 credentials held behind indexed joint signing/static-DH services. The executable owner state has no Ed25519 seed or converted secret. All source controller requests, optional failures, signing attempts and phase updates remain explicit; ordinary prekey, one-time and KEM material is independent auxiliary state for the joint-EUF reduction. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -19,7 +19,6 @@ variable {ι KemSK Auxiliary Value : Type} {base : OracleSpec ι} {n : Nat}
 
 structure Owner (source : RegistrationNativeMldsa.Source) where
   pin : session.ServerAuthenticationPin
-  mldsa : RegistrationNativeMldsa.Credential source
   identity : RegistrationNativeIdentityInterface.Credential
   prekeyScalar : ScalarBytes
   prekeyPublic : Std.Array U8 32#usize
@@ -71,7 +70,7 @@ def hash {source : RegistrationNativeMldsa.Source} (request : registration.HashR
 
 def restore {source : RegistrationNativeMldsa.Source} (seed : IdentitySeed) (owner : Owner source) :
     RegistrationNativeBeaconFrontend.Owner source :=
-  ⟨owner.pin, owner.mldsa, seed, owner.prekeyScalar, owner.prekeyPublic, owner.kemHandle,
+  ⟨owner.pin, seed, owner.prekeyScalar, owner.prekeyPublic, owner.kemHandle,
     owner.kemPublic, owner.worldOwner, owner.phase, owner.edHistory⟩
 
 def dummyIdentity : IdentitySeed := ⟨List.replicate 32 0, by simp⟩
@@ -82,7 +81,6 @@ noncomputable def liftOld {source : RegistrationNativeMldsa.Source}
   StateT.lift fun env => simulateQ ambientLift ((Prod.fst <$> work.run []).run env)
 
 structure Prepared (source : RegistrationNativeMldsa.Source) where
-  credentials : RegistrationNativeMldsa.Credential source
   pin : session.ServerAuthenticationPin
   identity : RegistrationNativeIdentityInterface.Credential
   prekey : ScalarBytes
@@ -90,27 +88,16 @@ structure Prepared (source : RegistrationNativeMldsa.Source) where
 noncomputable def prepare (source : RegistrationNativeMldsa.Source)
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64) :
     M n KemSK Auxiliary source (RustM (Option (Prepared source))) := do
-  match ← sample (RegistrationNativeMldsa.generate source) with
-  | none => pure (.ok none)
-  | some credentials => match registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
-    | .fail error => pure (.fail error)
-    | .div => pure .div
-    | .ok pending => match pending.request with
-      | .fail error => pure (.fail error)
-      | .div => pure .div
-      | .ok request => do
-          let digest ← hash request
-          match pending.resume (.Some (RegistrationAuthenticationShared.digestArray digest)) with
-          | .fail error => pure (.fail error)
-          | .div => pure .div
-          | .ok .None => pure (.ok none)
-          | .ok (.Some pin) =>
-              let identity ← StateT.lift (StateT.lift (RegistrationNativeIdentityInterface.create (Ambient n KemSK)))
-              match identity with
-              | none => pure (.ok none)
-              | some identity => do
-                  let prekey ← sample PqxdhJointGapDh.sampleScalar
-                  pure (.ok (some ⟨credentials, pin, identity, prekey⟩))
+  match registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
+  | .fail error => pure (.fail error)
+  | .div => pure .div
+  | .ok pin =>
+      let identity ← StateT.lift (StateT.lift (RegistrationNativeIdentityInterface.create (Ambient n KemSK)))
+      match identity with
+      | none => pure (.ok none)
+      | some identity => do
+          let prekey ← sample PqxdhJointGapDh.sampleScalar
+          pure (.ok (some ⟨pin, identity, prekey⟩))
 
 noncomputable def create (setup : Setup base KemSK) (source : RegistrationNativeMldsa.Source)
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64) :
@@ -123,7 +110,7 @@ noncomputable def create (setup : Setup base KemSK) (source : RegistrationNative
       let born ← kem (.inr (.inl .create))
       let worldOwner ← effect (.inr (.appendOwner keyId edPin .fresh))
       let owners ← get
-      let owner : Owner source := ⟨prepared.pin, prepared.credentials, prepared.identity, prepared.prekey,
+      let owner : Owner source := ⟨prepared.pin, prepared.identity, prepared.prekey,
         PqxdhRootTableInitialization.rootArray (setup.dh.publicKey prepared.prekey), born.1, born.2, worldOwner, .fresh, []⟩
       set (owners ++ [owner])
       pure (.ok (some owners.length))
@@ -131,11 +118,7 @@ noncomputable def create (setup : Setup base KemSK) (source : RegistrationNative
 noncomputable def outgoing (setup : Setup base KemSK) (source : RegistrationNativeMldsa.Source)
     (index : Nat) (owner : Owner source) : QueryImpl RegistrationBeaconInitExecutor.Spec (M n KemSK Auxiliary source)
   | .inl (.hash request) => hash request
-  | .inl (.sign request payload digest) => do
-      let reply ← sample (RegistrationNativeMldsa.owned source owner.mldsa request)
-      updateEnv fun env => { env with receipts := env.receipts ++
-        [⟨⟨request.public_key, payload, BeaconcryptCore.Refinement.RegistrationSigningTrace.replyBytes reply⟩, digest⟩] }
-      pure reply
+  | .inl (.sign _ _ _) => pure .None
   | .inr request => by
       classical
       exact if request.public_key = PqxdhRootTableInitialization.rootArray owner.identity.publicIdentity.ed25519 then do
@@ -168,7 +151,7 @@ noncomputable def bundle (setup : Setup base KemSK) (source : RegistrationNative
           let oneTime ← match supplied with | some scalar => pure scalar | none => sample PqxdhJointGapDh.sampleScalar
           let published ← simulateQ (outgoing setup source index owner)
             (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨owner.pin.binding⟩ (inputs owner)
-              ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)
+              ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)
           match published with
           | .fail error => pure (.fail error)
           | .div => pure .div

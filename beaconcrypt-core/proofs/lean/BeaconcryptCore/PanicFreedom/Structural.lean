@@ -51,7 +51,7 @@ theorem pqxdh_concrete_start_beacon_ratchet_kdf_total
     ∃ result, pqxdh.concrete.start_beacon_ratchet_kdf root = ok result :=
   (Static.pqxdh_BEACON_RATCHETS_total).elim fun i hi => ⟨_, by
     simp [pqxdh.concrete.start_beacon_ratchet_kdf, pqxdh.concrete.start_initial_ratchet_kdf,
-      ratchet.SymmetricRatchetKdfRequest.new, hi]
+      ratchet.InitialRatchetKdfRequest.new, hi]
     rfl⟩
 
 theorem pqxdh_concrete_start_server_ratchet_kdf_total
@@ -59,7 +59,7 @@ theorem pqxdh_concrete_start_server_ratchet_kdf_total
     ∃ result, pqxdh.concrete.start_server_ratchet_kdf root = ok result :=
   (Static.pqxdh_SERVER_RATCHETS_total).elim fun i hi => ⟨_, by
     simp [pqxdh.concrete.start_server_ratchet_kdf, pqxdh.concrete.start_initial_ratchet_kdf,
-      ratchet.SymmetricRatchetKdfRequest.new, hi]
+      ratchet.InitialRatchetKdfRequest.new, hi]
     rfl⟩
 
 theorem pqxdh_concrete_start_beacon_candidate_ratchet_kdf_total
@@ -69,7 +69,7 @@ theorem pqxdh_concrete_start_beacon_candidate_ratchet_kdf_total
   (Static.pqxdh_BEACON_RATCHETS_total).elim fun i hi => ⟨_, by
     simp [pqxdh.concrete.start_beacon_candidate_ratchet_kdf,
       pqxdh.BeaconRegistrationCandidate.ratchet_initialization,
-      pqxdh.concrete.start_initial_ratchet_kdf, ratchet.SymmetricRatchetKdfRequest.new, hi]
+      pqxdh.concrete.start_initial_ratchet_kdf, ratchet.InitialRatchetKdfRequest.new, hi]
     rfl⟩
 
 theorem pqxdh_concrete_start_server_candidate_ratchet_kdf_total
@@ -79,7 +79,7 @@ theorem pqxdh_concrete_start_server_candidate_ratchet_kdf_total
   (Static.pqxdh_SERVER_RATCHETS_total).elim fun i hi => ⟨_, by
     simp [pqxdh.concrete.start_server_candidate_ratchet_kdf,
       pqxdh.ServerRegistrationCandidate.ratchet_initialization,
-      pqxdh.concrete.start_initial_ratchet_kdf, ratchet.SymmetricRatchetKdfRequest.new, hi]
+      pqxdh.concrete.start_initial_ratchet_kdf, ratchet.InitialRatchetKdfRequest.new, hi]
     rfl⟩
 
 theorem pqxdh_BeaconRegistrationCandidate_ratchet_initialization_total

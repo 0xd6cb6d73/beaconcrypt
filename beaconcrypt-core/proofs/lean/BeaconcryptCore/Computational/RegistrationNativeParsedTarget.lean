@@ -35,7 +35,7 @@ private theorem erase_accept (entry : Entry) (raw : Pqxdh.Bytes) (session : Nat)
     rfl
   · cases equal
 
-/-- The native reader used by public designation is the actual bounded six-field Init reader. -/
+/-- The native reader used by public designation is the actual bounded four-field Init reader. -/
 theorem candidate_parsed (wire : Wire) (raw : Pqxdh.Bytes)
     (candidate : PqxdhEd25519EufCma.Phase1Candidate)
     (found : PqxdhDeploymentTranscript.candidateOf (RegistrationNativeWire.ledgerCodec wire) raw = some candidate) :

@@ -78,7 +78,7 @@ theorem record_output (setup : PqxdhServerAuthExperiment.Setup base KemSK) (wire
 theorem accepted_output (setup : PqxdhServerAuthExperiment.Setup base KemSK) (wire : RegistrationNativeWire.Wire)
     (self : beaconcrypt_public_wrapper.beacon.Beacon) (control : pqxdh.BeaconAborted) (aborted : self.state = .Aborted control)
     (owner : Owner source) (scalar : PqxdhJointGapDh.ScalarBytes) (authenticated : registration.AuthenticatedResponse)
-    (key : control.server_key_id = authenticated.pending.control.expected_server_binding.identity_key_id) :
+    (key : control.server_key_id = authenticated.control.expected_server_binding.identity_key_id) :
     AdapterPublicFinishFreeTree.accepted (n := n) setup wire self owner scalar authenticated =
       output self <$> RegistrationNativeFinishLowerErasure.accepted setup wire owner scalar authenticated := by
   simp only [AdapterPublicFinishFreeTree.accepted, RegistrationNativeFinishLowerErasure.accepted, map_bind]
@@ -110,11 +110,11 @@ theorem program_output (setup : PqxdhServerAuthExperiment.Setup base KemSK) (wir
   intro reply reached
   have actual := simulation_support (AdapterPublicFinishFreeTree.authentication (source := source) setup)
     (RegistrationResponseExecutor.begin pending (RegistrationNativeConcreteCodec.wire.decodeResponse (TranscriptAuthParts.absSlice input))) reached
-  rcases RegistrationResponseNormal.begin_shape pending _ reply actual with rejected | ⟨supplied, _, accepted⟩
+  rcases RegistrationResponseNormal.begin_shape pending _ reply actual with rejected | ⟨supplied, authenticated, _packet, _acceptedPacket, retained, accepted⟩
   · rw [rejected]
     simp only [AdapterPublicFinishFreeTree.afterAuthentication, RegistrationNativeFinishLowerErasure.afterAuthentication, output, map_pure]
   · rw [accepted]
-    exact accepted_output setup wire _ (BeaconcryptCore.Refinement.RegistrationResponse.abortedState pending) rfl owner scalar ⟨pending, supplied⟩ rfl
+    exact accepted_output setup wire _ (BeaconcryptCore.Refinement.RegistrationResponse.abortedState pending) rfl owner scalar authenticated (by rw [retained.1]; rfl)
 
 
 theorem program_journal {Auxiliary : Type} (setup : PqxdhServerAuthExperiment.Setup base KemSK) (wire : RegistrationNativeWire.Wire)

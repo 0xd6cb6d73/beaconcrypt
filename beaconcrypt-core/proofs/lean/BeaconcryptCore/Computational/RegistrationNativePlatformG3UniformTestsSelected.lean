@@ -61,7 +61,7 @@ private theorem startup_pin {n : Nat} (identity : PqxdhJointIdentity.PublicIdent
     | none => simp only [sampled,StateT.run_pure,mem_support_pure_iff] at continued;cases continued
     | some credential =>
       simp only [sampled,StateT.run_bind,mem_support_bind_iff] at continued
-      obtain ⟨installed,_installed,digest,_hashed,returned⟩ := continued
+      obtain ⟨installed,_installed,returned⟩ := continued
       rw [StateT.run_pure,mem_support_pure_iff] at returned
       cases returned
       exact PqxdhRootTableInitialization.rootArray_bytes identity.ed25519

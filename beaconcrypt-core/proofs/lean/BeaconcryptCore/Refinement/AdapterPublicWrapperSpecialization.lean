@@ -28,21 +28,6 @@ variable [model8 : BeaconcryptCore.Refinement.RegistrationWriterPrimitive.Operat
 variable [model9 : BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations]
 variable [model10 : beaconcrypt.ratchet.Operations] [model11 : beaconcrypt.auth.Operations]
 set_option backward.isDefEq.respectTransparency false
-omit model0 model1 model3 model4 model5 model6 model7 in
-theorem fingerprint_pin_source
-  (binding : beaconcrypt_core.pqxdh.ServerBinding)
-  (public_key : Array Std.U8 1952#usize) :
-    beaconcrypt_public_request.auth.fingerprint_pin (m := RustM) binding public_key =
-    beaconcrypt_public_wrapper.auth.fingerprint_pin binding public_key := by
-  rfl
-
-omit model3 model5 model6 model7 model8 model9 model10 model11 in
-theorem beacon_mldsa_public_key_source
-  (self : beacon.Beacon) :
-    beaconcrypt_public_request.beacon.Beacon.mldsa_public_key (m := RustM) self =
-    beaconcrypt_public_wrapper.beacon.Beacon.mldsa_public_key self := by
-  rfl
-
 omit model1 model3 model4 model5 model6 model7 model8 model9 model10 model11 in
 theorem beacon_identity_public_source
   (self : beacon.Beacon) :
@@ -57,7 +42,7 @@ theorem beacon_identity_secret_source
     beaconcrypt_public_wrapper.beacon.Beacon.identity_sk self := by
   rfl
 
-omit model3 model6 model7 in
+omit model1 model3 model4 model6 model7 in
 theorem init_body_source
   (beacon1 : beacon.Beacon)
   (effect : beaconcrypt_core.registration.BeaconInitEffect) :
@@ -65,7 +50,7 @@ theorem init_body_source
     beaconcrypt_public_wrapper.beacon._proof_beacon_init_ready_loop.body beacon1 effect := by
   rfl
 
-omit model3 model6 model7 model8 model9 model10 in
+omit model1 model3 model4 model6 model7 model8 model9 model10 in
 private theorem init_fuel (beacon1 : beacon.Beacon) (fuel : Nat)
     (effect : beaconcrypt_core.registration.BeaconInitEffect) :
     AdapterPublicWrapperLiftFunction.loopFuel (m := RustM) fuel
@@ -83,7 +68,7 @@ private theorem init_fuel (beacon1 : beacon.Beacon) (fuel : Nat)
         | cont next => exact ih next
 
 
-omit model3 model6 model7 in
+omit model1 model3 model4 model6 model7 in
 theorem init_loop_source
   (effect : beaconcrypt_core.registration.BeaconInitEffect)
   (beacon1 : beacon.Beacon) :
@@ -93,7 +78,7 @@ theorem init_loop_source
   simp only [init_body_source]
   exact (init_fuel beacon1 _ effect).trans (AdapterPublicInitSourceLoop.loop_specializes beacon1 _ effect (by omega))
 
-omit model3 model6 model7 in
+omit model1 model3 model4 model6 model7 in
 theorem init_ready_source
   (beacon1 : beacon.Beacon)
   (effect : beaconcrypt_core.registration.BeaconInitEffect) :
@@ -102,7 +87,7 @@ theorem init_ready_source
   unfold beaconcrypt_public_request.beacon._proof_beacon_init_ready beaconcrypt_public_wrapper.beacon._proof_beacon_init_ready
   rw [init_loop_source]
 
-omit model3 model6 model7 in
+omit model1 model3 model4 model6 model7 in
 theorem registration_bundle_source
   {R : Type}
   {Clause0_Clause0_Error : Type}
@@ -467,7 +452,7 @@ theorem server_identifier_source
     beaconcrypt_public_wrapper.server.Server.identity_key_kid self := by
   rfl
 
-omit model3 model6 model7 in
+omit model3 model6 model7 model8 model9 model10 model11 in
 theorem server_pin_source
   (self : server.Server) :
     beaconcrypt_public_request.server.Server.authentication_pin (m := RustM) self =
@@ -541,18 +526,6 @@ theorem build_registration_response_source
 
 end BeaconcryptCore.Refinement.AdapterPublicWrapperSpecialization
 
-
-/-- info: 'BeaconcryptCore.Refinement.AdapterPublicWrapperSpecialization.fingerprint_pin_source' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Refinement.AdapterPublicWrapperSpecialization.fingerprint_pin_source
-
-/-- info: 'BeaconcryptCore.Refinement.AdapterPublicWrapperSpecialization.beacon_mldsa_public_key_source' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Refinement.AdapterPublicWrapperSpecialization.beacon_mldsa_public_key_source
 
 /-- info: 'BeaconcryptCore.Refinement.AdapterPublicWrapperSpecialization.beacon_identity_public_source' depends on axioms: [propext,
  Classical.choice,

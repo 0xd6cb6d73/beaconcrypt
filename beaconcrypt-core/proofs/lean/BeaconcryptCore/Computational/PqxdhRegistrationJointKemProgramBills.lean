@@ -60,7 +60,7 @@ theorem commands (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (budget : PqxdhRegistrationJointKemCommands.Budget)
     (certified : ∀ source, work.IsQueryBoundP
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) (state : PqxdhServerAuthNative.NativeState KemSK) :
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : PqxdhServerAuthNative.NativeState KemSK) :
     Bounds (PqxdhRegistrationJointKemEncapsulation.commands setup codec checks identityIndex publicIdentity work owners state)
       (budget (.inl 1)) (budget (.inl 5)) (PqxdhRegistrationJointOpenUniform.total caps budget) (budget (.inl 3)) := by
   constructor

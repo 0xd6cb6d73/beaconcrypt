@@ -17,7 +17,7 @@ open RegistrationNativeBeaconDhReplies
 open RegistrationAgreementExecutor (Spec)
 variable {n : Nat} {ι KemSK : Type} {base : OracleSpec ι} {source : RegistrationNativeMldsa.Source}
 variable (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (owner : Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes)
 local notation "implementation" => fun query => lower setup checks representation created (RegistrationNativeBeaconFrontend.agreement setup owner oneTime query)
 

@@ -9,6 +9,9 @@ open RustM beaconcrypt_core ratchet ratchet.refined ratchet.concrete
 set_option autoImplicit false
 
 namespace BeaconcryptCore.Computational.PqxdhRecordLiftMixedWorld
+
+/-- Current concrete AD width, elaborated independently of dependent result annotations. -/
+private abbrev RecordAd := Std.Array Std.U8 151#usize
 open PqxdhRecordLiftInterface PqxdhRecordLiftWorldCompiler
 open PqxdhRecordLiftChainState PqxdhRecordLiftChainTable PqxdhRecordLiftChainCompiler
 open PqxdhRecordLiftChainOrder PqxdhRecordLiftBudget
@@ -254,7 +257,7 @@ theorem run_kdf {ι KemSK Reader Response E X : Type} {baseSpec : OracleSpec ι}
     (ideal : Coordinate (Slot n) → Bool) (route : RawCtxServerRouting.SenderDecoder)
     (env : Environment n E) (serverKid : Std.U64) (bounds : FreshBounds) (mode : Mode) (budget : Budget)
     (adversary : OracleComp (ModeSpec mode) X) (respects : budget.Respects adversary)
-    (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+    (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated RecordAd ×
       (X × PqxdhDeploymentSecrecy.Ledger) × E) × State n)
     (supported : result ∈ support (run (policy setup.source ideal) setup codec route env serverKid bounds mode adversary)) :
     result.2.primitive.1.native .kdf ≤ budget.sends + 51 * budget.receives := by
@@ -356,7 +359,7 @@ theorem installServer_tableGood (source : PqxdhJointKdfGame.FixedHkdfSha512NoSal
         exact good
 
 theorem initialize_tableGood (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
-    (ideal : Coordinate (Slot n) → Bool) (created : PqxdhLiveServerConstruction.Created Unit) (state : State n) (good : TableGood source ideal state)
+    (ideal : Coordinate (Slot n) → Bool) (created : PqxdhLiveServerConstruction.Created RecordAd) (state : State n) (good : TableGood source ideal state)
     (result : Unit × State n) (supported : result ∈ support ((initializeServer created).run state)) :
     TableGood source ideal result.2 := by
   simp only [initializeServer, StateT.run] at supported
@@ -659,7 +662,7 @@ theorem run_good {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response E
     (codec : PqxdhServerAuthExperiment.Codec Reader Response) (ideal : Coordinate (Slot n) → Bool) (route : RawCtxServerRouting.SenderDecoder)
     (env : Environment n E) (serverKid : Std.U64) (bounds : PqxdhDeploymentInterface.FreshBounds)
     (mode : PqxdhDeploymentInterface.Mode) (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X)
-    (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+    (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated RecordAd ×
       (X × PqxdhDeploymentSecrecy.Ledger) × E) × State n)
     (supported : result ∈ support (run (policy setup.source ideal) setup codec route env serverKid bounds mode adversary)) :
     Good setup.source ideal result.2 :=
@@ -672,7 +675,7 @@ theorem run_depth {ι KemSK Reader Response E X : Type} {baseSpec : OracleSpec �
     (ideal : Coordinate (Slot n) → Bool) (route : RawCtxServerRouting.SenderDecoder)
     (env : Environment n E) (serverKid : Std.U64) (bounds : FreshBounds) (mode : Mode) (budget : Budget)
     (adversary : OracleComp (ModeSpec mode) X) (respects : budget.Respects adversary)
-    (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+    (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated RecordAd ×
       (X × PqxdhDeploymentSecrecy.Ledger) × E) × State n)
     (supported : result ∈ support (run (policy setup.source ideal) setup codec route env serverKid bounds mode adversary)) :
     DepthBound result.2.chain (budget.sends + 51 * budget.receives) :=
@@ -693,7 +696,7 @@ theorem protocol_run_good {ι KemSK Reader Response E X : Type} {baseSpec : Orac
     (ideal : Coordinate (Slot n) → Bool) (route : RawCtxServerRouting.SenderDecoder)
     (env : Environment n E) (serverKid : Std.U64) (bounds : FreshBounds) (mode : Mode)
     (adversary : OracleComp (ModeSpec mode) X)
-    (result : (Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+    (result : (Option (PqxdhRegistrationJointServerBirth.ClientCreated RecordAd ×
       (X × PqxdhDeploymentSecrecy.Ledger) × E) × PqxdhRecordLiftProtocol.Control n) × PqxdhRecordLiftProtocol.Private n)
     (supported : result ∈ support (PqxdhRecordLiftProtocol.run (policy setup.source ideal)
       setup codec route env serverKid bounds mode adversary)) :
@@ -708,7 +711,7 @@ theorem protocol_run_bounds {ι KemSK Reader Response E X : Type} {baseSpec : Or
     (ideal : Coordinate (Slot n) → Bool) (route : RawCtxServerRouting.SenderDecoder)
     (env : Environment n E) (serverKid : Std.U64) (bounds : FreshBounds) (mode : Mode) (budget : Budget)
     (adversary : OracleComp (ModeSpec mode) X) (respects : budget.Respects adversary)
-    (result : (Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+    (result : (Option (PqxdhRegistrationJointServerBirth.ClientCreated RecordAd ×
       (X × PqxdhDeploymentSecrecy.Ledger) × E) × PqxdhRecordLiftProtocol.Control n) × PqxdhRecordLiftProtocol.Private n)
     (supported : result ∈ support (PqxdhRecordLiftProtocol.run (policy setup.source ideal)
       setup codec route env serverKid bounds mode adversary)) :

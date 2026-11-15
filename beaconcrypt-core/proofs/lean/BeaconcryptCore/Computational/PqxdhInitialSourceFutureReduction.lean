@@ -9,6 +9,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialSourceFutureReduction
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf
 open PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily PqxdhInitialBeaconAmbient
 open PqxdhInitialSourcePreparedSecrecy
@@ -33,11 +35,11 @@ local notation "mark" => PqxdhInitialSelectedOrigin.mark source selectedMessage
 local notation "execution" => PqxdhInitialSourceExperiment.execution response64 index metadata ready post before
 local notation "root" => PqxdhInitialSourceExperiment.root source previousRoot response64 selected
 local notation "state" => (PqxdhInitialSourceExperiment.initialState root shared privateState cache, ([] : List RootOutput))
-local notation "sourceView" => view source writer selectedMessage previousRoot response64 other sender route decode
+local notation "sourceView" => view (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
   index metadata ready post before selected number ancestors disclosed shared privateState cache depth remaining
-local notation "sourceSample" => sample source writer selectedMessage previousRoot response64 other sender route decode
+local notation "sourceSample" => sample (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
   index metadata ready post before selected number ancestors disclosed shared privateState cache depth
-local notation "sourceAddress" => address source writer selectedMessage previousRoot response64 other sender route decode
+local notation "sourceAddress" => address (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
   index metadata ready post before selected shared privateState cache depth
 
 variable (qPost qPre qApplication qSelector qAux : Nat)
@@ -56,22 +58,22 @@ local notation "V" => sampleBudget qPost qPre qApplication qSelector qAux
 
 /-- The actual future candidate event with a real child pays the exact joint-sampler tester endpoints; no candidate independence from that child is assumed. -/
 theorem source_bound (hmac : HmacSha512) (correct : SourceFullCorrect source hmac) :
-    Pr{let x ← PqxdhInitialFutureInputReduction.realFuture source writer mark sender route decode sourceView sourceSample sourceAddress}[x = true] ≤
-      2 * ((2 ^ 352 : ENNReal)⁻¹ + ENNReal.ofReal (PqxdhInitialFutureInputReduction.testerLoss
+    Pr{let x ← PqxdhInitialFutureInputReduction.realFuture (completedBinding := completedBinding) source writer mark sender route decode sourceView sourceSample sourceAddress}[x = true] ≤
+      2 * ((2 ^ 352 : ENNReal)⁻¹ + ENNReal.ofReal (PqxdhInitialFutureInputReduction.testerLoss (completedBinding := completedBinding)
         source writer mark sender route decode sourceView hmac sourceSample sourceAddress)) := by
-  exact PqxdhInitialFutureInputReduction.real_bound source writer mark sender route decode sourceView hmac correct sourceSample sourceAddress
+  exact PqxdhInitialFutureInputReduction.real_bound (completedBinding := completedBinding) source writer mark sender route decode sourceView hmac correct sourceSample sourceAddress
 
 include bounded preBound applicationBound selectorBound auxBound in
 /-- The same source-derived tester has two HMAC challenge calls and pays its complete prepared/parent/observer uniform bill, plus at most one real full-HKDF evaluation per actual candidate. -/
 theorem tester_queries :
-    let observe := PqxdhInitialCommonSecrecy.aliasTester source writer mark sender route decode sourceView
+    let observe := PqxdhInitialCommonSecrecy.aliasTester (completedBinding := completedBinding) source writer mark sender route decode sourceView
     (fullExpandReduction .ratchet (RawCtxSelectedParentSecrecy.joint sourceSample sourceAddress) observe).IsQueryBoundP IsHmacChallengeQuery 2 ∧
       (fullExpandReduction .ratchet (RawCtxSelectedParentSecrecy.joint sourceSample sourceAddress) observe).IsQueryBoundP
         PqxdhFullSecretInputKdf.IsHmacUniformQuery ((V + 76) + U) ∧
       (∀ context output result, result ∈ support
-        (PqxdhInitialCommonSecrecy.observed source writer mark sender route decode sourceView context output) →
+        (PqxdhInitialCommonSecrecy.observed (completedBinding := completedBinding) source writer mark sender route decode sourceView context output) →
         (RawCtxFullPreimageTester.evaluate output (PqxdhInitialCommonSecrecy.candidates result)).IsTotalQueryBound Q) := by
-  have boundedTester := reduction_queries source writer selectedMessage previousRoot response64 other sender route decode
+  have boundedTester := reduction_queries (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
     index metadata ready post before selected number ancestors disclosed shared privateState cache depth remaining
     qPost qPre qApplication qSelector qAux bounded preBound applicationBound selectorBound auxBound
   exact ⟨(boundedTester.1 true).1, (boundedTester.1 true).2, boundedTester.2⟩
@@ -79,14 +81,14 @@ theorem tester_queries :
 include bounded preBound applicationBound selectorBound auxBound in
 /-- Every challenger retains the actual prepared sampler, uniform parent and complete source observer; replacement key/output samples are billed separately. -/
 theorem tester_challengers (hmac : HmacSha512) :
-    let observe := PqxdhInitialCommonSecrecy.aliasTester source writer mark sender route decode sourceView
+    let observe := PqxdhInitialCommonSecrecy.aliasTester (completedBinding := completedBinding) source writer mark sender route decode sourceView
     let joint := RawCtxSelectedParentSecrecy.joint sourceSample sourceAddress
     (extractRealGame hmac joint (fullExtractReduction hmac .ratchet observe)).IsTotalQueryBound ((V + 76) + U) ∧
       (extractUniformGame joint (fullExtractReduction hmac .ratchet observe)).IsTotalQueryBound ((V + 76) + (64 + U)) ∧
       (hmacPrfRealGame hmac (fullExpandReduction .ratchet joint observe)).IsTotalQueryBound (64 + ((V + 76) + U)) ∧
       (hmacPrfRandomGame (fullExpandReduction .ratchet joint observe)).IsTotalQueryBound ((V + 76) + (64 + (64 + U))) ∧
       (RawCtxSelectedParentSecrecy.random sourceSample sourceAddress observe).IsTotalQueryBound ((V + 76) + (76 + U)) := by
-  exact challenger_queries source writer selectedMessage previousRoot response64 other sender route decode
+  exact challenger_queries (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
     index metadata ready post before selected number ancestors disclosed shared privateState cache depth remaining
     qPost qPre qApplication qSelector qAux bounded preBound applicationBound selectorBound auxBound hmac true
 

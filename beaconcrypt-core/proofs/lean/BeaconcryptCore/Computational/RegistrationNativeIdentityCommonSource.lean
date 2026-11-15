@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativeIdentitySourceSimulation
 
 /-! Actual ordinary effects, randomness and mutable Env updates are shared by the indexed-identity frontend and the original native source. These component equalities preserve the private identity prefix and both original randomness counters through the concrete ambient interpreter. -/
-open OracleComp OracleSpec CoreModels
+open OracleComp OracleSpec CoreModels Aeneas
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativeIdentityCommonSource
@@ -38,7 +38,7 @@ private theorem lift_modify (change : EnvState Auxiliary → EnvState Auxiliary)
 
 theorem effect_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List PqxdhJointIdentity.IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List PqxdhJointIdentity.IdentitySeed)
     (query : (PqxdhRecordLiftInterface.EnvEffects n).Domain) :
     Related (Auxiliary := Auxiliary) (source := source) setup checks representation created seeds
       (RegistrationNativeIdentityFrontend.effect query) (RegistrationNativeBeaconFrontend.effect query) := by
@@ -47,7 +47,7 @@ theorem effect_source (setup : Setup base KemSK) (checks : Checks)
 
 theorem effect_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (query : (PqxdhRecordLiftInterface.EnvEffects n).Domain) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (query : (PqxdhRecordLiftInterface.EnvEffects n).Domain) :
     Keeps (Auxiliary := Auxiliary) (source := source) setup checks representation created
       (RegistrationNativeIdentityFrontend.effect query) := by
   rw [← lift_effect]
@@ -55,7 +55,7 @@ theorem effect_keeps (setup : Setup base KemSK) (checks : Checks)
 
 theorem sample_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List PqxdhJointIdentity.IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List PqxdhJointIdentity.IdentitySeed)
     (work : ProbComp Value) :
     Related (n := n) (Auxiliary := Auxiliary) (source := source) setup checks representation created seeds
       (RegistrationNativeIdentityFrontend.sample work) (RegistrationNativeBeaconFrontend.sample work) :=
@@ -65,7 +65,7 @@ theorem sample_source (setup : Setup base KemSK) (checks : Checks)
 
 theorem sample_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (work : ProbComp Value) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (work : ProbComp Value) :
     Keeps (n := n) (Auxiliary := Auxiliary) (source := source) setup checks representation created
       (RegistrationNativeIdentityFrontend.sample work) :=
   keeps_program setup checks representation created _
@@ -73,7 +73,7 @@ theorem sample_keeps (setup : Setup base KemSK) (checks : Checks)
 
 theorem update_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List PqxdhJointIdentity.IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List PqxdhJointIdentity.IdentitySeed)
     (change : EnvState Auxiliary → EnvState Auxiliary) :
     Related (n := n) (source := source) setup checks representation created seeds
       (RegistrationNativeIdentityFrontend.updateEnv change) (RegistrationNativeBeaconFrontend.updateEnv change) := by
@@ -82,7 +82,7 @@ theorem update_source (setup : Setup base KemSK) (checks : Checks)
 
 theorem update_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (change : EnvState Auxiliary → EnvState Auxiliary) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (change : EnvState Auxiliary → EnvState Auxiliary) :
     Keeps (n := n) (source := source) setup checks representation created
       (RegistrationNativeIdentityFrontend.updateEnv change) := by
   rw [← lift_modify]

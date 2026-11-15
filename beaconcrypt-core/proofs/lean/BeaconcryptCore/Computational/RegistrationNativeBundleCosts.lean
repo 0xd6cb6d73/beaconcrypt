@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativeCreateCosts
 import BeaconcryptCore.Computational.RegistrationNativeInitCosts
 
-/-! The actual outgoing bundle retains its one-time scalar draw, original six-callback Init controller, complete signing history and final owner-phase capability. The conservative callback multiplicity charges every source slot with its maximum hash/sign bill; failed source operations keep their original prefix costs. -/
+/-! The actual outgoing bundle retains its one-time scalar draw, original four-callback Init controller, complete signing history and final owner-phase capability. The conservative callback multiplicity charges every source slot with its maximum hash/sign bill; failed source operations keep their original prefix costs. -/
 
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
@@ -20,11 +20,11 @@ variable {n : Nat} {ι KemSK Auxiliary : Type} {base : OracleSpec ι}
 
 def outgoingCost (qSign : Nat) (kind : EffectKind) := hashCost kind + coinCost qSign kind
 
-def bundleBill (qSign : Nat) (kind : EffectKind) := coinCost 32 kind + (outgoingCost qSign kind * 6 + administrativeCost kind)
+def bundleBill (qSign : Nat) (kind : EffectKind) := coinCost 32 kind + (outgoingCost qSign kind * 4 + administrativeCost kind)
 
 /-- Each actual Init callback retains its source hash/signing draws and mutable chronological receipts. -/
 theorem outgoing_bound (setup : PqxdhServerAuthExperiment.Setup base KemSK) (source : RegistrationNativeMldsa.Source)
-    (qSign qKem : Nat) (signing : ∀ key request, (source.sign key request).IsTotalQueryBound qSign)
+    (qSign qKem : Nat) (_signing : ∀ key request, (source.sign key request).IsTotalQueryBound qSign)
     (index : Nat) (owner : RegistrationNativeBeaconFrontend.Owner source) (query : RegistrationBeaconInitExecutor.Spec.Domain)
     (owners : RegistrationNativeBeaconFrontend.State source) (env : RegistrationWorldAgreementCompiler.EnvState Auxiliary)
     (kind : EffectKind) :
@@ -40,13 +40,7 @@ theorem outgoing_bound (setup : PqxdhServerAuthExperiment.Setup base KemSK) (sou
           unfold RegistrationNativeBeaconFrontend.outgoing RegistrationNativeBeaconFrontend.hash
           cases kind <;> exact effect_bound source qKem _ (.inr (.hash (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request))) owners env
       | sign request payload digest =>
-          simp only [RegistrationNativeBeaconFrontend.outgoing, StateT.run_bind]
-          apply weighted_mono _ _ (coinCost qSign kind + 0) _ ?_ (by unfold outgoingCost; omega)
-          apply weighted_bind _ _ _ _ _ (sample_bound source qKem kind _ qSign
-            (RegistrationNativePrimitiveCosts.signing_bound source qSign signing owner.mldsa request) owners env)
-          intro reply
-          simp only [RegistrationNativeBeaconFrontend.updateEnv, StateT.run_lift, StateT.run_bind,
-            StateT.run_modify, StateT.run_pure, pure_bind]
+          simp only [RegistrationNativeBeaconFrontend.outgoing, StateT.run_pure]
           trivial
   | inr request =>
       simp only [RegistrationNativeBeaconFrontend.outgoing]
@@ -55,7 +49,7 @@ theorem outgoing_bound (setup : PqxdhServerAuthExperiment.Setup base KemSK) (sou
         trivial
       · trivial
 
-/-- The actual six-slot executor is interpreted on both original state coordinates. -/
+/-- The actual four-slot executor is interpreted on both original state coordinates. -/
 theorem program_bound (setup : PqxdhServerAuthExperiment.Setup base KemSK) (source : RegistrationNativeMldsa.Source)
     (qSign qKem : Nat) (signing : ∀ key request, (source.sign key request).IsTotalQueryBound qSign)
     (wire : RegistrationNativeWire.Wire) (index : Nat) (owner : RegistrationNativeBeaconFrontend.Owner source)
@@ -64,11 +58,11 @@ theorem program_bound (setup : PqxdhServerAuthExperiment.Setup base KemSK) (sour
     Weighted (bill (n := n) qKem kind)
       (((simulateQ (RegistrationNativeBeaconFrontend.outgoing setup source index owner)
         (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-          ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)).run owners).run env)
-      (outgoingCost qSign kind * 6) := by
+          ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)).run owners).run env)
+      (outgoingCost qSign kind * 4) := by
   apply RegistrationNativeWeightedContext.run_bound (fun _ => outgoingCost qSign kind) _ _ _ _ owners env
-  · simpa only [ite_true] using weighted_indicator (fun _ => True) (outgoingCost qSign kind) _ 6
-      ((isQueryBoundP_true_iff _ _).mpr (RegistrationNativeInitCosts.begin_bound _ _ _ _ _ _))
+  · simpa only [ite_true] using weighted_indicator (fun _ => True) (outgoingCost qSign kind) _ 4
+      ((isQueryBoundP_true_iff _ _).mpr (RegistrationNativeInitCosts.begin_bound _ _ _ _ _))
   · intro query current environment
     exact outgoing_bound setup source qSign qKem signing index owner query current environment kind
 
@@ -78,7 +72,7 @@ private noncomputable def suffix (setup : PqxdhServerAuthExperiment.Setup base K
     RegistrationNativeBeaconFrontend.M n KemSK source Auxiliary (RustM (Option Pqxdh.Bytes)) := do
   let published ← simulateQ (RegistrationNativeBeaconFrontend.outgoing setup source index owner)
     (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)
+      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)
   match published with
   | .fail error => pure (.fail error)
   | .div => pure .div
@@ -94,7 +88,7 @@ private theorem suffix_bound (setup : PqxdhServerAuthExperiment.Setup base KemSK
     (oneTime : PqxdhJointGapDh.ScalarBytes) (owners : RegistrationNativeBeaconFrontend.State source)
     (env : RegistrationWorldAgreementCompiler.EnvState Auxiliary) (kind : EffectKind) :
     Weighted (bill (n := n) qKem kind) (((suffix setup source wire index owner oneTime).run owners).run env)
-      (outgoingCost qSign kind * 6 + administrativeCost kind) := by
+      (outgoingCost qSign kind * 4 + administrativeCost kind) := by
   simp only [suffix, StateT.run_bind]
   apply weighted_bind _ _ _ _ _ (program_bound setup source qSign qKem signing wire index owner oneTime owners env kind)
   intro published

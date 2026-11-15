@@ -10,6 +10,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialNativeCarried
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhFullSecretInputKdf PqxdhInitialPostContext PqxdhInitialBuilderContext
 open PqxdhInitialNativeLog PqxdhInitialNativePrefix PqxdhInitialBeaconAmbient
 variable {ι M P I D K X Response Shared Result Origin A N C : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -37,7 +39,7 @@ variable (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writ
   (execution : Execution extra M P I D K Result Origin S B)
 
 noncomputable def code :=
-  PqxdhInitialOriginForwardBuilder.program (X := X) (Response := Response) source mark execution.origin sender route decode
+  PqxdhInitialOriginForwardBuilder.program (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response) source mark execution.origin sender route decode
     execution.initial execution.index execution.metadata execution.ready execution.outside execution.before execution.trace
 
 private theorem selection (depth : Nat)
@@ -51,8 +53,8 @@ noncomputable def carried (depth stage : Nat)
     (external : QueryImpl (External extra RatchetChain I D K X Response Shared) (Ambient A N C))
     (state : State A N C) : ProbComp (Carried extra M P I D K Result Origin A N C S B) :=
   RawCtxForwardScan.scan PqxdhInitialForwardPost.selected (selected (extra := extra) depth) (selection depth)
-    (handler source writer stage external) (code source mark sender route decode execution)
-    (PqxdhInitialOriginForwardBuilder.program_covered source mark execution.origin sender route decode
+    (handler source writer stage external) (code (associatedData := associatedData) (completedBinding := completedBinding) source mark sender route decode execution)
+    (PqxdhInitialOriginForwardBuilder.program_covered (associatedData := associatedData) (completedBinding := completedBinding) source mark execution.origin sender route decode
       execution.initial execution.index execution.metadata execution.ready execution.outside execution.before execution.trace) state
 
 
@@ -89,8 +91,8 @@ theorem annotated_same {Tag Value State ι : Type} {base : OracleSpec ι}
 theorem carried_same (depth : Nat)
     (external : QueryImpl (External extra RatchetChain I D K X Response Shared) (Ambient A N C))
     (state : State A N C) (valid : Depth depth state) :
-    carried source writer mark sender route decode execution depth (depth + 1) external state =
-      carried source writer mark sender route decode execution depth (depth + 2) external state :=
+    carried (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth (depth + 1) external state =
+      carried (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth (depth + 2) external state :=
   annotated_same PqxdhInitialForwardPost.selected (selected (extra := extra) depth) (selection depth) _ _ (Depth depth)
     (fun query reached invariant _ => step_same source writer depth external query reached invariant)
     (fun query reached invariant unchosen reply supported =>
@@ -98,41 +100,41 @@ theorem carried_same (depth : Nat)
     _ _ state valid
 
 noncomputable def original :=
-  (PqxdhInitialOriginPost.sequence (X := X) (Response := Response) source execution.initial mark execution.origin
+  (PqxdhInitialOriginPost.sequence (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response) source execution.initial mark execution.origin
     sender route decode execution.index execution.metadata execution.ready execution.outside).run (execution.before, execution.trace)
 
 /-- Packing the actual returned descriptor is the exact full pending prefix of the original builder and complete post source. -/
 theorem carried_pack (depth stage : Nat)
     (external : QueryImpl (External extra RatchetChain I D K X Response Shared) (Ambient A N C))
     (state : State A N C) :
-    RawCtxForwardScan.pack (PqxdhInitialOriginContext.frame (X := X) (Response := Response) mark sender route decode) <$>
-        carried source writer mark sender route decode execution depth stage external state =
+    RawCtxForwardScan.pack (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode) <$>
+        carried (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth stage external state =
       RawCtxStatefulPendingPrefix.scan (selected (extra := extra) depth) (handler source writer stage external)
-        (original source mark sender route decode execution) state := by
+        (original (associatedData := associatedData) (completedBinding := completedBinding) source mark sender route decode execution) state := by
   simpa only [carried, code, original, PqxdhInitialOriginForwardBuilder.program_erase] using
     RawCtxForwardScan.scan_pack PqxdhInitialForwardPost.selected (selected (extra := extra) depth) (selection depth)
-      (handler source writer stage external) (PqxdhInitialOriginContext.frame (X := X) (Response := Response) mark sender route decode)
-      (code source mark sender route decode execution)
-      (PqxdhInitialOriginForwardBuilder.program_covered source mark execution.origin sender route decode
+      (handler source writer stage external) (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode)
+      (code (associatedData := associatedData) (completedBinding := completedBinding) source mark sender route decode execution)
+      (PqxdhInitialOriginForwardBuilder.program_covered (associatedData := associatedData) (completedBinding := completedBinding) source mark execution.origin sender route decode
         execution.initial execution.index execution.metadata execution.ready execution.outside execution.before execution.trace)
-      (PqxdhInitialOriginForwardBuilder.program_sound source mark execution.origin sender route decode
+      (PqxdhInitialOriginForwardBuilder.program_sound (associatedData := associatedData) (completedBinding := completedBinding) source mark execution.origin sender route decode
         execution.initial execution.index execution.metadata execution.ready execution.outside execution.before execution.trace) state
 
 /-- Resuming the actual carried prefix runs the same dependent query and complete source continuation without dropping any private effect. -/
 theorem carried_finish (depth stage : Nat)
     (external : QueryImpl (External extra RatchetChain I D K X Response Shared) (Ambient A N C))
     (state : State A N C) :
-    (carried source writer mark sender route decode execution depth stage external state >>= fun cut =>
+    (carried (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth stage external state >>= fun cut =>
       RawCtxPendingMixedPrefix.finish (handler source writer stage external)
-        (RawCtxForwardScan.pack (PqxdhInitialOriginContext.frame (X := X) (Response := Response) mark sender route decode) cut)) =
-      (simulateQ (handler source writer stage external) (original source mark sender route decode execution)).run state := by
+        (RawCtxForwardScan.pack (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode) cut)) =
+      (simulateQ (handler source writer stage external) (original (associatedData := associatedData) (completedBinding := completedBinding) source mark sender route decode execution)).run state := by
   simpa only [carried, code, original, PqxdhInitialOriginForwardBuilder.program_erase] using
     RawCtxForwardScan.scan_finish PqxdhInitialForwardPost.selected (selected (extra := extra) depth) (selection depth)
-      (handler source writer stage external) (PqxdhInitialOriginContext.frame (X := X) (Response := Response) mark sender route decode)
-      (code source mark sender route decode execution)
-      (PqxdhInitialOriginForwardBuilder.program_covered source mark execution.origin sender route decode
+      (handler source writer stage external) (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode)
+      (code (associatedData := associatedData) (completedBinding := completedBinding) source mark sender route decode execution)
+      (PqxdhInitialOriginForwardBuilder.program_covered (associatedData := associatedData) (completedBinding := completedBinding) source mark execution.origin sender route decode
         execution.initial execution.index execution.metadata execution.ready execution.outside execution.before execution.trace)
-      (PqxdhInitialOriginForwardBuilder.program_sound source mark execution.origin sender route decode
+      (PqxdhInitialOriginForwardBuilder.program_sound (associatedData := associatedData) (completedBinding := completedBinding) source mark execution.origin sender route decode
         execution.initial execution.index execution.metadata execution.ready execution.outside execution.before execution.trace) state
 
 /-- Every supported saved context has its own source-derived remaining-work certificate, including its complete origin metadata. -/
@@ -141,9 +143,9 @@ theorem carried_fits (depth stage : Nat)
     (qPost : Nat) (bounded : ∀ reply, (execution.outside reply).IsTotalQueryBound qPost)
     (state reached : State A N C) (context : Context extra M P I D K Result Origin S B)
     (supported : RawCtxForwardScan.Cut.pending context reached ∈ support
-      (carried source writer mark sender route decode execution depth stage external state)) :
+      (carried (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth stage external state)) :
     PqxdhInitialOriginCertificates.Fits qPost context :=
-  PqxdhInitialOriginCertificates.carried_fits source mark execution.origin sender route decode
+  PqxdhInitialOriginCertificates.carried_fits (associatedData := associatedData) (completedBinding := completedBinding) source mark execution.origin sender route decode
     execution.initial execution.index execution.metadata execution.ready execution.outside qPost bounded execution.before execution.trace
     (selected (extra := extra) depth) (selection depth) (handler source writer stage external) state reached context supported
 
@@ -152,18 +154,18 @@ theorem carried_origin (depth stage : Nat)
     (external : QueryImpl (External extra RatchetChain I D K X Response Shared) (Ambient A N C))
     (state reached : State A N C) (context : Context extra M P I D K Result Origin S B)
     (supported : RawCtxForwardScan.Cut.pending context reached ∈ support
-      (carried source writer mark sender route decode execution depth stage external state)) :
-    selected (extra := extra) depth (PqxdhInitialOriginContext.frame (X := X) (Response := Response) mark sender route decode context).1 reached = true ∧
-      RawCtxQueryOccurrence.Occurs (PqxdhInitialOriginContext.frame (X := X) (Response := Response) mark sender route decode context).1
-        (PqxdhInitialOriginContext.frame (X := X) (Response := Response) mark sender route decode context).2
-        (original source mark sender route decode execution) := by
+      (carried (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth stage external state)) :
+    selected (extra := extra) depth (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode context).1 reached = true ∧
+      RawCtxQueryOccurrence.Occurs (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode context).1
+        (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode context).2
+        (original (associatedData := associatedData) (completedBinding := completedBinding) source mark sender route decode execution) := by
   simpa only [code, original, PqxdhInitialOriginForwardBuilder.program_erase] using
     RawCtxForwardScan.pending_origin PqxdhInitialForwardPost.selected (selected (extra := extra) depth) (selection depth)
-      (handler source writer stage external) (PqxdhInitialOriginContext.frame (X := X) (Response := Response) mark sender route decode)
-      (code source mark sender route decode execution)
-      (PqxdhInitialOriginForwardBuilder.program_covered source mark execution.origin sender route decode
+      (handler source writer stage external) (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode)
+      (code (associatedData := associatedData) (completedBinding := completedBinding) source mark sender route decode execution)
+      (PqxdhInitialOriginForwardBuilder.program_covered (associatedData := associatedData) (completedBinding := completedBinding) source mark execution.origin sender route decode
         execution.initial execution.index execution.metadata execution.ready execution.outside execution.before execution.trace)
-      (PqxdhInitialOriginForwardBuilder.program_sound source mark execution.origin sender route decode
+      (PqxdhInitialOriginForwardBuilder.program_sound (associatedData := associatedData) (completedBinding := completedBinding) source mark execution.origin sender route decode
         execution.initial execution.index execution.metadata execution.ready execution.outside execution.before execution.trace)
       state reached context supported
 
@@ -172,50 +174,50 @@ theorem carried_covered (depth stage : Nat)
     (external : QueryImpl (External extra RatchetChain I D K X Response Shared) (Ambient A N C))
     (state reached : State A N C) (covered : Covered state) (context : Context extra M P I D K Result Origin S B)
     (supported : RawCtxForwardScan.Cut.pending context reached ∈ support
-      (carried source writer mark sender route decode execution depth stage external state)) : Covered reached := by
-  have mapped : RawCtxForwardScan.pack (PqxdhInitialOriginContext.frame (X := X) (Response := Response) mark sender route decode)
+      (carried (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth stage external state)) : Covered reached := by
+  have mapped : RawCtxForwardScan.pack (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode)
       (RawCtxForwardScan.Cut.pending context reached) ∈ support
-      (RawCtxForwardScan.pack (PqxdhInitialOriginContext.frame (X := X) (Response := Response) mark sender route decode) <$>
-        carried source writer mark sender route decode execution depth stage external state) := by
+      (RawCtxForwardScan.pack (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode) <$>
+        carried (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth stage external state) := by
     rw [support_map]
     exact ⟨RawCtxForwardScan.Cut.pending context reached, supported, rfl⟩
   rw [carried_pack] at mapped
   exact PqxdhInitialNativeLog.scan_covered source writer stage external (selected (extra := extra) depth)
-    (original source mark sender route decode execution) state covered _ mapped
+    (original (associatedData := associatedData) (completedBinding := completedBinding) source mark sender route decode execution) state covered _ mapped
 
 /-- A supported actual cut is a matching earlier recorded cache hit or a fresh miss at the requested predecessor depth. -/
 theorem carried_cases (depth stage : Nat)
     (external : QueryImpl (External extra RatchetChain I D K X Response Shared) (Ambient A N C))
     (state reached : State A N C) (covered : Covered state) (context : Context extra M P I D K Result Origin S B)
     (supported : RawCtxForwardScan.Cut.pending context reached ∈ support
-      (carried source writer mark sender route decode execution depth stage external state)) :
+      (carried (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth stage external state)) :
     RawCtxSelectiveChainGame.matched reached.1.1.2.2 (address context.original) = true ∧
       (((address context.original) ∈ reached.1.2 ∧ ∃ output, reached.1.1.2.1 (address context.original) = some output) ∨
         (reached.1.1.2.1 (address context.original) = none ∧ reached.1.1.2.2.depth = depth)) := by
-  exact selected_cases depth (PqxdhInitialOriginContext.frame (X := X) (Response := Response) mark sender route decode context).1 reached
-    (carried_covered source writer mark sender route decode execution depth stage external state reached covered context supported)
-    (address context.original) (PqxdhInitialBuilderContext.frame_address sender route decode context.original)
-    (carried_origin source writer mark sender route decode execution depth stage external state reached context supported).1
+  exact selected_cases depth (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode context).1 reached
+    (carried_covered (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth stage external state reached covered context supported)
+    (address context.original) (PqxdhInitialBuilderContext.frame_address (completedBinding := completedBinding) sender route decode context.original)
+    (carried_origin (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth stage external state reached context supported).1
 
 /-- On the actual miss branch, the supported source cut draws precisely one full76 response and updates the whole original cache/cursor/log state. -/
 theorem carried_miss (depth stage runStage : Nat) (before : depth < runStage)
     (external : QueryImpl (External extra RatchetChain I D K X Response Shared) (Ambient A N C))
     (state reached : State A N C) (covered : Covered state) (context : Context extra M P I D K Result Origin S B)
     (supported : RawCtxForwardScan.Cut.pending context reached ∈ support
-      (carried source writer mark sender route decode execution depth stage external state))
+      (carried (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth stage external state))
     (missing : reached.1.1.2.1 (address context.original) = none) :
     (handler source writer runStage external
-      (PqxdhInitialOriginContext.frame (X := X) (Response := Response) mark sender route decode context).1).run reached =
-      (fun output => (PqxdhInitialParentBuilderContext.reply sender route decode context.original output,
+      (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode context).1).run reached =
+      (fun output => (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode context.original output,
         PqxdhInitialNativeResponse.updated (address context.original) output reached)) <$> ($ᵗ FullOutput) := by
-  have cases := carried_cases source writer mark sender route decode execution depth stage external state reached covered context supported
+  have cases := carried_cases (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth stage external state reached covered context supported
   have actualDepth : reached.1.1.2.2.depth = depth := by
     rcases cases.2 with hit | miss
     · obtain ⟨output, found⟩ := hit.2
       rw [missing] at found
       cases found
     · exact miss.2
-  exact PqxdhInitialNativeResponse.origin_frame_miss source writer runStage external mark sender route decode context reached missing cases.1
+  exact PqxdhInitialNativeResponse.origin_frame_miss (completedBinding := completedBinding) source writer runStage external mark sender route decode context reached missing cases.1
     (by simpa only [actualDepth] using before)
 
 end BeaconcryptCore.Computational.PqxdhInitialNativeCarried

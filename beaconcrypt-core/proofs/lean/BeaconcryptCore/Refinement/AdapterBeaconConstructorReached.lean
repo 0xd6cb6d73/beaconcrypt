@@ -21,11 +21,12 @@ variable [generators : AdapterBeaconConstructorRequestMonad.Operations (RustT (M
 variable [crypto : AdapterPublicWrapperRequestMonad.CryptoOperations (RustT (M n KemSK source Auxiliary (StateT P ProbComp)))]
 variable [children : AdapterPublicWrapperRequestMonad.ChildOperations (RustT (M n KemSK source Auxiliary (StateT P ProbComp)))]
 variable (coins : QueryImpl unifSpec (StateT P ProbComp)) (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (generator : rand_core.TryCryptoRng R Error) (view : AdapterPublicWrapperState.MaterialView source KemSK)
 variable (kem : AdapterBeaconConstructorKem.Representation view R)
 variable (leaves : Leaves (n := n) (Auxiliary := Auxiliary) coins setup checks representation created generator view kem)
 
+omit children in
 theorem binding (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicKey)
     (mlPin : Std.Array U8 1952#usize) (rng afterRng : R)
     (owners ownersAfter : RegistrationNativeBeaconFrontend.State source)
@@ -39,7 +40,7 @@ theorem binding (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicK
   have normalized : AdapterBeaconConstructorJoint.normalize (view.edPublic serverId) keyId <$>
       AdapterBeaconConstructorNative.joint coins setup checks representation created generator view kem leaves (view.edPublic serverId) mlPin keyId rng =
       AdapterBeaconConstructorNative.joint coins setup checks representation created generator view kem leaves (view.edPublic serverId) mlPin keyId rng :=
-    AdapterBeaconConstructorJoint.normalized generator view _ leaves.ml setup.joint _ leaves.ed _ _ leaves.kx _ _ (view.edPublic serverId) mlPin keyId rng
+    AdapterBeaconConstructorJoint.normalized generator view setup.joint _ leaves.ed _ _ leaves.kx _ (view.edPublic serverId) mlPin keyId rng
   rw [← normalized] at supported
   simp only [StateT.run_map, support_map, Set.mem_image] at supported
   obtain ⟨raw, _, same⟩ := supported
@@ -52,6 +53,7 @@ theorem binding (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicK
     have exactBinding := congrArg (fun value : AdapterBeaconConstructorJoint.Capture source R => value.1.pin.binding) selected
     exact exactBinding.symm
 
+omit children in
 theorem kem_row (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicKey)
     (mlPin : Std.Array U8 1952#usize) (rng afterRng : R)
     (owners ownersAfter : RegistrationNativeBeaconFrontend.State source)
@@ -77,6 +79,7 @@ theorem kem_row (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicK
     exact (AdapterBeaconConstructorKemSupport.lifted_supported coins setup view kem prepared.2 middleOwners ownersAfter
       middleEnv envAfter middleNative middleP receipt after platformAfter generatedSupport).2.2
 
+omit children in
 theorem entry_material (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicKey)
     (mlPin : Std.Array U8 1952#usize) (rng afterRng : R)
     (owners ownersAfter : RegistrationNativeBeaconFrontend.State source)
@@ -107,7 +110,7 @@ theorem entry_material (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.
     simp only [StateT.run_pure, pure_bind, support_pure, Set.mem_singleton_iff,
       AdapterBeaconConstructorNative.sourceResult, AdapterBeaconConstructorJoint.sourceResult] at continued
     cases continued
-    let owner := RegistrationNativeBeaconBirth.owner setup source ready.pin ready.credentials ready.identity ready.prekey receipt.born middleNative.server.world.world.1.owners.length
+    let owner := RegistrationNativeBeaconBirth.owner setup source ready.pin ready.identity ready.prekey receipt.born middleNative.server.world.world.1.owners.length
     refine ⟨owner, ?_, ?_⟩
     · simp [owner]
     · have slot : (AdapterBeaconConstructorMaterial.appendNative keyId (view.edPublic serverId) middleNative).server.world.world.1.owners[owner.worldOwner]? = some (.inactive .fresh) := by

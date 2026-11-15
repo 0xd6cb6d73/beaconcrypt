@@ -10,6 +10,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialBuilderServiceBound
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhServerRegistrationPublication PqxdhInitialServiceBuilder PqxdhInitialResponseService
 open PqxdhJointKdfGame PqxdhSecretInputKdf
 variable {ι Result : Type} {base : OracleSpec ι}
@@ -32,7 +34,7 @@ set_option backward.isDefEq.respectTransparency false in
 theorem candidate_initial {Metadata PeerMetadata Consumed : Type}
     (pending : pqxdh.ServerRegistrationCandidate) (root : RootOutput) (data : Option Bytes)
     (metadata : PeerMetadata) (state : State Metadata PeerMetadata Consumed) :
-    (candidate pending root data metadata state).IsQueryBoundP (Initial (base := TailSpec)) 1 := by
+    (PqxdhInitialServiceBuilder.candidate (associatedData := associatedData) pending root data metadata state).IsQueryBoundP (Initial (base := TailSpec)) 1 := by
   simp only [candidate, original, isQueryBoundP_query_bind_iff, Initial,
     not_false_eq_true, true_or, ite_false, true_and]
   intro valid
@@ -54,13 +56,13 @@ theorem candidate_initial {Metadata PeerMetadata Consumed : Type}
 theorem used_initial {Metadata PeerMetadata Consumed : Type}
     (pending : PqxdhRegistrationInputs.UsedInput) (root : RootOutput) (data : Option Bytes)
     (metadata : PeerMetadata) (state : State Metadata PeerMetadata Consumed) :
-    (usedBuild pending root data metadata state).IsQueryBoundP (Initial (base := TailSpec)) 1 := by
+    (PqxdhInitialServiceBuilder.usedBuild (associatedData := associatedData) pending root data metadata state).IsQueryBoundP (Initial (base := TailSpec)) 1 := by
   apply PqxdhInitialBuilderQueryBounds.continue_bound
   rintro (_ | next)
   all_goals try exact isQueryBoundP_pure _ _ _
   apply PqxdhInitialBuilderQueryBounds.continue_bound
   rintro (prepared | _)
-  all_goals first | exact candidate_initial _ root data metadata state | exact isQueryBoundP_pure _ _ _
+  all_goals first | exact candidate_initial (associatedData := associatedData) _ root data metadata state | exact isQueryBoundP_pure _ _ _
 
 set_option backward.isDefEq.respectTransparency false in
 /-- Every ordinary native builder callback retains its complete coins and shared effects without initializer access; the single service callback forwards once. -/
@@ -81,9 +83,9 @@ theorem protocol_initial {M P I D K A : Type} {S B : Nat}
     (aux : QueryImpl AuxSpec (StateT (RawCtxSharedPrimitive.SharedState A) ProbComp))
     (sender : M → Std.U64) (index : Fin S) (metadata : P) (ready : PqxdhPrivateAcceptedRoot.Ready)
     (state : PqxdhRegistrationProtocolState.State M P I D K A S B) :
-    ((protocolBuild fixed writer aux sender index metadata ready).run state).IsQueryBoundP (Initial (base := unifSpec)) 1 := by
+    ((PqxdhInitialServiceBuilder.protocolBuild (associatedData := associatedData) fixed writer aux sender index metadata ready).run state).IsQueryBoundP (Initial (base := unifSpec)) 1 := by
   simp only [protocolBuild, StateT.run, isQueryBoundP_map_iff]
-  exact (used_initial _ _ _ _ _).simulateQ_run_StateT_of_step (tail_initial fixed writer aux) _
+  exact (used_initial (associatedData := associatedData) _ _ _ _ _).simulateQ_run_StateT_of_step (tail_initial fixed writer aux) _
 
 set_option backward.isDefEq.respectTransparency false in
 /-- Compiling the actual builder's initializer label preserves the same service count and forwards all ordinary coins. -/
@@ -103,9 +105,9 @@ theorem build_initial {M P I D K A : Type} {S B : Nat}
     (aux : QueryImpl AuxSpec (StateT (RawCtxSharedPrimitive.SharedState A) ProbComp))
     (sender : M → Std.U64) (index : Fin S) (metadata : P) (selected : PqxdhCorrelatedExtractFamily.Message)
     (ready : PqxdhPrivateAcceptedRoot.Ready) (state : PqxdhRegistrationProtocolState.State M P I D K A S B) :
-    (PqxdhInitialLabelBuilder.build fixed writer aux sender index metadata selected ready state).IsQueryBoundP
+    (PqxdhInitialLabelBuilder.build (associatedData := associatedData) fixed writer aux sender index metadata selected ready state).IsQueryBoundP
       PqxdhInitialObserverCallbackBudgets.IsService 1 :=
-  compiler_initial selected _ 1 (protocol_initial fixed writer aux sender index metadata _ state)
+  compiler_initial selected _ 1 (protocol_initial (associatedData := associatedData) fixed writer aux sender index metadata _ state)
 
 set_option backward.isDefEq.respectTransparency false in
 /-- The actual accepted current observer issues at most the one Server initializer plus one service request per permitted post finish. -/
@@ -121,16 +123,16 @@ theorem accepted_initial {ι M P I K X Response A KemSK : Type} {baseSpec : Orac
     (c : PqxdhAuthenticatedRootBudgets.Certificate env baseImpl kem program post)
     (secret : KemSK) (selected : PqxdhCorrelatedExtractFamily.Message)
     (prepared : PqxdhPrivateRootSource.Prepared setup
-      (PqxdhPhase2GeneratedDriver.driver env.toDriverEnvironment program).State)
+      (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)
     (ready : PqxdhPrivateAcceptedRoot.Ready) :
-    (PqxdhInitialLegalObserver.accepted env baseImpl kem attachedVerify primitives program post secret selected prepared ready).IsQueryBoundP
+    (PqxdhInitialLegalObserver.accepted (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post secret selected prepared ready).IsQueryBoundP
       PqxdhInitialObserverCallbackBudgets.IsService (1 + c.privatePost) := by
   unfold PqxdhInitialLegalObserver.accepted
-  apply isQueryBoundP_bind (build_initial _ _ _ _ _ _ _ _ _)
+  apply isQueryBoundP_bind (build_initial (associatedData := associatedData) _ _ _ _ _ _ _ _ _)
   intro result _supported
   rw [isQueryBoundP_map_iff]
   exact (c.postBound prepared.1.context.selection.1 result.1 (.inr 5)).simulateQ_run_StateT_of_step
-    (PqxdhInitialObserverBudgets.target_service attachedVerify primitives 1 env.source env.localImpl
+    (PqxdhInitialObserverBudgets.target_service (completedBinding := completedBinding) attachedVerify primitives 1 env.source env.localImpl
       env.recordWriter env.senderId env.route env.decode baseImpl kem secret ready.ciphertext) _
 
 end BeaconcryptCore.Computational.PqxdhInitialBuilderServiceBound

@@ -1,5 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Extraction.Funs
+import BeaconcryptCore.PanicFreedom.SessionBinding
+import BeaconcryptCore.PanicFreedom.Structural
 
 /-! Definitionally normal registration constructors, immutable views and field transfers, on arbitrary represented states. -/
 
@@ -23,20 +25,8 @@ theorem InitPacket_fields_total (self : registration.InitPacket) :
 theorem begin_server_pin_total (binding : pqxdh.ServerBinding) (public_key : Array Std.U8 1952#usize) :
     ∃ result, registration.begin_server_pin binding public_key = ok result := ⟨_, rfl⟩
 
-theorem PinFingerprint_request_total (self : registration.PinFingerprint) :
-    ∃ result, registration.PinFingerprint.request self = ok result := ⟨_, rfl⟩
-
 theorem InitHash_request_total (self : registration.InitHash) :
     ∃ result, registration.InitHash.request self = ok result := ⟨_, rfl⟩
-
-theorem InitMldsaVerification_request_total (self : registration.InitMldsaVerification) :
-    ∃ result, registration.InitMldsaVerification.request self = ok result := ⟨_, rfl⟩
-
-theorem InitServerFingerprint_request_total (self : registration.InitServerFingerprint) :
-    ∃ result, registration.InitServerFingerprint.request self = ok result := ⟨_, rfl⟩
-
-theorem InitBeaconFingerprint_request_total (self : registration.InitBeaconFingerprint) :
-    ∃ result, registration.InitBeaconFingerprint.request self = ok result := ⟨_, rfl⟩
 
 theorem BeaconPending_server_key_id_total (self : registration.BeaconPending) :
     ∃ result, registration.BeaconPending.server_key_id self = ok result := ⟨_, rfl⟩
@@ -56,14 +46,8 @@ theorem ResponseMldsaVerification_request_total (self : registration.ResponseMld
 theorem BeaconInitState_fields_total (self : registration.BeaconInitState) :
     ∃ result, registration.BeaconInitState.fields self = ok result := ⟨_, rfl⟩
 
-theorem BeaconFingerprint_request_total (self : registration.BeaconFingerprint) :
-    ∃ result, registration.BeaconFingerprint.request self = ok result := ⟨_, rfl⟩
-
 theorem BeaconInitHash_request_total (self : registration.BeaconInitHash) :
     ∃ result, registration.BeaconInitHash.request self = ok result := ⟨_, rfl⟩
-
-theorem BeaconMldsaSigning_request_total (self : registration.BeaconMldsaSigning) :
-    ∃ result, registration.BeaconMldsaSigning.request self = ok result := ⟨_, rfl⟩
 
 theorem BeaconInitReady_message_total (self : registration.BeaconInitReady) :
     ∃ result, registration.BeaconInitReady.message self = ok result := ⟨_, rfl⟩
@@ -95,22 +79,42 @@ theorem ServerResponseReady_message_total (self : registration.ServerResponseRea
 theorem PublishedServerResponse_into_parts_total {Encoded : Type} (self : registration.PublishedServerResponse Encoded) :
     ∃ result, registration.PublishedServerResponse.into_parts (Encoded := Encoded) self = ok result := ⟨_, rfl⟩
 
-theorem PinFingerprint_resume_total (self : registration.PinFingerprint)
-  (fingerprint : core.option.Option (Array Std.U8 64#usize)) :
-    ∃ result, registration.PinFingerprint.resume self fingerprint = ok result := by
-  cases fingerprint
-  all_goals exact ⟨_, rfl⟩
-
-theorem InitServerFingerprint_resume_total (self : registration.InitServerFingerprint)
-  (fingerprint : core.option.Option (Array Std.U8 64#usize)) :
-    ∃ result, registration.InitServerFingerprint.resume self fingerprint = ok result := by
-  cases fingerprint
-  all_goals exact ⟨_, rfl⟩
-
 theorem ResponseMldsaVerification_resume_total (self : registration.ResponseMldsaVerification) (verified : Bool) :
     ∃ result, registration.ResponseMldsaVerification.resume self verified = ok result := by
-  cases verified
-  all_goals exact ⟨_, rfl⟩
+  cases verified with
+  | false => exact ⟨_, rfl⟩
+  | true =>
+    obtain ⟨input, ran⟩ := SessionBinding.RegistrationBinding_ad_transcript_total self.pending.binding
+      ⟨self.packet.public.identity_key, self.packet.public.ephemeral_key,
+        self.packet.public.kem_cipher_text, self.packet.public.key_id⟩
+    exact ⟨_, by simp only [registration.ResponseMldsaVerification.resume, ↓reduceIte, ran, bind_tc_ok]; rfl⟩
+
+theorem BeaconAdHash_request_total (self : registration.BeaconAdHash) :
+    ∃ result, self.request = ok result := ⟨_, rfl⟩
+
+theorem ServerAdHash_request_total (self : registration.ServerAdHash) :
+    ∃ result, self.request = ok result := ⟨_, rfl⟩
+
+theorem BeaconAdHash_resume_total (self : registration.BeaconAdHash)
+    (digest : core.option.Option (Array Std.U8 64#usize)) :
+    ∃ result, self.resume digest = ok result := by
+  cases digest with
+  | none => exact ⟨_, rfl⟩
+  | some digest =>
+    obtain ⟨binding, ran⟩ := SessionBinding.RegistrationBinding_complete_total self.pending.binding digest
+    exact ⟨_, by simp only [registration.BeaconAdHash.resume, ran, bind_tc_ok]; rfl⟩
+
+theorem ServerAdHash_resume_total (self : registration.ServerAdHash)
+    (digest : core.option.Option (Array Std.U8 64#usize)) :
+    ∃ result, self.resume digest = ok result := by
+  cases digest with
+  | none => exact ⟨_, rfl⟩
+  | some digest =>
+    obtain ⟨pending, pendingRun⟩ := Structural.pqxdh_concrete_start_server_candidate_ratchet_kdf_total
+      self.candidate self.root.bytes
+    obtain ⟨binding, bindingRun⟩ := SessionBinding.RegistrationBinding_complete_total self.binding digest
+    exact ⟨_, by simp only [registration.ServerAdHash.resume, ratchet.RatchetChain.as_bytes,
+      pendingRun, bindingRun, bind_tc_ok]; rfl⟩
 
 theorem BeaconInitReady_publish_total {Encoded : Type} (self : registration.BeaconInitReady)
   (encoded : core.option.Option Encoded) :
@@ -146,31 +150,11 @@ end BeaconcryptCore.PanicFreedom.RegistrationTrivial
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.PanicFreedom.RegistrationTrivial.begin_server_pin_total
-/-- info: 'BeaconcryptCore.PanicFreedom.RegistrationTrivial.PinFingerprint_request_total' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.PanicFreedom.RegistrationTrivial.PinFingerprint_request_total
 /-- info: 'BeaconcryptCore.PanicFreedom.RegistrationTrivial.InitHash_request_total' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.PanicFreedom.RegistrationTrivial.InitHash_request_total
-/-- info: 'BeaconcryptCore.PanicFreedom.RegistrationTrivial.InitMldsaVerification_request_total' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.PanicFreedom.RegistrationTrivial.InitMldsaVerification_request_total
-/-- info: 'BeaconcryptCore.PanicFreedom.RegistrationTrivial.InitServerFingerprint_request_total' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.PanicFreedom.RegistrationTrivial.InitServerFingerprint_request_total
-/-- info: 'BeaconcryptCore.PanicFreedom.RegistrationTrivial.InitBeaconFingerprint_request_total' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.PanicFreedom.RegistrationTrivial.InitBeaconFingerprint_request_total
 /-- info: 'BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconPending_server_key_id_total' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
@@ -201,21 +185,11 @@ end BeaconcryptCore.PanicFreedom.RegistrationTrivial
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconInitState_fields_total
-/-- info: 'BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconFingerprint_request_total' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconFingerprint_request_total
 /-- info: 'BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconInitHash_request_total' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconInitHash_request_total
-/-- info: 'BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconMldsaSigning_request_total' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconMldsaSigning_request_total
 /-- info: 'BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconInitReady_message_total' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
@@ -267,16 +241,6 @@ end BeaconcryptCore.PanicFreedom.RegistrationTrivial
 #guard_msgs in
 #print axioms BeaconcryptCore.PanicFreedom.RegistrationTrivial.PublishedServerResponse_into_parts_total
 
-/-- info: 'BeaconcryptCore.PanicFreedom.RegistrationTrivial.PinFingerprint_resume_total' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.PanicFreedom.RegistrationTrivial.PinFingerprint_resume_total
-/-- info: 'BeaconcryptCore.PanicFreedom.RegistrationTrivial.InitServerFingerprint_resume_total' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.PanicFreedom.RegistrationTrivial.InitServerFingerprint_resume_total
 /-- info: 'BeaconcryptCore.PanicFreedom.RegistrationTrivial.ResponseMldsaVerification_resume_total' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
@@ -292,3 +256,27 @@ end BeaconcryptCore.PanicFreedom.RegistrationTrivial
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.PanicFreedom.RegistrationTrivial.ServerResponseReady_publish_total
+
+/-- info: 'BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconAdHash_request_total' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconAdHash_request_total
+
+/-- info: 'BeaconcryptCore.PanicFreedom.RegistrationTrivial.ServerAdHash_request_total' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.PanicFreedom.RegistrationTrivial.ServerAdHash_request_total
+
+/-- info: 'BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconAdHash_resume_total' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconAdHash_resume_total
+
+/-- info: 'BeaconcryptCore.PanicFreedom.RegistrationTrivial.ServerAdHash_resume_total' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.PanicFreedom.RegistrationTrivial.ServerAdHash_resume_total

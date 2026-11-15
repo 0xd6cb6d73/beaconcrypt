@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativePlatformMldsaSdkPrefixChronology
 import BeaconcryptCore.Computational.RegistrationNativePlatformMldsaSdkChronology
 
-/-! The full actual source SDK build retains same-position raw signing attempts and native unsigned-payload receipts. Every prefix law is instantiated with the actual repeated pin, reservation, occupancy, source first-record, signature, encoder and install bodies; no complete-build preservation premise is exposed. -/
+/-! The full actual source SDK build retains same-position raw signing attempts and native unsigned-payload receipts. Every prefix law is instantiated with actual pure pin selection, shared AD hashing, reservation, occupancy, source first record, signature, encoder and install bodies. No complete-build preservation premise is exposed. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -32,6 +32,7 @@ theorem build (setup : Setup base KemSK) (codec : Codec Reader Response)
       (RegistrationNativePlatformMldsaServer.build (handleSource source) credential setup codec view failure allocation erased reservePeer helper writer handle application) := by
   unfold RegistrationNativePlatformMldsaServer.build
   exact RegistrationNativePlatformMldsaSdkChronology.build source _
+    (RegistrationNativePlatformMldsaSdkPrefixChronology.adHash source coins) _
     (RegistrationNativePlatformMldsaSdkPrefixChronology.pin source coins) _
     (RegistrationNativePlatformMldsaSdkPrefixChronology.reserve source reservePeer) _
     (RegistrationNativePlatformMldsaSdkPrefixChronology.present source coins) _

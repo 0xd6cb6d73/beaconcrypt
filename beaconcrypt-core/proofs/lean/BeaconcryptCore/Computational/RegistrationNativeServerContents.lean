@@ -87,7 +87,7 @@ structure Contents (token : peer.ConsumedRegistration) (pin : session.ServerAuth
     (application : Slice U8) (initial : registration.ServerInitialKdf)
     (hashed : registration.ServerResponseHash) (signed : registration.PublishedServerResponse Pqxdh.Bytes) : Prop where
   pin_matches : BeaconcryptCore.Refinement.SessionBinding.sameServerPin token.agreement.binding.server_pin pin
-  binding : initial.binding = token.agreement.binding
+  binding : ∃ digest completed, token.agreement.binding.complete digest = .ok completed ∧ initial.binding = completed
   application : initial.application = application
   root : pqxdh.concrete.start_server_candidate_ratchet_kdf initial.candidate token.agreement.root.bytes = .ok initial.pending
   record_path : RegistrationServerRecordExecutor.Path initial hashed
@@ -101,51 +101,59 @@ theorem build_contents (setup : Setup base KemSK) (codec : Codec Reader Response
     (keyId : U64) (bytes : Pqxdh.Bytes)
     (supported : (.ok (some (keyId, bytes)), after) ∈ support
       ((RegistrationServerSdkSource.build setup codec checks sign encode handle application).run before)) :
-    ∃ token current plaintext lookup requested occupied middle initial hashed signed recorded signedAt,
+    ∃ token current plaintext lookup requested occupied middle adState initial hashedAt hashed signed recorded signedAt,
       RegistrationServerSdkSource.take handle before = (some token, current) ∧ application = some plaintext ∧
       peer.begin_completion_lookup current.control current.pin token plaintext = .ok (.Ok lookup) ∧
       lookup.request = .ok requested ∧
       (occupied, middle) ∈ support
         ((RegistrationServerSdkSource.world (RegistrationWorldServerCompletion.capability (.peerPresent requested))).run current) ∧
-      lookup.resume occupied = .ok (.Ok initial) ∧
+      lookup.resume occupied = .ok (.Ok adState) ∧
+      (.ok (.Ok initial), hashedAt) ∈ support ((RegistrationServerSdkSource.adHash adState).run middle) ∧
       Contents token current.pin plaintext initial hashed signed ∧
       (.ok (.Ok hashed), recorded) ∈ support
         ((simulateQ (RegistrationWorldRecords.handler setup codec)
-          (RegistrationServerRecordExecutor.fromInitial initial)).run middle.world) ∧
+          (RegistrationServerRecordExecutor.fromInitial initial)).run hashedAt.world) ∧
       (.ok (.Ok signed), signedAt) ∈ support
         ((RegistrationWorldServerCompletion.signing sign encode hashed).run recorded) := by
   obtain ⟨token, current, plaintext, taken, input, completed⟩ :=
     RegistrationNativeServerReceipt.build_cut setup codec checks sign encode handle application before after keyId bytes supported
-  obtain ⟨lookup, requested, occupied, middle, initial, looked, requestedAt, _fits, queried, resumed, _reserved, finished⟩ :=
+  obtain ⟨lookup, requested, occupied, middle, adState, initial, hashedAt, looked, requestedAt, _fits, queried, resumed, adHashed, _reserved, finished⟩ :=
     RegistrationNativeServerReceipt.complete_cut setup codec checks sign encode token plaintext current after keyId bytes completed
   obtain ⟨control, pin, tokenEq, applicationEq⟩ :=
     RegistrationNativeServerBindingReceipt.lookup_fields current.control current.pin token plaintext lookup looked
-  have admitted : registration.begin_server_completion current.control current.pin
-      (if occupied then .Occupied else .Available) token.agreement plaintext = .ok (.Ok initial) := by
+  have selected : registration.begin_server_completion current.control current.pin
+      (if occupied then .Occupied else .Available) token.agreement plaintext = .ok (.Ok adState) := by
     cases occupied <;> simpa only [peer.CompletionLookup.resume, Bool.false_eq_true, ite_false, ite_true, bind_tc_ok, control, pin, tokenEq, applicationEq] using resumed
-  obtain ⟨pinMatches, binding, plain, root⟩ := RegistrationNativeServerBindingReceipt.initial_root _ _ _ _ _ _ admitted
+  obtain ⟨digest, resumedHash⟩ := RegistrationServerSdkSource.adHash_receipt adState middle hashedAt initial adHashed
+  have admitted : BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission current.control current.pin
+      (if occupied then .Occupied else .Available) token.agreement plaintext initial :=
+    ⟨adState, digest, selected, resumedHash⟩
+  obtain ⟨pinMatches, digest, binding, completedBindingRun, sameBinding, plain, root⟩ :=
+    RegistrationNativeServerBindingReceipt.initial_root _ _ _ _ _ _ admitted
   obtain ⟨published, world, completedAt, _id, _bytes, _final⟩ :=
-    RegistrationNativeServerReceipt.fromInitial_cut setup codec sign encode current.control initial middle after keyId bytes finished
+    RegistrationNativeServerReceipt.fromInitial_cut setup codec sign encode current.control initial hashedAt after keyId bytes finished
   obtain ⟨hashed, recorded, recordedAt, publishedAt⟩ :=
-    RegistrationNativeServerReceipt.record_cut setup codec sign encode current.control initial middle.world world published completedAt
+    RegistrationNativeServerReceipt.record_cut setup codec sign encode current.control initial hashedAt.world world published completedAt
   obtain ⟨signed, signedAt, signingAt, _installed⟩ :=
     RegistrationNativeServerReceipt.publication_cut sign encode current.control hashed recorded world published publishedAt
   have path : RegistrationServerRecordExecutor.Path initial hashed := by
     apply RegistrationServerRecordExecutor.fromInitial_path
     apply OracleComp.support_simulateQ_run'_subset (RegistrationWorldRecords.handler setup codec)
-      (RegistrationServerRecordExecutor.fromInitial initial) middle.world
+      (RegistrationServerRecordExecutor.fromInitial initial) hashedAt.world
     rw [StateT.run'_eq, support_map]
     exact Set.mem_image_of_mem Prod.fst recordedAt
   have fields := RegistrationNativeServerBindingReceipt.Publication.world_full sign encode hashed signed recorded signedAt signingAt
-  exact ⟨token, current, plaintext, lookup, requested, occupied, middle, initial, hashed, signed, recorded, signedAt,
-    taken, input, looked, requestedAt, queried, resumed, ⟨pinMatches, binding, plain, root, path, fields⟩, recordedAt, signingAt⟩
+  exact ⟨token, current, plaintext, lookup, requested, occupied, middle, adState, initial, hashedAt, hashed, signed, recorded, signedAt,
+    taken, input, looked, requestedAt, queried, resumed, adHashed,
+    ⟨pinMatches, ⟨digest, binding, completedBindingRun, sameBinding⟩, plain, root, path, fields⟩, recordedAt, signingAt⟩
 
 /-- Token root provenance, both complete pin/AD metadata and actual first application bytes stay attached to the exact consumed sequence-one kernel. -/
 theorem contents_fields (token : peer.ConsumedRegistration) (pin : session.ServerAuthenticationPin)
     (application : Slice U8) (initial : registration.ServerInitialKdf)
     (hashed : registration.ServerResponseHash) (signed : registration.PublishedServerResponse Pqxdh.Bytes)
     (actual : Contents token pin application initial hashed signed) :
-    signed.binding = completedBinding token.agreement.binding initial.candidate.key_id ∧
+    ∃ digest completed, token.agreement.binding.complete digest = .ok completed ∧
+      initial.binding = completed ∧ signed.binding = completedBinding completed initial.candidate.key_id ∧
       signed.kernel = hashed.kernel ∧
       ∃ (response : pqxdh.concrete.InitialRatchetKdfResponse)
         (kernel : ratchet.concrete.ConcreteRatchetKernel) (bound : pqxdh.RegistrationKeyIdBinding)
@@ -155,19 +163,20 @@ theorem contents_fields (token : peer.ConsumedRegistration) (pin : session.Serve
         absBytes bound.bytes = Pqxdh.LE64 initial.candidate.key_id.val ∧
         signed.kernel = selected.advanced ∧ selected.sequence.val = 1 ∧
         selected.context.plaintext = application ∧ selected.context.prefix = .Some bound.bytes ∧
-        selected.context.associated_data = token.agreement.binding.associated_data ∧
+        selected.context.associated_data = completed.associated_data ∧
         selected.context.target_kid = initial.candidate.key_id ∧
         selected.context.sender_kid = initial.candidate.server_identity_key_id ∧
         selected.context.encoding = .Raw := by
   obtain ⟨binding, candidate, response, kernel, bound, selected, resumed, boundRun, boundBytes,
     consumed, sequence, context⟩ := path_contents initial hashed actual.record_path
-  refine ⟨?_, actual.publication.2.1, response, kernel, bound, selected, resumed, boundRun, boundBytes,
+  obtain ⟨digest, completed, completedRun, initialBinding⟩ := actual.binding
+  refine ⟨digest, completed, completedRun, initialBinding, ?_, actual.publication.2.1, response, kernel, bound, selected, resumed, boundRun, boundBytes,
     actual.publication.2.1.trans consumed, sequence, ?_, ?_, ?_, ?_, ?_, ?_⟩
-  · simpa only [binding, candidate, actual.binding] using actual.publication.1
+  · simpa only [binding, candidate, initialBinding] using actual.publication.1
   all_goals rw [context]
   · exact actual.application
   · rfl
-  · exact congrArg session.RegistrationBinding.associated_data actual.binding
+  · exact congrArg session.CompletedRegistrationBinding.associated_data initialBinding
   · rfl
   · rfl
   · rfl

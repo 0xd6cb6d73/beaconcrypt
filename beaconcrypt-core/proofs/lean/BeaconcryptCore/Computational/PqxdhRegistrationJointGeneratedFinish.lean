@@ -16,20 +16,22 @@ variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response Result Ne
 
 abbrev EncodedEntry := Nat × Nat × PqxdhRegistrationJointBundle.Owner
 
-/-- The whole mapped analysis state retains both service histories, shared caches, every owner and both per-owner creation indices. -/
+/-- The whole mapped analysis state retains both service histories, shared caches, every owner, both per-owner creation indices and every retained Phase 1 bundle. -/
 structure EncodedState (KemSK : Type) where
   pool : Pool KemSK
   shared : NativeState KemSK
   owners : List EncodedEntry
+  /-- The Phase 1 bundle each owner address last handed to the writer with a successful write (`PqxdhRegistrationJointSchedule.State.inits`). -/
+  inits : Nat → Option PqxdhEd25519EufCma.Phase1Candidate
 
 def encodeEntry (setup : Setup baseSpec KemSK) (entry : Entry KemSK) : EncodedEntry :=
   (entry.identityIndex, entry.kemIndex,
     PqxdhRegistrationJointBundle.encode setup entry.identityIndex entry.kemIndex entry.owner)
 
 def encodeState (setup : Setup baseSpec KemSK) (state : State KemSK) : EncodedState KemSK :=
-  ⟨state.pool, state.shared, state.owners.map (encodeEntry setup)⟩
+  ⟨state.pool, state.shared, state.owners.map (encodeEntry setup), state.inits⟩
 
-/-- At any actually reached selected owner, the original complete finish and the existing private-service compiler produce the same full encoded scheduler result. Exact slot ownership is proved from the generated prefix, without a caller-supplied slot assertion or successful-finish premise. -/
+/-- At any actually reached selected owner, the original complete finish and the existing private-service compiler, after the same transcript hash of the retained bundle (`PqxdhRegistrationJointCompiledOwner.compiledFinish`), produce the same full encoded scheduler result. Exact slot ownership is proved from the generated prefix, without a caller-supplied slot assertion or successful-finish premise. -/
 theorem generated_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (serverSeed : IdentitySeed) (program : OracleComp PqxdhRegistrationSchedule.Spec Result)
     (pool : Pool KemSK) (shared : NativeState KemSK) (reached : Result × State KemSK)
@@ -39,14 +41,13 @@ theorem generated_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
       (fun result => (result.1.1,
         ({ pool := result.2.1, shared := result.2.2,
            owners := (reached.2.owners.map (encodeEntry setup)).set address
-             (entry.identityIndex, entry.kemIndex, result.1.2) } : EncodedState KemSK))) <$>
-        (simulateQ (impl setup codec) (simulateQ (compiler setup codec)
-          (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw
-            (PqxdhRegistrationJointBundle.encode setup entry.identityIndex entry.kemIndex entry.owner)))).run
-              (reached.2.pool, reached.2.shared) := by
+             (entry.identityIndex, entry.kemIndex, result.1.2),
+           inits := reached.2.inits } : EncodedState KemSK))) <$>
+        (PqxdhRegistrationJointCompiledOwner.compiledFinish setup codec entry.identityIndex entry.kemIndex
+          (reached.2.inits address) raw entry.owner).run (reached.2.pool, reached.2.shared) := by
   have slots := PqxdhRegistrationJointSchedule.generated_slots setup codec checks serverSeed program pool shared reached supported address entry found
-  rw [PqxdhRegistrationJointCompiledOwner.owner_source setup codec entry.identityIndex entry.kemIndex entry.owner raw
-    (reached.2.pool, reached.2.shared) slots.1 slots.2]
+  rw [PqxdhRegistrationJointCompiledOwner.compiledFinish_source setup codec entry.identityIndex entry.kemIndex
+    (reached.2.inits address) raw entry.owner (reached.2.pool, reached.2.shared) slots.1 slots.2]
   simp [finish, StateT.run, found, encodeState, encodeEntry, Functor.map_map]
 
 /-- Annotation erasure preserves every selective uniform-query certificate for the complete adaptive source schedule, rather than dropping ambient work from the bill. -/
@@ -85,26 +86,27 @@ theorem schedule_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
       (fun query before => (query_uniform setup codec checks caps bounded serverSeed query before).isQueryBoundP) state)
 
 /-- The actually reached compiled owner pays one decapsulation, one joint identity DH, at most 56 native-tail requests and zero other service classes, plus the complete evaluated finish allowance. These are per-attempt bounds; prefix work is charged by `schedule_uniform`. -/
-theorem generated_compiled_resources (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+theorem generated_compiled_resources (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+    (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (serverSeed : IdentitySeed) (program : OracleComp PqxdhRegistrationSchedule.Spec Result)
     (pool : Pool KemSK) (shared : NativeState KemSK) (reached : Result × State KemSK)
     (supported : reached ∈ support ((simulateQ (handler setup codec checks serverSeed) program).run (initial pool shared)))
     (address : Nat) (entry : Entry KemSK) (found : reached.2.owners[address]? = some entry) (raw : Pqxdh.Bytes)
     (caps : PqxdhServerAuthSourceCosts.KemCaps) (bounded : PqxdhServerAuthSourceCosts.KemBound setup caps) :
     (∀ kind, (simulateQ (compiler setup codec)
-      (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw
         (PqxdhRegistrationJointBundle.encode setup entry.identityIndex entry.kemIndex entry.owner))).IsQueryBoundP
           (fun query => PqxdhRegistrationJointFinishCompiler.classify (KemSK := KemSK) (Response := Response) query = kind)
           (PqxdhRegistrationJointFinishCompiler.cap kind)) ∧
     ((simulateQ (impl setup codec) (simulateQ (compiler setup codec)
-      (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw
         (PqxdhRegistrationJointBundle.encode setup entry.identityIndex entry.kemIndex entry.owner)))).run
           (reached.2.pool, reached.2.shared)).IsTotalQueryBound
             (69 * max 64 (caps.decapsUniform + caps.baseUniform * caps.decapsBase)) := by
   have slots := PqxdhRegistrationJointSchedule.generated_slots setup codec checks serverSeed program pool shared reached supported address entry found
-  exact ⟨fun kind => PqxdhRegistrationJointCompiledOwner.owner_queries setup codec raw
+  exact ⟨fun kind => PqxdhRegistrationJointCompiledOwner.owner_queries completedBinding setup codec raw
     (PqxdhRegistrationJointBundle.encode setup entry.identityIndex entry.kemIndex entry.owner) kind,
-    PqxdhRegistrationJointCompiledOwner.owner_uniform setup codec caps bounded entry.identityIndex entry.kemIndex
+    PqxdhRegistrationJointCompiledOwner.owner_uniform completedBinding setup codec caps bounded entry.identityIndex entry.kemIndex
       entry.owner raw (reached.2.pool, reached.2.shared) slots.1 slots.2⟩
 
 end BeaconcryptCore.Computational.PqxdhRegistrationJointGeneratedFinish

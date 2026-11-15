@@ -7,8 +7,8 @@ import BeaconcryptCore.Computational.PqxdhRecordLiftProtocolHistory
 
 Facts of the compiled client's record control (`PqxdhRecordLiftProtocol.Control`) for every private service reply, used by the lift of the b2s Server-pin row of design-v2 section 7.6 (R1):
 
-- `ServerIs identity`: the control holds a Server with that identity and every peer's installed AD equals its identity-derived AD (`LegacyPeers`). Constructor imports establish this equality with populated metadata, while the old environment's later installs use the legacy binding. `ShellsOk ok`: every established owner's installed shell has associated data that `ok` admits at its owner index. `ControlOk` is both.
-- Every capability whose Beacon install fits `ok` and whose Server install uses the legacy binding (`InstallFits`), every environment effect, the Server initializer and the Server and Beacon record steps keep these facts (`capability_ok`, `effects_ok`, `initialize_ok`, `serverStep_ok`, `beaconStep_ok`, `handler_ok`). An environment program whose reachable requests all fit keeps them (`effects_program_ok`, through the generic `keep_bounded`).
+- `ServerIs identity okPeer`: the control holds a Server with that identity and every installed peer's complete AD is admitted by `okPeer` at its key ID (`PeersOk`; design §13: a per-key predicate, since every peer carries its own transcript AD `PqxdhTranscriptAd.adOf` of its own digest; it replaces the identity-derived `LegacyPeers` of the old 281-byte layout). Constructor imports are admitted when every constructor peer's metadata is (`peersOk_imported`). `ShellsOk ok`: every established owner's installed shell has associated data that `ok` admits at its owner index. `ControlOk` is both.
+- Every capability whose Beacon install fits `ok` and whose Server install fits `okPeer` (`InstallFits`), every environment effect, the Server initializer and the Server and Beacon record steps keep these facts (`capability_ok`, `effects_ok`, `initialize_ok`, `serverStep_ok`, `beaconStep_ok`, `handler_ok`). An environment program whose reachable requests all fit keeps them (`effects_program_ok`, through the generic `keep_bounded`).
 - On the flattened CTX world (`PqxdhRecordLiftFlat.nativeImpl`, any key modes): a native command that is not an environment command (`Quiet`: a coin, a BLAKE2b query or a record command) keeps the environment state and both facts (`nativeImpl_quiet`); an environment command is an outcome of the environment's step and keeps both facts when the step's reachable requests fit (`nativeImpl_env`).
 
 No assumption or contract; no security claim. No `PqxdhBoundary*` module is imported.
@@ -28,27 +28,29 @@ variable {n : ℕ}
 
 /-! ### The control facts -/
 
-/-- The old deployment environment installs identity-derived AD, including constructor-imported known peers. -/
-def LegacyPeers (server : PqxdhRecordLiftWorldCompiler.Server n) : Prop :=
-  ∀ keyId peer, server.peers keyId = some peer →
-    peer.binding.associatedBytes server.identity = RawCtxServerRouting.associatedBytes server.identity peer.identity
+/-- Every installed peer's complete AD is admitted by `okPeer` at its key ID (design §13: a per-key AD predicate, never one AD for all peers; it replaces the identity-derived `LegacyPeers` of the old 281-byte AD layout). -/
+def PeersOk (okPeer : Std.U64 → Std.Array Std.U8 151#usize → Prop) (server : PqxdhRecordLiftWorldCompiler.Server n) :
+    Prop :=
+  ∀ keyId peer, server.peers keyId = some peer → okPeer keyId peer.binding.associatedData
 
-/-- The source constructor import explicitly fills each known peer's metadata with its identity-derived AD. -/
-theorem legacyPeers_imported (created : PqxdhLiveServerConstruction.Created Unit) :
-    LegacyPeers (PqxdhRecordLiftWorldCompiler.Server.fromKnown (n := n)
+/-- The source constructor import fills each known peer's binding with the peer's supplied metadata, so the imported Server's peers are admitted when every constructor peer's metadata is. -/
+theorem peersOk_imported (okPeer : Std.U64 → Std.Array Std.U8 151#usize → Prop)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
+    (fits : ∀ keyId peer, created.server.server.peers keyId = some peer → okPeer keyId peer.metadata) :
+    PeersOk okPeer (PqxdhRecordLiftWorldCompiler.Server.fromKnown (n := n)
       (PqxdhRecordLiftWorld.importedServer created)) := by
   intro keyId peer found
   simp only [PqxdhRecordLiftWorldCompiler.Server.fromKnown, PqxdhRecordLiftWorld.importedServer,
     Option.map_map, Option.map_eq_some_iff] at found
-  obtain ⟨original, _, rfl⟩ := found
-  rfl
+  obtain ⟨original, originalFound, rfl⟩ := found
+  exact fits keyId original originalFound
 
-/-- Replacing one peer preserves legacy AD when the replacement has the same identity-derived AD. -/
-theorem legacyPeers_store (server : PqxdhRecordLiftWorldCompiler.Server n) (holds : LegacyPeers server)
-    (keyId : Std.U64) (peer : PqxdhRecordLiftWorldCompiler.Peer n)
-    (fits : peer.binding.associatedBytes server.identity =
-      RawCtxServerRouting.associatedBytes server.identity peer.identity) :
-    LegacyPeers { server with peers := Function.update server.peers keyId (some peer) } := by
+/-- Replacing one peer keeps every peer admitted when the replacement's AD is admitted at its key ID. -/
+theorem peersOk_store (okPeer : Std.U64 → Std.Array Std.U8 151#usize → Prop)
+    (server : PqxdhRecordLiftWorldCompiler.Server n)
+    (holds : PeersOk okPeer server) (keyId : Std.U64) (peer : PqxdhRecordLiftWorldCompiler.Peer n)
+    (fits : okPeer keyId peer.binding.associatedData) :
+    PeersOk okPeer { server with peers := Function.update server.peers keyId (some peer) } := by
   intro other current found
   by_cases same : other = keyId
   · subst other
@@ -58,28 +60,30 @@ theorem legacyPeers_store (server : PqxdhRecordLiftWorldCompiler.Server n) (hold
   · simp only [Function.update_of_ne same] at found
     exact holds other current found
 
-/-- The record control holds a Server with the given identity and the old environment's derived legacy peer AD. -/
-def ServerIs (identity : RawCtxServerRouting.Identity) (control : PqxdhRecordLiftProtocol.Control n) : Prop :=
-  ∃ server, control.server = some server ∧ server.identity = identity ∧ LegacyPeers server
+/-- The record control holds a Server with the given identity whose installed peers' ADs are admitted by `okPeer` at their key IDs. -/
+def ServerIs (identity : RawCtxServerRouting.Identity) (okPeer : Std.U64 → Std.Array Std.U8 151#usize → Prop)
+    (control : PqxdhRecordLiftProtocol.Control n) : Prop :=
+  ∃ server, control.server = some server ∧ server.identity = identity ∧ PeersOk okPeer server
 
 /-- Every established owner's installed shell has associated data admitted by `ok` at its owner index. -/
-def ShellsOk (ok : ℕ → Std.Array Std.U8 281#usize → Prop) (control : PqxdhRecordLiftProtocol.Control n) : Prop :=
+def ShellsOk (ok : ℕ → Std.Array Std.U8 151#usize → Prop) (control : PqxdhRecordLiftProtocol.Control n) : Prop :=
   ∀ (owner : ℕ) shell kernel, control.owners[owner]? = some (Phase.established shell kernel) →
     ok owner shell.associatedData
 
 /-- Both control facts. -/
-def ControlOk (identity : RawCtxServerRouting.Identity) (ok : ℕ → Std.Array Std.U8 281#usize → Prop)
-    (control : PqxdhRecordLiftProtocol.Control n) : Prop :=
-  ServerIs identity control ∧ ShellsOk ok control
+def ControlOk (identity : RawCtxServerRouting.Identity) (okPeer : Std.U64 → Std.Array Std.U8 151#usize → Prop)
+    (ok : ℕ → Std.Array Std.U8 151#usize → Prop) (control : PqxdhRecordLiftProtocol.Control n) : Prop :=
+  ServerIs identity okPeer control ∧ ShellsOk ok control
 
-/-- A Beacon install carries AD admitted by `ok`; a Server install uses the old environment's legacy binding; other effects fit. -/
-def InstallFits (ok : ℕ → Std.Array Std.U8 281#usize → Prop) : (EnvEffects n).Domain → Prop
-  | .inr (.installServer _ binding _) => binding.associatedData = none
+/-- A Beacon install carries AD admitted by `ok` at its owner index; a Server install carries AD admitted by `okPeer` at its key ID; other effects fit. -/
+def InstallFits (okPeer : Std.U64 → Std.Array Std.U8 151#usize → Prop) (ok : ℕ → Std.Array Std.U8 151#usize → Prop) :
+    (EnvEffects n).Domain → Prop
+  | .inr (.installServer keyId binding _) => okPeer keyId binding.associatedData
   | .inr (.installBeacon owner shell _) => ok owner shell.associatedData
   | _ => True
 
 /-- An owner list extended by an inactive owner keeps every established shell. -/
-theorem shellsOk_append (ok : ℕ → Std.Array Std.U8 281#usize → Prop) (control : PqxdhRecordLiftProtocol.Control n)
+theorem shellsOk_append (ok : ℕ → Std.Array Std.U8 151#usize → Prop) (control : PqxdhRecordLiftProtocol.Control n)
     (holds : ShellsOk ok control) (phase : InactivePhase) :
     ShellsOk ok { control with owners := control.owners ++ [Phase.inactive phase] } := by
   intro owner shell kernel found
@@ -94,7 +98,7 @@ theorem shellsOk_append (ok : ℕ → Std.Array Std.U8 281#usize → Prop) (cont
       simp at found
 
 /-- Replacing an owner by an inactive phase keeps every established shell. -/
-theorem shellsOk_setInactive (ok : ℕ → Std.Array Std.U8 281#usize → Prop)
+theorem shellsOk_setInactive (ok : ℕ → Std.Array Std.U8 151#usize → Prop)
     (control : PqxdhRecordLiftProtocol.Control n) (holds : ShellsOk ok control) (index : ℕ) (phase : InactivePhase) :
     ShellsOk ok { control with owners := control.owners.set index (Phase.inactive phase) } := by
   intro owner shell kernel found
@@ -106,7 +110,7 @@ theorem shellsOk_setInactive (ok : ℕ → Std.Array Std.U8 281#usize → Prop)
     exact holds owner shell kernel found
 
 /-- Replacing an owner by an established phase with an admitted shell keeps every established shell. -/
-theorem shellsOk_setEstablished (ok : ℕ → Std.Array Std.U8 281#usize → Prop)
+theorem shellsOk_setEstablished (ok : ℕ → Std.Array Std.U8 151#usize → Prop)
     (control : PqxdhRecordLiftProtocol.Control n) (holds : ShellsOk ok control) (index : ℕ) (shell : BeaconShell)
     (stored : PqxdhRecordLiftWorldCompiler.StoredKernel n) (fits : ok index shell.associatedData) :
     ShellsOk ok { control with owners := control.owners.set index (Phase.established shell stored) } := by
@@ -122,22 +126,23 @@ theorem shellsOk_setEstablished (ok : ℕ → Std.Array Std.U8 281#usize → Pro
 /-! ### The compiled client's requests -/
 
 section Requests
-variable (identity : RawCtxServerRouting.Identity) (ok : ℕ → Std.Array Std.U8 281#usize → Prop)
+variable (identity : RawCtxServerRouting.Identity) (okPeer : Std.U64 → Std.Array Std.U8 151#usize → Prop)
+  (ok : ℕ → Std.Array Std.U8 151#usize → Prop)
 
 /-- A lifted private request keeps the control. -/
 theorem lift_ok (query : (PqxdhRecordLiftProtocol.ServiceSpec n).Domain) (control : PqxdhRecordLiftProtocol.Control n)
-    (holds : ControlOk identity ok control)
+    (holds : ControlOk identity okPeer ok control)
     (result : (PqxdhRecordLiftProtocol.ServiceSpec n).Range query × PqxdhRecordLiftProtocol.Control n)
     (supported : result ∈ support ((StateT.lift ((PqxdhRecordLiftProtocol.ServiceSpec n).query query) :
-      PqxdhRecordLiftProtocol.Client n _).run control)) : ControlOk identity ok result.2 := by
+      PqxdhRecordLiftProtocol.Client n _).run control)) : ControlOk identity okPeer ok result.2 := by
   rw [PqxdhRecordLiftProtocolHistory.lift_control query control result supported]
   exact holds
 
 /-- Every capability that fits `ok` keeps both control facts. -/
-theorem capability_ok (query : (CapabilitySpec n).Domain) (fits : InstallFits ok (n := n) (.inr query))
-    (control : PqxdhRecordLiftProtocol.Control n) (holds : ControlOk identity ok control)
+theorem capability_ok (query : (CapabilitySpec n).Domain) (fits : InstallFits okPeer ok (n := n) (.inr query))
+    (control : PqxdhRecordLiftProtocol.Control n) (holds : ControlOk identity okPeer ok control)
     (result : (CapabilitySpec n).Range query × PqxdhRecordLiftProtocol.Control n)
-    (supported : result ∈ support (PqxdhRecordLiftProtocol.capability query control)) : ControlOk identity ok result.2 := by
+    (supported : result ∈ support (PqxdhRecordLiftProtocol.capability query control)) : ControlOk identity okPeer ok result.2 := by
   cases query with
   | peerPresent keyId =>
       simp only [PqxdhRecordLiftProtocol.capability, support_pure, Set.mem_singleton_iff] at supported
@@ -178,11 +183,7 @@ theorem capability_ok (query : (CapabilitySpec n).Domain) (fits : InstallFits ok
           rw [existing, Option.some.injEq] at found
           subst found
           refine ⟨⟨_, rfl, same, ?_⟩, fun owner shell kernel present => ?_⟩
-          · apply legacyPeers_store server legacy keyId ⟨peerIdentity, stored⟩
-            change peerIdentity.associatedData = none at fits
-            simp only [PeerBinding.associatedBytes, PeerBinding.associatedArray, fits,
-              Option.getD_none, PqxdhRecordLiftWorldCompiler.Peer.identity,
-              RawCtxServerRouting.associatedBytes]
+          · exact peersOk_store okPeer server legacy keyId ⟨peerIdentity, stored⟩ fits
           · rw [markUsed_owners] at present
             exact holds.2 owner shell kernel present
         · simp only [support_pure, Set.mem_singleton_iff] at supported
@@ -199,28 +200,28 @@ theorem capability_ok (query : (CapabilitySpec n).Domain) (fits : InstallFits ok
       · simp only [support_pure, Set.mem_singleton_iff] at supported
         subst result
         exact holds
-  | hash bytes => exact lift_ok identity ok (.hash bytes) control holds result supported
+  | hash bytes => exact lift_ok identity okPeer ok (.hash bytes) control holds result supported
 
 /-- Charging and every effect that fits `ok` keep both control facts. -/
-theorem effects_ok (query : (EnvEffects n).Domain) (fits : InstallFits ok query)
-    (control : PqxdhRecordLiftProtocol.Control n) (holds : ControlOk identity ok control)
+theorem effects_ok (query : (EnvEffects n).Domain) (fits : InstallFits okPeer ok query)
+    (control : PqxdhRecordLiftProtocol.Control n) (holds : ControlOk identity okPeer ok control)
     (result : (EnvEffects n).Range query × PqxdhRecordLiftProtocol.Control n)
     (supported : result ∈ support ((PqxdhRecordLiftProtocol.effects query).run control)) :
-    ControlOk identity ok result.2 := by
+    ControlOk identity okPeer ok result.2 := by
   simp only [PqxdhRecordLiftProtocol.effects, StateT.run_bind] at supported
   rw [mem_support_bind_iff] at supported
   obtain ⟨charged, member, continued⟩ := supported
   have same := PqxdhRecordLiftProtocolHistory.lift_control (.charge (effectKind query)) control charged member
   rw [same] at continued
   cases query with
-  | inl coin => exact lift_ok identity ok (.coin coin) control holds result continued
-  | inr request => exact capability_ok identity ok request fits control holds result continued
+  | inl coin => exact lift_ok identity okPeer ok (.coin coin) control holds result continued
+  | inr request => exact capability_ok identity okPeer ok request fits control holds result continued
 
 /-- A Server initialization keeps both control facts: a present Server is not reset. -/
-theorem initialize_ok (created : PqxdhLiveServerConstruction.Created Unit) (control : PqxdhRecordLiftProtocol.Control n)
-    (holds : ControlOk identity ok control) (result : Unit × PqxdhRecordLiftProtocol.Control n)
+theorem initialize_ok (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (control : PqxdhRecordLiftProtocol.Control n)
+    (holds : ControlOk identity okPeer ok control) (result : Unit × PqxdhRecordLiftProtocol.Control n)
     (supported : result ∈ support (PqxdhRecordLiftProtocol.initializeServer created control)) :
-    ControlOk identity ok result.2 := by
+    ControlOk identity okPeer ok result.2 := by
   obtain ⟨server, existing, _, _⟩ := holds.1
   simp only [PqxdhRecordLiftProtocol.initializeServer, existing, support_pure, Set.mem_singleton_iff] at supported
   subst result
@@ -229,10 +230,10 @@ theorem initialize_ok (created : PqxdhLiveServerConstruction.Created Unit) (cont
 /-- Every Server record step keeps both control facts. -/
 theorem serverStep_ok (decode : RawCtxReceive.FrameDecoder) (route : RawCtxServerRouting.SenderDecoder)
     (query : RawCtxServerMixed.SourceSpec.Domain) (control : PqxdhRecordLiftProtocol.Control n)
-    (holds : ControlOk identity ok control)
+    (holds : ControlOk identity okPeer ok control)
     (result : RawCtxServerMixed.SourceSpec.Range query × PqxdhRecordLiftProtocol.Control n)
     (supported : result ∈ support (PqxdhRecordLiftProtocol.serverStep decode route query control)) :
-    ControlOk identity ok result.2 := by
+    ControlOk identity okPeer ok result.2 := by
   obtain ⟨current, existing, same, legacy⟩ := holds.1
   simp only [PqxdhRecordLiftProtocol.serverStep, existing] at supported
   cases query with
@@ -246,7 +247,7 @@ theorem serverStep_ok (decode : RawCtxReceive.FrameDecoder) (route : RawCtxServe
       · simp only [bind_pure_comp, support_map] at supported
         rename_i peer selected
         obtain ⟨inner, _, rfl⟩ := supported
-        exact ⟨⟨_, rfl, same, legacyPeers_store current legacy keyId
+        exact ⟨⟨_, rfl, same, peersOk_store okPeer current legacy keyId
           { peer with kernel := inner.2.kernel } (legacy keyId peer selected)⟩, holds.2⟩
   | inr raw =>
       dsimp only at supported
@@ -261,15 +262,15 @@ theorem serverStep_ok (decode : RawCtxReceive.FrameDecoder) (route : RawCtxServe
         · simp only [bind_pure_comp, support_map] at supported
           rename_i peer selected
           obtain ⟨inner, _, rfl⟩ := supported
-          exact ⟨⟨_, rfl, same, legacyPeers_store current legacy _
+          exact ⟨⟨_, rfl, same, peersOk_store okPeer current legacy _
             { peer with kernel := inner.2.kernel } (legacy _ peer selected)⟩, holds.2⟩
 
 /-- Every Beacon record step keeps both control facts: an established owner keeps its shell. -/
 theorem beaconStep_ok (decode : RawCtxReceive.FrameDecoder) (owner : ℕ) (query : RawCtxMixedOwner.SourceSpec.Domain)
-    (control : PqxdhRecordLiftProtocol.Control n) (holds : ControlOk identity ok control)
+    (control : PqxdhRecordLiftProtocol.Control n) (holds : ControlOk identity okPeer ok control)
     (result : RawCtxMixedOwner.SourceSpec.Range query × PqxdhRecordLiftProtocol.Control n)
     (supported : result ∈ support (PqxdhRecordLiftProtocol.beaconStep decode owner query control)) :
-    ControlOk identity ok result.2 := by
+    ControlOk identity okPeer ok result.2 := by
   unfold PqxdhRecordLiftProtocol.beaconStep at supported
   split at supported
   · simp only [support_pure, Set.mem_singleton_iff] at supported
@@ -286,26 +287,27 @@ theorem beaconStep_ok (decode : RawCtxReceive.FrameDecoder) (owner : ℕ) (query
 
 /-- Every compiled-client request whose environment effect fits `ok` keeps both control facts. -/
 theorem handler_ok (decode : RawCtxReceive.FrameDecoder) (route : RawCtxServerRouting.SenderDecoder)
-    (query : (WorldSpec n).Domain) (fits : ∀ effect, query = .inr (.inl effect) → InstallFits ok effect)
-    (control : PqxdhRecordLiftProtocol.Control n) (holds : ControlOk identity ok control)
+    (query : (WorldSpec n).Domain) (fits : ∀ effect, query = .inr (.inl effect) → InstallFits okPeer ok effect)
+    (control : PqxdhRecordLiftProtocol.Control n) (holds : ControlOk identity okPeer ok control)
     (result : (WorldSpec n).Range query × PqxdhRecordLiftProtocol.Control n)
     (supported : result ∈ support ((PqxdhRecordLiftProtocol.handler decode route query).run control)) :
-    ControlOk identity ok result.2 := by
+    ControlOk identity okPeer ok result.2 := by
   rcases query with created | (effect | ((send | raw) | ⟨owner, request⟩))
-  · exact initialize_ok identity ok created control holds result supported
-  · exact effects_ok identity ok effect (fits effect rfl) control holds result supported
-  · exact serverStep_ok identity ok decode route (.inl send) control holds result supported
-  · exact serverStep_ok identity ok decode route (.inr raw) control holds result supported
+  · exact initialize_ok identity okPeer ok created control holds result supported
+  · exact effects_ok identity okPeer ok effect (fits effect rfl) control holds result supported
+  · exact serverStep_ok identity okPeer ok decode route (.inl send) control holds result supported
+  · exact serverStep_ok identity okPeer ok decode route (.inr raw) control holds result supported
   · rcases request with plaintext | raw
-    · exact beaconStep_ok identity ok decode owner (.inl plaintext) control holds result supported
-    · exact beaconStep_ok identity ok decode owner (.inr raw) control holds result supported
+    · exact beaconStep_ok identity okPeer ok decode owner (.inl plaintext) control holds result supported
+    · exact beaconStep_ok identity okPeer ok decode owner (.inr raw) control holds result supported
 
 end Requests
 
 /-! ### Programs -/
 
 section Programs
-variable (identity : RawCtxServerRouting.Identity) (ok : ℕ → Std.Array Std.U8 281#usize → Prop)
+variable (identity : RawCtxServerRouting.Identity) (okPeer : Std.U64 → Std.Array Std.U8 151#usize → Prop)
+  (ok : ℕ → Std.Array Std.U8 151#usize → Prop)
 
 /-- An invariant kept by every step of a stateful handler at the requests a program may issue (those that are not bad) is kept by the program's simulation. -/
 theorem keep_bounded {ι₁ ι₂ σ α : Type} {spec₁ : OracleSpec ι₁} {spec₂ : OracleSpec ι₂}
@@ -334,12 +336,12 @@ theorem keep_bounded {ι₁ ι₂ σ α : Type} {spec₁ : OracleSpec ι₁} {sp
 
 /-- An environment program whose every reachable request is admitted keeps both control facts, for every private reply. -/
 theorem effects_program_ok {α : Type} (bad : (EnvEffects n).Domain → Bool)
-    (fitting : ∀ query, bad query = false → InstallFits ok query) (work : OracleComp (EnvEffects n) α)
+    (fitting : ∀ query, bad query = false → InstallFits okPeer ok query) (work : OracleComp (EnvEffects n) α)
     (bounded : work.IsQueryBoundP (fun query => bad query = true) 0) (control : PqxdhRecordLiftProtocol.Control n)
-    (holds : ControlOk identity ok control) :
-    ∀ result ∈ support ((simulateQ PqxdhRecordLiftProtocol.effects work).run control), ControlOk identity ok result.2 :=
+    (holds : ControlOk identity okPeer ok control) :
+    ∀ result ∈ support ((simulateQ PqxdhRecordLiftProtocol.effects work).run control), ControlOk identity okPeer ok result.2 :=
   keep_bounded _ bad _ (fun query state good held result member =>
-    effects_ok identity ok query (fitting query good) state held result member) work bounded control holds
+    effects_ok identity okPeer ok query (fitting query good) state held result member) work bounded control holds
 
 end Programs
 
@@ -349,7 +351,8 @@ end Programs
 
 section Native
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response E : Type}
-  (identity : RawCtxServerRouting.Identity) (ok : ℕ → Std.Array Std.U8 281#usize → Prop)
+  (identity : RawCtxServerRouting.Identity) (okPeer : Std.U64 → Std.Array Std.U8 151#usize → Prop)
+  (ok : ℕ → Std.Array Std.U8 151#usize → Prop)
 open PqxdhServerAuthExperiment (Setup Codec)
 open PqxdhRecordLiftWorldCompiler (Label)
 
@@ -377,45 +380,45 @@ theorem lift_world_run (decode : RawCtxReceive.FrameDecoder) (route : RawCtxServ
 
 /-- A lifted world request whose environment effect fits `ok` keeps the environment state and both control facts. -/
 theorem lift_request_ok (decode : RawCtxReceive.FrameDecoder) (route : RawCtxServerRouting.SenderDecoder)
-    (request : (WorldSpec n).Domain) (fits : ∀ effect, request = .inr (.inl effect) → InstallFits ok effect) (e : E)
-    (control : PqxdhRecordLiftProtocol.Control n) (holds : ControlOk identity ok control) :
+    (request : (WorldSpec n).Domain) (fits : ∀ effect, request = .inr (.inl effect) → InstallFits okPeer ok effect) (e : E)
+    (control : PqxdhRecordLiftProtocol.Control n) (holds : ControlOk identity okPeer ok control) :
     ∀ inner ∈ support ((simulateQ (PqxdhRecordLiftProtocol.handler decode route)
       ((StateT.lift (liftM ((WorldSpec n).query request)) : StateT E (OracleComp (WorldSpec n)) _).run e)).run control),
-      inner.1.2 = e ∧ ControlOk identity ok inner.2 := by
+      inner.1.2 = e ∧ ControlOk identity okPeer ok inner.2 := by
   intro inner member
   rw [lift_world_run, support_map] at member
   obtain ⟨p, pMember, rfl⟩ := member
-  exact ⟨rfl, handler_ok identity ok decode route request fits control holds p pMember⟩
+  exact ⟨rfl, handler_ok identity okPeer ok decode route request fits control holds p pMember⟩
 
 /-- Every native command that is not an environment command keeps the environment state and both control facts. -/
 theorem nativeImpl_quiet (modes : Label n → PqxdhRecordLiftIdeal.KeyMode) (replace : Pqxdh.Bytes → Pqxdh.Bytes)
     (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
     (env : Environment n E) (query : Spec.Domain) (quiet : Quiet query) (state : NativeState n E)
-    (holds : ControlOk identity ok state.1.2) :
+    (holds : ControlOk identity okPeer ok state.1.2) :
     ∀ result ∈ support ((nativeImpl modes replace setup codec route env query).run state),
-      result.2.1.1 = state.1.1 ∧ ControlOk identity ok result.2.1.2 := by
+      result.2.1.1 = state.1.1 ∧ ControlOk identity okPeer ok result.2.1.2 := by
   intro result member
   rw [nativeImpl_run, support_map] at member
   obtain ⟨inner, reached, rfl⟩ := member
   have client := run_value (ctxInterpreter modes replace setup codec) _ state.2 inner reached
   rcases query with coin | command
-  · exact lift_request_ok identity ok codec.frameRead route (.inr (.inl (.inl coin)))
+  · exact lift_request_ok identity okPeer ok codec.frameRead route (.inr (.inl (.inl coin)))
       (fun effect same => by cases same; trivial) state.1.1 state.1.2 holds inner.1 client
   · cases command with
     | hash bytes =>
-        exact lift_request_ok identity ok codec.frameRead route (.inr (.inl (.inr (.hash bytes))))
+        exact lift_request_ok identity okPeer ok codec.frameRead route (.inr (.inl (.inr (.hash bytes))))
           (fun effect same => by cases same; trivial) state.1.1 state.1.2 holds inner.1 client
     | serverSend keyId plaintext =>
-        exact lift_request_ok identity ok codec.frameRead route (.inr (.inr (.inl (.inl (plaintext, keyId)))))
+        exact lift_request_ok identity okPeer ok codec.frameRead route (.inr (.inr (.inl (.inl (plaintext, keyId)))))
           (fun _ same => (by cases same)) state.1.1 state.1.2 holds inner.1 client
     | serverRaw raw =>
-        exact lift_request_ok identity ok codec.frameRead route (.inr (.inr (.inl (.inr raw))))
+        exact lift_request_ok identity okPeer ok codec.frameRead route (.inr (.inr (.inl (.inr raw))))
           (fun _ same => (by cases same)) state.1.1 state.1.2 holds inner.1 client
     | beaconSend owner plaintext =>
-        exact lift_request_ok identity ok codec.frameRead route (.inr (.inr (.inr (owner, .inl plaintext))))
+        exact lift_request_ok identity okPeer ok codec.frameRead route (.inr (.inr (.inr (owner, .inl plaintext))))
           (fun _ same => (by cases same)) state.1.1 state.1.2 holds inner.1 client
     | beaconRaw owner raw =>
-        exact lift_request_ok identity ok codec.frameRead route (.inr (.inr (.inr (owner, .inr raw))))
+        exact lift_request_ok identity okPeer ok codec.frameRead route (.inr (.inr (.inr (owner, .inr raw))))
           (fun _ same => (by cases same)) state.1.1 state.1.2 holds inner.1 client
     | _ => exact absurd trivial quiet
 
@@ -440,34 +443,22 @@ theorem nativeImpl_env (modes : Label n → PqxdhRecordLiftIdeal.KeyMode) (repla
     ∀ result ∈ support ((nativeImpl modes replace setup codec route env (.inr command)).run state),
       ((result.1, result.2.1.1) : EnvSpec.Range ⟨command, allowed⟩ × E) ∈
           support ((env.step ⟨command, allowed⟩).run state.1.1) ∧
-        ∀ bad : (EnvEffects n).Domain → Bool, (∀ query, bad query = false → InstallFits ok query) →
+        ∀ bad : (EnvEffects n).Domain → Bool, (∀ query, bad query = false → InstallFits okPeer ok query) →
           ((env.step ⟨command, allowed⟩).run state.1.1).IsQueryBoundP (fun query => bad query = true) 0 →
-          ControlOk identity ok state.1.2 → ControlOk identity ok result.2.1.2 := by
+          ControlOk identity okPeer ok state.1.2 → ControlOk identity okPeer ok result.2.1.2 := by
   intro result member
   rw [nativeImpl_run, support_map] at member
   obtain ⟨inner, reached, rfl⟩ := member
   have client := run_value (ctxInterpreter modes replace setup codec) _ state.2 inner reached
   rw [native_env_run env command allowed, ← QueryImpl.simulateQ_compose, handler_effectLift] at client
   exact ⟨run_value _ _ _ _ client, fun bad fitting bounded holds =>
-    effects_program_ok identity ok bad fitting _ bounded state.1.2 holds inner.1 client⟩
+    effects_program_ok identity okPeer ok bad fitting _ bounded state.1.2 holds inner.1 client⟩
 
 end Native
 
 end BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl
 
 -- Axiom guards (generated)
-
-/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.legacyPeers_imported' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.legacyPeers_imported
-
-/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.legacyPeers_store' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.legacyPeers_store
 
 /--
 info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.shellsOk_append' depends on axioms: [propext,
@@ -618,3 +609,13 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.nativeImp
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.nativeImpl_env
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.peersOk_imported' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.peersOk_imported
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.peersOk_store' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlinePinControl.peersOk_store

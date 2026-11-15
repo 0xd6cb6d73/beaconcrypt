@@ -40,7 +40,7 @@ open RegistrationNativePlatformSdkReification (backend)
 open RegistrationNativePlatformPublicAdapterPhysicalBackend (erase)
 open RegistrationNativePlatformPublicAdapterDispatcherCore (Private physical)
 
-noncomputable def active (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential mlSource)
+noncomputable def active (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential mlSource)
     (self :beaconcrypt_public_wrapper.beacon.Beacon) (pending :registration.BeaconPending)
     (prekey oneTime :beaconcrypt_crypto.crypto_kx.KeyPair) (kem :beaconcrypt_crypto.crypto_kem.mlkem768.KeyPair)
     (stored :self.state=.InitSent pending prekey oneTime kem) (input :Slice U8)
@@ -59,7 +59,7 @@ noncomputable def active (created :PqxdhLiveServerConstruction.Created Unit) (cr
     pending (AdapterPublicFinishLifetime.packet input) owner scalar before previous past
 
 omit [FrameDispatchFallback.Operations] in
-theorem active_source (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential mlSource)
+theorem active_source (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential mlSource)
     (self :beaconcrypt_public_wrapper.beacon.Beacon) (pending :registration.BeaconPending)
     (prekey oneTime :beaconcrypt_crypto.crypto_kx.KeyPair) (kem :beaconcrypt_crypto.crypto_kem.mlkem768.KeyPair)
     (stored :self.state=.InitSent pending prekey oneTime kem) (input :Slice U8)
@@ -104,12 +104,12 @@ theorem active_source (created :PqxdhLiveServerConstruction.Created Unit) (crede
     (((program.run past).run (erase (backend before))).run previous)) observedWire
   exact law.trans projected
 
-noncomputable def physicalLog (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential mlSource)
+noncomputable def physicalLog (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential mlSource)
     (current :Native×P) (objects :Private configuration created credential current) (log :List Log) :Store n KemSK R (P×List Log) :=
   let base:=physical configuration created credential current objects
   {base with backend:=(base.backend.1,(base.backend.2,log))}
 
-noncomputable def output (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential mlSource)
+noncomputable def output (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential mlSource)
     {target :ProbComp (RustM (Option Pqxdh.Bytes)×(Native×P))}
     (call :RegistrationNativePlatformExtractedSdkPublic.TotalStep (Private configuration created credential) target)
     (augmented :RegistrationNativePlatformPublicAdapterLoggedRuntime.Augmentation call (List Log)) :
@@ -121,7 +121,7 @@ noncomputable def output (created :PqxdhLiveServerConstruction.Created Unit) (cr
       PFunctor.FreeM.attachSupp augmented.sample
 
 omit [FrameDispatchFallback.Operations] in
-theorem active_query (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential mlSource)
+theorem active_query (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential mlSource)
     (self :beaconcrypt_public_wrapper.beacon.Beacon) (pending :registration.BeaconPending)
     (prekey oneTime :beaconcrypt_crypto.crypto_kx.KeyPair) (kem :beaconcrypt_crypto.crypto_kem.mlkem768.KeyPair)
     (stored :self.state=.InitSent pending prekey oneTime kem) (input :Slice U8)

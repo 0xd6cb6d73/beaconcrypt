@@ -218,6 +218,25 @@ theorem EntryRel.build (setup : Setup baseSpec KemSK) (context : Context KemSK)
     related.cache, related.flag, related.unselected, related.selected, related.below,
     related.marked, related.good, related.clean⟩
 
+/-- Two runs of the same two-step program with different final maps are related when every pair of reachable intermediate values relates the two final values. -/
+theorem relTriple_bind_map_same {α β γ δ : Type} (work : ProbComp α) (next : α → ProbComp β)
+    (left : α → β → γ) (right : α → β → δ) (relation : γ → δ → Prop)
+    (related : ∀ first ∈ support work, ∀ second ∈ support (next first), relation (left first second) (right first second)) :
+    RelTriple (work >>= fun first => left first <$> next first)
+      (work >>= fun first => right first <$> next first) relation := by
+  have leftMap : (work >>= fun first => left first <$> next first) =
+      (fun pair => left pair.1 pair.2) <$> (work >>= fun first => (fun second => (first, second)) <$> next first) := by
+    simp only [map_bind, Functor.map_map]
+  have rightMap : (work >>= fun first => right first <$> next first) =
+      (fun pair => right pair.1 pair.2) <$> (work >>= fun first => (fun second => (first, second)) <$> next first) := by
+    simp only [map_bind, Functor.map_map]
+  rw [leftMap, rightMap]
+  apply relTriple_map_same
+  intro pair member
+  simp only [mem_support_bind_iff, support_map, Set.mem_image] at member
+  obtain ⟨first, firstMember, second, secondMember, rfl⟩ := member
+  exact related first firstMember second secondMember
+
 /-- The complete source build query uses the actual selected root only in the mathematical continuation, preserving the original optional response, native state and common cache. -/
 theorem build_step_coupling (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (context : Context KemSK) (Q : Nat) (j : Fin (Q + 1)) (prk : HmacBlock)
@@ -245,12 +264,32 @@ theorem build_step_coupling (setup : Setup baseSpec KemSK) (codec : Codec Reader
         related.protocol.server, related.protocol.ctx]
       cases marked : right.1.2.1 session <;>
         simp only [restoreToken, Bool.false_eq_true, ↓reduceIte, sourceHiddenServices,
-          bind_pure_comp, Functor.map_map]
+          bind_pure_comp]
       all_goals
-        apply relTriple_map_same
-        intro result _
-        exact Or.inl ⟨(ProtocolRel.build _ _ _ _ related.protocol session result).1,
-          fun invariant => EntryRel.build setup context Q j prk left right related session result invariant⟩
+        rcases pre : PqxdhServerRegistrationPublication.prehash right.1.1.server token.pending payload with
+          _ | candidate
+        · simp only [map_pure]
+          apply relTriple_pure_pure
+          refine Or.inl ⟨rfl, fun invariant => ⟨invariant, ⟨rfl, rfl, related.protocol.beacon,
+            related.protocol.sessions, ?_, related.protocol.ghost, related.protocol.beaconInit⟩, related.cache, related.flag, related.unselected,
+            related.selected, related.below, related.marked, related.good, related.clean⟩⟩
+          intro index
+          by_cases same : index = session
+          · subst index
+            simp
+          · simpa only [Function.update_of_ne same] using related.protocol.pending index
+        · simp only [map_bind, Functor.map_map]
+          apply relTriple_bind_map_same
+          intro hashed _ result _
+          have protocol : ProtocolRel (expandRoot setup.hmac prk) right.1.2.1
+              { left.1.1 with ctx := hashed.2, server := right.1.1.server }
+              { right.1.1 with ctx := hashed.2 } :=
+            ⟨rfl, rfl, related.protocol.beacon, related.protocol.sessions, related.protocol.pending,
+              related.protocol.ghost, related.protocol.beaconInit⟩
+          exact Or.inl ⟨(ProtocolRel.build _ _ _ _ protocol session result).1,
+            fun invariant => ⟨invariant, (ProtocolRel.build _ _ _ _ protocol session result).2, related.cache,
+              related.flag, related.unselected, related.selected, related.below, related.marked, related.good,
+              related.clean⟩⟩
 
 end BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor
 
@@ -304,3 +343,8 @@ end BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor.build_step_coupling
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor.relTriple_bind_map_same' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor.relTriple_bind_map_same

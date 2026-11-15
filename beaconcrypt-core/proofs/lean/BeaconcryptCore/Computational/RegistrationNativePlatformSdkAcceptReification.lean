@@ -33,7 +33,7 @@ theorem accepted {E R Error : Type} (coins : QueryImpl unifSpec (StateT P ProbCo
     (generator : rand_core.TryCryptoRng R Error) (self : beaconcrypt_public_wrapper.server.Server)
     (input : Slice U8) (rng : R)
     (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (before after : Native) (related : AdapterPublicWrapperState.Server view views created credential self before.server)
     (edGetter : ∀ key, (@CryptoOperations.edPublicBytes material ed (RustT NativeM)
       (AdapterPublicAgreementNativePlatformInterpreter.operations coins original) key).run = pure (.ok (view.edPublic key)))

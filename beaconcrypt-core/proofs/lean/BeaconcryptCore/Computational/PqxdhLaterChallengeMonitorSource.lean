@@ -6,7 +6,9 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeMonitorSource
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhJointKdfGame PqxdhNativeSharedPrefix
 open RawCtxSelectedParentTable RawCtxSelectedParentEntry PqxdhFirstRecordConfidentiality
 variable {ι M P I D K X Response Shared A N C : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -98,14 +100,14 @@ theorem augmented_source {Result : Type} (key : RootOutput) (owner : RawCtxProto
     (work : OracleComp (AdvSpec extra S B) Result) (before : State (InsFull M P I D K A N C S B)) :
     Prod.map id (project insProject) <$>
       (simulateQ (step
-        (insAugmented pre application initial selector aux source writer prior (some parent) key target nonce next sender route read mark monitor)
+        (insAugmented (completedBinding := completedBinding) pre application initial selector aux source writer prior (some parent) key target nonce next sender route read mark monitor)
         (Selected target owner ∘ insProject) owner number bit) (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run before =
     (simulateQ (step
-      (PqxdhFirstRecordConfidentiality.trOriginal pre application initial selector aux source writer prior (some parent) key target nonce next sender route read mark)
+      (PqxdhFirstRecordConfidentiality.trOriginal (completedBinding := completedBinding) pre application initial selector aux source writer prior (some parent) key target nonce next sender route read mark)
       (Selected target owner) owner number bit) (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run (project insProject before) := by
   apply map_run_simulateQ_eq_of_query_map_eq
   exact step_project _ _ insProject
-    (insAugmented_step pre application initial selector aux source writer prior (some parent) key target nonce next sender route read mark monitor)
+    (insAugmented_step (completedBinding := completedBinding) pre application initial selector aux source writer prior (some parent) key target nonce next sender route read mark monitor)
     (Selected target owner) owner number bit
 
 /-- Retain the public wrapper state on normal return and all private/component state on every return; an outer refusal has no continuing wrapper reply. -/
@@ -121,12 +123,12 @@ theorem query_evaluated (key : RootOutput) (owner : RawCtxProtocolReveals.Owner 
     (before : InsFull M P I D K A N C S B) (choice : Option Bool) :
     close current <$> (simulateQ
       (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder read) source.crypto key)
-      (runStepper (PqxdhLaterChallengeMonitor.handler pre application initial selector aux source writer prior parent target nonce next sender
+      (runStepper (PqxdhLaterChallengeMonitor.handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender
         route read mark monitor owner number bit query) current (before.1, choice))).run before.2 =
-    (step (insEvaluated pre application initial selector aux source writer prior (some parent) key target nonce next sender route read mark monitor)
+    (step (insEvaluated (completedBinding := completedBinding) pre application initial selector aux source writer prior (some parent) key target nonce next sender route read mark monitor)
       (Selected target owner ∘ insProject) owner number bit query).run (current, (before, choice)) := by
   have same := congrArg (fun action => action.run before)
-    (insEvaluated_program pre application initial selector aux source writer prior (some parent) key target nonce next sender route read mark
+    (insEvaluated_program (completedBinding := completedBinding) pre application initial selector aux source writer prior (some parent) key target nonce next sender route read mark
       monitor ((PqxdhRecordConfidentialityChallenge.handler owner number bit query).run current))
   simp only [PqxdhSelectedStateInterpreter.evaluate, StateT.run] at same
   simp only [step, StateT.run]
@@ -169,17 +171,17 @@ theorem program_evaluated {Result : Type} (key : RootOutput) (owner : RawCtxProt
     (before : InsFull M P I D K A N C S B) (choice : Option Bool) :
     pair <$> (simulateQ
       (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder read) source.crypto key)
-      (runStepper (simulateQ (PqxdhLaterChallengeMonitor.handler pre application initial selector aux source writer prior parent target nonce next
+      (runStepper (simulateQ (PqxdhLaterChallengeMonitor.handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next
         sender route read mark monitor owner number bit) work) current (before.1, choice))).run before.2 =
     finish <$> (simulateQ (step
-      (insEvaluated pre application initial selector aux source writer prior (some parent) key target nonce next sender route read mark monitor)
+      (insEvaluated (completedBinding := completedBinding) pre application initial selector aux source writer prior (some parent) key target nonce next sender route read mark monitor)
       (Selected target owner ∘ insProject) owner number bit) (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run
       (current, (before, choice)) := by
   induction work using OracleComp.inductionOn generalizing current before choice with
   | pure value => rfl
   | query_bind query next ih =>
     simp only [simulateQ_bind, simulateQ_spec_query, runStepper_bind, StateT.run_bind, map_bind, optional_bind]
-    rw [← query_evaluated pre application initial selector aux source writer prior parent target nonce _ sender route read mark monitor
+    rw [← query_evaluated (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce _ sender route read mark monitor
       key owner number bit query current before choice, bind_map_left]
     congr 1
     funext result

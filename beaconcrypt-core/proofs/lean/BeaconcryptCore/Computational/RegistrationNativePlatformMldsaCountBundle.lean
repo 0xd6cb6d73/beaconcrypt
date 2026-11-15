@@ -22,7 +22,7 @@ open RegistrationNativePlatformMldsaCountRules (Correct)
 variable {n : Nat} {KemSK Platform E Value ι : Type} {base : OracleSpec ι} {source : RegistrationNativeMldsa.Source}
 variable (setup : Setup base KemSK) (checks : Checks)
 variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 
 private theorem native (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State Value)
     (stable : RegistrationNativeBeaconEnvView.Stable work) :
@@ -42,13 +42,13 @@ theorem outgoing (index : Nat) (owner : RegistrationNativeBeaconFrontend.Owner s
 private theorem begin (index : Nat) (owner : RegistrationNativeBeaconFrontend.Owner source)
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (publicKey : Std.Array U8 1952#usize) :
+    (pin : session.ServerAuthenticationPin) :
     Correct (localProject (n := n)) (RegistrationNativePlatformBeaconPublication.begin
       (RegistrationNativePlatformMldsaBundle.outgoing setup checks representation created index owner)
       (fun view => RegistrationNativePlatformMldsaProgram.lift (RegistrationNativePlatformBundleLower.lower
         (RegistrationNativePlatformGenericBundle.encoderWith (source := source) (Auxiliary := RegistrationServerRoleBackend.State)
           (RegistrationNativePlatformExperiment.writer (n := n) (KemSK := KemSK) (source := source) writer) view)))
-      control inputs coins pin publicKey) := by
+      control inputs coins pin) := by
   rw [← RegistrationNativePlatformMldsaBundleMap.begin_source]
   apply RegistrationNativePlatformMldsaCountRules.simulate localProject RegistrationNativeMldsaCountLower.idempotent
   intro query
@@ -78,7 +78,7 @@ theorem bundle
               (RegistrationNativePlatformGenericBundle.encoderWith (source := source) (Auxiliary := RegistrationServerRoleBackend.State)
                 (RegistrationNativePlatformExperiment.writer (n := n) (KemSK := KemSK) (source := source) writer) view)))
             ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-            ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey
+            ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin
           match published with
           | .fail error => pure (.fail error)
           | .div => pure .div
@@ -91,7 +91,7 @@ theorem bundle
               RegistrationNativePlatformMldsaProgram.coins setup checks representation created
               (RegistrationNativeBeaconFrontend.effect (.inr (.advanceOwner owner.worldOwner .initSent))))
             pure (.ok (some finished.encoded)) : StateT (Local n KemSK source) (M source Platform) (RustM (Option (alloc.vec.Vec U8)))) := by
-      apply RegistrationNativePlatformMldsaCountRules.bind localProject _ _ (begin setup checks representation created index owner writer _ _ _ _ _)
+      apply RegistrationNativePlatformMldsaCountRules.bind localProject _ _ (begin setup checks representation created index owner writer _ _ _ _)
       intro published
       cases published with
       | fail error | div => exact RegistrationNativePlatformMldsaCountRules.pure localProject RegistrationNativeMldsaCountLower.idempotent _

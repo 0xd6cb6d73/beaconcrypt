@@ -9,7 +9,7 @@ This module is the first stage of the server-authentication proof (Milestone B, 
 
 The patch. `romHmac hmac table` answers `table message` when the key is `zeroSalt` and the message is 192 bytes long, and `hmac.eval key message` otherwise (`eval_other`). Outside that slice the patch is the real function for every table (`eval_other`), so the idealization reprograms that slice and nothing else; the real function is the patch at its own values (`romHmac_extract`). The table and the real HMAC are parameters, and every statement holds for every table; only `production_ratchet_unchanged` relates the HMAC to the production source. The lazily sampled table, and its sharing between the honest root derivations and the adversary's HMAC queries, belong to the later family module `PqxdhExtractRomFamily`. The model has a single zero key, because RFC 5869 defines an absent salt as HashLen zero bytes and RFC 2104 pads shorter keys with zero bytes, so the empty salt, the 64-byte zero salt and the all-zero block key define the same function.
 
-Separation by length, from the extracted code. The extracted core hands the adapter exactly two kinds of Extract input. The root input `pqxdh.RootKeyInput` holds 192 bytes (`root_input_eq`; `Extraction/Types.lean:149-150`, Rust `beaconcrypt-core/src/pqxdh.rs:358-360`). The ratchet request `ratchet.SymmetricRatchetKdfRequest` holds a 32-byte input and a 41-byte label (`ratchet_input_ne`; `Extraction/Types.lean:40-42`, Rust `beaconcrypt-core/src/ratchet.rs:162-165`), and it serves both the 64-byte initial derivation and the 76-byte ongoing step. So a zero-salt Extract lands in the table exactly for root inputs (`extract_root`) and is real for every ratchet input (`extract_other`). Expand queries are keyed by a PRK and have 47 bytes (the root block `INFO_PQ ‖ 1`), 42 or 106 bytes (the two ratchet blocks under the 41-byte `INFO_R`) or 111 bytes (the second block under `INFO_PQ`). None is 192 bytes long, so no Expand query enters the table even when a PRK happens to equal `zeroSalt` (`expandRoot_same`, `expandFull_same`).
+Separation by length, from the extracted code. The extracted core hands the adapter exactly two kinds of Extract input. The root input `pqxdh.RootKeyInput` holds 192 bytes (`root_input_eq`; `Extraction/Types.lean:90-91`, Rust `beaconcrypt-core/src/pqxdh.rs:358-360`). The ratchet request `ratchet.SymmetricRatchetKdfRequest` holds a 32-byte input and a 48-byte message label (`ratchet_input_ne`; `Extraction/Types.lean:824-826`, Rust `beaconcrypt-core/src/ratchet.rs:191-194`), while a separate InitialRatchetKdfRequest carries the 45-byte initialization label (`Extraction/Types.lean:653-655`, Rust `beaconcrypt-core/src/ratchet.rs:164-167`). So a zero-salt Extract lands in the table exactly for root inputs (`extract_root`) and is real for every ratchet input (`extract_other`). Expand queries are keyed by a PRK and have 47 bytes (the root block `INFO_PQ ‖ 1`), 46 or 110 bytes under INFO_INIT and 49 or 113 bytes under INFO_R or 111 bytes (the second block under `INFO_PQ`). None is 192 bytes long, so no Expand query enters the table even when a PRK happens to equal `zeroSalt` (`expandRoot_same`, `expandFull_same`).
 
 Consequences for the protocol. `production_ratchet_unchanged`: under the existing functional contracts `SourceFullCorrect` and the ratchet prefix contract carried by the `FixedHkdfSha512NoSaltSource` bundle (`ProductionHkdfPrefixConsistent.ratchetPrefix`), the 76-byte and 64-byte production ratchet responses at every request the extracted core issues equal HKDF over the patched HMAC, for every table. These are `RawCtxSourceHkdf.response`, the ongoing response used by the record sealing and opening handlers, and `PqxdhRootTableInitialization.initialResponse`, the initial response of the Server's registration build (`PqxdhServerRegistrationPublication.build`), which the planned experiment (stage B4a) assigns to the Beacon's initialization callback. `RawCtxSourceHkdf.initialResponse`, which the existing live Beacon Phase 2 module uses, has the same definition, so the statement applies to it by `rfl`. The idealized world therefore computes the same ratchet as production, and the adversary can recompute it locally with the real function. `root_under_patch`: over the patched HMAC, the root derived from any root input is the real 32-byte Expand of that input's table entry. This is the shape of the family's root request, one table lookup followed by one real Expand query.
 
@@ -49,12 +49,12 @@ theorem romHmac_extract (hmac : HmacSha512) : romHmac hmac (extract hmac) = hmac
     · next hit => rw [hit.1]
     · rfl
 
-/-- Every ratchet request of the extracted core has a 32-byte input (`Extraction/Types.lean:40-42`), so it is never a 192-byte Extract input. -/
+/-- Every ratchet request of the extracted core has a 32-byte input (`Extraction/Types.lean:824-826`), so it is never a 192-byte Extract input. -/
 theorem ratchet_input_ne (request : beaconcrypt_core.ratchet.SymmetricRatchetKdfRequest) :
     (absBytes request.input).length ≠ 192 := by
   simp
 
-/-- Every root input assembled by the extracted core has exactly 192 bytes (`Extraction/Types.lean:149-150`). -/
+/-- Every root input assembled by the extracted core has exactly 192 bytes (`Extraction/Types.lean:90-91`). -/
 theorem root_input_eq (input : beaconcrypt_core.pqxdh.RootKeyInput) :
     (absBytes input.bytes).length = 192 := by
   simp
@@ -74,15 +74,15 @@ theorem expandRoot_same (hmac : HmacSha512) (table : Pqxdh.Bytes → HmacBlock) 
     expandRoot (romHmac hmac table) prk = expandRoot hmac prk := by
   simp [expandRoot, romHmac, rootExpandInput, Pqxdh.INFO_PQ]
 
-/-- The two-block 76-byte Expand is unchanged in both production domains and for every PRK, because its messages have 42, 47, 106 or 111 bytes. -/
+/-- The two-block 76-byte Expand is unchanged in all three production domains and for every PRK, because its messages have 46, 47, 49, 110, 111 or113 bytes. -/
 theorem expandFull_same (hmac : HmacSha512) (table : Pqxdh.Bytes → HmacBlock)
     (domain : FixedHkdfDomain) (prk : HmacBlock) :
     expandFull (romHmac hmac table) domain prk = expandFull hmac domain prk := by
   cases domain <;>
     simp [expandFull, romHmac, firstExpandInput, secondExpandInput, FixedHkdfDomain.info,
-      Pqxdh.INFO_PQ, Pqxdh.INFO_R]
+      Pqxdh.INFO_PQ, Pqxdh.INFO_INIT, Pqxdh.INFO_R]
 
-/-- The production ratchet responses at every request the extracted core issues (its 32-byte input under the fixed ratchet label) are HKDF over the patched HMAC, for every table: the 76-byte ongoing response and the 64-byte initial response alike. -/
+/-- Both typed source requests remain outside the patched Extract slice, under their distinct fixed domains. -/
 theorem production_ratchet_unchanged (source : FixedHkdfSha512NoSaltSource) (hmac : HmacSha512)
     (correct : SourceFullCorrect source hmac) (table : Pqxdh.Bytes → HmacBlock)
     (input : Std.Array Std.U8 32#usize) :
@@ -91,26 +91,26 @@ theorem production_ratchet_unchanged (source : FixedHkdfSha512NoSaltSource) (hma
       (expandFull (romHmac hmac table) .ratchet
         (extract (romHmac hmac table) (absBytes input))).toList ∧
     absBytes (PqxdhRootTableInitialization.initialResponse source.crypto
-        ⟨input, beaconcrypt_core.ratchet.SYM_RATCHET_INFO⟩).bytes =
-      (initialPrefix (expandFull (romHmac hmac table) .ratchet
+        ⟨input, beaconcrypt_core.ratchet.INITIAL_RATCHET_INFO⟩).bytes =
+      (initialPrefix (expandFull (romHmac hmac table) .initial
         (extract (romHmac hmac table) (absBytes input)))).toList := by
   have other : (absBytes input).length ≠ 192 := by simp
-  have patched :
-      expandFull (romHmac hmac table) .ratchet (extract (romHmac hmac table) (absBytes input)) =
-        expandFull hmac .ratchet (extract hmac (absBytes input)) := by
+  have patched (domain : FixedHkdfDomain) :
+      expandFull (romHmac hmac table) domain (extract (romHmac hmac table) (absBytes input)) =
+        expandFull hmac domain (extract hmac (absBytes input)) := by
     rw [extract_other hmac table (absBytes input) other, expandFull_same]
-  have full : source.crypto.hkdf (absBytes input) Pqxdh.INFO_R 76 =
-      (expandFull hmac .ratchet (extract hmac (absBytes input))).toList :=
-    congrArg List.Vector.toList (correct .ratchet (absBytes input))
-  have info : absBytes beaconcrypt_core.ratchet.SYM_RATCHET_INFO = Pqxdh.INFO_R :=
-    PqxdhInitialRatchetComplementarity.absBytes_ratchetSymmetricInfo
-  rw [patched]
   constructor
-  · rw [RawCtxSourceHkdf.response_bytes]
-    simpa only [info] using full
-  · rw [PqxdhRootTableInitialization.initialResponse_bytes]
-    simp only [info, source.prefixConsistent.ratchetPrefix, full, initialPrefix,
-      List.Vector.toList_take]
+  · rw [RawCtxSourceHkdf.response_bytes, patched]
+    simpa [PqxdhInitialRatchetComplementarity.absBytes_ratchetSymmetricInfo,
+      PqxdhJointKdf.productionStream, FixedHkdfDomain.address, FixedHkdfDomain.info] using
+      congrArg List.Vector.toList (correct .ratchet (absBytes input))
+  · rw [PqxdhRootTableInitialization.initialResponse_bytes, patched]
+    have full : source.crypto.hkdf (absBytes input) Pqxdh.INFO_INIT 76 =
+        (expandFull hmac .initial (extract hmac (absBytes input))).toList := by
+      simpa [PqxdhJointKdf.productionStream, FixedHkdfDomain.address, FixedHkdfDomain.info] using
+        congrArg List.Vector.toList (correct .initial (absBytes input))
+    simp only [PqxdhInitialRatchetComplementarity.absBytes_ratchetInitialInfo,
+      source.prefixConsistent.initialPrefix, full, initialPrefix, List.Vector.toList_take]
 
 /-- Over the patched HMAC the 32-byte root derived from any extracted root input is the real Expand of that input's table entry. -/
 theorem root_under_patch (hmac : HmacSha512) (table : Pqxdh.Bytes → HmacBlock)

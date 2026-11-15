@@ -11,6 +11,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core PqxdhRefinement
 
 set_option autoImplicit false
+set_option maxRecDepth 4096
+set_option backward.isDefEq.respectTransparency false
 
 namespace BeaconcryptCore.Computational.RegistrationResponseExecutor
 
@@ -36,7 +38,10 @@ def begin (pending : registration.BeaconPending) (packet : core.option.Option re
       continueResult (hashState.resume digest) fun verificationState =>
         RegistrationAuthenticationExecutor.continueWith verificationState.request fun request => do
           let verified ← RegistrationAuthenticationExecutor.Spec.query (.mldsa request)
-          pure (verificationState.resume verified)
+          continueResult (verificationState.resume verified) fun adState =>
+            RegistrationAuthenticationExecutor.continueWith adState.request fun adRequest => do
+              let adDigest ← RegistrationAuthenticationExecutor.Spec.query (.hash adRequest)
+              pure (adState.resume adDigest)
 
 noncomputable def execute {Auxiliary : Type} (crypto : Pqxdh.Crypto) (verify : MldsaTranscriptAuth.Verify)
     (writer : RawCtxMixedShared.Writer)
@@ -54,16 +59,56 @@ def verification (verify : MldsaTranscriptAuth.Verify) (pending : registration.B
   verify (absBytes pending.binding.server_pin.public_key) Pqxdh.TranscriptAuth.signingContext
     (Pqxdh.TranscriptAuth.signatureInput .server digest.toList) (absBytes packet.signature)
 
-def outcome (verify : MldsaTranscriptAuth.Verify) (pending : registration.BeaconPending)
-    (packet : registration.ResponsePacket) (digest : CtxDigest) : RustM ResponseResult :=
-  if verification verify pending packet digest then .ok (.Ok ⟨pending, packet⟩)
-  else .ok (.Err (abortedState pending))
+/-- Public AD hash input selected after pinned verification. -/
+def adPayload (pending : registration.BeaconPending) (packet : registration.ResponsePacket) : Pqxdh.Bytes :=
+  BeaconcryptCore.Refinement.RegistrationAd.preimage pending.binding
+    (BeaconcryptCore.Refinement.RegistrationAd.responseView packet.public)
+
+noncomputable def completedBinding (pending : registration.BeaconPending) (digest : CtxDigest) :
+    session.CompletedRegistrationBinding :=
+  (BeaconcryptCore.Refinement.SessionBinding.complete_refines pending.binding
+    (RegistrationAuthenticationShared.digestArray digest)).choose
+
+theorem completedBinding_run (pending : registration.BeaconPending) (digest : CtxDigest) :
+    pending.binding.complete (RegistrationAuthenticationShared.digestArray digest) =
+      .ok (completedBinding pending digest) :=
+  (BeaconcryptCore.Refinement.SessionBinding.complete_refines pending.binding
+    (RegistrationAuthenticationShared.digestArray digest)).choose_spec.1
+
+@[simp] theorem completedBinding_pin (pending : registration.BeaconPending) (digest : CtxDigest) :
+    (completedBinding pending digest).server_pin = pending.binding.server_pin :=
+  (BeaconcryptCore.Refinement.SessionBinding.complete_refines pending.binding
+    (RegistrationAuthenticationShared.digestArray digest)).choose_spec.2.1
+
+@[simp] theorem completedBinding_initHash (pending : registration.BeaconPending) (digest : CtxDigest) :
+    (completedBinding pending digest).init_hash = pending.binding.init_hash :=
+  (BeaconcryptCore.Refinement.SessionBinding.complete_refines pending.binding
+    (RegistrationAuthenticationShared.digestArray digest)).choose_spec.2.2.1
+
+@[simp] theorem completedBinding_digest (pending : registration.BeaconPending) (digest : CtxDigest) :
+    (completedBinding pending digest).session_transcript_hash = RegistrationAuthenticationShared.digestArray digest :=
+  (BeaconcryptCore.Refinement.SessionBinding.complete_refines pending.binding
+    (RegistrationAuthenticationShared.digestArray digest)).choose_spec.2.2.2.2.1
+
+@[simp] theorem completedBinding_consistent (pending : registration.BeaconPending) (digest : CtxDigest) :
+    BeaconcryptCore.Refinement.SessionBinding.registrationConsistent (completedBinding pending digest) :=
+  (BeaconcryptCore.Refinement.SessionBinding.complete_refines pending.binding
+    (RegistrationAuthenticationShared.digestArray digest)).choose_spec.2.2.2.2.2
+
+noncomputable def acceptedResponse (pending : registration.BeaconPending)
+    (packet : registration.ResponsePacket) (digest : CtxDigest) : registration.AuthenticatedResponse :=
+  ⟨pending.control, completedBinding pending digest, packet⟩
+
+theorem ad_accept_exact (stage : registration.BeaconAdHash) (digest : CtxDigest) :
+    stage.resume (.Some (RegistrationAuthenticationShared.digestArray digest)) =
+      .ok (.Ok (acceptedResponse stage.pending stage.packet digest)) := by
+  simp only [registration.BeaconAdHash.resume, completedBinding_run, bind_tc_ok, acceptedResponse]
 
 theorem begin_malformed (pending : registration.BeaconPending) :
     begin pending .None = pure (.ok (.Err (abortedState pending))) := by
   rfl
 
-/-- The whole extracted response-authentication execution hashes its actual transcript and gates acceptance on the retained pinned ML key. -/
+/-- Source order: response transcript hash, pinned signature verification, then the exact AD hash. False verification makes no AD request. -/
 theorem execute_some {Auxiliary : Type} (crypto : Pqxdh.Crypto) (verify : MldsaTranscriptAuth.Verify)
     (writer : RawCtxMixedShared.Writer)
     (kdf : QueryImpl RawCtxSharedPrimitive.KdfSpec
@@ -72,7 +117,10 @@ theorem execute_some {Auxiliary : Type} (crypto : Pqxdh.Crypto) (verify : MldsaT
     (state : RawCtxSharedPrimitive.SharedState Auxiliary) :
     (execute crypto verify writer kdf pending (.Some packet)).run state = (do
       let hashed ← (ctxRandomOracle ((), (payload pending packet).transcript)).run state.2
-      pure (outcome verify pending packet hashed.1, (state.1, hashed.2))) := by
+      if verification verify pending packet hashed.1 then
+        let ad ← (ctxRandomOracle ((), adPayload pending packet)).run hashed.2
+        pure (.ok (.Ok (acceptedResponse pending packet ad.1)), (state.1, ad.2))
+      else pure (.ok (.Err (abortedState pending)), (state.1, hashed.2))) := by
   obtain ⟨hashState, started, samePending, samePacket, parts, requested, bytes⟩ :=
     begin_response_some_exact pending packet
   simp only [execute, begin, started, continueResult, RegistrationAuthenticationExecutor.continueWith,
@@ -84,12 +132,72 @@ theorem execute_some {Auxiliary : Type} (crypto : Pqxdh.Crypto) (verify : MldsaT
     response_hash_some_exact hashState (RegistrationAuthenticationShared.digestArray digest)
   simp only [resumed, requestRun, simulateQ_bind, simulateQ_spec_query,
     simulateQ_pure, StateT.run_bind, StateT.run_pure]
-  rw [RegistrationAuthenticationShared.mldsa_exact, pure_bind, response_mldsa_gate_exact]
-  simp only [key, signature, contextBytes, inputBytes, RegistrationAuthenticationShared.digest_array_bytes,
-    pendingSame, packetSame, samePending, samePacket, outcome, verification]
-  rfl
+  rw [RegistrationAuthenticationShared.mldsa_exact, pure_bind]
+  have verdictEq : verify (absBytes request.public_key) (absBytes request.context)
+      (absBytes request.input) (absBytes request.signature) = verification verify pending packet digest := by
+    simp only [key, signature, contextBytes, inputBytes, RegistrationAuthenticationShared.digest_array_bytes,
+      samePending, samePacket, verification]
+  rw [verdictEq]
+  obtain ⟨adState, gate, adPending, adPacket, adInput⟩ :=
+    response_mldsa_gate_exact verificationState (verification verify pending packet digest)
+  have verificationPending := pendingSame.trans samePending
+  have verificationPacket := packetSame.trans samePacket
+  have retainedPending := adPending.trans verificationPending
+  have retainedPacket := adPacket.trans verificationPacket
+  have adAddress : absBytes adState.input = adPayload pending packet := by
+    simpa only [adPayload, verificationPending, verificationPacket] using adInput
+  by_cases verified : verification verify pending packet digest = true
+  · simp only [verified, ite_true] at gate ⊢
+    simp only [gate, continueResult, RegistrationAuthenticationExecutor.continueWith,
+      simulateQ_bind, simulateQ_spec_query, StateT.run_bind]
+    obtain ⟨adRequest, adRequested, adBytes⟩ := response_ad_hash_request_exact adState
+    simp only [adRequested, RegistrationAuthenticationExecutor.continueWith,
+      simulateQ_bind, simulateQ_spec_query, StateT.run_bind]
+    rw [RegistrationAuthenticationShared.hash_exact, bind_map_left, adBytes, adAddress]
+    refine bind_congr (fun ⟨adDigest, adCache⟩ => ?_)
+    simp only [simulateQ_pure, StateT.run_pure, ad_accept_exact,
+      retainedPending, retainedPacket]
+  · have declined : verification verify pending packet digest = false := Bool.eq_false_iff.mpr verified
+    simp only [declined, Bool.false_eq_true, ite_false] at gate ⊢
+    simp only [gate, continueResult, simulateQ_pure, StateT.run_pure,
+      verificationPending]
 
-/-- An accepted extracted response retains the original owner and packet, its actual verification verdict, and the shared hash receipt. -/
+/-- The accepted response is completed by an actual second hash, while the signature transcript receipt remains in the extended shared cache. -/
+theorem accepted_ad_receipt {Auxiliary : Type} (crypto : Pqxdh.Crypto) (verify : MldsaTranscriptAuth.Verify)
+    (writer : RawCtxMixedShared.Writer)
+    (kdf : QueryImpl RawCtxSharedPrimitive.KdfSpec
+      (StateT (RawCtxSharedPrimitive.SharedState Auxiliary) ProbComp))
+    (pending : registration.BeaconPending) (packet : registration.ResponsePacket)
+    (before after : RawCtxSharedPrimitive.SharedState Auxiliary)
+    (authenticated : registration.AuthenticatedResponse)
+    (supported : (.ok (.Ok authenticated), after) ∈ support
+      ((execute crypto verify writer kdf pending (.Some packet)).run before)) :
+    ∃ digest adDigest, authenticated = acceptedResponse pending packet adDigest ∧
+      verification verify pending packet digest = true ∧ after.1 = before.1 ∧
+      before.2 ≤ after.2 ∧ after.2 ((), (payload pending packet).transcript) = some digest ∧
+      after.2 ((), adPayload pending packet) = some adDigest := by
+  rw [execute_some, mem_support_bind_iff] at supported
+  obtain ⟨⟨digest, cache⟩, queried, returned⟩ := supported
+  by_cases verified : verification verify pending packet digest = true
+  · simp only [verified, ite_true, mem_support_bind_iff] at returned
+    obtain ⟨⟨adDigest, adCache⟩, adQueried, returned⟩ := returned
+    simp only [support_pure, Set.mem_singleton_iff] at returned
+    have resultSame := congrArg Prod.fst returned
+    have afterSame : after = (before.1, adCache) := congrArg Prod.snd returned
+    simp only [RustM.ok.injEq, core.result.Result.Ok.injEq] at resultSame
+    have first := MldsaSharedAuthentication.query_cached (payload pending packet).transcript
+      before.2 (digest, cache) queried
+    have second := MldsaSharedAuthentication.query_cached (adPayload pending packet)
+      cache (adDigest, adCache) adQueried
+    exact ⟨digest, adDigest, resultSame, verified, by rw [afterSame],
+      by simpa only [afterSame] using first.1.trans second.1,
+      by simpa only [afterSame] using second.1 first.2,
+      by simpa only [afterSame] using second.2⟩
+  · simp only [verified, ite_false, support_pure, Set.mem_singleton_iff] at returned
+    have impossible := congrArg Prod.fst returned
+    simp only [RustM.ok.injEq, reduceCtorEq] at impossible
+
+/-- Signature-origin callers retain the original receipt interface; the AD digest is an actual reached continuation witness. -/
 theorem accepted_receipt {Auxiliary : Type} (crypto : Pqxdh.Crypto) (verify : MldsaTranscriptAuth.Verify)
     (writer : RawCtxMixedShared.Writer)
     (kdf : QueryImpl RawCtxSharedPrimitive.KdfSpec
@@ -99,23 +207,12 @@ theorem accepted_receipt {Auxiliary : Type} (crypto : Pqxdh.Crypto) (verify : Ml
     (authenticated : registration.AuthenticatedResponse)
     (supported : (.ok (.Ok authenticated), after) ∈ support
       ((execute crypto verify writer kdf pending (.Some packet)).run before)) :
-    ∃ digest, authenticated = ⟨pending, packet⟩ ∧ verification verify pending packet digest = true ∧
-      after.1 = before.1 ∧ before.2 ≤ after.2 ∧
-      after.2 ((), (payload pending packet).transcript) = some digest := by
-  rw [execute_some, mem_support_bind_iff] at supported
-  obtain ⟨⟨digest, cache⟩, queried, returned⟩ := supported
-  simp only [support_pure, Set.mem_singleton_iff] at returned
-  have resultSame := congrArg Prod.fst returned
-  have afterSame : after = (before.1, cache) := congrArg Prod.snd returned
-  unfold outcome at resultSame
-  split at resultSame
-  · rename_i verified
-    simp only [RustM.ok.injEq, core.result.Result.Ok.injEq] at resultSame
-    have cached := MldsaSharedAuthentication.query_cached (payload pending packet).transcript before.2
-      (digest, cache) queried
-    exact ⟨digest, resultSame, verified, by rw [afterSame],
-      by simpa only [afterSame] using cached.1, by simpa only [afterSame] using cached.2⟩
-  · simp only [RustM.ok.injEq, reduceCtorEq] at resultSame
+    ∃ digest, (∃ adDigest, authenticated = acceptedResponse pending packet adDigest) ∧
+      verification verify pending packet digest = true ∧ after.1 = before.1 ∧
+      before.2 ≤ after.2 ∧ after.2 ((), (payload pending packet).transcript) = some digest := by
+  obtain ⟨digest, adDigest, same, verified, state, extension, signatureCached, _adCached⟩ :=
+    accepted_ad_receipt crypto verify writer kdf pending packet before after authenticated supported
+  exact ⟨digest, ⟨adDigest, same⟩, verified, state, extension, signatureCached⟩
 
 def trial (protectedKey : Bool) (pending : registration.BeaconPending)
     (packet : registration.ResponsePacket) (history : List MldsaTranscriptAuth.SigningCall) :
@@ -209,3 +306,45 @@ end BeaconcryptCore.Computational.RegistrationResponseExecutor
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationResponseExecutor.origin_split
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationResponseExecutor.completedBinding_run' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationResponseExecutor.completedBinding_run
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationResponseExecutor.completedBinding_pin' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationResponseExecutor.completedBinding_pin
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationResponseExecutor.completedBinding_initHash' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationResponseExecutor.completedBinding_initHash
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationResponseExecutor.completedBinding_digest' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationResponseExecutor.completedBinding_digest
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationResponseExecutor.completedBinding_consistent' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationResponseExecutor.completedBinding_consistent
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationResponseExecutor.ad_accept_exact' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationResponseExecutor.ad_accept_exact
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationResponseExecutor.accepted_ad_receipt' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationResponseExecutor.accepted_ad_receipt

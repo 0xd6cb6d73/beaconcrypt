@@ -9,6 +9,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialCurrentBeacon
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhKemIndCca PqxdhCorrelatedExpand PqxdhPhase2SourceAux
 open PqxdhPhase1AcceptanceOracle PqxdhEd25519EufCma PqxdhJointIdentity PqxdhPrivateKemSource
 open PqxdhSecretInputKdf PqxdhCorrelatedExtractFamily PqxdhCorrelatedExpandHybrid
@@ -158,7 +159,7 @@ noncomputable def owner (writer : RawCtxMixedShared.Writer) (response : RatchetK
     Ambient A (BareState count) RootOracle.QueryCache
       (Option Pqxdh.Bytes × RawCtxGenericRoleStorage.BeaconState RawCtxSelectedChain.Kernel
         (PqxdhGeneratedBeaconState.IdentityHandle I) D (PqxdhGeneratedBeaconState.KemHandle K)) :=
-  PqxdhInitialGenericBeacon.owner
+  PqxdhInitialGenericBeacon.owner (completedBinding := completedBinding)
     (preparation attachedVerify primitives count fixed localImpl baseImpl kem secret challenge)
     (liftCalls (RawCtxSelectedParentCalls.labelCalls fixed writer prior entry response))
     (application attachedVerify primitives count fixed localImpl baseImpl kem secret challenge)
@@ -171,12 +172,12 @@ theorem source_owner (writer : RawCtxMixedShared.Writer) (decode : RawCtxReceive
       (PqxdhGeneratedBeaconState.IdentityHandle I) D (PqxdhGeneratedBeaconState.KemHandle K)) :
     simulateQ (evaluated attachedVerify primitives count fixed localImpl baseImpl kem secret challenge
       prior entry selected second other target)
-      (PqxdhInitialFusedOwner.owner decode bytes
+      (PqxdhInitialFusedOwner.owner (completedBinding := completedBinding) decode bytes
         (RawCtxGenericRoleStorage.nativeBeacon
           (RawCtxSelectedChain.nativeKernel (RawCtxFreshChainCut.concreteChain target)) state)) =
       Prod.map id (RawCtxGenericRoleStorage.nativeBeacon
         (RawCtxSelectedChain.nativeKernel (RawCtxFreshChainCut.concreteChain target))) <$>
-        owner attachedVerify primitives count fixed localImpl baseImpl kem secret challenge prior entry selected second other
+        owner (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl baseImpl kem secret challenge prior entry selected second other
           writer (RawCtxSelectedParentCalls.childResponse prior entry target) decode bytes state := by
   have rawHandler : (fun q => evaluated attachedVerify primitives count fixed localImpl baseImpl kem secret challenge
       prior entry selected second other target (.inr (.inl (.inl q)))) =
@@ -194,7 +195,7 @@ theorem source_owner (writer : RawCtxMixedShared.Writer) (decode : RawCtxReceive
           (RawCtxSelectedParentCalls.childResponse prior entry target))).receive kernel sequence context := by
     rw [rawHandler]
     exact PqxdhInitialBeaconAmbient.selected_receive fixed writer prior entry target
-  have mapped := PqxdhInitialGenericBeaconNative.owner_mapped
+  have mapped := PqxdhInitialGenericBeaconNative.owner_mapped (completedBinding := completedBinding)
     (RawCtxSelectedChain.nativeKernel (RawCtxFreshChainCut.concreteChain target))
     (evaluated attachedVerify primitives count fixed localImpl baseImpl kem secret challenge prior entry selected second other target)
     (liftCalls (RawCtxSelectedParentCalls.labelCalls fixed writer prior entry

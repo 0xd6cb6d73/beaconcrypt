@@ -2,7 +2,7 @@
 import BeaconcryptCore.Refinement.AdapterPublicServerPinGlobal
 import BeaconcryptCore.Refinement.AdapterPublicServerSigningNative
 import BeaconcryptCore.Refinement.AdapterPublicServerLocalLens
-/-! The literal SDK Server authentication-pin getter under the same request-only hash-cut dictionary erases only that auxiliary cut to the actual full Native source pin recomputation. Individual immutable Ed/ML getters supply their object views; the actual hash effects, failure continuations and common platform poststate are retained. -/
+/-! The exact Server pin getter is pure under the request-only hash-cut dictionary. The same dictionary records actual authentication and AD transcript hashes, retaining their effects and the common platform poststate while erasure drops only the auxiliary cut. Individual immutable Ed/ML getters supply their object views. -/
 open CoreModels Aeneas OracleComp OracleSpec
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -76,7 +76,7 @@ variable [crypto : CryptoOperations (RustT (StateT (RegistrationNativePlatformCu
 variable {E : Type}
 
 theorem source (view : AdapterPublicWrapperState.MaterialView mlSource KemSK)
-    (views : AdapterPublicWrapperStorage.Views) (created : PqxdhLiveServerConstruction.Created Unit)
+    (views : AdapterPublicWrapperStorage.Views) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential mlSource)
     (previous : ChildOperations (RustT CutM))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) NativeM)
@@ -87,17 +87,20 @@ theorem source (view : AdapterPublicWrapperState.MaterialView mlSource KemSK)
     letI : ChildOperations (RustT CutM) := AdapterPublicServerSigningNative.children (outgoing coins sign) previous writer
     Prod.map id Prod.fst <$> (((beaconcrypt_public_request.server.Server.authentication_pin (m := RustT CutM) self).run).run before) =
       (RegistrationNativePlatformExperiment.server (RegistrationNativePlatformSourceBuild.pin coins)).run before.1 := by
-  let : ChildOperations (RustT CutM) := AdapterPublicServerSigningNative.children (outgoing coins sign) previous writer
-  rw [AdapterPublicWrapperPin.server_program self _ _ (hash coins sign)
+  rw [AdapterPublicWrapperPin.server_program self _ _
     (edGetter (platform.arcView self.identity).identity_key.public_key)
-    (mlGetter (platform.arcView self.identity).mldsa_identity) (fun _ => rfl)]
+    (mlGetter (platform.arcView self.identity).mldsa_identity)]
   have identity : view.edPublic (platform.arcView self.identity).identity_key.public_key = before.1.server.pin.binding.identity_public_key :=
     related.identity.publicKey.trans related.pinIdentity.symm
   have identifier : (platform.arcView self.identity).identity_key_kid = before.1.server.pin.binding.identity_key_id :=
     related.identity.identifier.trans related.pinIdentifier.symm
   have publicKey : (view.mldsa (platform.arcView self.identity).mldsa_identity).publicKey = before.1.server.pin.public_key :=
     congrArg RegistrationNativeMldsa.Credential.publicKey related.identity.mldsa |>.trans related.pinMldsa.symm
-  rw [identity, identifier, publicKey, program_erasure, AdapterPublicServerPinGlobal.program_run]
+  rw [identity, identifier, publicKey]
+  simp only [StateT.run_pure, map_pure, Prod.map, id_eq]
+  change (pure (RustM.ok (core.option.Option.Some
+    (⟨before.1.server.pin.binding, before.1.server.pin.public_key⟩ : session.ServerAuthenticationPin)), before.1) : m _) = _
+  exact AdapterPublicServerPinGlobal.program_run coins before.1
 
 end BeaconcryptCore.Refinement.AdapterPublicServerCutPin
 

@@ -7,7 +7,7 @@ import BeaconcryptCore.Computational.PqxdhRecordLiftOrigins
 
 Generic tools for invariants of the provenance-annotated record world (`PqxdhRecordLiftOrigins.handler`) with the CE ledger, for every environment (design-v2 section 7.2, items 1 and 4):
 
-- The annotated joint step `aWorldStep` (`aWorldStep_run`, `aWorldStep_erase`, `aWorldStep_reg`, `aWorldStep_fixed`) and the ledger layer over it (`ledgerStep`); `run_keeps_origins` (replaces, on the annotated record world, design-v2's `ledger_keeps` and `run_keeps_origins` by one statement; design-v2 states `ledger_keeps` on the split game `gameWith`, and no `gameWith`-level `ledger_keeps` is proved here): every outcome of the CE ledger over the open program, interpreted by the environment and the annotated World from an admissible joint state, keeps `Good`, a stable admissibility predicate and a relation `R` between the transcript, the environment state, the World and the annotation, when every registration command keeps `R`; `world_keeps_origins` for the whole annotated record world `annotatedRun` (which erases to `PqxdhRecordLiftWorld.run`, `annotatedRun_erase`).
+- The annotated joint step `aWorldStep` (`aWorldStep_run`, `aWorldStep_erase`, `aWorldStep_reg`, `aWorldStep_fixed`) and the ledger layer over it (`ledgerStep`); `run_keeps_origins` (replaces, on the annotated record world, design-v2's `ledger_keeps` and `run_keeps_origins` by one statement; design-v2 states `ledger_keeps` on the split game `gameWith`, and no `gameWith`-level `ledger_keeps` is proved here): every outcome of the CE ledger over the open program, interpreted by the environment and the annotated World from an admissible joint state, keeps `Good`, a stable admissibility predicate and a relation `R` between the transcript, the environment state, the World and the annotation, when every registration command keeps `R`; `world_keeps_origins` for the whole annotated record world `annotatedRun` (which erases to `PqxdhRecordLiftWorld.run`, `annotatedRun_erase`); its startup obligation reads each startup constructor view through its metadata-forgotten view (`PqxdhDeploymentEnvironment.eraseCreatedMetadata`) and asks for an empty peer map, as `PqxdhDeploymentIdealEnv.world_keeps` (no AD is supplied at startup).
 - The annotation invariant `AnnInv` of the World and its annotation: every hidden origin is at a handle the World holds (`Present`), every used marker has an origin (`Covered`), every origin's marker is used (`PqxdhRecordLiftOrigins.Marked`). Every World effect keeps it, and an effect that is not a hidden install keeps the annotation (`aEffects_keeps`, through `installServer_annInv` and `installBeacon_annInv`); it reads the World only through its fixed view (`annInv_view`). For environment programs: `aRun_rel` (the annotation changes only through allowed hidden installs), `aRun_free` (no hidden install: the annotation is kept) and `aRun_owner` (hidden installs only Beacon installs at one owner: only that owner's origin changes).
 
 These are support facts; no security claim is made here.
@@ -441,7 +441,7 @@ theorem annotatedRun_erase {E X : Type} (env : Environment n E) (serverKid : Std
       PqxdhRecordLiftWorld.run setup codec route env serverKid bounds mode adversary :=
   PqxdhRecordLiftOrigins.schedule_erase setup codec route _ PqxdhRecordLiftOrigins.initial
 
-/-- Every outcome of the provenance-annotated record world with an environment whose every startup outcome is a constructed Server with an initial environment state at which the stable predicate `inv` and the relation `R` hold with the initialized fresh World, the empty transcript and the empty annotation, and whose step splits every constructed Server's registration handler relative to `inv` and keeps `R` as in `ledgerStep_keeps`: the final environment state and World are admissible and satisfy `R` with the final transcript and annotation. -/
+/-- Every outcome of the provenance-annotated record world with an environment whose every startup outcome is a constructed Server without installed peers, read through its metadata-forgotten view, with an initial environment state at which the stable predicate `inv` and the relation `R` hold with the initialized fresh World, the empty transcript and the empty annotation, and whose step splits every constructed Server's registration handler relative to `inv` and keeps `R` as in `ledgerStep_keeps`: the final environment state and World are admissible and satisfy `R` with the final transcript and annotation. -/
 theorem world_keeps_origins {X : Type} (env : Environment n (EnvState KemSK Bk))
     (reg : PqxdhLiveServerConstruction.Created Unit → PqxdhDeploymentBackend.RegImpl KemSK Bk n)
     (inv : EnvState KemSK Bk → PqxdhRecordLiftWorld.State n → Prop) (stable : Stable inv)
@@ -453,9 +453,13 @@ theorem world_keeps_origins {X : Type} (env : Environment n (EnvState KemSK Bk))
       ∀ result ∈ support ((simulateQ (aEffects setup codec route) ((env.step query).run e)).run (w, o)),
         R (transcript ++ [⟨.inl (.inr query.val), result.1.1⟩]) result.1.2 result.2.1 result.2.2)
     (born : ∀ created start, some (created, start) ∈ support env.start →
-      ∃ backend, start = PqxdhDeploymentEnvironment.envInitial created backend ∧
-        inv start (PqxdhDeploymentEnvironmentJoin.initialized created (PqxdhRecordLiftWorld.initial (n := n))) ∧
-        R [] start (PqxdhDeploymentEnvironmentJoin.initialized created (PqxdhRecordLiftWorld.initial (n := n)))
+      ∃ backend, start = PqxdhDeploymentEnvironment.envInitial (PqxdhDeploymentEnvironment.eraseCreatedMetadata created)
+          backend ∧
+        (∀ keyId, created.server.server.peers keyId = none) ∧
+        inv start (PqxdhDeploymentEnvironmentJoin.initialized
+          (PqxdhDeploymentEnvironment.eraseCreatedMetadata created) (PqxdhRecordLiftWorld.initial (n := n))) ∧
+        R [] start (PqxdhDeploymentEnvironmentJoin.initialized
+          (PqxdhDeploymentEnvironment.eraseCreatedMetadata created) (PqxdhRecordLiftWorld.initial (n := n)))
           PqxdhRecordLiftOrigins.empty)
     (serverKid : Std.U64) (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X) :
@@ -500,14 +504,16 @@ theorem world_keeps_origins {X : Type} (env : Environment n (EnvState KemSK Bk))
       Set.mem_singleton_iff] at rest
     subst rest
     cases found
-  · obtain ⟨backend, rfl, holds, rHolds⟩ := born created _ started
+  · obtain ⟨backend, rfl, noPeer, holds, rHolds⟩ := born created _ started
+    let retained := PqxdhDeploymentEnvironment.eraseCreatedMetadata created
     have vacant : w.server = none := congrArg PqxdhRecordLiftWorld.State.server fresh
     have initRun : (PqxdhRecordLiftOrigins.handler setup codec route (.inl created)).run (w, PqxdhRecordLiftOrigins.empty) =
-        pure ((), (PqxdhDeploymentEnvironmentJoin.initialized created w, PqxdhRecordLiftOrigins.empty)) := by
+        pure ((), (PqxdhDeploymentEnvironmentJoin.initialized retained w, PqxdhRecordLiftOrigins.empty)) := by
       rw [handler_other setup codec route _ _ rfl]
       change (fun result => (result.1, (result.2, PqxdhRecordLiftOrigins.empty))) <$>
         PqxdhRecordLiftWorld.initializeServer created w = _
       simp only [PqxdhRecordLiftWorld.initializeServer, vacant]
+      rw [PqxdhDeploymentIdealEnv.imported_noPeer created noPeer w]
       rfl
     dsimp only [PqxdhDeploymentEnvironmentDraw.worldRest] at rest
     rw [simulateQ_bind, StateT.run_bind, simulateQ_spec_query, initRun, pure_bind, simulateQ_bind, StateT.run_bind,
@@ -517,10 +523,10 @@ theorem world_keeps_origins {X : Type} (env : Environment n (EnvState KemSK Bk))
     subst final
     simp only [Option.some.injEq] at found
     subst found
-    have view := PqxdhDeploymentEnvironmentJoin.initialized_view created w fresh
-    exact ⟨created, run_keeps_origins setup codec route env (reg created) created inv stable (splits created) R rView
-      rQuiet (rStep created) setup.source.crypto serverKid bounds _ PqxdhDeploymentSecrecy.Ledger.empty _ _ _
-      (PqxdhDeploymentEnvironmentJoin.good_initial created backend w fresh) (stable _ _ _ view holds)
+    have view := PqxdhDeploymentEnvironmentJoin.initialized_view retained w fresh
+    exact ⟨retained, run_keeps_origins setup codec route env (reg retained) retained inv stable (splits retained) R rView
+      rQuiet (rStep retained) setup.source.crypto serverKid bounds _ PqxdhDeploymentSecrecy.Ledger.empty _ _ _
+      (PqxdhDeploymentEnvironmentJoin.good_initial retained backend w fresh) (stable _ _ _ view holds)
       (rView _ _ _ _ _ view rHolds) middle middleMember⟩
 
 end Keeps

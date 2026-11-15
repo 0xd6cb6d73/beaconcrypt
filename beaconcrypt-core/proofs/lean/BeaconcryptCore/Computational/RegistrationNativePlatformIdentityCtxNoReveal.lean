@@ -83,7 +83,7 @@ private theorem native_safe (work : RegistrationNativeIdentityFrontend.M n KemSK
   exact native_lift_safe _ (allowed owners env)
 
 private theorem free_query_safe (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (RegistrationNativePlatformIdentityProgram.Spec n KemSK).Domain)
     (allowed : ProgramAllowed (KemSK := KemSK) query) (before : RegistrationNativeIdentityWorld.Context n KemSK) :
     ((RegistrationNativePlatformIdentityCtxCompiler.free
@@ -111,7 +111,7 @@ private theorem free_query_safe (setup : Setup base KemSK) (checks : Checks)
       simp only [Allowed, IsReveal, not_false_eq_true]
 
 private theorem native_beacon_safe (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeIdentityFrontend.M n KemSK RegistrationServerRoleBackend.State source A)
     (allowed : RegistrationNativeIdentityNoReveal.Safe work)
     (before : RegistrationNativeIdentityMain.State n KemSK source × Platform) :
@@ -125,7 +125,7 @@ private theorem native_beacon_safe (setup : Setup base KemSK) (checks : Checks)
 
 /-- Every actual CTX constructor branch remains free of indexed identity reveal, with its complete counters and current state retained. -/
 theorem create_safe (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (before : RegistrationNativeIdentityMain.State n KemSK source × Platform) :
     ((RegistrationNativePlatformIdentityCtxLifecycle.create setup edPin mlPin keyId checks representation created).run before).AllQueriesSatisfy Allowed :=
@@ -134,7 +134,7 @@ theorem create_safe (setup : Setup base KemSK) (checks : Checks)
 
 /-- Corrected assigned-ID finish and its actual opening/copy/abort branches cannot issue indexed identity reveal. -/
 theorem finish_safe (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat) (packet : Option registration.ResponsePacket)
     (before : RegistrationNativeIdentityMain.State n KemSK source × Platform) :
     ((RegistrationNativePlatformIdentityCtxLifecycle.finish setup checks representation created wire index packet).run before).AllQueriesSatisfy Allowed :=
@@ -165,7 +165,7 @@ private theorem quiet_program (work : RegistrationNativePlatformIdentityProgram.
 
 /-- The actual stateful bundle, including every failed writer and signing reply, contains no indexed reveal. -/
 theorem bundle_safe {E : Type} (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) (index : Nat)
     (before : RegistrationNativeIdentityMain.State n KemSK source × Platform) :
     ((RegistrationNativePlatformIdentityCtxLifecycle.bundle setup checks representation created writer index).run before).AllQueriesSatisfy Allowed := by
@@ -214,7 +214,7 @@ variable [primitive : BeaconcryptCore.Refinement.AdapterSealPrimitive.Operations
 variable {E : Type}
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
 variable (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 variable (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
 variable (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
 variable (reserveRegistration reservePeer : StateT Platform ProbComp Bool)
@@ -231,6 +231,9 @@ private theorem dispatch_safe (query : RegistrationNativeRawAdapter.TypedSpec.Do
     ((dispatch query).run before).AllQueriesSatisfy Allowed :=
   ordinary_safe (RegistrationNativePlatformIdentityCtxDispatch.context setup checks wire route representation created credential
     view failure allocation reserveRegistration reservePeer reserveFrame erased helper writer query before.1.beacons) before
+
+attribute [local irreducible] RegistrationNativePlatformIdentityCtxDispatch.step
+  RegistrationNativePlatformIdentityMainAmbient.command
 
 /-- Every literal typed callback including every public bundle attempt has zero indexed identity reveal queries, on every source branch and from arbitrary full current state. -/
 theorem handler_safe (query : RegistrationNativeRawAdapter.TypedSpec.Domain)

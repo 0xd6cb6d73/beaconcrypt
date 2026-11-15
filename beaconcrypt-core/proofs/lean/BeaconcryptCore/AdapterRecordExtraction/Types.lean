@@ -31,7 +31,7 @@ structure shared.Decrypted where
   seq : Std.U64
 
 /-- [beaconcrypt::ratchet::execute_record_receive::closure]
-    Source: 'beaconcrypt/src/ratchet.rs', lines 593:31-597:21 -/
+    Source: 'beaconcrypt/src/ratchet.rs', lines 597:31-601:21 -/
 @[reducible]
 def ratchet.execute_record_receive.closure := Unit
 

@@ -6,6 +6,7 @@ import BeaconcryptCore.Computational.PqxdhRegistrationJointKemRawBills
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBills
 open PqxdhKemIndCca PqxdhServerAuthExperiment PqxdhJointIdentity
 open PqxdhServerAuthNative (NativeState)
@@ -131,7 +132,7 @@ theorem commands_bills (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
     (certified : ∀ source, work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = some source)
       (budget source))
     (serverReads : work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = none) reads)
-    (owners : List EncodedEntry) (log : Log) (state : NativeState KemSK) :
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log) (state : NativeState KemSK) :
     Bounds (commands setup codec checks identityIndex publicIdentity work owners log state)
       (budget (.inl 1)) (budget (.inl 5)) (PqxdhRegistrationJointOpenUniform.total caps budget) (budget (.inl 3)) := by
   have partition : ∀ kind, work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = kind)
@@ -183,7 +184,7 @@ open PqxdhRegistrationJointKemPostBills (uniformCap CcaBills)
 /-- The logged `exposeAt` hides every encapsulation of the fully exposed logged command program on the tagged logged program except the selected one. -/
 theorem exposeAt_hides (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R)
-    (work : OracleComp (Spec KemSK) X) (index : Nat) (owners : List EncodedEntry) (log : Log)
+    (work : OracleComp (Spec KemSK) X) (index : Nat) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log)
     (state : NativeState KemSK) :
     Hides setup
       (PqxdhDeploymentLaterServerCut.exposeAt setup codec checks identityIndex publicIdentity observe work index owners
@@ -228,7 +229,7 @@ theorem accept_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
 /-- The logged `exposeAt` issues at most one exposed encapsulation request on every path. -/
 theorem exposeAt_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R)
-    (work : OracleComp (Spec KemSK) X) (index : Nat) (owners : List EncodedEntry) (log : Log)
+    (work : OracleComp (Spec KemSK) X) (index : Nat) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log)
     (state : NativeState KemSK) :
     (PqxdhDeploymentLaterServerCut.exposeAt setup codec checks identityIndex publicIdentity observe work index owners
       log state).IsQueryBoundP (IsEncapsulation (KemSK := KemSK)) 1 := by
@@ -251,7 +252,7 @@ theorem exposeAt_bills (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
     (certified : ∀ source, work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = some source)
       (budget source))
     (serverReads : work.IsQueryBoundP (fun query => laterKind (KemSK := KemSK) query = none) reads)
-    (index : Nat) (owners : List EncodedEntry) (log : Log) (state : NativeState KemSK) :
+    (index : Nat) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log) (state : NativeState KemSK) :
     Bounds (PqxdhDeploymentLaterServerCut.exposeAt setup codec checks identityIndex publicIdentity observe work
         index owners log state)
       (budget (.inl 1)) (budget (.inl 5))
@@ -323,7 +324,7 @@ theorem saved (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (ch
       (PqxdhRegistrationJointOpenUniform.total caps budget + caps.encapsCost * budget (.inl 3)) 0 := by
   have bills (created : PqxdhRegistrationJointServerBirth.ClientCreated Unit) :=
     exposeAt_bills setup codec checks caps bounded created.server.server.metadata.identityIndex
-      created.publicIdentity (decideTag decision) work budget reads certified serverReads index [] []
+      created.publicIdentity (decideTag decision) work budget reads certified serverReads index ([], fun _ => none) []
       (PqxdhRegistrationJointInitializedAccept.initial created)
   constructor
   · exact pre_bound setup ensureInit supplied _ runtime count selected context.1 _ _
@@ -386,10 +387,10 @@ theorem scan_bills (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
       (fun source => (isQueryBoundP_map_iff _ _ _).mpr
         (PqxdhDeploymentLaterServerBridge.tag_bound work index _ _ (certified source)))
       ((isQueryBoundP_map_iff _ _ _).mpr (PqxdhDeploymentLaterServerBridge.tag_bound work index _ _ serverReads))
-      [] [] (PqxdhRegistrationJointInitializedAccept.initial created))
+      ([], fun _ => none) [] (PqxdhRegistrationJointInitializedAccept.initial created))
   have finished (predicate : (PqxdhLiveKemBirth.Spec KemSK).Domain → Prop) [DecidablePred predicate] (cap : Nat)
       (bound : (simulateQ (actual setup) (commands setup codec checks created.server.server.metadata.identityIndex
-        created.publicIdentity (decideTag decision <$> PqxdhDeploymentLaterServerCommands.tag work index) [] []
+        created.publicIdentity (decideTag decision <$> PqxdhDeploymentLaterServerCommands.tag work index) ([], fun _ => none) []
         (PqxdhRegistrationJointInitializedAccept.initial created))).IsQueryBoundP predicate cap) :
       (PqxdhDeploymentLaterServerCut.scanned setup codec checks decision work index created).IsQueryBoundP
         predicate cap := by

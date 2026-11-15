@@ -102,7 +102,7 @@ theorem allowed (setup : Setup base KemSK) (selected : Nat) (scalar : PqxdhJoint
     (fun _ => allQueriesSatisfy_pure _ _)
 
 private theorem native_tree (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (tree : OracleComp (RegistrationNativeBeaconFrontend.Trusted n KemSK) Value) :
     simulateQ (RegistrationNativePlatformExperiment.bundleHandler (n := n) RegistrationNativePlatformMldsaProgram.coins
@@ -123,7 +123,7 @@ private theorem native_tree (setup : Setup base KemSK) (checks : Checks)
 /-- The literal common-P public constructor has the exact eager native source result and reached platform state. -/
 theorem create_source (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (selected : Nat) (scalar : PqxdhJointGapDh.ScalarBytes) (roots : Roots)
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)

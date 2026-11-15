@@ -31,7 +31,7 @@ theorem eval_server (work : StateT (RegistrationServerFrontendCompiler.State n) 
 noncomputable def handler (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential source) :
     QueryImpl RegistrationNativeRawAdapter.TypedSpec
       (StateT (RegistrationNativeExperiment.State n KemSK source) (OracleComp (Spec source)))
@@ -47,7 +47,7 @@ noncomputable def handler (setup : Setup base KemSK) (checks : Checks) (wire : R
 theorem eval_handler (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential source)
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain) :
     evalState (handler (n := n) setup checks wire route representation created credential query) =
@@ -65,7 +65,7 @@ theorem eval_handler (setup : Setup base KemSK) (checks : Checks) (wire : Regist
 noncomputable def run (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential source) (bounds : FreshBounds) (mode : Mode)
     (work : OracleComp (ModeSpec mode) Value) (before : RegistrationNativeExperiment.State n KemSK source) :
     OracleComp (Spec source) (Value × (RegistrationNativeLedger.State × RegistrationNativeExperiment.State n KemSK source)) :=
@@ -77,7 +77,7 @@ noncomputable def run (setup : Setup base KemSK) (checks : Checks) (wire : Regis
 theorem eval_run (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential source) (bounds : FreshBounds) (mode : Mode)
     (work : OracleComp (ModeSpec mode) Value) (before : RegistrationNativeExperiment.State n KemSK source) :
     evaluate (run setup checks wire route representation created credential bounds mode work before) =

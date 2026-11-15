@@ -5,7 +5,10 @@ open OracleComp OracleSpec CoreModels Aeneas OracleComp.ProgramLogic.Relational
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeGeneratedSamplerCoupling
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPhase1AcceptanceOracle PqxdhKemIndCca PqxdhInitializerSecrecy
 open CtxRomAuth AdaptiveCtxSharedHash PqxdhSecretInputKdf PqxdhFullSecretInputKdf
@@ -42,14 +45,14 @@ local notation "Output" => PqxdhBorrowedSharedPrefix.LocalOutput (M := M) (P := 
 
 /-- The concrete input extracted from this actual generated packet and its chosen outside continuation. -/
 noncomputable def sourceInput (post : Post) (packet : Packet) :=
-  PqxdhSourceSharedInput.input setup env callbacks program post attachedVerify primitives baseImpl kem owner number ancestors disclosed packet
+  PqxdhSourceSharedInput.input (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem owner number ancestors disclosed packet
 
 /-- Changing the outside continuation of an actual pending packet changes only its Post field, with the same literal selected application continuation. -/
 theorem pending_input (first second : Post) (publicKey : TargetKemPublicKey) (secret : KemSK)
     (prefixOutput : Output) (ephemeral : List.Vector UInt8 32) (ciphertext : MlKem768Ciphertext) (start : Input)
-    (same : sourceInput setup env callbacks program owner number attachedVerify primitives baseImpl kem ancestors disclosed first
+    (same : sourceInput (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program owner number attachedVerify primitives baseImpl kem ancestors disclosed first
       ⟨publicKey, secret, .pending prefixOutput ephemeral, ciphertext⟩ = Sum.inr start) :
-    sourceInput setup env callbacks program owner number attachedVerify primitives baseImpl kem ancestors disclosed second
+    sourceInput (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program owner number attachedVerify primitives baseImpl kem ancestors disclosed second
       ⟨publicKey, secret, .pending prefixOutput ephemeral, ciphertext⟩ =
       Sum.inr {start with post := second prefixOutput.context.selection.1} := by
   simp only [sourceInput, PqxdhSourceSharedInput.input, PqxdhInitialPreparedSourceInput.input,
@@ -60,25 +63,25 @@ theorem pending_input (first second : Post) (publicKey : TargetKemPublicKey) (se
 /-- The actual pending source packet executes the prepared carrier with its own selected adversary and the shared source input; only the explicit world wrapper differs. -/
 theorem after_pending (publicKey : TargetKemPublicKey) (secret : KemSK)
     (prefixOutput : Output) (ephemeral : List.Vector UInt8 32) (ciphertext : MlKem768Ciphertext) (start : Input)
-    (same : sourceInput setup env callbacks program owner number attachedVerify primitives baseImpl kem ancestors disclosed
+    (same : sourceInput (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program owner number attachedVerify primitives baseImpl kem ancestors disclosed
       (PqxdhRecordConfidentialityChallenge.post adversary owner number false)
       ⟨publicKey, secret, .pending prefixOutput ephemeral, ciphertext⟩ = Sum.inr start)
     (output : HmacBlock) (depth : Nat) (bit : Bool) :
-    PqxdhLaterChallengeSampler.after setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed
+    PqxdhLaterChallengeSampler.after (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed
       ⟨publicKey, secret, .pending prefixOutput ephemeral, ciphertext⟩ output depth =
-    PqxdhLaterChallengeSampler.prepared setup env callbacks owner number bit attachedVerify primitives baseImpl kem
+    PqxdhLaterChallengeSampler.prepared (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks owner number bit attachedVerify primitives baseImpl kem
       secret ciphertext start output depth (adversary prefixOutput.context.selection.1) := by
-  have actual := pending_input setup env callbacks program owner number attachedVerify primitives baseImpl kem ancestors disclosed
+  have actual := pending_input (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program owner number attachedVerify primitives baseImpl kem ancestors disclosed
     (PqxdhRecordConfidentialityChallenge.post adversary owner number false)
     (PqxdhRecordConfidentialityChallenge.post adversary owner number bit) publicKey secret prefixOutput ephemeral ciphertext start same
-  change (match sourceInput setup env callbacks program owner number attachedVerify primitives baseImpl kem ancestors disclosed
+  change (match sourceInput (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program owner number attachedVerify primitives baseImpl kem ancestors disclosed
       (PqxdhRecordConfidentialityChallenge.post adversary owner number bit)
       ⟨publicKey, secret, .pending prefixOutput ephemeral, ciphertext⟩ with
     | .inl decision => pure (Sum.inl decision, none)
-    | .inr input => PqxdhLaterChallengeSampler.prepared setup env callbacks owner number bit attachedVerify primitives baseImpl kem
+    | .inr input => PqxdhLaterChallengeSampler.prepared (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks owner number bit attachedVerify primitives baseImpl kem
         secret ciphertext input output depth (adversary prefixOutput.context.selection.1)) = _
   rw [actual]
-  exact PqxdhLaterChallengeGeneratedCoupling.prepared_post setup env callbacks owner number attachedVerify primitives baseImpl kem
+  exact PqxdhLaterChallengeGeneratedCoupling.prepared_post (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks owner number attachedVerify primitives baseImpl kem
     secret ciphertext start output depth bit (adversary prefixOutput.context.selection.1) _
 
 /-- The relation records actual incoming packets and caches, their literal selected source input, and the complete resulting prepared-carrier relation. Common completed decisions are retained exactly. -/
@@ -90,7 +93,7 @@ noncomputable def AfterRelated (output : HmacBlock) (first second : Bool)
     left = ((Sum.inl leftDecision, none), beforeLeft.2) ∧ right = ((Sum.inl rightDecision, none), beforeRight.2)) ∨
   ∃ prefixOutput ephemeral start,
     beforeLeft = beforeRight ∧ beforeLeft.1.state = .pending prefixOutput ephemeral ∧
-    sourceInput setup env callbacks program owner number attachedVerify primitives baseImpl kem ancestors disclosed
+    sourceInput (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program owner number attachedVerify primitives baseImpl kem ancestors disclosed
       (PqxdhRecordConfidentialityChallenge.post adversary owner number false) beforeLeft.1 = Sum.inr start ∧
     PqxdhLaterChallengeGeneratedCoupling.PreparedRelated setup env callbacks owner number attachedVerify primitives baseImpl kem
       beforeLeft.1.secretKey beforeLeft.1.ciphertext start output first second (adversary prefixOutput.context.selection.1) left right
@@ -100,24 +103,24 @@ theorem after (output : HmacBlock) (depth : Nat) (first second : Bool)
     (beforeLeft beforeRight : Packet × CtxRO.QueryCache)
     (related : PqxdhLaterChallengePreparationCoupling.PacketRelated setup program beforeLeft beforeRight) :
     RelTriple
-      ((simulateQ hashImpl (PqxdhLaterChallengeSampler.after setup env callbacks program adversary owner number first attachedVerify primitives baseImpl kem ancestors disclosed
+      ((simulateQ hashImpl (PqxdhLaterChallengeSampler.after (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number first attachedVerify primitives baseImpl kem ancestors disclosed
         beforeLeft.1 output depth)).run beforeLeft.2)
-      ((simulateQ hashImpl (PqxdhLaterChallengeSampler.after setup env callbacks program adversary owner number second attachedVerify primitives baseImpl kem ancestors disclosed
+      ((simulateQ hashImpl (PqxdhLaterChallengeSampler.after (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number second attachedVerify primitives baseImpl kem ancestors disclosed
         beforeRight.1 output depth)).run beforeRight.2)
-      (AfterRelated setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed output first second beforeLeft beforeRight) := by
+      (AfterRelated (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed output first second beforeLeft beforeRight) := by
   rcases related with rfl | ⟨leftCompleted, rightCompleted⟩
   · rcases beforeLeft with ⟨⟨publicKey, secret, state, ciphertext⟩, cache⟩
     cases state with
     | completed decision =>
       exact relTriple_pure_pure (Or.inl ⟨decision, decision, rfl, rfl, rfl, rfl⟩)
     | pending prefixOutput ephemeral =>
-      obtain ⟨start, same⟩ : ∃ start, sourceInput setup env callbacks program owner number attachedVerify primitives baseImpl kem ancestors disclosed
+      obtain ⟨start, same⟩ : ∃ start, sourceInput (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program owner number attachedVerify primitives baseImpl kem ancestors disclosed
         (PqxdhRecordConfidentialityChallenge.post adversary owner number false)
         ⟨publicKey, secret, .pending prefixOutput ephemeral, ciphertext⟩ = Sum.inr start := ⟨_, rfl⟩
-      rw [after_pending setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed publicKey secret prefixOutput ephemeral ciphertext start same output depth first,
-        after_pending setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed publicKey secret prefixOutput ephemeral ciphertext start same output depth second]
+      rw [after_pending (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed publicKey secret prefixOutput ephemeral ciphertext start same output depth first,
+        after_pending (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed publicKey secret prefixOutput ephemeral ciphertext start same output depth second]
       exact relTriple_post_mono
-        (PqxdhLaterChallengeGeneratedCoupling.prepared setup env callbacks owner number attachedVerify primitives baseImpl kem
+        (PqxdhLaterChallengeGeneratedCoupling.prepared (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks owner number attachedVerify primitives baseImpl kem
           secret ciphertext start output depth first second (adversary prefixOutput.context.selection.1) cache)
         (fun _ _ paired => Or.inr ⟨prefixOutput, ephemeral, start, rfl, rfl, same, paired⟩)
   · rcases beforeLeft with ⟨⟨leftPublic, leftSecret, leftState, leftCiphertext⟩, leftCache⟩
@@ -143,7 +146,7 @@ noncomputable def finish (packet : Packet) (parent : FullOutput) (nonce : NonceO
 noncomputable def Related (first second : Bool) (left right : Carrier × CtxRO.QueryCache) : Prop :=
   ∃ beforeLeft beforeRight output parent nonce chain leftAfter rightAfter,
     PqxdhLaterChallengePreparationCoupling.PacketRelated setup program beforeLeft beforeRight ∧
-    AfterRelated setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+    AfterRelated (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
       output first second beforeLeft beforeRight leftAfter rightAfter ∧
     left = finish setup program beforeLeft.1 parent nonce chain leftAfter ∧
     right = finish setup program beforeRight.1 parent nonce chain rightAfter
@@ -151,12 +154,12 @@ noncomputable def Related (first second : Bool) (left right : Carrier × CtxRO.Q
 /-- The two full original later-challenge samplers are coupled from actual KEM generation through source selection, the literal collector and every original material draw. Complete common/cached/refusal outcomes retain both full marginals. -/
 theorem run (depth : Nat) (first second : Bool) (cache : CtxRO.QueryCache) :
     RelTriple
-      ((simulateQ hashImpl (PqxdhLaterChallengeSampler.run setup env callbacks program adversary owner number first attachedVerify primitives baseImpl kem ancestors disclosed depth)).run cache)
-      ((simulateQ hashImpl (PqxdhLaterChallengeSampler.run setup env callbacks program adversary owner number second attachedVerify primitives baseImpl kem ancestors disclosed depth)).run cache)
-      (Related setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed first second) := by
+      ((simulateQ hashImpl (PqxdhLaterChallengeSampler.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number first attachedVerify primitives baseImpl kem ancestors disclosed depth)).run cache)
+      ((simulateQ hashImpl (PqxdhLaterChallengeSampler.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number second attachedVerify primitives baseImpl kem ancestors disclosed depth)).run cache)
+      (Related (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed first second) := by
   simp only [PqxdhLaterChallengeSampler.run, simulateQ_bind, StateT.run_bind, simulateQ_pure, StateT.run_pure]
   refine relTriple_bind
-    (PqxdhLaterChallengePreparationCoupling.prepare setup env callbacks program attachedVerify primitives baseImpl kem
+    (PqxdhLaterChallengePreparationCoupling.prepare (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program attachedVerify primitives baseImpl kem
       (PqxdhRecordConfidentialityChallenge.post adversary owner number first)
       (PqxdhRecordConfidentialityChallenge.post adversary owner number second) cache) ?_
   intro beforeLeft beforeRight packets
@@ -164,7 +167,7 @@ theorem run (depth : Nat) (first second : Bool) (cache : CtxRO.QueryCache) :
   refine relTriple_bind (relTriple_refl _) ?_
   rintro output _ rfl
   refine relTriple_bind
-    (after setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+    (after (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
       output depth first second beforeLeft beforeRight packets) ?_
   intro leftAfter rightAfter collected
   refine relTriple_bind (relTriple_refl _) ?_
@@ -190,7 +193,7 @@ noncomputable def CarriedRelated (first second : Bool)
     (left right : (Carrier × Option program.Selection) × CtxRO.QueryCache) : Prop :=
   ∃ beforeLeft beforeRight output parent nonce chain leftAfter rightAfter,
     PqxdhLaterChallengePreparationCoupling.PacketRelated setup program beforeLeft beforeRight ∧
-    AfterRelated setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+    AfterRelated (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
       output first second beforeLeft beforeRight leftAfter rightAfter ∧
     left = finishSelected setup program beforeLeft.1 parent nonce chain leftAfter ∧
     right = finishSelected setup program beforeRight.1 parent nonce chain rightAfter
@@ -198,12 +201,12 @@ noncomputable def CarriedRelated (first second : Bool)
 /-- The actual selection-retaining sampler has the same full coupling, with complete common outcomes, source-selected continuation and all original material draws kept. This is the carrier used by the same-source event lemmas. -/
 theorem carried (depth : Nat) (first second : Bool) (cache : CtxRO.QueryCache) :
     RelTriple
-      ((simulateQ hashImpl (PqxdhLaterChallengeGeneratedContinuation.run setup env callbacks program adversary owner number first attachedVerify primitives baseImpl kem ancestors disclosed depth)).run cache)
-      ((simulateQ hashImpl (PqxdhLaterChallengeGeneratedContinuation.run setup env callbacks program adversary owner number second attachedVerify primitives baseImpl kem ancestors disclosed depth)).run cache)
-      (CarriedRelated setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed first second) := by
+      ((simulateQ hashImpl (PqxdhLaterChallengeGeneratedContinuation.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number first attachedVerify primitives baseImpl kem ancestors disclosed depth)).run cache)
+      ((simulateQ hashImpl (PqxdhLaterChallengeGeneratedContinuation.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number second attachedVerify primitives baseImpl kem ancestors disclosed depth)).run cache)
+      (CarriedRelated (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed first second) := by
   simp only [PqxdhLaterChallengeGeneratedContinuation.run, simulateQ_bind, StateT.run_bind, simulateQ_pure, StateT.run_pure]
   refine relTriple_bind
-    (PqxdhLaterChallengePreparationCoupling.prepare setup env callbacks program attachedVerify primitives baseImpl kem
+    (PqxdhLaterChallengePreparationCoupling.prepare (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program attachedVerify primitives baseImpl kem
       (PqxdhRecordConfidentialityChallenge.post adversary owner number first)
       (PqxdhRecordConfidentialityChallenge.post adversary owner number second) cache) ?_
   intro beforeLeft beforeRight packets
@@ -211,7 +214,7 @@ theorem carried (depth : Nat) (first second : Bool) (cache : CtxRO.QueryCache) :
   refine relTriple_bind (relTriple_refl _) ?_
   rintro output _ rfl
   refine relTriple_bind
-    (after setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+    (after (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
       output depth first second beforeLeft beforeRight packets) ?_
   intro leftAfter rightAfter collected
   refine relTriple_bind (relTriple_refl _) ?_

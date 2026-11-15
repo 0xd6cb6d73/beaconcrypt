@@ -28,7 +28,7 @@ PRIMARY = [
     "event(RegistrationBeaconOpened(owner_2,attempt_2,target_2,opened_52,frame_1)) ==> event(RegistrationBeaconRawPlan(owner_2,attempt_2,target_2,material_52,next_52,skipped_1327))",
     "event(RegistrationBeaconClosedRejected(owner_2,attempt_2)) ==> event(RegistrationBeaconAttempt(owner_2,prior,raw_1))",
     "event(RegistrationBeaconPinRejected(owner_2,attempt_2,server)) ==> event(RegistrationBeaconDhComplete(owner_2,attempt_2,server)) && event(RegistrationBeaconSharedCleared(owner_2,attempt_2))",
-    "event(RegistrationBeaconCommitted(owner_2,attempt_2,raw_1,assigned_1,ad,payload,send_1,receive_1,cache)) ==> event(RegistrationBeaconPrepared(owner_2,attempt_2,root_1,send_1,hkdf_first_32(hkdf_sha512_no_salt(root_1,symmetric_ratchet_domain)))) && send_1 = hkdf_second_32(hkdf_sha512_no_salt(root_1,symmetric_ratchet_domain)) && receive_1 = hkdf_second_32(hkdf_sha512_no_salt(hkdf_first_32(hkdf_sha512_no_salt(root_1,symmetric_ratchet_domain)),symmetric_ratchet_domain)) && cache = receive_cache_empty",
+    "event(RegistrationBeaconCommitted(owner_2,attempt_2,raw_1,assigned_1,ad,payload,send_1,receive_1,cache)) ==> event(RegistrationBeaconPrepared(owner_2,attempt_2,root_1,send_1,hkdf_first_32(hkdf_sha512_no_salt(root_1,initial_ratchet_domain)))) && send_1 = hkdf_second_32(hkdf_sha512_no_salt(root_1,initial_ratchet_domain)) && receive_1 = hkdf_second_32(hkdf_sha512_no_salt(hkdf_first_32(hkdf_sha512_no_salt(root_1,initial_ratchet_domain)),symmetric_ratchet_domain)) && cache = receive_cache_empty",
 ]
 VERDICTS = ["true"] * 6 + ["unknown", "true", "true"]
 TAIL = [
@@ -130,10 +130,10 @@ def check_source_order():
         "pub(crate) fn authenticate_response",
         [
             "registration::begin_response_authentication(pending, packet)?",
-            "execute_hash(&pending.request())",
-            "pending.resume(digest)?",
+            "let digest = execute_hash(&pending.request()); let pending = pending.resume(digest)?;",
             "verify_requested(&pending.request())",
-            "pending.resume(verified)",
+            "let pending = pending.resume(verified)?;",
+            "let digest = execute_hash(&pending.request()); pending.resume(digest)",
         ],
     )
     begin = BASE.rust_body(

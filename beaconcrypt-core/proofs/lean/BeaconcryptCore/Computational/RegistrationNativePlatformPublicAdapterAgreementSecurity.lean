@@ -99,6 +99,30 @@ theorem bound (crypto :Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMateri
           identityIndex identifier rng bounds mode adversary crypto correct previous budget bounded functional result supported origin marker)).elim
   exact covered.trans (included.trans (exceptions_bound (n:=n) configuration (pure true) identityIndex identifier bounds mode adversary previous budget bounded functional))
 
+include objects in
+/-- The original source event and loss are unchanged. Every already eligible good execution additionally carries the physical pre-record hash receipt and the exact consumed response-authentication digest for the same partner values. -/
+theorem bound_with_session_ad (crypto :Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMaterial AD PT CT)
+    (correct :configuration.keyView.Correct) (previous :P) (budget :PqxdhDeploymentInterface.Budget)
+    (bounded :∀publication,RegistrationNativePlatformPublicAdapterInterface.Respects mode budget (adversary publication))
+    (functional :PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem) :
+    Pr{let result←(RegistrationNativePlatformPublicAdapterExecution.profile (n:=n) configuration identityIndex identifier rng bounds mode adversary
+      (event (setup:=setup) crypto)).run previous}[result.1=true]≤
+      loss (n:=n) configuration identityIndex identifier bounds mode adversary previous budget ∧
+      ∀ (result : RegistrationNativeKemRecipientLogSource.Result KemSK
+        (Option (RegistrationNativePlatformKemInitializedJournal.History n source Value P)×P) budget.create),
+        result ∈ support (RegistrationNativePlatformPublicAdapterSourceAgreementGame.experiment (n:=n) configuration
+          (pure true) identityIndex identifier bounds mode adversary previous budget functional) →
+        ¬ RegistrationNativePlatformOrdinaryKemExceptions.OriginCollision source (result.2.1.1.1,result.2.1.2) →
+        result.2.2 ≠ true →
+        RegistrationNativePlatformPublicAdapterSourceAgreementGame.HoldsWithSessionAd configuration objects (pure true)
+          (RegistrationNativePlatformPublicAdapterUnifiedStartupEd.contract configuration)
+          identityIndex identifier rng bounds mode adversary crypto previous (result.2.1.1.1,result.2.1.2) := by
+  refine ⟨bound configuration objects identityIndex identifier rng bounds mode adversary crypto correct previous budget bounded functional, ?_⟩
+  intro result supported origin marker
+  exact RegistrationNativePlatformPublicAdapterSourceAgreementCoverage.coverage_with_session_ad configuration objects (pure true)
+    (RegistrationNativePlatformPublicAdapterUnifiedStartupEd.contract configuration)
+    identityIndex identifier rng bounds mode adversary crypto correct previous budget bounded functional result supported origin marker
+
 end BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterAgreementSecurity
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterAgreementSecurity.exceptions_bound' depends on axioms: [propext,
@@ -112,3 +136,9 @@ end BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterAgreeme
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterAgreementSecurity.bound
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterAgreementSecurity.bound_with_session_ad' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterAgreementSecurity.bound_with_session_ad

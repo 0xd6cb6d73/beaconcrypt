@@ -161,22 +161,34 @@ theorem accept_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
   rintro ⟨(reply | _ | _), after⟩ <;> try trivial
   cases reply <;> trivial
 
-set_option backward.isDefEq.respectTransparency false in
-/-- One actual optional build has at most one CTX miss; token removal, failed writers, and the complete installed state remain executed. -/
-theorem native_build_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
-    (session : Nat) (payload : Option Pqxdh.Bytes) (state : NativeState KemSK) :
-    ((nativeBuild setup codec checks session payload).run state).IsTotalQueryBound 64 := by
-  simp only [nativeBuild, StateT.run, nativeGet_bind]
-  cases state.2.pending session <;> try trivial
-  simp only [nativeCoins_bind, nativeSet_bind]
-  exact isTotalQueryBound_bind (n₂ := 0)
-    (build_uniform setup codec checks _ _ payload state.2.server ([], state.2.ctx)) (fun _ => by trivial)
-
 /-- The public hash callback uses the original shared CTX cache, with zero draws on hits and at most 64 on misses. -/
 theorem hash_uniform (bytes : Pqxdh.Bytes) (state : NativeState KemSK) :
     ((nativeHash bytes).run state).IsTotalQueryBound 64 := by
   simpa only [nativeHash, StateT.run, IsTotalQueryBound, isQueryBound_map_iff] using
     CtxComputationalSecurity.ctxRandomOracle_total_query_bound ((), bytes) state.2.ctx
+
+set_option backward.isDefEq.respectTransparency false in
+/-- One actual optional build has at most two CTX misses (the Server transcript hash and the commitment); token removal, pre-hash rejection, failed writers, and the complete installed state remain executed. -/
+theorem native_build_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (session : Nat) (payload : Option Pqxdh.Bytes) (state : NativeState KemSK) :
+    ((nativeBuild setup codec checks session payload).run state).IsTotalQueryBound 128 := by
+  simp only [nativeBuild, StateT.run, nativeGet_bind]
+  cases found : state.2.pending session with
+  | none => trivial
+  | some token =>
+    cases pre : PqxdhServerRegistrationPublication.prehash state.2.server token.pending payload with
+    | none =>
+      simp only [pre, nativeSet_bind]
+      trivial
+    | some candidate =>
+      simp only [pre]
+      rw [native_bind_run]
+      refine (isTotalQueryBound_bind (n₂ := 64) (hash_uniform _ state) ?_).mono (by omega)
+      intro hashed
+      simp only [nativeGet_bind, nativeCoins_bind, nativeSet_bind]
+      exact isTotalQueryBound_bind (n₂ := 0)
+        (build_uniform (PqxdhTranscriptAd.adOf hashed.1) setup codec checks _ _ payload hashed.2.2.server
+          ([], hashed.2.2.ctx)) (fun _ => by trivial)
 
 /-- The original public HMAC endpoint pays one possible restricted Extract miss; outside that approved slice it keeps the real deterministic HMAC. -/
 theorem hmac_family_uniform (setup : Setup baseSpec KemSK) (seed : IdentitySeed) (scalar : ScalarBytes)

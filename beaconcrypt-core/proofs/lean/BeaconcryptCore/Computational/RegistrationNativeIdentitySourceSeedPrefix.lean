@@ -17,7 +17,7 @@ variable {source : RegistrationNativeMldsa.Source}
 /-- Every actual indexed source callback preserves all earlier seed indices, including failed services and all ordinary World effects. -/
 theorem query_prefix (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (query : (Trusted n KemSK).Domain)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (query : (Trusted n KemSK).Domain)
     (before : State n KemSK) (result : (Trusted n KemSK).Range query × State n KemSK)
     (supported : result ∈ support ((implementation (mlSource := source) setup checks representation created query).run before)) :
     before.identities.seeds.IsPrefix result.2.identities.seeds := by
@@ -47,7 +47,7 @@ theorem query_prefix (setup : Setup base KemSK) (checks : Checks)
 /-- Every complete adaptive identity-frontend source program retains the original private seed roster as a prefix. -/
 theorem program_prefix (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (work : OracleComp (Trusted n KemSK) Value)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (work : OracleComp (Trusted n KemSK) Value)
     (before : State n KemSK) (result : Value × State n KemSK)
     (supported : result ∈ support ((simulateQ (implementation (mlSource := source) setup checks representation created) work).run before)) :
     before.identities.seeds.IsPrefix result.2.identities.seeds := by

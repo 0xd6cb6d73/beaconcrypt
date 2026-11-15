@@ -16,7 +16,7 @@ variable {mlSource : RegistrationNativeMldsa.Source}
 /-- Actual ambient primitives do not read the fixed independent native owner roster. -/
 theorem trusted_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (owners : RegistrationNativeBeaconFrontend.State mlSource)
     (query : (RegistrationNativeBeaconFrontend.Trusted n KemSK).Domain) (before : Context n KemSK) :
     Prod.map id (attach owners) <$> (ambient (mlSource := mlSource) setup checks representation created query).run before =
@@ -30,7 +30,7 @@ theorem trusted_source (setup : Setup base KemSK) (checks : Checks)
 /-- Complete adaptive ambient source programs restore the original native trusted execution. -/
 theorem trusted_program (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (owners : RegistrationNativeBeaconFrontend.State mlSource)
     (work : OracleComp (RegistrationNativeBeaconFrontend.Trusted n KemSK) Value) (before : Context n KemSK) :
     Prod.map id (attach owners) <$> (simulateQ (ambient (mlSource := mlSource) setup checks representation created) work).run before =
@@ -48,7 +48,7 @@ def assemble (result : ((Value × RegistrationNativeBeaconFrontend.State mlSourc
 /-- Whole original native Beacon execution is recovered from its full owner/Env ambient source program. -/
 theorem beacon_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK mlSource RegistrationServerRoleBackend.State Value)
     (owners : RegistrationNativeBeaconFrontend.State mlSource) (before : Context n KemSK) :
     assemble <$> (simulateQ (ambient (mlSource := mlSource) setup checks representation created)

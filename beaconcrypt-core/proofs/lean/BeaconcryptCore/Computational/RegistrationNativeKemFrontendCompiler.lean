@@ -26,7 +26,7 @@ private def withWorld (before : RegistrationNativeExperiment.State n KemSK mlSou
 theorem build_source (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (session : Nat) (application : Option (Slice U8)) (before : RegistrationNativeExperiment.State n KemSK mlSource) :
     Prod.map id nativeProject <$>
         (RegistrationNativeExperiment.server (RegistrationServerSdkSource.build setup (ledgerCodec wire) checks
@@ -50,7 +50,7 @@ theorem build_source (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
 theorem record_source (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (query : RecordQuery) (before : RegistrationNativeExperiment.State n KemSK mlSource) :
     Prod.map id nativeProject <$> (RegistrationNativeExperiment.record setup wire route query mlSource).run before =
       (simulateQ (source setup checks wire route representation created credential)

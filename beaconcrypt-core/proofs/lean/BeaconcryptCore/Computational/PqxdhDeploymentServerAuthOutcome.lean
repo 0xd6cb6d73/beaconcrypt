@@ -23,10 +23,24 @@ theorem finish_some (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   simp only [finishOracle, StateT.run_bind, StateT.run_get, pure_bind] at supported
   cases active : before.beacon.beacon.phase with
   | initSent control prekey oneTime kem =>
-      simp only [active, StateT.run_bind, mem_support_bind_iff] at supported
-      obtain ⟨staged, _, supported⟩ := supported
-      simp only [StateT.run_get, StateT.run_set, StateT.run_pure, support_pure,
-        Set.mem_singleton_iff] at supported
+      simp only [active] at supported
+      cases retained : before.beaconInit with
+      | none =>
+          simp only [retained, StateT.run_bind, StateT.run_set, StateT.run_pure, pure_bind, support_pure,
+            Set.mem_singleton_iff, Prod.mk.injEq] at supported
+          simp [PqxdhBeaconPhase2Publication.finish, PqxdhBeaconPhase2Preparation.abort] at supported
+      | some init =>
+      cases decoded : responseOf codec raw with
+      | none =>
+          simp only [retained, decoded, StateT.run_bind, StateT.run_set, StateT.run_pure, pure_bind, support_pure,
+            Set.mem_singleton_iff, Prod.mk.injEq] at supported
+          simp [PqxdhBeaconPhase2Publication.finish, PqxdhBeaconPhase2Preparation.abort] at supported
+      | some response =>
+      simp only [retained, decoded, StateT.run_bind, mem_support_bind_iff] at supported
+      obtain ⟨hashed, _, supported⟩ := supported
+      simp only [StateT.run_get] at supported
+      obtain ⟨_, rfl, staged, _, supported⟩ := supported
+      simp only [StateT.run_set, StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
       obtain ⟨_, rfl, _, rfl, same⟩ := supported
       have resultEq := congrArg Prod.fst same
       have stateEq := congrArg Prod.snd same
@@ -116,8 +130,8 @@ theorem agreement_keys (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
         result.state.2.map publicCall ∧
       candidateOf codec acceptRaw = some candidate ∧
       acceptedKeys setup.source.crypto candidate = some (targetKeys setup result.context) := by
-  obtain ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, token, _, _, _, _, acceptCall, acceptRaw, input, consumed,
-    _, _, _, _, acceptMember, acceptEq, prefixed, _, _, _, sessionEq, _⟩ := agreement
+  obtain ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, token, _, _, _, _, _, _, _, acceptCall, acceptRaw, input,
+    consumed, _, _, _, _, _, _, _, acceptMember, acceptEq, prefixed, _, _, _, _, sessionEq, _⟩ := agreement
   have native : (some (PqxdhServerStaticDhSource.concreteInputs setup.joint result.context.seed input), consumed) ∈
       support ((nativePrefix setup codec checks result.context.seed acceptRaw).run acceptCall.before.server.consumed) := by
     rw [native_prefix, StateT.run_map, support_map]

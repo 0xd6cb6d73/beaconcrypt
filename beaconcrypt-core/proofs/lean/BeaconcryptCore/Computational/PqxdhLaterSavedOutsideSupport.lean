@@ -5,7 +5,9 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterSavedOutsideSupport
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhInitialPostContext RawCtxForwardTags
 variable {ι M P I D K X Response Shared Result Origin : Type} {extra : OracleSpec ι} {S B : Nat}
 
@@ -14,7 +16,7 @@ def Returns (property : Result → Prop)
     (context : PqxdhInitialOriginContext.Context extra M P I D K Result Origin S B) : Prop :=
   match context.original with
   | .inl (.record _ _ outside _) => ∀ reply value, value ∈ support (outside reply) → property value
-  | .inl (.finish _ _ _ _ outside _) => ∀ reply value, value ∈ support (outside reply) → property value
+  | .inl (.finish _ _ _ _ _ outside _) => ∀ reply value, value ∈ support (outside reply) → property value
   | .inr builder => ∀ reply value, value ∈ support (builder.outside reply) → property value
 
 private theorem record_returns (property : Result → Prop) (sender : M → Std.U64)
@@ -53,7 +55,7 @@ private theorem finish_returns (property : Result → Prop) (mark : PqxdhBeaconP
       OracleComp (PqxdhInitialOriginForwardPost.Spec extra M P I D K X Response Shared Result Origin S B) (Result × (NativeFront M P I D K S B × PqxdhInitialOriginPost.Trace Origin S B)))
     (valid : ∀ reply value, value ∈ support (outside reply) → property value)
     (later : ∀ reply updated saved, All (Returns property) (after reply updated saved)) :
-    All (Returns property) (PqxdhInitialOriginForwardPost.finish mark decode index raw before trace outside after) := by
+    All (Returns property) (PqxdhInitialOriginForwardPost.finish (completedBinding := completedBinding) mark decode index raw before trace outside after) := by
   unfold PqxdhInitialOriginForwardPost.finish
   cases phase : (before.roles.1.2 index).beacon.phase
   case initSent control prekey oneTime kem =>
@@ -78,7 +80,7 @@ private theorem finish_returns (property : Result → Prop) (mark : PqxdhBeaconP
                 · unfold PqxdhInitialOriginForwardPost.ownerLift
                   apply lift_all (fun _ => True) (Returns property)
                     (fun inner => ⟨.inl (.finish index before control
-                      (PqxdhBeaconPhase2Shared.clearedMetadata prepared.metadata) outside inner), trace, some (mark prepared.root)⟩)
+                      (PqxdhBeaconPhase2Shared.clearedMetadata prepared.metadata) prepared.metadata.associatedData outside inner), trace, some (mark prepared.root)⟩)
                     (fun _ _ => valid)
                   exact PqxdhLaterChallengeCapture.all_true _
                 · exact fun result => later _ _ _
@@ -91,7 +93,7 @@ theorem program_returns (property : Result → Prop)
     (client : OracleComp (PostSpec extra S B) Result)
     (valid : ∀ value, value ∈ support client → property value)
     (before : NativeFront M P I D K S B) (trace : PqxdhInitialOriginPost.Trace Origin S B) :
-    All (Returns property) (PqxdhInitialOriginForwardPost.program (X := X) (Response := Response) (Shared := Shared)
+    All (Returns property) (PqxdhInitialOriginForwardPost.program (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
       mark sender route decode client before trace) := by
   induction client using OracleComp.inductionOn generalizing before trace with
   | pure value => trivial
@@ -106,7 +108,7 @@ theorem program_returns (property : Result → Prop)
       · exact plain_returns property _ _ (fun reply => later reply before trace)
       · cases request with
         | finish index raw =>
-            exact finish_returns property mark decode index raw before trace outside _ nextValid later
+            exact finish_returns (completedBinding := completedBinding) property mark decode index raw before trace outside _ nextValid later
 
 /-- A supported actual Post cut carries the outside-return property of its original complete callback. The whole reached state stays in the scan premise. -/
 theorem scan_returns {State : Type} (property : Result → Prop)
@@ -121,12 +123,12 @@ theorem scan_returns {State : Type} (property : Result → Prop)
     (state reached : State) (context : PqxdhInitialOriginContext.Context extra M P I D K Result Origin S B)
     (supported : RawCtxForwardScan.Cut.pending context reached ∈ support
       (RawCtxForwardScan.scan PqxdhInitialOriginForwardPost.selected selected selection impl
-        (PqxdhInitialOriginForwardPost.program mark sender route decode client before trace)
-        (PqxdhInitialOriginForwardPost.program_covered mark sender route decode client before trace) state)) :
+        (PqxdhInitialOriginForwardPost.program (completedBinding := completedBinding) mark sender route decode client before trace)
+        (PqxdhInitialOriginForwardPost.program_covered (completedBinding := completedBinding) mark sender route decode client before trace) state)) :
     Returns property context :=
   RawCtxForwardTags.scan_all PqxdhInitialOriginForwardPost.selected selected selection impl (Returns property) _
-    (PqxdhInitialOriginForwardPost.program_covered mark sender route decode client before trace)
-    (program_returns property mark sender route decode client valid before trace) state reached context supported
+    (PqxdhInitialOriginForwardPost.program_covered (completedBinding := completedBinding) mark sender route decode client before trace)
+    (program_returns (completedBinding := completedBinding) property mark sender route decode client valid before trace) state reached context supported
 
 end BeaconcryptCore.Computational.PqxdhLaterSavedOutsideSupport
 

@@ -34,7 +34,7 @@ theorem source (native : QueryImpl AdapterInitAuthenticationStateful.NativeSpec 
       (((beaconcrypt_public_request.server.Server.authenticate_registration_lookup
         (m := RustT (StateT S ProbComp)) self input).run).run before) →
       ∃ publicKey, beaconcrypt_crypto.crypto_sign.PublicKey.from_bytes
-        lookup.authenticated.binding.beacon_identity_public_key.to_slice = .ok (.Ok publicKey) := by
+        lookup.authenticated.registration.beacon_identity_public_key.to_slice = .ok (.Ok publicKey) := by
   let : ChildOperations (RustT (StateT S ProbComp)) := AdapterPublicWrapperChildren.children
     (AdapterPublicWrapperChildNative.normalAuthentication native) recording writer
   let : Codecs (RustT (StateT S ProbComp)) := AdapterPublicConcreteCodecs.codecs

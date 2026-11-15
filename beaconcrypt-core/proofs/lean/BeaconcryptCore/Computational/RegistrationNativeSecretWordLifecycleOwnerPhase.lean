@@ -137,8 +137,7 @@ private theorem outgoing_keeps (setup : Setup base KemSK) (index target : Nat) (
   classical
   rcases query with (hashRequest | signRequest) | edRequest
   · exact lift_keeps index _
-  · exact bind_keeps index _ _ (sample_keeps index _) (fun _ =>
-      bind_keeps index _ _ (lift_keeps index _) (fun _ => pure_keeps index _))
+  · exact pure_keeps index _
   · simp only [RegistrationNativeBeaconFrontend.outgoing]
     split
     · exact bind_keeps index _ _ (log_keeps index target _ _) (fun _ => pure_keeps index _)
@@ -149,7 +148,7 @@ private noncomputable def bundled (setup : Setup base KemSK) (wire : Registratio
     M n KemSK source Auxiliary (RustM (Option Pqxdh.Bytes)) := do
   let published ← simulateQ (RegistrationNativeBeaconFrontend.outgoing setup source target owner)
     (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)
+      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)
   match published with
   | .fail error => pure (.fail error)
   | .div => pure .div

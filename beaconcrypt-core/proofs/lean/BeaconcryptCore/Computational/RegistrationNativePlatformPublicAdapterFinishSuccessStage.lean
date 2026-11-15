@@ -142,7 +142,7 @@ local notation "Native"=>RegistrationNativeExperiment.State n KemSK mlSource
 
 theorem sample (coins:QueryImpl unifSpec (StateT P ProbComp)) (setup:PqxdhServerAuthExperiment.Setup base KemSK)
     (checks:PqxdhServerAuthExperiment.Checks) (representation:RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created:PqxdhLiveServerConstruction.Created Unit) (wire:RegistrationNativeWire.Wire) (note:Stage→Log)
+    (created:PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire:RegistrationNativeWire.Wire) (note:Stage→Log)
     (pending:registration.BeaconPending) (input:Slice U8) (owner:Owner mlSource) (scalar:PqxdhJointGapDh.ScalarBytes)
     (before:Native) (previous:P) (past:List Log)
     (reached:(RegistrationNativePlatformExtractedSdkFinish.BodyResult n KemSK mlSource×P)×List Log)

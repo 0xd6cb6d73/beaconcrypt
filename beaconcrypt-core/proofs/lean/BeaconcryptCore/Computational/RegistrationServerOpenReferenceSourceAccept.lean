@@ -214,7 +214,7 @@ theorem after_project (setup : Setup base KemSK) (checks : Checks)
 theorem after_native (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (remember : Extra → Message → Option RootOutput → Extra) (services : Callbacks n KemSK Extra)
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit) (before : State n KemSK Extra) :
     Prod.map id (fun current => RegistrationServerReferenceSourceRetain.project

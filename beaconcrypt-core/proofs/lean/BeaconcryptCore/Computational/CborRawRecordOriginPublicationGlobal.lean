@@ -25,12 +25,14 @@ open CborRawRecordOriginObservation (ctxRun erasedRun retained_support retained_
 open CborRawRecordOriginPrefixes (full_program_invariant)
 variable {n : Nat} {ι KemSK Reader Response E X : Type} {baseSpec : OracleSpec ι}
 
+private abbrev RecordAd := Aeneas.Std.Array Aeneas.Std.U8 151#usize
+
 /-- The actual cursor-aware startup derives the original empty source dictionaries and writer logs. -/
 theorem startup_kept (modes : Label n → KeyMode) (replace : Pqxdh.Bytes → Pqxdh.Bytes)
     (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (codec : PqxdhServerAuthExperiment.Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
     (env : Environment n E)
-    (result : (((Option (PqxdhLiveServerConstruction.Created Unit × E) × CborRecordWorldClient.Shell) × Control n) × CtxPrivate n))
+    (result : (((Option (PqxdhLiveServerConstruction.Created RecordAd × E) × CborRecordWorldClient.Shell) × Control n) × CtxPrivate n))
     (supported : result ∈ support (CborRawRecordOriginFlatten.startup (ctxInterpreter modes replace setup codec) env codec route CtxPrivate.initial)) :
     Kept CtxPrivate.initial result.2 := by
   have projected : ((result.1.1.1, result.1.2), result.2) ∈ support
@@ -47,7 +49,7 @@ theorem startup_kept (modes : Label n → KeyMode) (replace : Pqxdh.Bytes → Pq
 theorem install_kept (modes : Label n → KeyMode) (replace : Pqxdh.Bytes → Pqxdh.Bytes)
     (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (codec : PqxdhServerAuthExperiment.Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
-    (created : PqxdhLiveServerConstruction.Created Unit) (shell : CborRecordWorldClient.Shell)
+    (created : PqxdhLiveServerConstruction.Created RecordAd) (shell : CborRecordWorldClient.Shell)
     (control : Control n) (before : CtxPrivate n) (result : (CborRecordWorldClient.Shell × Control n) × CtxPrivate n)
     (supported : result ∈ support (CborRawRecordOriginFlatten.install (ctxInterpreter modes replace setup codec) codec route created shell control before)) :
     Kept before result.2 := by

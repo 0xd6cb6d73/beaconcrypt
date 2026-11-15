@@ -9,6 +9,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialPendingBuilder
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhInitialPendingPost PqxdhInitialGenericBuilder
 variable {ι Chain Kernel M P I D K X Response Shared Result : Type} {extra : OracleSpec ι} {S B : Nat}
 
@@ -22,8 +23,8 @@ theorem after_interpretation (impl : QueryImpl spec m)
     (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Pqxdh.Bytes)
     (kernel : Kernel) (metadata : P)
     (state : PqxdhInitialGenericPublication.State Kernel M P (List Pqxdh.Bytes)) :
-    simulateQ impl (PqxdhInitialGenericPublication.afterInitialization calls aux candidate authenticated kernel metadata state) =
-      PqxdhInitialGenericPublication.afterInitialization
+    simulateQ impl (PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) calls aux candidate authenticated kernel metadata state) =
+      PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData)
         (RawCtxGenericOwnerInterpretation.interpretedCalls impl calls) (impl ∘ₛ aux)
         candidate authenticated kernel metadata state := by
   simp only [PqxdhInitialGenericPublication.afterInitialization, simulateQ_bind,
@@ -46,8 +47,8 @@ theorem candidate_interpretation (impl : QueryImpl spec m)
     (aux : QueryImpl PqxdhServerRegistrationPublication.AuxSpec (OracleComp spec))
     (initial : RustM Kernel) (pending : pqxdh.ServerRegistrationCandidate) (data : Option Pqxdh.Bytes)
     (metadata : P) (state : PqxdhInitialGenericPublication.State Kernel M P (List Pqxdh.Bytes)) :
-    simulateQ impl (candidate calls aux initial pending data metadata state) =
-      candidate (RawCtxGenericOwnerInterpretation.interpretedCalls impl calls) (impl ∘ₛ aux)
+    simulateQ impl (PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) calls aux initial pending data metadata state) =
+      PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) (RawCtxGenericOwnerInterpretation.interpretedCalls impl calls) (impl ∘ₛ aux)
         initial pending data metadata state := by
   simp only [candidate, simulateQ_bind]
   apply bind_congr
@@ -88,10 +89,10 @@ theorem ready_interpretation (impl : QueryImpl spec m)
     (aux : QueryImpl PqxdhServerRegistrationPublication.AuxSpec (OracleComp spec))
     (initial : RustM Kernel) (binding : pqxdh.ServerBinding) (ready : PqxdhPrivateAcceptedRoot.Ready)
     (metadata : P) (state : PqxdhInitialGenericPublication.State Kernel M P (List Pqxdh.Bytes)) :
-    simulateQ impl (readyBuild source calls aux initial binding ready metadata state) =
-      readyBuild source (RawCtxGenericOwnerInterpretation.interpretedCalls impl calls) (impl ∘ₛ aux)
+    simulateQ impl (PqxdhInitialGenericBuilder.readyBuild (associatedData := associatedData) source calls aux initial binding ready metadata state) =
+      PqxdhInitialGenericBuilder.readyBuild (associatedData := associatedData) source (RawCtxGenericOwnerInterpretation.interpretedCalls impl calls) (impl ∘ₛ aux)
         initial binding ready metadata state := by
-  unfold readyBuild usedBuild
+  unfold PqxdhInitialGenericBuilder.readyBuild usedBuild
   cases next : pqxdh.server_next_key_id state.control with
   | fail error => exact simulateQ_pure _ _
   | div => exact simulateQ_pure _ _
@@ -109,7 +110,7 @@ theorem ready_interpretation (impl : QueryImpl spec m)
           | ok result =>
               cases result with
               | Err error => exact simulateQ_pure _ _
-              | Ok candidate => exact candidate_interpretation impl calls aux initial candidate ready.application metadata state
+              | Ok candidate => exact candidate_interpretation (associatedData := associatedData) impl calls aux initial candidate ready.application metadata state
 
 end Interpretation
 def consume (index : Fin S) (ready : PqxdhPrivateAcceptedRoot.Ready) (before : Front Chain M P I D K S B) :
@@ -144,7 +145,7 @@ noncomputable def build (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
       (RustM (Option PqxdhServerRegistrationPublication.Response)) := fun before =>
   let current := consume index ready before
   let input := selected sender index current
-  reinstall index current <$> readyBuild source PqxdhInitialPendingPost.calls auxForward initial
+  reinstall index current <$> PqxdhInitialGenericBuilder.readyBuild (associatedData := associatedData) source PqxdhInitialPendingPost.calls auxForward initial
     ⟨input.server.identity, input.identityKeyId⟩ ready metadata input
 
 section BuildInterpretation
@@ -157,7 +158,7 @@ noncomputable def interpretedBuild (impl : QueryImpl (Spec extra Chain I D K X R
     StateT (Front Chain M P I D K S B) m (RustM (Option PqxdhServerRegistrationPublication.Response)) := fun before =>
   let current := consume index ready before
   let input := selected sender index current
-  reinstall index current <$> readyBuild source
+  reinstall index current <$> PqxdhInitialGenericBuilder.readyBuild (associatedData := associatedData) source
     (RawCtxGenericOwnerInterpretation.interpretedCalls impl PqxdhInitialPendingPost.calls) (impl ∘ₛ auxForward) initial
     ⟨input.server.identity, input.identityKeyId⟩ ready metadata input
 
@@ -166,8 +167,8 @@ theorem build_interpretation (impl : QueryImpl (Spec extra Chain I D K X Respons
     (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (initial : RustM (KernelOf Chain)) (sender : M → Std.U64) (index : Fin S) (metadata : P)
     (ready : PqxdhPrivateAcceptedRoot.Ready) (before : Front Chain M P I D K S B) :
-    simulateQ impl ((build source initial sender index metadata ready).run before) =
-      (interpretedBuild impl source initial sender index metadata ready).run before := by
+    simulateQ impl ((build (associatedData := associatedData) source initial sender index metadata ready).run before) =
+      (interpretedBuild (associatedData := associatedData) impl source initial sender index metadata ready).run before := by
   simp only [build, interpretedBuild, StateT.run, simulateQ_map, ready_interpretation]
 
 end BuildInterpretation
@@ -176,9 +177,9 @@ end BuildInterpretation
 theorem root_unused (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (initial : RustM (KernelOf Chain)) (sender : M → Std.U64) (index : Fin S) (metadata : P)
     (ready : PqxdhPrivateAcceptedRoot.Ready) (root : PqxdhSecretInputKdf.RootOutput) :
-    build (extra := extra) (I := I) (D := D) (K := K) (X := X) (Response := Response) (Shared := Shared) (B := B)
+    build (associatedData := associatedData) (extra := extra) (I := I) (D := D) (K := K) (X := X) (Response := Response) (Shared := Shared) (B := B)
       source initial sender index metadata { ready with root := root } =
-      build source initial sender index metadata ready := rfl
+      build (associatedData := associatedData) source initial sender index metadata ready := rfl
 
 end BeaconcryptCore.Computational.PqxdhInitialPendingBuilder
 

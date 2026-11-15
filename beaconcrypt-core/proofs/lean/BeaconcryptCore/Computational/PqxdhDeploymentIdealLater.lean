@@ -18,6 +18,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 
 set_option autoImplicit false
+set_option warningAsError true
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentIdealLater
 open PqxdhServerAuthExperiment (Setup Codec Checks)
@@ -366,6 +367,40 @@ theorem run_split_from {R : Type} (env : Environment n (EnvState KemSK Bk)) (ser
   · simp only [simulateQ_pure, StateT.run_pure]
   · simp only [bind_pure_comp, simulateQ_map, StateT.run_map]
 
+/-- The World's peer-metadata type: the supplied complete AD151 (as `PqxdhDeploymentEnvironmentDraw`'s private `RecordAd`). -/
+private abbrev RecordAd := Std.Array Std.U8 151#usize
+
+/-- The actual constructor at the supplied peer metadata type, with its peer metadata forgotten, is the actual constructor at `Unit` (the same statement and proof as the private `PqxdhDeploymentEnvironmentJoin.construct_erase` and `PqxdhDeploymentEnvironmentDraw.construct_erase`). -/
+private theorem construct_erase (ensureInit : StateT A ProbComp Bool) (identityIndex : ℕ) (runtime : A) :
+    (fun result => (result.1.map PqxdhDeploymentEnvironment.eraseCreatedMetadata, result.2)) <$>
+      ((PqxdhLiveServerConstruction.construct (P := RecordAd) setup.joint ensureInit identityIndex
+        setup.serverKeyId none).run runtime) =
+      ((PqxdhLiveServerConstruction.construct (P := Unit) setup.joint ensureInit identityIndex setup.serverKeyId
+        none).run runtime) := by
+  simp only [PqxdhLiveServerConstruction.construct, StateT.run, map_bind]
+  refine bind_congr fun ready => ?_
+  split <;> simp only [map_pure, Option.map_none, Option.map_some, Functor.map_map,
+    PqxdhDeploymentEnvironment.eraseCreatedMetadata_initialized]
+
+/-- The World's private initialization with a Server constructed at startup is `initialized` at the constructed Server with its peer metadata forgotten: the actual constructor installs no peer, so no AD is attached or derived (the same statement and proof as the private `PqxdhDeploymentEnvironmentDraw.start_imported`). -/
+private theorem start_imported (ensureInit : StateT A ProbComp Bool) (identityIndex : ℕ) (runtime : A)
+    (init : PqxdhLiveServerConstruction.Created Unit → Bk)
+    (created : PqxdhLiveServerConstruction.Created RecordAd) (state : EnvState KemSK Bk)
+    (supported : some (created, state) ∈ support (PqxdhDeploymentEnvironment.start setup ensureInit identityIndex runtime init))
+    (w : PqxdhRecordLiftWorld.State n) :
+    ({ w with server := some (PqxdhRecordLiftWorld.importedServer created) } : PqxdhRecordLiftWorld.State n) =
+      initialized (PqxdhDeploymentEnvironment.eraseCreatedMetadata created) w := by
+  simp only [PqxdhDeploymentEnvironment.start, support_map, Set.mem_image] at supported
+  obtain ⟨⟨result, after⟩, constructed, same⟩ := supported
+  cases result with
+  | none => cases same
+  | some made =>
+      simp only [Option.map_some, Option.some.injEq, Prod.mk.injEq] at same
+      obtain ⟨rfl, _⟩ := same
+      obtain ⟨seed, rfl, _⟩ := PqxdhLiveServerConstruction.construct_origin setup.joint ensureInit identityIndex
+        setup.serverKeyId none runtime after made constructed
+      rfl
+
 /-- C6 from a World state that differs from the initial World only in its counts (the later form of `PqxdhDeploymentEnvironmentDraw.join_from`; `PqxdhDeploymentEnvironmentJoin.join_later` is its case at the initial World): the LQ-F later game with the registration handler and its own post phase has the law of the later record world's program with the environment run from that World state, reassembled. -/
 theorem join_later_from (init : PqxdhLiveServerConstruction.Created Unit → Bk)
     (reg : PqxdhLiveServerConstruction.Created Unit → RegImpl KemSK Bk n) (env : Environment n (EnvState KemSK Bk))
@@ -385,15 +420,17 @@ theorem join_later_from (init : PqxdhLiveServerConstruction.Created Unit → Bk)
           second)).run w₀) := by
   let wrapped := PqxdhDeploymentSecrecy.wrap setup.source.crypto codec setup.serverKeyId bounds
     (PqxdhDeploymentInterface.asModeO mode first)
-  let native : Option (PqxdhLiveServerConstruction.Created Unit × EnvState KemSK Bk) →
+  let native : Option (PqxdhLiveServerConstruction.Created RecordAd × EnvState KemSK Bk) →
       ProbComp (Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × Out × PqxdhDeploymentSecrecy.Ledger ×
         XState KemSK Bk n)) := fun born => match born with
     | none => pure none
-    | some (created, _) => (fun result => some (PqxdhRegistrationJointServerBirth.encode created, result)) <$> (do
-        let run ← (simulateQ (handlerWith setup codec route (reg created)) wrapped).run
-          (PqxdhDeploymentBackend.xinitial created (init created))
-        let post ← (simulateQ (postNative setup codec route (reg created))
-          (second run.1.1 (PqxdhDeploymentFinishErasure.xreveal created run.2))).run run.2
+    | some (created, _) =>
+        let retained := PqxdhDeploymentEnvironment.eraseCreatedMetadata created
+        (fun result => some (PqxdhRegistrationJointServerBirth.encode retained, result)) <$> (do
+        let run ← (simulateQ (handlerWith setup codec route (reg retained)) wrapped).run
+          (PqxdhDeploymentBackend.xinitial retained (init retained))
+        let post ← (simulateQ (postNative setup codec route (reg retained))
+          (second run.1.1 (PqxdhDeploymentFinishErasure.xreveal retained run.2))).run run.2
         pure (post.1, run.1.2, post.2))
   have nativeSide : (PqxdhDeploymentFinishErasure.laterWith setup codec route init reg
       (fun created => postNative setup codec route (reg created)) ensureInit identityIndex bounds mode first
@@ -401,6 +438,10 @@ theorem join_later_from (init : PqxdhLiveServerConstruction.Created Unit → Bk)
     rw [born]
     simp only [PqxdhDeploymentFinishErasure.laterWith, PqxdhDeploymentEnvironment.start, StateT.run', StateT.run,
       map_bind, bind_map_left]
+    have erased := construct_erase setup ensureInit identityIndex runtime
+    simp only [StateT.run] at erased
+    rw [← erased]
+    simp only [bind_map_left]
     refine bind_congr fun constructed => ?_
     cases constructed.1 <;> simp only [map_pure, Option.map_none, Option.map_some, native, map_bind,
       StateT.run]
@@ -428,30 +469,33 @@ theorem join_later_from (init : PqxdhLiveServerConstruction.Created Unit → Bk)
   · simp only [simulateQ_pure, StateT.run_pure, pure_bind, map_pure, joined, Option.map_none]
     exact LawEq.refl _
   · rw [born] at started
+    have imported := start_imported setup ensureInit identityIndex runtime init created
+      initialEnv started w
+    let retained := PqxdhDeploymentEnvironment.eraseCreatedMetadata created
     have initialEq := PqxdhDeploymentEnvironment.start_initial setup ensureInit identityIndex runtime init created
       initialEnv started
     subst initialEq
     have vacant : w.server = none := congrArg PqxdhRecordLiftWorld.State.server fresh
     have initRun : (PqxdhRecordLiftWorld.handler setup codec route (.inl created)).run w =
-        pure ((), initialized created w) := by
+        pure ((), initialized retained w) := by
       change PqxdhRecordLiftWorld.initializeServer created w = _
-      simp only [PqxdhRecordLiftWorld.initializeServer, vacant]
+      simp only [PqxdhRecordLiftWorld.initializeServer, vacant, imported]
       rfl
     dsimp only
     rw [simulateQ_bind, StateT.run_bind, simulateQ_spec_query, initRun, pure_bind]
     simp only [simulateQ_bind, StateT.run_bind, simulateQ_pure, StateT.run_pure, bind_assoc, pure_bind]
-    rw [← PqxdhDeploymentEnvironmentJoin.merge_initial created (init created) w fresh]
-    refine PqxdhDeploymentEnvironmentJoin.run_join_bind setup codec route env (reg created) created inv stable
-      (splits created) wrapped _ _ (PqxdhDeploymentEnvironmentJoin.good_initial created (init created) w fresh)
-      (stable _ _ _ (PqxdhDeploymentEnvironmentJoin.initialized_view created w fresh) (startInv created))
+    rw [← PqxdhDeploymentEnvironmentJoin.merge_initial retained (init retained) w fresh]
+    refine PqxdhDeploymentEnvironmentJoin.run_join_bind setup codec route env (reg retained) retained inv stable
+      (splits retained) wrapped _ _ (PqxdhDeploymentEnvironmentJoin.good_initial retained (init retained) w fresh)
+      (stable _ _ _ (PqxdhDeploymentEnvironmentJoin.initialized_view retained w fresh) (startInv retained))
       _ _ (fun result good holds => ?_)
     rcases result with ⟨⟨⟨output, ledger⟩, finalEnv⟩, finalWorld⟩
     dsimp only
-    rw [PqxdhDeploymentEnvironmentJoin.reveal_merge created finalEnv finalWorld good]
-    have posted := (PqxdhDeploymentEnvironmentJoin.run_join setup codec route env (reg created) created inv stable
-      (splits created) (simulateQ PqxdhDeploymentLater.postEmbed (second output (envReveal finalEnv))) finalEnv
+    rw [PqxdhDeploymentEnvironmentJoin.reveal_merge retained finalEnv finalWorld good]
+    have posted := (PqxdhDeploymentEnvironmentJoin.run_join setup codec route env (reg retained) retained inv stable
+      (splits retained) (simulateQ PqxdhDeploymentLater.postEmbed (second output (envReveal finalEnv))) finalEnv
       finalWorld good holds).map
-        (fun result => some (PqxdhRegistrationJointServerBirth.encode created, result.1, ledger, result.2))
+        (fun result => some (PqxdhRegistrationJointServerBirth.encode retained, result.1, ledger, result.2))
     simp only [Functor.map_map] at posted
     simp only [postNative, QueryImpl.simulateQ_compose, map_pure, bind_pure_comp, Functor.map_map,
       PqxdhRecordLiftLater.post]

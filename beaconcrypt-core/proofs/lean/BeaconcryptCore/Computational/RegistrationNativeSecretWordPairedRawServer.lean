@@ -111,10 +111,35 @@ theorem complete (wire : RegistrationNativeWire.Wire) (reservePeer : Bool) (read
       GlobalInstall, Install, RegistrationNativeSecretWordAtomInstallCaps.InstallEnv, isQueryBoundP_query_iff]
   · intro occupied
     split <;> try (rw [simulateQ_pure]; exact RegistrationNativeSecretWordPairedTrace.pure_safe _)
-    split <;> try (rw [simulateQ_pure]; exact RegistrationNativeSecretWordPairedTrace.pure_safe _)
     rw [simulateQ_bind]
-    exact RegistrationNativeSecretWordPairedTrace.bind_safe _ _ (admitted wire.encodeResponse before.control _ ready.reference)
-      (fun published => finish published before)
+    apply RegistrationNativeSecretWordPairedTrace.bind_safe
+    · unfold RegistrationNativeSecretWordServerMaterial.adHash
+      split
+      · rw [simulateQ_pure]; exact RegistrationNativeSecretWordPairedTrace.pure_safe _
+      · rw [simulateQ_pure]; exact RegistrationNativeSecretWordPairedTrace.pure_safe _
+      · rw [simulateQ_bind]
+        apply RegistrationNativeSecretWordPairedTrace.bind_safe
+        · apply RegistrationNativeSecretWordPairedSafe.free
+          intro role
+          simp [RegistrationNativeSecretWordServerMaterial.effect, wordLift, QueryImpl.compose,
+            RegistrationNativeSecretWordInterface.paired, RegistrationNativeSecretWordInterface.liftLocal,
+            GlobalInstall, Install, RegistrationNativeSecretWordAtomInstallCaps.InstallEnv, isQueryBoundP_query_iff]
+        · intro digest
+          rw [simulateQ_pure]
+          exact RegistrationNativeSecretWordPairedTrace.pure_safe _
+    · intro hashed
+      cases hashed with
+      | fail error | div => rw [simulateQ_pure]; exact RegistrationNativeSecretWordPairedTrace.pure_safe _
+      | ok reply => cases reply with
+        | Err previous => rw [simulateQ_pure]; exact RegistrationNativeSecretWordPairedTrace.pure_safe _
+        | Ok initial =>
+          dsimp only
+          split
+          · rw [simulateQ_bind]
+            exact RegistrationNativeSecretWordPairedTrace.bind_safe _ _
+              (admitted wire.encodeResponse before.control _ ready.reference) (fun published => finish published before)
+          · rw [simulateQ_pure]
+            exact RegistrationNativeSecretWordPairedTrace.pure_safe _
 
 /-- Raw build consumes the same one-use Ready and preserves paired provenance for every application cancellation or native completion branch. -/
 theorem build (wire : RegistrationNativeWire.Wire) (reservePeer : Bool) (handle : Nat)

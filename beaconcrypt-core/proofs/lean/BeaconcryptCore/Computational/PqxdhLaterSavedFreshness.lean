@@ -7,6 +7,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhLaterSavedFreshness
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhJointKdfGame PqxdhNativeSharedPrefix
 open RawCtxSelectedParentTable RawCtxSelectedParentEntry RawCtxSelectedMessageDriver
 open PqxdhSelectedFirstRecord PqxdhFirstRecordConfidentiality
@@ -84,13 +85,13 @@ local notation "parent" => Entry.mk (PqxdhInitialBuilderContext.address context.
 theorem source_bound (earlier ancestors disclosed : List RatchetChain)
     (selected : RawCtxProtocolReveals.Owner S B) (number : Std.U64) :
     𝒟[(fun result => (by classical exact decide (Event prior parent target key nonce next earlier ancestors disclosed selected number result))) <$>
-      PqxdhLaterSavedPostComparison.original pre application initial selector aux fixed writer prior key target nonce next
+      PqxdhLaterSavedPostComparison.original (completedBinding := completedBinding) pre application initial selector aux fixed writer prior key target nonce next
         mark sender route read qPost context material fits state] {true} ≤
     𝒟[(fun result => (by classical exact decide (Event prior parent target key nonce next earlier ancestors disclosed selected number (result.1, insProject result.2)))) <$>
-      PqxdhLaterSavedPostComparison.compiled pre application initial selector aux fixed writer prior key target nonce next
+      PqxdhLaterSavedPostComparison.compiled (completedBinding := completedBinding) pre application initial selector aux fixed writer prior key target nonce next
         mark sender route read monitor qPost context material fits state] {true} +
     𝒟[(fun result => result.2.2 && (by classical exact decide (Event prior parent target key nonce next earlier ancestors disclosed selected number (result.1, insProject result.2.1)))) <$>
-      PqxdhLaterSavedPostComparison.flagged pre application initial selector aux fixed writer prior key target nonce next
+      PqxdhLaterSavedPostComparison.flagged (completedBinding := completedBinding) pre application initial selector aux fixed writer prior key target nonce next
         mark sender route read monitor qPost context material fits state] {true} := by
   classical
   have factor : ∀ result : Option Bool × Traced M P I D K A N C S B,
@@ -99,7 +100,7 @@ theorem source_bound (earlier ancestors disclosed : List RatchetChain)
       Event prior parent target key nonce next earlier ancestors disclosed selected number result :=
     fun result => ⟨And.left, fun enabled => ⟨enabled,
       event_good prior parent target key nonce next earlier ancestors disclosed selected number result enabled⟩⟩
-  simpa only [factor] using PqxdhLaterSavedPostComparison.source_bound pre application initial selector aux fixed writer
+  simpa only [factor] using PqxdhLaterSavedPostComparison.source_bound (completedBinding := completedBinding) pre application initial selector aux fixed writer
     prior key target nonce next mark sender route read monitor qPost context material fits state
       (Event prior parent target key nonce next earlier ancestors disclosed selected number)
 

@@ -20,7 +20,7 @@ variable {n :Nat} {I KemSK P Log A :Type} {base :OracleSpec I} {mlSource :Regist
 local notation "Native"=>RegistrationNativeExperiment.State n KemSK mlSource
 variable (coins :QueryImpl unifSpec (StateT P ProbComp))
 variable (setup :PqxdhServerAuthExperiment.Setup base KemSK) (checks :PqxdhServerAuthExperiment.Checks)
-variable (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created Unit)
+variable (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 
 noncomputable def implementation :QueryImpl (Trusted n KemSK) (StateT (Native×P) ProbComp):=fun query=>
   RegistrationNativePlatformPackedState.pack (RegistrationNativePlatformInterpret.state coins

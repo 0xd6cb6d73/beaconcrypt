@@ -179,12 +179,17 @@ theorem query (coins :QueryImpl unifSpec Base) (setup :PqxdhServerAuthExperiment
     (selected :RegistrationNativePlatformPublicAdapterBuildProgram.Spec.Domain) :
     Compatible (RegistrationNativePlatformPublicAdapterBuildSource.handler (n:=n) coins setup codec keyView failure allocation helper erased sign writer view original selected) :=by
   cases selected with
-  | inl self=>
-    unfold RegistrationNativePlatformPublicAdapterBuildSource.handler RegistrationNativePlatformPublicAdapterBuildPrefixPrimitives.pin
-    apply program_frame
-    intro request
-    apply map_frame _
-    exact outgoing_frame coins sign (.hash request)
+  | inl selected=>cases selected with
+    | inl self=>
+      unfold RegistrationNativePlatformPublicAdapterBuildSource.handler RegistrationNativePlatformPublicAdapterBuildPrefixPrimitives.pin
+      apply program_frame
+      intro request
+      apply map_frame _
+      exact outgoing_frame coins sign (.hash request)
+    | inr request=>
+      unfold RegistrationNativePlatformPublicAdapterBuildSource.handler RegistrationNativePlatformPublicAdapterBuildPrefixPrimitives.hash
+      apply map_frame _
+      exact outgoing_frame coins sign (.hash request)
   | inr selected=>cases selected with
     | inl pair=>exact lift_frame _
     | inr selected=>cases selected with

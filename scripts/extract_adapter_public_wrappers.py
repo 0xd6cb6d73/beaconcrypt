@@ -60,13 +60,12 @@ CHARON_FLAGS = [
     "--include=beaconcrypt::beacon::_proof_beacon_init_ready",
     "--include=beaconcrypt::beacon::_::identity_pk",
     "--include=beaconcrypt::beacon::_::identity_sk",
-    "--include=beaconcrypt::beacon::_::mldsa_public_key",
     "--include=beaconcrypt::server::_::identity_pk",
     "--include=beaconcrypt::server::_::identity_sk",
     "--include=beaconcrypt::server::_::identity_key_kid",
     "--include=beaconcrypt::server::_::mldsa_public_key",
     "--include=beaconcrypt::server::_::authentication_pin",
-    "--include=beaconcrypt::auth::fingerprint_pin",
+    "--include=beaconcrypt::auth::server_pin",
     "--include=beaconcrypt::beacon::_::finish_registration::closure::_::call_once",
     "--include=beaconcrypt::server::_::build_registration_response::closure::_::call_once",
     "--include=beaconcrypt::ratchet::RatchetManager",
@@ -97,7 +96,7 @@ CHARON_FLAGS = [
     "--include=beaconcrypt_crypto::crypto_kem::mlkem768::KeyPair",
     "--include=beaconcrypt_core::pqxdh::BeaconStartInputs",
     "--include=beaconcrypt_core::pqxdh::BeaconCoins",
-    "--include=beaconcrypt_core::registration::SignedInitView",
+    "--include=beaconcrypt_core::registration::InitView",
     "--include=beaconcrypt_core::authentication::InitFields",
     "--include=beaconcrypt_core::registration::BeaconInitialOpen",
     "--include=beaconcrypt::pqxdh::execute_agreement::closure",
@@ -129,7 +128,7 @@ CHARON_FLAGS = [
     "--include=beaconcrypt_core::pqxdh::BeaconStartInputs",
     "--include=beaconcrypt_core::pqxdh::BeaconCoins",
     "--include=beaconcrypt_core::registration::Ed25519SigningRequest",
-    "--include=beaconcrypt_core::registration::SignedInitView",
+    "--include=beaconcrypt_core::registration::InitView",
     "--include=beaconcrypt_core::authentication::InitFields",
     "--include=beaconcrypt::server::ServerIdentity",
     "--include={impl beaconcrypt::server::ProviderServer for "
@@ -178,10 +177,10 @@ CHARON_FLAGS = [
     "--include=beaconcrypt_parse::transport::kexresponse",
 ]
 RAW_SHA256 = {
-    "Types.lean": "ccb18ec6e15d8eb1072edda93e53da4664347306209936cd3db2a77c8fc9bb1c",
-    "Funs.lean": "628155b7794ac1da27a06bc00094c042bf3d9ed88cebd1f29f7528a0bb5ded38",
-    "TypesExternal_Template.lean": "ecee449db44f5ccb0373c2da8d051c62d8e9fdaa5ac15a4fcc81fe668e99c83b",
-    "FunsExternal_Template.lean": "3f200d4524ee710bb60842f9617c64299d94b55688fa0df3da3f4ffd484d2758",
+    "Types.lean": "e45665ee6898871ae5506e757eb9e88d95058010bb4a624662a9fb03560d5814",
+    "Funs.lean": "eb29b84827855cb39823d42e5b7fb079b3f9b5c4f83b0a4b56a57de44c61bf34",
+    "TypesExternal_Template.lean": "9d20f7f0ad6038ace8d9a8e9606fa518c7acf12ca665c2306824ecd6ade04098",
+    "FunsExternal_Template.lean": "82ebd1df189df86f25f0631617a603c52f78f7c1d408e585d0dc53dd25f504b3",
 }
 ALPHA = {
     "Types.lean": [
@@ -303,7 +302,7 @@ INTERFACES = (
         "BeaconcryptCore.Refinement.PublicWrapperPlatform.assignedKeyId binding",
     ),
     (
-        "beaconcrypt_core.session.SessionBinding.beacon_identity_public_key\n                                  sb",
+        "beaconcrypt_core.session.SessionBinding.beacon_identity_public_key\n                                    sb",
         "BeaconcryptCore.Refinement.PublicWrapperPlatform.beaconIdentity\n                                  sb",
     ),
     (
@@ -346,7 +345,7 @@ SUPPORT = (
 )
 
 
-CONTROL_SHA256 = "1c7141e7b8ab28f0832a22c29cdbf5e05d82e16618d0e0d45c6e0499621fe3d8"
+CONTROL_SHA256 = "ed0b8a9c43e688f55b032dcb932a78437a9712dd7928d3821350f81de39a6d51"
 
 
 def digest(contents: bytes) -> str:

@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativePublicInvariantFinish
 import BeaconcryptCore.Computational.RegistrationNativePublicStartup
 
-/-! Successful public-reference startup constructs an empty owner roster and empty local record-request ledger literally. The receipt follows all actual constructor/ML/hash continuations and does not assume startup success or an initialized metadata invariant. -/
+/-! Successful public-reference startup constructs an empty owner roster and empty local record-request ledger literally. The receipt follows the actual constructor and mandatory Server ML continuations followed by pure full-pin construction and does not assume startup success or an initialized metadata invariant. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -39,7 +39,7 @@ theorem start_fields (setup : Setup base KemSK) (ensureInit : StateT Unit ProbCo
           cases continued
       | some credential =>
           simp only [credential, StateT.run_bind, mem_support_bind_iff] at continued
-          obtain ⟨initialized, _installed, hashed, _fingerprinted, returned⟩ := continued
+          obtain ⟨initialized, _installed, returned⟩ := continued
           simp only [StateT.run_pure, mem_support_pure_iff] at returned
           cases returned
           exact ⟨rfl, rfl, rfl⟩

@@ -43,6 +43,22 @@ class AuthenticationRequestLiftingTests(unittest.TestCase):
         self.assertEqual(result.returncode, 2)
         self.assertEqual((lift.ROOT / lift.DESTINATION).read_bytes(), before)
 
+    def test_both_distinct_hash_requests_are_retained(self):
+        result = lift.transform(self.source)
+        self.assertEqual(result.count(b"Operations.hash"), 2)
+        self.assertEqual(result.count(b"Operations.verify"), 1)
+        self.assertLess(
+            result.index(b"Operations.verify"), result.index(b"Lifted.adHashRequest")
+        )
+
+    def test_discarded_ad_hash_reply(self):
+        self.rejected(
+            b"BeaconAdHash.resume val2 digest1", b"BeaconAdHash.resume val2 .None"
+        )
+
+    def test_changed_ad_hash_request(self):
+        self.rejected(b"BeaconAdHash.request val2", b"BeaconAdHash.request val1")
+
     def test_changed_entry_declaration(self):
         self.rejected(b"def auth.authenticate_response", b"def auth.other_response")
 

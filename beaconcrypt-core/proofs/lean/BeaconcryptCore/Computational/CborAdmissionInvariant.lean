@@ -180,6 +180,23 @@ theorem liftExisting_step_exact (setup : Setup baseSpec KemSK) (codec : Codec Re
   change _ = if CborProductionBoundary.allowed query (merge memory native) then _ else _
   simp only [admitted, ite_true]
 
+/-- Design §4.7 `copy_hash_hit` for the CBOR admission compiler: on every state satisfying the admission invariant, the forwarded transcript hash of a Server-peer or owner copy (`PqxdhDeploymentCompile.copyData`, issued by the delegated local record commands after the admission prefetch) is a cache hit that leaves the source14 state unchanged and answers the installed peer metadata or the established owner associated data. -/
+theorem copy_hash_hit (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (seed : IdentitySeed) (memory : Local) (native : PqxdhRegistrationSchedule.State KemSK)
+    (good : Good setup codec memory native) :
+    (∀ kid peer kernel, native.shared.2.server.server.peers kid = some peer →
+      (simulateQ (PqxdhRegistrationJointRevealSchedule.native setup codec checks seed)
+        (PqxdhDeploymentCompile.copyData (KemSK := KemSK) (some kernel)
+          (PqxdhDeploymentCompile.peerTranscript codec memory.copies.log kid))).run native =
+        pure (some peer.metadata, native)) ∧
+    (∀ index owner control associatedData current kernel, native.owners[index]? = some owner →
+      owner.beacon.phase = .established control associatedData current →
+      (simulateQ (PqxdhRegistrationJointRevealSchedule.native setup codec checks seed)
+        (PqxdhDeploymentCompile.copyData (KemSK := KemSK) (some kernel)
+          ((PqxdhDeploymentCompile.ownerView codec memory.copies.log index).map fun view => view.2.2))).run native =
+        pure (some associatedData, native)) :=
+  PqxdhDeploymentCompileInvariant.copy_hash_hit setup codec checks seed memory.copies native good.nativeGood
+
 end BeaconcryptCore.Computational.CborAdmissionInvariant
 
 /-- info: 'BeaconcryptCore.Computational.CborAdmissionInvariant.source_count_step' depends on axioms: [propext,
@@ -227,3 +244,8 @@ end BeaconcryptCore.Computational.CborAdmissionInvariant
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.CborAdmissionInvariant.liftExisting_step_exact
+/-- info: 'BeaconcryptCore.Computational.CborAdmissionInvariant.copy_hash_hit' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CborAdmissionInvariant.copy_hash_hit

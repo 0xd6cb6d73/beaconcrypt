@@ -32,7 +32,7 @@ noncomputable def environment (setup : Setup base KemSK) (checks : Checks) (wire
     (source : RegistrationNativeMldsa.Source) (credential : RegistrationNativeMldsa.Credential source)
     (seed : PqxdhJointIdentity.IdentitySeed) (scalar : PqxdhJointGapDh.ScalarBytes)
     (provider : Provider KemSK ProviderState) (selectedOwner selectedAccept : Nat)
-    (startup : ProbComp (Option (PqxdhLiveServerConstruction.Created Unit × State n KemSK ProviderState source))) :
+    (startup : ProbComp (Option (PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize) × State n KemSK ProviderState source))) :
     RegistrationNativeEntropyInterface.Environment n (State n KemSK ProviderState source) :=
   ⟨startup, step setup checks wire source credential seed scalar provider selectedOwner selectedAccept⟩
 

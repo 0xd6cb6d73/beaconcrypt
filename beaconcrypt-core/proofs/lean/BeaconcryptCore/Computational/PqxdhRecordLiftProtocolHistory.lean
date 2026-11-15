@@ -538,7 +538,7 @@ theorem install_beacon (owner : Nat) (shell : BeaconShell) (ref : KernelRef n)
     exact step_refl control safe
 
 /-- Source Server construction introduces only caller-known peers and never resets an existing Server. -/
-theorem initialize_server (created : PqxdhLiveServerConstruction.Created Unit)
+theorem initialize_server (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (control : PqxdhRecordLiftProtocol.Control n) (safe : Safe control)
     (result : Unit × PqxdhRecordLiftProtocol.Control n)
     (supported : result ∈ support (PqxdhRecordLiftProtocol.initializeServer created control)) :
@@ -1099,7 +1099,7 @@ theorem protocol_lift_trace {P : Type}
 /-- Source initialization imports known records but invokes no hidden sealing service. -/
 theorem protocol_initialize_trace {P : Type}
     (service : List (PqxdhRecordLiftWorldCompiler.Label n) → QueryImpl (PqxdhRecordLiftProtocol.ServiceSpec n) (StateT P (OracleComp targetSpec)))
-    (created : PqxdhLiveServerConstruction.Created Unit) (control : PqxdhRecordLiftProtocol.Control n)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (control : PqxdhRecordLiftProtocol.Control n)
     (state : P × List (PqxdhRecordLiftWorldCompiler.Label n)) (result : (Unit × PqxdhRecordLiftProtocol.Control n) × (P × List (PqxdhRecordLiftWorldCompiler.Label n)))
     (supported : result ∈ support ((simulateQ (traceService service)
       ((PqxdhRecordLiftProtocol.initializeServer created).run control)).run state)) : result.2.2 = state.2 := by

@@ -94,11 +94,12 @@ theorem accept_messages (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
   exact prefixKept _ reached reachedMember
 
 /-- A finish records only decapsulation and static DH requests, so it keeps every signing history. -/
-theorem finish_messages (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (identityIndex kemIndex : Nat)
-    (raw : Pqxdh.Bytes) (owner : PqxdhRegistrationSchedule.Owner KemSK) (state : PqxdhRegistrationJointFinish.State KemSK)
+theorem finish_messages (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+    (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (identityIndex kemIndex : Nat) (raw : Pqxdh.Bytes) (owner : PqxdhRegistrationSchedule.Owner KemSK) (state : PqxdhRegistrationJointFinish.State KemSK)
     (result : (Option Pqxdh.Bytes × PqxdhRegistrationSchedule.Owner KemSK) × PqxdhRegistrationJointFinish.State KemSK)
     (supported : result ∈ support ((simulateQ (PqxdhRegistrationJointFinish.annotated setup codec identityIndex kemIndex)
-      (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw owner)).run state)) (index : Nat) :
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw owner)).run
+        state)) (index : Nat) :
     messagesAt index result.2.1.1.transcript = messagesAt index state.1.1.transcript := by
   refine OracleComp.simulateQ_run_preserves_inv_of_query (spec' := unifSpec) _
     (fun current => messagesAt index current.1.1.transcript = messagesAt index state.1.1.transcript) ?_ _ state rfl
@@ -126,6 +127,34 @@ theorem finish_messages (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
       Set.mem_image] at member
     obtain ⟨_, _, rfl⟩ := member
     exact held
+
+/-- An owner's hashed annotated finish keeps the seeds, the key pool and every signing history: the transcript hash runs on the shared native state only, and the owner program at the completed binding of its digest is `finish_messages`/`annotated_program_slots`; the abort and inactive branches change nothing. -/
+theorem annotatedFinish_kept (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (identityIndex kemIndex : Nat)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) (state : PqxdhRegistrationJointFinish.State KemSK)
+    (result : (Option Pqxdh.Bytes × PqxdhRegistrationSchedule.Owner KemSK) × PqxdhRegistrationJointFinish.State KemSK)
+    (supported : result ∈ support ((PqxdhRegistrationJointFinish.annotatedFinish setup codec identityIndex kemIndex
+      retained raw owner).run state)) :
+    (result.2.1.1.seeds = state.1.1.seeds ∧ result.2.1.2.keys = state.1.2.keys) ∧
+      ∀ index, messagesAt index result.2.1.1.transcript = messagesAt index state.1.1.transcript := by
+  unfold PqxdhRegistrationJointFinish.annotatedFinish at supported
+  split at supported
+  · split at supported
+    · rw [StateT.run_bind, mem_support_bind_iff] at supported
+      obtain ⟨hashed, hashedMember, member⟩ := supported
+      have pool : hashed.2.1 = state.1 := by
+        simp only [PqxdhRegistrationJointFinish.onNative, StateT.run, support_map, Set.mem_image] at hashedMember
+        obtain ⟨_, _, rfl⟩ := hashedMember
+        rfl
+      rw [← pool]
+      exact ⟨PqxdhRegistrationJointFinish.annotated_program_slots setup codec identityIndex kemIndex _ hashed.2 result
+        member, finish_messages _ setup codec identityIndex kemIndex raw owner hashed.2 result member⟩
+    · simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
+      subst supported
+      exact ⟨⟨rfl, rfl⟩, fun _ => rfl⟩
+  · simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
+    subst supported
+    exact ⟨⟨rfl, rfl⟩, fun _ => rfl⟩
 
 /-- A current-field read keeps the owner registry, the seeds, every signing history and the Server identity: an identity read records only a reveal observation. -/
 theorem read_kept (request : Nat × PqxdhRegistrationJointLiveRead.Field) (state : PqxdhRegistrationJointSchedule.State KemSK) :
@@ -641,7 +670,7 @@ theorem create_signed (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
       · cases firstFound
     · split at firstFound <;> split at secondFound
       · omega
-      all_goals cases firstFound <;> cases secondFound
+      all_goals contradiction
   · intro position beyond
     simp only [seeds, List.length_append, List.length_singleton] at beyond
     simp only [messages]
@@ -723,10 +752,10 @@ theorem finish_signed (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
     obtain ⟨reached, reachedMember, same⟩ := member
     simp only [Prod.mk.injEq] at same
     obtain ⟨rfl, rfl⟩ := same
-    have slots := PqxdhRegistrationJointFinish.annotated_program_slots setup codec entry.identityIndex entry.kemIndex _
+    have kept := annotatedFinish_kept setup codec entry.identityIndex entry.kemIndex _ raw entry.owner
       (state.pool, state.shared) reached reachedMember
-    have messages := finish_messages setup codec entry.identityIndex entry.kemIndex raw entry.owner
-      (state.pool, state.shared) reached reachedMember
+    have slots := kept.1
+    have messages := kept.2
     have bound : owner < state.owners.length := (List.getElem?_eq_some_iff.mp found).1
     have lookup : ∀ other : Nat, (state.owners.set owner { entry with owner := reached.1.2 })[other]? =
         if other = owner then some { entry with owner := reached.1.2 } else state.owners[other]? := by
@@ -892,7 +921,12 @@ theorem bundle_signed (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
       (by simp [PqxdhDeploymentTranscript.step, PqxdhDeploymentTranscript.stepCommand, absent]) (by simp)
   · rename_i entry found
     simp only [support_map, Set.mem_image] at member
-    obtain ⟨traced, tracedMember, same⟩ := member
+    obtain ⟨⟨traced, logged⟩, tracedLogged, same⟩ := member
+    have tracedMember : traced ∈ support (PqxdhRegistrationJointBundle.trace setup codec entry.identityIndex entry.owner
+        state.pool.1) := by
+      rw [← PqxdhRegistrationJointBundle.trace_log setup codec entry.identityIndex entry.owner state.pool.1
+        (state.inits owner), support_map]
+      exact ⟨_, tracedLogged, rfl⟩
     simp only [Prod.mk.injEq] at same
     obtain ⟨rfl, rfl⟩ := same
     have phaseEq : PqxdhDeploymentTranscript.phase transcript owner =
@@ -1362,6 +1396,12 @@ end BeaconcryptCore.Computational.PqxdhDeploymentSigningHistory
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentSigningHistory.finish_messages
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentSigningHistory.annotatedFinish_kept' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentSigningHistory.annotatedFinish_kept
 
 /-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentSigningHistory.read_kept' depends on axioms: [propext,
  Classical.choice,

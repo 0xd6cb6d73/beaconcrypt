@@ -33,7 +33,7 @@ private theorem set_none {A : Type} (values : List (Option A)) (handle : Nat) (t
       simpa only [List.set_cons_succ, List.getElem?_cons_succ] using ih handle live
 
 theorem material_retained (view : MaterialView mlSource KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : beaconcrypt_public_wrapper.server.Server) (before : Native)
     (related : Server view views created credential self before.server) (handle : Nat) :
     Server view views created credential self (moved handle before).server := by
@@ -68,6 +68,7 @@ theorem entry_run (handle : Nat)
 
 omit material platform ed in
 theorem build_live
+    (deriveAd : RegistrationNativePlatformCompletionSdk.AdHash n m)
     (pin : StateT (RegistrationServerFrontendCompiler.State n) m
       (RustM (core.option.Option session.ServerAuthenticationPin)))
     (reserve : StateT (RegistrationServerFrontendCompiler.State n) m Bool)
@@ -76,8 +77,8 @@ theorem build_live
     (token : beaconcrypt_public_wrapper.server.RegistrationOutput) (consumed : peer.ConsumedRegistration)
     (before : Native) (handle : Nat) (related : Token token consumed)
     (live : before.server.sessions[handle]? = some (some consumed)) (application : Slice U8) :
-    (RegistrationNativePlatformCompletionSdk.build pin reserve present done handle (some application)).run before.server =
-      (RegistrationNativePlatformCompletionSdk.complete pin reserve present done token.registration application).run (moved handle before).server := by
+    (RegistrationNativePlatformCompletionSdk.build deriveAd pin reserve present done handle (some application)).run before.server =
+      (RegistrationNativePlatformCompletionSdk.complete deriveAd pin reserve present done token.registration application).run (moved handle before).server := by
   unfold RegistrationNativePlatformCompletionSdk.build
   simp only [StateT.run]
   rw [(move token consumed before handle related live).1]

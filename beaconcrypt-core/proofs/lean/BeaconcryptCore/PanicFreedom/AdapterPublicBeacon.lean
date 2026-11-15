@@ -30,11 +30,11 @@ attribute [local irreducible] beaconcrypt_registration_writer.wire.encode_init
 structure BundleContracts : Prop where
   init : AdapterPublicRegistrationLoops.InitContracts
   kxPublicBytes : ∀ key, Normal (crypto.kxPublicBytes key)
-  publicLeaves : AdapterPublicTrivial.Contracts
   writer : AdapterRegistrationWriterCallers.InitCallerContracts
   allocation : AdapterWire.Contracts
   kemPublicBytes : ∀ key, Normal (crypto.kemPublicBytes key)
 
+omit platform localOps in
 theorem get_registration_bundle_preserves (contracts : BundleContracts)
     {R E : Type} (generator : rand_core.TryCryptoRng R E)
     (random : AdapterPublicRegistrationLoops.GenerationContracts generator) (self : beacon.Beacon) (rng : R)
@@ -46,7 +46,7 @@ theorem get_registration_bundle_preserves (contracts : BundleContracts)
     beaconcrypt_crypto.crypto_kx.PublicKey.as_bytes,
     beaconcrypt_crypto.crypto_kem.mlkem768.PublicKey.as_bytes,
     beaconcrypt_crypto.crypto_sign.PublicKey.as_bytes,
-    beacon.Beacon.identity_pk, beacon.Beacon.mldsa_public_key, auth.MldsaIdentity.public_key,
+    beacon.Beacon.identity_pk,
     core.result.Result.ok, core.option.Option.as_ref, core.option.Option.take, core.mem.replace,
     core.option.Option.Insts.CoreOpsTry_traitTry.branch,
     core.option.Option.Insts.CoreOpsTry_traitTryTOptionInfallible.branch,
@@ -61,8 +61,7 @@ theorem get_registration_bundle_preserves (contracts : BundleContracts)
       | with_reducible exact contracts.kxPublicBytes _
       | with_reducible exact contracts.kemPublicBytes _
       | with_reducible exact contracts.init.edPublicBytes _
-      | with_reducible exact contracts.publicLeaves.mldsaPublic _
-      | exact RegistrationSigningContinuations.begin_beacon_init_total _ _ _ _ _
+      | exact RegistrationSigningContinuations.begin_beacon_init_total _ _ _ _
       | exact AdapterPublicRegistrationLoops.init_ready_total contracts.init _ _
       | exact RegistrationTrivial.BeaconInitReady_message_total _
       | exact RegistrationTrivial.BeaconInitReady_publish_total _ _
@@ -81,6 +80,7 @@ theorem response_packet_closure_total
   Registration.ResponsePacket_from_slices_total packet.identity_key packet.ephemeral_key
     packet.kem_cipher_text packet.key_id packet.app_cipher_text packet.signature
 
+omit platform localOps in
 theorem get_registration_bundle_total (contracts : BundleContracts)
     {R E : Type} (generator : rand_core.TryCryptoRng R E)
     (random : AdapterPublicRegistrationLoops.GenerationContracts generator) (self : beacon.Beacon) (rng : R) :

@@ -36,12 +36,14 @@ private theorem world_pure (value : X) :
   simp only [StateT.run_pure, simulateQ_pure, map_pure]
 
 
+private abbrev PeerMetadata := Std.Array U8 151#usize
+
 noncomputable def startup (setup : Setup base KemSK) (source : RegistrationNativeMldsa.Source)
     (ensureInit : StateT Unit ProbComp Bool) (identityIndex : Nat) (serverKeyId : U64)
     (identity : PqxdhJointIdentity.PublicIdentity) :
     StateT (PqxdhRecordLiftWorld.State n) ProbComp (Option (RegistrationNativePublicStartup.Started source)) := do
   let constructed ← PqxdhRecordLiftWorld.sampled
-    ((PqxdhLiveServerConstruction.construct (P := Unit) setup.joint ensureInit identityIndex serverKeyId none).run ())
+    ((PqxdhLiveServerConstruction.construct (P := PeerMetadata) setup.joint ensureInit identityIndex serverKeyId none).run ())
   match constructed.1 with
   | none => pure none
   | some _ =>
@@ -51,10 +53,9 @@ noncomputable def startup (setup : Setup base KemSK) (source : RegistrationNativ
       | some credential =>
           let created := RegistrationServerStartup.publicCreated identity identityIndex serverKeyId
           let _ ← PqxdhRecordLiftWorld.initializeServer created
-          let digest ← PqxdhRecordLiftWorld.effects (.inr (.hash (absBytes credential.publicKey)))
           let pin : session.ServerAuthenticationPin :=
             ⟨⟨PqxdhRootTableInitialization.rootArray identity.ed25519, serverKeyId⟩,
-              credential.publicKey, RegistrationAuthenticationShared.digestArray digest⟩
+              credential.publicKey⟩
           let frontend : RegistrationNativePublicFrontend.State source :=
             ⟨RegistrationServerMaterialFrontend.initial created.control pin, [],
               ⟨RegistrationServerRoleBackend.empty, [], [], []⟩, 0⟩
@@ -69,7 +70,7 @@ theorem start_world (setup : Setup base KemSK) (source : RegistrationNativeMldsa
   simp only [startup, RegistrationNativePublicStartup.start, world_bind]
   apply congrArg (fun continuation =>
     world (n := n) (KemSK := KemSK) (PqxdhRecordLiftWorld.sampled
-      ((PqxdhLiveServerConstruction.construct (P := Unit) setup.joint ensureInit identityIndex serverKeyId none).run ())) >>= continuation)
+      ((PqxdhLiveServerConstruction.construct (P := PeerMetadata) setup.joint ensureInit identityIndex serverKeyId none).run ())) >>= continuation)
   funext constructed
   cases constructed.1 with
   | none => exact (world_pure none).symm
@@ -78,7 +79,7 @@ theorem start_world (setup : Setup base KemSK) (source : RegistrationNativeMldsa
       apply congrArg (fun continuation =>
         world (n := n) (KemSK := KemSK) (PqxdhRecordLiftWorld.sampled (RegistrationNativeMldsa.generate source)) >>= continuation)
       funext generated
-      cases generated <;> simp only [world_pure, world_bind, RegistrationNativePublicInterpreter.effect]
+      cases generated <;> simp only [world_pure, world_bind]
 
 
 /-- All startup branches make zero root, selected-signing or public-HMAC queries. -/

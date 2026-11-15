@@ -9,6 +9,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialNativeAdjacent
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhInitialNativeLog PqxdhInitialNativePrefix PqxdhInitialNativeCarried
 open PqxdhInitialNativeRisk PqxdhInitialBeaconAmbient
 variable {ι M P I D K X Response Shared Result Origin A N C : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -25,44 +27,44 @@ variable (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writ
 noncomputable def continued (stage : Nat) (cut : Carried extra M P I D K Result Origin A N C S B) :
     ProbComp (Output M P I D K Result Origin A N C S B) :=
   RawCtxPendingMixedPrefix.finish (handler source writer stage external)
-    (RawCtxForwardScan.pack (PqxdhInitialOriginContext.frame mark sender route decode) cut)
+    (RawCtxForwardScan.pack (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode) cut)
 
 noncomputable def run (stage : Nat) (state : State A N C) : ProbComp (Output M P I D K Result Origin A N C S B) :=
-  (simulateQ (handler source writer stage external) (original source mark sender route decode execution)).run state
+  (simulateQ (handler source writer stage external) (original (associatedData := associatedData) (completedBinding := completedBinding) source mark sender route decode execution)).run state
 
 noncomputable def normalized (depth : Nat) (state : State A N C) : ProbComp (Output M P I D K Result Origin A N C S B) := by
   classical
-  exact carried source writer mark sender route decode execution depth (depth + 1) external state >>= fun cut =>
-    if Cached cut then continued source writer mark sender route decode external (depth + 1) cut
-    else continued source writer mark sender route decode external (depth + 2) cut
+  exact carried (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth (depth + 1) external state >>= fun cut =>
+    if Cached cut then continued (completedBinding := completedBinding) source writer mark sender route decode external (depth + 1) cut
+    else continued (completedBinding := completedBinding) source writer mark sender route decode external (depth + 2) cut
 
 /-- Both full adjacent source executions retain the same literal carried sampler and their complete original continuation and final state. -/
 theorem source_adjacent (depth : Nat) (state : State A N C) (before : Depth depth state) :
-    (carried source writer mark sender route decode execution depth (depth + 1) external state >>=
-      continued source writer mark sender route decode external (depth + 1)) =
-      run source writer mark sender route decode execution external (depth + 1) state ∧
-    (carried source writer mark sender route decode execution depth (depth + 1) external state >>=
-      continued source writer mark sender route decode external (depth + 2)) =
-      run source writer mark sender route decode execution external (depth + 2) state := by
+    (carried (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth (depth + 1) external state >>=
+      continued (completedBinding := completedBinding) source writer mark sender route decode external (depth + 1)) =
+      run (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution external (depth + 1) state ∧
+    (carried (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth (depth + 1) external state >>=
+      continued (completedBinding := completedBinding) source writer mark sender route decode external (depth + 2)) =
+      run (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution external (depth + 2) state := by
   constructor
-  · exact carried_finish source writer mark sender route decode execution depth (depth + 1) external state
-  · rw [carried_same source writer mark sender route decode execution depth external state before]
-    exact carried_finish source writer mark sender route decode execution depth (depth + 2) external state
+  · exact carried_finish (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth (depth + 1) external state
+  · rw [carried_same (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth external state before]
+    exact carried_finish (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth (depth + 2) external state
 
 /-- Replacing only the original cached branch costs one actual chronological collision probability, bounded by the complete source schedule. -/
 theorem normalization (depth k qPost : Nat)
     (bounded : ∀ reply, (execution.outside reply).IsTotalQueryBound qPost)
     (state : State A N C) (valid : Valid depth k state) (clean : Clean state) :
     ENNReal.ofReal (discreteDistance
-      (run source writer mark sender route decode execution external (depth + 2) state)
-      (normalized source writer mark sender route decode execution external depth state)) ≤
+      (run (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution external (depth + 2) state)
+      (normalized (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution external depth state)) ≤
       ∑ j ∈ Finset.range (7 + qPost * 67), ((k + j + 1 : Nat) : ℝ≥0∞) * (2 ^ 256 : ℝ≥0∞)⁻¹ := by
   classical
-  rw [← (source_adjacent source writer mark sender route decode execution external depth state valid.2.1).2, normalized]
+  rw [← (source_adjacent (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution external depth state valid.2.1).2, normalized]
   exact (ofReal_discreteDistance_bind_left_event_le _ _ _ Cached (fun cut good => by
     simp only [good, ite_false]
     exact EvalDistEq.refl _)).trans
-    (cached_risk source writer mark sender route decode execution depth k qPost external bounded state valid clean)
+    (cached_risk (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth k qPost external bounded state valid clean)
 
 /-- A common complete-state observation, including an appended private lineage check, preserves the one cached-branch charge. -/
 theorem normalization_after {Observed : Type} (depth k qPost : Nat)
@@ -70,30 +72,30 @@ theorem normalization_after {Observed : Type} (depth k qPost : Nat)
     (state : State A N C) (valid : Valid depth k state) (clean : Clean state)
     (observe : Output M P I D K Result Origin A N C S B → ProbComp Observed) :
     ENNReal.ofReal (discreteDistance
-      (run source writer mark sender route decode execution external (depth + 2) state >>= observe)
-      (normalized source writer mark sender route decode execution external depth state >>= observe)) ≤
+      (run (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution external (depth + 2) state >>= observe)
+      (normalized (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution external depth state >>= observe)) ≤
       ∑ j ∈ Finset.range (7 + qPost * 67), ((k + j + 1 : Nat) : ℝ≥0∞) * (2 ^ 256 : ℝ≥0∞)⁻¹ :=
   (ENNReal.ofReal_le_ofReal (discreteDistance_bind_right_le observe _ _)).trans
-    (normalization source writer mark sender route decode execution external depth k qPost bounded state valid clean)
+    (normalization (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution external depth k qPost bounded state valid clean)
 
 /-- One unchanged final source decision pays its normalized fresh-child comparison and the derived cached-input sum with coefficient one. -/
 theorem adjacent_bound (depth k qPost : Nat)
     (bounded : ∀ reply, (execution.outside reply).IsTotalQueryBound qPost)
     (state : State A N C) (valid : Valid depth k state) (clean : Clean state)
     (observe : Output M P I D K Result Origin A N C S B → ProbComp Bool) :
-    ENNReal.ofReal ((run source writer mark sender route decode execution external (depth + 1) state >>= observe).boolDistance
-      (run source writer mark sender route decode execution external (depth + 2) state >>= observe)) ≤
-      ENNReal.ofReal ((run source writer mark sender route decode execution external (depth + 1) state >>= observe).boolDistance
-        (normalized source writer mark sender route decode execution external depth state >>= observe)) +
+    ENNReal.ofReal ((run (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution external (depth + 1) state >>= observe).boolDistance
+      (run (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution external (depth + 2) state >>= observe)) ≤
+      ENNReal.ofReal ((run (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution external (depth + 1) state >>= observe).boolDistance
+        (normalized (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution external depth state >>= observe)) +
       ∑ j ∈ Finset.range (7 + qPost * 67), ((k + j + 1 : Nat) : ℝ≥0∞) * (2 ^ 256 : ℝ≥0∞)⁻¹ := by
   refine (ENNReal.ofReal_le_ofReal (ProbComp.boolDistance_triangle _
-    (normalized source writer mark sender route decode execution external depth state >>= observe) _)).trans ?_
+    (normalized (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution external depth state >>= observe) _)).trans ?_
   simp only [ProbComp.boolDistance, ← prEvent_eq_evalDist_singleton]
   rw [ENNReal.ofReal_add (abs_nonneg _) (abs_nonneg _)]
   apply add_le_add le_rfl
   refine (ENNReal.ofReal_le_ofReal (abs_prEvent_toReal_sub_le_discreteDistance _ _)).trans ?_
   rw [discreteDistance_comm]
-  exact normalization_after source writer mark sender route decode execution external depth k qPost bounded state valid clean observe
+  exact normalization_after (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution external depth k qPost bounded state valid clean observe
 
 end BeaconcryptCore.Computational.PqxdhInitialNativeAdjacent
 

@@ -7,6 +7,7 @@ The generated/native root reductions retain the actual source query ledger. This
 open OracleComp OracleSpec
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhGeneratedBeaconKdfBounds
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma
 open PqxdhGeneratedBeaconExperiment
 open PqxdhGeneratedBeaconSelector (Program driver driver_source_bound driver_class_bound driver_total)
@@ -98,12 +99,12 @@ theorem prepare_uniform_bound {KemSK : Type} {setup : StatefulPhase1Setup baseSp
     (nativeBound : ∀ target, (ccaAmbient (env.native.encaps target)).IsQueryBoundP IsMlKemUniformQuery uNative)
     (totalBound : ∀ target, (ccaAmbient (kem.encaps target)).IsQueryBoundP IsMlKemUniformQuery uTotal)
     (target : TargetKemPublicKey) :
-    ((protocol env kem attachedVerify primitives program post).prepare target).IsQueryBoundP IsMlKemUniformQuery
+    ((protocol (associatedData := associatedData) env kem attachedVerify primitives program post).prepare target).IsQueryBoundP IsMlKemUniformQuery
       ((32 + (qPrekey + (qOneTime + (qSource + (qWrite + compilerBill prefixBudget))))) +
         (uEphemeral + (max uNative uTotal + ((64 + 5 * qAux) +
           (postBudget.1 .coin + 64 * (postBudget.1 .send + postBudget.1 .raw + postBudget.1 .hash)))))) := by
   apply PqxdhGeneratedRootQueryBounds.rootProtocol_prefix_bound kem env.parameters attachedVerify primitives setup
-    (driver env.toEnvironment program) (observer env program post) IsMlKemUniformQuery
+    (driver env.toEnvironment program) (observer (associatedData := associatedData) env program post) IsMlKemUniformQuery
   · exact borrowed_uniform_bound env attachedVerify primitives program prefixBudget prefixBound
       qPrekey qOneTime qSource qWrite prekeyBound oneTimeBound noCreate sourceCoins writerBound
   · exact ephemeralBound
@@ -112,13 +113,13 @@ theorem prepare_uniform_bound {KemSK : Type} {setup : StatefulPhase1Setup baseSp
   · intro challenge output execution state
     simpa only [Environment.parameters, Nat.mul_zero, Nat.zero_add] using
       (PqxdhPrivateAcceptedRootBounds.observe_bounds env.source challenge attachedVerify primitives 1 setup
-        (observer env program post) output execution state 0 0 _ 0 0 0
-        (PqxdhGeneratedBeaconQueryBounds.completed_observer_bounds env program post postBudget postBound qAux output execution)).1
+        (observer (associatedData := associatedData) env program post) output execution state 0 0 _ 0 0 0
+        (PqxdhGeneratedBeaconQueryBounds.completed_observer_bounds (associatedData := associatedData) env program post postBudget postBound qAux output execution)).1
   · intro challenge output execution state
     simpa only [Environment.parameters, Nat.mul_zero, Nat.zero_add] using
       (PqxdhPrivateAcceptedRootBounds.acceptedObserve_bounds env.source challenge attachedVerify primitives 1 setup
-        (observer env program post) output execution state 0 0 _ 0 0 0
-        (PqxdhGeneratedBeaconQueryBounds.accepted_observer_bounds env program post postBudget postBound qAux auxBound output execution)).1
+        (observer (associatedData := associatedData) env program post) output execution state 0 0 _ 0 0 0
+        (PqxdhGeneratedBeaconQueryBounds.accepted_observer_bounds (associatedData := associatedData) env program post postBudget postBound qAux auxBound output execution)).1
 
 /-- Base and logical-decapsulation counts include every original generation and encapsulation request; the concrete native observer performs only its separately charged local work. -/
 theorem prepare_class_bound {KemSK : Type} {setup : StatefulPhase1Setup baseSpec}
@@ -142,7 +143,7 @@ theorem prepare_class_bound {KemSK : Type} {setup : StatefulPhase1Setup baseSpec
     (qAux : Nat)
     (auxBound : ∀ query primitive, ((env.aux query).run primitive).IsTotalQueryBound qAux)
     (target : TargetKemPublicKey) :
-    ((protocol env kem attachedVerify primitives program post).prepare target).IsQueryBoundP predicate
+    ((protocol (associatedData := associatedData) env kem attachedVerify primitives program post).prepare target).IsQueryBoundP predicate
       ((qPrekey + (qOneTime + qDriver)) + (qEphemeral + max qNative qTotal)) := by
   have excluded : ∀ coin, ¬ predicate (.inl (.inl coin)) := by
     rcases classChoice with rfl | rfl <;> simp [IsMlKemBaseQuery, IsMlKemLogicalDecapsulationQuery]
@@ -150,11 +151,11 @@ theorem prepare_class_bound {KemSK : Type} {setup : StatefulPhase1Setup baseSpec
     qPrekey qOneTime qDriver prekeyBound oneTimeBound driverBound
   have completed : ∀ challenge output execution state,
       (PqxdhPrivateAcceptedRoot.observe env.parameters.source challenge attachedVerify primitives 1 setup
-        (observer env program post) output execution state).IsQueryBoundP predicate 0 := by
+        (observer (associatedData := associatedData) env program post) output execution state).IsQueryBoundP predicate 0 := by
     intro challenge output execution state
     have bounded := PqxdhPrivateAcceptedRootBounds.observe_bounds env.parameters.source challenge
-      attachedVerify primitives 1 setup (observer env program post) output execution state 0 0 _ 0 0 0
-      (PqxdhGeneratedBeaconQueryBounds.completed_observer_bounds env program post postBudget postBound qAux output execution)
+      attachedVerify primitives 1 setup (observer (associatedData := associatedData) env program post) output execution state 0 0 _ 0 0 0
+      (PqxdhGeneratedBeaconQueryBounds.completed_observer_bounds (associatedData := associatedData) env program post postBudget postBound qAux output execution)
     rcases classChoice with rfl | rfl
     · cases Subsingleton.elim predicateDecidable instDecidablePredIsMlKemBaseQuery
       exact bounded.2.1
@@ -162,18 +163,18 @@ theorem prepare_class_bound {KemSK : Type} {setup : StatefulPhase1Setup baseSpec
       simpa only [Nat.zero_add] using bounded.2.2
   have accepted : ∀ challenge output execution state,
       (PqxdhPrivateAcceptedRoot.acceptedObserve env.parameters.source challenge attachedVerify primitives 1 setup
-        (observer env program post) output execution state).IsQueryBoundP predicate 0 := by
+        (observer (associatedData := associatedData) env program post) output execution state).IsQueryBoundP predicate 0 := by
     intro challenge output execution state
     have bounded := PqxdhPrivateAcceptedRootBounds.acceptedObserve_bounds env.parameters.source challenge
-      attachedVerify primitives 1 setup (observer env program post) output execution state 0 0 _ 0 0 0
-      (PqxdhGeneratedBeaconQueryBounds.accepted_observer_bounds env program post postBudget postBound qAux auxBound output execution)
+      attachedVerify primitives 1 setup (observer (associatedData := associatedData) env program post) output execution state 0 0 _ 0 0 0
+      (PqxdhGeneratedBeaconQueryBounds.accepted_observer_bounds (associatedData := associatedData) env program post postBudget postBound qAux auxBound output execution)
     rcases classChoice with rfl | rfl
     · cases Subsingleton.elim predicateDecidable instDecidablePredIsMlKemBaseQuery
       exact bounded.2.1
     · cases Subsingleton.elim predicateDecidable instDecidablePredIsMlKemLogicalDecapsulationQuery
       simpa only [Nat.zero_add] using bounded.2.2
   simpa only [protocol, Nat.add_zero] using PqxdhGeneratedRootQueryBounds.rootProtocol_prefix_bound kem env.parameters
-    attachedVerify primitives setup (driver env.toEnvironment program) (observer env program post) predicate
+    attachedVerify primitives setup (driver env.toEnvironment program) (observer (associatedData := associatedData) env program post) predicate
     (qPrekey + (qOneTime + qDriver)) qEphemeral qNative qTotal 0 first ephemeralBound nativeBound totalBound completed accepted target
 
 /-- The actual accepted native callback pays the builder and complete post-schedule on both response outcomes. -/
@@ -193,22 +194,22 @@ theorem native_sampler_bounds {KemSK : Type} {setup : StatefulPhase1Setup baseSp
     (decapBound : ∀ secret ciphertext,
       (simulateQ (kemAmbientImpl baseImpl) (kem.decaps secret ciphertext)).IsTotalQueryBound qDecap)
     (prepareBound : ∀ target,
-      ((protocol env kem attachedVerify primitives program post).prepare target).IsQueryBoundP IsMlKemUniformQuery uPre ∧
-      ((protocol env kem attachedVerify primitives program post).prepare target).IsQueryBoundP IsMlKemBaseQuery bPre ∧
-      ((protocol env kem attachedVerify primitives program post).prepare target).IsQueryBoundP IsMlKemLogicalDecapsulationQuery dPre)
+      ((protocol (associatedData := associatedData) env kem attachedVerify primitives program post).prepare target).IsQueryBoundP IsMlKemUniformQuery uPre ∧
+      ((protocol (associatedData := associatedData) env kem attachedVerify primitives program post).prepare target).IsQueryBoundP IsMlKemBaseQuery bPre ∧
+      ((protocol (associatedData := associatedData) env kem attachedVerify primitives program post).prepare target).IsQueryBoundP IsMlKemLogicalDecapsulationQuery dPre)
     (postBudget : RawCtxRevealBudgets.Budget)
     (postBound : ∀ choice response, RawCtxRevealBudgets.Bounded (post choice response) postBudget)
     (qAux : Nat)
     (auxBound : ∀ query primitive, ((env.aux query).run primitive).IsTotalQueryBound qAux) :
     PqxdhChallengeSecretQueryBounds.SamplerBounds baseImpl kem
-      (protocol env kem attachedVerify primitives program post)
+      (protocol (associatedData := associatedData) env kem attachedVerify primitives program post)
       qKeygen qEncap qBase qDecap uPre bPre dPre (nativePostBill postBudget qAux) 0 0 0 := by
   simpa only [protocol, nativePostBill, Nat.mul_zero, Nat.zero_add] using
     PqxdhGeneratedRootQueryBounds.rootProtocol_sampler_bounds baseImpl kem env.parameters attachedVerify primitives setup
-      (driver env.toEnvironment program) (observer env program post)
+      (driver env.toEnvironment program) (observer (associatedData := associatedData) env program post)
       qKeygen qEncap qBase qDecap uPre bPre dPre 0 0 (nativePostBill postBudget qAux) 0 0 0
       keygenBound encapBound baseBound decapBound prepareBound
-      (PqxdhGeneratedBeaconQueryBounds.accepted_observer_bounds env program post postBudget postBound qAux auxBound)
+      (PqxdhGeneratedBeaconQueryBounds.accepted_observer_bounds (associatedData := associatedData) env program post postBudget postBound qAux auxBound)
 
 /-- The same concrete reductions have one Extract call and one HMAC challenge call, with every source-local draw retained in the client allowance. -/
 theorem reduction_query_ledger {KemSK : Type} {setup : StatefulPhase1Setup baseSpec}
@@ -224,14 +225,14 @@ theorem reduction_query_ledger {KemSK : Type} {setup : StatefulPhase1Setup baseS
     (decapBound : ∀ secret ciphertext,
       (simulateQ (kemAmbientImpl baseImpl) (kem.decaps secret ciphertext)).IsTotalQueryBound qDecap)
     (prepareBound : ∀ target,
-      ((protocol env kem attachedVerify primitives program post).prepare target).IsQueryBoundP IsMlKemUniformQuery uPre ∧
-      ((protocol env kem attachedVerify primitives program post).prepare target).IsQueryBoundP IsMlKemBaseQuery bPre ∧
-      ((protocol env kem attachedVerify primitives program post).prepare target).IsQueryBoundP IsMlKemLogicalDecapsulationQuery dPre)
+      ((protocol (associatedData := associatedData) env kem attachedVerify primitives program post).prepare target).IsQueryBoundP IsMlKemUniformQuery uPre ∧
+      ((protocol (associatedData := associatedData) env kem attachedVerify primitives program post).prepare target).IsQueryBoundP IsMlKemBaseQuery bPre ∧
+      ((protocol (associatedData := associatedData) env kem attachedVerify primitives program post).prepare target).IsQueryBoundP IsMlKemLogicalDecapsulationQuery dPre)
     (postBudget : RawCtxRevealBudgets.Budget)
     (postBound : ∀ choice response, RawCtxRevealBudgets.Bounded (post choice response) postBudget)
     (qAux : Nat)
     (auxBound : ∀ query primitive, ((env.aux query).run primitive).IsTotalQueryBound qAux) :
-    let p := protocol env kem attachedVerify primitives program post
+    let p := protocol (associatedData := associatedData) env kem attachedVerify primitives program post
     let extractClient := PqxdhCorrelatedExtractFamily.reduction env.source hmac baseImpl kem p
     let rootClient := PqxdhCorrelatedExpand.rootReduction env.source baseImpl kem p
     let Q := qKeygen + ((uPre + qBase * bPre + qDecap * dPre) + qEncap) + nativePostBill postBudget qAux
@@ -245,19 +246,19 @@ theorem reduction_query_ledger {KemSK : Type} {setup : StatefulPhase1Setup baseS
       (PqxdhCorrelatedExpandHybrid.indexedReduction hmac rootClient index).IsQueryBoundP
         PqxdhSecretInputKdf.IsHmacChallengeQuery 1 := by
   dsimp only
-  have bounded := native_sampler_bounds env baseImpl kem attachedVerify primitives program post
+  have bounded := native_sampler_bounds (associatedData := associatedData) env baseImpl kem attachedVerify primitives program post
     qKeygen qEncap qBase qDecap uPre bPre dPre keygenBound encapBound baseBound decapBound prepareBound
     postBudget postBound qAux auxBound
   have extracted := PqxdhCorrelatedExtractQueryBounds.reduction_bounds env.source hmac baseImpl kem
-    (protocol env kem attachedVerify primitives program post) _ _ _ _ _ _ _ _ _ _ _ bounded
+    (protocol (associatedData := associatedData) env kem attachedVerify primitives program post) _ _ _ _ _ _ _ _ _ _ _ bounded
   have roots := PqxdhCorrelatedExpandQueryBounds.reduction_bounds env.source baseImpl kem
-    (protocol env kem attachedVerify primitives program post) _ _ _ _ _ _ _ _ _ _ _ bounded
+    (protocol (associatedData := associatedData) env kem attachedVerify primitives program post) _ _ _ _ _ _ _ _ _ _ _ bounded
   simp only [Nat.mul_zero, Nat.add_zero] at extracted roots
   refine ⟨extracted.1, extracted.2, roots.1, roots.2, ?_⟩
   intro index
   simpa only [Nat.mul_one] using PqxdhCorrelatedExpandQueryBounds.indexed_bounds hmac
     (PqxdhCorrelatedExpand.rootReduction env.source baseImpl kem
-      (protocol env kem attachedVerify primitives program post)) index _ 1 roots.1 roots.2
+      (protocol (associatedData := associatedData) env kem attachedVerify primitives program post)) index _ 1 roots.1 roots.2
 
 /-- Complete real and random challengers retain their own sampled keys or answers, including draws unused by a completed client. -/
 theorem reduction_sampler_ledger {KemSK : Type} {setup : StatefulPhase1Setup baseSpec}
@@ -273,14 +274,14 @@ theorem reduction_sampler_ledger {KemSK : Type} {setup : StatefulPhase1Setup bas
     (decapBound : ∀ secret ciphertext,
       (simulateQ (kemAmbientImpl baseImpl) (kem.decaps secret ciphertext)).IsTotalQueryBound qDecap)
     (prepareBound : ∀ target,
-      ((protocol env kem attachedVerify primitives program post).prepare target).IsQueryBoundP IsMlKemUniformQuery uPre ∧
-      ((protocol env kem attachedVerify primitives program post).prepare target).IsQueryBoundP IsMlKemBaseQuery bPre ∧
-      ((protocol env kem attachedVerify primitives program post).prepare target).IsQueryBoundP IsMlKemLogicalDecapsulationQuery dPre)
+      ((protocol (associatedData := associatedData) env kem attachedVerify primitives program post).prepare target).IsQueryBoundP IsMlKemUniformQuery uPre ∧
+      ((protocol (associatedData := associatedData) env kem attachedVerify primitives program post).prepare target).IsQueryBoundP IsMlKemBaseQuery bPre ∧
+      ((protocol (associatedData := associatedData) env kem attachedVerify primitives program post).prepare target).IsQueryBoundP IsMlKemLogicalDecapsulationQuery dPre)
     (postBudget : RawCtxRevealBudgets.Budget)
     (postBound : ∀ choice response, RawCtxRevealBudgets.Bounded (post choice response) postBudget)
     (qAux : Nat)
     (auxBound : ∀ query primitive, ((env.aux query).run primitive).IsTotalQueryBound qAux) :
-    let p := protocol env kem attachedVerify primitives program post
+    let p := protocol (associatedData := associatedData) env kem attachedVerify primitives program post
     let extractClient := PqxdhCorrelatedExtractFamily.reduction env.source hmac baseImpl kem p
     let rootClient := PqxdhCorrelatedExpand.rootReduction env.source baseImpl kem p
     let Q := qKeygen + ((uPre + qBase * bPre + qDecap * dPre) + qEncap) + nativePostBill postBudget qAux
@@ -294,13 +295,13 @@ theorem reduction_sampler_ledger {KemSK : Type} {setup : StatefulPhase1Setup bas
       (PqxdhSecretInputKdf.hmacPrfRandomGame
         (PqxdhCorrelatedExpandHybrid.indexedReduction hmac rootClient index)).IsTotalQueryBound (64 + Q + 64) := by
   dsimp only
-  have bounded := native_sampler_bounds env baseImpl kem attachedVerify primitives program post
+  have bounded := native_sampler_bounds (associatedData := associatedData) env baseImpl kem attachedVerify primitives program post
     qKeygen qEncap qBase qDecap uPre bPre dPre keygenBound encapBound baseBound decapBound prepareBound
     postBudget postBound qAux auxBound
   have extracted := PqxdhCorrelatedExtractQueryBounds.reduction_uniform_ledger env.source hmac baseImpl kem
-    (protocol env kem attachedVerify primitives program post) _ _ _ _ _ _ _ _ _ _ _ bounded
+    (protocol (associatedData := associatedData) env kem attachedVerify primitives program post) _ _ _ _ _ _ _ _ _ _ _ bounded
   have expanded := PqxdhCorrelatedExpandQueryBounds.source_uniform_ledger env.source hmac baseImpl kem
-    (protocol env kem attachedVerify primitives program post) _ _ _ _ _ _ _ _ _ _ _ bounded
+    (protocol (associatedData := associatedData) env kem attachedVerify primitives program post) _ _ _ _ _ _ _ _ _ _ _ bounded
   dsimp only at extracted expanded
   simp only [Nat.mul_zero, Nat.add_zero, Nat.mul_one] at extracted expanded
   exact ⟨extracted.1, extracted.2, expanded.2.1, expanded.2.2.1, expanded.2.2.2⟩
@@ -318,14 +319,14 @@ theorem ordinary_kem_ledger {KemSK : Type} {setup : StatefulPhase1Setup baseSpec
     (decapBound : ∀ secret ciphertext,
       (simulateQ (kemAmbientImpl baseImpl) (kem.decaps secret ciphertext)).IsTotalQueryBound qDecap)
     (prepareBound : ∀ target,
-      ((protocol env kem attachedVerify primitives program post).prepare target).IsQueryBoundP IsMlKemUniformQuery uPre ∧
-      ((protocol env kem attachedVerify primitives program post).prepare target).IsQueryBoundP IsMlKemBaseQuery bPre ∧
-      ((protocol env kem attachedVerify primitives program post).prepare target).IsQueryBoundP IsMlKemLogicalDecapsulationQuery dPre)
+      ((protocol (associatedData := associatedData) env kem attachedVerify primitives program post).prepare target).IsQueryBoundP IsMlKemUniformQuery uPre ∧
+      ((protocol (associatedData := associatedData) env kem attachedVerify primitives program post).prepare target).IsQueryBoundP IsMlKemBaseQuery bPre ∧
+      ((protocol (associatedData := associatedData) env kem attachedVerify primitives program post).prepare target).IsQueryBoundP IsMlKemLogicalDecapsulationQuery dPre)
     (postBudget : RawCtxRevealBudgets.Budget)
     (postBound : ∀ choice response, RawCtxRevealBudgets.Bounded (post choice response) postBudget)
     (qAux : Nat)
     (auxBound : ∀ query primitive, ((env.aux query).run primitive).IsTotalQueryBound qAux) :
-    let p := protocol env kem attachedVerify primitives program post
+    let p := protocol (associatedData := associatedData) env kem attachedVerify primitives program post
     let Q := qKeygen + ((uPre + qBase * bPre + qDecap * dPre) + qEncap) + nativePostBill postBudget qAux
     (PqxdhChallengeSecretRouting.reduction env.source kem p).MakesAtMostQueries
       uPre bPre dPre (nativePostBill postBudget qAux) 0 0 ∧
@@ -337,15 +338,15 @@ theorem ordinary_kem_ledger {KemSK : Type} {setup : StatefulPhase1Setup baseSpec
     (PqxdhPrivateRootGameBudgets.oneKeyFairProgram baseImpl kem
       (PqxdhChallengeSecretRouting.reduction env.source kem p)).IsTotalQueryBound (Q + 33) := by
   dsimp only
-  have bounded := native_sampler_bounds env baseImpl kem attachedVerify primitives program post
+  have bounded := native_sampler_bounds (associatedData := associatedData) env baseImpl kem attachedVerify primitives program post
     qKeygen qEncap qBase qDecap uPre bPre dPre keygenBound encapBound baseBound decapBound prepareBound
     postBudget postBound qAux auxBound
   have calls := PqxdhGeneratedRootQueryBounds.rootProtocol_reduction_bounds kem env.parameters attachedVerify primitives
-    setup (driver env.toEnvironment program) (observer env program post) uPre bPre dPre
+    setup (driver env.toEnvironment program) (observer (associatedData := associatedData) env program post) uPre bPre dPre
     0 0 (nativePostBill postBudget qAux) 0 0 0 prepareBound
-    (PqxdhGeneratedBeaconQueryBounds.accepted_observer_bounds env program post postBudget postBound qAux auxBound)
+    (PqxdhGeneratedBeaconQueryBounds.accepted_observer_bounds (associatedData := associatedData) env program post postBudget postBound qAux auxBound)
   have samplers := PqxdhGeneratedRootQueryBounds.correlated_world_ledger baseImpl kem env.parameters
-    attachedVerify primitives setup (driver env.toEnvironment program) (observer env program post)
+    attachedVerify primitives setup (driver env.toEnvironment program) (observer (associatedData := associatedData) env program post)
     qKeygen qEncap qBase qDecap uPre bPre dPre 0 0 (nativePostBill postBudget qAux) 0 0 0 (by simpa only [protocol, Nat.mul_zero, Nat.zero_add] using bounded)
   refine ⟨?_, ?_⟩
   · simpa only [protocol, Environment.parameters, Nat.mul_zero, Nat.zero_add] using calls
@@ -366,9 +367,9 @@ theorem prepare_decapsulation_bound {KemSK : Type} {setup : StatefulPhase1Setup 
     (qAux : Nat)
     (auxBound : ∀ query primitive, ((env.aux query).run primitive).IsTotalQueryBound qAux)
     (target : TargetKemPublicKey) :
-    ((protocol env kem attachedVerify primitives program post).prepare target).IsQueryBoundP
+    ((protocol (associatedData := associatedData) env kem attachedVerify primitives program post).prepare target).IsQueryBoundP
       IsMlKemLogicalDecapsulationQuery qD := by
-  simpa only [Nat.zero_add, Nat.add_zero, Nat.max_self] using prepare_class_bound env kem attachedVerify primitives
+  simpa only [Nat.zero_add, Nat.add_zero, Nat.max_self] using prepare_class_bound (associatedData := associatedData) env kem attachedVerify primitives
     program post IsMlKemLogicalDecapsulationQuery (Or.inr rfl) 0 0 qD 0 0 0
     (fun identity => PqxdhCorrelatedRootQueryBounds.ccaAmbient_no_decap (setup.prekey identity))
     (fun identity before target => PqxdhCorrelatedRootQueryBounds.ccaAmbient_no_decap (setup.oneTime identity before target))

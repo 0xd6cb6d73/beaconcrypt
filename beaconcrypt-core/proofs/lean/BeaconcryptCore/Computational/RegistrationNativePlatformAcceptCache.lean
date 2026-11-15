@@ -58,7 +58,7 @@ private theorem quiet_native {S W : Type} (field : S → W)
 
 theorem afterAuthentication (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (reserve : StateT Platform ProbComp Bool)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit) :
     Quiet (RegistrationNativeInitFinal.summary (n := n)) (RegistrationNativePlatformServerSdk.afterAuthentication coins setup checks (StateT.lift reserve)
       representation created packet authenticated) := by
@@ -127,7 +127,7 @@ attribute [local irreducible] RegistrationNativePlatformSourceAccept.authenticat
 private theorem afterPin (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks) (reserve : StateT Platform ProbComp Bool)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (pin : RustM (core.option.Option session.ServerAuthenticationPin)) :
     Keeps (serverCache (n := n)) (RegistrationNativePlatformSourceAccept.afterPin coins setup codec checks (StateT.lift reserve)
       route verify representation created packet pin) := by
@@ -154,7 +154,7 @@ private theorem afterPin (coins : QueryImpl unifSpec (StateT Platform ProbComp))
 theorem accept (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks) (reserve : StateT Platform ProbComp Bool)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) :
     Keeps (serverCache (n := n)) (RegistrationNativePlatformSourceAccept.accept coins setup codec checks reserve
       route verify representation created packet) := by

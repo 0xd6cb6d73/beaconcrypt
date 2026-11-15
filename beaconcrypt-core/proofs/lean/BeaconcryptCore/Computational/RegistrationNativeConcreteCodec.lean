@@ -69,8 +69,8 @@ theorem init_readback : RegistrationNativeWire.InitReadBack wire :=
 theorem response_readback : RegistrationNativeWire.ResponseReadBack wire :=
   @RegistrationNativeSourceWire.response_readback decoderOperations serializerBranches parseFrame FrameCodecContracts.nativeWrite
 
-theorem init_bytes (view : registration.SignedInitView) :
-    wire.encodeInit view = .Some ((136#u8 :: RegistrationSerializerInitBytes.payload
+theorem init_bytes (view : registration.InitView) :
+    wire.encodeInit view = .Some ((134#u8 :: RegistrationSerializerInitBytes.payload
       (RegistrationNativeSourceEncoders.initSyntax view)).map absByte) :=
   RegistrationNativeSourceWire.init_encoded serializerBranches view
 

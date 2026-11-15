@@ -156,7 +156,8 @@ theorem commands_inherit (P : (SourceSpec KemSK).Domain → Prop) [DecidablePred
     (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (work : OracleComp (SourceSpec KemSK) X) (n : ℕ)
     (bounded : work.IsQueryBoundP P n) (index : Nat)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) (state : PqxdhServerAuthNative.NativeState KemSK) :
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry ×
+      (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : PqxdhServerAuthNative.NativeState KemSK) :
     ∀ reached ∈ support (PqxdhRegistrationJointKemEncapsulation.commands setup codec checks identityIndex publicIdentity
         (PqxdhRegistrationJointAcceptCut.scan work index) owners state), ∀ raw next,
       reached.1.1 = .pending raw next → ∀ reply, (next reply).IsQueryBoundP P n := by
@@ -184,7 +185,8 @@ theorem opaqueScan_inherit (P : (SourceSpec KemSK).Domain → Prop) [DecidablePr
     (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × PqxdhRegistrationJointAcceptCutTag.Tag → R)
     (work : OracleComp (SourceSpec KemSK) X) (n : ℕ) (bounded : work.IsQueryBoundP P n)
-    (index : Nat) (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) (state : PqxdhServerAuthNative.NativeState KemSK) :
+    (index : Nat) (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry ×
+      (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : PqxdhServerAuthNative.NativeState KemSK) :
     ∀ cut ∈ support (opaqueScan (Reader := Reader) setup codec checks identityIndex publicIdentity observe work index
       owners state), InheritsCut P n cut := by
   intro cut reached
@@ -246,7 +248,7 @@ theorem sourcePreOpaque_inherit (P : (SourceSpec KemSK).Domain → Prop) [Decida
     · simp only [Inherits]
     · simp only [Inherits]
       have scanReached := support_option _ _ _ cut result.2 (by rw [← cutCase]; exact resultReached)
-      exact opaqueScan_inherit P setup codec checks _ _ _ work n bounded index [] _ cut scanReached
+      exact opaqueScan_inherit P setup codec checks _ _ _ work n bounded index ([], fun _ => none) _ cut scanReached
 
 /-- Every outcome of G1's prefix for the KEM-ideal branch has a context whose continuation inherits every query bound of the source program. -/
 theorem sharedStart_inherit (P : (SourceSpec KemSK).Domain → Prop) [DecidablePred P]
@@ -422,7 +424,10 @@ theorem hiddenN_build (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
     | some token => _ : OracleComp (SkelSpec V) _).IsQueryBoundP _ 0
   split
   · trivial
-  · exact isQueryBoundP_bind (n := 0) (m := 0) (liftComp_hidden _) fun _ _ => trivial
+  · split
+    · trivial
+    · exact isQueryBoundP_bind (n := 0) (m := 0) (liftComp_hidden _) fun _ _ =>
+        isQueryBoundP_bind (n := 0) (m := 0) (liftComp_hidden _) fun _ _ => trivial
 
 theorem hiddenN_tail (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (query : (PqxdhBeaconPhase2Publication.NativeTailSpec Response).Domain) :
@@ -512,7 +517,8 @@ variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response : Type}
 /-- Every source request makes at most one grouped Beacon finish, and only if it is a Beacon finish request. -/
 theorem groupedClient_group (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (selected : Nat)
     (challenge : MlKem768Ciphertext) (query : (PqxdhRegistrationJointRevealSchedule.Spec KemSK).Domain)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) :
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry ×
+      (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) :
     ((groupedClient setup codec selected challenge query).run owners).IsQueryBoundP
       (fun query => groupRequest? (κ₁ := (PqxdhRegistrationJointServiceSchedule.Spec KemSK Response).Domain) query = true)
       (if FinishKind query then 1 else 0) := by
@@ -530,16 +536,24 @@ theorem groupedClient_group (setup : Setup baseSpec KemSK) (codec : Codec Reader
         split
         · trivial
         · rw [isQueryBoundP_map_iff]
-          refine IsQueryBoundP.simulateQ_of_step
-            (PqxdhRegistrationJointKemRomSplit.groupedOwner_bound raw _) (fun query owner => ?_)
-            (fun query owner => ?_)
-          · rcases query with query | query
-            · simp [PqxdhRegistrationJointKemRomSplit.ownerGroup] at owner
-            · exact query_one _ _
-          · rcases query with query | query
-            · exact simulate_free (groupedPoolLift (KemSK := KemSK) (Response := Response)) _
-                (fun query => query_free _ _ (by simp [groupRequest?])) _
-            · simp [PqxdhRegistrationJointKemRomSplit.ownerGroup] at owner
+          unfold groupedHashed
+          split
+          · split
+            · rw [isQueryBoundP_query_bind_iff]
+              refine ⟨Or.inl (by simp [groupRequest?]), fun digest => ?_⟩
+              simp only [groupRequest?, Bool.false_eq_true, ↓reduceIte]
+              refine IsQueryBoundP.simulateQ_of_step
+                (PqxdhRegistrationJointKemRomSplit.groupedOwner_bound _ raw _) (fun query owner => ?_)
+                (fun query owner => ?_)
+              · rcases query with query | query
+                · simp [PqxdhRegistrationJointKemRomSplit.ownerGroup] at owner
+                · exact query_one _ _
+              · rcases query with query | query
+                · exact simulate_free (groupedPoolLift (KemSK := KemSK) (Response := Response)) _
+                    (fun query => query_free _ _ (by simp [groupRequest?])) _
+                · simp [PqxdhRegistrationJointKemRomSplit.ownerGroup] at owner
+            · trivial
+          · trivial
     | _ => exact (lifted _).mono (Nat.zero_le _)
   · exact (lifted _).mono (Nat.zero_le _)
 
@@ -563,7 +577,7 @@ theorem skelResume_hidden (setup : Setup baseSpec KemSK) (codec : Codec Reader R
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)
     (value : PqxdhServerRootPreparation.Verified Reader)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)
-    (consumed : List Pqxdh.Bytes) (game : GameState KemSK) (owners : List EncodedEntry)
+    (consumed : List Pqxdh.Bytes) (game : GameState KemSK) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))
     (next : Option Nat → OracleComp (SourceSpec KemSK) X) (selected : Nat) (ciphertext : MlKem768Ciphertext)
     (services : Services V Response) (m : ℕ)
     (bounded : ∀ reply, (next reply).IsQueryBoundP (FinishKind (KemSK := KemSK)) m) :

@@ -43,8 +43,8 @@ class InitAuthenticationExtraction(unittest.TestCase):
     def test_changed_hash(self):
         self.rejected(b"auth.execute_hash hr", b"auth.unreviewed_hash hr")
 
-    def test_changed_mldsa_verdict(self):
-        self.rejected(b"        verified", b"        true")
+    def test_discarded_transcript_hash(self):
+        self.rejected(b"InitHash.resume pending hash", b"InitHash.resume pending .None")
 
     def test_changed_opened_reply(self):
         self.rejected(

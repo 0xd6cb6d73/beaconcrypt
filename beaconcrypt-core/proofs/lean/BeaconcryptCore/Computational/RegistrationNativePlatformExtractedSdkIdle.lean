@@ -35,6 +35,7 @@ def NativeFinishIdle : RegistrationNativeBeaconFrontend.Phase →Prop
   | .initSent ..=>False
   | _=>True
 
+omit platform localOps in
 theorem bundle_source {R Error : Type} (generator : rand_core.TryCryptoRng R Error)
     (self : beaconcrypt_public_wrapper.beacon.Beacon) (rng : R) (idle : BundleIdle self.state) :
     (beaconcrypt_public_request.beacon.Beacon.get_registration_bundle_with_rng (m:=RustT m) generator self rng).run=
@@ -67,7 +68,7 @@ theorem finish_phase (view : AdapterPublicWrapperState.MaterialView source KemSK
 
 omit material platform ed localOps crypto children [PublicWrapperPlatform.CryptoOperations] [Codecs (RustT m)] in
 theorem bundle_native (coins : QueryImpl unifSpec m) (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) m) (index : Nat)
     (before : RegistrationNativeExperiment.State n KemSK source) (owner : RegistrationNativeBeaconFrontend.Owner source)
     (selected : before.beacons[index]?=some owner) (idle : NativeBundleIdle owner.phase) :

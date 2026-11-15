@@ -32,7 +32,7 @@ variable (keyView : RegistrationNativePlatformSourceSeal.KeyView)
 variable (failure : primitives.Error) (erased : commitment.CommitmentTranscript)
 open RegistrationNativePlatformExtractedSdkOrdinaryServerReceiveStep (route)
 variable (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (views : Views)
-variable (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (credential : RegistrationNativeMldsa.Credential mlSource)
 
 def Refused (views : Views) (self : beaconcrypt_public_wrapper.server.Server) (bytes : Slice U8) : Prop :=

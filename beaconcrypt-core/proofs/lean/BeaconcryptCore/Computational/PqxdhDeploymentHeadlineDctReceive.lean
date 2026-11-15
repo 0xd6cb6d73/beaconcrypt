@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhServerAuthBeaconFactor
+import BeaconcryptCore.Computational.PqxdhServerAuthBeaconFirstOpening
 import BeaconcryptCore.Computational.PqxdhDeploymentHiddenLayout
 import BeaconcryptCore.Computational.PqxdhRecordFactsBindingEvidence
 
@@ -22,6 +23,7 @@ open RustM beaconcrypt_core ratchet ratchet.refined ratchet.concrete
 set_option autoImplicit false
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctReceive
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 
 /-! ### Keyed commitments -/
 
@@ -137,7 +139,7 @@ theorem chain_keyed (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
       RawCtxChainOwner.State PqxdhServerAuthSendFactor.Kernel Unit) × RawCtxSharedPrimitive.SharedState Unit)
     (received : result ∈ support (((RawCtxChainOwner.rawReceive (PqxdhServerAuthBeaconFactor.primCalls sendCall
       (PqxdhServerAuthBeaconFactor.nativePrim setup codec) setup.source value.1) decode raw).run
-        (PqxdhServerAuthBeaconFactor.localState candidate (PqxdhServerAuthBeaconFactor.initial value.2))).run state))
+        (PqxdhServerAuthBeaconFactor.localState candidate associatedData (PqxdhServerAuthBeaconFactor.initial value.2))).run state))
     (message : RawCtxWholeOwner.Decrypted) (reply : result.1.1 = .Some message) :
     KeyedCommit frame result.2.2
       (PqxdhRefinement.absBytes (RawCtxInterpretedReceive.decodeResponse value.1).2.key.bytes) := by
@@ -170,7 +172,7 @@ theorem chain_keyed (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
           RawCtxSelectedChain.Slot.hidden
           (RawCtxSelectedChain.step setup.source value.1 RawCtxSelectedChain.Slot.hidden).1
           (RawCtxSelectedChain.step setup.source value.1 RawCtxSelectedChain.Slot.hidden).2
-          (⟨raw, frame, (PqxdhServerAuthBeaconFactor.localState candidate
+          (⟨raw, frame, (PqxdhServerAuthBeaconFactor.localState candidate associatedData
             (PqxdhServerAuthBeaconFactor.initial value.2)).associatedData⟩ : RawCtxWholeOwner.OpenContext)))) =
       ok (.Some (RawCtxSelectedChain.step setup.source value.1 RawCtxSelectedChain.Slot.hidden).2) := by
     rw [RawCtxInterpretedOpening.native_material]
@@ -201,8 +203,8 @@ theorem factored_keyed (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
   obtain ⟨⟨result, middle⟩, received, finished⟩ := supported
   simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff, Prod.mk.injEq] at finished
   obtain ⟨staging, rfl⟩ := finished
-  obtain ⟨reply, _, _, _⟩ := PqxdhBeaconPhase2Publication.afterOpening_success _ _ _ staged staging.symm
-  exact chain_keyed setup codec sendCall codec.frameRead raw frame decoded one _ value state (result, final) received
+  obtain ⟨reply, _, _, _⟩ := PqxdhBeaconPhase2Publication.afterOpening_success (associatedData := prepared.binding.associated_data) _ _ _ staged staging.symm
+  exact chain_keyed prepared.binding.associated_data setup codec sendCall codec.frameRead raw frame decoded one _ value state (result, final) received
     staged.opened reply
 
 /-- The Beacon's local owner on the initial kernel of a root, with the actual shared receive primitives: a successful raw receive whose message has sequence one decoded a frame, and the final cache holds that frame's commitment at an input keyed by the key of the root's factor. -/
@@ -212,7 +214,7 @@ theorem whole_keyed (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     (received : (core.option.Option RawCtxWholeOwner.Decrypted × RawCtxWholeOwner.OwnerState Unit) ×
       RawCtxSharedPrimitive.SharedState Unit)
     (member : received ∈ support (RawCtxWholeOwner.rawGame (RawCtxReceiveConsumption.receiveNative setup.source) decode raw
-      (PqxdhBeaconPhase2Publication.localOwner candidate (PqxdhBeaconPhase2Publication.normalInitial
+      (PqxdhBeaconPhase2Publication.localOwner candidate associatedData (PqxdhBeaconPhase2Publication.normalInitial
         (PqxdhInitialRatchetComplementarity.beaconPending (PqxdhRootTableInitialization.rootArray root))
         (RawCtxSourceHkdf.initialResponse setup.source.crypto
           (PqxdhInitialRatchetComplementarity.beaconPending (PqxdhRootTableInitialization.rootArray root)).request)))
@@ -232,7 +234,7 @@ theorem whole_keyed (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     ((RawCtxWholeOwner.rawReceive decode raw).run (RawCtxChainOwner.nativeState
       (RawCtxSelectedChain.nativeKernel (RawCtxFreshChainCut.concreteChain
         (PqxdhServerAuthSendFactor.target setup.source root)))
-      (PqxdhServerAuthBeaconFactor.localState candidate
+      (PqxdhServerAuthBeaconFactor.localState candidate associatedData
         (PqxdhServerAuthBeaconFactor.initial (PqxdhServerAuthSendFactor.other setup.source root)))))).run cache) at member
   rw [RawCtxChainOwner.rawReceive_native _ (PqxdhServerAuthBeaconFactor.primCalls (fun kernel _ => pure (kernel, none))
     (PqxdhServerAuthBeaconFactor.nativePrim setup codec) setup.source (PqxdhServerAuthSendFactor.factor setup.source root).1)
@@ -240,7 +242,7 @@ theorem whole_keyed (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     at member
   rw [StateT.run_map, support_map] at member
   obtain ⟨chainResult, chainMember, rfl⟩ := member
-  exact chain_keyed setup codec _ decode raw frame decoded frameOne candidate _ cache chainResult chainMember message reply
+  exact chain_keyed associatedData setup codec _ decode raw frame decoded frameOne candidate _ cache chainResult chainMember message reply
 
 /-- The sequence-one key of an R1 value `prk`: the key part of the material of the real key schedule of `prk` (root Expand, production initial HKDF, first ratchet step), split as the hidden layout splits it. It is a fixed function of `prk`. -/
 def seqKey (setup : Setup baseSpec KemSK) (prk : PqxdhSecretInputKdf.HmacBlock) : RawCtxKdfRequestTable.KeyPart :=

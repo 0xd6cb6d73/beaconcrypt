@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePlatformIdentitySourceHashBounds
 import BeaconcryptCore.Computational.RegistrationNativePlatformIdentityPublication
-/-! The actual generated-owner outgoing callback has exactly its explicit hash cost. ML signing, indexed attached Ed signing, failed signatures and chronological source bookkeeping contribute no shared hash calls. -/
+/-! The actual generated-owner outgoing callback has exactly its explicit hash cost. Rejected Beacon ML-DSA signing requests, indexed attached Ed signing, failed signatures and chronological source bookkeeping contribute no shared hash calls. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -39,8 +39,7 @@ theorem outgoing_bound (setup : Setup base KemSK) (index : Nat) (owner : Registr
     | hash request => exact hash_bound request
     | sign request payload digest =>
       unfold RegistrationNativeIdentityFrontend.outgoing
-      exact bind_bound _ _ 0 0 (sample_bound _) (fun _ =>
-        bind_bound _ _ 0 0 (update_env_bound _) (fun _ => pure_bound _ _))
+      exact pure_bound _ _
   | inr request =>
     classical
     simp only [IsOutgoingHash, ite_false, RegistrationNativeIdentityFrontend.outgoing]

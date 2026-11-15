@@ -18,7 +18,7 @@ abbrev Spec (E :Type):=RegistrationNativePlatformWriter.Spec E
 noncomputable def publication (implementation :QueryImpl (Spec E) (StateT S m))
     (observe :(query :(Spec E).Domain)→(Spec E).Range query→List Log)
     (control :pqxdh.BeaconFresh) (inputs :pqxdh.BeaconStartInputs) (scalar :pqxdh.BeaconCoins)
-    (pin :session.ServerAuthenticationPin) (mldsa :Std.Array U8 1952#usize)
+    (pin :session.ServerAuthenticationPin)
     (before :S×List Log) :m (RustM (RegistrationBeaconInitExecutor.Result (alloc.vec.Vec U8))×(S×List Log)) :=
   Prod.map id Prod.fst <$>
     (RegistrationNativePlatformBeaconPublication.begin
@@ -29,22 +29,22 @@ noncomputable def publication (implementation :QueryImpl (Spec E) (StateT S m))
       (fun signed=>simulateQ (fun query=>RegistrationNativePlatformCutJournal.liftNative (recorded implementation observe (.inr query)))
         (AdapterRegistrationWriterRequestExtraction.encodeInit (E:=E) (m:=AdapterRegistrationWriterRequestMonad.Program E)
           (RegistrationNativePlatformWriter.initPacket signed)).run)
-      control inputs scalar pin mldsa).run (before,none)
+      control inputs scalar pin).run (before,none)
 
 theorem source (implementation :QueryImpl (Spec E) (StateT S m))
     (observe :(query :(Spec E).Domain)→(Spec E).Range query→List Log)
     (control :pqxdh.BeaconFresh) (inputs :pqxdh.BeaconStartInputs) (scalar :pqxdh.BeaconCoins)
-    (pin :session.ServerAuthenticationPin) (mldsa :Std.Array U8 1952#usize) (before :S×List Log) :
-    publication implementation observe control inputs scalar pin mldsa before=
-      (simulateQ (recorded implementation observe) (RegistrationNativePlatformWriter.begin E control inputs scalar pin mldsa)).run before :=by
+    (pin :session.ServerAuthenticationPin) (before :S×List Log) :
+    publication implementation observe control inputs scalar pin before=
+      (simulateQ (recorded implementation observe) (RegistrationNativePlatformWriter.begin E control inputs scalar pin)).run before :=by
   have actual:=congrArg (fun work=>Prod.map id Prod.fst <$>work.run (before,none))
     (RegistrationNativePlatformPublicAdapterBundleStageCut.actual (recorded implementation observe) (fun _=>pure .None)
-      control inputs scalar pin mldsa)
+      control inputs scalar pin)
   have associated:=congrArg (fun tree=>Prod.map id Prod.fst <$>tree)
     (RegistrationNativePlatformPublicAdapterBundleStageCut.associate_program implementation observe
-      (RegistrationNativePlatformWriter.begin E control inputs scalar pin mldsa) ((before.1,none),before.2))
+      (RegistrationNativePlatformWriter.begin E control inputs scalar pin) ((before.1,none),before.2))
   have erased:=RegistrationNativePlatformPublicAdapterBundleStageCut.logged_source implementation observe
-    (RegistrationNativePlatformWriter.begin E control inputs scalar pin mldsa) ((before.1,none),before.2)
+    (RegistrationNativePlatformWriter.begin E control inputs scalar pin) ((before.1,none),before.2)
   simp only [Functor.map_map,Prod.map,RegistrationNativePlatformPublicAdapterCutLogAssociation.associate,id_eq] at associated erased
   exact actual.symm.trans (associated.symm.trans erased)
 end BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterBundleStageActual

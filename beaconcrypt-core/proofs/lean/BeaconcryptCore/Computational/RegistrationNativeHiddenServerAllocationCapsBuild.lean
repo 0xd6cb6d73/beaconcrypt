@@ -135,15 +135,32 @@ private theorem complete (wire : RegistrationNativeWire.Wire) (reservePeer : Boo
             | Err previous => trivial
             | Ok selected =>
               simp only []
-              split
-              · apply allQueriesSatisfy_bind (admitted wire.encodeResponse before.control
-                  (RegistrationBoundKeySchedule.publicInitial selected) ready.reference)
-                intro published
-                cases published with
-                | fail error => trivial
-                | div => trivial
-                | ok reply => cases reply <;> trivial
-              · trivial
+              apply allQueriesSatisfy_bind
+              · unfold RegistrationServerMaterialFrontend.adHash
+                cases requestedHash : selected.request with
+                | fail error | div => dsimp only; trivial
+                | ok request =>
+                    dsimp only
+                    have hashing : AllQueriesSatisfy (RegistrationServerMaterialFrontend.effect (n := n)
+                        (.inr (.hash (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request)))) PublicAllowed :=
+                      (allQueriesSatisfy_query_iff _ _).mpr rfl
+                    exact allQueriesSatisfy_bind hashing (fun _ => by trivial)
+              · intro hashed
+                cases hashed with
+                | fail error | div => trivial
+                | ok reply => cases reply with
+                  | Err previous => trivial
+                  | Ok initial =>
+                    dsimp only
+                    split
+                    · apply allQueriesSatisfy_bind (admitted wire.encodeResponse before.control
+                        (RegistrationBoundKeySchedule.publicInitial initial) ready.reference)
+                      intro published
+                      cases published with
+                      | fail error => trivial
+                      | div => trivial
+                      | ok reply => cases reply <;> trivial
+                    · trivial
         · trivial
 
 private theorem material_build (wire : RegistrationNativeWire.Wire) (reservePeer : Bool) (handle : Nat)

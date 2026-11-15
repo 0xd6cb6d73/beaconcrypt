@@ -15,6 +15,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 
 set_option autoImplicit false
+set_option warningAsError true
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterEnv
 open PqxdhServerAuthExperiment (Setup Codec Checks)
@@ -275,6 +276,15 @@ theorem c6_ideal (t : Target count) (ensureInit : StateT A ProbComp Bool) (ident
   funext outcome
   rcases outcome with _ | value <;> rfl
 
+/-- The exact constructed-client metadata projection used by the existing common C6 view; full actual World state remains separate. -/
+private def commonClient (created : PqxdhRegistrationJointServerBirth.ClientCreated PqxdhTranscriptAd.AssociatedData) :
+    PqxdhRegistrationJointServerBirth.ClientCreated Unit :=
+  { publicIdentity := created.publicIdentity
+    server := MldsaPublicAdServerRouting.forgetState created.server
+    control := created.control
+    consumed := created.consumed
+    origin := created.origin }
+
 /-- C6 for the later ideal game at the public projection (the later ideal form of `PqxdhDeploymentEnvironmentJoin.join_later_public`): the draw of the challenger's parameters followed by the later game with the ideal registration at them and the real post phase, and the later record world with `envGD` and the environment's reveal, have the same law of the Server's public data, the second adversary's output, the run-phase ledger, the record view (produced frames and raw-attempt counters) and the Beacon-side reveal with the Server ephemeral log of the final state. -/
 theorem c6_ideal_public (t : Target count) (ensureInit : StateT A ProbComp Bool) (identityIndex : ℕ) (runtime : A)
     (bounds : FreshBounds) (mode : Mode) (first : OracleComp (ModeSpec mode) X)
@@ -285,7 +295,7 @@ theorem c6_ideal_public (t : Target count) (ensureInit : StateT A ProbComp Bool)
         (PqxdhDeploymentLater.revealOf value.2.2.2.base.native.owners value.2.2.2.snap, value.2.2.2.log))) <$>
         (laterWith setup codec route idealInit (idealReg setup codec route checks t p) (realPost setup codec checks)
           ensureInit identityIndex bounds mode first second).run' runtime)
-      ((fun result => result.1.map fun value => (value.1, value.2.1.1, value.2.1.2,
+      ((fun result => result.1.map fun value => (commonClient value.1, value.2.1.1, value.2.1.2,
           PqxdhRecordLiftLater.recordView result.2,
           (PqxdhDeploymentLater.revealOf value.2.2.native.owners value.2.2.snap, value.2.2.log))) <$>
         PqxdhRecordLiftLater.run setup codec route (envGD setup codec checks t ensureInit identityIndex runtime)

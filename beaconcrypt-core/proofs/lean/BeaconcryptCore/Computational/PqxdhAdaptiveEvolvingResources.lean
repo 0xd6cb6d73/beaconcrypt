@@ -6,6 +6,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhAdaptiveEvolvingResources
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhAdaptiveTargetPost PqxdhAdaptiveAcceptedResult PqxdhAdaptiveCommonResult
 open PqxdhAdaptiveGeneratedResult PqxdhInitializerSecrecy PqxdhChallengeSecretRouting
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhHiddenRoot PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily
@@ -27,10 +29,10 @@ variable (c : PqxdhAuthenticatedRootBudgets.Certificate env baseImpl kem program
 
 /-- Every fixed-coordinate primitive reduction, collision tester and final ideal inherits the complete checked ledger from the single original source certificate. Target selection changes no source query. -/
 theorem target_ledger (selected : Choice) (hmac : HmacSha512) :
-    PqxdhAuthenticatedEvolvingResources.Ledger env baseImpl kem attachedVerify primitives program
+    PqxdhAuthenticatedEvolvingResources.Ledger (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program
       (mapPost post (choose selected)) (certificate env baseImpl kem program post c (choose selected))
       (targets selected).owner (targets selected).number (targets selected).ancestors (targets selected).disclosed hmac := by
-  exact PqxdhAuthenticatedEvolvingResources.complete env baseImpl kem attachedVerify primitives program
+  exact PqxdhAuthenticatedEvolvingResources.complete (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program
     (mapPost post (choose selected)) (certificate env baseImpl kem program post c (choose selected))
     (targets selected).owner (targets selected).number (targets selected).ancestors (targets selected).disclosed hmac
 

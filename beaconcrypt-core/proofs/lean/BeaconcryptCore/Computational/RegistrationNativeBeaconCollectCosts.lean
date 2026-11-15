@@ -100,7 +100,7 @@ theorem collect_bound (setup : PqxdhServerAuthExperiment.Setup base KemSK) {sour
   unfold RegistrationBeaconReferenceCompiler.collect
   apply weighted_run (fun _ => coinCost qKem kind) _ _ _ _ before
   · simpa only [ite_true] using weighted_indicator (fun _ => True) (coinCost qKem kind) _ 12
-      ((isQueryBoundP_true_iff _ _).mpr (PqxdhPhase2DhMetadata.prepare_bound _ _ _ _ _))
+      ((isQueryBoundP_true_iff _ _).mpr (PqxdhPhase2DhMetadata.prepare_bound _ _ _ _ _ _))
   · intro query current
     cases query <;> simp only [PqxdhPhase2GapDhSource.prefixImpl]
     all_goals first

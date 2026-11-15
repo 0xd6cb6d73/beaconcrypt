@@ -100,7 +100,7 @@ noncomputable def tableServices (setup : Setup baseSpec KemSK) (context : Contex
   derive := if select then selectHidden setup.joint setup.dh context.seed context.scalar
     else hiddenDerive setup.hmac setup.joint setup.dh context.seed context.scalar
   table := hiddenPublic
-  hiddenBuild _ _ server := pure (.ok (none, server))
+  hiddenBuild _ _ _ server := pure (.ok (none, server))
   hiddenAfter _ := pure none
 
 /-- An actual acceptance never calls either response continuation, so the selected factor and both source tail services disappear from this entire step. -/

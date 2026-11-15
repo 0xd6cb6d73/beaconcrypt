@@ -23,7 +23,7 @@ variable [material : PublicWrapperPlatform.Material] [platform : PublicWrapperPl
 variable [ed : AdapterInitEdPrimitive.Operations]
 variable (coins : QueryImpl unifSpec (StateT P ProbComp))
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (view : AdapterPublicWrapperState.MaterialView source KemSK)
 local notation "M"=>StateT (Backend n KemSK) (StateT P ProbComp)
 
@@ -53,9 +53,9 @@ theorem with_coins {R Error : Type} (generator : rand_core.TryCryptoRng R Error)
     (publicView : view.kxPublic oneTime.public_key=PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)) :
     call coins setup checks representation created view previousLocal previousCrypto failure writer previousChildren generator self rng=
       AdapterPublicBundlePublication.install self prekey oneTime kem rng <$>
-        RegistrationNativePlatformPublicAdapterBundlePublication.program coins setup checks representation created writer owner.mldsa owner.identitySeed
+        RegistrationNativePlatformPublicAdapterBundlePublication.program coins setup checks representation created writer owner.identitySeed
           ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-          ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin owner.mldsa.publicKey := by
+          ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin := by
   let : LocalOperations (RustT M):=locals coins setup checks representation created view previousLocal
   let : CryptoOperations (RustT M):=crypto setup view previousCrypto failure
   let : ChildOperations (RustT M):=children coins setup checks representation created writer previousChildren
@@ -67,12 +67,12 @@ theorem with_coins {R Error : Type} (generator : rand_core.TryCryptoRng R Error)
     control scalar prekey oneTime kem generator rng stored phase publicView]
   unfold AdapterPublicBundleMaterial.withMaterial
   rw [RegistrationNativePlatformPublicAdapterBundleDictionaries.outgoing_source coins setup checks representation created view
-    previousLocal previousCrypto failure writer previousChildren self owner related.identitySecret related.mldsa]
+    previousLocal previousCrypto failure writer previousChildren self owner related.identitySecret]
   unfold RegistrationNativePlatformPublicAdapterBundlePublication.program
   rw [RegistrationNativePlatformWriter.begin_interpret]
   simp only [bind_pure_comp]
   simp only [RegistrationNativePlatformPublicAdapterBundlePublication.handler]
-  have encoded : (fun signed : registration.SignedInitView=>
+  have encoded : (fun signed : registration.InitView=>
       (ChildOperations.encodeInit (m:=RustT M) (AdapterPublicBundleBody.packet signed)).run)=
       (fun signed=>simulateQ (fun query=>StateT.lift (writer query))
         (AdapterRegistrationWriterRequestExtraction.encodeInit (E:=E) (m:=AdapterRegistrationWriterRequestMonad.Program E)
@@ -89,14 +89,14 @@ local notation "CutM"=>StateT (RegistrationNativePlatformCutJournal.State Native
 variable [nativeLocal : LocalOperations (RustT (StateT (RegistrationNativePlatformCutJournal.State (RegistrationNativeExperiment.State n KemSK source)) (StateT P ProbComp)))]
 variable [nativeCrypto : CryptoOperations (RustT (StateT (RegistrationNativePlatformCutJournal.State (RegistrationNativeExperiment.State n KemSK source)) (StateT P ProbComp)))]
 
+omit nativeLocal in
 theorem with_coins_projection {R Error : Type} (generator : rand_core.TryCryptoRng R Error)
     (self : beaconcrypt_public_wrapper.beacon.Beacon) (rng : R)
     (index : Nat) (owner : RegistrationNativeBeaconFrontend.Owner source)
-    (fallback : registration.MldsaSigningRequest→StateT Native (StateT P ProbComp) RegistrationSigningShared.SignReply)
-    (other : QueryImpl AdapterInitAuthenticationRequestMonad.Spec CutM)
+    (other : QueryImpl AdapterPublicWrapperChildren.AuthenticationSpec CutM)
     (recording : QueryImpl AdapterRecordRequestMonad.Spec CutM)
     (nativeGetters : AdapterPublicBundleMaterial.Getters (m:=CutM) view)
-    (nativeLeaves : AdapterPublicBundleSourceExecution.Leaves coins setup checks representation created writer index owner failure fallback self)
+    (nativeLeaves : AdapterPublicBundleSourceExecution.Leaves (n := n) coins setup checks representation created writer index owner failure self)
     (control : pqxdh.BeaconFresh) (scalar : PqxdhJointGapDh.ScalarBytes)
     (prekey oneTime : beaconcrypt_crypto.crypto_kx.KeyPair) (kem : beaconcrypt_crypto.crypto_kem.mlkem768.KeyPair)
     (stored : self.state=.FreshWithCoins control prekey oneTime kem) (phase : owner.phase=.freshWithCoins scalar)
@@ -111,7 +111,7 @@ theorem with_coins_projection {R Error : Type} (generator : rand_core.TryCryptoR
         (RegistrationNativePlatformSdkReification.backend before.1)).run previous := by
   let : ChildOperations (RustT CutM):=AdapterPublicBundleSourceExecution.children coins setup checks representation created writer index owner other recording
   have sourceLaw:=(RegistrationNativePlatformExtractedSdkBundle.with_coins_complete coins setup checks representation created writer
-    index owner failure fallback other recording self view nativeGetters nativeLeaves control scalar prekey oneTime kem generator rng stored phase publicView before previous related selected).1
+    index owner failure other recording self view nativeGetters nativeLeaves control scalar prekey oneTime kem generator rng stored phase publicView before previous related selected).1
   have joint:=congrArg (fun distribution=>Prod.map (Prod.map id RegistrationNativePlatformSdkReification.backend) id <$>distribution) sourceLaw
   have physical:=congrArg (fun work=>(work.run (RegistrationNativePlatformSdkReification.backend before.1)).run previous)
     (with_coins coins setup checks representation created view previousLocal previousCrypto failure writer previousChildren generator self rng owner before.1.pool

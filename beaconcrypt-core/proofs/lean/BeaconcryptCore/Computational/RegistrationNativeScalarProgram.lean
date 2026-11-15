@@ -17,7 +17,7 @@ variable {source : RegistrationNativeMldsa.Source}
 /-- Complete adaptive typed source execution has the same full output and native poststate after moving the selected generated scalar into a private early draw. -/
 theorem eager (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (selected : Nat) (work : OracleComp TypedSpec Value) (before : State n KemSK source)
     (short : before.beacons.length ≤ selected) :
     (simulateQ (RegistrationNativeExperiment.handler setup checks wire route representation created source credential) work).run before =ᵈ

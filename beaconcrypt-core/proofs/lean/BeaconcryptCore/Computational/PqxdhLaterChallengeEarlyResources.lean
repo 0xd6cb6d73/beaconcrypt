@@ -8,7 +8,10 @@ open OracleComp OracleSpec CoreModels Aeneas OracleComp.ProgramLogic.Relational
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeEarlyResources
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPhase1AcceptanceOracle PqxdhKemIndCca PqxdhInitializerSecrecy
 open CtxRomAuth AdaptiveCtxSharedHash PqxdhSecretInputKdf PqxdhFullSecretInputKdf
@@ -58,18 +61,18 @@ theorem continuation_bills (q : Nat) (bit : Bool)
     (result : Certified setup program owner number (M := M) (P := P) (I := I) (K := K)
       (X := X) (Response := Response) (A := A) (KemSK := KemSK) q)
     (bounded : ∀ selection reply, (adversary selection reply).IsTotalQueryBound q) :
-    (continuation setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem q bit result).IsQueryBoundP
+    (continuation (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem q bit result).IsQueryBoundP
       (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxQueryBounds.SourceSeal) (1 + (1 + q)) ∧
-    (continuation setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem q bit result).IsQueryBoundP
+    (continuation (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem q bit result).IsQueryBoundP
       (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxReceive.IsRawQuery) (1 + (1 + q)) ∧
-    (continuation setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem q bit result).IsQueryBoundP
+    (continuation (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem q bit result).IsQueryBoundP
       AdaptiveCtxDynamicKnownBounds.HashRoute (1 + (1 + q)) := by
   unfold continuation
   split
   · simpa only [PqxdhLaterChallengeBeforeUnguarded.client_eq] using
-      PqxdhLaterChallengeBeforeConsumer.client_bills setup env callbacks program owner number attachedVerify primitives baseImpl kem
+      PqxdhLaterChallengeBeforeConsumer.client_bills (completedBinding := completedBinding) setup env callbacks program owner number attachedVerify primitives baseImpl kem
         (1 + q) bit (PqxdhLaterChallengeGeneratedBeforeObservation.beforeKey setup program (result.1, ∅))
-  · exact PqxdhLaterChallengeBuilderBills.client_bills setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem
+  · exact PqxdhLaterChallengeBuilderBills.client_bills (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem
       (1 + q) bit _ (fun selection reply => (bounded selection reply).mono (by omega))
 
 variable (original : PqxdhAuthenticatedRootExperiment.Post (baseSpec := baseSpec) program.Selection S (B + 1))
@@ -80,14 +83,14 @@ theorem continuation_uniform (c : PqxdhAuthenticatedRootBudgets.Certificate env0
     (result : Certified setup program owner number (M := M) (P := P) (I := I) (K := K)
       (X := X) (Response := Response) (A := A) (KemSK := KemSK) q)
     (bounded : ∀ selection reply, (adversary selection reply).IsTotalQueryBound q) :
-    (continuation setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem q bit result).IsQueryBoundP
+    (continuation (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem q bit result).IsQueryBoundP
       AdaptiveCtxDynamicKnownBounds.UniformRoute
       (PqxdhLaterChallengeBeforeResources.suffixAllowance setup env callbacks program baseImpl kem original c (1 + q)) := by
   unfold continuation
   split
-  · exact PqxdhLaterChallengeBeforeResources.client_uniform setup env callbacks program owner number attachedVerify primitives baseImpl kem
+  · exact PqxdhLaterChallengeBeforeResources.client_uniform (completedBinding := completedBinding) setup env callbacks program owner number attachedVerify primitives baseImpl kem
       original c (1 + q) bit _ _
-  · exact PqxdhLaterChallengeBuilderBills.client_uniform setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem
+  · exact PqxdhLaterChallengeBuilderBills.client_uniform (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem
       original c (1 + q) bit _ (fun selection reply => (bounded selection reply).mono (by omega))
 
 /-- The complete guard-free source reduction bills its actual full prefix and either early continuation in all four component query classes. -/
@@ -95,31 +98,31 @@ theorem compiled_bills (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseI
     (depth qHashPre qUniformPre : Nat) (budget : PqxdhPhase2SourceSchedulerBounds.Budget)
     (bounded : PqxdhRecordConfidentialityChallenge.AdvBounded program owner adversary budget)
     (prefixBit continuationBit : Bool)
-    (hashBound : (PqxdhLaterChallengeGeneratedContinuation.run setup env callbacks program adversary owner number prefixBit
+    (hashBound : (PqxdhLaterChallengeGeneratedContinuation.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number prefixBit
       attachedVerify primitives baseImpl kem ancestors disclosed depth).IsQueryBoundP (HashClass true) qHashPre)
-    (uniformBound : (PqxdhLaterChallengeGeneratedContinuation.run setup env callbacks program adversary owner number prefixBit
+    (uniformBound : (PqxdhLaterChallengeGeneratedContinuation.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number prefixBit
       attachedVerify primitives baseImpl kem ancestors disclosed depth).IsQueryBoundP (HashClass false) qUniformPre) :
     let q := FinitePartitionQueryBounds.bill (fun _ => 1) budget
-    (compiled setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+    (compiled (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
       depth budget bounded prefixBit continuationBit).IsQueryBoundP AdaptiveCtxDynamicKnownBounds.UniformRoute
       (qUniformPre + PqxdhLaterChallengeBeforeResources.suffixAllowance setup env callbacks program baseImpl kem original c (1 + q)) ∧
-    (compiled setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+    (compiled (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
       depth budget bounded prefixBit continuationBit).IsQueryBoundP AdaptiveCtxDynamicKnownBounds.HashRoute (qHashPre + (1 + (1 + q))) ∧
-    (compiled setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+    (compiled (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
       depth budget bounded prefixBit continuationBit).IsQueryBoundP
       (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxQueryBounds.SourceSeal) (1 + (1 + q)) ∧
-    (compiled setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+    (compiled (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
       depth budget bounded prefixBit continuationBit).IsQueryBoundP
       (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxReceive.IsRawQuery) (1 + (1 + q)) := by
   dsimp only
-  rw [← PqxdhLaterChallengeGeneratedFits.certified_erase setup env callbacks program adversary owner number prefixBit
+  rw [← PqxdhLaterChallengeGeneratedFits.certified_erase (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number prefixBit
     attachedVerify primitives baseImpl kem ancestors disclosed depth budget bounded, isQueryBoundP_map_iff] at hashBound uniformBound
   have forwarded := RawCtxPrefixKeyOrder.forward_bills _ qHashPre qUniformPre hashBound uniformBound
   have total := PqxdhLaterChallengeGeneratedFits.adversary_total setup program adversary owner budget bounded
-  have suffix := fun result => continuation_bills setup env callbacks program adversary owner number
+  have suffix := fun result => continuation_bills (completedBinding := completedBinding) setup env callbacks program adversary owner number
     attachedVerify primitives baseImpl kem _ continuationBit result total
   refine ⟨?_, ?_, ?_, ?_⟩
-  · exact isQueryBoundP_bind forwarded.2.1 (fun result _ => continuation_uniform setup env callbacks program adversary owner number
+  · exact isQueryBoundP_bind forwarded.2.1 (fun result _ => continuation_uniform (completedBinding := completedBinding) setup env callbacks program adversary owner number
       attachedVerify primitives baseImpl kem original c _ continuationBit result total)
   · exact isQueryBoundP_bind forwarded.1 (fun result _ => (suffix result).2.2)
   · simpa only [Nat.zero_add, compiled] using isQueryBoundP_bind forwarded.2.2.1 (fun result _ => (suffix result).1)

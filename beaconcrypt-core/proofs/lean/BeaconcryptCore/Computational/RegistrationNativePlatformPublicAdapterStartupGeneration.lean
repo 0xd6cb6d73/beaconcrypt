@@ -2,6 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterCreateGeneration
 import BeaconcryptCore.Refinement.AdapterServerConstructorJoint
 import BeaconcryptCore.Computational.RegistrationAgreementSampledState
+import BeaconcryptCore.Refinement.AdapterServerConstructorGeneration
 /-! Server startup maps the same original optional Ed generation and mandatory ML generation through the literal uniform counter. Constructor refusal, private object realizations and returned RNG remain joint with the actual startup state. -/
 open CoreModels Aeneas OracleComp OracleSpec
 open Aeneas.Std hiding namespace core alloc
@@ -64,10 +65,10 @@ noncomputable def signing (joint : PqxdhJointIdentity.Primitives)
     rw [contract.operation,lift_observe,simulateQ_map]
 
 noncomputable def mldsa (sample : ProbComp (Option (RegistrationNativeMldsa.Credential mlSource)))
-    (contract : AdapterBeaconConstructorGeneration.MldsaContract generator view sample) :
+    (contract : AdapterServerConstructorGeneration.MldsaContract generator view sample) :
     letI : AdapterBeaconConstructorRequestMonad.Operations (RustT (StateT (PqxdhRecordLiftWorld.State n) ProbComp)):=
       RegistrationNativePlatformPublicAdapterCreateGeneration.operations uniform original kem
-    AdapterBeaconConstructorGeneration.MldsaContract (m:=StateT (PqxdhRecordLiftWorld.State n) ProbComp) generator view (PqxdhRecordLiftWorld.sampled sample) := by
+    AdapterServerConstructorGeneration.MldsaContract (m:=StateT (PqxdhRecordLiftWorld.State n) ProbComp) generator view (PqxdhRecordLiftWorld.sampled sample) := by
   rw [←sampled]
   exact RegistrationNativePlatformPublicAdapterCreateGeneration.mldsa uniform kem generator view sample contract
 

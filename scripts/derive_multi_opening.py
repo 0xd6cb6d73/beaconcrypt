@@ -23,7 +23,7 @@ POLY1305_P = (1 << 130) - 5
 UINT128_MODULUS = 1 << 128
 UINT32_MASK = (1 << 32) - 1
 POLY1305_R_MASK = 0x0FFFFFFC0FFFFFFC0FFFFFFC0FFFFFFF
-AD_SIZE = 281
+AD_SIZE = 151
 
 
 def rotate_left_32(value: int, shift: int) -> int:
@@ -238,13 +238,13 @@ def main() -> None:
     assert commitment_one != commitment_two
 
     # Detect accidental drift from the checked-in Rust fixture.
-    assert attempt == 3
-    assert carry == 1
-    assert associated_data_two[:16].hex() == "d0ab0bfa3600d9d715b82befab62d160"
+    assert attempt == 2
+    assert carry == 0
+    assert associated_data_two[:16].hex() == "010fd10b0825d387f0f6bea280011e46"
     assert associated_data_two[16:] == associated_data_one[16:]
     assert plaintext_one.hex() == "89ea2a336d42c3373f1a954854c0e09c"
-    assert plaintext_two.hex() == "d4de696c5b25e8438e777ca060a610b3"
-    assert tag.hex() == "39996c6c0e78fdfb0bbf29d428aaed4d"
+    assert plaintext_two.hex() == "e67265bb4291d1ec9582c8eabcdac109"
+    assert tag.hex() == "8658cdca66b4af19115ed2cacd108b16"
 
     print("[chacha20poly1305-multi-opening-derivation]")
     print_value("attempt", attempt)

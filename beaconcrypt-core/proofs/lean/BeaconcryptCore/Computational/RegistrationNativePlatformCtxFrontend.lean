@@ -19,6 +19,14 @@ open RegistrationNativePlatformCtxLocal (realize)
 variable [primitive : AdapterSealPrimitive.Operations]
 variable {n : Nat} {I KemSK Reader Response Platform E A : Type} {base : OracleSpec I}
 
+/-- The owned transcript-AD continuation uses the same physical CTX hash interpreter as every other private Local hash. -/
+noncomputable def adHash (pending : registration.ServerAdHash) :
+    M (Local n) Platform RegistrationServerAdHash.Result :=
+  RegistrationServerAdHash.runWith (fun request => do
+    let digest ← privateWork (RegistrationNativePlatformCtxLocal.effects
+      (.inr (.hash (RegistrationInputs.hashBytes request))))
+    pure (.Some (RegistrationAuthenticationShared.digestArray digest))) pending
+
 noncomputable def free (setup : Setup base KemSK) (codec : Codec Reader Response)
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
@@ -28,6 +36,7 @@ noncomputable def free (setup : Setup base KemSK) (codec : Codec Reader Response
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (reserve : StateT Platform ProbComp Bool) (roots : RegistrationServerReferenceRestore.Roots) :
     QueryImpl RegistrationNativePlatformServerFrontendProgram.Spec (M (Local n) Platform)
+  | .adHash pending => adHash pending
   | .pin current => privateWork (RegistrationNativePlatformCtxPin.pin current)
   | .reserve => publicWork reserve
   | .present keyId => privateWork (RegistrationNativePlatformCtxLocal.effects (.inr (.peerPresent keyId)))
@@ -43,6 +52,35 @@ private theorem state_lift_apply {S X : Type} {m : Type → Type} [Monad m]
     (work : m X) (before : S) :
     (StateT.lift work : StateT S m X) before = (do let value ← work; pure (value, before)) := rfl
 
+omit primitive in
+/-- The physical CTX AD leaf reaches the same core continuation, private Local and platform state as the actual source AD leaf. -/
+theorem adHash_source (pending : registration.ServerAdHash) (before : Full (Local n) Platform) :
+    Prod.map id realize <$> (interpret (adHash (n := n) (Platform := Platform) pending)).run before =
+      (RegistrationAgreementNestedState.flatten
+        (RegistrationNativePlatformServerMaterialState.adHash RegistrationNativePlatformMldsaProgram.coins pending)).run
+        (realize before) := by
+  unfold adHash RegistrationNativePlatformServerMaterialState.adHash RegistrationNativePlatformServerCompletion.adHash
+    RegistrationNativePlatformServerCompletion.adHashWith RegistrationServerAdHash.runWith
+  cases pending.request with
+  | fail error | div =>
+    rw [RegistrationNativePlatformCtxRunner.pure_run]
+    simp only [RegistrationAgreementNestedState.flatten, StateT.run]
+    rfl
+  | ok request =>
+    simp only [bind_pure_comp]
+    have interpret_map {X Y : Type} (f : X → Y) (work : M (Local n) Platform X) :
+        interpret (f <$> work) = f <$> interpret work := by
+      rw [map_eq_bind_pure_comp, RegistrationNativePlatformCtxRunner.bind_run, map_eq_bind_pure_comp]
+      simp only [Function.comp_def, RegistrationNativePlatformCtxRunner.pure_run]
+    have flatten_map {X Y : Type} (f : X → Y)
+        (work : StateT (Local n) (StateT Platform ProbComp) X) :
+        RegistrationAgreementNestedState.flatten (f <$> work) = f <$> RegistrationAgreementNestedState.flatten work := by
+      funext state
+      simp only [RegistrationAgreementNestedState.flatten, StateT.run, state_map_apply, Functor.map_map, Prod.map_def, id_eq]
+    rw [interpret_map, interpret_map, flatten_map, flatten_map, StateT.run_map, StateT.run_map, StateT.run_map,
+      StateT.run_map, ← RegistrationNativePlatformCtxPin.capability_source]
+    simp only [Functor.map_map, Prod.map_def, id_eq]
+
 theorem query_source (setup : Setup base KemSK) (codec : Codec Reader Response)
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
@@ -56,6 +94,7 @@ theorem query_source (setup : Setup base KemSK) (codec : Codec Reader Response)
       (RegistrationAgreementNestedState.flatten
         (RegistrationNativePlatformServerFrontendCompiler.actual setup codec view failure allocation erased helper sign writer reserve roots query)).run (realize before) := by
   cases query with
+  | adHash pending => exact adHash_source pending before
   | pin current => exact RegistrationNativePlatformCtxPin.pin_source current before
   | reserve =>
     rw [show free setup codec view failure allocation erased sign helper writer reserve roots .reserve = publicWork reserve from rfl,
@@ -142,3 +181,9 @@ end BeaconcryptCore.Computational.RegistrationNativePlatformCtxFrontend
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativePlatformCtxFrontend.build_source
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformCtxFrontend.adHash_source' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformCtxFrontend.adHash_source

@@ -54,7 +54,7 @@ theorem bundled_bound (oneTime : PqxdhJointGapDh.ScalarBytes) :
   apply bind_bound _ _ 3 0
   · exact program_bound (RegistrationNativePlatformBeaconPublicationEdBounds.IsSign (E := E)) _
       (callback_bound setup index owner writer) _ 3
-      (RegistrationNativePlatformBeaconPublicationEdBounds.begin_bound _ _ _ _ _)
+      (RegistrationNativePlatformBeaconPublicationEdBounds.begin_bound _ _ _ _)
   · intro reply
     exact next_bound index owner oneTime reply
 

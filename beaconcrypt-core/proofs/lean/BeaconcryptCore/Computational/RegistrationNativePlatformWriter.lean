@@ -14,13 +14,11 @@ namespace BeaconcryptCore.Computational.RegistrationNativePlatformWriter
 open BeaconcryptCore.Refinement
 abbrev Spec (E : Type) := RegistrationBeaconInitExecutor.Spec + AdapterRegistrationWriterRequestMonad.Spec E
 
-def initPacket (view : registration.SignedInitView) : beaconcrypt_parse.transport.initkex where
+def initPacket (view : registration.InitView) : beaconcrypt_parse.transport.initkex where
   identity_key := view.fields.identity_key.to_slice
   pre_key := view.fields.pre_key.to_slice
   one_time_key := view.fields.one_time_key.to_slice
   pq_key := view.fields.pq_key.to_slice
-  mldsa_public_key := view.fields.mldsa_public_key.to_slice
-  signature := view.signature.to_slice
 
 def responsePacket (view : registration.SignedResponseView) : beaconcrypt_parse.transport.kexresponse where
   identity_key := view.identity_key.to_slice
@@ -30,16 +28,14 @@ def responsePacket (view : registration.SignedResponseView) : beaconcrypt_parse.
   key_id := view.key_id
   signature := view.signature.to_slice
 
-/-- This is the literal six-field conversion immediately preceding encode_init in the extracted public wrapper. -/
-theorem init_conversion (view : registration.SignedInitView) :
+/-- This is the literal four-field conversion immediately preceding encode_init in the extracted public wrapper. -/
+theorem init_conversion (view : registration.InitView) :
     (do
       let identity ← lift (Array.to_slice view.fields.identity_key)
       let prekey ← lift (Array.to_slice view.fields.pre_key)
       let one ← lift (Array.to_slice view.fields.one_time_key)
       let pq ← lift (Array.to_slice view.fields.pq_key)
-      let publicKey ← lift (Array.to_slice view.fields.mldsa_public_key)
-      let signature ← lift (Array.to_slice view.signature)
-      pure (⟨identity, prekey, one, pq, publicKey, signature⟩ : beaconcrypt_parse.transport.initkex)) =
+      pure (⟨identity, prekey, one, pq⟩ : beaconcrypt_parse.transport.initkex)) =
       (RustM.ok (initPacket view)) := rfl
 
 /-- The actual response conversion retains all public key fields, assigned id, application ciphertext and returned signature. -/
@@ -61,7 +57,7 @@ def writerLift {E : Type} : QueryImpl (AdapterRegistrationWriterRequestMonad.Spe
 def signingLift {E : Type} : QueryImpl RegistrationSigningShared.Spec (OracleComp (Spec E)) :=
   fun request => (Spec E).query (.inl (.inl request))
 
-def init (E : Type) (view : registration.SignedInitView) :
+def init (E : Type) (view : registration.InitView) :
     OracleComp (Spec E) (RustM (core.option.Option (alloc.vec.Vec U8))) :=
   simulateQ writerLift (AdapterRegistrationWriterRequestExtraction.encodeInit
     (E := E) (m := AdapterRegistrationWriterRequestMonad.Program E) (initPacket view)).run
@@ -73,8 +69,8 @@ def response (E : Type) (view : registration.SignedResponseView) :
 
 def begin (E : Type)
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array Std.U8 1952#usize) :=
-  RegistrationNativePlatformBeaconPublication.begin cryptoLift (init E) control inputs coins pin mldsa
+    (pin : session.ServerAuthenticationPin) :=
+  RegistrationNativePlatformBeaconPublication.begin cryptoLift (init E) control inputs coins pin
 
 def publication (E : Type) (pending : registration.ServerResponseHash) :=
   RegistrationNativePlatformServerPublication.program signingLift (response E) pending
@@ -82,7 +78,7 @@ def publication (E : Type) (pending : registration.ServerResponseHash) :=
 variable {E : Type} {m : Type → Type} [Monad m] [LawfulMonad m]
 
 theorem init_interpret
-    (implementation : QueryImpl (Spec E) m) (view : registration.SignedInitView) :
+    (implementation : QueryImpl (Spec E) m) (view : registration.InitView) :
     simulateQ implementation (init E view) =
       simulateQ (fun request => implementation (.inr request))
         (AdapterRegistrationWriterRequestExtraction.encodeInit
@@ -111,13 +107,13 @@ theorem response_interpret
 
 theorem begin_interpret (implementation : QueryImpl (Spec E) m)
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array Std.U8 1952#usize) :
-    simulateQ implementation (begin E control inputs coins pin mldsa) =
+    (pin : session.ServerAuthenticationPin) :
+    simulateQ implementation (begin E control inputs coins pin) =
       RegistrationNativePlatformBeaconPublication.begin (fun request => implementation (.inl request))
         (fun view => simulateQ (fun request => implementation (.inr request))
           (AdapterRegistrationWriterRequestExtraction.encodeInit
             (E := E) (m := AdapterRegistrationWriterRequestMonad.Program E) (initPacket view)).run)
-        control inputs coins pin mldsa := by
+        control inputs coins pin := by
   unfold begin
   rw [RegistrationNativePlatformBeaconPublication.begin_interpret]
   have crypto : (fun request => simulateQ implementation (cryptoLift (E := E) request)) =
@@ -146,7 +142,7 @@ theorem publication_interpret (implementation : QueryImpl (Spec E) m)
 omit [Monad m] [LawfulMonad m] in
 theorem init_joint {σ ι : Type} {base : OracleSpec.{0, 0} ι}
     (implementation : QueryImpl (Spec E) (StateT σ (OracleComp base)))
-    (view : registration.SignedInitView) (before : σ) :
+    (view : registration.InitView) (before : σ) :
     (simulateQ implementation (init E view)).run before =
       (AdapterRegistrationStatefulWriter.init (fun request => implementation (.inr request))
         (initPacket view)).run before := by
@@ -166,12 +162,12 @@ omit [Monad m] [LawfulMonad m] in
 theorem begin_joint {σ ι : Type} {base : OracleSpec.{0, 0} ι}
     (implementation : QueryImpl (Spec E) (StateT σ (OracleComp base)))
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array Std.U8 1952#usize) (before : σ) :
-    (simulateQ implementation (begin E control inputs coins pin mldsa)).run before =
+    (pin : session.ServerAuthenticationPin) (before : σ) :
+    (simulateQ implementation (begin E control inputs coins pin)).run before =
       (RegistrationNativePlatformBeaconPublication.begin (fun request => implementation (.inl request))
         (fun view => AdapterRegistrationStatefulWriter.init (fun request => implementation (.inr request))
-          (initPacket view)) control inputs coins pin mldsa).run before := by
-  exact congrArg (fun work : StateT σ (OracleComp base) _ => work.run before) (begin_interpret implementation control inputs coins pin mldsa)
+          (initPacket view)) control inputs coins pin).run before := by
+  exact congrArg (fun work : StateT σ (OracleComp base) _ => work.run before) (begin_interpret implementation control inputs coins pin)
 
 omit [Monad m] [LawfulMonad m] in
 /-- The response hash and signing history lead into the literal extracted stateful writer without restarting platform state. -/

@@ -3,7 +3,10 @@ import BeaconcryptCore.Computational.PqxdhLaterChallengeSampler
 /-! Classify the actual captured source cut using its executed callback prefix. Syntactic composition alone supplies no challenge chronology or input-log fact. -/
 open OracleComp OracleSpec
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeCutChronology
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open RawCtxForwardAnnotation RawCtxForwardCoverage RawCtxForwardScan
 
 /-- Sequential scanning either retains a cut in the actual first callback or continues with that callback's complete returned value and state. -/
@@ -120,14 +123,14 @@ abbrev FullState := (NativeFront M P I D K S B × PqxdhInitialOriginPost.Trace O
 noncomputable def postImpl : QueryImpl (PostSpec extra S B)
     (StateT (FullState (M := M) (P := P) (I := I) (D := D) (K := K) (Origin := Origin) (Local := Local) (S := S) (B := B)) ProbComp) :=
   fun query before => (fun result => (result.1.1, (result.1.2, result.2))) <$>
-    ((simulateQ impl ((PqxdhInitialOriginPost.compiler mark sender route read query).run before.1)).run before.2)
+    ((simulateQ impl ((PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) mark sender route read query).run before.1)).run before.2)
 
 /-- Complete adaptive Post interpretation preserves the exact frontend, origin trace and backend state under reassociation. -/
 theorem post_program (work : OracleComp (PostSpec extra S B) Result)
     (before : NativeFront M P I D K S B × PqxdhInitialOriginPost.Trace Origin S B) (state : Local) :
-    (simulateQ (postImpl mark sender route read impl) work).run (before, state) =
+    (simulateQ (postImpl (completedBinding := completedBinding) mark sender route read impl) work).run (before, state) =
       (fun result => (result.1.1, (result.1.2, result.2))) <$>
-        ((simulateQ impl ((simulateQ (PqxdhInitialOriginPost.compiler mark sender route read) work).run before)).run state) := by
+        ((simulateQ impl ((simulateQ (PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) mark sender route read) work).run before)).run state) := by
   induction work using OracleComp.inductionOn generalizing before state with
   | pure value => rfl
   | query_bind query next ih =>
@@ -148,17 +151,17 @@ theorem captured_reaches
     (details : PqxdhLaterChallengeCapture.Details extra M P I D K Origin S B)
     (supported : Cut.pending (context, details) reached ∈ support
       (scan PqxdhInitialForwardPost.selected chosen selection impl
-        (PqxdhLaterChallengeCapture.captured mark sender route read owner number bit work current before trace)
-        (PqxdhLaterChallengeCapture.captured_covered mark sender route read owner number bit work current before trace) state)) :
+        (PqxdhLaterChallengeCapture.captured (completedBinding := completedBinding) mark sender route read owner number bit work current before trace)
+        (PqxdhLaterChallengeCapture.captured_covered (completedBinding := completedBinding) mark sender route read owner number bit work current before trace) state)) :
     ∃ front history ambient,
-      PqxdhRecordConfidentialityTrace.Reaches (postImpl mark sender route read impl) owner number bit
+      PqxdhRecordConfidentialityTrace.Reaches (postImpl (completedBinding := completedBinding) mark sender route read impl) owner number bit
         work current ((before, trace), state)
         ((PqxdhFirstRecordConfidentiality.AdvSpec extra S B).query details.request.query >>= details.request.next)
         details.request.before ((front, history), ambient) ∧
       Cut.pending details.callback reached ∈ support
         (scan PqxdhInitialForwardPost.selected chosen selection impl
-          (program mark sender route read ((PqxdhRecordConfidentialityChallenge.handler owner number bit details.request.query).run details.request.before) front history)
-          (program_covered mark sender route read ((PqxdhRecordConfidentialityChallenge.handler owner number bit details.request.query).run details.request.before) front history) ambient) := by
+          (program (completedBinding := completedBinding) mark sender route read ((PqxdhRecordConfidentialityChallenge.handler owner number bit details.request.query).run details.request.before) front history)
+          (program_covered (completedBinding := completedBinding) mark sender route read ((PqxdhRecordConfidentialityChallenge.handler owner number bit details.request.query).run details.request.before) front history) ambient) := by
   induction work using OracleComp.inductionOn generalizing current before trace state with
   | pure value =>
       simp only [PqxdhLaterChallengeCapture.captured] at supported
@@ -170,18 +173,18 @@ theorem captured_reaches
           (fun reply => PqxdhLaterChallengeCapture.wrapped owner number bit (next reply.1) reply.2) callback,
           (⟨⟨query, current, next⟩, callback⟩ : PqxdhLaterChallengeCapture.Details extra M P I D K Origin S B))
       have headCovered := (PqxdhLaterChallengeCapture.covered_tags liftTag PqxdhInitialForwardPost.selected
-        (program (X := X) (Response := Response) mark sender route read
+        (program (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route read
           ((PqxdhRecordConfidentialityChallenge.handler owner number bit query).run current) before trace)).mpr
-        (program_covered mark sender route read ((PqxdhRecordConfidentialityChallenge.handler owner number bit query).run current) before trace)
+        (program_covered (completedBinding := completedBinding) mark sender route read ((PqxdhRecordConfidentialityChallenge.handler owner number bit query).run current) before trace)
       rcases native_pending_cases PqxdhInitialForwardPost.selected chosen selection impl _ _ headCovered
-        (fun value => PqxdhLaterChallengeCapture.captured_covered mark sender route read owner number bit
+        (fun value => PqxdhLaterChallengeCapture.captured_covered (completedBinding := completedBinding) mark sender route read owner number bit
           (next value.1.1) value.1.2 value.2.1 value.2.2)
-        (PqxdhLaterChallengeCapture.captured_covered mark sender route read owner number bit
+        (PqxdhLaterChallengeCapture.captured_covered (completedBinding := completedBinding) mark sender route read owner number bit
           (((PqxdhFirstRecordConfidentiality.AdvSpec extra S B).query query : OracleComp (PqxdhFirstRecordConfidentiality.AdvSpec extra S B) _) >>= next) current before trace)
         state reached (context, details) supported with inside | later
       · obtain ⟨callback, same, pending⟩ := native_pending_map liftTag PqxdhInitialForwardPost.selected chosen selection impl
-          (program mark sender route read ((PqxdhRecordConfidentialityChallenge.handler owner number bit query).run current) before trace)
-          (program_covered mark sender route read ((PqxdhRecordConfidentialityChallenge.handler owner number bit query).run current) before trace)
+          (program (completedBinding := completedBinding) mark sender route read ((PqxdhRecordConfidentialityChallenge.handler owner number bit query).run current) before trace)
+          (program_covered (completedBinding := completedBinding) mark sender route read ((PqxdhRecordConfidentialityChallenge.handler owner number bit query).run current) before trace)
           state reached (context, details) inside
         obtain ⟨rfl, rfl⟩ := Prod.mk.inj same
         exact ⟨before, trace, state, .here _ _ _, pending⟩
@@ -189,7 +192,7 @@ theorem captured_reaches
         obtain ⟨front, history, ambient, reachedRequest, pending⟩ := ih value.1.1 value.1.2 value.2.1 value.2.2 backend remaining
         rw [erase_mapTags, program_erase] at actual
         have step : (value.1, (value.2, backend)) ∈ support
-            ((simulateQ (postImpl mark sender route read impl)
+            ((simulateQ (postImpl (completedBinding := completedBinding) mark sender route read impl)
               ((PqxdhRecordConfidentialityChallenge.handler owner number bit query).run current)).run ((before, trace), state)) := by
           rw [post_program, support_map]
           exact ⟨(value, backend), actual, rfl⟩
@@ -210,39 +213,39 @@ theorem builder_reaches
     (details : PqxdhLaterChallengeCapture.Details extra M P I D K Origin S B)
     (supported : Cut.pending (context, some details) reached ∈ support
       (scan PqxdhInitialForwardPost.selected chosen selection impl
-        (PqxdhLaterChallengeBuilderCapture.capturedBuilder mark origin sender route read index before trace source initial metadata ready owner number bit adversary)
-        (PqxdhLaterChallengeBuilderCapture.builder_covered mark origin sender route read index before trace source initial metadata ready owner number bit adversary) state)) :
+        (PqxdhLaterChallengeBuilderCapture.capturedBuilder (associatedData := associatedData) (completedBinding := completedBinding) mark origin sender route read index before trace source initial metadata ready owner number bit adversary)
+        (PqxdhLaterChallengeBuilderCapture.builder_covered (associatedData := associatedData) (completedBinding := completedBinding) mark origin sender route read index before trace source initial metadata ready owner number bit adversary) state)) :
     ∃ built backend front history ambient,
       (built, backend) ∈ support ((simulateQ impl (simulateQ erase
-        (PqxdhInitialOriginForwardBuilder.program source mark origin sender route read initial index metadata ready pure before trace))).run state) ∧
-      PqxdhRecordConfidentialityTrace.Reaches (postImpl mark sender route read impl) owner number bit
+        (PqxdhInitialOriginForwardBuilder.program (associatedData := associatedData) (completedBinding := completedBinding) source mark origin sender route read initial index metadata ready pure before trace))).run state) ∧
+      PqxdhRecordConfidentialityTrace.Reaches (postImpl (completedBinding := completedBinding) mark sender route read impl) owner number bit
         (adversary built.1) PqxdhRecordConfidentialityChallenge.initial (built.2, backend)
         ((PqxdhFirstRecordConfidentiality.AdvSpec extra S B).query details.request.query >>= details.request.next)
         details.request.before ((front, history), ambient) ∧
       Cut.pending details.callback reached ∈ support
         (scan PqxdhInitialForwardPost.selected chosen selection impl
-          (program mark sender route read ((PqxdhRecordConfidentialityChallenge.handler owner number bit details.request.query).run details.request.before) front history)
-          (program_covered mark sender route read ((PqxdhRecordConfidentialityChallenge.handler owner number bit details.request.query).run details.request.before) front history) ambient) := by
+          (program (completedBinding := completedBinding) mark sender route read ((PqxdhRecordConfidentialityChallenge.handler owner number bit details.request.query).run details.request.before) front history)
+          (program_covered (completedBinding := completedBinding) mark sender route read ((PqxdhRecordConfidentialityChallenge.handler owner number bit details.request.query).run details.request.before) front history) ambient) := by
   unfold PqxdhLaterChallengeBuilderCapture.capturedBuilder at supported
   rcases native_pending_cases PqxdhInitialForwardPost.selected chosen selection impl _ _
     ((PqxdhLaterChallengeCapture.covered_tags _ _ _).mpr
-      (PqxdhInitialOriginForwardBuilder.program_covered source mark origin sender route read initial index metadata ready pure before trace))
+      (PqxdhInitialOriginForwardBuilder.program_covered (associatedData := associatedData) (completedBinding := completedBinding) source mark origin sender route read initial index metadata ready pure before trace))
     (fun built => (PqxdhLaterChallengeCapture.covered_tags _ _ _).mpr
-      (PqxdhLaterChallengeCapture.captured_covered mark sender route read owner number bit
+      (PqxdhLaterChallengeCapture.captured_covered (completedBinding := completedBinding) mark sender route read owner number bit
         (adversary built.1) PqxdhRecordConfidentialityChallenge.initial built.2.1 built.2.2))
-    (PqxdhLaterChallengeBuilderCapture.builder_covered mark origin sender route read index before trace source initial metadata ready owner number bit adversary)
+    (PqxdhLaterChallengeBuilderCapture.builder_covered (associatedData := associatedData) (completedBinding := completedBinding) mark origin sender route read index before trace source initial metadata ready owner number bit adversary)
     state reached (context, some details) supported with inside | later
   · obtain ⟨callback, same, pending⟩ := native_pending_map _ PqxdhInitialForwardPost.selected chosen selection impl _
-      (PqxdhInitialOriginForwardBuilder.program_covered source mark origin sender route read initial index metadata ready pure before trace)
+      (PqxdhInitialOriginForwardBuilder.program_covered (associatedData := associatedData) (completedBinding := completedBinding) source mark origin sender route read initial index metadata ready pure before trace)
       state reached (context, some details) inside
     cases same
   · obtain ⟨built, backend, actual, remaining⟩ := later
     obtain ⟨tag, same, pending⟩ := native_pending_map _ PqxdhInitialForwardPost.selected chosen selection impl _
-      (PqxdhLaterChallengeCapture.captured_covered mark sender route read owner number bit
+      (PqxdhLaterChallengeCapture.captured_covered (completedBinding := completedBinding) mark sender route read owner number bit
         (adversary built.1) PqxdhRecordConfidentialityChallenge.initial built.2.1 built.2.2)
       backend reached (context, some details) remaining
     have exactTag : tag = (context, details) := Prod.ext (Prod.mk.inj same).1 (Option.some.inj (Prod.mk.inj same).2)
-    obtain ⟨front, history, ambient, reachedRequest, cut⟩ := captured_reaches mark sender route read impl chosen selection owner number bit
+    obtain ⟨front, history, ambient, reachedRequest, cut⟩ := captured_reaches (completedBinding := completedBinding) mark sender route read impl chosen selection owner number bit
       (adversary built.1) PqxdhRecordConfidentialityChallenge.initial built.2.1 built.2.2 backend reached context details (exactTag ▸ pending)
     rw [erase_mapTags] at actual
     exact ⟨built, backend, front, history, ambient, actual, reachedRequest, cut⟩
@@ -274,14 +277,14 @@ variable (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (writer : RawC
 /-- Evaluating the literal captured shared scanner is the full audited native scan with the same capture. Private logs, candidates and the complete shared cache stay in the result. -/
 theorem shared_source (state : Local A N C) (cache : CtxRO.QueryCache) :
     RawCtxSharedPrefixScan.restore attach <$>
-      (simulateQ hashImpl (sharedCarried mark origin sender route read index before trace source writer stage
+      (simulateQ hashImpl (sharedCarried (associatedData := associatedData) (completedBinding := completedBinding) mark origin sender route read index before trace source writer stage
         pre application initializer selector aux initial metadata ready owner number bit adversary depth state)).run cache =
       scan PqxdhInitialForwardPost.selected (PqxdhInitialNativeAuditCarried.selected depth) (native_selection depth)
         (PqxdhInitialNativeAudit.handler source writer stage (fun request => localLift (pre request))
           (fun reply => localLift (application reply)) (fun secrets => localLift (initializer secrets))
           (fun request => localLift (selector request)) (fun request => localLift (aux request)))
-        (capturedBuilder mark origin sender route read index before trace source initial metadata ready owner number bit adversary)
-        (builder_covered mark origin sender route read index before trace source initial metadata ready owner number bit adversary)
+        (capturedBuilder (associatedData := associatedData) (completedBinding := completedBinding) mark origin sender route read index before trace source initial metadata ready owner number bit adversary)
+        (builder_covered (associatedData := associatedData) (completedBinding := completedBinding) mark origin sender route read index before trace source initial metadata ready owner number bit adversary)
         (attach state cache) := by
   exact RawCtxSharedPrefixScan.source PqxdhInitialForwardPost.selected (selected depth)
     (fun query state chosen => native_selection depth query (attach state ∅) chosen)
@@ -304,22 +307,22 @@ theorem shared_reaches (state : Local A N C) (cache : CtxRO.QueryCache)
     (context : PqxdhInitialOriginContext.Context extra M P I D K Bool Origin S B)
     (details : PqxdhLaterChallengeCapture.Details extra M P I D K Origin S B)
     (supported : (Cut.pending (context, some details) reached, after) ∈ support
-      ((simulateQ hashImpl (sharedCarried mark origin sender route read index before trace source writer stage
+      ((simulateQ hashImpl (sharedCarried (associatedData := associatedData) (completedBinding := completedBinding) mark origin sender route read index before trace source writer stage
         pre application initializer selector aux initial metadata ready owner number bit adversary depth state)).run cache)) :
     ∃ built backend front history ambient,
       (built, backend) ∈ support ((simulateQ nativeHandler (simulateQ erase
-        (PqxdhInitialOriginForwardBuilder.program source mark origin sender route read initial index metadata ready pure before trace))).run (attach state cache)) ∧
-      PqxdhRecordConfidentialityTrace.Reaches (postImpl mark sender route read nativeHandler) owner number bit
+        (PqxdhInitialOriginForwardBuilder.program (associatedData := associatedData) (completedBinding := completedBinding) source mark origin sender route read initial index metadata ready pure before trace))).run (attach state cache)) ∧
+      PqxdhRecordConfidentialityTrace.Reaches (postImpl (completedBinding := completedBinding) mark sender route read nativeHandler) owner number bit
         (adversary built.1) PqxdhRecordConfidentialityChallenge.initial (built.2, backend)
         ((PqxdhFirstRecordConfidentiality.AdvSpec extra S B).query details.request.query >>= details.request.next)
         details.request.before ((front, history), ambient) ∧
       Cut.pending details.callback (attach reached after) ∈ support
         (scan PqxdhInitialForwardPost.selected (PqxdhInitialNativeAuditCarried.selected depth) (native_selection depth) nativeHandler
-          (PqxdhInitialOriginForwardPost.program mark sender route read ((PqxdhRecordConfidentialityChallenge.handler owner number bit details.request.query).run details.request.before) front history)
-          (PqxdhInitialOriginForwardPost.program_covered mark sender route read ((PqxdhRecordConfidentialityChallenge.handler owner number bit details.request.query).run details.request.before) front history) ambient) := by
-  apply builder_reaches mark sender route read nativeHandler (PqxdhInitialNativeAuditCarried.selected depth) (native_selection depth)
+          (PqxdhInitialOriginForwardPost.program (completedBinding := completedBinding) mark sender route read ((PqxdhRecordConfidentialityChallenge.handler owner number bit details.request.query).run details.request.before) front history)
+          (PqxdhInitialOriginForwardPost.program_covered (completedBinding := completedBinding) mark sender route read ((PqxdhRecordConfidentialityChallenge.handler owner number bit details.request.query).run details.request.before) front history) ambient) := by
+  apply builder_reaches (associatedData := associatedData) (completedBinding := completedBinding) mark sender route read nativeHandler (PqxdhInitialNativeAuditCarried.selected depth) (native_selection depth)
     source origin index initial metadata ready before trace owner number bit adversary (attach state cache) (attach reached after) context details
-  rw [← shared_source source writer stage pre application initializer selector aux mark origin sender route read index before trace
+  rw [← shared_source (associatedData := associatedData) (completedBinding := completedBinding) source writer stage pre application initializer selector aux mark origin sender route read index before trace
     initial metadata ready owner number bit adversary depth state cache, support_map]
   exact ⟨(Cut.pending (context, some details) reached, after), supported, rfl⟩
 

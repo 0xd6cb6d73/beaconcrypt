@@ -31,7 +31,7 @@ private theorem lift_pure {Value : Type} (value : Value) :
 
 theorem initial (environment : QueryImpl (PqxdhRecordLiftInterface.EnvEffects n) m)
     (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
-    (request : SymmetricRatchetKdfRequest) :
+    (request : InitialRatchetKdfRequest) :
     read (Auxiliary := Auxiliary) environment source writer (.inl (.initialKdf request)) =
       charge .initialKdf *> pure (.Some (RawCtxSourceHkdf.initialResponse source.crypto request)) := by
   simp only [read, RegistrationBeaconChargedNative.kind, RegistrationWorldAgreement.recordCall,

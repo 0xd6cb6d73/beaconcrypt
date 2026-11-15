@@ -22,7 +22,8 @@ private theorem lift_apply {T X : Type} {m : Type → Type} [Monad m] [LawfulMon
     (work : m X) (before : T) : (StateT.lift work : StateT T m X) before = (fun value => (value,before)) <$> work := bind_pure_comp _ _
 attribute [local irreducible] peer.begin_completion_lookup RegistrationServerSdkSource.preflight
 
-variable (pin : session.ServerAuthenticationPin → StateT S ProbComp (RustM (core.option.Option session.ServerAuthenticationPin)))
+variable (deriveAd : AdHash (StateT S ProbComp))
+    (pin : session.ServerAuthenticationPin → StateT S ProbComp (RustM (core.option.Option session.ServerAuthenticationPin)))
     (reserve : StateT S ProbComp Bool) (present : U64 → StateT S ProbComp Bool)
     (service : Service (StateT S ProbComp) Encoded)
 
@@ -71,12 +72,29 @@ theorem after_result (control : pqxdh.ServerState) (message : RegistrationNative
         rw [show published = (.ok (.Ok peer),after) from Prod.ext reply sameRuntime] at called
         exact called
 
+/-- Successful material demand follows the actual AD callback and retains its complete reached state. -/
+theorem after_occupancy (control : pqxdh.ServerState) (lookup : peer.CompletionLookup)
+    (message : RegistrationNativeRelatedFamily.Message) (occupied : Bool)
+    (front afterFront : RegistrationServerMaterialFrontend.State) (before after : S) (keyId : U64) (bytes : Encoded)
+    (supported : ((.ok (some (keyId,bytes)),afterFront),after) ∈ support
+      (((afterOccupancy deriveAd reserve service control lookup message occupied).run front).run before)) :
+    Called service message keyId bytes after := by
+  cases selected : lookup.resume occupied with
+  | fail error | div => simp [afterOccupancy,selected] at supported
+  | ok result => cases result with
+    | Err previous => simp [afterOccupancy,selected] at supported
+    | Ok pending =>
+      simp only [afterOccupancy,selected,StateT.run_bind,StateT.run_lift,
+        bind_pure_comp,bind_map_left,mem_support_bind_iff] at supported
+      obtain ⟨hashed,_called,continued⟩ := supported
+      exact after_result reserve service control message _ front afterFront hashed.2 after keyId bytes continued
+
 /-- Every actual lookup, preflight and occupancy outcome retains that same successful service cut. -/
 theorem after_pin (control : pqxdh.ServerState) (ready : Ready) (application : Slice U8)
     (current : RustM (core.option.Option session.ServerAuthenticationPin))
     (front afterFront : RegistrationServerMaterialFrontend.State) (before after : S) (keyId : U64) (bytes : Encoded)
     (supported : ((.ok (some (keyId,bytes)),afterFront),after) ∈ support
-      (((afterPin reserve present service control ready application current).run front).run before)) :
+      (((afterPin deriveAd reserve present service control ready application current).run front).run before)) :
     Called service ready.reference keyId bytes after := by
   cases current with
   | fail error | div => simp [RegistrationNativePlatformServerMaterialFrontend.afterPin,StateT.run,pure_apply] at supported
@@ -97,31 +115,32 @@ theorem after_pin (control : pqxdh.ServerState) (ready : Ready) (application : S
             split at supported
             · rw [bind_apply,mem_support_bind_iff] at supported
               obtain ⟨occupied,_asked,continued⟩ := supported
-              exact after_result reserve service control ready.reference _ front afterFront occupied.2 after keyId bytes continued
+              exact after_occupancy deriveAd reserve service control lookup ready.reference occupied.1
+                front afterFront occupied.2 after keyId bytes continued
             · simp [pure_apply] at supported
 
-/-- Pin recomputation and all earlier effects precede the same literal final service callback. -/
+/-- Pure pin selection and all earlier effects precede the same literal final service callback. -/
 theorem complete (ready : Ready) (application : Slice U8)
     (front afterFront : RegistrationServerMaterialFrontend.State) (before after : S) (keyId : U64) (bytes : Encoded)
     (supported : ((.ok (some (keyId,bytes)),afterFront),after) ∈ support
-      (((RegistrationNativePlatformServerMaterialFrontend.complete pin reserve present service ready application).run front).run before)) :
+      (((RegistrationNativePlatformServerMaterialFrontend.complete deriveAd pin reserve present service ready application).run front).run before)) :
     Called service ready.reference keyId bytes after := by
   simp only [RegistrationNativePlatformServerMaterialFrontend.complete,StateT.run,bind_apply,mem_support_bind_iff] at supported
   obtain ⟨current,_asked,continued⟩ := supported
-  exact after_pin reserve present service front.control ready application current.1 front afterFront current.2 after keyId bytes continued
+  exact after_pin deriveAd reserve present service front.control ready application current.1 front afterFront current.2 after keyId bytes continued
 
 /-- The moved-token build uses the Ready actually stored at its pre-call session and keeps the exact final runtime state. -/
 theorem build (handle : Nat) (application : Option (Slice U8)) (ready : Ready)
     (front afterFront : RegistrationServerMaterialFrontend.State)
     (stored : front.sessions[handle]? = some (some ready)) (before after : S) (keyId : U64) (bytes : Encoded)
     (supported : ((.ok (some (keyId,bytes)),afterFront),after) ∈ support
-      (((RegistrationNativePlatformServerMaterialFrontend.build pin reserve present service handle application).run front).run before)) :
+      (((RegistrationNativePlatformServerMaterialFrontend.build deriveAd pin reserve present service handle application).run front).run before)) :
     Called service ready.reference keyId bytes after := by
   simp only [RegistrationNativePlatformServerMaterialFrontend.build,StateT.run,RegistrationServerMaterialFrontend.take,stored] at supported
   cases application with
   | none => simp [pure_apply] at supported
-  | some application => exact complete pin reserve present service ready application _ afterFront before after keyId bytes supported
-/-- Interpreting the exact four source leaves preserves the same stored descriptor and final service poststate. -/
+  | some application => exact complete deriveAd pin reserve present service ready application _ afterFront before after keyId bytes supported
+/-- Interpreting the exact current source leaves preserves the same stored descriptor and final service poststate. -/
 theorem program (implementation : QueryImpl RegistrationNativePlatformServerFrontendProgram.Spec (StateT S ProbComp))
     (handle : Nat) (application : Option (Slice U8)) (ready : Ready)
     (front afterFront : RegistrationServerMaterialFrontend.State)
@@ -130,7 +149,7 @@ theorem program (implementation : QueryImpl RegistrationNativePlatformServerFron
       ((simulateQ implementation ((RegistrationNativePlatformServerFrontendProgram.program handle application).run front)).run before)) :
     Called (fun control initial message => implementation (.service control initial message)) ready.reference keyId bytes after := by
   rw [RegistrationNativePlatformServerFrontendProgram.interpret] at supported
-  exact build (fun current => implementation (.pin current)) (implementation .reserve)
+  exact build (fun pending => implementation (.adHash pending)) (fun current => implementation (.pin current)) (implementation .reserve)
     (fun keyId => implementation (.present keyId)) (fun control initial message => implementation (.service control initial message))
     handle application ready front afterFront stored before after keyId bytes supported
 
@@ -165,3 +184,9 @@ end BeaconcryptCore.Computational.RegistrationNativePlatformServerServiceCut
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativePlatformServerServiceCut.program
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformServerServiceCut.after_occupancy' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformServerServiceCut.after_occupancy

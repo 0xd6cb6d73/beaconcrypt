@@ -163,7 +163,7 @@ noncomputable def program (env : Environment n E) (reserve : Nat → StateT E Pr
     (crypto : Pqxdh.Crypto) (codec : Codec Reader Response) (serverKid : U64)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value)
-    (created : PqxdhLiveServerConstruction.Created Unit) (initial : E) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (initial : E) :
     OracleComp (WorldSpec n) (RegistrationNativeEntropyRun.Outcome E Value) :=
   (fun result => some (PqxdhRegistrationJointServerBirth.encode created, result)) <$>
     (simulateQ (native env reserve) (RegistrationNativeLedger.wrap crypto codec serverKid bounds
@@ -174,7 +174,7 @@ theorem program_transport (env : Environment n E) (reserve : Nat → StateT E Pr
     (crypto : Pqxdh.Crypto) (codec : Codec Reader Response) (serverKid : U64)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value)
-    (created : PqxdhLiveServerConstruction.Created Unit) (initial : E) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (initial : E) :
     RegistrationNativeEntropyProgram.outcome <$>
       RegistrationNativePlatformGatedEntropyWorld.program (RegistrationNativeEntropyPort.environment env)
         (reserveLift reserve) crypto codec serverKid bounds mode
@@ -191,7 +191,7 @@ noncomputable def run (modes : Label n → KeyMode) (replace : Pqxdh.Bytes → P
     (env : Environment n E) (reserve : Nat → StateT E ProbComp (core.result.Result Unit Failure)) (serverKid : U64)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value)
-    (created : PqxdhLiveServerConstruction.Created Unit) (initial : E) (shell : CborRecordWorldClient.Shell)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (initial : E) (shell : CborRecordWorldClient.Shell)
     (control : PqxdhRecordLiftProtocol.Control n) (secret : CtxPrivate n) :
     ProbComp (RegistrationNativeEntropyRun.Result n E Value) :=
   (fun result => ((result.1.1.1, result.1.2), result.2)) <$>
@@ -204,7 +204,7 @@ theorem run_transport (modes : Label n → KeyMode) (replace : Pqxdh.Bytes → P
     (env : Environment n E) (reserve : Nat → StateT E ProbComp (core.result.Result Unit Failure)) (serverKid : U64)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value)
-    (created : PqxdhLiveServerConstruction.Created Unit) (initial : E) (shell : CborRecordWorldClient.Shell)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (initial : E) (shell : CborRecordWorldClient.Shell)
     (control : PqxdhRecordLiftProtocol.Control n) (secret : CtxPrivate n) :
     RegistrationNativeEntropyRun.project <$>
       RegistrationNativePlatformGatedEntropyInitial.run modes replace setup codec route

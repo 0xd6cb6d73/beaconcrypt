@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Refinement.AdapterPublicServerInstall
+import BeaconcryptCore.Refinement.AdapterPublicWrapperState
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -15,14 +16,14 @@ variable [ed : AdapterInitEdPrimitive.Operations]
 variable {source : RegistrationNativeMldsa.Source} {KemSK : Type}
 
 theorem control (view : MaterialView source KemSK) (containers : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (stored : beaconcrypt_public_wrapper.server.Server) {n : Nat} (native : RegistrationServerFrontendCompiler.State n)
     (related : Server view containers created credential stored native) (next : pqxdh.ServerState) :
     Server view containers created credential { stored with control := next } { native with control := next } := by
   exact { related with control := rfl }
 
 theorem entry (view : MaterialView source KemSK) (containers : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (stored : beaconcrypt_public_wrapper.server.Server) {n : Nat} (native : RegistrationServerFrontendCompiler.State n)
     (related : Server view containers created credential stored native) (identifier : U64)
     (result : Entry × (Entry → PeerMap)) (preserves : PeerEntry containers stored.known_ids identifier result) :
@@ -34,7 +35,7 @@ theorem entry (view : MaterialView source KemSK) (containers : Views)
   exact peers query
 
 theorem vacant (view : MaterialView source KemSK) (containers : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (stored : beaconcrypt_public_wrapper.server.Server) {n : Nat} (native : RegistrationServerFrontendCompiler.State n)
     (related : Server view containers created credential stored native)
     (pending : peer.PeerInsert (alloc.vec.Vec U8)) (publicKey : ed.PublicKey)

@@ -43,19 +43,19 @@ private theorem source_eq {S : Type} {Private : N→Type} {model : ProbComp (Rep
   exact retained packet
 
 noncomputable def basePhysical (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (current : RegistrationNativeExperiment.State n KemSK source×Platform)
     (before : RegistrationNativePlatformExtractedSdkCarrier.Carrier (R:=R) view views joint created credential current) : Store n KemSK R Platform :=erase before.objects
 
 noncomputable def strongPhysical (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (current : RegistrationNativeExperiment.State n KemSK source×Platform)
     (before : RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views created credential current) : Store n KemSK R Platform :=erase before.base.objects
 
 theorem of_base (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     {model : ProbComp (Reply×(RegistrationNativeExperiment.State n KemSK source×Platform))}
     (call : TotalStep (RegistrationNativePlatformExtractedSdkCarrier.Carrier (R:=R) view views setup.joint created credential) model)
     (coherent : ∀packet,RegistrationNativePlatformSdkStrongCarrier.OtkPublic
@@ -81,7 +81,7 @@ theorem active_send (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wi
     (converted : RegistrationNativePlatformOrdinarySourceNative.Conversion keyView)
     (failure : primitives.Error) (erased : commitment.CommitmentTranscript) (route : RawCtxServerRouting.SenderDecoder)
     (view : AdapterPublicWrapperState.MaterialView source KemSK) (containers : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (current : Native ×Platform) (before : Carrier (R:=R) view containers setup.joint created credential current)
     (logical : Nat) (owner : RegistrationNativeBeaconFrontend.Owner source) (selected : current.1.beacons[logical]?=some owner)
     (self : beaconcrypt_public_wrapper.beacon.Beacon) (sourceSelected : before.objects.beacons logical=some self)
@@ -128,7 +128,7 @@ theorem active_receive (setup : Setup base KemSK)
     (keyView : RegistrationNativePlatformSourceSeal.KeyView)
     (failure : primitives.Error) (erased : commitment.CommitmentTranscript) (route : RawCtxServerRouting.SenderDecoder)
     (view : AdapterPublicWrapperState.MaterialView source KemSK) (containers : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (current : Native ×Platform) (before : Carrier (R:=R) view containers setup.joint created credential current)
     (logical : Nat) (owner : RegistrationNativeBeaconFrontend.Owner source) (selected : current.1.beacons[logical]?=some owner)
     (self : beaconcrypt_public_wrapper.beacon.Beacon) (sourceSelected : before.objects.beacons logical=some self)
@@ -175,7 +175,7 @@ theorem idle_send (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire
     (reserve : Nat→StateT Platform ProbComp (core.result.Result Unit E)) (route : RawCtxServerRouting.SenderDecoder)
     (keyView : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitives.Error) (erased : commitment.CommitmentTranscript)
     (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (current : Native×Platform) (before : RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views created credential current)
     (logical : Nat) (bytes : Slice U8) (owner : RegistrationNativeBeaconFrontend.Owner source)
     (selected : current.1.beacons[logical]?=some owner) (tag : PqxdhRecordLiftInterface.InactivePhase)
@@ -209,7 +209,7 @@ theorem idle_receive (setup : Setup base KemSK) (wire : RegistrationNativeWire.W
     (reserve : Nat→StateT Platform ProbComp (core.result.Result Unit E)) (route : RawCtxServerRouting.SenderDecoder)
     (keyView : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitives.Error) (erased : commitment.CommitmentTranscript)
     (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (current : Native×Platform) (before : RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views created credential current)
     (logical : Nat) (bytes : Slice U8) (owner : RegistrationNativeBeaconFrontend.Owner source)
     (selected : current.1.beacons[logical]?=some owner) (tag : PqxdhRecordLiftInterface.InactivePhase)
@@ -243,7 +243,7 @@ omit [PublicWrapperPlatform.Allocator] [PublicWrapperPlatform.LocalOperations] [
 theorem missing_send (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire)
     (reserve : Nat→StateT Platform ProbComp (core.result.Result Unit E)) (route : RawCtxServerRouting.SenderDecoder)
     (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (current : Native×Platform) (before : RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views created credential current)
     (logical : Nat) (bytes : Pqxdh.Bytes) (missing : current.1.beacons[logical]?=none) :
     raw (strongPhysical setup view views created credential) (RegistrationNativePlatformSdkOrdinaryBeaconMissing.send setup wire reserve route view views created credential current before logical bytes missing)=
@@ -269,7 +269,7 @@ omit [PublicWrapperPlatform.Allocator] [PublicWrapperPlatform.LocalOperations] [
 theorem missing_receive (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire)
     (reserve : Nat→StateT Platform ProbComp (core.result.Result Unit E)) (route : RawCtxServerRouting.SenderDecoder)
     (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (current : Native×Platform) (before : RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views created credential current)
     (logical : Nat) (bytes : Pqxdh.Bytes) (missing : current.1.beacons[logical]?=none) :
     raw (strongPhysical setup view views created credential) (RegistrationNativePlatformSdkOrdinaryBeaconMissing.receive setup wire reserve route view views created credential current before logical bytes missing)=

@@ -16,7 +16,7 @@ namespace BeaconcryptCore.Computational.RegistrationNativeConcreteTuplePublicati
 open PqxdhEd25519EufCma
 local notation "encode" => (fun view => core.option.Option.Some (RegistrationNativeSourceWriterReadback.initVector view))
 
-private theorem packets_same (left right : registration.SignedInitView)
+private theorem packets_same (left right : registration.InitView)
     (same : RegistrationNativeSourceWriterReadback.initVector left = RegistrationNativeSourceWriterReadback.initVector right) :
     RegistrationNativeWire.initPacket left = RegistrationNativeWire.initPacket right := by
   apply Option.some.inj
@@ -25,16 +25,16 @@ private theorem packets_same (left right : registration.SignedInitView)
 
 /-- The actual ordered Ed3 and mandatory ML-signing source pipeline writes its original unsigned prekey, one-time and PQ inputs. -/
 theorem begin_tuple (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize)
+    (pin : session.ServerAuthenticationPin)
     (published : registration.PublishedBeaconInit (alloc.vec.Vec U8))
-    (supported : .ok (.Ok published) ∈ support (RegistrationBeaconInitExecutor.begin encode control inputs coins pin mldsa)) :
+    (supported : .ok (.Ok published) ∈ support (RegistrationBeaconInitExecutor.begin encode control inputs coins pin)) :
     (PqxdhDeploymentTranscript.candidateOf (RegistrationNativeWire.ledgerCodec RegistrationNativePlatformConcreteSource.wire)
       (TranscriptAuthParts.absSlice published.encoded)).bind PqxdhDeploymentPublishedTuple.candidateTuple =
       some ⟨PqxdhPhase2InputBytes.word inputs.prekey_public_key,
         PqxdhPhase2InputBytes.word coins.one_time_public_key, RegistrationRootInput.pqKey inputs.pq_public_key⟩ := by
-  obtain ⟨pre, preWritten, prePayload⟩ := RegistrationNativePrekeyPublication.begin_key encode control inputs coins pin mldsa published supported
-  obtain ⟨one, oneWritten, onePayload⟩ := RegistrationNativeOneTimePublication.begin_key encode control inputs coins pin mldsa published supported
-  obtain ⟨pq, pqWritten, pqPayload⟩ := RegistrationNativeKemPublication.begin_key encode control inputs coins pin mldsa published supported
+  obtain ⟨pre, preWritten, prePayload⟩ := RegistrationNativePrekeyPublication.begin_key encode control inputs coins pin published supported
+  obtain ⟨one, oneWritten, onePayload⟩ := RegistrationNativeOneTimePublication.begin_key encode control inputs coins pin published supported
+  obtain ⟨pq, pqWritten, pqPayload⟩ := RegistrationNativeKemPublication.begin_key encode control inputs coins pin published supported
   have preEq := Option.some.inj preWritten
   have oneSame := packets_same pre one (preEq.trans (Option.some.inj oneWritten).symm)
   have pqSame := packets_same pre pq (preEq.trans (Option.some.inj pqWritten).symm)

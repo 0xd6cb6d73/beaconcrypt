@@ -26,11 +26,11 @@ theorem route_total (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
       simpa only [PqxdhServerAuthCtxHandler.route, OptionT.run_lift, bind_pure_comp,
         StateT.run_map, IsTotalQueryBound, isQueryBound_map_iff, entryBill] using
         (PqxdhServerAuthCtxFinishBounds.finish_total setup codec context rest select caps bounded raw state).mono
-          (Nat.mul_le_mul_right _ (Nat.add_le_add_left (by decide : 65 ≤ 128) _))
+          (Nat.mul_le_mul_right _ (Nat.add_le_add_left (by decide : 66 ≤ 192) _))
     case build session payload =>
       simpa only [PqxdhServerAuthCtxHandler.route, entryBill] using
         ((PqxdhServerAuthCtxBuildBounds.build_bills setup.source codec checks rest session payload state).1).mono
-          (show slotWeight (state.1.1.pending session) ≤ 64 * slotWeight (state.1.1.pending session) by omega)
+          (show 2 * slotWeight (state.1.1.pending session) ≤ 128 * slotWeight (state.1.1.pending session) by omega)
     case accept raw =>
       simpa only [PqxdhServerAuthCtxHandler.route, OptionT.run_lift, bind_pure_comp,
         StateT.run_map, IsTotalQueryBound, isQueryBound_map_iff, entryBill] using

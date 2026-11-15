@@ -25,7 +25,7 @@ def Transition (pairs : List (MlKem768PublicKey × KemSK)) (before after : State
 
 variable (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
   (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-  (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+  (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
   (selected : Nat) (pairs : List (MlKem768PublicKey × KemSK)) (publicKey : MlKem768PublicKey) (real : Bool)
 local notation "provider" => RegistrationNativeKemOpenProvider.implementation (n := n) setup checks wire route representation created credential selected pairs publicKey real
 
@@ -111,7 +111,7 @@ theorem create_transition (chosen : Bool) (edPin : Std.Array U8 32#usize) (mlPin
                       simp only [Option.elim_some, simulateQ_pure, OptionT.run_pure, StateT.run_pure,
                         mem_support_pure_iff, Prod.mk.injEq, Option.some.injEq] at terminal
                       obtain ⟨rfl, rfl⟩ := terminal
-                      let owner := RegistrationNativeBeaconBirth.owner setup mlSource ready.pin ready.credentials ready.identity ready.prekey born worldOwner
+                      let owner := RegistrationNativeBeaconBirth.owner setup mlSource ready.pin ready.identity ready.prekey born worldOwner
                       refine Or.inr ⟨pair, owner, ?_, ?_, ?_, ?_, ?_⟩
                       · simpa only [counter] using pairAt
                       · change born.1 = borns before

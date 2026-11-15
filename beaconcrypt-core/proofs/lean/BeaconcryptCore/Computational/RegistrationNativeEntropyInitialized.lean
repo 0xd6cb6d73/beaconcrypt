@@ -18,7 +18,7 @@ variable {n : Nat} {ι KemSK E Value Reader Response : Type} {base : OracleSpec 
 noncomputable def program (env : Environment n E) (crypto : Pqxdh.Crypto)
     (codec : Codec Reader Response) (serverKid : Std.U64) (bounds : PqxdhDeploymentInterface.FreshBounds)
     (mode : PqxdhDeploymentInterface.Mode) (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value)
-    (created : PqxdhLiveServerConstruction.Created Unit) (initial : E) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (initial : E) :
     OracleComp (WorldSpec n) (RegistrationNativeEntropyRun.Outcome E Value) :=
   (fun result => some (PqxdhRegistrationJointServerBirth.encode created, result)) <$>
     (simulateQ (RegistrationNativeEntropyWorld.native env)
@@ -28,7 +28,7 @@ noncomputable def program (env : Environment n E) (crypto : Pqxdh.Crypto)
 theorem program_transport (env : Environment n E) (crypto : Pqxdh.Crypto)
     (codec : Codec Reader Response) (serverKid : Std.U64) (bounds : PqxdhDeploymentInterface.FreshBounds)
     (mode : PqxdhDeploymentInterface.Mode) (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value)
-    (created : PqxdhLiveServerConstruction.Created Unit) (initial : E) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (initial : E) :
     RegistrationNativeEntropyProgram.outcome <$>
       CborRawRecordEntropyWorld.program (RegistrationNativeEntropyPort.environment env) crypto codec serverKid bounds mode
         (RegistrationNativeEntropyCompile.compile mode work) created ([], initial) =
@@ -43,7 +43,7 @@ noncomputable def run (modes : Label n → KeyMode) (replace : Pqxdh.Bytes → P
     (setup : Setup base KemSK) (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
     (env : Environment n E) (serverKid : Std.U64) (bounds : PqxdhDeploymentInterface.FreshBounds)
     (mode : PqxdhDeploymentInterface.Mode) (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value)
-    (created : PqxdhLiveServerConstruction.Created Unit) (initial : E) (shell : CborRecordWorldClient.Shell)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (initial : E) (shell : CborRecordWorldClient.Shell)
     (control : PqxdhRecordLiftProtocol.Control n) (secret : CtxPrivate n) : ProbComp (RegistrationNativeEntropyRun.Result n E Value) :=
   (fun result => ((result.1.1.1, result.1.2), result.2)) <$>
     CborRawRecordOriginFlatten.interpret (ctxInterpreter modes replace setup codec) codec route
@@ -54,7 +54,7 @@ theorem run_transport (modes : Label n → KeyMode) (replace : Pqxdh.Bytes → P
     (setup : Setup base KemSK) (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
     (env : Environment n E) (serverKid : Std.U64) (bounds : PqxdhDeploymentInterface.FreshBounds)
     (mode : PqxdhDeploymentInterface.Mode) (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value)
-    (created : PqxdhLiveServerConstruction.Created Unit) (initial : E) (shell : CborRecordWorldClient.Shell)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (initial : E) (shell : CborRecordWorldClient.Shell)
     (control : PqxdhRecordLiftProtocol.Control n) (secret : CtxPrivate n) :
     RegistrationNativeEntropyRun.project <$>
       CborRawRecordEntropyInitial.run modes replace setup codec route (RegistrationNativeEntropyPort.environment env)
@@ -71,7 +71,7 @@ theorem run_transport (modes : Label n → KeyMode) (replace : Pqxdh.Bytes → P
 theorem fresh_bytes (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (env : Environment n E) (serverKid : Std.U64)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (work : OracleComp (RegistrationNativeInterface.ModeSpec .P) Value)
-    (claim : Value → Option (Nat × Pqxdh.Bytes)) (created : PqxdhLiveServerConstruction.Created Unit)
+    (claim : Value → Option (Nat × Pqxdh.Bytes)) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (initial : E) (shell : CborRecordWorldClient.Shell) (control : PqxdhRecordLiftProtocol.Control n) (secret : CtxPrivate n) :
     𝒟[RegistrationNativeEntropyFresh.event claim <$>
       run (fun _ => .random) id setup codec route env serverKid bounds .P work created initial shell control secret] {true} ≤

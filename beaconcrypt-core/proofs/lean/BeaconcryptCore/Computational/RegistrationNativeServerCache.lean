@@ -97,6 +97,13 @@ private theorem capability_keeps (query : PqxdhRecordLiftInterface.Capability n)
   cases same
   exact valid.trans (RegistrationWorldCache.effects_cache (.inr query) before.world.1 inner possible)
 
+private theorem adHash (pending : registration.ServerAdHash) :
+    Keeps (anchor := anchor) (RegistrationWorldServerCompletion.adHash (n := n) (Auxiliary := Auxiliary) pending) := by
+  unfold RegistrationWorldServerCompletion.adHash
+  cases pending.request with
+  | fail error | div => exact pure_keeps _
+  | ok request => exact bind_keeps _ _ (capability_keeps _) (fun _ => pure_keeps _)
+
 private theorem signing_query_cache
     (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
     (query : RegistrationSigningShared.Spec.Domain) (before : RegistrationWorldSigning.State n)
@@ -256,9 +263,17 @@ private theorem afterOccupancy (setup : Setup base KemSK) (codec : Codec Reader 
         exact front_pure _
     | Ok pending =>
         dsimp only
-        split
-        · exact sdk_fromInitial setup codec sign encode control pending
-        · exact front_pure _
+        apply front_bind _ _ (front_world _ (adHash pending))
+        intro hashed
+        cases hashed with
+        | fail error | div => exact front_pure _
+        | ok result => cases result with
+          | Err previous => exact front_pure _
+          | Ok initial =>
+              dsimp only
+              split
+              · exact sdk_fromInitial setup codec sign encode control initial
+              · exact front_pure _
 
 private theorem complete (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
@@ -336,7 +351,7 @@ private theorem build (setup : Setup base KemSK) (codec : Codec Reader Response)
 private theorem accept (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket) :
     ∀ (before : RegistrationServerFrontendCompiler.State n), FrontValid (anchor := anchor) before → ∀ result,
       result ∈ support ((RegistrationServerSdkSource.accept setup codec checks route verify representation created packet).run before) → FrontValid (anchor := anchor) result.2 := by
   intro before valid result supported
@@ -388,7 +403,7 @@ theorem build_cache (setup : Setup base KemSK) (codec : Codec Reader Response) (
 theorem accept_cache (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (before : RegistrationServerFrontendCompiler.State n)
     (result : RustM (Option Nat) × RegistrationServerFrontendCompiler.State n)
     (supported : result ∈ support ((RegistrationServerSdkSource.accept setup codec checks route verify representation created packet).run before)) :

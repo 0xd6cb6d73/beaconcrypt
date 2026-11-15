@@ -58,7 +58,7 @@ theorem native_game_source (setup : Setup baseSpec KemSK) (codec : Codec Reader 
   rintro context _ ⟨rfl, supported⟩
   exact native_source setup codec checks adversary revealSeed Q j observer context supported
 
-/-- Production constructor order: Server seed, Beacon seed, Beacon prekey, complete KEM generation and then the Phase-1 one-time scalar. Phase 1 and the entire native journal-producing continuation are unchanged. -/
+/-- Production constructor order: Server seed, Beacon seed, Beacon prekey, complete KEM generation and then the Phase-1 one-time scalar. Phase 1 (its logged run, which retains the Init bundle written by Phase 1) and the entire native journal-producing continuation are unchanged. -/
 noncomputable def orderedGame (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (adversary : Adversary) (revealSeed : Bool) (Q : Nat) (j : Fin (Q + 1))
     (observer : Observer) : ProbComp Bool := do
@@ -67,9 +67,10 @@ noncomputable def orderedGame (setup : Setup baseSpec KemSK) (codec : Codec Read
   let scalar ← PqxdhJointGapDh.sampleScalar
   let keys ← simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl) setup.kem.keygen
   let oneTime ← PqxdhJointGapDh.sampleScalar
-  let published ← phase1Run setup codec beaconSeed
+  let logged ← phase1Logged setup codec beaconSeed
     (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar) oneTime keys.1 keys.2
-  native setup codec checks adversary revealSeed Q j observer ⟨seed, scalar, beaconSeed, oneTime, keys, published⟩
+  native setup codec checks adversary revealSeed Q j observer
+    ⟨seed, scalar, beaconSeed, oneTime, keys, logged.1, logged.2⟩
 
 /-- Both source-order interchanges quantify over the full evaluated observed continuation, including every public request/reply, cache, state and adaptive decision. -/
 theorem native_source_order (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -79,9 +80,10 @@ theorem native_source_order (setup : Setup baseSpec KemSK) (codec : Codec Reader
       𝒟[orderedGame setup codec checks adversary revealSeed Q j observer] := by
   simpa only [nativeGame, orderedGame, contextSample, bind_assoc, pure_bind] using
     PqxdhServerAuthNative.constructor_order setup (fun seed scalar beaconSeed oneTime keys => do
-      let published ← phase1Run setup codec beaconSeed
+      let logged ← phase1Logged setup codec beaconSeed
         (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar) oneTime keys.1 keys.2
-      native setup codec checks adversary revealSeed Q j observer ⟨seed, scalar, beaconSeed, oneTime, keys, published⟩)
+      native setup codec checks adversary revealSeed Q j observer
+        ⟨seed, scalar, beaconSeed, oneTime, keys, logged.1, logged.2⟩)
 
 /-- Production-order accepted observation transport to the correlated uniform-output game with its five concrete advantages. This is a per-owner bridge; a concrete publication predicate and its uniform-endpoint probability are separate obligations. -/
 theorem ordered_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)

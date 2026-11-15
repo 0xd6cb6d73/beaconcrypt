@@ -74,6 +74,8 @@ variable (reserve : StateT Platform ProbComp Bool)
 local notation "reserveSource" => RegistrationNativePlatformSecretWordBuild.liftEffects
   (RegistrationNativePlatformBoundCompiler.liftPlatform (n := n) (RegistrationNativePlatformEffectCompiler.compile reserve))
 local notation "serviceSource" => RegistrationNativePlatformSecretWordBuild.service (n := n) source view failure allocation erased helper sign writer
+local notation "adHashSource" => fun pending => RegistrationNativePlatformSecretWordBuild.liftEffects
+  (RegistrationNativePlatformServerRestrictedService.adHash pending)
 
 
 omit primitive in
@@ -139,17 +141,56 @@ omit primitive in
 private theorem pin_quiet (current : session.ServerAuthenticationPin) :
     RegistrationNativePlatformPairedPublicationFree.Quiet
       (RegistrationNativePlatformServerRestrictedService.pin (n := n) (Platform := Platform) current) := by
-  unfold RegistrationNativePlatformServerRestrictedService.pin
-  exact RegistrationNativePlatformPairedPublicationFree.bind_quiet _ _
-    (effect_quiet _ (by intro role; simp [RegistrationNativeSecretWordAtomInstallCaps.InstallEnv]))
-    (fun _ => RegistrationNativePlatformPairedPublicationFree.pure_quiet _)
+  exact RegistrationNativePlatformPairedPublicationFree.pure_quiet _
+
+omit primitive in
+private theorem adHash_quiet (pending : registration.ServerAdHash) :
+    RegistrationNativePlatformPairedPublicationFree.Quiet
+      (RegistrationNativePlatformServerRestrictedService.adHash (n := n) (Platform := Platform) pending) := by
+  unfold RegistrationNativePlatformServerRestrictedService.adHash RegistrationServerAdHash.runWith
+  cases pending.request with
+  | fail error | div => exact RegistrationNativePlatformPairedPublicationFree.pure_quiet _
+  | ok request =>
+    simp only [bind_assoc,pure_bind]
+    exact RegistrationNativePlatformPairedPublicationFree.bind_quiet _ _
+      (effect_quiet _ (by intro role; simp [RegistrationNativeSecretWordAtomInstallCaps.InstallEnv]))
+      (fun _ => RegistrationNativePlatformPairedPublicationFree.pure_quiet _)
+
+private theorem afterOccupancy_messages (role : Role) (control : pqxdh.ServerState) (lookup : peer.CompletionLookup)
+    (reference : Message) (occupied : Bool) (before : ServerState) (previous : PublicState Platform)
+    (trace : State)
+    (result : ((RegistrationNativePlatformServerMaterialFrontend.Result (alloc.vec.Vec U8) × ServerState) × PublicState Platform) × State)
+    (supported : result ∈ support (compile (n := n) (KemSK := KemSK)
+      ((afterOccupancy adHashSource reserveSource serviceSource control lookup reference occupied).run before) previous trace)) :
+    messages role result.2.events = messages role trace.events ++
+      if role = .server ∧ present result.1.1.1 = true then [reference] else [] := by
+  cases selected : lookup.resume occupied with
+  | fail error | div =>
+    simp only [afterOccupancy,selected,StateT.run_pure,compile_pure,mem_support_pure_iff] at supported
+    cases supported
+    simp [present]
+  | ok answer => cases answer with
+    | Err previousControl =>
+      simp only [afterOccupancy,selected,StateT.run_pure,compile_pure,mem_support_pure_iff] at supported
+      cases supported
+      simp [present]
+    | Ok pending =>
+      simp only [afterOccupancy,selected,StateT.run_bind,StateT.run_lift,bind_pure_comp,bind_map_left] at supported
+      rw [compile_bind,mem_support_bind_iff] at supported
+      obtain ⟨hashed,called,supported⟩ := supported
+      rw [effects_neutral _ (adHash_quiet pending) previous trace,support_map] at called
+      obtain ⟨reached,_hashed,returned⟩ := called
+      cases returned
+      exact afterResult_messages source view failure allocation erased helper sign writer reserve role control reference
+        _ before reached.2 trace result supported
+
 
 private theorem afterPin_messages (role : Role) (control : pqxdh.ServerState) (ready : ServerReady) (application : Slice U8)
     (current : RustM (core.option.Option session.ServerAuthenticationPin)) (before : ServerState)
     (previous : PublicState Platform) (trace : State)
     (result : ((RegistrationNativePlatformServerMaterialFrontend.Result (alloc.vec.Vec U8) × ServerState) × PublicState Platform) × State)
     (supported : result ∈ support (compile (n := n) (KemSK := KemSK)
-      ((afterPin reserveSource
+      ((afterPin adHashSource reserveSource
         (fun keyId => RegistrationNativePlatformSecretWordBuild.liftEffects (RegistrationNativePlatformEffectCompiler.effect (.inr (.peerPresent keyId))))
         serviceSource control ready application current).run before) previous trace)) :
     messages role result.2.events = messages role trace.events ++
@@ -198,8 +239,8 @@ private theorem afterPin_messages (role : Role) (control : pqxdh.ServerState) (r
                 (by intro actual; simp [RegistrationNativeSecretWordAtomInstallCaps.InstallEnv])) previous trace,support_map] at called
               obtain ⟨reached,_called,equal⟩ := called
               cases equal
-              exact afterResult_messages source view failure allocation erased helper sign writer reserve role control ready.reference
-                _ before reached.2 trace result supported
+              exact afterOccupancy_messages source view failure allocation erased helper sign writer reserve role control lookup ready.reference reached.1
+                before reached.2 trace result supported
             · rw [compile_pure,mem_support_pure_iff] at supported
               cases supported
               simp [present]

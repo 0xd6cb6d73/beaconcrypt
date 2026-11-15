@@ -70,7 +70,7 @@ theorem program (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire)
 
 /-- The actual native initial64/ongoing76 controller consumes the same bound source entry and public hash program. No kernel is reset after sequence one. -/
 theorem controller (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire)
-    (erased : Std.Array U8 357#usize) (descriptor : RegistrationBeaconBoundSource.PublicAgreement)
+    (erased : Std.Array U8 227#usize) (descriptor : RegistrationBeaconBoundSource.PublicAgreement)
     (root : PqxdhSecretInputKdf.RootOutput) (before : Flat mlSource Auxiliary) :
     Prod.map id project <$>
       (simulateQ (RegistrationNativeBeaconFrontend.record (n := n) setup wire).flattenStateT

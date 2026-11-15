@@ -30,18 +30,17 @@ variable [localOps : LocalOperations (RustT (StateT (RegistrationNativePlatformC
 variable [crypto : CryptoOperations (RustT (StateT (RegistrationNativePlatformCutJournal.State (RegistrationNativeExperiment.State n KemSK source)) (StateT Platform ProbComp)))]
 variable (coins : QueryImpl unifSpec (StateT Platform ProbComp))
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (reservePackets : Usize →StateT Platform ProbComp (core.result.Result Unit E))
 local notation "packetWriter" => RegistrationNativePlatformConcreteSource.writer reservePackets
 variable (index : Nat) (owner : RegistrationNativeBeaconFrontend.Owner source) (failure : ed.Error)
-variable (fallback : registration.MldsaSigningRequest → RegistrationNativePlatformExperiment.M n KemSK source (StateT Platform ProbComp) RegistrationSigningShared.SignReply)
-variable (other : QueryImpl AdapterInitAuthenticationRequestMonad.Spec (StateT (RegistrationNativePlatformCutJournal.State (RegistrationNativeExperiment.State n KemSK source)) (StateT Platform ProbComp)))
+variable (other : QueryImpl AdapterPublicWrapperChildren.AuthenticationSpec (StateT (RegistrationNativePlatformCutJournal.State (RegistrationNativeExperiment.State n KemSK source)) (StateT Platform ProbComp)))
 variable (recording : QueryImpl AdapterRecordRequestMonad.Spec (StateT (RegistrationNativePlatformCutJournal.State (RegistrationNativeExperiment.State n KemSK source)) (StateT Platform ProbComp)))
 
 noncomputable def withCoins {R Error : Type} (self : beaconcrypt_public_wrapper.beacon.Beacon)
     (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (getters : AdapterPublicBundleMaterial.Getters (m := CutM) view)
-    (law : AdapterPublicBundleSourceExecution.Leaves coins setup checks representation created packetWriter index owner failure fallback self)
+    (law : AdapterPublicBundleSourceExecution.Leaves (n := n) coins setup checks representation created packetWriter index owner failure self)
     (control : pqxdh.BeaconFresh) (scalar : PqxdhJointGapDh.ScalarBytes)
     (prekey oneTime : beaconcrypt_crypto.crypto_kx.KeyPair) (kem : beaconcrypt_crypto.crypto_kem.mlkem768.KeyPair)
     (generator : rand_core.TryCryptoRng R Error) (rng : R)
@@ -58,7 +57,7 @@ noncomputable def withCoins {R Error : Type} (self : beaconcrypt_public_wrapper.
         bytes (.ok returned)=(pack (withCoinsNative index owner scalar packet)).1 →
         Private (pack (withCoinsNative index owner scalar packet)).2) :
     TotalStep Private (pack <$> ((RegistrationNativePlatformExtractedBundle.bundle coins setup checks representation created source packetWriter index).run before.1).run previous) := by
-  let selected:=RegistrationNativePlatformExtractedSdkAdaptiveBundle.withCoins coins setup checks representation created packetWriter index owner failure fallback other recording
+  let selected:=RegistrationNativePlatformExtractedSdkAdaptiveBundle.withCoins coins setup checks representation created packetWriter index owner failure other recording
     self view getters law control scalar prekey oneTime kem generator rng stored phase publicView before previous related selected Private put
   refine {step:=selected,observe:=fun value=>bytes (.ok value),normal:=?_,reply:=?_}
   · intro packet supported
@@ -73,7 +72,7 @@ noncomputable def withCoins {R Error : Type} (self : beaconcrypt_public_wrapper.
 noncomputable def fresh {R Error : Type} (self : beaconcrypt_public_wrapper.beacon.Beacon)
     (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (getters : AdapterPublicBundleMaterial.Getters (m := CutM) view)
-    (law : AdapterPublicBundleSourceExecution.Leaves coins setup checks representation created packetWriter index owner failure fallback self)
+    (law : AdapterPublicBundleSourceExecution.Leaves (n := n) coins setup checks representation created packetWriter index owner failure self)
     (control : pqxdh.BeaconFresh) (prekey : beaconcrypt_crypto.crypto_kx.KeyPair) (kem : beaconcrypt_crypto.crypto_kem.mlkem768.KeyPair)
     (generator : rand_core.TryCryptoRng R Error) (rng : R)
     (generation : AdapterPublicAgreementGeneration.Contract generator view
@@ -91,7 +90,7 @@ noncomputable def fresh {R Error : Type} (self : beaconcrypt_public_wrapper.beac
         bytes (.ok returned)=(pack (freshNative index owner packet)).1 →
         Private (pack (freshNative index owner packet)).2) :
     TotalStep Private (pack <$> ((RegistrationNativePlatformExtractedBundle.bundle coins setup checks representation created source packetWriter index).run before.1).run previous) := by
-  let selected:=RegistrationNativePlatformExtractedSdkAdaptiveBundle.fresh coins setup checks representation created packetWriter index owner failure fallback other recording
+  let selected:=RegistrationNativePlatformExtractedSdkAdaptiveBundle.fresh coins setup checks representation created packetWriter index owner failure other recording
     self view getters law control prekey kem generator rng generation stored phase before previous related selected Private put
   refine {step:=selected,observe:=fun value=>bytes (.ok value),normal:=?_,reply:=?_}
   · intro packet supported

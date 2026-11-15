@@ -44,14 +44,14 @@ private theorem joint_hom :
 /-- Source begin is unchanged by the exact product-state transformation, including recursive signing and the reached terminal writer. -/
 theorem begin_joint
     (impl : QueryImpl RegistrationBeaconInitExecutor.Spec (M (Owners := Owners) (Env := Env) (Native := Native) (Platform := Platform)))
-    (encode : registration.SignedInitView → M (Owners := Owners) (Env := Env) (Native := Native) (Platform := Platform)
+    (encode : registration.InitView → M (Owners := Owners) (Env := Env) (Native := Native) (Platform := Platform)
       (RustM (core.option.Option Encoded)))
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize) :
-    joint (RegistrationNativePlatformBeaconPublication.begin impl encode control inputs coins pin mldsa) =
+    (pin : session.ServerAuthenticationPin) :
+    joint (RegistrationNativePlatformBeaconPublication.begin impl encode control inputs coins pin) =
       RegistrationNativePlatformBeaconPublication.begin (fun query => joint (impl query)) (fun view => joint (encode view))
-        control inputs coins pin mldsa :=
-  RegistrationNativePlatformBeaconMap.begin joint_hom impl encode control inputs coins pin mldsa
+        control inputs coins pin :=
+  RegistrationNativePlatformBeaconMap.begin joint_hom impl encode control inputs coins pin
 
 /-- Literal nested callback support and its joint-state support describe the same complete source outcome. -/
 theorem joint_support (work : M (Owners := Owners) (Env := Env) (Native := Native) (Platform := Platform) Value)
@@ -71,14 +71,14 @@ theorem joint_support (work : M (Owners := Owners) (Env := Env) (Native := Nativ
 /-- Every actual supported nested source publication retains the reached raw Init tuple and complete crypto prefix together with its subsequent effectful writer support. -/
 theorem tuple
     (impl : QueryImpl RegistrationBeaconInitExecutor.Spec (M (Owners := Owners) (Env := Env) (Native := Native) (Platform := Platform)))
-    (encode : registration.SignedInitView → M (Owners := Owners) (Env := Env) (Native := Native) (Platform := Platform)
+    (encode : registration.InitView → M (Owners := Owners) (Env := Env) (Native := Native) (Platform := Platform)
       (RustM (core.option.Option Encoded)))
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize)
+    (pin : session.ServerAuthenticationPin)
     (published : registration.PublishedBeaconInit Encoded) (before after : JointState)
     (supported : ((((.ok (.Ok published), after.1), after.2.1), after.2.2.1), after.2.2.2) ∈ support
-      ((((RegistrationNativePlatformBeaconPublication.begin impl encode control inputs coins pin mldsa).run before.1).run before.2.1).run before.2.2.1 |>.run before.2.2.2)) :
-    ∃ atEncoder view started pending fingerprint atFingerprint,
+      ((((RegistrationNativePlatformBeaconPublication.begin impl encode control inputs coins pin).run before.1).run before.2.1).run before.2.2.1 |>.run before.2.2.2)) :
+    ∃ atEncoder view started pending hashing atHash,
       (.ok (.Some published.encoded), after) ∈ support ((joint (encode view)).run atEncoder) ∧
       pqxdh.beacon_start control inputs coins = .ok started ∧
       pqxdh.validate_init_kex started.message = .ok (.Ok {
@@ -86,17 +86,17 @@ theorem tuple
         beacon_prekey_public_key := inputs.prekey_public_key,
         beacon_one_time_public_key := coins.one_time_public_key,
         beacon_pq_public_key := inputs.pq_public_key }) ∧
-      registration.begin_beacon_init control inputs coins pin mldsa = .ok (.Ed25519SigningRequested pending) ∧
-      RegistrationNativeInitTupleSource.EdLead (fun query => joint (impl query)) pending before fingerprint atFingerprint ∧
-      RegistrationNativeInitTupleSource.Fixed started pin inputs.identity_public_key mldsa fingerprint.state ∧
-      RegistrationNativeInitTupleSource.Attached started fingerprint.state ∧
-      RegistrationNativeInitTupleSource.FingerprintCut (fun query => joint (impl query)) (fun _ => .Some published.encoded)
-        fingerprint atFingerprint published atEncoder := by
-  have actual := (joint_support (RegistrationNativePlatformBeaconPublication.begin impl encode control inputs coins pin mldsa)
+      registration.begin_beacon_init control inputs coins pin = .ok (.Ed25519SigningRequested pending) ∧
+      RegistrationNativeInitTupleSource.EdLead (fun query => joint (impl query)) pending before hashing atHash ∧
+      RegistrationNativeInitTupleSource.Fixed started pin inputs.identity_public_key hashing.state ∧
+      RegistrationNativeInitTupleSource.Attached started hashing.state ∧
+      RegistrationNativeInitTupleSource.HashCut (fun query => joint (impl query)) (fun _ => .Some published.encoded)
+        hashing atHash published atEncoder := by
+  have actual := (joint_support (RegistrationNativePlatformBeaconPublication.begin impl encode control inputs coins pin)
     before after (.ok (.Ok published))).mpr supported
   rw [begin_joint] at actual
   exact RegistrationNativePlatformPublicationReplay.begin_tuple (fun query => joint (impl query)) (fun view => joint (encode view))
-    control inputs coins pin mldsa published before after actual
+    control inputs coins pin published before after actual
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformBundleState
 

@@ -1,5 +1,5 @@
 -- SPDX-License-Identifier: 0BSD
-import BeaconcryptCore.Refinement.TranscriptAuth
+import BeaconcryptCore.Refinement.TranscriptAuthParts
 import BeaconcryptCore.PanicFreedom.Pqxdh
 
 /-!
@@ -83,33 +83,28 @@ theorem borrowed_slice_total (size : Std.Usize) (bytes : Slice Std.U8) :
   (borrowed_slice_exact size bytes).imp (fun _ h => h.1)
 
 def initPacketView (packet : registration.InitPacket)
-    (identity prekey oneTime pq mldsa signature : Slice Std.U8) : Prop :=
+    (identity prekey oneTime pq : Slice Std.U8) : Prop :=
   packet.identity_key.val = identity.val ∧ packet.pre_key.val = prekey.val ∧
-    packet.one_time_key.val = oneTime.val ∧ packet.pq_key.val = pq.val ∧
-    packet.mldsa_public_key.val = mldsa.val ∧ packet.signature.val = signature.val
+    packet.one_time_key.val = oneTime.val ∧ packet.pq_key.val = pq.val
 
-def initWidths (identity prekey oneTime pq mldsa signature : Slice Std.U8) : Prop :=
+def initWidths (identity prekey oneTime pq : Slice Std.U8) : Prop :=
   identity.val.length = 33 ∧ prekey.val.length = 98 ∧ oneTime.val.length = 98 ∧
-    pq.val.length = 1249 ∧ mldsa.val.length = 1952 ∧ signature.val.length = 3309
+    pq.val.length = 1249
 
 /-- Init admission rejects exactly malformed widths and otherwise retains every supplied byte. -/
-theorem init_packet_exact (identity prekey oneTime pq mldsa signature : Slice Std.U8) :
-    ∃ result, registration.InitPacket.from_slices identity prekey oneTime pq mldsa signature = ok result ∧
+theorem init_packet_exact (identity prekey oneTime pq : Slice Std.U8) :
+    ∃ result, registration.InitPacket.from_slices identity prekey oneTime pq = ok result ∧
       match result with
-      | .Some packet => initPacketView packet identity prekey oneTime pq mldsa signature
-      | .None => ¬ initWidths identity prekey oneTime pq mldsa signature := by
+      | .Some packet => initPacketView packet identity prekey oneTime pq
+      | .None => ¬ initWidths identity prekey oneTime pq := by
   obtain ⟨identityResult, identityRun, identityFacts⟩ := borrowed_slice_exact 33#usize identity
   obtain ⟨prekeyResult, prekeyRun, prekeyFacts⟩ := borrowed_slice_exact 98#usize prekey
   obtain ⟨oneTimeResult, oneTimeRun, oneTimeFacts⟩ := borrowed_slice_exact 98#usize oneTime
   obtain ⟨pqResult, pqRun, pqFacts⟩ := borrowed_slice_exact 1249#usize pq
-  obtain ⟨mldsaResult, mldsaRun, mldsaFacts⟩ := borrowed_slice_exact 1952#usize mldsa
-  obtain ⟨signatureResult, signatureRun, signatureFacts⟩ := borrowed_slice_exact 3309#usize signature
   all_goals cases identityResult
   all_goals cases prekeyResult
   all_goals cases oneTimeResult
   all_goals cases pqResult
-  all_goals cases mldsaResult
-  all_goals cases signatureResult
   all_goals simp_all [registration.InitPacket.from_slices, initPacketView, initWidths, Std.UScalar.ofNatCore_val_eq]
 
 def responsePacketView (packet : registration.ResponsePacket)

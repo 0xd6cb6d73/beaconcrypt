@@ -5,7 +5,7 @@ import BeaconcryptCore.Computational.RegistrationRootInput
 import BeaconcryptCore.Computational.RegistrationNativePlatformIdentityCtxTyped
 
 /-! The actual publicly stopped typed client returns either its first public hash-recognition witness or a valid selected-message field from its fixed accept packet. Its constructor uses public handles/messages and a known placeholder; the challenged seed and canonical signature occur only in the ordinary primitive interpreter. The ordinary joint weak-EUF advantage below is for this explicit client. Original native causal-event coverage is a separate source coupling obligation. -/
-open OracleComp OracleSpec ENNReal
+open OracleComp OracleSpec ENNReal Aeneas
 set_option autoImplicit false
 set_option warningAsError true
 set_option maxRecDepth 8192
@@ -115,7 +115,7 @@ variable {n : Nat} {I KemSK Platform E : Type} {base : OracleSpec I} {source : R
 variable [primitive : BeaconcryptCore.Refinement.AdapterSealPrimitive.Operations]
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
 variable (wire : RegistrationNativeWire.Wire) (route : RawCtxServerRouting.SenderDecoder)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (credential : RegistrationNativeMldsa.Credential source) (keys : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
 variable (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
 variable (reserveRegistration reservePeer : StateT Platform ProbComp Bool)

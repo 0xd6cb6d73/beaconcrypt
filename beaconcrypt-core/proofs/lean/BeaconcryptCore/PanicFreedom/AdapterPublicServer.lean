@@ -39,7 +39,7 @@ theorem authenticate_registration_lookup_total (contracts : AuthenticationContra
       | with_reducible apply normal_bind_at
       | (solve | simp_all)
       | with_reducible exact contracts.decode _
-      | with_reducible exact Registration.InitPacket_from_slices_total _ _ _ _ _ _
+      | with_reducible exact Registration.InitPacket_from_slices_total _ _ _ _
       | with_reducible exact AdapterPublicTrivial.server_authentication_pin_total contracts.publicLeaves _
       | with_reducible exact AdapterInitAuthentication.authenticate_init_total contracts.init _ _
       | exact normal_ok _

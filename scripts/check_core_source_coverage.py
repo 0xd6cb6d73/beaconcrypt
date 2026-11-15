@@ -278,6 +278,10 @@ NATIVE_BOUNDARY: dict[tuple[str, str], str] = {
         "beaconcrypt-core/src/ratchet/control.rs",
         "SequenceCache",
     ): "4c02d2e90b45cd92b3ff3ac63e40445fe261a67747656adab475b66b633fefd4",
+    (
+        "beaconcrypt-core/src/ratchet.rs",
+        "InitialRatchetKdfRequest",
+    ): "aab3c12ebfb9b8b8622115b368c8331bb3bddefeba447c6f6d4415afcfc5542d",
 }
 
 

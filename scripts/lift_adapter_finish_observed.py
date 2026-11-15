@@ -52,7 +52,7 @@ def render() -> str:
     variables = text[
         text.index(
             "variable [BeaconcryptCore.Refinement.PublicWrapperPlatform.Material]"
-        ) : text.index("/-- [beaconcrypt::auth::fingerprint_pin]")
+        ) : text.index("/-- [beaconcrypt::auth::server_pin]")
     ]
     digest = hashlib.sha256(text[start:stop].encode()).hexdigest()
     cut_digest = hashlib.sha256(cut.encode()).hexdigest()

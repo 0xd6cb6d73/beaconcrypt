@@ -6,7 +6,7 @@ import BeaconcryptCore.PanicFreedom.RegistrationSigningContinuations
 import BeaconcryptCore.PanicFreedom.RegistrationTrivial
 import BeaconcryptCore.PanicFreedom.RegistrationPublication
 import BeaconcryptCore.PanicFreedom.KeyAgreement
-import BeaconcryptCore.PanicFreedom.AdapterRecordReceive
+import BeaconcryptCore.Refinement.AdapterOptionDeref
 import BeaconcryptCore.Refinement.AdapterPublicInitSourceLoop
 import BeaconcryptCore.Refinement.AdapterPublicAgreementSourceLoop
 import BeaconcryptCore.Refinement.AdapterPublicFinishSourceLoop
@@ -32,7 +32,6 @@ variable [authentication : beaconcrypt.auth.Operations]
 /-! These contracts contain only the leaves used by each source cohort. RNG contracts select one dictionary and cover every state of that dictionary, including ordinary entropy errors. No conclusion about an arbitrary RNG callback is assumed. -/
 structure InitContracts : Prop where
   hash : ∀ request, Normal (authentication.hash request)
-  sign : ∀ identity request, Normal (localOps.auth_MldsaIdentity_sign_requested identity request)
   edPublicBytes : ∀ key, Normal (crypto.edPublicBytes key)
   edSign : ∀ message key, Normal (crypto.edSign message key)
 
@@ -133,12 +132,8 @@ local macro "safety_steps" contracts:term : tactic => `(tactic|
       | with_reducible exact KeyAgreement.root_kdf_resume_total _ _
       | with_reducible exact RegistrationSigning.ed_request_total _
       | with_reducible exact RegistrationSigning.ed_resume_total _ _
-      | with_reducible exact RegistrationTrivial.BeaconFingerprint_request_total _
       | with_reducible exact RegistrationTrivial.BeaconInitHash_request_total _
-      | with_reducible exact RegistrationTrivial.BeaconMldsaSigning_request_total _
-      | with_reducible exact RegistrationSigningContinuations.BeaconFingerprint_resume_total _ _
       | with_reducible exact RegistrationSigningContinuations.BeaconInitHash_resume_total _ _
-      | with_reducible exact RegistrationSigningContinuations.BeaconMldsaSigning_resume_total _ _
       | with_reducible exact RegistrationInputs.copied_slice_total _ _
       | with_reducible exact AdapterStandard.result_ok_total _
       | with_reducible exact AdapterStandard.option_branch_total _
@@ -239,6 +234,7 @@ theorem agreement_closure_total (contracts : AgreementContracts) {R : Type} {Cla
 
 end AgreementClosures
 
+omit platform localOps in
 theorem init_ready_body_total (contracts : InitContracts)
     (beacon1 : beacon.Beacon) (effect : registration.BeaconInitEffect) :
     ∃ result, beacon._proof_beacon_init_ready_loop.body beacon1 effect = ok result := by
@@ -248,17 +244,18 @@ theorem init_ready_body_total (contracts : InitContracts)
     repeat'
       first
         | with_reducible exact contracts.hash _
-        | with_reducible exact contracts.sign _ _
         | with_reducible exact contracts.edPublicBytes _
         | with_reducible exact contracts.edSign _ _
         | safety_steps contracts
 
+omit platform localOps in
 theorem init_ready_loop_total (contracts : InitContracts)
     (effect : registration.BeaconInitEffect) (beacon1 : beacon.Beacon) :
     ∃ result, beacon._proof_beacon_init_ready_loop effect beacon1 = ok result := by
   exact normal_loop _ AdapterPublicInitSourceLoop.rank (init_ready_body_total contracts beacon1)
     (AdapterPublicInitSourceLoop.body_progress beacon1) effect
 
+omit platform localOps in
 theorem init_ready_total (contracts : InitContracts)
     (beacon1 : beacon.Beacon) (effect : registration.BeaconInitEffect) :
     ∃ result, beacon._proof_beacon_init_ready beacon1 effect = ok result :=

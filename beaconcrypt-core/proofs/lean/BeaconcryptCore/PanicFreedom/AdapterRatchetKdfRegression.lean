@@ -16,33 +16,31 @@ variable [crypto : PublicWrapperPlatform.CryptoOperations]
 variable [operations : AdapterRatchetKdfPrimitive.Operations]
 
 theorem extract_error_panics (size : Usize) (bound : size.val ≤ 16320)
-    (request : ratchet.SymmetricRatchetKdfRequest) (error : primitive.Error)
-    (extracted : crypto.extract .None request.input.to_slice = ok (.Err error)) :
-    beaconcrypt_ratchet_kdf.ratchet.symmetric_ratchet_hkdf size request = fail .panic := by
+    (input : Array U8 32#usize) (info : Slice U8) (error : primitive.Error)
+    (extracted : crypto.extract .None input.to_slice = ok (.Err error)) :
+    beaconcrypt_ratchet_kdf.ratchet.symmetric_ratchet_hkdf size input info = fail .panic := by
   have within : (255 * 64 : Nat) < 2 ^ System.Platform.numBits := by scalar_tac
   have scaled : (255#usize * 64#usize : RustM Usize) = ok 16320#usize := by
     simp [HMul.hMul, UScalar.mul, UScalar.tryMk, UScalar.tryMkOpt, within]
   have admitted : size ≤ 16320#usize := by scalar_tac
   simp! only [beaconcrypt_ratchet_kdf.ratchet.symmetric_ratchet_hkdf, scaled,
-    massert, admitted, ↓reduceIte, ratchet.SymmetricRatchetKdfRequest.impl.input,
-    lift, bind_tc_ok, beaconcrypt_crypto.crypto_kdf.hkdf.sha512.extract, extracted,
+    massert, admitted, ↓reduceIte, lift, bind_tc_ok, beaconcrypt_crypto.crypto_kdf.hkdf.sha512.extract, extracted,
     core.result.Result.expect, core.panicking.internal.panic, bind_tc_fail]
 
 theorem expand_error_panics (size : Usize) (bound : size.val ≤ 16320)
-    (request : ratchet.SymmetricRatchetKdfRequest)
+    (input : Array U8 32#usize) (info : Slice U8)
     (prk : beaconcrypt_crypto.crypto_kdf.hkdf.sha512.Prk) (after : Slice U8)
     (error : primitive.Error)
-    (extracted : crypto.extract .None request.input.to_slice = ok (.Ok prk))
+    (extracted : crypto.extract .None input.to_slice = ok (.Ok prk))
     (expanded : operations.expandInto (Array.repeat size 0#u8).to_slice
-      (.Some request.info.to_slice) prk = ok (.Err error, after)) :
-    beaconcrypt_ratchet_kdf.ratchet.symmetric_ratchet_hkdf size request = fail .panic := by
+      (.Some info) prk = ok (.Err error, after)) :
+    beaconcrypt_ratchet_kdf.ratchet.symmetric_ratchet_hkdf size input info = fail .panic := by
   have within : (255 * 64 : Nat) < 2 ^ System.Platform.numBits := by scalar_tac
   have scaled : (255#usize * 64#usize : RustM Usize) = ok 16320#usize := by
     simp [HMul.hMul, UScalar.mul, UScalar.tryMk, UScalar.tryMkOpt, within]
   have admitted : size ≤ 16320#usize := by scalar_tac
   simp! only [beaconcrypt_ratchet_kdf.ratchet.symmetric_ratchet_hkdf, scaled,
-    massert, admitted, ↓reduceIte, ratchet.SymmetricRatchetKdfRequest.impl.input,
-    ratchet.SymmetricRatchetKdfRequest.impl.info, lift, bind_tc_ok,
+    massert, admitted, ↓reduceIte, lift, bind_tc_ok,
     beaconcrypt_crypto.crypto_kdf.hkdf.sha512.extract, extracted,
     core.result.Result.expect, zeroize.Zeroizing.new,
     zeroize.Zeroizing.Insts.CoreOpsDerefDerefMut.deref_mut,
@@ -69,7 +67,7 @@ theorem mock_contracts (size : Usize) (prk : beaconcrypt_crypto.crypto_kdf.hkdf.
   let _ := successfulCrypto prk
   let _ := successfulExpansion size
   refine { extract := fun _ => ⟨prk, rfl⟩, expand := ?_ }
-  intro _ request key called
+  intro _ input info key called
   exact ⟨_, ite_eq_left (AdapterRatchetKdf.zeroed_output_width size),
     AdapterRatchetKdf.zeroed_output_width size⟩
 
@@ -80,14 +78,14 @@ theorem unrelated_generation_diverges (prk : beaconcrypt_crypto.crypto_kdf.hkdf.
 
 theorem mock_symmetric_total (size : Usize) (bound : size.val ≤ 16320)
     (prk : beaconcrypt_crypto.crypto_kdf.hkdf.sha512.Prk)
-    (request : ratchet.SymmetricRatchetKdfRequest) :
+    (input : Array U8 32#usize) (info : Slice U8) :
     letI := successfulCrypto prk
     letI := successfulExpansion size
-    Normal (beaconcrypt_ratchet_kdf.ratchet.symmetric_ratchet_hkdf size request) := by
+    Normal (beaconcrypt_ratchet_kdf.ratchet.symmetric_ratchet_hkdf size input info) := by
   have selected := mock_contracts size prk
   let _ := successfulCrypto prk
   let _ := successfulExpansion size
-  exact AdapterRatchetKdf.symmetric_ratchet_hkdf_total size selected bound request
+  exact AdapterRatchetKdf.symmetric_ratchet_hkdf_total size selected bound input info
 
 omit crypto in
 theorem unselected_expansion_diverges (selected requested : Usize)

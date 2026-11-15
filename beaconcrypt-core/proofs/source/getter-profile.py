@@ -2,11 +2,10 @@
 # SPDX-License-Identifier: 0BSD
 """Check the reviewed, finite Rust getter/Lean field-availability boundary.
 
-This is a source tripwire and exhaustive phase-table comparison, not a Rust
-compiler proof, a primitive representation proof, or a compromise theorem.
+This is a source tripwire and exhaustive phase-table comparison, not a Rust compiler proof, a primitive representation proof, or a compromise theorem.
 The table covers the four named classical/KEM fields, not all secret material.
-ML-DSA identities are private adapter state; only their public keys and public
-key fingerprints have new getters. See doc/impl/mldsa-source-pins.md.
+The Server's stored ML-DSA identity remains private adapter state, with a public-key getter; Beacon has no ML-DSA identity and the former fingerprint getter is gone.
+Retained Init fields and session transcript metadata are public data; the finite table does not cover every secret-bearing API.
 """
 
 import argparse
@@ -30,29 +29,31 @@ FIELDS = {
 # Filled with reviewed complete source files, including lifecycle and adapter
 # visibility. Any change requires re-review, even outside a getter body.
 SOURCE_SHA256 = {
-    "beaconcrypt/src/beacon.rs": "71fb13a0d12ba7a49377178cdfb2754564350c12912a95c6784efbd1a582823b",
-    "beaconcrypt/src/server.rs": "9bd205117f41c690f5fae2936c2f70de61e751f04caee78de800e2ba51dffb13",
-    "beaconcrypt/src/ratchet.rs": "ff38395eceb8695cabee418be5e20074eee8482bd4f9e6d0bb2f801d368fffda",
-    "beaconcrypt/src/shared.rs": "6457931a67e77c2159bd6c33e366b433f1affe95cab2150f5a3df2dfda30a5b9",
-    "beaconcrypt/src/cbinds.rs": "72892223fa8d6815419dcda3dbc8a8a1a4a85f373cc4931b43b79c9c196bded1",
-    "beaconcrypt/src/pybinds.rs": "99add1792edca9c8feb9e94e0e500152baf34c99912be19b3ee9bb77c3b7127e",
+    "beaconcrypt/src/beacon.rs": "669482d038c8143ac25698bd4a1517480745c9b29c348d7d5c023992f813a845",
+    "beaconcrypt/src/server.rs": "b5e6992a58eacce5b51d2624ff58206fbd56c744a97561146d07176a9242b66b",
+    "beaconcrypt/src/ratchet.rs": "f9fa5f0b41821cc54fe5f626d18a853489300a7a2cde061efd8f7f0da277370d",
+    "beaconcrypt/src/shared.rs": "98ff9810f5b1a8425a2177dab49c53eda6aa75cf5f78aedb1617712b4da17387",
+    "beaconcrypt/src/cbinds.rs": "d6b84d410a604fa89ee95e2e237df94012e8ef7f6532130ad7c21a31eef04d46",
+    "beaconcrypt/src/pybinds.rs": "47065efeda4b5908cfa4c2d08ed160a07de5b00fa2aa4a941d692727b76d93fb",
     "beaconcrypt/src/lib.rs": "59b2239615ff5c4bfa10db7a7162b078db5abdd10f143f9a3624937a6ff4a3ba",
-    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointLiveRead.lean": "c3866a86f826c1fdc57bf605f7f47832ce6f88344c747819aaa53af3915b76fb",
-    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointOwnership.lean": "b802789bbb7ff115b50464900a759b1405db75e0c2212d5105021043971ceaec",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointLiveRead.lean": "efbb903e307af5c8738b6b98cb952ab193aa7fe5a93a3bdd15a04fdeee1ef754",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhRegistrationJointOwnership.lean": "d7cc2f32a9f43076d5ad783e6a393df563bb3d76cc2722f933ea195aa3d88fbf",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/RawCtxProtocolReveals.lean": "452bff899641ed154e7a84110407ca07d828f54f29975b4330cba80bc50f42b8",
-    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/RawCtxLiveLineage.lean": "a8c5adb13126e1f0a7e0c84f3fc2614de0c5f45ff730d484c9aaaf15e7cb9193",
+    "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/RawCtxLiveLineage.lean": "95392feb7e6fbfa2e5c4c4953ed82e610704737ef573691f66df5d7ef50a187d",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/RawCtxSelectedMessageFreshness.lean": "b62c79fa6a4716de40e138534117b023841fc3f7bc74928a47afb2f8401905de",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/RawCtxSelectedMessageReveals.lean": "5759dc6718dc7e5fc6e26f173deabb45d7dce988c27b5aa65091880dd293a911",
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/Computational/PqxdhJointIdentity.lean": "d9b9c25ac490e14743fe77ebfe6ae476d01fd22b8e5dba763f3e5faacf0c1a37",
-    "beaconcrypt-core/src/session.rs": "3779c778ce4f8ec534c2fa610c0a334302ada76fc5cd601ade575802ff9c07c4",
-    "beaconcrypt/src/auth.rs": "45b2513e304b4d4b12b41ca15ff15b94db54886e302453971d99ec0f1ce4f884",
-    "beaconcrypt/src/pqxdh.rs": "f3b880ec118bebfd49851156588e681da40f50761470fbacc6940fd69cabc319",
-    "beaconcrypt-core/src/agreement.rs": "cea8e603c7943f18ba79f95743cc113e3d16e8589c3614240b542ee3ac1109de",
-    "beaconcrypt-core/src/registration.rs": "fb6f679499585a9d9976abaea31f8dbd8f68f53f6c0f1deb7462ee393acf9f25",
-    "beaconcrypt-core/src/pqxdh.rs": "bff5dca4b9a292a025ad96ab9fba8761bc63d2e49dac493a2bae0d1cea67a018",
+    "beaconcrypt-core/src/authentication.rs": "eef28a2a39d5134528173e40d22d02f9846319d2c2d67dc4b0e60d14d6637659",
+    "beaconcrypt-core/src/ratchet.rs": "ff8981ab40ed42f406e04b1258063b8e5a9418af76cccc9f065f12160fa08f47",
+    "beaconcrypt-core/src/session.rs": "4f83234a89c0fe8df60d68753930339f68208e2f14c464849177006af550c15e",
+    "beaconcrypt/src/auth.rs": "f812e268cdd86cac01c43fdba5b25b944ebcdda1f6c03407203a6fbfa9ed16b5",
+    "beaconcrypt/src/pqxdh.rs": "031465df2916c2fd118a28b3cb91f79484f535e2149c9c5bc48d3c5395dacf23",
+    "beaconcrypt-core/src/agreement.rs": "7abf5bb56eb76ed461d52d0d6efff8bb18f165cc6831417a4f78f6e4d0672fa6",
+    "beaconcrypt-core/src/registration.rs": "8be65a2c601a151d0ec9d2a570b929d55d72394edceac59599e1b11d741bba83",
+    "beaconcrypt-core/src/pqxdh.rs": "0e90604b6537968f73873850ca7626f5019a9482c3225bb333d9a3ff555fde4f",
     "beaconcrypt-core/src/record_effects.rs": "dbdf79661a17c8d8c128ff349a7efe906d6713912e5510c9a0476b0c3efad2b5",
-    "beaconcrypt-core/src/peer.rs": "df4b0fc85a7a303f56908b13a4d90fb7d9233601040b43e035a99d341bd757bc",
-    "beaconcrypt-core/src/transport.rs": "bc3f347f251cb07e44c47699c6fa3db4c9ae8b73c6d1d54c6f9eb54911a463a9",
+    "beaconcrypt-core/src/peer.rs": "5ace82b81a3e1c191223fd0629be3f00bbd321336baed0b568c9e432df0f9d77",
+    "beaconcrypt-core/src/transport.rs": "795012d453a3ed209d6f8815eeedb2ccabaebd9a81d03f932d64f95aea9c3617",
     "beaconcrypt-crypto/src/crypto_aead.rs": "1b62a128ed169c81a45825ede6853b32ae715ce9ea96f9d53803e7fb461b9bf1",
     "beaconcrypt-crypto/src/crypto_generichash.rs": "292e806217ff105632f48ac32d89f3e9820b8a2b118810790be06e60104168f3",
     "beaconcrypt-crypto/src/crypto_kdf.rs": "8fc41159cc32f483a89ee4a273b9ebdf32fd75d23591580c991efb8b8c70cdf2",

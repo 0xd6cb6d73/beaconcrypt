@@ -59,7 +59,7 @@ private theorem map_apply {S A B : Type} {m : Type → Type} [Monad m] [LawfulMo
     (f : A → B) (work : StateT S m A) (before : S) :
     (f <$> work) before = Prod.map f id <$> work before := StateT.run_map f work before
 variable (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner mlSource) (oneTime : PqxdhJointGapDh.ScalarBytes)
 variable (reply : RegistrationNativePlatformIdentityBundle.Reply)
 local notation "action" => RegistrationNativePlatformIdentityCtxMain.beacon setup checks representation created

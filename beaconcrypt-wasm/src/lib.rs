@@ -77,7 +77,7 @@ thread_local! { static REGISTRY: RefCell<Registry> = RefCell::new(Registry::defa
 
 #[unsafe(no_mangle)]
 pub extern "C" fn bc_abi_version() -> u32 {
-	2
+	3
 }
 
 #[unsafe(no_mangle)]
@@ -291,11 +291,6 @@ fn dispatch(op: u32, handle: u32, arg: u64, input: &[u8], extra: &[u8]) -> Respo
 				handle,
 				server.identity_key_kid(),
 				server.mldsa_public_key().to_vec(),
-			),
-			(24, Handle::Beacon(beacon)) => Response::success(
-				handle,
-				beacon.identity_key_kid(),
-				beacon.mldsa_public_key().to_vec(),
 			),
 			(4, Handle::Beacon(beacon)) => match beacon.get_registration_bundle() {
 				Some(data) => Response::success(handle, 0, data),

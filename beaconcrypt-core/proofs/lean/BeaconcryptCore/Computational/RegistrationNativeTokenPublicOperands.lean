@@ -1,6 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeMatchedServerInput
 import BeaconcryptCore.Computational.RegistrationNativeCapturedCoordinates
+import BeaconcryptCore.Computational.RegistrationNativeBeaconPublication
 
 /-! The same consumed token's actual source acceptance retains the public ephemeral and KEM ciphertext of its collector. The already matched authenticated Init tuple supplies its four exact source public operands, without assuming private input or root equality. -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -17,7 +18,7 @@ variable {n : Nat} {ι KemSK : Type} {base : OracleSpec ι} {source : Registrati
 
 /-- A token's retained root receipt identifies the actual ephemeral public key and KEM ciphertext computed before source root erasure. -/
 theorem token (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit)
     (before after : RegistrationServerFrontendCompiler.State n) (completed : agreement.ServerAgreement)
     (receipt : RegistrationNativeTokenRootReceipt.Input setup checks representation created packet authenticated before after completed) :

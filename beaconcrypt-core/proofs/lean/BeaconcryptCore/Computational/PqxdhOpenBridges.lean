@@ -7,7 +7,7 @@ The headline experiments HB-111 (`PqxdhAuthenticatedRootBudgets.authenticated_na
 
 `executeOpen` is a hand-written Lean transcription of `execute_open`. It calls the extracted phase functions and the extracted `commitment.CommitmentTranscript.as_bytes` and `as_mut_bytes` in production order and threads their `RustM` results. The commitment hash and the AEAD opening are queries of the stand-in's own primitive interface `RawCtxSourceOpen.OpenSpec`: the hash query receives the bytes of the transcript returned by the extracted phases, the comparison is length-checked byte equality, which is what `libsodium_rs::utils::memcmp` computes (a length check followed by libsodium's `sodium_memcmp`, primitive law PL-11), and the AEAD query receives the key, nonce, associated data and combined ciphertext of the extracted `record.AeadRequest`. The transcript erasure writes an arbitrary array `erased` through the extracted mutable borrows (production writes zeros), and every statement holds for every such array. The composition, the two primitive queries, the comparison `compareDigest` and the erasure are hand-written Lean. No Lean statement relates `executeOpen` to the Rust `execute_open`: that it follows `execute_open`, including the phase order, the mapping of `crypto_generichash::generichash(…, None, COMMITMENT_SIZE).ok()` and `crypto_aead::chacha20poly1305_ietf::decrypt(…).ok()` onto the two `RawCtxSourceOpen.OpenSpec` queries and the conversion to `Decrypted`, is adapter-level trust checked only by review of `beaconcrypt/src/ratchet.rs`; the comparison also relies on primitive law PL-11, and its constant-time behaviour is not modelled. B12 relates this transcription to the experiments' opening step; it does not verify the Rust adapter.
 
-B12 (`OpenBridge`) quantifies over every source opening capability whose payload and associated data are represented by a byte slice and a 281-byte array; its last conjunct shows that every payload of at most `Std.Usize.max` bytes and every 281-byte associated data is represented, the same width conditions as B6 and B8. The extracted payload admission `record.OpenFrameContext.from_frame` always returns normally. If it rejects, the payload has at most 80 bytes (so the experiments' frame validity check rejects it before any receive), and the experiments' opening step makes no hash or AEAD query and returns the entry kernel without plaintext. If it admits a frame context, the experiments' complete opening step, callback and kernel publication, equals `executeOpen` on the capability with the same ratchet entry and prepared receive and the admitted context, wrapped in `ok`, as programs over the experiments' hash and AEAD queries. The equality therefore holds for a capability without material and for every primitive reply, including hash failure, commitment mismatch, AEAD failure and success, and the extracted phases never fail or diverge there. A second equality states the same for the opening callback alone.
+B12 (`OpenBridge`) quantifies over every source opening capability whose payload and associated data are represented by a byte slice and a 151-byte array; its last conjunct shows that every payload of at most `Std.Usize.max` bytes and every 151-byte associated data is represented, the same width conditions as B6 and B8. The extracted payload admission `record.OpenFrameContext.from_frame` always returns normally. If it rejects, the payload has at most 80 bytes (so the experiments' frame validity check rejects it before any receive), and the experiments' opening step makes no hash or AEAD query and returns the entry kernel without plaintext. If it admits a frame context, the experiments' complete opening step, callback and kernel publication, equals `executeOpen` on the capability with the same ratchet entry and prepared receive and the admitted context, wrapped in `ok`, as programs over the experiments' hash and AEAD queries. The equality therefore holds for a capability without material and for every primitive reply, including hash failure, commitment mismatch, AEAD failure and success, and the extracted phases never fail or diverge there. A second equality states the same for the opening callback alone.
 
 The headline restatements conjoin the statements of `PqxdhHeadlineBridges.authenticated_native_root_bound_bridged_full`, `PqxdhHeadlineBridges.authenticated_extracted_root_bound`, `PqxdhHeadlineBridges.evolving_bound_bridged_full` and `PqxdhHeadlineBridges.evolving_extracted_bound` with B12 at the same parameters and under the same hypotheses. B12 itself has no premises besides its representation conditions. The experiments still execute the hand-written opening programs; B12 states their equality with `executeOpen`, the hand-written Lean transcription of the unextracted `execute_open` that composes the extracted phases, not with the Rust function itself.
 
@@ -19,6 +19,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhOpenBridges
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhRefinement BeaconcryptCore.Refinement.RepresentationBridge
 open RawCtxInterpretedOpening (bindResult)
 open BeaconcryptCore.Refinement.ProtocolComposition (concreteByte absByte_concreteByte)
@@ -48,7 +50,7 @@ def compareDigest (digest : Option Pqxdh.Bytes) (pending : record.OpenCommitment
       ok (decide (digest = absBytes supplied))
 
 /-- Hand-written Lean transcription of production's `execute_open` (`beaconcrypt/src/ratchet.rs`). It calls the extracted `record.begin_open`, `record.OpenCommitment.impl.transcript`, `commitment.CommitmentTranscript.as_bytes`, `record.OpenCommitment.transcript_mut`, `commitment.CommitmentTranscript.as_mut_bytes`, `record.OpenCommitment.supplied_commitment`, `record.OpenCommitment.resume`, `record.OpenAead.request` and `record.OpenAead.finish` in production order; the commitment hash and the AEAD opening are queries of `RawCtxSourceOpen.OpenSpec`, and the transcript erasure writes `erased`. A `RustM` failure or divergence of an extracted phase is returned unchanged. -/
-def executeOpen (erased : Std.Array Std.U8 357#usize) (opening : ReceiveOpen record.OpenFrameContext) :
+def executeOpen (erased : Std.Array Std.U8 227#usize) (opening : ReceiveOpen record.OpenFrameContext) :
     OracleComp RawCtxSourceOpen.OpenSpec
       (RustM (ConcreteRatchetKernel × core.option.Option RawCtxWholeOwner.Decrypted)) :=
   bindResult (record.begin_open opening) fun start =>
@@ -181,9 +183,9 @@ theorem finish_withContext {Context Other A B : Type} (pending : ReceiveOpen Con
     cases r <;> rfl
 
 /-- Core bridge: whenever the extracted payload admission admits a frame context from a slice and array representing the capability's payload and associated data, the transcription of `execute_open` on the capability with that context equals the hand-written opening step `sourceOpen`, wrapped in `ok`, as programs over the same hash and AEAD queries. -/
-theorem executeOpen_source (erased : Std.Array Std.U8 357#usize)
+theorem executeOpen_source (erased : Std.Array Std.U8 227#usize)
     (pending : ReceiveOpen RawCtxWholeOwner.OpenContext)
-    (payload : Slice Std.U8) (ad : Std.Array Std.U8 281#usize) (context : record.OpenFrameContext)
+    (payload : Slice Std.U8) (ad : Std.Array Std.U8 151#usize) (context : record.OpenFrameContext)
     (hpayload : RawCtxNativeFramePrelude.sliceBytes payload = pending.context.frame.payload)
     (had : absBytes ad = pending.context.associatedData)
     (hframe : record.OpenFrameContext.from_frame payload ad pending.context.frame.sender =
@@ -199,7 +201,7 @@ theorem executeOpen_source (erased : Std.Array Std.U8 357#usize)
     have exact := RawCtxNativeFramePrelude.payload_exact payload ad pending.context.frame.sender
     rw [hframe, hpayload] at exact
     exact (RustM.ok.inj exact).symm
-  have hadLength : pending.context.associatedData.length = 281 := by
+  have hadLength : pending.context.associatedData.length = 151 := by
     rw [← had]; simp [absBytes_length]
   have hsequence := pending.sequence_total.choose_spec
   cases hm : pending.material_total.choose with
@@ -285,10 +287,10 @@ theorem executeOpen_source (erased : Std.Array Std.U8 357#usize)
       · simp only [hd, decide_false, Bool.false_eq_true, ite_false, RawCtxNativeFramePrelude.contextSlices,
           pure_bind, map_pure, RawCtxOwnerResult.mapReply, RawCtxOwnerOracle.finish_none, entry_withContext]
 
-/-- B12 (record opening): for every erasure value, every source opening capability and every slice and 281-byte array representing its payload and associated data, the extracted payload admission returns normally and either rejects a payload of at most 80 bytes while the experiments' opening step returns the entry kernel without any query, or admits a frame context for which the experiments' opening step (at the interface of `RawCtxMixedOwner.receiveAdapter`) and its opening callback equal the transcription `executeOpen` of production's composition of the extracted opening phases, wrapped in `ok`. Every payload of at most `Std.Usize.max` bytes and every 281-byte associated data is represented. -/
+/-- B12 (record opening): for every erasure value, every source opening capability and every slice and 151-byte array representing its payload and associated data, the extracted payload admission returns normally and either rejects a payload of at most 80 bytes while the experiments' opening step returns the entry kernel without any query, or admits a frame context for which the experiments' opening step (at the interface of `RawCtxMixedOwner.receiveAdapter`) and its opening callback equal the transcription `executeOpen` of production's composition of the extracted opening phases, wrapped in `ok`. Every payload of at most `Std.Usize.max` bytes and every 151-byte associated data is represented. -/
 def OpenBridge : Prop :=
-  (∀ (erased : Std.Array Std.U8 357#usize) (pending : ReceiveOpen RawCtxWholeOwner.OpenContext)
-      (payload : Slice Std.U8) (ad : Std.Array Std.U8 281#usize),
+  (∀ (erased : Std.Array Std.U8 227#usize) (pending : ReceiveOpen RawCtxWholeOwner.OpenContext)
+      (payload : Slice Std.U8) (ad : Std.Array Std.U8 151#usize),
     RawCtxNativeFramePrelude.sliceBytes payload = pending.context.frame.payload →
     absBytes ad = pending.context.associatedData →
     (record.OpenFrameContext.from_frame payload ad pending.context.frame.sender = ok .None ∧
@@ -305,8 +307,8 @@ def OpenBridge : Prop :=
         (fun reply => ok reply) <$>
           simulateQ RawCtxMixedOwner.receiveAdapter (RawCtxWholeOwner.adapter (.inr pending)))) ∧
   (∀ context : RawCtxWholeOwner.OpenContext, context.frame.payload.length ≤ Std.Usize.max →
-    context.associatedData.length = 281 →
-    ∃ (payload : Slice Std.U8) (ad : Std.Array Std.U8 281#usize),
+    context.associatedData.length = 151 →
+    ∃ (payload : Slice Std.U8) (ad : Std.Array Std.U8 151#usize),
       RawCtxNativeFramePrelude.sliceBytes payload = context.frame.payload ∧ absBytes ad = context.associatedData)
 
 /-- B12 holds. -/
@@ -335,7 +337,7 @@ theorem open_bridge : OpenBridge := by
       refine Or.inr ⟨context, execution, full, ?_⟩
       rw [full, mixed_step, standInOpen_callback, mixed_callback, simulateQ_map, Functor.map_map, Functor.map_map]
       rfl
-  · obtain ⟨array, harray⟩ := PqxdhHeadlineBridges.array_of_bytes 281#usize context.associatedData (by simpa using had)
+  · obtain ⟨array, harray⟩ := PqxdhHeadlineBridges.array_of_bytes 151#usize context.associatedData (by simpa using had)
     exact ⟨⟨context.frame.payload.map concreteByte, by simpa using hpayload⟩, array, by
       simp [RawCtxNativeFramePrelude.sliceBytes, List.map_map, Function.comp_def, absByte_concreteByte], harray⟩
 
@@ -368,12 +370,12 @@ theorem authenticated_native_root_bound_bridged_open
     (secretIdentity : M → Pqxdh.Bytes)
     (initialMatch : PqxdhProtocolServerInvariant.RootFields env.source.crypto secretIdentity
       env.senderId env.index env.server env.initial) :
-    let p := protocol env kem attachedVerify primitives program post
-    ((actual env baseImpl kem attachedVerify primitives program post).boolDistance
+    let p := protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post
+    ((actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post).boolDistance
       (uniformGame (rootReduction env.source baseImpl kem p)) ≤
       (PqxdhJointIdentity.advantage primitives
         (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
-          (driver env.toDriverEnvironment program) fallback ordinaryFallback)).toReal +
+          (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program) fallback ordinaryFallback)).toReal +
       Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)}[x = true].toReal +
       (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
         (PqxdhChallengeSecretRouting.reduction env.source kem p).toINDCCA).toReal +
@@ -383,18 +385,18 @@ theorem authenticated_native_root_bound_bridged_open
         (hmacPrfRealGame hmac (indexedReduction hmac (rootReduction env.source baseImpl kem p) index)).boolDistance
           (hmacPrfRandomGame (indexedReduction hmac (rootReduction env.source baseImpl kem p) index))) ∧
     (∀ result ∈ support (PqxdhPrivateSourceCoins.privateRun attachedVerify primitives 1
-      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (driver env.toDriverEnvironment program))),
+      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program))),
       ∃ output, result.1.map PqxdhPrivateRootSource.eraseOutput = some output ∧
         PqxdhProtocolServerInvariant.RootFields env.source.crypto secretIdentity env.senderId env.index
           env.server output.context.selection.2) ∧
-    PrepareBridge ∧ CommitBridge ∧ BeaconStartBridge ∧ BeaconCommitBridge ∧ RegistrationIdBridge ∧
+    PrepareBridge (associatedData := associatedData) ∧ CommitBridge ∧ BeaconStartBridge ∧ BeaconCommitBridge ∧ RegistrationIdBridge ∧
     CommitmentTranscriptBridge ∧ SendFinishBridge ∧ FramePayloadBridge ∧
-    AcceptBridge env baseImpl kem attachedVerify primitives program post secretIdentity ∧
+    AcceptBridge (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post secretIdentity ∧
     ValidateInitBridge ∧
     OpenBridge := by
   intro p
   obtain ⟨bound, reached, prepare, commit, start, established, rid, transcript, send, frame, accept, validate⟩ :=
-    authenticated_native_root_bound_bridged_full env baseImpl kem attachedVerify primitives program post c
+    authenticated_native_root_bound_bridged_full (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c
       compatible adapter functional hmac sourceCorrect fallback ordinaryFallback secretIdentity initialMatch
   exact ⟨bound, reached, prepare, commit, start, established, rid, transcript, send, frame, accept, validate,
     open_bridge⟩
@@ -409,12 +411,12 @@ theorem authenticated_extracted_root_bound_open
     (secretIdentity : M → Pqxdh.Bytes)
     (initialMatch : PqxdhProtocolServerInvariant.RootFields env.source.crypto secretIdentity
       env.senderId env.index env.server env.initial) :
-    let p := protocol env kem attachedVerify primitives program post
-    ((extractedActual env baseImpl kem attachedVerify primitives program post secretIdentity).boolDistance
+    let p := protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post
+    ((extractedActual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post secretIdentity).boolDistance
       (uniformGame (rootReduction env.source baseImpl kem p)) ≤
       (PqxdhJointIdentity.advantage primitives
         (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
-          (driver env.toDriverEnvironment program) fallback ordinaryFallback)).toReal +
+          (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program) fallback ordinaryFallback)).toReal +
       Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)}[x = true].toReal +
       (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
         (PqxdhChallengeSecretRouting.reduction env.source kem p).toINDCCA).toReal +
@@ -424,16 +426,16 @@ theorem authenticated_extracted_root_bound_open
         (hmacPrfRealGame hmac (indexedReduction hmac (rootReduction env.source baseImpl kem p) index)).boolDistance
           (hmacPrfRandomGame (indexedReduction hmac (rootReduction env.source baseImpl kem p) index))) ∧
     (∀ result ∈ support (PqxdhPrivateSourceCoins.privateRun attachedVerify primitives 1
-      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (driver env.toDriverEnvironment program))),
+      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program))),
       ∃ output, result.1.map PqxdhPrivateRootSource.eraseOutput = some output ∧
         PqxdhProtocolServerInvariant.RootFields env.source.crypto secretIdentity env.senderId env.index
           env.server output.context.selection.2) ∧
-    PrepareBridge ∧ CommitBridge ∧ BeaconStartBridge ∧ BeaconCommitBridge ∧ RegistrationIdBridge ∧
+    PrepareBridge (associatedData := associatedData) ∧ CommitBridge ∧ BeaconStartBridge ∧ BeaconCommitBridge ∧ RegistrationIdBridge ∧
     CommitmentTranscriptBridge ∧ SendFinishBridge ∧ FramePayloadBridge ∧ ValidateInitBridge ∧
     OpenBridge := by
   intro p
   obtain ⟨bound, reached, prepare, commit, start, established, rid, transcript, send, frame, validate⟩ :=
-    authenticated_extracted_root_bound env baseImpl kem attachedVerify primitives program post c
+    authenticated_extracted_root_bound (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c
       compatible adapter functional hmac sourceCorrect fallback ordinaryFallback secretIdentity initialMatch
   exact ⟨bound, reached, prepare, commit, start, established, rid, transcript, send, frame, validate,
     open_bridge⟩
@@ -451,19 +453,19 @@ theorem evolving_bound_bridged_open (positive : 0 < number.val)
     (secretIdentity : M → Pqxdh.Bytes)
     (initialMatch : PqxdhProtocolServerInvariant.RootFields env.source.crypto secretIdentity
       env.senderId env.index env.server env.initial) :
-    (PqxdhInitialRootEventSecrecy.actual env baseImpl kem attachedVerify primitives program post selected number
+    (PqxdhInitialRootEventSecrecy.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number
         ancestors disclosed).boolDistance
-      (PqxdhAuthenticatedEvolvingSecrecy.ideal env baseImpl kem attachedVerify primitives program post selected
+      (PqxdhAuthenticatedEvolvingSecrecy.ideal (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected
         number ancestors disclosed) ≤
-      PqxdhAuthenticatedEvolvingSecrecy.loss env baseImpl kem attachedVerify primitives program post selected
+      PqxdhAuthenticatedEvolvingSecrecy.loss (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected
         number ancestors disclosed c hmac fallback ordinaryFallback ∧
-    PrepareBridge ∧ CommitBridge ∧ BeaconStartBridge ∧ BeaconCommitBridge ∧ RegistrationIdBridge ∧
+    PrepareBridge (associatedData := associatedData) ∧ CommitBridge ∧ BeaconStartBridge ∧ BeaconCommitBridge ∧ RegistrationIdBridge ∧
     CommitmentTranscriptBridge ∧ SendFinishBridge ∧ FramePayloadBridge ∧ ValidateInitBridge ∧
-    EvolvingAcceptBridge env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed
+    EvolvingAcceptBridge (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed
       secretIdentity ∧
     OpenBridge := by
   obtain ⟨bound, prepare, commit, start, established, rid, transcript, send, frame, validate, accept⟩ :=
-    evolving_bound_bridged_full env baseImpl kem attachedVerify primitives program post c selected number
+    evolving_bound_bridged_full (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c selected number
       ancestors disclosed positive compatible adapter functional hmac correct fallback ordinaryFallback
       secretIdentity initialMatch
   exact ⟨bound, prepare, commit, start, established, rid, transcript, send, frame, validate, accept, open_bridge⟩
@@ -478,17 +480,17 @@ theorem evolving_extracted_bound_open (positive : 0 < number.val)
     (secretIdentity : M → Pqxdh.Bytes)
     (initialMatch : PqxdhProtocolServerInvariant.RootFields env.source.crypto secretIdentity
       env.senderId env.index env.server env.initial) :
-    (extractedEvolvingActual env baseImpl kem attachedVerify primitives program post selected number ancestors
+    (extractedEvolvingActual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors
         disclosed secretIdentity).boolDistance
-      (PqxdhAuthenticatedEvolvingSecrecy.ideal env baseImpl kem attachedVerify primitives program post selected
+      (PqxdhAuthenticatedEvolvingSecrecy.ideal (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected
         number ancestors disclosed) ≤
-      PqxdhAuthenticatedEvolvingSecrecy.loss env baseImpl kem attachedVerify primitives program post selected
+      PqxdhAuthenticatedEvolvingSecrecy.loss (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected
         number ancestors disclosed c hmac fallback ordinaryFallback ∧
-    PrepareBridge ∧ CommitBridge ∧ BeaconStartBridge ∧ BeaconCommitBridge ∧ RegistrationIdBridge ∧
+    PrepareBridge (associatedData := associatedData) ∧ CommitBridge ∧ BeaconStartBridge ∧ BeaconCommitBridge ∧ RegistrationIdBridge ∧
     CommitmentTranscriptBridge ∧ SendFinishBridge ∧ FramePayloadBridge ∧ ValidateInitBridge ∧
     OpenBridge := by
   obtain ⟨bound, prepare, commit, start, established, rid, transcript, send, frame, validate⟩ :=
-    evolving_extracted_bound env baseImpl kem attachedVerify primitives program post c selected number
+    evolving_extracted_bound (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c selected number
       ancestors disclosed positive compatible adapter functional hmac correct fallback ordinaryFallback
       secretIdentity initialMatch
   exact ⟨bound, prepare, commit, start, established, rid, transcript, send, frame, validate, open_bridge⟩

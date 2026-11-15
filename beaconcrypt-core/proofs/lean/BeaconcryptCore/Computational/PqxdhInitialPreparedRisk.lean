@@ -9,6 +9,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialPreparedRisk
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf
 open PqxdhInitialBeaconAmbient PqxdhInitialNativeLog
 variable {ι M P I D K X Response Shared A N C Result Origin : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -53,19 +55,19 @@ theorem carried_length (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
     (state reached : State A N C)
     (context : PqxdhInitialOriginContext.Context extra M P I D K Result Origin S B)
     (supported : RawCtxForwardScan.Cut.pending context reached ∈ support
-      (PqxdhInitialNativeCarried.carried source writer mark sender route decode execution depth stage external state)) :
+      (PqxdhInitialNativeCarried.carried (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth stage external state)) :
     reached.1.2.length ≤ state.1.2.length + (7 + qPost * 67) := by
   have packed : RawCtxForwardScan.pack
-      (PqxdhInitialOriginContext.frame (X := X) (Response := Response) mark sender route decode)
+      (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode)
       (.pending context reached) ∈ support
-      (RawCtxForwardScan.pack (PqxdhInitialOriginContext.frame (X := X) (Response := Response) mark sender route decode) <$>
-        PqxdhInitialNativeCarried.carried source writer mark sender route decode execution depth stage external state) := by
+      (RawCtxForwardScan.pack (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode) <$>
+        PqxdhInitialNativeCarried.carried (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth stage external state) := by
     rw [support_map]
     exact ⟨.pending context reached, supported, rfl⟩
   rw [PqxdhInitialNativeCarried.carried_pack] at packed
   exact scan_length source writer stage external (PqxdhInitialNativePrefix.selected depth)
-    (PqxdhInitialNativeCarried.original source mark sender route decode execution) (7 + qPost * 67)
-    (PqxdhInitialOriginPost.sequence_total source execution.initial mark execution.origin sender route decode
+    (PqxdhInitialNativeCarried.original (associatedData := associatedData) (completedBinding := completedBinding) source mark sender route decode execution) (7 + qPost * 67)
+    (PqxdhInitialOriginPost.sequence_total (associatedData := associatedData) (completedBinding := completedBinding) source execution.initial mark execution.origin sender route decode
       execution.index execution.metadata execution.ready execution.outside qPost bounded (execution.before, execution.trace))
     state _ packed
 
@@ -80,16 +82,16 @@ variable (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writ
   (execution : PqxdhInitialNativeCarried.Execution extra M P I D K Result Origin S B)
   (depth : Nat) (state : PqxdhInitialNativeAudit.State A N C)
 
-local notation "sourceRun" => PqxdhInitialNativeAuditCarried.carried source writer pre application initializer selector aux
+local notation "sourceRun" => PqxdhInitialNativeAuditCarried.carried (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux
   mark sender route decode execution depth (depth + 1) state
 
 /-- The proof-annotated actual pending descriptor carries a chronological log bounded by the same complete source allowance. -/
 theorem supported_length (qPost : Nat) (bounded : ∀ reply, (execution.outside reply).IsTotalQueryBound qPost)
     (input : PqxdhInitialSupportedCertificate.Supported sourceRun) :
     input.val.2.1.1.2.length ≤ state.1.1.2.length + (7 + qPost * 67) := by
-  apply carried_length source writer mark sender route decode execution depth (depth + 1) qPost
+  apply carried_length (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth (depth + 1) qPost
     (PqxdhInitialNativeAudit.external pre application initializer selector aux) bounded state.1 input.val.2.1 input.val.1
-  rw [← PqxdhInitialNativeAuditCarried.carried_projection source writer pre application initializer selector aux
+  rw [← PqxdhInitialNativeAuditCarried.carried_projection (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux
     mark sender route decode execution depth (depth + 1) state, support_map]
   exact ⟨.pending input.val.1 input.val.2, input.property, rfl⟩
 
@@ -100,14 +102,14 @@ def addresses : Bool ⊕ PqxdhInitialSupportedCertificate.Supported sourceRun �
 /-- The candidate addresses contain the entire actual earlier private-input log and the current unexecuted parent input, each explicitly counted. -/
 theorem addresses_length (qPost : Nat) (bounded : ∀ reply, (execution.outside reply).IsTotalQueryBound qPost)
     (input : Bool ⊕ PqxdhInitialSupportedCertificate.Supported sourceRun) :
-    (addresses source writer pre application initializer selector aux mark sender route decode execution depth state input).length ≤
+    (addresses (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode execution depth state input).length ≤
       state.1.1.2.length + (7 + qPost * 67) + 1 := by
   cases input with
   | inl result => exact Nat.zero_le _
   | inr input =>
     simpa only [addresses, List.length_append, List.length_singleton] using
       Nat.add_le_add_right
-        (supported_length source writer pre application initializer selector aux mark sender route decode execution depth state
+        (supported_length (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode execution depth state
           qPost bounded input) 1
 
 private theorem target_address (target : RootOutput) :
@@ -115,17 +117,17 @@ private theorem target_address (target : RootOutput) :
   change (⟨_, (RawCtxSelectedQueryTrace.rootVector (RawCtxFreshChainCut.concreteChain target)).toList⟩ : JointKdfAddress) = _
   rw [RawCtxSelectedQueryTrace.rootVector_concrete]
   exact congrArg (fun info => (⟨info, target.toList⟩ : JointKdfAddress))
-    (by simpa only [RawCtxChainSend.nativeRequest, FixedHkdfDomain.info, pqxdh.SYM_RATCHET_INFO] using PqxdhRefinement.absBytes_SYM_RATCHET_INFO)
+    (by simpa only [RawCtxChainSend.nativeRequest, FixedHkdfDomain.info, ratchet.SYM_RATCHET_INFO] using PqxdhRefinement.absBytes_SYM_RATCHET_INFO)
 
 /-- The exact prepared prefix and full76 parent draw charge all prior-input collisions plus the parent self-address by their concrete original log allowance. -/
 theorem collision_bound
     (observe : PqxdhInitialPreparedParent.Output M P I D K Result Origin A N C S B → ProbComp Bool)
     (qPost : Nat) (bounded : ∀ reply, (execution.outside reply).IsTotalQueryBound qPost) :
     Pr{let pair ← (RawCtxSelectedParentCandidates.sample
-        (PqxdhInitialPreparedResources.sample source writer pre application initializer selector aux mark sender route decode
+        (PqxdhInitialPreparedResources.sample (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode
           observe execution depth state)
-        (PqxdhInitialPreparedResources.address source writer pre application initializer selector aux mark sender route decode execution depth state))}[RawCtxSelectedParentPrivatePatch.targetAddress pair.2 ∈
-      addresses source writer pre application initializer selector aux mark sender route decode execution depth state pair.1.1] ≤
+        (PqxdhInitialPreparedResources.address (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode execution depth state))}[RawCtxSelectedParentPrivatePatch.targetAddress pair.2 ∈
+      addresses (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode execution depth state pair.1.1] ≤
       ((state.1.1.2.length + (7 + qPost * 67) + 1 : Nat) : ℝ≥0∞) * (2 ^ 256 : ℝ≥0∞)⁻¹ := by
   unfold RawCtxSelectedParentCandidates.sample
   have split : ∀ {Context Value : Type} (prior : ProbComp Context) (draw : Context → ProbComp Value)
@@ -134,21 +136,21 @@ theorem collision_bound
     fun prior draw q ε h => prEvent_bind_le_of_forall_le prior draw q h
   refine split _ _ _ _ fun context => ?_
   have bound := RawCtxFirstParentRisk.full_inputs
-    (addresses source writer pre application initializer selector aux mark sender route decode execution depth state context)
+    (addresses (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode execution depth state context)
   generalize sampled : ($ᵗ FullOutput : ProbComp FullOutput) = block at bound ⊢
   rw [bind_pure_comp _ block, prEvent_map]
   simp only [target_address]
   exact bound.trans (mul_le_mul_left
-    (Nat.cast_le.mpr (addresses_length source writer pre application initializer selector aux mark sender route decode
+    (Nat.cast_le.mpr (addresses_length (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode
       execution depth state qPost bounded context)) _)
 
 /-- Every private-cache binding at the actual supported source cut is represented in its chronological log. -/
 theorem supported_covered (covered : PqxdhInitialNativeLog.Covered state.1)
     (input : PqxdhInitialSupportedCertificate.Supported sourceRun) :
     PqxdhInitialNativeLog.Covered input.val.2.1 := by
-  apply PqxdhInitialNativeCarried.carried_covered source writer mark sender route decode execution depth (depth + 1)
+  apply PqxdhInitialNativeCarried.carried_covered (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth (depth + 1)
     (PqxdhInitialNativeAudit.external pre application initializer selector aux) state.1 input.val.2.1 covered input.val.1
-  rw [← PqxdhInitialNativeAuditCarried.carried_projection source writer pre application initializer selector aux
+  rw [← PqxdhInitialNativeAuditCarried.carried_projection (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux
     mark sender route decode execution depth (depth + 1) state, support_map]
   exact ⟨.pending input.val.1 input.val.2, input.property, rfl⟩
 
@@ -156,7 +158,7 @@ theorem supported_covered (covered : PqxdhInitialNativeLog.Covered state.1)
 theorem safe_pending (covered : PqxdhInitialNativeLog.Covered state.1)
     (input : PqxdhInitialSupportedCertificate.Supported sourceRun) (target : RootOutput)
     (safe : RawCtxSelectedParentPrivatePatch.targetAddress target ∉
-      addresses source writer pre application initializer selector aux mark sender route decode execution depth state (.inr input)) :
+      addresses (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode execution depth state (.inr input)) :
     input.val.2.1.1.1.2.1 (RawCtxSelectedParentPrivatePatch.targetAddress target) = none ∧
       RawCtxSelectedParentPrivatePatch.targetAddress target ≠ PqxdhInitialBuilderContext.address input.val.1.original ∧
       RawCtxSelectedParentPrivatePatch.targetAddress target ∉ input.val.2.1.1.2 := by
@@ -167,7 +169,7 @@ theorem safe_pending (covered : PqxdhInitialNativeLog.Covered state.1)
   cases found : input.val.2.1.1.1.2.1 (RawCtxSelectedParentPrivatePatch.targetAddress target) with
   | none => rfl
   | some output =>
-    exact False.elim (absent.1 (supported_covered source writer pre application initializer selector aux mark sender route decode
+    exact False.elim (absent.1 (supported_covered (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode
       execution depth state covered input _ output found))
 
 end BeaconcryptCore.Computational.PqxdhInitialPreparedRisk

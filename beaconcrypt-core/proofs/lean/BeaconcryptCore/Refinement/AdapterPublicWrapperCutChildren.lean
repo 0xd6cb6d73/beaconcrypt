@@ -21,7 +21,7 @@ def lifted (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (S
     QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT (State S) m) :=
   fun query => liftWorld (writer query)
 
-theorem init (authentication : QueryImpl AdapterInitAuthenticationRequestMonad.Spec (StateT (State S) m))
+theorem init (authentication : QueryImpl AdapterPublicWrapperChildren.AuthenticationSpec (StateT (State S) m))
     (recording : QueryImpl AdapterRecordRequestMonad.Spec (StateT (State S) m))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT S m))
     (packet : beaconcrypt_parse.transport.initkex) :
@@ -31,7 +31,7 @@ theorem init (authentication : QueryImpl AdapterInitAuthenticationRequestMonad.S
   rw [AdapterPublicWrapperChildren.init_writer_run]
   exact RegistrationNativePlatformCutLift.program writer _
 
-theorem response (authentication : QueryImpl AdapterInitAuthenticationRequestMonad.Spec (StateT (State S) m))
+theorem response (authentication : QueryImpl AdapterPublicWrapperChildren.AuthenticationSpec (StateT (State S) m))
     (recording : QueryImpl AdapterRecordRequestMonad.Spec (StateT (State S) m))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT S m))
     (packet : beaconcrypt_parse.transport.kexresponse) :

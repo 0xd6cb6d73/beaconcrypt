@@ -6,6 +6,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhRecordFactsOriginMarkerGlobal
+private abbrev RecordAd := Aeneas.Std.Array Aeneas.Std.U8 151#usize
 open PqxdhRecordLiftInterface PqxdhRecordLiftIdeal
 open PqxdhRecordLiftFlat (clientImpl support_run_fst)
 open PqxdhRecordLiftProtocolHistory (Safe)
@@ -28,7 +29,7 @@ noncomputable def startup (target : Label n) (modes : Label n → KeyMode)
 noncomputable def install (target : Label n) (modes : Label n → KeyMode)
     (replace : Pqxdh.Bytes → Pqxdh.Bytes) (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (codec : PqxdhServerAuthExperiment.Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
-    (created : PqxdhLiveServerConstruction.Created Unit) (control : PqxdhRecordLiftProtocol.Control n)
+    (created : PqxdhLiveServerConstruction.Created RecordAd) (control : PqxdhRecordLiftProtocol.Control n)
     (secret : CtxPrivate n × Bool) :=
   (simulateQ (service target modes replace setup codec)
     ((PqxdhRecordLiftProtocol.handler (n := n) codec.frameRead route (.inl created)).run control)).run secret
@@ -73,7 +74,7 @@ theorem startup_safe (target : Label n) (modes : Label n → KeyMode)
     (replace : Pqxdh.Bytes → Pqxdh.Bytes) (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (codec : PqxdhServerAuthExperiment.Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
     (env : Environment n E) (initial : CtxPrivate n × Bool)
-    (result : (Option (PqxdhLiveServerConstruction.Created Unit × E) × PqxdhRecordLiftProtocol.Control n) × (CtxPrivate n × Bool))
+    (result : (Option (PqxdhLiveServerConstruction.Created RecordAd × E) × PqxdhRecordLiftProtocol.Control n) × (CtxPrivate n × Bool))
     (supported : result ∈ support (startup target modes replace setup codec route env initial)) :
     Safe result.1.2 :=
   (PqxdhRecordLiftProtocolHistory.interpreted_schedule (service target modes replace setup codec)
@@ -84,7 +85,7 @@ theorem startup_safe (target : Label n) (modes : Label n → KeyMode)
 theorem install_safe (target : Label n) (modes : Label n → KeyMode)
     (replace : Pqxdh.Bytes → Pqxdh.Bytes) (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (codec : PqxdhServerAuthExperiment.Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
-    (created : PqxdhLiveServerConstruction.Created Unit) (control : PqxdhRecordLiftProtocol.Control n)
+    (created : PqxdhLiveServerConstruction.Created RecordAd) (control : PqxdhRecordLiftProtocol.Control n)
     (safe : Safe control) (secret : CtxPrivate n × Bool)
     (result : (Unit × PqxdhRecordLiftProtocol.Control n) × (CtxPrivate n × Bool))
     (supported : result ∈ support (install target modes replace setup codec route created control secret)) :

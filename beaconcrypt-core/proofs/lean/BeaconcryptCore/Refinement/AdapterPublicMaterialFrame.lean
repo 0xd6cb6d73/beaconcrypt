@@ -21,7 +21,7 @@ theorem pool (view : MaterialView source KemSK) (joint : PqxdhJointIdentity.Prim
     (owner : Owner source) (world : Option PqxdhRecordLiftBeacon.Phase)
     (related : Beacon view joint before self owner world) (keys : after.keys=before.keys) :
     Beacon view joint after self owner world := by
-  refine ⟨related.identityPublic,related.identitySecret,related.mldsa,related.pin,
+  refine ⟨related.identityPublic,related.identitySecret,related.pin,
     related.serverPublic,related.identifier,?_⟩
   simpa only [Phase,KemPair,keys] using related.phase
 

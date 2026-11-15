@@ -9,6 +9,8 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhAuthenticatedRootCommonBounds
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+variable (associatedData : Std.Array Std.U8 151#usize)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhPhase2GeneratedDriver PqxdhGeneratedBeaconState PqxdhAuthenticatedRootExperiment
 open PqxdhPrivateAcceptedRoot PqxdhKemIndCca PqxdhInitializerSecrecy
@@ -83,16 +85,16 @@ include localBound postBound in
 /-- Rejected registration resumes the complete original common scheduler, including every attempted finish. -/
 theorem completed_total
     (output : Option (PqxdhPrivateCandidateAcceptance.Outcome
-      (PqxdhPrivatePhase1Prefix.Retained setup Unit (driver env.toDriverEnvironment program).State)))
+      (PqxdhPrivatePhase1Prefix.Retained setup Unit (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)))
     (execution : PqxdhSourceAuthenticatedRoot.ServerExecution) :
-    ((commonObserver env program post).completed output execution).IsTotalQueryBound (commonBill qLocal qAux budget) := by
+    ((PqxdhAuthenticatedRootExperiment.commonObserver (associatedData := associatedData) (completedBinding := completedBinding) env program post).completed output execution).IsTotalQueryBound (commonBill qLocal qAux budget) := by
   cases output with
   | none => trivial
   | some output =>
     apply selectorLift_total
     apply IsTotalQueryBound.mono (n₁ := bill qLocal budget)
     · simpa only [IsTotalQueryBound, isQueryBound_map_iff] using
-        compiler_total env.source env.recordWriter env.senderId env.route env.decode env.localImpl qLocal localBound
+        PqxdhPhase2SourceSchedulerBounds.compiler_total (completedBinding := completedBinding) env.source env.recordWriter env.senderId env.route env.decode env.localImpl qLocal localBound
           (post output.context.selection.1 (.ok none)) budget (postBound _ _) output.context.selection.2
     · exact Nat.le_add_left _ _
 
@@ -101,27 +103,27 @@ include localBound postBound in
 theorem accepted_total
     (auxBound : ∀ query state, ((env.aux query).run state).IsTotalQueryBound qAux)
     (output : Option (PqxdhPrivateCandidateAcceptance.Outcome
-      (PqxdhPrivatePhase1Prefix.Retained setup Unit (driver env.toDriverEnvironment program).State)))
+      (PqxdhPrivatePhase1Prefix.Retained setup Unit (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)))
     (execution : Ready) :
-    ((commonObserver env program post).accepted output execution).IsTotalQueryBound (commonBill qLocal qAux budget) := by
+    ((PqxdhAuthenticatedRootExperiment.commonObserver (associatedData := associatedData) (completedBinding := completedBinding) env program post).accepted output execution).IsTotalQueryBound (commonBill qLocal qAux budget) := by
   cases output with
   | none => trivial
   | some output =>
     apply isTotalQueryBound_bind
-      (coins_total _ _ (PqxdhProtocolQueryBounds.build_uniform env.source env.recordWriter env.aux qAux auxBound
+      (coins_total _ _ (PqxdhProtocolQueryBounds.build_uniform (associatedData := associatedData) env.source env.recordWriter env.aux qAux auxBound
         env.senderId env.index env.metadata execution output.context.selection.2))
     intro result
     apply selectorLift_total
     simpa only [IsTotalQueryBound, isQueryBound_map_iff] using
-      compiler_total env.source env.recordWriter env.senderId env.route env.decode env.localImpl qLocal localBound
+      PqxdhPhase2SourceSchedulerBounds.compiler_total (completedBinding := completedBinding) env.source env.recordWriter env.senderId env.route env.decode env.localImpl qLocal localBound
         (post output.context.selection.1 result.1) budget (postBound _ _) result.2
 
 /-- Rejection runs only original source operations; it cannot enter the opaque target-root channel. -/
 theorem completed_roots
     (output : Option (PqxdhPrivateCandidateAcceptance.Outcome
-      (PqxdhPrivatePhase1Prefix.Retained setup Unit (driver env.toDriverEnvironment program).State)))
+      (PqxdhPrivatePhase1Prefix.Retained setup Unit (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)))
     (execution : PqxdhSourceAuthenticatedRoot.ServerExecution) :
-    ((commonObserver env program post).completed output execution).IsQueryBoundP
+    ((PqxdhAuthenticatedRootExperiment.commonObserver (associatedData := associatedData) (completedBinding := completedBinding) env program post).completed output execution).IsQueryBoundP
       (LocalClass (baseSpec := baseSpec) IsPrivateRoot) 0 := by
   cases output with
   | none => trivial
@@ -130,9 +132,9 @@ theorem completed_roots
 /-- Arbitrary accepted common candidates likewise retain the unblocked original source channel. -/
 theorem accepted_roots
     (output : Option (PqxdhPrivateCandidateAcceptance.Outcome
-      (PqxdhPrivatePhase1Prefix.Retained setup Unit (driver env.toDriverEnvironment program).State)))
+      (PqxdhPrivatePhase1Prefix.Retained setup Unit (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)))
     (execution : Ready) :
-    ((commonObserver env program post).accepted output execution).IsQueryBoundP
+    ((PqxdhAuthenticatedRootExperiment.commonObserver (associatedData := associatedData) (completedBinding := completedBinding) env program post).accepted output execution).IsQueryBoundP
       (LocalClass (baseSpec := baseSpec) IsPrivateRoot) 0 := by
   cases output with
   | none => trivial
@@ -142,26 +144,26 @@ include localBound postBound in
 /-- Every common completed observer class is bounded by the explicit structural bill, with zero opaque roots. -/
 theorem completed_bounds
     (output : Option (PqxdhPrivateCandidateAcceptance.Outcome
-      (PqxdhPrivatePhase1Prefix.Retained setup Unit (driver env.toDriverEnvironment program).State)))
+      (PqxdhPrivatePhase1Prefix.Retained setup Unit (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)))
     (execution : PqxdhSourceAuthenticatedRoot.ServerExecution) :
     let total := commonBill qLocal qAux budget
-    ObserverBounds ((commonObserver env program post).completed output execution) total total total total total 0 := by
-  have bounded := completed_total env program post qLocal localBound budget postBound qAux output execution
+    ObserverBounds ((PqxdhAuthenticatedRootExperiment.commonObserver (associatedData := associatedData) (completedBinding := completedBinding) env program post).completed output execution) total total total total total 0 := by
+  have bounded := completed_total (associatedData := associatedData) (completedBinding := completedBinding) env program post qLocal localBound budget postBound qAux output execution
   exact ⟨bounded.isQueryBoundP, bounded.isQueryBoundP, bounded.isQueryBoundP, bounded.isQueryBoundP,
-    bounded.isQueryBoundP, completed_roots env program post output execution⟩
+    bounded.isQueryBoundP, completed_roots (associatedData := associatedData) (completedBinding := completedBinding) env program post output execution⟩
 
 include localBound postBound in
 /-- Every common accepted observer class includes the complete native builder and original source schedule. -/
 theorem accepted_bounds
     (auxBound : ∀ query state, ((env.aux query).run state).IsTotalQueryBound qAux)
     (output : Option (PqxdhPrivateCandidateAcceptance.Outcome
-      (PqxdhPrivatePhase1Prefix.Retained setup Unit (driver env.toDriverEnvironment program).State)))
+      (PqxdhPrivatePhase1Prefix.Retained setup Unit (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)))
     (execution : Ready) :
     let total := commonBill qLocal qAux budget
-    ObserverBounds ((commonObserver env program post).accepted output execution) total total total total total 0 := by
-  have bounded := accepted_total env program post qLocal localBound budget postBound qAux auxBound output execution
+    ObserverBounds ((PqxdhAuthenticatedRootExperiment.commonObserver (associatedData := associatedData) (completedBinding := completedBinding) env program post).accepted output execution) total total total total total 0 := by
+  have bounded := accepted_total (associatedData := associatedData) (completedBinding := completedBinding) env program post qLocal localBound budget postBound qAux auxBound output execution
   exact ⟨bounded.isQueryBoundP, bounded.isQueryBoundP, bounded.isQueryBoundP, bounded.isQueryBoundP,
-    bounded.isQueryBoundP, accepted_roots env program post output execution⟩
+    bounded.isQueryBoundP, accepted_roots (associatedData := associatedData) (completedBinding := completedBinding) env program post output execution⟩
 
 end BeaconcryptCore.Computational.PqxdhAuthenticatedRootCommonBounds
 

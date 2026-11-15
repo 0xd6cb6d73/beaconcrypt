@@ -33,7 +33,7 @@ private theorem counted_create :
       | inr request => simp [RegistrationNativeKemBeaconFootprint.counted,RegistrationNativeKemResourceFootprint.counted]
 
 theorem pool_keys (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (target : Nat) (packet : Option registration.ResponsePacket)
     (before : Native) (result : RustM (Option Pqxdh.Bytes) ×Native)
     (reached : result∈support ((RegistrationNativeExperiment.beacon setup checks representation created
@@ -55,7 +55,7 @@ private theorem setPhase_other (target index : Nat) (different : index≠target)
   exact otherSelected
 
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable [material : PublicWrapperPlatform.Material] [ed : AdapterInitEdPrimitive.Operations]
 
 theorem other_material (view : AdapterPublicWrapperState.MaterialView source KemSK)

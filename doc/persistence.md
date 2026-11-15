@@ -10,7 +10,7 @@ Applications with a database can use `RowServer<S>` and the database-independent
 
 ## Database row API
 
-`RowServer` retains immutable identity keys and an application-supplied store. Each message operation reads one peer row inside a database transaction, executes the existing ratchet transition, and saves only that peer when its state changes. The peer includes its Ed25519 public key, ML-DSA public-key hash, both ratchet chains, counters, and bounded skipped-key cache. Peer state is discarded after every operation. Different handles can operate on the same lineage through separate connections to the same authoritative database; no global generation is updated for ordinary messages. `open` loads only the immutable identity row and performs no activation write.
+`RowServer` retains immutable identity keys and an application-supplied store. Each message operation reads one peer row inside a database transaction, executes the existing ratchet transition, and saves only that peer when its state changes. The peer includes its Ed25519 public key, session transcript hash, both ratchet chains, counters, and bounded skipped-key cache. Peer state is discarded after every operation. Different handles can operate on the same lineage through separate connections to the same authoritative database; no global generation is updated for ordinary messages. `open` loads only the immutable identity row and performs no activation write.
 
 The library has no database driver dependency. An application implements these interfaces using its own connection or pool:
 
@@ -50,7 +50,7 @@ The following logical records use opaque byte keys and versioned byte values:
 | Peer | One per assigned peer ID and lineage | Replaced only for that peer's state-changing operation |
 | Consumed registration | One per accepted registration ID and lineage | Inserted once and retained permanently |
 
-Keys and values must be stored byte-for-byte, for example in binary columns. Values bind their complete storage key, format version, independent generation, and identity digest. Peer payloads reuse the canonical checked codec, including the ML-DSA hash and receive-cache validation. Generations are storage revisions, not protocol sequence numbers: a cached receive can remove a key without advancing the receive counter. These checks do not authenticate untrusted storage or detect restoration of a stale database backup. The application must protect the database, WAL, replicas and backups as secret state and provide the same integrity, provenance, freshness and durability guarantees as snapshot storage. A lineage must never be made authoritative in two independent databases.
+Keys and values must be stored byte-for-byte, for example in binary columns. Row values use format version 2 and bind their complete storage key, independent generation, and identity digest. Version-1 rows are rejected without migration. Peer payloads reuse the canonical checked codec, including the exact 64-byte session transcript hash and receive-cache validation. Generations are storage revisions, not protocol sequence numbers: a cached receive can remove a key without advancing the receive counter. These checks do not authenticate untrusted storage or detect restoration of a stale database backup. The application must protect the database, WAL, replicas and backups as secret state and provide the same integrity, provenance, freshness and durability guarantees as snapshot storage. A lineage must never be made authoritative in two independent databases.
 
 Registration deliberately uses two transactions. The first commits the consumed registration marker before the pending cryptographic material can be used to build a response. The second reads the allocator, checks the next peer ID is absent, constructs the response, and atomically writes the allocator and new peer. A dropped pending attempt, failed response, transaction conflict, or crash does not remove the first marker. A rejected or interrupted registration therefore needs a fresh beacon registration attempt. Ordinary messages never read the allocator or replay history.
 
@@ -200,7 +200,7 @@ with open("server-state.bin", "wb") as state_file:
 
 Go uses `Server.ExportState` and `NewServerFromState`. C uses `beaconcrypt_server_export_state` and `beaconcrypt_server_new_from_state`. Complete runnable save-and-restore examples are available for [Python](../examples/python/main.py), [Go](../examples/go/main.go), and [C](../examples/c/main.c).
 
-The exported value is a binary version-3 snapshot envelope, not a bare JSON document. It contains a format identifier, a lineage identifier, a monotonic generation, the previous snapshot's digest, a payload length, and the canonical JSON server-state payload. The digest identifies exact snapshot bytes and links generations; because it is unkeyed, it does not authenticate snapshots obtained outside trusted storage.
+The exported value is a binary version-4 snapshot envelope, not a bare JSON document. It contains a format identifier, a lineage identifier, a monotonic generation, the previous snapshot's digest, a payload length, and the canonical JSON server-state payload. The digest identifies exact snapshot bytes and links generations; because it is unkeyed, it does not authenticate snapshots obtained outside trusted storage.
 
 Store implementations can call `replacement.validate_successor(expected)` to validate the envelope, exact next generation, same lineage and complete parent digest before accepting a replacement. The in-memory binding store uses this check. It must run in the same transaction as comparison with the authoritative current head; it supplies neither payload authentication nor external freshness, durability or linearizability. The application must separately provide storage integrity, freshness, durability, and linearizability; buffer wiping does not protect copies retained by the application or storage system. The deployment boundary describes the separate requirements and the limits of buffer erasure and fallible construction.
 
@@ -215,7 +215,7 @@ The decoded JSON payload has the following shape:
     "known_ids": {
       "1": {
         "pk": [1,179,176,97,56,138,132,165,3,79,7,190,144,179,105,2,187,3,165,119,87,142,123,131,59,254,117,167,156,41,125,254,56],
-        "mldsa_public_key_hash": [67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67],
+        "session_transcript_hash": [67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67],
         "ratchet": {
             "send_key": [6,8,[1,79,112,132,98,47,6,118,212,221,235,120,149,156,87,172,106,157,248,36,135,198,191,207,243,65,83,183,57,110,161,213]],
             "recv_key": [6,9,[171,11,55,200,145,194,88,3,54,90,129,116,208,31,217,146,194,6,40,38,184,222,233,43,198,132,151,204,51,182,233,11]],
@@ -226,7 +226,7 @@ The decoded JSON payload has the following shape:
       },
       "2": {
         "pk": [1,198,247,65,172,172,76,66,155,64,140,90,73,162,40,247,225,134,162,239,15,149,105,64,89,167,171,159,125,28,56,207,166],
-        "mldsa_public_key_hash": [67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67],
+        "session_transcript_hash": [67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67],
         "ratchet": {
             "send_key": [6,8,[62,234,153,109,200,24,60,67,197,43,127,175,32,40,158,53,61,233,196,100,226,72,64,51,164,91,186,161,85,15,211,144]],
             "recv_key": [6,9,[102,95,139,78,169,159,72,133,153,83,238,26,138,13,31,122,136,212,63,38,104,40,239,153,128,61,177,149,28,80,14,79]],
@@ -243,9 +243,9 @@ The decoded JSON payload has the following shape:
 }
 ```
 
-`identity_key` contains the server's 32-byte Ed25519 seed as a strongly typed array. `mldsa_identity_seed` contains its independent 32-byte ML-DSA-65 seed, and each peer requires its 64-byte `mldsa_public_key_hash` to reconstruct the authenticated AD. Version-one and version-two snapshots, missing fields, and incorrect seed or hash lengths are rejected. `identity_key_kid` is the server identity's key ID, `server_kid` is the last allocated remote-ID counter, and `known_ids` contains the known beacons' public keys and ratchet states. In this example the server knows two beacons, with key IDs 1 and 2.
+`identity_key` contains the server's 32-byte Ed25519 seed as a strongly typed array. `mldsa_identity_seed` contains the Server's independent 32-byte ML-DSA-65 seed, and each peer requires its exact 64-byte `session_transcript_hash` to reconstruct AD151 as the fixed 87-byte context followed by that digest. Snapshot versions 1, 2 and 3, missing fields, legacy peer ML-key hashes, and incorrect seed or hash lengths are rejected without migration. `identity_key_kid` is the server identity's key ID, `server_kid` is the last allocated remote-ID counter, and `known_ids` contains the known beacons' public keys and ratchet states. In this example the server knows two beacons, with key IDs 1 and 2.
 
-Registration transport messages use CBOR version two, with the agent ML-DSA public key and both parties' signatures carried as array fields. The persisted peer hash is BLAKE2b-512 of the decoded 1,952-byte agent ML-DSA public key. Registration CBOR headers and signature bytes are excluded from that hash. Snapshot version three stores the same identity seeds, peer hashes, and ratchets independently of registration encoding.
+Registration transport uses CBOR version 3. Init carries four public-key fields, three with attached Ed25519 signatures; the response retains the mandatory Server ML-DSA-65 signature. The persisted session hash is BLAKE2b-512 of the exact 2,638-byte concatenation of the four retained Init fields, including attached Ed25519 signatures, the response Server identity key, ephemeral key, KEM ciphertext, and LE64 assigned ID. CBOR framing, response application ciphertext and the response ML-DSA signature are excluded. Snapshot version 4 and row version 2 retain this digest independently of the ratchet state. Restoration trusts its provenance from the authoritative store; the codec does not recreate the original handshake or authenticate arbitrary supplied digests.
 
 Each serialized ratchet has exactly five fields: `send_key`, `recv_key`, `send_ctr`, `recv_past`, and `recv_ctr`. Send-message keys and their logical capabilities exist only during one encryption call and are never persisted. Objects from the former six-field format, including objects with an empty `send_past`, are rejected.
 
@@ -253,7 +253,7 @@ Each serialized ratchet has exactly five fields: `send_key`, `recv_key`, `send_c
 
 The canonical codec serializes peer IDs and cached receive sequences in numeric order and rejects duplicate or noncanonical map keys before inserting them into a `HashMap`. Restoration also checks field names, typed-array roles, counter bounds, cache capacity, and cached sequence alignment. These structural checks do not establish that arbitrary supplied chain bytes came from the canonical HKDF history, which is why restoration must receive the current snapshot from trusted storage.
 
-Version-3 snapshots permit up to 50 receive-cache entries. Restoration accepts structurally valid state with all 50 entries occupied, including a target retained by an older failed-receive implementation. An invalid retry against an imported cached target is neutral; an authentic retry consumes it. A full restored cache can still process the next no-skip future target because the target is consumed separately and never occupies a cache slot; a farther target that would require retaining another skipped key is rejected until an authentic cached frame frees capacity. A fresh maximum-gap success can now retain all 50 skipped keys without changing the snapshot format or cache capacity.
+Version-4 snapshots permit up to 50 receive-cache entries. Restoration accepts structurally valid state with all 50 entries occupied, including a target retained by an older failed-receive implementation. An invalid retry against an imported cached target is neutral; an authentic retry consumes it. A full restored cache can still process the next no-skip future target because the target is consumed separately and never occupies a cache slot; a farther target that would require retaining another skipped key is rejected until an authentic cached frame frees capacity. A fresh maximum-gap success can now retain all 50 skipped keys without changing the snapshot format or cache capacity.
 
 Rust applications use `PersistentServer<S>` with an implementation of `SnapshotStore` instead of exporting from a raw `Server`:
 

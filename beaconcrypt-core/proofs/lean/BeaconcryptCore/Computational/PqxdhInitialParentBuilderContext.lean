@@ -8,6 +8,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialParentBuilderContext
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhInitialPendingPost PqxdhInitialPostContext PqxdhInitialParentPost PqxdhInitialBuilderContext
 open RawCtxSelectedParentCalls RawCtxSelectedParentEntry RawCtxSelectedFamilyContext
 open RawCtxGenericRoleStorage RawCtxGenericRoleFamily PqxdhJointKdfGame PqxdhSecretInputKdf
@@ -82,9 +83,9 @@ noncomputable def reply (sender : M → Std.U64) (route : RawCtxServerRouting.Se
     (decode : RawCtxReceive.FrameDecoder) (context : PqxdhInitialBuilderContext.Context extra M P I D K Result S B)
     (output : FullOutput) :
     (Base extra RatchetChain I D K X Response Shared S B).Range
-      (PqxdhInitialBuilderContext.frame sender route decode context).1 :=
+      (PqxdhInitialBuilderContext.frame (completedBinding := completedBinding) sender route decode context).1 :=
   match context with
-  | .inl context => PqxdhInitialParentContext.reply sender route decode context output
+  | .inl context => PqxdhInitialParentContext.reply (completedBinding := completedBinding) sender route decode context output
   | .inr _ => RawCtxInterpretedReceive.decodeResponse (RawCtxKdfRequestTable.fullResponse output)
 
 section Services
@@ -103,11 +104,11 @@ theorem complete_map (entry : Entry) (target : RootOutput)
     (authenticated : Pqxdh.Bytes) (metadata : P) (outside : BuildResult → OracleComp (PostSpec extra S B) Result)
     (result : KernelOf RawCtxSelectedChain.Slot × Option RawCtxSourceSend.Encrypted) :
     simulateQ (nativeHandler source writer prior entry target pre application initial selector aux)
-      (complete sender route decode index (mapFront (nativeKernel target) before) candidate authenticated metadata outside
+      (complete (completedBinding := completedBinding) sender route decode index (mapFront (nativeKernel target) before) candidate authenticated metadata outside
         (Prod.map (nativeKernel target) id result)) =
     Prod.map id (mapFront (nativeKernel target)) <$> simulateQ
       (labelHandler source writer prior entry target pre application initial selector aux (childResponse prior entry target))
-      (complete sender route decode index before candidate authenticated metadata outside result) := by
+      (complete (completedBinding := completedBinding) sender route decode index before candidate authenticated metadata outside result) := by
   simp only [complete, afterSend, simulateQ_bind, map_bind]
   simp only [auxForward, nativeHandler, labelHandler, bind_assoc,
     Prod.map_def, id_eq]
@@ -116,7 +117,7 @@ theorem complete_map (entry : Entry) (target : RootOutput)
   cases sealed : result.2 with
   | none =>
     simp only [simulateQ_pure, pure_bind, PqxdhInitialPendingBuilder.reinstall, selected_map, install_map]
-    exact PqxdhInitialParentPost.program source writer prior entry target pre application initial selector aux
+    exact PqxdhInitialParentPost.program (completedBinding := completedBinding) source writer prior entry target pre application initial selector aux
       sender route decode _ _
   | some encrypted =>
     dsimp only
@@ -127,11 +128,11 @@ theorem complete_map (entry : Entry) (target : RootOutput)
     | some bytes =>
       simp only [simulateQ_pure, pure_bind, PqxdhInitialPendingBuilder.reinstall, selected_map,
         publish_map, install_map]
-      exact PqxdhInitialParentPost.program source writer prior entry target pre application initial selector aux
+      exact PqxdhInitialParentPost.program (completedBinding := completedBinding) source writer prior entry target pre application initial selector aux
         sender route decode _ _
     | none =>
       simp only [simulateQ_pure, pure_bind, PqxdhInitialPendingBuilder.reinstall, selected_map, install_map]
-      exact PqxdhInitialParentPost.program source writer prior entry target pre application initial selector aux
+      exact PqxdhInitialParentPost.program (completedBinding := completedBinding) source writer prior entry target pre application initial selector aux
         sender route decode _ _
 
 set_option backward.isDefEq.respectTransparency false in
@@ -141,12 +142,12 @@ theorem frame_cut (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDe
     (output : FullOutput) :
     simulateQ (nativeHandler source writer prior (fromOutput (PqxdhInitialBuilderContext.address context) output)
       (nextChain output) pre application initial selector aux)
-      ((PqxdhInitialBuilderContext.frame sender route decode context).2 (reply sender route decode context output)) =
+      ((PqxdhInitialBuilderContext.frame (completedBinding := completedBinding) sender route decode context).2 (reply (completedBinding := completedBinding) sender route decode context output)) =
     Prod.map id (mapFront (nativeKernel (nextChain output))) <$> simulateQ
       (labelHandler source writer prior (fromOutput (PqxdhInitialBuilderContext.address context) output)
         (nextChain output) pre application initial selector aux
         (childResponse prior (fromOutput (PqxdhInitialBuilderContext.address context) output) (nextChain output)))
-      (PqxdhInitialBuilderContext.stopped sender route decode context (material output)) := by
+      (PqxdhInitialBuilderContext.stopped (completedBinding := completedBinding) sender route decode context (material output)) := by
   cases context with
   | inr context =>
     have advanced : (RawCtxChainSend.ready context.pending
@@ -176,7 +177,7 @@ theorem frame_cut (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDe
       simulateQ (nativeHandler source writer prior
         (fromOutput (RawCtxSelectedPendingCut.requestAddress context.pending.request) output) (nextChain output)
         pre application initial selector aux)
-        (complete sender route decode context.index context.before context.candidate context.authenticated
+        (complete (completedBinding := completedBinding) sender route decode context.index context.before context.candidate context.authenticated
           context.metadata context.outside
           ((RawCtxChainSend.ready context.pending
             (RawCtxInterpretedReceive.decodeResponse (RawCtxKdfRequestTable.fullResponse output))).advanced, encrypted))) =
@@ -186,19 +187,19 @@ theorem frame_cut (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDe
             (fromOutput (RawCtxSelectedPendingCut.requestAddress context.pending.request) output) (nextChain output)
             pre application initial selector aux
             (childResponse prior (fromOutput (RawCtxSelectedPendingCut.requestAddress context.pending.request) output) (nextChain output)))
-            (complete sender route decode context.index (knownFront context.before) context.candidate context.authenticated
+            (complete (completedBinding := completedBinding) sender route decode context.index (knownFront context.before) context.candidate context.authenticated
               context.metadata context.outside ((RawCtxSelectedPendingCut.sendStop context.pending (material output)).advanced, encrypted)))
     rw [sealing]
     simp only [map_bind]
     apply bind_congr
     intro encrypted
     rw [advanced]
-    simpa only [known_front, Prod.map_apply, id_eq] using complete_map source writer prior pre application initial selector aux
+    simpa only [known_front, Prod.map_apply, id_eq] using complete_map (completedBinding := completedBinding) source writer prior pre application initial selector aux
       (fromOutput (RawCtxSelectedPendingCut.requestAddress context.pending.request) output) (nextChain output)
       sender route decode context.index (knownFront context.before) context.candidate context.authenticated
       context.metadata context.outside ((RawCtxSelectedPendingCut.sendStop context.pending (material output)).advanced, encrypted)
   | inl context =>
-    exact PqxdhInitialParentContext.frame_cut source writer prior pre application initial selector aux
+    exact PqxdhInitialParentContext.frame_cut (completedBinding := completedBinding) source writer prior pre application initial selector aux
       sender route decode context output
 
 /-- The complete first-builder or later-post cut retains every shared, private and cache field at the evaluated distribution. -/
@@ -207,12 +208,12 @@ theorem frame_run (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDe
     (output : FullOutput) (state : RawCtxSharedPrimitive.SharedState A × N) (cache : C) :
     ((simulateQ (nativeHandler source writer prior (fromOutput (PqxdhInitialBuilderContext.address context) output)
       (nextChain output) pre application initial selector aux)
-      ((PqxdhInitialBuilderContext.frame sender route decode context).2 (reply sender route decode context output))).run state).run cache =
+      ((PqxdhInitialBuilderContext.frame (completedBinding := completedBinding) sender route decode context).2 (reply (completedBinding := completedBinding) sender route decode context output))).run state).run cache =
     (fun result => ((Prod.map id (mapFront (nativeKernel (nextChain output))) result.1.1, result.1.2), result.2)) <$>
       ((simulateQ (labelHandler source writer prior (fromOutput (PqxdhInitialBuilderContext.address context) output)
         (nextChain output) pre application initial selector aux
         (childResponse prior (fromOutput (PqxdhInitialBuilderContext.address context) output) (nextChain output)))
-      (PqxdhInitialBuilderContext.stopped sender route decode context (material output))).run state).run cache := by
+      (PqxdhInitialBuilderContext.stopped (completedBinding := completedBinding) sender route decode context (material output))).run state).run cache := by
   rw [frame_cut]
   rw [StateT.run_map, StateT.run_map]
 

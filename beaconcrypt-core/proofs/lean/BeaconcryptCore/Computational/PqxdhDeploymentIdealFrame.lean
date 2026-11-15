@@ -73,7 +73,7 @@ variable {ι : Type} {baseSpec : OracleSpec ι} {Reader Response A X : Type}
   (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
   (checks : Checks) {count : ℕ}
 
-/-- C4 for the ideal environment of a target (design-v2 section 6.3, `c4_ideal`; `PqxdhDeploymentEnvironment.c4_closed` with `frame_idealD`): for every adversary respecting the budget `B`, every outcome of the record world with `envGD` has its BLAKE2b routes within `qHash + S + R + qBuild + qFinish` and its record derivations within `S + 51 R`. The startup coins do not enter the bound. -/
+/-- C4 for the ideal environment of a target (design-v2 section 6.3, `c4_ideal`; `PqxdhDeploymentEnvironment.c4_closed` with `frame_idealD`): for every adversary respecting the budget `B`, every outcome of the record world with `envGD` has its BLAKE2b routes within `qHash + S + R + 2 qBuild + 2 qFinish` (two BLAKE2b queries per build and per finish: the transcript hash and the sequence-one record hash, design §10) and its record derivations within `S + 51 R`. The startup coins do not enter the bound. -/
 theorem c4_ideal (caps : KemCaps) (bounded : KemBound setup caps) (t : Target count)
     (ensureInit : StateT A ProbComp Bool) (qInit : ℕ)
     (initBound : ∀ state, (ensureInit.run state).IsTotalQueryBound qInit) (identityIndex : ℕ) (runtime : A)
@@ -83,14 +83,14 @@ theorem c4_ideal (caps : KemCaps) (bounded : KemBound setup caps) (t : Target co
     ∀ result ∈ support (PqxdhRecordLiftWorld.run setup codec route
         (envGD setup codec checks t ensureInit identityIndex runtime) serverKid bounds mode adversary),
       result.2.primitive.1.effects .hash + result.2.primitive.1.native .hash ≤
-          B.hash + B.sends + B.receives + B.build + B.finish ∧
+          B.hash + B.sends + B.receives + 2 * B.build + 2 * B.finish ∧
         result.2.primitive.1.native .kdf ≤ B.sends + 51 * B.receives :=
   PqxdhDeploymentEnvironment.c4_closed setup codec route _ _ _
     (frame_idealD setup codec checks caps bounded t ensureInit qInit initBound identityIndex runtime)
     (PqxdhDeploymentEnvironment.allowanceG_hash _ _ (PqxdhDeploymentEnvironment.baseAllowance_hash caps))
     serverKid bounds mode B adversary respects
 
-/-- Later-mode C4 for the ideal environment of a target (`PqxdhDeploymentEnvironment.c4_later_closed` with `frame_idealD`): every outcome of the two-phase record world with `envGD` has its BLAKE2b routes within `qHash + S + R + qBuild + qFinish + qHash₂` and its record derivations within `S + 51 R`. -/
+/-- Later-mode C4 for the ideal environment of a target (`PqxdhDeploymentEnvironment.c4_later_closed` with `frame_idealD`): every outcome of the two-phase record world with `envGD` has its BLAKE2b routes within `qHash + S + R + 2 qBuild + 2 qFinish + qHash₂` and its record derivations within `S + 51 R`. -/
 theorem c4_ideal_later {Out R : Type} (caps : KemCaps) (bounded : KemBound setup caps) (t : Target count)
     (ensureInit : StateT A ProbComp Bool) (qInit : ℕ)
     (initBound : ∀ state, (ensureInit.run state).IsTotalQueryBound qInit) (identityIndex : ℕ) (runtime : A)
@@ -103,7 +103,7 @@ theorem c4_ideal_later {Out R : Type} (caps : KemCaps) (bounded : KemBound setup
     ∀ result ∈ support (PqxdhRecordLiftLater.run setup codec route
         (envGD setup codec checks t ensureInit identityIndex runtime) serverKid bounds mode reveal first second),
       result.2.primitive.1.effects .hash + result.2.primitive.1.native .hash ≤
-          B.hash + B.sends + B.receives + B.build + B.finish + post.hash ∧
+          B.hash + B.sends + B.receives + 2 * B.build + 2 * B.finish + post.hash ∧
         result.2.primitive.1.native .kdf ≤ B.sends + 51 * B.receives :=
   PqxdhDeploymentEnvironment.c4_later_closed setup codec route _ _ _
     (frame_idealD setup codec checks caps bounded t ensureInit qInit initBound identityIndex runtime)
@@ -151,7 +151,8 @@ theorem envG_admitted (t : Target count) (p : Params KemSK count) (ensureInit : 
   intro created start started
   have initial := PqxdhDeploymentEnvironment.start_initial setup ensureInit identityIndex runtime _ created start started
   subst initial
-  exact ⟨_, rfl, PqxdhDeploymentIdealEnv.idealInv_start t created⟩
+  exact ⟨_, rfl, PqxdhDeploymentIdealEnv.start_noPeer setup ensureInit identityIndex runtime _ created _ started,
+    PqxdhDeploymentIdealEnv.idealInv_start t _⟩
 
 /-- F4 on the final split game's own support (design-v2 section 5.2, `seed_at_install`, for every parameter `p`): on every outcome of `gameWith .. splitInit (idealSplit t p)`, the seed table holds a slot's seed exactly when the slot carries a hidden install ghost, the Server ghost (`peer` at coordinates allocated to the slot) or the Beacon ghost (`beacon` at coordinates allocated to the slot). Route: CE-11a's `join` at `envG t p` (whose startup is the split form's, so `born` is `rfl`) gives the final split game the law of the record world with `envG t p` read through `joined`; programs with the same law have the same support (`lawEq_support`); on every outcome of that record world `IdealInv` holds (`envG_admitted`), whose `seeds`, `serverMarks` and `beaconMarks` give the statement at the reassembled state. -/
 theorem seed_at_install_split (t : Target count) (p : Params KemSK count) (ensureInit : StateT A ProbComp Bool)

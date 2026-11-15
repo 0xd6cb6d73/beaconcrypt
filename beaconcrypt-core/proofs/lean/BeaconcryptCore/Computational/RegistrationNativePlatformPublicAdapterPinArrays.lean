@@ -36,7 +36,9 @@ theorem tokens (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (table : Nat →Option beaconcrypt_public_wrapper.server.RegistrationOutput) :
     RegistrationNativePlatformPublicAdapterTokenLineage.Parsed table := by
   intro _index token _stored
-  exact parsed view contract token.registration.agreement.binding.beacon_identity_public_key
+  obtain ⟨key, copied, _⟩ :=
+    TranscriptAuthInputsRefinement.identity_public_key_exact token.registration.agreement.binding.init_fields
+  exact ⟨key, copied, parsed view contract key⟩
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterPinArrays
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterPinArrays.pin' depends on axioms: [propext,

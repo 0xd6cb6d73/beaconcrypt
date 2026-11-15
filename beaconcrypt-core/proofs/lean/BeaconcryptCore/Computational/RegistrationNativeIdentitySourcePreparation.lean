@@ -18,7 +18,7 @@ variable {source : RegistrationNativeMldsa.Source}
 /-- Actual seed-free preparation realizes the complete original seed-bearing source preparation, including all optional failures and all current World/Env/owner fields. -/
 theorem prepare_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (current : RegistrationNativeIdentityFrontend.State source)
     (env : RegistrationWorldAgreementCompiler.EnvState RegistrationServerRoleBackend.State)

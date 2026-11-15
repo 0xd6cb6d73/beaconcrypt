@@ -240,7 +240,8 @@ theorem activeBranch_of_middle {A : Type} (ensureInit : StateT A ProbComp Bool) 
     have length : (p.pool (Target.ofCE budget g)).length = budget.create + 1 := by
       simp [PqxdhDeploymentIdealParams.pool_eq]
     omega
-  rw [PqxdhDeploymentIdealPostItemRun.itemPost_middle setup codec route checks (Target.ofCE budget g) p
+  rw [show (PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2).inits = reached.2.inits from rfl,
+    PqxdhDeploymentIdealPostItemRun.itemPost_middle setup codec route checks (Target.ofCE budget g) p
       (PqxdhDeploymentKemTransfer.decision setup.source.crypto codec setup.serverKeyId budget event claim g) created
       identity raw value matched ephemeral pre.2 pre.1.2 reached.2 related.base.owned related.base.prefixed related.indexed
       _ onlyAllowed _ bounded fits born.2.2,

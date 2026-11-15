@@ -56,7 +56,7 @@ LINTERS = (
 )
 POLICY = "set_option autoImplicit false\nset_option warningAsError true\n"
 RAW_SHA256 = {
-    "Funs.lean": "2954bb6111e4aa0ac97d609f162792ba82e07ec8e33fb3603c281848723c16e1",
+    "Funs.lean": "1445cddfe5104bbef0b736f12c5e26bfd8e5a574f0dfcb1d4b9ab64f3d8f5246",
     "FunsExternal_Template.lean": "6066715465c4a2b342348b6fce9270138db6274b885b14221b55a56d8ca0faa3",
     "Types.lean": "5d3e9968e5e1a92b823fa4abda1147e1330ae23006cf275f0cd48d89d54e3a66",
     "TypesExternal_Template.lean": "8523567a9ec3d2416673fd29f4aa75fe72104a375dba090d9d0746e2e9ca447e",

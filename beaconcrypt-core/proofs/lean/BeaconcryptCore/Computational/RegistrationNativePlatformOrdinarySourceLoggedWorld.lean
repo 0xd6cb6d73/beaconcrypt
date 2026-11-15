@@ -66,7 +66,7 @@ theorem source_owner [primitives : AdapterSealPrimitive.Operations] [FrameDispat
     (view : RegistrationNativePlatformSourceSeal.KeyView) (converted : RegistrationNativePlatformOrdinarySourceNative.Conversion view)
     (failure : primitives.Error) (erased : commitment.CommitmentTranscript)
     {Metadata : Type} (owner : RawCtxWholeOwner.OwnerState Metadata)
-    (plaintext : Slice U8) (sender : U64) (associated : Std.Array U8 281#usize)
+    (plaintext : Slice U8) (sender : U64) (associated : Std.Array U8 151#usize)
     (sameAD : owner.owner.associatedData = PqxdhRefinement.absBytes associated) :
     (RegistrationNativePlatformOrdinarySourceReceiptOwner.ownerResult owner ∘ RegistrationNativePlatformOrdinarySourceReceipt.abstractOutput) <$>
       simulateQ (RegistrationNativePlatformOrdinarySourceReceipt.callbacks view failure (kdf setup codec reserve)
@@ -95,7 +95,7 @@ noncomputable def owner [primitives : AdapterSealPrimitive.Operations] [FrameDis
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitives.Error)
     (erased : commitment.CommitmentTranscript)
     {Metadata : Type} (before : RawCtxWholeOwner.OwnerState Metadata)
-    (plaintext : Slice U8) (sender : U64) (associated : Array U8 281#usize) :
+    (plaintext : Slice U8) (sender : U64) (associated : Array U8 151#usize) :
     StateT State (StateT Platform ProbComp) (Option RawCtxSourceSend.Encrypted × RawCtxWholeOwner.OwnerState Metadata) :=
   (total before ∘ RegistrationNativePlatformOrdinarySourceReceiptOwner.ownerResult before ∘
     RegistrationNativePlatformOrdinarySourceReceipt.abstractOutput) <$>
@@ -110,7 +110,7 @@ theorem owner_source [primitives : AdapterSealPrimitive.Operations] [FrameDispat
     (view : RegistrationNativePlatformSourceSeal.KeyView) (converted : RegistrationNativePlatformOrdinarySourceNative.Conversion view)
     (failure : primitives.Error) (erased : commitment.CommitmentTranscript)
     {Metadata : Type} (before : RawCtxWholeOwner.OwnerState Metadata)
-    (plaintext : Slice U8) (sender : U64) (associated : Array U8 281#usize)
+    (plaintext : Slice U8) (sender : U64) (associated : Array U8 151#usize)
     (sameAD : before.owner.associatedData=PqxdhRefinement.absBytes associated) :
     owner setup codec reserve view failure erased before plaintext sender associated =
       simulateQ (native setup codec reserve)
@@ -126,7 +126,7 @@ theorem owner_logged [primitives : AdapterSealPrimitive.Operations] [FrameDispat
     (view : RegistrationNativePlatformSourceSeal.KeyView) (converted : RegistrationNativePlatformOrdinarySourceNative.Conversion view)
     (failure : primitives.Error) (erased : commitment.CommitmentTranscript)
     {Metadata : Type} (before : RawCtxWholeOwner.OwnerState Metadata)
-    (plaintext : Slice U8) (sender : U64) (associated : Array U8 281#usize)
+    (plaintext : Slice U8) (sender : U64) (associated : Array U8 151#usize)
     (sameAD : before.owner.associatedData=PqxdhRefinement.absBytes associated)
     (primitive : Primitive) (frames : PqxdhRecordLiftLoggedAdapters.Frames) :
     (owner setup codec reserve view failure erased before plaintext sender associated).run (primitive,frames) =

@@ -3,7 +3,7 @@ import BeaconcryptCore.Computational.RegistrationNativePlatformMldsaTableHandler
 import BeaconcryptCore.Computational.RegistrationNativeMldsaReceiptPreservation
 import BeaconcryptCore.Computational.RegistrationNativePlatformHashReceipt
 
-/-! Corrected incoming source callbacks preserve the literal chronological ML signing prefix and private ML pool. Actual pin hashing, dynamic reservations, assigned-ID copy/install and all failed poststates remain in the same common state. -/
+/-! Corrected incoming source callbacks preserve the literal chronological ML signing prefix and private ML pool. Pure pin selection, actual shared AD hashing, dynamic reservations, assigned-ID copy/install and all failed poststates remain in the same common state. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -115,6 +115,7 @@ private theorem record_holds (setup : Setup base KemSK) (wire : RegistrationNati
     (fun env => { env with recordRequests := env.recordRequests ++ [RegistrationWorldAgreement.recordCall query] }) (fun _ => rfl))
   intro ignored
   cases query with
+  | adHash request => exact bind_holds _ _ (effect_holds _) (fun _ => pure_holds _)
   | hash request => exact bind_holds _ _ (effect_holds _) (fun _ => pure_holds _)
   | _ => exact sample_holds _
 
@@ -256,7 +257,7 @@ private theorem authenticate_quiet (coins : QueryImpl unifSpec (StateT Platform 
 
 private theorem after_quiet (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (reserve : StateT Platform ProbComp Bool)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit) :
     Quiet (frontReceipts (n := n)) (RegistrationNativePlatformServerSdk.afterAuthentication coins setup checks (StateT.lift reserve)
       representation created packet authenticated) := by
@@ -285,7 +286,7 @@ private theorem after_quiet (coins : QueryImpl unifSpec (StateT Platform ProbCom
 private theorem afterPin_quiet (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks) (reserve : StateT Platform ProbComp Bool)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (pin : RustM (core.option.Option session.ServerAuthenticationPin)) :
     Quiet (frontReceipts (n := n)) (RegistrationNativePlatformSourceAccept.afterPin coins setup codec checks (StateT.lift reserve)
       route verify representation created packet pin) := by
@@ -309,7 +310,7 @@ private theorem afterPin_quiet (coins : QueryImpl unifSpec (StateT Platform Prob
 theorem accept (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks) (reserve : StateT Platform ProbComp Bool)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (before : RegistrationServerFrontendCompiler.State n) (previous : Platform)
     (result : (RustM (Option Nat) × RegistrationServerFrontendCompiler.State n) × Platform)
     (supported : result ∈ support (((RegistrationNativePlatformSourceAccept.accept coins setup codec checks reserve
@@ -341,7 +342,7 @@ variable {E : Type}
 variable (coins : QueryImpl unifSpec (StateT Platform ProbComp))
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
 variable (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 variable (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
 variable (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
 variable (reserveRegistration reservePeer : StateT Platform ProbComp Bool) (erased : commitment.CommitmentTranscript)
@@ -383,7 +384,7 @@ end Typed
 theorem handler [primitive : AdapterSealPrimitive.Operations] {E : Type}
     (realSource : RegistrationNativeMldsa.Source) (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential (RegistrationNativeMldsaOpaque.handleSource realSource))
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential (RegistrationNativeMldsaOpaque.handleSource realSource))
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
     (reserveRegistration reservePeer : StateT Platform ProbComp Bool) (erased : commitment.CommitmentTranscript)

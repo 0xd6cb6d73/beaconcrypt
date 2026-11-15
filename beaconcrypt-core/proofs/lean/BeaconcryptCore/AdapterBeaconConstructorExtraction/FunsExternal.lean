@@ -12,6 +12,7 @@ variable [BeaconcryptCore.Refinement.PublicWrapperPlatform.Material]
 variable [BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform]
 variable [primitive : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations]
 
+/-- Shared constructor backend: ML generation is used only by Server constructors; the Beacon controller never calls it. -/
 class Operations where
   mldsaGenerate {R E : Type} : rand_core.TryCryptoRng R E → R → RustM
     (core.result.Result beaconcrypt_public_wrapper.auth.MldsaIdentity Unit × R)
@@ -32,8 +33,7 @@ variable [primitive : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operatio
 
 variable [ops : BeaconcryptCore.Refinement.AdapterBeaconConstructorPrimitive.Operations]
 variable [beaconcrypt.auth.Operations]
-def auth.MldsaIdentity.generate_with_rng {R E : Type} (rng : rand_core.TryCryptoRng R E) := ops.mldsaGenerate rng
-def auth.fingerprint_pin := beaconcrypt_public_wrapper.auth.fingerprint_pin
+def auth.server_pin := beaconcrypt_public_wrapper.auth.server_pin
 variable [standard : BeaconcryptCore.Refinement.AdapterBeaconConstructorPrimitive.Standard]
 def error.KeyGenError.Insts.CoreFmtDebug.fmt := standard.debug.fmt
 end beaconcrypt_constructor

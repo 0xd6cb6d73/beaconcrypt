@@ -54,7 +54,7 @@ theorem accept (setup : Setup base KemSK) (codec : Codec Reader Response)
     (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
     (verify : MldsaTranscriptAuth.Verify) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (selected : Bool) (reserve : StateT Platform ProbComp Bool) (packet : registration.InitPacket)
     (before : State n KemSK Platform source) :
     (fun result => ((result.1, project (roots setup created.seed scalar) scalar result.2.1.1 result.2.2), result.2.1.2)) <$>
@@ -85,11 +85,13 @@ theorem accept (setup : Setup base KemSK) (codec : Codec Reader Response)
     simpa only [work, StateT.run, map_apply, Prod.map_def, id_eq] using atPlatform)
   exact final
 
+-- The corrected accept now selects the Server pin purely (no fingerprint hash query); keep the source accept program opaque to the elaborator so the `rfl` below matches it by name instead of evaluating the pin construction. Proof terms are unchanged and kernel-checked.
+attribute [local irreducible] RegistrationNativePlatformSourceAccept.accept in
 /-- The actual parsed-accept callback advances the source attempt counter before the same full-state runtime acceptance. -/
 theorem typed [primitive : BeaconcryptCore.Refinement.AdapterSealPrimitive.Operations]
     (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
     (selectedOwner selectedAccept : Nat) (scalar : PqxdhJointGapDh.ScalarBytes)
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)

@@ -26,7 +26,7 @@ local notation "Native" => RegistrationNativeExperiment.State n KemSK source
 /-- Full actual finish retains early consumption, mandatory authentication, agreement, record opening, installation and every terminal failure. -/
 private theorem old_finish_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat) (packet : Option registration.ResponsePacket)
     (before : State n KemSK source × SourceState) (owned : Owned setup.joint before) :
     Prod.map id RegistrationNativeIdentityMainSource.project <$>
@@ -46,12 +46,12 @@ private theorem old_finish_source (setup : Setup base KemSK) (checks : Checks)
 
 noncomputable def create (setup : Setup base KemSK) (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (checks : Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) : M n KemSK Platform source (RustM (Option Nat)) :=
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) : M n KemSK Platform source (RustM (Option Nat)) :=
   RegistrationNativePlatformIdentityMain.beacon setup checks representation created
     (RegistrationNativePlatformIdentityProgram.native (RegistrationNativeIdentityFrontend.create setup source edPin mlPin keyId))
 
 noncomputable def finish (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat) (packet : Option registration.ResponsePacket) :
     M n KemSK Platform source (RustM (Option Pqxdh.Bytes)) :=
   RegistrationNativePlatformIdentityMain.beacon setup checks representation created
@@ -80,7 +80,7 @@ private theorem lift_source (joint : PqxdhJointIdentity.Primitives)
 
 /-- Actual current creation has the exact same generated source row, real native costs and optional failure, retaining the original P. -/
 theorem create_source (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (before : (State n KemSK source × Platform) × SourceState) (owned : Owned setup.joint (before.1.1, before.2)) :
     Prod.map id project <$>
@@ -95,7 +95,7 @@ theorem create_source (setup : Setup base KemSK) (checks : Checks)
 
 /-- The actual source corrected finish, including copy-before-install and assigned sender ID, restores every native/P failure and success state. -/
 theorem finish_source (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat) (packet : Option registration.ResponsePacket)
     (before : (State n KemSK source × Platform) × SourceState) (owned : Owned setup.joint (before.1.1, before.2)) :
     Prod.map id project <$>

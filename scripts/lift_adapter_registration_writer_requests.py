@@ -16,7 +16,7 @@ DESTINATION = Path(
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/AdapterRegistrationWriterRequestExtraction.lean"
 )
 REVIEWED_BODIES = {
-    "init": "542718311f858e116f4c48e8b60d779b3c03fb803b7b380bebf8d5d072fa071d",
+    "init": "8b9558616b3d18121d6b460755e42206ab6d552d83834fa8bbb9a1623c997f92",
     "response": "f9af0e2b1f435264651c6c727851c3daa5f990abd8ce4d2da42b23fd397dc548",
 }
 REPLACEMENTS = {
@@ -27,7 +27,7 @@ REPLACEMENTS = {
             "m (core.option.Option (alloc.vec.Vec Std.U8))",
             1,
         ),
-        ("core.slice.Slice.len", "Lifted.len", 6),
+        ("core.slice.Slice.len", "Lifted.len", 4),
         ("beaconcrypt_core.transport.encoded_init_len", "Lifted.initCapacity", 1),
         ("core.option.Option.Insts.CoreOpsTry_traitTry.branch", "Lifted.branch", 1),
         (

@@ -26,7 +26,7 @@ attribute [local irreducible] RegistrationAgreementShared.rootResponse
 /-- The native replay lookup and every native source callback are retained until the private collector and root candidate are extracted. -/
 theorem agree (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit)
     (completed : agreement.ServerAgreement)
     (before after : RegistrationServerFrontendCompiler.State n)

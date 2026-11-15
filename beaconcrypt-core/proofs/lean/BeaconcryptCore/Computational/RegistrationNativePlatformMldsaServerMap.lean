@@ -111,34 +111,44 @@ private theorem transform_fromInitial (mapping : Map left right)
 
 omit primitive in
 private theorem transform_afterOccupancy (mapping : Map left right)
+    (deriveAd : RegistrationNativePlatformCompletionSdk.AdHash n (M left Platform))
     (reserve : StateT (RegistrationServerFrontendCompiler.State n) (M left Platform) Bool)
     (finish : RegistrationNativePlatformCompletionSdk.Completion n (M left Platform) (alloc.vec.Vec U8))
     (control : pqxdh.ServerState) (lookup : peer.CompletionLookup) (occupied : Bool) :
-    transform mapping (RegistrationNativePlatformCompletionSdk.afterOccupancy reserve finish control lookup occupied) =
-      RegistrationNativePlatformCompletionSdk.afterOccupancy (transform mapping reserve)
+    transform mapping (RegistrationNativePlatformCompletionSdk.afterOccupancy deriveAd reserve finish control lookup occupied) =
+      RegistrationNativePlatformCompletionSdk.afterOccupancy (fun pending => transform mapping (deriveAd pending)) (transform mapping reserve)
         (fun control initial => transform mapping (finish control initial)) control lookup occupied := by
   unfold RegistrationNativePlatformCompletionSdk.afterOccupancy
   cases lookup.resume occupied with
   | fail error | div => exact RegistrationNativePlatformMldsaSignMap.pure mapping _
   | ok answer => cases answer with
     | Err prior => exact RegistrationNativePlatformMldsaSignMap.pure mapping _
-    | Ok initial =>
+    | Ok pending =>
         rw [RegistrationNativePlatformMldsaSignMap.bind mapping]
         apply bind_congr
-        intro admitted
-        cases admitted with
-        | false => exact RegistrationNativePlatformMldsaSignMap.pure mapping _
-        | true => exact transform_fromInitial mapping finish control initial
+        intro hashed
+        cases hashed with
+        | fail error | div => exact RegistrationNativePlatformMldsaSignMap.pure mapping _
+        | ok answer => cases answer with
+          | Err previous => exact RegistrationNativePlatformMldsaSignMap.pure mapping _
+          | Ok initial =>
+            rw [RegistrationNativePlatformMldsaSignMap.bind mapping]
+            apply bind_congr
+            intro admitted
+            cases admitted with
+            | false => exact RegistrationNativePlatformMldsaSignMap.pure mapping _
+            | true => exact transform_fromInitial mapping finish control initial
 
 omit primitive in
 private theorem transform_afterPin (mapping : Map left right)
+    (deriveAd : RegistrationNativePlatformCompletionSdk.AdHash n (M left Platform))
     (reserve : StateT (RegistrationServerFrontendCompiler.State n) (M left Platform) Bool)
     (present : U64 → StateT (RegistrationServerFrontendCompiler.State n) (M left Platform) Bool)
     (finish : RegistrationNativePlatformCompletionSdk.Completion n (M left Platform) (alloc.vec.Vec U8))
     (control : pqxdh.ServerState) (token : peer.ConsumedRegistration) (application : Slice U8)
     (pin : RustM (Option session.ServerAuthenticationPin)) :
-    transform mapping (RegistrationNativePlatformCompletionSdk.afterPin reserve present finish control token application pin) =
-      RegistrationNativePlatformCompletionSdk.afterPin (transform mapping reserve) (fun keyId => transform mapping (present keyId))
+    transform mapping (RegistrationNativePlatformCompletionSdk.afterPin deriveAd reserve present finish control token application pin) =
+      RegistrationNativePlatformCompletionSdk.afterPin (fun pending => transform mapping (deriveAd pending)) (transform mapping reserve) (fun keyId => transform mapping (present keyId))
         (fun control initial => transform mapping (finish control initial)) control token application pin := by
   unfold RegistrationNativePlatformCompletionSdk.afterPin
   cases pin with
@@ -161,18 +171,19 @@ private theorem transform_afterPin (mapping : Map left right)
                   · rw [RegistrationNativePlatformMldsaSignMap.bind mapping]
                     apply bind_congr
                     intro occupied
-                    exact transform_afterOccupancy mapping reserve finish control lookup occupied
+                    exact transform_afterOccupancy mapping deriveAd reserve finish control lookup occupied
                   · exact RegistrationNativePlatformMldsaSignMap.pure mapping _
 
 omit primitive in
 private theorem transform_complete (mapping : Map left right)
+    (deriveAd : RegistrationNativePlatformCompletionSdk.AdHash n (M left Platform))
     (pin : StateT (RegistrationServerFrontendCompiler.State n) (M left Platform) (RustM (Option session.ServerAuthenticationPin)))
     (reserve : StateT (RegistrationServerFrontendCompiler.State n) (M left Platform) Bool)
     (present : U64 → StateT (RegistrationServerFrontendCompiler.State n) (M left Platform) Bool)
     (finish : RegistrationNativePlatformCompletionSdk.Completion n (M left Platform) (alloc.vec.Vec U8))
     (token : peer.ConsumedRegistration) (application : Slice U8) :
-    transform mapping (RegistrationNativePlatformCompletionSdk.complete pin reserve present finish token application) =
-      RegistrationNativePlatformCompletionSdk.complete (transform mapping pin) (transform mapping reserve) (fun keyId => transform mapping (present keyId))
+    transform mapping (RegistrationNativePlatformCompletionSdk.complete deriveAd pin reserve present finish token application) =
+      RegistrationNativePlatformCompletionSdk.complete (fun pending => transform mapping (deriveAd pending)) (transform mapping pin) (transform mapping reserve) (fun keyId => transform mapping (present keyId))
         (fun control initial => transform mapping (finish control initial)) token application := by
   unfold RegistrationNativePlatformCompletionSdk.complete
   rw [RegistrationNativePlatformMldsaSignMap.bind mapping]
@@ -185,17 +196,18 @@ private theorem transform_complete (mapping : Map left right)
   rw [RegistrationNativePlatformMldsaSignMap.bind mapping]
   apply bind_congr
   intro selected
-  exact transform_afterPin mapping reserve present finish before.control token application selected
+  exact transform_afterPin mapping deriveAd reserve present finish before.control token application selected
 
 omit primitive in
 private theorem transform_sdk (mapping : Map left right)
+    (deriveAd : RegistrationNativePlatformCompletionSdk.AdHash n (M left Platform))
     (pin : StateT (RegistrationServerFrontendCompiler.State n) (M left Platform) (RustM (Option session.ServerAuthenticationPin)))
     (reserve : StateT (RegistrationServerFrontendCompiler.State n) (M left Platform) Bool)
     (present : U64 → StateT (RegistrationServerFrontendCompiler.State n) (M left Platform) Bool)
     (finish : RegistrationNativePlatformCompletionSdk.Completion n (M left Platform) (alloc.vec.Vec U8))
     (handle : Nat) (application : Option (Slice U8)) :
-    transform mapping (RegistrationNativePlatformCompletionSdk.build pin reserve present finish handle application) =
-      RegistrationNativePlatformCompletionSdk.build (transform mapping pin) (transform mapping reserve) (fun keyId => transform mapping (present keyId))
+    transform mapping (RegistrationNativePlatformCompletionSdk.build deriveAd pin reserve present finish handle application) =
+      RegistrationNativePlatformCompletionSdk.build (fun pending => transform mapping (deriveAd pending)) (transform mapping pin) (transform mapping reserve) (fun keyId => transform mapping (present keyId))
         (fun control initial => transform mapping (finish control initial)) handle application := by
   funext before previous
   simp only [transform, RegistrationNativePlatformCompletionSdk.build, StateT.run]
@@ -205,7 +217,7 @@ private theorem transform_sdk (mapping : Map left right)
       | none => rfl
       | some token => cases application with
         | none => rfl
-        | some application => exact congrFun (congrFun (transform_complete mapping pin reserve present finish token application) current) previous
+        | some application => exact congrFun (congrFun (transform_complete mapping deriveAd pin reserve present finish token application) current) previous
 
 /-- Complete source build key translation preserves its actual shared platform behavior and all source outcomes. -/
 theorem build (mapping : Map left right) (current : RegistrationNativeMldsa.Credential left)

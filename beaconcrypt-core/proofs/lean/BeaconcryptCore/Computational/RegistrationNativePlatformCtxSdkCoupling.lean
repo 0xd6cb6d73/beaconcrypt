@@ -80,14 +80,15 @@ private theorem state_get_apply {S : Type} {m : Type → Type} [Monad m] (before
     (get : StateT S m S) before = pure (before, before) := rfl
 
 private theorem complete_control {m : Type → Type} [Monad m] [LawfulMonad m]
+    (deriveAd : RegistrationNativePlatformCompletionSdk.AdHash n m)
     (pin : StateT (State n) m (RustM (core.option.Option session.ServerAuthenticationPin)))
     (reserve : StateT (State n) m Bool) (present : U64 → StateT (State n) m Bool)
     (finish : RegistrationNativePlatformCompletionSdk.Completion n m Encoded)
     (token : peer.ConsumedRegistration) (application : Slice U8) :
-    RegistrationNativePlatformCompletionSdk.complete pin reserve present finish token application = (do
+    RegistrationNativePlatformCompletionSdk.complete deriveAd pin reserve present finish token application = (do
       let control ← (fun before => pure (before.control, before) : StateT (State n) m pqxdh.ServerState)
       let current ← pin
-      RegistrationNativePlatformCompletionSdk.afterPin reserve present finish control token application current) := by
+      RegistrationNativePlatformCompletionSdk.afterPin deriveAd reserve present finish control token application current) := by
   funext before
   simp only [RegistrationNativePlatformCompletionSdk.complete, state_bind_apply, state_get_apply, pure_bind]
 
@@ -101,6 +102,9 @@ private theorem take_replace (cache : RegistrationNativePlatformCtxBackend.Cache
   | some result => cases result <;> rfl
 
 section Controller
+variable (deriveAdLeft : RegistrationNativePlatformCompletionSdk.AdHash n (StateT Platform (OracleComp RegistrationNativePlatformCtxBackend.Spec)))
+variable (deriveAdRight : RegistrationNativePlatformCompletionSdk.AdHash n (StateT Platform ProbComp))
+variable (ad : ∀ pending, Coupled (deriveAdLeft pending) (deriveAdRight pending))
 variable (pinLeft : M (State n) Platform (RustM (core.option.Option session.ServerAuthenticationPin)))
 variable (pinRight : Native n Platform (RustM (core.option.Option session.ServerAuthenticationPin)))
 variable (reserveLeft : M (State n) Platform Bool) (reserveRight : Native n Platform Bool)
@@ -119,11 +123,11 @@ theorem fromInitial_source (control : pqxdh.ServerState) (pending : registration
       (RegistrationNativePlatformCompletionSdk.fromInitial finishRight control pending) := by
   exact bind_source _ _ _ _ (finish control pending) (fun result => commit_source result)
 
-include reserve finish in
+include ad reserve finish in
 /-- Reservation and each completion-lookup outcome retain the actual reached state. -/
 theorem afterOccupancy_source (control : pqxdh.ServerState) (lookup : peer.CompletionLookup) (occupied : Bool) :
-    Coupled (RegistrationNativePlatformCompletionSdk.afterOccupancy reserveLeft finishLeft control lookup occupied)
-      (RegistrationNativePlatformCompletionSdk.afterOccupancy reserveRight finishRight control lookup occupied) := by
+    Coupled (RegistrationNativePlatformCompletionSdk.afterOccupancy deriveAdLeft reserveLeft finishLeft control lookup occupied)
+      (RegistrationNativePlatformCompletionSdk.afterOccupancy deriveAdRight reserveRight finishRight control lookup occupied) := by
   unfold RegistrationNativePlatformCompletionSdk.afterOccupancy
   cases lookup.resume occupied with
   | fail error => exact pure_source _
@@ -131,18 +135,25 @@ theorem afterOccupancy_source (control : pqxdh.ServerState) (lookup : peer.Compl
   | ok result => cases result with
     | Err previous => exact pure_source _
     | Ok pending =>
-      apply bind_source _ _ _ _ reserve
-      intro admitted
-      cases admitted
-      · exact pure_source _
-      · exact fromInitial_source finishLeft finishRight finish control pending
+      apply bind_source _ _ _ _ (ad pending)
+      intro hashed
+      cases hashed with
+      | fail error | div => exact pure_source _
+      | ok answer => cases answer with
+        | Err previous => exact pure_source _
+        | Ok initial =>
+          apply bind_source _ _ _ _ reserve
+          intro admitted
+          cases admitted
+          · exact pure_source _
+          · exact fromInitial_source finishLeft finishRight finish control initial
 
-include reserve present finish in
+include ad reserve present finish in
 /-- The exact lookup, public preflight and occupancy branches introduce no hidden cache dependence. -/
 theorem afterPin_source (control : pqxdh.ServerState) (token : peer.ConsumedRegistration) (application : Slice U8)
     (current : RustM (core.option.Option session.ServerAuthenticationPin)) :
-    Coupled (RegistrationNativePlatformCompletionSdk.afterPin reserveLeft presentLeft finishLeft control token application current)
-      (RegistrationNativePlatformCompletionSdk.afterPin reserveRight presentRight finishRight control token application current) := by
+    Coupled (RegistrationNativePlatformCompletionSdk.afterPin deriveAdLeft reserveLeft presentLeft finishLeft control token application current)
+      (RegistrationNativePlatformCompletionSdk.afterPin deriveAdRight reserveRight presentRight finishRight control token application current) := by
   unfold RegistrationNativePlatformCompletionSdk.afterPin
   cases current with
   | fail error => exact pure_source _
@@ -166,26 +177,26 @@ theorem afterPin_source (control : pqxdh.ServerState) (token : peer.ConsumedRegi
             split
             · apply bind_source _ _ _ _ (present keyId)
               intro occupied
-              exact afterOccupancy_source reserveLeft reserveRight finishLeft finishRight reserve finish control lookup occupied
+              exact afterOccupancy_source (deriveAdLeft := deriveAdLeft) (deriveAdRight := deriveAdRight) (ad := ad) reserveLeft reserveRight finishLeft finishRight reserve finish control lookup occupied
             · exact pure_source _
 
-include pin reserve present finish in
+include ad pin reserve present finish in
 /-- The complete actual SDK finish gate preserves full native and platform state under the physical interpretation. -/
 theorem complete_source (token : peer.ConsumedRegistration) (application : Slice U8) :
-    Coupled (RegistrationNativePlatformCompletionSdk.complete pinLeft reserveLeft presentLeft finishLeft token application)
-      (RegistrationNativePlatformCompletionSdk.complete pinRight reserveRight presentRight finishRight token application) := by
+    Coupled (RegistrationNativePlatformCompletionSdk.complete deriveAdLeft pinLeft reserveLeft presentLeft finishLeft token application)
+      (RegistrationNativePlatformCompletionSdk.complete deriveAdRight pinRight reserveRight presentRight finishRight token application) := by
   rw [complete_control, complete_control]
   apply bind_source _ _ _ _ control_source
   intro control
   apply bind_source _ _ _ _ pin
   intro current
-  exact afterPin_source reserveLeft reserveRight presentLeft presentRight finishLeft finishRight reserve present finish control token application current
+  exact afterPin_source (deriveAdLeft := deriveAdLeft) (deriveAdRight := deriveAdRight) (ad := ad) reserveLeft reserveRight presentLeft presentRight finishLeft finishRight reserve present finish control token application current
 
-include pin reserve present finish in
+include ad pin reserve present finish in
 /-- The literal SDK build moves its token before all later failures and retains the exact same source/controller state. -/
 theorem build_source (handle : Nat) (application : Option (Slice U8)) :
-    Coupled (RegistrationNativePlatformCompletionSdk.build pinLeft reserveLeft presentLeft finishLeft handle application)
-      (RegistrationNativePlatformCompletionSdk.build pinRight reserveRight presentRight finishRight handle application) := by
+    Coupled (RegistrationNativePlatformCompletionSdk.build deriveAdLeft pinLeft reserveLeft presentLeft finishLeft handle application)
+      (RegistrationNativePlatformCompletionSdk.build deriveAdRight pinRight reserveRight presentRight finishRight handle application) := by
   intro before
   have physicalTake := take_replace before.2.1 handle before.1.1
   cases taken : RegistrationServerSdkSource.take handle before.1.1 with
@@ -200,7 +211,7 @@ theorem build_source (handle : Nat) (application : Option (Slice U8)) :
         simp only [interpret, RegistrationNativePlatformCompletionSdk.build, StateT.run, realize,
           taken, physicalTake, state_pure_apply, simulateQ_pure, map_pure, pack, Prod.map_def, id_eq]
       | some application =>
-        have same := complete_source pinLeft pinRight reserveLeft reserveRight presentLeft presentRight finishLeft finishRight
+        have same := complete_source (deriveAdLeft := deriveAdLeft) (deriveAdRight := deriveAdRight) (ad := ad) pinLeft pinRight reserveLeft reserveRight presentLeft presentRight finishLeft finishRight
           pin reserve present finish token application ((current, before.1.2), before.2)
         simpa only [interpret, RegistrationNativePlatformCompletionSdk.build, StateT.run, realize,
           taken, physicalTake, pack] using same

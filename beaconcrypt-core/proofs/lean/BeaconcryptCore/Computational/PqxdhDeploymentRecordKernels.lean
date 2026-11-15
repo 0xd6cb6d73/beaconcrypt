@@ -8,6 +8,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhDeploymentRecordKernels
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhServerAuthExperiment PqxdhServerAuthNative PqxdhJointIdentity RawCtxMaterialPositions
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response : Type}
 
@@ -64,7 +65,7 @@ theorem tail_finished (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
   obtain ⟨initial, initialState, raw, appState, received, initialMember, _, rawMember, _, opening⟩ :=
     PqxdhBeaconPhase2Publication.afterRoot_supported _ codec.frameRead prepared root intermediate final staged after
   obtain ⟨openedReply, sequenceOne, sameKernel, _⟩ :=
-    PqxdhBeaconPhase2Publication.afterOpening_success _ _ _ staged opening
+    PqxdhBeaconPhase2Publication.afterOpening_success _ _ _ _ staged opening
   have value : initial = RawCtxSourceHkdf.initialResponse setup.source.crypto
       (PqxdhInitialRatchetComplementarity.beaconPending root).request := by
     simp only [QueryImpl.apply_compose, PqxdhBeaconPhase2Publication.nativeAdapter,
@@ -84,12 +85,12 @@ theorem tail_finished (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
   have invariant := RawCtxReceiveConsumption.initialized_spent setup.source.crypto root _ (Or.inl initialized)
   have projected := finish_receive setup codec ((RawCtxWholeOwner.rawReceive codec.frameRead raw).run
     (PqxdhBeaconPhase2Publication.localOwner (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate)
-      (PqxdhBeaconPhase2Publication.normalInitial (PqxdhInitialRatchetComplementarity.beaconPending root) initial)))
+      prepared.binding.associated_data (PqxdhBeaconPhase2Publication.normalInitial (PqxdhInitialRatchetComplementarity.beaconPending root) initial)))
     appState
   have member : (received.1, cacheOf received.2) ∈ support (RawCtxWholeOwner.rawGame
       (RawCtxReceiveConsumption.receiveNative setup.source) codec.frameRead raw
       (PqxdhBeaconPhase2Publication.localOwner (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate)
-        (PqxdhBeaconPhase2Publication.normalInitial (PqxdhInitialRatchetComplementarity.beaconPending root) initial))
+        prepared.binding.associated_data (PqxdhBeaconPhase2Publication.normalInitial (PqxdhInitialRatchetComplementarity.beaconPending root) initial))
       (cacheOf appState)) := by
     unfold RawCtxWholeOwner.rawGame
     rw [← projected, support_map]
@@ -154,27 +155,27 @@ theorem initial_live (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (r
 
 /-- A Server registration result that installs nothing, or installs the committed candidate with a live kernel. -/
 def LivePublication (c : Pqxdh.Crypto) (candidate : pqxdh.ServerRegistrationCandidate)
-    (state : PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes))
+    (state : PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes))
     (result : RustM (Option PqxdhServerRegistrationPublication.Response ×
-      PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes))) : Prop :=
+      PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes))) : Prop :=
   result = ok (none, state) ∨ ∃ kernel bytes, Live c kernel ∧
-    result = ok (some ⟨bytes, candidate.key_id⟩, PqxdhServerRegistrationPublication.publish state candidate kernel ())
+    result = ok (some ⟨bytes, candidate.key_id⟩, PqxdhServerRegistrationPublication.publish state candidate kernel associatedData)
 
 /-- The first-send tail installs only a live kernel. -/
 theorem after_live (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Pqxdh.Bytes) (kernel : ConcreteRatchetKernel)
     (live : Live setup.source.crypto kernel)
-    (state : PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes))
+    (state : PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes))
     (primitive : RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext))
     (result : (Option PqxdhServerRegistrationPublication.Response ×
-      PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes)) ×
+      PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes)) ×
       RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext))
     (supported : result ∈ support ((simulateQ (tailImpl setup codec checks)
-      (PqxdhServerRegistrationPublication.afterInitialization candidate authenticated kernel () state)).run primitive))
+      (PqxdhServerRegistrationPublication.afterInitialization (associatedData := associatedData) candidate authenticated kernel associatedData state)).run primitive))
         :
-    LivePublication setup.source.crypto candidate state (ok result.1) := by
+    LivePublication (associatedData := associatedData) setup.source.crypto candidate state (ok result.1) := by
   obtain ⟨sent, afterSend, afterErase, sentMember, _, rest⟩ :=
-    PqxdhServerRegistrationPublication.afterInitialization_support _ candidate authenticated kernel () state primitive
+    PqxdhServerRegistrationPublication.afterInitialization_support (associatedData := associatedData) _ candidate authenticated kernel associatedData state primitive
       result supported
   have advanced := send_live setup codec checks kernel _ live primitive (sent, afterSend) sentMember
   cases hs : sent.2 with
@@ -191,14 +192,14 @@ theorem after_live (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
 theorem candidate_live (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (candidate : pqxdh.ServerRegistrationCandidate) (root : PqxdhSecretInputKdf.RootOutput) (payload : Option
       Pqxdh.Bytes)
-    (state : PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes))
+    (state : PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes))
     (primitive : RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext))
     (result : RustM (Option PqxdhServerRegistrationPublication.Response ×
-      PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes)) ×
+      PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes)) ×
       RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext))
     (supported : result ∈ support ((simulateQ (tailImpl setup codec checks)
-      (PqxdhServerRegistrationPublication.candidateTail setup.source candidate root payload () state)).run primitive)) :
-    LivePublication setup.source.crypto candidate state result.1 := by
+      (PqxdhServerRegistrationPublication.candidateTail (associatedData := associatedData) setup.source candidate root payload associatedData state)).run primitive)) :
+    LivePublication (associatedData := associatedData) setup.source.crypto candidate state result.1 := by
   obtain ⟨kernel, hrun, live⟩ := initial_live setup.source root
   have hinit := (PqxdhServerRegistrationPublication.candidate_initialization setup.source candidate root).trans hrun
   obtain ⟨binding, hbinding, _⟩ := PqxdhServerRegistrationPublication.candidate_binding candidate
@@ -230,24 +231,24 @@ theorem candidate_live (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
     simp only [Bool.not_true, Bool.false_eq_true, ite_false, simulateQ_map, StateT.run_map,
       support_map, Set.mem_image] at supported
     obtain ⟨inner, reached, rfl⟩ := supported
-    exact after_live setup codec checks candidate _ kernel live state afterAllocate inner reached
+    exact after_live (associatedData := associatedData) setup codec checks candidate _ kernel live state afterAllocate inner reached
   · simp only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
     exact Or.inl (congrArg Prod.fst supported)
 
 /-- A Server build installs nothing, or installs a live kernel at its candidate's key ID, which was free. -/
 theorem build_live (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (pending : pqxdh.PendingServerRegistration) (root : PqxdhSecretInputKdf.RootOutput) (payload : Option Pqxdh.Bytes)
-    (state : PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes))
+    (state : PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes))
     (primitive : RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext))
     (result : RustM (Option PqxdhServerRegistrationPublication.Response ×
-      PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes)) ×
+      PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes)) ×
       RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext))
     (supported : result ∈ support ((simulateQ (tailImpl setup codec checks)
-      (PqxdhServerRegistrationPublication.build setup.source pending root payload () state)).run primitive)) :
+      (PqxdhServerRegistrationPublication.build (associatedData := associatedData) setup.source pending root payload associatedData state)).run primitive)) :
     result.1 = ok (none, state) ∨ ∃ candidate kernel bytes, state.server.peers candidate.key_id = none ∧
       Live setup.source.crypto kernel ∧
       result.1 = ok (some ⟨bytes, candidate.key_id⟩, PqxdhServerRegistrationPublication.publish state candidate kernel
-        ()) := by
+        associatedData) := by
   obtain ⟨next, hnext⟩ := BeaconcryptCore.PanicFreedom.server_next_key_id_ok state.control
   simp only [PqxdhServerRegistrationPublication.build, hnext, PqxdhServerRegistrationPublication.continueRust]
     at supported
@@ -265,7 +266,7 @@ theorem build_live (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
           simp only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
           exact Or.inl (congrArg Prod.fst supported)
       | Ok candidate =>
-          rcases candidate_live setup codec checks candidate root payload state primitive result supported
+          rcases candidate_live (associatedData := associatedData) setup codec checks candidate root payload state primitive result supported
             with unchanged | ⟨kernel, bytes, live, published⟩
           · exact Or.inl unchanged
           · obtain ⟨available, key⟩ := PqxdhDeploymentCompileRegistration.prepare_key _ _ _ _ candidate hprepared
@@ -281,11 +282,11 @@ theorem build_live (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
             exact Or.inr ⟨candidate, kernel, bytes, free, live, published⟩
 
 /-- The established kernel of a Server peer. -/
-def peerKernel (server : RawCtxServerRouting.Server Unit Unit) (kid : Std.U64) : Option ConcreteRatchetKernel :=
+def peerKernel (server : RawCtxServerRouting.Server Unit PqxdhTranscriptAd.AssociatedData) (kid : Std.U64) : Option ConcreteRatchetKernel :=
   (server.peers kid).map (·.kernel)
 
 /-- A Server step keeps every peer kernel, except that a free key ID may receive a live kernel. -/
-def PeerStep (c : Pqxdh.Crypto) (before after : RawCtxServerRouting.Server Unit Unit) : Prop :=
+def PeerStep (c : Pqxdh.Crypto) (before after : RawCtxServerRouting.Server Unit PqxdhTranscriptAd.AssociatedData) : Prop :=
   ∀ kid, peerKernel after kid = peerKernel before kid ∨
     (peerKernel before kid = none ∧ ∃ kernel, peerKernel after kid = some kernel ∧ Live c kernel)
 
@@ -302,23 +303,39 @@ theorem buildOracle_peers (setup : Setup baseSpec KemSK) (codec : Codec Reader R
       subst supported
       exact fun _ => Or.inl rfl
   | some token =>
-      simp only [found, StateT.run_bind, mem_support_bind_iff] at supported
-      obtain ⟨built, lifted, supported⟩ := supported
-      obtain ⟨member, same⟩ := liftCoins_mem _ _ _ lifted
-      simp only [same, StateT.run_set, StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
-      obtain ⟨_, rfl, rfl⟩ := supported
-      rcases build_live setup codec checks token.pending token.root payload game.server _ built.1 member with
-        unchanged | ⟨candidate, kernel, bytes, free, live, published⟩
-      · simp only [unchanged, settle]
-        exact fun _ => Or.inl rfl
-      · intro kid
-        simp only [published, settle, PqxdhServerRegistrationPublication.publish, peerKernel]
-        by_cases same : kid = candidate.key_id
-        · subst same
-          right
-          refine ⟨by simp only [free, Option.map_none], kernel, by simp, live⟩
-        · left
-          simp only [Function.update_of_ne same]
+      simp only [found] at supported
+      cases guard : PqxdhServerRegistrationPublication.prehash game.server token.pending payload with
+      | none =>
+          simp only [guard, StateT.run_bind, StateT.run_set, StateT.run_pure, pure_bind,
+            support_pure, Set.mem_singleton_iff] at supported
+          subst result
+          exact fun _ => Or.inl rfl
+      | some candidate =>
+          simp only [guard] at supported
+          change result ∈ support ((hashOracle (PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf token.init)
+            (PqxdhTranscriptAd.serverResponse candidate)) >>= _).run game) at supported
+          rw [StateT.run_bind, mem_support_bind_iff] at supported
+          obtain ⟨hashed, hashing, supported⟩ := supported
+          simp only [hashOracle, StateT.run, bind_pure_comp, support_map] at hashing
+          obtain ⟨hashed, _, rfl⟩ := hashing
+          simp only [StateT.run_bind, StateT.run_get, pure_bind, mem_support_bind_iff] at supported
+          obtain ⟨built, lifted, supported⟩ := supported
+          obtain ⟨member, same⟩ := liftCoins_mem _ _ _ lifted
+          simp only [same, StateT.run_set, StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
+          obtain ⟨_, rfl, rfl⟩ := supported
+          rcases build_live (associatedData := PqxdhTranscriptAd.adOf hashed.1) setup codec checks token.pending
+            token.root payload game.server _ built.1 member with
+            unchanged | ⟨candidate, kernel, bytes, free, live, published⟩
+          · simp only [unchanged, settle]
+            exact fun _ => Or.inl rfl
+          · intro kid
+            simp only [published, settle, PqxdhServerRegistrationPublication.publish, peerKernel]
+            by_cases same : kid = candidate.key_id
+            · subst same
+              right
+              refine ⟨by simp only [free, Option.map_none], kernel, by simp, live⟩
+            · left
+              simp only [Function.update_of_ne same]
 
 /-- The established kernel of an optional owner. -/
 def ownerKernel (owner : Option (PqxdhRegistrationSchedule.Owner KemSK)) : Option ConcreteRatchetKernel :=
@@ -361,7 +378,7 @@ theorem finish_owners (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
         rcases reached with ⟨⟨reply, next⟩, final⟩
         change reply = none at rejected
         subst rejected
-        have shape := PqxdhDeploymentEligibility.finish_failure setup codec raw owner state.shared next final member
+        have shape := PqxdhDeploymentEligibility.ownerFinish_failure setup codec (state.inits index) raw owner state.shared next final member
         revert shape
         cases phase : owner.beacon.phase with
         | initSent control prekey oneTime kem =>
@@ -377,10 +394,17 @@ theorem finish_owners (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
         rcases reached with ⟨⟨reply, next⟩, final⟩
         change reply = some plaintext at accepted
         subst accepted
+        have receipt := PqxdhDeploymentCompileFootprint.ownerFinish_owner setup codec (state.inits index) raw owner
+          state.shared ((some plaintext, next), final) member
+        obtain ⟨control, prekey, oneTime, kem, response, kernel, init, fields, digest, phase, _, retained, decoded,
+          _, _⟩ := receipt.2.2.2 plaintext rfl
+        rw [retained, PqxdhRegistrationSchedule.ownerFinish_hashed setup codec init raw owner control prekey oneTime kem
+          phase fields decoded, StateT.run_bind, mem_support_bind_iff] at member
+        obtain ⟨hashed, _, member⟩ := member
         rw [PqxdhBeaconPhase2Publication.nativeOwner, ← QueryImpl.simulateQ_compose] at member
         obtain ⟨control, prekey, oneTime, kem, prepared, intermediate, staged, active, _, tailMember, _, _, _,
-          published⟩ := PqxdhBeaconPhase2Publication.owner_success _ codec.frameRead raw plaintext owner next
-            state.shared final member
+          published⟩ := PqxdhBeaconPhase2Publication.owner_success (PqxdhTranscriptAd.completedOf control hashed.1) _ codec.frameRead raw plaintext owner next
+            hashed.2 final member
         refine ⟨by simp [ownerKernel, active], staged.kernel, ?_,
           tail_finished setup codec prepared intermediate final staged tailMember⟩
         have equal := congrArg Prod.snd published
@@ -409,9 +433,15 @@ theorem bundle_owners (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
       by_cases same : other = index
       · subst same
         rw [List.getElem?_set_self bound, found]
-        obtain ⟨rejected, published⟩ := PqxdhDeploymentEligibility.bundle_candidate setup codec other owner reached
-          member
-        cases reply : reached.1 with
+        have original : reached.1 ∈ support (simulateQ (PqxdhRegistrationSchedule.bundleCallbacks setup codec
+            owner.beacon.identity) (PqxdhLivePhase1Bundle.bundle (PqxdhRegistrationSchedule.projection setup other)
+              owner)) := by
+          rw [← PqxdhRegistrationSchedule.bundleLog_fst setup codec owner.beacon.identity _ (state.inits other),
+            support_map]
+          exact ⟨reached, member, rfl⟩
+        obtain ⟨rejected, published⟩ := PqxdhDeploymentEligibility.bundle_candidate setup codec other owner reached.1
+          original
+        cases reply : reached.1.1 with
         | none => rw [rejected reply]
         | some bytes =>
             obtain ⟨fresh, prekey, oneTime, kem, _, _, _, phase, next, _⟩ := published bytes reply

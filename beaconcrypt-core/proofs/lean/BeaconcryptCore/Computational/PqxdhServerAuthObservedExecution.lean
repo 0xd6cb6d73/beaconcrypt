@@ -54,9 +54,9 @@ noncomputable def orderedGame (setup : Setup baseSpec KemSK) (codec : Codec Read
   let scalar ← PqxdhJointGapDh.sampleScalar
   let keys ← simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl) setup.kem.keygen
   let oneTime ← PqxdhJointGapDh.sampleScalar
-  let published ← phase1Run setup codec beaconSeed
+  let logged ← phase1Logged setup codec beaconSeed
     (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar) oneTime keys.1 keys.2
-  native setup codec checks adversary revealSeed observation ⟨seed, scalar, beaconSeed, oneTime, keys, published⟩
+  native setup codec checks adversary revealSeed observation ⟨seed, scalar, beaconSeed, oneTime, keys, logged.1, logged.2⟩
 
 /-- Constructor interchange is applied to the entire evaluated Phase-1/native/journal continuation, not to marginal distributions of keys. -/
 theorem native_order (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -65,9 +65,10 @@ theorem native_order (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
       𝒟[orderedGame setup codec checks adversary revealSeed observation] := by
   simpa only [nativeGame, orderedGame, contextSample, bind_assoc, pure_bind] using
     PqxdhServerAuthNative.constructor_order setup (fun seed scalar beaconSeed oneTime keys => do
-      let published ← phase1Run setup codec beaconSeed
+      let logged ← phase1Logged setup codec beaconSeed
         (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar) oneTime keys.1 keys.2
-      native setup codec checks adversary revealSeed observation ⟨seed, scalar, beaconSeed, oneTime, keys, published⟩)
+      native setup codec checks adversary revealSeed observation
+        ⟨seed, scalar, beaconSeed, oneTime, keys, logged.1, logged.2⟩)
 
 /-- The full production-order native observation is exactly the original journaled source observation, including the actual source family interpreter. -/
 theorem ordered_observed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)

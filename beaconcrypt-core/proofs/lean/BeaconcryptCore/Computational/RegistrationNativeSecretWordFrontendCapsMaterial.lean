@@ -6,6 +6,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
+set_option warningAsError true
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativeSecretWordFrontendCapsMaterial
 open RegistrationNativeSecretWordServerMaterial
@@ -51,6 +52,16 @@ private theorem finish_free (result : RustM (RegistrationNativePairedServerServi
   | ok reply => cases reply <;> trivial
 
 
+/-- A real shared hash query is not a private material demand. This does not assign it zero hash or coin cost. -/
+private theorem adHash_free (pending : registration.ServerAdHash) :
+    (adHash (n := n) pending).IsQueryBoundP IsDemand 0 := by
+  unfold adHash
+  cases pending.request with
+  | fail error | div => trivial
+  | ok request =>
+      exact isQueryBoundP_bind (n := 0) (m := 0)
+        (by simp [effect, isQueryBoundP_query_iff, IsDemand]) (fun _ _ => by trivial)
+
 /-- Complete native lookup/preflight/occupancy/reservation precede at most one material demand. -/
 theorem complete_bound (wire : RegistrationNativeWire.Wire) (reservePeer : Bool)
     (ready : RegistrationNativeSecretWordMessage.ServerReady) (application : Slice U8) (before : State) :
@@ -80,12 +91,19 @@ theorem complete_bound (wire : RegistrationNativeWire.Wire) (reservePeer : Bool)
               | Err previous => trivial
               | Ok selected =>
                 simp only []
-                split
-                · exact isQueryBoundP_bind (n := 1) (m := 0)
-                    (admitted_bound wire.encodeResponse before.control
-                      (RegistrationBoundKeySchedule.publicInitial selected) ready.reference)
-                    (fun published _ => finish_free published before)
-                · trivial
+                refine isQueryBoundP_bind (n := 0) (m := 1) (adHash_free selected) (fun hashed _ => ?_)
+                cases hashed with
+                | fail error | div => trivial
+                | ok result => cases result with
+                  | Err previous => trivial
+                  | Ok initial =>
+                    dsimp only
+                    split
+                    · exact isQueryBoundP_bind (n := 1) (m := 0)
+                        (admitted_bound wire.encodeResponse before.control
+                          (RegistrationBoundKeySchedule.publicInitial initial) ready.reference)
+                        (fun published _ => finish_free published before)
+                    · trivial
         · trivial
 
 /-- Taking a handle and cancellation are local; every concrete build has at most one material demand. -/

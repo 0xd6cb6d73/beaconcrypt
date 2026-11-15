@@ -469,7 +469,7 @@ variable {mlSource : RegistrationNativeMldsa.Source}
 
 omit primitive in
 theorem material_local (view : AdapterPublicWrapperState.MaterialView mlSource KemSK)
-    (views : AdapterPublicWrapperStorage.Views) (created : PqxdhLiveServerConstruction.Created Unit)
+    (views : AdapterPublicWrapperStorage.Views) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : beaconcrypt_public_wrapper.server.Server) (before : RegistrationServerFrontendCompiler.State n)
     (related : AdapterPublicWrapperState.Server view views created credential self before)
@@ -490,7 +490,7 @@ theorem record_publication_material (coins : QueryImpl unifSpec (StateT Platform
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (initial : registration.ServerInitialKdf)
     (sourceView : AdapterPublicWrapperState.MaterialView mlSource KemSK)
-    (views : AdapterPublicWrapperStorage.Views) (created : PqxdhLiveServerConstruction.Created Unit)
+    (views : AdapterPublicWrapperStorage.Views) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : beaconcrypt_public_wrapper.server.Server) (before : RegistrationServerFrontendCompiler.State n)
     (related : AdapterPublicWrapperState.Server sourceView views created credential self before)

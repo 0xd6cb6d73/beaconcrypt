@@ -55,7 +55,7 @@ theorem initialized_private (setup : Setup baseSpec KemSK) (codec : Codec Reader
   · trivial
   · simpa only [isQueryBoundP_map_iff, lifted_queries] using
       PqxdhRegistrationJointOpenCosts.command_program setup codec checks created.server.server.metadata.identityIndex
-        created.publicIdentity program budget certified [] (PqxdhRegistrationJointInitializedAccept.initial created) kind nonuniform
+        created.publicIdentity program budget certified ([], fun _ => none) (PqxdhRegistrationJointInitializedAccept.initial created) kind nonuniform
 
 /-- True counts runtime initialization; false counts caller-known import. These are actual local constructor calls, not private primitive security oracles. -/
 def localClass : (Spec KemSK).Domain → Option Bool
@@ -96,7 +96,7 @@ theorem initialized_local (setup : Setup baseSpec KemSK) (codec : Codec Reader R
   · trivial
   · simpa only [isQueryBoundP_map_iff] using lifted_local_free
       ((PqxdhRegistrationJointOpenBackend.compile setup codec checks created.server.server.metadata.identityIndex
-        created.publicIdentity (simulateQ (PqxdhRegistrationJointRevealSchedule.client setup codec) program) []).run
+        created.publicIdentity (simulateQ (PqxdhRegistrationJointRevealSchedule.client setup codec) program) ([], fun _ => none)).run
           (PqxdhRegistrationJointInitializedAccept.initial created)) kind
 
 end BeaconcryptCore.Computational.PqxdhRegistrationJointOpenInitializedCosts

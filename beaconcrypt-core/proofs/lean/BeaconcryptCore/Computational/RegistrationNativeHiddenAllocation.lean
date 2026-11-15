@@ -9,6 +9,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
+set_option warningAsError true
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativeHiddenAllocation
 open PqxdhServerAuthExperiment (Setup Checks Codec)
@@ -19,6 +20,7 @@ open RegistrationNativeRawAdapter (TypedSpec)
 variable {n : Nat} {ι KemSK ProviderState Reader Response Secret Value : Type} {base : OracleSpec ι}
 variable {source : RegistrationNativeMldsa.Source}
 attribute [local irreducible] RegistrationServerOpenReferenceCompiler.accept RegistrationServerOpenReferenceCompiler.build
+attribute [local irreducible] RegistrationNativePublicOwners.create
 
 noncomputable def typed (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)

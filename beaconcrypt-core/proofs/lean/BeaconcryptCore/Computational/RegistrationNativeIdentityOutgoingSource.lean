@@ -24,7 +24,7 @@ def signature (credential : RegistrationNativeIdentityInterface.Credential) (mes
 
 theorem signature_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List IdentitySeed)
     (credential : RegistrationNativeIdentityInterface.Credential) (seed : IdentitySeed) (message : Pqxdh.Bytes)
     (found : seeds[credential.handle]? = some seed) :
     Related (n := n) (Auxiliary := Auxiliary) (source := source) setup checks representation created seeds
@@ -37,7 +37,7 @@ theorem signature_source (setup : Setup base KemSK) (checks : Checks)
 
 theorem signature_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeIdentityInterface.Credential) (message : Pqxdh.Bytes) :
     Keeps (n := n) (Auxiliary := Auxiliary) (source := source) setup checks representation created (signature credential message) := by
   intro before result supported
@@ -50,7 +50,7 @@ theorem signature_keeps (setup : Setup base KemSK) (checks : Checks)
 
 theorem history_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List IdentitySeed)
     (index : Nat) (message : Pqxdh.Bytes) (value : PqxdhEd25519EufCma.Ed25519Signature) :
     Related (n := n) (Auxiliary := Auxiliary) (source := source) setup checks representation created seeds
       (RegistrationNativeIdentityFrontend.logEd index message value)
@@ -61,7 +61,7 @@ theorem history_source (setup : Setup base KemSK) (checks : Checks)
 
 theorem history_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (message : Pqxdh.Bytes) (value : PqxdhEd25519EufCma.Ed25519Signature) :
     Keeps (n := n) (Auxiliary := Auxiliary) (source := source) setup checks representation created
       (RegistrationNativeIdentityFrontend.logEd index message value) :=
@@ -70,7 +70,7 @@ theorem history_keeps (setup : Setup base KemSK) (checks : Checks)
 /-- Every actual outgoing Ed callback is the source callback under this exact generated credential, including mismatch rejection and failed attached-buffer packing. -/
 theorem ed_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List IdentitySeed)
     (index : Nat) (owner : Owner source) (seed : IdentitySeed)
     (request : registration.Ed25519SigningRequest)
     (found : seeds[owner.identity.handle]? = some seed)
@@ -108,7 +108,7 @@ theorem ed_source (setup : Setup base KemSK) (checks : Checks)
     simp only [RegistrationNativeIdentityFrontend.outgoing, RegistrationNativeBeaconFrontend.outgoing,
       RegistrationNativeIdentityFrontend.restore, ← publicKey, ite_eq_left matched,
       signature, next, original, pure_bind, message] at assembled ⊢
-    convert assembled using 1 <;> rfl
+    convert assembled using 1; rfl
   · simpa only [RegistrationNativeIdentityFrontend.outgoing, RegistrationNativeBeaconFrontend.outgoing,
       RegistrationNativeIdentityFrontend.restore, ← publicKey, ite_eq_right matched] using
       (related_pure (n := n) (Auxiliary := Auxiliary) (source := source) setup checks representation created seeds
@@ -116,7 +116,7 @@ theorem ed_source (setup : Setup base KemSK) (checks : Checks)
 
 theorem ed_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (owner : Owner source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (owner : Owner source)
     (request : registration.Ed25519SigningRequest) :
     Keeps (n := n) (Auxiliary := Auxiliary) setup checks representation created
       (RegistrationNativeIdentityFrontend.outgoing setup source index owner (.inr request)) := by
@@ -135,10 +135,10 @@ theorem ed_keeps (setup : Setup base KemSK) (checks : Checks)
       (keeps_pure (n := n) (Auxiliary := Auxiliary) (source := source) setup checks representation created
         (core.option.Option.None : RegistrationSigningShared.SignReply))
 
-/-- Hash, ML signing and generated-handle Ed signing callbacks jointly recover the actual original native outgoing service. -/
+/-- Shared hashes, the unavailable ML-signing branch and generated-handle Ed signing callbacks recover the actual original native outgoing service. -/
 theorem query_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List IdentitySeed)
     (index : Nat) (owner : Owner source) (seed : IdentitySeed)
     (found : seeds[owner.identity.handle]? = some seed)
     (publicKey : owner.identity.publicIdentity = setup.joint.publicKeys seed)
@@ -151,21 +151,12 @@ theorem query_source (setup : Setup base KemSK) (checks : Checks)
     | hash request =>
         exact RegistrationNativeIdentityCommonSource.effect_source setup checks representation created seeds _
     | sign request payload digest =>
-        simp only [RegistrationNativeIdentityFrontend.outgoing, RegistrationNativeBeaconFrontend.outgoing,
-          RegistrationNativeIdentityFrontend.restore]
-        apply related_bind setup checks representation created seeds _ _ _ _
-          (RegistrationNativeIdentityCommonSource.sample_source setup checks representation created seeds _)
-          (RegistrationNativeIdentityCommonSource.sample_keeps setup checks representation created _)
-        intro reply
-        exact related_bind setup checks representation created seeds _ _ _ _
-          (RegistrationNativeIdentityCommonSource.update_source setup checks representation created seeds _)
-          (RegistrationNativeIdentityCommonSource.update_keeps setup checks representation created _)
-          (fun _ => related_pure setup checks representation created seeds reply)
+        exact related_pure setup checks representation created seeds _
   | inr request => exact ed_source setup checks representation created seeds index owner seed request found publicKey
 
 theorem query_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (owner : Owner source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (owner : Owner source)
     (query : RegistrationBeaconInitExecutor.Spec.Domain) :
     Keeps (n := n) (Auxiliary := Auxiliary) setup checks representation created
       (RegistrationNativeIdentityFrontend.outgoing setup source index owner query) := by
@@ -173,18 +164,13 @@ theorem query_keeps (setup : Setup base KemSK) (checks : Checks)
   | inl query => cases query with
     | hash request => exact RegistrationNativeIdentityCommonSource.effect_keeps setup checks representation created _
     | sign request payload digest =>
-        simp only [RegistrationNativeIdentityFrontend.outgoing]
-        exact keeps_bind setup checks representation created _ _
-          (RegistrationNativeIdentityCommonSource.sample_keeps setup checks representation created _)
-          (fun _ => keeps_bind setup checks representation created _ _
-            (RegistrationNativeIdentityCommonSource.update_keeps setup checks representation created _)
-            (fun _ => keeps_pure setup checks representation created _))
+        exact keeps_pure setup checks representation created _
   | inr request => exact ed_keeps setup checks representation created index owner request
 
-/-- Complete native Init execution retains all three signing attempts, shared hashes, ML receipts, dynamic encoder results and every failure path under the same source interpretation. -/
+/-- Complete native Init execution retains its three Ed signing stages, shared hash, dynamic encoder results and every failure path under the same source interpretation. -/
 theorem program_source {Value : Type} (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List IdentitySeed)
     (index : Nat) (owner : Owner source) (seed : IdentitySeed)
     (found : seeds[owner.identity.handle]? = some seed)
     (publicKey : owner.identity.publicIdentity = setup.joint.publicKeys seed)
@@ -198,7 +184,7 @@ theorem program_source {Value : Type} (setup : Setup base KemSK) (checks : Check
 
 theorem program_keeps {Value : Type} (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (owner : Owner source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (owner : Owner source)
     (work : OracleComp RegistrationBeaconInitExecutor.Spec Value) :
     Keeps (n := n) (Auxiliary := Auxiliary) setup checks representation created
       (simulateQ (RegistrationNativeIdentityFrontend.outgoing setup source index owner) work) :=
@@ -207,7 +193,7 @@ theorem program_keeps {Value : Type} (setup : Setup base KemSK) (checks : Checks
 /-- The source correspondence includes the actual complete outgoing Init controller with its generated public fields and dynamic wire encoder. -/
 theorem init_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List IdentitySeed)
     (wire : RegistrationNativeWire.Wire) (index : Nat) (owner : Owner source) (seed : IdentitySeed)
     (oneTime : PqxdhJointGapDh.ScalarBytes)
     (found : seeds[owner.identity.handle]? = some seed)
@@ -216,24 +202,24 @@ theorem init_source (setup : Setup base KemSK) (checks : Checks)
       (simulateQ (RegistrationNativeIdentityFrontend.outgoing setup source index owner)
         (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨owner.pin.binding⟩
           (RegistrationNativeIdentityFrontend.inputs owner)
-          ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey))
+          ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin))
       (simulateQ (RegistrationNativeBeaconFrontend.outgoing setup source index (RegistrationNativeIdentityFrontend.restore seed owner))
         (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨owner.pin.binding⟩
           (RegistrationNativeBeaconFrontend.inputs setup (RegistrationNativeIdentityFrontend.restore seed owner))
-          ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)) := by
+          ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)) := by
   rw [← RegistrationNativeIdentityRoles.inputs_source setup owner seed publicKey]
   exact program_source setup checks representation created seeds index owner seed found publicKey _
 
 theorem init_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat) (owner : Owner source)
     (oneTime : PqxdhJointGapDh.ScalarBytes) :
     Keeps (n := n) (Auxiliary := Auxiliary) setup checks representation created
       (simulateQ (RegistrationNativeIdentityFrontend.outgoing setup source index owner)
         (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨owner.pin.binding⟩
           (RegistrationNativeIdentityFrontend.inputs owner)
-          ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)) :=
+          ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)) :=
   program_keeps setup checks representation created index owner _
 
 end BeaconcryptCore.Computational.RegistrationNativeIdentityOutgoingSource

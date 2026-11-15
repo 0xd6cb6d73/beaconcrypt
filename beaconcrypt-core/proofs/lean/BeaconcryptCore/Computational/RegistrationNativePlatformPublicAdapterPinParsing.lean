@@ -76,6 +76,7 @@ omit material ed [LawfulMonad m] children in
 private theorem lift_ok {A : Type} (value : A) :
     (AdapterRecordRequestMonad.liftRust (.ok value) : AdapterPublicWrapperRustT.RustT m A)=pure value := rfl
 
+omit children in
 theorem constructor {R Error : Type} (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (contract : EdContract view) (generator : rand_core.TryCryptoRng R Error)
     (keyId : U64) (edPin mlPin : Slice U8) (rng : R) :
@@ -96,6 +97,7 @@ theorem constructor {R Error : Type} (view : AdapterPublicWrapperState.MaterialV
     cases RegistrationNativeWire.parseMldsaPin (TranscriptAuthParts.absSlice mlPin) <;>
       simp only [lift_ok,pure_bind,AdapterBeaconConstructorBody.reject]
 
+omit children in
 theorem rejected {R Error : Type} (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (contract : EdContract view) (generator : rand_core.TryCryptoRng R Error)
     (keyId : U64) (edPin mlPin : Slice U8) (rng : R)

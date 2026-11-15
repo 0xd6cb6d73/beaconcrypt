@@ -9,6 +9,7 @@ open OracleComp OracleSpec ENNReal CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhPhase2GeneratedDriverBounds
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPrivateKemQueryBounds PqxdhPrivatePhase1Prefix
 open PqxdhJointPhase1AcceptanceComposition PqxdhPrivateSourceCoins
@@ -20,19 +21,19 @@ private theorem driver_class_bound {setup : StatefulPhase1Setup baseSpec}
     (env : Environment setup M P I K X Response A S B) (program : Program baseSpec setup.Context S (B + 1))
     (predicate : PqxdhPhase1AcceptanceOracle.SourceSpec.Domain → Prop) [DecidablePred predicate]
     (budget : Nat) (bounded : ∀ reply (state : State setup M P I K A S (B + 1)),
-      ((simulateQ (PqxdhPhase2SourceScheduler.compiler env.source env.recordWriter env.senderId
+      ((simulateQ (PqxdhPhase2SourceScheduler.compiler (completedBinding := completedBinding) env.source env.recordWriter env.senderId
         env.route env.decode env.localImpl) (program.main reply)).run state).IsQueryBoundP
           (SelectorSource (baseSpec := baseSpec) predicate) budget)
     (index : Nat) (publicIdentity : PublicIdentity) (generated : Generated setup Unit)
     (transcript : Phase1PublicTranscript setup.Context) :
-    ((driver env program).main index publicIdentity generated transcript).IsQueryBoundP
+    ((PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env program).main index publicIdentity generated transcript).IsQueryBoundP
       (SelectorSource (baseSpec := baseSpec) predicate) budget := by
   have first := PqxdhProtocolSelector.coins_excluded
     (SelectorSource (baseSpec := baseSpec) predicate)
     (by intro coin; simp [SelectorSource])
     (start setup env.phase1Writer index publicIdentity generated env.binding
       (PqxdhGeneratedBeaconSelector.bundle transcript) env.initial)
-  simpa only [driver, Nat.zero_add] using isQueryBoundP_bind first (m := budget) (fun started _ => by
+  simpa only [PqxdhPhase2GeneratedDriver.driver, Nat.zero_add] using isQueryBoundP_bind first (m := budget) (fun started _ => by
     simp only [bind_pure_comp, isQueryBoundP_map_iff]
     exact bounded _ started.2)
 
@@ -44,16 +45,16 @@ theorem driver_source_caps {setup : StatefulPhase1Setup baseSpec}
     (createBound : ∀ reply, (program.main reply).IsQueryBoundP (ForwardedSource (baseSpec := baseSpec) Creating) qCreate)
     (index : Nat) (publicIdentity : PublicIdentity) (generated : Generated setup Unit)
     (transcript : Phase1PublicTranscript setup.Context) :
-    let work := (driver env program).main index publicIdentity generated transcript
+    let work := (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env program).main index publicIdentity generated transcript
     work.IsQueryBoundP (SelectorSource (baseSpec := baseSpec) IsSigning) qSign ∧
       work.IsQueryBoundP (SelectorSource (baseSpec := baseSpec) Creating) qCreate := by
   constructor
-  · exact driver_class_bound env program IsSigning qSign
-      (fun reply state => (compiler_source_caps env.source env.recordWriter env.senderId env.route env.decode
+  · exact driver_class_bound (completedBinding := completedBinding) env program IsSigning qSign
+      (fun reply state => (PqxdhPhase2SourceSchedulerBounds.compiler_source_caps (completedBinding := completedBinding) env.source env.recordWriter env.senderId env.route env.decode
         env.localImpl (program.main reply) qSign qCreate (signBound reply) (createBound reply) state).1)
       index publicIdentity generated transcript
-  · exact driver_class_bound env program Creating qCreate
-      (fun reply state => (compiler_source_caps env.source env.recordWriter env.senderId env.route env.decode
+  · exact driver_class_bound (completedBinding := completedBinding) env program Creating qCreate
+      (fun reply state => (PqxdhPhase2SourceSchedulerBounds.compiler_source_caps (completedBinding := completedBinding) env.source env.recordWriter env.senderId env.route env.decode
         env.localImpl (program.main reply) qSign qCreate (signBound reply) (createBound reply) state).2)
       index publicIdentity generated transcript
 
@@ -65,9 +66,9 @@ theorem driver_total {setup : StatefulPhase1Setup baseSpec}
     (budget : Budget) (bounded : ∀ reply, Bounded (program.main reply) budget)
     (index : Nat) (publicIdentity : PublicIdentity) (generated : Generated setup Unit)
     (transcript : Phase1PublicTranscript setup.Context) :
-    ((driver env program).main index publicIdentity generated transcript).IsTotalQueryBound
+    ((PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env program).main index publicIdentity generated transcript).IsTotalQueryBound
       (qWrite + bill qLocal budget) := by
-  dsimp only [driver]
+  dsimp only [PqxdhPhase2GeneratedDriver.driver]
   apply isTotalQueryBound_bind
     (PqxdhProtocolQueryBounds.coins_total _ qWrite
       (start_uniform setup env.phase1Writer qWrite writerBound index publicIdentity generated env.binding
@@ -75,7 +76,7 @@ theorem driver_total {setup : StatefulPhase1Setup baseSpec}
   intro started
   simp only [bind_pure_comp, IsTotalQueryBound]
   rw [isQueryBound_map_iff]
-  exact compiler_total env.source env.recordWriter env.senderId env.route env.decode env.localImpl qLocal localBound
+  exact PqxdhPhase2SourceSchedulerBounds.compiler_total (completedBinding := completedBinding) env.source env.recordWriter env.senderId env.route env.decode env.localImpl qLocal localBound
     (program.main (started.1.map (fun bytes => ⟨transcript, bytes⟩))) budget (bounded _) started.2
 
 /-- The source-restricted enlarged experiment has exactly the original caps of three signing requests and one identity creation. -/
@@ -85,16 +86,16 @@ theorem program_source_caps {KemSK : Type} {setup : StatefulPhase1Setup baseSpec
     (kem : PqxdhKemIndCca.MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
     (noSign : ∀ reply, (program.main reply).IsQueryBoundP (ForwardedSource (baseSpec := baseSpec) IsSigning) 0)
     (noCreate : ∀ reply, (program.main reply).IsQueryBoundP (ForwardedSource (baseSpec := baseSpec) Creating) 0) :
-    let work := PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (driver env program)
+    let work := PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env program)
     work.IsQueryBoundP (fun query => IsSigning (translated query)) 3 ∧
       work.IsQueryBoundP (fun query => Creating (translated query)) 1 := by
   constructor
-  · exact PqxdhGeneratedPhase1Prefix.program_sign_bound baseImpl kem setup (driver env program)
+  · exact PqxdhGeneratedPhase1Prefix.program_sign_bound baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env program)
       (fun index identity generated transcript =>
-        (driver_source_caps env program 0 0 noSign noCreate index identity generated transcript).1)
-  · exact PqxdhGeneratedPhase1Prefix.program_create_bound baseImpl kem setup (driver env program)
+        (driver_source_caps (completedBinding := completedBinding) env program 0 0 noSign noCreate index identity generated transcript).1)
+  · exact PqxdhGeneratedPhase1Prefix.program_create_bound baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env program)
       (fun index identity generated transcript =>
-        (driver_source_caps env program 0 0 noSign noCreate index identity generated transcript).2)
+        (driver_source_caps (completedBinding := completedBinding) env program 0 0 noSign noCreate index identity generated transcript).2)
 
 /-- Accepted fresh same-identity substitutions in the actual enlarged source execution are charged once to the constructed joint-use weak-EUF reduction. -/
 theorem authentication_bound {KemSK : Type} {setup : StatefulPhase1Setup baseSpec}
@@ -107,13 +108,13 @@ theorem authentication_bound {KemSK : Type} {setup : StatefulPhase1Setup baseSpe
     (noCreate : ∀ reply, (program.main reply).IsQueryBoundP (ForwardedSource (baseSpec := baseSpec) Creating) 0)
     (fallback : DynamicForgery) (ordinaryFallback : PqxdhJointIdentity.Forgery) :
     Pr{let x ← (privateRun attachedVerify primitives 1
-      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (driver env program)))}[Changed x] ≤
+      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env program)))}[Changed x] ≤
       PqxdhJointIdentity.advantage primitives
-        (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup (driver env program) fallback ordinaryFallback) := by
+        (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env program) fallback ordinaryFallback) := by
   exact PqxdhGeneratedPhase1Prefix.authentication_bound attachedVerify primitives adapter baseImpl kem setup
-    (driver env program)
-    (fun index identity generated transcript => (driver_source_caps env program 0 0 noSign noCreate index identity generated transcript).1)
-    (fun index identity generated transcript => (driver_source_caps env program 0 0 noSign noCreate index identity generated transcript).2)
+    (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env program)
+    (fun index identity generated transcript => (driver_source_caps (completedBinding := completedBinding) env program 0 0 noSign noCreate index identity generated transcript).1)
+    (fun index identity generated transcript => (driver_source_caps (completedBinding := completedBinding) env program 0 0 noSign noCreate index identity generated transcript).2)
     fallback ordinaryFallback
 
 /-- The same single authentication loss covers arbitrary complete private continuations; the stopped forgery reduction need not execute their secret-dependent work. -/
@@ -127,18 +128,18 @@ theorem authentication_continuation_bound {KemSK Result : Type} {setup : Statefu
     (noCreate : ∀ reply, (program.main reply).IsQueryBoundP (ForwardedSource (baseSpec := baseSpec) Creating) 0)
     (fallback : DynamicForgery) (ordinaryFallback : PqxdhJointIdentity.Forgery)
     (next onChanged : Option (PqxdhPrivateCandidateAcceptance.Outcome
-      (Retained setup KemSK (driver env program).State)) × PqxdhPhase1AcceptanceOracle.BareState 1 → ProbComp Result) :
+      (Retained setup KemSK (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env program).State)) × PqxdhPhase1AcceptanceOracle.BareState 1 → ProbComp Result) :
     discreteDistance (privateRun attachedVerify primitives 1
-      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (driver env program)) >>= next)
+      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env program)) >>= next)
       (privateRun attachedVerify primitives 1
-        (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (driver env program)) >>= fun state =>
+        (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env program)) >>= fun state =>
         if changedBit state then onChanged state else next state) ≤
       (PqxdhJointIdentity.advantage primitives
-        (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup (driver env program) fallback ordinaryFallback)).toReal := by
+        (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env program) fallback ordinaryFallback)).toReal := by
   exact PqxdhGeneratedPhase1Prefix.authentication_continuation_bound attachedVerify primitives adapter baseImpl kem setup
-    (driver env program)
-    (fun index identity generated transcript => (driver_source_caps env program 0 0 noSign noCreate index identity generated transcript).1)
-    (fun index identity generated transcript => (driver_source_caps env program 0 0 noSign noCreate index identity generated transcript).2)
+    (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env program)
+    (fun index identity generated transcript => (driver_source_caps (completedBinding := completedBinding) env program 0 0 noSign noCreate index identity generated transcript).1)
+    (fun index identity generated transcript => (driver_source_caps (completedBinding := completedBinding) env program 0 0 noSign noCreate index identity generated transcript).2)
     fallback ordinaryFallback next onChanged
 
 /-- Subsequent source work is charged at every complete candidate and private-state result, including publication and finish failure. -/
@@ -149,12 +150,12 @@ theorem driver_continuation_total {Result : Type} {setup : StatefulPhase1Setup b
     (budget : Budget) (bounded : ∀ reply, Bounded (program.main reply) budget)
     (index : Nat) (publicIdentity : PublicIdentity) (generated : Generated setup Unit)
     (transcript : Phase1PublicTranscript setup.Context)
-    (next : Phase1Candidate × (driver env program).State → OracleComp (SelectorSpec baseSpec) Result)
+    (next : Phase1Candidate × (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env program).State → OracleComp (SelectorSpec baseSpec) Result)
     (qNext : Nat) (nextBound : ∀ result, (next result).IsTotalQueryBound qNext) :
-    (((driver env program).main index publicIdentity generated transcript) >>= next).IsTotalQueryBound
+    (((PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env program).main index publicIdentity generated transcript) >>= next).IsTotalQueryBound
       ((qWrite + bill qLocal budget) + qNext) := by
   exact isTotalQueryBound_bind
-    (driver_total env program qWrite writerBound qLocal localBound budget bounded index publicIdentity generated transcript)
+    (driver_total (completedBinding := completedBinding) env program qWrite writerBound qLocal localBound budget bounded index publicIdentity generated transcript)
     nextBound
 
 end BeaconcryptCore.Computational.PqxdhPhase2GeneratedDriverBounds

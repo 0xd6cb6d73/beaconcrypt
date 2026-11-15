@@ -5,7 +5,9 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengePrefixInput
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhFirstRecordConfidentiality (ConfPostSpec AdvSpec)
 open PqxdhRecordConfidentialityChallenge PqxdhRecordConfidentialityTrace
 open RawCtxProtocolReveals (Owner)
@@ -93,7 +95,7 @@ variable (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin)
   (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
 local notation "Full" => (PqxdhInitialPendingPost.Front RatchetChain M P I D K S B ×
   PqxdhInitialOriginPost.Trace Origin S B) × Backend
-local notation "postImpl" => PqxdhLaterChallengeCutChronology.postImpl mark sender route decode impl
+local notation "postImpl" => PqxdhLaterChallengeCutChronology.postImpl (completedBinding := completedBinding) mark sender route decode impl
 
 
 /-- The actual earlier challenge and both original prefix pieces, with its pre-send input retained in a specified chronological log. -/
@@ -135,10 +137,10 @@ theorem earlier_input (owner : Owner S B) (number : Std.U64) (bit : Bool)
       RawCtxSelectedPendingCut.requestAddress kernel.send_chain ∈ after.2.1.1.2 := by
   rcases earlier with ⟨left, right, next, prior, requestState, sentAfter, record,
     priorReached, unused, equal, clean, sent, suffix, sequence⟩
-  obtain ⟨kernel, selected, member⟩ := PqxdhLaterChallengeSendLog.challenge_input
+  obtain ⟨kernel, selected, member⟩ := PqxdhLaterChallengeSendLog.challenge_input (completedBinding := completedBinding)
     source writer stage pre application initial selector aux mark sender route decode
     owner (if bit then right else left) requestState sentAfter record sent
-  have retained := PqxdhLaterChallengePrefixLog.reaches_monotone
+  have retained := PqxdhLaterChallengePrefixLog.reaches_monotone (completedBinding := completedBinding)
     source writer stage pre application initial selector aux mark sender route decode
     owner number bit _ _ _ _ sentAfter after suffix
   exact ⟨left, right, next, prior, requestState, sentAfter, record, kernel,
@@ -160,11 +162,11 @@ theorem pending_input {Tag Value : Type}
     (saved : Backend) (tag : Tag)
     (supported : RawCtxForwardScan.Cut.pending tag saved ∈ support
       (RawCtxForwardScan.scan privateQuery selected selection impl work covered after.2)) :
-    InputBefore source writer stage pre application initial selector aux mark sender route decode
+    InputBefore (completedBinding := completedBinding) source writer stage pre application initial selector aux mark sender route decode
       owner number bit client rest before current ambient after saved.1.1.2 := by
   obtain ⟨left, right, next, prior, requestState, sentAfter, record, kernel,
     priorReached, unusedPrior, equal, clean, sent, suffix, sequence, selectedKernel, member⟩ :=
-      earlier_input source writer stage pre application initial selector aux mark sender route decode
+      earlier_input (completedBinding := completedBinding) source writer stage pre application initial selector aux mark sender route decode
         owner number bit client rest before current ambient after (reaches_earlier reached unused target)
   have retained := PqxdhLaterChallengeInputLog.pending_monotone
     source writer stage pre application initial selector aux privateQuery selected selection frame

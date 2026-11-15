@@ -33,17 +33,6 @@ theorem flagged_iff (server : Credential source) (calls : List (Call Registratio
   classical
   simp only [flagged, List.any_eq_true, decide_eq_true_eq, BadCalls]
 
-/-- Outside the one global native exception, each protected successful Init accept has earlier same-key unsigned issuance at its actual cut. -/
-theorem accept_issued (server : Credential source) (calls : List (Call RegistrationNativeRawAdapter.TypedSpec Whole))
-    (good : ¬ BadCalls server calls) (packet : registration.InitPacket) (session : Nat) (before after : Whole)
-    (member : (⟨.inr (.accept packet), before, .ok (some session), after⟩ : Call RegistrationNativeRawAdapter.TypedSpec Whole) ∈ calls)
-    (current : RegistrationNativeBeaconFrontend.Owner source) (owned : current ∈ before.1.beacons)
-    (keyProtected : packet.mldsa_public_key = current.mldsa.publicKey) :
-    MldsaTranscriptAuth.Issued (RegistrationAuthenticationNative.trial true before.1.server.pin packet
-      (RegistrationSigningShared.historyFor (PqxdhRefinement.absBytes packet.mldsa_public_key) (RegistrationNativeMldsaShared.nativeProject before.1))) := by
-  by_contra absent
-  exact good ⟨_, member, .accept packet session before.1 current owned keyProtected absent⟩
-
 /-- The same single exception covers every protected successful Beacon finish, using its actual earlier signing prefix. -/
 theorem finish_issued (server : Credential source) (calls : List (Call RegistrationNativeRawAdapter.TypedSpec Whole))
     (good : ¬ BadCalls server calls) (index : Nat) (packet : registration.ResponsePacket) (application : Pqxdh.Bytes)
@@ -59,7 +48,7 @@ theorem finish_issued (server : Credential source) (calls : List (Call Registrat
 
 variable (source) (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable [primitive : BeaconcryptCore.Refinement.AdapterSealPrimitive.Operations]
 variable (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
 variable (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
@@ -154,11 +143,6 @@ end BeaconcryptCore.Computational.RegistrationNativePlatformMldsaOriginJournal
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativePlatformMldsaOriginJournal.flagged_iff
 
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformMldsaOriginJournal.accept_issued' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformMldsaOriginJournal.accept_issued
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformMldsaOriginJournal.finish_issued' depends on axioms: [propext,
  Classical.choice,

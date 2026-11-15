@@ -50,6 +50,29 @@ private theorem finish (published : RustM (RegistrationNativePairedServerService
         subst result
         exact ⟨rfl, rfl⟩
 
+private theorem ad_hash_trace (pending : registration.ServerAdHash) (before : RegistrationNativeG2Trace.State)
+    (result : RustM (core.result.Result registration.ServerInitialKdf pqxdh.ServerState) × RegistrationNativeG2Trace.State)
+    (supported : result ∈ support (run (n := n) (KemSK := KemSK)
+      (RegistrationServerMaterialFrontend.adHash pending) before)) : result.2 = before := by
+  unfold RegistrationServerMaterialFrontend.adHash at supported
+  cases requested : pending.request with
+  | fail error | div =>
+      simp only [requested, pure_source, mem_support_pure_iff] at supported
+      subst result
+      rfl
+  | ok request =>
+      simp only [requested, bind_source, mem_support_bind_iff] at supported
+      obtain ⟨digest, queried, continued⟩ := supported
+      have same : digest.2 = before := by
+        simp only [run, RegistrationServerMaterialFrontend.effect, nativeLift, simulateQ_spec_query,
+          RegistrationNativeG2Trace.handler, RegistrationNativeG2Trace.begin, RegistrationNativeG2Trace.finish,
+          StateT.run, support_map] at queried
+        obtain ⟨reply, _called, returned⟩ := queried
+        exact (congrArg Prod.snd returned).symm
+      rw [same, pure_source, mem_support_pure_iff] at continued
+      subst result
+      rfl
+
 attribute [local irreducible] peer.begin_completion_lookup RegistrationServerSdkSource.preflight
 
 /-- Every original complete result has exactly its own successful Server descriptor suffix, across all failure branches. -/
@@ -83,6 +106,14 @@ theorem complete (role : Role) (wire : RegistrationNativeWire.Wire) (reservePeer
     obtain ⟨reply, _called, returned⟩ := asked
     exact (congrArg Prod.snd returned).symm
   rw [same] at continued
+  split at continued <;> try {
+    rw [pure_source, mem_support_pure_iff] at continued
+    subst result
+    simp [present] }
+  rw [bind_source, mem_support_bind_iff] at continued
+  obtain ⟨hashed, hashCalled, continued⟩ := continued
+  have hashSame := ad_hash_trace (KemSK := KemSK) _ before hashed hashCalled
+  rw [hashSame] at continued
   split at continued <;> try {
     rw [pure_source, mem_support_pure_iff] at continued
     subst result

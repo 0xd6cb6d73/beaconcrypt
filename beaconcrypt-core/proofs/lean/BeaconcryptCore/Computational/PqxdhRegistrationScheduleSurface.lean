@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhRegistrationScheduleInitial
 
-/-! The public constructor accepts arbitrary pin bytes and runs the actual initialization and 32-byte pin parse before the source-ordered generator. Typed construction is internal to this surface. Public owner and pending handles remain arbitrary natural numbers, including future and missing slots. -/
+/-! The classical constructor projection accepts arbitrary identity-pin bytes before its source-ordered generator. It retains arbitrary public owner and pending handles, including future and missing slots. Current full Server-pin admission is outside this projected surface. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core PqxdhRefinement
@@ -11,15 +11,15 @@ open PqxdhJointIdentity PqxdhJointGapDh PqxdhServerAuthExperiment PqxdhServerAut
 open PqxdhBeaconPhase2Preparation (Word32)
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response A Result : Type}
 
-/-- `Beacon::try_new` parses the pin with libsodium-rs 0.2.4 `crypto_sign::PublicKey::from_bytes` (beacon.rs:67-68), which only checks that the input is exactly 32 bytes long and copies it. Construction performs no conversion or point check. A pin that `ed25519_pk_to_curve25519` rejects is noticed only by finish, which converts the response identity (beacon.rs:432) and requires it to equal the pin byte for byte (core pqxdh.rs:545); such a Beacon is created normally and can publish bundles, a finish call before its bundle leaves it unchanged, and its first finish attempt after the bundle aborts it. The finish model reproduces this by construction; it is not proved as a separate theorem. The `Checks` argument is not consulted; it is kept so that existing call sites and statements keep their form. -/
+/-- The retained classical projection parses only a 32-byte Ed25519 identity. It models no full current Server pin, whose actual Native constructor additionally admits the mandatory Server ML-DSA public key before Beacon key generation. `Checks` is unused by this width-only classical parse. -/
 def parsePin (_checks : Checks) (bytes : Pqxdh.Bytes) : Option Word32 :=
   toWord32 bytes
 
-/-- The raw pin parse is exactly the 32-byte width parse for every `checks`; no point predicate is consulted, as in `Beacon::try_new`. -/
+/-- The classical projected pin parse is exactly the 32-byte width parse for every `checks`; no point predicate is consulted. -/
 theorem parsePin_eq_toWord32 (checks : Checks) (bytes : Pqxdh.Bytes) :
     parsePin checks bytes = toWord32 bytes := rfl
 
-/-- Runtime initialization runs first on every attempt, including pin bytes of the wrong width. Failed initialization or a wrong-width pin keeps all original protocol state and draws no Beacon key material, as `Beacon::try_new` returns `KeyGenError` there; every 32-byte pin, including one that is not a valid Ed25519 point, then runs the original typed constructor exactly once. -/
+/-- In this classical projection, initialization precedes the width parse; a failed reply preserves the original state and draws no projected Beacon key material. The current full-pin constructor correspondence is proved by the actual Native source path. -/
 noncomputable def rawCreate (setup : Setup baseSpec KemSK) (checks : Checks)
     (ensureInit : StateT A ProbComp Bool) (bytes : Pqxdh.Bytes) (keyId : Std.U64) :
     StateT (A × State KemSK) ProbComp (Option Nat) := fun state => do

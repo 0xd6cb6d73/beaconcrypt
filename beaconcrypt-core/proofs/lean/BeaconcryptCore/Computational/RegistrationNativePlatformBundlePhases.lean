@@ -29,7 +29,7 @@ private theorem state_get_apply {S : Type} {m : Type → Type} [Monad m]
 
 private theorem native_get (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (before : Local n KemSK source) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (before : Local n KemSK source) :
     (RegistrationNativePlatformBundleLower.native coins setup checks representation created
       (get : M n KemSK source RegistrationServerRoleBackend.State (RegistrationNativeBeaconFrontend.State source))).run before =
       pure (before.1, before) := by
@@ -38,7 +38,7 @@ private theorem native_get (coins : QueryImpl unifSpec (StateT Platform ProbComp
 
 private theorem native_source (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : M n KemSK source RegistrationServerRoleBackend.State Value)
     (before after : Local n KemSK source) (previous next : Platform) (value : Value)
     (supported : ((value, after), next) ∈ support (((RegistrationNativePlatformBundleLower.native coins setup checks representation created work).run before).run previous)) :
@@ -59,7 +59,7 @@ private theorem native_source (coins : QueryImpl unifSpec (StateT Platform ProbC
 
 private theorem sampled (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (draw : ProbComp Value)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (draw : ProbComp Value)
     (before after : Local n KemSK source) (previous next : Platform) (value : Value)
     (supported : ((value, after), next) ∈ support (((RegistrationNativePlatformBundleLower.native coins setup checks representation created
       (RegistrationNativeBeaconFrontend.sample draw)).run before).run previous)) : after.1 = before.1 := by
@@ -79,7 +79,7 @@ private theorem masked_set (index : Nat) (pending : registration.BeaconPending) 
 
 private theorem after_shape (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (owner : Owner source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (owner : Owner source)
     (oneTime : PqxdhJointGapDh.ScalarBytes) (published : registration.PublishedBeaconInit (alloc.vec.Vec U8))
     (before : Local n KemSK source) (previous : Platform)
     (result : (RustM (Option (alloc.vec.Vec U8)) × Local n KemSK source) × Platform)
@@ -107,7 +107,7 @@ set_option maxHeartbeats 1000000 in
 /-- Actual local bundle phases include every failed primitive, optional writer reply and divergence outcome. -/
 theorem bundle (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) (index : Nat)
     (before : Local n KemSK source) (previous : Platform)
     (result : (RustM (Option (alloc.vec.Vec U8)) × Local n KemSK source) × Platform)
@@ -173,7 +173,7 @@ private theorem map_apply {S X Y : Type} {m : Type → Type} [Monad m] [LawfulMo
 /-- Literal source closure retains exactly the same all-outcome phase-change alternative. -/
 theorem native_shape (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) (index : Nat)
     (before : RegistrationNativeExperiment.State n KemSK source) (previous : Platform)
     (result : (RustM (Option Pqxdh.Bytes) × RegistrationNativeExperiment.State n KemSK source) × Platform)
@@ -202,7 +202,7 @@ private theorem pending_lookup (before after : RegistrationNativeBeaconFrontend.
 /-- A retained pending capability is inherited, or supplied by this same actual successful source bundle at its selected slot. -/
 theorem native_pending (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) (target : Nat)
     (before after : RegistrationNativeExperiment.State n KemSK source) (previous next : Platform) (reply : RustM (Option Pqxdh.Bytes))
     (supported : ((reply, after), next) ∈ support (((RegistrationNativePlatformExperiment.bundle coins setup checks representation created source writer target).run before).run previous))

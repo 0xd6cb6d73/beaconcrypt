@@ -6,6 +6,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
+set_option warningAsError true
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativeSecretWordMaterialSessions
 open RegistrationNativeSecretWordServerMaterial (State Result)
@@ -81,15 +82,28 @@ theorem complete_sessions (wire : RegistrationNativeWire.Wire) (reservePeer : Bo
                   simp only [resumeEq, mem_support_pure_iff] at supported
                   subst result
                   rfl
-              | Ok initial =>
-                  simp only [resumeEq] at supported
-                  split at supported
-                  · rw [mem_support_bind_iff] at supported
-                    obtain ⟨published, _possible, supported⟩ := supported
-                    exact finish_sessions published before result supported
-                  · rw [mem_support_pure_iff] at supported
-                    subst result
-                    rfl
+              | Ok selected =>
+                  simp only [resumeEq, mem_support_bind_iff] at supported
+                  obtain ⟨hashed, _, supported⟩ := supported
+                  cases hashed with
+                  | fail error | div =>
+                      simp only [mem_support_pure_iff] at supported
+                      subst result
+                      rfl
+                  | ok answer => cases answer with
+                    | Err previous =>
+                        simp only [mem_support_pure_iff] at supported
+                        subst result
+                        rfl
+                    | Ok initial =>
+                        dsimp only at supported
+                        split at supported
+                        · rw [mem_support_bind_iff] at supported
+                          obtain ⟨published, _possible, supported⟩ := supported
+                          exact finish_sessions published before result supported
+                        · rw [mem_support_pure_iff] at supported
+                          subst result
+                          rfl
           · rw [mem_support_pure_iff] at supported
             subst result
             rfl

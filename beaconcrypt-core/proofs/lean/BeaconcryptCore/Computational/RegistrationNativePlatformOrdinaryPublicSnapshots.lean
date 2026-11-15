@@ -36,7 +36,7 @@ variable (adversary : RegistrationNativeExperiment.Public → OracleComp (Regist
 variable (previous : Platform)
 
 
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 local notation "Native" => RegistrationNativeExperiment.State n KemSK source
 local notation "Whole" => RegistrationNativeLedger.State × (Native × Platform)
 local notation "typed" => RegistrationNativePlatformOrdinaryKemClientJournal.actual setup checks wire route representation created credential view failure allocation reserveRegistration reservePeer reserveFrame erased helper writer

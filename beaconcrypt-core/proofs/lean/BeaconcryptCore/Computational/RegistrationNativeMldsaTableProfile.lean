@@ -58,12 +58,12 @@ theorem source_profile (setup : Setup base KemSK) (checks : Checks) (wire : Regi
   | none => simp only [current, RegistrationNativeMldsaTableStart.restored, Option.bind_none]
   | some initial =>
       have member : initial ∈ initialized.1 := by rw [current]; rfl
-      obtain ⟨key, server, owners⟩ := RegistrationNativeMldsaTableStart.initialized source setup ensureInit identityIndex
+      obtain ⟨key, server⟩ := RegistrationNativeMldsaTableStart.initialized source setup ensureInit identityIndex
         serverKeyId initialized supported initial member
       simp only [current, server.1, RegistrationNativeMldsaTableStart.restored, Option.bind_some,
         Option.map_some, RegistrationNativeMldsaMap.initial_public]
       have actual := RegistrationNativeMldsaTableRun.run source setup checks wire route representation initial.created
-        initial.credential key bounds mode (adversary initial.public) initial.state initialized.2 server owners
+        initial.credential key bounds mode (adversary initial.public) initial.state initialized.2 server
       rw [actual]
       rw [RegistrationNativeMldsaMap.initial,
         RegistrationNativeMldsaOpaque.restore_live source key initialized.2 initial.credential key server]

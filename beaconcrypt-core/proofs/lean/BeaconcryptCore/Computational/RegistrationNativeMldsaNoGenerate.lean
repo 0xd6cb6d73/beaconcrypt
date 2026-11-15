@@ -142,10 +142,17 @@ private theorem afterOccupancy {Reader Response : Type} (setup : Setup base KemS
   | ok result => cases result with
     | Err previous => exact pure_good source _
     | Ok pending =>
-        simp only
-        split
-        · exact fromInitial source credential setup codec encode control pending
-        · exact pure_good source _
+        apply bind_good source _ _ (lift_good source _)
+        intro hashed
+        cases hashed with
+        | fail error | div => exact pure_good source _
+        | ok result => cases result with
+          | Err previous => exact pure_good source _
+          | Ok initial =>
+              simp only
+              split
+              · exact fromInitial source credential setup codec encode control initial
+              · exact pure_good source _
 
 /-- Complete native build has no named generation request, including all failed prefixes. -/
 theorem build {Reader Response : Type} (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -182,7 +189,7 @@ open RegistrationNativeMldsaShared (Local)
 open RegistrationNativeBeaconFrontend (Owner)
 variable (setup : Setup base KemSK) (checks : Checks)
 variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 
 private theorem native (work : RegistrationNativeBeaconFrontend.M n KemSK source
     RegistrationServerRoleBackend.State Value) :
@@ -192,16 +199,8 @@ private theorem native (work : RegistrationNativeBeaconFrontend.M n KemSK source
 /-- Init publication has no named generation request. -/
 theorem outgoing (index : Nat) (owner : Owner source)
     (query : RegistrationBeaconInitExecutor.Spec.Domain) :
-    Good source (RegistrationNativeMldsaBundle.outgoing (n := n) setup checks representation created index owner query) := by
-  cases query with
-  | inl query => cases query with
-    | hash request => exact native source setup checks representation created _
-    | sign request payload digest =>
-        intro before
-        simp only [RegistrationNativeMldsaBundle.outgoing, StateT.run]
-        exact allQueriesSatisfy_bind (call_all source owner.mldsa .environment request before.2.2.server.world.world.1)
-          (fun _ => allQueriesSatisfy_pure _ _)
-  | inr request => exact native source setup checks representation created _
+    Good source (RegistrationNativeMldsaBundle.outgoing (n := n) setup checks representation created index owner query) :=
+  native source setup checks representation created _
 
 private theorem afterPublished (index : Nat) (owner : Owner source)
     (oneTime : PqxdhJointGapDh.ScalarBytes) (published : RustM (RegistrationBeaconInitExecutor.Result Pqxdh.Bytes)) :
@@ -233,7 +232,7 @@ theorem bundle (wire : RegistrationNativeWire.Wire) (index : Nat) (before : Loca
             let published ← simulateQ (RegistrationNativeMldsaBundle.outgoing setup checks representation created index owner)
               (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨owner.pin.binding⟩
                 (RegistrationNativeBeaconFrontend.inputs setup owner)
-                ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)
+                ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)
             RegistrationNativeMldsaBundle.afterPublished setup checks representation created index owner oneTime published).run current).AllQueriesSatisfy (Allowed source) :=
         bind_good source _ _
           (simulate_good source _ (outgoing source setup checks representation created index owner) _)

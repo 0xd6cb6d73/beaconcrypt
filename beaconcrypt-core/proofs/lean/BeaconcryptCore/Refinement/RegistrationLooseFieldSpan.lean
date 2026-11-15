@@ -1,6 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Refinement.RegistrationLooseArgument
 import BeaconcryptCore.Refinement.RegistrationPreflightCoverage
+import BeaconcryptCore.Refinement.RegistrationPreflightFour
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM
@@ -198,6 +199,23 @@ theorem six_atoms (input start : Slice U8) (a0 a1 a2 a3 a4 a5 : U8)
   · rw [startBytes, bytes0, bytes1, bytes2, bytes3, bytes4, bytes5, work.consumed]
     rfl
 
+theorem four_atoms (input start : Slice U8) (a0 a1 a2 a3 : U8)
+    (allowed0 : a0 = 0#u8 ∨ a0 = 2#u8) (allowed1 : a1 = 0#u8 ∨ a1 = 2#u8)
+    (allowed2 : a2 = 0#u8 ∨ a2 = 2#u8) (allowed3 : a3 = 0#u8 ∨ a3 = 2#u8)
+    (begin : RegistrationPreflightSix.Start input start)
+    (work : RegistrationPreflightFour.Chain begin.tail a0 a1 a2 a3) :
+    ∃ atoms : List Atom, atoms.length = 4 ∧ atoms.map major = [a0, a1, a2, a3] ∧
+      input.val = start.val ++ atomsBytes atoms := by
+  have startBytes := strip_span input start begin.tail begin.source
+  obtain ⟨atom0, major0, bytes0⟩ := field_span begin.tail work.first.tail a0 allowed0 work.first.source
+  obtain ⟨atom1, major1, bytes1⟩ := field_span work.first.tail work.second.tail a1 allowed1 work.second.source
+  obtain ⟨atom2, major2, bytes2⟩ := field_span work.second.tail work.third.tail a2 allowed2 work.third.source
+  obtain ⟨atom3, major3, bytes3⟩ := field_span work.third.tail work.fourth.tail a3 allowed3 work.fourth.source
+  refine ⟨[atom0, atom1, atom2, atom3], rfl, ?_, ?_⟩
+  · simp only [List.map_cons, List.map_nil, major0, major1, major2, major3]
+  · rw [startBytes, bytes0, bytes1, bytes2, bytes3, work.consumed]
+    rfl
+
 end BeaconcryptCore.Refinement.RegistrationLooseFieldSpan
 
 /-- info: 'BeaconcryptCore.Refinement.RegistrationLooseFieldSpan.try_usize_value' depends on axioms: [propext,
@@ -241,3 +259,9 @@ end BeaconcryptCore.Refinement.RegistrationLooseFieldSpan
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Refinement.RegistrationLooseFieldSpan.six_atoms
+
+/-- info: 'BeaconcryptCore.Refinement.RegistrationLooseFieldSpan.four_atoms' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.RegistrationLooseFieldSpan.four_atoms

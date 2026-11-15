@@ -25,12 +25,12 @@ theorem given_cut (crypto : Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetM
     (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (view : RegistrationNativePlatformSourceSeal.KeyView) (correct : view.Correct) (failure : primitive.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp)) (erased : commitment.CommitmentTranscript)
     (rawAllocation : alloc.vec.Vec U8 → Usize → StateT Platform ProbComp (RustM (core.result.Result Unit E)))
     (serializer : U64 → U64 → Std.Array (Slice U8) 3#usize → Slice U8 → StateT Platform ProbComp (RustM (Usize × Slice U8)))
-    (owner : Owner source) (original : registration.BeaconPending) (oneTime : PqxdhJointGapDh.ScalarBytes)
+    (owner : Owner source) (original : registration.BeaconPending) {adDigest : CtxRomAuth.CtxDigest} (oneTime : PqxdhJointGapDh.ScalarBytes)
     (packet :registration.ResponsePacket) (application :Pqxdh.Bytes)
     (middle agreed recorded :Local n KemSK source)
     (capability :agreement.BeaconAgreement) (completed :registration.CompletedBeacon)
@@ -38,7 +38,7 @@ theorem given_cut (crypto : Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetM
     (agreementRun :(.ok (.BeaconComplete capability),agreed)∈support
       ((lower setup checks representation created
         (simulateQ (RegistrationNativeBeaconFrontend.agreement setup owner oneTime)
-          (RegistrationAgreementExecutor.beacon ⟨original,packet⟩))).run middle))
+          (RegistrationAgreementExecutor.beacon (RegistrationResponseExecutor.acceptedResponse original packet adDigest)))).run middle))
     (recordRun :(.ok (.Ok completed),recorded)∈support
       ((lower setup checks representation created
         (simulateQ (RegistrationNativeBeaconFrontend.record setup wire)
@@ -68,12 +68,12 @@ theorem given_cut (crypto : Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetM
     (kemCiphertext : packet.public.kem_cipher_text = token.agreement.pending.kem_ciphertext)
     (control : pqxdh.ServerState) (stagePin : session.ServerAuthenticationPin) (availability : pqxdh.KeyIdAvailability) (serverApplication : Slice U8)
     (serverInitial : registration.ServerInitialKdf) (hashed : registration.ServerResponseHash)
-    (serverStarted : registration.begin_server_completion control stagePin availability token.agreement serverApplication = .ok (.Ok serverInitial))
+    (serverStarted : BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission control stagePin availability token.agreement serverApplication serverInitial)
     (issued : RegistrationNativePlatformSourceFinishContents.RecordCut (n := n) coins setup wire view failure allocation erased
       rawAllocation serializer serverInitial hashed cache)
     (extension : RegistrationNativeWorldCache.cache recorded.2.2 ≤ cache)
     (ciphertext : hashed.ciphertext = packet.application) (collisionFree : ¬ CacheHasCollision cache) :
-    RegistrationNativeCompletionContents.Outcome serverInitial ⟨original,packet⟩ capability completed application ∧
+    RegistrationNativeCompletionContents.Outcome serverInitial (RegistrationResponseExecutor.acceptedResponse original packet adDigest) capability completed application ∧
     application=TranscriptAuthParts.absSlice serverApplication ∧
     ((token.agreement.root.bytes=capability.root.bytes ∧
       RegistrationNativeInitializedInitializers.Initializers crypto setup.source token.agreement capability serverInitial beaconInitial) ∨result.2.2=true) := by
@@ -82,21 +82,25 @@ theorem given_cut (crypto : Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetM
         (simulateQ (RegistrationNativeBeaconFrontend.record setup wire)
           (RegistrationBeaconRecordExecutor.begin capability))).run agreed) :=by
     simpa only [RegistrationBeaconRecordExecutor.begin,started,RegistrationBeaconRecordExecutor.continueWith] using recordRun
+  have acceptedCoherent : (RegistrationResponseExecutor.acceptedResponse original packet adDigest).control.expected_server_binding =
+      (RegistrationResponseExecutor.acceptedResponse original packet adDigest).binding.server_pin.binding := by
+    simpa only [RegistrationResponseExecutor.acceptedResponse, RegistrationResponseExecutor.completedBinding_pin] using coherent
   have compared := RegistrationNativeLoggedStagedRootAgreement.root_or_marker setup checks functional representation created work result sampled
     initPacket initAuth serverBefore serverAfter accepted receipt owner oneTime token tokenEq matched
-    ⟨original, packet⟩ coherent capability middle agreed agreementRun target row publicKey prekey serverIdentity ephemeral kemCiphertext
+    (RegistrationResponseExecutor.acceptedResponse original packet adDigest) acceptedCoherent capability middle agreed agreementRun target row publicKey prekey serverIdentity ephemeral kemCiphertext
   obtain ⟨_input, _atRoot, _original, _collected, _fields, _prepared, literal, _stateEq⟩ :=
-    RegistrationNativeBeaconAgreementInputReceipt.local_cut setup checks representation created owner oneTime ⟨original, packet⟩ coherent capability middle agreed agreementRun
-  have sameBinding : capability.binding = original.binding := congrArg agreement.BeaconAgreement.binding literal
+    RegistrationNativeBeaconAgreementInputReceipt.local_cut setup checks representation created owner oneTime (RegistrationResponseExecutor.acceptedResponse original packet adDigest) acceptedCoherent capability middle agreed agreementRun
+  have sameBinding : capability.binding = RegistrationResponseExecutor.completedBinding original adDigest := congrArg agreement.BeaconAgreement.binding literal
   have sameCiphertext : capability.application_ciphertext = packet.application := congrArg agreement.BeaconAgreement.application_ciphertext literal
   obtain ⟨serverBefore, serverAfter, serverRun, serverExtension⟩ := issued
   obtain ⟨ad, sender, assigned, plaintext, completedBinding⟩ := RegistrationNativePlatformPairedRecord.run coins setup checks wire representation created
     view correct failure allocation erased rawAllocation serializer serverInitial hashed serverBefore serverAfter capability completed agreed recorded cache
     serverRun serverExtension recordCalled extension (ciphertext.trans sameCiphertext.symm) collisionFree
-  have contents : RegistrationNativeCompletionContents.Outcome serverInitial ⟨original, packet⟩ capability completed application :=
-    ⟨sameBinding, sameCiphertext, ad.trans (congrArg session.RegistrationBinding.associated_data sameBinding), sender,
-      assigned, returned.trans plaintext, by simpa only [sameBinding] using completedBinding⟩
-  have serverApplicationEq := (RegistrationNativeServerBindingReceipt.initial_root control stagePin availability token.agreement serverApplication serverInitial serverStarted).2.2.1
+  have contents : RegistrationNativeCompletionContents.Outcome serverInitial (RegistrationResponseExecutor.acceptedResponse original packet adDigest) capability completed application :=
+    ⟨sameBinding, sameCiphertext, ad.trans (congrArg session.CompletedRegistrationBinding.associated_data sameBinding), sender,
+      assigned, returned.trans plaintext, by simpa only [sameBinding, RegistrationResponseExecutor.acceptedResponse] using completedBinding⟩
+  obtain ⟨_serverDigest, _serverBinding, _completed, _same, serverApplicationEq, _started⟩ :=
+    (RegistrationNativeServerBindingReceipt.initial_root control stagePin availability token.agreement serverApplication serverInitial serverStarted).2
   refine ⟨contents, ?_, ?_⟩
   · exact contents.2.2.2.2.2.1.trans (congrArg TranscriptAuthParts.absSlice serverApplicationEq)
   · rcases compared with rootEq | failed

@@ -55,6 +55,8 @@ variable (generation : source.generate.IsTotalQueryBound qGenerate)
 variable (signing : ∀ key request, (source.sign key request).IsTotalQueryBound qSign)
 variable (signed : ∀ request, (sign request).IsTotalQueryBound qSign)
 local notation "callback" => handler (n := n) setup checks wire source sign selectedOwner selectedAccept publicPrekey view failure allocation reserveRegistration reservePeer reserveFrame erased helper writer
+-- The concrete OPEN accept program builds the 2638-byte Init transcript; keep it opaque so unifying the accept goal with `embed_bound` does not whnf-evaluate it.
+attribute [local irreducible] RegistrationNativePlatformServerOpenControl.accept in
 include generation signing signed in
 /-- Every literal corrected public callback has a derived native/global weighted bill from source controllers and primitive sampler caps, with all P histories retained. -/
 theorem handler_bound (query : RegistrationNativeRawAdapter.TypedSpec.Domain)

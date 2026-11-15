@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationServerReferenceSourceClient
+import BeaconcryptCore.Computational.RegistrationServerReferencePrefixSource
 
 /-! Exact post-authentication native Server agreement via the public root-reference preparation. The actual source prefix and every failed optional callback retain the complete local World; only the private family history and redundant outer cache are erased. An open-KEM collector can connect by its separate actual-prefix source law. -/
 open OracleComp OracleSpec CoreModels Aeneas

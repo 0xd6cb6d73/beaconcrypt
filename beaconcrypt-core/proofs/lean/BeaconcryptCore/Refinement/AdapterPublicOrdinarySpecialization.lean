@@ -27,13 +27,13 @@ theorem put (slot : ratchet.RatchetKernelSlot) (kernel : beaconcrypt_core.ratche
       beaconcrypt_public_ordinary.ratchet.RatchetKernelSlot.put slot kernel := by rfl
 
 omit [PublicWrapperPlatform.Material] [AdapterInitEdPrimitive.Operations] [PublicWrapperPlatform.LocalOperations] [PublicWrapperPlatform.ContainerOperations] in
-theorem send (bytes : Slice U8) (target sender : U64) (ad : Array U8 281#usize)
+theorem send (bytes : Slice U8) (target sender : U64) (ad : Array U8 151#usize)
     (manager : ratchet.RatchetManager) :
     beaconcrypt_public_ordinary_request.ratchet.encrypt_message_with_ratchet (m := RustM) bytes target sender ad manager =
       beaconcrypt_public_ordinary.ratchet.encrypt_message_with_ratchet bytes target sender ad manager := by rfl
 
 omit [PublicWrapperPlatform.Material] [AdapterInitEdPrimitive.Operations] [PublicWrapperPlatform.LocalOperations] [PublicWrapperPlatform.ContainerOperations] in
-theorem receive (bytes : Slice U8) (sender : U64) (ad : Array U8 281#usize)
+theorem receive (bytes : Slice U8) (sender : U64) (ad : Array U8 151#usize)
     (manager : ratchet.RatchetManager) :
     beaconcrypt_public_ordinary_request.ratchet.decrypt_message_with_ratchet (m := RustM) bytes sender ad manager =
       beaconcrypt_public_ordinary.ratchet.decrypt_message_with_ratchet bytes sender ad manager := by rfl

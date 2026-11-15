@@ -1,6 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctEvent
 import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctTools
+import BeaconcryptCore.Computational.PqxdhCtxBirthdayPotential
 import BeaconcryptCore.Computational.PqxdhDeploymentIdealFrame
 
 /-!
@@ -29,25 +30,11 @@ variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response A X : Typ
 
 /-! ### The collision event and the counted potential -/
 
-/-- Two distinct inputs of the BLAKE2b cache with one digest. -/
-def CtxColl (cache : CtxRomAuth.CtxRO.QueryCache) : Prop := ∃ y z d, y ≠ z ∧ cache y = some d ∧ cache z = some d
-
-/-- The collision event is the generic one at the BLAKE2b oracle. -/
-theorem ctxColl_collIn (cache : CtxRomAuth.CtxRO.QueryCache) : CtxColl cache ↔ CollIn cache := Iff.rfl
-
 /-- The counted BLAKE2b calls of a primitive state: capability requests and record calls. -/
 def primCount (prim : PqxdhRecordLiftWorld.Primitive) : ℕ := prim.1.effects .hash + prim.1.native .hash
 
 /-- The counted BLAKE2b calls of the World. -/
 def hashCount (w : PqxdhRecordLiftWorld.State 2) : ℕ := primCount w.primitive
-
-open Classical in
-/-- The stopped birthday potential with `H` counted calls allowed, after `n` counted calls on a cache. -/
-noncomputable def drawPotential (H n : ℕ) (cache : CtxRomAuth.CtxRO.QueryCache) : ℝ≥0∞ :=
-  if n ≤ H then
-    (if CtxColl cache then 1 else 0) +
-      (((H - n : ℕ) : ℝ≥0∞) * size cache + ((H - n).choose 2 : ℝ≥0∞)) * (2 ^ 512 : ℝ≥0∞)⁻¹
-  else 0
 
 /-- The stopped birthday potential of a primitive state. -/
 noncomputable def primPotential (H : ℕ) (prim : PqxdhRecordLiftWorld.Primitive) : ℝ≥0∞ :=
@@ -55,45 +42,6 @@ noncomputable def primPotential (H : ℕ) (prim : PqxdhRecordLiftWorld.Primitive
 
 /-- The stopped birthday potential of the World. -/
 noncomputable def collPotential (H : ℕ) (w : PqxdhRecordLiftWorld.State 2) : ℝ≥0∞ := primPotential H w.primitive
-
-/-- One counted read of the lazily sampled BLAKE2b oracle does not raise the stopped birthday potential in expectation: a miss hits one of `|C|` cached digests with chance `|C|/2^512`, and `(b-1)(m+1) + C(b-1,2) = b·m + C(b,2) - m`. -/
-theorem draw_step (H n : ℕ) (cache : CtxRomAuth.CtxRO.QueryCache) (query : CtxRomAuth.CtxRO.Domain) :
-    wp ((CtxRomAuth.ctxRandomOracle query).run cache) (fun r => drawPotential H (n + 1) r.2) ≤
-      drawPotential H n cache := by
-  classical
-  by_cases room : n + 1 ≤ H
-  · obtain ⟨b, hb⟩ : ∃ b, H - n = b + 1 := ⟨H - n - 1, by omega⟩
-    have hb' : H - (n + 1) = b := by omega
-    have expand : ∀ r : CtxRomAuth.CtxDigest × CtxRomAuth.CtxRO.QueryCache, drawPotential H (n + 1) r.2 =
-        (if CtxColl r.2 then 1 else 0) + size r.2 * ((b : ℝ≥0∞) * (2 ^ 512 : ℝ≥0∞)⁻¹) +
-          (b.choose 2 : ℝ≥0∞) * (2 ^ 512 : ℝ≥0∞)⁻¹ := by
-      intro r
-      simp only [drawPotential, room, ↓reduceIte, hb']
-      ring
-    simp only [expand]
-    rw [OracleComp.ProgramLogic.wp_add, OracleComp.ProgramLogic.wp_add,
-      OracleComp.ProgramLogic.wp_const_mul]
-    have coll := PqxdhDeploymentHeadlineDctTools.ro_coll cache query
-    have sized := PqxdhDeploymentHeadlineDctTools.ro_size cache query
-    have constant : wp ((CtxRomAuth.ctxRandomOracle query).run cache)
-        (fun _ => (b.choose 2 : ℝ≥0∞) * (2 ^ 512 : ℝ≥0∞)⁻¹) ≤ (b.choose 2 : ℝ≥0∞) * (2 ^ 512 : ℝ≥0∞)⁻¹ :=
-      OracleComp.ProgramLogic.wp_le_const_of_support _ fun _ _ => le_rfl
-    rw [CtxRomAuth.ctxDigest_card] at coll
-    simp only [drawPotential, show n ≤ H by omega, ↓reduceIte, hb]
-    calc _ ≤ ((if CtxColl cache then 1 else 0) + size cache * ((2 : ℝ≥0∞) ^ 512)⁻¹) +
-          (size cache + 1) * ((b : ℝ≥0∞) * (2 ^ 512 : ℝ≥0∞)⁻¹) + (b.choose 2 : ℝ≥0∞) * (2 ^ 512 : ℝ≥0∞)⁻¹ := by
-          gcongr
-          · simp only [Nat.cast_pow, Nat.cast_ofNat] at coll
-            exact coll
-      _ = (if CtxColl cache then 1 else 0) +
-          (((b + 1 : ℕ) : ℝ≥0∞) * size cache + ((b + 1).choose 2 : ℝ≥0∞)) * (2 ^ 512 : ℝ≥0∞)⁻¹ := by
-          rw [Nat.choose_succ_succ', Nat.choose_one_right, Nat.cast_add, Nat.cast_add, Nat.cast_one]
-          ring
-  · have zero : ∀ r : CtxRomAuth.CtxDigest × CtxRomAuth.CtxRO.QueryCache, drawPotential H (n + 1) r.2 = 0 := by
-      intro r
-      simp only [drawPotential, room, ↓reduceIte]
-    simp only [zero]
-    exact le_trans (OracleComp.ProgramLogic.wp_le_const_of_support _ fun _ _ => le_rfl) zero_le
 
 /-! ### The primitive interpreter -/
 
@@ -345,17 +293,12 @@ theorem world_hash_count (caps : PqxdhServerAuthSourceCosts.KemCaps)
       hashCount result.2 ≤ PqxdhDeploymentHeadlineDctEvent.ctxCap budget := by
   intro result supported
   have hashes : ∀ kind : Fin 14, PqxdhDeploymentEnvironment.baseAllowance caps kind .hash =
-      if kind = 4 ∨ kind = 5 then 1 else 0 := fun _ => rfl
+      if kind = 4 ∨ kind = 5 then 2 else 0 := fun _ => rfl
   exact (PqxdhDeploymentEnvironment.c4_closed setup codec route _ _ _
     (PqxdhDeploymentIdealFrame.frame_idealD setup codec checks caps bounded
       (PqxdhDeploymentIdealParams.Target.ofCE budget g) ensureInit qInit initBound 0 runtime)
     (fun kind => PqxdhDeploymentEnvironment.allowanceG_hash _ _ hashes kind) setup.serverKeyId
     bounds mode budget adversary respects result supported).1
-
-/-- The empty cache has no entry. -/
-theorem size_empty : size (∅ : CtxRomAuth.CtxRO.QueryCache) = 0 := by
-  unfold size
-  simp
 
 open Classical in
 /-- `coll_world`: on the record world with the ideal environment of a target, the BLAKE2b cache ends with two distinct inputs of one digest with probability at most `C(ctxCap, 2)/2^512` (the stopped birthday potential does not increase, `world_step_coll`, starts at `C(ctxCap, 2)/2^512`, and is at least one on a collision, since every outcome makes at most `ctxCap` counted calls, `world_hash_count`). -/
@@ -395,20 +338,6 @@ end Bound
 end BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctHash
 
 -- Axiom guards (generated)
-
-/--
-info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctHash.ctxColl_collIn' does not depend on any axioms
--/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctHash.ctxColl_collIn
-
-/--
-info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctHash.draw_step' depends on axioms: [propext,
- Classical.choice,
- Quot.sound]
--/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctHash.draw_step
 
 /--
 info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctHash.expected_countCoin' depends on axioms: [propext,
@@ -489,14 +418,6 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctHash.world_hash_c
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctHash.world_hash_count
-
-/--
-info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctHash.size_empty' depends on axioms: [propext,
- Classical.choice,
- Quot.sound]
--/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctHash.size_empty
 
 /--
 info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctHash.coll_world' depends on axioms: [propext,

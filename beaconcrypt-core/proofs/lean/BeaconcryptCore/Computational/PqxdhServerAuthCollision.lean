@@ -491,16 +491,24 @@ theorem finish_thirds (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
   simp only [finishOracle, StateT.run_bind, StateT.run_get, pure_bind] at supported
   cases hphase : state.beacon.beacon.phase with
   | initSent control prekey oneTime kem =>
-      simp only [hphase, StateT.run_bind, mem_support_bind_iff] at supported
-      obtain ⟨staged, stageRun, supported⟩ := supported
-      obtain ⟨cache, extra, stagedEq, shape⟩ := stage_run setup codec beaconSeed
-        publicValue control state.beacon.beacon.identity oneTime kem raw state staged stageRun
-      simp only [StateT.run_get, StateT.run_set, StateT.run_pure, support_pure,
-        Set.mem_singleton_iff] at supported
-      obtain ⟨_, rfl, _, rfl, rfl⟩ := supported
-      rw [Ghost.accept_touches, stagedEq]
-      rcases shape with ⟨rfl, _, _⟩ | ⟨pending, _, rfl⟩ <;> simp only [
-        thirds, List.filterMap_append, List.filterMap_nil, List.filterMap_cons, List.append_nil]
+      simp only [hphase] at supported
+      split at supported
+      · simp only [StateT.run_bind, mem_support_bind_iff] at supported
+        obtain ⟨hashed, hashRun, supported⟩ := supported
+        obtain ⟨hashCache, hashedEq⟩ := hashOracle_step _ _ _ hashRun
+        simp only [StateT.run_get, support_pure, Set.mem_singleton_iff, exists_eq_left] at supported
+        obtain ⟨staged, stageRun, supported⟩ := supported
+        obtain ⟨cache, extra, stagedEq, shape⟩ := stage_run (PqxdhTranscriptAd.completedOf control hashed.1) setup codec
+          beaconSeed publicValue control hashed.2.beacon.beacon.identity oneTime kem raw hashed.2 staged stageRun
+        simp only [StateT.run_set, StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
+        obtain ⟨_, rfl, _, rfl, rfl⟩ := supported
+        rw [Ghost.accept_touches, stagedEq, hashedEq]
+        rcases shape with ⟨rfl, _, _⟩ | ⟨pending, _, rfl⟩ <;> simp only [
+          thirds, List.filterMap_append, List.filterMap_nil, List.filterMap_cons, List.append_nil]
+      · simp only [StateT.run_bind, StateT.run_set, StateT.run_pure, pure_bind, support_pure,
+          Set.mem_singleton_iff] at supported
+        subst supported
+        rfl
   | _ =>
       simp only [hphase, StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
       subst supported
@@ -706,8 +714,9 @@ theorem body_collision_probability (setup : Setup baseSpec KemSK) (codec : Codec
   rw [simulateQ_map, StateT.run_map, OracleComp.simulateQ_mapStateTBase_run_eq_map_flattenStateT,
     Functor.map_map, prEvent_map]
   have bound := run_collision_probability setup codec checks spread publicValue beaconSeed seed scalar
-    (adversary ⟨publicValue.identity, setup.serverKeyId, published.1, revealed⟩) Q (accept _)
-    (initialGameState setup publicValue published.2, state) (by simp [initialGameState, Ghost.empty, thirds, Collision])
+    (adversary ⟨publicValue.identity, setup.serverKeyId, published.1.1, revealed⟩) Q (accept _)
+    (initialGameState setup publicValue published.1.2 published.2, state)
+    (by simp [initialGameState, Ghost.empty, thirds, Collision])
   simpa only [initialGameState, Ghost.empty, thirds, List.filterMap_nil, List.length_nil,
     allowance_eq, Nat.mul_zero, Nat.zero_add, Function.comp_def, PqxdhServerAuthGapDh.fusedImpl] using bound
 

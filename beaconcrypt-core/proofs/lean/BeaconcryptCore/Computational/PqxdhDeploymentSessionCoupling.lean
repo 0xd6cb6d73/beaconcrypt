@@ -20,7 +20,7 @@ open PqxdhRegistrationR1Restriction (eraseShared)
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response Result : Type}
 
 /-- Read a localized singleton outcome back as its original multi-owner source state. The private ServerAuth journal is omitted; the program's result, full source journal and every native field remain. -/
-def localizedView (pre : Pre KemSK)
+noncomputable def localizedView (pre : Pre KemSK)
     (outcome : (((Result × List (SourceEntry KemSK)) × Emb KemSK) ×
       State KemSK)) : (Result × List (SourceEntry KemSK)) × State KemSK :=
   (outcome.1.1, eraseShared (multiOf pre outcome.1.2 outcome.2))
@@ -34,12 +34,13 @@ def eagerView (outcome : (Result × List (SourceEntry KemSK)) × (State KemSK ×
 theorem localized_frozen_state (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (seed : IdentitySeed) (c : Nat) (program : OracleComp (SourceSpec KemSK) Result)
     (unread : program.IsQueryBoundP (Bad (KemSK := KemSK)) 0) (state : State KemSK) (empty : state.owners = [])
+    (blank : state.inits = fun _ => none)
     (pre : Pre KemSK) (member : pre ∈ support (PqxdhDeploymentServerAuthEager.draw setup codec (seedBinding setup seed))) :
     localizedView pre <$>
       (simulateQ (PqxdhRegistrationSchedule.handler setup codec checks seed)
         (simulateQ PqxdhRegistrationR1Restriction.route
           (PqxdhDeploymentServerAuthEmbed.embedded setup codec c program
-            (seedInput setup seed pre.reply)))).run ⟨state.shared, [pre.bundled]⟩ =
+            (seedInput setup seed pre.reply)))).run ⟨state.shared, [pre.bundled], Function.update (fun _ => none) 0 pre.init⟩ =
       eagerView <$>
         (simulateQ (PqxdhDeploymentServerAuthLocal.eager setup codec checks seed c (seedBinding setup seed) pre)
           (freeze dflt (stopAt c) program)).run (state, .waiting) := by
@@ -49,16 +50,17 @@ theorem localized_frozen_state (setup : Setup baseSpec KemSK) (codec : Codec Rea
         ((outcome.1, outcome.2.1), outcome.2.2.1)) <$> run)
     (PqxdhDeploymentServerAuthLocalize.localize setup codec checks seed c
       (seedInput setup seed pre.reply) (seedBinding setup seed) pre rfl rfl createdFresh bundledSent
-      program unread (⟨state.shared, [pre.bundled]⟩ : State KemSK) rfl)
-  have stateEq : (⟨state.shared, []⟩ : State KemSK) = state :=
-    congrArg (PqxdhRegistrationSchedule.State.mk state.shared) empty.symm
+      program unread (⟨state.shared, [pre.bundled], Function.update (fun _ => none) 0 pre.init⟩ : State KemSK) rfl (by simp))
+  have stateEq : (⟨state.shared, [], fun _ => none⟩ : State KemSK) = state := by
+    cases state with
+    | mk shared owners inits => cases empty; cases blank; rfl
   simp only [Functor.map_map, stateEq] at localized
   rw [← QueryImpl.simulateQ_compose]
   change localizedView pre <$>
       (simulateQ (PqxdhDeploymentServerAuthLocalize.routed setup codec checks seed)
         ((simulateQ (PqxdhDeploymentServerAuthEmbed.embed setup codec c (seedInput setup seed pre.reply))
           ((simulateQ (PqxdhDeploymentServerAuthEmbed.freezeImpl dflt (stopAt c)) program).run [])).run
-            Emb.empty)).run ⟨state.shared, [pre.bundled]⟩ =
+            Emb.empty)).run ⟨state.shared, [pre.bundled], Function.update (fun _ => none) 0 pre.init⟩ =
     eagerView <$> (simulateQ (PqxdhDeploymentServerAuthLocal.eager setup codec checks seed c
       (seedBinding setup seed) pre)
         ((simulateQ (PqxdhDeploymentServerAuthEmbed.freezeImpl dflt (stopAt c)) program).run [])).run
@@ -71,7 +73,8 @@ theorem localized_frozen_state (setup : Setup baseSpec KemSK) (codec : Codec Rea
 /-- The early-draw reduction preserves the full frozen deployment state in distribution, not only the public journal event used by CE-A1. -/
 theorem frozen_state (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (seed : IdentitySeed) (c : Nat) (program : OracleComp (SourceSpec KemSK) Result)
-    (unread : program.IsQueryBoundP (Bad (KemSK := KemSK)) 0) (state : State KemSK) (empty : state.owners = []) :
+    (unread : program.IsQueryBoundP (Bad (KemSK := KemSK)) 0) (state : State KemSK) (empty : state.owners = [])
+    (blank : state.inits = fun _ => none) :
     EvalDistEq
       (Prod.map id eraseShared <$>
         (simulateQ (base setup codec checks seed) (freeze dflt (stopAt c) program)).run state)
@@ -81,12 +84,12 @@ theorem frozen_state (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
           (simulateQ (PqxdhRegistrationSchedule.handler setup codec checks seed)
             (simulateQ PqxdhRegistrationR1Restriction.route
               (PqxdhDeploymentServerAuthEmbed.embedded setup codec c program
-                (seedInput setup seed pre.reply)))).run ⟨state.shared, [pre.bundled]⟩) := by
+                (seedInput setup seed pre.reply)))).run ⟨state.shared, [pre.bundled], Function.update (fun _ => none) 0 pre.init⟩) := by
   refine ((PqxdhDeploymentServerAuthEager.swap setup codec checks seed c (seedBinding setup seed)
-    (freeze dflt (stopAt c) program) state (by simp [empty])).map (Prod.map id eraseShared)).trans ?_
+    (freeze dflt (stopAt c) program) state (by simp [empty]) (by intro index _; rw [blank])).map (Prod.map id eraseShared)).trans ?_
   simp only [map_bind, Functor.map_map]
   refine EvalDistEq.bind_congr_of_support _ fun pre member => ?_
-  rw [localized_frozen_state setup codec checks seed c program unread state empty pre member]
+  rw [localized_frozen_state setup codec checks seed c program unread state empty blank pre member]
   exact .rfl
 
 /-- The early target material is reconstructed from its actual private generation context, not by matching public keys. -/
@@ -94,7 +97,31 @@ def contextPre (setup : Setup baseSpec KemSK) (context : Context KemSK) : Pre Ke
   ⟨PqxdhRegistrationR1Restriction.ownerValue context.beaconSeed context.scalar context.keys.1
       (freshBeacon setup (context.publicValue setup) context.keys.2),
     context.published.1,
-    PqxdhRegistrationR1Restriction.ownerValue context.beaconSeed context.scalar context.keys.1 context.published.2⟩
+    PqxdhRegistrationR1Restriction.ownerValue context.beaconSeed context.scalar context.keys.1 context.published.2,
+    context.beaconInit⟩
+
+private theorem local_bundle_logged_materialized (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (seed identity : IdentitySeed) (selected : PqxdhJointGapDh.ScalarBytes)
+    (keys : PqxdhKemIndCca.MlKem768PublicKey × KemSK) :
+    PqxdhDeploymentServerAuthEmbed.localBundleLog setup codec 0
+      (PqxdhRegistrationR1Restriction.ownerValue identity selected keys.1
+        (freshBeacon setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed selected) keys.2)) none =
+      (fun logged => ((logged.1.1,
+        PqxdhRegistrationR1Restriction.ownerValue identity selected keys.1 logged.1.2), logged.2)) <$>
+        (do
+          let oneTime ← PqxdhJointGapDh.sampleScalar
+          phase1Logged setup codec identity (PqxdhJointGapDh.challenge setup.joint setup.dh seed selected)
+            oneTime keys.1 keys.2) := by
+  have same := congrArg (Functor.map (fun result : Option Pqxdh.Bytes × State KemSK =>
+      ((result.1, result.2.owners.headD
+        (PqxdhRegistrationR1Restriction.ownerValue identity selected keys.1
+          (freshBeacon setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed selected) keys.2))), result.2.inits 0)))
+    (PqxdhRegistrationR1Initial.bundle_initial setup codec seed identity selected keys.1 keys.2
+      (freshBeacon setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed selected) keys.2))
+  rw [PqxdhDeploymentServerAuthLocal.bundle_found setup codec 0 _ _ rfl] at same
+  simpa only [Functor.map_map, PqxdhRegistrationR1Restriction.singleton,
+    PqxdhRegistrationR1Initial.sourceInitial, initialGameState, List.set_cons_zero,
+    List.headD_cons, Function.update_self, Prod.mk.eta, id_map'] using same
 
 /-- Materializing the initial concrete owner commutes with the optional first bundle, retaining its exact returned owner even on publication failure. -/
 theorem local_bundle_materialized (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -109,25 +136,21 @@ theorem local_bundle_materialized (setup : Setup baseSpec KemSK) (codec : Codec 
           let oneTime ← PqxdhJointGapDh.sampleScalar
           phase1Run setup codec identity (PqxdhJointGapDh.challenge setup.joint setup.dh seed selected)
             oneTime keys.1 keys.2) := by
-  have same := congrArg (Functor.map (fun result : Option Pqxdh.Bytes × State KemSK =>
-      (result.1, result.2.owners.headD
-        (PqxdhRegistrationR1Restriction.ownerValue identity selected keys.1
-          (freshBeacon setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed selected) keys.2)))))
-    (PqxdhRegistrationR1Initial.bundle_initial setup codec seed identity selected keys.1 keys.2
-      (freshBeacon setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed selected) keys.2))
-  rw [PqxdhDeploymentServerAuthLocal.bundle_found setup codec 0 _ _ rfl] at same
-  simpa only [Functor.map_map, PqxdhRegistrationR1Restriction.singleton,
-    PqxdhRegistrationR1Initial.sourceInitial, initialGameState, List.set_cons_zero,
-    List.headD_cons, Prod.mk.eta, id_map'] using same
+  have same := congrArg (Functor.map Prod.fst) (local_bundle_logged_materialized setup codec seed identity selected keys)
+  rw [PqxdhDeploymentServerAuthEmbed.localBundleLog_fst] at same
+  rw [same, Functor.map_map, map_bind, map_bind]
+  apply bind_congr
+  intro oneTime
+  rw [← phase1Logged_fst, Functor.map_map]
 
 /-- Private source-order generation context for a fixed Server seed. -/
 noncomputable def contextDraw (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (seed : IdentitySeed) : ProbComp (Context KemSK) := do
   let material ← PqxdhRegistrationJointCreation.material setup
   let oneTime ← PqxdhJointGapDh.sampleScalar
-  let published ← phase1Run setup codec material.seed
+  let logged ← phase1Logged setup codec material.seed
     (PqxdhJointGapDh.challenge setup.joint setup.dh seed material.prekey) oneTime material.keys.1 material.keys.2
-  pure ⟨seed, material.prekey, material.seed, oneTime, material.keys, published⟩
+  pure ⟨seed, material.prekey, material.seed, oneTime, material.keys, logged.1, logged.2⟩
 
 /-- Reindexing the actual early draw retains its complete created and bundled owner, not just the optional public reply. -/
 theorem draw_materialized (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (seed : IdentitySeed) :
@@ -137,13 +160,13 @@ theorem draw_materialized (setup : Setup baseSpec KemSK) (codec : Codec Reader R
     contextDraw, PqxdhRegistrationJointCreation.material, map_bind, bind_assoc, pure_bind, map_pure]
   refine bind_congr fun identity => bind_congr fun selected => bind_congr fun keys => ?_
   change (do
-    let bundled ← PqxdhDeploymentServerAuthEmbed.localBundle setup codec 0
+    let bundled ← PqxdhDeploymentServerAuthEmbed.localBundleLog setup codec 0
       (PqxdhRegistrationR1Restriction.ownerValue identity selected keys.1
-        (freshBeacon setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed selected) keys.2))
+        (freshBeacon setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed selected) keys.2)) none
     pure (⟨PqxdhRegistrationR1Restriction.ownerValue identity selected keys.1
       (freshBeacon setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed selected) keys.2),
-        bundled.1, bundled.2⟩ : Pre KemSK)) = _
-  rw [local_bundle_materialized setup codec seed identity selected keys, bind_map_left, bind_assoc]
+        bundled.1.1, bundled.1.2, bundled.2⟩ : Pre KemSK)) = _
+  rw [local_bundle_logged_materialized setup codec seed identity selected keys, bind_map_left, bind_assoc]
   rfl
 
 /-- The original generated Server state, before any dynamic owner is allocated. -/
@@ -168,38 +191,43 @@ def occurrenceView (setup : Setup baseSpec KemSK) (context : Context KemSK)
 theorem fixed_root_state (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (seed identity : IdentitySeed) (selected oneTime : PqxdhJointGapDh.ScalarBytes)
     (keys : PqxdhKemIndCca.MlKem768PublicKey × KemSK)
-    (published : Option Pqxdh.Bytes × RawCtxBeaconLifecycle.State Unit (Unit ⊕ PqxdhJointGapDh.ScalarBytes) KemSK)
-    (supported : published ∈ support (phase1Run setup codec identity
+    (published : (Option Pqxdh.Bytes × RawCtxBeaconLifecycle.State Unit (Unit ⊕ PqxdhJointGapDh.ScalarBytes) KemSK) ×
+      Option PqxdhEd25519EufCma.Phase1Candidate)
+    (supported : published ∈ support (phase1Logged setup codec identity
       (PqxdhJointGapDh.challenge setup.joint setup.dh seed selected) oneTime keys.1 keys.2))
     (work : OracleComp ServerAuthSpec Result) :
     Prod.map id eraseShared <$>
       (simulateQ (PqxdhRegistrationSchedule.handler setup codec checks seed)
         (simulateQ PqxdhRegistrationR1Restriction.route work)).run
           ⟨(initial setup seed).shared,
-            [PqxdhRegistrationR1Restriction.ownerValue identity selected keys.1 published.2]⟩ =
-      occurrenceView setup ⟨seed, selected, identity, oneTime, keys, published⟩ <$>
+            [PqxdhRegistrationR1Restriction.ownerValue identity selected keys.1 published.1.2],
+            Function.update (fun _ => none) 0 published.2⟩ =
+      occurrenceView setup ⟨seed, selected, identity, oneTime, keys, published.1, published.2⟩ <$>
         PqxdhServerAuthRootExecution.execution setup codec checks
-          ⟨seed, selected, identity, oneTime, keys, published⟩ work := by
+          ⟨seed, selected, identity, oneTime, keys, published.1, published.2⟩ work := by
   have native := PqxdhRegistrationR1Audit.singleton_program setup codec checks seed identity selected keys.1
-    (compatibility setup seed) work (PqxdhRegistrationR1Initial.sourceInitial setup seed selected published.2)
+    (compatibility setup seed) work (PqxdhRegistrationR1Initial.sourceInitial setup seed selected published.1.2 published.2)
     (inv_initial setup codec identity (PqxdhJointGapDh.challenge setup.joint setup.dh seed selected)
       oneTime keys.1 keys.2 published supported)
     (phase1_handles setup codec identity (PqxdhJointGapDh.challenge setup.joint setup.dh seed selected)
-      oneTime keys.1 keys.2 published supported)
+      oneTime keys.1 keys.2 published.1
+      (phase1Logged_support setup codec identity (PqxdhJointGapDh.challenge setup.joint setup.dh seed selected)
+        oneTime keys.1 keys.2 published supported))
   rw [← PqxdhRegistrationR1RootAudit.native_root setup codec checks
-    ⟨seed, selected, identity, oneTime, keys, published⟩ work
+    ⟨seed, selected, identity, oneTime, keys, published.1, published.2⟩ work
     (inv_initial setup codec identity (PqxdhJointGapDh.challenge setup.joint setup.dh seed selected)
       oneTime keys.1 keys.2 published supported)] at native
   have initialEq : PqxdhRegistrationR1Restriction.singleton identity selected keys.1 (compatibility setup seed)
-      (eraseObservers (PqxdhRegistrationR1Initial.sourceInitial setup seed selected published.2)) =
+      (eraseObservers (PqxdhRegistrationR1Initial.sourceInitial setup seed selected published.1.2 published.2)) =
       (⟨(initial setup seed).shared,
-        [PqxdhRegistrationR1Restriction.ownerValue identity selected keys.1 published.2]⟩ : State KemSK) := rfl
+        [PqxdhRegistrationR1Restriction.ownerValue identity selected keys.1 published.1.2],
+            Function.update (fun _ => none) 0 published.2⟩ : State KemSK) := rfl
   change Prod.map id eraseShared <$> _ =
     (fun outcome : (Result × PqxdhServerAuthRootOccurrences.Audit KemSK) × PqxdhJointDhExtractFamily.State =>
       (outcome.1.1, PqxdhRegistrationR1Restriction.singleton identity selected keys.1
         (compatibility setup seed) (eraseObservers (outcome.2, outcome.1.2.1)))) <$>
       PqxdhServerAuthRootExecution.execution setup codec checks
-        ⟨seed, selected, identity, oneTime, keys, published⟩ work
+        ⟨seed, selected, identity, oneTime, keys, published.1, published.2⟩ work
   simpa only [initialEq, Functor.map_map, PqxdhRegistrationR1RootAudit.nativeOf,
     Prod.map, Function.comp_def, id_eq] using native
 
@@ -218,7 +246,7 @@ theorem contextual_root_state (setup : Setup baseSpec KemSK) (codec : Codec Read
       (fun result => (pre, result)) <$> (Prod.map id eraseShared <$>
         (simulateQ (PqxdhRegistrationSchedule.handler setup codec checks seed)
           (simulateQ PqxdhRegistrationR1Restriction.route (work pre.reply))).run
-            ⟨(initial setup seed).shared, [pre.bundled]⟩)) =
+            ⟨(initial setup seed).shared, [pre.bundled], Function.update (fun _ => none) 0 pre.init⟩)) =
       (fun audit => (contextPre setup audit.2.context, singletonAuditView setup audit)) <$>
         PqxdhRegistrationR1RootAudit.rootAudited setup codec checks seed work := by
   rw [draw_materialized]
@@ -227,9 +255,9 @@ theorem contextual_root_state (setup : Setup baseSpec KemSK) (codec : Codec Read
   refine bind_congr fun material => bind_congr fun oneTime =>
     OracleComp.bind_congr_of_forall_mem_support _ fun published supported => ?_
   have coupled := congrArg (Functor.map (fun result =>
-      (contextPre setup ⟨seed, material.prekey, material.seed, oneTime, material.keys, published⟩, result)))
+      (contextPre setup ⟨seed, material.prekey, material.seed, oneTime, material.keys, published.1, published.2⟩, result)))
     (fixed_root_state setup codec checks seed material.seed material.prekey oneTime material.keys published
-      supported (work published.1))
+      supported (work published.1.1))
   simpa only [Functor.map_map, contextPre, occurrenceView, singletonAuditView] using coupled
 
 /-- Existing analysis-history erasure commutes with reassembling the full source state. -/
@@ -268,7 +296,7 @@ noncomputable def audited (setup : Setup baseSpec KemSK) (codec : Codec Reader R
     (fun published => PqxdhDeploymentServerAuthEmbed.adversary setup codec c program (seedInput setup seed published))
 
 /-- Reassemble every original source field from the private root-labelled execution. Only proof histories are erased; no cache, owner, pending token or native counter is projected away. -/
-def auditedView (setup : Setup baseSpec KemSK)
+noncomputable def auditedView (setup : Setup baseSpec KemSK)
     (audit : PqxdhRegistrationR1RootAudit.RootAudit KemSK (ReducedResult KemSK Result)) :
     (Result × List (SourceEntry KemSK)) × State KemSK :=
   localizedView (contextPre setup audit.2.context) (audit.1.1, (singletonAuditView setup audit).2)
@@ -288,7 +316,7 @@ theorem frozen_root_state (setup : Setup baseSpec KemSK) (codec : Codec Reader R
       (fun published => PqxdhDeploymentServerAuthEmbed.adversary setup codec c program (seedInput setup seed published)))
   simp only [map_bind, Functor.map_map, Prod.map, id_eq, localizedView_erase] at coupled
   change _ = auditedView setup <$> audited setup codec checks seed c program at coupled
-  refine (frozen_state setup codec checks seed c program unread (initial setup seed) rfl).trans ?_
+  refine (frozen_state setup codec checks seed c program unread (initial setup seed) rfl rfl).trans ?_
   rw [← coupled]
   simp only [recorded_localized_state]
   exact .rfl

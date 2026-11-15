@@ -31,7 +31,7 @@ variable (keyView : RegistrationNativePlatformSourceSeal.KeyView)
 variable (converted : RegistrationNativePlatformOrdinarySourceNative.Conversion keyView)
 variable (failure : primitives.Error) (erased : commitment.CommitmentTranscript) (route : RawCtxServerRouting.SenderDecoder)
 variable (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (views : Views)
-variable (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (credential : RegistrationNativeMldsa.Credential mlSource)
 
 noncomputable def live (current : Native ×Platform) (before : Carrier (R:=R) view views joint created credential current)
@@ -53,7 +53,7 @@ noncomputable def live (current : Native ×Platform) (before : Carrier (R:=R) vi
   let server:=Classical.choose fact
   have present:= (Classical.choose_spec fact).1
   have matched : AdapterPublicOrdinaryServerReifier.server view views before.objects.server server.records.rawAttempts=server := (Classical.choose_spec fact).2
-  let peer : RawCtxServerRouting.Peer (Array U8 281#usize) :=
+  let peer : RawCtxServerRouting.Peer (Array U8 151#usize) :=
     ⟨remote.peer.binding.beacon_identity_public_key,kernel,remote.peer.binding.associated_data⟩
   have found : server.records.server.peers key=some peer := by
     rw [←matched]

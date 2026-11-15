@@ -93,7 +93,10 @@ theorem draw_support (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
   simp only [draw, mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at member
   obtain ⟨created, createdMember, bundled, bundledMember, rfl⟩ := member
   refine ⟨PqxdhDeploymentServerAuthEager.localCreate_fresh setup _ _ created createdMember, fun bytes published => ?_⟩
-  exact bundle_published _ _ bundled (support_simulateQ_subset _ _ bundledMember) bytes published
+  have projected : bundled.1 ∈ support (localBundle setup codec 0 created) := by
+    rw [← PqxdhDeploymentServerAuthEmbed.localBundleLog_fst setup codec 0 created none, support_map]
+    exact Set.mem_image_of_mem _ bundledMember
+  exact bundle_published _ _ bundled.1 (support_simulateQ_subset _ _ projected) bytes published
 
 /-- The compiled program issues no identity, KEM, prekey or one-time read. -/
 theorem compiled_unread (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -144,10 +147,12 @@ theorem typed_draw {β : Type} (setup : Setup baseSpec KemSK) (codec : Codec Rea
       next published) =
     (do
       let pre ← draw setup codec binding
-      next (pre.reply, ⟨(PqxdhRegistrationSchedule.initial (KemSK := KemSK) created).shared, [pre.bundled]⟩)) := by
+      next (pre.reply, ⟨(PqxdhRegistrationSchedule.initial (KemSK := KemSK) created).shared, [pre.bundled],
+        Function.update (PqxdhRegistrationSchedule.initial (KemSK := KemSK) created).inits 0 pre.init⟩)) := by
   have made : (PqxdhRegistrationSchedule.create setup binding.1 binding.2).run
       (PqxdhRegistrationSchedule.initial (KemSK := KemSK) created) =
-      (fun owner => (0, ⟨(PqxdhRegistrationSchedule.initial (KemSK := KemSK) created).shared, [owner]⟩)) <$>
+      (fun owner => (0, ⟨(PqxdhRegistrationSchedule.initial (KemSK := KemSK) created).shared, [owner],
+        (PqxdhRegistrationSchedule.initial (KemSK := KemSK) created).inits⟩)) <$>
         localCreate setup binding.1 binding.2 :=
     PqxdhDeploymentServerAuthLocal.create_local setup binding.1 binding.2 _
   rw [made, bind_map_left]
@@ -208,7 +213,7 @@ def seedInput (setup : Setup baseSpec KemSK) (seed : IdentitySeed) (published : 
 theorem frozen_single (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (seed : IdentitySeed) (c : Nat) (program : OracleComp (SourceSpec KemSK) Result)
     (unread : program.IsQueryBoundP (Bad (KemSK := KemSK)) 0) (state : State KemSK) (empty : state.owners = [])
-    (crypto : Pqxdh.Crypto) :
+    (unbundled : ∀ index, state.inits index = none) (crypto : Pqxdh.Crypto) :
     Pr{let outcome : (Result × List (SourceEntry KemSK)) × State KemSK ←
         (simulateQ (base setup codec checks seed) (freeze dflt (stopAt c) program)).run state}[Unmatched crypto codec (seedBinding setup seed) c (regsOfSource outcome.1.2)] =
     Pr{let outcome : ((((Result × List (SourceEntry KemSK)) × Emb KemSK) × QueryLog ServerAuthSpec) × State KemSK) ← (do
@@ -216,9 +221,9 @@ theorem frozen_single (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
         (simulateQ (PqxdhRegistrationSchedule.handler setup codec checks seed)
           (simulateQ PqxdhRegistrationR1Restriction.route
             (PqxdhDeploymentServerAuthEmbed.adversary setup codec c program (seedInput setup seed pre.reply)))).run
-          ⟨state.shared, [pre.bundled]⟩)}[Unmatched crypto codec (seedBinding setup seed) c (regsOfSource outcome.1.1.1.2)] := by
+          ⟨state.shared, [pre.bundled], Function.update state.inits 0 pre.init⟩)}[Unmatched crypto codec (seedBinding setup seed) c (regsOfSource outcome.1.1.1.2)] := by
   rw [probEvent_evalSPMF _ _ (PqxdhDeploymentServerAuthEager.swap setup codec checks seed c (seedBinding setup seed)
-    (freeze dflt (stopAt c) program) state (by simp [empty]))]
+    (freeze dflt (stopAt c) program) state (by simp [empty]) fun index _ => unbundled index)]
   have transfer : ∀ {β γ δ ε : Type} (first : ProbComp ε) (left : ε → ProbComp β) (right : ε → ProbComp γ)
       (leftView : β → δ) (rightView : γ → δ) (event : δ → Prop),
       (∀ value ∈ support first, leftView <$> left value = rightView <$> right value) →
@@ -232,15 +237,17 @@ theorem frozen_single (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
       State KemSK) => outcome.1.1.1.2)
     (fun journal => Unmatched crypto codec (seedBinding setup seed) c (regsOfSource journal)) fun pre member => ?_
   obtain ⟨createdFresh, bundledSent⟩ := draw_support setup codec _ pre member
-  set single : State KemSK := ⟨state.shared, [pre.bundled]⟩ with singleEq
+  set single : State KemSK := ⟨state.shared, [pre.bundled], Function.update state.inits 0 pre.init⟩ with singleEq
   set input := seedInput setup seed pre.reply with inputEq
-  have stateEq : (⟨single.shared, []⟩ : State KemSK) = state := by
+  have stateEq : (⟨single.shared, [], fun _ => none⟩ : State KemSK) = state := by
     cases state
-    simp_all
+    simp only [PqxdhRegistrationSchedule.State.mk.injEq] at empty ⊢
+    exact ⟨rfl, empty.symm, funext fun index => (unbundled index).symm⟩
   have localized := congrArg (fun run => (fun outcome : Result × (List (SourceEntry KemSK) × (State KemSK ×
       PqxdhDeploymentServerAuthLocal.Phase)) => outcome.2.1) <$> run)
     (PqxdhDeploymentServerAuthLocalize.localize setup codec checks seed c input
-      (seedBinding setup seed) pre rfl rfl createdFresh bundledSent program unread single rfl)
+      (seedBinding setup seed) pre rfl rfl createdFresh bundledSent program unread single rfl
+      (by rw [singleEq]; exact Function.update_self (0 : Nat) pre.init state.inits))
   simp only [Functor.map_map, stateEq] at localized
   have eagerRun := PqxdhDeploymentServerAuthLocalize.stack_run
     (PqxdhDeploymentServerAuthLocal.eager setup codec checks seed c (seedBinding setup seed) pre)
@@ -316,13 +323,19 @@ theorem typed_root {Value : Type} (setup : Setup baseSpec KemSK) (codec : Codec 
           (simulateQ PqxdhRegistrationR1Restriction.route (work pre.reply))).run
           ⟨(PqxdhRegistrationSchedule.initial (KemSK := KemSK)
             (PqxdhLiveServerConstruction.initialized setup.joint identityIndex setup.serverKeyId origin seed)).shared,
-            [pre.bundled]⟩)}[event outcome.1] =
+            [pre.bundled], Function.update (PqxdhRegistrationSchedule.initial (KemSK := KemSK)
+            (PqxdhLiveServerConstruction.initialized setup.joint identityIndex setup.serverKeyId origin seed)).inits 0
+              pre.init⟩)}[event outcome.1] =
     Pr{let audit ← PqxdhRegistrationR1RootAudit.rootAudited setup codec checks seed work}[event audit.1] := by
   have shared : (PqxdhRegistrationSchedule.initial (KemSK := KemSK)
       (PqxdhLiveServerConstruction.initialized setup.joint identityIndex setup.serverKeyId origin seed)).shared =
       (PqxdhRegistrationSchedule.initial (KemSK := KemSK)
         (PqxdhLiveServerConstruction.initialized setup.joint 0 setup.serverKeyId origin seed)).shared := rfl
-  rw [shared, ← typed_draw setup codec (PqxdhLiveServerConstruction.initialized setup.joint 0 setup.serverKeyId origin seed)
+  have inits : (PqxdhRegistrationSchedule.initial (KemSK := KemSK)
+      (PqxdhLiveServerConstruction.initialized setup.joint identityIndex setup.serverKeyId origin seed)).inits =
+      (PqxdhRegistrationSchedule.initial (KemSK := KemSK)
+        (PqxdhLiveServerConstruction.initialized setup.joint 0 setup.serverKeyId origin seed)).inits := rfl
+  rw [shared, inits, ← typed_draw setup codec (PqxdhLiveServerConstruction.initialized setup.joint 0 setup.serverKeyId origin seed)
     (seedBinding setup seed) (fun published => (simulateQ (PqxdhRegistrationSchedule.handler setup codec checks seed)
       (simulateQ PqxdhRegistrationR1Restriction.route (work published.1))).run published.2)]
   have typed := PqxdhRegistrationR1Initial.typed_audit setup codec checks seed origin work
@@ -360,7 +373,7 @@ theorem seed_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
         PqxdhDeploymentServerAuthEmbed.adversary setup codec c (compileFull setup codec route bounds mode adversary)
           (seedInput setup seed published)))}[PqxdhServerAuthCommonProbability.decision setup codec checks audit.2 = true] := by
   rw [native_frozen, frozen_single setup codec checks seed c _ (compiled_unread setup codec route bounds mode adversary)
-    _ rfl setup.source.crypto]
+    _ rfl (fun _ => rfl) setup.source.crypto]
   have step := typed_root setup codec checks seed identityIndex origin (fun published =>
     PqxdhDeploymentServerAuthEmbed.adversary setup codec c (compileFull setup codec route bounds mode adversary)
       (seedInput setup seed published))
@@ -369,6 +382,193 @@ theorem seed_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
   exact step.trans_le (prEvent_mono_of_support _ _ _ fun audit member failure =>
     root_failure setup codec checks phase1 seed seeded c _ audit member failure)
 
+
+/-! ## Generic events and the transcript failure -/
+
+/-- Every event of a registration view that is decided once `c` stops: on the compiled program run under the native handler, its probability on the transcript's registration view is its probability on the registration view of the program's journal frozen at the stop of `c`. `native_frozen` is this fact for the A1 failure. -/
+theorem native_frozen_event (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (seed : IdentitySeed) (route : RawCtxServerRouting.SenderDecoder) (bounds : FreshBounds) (mode : Mode)
+    (adversary : OracleComp (ModeSpec mode) X) (c : Nat) (event : List PqxdhDeploymentServerAuthEvent.Reg → Prop)
+    (stable : ∀ regs extra, PqxdhDeploymentServerAuthEvent.Stop c regs → (event (regs ++ extra) ↔ event regs))
+    (state : State KemSK) :
+    Pr{let result : ((X × Ledger) × Local) × State KemSK ←
+        (simulateQ (base setup codec checks seed) (compileFull setup codec route bounds mode adversary)).run state}[event (regsOf result.1.1.2.transcript)] =
+    Pr{let outcome : (((X × Ledger) × Local) × List (SourceEntry KemSK)) × State KemSK ← ((simulateQ (base setup codec checks seed)
+        (freeze dflt (stopAt c) (compileFull setup codec route bounds mode adversary))).run state)}[event (regsOfSource outcome.1.2)] := by
+  have erased : (simulateQ (base setup codec checks seed) (compileFull setup codec route bounds mode adversary)).run state =
+      (fun outcome => (outcome.1.1, outcome.2)) <$> (simulateQ (base setup codec checks seed)
+        (PqxdhDeploymentServerAuthFreeze.journal dflt (compileFull setup codec route bounds mode adversary))).run state := by
+    conv_lhs => rw [← PqxdhDeploymentServerAuthFreeze.journal_erase dflt (compileFull setup codec route bounds mode adversary)]
+    rw [simulateQ_map, StateT.run_map]
+  rw [erased, prEvent_map]
+  rw [prEvent_congr_of_support _ _ (fun outcome : (((X × Ledger) × Local) × List (SourceEntry KemSK)) × State KemSK =>
+      event
+        (regsOfSource (PqxdhDeploymentServerAuthEvent.untilStop (stopAt c) outcome.1.2))) ?_]
+  · have frozen := probEvent_evalSPMF _ _ (PqxdhDeploymentServerAuthFreeze.frozen_journal dflt (stopAt c)
+      (base setup codec checks seed) (compileFull setup codec route bounds mode adversary)
+      (PqxdhDeploymentServerAuthFreeze.stopAt_nil c) state)
+      (fun journal => event (regsOfSource journal))
+    rw [prEvent_map, prEvent_map] at frozen
+    exact frozen
+  · intro outcome member
+    have program : outcome.1 ∈ support (PqxdhDeploymentServerAuthFreeze.journal dflt
+        (compileFull setup codec route bounds mode adversary)) := by
+      apply support_simulateQ_run'_subset (base setup codec checks seed) _ state
+      rw [StateT.run'_eq, support_map]
+      exact Set.mem_image_of_mem _ member
+    have regs := PqxdhDeploymentServerAuthTrace.compiled_regs setup codec route bounds mode adversary outcome.1 program
+    rw [PqxdhDeploymentServerAuthFreeze.event_frozen c event stable]
+    simp only [regs]
+
+
+/-- From a state with no owner, every event of the frozen journal's registration view has, for a program that issues no identity, KEM, prekey or one-time read, the probability under the native handler that it has on the frozen journal returned by `R_c` on the singleton that the early draw of the target's material creates and bundles. `frozen_single` is this fact for the A1 failure. -/
+theorem frozen_single_event (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (seed : IdentitySeed) (c : Nat) (program : OracleComp (SourceSpec KemSK) Result)
+    (unread : program.IsQueryBoundP (Bad (KemSK := KemSK)) 0) (state : State KemSK) (empty : state.owners = [])
+    (unbundled : ∀ index, state.inits index = none) (event : List PqxdhDeploymentServerAuthEvent.Reg → Prop) :
+    Pr{let outcome : (Result × List (SourceEntry KemSK)) × State KemSK ←
+        (simulateQ (base setup codec checks seed) (freeze dflt (stopAt c) program)).run state}[event (regsOfSource outcome.1.2)] =
+    Pr{let outcome : ((((Result × List (SourceEntry KemSK)) × Emb KemSK) × QueryLog ServerAuthSpec) × State KemSK) ← (do
+        let pre ← draw setup codec (seedBinding setup seed)
+        (simulateQ (PqxdhRegistrationSchedule.handler setup codec checks seed)
+          (simulateQ PqxdhRegistrationR1Restriction.route
+            (PqxdhDeploymentServerAuthEmbed.adversary setup codec c program (seedInput setup seed pre.reply)))).run
+          ⟨state.shared, [pre.bundled], Function.update state.inits 0 pre.init⟩)}[event (regsOfSource outcome.1.1.1.2)] := by
+  rw [probEvent_evalSPMF _ _ (PqxdhDeploymentServerAuthEager.swap setup codec checks seed c (seedBinding setup seed)
+    (freeze dflt (stopAt c) program) state (by simp [empty]) fun index _ => unbundled index)]
+  have transfer : ∀ {β γ δ ε : Type} (first : ProbComp ε) (left : ε → ProbComp β) (right : ε → ProbComp γ)
+      (leftView : β → δ) (rightView : γ → δ) (event : δ → Prop),
+      (∀ value ∈ support first, leftView <$> left value = rightView <$> right value) →
+      Pr{let x ← first >>= left}[event (leftView x)] = Pr{let x ← first >>= right}[event (rightView x)] := by
+    intro β γ δ ε first left right leftView rightView event same
+    have mapped := (OracleComp.EvalDistEq.bind_congr_of_support first (f := fun value => leftView <$> left value)
+      (g := fun value => rightView <$> right value) fun value member => by rw [same value member]).prEvent_eq event
+    simpa only [← map_bind, prEvent_map] using mapped
+  refine transfer _ _ _ (fun outcome : (Result × List (SourceEntry KemSK)) × State KemSK => outcome.1.2)
+    (fun outcome : ((((Result × List (SourceEntry KemSK)) × Emb KemSK) × QueryLog ServerAuthSpec) ×
+      State KemSK) => outcome.1.1.1.2)
+    (fun journal => event (regsOfSource journal)) fun pre member => ?_
+  obtain ⟨createdFresh, bundledSent⟩ := draw_support setup codec _ pre member
+  set single : State KemSK := ⟨state.shared, [pre.bundled], Function.update state.inits 0 pre.init⟩ with singleEq
+  set input := seedInput setup seed pre.reply with inputEq
+  have stateEq : (⟨single.shared, [], fun _ => none⟩ : State KemSK) = state := by
+    cases state
+    simp only [PqxdhRegistrationSchedule.State.mk.injEq] at empty ⊢
+    exact ⟨rfl, empty.symm, funext fun index => (unbundled index).symm⟩
+  have localized := congrArg (fun run => (fun outcome : Result × (List (SourceEntry KemSK) × (State KemSK ×
+      PqxdhDeploymentServerAuthLocal.Phase)) => outcome.2.1) <$> run)
+    (PqxdhDeploymentServerAuthLocalize.localize setup codec checks seed c input
+      (seedBinding setup seed) pre rfl rfl createdFresh bundledSent program unread single rfl
+      (by rw [singleEq]; exact Function.update_self (0 : Nat) pre.init state.inits))
+  simp only [Functor.map_map, stateEq] at localized
+  have eagerRun := PqxdhDeploymentServerAuthLocalize.stack_run
+    (PqxdhDeploymentServerAuthLocal.eager setup codec checks seed c (seedBinding setup seed) pre)
+    (PqxdhDeploymentServerAuthEmbed.freezeImpl dflt (stopAt c)) program [] (state, .waiting)
+  have outerRun := PqxdhDeploymentServerAuthLocalize.stack_run
+    (PqxdhDeploymentServerAuthLocalize.stack (PqxdhDeploymentServerAuthLocalize.routed setup codec checks seed)
+      (PqxdhDeploymentServerAuthEmbed.embed setup codec c input))
+    (PqxdhDeploymentServerAuthEmbed.freezeImpl dflt (stopAt c)) program [] (Emb.empty, single)
+  have innerRun := PqxdhDeploymentServerAuthLocalize.stack_run
+    (PqxdhDeploymentServerAuthLocalize.routed setup codec checks seed)
+    (PqxdhDeploymentServerAuthEmbed.embed setup codec c input) (freeze dflt (stopAt c) program) Emb.empty single
+  have erased : PqxdhDeploymentServerAuthEmbed.embedded setup codec c program input =
+      Prod.fst <$> PqxdhDeploymentServerAuthEmbed.adversary setup codec c program input :=
+    (PqxdhServerAuthApiJournal.erase _).symm
+  have left : (fun outcome : (Result × List (SourceEntry KemSK)) × State KemSK => outcome.1.2) <$>
+      ((fun result : (Result × List (SourceEntry KemSK)) × (State KemSK × PqxdhDeploymentServerAuthLocal.Phase) =>
+          (result.1, result.2.1)) <$>
+        (simulateQ (PqxdhDeploymentServerAuthLocal.eager setup codec checks seed c (seedBinding setup seed) pre)
+          (freeze dflt (stopAt c) program)).run (state, .waiting)) =
+      (fun outcome : Result × (List (SourceEntry KemSK) × (Emb KemSK × State KemSK)) => outcome.2.1) <$>
+        (simulateQ (PqxdhDeploymentServerAuthLocalize.singleSide setup codec checks seed c input) program).run
+          ([], (Emb.empty, single)) := by
+    rw [Functor.map_map]
+    change _ <$> (simulateQ (PqxdhDeploymentServerAuthLocal.eager setup codec checks seed c (seedBinding setup seed) pre)
+      ((simulateQ (PqxdhDeploymentServerAuthEmbed.freezeImpl dflt (stopAt c)) program).run [])).run (state, .waiting) = _
+    rw [eagerRun, Functor.map_map]
+    exact localized.symm
+  have right : (fun outcome : ((((Result × List (SourceEntry KemSK)) × Emb KemSK) × QueryLog ServerAuthSpec) ×
+      State KemSK) => outcome.1.1.1.2) <$>
+      (simulateQ (PqxdhRegistrationSchedule.handler setup codec checks seed)
+        (simulateQ PqxdhRegistrationR1Restriction.route
+          (PqxdhDeploymentServerAuthEmbed.adversary setup codec c program input))).run single =
+      (fun outcome : Result × (List (SourceEntry KemSK) × (Emb KemSK × State KemSK)) => outcome.2.1) <$>
+        (simulateQ (PqxdhDeploymentServerAuthLocalize.singleSide setup codec checks seed c input) program).run
+          ([], (Emb.empty, single)) := by
+    have routedEq : (simulateQ (PqxdhRegistrationSchedule.handler setup codec checks seed)
+        (simulateQ PqxdhRegistrationR1Restriction.route
+          (PqxdhDeploymentServerAuthEmbed.embedded setup codec c program input))).run single =
+        (simulateQ (PqxdhDeploymentServerAuthLocalize.routed setup codec checks seed)
+          (PqxdhDeploymentServerAuthEmbed.embedded setup codec c program input)).run single := by
+      rw [PqxdhDeploymentServerAuthLocalize.routed, QueryImpl.simulateQ_compose]
+    have advEq : (fun outcome : ((((Result × List (SourceEntry KemSK)) × Emb KemSK) × QueryLog ServerAuthSpec) ×
+        State KemSK) => outcome.1.1.1.2) <$>
+        (simulateQ (PqxdhRegistrationSchedule.handler setup codec checks seed)
+          (simulateQ PqxdhRegistrationR1Restriction.route
+            (PqxdhDeploymentServerAuthEmbed.adversary setup codec c program input))).run single =
+        (fun outcome : (((Result × List (SourceEntry KemSK)) × Emb KemSK) × State KemSK) => outcome.1.1.2) <$>
+        (simulateQ (PqxdhRegistrationSchedule.handler setup codec checks seed)
+          (simulateQ PqxdhRegistrationR1Restriction.route
+            (PqxdhDeploymentServerAuthEmbed.embedded setup codec c program input))).run single := by
+      rw [erased, simulateQ_map, simulateQ_map, StateT.run_map, Functor.map_map]
+    rw [advEq, routedEq]
+    change _ <$> (simulateQ (PqxdhDeploymentServerAuthLocalize.routed setup codec checks seed)
+      ((simulateQ (PqxdhDeploymentServerAuthEmbed.embed setup codec c input) (freeze dflt (stopAt c) program)).run
+        Emb.empty)).run single = _
+    rw [innerRun, Functor.map_map]
+    change _ <$> (simulateQ (PqxdhDeploymentServerAuthLocalize.stack (PqxdhDeploymentServerAuthLocalize.routed setup
+      codec checks seed) (PqxdhDeploymentServerAuthEmbed.embed setup codec c input))
+      ((simulateQ (PqxdhDeploymentServerAuthEmbed.freezeImpl dflt (stopAt c)) program).run [])).run
+        (Emb.empty, single) = _
+    rw [outerRun, Functor.map_map]
+    rfl
+  rw [left, right]
+
+
+/-- On every root-audited singleton run of `R_c`, for every Server seed the generator can draw, the A1 transcript failure of `c` on the frozen journal under the seed's binding is a common authentication failure or a collision of the final BLAKE2b cache. Premises: the approved Phase 1 and Phase 2 read-back contracts. -/
+theorem root_transcript_failure (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
+    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (seed : IdentitySeed)
+    (seeded : seed ∈ support sampleSeed) (c : Nat) (program : OracleComp (SourceSpec KemSK) Result)
+    (audit : PqxdhRegistrationR1RootAudit.RootAudit KemSK
+      ((((Result × List (SourceEntry KemSK)) × Emb KemSK) × QueryLog ServerAuthSpec)))
+    (member : audit ∈ support (PqxdhRegistrationR1RootAudit.rootAudited setup codec checks seed
+      (fun published => PqxdhDeploymentServerAuthEmbed.adversary setup codec c program (seedInput setup seed published))))
+    (failure : PqxdhDeploymentServerAuthTrack.Untranscripted setup.source.crypto codec (seedBinding setup seed) c
+      (regsOfSource audit.1.1.1.2)) :
+    PqxdhServerAuthCommonProbability.collisionDecision setup codec checks audit.2 = true := by
+  have client := PqxdhDeploymentServerAuthJournal.audited_client setup codec checks seed _ audit member
+  obtain ⟨⟨raw, payload, finished⟩, untranscripted⟩ := PqxdhDeploymentServerAuthTrack.adversary_untranscripted
+    setup.source.crypto setup codec c program (seedInput setup seed audit.2.context.published.1) audit.1 client failure
+  exact PqxdhDeploymentServerAuthJournal.audited_transcript_failure setup codec checks phase1 phase2 seed seeded
+    (fun input => PqxdhDeploymentServerAuthEmbed.embedded setup codec c program input) audit member raw payload finished
+    untranscripted
+
+/-- For one Server seed the generator can draw and one creation index `c`, the A1 transcript failure of `c` under the seed's binding on the transcript of the compiled program, run natively from the constructed Server's initial state, is at most the failure-or-collision probability of the root-audited singleton run of `R_c`. Premises: the approved Phase 1 and Phase 2 read-back contracts. -/
+theorem seed_bound_transcript (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadBack codec)
+    (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (route : RawCtxServerRouting.SenderDecoder)
+    (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (c : Nat) (seed : IdentitySeed)
+    (seeded : seed ∈ support sampleSeed) (identityIndex : Nat) (origin : PqxdhLiveServerConstruction.Origin) :
+    Pr{let result ← ((simulateQ (base setup codec checks seed) (compileFull setup codec route bounds mode adversary)).run
+        (PqxdhRegistrationSchedule.initial
+          (PqxdhLiveServerConstruction.initialized setup.joint identityIndex setup.serverKeyId origin seed)))}[PqxdhDeploymentServerAuthTrack.Untranscripted setup.source.crypto codec (seedBinding setup seed) c (regsOf result.1.1.2.transcript)] ≤
+    Pr{let audit ← (PqxdhRegistrationR1RootAudit.rootAudited setup codec checks seed (fun published =>
+        PqxdhDeploymentServerAuthEmbed.adversary setup codec c (compileFull setup codec route bounds mode adversary)
+          (seedInput setup seed published)))}[PqxdhServerAuthCommonProbability.collisionDecision setup codec checks audit.2 = true] := by
+  rw [native_frozen_event setup codec checks seed route bounds mode adversary c
+      (PqxdhDeploymentServerAuthTrack.Untranscripted setup.source.crypto codec (seedBinding setup seed) c)
+      (PqxdhDeploymentServerAuthTrack.untranscripted_stop setup.source.crypto codec (seedBinding setup seed) c),
+    frozen_single_event setup codec checks seed c _ (compiled_unread setup codec route bounds mode adversary)
+      _ rfl (fun _ => rfl)]
+  have step := typed_root setup codec checks seed identityIndex origin (fun published =>
+    PqxdhDeploymentServerAuthEmbed.adversary setup codec c (compileFull setup codec route bounds mode adversary)
+      (seedInput setup seed published))
+    (fun value : (((((X × Ledger) × Local) × List (SourceEntry KemSK)) × Emb KemSK) × QueryLog ServerAuthSpec) =>
+      PqxdhDeploymentServerAuthTrack.Untranscripted setup.source.crypto codec (seedBinding setup seed) c
+        (regsOfSource value.1.1.2))
+  exact step.trans_le (prEvent_mono_of_support _ _ _ fun audit member failure =>
+    root_transcript_failure setup codec checks phase1 phase2 seed seeded c _ audit member failure)
 
 end BeaconcryptCore.Computational.PqxdhDeploymentServerAuthChain
 
@@ -437,3 +637,27 @@ end BeaconcryptCore.Computational.PqxdhDeploymentServerAuthChain
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthChain.seed_bound
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthChain.native_frozen_event' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthChain.native_frozen_event
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthChain.frozen_single_event' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthChain.frozen_single_event
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthChain.root_transcript_failure' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthChain.root_transcript_failure
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthChain.seed_bound_transcript' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthChain.seed_bound_transcript

@@ -34,7 +34,7 @@ theorem complete
     (reservePeer : StateT (RegistrationServerFrontendCompiler.State n) (StateT P ProbComp) Bool)
     (token : peer.ConsumedRegistration) (application : Slice U8) :
     Normal (RegistrationNativePlatformExperiment.server (KemSK:=KemSK) (source:=source)
-      (RegistrationNativePlatformCompletionSdk.complete (RegistrationNativePlatformSourceBuild.pin coins)
+      (RegistrationNativePlatformCompletionSdk.complete (RegistrationNativePlatformCompletionSdk.nativeAdHash coins) (RegistrationNativePlatformSourceBuild.pin coins)
         reservePeer (RegistrationNativePlatformCompletionSdk.nativePresent coins)
         (RegistrationNativePlatformExtractedSdkServer.Build.sourceFinish coins setup codec view failure (allocation allocate)
           (RegistrationNativePlatformConcreteSource.helper reserveFrame) erased sign
@@ -90,7 +90,7 @@ theorem normal
     (previousLocal : LocalOperations (RustT SourceM))
     (previousChildren : ChildOperations (RustT SourceM))
     (view : MaterialView mlSource KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : Server) (before : Cut) (related : AdapterPublicWrapperState.Server view views created credential self before.1.server)
     (token : beaconcrypt_public_wrapper.server.RegistrationOutput) (data : core.option.Option (Slice U8))
     (parsed : AdapterPublicServerToken.ParsedToken token)

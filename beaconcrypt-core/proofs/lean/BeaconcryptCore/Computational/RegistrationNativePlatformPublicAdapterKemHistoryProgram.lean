@@ -34,7 +34,7 @@ local notation "Native"=>RegistrationNativeExperiment.State n KemSK source
 local notation "AuditState"=>RegistrationNativePlatformPublicAdapterAuditLowModel.State n KemSK P source
 
 
-variable (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
 local notation "wire"=>RegistrationNativePlatformConcreteSource.wire
 local notation "canonical"=>RegistrationNativePlatformOrdinaryExperiment.canonicalWire wire
 local notation "route"=>RegistrationNativePlatformPublicAdapterRouting.route

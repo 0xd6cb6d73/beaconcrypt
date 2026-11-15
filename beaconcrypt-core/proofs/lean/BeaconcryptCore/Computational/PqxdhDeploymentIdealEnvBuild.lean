@@ -29,6 +29,7 @@ open PqxdhServerRegistrationPublication (AuxSpec Response)
 /-! ### The generic Server build under a peer-wise transformation -/
 
 section GenericBuild
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 variable {Kernel Metadata PeerMetadata Consumed : Type} {m : Type → Type} [Monad m] [LawfulMonad m]
 open PqxdhInitialGenericPublication (State)
 
@@ -58,9 +59,9 @@ theorem afterInitialization_mapPeers (calls : RawCtxChainOwner.Calls Kernel m) (
     (metadata : PeerMetadata) (state : State Kernel Metadata PeerMetadata Consumed)
     (φ : Std.U64 → RawCtxGenericRoleStorage.Peer Kernel PeerMetadata → RawCtxGenericRoleStorage.Peer Kernel PeerMetadata)
     (fixed : ∀ peer, φ candidate.key_id peer = peer) :
-    PqxdhInitialGenericPublication.afterInitialization calls aux candidate authenticated kernel metadata (mapPeers φ state) =
+    PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) calls aux candidate authenticated kernel metadata (mapPeers φ state) =
       (fun value => (value.1, mapPeers φ value.2)) <$>
-        PqxdhInitialGenericPublication.afterInitialization calls aux candidate authenticated kernel metadata state := by
+        PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) calls aux candidate authenticated kernel metadata state := by
   unfold PqxdhInitialGenericPublication.afterInitialization
   simp only [map_bind]
   refine bind_congr fun sent => ?_
@@ -80,9 +81,9 @@ theorem candidate_mapPeers (calls : RawCtxChainOwner.Calls Kernel m) (aux : Quer
     (state : State Kernel Metadata PeerMetadata Consumed)
     (φ : Std.U64 → RawCtxGenericRoleStorage.Peer Kernel PeerMetadata → RawCtxGenericRoleStorage.Peer Kernel PeerMetadata)
     (fixed : ∀ peer, φ candidate.key_id peer = peer) :
-    PqxdhInitialGenericBuilder.candidate calls aux initial candidate data metadata (mapPeers φ state) =
+    PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) calls aux initial candidate data metadata (mapPeers φ state) =
       Functor.map (fun value => (value.1, mapPeers φ value.2)) <$>
-        PqxdhInitialGenericBuilder.candidate calls aux initial candidate data metadata state := by
+        PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) calls aux initial candidate data metadata state := by
   unfold PqxdhInitialGenericBuilder.candidate
   simp only [map_bind]
   refine bind_congr fun valid => ?_
@@ -106,7 +107,7 @@ theorem candidate_mapPeers (calls : RawCtxChainOwner.Calls Kernel m) (aux : Quer
             · simp only [map_pure]
               rfl
             · split
-              · simp only [afterInitialization_mapPeers calls aux candidate _ _ metadata state φ fixed, Functor.map_map]
+              · simp only [afterInitialization_mapPeers (associatedData := associatedData) calls aux candidate _ _ metadata state φ fixed, Functor.map_map]
                 rfl
               · simp only [map_pure]
                 rfl
@@ -125,10 +126,10 @@ theorem genericBuild_mapPeers (calls : RawCtxChainOwner.Calls Kernel m) (aux : Q
     (metadata : PeerMetadata) (state : State Kernel Metadata PeerMetadata Consumed)
     (φ : Std.U64 → RawCtxGenericRoleStorage.Peer Kernel PeerMetadata → RawCtxGenericRoleStorage.Peer Kernel PeerMetadata)
     (vacantFixed : ∀ kid, state.server.peers kid = none → ∀ peer, φ kid peer = peer) :
-    PqxdhServerAuthSendFactor.genericBuild calls aux initial pending data metadata (mapPeers φ state) =
+    PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData) calls aux initial pending data metadata (mapPeers φ state) =
       Functor.map (fun value => (value.1, mapPeers φ value.2)) <$>
-        PqxdhServerAuthSendFactor.genericBuild calls aux initial pending data metadata state := by
-  have candidateStep := fun candidate fixed => candidate_mapPeers calls aux initial candidate data metadata state φ fixed
+        PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData) calls aux initial pending data metadata state := by
+  have candidateStep := fun candidate fixed => candidate_mapPeers (associatedData := associatedData) calls aux initial candidate data metadata state φ fixed
   unfold PqxdhServerAuthSendFactor.genericBuild PqxdhInitialGenericBuilder.continueRust
   simp only [mapPeers, Option.isSome_map] at candidateStep ⊢
   cases next : pqxdh.server_next_key_id state.control with
@@ -165,6 +166,7 @@ end GenericBuild
 /-! ### Shapes of the generic Server build -/
 
 section GenericShape
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 variable {Kernel Metadata PeerMetadata Consumed : Type} {ι' : Type} {spec' : OracleSpec ι'}
 open PqxdhInitialGenericPublication (State)
 
@@ -182,7 +184,7 @@ theorem afterInitializationG_shape (calls : RawCtxChainOwner.Calls Kernel (Oracl
     (aux : QueryImpl AuxSpec (OracleComp spec')) (candidate : pqxdh.ServerRegistrationCandidate)
     (authenticated : Pqxdh.Bytes) (kernel : Kernel) (metadata : PeerMetadata)
     (state : State Kernel Metadata PeerMetadata Consumed) (vacant : state.server.peers candidate.key_id = none) :
-    ∀ result ∈ support (PqxdhInitialGenericPublication.afterInitialization calls aux candidate authenticated kernel
+    ∀ result ∈ support (PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) calls aux candidate authenticated kernel
       metadata state), GBuilt state metadata (.ok result) := by
   intro result supported
   unfold PqxdhInitialGenericPublication.afterInitialization at supported
@@ -231,7 +233,7 @@ theorem candidateG_shape (calls : RawCtxChainOwner.Calls Kernel (OracleComp spec
     (aux : QueryImpl AuxSpec (OracleComp spec')) (initial : RustM Kernel) (candidate : pqxdh.ServerRegistrationCandidate)
     (data : Option Pqxdh.Bytes) (metadata : PeerMetadata) (state : State Kernel Metadata PeerMetadata Consumed)
     (vacant : state.server.peers candidate.key_id = none) :
-    ∀ result ∈ support (PqxdhInitialGenericBuilder.candidate calls aux initial candidate data metadata state),
+    ∀ result ∈ support (PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) calls aux initial candidate data metadata state),
       GBuilt state metadata result := by
   intro result supported
   unfold PqxdhInitialGenericBuilder.candidate at supported
@@ -264,7 +266,7 @@ theorem candidateG_shape (calls : RawCtxChainOwner.Calls Kernel (OracleComp spec
             innerMember
           rw [support_map] at finalMember
           obtain ⟨published, publishedMember, rfl⟩ := finalMember
-          exact afterInitializationG_shape calls aux candidate _ _ metadata state vacant published publishedMember
+          exact afterInitializationG_shape (associatedData := associatedData) calls aux candidate _ _ metadata state vacant published publishedMember
       · simp only [support_pure, Set.mem_singleton_iff] at innerMember
         subst innerMember
         rfl
@@ -273,7 +275,7 @@ theorem candidateG_shape (calls : RawCtxChainOwner.Calls Kernel (OracleComp spec
 theorem genericBuild_shape (calls : RawCtxChainOwner.Calls Kernel (OracleComp spec'))
     (aux : QueryImpl AuxSpec (OracleComp spec')) (initial : RustM Kernel) (pending : pqxdh.PendingServerRegistration)
     (data : Option Pqxdh.Bytes) (metadata : PeerMetadata) (state : State Kernel Metadata PeerMetadata Consumed) :
-    ∀ result ∈ support (PqxdhServerAuthSendFactor.genericBuild calls aux initial pending data metadata state),
+    ∀ result ∈ support (PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData) calls aux initial pending data metadata state),
       GBuilt state metadata result := by
   intro result supported
   unfold PqxdhServerAuthSendFactor.genericBuild PqxdhInitialGenericBuilder.continueRust at supported
@@ -297,7 +299,7 @@ theorem genericBuild_shape (calls : RawCtxChainOwner.Calls Kernel (OracleComp sp
                 by_contra occupied
                 rw [Option.isSome_iff_ne_none.mpr occupied] at available
                 simp at available
-              exact candidateG_shape calls aux initial candidate data metadata state vacant result supported
+              exact candidateG_shape (associatedData := associatedData) calls aux initial candidate data metadata state vacant result supported
             · simp only [support_pure, Set.mem_singleton_iff] at supported
               subst supported
               rfl
@@ -330,13 +332,14 @@ end GenericShape
 /-! ### The free factored build: override and shape -/
 
 section FreeBuild
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhDeploymentCompileRegistration (overrideServer mapBuilt)
 open PqxdhDeploymentSplitFactor (freeBuild)
 
 /-- CE-3's local peer copies as a peer-wise transformation of the generic Server state: a copied peer gets the known form of its local kernel. -/
 def copyPeers (copies : PqxdhDeploymentCompile.Local) (kid : Std.U64)
-    (peer : RawCtxGenericRoleStorage.Peer PqxdhServerAuthSendFactor.Kernel Unit) :
-    RawCtxGenericRoleStorage.Peer PqxdhServerAuthSendFactor.Kernel Unit :=
+    (peer : RawCtxGenericRoleStorage.Peer PqxdhServerAuthSendFactor.Kernel PqxdhTranscriptAd.AssociatedData) :
+    RawCtxGenericRoleStorage.Peer PqxdhServerAuthSendFactor.Kernel PqxdhTranscriptAd.AssociatedData :=
   match copies.peers kid with
   | some kernel => { peer with kernel := PqxdhServerAuthSendFactor.known kernel }
   | none => peer
@@ -357,7 +360,8 @@ theorem embed_override (copies : PqxdhDeploymentCompile.Local) (server : PqxdhSe
 
 /-- The native projection of a state transformed by the copies is CE-3's override of the native projection. -/
 theorem native_override (copies : PqxdhDeploymentCompile.Local)
-    (state : PqxdhInitialGenericPublication.State PqxdhServerAuthSendFactor.Kernel Unit Unit (List Pqxdh.Bytes)) :
+    (state : PqxdhInitialGenericPublication.State PqxdhServerAuthSendFactor.Kernel Unit PqxdhTranscriptAd.AssociatedData
+      (List Pqxdh.Bytes)) :
     PqxdhInitialGenericPublication.native PqxdhServerAuthSendFactor.resolve (mapPeers (copyPeers copies) state) =
       overrideServer copies (PqxdhInitialGenericPublication.native PqxdhServerAuthSendFactor.resolve state) := by
   simp only [PqxdhInitialGenericPublication.native, RawCtxGenericRoleStorage.nativeServer, mapPeers, overrideServer]
@@ -377,10 +381,10 @@ theorem freeBuild_override (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSour
     (value : PqxdhServerAuthSendFactor.Factor) (pending : pqxdh.PendingServerRegistration) (data : Option Pqxdh.Bytes)
     (copies : PqxdhDeploymentCompile.Local) (server : PqxdhServerAuthEntryFactor.ServerState)
     (installed : ∀ kid current, copies.peers kid = some current → server.server.peers kid ≠ none) :
-    freeBuild source value pending data (overrideServer copies server) =
-      mapBuilt copies <$> freeBuild source value pending data server := by
+    freeBuild (associatedData := associatedData) source value pending data (overrideServer copies server) =
+      mapBuilt copies <$> freeBuild (associatedData := associatedData) source value pending data server := by
   unfold freeBuild PqxdhServerAuthLoggedSendFactor.factored
-  rw [embed_override, genericBuild_mapPeers _ _ _ _ _ _ _ _ (fun kid vacant peer => ?_), Functor.map_map,
+  rw [embed_override, genericBuild_mapPeers (associatedData := associatedData) _ _ _ _ _ _ _ _ (fun kid vacant peer => ?_), Functor.map_map,
     Functor.map_map]
   · congr 1
     funext result
@@ -403,13 +407,13 @@ theorem freeBuild_override (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSour
 theorem freeBuild_shape (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (value : PqxdhServerAuthSendFactor.Factor) (pending : pqxdh.PendingServerRegistration) (data : Option Pqxdh.Bytes)
     (server : PqxdhServerAuthEntryFactor.ServerState) :
-    ∀ result ∈ support (freeBuild source value pending data server),
-      PqxdhDeploymentEnvironmentReal.Built server () result := by
+    ∀ result ∈ support (freeBuild (associatedData := associatedData) source value pending data server),
+      PqxdhDeploymentEnvironmentReal.Built server associatedData result := by
   intro result supported
   unfold freeBuild PqxdhServerAuthLoggedSendFactor.factored at supported
   rw [support_map] at supported
   obtain ⟨inner, member, rfl⟩ := supported
-  have shape := genericBuild_shape _ _ _ _ _ _ _ inner member
+  have shape := genericBuild_shape (associatedData := associatedData) _ _ _ _ _ _ _ inner member
   have back : PqxdhInitialGenericPublication.native PqxdhServerAuthSendFactor.resolve
       (PqxdhServerAuthSendFactor.embed server) = server :=
     PqxdhServerAuthSendFactor.native_embed RawCtxSelectedChain.unusedChain server
@@ -428,6 +432,7 @@ theorem freeBuild_shape (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
   · trivial
 
 end FreeBuild
+
 
 /-! ### The World's hidden installs with its counts forgotten -/
 
@@ -448,30 +453,31 @@ theorem resolve_uncount (role : PqxdhRecordLiftInterface.Role) (j : PqxdhRecordL
   simp only [PqxdhRecordLiftWorld.resolve, PqxdhRecordLiftWorld.sampled, StateT.run, bind_pure_comp, Functor.map_map]
   rfl
 
-/-- An admitted hidden Server install with the World's counts forgotten: one lookup of the lazy seed table, the Server marker of the slot set, and the peer installed with the World's Server kernel of the seed. -/
+/-- An admitted hidden Server install with the World's counts forgotten: one lookup of the lazy seed table, the Server marker of the slot set, and the peer installed with the World's Server kernel of the seed and the AD151 it was installed with. -/
 theorem effects_hiddenServer (keyId : Std.U64) (identity : RawCtxServerRouting.Identity)
+    (ad : PqxdhTranscriptAd.AssociatedData)
     (j : PqxdhRecordLiftInterface.Slot n) (w : PqxdhRecordLiftWorld.State n) (world : PqxdhRecordLiftWorld.Server)
     (found : w.server = some world) (vacant : world.records.server.peers keyId = none)
     (unused : w.used j .server = false) :
     Prod.map id uncount <$> (simulateQ PqxdhRecordLiftWorld.effects
-        (PqxdhDeploymentEnvironment.issue (.installServer keyId identity (.hidden j)))).run w =
+        (PqxdhDeploymentEnvironment.issue (.installServer keyId ⟨identity, ad⟩ (.hidden j)))).run w =
       (fun r => ((), uncount { w with
         seeds := r.2
         used := Function.update w.used j (Function.update (w.used j) .server true)
-        server := some (installPeer world keyId identity (PqxdhRecordLiftWorld.kernel .server r.1)) })) <$>
+        server := some (installPeer world keyId identity (PqxdhRecordLiftWorld.kernel .server r.1) ad) })) <$>
         (PqxdhRecordLiftLazyTable.impl j).run w.seeds := by
   rw [effects_issue]
-  have charged : (PqxdhRecordLiftWorld.chargeEffect (.inr (.installServer keyId identity (.hidden j))) w).server =
+  have charged : (PqxdhRecordLiftWorld.chargeEffect (.inr (.installServer keyId ⟨identity, ad⟩ (.hidden j))) w).server =
       some world := found
   have admitted : world.records.server.peers keyId = none ∧ PqxdhRecordLiftWorld.Unused
-      (PqxdhRecordLiftWorld.chargeEffect (.inr (.installServer keyId identity (.hidden j))) w) .server (.hidden j) :=
+      (PqxdhRecordLiftWorld.chargeEffect (.inr (.installServer keyId ⟨identity, ad⟩ (.hidden j))) w) .server (.hidden j) :=
     ⟨vacant, unused⟩
-  change (fun result => ((), uncount result.2)) <$> (PqxdhRecordLiftWorld.installServer keyId identity (.hidden j)).run
-    (PqxdhRecordLiftWorld.chargeEffect (.inr (.installServer keyId identity (.hidden j))) w) = _
+  change (fun result => ((), uncount result.2)) <$> (PqxdhRecordLiftWorld.installServer keyId ⟨identity, ad⟩ (.hidden j)).run
+    (PqxdhRecordLiftWorld.chargeEffect (.inr (.installServer keyId ⟨identity, ad⟩ (.hidden j))) w) = _
   have forgot := PqxdhRecordLiftWorld.countCoin_forget ((PqxdhRecordLiftLazyTable.impl j).run w.seeds)
-    (PqxdhRecordLiftWorld.chargeEffect (.inr (.installServer keyId identity (.hidden j))) w).primitive.1.uniform
+    (PqxdhRecordLiftWorld.chargeEffect (.inr (.installServer keyId ⟨identity, ad⟩ (.hidden j))) w).primitive.1.uniform
   conv_rhs => rw [← forgot, Functor.map_map]
-  have used' : (PqxdhRecordLiftWorld.chargeEffect (.inr (.installServer keyId identity (.hidden j))) w).used j .server =
+  have used' : (PqxdhRecordLiftWorld.chargeEffect (.inr (.installServer keyId ⟨identity, ad⟩ (.hidden j))) w).used j .server =
       false := unused
   simp only [PqxdhRecordLiftWorld.installServer, StateT.run, charged, vacant, PqxdhRecordLiftWorld.Unused, used',
     and_self, ↓reduceIte, PqxdhRecordLiftWorld.resolve, PqxdhRecordLiftWorld.sampled, bind_pure_comp, Functor.map_map]
@@ -479,24 +485,24 @@ theorem effects_hiddenServer (keyId : Std.U64) (identity : RawCtxServerRouting.I
 
 /-- An issued hidden Server install is count-free: its World run with the counts forgotten does not depend on the counts. -/
 theorem countFree_hiddenServer (keyId : Std.U64) (identity : RawCtxServerRouting.Identity)
-    (j : PqxdhRecordLiftInterface.Slot n) :
+    (ad : PqxdhTranscriptAd.AssociatedData) (j : PqxdhRecordLiftInterface.Slot n) :
     PqxdhDeploymentEnvironmentReal.CountFree
-      (PqxdhDeploymentEnvironment.issue (n := n) (.installServer keyId identity (.hidden j))) := fun w => by
+      (PqxdhDeploymentEnvironment.issue (n := n) (.installServer keyId ⟨identity, ad⟩ (.hidden j))) := fun w => by
   by_cases admitted : ∃ world, w.server = some world ∧ world.records.server.peers keyId = none ∧ w.used j .server = false
   · obtain ⟨world, found, vacant, unused⟩ := admitted
-    rw [effects_hiddenServer keyId identity j w world found vacant unused,
-      effects_hiddenServer keyId identity j (uncount w) world found vacant unused]
+    rw [effects_hiddenServer keyId identity ad j w world found vacant unused,
+      effects_hiddenServer keyId identity ad j (uncount w) world found vacant unused]
     rfl
   · have refused : ∀ v : PqxdhRecordLiftWorld.State n, v.server = w.server → v.used = w.used →
-        (PqxdhRecordLiftWorld.installServer keyId identity (.hidden j)).run v = pure (false, v) := by
+        (PqxdhRecordLiftWorld.installServer keyId ⟨identity, ad⟩ (.hidden j)).run v = pure (false, v) := by
       intro v server used
-      refine PqxdhRecordLiftWorld.installServer_refused keyId identity _ v fun both => admitted ?_
+      refine PqxdhRecordLiftWorld.installServer_refused keyId ⟨identity, ad⟩ _ v fun both => admitted ?_
       obtain ⟨⟨world, found, vacant⟩, unused⟩ := both
       exact ⟨world, server ▸ found, vacant, used ▸ unused⟩
     rw [effects_issue, effects_issue]
-    change (fun result => ((), uncount result.2)) <$> (PqxdhRecordLiftWorld.installServer keyId identity (.hidden j)).run
+    change (fun result => ((), uncount result.2)) <$> (PqxdhRecordLiftWorld.installServer keyId ⟨identity, ad⟩ (.hidden j)).run
       (PqxdhRecordLiftWorld.chargeEffect _ w) = (fun result => ((), uncount result.2)) <$>
-        (PqxdhRecordLiftWorld.installServer keyId identity (.hidden j)).run (PqxdhRecordLiftWorld.chargeEffect _ (uncount w))
+        (PqxdhRecordLiftWorld.installServer keyId ⟨identity, ad⟩ (.hidden j)).run (PqxdhRecordLiftWorld.chargeEffect _ (uncount w))
     rw [refused (PqxdhRecordLiftWorld.chargeEffect _ w) rfl rfl,
       refused (PqxdhRecordLiftWorld.chargeEffect _ (uncount w)) rfl rfl, map_pure, map_pure]
     rfl
@@ -539,29 +545,34 @@ noncomputable def builtEnv (e : EnvState KemSK SplitBk) (session : ℕ) (coords 
     backend := (material, (e.backend.2.1, { e.backend.2.2 with
       peer := ((publishedKey result.1.1 result.1.2).map fun keyId => (keyId, coords)).or e.backend.2.2.peer })) }
 
-/-- The marked build in capability form (design-v2 section 6.1): at the slot of the marked coordinates, the material is read lazily from the environment's material cache (coin effects at its first touch), then CE-11a's split hidden build of that slot runs on the session's pending token (`PqxdhDeploymentEnvironment.buildSplitEnv`: the factored build at the material and the dummy seed with its BLAKE2b request forwarded, settled, then the hidden install `installServer keyId identity (.hidden slot)` of the published peer). Without an allocated slot or a pending token it does nothing. -/
+/-- The marked build in capability form (design-v2 section 6.1, on the hashed build of design §4.3): at the slot of the marked coordinates, the material is read lazily from the environment's material cache (coin effects at its first touch); a token rejected by the pre-hash guard is then consumed with no further effect, and otherwise the registration transcript of the token's retained Phase 1 bundle and the candidate's response is one forwarded `.hash` and CE-11a's split hidden build of that slot runs on the session's pending token at the AD of its digest (`PqxdhDeploymentEnvironment.buildSplitEnv`: the factored build at the material and the dummy seed with its BLAKE2b request forwarded, settled, then the hidden install `installServer keyId ⟨identity, ad⟩ (.hidden slot)` of the published peer with the AD it was installed with). Without an allocated slot or a pending token it does nothing. -/
 noncomputable def buildHiddenEnv (session : ℕ) (payload : Option Pqxdh.Bytes) (coords : Coord) :
     StateT (EnvState KemSK SplitBk) (OracleComp (EnvEffects 2)) (Option PqxdhServerRegistrationPublication.Response) :=
   fun e => match e.backend.2.1.1 coords, e.native.shared.2.pending session with
   | some j, some token => do
       let drawn ← coins (((MaterialSpec 2).randomOracle j).run e.backend.1)
-      let result ← (PqxdhDeploymentEnvironment.buildSplitEnv setup codec checks drawn.1 j token payload
-        e.native.shared.2.server).run []
-      pure (result.1.1, builtEnv e session coords drawn.2 result)
+      match PqxdhServerRegistrationPublication.prehash e.native.shared.2.server token.pending payload with
+      | none => pure (none, builtEnv e session coords drawn.2 ((none, e.native.shared.2.server), []))
+      | some candidate => do
+          let digest ← PqxdhDeploymentEnvironment.request (.hash (PqxdhTranscriptAd.transcript
+            (PqxdhTranscriptAd.initOf token.init) (PqxdhTranscriptAd.serverResponse candidate)))
+          let result ← (PqxdhDeploymentEnvironment.buildSplitEnv setup codec checks drawn.1 j token payload
+            (PqxdhTranscriptAd.adOf digest) e.native.shared.2.server).run []
+          pure (result.1.1, builtEnv e session coords drawn.2 result)
   | _, _ => pure (none, e)
 
 /-- The forwarded split build issues no administrative effect. -/
 theorem buildSplitFwd_noAdmin (material : PqxdhDeploymentHiddenLayout.Material)
-    (token : PqxdhServerRelatedRootConsumer.Returned) (payload : Option Pqxdh.Bytes)
+    (token : PqxdhServerRelatedRootConsumer.Returned) (payload : Option Pqxdh.Bytes) (ad : PqxdhTranscriptAd.AssociatedData)
     (server : PqxdhServerAuthEntryFactor.ServerState) (log : List RawCtxSourceSend.SealContext) :
-    ((PqxdhDeploymentEnvironment.buildSplitFwd (n := 2) setup codec checks material token payload server).run
+    ((PqxdhDeploymentEnvironment.buildSplitFwd (n := 2) setup codec checks material token payload ad server).run
       log).IsQueryBoundP (fun effect => effectKind effect = .administrative) 0 := by
-  have bound : ((PqxdhDeploymentEnvironment.buildSplitFwd (n := 2) setup codec checks material token payload server).run
+  have bound : ((PqxdhDeploymentEnvironment.buildSplitFwd (n := 2) setup codec checks material token payload ad server).run
       log).IsQueryBoundP (fun effect => effectKind effect = .administrative)
         (if (EffectKind.administrative) = .hash then 1 else 0) := by
     simp only [PqxdhDeploymentEnvironment.buildSplitFwd, PqxdhServerAuthLoggedSendFactor.factored, StateT.run_map,
       isQueryBoundP_map_iff]
-    exact PqxdhDeploymentEnvironment.generic_build_bound _ _ _ _
+    exact PqxdhDeploymentEnvironment.generic_build_bound _ ad _ _ _
       (fun entry context current => PqxdhDeploymentEnvironment.loggedFwd_send_bound setup codec checks _ entry context
         current .administrative) (fun query current => by
         have bound := PqxdhDeploymentEnvironment.tailFwd_bound (n := 2) setup codec checks (.inr query) current
@@ -579,9 +590,9 @@ theorem countFree_hiddenServerEffect (j : PqxdhRecordLiftInterface.Slot 2)
   · exact countFree_pure _
   · split
     · exact countFree_pure _
-    · exact countFree_hiddenServer _ _ j
+    · exact countFree_hiddenServer _ _ _ j
 
-/-- The marked build in capability form at an allocated slot with a pending token, run by the World with its counts forgotten: the lazy material read, the forwarded split build read through `ctxEffects` on the World's CTX cache, then the hidden install of the settled build. -/
+/-- The marked build in capability form at an allocated slot with a pending token, run by the World with its counts forgotten: the lazy material read; a token rejected by the pre-hash guard is consumed with the World's CTX cache unchanged; otherwise the forwarded transcript hash on the World's CTX cache, the forwarded split build at the AD of its digest read through `ctxEffects` on the cache after it, then the hidden install of the settled build. -/
 theorem buildHidden_effects (session : ℕ) (payload : Option Pqxdh.Bytes) (coords : Coord) (e : EnvState KemSK SplitBk)
     (w : PqxdhRecordLiftWorld.State 2) (j : PqxdhRecordLiftInterface.Slot 2)
     (token : PqxdhServerRelatedRootConsumer.Returned) (allocated : e.backend.2.1.1 coords = some j)
@@ -589,8 +600,14 @@ theorem buildHidden_effects (session : ℕ) (payload : Option Pqxdh.Bytes) (coor
     Prod.map id uncount <$> (simulateQ PqxdhRecordLiftWorld.effects
         ((buildHiddenEnv setup codec checks session payload coords).run e)).run w =
       ((MaterialSpec 2).randomOracle j).run e.backend.1 >>= fun drawn =>
-        (simulateQ (ctxEffects ctxAdmin) ((PqxdhDeploymentEnvironment.buildSplitFwd (n := 2) setup codec checks drawn.1
-          token payload e.native.shared.2.server).run [])).run w.primitive.2 >>= fun result =>
+        match PqxdhServerRegistrationPublication.prehash e.native.shared.2.server token.pending payload with
+        | none => pure ((none, builtEnv e session coords drawn.2 ((none, e.native.shared.2.server), [])),
+            uncount (withCache w w.primitive.2))
+        | some candidate =>
+          (CtxRomAuth.ctxRandomOracle ((), PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf token.init)
+              (PqxdhTranscriptAd.serverResponse candidate))).run w.primitive.2 >>= fun hashed =>
+          (simulateQ (ctxEffects ctxAdmin) ((PqxdhDeploymentEnvironment.buildSplitFwd (n := 2) setup codec checks drawn.1
+            token payload (PqxdhTranscriptAd.adOf hashed.1) e.native.shared.2.server).run [])).run hashed.2 >>= fun result =>
             Prod.map id uncount <$> (simulateQ PqxdhRecordLiftWorld.effects
               (PqxdhDeploymentEnvironment.hiddenServerEffect j
                 (PqxdhServerAuthExperiment.settle e.native.shared.2.server result.1.1) >>= fun _ =>
@@ -598,38 +615,59 @@ theorem buildHidden_effects (session : ℕ) (payload : Option Pqxdh.Bytes) (coor
                     builtEnv e session coords drawn.2
                       (PqxdhServerAuthExperiment.settle e.native.shared.2.server result.1.1, result.1.2)))).run
               (withCache w result.2) := by
-  have program : (buildHiddenEnv setup codec checks session payload coords).run e =
-      (coins (((MaterialSpec 2).randomOracle j).run e.backend.1) >>= fun drawn =>
-        (fun r => (drawn, r)) <$> (PqxdhDeploymentEnvironment.buildSplitFwd (n := 2) setup codec checks drawn.1 token
-          payload e.native.shared.2.server).run []) >>= fun value =>
-        PqxdhDeploymentEnvironment.hiddenServerEffect j
-          (PqxdhServerAuthExperiment.settle e.native.shared.2.server value.2.1) >>= fun _ =>
-            pure ((PqxdhServerAuthExperiment.settle e.native.shared.2.server value.2.1).1,
-              builtEnv e session coords value.1.2
-                (PqxdhServerAuthExperiment.settle e.native.shared.2.server value.2.1, value.2.2)) := by
-    change (match e.backend.2.1.1 coords, e.native.shared.2.pending session with
-      | some j, some token => _
-      | _, _ => _) = _
-    rw [allocated, pending]
-    simp only [PqxdhDeploymentEnvironment.buildSplitEnv, StateT.run_bind, StateT.run_lift, StateT.run_pure, bind_assoc,
-      pure_bind, bind_map_left]
-  rw [program, effects_then_free ctxAdmin _ ?noAdmin _ (fun value => countFree_bind
-    (countFree_hiddenServerEffect j _) fun _ => countFree_pure _) w]
-  · rw [simulateQ_bind, StateT.run_bind, PqxdhDeploymentEnvironment.ctxEffects_coins, bind_map_left, bind_assoc]
+  rcases pre : PqxdhServerRegistrationPublication.prehash e.native.shared.2.server token.pending payload with
+    _ | candidate
+  · have program : (buildHiddenEnv setup codec checks session payload coords).run e =
+        coins (((MaterialSpec 2).randomOracle j).run e.backend.1) >>= fun drawn =>
+          pure (none, builtEnv e session coords drawn.2 ((none, e.native.shared.2.server), [])) := by
+      change (match e.backend.2.1.1 coords, e.native.shared.2.pending session with
+        | some j, some token => _
+        | _, _ => _) = _
+      rw [allocated, pending]
+      simp only [pre]
+    rw [program, effects_then_free ctxAdmin _ (coins_noAdmin _) _ (fun _ => countFree_pure _) w,
+      PqxdhDeploymentEnvironment.ctxEffects_coins, bind_map_left]
     refine bind_congr fun drawn => ?_
-    rw [simulateQ_map, StateT.run_map, bind_map_left]
-  · have bound := isQueryBoundP_bind (coins_noAdmin (n := 2) (((MaterialSpec 2).randomOracle j).run e.backend.1))
-      (fun drawn _ => (isQueryBoundP_map_iff _ _ _).mpr (buildSplitFwd_noAdmin setup codec checks drawn.1 token payload
-        e.native.shared.2.server []) :
-        ∀ drawn ∈ support (coins (n := 2) (((MaterialSpec 2).randomOracle j).run e.backend.1)),
-          ((fun r => (drawn, r)) <$> (PqxdhDeploymentEnvironment.buildSplitFwd (n := 2) setup codec checks drawn.1 token
-            payload e.native.shared.2.server).run []).IsQueryBoundP (fun effect => effectKind effect = .administrative) 0)
-    simpa only [Nat.add_zero] using bound
+    simp only [simulateQ_pure, StateT.run_pure, map_pure]
+    rfl
+  · have program : (buildHiddenEnv setup codec checks session payload coords).run e =
+        (coins (((MaterialSpec 2).randomOracle j).run e.backend.1) >>= fun drawn =>
+          PqxdhDeploymentEnvironment.request (n := 2) (.hash (PqxdhTranscriptAd.transcript
+            (PqxdhTranscriptAd.initOf token.init) (PqxdhTranscriptAd.serverResponse candidate))) >>= fun digest =>
+          (fun r => (drawn, r)) <$> (PqxdhDeploymentEnvironment.buildSplitFwd (n := 2) setup codec checks drawn.1 token
+            payload (PqxdhTranscriptAd.adOf digest) e.native.shared.2.server).run []) >>= fun value =>
+          PqxdhDeploymentEnvironment.hiddenServerEffect j
+            (PqxdhServerAuthExperiment.settle e.native.shared.2.server value.2.1) >>= fun _ =>
+              pure ((PqxdhServerAuthExperiment.settle e.native.shared.2.server value.2.1).1,
+                builtEnv e session coords value.1.2
+                  (PqxdhServerAuthExperiment.settle e.native.shared.2.server value.2.1, value.2.2)) := by
+      change (match e.backend.2.1.1 coords, e.native.shared.2.pending session with
+        | some j, some token => _
+        | _, _ => _) = _
+      rw [allocated, pending]
+      simp only [pre, PqxdhDeploymentEnvironment.buildSplitEnv, StateT.run_bind, StateT.run_lift, StateT.run_pure,
+        bind_assoc, pure_bind, bind_map_left]
+    rw [program, effects_then_free ctxAdmin _ ?noAdmin _ (fun value => countFree_bind
+      (countFree_hiddenServerEffect j _) fun _ => countFree_pure _) w]
+    · rw [simulateQ_bind, StateT.run_bind, PqxdhDeploymentEnvironment.ctxEffects_coins, bind_map_left, bind_assoc]
+      refine bind_congr fun drawn => ?_
+      dsimp only
+      rw [simulateQ_bind, StateT.run_bind, bind_assoc]
+      simp only [PqxdhDeploymentEnvironment.request, simulateQ_query, OracleQuery.input_query, OracleQuery.cont_query,
+        id_map]
+      refine bind_congr fun hashed => ?_
+      rw [simulateQ_map, StateT.run_map, bind_map_left]
+    · refine isQueryBoundP_bind (n := 0) (m := 0) (coins_noAdmin _) fun drawn _ => ?_
+      refine isQueryBoundP_bind (n := 0) (m := 0) ?_ fun digest _ => ?_
+      · simpa only [reduceCtorEq, ite_false] using
+          PqxdhDeploymentEnvironment.request_hash_bound (n := 2) _ .administrative
+      · exact (isQueryBoundP_map_iff _ _ _).mpr (buildSplitFwd_noAdmin setup codec checks drawn.1 token payload
+          (PqxdhTranscriptAd.adOf digest) e.native.shared.2.server [])
 
 /-- The extended state after the final split form's marked build (before its hidden install): the game state after the build, the material cache after the hidden read, and the Server install ghost set when the build published a peer. -/
 def builtX (x : PqxdhDeploymentBackend.XState KemSK SplitBk 2) (session : ℕ) (coords : Coord) (material : MatCache 2)
     (result : RustM (Option PqxdhServerRegistrationPublication.Response ×
-      PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes)) ×
+      PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes)) ×
         (List RawCtxSourceSend.SealContext × CtxRomAuth.CtxRO.QueryCache)) :
     PqxdhDeploymentBackend.XState KemSK SplitBk 2 :=
   { x with
@@ -640,7 +678,7 @@ def builtX (x : PqxdhDeploymentBackend.XState KemSK SplitBk 2) (session : ℕ) (
         (PqxdhServerAuthExperiment.settle x.base.native.shared.2.server result.1).2).map fun keyId => (keyId, coords)).or
           x.backend.2.2.peer })) }
 
-/-- One run of the marked build with the erased hidden services at a material and the dummy seed: the free factored build at that value under the native logged tail, settled. -/
+/-- One run of the marked build with the erased hidden services at a material and the dummy seed: a token rejected by the pre-hash guard is consumed; otherwise the transcript hash on the CTX cache, then the free factored build at that value and the AD of the digest under the native logged tail, settled. -/
 theorem buildHidden_run (material : PqxdhDeploymentHiddenLayout.Material) (session : ℕ) (payload : Option Pqxdh.Bytes)
     (shared : PqxdhServerAuthNative.NativeState KemSK) :
     (PqxdhDeploymentIdealSteps.buildHidden (PqxdhDeploymentIdealSteps.erasedHidden setup codec checks
@@ -648,11 +686,18 @@ theorem buildHidden_run (material : PqxdhDeploymentHiddenLayout.Material) (sessi
         shared =
       match shared.2.pending session with
       | none => pure (none, shared)
-      | some token => (fun result => ((PqxdhServerAuthExperiment.settle shared.2.server result.1).1,
-          (shared.1, PqxdhDeploymentEnvironmentReal.builtGame shared.2 session result))) <$>
-        (simulateQ (PqxdhServerAuthExperiment.tailImpl setup codec checks) (freeBuild setup.source
-          (PqxdhServerAuthCtxMaterial.factor (PqxdhDeploymentHiddenLayout.joinOutput material
-            PqxdhDeploymentHiddenSplit.dummySeed)) token.pending payload shared.2.server)).run ([], shared.2.ctx) := by
+      | some token =>
+        match PqxdhServerRegistrationPublication.prehash shared.2.server token.pending payload with
+        | none => pure (none, (shared.1, { shared.2 with pending := Function.update shared.2.pending session none }))
+        | some candidate =>
+          (CtxRomAuth.ctxRandomOracle ((), PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf token.init)
+              (PqxdhTranscriptAd.serverResponse candidate))).run shared.2.ctx >>= fun hashed =>
+          (fun result => ((PqxdhServerAuthExperiment.settle shared.2.server result.1).1,
+            (shared.1, PqxdhDeploymentEnvironmentReal.builtGame shared.2 session result))) <$>
+          (simulateQ (PqxdhServerAuthExperiment.tailImpl setup codec checks)
+            (freeBuild (PqxdhTranscriptAd.adOf hashed.1) setup.source
+              (PqxdhServerAuthCtxMaterial.factor (PqxdhDeploymentHiddenLayout.joinOutput material
+                PqxdhDeploymentHiddenSplit.dummySeed)) token.pending payload shared.2.server)).run ([], hashed.2) := by
   rcases shared with ⟨family, game⟩
   unfold PqxdhDeploymentIdealSteps.buildHidden
   rw [PqxdhDeploymentBackend.nativeGet_bind]
@@ -661,17 +706,26 @@ theorem buildHidden_run (material : PqxdhDeploymentHiddenLayout.Material) (sessi
   | none => rfl
   | some token =>
       dsimp only
-      rw [PqxdhDeploymentBackend.nativeCoins_bind, map_eq_bind_pure_comp]
-      have free := PqxdhDeploymentSplitFactor.buildFactor_free setup codec checks material
-        PqxdhDeploymentHiddenSplit.dummySeed token payload game.server
-      change ((PqxdhDeploymentHiddenEntry.buildFactor setup codec checks material PqxdhDeploymentHiddenSplit.dummySeed
-        token payload game.server).run ([], game.ctx)) >>= _ = _
-      rw [free]
-      refine bind_congr fun result => ?_
-      rw [PqxdhDeploymentBackend.nativeSet_run_bind]
-      rfl
+      cases PqxdhServerRegistrationPublication.prehash game.server token.pending payload with
+      | none => rfl
+      | some candidate =>
+          dsimp only
+          rw [StateT.run_bind]
+          change ((fun result => (result.1, (family, { game with ctx := result.2 }))) <$>
+            (CtxRomAuth.ctxRandomOracle ((), _)).run game.ctx) >>= _ = _
+          rw [bind_map_left]
+          refine bind_congr fun hashed => ?_
+          rw [PqxdhDeploymentBackend.nativeGet_bind, PqxdhDeploymentBackend.nativeCoins_bind, map_eq_bind_pure_comp]
+          have free := PqxdhDeploymentSplitFactor.buildFactor_free (PqxdhTranscriptAd.adOf hashed.1) setup codec checks
+            material PqxdhDeploymentHiddenSplit.dummySeed token payload game.server
+          change ((PqxdhDeploymentHiddenEntry.buildFactor setup codec checks material PqxdhDeploymentHiddenSplit.dummySeed
+            token payload (PqxdhTranscriptAd.adOf hashed.1) game.server).run ([], hashed.2)) >>= _ = _
+          rw [free]
+          refine bind_congr fun result => ?_
+          rw [PqxdhDeploymentBackend.nativeSet_run_bind]
+          rfl
 
-/-- The final split form's marked build at an allocated slot with a pending token: the lazy material read, the free factored build at the material and the dummy seed under the native logged tail on the CTX cache, then the hidden Server install. -/
+/-- The final split form's marked build at an allocated slot with a pending token: the lazy material read; a token rejected by the pre-hash guard is consumed (no hidden install); otherwise the transcript hash on the CTX cache, the free factored build at the material, the dummy seed and the AD of the digest under the native logged tail, then the hidden Server install. -/
 theorem idealSplit_build_hidden (t : PqxdhDeploymentIdealParams.Target count) (p : PqxdhDeploymentIdealParams.Params KemSK count)
     (created : PqxdhLiveServerConstruction.Created Unit) (session : ℕ) (payload : Option Pqxdh.Bytes)
     (x : PqxdhDeploymentBackend.XState KemSK SplitBk 2) (coords : Coord) (j : PqxdhRecordLiftInterface.Slot 2)
@@ -679,13 +733,21 @@ theorem idealSplit_build_hidden (t : PqxdhDeploymentIdealParams.Target count) (p
     (pending : x.base.native.shared.2.pending session = some token) (allocated : x.backend.2.1.1 coords = some j) :
     (PqxdhDeploymentIdealDefer.idealSplit setup codec route checks t p created ⟨.build session payload, trivial⟩).run x =
       ((MaterialSpec 2).randomOracle j).run x.backend.1 >>= fun drawn =>
-        (simulateQ (PqxdhServerAuthExperiment.tailImpl setup codec checks) (freeBuild setup.source
-          (PqxdhServerAuthCtxMaterial.factor (PqxdhDeploymentHiddenLayout.joinOutput drawn.1
-            PqxdhDeploymentHiddenSplit.dummySeed)) token.pending payload x.base.native.shared.2.server)).run
-              ([], x.base.native.shared.2.ctx) >>= fun result =>
-          (fun r => (r.1.1, r.2)) <$> PqxdhDeploymentIdealDefer.serverInstall
-            (((PqxdhServerAuthExperiment.settle x.base.native.shared.2.server result.1).1, some coords),
-              builtX x session coords drawn.2 result) := by
+        match PqxdhServerRegistrationPublication.prehash x.base.native.shared.2.server token.pending payload with
+        | none => (fun r => (r.1.1, r.2)) <$> PqxdhDeploymentIdealDefer.serverInstall ((none, some coords), { x with
+            base := { x.base with native := { x.base.native with shared := (x.base.native.shared.1,
+              { x.base.native.shared.2 with pending := Function.update x.base.native.shared.2.pending session none }) } }
+            backend := (drawn.2, x.backend.2) })
+        | some candidate =>
+          (CtxRomAuth.ctxRandomOracle ((), PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf token.init)
+              (PqxdhTranscriptAd.serverResponse candidate))).run x.base.native.shared.2.ctx >>= fun hashed =>
+          (simulateQ (PqxdhServerAuthExperiment.tailImpl setup codec checks) (freeBuild (PqxdhTranscriptAd.adOf hashed.1)
+            setup.source (PqxdhServerAuthCtxMaterial.factor (PqxdhDeploymentHiddenLayout.joinOutput drawn.1
+              PqxdhDeploymentHiddenSplit.dummySeed)) token.pending payload x.base.native.shared.2.server)).run
+                ([], hashed.2) >>= fun result =>
+            (fun r => (r.1.1, r.2)) <$> PqxdhDeploymentIdealDefer.serverInstall
+              (((PqxdhServerAuthExperiment.settle x.base.native.shared.2.server result.1).1, some coords),
+                builtX x session coords drawn.2 result) := by
   change (fun r => (r.1.1, r.2)) <$> ((PqxdhDeploymentIdealKernel.slotRunX PqxdhDeploymentIdealKernel.lazyDummy
     (PqxdhDeploymentIdealKernel.buildStepC setup codec checks route (PqxdhDeploymentIdealSteps.erasedHidden setup codec
       checks) created session payload)).run x >>= PqxdhDeploymentIdealDefer.serverInstall) = _
@@ -725,8 +787,13 @@ theorem idealSplit_build_hidden (t : PqxdhDeploymentIdealParams.Target count) (p
         (PqxdhDeploymentHiddenLayout.joinOutput drawn.1 PqxdhDeploymentHiddenSplit.dummySeed)) session payload).run
           x.base.native.shared)) >>= _ = _
   rw [buildHidden_run]
-  simp only [pending, Functor.map_map, bind_map_left]
-  rfl
+  simp only [pending]
+  rcases pre : PqxdhServerRegistrationPublication.prehash x.base.native.shared.2.server token.pending payload with
+    _ | candidate
+  · simp only [map_pure, pure_bind]
+    rfl
+  · simp only [Functor.map_map, bind_map_left, map_bind, bind_assoc]
+    rfl
 
 /-- The final split form's hidden Server install when the build published no peer: nothing. -/
 theorem serverInstall_quiet (reply : Option PqxdhServerRegistrationPublication.Response) (coords : Option Coord)
@@ -769,11 +836,11 @@ theorem serverInstall_published (reply : Option PqxdhServerRegistrationPublicati
 theorem strip_builtSettled_publish (state : PqxdhRegistrationSchedule.State KemSK) (session : ℕ)
     (response : PqxdhServerRegistrationPublication.Response) (server : PqxdhServerAuthEntryFactor.ServerState)
     (candidate : pqxdh.ServerRegistrationCandidate) (first second : beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel)
-    (log : List RawCtxSourceSend.SealContext) :
+    (ad : PqxdhTranscriptAd.AssociatedData) (log : List RawCtxSourceSend.SealContext) :
     strip (builtSettled state session
-        (some response, PqxdhServerRegistrationPublication.publish server candidate first ()) log) =
+        (some response, PqxdhServerRegistrationPublication.publish server candidate first ad) log) =
       strip (builtSettled state session
-        (some response, PqxdhServerRegistrationPublication.publish server candidate second ()) log) := by
+        (some response, PqxdhServerRegistrationPublication.publish server candidate second ad) log) := by
   simp only [strip, builtSettled, PqxdhServerRegistrationPublication.publish]
   congr 5
   funext keyId
@@ -825,18 +892,36 @@ theorem buildHidden_law (t : PqxdhDeploymentIdealParams.Target count)
     rw [show (merge e w).base.native = PqxdhDeploymentEnvironmentJoin.fill w e.native from rfl,
       PqxdhDeploymentEnvironmentReal.fill_some w world found]
     rfl]
-  rw [map_bind]
+  rw [PqxdhDeploymentCompileRegistration.prehash_override, map_bind]
   refine bind_congr fun drawn => ?_
-  rw [freeBuild_override _ _ _ _ _ _ (installed_world world e.native.shared.2 peersRaw), simulateQ_map, StateT.run_map,
+  rcases pre : PqxdhServerRegistrationPublication.prehash e.native.shared.2.server token.pending payload with
+    _ | candidate
+  · dsimp only
+    rw [map_pure, serverInstall_quiet _ _ _ rfl, map_pure]
+    have filled := PqxdhDeploymentEnvironmentReal.fill_strip (uncount (withCache w w.primitive.2)) world found
+      (builtSettled e.native session (none, e.native.shared.2.server) []) (PqxdhDeploymentEnvironmentReal.good_matched
+        created e w good)
+    simp only [merge, builtEnv]
+    rw [filled, PqxdhDeploymentEnvironmentReal.fill_some (uncount (withCache w w.primitive.2)) world found,
+      PqxdhDeploymentEnvironmentReal.fill_some w world found]
+    simp only [builtSettled, List.map_nil, List.append_nil, publishedKey, Option.map_none, Option.none_or]
+    rfl
+  dsimp only
+  rw [map_bind]
+  refine bind_congr fun hashed => ?_
+  generalize PqxdhTranscriptAd.adOf hashed.1 = ad
+  generalize hashed.2 = cache₀
+  rw [freeBuild_override ad _ _ _ _ _ _ (installed_world world e.native.shared.2 peersRaw), simulateQ_map, StateT.run_map,
     PqxdhDeploymentEnvironment.tail_factor ctxAdmin setup codec checks, Functor.map_map, bind_map_left,
-    PqxdhDeploymentSplitFactor.buildSplitFwd_free, StateT.run_map, simulateQ_map, StateT.run_map, bind_map_left, map_bind]
+    PqxdhDeploymentSplitFactor.buildSplitFwd_free ad, StateT.run_map, simulateQ_map, StateT.run_map, bind_map_left,
+    map_bind]
   apply OracleComp.bind_congr_of_forall_mem_support
   rintro ⟨⟨rust, log⟩, cache⟩ member
-  have built : Built e.native.shared.2.server () rust :=
-    freeBuild_shape _ _ _ _ _ rust (run_support _ _ [] (rust, log) (run_support _ _ w.primitive.2 ((rust, log), cache) member))
+  have built : Built e.native.shared.2.server ad rust :=
+    freeBuild_shape ad _ _ _ _ _ rust (run_support _ _ [] (rust, log) (run_support _ _ cache₀ ((rust, log), cache) member))
   dsimp only
   have quiet : ∀ rust' : RustM (Option PqxdhServerRegistrationPublication.Response ×
-      PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes)),
+      PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes)),
       PqxdhServerAuthExperiment.settle e.native.shared.2.server rust' = (none, e.native.shared.2.server) →
       PqxdhServerAuthExperiment.settle e.native.shared.2.server
         (PqxdhDeploymentHiddenSplit.replaceRaw PqxdhDeploymentHiddenSplit.placeholderKernel <$> rust') =
@@ -898,39 +983,40 @@ theorem buildHidden_law (t : PqxdhDeploymentIdealParams.Target count)
       simp only [worldCopies, vacantWorld, Option.map_none]
     have replaced : PqxdhServerAuthExperiment.settle e.native.shared.2.server
         (PqxdhDeploymentHiddenSplit.replaceRaw PqxdhDeploymentHiddenSplit.placeholderKernel <$>
-          RustM.ok (some response, PqxdhServerRegistrationPublication.publish e.native.shared.2.server candidate kernel ())) =
+          RustM.ok (some response, PqxdhServerRegistrationPublication.publish e.native.shared.2.server candidate kernel ad)) =
         (some response, PqxdhServerRegistrationPublication.publish e.native.shared.2.server candidate
-          PqxdhDeploymentHiddenSplit.placeholderKernel ()) := by
+          PqxdhDeploymentHiddenSplit.placeholderKernel ad) := by
       change (some response, PqxdhDeploymentHiddenSplit.setPeerKernel (PqxdhServerRegistrationPublication.publish
-        e.native.shared.2.server candidate kernel ()) response.keyId PqxdhDeploymentHiddenSplit.placeholderKernel) = _
+        e.native.shared.2.server candidate kernel ad) response.keyId PqxdhDeploymentHiddenSplit.placeholderKernel) = _
       rw [keyEq, PqxdhDeploymentHiddenSplit.publish_setPeerKernel]
     have peerAt := (PqxdhServerRegistrationPublication.publish_fields e.native.shared.2.server candidate
-      PqxdhDeploymentHiddenSplit.placeholderKernel ()).1
+      PqxdhDeploymentHiddenSplit.placeholderKernel ad).1
     have effect : PqxdhDeploymentEnvironment.hiddenServerEffect (n := 2) j (some response,
         PqxdhServerRegistrationPublication.publish e.native.shared.2.server candidate
-          PqxdhDeploymentHiddenSplit.placeholderKernel ()) =
-        PqxdhDeploymentEnvironment.issue (.installServer response.keyId candidate.beacon_identity_public_key (.hidden j)) := by
+          PqxdhDeploymentHiddenSplit.placeholderKernel ad) =
+        PqxdhDeploymentEnvironment.issue (.installServer response.keyId ⟨candidate.beacon_identity_public_key, ad⟩
+          (.hidden j)) := by
       unfold PqxdhDeploymentEnvironment.hiddenServerEffect
       simp only [keyEq, peerAt]
     rw [replaced, effect, PqxdhDeploymentEnvironmentReal.effects_issue_then,
-      effects_hiddenServer response.keyId candidate.beacon_identity_public_key j (withCache w cache) world found
+      effects_hiddenServer response.keyId candidate.beacon_identity_public_key ad j (withCache w cache) world found
         (by rw [keyEq]; exact vacantWorld) unused]
     have serverM : (merge e w).base.native.shared.2.server =
         PqxdhDeploymentCompileRegistration.overrideServer (worldCopies world) e.native.shared.2.server := by
       rw [← serverEq, show (merge e w).base.native = PqxdhDeploymentEnvironmentJoin.fill w e.native from rfl,
         PqxdhDeploymentEnvironmentReal.fill_some w world found]
     have publishedNative : publishedKey (some response) (PqxdhDeploymentCompileRegistration.overrideServer
-        (worldCopies world) (PqxdhServerRegistrationPublication.publish e.native.shared.2.server candidate kernel ())) =
+        (worldCopies world) (PqxdhServerRegistrationPublication.publish e.native.shared.2.server candidate kernel ad)) =
         some response.keyId := by
       simp only [publishedKey, PqxdhDeploymentCompileRegistration.overrideServer,
         PqxdhServerRegistrationPublication.publish, keyEq, Function.update_self, Option.map_some]
     rw [serverInstall_published _ coords _ j allocated (by
       change (publishedKey (some response) (PqxdhServerAuthExperiment.settle (merge e w).base.native.shared.2.server
         (PqxdhDeploymentCompileRegistration.mapBuilt (worldCopies world) (RustM.ok (some response,
-          PqxdhServerRegistrationPublication.publish e.native.shared.2.server candidate kernel ())))).2).isSome = true
+          PqxdhServerRegistrationPublication.publish e.native.shared.2.server candidate kernel ad)))).2).isSome = true
       rw [serverM]
       change (publishedKey (some response) (PqxdhDeploymentCompileRegistration.overrideServer (worldCopies world)
-        (PqxdhServerRegistrationPublication.publish e.native.shared.2.server candidate kernel ()))).isSome = true
+        (PqxdhServerRegistrationPublication.publish e.native.shared.2.server candidate kernel ad))).isSome = true
       rw [publishedNative]
       rfl)]
     have project : ((PqxdhRecordLiftWorld.SeedSpec 2).randomOracle j).run w.seeds.1 =
@@ -948,42 +1034,42 @@ theorem buildHidden_law (t : PqxdhDeploymentIdealParams.Target count)
     obtain ⟨seed, table⟩ := r
     have merged := PqxdhDeploymentIdealEnvReal.build_merge created session e w good world found
       (RustM.ok (some response, PqxdhServerRegistrationPublication.publish e.native.shared.2.server candidate
-        (PqxdhRecordLiftWorld.kernel .server seed) ())) log cache
-      (installPeer world candidate.key_id candidate.beacon_identity_public_key (PqxdhRecordLiftWorld.kernel .server seed))
-      rfl (override_publish world _ identity peersRaw candidate _ vacantWorld) rfl
+        (PqxdhRecordLiftWorld.kernel .server seed) ad)) log cache
+      (installPeer world candidate.key_id candidate.beacon_identity_public_key (PqxdhRecordLiftWorld.kernel .server seed) ad)
+      rfl (override_publish world _ identity peersRaw candidate _ ad vacantWorld) rfl
     have nativeEq : PqxdhDeploymentEnvironmentReal.builtNative e.native session (RustM.ok (some response,
         PqxdhServerRegistrationPublication.publish e.native.shared.2.server candidate
-          (PqxdhRecordLiftWorld.kernel .server seed) ()), log) =
+          (PqxdhRecordLiftWorld.kernel .server seed) ad), log) =
         builtSettled e.native session (some response, PqxdhServerRegistrationPublication.publish e.native.shared.2.server
-          candidate (PqxdhRecordLiftWorld.kernel .server seed) ()) log := rfl
+          candidate (PqxdhRecordLiftWorld.kernel .server seed) ad) log := rfl
     have baseEq := congrArg PqxdhDeploymentBackend.XState.base merged
     rw [nativeEq, ← strip_builtSettled_publish e.native session response e.native.shared.2.server candidate
-      PqxdhDeploymentHiddenSplit.placeholderKernel (PqxdhRecordLiftWorld.kernel .server seed) log] at baseEq
+      PqxdhDeploymentHiddenSplit.placeholderKernel (PqxdhRecordLiftWorld.kernel .server seed) ad log] at baseEq
     have fillEq := PqxdhDeploymentEnvironmentReal.fill_some w world found e.native
     have fixed : PqxdhDeploymentHiddenSplit.setPeerKernel (PqxdhDeploymentCompileRegistration.overrideServer
-        (worldCopies world) (PqxdhServerRegistrationPublication.publish e.native.shared.2.server candidate kernel ()))
+        (worldCopies world) (PqxdhServerRegistrationPublication.publish e.native.shared.2.server candidate kernel ad))
           candidate.key_id (PqxdhRecordLiftWorld.kernel .server seed) =
         PqxdhDeploymentCompileRegistration.overrideServer (worldCopies world)
           (PqxdhServerRegistrationPublication.publish e.native.shared.2.server candidate
-            (PqxdhRecordLiftWorld.kernel .server seed) ()) := by
+            (PqxdhRecordLiftWorld.kernel .server seed) ad) := by
       rw [setPeerKernel_override _ _ _ _ noCopy, PqxdhDeploymentHiddenSplit.publish_setPeerKernel]
     have settledM : ∀ kernel' : beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel,
         PqxdhServerAuthExperiment.settle (PqxdhDeploymentCompileRegistration.overrideServer (worldCopies world)
           e.native.shared.2.server) (PqxdhDeploymentCompileRegistration.mapBuilt (worldCopies world)
             (RustM.ok (some response, PqxdhServerRegistrationPublication.publish e.native.shared.2.server candidate
-              kernel' ()))) =
+              kernel' ad))) =
         (some response, PqxdhDeploymentCompileRegistration.overrideServer (worldCopies world)
-          (PqxdhServerRegistrationPublication.publish e.native.shared.2.server candidate kernel' ())) := fun _ => rfl
+          (PqxdhServerRegistrationPublication.publish e.native.shared.2.server candidate kernel' ad)) := fun _ => rfl
     have publishedEnv : publishedKey (some response) (PqxdhServerRegistrationPublication.publish e.native.shared.2.server
-        candidate PqxdhDeploymentHiddenSplit.placeholderKernel ()) = some response.keyId := by
+        candidate PqxdhDeploymentHiddenSplit.placeholderKernel ad) = some response.keyId := by
       simp only [publishedKey, PqxdhServerRegistrationPublication.publish, keyEq, Function.update_self, Option.map_some]
     rw [keyEq]
     refine Prod.ext rfl ?_
     change PqxdhDeploymentBackend.XState.mk (merge { e with native := strip (builtSettled e.native session
         (some response, PqxdhServerRegistrationPublication.publish e.native.shared.2.server candidate
-          PqxdhDeploymentHiddenSplit.placeholderKernel ()) log) }
+          PqxdhDeploymentHiddenSplit.placeholderKernel ad) log) }
         (uncount { withCache w cache with server := some (installPeer world candidate.key_id
-          candidate.beacon_identity_public_key (PqxdhRecordLiftWorld.kernel .server seed)) })).base _ _ _ _ =
+          candidate.beacon_identity_public_key (PqxdhRecordLiftWorld.kernel .server seed) ad) })).base _ _ _ _ =
       PqxdhDeploymentBackend.XState.mk _ _ _ _ _
     rw [baseEq]
     simp only [builtX, merge, fillEq, serverEq, builtEnv, Prod.map, id, PqxdhDeploymentIdealKernel.peerFix,
@@ -993,7 +1079,7 @@ theorem buildHidden_law (t : PqxdhDeploymentIdealParams.Target count)
   · exact quiet _ rfl rfl
 
 open PqxdhDeploymentEnvironmentReal (worldCopies run_support Built installPeer) in
-/-- Every outcome of the marked build in capability form at an allocated slot with a pending token, with the World's counts forgotten, from an admissible state whose World Server marker of the slot is unused: either nothing was published (the token consumed, the seals logged, the World's CTX cache advanced) or one peer was published at a key ID vacant before, the World installed it with its Server kernel of the slot's seed, which its seed table now holds, and set the slot's Server marker. -/
+/-- Every outcome of the marked build in capability form at an allocated slot with a pending token, with the World's counts forgotten, from an admissible state whose World Server marker of the slot is unused: either nothing was published (the token consumed, the seals logged, the World's CTX cache advanced; a token rejected by the pre-hash guard logs no seal and leaves the cache) or one peer was published at a key ID vacant before with the AD151 of its build, the World installed it with its Server kernel of the slot's seed, which its seed table now holds, and that AD, and set the slot's Server marker. -/
 theorem buildHidden_outcome (created : PqxdhLiveServerConstruction.Created Unit) (session : ℕ)
     (payload : Option Pqxdh.Bytes) (coords : Coord) (e : EnvState KemSK SplitBk) (w : PqxdhRecordLiftWorld.State 2)
     (good : Good created e w) (j : PqxdhRecordLiftInterface.Slot 2) (token : PqxdhServerRelatedRootConsumer.Returned)
@@ -1004,16 +1090,16 @@ theorem buildHidden_outcome (created : PqxdhLiveServerConstruction.Created Unit)
       ∃ material log cache,
         (result.1.1 = none ∧ result.1.2 = builtEnv e session coords material ((none, e.native.shared.2.server), log) ∧
           result.2 = uncount (withCache w cache)) ∨
-        (∃ response candidate seed table, response.keyId = candidate.key_id ∧
+        (∃ response candidate seed table ad, response.keyId = candidate.key_id ∧
           e.native.shared.2.server.server.peers candidate.key_id = none ∧ table.1 j = some seed ∧
           w.seeds.1 ≤ table.1 ∧ result.1.1 = some response ∧
           result.1.2 = builtEnv e session coords material ((some response, PqxdhServerRegistrationPublication.publish
-            e.native.shared.2.server candidate PqxdhDeploymentHiddenSplit.placeholderKernel ()), log) ∧
+            e.native.shared.2.server candidate PqxdhDeploymentHiddenSplit.placeholderKernel ad), log) ∧
           result.2 = uncount { withCache w cache with
             seeds := table
             used := Function.update w.used j (Function.update (w.used j) .server true)
             server := some (installPeer world candidate.key_id candidate.beacon_identity_public_key
-              (PqxdhRecordLiftWorld.kernel .server seed)) }) := by
+              (PqxdhRecordLiftWorld.kernel .server seed) ad) }) := by
   obtain ⟨world', found', _, _, peersRaw⟩ := good.server
   rw [found] at found'
   cases found'
@@ -1021,24 +1107,38 @@ theorem buildHidden_outcome (created : PqxdhLiveServerConstruction.Created Unit)
   rw [buildHidden_effects setup codec checks session payload coords e w j token allocated pending,
     mem_support_bind_iff] at supported
   obtain ⟨drawn, _, supported⟩ := supported
-  rw [mem_support_bind_iff, PqxdhDeploymentSplitFactor.buildSplitFwd_free, StateT.run_map, simulateQ_map,
+  rcases pre : PqxdhServerRegistrationPublication.prehash e.native.shared.2.server token.pending payload with
+    _ | candidate₀
+  · rw [pre, support_pure, Set.mem_singleton_iff] at supported
+    subst supported
+    exact ⟨drawn.2, [], w.primitive.2, Or.inl ⟨rfl, rfl, rfl⟩⟩
+  rw [pre] at supported
+  dsimp only at supported
+  rw [mem_support_bind_iff] at supported
+  obtain ⟨hashed, _, supported⟩ := supported
+  generalize PqxdhTranscriptAd.adOf hashed.1 = ad at supported
+  rw [mem_support_bind_iff, PqxdhDeploymentSplitFactor.buildSplitFwd_free ad, StateT.run_map, simulateQ_map,
     StateT.run_map, support_map] at supported
   obtain ⟨_, ⟨⟨⟨rust, log⟩, cache⟩, member, rfl⟩, final⟩ := supported
-  have built : Built e.native.shared.2.server () rust :=
-    freeBuild_shape _ _ _ _ _ rust (run_support _ _ [] (rust, log) (run_support _ _ w.primitive.2 ((rust, log), cache) member))
+  have built : Built e.native.shared.2.server ad rust :=
+    freeBuild_shape ad _ _ _ _ _ rust (run_support _ _ [] (rust, log) (run_support _ _ hashed.2 ((rust, log), cache) member))
   refine ⟨drawn.2, log, cache, ?_⟩
   have effect : PqxdhDeploymentEnvironment.hiddenServerEffect (n := 2) j (none, e.native.shared.2.server) = pure () :=
     rfl
+  have quietCase : result ∈ support (Prod.map id uncount <$> (simulateQ PqxdhRecordLiftWorld.effects
+      (PqxdhDeploymentEnvironment.hiddenServerEffect j (none, e.native.shared.2.server) >>= fun _ =>
+        pure (none, builtEnv e session coords drawn.2 ((none, e.native.shared.2.server), log)))).run
+          (withCache w cache)) →
+      (result.1.1 = none ∧ result.1.2 = builtEnv e session coords drawn.2 ((none, e.native.shared.2.server), log) ∧
+        result.2 = uncount (withCache w cache)) := by
+    intro final
+    rw [effect, pure_bind, simulateQ_pure, StateT.run_pure, map_pure, support_pure, Set.mem_singleton_iff] at final
+    subst final
+    exact ⟨rfl, rfl, rfl⟩
   rcases rust with ⟨_ | response, after⟩ | error | _
   · have same : after = e.native.shared.2.server := built
     subst same
-    change result ∈ support (Prod.map id uncount <$> (simulateQ PqxdhRecordLiftWorld.effects
-      (PqxdhDeploymentEnvironment.hiddenServerEffect j (none, e.native.shared.2.server) >>= fun _ =>
-        pure (none, builtEnv e session coords drawn.2 ((none, e.native.shared.2.server), log)))).run
-          (withCache w cache)) at final
-    rw [effect, pure_bind, simulateQ_pure, StateT.run_pure, map_pure, support_pure, Set.mem_singleton_iff] at final
-    subst final
-    exact Or.inl ⟨rfl, rfl, rfl⟩
+    exact Or.inl (quietCase final)
   · obtain ⟨candidate, kernel, keyEq, vacant, published⟩ := built
     subst published
     have vacantWorld : world.records.server.peers candidate.key_id = none := by
@@ -1049,42 +1149,31 @@ theorem buildHidden_outcome (created : PqxdhLiveServerConstruction.Created Unit)
       | some peer => rw [hworld] at mapped; cases mapped
     have replaced : PqxdhServerAuthExperiment.settle e.native.shared.2.server
         (PqxdhDeploymentHiddenSplit.replaceRaw PqxdhDeploymentHiddenSplit.placeholderKernel <$>
-          RustM.ok (some response, PqxdhServerRegistrationPublication.publish e.native.shared.2.server candidate kernel ())) =
+          RustM.ok (some response, PqxdhServerRegistrationPublication.publish e.native.shared.2.server candidate kernel ad)) =
         (some response, PqxdhServerRegistrationPublication.publish e.native.shared.2.server candidate
-          PqxdhDeploymentHiddenSplit.placeholderKernel ()) := by
+          PqxdhDeploymentHiddenSplit.placeholderKernel ad) := by
       change (some response, PqxdhDeploymentHiddenSplit.setPeerKernel (PqxdhServerRegistrationPublication.publish
-        e.native.shared.2.server candidate kernel ()) response.keyId PqxdhDeploymentHiddenSplit.placeholderKernel) = _
+        e.native.shared.2.server candidate kernel ad) response.keyId PqxdhDeploymentHiddenSplit.placeholderKernel) = _
       rw [keyEq, PqxdhDeploymentHiddenSplit.publish_setPeerKernel]
     have peerAt := (PqxdhServerRegistrationPublication.publish_fields e.native.shared.2.server candidate
-      PqxdhDeploymentHiddenSplit.placeholderKernel ()).1
+      PqxdhDeploymentHiddenSplit.placeholderKernel ad).1
     have effect : PqxdhDeploymentEnvironment.hiddenServerEffect (n := 2) j (some response,
         PqxdhServerRegistrationPublication.publish e.native.shared.2.server candidate
-          PqxdhDeploymentHiddenSplit.placeholderKernel ()) =
-        PqxdhDeploymentEnvironment.issue (.installServer response.keyId candidate.beacon_identity_public_key (.hidden j)) := by
+          PqxdhDeploymentHiddenSplit.placeholderKernel ad) =
+        PqxdhDeploymentEnvironment.issue (.installServer response.keyId ⟨candidate.beacon_identity_public_key, ad⟩
+          (.hidden j)) := by
       unfold PqxdhDeploymentEnvironment.hiddenServerEffect
       simp only [keyEq, peerAt]
     rw [replaced, effect, PqxdhDeploymentEnvironmentReal.effects_issue_then,
-      effects_hiddenServer response.keyId candidate.beacon_identity_public_key j (withCache w cache) world found
+      effects_hiddenServer response.keyId candidate.beacon_identity_public_key ad j (withCache w cache) world found
         (by rw [keyEq]; exact vacantWorld) unused, Functor.map_map, support_map] at final
     obtain ⟨⟨seed, table⟩, inTable, rfl⟩ := final
     have facts := PqxdhRecordLiftLazyTable.step_facts j w.seeds (seed, table) inTable
-    refine Or.inr ⟨response, candidate, seed, table, keyEq, vacant, facts.1, facts.2.1, rfl, rfl, ?_⟩
+    refine Or.inr ⟨response, candidate, seed, table, ad, keyEq, vacant, facts.1, facts.2.1, rfl, rfl, ?_⟩
     rw [keyEq]
     rfl
-  · change result ∈ support (Prod.map id uncount <$> (simulateQ PqxdhRecordLiftWorld.effects
-      (PqxdhDeploymentEnvironment.hiddenServerEffect j (none, e.native.shared.2.server) >>= fun _ =>
-        pure (none, builtEnv e session coords drawn.2 ((none, e.native.shared.2.server), log)))).run
-          (withCache w cache)) at final
-    rw [effect, pure_bind, simulateQ_pure, StateT.run_pure, map_pure, support_pure, Set.mem_singleton_iff] at final
-    subst final
-    exact Or.inl ⟨rfl, rfl, rfl⟩
-  · change result ∈ support (Prod.map id uncount <$> (simulateQ PqxdhRecordLiftWorld.effects
-      (PqxdhDeploymentEnvironment.hiddenServerEffect j (none, e.native.shared.2.server) >>= fun _ =>
-        pure (none, builtEnv e session coords drawn.2 ((none, e.native.shared.2.server), log)))).run
-          (withCache w cache)) at final
-    rw [effect, pure_bind, simulateQ_pure, StateT.run_pure, map_pure, support_pure, Set.mem_singleton_iff] at final
-    subst final
-    exact Or.inl ⟨rfl, rfl, rfl⟩
+  · exact Or.inl (quietCase final)
+  · exact Or.inl (quietCase final)
 
 open PqxdhDeploymentEnvironmentReal (worldCopies installPeer good_intro good_server good_matched keeps_uncount
   good_uncount) in
@@ -1102,17 +1191,14 @@ theorem buildHidden_keeps (created : PqxdhLiveServerConstruction.Created Unit) (
   intro result supported
   obtain ⟨material, log, cache, outcome⟩ := buildHidden_outcome setup codec checks created session payload coords e w good
     j token allocated pending unused world found result supported
-  rcases outcome with ⟨_, envEq, worldEq⟩ | ⟨response, candidate, seed, table, keyEq, vacant, _, _, _, envEq, worldEq⟩
+  rcases outcome with ⟨_, envEq, worldEq⟩ | ⟨response, candidate, seed, table, ad, keyEq, vacant, _, _, _, envEq, worldEq⟩
   · rw [envEq, worldEq]
     exact good_intro created _ (builtSettled e.native session (none, e.native.shared.2.server) log) _ world rfl
       good.createdEq found sender identity peers good.ownersLength (good_matched created e w good)
-      (good.legacyAD world found)
   · rw [envEq, worldEq]
     refine good_intro created _ (builtSettled e.native session (some response, PqxdhServerRegistrationPublication.publish
-      e.native.shared.2.server candidate PqxdhDeploymentHiddenSplit.placeholderKernel ()) log) _ _ rfl good.createdEq rfl
+      e.native.shared.2.server candidate PqxdhDeploymentHiddenSplit.placeholderKernel ad) log) _ _ rfl good.createdEq rfl
       sender identity (fun keyId => ?_) good.ownersLength (good_matched created e w good)
-      (MldsaLegacyServerRouting.legacy_insert world.records.server candidate.key_id candidate.beacon_identity_public_key
-        _ (good.legacyAD world found))
     simp only [builtSettled, installPeer, PqxdhServerRegistrationPublication.publish]
     by_cases same : keyId = candidate.key_id
     · subst same

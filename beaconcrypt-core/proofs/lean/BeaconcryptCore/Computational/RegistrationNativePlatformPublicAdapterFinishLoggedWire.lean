@@ -41,10 +41,10 @@ variable (trusted :QueryImpl (Trusted n KemSK) m) (note :Stage→Log)
 theorem first (initial :registration.BeaconInitialKdf) :
     RegistrationNativePlatformPublicAdapterFinishSourceLogProgram.firstRecord setup left trusted note initial=
       RegistrationNativePlatformPublicAdapterFinishSourceLogProgram.firstRecord setup right trusted note initial :=by
-  have one:=from_initial (RegistrationNativePlatformSdkFinishDictionaries.primitives setup trusted ⟨List.replicate 357 0#u8,by simp⟩)
+  have one:=from_initial (RegistrationNativePlatformSdkFinishDictionaries.primitives setup trusted ⟨List.replicate 227 0#u8,by simp⟩)
     (RegistrationNativePlatformSdkFinishDictionaries.record setup left trusted)
     (RegistrationNativePlatformSdkFinishDictionaries.record_leaves setup left trusted _) initial
-  have two:=from_initial (RegistrationNativePlatformSdkFinishDictionaries.primitives setup trusted ⟨List.replicate 357 0#u8,by simp⟩)
+  have two:=from_initial (RegistrationNativePlatformSdkFinishDictionaries.primitives setup trusted ⟨List.replicate 227 0#u8,by simp⟩)
     (RegistrationNativePlatformSdkFinishDictionaries.record setup right trusted)
     (RegistrationNativePlatformSdkFinishDictionaries.record_leaves setup right trusted _) initial
   funext past

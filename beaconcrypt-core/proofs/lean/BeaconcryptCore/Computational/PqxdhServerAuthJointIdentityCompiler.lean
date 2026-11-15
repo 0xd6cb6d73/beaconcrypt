@@ -92,6 +92,51 @@ theorem phase1_plain (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
   rw [phase1, ← QueryImpl.simulateQ_compose, signing_query]
   rfl
 
+/-- The Phase1 callbacks of `signingImpl` with retention of the written bundle, as in `phase1LogImpl`: the three signatures remain the joint challenger's (no extra signing query), and the writer callback additionally records the bundle exactly when the codec writes it. -/
+def signingLogImpl (codec : Codec Reader Response) (oneTime : ScalarBytes) :
+    QueryImpl (PqxdhLivePhase1Bundle.Spec (Unit ⊕ ScalarBytes))
+      (StateT (Option PqxdhEd25519EufCma.Phase1Candidate) (OracleComp AdversarySpec))
+  | .inl query => StateT.lift (signingImpl codec oneTime (.inl query))
+  | .inr (.inl query) => StateT.lift (signingImpl codec oneTime (.inr (.inl query)))
+  | .inr (.inr bundle) => fun logged =>
+      pure (codec.write1 bundle, if (codec.write1 bundle).isSome then some bundle else logged)
+
+set_option backward.isDefEq.respectTransparency false in
+/-- Every logged callback has the same reply and retained bundle under the joint challenger, including refusal. -/
+theorem signingLog_query (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (seed : IdentitySeed) (oneTime : ScalarBytes) :
+    (plain setup.joint seed).mapStateTBase (signingLogImpl codec oneTime) = phase1LogImpl setup codec seed oneTime := by
+  have composed := congrFun (signing_query setup codec seed oneTime)
+  funext query state
+  rcases query with gen | (request | bundle)
+  all_goals simp only [QueryImpl.mapStateTBase, StateT.mk, signingLogImpl, phase1LogImpl, StateT.run_lift,
+    simulateQ_bind, simulateQ_pure]
+  · rw [← composed]
+    rfl
+  · rw [← composed]
+    rfl
+  · rfl
+
+/-- The original full bundle with its written Init bundle retained, with the same private key handles, joint signatures and optional writer result. -/
+def loggedPhase1 (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (target : PublicIdentity) (publicValue : PublicChallenge) (oneTime : ScalarBytes)
+    (kemPk : PqxdhKemIndCca.MlKem768PublicKey) (kemSk : KemSK) :
+    OracleComp AdversarySpec ((Option Pqxdh.Bytes × RawCtxBeaconLifecycle.State Unit (Unit ⊕ ScalarBytes) KemSK) ×
+      Option PqxdhEd25519EufCma.Phase1Candidate) :=
+  (simulateQ (signingLogImpl codec oneTime)
+    (PqxdhLivePhase1Bundle.bundle (publicProjection setup publicValue target kemPk) (freshBeacon setup publicValue kemSk))).run
+      none
+
+/-- Exact complete logged Phase1 execution under the ordinary challenger, including writer failure, the retained native state and the retained bundle. -/
+theorem loggedPhase1_plain (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (seed : IdentitySeed) (publicValue : PublicChallenge) (oneTime : ScalarBytes)
+    (kemPk : PqxdhKemIndCca.MlKem768PublicKey) (kemSk : KemSK) :
+    simulateQ (plain setup.joint seed)
+      (loggedPhase1 setup codec (setup.joint.publicKeys seed) publicValue oneTime kemPk kemSk) =
+      phase1Logged setup codec seed publicValue oneTime kemPk kemSk := by
+  rw [loggedPhase1, QueryImpl.simulateQ_mapStateTBase_run, signingLog_query]
+  rfl
+
 /-- Every nonidentity operation remains real and local; the sole identity-secret DH callback is forwarded to the joint challenger. -/
 noncomputable def auxiliary (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) :
     QueryImpl (PqxdhBeaconPhase2Preparation.Spec Unit (Unit ⊕ ScalarBytes) KemSK Unit Response)
@@ -144,19 +189,23 @@ theorem prefix_query (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
   rfl
 
 /-- Literal native preparation, with local prekey/one-time/KEM secrets and only the target identity secret unavailable. -/
-noncomputable def prepare (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+noncomputable def prepare (completedBinding : session.CompletedRegistrationBinding)
+    (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (scalar : ScalarBytes) (control : pqxdh.BeaconInitSent) (identity : Unit)
     (oneTime : Unit ⊕ ScalarBytes) (kem : KemSK) (raw : Pqxdh.Bytes) :
     OracleComp AdversarySpec (Option (PqxdhBeaconPhase2Preparation.Prepared Response)) :=
   (simulateQ (prefixImpl setup codec scalar)
-    (PqxdhBeaconPhase2Preparation.prepare control identity (.inl ()) (.inr oneTime) kem raw)).run' ()
+    (PqxdhBeaconPhase2Preparation.prepare (completedBinding := completedBinding) control identity (.inl ()) (.inr oneTime)
+      kem raw)).run' ()
 
 /-- Complete original preparation, including all early rejection and prior local effects, equals the routed program. -/
-theorem prepare_plain (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+theorem prepare_plain (completedBinding : session.CompletedRegistrationBinding)
+    (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (scalar : ScalarBytes) (seed : IdentitySeed) (control : pqxdh.BeaconInitSent) (identity : Unit)
     (oneTime : Unit ⊕ ScalarBytes) (kem : KemSK) (raw : Pqxdh.Bytes) :
-    simulateQ (plain setup.joint seed) (prepare setup codec scalar control identity oneTime kem raw) =
-      (PqxdhServerAuthNative.nativeBeaconPrefix setup codec scalar seed control identity oneTime kem raw).run' () := by
+    simulateQ (plain setup.joint seed) (prepare completedBinding setup codec scalar control identity oneTime kem raw) =
+      (PqxdhServerAuthNative.nativeBeaconPrefix completedBinding setup codec scalar seed control identity oneTime kem
+        raw).run' () := by
   simp only [prepare, StateT.run'_eq, simulateQ_map, QueryImpl.simulateQ_mapStateTBase_run, prefix_query,
     PqxdhServerAuthNative.nativeBeaconPrefix]
 
@@ -164,11 +213,12 @@ theorem prepare_plain (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
 abbrev Game (KemSK : Type) := StateT (PqxdhServerAuthNative.NativeState KemSK) (OracleComp AdversarySpec)
 
 /-- Actual complete native tail after routed preparation; the Server seed is local and the target Beacon seed is never an argument. -/
-noncomputable def stage (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+noncomputable def stage (completedBinding : session.CompletedRegistrationBinding)
+    (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (serverSeed : IdentitySeed) (scalar : ScalarBytes) (control : pqxdh.BeaconInitSent)
     (identity : Unit) (oneTime : Unit ⊕ ScalarBytes) (kem : KemSK) (raw : Pqxdh.Bytes) :
     Game KemSK (Option PqxdhBeaconPhase2Publication.Staged) := fun state => do
-  let prepared ← prepare setup codec scalar control identity oneTime kem raw
+  let prepared ← prepare completedBinding setup codec scalar control identity oneTime kem raw
   match prepared with
   | none => pure (none, state)
   | some original => coins ((PqxdhServerAuthNative.nativeBeaconTail setup codec
@@ -176,27 +226,39 @@ noncomputable def stage (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
 
 set_option backward.isDefEq.respectTransparency false in
 /-- Preparation and the full native record continuation preserve the same optional result, Extract/CTX caches and protocol state. -/
-theorem stage_plain (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+theorem stage_plain (completedBinding : session.CompletedRegistrationBinding)
+    (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (serverSeed beaconSeed : IdentitySeed) (scalar : ScalarBytes) (control : pqxdh.BeaconInitSent)
     (identity : Unit) (oneTime : Unit ⊕ ScalarBytes) (kem : KemSK) (raw : Pqxdh.Bytes)
     (state : PqxdhServerAuthNative.NativeState KemSK) :
-    simulateQ (plain setup.joint beaconSeed) ((stage setup codec serverSeed scalar control identity oneTime kem raw).run state) =
-      (PqxdhServerAuthNative.nativeBeaconStage setup codec serverSeed scalar beaconSeed control identity oneTime kem raw).run state := by
+    simulateQ (plain setup.joint beaconSeed)
+      ((stage completedBinding setup codec serverSeed scalar control identity oneTime kem raw).run state) =
+      (PqxdhServerAuthNative.nativeBeaconStage completedBinding setup codec serverSeed scalar beaconSeed control identity
+        oneTime kem raw).run state := by
   simp only [stage, StateT.run, simulateQ_bind, prepare_plain, PqxdhServerAuthNative.nativeBeaconStage,
     PqxdhServerAuthNative.nativeCoins_bind]
   apply bind_congr
   rintro (_ | original) <;> simp only [simulateQ_pure, coins_plain]
   rfl
 
-/-- The original one-shot finish keeps the whole tail and final native publication/abort. -/
+/-- The original one-shot finish keeps the transcript hash of the retained bundle on the shared BLAKE2b cache, the whole tail at the completed binding of that digest and final native publication/abort; an undecodable Phase 2 (or a missing bundle) aborts before any hash. -/
 noncomputable def finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (serverSeed : IdentitySeed) (scalar : ScalarBytes) (raw : Pqxdh.Bytes) : Game KemSK (Option Pqxdh.Bytes) := fun state =>
   match state.2.beacon.beacon.phase with
-  | .initSent control _ oneTime kem => do
-      let staged ← (stage setup codec serverSeed scalar control state.2.beacon.beacon.identity oneTime kem raw).run state
-      let current := staged.2.2
-      let result := PqxdhBeaconPhase2Publication.finish control current.beacon staged.1
-      pure (result.1, staged.2.1, { current with beacon := result.2, ghost := current.ghost.accept (acceptedOf staged.1 result.1) })
+  | .initSent control _ oneTime kem =>
+    match state.2.beaconInit, responseOf codec raw with
+    | some init, some response => do
+        let hashed ← coins ((PqxdhServerAuthNative.nativeHash
+          (PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf init) response)).run state)
+        let staged ← (stage (PqxdhTranscriptAd.completedOf control hashed.1) setup codec serverSeed scalar control
+          hashed.2.2.beacon.beacon.identity oneTime kem raw).run hashed.2
+        let current := staged.2.2
+        let result := PqxdhBeaconPhase2Publication.finish control current.beacon staged.1
+        pure (result.1, staged.2.1,
+          { current with beacon := result.2, ghost := current.ghost.accept (acceptedOf staged.1 result.1) })
+    | _, _ =>
+        let result := PqxdhBeaconPhase2Publication.finish control state.2.beacon none
+        pure (result.1, state.1, { state.2 with beacon := result.2 })
   | _ => pure (none, state)
 
 set_option backward.isDefEq.respectTransparency false in
@@ -208,10 +270,17 @@ theorem finish_plain (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
       (PqxdhServerAuthNative.nativeFinish setup codec serverSeed scalar beaconSeed raw).run state := by
   simp only [StateT.run, finish, PqxdhServerAuthNative.nativeFinish, PqxdhServerAuthNative.nativeGet_bind]
   cases phase : state.2.beacon.beacon.phase <;> simp only [simulateQ_pure]
-  all_goals first | rfl | skip
-  simp only [simulateQ_bind, simulateQ_pure, PqxdhServerAuthNative.native_bind_run]
+  all_goals try rfl
   rename_i control prekey oneTime kem
-  have actual := stage_plain setup codec serverSeed beaconSeed scalar control state.2.beacon.beacon.identity oneTime kem raw state
+  cases bundle : state.2.beaconInit <;> cases response : responseOf codec raw <;> simp only [simulateQ_pure]
+  all_goals try rfl
+  rename_i init fields
+  simp only [simulateQ_bind, coins_plain, PqxdhServerAuthNative.native_bind_run]
+  apply bind_congr
+  intro hashed
+  simp only [simulateQ_pure]
+  have actual := stage_plain (PqxdhTranscriptAd.completedOf control hashed.1) setup codec serverSeed beaconSeed scalar
+    control hashed.2.2.beacon.beacon.identity oneTime kem raw hashed.2
   simp only [StateT.run] at actual
   rw [actual]
   apply bind_congr
@@ -233,7 +302,7 @@ theorem handler_plain (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
   funext query state
   rcases query with coin | (raw | build | raw | hmac | bytes | key)
   all_goals simp only [QueryImpl.mapStateTBase, StateT.mk, handler, StateT.run, coins_plain]
-  all_goals first | rfl | skip
+  all_goals try rfl
   exact finish_plain setup codec serverSeed beaconSeed scalar raw state
 
 /-- The entire adaptive public program is the original source execution with its complete private state. -/
@@ -250,10 +319,10 @@ noncomputable def execution {Result : Type} (setup : Setup baseSpec KemSK) (code
     (keys : PqxdhKemIndCca.MlKem768PublicKey × KemSK)
     (work : AuthInput → OracleComp ServerAuthSpec Result) (target : PublicIdentity) := do
   let publicValue := PqxdhJointGapDh.challenge setup.joint setup.dh serverSeed scalar
-  let published ← phase1 setup codec target publicValue oneTime keys.1 keys.2
+  let published ← loggedPhase1 setup codec target publicValue oneTime keys.1 keys.2
   let result ← (simulateQ (handler setup codec checks serverSeed scalar)
-    (work ⟨publicValue.identity, setup.serverKeyId, published.1, none⟩)).run
-      (PqxdhJointDhExtractFamily.empty, initialGameState setup publicValue published.2)
+    (work ⟨publicValue.identity, setup.serverKeyId, published.1.1, none⟩)).run
+      (PqxdhJointDhExtractFamily.empty, initialGameState setup publicValue published.1.2 published.2)
   pure (published, result)
 
 /-- One actual joint execution reproduces the complete original Phase1 and adaptive native continuation; no source field or occurrence premise is assumed. -/
@@ -264,12 +333,12 @@ theorem execution_plain {Result : Type} (setup : Setup baseSpec KemSK) (codec : 
     simulateQ (plain setup.joint beaconSeed)
       (execution setup codec checks serverSeed scalar oneTime keys work (setup.joint.publicKeys beaconSeed)) = (do
         let publicValue := PqxdhJointGapDh.challenge setup.joint setup.dh serverSeed scalar
-        let published ← phase1Run setup codec beaconSeed publicValue oneTime keys.1 keys.2
+        let published ← phase1Logged setup codec beaconSeed publicValue oneTime keys.1 keys.2
         let result ← (simulateQ (PqxdhServerAuthNative.nativeHandler setup codec checks serverSeed scalar beaconSeed)
-          (work ⟨publicValue.identity, setup.serverKeyId, published.1, none⟩)).run
-            (PqxdhJointDhExtractFamily.empty, initialGameState setup publicValue published.2)
+          (work ⟨publicValue.identity, setup.serverKeyId, published.1.1, none⟩)).run
+            (PqxdhJointDhExtractFamily.empty, initialGameState setup publicValue published.1.2 published.2)
         pure (published, result)) := by
-  simp only [execution, simulateQ_bind, phase1_plain, program_plain, simulateQ_pure]
+  simp only [execution, simulateQ_bind, loggedPhase1_plain, program_plain, simulateQ_pure]
 
 /-- A concrete joint-interface client samples all nontarget private material locally and executes the actual observed R1 program. The target seed remains solely in the challenger. -/
 noncomputable def client (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -292,10 +361,10 @@ theorem client_plain (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
       let scalar ← PqxdhJointGapDh.sampleScalar
       let keys ← simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl) setup.kem.keygen
       let oneTime ← PqxdhJointGapDh.sampleScalar
-      let published ← phase1Run setup codec beaconSeed
+      let logged ← phase1Logged setup codec beaconSeed
         (PqxdhJointGapDh.challenge setup.joint setup.dh serverSeed scalar) oneTime keys.1 keys.2
       PqxdhServerAuthObservedExecution.native setup codec checks adversary false observation
-        ⟨serverSeed, scalar, beaconSeed, oneTime, keys, published⟩) := by
+        ⟨serverSeed, scalar, beaconSeed, oneTime, keys, logged.1, logged.2⟩) := by
   simp only [client, simulateQ_bind, coins_plain, execution_plain, simulateQ_pure, bind_assoc, pure_bind]
   simp only [PqxdhServerAuthObservedExecution.native, PqxdhServerAuthEntryFactor.contextInput,
     PqxdhServerAuthEntryFactor.contextState, PqxdhServerAuthEntryFactor.Context.publicValue,
@@ -342,6 +411,16 @@ end BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityCompiler
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityCompiler.phase1_plain
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityCompiler.signingLog_query' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityCompiler.signingLog_query
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityCompiler.loggedPhase1_plain' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityCompiler.loggedPhase1_plain
 /-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthJointIdentityCompiler.auxiliary_query' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/

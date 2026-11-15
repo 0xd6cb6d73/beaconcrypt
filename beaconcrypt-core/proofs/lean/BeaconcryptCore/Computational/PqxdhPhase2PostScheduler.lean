@@ -11,6 +11,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhPhase2PostScheduler
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhPhase2SourceAux PqxdhKemIndCca PqxdhPrivateKemSource PqxdhJointKdfGame
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhPhase1AcceptanceOracle
 open PqxdhChallengeSecretRouting PqxdhInitializerSecrecy
@@ -71,7 +72,7 @@ noncomputable def nativeFinish
       (StateT (State (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B) count) ProbComp)
   | .finish index raw => fun before => installed index before <$>
       (simulateQ (native attachedVerify primitives count source localImpl baseImpl kem secret)
-        (PqxdhBeaconPhase2Publication.nativeOwner decode raw (before.1.roles.1.2 index))).run
+        (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw (before.1.roles.1.2 index))).run
           (before.1.primitive, before.2)
 
 /-- Opaque target processing returns the same optional API reply and retains every installed field. -/
@@ -85,7 +86,7 @@ noncomputable def targetFinish
         (OracleComp (LocalPostSpec baseSpec)))
   | .finish index raw => fun before => installed index before <$>
       (simulateQ (handles attachedVerify primitives count source localImpl challenge)
-        (PqxdhBeaconPhase2Shared.owner decode raw (before.1.roles.1.2 index))).run
+        (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) decode raw (before.1.roles.1.2 index))).run
           (before.1.primitive, before.2)
 
 set_option backward.isDefEq.respectTransparency false in
@@ -102,17 +103,17 @@ theorem owner_actual
     (owner : RawCtxBeaconLifecycle.State (IdentityHandle I) D (KemHandle K))
     (state : SharedState A × BareState count) :
     (simulateQ (native attachedVerify primitives count source localImpl baseImpl kem secret)
-      (PqxdhBeaconPhase2Publication.nativeOwner decode raw owner)).run state =
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw owner)).run state =
       simulateQ (kemAmbientImpl baseImpl) (simulateQ (actualImpl source kem secret challenge)
         ((simulateQ (handles attachedVerify primitives count source localImpl challenge)
-          (PqxdhBeaconPhase2Shared.owner decode raw owner)).run state)) := by
+          (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) decode raw owner)).run state)) := by
   have direct := PqxdhPhase2PostSource.native_complete attachedVerify primitives count source localImpl
     baseImpl kem secret challenge
     (simulateQ (PqxdhPhase2KemHandles.native PqxdhPhase2KemProvenance.encode)
-      (PqxdhBeaconPhase2Publication.nativeOwner decode raw owner)) state
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw owner)) state
   rw [native, QueryImpl.simulateQ_compose, ← direct]
   rw [← QueryImpl.simulateQ_compose,
-    PqxdhBeaconPhase2Shared.owner_realization _ _ _
+    PqxdhBeaconPhase2Shared.owner_realization (completedBinding := completedBinding) _ _ _
       (PqxdhPhase2SharedKemHandles.full_calls PqxdhPhase2KemProvenance.encode _ _ _
         (PqxdhBeaconPhase2Routed.full_calls source kem secret challenge supplied agreement
           (borrowedAux attachedVerify primitives count source localImpl)))]
@@ -126,7 +127,7 @@ theorem owner_actual
           (borrowedAux attachedVerify primitives count source localImpl))
         (fun _ _ => rfl)
         (simulateQ (PqxdhPhase2SharedKemHandles.full PqxdhPhase2KemProvenance.encode)
-          (PqxdhBeaconPhase2Shared.owner decode raw owner)) state).symm
+          (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) decode raw owner)) state).symm
 
 set_option backward.isDefEq.respectTransparency false in
 /-- Complete native installation commutes with the same good-sample target simulation. -/
@@ -140,14 +141,14 @@ theorem finish_actual
     (agreement : kem.decaps secret challenge = pure (some supplied))
     (decode : RawCtxReceive.FrameDecoder) (query : (PqxdhPhase2LiveFinish.FinishSpec B).Domain)
     (state : State (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B) count) :
-    (nativeFinish attachedVerify primitives count source localImpl baseImpl kem secret decode query).run state =
+    (nativeFinish (completedBinding := completedBinding) attachedVerify primitives count source localImpl baseImpl kem secret decode query).run state =
       simulateQ (kemAmbientImpl baseImpl) (simulateQ (actualImpl source kem secret challenge)
-        ((targetFinish attachedVerify primitives count source localImpl challenge decode query).run state)) := by
+        ((targetFinish (completedBinding := completedBinding) attachedVerify primitives count source localImpl challenge decode query).run state)) := by
   cases query with
   | finish index raw =>
     simpa only [nativeFinish, targetFinish, StateT.run, simulateQ_map] using
       congrArg (Functor.map (installed index state))
-        (owner_actual attachedVerify primitives count source localImpl baseImpl kem secret challenge supplied agreement
+        (owner_actual (completedBinding := completedBinding) attachedVerify primitives count source localImpl baseImpl kem secret challenge supplied agreement
           decode raw (state.1.roles.1.2 index) (state.1.primitive, state.2))
 
 /-- Every original public request is routed to the public CCA channel, including its challenge block. -/
@@ -191,7 +192,7 @@ noncomputable def actual
       (fun result => (result.1, (state.1, result.2))) <$>
         simulateQ (PqxdhPhase2PostSource.interpretation baseImpl kem secret challenge)
           ((borrowedSelector attachedVerify primitives count request).run state.2)
-  | .inr request => nativeFinish attachedVerify primitives count source localImpl baseImpl kem secret decode request
+  | .inr request => nativeFinish (completedBinding := completedBinding) attachedVerify primitives count source localImpl baseImpl kem secret decode request
 
 /-- The executable target program receives no selected KEM secret or supplied shared-secret bytes. -/
 noncomputable def target
@@ -210,7 +211,7 @@ noncomputable def target
   | .inl (.inr request) => fun state => publicWork
       ((fun result => (result.1, (state.1, result.2))) <$>
         (borrowedSelector attachedVerify primitives count request).run state.2)
-  | .inr request => targetFinish attachedVerify primitives count source localImpl challenge decode request
+  | .inr request => targetFinish (completedBinding := completedBinding) attachedVerify primitives count source localImpl challenge decode request
 
 variable
     (attachedVerify : Ed25519PublicKey → Pqxdh.Bytes → Option Pqxdh.Bytes)
@@ -229,9 +230,9 @@ set_option backward.isDefEq.respectTransparency false in
 theorem step_actual
     (query : (Spec (baseSpec := baseSpec) (S := S) (B := B)).Domain)
     (state : State (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B) count) :
-    (actual attachedVerify primitives count source localImpl writer senderId route decode baseImpl kem secret challenge query).run state =
+    (actual (completedBinding := completedBinding) attachedVerify primitives count source localImpl writer senderId route decode baseImpl kem secret challenge query).run state =
       simulateQ (interpretation source baseImpl kem secret challenge)
-        ((target attachedVerify primitives count source localImpl writer senderId route decode challenge query).run state) := by
+        ((target (completedBinding := completedBinding) attachedVerify primitives count source localImpl writer senderId route decode challenge query).run state) := by
   rcases query with (query | query)
   · cases query with
     | inl request =>
@@ -239,21 +240,21 @@ theorem step_actual
     | inr request =>
       simp only [actual, target, StateT.run, public_actual, simulateQ_map]
   · simpa only [actual, target, interpretation, QueryImpl.simulateQ_compose] using
-      finish_actual attachedVerify primitives count source localImpl baseImpl kem secret challenge supplied agreement decode query state
+      finish_actual (completedBinding := completedBinding) attachedVerify primitives count source localImpl baseImpl kem secret challenge supplied agreement decode query state
 
 include supplied agreement in
 /-- The entire adaptive postchallenge execution agrees, including all replies, complete live owners, caches and identity history. -/
 theorem schedule_actual {Result : Type}
     (client : OracleComp (Spec (baseSpec := baseSpec) (S := S) (B := B)) Result)
     (state : State (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B) count) :
-    (simulateQ (actual attachedVerify primitives count source localImpl writer senderId route decode baseImpl kem secret challenge) client).run state =
+    (simulateQ (actual (completedBinding := completedBinding) attachedVerify primitives count source localImpl writer senderId route decode baseImpl kem secret challenge) client).run state =
       simulateQ (interpretation source baseImpl kem secret challenge)
-        ((simulateQ (target attachedVerify primitives count source localImpl writer senderId route decode challenge) client).run state) := by
+        ((simulateQ (target (completedBinding := completedBinding) attachedVerify primitives count source localImpl writer senderId route decode challenge) client).run state) := by
   exact (simulateQ_StateT_compose
-    (target attachedVerify primitives count source localImpl writer senderId route decode challenge)
+    (target (completedBinding := completedBinding) attachedVerify primitives count source localImpl writer senderId route decode challenge)
     (interpretation source baseImpl kem secret challenge)
-    (actual attachedVerify primitives count source localImpl writer senderId route decode baseImpl kem secret challenge)
-    (fun query before => (step_actual attachedVerify primitives count source localImpl writer senderId route decode
+    (actual (completedBinding := completedBinding) attachedVerify primitives count source localImpl writer senderId route decode baseImpl kem secret challenge)
+    (fun query before => (step_actual (completedBinding := completedBinding) attachedVerify primitives count source localImpl writer senderId route decode
       baseImpl kem secret challenge supplied agreement query before).symm) client state).symm
 
 include supplied agreement in
@@ -261,11 +262,11 @@ include supplied agreement in
 theorem schedule_reduction {Result : Type}
     (client : OracleComp (Spec (baseSpec := baseSpec) (S := S) (B := B)) Result)
     (state : State (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B) count) :
-    (simulateQ (actual attachedVerify primitives count source localImpl writer senderId route decode baseImpl kem secret challenge) client).run state =
+    (simulateQ (actual (completedBinding := completedBinding) attachedVerify primitives count source localImpl writer senderId route decode baseImpl kem secret challenge) client).run state =
       simulateQ (kemAmbientImpl baseImpl) (simulateQ (publicImpl kem secret challenge)
         (simulateQ (PqxdhChallengeSecretRouting.route source challenge supplied)
-          ((simulateQ (target attachedVerify primitives count source localImpl writer senderId route decode challenge) client).run state))) := by
-  rw [schedule_actual attachedVerify primitives count source localImpl writer senderId route decode baseImpl kem secret challenge supplied agreement,
+          ((simulateQ (target (completedBinding := completedBinding) attachedVerify primitives count source localImpl writer senderId route decode challenge) client).run state))) := by
+  rw [schedule_actual (completedBinding := completedBinding) attachedVerify primitives count source localImpl writer senderId route decode baseImpl kem secret challenge supplied agreement,
     route_complete source kem secret challenge supplied agreement]
   exact QueryImpl.simulateQ_compose _ _ _
 

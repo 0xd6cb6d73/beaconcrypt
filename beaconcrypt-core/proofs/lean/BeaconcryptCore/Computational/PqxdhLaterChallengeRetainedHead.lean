@@ -12,6 +12,7 @@ open OracleComp OracleSpec
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeRetainedHead
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhFullSecretInputKdf RawCtxSelectedParentTable
 variable {ι M P I D K X Response Shared A N C Result Origin : Type} {extra : OracleSpec ι} {S B : Nat}
 
@@ -85,8 +86,8 @@ theorem frame_step (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedS
     (context : PqxdhInitialBuilderContext.Context extra M P I D K Result S B)
     (state : PqxdhInitialNativeRetained.RetainedState A N C) :
     (PqxdhInitialNativeRetained.retained source writer prior external
-      (PqxdhInitialBuilderContext.frame sender route decode context).1).run state =
-      pure (PqxdhInitialParentBuilderContext.reply sender route decode context
+      (PqxdhInitialBuilderContext.frame (completedBinding := completedBinding) sender route decode context).1).run state =
+      pure (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode context
         (prior (PqxdhInitialBuilderContext.address context)), state) := by
   rcases context with ((_ | _) | _)
   case inl.finish _ _ _ _ _ inner =>
@@ -131,10 +132,10 @@ theorem origin_step (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixed
     (context : PqxdhInitialOriginContext.Context extra M P I D K Result Origin S B)
     (state : PqxdhInitialNativeRetained.RetainedState A N C) :
     (PqxdhInitialNativeRetained.retained source writer prior external
-      (PqxdhInitialOriginContext.frame mark sender route decode context).1).run state =
-      pure (PqxdhInitialParentBuilderContext.reply sender route decode context.original
+      (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode context).1).run state =
+      pure (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode context.original
         (prior (PqxdhInitialBuilderContext.address context.original)), state) :=
-  frame_step source writer prior external sender route decode context.original state
+  frame_step (completedBinding := completedBinding) source writer prior external sender route decode context.original state
 
 /-- The retained parent slot wins even when its address aliases the selected child; this head equation needs no separation premise. -/
 theorem parent_step (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
@@ -149,11 +150,11 @@ theorem parent_step (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixed
     (state : PqxdhInitialNativeRetained.RetainedState A N C) :
     (PqxdhInitialNativeRetained.retained source writer
       (RawCtxSelectedMessageDriver.privateTable prior (some entry) target output) external
-      (PqxdhInitialOriginContext.frame mark sender route decode context).1).run state =
-      pure (PqxdhInitialParentBuilderContext.reply sender route decode context.original
+      (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode context).1).run state =
+      pure (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode context.original
         (RawCtxSelectedParentEntry.realize entry target), state) := by
   simpa only [RawCtxSelectedMessageDriver.privateTable, lookup, atParent, ite_true] using
-    origin_step source writer (RawCtxSelectedMessageDriver.privateTable prior (some entry) target output)
+    origin_step (completedBinding := completedBinding) source writer (RawCtxSelectedMessageDriver.privateTable prior (some entry) target output)
       external mark sender route decode context state
 
 /-- Executing the actual original parent head and its complete continuation equals resuming with the literal retained parent response in the same state. -/
@@ -170,16 +171,16 @@ theorem parent_execute (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
     (simulateQ (PqxdhInitialNativeRetained.retained source writer
       (RawCtxSelectedMessageDriver.privateTable prior (some entry) target output) external)
       (((PqxdhInitialNativeLog.Spec extra RatchetChain I D K X Response Shared S B).query
-        (PqxdhInitialOriginContext.frame mark sender route decode context).1 :
+        (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode context).1 :
           OracleComp (PqxdhInitialNativeLog.Spec extra RatchetChain I D K X Response Shared S B) _) >>=
-        (PqxdhInitialOriginContext.frame mark sender route decode context).2)).run state =
+        (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode context).2)).run state =
       (simulateQ (PqxdhInitialNativeRetained.retained source writer
         (RawCtxSelectedMessageDriver.privateTable prior (some entry) target output) external)
-        ((PqxdhInitialOriginContext.frame mark sender route decode context).2
-          (PqxdhInitialParentBuilderContext.reply sender route decode context.original
+        ((PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode context).2
+          (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode context.original
             (RawCtxSelectedParentEntry.realize entry target)))).run state := by
   simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind,
-    parent_step source writer prior entry target output external mark sender route decode context atParent state,
+    parent_step (completedBinding := completedBinding) source writer prior entry target output external mark sender route decode context atParent state,
     pure_bind]
 
 end BeaconcryptCore.Computational.PqxdhLaterChallengeRetainedHead

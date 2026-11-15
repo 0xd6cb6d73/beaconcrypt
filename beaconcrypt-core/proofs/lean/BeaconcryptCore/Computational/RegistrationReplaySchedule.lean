@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
-import BeaconcryptCore.Computational.RegistrationHiddenInstall
+import BeaconcryptCore.Computational.RegistrationAgreementExecutor
+import BeaconcryptCore.Refinement.PeerOwnership
 
 /-! Replay status belongs to a persistent private registration-ID set, rather than an adversarial Fresh argument. Both membership and insertion use the actual native ownership capabilities. Source insertion occurs after completed root agreement and before response completion; the later callback receives no set lens, so signing/encoding/publication failure cannot undo consumption. -/
 open OracleComp OracleSpec CoreModels Aeneas

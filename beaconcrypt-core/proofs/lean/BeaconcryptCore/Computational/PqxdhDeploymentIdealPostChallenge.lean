@@ -9,7 +9,7 @@ After an active selected accept, the middle source handler answers a finish of t
 - Relabelling: the opaque preparation and collection (`PqxdhBeaconPhase2Shared.prepare`, `collect`) are natural in the owner's identity, KEM key and identity-conversion types for one owner (`RelabelCalls`, `collect_relabel`, `prepare_relabel`); item 2's encoded owner (identity index, public key with KEM index) and the native owner (identity seed, key pair) are related through it.
 - The preparation through item 2's layers: the post-challenge router answers the decapsulation of the challenge ciphertext at the selected index from its placeholder candidate without a CCA query (`reservation_selected`, `post_target`), and item 2's marked preparation returns the challenge marker (`stack_target`); every other preparation request is item 2's marked preparation with known handles under the actual services, which changes only transcripts that item 2's view erases (`prepItem`, `prepKnown_erase`, `stack_prepQuery`, `stack_prepProgram`). Item 2's answers relabel the native answers with the challenge handle (`prep_calls`), which keep the CE-native state (`slot_prep`).
 - The grouped request: a known decapsulation result is item 2's native grouped answer on both sides (`slot_known` with `PqxdhDeploymentIdealPostFinish.stack_known`); the challenge marker is `PqxdhDeploymentIdealSteps.groupCE_challenge` carried through item 2's table layers to the allocator (`tableLayer_flat`, `stack_challenge`, `groupCE_keep`, `stack_challengeC`).
-- `owner_challenge`: owner k's grouped owner through item 2's layers is the CE-native grouped owner past the allocator, projected.
+- `owner_challenge`: owner k's grouped owner (at a completed binding) through item 2's layers is the CE-native grouped owner past the allocator, projected; `hashed_challenge` adds the transcript hash: owner k's grouped hashed owner (`PqxdhRegistrationJointKemPostSkeleton.groupedHashed`) through item 2's layers is the CE-native hashed owner `hashedOwnerCE` past the allocator, projected.
 - The allocator keeps a good state and every value it represents (`slot_keep`, `slot_keepProgram`), so the hidden read leaves item 2's view of the mark unchanged.
 - The middle side and the step: `rejoin_set`, `afterChallenge`, `finishStep_challenge`, `finishChallenge_found`, `sourceMid_challenge`, and `step_challenge`, with hypotheses that the finish is owner k's challenge finish, item 2's ownership invariant, the addressed owner's KEM index the selected one, a prefix KEM pool, a good allocator state and a stored value at the mark's coordinates. `finish_other` derives the premise of `step_finish` about the addressed owner from the finish not being owner k's challenge finish, the active flag and the owner's KEM index being its position; `step_finishActive` combines both steps for every finish after an active selected accept.
 
@@ -77,9 +77,10 @@ theorem prepare_relabel {m : Type → Type} [Monad m] [LawfulMonad m]
     (source : QueryImpl (Spec I₁ D K₁ X₁ Response S) m) (target : QueryImpl (Spec I₂ D K₂ X₂ Response S) m)
     (identity₁ : I₁) (identity₂ : I₂) (kem₁ : K₁) (kem₂ : K₂) (x₁ : X₁) (x₂ : X₂)
     (calls : RelabelCalls source target identity₁ identity₂ kem₁ kem₂ x₁ x₂)
+    (binding : beaconcrypt_core.session.CompletedRegistrationBinding)
     (control : beaconcrypt_core.pqxdh.BeaconInitSent) (prekey oneTime : D) (raw : PqxdhBeaconPhase2Preparation.Bytes) :
-    simulateQ target (prepare control identity₂ prekey oneTime kem₂ raw) =
-      simulateQ source (prepare control identity₁ prekey oneTime kem₁ raw) := by
+    simulateQ target (prepare binding control identity₂ prekey oneTime kem₂ raw) =
+      simulateQ source (prepare binding control identity₁ prekey oneTime kem₁ raw) := by
   simp only [prepare, simulateQ_bind, collect_relabel source target identity₁ identity₂ kem₁ kem₂ x₁ x₂ calls]
   refine bind_congr fun inputs => ?_
   rcases inputs with _ | inputs
@@ -453,7 +454,8 @@ variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response : Type}
   (t : Target count) (p : Params KemSK count) (created : PqxdhLiveServerConstruction.Created Unit)
 
 /-- Owner k's grouped finish through item 2's layers, at the encoded owner with the selected KEM index, from a state that projects the private pools and the CE-native state, is the CE-native grouped owner `groupedOwnerCE` under `ownerImplCE` with the factored hidden services past the allocator, from no recorded coordinates, projected: the returned owner encoded, the skeleton's game state the CE one without ghosts, item 2's marks and item 2's view of the router state kept, and the table cache, the allocator and the table the CE's. It needs the owner's identity index to hold its seed, the selected KEM index to hold the owner's KEM key pair while it waits for Phase 2, and a prefix KEM pool. -/
-theorem owner_challenge (raw : Pqxdh.Bytes) (identityIndex : ℕ) (owner : PqxdhRegistrationSchedule.Owner KemSK)
+theorem owner_challenge (binding : beaconcrypt_core.session.CompletedRegistrationBinding) (raw : Pqxdh.Bytes)
+    (identityIndex : ℕ) (owner : PqxdhRegistrationSchedule.Owner KemSK)
     (joint : PqxdhDynamicIdentityPool.SourceState) (pool : PqxdhLiveKemBirth.Pool KemSK)
     (identityOwned : joint.seeds[identityIndex]? = some owner.beacon.identity)
     (kemOwned : ∀ control prekey oneTime keys, owner.beacon.phase = .initSent control prekey oneTime keys →
@@ -462,14 +464,14 @@ theorem owner_challenge (raw : Pqxdh.Bytes) (identityIndex : ℕ) (owner : Pqxdh
     (native : PqxdhServerAuthNative.NativeState KemSK) (marks : PqxdhRegistrationJointKemPostSkeleton.Marks Output)
     (slots : SlotState) :
     stackRun setup codec checks t p created
-        (groupedOwner raw (PqxdhRegistrationJointBundle.encode setup identityIndex t.kem.val owner))
+        (groupedOwner binding raw (PqxdhRegistrationJointBundle.encode setup identityIndex t.kem.val owner))
         (clean native.2, marks) (eraseServiceC ((joint, PqxdhDeploymentIdealPoolSource.routerOf pool), (native.1.cache, slots))) =
       (fun r => (some ((r.1.1.1, PqxdhRegistrationJointBundle.encode setup identityIndex t.kem.val r.1.1.2),
           (clean r.1.2.1.2, marks)),
           eraseServiceC ((joint, PqxdhDeploymentIdealPoolSource.routerOf pool), (r.1.2.1.1.cache, r.2)))) <$>
         (simulateQ (PqxdhRegistrationJointKemSecondEntry.slotImpl PqxdhDeploymentSeedSplit.tableService)
           ((simulateQ (ownerImplCE setup codec (factoredHidden setup codec checks) p.challenge)
-            (groupedOwnerCE raw owner)).run (native, none))).run slots := by
+            (groupedOwnerCE binding raw owner)).run (native, none))).run slots := by
   have mappedPhase : (PqxdhRegistrationJointBundle.encode setup identityIndex t.kem.val owner).beacon.phase =
       PqxdhBeaconPhase1Publication.mapPhase (PqxdhRegistrationJointBundle.keyMap t.kem.val) owner.beacon.phase := rfl
   unfold groupedOwner groupedOwnerCE
@@ -489,8 +491,8 @@ theorem owner_challenge (raw : Pqxdh.Bytes) (identityIndex : ℕ) (owner : Pqxdh
       prepare_relabel (preparationCE setup codec p.challenge) (prepItem setup codec t p joint pool) owner.beacon.identity
         (PqxdhRegistrationJointBundle.identityMap setup identityIndex owner.beacon.identity) keys
         (PqxdhRegistrationJointBundle.keyMap t.kem.val keys) owner.beacon.identity identityIndex
-        (prep_calls setup codec t p joint pool identityIndex owner.beacon.identity keys identityOwned kemAt) control prekey
-        oneTime raw,
+        (prep_calls setup codec t p joint pool identityIndex owner.beacon.identity keys identityOwned kemAt) binding control
+        prekey oneTime raw,
       bind_map_left, simulateQ_bind, StateT.run_bind, simulateQ_bind, StateT.run_bind,
       slot_prep setup codec p (factoredHidden setup codec checks) _ (native, none) slots, bind_map_left, map_bind]
     refine bind_congr fun prepared => ?_
@@ -516,6 +518,68 @@ theorem owner_challenge (raw : Pqxdh.Bytes) (identityIndex : ℕ) (owner : Pqxdh
           refine bind_congr fun result => ?_
           simp only [Option.elim_some, stackRun_pure, simulateQ_pure, StateT.run_pure, map_pure,
             PqxdhRegistrationJointFinish.finish_map]
+
+/-- Owner k's grouped hashed finish through item 2's layers, at the encoded owner with the selected KEM index and its retained bundle, is the CE-native hashed grouped owner `hashedOwnerCE` past the allocator, projected as in `owner_challenge`: the transcript hash is the native BLAKE2b request on both sides (`PqxdhDeploymentIdealPostFinish.stack_hash`), and the grouped owners at the digest's completed binding follow `owner_challenge`. -/
+theorem hashed_challenge (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes) (identityIndex : ℕ)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK)
+    (joint : PqxdhDynamicIdentityPool.SourceState) (pool : PqxdhLiveKemBirth.Pool KemSK)
+    (identityOwned : joint.seeds[identityIndex]? = some owner.beacon.identity)
+    (kemOwned : ∀ control prekey oneTime keys, owner.beacon.phase = .initSent control prekey oneTime keys →
+      pool.keys[t.kem.val]? = some keys)
+    (prefixed : PqxdhDeploymentIdealPoolSource.PoolPrefix (p.pool t) pool)
+    (native : PqxdhServerAuthNative.NativeState KemSK) (marks : PqxdhRegistrationJointKemPostSkeleton.Marks Output)
+    (slots : SlotState) :
+    ((simulateQ (PqxdhDeploymentIdealPostHidden.lowerEC setup t p)
+        ((simulateQ (PqxdhRegistrationJointKemPostSkeleton.skelImpl setup codec checks
+          created.server.server.metadata.identityIndex created.publicIdentity
+          (PqxdhRegistrationJointKemEntryFactor.factoredServices setup codec checks))
+          (PqxdhRegistrationJointKemPostSkeleton.groupedHashed setup codec t.kem.val p.challenge retained raw
+            (PqxdhRegistrationJointBundle.encode setup identityIndex t.kem.val owner))).run
+          (clean native.2, marks))).run).run
+        (eraseServiceC ((joint, PqxdhDeploymentIdealPoolSource.routerOf pool), (native.1.cache, slots))) =
+      (fun r => (some ((r.1.1.1, PqxdhRegistrationJointBundle.encode setup identityIndex t.kem.val r.1.1.2),
+          (clean r.1.2.1.2, marks)),
+          eraseServiceC ((joint, PqxdhDeploymentIdealPoolSource.routerOf pool), (r.1.2.1.1.cache, r.2)))) <$>
+        (simulateQ (PqxdhRegistrationJointKemSecondEntry.slotImpl PqxdhDeploymentSeedSplit.tableService)
+          ((PqxdhDeploymentIdealSteps.hashedOwnerCE setup codec (factoredHidden setup codec checks) p.challenge retained
+            raw owner).run (native, none))).run slots := by
+  have mappedPhase : (PqxdhRegistrationJointBundle.encode setup identityIndex t.kem.val owner).beacon.phase =
+      PqxdhBeaconPhase1Publication.mapPhase (PqxdhRegistrationJointBundle.keyMap t.kem.val) owner.beacon.phase := rfl
+  unfold PqxdhRegistrationJointKemPostSkeleton.groupedHashed PqxdhDeploymentIdealSteps.hashedOwnerCE
+  rw [mappedPhase]
+  rcases phase : owner.beacon.phase with _ | _ | ⟨control, prekey, oneTime, keys⟩ | _ | _
+  all_goals simp only [PqxdhBeaconPhase1Publication.mapPhase]
+  case fresh | freshWithCoins | established | aborted =>
+    simp only [simulateQ_pure, StateT.run_pure, OptionT.run_pure, map_pure]
+  case initSent =>
+    rcases retained with _ | init <;> rcases PqxdhServerAuthExperiment.responseOf codec raw with _ | response
+    all_goals dsimp only
+    case some.some =>
+      simp only [simulateQ_bind, StateT.run_bind, OptionT.run_bind, Option.elimM]
+      rw [PqxdhDeploymentIdealPostFinish.stack_hash setup codec checks t p created _ joint pool native marks slots]
+      have hashCE : (simulateQ (PqxdhRegistrationJointKemSecondEntry.slotImpl PqxdhDeploymentSeedSplit.tableService)
+          ((fun r => (r.1, (r.2, (none : Option Coord)))) <$> PqxdhDeploymentIdealSteps.liftS
+            ((PqxdhServerAuthNative.nativeHash (KemSK := KemSK)
+              (PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf init) response)).run native))).run slots =
+          (fun r => ((r.1, (r.2, (none : Option Coord))), slots)) <$> (PqxdhServerAuthNative.nativeHash (KemSK := KemSK)
+            (PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf init) response)).run native := by
+        rw [simulateQ_map, StateT.run_map, PqxdhDeploymentIdealCut.slotImpl_lift, Functor.map_map]
+      change _ = _ <$> ((simulateQ (PqxdhRegistrationJointKemSecondEntry.slotImpl PqxdhDeploymentSeedSplit.tableService)
+          ((fun r => (r.1, (r.2, (none : Option Coord)))) <$> PqxdhDeploymentIdealSteps.liftS
+            ((PqxdhServerAuthNative.nativeHash (KemSK := KemSK)
+              (PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf init) response)).run native))).run slots >>= _)
+      rw [hashCE, bind_map_left, bind_map_left, map_bind]
+      refine bind_congr fun hashed => ?_
+      simp only [Option.elim_some]
+      have stack := owner_challenge setup codec checks t p created (PqxdhTranscriptAd.completedOf control hashed.1) raw
+        identityIndex owner joint pool identityOwned kemOwned prefixed hashed.2 marks slots
+      unfold stackRun at stack
+      rw [← QueryImpl.simulateQ_compose] at stack
+      rw [← QueryImpl.simulateQ_compose]
+      exact stack
+    all_goals
+      simp only [simulateQ_pure, StateT.run_pure, OptionT.run_pure, map_pure]
+      rfl
 
 end Owner
 
@@ -665,7 +729,7 @@ theorem rejoin_set (old : PqxdhRegistrationJointSchedule.State KemSK) (shared : 
     (address : ℕ) (entry : PqxdhRegistrationJointOwnership.Entry KemSK) (found : old.owners[address]? = some entry)
     (owner : PqxdhRegistrationSchedule.Owner KemSK) :
     PqxdhDeploymentIdealPostSource.rejoin old
-        ⟨shared, (old.owners.map PqxdhRegistrationJointOwnership.Entry.owner).set address owner⟩ =
+        ⟨shared, (old.owners.map PqxdhRegistrationJointOwnership.Entry.owner).set address owner, old.inits⟩ =
       { old with shared := shared, owners := old.owners.set address { entry with owner := owner } } := by
   simp only [PqxdhDeploymentIdealPostSource.rejoin]
   congr 1
@@ -704,29 +768,30 @@ theorem finishStep_challenge (hidden : Output → PqxdhRegistrationJointKemPostS
     else _) = _
   rw [ite_eq_left_of_eq_true _ _ (eq_true condition)]
 
-/-- `finishChallenge` at a present owner: the grouped native owner under `ownerImplCE`, with the owner reinstalled. -/
+/-- `finishChallenge` at a present owner: the hashed grouped native owner `hashedOwnerCE` at the owner's retained bundle, with the owner reinstalled. -/
 theorem finishChallenge_found (hidden : Output → PqxdhRegistrationJointKemPostSkeleton.Hidden Response)
     (challenge : MlKem768Ciphertext) (address : ℕ) (raw : Pqxdh.Bytes) (state : PqxdhRegistrationSchedule.State KemSK)
     (owner : PqxdhRegistrationSchedule.Owner KemSK) (found : state.owners[address]? = some owner) (recorded : Option Coord) :
     (PqxdhDeploymentIdealSteps.finishChallenge setup codec hidden challenge address raw).run (state, recorded) =
-      (fun result => (result.1.1, (({ shared := result.2.1, owners := state.owners.set address result.1.2 } :
+      (fun result => (result.1.1, (({ state with shared := result.2.1, owners := state.owners.set address result.1.2 } :
           PqxdhRegistrationSchedule.State KemSK), result.2.2))) <$>
-        (simulateQ (ownerImplCE setup codec hidden challenge) (groupedOwnerCE raw owner)).run (state.shared, recorded) := by
+        (PqxdhDeploymentIdealSteps.hashedOwnerCE setup codec hidden challenge (state.inits address) raw owner).run
+          (state.shared, recorded) := by
   change (match state.owners[address]? with
     | none => _
     | some owner => _) = _
   rw [found]
   simp only [bind_pure_comp]
 
-/-- On owner k's challenge finish, the middle source handler is the ideal registration's challenge finish: the CE-native grouped owner under `ownerImplCE` with the factored hidden services from the annotated shared state and no recorded coordinates, past the allocator and item 2's lazy table from the middle's. -/
+/-- On owner k's challenge finish, the middle source handler is the ideal registration's challenge finish: the CE-native hashed grouped owner `hashedOwnerCE` with the factored hidden services at the owner's retained bundle, from the annotated shared state and no recorded coordinates, past the allocator and item 2's lazy table from the middle's. -/
 theorem sourceMid_challenge (address : ℕ) (raw : Pqxdh.Bytes) (m : Mid KemSK)
     (hidden : PqxdhDeploymentIdealPostSource.finishHiddenAt t m address = true)
     (entry : PqxdhRegistrationJointOwnership.Entry KemSK) (found : m.joint.owners[address]? = some entry) :
     (sourceMid setup codec route checks t p created (.inl (.inr (.finish address raw)))).run m =
       (fun result => (result.1.1.1, afterChallenge m address entry result)) <$>
         (simulateQ (PqxdhRegistrationJointKemSecondEntry.slotImpl PqxdhDeploymentSeedSplit.tableService)
-          ((simulateQ (ownerImplCE setup codec (factoredHidden setup codec checks) p.challenge)
-            (groupedOwnerCE raw entry.owner)).run (m.joint.shared, none))).run (m.backend.2.1, m.backend.1) := by
+          ((PqxdhDeploymentIdealSteps.hashedOwnerCE setup codec (factoredHidden setup codec checks) p.challenge
+            (m.joint.inits address) raw entry.owner).run (m.joint.shared, none))).run (m.backend.2.1, m.backend.1) := by
   change (if PqxdhDeploymentIdealPostSource.finishHiddenAt t m address then _ else _) = _
   rw [ite_eq_left_of_eq_true _ _ (eq_true hidden), PqxdhDeploymentIdealPostHidden.idealMid_run]
   change _ <$> (simulateQ (PqxdhRegistrationJointKemSecondEntry.slotImpl PqxdhDeploymentSeedSplit.tableService)
@@ -745,7 +810,9 @@ theorem sourceMid_challenge (address : ℕ) (raw : Pqxdh.Bytes) (m : Mid KemSK)
   refine congrArg (fun f => f <$> _) (funext fun result => ?_)
   simp only [PqxdhDeploymentIdealPostSource.fromX, PqxdhDeploymentIdealSlots.attach, afterChallenge]
   rw [show (PqxdhDeploymentIdealSlots.detach (PqxdhDeploymentIdealPostSource.toX m)).base.native.owners =
-    m.joint.owners.map PqxdhRegistrationJointOwnership.Entry.owner from rfl, rejoin_set _ _ address entry found]
+    m.joint.owners.map PqxdhRegistrationJointOwnership.Entry.owner from rfl,
+    show (PqxdhDeploymentIdealSlots.detach (PqxdhDeploymentIdealPostSource.toX m)).base.native.inits = m.joint.inits
+      from rfl, rejoin_set _ _ address entry found]
   rfl
 
 end Middle
@@ -796,7 +863,8 @@ theorem step_challenge (address : ℕ) (raw : Pqxdh.Bytes) (m : Mid KemSK)
     PqxdhDeploymentIdealPostSteps.upperE_run setup codec checks t p created _ _
       (PqxdhDeploymentIdealPostSteps.encodeMid_clean setup m),
     sourceMid_challenge setup codec route checks t p created address raw m hidden entry found]
-  have present : (encodeMid setup m).1.1[address]? = some (PqxdhRegistrationJointGeneratedFinish.encodeEntry setup entry) := by
+  have present : (encodeMid setup m).1.1.1[address]? =
+      some (PqxdhRegistrationJointGeneratedFinish.encodeEntry setup entry) := by
     simp [encodeMid, PqxdhRegistrationJointGeneratedFinish.encodeState, List.getElem?_map, found]
   have encoded : (PqxdhRegistrationJointGeneratedFinish.encodeEntry setup entry).2.2 =
       PqxdhRegistrationJointBundle.encode setup entry.identityIndex t.kem.val entry.owner := by
@@ -804,10 +872,10 @@ theorem step_challenge (address : ℕ) (raw : Pqxdh.Bytes) (m : Mid KemSK)
   have start : (encodeMidC setup m).2 = eraseServiceC ((m.joint.pool.1,
       PqxdhDeploymentIdealPoolSource.routerOf m.joint.pool.2), (m.joint.shared.1.cache, (m.backend.2.1, m.backend.1))) := by
     simp only [encodeMidC, encodeMid, eraseServiceC, Prod.map, PqxdhRegistrationJointKemObserverFree.eraseJoint_idem]
-  have stack := owner_challenge setup codec checks t p created raw entry.identityIndex entry.owner m.joint.pool.1
-    m.joint.pool.2 identityOwned kemOwned prefixed m.joint.shared (skelMarks m) (m.backend.2.1, m.backend.1)
+  have stack := hashed_challenge setup codec checks t p created (m.joint.inits address) raw entry.identityIndex
+    entry.owner m.joint.pool.1 m.joint.pool.2 identityOwned kemOwned prefixed m.joint.shared (skelMarks m)
+    (m.backend.2.1, m.backend.1)
   rw [← start, ← encoded] at stack
-  unfold stackRun at stack
   rw [PqxdhDeploymentIdealPostFinish.upperLayer_finish setup codec checks t p created address raw _ _ present,
     Functor.map_map, simulateQ_map, OptionT.run_map, StateT.run_map]
   erw [stack]
@@ -823,14 +891,15 @@ theorem step_challenge (address : ℕ) (raw : Pqxdh.Bytes) (m : Mid KemSK)
       simp only [afterChallenge, mark, Option.bind_some]
       rw [keep _ _ held, held]
   have owners : (PqxdhRegistrationJointGeneratedFinish.encodeState setup (afterChallenge m address entry result).joint).owners =
-      (encodeMid setup m).1.1.set address (entry.identityIndex, entry.kemIndex,
+      (encodeMid setup m).1.1.1.set address (entry.identityIndex, entry.kemIndex,
         PqxdhRegistrationJointBundle.encode setup entry.identityIndex t.kem.val result.1.1.2) := by
     simp [afterChallenge, PqxdhRegistrationJointGeneratedFinish.encodeState, encodeMid, List.map_set,
       PqxdhRegistrationJointGeneratedFinish.encodeEntry, kemAt]
   simp only [Function.comp_apply, Option.map_some]
   rw [show (encodeMidC setup (afterChallenge m address entry result)).1 =
-      ((PqxdhRegistrationJointGeneratedFinish.encodeState setup (afterChallenge m address entry result).joint).owners,
-        (clean result.1.2.1.2, skelMarks (afterChallenge m address entry result))) from rfl, owners, marks]
+      (((PqxdhRegistrationJointGeneratedFinish.encodeState setup (afterChallenge m address entry result).joint).owners,
+        m.joint.inits), (clean result.1.2.1.2, skelMarks (afterChallenge m address entry result))) from rfl, owners,
+      marks]
   simp only [encodeMidC, encodeMid, eraseServiceC, Prod.map, PqxdhRegistrationJointKemObserverFree.eraseJoint_idem, id_eq]
   rfl
 
@@ -1074,3 +1143,8 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealPostChallenge.step_fini
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealPostChallenge.step_finishActive
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealPostChallenge.hashed_challenge' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealPostChallenge.hashed_challenge

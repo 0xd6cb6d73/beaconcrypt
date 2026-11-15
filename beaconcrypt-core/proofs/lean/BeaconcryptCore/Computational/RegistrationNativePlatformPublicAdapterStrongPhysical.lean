@@ -18,7 +18,7 @@ variable [ed : AdapterInitEdPrimitive.Operations]
 variable {n : Nat} {I KemSK P R Reply PublicReply : Type} {base : OracleSpec I} {mlSource : RegistrationNativeMldsa.Source}
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK)
 variable (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (views : AdapterPublicWrapperStorage.Views)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
 
 theorem map_of_base {model : ProbComp (Reply×(RegistrationNativeExperiment.State n KemSK mlSource×P))}
     (call : TotalStep (RegistrationNativePlatformExtractedSdkCarrier.Carrier (R:=R) view views setup.joint created credential) model)

@@ -30,7 +30,7 @@ noncomputable def project (completed : agreement.ServerAgreement)
           { result.2.server with consumed := history, sessions := result.2.server.sessions ++ [some token.registration] } })
 
 omit material platform ed in
-theorem native (created : PqxdhLiveServerConstruction.Created Unit)
+theorem native (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (before : RegistrationNativeExperiment.State n KemSK source) (completed : agreement.ServerAgreement) :
     (RegistrationNativeExperiment.server (RegistrationServerNativeSource.retain created completed)).run before =
       pure (.ok (AdapterPublicServerRetain.handle before.server completed),
@@ -43,7 +43,7 @@ variable [PublicWrapperPlatform.Allocator] [PublicWrapperPlatform.LocalOperation
 variable [containers : ContainerOperations (RustT (RegistrationNativeExperiment.M n KemSK source))]
 
 theorem source_record (view : AdapterPublicWrapperState.MaterialView source KemSK)
-    (views : AdapterPublicWrapperStorage.Views) (created : PqxdhLiveServerConstruction.Created Unit)
+    (views : AdapterPublicWrapperStorage.Views) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential source) (self : beaconcrypt_public_wrapper.server.Server)
     (before : RegistrationNativeExperiment.State n KemSK source) (rng : R) (completed : agreement.ServerAgreement)
     (reply : Bool × AdapterPublicWrapperStorage.ReplaySet)

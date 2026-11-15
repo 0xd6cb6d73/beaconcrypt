@@ -1,6 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePlatformIdentityFinishControllerHashBounds
-/-! The literal corrected opaque-owner finish uses one response-authentication hash and at most one first-record commitment hash. Every malformed packet, optional primitive rejection, source copy, assigned-ID installation and terminal abort is retained. This is a source syntax bill for the physical shared Env hash backend, with no success, frame or old-whole-handler premise. -/
+import BeaconcryptCore.Computational.RegistrationNativePlatformIdentityFinishRun
+/-! The literal corrected opaque-owner finish uses two response-authentication hashes and at most one first-record commitment hash. Every malformed packet, optional primitive rejection, source copy, assigned-ID installation and terminal abort is retained. This is a source syntax bill for the physical shared Env hash backend, with no success, frame or old-whole-handler premise. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -46,8 +47,8 @@ private theorem authentication_bound (setup : Setup base KemSK) (query : Registr
 private theorem response_bound (setup : Setup base KemSK) (pending : registration.BeaconPending)
     (packet : core.option.Option registration.ResponsePacket) :
     Bounded (simulateQ (RegistrationNativeIdentityFrontend.authentication (n := n) (Auxiliary := Auxiliary) setup source)
-      (RegistrationResponseExecutor.begin pending packet)) 1 :=
-  program_bound RegistrationAuthenticationHashBounds.IsHash _ (authentication_bound setup) _ 1
+      (RegistrationResponseExecutor.begin pending packet)) 2 :=
+  program_bound RegistrationAuthenticationHashBounds.IsHash _ (authentication_bound setup) _ 2
     (RegistrationNativePlatformIdentityFinishControllerHashBounds.response_begin pending packet)
 
 private theorem agreement_bound (setup : Setup base KemSK) (owner : Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes)
@@ -106,23 +107,23 @@ private theorem after_authentication_bound (setup : Setup base KemSK) (wire : Re
     | Ok authenticated =>
         exact bind_bound _ _ 0 1 (agreement_bound setup owner oneTime _) (after_agreement_bound setup wire index owner)
 
-/-- The exact active source body retains both hash positions and every abort/install branch, including assigned-ID installation after the actual source copy. -/
+/-- The exact active source body retains all three hash positions and every abort/install branch, including assigned-ID installation after the actual source copy. -/
 theorem begin_bound (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire)
     (index : Nat) (owner : Owner source) (pending : registration.BeaconPending) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (packet : Option registration.ResponsePacket) :
-    Bounded (RegistrationNativePlatformIdentityFinishSteps.begin (n := n) (Auxiliary := Auxiliary) setup wire index owner pending oneTime packet) 2 := by
+    Bounded (RegistrationNativePlatformIdentityFinishSteps.begin (n := n) (Auxiliary := Auxiliary) setup wire index owner pending oneTime packet) 3 := by
   cases moved : pending.aborted_state with
   | fail error | div =>
       simpa only [RegistrationNativePlatformIdentityFinishSteps.begin, moved] using
-        (pure_bound (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (source := source) _ 2)
+        (pure_bound (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (source := source) _ 3)
   | ok aborted =>
       simp only [RegistrationNativePlatformIdentityFinishSteps.begin, moved]
-      exact bind_bound _ _ 0 2 (modify_bound _) (fun _ => bind_bound _ _ 1 1
+      exact bind_bound _ _ 0 3 (modify_bound _) (fun _ => bind_bound _ _ 2 1
         (response_bound setup pending _) (after_authentication_bound setup wire index owner oneTime))
 
 private theorem start_bound (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire)
     (index : Nat) (owner : Owner source) (packet : Option registration.ResponsePacket) :
-    Bounded (RegistrationNativePlatformIdentityFinishRun.start (n := n) (Auxiliary := Auxiliary) setup wire index owner packet) 2 := by
+    Bounded (RegistrationNativePlatformIdentityFinishRun.start (n := n) (Auxiliary := Auxiliary) setup wire index owner packet) 3 := by
   cases phase : owner.phase with
   | initSent pending oneTime =>
       simpa only [RegistrationNativePlatformIdentityFinishRun.start, phase] using begin_bound setup wire index owner pending oneTime packet
@@ -130,12 +131,12 @@ private theorem start_bound (setup : Setup base KemSK) (wire : RegistrationNativ
       simp only [RegistrationNativePlatformIdentityFinishRun.start, phase]
       exact pure_bound _ _
 
-/-- The complete literal corrected opaque-owner finish has at most two physical shared Env hash calls, for every owner roster and reached environment. -/
+/-- The complete literal corrected opaque-owner finish has at most three physical shared Env hash calls, for every owner roster and reached environment. -/
 theorem finish_bound (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire)
     (index : Nat) (packet : Option registration.ResponsePacket) :
-    Bounded (RegistrationNativePlatformIdentityFinishRun.finish (n := n) (Auxiliary := Auxiliary) setup source wire index packet) 2 := by
+    Bounded (RegistrationNativePlatformIdentityFinishRun.finish (n := n) (Auxiliary := Auxiliary) setup source wire index packet) 3 := by
   unfold RegistrationNativePlatformIdentityFinishRun.finish
-  apply bind_bound _ _ 0 2 get_bound
+  apply bind_bound _ _ 0 3 get_bound
   intro owners
   cases owners[index]? with
   | none => exact pure_bound _ _

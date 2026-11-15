@@ -57,19 +57,19 @@ theorem wrong_payload : (𝒟[wrongPayloadGame] {true}).toReal = 1 := by
   exact le_antisymm (by simpa only [ENNReal.toReal_one] using
     (ENNReal.toReal_mono ENNReal.one_ne_top upper)) actual
 
-/-- The concrete same-witness attack uses at most one accept and commitment-hash request and no public HMAC query on every adversary input. -/
-theorem query_budget : AuthBudget client 1 0 1 :=
-  PqxdhServerAuthPresealControl.adversary_budget setup codec [1] [2]
+/-- The concrete same-witness attack uses at most one accept, two BLAKE2b requests (the registration-transcript hash and the commitment hash) and no public HMAC query on every adversary input. Replaces the base `query_budget` (one BLAKE2b request). -/
+theorem query_budget_transcript : AuthBudget client 1 0 2 :=
+  PqxdhServerAuthPresealControl.adversary_budget_transcript setup codec [1] [2]
 
-/-- All adaptive reply paths retain the separate API ledger: one accept, build, altered reveal, public commitment hash and finish, with zero explicit coins or public HMAC calls. -/
-theorem query_classes (input : AuthInput) (category : PqxdhServerAuthPresealControl.ApiClass) :
+/-- All adaptive reply paths retain the separate API ledger: one accept, build, altered reveal and finish, two public BLAKE2b requests (transcript and commitment), with zero explicit coins or public HMAC calls. Replaces the base `query_classes` (one hash request). -/
+theorem query_classes_transcript (input : AuthInput) (category : PqxdhServerAuthPresealControl.ApiClass) :
     (client input).IsQueryBoundP (PqxdhServerAuthPresealControl.HasClass category)
-      (match category with | .coin | .hmac => 0 | _ => 1) :=
-  PqxdhServerAuthPresealControl.adversary_classes setup codec [1] [2] input category
+      (match category with | .coin | .hmac => 0 | .hash => 2 | _ => 1) :=
+  PqxdhServerAuthPresealControl.adversary_classes_transcript setup codec [1] [2] input category
 
-/-- The complete concrete adversary makes at most five public API calls, including every optional rejection branch. This does not count source or challenger work as free. -/
-theorem query_total (input : AuthInput) : (client input).IsTotalQueryBound 5 :=
-  PqxdhServerAuthPresealControl.adversary_total setup codec [1] [2] input
+/-- The complete concrete adversary makes at most six public API calls, including every optional rejection branch. This does not count source or challenger work as free. Replaces the base `query_total` (five calls). -/
+theorem query_total_transcript (input : AuthInput) : (client input).IsTotalQueryBound 6 :=
+  PqxdhServerAuthPresealControl.adversary_total_transcript setup codec [1] [2] input
 
 end BeaconcryptCore.Computational.PqxdhServerAuthJointPresealWitness
 
@@ -97,21 +97,21 @@ end BeaconcryptCore.Computational.PqxdhServerAuthJointPresealWitness
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhServerAuthJointPresealWitness.wrong_payload
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthJointPresealWitness.query_budget' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthJointPresealWitness.query_budget_transcript' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhServerAuthJointPresealWitness.query_budget
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthJointPresealWitness.query_budget_transcript
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthJointPresealWitness.query_classes' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthJointPresealWitness.query_classes_transcript' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhServerAuthJointPresealWitness.query_classes
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthJointPresealWitness.query_classes_transcript
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthJointPresealWitness.query_total' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthJointPresealWitness.query_total_transcript' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhServerAuthJointPresealWitness.query_total
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthJointPresealWitness.query_total_transcript
 

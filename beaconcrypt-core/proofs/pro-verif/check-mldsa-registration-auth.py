@@ -22,57 +22,45 @@ MODEL_FILES = (
     "mldsa-registration-auth.pv",
 )
 MODEL_SHA256 = {
-    "mldsa-auth.pvl": "09c409113e49aa61f4f7d777d30f3778a743ccab7a47cf9d7c506b146d29e403",
-    "mldsa-registration-auth.pvl": "ce5ee0e2e07d642a2c3aa12b2789d981c402bb7ca7f7c5c9466322832656408a",
-    "mldsa-registration-auth.pv": "d5ed999eac22acf788d7e4166ac1f233ddede02c916f55fd32fac358e5ad8bcf",
+    "mldsa-auth.pvl": "f0327d648099b035b4e374467ee31f038a2a884f51fe980719b90372d18f1f05",
+    "mldsa-registration-auth.pvl": "03247d50ce316322bca97fea40e480bf6b27efadcca04cea064b33c606ad946c",
+    "mldsa-registration-auth.pv": "b15df07590d2c3d5147bef2ecfac79df35ebc44543a2211bb324493c666d6140",
 }
 PRIMARY = (
-    "event(MldsaHonestInitAccepted(agent_ml,server_ml,init_hash,classical_init)) ==> "
-    "event(MldsaInitSigned(agent_ml,server_ml,init_hash,classical_init))",
     "event(MldsaResponseAccepted(server_ml,init_hash,response)) ==> "
     "event(MldsaResponseSigned(server_ml,init_hash,response))",
+    "not event(MldsaRequestAdmitted)",
+    "not event(MldsaCopiedClassicalAccepted)",
     "not event(MldsaHonestResponseVerified)",
-    "not event(MldsaOwnedKeyAccepted)",
-    "not event(MldsaCompromisedAgentAccepted)",
     "not event(MldsaCompromisedServerAccepted)",
     "not event(MldsaAdOpened)",
-    "not event(MldsaWrongServerAdOpened)",
-    "not event(MldsaWrongAgentAdOpened)",
+    "not event(MldsaWrongResponseAdOpened)",
+    "not event(MldsaWrongInitAdOpened)",
     "not event(MldsaWrongRoleAccepted)",
     "not event(MldsaWrongContextAccepted)",
     "not event(MldsaWrongRequestAccepted)",
 )
-VERDICTS = (
-    "true",
-    "true",
-    "false",
-    "false",
-    "false",
-    "false",
-    "false",
-    "true",
-    "true",
-    "true",
-    "true",
-    "true",
-)
-VARIABLE = re.compile(
-    r"\b(?:agent_ml|server_ml|init_hash|classical_init|response)(?:_[0-9]+)?\b(?!\s*\()"
-)
+VERDICTS = ("true",) + ("false",) * 5 + ("true",) * 5
+VARIABLE = re.compile(r"\b(?:server_ml|init_hash|response)(?:_[0-9]+)?\b(?!\s*\()")
 CONTROLS = (
     (
-        "without-init-verifier",
-        0,
-        "let verified_init_input = mldsa_verify(candidate_signature,\n"
-        "        candidate_ml, mldsa_signing_context()) in",
-        "let verified_init_input = mldsa_beacon_input(candidate_hash) in",
-    ),
-    (
         "without-response-verifier",
-        1,
+        0,
         "let verified_response_input = mldsa_verify(response_signature,\n"
         "        server_ml, mldsa_signing_context()) in",
         "let verified_response_input = mldsa_server_input(expected_response_hash) in",
+    ),
+    (
+        "without-response-ad-binding",
+        6,
+        "mldsa_ad(init, server, other_ephemeral, kem, mldsa_assigned_id())",
+        "mldsa_ad(init, server, ephemeral, kem, mldsa_assigned_id())",
+    ),
+    (
+        "without-init-ad-binding",
+        7,
+        "mldsa_ad(different_init, server, ephemeral, kem, mldsa_assigned_id())",
+        "mldsa_ad(init, server, ephemeral, kem, mldsa_assigned_id())",
     ),
 )
 
@@ -214,7 +202,7 @@ def main():
     except (OSError, ValueError) as error:
         parser.exit(1, str(error) + "\n")
     print(
-        "ML-DSA assumed-interface profile: 12 exact verdicts and 2 reconstructed verifier-bypass controls passed"
+        "ML-DSA assumed-interface profile: 11 exact verdicts and 3 reconstructed verifier/AD controls passed"
     )
 
 

@@ -35,7 +35,7 @@ private theorem pq_root (value : PqxdhKemIndCca.MlKem768PublicKey) :
 
 /-- The two actual collectors agree on every private root coordinate when their public source-stage fields match. -/
 theorem collect (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (owner : Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (verified : PqxdhServerRootPreparation.Verified registration.InitPacket)
     (serverInput : PqxdhServerRootPreparation.Inputs registration.InitPacket Unit Word32)

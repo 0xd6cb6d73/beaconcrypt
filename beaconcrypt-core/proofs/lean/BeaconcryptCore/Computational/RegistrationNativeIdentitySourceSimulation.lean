@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativeIdentityRealization
 
 /-! Source simulation for native operations that use existing indexed identities. Both executions retain the complete mutable owner roster, environment and native context. The fixed seed prefix is interpreter-private, and its preservation is proved from actual source operations before binding their continuations. -/
-open OracleComp OracleSpec CoreModels
+open OracleComp OracleSpec CoreModels Aeneas
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativeIdentitySourceSimulation
@@ -41,7 +41,7 @@ def view (seeds : List IdentitySeed) (before : NewState n KemSK Auxiliary source
 
 noncomputable def runNew (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeIdentityFrontend.M n KemSK Auxiliary source Value)
     (before : NewState n KemSK Auxiliary source) : ProbComp (Value × NewState n KemSK Auxiliary source) :=
   (fun result => (result.1.1.1, ((result.1.1.2, result.1.2), result.2))) <$>
@@ -50,7 +50,7 @@ noncomputable def runNew (setup : Setup base KemSK) (checks : Checks)
 
 noncomputable def runOld (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK source Auxiliary Value)
     (before : OldState n KemSK Auxiliary source) : ProbComp (Value × OldState n KemSK Auxiliary source) :=
   (fun result => (result.1.1.1, ((result.1.1.2, result.1.2), result.2))) <$>
@@ -59,7 +59,7 @@ noncomputable def runOld (setup : Setup base KemSK) (checks : Checks)
 
 def Related (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List IdentitySeed)
     (next : RegistrationNativeIdentityFrontend.M n KemSK Auxiliary source Value)
     (original : RegistrationNativeBeaconFrontend.M n KemSK source Auxiliary Value) : Prop :=
   ∀ before, before.2.identities.seeds = seeds →
@@ -68,14 +68,14 @@ def Related (setup : Setup base KemSK) (checks : Checks)
 
 def Keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeIdentityFrontend.M n KemSK Auxiliary source Value) : Prop :=
   ∀ before result, result ∈ support (runNew setup checks representation created work before) →
     result.2.2.identities.seeds = before.2.identities.seeds
 
 theorem runNew_bind (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeIdentityFrontend.M n KemSK Auxiliary source Value)
     (next : Value → RegistrationNativeIdentityFrontend.M n KemSK Auxiliary source Other)
     (before : NewState n KemSK Auxiliary source) :
@@ -86,7 +86,7 @@ theorem runNew_bind (setup : Setup base KemSK) (checks : Checks)
 
 theorem runOld_bind (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK source Auxiliary Value)
     (next : Value → RegistrationNativeBeaconFrontend.M n KemSK source Auxiliary Other)
     (before : OldState n KemSK Auxiliary source) :
@@ -98,7 +98,7 @@ theorem runOld_bind (setup : Setup base KemSK) (checks : Checks)
 /-- Sequencing source-related operations transports the private-prefix fact from the actual reached first operation. -/
 theorem related_bind (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List IdentitySeed)
     (work : RegistrationNativeIdentityFrontend.M n KemSK Auxiliary source Value)
     (original : RegistrationNativeBeaconFrontend.M n KemSK source Auxiliary Value)
     (next : Value → RegistrationNativeIdentityFrontend.M n KemSK Auxiliary source Other)
@@ -122,7 +122,7 @@ theorem related_bind (setup : Setup base KemSK) (checks : Checks)
 /-- Prefix preservation is compositional on every supported actual source outcome. -/
 theorem keeps_bind (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeIdentityFrontend.M n KemSK Auxiliary source Value)
     (next : Value → RegistrationNativeIdentityFrontend.M n KemSK Auxiliary source Other)
     (first : Keeps setup checks representation created work)
@@ -135,7 +135,7 @@ theorem keeps_bind (setup : Setup base KemSK) (checks : Checks)
 
 theorem related_pure (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List IdentitySeed) (value : Value) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List IdentitySeed) (value : Value) :
     Related (n := n) (Auxiliary := Auxiliary) (source := source) setup checks representation created seeds
       (pure value) (pure value) := by
   intro before _prior
@@ -143,7 +143,7 @@ theorem related_pure (setup : Setup base KemSK) (checks : Checks)
 
 theorem keeps_pure (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (value : Value) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (value : Value) :
     Keeps (n := n) (Auxiliary := Auxiliary) (source := source) setup checks representation created (pure value) := by
   intro before result supported
   simp only [runNew, StateT.run_pure, simulateQ_pure, map_pure,
@@ -158,7 +158,7 @@ noncomputable def liftAmbient
 
 theorem runNew_lift (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : StateT (EnvState Auxiliary) (OracleComp (RegistrationNativeIdentityFrontend.Ambient n KemSK)) Value)
     (before : NewState n KemSK Auxiliary source) :
     runNew setup checks representation created (liftAmbient work) before =
@@ -177,7 +177,7 @@ theorem runNew_lift (setup : Setup base KemSK) (checks : Checks)
 
 theorem related_lift (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List IdentitySeed)
     (work : StateT (EnvState Auxiliary) (OracleComp (RegistrationNativeIdentityFrontend.Ambient n KemSK)) Value) :
     Related (source := source) setup checks representation created seeds (liftAmbient work) (StateT.lift work) := by
   intro before _prior
@@ -187,7 +187,7 @@ theorem related_lift (setup : Setup base KemSK) (checks : Checks)
 
 theorem keeps_lift (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : StateT (EnvState Auxiliary) (OracleComp (RegistrationNativeIdentityFrontend.Ambient n KemSK)) Value) :
     Keeps (source := source) setup checks representation created (liftAmbient work) := by
   intro before result supported
@@ -199,7 +199,7 @@ theorem keeps_lift (setup : Setup base KemSK) (checks : Checks)
 theorem related_program {Index : Type} {spec : OracleSpec Index}
     (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List IdentitySeed)
     (next : QueryImpl spec (RegistrationNativeIdentityFrontend.M n KemSK Auxiliary source))
     (original : QueryImpl spec (RegistrationNativeBeaconFrontend.M n KemSK source Auxiliary))
     (first : ∀ query, Related setup checks representation created seeds (next query) (original query))
@@ -215,7 +215,7 @@ theorem related_program {Index : Type} {spec : OracleSpec Index}
 theorem keeps_program {Index : Type} {spec : OracleSpec Index}
     (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (next : QueryImpl spec (RegistrationNativeIdentityFrontend.M n KemSK Auxiliary source))
     (keeps : ∀ query, Keeps setup checks representation created (next query))
     (work : OracleComp spec Value) : Keeps setup checks representation created (simulateQ next work) := by
@@ -227,7 +227,7 @@ theorem keeps_program {Index : Type} {spec : OracleSpec Index}
 
 theorem related_modify (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List IdentitySeed)
     (next : RegistrationNativeIdentityFrontend.State source → RegistrationNativeIdentityFrontend.State source)
     (original : RegistrationNativeBeaconFrontend.State source → RegistrationNativeBeaconFrontend.State source)
     (law : ∀ current, RegistrationNativeIdentityRealization.owners ⟨seeds, []⟩ (next current) =
@@ -239,7 +239,7 @@ theorem related_modify (setup : Setup base KemSK) (checks : Checks)
 
 theorem keeps_modify (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (next : RegistrationNativeIdentityFrontend.State source → RegistrationNativeIdentityFrontend.State source) :
     Keeps (n := n) (Auxiliary := Auxiliary) setup checks representation created (modify next) := by
   intro before result supported

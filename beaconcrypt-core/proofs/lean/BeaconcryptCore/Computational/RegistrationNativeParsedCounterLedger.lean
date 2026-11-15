@@ -17,7 +17,7 @@ variable {n : Nat} {ι KemSK Value : Type} {base : OracleSpec ι} {mlSource : Re
 noncomputable abbrev native (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource) :=
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource) :=
   RegistrationNativeRawAdapter.handler wire
     (RegistrationNativeExperiment.handler (n := n) setup checks wire route representation created mlSource credential)
 
@@ -35,7 +35,7 @@ private theorem send_increment (wire : Wire) (query : RegistrationNativeInterfac
 theorem restricted_counter (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (work : OracleComp RegistrationNativeInterface.Spec Value)
     (bounded : work.IsQueryBoundP
       (fun query => PqxdhDeploymentSecrecy.coinOrSend (RegistrationNativeInterface.eraseCore query) = false) 0)
@@ -77,7 +77,7 @@ private theorem ledger_trace (crypto : Pqxdh.Crypto) (wire : Wire) (serverKeyId 
 theorem secrecy_counter (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (bounds : FreshBounds) (query : PqxdhDeploymentInterface.Secrecy)
     (before : RegistrationNativeLedger.State × State n KemSK mlSource)
     (result : Option RawCtxSourceSend.Encrypted × (RegistrationNativeLedger.State × State n KemSK mlSource))
@@ -96,7 +96,7 @@ theorem secrecy_counter (setup : Setup base KemSK) (checks : Checks) (wire : Wir
 theorem step_counter (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (bounds : FreshBounds) (query : RegistrationNativeInterface.FullSpec.Domain) (offset : Nat)
     (before : RegistrationNativeLedger.State × State n KemSK mlSource)
     (prior : before.2.parsedAccepts = offset + parsedAcceptCount wire before.1.transcript)
@@ -140,7 +140,7 @@ theorem step_counter (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
 theorem core_run (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (bounds : FreshBounds) (query : RegistrationNativeInterface.Spec.Domain)
     (before : RegistrationNativeLedger.State × State n KemSK mlSource) :
     (RegistrationNativeFullCompiler.handler setup.source.crypto wire created.server.server.metadata.sender bounds
@@ -158,7 +158,7 @@ theorem core_run (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
 theorem step_trace (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (bounds : FreshBounds) (query : RegistrationNativeInterface.FullSpec.Domain)
     (before : RegistrationNativeLedger.State × State n KemSK mlSource)
     (result : RegistrationNativeInterface.FullSpec.Range query × (RegistrationNativeLedger.State × State n KemSK mlSource))

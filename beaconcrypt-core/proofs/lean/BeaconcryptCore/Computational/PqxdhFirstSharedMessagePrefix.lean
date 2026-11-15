@@ -7,6 +7,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhFirstSharedMessagePrefix
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPhase1AcceptanceOracle PqxdhKemIndCca PqxdhInitializerSecrecy
 open CtxRomAuth AdaptiveCtxSharedHash PqxdhSecretInputKdf PqxdhFullSecretInputKdf
@@ -25,10 +27,10 @@ variable (setup : StatefulPhase1Setup baseSpec)
 local notation "env0" => PqxdhSourceSharedPreparation.environment setup env callbacks ∅
 local notation "Context" => PqxdhAdaptiveMessageKeySource.FirstContext (M := M) (P := P) (I := I) (K := K) (X := X)
   (Response := Response) (A := A) (S := S) (B := B) (setup := setup)
-local notation "prior" => PqxdhInitialPreparedSourceInput.prior env0 baseImpl kem attachedVerify primitives program post selected number ancestors disclosed
+local notation "prior" => PqxdhInitialPreparedSourceInput.prior (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program post selected number ancestors disclosed
 
 noncomputable def run : OracleComp HashSpec Context := do
-  let context ← PqxdhSourceSharedInput.run setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed
+  let context ← PqxdhSourceSharedInput.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed
   let initial ← simulateQ RawCtxSelectiveSharedRom.coins ($ᵗ HmacBlock)
   let nonce ← simulateQ RawCtxSelectiveSharedRom.coins ($ᵗ NonceOutput)
   let chain ← simulateQ RawCtxSelectiveSharedRom.coins ($ᵗ RootOutput)
@@ -40,7 +42,7 @@ def restore (context : Context) (cache : CtxRO.QueryCache) : Context :=
 /-- The complete source-derived first-record preparation retains its actual reached ROM cache, source input and all three independent non-message-key outputs. -/
 theorem source :
     (fun result => restore setup result.1 result.2) <$>
-      (simulateQ hashImpl (run setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed)).run ∅ =
+      (simulateQ hashImpl (run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed)).run ∅ =
     (do
       let context ← prior
       let initial ← $ᵗ HmacBlock
@@ -48,7 +50,7 @@ theorem source :
       let chain ← $ᵗ RootOutput
       pure (context, initial, nonce, chain)) := by
   simp only [run, simulateQ_bind, StateT.run_bind, map_bind, RawCtxSelectiveSharedRom.coins_complete, bind_map_left]
-  rw [← PqxdhSourceSharedInput.source setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed]
+  rw [← PqxdhSourceSharedInput.source (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed]
   simp only [bind_map_left]
   apply bind_congr
   intro result
@@ -64,14 +66,14 @@ theorem source :
 theorem shared_source :
     (fun result => restore setup result.1 result.2.1) <$>
       (simulateQ AdaptiveCtxSharedTarget.sharedImpl
-        (run setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed)).run (∅, []) =
+        (run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed)).run (∅, []) =
     (do
       let context ← prior
       let initial ← $ᵗ HmacBlock
       let nonce ← $ᵗ NonceOutput
       let chain ← $ᵗ RootOutput
       pure (context, initial, nonce, chain)) := by
-  rw [← source setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed,
+  rw [← source (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed,
     ← AdaptiveCtxSharedTarget.cache_schedule _ (∅, [])]
   simp only [Functor.map_map, Prod.map_def, id_eq]
 
@@ -85,19 +87,19 @@ theorem key_order (real : Bool) (decodeRaw : AdaptiveCtxReceive.RawDecoder) :
         let chain ← $ᵗ RootOutput
         pure (input, initial, nonce, chain))
       let key ← $ᵗ RootOutput
-      PqxdhAdaptiveMessageKeySource.firstObserve env0 context key)] =
+      PqxdhAdaptiveMessageKeySource.firstObserve (associatedData := associatedData) (completedBinding := completedBinding) env0 context key)] =
     𝒟[(do
       let key ← $ᵗ CtxKey
       let result ← (simulateQ (AdaptiveCtxDynamicKnownKeys.sourceImpl real decodeRaw env.source.crypto key)
         (simulateQ RawCtxSourceSharedRom.forward
-          (run setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed))).run
+          (run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed))).run
           AdaptiveCtxDynamicKnownKeys.initialSource
-      PqxdhAdaptiveMessageKeySource.firstObserve env0 (restore setup result.1 result.2.cache) key)] := by
-  rw [← shared_source setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed]
+      PqxdhAdaptiveMessageKeySource.firstObserve (associatedData := associatedData) (completedBinding := completedBinding) env0 (restore setup result.1 result.2.cache) key)] := by
+  rw [← shared_source (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed]
   simp only [bind_map_left]
   exact (RawCtxPrefixKeyOrder.complete real decodeRaw env.source.crypto
-    (run setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed)
-    (fun key context state => PqxdhAdaptiveMessageKeySource.firstObserve env0 (restore setup context state.cache)
+    (run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed)
+    (fun key context state => PqxdhAdaptiveMessageKeySource.firstObserve (associatedData := associatedData) (completedBinding := completedBinding) env0 (restore setup context state.cache)
       key)).evalDist_eq
 
 /-- The named adaptive first-record endpoint consumes this actual same-ROM preparation without a final event-equivalence premise. The pending CTX suffix still has to simulate the displayed original native observer. -/
@@ -105,17 +107,17 @@ theorem adaptive_endpoint {Choice : Type} [DecidableEq Choice]
     (adaptivePost : PqxdhAdaptiveTargetPost.Post Choice program.Selection baseSpec S (B + 1))
     (targets : Choice → PqxdhAdaptiveAcceptedResult.Target S (B + 1)) (choice : Choice)
     (real : Bool) (decodeRaw : AdaptiveCtxReceive.RawDecoder) :
-    𝒟[PqxdhAdaptiveMessageKeySource.firstIdeal env0 baseImpl kem attachedVerify primitives program adaptivePost targets choice] =
+    𝒟[PqxdhAdaptiveMessageKeySource.firstIdeal (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program adaptivePost targets choice] =
     𝒟[(do
       let key ← $ᵗ CtxKey
       let result ← (simulateQ (AdaptiveCtxDynamicKnownKeys.sourceImpl real decodeRaw env.source.crypto key)
         (simulateQ RawCtxSourceSharedRom.forward
-          (run setup env callbacks program (PqxdhAdaptiveTargetPost.mapPost adaptivePost (PqxdhAdaptiveTargetPost.choose choice))
+          (run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program (PqxdhAdaptiveTargetPost.mapPost adaptivePost (PqxdhAdaptiveTargetPost.choose choice))
             attachedVerify primitives baseImpl kem (targets choice).owner (targets choice).number
             (targets choice).ancestors (targets choice).disclosed))).run AdaptiveCtxDynamicKnownKeys.initialSource
-      PqxdhAdaptiveMessageKeySource.firstObserve env0 (restore setup result.1 result.2.cache) key)] := by
+      PqxdhAdaptiveMessageKeySource.firstObserve (associatedData := associatedData) (completedBinding := completedBinding) env0 (restore setup result.1 result.2.cache) key)] := by
   simpa only [PqxdhAdaptiveMessageKeySource.firstIdeal, PqxdhAdaptiveMessageKeySource.firstPrepare] using
-    key_order setup env callbacks program (PqxdhAdaptiveTargetPost.mapPost adaptivePost (PqxdhAdaptiveTargetPost.choose choice))
+    key_order (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program (PqxdhAdaptiveTargetPost.mapPost adaptivePost (PqxdhAdaptiveTargetPost.choose choice))
       attachedVerify primitives baseImpl kem (targets choice).owner (targets choice).number
       (targets choice).ancestors (targets choice).disclosed real decodeRaw
 

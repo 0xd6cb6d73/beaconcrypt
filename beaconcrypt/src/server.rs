@@ -232,18 +232,13 @@ impl Server {
 	}
 
 	fn authentication_pin(&self) -> Option<ServerAuthenticationPin> {
-		auth::fingerprint_pin(
+		auth::server_pin(
 			verified_pqxdh::ServerBinding {
 				identity_public_key: *self.identity_pk().as_bytes(),
 				identity_key_id: self.identity_key_kid(),
 			},
 			self.mldsa_public_key(),
 		)
-	}
-
-	/// Hash of the key authenticated by InitKex; authorization remains the caller's responsibility.
-	pub fn mldsa_public_key_hash_by_kid(&self, kid: u64) -> Option<&[u8; 64]> {
-		Some(self.known_ids.get(&kid)?.mldsa_public_key_hash())
 	}
 
 	#[cfg(test)]
@@ -316,13 +311,8 @@ impl Server {
 	#[cfg(test)]
 	pub(crate) fn add_known_kid(&mut self, k: u64, pk: crypto_sign::PublicKey) {
 		let pin = self.authentication_pin().unwrap();
-		let binding = SessionBinding::from_trusted_metadata(
-			pin.binding(),
-			k,
-			*pk.as_bytes(),
-			*pin.fingerprint(),
-			[0; 64],
-		);
+		let binding =
+			SessionBinding::from_trusted_metadata(pin.binding(), k, *pk.as_bytes(), [0; 64]);
 		self.known_ids.entry(k).or_insert(EstablishedRemote::new(
 			pk,
 			RatchetManager::default(),
@@ -551,8 +541,6 @@ impl Server {
 			registration.pre_key,
 			registration.one_time_key,
 			registration.pq_key,
-			registration.mldsa_public_key,
-			registration.signature,
 		)?;
 		let authenticated = auth::authenticate_init(self.authentication_pin()?, packet)?;
 		Some(beaconcrypt_core::peer::begin_registration_lookup(
@@ -629,6 +617,8 @@ impl ProviderServer for Server {
 		let pending = lookup
 			.resume(self.known_ids.contains_key(&next_key_id))
 			.ok()?;
+		let hash = auth::execute_hash(&pending.request());
+		let pending = pending.resume(hash).ok()?;
 		self.known_ids.try_reserve(1).ok()?;
 		let response = verified_pqxdh::InitialRatchetKdfResponse::from_bytes(
 			crate::ratchet::initial_ratchet_hkdf(pending.request()),
@@ -747,12 +737,8 @@ mod row_tests {
 			beacon.identity_pk().as_bytes()
 		);
 		assert_eq!(
-			binding.server_fingerprint(),
-			peer.binding().server_fingerprint()
-		);
-		assert_eq!(
-			binding.beacon_fingerprint(),
-			peer.binding().beacon_fingerprint()
+			binding.session_transcript_hash(),
+			peer.binding().session_transcript_hash()
 		);
 		assert_eq!(
 			binding.associated_data(),
@@ -959,12 +945,8 @@ mod size_tests {
 			peer.binding().beacon_identity_public_key()
 		);
 		assert_eq!(
-			binding.server_fingerprint(),
-			peer.binding().server_fingerprint()
-		);
-		assert_eq!(
-			binding.beacon_fingerprint(),
-			peer.binding().beacon_fingerprint()
+			binding.session_transcript_hash(),
+			peer.binding().session_transcript_hash()
 		);
 		let encrypted = restored
 			.encrypt_message(b"restored binding", response.kid)
@@ -999,12 +981,7 @@ mod size_tests {
 		SharedIdentity::get_mut(&mut server.identity)
 			.expect("test identity has no outstanding row session")
 			.mldsa_identity = MldsaIdentity::from_seed([9; 32]);
-		assert_ne!(
-			auth::public_key_hash(&server.mldsa_public_key())
-				.unwrap()
-				.as_slice(),
-			&expected[153..217]
-		);
+
 		assert_eq!(server.associated_data(response.kid), Some(expected));
 		let encrypted = server
 			.encrypt_message(b"stored binding", response.kid)

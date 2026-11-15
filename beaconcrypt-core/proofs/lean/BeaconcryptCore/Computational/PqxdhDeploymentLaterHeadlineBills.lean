@@ -11,7 +11,7 @@ The query bills of every reduction behind the terms of the later headlines (CE-K
 - `kem_bills_later`: the logged per-target KEM adversary of `kemLossL` makes at most the queries of `PqxdhDeploymentLaterServerTransfer.kem_transfer_server_bills` (`PqxdhDeploymentLaterServerBills.adversary_bound` at the transported caps of the compiled LQ-F program; the post budget enters only the uniform allowance, the Server read costs nothing).
 - `slot_bills_later`: the HMAC-PRF reductions and the key-schedule distinguishers of `slotLossL` respect bills built from `rootBillL` at `laterTransported bounds budget post` (`PqxdhDeploymentLaterServerItemBills.laterSlot_bills_compiled`).
 - `records_bills_later`: the later chain, integrity and privacy reductions of `recLossL` respect their bills `laterChainBills`, `laterCtxBills`, `laterPrivBills` at the later bill input `inputL` (`PqxdhRecordLiftLaterTargets.LaterRecordBounded`, the bill conjunct of `PqxdhRecordLiftLaterLift.later_record_lift` at the frame of `frame_idealD`); `records_hash_later`: the integrity and privacy hash bills at `inputL` are the run-phase shared-hash total of `BI_g` plus the post phase's shared-hash work `postHash` (`qHash₂`, `laterCtx_hash_bill`, `laterPriv_hash_bill`).
-- `hash_route_later`: on every outcome of the later record world with the ideal environment of a target and the environment's reveal, the BLAKE2b routes are within `qHash + S + R + qBuild + qFinish + qHash₂` and the record derivations within `S + 51 R` (`PqxdhDeploymentIdealFrame.c4_ideal_later`).
+- `hash_route_later`: on every outcome of the later record world with the ideal environment of a target and the environment's reveal, the BLAKE2b routes are within `qHash + S + R + 2 qBuild + 2 qFinish + qHash₂` and the record derivations within `S + 51 R` (`PqxdhDeploymentIdealFrame.c4_ideal_later`).
 - `beta_decapsulations_later`: phase 1 of `β_g`'s adversary, built from the run-phase adversary `first`, makes at most `qFinish + 1` logical decapsulation queries (`PqxdhDeploymentHeadlineAnomaly.beta_decapsulations`); the anomaly is a run-phase event and its term is the classical one of `first`.
 - `later_target_bills`: the conjunction of the five per-target bills.
 
@@ -21,6 +21,7 @@ Not here: the uniform and base-query bill of phase 1 of `β_g`'s adversary (`ptc
 open OracleComp OracleSpec ENNReal
 
 set_option autoImplicit false
+set_option warningAsError true
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineBills
 open PqxdhServerAuthExperiment (Setup Codec Checks)
@@ -157,7 +158,7 @@ theorem records_hash_later (caps : KemCaps) (qInit : ℕ) (budget : Budget) (bou
           PqxdhRecordLiftLaterTargets.postHash (inputL caps qInit budget bounds post) :=
   ⟨PqxdhRecordLiftLaterCtx.laterCtx_hash_bill _, PqxdhRecordLiftLaterPriv.laterPriv_hash_bill _⟩
 
-/-- The later C4 hash route at the ideal environment of a target (`PqxdhDeploymentIdealFrame.c4_ideal_later`): on every outcome of the later record world with `envGD` at the target of `g` and the environment's reveal, for a run-phase adversary within its budget and a post adversary within its post budget, the BLAKE2b routes are within `qHash + S + R + qBuild + qFinish + qHash₂` and the record derivations within `S + 51 R`. -/
+/-- The later C4 hash route at the ideal environment of a target (`PqxdhDeploymentIdealFrame.c4_ideal_later`): on every outcome of the later record world with `envGD` at the target of `g` and the environment's reveal, for a run-phase adversary within its budget and a post adversary within its post budget, the BLAKE2b routes are within `qHash + S + R + 2 qBuild + 2 qFinish + qHash₂` and the record derivations within `S + 51 R`. -/
 theorem hash_route_later (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (caps : KemCaps) (bounded : KemBound setup caps)
     (ensureInit : StateT A ProbComp Bool) (qInit : ℕ)
@@ -170,7 +171,7 @@ theorem hash_route_later (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
         (PqxdhDeploymentIdealEnv.envGD setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
         setup.serverKeyId bounds mode envReveal first second),
       result.2.primitive.1.effects .hash + result.2.primitive.1.native .hash ≤
-          budget.hash + budget.sends + budget.receives + budget.build + budget.finish + post.hash ∧
+          budget.hash + budget.sends + budget.receives + 2 * budget.build + 2 * budget.finish + post.hash ∧
         result.2.primitive.1.native .kdf ≤ budget.sends + 51 * budget.receives :=
   PqxdhDeploymentIdealFrame.c4_ideal_later setup codec route checks caps bounded (Target.ofCE budget g) ensureInit
     qInit initBound 0 runtime setup.serverKeyId bounds mode budget post envReveal first second respects postRespects
@@ -234,7 +235,7 @@ theorem later_target_bills (setup : Setup baseSpec KemSK) (codec : Codec Reader 
         (PqxdhDeploymentIdealEnv.envGD setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
         setup.serverKeyId bounds mode envReveal first second),
       result.2.primitive.1.effects .hash + result.2.primitive.1.native .hash ≤
-          budget.hash + budget.sends + budget.receives + budget.build + budget.finish + post.hash ∧
+          budget.hash + budget.sends + budget.receives + 2 * budget.build + 2 * budget.finish + post.hash ∧
         result.2.primitive.1.native .kdf ≤ budget.sends + 51 * budget.receives) ∧
     ∀ pk, ((PqxdhDeploymentHeadlineAnomaly.ptc setup.kem (PqxdhDeploymentIdealAnomalyGuesser.anomalyGuesser setup codec
         route checks (Target.ofCE budget g) ensureInit 0 runtime bounds mode first)).preChallenge pk).IsQueryBoundP

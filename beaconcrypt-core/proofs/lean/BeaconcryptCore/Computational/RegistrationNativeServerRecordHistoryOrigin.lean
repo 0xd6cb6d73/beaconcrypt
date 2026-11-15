@@ -22,7 +22,7 @@ open PqxdhServerAuthExperiment (Setup Checks)
 variable {n : Nat} {ι KemSK V : Type} {base : OracleSpec ι} {source : RegistrationNativeMldsa.Source}
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 local notation "Native" => RegistrationNativeExperiment.State n KemSK source
 local notation "implementation" => RegistrationNativeExperiment.handler setup checks wire route representation created source credential
 attribute [local irreducible] RegistrationNativeExperiment.handler
@@ -31,7 +31,7 @@ def SourceAt (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire) (ca
   ∃ index application token current plaintext availability initial hashed,
     call.query = .inr (.build index application) ∧
     RegistrationServerSdkSource.take index call.before.server = (some token, current) ∧ application = some plaintext ∧
-    registration.begin_server_completion current.control current.pin availability token.agreement plaintext = .ok (.Ok initial) ∧
+    BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission current.control current.pin availability token.agreement plaintext initial ∧
     RegistrationServerRecordExecutor.Path initial hashed ∧
     RegistrationNativeServerRecordIssuance.RecordCut (n := n) setup (RegistrationNativeWire.ledgerCodec wire) initial hashed (RegistrationNativeWorldCache.cache call.after) ∧
     receipt.observation.publicKey = hashed.binding.server_pin.public_key ∧ receipt.observation.payload = Command.payload (.server hashed)

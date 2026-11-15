@@ -83,16 +83,16 @@ theorem full_second (request : RawCtxInitializedKdfFamily.InitialRequest)
 theorem source_second (source : FixedHkdfSha512NoSaltSource) (request : RawCtxInitializedKdfFamily.InitialRequest) :
     RawCtxInitializedKdfFamily.initialReply source request =
       nativeKernel (RawCtxFreshChainCut.concreteChain (PqxdhOrderedChainHybrids.nextChain
-        (productionStream source.crypto (RawCtxKdfRequestTable.address ⟨request.2, ratchet.SYM_RATCHET_INFO⟩)))) <$>
+        (productionStream source.crypto (RawCtxKdfRequestTable.initialAddress ⟨request.2, ratchet.INITIAL_RATCHET_INFO⟩)))) <$>
       initialSecond request.1 (RawCtxSelectedParentEntry.fromOutput
-        (RawCtxKdfRequestTable.address ⟨request.2, ratchet.SYM_RATCHET_INFO⟩)
-        (productionStream source.crypto (RawCtxKdfRequestTable.address ⟨request.2, ratchet.SYM_RATCHET_INFO⟩))).material.1 := by
+        (RawCtxKdfRequestTable.initialAddress ⟨request.2, ratchet.INITIAL_RATCHET_INFO⟩)
+        (productionStream source.crypto (RawCtxKdfRequestTable.initialAddress ⟨request.2, ratchet.INITIAL_RATCHET_INFO⟩))).material.1 := by
   rw [← RawCtxInitializedKdfFamily.initial_projection]
   simpa only [RawCtxSelectedParentEntry.realize_fromOutput] using full_second request
-    (RawCtxSelectedParentEntry.fromOutput (RawCtxKdfRequestTable.address ⟨request.2, ratchet.SYM_RATCHET_INFO⟩)
-      (productionStream source.crypto (RawCtxKdfRequestTable.address ⟨request.2, ratchet.SYM_RATCHET_INFO⟩)))
+    (RawCtxSelectedParentEntry.fromOutput (RawCtxKdfRequestTable.initialAddress ⟨request.2, ratchet.INITIAL_RATCHET_INFO⟩)
+      (productionStream source.crypto (RawCtxKdfRequestTable.initialAddress ⟨request.2, ratchet.INITIAL_RATCHET_INFO⟩)))
     (PqxdhOrderedChainHybrids.nextChain
-      (productionStream source.crypto (RawCtxKdfRequestTable.address ⟨request.2, ratchet.SYM_RATCHET_INFO⟩)))
+      (productionStream source.crypto (RawCtxKdfRequestTable.initialAddress ⟨request.2, ratchet.INITIAL_RATCHET_INFO⟩)))
 
 /-- Splitting the actual64 draw preserves both roles and every result of the complete native continuation. -/
 theorem uniform_native_second {Context Result : Type} (sample : ProbComp Context)

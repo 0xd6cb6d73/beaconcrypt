@@ -28,7 +28,7 @@ noncomputable def startup (service : QueryImpl (ServiceSpec n) (StateT S ProbCom
 
 noncomputable def install (service : QueryImpl (ServiceSpec n) (StateT S ProbComp))
     (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
-    (created : PqxdhLiveServerConstruction.Created Unit) (shell : CborRecordWorldClient.Shell)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (shell : CborRecordWorldClient.Shell)
     (control : Control n) (secret : S) :=
   (fun result => ((result.1.1.2, result.1.2), result.2)) <$>
     interpret service codec route ((WorldSpec n).query (.inl created)) shell control secret

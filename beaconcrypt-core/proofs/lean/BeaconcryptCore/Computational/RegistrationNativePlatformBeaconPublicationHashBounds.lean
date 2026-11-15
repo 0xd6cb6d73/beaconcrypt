@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePlatformWriter
-/-! Exact shared-hash budgets for the literal effectful Init publication tree. Attached Ed signing and mutable serialization do not call the shared hash service; fingerprint and ML transcript hashing contribute the two possible calls, including every rejected or failed prefix. -/
+/-! Exact shared-hash budgets for the literal effectful Init publication tree. Attached Ed signing and mutable serialization do not call the shared hash service; the request transcript contributes the one possible call, including every rejected or failed prefix. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -12,8 +12,8 @@ namespace BeaconcryptCore.Computational.RegistrationNativePlatformBeaconPublicat
 open RegistrationNativePlatformBeaconPublication
 open RegistrationNativePlatformWriter (Spec cryptoLift init)
 variable {E : Type}
-attribute [local irreducible] registration.BeaconInitHash.resume registration.BeaconFingerprint.resume
-  registration.BeaconMldsaSigning.resume registration.BeaconEd25519Signing.resume registration.begin_beacon_init
+attribute [local irreducible] registration.BeaconInitHash.resume
+  registration.BeaconEd25519Signing.resume registration.begin_beacon_init
 
 def IsHash : (Spec E).Domain → Prop
   | .inl (.inl (.hash _)) => True
@@ -34,7 +34,7 @@ private theorem continue_bound {Input A : Type} (action : RustM Input)
   | fail error | div => trivial
 
 /-- The extracted mutable Init serializer is entirely in the external writer branch. -/
-theorem init_bound (view : registration.SignedInitView) : (init E view).IsQueryBoundP (IsHash (E := E)) 0 := by
+theorem init_bound (view : registration.InitView) : (init E view).IsQueryBoundP (IsHash (E := E)) 0 := by
   unfold init
   apply (isQueryBoundP_false _ 0).simulateQ_of_step (fun _ impossible => impossible.elim)
   intro query _
@@ -47,20 +47,6 @@ private theorem ready_bound (pending : registration.BeaconInitReady) :
   intro view
   exact isQueryBoundP_bind (n := 0) (m := 0) (init_bound (E := E) view) (fun _ _ => isQueryBoundP_pure _ _ _)
 
-private theorem signing_bound (payload : MldsaTranscriptAuth.Payload) (digest : CtxRomAuth.CtxDigest)
-    (pending : registration.BeaconMldsaSigning) :
-    (fromSigning (cryptoLift (E := E)) (init E) payload digest pending).IsQueryBoundP (IsHash (E := E)) 0 := by
-  unfold fromSigning
-  apply continue_bound
-  intro request
-  simp only [cryptoLift, isQueryBoundP_query_bind_iff, IsHash, not_false_eq_true, true_or, ite_false]
-  refine ⟨trivial, fun signature => ?_⟩
-  apply continue_bound
-  intro effect
-  cases effect with
-  | Ready selected => exact ready_bound selected
-  | _ => trivial
-
 private theorem hash_bound (pending : registration.BeaconInitHash) :
     (fromHash (cryptoLift (E := E)) (init E) pending).IsQueryBoundP (IsHash (E := E)) 1 := by
   unfold fromHash
@@ -71,25 +57,12 @@ private theorem hash_bound (pending : registration.BeaconInitHash) :
   apply continue_bound
   intro effect
   cases effect with
-  | MldsaSigningRequested selected => exact signing_bound _ _ selected
+  | Ready selected => exact ready_bound selected
   | _ => trivial
 
-private theorem fingerprint_bound (pending : registration.BeaconFingerprint) :
-    (fromFingerprint (cryptoLift (E := E)) (init E) pending).IsQueryBoundP (IsHash (E := E)) 2 := by
-  unfold fromFingerprint
-  apply continue_bound
-  intro request
-  simp only [cryptoLift, isQueryBoundP_query_bind_iff, IsHash, not_true_eq_false, false_or, ite_true]
-  refine ⟨by omega, fun digest => ?_⟩
-  apply continue_bound
-  intro effect
-  cases effect with
-  | HashRequested selected => exact hash_bound selected
-  | _ => trivial
-
-/-- All attached-signing continuations precede at most the same two actual hash stages. -/
+/-- All attached-signing continuations precede at most the same single actual hash stage. -/
 theorem ed_bound (pending : registration.BeaconEd25519Signing) :
-    (fromEd (cryptoLift (E := E)) (init E) pending).IsQueryBoundP (IsHash (E := E)) 2 := by
+    (fromEd (cryptoLift (E := E)) (init E) pending).IsQueryBoundP (IsHash (E := E)) 1 := by
   rw [fromEd.eq_def]
   apply continue_bound
   intro request
@@ -99,15 +72,15 @@ theorem ed_bound (pending : registration.BeaconEd25519Signing) :
   | fail error | div => trivial
   | ok effect => cases effect with
     | Ed25519SigningRequested next => exact ed_bound next
-    | FingerprintRequested next => exact fingerprint_bound next
+    | HashRequested next => exact hash_bound next
     | _ => trivial
 termination_by RegistrationBeaconInitExecutor.edRank pending
 decreasing_by exact RegistrationBeaconInitExecutor.ed_rank pending reply next actual
 
-/-- Actual source Init publication has two shared hash calls even with repeated signing/writer failures. -/
+/-- Actual source Init publication has at most one shared hash call even with repeated signing/writer failures. -/
 theorem begin_bound (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize) :
-    (RegistrationNativePlatformWriter.begin E control inputs coins pin mldsa).IsQueryBoundP (IsHash (E := E)) 2 := by
+    (pin : session.ServerAuthenticationPin) :
+    (RegistrationNativePlatformWriter.begin E control inputs coins pin).IsQueryBoundP (IsHash (E := E)) 1 := by
   unfold RegistrationNativePlatformWriter.begin begin
   apply continue_bound
   intro effect

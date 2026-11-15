@@ -20,7 +20,7 @@ theorem owner_fields (before after : Owner source) (phase : Phase)
     (fields : RegistrationNativeOwnerFields.metadata after = RegistrationNativeOwnerFields.metadata before)
     (samePhase : after.phase = phase) :
     after = {before with phase, edHistory := after.edHistory} := by
-  have copied := congrArg (fun owner : Owner source => {owner with phase := after.phase, edHistory := after.edHistory}) fields
+  have copied := congrArg (fun owner : Owner source => ({owner with phase := after.phase, edHistory := after.edHistory} : Owner source)) fields
   change after = {before with phase := after.phase, edHistory := after.edHistory} at copied
   simpa only [samePhase] using copied
 
@@ -35,7 +35,7 @@ theorem history (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (related : AdapterPublicWrapperState.Beacon view joint pool self owner world)
     (log : PqxdhJointIdentity.History) :
     AdapterPublicWrapperState.Beacon view joint pool self {owner with edHistory := log} world := by
-  refine ⟨related.identityPublic, related.identitySecret, related.mldsa, related.pin, related.serverPublic, ?_, ?_⟩
+  refine ⟨related.identityPublic, related.identitySecret, related.pin, related.serverPublic, ?_, ?_⟩
   · simpa only [AdapterPublicWrapperState.currentId] using related.identifier
   · simpa only [AdapterPublicWrapperState.Phase] using related.phase
 

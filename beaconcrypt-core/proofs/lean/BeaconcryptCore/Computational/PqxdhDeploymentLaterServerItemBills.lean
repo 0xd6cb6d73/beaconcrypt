@@ -12,6 +12,7 @@ Every bill takes a cap `reads` on the Server reads of the program, as `LaterServ
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
+set_option warningAsError true
 set_option maxRecDepth 100000
 namespace BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemBills
 open PqxdhKemIndCca PqxdhInitializerSecrecy PqxdhServerAuthExperiment PqxdhJointIdentity
@@ -118,7 +119,7 @@ theorem commandsL_inherit (P : (PqxdhDeploymentLaterServerSource.Spec KemSK).Dom
     (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity)
     (work : OracleComp (PqxdhDeploymentLaterServerSource.Spec KemSK) X) (n : ℕ) (bounded : work.IsQueryBoundP P n)
-    (index : Nat) (owners : List EncodedEntry) (log : Log) (state : NativeState KemSK) :
+    (index : Nat) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log) (state : NativeState KemSK) :
     ∀ reached ∈ support (PqxdhDeploymentLaterServerCommands.run setup codec checks identityIndex publicIdentity
         (PqxdhDeploymentLaterServerCommands.scan work index) owners log state), ∀ raw next,
       reached.1.1 = .pending raw next → ∀ reply, (next reply).IsQueryBoundP P n := by
@@ -146,7 +147,7 @@ theorem opaqueScanL_inherit (P : (PqxdhDeploymentLaterServerSource.Spec KemSK).D
     (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R)
     (work : OracleComp (PqxdhDeploymentLaterServerSource.Spec KemSK) X) (n : ℕ) (bounded : work.IsQueryBoundP P n)
-    (index : Nat) (owners : List EncodedEntry) (log : Log) (state : NativeState KemSK) :
+    (index : Nat) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log) (state : NativeState KemSK) :
     ∀ cut ∈ support (opaqueScan (Reader := Reader) setup codec checks identityIndex publicIdentity observe work index
       owners log state), InheritsCutL P n cut := by
   intro cut reached
@@ -208,7 +209,7 @@ theorem sourcePreOpaqueL_inherit (P : (PqxdhDeploymentLaterServerSource.Spec Kem
     · simp only [InheritsL]
     · simp only [InheritsL]
       have scanReached := support_option _ _ _ cut result.2 (by rw [← cutCase]; exact resultReached)
-      exact opaqueScanL_inherit P setup codec checks _ _ _ work n bounded index [] [] _ cut scanReached
+      exact opaqueScanL_inherit P setup codec checks _ _ _ work n bounded index ([], fun _ => none) [] _ cut scanReached
 
 /-- Every outcome of G1's prefix for the logged KEM-ideal branch has a context whose continuation inherits every query bound of the logged-source program. -/
 theorem sharedStartL_inherit (P : (PqxdhDeploymentLaterServerSource.Spec KemSK).Domain → Prop) [DecidablePred P]
@@ -332,7 +333,7 @@ theorem skelResumeL_cost (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)
     (value : PqxdhServerRootPreparation.Verified Reader)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)
-    (consumed : List Pqxdh.Bytes) (game : GameState KemSK) (owners : List EncodedEntry) (log : Log)
+    (consumed : List Pqxdh.Bytes) (game : GameState KemSK) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log)
     (next : Option Nat → OracleComp (PqxdhDeploymentLaterServerSource.Spec KemSK) X) (selected : Nat)
     (ciphertext : MlKem768Ciphertext) (services : Services V Response) (bills : ServiceBills services)
     (budget : SourceKind → ℕ) (reads : ℕ)

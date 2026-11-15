@@ -10,6 +10,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialBuilderPacking
+variable (associatedData : Std.Array Std.U8 151#usize)
 open PqxdhInitialBeaconAmbient PqxdhInitialPendingPost
 variable {ι Chain M P I D K X Response Shared A N C : Type} {extra : OracleSpec ι} {S B : Nat}
 
@@ -62,9 +63,9 @@ theorem build
     (fun result => (result.1.1, PqxdhInitialPostPacking.pack (result.1.2, result.2))) <$>
       (simulateQ (handler (fun query => PqxdhInitialBeaconAmbient.lift (primitive query))
         reader pre application initial selector (fun query => PqxdhInitialBeaconAmbient.lift (aux query)))
-        ((PqxdhInitialPendingBuilder.build source kernel sender index metadata ready).run before.1)).run before.2 =
+        ((PqxdhInitialPendingBuilder.build (associatedData := associatedData) source kernel sender index metadata ready).run before.1)).run before.2 =
       (fun cache => (fun result => ((result.1, (result.2, before.2.2)), cache)) <$>
-        (PqxdhInitialGenericProtocolBuilder.build source
+        (PqxdhInitialGenericProtocolBuilder.build (associatedData := associatedData) source
           (RawCtxGenericOwnerInterpretation.interpretedCalls primitive RawCtxPendingOwnerQueries.calls)
           aux kernel sender index metadata ready).run (PqxdhInitialPostPacking.pack before).1) := by
   rw [PqxdhInitialPendingBuilder.build_interpretation]
@@ -74,7 +75,7 @@ theorem build
   simp only [bind_pure_comp]
   let current := PqxdhInitialPendingBuilder.consume index ready before.1
   let input := PqxdhInitialPendingBuilder.selected sender index current
-  let work := PqxdhInitialGenericBuilder.readyBuild source
+  let work := PqxdhInitialGenericBuilder.readyBuild (associatedData := associatedData) source
     (RawCtxGenericOwnerInterpretation.interpretedCalls primitive RawCtxPendingOwnerQueries.calls) aux kernel
     ⟨input.server.identity, input.identityKeyId⟩ ready metadata input
   let execution := work.run before.2.1

@@ -104,6 +104,21 @@
     "module": "BeaconcryptCore.PanicFreedom.Authentication",
     "theorem": "BeaconcryptCore.PanicFreedom.Authentication.role_clone_total"
   },
+  "authentication.OwnedInitFields.fields": {
+    "module": "BeaconcryptCore.PanicFreedom.Authentication",
+    "theorem": "BeaconcryptCore.PanicFreedom.Authentication.owned_fields_total",
+    "form": "exists"
+  },
+  "authentication.OwnedInitFields.identity_public_key": {
+    "module": "BeaconcryptCore.PanicFreedom.Authentication",
+    "theorem": "BeaconcryptCore.PanicFreedom.Authentication.owned_identity_public_key_total",
+    "form": "exists"
+  },
+  "authentication.OwnedInitFields.new": {
+    "module": "BeaconcryptCore.PanicFreedom.Authentication",
+    "theorem": "BeaconcryptCore.PanicFreedom.Authentication.owned_fields_new_total",
+    "form": "exists"
+  },
   "authentication.ResponseTranscript.parts": {
     "form": "exists",
     "module": "BeaconcryptCore.PanicFreedom.Authentication",
@@ -124,15 +139,20 @@
     "module": "BeaconcryptCore.PanicFreedom.Authentication",
     "theorem": "BeaconcryptCore.PanicFreedom.Authentication.associated_data_width_total"
   },
-  "authentication.bind_associated_data": {
-    "form": "exists",
+  "authentication.assemble_associated_data": {
     "module": "BeaconcryptCore.PanicFreedom.Authentication",
-    "theorem": "BeaconcryptCore.PanicFreedom.Authentication.bind_associated_data_total"
+    "theorem": "BeaconcryptCore.PanicFreedom.Authentication.assemble_associated_data_total",
+    "form": "exists"
   },
   "authentication.build_init_transcript": {
     "form": "exists",
     "module": "BeaconcryptCore.PanicFreedom.Authentication",
     "theorem": "BeaconcryptCore.PanicFreedom.Authentication.build_init_transcript_total"
+  },
+  "authentication.build_record_ad_transcript": {
+    "module": "BeaconcryptCore.PanicFreedom.Authentication",
+    "theorem": "BeaconcryptCore.PanicFreedom.Authentication.build_record_ad_transcript_total",
+    "form": "exists"
   },
   "authentication.build_response_prefix": {
     "form": "exists",
@@ -409,11 +429,6 @@
     "module": "BeaconcryptCore.PanicFreedom.Trivial",
     "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_BeaconRegistrationCandidate_impl_assigned_key_id_total"
   },
-  "pqxdh.BeaconRegistrationCandidate.impl.associated_data": {
-    "form": "exists",
-    "module": "BeaconcryptCore.PanicFreedom.Trivial",
-    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_BeaconRegistrationCandidate_impl_associated_data_total"
-  },
   "pqxdh.BeaconRegistrationCandidate.impl.root_key_input": {
     "form": "exists",
     "module": "BeaconcryptCore.PanicFreedom.Trivial",
@@ -644,11 +659,6 @@
     "module": "BeaconcryptCore.PanicFreedom.Trivial",
     "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_ServerCoins_Insts_CoreCloneClone_clone_total"
   },
-  "pqxdh.ServerRegistrationCandidate.impl.associated_data": {
-    "form": "exists",
-    "module": "BeaconcryptCore.PanicFreedom.Trivial",
-    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.pqxdh_ServerRegistrationCandidate_impl_associated_data_total"
-  },
   "pqxdh.ServerRegistrationCandidate.impl.beacon_identity_public_key": {
     "form": "exists",
     "module": "BeaconcryptCore.PanicFreedom.Trivial",
@@ -859,11 +869,6 @@
     "module": "BeaconcryptCore.PanicFreedom.Pqxdh",
     "theorem": "BeaconcryptCore.PanicFreedom.beacon_start_ok"
   },
-  "pqxdh.build_associated_data": {
-    "form": "exists",
-    "module": "BeaconcryptCore.PanicFreedom.Pqxdh",
-    "theorem": "BeaconcryptCore.PanicFreedom.build_associated_data_ok"
-  },
   "pqxdh.build_root_key_input": {
     "form": "exists",
     "module": "BeaconcryptCore.PanicFreedom.Pqxdh",
@@ -1003,6 +1008,21 @@
     "form": "exists",
     "module": "BeaconcryptCore.PanicFreedom.Structural",
     "theorem": "BeaconcryptCore.PanicFreedom.Structural.pqxdh_validate_registration_status_total"
+  },
+  "ratchet.InitialRatchetKdfRequest.impl.info": {
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_InitialRatchetKdfRequest_impl_info_total",
+    "form": "exists"
+  },
+  "ratchet.InitialRatchetKdfRequest.impl.input": {
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_InitialRatchetKdfRequest_impl_input_total",
+    "form": "exists"
+  },
+  "ratchet.InitialRatchetKdfRequest.new": {
+    "module": "BeaconcryptCore.PanicFreedom.Trivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.Trivial.ratchet_InitialRatchetKdfRequest_new_total",
+    "form": "exists"
   },
   "ratchet.RATCHET_KDF_OUTPUT_SIZE": {
     "form": "exists",
@@ -1824,6 +1844,16 @@
     "module": "BeaconcryptCore.PanicFreedom.RegistrationTrivial",
     "theorem": "BeaconcryptCore.PanicFreedom.RegistrationTrivial.AuthenticatedResponse_into_parts_total"
   },
+  "registration.BeaconAdHash.request": {
+    "module": "BeaconcryptCore.PanicFreedom.RegistrationTrivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconAdHash_request_total",
+    "form": "exists"
+  },
+  "registration.BeaconAdHash.resume": {
+    "module": "BeaconcryptCore.PanicFreedom.RegistrationTrivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconAdHash_resume_total",
+    "form": "exists"
+  },
   "registration.BeaconEd25519Signing.request": {
     "form": "exists",
     "module": "BeaconcryptCore.PanicFreedom.RegistrationSigning",
@@ -1833,16 +1863,6 @@
     "form": "exists",
     "module": "BeaconcryptCore.PanicFreedom.RegistrationSigning",
     "theorem": "BeaconcryptCore.PanicFreedom.RegistrationSigning.ed_resume_total"
-  },
-  "registration.BeaconFingerprint.request": {
-    "form": "exists",
-    "module": "BeaconcryptCore.PanicFreedom.RegistrationTrivial",
-    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconFingerprint_request_total"
-  },
-  "registration.BeaconFingerprint.resume": {
-    "form": "exists",
-    "module": "BeaconcryptCore.PanicFreedom.RegistrationSigningContinuations",
-    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationSigningContinuations.BeaconFingerprint_resume_total"
   },
   "registration.BeaconInitHash.request": {
     "form": "exists",
@@ -1878,16 +1898,6 @@
     "form": "exists",
     "module": "BeaconcryptCore.PanicFreedom.RegistrationPublication",
     "theorem": "BeaconcryptCore.PanicFreedom.RegistrationPublication.BeaconInitialKdf_resume_total"
-  },
-  "registration.BeaconMldsaSigning.request": {
-    "form": "exists",
-    "module": "BeaconcryptCore.PanicFreedom.RegistrationTrivial",
-    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationTrivial.BeaconMldsaSigning_request_total"
-  },
-  "registration.BeaconMldsaSigning.resume": {
-    "form": "exists",
-    "module": "BeaconcryptCore.PanicFreedom.RegistrationSigningContinuations",
-    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationSigningContinuations.BeaconMldsaSigning_resume_total"
   },
   "registration.BeaconPending.abort": {
     "form": "exists",
@@ -1949,16 +1959,6 @@
     "module": "BeaconcryptCore.PanicFreedom.RegistrationTrivial",
     "theorem": "BeaconcryptCore.PanicFreedom.RegistrationTrivial.CompletedBeacon_into_parts_total"
   },
-  "registration.InitBeaconFingerprint.request": {
-    "form": "exists",
-    "module": "BeaconcryptCore.PanicFreedom.RegistrationTrivial",
-    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationTrivial.InitBeaconFingerprint_request_total"
-  },
-  "registration.InitBeaconFingerprint.resume": {
-    "form": "exists",
-    "module": "BeaconcryptCore.PanicFreedom.Registration",
-    "theorem": "BeaconcryptCore.PanicFreedom.Registration.InitBeaconFingerprint_resume_total"
-  },
   "registration.InitEd25519Verification.request": {
     "form": "exists",
     "module": "BeaconcryptCore.PanicFreedom.Registration",
@@ -1979,16 +1979,6 @@
     "module": "BeaconcryptCore.PanicFreedom.Registration",
     "theorem": "BeaconcryptCore.PanicFreedom.Registration.InitHash_resume_total"
   },
-  "registration.InitMldsaVerification.request": {
-    "form": "exists",
-    "module": "BeaconcryptCore.PanicFreedom.RegistrationTrivial",
-    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationTrivial.InitMldsaVerification_request_total"
-  },
-  "registration.InitMldsaVerification.resume": {
-    "form": "exists",
-    "module": "BeaconcryptCore.PanicFreedom.Registration",
-    "theorem": "BeaconcryptCore.PanicFreedom.Registration.InitMldsaVerification_resume_total"
-  },
   "registration.InitPacket.fields": {
     "form": "exists",
     "module": "BeaconcryptCore.PanicFreedom.RegistrationTrivial",
@@ -1998,26 +1988,6 @@
     "form": "exists",
     "module": "BeaconcryptCore.PanicFreedom.Registration",
     "theorem": "BeaconcryptCore.PanicFreedom.Registration.InitPacket_from_slices_total"
-  },
-  "registration.InitServerFingerprint.request": {
-    "form": "exists",
-    "module": "BeaconcryptCore.PanicFreedom.RegistrationTrivial",
-    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationTrivial.InitServerFingerprint_request_total"
-  },
-  "registration.InitServerFingerprint.resume": {
-    "form": "exists",
-    "module": "BeaconcryptCore.PanicFreedom.RegistrationTrivial",
-    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationTrivial.InitServerFingerprint_resume_total"
-  },
-  "registration.PinFingerprint.request": {
-    "form": "exists",
-    "module": "BeaconcryptCore.PanicFreedom.RegistrationTrivial",
-    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationTrivial.PinFingerprint_request_total"
-  },
-  "registration.PinFingerprint.resume": {
-    "form": "exists",
-    "module": "BeaconcryptCore.PanicFreedom.RegistrationTrivial",
-    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationTrivial.PinFingerprint_resume_total"
   },
   "registration.PublishedBeaconInit.into_parts": {
     "form": "exists",
@@ -2053,6 +2023,16 @@
     "form": "exists",
     "module": "BeaconcryptCore.PanicFreedom.Registration",
     "theorem": "BeaconcryptCore.PanicFreedom.Registration.ResponsePacket_from_slices_total"
+  },
+  "registration.ServerAdHash.request": {
+    "module": "BeaconcryptCore.PanicFreedom.RegistrationTrivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationTrivial.ServerAdHash_request_total",
+    "form": "exists"
+  },
+  "registration.ServerAdHash.resume": {
+    "module": "BeaconcryptCore.PanicFreedom.RegistrationTrivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.RegistrationTrivial.ServerAdHash_resume_total",
+    "form": "exists"
   },
   "registration.ServerInitialKdf.request": {
     "form": "exists",
@@ -2174,15 +2154,35 @@
     "module": "BeaconcryptCore.PanicFreedom.RegistrationPublication",
     "theorem": "BeaconcryptCore.PanicFreedom.RegistrationPublication.normalize_beacon_open_total"
   },
-  "session.RegistrationBinding.finish": {
-    "form": "exists",
+  "session.CompletedRegistrationBinding.finish": {
     "module": "BeaconcryptCore.PanicFreedom.SessionBinding",
-    "theorem": "BeaconcryptCore.PanicFreedom.SessionBinding.RegistrationBinding_finish_total"
+    "theorem": "BeaconcryptCore.PanicFreedom.SessionBinding.CompletedRegistrationBinding_finish_total",
+    "form": "exists"
   },
-  "session.RegistrationBinding.impl.associated_data": {
-    "form": "exists",
+  "session.CompletedRegistrationBinding.impl.associated_data": {
     "module": "BeaconcryptCore.PanicFreedom.SessionBinding",
-    "theorem": "BeaconcryptCore.PanicFreedom.SessionBinding.RegistrationBinding_associated_data_total"
+    "theorem": "BeaconcryptCore.PanicFreedom.SessionBinding.CompletedRegistrationBinding_associated_data_total",
+    "form": "exists"
+  },
+  "session.CompletedRegistrationBinding.impl.init_hash": {
+    "module": "BeaconcryptCore.PanicFreedom.SessionBinding",
+    "theorem": "BeaconcryptCore.PanicFreedom.SessionBinding.CompletedRegistrationBinding_init_hash_total",
+    "form": "exists"
+  },
+  "session.CompletedRegistrationBinding.impl.server_pin": {
+    "module": "BeaconcryptCore.PanicFreedom.SessionBinding",
+    "theorem": "BeaconcryptCore.PanicFreedom.SessionBinding.CompletedRegistrationBinding_server_pin_total",
+    "form": "exists"
+  },
+  "session.RegistrationBinding.ad_transcript": {
+    "module": "BeaconcryptCore.PanicFreedom.SessionBinding",
+    "theorem": "BeaconcryptCore.PanicFreedom.SessionBinding.RegistrationBinding_ad_transcript_total",
+    "form": "exists"
+  },
+  "session.RegistrationBinding.complete": {
+    "module": "BeaconcryptCore.PanicFreedom.SessionBinding",
+    "theorem": "BeaconcryptCore.PanicFreedom.SessionBinding.RegistrationBinding_complete_total",
+    "form": "exists"
   },
   "session.RegistrationBinding.impl.init_hash": {
     "form": "exists",
@@ -2214,11 +2214,6 @@
     "module": "BeaconcryptCore.PanicFreedom.SessionBinding",
     "theorem": "BeaconcryptCore.PanicFreedom.SessionBinding.ServerAuthenticationPin_binding_total"
   },
-  "session.ServerAuthenticationPin.impl.fingerprint": {
-    "form": "exists",
-    "module": "BeaconcryptCore.PanicFreedom.SessionBinding",
-    "theorem": "BeaconcryptCore.PanicFreedom.SessionBinding.ServerAuthenticationPin_fingerprint_total"
-  },
   "session.ServerAuthenticationPin.impl.public_key": {
     "form": "exists",
     "module": "BeaconcryptCore.PanicFreedom.SessionBinding",
@@ -2249,11 +2244,6 @@
     "module": "BeaconcryptCore.PanicFreedom.SessionBinding",
     "theorem": "BeaconcryptCore.PanicFreedom.SessionBinding.SessionBinding_associated_data_total"
   },
-  "session.SessionBinding.impl.beacon_fingerprint": {
-    "form": "exists",
-    "module": "BeaconcryptCore.PanicFreedom.SessionBinding",
-    "theorem": "BeaconcryptCore.PanicFreedom.SessionBinding.SessionBinding_beacon_fingerprint_total"
-  },
   "session.SessionBinding.impl.beacon_identity_public_key": {
     "form": "exists",
     "module": "BeaconcryptCore.PanicFreedom.SessionBinding",
@@ -2264,10 +2254,10 @@
     "module": "BeaconcryptCore.PanicFreedom.SessionBinding",
     "theorem": "BeaconcryptCore.PanicFreedom.SessionBinding.SessionBinding_server_binding_total"
   },
-  "session.SessionBinding.impl.server_fingerprint": {
-    "form": "exists",
+  "session.SessionBinding.impl.session_transcript_hash": {
     "module": "BeaconcryptCore.PanicFreedom.SessionBinding",
-    "theorem": "BeaconcryptCore.PanicFreedom.SessionBinding.SessionBinding_server_fingerprint_total"
+    "theorem": "BeaconcryptCore.PanicFreedom.SessionBinding.SessionBinding_session_transcript_hash_total",
+    "form": "exists"
   },
   "transport.CborLength.bytes": {
     "form": "exists",

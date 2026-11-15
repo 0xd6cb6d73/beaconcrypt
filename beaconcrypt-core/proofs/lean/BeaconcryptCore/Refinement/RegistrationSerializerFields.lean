@@ -285,18 +285,6 @@ theorem initkex_field_3 (input out : Slice U8) :
   simp only [transport.extraction_serialize_initkex_size_3, transport.serialize_bstr,
     transport.bstr_left, bind_tc_ok, cbor_major_type_byte_string, ↓reduceIte]
 
-theorem initkex_field_4 (input out : Slice U8) :
-    transport.extraction_serialize_initkex_size_4 input out true true =
-      transport.serialize_bstr input out := by
-  simp only [transport.extraction_serialize_initkex_size_4, transport.serialize_bstr,
-    transport.bstr_left, bind_tc_ok, cbor_major_type_byte_string, ↓reduceIte]
-
-theorem initkex_field_5 (input out : Slice U8) :
-    transport.extraction_serialize_initkex_size_5 input out true true =
-      transport.serialize_bstr input out := by
-  simp only [transport.extraction_serialize_initkex_size_5, transport.serialize_bstr,
-    transport.bstr_left, bind_tc_ok, cbor_major_type_byte_string, ↓reduceIte]
-
 theorem kexresponse_field_0 (input out : Slice U8) :
     transport.extraction_serialize_kexresponse_size_0 input out true true =
       transport.serialize_bstr input out := by
@@ -435,17 +423,7 @@ end BeaconcryptCore.Refinement.RegistrationSerializerFields
 #guard_msgs in
 #print axioms BeaconcryptCore.Refinement.RegistrationSerializerFields.initkex_field_3
 
-/-- info: 'BeaconcryptCore.Refinement.RegistrationSerializerFields.initkex_field_4' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Refinement.RegistrationSerializerFields.initkex_field_4
 
-/-- info: 'BeaconcryptCore.Refinement.RegistrationSerializerFields.initkex_field_5' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Refinement.RegistrationSerializerFields.initkex_field_5
 
 /-- info: 'BeaconcryptCore.Refinement.RegistrationSerializerFields.kexresponse_field_0' depends on axioms: [propext,
  Classical.choice,

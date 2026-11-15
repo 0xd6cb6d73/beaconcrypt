@@ -38,7 +38,7 @@ private theorem agreement_program (source : PqxdhJointKdfGame.FixedHkdfSha512NoS
   OracleComp.map_run_simulateQ_eq_of_query_map_eq _ _ _ (agreement_query source primitive) work before
 
 private theorem agree (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit) (before : RegistrationServerFrontendCompiler.State n) :
     Prod.map id serverView <$> (RegistrationServerNativeSource.agree setup checks representation created packet authenticated).run before =
       (RegistrationServerNativeSource.agree setup checks representation created packet authenticated).run (serverView before) := by
@@ -47,7 +47,7 @@ private theorem agree (setup : Setup base KemSK) (checks : Checks)
   have mapped := congrArg (fun action => (fun result => (result.1, {serverView before with world := result.2})) <$> action) framed
   simpa only [RegistrationServerNativeSource.agree, StateT.run, Functor.map_map, serverView, Prod.map_def, id_eq] using mapped
 
-private theorem retain (created : PqxdhLiveServerConstruction.Created Unit) (accepted : agreement.ServerAgreement)
+private theorem retain (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (accepted : agreement.ServerAgreement)
     (before : RegistrationServerFrontendCompiler.State n) :
     Prod.map id serverView <$> (RegistrationServerNativeSource.retain created accepted).run before =
       (RegistrationServerNativeSource.retain created accepted).run (serverView before) := by
@@ -102,7 +102,7 @@ private theorem consumed (authenticated : registration.AuthenticatedInit) :
     view, serverView, RegistrationNativePlatformIdentityReceiptView.view, Prod.map_def, id_eq]
 
 private theorem afterAuthentication (setup : Setup base KemSK) (checks : Checks) (reserve : StateT Platform ProbComp Bool)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit) :
     Stable (RegistrationNativePlatformCtxAcceptSdk.afterAuthentication (n := n) setup checks reserve representation created packet authenticated) := by
   unfold RegistrationNativePlatformCtxAcceptSdk.afterAuthentication
@@ -126,7 +126,7 @@ private theorem afterAuthentication (setup : Setup base KemSK) (checks : Checks)
 
 private theorem afterPin (setup : Setup base KemSK) (checks : Checks) (reserve : StateT Platform ProbComp Bool)
     (verify : MldsaTranscriptAuth.Verify) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (result : RegistrationNativeServerPinRecompute.PinReply) :
     Stable (RegistrationNativePlatformCtxAcceptSdk.afterPin (n := n) setup checks reserve verify representation created packet result) := by
   unfold RegistrationNativePlatformCtxAcceptSdk.afterPin
@@ -148,7 +148,7 @@ private theorem afterPin (setup : Setup base KemSK) (checks : Checks) (reserve :
 /-- The actual SDK accept controller ignores only earlier raw ML receipt payloads; no branch or mutable state is dropped. -/
 theorem sdk (setup : Setup base KemSK) (checks : Checks) (reserve : StateT Platform ProbComp Bool)
     (verify : MldsaTranscriptAuth.Verify) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket) :
     Stable (RegistrationNativePlatformCtxAcceptSdk.accept (n := n) setup checks reserve verify representation created packet) := by
   unfold RegistrationNativePlatformCtxAcceptSdk.accept
   exact bind_stable _ _ RegistrationNativePlatformCtxSdkSourceReceiptView.pin_stable
@@ -157,7 +157,7 @@ theorem sdk (setup : Setup base KemSK) (checks : Checks) (reserve : StateT Platf
 /-- The full Context parse-attempt increment preserves that same receipt view, with the exact KEM pool, P and backend state retained. -/
 theorem accept (setup : Setup base KemSK) (checks : Checks) (reserve : StateT Platform ProbComp Bool)
     (verify : MldsaTranscriptAuth.Verify) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket) :
     RegistrationNativePlatformCtxBuildReceiptView.Stable
       (RegistrationNativePlatformCtxAccept.accept (n := n) setup checks reserve verify representation created packet) := by
   intro before

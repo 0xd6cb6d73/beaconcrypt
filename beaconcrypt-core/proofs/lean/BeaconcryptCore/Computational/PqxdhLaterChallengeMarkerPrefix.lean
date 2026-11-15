@@ -6,7 +6,9 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeMarkerPrefix
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhJointKdfGame PqxdhNativeSharedPrefix
 open RawCtxSelectedParentTable RawCtxSelectedParentEntry PqxdhFirstRecordConfidentiality
 variable {ι M P I D K X Response Shared A N C : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -55,7 +57,7 @@ theorem query_unmarked (owner : RawCtxProtocolReveals.Owner S B) (number : Std.U
     (finalState : PqxdhLaterChallengeMonitor.State M P I D K A N C S B)
     (reply : (AdvSpec extra S B).Range query)
     (supported : (some (reply, after), finalState) ∈ support (runStepper
-      (PqxdhLaterChallengeMonitor.handler pre application initial selector aux source writer prior parent target nonce next sender route
+      (PqxdhLaterChallengeMonitor.handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route
         read mark monitor owner number bit query) current before))
     (unused : after.pair = none) : current.pair = none ∧ finalState.2 = before.2 := by
   simp only [PqxdhLaterChallengeMonitor.handler, runStepper, OptionT.run_mk, StateT.run, support_map] at supported
@@ -72,7 +74,7 @@ theorem program_unmarked {Result : Type} (owner : RawCtxProtocolReveals.Owner S 
     (client : OracleComp (AdvSpec extra S B) Result) (current after : PqxdhRecordConfidentialityChallenge.State)
     (before finalState : PqxdhLaterChallengeMonitor.State M P I D K A N C S B) (value : Result)
     (supported : (some (value, after), finalState) ∈ support (runStepper
-      (simulateQ (PqxdhLaterChallengeMonitor.handler pre application initial selector aux source writer prior parent target nonce next
+      (simulateQ (PqxdhLaterChallengeMonitor.handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next
         sender route read mark monitor owner number bit) client) current before))
     (unused : after.pair = none) : current.pair = none ∧ finalState.2 = before.2 := by
   induction client using OracleComp.inductionOn generalizing current before with
@@ -86,7 +88,7 @@ theorem program_unmarked {Result : Type} (owner : RawCtxProtocolReveals.Owner S 
       rcases step with ⟨_ | ⟨reply, intermediate⟩, state⟩
       · simp only [mem_support_pure_iff, Prod.mk.injEq, reduceCtorEq, false_and] at later
       · have tail := ih reply intermediate state later
-        have first := query_unmarked pre application initial selector aux source writer prior parent target nonce next sender route read
+        have first := query_unmarked (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read
           mark monitor owner number bit query current intermediate before state reply actual tail.1
         exact ⟨first.1, tail.2.trans first.2⟩
 
@@ -98,15 +100,15 @@ theorem evaluated_unmarked {Result Backend : Type}
     (before finalState : PqxdhLaterChallengeMonitor.State M P I D K A N C S B) (value : Result)
     (initialBackend finalBackend : Backend)
     (supported : ((some (value, after), finalState), finalBackend) ∈ support ((simulateQ impl (runStepper
-      (simulateQ (PqxdhLaterChallengeMonitor.handler pre application initial selector aux source writer prior parent target nonce next
+      (simulateQ (PqxdhLaterChallengeMonitor.handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next
         sender route read mark monitor owner number bit) client) current before)).run initialBackend))
     (unused : after.pair = none) : current.pair = none ∧ finalState.2 = before.2 := by
-  apply program_unmarked pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
+  apply program_unmarked (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
     owner number bit client current after before finalState value _ unused
   apply support_simulateQ_run'_subset impl _ initialBackend
   simpa only [StateT.run'_eq, support_map, Set.mem_image] using
     (show ∃ result ∈ support ((simulateQ impl (runStepper
-      (simulateQ (PqxdhLaterChallengeMonitor.handler pre application initial selector aux source writer prior parent target nonce next
+      (simulateQ (PqxdhLaterChallengeMonitor.handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next
         sender route read mark monitor owner number bit) client) current before)).run initialBackend),
       result.1 = (some (value, after), finalState) from ⟨_, supported, rfl⟩)
 

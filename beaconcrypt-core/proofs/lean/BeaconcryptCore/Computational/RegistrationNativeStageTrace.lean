@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
-import BeaconcryptCore.Computational.RegistrationNativeServerIssuance
-import BeaconcryptCore.Computational.PqxdhRecordLiftFlat
+import BeaconcryptCore.Computational.RegistrationOracleStateSupport
+import VCVio.OracleComp.SimSemantics.StateT.StateProjection
 
 /-! A private source journal retains complete pre/post callback states in one execution. Its exact erasure leaves original adaptive source semantics unchanged. The chronological path witnesses each callback at its actual earlier leading; this journal is mathematical analysis state and is never an adversary interface. -/
 open OracleComp OracleSpec

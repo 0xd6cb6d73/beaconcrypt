@@ -43,7 +43,7 @@ theorem lift_safe (work : RegistrationNativeBeaconFrontend.M n KemSK source Auxi
     intro paid
     exact False.elim (free paid)
 
-theorem encoder_safe (view : registration.SignedInitView) :
+theorem encoder_safe (view : registration.InitView) :
     Safe (queries := Spec E n KemSK) (Allowed (E := E) (n := n) (KemSK := KemSK))
       (encoder (KemSK := KemSK) (source := source) (Auxiliary := Auxiliary) E view) := by
   intro owners env
@@ -76,7 +76,7 @@ theorem program_safe (setup : PqxdhServerAuthExperiment.Setup base KemSK) (index
         apply bind_safe (Allowed (E := E) (n := n) (KemSK := KemSK)) _ _
           (RegistrationPublicationQuerySafety.Beacon.begin (Allowed (E := E) (n := n) (KemSK := KemSK)) _
             (fun query => lift_safe _ (RegistrationNativeKemBeaconFootprint.outgoing_zero setup .other index owner query))
-            _ (encoder_safe) _ _ _ _ _)
+            _ (encoder_safe) _ _ _ _)
         intro published
         cases published with
         | fail error | div => exact pure_safe (Allowed (E := E) (n := n) (KemSK := KemSK)) _

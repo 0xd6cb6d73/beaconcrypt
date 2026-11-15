@@ -15,7 +15,7 @@ variable {S : Type}
 
 /-- The reached Server initializer actually consumes its interpreter's concrete initial response before the rest of the first-record computation. -/
 theorem server (implementation : QueryImpl Spec (StateT S ProbComp))
-    (response : ratchet.SymmetricRatchetKdfRequest → pqxdh.concrete.InitialRatchetKdfResponse)
+    (response : ratchet.InitialRatchetKdfRequest → pqxdh.concrete.InitialRatchetKdfResponse)
     (law : ∀ request before answer after, (answer, after) ∈ support ((implementation (.initialKdf request)).run before) → answer = .Some (response request))
     (initial : registration.ServerInitialKdf) (completed : registration.ServerResponseHash) (before after : S)
     (supported : (.ok (.Ok completed), after) ∈ support
@@ -42,7 +42,7 @@ theorem server (implementation : QueryImpl Spec (StateT S ProbComp))
 
 /-- The reached Beacon initializer actually consumes its concrete initial response before the unchanged first-record receive loop. -/
 theorem beacon (implementation : QueryImpl Spec (StateT S ProbComp))
-    (response : ratchet.SymmetricRatchetKdfRequest → pqxdh.concrete.InitialRatchetKdfResponse)
+    (response : ratchet.InitialRatchetKdfRequest → pqxdh.concrete.InitialRatchetKdfResponse)
     (law : ∀ request before answer after, (answer, after) ∈ support ((implementation (.initialKdf request)).run before) → answer = .Some (response request))
     (initial : registration.BeaconInitialKdf) (completed : registration.CompletedBeacon) (before after : S)
     (supported : (.ok (.Ok completed), after) ∈ support
@@ -70,7 +70,7 @@ theorem beacon (implementation : QueryImpl Spec (StateT S ProbComp))
 /-- The actual instrumented World initial getter returns the concrete fixed source response, with all reached counters and state retained. -/
 theorem world_reply {n : Nat} {Auxiliary ι KemSK Reader Encoded : Type} {base : OracleSpec ι}
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (codec : PqxdhServerAuthExperiment.Codec Reader Encoded)
-    (request : ratchet.SymmetricRatchetKdfRequest) (before after : RegistrationWorldAgreement.State n Auxiliary)
+    (request : ratchet.InitialRatchetKdfRequest) (before after : RegistrationWorldAgreement.State n Auxiliary)
     (answer : Spec.Range (.initialKdf request))
     (supported : (answer, after) ∈ support ((RegistrationWorldRecords.handler setup codec (.initialKdf request)).run before)) :
     answer = .Some (RawCtxSourceHkdf.initialResponse setup.source.crypto request) := by

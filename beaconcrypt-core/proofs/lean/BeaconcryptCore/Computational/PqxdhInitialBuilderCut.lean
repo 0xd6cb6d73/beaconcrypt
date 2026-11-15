@@ -1,7 +1,7 @@
 import BeaconcryptCore.Computational.PqxdhRegistrationProtocolState
 
 /-!
-The exact original registration builder is factored at its pure64-byte initializer result. Its current allocation/binding checks, identity validation and peer reservation still precede initialization, and plaintext allocation, first send, erasure, serialization, publication and reinstallation remain the original tail. The factored code never reads the root field. This is a source-derived continuation for an initializer hybrid, not a new protocol or an arbitrary compatibility premise.
+This generic post-hash suffix takes public supplied AD151; it does not construct current session AD or replace the current native hash-admission receipt. The exact registration builder is factored at its pure64-byte initializer result. Its current allocation/binding checks, identity validation and peer reservation still precede initialization, and plaintext allocation, first send, erasure, serialization, publication and reinstallation remain the original tail. The factored code never reads the root field. This is a source-derived continuation for an initializer hybrid, not a new protocol or an arbitrary compatibility premise.
 -/
 
 open OracleComp OracleSpec CoreModels Aeneas
@@ -9,6 +9,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete PqxdhRefinement
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialBuilderCut
+variable (associatedData : Std.Array Std.U8 151#usize)
 open PqxdhServerRegistrationPublication PqxdhSecretInputKdf PqxdhJointKdfGame
 
 noncomputable def candidate {Metadata PeerMetadata Consumed : Type}
@@ -28,7 +29,7 @@ noncomputable def candidate {Metadata PeerMetadata Consumed : Type}
           let allocated ← TailSpec.query (.inr (.reservePlaintext (8 + plaintext.length)))
           if !allocated then pure (ok (none, state)) else
             continueRust (candidate.key_id_binding) fun binding =>
-              ok <$> afterInitialization candidate (absBytes binding.bytes ++ plaintext)
+              ok <$> PqxdhServerRegistrationPublication.afterInitialization (associatedData := associatedData) candidate (absBytes binding.bytes ++ plaintext)
                 kernel metadata state
         else pure (ok (none, state))
 
@@ -37,9 +38,9 @@ theorem candidate_source {Metadata PeerMetadata Consumed : Type}
     (source : FixedHkdfSha512NoSaltSource) (pending : pqxdh.ServerRegistrationCandidate)
     (root : RootOutput) (data : Option Bytes) (metadata : PeerMetadata)
     (state : State Metadata PeerMetadata Consumed) :
-    candidate (PqxdhRootTableInitialization.initialKernelRun source false root) pending data metadata state =
-      candidateTail source pending root data metadata state := by
-  simp only [candidate, candidateTail, candidate_initialization]
+    candidate (associatedData := associatedData) (PqxdhRootTableInitialization.initialKernelRun source false root) pending data metadata state =
+      PqxdhServerRegistrationPublication.candidateTail (associatedData := associatedData) source pending root data metadata state := by
+  simp only [candidate, PqxdhServerRegistrationPublication.candidateTail, candidate_initialization]
 
 noncomputable def usedBuild {Metadata PeerMetadata Consumed : Type}
     (initial : RustM ConcreteRatchetKernel)
@@ -57,15 +58,15 @@ noncomputable def usedBuild {Metadata PeerMetadata Consumed : Type}
           ⟨state.server.identity, state.identityKeyId⟩ availability) fun prepared =>
           match prepared with
           | .Err _ => pure (ok (none, state))
-          | .Ok candidate => PqxdhInitialBuilderCut.candidate initial candidate data metadata state
+          | .Ok candidate => PqxdhInitialBuilderCut.candidate (associatedData := associatedData) initial candidate data metadata state
 
 /-- Rechecks of the exact current Server control and binding precede the same source-derived initializer tail. -/
 theorem used_source {Metadata PeerMetadata Consumed : Type}
     (source : FixedHkdfSha512NoSaltSource) (pending : PqxdhRegistrationInputs.UsedInput)
     (root : RootOutput) (data : Option Bytes) (metadata : PeerMetadata)
     (state : State Metadata PeerMetadata Consumed) :
-    usedBuild (PqxdhRootTableInitialization.initialKernelRun source false root) pending data metadata state =
-      PqxdhRegistrationInputs.build source pending root data metadata state := by
+    usedBuild (associatedData := associatedData) (PqxdhRootTableInitialization.initialKernelRun source false root) pending data metadata state =
+      PqxdhRegistrationInputs.build (associatedData := associatedData) source pending root data metadata state := by
   simp only [usedBuild, PqxdhRegistrationInputs.build, candidate_source]
   rfl
 
@@ -73,23 +74,23 @@ noncomputable def readyBuild {Metadata PeerMetadata Consumed : Type}
     (source : FixedHkdfSha512NoSaltSource) (initial : RustM ConcreteRatchetKernel)
     (binding : pqxdh.ServerBinding) (ready : PqxdhPrivateAcceptedRoot.Ready) (metadata : PeerMetadata)
     (state : State Metadata PeerMetadata Consumed) :=
-  usedBuild initial (PqxdhAcceptedRegistration.usedReady source.crypto binding ready) ready.application metadata state
+  usedBuild (associatedData := associatedData) initial (PqxdhAcceptedRegistration.usedReady source.crypto binding ready) ready.application metadata state
 
 /-- The actual accepted-root builder uses its same consumed context and exactly one factored initializer result. -/
 theorem ready_source {Metadata PeerMetadata Consumed : Type}
     (source : FixedHkdfSha512NoSaltSource) (binding : pqxdh.ServerBinding)
     (ready : PqxdhPrivateAcceptedRoot.Ready) (metadata : PeerMetadata) (state : State Metadata PeerMetadata Consumed) :
-    readyBuild source (PqxdhRootTableInitialization.initialKernelRun source false ready.root) binding ready metadata state =
-      PqxdhAcceptedRegistration.buildReady source binding ready metadata state := by
-  exact used_source source _ ready.root ready.application metadata state
+    readyBuild (associatedData := associatedData) source (PqxdhRootTableInitialization.initialKernelRun source false ready.root) binding ready metadata state =
+      PqxdhAcceptedRegistration.buildReady (associatedData := associatedData) source binding ready metadata state := by
+  exact used_source (associatedData := associatedData) source _ ready.root ready.application metadata state
 
 /-- Once the initializer result is supplied, every complete accepted builder effect is independent of the Ready root field. -/
 theorem ready_root_unused {Metadata PeerMetadata Consumed : Type}
     (source : FixedHkdfSha512NoSaltSource) (initial : RustM ConcreteRatchetKernel)
     (binding : pqxdh.ServerBinding) (ready : PqxdhPrivateAcceptedRoot.Ready) (root : RootOutput)
     (metadata : PeerMetadata) (state : State Metadata PeerMetadata Consumed) :
-    readyBuild source initial binding {ready with root := root} metadata state =
-      readyBuild source initial binding ready metadata state := by
+    readyBuild (associatedData := associatedData) source initial binding {ready with root := root} metadata state =
+      readyBuild (associatedData := associatedData) source initial binding ready metadata state := by
   rfl
 
 noncomputable def protocolBuild {M P I D K A : Type} {S B : Nat}
@@ -105,16 +106,16 @@ noncomputable def protocolBuild {M P I D K A : Type} {S B : Nat}
     let selected := PqxdhRegistrationProtocolState.input senderId index metadata current
     PqxdhRegistrationProtocolState.reinstall index current <$> (simulateQ (PqxdhRegistrationProtocolState.registrationImpl source writer aux)
       (simulateQ PqxdhServerRegistrationPublication.nativeAdapter
-        (readyBuild source initial selected.binding ready metadata selected.state))).run current.primitive
+        (readyBuild (associatedData := associatedData) source initial selected.binding ready metadata selected.state))).run current.primitive
 
 /-- Factoring initialization retains the entire real registration protocol state, first send and selected Server reinstallation. -/
 theorem protocol_source {M P I D K A : Type} {S B : Nat}
     (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (aux : QueryImpl AuxSpec (StateT (RawCtxSharedPrimitive.SharedState A) ProbComp))
     (senderId : M → Std.U64) (index : Fin S) (metadata : P) (ready : PqxdhPrivateAcceptedRoot.Ready) :
-    protocolBuild (I := I) (D := D) (K := K) (B := B) source writer
+    protocolBuild (associatedData := associatedData) (I := I) (D := D) (K := K) (B := B) source writer
       (PqxdhRootTableInitialization.initialKernelRun source false ready.root) aux senderId index metadata ready =
-      PqxdhRegistrationProtocolState.build source writer aux senderId index metadata ready := by
+      PqxdhRegistrationProtocolState.build (associatedData := associatedData) source writer aux senderId index metadata ready := by
   funext state
   simp only [protocolBuild, PqxdhRegistrationProtocolState.build, ready_source]
 
@@ -123,8 +124,8 @@ theorem protocol_root_unused {M P I D K A : Type} {S B : Nat}
     (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer) (initial : RustM ConcreteRatchetKernel)
     (aux : QueryImpl AuxSpec (StateT (RawCtxSharedPrimitive.SharedState A) ProbComp))
     (senderId : M → Std.U64) (index : Fin S) (metadata : P) (ready : PqxdhPrivateAcceptedRoot.Ready) (root : RootOutput) :
-    protocolBuild (I := I) (D := D) (K := K) (B := B) source writer initial aux senderId index metadata {ready with root := root} =
-      protocolBuild source writer initial aux senderId index metadata ready := by
+    protocolBuild (associatedData := associatedData) (I := I) (D := D) (K := K) (B := B) source writer initial aux senderId index metadata {ready with root := root} =
+      protocolBuild (associatedData := associatedData) source writer initial aux senderId index metadata ready := by
   rfl
 
 def eraseRoot (ready : PqxdhPrivateAcceptedRoot.Ready) : PqxdhPrivateAcceptedRoot.Ready :=
@@ -143,9 +144,9 @@ theorem protocol_erased_source {M P I D K A : Type} {S B : Nat}
     (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (aux : QueryImpl AuxSpec (StateT (RawCtxSharedPrimitive.SharedState A) ProbComp))
     (senderId : M → Std.U64) (index : Fin S) (metadata : P) (ready : PqxdhPrivateAcceptedRoot.Ready) :
-    protocolBuild (I := I) (D := D) (K := K) (B := B) source writer
+    protocolBuild (associatedData := associatedData) (I := I) (D := D) (K := K) (B := B) source writer
       (PqxdhRootTableInitialization.initialKernelRun source false ready.root) aux senderId index metadata (eraseRoot ready) =
-      PqxdhRegistrationProtocolState.build source writer aux senderId index metadata ready := by
+      PqxdhRegistrationProtocolState.build (associatedData := associatedData) source writer aux senderId index metadata ready := by
   rw [eraseRoot, protocol_root_unused, protocol_source]
 
 end BeaconcryptCore.Computational.PqxdhInitialBuilderCut

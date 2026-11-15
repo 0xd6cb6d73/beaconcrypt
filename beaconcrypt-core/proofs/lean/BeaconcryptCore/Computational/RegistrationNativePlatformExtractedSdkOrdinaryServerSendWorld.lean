@@ -19,7 +19,7 @@ variable {n : Nat} {Platform E I KemSK : Type} {base : OracleSpec I}
 variable [primitives : AdapterSealPrimitive.Operations] [FrameDispatchFallback.Operations]
 
 def finish (before : PqxdhRecordLiftWorld.State n) (server : PqxdhRecordLiftWorld.Server) (key : U64)
-    (peer : RawCtxServerRouting.Peer (Array U8 281#usize))
+    (peer : RawCtxServerRouting.Peer (Array U8 151#usize))
     (result : (((Option RawCtxSourceSend.Encrypted ×RawCtxWholeOwner.OwnerState Unit) ×
       RegistrationNativePlatformExtractedSdkOrdinaryDriver.State) ×Platform)) :
     ((Option RawCtxSourceSend.Encrypted ×PqxdhRecordLiftWorld.State n) ×Platform) :=
@@ -29,7 +29,7 @@ def finish (before : PqxdhRecordLiftWorld.State n) (server : PqxdhRecordLiftWorl
                  primitive:=result.1.2.1}),result.2)
 
 def project (before : PqxdhRecordLiftWorld.State n) (server : PqxdhRecordLiftWorld.Server) (key : U64)
-    (peer : RawCtxServerRouting.Peer (Array U8 281#usize))
+    (peer : RawCtxServerRouting.Peer (Array U8 151#usize))
     (result : ((RustM AdapterRecordStatefulSend.Result ×RegistrationNativePlatformExtractedSdkOrdinaryDriver.State) ×Platform)) :=
   finish before server key peer
     ((RegistrationNativePlatformExtractedSdkOrdinarySendCommon.project
@@ -47,7 +47,7 @@ theorem world (setup : Setup base KemSK) (wire : Wire)
     (converted : RegistrationNativePlatformOrdinarySourceNative.Conversion view)
     (failure : primitives.Error) (erased : commitment.CommitmentTranscript)
     (before : PqxdhRecordLiftWorld.State n) (previous : Platform) (server : PqxdhRecordLiftWorld.Server)
-    (key : U64) (peer : RawCtxServerRouting.Peer (Array U8 281#usize)) (bytes : Slice U8)
+    (key : U64) (peer : RawCtxServerRouting.Peer (Array U8 151#usize)) (bytes : Slice U8)
     (present : before.server=some server) (selected : server.records.server.peers key=some peer) :
     project before server key peer <$>
       (((sample setup (ledgerCodec wire) reserve view failure erased key server.sender peer.metadata peer.kernel bytes).run
@@ -94,8 +94,8 @@ theorem world (setup : Setup base KemSK) (wire : Wire)
       let work:=RegistrationNativePlatformExtractedSdkOrdinarySendCommon.ownerNative setup (ledgerCodec wire) reserve
         (owner key peer.metadata peer.kernel server.records.rawAttempts) server.sender bytes
       let first:=fun result : Option RawCtxSourceSend.Encrypted ×RawCtxWholeOwner.OwnerState Unit =>
-        (result.1,(⟨RawCtxServerRouting.putPeer server.records.server key peer result.2.owner.kernel,result.2.rawAttempts⟩ : RawCtxServerRouting.State Unit (Array U8 281#usize)))
-      let last:=fun result : ((Option RawCtxSourceSend.Encrypted ×RawCtxServerRouting.State Unit (Array U8 281#usize)) ×RegistrationNativePlatformExtractedSdkOrdinaryDriver.State) =>
+        (result.1,(⟨RawCtxServerRouting.putPeer server.records.server key peer result.2.owner.kernel,result.2.rawAttempts⟩ : RawCtxServerRouting.State Unit (Array U8 151#usize)))
+      let last:=fun result : ((Option RawCtxSourceSend.Encrypted ×RawCtxServerRouting.State Unit (Array U8 151#usize)) ×RegistrationNativePlatformExtractedSdkOrdinaryDriver.State) =>
         (result.1.1,PqxdhRecordLiftWorld.produce (PqxdhDeploymentNative.serverTag (.inl (TranscriptAuthParts.absSlice bytes,key))) result.2.2
           {before with server:=some {server with records:=result.1.2},primitive:=result.2.1})
       change _=((last <$> ((first <$>work).run (before.primitive,[]))).run previous)
@@ -111,7 +111,7 @@ theorem guarded (setup : Setup base KemSK) (wire : Wire)
     (converted : RegistrationNativePlatformOrdinarySourceNative.Conversion view)
     (failure : primitives.Error) (erased : commitment.CommitmentTranscript) (route : RawCtxServerRouting.SenderDecoder)
     (before : PqxdhRecordLiftWorld.State n) (previous : Platform) (server : PqxdhRecordLiftWorld.Server)
-    (key : U64) (peer : RawCtxServerRouting.Peer (Array U8 281#usize)) (bytes : Slice U8)
+    (key : U64) (peer : RawCtxServerRouting.Peer (Array U8 151#usize)) (bytes : Slice U8)
     (present : before.server=some server) (selected : server.records.server.peers key=some peer) :
     project before server key peer <$>
       (((sample setup (ledgerCodec wire) reserve view failure erased key server.sender peer.metadata peer.kernel bytes).run

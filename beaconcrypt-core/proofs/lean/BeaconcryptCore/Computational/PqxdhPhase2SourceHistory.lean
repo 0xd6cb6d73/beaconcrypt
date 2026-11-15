@@ -6,6 +6,7 @@ open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhPhase2SourceHistory
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhPhase2SourceScheduler PqxdhPhase2SourceAux PqxdhPrivateKemSource PqxdhKemIndCca
 open PqxdhInitializerSecrecy PqxdhStatefulPhase1EufCma
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhPhase1AcceptanceOracle
@@ -15,7 +16,7 @@ variable (attachedVerify : Ed25519PublicKey → Pqxdh.Bytes → Option Pqxdh.Byt
   (writer : RawCtxMixedShared.Writer) (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
   (decode : RawCtxReceive.FrameDecoder) (localImpl : QueryImpl (LocalSpec I D K X Response) (StateT A ProbComp))
   (baseImpl : QueryImpl baseSpec ProbComp) (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK)) (secret : KemSK)
-local notation "handler" => ordinary attachedVerify primitives count source writer sender route decode localImpl
+local notation "handler" => PqxdhPhase2SourceScheduler.ordinary (completedBinding := completedBinding) attachedVerify primitives count source writer sender route decode localImpl
 local notation "evaluate" => evalKem baseImpl kem secret
 
 /-- Every actual scheduler callback preserves the prior observations and adds at most one reveal entry. -/
@@ -54,7 +55,7 @@ theorem schedule {Result : Type} (client : OracleComp (Spec baseSpec S B) Result
       rw [simulateQ_bind, simulateQ_spec_query, StateT.run_bind, evalKem_bind, mem_support_bind_iff] at present
       obtain ⟨reply, supported, continued⟩ := present
       obtain ⟨firstLog, prefixEq, prefixLength⟩ :=
-        step attachedVerify primitives count source writer sender route decode localImpl baseImpl kem secret query state reply supported
+        step (completedBinding := completedBinding) attachedVerify primitives count source writer sender route decode localImpl baseImpl kem secret query state reply supported
       obtain ⟨tailLog, tailEq, tailLength⟩ :=
         ih reply.1 (budget - 1) (bounded.2 reply.1) reply.2 result continued
       refine ⟨firstLog ++ tailLog, ?_, ?_⟩
@@ -82,7 +83,7 @@ theorem driver_length {setup : StatefulPhase1Setup baseSpec}
     (index : Nat) (publicIdentity : PublicIdentity) (generated : Generated setup Unit)
     (transcript : Phase1PublicTranscript setup.Context) (identities : BareState count)
     (result : Phase1Candidate × program.Selection × PqxdhGeneratedBeaconState.State setup M P I K (A × BareState count) S (B + 1))
-    (present : result ∈ support (evaluate (PqxdhPhase2GeneratedDriver.ordinaryRun env program attachedVerify primitives count
+    (present : result ∈ support (evaluate (PqxdhPhase2GeneratedDriver.ordinaryRun (completedBinding := completedBinding) env program attachedVerify primitives count
       index publicIdentity generated transcript identities))) :
     result.2.2.roles.2.observations.length ≤ env.initial.roles.2.observations.length + budget := by
   simp only [PqxdhPhase2GeneratedDriver.ordinaryRun, evalKem_bind, evalKem_coins,
@@ -90,7 +91,7 @@ theorem driver_length {setup : StatefulPhase1Setup baseSpec}
   obtain ⟨started, startedSupport, selected, selectedSupport, finished⟩ := present
   have finalEq := eq_of_mem_support_pure _ finished
   subst result
-  obtain ⟨suffix, equality, cap⟩ := schedule attachedVerify primitives count env.source env.recordWriter env.senderId env.route env.decode
+  obtain ⟨suffix, equality, cap⟩ := schedule (completedBinding := completedBinding) attachedVerify primitives count env.source env.recordWriter env.senderId env.route env.decode
     env.localImpl baseImpl kem secret _ budget (bounded _) (PqxdhPhase2OldSource.packState started.2 identities) selected selectedSupport
   have startEq := start_length env index publicIdentity generated (PqxdhGeneratedBeaconSelector.bundle transcript) started startedSupport
   simp only [equality, List.length_append, PqxdhPhase2OldSource.packState]

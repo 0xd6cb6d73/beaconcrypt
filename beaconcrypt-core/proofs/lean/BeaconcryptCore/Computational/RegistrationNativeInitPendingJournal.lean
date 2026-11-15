@@ -28,7 +28,7 @@ def SourceAt (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire)
 /-- Every actual callback transports an exact pending capability backwards, or is its own successful bundle source. -/
 theorem step (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (before after : Native)
     (reply : RegistrationNativeRawAdapter.TypedSpec.Range query)
     (supported : (reply, after) ∈ support ((RegistrationNativeExperiment.handler setup checks wire route representation
@@ -53,7 +53,7 @@ theorem step (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNa
 /-- The actual chronological path locates an existing pending capability in the initial state or at one of its own earlier successful bundle callbacks. -/
 theorem path (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (initial final : Native) (calls : List (Call RegistrationNativeRawAdapter.TypedSpec Native))
     (actual : Path (RegistrationNativeExperiment.handler setup checks wire route representation created source credential) initial calls final)
     (index : Nat) (pending : registration.BeaconPending) (oneTime : PqxdhJointGapDh.ScalarBytes)
@@ -76,7 +76,8 @@ theorem start_empty (setup : Setup base KemSK) (ensureInit : StateT Unit ProbCom
     (identityIndex : Nat) (serverKeyId : U64) (initial : RegistrationNativeExperiment.Initial n KemSK source)
     (supported : some initial ∈ support (RegistrationNativeExperiment.start setup source ensureInit identityIndex serverKeyId)) :
     initial.state.beacons = [] := by
-  simp only [RegistrationNativeExperiment.start, mem_support_bind_iff] at supported
+  delta RegistrationNativeExperiment.start at supported
+  simp only [mem_support_bind_iff] at supported
   obtain ⟨constructed, _constructed, continued⟩ := supported
   cases selected : constructed.1.1 with
   | none => simp only [selected, mem_support_pure_iff] at continued; cases continued
@@ -100,7 +101,7 @@ theorem start_empty (setup : Setup base KemSK) (ensureInit : StateT Unit ProbCom
 
 private theorem metadata_path (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (initial final : Native) (calls : List (Call RegistrationNativeRawAdapter.TypedSpec Native))
     (actual : Path (RegistrationNativeExperiment.handler setup checks wire route representation created source credential) initial calls final) :
     RegistrationNativeOwnerRoster.Prefix initial.beacons final.beacons := by

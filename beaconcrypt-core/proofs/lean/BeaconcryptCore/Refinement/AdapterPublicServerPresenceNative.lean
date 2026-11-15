@@ -20,7 +20,7 @@ def charged (before : RegistrationServerFrontendCompiler.State n) (identifier : 
     (PqxdhRecordLiftWorld.chargeEffect (.inr (.peerPresent identifier)) before.world.world.1, before.world.world.2)}}
 
 theorem material_related (view : MaterialView mlSource KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : beaconcrypt_public_wrapper.server.Server) (before : RegistrationServerFrontendCompiler.State n)
     (related : Server view views created credential self before) (identifier : U64) :
     Server view views created credential self (charged before identifier) := by
@@ -30,7 +30,7 @@ variable {m : Type → Type} [Monad m] [LawfulMonad m]
 
 theorem source (coins : QueryImpl unifSpec m)
     (view : MaterialView mlSource KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : beaconcrypt_public_wrapper.server.Server) (before : RegistrationServerFrontendCompiler.State n)
     (related : Server view views created credential self before) (identifier : U64) :
     (RegistrationNativePlatformCompletionSdk.nativePresent coins identifier).run before =
@@ -46,7 +46,7 @@ theorem source (coins : QueryImpl unifSpec m)
 
 theorem readonly (coins : QueryImpl unifSpec m)
     (view : MaterialView mlSource KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : beaconcrypt_public_wrapper.server.Server) (before : RegistrationServerFrontendCompiler.State n)
     (related : Server view views created credential self before) (identifier : U64) :
     Prod.fst <$> (RegistrationNativePlatformCompletionSdk.nativePresent coins identifier).run before =

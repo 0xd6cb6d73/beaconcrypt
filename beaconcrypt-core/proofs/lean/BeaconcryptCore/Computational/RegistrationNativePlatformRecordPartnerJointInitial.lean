@@ -74,8 +74,8 @@ theorem startup_quiet (setup : PqxdhServerAuthExperiment.Setup base KemSK) (sour
     cases credential with
     | none=>trivial
     | some credential=>
-      simp only [allQueriesSatisfy_query_bind_iff,PqxdhRecordLiftInterface.effectLift]
-      exact ⟨trivial,fun _=>⟨trivial,fun _=>trivial⟩⟩
+      simp only [allQueriesSatisfy_query_bind_iff]
+      exact ⟨trivial,fun _=>trivial⟩
 
 /-- The actual source startup derives unchanged physical opaque origins; no initial/final slot equality is assumed. -/
 theorem startup (setup : PqxdhServerAuthExperiment.Setup base KemSK) (source : RegistrationNativeMldsa.Source)

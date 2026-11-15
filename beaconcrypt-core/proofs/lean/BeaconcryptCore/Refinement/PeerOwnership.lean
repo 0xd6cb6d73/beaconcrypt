@@ -254,9 +254,7 @@ theorem prepared_candidate_allocation (control : pqxdh.ServerState)
     candidate.previous_state = control ∧ candidate.next_state.last_key_id = candidate.key_id ∧
       pqxdh.server_next_key_id control = ok (.Ok candidate.key_id) := by
   obtain ⟨next, nextRun⟩ := BeaconcryptCore.PanicFreedom.server_next_key_id_ok control
-  obtain ⟨ad, adRun⟩ := BeaconcryptCore.PanicFreedom.build_associated_data_ok
-    binding.identity_public_key accepted.beacon_identity_public_key
-  simp only [pqxdh.server_prepare_commit, array_eq_abs, nextRun, adRun, bind_tc_ok] at prepared
+  simp only [pqxdh.server_prepare_commit, array_eq_abs, nextRun, bind_tc_ok] at prepared
   cases next <;> cases availability <;> split_ifs at prepared <;> simp_all [bind_tc_ok]
   all_goals simp [← prepared]
 

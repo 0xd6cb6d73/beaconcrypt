@@ -23,19 +23,19 @@ open PqxdhSecretInputKdf PqxdhCorrelatedExtractFamily PqxdhCorrelatedExpand Pqxd
 open PqxdhJointKdf PqxdhJointKdfGame
 
 /-- The supplied fixed source is evaluated at the exact requested 64-byte initialization width. -/
-def initialResponse (c : Pqxdh.Crypto) (request : ratchet.SymmetricRatchetKdfRequest) :
+def initialResponse (c : Pqxdh.Crypto) (request : ratchet.InitialRatchetKdfRequest) :
     pqxdh.concrete.InitialRatchetKdfResponse :=
   ⟨⟨(c.hkdf (absBytes request.input) (absBytes request.info) 64).map concreteByte,
     by simp [c.hkdf_length]⟩⟩
 
-theorem initialResponse_bytes (c : Pqxdh.Crypto) (request : ratchet.SymmetricRatchetKdfRequest) :
+theorem initialResponse_bytes (c : Pqxdh.Crypto) (request : ratchet.InitialRatchetKdfRequest) :
     absBytes (initialResponse c request).bytes = c.hkdf (absBytes request.input) (absBytes request.info) 64 := by
   simp [initialResponse, absBytes, List.map_map, Function.comp_def]
 
 theorem initialResponse_law (c : Pqxdh.Crypto) : InitialKdfLaw c (initialResponse c) := by
   intro root
   rw [initialResponse_bytes]
-  simp only [absBytes_ratchetSymmetricInfo]
+  simp only [absBytes_ratchetInitialInfo]
 
 /-- This conversion preserves the entire retained root, not a hash or new sample. -/
 def rootArray (root : RootOutput) : Std.Array Std.U8 32#usize :=
@@ -52,10 +52,10 @@ def initialKernelRun (source : FixedHkdfSha512NoSaltSource) (beacon : Bool) (roo
 
 /-- The actual 64-byte response shares its prefix with the same 76-byte ratchet stream. -/
 theorem initialResponse_prefix (source : FixedHkdfSha512NoSaltSource) (root : RootOutput) :
-    absBytes (initialResponse source.crypto ⟨rootArray root, ratchet.SYM_RATCHET_INFO⟩).bytes =
-      (streamBytes (productionStream source.crypto (ratchetAddress root.toList))).take 64 := by
-  rw [initialResponse_bytes, rootArray_bytes, absBytes_ratchetSymmetricInfo]
-  exact source.prefixConsistent.ratchetPrefix root.toList
+    absBytes (initialResponse source.crypto ⟨rootArray root, ratchet.INITIAL_RATCHET_INFO⟩).bytes =
+      (streamBytes (productionStream source.crypto (initialAddress root.toList))).take 64 := by
+  rw [initialResponse_bytes, rootArray_bytes, absBytes_ratchetInitialInfo]
+  exact source.prefixConsistent.initialPrefix root.toList
 
 /-- Exact extracted kernels retain source byte origins and the complete zero-counter/empty-skipped refinement. -/
 theorem initialize_refines {AD PT CT : Type} (source : FixedHkdfSha512NoSaltSource)
@@ -304,7 +304,7 @@ theorem equal_roots_kernel (source : FixedHkdfSha512NoSaltSource) (beacon : Bool
 theorem initialize_stream_refines {AD PT CT : Type} (source : FixedHkdfSha512NoSaltSource)
     (cr : Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMaterial AD PT CT)
     (beacon : Bool) (root : RootOutput) :
-    let chains := initialProjection (productionStream source.crypto (ratchetAddress root.toList))
+    let chains := initialProjection (productionStream source.crypto (initialAddress root.toList))
     ∃ kernel, initialKernelRun source beacon root = ok kernel ∧
       ChainBytesRefines kernel.refined.send_chain (if beacon then chains.2 else chains.1) ∧
       ChainBytesRefines kernel.refined.receive_chain (if beacon then chains.1 else chains.2) ∧

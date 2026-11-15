@@ -162,8 +162,9 @@ theorem program_run (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
 noncomputable def compile (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity)
     (work : PqxdhRegistrationJointServiceSchedule.Client KemSK Response Result)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) :
-    Client KemSK (Result × List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) :=
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) :
+    Client KemSK (Result × (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry ×
+      (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))) :=
   simulateQ (impl setup codec checks identityIndex publicIdentity) (work.run owners)
 
 /-- Reinstall the complete owner registry after interpreting open services; no result coordinate or private history is discarded. -/
@@ -172,8 +173,9 @@ noncomputable def execute (setup : Setup baseSpec KemSK) (codec : Codec Reader R
     (work : PqxdhRegistrationJointServiceSchedule.Client KemSK Response Result)
     (state : PqxdhRegistrationJointGeneratedFinish.EncodedState KemSK) :
     ProbComp (Result × PqxdhRegistrationJointGeneratedFinish.EncodedState KemSK) :=
-  (fun result => (result.1.1, ⟨result.2.1, result.2.2, result.1.2⟩)) <$>
-    run setup (compile setup codec checks identityIndex publicIdentity work state.owners) (state.pool, state.shared)
+  (fun result => (result.1.1, ⟨result.2.1, result.2.2, result.1.2.1, result.1.2.2⟩)) <$>
+    run setup (compile setup codec checks identityIndex publicIdentity work (state.owners, state.inits))
+      (state.pool, state.shared)
 
 /-- The complete actual command client is the reviewed seedless scheduler with joint identity/KEM requests still open until the final interpretation. -/
 theorem execute_run (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)

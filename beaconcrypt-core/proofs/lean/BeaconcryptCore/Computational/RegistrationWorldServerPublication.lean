@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationWorldRecords
+import BeaconcryptCore.Computational.RegistrationRecordBinding
 import BeaconcryptCore.Refinement.RegistrationPublication
 
 /-!
@@ -45,7 +46,7 @@ def signing (encode : registration.SignedResponseView → core.option.Option Enc
     let signature ← Spec.query (.sign request payload digest)
     continueResult (pending.resume signature) (ready encode)
 
-/-- This phase begins at the actual post-record hash capability; earlier authentication and Beacon fingerprint work are separate executed phases. -/
+/-- This phase begins at the actual post-record hash capability; earlier Init authentication and response-dependent AD hashing are separate executed phases. -/
 def program (encode : registration.SignedResponseView → core.option.Option Encoded)
     (pending : registration.ServerResponseHash) : OracleComp Spec (RustM (Result Encoded)) :=
   continueWith pending.request fun request => do

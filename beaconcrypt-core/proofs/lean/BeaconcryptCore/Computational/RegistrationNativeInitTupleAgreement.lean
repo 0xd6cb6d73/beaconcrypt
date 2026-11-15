@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativeTokenCacheTrace
 import BeaconcryptCore.Computational.RegistrationNativeInitTupleCache
 import BeaconcryptCore.Computational.RegistrationCredentialBridge
-import BeaconcryptCore.Computational.RegistrationNativeHandlerCache
+import BeaconcryptCore.Computational.RegistrationNativeHandlerCacheCore
 import BeaconcryptCore.Computational.RegistrationNativeServerPinTrace
 
 /-! Actual common-cache receipts and extracted typed validation identify the exact accepted native Init key tuple. The primitive-width representation is retained; no secret-input agreement or partner premise is assumed. -/
@@ -25,7 +25,7 @@ attribute [local irreducible] RegistrationNativeExperiment.handler RegistrationS
 /-- Actual native authentication returns exactly the original packet's extracted typed key tuple. -/
 theorem parsed (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (before after : RegistrationServerFrontendCompiler.State n)
     (events : List BeaconcryptCore.Refinement.RegistrationAuthenticationFlow.Event) (authenticated : registration.AuthenticatedInit)
     (supported : (.ok (events, .Accepted authenticated), after) ∈ support
@@ -48,7 +48,7 @@ theorem parsed (setup : Setup base KemSK) (codec : Codec Reader Response)
 /-- The actual cache and typed validation force the accepted registration to be the tuple from this reached source bundle. -/
 theorem registration (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (before after : RegistrationServerFrontendCompiler.State n)
     (events : List BeaconcryptCore.Refinement.RegistrationAuthenticationFlow.Event) (authenticated : registration.AuthenticatedInit)
     (supported : (.ok (events, .Accepted authenticated), after) ∈ support
@@ -85,7 +85,7 @@ theorem registration (setup : Setup base KemSK) (codec : Codec Reader Response)
 
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 local notation "Native" => RegistrationNativeExperiment.State n KemSK source
 local notation "implementation" => RegistrationNativeExperiment.handler setup checks wire route representation created source credential
 

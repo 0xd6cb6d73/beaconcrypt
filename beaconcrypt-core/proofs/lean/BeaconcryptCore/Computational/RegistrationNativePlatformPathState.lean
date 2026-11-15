@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePlatformServerPinTrace
+import BeaconcryptCore.Computational.RegistrationNativeTokenSource
 import BeaconcryptCore.Computational.RegistrationNativePlatformInitPendingJournal
 
 /-! Actual corrected chronological source paths extend one shared cache and preserve their configured Server pin and its reached hash receipt. All native/platform states and failed callback outcomes remain literal. -/
@@ -23,7 +24,7 @@ variable [primitive : AdapterSealPrimitive.Operations]
 variable (coins : QueryImpl unifSpec (StateT Platform ProbComp))
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
 variable (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 variable (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
 variable (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
 variable (reserveRegistration reservePeer : StateT Platform ProbComp Bool) (erased : commitment.CommitmentTranscript)
@@ -66,14 +67,13 @@ theorem pin {first last : Whole} {calls : List (Call RegistrationNativeRawAdapte
     exact ih.trans (RegistrationNativePlatformServerPinTrace.handler_pin coins setup checks wire route representation created credential view failure allocation
       reserveRegistration reservePeer erased helper writer call.query call.before.1 call.before.2 ((call.reply, call.after.1), call.after.2) sourceCalled)
 
-/-- The earlier actual cached-pin receipt survives the whole source path with its same literal configured pin. -/
-theorem pinned {first last : Whole} {calls : List (Call RegistrationNativeRawAdapter.TypedSpec Whole)}
+/-- The configured Server binding and complete public key survive the whole source path. -/
+theorem pinned (referenceBinding : pqxdh.ServerBinding) (referencePublicKey : Std.Array U8 1952#usize) {first last : Whole} {calls : List (Call RegistrationNativeRawAdapter.TypedSpec Whole)}
     (reached : Path impl first calls last)
-    (initial : RegistrationNativeServerPinRecompute.Cached first.1.server.pin (RegistrationNativeWorldCache.cache first.1)) :
-    RegistrationNativeServerPinRecompute.Cached last.1.server.pin (RegistrationNativeWorldCache.cache last.1) := by
+    (initial : RegistrationNativeServerPinCached.Configured first.1.server.pin referenceBinding referencePublicKey) :
+    RegistrationNativeServerPinCached.Configured last.1.server.pin referenceBinding referencePublicKey := by
   rw [pin coins setup checks wire route representation created credential view failure allocation reserveRegistration reservePeer erased helper writer reached]
-  exact RegistrationNativeServerPinCached.extend _ _ _ initial
-    (cache coins setup checks wire route representation created credential view failure allocation reserveRegistration reservePeer erased helper writer reached)
+  exact initial
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformPathState
 

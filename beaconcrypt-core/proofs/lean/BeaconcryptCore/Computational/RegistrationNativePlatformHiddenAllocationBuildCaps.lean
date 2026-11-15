@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePlatformHiddenAllocationPublication
 import BeaconcryptCore.Computational.RegistrationNativePlatformHiddenAllocationLocal
-/-! The complete actual public Server build cannot append a physical Beacon owner. Its moved-token four-leaf controller, stateful preflights, native publication and known or hidden install suffix retain all source failures and the same P. -/
+/-! The complete actual public Server build cannot append a physical Beacon owner. Its moved-token five-leaf controller, stateful preflights, native publication and known or hidden install suffix retain all source failures and the same P. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -163,8 +163,13 @@ theorem target (reserve : StateT Platform ProbComp Bool)
   cases request with
   | pin current =>
     apply lift_effects
-    unfold RegistrationNativePlatformServerRestrictedService.pin
-    exact bind_quiet _ _ (effect_quiet _ rfl) (fun _ => pure_quiet _)
+    exact pure_quiet _
+  | adHash pending =>
+    apply lift_effects
+    unfold RegistrationNativePlatformServerRestrictedService.adHash RegistrationServerAdHash.runWith
+    cases pending.request with
+    | fail error | div => exact pure_quiet _
+    | ok request => exact bind_quiet _ _ (effect_quiet _ rfl) (fun _ => pure_quiet _)
   | reserve =>
     apply lift_effects
     intro previous
@@ -174,7 +179,7 @@ theorem target (reserve : StateT Platform ProbComp Bool)
   | present keyId => exact lift_effects _ (effect_quiet (.inr (.peerPresent keyId)) rfl) before
   | service control initial message => exact service source view failure allocation erased helper sign writer control initial message before
 
-/-- The exact four-leaf controller closes its physical-allocation footprint on all source results. -/
+/-- The exact five-leaf controller closes its physical-allocation footprint on all source results. -/
 theorem program (reserve : StateT Platform ProbComp Bool)
     (work : OracleComp RegistrationNativePlatformServerFrontendProgram.Spec A) (before : PublicState Platform) :
     ((simulateQ (RegistrationNativePlatformServerFrontendCompiler.target source view failure allocation erased helper sign writer reserve) work).run before).AllQueriesSatisfy

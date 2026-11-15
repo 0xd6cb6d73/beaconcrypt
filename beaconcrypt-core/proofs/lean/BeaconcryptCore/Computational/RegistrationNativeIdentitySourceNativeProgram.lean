@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeIdentitySourceCommon
 
-/-! The original seed-bearing constructor preparation has the same public ML/pin prefix and literal ordinary seed/prekey suffix query program. This is an operational source factor, including every optional native refusal. -/
+/-! The original seed-bearing constructor preparation has the same pure full-pin prefix and literal ordinary seed/prekey suffix query program. This is an operational source factor, including every optional native refusal. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -36,37 +36,15 @@ theorem prepare_program (source : RegistrationNativeMldsa.Source) (edPin : Std.A
     (mlPin : Std.Array U8 1952#usize) (keyId : U64) :
     RegistrationNativeBeaconFrontend.prepare (n := n) (KemSK := KemSK) (Auxiliary := RegistrationServerRoleBackend.State) source edPin mlPin keyId =
       lift (RegistrationNativeIdentitySourceCommon.nativeProgram source edPin mlPin keyId) := by
-  simp only [RegistrationNativeBeaconFrontend.prepare, RegistrationNativeIdentitySourceCommon.nativeProgram,
-    RegistrationNativeIdentitySourceCommon.program, simulateQ_bind, lift_bind, sample_lift, bind_assoc]
-  apply congrArg (fun continuation =>
-    (RegistrationNativeBeaconFrontend.sample (n := n) (KemSK := KemSK) (mldsaSource := source)
-      (Auxiliary := RegistrationServerRoleBackend.State) (RegistrationNativeMldsa.generate source) >>= continuation))
-  funext generated
-  cases generated with
-  | none => simp only [simulateQ_pure, RegistrationNativeIdentitySourceCommon.afterNative, pure_bind, lift_pure]
-  | some credentials =>
-      cases initial : registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
-      | fail error => simp only [simulateQ_pure, RegistrationNativeIdentitySourceCommon.afterNative, pure_bind, lift_pure]
-      | div => simp only [simulateQ_pure, RegistrationNativeIdentitySourceCommon.afterNative, pure_bind, lift_pure]
-      | ok pending =>
-          cases requested : pending.request with
-          | fail error => simp only [requested, RegistrationNativeIdentitySourceCommon.afterNative, pure_bind, simulateQ_pure, lift_pure]
-          | div => simp only [requested, RegistrationNativeIdentitySourceCommon.afterNative, pure_bind, simulateQ_pure, lift_pure]
-          | ok request =>
-              simp only [requested, simulateQ_bind, simulateQ_spec_query, lift_bind, RegistrationBeaconReferenceNativeRecord.environment, bind_assoc]
-              apply congrArg (fun continuation =>
-                (RegistrationNativeBeaconFrontend.hash (n := n) (KemSK := KemSK) (mldsaSource := source)
-                  (Auxiliary := RegistrationServerRoleBackend.State) request >>= continuation))
-              funext digest
-              cases resumed : pending.resume (.Some (RegistrationAuthenticationShared.digestArray digest)) with
-              | fail error => simp only [simulateQ_pure, RegistrationNativeIdentitySourceCommon.afterNative, pure_bind, lift_pure]
-              | div => simp only [simulateQ_pure, RegistrationNativeIdentitySourceCommon.afterNative, pure_bind, lift_pure]
-              | ok reply => cases reply with
-                | none => simp only [simulateQ_pure, RegistrationNativeIdentitySourceCommon.afterNative, pure_bind, lift_pure]
-                | some pin =>
-                    simp only [simulateQ_pure, RegistrationNativeIdentitySourceCommon.afterNative, pure_bind,
-                      RegistrationNativeIdentitySourceSuffix.native, RegistrationNativeIdentitySourceSuffix.oldSample,
-                      lift_bind, lift_pure, sample_lift]
+  unfold RegistrationNativeBeaconFrontend.prepare RegistrationNativeIdentitySourceCommon.nativeProgram
+    RegistrationNativeIdentitySourceCommon.program
+  cases initial : registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
+  | fail error | div =>
+      simp only [simulateQ_pure, RegistrationNativeIdentitySourceCommon.afterNative, pure_bind, lift_pure]
+  | ok pin =>
+      simp only [simulateQ_pure, RegistrationNativeIdentitySourceCommon.afterNative, pure_bind,
+        RegistrationNativeIdentitySourceSuffix.native, RegistrationNativeIdentitySourceSuffix.oldSample,
+        lift_bind, lift_pure, sample_lift]
 
 /-- The original preparation changes neither the current source roster nor its local mutable environment while executing that query program. -/
 theorem prepare_run (source : RegistrationNativeMldsa.Source) (edPin : Std.Array U8 32#usize)

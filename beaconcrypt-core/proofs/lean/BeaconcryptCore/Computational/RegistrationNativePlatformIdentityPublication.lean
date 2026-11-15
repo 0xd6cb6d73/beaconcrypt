@@ -32,7 +32,7 @@ noncomputable def originalCallback (setup : Setup base KemSK) (index : Nat) (own
 
 /-- Actual outgoing signature/hash leaves and the exact same P writer interpret every source request. -/
 theorem query_source (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (seeds : List IdentitySeed) (index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner source) (seed : IdentitySeed)
     (found : seeds[owner.identity.handle]? = some seed) (publicKey : owner.identity.publicIdentity = setup.joint.publicKeys seed)
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
@@ -47,7 +47,7 @@ theorem query_source (setup : Setup base KemSK) (checks : Checks)
 
 /-- Actual failed signing and source writer calls preserve the same generated private identity roster. -/
 theorem query_keeps (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner source)
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (query : (RegistrationNativePlatformWriter.Spec E).Domain) :
@@ -60,7 +60,7 @@ theorem query_keeps (setup : Setup base KemSK) (checks : Checks)
 
 /-- Arbitrary adaptive source publication trees preserve complete same-run state, including failed-prefix history and mutable writer results. -/
 theorem program_source (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (seeds : List IdentitySeed) (index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner source) (seed : IdentitySeed)
     (found : seeds[owner.identity.handle]? = some seed) (publicKey : owner.identity.publicIdentity = setup.joint.publicKeys seed)
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
@@ -72,7 +72,7 @@ theorem program_source (setup : Setup base KemSK) (checks : Checks)
     (query_keeps setup checks representation created index owner writer) work
 
 theorem program_keeps (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner source)
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (work : OracleComp (RegistrationNativePlatformWriter.Spec E) Value) :
@@ -82,28 +82,28 @@ theorem program_keeps (setup : Setup base KemSK) (checks : Checks)
 
 /-- The literal actual source Init controller, including all six-field serialization and shared-state allocation, has the opaque-credential source interpretation. -/
 theorem begin_source (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (seeds : List IdentitySeed) (index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner source) (seed : IdentitySeed)
     (oneTime : PqxdhJointGapDh.ScalarBytes)
     (found : seeds[owner.identity.handle]? = some seed) (publicKey : owner.identity.publicIdentity = setup.joint.publicKeys seed)
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) :
     Related (n := n) (Auxiliary := Auxiliary) setup checks representation created seeds
       (simulateQ (callback setup index owner writer) (RegistrationNativePlatformWriter.begin E ⟨owner.pin.binding⟩
-        (RegistrationNativeIdentityFrontend.inputs owner) ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey))
+        (RegistrationNativeIdentityFrontend.inputs owner) ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin))
       (simulateQ (originalCallback setup index (RegistrationNativeIdentityFrontend.restore seed owner) writer)
         (RegistrationNativePlatformWriter.begin E ⟨owner.pin.binding⟩
           (RegistrationNativeBeaconFrontend.inputs setup (RegistrationNativeIdentityFrontend.restore seed owner))
-            ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)) := by
+            ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)) := by
   rw [← RegistrationNativeIdentityRoles.inputs_source setup owner seed publicKey]
   exact program_source setup checks representation created seeds index owner seed found publicKey writer _
 
 theorem begin_keeps (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) :
     Keeps (n := n) (Auxiliary := Auxiliary) setup checks representation created
       (simulateQ (callback setup index owner writer) (RegistrationNativePlatformWriter.begin E ⟨owner.pin.binding⟩
-        (RegistrationNativeIdentityFrontend.inputs owner) ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)) :=
+        (RegistrationNativeIdentityFrontend.inputs owner) ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)) :=
   program_keeps setup checks representation created index owner writer _
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformIdentityPublication

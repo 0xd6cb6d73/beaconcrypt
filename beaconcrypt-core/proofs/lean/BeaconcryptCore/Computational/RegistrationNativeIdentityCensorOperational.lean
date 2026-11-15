@@ -44,8 +44,8 @@ def signing (selected : Nat) (handle : Nat) (message : Pqxdh.Bytes) :
   if handle = selected ∧ before.target = some message then StateT.lift (Spec.query (.inr (.omitted handle message)))
   else StateT.lift (embed (.inl (.inl (.inl (.inl (.inr (.service handle (.sign message))))))))
 
-/-- The original source transcript's selected one-time signature occupies bytes4140 through4203. -/
-def parts (bytes : Pqxdh.Bytes) : Pqxdh.Bytes × Pqxdh.Bytes := (bytes.take 4140, bytes.drop 4204)
+/-- The original source transcript's selected one-time signature occupies bytes2188 through4203. -/
+def parts (bytes : Pqxdh.Bytes) : Pqxdh.Bytes × Pqxdh.Bytes := (bytes.take 2188, bytes.drop 2252)
 
 def implementation (selected : Nat) (placeholder : Ed25519Signature) : QueryImpl Source (StateT Mode (OracleComp Spec))
   | .inl (.inl (.inr (.service handle (.sign message)))) => signing selected handle message

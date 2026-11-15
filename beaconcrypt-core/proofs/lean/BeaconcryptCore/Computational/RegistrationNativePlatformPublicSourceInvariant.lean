@@ -39,6 +39,9 @@ private theorem get_apply {S : Type} {m : Type → Type} [Monad m] (before : S) 
 private theorem modify_apply {S : Type} {m : Type → Type} [Monad m] (changeState : S → S) (before : S) :
     (modify changeState : StateT S m Unit) before = pure ((), changeState before) := rfl
 
+/- The concrete corrected open-accept program now selects the Server pin purely (no fingerprint hash query), so elaboration-time `whnf` of its support types would evaluate the whole program; keep it opaque to the elaborator here. Proof terms are unchanged. -/
+attribute [local irreducible] RegistrationNativePlatformServerOpenControl.accept
+
 section Callbacks
 variable [primitive : BeaconcryptCore.Refinement.AdapterSealPrimitive.Operations]
     (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)

@@ -7,6 +7,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhPhase2GeneratedServerFields
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhPhase2SourceScheduler PqxdhPhase2SourceAux PqxdhPrivateKemSource PqxdhJointKdfGame
 variable {ι M P I D K X Response A : Type} {baseSpec : OracleSpec ι} {S B : Nat}
 
@@ -40,7 +41,7 @@ theorem compiler_step_fields
     (localImpl : QueryImpl (LocalSpec I D K X Response) (StateT A ProbComp))
     (query : (Spec baseSpec S B).Domain) (state : State M P I D K A S B)
     (result : (Spec baseSpec S B).Range query × State M P I D K A S B)
-    (supported : result ∈ support ((compiler source writer senderId route decodeFrame localImpl query).run state)) :
+    (supported : result ∈ support ((PqxdhPhase2SourceScheduler.compiler (completedBinding := completedBinding) source writer senderId route decodeFrame localImpl query).run state)) :
     Fields state result.2 := by
   rcases query with ((record | forwarded) | finish)
   · have original := support_simulation _ _ supported
@@ -65,7 +66,7 @@ theorem compiler_fields {Result : Type}
     (localImpl : QueryImpl (LocalSpec I D K X Response) (StateT A ProbComp))
     (client : OracleComp (Spec baseSpec S B) Result) (state : State M P I D K A S B)
     (result : Result × State M P I D K A S B)
-    (supported : result ∈ support ((simulateQ (compiler source writer senderId route decodeFrame localImpl) client).run state)) :
+    (supported : result ∈ support ((simulateQ (PqxdhPhase2SourceScheduler.compiler (completedBinding := completedBinding) source writer senderId route decodeFrame localImpl) client).run state)) :
     Fields state result.2 := by
   induction client using OracleComp.inductionOn generalizing state result with
   | pure value =>
@@ -74,7 +75,7 @@ theorem compiler_fields {Result : Type}
   | query_bind query next ih =>
     simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind, mem_support_bind_iff] at supported
     obtain ⟨intermediate, first, rest⟩ := supported
-    have before := compiler_step_fields source writer senderId route decodeFrame localImpl query state intermediate first
+    have before := compiler_step_fields (completedBinding := completedBinding) source writer senderId route decodeFrame localImpl query state intermediate first
     have after := ih intermediate.1 intermediate.2 result rest
     exact ⟨after.1.trans before.1, after.2.1.trans before.2.1, fun index =>
       ⟨(after.2.2 index).1.trans (before.2.2 index).1, (after.2.2 index).2.trans (before.2.2 index).2⟩⟩
@@ -90,13 +91,13 @@ theorem ordinary_fields {Result : Type}
     (identities : PqxdhPhase1AcceptanceOracle.BareState count)
     (result : Result × State M P I D K (A × PqxdhPhase1AcceptanceOracle.BareState count) S B)
     (supported : result ∈ support ((simulateQ
-      (ordinary attachedVerify primitives count source writer senderId route decodeFrame localImpl) client).run
+      (PqxdhPhase2SourceScheduler.ordinary (completedBinding := completedBinding) attachedVerify primitives count source writer senderId route decodeFrame localImpl) client).run
         (PqxdhPhase2OldSource.packState state identities))) :
     Fields state result.2 := by
   rw [← compiler_complete, support_map] at supported
   obtain ⟨original, originalSupport, rfl⟩ := supported
   have sourceSupport := support_state_simulation _ _ _ original originalSupport
-  exact compiler_fields source writer senderId route decodeFrame localImpl client state original.1 sourceSupport
+  exact compiler_fields (completedBinding := completedBinding) source writer senderId route decodeFrame localImpl client state original.1 sourceSupport
 
 set_option backward.isDefEq.respectTransparency false in
 /-- Actual fresh-owner publication and every enlarged scheduler continuation preserve the original Server fixed fields. -/
@@ -106,15 +107,15 @@ theorem driver_fields
     (program : PqxdhPhase2GeneratedDriver.Program baseSpec setup.Context S (B + 1))
     (index : Nat) (publicIdentity : PqxdhJointIdentity.PublicIdentity)
     (generated : Generated setup Unit) (transcript : PqxdhEd25519EufCma.Phase1PublicTranscript setup.Context)
-    (result : PqxdhEd25519EufCma.Phase1Candidate × (PqxdhPhase2GeneratedDriver.driver env program).State)
-    (supported : result ∈ support ((PqxdhPhase2GeneratedDriver.driver env program).main index publicIdentity generated transcript)) :
+    (result : PqxdhEd25519EufCma.Phase1Candidate × (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env program).State)
+    (supported : result ∈ support ((PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env program).main index publicIdentity generated transcript)) :
     Fields env.initial result.2.2 := by
   simp only [PqxdhPhase2GeneratedDriver.driver, mem_support_bind_iff] at supported
   obtain ⟨started, startSupport, selected, selectedSupport, finalSupport⟩ := supported
   obtain rfl := OracleComp.eq_of_mem_support_pure _ finalSupport
   obtain ⟨servers, controls, consumed⟩ := PqxdhGeneratedBeaconState.start_servers setup env.phase1Writer index publicIdentity generated
     env.binding (PqxdhGeneratedBeaconSelector.bundle transcript) env.initial started (support_simulation _ _ startSupport)
-  have after := compiler_fields env.source env.recordWriter env.senderId env.route env.decode env.localImpl
+  have after := compiler_fields (completedBinding := completedBinding) env.source env.recordWriter env.senderId env.route env.decode env.localImpl
     _ started.2 selected selectedSupport
   exact ⟨after.1.trans controls, after.2.1.trans consumed, fun index =>
     ⟨(after.2.2 index).1.trans (congrArg (fun family => (family index).server.identity) servers),
@@ -130,10 +131,10 @@ theorem program_fields {KemSK : Type}
     (primitives : PqxdhJointIdentity.Primitives) (count : Nat) (baseImpl : QueryImpl baseSpec ProbComp)
     (kem : PqxdhKemIndCca.MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
     (result : Option (PqxdhPrivateCandidateAcceptance.Outcome
-      (PqxdhPrivatePhase1Prefix.Retained setup KemSK (PqxdhPhase2GeneratedDriver.driver env program).State)) ×
+      (PqxdhPrivatePhase1Prefix.Retained setup KemSK (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env program).State)) ×
         PqxdhPhase1AcceptanceOracle.BareState count)
     (supported : result ∈ support (PqxdhPrivateSourceCoins.privateRun attachedVerify primitives count
-      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver env program)))) :
+      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env program)))) :
     ∃ output, result.1 = some output ∧ Fields env.initial output.context.selection.2 := by
   rw [PqxdhGeneratedPhase1Prefix.program_complete] at supported
   simp only [mem_support_bind_iff] at supported
@@ -141,7 +142,7 @@ theorem program_fields {KemSK : Type}
   obtain rfl := OracleComp.eq_of_mem_support_pure _ finalSupport
   have localSupport := support_state_simulation _ _ _ selected selectedSupport
   have originalSupport := support_simulation _ _ localSupport
-  exact ⟨_, rfl, driver_fields env program 0 (primitives.publicKeys seed)
+  exact ⟨_, rfl, driver_fields (completedBinding := completedBinding) env program 0 (primitives.publicKeys seed)
     (PqxdhPrivateRootSource.eraseGenerated generated) _ selected.1 originalSupport⟩
 
 set_option backward.isDefEq.respectTransparency false in
@@ -154,17 +155,17 @@ theorem reached_root_fields {KemSK : Type}
     (primitives : PqxdhJointIdentity.Primitives) (count : Nat) (baseImpl : QueryImpl baseSpec ProbComp)
     (kem : PqxdhKemIndCca.MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
     (result : Option (PqxdhPrivateCandidateAcceptance.Outcome
-      (PqxdhPrivatePhase1Prefix.Retained setup KemSK (PqxdhPhase2GeneratedDriver.driver env program).State)) ×
+      (PqxdhPrivatePhase1Prefix.Retained setup KemSK (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env program).State)) ×
         PqxdhPhase1AcceptanceOracle.BareState count)
     (supported : result ∈ support (PqxdhPrivateSourceCoins.privateRun attachedVerify primitives count
-      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver env program))))
+      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env program))))
     (secretIdentity : M → Pqxdh.Bytes) (index : Fin S) (server : Pqxdh.ServerState)
     (initialMatch : PqxdhProtocolServerInvariant.RootFields env.source.crypto secretIdentity
       env.senderId index server env.initial) :
     ∃ output, result.1.map PqxdhPrivateRootSource.eraseOutput = some output ∧
       PqxdhProtocolServerInvariant.RootFields env.source.crypto secretIdentity env.senderId index
         server output.context.selection.2 := by
-  obtain ⟨output, outputEq, fields⟩ := program_fields env program attachedVerify primitives count baseImpl kem result supported
+  obtain ⟨output, outputEq, fields⟩ := program_fields (completedBinding := completedBinding) env program attachedVerify primitives count baseImpl kem result supported
   refine ⟨PqxdhPrivateRootSource.eraseOutput output, by simp only [outputEq, Option.map_some], ?_⟩
   simpa only [PqxdhProtocolServerInvariant.RootFields, PqxdhPrivateRootSource.eraseOutput,
     PqxdhPrivateRootSource.eraseRetained, fields.1, fields.2.1,

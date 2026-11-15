@@ -81,11 +81,11 @@ theorem compile_full_game (setup : Setup baseSpec KemSK) (wire : Codec Reader Re
   rintro ⟨_ | created, after⟩ born
   · simp only [map_pure, mergeFull, Option.map_none]
   · dsimp only
-    obtain ⟨sender, lastId, peers⟩ := CborAdmissionCompileGame.construct_fields setup.joint ensureInit identityIndex
+    obtain ⟨sender, lastId, _⟩ := CborAdmissionCompileGame.construct_fields setup.joint ensureInit identityIndex
       setup.serverKeyId runtime created after born
     have compiled := CborRawCompile.compile_native setup wire parse checks lengths parser created.seed phase1 phase2
       (wrap setup.source.crypto (boundaryWire wire parse) setup.serverKeyId bounds (asModeO mode adversary))
-      (PqxdhRegistrationSchedule.initial created) sender lastId peers rfl (fun _ => rfl)
+      (PqxdhRegistrationSchedule.initial created) sender lastId (fun _ => rfl) rfl (fun _ => rfl)
     have wrapped := run_wrap setup wire parse checks created.seed bounds (asModeO mode adversary)
       (PqxdhDeploymentNative.initial created)
     simp only [StateT.run] at wrapped compiled

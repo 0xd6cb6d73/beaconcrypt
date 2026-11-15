@@ -132,7 +132,7 @@ theorem hides_bound (setup : Setup baseSpec KemSK)
 theorem exposeAt_hides (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × PqxdhRegistrationJointAcceptCutTag.Tag → R)
     (work : OracleComp (SourceSpec KemSK) X) (index : Nat)
-    (owners : List EncodedEntry) (state : NativeState KemSK) :
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK) :
     Hides setup
       (PqxdhRegistrationJointAcceptKemCut.exposeAt setup codec checks identityIndex publicIdentity observe work
         index owners state)
@@ -168,7 +168,7 @@ theorem exposeAt_bills (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
     (work : OracleComp (SourceSpec KemSK) X) (budget : Budget)
     (certified : ∀ source, work.IsQueryBoundP
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))
-    (index : Nat) (owners : List EncodedEntry) (state : NativeState KemSK) :
+    (index : Nat) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK) :
     Bounds (PqxdhRegistrationJointAcceptKemCut.exposeAt setup codec checks identityIndex publicIdentity observe work
         index owners state)
       (budget (.inl 1)) (budget (.inl 5))
@@ -272,7 +272,7 @@ theorem saved (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (ch
       (PqxdhRegistrationJointOpenUniform.total caps budget + caps.encapsCost * budget (.inl 3)) 0 := by
   have bills (created : PqxdhRegistrationJointServerBirth.ClientCreated Unit) :=
     exposeAt_bills setup codec checks caps bounded created.server.server.metadata.identityIndex
-      created.publicIdentity (PqxdhRegistrationJointAcceptCutTag.decideTag decision) work budget certified index []
+      created.publicIdentity (PqxdhRegistrationJointAcceptCutTag.decideTag decision) work budget certified index ([], fun _ => none)
       (PqxdhRegistrationJointInitializedAccept.initial created)
   constructor
   · exact preRaw_bound setup codec checks ensureInit supplied decision work runtime count selected index context.1
@@ -338,12 +338,12 @@ theorem scan_bills (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
       (PqxdhRegistrationJointAcceptCutTag.tag_bound work index _ _ (certified source))
   have actualBills := PqxdhRegistrationJointKemCutInterpreted.actual_bills setup caps bounded _ _ _ _ _
     (PqxdhRegistrationJointKemProgramBills.commands setup codec checks caps bounded
-      created.server.server.metadata.identityIndex created.publicIdentity _ budget tagged []
+      created.server.server.metadata.identityIndex created.publicIdentity _ budget tagged ([], fun _ => none)
       (PqxdhRegistrationJointInitializedAccept.initial created))
   have finished (predicate : (PqxdhLiveKemBirth.Spec KemSK).Domain → Prop) [DecidablePred predicate] (cap : Nat)
       (bound : (simulateQ (actual setup) (commands setup codec checks created.server.server.metadata.identityIndex
         created.publicIdentity (PqxdhRegistrationJointAcceptCutTag.decideTag decision <$>
-          PqxdhRegistrationJointAcceptCutTag.tag work index) []
+          PqxdhRegistrationJointAcceptCutTag.tag work index) ([], fun _ => none)
         (PqxdhRegistrationJointInitializedAccept.initial created))).IsQueryBoundP predicate cap) :
       (rawScan setup codec checks decision work index created).IsQueryBoundP predicate cap := by
     apply PqxdhRegistrationJointKemCutBounds.bind_prefix _ (PqxdhRegistrationJointKemCut.finish setup)

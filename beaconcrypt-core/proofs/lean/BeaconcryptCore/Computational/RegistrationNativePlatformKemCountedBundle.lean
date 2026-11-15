@@ -24,7 +24,7 @@ local notation "Client" => State n source
 local notation "Native" => RegistrationNativeExperiment.State n KemSK source
 
 noncomputable def trusted (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit) :
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     QueryImpl (RegistrationNativeBeaconFrontend.Trusted n KemSK) (StateT Client (M KemSK Platform)) :=
   fun query => inject (RegistrationNativeKemCountedTrusted.implementation setup checks representation created query)
 
@@ -33,14 +33,14 @@ def writer (implementation : QueryImpl (AdapterRegistrationWriterRequestMonad.Sp
   fun query => lift (StateT.lift (implementation query))
 
 noncomputable def handler (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (implementation : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) :
     QueryImpl (RegistrationNativePlatformGenericBundle.Spec E n KemSK) (StateT Client (M KemSK Platform))
   | .inl query => trusted setup checks representation created query
   | .inr query => writer implementation query
 
 noncomputable def program (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (implementation : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) (index : Nat) :
     StateT Client (M KemSK Platform) (RustM (Option Pqxdh.Bytes)) := fun before => do
   let result ← (simulateQ (handler setup checks representation created implementation)
@@ -61,7 +61,7 @@ private theorem map_apply {S A B : Type} {m : Type → Type} [Monad m] [LawfulMo
 
 /-- Every actual source trusted/writer request retains the complete native, external and private-pool state in the counted interpretation. -/
 theorem query_source (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (implementation : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (query : (RegistrationNativePlatformGenericBundle.Spec E n KemSK).Domain) (before : Native) (previous : Platform) :
     (execute setup (handler setup checks representation created implementation query)).run (project (before, previous)) =
@@ -87,7 +87,7 @@ theorem query_source (setup : Setup base KemSK) (checks : Checks)
 
 /-- Arbitrary adaptive source writer/trusted continuations retain that same joint state and full actual costs. -/
 theorem tree_source (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (implementation : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (work : OracleComp (RegistrationNativePlatformGenericBundle.Spec E n KemSK) Value) (before : Native) (previous : Platform) :
     (execute setup (simulateQ (handler setup checks representation created implementation) work)).run (project (before, previous)) =
@@ -104,7 +104,7 @@ theorem tree_source (setup : Setup base KemSK) (checks : Checks)
 
 /-- The complete actual Init publication, source encoder, phase update and lifecycle suffix keep their literal three-coordinate poststate. -/
 theorem source_program (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (implementation : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (index : Nat) (before : Native) (previous : Platform) :
     (execute setup (program setup checks representation created implementation index)).run (project (before, previous)) =
@@ -126,7 +126,7 @@ theorem source_program (setup : Setup base KemSK) (checks : Checks)
 
 /-- Lossless client/pool reassembly recovers the literal source bundle execution, including failed writers and exact native counters. -/
 theorem native_source (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (implementation : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (index : Nat) (before : Native) (previous : Platform) :
     Prod.map id restore <$> (execute setup (program setup checks representation created implementation index)).run (project (before, previous)) =

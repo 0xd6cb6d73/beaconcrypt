@@ -203,7 +203,7 @@ private theorem log_stable (placeholder signature : Ed25519Signature) (index : N
   exact congrArg (fun selected => (pure ((), (selected, before.2)) : OracleComp (RegistrationNativeIdentityFrontend.Trusted n KemSK)
     (Unit × Packed (source := source) (Auxiliary := Auxiliary)))) (initial.trans following.symm)
 
-/-- Every actual outgoing callback ignores earlier signature bytes while keeping the exact current signature reply and actual ML/CTX effects. -/
+/-- Every actual outgoing callback ignores earlier signature bytes while keeping the exact current signature reply and actual shared CTX effects. -/
 theorem outgoing (placeholder : Ed25519Signature) (setup : Setup base KemSK) (source : RegistrationNativeMldsa.Source)
     (index : Nat) (selected : Owner source) (query : RegistrationBeaconInitExecutor.Spec.Domain) :
     Stable placeholder (RegistrationNativeIdentityFrontend.outgoing (n := n) (Auxiliary := Auxiliary) setup source index selected query) := by
@@ -211,9 +211,7 @@ theorem outgoing (placeholder : Ed25519Signature) (setup : Setup base KemSK) (so
   cases query with
   | inl query => cases query with
     | hash request => exact lift_stable placeholder _
-    | sign request payload digest =>
-      exact bind_stable placeholder _ _ (sample_stable placeholder _) fun _ =>
-        bind_stable placeholder _ _ (lift_stable placeholder _) fun _ => pure_stable placeholder _
+    | sign request payload digest => exact pure_stable placeholder _
   | inr request =>
     simp only [RegistrationNativeIdentityFrontend.outgoing]
     split

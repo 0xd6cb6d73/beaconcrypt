@@ -35,7 +35,7 @@ local notation "coins"=>RegistrationNativePlatformMldsaProgram.coins
 local notation "writer"=>RegistrationNativePlatformConcreteSource.writer configuration.reservePackets
 local notation "PhysicalM"=>StateT (Backend n KemSK) (StateT P ProbComp)
 
-noncomputable def body (created :PqxdhLiveServerConstruction.Created Unit) (note :Stage→Log)
+noncomputable def body (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (note :Stage→Log)
     (self :beaconcrypt_public_wrapper.beacon.Beacon) (input :Slice U8)
     (before :Backend n KemSK × (P × List Log)) :
     ProbComp ((RustM AdapterPublicFinishBody.Result ×Backend n KemSK)×(P×List Log)) :=
@@ -55,7 +55,7 @@ def dropRaw (result :RustM (Option Pqxdh.Bytes×Store n KemSK R (P×List Log))×
   (Prod.map id dropStore <$>result.1,(result.2.1,result.2.2.1))
 
 omit [FrameDispatchFallback.Operations] in
-theorem body_erase (created :PqxdhLiveServerConstruction.Created Unit) (note :Stage→Log)
+theorem body_erase (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (note :Stage→Log)
     (self :beaconcrypt_public_wrapper.beacon.Beacon) (input :Slice U8)
     (before :Backend n KemSK × (P × List Log)) :
     (fun result=>((result.1.1,result.1.2),result.2.1)) <$>body configuration created note self input before=
@@ -82,7 +82,7 @@ theorem body_erase (created :PqxdhLiveServerConstruction.Created Unit) (note :St
   rw [logged]
   simpa only [StateT.run_map,Functor.map_map] using observed
 
-noncomputable def run (created :PqxdhLiveServerConstruction.Created Unit) (note :Stage→Log)
+noncomputable def run (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (note :Stage→Log)
     (before :Store n KemSK R (P×List Log)) (index :Nat) (input :Slice U8) :
     ProbComp (RustM (Option Pqxdh.Bytes×Store n KemSK R (P×List Log))×(Backend n KemSK×(P×List Log))) :=
   match before.beacons index with
@@ -103,7 +103,7 @@ private theorem finish_drop (before :Store n KemSK R (P×List Log)) (index :Nat)
   cases reply <;> rfl
 
 omit [FrameDispatchFallback.Operations] in
-theorem erase (created :PqxdhLiveServerConstruction.Created Unit) (note :Stage→Log)
+theorem erase (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (note :Stage→Log)
     (before :Store n KemSK R (P×List Log)) (index :Nat) (input :Slice U8) :
     dropRaw <$>run configuration created note before index input=
       RegistrationNativePlatformPublicAdapterConfiguredFinish.sourceCall configuration created (dropStore before) index input :=by
@@ -121,14 +121,14 @@ theorem erase (created :PqxdhLiveServerConstruction.Created Unit) (note :Stage�
     funext reached
     exact finish_drop before index reached
 
-noncomputable def operation (created :PqxdhLiveServerConstruction.Created Unit)
+noncomputable def operation (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (before :RegistrationNativePlatformPublicAdapterSourceEvents.State n KemSK R P) (index :Nat) (input :Slice U8) :
     ProbComp (RegistrationNativePlatformPublicAdapterSourceEvents.Outcome n KemSK R P (Option Pqxdh.Bytes)) :=
   (Prod.map (Functor.map (Prod.map id RegistrationNativePlatformPublicAdapterSourceRuntime.objects)) id) <$>
     run configuration created RegistrationNativePlatformPublicAdapterSourceEvents.Event.stage before index input
 
 omit [FrameDispatchFallback.Operations] in
-theorem operation_erase (created :PqxdhLiveServerConstruction.Created Unit)
+theorem operation_erase (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (before :RegistrationNativePlatformPublicAdapterSourceEvents.State n KemSK R P) (index :Nat) (input :Slice U8) :
     RegistrationNativePlatformPublicAdapterSourceEvents.outcome <$>operation configuration created before index input=
       (Prod.map (Functor.map (Prod.map id RegistrationNativePlatformPublicAdapterSourceRuntime.objects)) id) <$>

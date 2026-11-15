@@ -86,13 +86,14 @@ pub type AeadNonce = crypto_aead::chacha20poly1305_ietf::Nonce;
 /// The core fixes both the input and domain label before this executor runs.
 /// Production only applies the requested primitive and returns its fixed-width output.
 fn symmetric_ratchet_hkdf<const OUTPUT_SIZE: usize>(
-	request: &verified_ratchet::SymmetricRatchetKdfRequest,
+	input: &[u8; RATCHET_CHAIN_SIZE],
+	info: &[u8],
 ) -> [u8; OUTPUT_SIZE] {
 	const { assert!(OUTPUT_SIZE <= 255 * 64) };
-	let prk = crypto_kdf::hkdf::sha512::extract(None, request.input())
+	let prk = crypto_kdf::hkdf::sha512::extract(None, input)
 		.expect("HKDF-SHA-512 extract accepts every fixed-width ratchet chain");
 	let mut output = Zeroizing::new([0u8; OUTPUT_SIZE]);
-	crypto_kdf::hkdf::sha512::expand_into(&mut output[..], Some(request.info()), &prk)
+	crypto_kdf::hkdf::sha512::expand_into(&mut output[..], Some(info), &prk)
 		.expect("the fixed ratchet output sizes are below the HKDF-SHA-512 limit");
 	*output
 }
@@ -100,13 +101,16 @@ fn symmetric_ratchet_hkdf<const OUTPUT_SIZE: usize>(
 pub(crate) fn ratchet_hkdf(
 	request: &verified_ratchet::SymmetricRatchetKdfRequest,
 ) -> verified_ratchet::RatchetKdfResponse {
-	verified_ratchet::RatchetKdfResponse::from_bytes(symmetric_ratchet_hkdf(request))
+	verified_ratchet::RatchetKdfResponse::from_bytes(symmetric_ratchet_hkdf(
+		request.input(),
+		request.info(),
+	))
 }
 
 pub(crate) fn initial_ratchet_hkdf(
-	request: &verified_ratchet::SymmetricRatchetKdfRequest,
+	request: &verified_ratchet::InitialRatchetKdfRequest,
 ) -> [u8; INITIAL_RATCHET_KDF_OUTPUT_SIZE] {
-	symmetric_ratchet_hkdf(request)
+	symmetric_ratchet_hkdf(request.input(), request.info())
 }
 
 #[cfg(test)]
@@ -739,22 +743,22 @@ mod raw_receive_tests {
 	}
 
 	#[test]
-	fn each_mldsa_key_hash_byte_is_bound_without_consuming_a_rejected_key() {
+	fn every_ad_byte_is_bound_without_consuming_a_rejected_key() {
 		let mut sender = RatchetManager::default();
 		let mut receiver = RatchetManager::default();
 		let mut associated_data = [0x51; AD_SIZE];
-		associated_data[153..217].fill(0x61);
-		associated_data[217..281].fill(0x71);
+		associated_data[..87].fill(0x61);
+		associated_data[87..151].fill(0x71);
 		let encrypted =
 			encrypt_message_with_ratchet(b"payload", 9, 7, &associated_data, &mut sender).unwrap();
 		let before = serde_json::to_string(&receiver).unwrap();
-		for index in 153..281 {
+		for index in 0..151 {
 			let mut changed = associated_data;
 			changed[index] ^= 1;
 			assert!(
 				decrypt_message_with_ratchet(&encrypted.ciphertext, 7, &changed, &mut receiver)
 					.is_none(),
-				"changed authentication-key hash byte {index} was accepted"
+				"changed associated-data byte {index} was accepted"
 			);
 			assert_eq!(serde_json::to_string(&receiver).unwrap(), before);
 		}
@@ -781,18 +785,57 @@ mod initial_kdf_tests {
 	#[test]
 	fn initial_ratchet_hkdf_matches_known_answer_and_orders_complementary_chains() {
 		beaconcrypt_crypto::ensure_init().unwrap();
-		// Independently reproduced by both KAT generators' [ratchet] step 1: HKDF's
-		// 64-byte expansion is the prefix of that step's 76-byte expansion.
+		// Independently reproduced by both KAT generators' [ratchet-initial] fixture.
+		// Initialization and message steps use distinct exact domain labels.
 		let expected_hex = concat!(
-			"f57007f1b1c7a62a7d6cdfa5df07538c43d83656906764d607e627401906e42a",
-			"5936897d8bd06b7daf70bd0d64b2f607a055fd843ddb779051cb975bbb02b1d3"
+			"c56fe919920efc6a47a409ed984bf2b6831ffa67163b8900998a5b1305cbb1c55",
+			"eb7c0a750ca0de958c274a27627af69617f0bb7ccf5a4a8acbb22b696dbf00d"
 		);
 		let expected: [u8; 64] = core::array::from_fn(|index| {
 			u8::from_str_radix(&expected_hex[index * 2..index * 2 + 2], 16).unwrap()
 		});
 		let root = [0x24; KDF_STATE_SIZE];
 		let beacon_pending = start_beacon_ratchet_kdf(&root);
+		assert_eq!(
+			beacon_pending.request().info(),
+			b"SymRatchetInit_HKDF_SHA-512_CHACHA20_POLY1305"
+		);
+		assert_eq!(
+			start_server_ratchet_kdf(&root).request().info(),
+			beacon_pending.request().info()
+		);
 		assert_eq!(initial_ratchet_hkdf(beacon_pending.request()), expected);
+		let message = match verified_ratchet::begin_send(
+			RatchetKernel::new(SendChain::from_bytes(root), SendChain::from_bytes(root)),
+			(),
+		) {
+			verified_ratchet::SendStart::SendKdfRequested(pending) => pending,
+			_ => panic!("fresh message chain"),
+		};
+		assert_eq!(
+			message.request().info(),
+			b"SymRatchetMessage_HKDF_SHA-512_CHACHA20_POLY1305"
+		);
+		assert_ne!(
+			message.request().info().as_slice(),
+			&beacon_pending.request().info()[..]
+		);
+		let message_prefix = concat!(
+			"95eef77611289a6d9149cc2d0312298e1ec049fe3680f7d3fd3c067a22553220",
+			"68077f4476c2e526c51d0d02827617bc420d65bbedab24e5e33393ed6734bf0b"
+		);
+		let message_prefix: [u8; 64] = core::array::from_fn(|index| {
+			u8::from_str_radix(&message_prefix[index * 2..index * 2 + 2], 16).unwrap()
+		});
+		assert_eq!(
+			&ratchet_hkdf(message.request()).as_bytes()[..64],
+			&message_prefix
+		);
+		assert_eq!(
+			symmetric_ratchet_hkdf::<64>(message.request().input(), message.request().info()),
+			message_prefix
+		);
+		assert_ne!(expected, message_prefix);
 		let beacon = finish_initial_ratchet_kdf(beacon_pending);
 		let server = finish_initial_ratchet_kdf(start_server_ratchet_kdf(&root));
 		assert_eq!(beacon.receive_chain().as_bytes(), &expected[..32]);

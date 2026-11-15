@@ -10,6 +10,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhPhase2PostSchedulerBounds
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhPhase2PostScheduler PqxdhPhase2SourceAux PqxdhKemIndCca PqxdhPrivateKemSource
 open PqxdhJointKdfGame PqxdhEd25519EufCma PqxdhJointIdentity PqxdhPhase1AcceptanceOracle
 open PqxdhChallengeSecretRouting PqxdhChallengeSecretQueryBounds
@@ -196,24 +197,24 @@ theorem targetFinish_bound
     (challenge : MlKem768Ciphertext) (decode : RawCtxReceive.FrameDecoder) (resource : Resource)
     (query : (PqxdhPhase2LiveFinish.FinishSpec B).Domain)
     (state : State (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B) count) :
-    ((targetFinish (baseSpec := baseSpec) attachedVerify primitives count source localImpl challenge decode query).run state).IsQueryBoundP (predicate (baseSpec := baseSpec) resource) (finishCost qLocal resource) := by
+    ((PqxdhPhase2PostScheduler.targetFinish (completedBinding := completedBinding) (baseSpec := baseSpec) attachedVerify primitives count source localImpl challenge decode query).run state).IsQueryBoundP (predicate (baseSpec := baseSpec) resource) (finishCost qLocal resource) := by
   cases query with
   | finish index raw =>
-    simp only [targetFinish, StateT.run]
+    simp only [PqxdhPhase2PostScheduler.targetFinish, StateT.run]
     rw [isQueryBoundP_map_iff]
     cases resource with
     | uniform =>
       exact PqxdhBeaconPhase2Bounds.interpreted_total_bound _ _ (max qLocal 64) 69
         (fun query before => handles_step attachedVerify primitives count source localImpl qLocal localBound challenge .uniform query before)
-        _ (PqxdhPhase2SharedBounds.owner_total decode raw _) _
+        _ (PqxdhPhase2SharedBounds.owner_total (completedBinding := completedBinding) decode raw _) _
     | base =>
       exact (isQueryBoundP_false _ 0).simulateQ_run_StateT_of_step
         (fun query before => handles_step attachedVerify primitives count source localImpl qLocal localBound challenge .base query before) _
     | decapsulation =>
-      exact (PqxdhPhase2SharedBounds.owner_decapsulation decode raw _).simulateQ_run_StateT_of_step
+      exact (PqxdhPhase2SharedBounds.owner_decapsulation (completedBinding := completedBinding) decode raw _).simulateQ_run_StateT_of_step
         (fun query before => handles_step attachedVerify primitives count source localImpl qLocal localBound challenge .decapsulation query before) _
     | root =>
-      exact (PqxdhPhase2SharedBounds.owner_root decode raw _).simulateQ_run_StateT_of_step
+      exact (PqxdhPhase2SharedBounds.owner_root (completedBinding := completedBinding) decode raw _).simulateQ_run_StateT_of_step
         (fun query before => handles_step attachedVerify primitives count source localImpl qLocal localBound challenge .root query before) _
 
 /-- The original scheduler partition is retained; the source coordinate conservatively permits creation and a source coin request. -/
@@ -239,7 +240,7 @@ theorem target_step
     (challenge : MlKem768Ciphertext) (resource : Resource)
     (query : (Spec (baseSpec := baseSpec) (S := S) (B := B)).Domain)
     (state : State (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B) count) :
-    ((target (baseSpec := baseSpec) attachedVerify primitives count source localImpl writer senderId route decode challenge query).run state).IsQueryBoundP (predicate (baseSpec := baseSpec) resource)
+    ((PqxdhPhase2PostScheduler.target (completedBinding := completedBinding) (baseSpec := baseSpec) attachedVerify primitives count source localImpl writer senderId route decode challenge query).run state).IsQueryBoundP (predicate (baseSpec := baseSpec) resource)
         (cost qLocal resource (PqxdhPhase2SourceSchedulerBounds.classify (baseSpec := baseSpec) query)) := by
   rcases query with ((query | query) | query)
   · change (publicWork (ccaCoins ((fun result => (result.1, (result.2, state.2))) <$>
@@ -286,7 +287,7 @@ theorem target_step
         simp [PqxdhPhase2SourceSchedulerBounds.classify, cost, PqxdhPrivateRootQueryBounds.SelectorCCA,
           IsMlKemLogicalDecapsulationQuery]
     | root => exact isQueryBoundP_false _ _
-  · exact targetFinish_bound attachedVerify primitives count source localImpl qLocal localBound challenge decode resource query state
+  · exact targetFinish_bound (completedBinding := completedBinding) attachedVerify primitives count source localImpl qLocal localBound challenge decode resource query state
 
 def bill (qLocal : Nat) (resource : Resource) (budget : PqxdhPhase2SourceSchedulerBounds.Budget) : Nat :=
   ∑ kind, cost qLocal resource kind * budget kind
@@ -304,10 +305,10 @@ theorem target_bound {Result : Type}
     (budget : PqxdhPhase2SourceSchedulerBounds.Budget)
     (bounded : PqxdhPhase2SourceSchedulerBounds.Bounded client budget)
     (state : State (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B) count) :
-    ((simulateQ (target attachedVerify primitives count source localImpl writer senderId route decode challenge) client).run state).IsQueryBoundP (predicate (baseSpec := baseSpec) resource) (bill qLocal resource budget) := by
+    ((simulateQ (PqxdhPhase2PostScheduler.target (completedBinding := completedBinding) attachedVerify primitives count source localImpl writer senderId route decode challenge) client).run state).IsQueryBoundP (predicate (baseSpec := baseSpec) resource) (bill qLocal resource budget) := by
   exact FinitePartitionQueryBounds.weighted_bound (PqxdhPhase2SourceSchedulerBounds.classify (baseSpec := baseSpec))
     (cost qLocal resource) budget _ _ client bounded
-    (fun query before => target_step attachedVerify primitives count source localImpl qLocal localBound
+    (fun query before => target_step (completedBinding := completedBinding) attachedVerify primitives count source localImpl qLocal localBound
       writer senderId route decode challenge resource query before) state
 
 /-- The coin bill includes source identity generation, every public coin request and every finish attempt. -/
@@ -352,10 +353,10 @@ theorem fullPostBounds {Result : Type}
     (budget : PqxdhPhase2SourceSchedulerBounds.Budget)
     (bounded : PqxdhPhase2SourceSchedulerBounds.Bounded client budget)
     (state : State (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B) count) :
-    PostBounds ((simulateQ (target attachedVerify primitives count source localImpl writer senderId route decode challenge) client).run state)
+    PostBounds ((simulateQ (PqxdhPhase2PostScheduler.target (completedBinding := completedBinding) attachedVerify primitives count source localImpl writer senderId route decode challenge) client).run state)
       (bill qLocal .uniform budget) (budget (.inr 3))
       (budget (.inr 4) + budget (.inr 5)) (budget (.inr 5)) := by
-  have bound := fun resource => target_bound attachedVerify primitives count source localImpl qLocal localBound
+  have bound := fun resource => target_bound (completedBinding := completedBinding) attachedVerify primitives count source localImpl qLocal localBound
     writer senderId route decode challenge resource client budget bounded state
   exact ⟨bound .uniform, by simpa only [base_bill, predicate, publicPredicate] using bound .base,
     by simpa only [decapsulation_bill, predicate, publicPredicate] using bound .decapsulation,

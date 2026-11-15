@@ -49,7 +49,7 @@ include shortRejects in
 /-- Success of the literal corrected after-pin controller implies detached phase-one validation, without any owner or key-created condition. -/
 theorem after_pin (checks : Checks)
     (reserve : StateT (State n) (StateT Platform ProbComp) Bool)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (pinResult : RustM (core.option.Option session.ServerAuthenticationPin)) (tokenIndex : Nat)
     (before after : State n) (previous current : Platform)
     (supported : ((.ok (some tokenIndex), after), current) ∈ support
@@ -66,14 +66,14 @@ theorem after_pin (checks : Checks)
         cases result : checked with
         | fail error | div => simp only [result, StateT.run_pure, mem_support_pure_iff] at supported; cases supported
         | ok checkedResult => rcases checkedResult with ⟨events, status⟩; cases status with
-          | HashRequested _ | MldsaVerificationRequested _ | Ed25519VerificationRequested _ | ServerFingerprintRequested _ | BeaconFingerprintRequested _ | Rejected => simp only [result, StateT.run_pure, mem_support_pure_iff] at supported; cases supported
+          | HashRequested _ | Ed25519VerificationRequested _ | Rejected => simp only [result, StateT.run_pure, mem_support_pure_iff] at supported; cases supported
           | Accepted authenticated =>
               refine ⟨_, _, authentication setup codec shortRejects route verify packet pin before afterAuth previous afterPlatform events authenticated ?_⟩
               simpa only [result] using reached
 include shortRejects in
 /-- Every successful actual source accept has a detached phase-one candidate; the common persistent platform state and all pin/reservation/authentication prefixes are retained. -/
 theorem source_accept (checks : Checks) (reserve : StateT Platform ProbComp Bool)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (tokenIndex : Nat) (before after : State n) (previous current : Platform)
     (supported : ((.ok (some tokenIndex), after), current) ∈ support
       (((RegistrationNativePlatformSourceAccept.accept RegistrationNativePlatformMldsaProgram.coins setup codec checks reserve route verify
@@ -84,10 +84,12 @@ theorem source_accept (checks : Checks) (reserve : StateT Platform ProbComp Bool
   obtain ⟨pin, _recomputed, supported⟩ := supported
   exact after_pin setup codec shortRejects route verify packet checks (StateT.lift reserve) representation created
     pin.1.1 tokenIndex pin.1.2 after pin.2 current supported
+attribute [local irreducible] RegistrationNativePlatformCtxContext.realize
+  RegistrationNativePlatformCtxContext.interpret RegistrationNativePlatformCtxAccept.accept
 include shortRejects codec route in
 /-- The literal Context accept interpreter has the same unrestricted candidate conclusion at successful public acceptance. -/
 theorem accepted (checks : Checks) (reserve : StateT Platform ProbComp Bool)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (tokenIndex : Nat) (before after : RegistrationNativePlatformCtxContext.Full n KemSK Platform)
     (supported : (.ok (some tokenIndex), after) ∈ support
       ((RegistrationNativePlatformCtxContext.interpret
@@ -99,7 +101,7 @@ theorem accepted (checks : Checks) (reserve : StateT Platform ProbComp Bool)
           (RegistrationNativePlatformCtxAccept.accept setup checks reserve verify representation created packet)).run before) :=
     by
       rw [support_map]
-      exact ⟨(.ok (some tokenIndex), after), supported, rfl⟩
+      exact Set.mem_image_of_mem _ supported
   rw [RegistrationNativePlatformCtxAccept.accept_source setup codec checks reserve route verify representation created packet before] at mapped
   simp only [RegistrationNativePlatformCtxBuild.nativeServer, StateT.run, support_map] at mapped
   obtain ⟨result, reached, equal⟩ := mapped

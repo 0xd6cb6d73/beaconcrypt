@@ -2,6 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterStartupGeneration
 import BeaconcryptCore.Computational.RegistrationNativePlatformSdkStrongInitialized
 import BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterPhysicalBackend
+import BeaconcryptCore.Refinement.AdapterServerConstructorGeneration
 /-! Public initialization derives its observed primitive dictionaries from the same original constructor, cryptographic and persistent local methods. Optional generation refusal and the actual returned Server/RNG remain joint with the initialization receipt. -/
 open CoreModels Aeneas OracleComp OracleSpec
 open Aeneas.Std hiding namespace core alloc
@@ -60,7 +61,7 @@ variable (generator : rand_core.TryCryptoRng R Error) (view : AdapterPublicWrapp
 variable (views : AdapterPublicWrapperStorage.Views) (objects : AdapterServerConstructorObjects.Leaves views)
 variable (ensureInit : StateT Unit ProbComp Bool)
 variable (serverEd : AdapterServerConstructorJoint.EdContract generator view setup.joint (AdapterServerConstructorStartup.edCore ensureInit))
-variable (ml : AdapterBeaconConstructorGeneration.MldsaContract generator view (RegistrationNativeMldsa.generate source))
+variable (ml : AdapterServerConstructorGeneration.MldsaContract generator view (RegistrationNativeMldsa.generate source))
 variable (edGetter : ∀key,originalCrypto.edPublicBytes key=pure (view.edPublic key))
 variable (mlGetter : ∀identity,(originalLocal.auth_MldsaIdentity_public_key identity).run=pure (.ok (view.mldsa identity).publicKey))
 
@@ -115,7 +116,7 @@ theorem native (previous : P) (identityIndex : Nat) (identifier : U64) (rng : R)
   let : LocalOperations (RustT WorldM):=localOperations (n:=n) previous
   exact RegistrationNativePlatformExtractedSdkInitialized.native setup generator view views objects ensureInit
     (signing (n:=n) setup generator view ensureInit serverEd) (mldsa (n:=n) generator view ml)
-    (ed_public (n:=n) view edGetter) (ml_public (n:=n) view mlGetter previous) (hash (n:=n)) identityIndex identifier rng
+    (ed_public (n:=n) view edGetter) (ml_public (n:=n) view mlGetter previous) identityIndex identifier rng
 
 include objects serverEd ml edGetter mlGetter in
 noncomputable def carrier (previous : P) (identityIndex : Nat) (identifier : U64) (rng : R)
@@ -129,7 +130,7 @@ noncomputable def carrier (previous : P) (identityIndex : Nat) (identifier : U64
   let : LocalOperations (RustT WorldM):=localOperations (n:=n) previous
   exact RegistrationNativePlatformSdkStrongInitialized.carrier setup generator view views objects ensureInit
     (signing (n:=n) setup generator view ensureInit serverEd) (mldsa (n:=n) generator view ml)
-    (ed_public (n:=n) view edGetter) (ml_public (n:=n) view mlGetter previous) (hash (n:=n)) identityIndex identifier rng receipt ready previous supported returned
+    (ed_public (n:=n) view edGetter) (ml_public (n:=n) view mlGetter previous) identityIndex identifier rng receipt ready previous supported returned
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterInitialization
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterInitialization.ed_public' depends on axioms: [propext,

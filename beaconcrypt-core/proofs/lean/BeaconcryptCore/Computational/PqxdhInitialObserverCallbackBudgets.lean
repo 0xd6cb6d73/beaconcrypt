@@ -9,6 +9,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialObserverCallbackBudgets
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhInitialRootLabelService PqxdhInitialLabelCompiler PqxdhInitialRootFreeCallbacks
 open PqxdhJointKdfGame PqxdhKemIndCca PqxdhChallengeSecretRouting PqxdhChallengeSecretQueryBounds
 open PqxdhInitializerSecrecy PqxdhCorrelatedExpand PqxdhCorrelatedExpandHybrid
@@ -46,7 +47,7 @@ theorem public_step
        (if PublicClass (baseSpec := baseSpec) IsMlKemLogicalDecapsulationQuery query then qDecap else 0)) := by
   rcases query with ((coin | query) | ciphertext) | privateRequest
   all_goals simp only [publicOnly, publicImpl, KEMScheme.IND_CCA_postChallengeImpl, QueryImpl.add,
-    HasQuery.toQueryImpl, PublicClass, IsMlKemUniformQuery, IsMlKemBaseQuery,
+    PublicClass, IsMlKemUniformQuery, IsMlKemBaseQuery,
     IsMlKemLogicalDecapsulationQuery, ite_true, ite_false, Nat.zero_add, Nat.add_zero]
   · change (simulateQ (kemAmbientImpl baseImpl) ((unifSpec + baseSpec).query (.inl coin))).IsTotalQueryBound 1
     rw [simulateQ_spec_query]
@@ -239,16 +240,16 @@ theorem owner_partition (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes
     (state : PqxdhBeaconPhase2Preparation.State
       (PqxdhGeneratedBeaconState.IdentityHandle I) D (PqxdhGeneratedBeaconState.KemHandle K))
     (kind : CallbackKind) :
-    (PqxdhInitialFusedOwner.owner (X := X ⊕ PqxdhPhase2JointIdentity.Converted)
+    (PqxdhInitialFusedOwner.owner (completedBinding := completedBinding) (X := X ⊕ PqxdhPhase2JointIdentity.Converted)
       (Response := Response) (Shared := PqxdhPhase2DecapsulationRouting.Shared) decode raw state).IsQueryBoundP
         (fun query => callbackKind query = kind) (callbackBudget kind) := by
   cases kind with
   | ordinary =>
       exact IsQueryBoundP.of_imp (fun _ _ => True.intro)
-        (PqxdhInitialFusedBudgets.owner_total decode raw state).isQueryBoundP
+        (PqxdhInitialFusedBudgets.owner_total (completedBinding := completedBinding) decode raw state).isQueryBoundP
   | decapsulation =>
       apply IsQueryBoundP.of_imp (p' := PqxdhInitialFusedBudgets.IsDecapsulation) _
-        (PqxdhInitialFusedBudgets.owner_decapsulation decode raw state)
+        (PqxdhInitialFusedBudgets.owner_decapsulation (completedBinding := completedBinding) decode raw state)
       intro query chosen
       cases query with
       | inl query =>
@@ -258,7 +259,7 @@ theorem owner_partition (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes
       | inr query => cases query <;> simp [callbackKind] at chosen
   | service =>
       apply IsQueryBoundP.of_imp (p' := PqxdhInitialFusedBudgets.IsService) _
-        (PqxdhInitialFusedBudgets.owner_service decode raw state)
+        (PqxdhInitialFusedBudgets.owner_service (completedBinding := completedBinding) decode raw state)
       intro query chosen
       cases query with
       | inl query => simp [callbackKind] at chosen; split at chosen <;> contradiction
@@ -279,19 +280,19 @@ theorem owner_bounds
       (PqxdhGeneratedBeaconState.IdentityHandle I) D (PqxdhGeneratedBeaconState.KemHandle K))
     (state : SharedState A × BareState count) :
     let actual := (simulateQ (PqxdhInitialFusedCompiler.compiler attachedVerify primitives count fixed localImpl baseImpl kem secret challenge)
-      (PqxdhInitialFusedOwner.owner decode raw owner)).run state
+      (PqxdhInitialFusedOwner.owner (completedBinding := completedBinding) decode raw owner)).run state
     actual.IsQueryBoundP IsCoin (69 * max qLocal 64 + qDecap) ∧ actual.IsQueryBoundP IsService 1 := by
   constructor
   · have weighted := FinitePartitionQueryBounds.weighted_bound callbackKind (callbackCost qLocal qDecap) callbackBudget
       (PqxdhInitialFusedCompiler.compiler attachedVerify primitives count fixed localImpl baseImpl kem secret challenge)
-      IsCoin (PqxdhInitialFusedOwner.owner decode raw owner) (owner_partition decode raw owner)
+      IsCoin (PqxdhInitialFusedOwner.owner (completedBinding := completedBinding) decode raw owner) (owner_partition (completedBinding := completedBinding) decode raw owner)
       (compiler_uniform attachedVerify primitives count fixed localImpl baseImpl kem secret challenge qLocal qBase qDecap localBound baseBound decapBound) state
     have bill : (∑ kind, callbackCost qLocal qDecap kind * callbackBudget kind) = 69 * max qLocal 64 + qDecap := by
       rw [show (Finset.univ : Finset CallbackKind) = {.ordinary, .decapsulation, .service} by decide]
       simp [callbackCost, callbackBudget]
       omega
     simpa only [bill] using weighted
-  · exact (PqxdhInitialFusedBudgets.owner_service decode raw owner).simulateQ_run_StateT_of_step
+  · exact (PqxdhInitialFusedBudgets.owner_service (completedBinding := completedBinding) decode raw owner).simulateQ_run_StateT_of_step
       (fun query before => compiler_service attachedVerify primitives count fixed localImpl baseImpl kem secret challenge query before) state
 
 end Callbacks

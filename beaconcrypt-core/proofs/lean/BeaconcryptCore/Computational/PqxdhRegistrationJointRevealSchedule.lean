@@ -78,7 +78,7 @@ theorem generated_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
     (checks : Checks) (serverSeed : IdentitySeed) (program : OracleComp (Spec KemSK) Result)
     (pool : PqxdhRegistrationJointPreparation.Pool KemSK) (shared : NativeState KemSK) :
     PqxdhRegistrationJointServiceSchedule.execute setup codec checks serverSeed
-      (simulateQ (client setup codec) program) ⟨pool, shared, []⟩ =
+      (simulateQ (client setup codec) program) ⟨pool, shared, [], fun _ => none⟩ =
       (fun result => (result.1, encodeState setup result.2)) <$>
         (simulateQ (source setup codec checks serverSeed) program).run
           (PqxdhRegistrationJointSchedule.initial pool shared) := by

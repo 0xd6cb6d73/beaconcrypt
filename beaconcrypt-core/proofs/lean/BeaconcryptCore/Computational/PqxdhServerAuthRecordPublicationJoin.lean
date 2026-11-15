@@ -17,7 +17,8 @@ theorem written_frame (codec : Codec Reader Response)
     (frameBack : PqxdhServerAuthNegativeControl.FrameReadBack codec)
     (pending : pqxdh.PendingServerRegistration) (data : Option Pqxdh.Bytes) (server : ServerState)
     (response : PqxdhServerRegistrationPublication.Response) (entry : CtxRomAuth.CtxSuccessfulSeal)
-    (built : PqxdhServerAuthPublicationBuiltRecord.At codec pending data server response entry)
+    (associatedData : PqxdhTranscriptAd.AssociatedData)
+    (built : PqxdhServerAuthPublicationBuiltRecord.At associatedData codec pending data server response entry)
     (record : RawCtxReceive.DecodedFrame) (same : PqxdhServerAuthFinishFrameReceipt.Matches record entry) :
     frame codec response.serialized = some record := by
   obtain ⟨key, candidate, binding, sealed, encrypted, nonce, width, _, _, _, _, outer, _, _, input, inner⟩ := built
@@ -58,13 +59,13 @@ theorem accepted_published (setup : Setup baseSpec KemSK) (codec : Codec Reader 
     result supported journal normal snap accepted owned notBad with won | ⟨raw, selected, entry, member, record, decoded, same⟩
   · exact Or.inl won
   · obtain ⟨payload, response, earlier⟩ := published
-    rcases PqxdhServerAuthPublicationBuildJournal.accepted_records setup codec checks adversary context rest key Q j
+    rcases PqxdhServerAuthPublicationBuildJournal.accepted_records_transcript setup codec checks adversary context rest key Q j
       writable result supported journal normal snap accepted owned notBad unique payload response
-      (List.takeWhile_subset _ earlier) with won | ⟨_, token, server, records⟩
+      (List.takeWhile_subset _ earlier) with won | ⟨_, token, server, digest, records⟩
     · exact Or.inl won
     · exact Or.inr ⟨payload, response, raw, record, earlier, selected, decoded,
         written_frame codec responseBack frameBack token.pending payload server response entry
-          (records entry member) record same⟩
+          (PqxdhTranscriptAd.adOf digest) (records entry member) record same⟩
 
 /-- The stronger missing-record event uses the same ordinary-authentication and unpublished-matched-attempt alternatives on the same marked execution. It introduces no second authentication charge. -/
 theorem accepted_clean (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)

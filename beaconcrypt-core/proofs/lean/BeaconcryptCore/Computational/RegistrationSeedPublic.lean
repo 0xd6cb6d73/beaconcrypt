@@ -42,7 +42,7 @@ theorem selected_map (initial : registration.ServerInitialKdf) (root : Std.Array
   simp only [RegistrationSeedErasure.selected, registration.ServerInitialKdf.resume,
     pqxdh.server_abort_candidate, RegistrationSeedErasure.initial_kernel initial root role,
     pqxdh.ServerRegistrationCandidate.impl.key_id, pqxdh.ServerRegistrationCandidate.impl.server_identity_key_id,
-    session.RegistrationBinding.impl.associated_data, contextRun, bind_tc_ok]
+    session.CompletedRegistrationBinding.impl.associated_data, contextRun, bind_tc_ok]
   obtain ⟨empty, emptyRun⟩ : ∃ result, core.slice.Slice.is_empty initial.application = .ok result := ⟨_, rfl⟩
   simp only [ConcreteRatchetKernel.from_counters, ratchet.refined.RefinedRatchet.from_counters,
     ratchet.control.RatchetState.from_counters, ratchet.control.SequenceCache.empty,

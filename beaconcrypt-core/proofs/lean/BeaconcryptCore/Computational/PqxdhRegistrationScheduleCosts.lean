@@ -1,6 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhRegistrationScheduleSurface
 import BeaconcryptCore.Computational.PqxdhServerAuthEntryResourceServices
+import BeaconcryptCore.Computational.PqxdhServerAuthNativeUniformCosts
 
 /-! Explicit source construction and callback bills retain primitive randomness and interpreted base work. Counts measure oracle calls; deterministic validation, indexing, serialization and bookkeeping remain actual local computations. -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -88,20 +89,39 @@ theorem callbacks_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader R
   · exact (tail_uniform setup codec query state).mono (Nat.le_max_left 64 caps.decapsCost)
 
 /-- The full literal owner attempt charges all 69 possible callbacks, including preparation and opening work before final sequence/binding rejection. This conservative bound retains complete source and cache state. -/
-theorem owner_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+theorem owner_uniform (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+    (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (caps : KemCaps) (bounded : KemBound setup caps) (raw : Pqxdh.Bytes)
     (owner : Owner KemSK) (state : NativeState KemSK) :
-    ((simulateQ (callbacks setup codec) (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw owner)).run state).IsTotalQueryBound (69 * max 64 caps.decapsCost) := by
+    ((simulateQ (callbacks setup codec) (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding)
+      codec.frameRead raw owner)).run state).IsTotalQueryBound (69 * max 64 caps.decapsCost) := by
   exact (isQueryBoundP_true_iff _ _).mp
-    (PqxdhBeaconPhase2Bounds.native_interpreted_bound (callbacks setup codec) (fun _ => True)
+    (PqxdhBeaconPhase2Bounds.native_interpreted_bound (completedBinding := completedBinding)
+      (callbacks setup codec) (fun _ => True)
       (max 64 caps.decapsCost) (fun query current => (callbacks_uniform setup codec caps bounded query current).isQueryBoundP)
       codec.frameRead raw owner state)
 
-/-- Every public finish attempt retains the complete owner bill; missing or future slots are ordinary zero-draw rejection branches. Reinstallation adds no oracle query and preserves all previous effects. -/
+/-- One owner's hashed finish pays at most one 64-byte transcript digest draw before the complete native owner bill; abort and non-InitSent branches draw nothing. -/
+theorem ownerFinish_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (caps : KemCaps) (bounded : KemBound setup caps)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : Owner KemSK) (state : NativeState KemSK) :
+    ((ownerFinish setup codec retained raw owner).run state).IsTotalQueryBound
+      (64 + 69 * max 64 caps.decapsCost) := by
+  unfold ownerFinish
+  split
+  · split
+    · rw [StateT.run_bind]
+      exact isTotalQueryBound_bind (PqxdhServerAuthNativeUniformCosts.hash_uniform _ state)
+        (fun hashed => owner_uniform _ setup codec caps bounded raw owner hashed.2)
+    · trivial
+  · trivial
+
+/-- Every public finish attempt retains the complete owner bill and its one transcript digest draw; missing or future slots are ordinary zero-draw rejection branches. Reinstallation adds no oracle query and preserves all previous effects. -/
 theorem finish_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (caps : KemCaps) (bounded : KemBound setup caps) (index : Nat) (raw : Pqxdh.Bytes)
     (state : State KemSK) :
-    ((finish setup codec index raw).run state).IsTotalQueryBound (69 * max 64 caps.decapsCost) := by
+    ((finish setup codec index raw).run state).IsTotalQueryBound (64 + 69 * max 64 caps.decapsCost) := by
   cases found : state.owners[index]? with
   | none =>
       rw [finish_missing setup codec index raw state found]
@@ -109,7 +129,7 @@ theorem finish_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
   | some owner =>
       simpa only [StateT.run, finish_source setup codec index raw state owner found,
         IsTotalQueryBound, isQueryBound_map_iff] using
-        owner_uniform setup codec caps bounded raw owner state.shared
+        ownerFinish_uniform setup codec caps bounded (state.inits index) raw owner state.shared
 
 set_option backward.isDefEq.respectTransparency false in
 /-- After the optional one-time draw, the actual three signatures and optional writer retain all source work without issuing a uniform-oracle call. This is a functional primitive/query-interface fact, not zero runtime. -/
@@ -154,8 +174,10 @@ theorem bundle_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
       simp only [bundle, StateT.run_bind, StateT.run_get, pure_bind, found, StateT.run_pure]
       trivial
   | some owner =>
+      have program := bundle_program_uniform setup codec index owner
+      rw [← bundleLog_fst setup codec owner.beacon.identity _ (state.inits index)] at program
       simpa only [StateT.run, bundle_source setup codec index state owner found,
-        IsTotalQueryBound, isQueryBound_map_iff] using bundle_program_uniform setup codec index owner
+        IsTotalQueryBound, isQueryBound_map_iff] using program
 
 /-- Actual Server root evaluation retains its full family history and touch while drawing at most one 64-byte Extract value. -/
 theorem server_root_uniform (hmac : PqxdhSecretInputKdf.HmacSha512) (index : Nat)
@@ -207,20 +229,11 @@ theorem accept_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
       intro result
       split <;> trivial
 
-/-- Actual response construction pays the complete native hash/tail work before either writer can fail; missing or spent pending slots remain ordinary rejection. -/
+/-- Actual response construction pays its transcript digest and the complete native hash/tail work before either writer can fail; missing or spent pending slots remain ordinary rejection. -/
 theorem build_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (index : Nat) (payload : Option Pqxdh.Bytes) (state : NativeState KemSK) :
-    ((nativeBuild setup codec checks index payload).run state).IsTotalQueryBound 64 := by
-  simp only [nativeBuild, StateT.run_bind]
-  simp only [StateT.run, nativeGet, localState, pure_bind]
-  cases found : state.2.pending index with
-  | none => trivial
-  | some token =>
-      change ((nativeCoins _ >>= _).run state).IsTotalQueryBound 64
-      simp only [StateT.run_bind, StateT.run_pure]
-      simp only [StateT.run, nativeCoins, nativeSet, localState, map_pure, bind_pure_comp]
-      simpa only [StateT.run, IsTotalQueryBound, isQueryBound_map_iff] using
-        PqxdhServerAuthTailCosts.build_uniform setup codec checks token.pending token.root payload state.2.server ([], state.2.ctx)
+    ((nativeBuild setup codec checks index payload).run state).IsTotalQueryBound 128 :=
+  PqxdhServerAuthNativeUniformCosts.native_build_uniform setup codec checks index payload state
 
 /-- The public HMAC callback keeps off-domain evaluation real and charges one possible shared Extract-table draw on the admitted slice. -/
 theorem public_hmac_uniform (setup : Setup baseSpec KemSK) (seed : IdentitySeed) (scalar : ScalarBytes)
@@ -343,3 +356,8 @@ end BeaconcryptCore.Computational.PqxdhRegistrationSchedule
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhRegistrationSchedule.hash_uniform
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationSchedule.ownerFinish_uniform' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationSchedule.ownerFinish_uniform

@@ -24,7 +24,7 @@ variable [material : PublicWrapperPlatform.Material] [platform : PublicWrapperPl
 variable [ed : AdapterInitEdPrimitive.Operations]
 variable (coins : QueryImpl unifSpec (StateT P ProbComp))
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (view : AdapterPublicWrapperState.MaterialView source KemSK)
 local notation "M"=>StateT (Backend n KemSK) (StateT P ProbComp)
 
@@ -40,7 +40,6 @@ variable (previousChildren : ChildOperations (RustT (StateT (Backend n KemSK) (S
 theorem material_source {R : Type} (self : beaconcrypt_public_wrapper.beacon.Beacon) (rng : R)
     (owner : RegistrationNativeBeaconFrontend.Owner source)
     (secret : view.edSecret self.identity_key.secret_key=owner.identitySeed)
-    (credential : view.mldsa self.authentication.identity=owner.mldsa)
     (scalar : PqxdhJointGapDh.ScalarBytes)
     (prekey oneTime : beaconcrypt_crypto.crypto_kx.KeyPair) (kem : beaconcrypt_crypto.crypto_kem.mlkem768.KeyPair) :
     let : LocalOperations (RustT M):=locals coins setup checks representation created view previousLocal
@@ -50,21 +49,21 @@ theorem material_source {R : Type} (self : beaconcrypt_public_wrapper.beacon.Bea
       (leaves coins setup checks representation created view previousLocal previousCrypto failure writer previousChildren self)
       scalar prekey oneTime kem rng=
       AdapterPublicBundlePublication.install self prekey oneTime kem rng <$>
-        RegistrationNativePlatformPublicAdapterBundlePublication.program coins setup checks representation created writer owner.mldsa owner.identitySeed
+        RegistrationNativePlatformPublicAdapterBundlePublication.program coins setup checks representation created writer owner.identitySeed
           ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-          ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin owner.mldsa.publicKey := by
+          ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin := by
   let : LocalOperations (RustT M):=locals coins setup checks representation created view previousLocal
   let : CryptoOperations (RustT M):=crypto setup view previousCrypto failure
   let : ChildOperations (RustT M):=children coins setup checks representation created writer previousChildren
   dsimp only
   unfold AdapterPublicBundleMaterial.withMaterial
   rw [RegistrationNativePlatformPublicAdapterBundleDictionaries.outgoing_source coins setup checks representation created view
-    previousLocal previousCrypto failure writer previousChildren self owner secret credential]
+    previousLocal previousCrypto failure writer previousChildren self owner secret]
   unfold RegistrationNativePlatformPublicAdapterBundlePublication.program
   rw [RegistrationNativePlatformWriter.begin_interpret]
   simp only [bind_pure_comp]
   simp only [RegistrationNativePlatformPublicAdapterBundlePublication.handler]
-  have encoded : (fun signed : registration.SignedInitView=>
+  have encoded : (fun signed : registration.InitView=>
       (ChildOperations.encodeInit (m:=RustT M) (AdapterPublicBundleBody.packet signed)).run)=
       (fun signed=>simulateQ (fun query=>StateT.lift (writer query))
         (AdapterRegistrationWriterRequestExtraction.encodeInit (E:=E) (m:=AdapterRegistrationWriterRequestMonad.Program E)
@@ -92,8 +91,8 @@ theorem fresh {R Error : Type} (generator : rand_core.TryCryptoRng R Error)
       failure writer previousChildren generator self rng=
       (fun result=>AdapterPublicBundlePublication.install self prekey (contract.realize result.1 rng).1 kem
         (contract.realize result.1 rng).2 result.2) <$>
-        RegistrationNativePlatformPublicAdapterBundlePublication.freshProgram coins setup checks representation created writer owner.mldsa owner.identitySeed
-          ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner) owner.pin owner.mldsa.publicKey := by
+        RegistrationNativePlatformPublicAdapterBundlePublication.freshProgram coins setup checks representation created writer owner.identitySeed
+          ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner) owner.pin := by
   let observedCrypto:=RegistrationNativePlatformPublicAdapterUniformObserver.operations
     (RegistrationNativePlatformPublicAdapterBundleGeneration.backendUniform (n:=n) coins setup checks representation created) original
   let : LocalOperations (RustT M):=locals coins setup checks representation created view previousLocal
@@ -117,7 +116,7 @@ theorem fresh {R Error : Type} (generator : rand_core.TryCryptoRng R Error)
     (leaves coins setup checks representation created view previousLocal observedCrypto failure writer previousChildren self)
     scalar prekey (contract.realize scalar rng).1 kem (contract.realize scalar rng).2=_
   simpa only [Functor.map_map] using material_source coins setup checks representation created view previousLocal observedCrypto failure writer previousChildren
-    self (contract.realize scalar rng).2 owner related.identitySecret related.mldsa scalar prekey (contract.realize scalar rng).1 kem
+    self (contract.realize scalar rng).2 owner related.identitySecret scalar prekey (contract.realize scalar rng).1 kem
 
 local notation "Native"=>RegistrationNativeExperiment.State n KemSK source
 local notation "CutM"=>StateT (RegistrationNativePlatformCutJournal.State Native) (StateT P ProbComp)
@@ -128,7 +127,7 @@ theorem fresh_projection {R Error : Type} (generator : rand_core.TryCryptoRng R 
     (previousNativeLocal : LocalOperations (RustT CutM))
     (self : beaconcrypt_public_wrapper.beacon.Beacon) (rng : R)
     (index : Nat) (owner : RegistrationNativeBeaconFrontend.Owner source)
-    (other : QueryImpl AdapterInitAuthenticationRequestMonad.Spec CutM)
+    (other : QueryImpl AdapterPublicWrapperChildren.AuthenticationSpec CutM)
     (recording : QueryImpl AdapterRecordRequestMonad.Spec CutM)
     (control : pqxdh.BeaconFresh) (prekey : beaconcrypt_crypto.crypto_kx.KeyPair) (kem : beaconcrypt_crypto.crypto_kem.mlkem768.KeyPair)
     (stored : self.state=.Fresh control prekey kem) (phase : owner.phase=.fresh)
@@ -157,8 +156,7 @@ theorem fresh_projection {R Error : Type} (generator : rand_core.TryCryptoRng R 
   let : ChildOperations (RustT CutM):=AdapterPublicBundleSourceExecution.children coins setup checks representation created writer index owner other recording
   let nativeGeneration:=RegistrationNativePlatformPublicAdapterBundleInstrumentation.generation_native (n:=n)
     coins setup checks representation created writer view index owner self failure generator contract
-  have sourceLaw:=(RegistrationNativePlatformExtractedSdkBundle.fresh_complete coins setup checks representation created writer index owner failure
-    (RegistrationNativePlatformPublicAdapterBundleInstrumentation.fallback (n:=n) coins setup checks representation created owner) other recording self view
+  have sourceLaw:=(RegistrationNativePlatformExtractedSdkBundle.fresh_complete coins setup checks representation created writer index owner failure other recording self view
     (RegistrationNativePlatformPublicAdapterBundleInstrumentation.getters coins setup checks representation created writer view index owner self previousNativeLocal nativeCrypto failure)
     (RegistrationNativePlatformPublicAdapterBundleInstrumentation.leaves coins setup checks representation created writer view index owner self previousNativeLocal nativeCrypto failure)
     control prekey kem generator rng nativeGeneration stored phase before previous related selected).1

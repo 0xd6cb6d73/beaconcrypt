@@ -83,15 +83,13 @@ pub fn encoded_frame_len(sequence: u64, sender: u64, ciphertext_length: usize) -
 		.finish()
 }
 
-/// Exact request size, in identity/prekey/one-time/PQ/ML-key/signature order.
-pub fn encoded_init_len(lengths: [usize; 6]) -> Option<usize> {
+/// Exact request size, in identity/prekey/one-time/PQ order.
+pub fn encoded_init_len(lengths: [usize; 4]) -> Option<usize> {
 	CborLength::new()
 		.bytes(lengths[0])
 		.bytes(lengths[1])
 		.bytes(lengths[2])
 		.bytes(lengths[3])
-		.bytes(lengths[4])
-		.bytes(lengths[5])
 		.finish()
 }
 

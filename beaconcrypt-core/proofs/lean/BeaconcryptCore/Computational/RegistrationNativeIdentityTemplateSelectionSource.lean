@@ -87,8 +87,10 @@ theorem initialized {n : Nat} {I KemSK : Type} {base : OracleSpec I} {source : R
     (reached : some initial ∈ support (RegistrationNativeExperiment.start setup source ensureInit identityIndex serverKeyId)) :
     Ready selected (({} : Policy), (⟨PqxdhDynamicIdentityPool.initialState,
       (RegistrationNativeWorldCache.cache initial.state, [PqxdhRefinement.absBytes initial.credential.publicKey]), none, none, none⟩ : State)) := by
-  exact ⟨RegistrationNativeIdentityCensorPolicySource.initialized selected _, rfl,
-    RegistrationNativeIdentityCensorCacheProvenance.initialized setup ensureInit identityIndex serverKeyId initial reached⟩
+  have empty := RegistrationNativeIdentityCensorCacheProvenance.initialized setup ensureInit identityIndex serverKeyId initial reached
+  refine ⟨RegistrationNativeIdentityCensorPolicySource.initialized selected _, rfl, ?_⟩
+  intro bytes present
+  exact absurd (empty bytes present) List.not_mem_nil
 
 
 private theorem observe_fresh (selected : Nat) (wanted : Pqxdh.Bytes) (request : Old.Domain)

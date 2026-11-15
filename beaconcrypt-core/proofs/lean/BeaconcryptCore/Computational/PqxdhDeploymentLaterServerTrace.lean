@@ -7,6 +7,7 @@ import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBridge
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhDeploymentLaterServerTrace
 open PqxdhServerAuthExperiment PqxdhServerAuthNative PqxdhJointIdentity PqxdhJointGapDh
 open PqxdhDeploymentQuiet (kemReveal)
@@ -138,32 +139,55 @@ theorem kem_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) 
           · rename_i entry _
             simp only [support_map, Set.mem_image] at supported
             obtain ⟨finished, finishedMember, rfl⟩ := supported
-            refine OracleComp.simulateQ_run_preserves_inv_of_query (spec' := unifSpec) _
-              (fun current => KemQuiet current.1) ?_ _ (state.pool, state.shared) quiet finished finishedMember
-            intro query current currentQuiet reached member
-            rcases query with query | query
-            · simp only [PqxdhRegistrationJointFinish.annotated, PqxdhRegistrationJointFinish.onPool, StateT.run,
-                support_map, Set.mem_image] at member
-              obtain ⟨inner, innerMember, rfl⟩ := member
-              cases query with
-              | decapsulate ciphertext key =>
-                  simp only [PqxdhRegistrationJointPreparation.annotated, support_map, Set.mem_image] at innerMember
-                  obtain ⟨_, _, rfl⟩ := innerMember
-                  unfold KemQuiet at currentQuiet ⊢
-                  simp [PqxdhLiveKemBirth.record, kemReveal, currentQuiet]
-              | dhIdentity seed point =>
-                  simp only [PqxdhRegistrationJointPreparation.annotated, support_pure, Set.mem_singleton_iff]
-                    at innerMember
-                  subst innerMember
-                  exact currentQuiet
-              | _ =>
-                  simp only [PqxdhRegistrationJointPreparation.annotated, support_map, Set.mem_image] at innerMember
-                  obtain ⟨_, _, rfl⟩ := innerMember
-                  exact currentQuiet
-            · simp only [PqxdhRegistrationJointFinish.annotated, PqxdhRegistrationJointFinish.onNative, StateT.run,
-                support_map, Set.mem_image] at member
-              obtain ⟨_, _, rfl⟩ := member
-              exact currentQuiet
+            have nativeQuiet (binding : beaconcrypt_core.session.CompletedRegistrationBinding)
+                (before : PqxdhRegistrationJointFinish.State KemSK) (beforeQuiet : KemQuiet before.1)
+                (finished : (Option Pqxdh.Bytes × PqxdhRegistrationSchedule.Owner KemSK) × PqxdhRegistrationJointFinish.State KemSK)
+                (member : finished ∈ support ((simulateQ (PqxdhRegistrationJointFinish.annotated setup codec entry.identityIndex entry.kemIndex)
+                  (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := binding) codec.frameRead raw entry.owner)).run before)) :
+                KemQuiet finished.2.1 := by
+              refine OracleComp.simulateQ_run_preserves_inv_of_query (spec' := unifSpec) _
+                (fun current => KemQuiet current.1) ?_ _ before beforeQuiet finished member
+              intro query current currentQuiet reached member
+              rcases query with query | query
+              · simp only [PqxdhRegistrationJointFinish.annotated, PqxdhRegistrationJointFinish.onPool, StateT.run,
+                  support_map, Set.mem_image] at member
+                obtain ⟨inner, innerMember, rfl⟩ := member
+                cases query with
+                | decapsulate ciphertext key =>
+                    simp only [PqxdhRegistrationJointPreparation.annotated, support_map, Set.mem_image] at innerMember
+                    obtain ⟨_, _, rfl⟩ := innerMember
+                    unfold KemQuiet at currentQuiet ⊢
+                    simp [PqxdhLiveKemBirth.record, kemReveal, currentQuiet]
+                | dhIdentity seed point =>
+                    simp only [PqxdhRegistrationJointPreparation.annotated, support_pure, Set.mem_singleton_iff]
+                      at innerMember
+                    subst innerMember
+                    exact currentQuiet
+                | _ =>
+                    simp only [PqxdhRegistrationJointPreparation.annotated, support_map, Set.mem_image] at innerMember
+                    obtain ⟨_, _, rfl⟩ := innerMember
+                    exact currentQuiet
+              · simp only [PqxdhRegistrationJointFinish.annotated, PqxdhRegistrationJointFinish.onNative, StateT.run,
+                  support_map, Set.mem_image] at member
+                obtain ⟨_, _, rfl⟩ := member
+                exact currentQuiet
+            unfold PqxdhRegistrationJointFinish.annotatedFinish at finishedMember
+            cases phase : entry.owner.beacon.phase <;>
+              simp only [phase] at finishedMember
+            case initSent control prekey oneTime kem =>
+              cases retained : state.inits address <;> cases decoded : responseOf codec raw <;>
+                simp only [retained, decoded] at finishedMember
+              case some.some init response =>
+                change finished ∈ support (StateT.run _ (state.pool, state.shared)) at finishedMember
+                rw [StateT.run_bind, mem_support_bind_iff] at finishedMember
+                obtain ⟨hashed, hashMember, member⟩ := finishedMember
+                simp only [PqxdhRegistrationJointFinish.onNative, StateT.run, support_map, Set.mem_image] at hashMember
+                obtain ⟨value, _, rfl⟩ := hashMember
+                exact nativeQuiet (PqxdhTranscriptAd.completedOf control value.1) (state.pool, value.2) quiet finished member
+              all_goals subst finished
+              all_goals exact quiet
+            all_goals subst finished
+            all_goals exact quiet
       | hmac key message => exact sharedQuiet _ result supported
       | hash bytes => exact sharedQuiet _ result supported
       | reveal keyId => exact sharedQuiet _ result supported

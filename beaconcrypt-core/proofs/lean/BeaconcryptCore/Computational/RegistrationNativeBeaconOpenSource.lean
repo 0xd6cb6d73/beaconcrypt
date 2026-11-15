@@ -38,7 +38,7 @@ theorem record_open (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wi
 
 /-- Every reached actual lowered opening reply has those exact source operands and result. -/
 theorem reply (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (request : record.AeadRequest) (before after : Local n KemSK source)
     (answer : RegistrationRecordPrimitives.Spec.Range (.openAead request))
     (supported : (answer, after) ∈ support ((lower setup checks representation created

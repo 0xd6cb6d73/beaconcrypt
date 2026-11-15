@@ -53,6 +53,14 @@ private theorem capability_stable (query : PqxdhRecordLiftInterface.Capability n
     mask, RegistrationNativeKemWorldUniform.mask] at law ⊢
   convert law using 1
 
+private theorem adHash_stable (pending : registration.ServerAdHash) :
+    Stable (mask (n := n) (Auxiliary := Auxiliary)) (RegistrationWorldServerCompletion.adHash pending) := by
+  unfold RegistrationWorldServerCompletion.adHash
+  cases pending.request with
+  | fail error | div => exact pure_stable mask (fun _ => rfl) _
+  | ok request =>
+      exact bind_stable mask _ _ (capability_stable _) (fun _ => pure_stable mask (fun _ => rfl) _)
+
 private theorem signing_stable
     (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
     (encode : registration.SignedResponseView → core.option.Option Encoded)
@@ -148,10 +156,18 @@ private theorem occupancy_stable (setup : Setup base KemSK) (codec : Codec Reade
           simp only [RegistrationServerSdkSource.afterOccupancy, action]
           exact pure_stable RegistrationNativeKemServerState.maskServer (fun _ => rfl) _
       | Ok pending =>
-          simp only [RegistrationServerSdkSource.afterOccupancy, action]
-          split
-          · exact initial_stable setup codec sign encode control pending
-          · exact pure_stable RegistrationNativeKemServerState.maskServer (fun _ => rfl) _
+          simp only [RegistrationServerSdkSource.afterOccupancy, action, RegistrationServerSdkSource.adHash]
+          apply bind_stable _ _ _ (world_stable _ (adHash_stable pending))
+          intro hashed
+          cases hashed with
+          | fail error | div => exact pure_stable RegistrationNativeKemServerState.maskServer (fun _ => rfl) _
+          | ok reply => cases reply with
+            | Err previous => exact pure_stable RegistrationNativeKemServerState.maskServer (fun _ => rfl) _
+            | Ok initial =>
+                dsimp only
+                split
+                · exact initial_stable setup codec sign encode control initial
+                · exact pure_stable RegistrationNativeKemServerState.maskServer (fun _ => rfl) _
 
 private theorem complete_input (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)

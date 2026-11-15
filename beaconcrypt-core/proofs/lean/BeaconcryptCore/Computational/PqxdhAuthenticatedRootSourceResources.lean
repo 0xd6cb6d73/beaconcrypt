@@ -11,6 +11,8 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhAuthenticatedRootSourceResources
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhPhase2SourceAux PqxdhKemIndCca PqxdhPrivateKemSource PqxdhJointKdfGame
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhPhase1AcceptanceOracle
 open PqxdhInitializerSecrecy PqxdhKemCorrectnessError PqxdhChallengeSecretRouting
@@ -72,13 +74,13 @@ theorem nativeFinish_uniform
     (localBound : ∀ query state, ((localImpl query).run state).IsTotalQueryBound qLocal)
     (decode : RawCtxReceive.FrameDecoder) (query : (PqxdhPhase2LiveFinish.FinishSpec B).Domain)
     (state : PqxdhPhase2PostScheduler.State (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B) count) :
-    ((PqxdhPhase2PostScheduler.nativeFinish attachedVerify primitives count source localImpl baseImpl kem secret decode query).run state).IsTotalQueryBound (69 * max qLocal 64) := by
+    ((PqxdhPhase2PostScheduler.nativeFinish (completedBinding := completedBinding) attachedVerify primitives count source localImpl baseImpl kem secret decode query).run state).IsTotalQueryBound (69 * max qLocal 64) := by
   cases query with
   | finish index raw =>
     simp only [PqxdhPhase2PostScheduler.nativeFinish, StateT.run, IsTotalQueryBound]
     apply (isQueryBound_map_iff _ _ _ _ _).2
     exact (isQueryBoundP_true_iff _ _).1
-      (PqxdhBeaconPhase2Bounds.native_interpreted_bound
+      (PqxdhBeaconPhase2Bounds.native_interpreted_bound (completedBinding := completedBinding)
         (PqxdhPhase2PostScheduler.native attachedVerify primitives count source localImpl baseImpl kem secret)
         (fun _ => True) (max qLocal 64)
         (fun query state => (isQueryBoundP_true_iff _ _).2
@@ -109,7 +111,7 @@ theorem actual_step_uniform
     (baseBound : ∀ query, (baseImpl query).IsTotalQueryBound uBase)
     (query : (PqxdhPhase2SourceScheduler.Spec baseSpec S B).Domain)
     (state : PqxdhPhase2PostScheduler.State (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B) count) :
-    ((PqxdhPhase2PostScheduler.actual attachedVerify primitives count source localImpl writer senderId route decode baseImpl kem secret challenge query).run state).IsTotalQueryBound
+    ((PqxdhPhase2PostScheduler.actual (completedBinding := completedBinding) attachedVerify primitives count source localImpl writer senderId route decode baseImpl kem secret challenge query).run state).IsTotalQueryBound
       (postCost qLocal uBase (PqxdhPhase2SourceSchedulerBounds.classify (baseSpec := baseSpec) query)) := by
   rcases query with ((query | query) | query)
   · have old := PqxdhProtocolQueryBounds.source_uniform_step source writer senderId route decode query state.1
@@ -144,7 +146,7 @@ theorem actual_step_uniform
       change (simulateQ (kemAmbientImpl baseImpl)
         (if ciphertext = challenge then pure none else kem.decaps secret ciphertext)).IsTotalQueryBound 0
       split <;> simp [functional.exact, IsTotalQueryBound]
-  · exact nativeFinish_uniform attachedVerify primitives count source localImpl baseImpl kem functional secret qLocal localBound decode query state
+  · exact nativeFinish_uniform (completedBinding := completedBinding) attachedVerify primitives count source localImpl baseImpl kem functional secret qLocal localBound decode query state
 
 /-- Every adaptive post continuation pays the sum of its actual per-class source costs on all reply branches. -/
 theorem actual_post_uniform {Result : Type}
@@ -162,15 +164,15 @@ theorem actual_post_uniform {Result : Type}
     (budget : PqxdhPhase2SourceSchedulerBounds.Budget)
     (bounded : PqxdhPhase2SourceSchedulerBounds.Bounded client budget)
     (state : PqxdhPhase2PostScheduler.State (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B) count) :
-    ((simulateQ (PqxdhPhase2PostScheduler.actual attachedVerify primitives count source localImpl writer senderId route decode baseImpl kem secret challenge) client).run state).IsTotalQueryBound
+    ((simulateQ (PqxdhPhase2PostScheduler.actual (completedBinding := completedBinding) attachedVerify primitives count source localImpl writer senderId route decode baseImpl kem secret challenge) client).run state).IsTotalQueryBound
       (postBill qLocal uBase budget) := by
   exact (isQueryBoundP_true_iff _ _).1
     (FinitePartitionQueryBounds.weighted_bound (PqxdhPhase2SourceSchedulerBounds.classify (baseSpec := baseSpec))
       (postCost qLocal uBase) budget
-      (PqxdhPhase2PostScheduler.actual attachedVerify primitives count source localImpl writer senderId route decode baseImpl kem secret challenge)
+      (PqxdhPhase2PostScheduler.actual (completedBinding := completedBinding) attachedVerify primitives count source localImpl writer senderId route decode baseImpl kem secret challenge)
       (fun _ => True) client bounded
       (fun query state => (isQueryBoundP_true_iff _ _).2
-        (actual_step_uniform attachedVerify primitives count source localImpl writer senderId route decode baseImpl kem functional secret challenge qLocal uBase localBound baseBound query state)) state)
+        (actual_step_uniform (completedBinding := completedBinding) attachedVerify primitives count source localImpl writer senderId route decode baseImpl kem functional secret challenge qLocal uBase localBound baseBound query state)) state)
 
 /-- Scalar accounting retains native record work, arbitrary source creation, public/base calls and every separate finish attempt. -/
 theorem postBill_eq (qLocal uBase : Nat) (budget : PqxdhPhase2SourceSchedulerBounds.Budget) :
@@ -207,15 +209,15 @@ variable {setup : StatefulPhase1Setup baseSpec}
 include functional localBound baseBound auxBound postBound in
 /-- The original accepted builder and complete actual native post execution are charged without requiring successful acceptance, good decapsulation or a security-game equality. -/
 theorem nativeAccepted_uniform
-    (secret : KemSK) (prepared : Prepared setup (driver env.toDriverEnvironment program).State) (ready : Ready) :
-    (nativeAccepted env baseImpl kem attachedVerify primitives program post secret prepared ready).IsTotalQueryBound
+    (secret : KemSK) (prepared : Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State) (ready : Ready) :
+    (nativeAccepted (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post secret prepared ready).IsTotalQueryBound
       ((64 + 5 * qAux) + postBill qLocal uBase budget) := by
   apply isTotalQueryBound_bind
-    (PqxdhProtocolQueryBounds.build_uniform env.source env.recordWriter env.aux qAux auxBound
+    (PqxdhProtocolQueryBounds.build_uniform (associatedData := associatedData) env.source env.recordWriter env.aux qAux auxBound
       env.senderId env.index env.metadata ready prepared.1.context.selection.2)
   intro result
   simpa only [IsTotalQueryBound, isQueryBound_map_iff] using
-    actual_post_uniform attachedVerify primitives 1 env.source env.localImpl env.recordWriter env.senderId env.route env.decode
+    actual_post_uniform (completedBinding := completedBinding) attachedVerify primitives 1 env.source env.localImpl env.recordWriter env.senderId env.route env.decode
       baseImpl kem functional secret ready.ciphertext qLocal uBase localBound baseBound _ budget
       (postBound prepared.1.context.selection.1 result.1) (result.2, prepared.2)
 
@@ -228,11 +230,11 @@ include functional localBound baseBound postBound in
 /-- The original unblocked completed observer retains all native/source work, even when target encapsulation or root validation fails. -/
 theorem observe_uniform
     (secret : KemSK) (output : Option (PqxdhPrivateCandidateAcceptance.Outcome
-      (PqxdhPrivatePhase1Prefix.Retained setup Unit (driver env.toDriverEnvironment program).State)))
+      (PqxdhPrivatePhase1Prefix.Retained setup Unit (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)))
     (execution : PqxdhSourceAuthenticatedRoot.ServerExecution) (state : BareState 1) :
     (evalKem baseImpl kem secret (PqxdhPrivateAcceptedRoot.observe env.source none attachedVerify primitives 1 setup
-      (commonObserver env program post) output execution state)).IsTotalQueryBound (commonUniformBill qLocal uBase qAux budget) := by
-  have caps := PqxdhAuthenticatedRootPrepareBounds.observe_caps env program post attachedVerify primitives
+      (commonObserver (associatedData := associatedData) (completedBinding := completedBinding) env program post) output execution state)).IsTotalQueryBound (commonUniformBill qLocal uBase qAux budget) := by
+  have caps := PqxdhAuthenticatedRootPrepareBounds.observe_caps (associatedData := associatedData) (completedBinding := completedBinding) env program post attachedVerify primitives
     qLocal localBound budget postBound qAux none output execution state
   simpa only [commonUniformBill, Nat.zero_mul, Nat.add_zero] using
     PqxdhPrivateRootGameBudgets.evalKem_uniform_bound baseImpl kem secret uBase 0 baseBound
@@ -243,11 +245,11 @@ include functional localBound baseBound auxBound postBound in
 /-- Every accepted common candidate pays its original builder and full unblocked native/source schedule. -/
 theorem acceptedObserve_uniform
     (secret : KemSK) (output : Option (PqxdhPrivateCandidateAcceptance.Outcome
-      (PqxdhPrivatePhase1Prefix.Retained setup Unit (driver env.toDriverEnvironment program).State)))
+      (PqxdhPrivatePhase1Prefix.Retained setup Unit (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)))
     (execution : Ready) (state : BareState 1) :
     (evalKem baseImpl kem secret (PqxdhPrivateAcceptedRoot.acceptedObserve env.source none attachedVerify primitives 1 setup
-      (commonObserver env program post) output execution state)).IsTotalQueryBound (commonUniformBill qLocal uBase qAux budget) := by
-  have caps := PqxdhAuthenticatedRootPrepareBounds.acceptedObserve_caps env program post attachedVerify primitives
+      (commonObserver (associatedData := associatedData) (completedBinding := completedBinding) env program post) output execution state)).IsTotalQueryBound (commonUniformBill qLocal uBase qAux budget) := by
+  have caps := PqxdhAuthenticatedRootPrepareBounds.acceptedObserve_caps (associatedData := associatedData) (completedBinding := completedBinding) env program post attachedVerify primitives
     qLocal localBound budget postBound qAux auxBound none output execution state
   simpa only [commonUniformBill, Nat.zero_mul, Nat.add_zero] using
     PqxdhPrivateRootGameBudgets.evalKem_uniform_bound baseImpl kem secret uBase 0 baseBound
@@ -261,20 +263,20 @@ def continuationBill (qLocal uBase qAux : Nat) (budget : Budget) : Nat :=
 include functional localBound baseBound auxBound postBound in
 /-- Actual optional encapsulation failure and every validation outcome retain their complete original continuation bill. -/
 theorem nativeAfterEncapsulation_uniform
-    (secret : KemSK) (prepared : Prepared setup (driver env.toDriverEnvironment program).State)
+    (secret : KemSK) (prepared : Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)
     (ephemeral : List.Vector UInt8 32) (encapsulated : Option (MlKem768Ciphertext × MlKemSharedSecret)) :
-    (nativeAfterEncapsulation env baseImpl kem attachedVerify primitives program post secret prepared ephemeral encapsulated).IsTotalQueryBound
+    (nativeAfterEncapsulation (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post secret prepared ephemeral encapsulated).IsTotalQueryBound
       (continuationBill qLocal uBase qAux budget) := by
   unfold nativeAfterEncapsulation
   cases encapsulated with
   | none =>
-    exact (observe_uniform env baseImpl kem functional attachedVerify primitives program post qLocal uBase qAux localBound baseBound budget postBound secret _ _ _).mono (Nat.le_max_left _ _)
+    exact (observe_uniform (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem functional attachedVerify primitives program post qLocal uBase qAux localBound baseBound budget postBound secret _ _ _).mono (Nat.le_max_left _ _)
   | some pair =>
     rcases pair with ⟨ciphertext, shared⟩
     dsimp only
     split
-    · exact (observe_uniform env baseImpl kem functional attachedVerify primitives program post qLocal uBase qAux localBound baseBound budget postBound secret _ _ _).mono (Nat.le_max_left _ _)
-    · exact (nativeAccepted_uniform env baseImpl kem functional attachedVerify primitives program post qLocal uBase qAux localBound baseBound auxBound budget postBound secret prepared _).mono (Nat.le_max_right _ _)
+    · exact (observe_uniform (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem functional attachedVerify primitives program post qLocal uBase qAux localBound baseBound budget postBound secret _ _ _).mono (Nat.le_max_left _ _)
+    · exact (nativeAccepted_uniform (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem functional attachedVerify primitives program post qLocal uBase qAux localBound baseBound auxBound budget postBound secret prepared _).mono (Nat.le_max_right _ _)
 
 include functional localBound baseBound auxBound postBound in
 /-- Common candidates execute the actual optional native encapsulator and all rejection/acceptance branches under their original unblocked interpreter. -/
@@ -283,34 +285,34 @@ theorem allCandidateCommon_uniform
     (ephemeralBound : (simulateQ (kemAmbientImpl baseImpl) env.ephemeralGen).IsTotalQueryBound uEphemeral)
     (nativeBound : ∀ key, (simulateQ (kemAmbientImpl baseImpl) (env.native.encaps key)).IsTotalQueryBound uNative)
     (secret : KemSK) (output : Option (PqxdhPrivateCandidateAcceptance.Outcome
-      (PqxdhPrivatePhase1Prefix.Retained setup Unit (driver env.toDriverEnvironment program).State)))
+      (PqxdhPrivatePhase1Prefix.Retained setup Unit (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)))
     (state : BareState 1) :
     (evalKem baseImpl kem secret (PqxdhPrivateAcceptedRoot.allCandidateCommon env.source kem env.native attachedVerify primitives 1 setup
-      (commonObserver env program post) output state env.server env.application env.ephemeralGen)).IsTotalQueryBound
+      (commonObserver (associatedData := associatedData) (completedBinding := completedBinding) env program post) output state env.server env.application env.ephemeralGen)).IsTotalQueryBound
       (uEphemeral + (uNative + commonUniformBill qLocal uBase qAux budget)) := by
   unfold PqxdhPrivateAcceptedRoot.allCandidateCommon
   cases output.bind (·.accepted) with
   | none =>
-    exact (observe_uniform env baseImpl kem functional attachedVerify primitives program post qLocal uBase qAux localBound baseBound budget postBound secret _ _ _).mono (by omega)
+    exact (observe_uniform (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem functional attachedVerify primitives program post qLocal uBase qAux localBound baseBound budget postBound secret _ _ _).mono (by omega)
   | some selected =>
     rcases selected with ⟨identity, keys⟩
     dsimp only
     unfold PqxdhPrivateAcceptedRoot.acceptedCommon
     split
-    · exact (observe_uniform env baseImpl kem functional attachedVerify primitives program post qLocal uBase qAux localBound baseBound budget postBound secret _ _ _).mono (by omega)
+    · exact (observe_uniform (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem functional attachedVerify primitives program post qLocal uBase qAux localBound baseBound budget postBound secret _ _ _).mono (by omega)
     · simp only [evalKem_bind, ← PqxdhPrivateRootQueryBounds.ccaAmbient_eq_lift, evalKem_ambient]
       apply isTotalQueryBound_bind ephemeralBound
       intro ephemeral
       apply isTotalQueryBound_bind (nativeBound keys.pqKey)
       intro encapsulated
       cases encapsulated with
-      | none => exact observe_uniform env baseImpl kem functional attachedVerify primitives program post qLocal uBase qAux localBound baseBound budget postBound secret _ _ _
+      | none => exact observe_uniform (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem functional attachedVerify primitives program post qLocal uBase qAux localBound baseBound budget postBound secret _ _ _
       | some pair =>
         rcases pair with ⟨ciphertext, shared⟩
         dsimp only
         split
-        · exact observe_uniform env baseImpl kem functional attachedVerify primitives program post qLocal uBase qAux localBound baseBound budget postBound secret _ _ _
-        · exact acceptedObserve_uniform env baseImpl kem functional attachedVerify primitives program post qLocal uBase qAux localBound baseBound auxBound budget postBound secret _ _ _
+        · exact observe_uniform (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem functional attachedVerify primitives program post qLocal uBase qAux localBound baseBound budget postBound secret _ _ _
+        · exact acceptedObserve_uniform (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem functional attachedVerify primitives program post qLocal uBase qAux localBound baseBound auxBound budget postBound secret _ _ _
 
 include functional localBound baseBound auxBound postBound in
 /-- The original all-candidate next action pays actual optional encapsulation before its complete native/common continuation. -/
@@ -318,8 +320,8 @@ theorem nativeNext_uniform
     (uEphemeral uNative : Nat)
     (ephemeralBound : (simulateQ (kemAmbientImpl baseImpl) env.ephemeralGen).IsTotalQueryBound uEphemeral)
     (nativeBound : ∀ key, (simulateQ (kemAmbientImpl baseImpl) (env.native.encaps key)).IsTotalQueryBound uNative)
-    (secret : KemSK) (prepared : Prepared setup (driver env.toDriverEnvironment program).State) :
-    (nativeNext env baseImpl kem attachedVerify primitives program post secret prepared).IsTotalQueryBound
+    (secret : KemSK) (prepared : Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State) :
+    (nativeNext (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post secret prepared).IsTotalQueryBound
       (uEphemeral + (uNative + continuationBill qLocal uBase qAux budget)) := by
   unfold nativeNext
   split
@@ -327,8 +329,8 @@ theorem nativeNext_uniform
     intro ephemeral
     apply isTotalQueryBound_bind (nativeBound _)
     intro encapsulated
-    exact nativeAfterEncapsulation_uniform env baseImpl kem functional attachedVerify primitives program post qLocal uBase qAux localBound baseBound auxBound budget postBound secret prepared ephemeral encapsulated
-  · exact (allCandidateCommon_uniform env baseImpl kem functional attachedVerify primitives program post qLocal uBase qAux localBound baseBound auxBound budget postBound uEphemeral uNative ephemeralBound nativeBound secret _ _).mono (by
+    exact nativeAfterEncapsulation_uniform (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem functional attachedVerify primitives program post qLocal uBase qAux localBound baseBound auxBound budget postBound secret prepared ephemeral encapsulated
+  · exact (allCandidateCommon_uniform (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem functional attachedVerify primitives program post qLocal uBase qAux localBound baseBound auxBound budget postBound uEphemeral uNative ephemeralBound nativeBound secret _ _).mono (by
       exact Nat.add_le_add_left (Nat.add_le_add_left (Nat.le_max_left _ _) _) _)
 
 include functional localBound baseBound auxBound postBound in
@@ -347,7 +349,7 @@ theorem actual_uniform
       PqxdhJointPhase1AcceptanceComposition.IsSigning) 0)
     (noCreate : ∀ reply, (program.main reply).IsQueryBoundP (ForwardedSource (baseSpec := baseSpec)
       PqxdhPrivatePhase1Prefix.Creating) 0) :
-    (actual env baseImpl kem attachedVerify primitives program post).IsTotalQueryBound
+    (actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post).IsTotalQueryBound
       ((32 + ((uPrekey + (uKeygen + uOneTime)) +
         (2 * (qWrite + PqxdhPhase2SourceSchedulerBounds.bill qLocal prefixBudget) +
           uBase * (qWrite + PqxdhPhase2SourceSchedulerBounds.bill qLocal prefixBudget)))) +
@@ -355,14 +357,14 @@ theorem actual_uniform
   unfold actual PqxdhGeneratedNativeContinuation.nativeContinued
   apply isTotalQueryBound_bind
   · simpa only [Nat.zero_mul, Nat.add_zero] using
-      PqxdhPhase2GeneratedDriverResources.program_uniform env.toDriverEnvironment program attachedVerify primitives 1
+      PqxdhPhase2GeneratedDriverResources.program_uniform (completedBinding := completedBinding) env.toDriverEnvironment program attachedVerify primitives 1
         baseImpl kem uBase 0 baseBound (fun secret ciphertext => by simp [functional.exact, IsTotalQueryBound])
         uPrekey uKeygen uOneTime prekeyBound keygenBound oneTimeBound qWrite writerBound qLocal localBound
         prefixBudget prefixBound noSign noCreate
   · intro stopped
     cases stopped.1 with
     | none => trivial
-    | some output => exact nativeNext_uniform env baseImpl kem functional attachedVerify primitives program post qLocal uBase qAux localBound baseBound auxBound budget postBound uEphemeral uNative ephemeralBound nativeBound output.context.generated.secret _
+    | some output => exact nativeNext_uniform (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem functional attachedVerify primitives program post qLocal uBase qAux localBound baseBound auxBound budget postBound uEphemeral uNative ephemeralBound nativeBound output.context.generated.secret _
 
 end BeaconcryptCore.Computational.PqxdhAuthenticatedRootSourceResources
 

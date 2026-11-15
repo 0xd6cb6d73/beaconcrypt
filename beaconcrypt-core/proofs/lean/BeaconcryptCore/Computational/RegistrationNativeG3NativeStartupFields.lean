@@ -2,11 +2,12 @@
 import BeaconcryptCore.Computational.RegistrationNativeG3MaterializedStartup
 import BeaconcryptCore.Computational.RegistrationNativeSecretWordMessage
 
-/-! Actual effectful native startup supplies the cold original frontend and an unused role map on the same reached World. Its successful output still contains the literal ML-pin hash cache. These facts are derived from the original constructor/import/hash AST and do not reset private World state. -/
+/-! Actual effectful native startup supplies the cold original frontend and an unused role map on the same reached World. Server ML generation and pure fixed pin construction retain the complete reached World cache. These facts are derived from the actual constructor/import AST and do not reset private World state. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
+set_option warningAsError true
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativeG3NativeStartupFields
 open PqxdhServerAuthExperiment (Setup)
@@ -57,7 +58,7 @@ theorem start_cold (setup : Setup base KemSK) (source : RegistrationNativeMldsa.
       | none => simp only [sampled, mem_support_pure_iff] at continued; cases continued
       | some credential =>
           simp only [sampled, mem_support_bind_iff] at continued
-          obtain ⟨installed, _installed, digest, _hashed, returned⟩ := continued
+          obtain ⟨installed, _installed, returned⟩ := continued
           simp only [mem_support_pure_iff, Option.some.injEq] at returned
           cases returned
           exact ⟨rfl, rfl, rfl⟩
@@ -146,10 +147,7 @@ private theorem start_allowed (setup : Setup base KemSK) (source : RegistrationN
     · apply OracleComp.isQueryBoundP_bind (n := 0) (m := 0) _ _
       · simp [Allowed, isQueryBoundP_query_iff]
       · intro installed _possible
-        apply OracleComp.isQueryBoundP_bind (n := 0) (m := 0) _ _
-        · simp [effectLift, Allowed, isQueryBoundP_query_iff]
-        · intro digest _possible
-          trivial
+        trivial
 
 /-- The same actual startup result has both cold frontend fields and an untouched role-use map; the reached shared cache is retained literally. -/
 theorem initialized (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire)

@@ -100,6 +100,7 @@ theorem optional_scrub {Input State : Type} {spec : OracleSpec Input}
 
 open PqxdhServerAuthExperiment (Codec Checks)
 variable {Reader WireResponse : Type}
+variable (associatedData : PqxdhTranscriptAd.AssociatedData)
 
 /-- Every actual builder service is invariant under selected-record replacement when only its inner writer is forced to fail. Auxiliary outcomes, including the original outer writer, are unchanged. -/
 theorem compiler_scrub (replacement : CtxRomRecord)
@@ -121,9 +122,10 @@ theorem compiled_scrub {Metadata PeerMetadata Consumed : Type} (replacement : Ct
     (data : Option Pqxdh.Bytes) (metadata : PeerMetadata)
     (state : PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed)
     (before : PqxdhServerAuthBuildProgram.Log) :
-    simulateQ (scrub replacement) ((PqxdhServerAuthBuildProgram.compiled source
+    simulateQ (scrub replacement) ((PqxdhServerAuthBuildProgram.compiled associatedData source
       (referenceCodec codec) checks rest pending data metadata state).run.run before) =
-      (PqxdhServerAuthBuildProgram.compiled source (referenceCodec codec) checks rest pending data metadata state).run.run before :=
+      (PqxdhServerAuthBuildProgram.compiled associatedData source (referenceCodec codec) checks rest pending data metadata
+        state).run.run before :=
   optional_scrub replacement _ (compiler_scrub replacement source codec checks) _ before
 
 open PqxdhServerAuthExperiment PqxdhServerAuthEntryFactor PqxdhServerAuthCtxState
@@ -136,11 +138,13 @@ theorem selected_build_scrub (replacement : CtxRomRecord)
     (rest : PqxdhServerAuthCtxCalls.Residual) (session : Nat)
     (token : PqxdhServerRelatedRootConsumer.Returned) (payload : Option Pqxdh.Bytes)
     (server : ServerState) (state : Local KemSK) :
-    simulateQ (scrub replacement) ((PqxdhServerAuthCtxBuild.selected source
+    simulateQ (scrub replacement) ((PqxdhServerAuthCtxBuild.selected associatedData source
       (referenceCodec codec) checks rest session token payload server).run.run state) =
-      (PqxdhServerAuthCtxBuild.selected source (referenceCodec codec) checks rest session token payload server).run.run state := by
+      (PqxdhServerAuthCtxBuild.selected associatedData source (referenceCodec codec) checks rest session token payload
+        server).run.run state := by
   change simulateQ (scrub replacement) (PqxdhServerAuthCtxBuild.post session state <$>
-    (PqxdhServerAuthBuildProgram.compiled source (referenceCodec codec) checks rest token.pending payload () server).run.run []) = _
+    (PqxdhServerAuthBuildProgram.compiled associatedData source (referenceCodec codec) checks rest token.pending payload
+      associatedData server).run.run []) = _
   rw [simulateQ_map, compiled_scrub]
   rfl
 
@@ -157,9 +161,18 @@ theorem build_scrub (replacement : CtxRomRecord)
   cases found : state.1.1.pending session with
   | none => simp only [simulateQ_pure]
   | some token =>
-      split_ifs
-      · exact selected_build_scrub replacement source codec checks rest session token payload _ state
-      · exact quiet replacement _ (PqxdhServerAuthCtxBuildBounds.known_bills source codec checks session token payload _ state).2.2.1
+      simp only []
+      split
+      · simp only [simulateQ_pure]
+      · change simulateQ (scrub replacement) (StateT.run (PqxdhServerAuthCtxState.hash _ >>= _) state) =
+          StateT.run (PqxdhServerAuthCtxState.hash _ >>= _) state
+        rw [StateT.run_bind, simulateQ_bind,
+          quiet replacement _ (PqxdhServerAuthCtxStateBounds.hash_bills _ state).2.1]
+        refine bind_congr fun digest => ?_
+        split_ifs
+        · exact selected_build_scrub _ replacement source codec checks rest session token payload _ digest.2
+        · exact quiet replacement _
+            (PqxdhServerAuthCtxBuildBounds.known_bills _ source codec checks session token payload _ digest.2).2.2.1
 
 variable {ι : Type} {baseSpec : OracleSpec ι}
 

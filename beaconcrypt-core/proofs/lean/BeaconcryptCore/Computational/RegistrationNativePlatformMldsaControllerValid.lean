@@ -15,7 +15,7 @@ open BeaconcryptCore.Refinement
 open PqxdhServerAuthExperiment (Setup Checks)
 open RegistrationNativeMldsa (Source Credential)
 open RegistrationNativeMldsaOpaque (Pool handleSource)
-open RegistrationNativeMldsaPoolMap (CredentialLive OwnersLive)
+open RegistrationNativeMldsaPoolMap (CredentialLive)
 open RegistrationNativeMldsaTableSign (Valid)
 open RegistrationNativePlatformMldsaProgram (M)
 open RegistrationNativePlatformQuerySafety (Safe pure_safe bind_safe map_safe inject_safe lift_safe frame_safe)
@@ -27,7 +27,7 @@ open RegistrationNativeMldsaShared (Local)
 open RegistrationNativeBeaconFrontend (Owner)
 variable (setup : Setup base KemSK) (checks : Checks)
 variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 
 private theorem native
     (work : RegistrationNativeBeaconFrontend.M n KemSK (handleSource source) RegistrationServerRoleBackend.State Value) :
@@ -36,23 +36,21 @@ private theorem native
         RegistrationNativePlatformMldsaProgram.coins setup checks representation created work)) :=
   lift_safe (Valid source pool) (fun _ => trivial) _
 
-private theorem outgoing (index : Nat) (owner : Owner (handleSource source))
-    (live : CredentialLive source pool owner.mldsa) (query : RegistrationBeaconInitExecutor.Spec.Domain) :
+private theorem outgoing (index : Nat) (owner : Owner (handleSource source)) (query : RegistrationBeaconInitExecutor.Spec.Domain) :
     Safe (Valid source pool) (RegistrationNativePlatformMldsaBundle.outgoing (n := n) (Platform := Platform)
       setup checks representation created index owner query) :=
   inject_safe (Valid source pool) _
-    (RegistrationNativeMldsaControllerValid.Bundle.outgoing source pool setup checks representation created index owner live query)
+    (RegistrationNativeMldsaControllerValid.Bundle.outgoing source pool setup checks representation created index owner query)
 
-private theorem published (index : Nat) (owner : Owner (handleSource source))
-    (live : CredentialLive source pool owner.mldsa) (oneTime : PqxdhJointGapDh.ScalarBytes)
-    (encode : registration.SignedInitView → RegistrationNativePlatformBundleLower.Front n KemSK (handleSource source)
+private theorem published (index : Nat) (owner : Owner (handleSource source)) (oneTime : PqxdhJointGapDh.ScalarBytes)
+    (encode : registration.InitView → RegistrationNativePlatformBundleLower.Front n KemSK (handleSource source)
       (StateT Platform ProbComp) (RustM (Option Encoded))) :
     Safe (Valid source pool) (do
       let published ← RegistrationNativePlatformBeaconPublication.begin
         (RegistrationNativePlatformMldsaBundle.outgoing setup checks representation created index owner)
         (fun view => RegistrationNativePlatformMldsaProgram.lift (RegistrationNativePlatformBundleLower.lower (encode view)))
         ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey
+        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin
       match published with
       | .fail error => pure (.fail error)
       | .div => pure .div
@@ -67,8 +65,8 @@ private theorem published (index : Nat) (owner : Owner (handleSource source))
         pure (.ok (some finished.encoded)) : StateT (Local n KemSK (handleSource source)) (M (handleSource source) Platform) (RustM (Option Encoded))) := by
   apply bind_safe (Valid source pool) _ _
     (RegistrationNativePlatformQuerySafety.Beacon.begin (Valid source pool) _
-      (outgoing source pool setup checks representation created index owner live) _
-      (fun _ => lift_safe (Valid source pool) (fun _ => trivial) _) _ _ _ _ _)
+      (outgoing source pool setup checks representation created index owner) _
+      (fun _ => lift_safe (Valid source pool) (fun _ => trivial) _) _ _ _ _)
   intro published
   cases published with
   | fail error | div => exact pure_safe (Valid source pool) _
@@ -86,12 +84,11 @@ private theorem native_get (before : Local n KemSK (handleSource source)) (previ
       RegistrationNativePlatformMldsaProgram.coins setup checks representation created get)).run before).run previous) =
       pure ((before.1, before), previous) := rfl
 
-/-- The actual owner lookup derives the source Init signer from the reached live owner list. -/
+/-- The actual owner lookup derives the source Init inputs from the reached owner list. -/
 theorem bundle
-    (encode : registration.SignedInitView → RegistrationNativePlatformBundleLower.Front n KemSK (handleSource source)
+    (encode : registration.InitView → RegistrationNativePlatformBundleLower.Front n KemSK (handleSource source)
       (StateT Platform ProbComp) (RustM (Option Encoded)))
-    (index : Nat) (before : Local n KemSK (handleSource source)) (previous : Platform)
-    (owners : OwnersLive source pool before.1) :
+    (index : Nat) (before : Local n KemSK (handleSource source)) (previous : Platform) :
     (((RegistrationNativePlatformMldsaBundle.bundle setup checks representation created encode index).run before).run previous).AllQueriesSatisfy
       (Valid source pool) := by
   simp only [RegistrationNativePlatformMldsaBundle.bundle, StateT.run_bind,
@@ -99,7 +96,6 @@ theorem bundle
   cases found : before.1[index]? with
   | none => exact allQueriesSatisfy_pure _ _
   | some owner =>
-    have live : CredentialLive source pool owner.mldsa := owners owner (List.mem_of_getElem? found)
     dsimp only
     cases phase : owner.phase with
     | initSent pending oneTime | established completed | aborted previous =>
@@ -111,26 +107,25 @@ theorem bundle
       apply allQueriesSatisfy_bind
         (lift_safe (Valid source pool) (fun _ => trivial) _ before previous)
       intro oneTime
-      exact published source pool setup checks representation created index owner live oneTime.1.1 encode oneTime.1.2 oneTime.2
+      exact published source pool setup checks representation created index owner oneTime.1.1 encode oneTime.1.2 oneTime.2
     | freshWithCoins oneTime =>
       dsimp only
-      exact published source pool setup checks representation created index owner live oneTime encode before previous
+      exact published source pool setup checks representation created index owner oneTime encode before previous
 
 private theorem state_map_apply {S X Y : Type} {m : Type → Type} [Monad m] [LawfulMonad m]
     (observe : X → Y) (work : StateT S m X) (before : S) :
     (observe <$> work) before = Prod.map observe id <$> work before := bind_pure_comp _ _
 
-/-- Closing the full source bundle retains live-signing validity, including failed stateful source encoding. -/
+/-- Closing the full source bundle uses only ordinary effects, including failed stateful source encoding. -/
 theorem sourceBundle {E : Type}
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) (index : Nat)
-    (before : RegistrationNativeExperiment.State n KemSK (handleSource source)) (previous : Platform)
-    (live : RegistrationNativeMldsaPoolMap.StateLive source pool before) :
+    (before : RegistrationNativeExperiment.State n KemSK (handleSource source)) (previous : Platform) :
     (((RegistrationNativePlatformMldsaBundle.sourceBundle setup checks representation created writer index).run before).run previous).AllQueriesSatisfy
       (Valid source pool) := by
   simp only [RegistrationNativePlatformMldsaBundle.sourceBundle, StateT.run, state_map_apply, map_eq_pure_bind]
   exact allQueriesSatisfy_bind
     (bundle source pool setup checks representation created _ index
-      (before.beacons, (RegistrationWorldAgreementCompiler.erase before.server.world, before)) previous live)
+      (before.beacons, (RegistrationWorldAgreementCompiler.erase before.server.world, before)) previous)
     (fun _ => allQueriesSatisfy_pure _ _)
 end Bundle
 
@@ -199,7 +194,10 @@ theorem build {E Reader Response : Type} (setup : Setup base KemSK)
     Safe (Valid source pool) (RegistrationNativePlatformMldsaServer.build (n := n) (handleSource source) credential
       setup codec view failure allocation erased reservePeer helper writer handle application) := by
   unfold RegistrationNativePlatformMldsaServer.build
-  exact RegistrationNativePlatformSdkQuerySafety.build (Valid source pool) _
+  exact RegistrationNativePlatformSdkQuerySafety.build (Valid source pool)
+    (fun pending => RegistrationNativePlatformMldsaProgram.lift
+      (RegistrationNativePlatformCompletionSdk.nativeAdHash RegistrationNativePlatformMldsaProgram.coins pending))
+    (fun _ => lift_safe (Valid source pool) (fun _ => trivial) _) _
     (lift_safe (Valid source pool) (fun _ => trivial) _) _
     (lift_safe (Valid source pool) (fun _ => trivial) _) _
     (fun _ => lift_safe (Valid source pool) (fun _ => trivial) _) _

@@ -14,6 +14,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 
 set_option autoImplicit false
+set_option warningAsError true
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterSteps
 open PqxdhServerAuthExperiment (Setup Codec Checks)
@@ -39,13 +40,13 @@ noncomputable def upperLayerL {V : Type} (setup : Setup baseSpec KemSK) (codec :
     (identityIndex : ℕ) (publicIdentity : PqxdhJointIdentity.PublicIdentity) (selected : ℕ)
     (challenge : MlKem768Ciphertext) (services : PqxdhRegistrationJointKemPostSkeleton.Services V Response) :
     QueryImpl (PqxdhDeploymentLaterServerSource.Spec KemSK)
-      (StateT ((List EncodedEntry × Log) × SkelState KemSK V) (OracleComp (Enc KemSK + TSpec V))) :=
+      (StateT (((List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) × Log) × SkelState KemSK V) (OracleComp (Enc KemSK + TSpec V))) :=
   ((skelImplL setup codec checks identityIndex publicIdentity services).mapStateTBase
     (groupedClientL setup codec selected challenge identityIndex)).flattenStateT
 
 /-- Erasing the skeleton's game observers in the logged upper state. -/
-def cleanUpperL {V : Type} (state : (List EncodedEntry × Log) × SkelState KemSK V) :
-    (List EncodedEntry × Log) × SkelState KemSK V :=
+def cleanUpperL {V : Type} (state : ((List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) × Log) × SkelState KemSK V) :
+    ((List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) × Log) × SkelState KemSK V :=
   (state.1, cleanSkel state.2)
 
 section View
@@ -61,7 +62,7 @@ noncomputable abbrev upperEL :=
 
 /-- Item 2's view of a logged middle state: the classical view without table counters, with the log beside the owners. -/
 def encodeMidCL (s : MidL KemSK) :
-    ((List EncodedEntry × Log) × SkelState KemSK Output) × ServiceState KemSK :=
+    (((List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) × Log) × SkelState KemSK Output) × ServiceState KemSK :=
   ((((encodeMidC setup s.1).1.1, s.2), (encodeMidC setup s.1).1.2), (encodeMidC setup s.1).2)
 
 /-- The per-request obligation at the logged view. -/
@@ -90,7 +91,7 @@ theorem upperLayerL_inl {V : Type} (identityIndex : ℕ) (publicIdentity : Pqxdh
     (selected : ℕ) (challenge : MlKem768Ciphertext) (services : PqxdhRegistrationJointKemPostSkeleton.Services V Response)
     (query : (PqxdhRegistrationJointRevealSchedule.Spec KemSK).Domain)
     (other : ∀ raw, query ≠ .inl (.inr (.accept raw)))
-    (state : (List EncodedEntry × Log) × SkelState KemSK V) :
+    (state : ((List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) × Log) × SkelState KemSK V) :
     (upperLayerL setup codec checks identityIndex publicIdentity selected challenge services (.inl query)).run state =
       (fun result => (result.1, ((result.2.1, state.1.2), result.2.2))) <$>
         (upperLayer setup codec checks identityIndex publicIdentity selected challenge services query).run
@@ -106,7 +107,7 @@ theorem upperLayerL_inl {V : Type} (identityIndex : ℕ) (publicIdentity : Pqxdh
 
 /-- Item 2's view of a logged middle state with the table counters kept (the classical `encodeMid`), with the log beside the owners. -/
 def encodeMidL (s : MidL KemSK) :
-    ((List EncodedEntry × Log) × SkelState KemSK Output) × ServiceState KemSK :=
+    (((List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) × Log) × SkelState KemSK Output) × ServiceState KemSK :=
   ((((PqxdhDeploymentIdealPostSteps.encodeMid setup s.1).1.1, s.2), (PqxdhDeploymentIdealPostSteps.encodeMid setup s.1).1.2),
     (PqxdhDeploymentIdealPostSteps.encodeMid setup s.1).2)
 
@@ -186,7 +187,7 @@ variable (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (route :
 /-- The logged upper layers on the Server read: the identity-pool reveal of the Server's identity slot (`identityIndex`) through the skeleton's encapsulator lift, returned with the log, the state unchanged. -/
 theorem upperLayerL_read {V : Type} (identityIndex : ℕ) (publicIdentity : PqxdhJointIdentity.PublicIdentity)
     (selected : ℕ) (challenge : MlKem768Ciphertext) (services : PqxdhRegistrationJointKemPostSkeleton.Services V Response)
-    (state : (List EncodedEntry × Log) × SkelState KemSK V) :
+    (state : ((List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) × Log) × SkelState KemSK V) :
     (upperLayerL setup codec checks identityIndex publicIdentity selected challenge services (.inr ())).run state =
       (fun reply => ((reply, state.1.2), state)) <$>
         PqxdhRegistrationJointKemPostSkeleton.encLift (V := V) (.inl (.inl (.inr (.reveal identityIndex)))) := by
@@ -221,7 +222,7 @@ variable (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (route :
 /-- The logged upper layers on a raw accept: the logged skeleton accept, with its logged scalar appended to the log. -/
 theorem upperLayerL_accept {V : Type} (identityIndex : ℕ) (publicIdentity : PqxdhJointIdentity.PublicIdentity)
     (selected : ℕ) (challenge : MlKem768Ciphertext) (services : PqxdhRegistrationJointKemPostSkeleton.Services V Response)
-    (raw : Pqxdh.Bytes) (state : (List EncodedEntry × Log) × SkelState KemSK V) :
+    (raw : Pqxdh.Bytes) (state : ((List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) × Log) × SkelState KemSK V) :
     (upperLayerL setup codec checks identityIndex publicIdentity selected challenge services
         (.inl (.inl (.inr (.accept raw))))).run state =
       (fun result => (result.1.1, ((state.1.1, state.1.2 ++ [result.1.2]), result.2))) <$>
@@ -450,19 +451,19 @@ variable (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (route :
 
 /-- The upper layers on an identity field read: the identity-pool reveal of the encoded owner's identity slot, sent to the exposed encapsulation interface, with the upper state kept; an absent owner reads nothing. -/
 theorem upperLayer_identity (address : ℕ)
-    (state : List EncodedEntry × SkelState KemSK Output) :
+    (state : (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) × SkelState KemSK Output) :
     (upperLayer setup codec checks created.server.server.metadata.identityIndex created.publicIdentity t.kem.val
         p.challenge (factoredServices setup codec checks) (.inr (address, .identity))).run state =
-      match state.1[address]? with
+      match state.1.1[address]? with
       | none => pure (none, state)
       | some entry => (fun value => (value, state)) <$>
           simulateQ poolUp (PqxdhRegistrationJointLiveRead.entryClient (KemSK := KemSK) .identity entry) := by
-  rcases state with ⟨owners, skel⟩
+  rcases state with ⟨⟨owners, inits⟩, skel⟩
   simp only [upperLayer, QueryImpl.flattenStateT, QueryImpl.mapStateTBase, StateT.run_mk,
     PqxdhRegistrationJointKemPostSkeleton.groupedClient, PqxdhRegistrationJointRevealSchedule.client]
   change (fun x => (x.1.1, x.1.2, x.2)) <$> StateT.run (simulateQ _
     (simulateQ PqxdhRegistrationJointKemPostSkeleton.groupedLift
-      (PqxdhRegistrationJointLiveRead.clientStep (Response := Response) (address, .identity) owners))) skel = _
+      (PqxdhRegistrationJointLiveRead.clientStep (Response := Response) (address, .identity) (owners, inits)))) skel = _
   rcases found : owners[address]? with _ | entry
   · simp [PqxdhRegistrationJointLiveRead.clientStep, found]
   · simp only [PqxdhRegistrationJointLiveRead.clientStep, found, simulateQ_map, StateT.run_map,
@@ -480,7 +481,7 @@ theorem step_identity (address : ℕ) (m : Mid KemSK)
   change _ = _ <$> ((fun r => (r.1, ({ m with joint := r.2, backend := m.backend } : Mid KemSK))) <$>
     (pure (PqxdhRegistrationJointLiveRead.sourceStep (address, .identity) m.joint) : ProbComp _))
   rw [map_pure, map_pure]
-  have encoded : (encodeMid setup m).1.1[address]? =
+  have encoded : (encodeMid setup m).1.1.1[address]? =
       (m.joint.owners[address]?).map (PqxdhRegistrationJointGeneratedFinish.encodeEntry setup) := by
     simp [encodeMid, PqxdhRegistrationJointGeneratedFinish.encodeState, List.getElem?_map]
   rw [encoded]
@@ -724,7 +725,7 @@ theorem skelResumeL_upper {X R : Type} (identityIndex : ℕ) (publicIdentity : P
     (observe : X × PqxdhRegistrationJointAcceptCutTag.Tag → R) (raw : Pqxdh.Bytes)
     (value : PqxdhServerRootPreparation.Verified Reader)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes) (consumed : List Pqxdh.Bytes)
-    (game : PqxdhServerAuthExperiment.GameState KemSK) (owners : List EncodedEntry) (log : Log)
+    (game : PqxdhServerAuthExperiment.GameState KemSK) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log)
     (next : Option ℕ → OracleComp (PqxdhDeploymentLaterServerSource.Spec KemSK) X) (selected : ℕ)
     (challenge : MlKem768Ciphertext) (services : PqxdhRegistrationJointKemPostSkeleton.Services V Response) :
     PqxdhDeploymentLaterServerItemTargets.skelResumeL setup codec checks identityIndex publicIdentity observe raw value
@@ -748,7 +749,7 @@ theorem itemPostL_active {A Out : Type}
     (created : PqxdhRegistrationJointServerBirth.ClientCreated Unit) (others : Fin count → MlKem768PublicKey × KemSK)
     (raw : Pqxdh.Bytes) (value : PqxdhServerRootPreparation.Verified Reader) (matched : value.keys.pqKey = p.chosen.1)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes) (consumed : List Pqxdh.Bytes)
-    (native : PqxdhServerAuthNative.NativeState KemSK) (owners : List EncodedEntry) (log : Log)
+    (native : PqxdhServerAuthNative.NativeState KemSK) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log)
     (next : Option ℕ → OracleComp (PqxdhDeploymentLaterServerSource.Spec KemSK)
       (Out × (PqxdhDeploymentSecrecy.Ledger × (PqxdhDeploymentLater.Snap × PqxdhDeploymentCompile.Local))))
     (state : PqxdhDynamicKemJointSource.State KemSK) (after : A) :
@@ -785,7 +786,7 @@ theorem itemPostL_erased {A Out : Type}
     (created : PqxdhRegistrationJointServerBirth.ClientCreated Unit) (others : Fin count → MlKem768PublicKey × KemSK)
     (raw : Pqxdh.Bytes) (value : PqxdhServerRootPreparation.Verified Reader) (matched : value.keys.pqKey = p.chosen.1)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes) (consumed : List Pqxdh.Bytes)
-    (native : PqxdhServerAuthNative.NativeState KemSK) (owners : List EncodedEntry) (log : Log)
+    (native : PqxdhServerAuthNative.NativeState KemSK) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log)
     (next : Option ℕ → OracleComp (PqxdhDeploymentLaterServerSource.Spec KemSK)
       (Out × (PqxdhDeploymentSecrecy.Ledger × (PqxdhDeploymentLater.Snap × PqxdhDeploymentCompile.Local))))
     (state : PqxdhDynamicKemJointSource.State KemSK) (after : A) :
@@ -823,7 +824,7 @@ theorem itemPostL_clean {A Out : Type}
     (created : PqxdhRegistrationJointServerBirth.ClientCreated Unit) (others : Fin count → MlKem768PublicKey × KemSK)
     (raw : Pqxdh.Bytes) (value : PqxdhServerRootPreparation.Verified Reader) (matched : value.keys.pqKey = p.chosen.1)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes) (consumed : List Pqxdh.Bytes)
-    (native : PqxdhServerAuthNative.NativeState KemSK) (owners : List EncodedEntry) (log : Log)
+    (native : PqxdhServerAuthNative.NativeState KemSK) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log)
     (next : Option ℕ → OracleComp (PqxdhDeploymentLaterServerSource.Spec KemSK)
       (Out × (PqxdhDeploymentSecrecy.Ledger × (PqxdhDeploymentLater.Snap × PqxdhDeploymentCompile.Local))))
     (state : PqxdhDynamicKemJointSource.State KemSK) (after : A) :
@@ -854,7 +855,7 @@ theorem itemPostL_clean {A Out : Type}
             p.challenge (factoredServices setup codec checks)))
           (PqxdhDeploymentLaterServerCut.tagged (PqxdhRegistrationJointAcceptCutTag.decideTag decision) raw next
             answer.1)).run ((owners, log ++ [some ephemeral.secret]), cleanSkel answer.2) =
-      (fun result : (Bool × (List EncodedEntry × Log)) × SkelState KemSK Output => (result.1, cleanSkel result.2)) <$>
+      (fun result : (Bool × ((List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) × Log)) × SkelState KemSK Output => (result.1, cleanSkel result.2)) <$>
         ((fun result => ((result.1, result.2.1), result.2.2)) <$>
           (simulateQ (upperLayerL setup codec checks created.server.server.metadata.identityIndex created.publicIdentity
             t.kem.val p.challenge (factoredServices setup codec checks))
@@ -909,7 +910,7 @@ theorem itemPost_middleL {A Out : Type}
     PqxdhDeploymentIdealLaterBranch.itemPostL (Reader := Reader) setup codec checks t p decision
         (.ready (PqxdhRegistrationJointServerBirth.encode created) p.others
           (some (.pending raw value ephemeral consumed joint.shared
-            (PqxdhRegistrationJointGeneratedFinish.encodeState setup joint).owners log next))
+            ((PqxdhRegistrationJointGeneratedFinish.encodeState setup joint).owners, (PqxdhRegistrationJointGeneratedFinish.encodeState setup joint).inits) log next))
           (joint.pool.1, PqxdhDeploymentIdealPoolSource.routerOf joint.pool.2) after) =
       (simulateQ (PqxdhRegistrationJointKemSecondEntry.slotImpl PqxdhDeploymentSeedSplit.tableService)
           ((PqxdhDeploymentIdealActive.acceptAfter setup codec checks created.seed p.challenge value ephemeral consumed
@@ -928,7 +929,7 @@ theorem itemPost_middleL {A Out : Type}
           PqxdhCorrelatedExtractFamily.Message 2), (PqxdhRecordLiftLazyTable.initial : PqxdhDeploymentIdealSteps.TableState)))) :=
     rfl
   rw [counts]
-  have toC : ∀ work : OracleComp (Enc KemSK + TSpec Output) ((Bool × (List EncodedEntry × Log)) ×
+  have toC : ∀ work : OracleComp (Enc KemSK + TSpec Output) ((Bool × ((List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) × Log)) ×
         SkelState KemSK Output),
       PqxdhRegistrationJointKemPostSkeleton.skelDecide <$> ((simulateQ (PqxdhDeploymentIdealPostSteps.lowerE setup t p)
         work).run).run (PqxdhDeploymentIdealPostSim.eraseService ((joint.pool.1,
@@ -957,7 +958,7 @@ theorem itemPost_middleL {A Out : Type}
       (fun answer skel => (fun result => ((result.1, result.2.1), result.2.2)) <$>
         (simulateQ (upperEL setup codec checks t p created)
           (PqxdhDeploymentLaterServerCut.tagged (PqxdhRegistrationJointAcceptCutTag.decideTag decision) raw next
-            answer)).run (((PqxdhRegistrationJointGeneratedFinish.encodeState setup joint).owners,
+            answer)).run ((((PqxdhRegistrationJointGeneratedFinish.encodeState setup joint).owners, (PqxdhRegistrationJointGeneratedFinish.encodeState setup joint).inits),
               log ++ [some ephemeral.secret]), skel)))) ?_
   rw [show (PqxdhRegistrationJointServerBirth.encode created).publicIdentity = setup.joint.publicKeys created.seed
       from identity, simulateQ_bind, OptionT.run_bind, Option.elimM, StateT.run_bind,
@@ -980,7 +981,7 @@ theorem itemPost_middleL {A Out : Type}
     ephemeral consumed logged joint.shared _ PqxdhRegistrationJointKemSecondEntry.slotGood_empty (by decide) w member
   have holds := PqxdhDeploymentIdealPostItemRun.itemInv_after t p created joint owned prefixed indexed w active good stored
   have encodeAfter : encodeMidCL setup (afterSelected t joint w, log ++ [some ephemeral.secret]) =
-      ((((PqxdhRegistrationJointGeneratedFinish.encodeState setup joint).owners, log ++ [some ephemeral.secret]),
+      (((((PqxdhRegistrationJointGeneratedFinish.encodeState setup joint).owners, (PqxdhRegistrationJointGeneratedFinish.encodeState setup joint).inits), log ++ [some ephemeral.secret]),
         (clean w.1.2.2, marksOf w.1.1.2.2 w.2)),
         PqxdhDeploymentIdealPostHidden.eraseServiceC ((joint.pool.1, PqxdhDeploymentIdealPoolSource.routerOf joint.pool.2),
           (w.1.2.1.cache, w.2))) := by

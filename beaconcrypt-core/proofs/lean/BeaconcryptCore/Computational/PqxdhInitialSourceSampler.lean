@@ -9,6 +9,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialSourceSampler
+variable (associatedData : Std.Array Std.U8 151#usize)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf RawCtxInitialSentinelSampler
 variable {M P I D K A Context Result : Type} {S B : Nat}
 
@@ -26,14 +27,14 @@ noncomputable def sourceBuilder (source : FixedHkdfSha512NoSaltSource) (writer :
     (aux : QueryImpl PqxdhServerRegistrationPublication.AuxSpec (StateT (RawCtxSharedPrimitive.SharedState A) ProbComp))
     (sender : M → Std.U64) (input : Input M P I D K A S B) (output : HmacBlock) : ProbComp (Built M P I D K A S B) :=
   simulateQ (PqxdhInitialReplyErasure.supplied (RawCtxSelectedInitialConstructor.response64 output))
-    ((PqxdhInitialServiceBuilder.protocolBuild source writer aux sender input.index input.metadata input.ready).run input.state)
+    ((PqxdhInitialServiceBuilder.protocolBuild (associatedData := associatedData) source writer aux sender input.index input.metadata input.ready).run input.state)
 
 noncomputable def selectedBuilder (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (aux : QueryImpl PqxdhServerRegistrationPublication.AuxSpec (StateT (RawCtxSharedPrimitive.SharedState A) ProbComp))
     (sender : M → Std.U64) (input : Input M P I D K A S B) (other target : RootOutput) (extra : NonceOutput) :
     ProbComp (Built M P I D K A S B) :=
   Prod.map id (PqxdhInitialGenericProtocol.native (RawCtxSelectedChain.nativeKernel (RawCtxFreshChainCut.concreteChain target))) <$>
-    (PqxdhInitialGenericProtocolBuilder.build source
+    (PqxdhInitialGenericProtocolBuilder.build (associatedData := associatedData) source
       (RawCtxSelectedParentCalls.labelCalls source writer (PqxdhJointKdf.productionStream source.crypto)
         (RawCtxInitialSentinel.entry other extra)
         (RawCtxSelectedParentCalls.childResponse (PqxdhJointKdf.productionStream source.crypto) (RawCtxInitialSentinel.entry other extra) target))
@@ -45,9 +46,9 @@ noncomputable def selectedBuilder (source : FixedHkdfSha512NoSaltSource) (writer
 theorem source_halves (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (aux : QueryImpl PqxdhServerRegistrationPublication.AuxSpec (StateT (RawCtxSharedPrimitive.SharedState A) ProbComp))
     (sender : M → Std.U64) (input : Input M P I D K A S B) (other target : RootOutput) (extra : NonceOutput) :
-    sourceBuilder source writer aux sender input (join input.second other target) =
-      selectedBuilder source writer aux sender input other target extra :=
-  PqxdhInitialSentinelSource.supplied_source source writer input.second other target extra aux sender input.index input.metadata input.ready input.state
+    sourceBuilder (associatedData := associatedData) source writer aux sender input (join input.second other target) =
+      selectedBuilder (associatedData := associatedData) source writer aux sender input other target extra :=
+  PqxdhInitialSentinelSource.supplied_source (associatedData := associatedData) source writer input.second other target extra aux sender input.index input.metadata input.ready input.state
 
 /-- The whole evaluated continuation, including the original64 response and all private/public builder poststate, preserves one shared directional draw under either adaptively selected orientation. -/
 theorem full_continuation (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
@@ -57,11 +58,11 @@ theorem full_continuation (source : FixedHkdfSha512NoSaltSource) (writer : RawCt
     EvalDistEq
       (do let context ← prior
           let output ← $ᵗ HmacBlock
-          let result ← sourceBuilder source writer (aux context) sender (input context) output
+          let result ← sourceBuilder (associatedData := associatedData) source writer (aux context) sender (input context) output
           next context output result)
       (do let context ← prior
           let output ← $ᵗ FullOutput
-          let result ← selectedBuilder source writer (aux context) sender (input context)
+          let result ← selectedBuilder (associatedData := associatedData) source writer (aux context) sender (input context)
             (PqxdhOrderedChainHybrids.material output).1 (PqxdhOrderedChainHybrids.nextChain output)
             (PqxdhOrderedChainHybrids.material output).2
           next context (join (input context).second (PqxdhOrderedChainHybrids.material output).1
@@ -69,30 +70,30 @@ theorem full_continuation (source : FixedHkdfSha512NoSaltSource) (writer : RawCt
   refine EvalDistEq.bind_right prior fun context => ?_
   have halves := initial_observed (input context).second
     (fun other target => do
-      let result ← sourceBuilder source writer (aux context) sender (input context) (join (input context).second other target)
+      let result ← sourceBuilder (associatedData := associatedData) source writer (aux context) sender (input context) (join (input context).second other target)
       next context (join (input context).second other target) result)
   simp only [join_parts] at halves
   refine halves.trans (EvalDistEq.bind_right ($ᵗ FullOutput) (fun output => ?_))
-  rw [source_halves source writer (aux context) sender (input context) _ _ (PqxdhOrderedChainHybrids.material output).2]
+  rw [source_halves (associatedData := associatedData) source writer (aux context) sender (input context) _ _ (PqxdhOrderedChainHybrids.material output).2]
 
 /-- The literal actual source builder pays its derived one-commitment plus five-auxiliary-call bill for every supplied64 response. -/
 theorem source_uniform (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (aux : QueryImpl PqxdhServerRegistrationPublication.AuxSpec (StateT (RawCtxSharedPrimitive.SharedState A) ProbComp))
     (qAux : Nat) (auxBound : ∀ query primitive, ((aux query).run primitive).IsTotalQueryBound qAux)
     (sender : M → Std.U64) (input : Input M P I D K A S B) (output : HmacBlock) :
-    (sourceBuilder source writer aux sender input output).IsTotalQueryBound (64 + 5 * qAux) := by
+    (sourceBuilder (associatedData := associatedData) source writer aux sender input output).IsTotalQueryBound (64 + 5 * qAux) := by
   unfold sourceBuilder
   rw [PqxdhInitialSuppliedBuilder.protocol_supplied]
-  exact PqxdhInitialBuilderQueryBounds.protocol_uniform source writer _ aux qAux auxBound sender input.index input.metadata _ input.state
+  exact PqxdhInitialBuilderQueryBounds.protocol_uniform (associatedData := associatedData) source writer _ aux qAux auxBound sender input.index input.metadata _ input.state
 
 /-- The selected mathematical builder has the same literal primitive program by the proved typed-source equality; this bound does not use an evaluated distribution equation. -/
 theorem selected_uniform (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (aux : QueryImpl PqxdhServerRegistrationPublication.AuxSpec (StateT (RawCtxSharedPrimitive.SharedState A) ProbComp))
     (qAux : Nat) (auxBound : ∀ query primitive, ((aux query).run primitive).IsTotalQueryBound qAux)
     (sender : M → Std.U64) (input : Input M P I D K A S B) (other target : RootOutput) (extra : NonceOutput) :
-    (selectedBuilder source writer aux sender input other target extra).IsTotalQueryBound (64 + 5 * qAux) := by
+    (selectedBuilder (associatedData := associatedData) source writer aux sender input other target extra).IsTotalQueryBound (64 + 5 * qAux) := by
   rw [← source_halves]
-  exact source_uniform source writer aux qAux auxBound sender input _
+  exact source_uniform (associatedData := associatedData) source writer aux qAux auxBound sender input _
 
 set_option maxRecDepth 2048 in
 /-- The two literal source/comparison programs pay64 versus76 sampler bytes, all actual builder work and the complete outside continuation separately. -/
@@ -105,11 +106,11 @@ theorem execution_queries (source : FixedHkdfSha512NoSaltSource) (writer : RawCt
     (nextBound : ∀ context output state, (next context output state).IsTotalQueryBound qNext) :
     (do let context ← prior
         let output ← $ᵗ HmacBlock
-        let result ← sourceBuilder source writer (aux context) sender (input context) output
+        let result ← sourceBuilder (associatedData := associatedData) source writer (aux context) sender (input context) output
         next context output result).IsTotalQueryBound (qPrior + (64 + ((64 + 5 * qAux) + qNext))) ∧
       (do let context ← prior
           let output ← $ᵗ FullOutput
-          let result ← selectedBuilder source writer (aux context) sender (input context)
+          let result ← selectedBuilder (associatedData := associatedData) source writer (aux context) sender (input context)
             (PqxdhOrderedChainHybrids.material output).1 (PqxdhOrderedChainHybrids.nextChain output)
             (PqxdhOrderedChainHybrids.material output).2
           next context (join (input context).second (PqxdhOrderedChainHybrids.material output).1
@@ -118,11 +119,11 @@ theorem execution_queries (source : FixedHkdfSha512NoSaltSource) (writer : RawCt
   constructor
   · exact isTotalQueryBound_bind priorBound (fun context =>
       isTotalQueryBound_bind (CtxComputationalSecurity.uniformFixedBytes_isTotalQueryBound 64) (fun output =>
-        isTotalQueryBound_bind (source_uniform source writer (aux context) qAux (auxBound context) sender (input context) output)
+        isTotalQueryBound_bind (source_uniform (associatedData := associatedData) source writer (aux context) qAux (auxBound context) sender (input context) output)
           (fun state => nextBound context output state)))
   · exact isTotalQueryBound_bind priorBound (fun context =>
       isTotalQueryBound_bind (CtxComputationalSecurity.uniformFixedBytes_isTotalQueryBound 76) (fun output =>
-        isTotalQueryBound_bind (selected_uniform source writer (aux context) qAux (auxBound context) sender (input context)
+        isTotalQueryBound_bind (selected_uniform (associatedData := associatedData) source writer (aux context) qAux (auxBound context) sender (input context)
           (PqxdhOrderedChainHybrids.material output).1 (PqxdhOrderedChainHybrids.nextChain output)
           (PqxdhOrderedChainHybrids.material output).2) (fun state => nextBound context _ state)))
 

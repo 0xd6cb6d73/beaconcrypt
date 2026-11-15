@@ -17,7 +17,7 @@ variable {Auxiliary : Type}
 
 structure PublicAgreement where
   candidate : pqxdh.BeaconRegistrationCandidate
-  binding : session.RegistrationBinding
+  binding : session.CompletedRegistrationBinding
   application : Slice U8
 
 def atRoot (descriptor : PublicAgreement) (root : RootOutput) : agreement.BeaconAgreement :=
@@ -49,7 +49,7 @@ theorem primitive_kdf (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
 
 /-- Actual source record admission has precisely the internal decoded-frame service, including malformed payloads and optional primitive failures. -/
 theorem receive_source (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
-    (writer : RawCtxMixedShared.Writer) (erased : Std.Array U8 357#usize)
+    (writer : RawCtxMixedShared.Writer) (erased : Std.Array U8 227#usize)
     (descriptor : PublicAgreement) (root : RootOutput) (kernel : ConcreteRatchetKernel) :
     simulateQ (RegistrationRawReceiveBridge.implementation (Auxiliary := Auxiliary) source writer)
       (RegistrationRawReceiveBridge.finishModel (atRoot descriptor root) <$>
@@ -119,7 +119,7 @@ theorem owner_factor (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
 
 /-- The actual typed initial callback and complete sequence-one source controller consume the same 108-byte entry as the Server, retaining the actual native completion and shared state. -/
 theorem source_factor (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
-    (writer : RawCtxMixedShared.Writer) (erased : Std.Array U8 357#usize)
+    (writer : RawCtxMixedShared.Writer) (erased : Std.Array U8 227#usize)
     (descriptor : PublicAgreement) (root : RootOutput) :
     RegistrationBeaconRecordExecutor.execute (Auxiliary := Auxiliary) source writer (atRoot descriptor root) =
       fromOutput source writer descriptor (PqxdhServerAuthKeySchedule.fromRoot source root) := by
@@ -134,14 +134,14 @@ theorem source_factor (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     pqxdh.concrete.InitialRatchetKdfPending.impl.request,
     PqxdhInitialRatchetComplementarity.beaconPending, simulateQ_bind, simulateQ_spec_query, StateT.run_bind]
   rw [show (RegistrationRawReceiveBridge.implementation source writer
-      (.inl (.initialKdf ⟨PqxdhRootTableInitialization.rootArray root, SYM_RATCHET_INFO⟩))).run state =
+      (.inl (.initialKdf ⟨PqxdhRootTableInitialization.rootArray root, INITIAL_RATCHET_INFO⟩))).run state =
       pure (.Some (RawCtxSourceHkdf.initialResponse source.crypto
-        ⟨PqxdhRootTableInitialization.rootArray root, SYM_RATCHET_INFO⟩), state) from rfl]
+        ⟨PqxdhRootTableInitialization.rootArray root, INITIAL_RATCHET_INFO⟩), state) from rfl]
   simp only [pure_bind]
   have kernelRun := PqxdhBeaconPhase2Publication.normalInitial_exact
     (PqxdhInitialRatchetComplementarity.beaconPending (PqxdhRootTableInitialization.rootArray root))
     (RawCtxSourceHkdf.initialResponse source.crypto
-      ⟨PqxdhRootTableInitialization.rootArray root, SYM_RATCHET_INFO⟩)
+      ⟨PqxdhRootTableInitialization.rootArray root, INITIAL_RATCHET_INFO⟩)
   have initialEq := PqxdhServerAuthBeaconFactor.initial_source source root
   simp only [PqxdhInitialRatchetComplementarity.beaconPending] at kernelRun initialEq
   rw [initialEq] at kernelRun

@@ -18,7 +18,7 @@ variable {ι KemSK Auxiliary : Type} {base : OracleSpec ι} {n : Nat}
 variable {Encoded : Type}
 
 noncomputable def bundle (setup : Setup base KemSK) (source : RegistrationNativeMldsa.Source)
-    (encode : registration.SignedInitView → M n KemSK source Auxiliary (RustM (core.option.Option Encoded)))
+    (encode : registration.InitView → M n KemSK source Auxiliary (RustM (core.option.Option Encoded)))
     (index : Nat) : M n KemSK source Auxiliary (RustM (Option Encoded)) := do
   let owners ← get
   match owners[index]? with
@@ -37,7 +37,7 @@ noncomputable def bundle (setup : Setup base KemSK) (source : RegistrationNative
       let published ← RegistrationNativePlatformBeaconPublication.begin
         (RegistrationNativeBeaconFrontend.outgoing setup source index owner) encode
         ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey
+        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin
       match published with
       | .fail error => pure (.fail error)
       | .div => pure .div
@@ -53,11 +53,11 @@ private theorem pure_publication (setup : Setup base KemSK) (source : Registrati
       (RegistrationNativeBeaconFrontend.outgoing (n := n) (Auxiliary := Auxiliary) setup source index owner)
       (fun view => pure (.ok (wire.encodeInit view)))
       ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey =
+      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin =
     simulateQ (RegistrationNativeBeaconFrontend.outgoing setup source index owner)
       (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨owner.pin.binding⟩
         (RegistrationNativeBeaconFrontend.inputs setup owner)
-        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey) := by
+        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin) := by
   rw [← RegistrationNativePlatformBeaconPublication.begin_pure,
     RegistrationNativePlatformBeaconPublication.begin_interpret]
   simp only [simulateQ_spec_query, simulateQ_pure]
@@ -91,7 +91,7 @@ theorem bundle_pure (setup : Setup base KemSK) (source : RegistrationNativeMldsa
 
 def encoder {E : Type} {source : RegistrationNativeMldsa.Source}
     (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E)
-      (M n KemSK source Auxiliary)) (view : registration.SignedInitView) :=
+      (M n KemSK source Auxiliary)) (view : registration.InitView) :=
   simulateQ writer (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestExtraction.encodeInit
     (E := E) (m := BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Program E)
     (RegistrationNativePlatformWriter.initPacket view)).run
@@ -117,11 +117,11 @@ theorem source_publication {E : Type} (setup : Setup base KemSK) (source : Regis
     simulateQ (joint setup source index owner writer)
       (RegistrationNativePlatformWriter.begin E ⟨owner.pin.binding⟩
         (RegistrationNativeBeaconFrontend.inputs setup owner)
-        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey) =
+        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin) =
       RegistrationNativePlatformBeaconPublication.begin
         (RegistrationNativeBeaconFrontend.outgoing setup source index owner) (encoder writer)
         ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey := by
+        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin := by
   rw [RegistrationNativePlatformWriter.begin_interpret]
   rfl
 end BeaconcryptCore.Computational.RegistrationNativePlatformBundle

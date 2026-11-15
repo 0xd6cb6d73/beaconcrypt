@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeParsedTarget
+import BeaconcryptCore.Computational.RegistrationNativeFullCompiler
 
 /-! The parsed target is bounded by the original raw accept allowance. This counts the original ledger entries, including malformed inputs and failed authentication, and derives the bound through the literal secrecy wrapper before any native reduction. -/
 open OracleComp OracleSpec CoreModels Aeneas

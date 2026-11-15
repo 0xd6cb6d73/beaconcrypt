@@ -26,7 +26,7 @@ def handle (before : RegistrationServerFrontendCompiler.State n) (completed : ag
   else some before.sessions.length
 
 omit material platform primitive in
-theorem native (created : PqxdhLiveServerConstruction.Created Unit)
+theorem native (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (before : RegistrationServerFrontendCompiler.State n) (completed : agreement.ServerAgreement) :
     (RegistrationServerNativeSource.retain created completed).run before = pure (.ok (handle before completed), after before completed) := by
   unfold RegistrationServerNativeSource.retain RegistrationServerNativeSource.sourceStep
@@ -60,7 +60,7 @@ theorem inserted_flag (views : AdapterPublicWrapperStorage.Views)
   exact (related _).trans (by simp)
 
 theorem source {R : Type} (view : AdapterPublicWrapperState.MaterialView mldsaSource KemSK)
-    (views : AdapterPublicWrapperStorage.Views) (created : PqxdhLiveServerConstruction.Created Unit)
+    (views : AdapterPublicWrapperStorage.Views) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential mldsaSource) (self : beaconcrypt_public_wrapper.server.Server)
     (before : RegistrationServerFrontendCompiler.State n) (rng : R) (completed : agreement.ServerAgreement)
     (reply : Bool × AdapterPublicWrapperStorage.ReplaySet)

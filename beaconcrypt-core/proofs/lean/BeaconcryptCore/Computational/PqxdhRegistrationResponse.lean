@@ -39,10 +39,7 @@ theorem prepared_counter (state : pqxdh.ServerState) (pending : pqxdh.PendingSer
       | Ok next =>
           have count := next_id state next generated
           cases availability <;> simp only [bind_tc_ok, Bool.false_eq_true, ite_false, ite_true] at prepared
-          · obtain ⟨ad, built⟩ := BeaconcryptCore.PanicFreedom.build_associated_data_ok
-              binding.identity_public_key pending.beacon_identity_public_key
-            simp only [built, bind_tc_ok] at prepared
-            cases RustM.ok.inj prepared
+          · cases RustM.ok.inj prepared
             exact ⟨rfl, count, rfl⟩
           · simp at prepared
     · simp at prepared
@@ -58,16 +55,16 @@ def Publication (candidate : pqxdh.ServerRegistrationCandidate)
     result = ok (some ⟨bytes, candidate.key_id⟩, publish state candidate kernel metadata)
 
 /-- The complete first-send tail retains ordinary failure without publication, or publishes the exact successful outer-writer response and advanced kernel. -/
-theorem after_publication (impl : QueryImpl TailSpec (StateT PrimitiveState (OracleComp base)))
+theorem after_publication (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize) (impl : QueryImpl TailSpec (StateT PrimitiveState (OracleComp base)))
     (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Bytes)
     (kernel : ratchet.concrete.ConcreteRatchetKernel) (metadata : PeerMetadata)
     (state : State Metadata PeerMetadata Consumed) (primitive : PrimitiveState)
     (result : (Option Response × State Metadata PeerMetadata Consumed) × PrimitiveState)
     (supported : result ∈ support ((simulateQ impl
-      (afterInitialization candidate authenticated kernel metadata state)).run primitive)) :
+      (afterInitialization (associatedData := associatedData) candidate authenticated kernel metadata state)).run primitive)) :
     Publication candidate metadata state (ok result.1) := by
   obtain ⟨sent, afterSend, afterErase, _, _, rest⟩ :=
-    afterInitialization_support impl candidate authenticated kernel metadata state primitive result supported
+    afterInitialization_support (associatedData := associatedData) impl candidate authenticated kernel metadata state primitive result supported
   cases hs : sent.2 with
   | none => rw [hs] at rest; rw [rest]; exact Or.inl rfl
   | some encrypted =>
@@ -79,14 +76,14 @@ theorem after_publication (impl : QueryImpl TailSpec (StateT PrimitiveState (Ora
       | some bytes => exact Or.inr ⟨sent.1, bytes, rfl⟩
 
 /-- Identity, allocation, nonempty payload and binding gates preserve the exact optional publication boundary. Primitive and auxiliary poststates are arbitrary supported results. -/
-theorem candidate_publication (impl : QueryImpl TailSpec (StateT PrimitiveState (OracleComp base)))
+theorem candidate_publication (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize) (impl : QueryImpl TailSpec (StateT PrimitiveState (OracleComp base)))
     (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (candidate : pqxdh.ServerRegistrationCandidate) (root : PqxdhSecretInputKdf.RootOutput)
     (payload : Option Bytes) (metadata : PeerMetadata) (state : State Metadata PeerMetadata Consumed)
     (primitive : PrimitiveState)
     (result : RustM (Option Response × State Metadata PeerMetadata Consumed) × PrimitiveState)
     (supported : result ∈ support ((simulateQ impl
-      (candidateTail source candidate root payload metadata state)).run primitive)) :
+      (candidateTail (associatedData := associatedData) source candidate root payload metadata state)).run primitive)) :
     Publication candidate metadata state result.1 := by
   obtain ⟨kernel, hrun, _, _, _⟩ := PqxdhRootTableInitialization.initialize_refines source
     PqxdhServerAuthExperiment.unitRatchet false root
@@ -119,18 +116,18 @@ theorem candidate_publication (impl : QueryImpl TailSpec (StateT PrimitiveState 
     simp only [Bool.not_true, Bool.false_eq_true, ite_false, simulateQ_map, StateT.run_map,
       support_map, Set.mem_image] at supported
     obtain ⟨inner, reached, rfl⟩ := supported
-    exact after_publication impl candidate _ kernel metadata state afterAllocate inner reached
+    exact after_publication (associatedData := associatedData) impl candidate _ kernel metadata state afterAllocate inner reached
   · simp only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
     exact Or.inl (congrArg Prod.fst supported)
 
 /-- Every complete source response either preserves the unpublished Server or uses its actual successful extracted candidate and writer result. -/
-theorem build_publication (impl : QueryImpl TailSpec (StateT PrimitiveState (OracleComp base)))
+theorem build_publication (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize) (impl : QueryImpl TailSpec (StateT PrimitiveState (OracleComp base)))
     (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (pending : pqxdh.PendingServerRegistration) (root : PqxdhSecretInputKdf.RootOutput)
     (payload : Option Bytes) (metadata : PeerMetadata) (state : State Metadata PeerMetadata Consumed)
     (primitive : PrimitiveState)
     (result : RustM (Option Response × State Metadata PeerMetadata Consumed) × PrimitiveState)
-    (supported : result ∈ support ((simulateQ impl (build source pending root payload metadata state)).run primitive)) :
+    (supported : result ∈ support ((simulateQ impl (build (associatedData := associatedData) source pending root payload metadata state)).run primitive)) :
     result.1 = ok (none, state) ∨ ∃ next candidate kernel bytes,
       pqxdh.server_next_key_id state.control = ok (.Ok next) ∧
       pqxdh.server_prepare_commit state.control pending ⟨state.server.identity, state.identityKeyId⟩
@@ -152,24 +149,24 @@ theorem build_publication (impl : QueryImpl TailSpec (StateT PrimitiveState (Ora
           simp only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
           exact Or.inl (congrArg Prod.fst supported)
       | Ok candidate =>
-          rcases candidate_publication impl source candidate root payload metadata state primitive result supported
+          rcases candidate_publication (associatedData := associatedData) impl source candidate root payload metadata state primitive result supported
             with unchanged | ⟨kernel, bytes, published⟩
           · exact Or.inl unchanged
           · exact Or.inr ⟨next, candidate, kernel, bytes, hnext, hprepared, published⟩
 
 /-- The response's ID and published counter are exactly the old counter plus one. Failure keeps the full original Server; the interpreted private callback poststate remains unrestricted. -/
-theorem build_counter (impl : QueryImpl TailSpec (StateT PrimitiveState (OracleComp base)))
+theorem build_counter (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize) (impl : QueryImpl TailSpec (StateT PrimitiveState (OracleComp base)))
     (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (pending : pqxdh.PendingServerRegistration) (root : PqxdhSecretInputKdf.RootOutput)
     (payload : Option Bytes) (metadata : PeerMetadata) (state : State Metadata PeerMetadata Consumed)
     (primitive : PrimitiveState)
     (result : RustM (Option Response × State Metadata PeerMetadata Consumed) × PrimitiveState)
-    (supported : result ∈ support ((simulateQ impl (build source pending root payload metadata state)).run primitive)) :
+    (supported : result ∈ support ((simulateQ impl (build (associatedData := associatedData) source pending root payload metadata state)).run primitive)) :
     result.1 = ok (none, state) ∨ ∃ response final,
       result.1 = ok (some response, final) ∧
       final.control.last_key_id.val = state.control.last_key_id.val + 1 ∧
       response.keyId = final.control.last_key_id ∧ final.consumed = state.consumed := by
-  rcases build_publication impl source pending root payload metadata state primitive result supported
+  rcases build_publication (associatedData := associatedData) impl source pending root payload metadata state primitive result supported
     with unchanged | ⟨next, candidate, kernel, bytes, _, prepared, published⟩
   · exact Or.inl unchanged
   · obtain ⟨_, counter, assigned⟩ := prepared_counter state.control pending
@@ -196,15 +193,31 @@ theorem build_oracle_counter (setup : Setup baseSpec KemSK) (codec : Codec Reade
       subst supported
       exact Or.inl ⟨rfl, rfl⟩
   | some token =>
-      simp only [hp, StateT.run_bind, mem_support_bind_iff] at supported
-      obtain ⟨tail, lifted, supported⟩ := supported
-      obtain ⟨tailMember, same⟩ := liftCoins_mem _ _ _ lifted
-      simp only [same, StateT.run_set, StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
-      obtain ⟨_, rfl, rfl, rfl⟩ := supported
-      rcases build_counter (tailImpl setup codec checks) setup.source token.pending token.root payload ()
-        state.server ([], state.ctx) tail.1 tailMember with unchanged | ⟨response, final, written, counter, key, _⟩
-      · simp [unchanged, settle]
-      · simp only [written, settle]; exact Or.inr ⟨response, rfl, counter, key⟩
+      simp only [hp] at supported
+      cases hpre : PqxdhServerRegistrationPublication.prehash state.server token.pending payload with
+      | none =>
+          simp only [hpre, StateT.run_bind, StateT.run_set, pure_bind, StateT.run_pure, support_pure,
+            Set.mem_singleton_iff] at supported
+          subst supported
+          exact Or.inl ⟨rfl, rfl⟩
+      | some candidate =>
+          simp only [hpre, StateT.run_bind, mem_support_bind_iff] at supported
+          obtain ⟨hashed, hashRun, supported⟩ := supported
+          obtain ⟨hashEq, _, _⟩ := hashOracle_grows _ state hashed hashRun
+          simp only [StateT.run_get] at supported
+          obtain ⟨current, currentRun, supported⟩ := supported
+          rw [support_pure, Set.mem_singleton_iff] at currentRun
+          subst currentRun
+          obtain ⟨tail, lifted, supported⟩ := supported
+          obtain ⟨tailMember, same⟩ := liftCoins_mem _ _ _ lifted
+          rw [hashEq] at tailMember
+          simp only [same, StateT.run_set, StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
+          obtain ⟨_, rfl, rfl, rfl⟩ := supported
+          rw [hashEq]
+          rcases build_counter _ (tailImpl setup codec checks) setup.source token.pending token.root payload _
+            state.server ([], hashed.2.ctx) tail.1 tailMember with unchanged | ⟨response, final, written, counter, key, _⟩
+          · simp [unchanged, settle]
+          · simp only [written, settle]; exact Or.inr ⟨response, rfl, counter, key⟩
 
 /-- Admission consumes its registration pair but never allocates a response identifier. -/
 theorem accept_control (setup : Setup baseSpec KemSK) (codec : Codec Reader WireResponse)
@@ -243,14 +256,30 @@ theorem finish_control (setup : Setup baseSpec KemSK) (codec : Codec Reader Wire
   simp only [finishOracle, StateT.run_bind, StateT.run_get, pure_bind] at supported
   cases hphase : state.beacon.beacon.phase with
   | initSent control prekey oneTime kem =>
-      simp only [hphase, StateT.run_bind, mem_support_bind_iff] at supported
-      obtain ⟨staged, stageRun, supported⟩ := supported
-      obtain ⟨cache, extra, stagedEq, _⟩ := stage_run setup codec beaconSeed
-        publicValue control state.beacon.beacon.identity oneTime kem raw state staged stageRun
-      simp only [StateT.run_get, StateT.run_set, StateT.run_pure, support_pure,
-        Set.mem_singleton_iff] at supported
-      obtain ⟨_, rfl, _, rfl, rfl⟩ := supported
-      rw [stagedEq]
+      simp only [hphase] at supported
+      rcases hinit : state.beaconInit with _ | init <;>
+        rcases hresp : responseOf codec raw with _ | response <;>
+        simp only [hinit, hresp, StateT.run_bind, StateT.run_set, pure_bind, StateT.run_pure, support_pure,
+          Set.mem_singleton_iff] at supported
+      · subst supported
+        rfl
+      · subst supported
+        rfl
+      · subst supported
+        rfl
+      · simp only [mem_support_bind_iff] at supported
+        obtain ⟨hashed, hashRun, supported⟩ := supported
+        obtain ⟨hashEq, _, _⟩ := hashOracle_grows _ state hashed hashRun
+        simp only [StateT.run_get] at supported
+        obtain ⟨current, currentRun, supported⟩ := supported
+        rw [support_pure, Set.mem_singleton_iff] at currentRun
+        subst currentRun
+        obtain ⟨staged, stageRun, supported⟩ := supported
+        obtain ⟨cache, extra, stagedEq, _⟩ := stage_run _ setup codec beaconSeed
+          publicValue control _ oneTime kem raw _ staged stageRun
+        simp only [support_pure, Set.mem_singleton_iff] at supported
+        obtain ⟨_, rfl, _, rfl, rfl⟩ := supported
+        rw [stagedEq, hashEq]
   | _ =>
       simp only [hphase, StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
       subst supported
@@ -403,7 +432,7 @@ theorem source_ordered_counter (setup : Setup baseSpec KemSK) (codec : Codec Rea
   obtain ⟨seed, _, beaconSeed, _, scalar, _, keys, _, oneTime, _, published, publishedMember,
     final, finalMember, rfl⟩ := supported
   have original := PqxdhServerAuthNative.evaluate_support setup seed scalar _
-    (PqxdhJointDhExtractFamily.empty, initialGameState setup (challenge setup.joint setup.dh seed scalar) published.2)
+    (PqxdhJointDhExtractFamily.empty, initialGameState setup (challenge setup.joint setup.dh seed scalar) published.1.2 published.2)
     final (by
       rw [PqxdhServerAuthNative.program_native setup codec checks seed scalar beaconSeed _ _
         (inv_initial setup codec beaconSeed (challenge setup.joint setup.dh seed scalar)

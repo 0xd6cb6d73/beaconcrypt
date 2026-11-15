@@ -131,7 +131,7 @@ class ClassificationTests(unittest.TestCase):
     def test_legacy_checkers_require_explicit_projection_marker(self):
         marker = (
             "(* @beaconcrypt-fidelity-v1 legacy_profiles.scope="
-            "classical_projection:MLDSA_guards_not_globally_lifted *)"
+            "historical_classical_projection:no_current_runtime_refinement_claim *)"
         )
         original = (HERE / "production-transcript-interface.pvl").read_text()
         self.assertEqual(original.count(marker), 1)
@@ -511,7 +511,7 @@ class MldsaClassificationTests(unittest.TestCase):
     def test_complete_assumed_interface_roster(self):
         self.assertEqual(len(self.rows), 14)
         self.check(self.rows)
-        self.assertEqual(sum(row["class"] == "security" for row in self.rows), 2)
+        self.assertEqual(sum(row["class"] == "security" for row in self.rows), 1)
 
     def test_every_new_verdict_is_required(self):
         for index in range(len(self.rows)):
@@ -558,7 +558,7 @@ class MldsaClassificationTests(unittest.TestCase):
 
     def test_response_signature_exclusion_is_pinned(self):
         changed = copy.deepcopy(self.rows)
-        changed[1]["scope"] = changed[1]["scope"].replace(
+        changed[0]["scope"] = changed[0]["scope"].replace(
             "excluding signature bytes", "including signature bytes"
         )
         with self.assertRaises(ValueError):
@@ -591,12 +591,12 @@ class MldsaJointClassificationTests(unittest.TestCase):
         CHECK.validate_mldsa_joint_scope(rows)
 
     def test_complete_bounded_joint_roster(self):
-        self.assertEqual(len(self.rows), 19)
+        self.assertEqual(len(self.rows), 21)
         self.check(self.rows)
         for cls, count in [
-            ("security", 8),
-            ("witness", 4),
-            ("limitation", 2),
+            ("security", 7),
+            ("witness", 6),
+            ("limitation", 3),
             ("negative-control", 5),
         ]:
             self.assertEqual(sum(row["class"] == cls for row in self.rows), count)
@@ -616,7 +616,7 @@ class MldsaJointClassificationTests(unittest.TestCase):
                 self.check(changed)
 
     def test_joint_security_cannot_be_relabelled_or_generalized(self):
-        for index in range(8):
+        for index in range(7):
             for field, value in [
                 ("class", "definitional"),
                 ("scope", "unconditional full-protocol quantum security"),
@@ -629,7 +629,7 @@ class MldsaJointClassificationTests(unittest.TestCase):
                 ):
                     self.check(changed)
 
-    def test_assumptions_and_protected_payload_policy_are_mandatory(self):
+    def test_assumptions_and_actual_request_lineage_policy_are_mandatory(self):
         for phrase in [
             "unrevealed",
             "without enrollment",
@@ -662,8 +662,8 @@ class MldsaJointClassificationTests(unittest.TestCase):
 
     def test_replay_witness_is_not_an_injective_replay_theorem(self):
         changed = copy.deepcopy(self.rows)
-        changed[12]["scope"] = changed[12]["scope"].replace(
-            "passive private observation matches insertion and rejection of the same actual registration ID in distinct Server invocations, with the rejecting invocation consuming the matching token released after insertion; no arbitrary replay-schedule theorem",
+        changed[14]["scope"] = changed[14]["scope"].replace(
+            "actual consumed-ID rejection observes the prior token released for the same registration ID by a distinct invocation; no arbitrary replay-schedule theorem",
             "arbitrary registration and record replay is prevented injectively",
         )
         with self.assertRaises(ValueError):
@@ -672,7 +672,7 @@ class MldsaJointClassificationTests(unittest.TestCase):
     def test_quantum_library_and_response_signature_exclusion_are_mandatory(self):
         for index, old, new in [
             (0, "quantum-capabilities.pvl", ""),
-            (1, "excluding ML signature bytes", "including ML signature bytes"),
+            (0, "excluding ML signature bytes", "including ML signature bytes"),
         ]:
             changed = copy.deepcopy(self.rows)
             changed[index]["scope"] = changed[index]["scope"].replace(old, new)

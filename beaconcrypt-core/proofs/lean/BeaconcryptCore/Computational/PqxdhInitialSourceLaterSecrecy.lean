@@ -7,6 +7,8 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhInitialSourceLaterSecrecy
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhOrderedChainHybrids
 open PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily PqxdhInitialBeaconAmbient
 open PqxdhInitialSourcePreparedSecrecy
@@ -31,13 +33,13 @@ local notation "mark" => PqxdhInitialSelectedOrigin.mark source selectedMessage
 local notation "execution" => PqxdhInitialSourceExperiment.execution response64 index metadata ready post before
 local notation "root" => PqxdhInitialSourceExperiment.root source previousRoot response64 selected
 local notation "state" => (PqxdhInitialSourceExperiment.initialState root shared privateState cache, ([] : List RootOutput))
-local notation "sourceRun" => PqxdhInitialNativeAuditCarried.carried source writer (pre other) (application other) initial (selector other) (aux other)
+local notation "sourceRun" => PqxdhInitialNativeAuditCarried.carried (associatedData := associatedData) (completedBinding := completedBinding) source writer (pre other) (application other) initial (selector other) (aux other)
   mark sender route decode execution depth (depth + 1) state
-local notation "sourceView" => view source writer selectedMessage previousRoot response64 other sender route decode
+local notation "sourceView" => PqxdhInitialSourcePreparedSecrecy.view (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
   index metadata ready post before selected number ancestors disclosed shared privateState cache depth remaining
-local notation "sourceSample" => sample source writer selectedMessage previousRoot response64 other sender route decode
+local notation "sourceSample" => PqxdhInitialSourcePreparedSecrecy.sample (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
   index metadata ready post before selected number ancestors disclosed shared privateState cache depth
-local notation "sourceAddress" => address source writer selectedMessage previousRoot response64 other sender route decode
+local notation "sourceAddress" => PqxdhInitialSourcePreparedSecrecy.address (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
   index metadata ready post before selected shared privateState cache depth
 local notation "external" => PqxdhInitialNativeAudit.external (pre other) (application other) initial (selector other) (aux other)
 
@@ -45,22 +47,22 @@ local notation "external" => PqxdhInitialNativeAudit.external (pre other) (appli
 
 
 
-local notation "actualGame" => PqxdhInitialSourcePreparedSecrecy.actual source writer selectedMessage previousRoot response64 other sender route decode
+local notation "actualGame" => PqxdhInitialSourcePreparedSecrecy.actual (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
   index metadata ready post before selected number ancestors disclosed shared privateState cache depth remaining
-local notation "randomGame" => PqxdhInitialSourcePreparedSecrecy.random source writer selectedMessage previousRoot response64 other sender route decode
+local notation "randomGame" => PqxdhInitialSourcePreparedSecrecy.random (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
   index metadata ready post before selected number ancestors disclosed shared privateState cache depth remaining
-local notation "continuation" => PqxdhInitialSourceLaterMixture.resumed source writer selectedMessage previousRoot response64 other sender route decode
+local notation "continuation" => PqxdhInitialSourceLaterMixture.resumed (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
   index metadata ready post before selected number ancestors disclosed shared privateState cache depth
 local notation "early" => sourceSample >>= fun context => ($ᵗ FullOutput) >>= continuation (depth + 1) context
 local notation "later" => sourceSample >>= fun context => ($ᵗ FullOutput) >>= continuation (depth + 2) context
-local notation "parentSample" => PqxdhInitialSourceLaterMixture.parents source writer selectedMessage previousRoot response64 other sender route decode
+local notation "parentSample" => PqxdhInitialSourceLaterMixture.parents (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
   index metadata ready post before selected number ancestors disclosed shared privateState cache depth
-local notation "badEvent" => PqxdhInitialSourceLaterMixture.bad source writer selectedMessage previousRoot response64 other sender route decode
+local notation "badEvent" => PqxdhInitialSourceLaterMixture.bad (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
   index metadata ready post before selected shared privateState cache depth
 local notation "observation" => PqxdhInitialSourcePreparedSecrecy.observe source previousRoot response64 selected number ancestors disclosed
-local notation "sourceGame" => PqxdhInitialSourceExperiment.game source writer selectedMessage previousRoot response64 other sender route decode
+local notation "sourceGame" => PqxdhInitialSourceExperiment.game (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
   index metadata ready post before selected number ancestors disclosed shared privateState cache
-local notation "normalized" => PqxdhInitialNativeAdjacent.normalized source writer mark sender route decode execution
+local notation "normalized" => PqxdhInitialNativeAdjacent.normalized (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution
   (PqxdhInitialOriginFinishPath.withInitial source selectedMessage previousRoot response64 other) depth state.1 >>= observation
 
 variable (qPost qPre qApplication qSelector qAux : Nat)
@@ -70,7 +72,7 @@ variable (qPost qPre qApplication qSelector qAux : Nat)
   (selectorBound : ∀ query ambientState rootCache, (selector other query ambientState rootCache).IsTotalQueryBound qSelector)
   (auxBound : ∀ query ambientState rootCache, (aux other query ambientState rootCache).IsTotalQueryBound qAux)
 
-local notation "primitiveLoss" => PqxdhInitialSourcePreparedSecrecy.loss source writer selectedMessage previousRoot response64 other sender route decode
+local notation "primitiveLoss" => PqxdhInitialSourcePreparedSecrecy.loss (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
   index metadata ready post before selected number ancestors disclosed shared privateState cache depth remaining qPost
 
 include bounded preBound applicationBound selectorBound auxBound in
@@ -79,14 +81,14 @@ theorem normalized_bound (hmac : HmacSha512) (correct : SourceFullCorrect source
     (position : number.val = (depth + 1) + remaining + 1) :
     ENNReal.ofReal ((sourceGame (depth + 1)).boolDistance normalized) ≤
       ENNReal.ofReal (primitiveLoss hmac) + 2 * (((8 + qPost * 67 : Nat) : ENNReal) * (2 ^ 256 : ENNReal)⁻¹) := by
-  have realBound := PqxdhInitialSourceLaterMixture.real_bound source writer selectedMessage previousRoot response64 other sender route decode
+  have realBound := PqxdhInitialSourceLaterMixture.real_bound (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
     index metadata ready post before selected number ancestors disclosed shared privateState cache depth remaining position
-  have randomBound := PqxdhInitialSourceLaterMixture.random_bound source writer selectedMessage previousRoot response64 other sender route decode
+  have randomBound := PqxdhInitialSourceLaterMixture.random_bound (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
     index metadata ready post before selected number ancestors disclosed shared privateState cache depth remaining position
-  have primitive := PqxdhInitialSourcePreparedSecrecy.bound source writer selectedMessage previousRoot response64 other sender route decode
+  have primitive := PqxdhInitialSourcePreparedSecrecy.bound (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
     index metadata ready post before selected number ancestors disclosed shared privateState cache depth remaining
     qPost qPre qApplication qSelector qAux bounded preBound applicationBound selectorBound auxBound hmac correct
-  have collision := PqxdhInitialSourceLaterMixture.collision_bound source writer selectedMessage previousRoot response64 other sender route decode
+  have collision := PqxdhInitialSourceLaterMixture.collision_bound (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
     index metadata ready post before selected number ancestors disclosed shared privateState cache depth qPost bounded
   have triangle : (early).boolDistance later ≤
       (early).boolDistance actualGame + (actualGame).boolDistance randomGame + (randomGame).boolDistance later := by
@@ -105,9 +107,9 @@ theorem normalized_bound (hmac : HmacSha512) (correct : SourceFullCorrect source
     rw [two_mul]
     ac_rfl
   have complete := total.trans (add_le_add le_rfl (mul_le_mul_right collision 2))
-  have earlyEq := PqxdhInitialSourceLaterMixture.resumed_real source writer selectedMessage previousRoot response64 other sender route decode
+  have earlyEq := PqxdhInitialSourceLaterMixture.resumed_real (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
     index metadata ready post before selected number ancestors disclosed shared privateState cache depth
-  have laterEq := PqxdhInitialSourceLaterMixture.resumed_normalized source writer selectedMessage previousRoot response64 other sender route decode
+  have laterEq := PqxdhInitialSourceLaterMixture.resumed_normalized (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
     index metadata ready post before selected number ancestors disclosed shared privateState cache depth
   simpa only [ProbComp.boolDistance, congrArg (fun μ : MeasureTheory.Measure Bool => μ {true}) earlyEq,
     congrArg (fun μ : MeasureTheory.Measure Bool => μ {true}) laterEq] using complete
@@ -119,10 +121,10 @@ theorem source_bound (hmac : HmacSha512) (correct : SourceFullCorrect source hma
     ENNReal.ofReal ((sourceGame (depth + 1)).boolDistance (sourceGame (depth + 2))) ≤
       ENNReal.ofReal (primitiveLoss hmac) + 2 * (((8 + qPost * 67 : Nat) : ENNReal) * (2 ^ 256 : ENNReal)⁻¹) +
         ∑ j ∈ Finset.range (7 + qPost * 67), ((j + 1 : Nat) : ENNReal) * (2 ^ 256 : ENNReal)⁻¹ := by
-  have normalizedBound := normalized_bound source writer selectedMessage previousRoot response64 other sender route decode
+  have normalizedBound := normalized_bound (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
     index metadata ready post before selected number ancestors disclosed shared privateState cache depth remaining
     qPost qPre qApplication qSelector qAux bounded preBound applicationBound selectorBound auxBound hmac correct position
-  have sourceBound := PqxdhInitialNativeAdjacent.adjacent_bound source writer mark sender route decode execution
+  have sourceBound := PqxdhInitialNativeAdjacent.adjacent_bound (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution
     (PqxdhInitialOriginFinishPath.withInitial source selectedMessage previousRoot response64 other) depth 0 qPost bounded state.1
     (PqxdhInitialSourceExperiment.initial_valid root shared privateState cache depth).1
     (PqxdhInitialSourceExperiment.initial_valid root shared privateState cache depth).2 observation

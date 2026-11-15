@@ -13,7 +13,7 @@ use crate::server::{
 use crate::{Decrypted, Encrypted, SendOutcome};
 
 const SNAPSHOT_MAGIC: &[u8; 16] = b"beaconcrypt-snap";
-const SNAPSHOT_VERSION: u16 = 3;
+const SNAPSHOT_VERSION: u16 = 4;
 const SNAPSHOT_KIND_SERVER: u8 = 1;
 const SNAPSHOT_RESERVED: u8 = 0;
 const LINEAGE_SIZE: usize = 32;
@@ -1046,15 +1046,15 @@ mod tests {
 	}
 
 	#[test]
-	fn snapshot_v3_preserves_mldsa_identity_and_rejects_previous_versions() {
+	fn snapshot_v4_preserves_server_identity_and_rejects_previous_versions() {
 		let persistent = deterministic_persistent_server();
 		let public_key = persistent.mldsa_public_key();
 		let snapshot = persistent.snapshot().unwrap();
 		assert_eq!(
 			&snapshot.as_bytes()[SNAPSHOT_MAGIC.len()..SNAPSHOT_MAGIC.len() + 2],
-			&3u16.to_le_bytes()
+			&4u16.to_le_bytes()
 		);
-		for version in [0u16, 1, 2, 4, u16::MAX] {
+		for version in [0u16, 1, 2, 3, 5, u16::MAX] {
 			let mut bytes = snapshot.as_bytes().to_vec();
 			bytes[SNAPSHOT_MAGIC.len()..SNAPSHOT_MAGIC.len() + 2]
 				.copy_from_slice(&version.to_le_bytes());

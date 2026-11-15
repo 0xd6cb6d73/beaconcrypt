@@ -1,7 +1,8 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterUniformObserver
 import BeaconcryptCore.Refinement.AdapterBeaconConstructorGeneration
-/-! One original probabilistic primitive contract supplies the actual constructor's ML, Ed and X25519 source methods after explicit uniform observation. The joint private object and caller RNG are preserved. KEM remains a separate source operation because its actual private-pair birth also updates the source pool. -/
+import BeaconcryptCore.Refinement.AdapterServerConstructorGeneration
+/-! Original probabilistic primitive contracts supply shared Server ML generation and Beacon Ed/X25519 methods after explicit uniform observation. Actual Beacon creation uses only Ed, X25519 and KEM. The joint private object and caller RNG are preserved. KEM remains a separate source operation because its actual private-pair birth also updates the source pool. -/
 open CoreModels Aeneas OracleComp OracleSpec
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -34,9 +35,9 @@ variable (kem : {R E : Type} → rand_core.TryCryptoRng R E → R → RustT m
 noncomputable def mldsa {R Error KemSK : Type} {source : RegistrationNativeMldsa.Source}
     (generator : rand_core.TryCryptoRng R Error) (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (sample : ProbComp (Option (RegistrationNativeMldsa.Credential source)))
-    (contract : AdapterBeaconConstructorGeneration.MldsaContract generator view sample) :
+    (contract : AdapterServerConstructorGeneration.MldsaContract generator view sample) :
     let : AdapterBeaconConstructorRequestMonad.Operations (RustT m) := operations uniform original kem
-    AdapterBeaconConstructorGeneration.MldsaContract generator view (simulateQ uniform sample) := by
+    AdapterServerConstructorGeneration.MldsaContract generator view (simulateQ uniform sample) := by
   let : AdapterBeaconConstructorRequestMonad.Operations (RustT m) := operations uniform original kem
   refine { joint := fun rng => simulateQ uniform (contract.joint rng), nativeMarginal := ?_, realize := contract.realize, privateView := contract.privateView, operation := ?_ }
   · intro rng

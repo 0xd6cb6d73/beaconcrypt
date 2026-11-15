@@ -37,7 +37,7 @@ theorem uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (
     intro others _
     simpa only [isQueryBoundP_map_iff] using
       PqxdhRegistrationJointKemCosts.pre_uniform setup codec checks caps bounded
-        created.server.server.metadata.identityIndex created.publicIdentity client budget certified []
+        created.server.server.metadata.identityIndex created.publicIdentity client budget certified ([], fun _ => none)
         (PqxdhRegistrationJointInitializedAccept.initial created) selected.val
         (PqxdhDynamicKemRouter.selectedReservation selected target others) (after.1.1, PqxdhDynamicKemRouter.empty)
 
@@ -50,7 +50,7 @@ theorem excluded (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) 
     (noCoins : ∀ coin, ¬ predicate (.inl (.inl coin))) (q : Nat)
     (suffix : ∀ created joint others,
       (PqxdhRegistrationJointKemRouting.pre setup codec checks
-        created.server.server.metadata.identityIndex created.publicIdentity client []
+        created.server.server.metadata.identityIndex created.publicIdentity client ([], fun _ => none)
         (PqxdhRegistrationJointInitializedAccept.initial created) selected.val
         (PqxdhDynamicKemRouter.selectedReservation selected target others)
         (joint, PqxdhDynamicKemRouter.empty)).IsQueryBoundP predicate q) :
@@ -77,7 +77,7 @@ theorem decapsulations (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
   excluded setup codec checks ensureInit supplied client runtime count selected target
     IsMlKemLogicalDecapsulationQuery (fun _ => by simp [IsMlKemLogicalDecapsulationQuery]) _
     (fun created joint others => PqxdhRegistrationJointKemRouting.pre_decapsulations setup codec checks
-      created.server.server.metadata.identityIndex created.publicIdentity client budget certified []
+      created.server.server.metadata.identityIndex created.publicIdentity client budget certified ([], fun _ => none)
       (PqxdhRegistrationJointInitializedAccept.initial created) selected.val
       (PqxdhDynamicKemRouter.selectedReservation selected target others) (joint, PqxdhDynamicKemRouter.empty))
 
@@ -93,7 +93,7 @@ theorem base (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (che
   excluded setup codec checks ensureInit supplied client runtime count selected target
     IsMlKemBaseQuery (fun _ => by simp [IsMlKemBaseQuery]) _
     (fun created joint others => PqxdhRegistrationJointKemCosts.pre_base setup codec checks caps bounded
-      created.server.server.metadata.identityIndex created.publicIdentity client budget certified []
+      created.server.server.metadata.identityIndex created.publicIdentity client budget certified ([], fun _ => none)
       (PqxdhRegistrationJointInitializedAccept.initial created) selected.val
       (PqxdhDynamicKemRouter.selectedReservation selected target others) (joint, PqxdhDynamicKemRouter.empty))
 

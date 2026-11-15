@@ -9,6 +9,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhAdaptiveNativeResult
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+  (associatedData : Std.Array Std.U8 151#usize)
 open PqxdhAdaptiveTargetPost PqxdhAdaptiveAcceptedResult PqxdhAdaptiveCommonResult
 open PqxdhAdaptiveGeneratedResult PqxdhInitializerSecrecy
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhHiddenRoot PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily
@@ -26,33 +28,33 @@ variable {setup : StatefulPhase1Setup baseSpec}
     (targets : Choice → Target S (B + 1))
 
 noncomputable def nativeAccepted
-    (secret : KemSK) (prepared : Prepared setup (driver env.toDriverEnvironment program).State) (ready : Ready) : ProbComp (Decision Choice) :=
+    (secret : KemSK) (prepared : Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State) (ready : Ready) : ProbComp (Decision Choice) :=
   simulateQ (PqxdhPhase2PostScheduler.interpretation env.source baseImpl kem secret ready.ciphertext)
-    (PqxdhAdaptiveAcceptedResult.target env attachedVerify primitives program post prepared ready targets)
+    (PqxdhAdaptiveAcceptedResult.target (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program post prepared ready targets)
 
 /-- The private native interpreter preserves the adaptive choice while retaining the selected KEM secret internally. -/
 theorem nativeAccepted_map [DecidableEq Choice] (selected : Choice)
-    (secret : KemSK) (prepared : Prepared setup (driver env.toDriverEnvironment program).State) (ready : Ready) :
-    PqxdhInitialRootEventExperiment.nativeAccepted env baseImpl kem attachedVerify primitives program (mapPost post (choose selected))
-      (PqxdhInitialRootEventSecrecy.accepted env attachedVerify primitives program (mapPost post (choose selected))
+    (secret : KemSK) (prepared : Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State) (ready : Ready) :
+    PqxdhInitialRootEventExperiment.nativeAccepted (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program (mapPost post (choose selected))
+      (PqxdhInitialRootEventSecrecy.accepted (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program (mapPost post (choose selected))
         (targets selected).owner (targets selected).number (targets selected).ancestors (targets selected).disclosed)
       secret prepared ready =
-    choose selected <$> nativeAccepted env baseImpl kem attachedVerify primitives program post targets secret prepared ready := by
+    choose selected <$> nativeAccepted (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post targets secret prepared ready := by
   simp only [PqxdhInitialRootEventExperiment.nativeAccepted, PqxdhInitialRootEventSecrecy.accepted,
     PqxdhAdaptiveAcceptedResult.target_map, nativeAccepted, simulateQ_map]
 
 noncomputable def nativeAfterEncapsulation
-    (secret : KemSK) (prepared : Prepared setup (driver env.toDriverEnvironment program).State)
+    (secret : KemSK) (prepared : Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)
     (ephemeral : List.Vector UInt8 32) (encapsulated : Option (MlKem768Ciphertext × MlKemSharedSecret)) : ProbComp (Decision Choice) :=
   match encapsulated with
-  | none => evalKem baseImpl kem secret (PqxdhAdaptiveCommonResult.observe env.source none attachedVerify primitives 1 setup (common env program post)
+  | none => evalKem baseImpl kem secret (PqxdhAdaptiveCommonResult.observe env.source none attachedVerify primitives 1 setup (common (associatedData := associatedData) (completedBinding := completedBinding) env program post)
       (some prepared.1) ⟨some ephemeral, none, .error .badEncoding, env.server⟩ prepared.2)
   | some (ciphertext, shared) =>
       match rootFailure env.source.crypto env.server.ikSk ephemeral.toList prepared.1.context.publicIdentity.ed25519
         prepared.1.context.generated.before.publicKey prepared.1.context.generated.after.publicKey with
-      | some failure => evalKem baseImpl kem secret (PqxdhAdaptiveCommonResult.observe env.source none attachedVerify primitives 1 setup (common env program post)
+      | some failure => evalKem baseImpl kem secret (PqxdhAdaptiveCommonResult.observe env.source none attachedVerify primitives 1 setup (common (associatedData := associatedData) (completedBinding := completedBinding) env program post)
           (some prepared.1) ⟨some ephemeral, some ciphertext, .error failure, env.server⟩ prepared.2)
-      | none => nativeAccepted env baseImpl kem attachedVerify primitives program post targets secret prepared
+      | none => nativeAccepted (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post targets secret prepared
           (ready env.server env.application prepared.1.context.publicIdentity.ed25519 prepared.1.context.generated.after.publicKey
             ephemeral ciphertext (productionHiddenRoot env.source
               (serverCoordinates env.source.crypto env.server.ikSk ephemeral.toList prepared.1.context.publicIdentity.ed25519
@@ -60,63 +62,63 @@ noncomputable def nativeAfterEncapsulation
 
 /-- Optional encapsulation and conversion/DH rejection keep the original common path and final adaptive choice. -/
 theorem nativeAfterEncapsulation_map [DecidableEq Choice] (selected : Choice)
-    (secret : KemSK) (prepared : Prepared setup (driver env.toDriverEnvironment program).State)
+    (secret : KemSK) (prepared : Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)
     (ephemeral : List.Vector UInt8 32) (encapsulated : Option (MlKem768Ciphertext × MlKemSharedSecret)) :
-    PqxdhInitialRootEventExperiment.nativeAfterEncapsulation env baseImpl kem attachedVerify primitives program (mapPost post (choose selected))
-      (PqxdhInitialRootEventSecrecy.accepted env attachedVerify primitives program (mapPost post (choose selected))
+    PqxdhInitialRootEventExperiment.nativeAfterEncapsulation (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program (mapPost post (choose selected))
+      (PqxdhInitialRootEventSecrecy.accepted (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program (mapPost post (choose selected))
         (targets selected).owner (targets selected).number (targets selected).ancestors (targets selected).disclosed)
       secret prepared ephemeral encapsulated =
-    choose selected <$> nativeAfterEncapsulation env baseImpl kem attachedVerify primitives program post targets secret prepared ephemeral encapsulated := by
+    choose selected <$> nativeAfterEncapsulation (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post targets secret prepared ephemeral encapsulated := by
   cases encapsulated with
   | none =>
     simp only [PqxdhInitialRootEventExperiment.nativeAfterEncapsulation, nativeAfterEncapsulation,
-      ← common_map env program post selected, PqxdhAdaptiveCommonResult.observe_map, evalKem, simulateQ_map]
+      ← common_map (associatedData := associatedData) (completedBinding := completedBinding) env program post selected, PqxdhAdaptiveCommonResult.observe_map, evalKem, simulateQ_map]
   | some pair =>
     rcases pair with ⟨ciphertext, shared⟩
     cases failure : rootFailure env.source.crypto env.server.ikSk ephemeral.toList prepared.1.context.publicIdentity.ed25519
       prepared.1.context.generated.before.publicKey prepared.1.context.generated.after.publicKey <;>
       simp only [PqxdhInitialRootEventExperiment.nativeAfterEncapsulation, nativeAfterEncapsulation, failure,
-        nativeAccepted_map, ← common_map env program post selected, PqxdhAdaptiveCommonResult.observe_map,
+        nativeAccepted_map, ← common_map (associatedData := associatedData) (completedBinding := completedBinding) env program post selected, PqxdhAdaptiveCommonResult.observe_map,
         evalKem, simulateQ_map]
 
 noncomputable def nativeNext
-    (secret : KemSK) (prepared : Prepared setup (driver env.toDriverEnvironment program).State) : ProbComp (Decision Choice) :=
+    (secret : KemSK) (prepared : Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State) : ProbComp (Decision Choice) :=
   if targetEligible env.parameters prepared then do
     let ephemeral ← simulateQ (kemAmbientImpl baseImpl) env.ephemeralGen
     let encapsulated ← simulateQ (kemAmbientImpl baseImpl) (env.native.encaps prepared.1.context.generated.target)
-    nativeAfterEncapsulation env baseImpl kem attachedVerify primitives program post targets secret prepared ephemeral encapsulated
+    nativeAfterEncapsulation (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post targets secret prepared ephemeral encapsulated
   else evalKem baseImpl kem secret (PqxdhAdaptiveCommonResult.allCandidateCommon env.source kem env.native attachedVerify primitives 1 setup
-    (common env program post) (some prepared.1) prepared.2 env.server env.application env.ephemeralGen)
+    (common (associatedData := associatedData) (completedBinding := completedBinding) env program post) (some prepared.1) prepared.2 env.server env.application env.ephemeralGen)
 
 /-- Internally selected eligibility keeps honest unchanged, changed, attacker-owned and rejected candidates in the same source experiment. -/
 theorem nativeNext_map [DecidableEq Choice] (selected : Choice)
-    (secret : KemSK) (prepared : Prepared setup (driver env.toDriverEnvironment program).State) :
-    PqxdhInitialRootEventExperiment.nativeNext env baseImpl kem attachedVerify primitives program (mapPost post (choose selected))
-      (PqxdhInitialRootEventSecrecy.accepted env attachedVerify primitives program (mapPost post (choose selected))
+    (secret : KemSK) (prepared : Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State) :
+    PqxdhInitialRootEventExperiment.nativeNext (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program (mapPost post (choose selected))
+      (PqxdhInitialRootEventSecrecy.accepted (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program (mapPost post (choose selected))
         (targets selected).owner (targets selected).number (targets selected).ancestors (targets selected).disclosed) secret prepared =
-    choose selected <$> nativeNext env baseImpl kem attachedVerify primitives program post targets secret prepared := by
+    choose selected <$> nativeNext (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post targets secret prepared := by
   simp only [PqxdhInitialRootEventExperiment.nativeNext, nativeNext]
   split
   · simp only [nativeAfterEncapsulation_map, map_bind]
-  · simp only [← common_map env program post selected, PqxdhAdaptiveCommonResult.allCandidateCommon_map, evalKem, simulateQ_map]
+  · simp only [← common_map (associatedData := associatedData) (completedBinding := completedBinding) env program post selected, PqxdhAdaptiveCommonResult.allCandidateCommon_map, evalKem, simulateQ_map]
 
 /-- One source-ordered generated run returns the adversary's adaptive target and the exact selected source event. -/
 noncomputable def actual : ProbComp (Decision Choice) :=
-  PqxdhGeneratedNativeContinuation.nativeContinued attachedVerify primitives baseImpl kem setup (driver env.toDriverEnvironment program)
-    (nativeNext env baseImpl kem attachedVerify primitives program post targets) rejected
+  PqxdhGeneratedNativeContinuation.nativeContinued attachedVerify primitives baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program)
+    (nativeNext (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post targets) rejected
 
 /-- Every maintained fixed-target source experiment is an exact result projection of one common original execution. The selector and all private generators run only once in their production order. -/
 theorem actual_map [DecidableEq Choice] (selected : Choice) :
-    PqxdhInitialRootEventSecrecy.actual env baseImpl kem attachedVerify primitives program (mapPost post (choose selected))
+    PqxdhInitialRootEventSecrecy.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program (mapPost post (choose selected))
       (targets selected).owner (targets selected).number (targets selected).ancestors (targets selected).disclosed =
-    choose selected <$> actual env baseImpl kem attachedVerify primitives program post targets := by
+    choose selected <$> actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post targets := by
   simp only [PqxdhInitialRootEventSecrecy.actual, PqxdhInitialRootEventExperiment.actual,
     actual, PqxdhGeneratedNativeContinuation.nativeContinued, map_bind]
   apply bind_congr
   intro stopped
   cases stopped.1 with
   | none => simp [rejected, choose]
-  | some output => exact nativeNext_map env baseImpl kem attachedVerify primitives program post targets selected _ _
+  | some output => exact nativeNext_map (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post targets selected _ _
 
 end BeaconcryptCore.Computational.PqxdhAdaptiveNativeResult
 

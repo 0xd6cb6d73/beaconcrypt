@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeSampling
 
-/-! The source-only early-scalar experiment keeps the actual constructor preflights, pin hashing, identity and counted prekey draws. Only a successful selected roster birth substitutes the supplied private scalar before the literal indexed KEM/public-owner suffix. The original raw and secrecy compilers are unchanged. -/
+/-! The source-only early-scalar experiment keeps the actual pure pin selection, identity and counted prekey draws. Only a successful selected roster birth substitutes the supplied private scalar before the literal indexed KEM/public-owner suffix. The original raw and secrecy compilers are unchanged. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -20,7 +20,7 @@ noncomputable def create (setup : Setup base KemSK) (source : RegistrationNative
   | .ok (some prepared) =>
       let owners ← get
       let prekey := if owners.length = selected then scalar else prepared.prekey
-      RegistrationNativeBeaconFrontend.appendBorn setup source edPin keyId prepared.pin prepared.credentials prepared.identity prekey
+      RegistrationNativeBeaconFrontend.appendBorn setup source edPin keyId prepared.pin prepared.identity prekey
   | .ok none => pure (.ok none)
   | .fail error => pure (.fail error)
   | .div => pure .div
@@ -28,7 +28,7 @@ noncomputable def create (setup : Setup base KemSK) (source : RegistrationNative
 noncomputable def handler (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (source : RegistrationNativeMldsa.Source) (credential : RegistrationNativeMldsa.Credential source)
     (selected : Nat) (scalar : ScalarBytes) :
     QueryImpl RegistrationNativeRawAdapter.TypedSpec (RegistrationNativeExperiment.M n KemSK source)
@@ -39,7 +39,7 @@ noncomputable def handler (setup : Setup base KemSK) (checks : Checks) (wire : R
 noncomputable def run (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (source : RegistrationNativeMldsa.Source) (credential : RegistrationNativeMldsa.Credential source)
     (selected : Nat) (scalar : ScalarBytes) (bounds : PqxdhDeploymentInterface.FreshBounds)
     (mode : PqxdhDeploymentInterface.Mode)

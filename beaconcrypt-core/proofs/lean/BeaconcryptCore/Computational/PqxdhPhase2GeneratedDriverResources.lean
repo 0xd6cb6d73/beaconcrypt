@@ -9,6 +9,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhPhase2GeneratedDriverResources
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPrivateKemQueryBounds PqxdhPrivatePhase1Prefix
 open PqxdhJointPhase1AcceptanceComposition PqxdhPrivateSourceCoins
@@ -28,14 +29,14 @@ theorem driver_uniform {setup : StatefulPhase1Setup baseSpec}
     (index : Nat) (publicIdentity : PublicIdentity) (generated : Generated setup Unit)
     (transcript : Phase1PublicTranscript setup.Context) (identities : PqxdhPhase1AcceptanceOracle.BareState count) :
     ((simulateQ (borrowedSelector attachedVerify primitives count)
-      ((driver env program).main index publicIdentity generated transcript)).run identities).IsQueryBoundP
+      ((PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env program).main index publicIdentity generated transcript)).run identities).IsQueryBoundP
         IsMlKemUniformQuery (2 * (qWrite + bill qLocal budget)) := by
-  have total := driver_total env program qWrite writerBound qLocal localBound budget bounded index publicIdentity generated transcript
+  have total := PqxdhPhase2GeneratedDriverBounds.driver_total (completedBinding := completedBinding) env program qWrite writerBound qLocal localBound budget bounded index publicIdentity generated transcript
   simpa only [Nat.mul_zero, Nat.zero_add, two_mul] using
     PqxdhPrivateRootQueryBounds.borrowed_uniform_bound attachedVerify primitives count
-      ((driver env program).main index publicIdentity generated transcript) 0
+      ((PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env program).main index publicIdentity generated transcript) 0
       (qWrite + bill qLocal budget) (qWrite + bill qLocal budget)
-      (driver_source_caps env program 0 0 noSign noCreate index publicIdentity generated transcript).2
+      (PqxdhPhase2GeneratedDriverBounds.driver_source_caps (completedBinding := completedBinding) env program 0 0 noSign noCreate index publicIdentity generated transcript).2
       total.isQueryBoundP total.isQueryBoundP identities
 
 /-- Every non-uniform ordinary class, including base calls and attempted selected decapsulation, retains an explicit bound from the actual source program. -/
@@ -50,12 +51,12 @@ theorem driver_class {setup : StatefulPhase1Setup baseSpec}
     (index : Nat) (publicIdentity : PublicIdentity) (generated : Generated setup Unit)
     (transcript : Phase1PublicTranscript setup.Context) (identities : PqxdhPhase1AcceptanceOracle.BareState count) :
     ((simulateQ (borrowedSelector attachedVerify primitives count)
-      ((driver env program).main index publicIdentity generated transcript)).run identities).IsQueryBoundP
+      ((PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env program).main index publicIdentity generated transcript)).run identities).IsQueryBoundP
         predicate (qWrite + bill qLocal budget) := by
   exact PqxdhPrivateRootQueryBounds.borrowed_class_bound attachedVerify primitives count
-    ((driver env program).main index publicIdentity generated transcript) predicate excluded
+    ((PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env program).main index publicIdentity generated transcript) predicate excluded
     (qWrite + bill qLocal budget)
-    (driver_total env program qWrite writerBound qLocal localBound budget bounded index publicIdentity generated transcript).isQueryBoundP identities
+    (PqxdhPhase2GeneratedDriverBounds.driver_total (completedBinding := completedBinding) env program qWrite writerBound qLocal localBound budget bounded index publicIdentity generated transcript).isQueryBoundP identities
 
 /-- The actual source interpreter pays the sampling costs of every opaque base and selected-decapsulation call, on every reply. -/
 theorem private_driver_uniform {KemSK : Type} {setup : StatefulPhase1Setup baseSpec}
@@ -74,16 +75,16 @@ theorem private_driver_uniform {KemSK : Type} {setup : StatefulPhase1Setup baseS
     (transcript : Phase1PublicTranscript setup.Context) (identities : PqxdhPhase1AcceptanceOracle.BareState count) :
     ((simulateQ (privateImpl attachedVerify primitives count)
       (simulateQ (localSelector baseImpl kem secret)
-        ((driver env program).main index publicIdentity generated transcript))).run identities).IsTotalQueryBound
+        ((PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env program).main index publicIdentity generated transcript))).run identities).IsTotalQueryBound
       (2 * (qWrite + bill qLocal budget) + uBase * (qWrite + bill qLocal budget) + uDecap * (qWrite + bill qLocal budget)) := by
   rw [localSelector_complete]
   exact PqxdhPrivateRootGameBudgets.evalKem_uniform_bound baseImpl kem secret uBase uDecap baseBound decapBound
     _ _ _ _
-    (driver_uniform env program attachedVerify primitives count qWrite writerBound qLocal localBound budget bounded
+    (driver_uniform (completedBinding := completedBinding) env program attachedVerify primitives count qWrite writerBound qLocal localBound budget bounded
       noSign noCreate index publicIdentity generated transcript identities)
-    (driver_class env program attachedVerify primitives count qWrite writerBound qLocal localBound budget bounded
+    (driver_class (completedBinding := completedBinding) env program attachedVerify primitives count qWrite writerBound qLocal localBound budget bounded
       IsMlKemBaseQuery (fun _ => by simp [IsMlKemBaseQuery]) index publicIdentity generated transcript identities)
-    (driver_class env program attachedVerify primitives count qWrite writerBound qLocal localBound budget bounded
+    (driver_class (completedBinding := completedBinding) env program attachedVerify primitives count qWrite writerBound qLocal localBound budget bounded
       IsMlKemLogicalDecapsulationQuery (fun _ => by simp [IsMlKemLogicalDecapsulationQuery]) index publicIdentity generated transcript identities)
 
 /-- Actual source generation and the complete enlarged private driver are charged before any evaluated generator interchange. -/
@@ -106,14 +107,14 @@ theorem program_uniform {KemSK : Type} {setup : StatefulPhase1Setup baseSpec}
     (noSign : ∀ reply, (program.main reply).IsQueryBoundP (ForwardedSource (baseSpec := baseSpec) IsSigning) 0)
     (noCreate : ∀ reply, (program.main reply).IsQueryBoundP (ForwardedSource (baseSpec := baseSpec) Creating) 0) :
     (privateRun attachedVerify primitives count
-      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (driver env program))).IsTotalQueryBound
+      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env program))).IsTotalQueryBound
       (32 + ((uPrekey + (uKeygen + uOneTime)) +
         (2 * (qWrite + bill qLocal budget) + uBase * (qWrite + bill qLocal budget) + uDecap * (qWrite + bill qLocal budget)))) := by
   exact PqxdhGeneratedRootQueryBounds.program_uniform_bound attachedVerify primitives count baseImpl kem setup
-    (driver env program) _ _
+    (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env program) _ _
     (fun identity => PqxdhPrivateRootGameBudgets.generate_uniform_bound baseImpl kem setup uPrekey uKeygen uOneTime
       prekeyBound keygenBound oneTimeBound identity)
-    (fun index publicIdentity generated secret transcript identities => private_driver_uniform env program
+    (fun index publicIdentity generated secret transcript identities => private_driver_uniform (completedBinding := completedBinding) env program
       attachedVerify primitives count baseImpl kem secret uBase uDecap baseBound (decapBound secret)
       qWrite writerBound qLocal localBound budget bounded noSign noCreate index publicIdentity generated transcript identities)
 
@@ -130,12 +131,12 @@ theorem prefix_uniform {setup : StatefulPhase1Setup baseSpec}
     (noSign : ∀ reply, (program.main reply).IsQueryBoundP (ForwardedSource (baseSpec := baseSpec) IsSigning) 0)
     (noCreate : ∀ reply, (program.main reply).IsQueryBoundP (ForwardedSource (baseSpec := baseSpec) Creating) 0)
     (target : TargetKemPublicKey) :
-    (PqxdhGeneratedRootSource.borrowedPrefix attachedVerify primitives setup (driver env program) target).IsQueryBoundP
+    (PqxdhGeneratedRootSource.borrowedPrefix attachedVerify primitives setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env program) target).IsQueryBoundP
       IsMlKemUniformQuery (32 + (qPrekey + (qOneTime + 2 * (qWrite + bill qLocal budget)))) := by
-  exact PqxdhGeneratedRootQueryBounds.borrowedPrefix_bound attachedVerify primitives setup (driver env program)
+  exact PqxdhGeneratedRootQueryBounds.borrowedPrefix_bound attachedVerify primitives setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env program)
     IsMlKemUniformQuery 32 qPrekey qOneTime (2 * (qWrite + bill qLocal budget))
     (ccaCoins_uniform _ _ sampleSeed_uniform_bound) prekeyBound oneTimeBound
-    (fun index publicIdentity generated transcript identities => driver_uniform env program attachedVerify primitives 1
+    (fun index publicIdentity generated transcript identities => driver_uniform (completedBinding := completedBinding) env program attachedVerify primitives 1
       qWrite writerBound qLocal localBound budget bounded noSign noCreate index publicIdentity generated transcript identities) target
 
 end BeaconcryptCore.Computational.PqxdhPhase2GeneratedDriverResources

@@ -211,7 +211,7 @@ theorem main (joint : PqxdhJointIdentity.Primitives) (selected : Nat) (placehold
 
 /-- The actual outgoing Ed callback has its literal ordinary source marginal for every target/mode, key-row absence, public-key rejection and optional signing outcome. -/
 theorem outgoing (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (selected index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner mlSource) (request : registration.Ed25519SigningRequest)
     (placeholder : Ed25519Signature) (before : Full (n := n) (KemSK := KemSK) (Platform := Platform) (mlSource := mlSource)) :
     let action := RegistrationNativePlatformIdentityCtxMain.beacon setup checks representation created

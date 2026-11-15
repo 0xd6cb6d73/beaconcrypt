@@ -1,8 +1,8 @@
 -- SPDX-License-Identifier: 0BSD
-import BeaconcryptCore.Computational.RegistrationNativeIdentityTemplateAlias
 import BeaconcryptCore.Computational.RegistrationNativeIdentityRecognition
+import BeaconcryptCore.Computational.RegistrationNativeInitStageContents
 
-/-! The original unsigned-Init hash request has one exact64-byte one-time signature window. Its leading bytes use the source fixed width98 and all remaining retained fields; no signature-byte-dependent length is exposed. The actual fingerprint continuation supplies the request, rather than a caller hash-template equation. Actual Ed-copy receipts separately establish the attached-field witness. -/
+/-! The original attached-signature Init hash request has one exact64-byte one-time signature window. Its leading bytes use the source fixed width98 and all remaining retained fields; no signature-byte-dependent length is exposed. The actual canonical-builder receipt supplies the request, rather than a caller hash-template equation. Actual Ed-copy receipts separately establish the attached-field witness. -/
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core PqxdhRefinement
@@ -15,7 +15,7 @@ open PqxdhEd25519EufCma (Ed25519PublicKey Ed25519Signature)
 
 def leading (state : registration.BeaconInitState) : Pqxdh.Bytes :=
   Pqxdh.TranscriptAuth.initDomain ++ Pqxdh.LE64 (TranscriptAuthRefinement.absId state.server_pin.binding.identity_key_id).toNat ++
-    absBytes state.server_pin.binding.identity_public_key ++ absBytes state.beacon_mldsa ++ absBytes state.server_pin.public_key ++
+    absBytes state.server_pin.binding.identity_public_key ++ absBytes state.server_pin.public_key ++
     Pqxdh.TranscriptAuth.hashField (absBytes state.started.message.identity_key) ++
     Pqxdh.TranscriptAuth.hashField (absBytes state.pre_key) ++ Pqxdh.LE64 98
 
@@ -36,26 +36,27 @@ private theorem template (state : registration.BeaconInitState) (signature : Ed2
   simp only [Pqxdh.TranscriptAuth.initTranscript, TranscriptAuthRefinement.absInit, retainedFields, framed,
     leading, trailing, List.append_assoc]
 
-/-- Every actual successful fingerprint reply reaches the literal source hash request containing this precise signature window. -/
-theorem source (pending : registration.BeaconFingerprint) (digest : Std.Array U8 64#usize)
+/-- The actual canonical request-hash input contains this precise Ed signature window. -/
+theorem source (pending : registration.BeaconInitHash)
+    (canonical : RegistrationNativeInitStageContents.Canonical pending)
     (signature : Ed25519Signature) (message : Pqxdh.Bytes)
     (attached : absBytes pending.state.one_time_key = signature.toList ++ message) :
-    ∃ next request, pending.resume (.Some digest) = .ok (.HashRequested next) ∧ next.request = .ok request ∧
+    ∃ request, pending.request = .ok request ∧
       RegistrationInputs.hashBytes request = leading pending.state ++ signature.toList ++ trailing pending.state message := by
-  obtain ⟨next, resumed, _, _, request, requested, bytes⟩ := RegistrationSigningContinuations.beacon_fingerprint_some_exact pending digest
-  exact ⟨next, request, resumed, requested, bytes.trans (template pending.state signature message attached)⟩
+  refine ⟨.Single pending.input.to_slice, rfl, ?_⟩
+  exact canonical.trans (template pending.state signature message attached)
 
-/-- Public recognition necessarily finds a valid target signature in that actual reached source request, without canonical-signature uniqueness. -/
+/-- Recognition finds a valid target Ed signature in the actual reached request, without canonical-signature uniqueness. -/
 theorem recognized (verify : Ed25519PublicKey → Pqxdh.Bytes → Ed25519Signature → Bool)
     (publicKey : Ed25519PublicKey) (target : Pqxdh.Bytes)
-    (pending : registration.BeaconFingerprint) (digest : Std.Array U8 64#usize)
+    (pending : registration.BeaconInitHash) (canonical : RegistrationNativeInitStageContents.Canonical pending)
     (signature : Ed25519Signature) (message : Pqxdh.Bytes)
     (attached : absBytes pending.state.one_time_key = signature.toList ++ message)
     (valid : verify publicKey target signature = true) :
-    ∃ next request, pending.resume (.Some digest) = .ok (.HashRequested next) ∧ next.request = .ok request ∧
+    ∃ request, pending.request = .ok request ∧
       (RegistrationNativeIdentityRecognition.recognize verify publicKey target (RegistrationInputs.hashBytes request)).isSome = true := by
-  obtain ⟨next, request, resumed, requested, bytes⟩ := source pending digest signature message attached
-  exact ⟨next, request, resumed, requested, bytes ▸
+  obtain ⟨request, requested, bytes⟩ := source pending canonical signature message attached
+  exact ⟨request, requested, bytes ▸
     RegistrationNativeIdentityRecognition.template_recognized verify publicKey target (leading pending.state)
       (trailing pending.state message) signature valid⟩
 

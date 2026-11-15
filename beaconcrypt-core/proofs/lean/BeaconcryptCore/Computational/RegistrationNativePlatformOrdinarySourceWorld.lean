@@ -207,7 +207,7 @@ theorem source_owner [primitives : AdapterSealPrimitive.Operations] [FrameDispat
     (view : RegistrationNativePlatformSourceSeal.KeyView) (converted : RegistrationNativePlatformOrdinarySourceNative.Conversion view)
     (failure : primitives.Error) (erased : commitment.CommitmentTranscript)
     {Metadata : Type} (owner : RawCtxWholeOwner.OwnerState Metadata)
-    (plaintext : Slice U8) (sender : U64) (associated : Std.Array U8 281#usize)
+    (plaintext : Slice U8) (sender : U64) (associated : Std.Array U8 151#usize)
     (sameAD : owner.owner.associatedData = PqxdhRefinement.absBytes associated) :
     (RegistrationNativePlatformOrdinarySourceOwner.ownerResult owner ∘ RegistrationNativePlatformOrdinarySourceNative.abstractOutput) <$>
       simulateQ (RegistrationNativePlatformOrdinarySourceNative.callbacks view failure (kdf setup codec reserve)
@@ -231,7 +231,7 @@ theorem joint [primitives : AdapterSealPrimitive.Operations] [FrameDispatchFallb
     (view : RegistrationNativePlatformSourceSeal.KeyView) (converted : RegistrationNativePlatformOrdinarySourceNative.Conversion view)
     (failure : primitives.Error) (erased : commitment.CommitmentTranscript)
     {Metadata : Type} (owner : RawCtxWholeOwner.OwnerState Metadata)
-    (plaintext : Slice U8) (sender : U64) (associated : Std.Array U8 281#usize)
+    (plaintext : Slice U8) (sender : U64) (associated : Std.Array U8 151#usize)
     (sameAD : owner.owner.associatedData = PqxdhRefinement.absBytes associated) (before : Primitive) (previous : Platform) :
     (((RegistrationNativePlatformOrdinarySourceOwner.ownerResult owner ∘ RegistrationNativePlatformOrdinarySourceNative.abstractOutput) <$>
       simulateQ (RegistrationNativePlatformOrdinarySourceNative.callbacks view failure (kdf setup codec reserve)

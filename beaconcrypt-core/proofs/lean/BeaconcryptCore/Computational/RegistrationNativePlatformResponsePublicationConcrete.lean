@@ -1,4 +1,5 @@
 -- SPDX-License-Identifier: 0BSD
+import BeaconcryptCore.Computational.PqxdhEnvironmentForward
 import BeaconcryptCore.Computational.RegistrationNativePlatformResponsePublicationSupport
 import BeaconcryptCore.Computational.RegistrationNativePlatformConcreteSource
 

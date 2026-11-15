@@ -38,6 +38,7 @@ noncomputable def joint (setup : Setup base KemSK) (codec : Codec Reader Respons
     (before : Local n) (previous : Platform) : ProbComp (Outcome n Platform) :=
   ((RegistrationNativePlatformServerMaterialState.close
     (RegistrationNativePlatformServerMaterialFrontend.build
+      (RegistrationNativePlatformServerMaterialState.adHash RegistrationNativePlatformMldsaProgram.coins)
       (RegistrationNativePlatformServerMaterialState.pin RegistrationNativePlatformMldsaProgram.coins)
       (StateT.lift reserve)
       (fun keyId => RegistrationNativePlatformServerCompletion.capability RegistrationNativePlatformMldsaProgram.coins (.peerPresent keyId))

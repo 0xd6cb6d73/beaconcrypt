@@ -37,7 +37,7 @@ variable [localOps : LocalOperations (RustT (M n KemSK source Auxiliary))]
 
 theorem source_erasure (setup : PqxdhServerAuthExperiment.Setup base KemSK) (wire : RegistrationNativeWire.Wire)
     (erased : commitment.CommitmentTranscript)
-    (authentication : QueryImpl AdapterInitAuthenticationRequestMonad.Spec (M n KemSK source Auxiliary))
+    (authentication : QueryImpl AdapterPublicWrapperChildren.AuthenticationSpec (M n KemSK source Auxiliary))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (M n KemSK source Auxiliary))
     (initial : ∀ request, (localOps.ratchet_initial_ratchet_hkdf request).run =
       pure (.ok (RawCtxSourceHkdf.initialResponse setup.source.crypto request).bytes))
@@ -60,7 +60,7 @@ theorem source_erasure (setup : PqxdhServerAuthExperiment.Setup base KemSK) (wir
 
 theorem source_with_journal (setup : PqxdhServerAuthExperiment.Setup base KemSK) (wire : RegistrationNativeWire.Wire)
     (erased : commitment.CommitmentTranscript)
-    (authentication : QueryImpl AdapterInitAuthenticationRequestMonad.Spec (M n KemSK source Auxiliary))
+    (authentication : QueryImpl AdapterPublicWrapperChildren.AuthenticationSpec (M n KemSK source Auxiliary))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (M n KemSK source Auxiliary))
     (initial : ∀ request, (localOps.ratchet_initial_ratchet_hkdf request).run =
       pure (.ok (RawCtxSourceHkdf.initialResponse setup.source.crypto request).bytes))

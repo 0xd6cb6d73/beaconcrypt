@@ -9,6 +9,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialSourceFutureInput
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf
 open PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily PqxdhInitialBeaconAmbient
 open PqxdhInitialSourcePreparedSecrecy
@@ -33,11 +35,11 @@ local notation "mark" => PqxdhInitialSelectedOrigin.mark source selectedMessage
 local notation "execution" => PqxdhInitialSourceExperiment.execution response64 index metadata ready post before
 local notation "root" => PqxdhInitialSourceExperiment.root source previousRoot response64 selected
 local notation "state" => (PqxdhInitialSourceExperiment.initialState root shared privateState cache, ([] : List RootOutput))
-local notation "sourceView" => view source writer selectedMessage previousRoot response64 other sender route decode
+local notation "sourceView" => view (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
   index metadata ready post before selected number ancestors disclosed shared privateState cache depth remaining
-local notation "sourceSample" => sample source writer selectedMessage previousRoot response64 other sender route decode
+local notation "sourceSample" => sample (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
   index metadata ready post before selected number ancestors disclosed shared privateState cache depth
-local notation "sourceAddress" => address source writer selectedMessage previousRoot response64 other sender route decode
+local notation "sourceAddress" => address (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
   index metadata ready post before selected shared privateState cache depth
 
 variable (qPost qPre qApplication qSelector qAux : Nat)
@@ -56,11 +58,11 @@ local notation "V" => sampleBudget qPost qPre qApplication qSelector qAux
 include bounded preBound applicationBound selectorBound auxBound in
 /-- The native fresh candidate event in the entire original stopped suffix has the displayed source-derived cap; no whole-observer or no-future-reveal premise is supplied. -/
 theorem source_bound :
-    Pr{let x ← PqxdhInitialFutureInputCandidates.future source writer mark sender route decode sourceView sourceSample sourceAddress}[x = true] ≤
+    Pr{let x ← PqxdhInitialFutureInputCandidates.future (completedBinding := completedBinding) source writer mark sender route decode sourceView sourceSample sourceAddress}[x = true] ≤
       2 * ((Q : ENNReal) / (2 ^ 256 : ENNReal)) := by
-  apply PqxdhInitialFutureInputCandidates.future_bound
+  apply PqxdhInitialFutureInputCandidates.future_bound (completedBinding := completedBinding)
   intro context output result reached
-  have counted := PqxdhInitialSourceSecrecyResources.candidates_bound source writer (pre other) (application other)
+  have counted := PqxdhInitialSourceSecrecyResources.candidates_bound (associatedData := associatedData) (completedBinding := completedBinding) source writer (pre other) (application other)
     initial (selector other) (aux other) mark sender route decode execution depth state root ancestors disclosed
     selected number remaining qPost bounded costs
     (PqxdhInitialAuditedResources.retained_callbacks source selectedMessage previousRoot response64
@@ -73,14 +75,14 @@ theorem source_bound :
 include bounded preBound applicationBound selectorBound auxBound in
 /-- The concrete target-free future tester pays the actual prefix budget, both76-byte samples, and the complete derived source continuation budget. -/
 theorem masked_uniform :
-    (PqxdhInitialFutureInputCandidates.masked source writer mark sender route decode sourceView sourceSample sourceAddress).IsTotalQueryBound
+    (PqxdhInitialFutureInputCandidates.masked (completedBinding := completedBinding) source writer mark sender route decode sourceView sourceSample sourceAddress).IsTotalQueryBound
       (V + (76 + (76 + U))) := by
-  apply PqxdhInitialFutureInputCandidates.masked_uniform
-  · exact sample_uniform source writer selectedMessage previousRoot response64 other sender route decode
+  apply PqxdhInitialFutureInputCandidates.masked_uniform (completedBinding := completedBinding)
+  · exact sample_uniform (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
       index metadata ready post before selected number ancestors disclosed shared privateState cache depth
       qPost qPre qApplication qSelector qAux bounded preBound applicationBound selectorBound auxBound
   · intro context output
-    have counted := PqxdhInitialSourceSecrecyResources.observed_uniform source writer (pre other) (application other)
+    have counted := PqxdhInitialSourceSecrecyResources.observed_uniform (associatedData := associatedData) (completedBinding := completedBinding) source writer (pre other) (application other)
       initial (selector other) (aux other) mark sender route decode execution depth state root ancestors disclosed
       selected number remaining qPost bounded costs
       (PqxdhInitialAuditedResources.retained_callbacks source selectedMessage previousRoot response64

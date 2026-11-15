@@ -73,12 +73,9 @@ theorem selected_contracts_with_divergent_other (before : Unit) :
   rintro ⟨value, returned⟩
   cases returned
 
-variable [authentication : beaconcrypt.auth.Operations]
-
 theorem selected_beacon_contracts
     (parse : ∀ input, Normal (primitive.parse input))
-    (edPublicBytes : ∀ key, Normal (crypto.edPublicBytes key))
-    (hash : ∀ request, Normal (authentication.hash request)) :
+    (edPublicBytes : ∀ key, Normal (crypto.edPublicBytes key)) :
     AdapterConstructors.BeaconContracts (crypto := cryptoModel)
       (generators := constructorModel) errorRng := by
   let : PublicWrapperPlatform.CryptoOperations := cryptoModel
@@ -86,8 +83,6 @@ theorem selected_beacon_contracts
   exact {
     parse := parse
     edPublicBytes := edPublicBytes
-    hash := hash
-    mldsaGenerate := fun _ => ⟨_, rfl⟩
     edGenerate := fun _ => ⟨_, rfl⟩
     kxGenerate := fun _ => ⟨_, rfl⟩
     kemGenerate := fun _ => ⟨_, rfl⟩

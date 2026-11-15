@@ -14,7 +14,6 @@ namespace BeaconcryptCore.Computational.RegistrationNativePlatformMldsaTableCach
 open BeaconcryptCore.Refinement
 open PqxdhServerAuthExperiment (Setup Checks)
 open RegistrationNativeMldsaOpaque (Pool handleSource restore Live)
-open RegistrationNativeMldsaPoolMap (StateLive)
 open RegistrationNativePlatformMldsaTableProgram (runState)
 open RegistrationNativePlatformMldsaTableRestore (observe)
 open RegistrationNativePlatformMldsaProgram (coins)
@@ -25,7 +24,7 @@ variable [primitive : AdapterSealPrimitive.Operations]
 /-- The actual corrected source callback preserves every cached ML receipt at the same reached private-table/platform cut. -/
 theorem cached (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential (handleSource source)) (fallback : RegistrationNativeMldsa.Credential source)
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
@@ -34,7 +33,7 @@ theorem cached (setup : Setup base KemSK) (checks : Checks) (wire : Registration
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain)
     (before : RegistrationNativeExperiment.State n KemSK (handleSource source)) (previous : Platform) (pool : Pool source)
-    (server : Live source pool credential fallback) (owners : StateLive source pool before)
+    (server : Live source pool credential fallback)
     (valid : RegistrationSigningShared.Cached (RegistrationNativeMldsaShared.nativeProject before))
     (result : ((RegistrationNativeRawAdapter.TypedSpec.Range query × RegistrationNativeExperiment.State n KemSK (handleSource source)) × Platform) × Pool source)
     (supported : result ∈ support (runState source
@@ -46,7 +45,7 @@ theorem cached (setup : Setup base KemSK) (checks : Checks) (wire : Registration
         reserveRegistration reservePeer erased helper writer query).run
           (RegistrationNativeMldsaMap.nativeState (restore source fallback pool) before)).run previous) := by
     rw [← RegistrationNativePlatformMldsaTableHandler.restored source setup checks wire route representation created credential view failure allocation
-      reserveRegistration reservePeer erased helper writer fallback pool server query before previous owners, support_map]
+      reserveRegistration reservePeer erased helper writer fallback pool server query before previous, support_map]
     exact ⟨result, supported, rfl⟩
   exact RegistrationNativePlatformCachedInvariant.handler setup checks wire route representation created fallback view failure allocation
     reserveRegistration reservePeer erased helper writer query

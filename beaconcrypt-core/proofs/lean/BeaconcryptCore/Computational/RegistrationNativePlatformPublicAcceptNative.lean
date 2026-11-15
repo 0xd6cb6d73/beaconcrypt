@@ -30,7 +30,7 @@ theorem server (setup : Setup base KemSK) (codec : Codec Reader Response)
     (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
     (verify : MldsaTranscriptAuth.Verify) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (selected : Bool) (reserve : StateT Platform ProbComp Bool) (packet : registration.InitPacket)
     (before : State n KemSK Platform source) :
     (fun result => ((result.1, RegistrationNativePlatformServerOpenControl.project

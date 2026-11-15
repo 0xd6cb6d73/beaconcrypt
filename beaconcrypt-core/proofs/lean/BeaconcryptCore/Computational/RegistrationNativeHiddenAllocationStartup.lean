@@ -2,10 +2,11 @@
 import BeaconcryptCore.Computational.RegistrationNativeHiddenAllocation
 import BeaconcryptCore.Computational.RegistrationNativeHiddenStartup
 
-/-! The effectful actual native startup creates no owner and derives the initial joint allocation invariant after its constructor, ML generation, Server import and shared-cache pin hash. No pure-start or caller-owned-roster premise is used. -/
+/-! The effectful actual native startup creates no owner and derives the initial joint allocation invariant after its constructor, Server ML generation and Server import. No pure-start or caller-owned-roster premise is used. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
+set_option warningAsError true
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativeHiddenAllocationStartup
 open PqxdhServerAuthExperiment (Setup Codec)
@@ -21,7 +22,7 @@ private theorem coins (work : ProbComp Value) : AllQueriesSatisfy (simulateQ (co
       simp only [simulateQ_bind, simulateQ_spec_query, coinLift]
       exact (allQueriesSatisfy_query_bind_iff _ _ _).mpr ⟨rfl, ih⟩
 
-/-- Every actual startup callback is a coin, Server import or shared hash, with no physical owner allocation. -/
+/-- Every actual startup callback is a coin or Server import, with no physical owner allocation. -/
 theorem start_safe (setup : Setup base KemSK) (ensureInit : StateT Unit ProbComp Bool)
     (identityIndex : Nat) (serverKeyId : U64) (identity : PqxdhJointIdentity.PublicIdentity) :
     AllQueriesSatisfy (RegistrationNativeHiddenStartup.start (n := n) setup source ensureInit identityIndex serverKeyId identity) WorldAllowed := by
@@ -40,8 +41,7 @@ theorem start_safe (setup : Setup base KemSK) (ensureInit : StateT Unit ProbComp
           apply allQueriesSatisfy_bind ((allQueriesSatisfy_query_iff (spec := WorldSpec n)
             (.inl (RegistrationServerStartup.publicCreated identity identityIndex serverKeyId)) WorldAllowed).mpr rfl)
           intro installed
-          exact allQueriesSatisfy_bind ((allQueriesSatisfy_query_iff (spec := WorldSpec n)
-            (.inr (.inl (.inr (.hash (PqxdhRefinement.absBytes credential.publicKey))))) WorldAllowed).mpr rfl) (fun _ => trivial)
+          trivial
 
 /-- Every reached interpreted startup result belongs to its literal source AST, irrespective of private service behavior. -/
 theorem interpreted_support (service : QueryImpl (PqxdhRecordLiftProtocol.ServiceSpec n) (StateT Secret ProbComp))

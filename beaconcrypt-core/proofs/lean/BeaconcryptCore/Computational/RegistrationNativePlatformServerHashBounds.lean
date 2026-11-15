@@ -184,18 +184,27 @@ private theorem target (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
     (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (reserve : StateT Platform ProbComp Bool) (query : RegistrationNativePlatformServerFrontendProgram.Spec.Domain) :
-    FrontBound (RegistrationNativePlatformServerFrontendCompiler.target (n := n) source view failure allocation erased helper sign writer reserve query) 4 := by
+    FrontBound (RegistrationNativePlatformServerFrontendCompiler.target (n := n) source view failure allocation erased helper sign writer reserve query)
+      (if RegistrationNativePlatformServerFrontendRequestBounds.NonPin query then 4 else 0) := by
   cases query with
   | pin current =>
     apply lift_bound
+    exact fun _ => isQueryBoundP_pure _ _ _
+  | adHash pending =>
+    apply lift_bound
     intro previous
-    have bounded : ((RegistrationNativePlatformServerRestrictedService.pin (n := n) current).run previous).IsQueryBoundP IsHash 1 := by
-      change (((fun digest => (.ok (.Some ⟨current.binding, current.public_key, RegistrationAuthenticationShared.digestArray digest⟩), previous)) <$>
-        ((Spec n).query (.inl (.inr (.hash (PqxdhRefinement.absBytes current.public_key)))))) :
-          OracleComp (Spec n) (RustM (core.option.Option session.ServerAuthenticationPin) × RegistrationNativePlatformBoundCompiler.PublicState Platform)).IsQueryBoundP IsHash 1
-      simp only [isQueryBoundP_map_iff, isQueryBoundP_query_iff, IsHash]
-      decide
-    exact bounded.mono (by decide)
+    cases requested : pending.request with
+    | fail error | div =>
+      simp only [RegistrationNativePlatformServerRestrictedService.adHash,
+        RegistrationServerAdHash.runWith, requested, StateT.run_pure]
+      exact isQueryBoundP_pure _ _ _
+    | ok request =>
+      simp only [RegistrationNativePlatformServerRestrictedService.adHash,
+        RegistrationServerAdHash.runWith, requested, bind_pure_comp]
+      have bounded := effect (n := n)
+        (.inr (.hash (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request))) previous
+      change (_ : OracleComp (Spec n) _).IsQueryBoundP IsHash 1 at bounded
+      exact bounded.mono (by simp only [RegistrationNativePlatformServerFrontendRequestBounds.NonPin, ite_true]; omega)
   | reserve =>
     apply lift_bound
     intro previous
@@ -209,10 +218,10 @@ private theorem target (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     intro previous
     have bounded := effect (n := n) (.inr (.peerPresent keyId)) previous
     change (_ : OracleComp (Spec n) _).IsQueryBoundP IsHash 0 at bounded
-    exact bounded.mono (by decide)
+    exact bounded.mono (Nat.zero_le _)
   | service control initial message => exact service source view failure allocation erased helper sign writer control initial message
 
-/-- The literal corrected full Server build has a conservative finite shared-hash allowance derived from four reached source request leaves and their actual stateful implementations. -/
+/-- The literal corrected full Server build has a conservative finite shared-hash allowance derived from four charged non-pin source request leaves and their actual stateful implementations; full-pin selection is pure. -/
 theorem build (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
@@ -225,10 +234,9 @@ theorem build (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     ((simulateQ (RegistrationNativePlatformServerFrontendCompiler.target (n := n) source view failure allocation erased helper sign writer reserve)
       ((RegistrationNativePlatformServerFrontendProgram.program handle application).run front)).run before).IsQueryBoundP IsFrontendHash 16 := by
   apply indicator IsFrontendHash _ 16
-  apply weighted_run (fun _ => 4) frontCost _ _ 16 before
-  · have actual := weighted_indicator (fun _ => True) 4 _ 4
-      ((isQueryBoundP_true_iff _ _).mpr (RegistrationNativePlatformServerFrontendRequestBounds.program handle application front))
-    simpa only [ite_true] using actual
+  apply weighted_run (fun query => if RegistrationNativePlatformServerFrontendRequestBounds.NonPin query then 4 else 0) frontCost _ _ 16 before
+  · exact weighted_indicator RegistrationNativePlatformServerFrontendRequestBounds.NonPin 4 _ 4
+      (RegistrationNativePlatformServerFrontendRequestBounds.program_nonpin handle application front)
   · intro query previous
     have actual := weighted_indicator (IsFrontendHash (n := n)) 1 _ _ (target (n := n) source view failure allocation erased helper sign writer reserve query previous)
     simp only [Nat.one_mul] at actual

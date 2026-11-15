@@ -64,7 +64,7 @@ theorem borrow (known :PeerMap) :
   rw [configuration.peerBorrow]
   rfl
 
-variable (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
 
 noncomputable def serverSend (current :Native×P) (before :Private configuration created credential current) (bytes :Slice U8) (key :U64) :
     TotalStep (Private configuration created credential)

@@ -48,8 +48,6 @@ pub const ENCODED_MLKEM768_PUBLIC_KEY_SIZE: usize = MLKEM768_PUBLIC_KEY_SIZE + 1
 
 // https://signal.org/docs/specifications/pqxdh/#pqxdh-parameters
 pub const PQXDH_INFO: &[u8; 46] = b"BeaconcryptPqxdh_CURVE25519_SHA-512_ML-KEM-768";
-pub const SYM_RATCHET_INFO_SIZE: usize = crate::ratchet::SYM_RATCHET_INFO_SIZE;
-pub const SYM_RATCHET_INFO: &[u8; SYM_RATCHET_INFO_SIZE] = crate::ratchet::SYM_RATCHET_INFO;
 
 pub const ROOT_KEY_INPUT_SIZE: usize =
 	PQXDH_PADDING_SIZE + (4 * DH_SECRET_SIZE) + SHARED_SECRET_SIZE;
@@ -64,7 +62,7 @@ const _: () = assert!(DH_SECRET_SIZE == 32);
 const _: () = assert!(SHARED_SECRET_SIZE == 32);
 const _: () = assert!(RATCHET_CHAIN_SIZE == 32);
 const _: () = assert!(ROOT_KEY_INPUT_SIZE == 192);
-const _: () = assert!(ASSOCIATED_DATA_SIZE == 281);
+const _: () = assert!(ASSOCIATED_DATA_SIZE == 151);
 const _: () = assert!(REGISTRATION_KEY_ID_BINDING_SIZE == 8);
 const _: () = assert!(REGISTRATION_ID_SIZE == 64);
 const _: () = assert!(SIGN_TYPE_ED25519 < 0x80);
@@ -494,7 +492,7 @@ pub fn split_initial_ratchet_kdf_output(
 	}
 }
 
-/// Candidate beacon session. Its root, AD, identity assignment, and ratchet
+/// Candidate beacon session. Its root, identity assignment, and ratchet
 /// direction have been validated, but its initial ciphertext has not yet
 /// authenticated. It must be consumed by [`beacon_commit`] or
 /// [`beacon_abort_candidate`].
@@ -502,7 +500,6 @@ pub struct BeaconRegistrationCandidate {
 	server_binding: ServerBinding,
 	assigned_key_id: u64,
 	root_key_input: RootKeyInput,
-	associated_data: [u8; ASSOCIATED_DATA_SIZE],
 }
 
 impl BeaconRegistrationCandidate {
@@ -524,10 +521,6 @@ impl BeaconRegistrationCandidate {
 
 	pub fn root_key_input_mut(&mut self) -> &mut RootKeyInput {
 		&mut self.root_key_input
-	}
-
-	pub const fn associated_data(&self) -> &[u8; ASSOCIATED_DATA_SIZE] {
-		&self.associated_data
 	}
 
 	pub const fn ratchet_initialization(&self) -> RatchetInitialization {
@@ -556,15 +549,10 @@ pub fn beacon_prepare_finish(
 		Ok(value) => value,
 		Err(err) => return Err(err),
 	};
-	let associated_data = build_associated_data(
-		state.expected_server_binding.identity_public_key,
-		state.beacon_identity_public_key,
-	);
 	Ok(BeaconRegistrationCandidate {
 		server_binding: state.expected_server_binding,
 		assigned_key_id: inputs.assigned_key_id,
 		root_key_input,
-		associated_data,
 	})
 }
 
@@ -793,7 +781,6 @@ pub struct ServerRegistrationCandidate {
 	server_identity_key_id: u64,
 	ephemeral_public_key: [u8; X25519_PUBLIC_KEY_SIZE],
 	kem_ciphertext: [u8; MLKEM768_CIPHERTEXT_SIZE],
-	associated_data: [u8; ASSOCIATED_DATA_SIZE],
 }
 
 impl ServerRegistrationCandidate {
@@ -819,10 +806,6 @@ impl ServerRegistrationCandidate {
 
 	pub const fn kem_ciphertext(&self) -> &[u8; MLKEM768_CIPHERTEXT_SIZE] {
 		&self.kem_ciphertext
-	}
-
-	pub const fn associated_data(&self) -> &[u8; ASSOCIATED_DATA_SIZE] {
-		&self.associated_data
 	}
 
 	pub const fn ratchet_initialization(&self) -> RatchetInitialization {
@@ -881,10 +864,6 @@ pub fn server_prepare_commit(
 		server_identity_key_id: current_server_binding.identity_key_id,
 		ephemeral_public_key: pending.ephemeral_public_key,
 		kem_ciphertext: pending.kem_ciphertext,
-		associated_data: build_associated_data(
-			current_server_binding.identity_public_key,
-			pending.beacon_identity_public_key,
-		),
 	})
 }
 
@@ -892,14 +871,13 @@ pub fn server_prepare_commit(
 pub struct EstablishedPeer {
 	pub key_id: u64,
 	pub identity_public_key: [u8; SIGN_PUBLIC_KEY_SIZE],
-	pub associated_data: [u8; ASSOCIATED_DATA_SIZE],
 }
 
+// Both operations are explicit extraction endpoints with normal-return certificates.
+#[allow(clippy::partialeq_ne_impl)]
 impl PartialEq for EstablishedPeer {
 	fn eq(&self, other: &Self) -> bool {
-		self.key_id == other.key_id
-			&& self.identity_public_key == other.identity_public_key
-			&& self.associated_data == other.associated_data
+		self.key_id == other.key_id && self.identity_public_key == other.identity_public_key
 	}
 
 	fn ne(&self, other: &Self) -> bool {
@@ -915,47 +893,12 @@ pub fn server_commit(candidate: ServerRegistrationCandidate) -> (ServerState, Es
 		EstablishedPeer {
 			key_id: candidate.key_id,
 			identity_public_key: candidate.beacon_identity_public_key,
-			associated_data: candidate.associated_data,
 		},
 	)
 }
 
 pub const fn server_abort_candidate(candidate: &ServerRegistrationCandidate) -> ServerState {
 	candidate.previous_state
-}
-
-/// Associated data is always encoded server identity first, beacon identity
-/// second, then the key-exchange and ratchet domain-separation strings.
-#[cfg_attr(
-	feature = "proverif",
-	hax_lib::proverif::replace(
-		"reduc forall server_identity: bitstring, beacon_identity: bitstring;\n  ${build_associated_data}(server_identity, beacon_identity) = beaconcrypt_associated_data(tag_ed25519(server_identity), tag_ed25519(beacon_identity), pqxdh_domain(), symmetric_ratchet_domain())."
-	)
-)]
-/// Build the fixed associated-data prefix and reserve its final 128 bytes for the ordered
-/// BLAKE2b-512 hashes of the Server and Beacon ML-DSA public keys. The production adapter fills
-/// both hashes before using this value for authenticated encryption or CTX commitment.
-pub fn build_associated_data(
-	server_identity_public_key: [u8; SIGN_PUBLIC_KEY_SIZE],
-	beacon_identity_public_key: [u8; SIGN_PUBLIC_KEY_SIZE],
-) -> [u8; ASSOCIATED_DATA_SIZE] {
-	let encoded_server = tag_sign_key(server_identity_public_key);
-	let encoded_beacon = tag_sign_key(beacon_identity_public_key);
-
-	let output: [u8; ASSOCIATED_DATA_SIZE] = core::array::from_fn(|i| {
-		if i < 33 {
-			encoded_server[i]
-		} else if i < 66 {
-			encoded_beacon[i - 33]
-		} else if i < 112 {
-			PQXDH_INFO[i - 66]
-		} else if i < 153 {
-			SYM_RATCHET_INFO[i - 112]
-		} else {
-			0
-		}
-	});
-	output
 }
 
 fn tag_sign_key(key: [u8; SIGN_PUBLIC_KEY_SIZE]) -> [u8; ENCODED_SIGN_PUBLIC_KEY_SIZE] {
@@ -1189,18 +1132,7 @@ mod tests {
 	}
 
 	#[test]
-	fn associated_data_and_ratchet_directions_are_role_ordered() {
-		let server_id = [0x71; SIGN_PUBLIC_KEY_SIZE];
-		let beacon_id = [0x72; SIGN_PUBLIC_KEY_SIZE];
-		let ad = build_associated_data(server_id, beacon_id);
-		assert_eq!(ad[0], SIGN_TYPE_ED25519);
-		assert_eq!(&ad[1..33], &server_id);
-		assert_eq!(ad[33], SIGN_TYPE_ED25519);
-		assert_eq!(&ad[34..66], &beacon_id);
-		assert_eq!(&ad[66..112], PQXDH_INFO);
-		assert_eq!(&ad[112..153], SYM_RATCHET_INFO);
-		assert_eq!(&ad[153..], &[0; 128]);
-
+	fn ratchet_directions_are_role_ordered() {
 		assert_eq!(BEACON_RATCHETS.receive_offset(), 0);
 		assert_eq!(BEACON_RATCHETS.send_offset(), 32);
 		assert_eq!(SERVER_RATCHETS.receive_offset(), 32);
@@ -1211,7 +1143,7 @@ mod tests {
 		pending: &InitialRatchetKdfPending,
 	) -> InitialRatchetKdfResponse {
 		let request = pending.request();
-		assert_eq!(request.info(), SYM_RATCHET_INFO);
+		assert_eq!(request.info(), crate::ratchet::INITIAL_RATCHET_INFO);
 		let root = request.input();
 		let mut output = [0u8; INITIAL_RATCHET_KDF_OUTPUT_SIZE];
 		output[0..32].copy_from_slice(root);
@@ -1224,7 +1156,7 @@ mod tests {
 	fn test_ratchet_kdf(
 		request: &crate::ratchet::SymmetricRatchetKdfRequest,
 	) -> crate::ratchet::RatchetKdfResponse {
-		assert_eq!(request.info(), SYM_RATCHET_INFO);
+		assert_eq!(request.info(), crate::ratchet::SYM_RATCHET_INFO);
 		let input = request.input();
 		let mut output = [0u8; crate::ratchet::RATCHET_KDF_OUTPUT_SIZE];
 		for index in 0..RATCHET_CHAIN_SIZE {
@@ -1549,7 +1481,6 @@ mod tests {
 		let peer = EstablishedPeer {
 			key_id: 5,
 			identity_public_key: [0x42; SIGN_PUBLIC_KEY_SIZE],
-			associated_data: [0x24; ASSOCIATED_DATA_SIZE],
 		};
 		let same = peer.clone();
 		assert!(peer == same);
@@ -1563,13 +1494,8 @@ mod tests {
 			identity_public_key: [0x43; SIGN_PUBLIC_KEY_SIZE],
 			..peer.clone()
 		};
-		let different_associated_data = EstablishedPeer {
-			associated_data: [0x25; ASSOCIATED_DATA_SIZE],
-			..peer.clone()
-		};
 		assert!(peer != different_key_id);
 		assert!(peer != different_identity);
-		assert!(peer != different_associated_data);
 	}
 
 	#[test]

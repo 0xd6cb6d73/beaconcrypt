@@ -35,7 +35,7 @@ theorem collect_run :
     lower (localImpl (n := n) setup wire route sign input inside provider outer false)
       (RegistrationNativeSecretWordBeaconCompiler.collect setup owner oneTime authenticated) =
       simulateQ (compiler setup wire route sign input inside provider outer owner oneTime authenticated)
-        (RegistrationNativeSecretWordBeaconPrepare.prepare authenticated.pending.control () () () []) := by
+        (RegistrationNativeSecretWordBeaconPrepare.prepare (completedBinding := authenticated.binding) authenticated.control () () () []) := by
   unfold RegistrationNativeSecretWordBeaconCompiler.collect
   exact RegistrationNativeSecretWordTargetServerExecution.lower_program _ _ _
 

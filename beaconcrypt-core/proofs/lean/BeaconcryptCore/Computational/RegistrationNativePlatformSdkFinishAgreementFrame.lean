@@ -60,7 +60,7 @@ variable [original : CryptoOperations (RustT ProbComp)]
   | _=>exact pure_frame _ before canonical result supported
 
  theorem native_frame (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (originalModel : AdapterPublicAgreementCommonModel.Model (m:=ProbComp) setup view)
     (aligned : RegistrationNativePlatformSdkFinishDecapsulation.Aligned setup originalModel.decapsulate)

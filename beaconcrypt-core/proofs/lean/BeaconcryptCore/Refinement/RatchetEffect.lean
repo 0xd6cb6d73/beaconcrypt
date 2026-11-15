@@ -26,7 +26,7 @@ theorem pqxdh.concrete.start_initial_ratchet_kdf_exact
     (root : Array Std.U8 32#usize) (initialization : pqxdh.RatchetInitialization) :
     pqxdh.concrete.start_initial_ratchet_kdf root initialization =
       ok {
-        request := { input := root, info := ratchet.SYM_RATCHET_INFO },
+        request := { input := root, info := ratchet.INITIAL_RATCHET_INFO },
         initialization := initialization
       } := by
   rfl
@@ -40,28 +40,28 @@ theorem pqxdh.concrete.start_beacon_ratchet_kdf_exact
     (root : Array Std.U8 32#usize) :
     pqxdh.concrete.start_beacon_ratchet_kdf root =
       ok {
-        request := { input := root, info := ratchet.SYM_RATCHET_INFO },
+        request := { input := root, info := ratchet.INITIAL_RATCHET_INFO },
         initialization := { send_offset := 32#u8, receive_offset := 0#u8 }
       } := by
   have hcast : UScalar.cast UScalarTy.U8 32#usize = 32#u8 := by
     apply UScalar.eq_of_val_eq
     simp_scalar
   simp [pqxdh.concrete.start_beacon_ratchet_kdf, pqxdh.BEACON_RATCHETS,
-    pqxdh.concrete.start_initial_ratchet_kdf, ratchet.SymmetricRatchetKdfRequest.new,
+    pqxdh.concrete.start_initial_ratchet_kdf, ratchet.InitialRatchetKdfRequest.new,
     pqxdh.RATCHET_CHAIN_SIZE, ratchet.RATCHET_CHAIN_SIZE, lift, hcast]
 
 theorem pqxdh.concrete.start_server_ratchet_kdf_exact
     (root : Array Std.U8 32#usize) :
     pqxdh.concrete.start_server_ratchet_kdf root =
       ok {
-        request := { input := root, info := ratchet.SYM_RATCHET_INFO },
+        request := { input := root, info := ratchet.INITIAL_RATCHET_INFO },
         initialization := { send_offset := 0#u8, receive_offset := 32#u8 }
       } := by
   have hcast : UScalar.cast UScalarTy.U8 32#usize = 32#u8 := by
     apply UScalar.eq_of_val_eq
     simp_scalar
   simp [pqxdh.concrete.start_server_ratchet_kdf, pqxdh.SERVER_RATCHETS,
-    pqxdh.concrete.start_initial_ratchet_kdf, ratchet.SymmetricRatchetKdfRequest.new,
+    pqxdh.concrete.start_initial_ratchet_kdf, ratchet.InitialRatchetKdfRequest.new,
     pqxdh.RATCHET_CHAIN_SIZE, ratchet.RATCHET_CHAIN_SIZE, lift, hcast]
 
 theorem pqxdh.concrete.resume_initial_ratchet_kdf_is_core_partition

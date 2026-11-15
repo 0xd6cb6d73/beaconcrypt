@@ -27,7 +27,7 @@ variable {setup :PqxdhServerAuthExperiment.Setup base KemSK} {checks :PqxdhServe
 variable (configuration :RegistrationNativePlatformPublicAdapterConfiguration.Configuration
   (P:=P) (E:=E) (R:=R) (Error:=Error) (source:=source) setup checks)
 variable {Value :Type}
-variable (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
 local notation "Private"=>RegistrationNativePlatformPublicAdapterAuditLowModel.Private (n:=n) configuration created credential
 local notation "physical"=>RegistrationNativePlatformPublicAdapterAuditLowModel.physical (n:=n) configuration created credential
 local notation "Log"=>RegistrationNativePlatformPublicAdapterSourceEvents.Log n KemSK R P
@@ -56,55 +56,6 @@ theorem bad (command :RegistrationNativePlatformPublicAdapterInterface.Command)
     exact RegistrationNativePlatformPublicAdapterSourceSigningHistory.history_eq key
       (RegistrationNativeMldsaShared.nativeProject current.1,leading) history
   cases sourceBad with
-  | accept input packet session ownerIndex beforeSource afterSource self token decoded found protectedKey returned absent=>
-    change (some session,after)∈support ((RegistrationNativePlatformPublicAdapterAuditModel.raw configuration created credential
-      (.inr (.accept (TranscriptAuthParts.absSlice input)))).run (current,prior)) at supported
-    unfold RegistrationNativePlatformPublicAdapterAuditModel.raw at supported
-    erw [RegistrationNativePlatformPublicAdapterTypedAuditRaw.query] at supported
-    simp only [RegistrationNativePlatformPublicAdapterTypedAuditRaw.form,RegistrationNativeConcreteReaders.init,decoded,
-      support_map] at supported
-    obtain ⟨middle,called,same⟩:=supported
-    simp only [RegistrationNativePlatformPublicAdapterTypedAudit.handler,StateT.run,support_map] at called
-    obtain ⟨base,called,actualResult⟩:=called
-    subst middle
-    rcases base with ⟨answer,next⟩
-    cases actual:answer with
-    | fail error | div=>simp only [Prod.map_def,id_eq,actual,RegistrationNativeRawAdapter.resultOption,Prod.mk.injEq,reduceCtorEq,false_and] at same
-    | ok optional=>cases optional with
-      | none=>simp only [Prod.map_def,id_eq,actual,RegistrationNativeRawAdapter.resultOption,Prod.mk.injEq,reduceCtorEq,false_and] at same
-      | some identifier=>
-        simp only [Prod.map_def,id_eq,actual,RegistrationNativeRawAdapter.resultOption,Prod.mk.injEq] at same
-        rcases same with ⟨sameIndex,sameState⟩
-        have sameValue:=Option.some.inj sameIndex
-        subst identifier
-        subst after
-        have nativeSupport:((.ok (some session),next.1),next.2)∈support
-          (((RegistrationNativePlatformExtractedSdkServer.Accept.native coins setup codec checks
-            (AdapterPublicServerSourceLens.admitted <$>configuration.replayAllocate stored.base.objects.server.consumed_registrations)
-            route source.verify configuration.agreement.representation created input).run current.1).run current.2) :=by
-          have target:=RegistrationNativePlatformPublicAdapterAuditedAccept.validTarget configuration created credential (current,prior) stored input packet decoded
-          have original:=Eq.mp (congrArg (fun action=>(answer,next)∈support action) target.symm) called
-          simp only [RegistrationNativePlatformPackedState.pack,StateT.run,support_map] at original
-          obtain ⟨inner,reached,equal⟩:=original
-          have nativeReply:=congrArg (fun value=>value.1) equal
-          have nativeState:=congrArg (fun value=>value.2.1) equal
-          have nativeP:=congrArg (fun value=>value.2.2) equal
-          rw [actual] at nativeReply
-          change inner.1.1=.ok (some session) at nativeReply
-          change inner.1.2=next.1 at nativeState
-          change inner.2=next.2 at nativeP
-          change ((inner.1.1,inner.1.2),inner.2)∈_ at reached
-          erw [nativeReply,nativeState,nativeP] at reached
-          exact reached
-        have pins:=RegistrationNativePlatformPublicAdapterAcceptPin.returned_source coins setup codec checks
-          (AdapterPublicServerSourceLens.admitted <$>configuration.replayAllocate stored.base.objects.server.consumed_registrations)
-          route source.verify configuration.agreement.representation created configuration.view configuration.views credential configuration.edFunctional input
-          current.1 next.1 current.2 next.2 session storedAfter.base token returned nativeSupport
-        have actualBad:=RegistrationNativePlatformPublicAdapterSourceAuthentication.accept configuration.view configuration.views setup.joint created credential current
-          stored.base leading historyEq packet session ownerIndex self found token pins protectedKey absent
-        change prior.bad ||decide (failure (.inr (.accept packet)) (.ok (some session)) current)=true
-        simp only [RegistrationNativePlatformPublicAdapterAuditModel.failure]
-        simp [actualBad]
   | finish index input packet application beforeSource afterSource self pending prekey oneTime kem decoded found phase protectedKey absent=>
     change (some application,after)∈support ((RegistrationNativePlatformPublicAdapterAuditModel.raw configuration created credential
       (.inr (.finish index (TranscriptAuthParts.absSlice input)))).run (current,prior)) at supported

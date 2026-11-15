@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePublicStartupFrame
-/-! Actual generated startup never allocates a protected record seed or uses a protected record role. Constructor, ML generation, Server initialization and the real shared pin hash retain these fields on every outcome, without resetting the reached cache or counters. -/
+/-! Actual generated startup never allocates a protected record seed or uses a protected record role. Constructor, ML generation, Server initialization and pure full-pin selection retain these fields on every outcome, without resetting the reached cache or counters. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core PqxdhRefinement
@@ -22,20 +22,11 @@ private theorem sampled (work : ProbComp A) (before : PqxdhRecordLiftWorld.State
   cases equal
   rfl
 
-private theorem install (created : PqxdhLiveServerConstruction.Created Unit) (before : PqxdhRecordLiftWorld.State n)
+private theorem install (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (before : PqxdhRecordLiftWorld.State n)
     (result : Unit × PqxdhRecordLiftWorld.State n)
     (supported : result ∈ support ((PqxdhRecordLiftWorld.initializeServer created).run before)) : fields result.2 = fields before := by
   simp only [PqxdhRecordLiftWorld.initializeServer, StateT.run] at supported
   split at supported <;> rw [mem_support_pure_iff] at supported <;> cases supported <;> rfl
-
-private theorem hash (bytes : Pqxdh.Bytes) (before : PqxdhRecordLiftWorld.State n)
-    (result : (PqxdhRecordLiftInterface.EnvEffects n).Range (.inr (.hash bytes)) × PqxdhRecordLiftWorld.State n)
-    (supported : result ∈ support ((PqxdhRecordLiftWorld.effects (.inr (.hash bytes))).run before)) : fields result.2 = fields before := by
-  simp only [PqxdhRecordLiftWorld.effects, PqxdhRecordLiftWorld.capability, StateT.run,
-    mem_support_bind_iff, mem_support_pure_iff] at supported
-  obtain ⟨actual, called, equal⟩ := supported
-  cases equal
-  exact sampled _ (PqxdhRecordLiftWorld.chargeEffect (.inr (.hash bytes)) before) actual called
 
 /-- Every actual startup branch preserves the complete protected role-use and seed fields. -/
 theorem startup_fields (setup : Setup base KemSK) (source : RegistrationNativeMldsa.Source)
@@ -63,14 +54,13 @@ theorem startup_fields (setup : Setup base KemSK) (source : RegistrationNativeMl
       exact generatedFields.trans constructedFields
     | some credential =>
       simp only [born, StateT.run_bind, mem_support_bind_iff] at supported
-      obtain ⟨installed, initialized, digest, hashed, supported⟩ := supported
+      obtain ⟨installed, initialized, supported⟩ := supported
       have installedFields := install _ generated.2 installed initialized
-      have hashedFields := hash (absBytes credential.publicKey) installed.2 digest hashed
       rw [StateT.run_pure, mem_support_pure_iff] at supported
       cases supported
-      exact hashedFields.trans (installedFields.trans (generatedFields.trans constructedFields))
+      exact installedFields.trans (generatedFields.trans constructedFields)
 
-/-- Actual cold initialization leaves every protected role unused and its private seed table empty, at the real warmed hash cache. -/
+/-- Actual cold initialization leaves every protected role unused and its private seed table empty, at the actual initialized cache. -/
 theorem initialized (setup : Setup base KemSK) (source : RegistrationNativeMldsa.Source)
     (ensureInit : StateT Unit ProbComp Bool) (identityIndex : Nat) (serverKeyId : U64)
     (identity : PqxdhJointIdentity.PublicIdentity)

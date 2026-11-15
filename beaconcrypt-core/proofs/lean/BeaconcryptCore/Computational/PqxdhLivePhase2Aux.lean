@@ -9,6 +9,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhLivePhase2Aux
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhBeaconPhase2Preparation (Bytes Word32 Ciphertext)
 open PqxdhKemIndCca PqxdhJointIdentity PqxdhJointKdfGame
 open PqxdhBeaconPhase2Routed (AuxSpec)
@@ -276,10 +277,10 @@ theorem owner_source (baseImpl : QueryImpl baseSpec ProbComp) (primitives : Prim
     (auxiliary : SharedState A) (state : PqxdhLiveKemBirth.State KemSK) :
     (simulateQ (PqxdhLiveKemBirth.impl baseImpl primitives kem)
       ((simulateQ (dispatch source (aux source callbacks))
-        (PqxdhBeaconPhase2Publication.nativeOwner decode raw owner)).run auxiliary)).run state =
+        (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw owner)).run auxiliary)).run state =
         (fun result => ((result.1, result.2.1), result.2.2)) <$>
           (simulateQ (dispatch source (direct baseImpl primitives kem source callbacks))
-            (PqxdhBeaconPhase2Publication.nativeOwner decode raw owner)).run (auxiliary, state) :=
+            (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw owner)).run (auxiliary, state) :=
   native_program_source baseImpl primitives kem source callbacks _ auxiliary state
 
 
@@ -406,27 +407,27 @@ theorem owner_query_caps (source : FixedHkdfSha512NoSaltSource)
     (decode : RawCtxReceive.FrameDecoder) (raw : Bytes)
     (owner : PqxdhBeaconPhase2Preparation.State Identity D Handle) (auxiliary : SharedState A) :
     let run := (simulateQ (dispatch source (aux (KemSK := KemSK) source callbacks))
-      (PqxdhBeaconPhase2Publication.nativeOwner decode raw owner)).run auxiliary
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw owner)).run auxiliary
     run.IsQueryBoundP (IsAllocationOrReveal (KemSK := KemSK)) 0 ∧
       run.IsQueryBoundP (PqxdhDynamicKemJointBounds.IsIdentityCreate (KemSK := KemSK)) 0 ∧
       run.IsQueryBoundP (PqxdhDynamicKemJointBounds.IsDecapsulation (KemSK := KemSK)) 69 ∧
       run.IsQueryBoundP (PqxdhDynamicKemJointBounds.IsUniform (KemSK := KemSK)) (69 * max qLocal 64) := by
   constructor
-  · simpa only [Nat.mul_zero] using PqxdhBeaconPhase2Bounds.native_interpreted_bound
+  · simpa only [Nat.mul_zero] using PqxdhBeaconPhase2Bounds.native_interpreted_bound (completedBinding := completedBinding)
       (dispatch source (aux source callbacks)) (IsAllocationOrReveal (KemSK := KemSK)) 0
       (dispatch_queries source _ _ 0 (fun query state => (auxiliary_service_caps source callbacks query state).1))
       decode raw owner auxiliary
   constructor
-  · simpa only [Nat.mul_zero] using PqxdhBeaconPhase2Bounds.native_interpreted_bound
+  · simpa only [Nat.mul_zero] using PqxdhBeaconPhase2Bounds.native_interpreted_bound (completedBinding := completedBinding)
       (dispatch source (aux source callbacks)) (PqxdhDynamicKemJointBounds.IsIdentityCreate (KemSK := KemSK)) 0
       (dispatch_queries source _ _ 0 (fun query state => (auxiliary_service_caps source callbacks query state).2.1))
       decode raw owner auxiliary
   constructor
-  · simpa only [Nat.mul_one] using PqxdhBeaconPhase2Bounds.native_interpreted_bound
+  · simpa only [Nat.mul_one] using PqxdhBeaconPhase2Bounds.native_interpreted_bound (completedBinding := completedBinding)
       (dispatch source (aux source callbacks)) (PqxdhDynamicKemJointBounds.IsDecapsulation (KemSK := KemSK)) 1
       (dispatch_queries source _ _ 1 (fun query state => (auxiliary_service_caps source callbacks query state).2.2))
       decode raw owner auxiliary
-  · exact PqxdhBeaconPhase2Bounds.native_interpreted_bound
+  · exact PqxdhBeaconPhase2Bounds.native_interpreted_bound (completedBinding := completedBinding)
       (dispatch source (aux source callbacks)) (PqxdhDynamicKemJointBounds.IsUniform (KemSK := KemSK)) (max qLocal 64)
       (dispatch_queries source _ _ _ (uniform_queries source callbacks qLocal localBound))
       decode raw owner auxiliary

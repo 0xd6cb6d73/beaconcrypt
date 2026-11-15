@@ -23,30 +23,30 @@ def oldSample (work : ProbComp Value) : OracleComp (Ambient n KemSK) Value :=
 def newSample (work : ProbComp Value) : OracleComp (Trusted n KemSK) Value :=
   simulateQ RegistrationNativeIdentityFrontend.ambientLift (oldSample work)
 
-def native (credentials : RegistrationNativeMldsa.Credential source) (pin : session.ServerAuthenticationPin) :
+def native (pin : session.ServerAuthenticationPin) :
     OracleComp (Ambient n KemSK) (RustM (Option (RegistrationNativeBeaconFrontend.Prepared source))) := do
   let seed ← oldSample PqxdhJointIdentity.sampleSeed
   let scalar ← oldSample PqxdhJointGapDh.sampleScalar
-  pure (.ok (some ⟨credentials, pin, seed, scalar⟩))
+  pure (.ok (some ⟨pin, seed, scalar⟩))
 
-def exposed (credentials : RegistrationNativeMldsa.Credential source) (pin : session.ServerAuthenticationPin) :
+def exposed (pin : session.ServerAuthenticationPin) :
     OracleComp (Trusted n KemSK) (RustM (Option (RegistrationNativeIdentityFrontend.Prepared source))) := do
   let identity ← RegistrationNativeIdentityInterface.create (Ambient n KemSK)
   match identity with
   | none => pure (.ok none)
   | some identity =>
       let scalar ← newSample PqxdhJointGapDh.sampleScalar
-      pure (.ok (some ⟨credentials, pin, identity, scalar⟩))
+      pure (.ok (some ⟨pin, identity, scalar⟩))
 
 /-- The entire source identity/prekey suffix, including actual counters and context, equals the original scalar/seed constructor after private credential realization. -/
 theorem source_exact (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
-    (credentials : RegistrationNativeMldsa.Credential source) (pin : session.ServerAuthenticationPin)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
+    (pin : session.ServerAuthenticationPin)
     (before : State n KemSK) :
     (fun result => (RegistrationNativeIdentityRealization.preparedReply result.2.identities result.1, result.2.context)) <$>
-      (simulateQ (implementation (mlSource := source) setup checks representation created) (exposed credentials pin)).run before =
-      (simulateQ (ambient (mlSource := source) setup checks representation created) (native credentials pin)).run before.context := by
+      (simulateQ (implementation (mlSource := source) setup checks representation created) (exposed (source := source) pin)).run before =
+      (simulateQ (ambient (mlSource := source) setup checks representation created) (native (source := source) pin)).run before.context := by
   simp only [exposed, native, oldSample, simulateQ_bind, StateT.run_bind, map_bind]
   rw [RegistrationNativeIdentitySourceBirth.create_source, RegistrationNativeIdentitySourceEffects.seed]
   simp only [bind_map_left]

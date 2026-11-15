@@ -1,9 +1,9 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationBeaconRecordNormal
-import BeaconcryptCore.Computational.RegistrationResponseExecutor
+import BeaconcryptCore.Computational.RegistrationResponseHashBounds
 import BeaconcryptCore.Computational.RegistrationAuthenticationHashBounds
 import BeaconcryptCore.Computational.RegistrationNativePlatformIdentityFinishPrimitiveHashBounds
-/-! Source control bounds for corrected Beacon finish. Response authentication has one hash position; the actual ranked receive controller crosses its commitment position at most once, even with arbitrary receive-KDF continuations and optional primitive replies. -/
+/-! Source control bounds for corrected Beacon finish. Response authentication has two hash positions; the actual ranked receive controller crosses its commitment position at most once, even with arbitrary receive-KDF continuations and optional primitive replies. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -85,40 +85,10 @@ theorem record_begin (agreed : agreement.BeaconAgreement) : (begin agreed).IsQue
   | Err aborted => exact isQueryBoundP_pure _ _ _
   | Ok next => simpa only [IsRecordHash, ite_false] using (record_program next).mono (potential_le next)
 
-private theorem response_continue {Input : Type} (result : RustM (core.result.Result Input pqxdh.BeaconAborted))
-    (next : Input → OracleComp RegistrationAuthenticationExecutor.Spec (RustM RegistrationResponseExecutor.ResponseResult))
-    (cap : Nat) (bounded : ∀ value, (next value).IsQueryBoundP RegistrationAuthenticationHashBounds.IsHash cap) :
-    (RegistrationResponseExecutor.continueResult result next).IsQueryBoundP RegistrationAuthenticationHashBounds.IsHash cap := by
-  cases result with
-  | fail error | div => exact isQueryBoundP_pure _ _ _
-  | ok result => cases result with
-    | Err aborted => exact isQueryBoundP_pure _ _ _
-    | Ok value => exact bounded value
-private theorem response_with {Input : Type} (result : RustM Input)
-    (next : Input → OracleComp RegistrationAuthenticationExecutor.Spec (RustM RegistrationResponseExecutor.ResponseResult))
-    (cap : Nat) (bounded : ∀ value, (next value).IsQueryBoundP RegistrationAuthenticationHashBounds.IsHash cap) :
-    (RegistrationAuthenticationExecutor.continueWith result next).IsQueryBoundP RegistrationAuthenticationHashBounds.IsHash cap := by
-  cases result with
-  | fail error | div => exact isQueryBoundP_pure _ _ _
-  | ok value => exact bounded value
-
-/-- Literal response authentication has one hash position and a hash-free ML verification, with every malformed/getter/resume failure retained. -/
+/-- Literal response authentication has two hash positions around hash-free pinned ML verification, with every failed prefix retained. -/
 theorem response_begin (pending : registration.BeaconPending) (packet : core.option.Option registration.ResponsePacket) :
-    (RegistrationResponseExecutor.begin pending packet).IsQueryBoundP RegistrationAuthenticationHashBounds.IsHash 1 := by
-  unfold RegistrationResponseExecutor.begin
-  apply response_continue _ _ 1
-  intro hashing
-  apply response_with _ _ 1
-  intro request
-  rw [isQueryBoundP_query_bind_iff]
-  refine ⟨Or.inr (by decide), ?_⟩
-  intro digest
-  apply response_continue _ _ 0
-  intro verification
-  apply response_with _ _ 0
-  intro verify
-  rw [isQueryBoundP_query_bind_iff]
-  exact ⟨Or.inl (by simp [RegistrationAuthenticationHashBounds.IsHash]), fun _ => isQueryBoundP_pure _ _ _⟩
+    (RegistrationResponseExecutor.begin pending packet).IsQueryBoundP RegistrationAuthenticationHashBounds.IsHash 2 :=
+  RegistrationResponseHashBounds.begin_hash_bound pending packet
 end BeaconcryptCore.Computational.RegistrationNativePlatformIdentityFinishControllerHashBounds
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformIdentityFinishControllerHashBounds.record_program' depends on axioms: [propext,

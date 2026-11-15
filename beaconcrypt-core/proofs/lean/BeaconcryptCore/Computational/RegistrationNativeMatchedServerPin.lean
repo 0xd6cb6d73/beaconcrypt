@@ -19,13 +19,13 @@ attribute [local irreducible] RegistrationNativeExperiment.handler RegistrationS
 /-- A matched actual token's successful Server initial capability uses the configured classical Server identity. -/
 theorem initial_identity (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (owner : RegistrationNativeBeaconFrontend.Owner source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (owner : RegistrationNativeBeaconFrontend.Owner source)
     (oneTime : PqxdhJointGapDh.ScalarBytes) (token : peer.ConsumedRegistration)
     (pin : session.ServerAuthenticationPin) (cache : CtxRomAuth.CtxRO.QueryCache)
     (receipt : RegistrationNativeMatchedServerInput.Receipt (n := n) setup checks wire route representation created owner oneTime token pin cache)
     (control : pqxdh.ServerState) (actualPin : session.ServerAuthenticationPin) (availability : pqxdh.KeyIdAvailability)
     (application : Slice U8) (initial : registration.ServerInitialKdf)
-    (admitted : registration.begin_server_completion control actualPin availability token.agreement application = .ok (.Ok initial)) :
+    (admitted : BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission control actualPin availability token.agreement application initial) :
     initial.candidate.server_identity_public_key = pin.binding.identity_public_key := by
   have supported := receipt.checked
   rw [RegistrationNativeInitAuthentication.authenticate, support_map] at supported

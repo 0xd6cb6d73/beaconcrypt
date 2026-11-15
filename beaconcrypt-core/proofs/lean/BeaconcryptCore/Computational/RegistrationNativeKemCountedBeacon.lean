@@ -19,7 +19,7 @@ local notation "Client" => State n source
 
 noncomputable def program (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State Value) :
     StateT Client (OracleComp (Spec KemSK)) Value := fun before => do
   let result ← (simulateQ (RegistrationNativeKemCountedTrusted.implementation setup checks representation created)
@@ -33,7 +33,7 @@ private theorem map_apply {S A B : Type} {m : Type → Type} [Monad m] [LawfulMo
 /-- All actual Beacon frontend control and native/private state are retained through the counted indexed source. -/
 theorem source_program (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State Value) (before : Native) :
     (execute setup (program setup checks representation created work)).run (project before) =
       Prod.map id project <$> (RegistrationNativeExperiment.beacon setup checks representation created work).run before := by
@@ -51,7 +51,7 @@ def restore (before : Client × Pool KemSK) : Native := toNative before.1 before
 /-- Reassembling the full private pool recovers the literal complete actual native Beacon execution and all its counters. -/
 theorem native_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State Value) (before : Native) :
     Prod.map id restore <$> (execute setup (program setup checks representation created work)).run (project before) =
       (RegistrationNativeExperiment.beacon setup checks representation created work).run before := by

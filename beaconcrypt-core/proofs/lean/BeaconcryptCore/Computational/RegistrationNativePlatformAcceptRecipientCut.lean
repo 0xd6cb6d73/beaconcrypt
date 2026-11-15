@@ -76,7 +76,7 @@ private def RootCorrect (setup : Setup base KemSK) (entry : RegistrationAgreemen
 
 private theorem root_query (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (query : RegistrationAgreementExecutor.Request)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (query : RegistrationAgreementExecutor.Request)
     (before : Client) (reply : RegistrationAgreementExecutor.Spec.Range query) (after : Client) (log : Log KemSK)
     (supported : ((reply, after), log) ∈ support
       ((RegistrationNativeKemCountedServerPrimitive.agreement setup checks representation created query).run before).withQueryLog) :
@@ -91,7 +91,7 @@ private theorem root_query (setup : Setup base KemSK) (checks : Checks)
 
 private theorem agree_cut (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (authenticated : registration.AuthenticatedInit) (accepted : agreement.ServerAgreement)
     (before after : Client) (log : Log KemSK)
     (supported : ((.ok (.ServerComplete accepted), after), log) ∈ support
@@ -143,7 +143,7 @@ private theorem inject_run (work : StateT Client (OracleComp CP) Value) (before 
 /-- An actual retained one-use token is connected to its actual completed Server agreement and same-log private Root input. -/
 structure Cut (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (authenticated : registration.AuthenticatedInit) (handle : Nat)
     (after : Client) (finalPlatform : Platform) (log : Log KemSK) where
   beforeAgreement : Client
@@ -163,7 +163,7 @@ structure Cut (setup : Setup base KemSK) (checks : Checks)
 theorem afterAuthentication (setup : Setup base KemSK) (checks : Checks)
     (reserve : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) Bool)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (authenticated : registration.AuthenticatedInit) (before after : Client) (previous finalPlatform : Platform)
     (handle : Nat) (log : Log KemSK)
     (supported : (((.ok (some handle), after), finalPlatform), log) ∈ support
@@ -217,7 +217,7 @@ theorem afterAuthentication (setup : Setup base KemSK) (checks : Checks)
 
 private theorem Cut.extend (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (authenticated : registration.AuthenticatedInit) (handle : Nat) (after : Client) (finalPlatform : Platform)
     (prefixLog log suffixLog : Log KemSK)
     (receipt : Cut setup checks representation created packet authenticated handle after finalPlatform log) :
@@ -231,7 +231,7 @@ attribute [local irreducible] RegistrationNativePlatformSourceAccept.authenticat
 /-- The actual mandatory authentication prefix and the retained token's actual Root cut share this same callback log. -/
 structure CheckedCut (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (pin : session.ServerAuthenticationPin) (before : Client) (previous : Platform)
     (handle : Nat) (after : Client) (finalPlatform : Platform) (log : Log KemSK) where
   authenticated : registration.AuthenticatedInit
@@ -246,7 +246,7 @@ structure CheckedCut (setup : Setup base KemSK) (codec : Codec Reader Response) 
 
 private theorem CheckedCut.extend (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (pin : session.ServerAuthenticationPin) (before : Client) (previous : Platform)
     (handle : Nat) (after : Client) (finalPlatform : Platform) (prefixLog log suffixLog : Log KemSK)
     (receipt : CheckedCut setup codec checks route representation created packet pin before previous handle after finalPlatform log) :
@@ -258,7 +258,7 @@ private theorem CheckedCut.extend (setup : Setup base KemSK) (codec : Codec Read
 theorem afterPin (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (reserve : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) Bool)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (pinResult : RustM (core.option.Option session.ServerAuthenticationPin))
     (before after : Client) (previous finalPlatform : Platform) (handle : Nat) (log : Log KemSK)
     (supported : (((.ok (some handle), after), finalPlatform), log) ∈ support
@@ -296,7 +296,7 @@ theorem afterPin (setup : Setup base KemSK) (codec : Codec Reader Response) (che
 theorem accept (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (reserve : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) Bool)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (before after : Client) (previous finalPlatform : Platform) (handle : Nat) (log : Log KemSK)
     (supported : (((.ok (some handle), after), finalPlatform), log) ∈ support
       (run (RegistrationNativePlatformKemCountedAccept.accept setup codec checks reserve route representation created packet)

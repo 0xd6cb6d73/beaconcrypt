@@ -5,6 +5,7 @@ import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerInitialized
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhDeploymentLaterServerBridge
 open PqxdhKemIndCca PqxdhServerAuthExperiment PqxdhJointIdentity
 open PqxdhServerAuthNative (NativeState)
@@ -23,7 +24,7 @@ variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response A X R S R
 /-- The logged command compiler is natural in the program result. -/
 theorem commands_map (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (f : R → S) (client : OracleComp (Spec KemSK) R)
-    (owners : List EncodedEntry) (log : Log) (state : NativeState KemSK) :
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log) (state : NativeState KemSK) :
     commands setup codec checks identityIndex publicIdentity (f <$> client) owners log state =
       mapOutcome f <$> commands setup codec checks identityIndex publicIdentity client owners log state := by
   simp only [commands, PqxdhDeploymentLaterServerCommands.run, simulateQ_map, StateT.run_map, Functor.map_map]
@@ -32,7 +33,7 @@ theorem commands_map (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
 /-- The logged exposure of the selected accept is natural in the observation of the tagged result. -/
 theorem exposeAt_map (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (f : R → S)
-    (work : OracleComp (Spec KemSK) X) (index : Nat) (owners : List EncodedEntry) (log : Log)
+    (work : OracleComp (Spec KemSK) X) (index : Nat) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log)
     (state : NativeState KemSK) :
     exposeAt setup codec checks identityIndex publicIdentity (fun output => f (observe output)) work index owners log
         state =
@@ -55,7 +56,7 @@ theorem exposeAt_map (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
 /-- With the identity observation, the logged exposure interprets under the actual encapsulator to the hidden logged command program of the tagged program. -/
 theorem exposeAt_tag (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (work : OracleComp (Spec KemSK) X) (index : Nat)
-    (owners : List EncodedEntry) (log : Log) (state : NativeState KemSK) :
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log) (state : NativeState KemSK) :
     simulateQ (actual setup) (exposeAt setup codec checks identityIndex publicIdentity id work index owners log state) =
       simulateQ (actual setup) (commands setup codec checks identityIndex publicIdentity (tag work index) owners log
         state) := by
@@ -67,7 +68,7 @@ theorem scanned_map (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     (created : PqxdhRegistrationJointServerBirth.ClientCreated Unit) :
     PqxdhDeploymentLaterServerCut.scanned setup codec checks decision work index created =
       cutMap (mapOutcome (decideTag decision)) <$> PqxdhRegistrationJointKemCut.scan setup
-        (exposeAt setup codec checks created.server.server.metadata.identityIndex created.publicIdentity id work index []
+        (exposeAt setup codec checks created.server.server.metadata.identityIndex created.publicIdentity id work index ([], fun _ => none)
           [] (PqxdhRegistrationJointInitializedAccept.initial created)) 0 := by
   rw [← PqxdhRegistrationJointKemRawNatural.scan_map, ← exposeAt_map]
   rfl
@@ -77,7 +78,7 @@ theorem rawResume_tag (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)
     (value : PqxdhServerRootPreparation.Verified Reader)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)
-    (consumed : List Pqxdh.Bytes) (state : NativeState KemSK) (owners : List EncodedEntry) (log : Log)
+    (consumed : List Pqxdh.Bytes) (state : NativeState KemSK) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log)
     (next : Option Nat → OracleComp (Spec KemSK) X) (reply : PqxdhRegistrationJointKemCut.Reply)
     (outcome : Outcome KemSK R)
     (reached : outcome ∈ support (rawResume setup codec checks identityIndex publicIdentity observe raw value ephemeral
@@ -96,7 +97,7 @@ set_option backward.isDefEq.respectTransparency false in
 /-- At a pending logged KEM cut of the identity-observation exposure, every completed stopped-router continuation that satisfies the run event encapsulated to the selected reserved key. -/
 theorem active_raw (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (decision : X → Bool) (identityIndex : Nat) (publicIdentity : PublicIdentity)
-    (work : OracleComp (Spec KemSK) X) (index : Nat) (owners : List EncodedEntry) (log : Log)
+    (work : OracleComp (Spec KemSK) X) (index : Nat) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log)
     (state : NativeState KemSK) (selected : Nat) (pairs : List (MlKem768PublicKey × KemSK))
     (chosen : MlKem768PublicKey × KemSK) (reserved : pairs[selected]? = some chosen)
     (request : PqxdhRegistrationJointKemCut.Request)
@@ -143,7 +144,7 @@ theorem run_le_real (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
       ((simulateQ (PqxdhDynamicKemJointRouter.stopped setup.baseImpl setup.joint setup.kem selected.val
         (List.ofFn (selected.insertNth chosen others)))
         (simulateQ (actual setup) (commands setup codec checks created.server.server.metadata.identityIndex
-          created.publicIdentity (tag work index) [] [] (PqxdhRegistrationJointInitializedAccept.initial created)))).run).run
+          created.publicIdentity (tag work index) ([], fun _ => none) [] (PqxdhRegistrationJointInitializedAccept.initial created)))).run).run
         (joint, PqxdhDynamicKemRouter.empty)] {true} ≤
     𝒟[((simulateQ (PqxdhDynamicKemJointRouter.stopped setup.baseImpl setup.joint setup.kem selected.val
         (List.ofFn (selected.insertNth chosen others)))

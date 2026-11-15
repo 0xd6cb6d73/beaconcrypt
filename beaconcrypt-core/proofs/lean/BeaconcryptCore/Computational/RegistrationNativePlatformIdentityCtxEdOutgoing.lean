@@ -59,7 +59,7 @@ noncomputable def expected (index : Nat) (owner : RegistrationNativeIdentityFron
 
 /-- Full source normalization of the actual outgoing callback, including missing source rows and the original public-key gate. -/
 theorem outgoing (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner source) (request : registration.Ed25519SigningRequest)
     (before : RegistrationNativeIdentityMain.State n KemSK source × Platform) :
     (RegistrationNativePlatformIdentityCtxMain.beacon setup checks representation created

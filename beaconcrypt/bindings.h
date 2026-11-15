@@ -483,12 +483,6 @@ struct beaconcrypt_Buffer beaconcrypt_beacon_identity_pk(const struct beaconcryp
 struct beaconcrypt_Buffer beaconcrypt_server_mldsa_public_key(const struct beaconcrypt_Server *handle);
 
 /**
- * Copy the beacon's ML-DSA-65 public key into a caller-owned buffer.
- * Returns an empty buffer for a null handle.
- */
-struct beaconcrypt_Buffer beaconcrypt_beacon_mldsa_public_key(const struct beaconcrypt_Beacon *handle);
-
-/**
  * Generate the beacon's serialized registration bundle.
  *
  * Returns an empty buffer when the handle is invalid or the beacon cannot generate a bundle in its current state.

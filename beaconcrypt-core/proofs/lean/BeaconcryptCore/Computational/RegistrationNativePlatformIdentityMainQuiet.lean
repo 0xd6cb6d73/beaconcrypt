@@ -37,7 +37,7 @@ private theorem dynamic_coins (work : ProbComp Value) :
 
 private theorem query_quiet (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (RegistrationNativePlatformIdentityProgram.Spec n KemSK).Domain)
     (allowed : RegistrationNativePlatformIdentityQuiet.PlatformAllowed n KemSK query)
     (before : RegistrationNativeIdentityWorld.Context n KemSK) :
@@ -58,7 +58,7 @@ private theorem query_quiet (setup : Setup base KemSK) (checks : Checks)
 
 private theorem program_quiet (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp (RegistrationNativePlatformIdentityProgram.Spec n KemSK) Value)
     (allowed : AllQueriesSatisfy work (RegistrationNativePlatformIdentityQuiet.PlatformAllowed n KemSK))
     (before : RegistrationNativeIdentityWorld.Context n KemSK) :
@@ -85,7 +85,7 @@ private theorem dynamic_lift (work : OracleComp PqxdhDynamicIdentityPool.Dynamic
 /-- Every quiet actual effectful frontend compiles to a client with no create/reveal request on any reply. -/
 theorem beacon_quiet (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativePlatformIdentityProgram.M n KemSK RegistrationServerRoleBackend.State Platform source Value)
     (prior : RegistrationNativePlatformIdentityQuiet.PlatformSafe work)
     (before : State n KemSK source × Platform) :

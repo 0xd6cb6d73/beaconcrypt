@@ -10,6 +10,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialNativeAuditCarried
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhInitialBeaconAmbient PqxdhInitialNativeAudit
 variable {ι M P I D K X Response Shared Result Origin A N C : Type} {extra : OracleSpec ι} {S B : Nat}
 
@@ -70,14 +72,14 @@ variable (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin)
 noncomputable def carried (depth stage : Nat) (state : State A N C) : ProbComp (Carried extra M P I D K Result Origin A N C S B) :=
   RawCtxForwardScan.scan PqxdhInitialForwardPost.selected (selected depth) (selection depth)
     (handler source writer stage pre application initial selector aux)
-    (PqxdhInitialNativeCarried.code source mark sender route decode execution)
-    (PqxdhInitialOriginForwardBuilder.program_covered source mark execution.origin sender route decode
+    (PqxdhInitialNativeCarried.code (associatedData := associatedData) (completedBinding := completedBinding) source mark sender route decode execution)
+    (PqxdhInitialOriginForwardBuilder.program_covered (associatedData := associatedData) (completedBinding := completedBinding) source mark execution.origin sender route decode
       execution.initial execution.index execution.metadata execution.ready execution.outside execution.before execution.trace) state
 
 /-- The actual saved descriptor, entire native state and chronological candidate list share one identical sampler in adjacent selective stages. -/
 theorem carried_same (depth : Nat) (state : State A N C) (valid : Depth depth state) :
-    carried source writer pre application initial selector aux mark sender route decode execution depth (depth + 1) state =
-      carried source writer pre application initial selector aux mark sender route decode execution depth (depth + 2) state :=
+    carried (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initial selector aux mark sender route decode execution depth (depth + 1) state =
+      carried (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initial selector aux mark sender route decode execution depth (depth + 2) state :=
   PqxdhInitialNativeCarried.annotated_same PqxdhInitialForwardPost.selected (selected depth) (selection depth) _ _ (Depth depth)
     (fun query reached invariant _ => step_same source writer pre application initial selector aux depth query reached invariant)
     (fun query reached invariant unchosen reply supported =>
@@ -114,8 +116,8 @@ private theorem scan_projection {Tag Value : Type} (depth stage : Nat)
 
 /-- Erasing the added audit from the carried source sampler preserves the literal original descriptor, rather than recovering it from a continuation projection. -/
 theorem carried_projection (depth stage : Nat) (state : State A N C) :
-    eraseCut <$> carried source writer pre application initial selector aux mark sender route decode execution depth stage state =
-      PqxdhInitialNativeCarried.carried source writer mark sender route decode execution depth stage
+    eraseCut <$> carried (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initial selector aux mark sender route decode execution depth stage state =
+      PqxdhInitialNativeCarried.carried (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth stage
         (external pre application initial selector aux) state.1 :=
   scan_projection source writer pre application initial selector aux depth stage _ _ state
 
@@ -158,11 +160,11 @@ private theorem scan_audit {Tag Value : Type} (depth stage : Nat)
 theorem carried_audit (depth stage qPost : Nat)
     (bounded : ∀ reply, (execution.outside reply).IsTotalQueryBound qPost)
     (state : State A N C) (result : Carried extra M P I D K Result Origin A N C S B)
-    (supported : result ∈ support (carried source writer pre application initial selector aux mark sender route decode execution depth stage state)) :
+    (supported : result ∈ support (carried (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initial selector aux mark sender route decode execution depth stage state)) :
     ∃ added, (cutState result).2 = state.2 ++ added ∧ added.length ≤ 3 * (7 + qPost * 67) := by
   apply scan_audit source writer pre application initial selector aux depth stage _ _ (7 + qPost * 67) _ state result supported
   simpa only [PqxdhInitialNativeCarried.code, PqxdhInitialOriginForwardBuilder.program_erase] using
-    PqxdhInitialOriginPost.sequence_total source execution.initial mark execution.origin sender route decode
+    PqxdhInitialOriginPost.sequence_total (associatedData := associatedData) (completedBinding := completedBinding) source execution.initial mark execution.origin sender route decode
       execution.index execution.metadata execution.ready execution.outside qPost bounded (execution.before, execution.trace)
 
 /-- Every supported audited source cut inherits its source-derived full outside continuation certificate from the same literal original descriptor. -/
@@ -170,22 +172,22 @@ theorem carried_fits (depth stage qPost : Nat)
     (bounded : ∀ reply, (execution.outside reply).IsTotalQueryBound qPost)
     (state reached : State A N C) (context : Context extra M P I D K Result Origin S B)
     (supported : RawCtxForwardScan.Cut.pending context reached ∈ support
-      (carried source writer pre application initial selector aux mark sender route decode execution depth stage state)) :
+      (carried (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initial selector aux mark sender route decode execution depth stage state)) :
     PqxdhInitialOriginCertificates.Fits qPost context := by
-  apply PqxdhInitialNativeCarried.carried_fits source writer mark sender route decode execution depth stage
+  apply PqxdhInitialNativeCarried.carried_fits (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth stage
     (external pre application initial selector aux) qPost bounded state.1 reached.1 context
-  rw [← carried_projection source writer pre application initial selector aux mark sender route decode execution depth stage state,
+  rw [← carried_projection (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initial selector aux mark sender route decode execution depth stage state,
     support_map]
   exact ⟨.pending context reached, supported, rfl⟩
 
 /-- The original source uniform bill also bounds its audited prefix: both audit erasure and scan completion are literal oracle-program equations. -/
 theorem carried_uniform (depth stage budget : Nat) (state : State A N C)
     (bounded : ((simulateQ (PqxdhInitialNativeLog.handler source writer stage (external pre application initial selector aux))
-      (PqxdhInitialNativeCarried.original source mark sender route decode execution)).run state.1).IsTotalQueryBound budget) :
-    (carried source writer pre application initial selector aux mark sender route decode execution depth stage state).IsTotalQueryBound budget := by
+      (PqxdhInitialNativeCarried.original (associatedData := associatedData) (completedBinding := completedBinding) source mark sender route decode execution)).run state.1).IsTotalQueryBound budget) :
+    (carried (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initial selector aux mark sender route decode execution depth stage state).IsTotalQueryBound budget := by
   apply RawCtxForwardScan.scan_uniform PqxdhInitialForwardPost.selected (selected depth) (selection depth)
-    (handler source writer stage pre application initial selector aux) (PqxdhInitialOriginContext.frame mark sender route decode)
-    _ _ (PqxdhInitialOriginForwardBuilder.program_sound source mark execution.origin sender route decode execution.initial
+    (handler source writer stage pre application initial selector aux) (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode)
+    _ _ (PqxdhInitialOriginForwardBuilder.program_sound (associatedData := associatedData) (completedBinding := completedBinding) source mark execution.origin sender route decode execution.initial
       execution.index execution.metadata execution.ready execution.outside execution.before execution.trace) state budget
   apply (isQueryBound_map_iff _ (Prod.map id Prod.fst) _ _ _).mp
   rw [program_erase source writer stage pre application initial selector aux]

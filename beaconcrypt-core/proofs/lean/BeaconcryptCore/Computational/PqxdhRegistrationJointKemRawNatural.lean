@@ -98,7 +98,7 @@ def mapOutcome (f : R → S) (outcome : Outcome KemSK R) : Outcome KemSK S :=
 /-- The exposed source command compiler is natural in the client result. -/
 theorem commands_map (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (f : R → S) (client : OracleComp (SourceSpec KemSK) R)
-    (owners : List EncodedEntry) (state : NativeState KemSK) :
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK) :
     commands setup codec checks identityIndex publicIdentity (f <$> client) owners state =
       mapOutcome f <$> commands setup codec checks identityIndex publicIdentity client owners state := by
   simp only [commands, simulateQ_map, StateT.run_map]
@@ -107,7 +107,7 @@ theorem commands_map (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
 /-- The actual source command program is natural in the client result. -/
 theorem program_map (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (f : R → S) (client : OracleComp (SourceSpec KemSK) R)
-    (owners : List EncodedEntry) (state : NativeState KemSK) :
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK) :
     PqxdhRegistrationJointKemCommands.program setup codec checks identityIndex publicIdentity (f <$> client)
         owners state =
       mapOutcome f <$> PqxdhRegistrationJointKemCommands.program setup codec checks identityIndex publicIdentity
@@ -119,7 +119,7 @@ theorem program_map (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
 /-- The decision program of the KEM games is the result map of the tagged program of the real run under the actual source command compiler. -/
 theorem decision_program (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (decision : X → Bool)
-    (work : OracleComp (SourceSpec KemSK) X) (index : Nat) (owners : List EncodedEntry) (state : NativeState KemSK) :
+    (work : OracleComp (SourceSpec KemSK) X) (index : Nat) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK) :
     PqxdhRegistrationJointKemCommands.program setup codec checks identityIndex publicIdentity
         (decisionClient decision work index) owners state =
       mapOutcome (decideTag decision) <$> PqxdhRegistrationJointKemCommands.program setup codec checks identityIndex
@@ -135,7 +135,7 @@ theorem hide_map (setup : Setup baseSpec KemSK) (f : Result → Next)
 /-- Exposing only the selected accept is natural in the observation of the tagged result: a composed observation is the result map of the inner one, on every path including completion before the selected accept. -/
 theorem exposeAt_map (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (f : R → S)
-    (work : OracleComp (SourceSpec KemSK) X) (index : Nat) (owners : List EncodedEntry) (state : NativeState KemSK) :
+    (work : OracleComp (SourceSpec KemSK) X) (index : Nat) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK) :
     exposeAt setup codec checks identityIndex publicIdentity (fun output => f (observe output)) work index owners state =
       mapOutcome f <$> exposeAt setup codec checks identityIndex publicIdentity observe work index owners state := by
   simp only [exposeAt, map_bind]
@@ -155,7 +155,7 @@ theorem exposeAt_map (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
 /-- Exposing the selected accept with the identity observation interprets, under the actual encapsulator, to the actual source command program of the tagged client itself. -/
 theorem exposeAt_tag (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (work : OracleComp (SourceSpec KemSK) X) (index : Nat)
-    (owners : List EncodedEntry) (state : NativeState KemSK) :
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK) :
     simulateQ (actual setup) (exposeAt setup codec checks identityIndex publicIdentity id work index owners state) =
       PqxdhRegistrationJointKemCommands.program setup codec checks identityIndex publicIdentity (tag work index)
         owners state := by
@@ -237,7 +237,7 @@ theorem rawScan_map (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     (created : PqxdhRegistrationJointServerBirth.ClientCreated Unit) :
     PqxdhRegistrationJointKemRawChallenge.rawScan setup codec checks decision work index created =
       cutMap (mapOutcome (decideTag decision)) <$> PqxdhRegistrationJointKemCut.scan setup
-        (exposeAt setup codec checks created.server.server.metadata.identityIndex created.publicIdentity id work index []
+        (exposeAt setup codec checks created.server.server.metadata.identityIndex created.publicIdentity id work index ([], fun _ => none)
           (PqxdhRegistrationJointInitializedAccept.initial created)) 0 := by
   rw [← scan_map, ← exposeAt_map]
   rfl

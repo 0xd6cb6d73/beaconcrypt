@@ -16,21 +16,21 @@ open RegistrationWorldAgreementCompiler (EnvState)
 variable {ι KemSK Auxiliary Private : Type} {base : OracleSpec ι} {n : Nat}
 
 def owner (setup : Setup base KemSK) (mlSource : RegistrationNativeMldsa.Source)
-    (pin : session.ServerAuthenticationPin) (credentials : RegistrationNativeMldsa.Credential mlSource)
+    (pin : session.ServerAuthenticationPin)
     (identity : IdentitySeed) (prekey : ScalarBytes)
     (born : Nat × PqxdhKemIndCca.MlKem768PublicKey) (worldOwner : Nat) : Owner mlSource :=
-  ⟨pin, credentials, identity, prekey,
+  ⟨pin, identity, prekey,
     PqxdhRootTableInitialization.rootArray (setup.dh.publicKey prekey), born.1, born.2, worldOwner, .fresh, []⟩
 
 /-- No native state or environment log is replaced while the two actual external callbacks execute. -/
 theorem append_program (setup : Setup base KemSK) (mlSource : RegistrationNativeMldsa.Source)
     (edPin : Std.Array U8 32#usize) (keyId : U64)
-    (pin : session.ServerAuthenticationPin) (credentials : RegistrationNativeMldsa.Credential mlSource)
+    (pin : session.ServerAuthenticationPin)
     (identity : IdentitySeed) (prekey : ScalarBytes) (owners : State mlSource) (env : EnvState Auxiliary) :
-    ((appendBorn (n := n) setup mlSource edPin keyId pin credentials identity prekey).run owners).run env = (do
+    ((appendBorn (n := n) setup mlSource edPin keyId pin identity prekey).run owners).run env = (do
       let born : Nat × PqxdhKemIndCca.MlKem768PublicKey ← (Trusted n KemSK).query (.inr (.inr (.inl .create)))
       let worldOwner : Nat ← (Trusted n KemSK).query (.inl (.inr (.appendOwner keyId edPin .fresh)))
-      pure ((.ok (some owners.length), owners ++ [owner setup mlSource pin credentials identity prekey born worldOwner]), env)) := by
+      pure ((.ok (some owners.length), owners ++ [owner setup mlSource pin identity prekey born worldOwner]), env)) := by
   simp only [appendBorn, kem, effect, StateT.run_bind, StateT.run_lift, StateT.run_pure,
     StateT.run_get, bind_pure_comp, owner]
   rfl
@@ -39,17 +39,17 @@ theorem append_program (setup : Setup base KemSK) (mlSource : RegistrationNative
 theorem append_supported (setup : Setup base KemSK) (mlSource : RegistrationNativeMldsa.Source)
     (implementation : QueryImpl (Trusted n KemSK) (StateT Private ProbComp))
     (edPin : Std.Array U8 32#usize) (keyId : U64)
-    (pin : session.ServerAuthenticationPin) (credentials : RegistrationNativeMldsa.Credential mlSource)
+    (pin : session.ServerAuthenticationPin)
     (identity : IdentitySeed) (prekey : ScalarBytes) (owners : State mlSource) (env : EnvState Auxiliary)
     (before : Private)
     (result : ((RustM (Option Nat) × State mlSource) × EnvState Auxiliary) × Private)
     (supported : result ∈ support ((simulateQ implementation
-      (((appendBorn setup mlSource edPin keyId pin credentials identity prekey).run owners).run env)).run before)) :
+      (((appendBorn setup mlSource edPin keyId pin identity prekey).run owners).run env)).run before)) :
     ∃ born middle worldOwner after,
       (born, middle) ∈ support ((implementation (.inr (.inr (.inl .create)))).run before) ∧
       (worldOwner, after) ∈ support ((implementation (.inl (.inr (.appendOwner keyId edPin .fresh)))).run middle) ∧
       result = (((.ok (some owners.length), owners ++
-        [owner setup mlSource pin credentials identity prekey born worldOwner]), env), after) := by
+        [owner setup mlSource pin identity prekey born worldOwner]), env), after) := by
   rw [append_program] at supported
   simp only [simulateQ_bind, simulateQ_spec_query, simulateQ_pure, StateT.run_bind,
     StateT.run_pure, mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at supported
@@ -64,7 +64,7 @@ theorem create_program (setup : Setup base KemSK) (mlSource : RegistrationNative
       let earlier ← ((prepare (n := n) (KemSK := KemSK) mlSource edPin mlPin keyId).run owners).run env
       match earlier.1.1 with
       | .ok (some prepared) =>
-          ((appendBorn setup mlSource edPin keyId prepared.pin prepared.credentials prepared.identity prepared.prekey).run earlier.1.2).run earlier.2
+          ((appendBorn setup mlSource edPin keyId prepared.pin prepared.identity prepared.prekey).run earlier.1.2).run earlier.2
       | .ok none => pure ((.ok none, earlier.1.2), earlier.2)
       | .fail error => pure ((.fail error, earlier.1.2), earlier.2)
       | .div => pure ((.div, earlier.1.2), earlier.2)) := by
@@ -88,7 +88,7 @@ theorem create_supported (setup : Setup base KemSK) (mlSource : RegistrationNati
       (((.ok (some prepared), leadingOwners), leadingEnv), middle) ∈ support
         ((simulateQ implementation (((prepare mlSource edPin mlPin keyId).run owners).run env)).run before) ∧
       (((.ok (some index), ownersAfter), envAfter), after) ∈ support
-        ((simulateQ implementation (((appendBorn setup mlSource edPin keyId prepared.pin prepared.credentials
+        ((simulateQ implementation (((appendBorn setup mlSource edPin keyId prepared.pin
           prepared.identity prepared.prekey).run leadingOwners).run leadingEnv)).run middle) := by
   rw [create_program] at supported
   simp only [simulateQ_bind, StateT.run_bind, mem_support_bind_iff] at supported

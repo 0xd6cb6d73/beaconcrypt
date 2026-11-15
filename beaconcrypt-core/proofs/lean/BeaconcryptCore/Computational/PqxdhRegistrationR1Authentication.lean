@@ -42,7 +42,7 @@ theorem budget_iff (work : AuthInput → OracleComp ServerAuthSpec Result) (Q qH
       fun input => (unit_queries work input _ _).mpr (bounded.rom input),
       fun input => (unit_queries work input _ _).mpr (bounded.hash input)⟩
 
-/-- The actual generated-Server singleton has the published full common session/decoded-record authentication bound and the identical constructed reductions. Both source initialization calls are retained on the left and removed only by the checked gate inequality. Every primitive, resource and codec contract is the original endpoint's contract; supplied Server seeds have no such conclusion. -/
+/-- The actual generated-Server singleton has the published full common session/decoded-record authentication bound and the identical constructed reductions. Both source initialization calls are retained on the left and removed only by the checked gate inequality. Every primitive, resource and codec contract is the original endpoint's contract; supplied Server seeds have no such conclusion. The bound carries the transcript-hash birthday term last. -/
 theorem generated_authentication (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (caps : KemCaps) (bounded : KemBound setup caps) (ensureInit : StateT A ProbComp Bool)
     (work : AuthInput → OracleComp ServerAuthSpec Result) (runtime : A)
@@ -69,7 +69,8 @@ theorem generated_authentication (setup : Setup baseSpec KemSK) (codec : Codec R
         PqxdhServerAuthObservedSchedule.scheduleLoss setup codec checks (unitWork work) false Q j
           (PqxdhServerAuthSessionRecord.observers codec Q j)) +
       (PqxdhJointIdentity.advantage setup.joint
-        (PqxdhServerAuthJointIdentityEuf.reduction setup codec checks (unitWork work) signatureFallback)).toReal ∧
+        (PqxdhServerAuthJointIdentityEuf.reduction setup codec checks (unitWork work) signatureFallback)).toReal +
+      PqxdhServerAuthTranscriptCollision.term Q qHash ∧
     PqxdhServerAuthCommonAuthentication.ReductionBills setup codec checks caps (unitWork work) qCoin Q qH qHash qTotal qFinish fallback signatureFallback := by
   have bound := PqxdhServerAuthCommonAuthentication.common_authentication_with_resources
     setup codec checks caps bounded (unitWork work) qCoin Q qH qHash

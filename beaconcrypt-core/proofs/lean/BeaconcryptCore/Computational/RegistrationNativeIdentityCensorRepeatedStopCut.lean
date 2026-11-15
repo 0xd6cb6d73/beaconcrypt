@@ -24,7 +24,7 @@ local notation "Outcome" => RustM (Option (alloc.vec.Vec U8)) × FullState
 open RegistrationNativeIdentityCensorBundleStopCut (RawReply published cut)
 
 variable (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (selected index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner mlSource) (placeholder : Ed25519Signature)
 variable (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E))
 local notation "Main" => RegistrationNativePlatformIdentityCtxMain.beacon (n := n) (Platform := Platform) (source := mlSource) setup checks representation created
@@ -46,7 +46,7 @@ theorem failure_paired (oneTime : PqxdhJointGapDh.ScalarBytes)
   rw [RegistrationNativeIdentityCensorBundleFailureSource.source, RegistrationNativeIdentityCensorBundleFailureSource.source]
   have same := RegistrationNativeIdentityCensorRepeatedSource.publication setup checks representation created selected index owner placeholder reserve
     (pqxdh.BeaconFresh.mk owner.pin.binding) (RegistrationNativeIdentityFrontend.inputs owner)
-    (pqxdh.BeaconCoins.mk (PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime))) owner.pin owner.mldsa.publicKey
+    (pqxdh.BeaconCoins.mk (PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime))) owner.pin
     started built rfl before seed handle held sourceTarget found
   have mapped := congrArg (fun distribution => (fun returned => returned.1.map (fun _ => returned.2)) <$> distribution) same
   have observed : (fun returned : RegistrationNativePlatformIdentityBundle.Reply × Full (n := n) (KemSK := KemSK) (Platform := Platform) (mlSource := mlSource) =>

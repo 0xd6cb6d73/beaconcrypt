@@ -24,7 +24,7 @@ def owners (pool : PqxdhDynamicIdentityPool.SourceState) (current : Registration
 
 def prepared (pool : PqxdhDynamicIdentityPool.SourceState) (current : RegistrationNativeIdentityFrontend.Prepared source) :
     RegistrationNativeBeaconFrontend.Prepared source :=
-  ⟨current.credentials, current.pin, seedFor pool current.identity, current.prekey⟩
+  ⟨current.pin, seedFor pool current.identity, current.prekey⟩
 
 def preparedReply (pool : PqxdhDynamicIdentityPool.SourceState) :
     RustM (Option (RegistrationNativeIdentityFrontend.Prepared source)) →

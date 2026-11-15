@@ -37,7 +37,8 @@ noncomputable def groupedSource (setup : Setup baseSpec KemSK) (codec : Codec Re
     (checks : Checks) (selected : Nat) (challenge : PqxdhKemIndCca.MlKem768Ciphertext)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (services : Services V Response) :
     QueryImpl (SourceSpec KemSK)
-      (StateT (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × SkelState KemSK V)
+      (StateT ((List PqxdhRegistrationJointGeneratedFinish.EncodedEntry ×
+          (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) × SkelState KemSK V)
         (OracleComp (Enc KemSK + TSpec V))) :=
   ((skelImpl setup codec checks identityIndex publicIdentity services).mapStateTBase
     (groupedClient setup codec selected challenge)).flattenStateT
@@ -58,11 +59,11 @@ theorem grouped_record_query (setup : Setup baseSpec KemSK) (left right : Codec 
   · cases field
     all_goals try simp [RecordKind, sourceKind, PqxdhRegistrationJointRevealCosts.fieldIndex] at permitted
     apply StateT.ext
-    rintro ⟨owners, state⟩
+    rintro ⟨⟨owners, inits⟩, state⟩
     change (groupedSource setup left checks selected challenge identityIndex publicIdentity leftServices
-      (.inr (address, .kernel))).run (owners, state) =
+      (.inr (address, .kernel))).run ((owners, inits), state) =
       (groupedSource setup right checks selected challenge identityIndex publicIdentity rightServices
-        (.inr (address, .kernel))).run (owners, state)
+        (.inr (address, .kernel))).run ((owners, inits), state)
     simp only [groupedSource, QueryImpl.flattenStateT_mapStateTBase_apply_run]
     cases present : owners[address]? <;>
       simp [groupedClient,

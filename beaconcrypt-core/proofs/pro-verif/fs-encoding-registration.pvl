@@ -101,7 +101,11 @@ let Cur(
             ratchet_material(server_to_beacon_chain(root))
           in
           
-          let associated_data = fs_associated_data(server_identity, identity) in
+          let associated_data = fs_associated_data(
+            tag_ed25519(identity), signed_prekey, signed_one_time, signed_pq,
+            server_identity, x25519_public(ephemeral_secret),
+            mlkem_ciphertext(pq, kem_coins), assigned_key_id
+          ) in
           
           new payload: bitstring;
           
@@ -244,7 +248,13 @@ let FsBeacon() =
   
   let server_material_1 = ratchet_material(server_to_beacon_chain(root)) in
 
-  let associated_data = fs_associated_data(server_identity, beacon_identity) in
+  let associated_data = fs_associated_data(
+    tag_ed25519(beacon_identity),
+    sign(tag_x25519_prekey(x25519_public(beacon_prekey_secret)), beacon_identity_secret),
+    sign(tag_x25519_one_time(x25519_public(beacon_one_time_secret)), beacon_identity_secret),
+    sign(tag_mlkem768(mlkem_public(beacon_pq_secret)), beacon_identity_secret),
+    response_server_identity, server_ephemeral, kem_ciphertext, assigned_key_id
+  ) in
   
   let crypto_frame(
     frame_cipher: bitstring,

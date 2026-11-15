@@ -67,7 +67,7 @@ private theorem state_pure_apply {S A : Type} {m : Type → Type} [Monad m]
 
 /-- A literal pure primitive reply changes only the actual source request ledger under native lowering. -/
 theorem pure_step (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (owner : Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (query : RegistrationAgreementExecutor.Request) (answer : RegistrationAgreementExecutor.Spec.Range query)
     (primitive : RegistrationNativeBeaconFrontend.agreementCore (n := n) (Auxiliary := RegistrationServerRoleBackend.State) setup owner oneTime query = pure answer)

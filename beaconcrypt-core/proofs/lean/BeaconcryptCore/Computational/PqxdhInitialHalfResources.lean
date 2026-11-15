@@ -9,6 +9,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialHalfResources
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+  (associatedData : Std.Array Std.U8 151#usize)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf
 open PqxdhInitialBeaconAmbient PqxdhInitialHalfObserverBudgets PqxdhInitialHalfProgram
 open PqxdhInitialSourceInitialSecrecy (Input)
@@ -29,11 +31,11 @@ theorem program_total (source : FixedHkdfSha512NoSaltSource)
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (execution : Execution extra M P I D K Result Origin S B) (depth qPost : Nat)
     (bounded : ∀ reply, (execution.post reply).IsTotalQueryBound qPost) :
-    (program (X := X) (Response := Response) source mark sender route decode execution depth).IsTotalQueryBound (2 * (7 + qPost * 67) + (depth + 1)) := by
+    (program (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response) source mark sender route decode execution depth).IsTotalQueryBound (2 * (7 + qPost * 67) + (depth + 1)) := by
   unfold program baseProgram
   apply isTotalQueryBound_bind
     (PqxdhInitialHalfObserverCompiler.program_bound _ _
-      (PqxdhInitialOriginPost.sequence_total source execution.first mark execution.origin sender route decode
+      (PqxdhInitialOriginPost.sequence_total (associatedData := associatedData) (completedBinding := completedBinding) source execution.first mark execution.origin sender route decode
         execution.index execution.metadata execution.ready execution.post qPost bounded (execution.before, execution.trace)))
   intro result
   rw [bind_pure_comp]
@@ -72,10 +74,10 @@ theorem callbacks (entry : Entry) : ExternalUniform (costs qPre qApplication qSe
 include postBound checkBound knownBound preBound applicationBound selectorBound auxBound in
 /-- The literal complete ordinary first-half observer has the derived uniform-byte and candidate bills from the actual source input. -/
 theorem one_bounds (entry : Entry) (output : FullOutput) :
-    let work := PqxdhInitialHalfSecrecy.observed source writer (mark source) sender route decode (view source) (.inr input, entry) output
+    let work := PqxdhInitialHalfSecrecy.observed (associatedData := associatedData) (completedBinding := completedBinding) source writer (mark source) sender route decode (view source) (.inr input, entry) output
     work.IsTotalQueryBound (uniformCap qPost qCheck qPre qApplication qSelector qAux) ∧
       ∀ result ∈ support work, (PqxdhInitialHalfSecrecy.candidates result).length ≤ candidateCap qPost qCheck qKnown := by
-  have fullBound := (program_total (X := X) (Response := Response) source (mark source input) sender route decode (PqxdhInitialSourceHalf.execution input entry.material.1)
+  have fullBound := (program_total (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response) source (mark source input) sender route decode (PqxdhInitialSourceHalf.execution input entry.material.1)
     (input.number.val - 1) qPost postBound).mono (Nat.add_le_add_left checkBound _)
   have callbackBound := callbacks source input qPre qApplication qSelector qAux preBound applicationBound selectorBound auxBound entry
   have uniform := complete_uniform source writer (productionStream source.crypto) entry output

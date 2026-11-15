@@ -29,13 +29,13 @@ noncomputable def phase (setup : Setup base KemSK) (wire : RegistrationNativeWir
 /-- The full post-authentication public program is the actual native agreement controller followed by its actual terminal/open/install continuation. -/
 theorem phase_source (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential mlSource)
     (owner current : Owner mlSource) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (env : EnvState RegistrationServerRoleBackend.State)
     (authenticated : registration.AuthenticatedResponse)
-    (coherent : authenticated.pending.control.expected_server_binding = authenticated.pending.binding.server_pin.binding)
-    (erased : Std.Array U8 357#usize) (before : State n KemSK mlSource) :
+    (coherent : authenticated.control.expected_server_binding = authenticated.binding.server_pin.binding)
+    (erased : Std.Array U8 227#usize) (before : State n KemSK mlSource) :
     RegistrationBeaconReferenceNativeCompletion.drop <$>
       (simulateQ (implementation setup checks wire representation created scalar credential)
         (((phase setup wire (eraseOwner owner) oneTime authenticated).run (eraseOwner current)).run env)).run before = (do

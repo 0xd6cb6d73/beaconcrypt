@@ -9,6 +9,8 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhInitialRootEventResources
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf
 open PqxdhKemIndCca PqxdhInitializerSecrecy PqxdhJointKdfGame PqxdhChallengeSecretRouting
 open PqxdhStatefulPhase1EufCma PqxdhEd25519EufCma PqxdhJointIdentity PqxdhPrivateRootSource
@@ -36,7 +38,7 @@ def coins : Nat :=
 include postTotal
 /-- Every indexed root HMAC reduction has one challenge query. Both evaluated challengers also pay their ordinary 64-byte secret-key generation. -/
 theorem hmac_queries (hmac : HmacSha512) :
-    let p := PqxdhInitialRootEventAccepted.protocol env attachedVerify primitives program post kem selected number ancestors disclosed
+    let p := PqxdhInitialRootEventAccepted.protocol (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program post kem selected number ancestors disclosed
     let client := rootReduction env.source baseImpl kem p
     let qCoins := coins env baseImpl kem program post c qPost
     client.IsQueryBoundP PqxdhCorrelatedExpandQueryBounds.IsCoin qCoins ∧
@@ -51,42 +53,42 @@ theorem hmac_queries (hmac : HmacSha512) :
         (64 + qCoins + 64 * (1 + (7 + qPost * 67))) := by
   exact PqxdhAuthenticatedRootEndpoint.reduction_resources env.source baseImpl kem _ hmac
     _ _ _ _ _ _ _ _ _ _ _
-    (PqxdhInitialRootEventBounds.sampler_bounds attachedVerify primitives env baseImpl kem program post c qPost postTotal selected number ancestors disclosed)
+    (PqxdhInitialRootEventBounds.sampler_bounds (associatedData := associatedData) (completedBinding := completedBinding) attachedVerify primitives env baseImpl kem program post c qPost postTotal selected number ancestors disclosed)
 
 /-- The exact correlated Extract family has at most one initial and one per continued source callback request, with explicit real/random challenger sampling. -/
 theorem extract_queries (hmac : HmacSha512) :
-    let p := PqxdhInitialRootEventAccepted.protocol env attachedVerify primitives program post kem selected number ancestors disclosed
+    let p := PqxdhInitialRootEventAccepted.protocol (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program post kem selected number ancestors disclosed
     let client := PqxdhCorrelatedExtractFamily.reduction env.source hmac baseImpl kem p
     let qCoins := coins env baseImpl kem program post c qPost
     client.IsQueryBoundP PqxdhCorrelatedExtractQueryBounds.IsCoin qCoins ∧
     client.IsQueryBoundP PqxdhCorrelatedExtractQueryBounds.IsFamily (1 + (7 + qPost * 67)) ∧
     (PqxdhCorrelatedExtractFamily.realGame hmac client).IsTotalQueryBound (32 + qCoins) ∧
     (PqxdhCorrelatedExtractFamily.randomGame client).IsTotalQueryBound (qCoins + 64 * (1 + (7 + qPost * 67))) := by
-  have caps := PqxdhInitialRootEventBounds.sampler_bounds attachedVerify primitives env baseImpl kem program post c qPost postTotal selected number ancestors disclosed
+  have caps := PqxdhInitialRootEventBounds.sampler_bounds (associatedData := associatedData) (completedBinding := completedBinding) attachedVerify primitives env baseImpl kem program post c qPost postTotal selected number ancestors disclosed
   have queries := PqxdhCorrelatedExtractQueryBounds.reduction_bounds env.source hmac baseImpl kem _ _ _ _ _ _ _ _ _ _ _ _ caps
   have games := PqxdhCorrelatedExtractQueryBounds.reduction_uniform_ledger env.source hmac baseImpl kem _ _ _ _ _ _ _ _ _ _ _ _ caps
   exact ⟨queries.1, queries.2, games.1, games.2⟩
 
 /-- The source-event ordinary CCA reduction preserves all prechallenge oracle budgets and charges both public and private continued decapsulations. -/
 theorem cca_queries :
-    let p := PqxdhInitialRootEventAccepted.protocol env attachedVerify primitives program post kem selected number ancestors disclosed
+    let p := PqxdhInitialRootEventAccepted.protocol (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program post kem selected number ancestors disclosed
     (PqxdhChallengeSecretRouting.reduction env.source kem p).MakesAtMostQueries
       c.uPre c.bPre c.dPre
       ((7 + qPost * 67) * PqxdhInitialRootEventBounds.callbackBill c.qLocal c.qAux .uniform)
       (7 + qPost * 67) ((7 + qPost * 67) + (7 + qPost * 67)) := by
-  have caps := PqxdhInitialRootEventBounds.sampler_bounds attachedVerify primitives env baseImpl kem program post c qPost postTotal selected number ancestors disclosed
+  have caps := PqxdhInitialRootEventBounds.sampler_bounds (associatedData := associatedData) (completedBinding := completedBinding) attachedVerify primitives env baseImpl kem program post c qPost postTotal selected number ancestors disclosed
   exact PqxdhChallengeSecretQueryBounds.reduction_bounds env.source kem _ _ _ _ _ _ _ _ caps.prepare caps.resume
 
 /-- Both CCA challenger branches have the complete interpreted source bill and the branch-independent 32-byte challenge sample. -/
 theorem cca_challenger (bit : Bool) :
-    let p := PqxdhInitialRootEventAccepted.protocol env attachedVerify primitives program post kem selected number ancestors disclosed
+    let p := PqxdhInitialRootEventAccepted.protocol (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program post kem selected number ancestors disclosed
     (simulateQ (kemAmbientImpl baseImpl)
       (oneKeyBranchMain kem (runtimeOfImpl (kemAmbientImpl baseImpl))
         (PqxdhChallengeSecretRouting.reduction env.source kem p) bit)).IsTotalQueryBound
       (c.qKeygen + ((c.uPre + c.qBase * c.bPre + c.qDecap * c.dPre) +
         (c.qEncap + (32 + ((7 + qPost * 67) * PqxdhInitialRootEventBounds.callbackBill c.qLocal c.qAux .uniform +
           c.qBase * (7 + qPost * 67) + c.qDecap * ((7 + qPost * 67) + (7 + qPost * 67))))))) := by
-  have caps := PqxdhInitialRootEventBounds.sampler_bounds attachedVerify primitives env baseImpl kem program post c qPost postTotal selected number ancestors disclosed
+  have caps := PqxdhInitialRootEventBounds.sampler_bounds (associatedData := associatedData) (completedBinding := completedBinding) attachedVerify primitives env baseImpl kem program post c qPost postTotal selected number ancestors disclosed
   exact PqxdhChallengeSecretQueryBounds.fixed_world_uniform_bound env.source baseImpl kem _
     _ _ _ _ _ _ _ _ _ _ _ caps.keygen caps.encaps caps.base caps.decaps caps.prepare caps.resume bit
 
@@ -101,12 +103,12 @@ include c
 omit postTotal in
 /-- Authentication uses the original source prefix: exactly the three signing calls and one selected identity creation cap are preserved. -/
 theorem signing_queries :
-    let work := PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (driver env.toDriverEnvironment program)
+    let work := PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program)
     work.IsQueryBoundP (fun query => PqxdhJointPhase1AcceptanceComposition.IsSigning
       (PqxdhPrivateSourceCoins.translated query)) 3 ∧
     work.IsQueryBoundP (fun query => PqxdhPrivatePhase1Prefix.Creating
       (PqxdhPrivateSourceCoins.translated query)) 1 := by
-  exact PqxdhAuthenticatedRootComposition.prefix_source_caps env baseImpl kem program c.noSign c.noCreate
+  exact PqxdhAuthenticatedRootComposition.prefix_source_caps (completedBinding := completedBinding) env baseImpl kem program c.noSign c.noCreate
 
 end BeaconcryptCore.Computational.PqxdhInitialRootEventResources
 

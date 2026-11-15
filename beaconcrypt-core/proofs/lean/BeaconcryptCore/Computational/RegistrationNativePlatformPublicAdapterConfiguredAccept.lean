@@ -66,7 +66,7 @@ theorem insertion (self :beaconcrypt_public_wrapper.server.Server) :
   rw [operation]
   rfl
 
-variable (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
 variable (current :RegistrationNativeExperiment.State n KemSK source×P)
 variable (before :RegistrationNativePlatformPublicAdapterDispatcherCore.Private configuration created credential current)
 variable (input :Slice U8)

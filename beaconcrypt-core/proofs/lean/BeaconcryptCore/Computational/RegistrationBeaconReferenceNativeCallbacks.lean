@@ -17,7 +17,7 @@ variable {mlSource : RegistrationNativeMldsa.Source}
 
 private theorem lower_run (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : StateT (EnvState RegistrationServerRoleBackend.State)
       (OracleComp (RegistrationNativeBeaconFrontend.Trusted n KemSK)) Value)
     (before : Local n KemSK mlSource) :
@@ -71,7 +71,7 @@ theorem owned_program (setup : Setup base KemSK) (scalar : PqxdhJointGapDh.Scala
 /-- Lowering the private selected-role restoration uses the actual global native primitive interpretation. -/
 theorem lower_query (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (owner : SelectedOwner mlSource) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (query : RegistrationAgreementExecutor.Request) :
     lower (n := n) setup checks representation created (source setup scalar owner oneTime query) =
@@ -93,7 +93,7 @@ theorem lower_query (setup : Setup base KemSK) (checks : Checks)
 /-- Arbitrary reached native agreement programs share the concrete global source state. -/
 theorem lower_program (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (owner : SelectedOwner mlSource) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (work : OracleComp RegistrationAgreementExecutor.Spec Value) :
     lower setup checks representation created (simulateQ (source (n := n) setup scalar owner oneTime) work) =

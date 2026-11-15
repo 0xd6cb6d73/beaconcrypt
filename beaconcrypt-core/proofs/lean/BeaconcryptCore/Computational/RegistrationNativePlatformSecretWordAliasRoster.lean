@@ -14,6 +14,7 @@ set_option maxRecDepth 8192
 set_option maxHeartbeats 1200000
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativePlatformSecretWordAliasRoster
+attribute [local irreducible] RegistrationNativePlatformSecretWordOpen.accept
 open PqxdhServerAuthExperiment (Setup Checks)
 open RegistrationNativeSecretWordTargetPublication (key pack_keys restore_keys)
 open RegistrationNativePlatformSecretWordOrdinary (State)

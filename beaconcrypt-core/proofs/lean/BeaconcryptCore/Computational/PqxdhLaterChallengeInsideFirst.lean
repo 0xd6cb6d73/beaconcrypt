@@ -6,7 +6,9 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeInsideFirst
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhInitialPostContext RawCtxForwardTags RawCtxForwardFirstCut PqxdhFirstRecordConfidentiality
 open PqxdhLaterChallengeInsideState (familySendRequest)
 variable {ι M P I D K X Response Shared Result Origin : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -85,7 +87,7 @@ private theorem challenge_first (mark : PqxdhBeaconPhase2Shared.Secrets Shared �
     (owner : RawCtxProtocolReveals.Owner S B) (number : Std.U64) (bit : Bool) (left right : Pqxdh.Bytes)
     (equal : left.length = right.length) (current : PqxdhRecordConfidentialityChallenge.State)
     (unused : current.pair = none) (before : NativeFront M P I D K S B) (trace : PqxdhInitialOriginPost.Trace Origin S B) :
-    First (PqxdhInitialOriginForwardPost.program (X := X) (Response := Response) mark sender route decode
+    First (PqxdhInitialOriginForwardPost.program (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode
       ((PqxdhRecordConfidentialityChallenge.handler (extra := extra) owner number bit (.inr (left, right))).run current) before trace) := by
   rw [PqxdhRecordConfidentialityChallenge.challenge_step owner number bit left right equal current unused]
   rw [← bind_pure_comp]
@@ -103,7 +105,7 @@ theorem inside_first (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin) 
     (details : PqxdhLaterChallengeCapture.Details extra M P I D K Origin S B)
     (classified : PqxdhLaterChallengeSavedClassification.phase (some details) = .inside)
     (before : NativeFront M P I D K S B) (trace : PqxdhInitialOriginPost.Trace Origin S B) :
-    First (PqxdhInitialOriginForwardPost.program (X := X) (Response := Response) mark sender route decode
+    First (PqxdhInitialOriginForwardPost.program (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode
       ((PqxdhRecordConfidentialityChallenge.handler owner number bit details.request.query).run details.request.before) before trace) := by
   rcases details with ⟨⟨query, current, next⟩, callback⟩
   cases used : current.pair with
@@ -112,7 +114,7 @@ theorem inside_first (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin) 
       rcases query with request | ⟨left, right⟩
       · simp only [PqxdhLaterChallengeSavedClassification.phase, used, reduceCtorEq] at classified
       · by_cases equal : left.length = right.length
-        · exact challenge_first mark sender route decode owner number bit left right equal current used before trace
+        · exact challenge_first (completedBinding := completedBinding) mark sender route decode owner number bit left right equal current used before trace
         · simp only [PqxdhLaterChallengeSavedClassification.phase, used, equal, ite_false, reduceCtorEq] at classified
 
 
@@ -128,21 +130,21 @@ theorem cut_start {State : Type} (mark : PqxdhBeaconPhase2Shared.Secrets Shared 
     (front : NativeFront M P I D K S B) (trace : PqxdhInitialOriginPost.Trace Origin S B) (state reached : State)
     (cut : RawCtxForwardScan.Cut.pending details.callback reached ∈ support
       (RawCtxForwardScan.scan PqxdhInitialOriginForwardPost.selected selected selection impl
-        (PqxdhInitialOriginForwardPost.program mark sender route decode
+        (PqxdhInitialOriginForwardPost.program (completedBinding := completedBinding) mark sender route decode
           ((PqxdhRecordConfidentialityChallenge.handler owner number bit details.request.query).run details.request.before) front trace)
-        (PqxdhInitialOriginForwardPost.program_covered mark sender route decode
+        (PqxdhInitialOriginForwardPost.program_covered (completedBinding := completedBinding) mark sender route decode
           ((PqxdhRecordConfidentialityChallenge.handler owner number bit details.request.query).run details.request.before) front trace) state)) :
     reached = state ∧
-      (simulateQ (PqxdhInitialOriginPost.compiler (X := X) (Response := Response) mark sender route decode)
+      (simulateQ (PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode)
         ((PqxdhRecordConfidentialityChallenge.handler owner number bit details.request.query).run details.request.before)).run (front, trace) =
       (((Base extra RatchetChain I D K X Response Shared S B).query
-        (PqxdhInitialOriginContext.frame mark sender route decode details.callback).1 : OracleComp (Base extra RatchetChain I D K X Response Shared S B) _) >>=
-        (PqxdhInitialOriginContext.frame mark sender route decode details.callback).2) := by
+        (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode details.callback).1 : OracleComp (Base extra RatchetChain I D K X Response Shared S B) _) >>=
+        (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode details.callback).2) := by
   simpa only [PqxdhInitialOriginForwardPost.program_erase] using
     (RawCtxForwardFirstCut.cut_start PqxdhInitialForwardPost.selected selected selection impl
-      (PqxdhInitialOriginContext.frame mark sender route decode) _ _
-      (PqxdhInitialOriginForwardPost.program_sound mark sender route decode _ front trace)
-      (inside_first mark sender route decode owner number bit details classified front trace) state reached details.callback cut)
+      (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode) _ _
+      (PqxdhInitialOriginForwardPost.program_sound (completedBinding := completedBinding) mark sender route decode _ front trace)
+      (inside_first (completedBinding := completedBinding) mark sender route decode owner number bit details classified front trace) state reached details.callback cut)
 
 
 end BeaconcryptCore.Computational.PqxdhLaterChallengeInsideFirst

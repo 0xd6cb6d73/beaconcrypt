@@ -6,7 +6,10 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeSamplerFits
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPhase1AcceptanceOracle PqxdhKemIndCca PqxdhInitializerSecrecy
 open CtxRomAuth AdaptiveCtxSharedHash PqxdhSecretInputKdf PqxdhFullSecretInputKdf
@@ -29,7 +32,7 @@ local notation "Packet" => PqxdhSourceSharedPreparation.Packet
   (PqxdhSourceSharedPreparation.LocalOutput (M := M) (P := P) (I := I) (K := K) (A := A) setup program) KemSK
 local notation "LocalPacket" => PqxdhSharedParentInput.LocalPacket (setup := setup) (M := M) (P := P) (I := I) (K := K)
     (X := X) (Response := Response) (A := A) (S := S) (B := B)
-local notation "input" => PqxdhSourceSharedInput.input setup env callbacks program post attachedVerify primitives baseImpl kem owner number ancestors disclosed
+local notation "input" => PqxdhSourceSharedInput.input (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem owner number ancestors disclosed
 abbrev Details := PqxdhLaterChallengeCapture.Details (SelectorSpec baseSpec) M P (IdentityHandle I) (DhPair setup) (KemHandle K) Bool S (B + 1)
 
 local notation "Input" => PqxdhInitialPreparedSourceInput.Input (M := M) (P := P) (I := I) (K := K) (X := X)
@@ -52,20 +55,20 @@ theorem prepared_fits (secret : KemSK) (challenge : MlKem768Ciphertext)
       (PqxdhFirstRecordConfidentiality.AdvSpec (SelectorSpec baseSpec) S (B + 1)) Bool)
     (q : Nat) (bounded : ∀ reply, (continuation reply).IsTotalQueryBound q)
     (result : LocalPacket × Option (Details (setup := setup) (M := M) (P := P) (I := I) (K := K) (S := S) (B := B)))
-    (supported : result ∈ support (prepared setup env callbacks owner number bit attachedVerify primitives baseImpl kem secret challenge start output depth continuation)) :
+    (supported : result ∈ support (prepared (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks owner number bit attachedVerify primitives baseImpl kem secret challenge start output depth continuation)) :
     PacketFits setup owner number q result := by
   simp only [prepared, mem_support_bind_iff, mem_support_pure_iff] at supported
   obtain ⟨value, reached, rfl⟩ := supported
   cases value with
   | inl decision => trivial
   | inr pending =>
-      exact PqxdhLaterChallengePreparedFits.run_fits env0 callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number bit continuation q bounded pending.1 pending.2 reached
+      exact PqxdhLaterChallengePreparedFits.run_fits (associatedData := associatedData) (completedBinding := completedBinding) env0 callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number bit continuation q bounded pending.1 pending.2 reached
 
 /-- The actual generated selection supplies the same all-reply continuation allowance; neither completed preparation nor cached completion imposes a new condition on its Boolean. -/
 theorem after_fits (packet : Packet) (output : HmacBlock) (depth : Nat)
     (q : Nat) (bounded : ∀ selection reply, (adversary selection reply).IsTotalQueryBound q)
     (result : LocalPacket × Option (Details (setup := setup) (M := M) (P := P) (I := I) (K := K) (S := S) (B := B)))
-    (supported : result ∈ support (after setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed packet output depth)) :
+    (supported : result ∈ support (after (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed packet output depth)) :
     PacketFits setup owner number q result := by
   rcases packet with ⟨publicKey, secretKey, state, ciphertext⟩
   cases state with
@@ -80,18 +83,18 @@ theorem after_fits (packet : Packet) (output : HmacBlock) (depth : Nat)
       · simp only [mem_support_pure_iff] at supported
         subst result
         trivial
-      · exact prepared_fits setup env callbacks owner number bit attachedVerify primitives baseImpl kem _ _ _ _ _ _ q (bounded prefixOutput.context.selection.1) _ supported
+      · exact prepared_fits (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks owner number bit attachedVerify primitives baseImpl kem _ _ _ _ _ _ q (bounded prefixOutput.context.selection.1) _ supported
 
 /-- Every actual supported full sampler retains the both complete source continuation allowances of its pending descriptor. All material draws and original completed outcomes remain present. -/
 theorem run_fits (depth : Nat)
     (q : Nat) (bounded : ∀ selection reply, (adversary selection reply).IsTotalQueryBound q)
     (result : Carrier (setup := setup) (M := M) (P := P) (I := I) (K := K)
       (X := X) (Response := Response) (A := A) (KemSK := KemSK) (S := S) (B := B))
-    (supported : result ∈ support (PqxdhLaterChallengeSampler.run setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed depth)) :
+    (supported : result ∈ support (PqxdhLaterChallengeSampler.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed depth)) :
     PacketFits setup owner number q (result.1.2.1.1.1, result.2) := by
   simp only [PqxdhLaterChallengeSampler.run, mem_support_bind_iff, mem_support_pure_iff] at supported
   obtain ⟨packet, _, output, _, localPacket, reached, parent, _, nonce, _, chain, _, rfl⟩ := supported
-  exact after_fits setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed packet output depth q bounded localPacket reached
+  exact after_fits (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed packet output depth q bounded localPacket reached
 
 end BeaconcryptCore.Computational.PqxdhLaterChallengeSamplerFits
 

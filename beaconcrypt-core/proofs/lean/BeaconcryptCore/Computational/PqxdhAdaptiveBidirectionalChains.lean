@@ -348,7 +348,7 @@ theorem adaptiveInitialReduction_query_bounds {Context Result : Type}
     (sampleBound : IsTotalQueryBound sample qSample)
     (clientBound : ∀ context, IsQueryBoundP (client context) IsCoin coins)
     (finishBound : ∀ context result, IsTotalQueryBound (finish context result) after) :
-    let reduction := fullExpandReduction .ratchet (rootSampler sample)
+    let reduction := fullExpandReduction .initial (rootSampler sample)
       (initialObserver source (tapeObserver fallback client finish) left right)
     reduction.IsQueryBoundP IsHmacChallengeQuery 2 ∧
       reduction.IsQueryBoundP IsHmacUniformQuery ((qSample + 32) + (coins + after)) := by
@@ -394,15 +394,15 @@ theorem adaptiveRightReduction_query_bounds {Context Result : Type}
     (tapeObserver_uniform_bound fallback client finish coins after clientBound finishBound)
 
 /-- The five unchanged primitive worlds, recording their full actual sampling costs. -/
-def FullWorldBounds {Context : Type} (hmac : HmacSha512) (joint : SecretInputSampler Context)
+def FullWorldBounds {Context : Type} (domain : FixedHkdfDomain) (hmac : HmacSha512) (joint : SecretInputSampler Context)
     (observe : FullObserver Context) (qJoint qObserver : Nat) : Prop :=
-  (extractRealGame hmac joint (fullExtractReduction hmac .ratchet observe)).IsTotalQueryBound
+  (extractRealGame hmac joint (fullExtractReduction hmac domain observe)).IsTotalQueryBound
       (qJoint + qObserver) ∧
-    (extractUniformGame joint (fullExtractReduction hmac .ratchet observe)).IsTotalQueryBound
+    (extractUniformGame joint (fullExtractReduction hmac domain observe)).IsTotalQueryBound
       (qJoint + (64 + qObserver)) ∧
-    (hmacPrfRealGame hmac (fullExpandReduction .ratchet joint observe)).IsTotalQueryBound
+    (hmacPrfRealGame hmac (fullExpandReduction domain joint observe)).IsTotalQueryBound
       (64 + (qJoint + qObserver)) ∧
-    (hmacPrfRandomGame (fullExpandReduction .ratchet joint observe)).IsTotalQueryBound
+    (hmacPrfRandomGame (fullExpandReduction domain joint observe)).IsTotalQueryBound
       (qJoint + (64 + (64 + qObserver))) ∧
     (independentFullGame joint observe).IsTotalQueryBound (qJoint + (76 + qObserver))
 
@@ -414,7 +414,7 @@ theorem adaptiveInitialChallenger_query_bounds {Context Result : Type}
     (sampleBound : IsTotalQueryBound sample qSample)
     (clientBound : ∀ context, IsQueryBoundP (client context) IsCoin coins)
     (finishBound : ∀ context result, IsTotalQueryBound (finish context result) after) :
-    FullWorldBounds hmac (rootSampler sample)
+    FullWorldBounds .initial hmac (rootSampler sample)
       (initialObserver source (tapeObserver fallback client finish) left right)
       (qSample + 32) (coins + after) := by
   exact initialChallenger_query_bounds source hmac sample (tapeObserver fallback client finish)
@@ -429,7 +429,7 @@ theorem adaptiveLeftChallenger_query_bounds {Context Result : Type}
     (sampleBound : IsTotalQueryBound sample qSample)
     (clientBound : ∀ context, IsQueryBoundP (client context) IsCoin coins)
     (finishBound : ∀ context result, IsTotalQueryBound (finish context result) after) :
-    FullWorldBounds hmac (hopSampler sample cut)
+    FullWorldBounds .ratchet hmac (hopSampler sample cut)
       (hopObserver source (leftObserver source (tapeObserver fallback client finish) right 0) remaining)
       (qSample + (44 * cut + 32)) (32 + (coins + after)) := by
   apply hopChallenger_query_bounds source hmac sample
@@ -448,7 +448,7 @@ theorem adaptiveRightChallenger_query_bounds {Context Result : Type}
     (sampleBound : IsTotalQueryBound sample qSample)
     (clientBound : ∀ context, IsQueryBoundP (client context) IsCoin coins)
     (finishBound : ∀ context result, IsTotalQueryBound (finish context result) after) :
-    FullWorldBounds hmac (hopSampler (rightContextSampler source sample left left) cut)
+    FullWorldBounds .ratchet hmac (hopSampler (rightContextSampler source sample left left) cut)
       (hopObserver source (rightObserver (tapeObserver fallback client finish)) remaining)
       ((qSample + (44 * left + 32)) + (44 * cut + 32)) (coins + after) := by
   exact hopChallenger_query_bounds source hmac (rightContextSampler source sample left left)

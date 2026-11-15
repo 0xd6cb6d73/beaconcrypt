@@ -71,7 +71,7 @@ theorem lazy_step (joint : PqxdhJointIdentity.Primitives) (query : DynamicSpec.D
 
 theorem world_step (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Aeneas.Std.Array Aeneas.Std.U8 151#usize))
     (query : (RegistrationNativeIdentityFrontend.Trusted n KemSK).Domain)
     (before : RegistrationNativeIdentityWorld.State n KemSK)
     (result : (RegistrationNativeIdentityFrontend.Trusted n KemSK).Range query × RegistrationNativeIdentityWorld.State n KemSK)
@@ -96,7 +96,7 @@ theorem world_step (setup : Setup base KemSK) (checks : Checks)
 /-- The internal reserved-handle property is derived at every reached prefix of an arbitrary actual native indexed-source program. -/
 theorem world_program (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Aeneas.Std.Array Aeneas.Std.U8 151#usize))
     (work : OracleComp (RegistrationNativeIdentityFrontend.Trusted n KemSK) Value)
     (before : RegistrationNativeIdentityWorld.State n KemSK)
     (result : Value × RegistrationNativeIdentityWorld.State n KemSK)

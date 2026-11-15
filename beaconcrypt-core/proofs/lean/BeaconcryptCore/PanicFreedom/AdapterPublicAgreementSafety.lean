@@ -96,12 +96,8 @@ local macro "agreement_safety_steps" contracts:term " with " random:term : tacti
       | with_reducible exact KeyAgreement.root_kdf_resume_total _ _
       | with_reducible exact RegistrationSigning.ed_request_total _
       | with_reducible exact RegistrationSigning.ed_resume_total _ _
-      | with_reducible exact RegistrationTrivial.BeaconFingerprint_request_total _
       | with_reducible exact RegistrationTrivial.BeaconInitHash_request_total _
-      | with_reducible exact RegistrationTrivial.BeaconMldsaSigning_request_total _
-      | with_reducible exact RegistrationSigningContinuations.BeaconFingerprint_resume_total _ _
       | with_reducible exact RegistrationSigningContinuations.BeaconInitHash_resume_total _ _
-      | with_reducible exact RegistrationSigningContinuations.BeaconMldsaSigning_resume_total _ _
       | with_reducible exact RegistrationInputs.copied_slice_total _ _
       | with_reducible exact AdapterStandard.result_ok_total _
       | with_reducible exact AdapterStandard.option_branch_total _

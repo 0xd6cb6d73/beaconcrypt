@@ -21,7 +21,7 @@ theorem identity_creations (setup : Setup baseSpec KemSK) (codec : Codec Reader 
     (budget : Budget)
     (certified : ∀ source, client.IsQueryBoundP
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))
-    (owners : List EncodedEntry) (native : NativeState KemSK) :
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (native : NativeState KemSK) :
     (program setup codec checks identityIndex publicIdentity client owners native).IsQueryBoundP
       (PqxdhDynamicKemJointBounds.IsIdentityCreate (KemSK := KemSK)) (budget (.inl 1)) := by
   have cap := PqxdhRegistrationJointOpenCosts.command_program setup codec checks identityIndex publicIdentity
@@ -60,7 +60,7 @@ theorem pre_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     (budget : Budget)
     (certified : ∀ source, client.IsQueryBoundP
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))
-    (owners : List EncodedEntry) (native : NativeState KemSK) (selected : Nat)
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (native : NativeState KemSK) (selected : Nat)
     (reservation : PqxdhDynamicKemRouter.Reservation KemSK) (state : State KemSK) :
     (pre setup codec checks identityIndex publicIdentity client owners native selected reservation state).IsQueryBoundP
       IsMlKemUniformQuery (32 * budget (.inl 1) + PqxdhRegistrationJointOpenUniform.total caps budget + caps.decapsUniform * budget (.inl 5)) :=
@@ -78,7 +78,7 @@ theorem post_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
     (budget : Budget)
     (certified : ∀ source, client.IsQueryBoundP
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))
-    (owners : List EncodedEntry) (native : NativeState KemSK) (selected : Nat)
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (native : NativeState KemSK) (selected : Nat)
     (reservation : PqxdhDynamicKemRouter.Reservation KemSK) (state : State KemSK)
     (challenge : MlKem768Ciphertext) (candidate : MlKemSharedSecret) :
     (post setup codec checks identityIndex publicIdentity client owners native selected reservation state challenge candidate).IsQueryBoundP
@@ -108,7 +108,7 @@ theorem pre_base (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) 
     (budget : Budget)
     (certified : ∀ source, client.IsQueryBoundP
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))
-    (owners : List EncodedEntry) (native : NativeState KemSK) (selected : Nat)
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (native : NativeState KemSK) (selected : Nat)
     (reservation : PqxdhDynamicKemRouter.Reservation KemSK) (state : State KemSK) :
     (pre setup codec checks identityIndex publicIdentity client owners native selected reservation state).IsQueryBoundP
       IsMlKemBaseQuery (caps.decapsBase * budget (.inl 5)) :=
@@ -125,7 +125,7 @@ theorem post_base (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (budget : Budget)
     (certified : ∀ source, client.IsQueryBoundP
       (fun query => PqxdhRegistrationJointRevealCosts.sourceKind (KemSK := KemSK) query = source) (budget source))
-    (owners : List EncodedEntry) (native : NativeState KemSK) (selected : Nat)
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (native : NativeState KemSK) (selected : Nat)
     (reservation : PqxdhDynamicKemRouter.Reservation KemSK) (state : State KemSK)
     (challenge : MlKem768Ciphertext) (candidate : MlKemSharedSecret) :
     (post setup codec checks identityIndex publicIdentity client owners native selected reservation state challenge candidate).IsQueryBoundP

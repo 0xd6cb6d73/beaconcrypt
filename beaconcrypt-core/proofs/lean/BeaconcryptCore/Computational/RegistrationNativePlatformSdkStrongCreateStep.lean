@@ -29,7 +29,7 @@ variable [children : AdapterPublicWrapperRequestMonad.ChildOperations
   (AdapterPublicWrapperRustT.RustT (RegistrationNativePlatformExtractedSdkCreateReceipt.SourceM n KemSK source Platform))]
 variable (coins : QueryImpl unifSpec (StateT Platform ProbComp)) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
 variable (checks : PqxdhServerAuthExperiment.Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (generator : rand_core.TryCryptoRng R Error)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (generator : rand_core.TryCryptoRng R Error)
 variable (view : AdapterPublicWrapperState.MaterialView source KemSK) (kem : AdapterBeaconConstructorKem.Representation view R)
 variable (leaves : AdapterBeaconConstructorNative.Leaves (n:=n) (Auxiliary:=RegistrationServerRoleBackend.State)
   coins setup checks representation created generator view kem)

@@ -54,6 +54,7 @@ abbrev vacantInsert (entry : Vacant) (remote : Remote) :=
 
 structure Contracts : Prop where
   publicLeaves : AdapterPublicTrivial.Contracts
+  hash : ∀ request, Normal (authentication.hash request)
   allocation : AdapterWire.Contracts
   serialization : AdapterRegistrationWriterCallers.ResponseCallerContracts
   parse : ∀ input, Normal (primitive.parse input)
@@ -108,7 +109,7 @@ theorem build_registration_response_total (contracts : Contracts) (self : server
       | with_reducible exact contracts.sealing _
       | with_reducible exact contracts.writing _
       | with_reducible exact contracts.sign _ _
-      | with_reducible exact contracts.publicLeaves.hash _
+      | with_reducible exact contracts.hash _
       | with_reducible exact contracts.contains _ _
       | with_reducible exact contracts.reserve _
       | with_reducible exact contracts.entry _ _
@@ -124,6 +125,8 @@ theorem build_registration_response_total (contracts : Contracts) (self : server
       | with_reducible exact PeerOwnership.begin_peer_insert_total _ _
       | with_reducible exact Trivial.pqxdh_concrete_InitialRatchetKdfResponse_from_bytes_total _
       | with_reducible exact RegistrationTrivial.ServerInitialKdf_request_total _
+      | with_reducible exact RegistrationTrivial.ServerAdHash_request_total _
+      | with_reducible exact RegistrationTrivial.ServerAdHash_resume_total _ _
       | with_reducible exact RegistrationPublication.ServerInitialKdf_resume_total _ _
       | with_reducible exact RegistrationPublication.ServerInitialSeal_request_total _
       | with_reducible exact RegistrationPublication.ServerInitialSeal_resume_total _ _

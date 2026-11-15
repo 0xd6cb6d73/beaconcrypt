@@ -22,16 +22,16 @@ def entryBill (caps : KemCaps) (query : ServerAuthSpec.Domain) (game : GameState
   match query with
   | .inl _ => 1
   | .inr (.accept _) => 32 + caps.encapsCost + 64
-  | .inr (.build index _) => 64 * slotWeight (game.pending index)
-  | .inr (.finish _) => (caps.decapsCost + 128) * initSentFlag game
+  | .inr (.build index _) => 128 * slotWeight (game.pending index)
+  | .inr (.finish _) => (caps.decapsCost + 192) * initSentFlag game
   | .inr (.hash _) => 64
   | .inr (.hmac key bytes) => if key = PqxdhSecretInputKdf.zeroSalt ∧ bytes.length = 192 then 64 else 0
   | .inr (.reveal _) => 0
 
 /-- The potential reserves every remaining accept's table/prefix/build work, all pending builds, one active finish, and direct public query work. -/
 def entryPotential (caps : KemCaps) (budget : Fin 4 → Nat) (game : GameState KemSK) : Nat :=
-  budget 0 + (32 + caps.encapsCost + 128) * budget 1 + 64 * budget 2 + 64 * budget 3 +
-    64 * pendingCount game + (caps.decapsCost + 128) * initSentFlag game
+  budget 0 + (32 + caps.encapsCost + 192) * budget 1 + 64 * budget 2 + 64 * budget 3 +
+    128 * pendingCount game + (caps.decapsCost + 192) * initSentFlag game
 
 /-- The remaining source-interface budget and current token/phase reservations cover each immediate uniform bill. -/
 theorem entryBill_le (caps : KemCaps) (query : ServerAuthSpec.Domain) (game : GameState KemSK)
@@ -48,12 +48,12 @@ theorem entryBill_le (caps : KemCaps) (query : ServerAuthSpec.Domain) (game : Ga
     omega
   cases query with
   | accept raw =>
-      have enough := Nat.mul_le_mul_left (32 + caps.encapsCost + 128) (acceptPos trivial)
+      have enough := Nat.mul_le_mul_left (32 + caps.encapsCost + 192) (acceptPos trivial)
       simp only [Nat.mul_one] at enough
       simp only [entryBill, entryPotential]
       omega
   | build index payload =>
-      have enough := Nat.mul_le_mul_left 64 (resource_pending_weight game valid index)
+      have enough := Nat.mul_le_mul_left 128 (resource_pending_weight game valid index)
       simp only [entryBill, entryPotential]
       omega
   | finish raw => simp only [entryBill, entryPotential]; omega
@@ -155,7 +155,7 @@ theorem hidden_client_uniform {ι : Type} {baseSpec : OracleSpec ι} {Reader Res
 
 /-- Complete interpreter bill after context generation; the omitted-entry challenge sampler is separate. -/
 def entryRunBudget (caps : KemCaps) (qCoin Q qHash qH : Nat) : Nat :=
-  qCoin + (32 + caps.encapsCost + 128) * Q + 64 * qHash + 64 * qH + caps.decapsCost + 128
+  qCoin + (32 + caps.encapsCost + 192) * Q + 64 * qHash + 64 * qH + caps.decapsCost + 192
 
 /-- The literal initial context has no pending builds and at most one active finish. -/
 theorem entry_initial_potential {ι : Type} {baseSpec : OracleSpec ι}
@@ -163,7 +163,7 @@ theorem entry_initial_potential {ι : Type} {baseSpec : OracleSpec ι}
     (qCoin Q qHash qH : Nat) :
     entryPotential caps ![qCoin, Q, qHash, qH] (contextState setup context) ≤
       entryRunBudget caps qCoin Q qHash qH := by
-  have enough := Nat.mul_le_mul_left (caps.decapsCost + 128) (initSentFlag_le (contextState setup context))
+  have enough := Nat.mul_le_mul_left (caps.decapsCost + 192) (initSentFlag_le (contextState setup context))
   simp only [Nat.mul_one, contextState] at enough
   simp [entryPotential, contextState, pending_initial, entryRunBudget]
   omega
@@ -182,12 +182,13 @@ theorem context_uniform {ι : Type} {baseSpec : OracleSpec ι} {Reader Response 
   refine isTotalQueryBound_bind PqxdhJointGapDh.sampleScalar_uniform (fun oneTime => ?_)
   refine (isTotalQueryBound_bind (n₂ := 0) (keygen_uniform setup caps bounded) (fun keys => ?_)).mono (by omega)
   rw [bind_pure_comp, IsTotalQueryBound, isQueryBound_map_iff]
-  exact phase1_uniform setup codec beaconSeed _ oneTime keys.1 keys.2
+  rw [phase1Logged_eq]
+  trivial
 
 /-- Expanded complete ordinary continuation bill, including actual source context, every KEM/base contribution and every possible retained-table sample. Challenge-game sampling remains separate. -/
 theorem entry_budget_expanded (caps : KemCaps) (qCoin Q qHash qH : Nat) :
     128 + caps.keygenCost + entryRunBudget caps qCoin Q qHash qH =
-      256 + qCoin + 160 * Q + 64 * (qHash + qH) +
+      320 + qCoin + 224 * Q + 64 * (qHash + qH) +
       caps.keygenUniform + Q * caps.encapsUniform + caps.decapsUniform +
       caps.baseUniform * (caps.keygenBase + Q * caps.encapsBase + caps.decapsBase) := by
   simp only [entryRunBudget, KemCaps.keygenCost, KemCaps.encapsCost, KemCaps.decapsCost]

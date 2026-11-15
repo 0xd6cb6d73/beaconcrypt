@@ -3,6 +3,7 @@ import BeaconcryptCore.Computational.RegistrationRawSealBridge
 import BeaconcryptCore.Computational.RegistrationBeaconRecordExecutor
 import BeaconcryptCore.Computational.PqxdhBeaconPhase2Shared
 import BeaconcryptCore.Computational.RecordEffectsReceiveBridge
+import BeaconcryptCore.Refinement.RegistrationAd
 
 /-!
 Post-root services retain the actual authenticated binding as public metadata. The Server rechecks the complete current pin, executes the actual initial and ongoing KDF requests, and invokes the existing raw source sealing program with populated AD before sequence one is sealed. The Beacon's handle and native preparation metadata are updated before record admission. No kernel is reset after its first send or receive, and no ciphertext is resealed under a replacement AD.
@@ -61,10 +62,15 @@ def fromInitial (pending : registration.ServerInitialKdf) : OracleComp Spec (Rus
     let response ← Spec.query (.inl (.initialKdf request))
     continueResult (pending.resume response) fromRatchet
 
+def fromAd (pending : registration.ServerAdHash) : OracleComp Spec (RustM ServerResult) :=
+  continueWith pending.request fun request => do
+    let response ← Spec.query (.inl (.adHash request))
+    continueResult (pending.resume response) fromInitial
+
 def server (control : pqxdh.ServerState) (current : session.ServerAuthenticationPin)
     (availability : pqxdh.KeyIdAvailability) (agreement : agreement.ServerAgreement) (application : Slice Std.U8) :
     OracleComp Spec (RustM ServerResult) :=
-  continueResult (registration.begin_server_completion control current availability agreement application) fromInitial
+  continueResult (registration.begin_server_completion control current availability agreement application) fromAd
 
 private theorem ratchet_exact (pending : registration.ServerInitialSeal)
     (raw : pending.pending.pending.context.encoding = .Raw) :
@@ -104,6 +110,21 @@ theorem initial_exact (pending : registration.ServerInitialKdf) :
       simp only [resumed, RegistrationServerRecordExecutor.continueResult, continueResult]
       exact ratchet_exact next (by rw [context]; rfl)
 
+/-- The additional AD hash is retained as a real callback in the raw source projection. -/
+theorem ad_exact (pending : registration.ServerAdHash) :
+    simulateQ RegistrationRawSealBridge.nativeAdapter (RegistrationServerRecordExecutor.fromAd pending) =
+      fromAd pending := by
+  simp only [RegistrationServerRecordExecutor.fromAd, fromAd, map_continueWith]
+  apply congrArg (continueWith pending.request)
+  funext request
+  simp only [simulateQ_bind, simulateQ_spec_query, RegistrationRawSealBridge.nativeAdapter]
+  apply bind_congr
+  intro response
+  simp only [map_continueResult]
+  apply congrArg (continueResult (pending.resume response))
+  funext initial
+  exact initial_exact initial
+
 /-- The actual current-pin and allocator gates precede the prefix-aware raw service. -/
 theorem server_exact (control : pqxdh.ServerState) (current : session.ServerAuthenticationPin)
     (availability : pqxdh.KeyIdAvailability) (agreement : agreement.ServerAgreement) (application : Slice Std.U8) :
@@ -112,8 +133,8 @@ theorem server_exact (control : pqxdh.ServerState) (current : session.ServerAuth
       server control current availability agreement application := by
   simp only [RegistrationServerRecordExecutor.begin, server, map_continueResult]
   apply congrArg (continueResult (registration.begin_server_completion control current availability agreement application))
-  funext initial
-  exact initial_exact initial
+  funext pending
+  exact ad_exact pending
 
 theorem server_shared {Auxiliary : Type} (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (writer : RawCtxMixedShared.Writer) (control : pqxdh.ServerState) (current : session.ServerAuthenticationPin)
@@ -125,50 +146,28 @@ theorem server_shared {Auxiliary : Type} (source : PqxdhJointKdfGame.FixedHkdfSh
   rw [RegistrationServerRecordExecutor.execute, ← RegistrationRawSealBridge.program_projection,
     server_exact]
 
-/-- A successful native post-root gate requests the retained actual root at the fixed initialization domain. -/
+/-- Actual selected AD completion precedes the request for the retained root at the fixed initial domain. -/
 theorem server_root_request (control : pqxdh.ServerState) (current : session.ServerAuthenticationPin)
     (availability : pqxdh.KeyIdAvailability) (agreement : agreement.ServerAgreement) (application : Slice Std.U8)
     (initial : registration.ServerInitialKdf)
-    (actual : registration.begin_server_completion control current availability agreement application = .ok (.Ok initial)) :
-    initial.pending.request.input = agreement.root.bytes ∧ initial.pending.request.info = SYM_RATCHET_INFO := by
-  obtain ⟨empty, emptyRun⟩ : ∃ result, core.slice.Slice.is_empty application = .ok result := ⟨_, rfl⟩
-  obtain ⟨matched, matchRun⟩ := BeaconcryptCore.PanicFreedom.SessionBinding.RegistrationBinding_matches_server_total
-    agreement.binding current
-  obtain ⟨prepared, prepareRun⟩ := BeaconcryptCore.PanicFreedom.server_prepare_commit_ok control agreement.pending
-    current.binding availability
-  cases prepared with
-  | Err error =>
-      cases empty <;> cases matched <;>
-        simp [registration.begin_server_completion, session.ServerAuthenticationPin.impl.binding,
-          emptyRun, matchRun, prepareRun] at actual
-  | Ok candidate =>
-      have initialRun : pqxdh.concrete.start_server_candidate_ratchet_kdf candidate agreement.root.bytes =
-          .ok (PqxdhInitialRatchetComplementarity.serverPending agreement.root.bytes) := by
-        simpa only [pqxdh.concrete.start_server_candidate_ratchet_kdf,
-          pqxdh.ServerRegistrationCandidate.ratchet_initialization,
-          pqxdh.concrete.start_server_ratchet_kdf, PqxdhInitialRatchetComplementarity.serverPending] using
-          pqxdh.concrete.start_server_ratchet_kdf_exact agreement.root.bytes
-      cases empty <;> cases matched
-      all_goals simp only [registration.begin_server_completion, session.ServerAuthenticationPin.impl.binding,
-        ratchet.RatchetChain.as_bytes, emptyRun, matchRun, prepareRun, initialRun, bind_tc_ok,
-        Bool.false_eq_true, ite_false, ite_true, RustM.ok.injEq, core.result.Result.Ok.injEq,
-        reduceCtorEq] at actual
-      cases actual
-      exact ⟨rfl, rfl⟩
+    (actual : BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission control current availability agreement application initial) :
+    initial.pending.request.input = agreement.root.bytes ∧ initial.pending.request.info = INITIAL_RATCHET_INFO := by
+  rw [BeaconcryptCore.Refinement.RegistrationAd.server_admission_pending
+    control current availability agreement application initial actual]
+  exact ⟨rfl, rfl⟩
 
 def boundCandidate (pending : registration.ServerInitialKdf) : pqxdh.ServerRegistrationCandidate :=
-  { pending.candidate with associated_data := pending.binding.associated_data }
+  pending.candidate
 
 theorem bound_candidate_fields (pending : registration.ServerInitialKdf) :
-    (boundCandidate pending).associated_data = pending.binding.associated_data ∧
-      (boundCandidate pending).key_id = pending.candidate.key_id ∧
+    (boundCandidate pending).key_id = pending.candidate.key_id ∧
       (boundCandidate pending).next_state = pending.candidate.next_state ∧
       (boundCandidate pending).server_identity_public_key = pending.candidate.server_identity_public_key ∧
       (boundCandidate pending).ephemeral_public_key = pending.candidate.ephemeral_public_key ∧
       (boundCandidate pending).kem_ciphertext = pending.candidate.kem_ciphertext := by
-  exact ⟨rfl, rfl, rfl, rfl, rfl, rfl⟩
+  exact ⟨rfl, rfl, rfl, rfl, rfl⟩
 
-/-- The source seal input is selected only after the actual two KDF replies. Its candidate AD is replaced before the sequence-one seal, retaining its exact native entry kernel and streamed ID prefix. -/
+/-- The source seal input is selected only after the actual two KDF replies. The completed binding supplies full AD before the sequence-one seal, retaining its exact native entry kernel and streamed ID prefix. -/
 theorem initial_source_input (pending : registration.ServerInitialKdf)
     (initialResponse : pqxdh.concrete.InitialRatchetKdfResponse) (response : RatchetKdfResponse) :
     ∃ (kernel : ConcreteRatchetKernel) (next : registration.ServerInitialSeal) (selected : registration.ServerRecordAead),
@@ -177,7 +176,7 @@ theorem initial_source_input (pending : registration.ServerInitialKdf)
       next.pending.pending.entry = kernel ∧ next.resume (.Some response) = .ok (.Ok selected) ∧
       RegistrationRawSealBridge.inputOf selected.pending.seal =
         ⟨selected.pending.seal.material, 1#u64,
-          PqxdhServerRegistrationPublication.firstContext (boundCandidate pending)
+          PqxdhServerRegistrationPublication.firstContext (boundCandidate pending) pending.binding.associated_data
             (Pqxdh.LE64 pending.candidate.key_id.val ++ TranscriptAuthParts.absSlice pending.application)⟩ := by
   obtain ⟨kernel, bound, next, kernelRun, _boundRun, boundBytes, resumed, _state, entry, context, sequence, _request⟩ :=
     server_kdf_prefix_refines pending initialResponse
@@ -191,15 +190,15 @@ theorem initial_source_input (pending : registration.ServerInitialKdf)
     selectedContext, context, serverRecordContext, first,
     PqxdhServerRegistrationPublication.firstContext, boundCandidate, boundBytes]
 
-def bindPrepared {Response Shared : Type} (binding : session.RegistrationBinding)
+def bindPrepared {Response Shared : Type} (binding : session.CompletedRegistrationBinding)
     (pending : PqxdhBeaconPhase2Shared.Prepared Response Shared) : PqxdhBeaconPhase2Shared.Prepared Response Shared :=
-  { pending with metadata := { pending.metadata with associatedData := binding.associated_data } }
+  { pending with metadata := { pending.metadata with completed := binding } }
 
-def bindNativePrepared {Response : Type} (binding : session.RegistrationBinding)
+def bindNativePrepared {Response : Type} (binding : session.CompletedRegistrationBinding)
     (pending : PqxdhBeaconPhase2Preparation.Prepared Response) : PqxdhBeaconPhase2Preparation.Prepared Response :=
-  { pending with candidate := { pending.candidate with associated_data := binding.associated_data } }
+  { pending with binding := binding }
 
-theorem prepared_fields {Response Shared : Type} (binding : session.RegistrationBinding)
+theorem prepared_fields {Response Shared : Type} (binding : session.CompletedRegistrationBinding)
     (pending : PqxdhBeaconPhase2Shared.Prepared Response Shared) :
     (bindPrepared binding pending).metadata.associatedData = binding.associated_data ∧
       (bindPrepared binding pending).metadata.binding = pending.metadata.binding ∧
@@ -209,19 +208,19 @@ theorem prepared_fields {Response Shared : Type} (binding : session.Registration
   ⟨rfl, rfl, rfl, rfl, rfl⟩
 
 theorem prepared_related {Response Shared : Type} (interpret : Shared → Std.Array Std.U8 32#usize)
-    (binding : session.RegistrationBinding) (native : PqxdhBeaconPhase2Preparation.Prepared Response)
+    (binding : session.CompletedRegistrationBinding) (native : PqxdhBeaconPhase2Preparation.Prepared Response)
     (handles : PqxdhBeaconPhase2Shared.Prepared Response Shared)
     (related : PqxdhBeaconPhase2Shared.ReadyRel interpret native handles) :
     PqxdhBeaconPhase2Shared.ReadyRel interpret (bindNativePrepared binding native) (bindPrepared binding handles) := by
   obtain ⟨response, ciphertext, ephemeral, metadata, root⟩ := related
   refine ⟨response, ciphertext, ephemeral, ?_, root⟩
   exact congrArg (fun data : PqxdhBeaconPhase2Shared.Metadata =>
-    { data with associatedData := binding.associated_data }) metadata
+    { data with completed := binding }) metadata
 
-theorem beacon_owner_ad {Response Shared : Type} (binding : session.RegistrationBinding)
+theorem beacon_owner_ad {Response Shared : Type} (binding : session.CompletedRegistrationBinding)
     (pending : PqxdhBeaconPhase2Shared.Prepared Response Shared) (kernel : ConcreteRatchetKernel) :
     (PqxdhBeaconPhase2Publication.localOwner
-      (PqxdhBeaconPhase2Shared.clearedMetadata (bindPrepared binding pending).metadata) kernel).owner.associatedData =
+      (PqxdhBeaconPhase2Shared.clearedMetadata (bindPrepared binding pending).metadata) binding.associated_data kernel).owner.associatedData =
       absBytes binding.associated_data := rfl
 
 end BeaconcryptCore.Computational.RegistrationPostRootServices

@@ -8,6 +8,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialSourceSelection
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily
 open PqxdhInitialBeaconAmbient PqxdhInitialSourceExperiment
 variable {ι M P I D K X Response A N : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -26,12 +28,12 @@ variable (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writ
 /-- Selecting an actually published fresh record costs a finite sum over the source-derived position allowance, retaining the same original decision and byte-level freshness. -/
 theorem positions (stage qPost : Nat) (bounded : ∀ reply, (post reply).IsTotalQueryBound qPost)
     (ancestors disclosed : List RatchetChain) :
-    Pr{let result ← (run source writer selectedMessage previousRoot response64 other sender route decode index metadata ready post before
+    Pr{let result ← (run (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode index metadata ready post before
         selected shared privateState cache stage)}[∃ number : Std.U64,
       PqxdhInitialPublishedEvent.sourceEvent source (root source previousRoot response64 selected)
         selected number ancestors disclosed result] ≤
       ∑ position ∈ Finset.range (7 + qPost * 67 + 1),
-        Pr{let result ← (run source writer selectedMessage previousRoot response64 other sender route decode index metadata ready post before
+        Pr{let result ← (run (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode index metadata ready post before
             selected shared privateState cache stage)}[∃ number : Std.U64, number.val = position ∧
           PqxdhInitialPublishedEvent.sourceEvent source (root source previousRoot response64 selected)
             selected number ancestors disclosed result] := by
@@ -39,7 +41,7 @@ theorem positions (stage qPost : Nat) (bounded : ∀ reply, (post reply).IsTotal
   apply prEvent_mono_of_support
   exact fun result supported ⟨number, event⟩ =>
     ⟨number.val, Finset.mem_range.mpr (Nat.lt_succ_of_le
-      (published_bound source writer selectedMessage previousRoot response64 other sender route decode index metadata ready
+      (published_bound (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode index metadata ready
         post before selected number shared privateState cache stage qPost bounded result supported event.1.2)), number, rfl, event⟩
 
 end BeaconcryptCore.Computational.PqxdhInitialSourceSelection

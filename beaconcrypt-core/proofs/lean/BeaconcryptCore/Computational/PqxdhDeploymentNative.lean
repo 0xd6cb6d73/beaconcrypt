@@ -1,11 +1,13 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhDeploymentInterface
 import BeaconcryptCore.Computational.RawCtxMixedShared
+import BeaconcryptCore.Computational.MldsaServerRouting
 
-/-! Native semantics of the common deployment experiment for coins and commands (CE-2). Registration commands, the public HMAC and BLAKE2b oracles are the source14 handler on the one live native Server and its dynamically created owners; `create` first applies the public 32-byte pin parse and does not re-run runtime initialization (deviation D1). Record commands run `RawCtxServerMixed.serverImpl` and `RawCtxBeaconLifecycle.beaconImpl` on the live Server peer map and the live owners, with real HKDF and AEAD, the codec frame reader and writer, and the shared BLAKE2b cache; their raw-attempt ghost counters are kept beside the native state. Every record program runs behind `frameLog`, which forwards each primitive call unchanged and records every frame handed to the frame writer, so the ghost list `produced` holds every sealed record with the handle of the command that produced it (`serverTag`, `beaconTag`), never its plaintext, including records whose writer then failed (`logged_forget`: logging changes no result). The game constructs the Server from a generated seed only. The secrecy commands and the transcript are added on top of this handler in `PqxdhDeploymentSecrecy`. No reveal, public getter or snapshot exists. No security claim is made here. -/
+/-! Native semantics of the common deployment experiment for coins and commands (CE-2). Registration commands, the public HMAC and BLAKE2b oracles are the source14 handler on the one live native Server and its dynamically created owners; `create` first applies the public 32-byte pin parse and does not re-run runtime initialization (deviation D1). The registration handler computes each session's associated data where the Rust does: the Server build hashes its registration transcript on the shared BLAKE2b cache and installs `AD151 = context87 ‖ digest` as the new peer's metadata, and each owner's finish hashes the same transcript of its retained Phase 1 bundle and the decoded response before agreement (`PqxdhRegistrationSchedule.ownerFinish`). Record commands run the per-peer router `MldsaServerRouting.handler` (each peer seals and opens under its own installed AD) and `RawCtxBeaconLifecycle.beaconImpl` (each owner under its established AD) on the live Server peer map and the live owners, with real HKDF and AEAD, the codec frame reader and writer, and the shared BLAKE2b cache; their raw-attempt ghost counters are kept beside the native state. Every record program runs behind `frameLog`, which forwards each primitive call unchanged and records every frame handed to the frame writer, so the ghost list `produced` holds every sealed record with the handle of the command that produced it (`serverTag`, `beaconTag`), never its plaintext, including records whose writer then failed (`logged_forget`: logging changes no result). The game constructs the Server from a generated seed only. The secrecy commands and the transcript are added on top of this handler in `PqxdhDeploymentSecrecy`. No reveal, public getter or snapshot exists. No security claim is made here. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhDeploymentNative
 open PqxdhServerAuthExperiment PqxdhJointIdentity
 open PqxdhDeploymentInterface (Spec Command FrameTag parsePin)
@@ -67,11 +69,11 @@ noncomputable def record {Result : Type} (setup : Setup baseSpec KemSK) (codec :
   PqxdhRegistrationSchedule.onShared (PqxdhServerAuthNative.nativeCtx (simulateQ (primitives setup codec) work))
 
 /-- The live Server peer map with its raw-attempt counter. -/
-def serverView (state : State KemSK) : RawCtxServerRouting.State Unit Unit :=
+def serverView (state : State KemSK) : RawCtxServerRouting.State Unit PqxdhTranscriptAd.AssociatedData :=
   ⟨state.native.shared.2.server.server, state.serverRaw⟩
 
 /-- Reinstall a Server peer map and its counter; control, consumed IDs, tokens and all other fields are kept. -/
-def withServer (state : State KemSK) (server : RawCtxServerRouting.State Unit Unit) : State KemSK :=
+def withServer (state : State KemSK) (server : RawCtxServerRouting.State Unit PqxdhTranscriptAd.AssociatedData) : State KemSK :=
   { state with
     native := { state.native with shared := (state.native.shared.1, { state.native.shared.2 with
       server := { state.native.shared.2.server with server := server.server } }) }
@@ -80,11 +82,11 @@ def withServer (state : State KemSK) (server : RawCtxServerRouting.State Unit Un
 /-- `Server::encrypt_message` sends under the Server's own identity key ID. -/
 def senderId (state : State KemSK) : Unit → Std.U64 := fun _ => state.native.shared.2.server.identityKeyId
 
-/-- Server record commands: `encrypt_message` and `decrypt_message` on the live peer map, routed by the header router `route` and decoded by the codec frame reader; produced frames are logged. -/
+/-- Server record commands: `encrypt_message` and `decrypt_message` on the live peer map, routed by the header router `route` and decoded by the codec frame reader, each peer under its own installed AD151; produced frames are logged. -/
 noncomputable def serverStep (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (query : RawCtxServerMixed.SourceSpec.Domain) :
     StateT (State KemSK) ProbComp (RawCtxServerMixed.SourceSpec.Range query) := fun state => do
-  let result ← (record setup codec (logged ((RawCtxServerMixed.serverImpl (senderId state) route codec.frameRead query).run
+  let result ← (record setup codec (logged ((MldsaServerRouting.handler PqxdhRefinement.absBytes (senderId state) route codec.frameRead query).run
     (serverView state)))).run state.native
   pure (result.1.1.1, produce (serverTag query) result.1.2 (withServer { state with native := result.2 } result.1.1.2))
 

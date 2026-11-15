@@ -172,6 +172,20 @@ theorem interp_run_liftCoins (forward : CoinForward family) {α : Type} (work : 
     (interp family (liftCoins work : Game KemSK α)).run state = (fun value => (value, state)) <$> work := by
   rw [interp_liftCoins forward]; rfl
 
+/-- Interpretation of the BLAKE2b random oracle on the shared cache: the oracle runs on the game's cache and the new cache is written back. -/
+theorem interp_run_hashOracle (forward : CoinForward family) (bytes : Pqxdh.Bytes)
+    (state : GameState KemSK × PqxdhJointDhExtractFamily.State) :
+    (interp family (hashOracle bytes : Game KemSK CtxRomAuth.CtxDigest)).run state =
+      (fun result => (result.1, ({ state.1 with ctx := result.2 }, state.2))) <$>
+        (CtxRomAuth.ctxRandomOracle ((), bytes)).run state.1.ctx := by
+  change (fun result => (result.1.1, (result.1.2, result.2))) <$> (simulateQ family
+    (familyCoins ((CtxRomAuth.ctxRandomOracle ((), bytes)).run state.1.ctx) >>= fun result =>
+      pure (result.1, { state.1 with ctx := result.2 }))).run state.2 = _
+  rw [simulateQ_bind, StateT.run_bind, family_coins forward]
+  simp only [bind_map_left, simulateQ_pure, StateT.run_pure, map_bind, map_pure]
+  rw [map_eq_bind_pure_comp]
+  rfl
+
 theorem interp_run_map {α β : Type} (update : α → β) (work : Game KemSK α)
     (state : GameState KemSK × PqxdhJointDhExtractFamily.State) :
     (interp family (update <$> work)).run state =
@@ -195,7 +209,7 @@ theorem client_run_flat (index : Nat) (serverBinding : pqxdh.ServerBinding)
           | none => pure (ok none, (touched, derived.2))
           | some root =>
               let token := PqxdhServerClearedRoot.pending serverBinding input
-              pure (ok (some ⟨root, token⟩), ({ touched with server := { touched.server with
+              pure (ok (some ⟨root, token, input.verified.candidate⟩), ({ touched with server := { touched.server with
                 consumed := touched.server.consumed ++ [absBytes token.registration_id.bytes] } }, derived.2)))
       else pure (ok none, state) := by
   unfold PqxdhServerRelatedRootConsumer.client
@@ -287,13 +301,20 @@ theorem buildStep_run {τ : Type} (setup : Setup baseSpec KemSK) (codec : Codec 
     (buildStep setup codec checks svc session payload).run state =
       (match state.1.pending session with
       | none => pure (none, state)
-      | some token => do
-          let result ← (if state.2.1 session then svc.hiddenBuild token payload state.1.server
-            else simulateQ (tailImpl setup codec checks)
-              (PqxdhServerRegistrationPublication.build setup.source token.pending token.root payload ()
-                state.1.server)).run ([], state.1.ctx)
-          let after := afterBuild session state.1 result
-          pure (after.1, (after.2, state.2))) :=
+      | some token =>
+        match PqxdhServerRegistrationPublication.prehash state.1.server token.pending payload with
+        | none => pure (none, ({ state.1 with pending := Function.update state.1.pending session none }, state.2))
+        | some candidate => do
+            let hashed ← (CtxRomAuth.ctxRandomOracle ((), PqxdhTranscriptAd.transcript
+              (PqxdhTranscriptAd.initOf token.init) (PqxdhTranscriptAd.serverResponse candidate))).run state.1.ctx
+            let game : GameState KemSK := { state.1 with ctx := hashed.2 }
+            let ad := PqxdhTranscriptAd.adOf hashed.1
+            let result ← (if state.2.1 session then svc.hiddenBuild token payload ad game.server
+              else simulateQ (tailImpl setup codec checks)
+                (PqxdhServerRegistrationPublication.build (associatedData := ad) setup.source token.pending token.root
+                  payload ad game.server)).run ([], game.ctx)
+            let after := afterBuild session game result
+            pure (after.1, (after.2, state.2))) :=
   rfl
 
 theorem interp_run_onCtx_simulateQ (family : QueryImpl RootSpec (StateT PqxdhJointDhExtractFamily.State ProbComp))
@@ -315,12 +336,15 @@ theorem interp_run_onCtx_simulateQ (family : QueryImpl RootSpec (StateT PqxdhJoi
       refine bind_congr fun result => ?_
       rw [ih]
 
-theorem stage_game (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (beaconSeed : IdentitySeed)
+theorem stage_game (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+    (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (beaconSeed : IdentitySeed)
     (publicValue : PublicChallenge) (control : pqxdh.BeaconInitSent) (identity : Unit) (oneTime : Unit ⊕ ScalarBytes)
     (kem : KemSK) (raw : Pqxdh.Bytes) :
     simulateQ (stageImpl setup codec beaconSeed)
-        (PqxdhPhase2DhStage.stage publicValue codec.frameRead control identity oneTime kem raw) =
-      liftCoins ((beaconPrefix setup codec beaconSeed control identity oneTime kem raw).run' ()) >>= fun prepared =>
+        (PqxdhPhase2DhStage.stage (completedBinding := completedBinding) publicValue codec.frameRead control identity
+          oneTime kem raw) =
+      liftCoins ((beaconPrefix completedBinding setup codec beaconSeed control identity oneTime kem raw).run' ()) >>=
+        fun prepared =>
         match prepared with
         | none => pure none
         | some pending =>
@@ -375,17 +399,22 @@ theorem finishStep_run {τ : Type} (setup : Setup baseSpec KemSK) (codec : Codec
     (state : FlatState KemSK τ) :
     (finishStep setup codec publicValue beaconSeed svc raw).run state =
       (match state.1.beacon.beacon.phase with
-      | .initSent control _ oneTime kem => do
-          let prepared ← (beaconPrefix setup codec beaconSeed control state.1.beacon.beacon.identity oneTime kem
-            raw).run' ()
+      | .initSent control _ oneTime kem =>
+        match state.1.beaconInit, responseOf codec raw with
+        | some init, some response => do
+          let hashed ← (CtxRomAuth.ctxRandomOracle ((), PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf init)
+            response)).run state.1.ctx
+          let hashedGame : GameState KemSK := { state.1 with ctx := hashed.2 }
+          let prepared ← (beaconPrefix (PqxdhTranscriptAd.completedOf control hashed.1) setup codec beaconSeed control
+            state.1.beacon.beacon.identity oneTime kem raw).run' ()
           match prepared with
           | none =>
-              let outcome := finishOutcome control state.1 none
+              let outcome := finishOutcome control hashedGame none
               pure (outcome.1, (outcome.2, state.2))
           | some pending => do
               let message := PqxdhJointDhExtractRoot.beaconMessage publicValue pending.collected
-              let game : GameState KemSK := { state.1 with ghost := { state.1.ghost with
-                touches := state.1.ghost.touches ++ [Touch.beacon message] } }
+              let game : GameState KemSK := { hashedGame with ghost := { hashedGame.ghost with
+                touches := hashedGame.ghost.touches ++ [Touch.beacon message] } }
               let derived ← (svc.derive message).run state.2.2
               match derived.1 with
               | .rejected =>
@@ -400,6 +429,9 @@ theorem finishStep_run {τ : Type} (setup : Setup baseSpec KemSK) (codec : Codec
                   let staged ← (svc.hiddenAfter pending).run ((), game.ctx)
                   let outcome := finishOutcome control { game with ctx := staged.2.2 } staged.1
                   pure (outcome.1, (outcome.2, state.2.1, derived.2))
+        | _, _ =>
+          let result := PqxdhBeaconPhase2Publication.finish control state.1.beacon none
+          pure (result.1, ({ state.1 with beacon := result.2 }, state.2))
       | _ => pure (none, state)) :=
   rfl
 
@@ -501,11 +533,20 @@ theorem build_couple (session : Nat) (payload : Option Pqxdh.Bytes)
       simp only [interp_run_pure]
       exact relTriple_pure_pure ⟨rfl, rfl⟩
   | some token =>
-      simp only [interp_bind, StateT.run_bind, interp_run_liftCoins _ forward, interp_run_set, interp_run_pure,
-        bind_map_left, pure_bind, Bool.false_eq_true, ite_false]
-      refine relTriple_bind (relTriple_refl _) fun left right same => ?_
-      cases same
-      exact relTriple_pure_pure ⟨rfl, rfl⟩
+      dsimp only
+      cases prehashed : PqxdhServerRegistrationPublication.prehash state.1.server token.pending payload with
+      | none =>
+          simp only [interp_bind, StateT.run_bind, interp_run_set, interp_run_pure, pure_bind]
+          exact relTriple_pure_pure ⟨rfl, rfl⟩
+      | some candidate =>
+          simp only [interp_bind, StateT.run_bind, interp_run_hashOracle _ forward, bind_map_left]
+          refine relTriple_bind (relTriple_refl _) fun hashed other same => ?_
+          cases same
+          simp only [interp_run_get, interp_run_liftCoins _ forward, interp_run_set,
+            interp_run_pure, bind_map_left, pure_bind, Bool.false_eq_true, ite_false]
+          refine relTriple_bind (relTriple_refl _) fun left right same => ?_
+          cases same
+          exact relTriple_pure_pure ⟨rfl, rfl⟩
 
 theorem finish_couple (raw : Pqxdh.Bytes) (state : GameState KemSK × PqxdhJointDhExtractFamily.State) :
     RelTriple ((interp (PqxdhExtractRomFamily.romImpl setup.hmac setup.joint setup.dh seed scalar ∘ₛ
@@ -524,13 +565,28 @@ theorem finish_couple (raw : Pqxdh.Bytes) (state : GameState KemSK × PqxdhJoint
   simp only [project]
   cases phase : state.1.beacon.beacon.phase
   case initSent control prekey oneTime kem =>
-      simp only [stage_game, interp_bind, StateT.run_bind, interp_run_liftCoins _ forward, bind_map_left, bind_assoc]
+    dsimp only
+    cases retained : state.1.beaconInit with
+    | none =>
+        simp only [interp_bind, StateT.run_bind, interp_run_set, interp_run_pure, pure_bind]
+        exact relTriple_pure_pure ⟨rfl, rfl⟩
+    | some init =>
+    cases decoded : responseOf codec raw with
+    | none =>
+        simp only [interp_bind, StateT.run_bind, interp_run_set, interp_run_pure, pure_bind]
+        exact relTriple_pure_pure ⟨rfl, rfl⟩
+    | some response =>
+      simp only [interp_bind, StateT.run_bind, interp_run_hashOracle _ forward, bind_map_left]
+      refine relTriple_bind (relTriple_refl _) fun hashed other same => ?_
+      cases same
+      simp only [interp_run_get, pure_bind, stage_game, interp_bind, StateT.run_bind, interp_run_liftCoins _ forward,
+        bind_map_left, bind_assoc]
       refine relTriple_bind (relTriple_refl _) fun prepared other same => ?_
       cases same
       cases prepared with
       | none =>
-          simp only [interp_run_pure, pure_bind, interp_run_get, interp_run_set]
-          exact relTriple_pure_pure ⟨rfl, rfl⟩
+          simp only [interp_run_pure, pure_bind, interp_run_set]
+          exact relTriple_pure_pure ⟨rfl, by simp only [retained]; rfl⟩
       | some pending =>
           simp only [recordTouch, interp_bind, StateT.run_bind, interp_run_modify, pure_bind, interp_run_forward,
             bind_map_left, bind_assoc]
@@ -542,15 +598,15 @@ theorem finish_couple (raw : Pqxdh.Bytes) (state : GameState KemSK × PqxdhJoint
           subst replyEq cacheEq
           cases reply with
           | rejected =>
-              simp only [Reply.value, interp_run_pure, pure_bind, interp_run_get,
+              simp only [Reply.value, interp_run_pure, pure_bind,
                 interp_run_set]
-              exact relTriple_pure_pure ⟨rfl, rfl⟩
+              exact relTriple_pure_pure ⟨rfl, by simp only [retained]; rfl⟩
           | root value =>
               simp only [Reply.value, interp_run_onCtx_simulateQ _ forward, bind_map_left,
-                interp_run_get, interp_run_set, interp_run_pure, pure_bind]
+                interp_run_set, interp_run_pure, pure_bind]
               refine relTriple_bind (relTriple_refl _) fun staged other same => ?_
               cases same
-              exact relTriple_pure_pure ⟨rfl, rfl⟩
+              exact relTriple_pure_pure ⟨rfl, by simp only [retained]; rfl⟩
           | hidden => simp [Reply.isHidden] at visible
   all_goals
     simp only [interp_run_pure]
@@ -604,7 +660,7 @@ theorem flatReal_couple (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
         fun _ _ post => Or.inl ⟨post.1, post.2⟩)
     work state (project state) (Or.inl rfl)
 
-/-- Everything the experiment samples before the adversary runs: the two Gap-DH secrets, the Beacon's identity seed, one-time scalar and ML-KEM key pair, and the published Phase 1 with the Beacon state. -/
+/-- Everything the experiment samples before the adversary runs: the two Gap-DH secrets, the Beacon's identity seed, one-time scalar and ML-KEM key pair, the published Phase 1 with the Beacon state, and the Phase 1 bundle the Beacon retained for its transcript hash (`phase1Logged`). -/
 structure Context (KemSK : Type) where
   seed : IdentitySeed
   scalar : ScalarBytes
@@ -612,6 +668,7 @@ structure Context (KemSK : Type) where
   oneTime : ScalarBytes
   keys : PqxdhKemIndCca.MlKem768PublicKey × KemSK
   published : Option Pqxdh.Bytes × RawCtxBeaconLifecycle.State Unit (Unit ⊕ ScalarBytes) KemSK
+  beaconInit : Option PqxdhEd25519EufCma.Phase1Candidate
 
 /-- The public challenge of a context's two secrets. -/
 def Context.publicValue (setup : Setup baseSpec KemSK) (context : Context KemSK) : PublicChallenge :=
@@ -625,9 +682,9 @@ noncomputable def contextSample (setup : Setup baseSpec KemSK) (codec : Codec Re
   let beaconSeed ← sampleSeed
   let oneTime ← PqxdhJointGapDh.sampleScalar
   let keys ← simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl) setup.kem.keygen
-  let published ← phase1Run setup codec beaconSeed (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar)
+  let logged ← phase1Logged setup codec beaconSeed (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar)
     oneTime keys.1 keys.2
-  pure ⟨seed, scalar, beaconSeed, oneTime, keys, published⟩
+  pure ⟨seed, scalar, beaconSeed, oneTime, keys, logged.1, logged.2⟩
 
 /-- The adversary's public input for a context. -/
 def contextInput (setup : Setup baseSpec KemSK) (revealSeed : Bool) (context : Context KemSK) : AuthInput :=
@@ -636,7 +693,7 @@ def contextInput (setup : Setup baseSpec KemSK) (revealSeed : Bool) (context : C
 
 /-- The initial game state of a context. -/
 def contextState (setup : Setup baseSpec KemSK) (context : Context KemSK) : GameState KemSK :=
-  initialGameState setup (context.publicValue setup) context.published.2
+  initialGameState setup (context.publicValue setup) context.published.2 context.beaconInit
 
 /-- A flattened run of the adversary from a context, with no marks and the given initial table state. -/
 noncomputable def flatRun (setup : Setup baseSpec KemSK) (adversary : Adversary) (revealSeed : Bool)
@@ -774,6 +831,11 @@ end BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor.interp_run_liftCoins
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor.interp_run_hashOracle' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor.interp_run_hashOracle
 /-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor.interp_run_map' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/

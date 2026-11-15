@@ -44,16 +44,36 @@ theorem tail_calls (setup : Setup baseSpec KemSK) (wire : Codec Reader Response)
     CborTaggedCodec.application_tagged]
   all_goals try (intros; trivial)
 
-theorem native_owner (setup : Setup baseSpec KemSK) (wire : Codec Reader Response)
+theorem native_owner (completedBinding : session.CompletedRegistrationBinding)
+    (setup : Setup baseSpec KemSK) (wire : Codec Reader Response)
     (sender : Std.U64) (raw : Pqxdh.Bytes) (owner : Owner KemSK) :
     simulateQ (callbacks setup (CborTaggedCodec.codec wire))
-      (PqxdhBeaconPhase2Publication.nativeOwner (CborTaggedCodec.codec wire).frameRead
-        (CborTaggedCodec.tag sender raw) owner) =
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding)
+        (CborTaggedCodec.codec wire).frameRead (CborTaggedCodec.tag sender raw) owner) =
     simulateQ (callbacks setup (CborRegistrationCodec.normalize wire sender))
-      (PqxdhBeaconPhase2Publication.nativeOwner (CborRegistrationCodec.normalize wire sender).frameRead raw owner) := by
-  exact CborResponseRepresentation.native_owner (Prod.mk sender) _ _ raw
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding)
+        (CborRegistrationCodec.normalize wire sender).frameRead raw owner) := by
+  exact CborResponseRepresentation.native_owner (completedBinding := completedBinding) (Prod.mk sender) _ _ raw
     (CborTaggedCodec.tag sender raw) (preparation_calls setup wire sender raw)
     (tail_calls setup wire sender) wire.frameRead owner
+
+/-- The tagged envelope decodes to the same four transcript response fields as the untagged normalized response. -/
+theorem responseOf_tagged (wire : Codec Reader Response) (sender : Std.U64) (raw : Pqxdh.Bytes) :
+    responseOf (CborTaggedCodec.codec wire) (CborTaggedCodec.tag sender raw) =
+      responseOf (CborRegistrationCodec.normalize wire sender) raw := by
+  cases parsed : wire.read2 raw <;>
+    simp only [responseOf, CborRegistrationCodec.normalize, CborTaggedCodec.codec, CborTaggedCodec.untag_tag,
+      parsed, Option.bind_eq_bind, Option.bind_none, Option.bind_some]
+
+/-- Public response tagging preserves the hashed owner finish: the tagged and untagged responses hash the same transcript and run the same native owner at its completed binding. -/
+theorem ownerFinish_tagged (setup : Setup baseSpec KemSK) (wire : Codec Reader Response)
+    (sender : Std.U64) (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : Owner KemSK) :
+    ownerFinish setup (CborTaggedCodec.codec wire) retained (CborTaggedCodec.tag sender raw) owner =
+      ownerFinish setup (CborRegistrationCodec.normalize wire sender) retained raw owner := by
+  unfold ownerFinish
+  rw [responseOf_tagged]
+  simp_rw [native_owner]
 
 /-- Public response tagging preserves the optional finish reply and the complete scheduler state. -/
 theorem finish (setup : Setup baseSpec KemSK) (wire : Codec Reader Response)
@@ -62,7 +82,7 @@ theorem finish (setup : Setup baseSpec KemSK) (wire : Codec Reader Response)
       index (CborTaggedCodec.tag sender raw) =
     PqxdhRegistrationSchedule.finish setup (CborRegistrationCodec.normalize wire sender) index raw := by
   unfold PqxdhRegistrationSchedule.finish
-  simp_rw [native_owner]
+  simp_rw [ownerFinish_tagged]
 
 theorem deployment_finish (setup : Setup baseSpec KemSK) (wire : Codec Reader Response)
     (checks : Checks) (route : RawCtxServerRouting.SenderDecoder)
@@ -144,3 +164,13 @@ end BeaconcryptCore.Computational.CborTaggedFinish
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.CborTaggedFinish.production_finish
+/-- info: 'BeaconcryptCore.Computational.CborTaggedFinish.responseOf_tagged' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CborTaggedFinish.responseOf_tagged
+/-- info: 'BeaconcryptCore.Computational.CborTaggedFinish.ownerFinish_tagged' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.CborTaggedFinish.ownerFinish_tagged

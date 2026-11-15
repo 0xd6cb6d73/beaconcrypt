@@ -28,7 +28,7 @@ structure Parameters (Auxiliary : Type) where
 abbrev Global (n : Nat) (Auxiliary : Type) := RegistrationWorldRoot.FullState n Auxiliary
 abbrev State (n : Nat) (Auxiliary : Type) := RegistrationReplaySchedule.State × Global n Auxiliary
 
-noncomputable def agreement (parameters : Parameters Auxiliary) (control : pqxdh.ServerState)
+noncomputable def agreement (parameters : Parameters Auxiliary) (_control : pqxdh.ServerState)
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit) :
     StateT (State n Auxiliary) ProbComp (RustM agreement.AgreementEffect) := fun before =>
   if before.1.contains (RegistrationReplaySchedule.identifier authenticated) then

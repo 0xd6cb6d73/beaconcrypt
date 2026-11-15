@@ -29,7 +29,7 @@ private theorem predicate (query : (RegistrationNativeMldsaProgram.Spec (handleS
   | inl coin => rfl
   | inr query => cases query <;> rfl
 
-private theorem callback (selected : Nat) (created : PqxdhLiveServerConstruction.Created Unit)
+private theorem callback (selected : Nat) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential (handleSource source))
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain)
     (before : RegistrationNativeMldsaDynamicGame.State (n := n) (KemSK := KemSK) source) :

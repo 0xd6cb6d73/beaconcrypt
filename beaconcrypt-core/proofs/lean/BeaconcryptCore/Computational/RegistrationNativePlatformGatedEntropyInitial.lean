@@ -23,7 +23,7 @@ variable {n : Nat} {ι KemSK Reader Response E X Failure : Type} {base : OracleS
 noncomputable def run (modes : Label n → KeyMode) (replace : Pqxdh.Bytes → Pqxdh.Bytes)
     (setup : Setup base KemSK) (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
     (env : Environment n E) (reserve : Nat → StateT E ProbComp (core.result.Result Unit Failure)) (serverKid : Std.U64) (bounds : FreshBounds) (mode : Mode)
-    (adversary : OracleComp (ModeSpec mode) X) (created : PqxdhLiveServerConstruction.Created Unit)
+    (adversary : OracleComp (ModeSpec mode) X) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (state : CborRawRecordFlat.NativeState n E) : ProbComp (Client n E X × CtxPrivate n) :=
   (fun result => ((some (PqxdhRegistrationJointServerBirth.encode created,
     (result.1, result.2.1), result.2.2.1.1.1), result.2.2.1.2), result.2.2.2)) <$>
@@ -34,7 +34,7 @@ noncomputable def run (modes : Label n → KeyMode) (replace : Pqxdh.Bytes → P
 theorem world_couple (modes : Label n → KeyMode) (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (env : Environment n E) (reserve : Nat → StateT E ProbComp (core.result.Result Unit Failure)) (serverKid : Std.U64) (bounds : FreshBounds)
     (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (claim : X → Option (Nat × Pqxdh.Bytes))
-    (created : PqxdhLiveServerConstruction.Created Unit) (state : CborRawRecordFlat.NativeState n E)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (state : CborRawRecordFlat.NativeState n E)
     (index length : Nat) (offsets : Fin length → Fin 256) :
     Swap (fun first second => hitAt claim index length (ctxView first) =
       shiftedHit bounds claim index length offsets (ctxView second))
@@ -61,7 +61,7 @@ theorem world_couple (modes : Label n → KeyMode) (setup : Setup base KemSK) (c
 theorem fresh_zeros_bytes (modes : Label n → KeyMode) (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (env : Environment n E) (reserve : Nat → StateT E ProbComp (core.result.Result Unit Failure)) (serverKid : Std.U64) (bounds : FreshBounds)
     (mode : Mode) (adversary : OracleComp (ModeSpec mode) X) (claim : X → Option (Nat × Pqxdh.Bytes))
-    (created : PqxdhLiveServerConstruction.Created Unit) (state : CborRawRecordFlat.NativeState n E) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (state : CborRawRecordFlat.NativeState n E) :
     𝒟[(fun result => freshEvent claim (ctxView result)) <$>
       run modes zeros setup codec route env reserve serverKid bounds mode adversary created state] {true} ≤
       ((256 ^ bounds.min : Nat) : ℝ≥0∞)⁻¹ :=

@@ -29,35 +29,35 @@ variable [BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations]
 def error.KeyGenError := Unit
 
 /-- [beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::try_new_with_rng::closure#4]
-    Source: 'beaconcrypt/src/beacon.rs', lines 129:29-129:51 -/
+    Source: 'beaconcrypt/src/beacon.rs', lines 127:29-127:51 -/
 @[reducible]
 def beacon.Beacon.try_new_with_rng.closure_4 (_R : Type) (_Clause0_Clause0_Error
   : Type) :=
 Unit
 
 /-- [beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::try_new_with_rng::closure#3]
-    Source: 'beaconcrypt/src/beacon.rs', lines 127:29-127:51 -/
+    Source: 'beaconcrypt/src/beacon.rs', lines 125:29-125:51 -/
 @[reducible]
 def beacon.Beacon.try_new_with_rng.closure_3 (_R : Type) (_Clause0_Clause0_Error
   : Type) :=
 Unit
 
 /-- [beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::try_new_with_rng::closure#2]
-    Source: 'beaconcrypt/src/beacon.rs', lines 122:25-122:47 -/
+    Source: 'beaconcrypt/src/beacon.rs', lines 120:25-120:47 -/
 @[reducible]
 def beacon.Beacon.try_new_with_rng.closure_2 (_R : Type) (_Clause0_Clause0_Error
   : Type) :=
 Unit
 
 /-- [beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::try_new_with_rng::closure#1]
-    Source: 'beaconcrypt/src/beacon.rs', lines 110:67-110:89 -/
+    Source: 'beaconcrypt/src/beacon.rs', lines 109:67-109:89 -/
 @[reducible]
 def beacon.Beacon.try_new_with_rng.closure_1 (_R : Type) (_Clause0_Clause0_Error
   : Type) :=
 Unit
 
 /-- [beaconcrypt::beacon::{beaconcrypt::beacon::Beacon}::try_new_with_rng::closure]
-    Source: 'beaconcrypt/src/beacon.rs', lines 109:69-109:91 -/
+    Source: 'beaconcrypt/src/beacon.rs', lines 108:69-108:91 -/
 @[reducible]
 def beacon.Beacon.try_new_with_rng.closure (_R : Type) (_Clause0_Clause0_Error :
   Type) :=

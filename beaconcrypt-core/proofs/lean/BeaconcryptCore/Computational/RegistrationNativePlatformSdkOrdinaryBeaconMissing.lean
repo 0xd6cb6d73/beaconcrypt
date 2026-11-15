@@ -22,7 +22,7 @@ variable [material : PublicWrapperPlatform.Material] [platform : PublicWrapperPl
 noncomputable def send (setup : Setup base KemSK) (wire : Wire)
     (reserve : Nat→StateT Platform ProbComp (core.result.Result Unit E)) (route : RawCtxServerRouting.SenderDecoder)
     (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (current : Native×Platform) (before : StrongCarrier (R:=R) setup view views created credential current)
     (logical : Nat) (bytes : Pqxdh.Bytes) (missing : current.1.beacons[logical]?=none) :
     RegistrationNativePlatformExtractedSdkPublic.TotalStep (StrongCarrier (R:=R) setup view views created credential)
@@ -52,7 +52,7 @@ noncomputable def send (setup : Setup base KemSK) (wire : Wire)
 noncomputable def receive (setup : Setup base KemSK) (wire : Wire)
     (reserve : Nat→StateT Platform ProbComp (core.result.Result Unit E)) (route : RawCtxServerRouting.SenderDecoder)
     (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (current : Native×Platform) (before : StrongCarrier (R:=R) setup view views created credential current)
     (logical : Nat) (bytes : Pqxdh.Bytes) (missing : current.1.beacons[logical]?=none) :
     RegistrationNativePlatformExtractedSdkPublic.TotalStep (StrongCarrier (R:=R) setup view views created credential)

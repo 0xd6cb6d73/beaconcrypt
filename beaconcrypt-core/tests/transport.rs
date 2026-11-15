@@ -26,9 +26,9 @@ mod tests {
 		assert_eq!(encoded_frame_len(0, 0, 0), Some(6));
 		assert_eq!(encoded_frame_len(24, 256, 65_536), Some(65_549));
 		assert_eq!(encoded_frame_len(u64::MAX, u64::MAX, 23), Some(45));
-		assert_eq!(encoded_init_len([0; 6]), Some(9));
-		assert_eq!(encoded_init_len([1, 24, 256, 65_536, 0, 0]), Some(65_833));
-		assert_eq!(encoded_init_len([33, 98, 98, 1249, 1952, 3309]), Some(6757));
+		assert_eq!(encoded_init_len([0; 4]), Some(7));
+		assert_eq!(encoded_init_len([1, 24, 256, 65_536]), Some(65_831));
+		assert_eq!(encoded_init_len([33, 98, 98, 1249]), Some(1490));
 		assert_eq!(encoded_response_len([0; 5], 0), Some(9));
 		assert_eq!(
 			encoded_response_len([1, 24, 256, 65_536, 0], u64::MAX),
@@ -49,9 +49,9 @@ mod tests {
 				None
 			);
 		}
-		for field in 0..6 {
-			let mut lengths = [0; 6];
-			lengths[field] = MAX_MESSAGE_SIZE - 13;
+		for field in 0..4 {
+			let mut lengths = [0; 4];
+			lengths[field] = MAX_MESSAGE_SIZE - 11;
 			assert_eq!(encoded_init_len(lengths), Some(MAX_MESSAGE_SIZE));
 			lengths[field] += 1;
 			assert_eq!(encoded_init_len(lengths), None);
@@ -74,8 +74,8 @@ mod tests {
 	fn sizing_rejects_usize_overflow_and_oversized_combinations() {
 		for impossible in [usize::MAX, usize::MAX - 8, MAX_MESSAGE_SIZE] {
 			assert_eq!(encoded_frame_len(0, 0, impossible), None);
-			for field in 0..6 {
-				let mut lengths = [0; 6];
+			for field in 0..4 {
+				let mut lengths = [0; 4];
 				lengths[field] = impossible;
 				assert_eq!(encoded_init_len(lengths), None);
 			}
@@ -85,9 +85,9 @@ mod tests {
 				assert_eq!(encoded_response_len(lengths, 0), None);
 			}
 		}
-		assert_eq!(encoded_init_len([MAX_MESSAGE_SIZE / 6; 6]), None);
+		assert_eq!(encoded_init_len([MAX_MESSAGE_SIZE / 4; 4]), None);
 		assert_eq!(encoded_response_len([MAX_MESSAGE_SIZE / 5; 5], 0), None);
-		assert_eq!(encoded_init_len([usize::MAX - 12, 12, 0, 0, 0, 0]), None);
+		assert_eq!(encoded_init_len([usize::MAX - 12, 12, 0, 0]), None);
 	}
 
 	#[test]

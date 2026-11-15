@@ -186,7 +186,7 @@ variable [platform : PublicWrapperPlatform.Platform]
   { previous with ratchet_initial_ratchet_hkdf := beaconcrypt_ratchet_kdf.ratchet.initial_ratchet_hkdf }
 
 theorem source_initial_kdf (previous : PublicWrapperPlatform.LocalOperations)
-    (request : ratchet.SymmetricRatchetKdfRequest) :
+    (request : ratchet.InitialRatchetKdfRequest) :
     (sourceLocalOperations previous).ratchet_initial_ratchet_hkdf request =
       beaconcrypt_ratchet_kdf.ratchet.initial_ratchet_hkdf request := rfl
 
@@ -251,6 +251,7 @@ variable [FrameDispatchFallback.Operations]
 
 structure ResponseContracts : Prop where
   publicLeaves : AdapterPublicTrivial.Contracts
+  hash : ∀ request, Normal (authentication.hash request)
   allocation : AdapterWire.Contracts
   sealingPrimitive : AdapterSeal.PrimitiveContracts
   parse : ∀ input, Normal (primitive.parse input)
@@ -267,13 +268,14 @@ theorem response_contracts (initial : AdapterRatchetKdf.Contracts 64#usize)
     letI := sourceReceiveOperations recordOps
     letI := sourceLocalOperations localOps
     AdapterPublicRegistrationWriterSource.ResponseContracts := by
-  rcases leaves with ⟨publicLeaves, allocation, sealingPrimitive, parse, commitment,
+  rcases leaves with ⟨publicLeaves, hash, allocation, sealingPrimitive, parse, commitment,
     sign, contains, reserve, entry, insert⟩
-  rcases publicLeaves with ⟨mldsaPublic, edPublicBytes, hash⟩
+  rcases publicLeaves with ⟨mldsaPublic, edPublicBytes⟩
   let _ := sourceReceiveOperations recordOps
   let _ := sourceLocalOperations localOps
   exact {
-    publicLeaves := { mldsaPublic := mldsaPublic, edPublicBytes := edPublicBytes, hash := hash }
+    publicLeaves := { mldsaPublic := mldsaPublic, edPublicBytes := edPublicBytes }
+    hash := hash
     allocation := allocation
     sealingPrimitive := sealingPrimitive
     parse := parse

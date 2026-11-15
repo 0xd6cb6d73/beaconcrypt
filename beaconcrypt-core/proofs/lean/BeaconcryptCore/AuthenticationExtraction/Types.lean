@@ -31,25 +31,24 @@ inductive authentication.AuthRole where
 | Server : authentication.AuthRole
 
 /-- [beaconcrypt_core::authentication::InitFields]
-    Source: 'beaconcrypt-core/src/authentication.rs', lines 34:0-40:1
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 34:0-39:1
     Visibility: public -/
 structure authentication.InitFields where
   identity_key : Array Std.U8 33#usize
   pre_key : Array Std.U8 98#usize
   one_time_key : Array Std.U8 98#usize
   pq_key : Array Std.U8 1249#usize
-  mldsa_public_key : Array Std.U8 1952#usize
 
 /-- [beaconcrypt_core::authentication::build_init_transcript::closure]
-    Source: 'beaconcrypt-core/src/authentication.rs', lines 66:25-94:5 -/
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 65:25-91:5 -/
 def authentication.build_init_transcript.closure :=
-  Array Std.U8 8#usize × Array Std.U8 32#usize × Array Std.U8 33#usize ×
-  Array Std.U8 98#usize × Array Std.U8 98#usize × Array Std.U8 1249#usize ×
-  Array Std.U8 1952#usize × Array Std.U8 1952#usize × Array Std.U8 8#usize ×
-  Array Std.U8 8#usize × Array Std.U8 8#usize
+  Array Std.U8 8#usize × Array Std.U8 32#usize × Array Std.U8 1952#usize ×
+  Array Std.U8 8#usize × Array Std.U8 33#usize × Array Std.U8 98#usize ×
+  Array Std.U8 98#usize × Array Std.U8 1249#usize × Array Std.U8 8#usize ×
+  Array Std.U8 8#usize
 
 /-- [beaconcrypt_core::authentication::ResponseFields]
-    Source: 'beaconcrypt-core/src/authentication.rs', lines 98:0-104:1
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 95:0-101:1
     Visibility: public -/
 structure authentication.ResponseFields where
   identity_key : Array Std.U8 32#usize
@@ -59,14 +58,14 @@ structure authentication.ResponseFields where
   key_id : Std.U64
 
 /-- [beaconcrypt_core::authentication::build_response_prefix::closure]
-    Source: 'beaconcrypt-core/src/authentication.rs', lines 117:25-137:5 -/
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 114:25-134:5 -/
 def authentication.build_response_prefix.closure :=
   Array Std.U8 64#usize × Array Std.U8 8#usize × Array Std.U8 32#usize ×
   Array Std.U8 32#usize × Array Std.U8 8#usize × Array Std.U8 1088#usize ×
   Array Std.U8 8#usize
 
 /-- [beaconcrypt_core::authentication::ResponseTranscript]
-    Source: 'beaconcrypt-core/src/authentication.rs', lines 141:0-145:1
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 138:0-142:1
     Visibility: public -/
 structure authentication.ResponseTranscript where
   «prefix» : Array Std.U8 1293#usize
@@ -74,13 +73,44 @@ structure authentication.ResponseTranscript where
   assigned_id : Array Std.U8 8#usize
 
 /-- [beaconcrypt_core::authentication::build_signature_input::closure]
-    Source: 'beaconcrypt-core/src/authentication.rs', lines 184:25-194:5 -/
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 181:25-191:5 -/
 def authentication.build_signature_input.closure :=
   Array Std.U8 34#usize × Array Std.U8 64#usize
 
-/-- [beaconcrypt_core::authentication::bind_associated_data::closure]
-    Source: 'beaconcrypt-core/src/authentication.rs', lines 203:25-211:5 -/
-def authentication.bind_associated_data.closure :=
-  Array Std.U8 281#usize × Array Std.U8 64#usize × Array Std.U8 64#usize
+/-- [beaconcrypt_core::authentication::OwnedInitFields]
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 197:0-202:1
+    Visibility: public -/
+structure authentication.OwnedInitFields where
+  identity_key : Array Std.U8 33#usize
+  pre_key : Array Std.U8 98#usize
+  one_time_key : Array Std.U8 98#usize
+  pq_key : Array Std.U8 1249#usize
+
+/-- [beaconcrypt_core::authentication::{beaconcrypt_core::authentication::OwnedInitFields}::identity_public_key::closure]
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 224:29-224:57 -/
+@[reducible]
+def authentication.OwnedInitFields.identity_public_key.closure :=
+  authentication.OwnedInitFields
+
+/-- [beaconcrypt_core::authentication::AdResponseFields]
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 236:0-241:1
+    Visibility: public -/
+structure authentication.AdResponseFields where
+  identity_key : Array Std.U8 32#usize
+  ephemeral_key : Array Std.U8 32#usize
+  kem_cipher_text : Array Std.U8 1088#usize
+  key_id : Std.U64
+
+/-- [beaconcrypt_core::authentication::build_record_ad_transcript::closure]
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 249:25-267:5 -/
+def authentication.build_record_ad_transcript.closure :=
+  Array Std.U8 33#usize × Array Std.U8 98#usize × Array Std.U8 98#usize ×
+  Array Std.U8 1249#usize × Array Std.U8 32#usize × Array Std.U8 32#usize ×
+  Array Std.U8 1088#usize × Array Std.U8 8#usize
+
+/-- [beaconcrypt_core::authentication::assemble_associated_data::closure]
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 274:25-280:5 -/
+@[reducible]
+def authentication.assemble_associated_data.closure := Array Std.U8 64#usize
 
 end beaconcrypt_authentication_core

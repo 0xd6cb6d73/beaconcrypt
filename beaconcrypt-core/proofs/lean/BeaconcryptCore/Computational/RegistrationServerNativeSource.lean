@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationServerFrontendGame
 
-/-! This source interpreter executes the actual concrete role backend and native agreement controller under the owned replay lookup. The selected converter's fixed-width representation is explicit. Root-family bookkeeping is removed only from the analysis projection; actual SDK conversion/KEM/DH/HKDF, ML/Ed gates, replay insertion and publication effects remain. -/
+/-! This source interpreter executes the actual concrete role backend and native agreement controller under the owned replay lookup. The selected converter's fixed-width representation is explicit. Root-family bookkeeping is removed only from the analysis projection; actual SDK conversion/KEM/DH/HKDF, attached Ed Init gates, mandatory Server ML response signing, replay insertion and publication effects remain. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -16,7 +16,7 @@ open RegistrationServerFrontendCompiler (State restore erase)
 variable {ι KemSK Reader Response Encoded Value : Type} {base : OracleSpec ι} {n : Nat}
 
 /-- The immutable constructor is private to the source interpreter. No selected seed is put into executable client state. -/
-def sourceStep (created : PqxdhLiveServerConstruction.Created Unit)
+def sourceStep (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : StateT (RegistrationWorldServerFrontend.State n RegistrationServerRoleBackend.State) ProbComp Value) :
     StateT (State n) ProbComp Value := fun before =>
   Prod.map id erase <$> work.run (restore created (PqxdhJointDhExtractFamily.empty, before))
@@ -24,8 +24,8 @@ def sourceStep (created : PqxdhLiveServerConstruction.Created Unit)
 /-- Actual replay lookup precedes all actual concrete conversion/KEM/DH/root callbacks. -/
 noncomputable def agree (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
-    (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
+    (_packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit) :
     StateT (State n) ProbComp (RustM agreement.AgreementEffect) := fun before =>
   (fun result => (result.1, { before with world := result.2 })) <$>
     (simulateQ (RegistrationWorldAgreement.agreement setup.source
@@ -34,17 +34,17 @@ noncomputable def agree (setup : Setup base KemSK) (checks : Checks)
 
 noncomputable def authenticate (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket) :=
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket) :=
   sourceStep (n := n) created (RegistrationWorldServerFrontend.authenticate setup codec route verify packet)
 
-def retain (created : PqxdhLiveServerConstruction.Created Unit) (accepted : agreement.ServerAgreement) :=
+def retain (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (accepted : agreement.ServerAgreement) :=
   sourceStep (n := n) created (RegistrationWorldServerFrontend.retain accepted)
 
-/-- The actual native source accepts only after mandatory ML/Ed authentication and private replay lookup, then inserts the ID before giving the one-use handle. -/
+/-- The actual native source accepts only after attached Ed Init authentication and private replay lookup, then inserts the ID before giving the one-use handle. -/
 noncomputable def accept (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket) :
     StateT (State n) ProbComp (RustM (Option Nat)) := do
   let checked ← authenticate setup codec route verify created packet
   match checked with
@@ -69,7 +69,7 @@ private theorem map_state_apply {S X Y : Type} (f : X → Y) (work : StateT S Pr
 theorem agree_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit) (before : Family × State n) :
     Prod.map id Prod.snd <$>
       (RegistrationServerRootCompiler.interpret (RegistrationServerRootCompiler.family setup.hmac setup.joint setup.dh created.seed scalar)
@@ -92,7 +92,7 @@ theorem agree_source (setup : Setup base KemSK) (checks : Checks)
 
 private theorem authenticate_frame (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (family : Family) (before : State n) :
     Prod.map id erase <$>
       (RegistrationWorldServerFrontend.authenticate setup codec route verify packet).run (restore created (family, before)) =
@@ -100,7 +100,7 @@ private theorem authenticate_frame (setup : Setup base KemSK) (codec : Codec Rea
   simp only [authenticate, sourceStep, RegistrationWorldServerFrontend.authenticate, RegistrationWorldServerFrontend.withWorld,
     restore, erase, StateT.run, Functor.map_map, Prod.map, id_eq]
 
-private theorem retain_frame (created : PqxdhLiveServerConstruction.Created Unit) (accepted : agreement.ServerAgreement)
+private theorem retain_frame (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (accepted : agreement.ServerAgreement)
     (family : Family) (before : State n) :
     Prod.map id erase <$> (RegistrationWorldServerFrontend.retain accepted).run (restore created (family, before)) =
       (retain created accepted).run before := by
@@ -110,7 +110,7 @@ private theorem retain_frame (created : PqxdhLiveServerConstruction.Created Unit
   | div => simp only [map_pure]; rfl
   | ok result => rcases result with ⟨option, history⟩; cases option <;> simp only [map_pure] <;> rfl
 
-private theorem erase_restore (created : PqxdhLiveServerConstruction.Created Unit) (state : Family × State n) :
+private theorem erase_restore (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (state : Family × State n) :
     erase (restore created state) = state.2 := rfl
 
 private theorem drop_eq {X : Type} :
@@ -122,7 +122,7 @@ private theorem drop_eq {X : Type} :
 
 private theorem authenticate_source (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (packet : registration.InitPacket) (before : Family × State n) :
     Prod.map id Prod.snd <$>
       (RegistrationServerRootCompiler.interpret (RegistrationServerRootCompiler.family setup.hmac setup.joint setup.dh created.seed scalar)
@@ -133,7 +133,7 @@ private theorem authenticate_source (setup : Setup base KemSK) (codec : Codec Re
   simpa only [drop_eq, Functor.map_map, Function.comp_def, Prod.map, id_eq, erase_restore] using same.trans
     (authenticate_frame setup codec route verify created packet before.1 before.2)
 
-private theorem retain_source (setup : Setup base KemSK) (created : PqxdhLiveServerConstruction.Created Unit)
+private theorem retain_source (setup : Setup base KemSK) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (scalar : PqxdhJointGapDh.ScalarBytes) (accepted : agreement.ServerAgreement) (before : Family × State n) :
     Prod.map id Prod.snd <$>
       (RegistrationServerRootCompiler.interpret (RegistrationServerRootCompiler.family setup.hmac setup.joint setup.dh created.seed scalar)
@@ -167,12 +167,12 @@ private theorem bind_source {X Y : Type} (family : QueryImpl RootSpec (StateT Fa
   funext result
   exact rest result.1 result.2
 
-/-- The complete actual concrete-source mandatory-ML accept execution is derived, including optional converter/KEM/DH outcomes and all owned replay mutations. -/
+/-- The complete actual concrete-source Ed-authenticated accept execution is derived, including optional converter/KEM/DH outcomes and all owned replay mutations. -/
 theorem accept_source (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (packet : registration.InitPacket) (before : Family × State n) :
     Prod.map id Prod.snd <$>
       (RegistrationServerRootCompiler.interpret (RegistrationServerRootCompiler.family setup.hmac setup.joint setup.dh created.seed scalar)
@@ -199,7 +199,7 @@ theorem accept_source (setup : Setup base KemSK) (codec : Codec Reader Response)
 private theorem complete_frame (setup : Setup base KemSK) (codec : Codec Reader Response)
     (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
     (encode : registration.SignedResponseView → core.option.Option Encoded)
-    (created : PqxdhLiveServerConstruction.Created Unit) (family : Family) (before : State n)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (family : Family) (before : State n)
     (consumed : peer.ConsumedRegistration) (application : Slice U8) :
     Prod.map id erase <$>
       (RegistrationWorldServerFrontend.complete setup codec sign encode consumed application).run (restore created (family, before)) =
@@ -227,7 +227,7 @@ private theorem get_bind {S X : Type} {m : Type → Type} [Monad m] [LawfulMonad
 private theorem build_frame (setup : Setup base KemSK) (codec : Codec Reader Response)
     (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
     (encode : registration.SignedResponseView → core.option.Option Encoded)
-    (created : PqxdhLiveServerConstruction.Created Unit) (family : Family) (before : State n)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (family : Family) (before : State n)
     (handle : Nat) (application : Slice U8) :
     Prod.map id erase <$>
       (RegistrationWorldServerFrontend.build setup codec sign encode handle application).run (restore created (family, before)) =
@@ -255,7 +255,7 @@ private theorem build_frame (setup : Setup base KemSK) (codec : Codec Reader Res
 theorem build_source (setup : Setup base KemSK) (codec : Codec Reader Response)
     (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
     (encode : registration.SignedResponseView → core.option.Option Encoded)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (handle : Nat) (application : Slice U8) (before : Family × State n) :
     Prod.map id Prod.snd <$>
       (RegistrationServerRootCompiler.interpret (RegistrationServerRootCompiler.family setup.hmac setup.joint setup.dh created.seed scalar)
@@ -273,14 +273,14 @@ noncomputable def handler (setup : Setup base KemSK) (codec : Codec Reader Respo
     (encode : registration.SignedResponseView → core.option.Option Encoded)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes) :
     QueryImpl (RegistrationServerFrontendGame.Spec Encoded) (StateT (State n) ProbComp)
   | .inr (.accept packet) => accept setup codec checks route verify representation created packet
   | query => sourceStep created
       (RegistrationServerFrontendGame.native setup codec checks route verify sign encode correct scalar query)
 
 private theorem world_source {X : Type} (setup : Setup base KemSK)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (work : StateT (Local n) ProbComp X) (before : Family × State n) :
     Prod.map id Prod.snd <$>
       (RegistrationServerRootCompiler.interpret (RegistrationServerRootCompiler.family setup.hmac setup.joint setup.dh created.seed scalar)
@@ -298,7 +298,7 @@ theorem query_source (setup : Setup base KemSK) (codec : Codec Reader Response) 
     (encode : registration.SignedResponseView → core.option.Option Encoded)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (query : (RegistrationServerFrontendGame.Spec Encoded).Domain) (before : Family × State n) :
     Prod.map id Prod.snd <$>
       (RegistrationServerRootCompiler.interpret (RegistrationServerRootCompiler.family setup.hmac setup.joint setup.dh created.seed scalar)
@@ -320,7 +320,7 @@ theorem program_source {X : Type} (setup : Setup base KemSK) (codec : Codec Read
     (encode : registration.SignedResponseView → core.option.Option Encoded)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (work : OracleComp (RegistrationServerFrontendGame.Spec Encoded) X) (before : Family × State n) :
     Prod.map id Prod.snd <$>
       (RegistrationServerRootCompiler.interpret (RegistrationServerRootCompiler.family setup.hmac setup.joint setup.dh created.seed scalar)
@@ -347,7 +347,7 @@ noncomputable def profile {X : Type} (setup : Setup base KemSK) (codec : Codec R
   let seed ← PqxdhJointIdentity.sampleSeed
   let scalar ← PqxdhJointGapDh.sampleScalar
   let publicValue := PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar
-  let created := PqxdhLiveServerConstruction.initialized (P := Unit) setup.joint identityIndex serverKid .generated seed
+  let created := PqxdhLiveServerConstruction.initialized (P := Std.Array Std.U8 151#usize) setup.joint identityIndex serverKid .generated seed
   let before ← initial publicValue
   let result ← (simulateQ (handler setup codec checks route verify sign encode representation correct created scalar)
     (adversary publicValue)).run before
@@ -373,7 +373,7 @@ private theorem client_source {X : Type} (setup : Setup base KemSK) (codec : Cod
     (encode : registration.SignedResponseView → core.option.Option Encoded)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (initial : PqxdhJointGapDh.PublicChallenge → ProbComp (State n))
     (adversary : PqxdhJointGapDh.PublicChallenge → OracleComp (RegistrationServerFrontendGame.Spec Encoded) X)
     (event : PqxdhJointGapDh.PublicChallenge → X → State n → Bool)
@@ -416,7 +416,7 @@ theorem profile_real {X : Type} (setup : Setup base KemSK) (codec : Codec Reader
   apply congrArg (fun continuation => PqxdhJointGapDh.sampleScalar >>= continuation)
   funext scalar
   exact client_source setup codec checks route verify sign encode representation correct
-    (PqxdhLiveServerConstruction.initialized (P := Unit) setup.joint identityIndex serverKid .generated seed)
+    (PqxdhLiveServerConstruction.initialized (P := Std.Array Std.U8 151#usize) setup.joint identityIndex serverKid .generated seed)
     scalar initial adversary event _
 
 /-- The actual mandatory-ML SDK-source profile has coefficient-one related-root loss; no whole-game equality, supplied verifier verdict, guessed digest or adversarial Fresh status is an assumption. -/

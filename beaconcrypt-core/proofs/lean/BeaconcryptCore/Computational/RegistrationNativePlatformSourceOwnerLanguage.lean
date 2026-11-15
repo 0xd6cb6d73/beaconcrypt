@@ -85,21 +85,21 @@ theorem embedding_program
 
 noncomputable def native (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (source : RegistrationNativeMldsa.Source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (source : RegistrationNativeMldsa.Source)
     (work : Base n KemSK Platform Value) : RegistrationNativePlatformOrdinaryExperiment.M n KemSK source Platform Value :=
   fun before previous => (fun result => ((result.1.1, result.2), result.1.2)) <$>
     (simulateQ (nativeHandler setup checks representation created source) (work.run previous)).run before
 
 theorem native_pure (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (value : Value) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (value : Value) :
     native (n := n) (Platform := Platform) setup checks representation created source (pure value) = pure value := by
   funext before previous
   simp only [native, StateT.run, pure_apply, simulateQ_pure, map_pure]
 
 theorem native_bind (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : Base n KemSK Platform Value) (next : Value → Base n KemSK Platform Next) :
     native setup checks representation created source (work >>= next) =
       (native setup checks representation created source work >>= fun value => native setup checks representation created source (next value)) := by
@@ -108,7 +108,7 @@ theorem native_bind (setup : Setup base KemSK) (checks : Checks)
 
 private theorem native_coins (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (work : ProbComp Value)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (work : ProbComp Value)
     (before : RegistrationNativeExperiment.State n KemSK source) :
     (simulateQ (nativeHandler setup checks representation created source) (simulateQ coins work)) before =
       (fun value => (value, before)) <$> work := by
@@ -122,7 +122,7 @@ private theorem native_coins (setup : Setup base KemSK) (checks : Checks)
 /-- External writer work retains its exact returned P and leaves the full native state untouched. -/
 theorem native_platform (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (work : StateT Platform ProbComp Value) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (work : StateT Platform ProbComp Value) :
     native (n := n) setup checks representation created source (platform work) = StateT.lift work := by
   funext before previous
   simp only [native, StateT.run, platform, native_coins, Functor.map_map, lift_apply, map_apply]
@@ -139,7 +139,7 @@ private theorem counted_coins (work : ProbComp Value) (previous : Platform) :
 /-- The trusted branch retains the exact native sampler and its measured counter updates; only external coins are uncounted. -/
 theorem native_trusted (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (query : (RegistrationNativeBeaconFrontend.Trusted n KemSK).Domain) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (query : (RegistrationNativeBeaconFrontend.Trusted n KemSK).Domain) :
     native (Platform := Platform) setup checks representation created source (trusted query) =
       RegistrationNativePlatformExperiment.trusted RegistrationNativePlatformMldsaProgram.coins setup checks representation created source query := by
   funext before previous
@@ -151,7 +151,7 @@ theorem native_trusted (setup : Setup base KemSK) (checks : Checks)
 /-- The entire free stateful owner/writer program has the literal native platform dictionary. -/
 theorem native_program (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (work : OracleComp (RegistrationNativePlatformGenericBundle.Spec E n KemSK) Value) :
     native setup checks representation created source (simulateQ (handler writer) work) =

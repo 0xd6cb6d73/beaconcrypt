@@ -8,7 +8,7 @@ set_option autoImplicit false
 set_option warningAsError true
 set_option maxRecDepth 4096
 set_option backward.isDefEq.respectTransparency false
-/-! Selected per-key sampling and object-view contracts retain the actual returned caller RNG jointly with each native secret. ML failure retains its reached RNG. The Ed and X25519 contracts explicitly select the infallible native sampling profile; they do not cover arbitrary failing TryCryptoRng implementations. Generic constructor factoring remains valid on every error path without these contracts. No controller or initial-material conclusion is a contract field. -/
+/-! Selected per-key sampling and object-view contracts retain the actual returned caller RNG jointly with each native secret. The Beacon has no ML sampler. The Ed and X25519 contracts explicitly select the infallible native sampling profile; they do not cover arbitrary failing TryCryptoRng implementations. Generic constructor factoring remains valid on every error path without these contracts. No controller or initial-material conclusion is a contract field. -/
 namespace BeaconcryptCore.Refinement.AdapterBeaconConstructorGeneration
 open AdapterPublicWrapperRustT (RustT)
 open AdapterPublicWrapperRequestMonad
@@ -24,16 +24,6 @@ variable [material : PublicWrapperPlatform.Material] [primitive : AdapterInitEdP
 variable [generators : AdapterBeaconConstructorRequestMonad.Operations (RustT m)]
 variable [crypto : CryptoOperations (RustT m)] [children : ChildOperations (RustT m)]
 variable {source : RegistrationNativeMldsa.Source} {KemSK R Error : Type}
-
-structure MldsaContract (generator : rand_core.TryCryptoRng R Error)
-    (view : AdapterPublicWrapperState.MaterialView source KemSK)
-    (sample : m (Option (RegistrationNativeMldsa.Credential source))) where
-  joint : R → m (Option (RegistrationNativeMldsa.Credential source) × R)
-  nativeMarginal : ∀ rng, Prod.fst <$> joint rng = sample
-  realize : RegistrationNativeMldsa.Credential source → beaconcrypt_public_wrapper.auth.MldsaIdentity
-  privateView : ∀ credential, view.mldsa (realize credential) = credential
-  operation : ∀ rng, generators.mldsaGenerate generator rng = RustT.lift
-    ((fun reply => (match reply.1 with | none => .Err () | some credential => .Ok (realize credential), reply.2)) <$> joint rng)
 
 structure EdContract (generator : rand_core.TryCryptoRng R Error)
     (view : AdapterPublicWrapperState.MaterialView source KemSK) (jointKeys : PqxdhJointIdentity.Primitives)
@@ -59,30 +49,22 @@ structure KxContract (generator : rand_core.TryCryptoRng R Error)
   operation : ∀ rng, crypto.kxGenerate generator rng = RustT.lift
     ((fun reply => (.Ok (realize reply.1), reply.2)) <$> joint rng)
 
+omit children in
 theorem with_inputs (generator : rand_core.TryCryptoRng R Error)
     (view : AdapterPublicWrapperState.MaterialView source KemSK)
-    (sample : m (Option (RegistrationNativeMldsa.Credential source))) (model : MldsaContract generator view sample)
     (identifier : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicKey)
     (mldsa : Std.Array U8 1952#usize) (rng : R)
     (getter : crypto.edPublicBytes serverId = pure (view.edPublic serverId)) :
     AdapterBeaconConstructorBody.withInputs generator identifier serverId mldsa rng = (do
-      let reply ← RustT.lift (model.joint rng)
-      match reply.1 with
-      | none => AdapterBeaconConstructorBody.reject reply.2
-      | some credential =>
-        let binding : pqxdh.ServerBinding := ⟨view.edPublic serverId, identifier⟩
-        let pin ← beaconcrypt_public_request.auth.fingerprint_pin (m := RustT m) binding mldsa
-        match pin with
-        | .None => AdapterBeaconConstructorBody.reject reply.2
-        | .Some pin => AdapterBeaconConstructorBody.withKeys generator identifier serverId binding pin (model.realize credential) reply.2) := by
+      let binding : pqxdh.ServerBinding := ⟨view.edPublic serverId, identifier⟩
+      let pin ← beaconcrypt_public_request.auth.server_pin (m := RustT m) binding mldsa
+      match pin with
+      | .None => AdapterBeaconConstructorBody.reject rng
+      | .Some pin => AdapterBeaconConstructorBody.withKeys generator identifier serverId binding pin rng) := by
   unfold AdapterBeaconConstructorBody.withInputs
   rw [getter]
   simp only [pure_bind]
-  rw [model.operation, lift_map]
-  simp only [bind_map_left]
-  apply bind_congr
-  rintro ⟨selected, nextRng⟩
-  cases selected <;> rfl
+  rfl
 
 omit children in
 theorem with_keys (generator : rand_core.TryCryptoRng R Error)
@@ -92,15 +74,15 @@ theorem with_keys (generator : rand_core.TryCryptoRng R Error)
     (kxSample : m PqxdhJointGapDh.ScalarBytes) (kx : KxContract generator view kxPublic kxSample)
     (identifier : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicKey)
     (binding : pqxdh.ServerBinding) (pin : session.ServerAuthenticationPin)
-    (identity : beaconcrypt_public_wrapper.auth.MldsaIdentity) (rng : R) :
-    AdapterBeaconConstructorBody.withKeys generator identifier serverId binding pin identity rng = (do
+    (rng : R) :
+    AdapterBeaconConstructorBody.withKeys generator identifier serverId binding pin rng = (do
       let signing ← RustT.lift (ed.joint rng)
       let control ← AdapterRecordRequestMonad.liftRust (pqxdh.BeaconFresh.new binding)
       let prekey ← RustT.lift (kx.joint signing.2)
       let (kem, nextRng) ← generators.kemGenerate generator prekey.2
       match kem with
       | .Err _ => AdapterBeaconConstructorBody.reject nextRng
-      | .Ok kem => pure (.Ok ⟨ed.realize signing.1, identifier, .Fresh control (kx.realize prekey.1) kem, serverId, ⟨identity, pin⟩⟩, nextRng)) := by
+      | .Ok kem => pure (.Ok ⟨ed.realize signing.1, identifier, .Fresh control (kx.realize prekey.1) kem, serverId, ⟨pin⟩⟩, nextRng)) := by
   unfold AdapterBeaconConstructorBody.withKeys
   rw [ed.operation, lift_map]
   simp only [bind_map_left]

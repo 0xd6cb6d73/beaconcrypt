@@ -7,6 +7,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.refined ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhLaterSavedContext
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhJointKdfGame PqxdhNativeSharedPrefix
 open RawCtxSelectedParentTable RawCtxSelectedParentEntry RawCtxSelectedMessageDriver
 open PqxdhSelectedFirstRecord
@@ -31,13 +32,13 @@ noncomputable def complete (fits : PqxdhInitialOriginCertificates.Fits qPost con
       RawCtxSharedPrimitive.SharedState (Local A N C))) :=
   match context, fits with
   | ⟨.inl (.record request before outside inner), trace, _⟩, fits =>
-      PqxdhLaterSavedRecord.selectedRecord pre application initial selector aux source writer prior key target nonce next
+      PqxdhLaterSavedRecord.selectedRecord (completedBinding := completedBinding) pre application initial selector aux source writer prior key target nonce next
         mark sender route read request before trace outside inner material fits.2 state
-  | ⟨.inl (.finish index before control candidate outside inner), trace, origin⟩, fits =>
-      PqxdhLaterSavedFinish.selectedPendingFinish pre application initial selector aux source writer prior key target nonce next
-        mark sender route read index before trace origin control candidate outside inner material fits.2 state
+  | ⟨.inl (.finish index before control candidate associatedData outside inner), trace, origin⟩, fits =>
+      PqxdhLaterSavedFinish.selectedPendingFinish (completedBinding := completedBinding) pre application initial selector aux source writer prior key target nonce next
+        mark sender route read index before trace origin control candidate associatedData outside inner material fits.2 state
   | ⟨.inr builder, trace, origin⟩, _ =>
-      PqxdhLaterSavedBuilder.selectedBuilder pre application initial selector aux source writer prior key target nonce next
+      PqxdhLaterSavedBuilder.selectedBuilder (completedBinding := completedBinding) pre application initial selector aux source writer prior key target nonce next
         mark sender route read trace origin builder material state
 
 local notation "parent" => Entry.mk (PqxdhInitialBuilderContext.address context.original) material
@@ -49,24 +50,24 @@ theorem retained_complete (fits : PqxdhInitialOriginCertificates.Fits qPost cont
     (simulateQ (PqxdhInitialNativeRetained.retained source writer
       (privateTable prior (some parent) target (RawCtxSelectedMessageKdf.response key nonce next))
       (lifted pre application initial selector aux))
-      (PqxdhInitialOriginContext.resume mark sender route read context
-        (PqxdhInitialParentBuilderContext.reply sender route read context.original (realize parent target)))).run
+      (PqxdhInitialOriginContext.resume (completedBinding := completedBinding) mark sender route read context
+        (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route read context.original (realize parent target)))).run
           (retainedOf (RawCtxSelectedReceiveCompiler.project state)) =
       (fun result => ((result.1, result.2.1), retainedOf result.2.2)) <$>
-        complete pre application initial selector aux source writer prior key target nonce next mark sender route read
+        complete (completedBinding := completedBinding) pre application initial selector aux source writer prior key target nonce next mark sender route read
           qPost context material fits state := by
   rcases context with ⟨original, trace, origin⟩
   cases original with
   | inl original =>
       cases original with
       | record request before outside inner =>
-          exact PqxdhLaterSavedRecord.retained_record pre application initial selector aux source writer prior key target nonce next
+          exact PqxdhLaterSavedRecord.retained_record (completedBinding := completedBinding) pre application initial selector aux source writer prior key target nonce next
             mark sender route read request before trace outside inner material origin fits.2 admitted state
-      | finish index before control candidate outside inner =>
-          exact PqxdhLaterSavedFinish.retained_finish pre application initial selector aux source writer prior key target nonce next
-            mark sender route read index before trace origin control candidate outside inner material fits.2 admitted state
+      | finish index before control candidate associatedData outside inner =>
+          exact PqxdhLaterSavedFinish.retained_finish (completedBinding := completedBinding) pre application initial selector aux source writer prior key target nonce next
+            mark sender route read index before trace origin control candidate associatedData outside inner material fits.2 admitted state
   | inr builder =>
-      exact PqxdhLaterSavedBuilder.retained_builder pre application initial selector aux source writer prior key target nonce next
+      exact PqxdhLaterSavedBuilder.retained_builder (completedBinding := completedBinding) pre application initial selector aux source writer prior key target nonce next
         mark sender route read trace origin builder material state
 
 end BeaconcryptCore.Computational.PqxdhLaterSavedContext

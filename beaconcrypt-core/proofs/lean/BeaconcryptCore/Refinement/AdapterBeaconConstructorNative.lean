@@ -30,44 +30,38 @@ variable [crypto : AdapterPublicWrapperRequestMonad.CryptoOperations (RustT (M n
 variable [children : AdapterPublicWrapperRequestMonad.ChildOperations (RustT (M n KemSK source Auxiliary m))]
 
 noncomputable def lift (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     {Value : Type} (work : RegistrationNativeBeaconFrontend.M n KemSK source Auxiliary Value) : M n KemSK source Auxiliary m Value :=
   RegistrationNativePlatformGenericBundle.liftLegacy (AdapterBeaconConstructorKemLift.implementation coins setup checks representation created) work
 
 structure Leaves (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (generator : rand_core.TryCryptoRng R Error) (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (kem : AdapterBeaconConstructorKem.Representation view R) where
-  ml : AdapterBeaconConstructorGeneration.MldsaContract (m := M n KemSK source Auxiliary m) generator view
-    (lift coins setup checks representation created (RegistrationNativeBeaconFrontend.sample (RegistrationNativeMldsa.generate source)))
   ed : AdapterBeaconConstructorGeneration.EdContract (m := M n KemSK source Auxiliary m) generator view setup.joint
     (lift coins setup checks representation created (RegistrationNativeBeaconFrontend.sample PqxdhJointIdentity.sampleSeed))
   kx : AdapterBeaconConstructorGeneration.KxContract (m := M n KemSK source Auxiliary m) generator view
     (fun scalar => PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar))
     (lift coins setup checks representation created (RegistrationNativeBeaconFrontend.sample PqxdhJointGapDh.sampleScalar))
   getter : ∀ key, crypto.edPublicBytes key = pure (view.edPublic key)
-  hash : ∀ request, (children.executeHash request).run =
-    (fun digest => RustM.ok (core.option.Option.Some (RegistrationAuthenticationShared.digestArray digest))) <$>
-      lift coins setup checks representation created (RegistrationNativeBeaconFrontend.hash request)
   kemOperation : ∀ rng, generators.kemGenerate generator rng = RustT.lift
     ((fun receipt : AdapterBeaconConstructorKem.Receipt R => (.Ok receipt.pair, receipt.rng)) <$>
       AdapterBeaconConstructorKemLift.joint (n := n) (Auxiliary := Auxiliary) coins setup view kem rng)
 
 variable (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (generator : rand_core.TryCryptoRng R Error) (view : AdapterPublicWrapperState.MaterialView source KemSK)
 variable (kem : AdapterBeaconConstructorKem.Representation view R)
 variable (leaves : Leaves (n := n) (Auxiliary := Auxiliary) coins setup checks representation created generator view kem)
 
 noncomputable def joint (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64) (rng : R) :
     M n KemSK source Auxiliary m (Option (AdapterBeaconConstructorJoint.Capture source R) × R) :=
-  AdapterBeaconConstructorJoint.joint generator view _ leaves.ml setup.joint _ leaves.ed _ _ leaves.kx
-    (fun request => lift coins setup checks representation created (RegistrationNativeBeaconFrontend.hash request))
+  AdapterBeaconConstructorJoint.joint generator view setup.joint _ leaves.ed _ _ leaves.kx
     (AdapterBeaconConstructorKemLift.joint coins setup view kem) edPin mlPin keyId rng
 
 noncomputable def sourceResult (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicKey)
     (result : Option (AdapterBeaconConstructorJoint.Capture source R) × R) : AdapterBeaconConstructorBody.Outcome R :=
-  AdapterBeaconConstructorJoint.sourceResult generator view _ leaves.ml setup.joint _ leaves.ed _ _ leaves.kx keyId serverId result
+  AdapterBeaconConstructorJoint.sourceResult generator view setup.joint _ leaves.ed _ _ leaves.kx keyId serverId result
 
 noncomputable def entry (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicKey)
     (mlPin : Std.Array U8 1952#usize) (rng : R) : M n KemSK source Auxiliary m (RustM (Option Nat) × AdapterBeaconConstructorBody.Outcome R) := do
@@ -80,21 +74,22 @@ noncomputable def entry (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign
       (RegistrationNativeBeaconCreateEntry.register setup (view.edPublic serverId) keyId ready generated.born)
     pure (registered, sourceResult)
 
+omit children in
 theorem source_body (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicKey)
     (mlPin : Std.Array U8 1952#usize) (rng : R) :
     AdapterBeaconConstructorBody.withInputs (m := M n KemSK source Auxiliary m) generator keyId serverId mlPin rng =
       RustT.lift (sourceResult coins setup checks representation created generator view kem leaves keyId serverId <$>
         joint coins setup checks representation created generator view kem leaves (view.edPublic serverId) mlPin keyId rng) := by
-  exact AdapterBeaconConstructorJoint.source_program generator view _ leaves.ml setup.joint _ leaves.ed _ _ leaves.kx _ _
-    keyId serverId mlPin rng (leaves.getter serverId) leaves.hash leaves.kemOperation
+  exact AdapterBeaconConstructorJoint.source_program generator view setup.joint _ leaves.ed _ _ leaves.kx _
+    keyId serverId mlPin rng (leaves.getter serverId) leaves.kemOperation
 
+omit children in
 theorem native_entry (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicKey)
     (mlPin : Std.Array U8 1952#usize) (rng : R) :
     Prod.fst <$> entry coins setup checks representation created generator view kem leaves keyId serverId mlPin rng =
       lift coins setup checks representation created
         (RegistrationNativeBeaconFrontend.create setup source (view.edPublic serverId) mlPin keyId) := by
-  have marginal := AdapterBeaconConstructorJoint.native generator view _ leaves.ml setup.joint _ leaves.ed _ _ leaves.kx
-    (fun request => lift coins setup checks representation created (RegistrationNativeBeaconFrontend.hash request))
+  have marginal := AdapterBeaconConstructorJoint.native generator view setup.joint _ leaves.ed _ _ leaves.kx
     (AdapterBeaconConstructorKemLift.joint coins setup view kem)
     (lift coins setup checks representation created (RegistrationNativeBeaconFrontend.kem (.inr (.inl .create))))
     (AdapterBeaconConstructorKemLift.native coins setup checks representation created view kem)
@@ -116,7 +111,7 @@ theorem native_entry (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.Pu
           simp only [bind_pure_comp, AdapterBeaconConstructorJoint.nativeResult, Option.map_some, next, Functor.map_map]
           exact id_map (lift coins setup checks representation created (RegistrationNativeBeaconCreateEntry.register setup (view.edPublic serverId) keyId ready generated.born) : M n KemSK source Auxiliary m (RustM (Option Nat)))
     _ = _ := by
-      change ((AdapterBeaconConstructorJoint.nativeResult <$> AdapterBeaconConstructorJoint.joint generator view _ leaves.ml setup.joint _ leaves.ed _ _ leaves.kx _ _ (view.edPublic serverId) mlPin keyId rng) >>= next) = _
+      change ((AdapterBeaconConstructorJoint.nativeResult <$> AdapterBeaconConstructorJoint.joint generator view setup.joint _ leaves.ed _ _ leaves.kx _ (view.edPublic serverId) mlPin keyId rng) >>= next) = _
       rw [marginal]
       refine Eq.trans ?_ (RegistrationNativeBeaconCreateLift.create
         (AdapterBeaconConstructorKemLift.implementation coins setup checks representation created) setup (view.edPublic serverId) mlPin keyId).symm
@@ -146,6 +141,7 @@ noncomputable def sourceAll (keyId : U64) (identityKey mldsaKey : Slice U8) (rng
         joint coins setup checks representation created generator view kem leaves (view.edPublic serverId) key keyId rng))
       (fun _ => AdapterBeaconConstructorBody.reject rng)
 
+omit children in
 theorem source_all (keyId : U64) (identityKey mldsaKey : Slice U8) (rng : R) :
     beaconcrypt_constructor_request.beacon.Beacon.try_new_with_rng (m := RustT (M n KemSK source Auxiliary m)) generator keyId identityKey mldsaKey rng =
       sourceAll coins setup checks representation created generator view kem leaves keyId identityKey mldsaKey rng := by

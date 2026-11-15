@@ -37,10 +37,12 @@ def skelMarks (m : Mid KemSK) : Option (ℕ × Output) :=
   m.backend.2.2.marks.bind fun mark =>
     (PqxdhRegistrationJointKemSecondEntry.cacheOf (m.backend.2.1, m.backend.1) mark.2).map fun value => (mark.1, value)
 
-/-- Item 2's view of the middle state: the encoded owners, the skeleton state (the game state without analysis observers and the mark with its value), and the service state (the router state of the annotated pools without transcripts, the public table cache, the allocator and the two-slot table). -/
+/-- Item 2's view of the middle state: the owners pair (the encoded owners and the retained Phase 1 bundles), the skeleton state (the game state without analysis observers and the mark with its value), and the service state (the router state of the annotated pools without transcripts, the public table cache, the allocator and the two-slot table). -/
 def encodeMid (setup : Setup baseSpec KemSK) (m : Mid KemSK) :
-    (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × SkelState KemSK Output) × ServiceState KemSK :=
-  (((PqxdhRegistrationJointGeneratedFinish.encodeState setup m.joint).owners, (clean m.joint.shared.2, skelMarks m)),
+    ((List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate)) ×
+      SkelState KemSK Output) × ServiceState KemSK :=
+  ((((PqxdhRegistrationJointGeneratedFinish.encodeState setup m.joint).owners, m.joint.inits),
+      (clean m.joint.shared.2, skelMarks m)),
     (PqxdhRegistrationJointKemObserverFree.eraseJoint (m.joint.pool.1, PqxdhDeploymentIdealPoolSource.routerOf m.joint.pool.2),
       (m.joint.shared.1.cache, (m.backend.2.1, m.backend.1))))
 
@@ -107,7 +109,8 @@ variable (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (route :
 
 /-- The upper layers with erased game observers, from a view without them, are the upper layers with the observers of the poststate erased. -/
 theorem upperE_run (query : (PqxdhRegistrationJointRevealSchedule.Spec KemSK).Domain)
-    (state : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × SkelState KemSK Output)
+    (state : (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate)) ×
+      SkelState KemSK Output)
     (clean : cleanUpper state = state) :
     (upperE setup codec checks t p created query).run state =
       Prod.map id cleanUpper <$> (upperLayer setup codec checks created.server.server.metadata.identityIndex
@@ -117,7 +120,8 @@ theorem upperE_run (query : (PqxdhRegistrationJointRevealSchedule.Spec KemSK).Do
 
 /-- The upper layers on the BLAKE2b request: the skeleton's native hash on its game state. -/
 theorem upperLayer_hash (bytes : Pqxdh.Bytes)
-    (state : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × SkelState KemSK Output) :
+    (state : (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate)) ×
+      SkelState KemSK Output) :
     (upperLayer setup codec checks created.server.server.metadata.identityIndex created.publicIdentity t.kem.val
         p.challenge (factoredServices setup codec checks) (.inl (.inr (.hash bytes)))).run state =
       (fun result => (result.1, (state.1, result.2))) <$> simulateQ (fwd (T := TSpec Output) (coinLift (KemSK := KemSK)))
@@ -153,7 +157,8 @@ theorem step_hash (bytes : Pqxdh.Bytes) (m : Mid KemSK) :
 
 /-- The upper layers on the Server kernel reveal: the skeleton's native reveal on its game state. -/
 theorem upperLayer_reveal (keyId : Std.U64)
-    (state : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × SkelState KemSK Output) :
+    (state : (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate)) ×
+      SkelState KemSK Output) :
     (upperLayer setup codec checks created.server.server.metadata.identityIndex created.publicIdentity t.kem.val
         p.challenge (factoredServices setup codec checks) (.inl (.inr (.reveal keyId)))).run state =
       (fun result => (result.1, (state.1, result.2))) <$> simulateQ (fwd (T := TSpec Output) (coinLift (KemSK := KemSK)))
@@ -185,7 +190,8 @@ theorem step_reveal (keyId : Std.U64) (m : Mid KemSK) :
 
 /-- The upper layers on a coin: the coin channel of the exposed encapsulation interface, with the state kept. -/
 theorem upperLayer_coin (coin : unifSpec.Domain)
-    (state : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × SkelState KemSK Output) :
+    (state : (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate)) ×
+      SkelState KemSK Output) :
     (upperLayer setup codec checks created.server.server.metadata.identityIndex created.publicIdentity t.kem.val
         p.challenge (factoredServices setup codec checks) (.inl (.inl coin))).run state =
       (fun reply => (reply, state)) <$> ((Enc KemSK + TSpec Output).query (.inl (.inl (.inr (.inl coin)))) :

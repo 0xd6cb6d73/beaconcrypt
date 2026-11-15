@@ -35,7 +35,7 @@ variable [BeaconcryptCore.Refinement.RegistrationWriterPrimitive.Operations]
 variable [BeaconcryptCore.Refinement.AdapterWirePrimitive.Operations]
 
 /-- [beaconcrypt::server::{beaconcrypt::server::Server}::get_shared_secret_with_rng]:
-    Source: 'beaconcrypt/src/server.rs', lines 532:4-539:5
+    Source: 'beaconcrypt/src/server.rs', lines 522:4-529:5
     Visibility: public -/
 def server.Server.get_shared_secret_with_rng
   {R : Type} {Clause0_Clause0_Error : Type} (rand_coreTryCryptoRngInst :

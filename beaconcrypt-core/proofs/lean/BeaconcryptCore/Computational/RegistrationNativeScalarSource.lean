@@ -34,7 +34,7 @@ theorem sample_effects (draw : ProbComp Value) :
 /-- Literal constructor sampling closes to the original Env coin program in the current native World, preserving every outer field. -/
 theorem sample (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (draw : ProbComp Value)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (draw : ProbComp Value)
     (before : RegistrationNativeExperiment.State n KemSK source) :
     (RegistrationNativeExperiment.beacon setup checks representation created
       (RegistrationNativeBeaconFrontend.sample draw)).run before =
@@ -46,7 +46,7 @@ theorem sample (setup : Setup base KemSK) (checks : Checks)
 /-- Actual source scalar sampling keeps the native pool, roster, receipts and exact 32-query uniform/coin charges. -/
 theorem scalar (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (before : RegistrationNativeExperiment.State n KemSK source) :
     (RegistrationNativeExperiment.beacon setup checks representation created
       (RegistrationNativeBeaconFrontend.sample PqxdhJointGapDh.sampleScalar)).run before =
@@ -58,7 +58,7 @@ theorem scalar (setup : Setup base KemSK) (checks : Checks)
 /-- The independent private challenge replaces only the scalar used by the native continuation; its dummy draw stays in the actual source state. -/
 theorem scalar_eager (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (before : RegistrationNativeExperiment.State n KemSK source)
     (next : PqxdhJointGapDh.ScalarBytes → RegistrationNativeExperiment.State n KemSK source → ProbComp Value) :
     (do let drawn ← (RegistrationNativeExperiment.beacon setup checks representation created

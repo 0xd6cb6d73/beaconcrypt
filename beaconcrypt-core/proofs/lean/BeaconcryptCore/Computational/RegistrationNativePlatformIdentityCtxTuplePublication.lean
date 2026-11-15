@@ -40,7 +40,7 @@ private theorem external_program {J : Type} {spec : OracleSpec J}
   | query_bind query next ih => simp only [simulateQ_bind,simulateQ_spec_query,ih,external_bind]
 
 private theorem encoder (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E))
-    (view : registration.SignedInitView) (bytes : alloc.vec.Vec U8)
+    (view : registration.InitView) (bytes : alloc.vec.Vec U8)
     (possible : Possible (external (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (source := source)
       (simulateQ (RegistrationNativePlatformConcreteSource.writer reserve)
         (AdapterRegistrationWriterRequestExtraction.encodeInit (E := E) (m := AdapterRegistrationWriterRequestMonad.Program E)
@@ -63,7 +63,7 @@ theorem publication (setup : Setup base KemSK) (index : Nat)
     (possible : Possible (simulateQ (RegistrationNativePlatformIdentityPublication.callback (n := n) (Auxiliary := Auxiliary)
       setup index owner (RegistrationNativePlatformConcreteSource.writer reserve))
       (RegistrationNativePlatformWriter.begin E ⟨owner.pin.binding⟩ (RegistrationNativeIdentityFrontend.inputs owner)
-        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin owner.mldsa.publicKey)) (.ok (.Ok published))) :
+        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin)) (.ok (.Ok published))) :
     (PqxdhDeploymentTranscript.candidateOf (RegistrationNativeWire.ledgerCodec RegistrationNativePlatformConcreteSource.wire)
       (TranscriptAuthParts.absSlice published.encoded)).bind PqxdhDeploymentPublishedTuple.candidateTuple =
         some ⟨PqxdhPhase2InputBytes.word owner.prekeyPublic, setup.dh.publicKey scalar, owner.kemPublic⟩ := by
@@ -71,20 +71,20 @@ theorem publication (setup : Setup base KemSK) (index : Nat)
   change Possible (RegistrationNativePlatformBeaconPublication.begin _
     (fun view => simulateQ (fun query => external ((RegistrationNativePlatformConcreteSource.writer reserve) query))
       (AdapterRegistrationWriterRequestExtraction.encodeInit (E := E) (m := AdapterRegistrationWriterRequestMonad.Program E)
-        (RegistrationNativePlatformWriter.initPacket view)).run) _ _ _ _ _) _ at possible
+        (RegistrationNativePlatformWriter.initPacket view)).run) _ _ _ _) _ at possible
   simp_rw [external_program] at possible
   have original := RegistrationNativePlatformPublicationSupport.begin _ _
     (fun view => core.option.Option.Some (RegistrationNativeSourceWriterReadback.initVector view))
     (encoder (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (source := source) reserve)
     ⟨owner.pin.binding⟩ (RegistrationNativeIdentityFrontend.inputs owner)
-    ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin owner.mldsa.publicKey published possible
-  have fields := RegistrationNativeConcreteTuplePublication.begin_tuple _ _ _ _ _ published original
+    ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin published possible
+  have fields := RegistrationNativeConcreteTuplePublication.begin_tuple _ _ _ _ published original
   simpa only [RegistrationNativeIdentityFrontend.inputs,PqxdhPhase2InputBytes.word_rootArray,
     RegistrationNativeBeaconPublication.pq_key] using fields
 
 /-- The actual physical shared-hash source interpretation can only return values supported by its literal owner/Env/P source tree. -/
 theorem beacon_possible (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : M n KemSK RegistrationServerRoleBackend.State Platform source A)
     (before : RegistrationNativePlatformIdentityCtxMain.Full n KemSK Platform source)
     (result : A × RegistrationNativePlatformIdentityCtxMain.Full n KemSK Platform source)
@@ -141,7 +141,7 @@ private theorem next_bytes (index : Nat) (owner : RegistrationNativeIdentityFron
 
 /-- A successful captured actual CTX body publishes the unsigned tuple of that same owner and scalar. The arbitrary final source, physical cache/journal, counters and P are retained by the actual support premise. -/
 theorem bundled (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner source) (scalar : PqxdhJointGapDh.ScalarBytes)
     (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E))
     (before after : RegistrationNativePlatformIdentityCtxMain.Full n KemSK Platform source) (bytes : alloc.vec.Vec U8)
@@ -160,7 +160,7 @@ theorem bundled (setup : Setup base KemSK) (checks : Checks)
 
 /-- The same captured body also identifies the original tagged one-time message used by its actual source start. -/
 theorem bundled_started (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner source) (scalar : PqxdhJointGapDh.ScalarBytes)
     (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E))
     (started : pqxdh.BeaconStart)
@@ -180,7 +180,7 @@ theorem bundled_started (setup : Setup base KemSK) (checks : Checks)
 
 /-- Every successful actual outer source bundle reaches one captured owner/scalar and publishes precisely their unsigned key tuple. -/
 theorem bundle_vec (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E))
     (before after : RegistrationNativePlatformIdentityCtxMain.Full n KemSK Platform source) (bytes : alloc.vec.Vec U8)
     (supported : (.ok (some bytes),after) ∈ support ((RegistrationNativePlatformIdentityCtxMain.interpret setup.joint
@@ -211,7 +211,7 @@ private theorem interpret_map (joint : PqxdhJointIdentity.Primitives) (change : 
 
 /-- The public lifecycle's successful byte reply has this same captured source tuple, with all sampled/stored-coin and failed-prefix paths retained. -/
 theorem bundle (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E))
     (before after : RegistrationNativePlatformIdentityCtxMain.Full n KemSK Platform source) (bytes : Pqxdh.Bytes)
     (supported : (.ok (some bytes),after) ∈ support ((RegistrationNativePlatformIdentityCtxMain.interpret setup.joint

@@ -38,7 +38,8 @@ theorem context_generated (setup : Setup baseSpec KemSK) (codec : Codec Reader R
   simp only [contextSample, mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at supported
   obtain ⟨seed, seedRun, scalar, scalarRun, beaconSeed, beaconRun, oneTime, oneTimeRun,
     keys, keysRun, published, publishedRun, rfl⟩ := supported
-  exact ⟨seedRun, scalarRun, beaconRun, oneTimeRun, keysRun, publishedRun⟩
+  exact ⟨seedRun, scalarRun, beaconRun, oneTimeRun, keysRun,
+    phase1Logged_support setup codec beaconSeed _ oneTime keys.1 keys.2 published publishedRun⟩
 
 /-- The private generation position and all generated fields come from one literal sampler output. -/
 theorem sample_generated (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)

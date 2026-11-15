@@ -157,7 +157,7 @@ theorem real_le_run (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
       ((simulateQ (PqxdhDynamicKemJointRouter.stopped setup.baseImpl setup.joint setup.kem selected.val
         (List.ofFn (selected.insertNth chosen others)))
         (PqxdhRegistrationJointKemCommands.program setup codec checks created.server.server.metadata.identityIndex
-          created.publicIdentity (tag work index) [] (PqxdhRegistrationJointInitializedAccept.initial
+          created.publicIdentity (tag work index) ([], fun _ => none) (PqxdhRegistrationJointInitializedAccept.initial
             created))).run).run (joint, PqxdhDynamicKemRouter.empty)] {true} := by
   classical
   rw [← PqxdhRegistrationJointKemRawNatural.exposeAt_tag, ← PqxdhRegistrationJointKemCut.scan_finish _ _ 0,
@@ -233,7 +233,7 @@ theorem real_le_commands (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
   refine le_trans (le_of_eq ?_) (le_trans (le_of_eq (PqxdhDynamicKemJointStopping.history_event setup.baseImpl
     setup.joint setup.kem selected.val (List.ofFn (selected.insertNth chosen others))
     (PqxdhRegistrationJointKemCommands.program setup codec checks created.server.server.metadata.identityIndex
-      created.publicIdentity (tag work index) [] (PqxdhRegistrationJointInitializedAccept.initial created))
+      created.publicIdentity (tag work index) ([], fun _ => none) (PqxdhRegistrationJointInitializedAccept.initial created))
     (joint, PqxdhDynamicKemRouter.empty) rfl (Completed decision)).symm) ?_)
   · apply prEvent_congr_of_support
     intro reached _

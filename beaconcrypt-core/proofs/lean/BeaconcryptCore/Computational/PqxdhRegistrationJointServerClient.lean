@@ -7,7 +7,8 @@ open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhRegistrationJointServerClient
 open PqxdhJointIdentity PqxdhJointGapDh PqxdhServerAuthExperiment PqxdhServerAuthNative
-open PqxdhRegistrationJointServiceSchedule (Spec Client poolLift finishLift birth create bundle finish)
+open PqxdhRegistrationJointServiceSchedule (Spec Client poolLift finishLift birth create bundle finish finishOwner
+  log_interpreted client_log)
 open PqxdhRegistrationJointGeneratedFinish (EncodedEntry EncodedState encodeEntry encodeState)
 open PqxdhRegistrationJointFinish (onPool onNative)
 open PqxdhRegistrationJointLiveRead (ReadSpec sourceStep clientStep entry_source)
@@ -25,8 +26,9 @@ noncomputable def impl (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
 noncomputable def execute (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (client : Client KemSK Response Result)
     (state : EncodedState KemSK) : ProbComp (Result × EncodedState KemSK) :=
-  (fun result => (result.1.1, ⟨result.2.1, result.2.2, result.1.2⟩)) <$>
-    (simulateQ (impl setup codec checks identityIndex publicIdentity) (client.run state.owners)).run (state.pool, state.shared)
+  (fun result => (result.1.1, ⟨result.2.1, result.2.2, result.1.2.1, result.1.2.2⟩)) <$>
+    (simulateQ (impl setup codec checks identityIndex publicIdentity) (client.run (state.owners, state.inits))).run
+      (state.pool, state.shared)
 
 /-- A whole private-service client retains the complete shared native state while updating both private pools and their histories. -/
 theorem pool_program (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -51,6 +53,22 @@ theorem finish_program (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
   rw [← QueryImpl.simulateQ_compose]
   congr 1; funext query
   exact simulateQ_spec_query (impl setup codec checks identityIndex publicIdentity) (.inl query)
+
+/-- The encoded owner finish under the seedless backend is the compiled hashed owner finish (`PqxdhRegistrationJointCompiledOwner.compiledFinish`): the forwarded `hash` request reaches the same shared native transcript hash. -/
+theorem finishOwner_backend (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (checks : Checks) (identityIndex : Nat) (publicIdentity : PublicIdentity) (kemIndex ownerIdentity : Nat)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) :
+    simulateQ (impl setup codec checks identityIndex publicIdentity)
+      (finishOwner setup codec retained raw (PqxdhRegistrationJointBundle.encode setup ownerIdentity kemIndex owner)) =
+      PqxdhRegistrationJointCompiledOwner.compiledFinish setup codec ownerIdentity kemIndex retained raw owner := by
+  unfold finishOwner PqxdhRegistrationJointCompiledOwner.compiledFinish
+  cases phase : owner.beacon.phase <;> simp only [PqxdhRegistrationJointBundle.encode,
+    PqxdhBeaconPhase1Publication.mapState, PqxdhBeaconPhase1Publication.mapPhase, phase, simulateQ_pure]
+  case initSent control prekey oneTime kem =>
+    cases retained <;> cases responseOf codec raw <;>
+      simp only [simulateQ_pure, simulateQ_bind, simulateQ_spec_query, finish_program]
+    all_goals rfl
 
 /-- The actual source constructor and executable handle constructor have the same full encoded distribution, with identity, prekey and KEM generators in source order. -/
 theorem create_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -86,9 +104,10 @@ theorem bundle_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
       simp only [execute, StateT.run, bundle, encodeState, List.getElem?_map, found,
         Option.map_some, encodeEntry, simulateQ_map]
       change _ <$> StateT.run (_ <$> _) _ = _
-      rw [StateT.run_map, pool_program, PqxdhRegistrationJointBundleCompiler.bundle_source setup codec
-        entry.identityIndex entry.kemIndex entry.owner state.pool
-        (owned entry (List.mem_of_getElem? found)).1]
+      rw [StateT.run_map, pool_program]
+      erw [log_interpreted setup codec _ (state.inits address) state.pool,
+        client_log setup codec entry.identityIndex entry.kemIndex entry.owner state.pool.1 state.pool.2
+          (state.inits address) (owned entry (List.mem_of_getElem? found)).1]
       simp [PqxdhRegistrationJointSchedule.bundle, found, Functor.map_map, encodeEntry]
 
 /-- Every raw finish attempt uses the selected source-owned identity/KEM slots and reinstalls the complete optional native result without changing any other owner. -/
@@ -107,8 +126,11 @@ theorem finish_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
       simp only [execute, StateT.run, finish, encodeState, List.getElem?_map, found,
         Option.map_some, encodeEntry, simulateQ_map]
       change _ <$> StateT.run (_ <$> _) _ = _
-      rw [StateT.run_map, finish_program, PqxdhRegistrationJointCompiledOwner.owner_source setup codec
-        entry.identityIndex entry.kemIndex entry.owner raw (state.pool, state.shared)
+      rw [StateT.run_map]
+      erw [finishOwner_backend setup codec checks identityIndex publicIdentity entry.kemIndex entry.identityIndex
+        (state.inits address) raw entry.owner,
+        PqxdhRegistrationJointCompiledOwner.compiledFinish_source setup codec
+        entry.identityIndex entry.kemIndex (state.inits address) raw entry.owner (state.pool, state.shared)
         (owned entry (List.mem_of_getElem? found)).1
         (fun control prekey oneTime keys phase => (owned entry (List.mem_of_getElem? found)).2 keys
           (by simp only [PqxdhRegistrationJointOwnership.activeKey, phase]))]
@@ -166,12 +188,12 @@ theorem query_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
         (PqxdhRegistrationJointServerSchedule.source setup codec checks seed identityIndex query).run state := by
   rcases query with (coin | request) | read
   case inl.inr =>
-    cases request <;> first
+    cases request
+    all_goals try first
     | exact create_source setup codec checks identityIndex (setup.joint.publicKeys seed) _ _ state
     | exact bundle_source setup codec checks identityIndex (setup.joint.publicKeys seed) _ state owned.1
     | exact finish_source setup codec checks identityIndex (setup.joint.publicKeys seed) _ _ state owned.1
     | exact shared_source setup codec checks seed identityIndex _ state owned.2
-    | skip
     all_goals simp only [PqxdhRegistrationJointRevealSchedule.client, PqxdhRegistrationJointServiceSchedule.handler,
       PqxdhRegistrationJointServerSchedule.source, PqxdhRegistrationJointRevealSchedule.source,
       PqxdhRegistrationJointSchedule.handler]
@@ -284,3 +306,9 @@ end BeaconcryptCore.Computational.PqxdhRegistrationJointServerClient
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointServerClient.program_source
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationJointServerClient.finishOwner_backend' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointServerClient.finishOwner_backend

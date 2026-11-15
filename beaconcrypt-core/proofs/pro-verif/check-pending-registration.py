@@ -163,7 +163,7 @@ def check_token_service(directory=HERE):
     build = model.split("let SchedBuild(", 1)[1].split("let SchedAbsent(", 1)[0]
     if (
         build.count("get sched_pending(=token, origin: bitstring") != 1
-        or "root: bitstring, lease: channel) in" not in build
+        or "root: bitstring, raw_init: bitstring, lease: channel) in" not in build
         or "out(lease, (owner, data, failure_stage, request, lock, state, accepts, builds, counter, ticket_counter, limit))"
         not in build
     ):
@@ -214,7 +214,7 @@ def check_publication(directory=HERE):
         "registration_set_root(SERVER_IDENTITY_SECRET, identity, prekey, one_time, pq, failure_stage)",
         "insert registration_set_consumed(owner, rid);",
         "let token = sched_token(ticket_counter) in",
-        "insert sched_pending(token, owner, server_identity, SERVER_KEY_ID, verified, core_init, ephemeral, ciphertext, root, lease);",
+        "insert sched_pending(token, owner, server_identity, SERVER_KEY_ID, verified, core_init, ephemeral, ciphertext, root, raw, lease);",
         "event SchedTokenCreated(owner, token);",
         "SchedReturn(request, sched_some_token(token),",
     )
@@ -285,7 +285,8 @@ def check_source(directory=HERE):
             "let rejected = control;",
             "if application.is_empty() || !agreement.binding.matches_server(current_pin) { return Err(rejected); }",
             "crate::pqxdh::server_prepare_commit(control, agreement.pending, current_pin.binding(), availability,)",
-            "crate::pqxdh::start_server_candidate_ratchet_kdf(&candidate, agreement.root.as_bytes())",
+            "agreement.binding.ad_transcript(AdResponseFields {",
+            "Ok(ServerAdHash {",
         ],
     )
     SOURCE.source_order(

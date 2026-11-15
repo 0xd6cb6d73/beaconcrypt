@@ -8,6 +8,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialPrivateKdf
+variable (associatedData : Std.Array Std.U8 151#usize)
 open PqxdhJointKdfGame PqxdhInitialBuilderCut
 variable {M P I D K A : Type} {S B : Nat}
 
@@ -37,16 +38,16 @@ noncomputable def build (fixed : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
   PqxdhRegistrationProtocolState.reinstall index current <$>
     (simulateQ (registration fixed writer kdf aux)
       (simulateQ PqxdhServerRegistrationPublication.nativeAdapter
-        (readyBuild fixed initial selected.binding ready metadata selected.state))).run current.primitive
+        (PqxdhInitialBuilderCut.readyBuild (associatedData := associatedData) fixed initial selected.binding ready metadata selected.state))).run current.primitive
 
 /-- The original fixed private KDF gives the complete existing source builder, including its FIRST send, optional publication and all role/control/cache reinstallation. -/
 theorem build_source (fixed : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (initial : RustM ratchet.concrete.ConcreteRatchetKernel)
     (aux : QueryImpl PqxdhServerRegistrationPublication.AuxSpec (StateT (RawCtxSharedPrimitive.SharedState A) ProbComp))
     (senderId : M → Std.U64) (index : Fin S) (metadata : P) (ready : PqxdhPrivateAcceptedRoot.Ready) :
-    build (I := I) (D := D) (K := K) (B := B) fixed writer (RawCtxSourceHkdf.kdfImpl fixed)
+    build (associatedData := associatedData) (I := I) (D := D) (K := K) (B := B) fixed writer (RawCtxSourceHkdf.kdfImpl fixed)
       initial aux senderId index metadata ready =
-      protocolBuild fixed writer initial aux senderId index metadata ready := rfl
+      PqxdhInitialBuilderCut.protocolBuild (associatedData := associatedData) fixed writer initial aux senderId index metadata ready := rfl
 
 noncomputable def records (fixed : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (kdf : QueryImpl RawCtxSharedPrimitive.KdfSpec (StateT (RawCtxSharedPrimitive.SharedState A) ProbComp))
@@ -80,11 +81,11 @@ theorem build_supplied (fixed : FixedHkdfSha512NoSaltSource) (writer : RawCtxMix
     (senderId : M → Std.U64) (index : Fin S) (metadata : P) (ready : PqxdhPrivateAcceptedRoot.Ready)
     (state : PqxdhRegistrationProtocolState.State M P I D K A S B) :
     simulateQ (PqxdhInitialReplyErasure.supplied response)
-      ((PqxdhInitialServiceBuilder.protocolBuild fixed writer aux senderId index metadata ready).run state) =
-      (build fixed writer (RawCtxSourceHkdf.kdfImpl fixed) (PqxdhInitialReplyErasure.kernelOf false response)
+      ((PqxdhInitialServiceBuilder.protocolBuild (associatedData := associatedData) fixed writer aux senderId index metadata ready).run state) =
+      (build (associatedData := associatedData) fixed writer (RawCtxSourceHkdf.kdfImpl fixed) (PqxdhInitialReplyErasure.kernelOf false response)
         aux senderId index metadata (eraseRoot ready)).run state := by
   rw [build_source]
-  exact PqxdhInitialSuppliedBuilder.protocol_supplied fixed writer response aux senderId index metadata ready state
+  exact PqxdhInitialSuppliedBuilder.protocol_supplied (associatedData := associatedData) fixed writer response aux senderId index metadata ready state
 
 /-- Changing the private record derivation interpreter never changes a public HKDF evaluation or its complete shared state. -/
 theorem public_hkdf (fixed : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)

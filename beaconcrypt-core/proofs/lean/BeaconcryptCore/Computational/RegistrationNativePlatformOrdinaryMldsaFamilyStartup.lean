@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativePlatformOrdinaryMldsaFamilyCover
 import BeaconcryptCore.Computational.RegistrationNativeMldsaFamilyStartup
 
-/-! The unchanged actual constructor and initial ML generation initialize the corrected finite-family invariant. The arbitrary initial external state is retained literally; the stored-pin cache receipt is derived from the actual source fingerprint initialization. -/
+/-! The unchanged actual constructor and initial ML generation initialize the corrected finite-family invariant. The arbitrary initial external state is retained literally; the stored pin's full ML public key is derived from the actual source startup configuration. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
@@ -26,7 +26,7 @@ theorem initialized (previous : Platform)
       (RegistrationNativeMldsaCreation.start setup ensureInit identityIndex serverKid) {}) := by
     rw [← RegistrationNativeMldsaFamilyStartup.erase (n := n) (cap := cap) source setup ensureInit identityIndex serverKid, support_map]
     exact ⟨((some initial, ghosts), pool), supported, rfl⟩
-  exact ⟨fallback, ⟨good.1, RegistrationNativePlatformServerPinTrace.table_initialized setup source ensureInit identityIndex serverKid (some initial, pool) original initial rfl,
+  exact ⟨fallback, ⟨good.1, (RegistrationNativePlatformServerPinTrace.table_initialized setup source ensureInit identityIndex serverKid (some initial, pool) original initial rfl).2,
     good.2⟩, attempts⟩
 end BeaconcryptCore.Computational.RegistrationNativePlatformOrdinaryMldsaFamilyStartup
 

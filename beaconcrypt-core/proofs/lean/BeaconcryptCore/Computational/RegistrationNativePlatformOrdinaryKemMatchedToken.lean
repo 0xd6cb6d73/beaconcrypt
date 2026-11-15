@@ -89,16 +89,13 @@ theorem taken (budget : Budget) (functional : PqxdhChallengeSecretRouting.Functi
   obtain ⟨packet, handle, first, last, accepted, cut, tokenEq⟩ := RegistrationNativePlatformOrdinaryKemTokenRoot.taken setup checks wire route representation source
     ensureInit identityIndex serverKeyId view failure allocation reserveRegistration reservePeer reserveFrame erased helper writer bounds mode adversary previous budget functional result supported history returned path
       buildCall member index token current moved
-  obtain ⟨_acceptLeading, _acceptTrailing, _acceptSplit, beforeAccept, _accepted, afterAccept⟩ := path.reached.member
+  obtain ⟨_acceptLeading, _acceptTrailing, _acceptSplit, beforeAccept, -, afterAccept⟩ := path.reached.member
     (⟨.inr (.accept packet), first, .ok (some handle), last⟩ : Call RegistrationNativeRawAdapter.TypedSpec Whole) accepted
-  have pinned := RegistrationNativePlatformOrdinaryPathState.pinned setup checks wire route representation path.initial.created path.initial.credential view failure allocation
-    reserveRegistration reservePeer reserveFrame erased helper writer beforeAccept
-      (RegistrationNativeServerPinCached.start setup ensureInit identityIndex serverKeyId path.initial path.startup)
   have extension := (RegistrationNativePlatformOrdinaryPathState.path setup checks wire route representation path.initial.created path.initial.credential view failure allocation
     reserveRegistration reservePeer reserveFrame erased helper writer afterAccept).1
   have tuple := RegistrationNativePlatformActualMatchedTuple.tuple setup checks (RegistrationNativePlatformOrdinaryExperiment.canonicalWire wire) route representation path.initial.created packet
     { RegistrationNativeKemServerState.ofNative first.1 with parsedAccepts := first.1.parsedAccepts + 1 }
-    (RegistrationNativeKemServerState.ofNative last.1) first.2 last.2 handle result.2.1.1.2 cut pinned token tokenEq owner pending oneTime
+    (RegistrationNativeKemServerState.ofNative last.1) first.2 last.2 handle result.2.1.1.2 cut token tokenEq owner pending oneTime
       (RegistrationNativeWorldCache.cache path.finalNative) pendingInput extension initHash collisionFree
   exact ⟨packet, handle, first, last, accepted, cut, tokenEq, tuple⟩
 

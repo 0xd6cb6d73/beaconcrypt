@@ -10,6 +10,7 @@ open OracleComp OracleSpec
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhSelectedPostDisclosure
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhJointKdfGame PqxdhNativeSharedPrefix
 open RawCtxSelectedParentTable RawCtxSelectedParentEntry
 open PqxdhSelectedPostCompiler (Optional SourceState)
@@ -32,14 +33,14 @@ noncomputable def normal :
         (RawCtxSelectedMessageStopping.normal
           (RawCtxSelectedMessageStopping.sourceRecord source writer prior parent key target nonce next sender route read) key request).run
             (before.1.roles, before.2)
-  | query => (PqxdhSelectedPostCompiler.original pre application initial selector aux source writer prior parent key target nonce next sender route read query).run before
+  | query => (PqxdhSelectedPostCompiler.original (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read query).run before
 
 def Good (state : SourceState M P I D K A N C S B) : Prop := RawCtxSelectedMessageFreshness.hidden state.1.roles.2 = false
 
 /-- The two concrete source callbacks preserve the same complete state distribution at each request; only a hidden disclosure reply is withheld. -/
 theorem step_state (query : (Optional (PqxdhInitialGenericPost.Spec extra S B)).Domain) (before : SourceState M P I D K A N C S B) :
-    Prod.snd <$> (normal pre application initial selector aux source writer prior parent key target nonce next sender route read query).run before =
-      Prod.snd <$> (PqxdhSelectedPostCompiler.original pre application initial selector aux source writer prior parent key target nonce next sender route read query).run before := by
+    Prod.snd <$> (normal (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read query).run before =
+      Prod.snd <$> (PqxdhSelectedPostCompiler.original (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read query).run before := by
   rcases query with (request | request) | request
   · cases request with
     | inl request =>
@@ -53,7 +54,7 @@ theorem step_state (query : (Optional (PqxdhInitialGenericPost.Spec extra S B)).
 /-- No original outer source operation can remove an earlier hidden-key disclosure, including a later attempted Beacon registration or private selector callback. -/
 theorem normal_good (query : (Optional (PqxdhInitialGenericPost.Spec extra S B)).Domain) (before : SourceState M P I D K A N C S B)
     (result : (Optional (PqxdhInitialGenericPost.Spec extra S B)).Range query × SourceState M P I D K A N C S B)
-    (supported : result ∈ support ((normal pre application initial selector aux source writer prior parent key target nonce next sender route read query).run before))
+    (supported : result ∈ support ((normal (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read query).run before))
     (good : Good result.2) : Good before := by
   rcases query with (request | request) | request
   · simp only [normal, StateT.run, support_map, Set.mem_image] at supported
@@ -73,26 +74,26 @@ theorem normal_good (query : (Optional (PqxdhInitialGenericPost.Spec extra S B))
 /-- The concrete stopped callback retains the same disclosure evidence even if its caller could continue after the internal stop. -/
 theorem original_good (query : (Optional (PqxdhInitialGenericPost.Spec extra S B)).Domain) (before : SourceState M P I D K A N C S B)
     (result : (Optional (PqxdhInitialGenericPost.Spec extra S B)).Range query × SourceState M P I D K A N C S B)
-    (supported : result ∈ support ((PqxdhSelectedPostCompiler.original pre application initial selector aux source writer prior parent key target nonce next sender route read query).run before))
+    (supported : result ∈ support ((PqxdhSelectedPostCompiler.original (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read query).run before))
     (good : Good result.2) : Good before := by
   have observed : result.2 ∈ support (Prod.snd <$>
-      (normal pre application initial selector aux source writer prior parent key target nonce next sender route read query).run before) := by
-    rw [step_state pre application initial selector aux source writer prior parent key target nonce next sender route read query before]
+      (normal (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read query).run before) := by
+    rw [step_state (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read query before]
     simp only [support_map, Set.mem_image]
     exact ⟨result, supported, rfl⟩
   simp only [support_map, Set.mem_image] at observed
   obtain ⟨reply, actual, same⟩ := observed
-  exact normal_good pre application initial selector aux source writer prior parent key target nonce next sender route read query before reply actual (same ▸ good)
+  exact normal_good (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read query before reply actual (same ▸ good)
 
 noncomputable def handler (stopped : Bool) :
     QueryImpl (Optional (PqxdhInitialGenericPost.Spec extra S B)) (StateT (SourceState M P I D K A N C S B) ProbComp) :=
-  if stopped then PqxdhSelectedPostCompiler.original pre application initial selector aux source writer prior parent key target nonce next sender route read
-  else normal pre application initial selector aux source writer prior parent key target nonce next sender route read
+  if stopped then PqxdhSelectedPostCompiler.original (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read
+  else normal (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read
 
 /-- Any complete adaptive outer continuation retains an earlier hidden-key disclosure in either the ordinary or stopped source. -/
 theorem schedule_good (stopped : Bool) (work : OracleComp (Optional (PqxdhInitialGenericPost.Spec extra S B)) Result)
     (before : SourceState M P I D K A N C S B) (result : Result × SourceState M P I D K A N C S B)
-    (supported : result ∈ support ((simulateQ (handler pre application initial selector aux source writer prior parent key target nonce next sender route read stopped) work).run before))
+    (supported : result ∈ support ((simulateQ (handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read stopped) work).run before))
     (good : Good result.2) : Good before := by
   induction work using OracleComp.inductionOn generalizing before with
   | pure value =>
@@ -104,8 +105,8 @@ theorem schedule_good (stopped : Bool) (work : OracleComp (Optional (PqxdhInitia
     obtain ⟨reply, actual, tail⟩ := supported
     have after := ih reply.1 reply.2 tail
     cases stopped with
-    | false => exact normal_good pre application initial selector aux source writer prior parent key target nonce next sender route read query before reply actual after
-    | true => exact original_good pre application initial selector aux source writer prior parent key target nonce next sender route read query before reply actual after
+    | false => exact normal_good (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read query before reply actual after
+    | true => exact original_good (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read query before reply actual after
 
 -- The finite-query source has discrete successful outputs, even when retained fields are arbitrary types.
 local instance : MeasurableSpace (Result × SourceState M P I D K A N C S B) := ⊤
@@ -115,10 +116,10 @@ local instance : DiscreteMeasurableSpace (Result × SourceState M P I D K A N C 
 theorem output_bad_zero (stopped : Bool) (work : OracleComp (Optional (PqxdhInitialGenericPost.Spec extra S B)) Result)
     (before : SourceState M P I D K A N C S B) (result : Result × SourceState M P I D K A N C S B)
     (bad : ¬ Good before) (good : Good result.2) :
-    𝒟[(simulateQ (handler pre application initial selector aux source writer prior parent key target nonce next sender route read stopped) work).run before] {result} = 0 := by
+    𝒟[(simulateQ (handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read stopped) work).run before] {result} = 0 := by
   rw [← prEvent_eq_evalDist_singleton]
   exact prEvent_eq_zero_of_not_mem_support _ fun supported =>
-    bad (schedule_good pre application initial selector aux source writer prior parent key target nonce next sender route read stopped work before result supported good)
+    bad (schedule_good (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read stopped work before result supported good)
 
 noncomputable def Discloses (query : (Optional (PqxdhInitialGenericPost.Spec extra S B)).Domain)
     (before : SourceState M P I D K A N C S B) : Prop :=
@@ -129,8 +130,8 @@ noncomputable def Discloses (query : (Optional (PqxdhInitialGenericPost.Spec ext
 /-- Before an actual hidden skipped-key disclosure, the ordinary and stopped outer source return the same complete callback result and poststate. -/
 theorem step_agree (query : (Optional (PqxdhInitialGenericPost.Spec extra S B)).Domain) (before : SourceState M P I D K A N C S B)
     (clear : ¬ Discloses (extra := extra) query before) :
-    (normal pre application initial selector aux source writer prior parent key target nonce next sender route read query).run before =
-      (PqxdhSelectedPostCompiler.original pre application initial selector aux source writer prior parent key target nonce next sender route read query).run before := by
+    (normal (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read query).run before =
+      (PqxdhSelectedPostCompiler.original (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read query).run before := by
   rcases query with (request | request) | request
   · cases request with
     | inl request =>
@@ -171,12 +172,12 @@ theorem disclosed_bad (request : RawCtxProtocolReveals.Request S B) (before : So
     hidden, Bool.or_true, Bool.true_eq_false, not_false_eq_true]
 
 private theorem normal_read (request : RawCtxProtocolReveals.Request S B) (before : SourceState M P I D K A N C S B) :
-    (normal pre application initial selector aux source writer prior parent key target nonce next sender route read (.inl (.inl (.inr request)))).run before =
+    (normal (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read (.inl (.inl (.inr request)))).run before =
       pure (some (RawCtxSelectedMessageReveals.interpretReply key request (RawCtxSelectedMessageReveals.step request before.1.roles).1), afterRead request before) := by
   simp only [normal, RawCtxSelectedMessageStopping.normal, StateT.run, map_pure, afterRead]
 
 private theorem original_read (request : RawCtxProtocolReveals.Request S B) (before : SourceState M P I D K A N C S B) :
-    (PqxdhSelectedPostCompiler.original pre application initial selector aux source writer prior parent key target nonce next sender route read (.inl (.inl (.inr request)))).run before =
+    (PqxdhSelectedPostCompiler.original (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read (.inl (.inl (.inr request)))).run before =
       pure (RawCtxSelectedMessageReveals.emit request (RawCtxSelectedMessageReveals.step request before.1.roles).1, afterRead request before) := by
   simp only [PqxdhSelectedPostCompiler.original, RawCtxSelectedFamilyNonceCoupling.original,
     RawCtxSelectedMessageStopping.stopping, OptionT.run_mk, StateT.run, map_pure, afterRead]
@@ -185,15 +186,15 @@ private theorem original_read (request : RawCtxProtocolReveals.Request S B) (bef
 theorem output_good (work : OracleComp (Optional (PqxdhInitialGenericPost.Spec extra S B)) Result)
     (before : SourceState M P I D K A N C S B) (result : Result × SourceState M P I D K A N C S B)
     (good : Good result.2) :
-    𝒟[(simulateQ (normal pre application initial selector aux source writer prior parent key target nonce next sender route read) work).run before] {result} =
-      𝒟[(simulateQ (PqxdhSelectedPostCompiler.original pre application initial selector aux source writer prior parent key target nonce next sender route read) work).run before] {result} := by
+    𝒟[(simulateQ (normal (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read) work).run before] {result} =
+      𝒟[(simulateQ (PqxdhSelectedPostCompiler.original (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read) work).run before] {result} := by
   classical
   induction work using OracleComp.inductionOn generalizing before with
   | pure value => rfl
   | query_bind query continuation ih =>
     simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind]
     by_cases clear : ¬ Discloses (extra := extra) query before
-    · rw [step_agree pre application initial selector aux source writer prior parent key target nonce next sender route read query before clear]
+    · rw [step_agree (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read query before clear]
       rw [← prEvent_eq_evalDist_singleton _ result, ← prEvent_eq_evalDist_singleton _ result,
         OracleComp.prEvent_bind_eq_tsum, OracleComp.prEvent_bind_eq_tsum]
       apply tsum_congr
@@ -202,21 +203,21 @@ theorem output_good (work : OracleComp (Optional (PqxdhInitialGenericPost.Spec e
       rw [← prEvent_eq_evalDist_singleton _ result, ← prEvent_eq_evalDist_singleton _ result] at same
       rw [same]
     · obtain ⟨request, rfl, disclosed⟩ := discloses_shape query before (not_not.mp clear)
-      rw [normal_read pre application initial selector aux source writer prior parent key target nonce next sender route read request before,
-        original_read pre application initial selector aux source writer prior parent key target nonce next sender route read request before]
+      rw [normal_read (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read request before,
+        original_read (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read request before]
       simp only [pure_bind, disclosed]
       have bad := disclosed_bad request before disclosed
-      exact (output_bad_zero pre application initial selector aux source writer prior parent key target nonce next sender route read false
+      exact (output_bad_zero (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read false
         (continuation (some (RawCtxSelectedMessageReveals.interpretReply key request (RawCtxSelectedMessageReveals.step request before.1.roles).1)))
         (afterRead request before) result bad good).trans
-          (output_bad_zero pre application initial selector aux source writer prior parent key target nonce next sender route read true
+          (output_bad_zero (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read true
             (continuation none) (afterRead request before) result bad good).symm
 
 /-- Every final event gated by the actual retained disclosure history has equal probability in the complete ordinary and stopped outer source. -/
 theorem event_good (work : OracleComp (Optional (PqxdhInitialGenericPost.Spec extra S B)) Result)
     (before : SourceState M P I D K A N C S B) (event : Result × SourceState M P I D K A N C S B → Prop) :
-    𝒟[(simulateQ (normal pre application initial selector aux source writer prior parent key target nonce next sender route read) work).run before] {result | event result ∧ Good result.2} =
-      𝒟[(simulateQ (PqxdhSelectedPostCompiler.original pre application initial selector aux source writer prior parent key target nonce next sender route read) work).run before] {result | event result ∧ Good result.2} := by
+    𝒟[(simulateQ (normal (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read) work).run before] {result | event result ∧ Good result.2} =
+      𝒟[(simulateQ (PqxdhSelectedPostCompiler.original (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read) work).run before] {result | event result ∧ Good result.2} := by
   classical
   rw [← prEvent_eq_evalDist_of_discrete, ← prEvent_eq_evalDist_of_discrete, OracleComp.prEvent_eq_tsum_ite,
     OracleComp.prEvent_eq_tsum_ite]
@@ -224,7 +225,7 @@ theorem event_good (work : OracleComp (Optional (PqxdhInitialGenericPost.Spec ex
   intro result
   by_cases good : Good result.2
   · simp only [good, and_true]
-    have same := output_good pre application initial selector aux source writer prior parent key target nonce next sender route read work before result good
+    have same := output_good (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read work before result good
     rw [← prEvent_eq_evalDist_singleton _ result, ← prEvent_eq_evalDist_singleton _ result] at same
     rw [same]
   · simp only [good, and_false, ite_false]
@@ -233,10 +234,10 @@ theorem event_good (work : OracleComp (Optional (PqxdhInitialGenericPost.Spec ex
 theorem event_fresh (remaining known : List RatchetChain)
     (work : OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result)
     (before : SourceState M P I D K A N C S B) (event : Option Result × SourceState M P I D K A N C S B → Prop) :
-    𝒟[(simulateQ (normal pre application initial selector aux source writer prior parent key target nonce next sender route read)
+    𝒟[(simulateQ (normal (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read)
         (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run before] {result | event result ∧ RawCtxLiveLineage.Fresh (RawCtxFreshChainCut.concreteChain key :: remaining) known
         (RawCtxSelectedMessageFreshness.interpretHistory key result.2.1.roles.2)} =
-      𝒟[(simulateQ (PqxdhSelectedPostCompiler.original pre application initial selector aux source writer prior parent key target nonce next sender route read)
+      𝒟[(simulateQ (PqxdhSelectedPostCompiler.original (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read)
           (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run before] {result | event result ∧ RawCtxLiveLineage.Fresh (RawCtxFreshChainCut.concreteChain key :: remaining) known
           (RawCtxSelectedMessageFreshness.interpretHistory key result.2.1.roles.2)} := by
   have factor : (fun result : Option Result × SourceState M P I D K A N C S B =>
@@ -247,7 +248,7 @@ theorem event_fresh (remaining known : List RatchetChain)
     funext result
     apply propext
     exact ⟨And.left, fun h => ⟨h, ((RawCtxSelectedMessageFreshness.fresh_keys key remaining known result.2.1.roles.2).mp h.2).1.1⟩⟩
-  simpa only [factor] using event_good pre application initial selector aux source writer prior parent key target nonce next sender route read
+  simpa only [factor] using event_good (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read
     (RawCtxSelectedFamilyNonceCoupling.optionalClient work) before
     (fun result => event result ∧ RawCtxLiveLineage.Fresh (RawCtxFreshChainCut.concreteChain key :: remaining) known
       (RawCtxSelectedMessageFreshness.interpretHistory key result.2.1.roles.2))

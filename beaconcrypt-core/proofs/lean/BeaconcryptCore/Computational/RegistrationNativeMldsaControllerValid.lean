@@ -15,7 +15,7 @@ namespace BeaconcryptCore.Computational.RegistrationNativeMldsaControllerValid
 open PqxdhServerAuthExperiment (Setup Codec Checks)
 open RegistrationNativeMldsa (Source Credential)
 open RegistrationNativeMldsaOpaque (Pool handleSource)
-open RegistrationNativeMldsaPoolMap (CredentialLive OwnersLive)
+open RegistrationNativeMldsaPoolMap (CredentialLive)
 open RegistrationNativeMldsaProgram (Spec liftState)
 open RegistrationNativeMldsaTableSign (Valid)
 variable {n : Nat} {ι KemSK State Value Next : Type} {base : OracleSpec ι}
@@ -143,10 +143,17 @@ private theorem afterOccupancy {Reader Response : Type} (setup : Setup base KemS
   | ok result => cases result with
     | Err previous => exact pure_good source pool _
     | Ok pending =>
-        simp only
-        split
-        · exact fromInitial source pool credential live setup codec encode control pending
-        · exact pure_good source pool _
+        apply bind_good source pool _ _ (lift_good source pool _)
+        intro hashed
+        cases hashed with
+        | fail error | div => exact pure_good source pool _
+        | ok result => cases result with
+          | Err previous => exact pure_good source pool _
+          | Ok initial =>
+              simp only
+              split
+              · exact fromInitial source pool credential live setup codec encode control initial
+              · exact pure_good source pool _
 
 /-- All queries of the complete actual Server build use ordinary effects or its live owned signer. -/
 theorem build {Reader Response : Type} (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -183,26 +190,18 @@ open RegistrationNativeMldsaShared (Local)
 open RegistrationNativeBeaconFrontend (Owner)
 variable (setup : Setup base KemSK) (checks : Checks)
 variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 
 private theorem native (work : RegistrationNativeBeaconFrontend.M n KemSK (handleSource source)
     RegistrationServerRoleBackend.State Value) :
     Good source pool (RegistrationNativeMldsaBundle.native setup checks representation created work) :=
   lift_good source pool _
 
-/-- Every Init signing callback uses its reached owner credential, including unsuccessful publication prefixes. -/
+/-- Every current Init callback is ordinary work and contains no ML capability request. -/
 theorem outgoing (index : Nat) (owner : Owner (handleSource source))
-    (live : CredentialLive source pool owner.mldsa) (query : RegistrationBeaconInitExecutor.Spec.Domain) :
-    Good source pool (RegistrationNativeMldsaBundle.outgoing (n := n) setup checks representation created index owner query) := by
-  cases query with
-  | inl query => cases query with
-    | hash request => exact native source pool setup checks representation created _
-    | sign request payload digest =>
-        intro before
-        simp only [RegistrationNativeMldsaBundle.outgoing, StateT.run]
-        exact allQueriesSatisfy_bind (call_all source pool owner.mldsa live .environment request before.2.2.server.world.world.1)
-          (fun _ => allQueriesSatisfy_pure _ _)
-  | inr request => exact native source pool setup checks representation created _
+    (query : RegistrationBeaconInitExecutor.Spec.Domain) :
+    Good source pool (RegistrationNativeMldsaBundle.outgoing (n := n) setup checks representation created index owner query) :=
+  native source pool setup checks representation created _
 
 private theorem afterPublished (index : Nat) (owner : Owner (handleSource source))
     (oneTime : PqxdhJointGapDh.ScalarBytes) (published : RustM (RegistrationBeaconInitExecutor.Result Pqxdh.Bytes)) :
@@ -222,23 +221,22 @@ private theorem native_get (before : Local n KemSK (handleSource source)) :
 
 /-- Actual bundle lookup derives the live signer from the reached owner list; no valid-signing assumption is supplied by a caller. -/
 theorem bundle (wire : RegistrationNativeWire.Wire) (index : Nat) (before : Local n KemSK (handleSource source))
-    (owners : OwnersLive source pool before.1) :
+    :
     ((RegistrationNativeMldsaBundle.bundle setup checks wire representation created index).run before).AllQueriesSatisfy (Valid source pool) := by
   simp only [RegistrationNativeMldsaBundle.bundle, StateT.run_bind, native_get source setup checks representation created,
     pure_bind]
   cases found : before.1[index]? with
   | none => exact allQueriesSatisfy_pure _ _
   | some owner =>
-      have live : CredentialLive source pool owner.mldsa := owners owner (List.mem_of_getElem? found)
       have continuation (oneTime : PqxdhJointGapDh.ScalarBytes) (current : Local n KemSK (handleSource source)) :
           ((do
             let published ← simulateQ (RegistrationNativeMldsaBundle.outgoing setup checks representation created index owner)
               (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨owner.pin.binding⟩
                 (RegistrationNativeBeaconFrontend.inputs setup owner)
-                ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)
+                ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)
             RegistrationNativeMldsaBundle.afterPublished setup checks representation created index owner oneTime published).run current).AllQueriesSatisfy (Valid source pool) :=
         bind_good source pool _ _
-          (simulate_good source pool _ (outgoing source pool setup checks representation created index owner live) _)
+          (simulate_good source pool _ (outgoing source pool setup checks representation created index owner) _)
           (afterPublished source pool setup checks representation created index owner oneTime) current
       cases phase : owner.phase <;> simp only [phase]
       all_goals first
@@ -251,9 +249,9 @@ theorem bundle (wire : RegistrationNativeWire.Wire) (index : Nat) (before : Loca
 /-- The complete source Init wrapper inherits the live-credential query law from its actual lookup and local continuation. -/
 theorem sourceBundle (wire : RegistrationNativeWire.Wire) (index : Nat)
     (before : RegistrationNativeExperiment.State n KemSK (handleSource source))
-    (owners : RegistrationNativeMldsaPoolMap.StateLive source pool before) :
+    :
     ((RegistrationNativeMldsaBundle.sourceBundle setup checks wire representation created index).run before).AllQueriesSatisfy (Valid source pool) :=
-  map_all _ _ _ (bundle source pool setup checks representation created wire index _ owners)
+  map_all _ _ _ (bundle source pool setup checks representation created wire index _)
 end Bundle
 end BeaconcryptCore.Computational.RegistrationNativeMldsaControllerValid
 

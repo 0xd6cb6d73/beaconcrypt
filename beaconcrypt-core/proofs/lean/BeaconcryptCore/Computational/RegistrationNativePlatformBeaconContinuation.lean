@@ -40,7 +40,7 @@ noncomputable def afterPrepared (source : PqxdhJointKdfGame.FixedHkdfSha512NoSal
 
 private theorem through (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (source : OracleComp (Trusted n KemSK) ((Value × Owner mlSource) × EnvState Auxiliary))
     (target : OracleComp (Trusted n KemSK) ((Value × SelectedOwner mlSource) × EnvState Auxiliary))
     (equal : view <$> source = target) (before : RegistrationNativeExperiment.State n KemSK mlSource) :
@@ -66,7 +66,7 @@ private theorem abort_projection (owner current : Owner mlSource)
 
 theorem abort_owner_source (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential mlSource)
     (owner current : Owner mlSource) (env : EnvState RegistrationServerRoleBackend.State)
     (value : Value) (before : State n KemSK mlSource) :
@@ -92,11 +92,11 @@ theorem abort_owner_source (setup : Setup base KemSK) (checks : Checks) (wire : 
 /-- The entire post-agreement continuation is the actual native source continuation, with only private preparation bookkeeping and the selected scalar projected; its complete local environment is retained. -/
 theorem continuation_source (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential mlSource)
     (owner current : Owner mlSource) (env : EnvState RegistrationServerRoleBackend.State)
     (authenticated : registration.AuthenticatedResponse) (result : RustM (Option RegistrationBeaconReferenceRoot.Ready))
-    (erased : Std.Array U8 357#usize) (before : State n KemSK mlSource) :
+    (erased : Std.Array U8 227#usize) (before : State n KemSK mlSource) :
     RegistrationBeaconReferenceNativeCompletion.drop <$>
       (simulateQ (implementation setup checks wire representation created scalar credential)
         (((afterPrepared setup.source wire.frameWrite (eraseOwner owner) result :

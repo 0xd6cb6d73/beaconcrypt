@@ -135,7 +135,7 @@ theorem collect_bound (setup : Setup base KemSK) {mlSource : RegistrationNativeM
     (authenticated : registration.AuthenticatedResponse) (before : EnvState Auxiliary) :
     ((collect (n := n) setup owner oneTime authenticated).run before).IsQueryBoundP (IsDecap (KemSK := KemSK)) 1 := by
   unfold collect
-  have original : (PqxdhPhase2DhMetadata.prepare authenticated.pending.control () () () []).IsQueryBoundP
+  have original : (PqxdhPhase2DhMetadata.prepare (completedBinding := authenticated.binding) authenticated.control () () () []).IsQueryBoundP
       (PrefixDecap (X := Unit) (Response := registration.AuthenticatedResponse)) 1 := by
     simp only [PqxdhPhase2DhMetadata.prepare, bind_pure_comp, isQueryBoundP_map_iff]
     exact collector_one () () () []

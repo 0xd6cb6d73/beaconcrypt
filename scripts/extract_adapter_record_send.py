@@ -60,10 +60,11 @@ LINTERS = (
 )
 POLICY = "set_option autoImplicit false\nset_option warningAsError true\n"
 RAW_SHA256 = {
-    "Types.lean": "27166238164a830b4c8e534bb1a05e2b4ec6f561306374c0a41234e4e63b5db4",
-    "Funs.lean": "04d258a293b273ab2c185728f5f5296cc1a8c783dfbb190ac1210ffb75ab5ec1",
+    # Final actual replay changed source-span comments only; interfaces and bodies are unchanged.
+    "Types.lean": "e7ec2f35c3bd22ae2ac0312528c250b643abdd5433bdfdd3188c11b7ec3123e8",
+    "Funs.lean": "f84d5433f5fbcb10909b2bb0dd024f44ab076176735aad37bccfeece3814e2d0",
     "TypesExternal_Template.lean": "8523567a9ec3d2416673fd29f4aa75fe72104a375dba090d9d0746e2e9ca447e",
-    "FunsExternal_Template.lean": "5c303ca131e2e914ea714d2b3d3526f28e537fab199a0e4679f1b7add10a9c54",
+    "FunsExternal_Template.lean": "3fc312e981df7cbde05251a0195897e5e0b689cd2dc8ffe6f93562bb4d76efb5",
 }
 
 INTERFACES = []

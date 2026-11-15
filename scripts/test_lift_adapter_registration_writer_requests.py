@@ -23,7 +23,7 @@ class RegistrationWriterLifting(unittest.TestCase):
         self.assertEqual(output.count("def encodeResponse\n"), 1)
         self.assertIn("Lifted.writeInit (E := E) val init", output)
         self.assertIn("Lifted.writeResponse (E := E) val response", output)
-        self.assertIn("init.mldsa_public_key", output)
+        self.assertIn("init.one_time_key", output)
         self.assertIn("response.key_id", output)
 
     def reject(self, before, after):
@@ -36,7 +36,7 @@ class RegistrationWriterLifting(unittest.TestCase):
         self.reject(b"ControlFlow.Continue val", b"ControlFlow.Break val")
 
     def test_reject_changed_ml_field(self):
-        self.reject(b"init.mldsa_public_key", b"init.signature")
+        self.reject(b"init.one_time_key", b"init.pq_key")
 
     def test_reject_reordered_field(self):
         self.reject(b"init.pre_key", b"init.one_time_key")

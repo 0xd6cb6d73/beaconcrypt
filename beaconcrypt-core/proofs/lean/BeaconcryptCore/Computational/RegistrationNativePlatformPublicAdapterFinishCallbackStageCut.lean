@@ -48,7 +48,7 @@ open RegistrationNativePlatformPublicAdapterLoggedRuntime (Augmentation unchange
 open RegistrationNativePlatformPublicAdapterFinishLoggedJoint (output physicalLog)
 open RegistrationNativePlatformExtractedSdkPublic (TotalStep)
 
-variable (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential mlSource)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential mlSource)
 
 open RegistrationNativePlatformPublicAdapterFinishLoggedDispatch (augmentation transport)
 

@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePlatformSourceCompletion
 
-/-! The Server SDK retains its literal moved-token, pin lookup, preflight, occupancy, reservation and commitment stages while accepting an effectful first-record completion. Pin computation and reservations execute at each reached call and retain their poststates, including failures. The stored-pin specialization recovers the existing logical native SDK; recomputing the actual source pin is an additive callback rather than a claimed equality of complete Worlds. -/
+/-! The Server SDK retains moved-token consumption, exact pin lookup, preflight and occupancy, followed by actual transcript AD hashing, reservation and effectful first-record completion. The pin lookup is pure in the current source specialization; hash and reservation callbacks retain their reached states, including failures. Compatibility specializations preserve these individual operations without assuming equality of complete Worlds. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -15,6 +15,11 @@ open PqxdhServerAuthExperiment (Setup Codec)
 variable {n : Nat} {Encoded Value ι KemSK Reader Response : Type} {base : OracleSpec ι}
 variable {m : Type → Type} [Monad m]
 
+/-- A hash continuation executes before reservation and returns an initial capability only after actual core completion. -/
+abbrev AdHash (n : Nat) (m : Type → Type) [Monad m] :=
+  registration.ServerAdHash → StateT (State n) m
+    (RustM (core.result.Result registration.ServerInitialKdf pqxdh.ServerState))
+
 abbrev Completion (n : Nat) (m : Type → Type) [Monad m] (Encoded : Type) :=
   pqxdh.ServerState → registration.ServerInitialKdf →
     StateT (Local n) m (RustM (RegistrationWorldServerCompletion.Result Encoded))
@@ -25,7 +30,7 @@ def fromInitial (finish : Completion n m Encoded)
   let published ← RegistrationNativePlatformServerSdk.world (finish control pending)
   RegistrationNativePlatformServerSdk.commit published
 
-def afterOccupancy (reserve : StateT (State n) m Bool) (finish : Completion n m Encoded)
+def afterOccupancy (deriveAd : AdHash n m) (reserve : StateT (State n) m Bool) (finish : Completion n m Encoded)
     (control : pqxdh.ServerState) (lookup : peer.CompletionLookup) (occupied : Bool) :
     StateT (State n) m (RustM (Option (U64 × Encoded))) :=
   match lookup.resume occupied with
@@ -33,10 +38,16 @@ def afterOccupancy (reserve : StateT (State n) m Bool) (finish : Completion n m 
   | .div => pure .div
   | .ok (.Err _) => pure (.ok none)
   | .ok (.Ok pending) => do
-      let admitted ← reserve
-      if admitted then fromInitial finish control pending else pure (.ok none)
+      let hashed ← deriveAd pending
+      match hashed with
+      | .fail error => pure (.fail error)
+      | .div => pure .div
+      | .ok (.Err _) => pure (.ok none)
+      | .ok (.Ok initial) => do
+        let admitted ← reserve
+        if admitted then fromInitial finish control initial else pure (.ok none)
 
-def afterPin (reserve : StateT (State n) m Bool) (present : U64 → StateT (State n) m Bool)
+def afterPin (deriveAd : AdHash n m) (reserve : StateT (State n) m Bool) (present : U64 → StateT (State n) m Bool)
     (finish : Completion n m Encoded) (control : pqxdh.ServerState)
     (token : peer.ConsumedRegistration) (application : Slice U8)
     (result : RustM (core.option.Option session.ServerAuthenticationPin)) :
@@ -54,18 +65,18 @@ def afterPin (reserve : StateT (State n) m Bool) (present : U64 → StateT (Stat
       | .div => pure .div
       | .ok keyId => if RegistrationServerSdkSource.preflight application keyId then do
           let occupied ← present keyId
-          afterOccupancy reserve finish control lookup occupied
+          afterOccupancy deriveAd reserve finish control lookup occupied
         else pure (.ok none)
 
-def complete (pin : StateT (State n) m (RustM (core.option.Option session.ServerAuthenticationPin)))
+def complete (deriveAd : AdHash n m) (pin : StateT (State n) m (RustM (core.option.Option session.ServerAuthenticationPin)))
     (reserve : StateT (State n) m Bool) (present : U64 → StateT (State n) m Bool)
     (finish : Completion n m Encoded) (token : peer.ConsumedRegistration) (application : Slice U8) :
     StateT (State n) m (RustM (Option (U64 × Encoded))) := do
   let before ← get
   let current ← pin
-  afterPin reserve present finish before.control token application current
+  afterPin deriveAd reserve present finish before.control token application current
 
-def build (pin : StateT (State n) m (RustM (core.option.Option session.ServerAuthenticationPin)))
+def build (deriveAd : AdHash n m) (pin : StateT (State n) m (RustM (core.option.Option session.ServerAuthenticationPin)))
     (reserve : StateT (State n) m Bool) (present : U64 → StateT (State n) m Bool)
     (finish : Completion n m Encoded) (handle : Nat) (application : Option (Slice U8)) :
     StateT (State n) m (RustM (Option (U64 × Encoded))) := fun before =>
@@ -73,13 +84,16 @@ def build (pin : StateT (State n) m (RustM (core.option.Option session.ServerAut
   | (none, current) => pure (.ok none, current)
   | (some token, current) => match application with
     | none => pure (.ok none, current)
-    | some application => (complete pin reserve present finish token application).run current
+    | some application => (complete deriveAd pin reserve present finish token application).run current
 
 def storedPin : StateT (State n) m (RustM (core.option.Option session.ServerAuthenticationPin)) :=
   fun before => pure (.ok (.Some before.pin), before)
 
 noncomputable def nativePresent (coins : QueryImpl unifSpec m) (keyId : U64) : StateT (State n) m Bool :=
   RegistrationNativePlatformServerSdk.world (RegistrationNativePlatformServerCompletion.capability coins (.peerPresent keyId))
+
+noncomputable def nativeAdHash (coins : QueryImpl unifSpec m) : AdHash n m :=
+  RegistrationNativePlatformServerSdk.adHash coins
 
 noncomputable def nativeFinish (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (codec : Codec Reader Response)
     (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
@@ -98,7 +112,7 @@ theorem afterOccupancy_native (coins : QueryImpl unifSpec m) (setup : Setup base
     (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
     (encode : registration.SignedResponseView → StateT (Local n) m (RustM (core.option.Option Encoded)))
     (control : pqxdh.ServerState) (lookup : peer.CompletionLookup) (occupied : Bool) :
-    afterOccupancy reserve (nativeFinish coins setup codec sign encode) control lookup occupied =
+    afterOccupancy (nativeAdHash coins) reserve (nativeFinish coins setup codec sign encode) control lookup occupied =
       RegistrationNativePlatformServerSdk.afterOccupancy coins setup codec reserve sign encode control lookup occupied := rfl
 
 variable [LawfulMonad m]
@@ -108,10 +122,10 @@ theorem complete_native (coins : QueryImpl unifSpec m) (setup : Setup base KemSK
     (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
     (encode : registration.SignedResponseView → StateT (Local n) m (RustM (core.option.Option Encoded)))
     (token : peer.ConsumedRegistration) (application : Slice U8) :
-    complete storedPin reserve (nativePresent coins) (nativeFinish coins setup codec sign encode) token application =
+    complete (nativeAdHash coins) storedPin reserve (nativePresent coins) (nativeFinish coins setup codec sign encode) token application =
       RegistrationNativePlatformServerSdk.complete coins setup codec reserve sign encode token application := by
   funext before
-  change (complete storedPin reserve (nativePresent coins) (nativeFinish coins setup codec sign encode)
+  change (complete (nativeAdHash coins) storedPin reserve (nativePresent coins) (nativeFinish coins setup codec sign encode)
     token application).run before =
       (RegistrationNativePlatformServerSdk.complete coins setup codec reserve sign encode token application).run before
   simp only [complete, StateT.run_bind, StateT.run_get, pure_bind]
@@ -140,7 +154,7 @@ theorem build_native (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (
     (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
     (encode : registration.SignedResponseView → StateT (Local n) m (RustM (core.option.Option Encoded)))
     (handle : Nat) (application : Option (Slice U8)) :
-    build storedPin reserve (nativePresent coins) (nativeFinish coins setup codec sign encode) handle application =
+    build (nativeAdHash coins) storedPin reserve (nativePresent coins) (nativeFinish coins setup codec sign encode) handle application =
       RegistrationNativePlatformServerSdk.build coins setup codec reserve sign encode handle application := by
   funext before
   unfold build RegistrationNativePlatformServerSdk.build
@@ -154,14 +168,14 @@ theorem build_native (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (
           | some application =>
               exact congrFun (complete_native coins setup codec reserve sign encode token application) current
 
-theorem complete_run
+theorem complete_run (deriveAd : AdHash n m)
     (pin : StateT (State n) m (RustM (core.option.Option session.ServerAuthenticationPin)))
     (reserve : StateT (State n) m Bool) (present : U64 → StateT (State n) m Bool)
     (finish : Completion n m Encoded) (token : peer.ConsumedRegistration) (application : Slice U8)
     (before : State n) :
-    (complete pin reserve present finish token application).run before = (do
+    (complete deriveAd pin reserve present finish token application).run before = (do
       let current ← pin.run before
-      (afterPin reserve present finish before.control token application current.1).run current.2) := by
+      (afterPin deriveAd reserve present finish before.control token application current.1).run current.2) := by
   simp only [complete, StateT.run_bind, StateT.run_get, pure_bind]
 
 section Interpret
@@ -198,10 +212,11 @@ theorem fromInitial_interpret (implementation : QueryImpl spec m)
   exact commit_interpret implementation published
 
 theorem afterOccupancy_interpret (implementation : QueryImpl spec m)
+    (deriveAd : AdHash n (OracleComp spec))
     (reserve : StateT (State n) (OracleComp spec) Bool) (finish : Completion n (OracleComp spec) Encoded)
     (control : pqxdh.ServerState) (lookup : peer.CompletionLookup) (occupied : Bool) :
-    state implementation (afterOccupancy reserve finish control lookup occupied) =
-      afterOccupancy (state implementation reserve)
+    state implementation (afterOccupancy deriveAd reserve finish control lookup occupied) =
+      afterOccupancy (fun pending => state implementation (deriveAd pending)) (state implementation reserve)
         (fun control pending => state implementation (finish control pending)) control lookup occupied := by
   unfold afterOccupancy
   cases lookup.resume occupied with
@@ -213,19 +228,30 @@ theorem afterOccupancy_interpret (implementation : QueryImpl spec m)
       | Ok pending =>
           rw [state_bind]
           apply bind_congr
-          intro admitted
-          cases admitted with
-          | false => exact state_pure implementation _
-          | true => exact fromInitial_interpret implementation finish control pending
+          intro hashed
+          cases hashed with
+          | fail error => exact state_pure implementation _
+          | div => exact state_pure implementation _
+          | ok result =>
+            cases result with
+            | Err previous => exact state_pure implementation _
+            | Ok initial =>
+              rw [state_bind]
+              apply bind_congr
+              intro admitted
+              cases admitted with
+              | false => exact state_pure implementation _
+              | true => exact fromInitial_interpret implementation finish control initial
 
 theorem afterPin_interpret (implementation : QueryImpl spec m)
+    (deriveAd : AdHash n (OracleComp spec))
     (reserve : StateT (State n) (OracleComp spec) Bool)
     (present : U64 → StateT (State n) (OracleComp spec) Bool)
     (finish : Completion n (OracleComp spec) Encoded) (control : pqxdh.ServerState)
     (token : peer.ConsumedRegistration) (application : Slice U8)
     (result : RustM (core.option.Option session.ServerAuthenticationPin)) :
-    state implementation (afterPin reserve present finish control token application result) =
-      afterPin (state implementation reserve) (fun keyId => state implementation (present keyId))
+    state implementation (afterPin deriveAd reserve present finish control token application result) =
+      afterPin (fun pending => state implementation (deriveAd pending)) (state implementation reserve) (fun keyId => state implementation (present keyId))
         (fun control pending => state implementation (finish control pending)) control token application result := by
   unfold afterPin
   cases result with
@@ -253,17 +279,18 @@ theorem afterPin_interpret (implementation : QueryImpl spec m)
                       · rw [state_bind]
                         apply bind_congr
                         intro occupied
-                        exact afterOccupancy_interpret implementation reserve finish control lookup occupied
+                        exact afterOccupancy_interpret implementation deriveAd reserve finish control lookup occupied
                       · exact state_pure implementation _
 
 theorem complete_interpret (implementation : QueryImpl spec m)
+    (deriveAd : AdHash n (OracleComp spec))
     (pin : StateT (State n) (OracleComp spec) (RustM (core.option.Option session.ServerAuthenticationPin)))
     (reserve : StateT (State n) (OracleComp spec) Bool)
     (present : U64 → StateT (State n) (OracleComp spec) Bool)
     (finish : Completion n (OracleComp spec) Encoded)
     (token : peer.ConsumedRegistration) (application : Slice U8) :
-    state implementation (complete pin reserve present finish token application) =
-      complete (state implementation pin) (state implementation reserve)
+    state implementation (complete deriveAd pin reserve present finish token application) =
+      complete (fun pending => state implementation (deriveAd pending)) (state implementation pin) (state implementation reserve)
         (fun keyId => state implementation (present keyId))
         (fun control pending => state implementation (finish control pending)) token application := by
   unfold complete
@@ -275,15 +302,16 @@ theorem complete_interpret (implementation : QueryImpl spec m)
   rw [state_bind]
   apply bind_congr
   intro current
-  exact afterPin_interpret implementation reserve present finish before.control token application current
+  exact afterPin_interpret implementation deriveAd reserve present finish before.control token application current
 
 theorem build_interpret (implementation : QueryImpl spec m)
+    (deriveAd : AdHash n (OracleComp spec))
     (pin : StateT (State n) (OracleComp spec) (RustM (core.option.Option session.ServerAuthenticationPin)))
     (reserve : StateT (State n) (OracleComp spec) Bool)
     (present : U64 → StateT (State n) (OracleComp spec) Bool)
     (finish : Completion n (OracleComp spec) Encoded) (handle : Nat) (application : Option (Slice U8)) :
-    state implementation (build pin reserve present finish handle application) =
-      build (state implementation pin) (state implementation reserve)
+    state implementation (build deriveAd pin reserve present finish handle application) =
+      build (fun pending => state implementation (deriveAd pending)) (state implementation pin) (state implementation reserve)
         (fun keyId => state implementation (present keyId))
         (fun control pending => state implementation (finish control pending)) handle application := by
   funext before
@@ -296,16 +324,17 @@ theorem build_interpret (implementation : QueryImpl spec m)
           cases application with
           | none => rfl
           | some application =>
-              exact congrFun (complete_interpret implementation pin reserve present finish token application) current
+              exact congrFun (complete_interpret implementation deriveAd pin reserve present finish token application) current
 
 theorem build_continuation (implementation : QueryImpl spec m)
+    (deriveAd : AdHash n (OracleComp spec))
     (pin : StateT (State n) (OracleComp spec) (RustM (core.option.Option session.ServerAuthenticationPin)))
     (reserve : StateT (State n) (OracleComp spec) Bool)
     (present : U64 → StateT (State n) (OracleComp spec) Bool)
     (finish : Completion n (OracleComp spec) Encoded) (handle : Nat) (application : Option (Slice U8))
     (next : RustM (Option (U64 × Encoded)) → StateT (State n) (OracleComp spec) Value) :
-    state implementation (build pin reserve present finish handle application >>= next) = (do
-      let result ← build (state implementation pin) (state implementation reserve)
+    state implementation (build deriveAd pin reserve present finish handle application >>= next) = (do
+      let result ← build (fun pending => state implementation (deriveAd pending)) (state implementation pin) (state implementation reserve)
         (fun keyId => state implementation (present keyId))
         (fun control pending => state implementation (finish control pending)) handle application
       state implementation (next result)) := by

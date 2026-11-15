@@ -31,7 +31,7 @@ variable [localOps : AdapterPublicWrapperRequestMonad.LocalOperations (AdapterPu
 variable [crypto : AdapterPublicWrapperRequestMonad.CryptoOperations (AdapterPublicWrapperRustT.RustT (M n KemSK source RegistrationServerRoleBackend.State))]
 variable {E : Type}
 theorem same_execution (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire)
     (erased : commitment.CommitmentTranscript)
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (M n KemSK source RegistrationServerRoleBackend.State))
@@ -124,7 +124,7 @@ theorem body_normal (setup : PqxdhServerAuthExperiment.Setup base KemSK) (wire :
 
 omit material ed platform [PublicWrapperPlatform.CryptoOperations] localOps crypto in
 theorem interpreted_normal {Auxiliary : Type} (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (pending : registration.BeaconPending) (packet : core.option.Option registration.ResponsePacket)
     (owner : Owner source) (scalar : PqxdhJointGapDh.ScalarBytes) (env : RegistrationWorldAgreementCompiler.EnvState Auxiliary)
     (before : RegistrationNativeExperiment.State n KemSK source)
@@ -195,7 +195,7 @@ def finalState (index : Nat) (owner : Owner source) (control : pqxdh.BeaconAbort
 omit platform [PublicWrapperPlatform.CryptoOperations] localOps crypto in
 theorem reached_material (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat) (self : beaconcrypt_public_wrapper.beacon.Beacon) (owner : Owner source)
     (pending : registration.BeaconPending) (prekey oneTime : beaconcrypt_crypto.crypto_kx.KeyPair)
     (kem : beaconcrypt_crypto.crypto_kem.mlkem768.KeyPair) (scalar : PqxdhJointGapDh.ScalarBytes)

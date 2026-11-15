@@ -36,7 +36,6 @@ inductive Phase where
 /-- Real source state. KEM secret keys remain solely in the indexed private service. -/
 structure Owner (mldsaSource : RegistrationNativeMldsa.Source) where
   pin : session.ServerAuthenticationPin
-  mldsa : RegistrationNativeMldsa.Credential mldsaSource
   identitySeed : IdentitySeed
   prekeyScalar : ScalarBytes
   prekeyPublic : Std.Array U8 32#usize
@@ -92,20 +91,19 @@ def hash {mldsaSource : RegistrationNativeMldsa.Source} (request : registration.
 /-- The exact suffix after all constructor preflights and ordinary identity draws. -/
 def appendBorn (setup : Setup base KemSK) (mldsaSource : RegistrationNativeMldsa.Source)
     (edPin : Std.Array U8 32#usize) (keyId : U64)
-    (pin : session.ServerAuthenticationPin) (credentials : RegistrationNativeMldsa.Credential mldsaSource)
+    (pin : session.ServerAuthenticationPin)
     (identity : IdentitySeed) (prekey : ScalarBytes) :
     M n KemSK mldsaSource Auxiliary (RustM (Option Nat)) := do
   let born ← kem (.inr (.inl .create))
   let worldOwner ← effect (.inr (.appendOwner keyId edPin .fresh))
   let owners ← get
-  let owner : Owner mldsaSource := ⟨pin, credentials, identity, prekey,
+  let owner : Owner mldsaSource := ⟨pin, identity, prekey,
     PqxdhRootTableInitialization.rootArray (setup.dh.publicKey prekey), born.1, born.2, worldOwner, .fresh, []⟩
   set (owners ++ [owner])
   pure (.ok (some owners.length))
 
 /-- Source-only constructor prefix, retained privately until indexed key creation. -/
 structure Prepared (mldsaSource : RegistrationNativeMldsa.Source) where
-  credentials : RegistrationNativeMldsa.Credential mldsaSource
   pin : session.ServerAuthenticationPin
   identity : IdentitySeed
   prekey : ScalarBytes
@@ -113,34 +111,21 @@ structure Prepared (mldsaSource : RegistrationNativeMldsa.Source) where
 noncomputable def prepare (mldsaSource : RegistrationNativeMldsa.Source)
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64) :
     M n KemSK mldsaSource Auxiliary (RustM (Option (Prepared mldsaSource))) := do
-  let generated ← sample (RegistrationNativeMldsa.generate mldsaSource)
-  match generated with
-  | none => pure (.ok none)
-  | some credentials =>
-    match registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
-    | .fail error => pure (.fail error)
-    | .div => pure .div
-    | .ok pending => match pending.request with
-      | .fail error => pure (.fail error)
-      | .div => pure .div
-      | .ok request => do
-        let digest ← hash request
-        match pending.resume (.Some (RegistrationAuthenticationShared.digestArray digest)) with
-        | .fail error => pure (.fail error)
-        | .div => pure .div
-        | .ok .None => pure (.ok none)
-        | .ok (.Some pin) => do
-          let identity ← sample PqxdhJointIdentity.sampleSeed
-          let prekey ← sample PqxdhJointGapDh.sampleScalar
-          pure (.ok (some ⟨credentials, pin, identity, prekey⟩))
+  match registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
+  | .fail error => pure (.fail error)
+  | .div => pure .div
+  | .ok pin => do
+      let identity ← sample PqxdhJointIdentity.sampleSeed
+      let prekey ← sample PqxdhJointGapDh.sampleScalar
+      pure (.ok (some ⟨pin, identity, prekey⟩))
 
-/-- Actual constructor order: ML keygen, native pin fingerprint, identity, prekey, indexed KEM keygen, then public owner allocation. -/
+/-- Actual constructor order: fixed-size Server pin, identity, prekey, indexed KEM keygen, then public owner allocation. The Source parameter supplies the mandatory Server response verifier; the Beacon owns no ML credential. -/
 noncomputable def create (setup : Setup base KemSK) (mldsaSource : RegistrationNativeMldsa.Source)
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64) :
     M n KemSK mldsaSource Auxiliary (RustM (Option Nat)) := do
   match ← prepare mldsaSource edPin mlPin keyId with
   | .ok (some prepared) =>
-      appendBorn setup mldsaSource edPin keyId prepared.pin prepared.credentials prepared.identity prepared.prekey
+      appendBorn setup mldsaSource edPin keyId prepared.pin prepared.identity prepared.prekey
   | .ok none => pure (.ok none)
   | .fail error => pure (.fail error)
   | .div => pure .div
@@ -148,11 +133,7 @@ noncomputable def create (setup : Setup base KemSK) (mldsaSource : RegistrationN
 noncomputable def outgoing (setup : Setup base KemSK) (mldsaSource : RegistrationNativeMldsa.Source)
     (index : Nat) (owner : Owner mldsaSource) : QueryImpl RegistrationBeaconInitExecutor.Spec (M n KemSK mldsaSource Auxiliary)
   | .inl (.hash request) => hash request
-  | .inl (.sign request payload digest) => do
-      let reply ← sample (RegistrationNativeMldsa.owned mldsaSource owner.mldsa request)
-      updateEnv fun env => { env with receipts := env.receipts ++
-        [⟨⟨request.public_key, payload, BeaconcryptCore.Refinement.RegistrationSigningTrace.replyBytes reply⟩, digest⟩] }
-      pure reply
+  | .inl (.sign _ _ _) => pure .None -- Unreachable shared Server-only request; Init issues no ML operation.
   | .inr request => by
       classical
       exact if request.public_key = PqxdhRootTableInitialization.rootArray (setup.joint.publicKeys owner.identitySeed).ed25519 then
@@ -186,7 +167,7 @@ noncomputable def bundle (setup : Setup base KemSK) (mldsaSource : RegistrationN
         | none => sample PqxdhJointGapDh.sampleScalar
       let published ← simulateQ (outgoing setup mldsaSource index owner)
         (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨owner.pin.binding⟩ (inputs setup owner)
-          ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)
+          ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)
       match published with
       | .fail error => pure (.fail error)
       | .div => pure .div
@@ -234,6 +215,9 @@ noncomputable def agreement (setup : Setup base KemSK) {mldsaSource : Registrati
 
 private noncomputable def recordCore (setup : Setup base KemSK) {mldsaSource : RegistrationNativeMldsa.Source}
     (wire : Wire) : QueryImpl RegistrationRecordPrimitives.Spec (M n KemSK mldsaSource Auxiliary)
+  | .adHash request => do
+      let digest ← hash request
+      pure (.Some (RegistrationAuthenticationShared.digestArray digest))
   | .hash transcript => do
       let digest ← hash (.Single (Std.Array.to_slice transcript.bytes))
       pure (.Some (RegistrationAuthenticationShared.digestArray digest))

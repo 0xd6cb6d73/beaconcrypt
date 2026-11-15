@@ -150,8 +150,8 @@ const BODIES: &[(&str, &str, &str, &str)] = &[
 	(
 		"shared",
 		"impl<PkType: SignaturePk> EstablishedRemote<PkType>",
-		"mldsa_public_key_hash",
-		"self.peer.binding().beacon_fingerprint()",
+		"session_transcript_hash",
+		"self.peer.binding().session_transcript_hash()",
 	),
 	(
 		"shared",

@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
-import BeaconcryptCore.Refinement.AdapterRecordReceive
+import BeaconcryptCore.AdapterRecordExtraction.Funs
+import BeaconcryptCore.Computational.VCVioForwardOracleComp
 
 /-! A request interpretation for the selected extracted receive-loop body. The transformation retains the original pure core calls and moves only the four explicitly enumerated primitive calls into requests. Failure and divergence are short circuiting results; an optional primitive failure remains an ordinary reply and keeps the primitive poststate. -/
 

@@ -24,7 +24,7 @@ def Ordinary : RegistrationNativeRawAdapter.TypedSpec.Domain → Prop
 /-- All actual non-registration commands retain their native full protocol state, returned values and source World under the explicit output view. -/
 theorem query_source (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential source) (selectedOwner selectedAccept : Nat)
     (publicPrekey : PqxdhJointIdentity.PeerEncoding) (roots : Roots)
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (ordinary : Ordinary query) (before : State n KemSK source) :

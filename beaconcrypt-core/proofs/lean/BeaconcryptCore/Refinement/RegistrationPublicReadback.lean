@@ -13,12 +13,12 @@ open beaconcrypt_parse cbordetveraux
 open RegistrationHeaderCanonical RegistrationPreflightRecords
 
 theorem init_payload_length (value : transport.initkex) (shape : RegistrationSerializerInitBytes.InitShape value) :
-    (RegistrationSerializerInitBytes.payload value).length = 6756 := by
-  rcases shape with ⟨identityLength, preLength, oneTimeLength, pqLength, mldsaLength, signatureLength⟩
-  simp only [Slice.length] at identityLength preLength oneTimeLength pqLength mldsaLength signatureLength
+    (RegistrationSerializerInitBytes.payload value).length = 1489 := by
+  rcases shape with ⟨identityLength, preLength, oneTimeLength, pqLength⟩
+  simp only [Slice.length] at identityLength preLength oneTimeLength pqLength
   simp [RegistrationSerializerInitBytes.payload, RegistrationSerializerInitBytes.fieldBytes,
     encoded_length, writtenCount,
-    identityLength, preLength, oneTimeLength, pqLength, mldsaLength, signatureLength]
+    identityLength, preLength, oneTimeLength, pqLength]
 
 theorem response_payload_length (value : transport.kexresponse) (shape : RegistrationSerializerResponseBytes.ResponseShape value) :
     (RegistrationSerializerResponseBytes.payload value).length + 1 = RegistrationSerializerResponseBytes.totalLength value := by
@@ -42,12 +42,12 @@ theorem response_payload_length (value : transport.kexresponse) (shape : Registr
 
 set_option backward.isDefEq.respectTransparency false in
 theorem preflight_init (input : Slice U8) (value : transport.initkex)
-    (contents : input.val = 136#u8 :: RegistrationSerializerInitBytes.payload value)
+    (contents : input.val = 134#u8 :: RegistrationSerializerInitBytes.payload value)
     (shape : RegistrationSerializerInitBytes.InitShape value) :
-    registration_validator_primitive.preflightSlice input initStart ((Array.repeat 6#usize 2#u8).to_slice) = .ok (.Some ()) := by
-  rw [RegistrationPublicDecoderControl.preflight_array, ← init_kinds_source]
+    registration_validator_primitive.preflightSlice input initStart ((Array.repeat 4#usize 2#u8).to_slice) = .ok (.Some ()) := by
+  rw [RegistrationPublicDecoderControl.preflight_array_four, ← init_kinds_source]
   apply RegistrationPreflightRecords.init input value contents
-  have length : input.length = 6757 := by
+  have length : input.length = 1490 := by
     rw [Slice.length, contents, List.length_cons, init_payload_length value shape]
   omega
 
@@ -68,7 +68,7 @@ theorem preflight_response (input : Slice U8) (value : transport.kexresponse)
 
 set_option backward.isDefEq.respectTransparency false in
 theorem decode_init [RegistrationValidatorPrimitive.Operations] (input : Slice U8) (value : transport.initkex)
-    (contents : input.val = 136#u8 :: RegistrationSerializerInitBytes.payload value)
+    (contents : input.val = 134#u8 :: RegistrationSerializerInitBytes.payload value)
     (shape : RegistrationSerializerInitBytes.InitShape value) :
     extraction_decode_init input = .ok (.Some value) := by
   have gate := preflight_init input value contents shape

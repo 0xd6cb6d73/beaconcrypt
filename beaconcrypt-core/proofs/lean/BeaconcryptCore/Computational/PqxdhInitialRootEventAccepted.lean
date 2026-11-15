@@ -9,6 +9,8 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhInitialRootEventAccepted
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf
 open PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily PqxdhCorrelatedExpandHybrid
 open PqxdhInitialBeaconAmbient PqxdhKemIndCca PqxdhEd25519EufCma PqxdhJointIdentity
@@ -21,7 +23,7 @@ variable {setup : StatefulPhase1Setup baseSpec}
     (env : PqxdhAuthenticatedRootExperiment.Environment setup M P I K X Response A S B)
     (attachedVerify : Ed25519PublicKey → Pqxdh.Bytes → Option Pqxdh.Bytes) (primitives : Primitives)
     (program : Program baseSpec setup.Context S (B + 1)) (post : Post (baseSpec := baseSpec) program.Selection S (B + 1))
-    (prepared : PqxdhPrivateRootSource.Prepared setup (driver env.toDriverEnvironment program).State) (ready : Ready)
+    (prepared : PqxdhPrivateRootSource.Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State) (ready : Ready)
 
 abbrev Snapshot := PqxdhInitialOriginPostPath.Snapshot M P (IdentityHandle I) (DhPair setup) (KemHandle K) S (B + 1)
 
@@ -34,10 +36,10 @@ noncomputable def front : PqxdhInitialOriginPostPath.Front M P (IdentityHandle I
   ⟨before.roles, before.controls, before.consumed⟩
 
 noncomputable def client :=
-  PqxdhInitialNativeCarried.original (X := X ⊕ PqxdhPhase2JointIdentity.Converted) (Response := Response) env.source (PqxdhInitialSelectedOrigin.mark env.source (selectedMessage env program prepared ready))
+  PqxdhInitialNativeCarried.original (associatedData := associatedData) (completedBinding := completedBinding) (X := X ⊕ PqxdhPhase2JointIdentity.Converted) (Response := Response) env.source (PqxdhInitialSelectedOrigin.mark env.source (selectedMessage (completedBinding := completedBinding) env program prepared ready))
     env.senderId env.route env.decode
     (PqxdhInitialSourceExperiment.execution (PqxdhInitialRootLabelService.realInitial env.source ready.root)
-      env.index env.metadata ready (post prepared.1.context.selection.1) (front env program prepared))
+      env.index env.metadata ready (post prepared.1.context.selection.1) (front (completedBinding := completedBinding) env program prepared))
 
 noncomputable def decision (selected : RawCtxProtocolReveals.Owner S (B + 1)) (number : Std.U64)
     (ancestors disclosed : List RatchetChain)
@@ -52,7 +54,7 @@ noncomputable def target (selected : RawCtxProtocolReveals.Owner S (B + 1)) (num
     (ancestors disclosed : List RatchetChain) : OracleComp (LocalPostSpec baseSpec) Bool :=
   (fun result => decision env ready selected number ancestors disclosed result.1) <$>
     (simulateQ (PqxdhInitialRootEventCompiler.target env.source env.recordWriter attachedVerify primitives 1 env.localImpl
-      env.aux ready.ciphertext) (client env program post prepared ready)).run
+      env.aux ready.ciphertext) (client (associatedData := associatedData) (completedBinding := completedBinding) env program post prepared ready)).run
       (prepared.1.context.selection.2.primitive, prepared.2)
 
 variable (baseImpl : QueryImpl baseSpec ProbComp)
@@ -61,8 +63,8 @@ variable (baseImpl : QueryImpl baseSpec ProbComp)
 /-- The concrete source external callbacks are precisely the actual prepared-input callbacks with only their source initializer installed. -/
 theorem external_source :
     PqxdhInitialRootEventCompiler.sourceExternal env.source attachedVerify primitives 1 env.localImpl env.aux ready.ciphertext
-      baseImpl kem secret (selectedMessage env program prepared ready) ready.root =
-    PqxdhInitialOriginFinishPath.withInitial env.source (selectedMessage env program prepared ready) ready.root
+      baseImpl kem secret (selectedMessage (completedBinding := completedBinding) env program prepared ready) ready.root =
+    PqxdhInitialOriginFinishPath.withInitial env.source (selectedMessage (completedBinding := completedBinding) env program prepared ready) ready.root
       (PqxdhInitialRootLabelService.realInitial env.source ready.root)
       (PqxdhInitialPreparedSourceInput.other env baseImpl kem attachedVerify primitives secret ready.ciphertext) := by
   funext query
@@ -70,23 +72,23 @@ theorem external_source :
 
 noncomputable def sourceGame (selected : RawCtxProtocolReveals.Owner S (B + 1)) (number : Std.U64)
     (ancestors disclosed : List RatchetChain) : ProbComp Bool :=
-  PqxdhInitialSourceExperiment.game env.source env.recordWriter (selectedMessage env program prepared ready) ready.root
+  PqxdhInitialSourceExperiment.game (associatedData := associatedData) (completedBinding := completedBinding) env.source env.recordWriter (selectedMessage (completedBinding := completedBinding) env program prepared ready) ready.root
     (PqxdhInitialRootLabelService.realInitial env.source ready.root)
     (PqxdhInitialPreparedSourceInput.other env baseImpl kem attachedVerify primitives secret ready.ciphertext)
     env.senderId env.route env.decode env.index env.metadata ready (post prepared.1.context.selection.1)
-    (front env program prepared) selected number ancestors disclosed prepared.1.context.selection.2.primitive prepared.2 ∅ 0
+    (front (completedBinding := completedBinding) env program prepared) selected number ancestors disclosed prepared.1.context.selection.2.primitive prepared.2 ∅ 0
 
 /-- The complete published-record source event under a real initializer is exactly the new executable accepted continuation at the uniform-root endpoint, without an equality-of-final-events premise. -/
 theorem source_uniform (selected : RawCtxProtocolReveals.Owner S (B + 1)) (number : Std.U64)
     (ancestors disclosed : List RatchetChain) :
-    sourceGame env attachedVerify primitives program post prepared ready baseImpl kem secret selected number ancestors disclosed =
+    sourceGame (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program post prepared ready baseImpl kem secret selected number ancestors disclosed =
     (simulateQ uniformImpl (simulateQ (rootPost env.source baseImpl kem secret ready.ciphertext)
-      (target env attachedVerify primitives program post prepared ready selected number ancestors disclosed))).run'
-        (PqxdhInitialRootLabelService.completeCache (selectedMessage env program prepared ready) ready.root ∅) := by
+      (target (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program post prepared ready selected number ancestors disclosed))).run'
+        (PqxdhInitialRootLabelService.completeCache (selectedMessage (completedBinding := completedBinding) env program prepared ready) ready.root ∅) := by
   rw [sourceGame, PqxdhInitialSourceReal.game_source]
   have same := PqxdhInitialRootEventCompiler.observed_uniform env.source env.recordWriter attachedVerify primitives 1 env.localImpl
-    env.aux ready.ciphertext baseImpl kem secret (selectedMessage env program prepared ready) ready.root
-    (client env program post prepared ready) (decision env ready selected number ancestors disclosed)
+    env.aux ready.ciphertext baseImpl kem secret (selectedMessage (completedBinding := completedBinding) env program prepared ready) ready.root
+    (client (associatedData := associatedData) (completedBinding := completedBinding) env program post prepared ready) (decision env ready selected number ancestors disclosed)
     (prepared.1.context.selection.2.primitive, prepared.2) ∅
   rw [external_source] at same
   exact same
@@ -94,12 +96,12 @@ theorem source_uniform (selected : RawCtxProtocolReveals.Owner S (B + 1)) (numbe
 /-- The root reduction uses the original complete authenticated preparation and coordinates, then the source event continuation. Neither prepare nor resume receives the selected secret key. -/
 noncomputable def protocol (selected : RawCtxProtocolReveals.Owner S (B + 1)) (number : Std.U64)
     (ancestors disclosed : List RatchetChain) : Protocol baseSpec :=
-  { PqxdhAuthenticatedRootExperiment.protocol env kem attachedVerify primitives program post with
+  { PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post with
     resume := fun _ ciphertext mode root => match mode with
       | .completed decision => pure decision
       | .pending prepared ephemeral => match root with
         | none => pure false
-        | some root => target env attachedVerify primitives program post prepared
+        | some root => target (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program post prepared
             (PqxdhPrivateAcceptedRoot.ready env.server env.application prepared.1.context.publicIdentity.ed25519
               prepared.1.context.generated.after.publicKey ephemeral ciphertext root) selected number ancestors disclosed }
 
@@ -107,8 +109,8 @@ noncomputable def protocol (selected : RawCtxProtocolReveals.Owner S (B + 1)) (n
 theorem uniform_source (selected : RawCtxProtocolReveals.Owner S (B + 1)) (number : Std.U64)
     (ancestors disclosed : List RatchetChain) :
     𝒟[uniformGame (rootReduction env.source baseImpl kem
-      (protocol env attachedVerify primitives program post kem selected number ancestors disclosed))] =
-    𝒟[PqxdhInitialPreparedSourceInput.uniformRoot env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed] := by
+      (protocol (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program post kem selected number ancestors disclosed))] =
+    𝒟[PqxdhInitialPreparedSourceInput.uniformRoot (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed] := by
   apply EvalDistEq.evalDist_eq
   simp only [uniformGame, StateT.run'_eq, PqxdhInitialRootContext.reduction_complete,
     PqxdhInitialPreparedSourceInput.uniformRoot, PqxdhInitialSourceInitialSecrecy.real,
@@ -127,7 +129,7 @@ theorem uniform_source (selected : RawCtxProtocolReveals.Owner S (B + 1)) (numbe
     simp only [PqxdhInitialRootContext.firstMiss, protocol, PqxdhAuthenticatedRootExperiment.protocol,
       PqxdhInitialRootContext.afterRoot, PqxdhInitialPreparedSourceInput.input, map_bind]
     refine EvalDistEq.bind_right _ (fun root => ?_)
-    have same := source_uniform env attachedVerify primitives program post prepared
+    have same := source_uniform (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program post prepared
       (PqxdhPrivateAcceptedRoot.ready env.server env.application prepared.1.context.publicIdentity.ed25519
         prepared.1.context.generated.after.publicKey ephemeral pair.1 root) baseImpl kem keys.2 selected number ancestors disclosed
     exact (fun {α : Type} {mx my : ProbComp α} (equal : mx = my) => (equal ▸ EvalDistEq.rfl : EvalDistEq mx my))

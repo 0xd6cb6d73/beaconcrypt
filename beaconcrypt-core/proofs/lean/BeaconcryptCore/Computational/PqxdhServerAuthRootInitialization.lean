@@ -12,7 +12,8 @@ open PqxdhRootTableInitialization (rootArray)
 variable {ι KemSK Reader Response : Type} {baseSpec : OracleSpec ι}
 
 /-- A successful actual Beacon stage retains its reached metadata and the literal root callback value used by the complete original post-root initializer/getter/receive program. No root is inferred from an installed kernel. -/
-theorem stage_receipt (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+theorem stage_receipt (completedBinding : session.CompletedRegistrationBinding)
+    (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (beaconSeed seed : IdentitySeed) (scalar : ScalarBytes) (publicValue : PublicChallenge)
     (control : pqxdh.BeaconInitSent) (identity : Unit) (oneTime : Unit ⊕ ScalarBytes)
     (kem : KemSK) (raw : Pqxdh.Bytes)
@@ -21,9 +22,11 @@ theorem stage_receipt (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
     (after : GameState KemSK × PqxdhJointDhExtractFamily.State)
     (supported : (some staged, after) ∈ support
       ((interp (family setup seed scalar) (simulateQ (stageImpl setup codec beaconSeed)
-        (PqxdhPhase2DhStage.stage publicValue codec.frameRead control identity oneTime kem raw))).run before)) :
+        (PqxdhPhase2DhStage.stage (completedBinding := completedBinding) publicValue codec.frameRead control identity
+          oneTime kem raw))).run before)) :
     ∃ pending root,
-      some pending ∈ support ((beaconPrefix setup codec beaconSeed control identity oneTime kem raw).run' ()) ∧
+      some pending ∈ support ((beaconPrefix completedBinding setup codec beaconSeed control identity oneTime kem
+        raw).run' ()) ∧
       (some root, after.2) ∈ support ((family setup seed scalar
         (.inr (.derive (PqxdhJointDhExtractRoot.beaconMessage publicValue pending.collected)))).run before.2) ∧
       RootAt setup seed scalar after.2.cache
@@ -35,7 +38,7 @@ theorem stage_receipt (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
           [.beacon (PqxdhJointDhExtractRoot.beaconMessage publicValue pending.collected)] } } := by
   have forward : CoinForward (family setup seed scalar) :=
     rom_coinForward setup.hmac setup.joint setup.dh seed scalar
-  rw [stage_game] at supported
+  rw [stage_game completedBinding] at supported
   simp only [interp_bind, StateT.run_bind, interp_run_liftCoins _ forward,
     bind_map_left, mem_support_bind_iff] at supported
   obtain ⟨prepared, preparedRun, continued⟩ := supported
@@ -83,7 +86,8 @@ theorem accept_receipt (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
       (some root, after.2) ∈ support ((family setup seed scalar
         (.inr (.derive (PqxdhServerRelatedRootInput.message input)))).run before.2) ∧
       RootAt setup seed scalar after.2.cache (PqxdhServerRelatedRootInput.message input) root ∧
-      after.1.pending index = some ⟨root, PqxdhServerClearedRoot.pending (binding setup publicValue) input⟩ ∧
+      after.1.pending index = some ⟨root, PqxdhServerClearedRoot.pending (binding setup publicValue) input,
+        input.verified.candidate⟩ ∧
       after.1.ghost.touches = before.1.ghost.touches ++
         [.session index (PqxdhServerRelatedRootInput.message input) (some root)] := by
   classical
@@ -120,24 +124,28 @@ theorem accept_receipt (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
     · simp only [valid, ite_false, pure_bind, interp_run_pure, support_pure, Set.mem_singleton_iff,
         Prod.mk.injEq, reduceCtorEq, false_and] at continued
 
-/-- A successful original build consumes its actual present token, runs the native builder with that token's root, and installs the kernel produced from that same root. The complete native log and cache effects remain in the support receipt. -/
-theorem build_receipt (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+/-- A successful original build consumes its actual present token, passes the pure pre-hash guard with a candidate, hashes the transcript of the token's retained Init buffers and that candidate's response fields on the shared cache, runs the native builder with that token's root at the AD of the digest, and installs the kernel produced from that same root with that AD as the peer metadata. The complete native log and cache effects remain in the support receipt. -/
+theorem build_receipt_transcript (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (seed : IdentitySeed) (scalar : ScalarBytes) (index : Nat) (payload : Option Pqxdh.Bytes)
     (before : GameState KemSK × PqxdhJointDhExtractFamily.State)
     (response : PqxdhServerRegistrationPublication.Response)
     (after : GameState KemSK × PqxdhJointDhExtractFamily.State)
     (supported : (some response, after) ∈ support
       ((interp (family setup seed scalar) (buildOracle setup codec checks index payload)).run before)) :
-    ∃ token candidate kernel logged cache,
+    ∃ token candidate digest hashed published kernel logged cache,
       before.1.pending index = some token ∧
+      PqxdhServerRegistrationPublication.prehash before.1.server token.pending payload = some candidate ∧
+      (digest, hashed) ∈ support ((CtxRomAuth.ctxRandomOracle (PqxdhTranscriptAd.query
+        (PqxdhTranscriptAd.initOf token.init) (PqxdhTranscriptAd.serverResponse candidate))).run before.1.ctx) ∧
       after.2 = before.2 ∧
       after.1.pending = Function.update before.1.pending index none ∧
-      after.1.server = PqxdhServerRegistrationPublication.publish before.1.server candidate kernel () ∧
+      after.1.server = PqxdhServerRegistrationPublication.publish before.1.server published kernel
+        (PqxdhTranscriptAd.adOf digest) ∧
       Installed setup.source token.root kernel ∧
-      (ok (some response, PqxdhServerRegistrationPublication.publish before.1.server candidate kernel ()),
-        (logged, cache)) ∈ support ((simulateQ (tailImpl setup codec checks)
-          (PqxdhServerRegistrationPublication.build setup.source token.pending token.root payload () before.1.server)).run
-            ([], before.1.ctx)) ∧
+      (ok (some response, PqxdhServerRegistrationPublication.publish before.1.server published kernel
+          (PqxdhTranscriptAd.adOf digest)), (logged, cache)) ∈ support ((simulateQ (tailImpl setup codec checks)
+          (PqxdhServerRegistrationPublication.build (associatedData := PqxdhTranscriptAd.adOf digest) setup.source
+            token.pending token.root payload (PqxdhTranscriptAd.adOf digest) before.1.server)).run ([], hashed)) ∧
       after.1.ctx = cache ∧
       after.1.ghost.seals = before.1.ghost.seals ++ logged.map (fun entry => (index, entry)) := by
   have forward : CoinForward (family setup seed scalar) :=
@@ -149,34 +157,53 @@ theorem build_receipt (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
       simp only [lookup, interp_run_pure, support_pure, Set.mem_singleton_iff, Prod.mk.injEq,
         reduceCtorEq, false_and] at supported
   | some token =>
-      simp only [lookup, interp_bind, StateT.run_bind, interp_run_liftCoins _ forward,
-        bind_map_left, mem_support_bind_iff] at supported
-      obtain ⟨tail, tailRun, continued⟩ := supported
-      rcases build_support (tailImpl setup codec checks) setup.source (tailImpl_kdf setup codec checks)
-        token.pending token.root payload () before.1.server ([], before.1.ctx) tail tailRun with failed |
-          ⟨candidate, kernel, output, completed, installed, _⟩
-      · simp only [failed, settle, interp_run_set, interp_run_pure,
-          support_pure, Set.mem_singleton_iff, exists_eq_left, Prod.mk.injEq, reduceCtorEq, false_and] at continued
-      · simp only [completed, settle, interp_run_set, interp_run_pure,
-          support_pure, Set.mem_singleton_iff, exists_eq_left, Prod.mk.injEq, Option.some.injEq] at continued
-        obtain ⟨outputEq, stateEq⟩ := continued
-        rw [outputEq, stateEq]
-        refine ⟨token, candidate, kernel, tail.2.1, tail.2.2, rfl, rfl, rfl, rfl, installed, ?_, rfl, rfl⟩
-        rw [← completed]
-        exact tailRun
+      cases pre : PqxdhServerRegistrationPublication.prehash before.1.server token.pending payload with
+      | none =>
+          simp only [lookup, pre, interp_bind, StateT.run_bind, interp_run_set, interp_run_pure, pure_bind,
+            support_pure, Set.mem_singleton_iff, Prod.mk.injEq, reduceCtorEq, false_and] at supported
+      | some candidate =>
+          simp only [lookup, pre, interp_bind, StateT.run_bind, interp_run_hashOracle _ forward,
+            bind_map_left, mem_support_bind_iff] at supported
+          obtain ⟨hashed, hashRun, supported⟩ := supported
+          obtain ⟨current, currentRun, supported⟩ := supported
+          simp only [interp_run_get, support_pure, Set.mem_singleton_iff] at currentRun
+          subst currentRun
+          obtain ⟨tail, tailRun, continued⟩ := supported
+          rw [interp_run_liftCoins _ forward, support_map] at tailRun
+          obtain ⟨tail, tailRun, rfl⟩ := tailRun
+          rcases build_support (PqxdhTranscriptAd.adOf hashed.1) (tailImpl setup codec checks) setup.source
+            (tailImpl_kdf setup codec checks) token.pending token.root payload (PqxdhTranscriptAd.adOf hashed.1)
+            before.1.server ([], hashed.2) tail tailRun with failed |
+              ⟨published, kernel, output, completed, installed, _⟩
+          · simp only [failed, settle, interp_run_set, interp_run_pure,
+              support_pure, Set.mem_singleton_iff, exists_eq_left, Prod.mk.injEq, reduceCtorEq,
+              false_and] at continued
+          · simp only [completed, settle, interp_run_set, interp_run_pure,
+              support_pure, Set.mem_singleton_iff, exists_eq_left, Prod.mk.injEq, Option.some.injEq] at continued
+            obtain ⟨outputEq, stateEq⟩ := continued
+            rw [outputEq, stateEq]
+            refine ⟨token, candidate, hashed.1, hashed.2, published, kernel, tail.2.1, tail.2.2, rfl, pre, hashRun,
+              rfl, rfl, rfl, installed, ?_, rfl, rfl⟩
+            rw [← completed]
+            exact tailRun
 
-/-- A successful original finish reaches an actual InitSent stage, retains that stage's full primitive state, and publishes precisely its staged kernel after the original outer pin checks. -/
-theorem finish_receipt (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+/-- A successful original finish reaches an actual InitSent stage with a retained Init bundle and a decodable Phase 2, hashes their transcript on the shared cache, retains the full primitive state of the stage at the completed binding of that digest, and publishes precisely its staged kernel after the original outer pin checks. -/
+theorem finish_receipt_transcript (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (publicValue : PublicChallenge) (beaconSeed seed : IdentitySeed) (scalar : ScalarBytes)
     (raw payload : Pqxdh.Bytes) (before after : GameState KemSK × PqxdhJointDhExtractFamily.State)
     (supported : (some payload, after) ∈ support
       ((interp (family setup seed scalar) (finishOracle setup codec publicValue beaconSeed raw)).run before)) :
-    ∃ control prekey oneTime kem staged middle,
+    ∃ control prekey oneTime kem init response digest hashed staged middle,
       before.1.beacon.beacon.phase = .initSent control prekey oneTime kem ∧
+      before.1.beaconInit = some init ∧
+      responseOf codec raw = some response ∧
+      (digest, hashed) ∈ support ((CtxRomAuth.ctxRandomOracle (PqxdhTranscriptAd.query
+        (PqxdhTranscriptAd.initOf init) response)).run before.1.ctx) ∧
       (some staged, middle) ∈ support ((interp (family setup seed scalar)
         (simulateQ (stageImpl setup codec beaconSeed)
-          (PqxdhPhase2DhStage.stage publicValue codec.frameRead control before.1.beacon.beacon.identity
-            oneTime kem raw))).run before) ∧
+          (PqxdhPhase2DhStage.stage (completedBinding := PqxdhTranscriptAd.completedOf control digest) publicValue
+            codec.frameRead control before.1.beacon.beacon.identity oneTime kem raw))).run
+          ({ before.1 with ctx := hashed }, before.2)) ∧
       control.expected_server_binding.identity_key_id = staged.authenticated.candidate.server_binding.identity_key_id ∧
       absBytes middle.1.beacon.beacon.serverIdentity =
         absBytes staged.authenticated.candidate.server_binding.identity_public_key ∧
@@ -184,45 +211,64 @@ theorem finish_receipt (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
       after = ({ middle.1 with
         beacon := (PqxdhBeaconPhase2Publication.publish middle.1.beacon staged).2
         ghost := middle.1.ghost.accept (some (Accepted.ofStaged staged)) }, middle.2) := by
+  have forward : CoinForward (family setup seed scalar) :=
+    rom_coinForward setup.hmac setup.joint setup.dh seed scalar
   unfold finishOracle at supported
   simp only [interp_bind, StateT.run_bind, interp_run_get, pure_bind] at supported
   cases active : before.1.beacon.beacon.phase with
   | initSent control prekey oneTime kem =>
-      simp only [active, interp_bind, StateT.run_bind, mem_support_bind_iff] at supported
-      obtain ⟨reached, stagedRun, continued⟩ := supported
-      simp only [interp_run_get, interp_run_set, interp_run_pure, support_pure, Set.mem_singleton_iff,
-        exists_eq_left, Prod.mk.injEq] at continued
-      obtain ⟨staged, stageEq, pinned, identity, published⟩ :=
-        PqxdhBeaconPhase2Publication.finish_success control reached.2.1.beacon
-          (PqxdhBeaconPhase2Publication.finish control reached.2.1.beacon reached.1).2
-          reached.1 payload (Prod.ext continued.1.symm rfl)
-      refine ⟨control, prekey, oneTime, kem, staged, reached.2, rfl, ?_, pinned, identity,
-        (congrArg Prod.fst published).symm, ?_⟩
-      · rw [← stageEq]
-        exact stagedRun
-      · rw [continued.2, ← congrArg Prod.snd published, ← continued.1]
-        simp only [stageEq, acceptedOf, Option.isSome_some, ite_true, Option.map_some]
-
+      simp only [active] at supported
+      split at supported
+      · rename_i init response bundle decoded
+        simp only [interp_bind, StateT.run_bind, interp_run_hashOracle _ forward,
+          bind_map_left, mem_support_bind_iff] at supported
+        obtain ⟨hashed, hashRun, supported⟩ := supported
+        obtain ⟨current, currentRun, supported⟩ := supported
+        simp only [interp_run_get, support_pure, Set.mem_singleton_iff] at currentRun
+        subst currentRun
+        obtain ⟨reached, stagedRun, continued⟩ := supported
+        simp only [interp_run_get, interp_run_set, interp_run_pure, support_pure, Set.mem_singleton_iff,
+          exists_eq_left, Prod.mk.injEq] at continued
+        obtain ⟨staged, stageEq, pinned, identity, published⟩ :=
+          PqxdhBeaconPhase2Publication.finish_success control reached.2.1.beacon
+            (PqxdhBeaconPhase2Publication.finish control reached.2.1.beacon reached.1).2
+            reached.1 payload (Prod.ext continued.1.symm rfl)
+        refine ⟨control, prekey, oneTime, kem, init, response, hashed.1, hashed.2, staged, reached.2, rfl, bundle,
+          decoded, hashRun, ?_, pinned, identity, (congrArg Prod.fst published).symm, ?_⟩
+        · rw [← stageEq]
+          exact stagedRun
+        · rw [continued.2, ← congrArg Prod.snd published, ← continued.1]
+          simp only [stageEq, acceptedOf, Option.isSome_some, ite_true, Option.map_some]
+      · simp only [interp_bind, StateT.run_bind, interp_run_set, interp_run_pure, pure_bind,
+          support_pure, Set.mem_singleton_iff, Prod.mk.injEq] at supported
+        obtain ⟨_, absurdEq, _⟩ := PqxdhBeaconPhase2Publication.finish_success control before.1.beacon
+          (PqxdhBeaconPhase2Publication.finish control before.1.beacon none).2 none payload
+          (Prod.ext supported.1.symm rfl)
+        cases absurdEq
   | _ =>
       simp only [active, interp_run_pure, support_pure, Set.mem_singleton_iff, Prod.mk.injEq,
         reduceCtorEq, false_and] at supported
 
-/-- The actual successful finish carries one continuous receipt from its literal root callback through native initialization/opening to the published Beacon kernel. The root is retained at the final real cache, independently of kernel representations. -/
-theorem finish_root (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+/-- The actual successful finish carries one continuous receipt from the transcript hash of its retained Init bundle and decoded Phase 2, through its literal root callback and native initialization/opening at the completed binding of that digest, to the published Beacon kernel. The root is retained at the final real cache, independently of kernel representations. -/
+theorem finish_root_transcript (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (publicValue : PublicChallenge) (beaconSeed seed : IdentitySeed) (scalar : ScalarBytes)
     (raw payload : Pqxdh.Bytes) (before after : GameState KemSK × PqxdhJointDhExtractFamily.State)
     (supported : (some payload, after) ∈ support
       ((interp (family setup seed scalar) (finishOracle setup codec publicValue beaconSeed raw)).run before)) :
-    ∃ control prekey oneTime kem pending root staged,
+    ∃ control prekey oneTime kem init response digest hashed pending root staged,
       before.1.beacon.beacon.phase = .initSent control prekey oneTime kem ∧
-      some pending ∈ support ((beaconPrefix setup codec beaconSeed control before.1.beacon.beacon.identity
-        oneTime kem raw).run' ()) ∧
+      before.1.beaconInit = some init ∧
+      responseOf codec raw = some response ∧
+      (digest, hashed) ∈ support ((CtxRomAuth.ctxRandomOracle (PqxdhTranscriptAd.query
+        (PqxdhTranscriptAd.initOf init) response)).run before.1.ctx) ∧
+      some pending ∈ support ((beaconPrefix (PqxdhTranscriptAd.completedOf control digest) setup codec beaconSeed
+        control before.1.beacon.beacon.identity oneTime kem raw).run' ()) ∧
       (some root, after.2) ∈ support ((family setup seed scalar
         (.inr (.derive (PqxdhJointDhExtractRoot.beaconMessage publicValue pending.collected)))).run before.2) ∧
       RootAt setup seed scalar after.2.cache
         (PqxdhJointDhExtractRoot.beaconMessage publicValue pending.collected) root ∧
       (some staged, ((), after.1.ctx)) ∈ support ((simulateQ (beaconNative setup codec)
-        (PqxdhPhase2DhRootConsumer.afterRoot codec.frameRead pending (rootArray root))).run ((), before.1.ctx)) ∧
+        (PqxdhPhase2DhRootConsumer.afterRoot codec.frameRead pending (rootArray root))).run ((), hashed)) ∧
       after.1.beacon.beacon.phase = .established
         ⟨staged.authenticated.candidate.server_binding, staged.authenticated.candidate.assigned_key_id⟩
         staged.associatedData staged.kernel ∧
@@ -230,14 +276,15 @@ theorem finish_root (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
       control.expected_server_binding.identity_key_id = staged.authenticated.candidate.server_binding.identity_key_id ∧
       after.1.ghost.touches = before.1.ghost.touches ++
         [.beacon (PqxdhJointDhExtractRoot.beaconMessage publicValue pending.collected)] := by
-  obtain ⟨control, prekey, oneTime, kem, staged, middle, active, reached, pinned, _, plaintext, stateEq⟩ :=
-    finish_receipt setup codec publicValue beaconSeed seed scalar raw payload before after supported
+  obtain ⟨control, prekey, oneTime, kem, init, response, digest, hashed, staged, middle, active, bundle, decoded,
+    hashRun, reached, pinned, _, plaintext, stateEq⟩ :=
+    finish_receipt_transcript setup codec publicValue beaconSeed seed scalar raw payload before after supported
   obtain ⟨pending, root, prepared, derived, rooted, initialized, stageState⟩ :=
-    stage_receipt setup codec beaconSeed seed scalar publicValue control before.1.beacon.beacon.identity
-      oneTime kem raw before staged middle reached
+    stage_receipt (PqxdhTranscriptAd.completedOf control digest) setup codec beaconSeed seed scalar publicValue control
+      before.1.beacon.beacon.identity oneTime kem raw ({ before.1 with ctx := hashed }, before.2) staged middle reached
   rw [stateEq]
-  refine ⟨control, prekey, oneTime, kem, pending, root, staged, active, prepared, derived, rooted,
-    initialized, rfl, plaintext, pinned, ?_⟩
+  refine ⟨control, prekey, oneTime, kem, init, response, digest, hashed, pending, root, staged, active, bundle, decoded,
+    hashRun, prepared, derived, rooted, initialized, rfl, plaintext, pinned, ?_⟩
   exact (Ghost.accept_touches _ _).trans (congrArg (fun state => state.ghost.touches) stageState)
 
 end BeaconcryptCore.Computational.PqxdhServerAuthRootInitialization
@@ -256,20 +303,20 @@ end BeaconcryptCore.Computational.PqxdhServerAuthRootInitialization
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhServerAuthRootInitialization.accept_receipt
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthRootInitialization.build_receipt' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthRootInitialization.build_receipt_transcript' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhServerAuthRootInitialization.build_receipt
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthRootInitialization.build_receipt_transcript
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthRootInitialization.finish_receipt' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthRootInitialization.finish_receipt_transcript' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhServerAuthRootInitialization.finish_receipt
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthRootInitialization.finish_receipt_transcript
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthRootInitialization.finish_root' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthRootInitialization.finish_root_transcript' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhServerAuthRootInitialization.finish_root
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthRootInitialization.finish_root_transcript

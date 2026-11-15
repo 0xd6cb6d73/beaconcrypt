@@ -49,18 +49,18 @@ structure InitializedChainsObserver
 
 /-- The first typed symmetric projection at the canonical root-derived ratchet address. -/
 def initializedFirstQuery (root : HiddenRootCoordinate) : JointKdfViewQuery :=
-  ⟨root.toList, .ratchet, .first32⟩
+  ⟨root.toList, .initial, .first32⟩
 
 /-- The second typed symmetric projection at the same canonical root-derived ratchet address. -/
 def initializedSecondQuery (root : HiddenRootCoordinate) : JointKdfViewQuery :=
-  ⟨root.toList, .ratchet, .second32⟩
+  ⟨root.toList, .initial, .second32⟩
 
 @[simp] theorem initializedFirstQuery_address (root : HiddenRootCoordinate) :
-    (initializedFirstQuery root).address = ratchetAddress root.toList := by
+    (initializedFirstQuery root).address = initialAddress root.toList := by
   rfl
 
 @[simp] theorem initializedSecondQuery_address (root : HiddenRootCoordinate) :
-    (initializedSecondQuery root).address = ratchetAddress root.toList := by
+    (initializedSecondQuery root).address = initialAddress root.toList := by
   rfl
 
 theorem initializedQueries_same_address (root : HiddenRootCoordinate) :
@@ -134,7 +134,7 @@ theorem simulateQ_initializedChainsWrapperMain_real
     initializedFirstQuery, initializedSecondQuery,
     JointKdfViewQuery.project, JointKdfProjection.project,
     JointKdfViewQuery.address, FixedHkdfDomain.address,
-    PqxdhJointKdf.ratchetAddress, PqxdhJointKdf.initialProjection]
+    PqxdhJointKdf.initialAddress, PqxdhJointKdf.initialProjection]
   rfl
 
 /-! ## Exact logical query accounting -/
@@ -338,7 +338,7 @@ theorem run_initializedChainsWrapperMain_random_empty
               ⟨PqxdhJointKdf.first32 stream,
                 PqxdhJointKdf.second32 stream⟩))).run
           ((∅ : JointKdfRO.QueryCache).cacheQuery
-            (ratchetAddress root.toList) stream)) := by
+            (initialAddress root.toList) stream)) := by
   rw [simulateQ_initializedChainsWrapperMain_toJointKdfView]
   simp only [simulateQ_query_bind, OracleQuery.input_query,
     monadLift_self, StateT.run_bind]
@@ -373,7 +373,7 @@ theorem run'_initializedChainsWrapperMain_random_empty
               ⟨PqxdhJointKdf.first32 stream,
                 PqxdhJointKdf.second32 stream⟩))).run'
           ((∅ : JointKdfRO.QueryCache).cacheQuery
-            (ratchetAddress root.toList) stream)) := by
+            (initialAddress root.toList) stream)) := by
   simp only [StateT.run'_eq]
   rw [run_initializedChainsWrapperMain_random_empty]
   rw [map_bind]
@@ -479,7 +479,7 @@ noncomputable def independentRootInitializedChainsGame
         ⟨PqxdhJointKdf.first32 stream,
           PqxdhJointKdf.second32 stream⟩))).run'
     ((∅ : JointKdfRO.QueryCache).cacheQuery
-      (ratchetAddress root.toList) stream)
+      (initialAddress root.toList) stream)
 
 /-- HB-66's terminal independent-root game specializes exactly to one shared-address cached stream supplying the two directional chains. -/
 theorem initializerIndependentRootGame_initializedChains_eq

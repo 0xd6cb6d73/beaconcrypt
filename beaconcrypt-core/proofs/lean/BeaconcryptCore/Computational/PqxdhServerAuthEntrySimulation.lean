@@ -219,7 +219,7 @@ def Reply.isHidden : Reply → Bool
   | _ => false
 
 /-- The Server state of the experiment. -/
-abbrev ServerState := PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes)
+abbrev ServerState := PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes)
 
 /-- The shared BLAKE2b cache with the seal log, the state of the Server's response tail. -/
 abbrev SealState := RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext)
@@ -230,11 +230,12 @@ abbrev Marks := Nat → Bool
 /-- The state of a flattened experiment: the game state, the session marks and the table state. -/
 abbrev FlatState (KemSK τ : Type) := GameState KemSK × Marks × τ
 
-/-- The table services a flattened experiment uses: the table read of a root derivation, the adversary's table query, the response tail of a marked session and the Beacon's continuation after a hidden reply. -/
+/-- The table services a flattened experiment uses: the table read of a root derivation, the adversary's table query, the response tail of a marked session (at the AD the build computed from the transcript hash) and the Beacon's continuation after a hidden reply. -/
 structure Services (Response τ : Type) where
   derive : PqxdhJointDhExtractFamily.Message → StateT τ ProbComp Reply
   table : Pqxdh.Bytes → StateT τ ProbComp HmacBlock
-  hiddenBuild : PqxdhServerRelatedRootConsumer.Returned → Option Pqxdh.Bytes → ServerState →
+  hiddenBuild : PqxdhServerRelatedRootConsumer.Returned → Option Pqxdh.Bytes → PqxdhTranscriptAd.AssociatedData →
+    ServerState →
     StateT SealState ProbComp (RustM (Option PqxdhServerRegistrationPublication.Response × ServerState))
   hiddenAfter : PqxdhPhase2DhMetadata.Prepared Response →
     StateT (RawCtxSharedPrimitive.SharedState Unit) ProbComp (Option PqxdhBeaconPhase2Publication.Staged)
@@ -254,7 +255,8 @@ def afterDerive (index : Nat) (input : PqxdhServerRootPreparation.Inputs Reader 
       let token := PqxdhServerClearedRoot.pending (binding setup publicValue) input
       let consumed : GameState KemSK := { touched with server := { touched.server with
         consumed := touched.server.consumed ++ [absBytes token.registration_id.bytes] } }
-      (some index, { consumed with pending := Function.update consumed.pending index (some ⟨root, token⟩) })
+      (some index, { consumed with
+        pending := Function.update consumed.pending index (some ⟨root, token, input.verified.candidate⟩) })
 
 /-- The flattened accept step (`acceptOracle`): the Phase 1 prefix, then one table read for the root derivation. A hidden reply marks the session. -/
 noncomputable def acceptStep (raw : Pqxdh.Bytes) : StateT (FlatState KemSK τ) ProbComp (Option Nat) :=
@@ -286,19 +288,26 @@ def afterBuild (session : Nat) (game : GameState KemSK)
     ctx := result.2.2
     ghost := { game.ghost with seals := game.ghost.seals ++ result.2.1.map (fun context => (session, context)) } })
 
-/-- The flattened build step (`buildOracle`): an unmarked session runs the native builder with its stored root; a marked session runs the service's response tail. -/
+/-- The flattened build step (`buildOracle`): a present token is consumed; after the pure pre-hash guard the transcript is hashed on the shared BLAKE2b cache, then an unmarked session runs the native builder with its stored root at the AD of that digest, and a marked session runs the service's response tail at that AD. -/
 noncomputable def buildStep (session : Nat) (payload : Option Pqxdh.Bytes) :
     StateT (FlatState KemSK τ) ProbComp (Option PqxdhServerRegistrationPublication.Response) :=
   fun state =>
     match state.1.pending session with
     | none => pure (none, state)
-    | some token => do
-        let result ← (if state.2.1 session then svc.hiddenBuild token payload state.1.server
-          else simulateQ (tailImpl setup codec checks)
-            (PqxdhServerRegistrationPublication.build setup.source token.pending token.root payload ()
-              state.1.server)).run ([], state.1.ctx)
-        let after := afterBuild session state.1 result
-        pure (after.1, (after.2, state.2))
+    | some token =>
+      match PqxdhServerRegistrationPublication.prehash state.1.server token.pending payload with
+      | none => pure (none, ({ state.1 with pending := Function.update state.1.pending session none }, state.2))
+      | some candidate => do
+          let hashed ← (CtxRomAuth.ctxRandomOracle ((), PqxdhTranscriptAd.transcript
+            (PqxdhTranscriptAd.initOf token.init) (PqxdhTranscriptAd.serverResponse candidate))).run state.1.ctx
+          let game : GameState KemSK := { state.1 with ctx := hashed.2 }
+          let ad := PqxdhTranscriptAd.adOf hashed.1
+          let result ← (if state.2.1 session then svc.hiddenBuild token payload ad game.server
+            else simulateQ (tailImpl setup codec checks)
+              (PqxdhServerRegistrationPublication.build (associatedData := ad) setup.source token.pending token.root
+                payload ad game.server)).run ([], game.ctx)
+          let after := afterBuild session game result
+          pure (after.1, (after.2, state.2))
 
 /-- The outcome of a finish from a staged result, as `finishOracle` leaves it: the final checks, the new Beacon state and the acceptance snapshot. -/
 noncomputable def finishOutcome (control : pqxdh.BeaconInitSent) (game : GameState KemSK)
@@ -306,21 +315,26 @@ noncomputable def finishOutcome (control : pqxdh.BeaconInitSent) (game : GameSta
   let result := PqxdhBeaconPhase2Publication.finish control game.beacon staged
   (result.1, { game with beacon := result.2, ghost := game.ghost.accept (acceptedOf staged result.1) })
 
-/-- The flattened finish step (`finishOracle`): in the InitSent phase, the Beacon's preparation, its touch, one table read for its root derivation, then the native continuation on the root or the service's continuation on a hidden reply, and the final checks. -/
+/-- The flattened finish step (`finishOracle`): in the InitSent phase with a retained bundle and a decodable Phase 2, the transcript hash on the shared BLAKE2b cache, then the Beacon's preparation with the completed binding of that digest, its touch, one table read for its root derivation, then the native continuation on the root or the service's continuation on a hidden reply, and the final checks; otherwise an InitSent Beacon aborts before any hash. -/
 noncomputable def finishStep (raw : Pqxdh.Bytes) : StateT (FlatState KemSK τ) ProbComp (Option Pqxdh.Bytes) :=
   fun state =>
     match state.1.beacon.beacon.phase with
-    | .initSent control _ oneTime kem => do
-        let prepared ← (beaconPrefix setup codec beaconSeed control state.1.beacon.beacon.identity oneTime kem
-          raw).run' ()
+    | .initSent control _ oneTime kem =>
+      match state.1.beaconInit, responseOf codec raw with
+      | some init, some response => do
+        let hashed ← (CtxRomAuth.ctxRandomOracle ((), PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf init)
+          response)).run state.1.ctx
+        let hashedGame : GameState KemSK := { state.1 with ctx := hashed.2 }
+        let prepared ← (beaconPrefix (PqxdhTranscriptAd.completedOf control hashed.1) setup codec beaconSeed control
+          state.1.beacon.beacon.identity oneTime kem raw).run' ()
         match prepared with
         | none =>
-            let outcome := finishOutcome control state.1 none
+            let outcome := finishOutcome control hashedGame none
             pure (outcome.1, (outcome.2, state.2))
         | some pending => do
             let message := PqxdhJointDhExtractRoot.beaconMessage publicValue pending.collected
-            let game : GameState KemSK := { state.1 with ghost := { state.1.ghost with
-              touches := state.1.ghost.touches ++ [Touch.beacon message] } }
+            let game : GameState KemSK := { hashedGame with ghost := { hashedGame.ghost with
+              touches := hashedGame.ghost.touches ++ [Touch.beacon message] } }
             let derived ← (svc.derive message).run state.2.2
             match derived.1 with
             | .rejected =>
@@ -335,6 +349,9 @@ noncomputable def finishStep (raw : Pqxdh.Bytes) : StateT (FlatState KemSK τ) P
                 let staged ← (svc.hiddenAfter pending).run ((), game.ctx)
                 let outcome := finishOutcome control { game with ctx := staged.2.2 } staged.1
                 pure (outcome.1, (outcome.2, state.2.1, derived.2))
+      | _, _ =>
+        let result := PqxdhBeaconPhase2Publication.finish control state.1.beacon none
+        pure (result.1, ({ state.1 with beacon := result.2 }, state.2))
     | _ => pure (none, state)
 
 /-- The flattened public HMAC (`hmacOracle`): a query inside the table domain is logged and read from the table service; any other query is the real HMAC. -/
@@ -382,8 +399,8 @@ noncomputable def realServices (setup : Setup baseSpec KemSK) (codec : Codec Rea
     Services Response HmacOracle.QueryCache where
   derive := realDerive setup.hmac setup.joint setup.dh seed scalar
   table message := HmacOracle.randomOracle message
-  hiddenBuild token payload server := simulateQ (tailImpl setup codec checks)
-    (PqxdhServerRegistrationPublication.build setup.source token.pending token.root payload () server)
+  hiddenBuild token payload ad server := simulateQ (tailImpl setup codec checks)
+    (PqxdhServerRegistrationPublication.build (associatedData := ad) setup.source token.pending token.root payload ad server)
   hiddenAfter _ := pure none
 
 end Real

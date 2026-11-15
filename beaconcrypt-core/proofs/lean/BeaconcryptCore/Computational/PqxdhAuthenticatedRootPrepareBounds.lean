@@ -7,6 +7,8 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhAuthenticatedRootPrepareBounds
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhPhase2GeneratedDriver PqxdhGeneratedBeaconState PqxdhAuthenticatedRootExperiment
 open PqxdhPrivateAcceptedRoot PqxdhKemIndCca PqxdhInitializerSecrecy
@@ -34,14 +36,14 @@ include localBound postBound in
 theorem observe_caps
     (challenge : Option MlKem768Ciphertext)
     (output : Option (PqxdhPrivateCandidateAcceptance.Outcome
-      (PqxdhPrivatePhase1Prefix.Retained setup Unit (driver env.toDriverEnvironment program).State)))
+      (PqxdhPrivatePhase1Prefix.Retained setup Unit (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)))
     (execution : PqxdhSourceAuthenticatedRoot.ServerExecution) (state : PqxdhPhase1AcceptanceOracle.BareState 1) :
     let total := commonBill qLocal qAux budget
     Caps (PqxdhPrivateAcceptedRoot.observe env.source challenge attachedVerify primitives 1 setup
-      (commonObserver env program post) output execution state) (34 * total) total total := by
+      (PqxdhAuthenticatedRootExperiment.commonObserver (associatedData := associatedData) (completedBinding := completedBinding) env program post) output execution state) (34 * total) total total := by
   have caps := PqxdhPrivateAcceptedRootBounds.observe_bounds env.source challenge attachedVerify primitives 1 setup
-    (commonObserver env program post) output execution state
-    _ _ _ _ _ _ (completed_bounds env program post qLocal localBound budget postBound qAux output execution)
+    (PqxdhAuthenticatedRootExperiment.commonObserver (associatedData := associatedData) (completedBinding := completedBinding) env program post) output execution state
+    _ _ _ _ _ _ (PqxdhAuthenticatedRootCommonBounds.completed_bounds (associatedData := associatedData) (completedBinding := completedBinding) env program post qLocal localBound budget postBound qAux output execution)
   refine ⟨?_, caps.2.1, ?_⟩
   · exact caps.1.mono (by omega)
   · simpa only [Nat.add_zero] using caps.2.2
@@ -51,14 +53,14 @@ include localBound postBound auxBound in
 theorem acceptedObserve_caps
     (challenge : Option MlKem768Ciphertext)
     (output : Option (PqxdhPrivateCandidateAcceptance.Outcome
-      (PqxdhPrivatePhase1Prefix.Retained setup Unit (driver env.toDriverEnvironment program).State)))
+      (PqxdhPrivatePhase1Prefix.Retained setup Unit (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)))
     (execution : Ready) (state : PqxdhPhase1AcceptanceOracle.BareState 1) :
     let total := commonBill qLocal qAux budget
     Caps (PqxdhPrivateAcceptedRoot.acceptedObserve env.source challenge attachedVerify primitives 1 setup
-      (commonObserver env program post) output execution state) (34 * total) total total := by
+      (PqxdhAuthenticatedRootExperiment.commonObserver (associatedData := associatedData) (completedBinding := completedBinding) env program post) output execution state) (34 * total) total total := by
   have caps := PqxdhPrivateAcceptedRootBounds.acceptedObserve_bounds env.source challenge attachedVerify primitives 1 setup
-    (commonObserver env program post) output execution state
-    _ _ _ _ _ _ (accepted_bounds env program post qLocal localBound budget postBound qAux auxBound output execution)
+    (PqxdhAuthenticatedRootExperiment.commonObserver (associatedData := associatedData) (completedBinding := completedBinding) env program post) output execution state
+    _ _ _ _ _ _ (PqxdhAuthenticatedRootCommonBounds.accepted_bounds (associatedData := associatedData) (completedBinding := completedBinding) env program post qLocal localBound budget postBound qAux auxBound output execution)
   refine ⟨?_, caps.2.1, ?_⟩
   · exact caps.1.mono (by omega)
   · simpa only [Nat.add_zero] using caps.2.2
@@ -71,28 +73,28 @@ theorem dispatch_caps
     (ephemeralBound : Caps (ccaAmbient env.ephemeralGen) uEp bEp dEp)
     (nativeBound : ∀ key, Caps (ccaAmbient (env.native.encaps key)) uNative bNative dNative)
     (totalBound : ∀ key, Caps (ccaAmbient (kem.encaps key)) uTotal bTotal dTotal)
-    (prepared : PqxdhPrivateRootSource.Prepared setup (driver env.toDriverEnvironment program).State) :
+    (prepared : PqxdhPrivateRootSource.Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State) :
     let total := commonBill qLocal qAux budget
     Caps (PqxdhPrivateAcceptedRoot.dispatch kem env.parameters attachedVerify primitives setup
-      (commonObserver env program post) prepared)
+      (PqxdhAuthenticatedRootExperiment.commonObserver (associatedData := associatedData) (completedBinding := completedBinding) env program post) prepared)
       (uEp + (max uNative uTotal + 34 * total))
       (bEp + (max bNative bTotal + total))
       (dEp + (max dNative dTotal + total)) := by
-  let rejected := observe_caps env program post attachedVerify primitives qLocal localBound budget postBound qAux
-  let accepted := acceptedObserve_caps env program post attachedVerify primitives qLocal localBound budget postBound qAux auxBound
+  let rejected := observe_caps (associatedData := associatedData) (completedBinding := completedBinding) env program post attachedVerify primitives qLocal localBound budget postBound qAux
+  let accepted := acceptedObserve_caps (associatedData := associatedData) (completedBinding := completedBinding) env program post attachedVerify primitives qLocal localBound budget postBound qAux auxBound
   refine ⟨?_, ?_, ?_⟩
   · exact PqxdhPrivateAcceptedRootBounds.dispatch_bound kem env.parameters attachedVerify primitives setup
-      (commonObserver env program post) IsMlKemUniformQuery _ _ _ _ ephemeralBound.uniforms
+      (PqxdhAuthenticatedRootExperiment.commonObserver (associatedData := associatedData) (completedBinding := completedBinding) env program post) IsMlKemUniformQuery _ _ _ _ ephemeralBound.uniforms
       (fun key => (nativeBound key).uniforms) (fun key => (totalBound key).uniforms)
       (fun challenge output execution state => (rejected challenge output execution state).uniforms)
       (fun challenge output execution state => (accepted challenge output execution state).uniforms) prepared
   · exact PqxdhPrivateAcceptedRootBounds.dispatch_bound kem env.parameters attachedVerify primitives setup
-      (commonObserver env program post) IsMlKemBaseQuery _ _ _ _ ephemeralBound.bases
+      (PqxdhAuthenticatedRootExperiment.commonObserver (associatedData := associatedData) (completedBinding := completedBinding) env program post) IsMlKemBaseQuery _ _ _ _ ephemeralBound.bases
       (fun key => (nativeBound key).bases) (fun key => (totalBound key).bases)
       (fun challenge output execution state => (rejected challenge output execution state).bases)
       (fun challenge output execution state => (accepted challenge output execution state).bases) prepared
   · exact PqxdhPrivateAcceptedRootBounds.dispatch_bound kem env.parameters attachedVerify primitives setup
-      (commonObserver env program post) IsMlKemLogicalDecapsulationQuery _ _ _ _ ephemeralBound.decaps
+      (PqxdhAuthenticatedRootExperiment.commonObserver (associatedData := associatedData) (completedBinding := completedBinding) env program post) IsMlKemLogicalDecapsulationQuery _ _ _ _ ephemeralBound.decaps
       (fun key => (nativeBound key).decaps) (fun key => (totalBound key).decaps)
       (fun challenge output execution state => (rejected challenge output execution state).decaps)
       (fun challenge output execution state => (accepted challenge output execution state).decaps) prepared
@@ -108,13 +110,13 @@ theorem prefix_class
     (prekeyBound : ∀ identity, (ccaAmbient (setup.prekey identity)).IsQueryBoundP predicate qPrekey)
     (oneTimeBound : ∀ identity before key, (ccaAmbient (setup.oneTime identity before key)).IsQueryBoundP predicate qOneTime)
     (key : TargetKemPublicKey) :
-    (PqxdhGeneratedRootSource.borrowedPrefix attachedVerify primitives setup (driver env.toDriverEnvironment program) key).IsQueryBoundP
+    (PqxdhGeneratedRootSource.borrowedPrefix attachedVerify primitives setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program) key).IsQueryBoundP
       predicate (qPrekey + (qOneTime + (qWrite + bill qLocal preBudget))) := by
   simpa only [Nat.zero_add] using PqxdhGeneratedRootQueryBounds.borrowedPrefix_bound attachedVerify primitives setup
-    (driver env.toDriverEnvironment program) predicate 0 qPrekey qOneTime (qWrite + bill qLocal preBudget)
+    (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program) predicate 0 qPrekey qOneTime (qWrite + bill qLocal preBudget)
     (PqxdhPrivateRootQueryBounds.ccaCoins_excluded PqxdhJointIdentity.sampleSeed predicate excluded)
     prekeyBound oneTimeBound
-    (fun index identity generated transcript state => PqxdhPhase2GeneratedDriverResources.driver_class env.toDriverEnvironment program
+    (fun index identity generated transcript state => PqxdhPhase2GeneratedDriverResources.driver_class (completedBinding := completedBinding) env.toDriverEnvironment program
       attachedVerify primitives 1 qWrite writerBound qLocal localBound preBudget preBound predicate excluded
       index identity generated transcript state) key
 
@@ -132,18 +134,18 @@ theorem prefix_caps
     (oneTimeBound : ∀ identity before key, Caps (ccaAmbient (setup.oneTime identity before key)) uOneTime bOneTime dOneTime)
     (key : TargetKemPublicKey) :
     let driverCost := qWrite + bill qLocal preBudget
-    Caps (PqxdhGeneratedRootSource.borrowedPrefix attachedVerify primitives setup (driver env.toDriverEnvironment program) key)
+    Caps (PqxdhGeneratedRootSource.borrowedPrefix attachedVerify primitives setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program) key)
       (32 + (uPrekey + (uOneTime + 2 * driverCost)))
       (bPrekey + (bOneTime + driverCost)) (dPrekey + (dOneTime + driverCost)) := by
   refine ⟨?_, ?_, ?_⟩
-  · exact PqxdhPhase2GeneratedDriverResources.prefix_uniform env.toDriverEnvironment program attachedVerify primitives
+  · exact PqxdhPhase2GeneratedDriverResources.prefix_uniform (completedBinding := completedBinding) env.toDriverEnvironment program attachedVerify primitives
       uPrekey uOneTime (fun identity => (prekeyBound identity).uniforms)
       (fun identity before target => (oneTimeBound identity before target).uniforms)
       qWrite writerBound qLocal localBound preBudget preBound noSign noCreate key
-  · exact prefix_class env program attachedVerify primitives qLocal localBound qWrite writerBound preBudget preBound
+  · exact prefix_class (completedBinding := completedBinding) env program attachedVerify primitives qLocal localBound qWrite writerBound preBudget preBound
       IsMlKemBaseQuery (fun _ => by simp [IsMlKemBaseQuery]) bPrekey bOneTime
       (fun identity => (prekeyBound identity).bases) (fun identity before target => (oneTimeBound identity before target).bases) key
-  · exact prefix_class env program attachedVerify primitives qLocal localBound qWrite writerBound preBudget preBound
+  · exact prefix_class (completedBinding := completedBinding) env program attachedVerify primitives qLocal localBound qWrite writerBound preBudget preBound
       IsMlKemLogicalDecapsulationQuery (fun _ => by simp [IsMlKemLogicalDecapsulationQuery]) dPrekey dOneTime
       (fun identity => (prekeyBound identity).decaps) (fun identity before target => (oneTimeBound identity before target).decaps) key
 
@@ -167,13 +169,13 @@ theorem prepare_caps
     (key : TargetKemPublicKey) :
     let driverCost := qWrite + bill qLocal preBudget
     let commonCost := commonBill qLocal qAux budget
-    Caps ((protocol env kem attachedVerify primitives program post).prepare key)
+    Caps ((PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post).prepare key)
       ((32 + (uPrekey + (uOneTime + 2 * driverCost))) + (uEp + (max uNative uTotal + 34 * commonCost)))
       ((bPrekey + (bOneTime + driverCost)) + (bEp + (max bNative bTotal + commonCost)))
       ((dPrekey + (dOneTime + driverCost)) + (dEp + (max dNative dTotal + commonCost))) := by
-  let prefixCaps := prefix_caps env program attachedVerify primitives qLocal localBound qWrite writerBound preBudget preBound
+  let prefixCaps := prefix_caps (completedBinding := completedBinding) env program attachedVerify primitives qLocal localBound qWrite writerBound preBudget preBound
     noSign noCreate uPrekey bPrekey dPrekey uOneTime bOneTime dOneTime prekeyBound oneTimeBound key
-  let dispatch := dispatch_caps env program post attachedVerify primitives qLocal localBound budget postBound qAux auxBound kem
+  let dispatch := dispatch_caps (associatedData := associatedData) (completedBinding := completedBinding) env program post attachedVerify primitives qLocal localBound budget postBound qAux auxBound kem
     uEp bEp dEp uNative bNative dNative uTotal bTotal dTotal ephemeralBound nativeBound totalBound
   exact ⟨isQueryBoundP_bind prefixCaps.uniforms (fun prepared _ => (dispatch prepared).uniforms),
     isQueryBoundP_bind prefixCaps.bases (fun prepared _ => (dispatch prepared).bases),

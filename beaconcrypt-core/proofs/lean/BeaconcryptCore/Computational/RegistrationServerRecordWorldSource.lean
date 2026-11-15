@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationServerRecordSourceProgram
-import BeaconcryptCore.Computational.RegistrationNativeWorldView
+import BeaconcryptCore.Computational.RegistrationServerRecordWorldView
 import BeaconcryptCore.Computational.RegistrationWorldRecords
 
 /-! Actual SDK Server first-record callbacks retain all protocol/record state and the shared World while differing from the locally evaluated source program only in their native-call instrumentation. The view omits that map, the separately billed Env coin ledger and the chronological record-kind log; the underlying source still retains all three for their separate bills. -/
@@ -12,9 +12,6 @@ set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationServerRecordWorldSource
 open PqxdhServerAuthExperiment (Setup Codec)
 variable {n : Nat} {Auxiliary ι KemSK Reader Response Value : Type} {base : OracleSpec ι}
-
-def project (before : RegistrationWorldAgreement.State n Auxiliary) : RegistrationWorldAgreement.State n Auxiliary :=
-  { before with recordRequests := [], world := (RegistrationNativeWorldView.project before.world.1, before.world.2) }
 
 noncomputable def target (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (writer : RawCtxMixedShared.Writer) :
@@ -42,6 +39,23 @@ theorem query (setup : Setup base KemSK) (codec : Codec Reader Response)
   | «seal» request => rfl
   | write request => cases request <;> rfl
   | openAead request => rfl
+  | adHash request =>
+      have same := congrArg (fun distribution => (fun result =>
+        (core.option.Option.Some (RegistrationAuthenticationShared.digestArray result.1),
+          { project before with world := (result.2, before.world.2) })) <$> distribution)
+        (RegistrationNativeWorldView.hash (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request) before.world.1)
+      simp only [RegistrationWorldRecords.handler, RegistrationWorldRecords.shared,
+        RegistrationRecordPrimitives.callbacks, RegistrationAuthenticationShared.callbacks,
+        RegistrationServerRecordSourceProgram.native, RegistrationRawSealBridge.nativeAdapter,
+        RegistrationBoundSourceCompiler.rawCompiler, QueryImpl.apply_compose,
+        RegistrationBoundSourceCompiler.rawCallbacks, RegistrationBoundSourceCompiler.sharedCompiler,
+        RegistrationRawSealBridge.Spec, MldsaSharedNative.authLift,
+        simulateQ_map, simulateQ_spec_query,
+        bind_pure_comp,
+        target, StateT.run, Functor.map_map, Prod.map_def, id_eq, project,
+        RegistrationNativeWorldView.project, RegistrationNativeWorldView.eraseNative,
+        RegistrationWorldCoinCompiler.eraseCoin, state_map_apply, PqxdhDeploymentEnvironment.request] at same ⊢
+      exact same
   | hash transcript =>
       have same := congrArg (fun distribution => (fun result =>
         (core.option.Option.Some (RegistrationAuthenticationShared.digestArray result.1),

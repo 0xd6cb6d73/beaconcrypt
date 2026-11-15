@@ -87,7 +87,7 @@ theorem entry_init_extract_random_uniform (source : FixedHkdfSha512NoSaltSource)
     OracleComp.isTotalQueryBound_bind entry_extract_sampler_uniform (fun _ =>
       OracleComp.isTotalQueryBound_bind
         (CtxComputationalSecurity.uniformFixedBytes_isTotalQueryBound 64) (fun key => bounded
-          (fromInitializer source (hmac.eval key (firstExpandInput .ratchet)))))
+          (fromInitializer source (hmac.eval key (firstExpandInput .initial)))))
 
 /-- The initializer PRF real game samples the full 64-byte hidden key. -/
 theorem entry_init_prf_real_uniform (source : FixedHkdfSha512NoSaltSource)

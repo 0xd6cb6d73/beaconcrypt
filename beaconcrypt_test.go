@@ -333,8 +333,12 @@ func TestRegistrationIsBoundToTheIntendedServer(t *testing.T) {
 	if _, err := expectedServer.RegisterBeacon(phase1, []byte("expected server")); err != nil {
 		t.Fatal(err)
 	}
-	if response, err := wrongServer.RegisterBeacon(phase1, []byte("wrong server")); response != nil || err == nil {
-		t.Fatal("registration was accepted by a server outside its authenticated transcript")
+	response, err := wrongServer.RegisterBeacon(phase1, []byte("wrong server"))
+	if err != nil || response == nil {
+		t.Fatalf("arbitrary registration request rejected: %v", err)
+	}
+	if plaintext, err := beacon.ProcessInitialMessage(response.Serialized); err == nil || plaintext != nil {
+		t.Fatal("Beacon accepted an initial response from a different pinned Server")
 	}
 }
 

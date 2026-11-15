@@ -55,7 +55,7 @@ theorem world_natural (mapping : Map left right) (work : StateT (PqxdhRecordLift
 
 set_option backward.isDefEq.respectTransparency false in
 theorem trusted_natural (mapping : Map left right) (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (RegistrationNativeBeaconFrontend.Trusted n KemSK).Domain) :
     Natural mapping id (RegistrationNativeExperiment.trusted setup checks representation created left query)
       (RegistrationNativeExperiment.trusted setup checks representation created right query) := by
@@ -102,7 +102,7 @@ theorem record_natural (mapping : Map left right) (setup : Setup base KemSK) (wi
 
 set_option backward.isDefEq.respectTransparency false in
 theorem beacon_natural (mapping : Map left right) (value : Value → Other) (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (first : RegistrationNativeBeaconFrontend.M n KemSK left RegistrationServerRoleBackend.State Value)
     (second : RegistrationNativeBeaconFrontend.M n KemSK right RegistrationServerRoleBackend.State Other)
     (related : RegistrationNativeMldsaOrdinaryMap.Natural mapping value first second) :
@@ -149,23 +149,22 @@ theorem parsed_natural (mapping : Map left right) :
   rfl
 
 set_option backward.isDefEq.respectTransparency false in
-theorem createSuffix_natural (mapping : Map left right) (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
-    (edPin : Std.Array Std.U8 32#usize) (mlPin : Std.Array Std.U8 1952#usize) (keyId : Std.U64)
-    (generated : Option (RegistrationNativeMldsa.Credential left)) :
+theorem create_natural (mapping : Map left right) (setup : Setup base KemSK) (checks : Checks)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
+    (edPin : Std.Array Std.U8 32#usize) (mlPin : Std.Array Std.U8 1952#usize) (keyId : Std.U64) :
     Natural (n := n) mapping id
       (RegistrationNativeExperiment.beacon setup checks representation created
-        (RegistrationNativeMldsaCreation.createSuffix setup edPin mlPin keyId generated))
+        (RegistrationNativeBeaconFrontend.create setup left edPin mlPin keyId))
       (RegistrationNativeExperiment.beacon setup checks representation created
-        (RegistrationNativeMldsaCreation.createSuffix setup edPin mlPin keyId (generated.map (RegistrationNativeMldsaMap.credential mapping)))) :=
+        (RegistrationNativeBeaconFrontend.create setup right edPin mlPin keyId)) :=
   beacon_natural mapping id setup checks representation created _ _
-    (RegistrationNativeMldsaControllerMap.createSuffix_natural mapping setup edPin mlPin keyId generated)
+    (RegistrationNativeMldsaControllerMap.create_natural mapping setup edPin mlPin keyId)
 
 set_option backward.isDefEq.respectTransparency false in
 theorem non_ml_natural (mapping : Map left right) (sameVerify : left.verify = right.verify)
     (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential left)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential left)
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (ordinary : NonML query) :
     Natural (n := n) mapping id
       (RegistrationNativeExperiment.handler setup checks wire route representation created left credential query)
@@ -247,11 +246,11 @@ end BeaconcryptCore.Computational.RegistrationNativeMldsaGlobalMap
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaGlobalMap.parsed_natural
 
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaGlobalMap.createSuffix_natural' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaGlobalMap.create_natural' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaGlobalMap.createSuffix_natural
+#print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaGlobalMap.create_natural
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaGlobalMap.non_ml_natural' depends on axioms: [propext,
  Classical.choice,

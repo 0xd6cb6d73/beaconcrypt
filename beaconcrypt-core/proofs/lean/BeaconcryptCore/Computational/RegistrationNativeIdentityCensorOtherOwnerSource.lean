@@ -4,7 +4,7 @@ import BeaconcryptCore.Computational.RegistrationNativeIdentityCensorPublication
 import BeaconcryptCore.Computational.RegistrationNativeIdentityCensorHashFrame
 import BeaconcryptCore.Computational.RegistrationNativeIdentityCensorBundleTerminal
 
-/-! Publications under a different opaque owner handle forward every genuine current request. The actual source dictionary preserves the fixed selected target and inactive flag through all Ed/hash/ML/writer outcomes, so the complete original publication and charged terminal body agree exactly in both private interpretations. -/
+/-! Publications under a different opaque owner handle forward every genuine current request. The actual source dictionary preserves the fixed selected target and inactive flag through all Ed/hash/Ready/writer outcomes, so the complete original publication and charged terminal body agree exactly in both private interpretations. -/
 open OracleComp OracleSpec CoreModels Aeneas beaconcrypt_core
 open Aeneas.Std hiding namespace core alloc
 open RustM
@@ -19,7 +19,7 @@ open PqxdhEd25519EufCma (Ed25519Signature)
 open RegistrationNativeIdentityCensorEdOutgoingSource (Full interpret)
 variable {n : Nat} {I KemSK Platform E A : Type} {base : OracleSpec I} {mlSource : RegistrationNativeMldsa.Source}
 variable (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (selected index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner mlSource) (placeholder : Ed25519Signature)
 variable (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
 local notation "FullState" => Full (n := n) (KemSK := KemSK) (Platform := Platform) (mlSource := mlSource)

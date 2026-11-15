@@ -50,10 +50,7 @@ private theorem pin_native (binding : pqxdh.ServerBinding) (key : Std.Array U8 1
       (RegistrationNativeServerPinRecompute.native binding key) := by
   intro before
   rw [RegistrationNativeServerPinRecompute.native_run, RegistrationNativeServerPinRecompute.native_run]
-  have compared := congrArg (fun action => (fun result =>
-    ((.ok (.Some (⟨binding, key, RegistrationAuthenticationShared.digestArray result.1⟩ : session.ServerAuthenticationPin)) : RegistrationNativeServerPinRecompute.PinReply), result.2)) <$> action)
-    (RegistrationNativeWorldViewEffects.effects_input (.inr (.hash (PqxdhRefinement.absBytes key))) before)
-  simpa only [bind_pure_comp, Functor.map_map, Prod.map_def, id_eq] using compared
+  simp only [map_pure, Prod.map_def, id_eq, RegistrationNativeWorldView.project_idempotent]
 
 omit [LawfulMonad m] in
 private theorem pin_apply (coins : QueryImpl unifSpec m) (before : State n) :
@@ -61,7 +58,7 @@ private theorem pin_apply (coins : QueryImpl unifSpec m) (before : State n) :
       inWorld coins (RegistrationNativeServerPinRecompute.native before.pin.binding before.pin.public_key) before := rfl
 private theorem pin_field (before : State n) : (nativeView before).pin = before.pin := rfl
 
-/-- The actual repeated pin hash keeps its full sampler and reached public/native state under the named instrumentation view. -/
+/-- The actual pure pin selection retains its configured fields and complete state under the named instrumentation view. -/
 theorem pin (coins : QueryImpl unifSpec m) :
     Stable (nativeView (n := n)) (RegistrationNativePlatformSourceBuild.pin coins) := by
   intro before
@@ -96,7 +93,7 @@ omit [LawfulMonad m] in
 private theorem pure_apply {S X : Type} (value : X) (before : S) : (pure value : StateT S m X) before = pure (value, before) := rfl
 
 private theorem after_shape (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (checks : Checks) (reserve : m Bool)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit) :
     RegistrationNativePlatformServerSdk.afterAuthentication (n := n) coins setup checks (StateT.lift reserve) representation created packet authenticated = (do
       let history ← consumed
@@ -117,7 +114,7 @@ private theorem after_shape (coins : QueryImpl unifSpec m) (setup : Setup base K
   rfl
 
 private theorem after_authentication (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (checks : Checks) (reserve : m Bool)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit) :
     Stable (nativeView (n := n))
       (RegistrationNativePlatformServerSdk.afterAuthentication coins setup checks (StateT.lift reserve) representation created packet authenticated) := by
@@ -141,7 +138,7 @@ private theorem after_authentication (coins : QueryImpl unifSpec m) (setup : Set
 
 private theorem after_pin (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (codec : Codec Reader Response)
     (checks : Checks) (reserve : m Bool) (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (result : RegistrationNativeServerPinRecompute.PinReply) :
     Stable (nativeView (n := n)) (RegistrationNativePlatformSourceAccept.afterPin coins setup codec checks
       (StateT.lift reserve) route verify representation created packet result) := by
@@ -163,7 +160,7 @@ private theorem after_pin (coins : QueryImpl unifSpec m) (setup : Setup base Kem
 /-- Actual complete source acceptance is invariant under instrumentation projection while preserving its complete common-monad effects. -/
 theorem accept (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (codec : Codec Reader Response)
     (checks : Checks) (reserve : m Bool) (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) :
     Stable (nativeView (n := n)) (RegistrationNativePlatformSourceAccept.accept coins setup codec checks reserve route verify representation created packet) := by
   unfold RegistrationNativePlatformSourceAccept.accept RegistrationNativePlatformSourceAccept.acceptWith

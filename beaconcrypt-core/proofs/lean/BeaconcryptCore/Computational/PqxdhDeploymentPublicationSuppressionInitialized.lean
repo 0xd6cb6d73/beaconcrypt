@@ -16,7 +16,7 @@ open PqxdhRegistrationJointServerBirth (ClientCreated)
 open PqxdhRegistrationJointGeneratedFinish (EncodedEntry EncodedState encodeState)
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response A Result : Type}
 
-abbrev Outcome (KemSK Result : Type) := ClientCreated Unit × Result × NativeState KemSK × (List EncodedEntry × Selection)
+abbrev Outcome (KemSK Result : Type) := ClientCreated Unit × Result × NativeState KemSK × ((List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) × Selection)
 abbrev SourceOutcome (KemSK Result : Type) := ClientCreated Unit × Result × PqxdhDeploymentPublicationSuppressionSchedule.State KemSK
 abbrev EncodedOutcome (KemSK Result : Type) := ClientCreated Unit × Result × (EncodedState KemSK × Selection)
 
@@ -34,11 +34,11 @@ noncomputable def client (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
         ((simulateQ (PqxdhRegistrationJointOpenBackend.impl setup codec checks
             created.server.server.metadata.identityIndex created.publicIdentity)
           ((simulateQ (PqxdhDeploymentPublicationSuppressionSchedule.handler setup codec) program).run
-            ([], Selection.initial ordinal))).run (PqxdhRegistrationJointInitializedAccept.initial created))
+            (([], fun _ => none), Selection.initial ordinal))).run (PqxdhRegistrationJointInitializedAccept.initial created))
 
 def attach (pool : PqxdhRegistrationJointPreparation.Pool KemSK) (result : Outcome KemSK Result) :
     EncodedOutcome KemSK Result :=
-  (result.1, result.2.1, (⟨pool, result.2.2.1, result.2.2.2.1⟩, result.2.2.2.2))
+  (result.1, result.2.1, (⟨pool, result.2.2.1, result.2.2.2.1.1, result.2.2.2.1.2⟩, result.2.2.2.2))
 
 def encodeOutcome (setup : Setup baseSpec KemSK) (result : SourceOutcome KemSK Result) :
     EncodedOutcome KemSK Result :=
@@ -107,7 +107,7 @@ theorem run_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
     have backend := PqxdhRegistrationJointOpenBackend.program_run setup codec checks
       created.server.server.metadata.identityIndex (setup.joint.publicKeys created.seed)
       ((simulateQ (PqxdhDeploymentPublicationSuppressionSchedule.handler setup codec) program).run
-        ([], Selection.initial ordinal))
+        (([], fun _ => none), Selection.initial ordinal))
       (after.1, (PqxdhRegistrationSchedule.initial created).shared)
     simp only [PqxdhDeploymentPublicationSuppressionSchedule.execute, encodeState,
       PqxdhRegistrationJointSchedule.initial, List.map_nil] at commands

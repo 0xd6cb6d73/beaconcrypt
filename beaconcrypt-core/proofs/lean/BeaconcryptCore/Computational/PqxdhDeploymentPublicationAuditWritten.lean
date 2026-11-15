@@ -100,7 +100,12 @@ theorem bundle_written (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
     simp only [bundle, StateT.run, found, support_map, Set.mem_image] at supported
     obtain ⟨returned, member, same⟩ := supported
     subst result
-    exact trace_written setup codec address entry.identityIndex entry.owner state.1.pool.1 state.2 held returned member
+    have original : returned.1 ∈ support (trace setup codec address entry.identityIndex entry.owner
+        state.1.pool.1 state.2) := by
+      rw [← traceLogged_trace setup codec address entry.identityIndex entry.owner state.1.pool.1 state.2
+        (state.1.inits address), support_map]
+      exact ⟨returned, member, rfl⟩
+    exact trace_written setup codec address entry.identityIndex entry.owner state.1.pool.1 state.2 held returned.1 original
 
 /-- All actual source commands retain the writer/tuple provenance of the same prepared audit. -/
 theorem query_written (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)

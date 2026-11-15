@@ -3,7 +3,7 @@ import BeaconcryptCore.Computational.RegistrationNativePlatformPrivateKdfState
 import BeaconcryptCore.Computational.RegistrationNativePlatformSourceCompletion
 import BeaconcryptCore.Computational.RegistrationNativePairedServerService
 import BeaconcryptCore.Computational.RegistrationNativePlatformSourceBuild
-import BeaconcryptCore.Computational.RegistrationServerPublicationWorldCompiler
+import BeaconcryptCore.Computational.RegistrationServerPublicationWorldEffect
 /-! The corrected source material service retains stateful sealing, mutable hashing, response signing and both runtime writers in one monad. Its protected public branch receives only material44 and a private World slot; the generated whole kernel is removed by the checked source continuation and the actual hidden installation body. -/
 open OracleComp OracleSpec CoreModels Aeneas beaconcrypt_core
 open Aeneas.Std hiding namespace core alloc

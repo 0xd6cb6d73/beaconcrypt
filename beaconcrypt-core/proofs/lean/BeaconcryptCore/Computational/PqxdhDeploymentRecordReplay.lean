@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhDeploymentRecordKernels
+import BeaconcryptCore.Computational.MldsaServerRoutingCases
 
 /-! Record replay in the common deployment experiment (CE-6, CE-C3). The transcript shows a Server peer accepting a sequence number at every successful Server raw receive whose decrypted record names the peer's key ID, and a Beacon owner accepting one at every successful raw receive of that owner and, for sequence one, at its successful finish (`peerSequences`, `ownerSequences`). The run invariant `Tracked` says that every peer and every owner with a kernel carries the source receive relation with exactly the receive positions of these accepted sequence numbers consumed, and that a handle without a kernel accepted nothing. A raw receive consumes the decoded position on the routed peer or on the addressed owner only (`serverRaw_tracked`, `beaconRaw_tracked`, from `RawCtxReceiveConsumption.raw_spent`); sends, including those of the secrecy commands, advance send chains only (`serverSend_tracked`, `beaconSend_tracked`, `coinSend_tracked`); a build or a finish installs a kernel only where none was (`PqxdhDeploymentRecordKernels`). The constructed Server has no peer and the experiment starts with no owner (`tracked_game`). Since consumed positions never repeat, `record_replay_game` (CE-C3): on every outcome of the experiment, in either mode, for every adversary and with no budget, no peer and no owner accepted a sequence number twice. This is zero loss: a deterministic consequence of slot consumption on one live object, with no probability, codec law or security assumption. Replay across objects, through copies, restoration or persistence, is outside this experiment. -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -127,7 +128,7 @@ theorem tracked_server (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) 
     (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes) (transcript : List Entry)
     (state : PqxdhDeploymentNative.State KemSK) (tracked : Tracked source.crypto transcript state)
     (primitive : RawCtxSharedPrimitive.SharedState Unit)
-    (reached : (core.option.Option RawCtxWholeOwner.Decrypted × RawCtxServerRouting.State Unit Unit) ×
+    (reached : (core.option.Option RawCtxWholeOwner.Decrypted × RawCtxServerRouting.State Unit PqxdhTranscriptAd.AssociatedData) ×
       RawCtxSharedPrimitive.SharedState Unit)
     (opened : reached ∈ support (RawCtxServerRouting.rawGame (RawCtxReceiveConsumption.receiveNative source) route
       decode raw (PqxdhDeploymentNative.serverView state) primitive))
@@ -194,6 +195,95 @@ theorem tracked_server (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) 
   · rw [owners, ownerSequences_append, quiet, Option.toList_none, List.append_nil]
     exact tracked.owners index
 
+/-- A Server raw receive under the per-peer AD router: a missing route or peer rejects and keeps the peer map; a routed present peer runs the source raw receive on its kernel under the selected peer AD, and the router reinstalls the returned kernel. -/
+theorem public_raw_cases (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (sender : Unit → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (raw : Pqxdh.Bytes)
+    (view : RawCtxServerRouting.State Unit PqxdhTranscriptAd.AssociatedData) (primitive : RawCtxSharedPrimitive.SharedState Unit)
+    (reached : (core.option.Option RawCtxWholeOwner.Decrypted × RawCtxServerRouting.State Unit PqxdhTranscriptAd.AssociatedData) ×
+      RawCtxSharedPrimitive.SharedState Unit)
+    (member : reached ∈ support ((simulateQ (PqxdhDeploymentNative.primitives setup codec)
+      ((MldsaServerRouting.handler PqxdhRefinement.absBytes sender route codec.frameRead (.inr raw)).run view)).run
+        primitive)) :
+    (reached.1.1 = .None ∧ reached.1.2.server = view.server) ∨
+      ∃ routed peer received, route raw = some routed ∧ view.server.peers routed = some peer ∧
+        received ∈ support (RawCtxWholeOwner.rawGame (RawCtxReceiveConsumption.receiveNative setup.source)
+          codec.frameRead raw ⟨⟨peer.kernel, routed, PqxdhRefinement.absBytes peer.metadata, ()⟩, view.rawAttempts⟩
+          primitive) ∧
+        reached.1.1 = received.1.1 ∧
+        reached.1.2.server = RawCtxServerRouting.putPeer view.server routed peer received.1.2.owner.kernel := by
+  exact MldsaServerRoutingCases.receive_cases PqxdhRefinement.absBytes setup codec route raw view primitive reached member
+
+/-- The per-peer AD form of the Server raw step: a supported receive of the per-peer AD Server router on the live peer map keeps the invariant for any state that installs its peer map and keeps the owners. The receive consumes positions on the routed peer only; the AD it authenticates plays no role. -/
+theorem tracked_public_server (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (sender : Unit → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (raw : Pqxdh.Bytes)
+    (transcript : List Entry) (state : PqxdhDeploymentNative.State KemSK)
+    (tracked : Tracked setup.source.crypto transcript state) (primitive : RawCtxSharedPrimitive.SharedState Unit)
+    (reached : (core.option.Option RawCtxWholeOwner.Decrypted × RawCtxServerRouting.State Unit PqxdhTranscriptAd.AssociatedData) ×
+      RawCtxSharedPrimitive.SharedState Unit)
+    (opened : reached ∈ support ((simulateQ (PqxdhDeploymentNative.primitives setup codec)
+      ((MldsaServerRouting.handler PqxdhRefinement.absBytes sender route codec.frameRead (.inr raw)).run
+        (PqxdhDeploymentNative.serverView state))).run primitive))
+    (after : PqxdhDeploymentNative.State KemSK) (server : after.native.shared.2.server.server = reached.1.2.server)
+    (owners : after.native.owners = state.native.owners) :
+    Tracked setup.source.crypto (transcript ++ [⟨.inl (.inr (.serverRaw raw)), reached.1.1⟩]) after := by
+  have quiet : ∀ index, ownerAccepted index ⟨.inl (.inr (.serverRaw raw)), reached.1.1⟩ = none := fun _ => rfl
+  refine ⟨fun kid => ?_, fun index => ?_⟩
+  · rw [server, peerSequences_append, peerAccepted_server]
+    rcases public_raw_cases setup codec sender route raw _ primitive reached opened with
+      ⟨rejected, sameServer⟩ | ⟨routed, peer, received, _, found, receivedMember, reply, shape⟩
+    · rw [rejected, sameServer]
+      simp only [Option.toList_none, List.append_nil]
+      exact tracked.peers kid
+    · have keyId : ∀ message, received.1.1 = .Some message → message.keyId = routed := by
+        intro message success
+        obtain ⟨_, _, _, expected, _⟩ := RawCtxOwnerProvenance.raw_success_metadata _ codec.frameRead raw _
+          primitive received receivedMember message success
+        exact expected
+      rw [reply, shape]
+      by_cases same : kid = routed
+      · subst same
+        have held := tracked.peers kid
+        have kernelOf : peerKernel state.native.shared.2.server.server kid = some peer.kernel := by
+          change (state.native.shared.2.server.server.peers kid).map (·.kernel) = some peer.kernel
+          change state.native.shared.2.server.server.peers kid = some peer at found
+          rw [found, Option.map_some]
+        rw [kernelOf] at held
+        obtain ⟨sendOrigin, receiveOrigin, consumed⟩ := held
+        have next := RawCtxReceiveConsumption.raw_spent setup.source sendOrigin receiveOrigin _ codec.frameRead raw _
+          consumed primitive received receivedMember
+        have holds := holds_receive setup.source.crypto _ _ sendOrigin receiveOrigin received.1.1 next
+        have kernelAfter : peerKernel (RawCtxServerRouting.putPeer (PqxdhDeploymentNative.serverView state).server kid
+            peer received.1.2.owner.kernel) kid = some received.1.2.owner.kernel := by
+          simp only [peerKernel, RawCtxServerRouting.putPeer_selected, Option.map_some]
+        rw [kernelAfter]
+        have accepted : (match received.1.1 with
+            | .Some message => if message.keyId = kid then some message.sequence else none
+            | .None => none).toList = acceptedOf received.1.1 := by
+          cases reply : received.1.1 with
+          | none => rfl
+          | some message =>
+              have own := keyId message reply
+              simp only [own, ite_true, Option.toList_some, acceptedOf]
+        rw [accepted]
+        exact holds
+      · have kernelAfter : peerKernel (RawCtxServerRouting.putPeer (PqxdhDeploymentNative.serverView state).server
+            routed peer received.1.2.owner.kernel) kid = peerKernel state.native.shared.2.server.server kid := by
+          simp only [peerKernel, RawCtxServerRouting.putPeer_other _ _ _ _ _ same]
+          rfl
+        rw [kernelAfter]
+        have nothing : (match received.1.1 with
+            | .Some message => if message.keyId = kid then some message.sequence else none
+            | .None => none) = none := by
+          cases reply : received.1.1 with
+          | none => rfl
+          | some message =>
+              have own := keyId message reply
+              simp only [own, Ne.symm same, ite_false]
+        simp only [nothing, Option.toList_none, List.append_nil]
+        exact tracked.peers kid
+  · rw [owners, ownerSequences_append, quiet, Option.toList_none, List.append_nil]
+    exact tracked.owners index
+
 /-- A Server raw receive keeps the invariant: only the routed peer can accept, its kernel consumes the accepted position, and every other peer and every owner is unchanged. -/
 theorem serverRaw_tracked (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (raw : Pqxdh.Bytes) (transcript : List Entry)
@@ -209,11 +299,7 @@ theorem serverRaw_tracked (setup : Setup baseSpec KemSK) (codec : Codec Reader R
   rw [PqxdhDeploymentNative.record_run, support_map] at member
   obtain ⟨recorded, recordedMember, rfl⟩ := member
   have opened := logged_support _ _ _ recorded recordedMember
-  change _ ∈ support ((simulateQ (PqxdhDeploymentNative.primitives setup codec) (RawCtxServerMixed.rawServer route
-    codec.frameRead raw (PqxdhDeploymentNative.serverView state))).run _) at opened
-  rw [RawCtxServerMixed.raw_interpretation, PqxdhDeploymentNative.primitives,
-    RawCtxReceiveConsumption.shared_receiveNative] at opened
-  exact tracked_server setup.source route codec.frameRead raw transcript state tracked _ _ opened _ rfl fields.1
+  exact tracked_public_server setup codec _ route raw transcript state tracked _ _ opened _ rfl fields.1
 
 /-- An entry that shows no handle accepting keeps the invariant. -/
 theorem tracked_quiet (c : Pqxdh.Crypto) (transcript : List Entry) (state : PqxdhDeploymentNative.State KemSK)
@@ -233,6 +319,26 @@ theorem compose_assoc {ι₁ ι₂ ι₃ : Type} {spec₁ : OracleSpec ι₁} {s
   funext query
   simp only [QueryImpl.apply_compose, QueryImpl.simulateQ_compose]
 
+/-- A Server send under the per-peer AD router: a missing peer keeps the peer map; a present peer runs the source send on its kernel under the selected peer AD, and the router reinstalls the returned kernel. -/
+theorem public_send_cases (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (sender : Unit → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (plaintext : Pqxdh.Bytes) (kid : Std.U64)
+    (view : RawCtxServerRouting.State Unit PqxdhTranscriptAd.AssociatedData) (primitive : RawCtxSharedPrimitive.SharedState Unit)
+    (reached : (Option RawCtxSourceSend.Encrypted × RawCtxServerRouting.State Unit PqxdhTranscriptAd.AssociatedData) ×
+      RawCtxSharedPrimitive.SharedState Unit)
+    (member : reached ∈ support ((simulateQ (PqxdhDeploymentNative.primitives setup codec)
+      ((MldsaServerRouting.handler PqxdhRefinement.absBytes sender route codec.frameRead
+        (.inl (plaintext, kid))).run view)).run primitive)) :
+    reached.1.2.server = view.server ∨
+      ∃ peer step, view.server.peers kid = some peer ∧
+        step ∈ support (RawCtxSourceSend.sendGame (RawCtxReceiveConsumption.sendNative setup.source codec.frameWrite)
+          (sender view.server.metadata) plaintext
+          ⟨⟨peer.kernel, kid, PqxdhRefinement.absBytes peer.metadata, ()⟩, view.rawAttempts⟩ primitive) ∧
+        reached.1.2.server = RawCtxServerRouting.putPeer view.server kid peer step.1.2.owner.kernel := by
+  rcases MldsaServerRoutingCases.send_cases PqxdhRefinement.absBytes setup codec sender plaintext kid view primitive reached member with
+    missing | ⟨peer, step, found, supported, _, shape⟩
+  · exact Or.inl missing
+  · exact Or.inr ⟨peer, step, found, supported, shape⟩
+
 /-- A Server send keeps the invariant with the transcript fixed: the addressed peer's kernel advances its send chain only. -/
 theorem serverSend_tracked (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (plaintext : Pqxdh.Bytes) (kid : Std.U64) (transcript : List Entry)
@@ -250,16 +356,13 @@ theorem serverSend_tracked (setup : Setup baseSpec KemSK) (codec : Codec Reader 
   rw [PqxdhDeploymentNative.record_run, support_map] at member
   obtain ⟨recorded, recordedMember, rfl⟩ := member
   have sent := logged_support _ _ _ recorded recordedMember
-  change _ ∈ support ((simulateQ (PqxdhDeploymentNative.primitives setup codec) (RawCtxServerMixed.sendServer
-    (PqxdhDeploymentNative.senderId state) plaintext kid (PqxdhDeploymentNative.serverView state))).run _) at sent
-  rw [RawCtxServerMixed.send_interpretation] at sent
   refine ⟨fun other => ?_, fun index => ?_⟩
   · change Holds _ (peerKernel recorded.1.1.2.server other) _
-    rcases RawCtxServerSend.sendGame_cases _ _ plaintext kid _ _ _ sent with ⟨_, missing⟩ | ⟨peer, step, found,
-      stepMember, shape⟩
-    · rw [congrArg (fun reached => reached.1.2) missing]
+    rcases public_send_cases setup codec _ route plaintext kid _ _ _ sent with missing | ⟨peer, step,
+      found, stepMember, shape⟩
+    · rw [missing]
       exact tracked.peers other
-    · rw [congrArg (fun reached => reached.1.2) shape]
+    · rw [shape]
       by_cases same : other = kid
       · subst same
         have held := tracked.peers other
@@ -269,7 +372,6 @@ theorem serverSend_tracked (setup : Setup baseSpec KemSK) (codec : Codec Reader 
           rw [found, Option.map_some]
         rw [kernelOf] at held
         obtain ⟨sendOrigin, receiveOrigin, consumed⟩ := held
-        rw [compose_assoc, ← RawCtxMixedOwner.sendAdapter] at stepMember
         have next := RawCtxReceiveConsumption.send_spent setup.source codec.frameWrite sendOrigin receiveOrigin _ _
           plaintext _ consumed _ step stepMember
         have kernelAfter : peerKernel (RawCtxServerRouting.putPeer (PqxdhDeploymentNative.serverView state).server
@@ -727,8 +829,6 @@ theorem tracked_game (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
   · simp only [support_map, Set.mem_image] at supported
     obtain ⟨executed, executedMember, rfl⟩ := supported
     cases reached
-    have empty := construct_peers setup.joint ensureInit identityIndex setup.serverKeyId runtime constructed after
-      bornMember
     exact OracleComp.simulateQ_run_preserves_inv_of_query
       (PqxdhDeploymentSecrecy.handler setup codec checks route constructed.seed bounds)
       (fun state => Tracked setup.source.crypto state.1.transcript state.2)
@@ -737,7 +837,7 @@ theorem tracked_game (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
       (asModeO mode adversary) (Ledger.empty, PqxdhDeploymentNative.initial constructed)
       ⟨fun kid => by
         simp [Holds, peerKernel, peerSequences, PqxdhDeploymentNative.initial, PqxdhRegistrationSchedule.initial,
-          Ledger.empty, empty kid],
+          Ledger.empty],
         fun index => by simp [Holds, ownerKernel, ownerSequences, PqxdhDeploymentNative.initial,
           PqxdhRegistrationSchedule.initial, Ledger.empty]⟩ _ executedMember
 
@@ -814,6 +914,18 @@ end BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.tracked_server
 
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.public_raw_cases' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.public_raw_cases
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.tracked_public_server' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.tracked_public_server
+
 /-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.serverRaw_tracked' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
@@ -829,6 +941,12 @@ end BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay
 /-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.compose_assoc' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.compose_assoc
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.public_send_cases' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.public_send_cases
 
 /-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay.serverSend_tracked' depends on axioms: [propext,
  Classical.choice,

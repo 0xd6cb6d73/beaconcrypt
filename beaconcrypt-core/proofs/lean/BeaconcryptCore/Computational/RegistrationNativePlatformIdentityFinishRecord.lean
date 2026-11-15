@@ -48,7 +48,7 @@ theorem install_exact (index : Nat) (owner : Owner source) (completed : registra
 /-- Both source controllers copy before installing the actual assigned sender identifier and the actual consumed first-record kernel. -/
 theorem install_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List IdentitySeed)
     (index : Nat) (owner : Owner source) (seed : IdentitySeed) (completed : registration.CompletedBeacon) :
     Related (n := n) (Auxiliary := Auxiliary) setup checks representation created seeds
       (install index owner completed)
@@ -68,7 +68,7 @@ theorem install_source (setup : Setup base KemSK) (checks : Checks)
 
 theorem install_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (owner : Owner source) (completed : registration.CompletedBeacon) :
     Keeps (n := n) (Auxiliary := Auxiliary) setup checks representation created (install index owner completed) := by
   rw [install_exact]
@@ -99,7 +99,7 @@ noncomputable def original (index : Nat) (owner : RegistrationNativeBeaconFronte
 
 theorem after_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List IdentitySeed)
     (index : Nat) (owner : Owner source) (seed : IdentitySeed) (reply : RustM RegistrationBeaconRecordExecutor.Result) :
     Related (n := n) (Auxiliary := Auxiliary) setup checks representation created seeds
       (after index owner reply) (original index (RegistrationNativeIdentityFrontend.restore seed owner) reply) := by
@@ -111,7 +111,7 @@ theorem after_source (setup : Setup base KemSK) (checks : Checks)
 
 theorem after_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (owner : Owner source) (reply : RustM RegistrationBeaconRecordExecutor.Result) :
     Keeps (n := n) (Auxiliary := Auxiliary) setup checks representation created (after index owner reply) := by
   cases reply with

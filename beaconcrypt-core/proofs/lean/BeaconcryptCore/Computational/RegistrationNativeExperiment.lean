@@ -2,6 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativeBeaconFrontend
 import BeaconcryptCore.Computational.RegistrationServerSdkSource
 import BeaconcryptCore.Computational.RegistrationNativeEvents
+import BeaconcryptCore.Computational.RegistrationNativeFullCompiler
 import BeaconcryptCore.Computational.CborRecordWorldSimulation
 
 /-! The concrete native source deployment runs actual Server and Beacon controllers on one record World and one private generated KEM pool. The ML source generates local credentials; native packet parsing and dynamic encoding are the explicit Wire boundary. The source state retains native secrets privately. Cryptographic clients must erase selected identity/prekey bytes and native root/seed capabilities through the separate role and material compilers before applying their bounds. Original CE secrecy draws remain above this dispatcher. -/
@@ -40,7 +41,7 @@ def world {mlSource : RegistrationNativeMldsa.Source} {Result : Type}
 /-- The concrete indexed primitive interpretation keeps generated KEM secrets in the private pool and counts every actual primitive coin in the same World. -/
 noncomputable def trusted (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (mlSource : RegistrationNativeMldsa.Source) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (mlSource : RegistrationNativeMldsa.Source) :
     QueryImpl (RegistrationNativeBeaconFrontend.Trusted n KemSK) (M n KemSK mlSource)
   | .inl query => world (PqxdhRecordLiftWorld.effects query)
   | .inr query => fun before => do
@@ -59,7 +60,7 @@ noncomputable def trusted (setup : Setup base KemSK) (checks : Checks)
 noncomputable def beacon {mlSource : RegistrationNativeMldsa.Source} {Result : Type}
     (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK mlSource RegistrationServerRoleBackend.State Result) :
     M n KemSK mlSource Result := fun before => do
   let result ← (simulateQ (trusted setup checks representation created mlSource)
@@ -88,7 +89,7 @@ noncomputable def record (setup : Setup base KemSK) (wire : Wire)
 noncomputable def handler (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (mlSource : RegistrationNativeMldsa.Source) (credential : RegistrationNativeMldsa.Credential mlSource) :
     QueryImpl TypedSpec (M n KemSK mlSource)
   | .inl coin => world (PqxdhRecordLiftWorld.effects (.inl coin))
@@ -115,7 +116,7 @@ noncomputable def handler (setup : Setup base KemSK) (checks : Checks) (wire : W
 noncomputable def run (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (mlSource : RegistrationNativeMldsa.Source) (credential : RegistrationNativeMldsa.Credential mlSource)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value) (before : State n KemSK mlSource) :=
@@ -126,7 +127,7 @@ noncomputable def run (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
 noncomputable def app (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (mlSource : RegistrationNativeMldsa.Source) (credential : RegistrationNativeMldsa.Credential mlSource)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (budget : PqxdhDeploymentInterface.Budget)
     (claim : Value → Option (Nat × Pqxdh.Bytes))
@@ -135,9 +136,9 @@ noncomputable def app (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     run setup checks wire route representation created mlSource credential bounds .P work before
 
 
-/-- Private actual startup includes runtime initialization, classical seed sampling, actual ML key generation, native World initialization and the actual pin fingerprint. -/
+/-- Private actual Server startup includes runtime initialization, classical seed sampling, mandatory Server ML key generation, native World initialization and pure pin selection. -/
 structure Initial (n : Nat) (KemSK : Type) (mlSource : RegistrationNativeMldsa.Source) where
-  created : PqxdhLiveServerConstruction.Created Unit
+  created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)
   credential : RegistrationNativeMldsa.Credential mlSource
   state : State n KemSK mlSource
 
@@ -149,11 +150,13 @@ structure Public where
 def Initial.public {mlSource : RegistrationNativeMldsa.Source} (initial : Initial n KemSK mlSource) : Public :=
   ⟨initial.created.publicIdentity, initial.credential.publicKey, initial.created.server.server.metadata.sender⟩
 
+private abbrev PeerMetadata := Std.Array U8 151#usize
+
 noncomputable def start (setup : Setup base KemSK) (mlSource : RegistrationNativeMldsa.Source)
     (ensureInit : StateT Unit ProbComp Bool) (identityIndex : Nat) (serverKeyId : U64) :
     ProbComp (Option (Initial n KemSK mlSource)) := do
   let constructed ← (PqxdhRecordLiftWorld.sampled
-    ((PqxdhLiveServerConstruction.construct (P := Unit) setup.joint ensureInit identityIndex serverKeyId none).run ())).run
+    ((PqxdhLiveServerConstruction.construct (P := PeerMetadata) setup.joint ensureInit identityIndex serverKeyId none).run ())).run
       (PqxdhRecordLiftWorld.initial : PqxdhRecordLiftWorld.State n)
   match constructed.1.1 with
   | none => pure none
@@ -188,7 +191,7 @@ noncomputable def profile (setup : Setup base KemSK) (checks : Checks) (wire : W
 /-- A successful actual source KEM birth names the genuine generated private pair and the exact appended pool handle; public-key equality is never substituted for ownership. -/
 theorem trusted_create_generated (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (mlSource : RegistrationNativeMldsa.Source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (mlSource : RegistrationNativeMldsa.Source)
     (before : State n KemSK mlSource)
     (result : (Nat × PqxdhKemIndCca.MlKem768PublicKey) × State n KemSK mlSource)
     (reached : result ∈ support ((trusted setup checks representation created mlSource

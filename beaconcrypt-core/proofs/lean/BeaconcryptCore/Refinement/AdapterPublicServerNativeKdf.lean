@@ -19,7 +19,7 @@ local notation "LocalM" => StateT (RegistrationServerRootCompiler.Local n) m
 local notation "NativeM" => RegistrationNativePlatformExperiment.M n KemSK mlSource m
 
 noncomputable def initial (setup : PqxdhServerAuthExperiment.Setup base KemSK)
-    (request : ratchet.SymmetricRatchetKdfRequest) : LocalM (Std.Array U8 64#usize) := do
+    (request : ratchet.InitialRatchetKdfRequest) : LocalM (Std.Array U8 64#usize) := do
   modify fun before => {before with recordRequests := before.recordRequests ++ [RegistrationWorldAgreement.recordCall (.initialKdf request)]}
   pure (RawCtxSourceHkdf.initialResponse setup.source.crypto request).bytes
 
@@ -32,7 +32,7 @@ noncomputable def ratchet (coins : QueryImpl unifSpec m) (setup : PqxdhServerAut
   pure response
 
 theorem initial_callback (coins : QueryImpl unifSpec m) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
-    (codec : PqxdhServerAuthExperiment.Codec Reader Response) (request : ratchet.SymmetricRatchetKdfRequest) :
+    (codec : PqxdhServerAuthExperiment.Codec Reader Response) (request : ratchet.InitialRatchetKdfRequest) :
     RegistrationNativePlatformServerCompletion.records (n := n) coins setup codec (.initialKdf request) =
       (fun bytes => core.option.Option.Some (⟨bytes⟩ : pqxdh.concrete.InitialRatchetKdfResponse)) <$> initial setup request := by
   apply StateT.ext

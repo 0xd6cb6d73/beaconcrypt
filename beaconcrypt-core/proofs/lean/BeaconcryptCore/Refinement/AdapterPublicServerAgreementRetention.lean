@@ -60,7 +60,7 @@ variable {m : Type → Type} [Monad m] [LawfulMonad m]
 local notation "NativeM" => StateT (RegistrationNativeExperiment.State n KemSK mlSource) m
 
 omit material platform ed in
-noncomputable def continueNative (coins : QueryImpl unifSpec m) (created : PqxdhLiveServerConstruction.Created Unit)
+noncomputable def continueNative (coins : QueryImpl unifSpec m) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (effect : RustM agreement.AgreementEffect) : NativeM (RustM (Option Nat)) :=
   match effect with
   | .fail error => pure (.fail error)
@@ -70,7 +70,7 @@ noncomputable def continueNative (coins : QueryImpl unifSpec m) (created : Pqxdh
   | .ok _ => pure (.ok none)
 
 omit material platform ed [LawfulMonad m] in
-theorem continueNative_run (coins : QueryImpl unifSpec m) (created : PqxdhLiveServerConstruction.Created Unit)
+theorem continueNative_run (coins : QueryImpl unifSpec m) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (effect : RustM agreement.AgreementEffect) (before : RegistrationNativeExperiment.State n KemSK mlSource) :
     (continueNative coins created effect).run before = pure (retained effect before) := by
   cases effect with
@@ -87,7 +87,7 @@ structure Standard (views : AdapterPublicWrapperStorage.Views) (self : beaconcry
     AdapterPublicWrapperStorage.ReplayInsert views self.consumed_registrations completed.pending.registration_id.bytes reply
 
 theorem replay_step {R : Type} (view : AdapterPublicWrapperState.MaterialView mlSource KemSK)
-    (views : AdapterPublicWrapperStorage.Views) (created : PqxdhLiveServerConstruction.Created Unit)
+    (views : AdapterPublicWrapperStorage.Views) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential mlSource) (self : beaconcrypt_public_wrapper.server.Server)
     (before current afterRole : RegistrationNativeExperiment.State n KemSK mlSource)
     (related : AdapterPublicWrapperState.Server view views created credential self afterRole.server)
@@ -151,7 +151,7 @@ theorem program_after_restore {PlatformState R E : Type}
     (self : beaconcrypt_public_wrapper.server.Server)
     (work : OracleComp Spec (RustM agreement.AgreementEffect)) (rng : R)
     (view : AdapterPublicWrapperState.MaterialView mlSource KemSK)
-    (views : AdapterPublicWrapperStorage.Views) (created : PqxdhLiveServerConstruction.Created Unit)
+    (views : AdapterPublicWrapperStorage.Views) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential mlSource)
     (before : RegistrationNativeExperiment.State n KemSK mlSource)
     [ContainerOperations (RustT (StateT (RegistrationNativeExperiment.State n KemSK mlSource) (StateT PlatformState ProbComp)))]
@@ -192,7 +192,7 @@ theorem program_after_restore {PlatformState R E : Type}
 
 omit material platform ed original containers [PublicWrapperPlatform.Allocator]
   [PublicWrapperPlatform.LocalOperations] [PublicWrapperPlatform.ContainerOperations] in
-theorem after_native (coins : QueryImpl unifSpec m) (created : PqxdhLiveServerConstruction.Created Unit)
+theorem after_native (coins : QueryImpl unifSpec m) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : NativeM (RustM agreement.AgreementEffect))
     (before : RegistrationNativeExperiment.State n KemSK mlSource) :
     afterRestore <$> (RustM.ok <$> work.run before) =
@@ -214,7 +214,7 @@ theorem native {PlatformState R E ι : Type} {base : OracleSpec ι}
     (views : AdapterPublicWrapperStorage.Views)
     (model : AdapterPublicAgreementPrimitiveModel.Model (m := ProbComp) generator setup checks view)
     (entropy : AdapterPublicAgreementServerNative.Entropy model)
-    (identity : material.EdSecretKey) (created : PqxdhLiveServerConstruction.Created Unit)
+    (identity : material.EdSecretKey) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (identityView : view.edSecret identity = created.seed)
     (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : beaconcrypt_public_wrapper.server.Server) (rng : R)

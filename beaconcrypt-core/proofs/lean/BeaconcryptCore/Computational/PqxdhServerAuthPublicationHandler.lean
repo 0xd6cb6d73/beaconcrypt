@@ -11,6 +11,7 @@ namespace BeaconcryptCore.Computational.PqxdhServerAuthPublicationHandler
 open PqxdhServerAuthExperiment PqxdhServerAuthEntryFactor PqxdhServerAuthCtxState
 open PqxdhJointKdfGame
 open PqxdhServerAuthPublicationTrace (AnnotatedSpec liftDynamic erase)
+variable (associatedData : PqxdhTranscriptAd.AssociatedData)
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader WireResponse Result : Type}
 
 abbrev Program (KemSK : Type) := StateT (Local KemSK) (OracleComp AnnotatedSpec)
@@ -26,15 +27,17 @@ noncomputable def selected (source : FixedHkdfSha512NoSaltSource) (codec : Codec
     (token : PqxdhServerRelatedRootConsumer.Returned) (payload : Option Pqxdh.Bytes)
     (server : ServerState) : Compiler KemSK (Option PqxdhServerAuthCtxBuild.Response) :=
   OptionT.mk fun state => PqxdhServerAuthCtxBuild.post session state <$>
-    PqxdhServerAuthPublicationTrace.annotated source codec checks rest session token.pending payload () server []
+    PqxdhServerAuthPublicationTrace.annotated (associatedData := associatedData) source codec checks rest session
+      token.pending payload associatedData server []
 
 /-- The actual optional result, source settlement and component program are identical after private observations are erased. -/
 theorem selected_erase (source : FixedHkdfSha512NoSaltSource) (codec : Codec Reader WireResponse)
     (checks : Checks) (rest : PqxdhServerAuthCtxCalls.Residual) (session : Nat)
     (token : PqxdhServerRelatedRootConsumer.Returned) (payload : Option Pqxdh.Bytes)
     (server : ServerState) (state : Local KemSK) :
-    simulateQ erase ((selected source codec checks rest session token payload server).run.run state) =
-      (PqxdhServerAuthCtxBuild.selected source codec checks rest session token payload server).run.run state := by
+    simulateQ erase ((selected associatedData source codec checks rest session token payload server).run.run state) =
+      (PqxdhServerAuthCtxBuild.selected associatedData source codec checks rest session token payload server).run.run
+        state := by
   simp only [selected, OptionT.run_mk, StateT.run, simulateQ_map,
     PqxdhServerAuthPublicationTrace.annotated_erase,
     PqxdhServerAuthCtxBuild.selected, PqxdhServerAuthCtxBuild.after]
@@ -44,7 +47,7 @@ theorem lift_erase (work : PqxdhServerAuthCtxBuild.Compiler KemSK Result) (state
     simulateQ erase ((liftOld work).run.run state) = work.run.run state :=
   PqxdhServerAuthPublicationTrace.erase_lift _
 
-/-- The original token lookup and selected/ordinary dispatch are unchanged. Only a reached selected builder emits publication annotations. -/
+/-- The original token lookup, pure pre-hash guard, component transcript hash and selected/ordinary dispatch at the AD of the digest are unchanged. Only a reached selected builder emits publication annotations. -/
 noncomputable def build (source : FixedHkdfSha512NoSaltSource) (codec : Codec Reader WireResponse)
     (checks : Checks) (rest : PqxdhServerAuthCtxCalls.Residual) (session : Nat)
     (payload : Option Pqxdh.Bytes) : Compiler KemSK (Option PqxdhServerAuthCtxBuild.Response) :=
@@ -52,11 +55,19 @@ noncomputable def build (source : FixedHkdfSha512NoSaltSource) (codec : Codec Re
     match state.1.1.pending session with
     | none => pure (some none, state)
     | some token =>
-        if state.1.2.1 session then
-          (selected source codec checks rest session token payload state.1.1.server).run state
-        else (liftOld (PqxdhServerAuthCtxBuild.known source codec checks session token payload state.1.1.server)).run state
+      match PqxdhServerRegistrationPublication.prehash state.1.1.server token.pending payload with
+      | none => pure (some none,
+          (({ state.1.1 with pending := Function.update state.1.1.pending session none }, state.1.2), state.2))
+      | some candidate => do
+          let hashed ← simulateQ liftDynamic ((PqxdhServerAuthCtxState.hash (PqxdhTranscriptAd.transcript
+            (PqxdhTranscriptAd.initOf token.init) (PqxdhTranscriptAd.serverResponse candidate))).run state)
+          if state.1.2.1 session then
+            (selected (PqxdhTranscriptAd.adOf hashed.1) source codec checks rest session token payload
+              state.1.1.server).run hashed.2
+          else (liftOld (PqxdhServerAuthCtxBuild.known (PqxdhTranscriptAd.adOf hashed.1) source codec checks session
+            token payload state.1.1.server)).run hashed.2
 
-/-- Complete build erasure includes absent tokens, ordinary roots and every selected optional outcome. No source success or unused-nonce condition is required for this syntactic equality. -/
+/-- Complete build erasure includes absent tokens, pre-hash rejections, ordinary roots and every selected optional outcome. No source success or unused-nonce condition is required for this syntactic equality. -/
 theorem build_erase (source : FixedHkdfSha512NoSaltSource) (codec : Codec Reader WireResponse)
     (checks : Checks) (rest : PqxdhServerAuthCtxCalls.Residual) (session : Nat)
     (payload : Option Pqxdh.Bytes) (state : Local KemSK) :
@@ -65,13 +76,35 @@ theorem build_erase (source : FixedHkdfSha512NoSaltSource) (codec : Codec Reader
   cases found : state.1.1.pending session with
   | none => simp only [build, PqxdhServerAuthCtxBuild.build, OptionT.run_mk, StateT.run, found, simulateQ_pure]
   | some token =>
+    cases pre : PqxdhServerRegistrationPublication.prehash state.1.1.server token.pending payload with
+    | none =>
+        simp only [build, PqxdhServerAuthCtxBuild.build, OptionT.run_mk, StateT.run, found, pre, simulateQ_pure]
+    | some candidate =>
+      have left : (build source codec checks rest session payload).run.run state =
+          simulateQ liftDynamic ((PqxdhServerAuthCtxState.hash (PqxdhTranscriptAd.transcript
+            (PqxdhTranscriptAd.initOf token.init) (PqxdhTranscriptAd.serverResponse candidate))).run state) >>=
+            fun hashed => if state.1.2.1 session then
+              (selected (PqxdhTranscriptAd.adOf hashed.1) source codec checks rest session token payload
+                state.1.1.server).run.run hashed.2
+            else (liftOld (PqxdhServerAuthCtxBuild.known (PqxdhTranscriptAd.adOf hashed.1) source codec checks session
+              token payload state.1.1.server)).run.run hashed.2 := by
+        simp only [build, OptionT.run_mk, StateT.run, found, pre]
+      have right : (PqxdhServerAuthCtxBuild.build source codec checks rest session payload).run.run state =
+          (PqxdhServerAuthCtxState.hash (PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf token.init)
+            (PqxdhTranscriptAd.serverResponse candidate)) >>= fun digest =>
+            if state.1.2.1 session then
+              (PqxdhServerAuthCtxBuild.selected (PqxdhTranscriptAd.adOf digest) source codec checks rest session token
+                payload state.1.1.server).run
+            else (PqxdhServerAuthCtxBuild.known (PqxdhTranscriptAd.adOf digest) source codec checks session token payload
+              state.1.1.server).run).run state := by
+        simp only [PqxdhServerAuthCtxBuild.build, OptionT.run_mk, StateT.run, found, pre]
+      rw [left, right, StateT.run_bind, simulateQ_bind, PqxdhServerAuthPublicationTrace.erase_lift]
+      refine bind_congr fun hashed => ?_
       by_cases marked : state.1.2.1 session = true
-      · simpa only [build, PqxdhServerAuthCtxBuild.build, OptionT.run_mk, StateT.run,
-          found, marked, ite_true] using
-          selected_erase source codec checks rest session token payload state.1.1.server state
-      · simpa only [build, PqxdhServerAuthCtxBuild.build, OptionT.run_mk, StateT.run,
-          found, marked, Bool.false_eq_true, ite_false] using
-          lift_erase (PqxdhServerAuthCtxBuild.known source codec checks session token payload state.1.1.server) state
+      · simpa only [marked, ite_true] using selected_erase (PqxdhTranscriptAd.adOf hashed.1) source codec checks rest
+          session token payload state.1.1.server hashed.2
+      · simpa only [marked, Bool.false_eq_true, ite_false] using lift_erase (PqxdhServerAuthCtxBuild.known
+          (PqxdhTranscriptAd.adOf hashed.1) source codec checks session token payload state.1.1.server) hashed.2
 
 /-- The original complete dispatch is retained; only its build branch uses the privately annotated builder. -/
 noncomputable def route (setup : Setup baseSpec KemSK) (codec : Codec Reader WireResponse)

@@ -7,6 +7,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete PqxdhRefinement
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhServerAuthEntryFactor
+variable (associatedData : PqxdhTranscriptAd.AssociatedData)
 open PqxdhServerAuthExperiment PqxdhJointIdentity PqxdhJointGapDh
 open PqxdhServerAuthSourceCosts PqxdhServerAuthTailCosts
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response : Type}
@@ -95,7 +96,7 @@ theorem generic_after_uniform {K σ Metadata PeerMetadata Consumed : Type}
     (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Pqxdh.Bytes) (kernel : K)
     (metadata : PeerMetadata) (server : PqxdhInitialGenericPublication.State K Metadata PeerMetadata Consumed)
     (state : σ) :
-    ((PqxdhInitialGenericPublication.afterInitialization calls aux candidate authenticated kernel metadata server).run state).IsTotalQueryBound cost := by
+    ((PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) calls aux candidate authenticated kernel metadata server).run state).IsTotalQueryBound cost := by
   simp only [PqxdhInitialGenericPublication.afterInitialization, StateT.run_bind]
   apply (isTotalQueryBound_bind (n₂ := 0) (sendBound _ _ state) ?_).mono (by omega)
   rintro ⟨⟨advanced, encrypted⟩, current⟩
@@ -116,7 +117,7 @@ theorem generic_candidate_uniform {K σ Metadata PeerMetadata Consumed : Type}
     (initial : RustM K) (candidate : pqxdh.ServerRegistrationCandidate) (data : Option Pqxdh.Bytes)
     (metadata : PeerMetadata) (server : PqxdhInitialGenericPublication.State K Metadata PeerMetadata Consumed)
     (state : σ) :
-    ((PqxdhInitialGenericBuilder.candidate calls aux initial candidate data metadata server).run state).IsTotalQueryBound cost := by
+    ((PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) calls aux initial candidate data metadata server).run state).IsTotalQueryBound cost := by
   simp only [PqxdhInitialGenericBuilder.candidate, StateT.run_bind]
   apply (isTotalQueryBound_bind (n₁ := 0) (n₂ := cost) (auxBound (.checkIdentity _) state) ?_).mono (by omega)
   rintro ⟨valid, checked⟩
@@ -147,11 +148,11 @@ theorem generic_candidate_uniform {K σ Metadata PeerMetadata Consumed : Type}
                     | fail error => trivial
                     | div => trivial
                     | ok binding =>
-                        change ((ok <$> PqxdhInitialGenericPublication.afterInitialization calls aux candidate
+                        change ((ok <$> PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) calls aux candidate
                           (absBytes binding.bytes ++ data.getD PqxdhServerRegistrationPublication.registrationWitness)
                           kernel metadata server).run allocatedState).IsTotalQueryBound cost
                         rw [StateT.run_map, IsTotalQueryBound, isQueryBound_map_iff]
-                        exact generic_after_uniform calls aux cost sendBound auxBound candidate _ kernel metadata server allocatedState
+                        exact generic_after_uniform (associatedData := associatedData) calls aux cost sendBound auxBound candidate _ kernel metadata server allocatedState
               · trivial
 
 /-- The full source builder retains the send bill through all key-ID, admission, allocation and writer branches. -/
@@ -163,7 +164,7 @@ theorem generic_build_uniform {K σ Metadata PeerMetadata Consumed : Type}
     (initial : RustM K) (pending : pqxdh.PendingServerRegistration) (data : Option Pqxdh.Bytes)
     (metadata : PeerMetadata) (server : PqxdhInitialGenericPublication.State K Metadata PeerMetadata Consumed)
     (state : σ) :
-    ((PqxdhServerAuthSendFactor.genericBuild calls aux initial pending data metadata server).run state).IsTotalQueryBound cost := by
+    ((PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData) calls aux initial pending data metadata server).run state).IsTotalQueryBound cost := by
   unfold PqxdhServerAuthSendFactor.genericBuild
   cases pqxdh.server_next_key_id server.control with
   | fail error => trivial
@@ -181,18 +182,19 @@ theorem generic_build_uniform {K σ Metadata PeerMetadata Consumed : Type}
           | ok prepared =>
               cases prepared with
               | Err error => trivial
-              | Ok candidate => exact generic_candidate_uniform calls aux cost sendBound auxBound initial candidate data metadata server state
+              | Ok candidate => exact generic_candidate_uniform (associatedData := associatedData) calls aux cost sendBound auxBound initial candidate data metadata server state
 
 /-- The concrete arbitrary108-byte selected Server service has the same one-hash uniform allowance as the real source builder. -/
 theorem factor_build_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (context : Context KemSK) (value : PqxdhServerAuthKeySchedule.Output)
     (token : PqxdhServerRelatedRootConsumer.Returned) (payload : Option Pqxdh.Bytes)
     (server : ServerState) (state : SealState) :
-    ((((factorServices setup codec checks context value).hiddenBuild token payload server)).run state).IsTotalQueryBound 64 := by
+    ((((factorServices setup codec checks context value).hiddenBuild token payload associatedData server)).run
+      state).IsTotalQueryBound 64 := by
   simp only [factorServices, PqxdhServerAuthLoggedSendFactor.factored, StateT.run_map,
     IsTotalQueryBound, isQueryBound_map_iff]
-  exact generic_build_uniform _ _ 64 (factored_send_uniform setup codec checks _) (logged_aux_uniform setup codec checks)
-    _ token.pending payload () _ state
+  exact generic_build_uniform (associatedData := associatedData) _ _ 64 (factored_send_uniform setup codec checks _) (logged_aux_uniform setup codec checks)
+    _ token.pending payload associatedData _ state
 
 /-- The actual Beacon primitive keeps real zero-coin HKDF and charges one possible 64-byte shared-cache commitment per attempted opening. -/
 theorem beacon_primitive_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -329,7 +331,7 @@ theorem hidden_public_uniform (bytes : Pqxdh.Bytes) (table : HiddenTable) :
 structure ServiceUniform {τ : Type} (services : Services Response τ) : Prop where
   derive : ∀ message state, ((services.derive message).run state).IsTotalQueryBound 64
   table : ∀ bytes state, ((services.table bytes).run state).IsTotalQueryBound 64
-  build : ∀ token payload server state, ((services.hiddenBuild token payload server).run state).IsTotalQueryBound 64
+  build : ∀ token payload ad server state, ((services.hiddenBuild token payload ad server).run state).IsTotalQueryBound 64
   after : ∀ pending state, ((services.hiddenAfter pending).run state).IsTotalQueryBound 64
 
 /-- All four concrete factor callbacks satisfy their full-state uniform caps; no service cost remains assumed by the final reduction. -/
@@ -337,7 +339,7 @@ theorem factor_services_uniform (setup : Setup baseSpec KemSK) (codec : Codec Re
     (checks : Checks) (context : Context KemSK) (value : PqxdhServerAuthKeySchedule.Output) :
     ServiceUniform (factorServices setup codec checks context value) := by
   exact ⟨hidden_derive_uniform setup.hmac setup.joint setup.dh context.seed context.scalar,
-    hidden_public_uniform, factor_build_uniform setup codec checks context value,
+    hidden_public_uniform, fun token payload ad => factor_build_uniform ad setup codec checks context value token payload,
     factor_after_uniform setup codec checks context value⟩
 
 /-- Replacing only designation's derivation with its zero-query table check preserves all callback caps. -/

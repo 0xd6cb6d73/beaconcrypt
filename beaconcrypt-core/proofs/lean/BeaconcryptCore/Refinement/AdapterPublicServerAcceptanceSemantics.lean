@@ -23,7 +23,7 @@ attribute [local irreducible] RegistrationAuthenticationExecutor.begin
 noncomputable def afterLookup (coins : QueryImpl unifSpec m)
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
     (reserve : m Bool) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (checked : RustM (core.option.Option peer.RegistrationLookup)) : NativeM (RustM (Option Nat)) :=
   match checked with
   | .fail error => pure (.fail error)
@@ -39,7 +39,7 @@ theorem after_pin (coins : QueryImpl unifSpec m)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (edLaws : RegistrationNativePlatformAuthentication.EdFunctional setup.source.crypto)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (control : pqxdh.ServerState)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (control : pqxdh.ServerState)
     (packet : registration.InitPacket) (pinReply : RegistrationNativeServerPinRecompute.PinReply) :
     (do let checked ← world (AdapterPublicServerAuthentication.afterPin
           (RegistrationNativePlatformAuthentication.native coins setup codec route verify edLaws) control packet pinReply)
@@ -84,7 +84,7 @@ theorem accept_run (coins : QueryImpl unifSpec m)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (edLaws : RegistrationNativePlatformAuthentication.EdFunctional setup.source.crypto)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (before : RegistrationNativeExperiment.State n KemSK mlSource) :
     (do let checked ← world (AdapterPublicServerAuthenticationPrefix.program coins setup codec route verify edLaws
           before.server.control before.server.pin.binding before.server.pin.public_key packet)

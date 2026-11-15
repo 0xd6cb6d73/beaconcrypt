@@ -113,7 +113,7 @@ theorem startup_pin (ensureInit : StateT Unit ProbComp Bool) (identityIndex : Na
       | none => simp only [sampled, mem_support_pure_iff] at continued; cases continued
       | some credential =>
           simp only [sampled, mem_support_bind_iff] at continued
-          obtain ⟨installed, _installed, digest, _hashed, returned⟩ := continued
+          obtain ⟨installed, _installed, returned⟩ := continued
           simp only [mem_support_pure_iff, Option.some.injEq] at returned
           cases returned
           exact PqxdhRootTableInitialization.rootArray_bytes identity.ed25519

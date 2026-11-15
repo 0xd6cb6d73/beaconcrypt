@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Refinement.AdapterServerConstructorInitialized
+import BeaconcryptCore.Refinement.AdapterServerConstructorGeneration
 open CoreModels Aeneas OracleComp OracleSpec
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -7,7 +8,7 @@ set_option autoImplicit false
 set_option warningAsError true
 set_option maxRecDepth 4096
 set_option backward.isDefEq.respectTransparency false
-/-! The initialized Server material relation is derived from its actual key object, empty std stores and same native fingerprint path. Metadata frames are computed from the literal hash/sampler, never supplied as whole-controller assumptions. -/
+/-! The initialized Server material relation is derived from its actual key object, empty std stores and pure native full-pin selection. The original joint Ed/ML samples and complete startup state remain; no hash callback or whole-controller conclusion is a premise. -/
 namespace BeaconcryptCore.Refinement.AdapterServerConstructorMaterial
 open AdapterPublicWrapperRustT (RustT)
 open AdapterPublicWrapperState AdapterPublicWrapperStorage
@@ -21,16 +22,6 @@ variable [generators : AdapterBeaconConstructorRequestMonad.Operations
 local notation "World" => PqxdhRecordLiftWorld.State n
 local notation "M" => StateT World ProbComp
 
-omit material platform primitive [AdapterServerConstructorPrimitive.Standard] generators in
-private theorem hash_fields (input : Pqxdh.Bytes) (before : World)
-    (result : CtxRomAuth.CtxDigest×World)
-    (supported : result∈support ((PqxdhRecordLiftWorld.effects (.inr (.hash input))).run before)) :
-    result.2.server=before.server ∧ result.2.owners=before.owners := by
-  simp only [PqxdhRecordLiftWorld.effects,PqxdhRecordLiftWorld.capability,
-    PqxdhRecordLiftWorld.chargeEffect,PqxdhRecordLiftWorld.sampled,StateT.run,
-    bind_pure_comp,Functor.map_map,support_map] at supported
-  obtain ⟨inner,_called,rfl⟩:=supported
-  exact ⟨rfl,rfl⟩
 
 theorem finish (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (generator : rand_core.TryCryptoRng R Error) (view : MaterialView mlSource KemSK)
@@ -38,7 +29,7 @@ theorem finish (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (edSample : M (Option PqxdhJointIdentity.IdentitySeed))
     (ed : AdapterServerConstructorJoint.EdContract generator view setup.joint edSample)
     (mlSample : M (Option (RegistrationNativeMldsa.Credential mlSource)))
-    (ml : AdapterBeaconConstructorGeneration.MldsaContract generator view mlSample)
+    (ml : AdapterServerConstructorGeneration.MldsaContract generator view mlSample)
     (identityIndex : Nat) (identifier : U64) (prepared : AdapterServerConstructorJoint.Prepared mlSource)
     (before after : World) (initial : RegistrationNativeExperiment.Initial n KemSK mlSource)
     (empty : before.server=none)
@@ -64,20 +55,14 @@ theorem finish (setup : PqxdhServerAuthExperiment.Setup base KemSK)
   simp only [StateT.run] at pin
   simp only [PqxdhLiveServerConstruction.initialized] at supported pin
   rw [pin] at supported
-  simp only [RegistrationWorldServerCompletion.capability,StateT.run,bind_map_left,
-    mem_support_bind_iff] at supported
-  obtain ⟨hashed,hashSupport,supported⟩:=supported
   simp only [mem_support_pure_iff] at supported
-  obtain ⟨actualHash,actualSupport,pinOutput⟩:=hashSupport
-  simp only [mem_support_pure_iff] at pinOutput
-  subst hashed
+  obtain ⟨pinned,rfl,supported⟩ := supported
   cases supported
-  have fields:=hash_fields (PqxdhRefinement.absBytes prepared.credential.publicKey) _ actualHash actualSupport
   have identity:=AdapterServerConstructorJoint.identity generator view views objects setup.joint edSample ed mlSample ml identityIndex identifier prepared
   have empties:=AdapterServerConstructorObjects.empty views objects identifier (ed.realize prepared.seed) (ml.realize prepared.credential)
-  refine ⟨?_,rfl,rfl,fields.2⟩
+  refine ⟨?_,rfl,rfl,rfl⟩
   refine ⟨identity,rfl,rfl,rfl,rfl,empties.1,?_⟩
-  refine ⟨PqxdhRecordLiftWorld.importedServer (PqxdhLiveServerConstruction.initialized setup.joint identityIndex identifier .generated prepared.seed),fields.1,rfl,rfl,?_⟩
+  refine ⟨PqxdhRecordLiftWorld.importedServer (PqxdhLiveServerConstruction.initialized setup.joint identityIndex identifier .generated prepared.seed),rfl,rfl,rfl,?_⟩
   exact empties.2
 end BeaconcryptCore.Refinement.AdapterServerConstructorMaterial
 

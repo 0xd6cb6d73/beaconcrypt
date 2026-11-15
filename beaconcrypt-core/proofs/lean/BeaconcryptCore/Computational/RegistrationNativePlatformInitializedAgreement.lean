@@ -26,7 +26,7 @@ def opened (before : RegistrationNativeExperiment.State n KemSK source) : Local 
 omit primitive in
 private theorem source_lower (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State Value)
     (before : RegistrationNativeExperiment.State n KemSK source) :
     (RegistrationNativeExperiment.beacon setup checks representation created work).run before =
@@ -69,30 +69,30 @@ theorem initialized (crypto : Ratchet.Crypto ratchet.RatchetChain ratchet.Ratche
     (kemCiphertext : packet.public.kem_cipher_text = token.agreement.pending.kem_ciphertext)
     (control : pqxdh.ServerState) (availability : pqxdh.KeyIdAvailability) (serverApplication : Slice U8)
     (serverInitial : registration.ServerInitialKdf) (hashed : registration.ServerResponseHash)
-    (serverStarted : registration.begin_server_completion control pin availability token.agreement serverApplication = .ok (.Ok serverInitial))
+    (serverStarted : BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission control pin availability token.agreement serverApplication serverInitial)
     (issued : RegistrationNativePlatformSourceFinishContents.RecordCut (n := n) coins setup wire view failure allocation erased
       rawAllocation serializer serverInitial hashed cache)
     (extension : RegistrationNativeWorldCache.cache finished ≤ cache)
     (ciphertext : hashed.ciphertext = packet.application) (collisionFree : ¬ CacheHasCollision cache) :
-    ∃ aborted middle agreed recorded capability completed beaconInitial,
+    ∃ adDigest aborted middle agreed recorded capability completed beaconInitial,
       original.aborted_state = .ok aborted ∧
-      (.ok (.Ok (⟨original, packet⟩ : registration.AuthenticatedResponse)), middle) ∈ support
+      (.ok (.Ok ((RegistrationResponseExecutor.acceptedResponse original packet adDigest) : registration.AuthenticatedResponse)), middle) ∈ support
         ((lower setup checks representation initial.created (simulateQ (RegistrationNativeBeaconFrontend.authentication setup source)
           (RegistrationResponseExecutor.begin original (.Some packet)))).run
             (RegistrationNativePlatformCompletionReceipt.consumed (opened progress.2) index aborted)) ∧
       (.ok (.BeaconComplete capability), agreed) ∈ support ((lower setup checks representation initial.created
-        (simulateQ (RegistrationNativeBeaconFrontend.agreement setup owner oneTime) (RegistrationAgreementExecutor.beacon ⟨original, packet⟩))).run middle) ∧
+        (simulateQ (RegistrationNativeBeaconFrontend.agreement setup owner oneTime) (RegistrationAgreementExecutor.beacon (RegistrationResponseExecutor.acceptedResponse original packet adDigest)))).run middle) ∧
       (.ok (.Ok completed), recorded) ∈ support ((lower setup checks representation initial.created
         (simulateQ (RegistrationNativeBeaconFrontend.record setup wire) (RegistrationBeaconRecordExecutor.begin capability))).run agreed) ∧
       registration.begin_beacon_completion capability = .ok beaconInitial ∧ beaconInitial.agreement = capability ∧
-      RegistrationNativeCompletionContents.Outcome serverInitial ⟨original, packet⟩ capability completed application ∧
+      RegistrationNativeCompletionContents.Outcome serverInitial (RegistrationResponseExecutor.acceptedResponse original packet adDigest) capability completed application ∧
       application = TranscriptAuthParts.absSlice serverApplication ∧
       ((token.agreement.root.bytes = capability.root.bytes ∧
         RegistrationNativeInitializedInitializers.Initializers crypto setup.source token.agreement capability serverInitial beaconInitial) ∨
         ∃ (beaconInput : PqxdhBeaconPhase2Preparation.Inputs registration.AuthenticatedResponse) (atRoot : Local n KemSK source),
           (some beaconInput, atRoot) ∈ support ((lower setup checks representation initial.created
             (simulateQ (RegistrationNativeBeaconFrontend.agreement setup owner oneTime)
-              (simulateQ (RegistrationBeaconAgreementRoot.callbacks ⟨original, packet⟩)
+              (simulateQ (RegistrationBeaconAgreementRoot.callbacks (RegistrationResponseExecutor.acceptedResponse original packet adDigest))
                 (PqxdhBeaconPhase2Preparation.collect () false true () [])))).run middle) ∧
           RegistrationNativeRecipientFailure.FailureAt setup middle.2.2.pool owner.kemHandle serverReceipt.root.collected beaconInput) := by
   have invariant := RegistrationNativePlatformOwnerInvariants.initialized coins setup checks wire route representation

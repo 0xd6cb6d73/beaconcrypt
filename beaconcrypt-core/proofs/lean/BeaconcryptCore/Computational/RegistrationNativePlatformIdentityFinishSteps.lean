@@ -41,7 +41,7 @@ noncomputable def oldAfterAgreement (setup : Setup base KemSK) (wire : Registrat
 
 theorem agreement_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List IdentitySeed)
     (wire : RegistrationNativeWire.Wire) (index : Nat) (owner : Owner source) (seed : IdentitySeed)
     (reply : RustM agreement.AgreementEffect) :
     Related (n := n) (Auxiliary := Auxiliary) setup checks representation created seeds
@@ -61,7 +61,7 @@ theorem agreement_source (setup : Setup base KemSK) (checks : Checks)
 
 theorem agreement_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat) (owner : Owner source) (reply : RustM agreement.AgreementEffect) :
     Keeps (n := n) (Auxiliary := Auxiliary) setup checks representation created (afterAgreement setup wire index owner reply) := by
   cases reply with
@@ -99,7 +99,7 @@ noncomputable def oldAfterAuthentication (setup : Setup base KemSK) (wire : Regi
 
 theorem authentication_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List IdentitySeed)
     (wire : RegistrationNativeWire.Wire) (index : Nat) (owner : Owner source) (seed : IdentitySeed)
     (oneTime : PqxdhJointGapDh.ScalarBytes) (found : seeds[owner.identity.handle]? = some seed)
     (reply : RustM RegistrationResponseExecutor.ResponseResult) :
@@ -118,7 +118,7 @@ theorem authentication_source (setup : Setup base KemSK) (checks : Checks)
 
 theorem authentication_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat) (owner : Owner source)
     (oneTime : PqxdhJointGapDh.ScalarBytes) (reply : RustM RegistrationResponseExecutor.ResponseResult) :
     Keeps (n := n) (Auxiliary := Auxiliary) setup checks representation created (afterAuthentication setup wire index owner oneTime reply) := by
@@ -160,7 +160,7 @@ noncomputable def oldBegin (setup : Setup base KemSK) (wire : RegistrationNative
 /-- InitSent is terminally consumed before packet admission, then every actual authentication/agreement/opening/install continuation agrees with the original native source. -/
 theorem begin_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List IdentitySeed)
     (wire : RegistrationNativeWire.Wire) (index : Nat) (owner : Owner source) (seed : IdentitySeed)
     (pending : registration.BeaconPending) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (packet : Option registration.ResponsePacket) (found : seeds[owner.identity.handle]? = some seed) :
@@ -181,7 +181,7 @@ theorem begin_source (setup : Setup base KemSK) (checks : Checks)
 
 theorem begin_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat) (owner : Owner source)
     (pending : registration.BeaconPending) (oneTime : PqxdhJointGapDh.ScalarBytes) (packet : Option registration.ResponsePacket) :
     Keeps (n := n) (Auxiliary := Auxiliary) setup checks representation created (begin setup wire index owner pending oneTime packet) := by

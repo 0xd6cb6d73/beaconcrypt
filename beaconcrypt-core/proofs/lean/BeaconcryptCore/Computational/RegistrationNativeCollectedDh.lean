@@ -19,7 +19,7 @@ variable {n : Nat} {ι KemSK : Type} {base : OracleSpec ι} {source : Registrati
 private theorem peer_root (value : List.Vector UInt8 32) : PqxdhPhase2GapDhSource.peer (rootArray value) = value :=
   PqxdhPhase2InputBytes.word_rootArray value
 theorem collect (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (owner : Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (verified : PqxdhServerRootPreparation.Verified registration.InitPacket)
     (serverInput : PqxdhServerRootPreparation.Inputs registration.InitPacket Unit Word32)

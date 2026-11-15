@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
-"""Check the exact registration correspondences with native X25519 aliases."""
+"""Check the exact registration correspondences with native X25519 aliases.
+
+Registration version 3 hashes the exact response ephemeral bytes into the
+transcript AD151, so an attacker-flipped high-bit alias changes the Beacon's
+AD and the initial frame no longer opens: the four exact correspondences now
+hold under the alias interface, as evidence that AD151 binds the aliased
+ephemeral bytes. The counterfactual environment omits only the ephemeral key
+from the transcript AD; it reproduces the historical alias counterexamples,
+so the native X25519 high-bit alias is still shown to break exact byte-level
+origin on its own when the ephemeral bytes are not bound.
+"""
 
 from __future__ import annotations
 
@@ -80,6 +90,33 @@ def alias_crypto(directory: Path) -> str:
         raise ValueError("baseline X25519 boundary changed; review required")
     replacement = (directory / "phase2-x25519-alias-theory.pvl").read_text()
     return source[:start] + replacement + source[finish:]
+
+
+OMITTED_EPHEMERAL = "x25519_alias_counterfactual_ad_omitted_ephemeral"
+TRANSCRIPT_AD_LETFUN = "letfun transcript_associated_data("
+TRANSCRIPT_AD_BODY = "    server_identity, ephemeral, kem, sender_id_le64(assigned)))).\n"
+
+
+def ad_omits_ephemeral_environment(directory: Path) -> str:
+    """Counterfactual only: the transcript AD omits the response ephemeral key."""
+    source = (directory / "environment.pvl").read_text()
+    if (
+        source.count(TRANSCRIPT_AD_LETFUN) != 1
+        or source.count(TRANSCRIPT_AD_BODY) != 1
+        or source.index(TRANSCRIPT_AD_BODY) < source.index(TRANSCRIPT_AD_LETFUN)
+        or OMITTED_EPHEMERAL in source
+    ):
+        raise ValueError("transcript AD letfun changed; review required")
+    declaration = (
+        "(* Counterfactual control only: the transcript AD omits the ephemeral key. *)\n"
+        f"const {OMITTED_EPHEMERAL}: bitstring.\n"
+    )
+    source = source.replace(TRANSCRIPT_AD_LETFUN, declaration + TRANSCRIPT_AD_LETFUN, 1)
+    return source.replace(
+        TRANSCRIPT_AD_BODY,
+        TRANSCRIPT_AD_BODY.replace(" ephemeral,", f" {OMITTED_EPHEMERAL},", 1),
+        1,
+    )
 
 
 def selected_projected_queries(directory: Path) -> str:
@@ -255,24 +292,37 @@ def main() -> None:
         projected_queries.write_text(selected_projected_queries(directory))
         alias = work / "crypto-with-x25519-aliases.pvl"
         alias.write_text(alias_crypto(directory))
-        for label, crypto, query_source, expected, projected in (
-            ("canonical", directory / "crypto.pvl", queries, "true", False),
-            ("alias", alias, queries, "false", False),
+        environment = directory / "environment.pvl"
+        omitted = work / "environment-ad-omits-ephemeral.pvl"
+        omitted.write_text(ad_omits_ephemeral_environment(directory))
+        for label, crypto, model, query_source, expected, projected in (
+            ("canonical", directory / "crypto.pvl", environment, queries, "true", False),
+            ("alias", alias, environment, queries, "true", False),
             (
                 "projected-canonical",
                 directory / "crypto.pvl",
+                environment,
                 projected_queries,
                 "true",
                 True,
             ),
-            ("projected-alias", alias, projected_queries, "true", True),
+            ("projected-alias", alias, environment, projected_queries, "true", True),
+            (
+                "ad-omits-ephemeral-canonical",
+                directory / "crypto.pvl",
+                omitted,
+                queries,
+                "true",
+                False,
+            ),
+            ("ad-omits-ephemeral-alias", alias, omitted, queries, "false", False),
         ):
             command = [args.proverif]
             for library in (
                 directory / "production-transcript-interface.pvl",
                 crypto,
                 directory / "extraction/lib.pvl",
-                directory / "environment.pvl",
+                model,
                 query_source,
             ):
                 command.extend(("-lib", str(library)))

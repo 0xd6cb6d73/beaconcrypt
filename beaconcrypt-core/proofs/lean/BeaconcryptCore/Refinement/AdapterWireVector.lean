@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Refinement.AdapterWireStatefulWriter
+import BeaconcryptCore.Refinement.PqxdhBytes
 
 /-! Byte-level facts about the actual pinned std vector models used by the source writer. Reservation is deliberately absent from these deterministic lemmas. -/
 open CoreModels Aeneas

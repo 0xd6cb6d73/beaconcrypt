@@ -83,7 +83,7 @@ theorem record_inv (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wir
 theorem accept_inv (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (packet : registration.InitPacket) (before : State n KemSK mlSource × SourceState)
     (result : RustM (Option Nat) × (State n KemSK mlSource × SourceState)) (owned : Inv setup.joint before)
     (reached : result ∈ support ((interpret setup.joint (RegistrationNativeIdentityMain.handler setup checks wire route representation created credential
@@ -102,7 +102,7 @@ theorem accept_inv (setup : Setup base KemSK) (checks : Checks) (wire : Registra
 theorem handler_inv (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (before : State n KemSK mlSource × SourceState)
     (result : RegistrationNativeRawAdapter.TypedSpec.Range query × (State n KemSK mlSource × SourceState))
     (owned : Inv setup.joint before)

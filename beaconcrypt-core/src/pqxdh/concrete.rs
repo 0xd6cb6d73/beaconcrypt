@@ -15,7 +15,7 @@ use super::{
 	split_initial_ratchet_kdf_output,
 };
 
-use crate::ratchet::{ConcreteRatchetKernel, SymmetricRatchetKdfRequest};
+use crate::ratchet::{ConcreteRatchetKernel, InitialRatchetKdfRequest};
 
 /// Owned continuation for one initial symmetric-ratchet KDF request.
 ///
@@ -24,13 +24,13 @@ use crate::ratchet::{ConcreteRatchetKernel, SymmetricRatchetKdfRequest};
 /// [`InitialRatchetKdfResponse`].
 #[must_use = "the initial ratchet KDF request must be performed or the phase explicitly dropped"]
 pub struct InitialRatchetKdfPending {
-	request: SymmetricRatchetKdfRequest,
+	request: InitialRatchetKdfRequest,
 	initialization: RatchetInitialization,
 }
 
 impl InitialRatchetKdfPending {
 	/// The exact fixed-domain request selected by the core.
-	pub const fn request(&self) -> &SymmetricRatchetKdfRequest {
+	pub const fn request(&self) -> &InitialRatchetKdfRequest {
 		&self.request
 	}
 }
@@ -66,7 +66,7 @@ pub fn start_initial_ratchet_kdf(
 	initialization: RatchetInitialization,
 ) -> InitialRatchetKdfPending {
 	InitialRatchetKdfPending {
-		request: SymmetricRatchetKdfRequest::new(*root),
+		request: InitialRatchetKdfRequest::new(*root),
 		initialization,
 	}
 }

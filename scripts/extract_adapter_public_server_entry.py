@@ -48,9 +48,10 @@ FLAGS += [
 ]
 FLAGS += ["--start-from=beaconcrypt::server::_::get_shared_secret_with_rng"]
 RAW_SHA256 = {
-    "Funs.lean": "ed6840db8064aa6fdf33f8266ff7bbe252ecd9b7c98bcd4e903d5ab493f74fe8",
+    # Reviewed final actual replay: source-span comments only; delegator and child ABI unchanged.
+    "Funs.lean": "29526223d87419925e751db28480a7a562877b402d43a906d17a9bccc52d82fa",
     "Types.lean": "203e203b492f16e8159507be81dfbc87db1de72430aaf796d65b91eaf48e3a9f",
-    "FunsExternal_Template.lean": "fd30b8f004a93275728490a6f6f24a921d2f08f31c85a19db523d685eed5ea59",
+    "FunsExternal_Template.lean": "9b3db1e32ea50642a5eddbf0c8c23fef00ec704b9383c79d534f382f953ea1f6",
     "TypesExternal_Template.lean": "0bd18a9ea20e2561ede74c71734bde97a09ca188da725f85600a81a20b9d10c0",
 }
 TOOL_SHA256 = {

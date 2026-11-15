@@ -74,11 +74,11 @@ theorem source_profile :
   | none => simp only [current, RegistrationNativeMldsaTableStart.restored, Option.bind_none]; rfl
   | some initial =>
     have member : initial ∈ initialized.1 := by rw [current]; rfl
-    obtain ⟨key, server, owners⟩ := RegistrationNativeMldsaTableStart.initialized source setup ensureInit identityIndex serverKeyId initialized supported initial member
+    obtain ⟨key, server⟩ := RegistrationNativeMldsaTableStart.initialized source setup ensureInit identityIndex serverKeyId initialized supported initial member
     simp only [current, server.1, RegistrationNativeMldsaTableStart.restored, Option.bind_some,
       Option.map_some, RegistrationNativeMldsaMap.initial_public]
     have actual := RegistrationNativePlatformMldsaTableRun.run source setup checks wire route representation initial.created initial.credential key
-      view failure allocation reserveRegistration reservePeer erased helper writer bounds mode (adversary initial.public) initial.state previous initialized.2 server owners
+      view failure allocation reserveRegistration reservePeer erased helper writer bounds mode (adversary initial.public) initial.state previous initialized.2 server
     rw [actual]
     rw [RegistrationNativeMldsaMap.initial,
       RegistrationNativeMldsaOpaque.restore_live source key initialized.2 initial.credential key server]

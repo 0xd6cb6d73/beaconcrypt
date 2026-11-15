@@ -6,7 +6,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM
 set_option autoImplicit false
 set_option warningAsError true
-/-! These adapters bind the runtime writer leaves to the actual source-backed public serializers. They preserve all six native-view fields and the complete returned mutable output slice. Buffer allocation and reservation remain in the separately extracted runtime writer; decoding and readback are established separately. -/
+/-! These adapters bind the runtime writer leaves to the actual source-backed public serializers. They preserve all four Init fields and all Response fields and the complete returned mutable output slice. Buffer allocation and reservation remain in the separately extracted runtime writer; decoding and readback are established separately. -/
 namespace BeaconcryptCore.Computational.RegistrationNativeSourceEncoders
 open beaconcrypt_core
 open BeaconcryptCore.Refinement
@@ -16,13 +16,11 @@ open RegistrationSerializerReachableSource
   encodeInit := @beaconcrypt_parse.extraction_encode_init (RegistrationSerializerReachableSource.operations other)
   encodeResponse := @beaconcrypt_parse.extraction_encode_response (RegistrationSerializerReachableSource.operations other)
 
-def initSyntax (view : registration.SignedInitView) : beaconcrypt_parse.transport.initkex where
+def initSyntax (view : registration.InitView) : beaconcrypt_parse.transport.initkex where
   identity_key := view.fields.identity_key.to_slice
   pre_key := view.fields.pre_key.to_slice
   one_time_key := view.fields.one_time_key.to_slice
   pq_key := view.fields.pq_key.to_slice
-  mldsa_public_key := view.fields.mldsa_public_key.to_slice
-  signature := view.signature.to_slice
 
 def responseSyntax (view : registration.SignedResponseView) : beaconcrypt_parse.transport.kexresponse where
   identity_key := view.identity_key.to_slice
@@ -32,13 +30,13 @@ def responseSyntax (view : registration.SignedResponseView) : beaconcrypt_parse.
   key_id := view.key_id
   signature := view.signature.to_slice
 
-def encodeInit (other : OtherBranches) (view : registration.SignedInitView) (output : Slice U8) : RustM (Usize × Slice U8) :=
+def encodeInit (other : OtherBranches) (view : registration.InitView) (output : Slice U8) : RustM (Usize × Slice U8) :=
   (sourceOperations other).encodeInit (initSyntax view) output
 
 def encodeResponse (other : OtherBranches) (view : registration.SignedResponseView) (output : Slice U8) : RustM (Usize × Slice U8) :=
   (sourceOperations other).encodeResponse (responseSyntax view) output
 
-theorem init_shape (view : registration.SignedInitView) :
+theorem init_shape (view : registration.InitView) :
     RegistrationSerializerInitBytes.InitShape (initSyntax view) := by
   simp only [RegistrationSerializerInitBytes.InitShape, initSyntax, Array.length_to_slice]
   repeat' constructor <;> scalar_tac
@@ -48,13 +46,11 @@ theorem response_shape (view : registration.SignedResponseView) :
   simp only [RegistrationSerializerResponseBytes.ResponseShape, responseSyntax, Array.length_to_slice]
   repeat' constructor <;> scalar_tac
 
-theorem init_fields (view : registration.SignedInitView) :
+theorem init_fields (view : registration.InitView) :
     (initSyntax view).identity_key.val = view.fields.identity_key.val ∧
       (initSyntax view).pre_key.val = view.fields.pre_key.val ∧
       (initSyntax view).one_time_key.val = view.fields.one_time_key.val ∧
-      (initSyntax view).pq_key.val = view.fields.pq_key.val ∧
-      (initSyntax view).mldsa_public_key.val = view.fields.mldsa_public_key.val ∧
-      (initSyntax view).signature.val = view.signature.val := ⟨rfl, rfl, rfl, rfl, rfl, rfl⟩
+      (initSyntax view).pq_key.val = view.fields.pq_key.val := ⟨rfl, rfl, rfl, rfl⟩
 
 theorem response_fields (view : registration.SignedResponseView) :
     (responseSyntax view).identity_key.val = view.identity_key.val ∧
@@ -66,11 +62,11 @@ theorem response_fields (view : registration.SignedResponseView) :
 
 attribute [local irreducible] beaconcrypt_parse.extraction_encode_init beaconcrypt_parse.extraction_encode_response
 
-theorem init_bytes (other : OtherBranches) (view : registration.SignedInitView) (output : Slice U8)
-    (room : 6757 ≤ output.length) :
-    ∃ after, encodeInit other view output = .ok (6757#usize, after) ∧
+theorem init_bytes (other : OtherBranches) (view : registration.InitView) (output : Slice U8)
+    (room : 1490 ≤ output.length) :
+    ∃ after, encodeInit other view output = .ok (1490#usize, after) ∧
       after.length = output.length ∧
-      after.val = (136#u8 :: RegistrationSerializerInitBytes.payload (initSyntax view)) ++ output.val.drop 6757 := by
+      after.val = (134#u8 :: RegistrationSerializerInitBytes.payload (initSyntax view)) ++ output.val.drop 1490 := by
   unfold encodeInit sourceOperations
   exact RegistrationSerializerInitBytes.public_bytes other (initSyntax view) output (init_shape view) room
 

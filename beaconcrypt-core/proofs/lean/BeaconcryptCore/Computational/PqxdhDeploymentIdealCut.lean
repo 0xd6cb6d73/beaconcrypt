@@ -809,7 +809,7 @@ theorem pool_scan_source {Y : Type} (phase1 : PqxdhServerAuthNegativeControl.Pha
   rw [show PqxdhDeploymentNative.initial created =
       (⟨PqxdhRegistrationSchedule.initial created, 0, fun _ => 0, []⟩ : PqxdhDeploymentNative.State KemSK) from rfl,
     ← PqxdhDeploymentIdealPool.compile_native_pool setup codec checks route created.seed (p.pool t) phase1 phase2
-      (scanCE work index) (PqxdhRegistrationSchedule.initial created) sender peers rfl (fun _ => rfl),
+      (scanCE work index) (PqxdhRegistrationSchedule.initial created) sender (fun _ => rfl) rfl (fun _ => rfl),
     show PqxdhRegistrationSchedule.initial created =
       PqxdhRegistrationJointSchedule.source (sourceInit created pool) from rfl,
     ← PqxdhDeploymentIdealPoolSource.programPool_native, Functor.map_map]
@@ -826,10 +826,10 @@ theorem stopped_scan_source {Y : Type} (selected : ℕ) (identityIndex : ℕ)
     ((simulateQ (PqxdhDynamicKemJointRouter.stopped setup.baseImpl setup.joint setup.kem selected (p.pool t))
         (simulateQ (PqxdhRegistrationJointKemEncapsulation.actual setup)
           (PqxdhRegistrationJointKemEncapsulation.commands setup codec checks identityIndex
-            (setup.joint.publicKeys created.seed) (scan (PqxdhDeploymentCompile.compile setup codec route work) index) []
+            (setup.joint.publicKeys created.seed) (scan (PqxdhDeploymentCompile.compile setup codec route work) index) ([], fun _ => none)
             (PqxdhRegistrationSchedule.initial created).shared))).run).run (pool.1, PqxdhDynamicKemRouter.empty) =
       (fun result => (some (((compileCut setup codec route result.1,
-          (PqxdhRegistrationJointGeneratedFinish.encodeState setup result.2).owners), result.2.shared)),
+          ((PqxdhRegistrationJointGeneratedFinish.encodeState setup result.2).owners, (PqxdhRegistrationJointGeneratedFinish.encodeState setup result.2).inits)), result.2.shared)),
           (result.2.pool.1, PqxdhDeploymentIdealPoolSource.routerOf result.2.pool.2))) <$>
         (simulateQ (PqxdhDeploymentIdealPoolSource.sourcePool setup codec checks created.seed identityIndex (p.pool t))
           (PqxdhDeploymentCompile.compile setup codec route (scanCE work index))).run (sourceInit created pool) := by
@@ -934,7 +934,7 @@ noncomputable def opaqueRest {Z R : Type} (identityIndex : ℕ) (publicIdentity 
 theorem opaqueScan_split {Z R : Type} (identityIndex : ℕ) (publicIdentity : PqxdhJointIdentity.PublicIdentity)
     (observe : Z × PqxdhRegistrationJointAcceptCutTag.Tag → R)
     (work : OracleComp (PqxdhRegistrationJointRevealSchedule.Spec KemSK) Z) (index : ℕ)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry)
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate))
     (state : PqxdhServerAuthNative.NativeState KemSK) :
     PqxdhRegistrationJointKemRawOpaque.opaqueScan (Reader := Reader) setup codec checks identityIndex publicIdentity
         observe work index owners state =
@@ -963,7 +963,7 @@ theorem item2_prefix {Y : Type} (ensureInit : StateT A ProbComp Bool) (decision 
                 (opaqueRest setup codec checks created.server.server.metadata.identityIndex created.publicIdentity
                   (PqxdhRegistrationJointAcceptCutTag.decideTag decision)
                   ((compileCut setup codec route reached.1,
-                    (PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2).owners), reached.2.shared))).run).run
+                    ((PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2).owners, (PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2).inits)), reached.2.shared))).run).run
                   (reached.2.pool.1, PqxdhDeploymentIdealPoolSource.routerOf reached.2.pool.2)) >>= fun result =>
               pure (.ready (PqxdhRegistrationJointServerBirth.encode created) p.others result.1 result.2 born.2.2)) := by
   unfold PqxdhDeploymentIdealParams.preOpaquePool
@@ -984,7 +984,7 @@ theorem item2_prefix {Y : Type} (ensureInit : StateT A ProbComp Bool) (decision 
       (PqxdhRegistrationJointKemRawOpaque.opaqueScan (Reader := Reader) setup codec checks
         created.server.server.metadata.identityIndex created.publicIdentity
         (PqxdhRegistrationJointAcceptCutTag.decideTag decision) (PqxdhDeploymentCompile.compile setup codec route work)
-        t.accept [] (PqxdhRegistrationSchedule.initial created).shared)).run).run
+        t.accept ([], fun _ => none) (PqxdhRegistrationSchedule.initial created).shared)).run).run
           (after.1.1, PqxdhDynamicKemRouter.empty) = _
     rw [opaqueScan_split, simulateQ_bind, OptionT.run_bind, Option.elimM, StateT.run_bind, publicSame,
       stopped_scan_source setup codec route checks t p created t.kem.val created.server.server.metadata.identityIndex
@@ -1055,8 +1055,8 @@ theorem cut_good {Y : Type} (phase1 : PqxdhServerAuthNegativeControl.Phase1ReadB
     (fun query before after supported good => PqxdhDeploymentIdealPool.good_step_pool setup codec checks route
       created.seed (p.pool t) phase1 phase2 query before.1 before.2 good after supported)
     _ _ final finalMember)
-    (PqxdhDeploymentCompileInvariant.good_initial setup codec (PqxdhRegistrationSchedule.initial created) sender peers
-      rfl (fun _ => rfl))
+    (PqxdhDeploymentCompileInvariant.good_initial setup codec (PqxdhRegistrationSchedule.initial created) sender
+      (fun _ => rfl) rfl (fun _ => rfl))
 
 /-- On every outcome of the common prefix, the KEM pool holds the first entries of the challenger's pool, at most as many as the source budget's creations (the KEM key pair at KEM index `j` is pool entry `j`; `cut_indexed` shows that owner `j` has KEM index `j`, and `cut_entry_key` combines the two), when the budget of item 2's scan of the compiled program creates no more KEM keys than the pool holds. -/
 theorem cut_prefix {Y : Type} (pool : PqxdhRegistrationJointPreparation.Pool KemSK)
@@ -1085,16 +1085,16 @@ theorem cut_prefix {Y : Type} (pool : PqxdhRegistrationJointPreparation.Pool Kem
   have creations := PqxdhRegistrationJointKemCommands.creations setup codec checks
     created.server.server.metadata.identityIndex (setup.joint.publicKeys created.seed)
     (PqxdhDeploymentCompile.compile setup codec route (scanCE work t.accept)) budget certified'
-    (PqxdhRegistrationJointGeneratedFinish.encodeState setup (sourceInit created pool)).owners
+    ((PqxdhRegistrationJointGeneratedFinish.encodeState setup (sourceInit created pool)).owners, (PqxdhRegistrationJointGeneratedFinish.encodeState setup (sourceInit created pool)).inits)
     (sourceInit created pool).shared
   have image := PqxdhDeploymentIdealPoolSource.kemCommands_reserved setup codec checks created.seed
     created.server.server.metadata.identityIndex (p.pool t)
     (PqxdhDeploymentCompile.compile setup codec route (scanCE work t.accept)) (sourceInit created pool) owned
-  have mapped : (((reached.1, (PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2).owners),
+  have mapped : (((reached.1, ((PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2).owners, (PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2).inits)),
       reached.2.shared), reached.2.pool) ∈ support ((simulateQ (PqxdhDeploymentIdealPoolSource.reservedAt setup (p.pool t))
         (PqxdhRegistrationJointKemCommands.program setup codec checks created.server.server.metadata.identityIndex
           (setup.joint.publicKeys created.seed) (PqxdhDeploymentCompile.compile setup codec route (scanCE work t.accept))
-          (PqxdhRegistrationJointGeneratedFinish.encodeState setup (sourceInit created pool)).owners
+          ((PqxdhRegistrationJointGeneratedFinish.encodeState setup (sourceInit created pool)).owners, (PqxdhRegistrationJointGeneratedFinish.encodeState setup (sourceInit created pool)).inits)
           (sourceInit created pool).shared)).run (sourceInit created pool).pool) := by
     rw [image, support_map]
     exact ⟨reached, member, rfl⟩

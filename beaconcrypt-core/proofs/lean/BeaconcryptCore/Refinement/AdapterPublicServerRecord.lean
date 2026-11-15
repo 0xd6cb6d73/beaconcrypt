@@ -151,7 +151,7 @@ theorem aead (self : Server) (pending : registration.ServerRecordAead) :
           simp only [checked, bind_tc_ok, fused, commitment]
 
 structure Kdf (m : Type → Type) where
-  initial : ratchet.SymmetricRatchetKdfRequest → m (Std.Array U8 64#usize)
+  initial : ratchet.InitialRatchetKdfRequest → m (Std.Array U8 64#usize)
   ratchet : ratchet.SymmetricRatchetKdfRequest → m ratchet.RatchetKdfResponse
 
 structure KdfContract (operations : Kdf m) : Prop where
@@ -162,7 +162,7 @@ omit localOps containers children in
 def recordOperations (operations : Kdf m) : QueryImpl RegistrationRecordPrimitives.Spec m
   | .initialKdf request => (fun bytes => core.option.Option.Some (⟨bytes⟩ : pqxdh.concrete.InitialRatchetKdfResponse)) <$> operations.initial request
   | .ratchetKdf request => core.option.Option.Some <$> operations.ratchet request
-  | .rootKdf _ | .hash _ | .seal _ | .openAead _ | .write _ => pure .None
+  | .rootKdf _ | .adHash _ | .hash _ | .seal _ | .openAead _ | .write _ => pure .None
 
 noncomputable def fromRatchet (self : Server) (pending : registration.ServerInitialSeal) : RustT m Reply := do
   let request ← liftRust pending.request

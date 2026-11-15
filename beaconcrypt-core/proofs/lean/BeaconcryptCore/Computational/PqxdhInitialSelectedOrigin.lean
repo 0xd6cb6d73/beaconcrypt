@@ -10,6 +10,7 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 open OracleComp OracleSpec
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialSelectedOrigin
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhInitialRootLabelService PqxdhInitialSelectedService PqxdhCorrelatedExtractFamily
 open PqxdhSecretInputKdf PqxdhJointKdfGame PqxdhInitialSelectedBeacon
 open PqxdhCorrelatedExpand PqxdhCorrelatedExpandHybrid
@@ -75,7 +76,7 @@ theorem finish_origin {Kernel I D K X Response State : Type}
     (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
     (entry : RawCtxGenericRoleStorage.BeaconState Kernel I D K) (before : State)
     (result : PqxdhInitialFinishOrigin.Result Kernel Bool I D K × State)
-    (supported : result ∈ support ((PqxdhInitialFinishOrigin.owner (mark fixed selected) pre calls
+    (supported : result ∈ support ((PqxdhInitialFinishOrigin.owner (completedBinding := completedBinding) (mark fixed selected) pre calls
       application initial decode raw entry).run before))
     (recorded : result.1.2 = some true) :
     ∃ control prekey oneTime kem,
@@ -83,12 +84,12 @@ theorem finish_origin {Kernel I D K X Response State : Type}
         (atTail : State) (staged : Option (PqxdhInitialGenericBeacon.Staged Kernel)),
       entry.beacon.phase = .initSent control prekey oneTime kem ∧
       (some prepared, atTail) ∈ support ((simulateQ pre
-        (PqxdhBeaconPhase2Shared.prepare control entry.beacon.identity prekey oneTime kem raw)).run before) ∧
+        (PqxdhBeaconPhase2Shared.prepare (completedBinding := completedBinding) control entry.beacon.identity prekey oneTime kem raw)).run before) ∧
       (staged, result.2) ∈ support ((PqxdhInitialGenericBeacon.tail calls application initial decode prepared).run atTail) ∧
       result.1.1 = PqxdhInitialGenericBeacon.finish control entry staged ∧ result.1.1.1.isSome = true ∧
       PqxdhInitialRootLabelBridge.request fixed prepared.root = .family selected := by
   obtain ⟨control, prekey, oneTime, kem, prepared, atTail, staged, phase, preparation, tail, returned, success, marker⟩ :=
-    PqxdhInitialFinishOrigin.origin (mark fixed selected) pre calls application initial decode raw entry before
+    PqxdhInitialFinishOrigin.origin (completedBinding := completedBinding) (mark fixed selected) pre calls application initial decode raw entry before
       result supported true recorded
   exact ⟨control, prekey, oneTime, kem, prepared, atTail, staged, phase, preparation, tail, returned, success,
     (selectedRequest_iff selected _).mp marker.symm⟩

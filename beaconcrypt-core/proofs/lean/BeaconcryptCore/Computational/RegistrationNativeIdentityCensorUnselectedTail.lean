@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativeIdentityCensorPublicationSource
 import BeaconcryptCore.Computational.RegistrationNativeIdentityCensorHashOutgoingSource
 
-/-! With identical pending source data, the fingerprint/hash/ML/writer tail makes no omitted Ed signing call. Real and private-censored interpretation therefore agree on complete replies, Native/private/P states and every failure. -/
+/-! With identical pending source data, the hash/Ready/writer tail makes no omitted Ed signing call. Real and private-censored interpretation therefore agree on complete replies, Native/private/P states and every failure. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -17,7 +17,7 @@ open PqxdhEd25519EufCma (Ed25519Signature)
 open RegistrationNativeIdentityCensorEdOutgoingSource (Full interpret)
 variable {n : Nat} {I KemSK Platform E : Type} {base : OracleSpec I} {mlSource : RegistrationNativeMldsa.Source}
 variable (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (selected index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner mlSource) (placeholder : Ed25519Signature)
 variable (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E))
 local notation "Main" => RegistrationNativePlatformIdentityCtxMain.beacon (n := n) (Platform := Platform) (source := mlSource) setup checks representation created
@@ -44,16 +44,7 @@ private theorem encoder_equal : encoder(false) = encoder(true) := by
   funext fields
   exact RegistrationNativeIdentityCensorExternalSource.source_equal setup.joint selected placeholder setup checks representation created _
 
-private theorem signing (payload : MldsaTranscriptAuth.Payload) (digest : CtxRomAuth.CtxDigest) (pending : registration.BeaconMldsaSigning) :
-    RegistrationNativePlatformBeaconPublication.fromSigning (callback(false)) (encoder(false)) payload digest pending =
-      RegistrationNativePlatformBeaconPublication.fromSigning (callback(true)) (encoder(true)) payload digest pending := by
-  unfold RegistrationNativePlatformBeaconPublication.fromSigning
-  rw [encoder_equal setup checks representation created selected placeholder reserve]
-  apply congrArg (RegistrationNativePlatformBeaconPublication.continueWith pending.request)
-  funext request
-  rw [crypto_equal setup checks representation created selected index owner placeholder (.sign request payload digest)]
-
-private theorem hash (pending : registration.BeaconInitHash) :
+theorem request_hash (pending : registration.BeaconInitHash) :
     RegistrationNativePlatformBeaconPublication.fromHash (callback(false)) (encoder(false)) pending =
       RegistrationNativePlatformBeaconPublication.fromHash (callback(true)) (encoder(true)) pending := by
   unfold RegistrationNativePlatformBeaconPublication.fromHash
@@ -65,26 +56,10 @@ private theorem hash (pending : registration.BeaconInitHash) :
   apply congrArg (RegistrationNativePlatformBeaconPublication.continueWith _)
   funext effect
   cases effect with
-  | MldsaSigningRequested next => exact signing setup checks representation created selected index owner placeholder reserve _ digest next
+  | Ready next => rw [encoder_equal setup checks representation created selected placeholder reserve]
   | _ => rfl
 
-/-- The actual fingerprint and complete original source tail are identical on the same pending data, without projecting any current reply, log, cache, counter or platform state. -/
-theorem fingerprint (pending : registration.BeaconFingerprint) :
-    RegistrationNativePlatformBeaconPublication.fromFingerprint (callback(false)) (encoder(false)) pending =
-      RegistrationNativePlatformBeaconPublication.fromFingerprint (callback(true)) (encoder(true)) pending := by
-  unfold RegistrationNativePlatformBeaconPublication.fromFingerprint
-  apply congrArg (RegistrationNativePlatformBeaconPublication.continueWith pending.request)
-  funext request
-  rw [crypto_equal setup checks representation created selected index owner placeholder (.hash request)]
-  apply congrArg (Bind.bind (callback(true) (.inl (.hash request))))
-  funext digest
-  apply congrArg (RegistrationNativePlatformBeaconPublication.continueWith _)
-  funext effect
-  cases effect with
-  | HashRequested next => exact hash setup checks representation created selected index owner placeholder reserve next
-  | _ => rfl
-
-/-- Before any target is selected, the actual PQ signing stage and its full original fingerprint suffix have identical real/censored source behavior, including rejected keys and missing rows. -/
+/-- Before any target is selected, the actual PQ signing stage and its full original hash suffix have identical real/censored source behavior, including rejected keys and missing rows. -/
 theorem pq (pending : registration.BeaconEd25519Signing) (stage : pending.stage = .PqKey)
     (tagged : RegistrationNativeIdentitySigningRole.Tagged pending.state.started)
     (before : Full (n := n) (KemSK := KemSK) (Platform := Platform) (mlSource := mlSource))
@@ -106,17 +81,18 @@ theorem pq (pending : registration.BeaconEd25519Signing) (stage : pending.stage 
   cases effect <;> simp only [BeaconcryptCore.Refinement.RegistrationSigning.EdReplyTransition, stage] at facts
   case Rejected previous => rfl
   case Ed25519SigningRequested next => exact facts.2.elim
-  case FingerprintRequested next =>
-    exact congrArg (fun work => work.run middle) (fingerprint setup checks representation created selected index owner placeholder reserve next)
+  case HashRequested next =>
+    exact congrArg (fun work => work.run middle) (request_hash setup checks representation created selected index owner placeholder reserve next)
 
 end BeaconcryptCore.Computational.RegistrationNativeIdentityCensorUnselectedTail
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeIdentityCensorUnselectedTail.fingerprint' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeIdentityCensorUnselectedTail.fingerprint
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativeIdentityCensorUnselectedTail.pq' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativeIdentityCensorUnselectedTail.pq
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeIdentityCensorUnselectedTail.request_hash' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativeIdentityCensorUnselectedTail.request_hash

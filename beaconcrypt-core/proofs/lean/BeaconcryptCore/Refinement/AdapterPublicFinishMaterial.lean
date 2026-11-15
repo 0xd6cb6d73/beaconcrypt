@@ -25,7 +25,7 @@ theorem installed (view : AdapterPublicWrapperState.MaterialView source KemSK) (
         state := .Established completed.control completed.binding ⟨⟨some completed.kernel⟩⟩}
       {owner with phase := .established ⟨completed.control, completed.binding, completed.application⟩}
       (some (.established ⟨completed.binding.assigned_key_id, completed.control, completed.binding.associated_data⟩ completed.kernel)) := by
-  exact ⟨related.identityPublic, related.identitySecret, related.mldsa, related.pin, related.serverPublic,
+  exact ⟨related.identityPublic, related.identitySecret, related.pin, related.serverPublic,
     rfl, rfl, rfl, completed.kernel, rfl, rfl⟩
 
 omit platform in
@@ -37,7 +37,7 @@ theorem aborted (view : AdapterPublicWrapperState.MaterialView source KemSK) (jo
     (initial : owner.phase = .initSent pending scalar) (control : pqxdh.BeaconAborted) :
     AdapterPublicWrapperState.Beacon view joint finalPool {self with state := .Aborted control}
       {owner with phase := .aborted control} (some (.inactive .aborted)) := by
-  refine ⟨related.identityPublic, related.identitySecret, related.mldsa, related.pin, related.serverPublic, ?_, rfl, rfl⟩
+  refine ⟨related.identityPublic, related.identitySecret, related.pin, related.serverPublic, ?_, rfl, rfl⟩
   simpa only [AdapterPublicWrapperState.currentId, initial] using related.identifier
 
 omit platform in

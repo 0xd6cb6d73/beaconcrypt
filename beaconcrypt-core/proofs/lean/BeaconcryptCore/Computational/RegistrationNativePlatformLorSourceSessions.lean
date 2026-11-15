@@ -100,6 +100,8 @@ theorem accept_run (packet : registration.InitPacket) (before : State source Pla
     StateT.run,simulateQ_map,map_apply,Functor.map_map]
   rfl
 
+attribute [local irreducible] RegistrationNativePlatformSecretWordOpen.accept
+
 theorem typed_fresh (packet : registration.InitPacket) (handle : Nat) (before after : State source Platform Private)
     (supported : (.ok (some handle),after) ∈ support ((typed (.inr (.accept packet))).run before)) :
     handle=before.1.1.server.sessions.length := by

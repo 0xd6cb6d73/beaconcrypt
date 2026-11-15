@@ -38,6 +38,9 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhHeadlineBridges
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+/- The public AD and completed binding are supplied post-hash parameters of these mathematical suffix bridges. These equations do not derive current dynamic transcript hashing or per-session AD selection. AD preservation is a separate completed-binding/source-controller obligation, not a field of the low-level allocation candidate. -/
 open PqxdhRefinement PqxdhEd25519EufCma PqxdhKemIndCca
 open BeaconcryptCore.Refinement.ProtocolComposition (concreteByte absByte_concreteByte)
 
@@ -57,23 +60,23 @@ def PrepareBridge : Prop :=
       (registrationId : pqxdh.RegistrationId) (rootInput : pqxdh.RootKeyInput)
       (root : PqxdhSecretInputKdf.RootOutput) (data : Option Pqxdh.Bytes) (metadata : PeerMetadata)
       (state : PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed),
-    PqxdhRegistrationInputs.build source input root data metadata state =
-      PqxdhServerRegistrationPublication.build source
+    PqxdhRegistrationInputs.build (associatedData := associatedData) source input root data metadata state =
+      PqxdhServerRegistrationPublication.build (associatedData := associatedData) source
         ⟨input.server_binding, registrationId, input.beacon_identity_public_key,
           input.ephemeral_public_key, input.kem_ciphertext, rootInput⟩ root data metadata state)
 
 /-- B1 holds. -/
-theorem prepare_bridge : PrepareBridge :=
+theorem prepare_bridge : PrepareBridge (associatedData := associatedData) :=
   ⟨fun state input registrationId rootInput binding available =>
       PqxdhRegistrationInputs.prepare_exact state
         ⟨input.server_binding, registrationId, input.beacon_identity_public_key,
           input.ephemeral_public_key, input.kem_ciphertext, rootInput⟩ binding available,
     fun _ _ _ source input registrationId rootInput root data metadata state =>
-      PqxdhRegistrationInputs.build_exact source
+      PqxdhRegistrationInputs.build_exact (associatedData := associatedData) source
         ⟨input.server_binding, registrationId, input.beacon_identity_public_key,
           input.ephemeral_public_key, input.kem_ciphertext, rootInput⟩ root data metadata state⟩
 
-/-- B2 (server_commit): the extracted commit of any candidate returns exactly the control installed by the hand-written publication of HB-111 (native kernels) and of HB-112 (generic kernels), together with the committed key identifier, beacon identity and associated data. -/
+/-- B2 (server_commit): the extracted commit of any candidate returns exactly the control installed by the hand-written publication of HB-111 (native kernels) and of HB-112 (generic kernels), together with the committed key identifier and beacon identity. The current low-level candidate has no final AD; its completed registration binding is constructed separately by the actual AD-hash continuation. -/
 def CommitBridge : Prop :=
   (∀ (Metadata PeerMetadata Consumed : Type)
     (state : PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed)
@@ -81,13 +84,13 @@ def CommitBridge : Prop :=
     (metadata : PeerMetadata),
     pqxdh.server_commit candidate = ok
       ((PqxdhServerRegistrationPublication.publish state candidate kernel metadata).control,
-        ⟨candidate.key_id, candidate.beacon_identity_public_key, candidate.associated_data⟩)) ∧
+        ⟨candidate.key_id, candidate.beacon_identity_public_key⟩)) ∧
   (∀ (Kernel Metadata PeerMetadata Consumed : Type)
     (state : PqxdhInitialGenericPublication.State Kernel Metadata PeerMetadata Consumed)
     (candidate : pqxdh.ServerRegistrationCandidate) (kernel : Kernel) (metadata : PeerMetadata),
     pqxdh.server_commit candidate = ok
       ((PqxdhInitialGenericPublication.publish state candidate kernel metadata).control,
-        ⟨candidate.key_id, candidate.beacon_identity_public_key, candidate.associated_data⟩))
+        ⟨candidate.key_id, candidate.beacon_identity_public_key⟩))
 
 /-- B2 holds. -/
 theorem commit_bridge : CommitBridge :=
@@ -173,18 +176,18 @@ theorem array_of_bytes (n : Std.Usize) (bytes : Pqxdh.Bytes) (width : bytes.leng
   ⟨⟨bytes.map concreteByte, by simp [width]⟩, by
     simp [absBytes, List.map_map, Function.comp_def, absByte_concreteByte]⟩
 
-/-- B6 (build_commitment_transcript): whenever the hand-written sealing or opening path reaches its hash call (281-byte associated data, 16-byte tag), the hashed bytes are exactly the output of the extracted 357-byte commitment transcript builder on representing arrays. -/
+/-- B6 (build_commitment_transcript): whenever the hand-written sealing or opening path reaches its hash call (151-byte associated data, 16-byte tag), the hashed bytes are exactly the output of the extracted 227-byte commitment transcript builder on representing arrays. -/
 def CommitmentTranscriptBridge : Prop :=
   (∀ (input : RawCtxSourceSend.SealInput) (tagBytes : Pqxdh.Bytes),
-    input.context.associatedData.length = 281 → tagBytes.length = 16 →
-    ∃ (ad : Std.Array Std.U8 281#usize) (tag : Std.Array Std.U8 16#usize) (transcript : _),
+    input.context.associatedData.length = 151 → tagBytes.length = 16 →
+    ∃ (ad : Std.Array Std.U8 151#usize) (tag : Std.Array Std.U8 16#usize) (transcript : _),
       absBytes ad = input.context.associatedData ∧ absBytes tag = tagBytes ∧
       commitment.build_commitment_transcript input.material.key.bytes input.material.nonce.bytes ad tag
         input.sequence input.context.senderId = ok transcript ∧
       absBytes transcript.bytes = RawCtxSourceSeal.hashInput input tagBytes) ∧
   (∀ (input : RawCtxWholeOwner.OpenInput) (slices : RawCtxFrameDecoding.Slices),
-    input.context.associatedData.length = 281 → slices.tag.length = 16 →
-    ∃ (ad : Std.Array Std.U8 281#usize) (tag : Std.Array Std.U8 16#usize) (transcript : _),
+    input.context.associatedData.length = 151 → slices.tag.length = 16 →
+    ∃ (ad : Std.Array Std.U8 151#usize) (tag : Std.Array Std.U8 16#usize) (transcript : _),
       absBytes ad = input.context.associatedData ∧ absBytes tag = slices.tag ∧
       commitment.build_commitment_transcript input.material.key.bytes input.material.nonce.bytes ad tag
         input.sequence input.context.frame.sender = ok transcript ∧
@@ -194,13 +197,13 @@ def CommitmentTranscriptBridge : Prop :=
 theorem commitment_transcript_bridge : CommitmentTranscriptBridge := by
   constructor
   · intro input tagBytes adWidth tagWidth
-    obtain ⟨ad, adBytes⟩ := array_of_bytes 281#usize _ (by simpa using adWidth)
+    obtain ⟨ad, adBytes⟩ := array_of_bytes 151#usize _ (by simpa using adWidth)
     obtain ⟨tag, tagArray⟩ := array_of_bytes 16#usize tagBytes (by simpa using tagWidth)
     obtain ⟨transcript, built, bytes⟩ :=
       RawCtxSourceSeal.hashInput_extracted input tagBytes ad tag adBytes tagArray
     exact ⟨ad, tag, transcript, adBytes, tagArray, built, bytes⟩
   · intro input slices adWidth tagWidth
-    obtain ⟨ad, adBytes⟩ := array_of_bytes 281#usize _ (by simpa using adWidth)
+    obtain ⟨ad, adBytes⟩ := array_of_bytes 151#usize _ (by simpa using adWidth)
     obtain ⟨tag, tagArray⟩ := array_of_bytes 16#usize slices.tag (by simpa using tagWidth)
     obtain ⟨transcript, built, bytes⟩ :=
       RawCtxSourceOpen.hashInput_extracted input slices ad tag adBytes tagArray
@@ -223,7 +226,7 @@ theorem send_finish_bridge : SendFinishBridge :=
 
 /-- B8 (OpenFrameContext.from_frame): on every represented payload the extracted payload admission and its three slices equal the hand-written splitter, and every payload no longer than the native size bound is represented by a slice. -/
 def FramePayloadBridge : Prop :=
-  (∀ (payload : Slice Std.U8) (ad : Std.Array Std.U8 281#usize) (sender : Std.U64),
+  (∀ (payload : Slice Std.U8) (ad : Std.Array Std.U8 151#usize) (sender : Std.U64),
     (RawCtxNativeFramePrelude.projectOption RawCtxNativeFramePrelude.contextSlices <$>
         record.OpenFrameContext.from_frame payload ad sender) =
       ok (RawCtxFrameDecoding.fromPayload (RawCtxNativeFramePrelude.sliceBytes payload))) ∧
@@ -254,7 +257,7 @@ def AcceptBridge {setup : StatefulPhase1Setup baseSpec}
     (post : Post (baseSpec := baseSpec) program.Selection S (B + 1))
     (secretIdentity : M → Pqxdh.Bytes) : Prop :=
   ∀ stopped ∈ support (PqxdhPrivateSourceCoins.privateRun attachedVerify primitives 1
-      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (driver env.toDriverEnvironment program))),
+      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program))),
     ∀ output, stopped.1 = some output →
     ∀ (secret : KemSK) (ephemeral : List.Vector UInt8 32) (ciphertext : MlKem768Ciphertext)
       (shared : MlKemSharedSecret),
@@ -266,16 +269,16 @@ def AcceptBridge {setup : StatefulPhase1Setup baseSpec}
       (eraseOutput output).accepted = some ((eraseOutput output).context.publicIdentity.ed25519,
         (publicMaterial setup (eraseOutput output).context.publicIdentity.ed25519
           (eraseOutput output).context.generated).keyTuple) ∧
-      PqxdhAuthenticatedRootExperiment.nativeAfterEncapsulation env baseImpl kem attachedVerify primitives program
+      PqxdhAuthenticatedRootExperiment.nativeAfterEncapsulation (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program
           post secret (eraseOutput output, stopped.2) ephemeral (some (ciphertext, shared)) =
         (do
-          let result ← (PqxdhProtocolNativeAcceptance.nativeAccept env.source env.recordWriter env.aux
+          let result ← (PqxdhProtocolNativeAcceptance.nativeAccept (associatedData := associatedData) env.source env.recordWriter env.aux
             secretIdentity env.senderId env.index env.metadata env.application
             (eraseOutput output).context.publicIdentity.ed25519
             (publicMaterial setup (eraseOutput output).context.publicIdentity.ed25519
               (eraseOutput output).context.generated).keyTuple
             ephemeral ciphertext shared).run (eraseOutput output).context.selection.2
-          Prod.fst <$> (simulateQ (PqxdhPhase2PostScheduler.actual attachedVerify primitives 1 env.source
+          Prod.fst <$> (simulateQ (PqxdhPhase2PostScheduler.actual (completedBinding := completedBinding) attachedVerify primitives 1 env.source
             env.localImpl env.recordWriter env.senderId env.route env.decode baseImpl kem secret ciphertext)
             (post (eraseOutput output).context.selection.1 result.1)).run (result.2, stopped.2))
 
@@ -289,9 +292,9 @@ theorem accept_bridge {setup : StatefulPhase1Setup baseSpec}
     (secretIdentity : M → Pqxdh.Bytes)
     (initialMatch : PqxdhProtocolServerInvariant.RootFields env.source.crypto secretIdentity
       env.senderId env.index env.server env.initial) :
-    AcceptBridge env baseImpl kem attachedVerify primitives program post secretIdentity := by
+    AcceptBridge (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post secretIdentity := by
   intro stopped present output stoppedOutput secret ephemeral ciphertext shared eligible valid
-  obtain ⟨reached, erased, related⟩ := PqxdhAuthenticatedRootBoundary.reached_root_fields env baseImpl kem
+  obtain ⟨reached, erased, related⟩ := PqxdhAuthenticatedRootBoundary.reached_root_fields (completedBinding := completedBinding) env baseImpl kem
     attachedVerify primitives program secretIdentity initialMatch stopped present
   rw [stoppedOutput, Option.map_some, Option.some.injEq] at erased
   subst reached
@@ -299,7 +302,7 @@ theorem accept_bridge {setup : StatefulPhase1Setup baseSpec}
   refine ⟨fields.1, ?_⟩
   simp only [PqxdhAuthenticatedRootExperiment.nativeAfterEncapsulation, valid]
   rw [PqxdhAuthenticatedRootExperiment.nativeAccepted,
-    PqxdhProtocolNativeAcceptance.native_accept_eq_build env.source env.recordWriter env.aux
+    PqxdhProtocolNativeAcceptance.native_accept_eq_build (associatedData := associatedData) env.source env.recordWriter env.aux
     secretIdentity env.senderId env.index env.metadata (eraseOutput output).context.selection.2 env.server related
     env.application _ _ ephemeral ciphertext shared fields.2.2 valid]
   rfl
@@ -312,26 +315,26 @@ noncomputable def extractedAfterEncapsulation {setup : StatefulPhase1Setup baseS
     (program : Program baseSpec setup.Context S (B + 1))
     (post : Post (baseSpec := baseSpec) program.Selection S (B + 1))
     (secretIdentity : M → Pqxdh.Bytes) (secret : KemSK)
-    (prepared : Prepared setup (driver env.toDriverEnvironment program).State)
+    (prepared : Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)
     (ephemeral : List.Vector UInt8 32) (encapsulated : Option (MlKem768Ciphertext × MlKemSharedSecret)) :
     ProbComp Bool :=
   match encapsulated with
   | none => evalKem baseImpl kem secret (observe env.source none attachedVerify primitives 1 setup
-      (commonObserver env program post) (some prepared.1) ⟨some ephemeral, none, .error .badEncoding, env.server⟩
+      (commonObserver (associatedData := associatedData) (completedBinding := completedBinding) env program post) (some prepared.1) ⟨some ephemeral, none, .error .badEncoding, env.server⟩
       prepared.2)
   | some (ciphertext, shared) =>
       match rootFailure env.source.crypto env.server.ikSk ephemeral.toList prepared.1.context.publicIdentity.ed25519
         prepared.1.context.generated.before.publicKey prepared.1.context.generated.after.publicKey with
       | some failure => evalKem baseImpl kem secret (observe env.source none attachedVerify primitives 1 setup
-          (commonObserver env program post) (some prepared.1)
+          (commonObserver (associatedData := associatedData) (completedBinding := completedBinding) env program post) (some prepared.1)
           ⟨some ephemeral, some ciphertext, .error failure, env.server⟩ prepared.2)
       | none => do
-          let result ← (PqxdhProtocolNativeAcceptance.nativeAccept env.source env.recordWriter env.aux
+          let result ← (PqxdhProtocolNativeAcceptance.nativeAccept (associatedData := associatedData) env.source env.recordWriter env.aux
             secretIdentity env.senderId env.index env.metadata env.application
             prepared.1.context.publicIdentity.ed25519
             (publicMaterial setup prepared.1.context.publicIdentity.ed25519 prepared.1.context.generated).keyTuple
             ephemeral ciphertext shared).run prepared.1.context.selection.2
-          Prod.fst <$> (simulateQ (PqxdhPhase2PostScheduler.actual attachedVerify primitives 1 env.source
+          Prod.fst <$> (simulateQ (PqxdhPhase2PostScheduler.actual (completedBinding := completedBinding) attachedVerify primitives 1 env.source
             env.localImpl env.recordWriter env.senderId env.route env.decode baseImpl kem secret ciphertext)
             (post prepared.1.context.selection.1 result.1)).run (result.2, prepared.2)
 
@@ -343,14 +346,14 @@ noncomputable def extractedNext {setup : StatefulPhase1Setup baseSpec}
     (program : Program baseSpec setup.Context S (B + 1))
     (post : Post (baseSpec := baseSpec) program.Selection S (B + 1))
     (secretIdentity : M → Pqxdh.Bytes) (secret : KemSK)
-    (prepared : Prepared setup (driver env.toDriverEnvironment program).State) : ProbComp Bool :=
+    (prepared : Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State) : ProbComp Bool :=
   if targetEligible env.parameters prepared then do
     let ephemeral ← simulateQ (kemAmbientImpl baseImpl) env.ephemeralGen
     let encapsulated ← simulateQ (kemAmbientImpl baseImpl) (env.native.encaps prepared.1.context.generated.target)
-    extractedAfterEncapsulation env baseImpl kem attachedVerify primitives program post secretIdentity secret prepared
+    extractedAfterEncapsulation (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post secretIdentity secret prepared
       ephemeral encapsulated
   else evalKem baseImpl kem secret (allCandidateCommon env.source kem env.native attachedVerify primitives 1 setup
-    (commonObserver env program post) (some prepared.1) prepared.2 env.server env.application env.ephemeralGen)
+    (commonObserver (associatedData := associatedData) (completedBinding := completedBinding) env program post) (some prepared.1) prepared.2 env.server env.application env.ephemeralGen)
 
 /-- HB-111's experiment in which the accepted branch executes the extracted acceptance. -/
 noncomputable def extractedActual {setup : StatefulPhase1Setup baseSpec}
@@ -361,8 +364,8 @@ noncomputable def extractedActual {setup : StatefulPhase1Setup baseSpec}
     (post : Post (baseSpec := baseSpec) program.Selection S (B + 1))
     (secretIdentity : M → Pqxdh.Bytes) : ProbComp Bool :=
   PqxdhGeneratedNativeContinuation.nativeContinued attachedVerify primitives baseImpl kem setup
-    (driver env.toDriverEnvironment program)
-    (extractedNext env baseImpl kem attachedVerify primitives program post secretIdentity) false
+    (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program)
+    (extractedNext (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post secretIdentity) false
 
 /-- Under HB-111's representation premises, HB-111's experiment and the experiment executing the extracted acceptance have the same output distribution; on every reachable stopped run their continuations are equal programs. -/
 theorem actual_extracted {setup : StatefulPhase1Setup baseSpec}
@@ -374,8 +377,8 @@ theorem actual_extracted {setup : StatefulPhase1Setup baseSpec}
     (secretIdentity : M → Pqxdh.Bytes)
     (initialMatch : PqxdhProtocolServerInvariant.RootFields env.source.crypto secretIdentity
       env.senderId env.index env.server env.initial) :
-    𝒟[actual env baseImpl kem attachedVerify primitives program post] =
-      𝒟[extractedActual env baseImpl kem attachedVerify primitives program post secretIdentity] := by
+    𝒟[actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post] =
+      𝒟[extractedActual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post secretIdentity] := by
   unfold PqxdhAuthenticatedRootExperiment.actual extractedActual PqxdhGeneratedNativeContinuation.nativeContinued
   apply OracleComp.evalDist_bind_congr_of_support
   intro stopped present
@@ -399,7 +402,7 @@ theorem actual_extracted {setup : StatefulPhase1Setup baseSpec}
         | some failure =>
           simp only [PqxdhAuthenticatedRootExperiment.nativeAfterEncapsulation, extractedAfterEncapsulation, valid]
         | none =>
-          rw [(accept_bridge env baseImpl kem attachedVerify primitives program post secretIdentity initialMatch
+          rw [(accept_bridge (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post secretIdentity initialMatch
             stopped present output stoppedOutput _ ephemeral ciphertext shared eligible valid).2]
           simp only [extractedAfterEncapsulation, valid]
     · rfl
@@ -676,7 +679,7 @@ noncomputable def pendingBuild {Kernel Metadata PeerMetadata Consumed : Type} {m
           ⟨state.server.identity, state.identityKeyId⟩ availability) fun prepared =>
           match prepared with
           | .Err _ => pure (ok (none, state))
-          | .Ok candidate => PqxdhInitialGenericBuilder.candidate calls aux initial candidate data metadata state
+          | .Ok candidate => PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) calls aux initial candidate data metadata state
 
 /-- The generic builder on the extracted prepare equals the hand-written one on the pending token's used fields. -/
 theorem pendingBuild_used {Kernel Metadata PeerMetadata Consumed : Type} {m : Type → Type} [Monad m]
@@ -684,8 +687,8 @@ theorem pendingBuild_used {Kernel Metadata PeerMetadata Consumed : Type} {m : Ty
     (aux : QueryImpl PqxdhServerRegistrationPublication.AuxSpec m) (initial : RustM Kernel)
     (pending : pqxdh.PendingServerRegistration) (data : Option Pqxdh.Bytes) (metadata : PeerMetadata)
     (state : PqxdhInitialGenericPublication.State Kernel Metadata PeerMetadata Consumed) :
-    pendingBuild calls aux initial pending data metadata state =
-      PqxdhInitialGenericBuilder.usedBuild calls aux initial (PqxdhRegistrationInputs.used pending) data metadata
+    pendingBuild (associatedData := associatedData) calls aux initial pending data metadata state =
+      PqxdhInitialGenericBuilder.usedBuild (associatedData := associatedData) calls aux initial (PqxdhRegistrationInputs.used pending) data metadata
         state := rfl
 
 /-- HB-112's registration step with the extracted acceptance: `server_accept` on the selected front Server, consumption of the returned registration identifier, the root derived from the returned root input, and the generic first-send builder running the extracted `server_prepare_commit` on the returned pending token. The initial kernel is supplied as a function of the derived root. -/
@@ -709,7 +712,7 @@ noncomputable def frontAccept (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltS
       let consumed := absBytes pending.registration_id.bytes :: before.consumed index
       let current := { before with consumed := Function.update before.consumed index consumed }
       PqxdhInitialPendingBuilder.reinstall index current <$>
-        pendingBuild PqxdhInitialPendingPost.calls PqxdhInitialPendingPost.auxForward
+        pendingBuild (associatedData := associatedData) PqxdhInitialPendingPost.calls PqxdhInitialPendingPost.auxForward
           (initialOf (PqxdhProtocolNativeAcceptance.nativeRoot source pending)) pending application metadata
           (PqxdhInitialPendingBuilder.selected sender index current)
   | .ok (.Err _) => pure (.ok none, before)
@@ -727,9 +730,9 @@ theorem front_accept_eq_build (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltS
     (ephemeral : List.Vector UInt8 32) (ciphertext : MlKem768Ciphertext) (secret : MlKemSharedSecret)
     (fresh : identity.toList ++ keys.oneTime.toList ∉ server.consumed)
     (valid : rootFailure source.crypto server.ikSk ephemeral.toList identity keys.prekey keys.oneTime = none) :
-    (frontAccept (extra := extra) (X := X) (Response := Response) (Shared := Shared) source secretIdentity
+    (frontAccept (associatedData := associatedData) (extra := extra) (X := X) (Response := Response) (Shared := Shared) source secretIdentity
       initialOf sender index metadata application identity keys ephemeral ciphertext secret).run before =
-    (PqxdhInitialPendingBuilder.build source
+    (PqxdhInitialPendingBuilder.build (associatedData := associatedData) source
       (initialOf (productionHiddenRoot source
         (serverCoordinates source.crypto server.ikSk ephemeral.toList identity keys.prekey keys.oneTime) secret))
       sender index metadata
@@ -773,11 +776,11 @@ def EvolvingAcceptBridge {setup : StatefulPhase1Setup baseSpec}
     (selected : RawCtxProtocolReveals.Owner S (B + 1)) (number : Std.U64)
     (ancestors disclosed : List RatchetChain) (secretIdentity : M → Pqxdh.Bytes) : Prop :=
   ∀ stopped ∈ support (PqxdhPrivateSourceCoins.privateRun attachedVerify primitives 1
-      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (driver env.toDriverEnvironment program))),
+      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program))),
     ∀ output, stopped.1 = some output →
     ∀ (secret : KemSK) (ephemeral : List.Vector UInt8 32) (ciphertext : MlKem768Ciphertext)
       (shared : MlKemSharedSecret),
-      let prepared : Prepared setup (driver env.toDriverEnvironment program).State := (eraseOutput output, stopped.2)
+      let prepared : Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State := (eraseOutput output, stopped.2)
       let identity := prepared.1.context.publicIdentity.ed25519
       let keys := (publicMaterial setup identity prepared.1.context.generated).keyTuple
       let readyValue := ready env.server env.application identity keys.oneTime ephemeral ciphertext
@@ -786,19 +789,19 @@ def EvolvingAcceptBridge {setup : StatefulPhase1Setup baseSpec}
       targetEligible env.parameters prepared = true →
       rootFailure env.source.crypto env.server.ikSk ephemeral.toList identity keys.prekey keys.oneTime = none →
       prepared.1.accepted = some (identity, keys) ∧
-      PqxdhInitialRootEventExperiment.nativeAfterEncapsulation env baseImpl kem attachedVerify primitives program post
-          (PqxdhInitialRootEventSecrecy.accepted env attachedVerify primitives program post selected number
+      PqxdhInitialRootEventExperiment.nativeAfterEncapsulation (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post
+          (PqxdhInitialRootEventSecrecy.accepted (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program post selected number
             ancestors disclosed) secret prepared ephemeral (some (ciphertext, shared)) =
         simulateQ (PqxdhPhase2PostScheduler.interpretation env.source baseImpl kem secret ciphertext)
           ((fun result => PqxdhInitialRootEventAccepted.decision env readyValue selected number ancestors disclosed
               result.1) <$>
             (simulateQ (PqxdhInitialRootEventCompiler.target env.source env.recordWriter attachedVerify primitives 1
               env.localImpl env.aux ciphertext) (do
-                let built ← (frontAccept env.source secretIdentity (initialOf env.source) env.senderId env.index
+                let built ← (frontAccept (associatedData := associatedData) env.source secretIdentity (initialOf env.source) env.senderId env.index
                   env.metadata env.application identity keys ephemeral ciphertext shared).run
-                    (PqxdhInitialRootEventAccepted.front env program prepared)
-                (simulateQ (PqxdhInitialOriginPost.compiler (PqxdhInitialSelectedOrigin.mark env.source
-                    (PqxdhInitialRootEventAccepted.selectedMessage env program prepared readyValue))
+                    (PqxdhInitialRootEventAccepted.front (completedBinding := completedBinding) env program prepared)
+                (simulateQ (PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) (PqxdhInitialSelectedOrigin.mark env.source
+                    (PqxdhInitialRootEventAccepted.selectedMessage (completedBinding := completedBinding) env program prepared readyValue))
                     env.senderId env.route env.decode)
                   (post prepared.1.context.selection.1 built.1)).run
                     (built.2, PqxdhInitialOriginPost.afterBuilder PqxdhInitialSourcePublication.empty built.2
@@ -816,24 +819,24 @@ theorem evolving_accept_bridge {setup : StatefulPhase1Setup baseSpec}
     (ancestors disclosed : List RatchetChain) (secretIdentity : M → Pqxdh.Bytes)
     (initialMatch : PqxdhProtocolServerInvariant.RootFields env.source.crypto secretIdentity
       env.senderId env.index env.server env.initial) :
-    EvolvingAcceptBridge env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed
+    EvolvingAcceptBridge (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed
       secretIdentity := by
   intro stopped present output stoppedOutput secret ephemeral ciphertext shared prepared identity keys readyValue
     eligible valid
-  obtain ⟨reached, erased, related⟩ := PqxdhAuthenticatedRootBoundary.reached_root_fields env baseImpl kem
+  obtain ⟨reached, erased, related⟩ := PqxdhAuthenticatedRootBoundary.reached_root_fields (completedBinding := completedBinding) env baseImpl kem
     attachedVerify primitives program secretIdentity initialMatch stopped present
   rw [stoppedOutput, Option.map_some, Option.some.injEq] at erased
   subst reached
   have fields := of_decide_eq_true eligible
   have frontRelated : FrontRootFields env.source.crypto secretIdentity env.senderId env.index env.server
-      (PqxdhInitialRootEventAccepted.front env program prepared) := related
+      (PqxdhInitialRootEventAccepted.front (completedBinding := completedBinding) env program prepared) := related
   have branch : rootFailure env.source.crypto env.server.ikSk ephemeral.toList
       prepared.1.context.publicIdentity.ed25519 prepared.1.context.generated.before.publicKey
       prepared.1.context.generated.after.publicKey = none := valid
   refine ⟨fields.1, ?_⟩
   simp only [PqxdhInitialRootEventExperiment.nativeAfterEncapsulation, branch]
-  rw [front_accept_eq_build env.source secretIdentity (initialOf env.source) env.senderId env.index env.metadata
-    (PqxdhInitialRootEventAccepted.front env program prepared) env.server frontRelated env.application
+  rw [front_accept_eq_build (associatedData := associatedData) env.source secretIdentity (initialOf env.source) env.senderId env.index env.metadata
+    (PqxdhInitialRootEventAccepted.front (completedBinding := completedBinding) env program prepared) env.server frontRelated env.application
     identity keys ephemeral ciphertext shared fields.2.2 valid]
   rfl
 
@@ -846,18 +849,18 @@ noncomputable def extractedEvolvingAfterEncapsulation {setup : StatefulPhase1Set
     (post : PqxdhAuthenticatedRootExperiment.Post (baseSpec := baseSpec) program.Selection S (B + 1))
     (selected : RawCtxProtocolReveals.Owner S (B + 1)) (number : Std.U64)
     (ancestors disclosed : List RatchetChain) (secretIdentity : M → Pqxdh.Bytes) (secret : KemSK)
-    (prepared : Prepared setup (driver env.toDriverEnvironment program).State)
+    (prepared : Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)
     (ephemeral : List.Vector UInt8 32) (encapsulated : Option (MlKem768Ciphertext × MlKemSharedSecret)) :
     ProbComp Bool :=
   match encapsulated with
   | none => evalKem baseImpl kem secret (observe env.source none attachedVerify primitives 1 setup
-      (PqxdhAuthenticatedRootExperiment.commonObserver env program post) (some prepared.1)
+      (PqxdhAuthenticatedRootExperiment.commonObserver (associatedData := associatedData) (completedBinding := completedBinding) env program post) (some prepared.1)
       ⟨some ephemeral, none, .error .badEncoding, env.server⟩ prepared.2)
   | some (ciphertext, shared) =>
       match rootFailure env.source.crypto env.server.ikSk ephemeral.toList prepared.1.context.publicIdentity.ed25519
         prepared.1.context.generated.before.publicKey prepared.1.context.generated.after.publicKey with
       | some failure => evalKem baseImpl kem secret (observe env.source none attachedVerify primitives 1 setup
-          (PqxdhAuthenticatedRootExperiment.commonObserver env program post) (some prepared.1)
+          (PqxdhAuthenticatedRootExperiment.commonObserver (associatedData := associatedData) (completedBinding := completedBinding) env program post) (some prepared.1)
           ⟨some ephemeral, some ciphertext, .error failure, env.server⟩ prepared.2)
       | none =>
           let identity := prepared.1.context.publicIdentity.ed25519
@@ -870,11 +873,11 @@ noncomputable def extractedEvolvingAfterEncapsulation {setup : StatefulPhase1Set
                 result.1) <$>
               (simulateQ (PqxdhInitialRootEventCompiler.target env.source env.recordWriter attachedVerify primitives 1
                 env.localImpl env.aux ciphertext) (do
-                  let built ← (frontAccept env.source secretIdentity (initialOf env.source) env.senderId env.index
+                  let built ← (frontAccept (associatedData := associatedData) env.source secretIdentity (initialOf env.source) env.senderId env.index
                     env.metadata env.application identity keys ephemeral ciphertext shared).run
-                      (PqxdhInitialRootEventAccepted.front env program prepared)
-                  (simulateQ (PqxdhInitialOriginPost.compiler (PqxdhInitialSelectedOrigin.mark env.source
-                      (PqxdhInitialRootEventAccepted.selectedMessage env program prepared readyValue))
+                      (PqxdhInitialRootEventAccepted.front (completedBinding := completedBinding) env program prepared)
+                  (simulateQ (PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) (PqxdhInitialSelectedOrigin.mark env.source
+                      (PqxdhInitialRootEventAccepted.selectedMessage (completedBinding := completedBinding) env program prepared readyValue))
                       env.senderId env.route env.decode)
                     (post prepared.1.context.selection.1 built.1)).run
                       (built.2, PqxdhInitialOriginPost.afterBuilder PqxdhInitialSourcePublication.empty built.2
@@ -890,14 +893,14 @@ noncomputable def extractedEvolvingNext {setup : StatefulPhase1Setup baseSpec}
     (post : PqxdhAuthenticatedRootExperiment.Post (baseSpec := baseSpec) program.Selection S (B + 1))
     (selected : RawCtxProtocolReveals.Owner S (B + 1)) (number : Std.U64)
     (ancestors disclosed : List RatchetChain) (secretIdentity : M → Pqxdh.Bytes) (secret : KemSK)
-    (prepared : Prepared setup (driver env.toDriverEnvironment program).State) : ProbComp Bool :=
+    (prepared : Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State) : ProbComp Bool :=
   if targetEligible env.parameters prepared then do
     let ephemeral ← simulateQ (kemAmbientImpl baseImpl) env.ephemeralGen
     let encapsulated ← simulateQ (kemAmbientImpl baseImpl) (env.native.encaps prepared.1.context.generated.target)
-    extractedEvolvingAfterEncapsulation env baseImpl kem attachedVerify primitives program post selected number
+    extractedEvolvingAfterEncapsulation (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number
       ancestors disclosed secretIdentity secret prepared ephemeral encapsulated
   else evalKem baseImpl kem secret (allCandidateCommon env.source kem env.native attachedVerify primitives 1 setup
-    (PqxdhAuthenticatedRootExperiment.commonObserver env program post) (some prepared.1) prepared.2 env.server
+    (PqxdhAuthenticatedRootExperiment.commonObserver (associatedData := associatedData) (completedBinding := completedBinding) env program post) (some prepared.1) prepared.2 env.server
     env.application env.ephemeralGen)
 
 /-- HB-112's experiment in which the accepted branch executes the extracted acceptance. -/
@@ -910,8 +913,8 @@ noncomputable def extractedEvolvingActual {setup : StatefulPhase1Setup baseSpec}
     (selected : RawCtxProtocolReveals.Owner S (B + 1)) (number : Std.U64)
     (ancestors disclosed : List RatchetChain) (secretIdentity : M → Pqxdh.Bytes) : ProbComp Bool :=
   PqxdhGeneratedNativeContinuation.nativeContinued attachedVerify primitives baseImpl kem setup
-    (driver env.toDriverEnvironment program)
-    (extractedEvolvingNext env baseImpl kem attachedVerify primitives program post selected number ancestors
+    (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program)
+    (extractedEvolvingNext (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors
       disclosed secretIdentity) false
 
 /-- Under HB-111's representation premises, HB-112's experiment and the experiment executing the extracted acceptance have the same output distribution; on every reachable stopped run their continuations are equal programs. -/
@@ -925,9 +928,9 @@ theorem evolving_actual_extracted {setup : StatefulPhase1Setup baseSpec}
     (ancestors disclosed : List RatchetChain) (secretIdentity : M → Pqxdh.Bytes)
     (initialMatch : PqxdhProtocolServerInvariant.RootFields env.source.crypto secretIdentity
       env.senderId env.index env.server env.initial) :
-    𝒟[PqxdhInitialRootEventSecrecy.actual env baseImpl kem attachedVerify primitives program post selected number
+    𝒟[PqxdhInitialRootEventSecrecy.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number
         ancestors disclosed] =
-      𝒟[extractedEvolvingActual env baseImpl kem attachedVerify primitives program post selected number ancestors
+      𝒟[extractedEvolvingActual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors
         disclosed secretIdentity] := by
   unfold PqxdhInitialRootEventSecrecy.actual PqxdhInitialRootEventExperiment.actual extractedEvolvingActual
     PqxdhGeneratedNativeContinuation.nativeContinued
@@ -954,7 +957,7 @@ theorem evolving_actual_extracted {setup : StatefulPhase1Setup baseSpec}
           simp only [PqxdhInitialRootEventExperiment.nativeAfterEncapsulation, extractedEvolvingAfterEncapsulation,
             valid]
         | none =>
-          rw [(evolving_accept_bridge env baseImpl kem attachedVerify primitives program post selected number
+          rw [(evolving_accept_bridge (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number
             ancestors disclosed secretIdentity initialMatch stopped present output stoppedOutput _ ephemeral ciphertext
             shared eligible valid).2]
           simp only [extractedEvolvingAfterEncapsulation, valid]
@@ -990,12 +993,12 @@ theorem authenticated_native_root_bound_bridged
     (secretIdentity : M → Pqxdh.Bytes)
     (initialMatch : PqxdhProtocolServerInvariant.RootFields env.source.crypto secretIdentity
       env.senderId env.index env.server env.initial) :
-    let p := protocol env kem attachedVerify primitives program post
-    ((actual env baseImpl kem attachedVerify primitives program post).boolDistance
+    let p := protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post
+    ((actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post).boolDistance
       (uniformGame (rootReduction env.source baseImpl kem p)) ≤
       (PqxdhJointIdentity.advantage primitives
         (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
-          (driver env.toDriverEnvironment program) fallback ordinaryFallback)).toReal +
+          (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program) fallback ordinaryFallback)).toReal +
       Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)}[x = true].toReal +
       (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
         (PqxdhChallengeSecretRouting.reduction env.source kem p).toINDCCA).toReal +
@@ -1005,20 +1008,20 @@ theorem authenticated_native_root_bound_bridged
         (hmacPrfRealGame hmac (indexedReduction hmac (rootReduction env.source baseImpl kem p) index)).boolDistance
           (hmacPrfRandomGame (indexedReduction hmac (rootReduction env.source baseImpl kem p) index))) ∧
     (∀ result ∈ support (PqxdhPrivateSourceCoins.privateRun attachedVerify primitives 1
-      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (driver env.toDriverEnvironment program))),
+      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program))),
       ∃ output, result.1.map PqxdhPrivateRootSource.eraseOutput = some output ∧
         PqxdhProtocolServerInvariant.RootFields env.source.crypto secretIdentity env.senderId env.index
           env.server output.context.selection.2) ∧
-    PrepareBridge ∧ CommitBridge ∧ BeaconStartBridge ∧ BeaconCommitBridge ∧ RegistrationIdBridge ∧
+    PrepareBridge (associatedData := associatedData) ∧ CommitBridge ∧ BeaconStartBridge ∧ BeaconCommitBridge ∧ RegistrationIdBridge ∧
     CommitmentTranscriptBridge ∧ SendFinishBridge ∧ FramePayloadBridge ∧
-    AcceptBridge env baseImpl kem attachedVerify primitives program post secretIdentity := by
+    AcceptBridge (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post secretIdentity := by
   intro p
-  have original := PqxdhAuthenticatedRootBudgets.authenticated_native_root_bound env baseImpl kem
+  have original := PqxdhAuthenticatedRootBudgets.authenticated_native_root_bound (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem
     attachedVerify primitives program post c compatible adapter functional hmac sourceCorrect fallback
     ordinaryFallback secretIdentity initialMatch
-  exact ⟨original.1, original.2, prepare_bridge, commit_bridge, beacon_start_bridge, beacon_commit_bridge,
+  exact ⟨original.1, original.2, prepare_bridge (associatedData := associatedData), commit_bridge, beacon_start_bridge, beacon_commit_bridge,
     registration_id_bridge, commitment_transcript_bridge, send_finish_bridge, frame_payload_bridge,
-    accept_bridge env baseImpl kem attachedVerify primitives program post secretIdentity initialMatch⟩
+    accept_bridge (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post secretIdentity initialMatch⟩
 
 /-- HB-111 with every bridge proved here in the statement: `authenticated_native_root_bound_bridged` together with the validate_init_kex bridge B10. -/
 theorem authenticated_native_root_bound_bridged_full
@@ -1030,12 +1033,12 @@ theorem authenticated_native_root_bound_bridged_full
     (secretIdentity : M → Pqxdh.Bytes)
     (initialMatch : PqxdhProtocolServerInvariant.RootFields env.source.crypto secretIdentity
       env.senderId env.index env.server env.initial) :
-    let p := protocol env kem attachedVerify primitives program post
-    ((actual env baseImpl kem attachedVerify primitives program post).boolDistance
+    let p := protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post
+    ((actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post).boolDistance
       (uniformGame (rootReduction env.source baseImpl kem p)) ≤
       (PqxdhJointIdentity.advantage primitives
         (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
-          (driver env.toDriverEnvironment program) fallback ordinaryFallback)).toReal +
+          (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program) fallback ordinaryFallback)).toReal +
       Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)}[x = true].toReal +
       (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
         (PqxdhChallengeSecretRouting.reduction env.source kem p).toINDCCA).toReal +
@@ -1045,16 +1048,16 @@ theorem authenticated_native_root_bound_bridged_full
         (hmacPrfRealGame hmac (indexedReduction hmac (rootReduction env.source baseImpl kem p) index)).boolDistance
           (hmacPrfRandomGame (indexedReduction hmac (rootReduction env.source baseImpl kem p) index))) ∧
     (∀ result ∈ support (PqxdhPrivateSourceCoins.privateRun attachedVerify primitives 1
-      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (driver env.toDriverEnvironment program))),
+      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program))),
       ∃ output, result.1.map PqxdhPrivateRootSource.eraseOutput = some output ∧
         PqxdhProtocolServerInvariant.RootFields env.source.crypto secretIdentity env.senderId env.index
           env.server output.context.selection.2) ∧
-    PrepareBridge ∧ CommitBridge ∧ BeaconStartBridge ∧ BeaconCommitBridge ∧ RegistrationIdBridge ∧
+    PrepareBridge (associatedData := associatedData) ∧ CommitBridge ∧ BeaconStartBridge ∧ BeaconCommitBridge ∧ RegistrationIdBridge ∧
     CommitmentTranscriptBridge ∧ SendFinishBridge ∧ FramePayloadBridge ∧
-    AcceptBridge env baseImpl kem attachedVerify primitives program post secretIdentity ∧
+    AcceptBridge (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post secretIdentity ∧
     ValidateInitBridge := by
   intro p
-  have bridged := authenticated_native_root_bound_bridged env baseImpl kem attachedVerify primitives program post c
+  have bridged := authenticated_native_root_bound_bridged (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c
     compatible adapter functional hmac sourceCorrect fallback ordinaryFallback secretIdentity initialMatch
   exact ⟨bridged.1, bridged.2.1, bridged.2.2.1, bridged.2.2.2.1, bridged.2.2.2.2.1, bridged.2.2.2.2.2.1,
     bridged.2.2.2.2.2.2.1, bridged.2.2.2.2.2.2.2.1, bridged.2.2.2.2.2.2.2.2.1, bridged.2.2.2.2.2.2.2.2.2.1,
@@ -1070,12 +1073,12 @@ theorem authenticated_extracted_root_bound
     (secretIdentity : M → Pqxdh.Bytes)
     (initialMatch : PqxdhProtocolServerInvariant.RootFields env.source.crypto secretIdentity
       env.senderId env.index env.server env.initial) :
-    let p := protocol env kem attachedVerify primitives program post
-    ((extractedActual env baseImpl kem attachedVerify primitives program post secretIdentity).boolDistance
+    let p := protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post
+    ((extractedActual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post secretIdentity).boolDistance
       (uniformGame (rootReduction env.source baseImpl kem p)) ≤
       (PqxdhJointIdentity.advantage primitives
         (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
-          (driver env.toDriverEnvironment program) fallback ordinaryFallback)).toReal +
+          (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program) fallback ordinaryFallback)).toReal +
       Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)}[x = true].toReal +
       (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
         (PqxdhChallengeSecretRouting.reduction env.source kem p).toINDCCA).toReal +
@@ -1085,24 +1088,24 @@ theorem authenticated_extracted_root_bound
         (hmacPrfRealGame hmac (indexedReduction hmac (rootReduction env.source baseImpl kem p) index)).boolDistance
           (hmacPrfRandomGame (indexedReduction hmac (rootReduction env.source baseImpl kem p) index))) ∧
     (∀ result ∈ support (PqxdhPrivateSourceCoins.privateRun attachedVerify primitives 1
-      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (driver env.toDriverEnvironment program))),
+      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program))),
       ∃ output, result.1.map PqxdhPrivateRootSource.eraseOutput = some output ∧
         PqxdhProtocolServerInvariant.RootFields env.source.crypto secretIdentity env.senderId env.index
           env.server output.context.selection.2) ∧
-    PrepareBridge ∧ CommitBridge ∧ BeaconStartBridge ∧ BeaconCommitBridge ∧ RegistrationIdBridge ∧
+    PrepareBridge (associatedData := associatedData) ∧ CommitBridge ∧ BeaconStartBridge ∧ BeaconCommitBridge ∧ RegistrationIdBridge ∧
     CommitmentTranscriptBridge ∧ SendFinishBridge ∧ FramePayloadBridge ∧ ValidateInitBridge := by
   intro p
-  have original := PqxdhAuthenticatedRootBudgets.authenticated_native_root_bound env baseImpl kem
+  have original := PqxdhAuthenticatedRootBudgets.authenticated_native_root_bound (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem
     attachedVerify primitives program post c compatible adapter functional hmac sourceCorrect fallback
     ordinaryFallback secretIdentity initialMatch
-  have same : (extractedActual env baseImpl kem attachedVerify primitives program post secretIdentity).boolDistance
+  have same : (extractedActual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post secretIdentity).boolDistance
       (uniformGame (rootReduction env.source baseImpl kem p)) =
-      (actual env baseImpl kem attachedVerify primitives program post).boolDistance
+      (actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post).boolDistance
         (uniformGame (rootReduction env.source baseImpl kem p)) := by
     unfold ProbComp.boolDistance
-    rw [actual_extracted env baseImpl kem attachedVerify primitives program post secretIdentity initialMatch]
+    rw [actual_extracted (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post secretIdentity initialMatch]
   rw [same]
-  exact ⟨original.1, original.2, prepare_bridge, commit_bridge, beacon_start_bridge, beacon_commit_bridge,
+  exact ⟨original.1, original.2, prepare_bridge (associatedData := associatedData), commit_bridge, beacon_start_bridge, beacon_commit_bridge,
     registration_id_bridge, commitment_transcript_bridge, send_finish_bridge, frame_payload_bridge,
     validate_init_bridge⟩
 
@@ -1116,17 +1119,17 @@ theorem evolving_bound_bridged (positive : 0 < number.val)
     (functional : FunctionalDecapsulation kem)
     (hmac : HmacSha512) (correct : PqxdhFullSecretInputKdf.SourceFullCorrect env.source hmac)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : PqxdhJointIdentity.Forgery) :
-    (PqxdhInitialRootEventSecrecy.actual env baseImpl kem attachedVerify primitives program post selected number
+    (PqxdhInitialRootEventSecrecy.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number
         ancestors disclosed).boolDistance
-      (PqxdhAuthenticatedEvolvingSecrecy.ideal env baseImpl kem attachedVerify primitives program post selected
+      (PqxdhAuthenticatedEvolvingSecrecy.ideal (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected
         number ancestors disclosed) ≤
-      PqxdhAuthenticatedEvolvingSecrecy.loss env baseImpl kem attachedVerify primitives program post selected
+      PqxdhAuthenticatedEvolvingSecrecy.loss (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected
         number ancestors disclosed c hmac fallback ordinaryFallback ∧
-    PrepareBridge ∧ CommitBridge ∧ BeaconStartBridge ∧ BeaconCommitBridge ∧ RegistrationIdBridge ∧
+    PrepareBridge (associatedData := associatedData) ∧ CommitBridge ∧ BeaconStartBridge ∧ BeaconCommitBridge ∧ RegistrationIdBridge ∧
     CommitmentTranscriptBridge ∧ SendFinishBridge ∧ FramePayloadBridge :=
-  ⟨PqxdhAuthenticatedEvolvingSecrecy.bound env baseImpl kem attachedVerify primitives program post selected
+  ⟨PqxdhAuthenticatedEvolvingSecrecy.bound (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected
       number ancestors disclosed c positive compatible adapter functional hmac correct fallback ordinaryFallback,
-    prepare_bridge, commit_bridge, beacon_start_bridge, beacon_commit_bridge, registration_id_bridge,
+    prepare_bridge (associatedData := associatedData), commit_bridge, beacon_start_bridge, beacon_commit_bridge, registration_id_bridge,
     commitment_transcript_bridge, send_finish_bridge, frame_payload_bridge⟩
 
 /-- HB-112 with every bridge proved here in the statement: the bound of `PqxdhAuthenticatedEvolvingSecrecy.bound` (same hypotheses) together with B1-B8, the validate_init_kex bridge B10 and the accepted-branch acceptance bridge B11. B11 is stated under the additional representation premises `secretIdentity` and `initialMatch` of HB-111, which the bound itself does not use. -/
@@ -1139,21 +1142,21 @@ theorem evolving_bound_bridged_full (positive : 0 < number.val)
     (secretIdentity : M → Pqxdh.Bytes)
     (initialMatch : PqxdhProtocolServerInvariant.RootFields env.source.crypto secretIdentity
       env.senderId env.index env.server env.initial) :
-    (PqxdhInitialRootEventSecrecy.actual env baseImpl kem attachedVerify primitives program post selected number
+    (PqxdhInitialRootEventSecrecy.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number
         ancestors disclosed).boolDistance
-      (PqxdhAuthenticatedEvolvingSecrecy.ideal env baseImpl kem attachedVerify primitives program post selected
+      (PqxdhAuthenticatedEvolvingSecrecy.ideal (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected
         number ancestors disclosed) ≤
-      PqxdhAuthenticatedEvolvingSecrecy.loss env baseImpl kem attachedVerify primitives program post selected
+      PqxdhAuthenticatedEvolvingSecrecy.loss (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected
         number ancestors disclosed c hmac fallback ordinaryFallback ∧
-    PrepareBridge ∧ CommitBridge ∧ BeaconStartBridge ∧ BeaconCommitBridge ∧ RegistrationIdBridge ∧
+    PrepareBridge (associatedData := associatedData) ∧ CommitBridge ∧ BeaconStartBridge ∧ BeaconCommitBridge ∧ RegistrationIdBridge ∧
     CommitmentTranscriptBridge ∧ SendFinishBridge ∧ FramePayloadBridge ∧ ValidateInitBridge ∧
-    EvolvingAcceptBridge env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed
+    EvolvingAcceptBridge (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed
       secretIdentity :=
-  ⟨PqxdhAuthenticatedEvolvingSecrecy.bound env baseImpl kem attachedVerify primitives program post selected
+  ⟨PqxdhAuthenticatedEvolvingSecrecy.bound (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected
       number ancestors disclosed c positive compatible adapter functional hmac correct fallback ordinaryFallback,
-    prepare_bridge, commit_bridge, beacon_start_bridge, beacon_commit_bridge, registration_id_bridge,
+    prepare_bridge (associatedData := associatedData), commit_bridge, beacon_start_bridge, beacon_commit_bridge, registration_id_bridge,
     commitment_transcript_bridge, send_finish_bridge, frame_payload_bridge, validate_init_bridge,
-    evolving_accept_bridge env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed
+    evolving_accept_bridge (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed
       secretIdentity initialMatch⟩
 
 /-- HB-112 for the experiment that executes the extracted acceptance on its accepted branch (`extractedEvolvingActual`, whose registration step is `frontAccept`, hence the extracted `server_accept` and `registration_id`), with the unchanged ideal and loss and the bridges B1-B8 and B10. Besides HB-112's hypotheses it uses HB-111's representation premises `secretIdentity` and `initialMatch`. -/
@@ -1166,29 +1169,29 @@ theorem evolving_extracted_bound (positive : 0 < number.val)
     (secretIdentity : M → Pqxdh.Bytes)
     (initialMatch : PqxdhProtocolServerInvariant.RootFields env.source.crypto secretIdentity
       env.senderId env.index env.server env.initial) :
-    (extractedEvolvingActual env baseImpl kem attachedVerify primitives program post selected number ancestors
+    (extractedEvolvingActual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors
         disclosed secretIdentity).boolDistance
-      (PqxdhAuthenticatedEvolvingSecrecy.ideal env baseImpl kem attachedVerify primitives program post selected
+      (PqxdhAuthenticatedEvolvingSecrecy.ideal (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected
         number ancestors disclosed) ≤
-      PqxdhAuthenticatedEvolvingSecrecy.loss env baseImpl kem attachedVerify primitives program post selected
+      PqxdhAuthenticatedEvolvingSecrecy.loss (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected
         number ancestors disclosed c hmac fallback ordinaryFallback ∧
-    PrepareBridge ∧ CommitBridge ∧ BeaconStartBridge ∧ BeaconCommitBridge ∧ RegistrationIdBridge ∧
+    PrepareBridge (associatedData := associatedData) ∧ CommitBridge ∧ BeaconStartBridge ∧ BeaconCommitBridge ∧ RegistrationIdBridge ∧
     CommitmentTranscriptBridge ∧ SendFinishBridge ∧ FramePayloadBridge ∧ ValidateInitBridge := by
-  have original := PqxdhAuthenticatedEvolvingSecrecy.bound env baseImpl kem attachedVerify primitives program post
+  have original := PqxdhAuthenticatedEvolvingSecrecy.bound (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post
     selected number ancestors disclosed c positive compatible adapter functional hmac correct fallback ordinaryFallback
-  have same : (extractedEvolvingActual env baseImpl kem attachedVerify primitives program post selected number
+  have same : (extractedEvolvingActual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number
       ancestors disclosed secretIdentity).boolDistance
-      (PqxdhAuthenticatedEvolvingSecrecy.ideal env baseImpl kem attachedVerify primitives program post selected
+      (PqxdhAuthenticatedEvolvingSecrecy.ideal (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected
         number ancestors disclosed) =
-      (PqxdhInitialRootEventSecrecy.actual env baseImpl kem attachedVerify primitives program post selected number
+      (PqxdhInitialRootEventSecrecy.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number
         ancestors disclosed).boolDistance
-      (PqxdhAuthenticatedEvolvingSecrecy.ideal env baseImpl kem attachedVerify primitives program post selected
+      (PqxdhAuthenticatedEvolvingSecrecy.ideal (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected
         number ancestors disclosed) := by
     unfold ProbComp.boolDistance
-    rw [evolving_actual_extracted env baseImpl kem attachedVerify primitives program post selected number ancestors
+    rw [evolving_actual_extracted (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors
       disclosed secretIdentity initialMatch]
   rw [same]
-  exact ⟨original, prepare_bridge, commit_bridge, beacon_start_bridge, beacon_commit_bridge, registration_id_bridge,
+  exact ⟨original, prepare_bridge (associatedData := associatedData), commit_bridge, beacon_start_bridge, beacon_commit_bridge, registration_id_bridge,
     commitment_transcript_bridge, send_finish_bridge, frame_payload_bridge, validate_init_bridge⟩
 
 end Headlines

@@ -68,31 +68,15 @@ private theorem program_safe {Index : Type} {spec : OracleSpec Index}
       simp only [simulateQ_bind, simulateQ_spec_query]
       exact bind_safe _ _ (step query) ih
 
-/-- Actual preparation uses ordinary draws and the shared pin hash before any indexed birth or physical allocation. -/
+/-- Actual preparation selects the fixed-size Server pin and makes the ordinary identity/prekey draws before any indexed birth or physical allocation. -/
 theorem prepare_safe (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64) :
     Safe (prepare (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) source edPin mlPin keyId) := by
   unfold prepare
-  apply bind_safe _ _ (sample_safe _)
-  intro generated
-  cases generated with
-  | none => exact pure_safe _
-  | some credentials =>
-      dsimp only
-      cases begun : registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
-      | fail error | div => exact pure_safe _
-      | ok pending =>
-          simp only
-          cases requested : pending.request with
-          | fail error | div => exact pure_safe _
-          | ok request =>
-              simp only
-              apply bind_safe _ _ (effect_safe _ rfl)
-              intro digest
-              cases resumed : pending.resume (.Some (RegistrationAuthenticationShared.digestArray digest)) with
-              | fail error | div => exact pure_safe _
-              | ok result => cases result with
-                | none => exact pure_safe _
-                | some pin => exact bind_safe _ _ (sample_safe _) (fun _ => bind_safe _ _ (sample_safe _) (fun _ => pure_safe _))
+  cases begun : registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
+  | fail error | div => exact pure_safe _
+  | ok pin =>
+      exact bind_safe _ _ (sample_safe _) fun _ =>
+        bind_safe _ _ (sample_safe _) fun _ => pure_safe _
 
 private theorem outgoing_safe (setup : Setup base KemSK) (index : Nat) (owner : Owner source)
     (query : RegistrationBeaconInitExecutor.Spec.Domain) :
@@ -100,14 +84,14 @@ private theorem outgoing_safe (setup : Setup base KemSK) (index : Nat) (owner : 
   cases query with
   | inl query => cases query with
     | hash request => exact effect_safe _ rfl
-    | sign request payload digest => exact bind_safe _ _ (sample_safe _) (fun _ => bind_safe _ _ (update_safe _) (fun _ => pure_safe _))
+    | sign request payload digest => exact pure_safe _
   | inr request =>
       simp only [outgoing]
       split
       · exact bind_safe _ _ (modify_safe _) (fun _ => pure_safe _)
       · exact pure_safe _
 
-/-- Full native Ed3/fingerprint/ML publication and lifecycle update contain no physical owner allocation. -/
+/-- Full native attached-Ed Init publication and lifecycle update contain no physical owner allocation. -/
 theorem bundle_safe (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire) (index : Nat) :
     Safe (bundle (n := n) (Auxiliary := Auxiliary) setup source wire index) := by
   intro owners env
@@ -125,7 +109,7 @@ theorem bundle_safe (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wi
           have later (oneTime : PqxdhJointGapDh.ScalarBytes) : Safe (do
               let published ← simulateQ (outgoing setup source index owner)
                 (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨owner.pin.binding⟩ (inputs setup owner)
-                  ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)
+                  ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)
               match published with
               | .fail error => pure (.fail error)
               | .div => pure .div

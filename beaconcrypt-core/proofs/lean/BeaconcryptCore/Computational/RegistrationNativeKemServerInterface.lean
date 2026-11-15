@@ -43,7 +43,7 @@ def server (work : StateT (RegistrationServerFrontendCompiler.State n) ProbComp
 noncomputable def other (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     QueryImpl (Ambient n mlSource) (StateT (State n mlSource) ProbComp)
   | .get => fun before => pure (mask before, mask before)
   | .put after => fun _ => pure ((), mask after)
@@ -60,7 +60,7 @@ noncomputable def other (setup : Setup base KemSK) (codec : Codec Reader Respons
 noncomputable def source (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     QueryImpl (Spec n mlSource KemSK) (StateT (State n mlSource × PqxdhLiveKemBirth.Pool KemSK) ProbComp) :=
   RegistrationNativeKemInterface.source setup.baseImpl setup.kem (Ambient n mlSource)
     (other setup codec checks route verify representation created)

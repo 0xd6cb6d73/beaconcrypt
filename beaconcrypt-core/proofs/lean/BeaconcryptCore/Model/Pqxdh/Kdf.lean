@@ -1,4 +1,5 @@
 import BeaconcryptCore.Model.Pqxdh.Primitives
+import BeaconcryptCore.Model.Pqxdh.SessionTranscript
 import BeaconcryptCore.Model.Ratchet
 
 /-!
@@ -8,9 +9,8 @@ Second part of the ideal model of `pqxdh_spec.md`.  It defines
 
 * the PQXDH transcript `IKM_PQ = FF^32 ‖ DH₁ ‖ DH₂ ‖ DH₃ ‖ DH₄ ‖ SS` and the root
   secret `DS = HKDF₅₁₂(IKM_PQ, INFO_PQ, 32)` (spec §8),
-* the associated data `AD` — server identity first, beacon identity second
-  (spec §9),
-* the initial directional chain keys `L ‖ R = HKDF₅₁₂(DS, INFO_R, 64)` (spec §10),
+* historical identity-prefix AD281 for the older abstract lifecycle; current registration version 3 uses `SessionTranscript.associatedData` with context87 and its transcript digest,
+* the initial directional chain keys `L ‖ R = HKDF₅₁₂(DS, INFO_INIT, 64)` (spec §10),
 * the BeaconCrypt record layer: the `key ‖ next_chain ‖ nonce` partition of
   `HKDF₅₁₂(CK, INFO_R, 76)`, detached ChaCha20-Poly1305 sealing and the CTX
   commitment `T* = BLAKE2b₅₁₂(K ‖ N ‖ AD ‖ T ‖ LE64(seq) ‖ LE64(sid))`, with the
@@ -48,16 +48,16 @@ theorem rootSecret_length (c : Crypto) (ikm : Bytes) : (rootSecret c ikm).length
 
 /-! ## Associated data (spec §9) -/
 
-/-- The core associated-data buffer contains the ordered identity/domain prefix followed by 128 reserved zero bytes. The authentication adapter overwrites those slots with the ordered ML-DSA key fingerprints before record operations. -/
+/-- Historical identity-prefix model used by the older abstract lifecycle model. Current registration version 3 uses `SessionTranscript.associatedData`; this function is not a refinement of the current production encoder or binding. -/
 def assocData (ikSPub ikBPub : Bytes) : Bytes :=
-  tagSig ikSPub ++ tagSig ikBPub ++ INFO_PQ ++ INFO_R ++ List.replicate 128 0
+  tagSig ikSPub ++ tagSig ikBPub ++ INFO_PQ ++ INFO_AD_R ++ List.replicate 128 0
 
 theorem assocData_length {ikSPub ikBPub : Bytes} (hs : ikSPub.length = 32)
     (hb : ikBPub.length = 32) : (assocData ikSPub ikBPub).length = 281 := by
   simp only [assocData, List.length_append, tagSig_length hs, tagSig_length hb,
-    INFO_PQ_length, INFO_R_length, List.length_replicate]
+    INFO_PQ_length, INFO_AD_R_length, List.length_replicate]
 
-/-- The associated data determines the ordered identity pair. -/
+/-- The historical identity-prefix encoding determines its ordered identity pair. This is not a hash-injectivity claim for current sessions. -/
 theorem assocData_inj {a b a' b' : Bytes} (ha : a.length = 32) (hb : b.length = 32)
     (ha' : a'.length = 32) (hb' : b'.length = 32) (h : assocData a b = assocData a' b') :
     a = a' ∧ b = b' := by
@@ -68,10 +68,10 @@ theorem assocData_inj {a b a' b' : Bytes} (ha : a.length = 32) (hb : b.length = 
 
 /-! ## Initial directional chain keys (spec §10) -/
 
-/-- `R₀ = HKDF₅₁₂(DS, INFO_R, 64)`, split into the left and right halves
+/-- `R₀ = HKDF₅₁₂(DS, INFO_INIT, 64)`, split into the left and right halves
 `L = R₀[0..32)` and `R = R₀[32..64)`. -/
 def rootChains (c : Crypto) (ds : Bytes) : Bytes × Bytes :=
-  ((c.hkdf ds INFO_R 64).take 32, (c.hkdf ds INFO_R 64).drop 32)
+  ((c.hkdf ds INFO_INIT 64).take 32, (c.hkdf ds INFO_INIT 64).drop 32)
 
 theorem rootChains_length (c : Crypto) (ds : Bytes) :
     (rootChains c ds).1.length = 32 ∧ (rootChains c ds).2.length = 32 := by
@@ -79,11 +79,11 @@ theorem rootChains_length (c : Crypto) (ds : Bytes) :
 
 /-! ## The BeaconCrypt record layer (spec §13) -/
 
-/-- The associated data of a single BeaconCrypt record: the 281-byte PQXDH
+/-- The associated data of a single BeaconCrypt record: the session
 associated data together with the wire sequence number and the sender identifier,
 both of which the CTX commitment binds. -/
 structure RecordAD where
-  /-- The 281-byte associated data of the session. -/
+  /-- The complete public associated data of the session (151 bytes in the current runtime). -/
   bytes : Bytes
   /-- The wire sequence number of the record. -/
   seq : ℕ

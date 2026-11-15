@@ -9,6 +9,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhSelectedFirstOccurrence
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhInitialBeaconAmbient PqxdhInitialNativeLog
 open RawCtxSelectedFirstOccurrence (Recorded)
 variable {ι M P I D K X Response Shared A N C Result Origin : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -55,17 +57,17 @@ theorem carried_recorded (source : FixedHkdfSha512NoSaltSource) (writer : RawCtx
     (state reached : State A N C) (recorded : Recorded state.1)
     (context : PqxdhInitialNativeCarried.Context extra M P I D K Result Origin S B)
     (supported : RawCtxForwardScan.Cut.pending context reached ∈ support
-      (PqxdhInitialNativeCarried.carried source writer mark sender route decode execution depth stage external state)) :
+      (PqxdhInitialNativeCarried.carried (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth stage external state)) :
     Recorded reached.1 := by
-  have mapped : RawCtxForwardScan.pack (PqxdhInitialOriginContext.frame (X := X) (Response := Response) mark sender route decode)
+  have mapped : RawCtxForwardScan.pack (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode)
       (RawCtxForwardScan.Cut.pending context reached) ∈ support
-      (RawCtxForwardScan.pack (PqxdhInitialOriginContext.frame (X := X) (Response := Response) mark sender route decode) <$>
-        PqxdhInitialNativeCarried.carried source writer mark sender route decode execution depth stage external state) := by
+      (RawCtxForwardScan.pack (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode) <$>
+        PqxdhInitialNativeCarried.carried (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth stage external state) := by
     rw [support_map]
     exact ⟨RawCtxForwardScan.Cut.pending context reached, supported, rfl⟩
   rw [PqxdhInitialNativeCarried.carried_pack] at mapped
   exact scan_recorded source writer stage external (PqxdhInitialNativePrefix.selected (extra := extra) depth)
-    (PqxdhInitialNativeCarried.original source mark sender route decode execution) state recorded _ mapped
+    (PqxdhInitialNativeCarried.original (associatedData := associatedData) (completedBinding := completedBinding) source mark sender route decode execution) state recorded _ mapped
 
 section Actual
 open PqxdhSecretInputKdf PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily
@@ -86,11 +88,11 @@ local notation "mark" => PqxdhInitialSelectedOrigin.mark source selectedMessage
 local notation "execution" => PqxdhInitialSourceExperiment.execution response64 index metadata ready post before
 local notation "root" => PqxdhInitialSourceExperiment.root source previousRoot response64 selected
 local notation "state" => (PqxdhInitialSourceExperiment.initialState root shared privateState cache, ([] : List RootOutput))
-local notation "sourceRun" => PqxdhInitialNativeAuditCarried.carried source writer
+local notation "sourceRun" => PqxdhInitialNativeAuditCarried.carried (associatedData := associatedData) (completedBinding := completedBinding) source writer
   (PqxdhInitialSourcePreparedSecrecy.pre other) (PqxdhInitialSourcePreparedSecrecy.application other) initial
   (PqxdhInitialSourcePreparedSecrecy.selector other) (PqxdhInitialSourcePreparedSecrecy.aux other)
   mark sender route decode execution depth (depth + 1) state
-local notation "sourceSample" => PqxdhInitialSourcePreparedSecrecy.sample source writer selectedMessage previousRoot response64 other sender route decode
+local notation "sourceSample" => PqxdhInitialSourcePreparedSecrecy.sample (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
   index metadata ready post before selected number ancestors disclosed shared privateState cache depth
 
 /-- The exact prepared source sampler stops before the first global occurrence of its selected predecessor address. Both paired roles remain in the saved continuation; known-key byte aliases are not excluded. -/
@@ -100,13 +102,13 @@ theorem actual_first (input : PqxdhInitialSupportedCertificate.Supported sourceR
       input.val.2.1.1.1.2.1 (PqxdhInitialBuilderContext.address input.val.1.original) = none ∧
       RawCtxSelectiveChainGame.matched input.val.2.1.1.1.2.2 (PqxdhInitialBuilderContext.address input.val.1.original) = true ∧
       input.val.2.1.1.1.2.2.depth = depth := by
-  have selectedFacts := PqxdhInitialSourcePreparedSecrecy.pending_selected source writer selectedMessage previousRoot response64 other
+  have selectedFacts := PqxdhInitialSourcePreparedSecrecy.pending_selected (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other
     sender route decode index metadata ready post before selected number ancestors disclosed shared privateState cache depth input supported
-  have recorded := carried_recorded source writer mark sender route decode execution depth (depth + 1)
+  have recorded := carried_recorded (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth (depth + 1)
     (PqxdhInitialOriginFinishPath.withInitial source selectedMessage previousRoot response64 other)
     (PqxdhInitialSourceExperiment.initialState root shared privateState cache) input.val.2.1
     (RawCtxSelectedFirstOccurrence.empty_recorded _) input.val.1
-    (PqxdhInitialSourcePreparedSecrecy.supported_source source writer selectedMessage previousRoot response64 other sender route decode
+    (PqxdhInitialSourcePreparedSecrecy.supported_source (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
       index metadata ready post before selected shared privateState cache depth input)
   exact ⟨RawCtxSelectedFirstOccurrence.missing_first input.val.2.1.1 recorded _ selectedFacts.1, selectedFacts⟩
 

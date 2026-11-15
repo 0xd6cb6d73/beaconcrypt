@@ -9,6 +9,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialSourcePreparedSecrecy
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf
 open PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily PqxdhInitialBeaconAmbient
 variable {ι M P I D K X Response A N : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -44,26 +46,26 @@ noncomputable def observe (result : PqxdhInitialPreparedParent.Output M P I D K 
   pure (PqxdhInitialPublishedEvent.sourceDecision source root selected number ancestors disclosed result)
 
 local notation "observation" => observe source previousRoot response64 selected number ancestors disclosed
-local notation "sourceRun" => PqxdhInitialNativeAuditCarried.carried source writer (pre other) (application other) initial (selector other) (aux other)
+local notation "sourceRun" => PqxdhInitialNativeAuditCarried.carried (associatedData := associatedData) (completedBinding := completedBinding) source writer (pre other) (application other) initial (selector other) (aux other)
   mark sender route decode execution depth (depth + 1) state
 
 noncomputable def view :=
-  PqxdhInitialSourceSecrecyResources.view source writer (pre other) (application other) initial (selector other) (aux other)
+  PqxdhInitialSourceSecrecyResources.view (associatedData := associatedData) (completedBinding := completedBinding) source writer (pre other) (application other) initial (selector other) (aux other)
     mark sender route decode execution depth state root ancestors disclosed selected number remaining
 
 noncomputable def sample :=
-  PqxdhInitialPreparedResources.sample source writer (pre other) (application other) initial (selector other) (aux other)
+  PqxdhInitialPreparedResources.sample (associatedData := associatedData) (completedBinding := completedBinding) source writer (pre other) (application other) initial (selector other) (aux other)
     mark sender route decode observation execution depth state
 
 noncomputable def address :=
-  PqxdhInitialPreparedResources.address source writer (pre other) (application other) initial (selector other) (aux other)
+  PqxdhInitialPreparedResources.address (associatedData := associatedData) (completedBinding := completedBinding) source writer (pre other) (application other) initial (selector other) (aux other)
     mark sender route decode execution depth state
 
-local notation "sourceView" => view source writer selectedMessage previousRoot response64 other sender route decode
+local notation "sourceView" => view (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
   index metadata ready post before selected number ancestors disclosed shared privateState cache depth remaining
-local notation "sourceSample" => sample source writer selectedMessage previousRoot response64 other sender route decode
+local notation "sourceSample" => sample (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
   index metadata ready post before selected number ancestors disclosed shared privateState cache depth
-local notation "sourceAddress" => address source writer selectedMessage previousRoot response64 other sender route decode
+local notation "sourceAddress" => address (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
   index metadata ready post before selected shared privateState cache depth
 
 /-- Erasing the initializer audit yields exactly the complete original external source interface. -/
@@ -78,33 +80,33 @@ theorem earlier_walk (input : PqxdhInitialSupportedCertificate.Supported sourceR
     ∃ past, RawCtxCursorLineage.walk input.val.2.1.1.1.2.1 input.val.2.1.1.1.2.2.depth root =
       some (past, input.val.2.1.1.1.2.2.input) ∧
       (sourceView).earlier input = (past ++ [input.val.2.1.1.1.2.2.input]).map RawCtxFreshChainCut.concreteChain ++ ancestors := by
-  exact PqxdhInitialSourceSecrecyResources.earlier_walk source writer (pre other) (application other) initial (selector other) (aux other)
+  exact PqxdhInitialSourceSecrecyResources.earlier_walk (associatedData := associatedData) (completedBinding := completedBinding) source writer (pre other) (application other) initial (selector other) (aux other)
     mark sender route decode execution depth state root ancestors disclosed selected number remaining rfl input
 
 noncomputable def actual : ProbComp Bool :=
-  PqxdhInitialCommonSecrecy.actual source writer mark sender route decode sourceView sourceSample sourceAddress
+  PqxdhInitialCommonSecrecy.actual (completedBinding := completedBinding) source writer mark sender route decode sourceView sourceSample sourceAddress
 noncomputable def random : ProbComp Bool :=
-  PqxdhInitialCommonSecrecy.random source writer mark sender route decode sourceView sourceSample sourceAddress
-noncomputable def observer := PqxdhInitialCommonSecrecy.observer source writer mark sender route decode sourceView
-noncomputable def tester := PqxdhInitialCommonSecrecy.aliasTester source writer mark sender route decode sourceView
+  PqxdhInitialCommonSecrecy.random (completedBinding := completedBinding) source writer mark sender route decode sourceView sourceSample sourceAddress
+noncomputable def observer := PqxdhInitialCommonSecrecy.observer (completedBinding := completedBinding) source writer mark sender route decode sourceView
+noncomputable def tester := PqxdhInitialCommonSecrecy.aliasTester (completedBinding := completedBinding) source writer mark sender route decode sourceView
 
-local notation "mainObserver" => observer source writer selectedMessage previousRoot response64 other sender route decode
+local notation "mainObserver" => observer (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
   index metadata ready post before selected number ancestors disclosed shared privateState cache depth remaining
-local notation "testObserver" => tester source writer selectedMessage previousRoot response64 other sender route decode
+local notation "testObserver" => tester (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
   index metadata ready post before selected number ancestors disclosed shared privateState cache depth remaining
-local notation "actualGame" => actual source writer selectedMessage previousRoot response64 other sender route decode
+local notation "actualGame" => actual (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
   index metadata ready post before selected number ancestors disclosed shared privateState cache depth remaining
-local notation "randomGame" => random source writer selectedMessage previousRoot response64 other sender route decode
+local notation "randomGame" => random (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
   index metadata ready post before selected number ancestors disclosed shared privateState cache depth remaining
 
 /-- Every source-supported saved descriptor projects to the same complete original carried prefix. -/
 theorem supported_source (input : PqxdhInitialSupportedCertificate.Supported sourceRun) :
     RawCtxForwardScan.Cut.pending input.val.1 input.val.2.1 ∈ support
-      (PqxdhInitialNativeCarried.carried source writer mark sender route decode execution depth (depth + 1)
+      (PqxdhInitialNativeCarried.carried (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth (depth + 1)
         (PqxdhInitialOriginFinishPath.withInitial source selectedMessage previousRoot response64 other)
         (PqxdhInitialSourceExperiment.initialState root shared privateState cache)) := by
   rw [← external_source source selectedMessage previousRoot response64 other,
-    ← PqxdhInitialNativeAuditCarried.carried_projection source writer (pre other) (application other) initial
+    ← PqxdhInitialNativeAuditCarried.carried_projection (associatedData := associatedData) (completedBinding := completedBinding) source writer (pre other) (application other) initial
       (selector other) (aux other) mark sender route decode execution depth (depth + 1) state, support_map]
   exact ⟨.pending input.val.1 input.val.2, input.property, rfl⟩
 
@@ -114,13 +116,13 @@ theorem pending_selected (input : PqxdhInitialSupportedCertificate.Supported sou
     input.val.2.1.1.1.2.1 (PqxdhInitialBuilderContext.address input.val.1.original) = none ∧
       RawCtxSelectiveChainGame.matched input.val.2.1.1.1.2.2 (PqxdhInitialBuilderContext.address input.val.1.original) = true ∧
       input.val.2.1.1.1.2.2.depth = depth := by
-  have missing := PqxdhInitialPreparedResources.sample_missing source writer (pre other) (application other) initial
+  have missing := PqxdhInitialPreparedResources.sample_missing (associatedData := associatedData) (completedBinding := completedBinding) source writer (pre other) (application other) initial
     (selector other) (aux other) mark sender route decode observation execution depth state input supported
-  have cases := PqxdhInitialNativeCarried.carried_cases source writer mark sender route decode execution depth (depth + 1)
+  have cases := PqxdhInitialNativeCarried.carried_cases (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth (depth + 1)
     (PqxdhInitialOriginFinishPath.withInitial source selectedMessage previousRoot response64 other)
     (PqxdhInitialSourceExperiment.initialState root shared privateState cache) input.val.2.1
     (PqxdhInitialSourceExperiment.initial_valid root shared privateState cache depth).1.1 input.val.1
-    (supported_source source writer selectedMessage previousRoot response64 other sender route decode index metadata ready post before
+    (supported_source (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode index metadata ready post before
       selected shared privateState cache depth input)
   refine ⟨missing, cases.1, ?_⟩
   rcases cases.2 with hit | miss
@@ -158,13 +160,13 @@ include bounded preBound applicationBound selectorBound auxBound in
 /-- The exact source-selected, common-or-pending sampler and its native freshness observer satisfy the constructed Extract/HMAC bound with the source-derived candidate cap. -/
 theorem bound (hmac : HmacSha512) (correct : SourceFullCorrect source hmac) :
     (actualGame).boolDistance randomGame ≤
-      loss source writer selectedMessage previousRoot response64 other sender route decode index metadata ready post before
+      loss (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode index metadata ready post before
         selected number ancestors disclosed shared privateState cache depth remaining qPost hmac := by
   simpa only [actual, random, loss, observer, tester, view, sample, address,
     PqxdhInitialSourceSecrecyResources.candidateBudget, PqxdhInitialSourceSecrecyResources.callbackBudget,
     PqxdhInitialSupportedCertificate.priorBudget, PqxdhInitialSourceExperiment.execution, List.length_nil, Nat.add_zero,
     candidateBudget] using
-    PqxdhInitialSourceSecrecyResources.bound source writer (pre other) (application other) initial (selector other) (aux other)
+    PqxdhInitialSourceSecrecyResources.bound (associatedData := associatedData) (completedBinding := completedBinding) source writer (pre other) (application other) initial (selector other) (aux other)
       mark sender route decode execution depth state root ancestors disclosed selected number remaining qPost bounded costs
       (PqxdhInitialAuditedResources.retained_callbacks source selectedMessage previousRoot response64
         (pre other) (application other) (selector other) (aux other) qPre qApplication qSelector qAux
@@ -174,7 +176,7 @@ include bounded preBound applicationBound selectorBound auxBound in
 /-- The complete original prepared sampler pays the concrete source cap; its final Boolean observation adds no uniform query. -/
 theorem sample_uniform : (sourceSample).IsTotalQueryBound V := by
   simpa only [sample, sampleBudget, Nat.add_zero] using
-    PqxdhInitialPreparedResources.sample_uniform source writer (pre other) (application other) initial (selector other) (aux other)
+    PqxdhInitialPreparedResources.sample_uniform (associatedData := associatedData) (completedBinding := completedBinding) source writer (pre other) (application other) initial (selector other) (aux other)
       mark sender route decode observation execution depth state qPost 0 bounded costs
       (PqxdhInitialAuditedResources.retained_callbacks source selectedMessage previousRoot response64
         (pre other) (application other) (selector other) (aux other) qPre qApplication qSelector qAux
@@ -183,19 +185,19 @@ theorem sample_uniform : (sourceSample).IsTotalQueryBound V := by
 include bounded preBound applicationBound selectorBound auxBound in
 /-- Both concrete source reductions retain two HMAC challenge calls and the complete original source/parent/observer uniform bill; the separate tester retains every candidate evaluation. -/
 theorem reduction_queries :
-    (∀ forTester, let observe := PqxdhInitialCommonSecrecy.reductionObserver source writer mark sender route decode sourceView forTester
+    (∀ forTester, let observe := PqxdhInitialCommonSecrecy.reductionObserver (completedBinding := completedBinding) source writer mark sender route decode sourceView forTester
       (fullExpandReduction .ratchet (RawCtxSelectedParentSecrecy.joint sourceSample sourceAddress) observe).IsQueryBoundP IsHmacChallengeQuery 2 ∧
         (fullExpandReduction .ratchet (RawCtxSelectedParentSecrecy.joint sourceSample sourceAddress) observe).IsQueryBoundP
           PqxdhFullSecretInputKdf.IsHmacUniformQuery ((V + 76) + U)) ∧
       (∀ context output result, result ∈ support
-        (PqxdhInitialCommonSecrecy.observed source writer mark sender route decode sourceView context output) →
+        (PqxdhInitialCommonSecrecy.observed (completedBinding := completedBinding) source writer mark sender route decode sourceView context output) →
         (RawCtxFullPreimageTester.evaluate output (PqxdhInitialCommonSecrecy.candidates result)).IsTotalQueryBound Q) := by
   simpa only [sample, sampleBudget, observerBudget, view, address,
     PqxdhInitialSourceSecrecyResources.sampleBudget, PqxdhInitialSourceSecrecyResources.uniformBudget,
     PqxdhInitialSourceSecrecyResources.candidateBudget, PqxdhInitialSourceSecrecyResources.callbackBudget,
     PqxdhInitialSupportedCertificate.priorBudget, PqxdhInitialSourceExperiment.execution, List.length_nil, Nat.add_zero,
     PqxdhInitialParentObserverBudgets.Costs.cap, PqxdhInitialAuditedResources.retainedCosts, candidateBudget] using
-    PqxdhInitialSourceSecrecyResources.reduction_queries source writer (pre other) (application other) initial (selector other) (aux other)
+    PqxdhInitialSourceSecrecyResources.reduction_queries (associatedData := associatedData) (completedBinding := completedBinding) source writer (pre other) (application other) initial (selector other) (aux other)
       mark sender route decode execution depth state root ancestors disclosed selected number remaining qPost bounded costs
       (PqxdhInitialAuditedResources.retained_callbacks source selectedMessage previousRoot response64
         (pre other) (application other) (selector other) (aux other) qPre qApplication qSelector qAux
@@ -204,7 +206,7 @@ theorem reduction_queries :
 include bounded preBound applicationBound selectorBound auxBound in
 /-- Ordinary-game challenger costs include the original source and observer, Extract replacement, HMAC key, both random HMAC blocks and the independent child. -/
 theorem challenger_queries (hmac : HmacSha512) (forTester : Bool) :
-    let observe := PqxdhInitialCommonSecrecy.reductionObserver source writer mark sender route decode sourceView forTester
+    let observe := PqxdhInitialCommonSecrecy.reductionObserver (completedBinding := completedBinding) source writer mark sender route decode sourceView forTester
     let joint := RawCtxSelectedParentSecrecy.joint sourceSample sourceAddress
     (extractRealGame hmac joint (fullExtractReduction hmac .ratchet observe)).IsTotalQueryBound ((V + 76) + U) ∧
       (extractUniformGame joint (fullExtractReduction hmac .ratchet observe)).IsTotalQueryBound ((V + 76) + (64 + U)) ∧
@@ -215,7 +217,7 @@ theorem challenger_queries (hmac : HmacSha512) (forTester : Bool) :
     PqxdhInitialSourceSecrecyResources.sampleBudget, PqxdhInitialSourceSecrecyResources.uniformBudget,
     PqxdhInitialSourceSecrecyResources.callbackBudget, Nat.add_zero,
     PqxdhInitialParentObserverBudgets.Costs.cap, PqxdhInitialAuditedResources.retainedCosts] using
-    PqxdhInitialSourceSecrecyResources.challenger_queries source writer (pre other) (application other) initial (selector other) (aux other)
+    PqxdhInitialSourceSecrecyResources.challenger_queries (associatedData := associatedData) (completedBinding := completedBinding) source writer (pre other) (application other) initial (selector other) (aux other)
       mark sender route decode execution depth state root ancestors disclosed selected number remaining qPost bounded costs
       (PqxdhInitialAuditedResources.retained_callbacks source selectedMessage previousRoot response64
         (pre other) (application other) (selector other) (aux other) qPre qApplication qSelector qAux

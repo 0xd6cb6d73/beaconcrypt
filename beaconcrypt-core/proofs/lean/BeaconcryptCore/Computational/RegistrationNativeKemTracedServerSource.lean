@@ -27,7 +27,7 @@ def shared (current : Client × Pool KemSK) := RegistrationWorldAgreement.projec
 
 private theorem query_project (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (query : Request) (before : Client × Pool KemSK) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (query : Request) (before : Client × Pool KemSK) :
     Prod.map id shared <$> (RegistrationNativeKemServerCompiler.nativeAgreement setup checks representation created query).run before =
       (RegistrationAgreementShared.implementation setup.source (RegistrationServerRoleBackend.native setup checks representation created.seed) query).run (shared before) := by
   have law := RegistrationWorldAgreement.agreement_project setup.source
@@ -40,7 +40,7 @@ private theorem query_project (setup : Setup base KemSK) (checks : Checks)
 /-- Projecting the full actual counted block to the native collector retains every higher request/reply, including Root. -/
 theorem shared_program (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (work : OracleComp Spec Value)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (work : OracleComp Spec Value)
     (before : Client) (pool : Pool KemSK) :
     (fun result => (result.1.1, RegistrationWorldAgreement.project result.1.2.server.world)) <$>
       RegistrationNativeKemCountedProgram.runState setup.baseImpl setup.kem
@@ -60,7 +60,7 @@ theorem shared_program (setup : Setup base KemSK) (checks : Checks)
 /-- A native source-supported Root input tied to the same actual counted encapsulation entry. -/
 structure Receipt (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (authenticated : registration.AuthenticatedInit) (before after : Client)
     (completed : agreement.ServerAgreement) (log : Log KemSK) where
   nativeInput : RegistrationNativeTokenRootReceipt.Input setup checks representation created packet authenticated before.server after.server completed
@@ -76,7 +76,7 @@ private theorem pq_roundtrip (value : PqxdhKemIndCca.MlKem768PublicKey) :
 /-- The actual traced Server source block derives its genuine native collector receipt and exact same-run counted encapsulation reply, without selecting an unrelated supported primitive sample. -/
 theorem server (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (authenticated : registration.AuthenticatedInit) (completed : agreement.ServerAgreement)
     (before after : Client) (beforePool afterPool : Pool KemSK) (journal : Trace) (log : Log KemSK)
     (supported : ((((.ok (.ServerComplete completed), journal), after), log), afterPool) ∈ support
@@ -128,7 +128,7 @@ theorem server (setup : Setup base KemSK) (checks : Checks)
 
 private theorem lift_trace (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (work : OracleComp Spec Value)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (work : OracleComp Spec Value)
     (before after : Client) (beforePool afterPool : Pool KemSK) (value : Value) (log : Log KemSK)
     (supported : (((value, after), log), afterPool) ∈ support
       (RegistrationNativeKemCountedProgram.evaluate setup.baseImpl setup.kem
@@ -158,7 +158,7 @@ private theorem lift_trace (setup : Setup base KemSK) (checks : Checks)
 /-- The literal replay-scheduled actual Server agreement supplies a native source collector receipt tied to its actual encapsulation log entry and private draw cost. -/
 theorem agree (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (authenticated : registration.AuthenticatedInit) (completed : agreement.ServerAgreement)
     (before after : Client) (beforePool afterPool : Pool KemSK) (log : Log KemSK)
     (supported : (((.ok (.ServerComplete completed), after), log), afterPool) ∈ support

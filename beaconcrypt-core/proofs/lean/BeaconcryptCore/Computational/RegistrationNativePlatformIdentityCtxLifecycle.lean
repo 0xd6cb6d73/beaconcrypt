@@ -32,7 +32,7 @@ private theorem pool_projection (before : (RegistrationNativeIdentityMain.State 
 
 /-- Source restoration preserves every native field and ignores only the indexed service's extra uniform transcript entries. -/
 theorem beacon_native (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativePlatformIdentityProgram.M n KemSK RegistrationServerRoleBackend.State Platform source A)
     (before : Full n KemSK Platform source) :
     Prod.map id native <$> (interpret setup.joint (RegistrationNativePlatformIdentityCtxMain.beacon setup checks representation created work)).run before =
@@ -45,13 +45,13 @@ theorem beacon_native (setup : Setup base KemSK) (checks : Checks)
 
 noncomputable def create (setup : Setup base KemSK) (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (checks : Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) : M n KemSK Platform source (RustM (Option Nat)) :=
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) : M n KemSK Platform source (RustM (Option Nat)) :=
   RegistrationNativePlatformIdentityCtxMain.beacon setup checks representation created
     (RegistrationNativePlatformIdentityProgram.native (RegistrationNativeIdentityFrontend.create setup source edPin mlPin keyId))
 
 /-- Actual creation retains its generated row, optional failure, complete native counters and original P. -/
 theorem create_source (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (before : Full n KemSK Platform source) (owned : Owned setup.joint before) :
     Prod.map id native <$> (interpret setup.joint (create setup edPin mlPin keyId checks representation created)).run before =
@@ -63,7 +63,7 @@ theorem create_source (setup : Setup base KemSK) (checks : Checks)
     (RegistrationNativePlatformIdentityMainLifecycle.create_source setup checks representation created edPin mlPin keyId (oldBefore before) owned)
 
 noncomputable def finish (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat) (packet : Option registration.ResponsePacket) :
     M n KemSK Platform source (RustM (Option Pqxdh.Bytes)) :=
   RegistrationNativePlatformIdentityCtxMain.beacon setup checks representation created
@@ -71,7 +71,7 @@ noncomputable def finish (setup : Setup base KemSK) (checks : Checks)
 
 /-- The source finish retains early abort, assigned sender ID, copied payload, installation and every failed prefix. -/
 theorem finish_source (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat) (packet : Option registration.ResponsePacket)
     (before : Full n KemSK Platform source) (owned : Owned setup.joint before) :
     Prod.map id native <$> (interpret setup.joint (finish setup checks representation created wire index packet)).run before =
@@ -83,7 +83,7 @@ theorem finish_source (setup : Setup base KemSK) (checks : Checks)
     (RegistrationNativePlatformIdentityMainLifecycle.finish_source setup checks representation created wire index packet (oldBefore before) owned)
 
 noncomputable def bundle (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (index : Nat) : M n KemSK Platform source (RustM (Option Pqxdh.Bytes)) :=
   RegistrationNativePlatformIdentityNativeBundle.reply <$>
@@ -96,7 +96,7 @@ private theorem state_map_apply {S X Y : Type} {m : Type → Type} [Monad m] [La
 
 /-- The complete effectful six-field writer uses the same P and physical cache on successful and failed publication. -/
 theorem bundle_source (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (index : Nat) (before : Full n KemSK Platform source) (owned : Owned setup.joint before) :
     Prod.map id native <$> (interpret setup.joint (bundle setup checks representation created writer index)).run before =
@@ -130,7 +130,7 @@ private theorem owned_from_projection (joint : PqxdhJointIdentity.Primitives)
 
 /-- The actual CTX creation callback preserves every genuine generated row through all optional outcomes. -/
 theorem create_owned (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (before : Full n KemSK Platform source) (result : RustM (Option Nat) × Full n KemSK Platform source)
     (owned : Owned setup.joint before)
@@ -142,7 +142,7 @@ theorem create_owned (setup : Setup base KemSK) (checks : Checks)
 
 /-- The actual assigned-ID finish retains generated ownership through every failed source operation. -/
 theorem finish_owned (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat) (packet : Option registration.ResponsePacket)
     (before : Full n KemSK Platform source) (result : RustM (Option Pqxdh.Bytes) × Full n KemSK Platform source)
     (owned : Owned setup.joint before)
@@ -153,7 +153,7 @@ theorem finish_owned (setup : Setup base KemSK) (checks : Checks)
   exact RegistrationNativePlatformIdentityMainOwned.finish_owned setup checks representation created wire index packet (oldBefore before) inner owned supported
 
 private theorem bundle_projection (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (index : Nat) (before : Full n KemSK Platform source) :
     Prod.map id project <$> (interpret setup.joint (bundle setup checks representation created writer index)).run before =
@@ -169,7 +169,7 @@ private theorem bundle_projection (setup : Setup base KemSK) (checks : Checks)
 
 /-- Stateful source writing keeps every generated row even when signing or serialization fails. -/
 theorem bundle_owned (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (index : Nat) (before : Full n KemSK Platform source)
     (result : RustM (Option Pqxdh.Bytes) × Full n KemSK Platform source) (owned : Owned setup.joint before)

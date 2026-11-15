@@ -18,6 +18,9 @@ variable {n : Nat} {E Platform ι KemSK Value : Type} {base : OracleSpec ι} {so
 variable [primitive : AdapterSealPrimitive.Operations]
 local notation "Native" => RegistrationNativeExperiment.State n KemSK source
 
+attribute [local irreducible] RegistrationNativePlatformSourceAccept.accept
+  RegistrationNativePlatformSourceSeal.build
+
 omit primitive in
 private theorem map_apply {S X Y : Type} {m : Type → Type} [Monad m] [LawfulMonad m]
     (f : X → Y) (work : StateT S m X) (before : S) :
@@ -36,7 +39,7 @@ private theorem server_frame (work : StateT (RegistrationServerFrontendCompiler.
 theorem handler (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
     (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
     (reserveRegistration reservePeer : StateT Platform ProbComp Bool) (erased : commitment.CommitmentTranscript)

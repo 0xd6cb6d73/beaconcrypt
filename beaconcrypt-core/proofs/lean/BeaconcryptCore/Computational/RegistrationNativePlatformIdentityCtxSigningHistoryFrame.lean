@@ -134,7 +134,7 @@ variable {n : Nat} {I KemSK Platform E : Type} {base : OracleSpec I} {source : R
 
 /-- If the actual captured body newly signs at a handle, that handle is its actual captured owner. The source scope discharges this association even for failed writers and arbitrary primitive optional replies. -/
 theorem owner (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (captured : RegistrationNativeIdentityFrontend.Owner source) (scalar : PqxdhJointGapDh.ScalarBytes)
     (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (before : RegistrationNativePlatformIdentityCtxMain.Full n KemSK Platform source)

@@ -10,6 +10,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialSupportedCertificate
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhInitialBeaconAmbient RawCtxSelectedParentEntry
 open PqxdhInitialParentObserverBudgets (Costs ExternalUniform)
 variable {ι M P I D K X Response Shared A N C Result Origin : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -77,7 +79,7 @@ variable (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writ
   (disclosed : List RatchetChain) (remaining : Nat)
   (costs : Costs) (external : ExternalUniform costs pre application initializer selector aux)
 
-local notation "sourceRun" => PqxdhInitialNativeAuditCarried.carried source writer pre application initializer selector aux
+local notation "sourceRun" => PqxdhInitialNativeAuditCarried.carried (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux
   mark sender route decode execution depth stage state
 
 def priorBudget : Nat :=
@@ -91,12 +93,12 @@ def certificate (event : Supported sourceRun × Entry → PqxdhInitialParentStop
   costs := costs
   fits := by
     intro input
-    exact PqxdhInitialNativeAuditCarried.carried_fits source writer pre application initializer selector aux mark sender route decode
+    exact PqxdhInitialNativeAuditCarried.carried_fits (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode
       execution depth stage qPost sourceBound state input.val.2 input.val.1 input.property
   checkBound _ := le_refl _
   priorBound := by
     intro input
-    exact PqxdhInitialHistoryBudget.carried_seed source writer pre application initializer selector aux mark sender route decode
+    exact PqxdhInitialHistoryBudget.carried_seed (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode
       execution depth stage qPost sourceBound disclosed state input.1.val.2 input.1.val.1 input.1.property
   external _ := external
 
@@ -104,7 +106,7 @@ def certificate (event : Supported sourceRun × Entry → PqxdhInitialParentStop
 /-- The source-supported certificate has explicit whole-observer, candidate and checker bills, with the original saved history and initial audit charged in full. -/
 theorem certificate_bills
     (event : Supported sourceRun × Entry → PqxdhInitialParentStoppedHop.Trace M P I D K A N C Result Origin S B → Prop) :
-    let actual := certificate source writer pre application initializer selector aux mark sender route decode execution
+    let actual := certificate (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode execution
       depth stage qPost state sourceBound disclosed remaining costs external event
     PqxdhInitialParentStoppedBudgets.callbackBudget actual = 2 * (255 + qPost * 67) + (remaining + 1) ∧
       PqxdhInitialParentStoppedBudgets.uniformBudget actual = (2 * (255 + qPost * 67) + (remaining + 1)) * costs.cap ∧
@@ -118,15 +120,15 @@ theorem observer_resources
     (event : Supported sourceRun × Entry → PqxdhInitialParentStoppedHop.Trace M P I D K A N C Result Origin S B → Prop)
     (context : Supported sourceRun × Entry) (output : PqxdhFullSecretInputKdf.FullOutput) :
     let next := continuation source pre application initializer selector aux sourceRun disclosed remaining event
-    let work := PqxdhInitialParentStoppedHop.observed source writer mark sender route decode next context output
+    let work := PqxdhInitialParentStoppedHop.observed (completedBinding := completedBinding) source writer mark sender route decode next context output
     work.IsTotalQueryBound ((2 * (255 + qPost * 67) + (remaining + 1)) * costs.cap) ∧
       ∀ result, result ∈ support work → (PqxdhInitialParentStoppedHop.candidates result).length ≤
         priorBudget execution qPost state disclosed + 3 * (2 * (255 + qPost * 67) + (remaining + 1)) := by
-  exact ⟨PqxdhInitialParentStoppedBudgets.source_uniform source writer mark sender route decode _
-    (certificate source writer pre application initializer selector aux mark sender route decode execution
+  exact ⟨PqxdhInitialParentStoppedBudgets.source_uniform (completedBinding := completedBinding) source writer mark sender route decode _
+    (certificate (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode execution
       depth stage qPost state sourceBound disclosed remaining costs external event) context output,
-    PqxdhInitialParentStoppedBudgets.source_candidates source writer mark sender route decode _
-      (certificate source writer pre application initializer selector aux mark sender route decode execution
+    PqxdhInitialParentStoppedBudgets.source_candidates (completedBinding := completedBinding) source writer mark sender route decode _
+      (certificate (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initializer selector aux mark sender route decode execution
         depth stage qPost state sourceBound disclosed remaining costs external event) context output⟩
 
 end Source

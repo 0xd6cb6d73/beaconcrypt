@@ -18,7 +18,7 @@ open PqxdhServerAuthExperiment (Setup Checks)
 open RegistrationNativeMldsa (Source Credential)
 open RegistrationNativeMldsaOpaque (Pool handleSource restore Live)
 open RegistrationNativeMldsaMap (nativeState)
-open RegistrationNativeMldsaPoolMap (StateLive CredentialLive)
+open RegistrationNativeMldsaPoolMap (CredentialLive)
 open RegistrationNativeMldsaLiveOwners (NonCreate)
 open RegistrationNativePlatformMldsaTableProgram (runState)
 open RegistrationNativePlatformMldsaTableRestore (observe)
@@ -26,7 +26,7 @@ variable {n : Nat} {KemSK Platform E Value ι : Type} {base : OracleSpec ι}
 variable (source : Source) (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
 variable (route : RawCtxServerRouting.SenderDecoder)
 variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : Credential (handleSource source))
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential (handleSource source))
 variable [primitive : AdapterSealPrimitive.Operations]
 variable (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
 variable (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
@@ -46,8 +46,7 @@ private theorem lift_apply {S X : Type} {m : Type → Type} [Monad m] [LawfulMon
 /-- The actual non-generation callbacks contain only ordinary randomness or a signing request on a reached live owned credential. -/
 theorem valid (pool : Pool source) (server : CredentialLive source pool credential)
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (allowed : NonCreate query)
-    (before : RegistrationNativeExperiment.State n KemSK (handleSource source)) (previous : Platform)
-    (owners : StateLive source pool before) :
+    (before : RegistrationNativeExperiment.State n KemSK (handleSource source)) (previous : Platform) :
     (((callback query).run before).run previous).AllQueriesSatisfy (RegistrationNativeMldsaTableSign.Valid source pool) := by
   have ordinary (work : StateT (RegistrationNativeExperiment.State n KemSK (handleSource source)) (StateT Platform ProbComp)
       (RegistrationNativeRawAdapter.TypedSpec.Range query)) :
@@ -58,7 +57,7 @@ theorem valid (pool : Pool source) (server : CredentialLive source pool credenti
   | inl coin => exact ordinary _
   | inr query => cases query with
     | create _ _ _ => exact allowed.elim
-    | bundle index => exact RegistrationNativePlatformMldsaControllerValid.Bundle.sourceBundle source pool setup checks representation created writer index before previous owners
+    | bundle index => exact RegistrationNativePlatformMldsaControllerValid.Bundle.sourceBundle source pool setup checks representation created writer index before previous
     | build handle application =>
       simp only [RegistrationNativePlatformMldsaProfile.handler, RegistrationNativePlatformExperiment.server,
         StateT.run, bind_pure_comp, map_apply, Functor.map_map]
@@ -73,18 +72,16 @@ theorem valid (pool : Pool source) (server : CredentialLive source pool credenti
 theorem keys (pool : Pool source) (server : CredentialLive source pool credential)
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (allowed : NonCreate query)
     (before : RegistrationNativeExperiment.State n KemSK (handleSource source)) (previous : Platform)
-    (owners : StateLive source pool before)
     (result : ((RegistrationNativeRawAdapter.TypedSpec.Range query × RegistrationNativeExperiment.State n KemSK (handleSource source)) × Platform) × Pool source)
     (supported : result ∈ support (runState source (callback query) before previous pool)) : result.2.keys = pool.keys :=
   RegistrationNativeMldsaTableRestore.program_keys source pool _
-    (valid source setup checks wire route representation created credential view failure allocation reserveRegistration reservePeer erased helper writer pool server query allowed before previous owners)
+    (valid source setup checks wire route representation created credential view failure allocation reserveRegistration reservePeer erased helper writer pool server query allowed before previous)
     result supported
 
 /-- The complete actual table-backed callback restores the literal corrected source callback and its real platform poststate. -/
 theorem restored (fallback : Credential source) (pool : Pool source) (server : Live source pool credential fallback)
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain)
-    (before : RegistrationNativeExperiment.State n KemSK (handleSource source)) (previous : Platform)
-    (owners : StateLive source pool before) :
+    (before : RegistrationNativeExperiment.State n KemSK (handleSource source)) (previous : Platform) :
     observe source fallback <$> runState source (callback query) before previous pool =
       (((RegistrationNativePlatformExperiment.handler RegistrationNativePlatformMldsaProgram.coins setup checks wire route representation created source fallback
         view failure allocation reserveRegistration reservePeer erased helper writer query).run
@@ -104,12 +101,12 @@ theorem restored (fallback : Credential source) (pool : Pool source) (server : L
   | inl coin => exact ordinary trivial
   | inr query => cases query with
     | create edPin mlPin keyId =>
-      have same := RegistrationNativePlatformMldsaTableCreation.restored source setup checks representation created edPin mlPin keyId fallback pool before previous owners
+      have same := RegistrationNativePlatformMldsaTableCreation.restored source setup checks representation created edPin mlPin keyId fallback pool before previous
       simp only [RegistrationNativePlatformMldsaProfile.handler, RegistrationNativePlatformExperiment.handler,
         RegistrationNativePlatformExperiment.liftNative, StateT.run, RegistrationNativePlatformMldsaProgram.lift_coins,
         lift_apply, RegistrationNativeExperiment.handler]
       exact same
-    | bundle index => exact RegistrationNativePlatformMldsaTableRestore.bundle source fallback pool setup checks representation created writer index before previous owners
+    | bundle index => exact RegistrationNativePlatformMldsaTableRestore.bundle source fallback pool setup checks representation created writer index before previous
     | build handle application =>
       have same := RegistrationNativePlatformMldsaTableRestore.build source fallback pool credential ⟨fallback, server⟩ setup
         (RegistrationNativeWire.ledgerCodec wire) view failure allocation erased reservePeer helper writer handle application before previous
@@ -127,13 +124,12 @@ theorem restored (fallback : Credential source) (pool : Pool source) (server : L
 theorem server_live (fallback : Credential source) (pool : Pool source) (server : Live source pool credential fallback)
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain)
     (before : RegistrationNativeExperiment.State n KemSK (handleSource source)) (previous : Platform)
-    (owners : StateLive source pool before)
     (result : ((RegistrationNativeRawAdapter.TypedSpec.Range query × RegistrationNativeExperiment.State n KemSK (handleSource source)) × Platform) × Pool source)
     (supported : result ∈ support (runState source (callback query) before previous pool)) :
     Live source result.2 credential fallback := by
   have ordinary (allowed : NonCreate query) : Live source result.2 credential fallback := by
     have rows := keys source setup checks wire route representation created credential view failure allocation reserveRegistration reservePeer erased helper writer
-      pool ⟨fallback, server⟩ query allowed before previous owners result supported
+      pool ⟨fallback, server⟩ query allowed before previous result supported
     exact ⟨by rw [rows]; exact server.1, server.2⟩
   cases query with
   | inl coin => exact ordinary trivial
@@ -141,49 +137,6 @@ theorem server_live (fallback : Credential source) (pool : Pool source) (server 
     | create edPin mlPin keyId =>
       exact RegistrationNativePlatformMldsaTableCreation.key_live source setup checks representation created edPin mlPin keyId pool before previous
         credential fallback server result supported
-    | _ => exact ordinary trivial
-
-
-omit primitive in
-private theorem keys_live (initial final : Pool source) (same : final.keys = initial.keys)
-    (before : RegistrationNativeExperiment.State n KemSK (handleSource source)) (live : StateLive source initial before) :
-    StateLive source final before := by
-  intro owner member
-  obtain ⟨key, row, publicKey⟩ := live owner member
-  exact ⟨key, by rw [same]; exact row, publicKey⟩
-
-/-- Every actual complete source callback preserves all reached live owner handles at its actual final private table. -/
-theorem live (pool : Pool source) (server : CredentialLive source pool credential)
-    (query : RegistrationNativeRawAdapter.TypedSpec.Domain)
-    (before : RegistrationNativeExperiment.State n KemSK (handleSource source)) (previous : Platform)
-    (owners : StateLive source pool before)
-    (result : ((RegistrationNativeRawAdapter.TypedSpec.Range query × RegistrationNativeExperiment.State n KemSK (handleSource source)) × Platform) × Pool source)
-    (supported : result ∈ support (runState source (callback query) before previous pool)) :
-    StateLive source result.2 result.1.1.2 := by
-  have ordinary (allowed : RegistrationNativeMldsaGlobalMap.NonML query) : StateLive source result.2 result.1.1.2 := by
-    apply RegistrationNativePlatformMldsaTableOrdinary.live source setup checks wire route representation created credential view failure allocation
-      reserveRegistration reservePeer erased helper writer pool query allowed before previous owners result
-    cases query with
-    | inl coin => exact supported
-    | inr query => cases query <;> first | exact allowed.elim | exact supported
-  have retained (allowed : NonCreate query) := keys source setup checks wire route representation created credential view failure allocation
-    reserveRegistration reservePeer erased helper writer pool server query allowed before previous owners result supported
-  have possible := RegistrationNativeMldsaTableCallbacks.evaluate_support source (((callback query).run before).run previous) pool result supported
-  cases query with
-  | inl coin => exact ordinary trivial
-  | inr query => cases query with
-    | create edPin mlPin keyId =>
-      exact RegistrationNativePlatformMldsaTableCreation.live source setup checks representation created
-        edPin mlPin keyId pool before previous owners result supported
-    | bundle index =>
-      exact keys_live source pool result.2 (retained trivial) result.1.1.2
-        (RegistrationNativePlatformMldsaBundleOwnership.sourceBundle_live source pool setup checks representation created writer index
-          before result.1.1.2 previous result.1.2 result.1.1.1 owners possible)
-    | build handle application =>
-      have same := RegistrationNativePlatformMldsaServerOwners.build setup checks wire route representation created credential view failure allocation
-        reserveRegistration reservePeer erased helper writer handle application before result.1.1.2 previous result.1.2 result.1.1.1 possible
-      exact keys_live source pool result.2 (retained trivial) result.1.1.2
-        (RegistrationNativePlatformMldsaServerOwners.owners_live source pool before result.1.1.2 owners same.1)
     | _ => exact ordinary trivial
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformMldsaTableHandler
@@ -211,9 +164,3 @@ end BeaconcryptCore.Computational.RegistrationNativePlatformMldsaTableHandler
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativePlatformMldsaTableHandler.server_live
-
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformMldsaTableHandler.live' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformMldsaTableHandler.live

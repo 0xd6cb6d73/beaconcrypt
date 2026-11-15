@@ -9,6 +9,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialParentStoppedBudgets
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf
 open PqxdhInitialParentStoppedHop PqxdhInitialParentObserverBudgets RawCtxSelectedParentEntry
 open RawCtxSelectedParentHop (extractLoss hmacLoss)
@@ -47,62 +48,62 @@ variable (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writ
 
 /-- The actual full stopped observer pays its source-certified callback count and each separate original external cost, without a whole-observer resource premise. -/
 theorem source_uniform (context : Context × Entry) (output : FullOutput) :
-    (observed source writer mark sender route decode continuation context output).IsTotalQueryBound
+    (observed (completedBinding := completedBinding) source writer mark sender route decode continuation context output).IsTotalQueryBound
       (uniformBudget certificate) :=
   complete_uniform source writer (continuation.prior context.1) context.2 output
     (continuation.pre context.1) (continuation.application context.1) (continuation.initializer context.1)
     (continuation.selector context.1) (continuation.aux context.1) certificate.costs (certificate.external context.1)
-    RawCtxSelectedLiveRead.labelRead (program mark sender route decode continuation context) (callbackBudget certificate)
-    ((program_total mark sender route decode continuation context certificate.qPost (certificate.fits context.1)).mono
+    RawCtxSelectedLiveRead.labelRead (program (completedBinding := completedBinding) mark sender route decode continuation context) (callbackBudget certificate)
+    ((program_total (completedBinding := completedBinding) mark sender route decode continuation context certificate.qPost (certificate.fits context.1)).mono
       (Nat.add_le_add_left (certificate.checkBound context.1) _))
     (continuation.initial context)
 
 /-- The complete original initial ledger, every stopped-source callback and every appended checker query determine the actual candidate cap. -/
 theorem source_candidates (context : Context × Entry) (output : FullOutput)
     (result : Trace M P I D K A N C Result Origin S B)
-    (supported : result ∈ support (observed source writer mark sender route decode continuation context output)) :
+    (supported : result ∈ support (observed (completedBinding := completedBinding) source writer mark sender route decode continuation context output)) :
     (candidates result).length ≤ candidateBudget certificate := by
   have traceBound := trace_length
     (PqxdhInitialParentObserver.handler source writer (continuation.prior context.1) context.2 output
       (continuation.pre context.1) (continuation.application context.1) (continuation.initializer context.1)
       (continuation.selector context.1) (continuation.aux context.1) RawCtxSelectedLiveRead.labelRead)
-    (program mark sender route decode continuation context) (callbackBudget certificate)
-    ((program_total mark sender route decode continuation context certificate.qPost (certificate.fits context.1)).mono
+    (program (completedBinding := completedBinding) mark sender route decode continuation context) (callbackBudget certificate)
+    ((program_total (completedBinding := completedBinding) mark sender route decode continuation context certificate.qPost (certificate.fits context.1)).mono
       (Nat.add_le_add_left (certificate.checkBound context.1) _))
     (continuation.initial context) result supported
   exact traceBound.trans (Nat.add_le_add_right (certificate.priorBound context) _)
 
 /-- The full source-and-checker comparison uses the computed entire candidate cap; the certificate contains neither an alias-probability premise nor a whole-observer resource bound. -/
 theorem source_bound (hmac : HmacSha512) (correct : SourceFullCorrect source hmac) (sample : ProbComp Context) :
-    (actual source writer mark sender route decode continuation sample).boolDistance
-      (random source writer mark sender route decode continuation sample) ≤
-      extractLoss hmac sample (address continuation) (observer source writer mark sender route decode continuation) +
-        hmacLoss hmac sample (address continuation) (observer source writer mark sender route decode continuation) +
-        extractLoss hmac sample (address continuation) (aliasTester source writer mark sender route decode continuation) +
-        hmacLoss hmac sample (address continuation) (aliasTester source writer mark sender route decode continuation) +
+    (actual (completedBinding := completedBinding) source writer mark sender route decode continuation sample).boolDistance
+      (random (completedBinding := completedBinding) source writer mark sender route decode continuation sample) ≤
+      extractLoss hmac sample (address continuation) (observer (completedBinding := completedBinding) source writer mark sender route decode continuation) +
+        hmacLoss hmac sample (address continuation) (observer (completedBinding := completedBinding) source writer mark sender route decode continuation) +
+        extractLoss hmac sample (address continuation) (aliasTester (completedBinding := completedBinding) source writer mark sender route decode continuation) +
+        hmacLoss hmac sample (address continuation) (aliasTester (completedBinding := completedBinding) source writer mark sender route decode continuation) +
         (2 ^ 352 : ℝ)⁻¹ + (candidateBudget certificate : ℝ) / (2 ^ 256 : ℝ) :=
-  PqxdhInitialParentStoppedHop.bound source writer mark sender route decode continuation hmac correct sample
-    (candidateBudget certificate) (source_candidates source writer mark sender route decode continuation certificate)
+  PqxdhInitialParentStoppedHop.bound (completedBinding := completedBinding) source writer mark sender route decode continuation hmac correct sample
+    (candidateBudget certificate) (source_candidates (completedBinding := completedBinding) source writer mark sender route decode continuation certificate)
 
 /-- Both actual main/tester reductions have two HMAC challenges and the derived source/checker random bill; every tester fixed-HKDF evaluation is also counted. -/
 theorem source_reduction_queries (sample : ProbComp Context) (qSample : Nat)
     (sampleBound : sample.IsTotalQueryBound qSample) :
-    (∀ forTester, let observe := reductionObserver source writer mark sender route decode continuation forTester
+    (∀ forTester, let observe := reductionObserver (completedBinding := completedBinding) source writer mark sender route decode continuation forTester
       (fullExpandReduction .ratchet (RawCtxSelectedParentSecrecy.joint sample (address continuation)) observe).IsQueryBoundP
         IsHmacChallengeQuery 2 ∧
       (fullExpandReduction .ratchet (RawCtxSelectedParentSecrecy.joint sample (address continuation)) observe).IsQueryBoundP
         PqxdhFullSecretInputKdf.IsHmacUniformQuery ((qSample + 76) + uniformBudget certificate)) ∧
-      (∀ context output result, result ∈ support (observed source writer mark sender route decode continuation context output) →
+      (∀ context output result, result ∈ support (observed (completedBinding := completedBinding) source writer mark sender route decode continuation context output) →
         (RawCtxFullPreimageTester.evaluate output (candidates result)).IsTotalQueryBound (candidateBudget certificate)) :=
-  PqxdhInitialParentStoppedHop.reduction_queries source writer mark sender route decode continuation sample
+  PqxdhInitialParentStoppedHop.reduction_queries (completedBinding := completedBinding) source writer mark sender route decode continuation sample
     qSample (uniformBudget certificate) (candidateBudget certificate) sampleBound
-    (source_uniform source writer mark sender route decode continuation certificate)
-    (source_candidates source writer mark sender route decode continuation certificate)
+    (source_uniform (completedBinding := completedBinding) source writer mark sender route decode continuation certificate)
+    (source_candidates (completedBinding := completedBinding) source writer mark sender route decode continuation certificate)
 
 /-- Every Extract/HMAC challenger world consumes the computed full source/checker budget and separately pays for its actual64-byte blocks or76-byte child draw. -/
 theorem source_challenger_queries (hmac : HmacSha512) (sample : ProbComp Context) (qSample : Nat)
     (sampleBound : sample.IsTotalQueryBound qSample) (forTester : Bool) :
-    let observe := reductionObserver source writer mark sender route decode continuation forTester
+    let observe := reductionObserver (completedBinding := completedBinding) source writer mark sender route decode continuation forTester
     let joint := RawCtxSelectedParentSecrecy.joint sample (address continuation)
     let qObserve := uniformBudget certificate
     (extractRealGame hmac joint (fullExtractReduction hmac .ratchet observe)).IsTotalQueryBound
@@ -115,9 +116,9 @@ theorem source_challenger_queries (hmac : HmacSha512) (sample : ProbComp Context
         ((qSample + 76) + (64 + (64 + qObserve))) ∧
       (RawCtxSelectedParentSecrecy.random sample (address continuation) observe).IsTotalQueryBound
         ((qSample + 76) + (76 + qObserve)) :=
-  PqxdhInitialParentStoppedHop.challenger_queries source writer mark sender route decode continuation hmac sample
+  PqxdhInitialParentStoppedHop.challenger_queries (completedBinding := completedBinding) source writer mark sender route decode continuation hmac sample
     qSample (uniformBudget certificate) sampleBound
-    (source_uniform source writer mark sender route decode continuation certificate) forTester
+    (source_uniform (completedBinding := completedBinding) source writer mark sender route decode continuation certificate) forTester
 
 end BeaconcryptCore.Computational.PqxdhInitialParentStoppedBudgets
 

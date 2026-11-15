@@ -58,10 +58,10 @@ theorem compile_game (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
   apply bind_congr_of_forall_mem_support
   rintro ⟨_ | created, after⟩ born
   · simp only [map_pure, mergeOutcome, Option.map_none]
-  · obtain ⟨sender, lastId, peers⟩ := construct_fields setup.joint ensureInit identityIndex setup.serverKeyId runtime
+  · obtain ⟨sender, lastId, _⟩ := construct_fields setup.joint ensureInit identityIndex setup.serverKeyId runtime
       created after born
     have compiled := CborAdmissionCompileStep.compile_native setup codec checks route created.seed phase1 phase2
-      adversary (PqxdhRegistrationSchedule.initial created) sender lastId peers rfl (fun _ => rfl)
+      adversary (PqxdhRegistrationSchedule.initial created) sender lastId (fun _ => rfl) rfl (fun _ => rfl)
     simp only [StateT.run] at compiled
     simp only [PqxdhDeploymentNative.initial]
     rw [← compiled, Functor.map_map, Functor.map_map]

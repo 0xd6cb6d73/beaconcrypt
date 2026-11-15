@@ -66,7 +66,7 @@ theorem outgoing_free (role : Role) (setup : Setup base KemSK) (index : Nat) (ow
   cases query with
   | inl query => cases query with
     | hash request => exact native_effect role _ (by simp [RegistrationNativeSecretWordAtomInstallCaps.InstallEnv])
-    | sign request payload digest => exact native_bind role _ _ (native_sample role _) (fun _ => native_bind role _ _ (native_update role _) (fun _ => native_pure role _))
+    | sign request payload digest => exact native_pure role _
   | inr request =>
     simp only [RegistrationNativeBeaconFrontend.outgoing]
     split
@@ -109,12 +109,12 @@ private abbrev carrierMonad (role : Role) : Monad (Carrier (E := E) (n := n) (Ke
   bind work next := ⟨work.val >>= fun value => (next value).val, bind_free role _ _ work.property (fun value => (next value).property)⟩
 
 private theorem publication_free (role : Role) (setup : Setup base KemSK) (index : Nat) (owner : Owner source)
-    (encode : registration.SignedInitView → M source Auxiliary (OracleComp (Spec E n KemSK)) (RustM (core.option.Option (alloc.vec.Vec U8))))
+    (encode : registration.InitView → M source Auxiliary (OracleComp (Spec E n KemSK)) (RustM (core.option.Option (alloc.vec.Vec U8))))
     (writer : ∀ packet, Free role (encode packet)) (oneTime : PqxdhJointGapDh.ScalarBytes) :
     Free role (RegistrationNativePlatformBeaconPublication.begin
       (fun query => liftLegacy trustedLift (RegistrationNativeBeaconFrontend.outgoing setup source index owner query))
       encode ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey) := by
+      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin) := by
   let _ := carrierMonad (E := E) (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (source := source) role
   let _ : LawfulMonad (Carrier (E := E) (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (source := source) role) := LawfulMonad.mk' _
     (fun work => by apply Subtype.ext; exact bind_pure work.val)
@@ -124,15 +124,15 @@ private theorem publication_free (role : Role) (setup : Setup base KemSK) (index
   have hom : Cslib.IsMonadHom (Carrier (E := E) (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (source := source) role) (M source Auxiliary (OracleComp (Spec E n KemSK))) forget := .mk' (fun _ => rfl) (fun _ _ => rfl)
   let operations : QueryImpl RegistrationBeaconInitExecutor.Spec (Carrier (E := E) (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (source := source) role) :=
     fun query => ⟨liftLegacy trustedLift (RegistrationNativeBeaconFrontend.outgoing setup source index owner query), legacy_free role _ (outgoing_free role setup index owner query)⟩
-  let encoding : registration.SignedInitView → Carrier (E := E) (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (source := source) role (RustM (core.option.Option (alloc.vec.Vec U8))) := fun packet => ⟨encode packet, writer packet⟩
+  let encoding : registration.InitView → Carrier (E := E) (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (source := source) role (RustM (core.option.Option (alloc.vec.Vec U8))) := fun packet => ⟨encode packet, writer packet⟩
   have kept := (RegistrationNativePlatformBeaconPublication.begin operations encoding ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey).property
-  change Free role (forget (RegistrationNativePlatformBeaconPublication.begin operations encoding _ _ _ _ _)) at kept
+      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin).property
+  change Free role (forget (RegistrationNativePlatformBeaconPublication.begin operations encoding _ _ _ _)) at kept
   rw [RegistrationNativePlatformBeaconMap.begin hom] at kept
   exact kept
 
 theorem bundle_free (role : Role) (setup : Setup base KemSK)
-    (encode : registration.SignedInitView → M source Auxiliary (OracleComp (Spec E n KemSK)) (RustM (core.option.Option (alloc.vec.Vec U8))))
+    (encode : registration.InitView → M source Auxiliary (OracleComp (Spec E n KemSK)) (RustM (core.option.Option (alloc.vec.Vec U8))))
     (writer : ∀ packet, Free role (encode packet)) (index : Nat) :
     Free role (RegistrationNativePlatformGenericBundle.bundle trustedLift setup source encode index) := by
   unfold RegistrationNativePlatformGenericBundle.bundle
@@ -166,7 +166,7 @@ theorem bundle_free (role : Role) (setup : Setup base KemSK)
       simp only [phase]
       exact pure_free role _
 
-private theorem encoder_free (role : Role) (view : registration.SignedInitView) :
+private theorem encoder_free (role : Role) (view : registration.InitView) :
     Free role (RegistrationNativePlatformGenericBundle.encoder (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (source := source) E view) := by
   intro owners env
   simp only [RegistrationNativePlatformGenericBundle.encoder, RegistrationNativePlatformGenericBundle.encoderWith,

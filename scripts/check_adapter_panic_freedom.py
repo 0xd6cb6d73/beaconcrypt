@@ -106,6 +106,7 @@ CONTRACTS = {
     "AdapterServerConstructorExtraction": "BeaconcryptCore.PanicFreedom.AdapterConstructors.ServerContracts",
 }
 UNCONDITIONAL = {
+    "beaconcrypt_public_wrapper.auth.server_pin",
     "beaconcrypt_public_wrapper.beacon.Beacon.identity_pk",
     "beaconcrypt_public_wrapper.beacon.Beacon.identity_sk",
     "beaconcrypt_public_wrapper.ratchet.RatchetKernelSlot.new",
@@ -125,7 +126,6 @@ UNCONDITIONAL = {
     "beaconcrypt_public_ordinary.ratchet.encrypted_frame_sender",
 }
 PUBLIC_TRIVIAL_CONTRACTS = {
-    "beaconcrypt_public_wrapper.beacon.Beacon.mldsa_public_key",
     "beaconcrypt_public_wrapper.server.Server.mldsa_public_key",
     "beaconcrypt_public_wrapper.server.Server.authentication_pin",
 }
@@ -251,11 +251,6 @@ def assumptions(cohort: str, definition: "Definition") -> list[str]:
     if definition.name in PUBLIC_TRIVIAL_CONTRACTS:
         return [
             "(_adapter_contracts : BeaconcryptCore.PanicFreedom.AdapterPublicTrivial.Contracts)"
-        ]
-    if definition.name == "beaconcrypt_public_wrapper.auth.fingerprint_pin":
-        return [
-            "(_adapter_hash : ∀ request, BeaconcryptCore.PanicFreedom.AdapterNormal.Normal "
-            "(beaconcrypt.auth.Operations.hash request))"
         ]
     if cohort in {
         "AdapterBeaconConstructorExtraction",
@@ -1466,13 +1461,18 @@ def render(
                 "receive": "sourceReceiveOperations",
                 "initial": "sourceLocalOperations",
             }[operation]
+            request_type = (
+                "InitialRatchetKdfRequest"
+                if operation == "initial"
+                else "SymmetricRatchetKdfRequest"
+            )
             lines += [
                 f"theorem {checked} [_adapter_material : BeaconcryptCore.Refinement.PublicWrapperPlatform.Material]",
                 "    [_adapter_platform : BeaconcryptCore.Refinement.PublicWrapperPlatform.Platform]",
                 "    [_adapter_primitive : BeaconcryptCore.Refinement.AdapterInitEdPrimitive.Operations]",
                 "    [_adapter_crypto : BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations]",
                 "    [_adapter_hkdf : BeaconcryptCore.Refinement.AdapterRatchetKdfPrimitive.Operations]",
-                f"    (previous : {dictionary}) (request : beaconcrypt_core.ratchet.SymmetricRatchetKdfRequest) :",
+                f"    (previous : {dictionary}) (request : beaconcrypt_core.ratchet.{request_type}) :",
                 f"    ({KDF_SOURCE}.{selector} previous).{field} request =",
                 f"      beaconcrypt_ratchet_kdf.ratchet.{native} request := by",
                 f"  adapter_certificate {KDF_SOURCE}.source_{operation}_kdf",

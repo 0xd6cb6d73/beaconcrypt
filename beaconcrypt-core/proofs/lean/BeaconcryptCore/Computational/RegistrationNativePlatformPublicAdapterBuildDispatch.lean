@@ -18,7 +18,7 @@ variable [ed : AdapterInitEdPrimitive.Operations]
 variable {n : Nat} {I KemSK Platform R : Type} {base : OracleSpec I} {source : RegistrationNativeMldsa.Source}
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK)
 variable (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : AdapterPublicWrapperStorage.Views)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 variable (current : RegistrationNativeExperiment.State n KemSK source ×Platform)
 variable (before : StrongCarrier (R:=R) setup view views created credential current)
 
@@ -30,6 +30,7 @@ theorem moved_objects (handle : Nat) :
     (move setup view views created credential current before handle).base.objects=
       {before.base.objects with tokens:=Function.update before.base.objects.tokens handle none} := rfl
 
+variable (deriveAd : RegistrationNativePlatformCompletionSdk.AdHash n (StateT Platform ProbComp))
 variable (pin : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp)
   (RustM (core.option.Option session.ServerAuthenticationPin)))
 variable (reserve : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) Bool)
@@ -39,8 +40,8 @@ variable (finish : RegistrationNativePlatformCompletionSdk.Completion n (StateT 
 noncomputable def missing (handle : Nat) (absent : before.base.objects.tokens handle=none) (application : Option (Slice U8)) :
     TotalStep (StrongCarrier (R:=R) setup view views created credential)
       (RegistrationNativePlatformPackedState.pack
-        (RegistrationNativePlatformExperiment.server (RegistrationNativePlatformCompletionSdk.build pin reserve present finish handle application)) current) := by
-  rw [RegistrationNativePlatformExtractedSdkBuildDispatch.missing_model view views setup.joint created credential current before.base pin reserve present finish handle absent application]
+        (RegistrationNativePlatformExperiment.server (RegistrationNativePlatformCompletionSdk.build deriveAd pin reserve present finish handle application)) current) := by
+  rw [RegistrationNativePlatformExtractedSdkBuildDispatch.missing_model view views setup.joint created credential current before.base deriveAd pin reserve present finish handle absent application]
   exact {
     step:={
       Packet:=Unit
@@ -61,8 +62,8 @@ noncomputable def cancel (handle : Nat) (token : beaconcrypt_public_wrapper.serv
     (stored : before.base.objects.tokens handle=some token) :
     TotalStep (StrongCarrier (R:=R) setup view views created credential)
       (RegistrationNativePlatformPackedState.pack
-        (RegistrationNativePlatformExperiment.server (RegistrationNativePlatformCompletionSdk.build pin reserve present finish handle none)) current) := by
-  rw [RegistrationNativePlatformExtractedSdkBuildDispatch.cancel_model view views setup.joint created credential current before.base pin reserve present finish handle token stored]
+        (RegistrationNativePlatformExperiment.server (RegistrationNativePlatformCompletionSdk.build deriveAd pin reserve present finish handle none)) current) := by
+  rw [RegistrationNativePlatformExtractedSdkBuildDispatch.cancel_model view views setup.joint created credential current before.base deriveAd pin reserve present finish handle token stored]
   exact {
     step:={
       Packet:=Unit

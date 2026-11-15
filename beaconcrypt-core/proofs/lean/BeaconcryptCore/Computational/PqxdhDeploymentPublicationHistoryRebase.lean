@@ -232,6 +232,29 @@ theorem onBackend_prefix (earlier : History)
   simp only [Functor.map_map] at shifted
   convert shifted using 1 <;> rfl
 
+private theorem annotated_finish_prefix (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (identityIndex kemIndex : Nat) (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) (earlier : History)
+    (state : PqxdhRegistrationJointFinish.State KemSK) :
+    (fun result => (result.1, prependContext earlier result.2)) <$>
+        (PqxdhRegistrationJointFinish.annotatedFinish setup codec identityIndex kemIndex retained raw owner).run state =
+      (PqxdhRegistrationJointFinish.annotatedFinish setup codec identityIndex kemIndex retained raw owner).run
+        (prependContext earlier state) := by
+  unfold PqxdhRegistrationJointFinish.annotatedFinish
+  cases phase : owner.beacon.phase <;> simp only [StateT.run_pure, map_pure]
+  case initSent control prekey oneTime kem =>
+    cases retained <;> cases decoded : PqxdhServerAuthExperiment.responseOf codec raw <;>
+      simp only [StateT.run_pure, map_pure]
+    rw [StateT.run_bind, StateT.run_bind]
+    simp only [PqxdhRegistrationJointFinish.onNative, StateT.run, prependContext,
+      map_bind, bind_map_left]
+    apply bind_congr
+    intro hashed
+    exact finish_program_prefix setup codec identityIndex kemIndex
+      (PqxdhBeaconPhase2Publication.nativeOwner
+        (completedBinding := PqxdhTranscriptAd.completedOf control hashed.1) codec.frameRead raw owner)
+      earlier (state.1, hashed.2)
+
 /-- A native finish at any present or absent owner keeps its actual owner result and KEM/shared effects under identity-history prefixing. -/
 theorem source_finish_prefix (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (address : Nat) (raw : Pqxdh.Bytes) (earlier : History) (state : PqxdhRegistrationJointSchedule.State KemSK) :
@@ -245,8 +268,8 @@ theorem source_finish_prefix (setup : Setup baseSpec KemSK) (codec : Codec Reade
     have shifted := congrArg (fun work => (fun result => (result.1.1, { state with
         pool := result.2.1, shared := result.2.2,
         owners := state.owners.set address { entry with owner := result.1.2 } })) <$> work)
-      (finish_program_prefix setup codec entry.identityIndex entry.kemIndex
-        (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw entry.owner) earlier (state.pool, state.shared))
+      (annotated_finish_prefix setup codec entry.identityIndex entry.kemIndex (state.inits address) raw entry.owner
+        earlier (state.pool, state.shared))
     simp only [Functor.map_map] at shifted
     convert shifted using 1 <;> rfl
 
@@ -292,6 +315,21 @@ theorem bundle_trace_prefix (setup : Setup baseSpec KemSK) (codec : Codec Reader
     exact bundle_after_prefix setup codec index owner (some scalar) earlier pool
   case freshWithCoins => exact congrArg pure (bundle_after_prefix setup codec index owner none earlier pool)
 
+private theorem bundle_traceLog_prefix (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (index : Nat) (owner : PqxdhRegistrationSchedule.Owner KemSK) (earlier : History)
+    (pool : PqxdhDynamicIdentityPool.SourceState) (logged : Option PqxdhEd25519EufCma.Phase1Candidate) :
+    (fun result => ((result.1.1, prependIdentity earlier result.1.2), result.2)) <$>
+        PqxdhRegistrationJointBundle.traceLog setup codec index owner pool logged =
+      PqxdhRegistrationJointBundle.traceLog setup codec index owner (prependIdentity earlier pool) logged := by
+  cases phase : owner.beacon.phase <;>
+    simp only [PqxdhRegistrationJointBundle.traceLog, phase, Functor.map_map, map_pure]
+  case fresh =>
+    congr 1
+    funext scalar
+    exact Prod.ext (bundle_after_prefix setup codec index owner (some scalar) earlier pool) rfl
+  case freshWithCoins =>
+    exact congrArg pure (Prod.ext (bundle_after_prefix setup codec index owner none earlier pool) rfl)
+
 /-- Reinstalling a native bundle preserves source owner state and the exact new signing suffix. -/
 theorem source_bundle_prefix (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (address : Nat) (earlier : History) (state : PqxdhRegistrationJointSchedule.State KemSK) :
@@ -302,10 +340,11 @@ theorem source_bundle_prefix (setup : Setup baseSpec KemSK) (codec : Codec Reade
   | none => simp [PqxdhRegistrationJointSchedule.bundle, StateT.run, prependSchedule, found]
   | some entry =>
     simp only [PqxdhRegistrationJointSchedule.bundle, StateT.run, prependSchedule, found, Functor.map_map]
-    have shifted := congrArg (fun work => (fun result => (result.1.1, { state with
-        pool := (result.2, state.pool.2),
-        owners := state.owners.set address { entry with owner := result.1.2 } })) <$> work)
-      (bundle_trace_prefix setup codec entry.identityIndex entry.owner earlier state.pool.1)
+    have shifted := congrArg (fun work => (fun result => (result.1.1.1, { state with
+        pool := (result.1.2, state.pool.2),
+        owners := state.owners.set address { entry with owner := result.1.1.2 },
+        inits := Function.update state.inits address result.2 })) <$> work)
+      (bundle_traceLog_prefix setup codec entry.identityIndex entry.owner earlier state.pool.1 (state.inits address))
     simp only [Functor.map_map] at shifted
     convert shifted using 1 <;> rfl
 

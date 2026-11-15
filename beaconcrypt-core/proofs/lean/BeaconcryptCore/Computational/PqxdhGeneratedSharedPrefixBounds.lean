@@ -8,6 +8,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhGeneratedSharedPrefixBounds
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPhase1AcceptanceOracle PqxdhKemIndCca
 open PqxdhInitializerSecrecy CtxRomAuth AdaptiveCtxSharedHash
@@ -31,9 +32,9 @@ include writeBound mainBound selectorBound localBound in
 /-- Actual optional Phase1 publication and all later ordinary requests retain a complete shared-hash and uniform-call ledger. -/
 theorem generated_bills (index : Nat) (publicIdentity : PublicIdentity) (generated : Generated setup Unit)
     (transcript : Phase1PublicTranscript setup.Context) (identities : BareState count) :
-    (PqxdhGeneratedSharedPrefix.run setup env callbacks program attachedVerify primitives count baseImpl kem secret
+    (PqxdhGeneratedSharedPrefix.run (completedBinding := completedBinding) setup env callbacks program attachedVerify primitives count baseImpl kem secret
       index publicIdentity generated transcript identities).IsQueryBoundP (HashClass true) (69 * qCalls) ∧
-    (PqxdhGeneratedSharedPrefix.run setup env callbacks program attachedVerify primitives count baseImpl kem secret
+    (PqxdhGeneratedSharedPrefix.run (completedBinding := completedBinding) setup env callbacks program attachedVerify primitives count baseImpl kem secret
       index publicIdentity generated transcript identities).IsQueryBoundP (HashClass false)
         (qWrite + qCalls * (1 + qSelector + 69 * qLocal)) := by
   have writer : ∀ candidate auxiliary,
@@ -44,7 +45,7 @@ theorem generated_bills (index : Nat) (publicIdentity : PublicIdentity) (generat
     index publicIdentity generated env.binding (PqxdhGeneratedBeaconSelector.bundle transcript)
     (PqxdhGeneratedSharedPrefix.withCache setup env.initial ∅)
   have tail := fun started : Option Pqxdh.Bytes × State setup M P I K A S (B + 1) =>
-    PqxdhOrdinarySharedSchedulerBounds.program_bills attachedVerify primitives count env.source env.recordWriter
+    PqxdhOrdinarySharedSchedulerBounds.program_bills (completedBinding := completedBinding) attachedVerify primitives count env.source env.recordWriter
       env.senderId env.route env.decode env.localImpl baseImpl kem secret qSelector qLocal selectorBound localBound
       (program.main (started.1.map (fun bytes => ⟨transcript, bytes⟩)))
       (PqxdhOrdinarySharedScheduler.separate (PqxdhPhase2OldSource.packState started.2 identities)) qCalls
@@ -66,10 +67,10 @@ theorem borrowed_bills (qPre qOne : Nat)
     (localOneBound : ∀ query state, PqxdhOrdinaryNativeCache.sourceSafe query →
       ((PqxdhOrdinaryNativeCache.cacheFree attachedVerify primitives 1 env.source env.localImpl baseImpl kem secret query).run state).IsTotalQueryBound qLocal)
     (target : TargetKemPublicKey) :
-    (PqxdhBorrowedSharedPrefix.run setup env callbacks program attachedVerify primitives baseImpl kem secret target).IsQueryBoundP (HashClass true) (69 * qCalls) ∧
-    (PqxdhBorrowedSharedPrefix.run setup env callbacks program attachedVerify primitives baseImpl kem secret target).IsQueryBoundP (HashClass false)
+    (PqxdhBorrowedSharedPrefix.run (completedBinding := completedBinding) setup env callbacks program attachedVerify primitives baseImpl kem secret target).IsQueryBoundP (HashClass true) (69 * qCalls) ∧
+    (PqxdhBorrowedSharedPrefix.run (completedBinding := completedBinding) setup env callbacks program attachedVerify primitives baseImpl kem secret target).IsQueryBoundP (HashClass false)
       (32 + qPre + qOne + qWrite + qCalls * (1 + qSelector + 69 * qLocal)) := by
-  have tail := fun seed before after => generated_bills setup env callbacks program attachedVerify primitives 1 baseImpl kem secret
+  have tail := fun seed before after => generated_bills (completedBinding := completedBinding) setup env callbacks program attachedVerify primitives 1 baseImpl kem secret
     qWrite qCalls qSelector qLocal writeBound mainBound selectorOneBound localOneBound
     0 (primitives.publicKeys seed) (⟨before, target, (), after⟩ : Generated setup Unit)
     (PqxdhPrivatePhase1Prefix.transcript

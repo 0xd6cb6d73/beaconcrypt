@@ -44,7 +44,7 @@ noncomputable local instance idleLocal :LocalOperations (RustT (StateT (Registra
 noncomputable local instance idleCrypto :CryptoOperations (RustT (StateT (RegistrationNativeExperiment.State n KemSK source×P) ProbComp)):=packedCrypto
 noncomputable local instance idleChildren :ChildOperations (RustT (StateT (RegistrationNativeExperiment.State n KemSK source×P) ProbComp)):=children
 
-variable (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
 local notation "auditPrivate"=>RegistrationNativePlatformPublicAdapterAuditModel.Private configuration created credential
 local notation "auditModel"=>RegistrationNativePlatformPublicAdapterAuditModel.model configuration created credential
 local notation "auditPhysical"=>RegistrationNativePlatformPublicAdapterAuditModel.physical configuration created credential
@@ -79,7 +79,7 @@ theorem query (before :RegistrationNativePlatformPublicAdapterAuditModel.State n
     ((congrArg (fun tree=>RegistrationNativePlatformPublicAdapterPhysicalOrdinary.normalize <$>tree)
       (RegistrationNativePlatformPublicAdapterBundleDispatchSource.query coins setup checks configuration.agreement.representation created configuration.view
         (RegistrationNativePlatformPublicAdapterLeaves.localOperations originalLocal) configuration.edFailure configuration.reservePackets children
-        previousLocal (other (m:=CutM)) (recording (m:=CutM)) configuration.views credential index configuration.generator
+        previousLocal (fun _=>pure (.fail .panic)) (recording (m:=CutM)) configuration.views credential index configuration.generator
         (RegistrationNativePlatformPublicAdapterConfiguration.generation configuration) (before.1.1,none) before.1.2 stored)).trans
       (RegistrationNativePlatformPublicAdapterBundleNormalization.run_source coins setup checks configuration.agreement.representation created configuration.view
         (RegistrationNativePlatformPublicAdapterLeaves.localOperations originalLocal) configuration.edFailure writer children configuration.generator

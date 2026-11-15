@@ -19,7 +19,7 @@ variable [generators : AdapterBeaconConstructorPrimitive.Operations]
 variable [standard : AdapterBeaconConstructorPrimitive.Standard]
 variable [authentication : beaconcrypt.auth.Operations]
 
-omit platform standard in
+omit platform standard authentication in
 theorem beacon_try_new_with_rng_valid
     {R E : Type} (generator : rand_core.TryCryptoRng R E) (contracts : BeaconContracts generator) (identifier : U64)
     (identityKey mldsaKey : Slice U8) (rng : R) :
@@ -48,11 +48,10 @@ theorem beacon_try_new_with_rng_valid
       | (apply ensures_ok; trivial)
       | exact contracts.parse _
       | exact contracts.edPublicBytes _
-      | exact contracts.mldsaGenerate _
       | exact contracts.edGenerate _
       | exact contracts.kxGenerate _
       | exact contracts.kemGenerate _
-      | exact fingerprint_pin_total contracts.hash _ _
+      | exact server_pin_total _ _
       | exact RegistrationInputs.copied_slice_total _ _
       | (rintro ⟨left, right⟩)
       | (intro value)
@@ -108,7 +107,7 @@ theorem server_try_new_with_rng_valid
       | (split at *)
 
 omit [PublicWrapperPlatform.Allocator] [PublicWrapperPlatform.LocalOperations]
-    [PublicWrapperPlatform.ContainerOperations] [AdapterPublicOrdinaryPlatform.LookupOperations] platform serverStandard in
+    [PublicWrapperPlatform.ContainerOperations] [AdapterPublicOrdinaryPlatform.LookupOperations] platform serverStandard authentication in
 theorem beacon_try_new_valid (contracts : BeaconContracts standard.os) (identifier : U64)
     (identityKey mldsaKey : Slice U8) :
     Ensures (beaconcrypt_constructor.beacon.Beacon.try_new identifier identityKey mldsaKey)

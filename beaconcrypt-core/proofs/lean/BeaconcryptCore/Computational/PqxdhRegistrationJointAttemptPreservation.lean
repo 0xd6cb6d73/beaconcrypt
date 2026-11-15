@@ -37,20 +37,42 @@ theorem finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
   case none => simpa only [supported] using valid
   case some entry =>
     obtain ⟨reached, member, rfl⟩ := supported
-    have slots := PqxdhRegistrationJointFinish.annotated_program_slots setup codec entry.identityIndex entry.kemIndex
-      (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw entry.owner) (state.1.pool, state.1.shared) reached member
-    apply retained setup state _ valid slots.1 slots.2
-    · exact fun index => PqxdhRegistrationJointNonSigningHistory.finish setup codec entry.identityIndex entry.kemIndex index
-        codec.frameRead raw entry.owner (state.1.pool, state.1.shared) reached member
+    have facts : reached.2.1.1.seeds = state.1.pool.1.seeds ∧ reached.2.1.2.keys = state.1.pool.2.keys ∧
+        (∀ index, messagesAt index reached.2.1.1.transcript = messagesAt index state.1.pool.1.transcript) ∧
+        (∀ actual, PqxdhRegistrationJointAttemptTrace.basis setup reached.1.2 = some actual →
+          PqxdhRegistrationJointAttemptTrace.basis setup entry.owner = some actual) := by
+      unfold PqxdhRegistrationJointFinish.annotatedFinish at member
+      cases phase : entry.owner.beacon.phase <;> simp only [phase] at member
+      case initSent control prekey oneTime kem =>
+        cases retainedInit : state.1.inits address <;> cases decoded : responseOf codec raw <;>
+          simp only [retainedInit, decoded] at member
+        case some.some init response =>
+          change reached ∈ support (StateT.run (_ >>= _) _) at member
+          rw [StateT.run_bind, mem_support_bind_iff] at member
+          obtain ⟨hashed, hashMember, member⟩ := member
+          simp only [PqxdhRegistrationJointFinish.onNative, StateT.run, support_map, Set.mem_image] at hashMember
+          obtain ⟨value, _, rfl⟩ := hashMember
+          have slots := PqxdhRegistrationJointFinish.annotated_program_slots setup codec entry.identityIndex entry.kemIndex
+            _ (state.1.pool, value.2) reached member
+          exact ⟨slots.1, slots.2, fun index => PqxdhRegistrationJointNonSigningHistory.finish
+              (PqxdhTranscriptAd.completedOf control value.1) setup codec entry.identityIndex entry.kemIndex index
+              codec.frameRead raw entry.owner _ reached member,
+            fun actual active => PqxdhRegistrationJointAttemptTrace.finish_basis
+              (PqxdhTranscriptAd.completedOf control value.1) setup
+              (PqxdhRegistrationJointFinish.annotated setup codec entry.identityIndex entry.kemIndex)
+              codec.frameRead raw entry.owner _ reached member actual active⟩
+        all_goals subst member
+        all_goals exact ⟨rfl, rfl, fun _ => rfl, fun actual active => by
+          simp [PqxdhBeaconPhase2Preparation.abort, PqxdhRegistrationJointAttemptTrace.basis] at active⟩
+      all_goals subst member
+      all_goals exact ⟨rfl, rfl, fun _ => rfl, fun _ active => active⟩
+    apply retained setup state _ valid facts.1 facts.2.1 facts.2.2.1
     · intro current present
       rcases List.mem_or_eq_of_mem_set present with previous | updated
       · exact valid.live current previous
       · subst current
         obtain ⟨receipt, recorded, kem, live⟩ := valid.live entry (List.mem_of_getElem? found)
-        exact ⟨receipt, recorded, kem, fun actual active => live actual
-          (PqxdhRegistrationJointAttemptTrace.finish_basis setup
-            (PqxdhRegistrationJointFinish.annotated setup codec entry.identityIndex entry.kemIndex)
-            codec.frameRead raw entry.owner (state.1.pool, state.1.shared) reached member actual active)⟩
+        exact ⟨receipt, recorded, kem, fun actual active => live actual (facts.2.2.2 actual active)⟩
 
 /-- Actual raw Server acceptance retains the complete earlier issued-attempt history through all signature checks, DH, root generation and optional pending publication. -/
 theorem accept (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)

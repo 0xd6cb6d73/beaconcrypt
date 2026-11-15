@@ -18,7 +18,7 @@ variable {n : Nat} {ι KemSK ProviderState Value : Type} {base : OracleSpec ι}
 variable {source : RegistrationNativeMldsa.Source}
 
 abbrev Outcome (n : Nat) (KemSK ProviderState Value : Type) (source : RegistrationNativeMldsa.Source) :=
-  Option (PqxdhLiveServerConstruction.Created Unit ×
+  Option (PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize) ×
     (((Value × RegistrationNativeLedger.State) × RegistrationNativePublicFrontend.State source) ×
       RegistrationNativeHiddenInterpreter.State n KemSK ProviderState))
 

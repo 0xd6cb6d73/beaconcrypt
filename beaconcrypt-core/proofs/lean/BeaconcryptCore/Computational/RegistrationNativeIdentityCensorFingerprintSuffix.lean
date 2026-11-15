@@ -3,8 +3,9 @@ import BeaconcryptCore.Computational.RegistrationNativeIdentityCensorMldsaSuffix
 import BeaconcryptCore.Computational.RegistrationNativeIdentityEdPair
 import BeaconcryptCore.Computational.RegistrationNativeIdentityCensorHashFrame
 import BeaconcryptCore.Computational.RegistrationNativeIdentityCensorEdForwardSource
+import BeaconcryptCore.Computational.RegistrationNativeInitTupleSource
 
-/-! Actual paired fingerprint controllers keep the source one-time attachment and reach identical public template markers on the same physical private source. The source hash frame derives continued active routing; no hash or signing callback law is supplied. -/
+/-! Actual paired request-hash controllers keep the source one-time attachment and reach identical public template markers on the same physical private source. The source hash frame derives continued active routing; no hash or signing callback law is supplied. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core PqxdhRefinement
@@ -22,7 +23,7 @@ open RegistrationNativeIdentitySigningPair (stripState)
 open BeaconcryptCore.Refinement
 variable {n : Nat} {I KemSK Platform E : Type} {base : OracleSpec I} {mlSource : RegistrationNativeMldsa.Source}
 variable (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (selected index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner mlSource) (placeholder : Ed25519Signature)
 variable (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E))
 local notation "Main" => RegistrationNativePlatformIdentityCtxMain.beacon (n := n) (Platform := Platform) (source := mlSource) setup checks representation created
@@ -32,47 +33,25 @@ local notation "action(" query ")" => Main (RegistrationNativePlatformIdentityPr
 local notation "callback(" censored ")" => (fun query => source(censored, action(query)))
 local notation "encoder(" censored ")" => (fun fields => source(censored, Main (RegistrationNativePlatformIdentityProgram.external (RegistrationNativeIdentityCensorConcreteWriter.encode reserve fields))))
 
-/-- Equal actual fingerprint requests retain active routing and derive the paired physical template from the original attached one-time fields. -/
-theorem fingerprint (left right : registration.BeaconFingerprint) (same : stripState left.state = stripState right.state)
+/-- Paired canonical request hashes derive the same current physical template and Ready/writer suffix. -/
+theorem request_hash (left right : registration.BeaconInitHash) (same : stripState left.state = stripState right.state)
+    (canonicalLeft : RegistrationNativeInitStageContents.Canonical left)
+    (canonicalRight : RegistrationNativeInitStageContents.Canonical right)
     (canonical : Ed25519Signature) (message : Pqxdh.Bytes)
     (attachedLeft : absBytes left.state.one_time_key = canonical.toList ++ message)
     (attachedRight : absBytes right.state.one_time_key = placeholder.toList ++ message)
     (before : Full (n := n) (KemSK := KemSK) (Platform := Platform) (mlSource := mlSource)) (active : before.1.2.active = true) :
     Prod.map RegistrationNativeIdentityReadyFailure.observe (view placeholder) <$>
-      (RegistrationNativePlatformBeaconPublication.fromFingerprint (callback(false)) (encoder(false)) left).run before =
+      (RegistrationNativePlatformBeaconPublication.fromHash (callback(false)) (encoder(false)) left).run before =
     Prod.map RegistrationNativeIdentityReadyFailure.observe (view placeholder) <$>
-      (RegistrationNativePlatformBeaconPublication.fromFingerprint (callback(true)) (encoder(true)) right).run before := by
-  obtain ⟨requestLeft, requestedLeft, _, _⟩ := RegistrationNativeIdentityHashRoute.fingerprint left
-  obtain ⟨requestRight, requestedRight, _, _⟩ := RegistrationNativeIdentityHashRoute.fingerprint right
-  have requestEq : requestLeft = requestRight := RustM.ok.inj (requestedLeft.symm.trans
-    ((RegistrationNativeIdentityHashPair.fingerprint_request left right same).trans requestedRight))
-  subst requestRight
-  have currentHash : (callback(false) (.inl (.hash requestLeft))).run before =
-      (callback(true) (.inl (.hash requestLeft))).run before :=
-    RegistrationNativeIdentityCensorHashOutgoingSource.hash_same setup checks representation created selected placeholder requestLeft before
-  simp only [RegistrationNativePlatformBeaconPublication.fromFingerprint, requestedLeft, requestedRight,
-    RegistrationNativePlatformBeaconPublication.continueWith, StateT.run_bind, map_bind]
-  rw [currentHash]
-  apply bind_congr_of_forall_mem_support
-  intro result supported
-  have preserved := RegistrationNativeIdentityCensorHashFrame.outgoing setup checks representation created selected placeholder requestLeft true before result supported
-  have stillActive : result.2.1.2.active = true := (congrArg (fun state => state.1.active) preserved).trans active
-  obtain ⟨nextLeft, nextRight, resumedLeft, resumedRight, paired⟩ := RegistrationNativeIdentityHashPair.fingerprint left right same
-    (RegistrationAuthenticationShared.digestArray result.1)
-  obtain ⟨actualLeft, hashLeft, actualRight, hashRight, actualResumeLeft, requestedHashLeft,
-      actualResumeRight, requestedHashRight, framing, _literal⟩ := RegistrationNativeIdentityCensorTemplatePair.source left right same
-        (RegistrationAuthenticationShared.digestArray result.1) canonical placeholder message attachedLeft attachedRight
-  have equalLeft : nextLeft = actualLeft := registration.BeaconInitEffect.HashRequested.inj (RustM.ok.inj (resumedLeft.symm.trans actualResumeLeft))
-  have equalRight : nextRight = actualRight := registration.BeaconInitEffect.HashRequested.inj (RustM.ok.inj (resumedRight.symm.trans actualResumeRight))
-  have sourceLeft : nextLeft.request = .ok hashLeft := (congrArg registration.BeaconInitHash.request equalLeft).trans requestedHashLeft
-  have sourceRight : nextRight.request = .ok hashRight := (congrArg registration.BeaconInitHash.request equalRight).trans requestedHashRight
-  simp only [resumedLeft, resumedRight]
+      (RegistrationNativePlatformBeaconPublication.fromHash (callback(true)) (encoder(true)) right).run before := by
+  obtain ⟨requestLeft,requestRight,requestedLeft,requestedRight,framing,_literal⟩ :=
+    RegistrationNativeIdentityCensorTemplatePair.source left right same canonicalLeft canonicalRight canonical placeholder message attachedLeft attachedRight
   exact RegistrationNativeIdentityCensorMldsaSuffix.hash setup checks representation created selected index owner placeholder reserve
-    nextLeft nextRight paired hashLeft hashRight sourceLeft sourceRight framing result.2 stillActive
-
+    left right same requestLeft requestRight requestedLeft requestedRight framing before active
 
 private theorem retained_one_time (pending : registration.BeaconEd25519Signing) (reply : RegistrationSigningShared.SignReply)
-    (next : registration.BeaconFingerprint) (resumed : pending.resume reply = .ok (.FingerprintRequested next)) :
+    (next : registration.BeaconInitHash) (resumed : pending.resume reply = .ok (.HashRequested next)) :
     absBytes next.state.one_time_key = absBytes pending.state.one_time_key := by
   obtain ⟨actual, run, facts⟩ := RegistrationSigning.ed_resume_refines pending reply
   cases RustM.ok.inj (run.symm.trans resumed)
@@ -87,7 +66,7 @@ private theorem pq_rejected (pending : registration.BeaconEd25519Signing) (reply
   cases effect <;> simp only [RegistrationSigning.EdReplyTransition, stage] at facts
   case Rejected previous => simpa only [facts] using actual
   case Ed25519SigningRequested next => exact False.elim facts.2
-  case FingerprintRequested next =>
+  case HashRequested next =>
     cases reply with
     | none => cases facts.1
     | some signed =>
@@ -95,7 +74,7 @@ private theorem pq_rejected (pending : registration.BeaconEd25519Signing) (reply
       have width : signed.val.length = 1249 := (congrArg List.length bytes).symm.trans next.state.pq_key.property
       exact False.elim (invalid ⟨signed, rfl, facts.1, width⟩)
 
-/-- The actual role-separated PQ service forwards every genuine optional reply, preserves the selected source target and composes its original resume into the concrete fingerprint/hash/ML/writer suffix. -/
+/-- The actual role-separated PQ service forwards every genuine optional reply, preserves the selected source target and composes its original resume into the concrete hash/Ready/writer suffix. -/
 theorem pq (left right : registration.BeaconEd25519Signing) (same : RegistrationNativeIdentityEdPair.Same left right)
     (stage : left.stage = .PqKey) (tagged : RegistrationNativeIdentitySigningRole.Tagged left.state.started)
     (canonical : Ed25519Signature) (message : Pqxdh.Bytes)
@@ -140,8 +119,10 @@ theorem pq (left right : registration.BeaconEd25519Signing) (same : Registration
     conv_rhs => rw [returned, resumedRight]
     have nextAttachedLeft := (retained_one_time left (.Some signed) nextLeft resumedLeft).trans attachedLeft
     have nextAttachedRight := (retained_one_time right (.Some signed) nextRight resumedRight).trans attachedRight
-    exact fingerprint setup checks representation created selected index owner placeholder reserve nextLeft nextRight paired canonical message
-      nextAttachedLeft nextAttachedRight result.2 activeAfter
+    exact request_hash setup checks representation created selected index owner placeholder reserve nextLeft nextRight paired
+      (RegistrationNativeInitTupleSource.canonical_of_resume left (.Some signed) nextLeft resumedLeft)
+      (RegistrationNativeInitTupleSource.canonical_of_resume right (.Some signed) nextRight resumedRight)
+      canonical message nextAttachedLeft nextAttachedRight result.2 activeAfter
   · have invalidRight : ¬ ∃ signed, result.1 = .Some signed ∧ RegistrationSigning.replyTailMatches right result.1 ∧ signed.val.length = 1249 := by
       rintro ⟨signed, returned, admitted, width⟩
       exact valid ⟨signed, returned, (matching result.1).mpr admitted, width⟩
@@ -151,11 +132,11 @@ theorem pq (left right : registration.BeaconEd25519Signing) (same : Registration
 
 end BeaconcryptCore.Computational.RegistrationNativeIdentityCensorFingerprintSuffix
 
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeIdentityCensorFingerprintSuffix.fingerprint' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeIdentityCensorFingerprintSuffix.request_hash' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeIdentityCensorFingerprintSuffix.fingerprint
+#print axioms BeaconcryptCore.Computational.RegistrationNativeIdentityCensorFingerprintSuffix.request_hash
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativeIdentityCensorFingerprintSuffix.pq' depends on axioms: [propext,
  Classical.choice,

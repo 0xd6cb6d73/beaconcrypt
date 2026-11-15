@@ -58,30 +58,30 @@ local notation "coins" => RegistrationNativePlatformMldsaProgram.coins
 def Outcome (crypto : Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMaterial AD PT CT)
     (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (owner : RegistrationNativeBeaconFrontend.Owner source) (original : registration.BeaconPending) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (index : Nat) (packet : registration.ResponsePacket) (application : Pqxdh.Bytes) (before : Local n KemSK source)
     (token : peer.ConsumedRegistration)
     (serverInitial : registration.ServerInitialKdf) (serverApplication : Slice U8) : Prop :=
-    ∃ aborted middle agreed recorded capability completed beaconInitial,
+    ∃ adDigest aborted middle agreed recorded capability completed beaconInitial,
       original.aborted_state = .ok aborted ∧
-      (.ok (.Ok (⟨original, packet⟩ : registration.AuthenticatedResponse)), middle) ∈ support
+      (.ok (.Ok ((RegistrationResponseExecutor.acceptedResponse original packet adDigest) : registration.AuthenticatedResponse)), middle) ∈ support
         ((lower setup checks representation created (simulateQ (RegistrationNativeBeaconFrontend.authentication setup source)
           (RegistrationResponseExecutor.begin original (.Some packet)))).run
             (RegistrationNativePlatformCompletionReceipt.consumed before index aborted)) ∧
       (.ok (.BeaconComplete capability), agreed) ∈ support ((lower setup checks representation created
-        (simulateQ (RegistrationNativeBeaconFrontend.agreement setup owner oneTime) (RegistrationAgreementExecutor.beacon ⟨original, packet⟩))).run middle) ∧
+        (simulateQ (RegistrationNativeBeaconFrontend.agreement setup owner oneTime) (RegistrationAgreementExecutor.beacon (RegistrationResponseExecutor.acceptedResponse original packet adDigest)))).run middle) ∧
       (.ok (.Ok completed), recorded) ∈ support ((lower setup checks representation created
         (simulateQ (RegistrationNativeBeaconFrontend.record setup wire) (RegistrationBeaconRecordExecutor.begin capability))).run agreed) ∧
       registration.begin_beacon_completion capability = .ok beaconInitial ∧ beaconInitial.agreement = capability ∧
-      RegistrationNativeCompletionContents.Outcome serverInitial ⟨original, packet⟩ capability completed application ∧
+      RegistrationNativeCompletionContents.Outcome serverInitial (RegistrationResponseExecutor.acceptedResponse original packet adDigest) capability completed application ∧
       application = TranscriptAuthParts.absSlice serverApplication ∧
       token.agreement.root.bytes = capability.root.bytes ∧
       RegistrationNativeInitializedInitializers.Initializers crypto setup.source token.agreement capability serverInitial beaconInitial
 
 omit primitives in
 private theorem source_lower {V : Type} (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State V) (before : Native) :
     (RegistrationNativeExperiment.beacon setup checks representation created work).run before =
       Prod.map id RegistrationNativeMldsaShared.close <$> (lower setup checks representation created work).run (opened before) := by
@@ -127,23 +127,25 @@ theorem path (crypto : Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMateri
   have beforeExtension := (RegistrationNativePlatformOrdinaryPathState.path setup checks wire route representation execution.initial.created execution.initial.credential view failure allocation
     reserveRegistration reservePeer reserveFrame erased helper writer (.cons finishCall finished _ _ suffixRun)).1
   have serverMember : serverCall ∈ execution.calls := by rw [split]; exact List.mem_append_left _ earlier
-  have initialBinding := (RegistrationNativeServerBindingReceipt.initial_root stage.current.control stage.pin stage.availability stage.token.agreement stage.plaintext stage.initial stage.admitted).2.1
+  obtain ⟨adDigest, completedBinding, completedAt, initialBinding, _application, _root⟩ :=
+    (RegistrationNativeServerBindingReceipt.initial_root stage.current.control stage.pin stage.availability stage.token.agreement stage.plaintext stage.initial stage.admitted).2
+  obtain ⟨expectedBinding, expectedAt, _pin, hashRetained, _identity, _digest, _consistent⟩ :=
+    BeaconcryptCore.Refinement.SessionBinding.complete_refines stage.token.agreement.binding adDigest
+  have completedSame : expectedBinding = completedBinding := RustM.ok.inj (expectedAt.symm.trans completedAt)
   have retained := (RegistrationNativeServerContents.path_contents stage.initial stage.hashed stage.path).1
   have tokenHash : stage.token.agreement.binding.init_hash = pending.binding.init_hash :=
-    (congrArg (fun binding : session.RegistrationBinding => binding.init_hash) (retained.trans initialBinding)).symm.trans initHash
+    (hashRetained ▸ congrArg (fun binding : session.CompletedRegistrationBinding => binding.init_hash)
+      ((retained.trans initialBinding).trans completedSame.symm)).symm.trans initHash
   obtain ⟨initPacket, handle, first, last, accepted, cut, tokenEq, tuple⟩ := RegistrationNativePlatformOrdinaryKemMatchedToken.taken setup checks wire route representation source
     ensureInit identityIndex serverKeyId view failure allocation reserveRegistration reservePeer reserveFrame erased helper writer bounds mode adversary previous budget functional result supported history returned execution
       serverCall serverMember serverIndex stage.token stage.current stage.taken finishCall member index owner pending oneTime found phase tokenHash collisionFree
-  obtain ⟨_acceptLeading, _acceptTrailing, _acceptSplit, beforeAccept, _accepted, afterAccept⟩ := execution.reached.member
+  obtain ⟨_acceptLeading, _acceptTrailing, _acceptSplit, beforeAccept, -, afterAccept⟩ := execution.reached.member
     (⟨.inr (.accept initPacket), first, .ok (some handle), last⟩ : Call RegistrationNativeRawAdapter.TypedSpec Whole) accepted
-  have pinned := RegistrationNativePlatformOrdinaryPathState.pinned setup checks wire route representation execution.initial.created execution.initial.credential view failure allocation
-    reserveRegistration reservePeer reserveFrame erased helper writer beforeAccept
-      (RegistrationNativeServerPinCached.start setup ensureInit identityIndex serverKeyId execution.initial execution.startup)
   have extension := (RegistrationNativePlatformOrdinaryPathState.path setup checks wire route representation execution.initial.created execution.initial.credential view failure allocation
     reserveRegistration reservePeer reserveFrame erased helper writer afterAccept).1
   obtain ⟨matched⟩ := RegistrationNativePlatformActualTupleReceipt.receipt setup checks (RegistrationNativePlatformOrdinaryExperiment.canonicalWire wire) route representation execution.initial.created initPacket
     { RegistrationNativeKemServerState.ofNative first.1 with parsedAccepts := first.1.parsedAccepts + 1 }
-    (RegistrationNativeKemServerState.ofNative last.1) first.2 last.2 handle result.2.1.1.2 cut pinned stage.token tokenEq owner oneTime
+    (RegistrationNativeKemServerState.ofNative last.1) first.2 last.2 handle result.2.1.1.2 cut stage.token tokenEq owner oneTime
       (RegistrationNativeWorldCache.cache execution.finalNative) extension tuple
   have firstPin := (RegistrationNativePlatformOrdinaryPathState.path setup checks wire route representation execution.initial.created execution.initial.credential view failure allocation
     reserveRegistration reservePeer reserveFrame erased helper writer beforeAccept).2
@@ -204,7 +206,7 @@ theorem path (crypto : Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMateri
   cases replyEq
   have cacheEq : RegistrationNativeWorldCache.cache localAfter.2.2 = RegistrationNativeWorldCache.cache afterFinish.1 :=
     congrArg (fun result => RegistrationNativeWorldCache.cache result.2) same
-  obtain ⟨aborted, middle, agreed, recorded, capability, completed, beaconInitial, moved, authenticated, agreementRun, recordRun,
+  obtain ⟨adDigest, aborted, middle, agreed, recorded, capability, completed, beaconInitial, moved, authenticated, agreementRun, recordRun,
     started, sameInitial, contents, applicationEq, compared⟩ :=
       RegistrationNativePlatformLoggedSourceStageAgreement.finish crypto coins setup checks (RegistrationNativePlatformOrdinaryExperiment.canonicalWire wire) representation execution.initial.created view correct failure allocation erased rawAllocation serializer
         owner pending oneTime index packet application (opened beforeFinish.1) localAfter found phase called coherent prekey
@@ -215,7 +217,7 @@ theorem path (crypto : Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMateri
             stage.current.control stage.pin stage.availability stage.plaintext stage.initial stage.hashed stage.admitted recordCut
               (cacheEq ▸ afterExtension) ciphertext collisionFree
   have paired := compared.resolve_right marker
-  exact ⟨leading,trailing,serverCall,split,earlier,receipt,serverIndex,serverInput,stage,queryEq,aborted, middle, agreed, recorded, capability, completed, beaconInitial,
+  exact ⟨leading,trailing,serverCall,split,earlier,receipt,serverIndex,serverInput,stage,queryEq,adDigest,aborted, middle, agreed, recorded, capability, completed, beaconInitial,
     moved, authenticated, agreementRun, recordRun, started, sameInitial, contents, applicationEq, paired⟩
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformOrdinaryCausalAgreement

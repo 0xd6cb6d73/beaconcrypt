@@ -12,6 +12,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.refined ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialSourceHalf
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+  (associatedData : Std.Array Std.U8 151#usize)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf
 open PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily PqxdhInitialBeaconAmbient
 open PqxdhInitialSourceInitialSecrecy (Input Context)
@@ -127,7 +129,7 @@ noncomputable def retained (input : Input extra M P I D K X Response A N S B)
       (RawCtxSelectedParentPrivatePatch.privatePatch (productionStream source.crypto) target output)
       (PqxdhInitialOriginFinishPath.withInitial source input.selectedMessage zeroRoot
         (RawCtxSelectedInitialConstructor.response64 (join (second input.selected) other target)) input.other))
-      (PqxdhInitialNativeCarried.original source (mark source input) sender route decode
+      (PqxdhInitialNativeCarried.original (associatedData := associatedData) (completedBinding := completedBinding) source (mark source input) sender route decode
         (PqxdhInitialSourceExperiment.execution
           (RawCtxSelectedInitialConstructor.response64 (join (second input.selected) other target))
           input.index input.metadata { input.ready with root := zeroRoot } input.post input.before))).run
@@ -136,10 +138,10 @@ noncomputable def retained (input : Input extra M P I D K X Response A N S B)
 /-- The original retained source publication and byte-freshness event is the complete native initial-half observer. This is an exact program equality, preserving all initializer, first-send and later adaptive effects. -/
 theorem retained_native (input : Input extra M P I D K X Response A N S B)
     (other target : RootOutput) (padding : NonceOutput) (output : FullOutput) :
-    retained source writer sender route decode input other target output =
-      PqxdhInitialHalfSecrecy.native source writer (mark source) sender route decode (view source)
+    retained (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode input other target output =
+      PqxdhInitialHalfSecrecy.native (associatedData := associatedData) (completedBinding := completedBinding) source writer (mark source) sender route decode (view source)
         (.inr input, RawCtxInitialSentinel.entry other padding) target output := by
-  have equality := PqxdhInitialHalfRetained.decision_compiled source writer (productionStream source.crypto)
+  have equality := PqxdhInitialHalfRetained.decision_compiled (associatedData := associatedData) (completedBinding := completedBinding) source writer (productionStream source.crypto)
     other target padding ((view source).pre input) ((view source).application input)
     ((view source).initializer (input, RawCtxInitialSentinel.entry other padding))
     ((view source).selector input) ((view source).aux input) (mark source input) sender route decode
@@ -152,12 +154,12 @@ theorem retained_native (input : Input extra M P I D K X Response A N S B)
 /-- The actual stage-zero source event is obtained by supplying the selected input's unchanged real full76 response to the same private observer. -/
 theorem real_native (input : Input extra M P I D K X Response A N S B)
     (other target : RootOutput) (padding : NonceOutput) :
-    PqxdhInitialSourceInitialSecrecy.sourceGame source writer sender route decode input zeroRoot
+    PqxdhInitialSourceInitialSecrecy.sourceGame (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode input zeroRoot
       (RawCtxSelectedInitialConstructor.response64 (join (second input.selected) other target)) 0 =
-    PqxdhInitialHalfSecrecy.native source writer (mark source) sender route decode (view source)
+    PqxdhInitialHalfSecrecy.native (associatedData := associatedData) (completedBinding := completedBinding) source writer (mark source) sender route decode (view source)
       (.inr input, RawCtxInitialSentinel.entry other padding) target
       (productionStream source.crypto (RawCtxSelectedParentPrivatePatch.targetAddress target)) := by
-  rw [← retained_native source writer sender route decode input other target padding]
+  rw [← retained_native (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode input other target padding]
   unfold retained PqxdhInitialSourceInitialSecrecy.sourceGame
   rw [PqxdhInitialNativeParentRealization.consistent_patch,
     PqxdhInitialSourceReal.game_source]
@@ -168,18 +170,18 @@ theorem real_native (input : Input extra M P I D K X Response A N S B)
 /-- The actual stage-one source event draws a full76 child, preserving the same original initial64 response, publication gate and byte-level freshness observation. -/
 theorem random_native (input : Input extra M P I D K X Response A N S B)
     (positive : 0 < input.number.val) (other target : RootOutput) (padding : NonceOutput) :
-    𝒟[PqxdhInitialSourceInitialSecrecy.sourceGame source writer sender route decode input zeroRoot
+    𝒟[PqxdhInitialSourceInitialSecrecy.sourceGame (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode input zeroRoot
       (RawCtxSelectedInitialConstructor.response64 (join (second input.selected) other target)) 1] =
     𝒟[($ᵗ FullOutput) >>= fun output =>
-      PqxdhInitialHalfSecrecy.native source writer (mark source) sender route decode (view source)
+      PqxdhInitialHalfSecrecy.native (associatedData := associatedData) (completedBinding := completedBinding) source writer (mark source) sender route decode (view source)
         (.inr input, RawCtxInitialSentinel.entry other padding) target output] := by
   unfold PqxdhInitialSourceInitialSecrecy.sourceGame
-  rw [PqxdhInitialSourceRandom.game_source source writer input.selectedMessage zeroRoot _ input.other
+  rw [PqxdhInitialSourceRandom.game_source (associatedData := associatedData) (completedBinding := completedBinding) source writer input.selectedMessage zeroRoot _ input.other
     sender route decode input.index input.metadata _ input.post input.before input.selected
     input.shared input.privateState input.cache input.number positive]
   refine congrArg evalDist (bind_congr ?_)
   intro output
-  rw [← retained_native source writer sender route decode input other target padding output]
+  rw [← retained_native (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode input other target padding output]
   unfold PqxdhInitialSourceRandom.decision PqxdhInitialSourceRandom.randomRun
   rw [root source input.selected other target]
   rfl

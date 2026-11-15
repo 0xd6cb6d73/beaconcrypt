@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativeServerPinTrace
 import BeaconcryptCore.PanicFreedom.RegistrationTrivial
 
-/-! Actual native startup derives its configured Server pin from the created Server identity and actual generated ML credential. The fingerprint executes through the initialized shared World; it never changes the supplied binding or public key. -/
+/-! Actual native startup derives its configured Server pin from the created Server identity and actual generated ML credential. Pin selection performs no primitive callback and preserves the complete native state. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -11,29 +11,19 @@ set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativeServerPinStartup
 open PqxdhServerAuthExperiment (Setup)
 variable {n : Nat} {ι KemSK Auxiliary : Type} {base : OracleSpec ι}
-attribute [local irreducible] registration.PinFingerprint.request
 
-/-- The actual shared-World pin fingerprint preserves its supplied configured binding and ML key. -/
+/-- Actual pure pin selection preserves the configured binding and ML public key. -/
 theorem initialize_pin (binding : pqxdh.ServerBinding) (publicKey : Std.Array U8 1952#usize)
     (before after : RegistrationWorldServerReplay.Global n Auxiliary) (pin : session.ServerAuthenticationPin)
     (supported : (.ok (.Some pin), after) ∈ support
       ((RegistrationWorldServerFrontend.initializePin binding publicKey).run before)) :
     pin.binding = binding ∧ pin.public_key = publicKey := by
-  obtain ⟨request, requested⟩ := BeaconcryptCore.PanicFreedom.RegistrationTrivial.PinFingerprint_request_total
-    (⟨binding, publicKey⟩ : registration.PinFingerprint)
-  have began : registration.begin_server_pin binding publicKey = .ok (⟨binding, publicKey⟩ : registration.PinFingerprint) := rfl
-  simp only [RegistrationWorldServerFrontend.initializePin, StateT.run, began, requested,
-    mem_support_bind_iff, mem_support_pure_iff] at supported
-  obtain ⟨hashed, _hashed, returned⟩ := supported
-  have resumed : (⟨binding, publicKey⟩ : registration.PinFingerprint).resume
-      (.Some (RegistrationAuthenticationShared.digestArray hashed.1)) =
-      .ok (.Some ⟨binding, publicKey, RegistrationAuthenticationShared.digestArray hashed.1⟩) := rfl
-  rw [resumed] at returned
-  cases returned
+  simp only [RegistrationWorldServerFrontend.initializePin_native, mem_support_pure_iff] at supported
+  cases supported
   exact ⟨rfl, rfl⟩
 
 /-- Successful actual Server initialization uses the created source identity and actual supplied ML key. -/
-theorem frontend_pin (created : PqxdhLiveServerConstruction.Created Unit) (publicKey : Std.Array U8 1952#usize)
+theorem frontend_pin (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (publicKey : Std.Array U8 1952#usize)
     (auxiliary : Auxiliary) (before after : PqxdhRecordLiftWorld.State n)
     (native : RegistrationWorldServerFrontend.State n Auxiliary)
     (supported : (.ok (.Some native), after) ∈ support ((RegistrationWorldServerFrontend.start created publicKey auxiliary).run before)) :

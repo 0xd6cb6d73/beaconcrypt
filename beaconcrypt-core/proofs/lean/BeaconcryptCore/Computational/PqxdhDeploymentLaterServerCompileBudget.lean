@@ -6,6 +6,7 @@ import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerReserve
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhDeploymentLaterServerCompileBudget
 open PqxdhServerAuthExperiment PqxdhJointIdentity
 open PqxdhDeploymentInterface (ModeSpec Mode FreshBounds Budget asModeO)
@@ -142,13 +143,13 @@ theorem compile_server_no_kem (setup : Setup baseSpec KemSK) (codec : Codec Read
       simpa only [zero] using PqxdhDeploymentCompileBudget.step_bound setup codec route (.inr 1) query copies) _
     run.2.2)) fun _ _ => trivial
 
-/-- The transported caps of the compiled LQ-F program in the fourteen source14 query kinds: the transported caps of the classical compiled program, plus the post-run coin, HMAC and BLAKE2b budgets, `qCreate` identity reads and `qFinish + qCreate` prekey and one-time reads each. -/
+/-- The transported caps of the compiled LQ-F program in the fourteen source14 query kinds (two source14 BLAKE2b commands per compiled record: the public transcript cache read and the record commitment hash): the transported caps of the classical compiled program, plus the post-run coin, HMAC and BLAKE2b budgets, `qCreate` identity reads and `qFinish + qCreate` prekey and one-time reads each. -/
 def laterTransported (bounds : FreshBounds) (budget : Budget) (post : PostBudget) :
     PqxdhRegistrationJointKemCommands.Budget :=
   Sum.elim
     ![budget.coin + budget.test + budget.freshBytes bounds + post.coin, budget.create, budget.bundle, budget.accept,
       budget.build, budget.finish, budget.hmac + post.hmac,
-      budget.hash + budget.sends + budget.receives + budget.test + budget.fresh + post.hash,
+      budget.hash + 2 * budget.sends + 2 * budget.receives + 2 * budget.test + 2 * budget.fresh + post.hash,
       budget.serverSend + budget.serverRaw + budget.test + budget.fresh]
     ![budget.create, 0, budget.finish + budget.create, budget.finish + budget.create,
       budget.beaconSend + budget.beaconRaw + budget.test + budget.fresh]

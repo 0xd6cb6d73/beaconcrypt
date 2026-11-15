@@ -15,7 +15,7 @@ open AdapterPublicWrapperRustT (RustT)
 open AdapterPublicWrapperRequestMonad
 open AdapterPublicAgreementFields (Keys)
 open AdapterPublicAgreementPrimitiveModel (Model)
-open AdapterPublicServerToken (ParsedKey ParsedToken)
+open AdapterPublicServerToken (ParsedBinding ParsedToken)
 open BeaconcryptCore.Computational RegistrationAgreementExecutor
 private theorem lift_ok {m : Type → Type} [Monad m] {A : Type} (value : A) :
     (AdapterRecordRequestMonad.liftRust (.ok value) : RustT m A) = pure value := rfl
@@ -68,7 +68,7 @@ theorem reserved_parsed (model : Model (m := StateT S ProbComp) generator setup 
     (self : beaconcrypt_public_wrapper.server.Server) (control : pqxdh.ServerState)
     (authenticated : registration.AuthenticatedInit) (phase : agreement.AgreementEffect)
     (started : agreement.begin_server_agreement control .Fresh authenticated = .ok phase)
-    (parsed : ParsedKey authenticated.binding.beacon_identity_public_key)
+    (parsed : ParsedBinding authenticated.binding)
     (rng nextRng : R) (token : beaconcrypt_public_wrapper.server.RegistrationOutput)
     (current : beaconcrypt_public_wrapper.server.Server) (before after : S)
     (supported : (.ok (.Some token, current, nextRng), after) ∈ support
@@ -104,7 +104,7 @@ theorem reserved_parsed (model : Model (m := StateT S ProbComp) generator setup 
 
 theorem lookup_parsed (model : Model (m := StateT S ProbComp) generator setup checks view)
     (self : beaconcrypt_public_wrapper.server.Server) (pending : peer.RegistrationLookup)
-    (parsed : ParsedKey pending.authenticated.binding.beacon_identity_public_key)
+    (parsed : ParsedBinding pending.authenticated.binding)
     (rng nextRng : R) (token : beaconcrypt_public_wrapper.server.RegistrationOutput)
     (current : beaconcrypt_public_wrapper.server.Server) (before after : S)
     (supported : (.ok (.Some token, current, nextRng), after) ∈ support
@@ -137,7 +137,7 @@ theorem lookup_parsed (model : Model (m := StateT S ProbComp) generator setup ch
         parsed rng nextRng token current middle after continued
 theorem source_lookup_parsed (model : Model (m := StateT S ProbComp) generator setup checks view)
     (self : beaconcrypt_public_wrapper.server.Server) (pending : peer.RegistrationLookup)
-    (parsed : ParsedKey pending.authenticated.binding.beacon_identity_public_key)
+    (parsed : ParsedBinding pending.authenticated.binding)
     (rng nextRng : R) (token : beaconcrypt_public_wrapper.server.RegistrationOutput)
     (current : beaconcrypt_public_wrapper.server.Server) (before after : S)
     (supported : (.ok (.Some token, current, nextRng), after) ∈ support
@@ -150,6 +150,65 @@ theorem source_lookup_parsed (model : Model (m := StateT S ProbComp) generator s
 section Authenticated
 variable [localOps : LocalOperations (RustT (StateT S ProbComp))]
 variable [children : ChildOperations (RustT (StateT S ProbComp))] [codecs : Codecs (RustT (StateT S ProbComp))]
+
+section Binding
+attribute [local irreducible] RegistrationAuthenticationExecutor.begin RegistrationAuthenticationExecutor.execute
+attribute [local irreducible] beaconcrypt_public_request.server.Server.authenticate_registration_lookup
+
+omit children codecs containers [PublicWrapperPlatform.Allocator] [PublicWrapperPlatform.LocalOperations] [PublicWrapperPlatform.ContainerOperations] in
+set_option backward.isDefEq.respectTransparency true in
+/-- Every lookup returned by the SDK authentication prefix carries the parser receipt for the identity copied from its pending binding's owned Init fields, the exact key the actual Ed parser admitted. -/
+theorem authenticated_binding {E : Type}
+    (native : QueryImpl AdapterInitAuthenticationStateful.NativeSpec (StateT S ProbComp))
+    (parser : RegistrationAuthenticationReparse.Parser native)
+    (recording : QueryImpl AdapterRecordRequestMonad.Spec (StateT S ProbComp))
+    (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT S ProbComp))
+    (self : beaconcrypt_public_wrapper.server.Server) (input : Slice U8) :
+    letI : ChildOperations (RustT (StateT S ProbComp)) := AdapterPublicWrapperChildren.children
+      (AdapterPublicWrapperChildNative.normalAuthentication native) recording writer
+    letI : Codecs (RustT (StateT S ProbComp)) := AdapterPublicConcreteCodecs.codecs
+    ∀ lookup before after, (.ok (.Some lookup), after) ∈ support
+      (((beaconcrypt_public_request.server.Server.authenticate_registration_lookup
+        (m := RustT (StateT S ProbComp)) self input).run).run before) →
+      ParsedBinding lookup.authenticated.binding := by
+  let : ChildOperations (RustT (StateT S ProbComp)) := AdapterPublicWrapperChildren.children
+    (AdapterPublicWrapperChildNative.normalAuthentication native) recording writer
+  let : Codecs (RustT (StateT S ProbComp)) := AdapterPublicConcreteCodecs.codecs
+  intro lookup before after supported
+  rw [AdapterPublicServerAuthentication.source native recording writer self input] at supported
+  cases decoded : RegistrationNativeConcreteCodec.wire.decodeInit (TranscriptAuthParts.absSlice input) with
+  | none => simp only [RustM.ok.injEq, core.option.Option.Some, core.option.Option.None, decoded, StateT.run_pure, support_pure, Set.mem_singleton_iff, Prod.mk.injEq, reduceCtorEq, false_and] at supported
+  | some packet =>
+    simp only [decoded, StateT.run_bind, mem_support_bind_iff] at supported
+    obtain ⟨⟨pinReply, middle⟩, _pinCalled, continued⟩ := supported
+    cases pinReply with
+    | fail error | div => simp only [core.option.Option.Some, AdapterPublicServerAuthentication.afterPin, StateT.run_pure,
+        support_pure, Set.mem_singleton_iff, Prod.mk.injEq, reduceCtorEq, false_and] at continued
+    | ok optional => cases optional with
+      | none => simp only [RustM.ok.injEq, core.option.Option.Some, core.option.Option.None, AdapterPublicServerAuthentication.afterPin, StateT.run_pure,
+          support_pure, Set.mem_singleton_iff, Prod.mk.injEq, reduceCtorEq, false_and] at continued
+      | some pin =>
+        simp only [AdapterPublicServerAuthentication.afterPin, StateT.run_map, support_map] at continued
+        obtain ⟨⟨reply, current⟩, queried, returned⟩ := continued
+        cases reply with
+        | fail error | div => simp [AdapterPublicServerAuthentication.observed, AdapterInitAuthenticationDriver.observe, bind_tc_fail, bind_tc_div] at returned
+        | ok answer =>
+          rcases answer with ⟨events, state⟩
+          cases state <;>
+            simp [AdapterPublicServerAuthentication.observed, AdapterInitAuthenticationDriver.observe,
+              AdapterInitAuthenticationStateful.stateOption, bind_tc_ok, Prod.mk.injEq,
+              RustM.ok.injEq, reduceCtorEq] at returned
+          case Accepted authenticated =>
+            have same : lookup.authenticated = authenticated := by
+              have output : ({ control := self.control, authenticated := authenticated } : peer.RegistrationLookup) = lookup := by
+                simpa only [peer.begin_registration_lookup, bind_tc_ok, RustM.ok.injEq, core.option.Option.Some, _root_.Option.some.injEq] using returned.1
+              exact congrArg peer.RegistrationLookup.authenticated output.symm
+            rw [same]
+            exact ⟨authenticated.registration.beacon_identity_public_key,
+              RegistrationAuthenticationReparse.binding_identity _ pin packet events authenticated middle current queried,
+              RegistrationAuthenticationReparse.reparse native parser pin packet events authenticated middle current queried⟩
+end Binding
+
 noncomputable def sequence (self : beaconcrypt_public_wrapper.server.Server) (input : Slice U8) (rng : R) :
     RustT (StateT S ProbComp)
       (core.option.Option beaconcrypt_public_wrapper.server.RegistrationOutput × beaconcrypt_public_wrapper.server.Server × R) := do
@@ -184,8 +243,8 @@ theorem sequence_parsed {E : Type}
     | none => simp only [RustT.run_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff,
         Prod.mk.injEq, RustM.ok.injEq, reduceCtorEq, false_and] at continued
     | some pending =>
-      have parsed : ParsedKey pending.authenticated.binding.beacon_identity_public_key :=
-        AdapterPublicServerAuthenticationReceipt.source native parser recording writer self input pending before middle checked
+      have parsed : ParsedBinding pending.authenticated.binding :=
+        authenticated_binding native parser recording writer self input pending before middle checked
       exact source_lookup_parsed model self pending parsed rng nextRng token current middle after continued
 end Authenticated
 
@@ -221,6 +280,12 @@ end BeaconcryptCore.Refinement.AdapterPublicServerAcceptReceipt
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Refinement.AdapterPublicServerAcceptReceipt.source_lookup_parsed
+
+/-- info: 'BeaconcryptCore.Refinement.AdapterPublicServerAcceptReceipt.authenticated_binding' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.AdapterPublicServerAcceptReceipt.authenticated_binding
 
 /-- info: 'BeaconcryptCore.Refinement.AdapterPublicServerAcceptReceipt.sequence_parsed' depends on axioms: [propext,
  Classical.choice,

@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhRecordLiftSwap
+import BeaconcryptCore.Computational.RegistrationOracleStateSupport
 
 /-!
 # The flattened CTX world (items 4 and 5, world facts)
@@ -65,7 +66,7 @@ noncomputable def startup (modes : Label n → KeyMode) (replace : Pqxdh.Bytes �
 /-- The installation of the constructed Server under the CTX interpreter. -/
 noncomputable def install (modes : Label n → KeyMode) (replace : Pqxdh.Bytes → Pqxdh.Bytes)
     (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
-    (created : PqxdhLiveServerConstruction.Created Unit) (control : PqxdhRecordLiftProtocol.Control n)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (control : PqxdhRecordLiftProtocol.Control n)
     (secret : CtxPrivate n) :=
   (simulateQ (ctxInterpreter modes replace setup codec)
     ((PqxdhRecordLiftProtocol.handler (n := n) codec.frameRead route (.inl created)).run control)).run secret
@@ -176,7 +177,7 @@ theorem normalBegin_context {Send Receive Material Context : Type}
 
 /-- The selected seal input depends on its context, not on the proof of its width. -/
 theorem selectedInput_congr (material : PqxdhFullSecretInputKdf.NonceOutput) (sequence : Std.U64) (first second : RawCtxSourceSend.SealContext)
-    (firstWidth : first.associatedData.length = 281) (secondWidth : second.associatedData.length = 281)
+    (firstWidth : first.associatedData.length = 151) (secondWidth : second.associatedData.length = 151)
     (same : first = second) :
     RawCtxSelectedMessageSealing.selectedInput material sequence first firstWidth =
       RawCtxSelectedMessageSealing.selectedInput material sequence second secondWidth := by
@@ -400,22 +401,6 @@ theorem support_run_fst {σ α : Type} (impl : QueryImpl spec (StateT σ (Oracle
       obtain ⟨mid, _, hp⟩ := (MonadAttach.mem_support_bind).mp hp
       exact (MonadAttach.mem_support_bind).mpr ⟨mid.1, by simp, ih mid.1 mid.2 p hp⟩
 
-/-- A state predicate that every query keeps is kept by every simulated program. -/
-theorem support_keep_oracle {σ α : Type} (impl : QueryImpl spec (StateT σ (OracleComp spec'))) (B : σ → Prop)
-    (keep : ∀ q s, B s → ∀ p ∈ support ((impl q).run s), B p.2) (oa : OracleComp spec α) (s : σ) (hs : B s) :
-    ∀ p ∈ support ((simulateQ impl oa).run s), B p.2 := by
-  induction oa using OracleComp.inductionOn generalizing s with
-  | pure a =>
-      intro p hp
-      simp only [simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff] at hp
-      subst hp
-      exact hs
-  | query_bind q k ih =>
-      intro p hp
-      simp only [simulateQ_bind, simulateQ_query, OracleQuery.input_query, OracleQuery.cont_query, id_map,
-        StateT.run_bind] at hp
-      obtain ⟨mid, hmid, hp⟩ := (MonadAttach.mem_support_bind).mp hp
-      exact ih mid.1 mid.2 (keep q s hs mid hmid) p hp
 
 end Support
 
@@ -998,9 +983,6 @@ end BeaconcryptCore.Computational.PqxdhRecordLiftFlat
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhRecordLiftFlat.support_run_fst
 
-/-- info: 'BeaconcryptCore.Computational.PqxdhRecordLiftFlat.support_keep_oracle' depends on axioms: [propext, Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhRecordLiftFlat.support_keep_oracle
 
 /-- info: 'BeaconcryptCore.Computational.PqxdhRecordLiftFlat.ownerRun_known' depends on axioms: [propext,
  Classical.choice,

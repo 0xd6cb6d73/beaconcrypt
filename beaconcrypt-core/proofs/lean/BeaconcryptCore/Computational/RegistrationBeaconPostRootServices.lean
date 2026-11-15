@@ -28,7 +28,7 @@ private theorem map_continueWith {Input : Type} (result : RustM Input)
       continueWith result (fun value => simulateQ RegistrationRawReceiveBridge.nativeAdapter (next value)) := by
   cases result <;> rfl
 
-def fromInitial (erased : Std.Array Std.U8 357#usize) (pending : registration.BeaconInitialKdf) :
+def fromInitial (erased : Std.Array Std.U8 227#usize) (pending : registration.BeaconInitialKdf) :
     OracleComp Spec (RustM Result) :=
   continueWith pending.request fun request => do
     let response ← Spec.query (.inl (.initialKdf request))
@@ -41,11 +41,11 @@ def fromInitial (erased : Std.Array Std.U8 357#usize) (pending : registration.Be
               (RecordEffectsReceiveProgram.receive erased kernel 1#u64 pending.agreement.application_ciphertext
                 pending.agreement.binding.associated_data pending.agreement.candidate.server_binding.identity_key_id)
 
-def beacon (erased : Std.Array Std.U8 357#usize) (agreement : agreement.BeaconAgreement) :
+def beacon (erased : Std.Array Std.U8 227#usize) (agreement : agreement.BeaconAgreement) :
     OracleComp Spec (RustM Result) :=
   continueWith (registration.begin_beacon_completion agreement) (fromInitial erased)
 
-theorem initial_exact (erased : Std.Array Std.U8 357#usize) (pending : registration.BeaconInitialKdf) :
+theorem initial_exact (erased : Std.Array Std.U8 227#usize) (pending : registration.BeaconInitialKdf) :
     simulateQ RegistrationRawReceiveBridge.nativeAdapter (RegistrationBeaconRecordExecutor.fromInitial pending) =
       fromInitial erased pending := by
   simp only [RegistrationBeaconRecordExecutor.fromInitial, fromInitial, map_continueWith]
@@ -79,7 +79,7 @@ theorem initial_exact (erased : Std.Array Std.U8 357#usize) (pending : registrat
           simpa only [RegistrationRawReceiveBridge.normalized, RegistrationRawReceiveBridge.model, normalizedRun]
             using exactEffect
 
-theorem beacon_exact (erased : Std.Array Std.U8 357#usize) (agreement : agreement.BeaconAgreement) :
+theorem beacon_exact (erased : Std.Array Std.U8 227#usize) (agreement : agreement.BeaconAgreement) :
     simulateQ RegistrationRawReceiveBridge.nativeAdapter (RegistrationBeaconRecordExecutor.begin agreement) =
       beacon erased agreement := by
   simp only [RegistrationBeaconRecordExecutor.begin, beacon, map_continueWith]
@@ -88,7 +88,7 @@ theorem beacon_exact (erased : Std.Array Std.U8 357#usize) (agreement : agreemen
   exact initial_exact erased initial
 
 theorem beacon_shared {Auxiliary : Type} (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
-    (writer : RawCtxMixedShared.Writer) (erased : Std.Array Std.U8 357#usize) (agreement : agreement.BeaconAgreement)
+    (writer : RawCtxMixedShared.Writer) (erased : Std.Array Std.U8 227#usize) (agreement : agreement.BeaconAgreement)
     (state : RawCtxSharedPrimitive.SharedState Auxiliary) :
     (RegistrationBeaconRecordExecutor.execute source writer agreement).run state =
       (simulateQ (RegistrationRawReceiveBridge.implementation source writer) (beacon erased agreement)).run state := by

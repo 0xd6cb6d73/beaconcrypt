@@ -3,7 +3,9 @@ import BeaconcryptCore.Computational.RegistrationNativeMldsaCoinFinishSyntax
 import BeaconcryptCore.Computational.RegistrationNativeMldsaCoinAgreementSyntax
 import BeaconcryptCore.Computational.RegistrationNativeMldsaCoinPrimitives
 import BeaconcryptCore.Computational.RegistrationNativeResponseCosts
+import BeaconcryptCore.Computational.RegistrationResponseHashBounds
 import BeaconcryptCore.Computational.RegistrationNativeMldsaCoinRecords
+import BeaconcryptCore.Computational.RegistrationNativeMldsaProfile
 
 /-! Literal ordinary-randomness receipts for the original Beacon finish source. Its response authentication, actual indexed decapsulation, first-record receive loop, known-kernel installation and all failed continuations retain the same source state. The only external cost receipt constrains the actual KEM decapsulation program. -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -22,7 +24,7 @@ variable {n : Nat} {ι KemSK Value Next : Type} {base : OracleSpec ι}
 variable {source : Source}
 variable (setup : Setup base KemSK) (checks : Checks)
 variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 
 private theorem state_lift_apply {S X : Type} {m : Type → Type} [Monad m] [LawfulMonad m]
     (work : m X) (state : S) : (StateT.lift work) state = (fun value => (value, state)) <$> work := by
@@ -275,10 +277,12 @@ private theorem agreement (qDecap : Nat)
     (updateEnv setup checks representation created _) (fun _ => agreementCore setup checks representation created qDecap bounded owner oneTime query)
 
 private theorem authentication (query : RegistrationAuthenticationExecutor.Spec.Domain) :
-    B (RegistrationNativeBeaconFrontend.authentication setup source query) 64 := by
+    B (RegistrationNativeBeaconFrontend.authentication setup source query)
+      (if RegistrationResponseHashBounds.IsHash query then 64 else 0) := by
   unfold RegistrationNativeBeaconFrontend.authentication
   cases query with
   | hash request =>
+      change B _ 64
       exact bind_bound setup checks representation created _ _ 64 0
         (hash setup checks representation created request) (fun _ => pure_bound setup checks representation created _ _)
   | mldsa request | ed25519 request => exact pure_bound setup checks representation created _ _
@@ -300,6 +304,27 @@ private theorem simulated {Query : Type} {queries : OracleSpec Query}
           congrArg (fun count => count * cost) (Nat.sub_add_cancel bounded.1)
       simpa only [same] using rest
 
+private theorem simulated_authentication
+    (work : OracleComp RegistrationAuthenticationExecutor.Spec Value) (cap : Nat)
+    (bounded : work.IsQueryBoundP RegistrationResponseHashBounds.IsHash cap) :
+    B (simulateQ (RegistrationNativeBeaconFrontend.authentication setup source) work) (64 * cap) := by
+  induction work using OracleComp.inductionOn generalizing cap with
+  | pure value => exact pure_bound setup checks representation created _ _
+  | query_bind query next ih =>
+      rw [isQueryBoundP_query_bind_iff] at bounded
+      rw [simulateQ_bind, simulateQ_spec_query]
+      apply mono setup checks representation created _ _ (64 * cap)
+        (bind_bound setup checks representation created _ _
+          (if RegistrationResponseHashBounds.IsHash query then 64 else 0)
+          (64 * (if RegistrationResponseHashBounds.IsHash query then cap - 1 else cap))
+          (authentication setup checks representation created query) (fun reply => ih reply _ (bounded.2 reply)))
+      by_cases active : RegistrationResponseHashBounds.IsHash query
+      · have positive := bounded.1.resolve_left (not_not.mpr active)
+        simp only [active, ite_true]
+        omega
+      · simp only [active, ite_false, Nat.zero_add]
+        exact le_rfl
+
 private theorem native_record (wire : RegistrationNativeWire.Wire) (query : RawCtxMixedOwner.NativeSpec.Domain)
     (cache : CtxRomAuth.CtxRO.QueryCache) :
     ((MldsaSharedSource.implementation setup.source wire.frameWrite (.inr query)).run ((), cache)).IsTotalQueryBound
@@ -314,6 +339,11 @@ private theorem record_impl (wire : RegistrationNativeWire.Wire) (query : Regist
   cases query with
   | rootKdf request => trivial
   | initialKdf request => trivial
+  | adHash request =>
+      rw [RegistrationRecordPrimitives.ad_hash_exact]
+      simpa only [RegistrationNativeMldsaCoinFinishSyntax.IsHash, ite_true, IsTotalQueryBound, isQueryBound_map_iff] using
+        CtxComputationalSecurity.ctxRandomOracle_total_query_bound
+          ((), BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request) ∅
   | hash transcript =>
       rw [RegistrationRecordPrimitives.hash_exact]
       simpa only [RegistrationNativeMldsaCoinFinishSyntax.IsHash, ite_true, IsTotalQueryBound, isQueryBound_map_iff] using
@@ -348,6 +378,9 @@ private theorem record_impl (wire : RegistrationNativeWire.Wire) (query : Regist
 private noncomputable def recordLeaf (wire : RegistrationNativeWire.Wire) :
     QueryImpl RegistrationRecordPrimitives.Spec
       (RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State)
+  | .adHash request => do
+      let digest ← RegistrationNativeBeaconFrontend.hash request
+      pure (.Some (RegistrationAuthenticationShared.digestArray digest))
   | .hash transcript => do
       let digest ← RegistrationNativeBeaconFrontend.hash (.Single (Std.Array.to_slice transcript.bytes))
       pure (.Some (RegistrationAuthenticationShared.digestArray digest))
@@ -365,6 +398,9 @@ private theorem recordLeaf_bound (wire : RegistrationNativeWire.Wire) (query : R
     B (recordLeaf setup wire query) (if RegistrationNativeMldsaCoinFinishSyntax.IsHash query then 64 else 0) := by
   cases query with
   | hash transcript =>
+      exact bind_bound setup checks representation created _ _ 64 0 (hash setup checks representation created _)
+        (fun _ => pure_bound setup checks representation created _ _)
+  | adHash request =>
       exact bind_bound setup checks representation created _ _ 64 0 (hash setup checks representation created _)
         (fun _ => pure_bound setup checks representation created _ _)
   | rootKdf request => exact recordSample setup checks representation created wire (.rootKdf request) (fun impossible => impossible.elim)
@@ -564,8 +600,8 @@ private theorem finish (qDecap : Nat)
           (RegistrationResponseExecutor.begin pending (match packet with | none => .None | some value => .Some value))) >>=
             fromAuthentication setup wire index owner oneTime) (128 + (9 * qDecap + 64))
         apply bind_bound setup checks representation created _ _ 128 (9 * qDecap + 64)
-        · exact simulated setup checks representation created _ 64 (authentication setup checks representation created) _ 2
-            (RegistrationNativeResponseCosts.begin_bound pending _)
+        · exact simulated_authentication setup checks representation created _ 2
+            (RegistrationResponseHashBounds.begin_hash_bound pending _)
         · exact fromAuthentication_bound setup checks representation created qDecap bounded wire index owner oneTime
 
 private theorem source_lower
@@ -577,14 +613,14 @@ private theorem source_lower
   simp only [RegistrationNativeExperiment.beacon, lower, StateT.run,
     bind_pure_comp, Functor.map_map, Prod.map, id_eq, RegistrationNativeMldsaShared.close]
 
-/-- The original finish controller has two response-authentication slots, nine agreement slots and one shared first-record hash. Only indexed decapsulation can add primitive uniforms. -/
+/-- The original finish controller has two response-authentication hash slots, nine agreement slots and one shared first-record hash. Only indexed decapsulation can add primitive uniforms. -/
 def bill (qDecap : Nat) : Nat := 192 + 9 * qDecap
 
 /-- The complete free original typed finish callback obeys its literal ordinary-sampling bill for all raw ML replies and all failed source continuations. -/
 theorem handler (source : Source) (setup : Setup base KemSK) (checks : Checks)
     (wire : RegistrationNativeWire.Wire) (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : Credential source) (qDecap : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential source) (qDecap : Nat)
     (decapsulation : ∀ secret ciphertext, (simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl)
       (setup.kem.decaps secret ciphertext)).IsTotalQueryBound qDecap)
     (index : Nat) (packet : Option registration.ResponsePacket)

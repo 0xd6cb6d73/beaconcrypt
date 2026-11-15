@@ -51,7 +51,7 @@ noncomputable def client (control : pqxdh.ServerState) (binding : pqxdh.ServerBi
       let root ← (Spec Reader).query (.inl input)
       let _ ← (Spec Reader).query (.inr .eraseInput)
       let _ ← (Spec Reader).query (.inr (.consume token.registration_id))
-      pure (ok (some ⟨root, token⟩))
+      pure (ok (some ⟨root, token, input.verified.candidate⟩))
 
 /-- Existing analysis root interpretation, with its complete restricted Extract-ROM cache/history and original session touch kept private. This definition is not a fixed-HKDF security claim. -/
 noncomputable def romRoot (KemSK : Type) (hmac : HmacSha512) (index : Nat)

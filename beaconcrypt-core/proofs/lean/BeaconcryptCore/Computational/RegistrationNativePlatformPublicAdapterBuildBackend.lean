@@ -21,13 +21,13 @@ local notation "Local"=>RegistrationServerRootCompiler.Local n
 local notation "Base"=>StateT P ProbComp
 local notation "M"=>StateT (Backend n KemSK) Base
 
-noncomputable def initial (request : ratchet.SymmetricRatchetKdfRequest) : M (Std.Array U8 64#usize) :=
+noncomputable def initial (request : ratchet.InitialRatchetKdfRequest) : M (Std.Array U8 64#usize) :=
   pure (RawCtxSourceHkdf.initialResponse setup.source.crypto request).bytes
 
 noncomputable def ratchet (request : ratchet.SymmetricRatchetKdfRequest) : M ratchet.RatchetKdfResponse :=fun before=>
   simulateQ coins ((RegistrationNativePlatformPublicAdapterRecordBackend.record setup codec (.inl request)).run before)
 
-theorem initial_source (pool : PqxdhLiveKemBirth.Pool KemSK) (request : ratchet.SymmetricRatchetKdfRequest) (before : Local) :
+theorem initial_source (pool : PqxdhLiveKemBirth.Pool KemSK) (request : ratchet.InitialRatchetKdfRequest) (before : Local) :
     Prod.map id (project pool) <$>(AdapterPublicServerNativeKdf.initial (m:=Base) setup request).run before=
       (initial (n:=n) (KemSK:=KemSK) (P:=P) setup request).run (project pool before) := by
   simp only [AdapterPublicServerNativeKdf.initial,StateT.run_bind,StateT.run_modify,pure_bind,StateT.run_pure,map_pure]

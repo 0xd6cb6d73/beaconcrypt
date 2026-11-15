@@ -11,6 +11,7 @@ The resumption definitions keep the log (type `(R × Local) × NativeState`), as
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
+set_option warningAsError true
 set_option maxRecDepth 100000
 namespace BeaconcryptCore.Computational.PqxdhDeploymentLaterServerItemFree
 open PqxdhKemIndCca PqxdhInitializerSecrecy PqxdhServerAuthExperiment PqxdhJointIdentity
@@ -60,7 +61,7 @@ abbrev SpecL (KemSK Response : Type) := PqxdhRegistrationJointServiceSchedule.Sp
 /-- The logged form of a source client `client` on an interface `spec'`, with the owner registry and the log as its state: every source14 request other than the raw accept runs `client` with the log kept, the raw accept sends the logged accept request and appends the entry, and the Server read sends the identity-pool reveal of the Server's slot through `pool` and returns it with the log. -/
 noncomputable def logClient {ι' : Type} {spec' : OracleSpec ι'}
     (client : QueryImpl (PqxdhRegistrationJointRevealSchedule.Spec KemSK)
-      (StateT (List EncodedEntry) (OracleComp spec')))
+      (StateT (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (OracleComp spec')))
     (pool : QueryImpl (PqxdhLiveKemBirth.Spec KemSK) (OracleComp spec')) (identityIndex : Nat) :
     QueryImpl (PqxdhDeploymentLaterServerSource.Spec KemSK) (StateT Local (OracleComp (spec' + AcceptL)))
   | .inl (.inl (.inr (.accept raw))) => fun held =>
@@ -79,9 +80,9 @@ noncomputable def logClient {ι' : Type} {spec' : OracleSpec ι'}
 theorem logClient_step {ι₁ ι₂ : Type} {spec₁ : OracleSpec ι₁} {spec₂ : OracleSpec ι₂} {m : Type → Type} [Monad m]
     [LawfulMonad m]
     (client₁ : QueryImpl (PqxdhRegistrationJointRevealSchedule.Spec KemSK)
-      (StateT (List EncodedEntry) (OracleComp spec₁)))
+      (StateT (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (OracleComp spec₁)))
     (client₂ : QueryImpl (PqxdhRegistrationJointRevealSchedule.Spec KemSK)
-      (StateT (List EncodedEntry) (OracleComp spec₂)))
+      (StateT (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (OracleComp spec₂)))
     (pool₁ : QueryImpl (PqxdhLiveKemBirth.Spec KemSK) (OracleComp spec₁))
     (pool₂ : QueryImpl (PqxdhLiveKemBirth.Spec KemSK) (OracleComp spec₂))
     (impl₁ : QueryImpl (spec₁ + AcceptL) m) (impl₂ : QueryImpl (spec₂ + AcceptL) m) (identityIndex : Nat)
@@ -149,7 +150,7 @@ theorem impl_clientL (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
     rw [← QueryImpl.simulateQ_compose]
     congr 1
     funext request
-    simp only [QueryImpl.apply_compose, simulateQ_spec_query, implL, QueryImpl.add_apply_inl]
+    simp only [QueryImpl.apply_compose, simulateQ_spec_query, implL]
   rcases query with ((coin | request) | read) | later
   · simp only [PqxdhDeploymentLaterServerCommands.impl, clientL, logClient, StateT.run, simulateQ_map, lifted]
   · cases request
@@ -167,7 +168,7 @@ theorem impl_clientL (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
 /-- The logged command run is the native backend run on the logged source client's run. -/
 theorem run_clientL (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) {Result : Type}
-    (work : OracleComp (PqxdhDeploymentLaterServerSource.Spec KemSK) Result) (owners : List EncodedEntry) (log : Log)
+    (work : OracleComp (PqxdhDeploymentLaterServerSource.Spec KemSK) Result) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log)
     (state : NativeState KemSK) :
     PqxdhDeploymentLaterServerCommands.run setup codec checks identityIndex publicIdentity work owners log state =
       (simulateQ (implL setup codec checks identityIndex publicIdentity)
@@ -222,7 +223,7 @@ noncomputable def freeResumeL (setup : Setup baseSpec KemSK) (codec : Codec Read
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)
     (value : PqxdhServerRootPreparation.Verified Reader)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)
-    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry) (log : Log)
+    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log)
     (next : Option Nat → OracleComp (PqxdhDeploymentLaterServerSource.Spec KemSK) X)
     (ciphertext : MlKem768Ciphertext) (candidate : MlKemSharedSecret) :
     OracleComp (PqxdhRegistrationJointKemEncapsulation.Spec KemSK) ((R × Local) × NativeState KemSK) := do
@@ -240,7 +241,7 @@ theorem resume_freeL (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)
     (value : PqxdhServerRootPreparation.Verified Reader)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)
-    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry) (log : Log)
+    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log)
     (next : Option Nat → OracleComp (PqxdhDeploymentLaterServerSource.Spec KemSK) X)
     (ciphertext : MlKem768Ciphertext) (candidate : MlKemSharedSecret) :
     eraseOutcome <$> PqxdhDeploymentLaterServerCut.opaqueResume setup codec checks identityIndex publicIdentity observe
@@ -396,7 +397,7 @@ noncomputable def markedResumeL (setup : Setup baseSpec KemSK) (codec : Codec Re
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)
     (value : PqxdhServerRootPreparation.Verified Reader)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)
-    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry) (log : Log)
+    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log)
     (next : Option Nat → OracleComp (PqxdhDeploymentLaterServerSource.Spec KemSK) X) (selected : Nat)
     (ciphertext : MlKem768Ciphertext) (candidate : MlKemSharedSecret) :
     OracleComp (PqxdhRegistrationJointKemEncapsulation.Spec KemSK) ((R × Local) × NativeState KemSK) := do
@@ -415,7 +416,7 @@ theorem resume_markedL (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)
     (value : PqxdhServerRootPreparation.Verified Reader)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)
-    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry) (log : Log)
+    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log)
     (next : Option Nat → OracleComp (PqxdhDeploymentLaterServerSource.Spec KemSK) X) (selected : Nat)
     (ciphertext : MlKem768Ciphertext) (candidate : MlKemSharedSecret) :
     simulateQ (markEnc selected ciphertext candidate)
@@ -579,7 +580,7 @@ theorem markedResumeL_unmarked (setup : Setup baseSpec KemSK) (codec : Codec Rea
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)
     (value : PqxdhServerRootPreparation.Verified Reader)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)
-    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry) (log : Log)
+    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (log : Log)
     (next : Option Nat → OracleComp (PqxdhDeploymentLaterServerSource.Spec KemSK) X) (selected : Nat)
     (ciphertext : MlKem768Ciphertext) (candidate marker : MlKemSharedSecret) :
     simulateQ (markEnc selected ciphertext marker)

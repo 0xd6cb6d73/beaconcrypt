@@ -857,7 +857,7 @@ theorem effects_history (query : (EnvEffects n).Domain) (control : PqxdhRecordLi
   | inr request => exact capability_history request control past ready
 
 /-- Server initialization imports only caller-known peers. -/
-theorem initializeServer_history (created : PqxdhLiveServerConstruction.Created Unit)
+theorem initializeServer_history (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (control : PqxdhRecordLiftProtocol.Control n) (past : List (Label n)) (ready : ControlReady control past) :
     ServiceSafe ((PqxdhRecordLiftProtocol.initializeServer created).run control) past ∧
       ∀ result ∈ Trace ((PqxdhRecordLiftProtocol.initializeServer created).run control) past,

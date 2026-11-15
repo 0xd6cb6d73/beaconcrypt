@@ -36,7 +36,7 @@ private theorem sampled_server (work : ProbComp A) (before : PqxdhRecordLiftWorl
   rfl
 
 theorem trusted (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (Trusted n KemSK).Domain) (safe : RegistrationNativeWorldOwnerFrame.Safe (KemSK := KemSK) query)
     (before : Native) (result : (Trusted n KemSK).Range query ×Native)
     (reached : result∈support ((RegistrationNativeExperiment.trusted setup checks representation created source query).run before)) :
@@ -68,7 +68,7 @@ theorem trusted (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : P
         (sampled_server _ _ inner called)
 
 theorem program (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp (Trusted n KemSK) A)
     (allowed : AllQueriesSatisfy work (RegistrationNativeWorldOwnerFrame.Safe (KemSK := KemSK)))
     (before : Native) (result : A ×Native)
@@ -88,7 +88,7 @@ theorem program (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : P
 
 variable (coins : QueryImpl unifSpec (StateT Platform ProbComp))
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
 
 theorem bundle_query (query : (RegistrationNativePlatformGenericBundle.Spec E n KemSK).Domain)

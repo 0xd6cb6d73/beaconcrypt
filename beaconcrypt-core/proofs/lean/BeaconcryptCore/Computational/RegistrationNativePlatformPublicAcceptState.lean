@@ -27,13 +27,16 @@ private theorem map_apply {S A B : Type} {m : Type → Type} [Monad m] [LawfulMo
     (observe : A → B) (work : StateT S m A) (before : S) :
     (observe <$> work) before = Prod.map observe id <$> work before := StateT.run_map observe work before
 
+-- The Server pin is now selected purely (no fingerprint hash query), so elaboration-time whnf of the concrete OPEN accept program would evaluate `begin_server_pin`; keep the program opaque to the elaborator here. Proof terms are unchanged and kernel-checked.
+attribute [local irreducible] RegistrationNativePlatformServerOpenControl.accept
+
 /-- Full actual OPEN acceptance retains the same complete native source state and reached platform state, including every failure prefix. -/
 theorem accept (setup : Setup base KemSK) (codec : Codec Reader Response)
     (wire : RegistrationNativeWire.Wire) (checks : Checks) (route : RawCtxServerRouting.SenderDecoder)
     (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
     (verify : MldsaTranscriptAuth.Verify) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (selected : Bool) (reserve : StateT Platform ProbComp Bool) (packet : registration.InitPacket)
     (before : State n KemSK Platform source) :
     (fun result => ((result.1, project setup created.seed scalar result.2), result.2.1.2)) <$>

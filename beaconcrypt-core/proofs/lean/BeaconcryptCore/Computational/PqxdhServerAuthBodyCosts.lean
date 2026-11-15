@@ -83,12 +83,14 @@ theorem beacon_after_coins (setup : Setup baseSpec KemSK) (codec : Codec Reader 
 
 set_option backward.isDefEq.respectTransparency false in
 /-- The complete source stage pays the actual single KEM decapsulation and single opening commitment. Its selected root request remains a family query, accounted by the outer table interpreter. -/
-theorem stage_coins (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+theorem stage_coins (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding) (setup : Setup baseSpec KemSK)
+    (codec : Codec Reader Response)
     (beaconSeed : IdentitySeed) (caps : KemCaps) (bounded : KemBound setup caps)
     (publicValue : PublicChallenge) (control : pqxdh.BeaconInitSent) (identity : Unit)
     (oneTime : Unit ⊕ ScalarBytes) (kem : KemSK) (raw : Pqxdh.Bytes) (state : GameState KemSK) :
     ((simulateQ (stageImpl setup codec beaconSeed)
-      (PqxdhPhase2DhStage.stage publicValue codec.frameRead control identity oneTime kem raw)).run state).IsQueryBoundP
+      (PqxdhPhase2DhStage.stage (completedBinding := completedBinding) publicValue codec.frameRead control identity
+        oneTime kem raw)).run state).IsQueryBoundP
         IsCoinRoot (caps.decapsCost + 64) := by
   have prefixEq : stageImpl setup codec beaconSeed ∘ₛ PqxdhPhase2DhStage.prefixLift =
       liftUnit (KemSK := KemSK) (PqxdhPhase2GapDhSource.prefixImpl setup.beaconDomain
@@ -100,7 +102,8 @@ theorem stage_coins (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   apply isQueryBoundP_bind (n := caps.decapsCost) (m := 64)
   · apply liftCoins_uniform
     simpa only [beaconPrefix, StateT.run'_eq, IsTotalQueryBound, isQueryBound_map_iff] using
-      beacon_prefix_uniform setup codec beaconSeed caps bounded control identity oneTime kem raw ()
+      beacon_prefix_uniform (completedBinding := completedBinding) setup codec beaconSeed caps bounded control identity
+        oneTime kem raw ()
   · rintro ⟨(_ | prepared), current⟩ _
     · simp only [simulateQ_pure]; trivial
     · simp only [PqxdhPhase2DhRootConsumer.tail, PqxdhPhase2DhRootConsumer.root,
@@ -122,19 +125,33 @@ theorem stage_coins (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
           rw [nativeEq]
           exact beacon_after_coins setup codec prepared _ after
 
+/-- A public BLAKE2b request has the same existing 64-byte miss allowance, including cache hits. -/
+theorem hash_coins (bytes : Pqxdh.Bytes) (state : GameState KemSK) :
+    ((hashOracle bytes).run state).IsQueryBoundP IsCoinRoot 64 := by
+  change (familyCoins ((CtxRomAuth.ctxRandomOracle ((), bytes)).run state.ctx) >>= fun result =>
+    pure (result.1, { state with ctx := result.2 })).IsQueryBoundP IsCoinRoot 64
+  rw [bind_pure_comp, isQueryBoundP_map_iff]
+  exact familyCoins_uniform _ 64 (CtxComputationalSecurity.ctxRandomOracle_total_query_bound ((), bytes) state.ctx)
+
 /-- Only the original InitSent state incurs the complete decapsulation/opening bill. Every failed finish still consumes this one-shot opportunity. -/
 theorem finish_coins (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (beaconSeed : IdentitySeed) (caps : KemCaps) (bounded : KemBound setup caps)
     (publicValue : PublicChallenge) (raw : Pqxdh.Bytes) (state : GameState KemSK) :
     ((finishOracle setup codec publicValue beaconSeed raw).run state).IsQueryBoundP IsCoinRoot
-      ((caps.decapsCost + 64) * initSentFlag state) := by
+      ((caps.decapsCost + 128) * initSentFlag state) := by
   simp only [finishOracle, StateT.run_bind, StateT.run_get, pure_bind]
   cases phase : state.beacon.beacon.phase with
   | initSent control prekey oneTime kem =>
       simp only [initSentFlag, phase, Nat.mul_one]
-      apply (isQueryBoundP_bind (m := 0)
-        (stage_coins setup codec beaconSeed caps bounded publicValue control state.beacon.beacon.identity oneTime kem raw state)
-        (fun result _ => by change (pure _ : OracleComp PqxdhJointDhExtractRoot.RootSpec _).IsQueryBoundP IsCoinRoot 0; trivial)).mono (by omega)
+      split
+      · apply (isQueryBoundP_bind (n := 64) (m := caps.decapsCost + 64) (hash_coins _ state)
+          (fun hashed _ => ?_)).mono (by omega)
+        apply (isQueryBoundP_bind (m := 0)
+          (stage_coins (PqxdhTranscriptAd.completedOf control hashed.1) setup codec beaconSeed caps bounded publicValue
+            control hashed.2.beacon.beacon.identity oneTime kem raw hashed.2)
+          (fun result _ => by change (pure _ : OracleComp PqxdhJointDhExtractRoot.RootSpec _).IsQueryBoundP IsCoinRoot 0; trivial)).mono (by omega)
+      · simp only [StateT.run_bind, StateT.run_set, StateT.run_pure, pure_bind]
+        trivial
   | _ => simp only [phase, initSentFlag]; trivial
 
 /-- The root consumer performs its real erasure/consume callbacks and one family derivation, but no direct random draw. -/
@@ -173,31 +190,28 @@ theorem accept_coins (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
 theorem build_coins (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (session : Nat) (payload : Option Pqxdh.Bytes) (state : GameState KemSK) :
     ((buildOracle setup codec checks session payload).run state).IsQueryBoundP IsCoinRoot
-      (64 * slotWeight (state.pending session)) := by
+      (128 * slotWeight (state.pending session)) := by
   simp only [buildOracle, StateT.run_bind, StateT.run_get, pure_bind]
   cases found : state.pending session with
   | none => trivial
   | some token =>
-      simp only [slotWeight, Nat.mul_one, StateT.run_bind]
-      apply (isQueryBoundP_bind (m := 0)
-        (liftCoins_uniform _ 64 (build_uniform setup codec checks token.pending token.root payload state.server ([], state.ctx)) state)
-        (fun result _ => by trivial)).mono (by omega)
-
-/-- A public BLAKE2b request has the same existing 64-byte miss allowance, including cache hits. -/
-theorem hash_coins (bytes : Pqxdh.Bytes) (state : GameState KemSK) :
-    ((hashOracle bytes).run state).IsQueryBoundP IsCoinRoot 64 := by
-  change (familyCoins ((CtxRomAuth.ctxRandomOracle ((), bytes)).run state.ctx) >>= fun result =>
-    pure (result.1, { state with ctx := result.2 })).IsQueryBoundP IsCoinRoot 64
-  rw [bind_pure_comp, isQueryBoundP_map_iff]
-  exact familyCoins_uniform _ 64 (CtxComputationalSecurity.ctxRandomOracle_total_query_bound ((), bytes) state.ctx)
+      simp only [slotWeight, Nat.mul_one]
+      split
+      · simp only [StateT.run_bind, StateT.run_set, StateT.run_pure, pure_bind]
+        trivial
+      · apply (isQueryBoundP_bind (n := 64) (m := 64) (hash_coins _ state) (fun hashed _ => ?_)).mono (by omega)
+        apply (isQueryBoundP_bind (m := 0)
+          (liftCoins_uniform _ 64 (build_uniform (PqxdhTranscriptAd.adOf hashed.1) setup codec checks token.pending
+            token.root payload hashed.2.server ([], hashed.2.ctx)) hashed.2)
+          (fun result _ => by trivial)).mono (by omega)
 
 /-- Actual direct uniform cost of one original capability, including stateful refusal. -/
 def handlerCoinCost (caps : KemCaps) (query : ServerAuthSpec.Domain) (state : GameState KemSK) : Nat :=
   match query with
   | .inl _ => 1
   | .inr (.accept _) => 32 + caps.encapsCost
-  | .inr (.build session _) => 64 * slotWeight (state.pending session)
-  | .inr (.finish _) => (caps.decapsCost + 64) * initSentFlag state
+  | .inr (.build session _) => 128 * slotWeight (state.pending session)
+  | .inr (.finish _) => (caps.decapsCost + 128) * initSentFlag state
   | .inr (.hash _) => 64
   | .inr (.hmac _ _) => 0
   | .inr (.reveal _) => 0
@@ -232,8 +246,8 @@ instance : ∀ i, DecidablePred (coinClasses i) :=
 
 /-- Each remaining accept pays its full prefix and reserves one possible build. Existing tokens and the one-shot target phase retain their costs. -/
 def coinPotential (caps : KemCaps) (budget : Fin 3 → Nat) (state : GameState KemSK) : Nat :=
-  budget 0 + (32 + caps.encapsCost + 64) * budget 1 + 64 * budget 2 +
-    64 * pendingCount state + (caps.decapsCost + 64) * initSentFlag state
+  budget 0 + (32 + caps.encapsCost + 128) * budget 1 + 64 * budget 2 +
+    128 * pendingCount state + (caps.decapsCost + 128) * initSentFlag state
 
 /-- A current token's weight is part of the finite source registry; this consumes the already established operational invariant. -/
 theorem pending_weight_le (setup : Setup baseSpec KemSK) (publicValue : PublicChallenge)
@@ -273,12 +287,12 @@ theorem handler_cost_le (setup : Setup baseSpec KemSK) (caps : KemCaps)
   cases query with
   | accept raw =>
       have pos := acceptPos trivial
-      have enough := Nat.mul_le_mul_left (32 + caps.encapsCost + 64) pos
+      have enough := Nat.mul_le_mul_left (32 + caps.encapsCost + 128) pos
       simp only [Nat.mul_one] at enough
       simp only [handlerCoinCost, coinPotential]
       omega
   | build index payload =>
-      have enough := Nat.mul_le_mul_left 64 (pending_weight_le setup publicValue state valid index)
+      have enough := Nat.mul_le_mul_left 128 (pending_weight_le setup publicValue state valid index)
       simp only [handlerCoinCost, coinPotential]
       omega
   | finish raw => simp only [handlerCoinCost, coinPotential]; omega
@@ -363,7 +377,7 @@ theorem run_coins (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
 
 /-- Closed direct-uniform allowance for the actual API after Phase 1, with empty Server tokens and one target finish. -/
 def runCoinBudget (caps : KemCaps) (qCoin Q qHash : Nat) : Nat :=
-  qCoin + (32 + caps.encapsCost + 64) * Q + 64 * qHash + caps.decapsCost + 64
+  qCoin + (32 + caps.encapsCost + 128) * Q + 64 * qHash + caps.decapsCost + 128
 
 /-- Complete source-body allowance: actual Beacon seed and one-time scalar generation, interpreted KEM keygen, and the full adaptive API. -/
 def bodyCoinBudget (caps : KemCaps) (qCoin Q qHash : Nat) : Nat :=
@@ -372,11 +386,12 @@ def bodyCoinBudget (caps : KemCaps) (qCoin Q qHash : Nat) : Nat :=
 /-- Empty source setup discharges the complete pending/phase potential; no caller-selected token or repeated-finish resource premise remains. -/
 theorem initial_potential (setup : Setup baseSpec KemSK) (publicValue : PublicChallenge)
     (beacon : RawCtxBeaconLifecycle.State Unit (Unit ⊕ ScalarBytes) KemSK)
+    (beaconInit : Option PqxdhEd25519EufCma.Phase1Candidate)
     (caps : KemCaps) (qCoin Q qHash : Nat) :
-    coinPotential caps ![qCoin, Q, qHash] (initialGameState setup publicValue beacon) ≤
+    coinPotential caps ![qCoin, Q, qHash] (initialGameState setup publicValue beacon beaconInit) ≤
       runCoinBudget caps qCoin Q qHash := by
-  have flag := initSentFlag_le (initialGameState setup publicValue beacon)
-  have multiplied := Nat.mul_le_mul_left (caps.decapsCost + 64) flag
+  have flag := initSentFlag_le (initialGameState setup publicValue beacon beaconInit)
+  have multiplied := Nat.mul_le_mul_left (caps.decapsCost + 128) flag
   simp only [Nat.mul_one] at multiplied
   simp [coinPotential, pending_initial, runCoinBudget]
   omega
@@ -399,22 +414,22 @@ theorem body_coins (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
   refine isQueryBoundP_bind
     (familyCoins_uniform _ caps.keygenCost (keygen_uniform setup caps bounded)) fun keys _ => ?_
   refine (isQueryBoundP_bind (n := 0) (m := runCoinBudget caps qCoin Q qHash)
-    (familyCoins_uniform _ 0 (phase1_uniform setup codec beaconSeed publicValue oneTime keys.1 keys.2))
+    (familyCoins_uniform _ 0 (by rw [phase1Logged_eq]; trivial))
     fun published member => ?_).mono (by omega)
   rw [isQueryBoundP_map_iff]
   have invariant := inv_initial setup codec beaconSeed publicValue oneTime keys.1 keys.2 published
     (coins_support _ published member)
   apply (run_coins setup codec checks beaconSeed caps bounded publicValue _ ![qCoin, Q, qHash]
-    (fun i => ?_) _ invariant).mono (initial_potential setup publicValue published.2 caps qCoin Q qHash)
+    (fun i => ?_) _ invariant).mono (initial_potential setup publicValue published.1.2 published.2 caps qCoin Q qHash)
   fin_cases i
   · exact coins _
   · exact accepts _
   · exact hashes _
 
-/-- The primitive work remains explicit: one keygen, at most Q encapsulations and one decapsulation, each with its own direct and interpreted base query counts. The other direct draws are 128 + qCoin + 96*Q + 64*qHash. -/
+/-- The primitive work remains explicit: one keygen, at most Q encapsulations and one decapsulation, each with its own direct and interpreted base query counts. The other direct draws are 192 + qCoin + 160*Q + 64*qHash. -/
 theorem body_budget_expanded (caps : KemCaps) (qCoin Q qHash : Nat) :
     bodyCoinBudget caps qCoin Q qHash =
-      128 + qCoin + 96 * Q + 64 * qHash +
+      192 + qCoin + 160 * Q + 64 * qHash +
       caps.keygenUniform + Q * caps.encapsUniform + caps.decapsUniform +
       caps.baseUniform * (caps.keygenBase + Q * caps.encapsBase + caps.decapsBase) := by
   simp only [bodyCoinBudget, runCoinBudget, KemCaps.keygenCost, KemCaps.encapsCost, KemCaps.decapsCost]
@@ -469,7 +484,7 @@ theorem reduction_game_uniform (setup : Setup baseSpec KemSK) (codec : Codec Rea
 /-- Expanded complete ordinary-game uniform accounting keeps every primitive base callback explicit. -/
 theorem reduction_game_budget (caps : KemCaps) (qCoin Q qHash qH : Nat) :
     64 + (bodyCoinBudget caps qCoin Q qHash + 64 * (qH + Q + 1)) =
-      256 + qCoin + 160 * Q + 64 * (qHash + qH) +
+      320 + qCoin + 224 * Q + 64 * (qHash + qH) +
       caps.keygenUniform + Q * caps.encapsUniform + caps.decapsUniform +
       caps.baseUniform * (caps.keygenBase + Q * caps.encapsBase + caps.decapsBase) := by
   rw [body_budget_expanded]

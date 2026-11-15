@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativePlatformSdkCache
 import BeaconcryptCore.Computational.RegistrationNativePlatformSourceFrames
 
-/-! The actual source SDK build retains every earlier native hash-cache entry through repeated pin recomputation, capacity checks, source first-record allocation, ML publication and peer installation. Each structural control premise is discharged by the literal source body, including failed prefixes. -/
+/-! The actual source SDK build retains every earlier native hash-cache entry through pure configured pin selection, capacity checks, source first-record allocation, ML publication and peer installation. Each structural control premise is discharged by the literal source body, including failed prefixes. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -20,7 +20,7 @@ private theorem map_apply {S A B : Type} {m : Type → Type} [Monad m] [LawfulMo
     (f : A → B) (work : StateT S m A) (before : S) :
     (f <$> work) before = Prod.map f id <$> work before := StateT.run_map f work before
 
-/-- The actual repeated fingerprint call retains all earlier shared-cache entries, without requiring a cached hit. -/
+/-- Pure configured pin selection retains every earlier shared-cache entry without issuing a hash query. -/
 theorem pin (coins : QueryImpl unifSpec (StateT Platform ProbComp)) :
     Keeps (serverCache (n := n)) (RegistrationNativePlatformSourceBuild.pin coins) := by
   intro before previous result supported
@@ -29,12 +29,10 @@ theorem pin (coins : QueryImpl unifSpec (StateT Platform ProbComp)) :
   cases same
   have native : inner.1 ∈ support ((RegistrationNativeServerPinRecompute.native before.pin.binding before.pin.public_key).run before.world.world.1) :=
     RegistrationNativePlatformHashReceipt.native_support coins _ _ previous inner.2 called
-  rw [RegistrationNativeServerPinRecompute.native_run, mem_support_bind_iff] at native
-  obtain ⟨hashed, queried, returned⟩ := native
-  simp only [support_pure, Set.mem_singleton_iff] at returned
+  rw [RegistrationNativeServerPinRecompute.native_run] at native
+  have unchanged := eq_of_mem_support_pure _ native
   change before.world.world.1.primitive.2 ≤ inner.1.2.primitive.2
-  rw [congrArg Prod.snd returned]
-  exact RegistrationWorldCache.effects_cache (.inr (.hash (PqxdhRefinement.absBytes before.pin.public_key))) before.world.world.1 hashed queried
+  simpa only [unchanged] using (le_refl before.world.world.1.primitive.2)
 
 /-- External source capacity decisions retain the complete native cache, including on failure. -/
 theorem reserve (work : StateT Platform ProbComp Bool) :
@@ -62,6 +60,50 @@ theorem present (coins : QueryImpl unifSpec (StateT Platform ProbComp)) (keyId :
   rw [← cacheEq]
   exact RegistrationWorldCache.effects_cache (.inr (.peerPresent keyId)) before.world.world.1 queried possible
 
+private theorem local_pure (value : Value) :
+    Keeps (Platform := Platform) (localCache (n := n)) (pure value) := by
+  intro before previous result supported
+  simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
+  cases supported
+  exact le_refl _
+
+private theorem local_bind {Next : Type}
+    (work : StateT (RegistrationServerRootCompiler.Local n) (StateT Platform ProbComp) Value)
+    (next : Value → StateT (RegistrationServerRootCompiler.Local n) (StateT Platform ProbComp) Next)
+    (first : Keeps localCache work) (rest : ∀ value, Keeps localCache (next value)) :
+    Keeps localCache (work >>= next) := by
+  intro before previous result supported
+  simp only [StateT.run_bind, mem_support_bind_iff] at supported
+  obtain ⟨middle, called, continued⟩ := supported
+  exact (first before previous middle called).trans
+    (rest middle.1.1 middle.1.2 middle.2 result continued)
+
+private theorem local_capability (coins : QueryImpl unifSpec (StateT Platform ProbComp))
+    (query : PqxdhRecordLiftInterface.Capability n) :
+    Keeps localCache (RegistrationNativePlatformServerCompletion.capability coins query) := by
+  intro before previous result supported
+  have actual : result.1 ∈ support ((RegistrationWorldServerCompletion.capability query).run before) :=
+    RegistrationNativePlatformHashReceipt.native_support coins _ _ previous result.2 supported
+  simp only [RegistrationWorldServerCompletion.capability, StateT.run, support_map] at actual
+  obtain ⟨inner, called, same⟩ := actual
+  have cacheEq := congrArg (fun value => value.2.world.1.primitive.2) same
+  change before.world.1.primitive.2 ≤ result.1.2.world.1.primitive.2
+  rw [← cacheEq]
+  exact RegistrationWorldCache.effects_cache (.inr query) before.world.1 inner called
+
+/-- The actual reached AD hash extends the shared cache and retains its real failure poststate. -/
+theorem adHash (coins : QueryImpl unifSpec (StateT Platform ProbComp)) (pending : registration.ServerAdHash) :
+    Keeps (serverCache (n := n)) (RegistrationNativePlatformCompletionSdk.nativeAdHash coins pending) := by
+  apply RegistrationNativePlatformSdkCache.world
+  unfold RegistrationNativePlatformServerCompletion.adHash RegistrationNativePlatformServerCompletion.adHashWith RegistrationServerAdHash.runWith
+  cases pending.request with
+  | fail error | div => exact local_pure _
+  | ok request =>
+      simp only [bind_assoc, pure_bind]
+      apply local_bind _ _ (local_capability coins (.hash (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request)))
+      intro _digest
+      exact local_pure _
+
 variable [primitive : AdapterSealPrimitive.Operations]
 
 /-- Literal complete source SDK build extends its earlier cache for every returned result and actual external poststate. -/
@@ -76,7 +118,7 @@ theorem build (coins : QueryImpl unifSpec (StateT Platform ProbComp)) (setup : S
     Keeps (serverCache (n := n))
       (RegistrationNativePlatformSourceSeal.build coins setup codec view failure allocation erased reservePeer sign helper writer handle application) := by
   unfold RegistrationNativePlatformSourceSeal.build RegistrationNativePlatformSourceBuild.buildSource
-  apply RegistrationNativePlatformSdkCache.build _ (pin coins) _ (reserve reservePeer) _ (present coins)
+  apply RegistrationNativePlatformSdkCache.build _ (adHash coins) _ (pin coins) _ (reserve reservePeer) _ (present coins)
   intro control initial before previous result supported
   exact RegistrationNativePlatformSourceFrames.finish_cache coins setup codec view failure allocation erased sign helper writer
     control initial before previous result.1 result.2 supported
@@ -106,3 +148,9 @@ end BeaconcryptCore.Computational.RegistrationNativePlatformBuildCache
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativePlatformBuildCache.build
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformBuildCache.adHash' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformBuildCache.adHash

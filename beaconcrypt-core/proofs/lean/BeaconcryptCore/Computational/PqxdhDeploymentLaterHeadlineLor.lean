@@ -20,6 +20,7 @@ Premises: `FunctionalDecapsulation setup.kem`, `Phase1ReadBack`, `Phase2ReadBack
 open OracleComp OracleSpec ENNReal
 
 set_option autoImplicit false
+set_option warningAsError true
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineLor
 open PqxdhServerAuthExperiment (Setup Codec Checks)

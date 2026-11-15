@@ -165,7 +165,7 @@ theorem output (work : StateT RegistrationServerReferenceCompiler.Environment
   rw [StateT.run'_eq, support_map]
   exact ⟨reached.1, possible, congrArg Prod.fst equal⟩
 
-/-- Successful actual mandatory authentication retains its caller's exact pending owner and supplied packet. -/
+/-- Successful actual mandatory authentication retains its caller's exact control, completed binding and supplied packet. -/
 theorem packet (setup : Setup base KemSK) (source : RegistrationNativeMldsa.Source)
     (pending : registration.BeaconPending) (packet : Option registration.ResponsePacket)
     (authenticated : registration.AuthenticatedResponse) (before after : Auxiliary Private)
@@ -173,7 +173,10 @@ theorem packet (setup : Setup base KemSK) (source : RegistrationNativeMldsa.Sour
       ((lower implementation (StateT.lift (simulateQ RegistrationNativeSecretWordInterface.effect
         (simulateQ (RegistrationAuthenticationCompiler.callbacks setup.source.crypto source.verify)
           (RegistrationResponseExecutor.begin pending (match packet with | none => .None | some packet => .Some packet)))))).run before)) :
-    ∃ supplied, packet = some supplied ∧ authenticated = ⟨pending, supplied⟩ := by
+    ∃ supplied, packet = some supplied ∧
+      ∃ (digest : Std.Array Std.U8 64#usize) (completed : session.CompletedRegistrationBinding),
+        pending.binding.complete digest = .ok completed ∧
+        authenticated = ⟨pending.control, completed, supplied⟩ := by
   have possible := output (Value := RustM RegistrationResponseExecutor.ResponseResult) implementation _ before after (RustM.ok (core.result.Result.Ok authenticated)) supported
   simp only [StateT.run'_eq, StateT.run_lift, bind_pure_comp, Functor.map_map, id_map'] at possible
   have bare := RegistrationNativePublicSourceSupport.simulate_support _ _ _

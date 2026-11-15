@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePlatformServerRestrictedService
-/-! The derived corrected Server reference frontend is an exact free request program. The four leaves are its literal repeated pin hash, peer occupancy, stateful reservation and admitted material service; no whole frontend law is an interpretation field. -/
+/-! The current Server reference frontend is an exact free request program. Its leaves retain pure pin selection, peer occupancy, owned transcript-AD hashing, stateful reservation and admitted material service in source order; no whole frontend law is an interpretation field. -/
 open OracleComp OracleSpec CoreModels Aeneas beaconcrypt_core
 open Aeneas.Std hiding namespace core alloc
 open RustM
@@ -13,6 +13,7 @@ open RegistrationNativePlatformServerMaterialFrontend (Result)
 variable {m : Type → Type} [Monad m] [LawfulMonad m]
 
 inductive Request where
+  | adHash (pending : registration.ServerAdHash)
   | pin (current : session.ServerAuthenticationPin)
   | reserve
   | present (keyId : U64)
@@ -20,12 +21,14 @@ inductive Request where
       (message : RegistrationNativeRelatedFamily.Message)
 
 def Reply : Request → Type
+  | .adHash _ => RegistrationServerAdHash.Result
   | .pin _ => RustM (core.option.Option session.ServerAuthenticationPin)
   | .reserve | .present _ => Bool
   | .service _ _ _ => RustM (RegistrationHiddenInstall.Result (alloc.vec.Vec U8))
 
 abbrev Spec : OracleSpec Request := Reply
 
+def adHash (pending : registration.ServerAdHash) : OracleComp Spec (Reply (.adHash pending)) := Spec.query (.adHash pending)
 def pin (current : session.ServerAuthenticationPin) : OracleComp Spec (Reply (.pin current)) := Spec.query (.pin current)
 def reserve : OracleComp Spec Bool := Spec.query .reserve
 def present (keyId : U64) : OracleComp Spec Bool := Spec.query (.present keyId)
@@ -35,7 +38,7 @@ def service (control : pqxdh.ServerState) (initial : RegistrationBoundKeySchedul
 
 def program (handle : Nat) (application : Option (Slice U8)) :
     StateT RegistrationServerMaterialFrontend.State (OracleComp Spec) (Result (alloc.vec.Vec U8)) :=
-  RegistrationNativePlatformServerMaterialFrontend.build pin reserve present service handle application
+  RegistrationNativePlatformServerMaterialFrontend.build adHash pin reserve present service handle application
 
 private theorem bind_apply {S V W : Type} {q : Type → Type} [Monad q]
     (work : StateT S q V) (next : V → StateT S q W) (before : S) :
@@ -76,17 +79,27 @@ private theorem afterOccupancy_interpret (implementation : QueryImpl Spec m)
     (message : RegistrationNativeRelatedFamily.Message) (occupied : Bool)
     (before : RegistrationServerMaterialFrontend.State) :
     simulateQ implementation
-      ((RegistrationNativePlatformServerMaterialFrontend.afterOccupancy reserve service control lookup message occupied).run before) =
-      (RegistrationNativePlatformServerMaterialFrontend.afterOccupancy (implementation .reserve)
-        (fun control initial message => implementation (.service control initial message)) control lookup message occupied).run before :=
-  afterResult_interpret implementation control message _ before
+      ((RegistrationNativePlatformServerMaterialFrontend.afterOccupancy adHash reserve service control lookup message occupied).run before) =
+      (RegistrationNativePlatformServerMaterialFrontend.afterOccupancy (fun pending => implementation (.adHash pending)) (implementation .reserve)
+        (fun control initial message => implementation (.service control initial message)) control lookup message occupied).run before := by
+  unfold RegistrationNativePlatformServerMaterialFrontend.afterOccupancy
+  cases lookup.resume occupied with
+  | fail error | div => simp only [StateT.run_pure, simulateQ_pure]
+  | ok result => cases result with
+    | Err previous => simp only [StateT.run_pure, simulateQ_pure]
+    | Ok pending =>
+      simp only [StateT.run_bind, StateT.run_lift, bind_pure_comp, bind_map_left,
+        simulateQ_bind, adHash, simulateQ_spec_query]
+      apply bind_congr
+      intro hashed
+      exact afterResult_interpret implementation control message _ before
 
 private theorem afterPin_interpret (implementation : QueryImpl Spec m)
     (control : pqxdh.ServerState) (ready : RegistrationServerReferenceRoot.Ready) (application : Slice U8)
     (current : RustM (core.option.Option session.ServerAuthenticationPin)) (before : RegistrationServerMaterialFrontend.State) :
     simulateQ implementation
-      ((RegistrationNativePlatformServerMaterialFrontend.afterPin reserve present service control ready application current).run before) =
-      (RegistrationNativePlatformServerMaterialFrontend.afterPin (implementation .reserve)
+      ((RegistrationNativePlatformServerMaterialFrontend.afterPin adHash reserve present service control ready application current).run before) =
+      (RegistrationNativePlatformServerMaterialFrontend.afterPin (fun pending => implementation (.adHash pending)) (implementation .reserve)
         (fun keyId => implementation (.present keyId))
         (fun control initial message => implementation (.service control initial message)) control ready application current).run before := by
   cases current with
@@ -119,8 +132,8 @@ private theorem afterPin_interpret (implementation : QueryImpl Spec m)
 private theorem complete_interpret (implementation : QueryImpl Spec m)
     (ready : RegistrationServerReferenceRoot.Ready) (application : Slice U8) (before : RegistrationServerMaterialFrontend.State) :
     simulateQ implementation
-      ((RegistrationNativePlatformServerMaterialFrontend.complete pin reserve present service ready application).run before) =
-      (RegistrationNativePlatformServerMaterialFrontend.complete (fun current => implementation (.pin current))
+      ((RegistrationNativePlatformServerMaterialFrontend.complete adHash pin reserve present service ready application).run before) =
+      (RegistrationNativePlatformServerMaterialFrontend.complete (fun pending => implementation (.adHash pending)) (fun current => implementation (.pin current))
         (implementation .reserve) (fun keyId => implementation (.present keyId))
         (fun control initial message => implementation (.service control initial message)) ready application).run before := by
   simp only [RegistrationNativePlatformServerMaterialFrontend.complete, StateT.run,
@@ -129,11 +142,11 @@ private theorem complete_interpret (implementation : QueryImpl Spec m)
   intro current
   exact afterPin_interpret implementation before.control ready application current before
 
-/-- Every complete source-reference build phase is the fold of these four exact leaves. One-use take/cancel, all enclosing Rust outcomes and every reached external state are retained. -/
+/-- Every complete source-reference build phase is the fold of these five exact leaves. One-use take/cancel, all enclosing Rust outcomes and every reached external state are retained. -/
 theorem interpret (implementation : QueryImpl Spec m) (handle : Nat) (application : Option (Slice U8))
     (before : RegistrationServerMaterialFrontend.State) :
     simulateQ implementation ((program handle application).run before) =
-      (RegistrationNativePlatformServerMaterialFrontend.build (fun current => implementation (.pin current))
+      (RegistrationNativePlatformServerMaterialFrontend.build (fun pending => implementation (.adHash pending)) (fun current => implementation (.pin current))
         (implementation .reserve) (fun keyId => implementation (.present keyId))
         (fun control initial message => implementation (.service control initial message)) handle application).run before := by
   unfold program RegistrationNativePlatformServerMaterialFrontend.build

@@ -55,24 +55,24 @@ theorem finish_dh_total (state : agreement.AgreementState) :
 
 theorem begin_beacon_agreement_total (authenticated : registration.AuthenticatedResponse) :
     ∃ result, agreement.begin_beacon_agreement authenticated = ok result := by
-  by_cases hid : authenticated.pending.control.expected_server_binding.identity_key_id =
-    authenticated.pending.binding.server_pin.binding.identity_key_id
-  · by_cases hkey : absBytes authenticated.pending.control.expected_server_binding.identity_public_key =
-      absBytes authenticated.pending.binding.server_pin.binding.identity_public_key
+  by_cases hid : authenticated.control.expected_server_binding.identity_key_id =
+    authenticated.binding.server_pin.binding.identity_key_id
+  · by_cases hkey : absBytes authenticated.control.expected_server_binding.identity_public_key =
+      absBytes authenticated.binding.server_pin.binding.identity_public_key
     · simp [agreement.begin_beacon_agreement, registration.AuthenticatedResponse.into_parts,
-        pqxdh.BeaconInitSent.impl.expected_server_binding, session.RegistrationBinding.impl.server_pin,
+        pqxdh.BeaconInitSent.impl.expected_server_binding, session.CompletedRegistrationBinding.impl.server_pin,
         session.ServerAuthenticationPin.impl.binding, core.Array.Insts.CoreCmpPartialEqArray.ne,
         array_eq_abs, agreement.AgreementState.new, ratchet.RatchetChain.from_bytes,
         pqxdh.beacon_abort_init, hid, hkey]
     · simp [agreement.begin_beacon_agreement, registration.AuthenticatedResponse.into_parts,
-        pqxdh.BeaconInitSent.impl.expected_server_binding, session.RegistrationBinding.impl.server_pin,
+        pqxdh.BeaconInitSent.impl.expected_server_binding, session.CompletedRegistrationBinding.impl.server_pin,
         session.ServerAuthenticationPin.impl.binding, core.Array.Insts.CoreCmpPartialEqArray.ne,
         array_eq_abs, pqxdh.beacon_abort_init, hid, hkey]
-  · have hne : authenticated.pending.control.expected_server_binding.identity_key_id.val ≠
-        authenticated.pending.binding.server_pin.binding.identity_key_id.val :=
+  · have hne : authenticated.control.expected_server_binding.identity_key_id.val ≠
+        authenticated.binding.server_pin.binding.identity_key_id.val :=
       fun h => hid (UScalar.eq_of_val_eq h)
     simp [agreement.begin_beacon_agreement, registration.AuthenticatedResponse.into_parts,
-      pqxdh.BeaconInitSent.impl.expected_server_binding, session.RegistrationBinding.impl.server_pin,
+      pqxdh.BeaconInitSent.impl.expected_server_binding, session.CompletedRegistrationBinding.impl.server_pin,
       session.ServerAuthenticationPin.impl.binding, pqxdh.beacon_abort_init, hne]
 
 theorem root_kdf_resume_total (self : agreement.RootKdfPending)

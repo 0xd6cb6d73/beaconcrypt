@@ -20,9 +20,9 @@ open RegistrationBeaconRootInterpreter (sumCallbacks auxImpl sourceImpl)
 
 theorem prepare_sum (authenticated : registration.AuthenticatedResponse) :
     simulateQ (callbacks authenticated)
-      (PqxdhBeaconPhase2Preparation.prepare authenticated.pending.control () false true () []) =
+      (PqxdhBeaconPhase2Preparation.prepare (completedBinding := authenticated.binding) authenticated.control () false true () []) =
     simulateQ (sumCallbacks authenticated)
-      (PqxdhBeaconPhase2Preparation.prepare authenticated.pending.control () (.inl ()) (.inr ()) () []) := by
+      (PqxdhBeaconPhase2Preparation.prepare (completedBinding := authenticated.binding) authenticated.control () (.inl ()) (.inr ()) () []) := by
   simp only [PqxdhBeaconPhase2Preparation.prepare, simulateQ_bind,
     RegistrationBeaconRootInterpreter.collect_sum]
   congr 1
@@ -39,9 +39,9 @@ theorem prepare_source {m : Type → Type} [Monad m] [LawfulMonad m]
     (authenticated : registration.AuthenticatedResponse) :
     simulateQ (sourceImpl dh scalar backend visit)
       (simulateQ (callbacks authenticated)
-        (PqxdhBeaconPhase2Preparation.prepare authenticated.pending.control () false true () [])) =
+        (PqxdhBeaconPhase2Preparation.prepare (completedBinding := authenticated.binding) authenticated.control () false true () [])) =
     simulateQ (PqxdhPhase2GapDhSource.nativeImpl dh scalar (auxImpl backend authenticated) visit)
-      (PqxdhBeaconPhase2Preparation.prepare authenticated.pending.control () (.inl ()) (.inr ()) () []) := by
+      (PqxdhBeaconPhase2Preparation.prepare (completedBinding := authenticated.binding) authenticated.control () (.inl ()) (.inr ()) () []) := by
   rw [prepare_sum, ← QueryImpl.simulateQ_compose]
   have equal : sourceImpl dh scalar backend visit ∘ₛ sumCallbacks authenticated =
       PqxdhPhase2GapDhSource.nativeImpl dh scalar (auxImpl backend authenticated) visit := by
@@ -59,7 +59,7 @@ theorem after_source {m : Type → Type} [Monad m] [LawfulMonad m]
   cases result with
   | none => simp only [RegistrationBeaconRootPreparation.afterPrepared, simulateQ_pure]
   | some original =>
-      have requested : (⟨.Beacon original.candidate authenticated.pending.binding authenticated.packet.application⟩ : agreement.RootKdfPending).request =
+      have requested : (⟨.Beacon original.candidate authenticated.binding authenticated.packet.application⟩ : agreement.RootKdfPending).request =
           .ok ⟨original.candidate.root_key_input.bytes, pqxdh.PQXDH_INFO⟩ := by
         simp only [agreement.RootKdfPending.request, pqxdh.BeaconRegistrationCandidate.impl.root_key_input,
           pqxdh.RootKeyInput.as_bytes, bind_tc_ok]
@@ -71,10 +71,10 @@ theorem beacon_source {m : Type → Type} [Monad m] [LawfulMonad m]
     {joint : Primitives} (dh : DhInterface joint) (scalar : ScalarBytes)
     (backend : QueryImpl Spec m) (visit : Word32 → m Unit)
     (authenticated : registration.AuthenticatedResponse)
-    (coherent : authenticated.pending.control.expected_server_binding = authenticated.pending.binding.server_pin.binding) :
+    (coherent : authenticated.control.expected_server_binding = authenticated.binding.server_pin.binding) :
     simulateQ (sourceImpl dh scalar backend visit) (beacon authenticated) = (do
       let result ← (simulateQ (PqxdhPhase2GapDhSource.nativeImpl dh scalar (auxImpl backend authenticated) visit)
-        (PqxdhBeaconPhase2Preparation.prepare authenticated.pending.control () (.inl ()) (.inr ()) () []))
+        (PqxdhBeaconPhase2Preparation.prepare (completedBinding := authenticated.binding) authenticated.control () (.inl ()) (.inr ()) () []))
       simulateQ backend (RegistrationBeaconRootPreparation.afterPrepared authenticated result)) := by
   rw [RegistrationBeaconAgreementRoot.beacon_normalized authenticated coherent,
     RegistrationBeaconRootPreparation.normalized_prepared]

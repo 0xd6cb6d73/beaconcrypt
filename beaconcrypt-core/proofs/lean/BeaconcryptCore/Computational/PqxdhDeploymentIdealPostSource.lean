@@ -47,12 +47,12 @@ def mergeX (copies : Local) (m : Mid KemSK) : XState KemSK (IdealBk TableState) 
   ⟨merge copies (PqxdhRegistrationJointSchedule.source m.joint), m.backend, m.seeds,
     PqxdhDeploymentLater.Snap.empty, []⟩
 
-/-- An annotated source state with the shared native state and the owners of a native registration state, keeping the pools and the indices of every owner at a position the old state has. -/
+/-- An annotated source state with the shared native state, the owners and the retained Phase 1 bundles of a native registration state, keeping the pools and the indices of every owner at a position the old state has. -/
 def rejoin (old : PqxdhRegistrationJointSchedule.State KemSK) (new : PqxdhRegistrationSchedule.State KemSK) :
     PqxdhRegistrationJointSchedule.State KemSK :=
   ⟨old.pool, new.shared, new.owners.mapIdx fun position owner => match old.owners[position]? with
     | some entry => { entry with owner := owner }
-    | none => ⟨0, 0, owner⟩⟩
+    | none => ⟨0, 0, owner⟩, new.inits⟩
 
 /-- Erasing the annotations of a rejoined state gives the native registration state back. -/
 theorem source_rejoin (old : PqxdhRegistrationJointSchedule.State KemSK) (new : PqxdhRegistrationSchedule.State KemSK) :
@@ -915,6 +915,46 @@ theorem ownerImplCE_comm (hidden : Output → PqxdhRegistrationJointKemPostSkele
         rfl
       · exact (groupCE_comm copies setup codec hidden pending state.1 state.2).symm) work (s, mark)).symm
 
+/-- The hashed grouped native owner finish commutes with the override of the native state: the transcript hash reads and writes only the CTX cache, which the override leaves alone, and the grouped owner at the completed binding of every digest commutes (`ownerImplCE_comm`). -/
+theorem hashedOwnerCE_comm (hidden : Output → PqxdhRegistrationJointKemPostSkeleton.Hidden Response)
+    (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (retained : Option PqxdhEd25519EufCma.Phase1Candidate)
+    (raw : Pqxdh.Bytes) (owner : PqxdhRegistrationSchedule.Owner KemSK) (s : NativeState KemSK) (mark : Option Coord) :
+    (PqxdhDeploymentIdealSteps.hashedOwnerCE setup codec hidden challenge retained raw owner).run
+        (overrideShared copies s, mark) =
+      Prod.map id (Prod.map (overrideShared copies) id) <$>
+        (PqxdhDeploymentIdealSteps.hashedOwnerCE setup codec hidden challenge retained raw owner).run (s, mark) := by
+  have hashed : ∀ (bytes : Pqxdh.Bytes) (state : NativeState KemSK),
+      (PqxdhServerAuthNative.nativeHash (KemSK := KemSK) bytes).run (overrideShared copies state) =
+        (fun r => (r.1, overrideShared copies r.2)) <$> (PqxdhServerAuthNative.nativeHash bytes).run state := by
+    intro bytes state
+    simp only [StateT.run, PqxdhServerAuthNative.nativeHash, Functor.map_map]
+    rfl
+  unfold PqxdhDeploymentIdealSteps.hashedOwnerCE
+  cases owner.beacon.phase with
+  | initSent control prekey oneTime kem =>
+      dsimp only
+      rcases retained with _ | init
+      · simp only [StateT.run_pure, map_pure]
+        rfl
+      · rcases PqxdhServerAuthExperiment.responseOf codec raw with _ | response
+        · simp only [StateT.run_pure, map_pure]
+          rfl
+        · simp only [StateT.run_bind]
+          change (((fun r => (r.1, (r.2, mark))) <$> PqxdhDeploymentIdealSteps.liftS
+              ((PqxdhServerAuthNative.nativeHash (KemSK := KemSK) _).run (overrideShared copies s))) >>= _) =
+            Prod.map id (Prod.map (overrideShared copies) id) <$>
+              (((fun r => (r.1, (r.2, mark))) <$> PqxdhDeploymentIdealSteps.liftS
+                ((PqxdhServerAuthNative.nativeHash (KemSK := KemSK) _).run s)) >>= _)
+          rw [hashed]
+          simp only [PqxdhDeploymentIdealSteps.liftS, OracleComp.liftComp_map, Functor.map_map, bind_map_left, map_bind]
+          refine bind_congr fun digest => ?_
+          exact ownerImplCE_comm copies setup codec hidden challenge
+            (PqxdhDeploymentIdealSteps.groupedOwnerCE (Response := Response)
+              (PqxdhTranscriptAd.completedOf control digest.1) raw owner) digest.2 mark
+  | _ =>
+      simp only [StateT.run_pure, map_pure]
+      rfl
+
 /-- Owner k's challenge finish commutes with CE-3's merge when the addressed owner has no local copy. -/
 theorem finishChallenge_merge (hidden : Output → PqxdhRegistrationJointKemPostSkeleton.Hidden Response)
     (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (index : ℕ) (raw : Pqxdh.Bytes)
@@ -934,9 +974,11 @@ theorem finishChallenge_merge (hidden : Output → PqxdhRegistrationJointKemPost
   · simp only [map_pure]
     rfl
   · simp only [map_bind, map_pure]
-    have ran := ownerImplCE_comm copies setup codec hidden challenge
-      (PqxdhDeploymentIdealSteps.groupedOwnerCE (Response := Response) raw owner) native.shared mark
+    have inits : (merge copies native).native.inits = native.inits := by
+      rw [PqxdhDeploymentCompileRegistration.merge_native]
+    have ran := hashedOwnerCE_comm copies setup codec hidden challenge (native.inits index) raw owner native.shared mark
     simp only [StateT.run] at ran
+    rw [inits]
     erw [ran, bind_map_left]
     refine bind_congr fun result => ?_
     simp only [Prod.map, id_eq, PqxdhDeploymentCompileRegistration.merge_native, List.mapIdx_set, free,
@@ -949,6 +991,7 @@ end Finish
 section GenericBuild
 open RustM beaconcrypt_core
 variable {K M PM C : Type} {m : Type → Type} [Monad m] [LawfulMonad m]
+variable (associatedData : PqxdhTranscriptAd.AssociatedData)
 
 /-- Replace each present peer of a generic Server publication state by a function of its key ID. -/
 def mapPeersG (f : Std.U64 → RawCtxGenericRoleStorage.Peer K PM → RawCtxGenericRoleStorage.Peer K PM)
@@ -980,10 +1023,11 @@ theorem afterInitialization_mapPeers (f : Std.U64 → RawCtxGenericRoleStorage.P
     (calls : RawCtxChainOwner.Calls K m) (aux : QueryImpl PqxdhServerRegistrationPublication.AuxSpec m)
     (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Pqxdh.Bytes) (kernel : K) (metadata : PM)
     (state : PqxdhInitialGenericPublication.State K M PM C) (unused : f candidate.key_id = id) :
-    PqxdhInitialGenericPublication.afterInitialization calls aux candidate authenticated kernel metadata
-        (mapPeersG f state) =
+    PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) calls aux candidate authenticated
+        kernel metadata (mapPeersG f state) =
       (fun value => (value.1, mapPeersG f value.2)) <$>
-        PqxdhInitialGenericPublication.afterInitialization calls aux candidate authenticated kernel metadata state := by
+        PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) calls aux candidate authenticated
+          kernel metadata state := by
   unfold PqxdhInitialGenericPublication.afterInitialization
   simp only [map_bind]
   refine bind_congr fun sent => ?_
@@ -1001,8 +1045,10 @@ theorem candidate_mapPeers (f : Std.U64 → RawCtxGenericRoleStorage.Peer K PM �
     (calls : RawCtxChainOwner.Calls K m) (aux : QueryImpl PqxdhServerRegistrationPublication.AuxSpec m)
     (initial : RustM K) (candidate : pqxdh.ServerRegistrationCandidate) (data : Option Pqxdh.Bytes) (metadata : PM)
     (state : PqxdhInitialGenericPublication.State K M PM C) (unused : f candidate.key_id = id) :
-    PqxdhInitialGenericBuilder.candidate calls aux initial candidate data metadata (mapPeersG f state) =
-      mapBuiltG f <$> PqxdhInitialGenericBuilder.candidate calls aux initial candidate data metadata state := by
+    PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) calls aux initial candidate data metadata
+        (mapPeersG f state) =
+      mapBuiltG f <$> PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) calls aux initial candidate data
+        metadata state := by
   unfold PqxdhInitialGenericBuilder.candidate
   simp only [map_bind]
   refine bind_congr fun valid => ?_
@@ -1026,7 +1072,7 @@ theorem candidate_mapPeers (f : Std.U64 → RawCtxGenericRoleStorage.Peer K PM �
             · simp only [map_pure]
               rfl
             · split
-              · simp only [afterInitialization_mapPeers f calls aux candidate _ _ metadata state unused,
+              · simp only [afterInitialization_mapPeers associatedData f calls aux candidate _ _ metadata state unused,
                   Functor.map_map]
                 rfl
               · simp only [map_pure]
@@ -1046,8 +1092,10 @@ theorem genericBuild_mapPeers (f : Std.U64 → RawCtxGenericRoleStorage.Peer K P
     (initial : RustM K) (pending : pqxdh.PendingServerRegistration) (data : Option Pqxdh.Bytes) (metadata : PM)
     (state : PqxdhInitialGenericPublication.State K M PM C)
     (untouched : ∀ kid, state.server.peers kid = none → f kid = id) :
-    PqxdhServerAuthSendFactor.genericBuild calls aux initial pending data metadata (mapPeersG f state) =
-      mapBuiltG f <$> PqxdhServerAuthSendFactor.genericBuild calls aux initial pending data metadata state := by
+    PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData) calls aux initial pending data metadata
+        (mapPeersG f state) =
+      mapBuiltG f <$> PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData) calls aux initial pending data
+        metadata state := by
   unfold PqxdhServerAuthSendFactor.genericBuild PqxdhInitialGenericBuilder.continueRust
   have occupancy : ∀ kid, ((mapPeersG f state).server.peers kid).isSome = (state.server.peers kid).isSome := by
     intro kid
@@ -1075,7 +1123,8 @@ theorem genericBuild_mapPeers (f : Std.U64 → RawCtxGenericRoleStorage.Peer K P
                 by_contra occupied
                 rw [Option.isSome_iff_ne_none.mpr occupied] at available
                 simp at available
-              exact candidate_mapPeers f calls aux initial candidate data metadata state (by rw [same]; exact untouched value free)
+              exact candidate_mapPeers associatedData f calls aux initial candidate data metadata state
+                (by rw [same]; exact untouched value free)
             · simp only [map_pure]
               rfl
         | fail error => simp only [map_pure]; rfl
@@ -1093,14 +1142,16 @@ open PqxdhServerAuthNative (NativeState NativeGame)
 variable (copies : Local)
 
 /-- The replacement of a copied peer's kernel by its local copy, in the factored kernel representation. -/
-def knownCopy (kid : Std.U64) (peer : RawCtxGenericRoleStorage.Peer PqxdhServerAuthSendFactor.Kernel Unit) :
-    RawCtxGenericRoleStorage.Peer PqxdhServerAuthSendFactor.Kernel Unit :=
+def knownCopy (kid : Std.U64) (peer : RawCtxGenericRoleStorage.Peer PqxdhServerAuthSendFactor.Kernel
+      PqxdhTranscriptAd.AssociatedData) :
+    RawCtxGenericRoleStorage.Peer PqxdhServerAuthSendFactor.Kernel PqxdhTranscriptAd.AssociatedData :=
   match copies.peers kid with
   | some current => { peer with kernel := PqxdhServerAuthSendFactor.known current }
   | none => peer
 
 /-- Embedding the overridden Server state into the factored kernel representation gives `mapPeersG (knownCopy copies)` of the embedding. -/
-theorem embed_override (state : PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes)) :
+theorem embed_override
+    (state : PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes)) :
     PqxdhServerAuthSendFactor.embed (overrideServer copies state) =
       mapPeersG (knownCopy copies) (PqxdhServerAuthSendFactor.embed state) := by
   simp only [PqxdhServerAuthSendFactor.embed, overrideServer, mapPeersG]
@@ -1112,8 +1163,8 @@ theorem embed_override (state : PqxdhServerRegistrationPublication.State Unit Un
     rcases copies.peers kid <;> rfl
 
 /-- Resolving a factored state mapped by `knownCopy` gives the override of the resolved native Server state. -/
-theorem native_override (state : PqxdhInitialGenericPublication.State PqxdhServerAuthSendFactor.Kernel Unit Unit
-    (List Pqxdh.Bytes)) :
+theorem native_override (state : PqxdhInitialGenericPublication.State PqxdhServerAuthSendFactor.Kernel Unit
+    PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes)) :
     PqxdhInitialGenericPublication.native PqxdhServerAuthSendFactor.resolve (mapPeersG (knownCopy copies) state) =
       overrideServer copies (PqxdhInitialGenericPublication.native PqxdhServerAuthSendFactor.resolve state) := by
   simp only [PqxdhInitialGenericPublication.native, RawCtxGenericRoleStorage.nativeServer, mapPeersG, overrideServer]
@@ -1131,11 +1182,14 @@ theorem factored_override {m : Type → Type} [Monad m] [LawfulMonad m]
     (prim : QueryImpl RawCtxSourceSend.PrimitiveSpec m) (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (aux : QueryImpl PqxdhServerRegistrationPublication.AuxSpec m) (value : PqxdhServerAuthSendFactor.Factor)
     (pending : beaconcrypt_core.pqxdh.PendingServerRegistration) (data : Option Pqxdh.Bytes)
-    (state : PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes))
+    (ad : PqxdhTranscriptAd.AssociatedData)
+    (state : PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes))
     (installed : ∀ kid current, copies.peers kid = some current → state.server.peers kid ≠ none) :
-    PqxdhServerAuthLoggedSendFactor.factored receiveCall prim source aux value pending data () (overrideServer copies state) =
+    PqxdhServerAuthLoggedSendFactor.factored (associatedData := ad) receiveCall prim source aux value pending data ad
+        (overrideServer copies state) =
       mapBuilt copies <$>
-        PqxdhServerAuthLoggedSendFactor.factored receiveCall prim source aux value pending data () state := by
+        PqxdhServerAuthLoggedSendFactor.factored (associatedData := ad) receiveCall prim source aux value pending data ad
+          state := by
   unfold PqxdhServerAuthLoggedSendFactor.factored
   rw [embed_override, genericBuild_mapPeers]
   · simp only [Functor.map_map]
@@ -1175,22 +1229,38 @@ theorem buildHidden_comm {ι : Type} {baseSpec : OracleSpec ι} {Reader Response
   rcases s.2.pending session with _ | token
   · simp only [StateT.run_pure, map_pure]
     rfl
-  · have coins : ∀ {V : Type} (work : ProbComp V) (state : NativeState KemSK),
-        StateT.run (PqxdhServerAuthNative.nativeCoins work) state = (fun value => (value, state)) <$> work :=
-      fun _ _ => rfl
-    simp only [StateT.run_bind, coins, bind_map_left, map_bind]
-    have built := factored_override copies (fun entry _ _ => pure (entry, .None))
-      (PqxdhServerAuthLoggedSendFactor.loggedPrim setup codec checks) setup.source
-      (PqxdhServerAuthLoggedSendFactor.loggedAux setup codec checks) (PqxdhServerAuthCtxMaterial.factor value)
-      token.pending payload s.2.server installed
-    change (((PqxdhServerAuthLoggedSendFactor.factored (fun entry _ _ => pure (entry, .None))
-      (PqxdhServerAuthLoggedSendFactor.loggedPrim setup codec checks) setup.source
-      (PqxdhServerAuthLoggedSendFactor.loggedAux setup codec checks) (PqxdhServerAuthCtxMaterial.factor value)
-      token.pending payload () (overrideServer copies s.2.server)).run ([], s.2.ctx)) >>= _) = _
-    rw [built, StateT.run_map, bind_map_left]
-    refine bind_congr fun result => ?_
-    simp only [PqxdhDeploymentCompileRegistration.settle_override]
-    rfl
+  · have pre := PqxdhDeploymentCompileRegistration.prehash_override copies s.2.server token.pending payload
+    dsimp only
+    rw [pre]
+    cases PqxdhServerRegistrationPublication.prehash s.2.server token.pending payload with
+    | none =>
+        simp only [StateT.run_bind, StateT.run_pure]
+        rfl
+    | some candidate =>
+        have coins : ∀ {V : Type} (work : ProbComp V) (state : NativeState KemSK),
+            StateT.run (PqxdhServerAuthNative.nativeCoins work) state = (fun value => (value, state)) <$> work :=
+          fun _ _ => rfl
+        have hashRun : ∀ (bytes : Pqxdh.Bytes) (state : NativeState KemSK),
+            StateT.run (PqxdhServerAuthNative.nativeHash bytes) state =
+              (fun result => (result.1, (state.1, { state.2 with ctx := result.2 }))) <$>
+                (CtxRomAuth.ctxRandomOracle ((), bytes)).run state.2.ctx := fun _ _ => rfl
+        simp only [StateT.run_bind, hashRun, coins, get, bind_map_left, map_bind, pure_bind]
+        refine bind_congr fun hashed => ?_
+        have built := factored_override copies (fun entry _ _ => pure (entry, .None))
+          (PqxdhServerAuthLoggedSendFactor.loggedPrim setup codec checks) setup.source
+          (PqxdhServerAuthLoggedSendFactor.loggedAux setup codec checks) (PqxdhServerAuthCtxMaterial.factor value)
+          token.pending payload (PqxdhTranscriptAd.adOf hashed.1) s.2.server installed
+        change (((PqxdhServerAuthLoggedSendFactor.factored (associatedData := PqxdhTranscriptAd.adOf hashed.1)
+          (fun entry _ _ => pure (entry, .None))
+          (PqxdhServerAuthLoggedSendFactor.loggedPrim setup codec checks) setup.source
+          (PqxdhServerAuthLoggedSendFactor.loggedAux setup codec checks) (PqxdhServerAuthCtxMaterial.factor value)
+          token.pending payload (PqxdhTranscriptAd.adOf hashed.1) (overrideServer copies s.2.server)).run
+            ([], hashed.2)) >>= _) = _
+        rw [built, StateT.run_map, bind_map_left]
+        refine bind_congr fun result => ?_
+        have server : (overrideShared copies s).2.server = overrideServer copies s.2.server := rfl
+        simp only [server, PqxdhDeploymentCompileRegistration.settle_override]
+        rfl
 
 end FactoredBuild
 
@@ -1278,7 +1348,7 @@ theorem finishStep_challenge_merge (owner : ℕ) (raw : Pqxdh.Bytes) (y : XState
 
 /-- The key ID of a published peer is kept by the Server override. -/
 theorem publishedKey_override (response : Option PqxdhServerRegistrationPublication.Response)
-    (server : PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes)) :
+    (server : PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes)) :
     PqxdhDeploymentIdealSteps.publishedKey response (overrideServer copies server) =
       PqxdhDeploymentIdealSteps.publishedKey response server := by
   rcases response with _ | response
@@ -2056,3 +2126,8 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealPostSource.compile_simu
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealPostSource.compile_simulationMid
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealPostSource.hashedOwnerCE_comm' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealPostSource.hashedOwnerCE_comm

@@ -17,7 +17,7 @@ variable {ι KemSK : Type} {base : OracleSpec ι} {n : Nat}
 
 /-- Missing routes/peers retain the original raw-attempt increment; selected peers supply their actual stored AD array. -/
 noncomputable def serverRaw (setup : Setup base KemSK) (wire : Wire)
-    (erased : Array Std.U8 357#usize) (route : RawCtxServerRouting.SenderDecoder) (bytes : Pqxdh.Bytes) :
+    (erased : Array Std.U8 227#usize) (route : RawCtxServerRouting.SenderDecoder) (bytes : Pqxdh.Bytes) :
     StateT (PqxdhRecordLiftWorld.State n) ProbComp (Option RawCtxWholeOwner.Decrypted) := fun state =>
   match state.server with
   | none => pure (none, state)
@@ -47,7 +47,7 @@ theorem routing_raw (wire : Wire) (route : RawCtxServerRouting.SenderDecoder) (b
 /-- The source-selected Server raw callback preserves its entire original peer map, counters, output and primitive state. -/
 theorem server_native (setup : Setup base KemSK) (wire : Wire)
     (length : RegistrationNativeExtractedReceive.AeadLength setup.source.crypto)
-    (erased : Array Std.U8 357#usize) (route : RawCtxServerRouting.SenderDecoder) (bytes : Pqxdh.Bytes) :
+    (erased : Array Std.U8 227#usize) (route : RawCtxServerRouting.SenderDecoder) (bytes : Pqxdh.Bytes) :
     serverRaw (n := n) setup wire erased route bytes =
       PqxdhRecordLiftWorld.serverStep setup (ledgerCodec wire) route (.inr bytes) := by
   funext before
@@ -81,7 +81,7 @@ theorem server_native (setup : Setup base KemSK) (wire : Wire)
 
 /-- Absent and inactive owners retain their original distinct counter behavior; established owners provide the actual stored pin and AD. -/
 noncomputable def beaconRaw (setup : Setup base KemSK) (wire : Wire)
-    (erased : Array Std.U8 357#usize) (index : Nat) (bytes : Pqxdh.Bytes) :
+    (erased : Array Std.U8 227#usize) (index : Nat) (bytes : Pqxdh.Bytes) :
     StateT (PqxdhRecordLiftWorld.State n) ProbComp (Option RawCtxWholeOwner.Decrypted) := fun state =>
   match state.owners[index]? with
   | none => pure (none, state)
@@ -119,7 +119,7 @@ theorem beacon_established (decode : RawCtxReceive.FrameDecoder) (bytes : Pqxdh.
 /-- The source-selected Beacon raw callback retains its actual lifecycle shell, raw counter and complete primitive state. -/
 theorem beacon_native (setup : Setup base KemSK) (wire : Wire)
     (length : RegistrationNativeExtractedReceive.AeadLength setup.source.crypto)
-    (erased : Array Std.U8 357#usize) (index : Nat) (bytes : Pqxdh.Bytes) :
+    (erased : Array Std.U8 227#usize) (index : Nat) (bytes : Pqxdh.Bytes) :
     beaconRaw (n := n) setup wire erased index bytes =
       PqxdhRecordLiftWorld.beaconStep setup (ledgerCodec wire) index (.inr bytes) := by
   funext before
@@ -145,7 +145,7 @@ theorem beacon_native (setup : Setup base KemSK) (wire : Wire)
 
 /-- Only raw receive callbacks expand the extracted source loop; sends and all administrative services retain their original implementation. -/
 noncomputable def handler (setup : Setup base KemSK) (wire : Wire)
-    (erased : Array Std.U8 357#usize) (route : RawCtxServerRouting.SenderDecoder) :
+    (erased : Array Std.U8 227#usize) (route : RawCtxServerRouting.SenderDecoder) :
     QueryImpl (PqxdhRecordLiftInterface.WorldSpec n) (StateT (PqxdhRecordLiftWorld.State n) ProbComp)
   | .inr (.inr (.inl (.inr bytes))) => serverRaw setup wire erased route bytes
   | .inr (.inr (.inr (index, .inr bytes))) => beaconRaw setup wire erased index bytes
@@ -154,7 +154,7 @@ noncomputable def handler (setup : Setup base KemSK) (wire : Wire)
 /-- This equality is on complete callbacks, with one shared World through every adaptive continuation. -/
 theorem handler_native (setup : Setup base KemSK) (wire : Wire)
     (length : RegistrationNativeExtractedReceive.AeadLength setup.source.crypto)
-    (erased : Array Std.U8 357#usize) (route : RawCtxServerRouting.SenderDecoder) :
+    (erased : Array Std.U8 227#usize) (route : RawCtxServerRouting.SenderDecoder) :
     handler (n := n) setup wire erased route = PqxdhRecordLiftWorld.handler setup (ledgerCodec wire) route := by
   funext query
   rcases query with created | (effect | (server | ⟨index, beacon⟩))
@@ -169,7 +169,7 @@ theorem handler_native (setup : Setup base KemSK) (wire : Wire)
 
 /-- The original public transport refusal remains before the source-selected World callback. -/
 noncomputable def guarded (setup : Setup base KemSK) (wire : Wire)
-    (erased : Array Std.U8 357#usize) (route : RawCtxServerRouting.SenderDecoder) :
+    (erased : Array Std.U8 227#usize) (route : RawCtxServerRouting.SenderDecoder) :
     QueryImpl (PqxdhRecordLiftInterface.WorldSpec n) (StateT (PqxdhRecordLiftWorld.State n) ProbComp) :=
   fun query state => match CborRecordWorldClient.refusal query (CborRecordWorldCursor.worldShell state) with
   | some reply => pure (reply, state)
@@ -178,7 +178,7 @@ noncomputable def guarded (setup : Setup base KemSK) (wire : Wire)
 /-- The source-selected guarded World equals the exact original admitted World, including every transport refusal. -/
 theorem guarded_native (setup : Setup base KemSK) (wire : Wire)
     (length : RegistrationNativeExtractedReceive.AeadLength setup.source.crypto)
-    (erased : Array Std.U8 357#usize) (route : RawCtxServerRouting.SenderDecoder) :
+    (erased : Array Std.U8 227#usize) (route : RawCtxServerRouting.SenderDecoder) :
     guarded (n := n) setup wire erased route = CborRecordWorldSimulation.guarded setup (ledgerCodec wire) route := by
   funext query state
   unfold guarded CborRecordWorldSimulation.guarded

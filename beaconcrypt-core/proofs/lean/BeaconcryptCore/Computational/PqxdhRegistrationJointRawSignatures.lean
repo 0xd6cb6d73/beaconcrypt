@@ -3,7 +3,7 @@ import BeaconcryptCore.Computational.PqxdhRegistrationJointIdentityCosts
 import BeaconcryptCore.Computational.PqxdhJointPhase1Reports
 import BeaconcryptCore.Computational.PqxdhRegistrationAdmission
 
-/-! Original public raw registration fields at the actual native verification boundary. Public report extraction may inspect the supplied bytes, but never substitutes a recovered secret or assumes authentication. The existing attached-format/joint-use primitive contracts remain explicit. -/
+/-! Original public raw registration fields at the actual native verification boundary. Public report extraction may inspect the supplied bytes, but never substitutes a recovered secret or assumes authentication. The existing attached-format/joint-use primitive contracts remain explicit. This is the classical verification-prefix model; these statements alone do not establish current full Server-pin authentication or the dynamic transcript-hash admission prefix. -/
 open OracleComp OracleSpec CoreModels Aeneas
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhRegistrationJointRawSignatures
@@ -47,11 +47,9 @@ theorem verifyInput_source (setup : Setup baseSpec KemSK) (codec : Codec Reader 
       (verifyInput raw)).run consumed = pure (verified setup codec checks raw, consumed) := by
   simp only [verifyInput, simulateQ_bind, simulateQ_spec_query, PqxdhServerStaticDhSource.nativeImpl,
     serverAux, pure_bind, verified]
-  repeat' (first
-    | rfl
-    | (split <;> simp_all only [simulateQ_bind, simulateQ_spec_query, simulateQ_pure,
-        PqxdhServerStaticDhSource.nativeImpl, serverAux, StateT.run_pure,
-        pure_bind, Option.bind] <;> try dsimp))
+  repeat' (split <;> simp_all only [simulateQ_bind, simulateQ_spec_query, simulateQ_pure,
+    PqxdhServerStaticDhSource.nativeImpl, serverAux, StateT.run_pure,
+    pure_bind, Option.bind] <;> try dsimp)
 
 set_option backward.isDefEq.respectTransparency false in
 /-- Every successfully verified native input consists of the exact original raw field getters and the actual source attached-verification result. -/

@@ -17,12 +17,12 @@ variable {source : RegistrationNativeMldsa.Source}
 /-- A successful actual identity/prekey suffix returns exactly the pre-birth pool length and preserves the complete original transcript before its one creation observation. -/
 theorem suffix_fresh (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
-    (credentials : RegistrationNativeMldsa.Credential source) (pin : session.ServerAuthenticationPin)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
+    (pin : session.ServerAuthenticationPin)
     (before after : State n KemSK) (prepared : RegistrationNativeIdentityFrontend.Prepared source)
     (supported : (.ok (some prepared), after) ∈ support
       ((simulateQ (implementation (mlSource := source) setup checks representation created)
-        (RegistrationNativeIdentitySourceSuffix.exposed credentials pin)).run before)) :
+        (RegistrationNativeIdentitySourceSuffix.exposed (source := source) pin)).run before)) :
     ∃ value, prepared.identity = credential setup.joint before value ∧
       after.identities = (PqxdhDynamicIdentityPool.createdReply setup.joint before.identities value).2 := by
   simp only [RegistrationNativeIdentitySourceSuffix.exposed, simulateQ_bind, StateT.run_bind] at supported
@@ -41,7 +41,7 @@ theorem suffix_fresh (setup : Setup base KemSK) (checks : Checks)
 /-- Every successful complete preparation program has one fresh handle and its exact generated private source append. -/
 theorem program_fresh (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (before after : State n KemSK) (prepared : RegistrationNativeIdentityFrontend.Prepared source)
     (supported : (.ok (some prepared), after) ∈ support
@@ -60,7 +60,7 @@ theorem program_fresh (setup : Setup base KemSK) (checks : Checks)
   | ok reply => cases reply with
     | none => simp [RegistrationNativeIdentitySourceCommon.afterExposed, simulateQ_pure, StateT.run_pure] at continued
     | some base =>
-        obtain ⟨value, identityEq, poolEq⟩ := suffix_fresh setup checks representation created base.1 base.2
+        obtain ⟨value, identityEq, poolEq⟩ := suffix_fresh setup checks representation created base
           ⟨current, before.identities⟩ after prepared continued
         exact ⟨value, congrArg (fun selected => selected.handle) identityEq,
           congrArg (fun selected => selected.publicIdentity) identityEq, poolEq⟩
@@ -68,7 +68,7 @@ theorem program_fresh (setup : Setup base KemSK) (checks : Checks)
 /-- The full nested source preparation exposes the same fresh-handle and literal private append receipt, with no supplied success or ownership premise. -/
 theorem prepare_fresh (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (current afterOwners : RegistrationNativeIdentityFrontend.State source)
     (env afterEnv : RegistrationWorldAgreementCompiler.EnvState RegistrationServerRoleBackend.State)

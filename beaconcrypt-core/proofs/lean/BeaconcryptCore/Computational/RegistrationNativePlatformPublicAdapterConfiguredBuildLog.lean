@@ -34,7 +34,7 @@ variable {setup :PqxdhServerAuthExperiment.Setup base KemSK} {checks :PqxdhServe
 variable (configuration :RegistrationNativePlatformPublicAdapterConfiguration.Configuration
   (P:=P) (E:=E) (R:=R) (Error:=Error) (source:=source) setup checks)
 variable {Value :Type}
-variable (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
 local notation "Private"=>RegistrationNativePlatformPublicAdapterAuditLowModel.Private (n:=n) configuration created credential
 local notation "physical"=>RegistrationNativePlatformPublicAdapterAuditLowModel.physical (n:=n) configuration created credential
 local notation "Log"=>RegistrationNativePlatformPublicAdapterSourceEvents.Log n KemSK R P
@@ -275,7 +275,7 @@ theorem live_call (current :NativeP) (before :CorePrivate current) (handle :Nat)
   refine ⟨?_,?_⟩
   · conv_rhs=>rw [(Option.some_get valid).symm]
     exact (RegistrationNativePlatformExtractedSdkBuildDispatch.live_model configuration.view configuration.views setup.joint created credential current before.base
-      _ _ _ _ handle ((before.base.objects.tokens handle).get has) (Option.some_get has).symm
+      _ _ _ _ _ handle ((before.base.objects.tokens handle).get has) (Option.some_get has).symm
       ((RegistrationNativeRawAdapter.application (payload.map TranscriptAuthParts.absSlice)).get valid)).symm
   · exact congrArg (RegistrationNativePlatformPublicAdapterReply.map RegistrationNativePlatformPublicAdapterBuildRaw.response)
       ((dite_eq_right missing).trans (dite_eq_right declined))

@@ -4,6 +4,9 @@ import BeaconcryptCore.Computational.PqxdhDeploymentHiddenKernels
 import BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvBuild
 import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineGap
 import BeaconcryptCore.Computational.PqxdhPhase2InputBytes
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealKeymatch
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealEnvFacts
+import BeaconcryptCore.Computational.PqxdhDeploymentIdealBeacon
 
 /-!
 # CE-12 D-ct: the witness steps on the split game
@@ -22,6 +25,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 
 set_option autoImplicit false
+set_option warningAsError true
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctCommit
 open PqxdhServerAuthExperiment (Setup Codec Checks)
@@ -178,6 +182,7 @@ end Finish
 /-! ### The marked build's seal -/
 
 section Seal
+variable (associatedData : Std.Array Std.U8 151#usize)
 variable (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
 
 /-- The first 32 bytes of a seal's commitment input are the material key. -/
@@ -276,7 +281,7 @@ theorem afterInit_keyed {Metadata PeerMetadata Consumed : Type} (challenge : bea
     (result : (Option PqxdhServerRegistrationPublication.Response ×
       PqxdhInitialGenericPublication.State PqxdhServerAuthSendFactor.Kernel Metadata PeerMetadata Consumed) ×
         RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext))
-    (supported : result ∈ support ((PqxdhInitialGenericPublication.afterInitialization
+    (supported : result ∈ support ((PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData)
       (PqxdhServerAuthLoggedSendFactor.calls receive (PqxdhServerAuthLoggedSendFactor.loggedPrim setup codec checks)
         setup.source challenge) (PqxdhServerAuthLoggedSendFactor.loggedAux setup codec checks) candidate authenticated
       (PqxdhDeploymentHiddenKernels.serverInitial right) metadata generic).run state))
@@ -328,7 +333,7 @@ theorem candidate_keyed {Metadata PeerMetadata Consumed : Type}
     (result : RustM (Option PqxdhServerRegistrationPublication.Response ×
       PqxdhInitialGenericPublication.State PqxdhServerAuthSendFactor.Kernel Metadata PeerMetadata Consumed) ×
         RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext))
-    (supported : result ∈ support ((PqxdhInitialGenericBuilder.candidate
+    (supported : result ∈ support ((PqxdhInitialGenericBuilder.candidate (associatedData := associatedData)
       (PqxdhServerAuthLoggedSendFactor.calls receive (PqxdhServerAuthLoggedSendFactor.loggedPrim setup codec checks)
         setup.source challenge) (PqxdhServerAuthLoggedSendFactor.loggedAux setup codec checks)
       (RawCtxSelectedInitialConstructor.initial false right) candidate data metadata generic).run state))
@@ -379,7 +384,7 @@ theorem candidate_keyed {Metadata PeerMetadata Consumed : Type}
         simp only [binding, StateT.run_map, support_map] at supported
         obtain ⟨inner, innerRun, rfl⟩ := supported
         simp only [RustM.ok.injEq] at published
-        exact afterInit_keyed setup codec checks challenge right receive candidate _ metadata generic _ inner innerRun
+        exact afterInit_keyed (associatedData := associatedData) setup codec checks challenge right receive candidate _ metadata generic _ inner innerRun
           response (by rw [published])
     | fail error =>
         simp only [binding, StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
@@ -405,7 +410,7 @@ theorem genericBuild_keyed {Metadata PeerMetadata Consumed : Type}
     (result : RustM (Option PqxdhServerRegistrationPublication.Response ×
       PqxdhInitialGenericPublication.State PqxdhServerAuthSendFactor.Kernel Metadata PeerMetadata Consumed) ×
         RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext))
-    (supported : result ∈ support ((PqxdhServerAuthSendFactor.genericBuild
+    (supported : result ∈ support ((PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData)
       (PqxdhServerAuthLoggedSendFactor.calls receive (PqxdhServerAuthLoggedSendFactor.loggedPrim setup codec checks)
         setup.source challenge) (PqxdhServerAuthLoggedSendFactor.loggedAux setup codec checks)
       (RawCtxSelectedInitialConstructor.initial false right) pending data metadata generic).run state))
@@ -427,7 +432,7 @@ theorem genericBuild_keyed {Metadata PeerMetadata Consumed : Type}
         | ok value =>
             rw [prepared] at supported
             rcases value with candidate | error
-            · exact candidate_keyed setup codec checks challenge right receive candidate data metadata generic state result
+            · exact candidate_keyed (associatedData := associatedData) setup codec checks challenge right receive candidate data metadata generic state result
                 supported response after published
             · simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
               subst supported
@@ -463,7 +468,7 @@ theorem hiddenBuild_keyed (value : PqxdhServerAuthKeySchedule.Output) (token : P
     (result : RustM (Option PqxdhServerRegistrationPublication.Response × PqxdhServerAuthEntryFactor.ServerState) ×
       RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext))
     (supported : result ∈ support
-      (((PqxdhRegistrationJointKemEntryFactor.factoredHidden setup codec checks value).hiddenBuild token payload
+      (((PqxdhRegistrationJointKemEntryFactor.factoredHidden setup codec checks value).hiddenBuild token payload associatedData
         server).run state))
     (response : PqxdhServerRegistrationPublication.Response)
     (published : (PqxdhServerAuthExperiment.settle server result.1).1 = some response) :
@@ -471,19 +476,19 @@ theorem hiddenBuild_keyed (value : PqxdhServerAuthKeySchedule.Output) (token : P
       KeyedCommit frame result.2.2 (PqxdhRefinement.absBytes (RawCtxInterpretedReceive.decodeResponse
         (PqxdhServerAuthCtxMaterial.factor value).1).2.key.bytes) := by
   change result ∈ support ((Functor.map (Prod.map id (PqxdhInitialGenericPublication.native
-    PqxdhServerAuthSendFactor.resolve)) <$> PqxdhServerAuthSendFactor.genericBuild
+    PqxdhServerAuthSendFactor.resolve)) <$> PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData)
       (PqxdhServerAuthLoggedSendFactor.calls (fun entry _ _ => pure (entry, .None))
         (PqxdhServerAuthLoggedSendFactor.loggedPrim setup codec checks) setup.source
         (PqxdhServerAuthCtxMaterial.factor value).1) (PqxdhServerAuthLoggedSendFactor.loggedAux setup codec checks)
       (RawCtxSelectedInitialConstructor.initial false (PqxdhServerAuthCtxMaterial.factor value).2) token.pending
-      payload () (PqxdhServerAuthSendFactor.embed server)).run state) at supported
+      payload associatedData (PqxdhServerAuthSendFactor.embed server)).run state) at supported
   rw [StateT.run_map, support_map] at supported
   obtain ⟨inner, innerRun, rfl⟩ := supported
   rcases inner with ⟨⟨_ | built, after⟩ | error | _, final⟩
   · cases published
   · have same : some built = some response := published
     cases same
-    exact genericBuild_keyed setup codec checks _ _ _ token.pending payload () _ state _ innerRun response after rfl
+    exact genericBuild_keyed (associatedData := associatedData) setup codec checks _ _ _ token.pending payload associatedData _ state _ innerRun response after rfl
   · cases published
   · cases published
 
@@ -515,13 +520,22 @@ theorem buildHidden_keyed (value : PqxdhServerAuthKeySchedule.Output) (session :
   · simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at member
     subst member
     cases replied
-  · rename_i token _
-    rw [PqxdhDeploymentBackend.nativeCoins_bind, mem_support_bind_iff] at member
-    obtain ⟨built, builtMember, member⟩ := member
-    simp only [PqxdhServerAuthNative.nativeSet, StateT.run] at member
-    subst member
-    exact hiddenBuild_keyed setup codec checks value token payload shared.2.server ([], shared.2.ctx) built builtMember
-      response replied
+  · rename_i token found
+    split at member
+    · rw [PqxdhDeploymentBackend.nativeSet_run_bind] at member
+      simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at member
+      subst member
+      cases replied
+    · rename_i candidate passed
+      rw [StateT.run_bind, mem_support_bind_iff] at member
+      obtain ⟨hashed, _hashSupport, member⟩ := member
+      rw [PqxdhDeploymentBackend.nativeGet_bind, PqxdhDeploymentBackend.nativeCoins_bind,
+        mem_support_bind_iff] at member
+      obtain ⟨built, builtMember, member⟩ := member
+      simp only [PqxdhServerAuthNative.nativeSet, StateT.run] at member
+      subst member
+      exact hiddenBuild_keyed (associatedData := PqxdhTranscriptAd.adOf hashed.1) setup codec checks value token payload
+        hashed.2.2.server ([], hashed.2.2.ctx) built builtMember response replied
 
 /-- Under the approved Phase 2 and frame read-back contracts, the public Phase 2 reading of a Phase 2 writing whose application ciphertext is a frame writing is that frame. -/
 theorem written_frame (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec)

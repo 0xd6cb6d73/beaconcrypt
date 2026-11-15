@@ -3,6 +3,7 @@ import BeaconcryptCore.Refinement.AdapterServerConstructorRunnerSource
 import BeaconcryptCore.Refinement.AdapterServerConstructorRetained
 import BeaconcryptCore.Refinement.AdapterServerConstructorKeyFrame
 import BeaconcryptCore.Refinement.AdapterServerConstructorMaterial
+import BeaconcryptCore.Refinement.AdapterServerConstructorGeneration
 open CoreModels Aeneas OracleComp OracleSpec
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -37,15 +38,15 @@ local notation "edSample"   =>   PqxdhRecordLiftWorld.sampled (n:=n) (AdapterSer
 local notation "mlSample"   =>   PqxdhRecordLiftWorld.sampled (n:=n) (RegistrationNativeMldsa.generate mlSource)
 variable (ed : AdapterServerConstructorJoint.EdContract generator view setup.joint
   (PqxdhRecordLiftWorld.sampled (n:=n) (AdapterServerConstructorStartup.edCore ensureInit)))
-variable (ml : AdapterBeaconConstructorGeneration.MldsaContract generator view
+variable (ml : AdapterServerConstructorGeneration.MldsaContract generator view
   (PqxdhRecordLiftWorld.sampled (n:=n) (RegistrationNativeMldsa.generate mlSource)))
 include views objects ed ml
 
 variable (edGetter : ∀key,(crypto.edPublicBytes key).run=pure (.ok (view.edPublic key)))
 variable (mlGetter : ∀identity,(localOps.auth_MldsaIdentity_public_key identity).run=pure (.ok (view.mldsa identity).publicKey))
-variable (hashLeaf : ∀request,(children.executeHash request).run=RegistrationNativeServerPinRecompute.nativeHash request)
-include edGetter mlGetter hashLeaf
+include edGetter mlGetter
 
+omit children in
 theorem material (identityIndex : Nat) (identifier : U64) (rng : R)
     (receipt : Receipt n KemSK R mlSource)
     (ready : AdapterServerConstructorInitialized.Ready n KemSK R mlSource)
@@ -67,7 +68,7 @@ theorem material (identityIndex : Nat) (identifier : U64) (rng : R)
   have fields:=AdapterServerConstructorKeyFrame.keys mlSource ensureInit _ _ keyNative
   have modelFinish : (some ready.initial,after)∈support
       ((AdapterServerConstructorStartup.finish setup mlSource identityIndex identifier prepared).run before) := by
-    rw [←AdapterServerConstructorInitialized.native setup generator view views objects edSample ed mlSample ml identityIndex identifier prepared nextRng before edGetter mlGetter hashLeaf,support_map]
+    rw [←AdapterServerConstructorInitialized.native setup generator view views objects edSample ed mlSample ml identityIndex identifier prepared nextRng before edGetter mlGetter,support_map]
     exact ⟨(some ready,after),finishSupport,rfl⟩
   have kept:=AdapterServerConstructorRetained.returned setup view identityIndex identifier _ nextRng before after ready finishSupport
   have related:=AdapterServerConstructorMaterial.finish setup generator view views objects edSample ed mlSample ml

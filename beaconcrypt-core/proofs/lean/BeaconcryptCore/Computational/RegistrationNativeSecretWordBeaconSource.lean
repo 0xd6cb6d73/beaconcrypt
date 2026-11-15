@@ -103,7 +103,7 @@ theorem collector_source (setup : Setup base KemSK) {source : RegistrationNative
     funext query current
     exact query_source setup owner oneTime authenticated candidate query current
   change (simulateQ ((realize candidate).mapStateTBase (nativePrefix setup owner oneTime authenticated))
-    (PqxdhPhase2DhMetadata.prepare authenticated.pending.control () () () [])).run before = _
+    (PqxdhPhase2DhMetadata.prepare (completedBinding := authenticated.binding) authenticated.control () () () [])).run before = _
   rw [callbacks, RegistrationNativeSecretWordBeaconCompiler.collect_source, StateT.run_map]
   rfl
 

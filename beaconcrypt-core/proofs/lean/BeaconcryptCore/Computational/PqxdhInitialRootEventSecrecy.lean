@@ -12,6 +12,8 @@ set_option autoImplicit false
 set_option maxHeartbeats 400000
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhInitialRootEventSecrecy
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf
 open PqxdhKemIndCca PqxdhInitializerSecrecy PqxdhJointKdfGame PqxdhChallengeSecretRouting
 open PqxdhStatefulPhase1EufCma PqxdhEd25519EufCma PqxdhJointIdentity PqxdhPrivateRootSource
@@ -28,19 +30,19 @@ variable {setup : StatefulPhase1Setup baseSpec}
     (post : Post (baseSpec := baseSpec) program.Selection S (B + 1))
     (selected : RawCtxProtocolReveals.Owner S (B + 1)) (number : Std.U64) (ancestors disclosed : List RatchetChain)
 
-noncomputable def accepted (prepared : PqxdhPrivateRootSource.Prepared setup (driver env.toDriverEnvironment program).State)
+noncomputable def accepted (prepared : PqxdhPrivateRootSource.Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)
     (ready : Ready) : OracleComp (LocalPostSpec baseSpec) Bool :=
-  PqxdhInitialRootEventAccepted.target env attachedVerify primitives program post prepared ready selected number ancestors disclosed
+  PqxdhInitialRootEventAccepted.target (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program post prepared ready selected number ancestors disclosed
 
 noncomputable def actual : ProbComp Bool :=
-  PqxdhInitialRootEventExperiment.actual env baseImpl kem attachedVerify primitives program post
-    (accepted env attachedVerify primitives program post selected number ancestors disclosed)
+  PqxdhInitialRootEventExperiment.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post
+    (accepted (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program post selected number ancestors disclosed)
 
 /-- The authenticated-root endpoint uses precisely the concrete source-event protocol, not a second sampler chosen by an equality hypothesis. -/
 theorem protocol_source :
-    PqxdhInitialRootEventExperiment.protocol env kem attachedVerify primitives program post
-      (accepted env attachedVerify primitives program post selected number ancestors disclosed) =
-    PqxdhInitialRootEventAccepted.protocol env attachedVerify primitives program post kem selected number ancestors disclosed := by
+    PqxdhInitialRootEventExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post
+      (accepted (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program post selected number ancestors disclosed) =
+    PqxdhInitialRootEventAccepted.protocol (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program post kem selected number ancestors disclosed := by
   unfold PqxdhInitialRootEventExperiment.protocol PqxdhInitialRootEventAccepted.protocol accepted
   dsimp only
   congr 1
@@ -54,10 +56,10 @@ variable (c : PqxdhAuthenticatedRootBudgets.Certificate env baseImpl kem program
 
 noncomputable def loss (hmac : HmacSha512) (fallback : PqxdhDynamicIdentityRouting.DynamicForgery)
     (ordinaryFallback : PqxdhJointIdentity.Forgery) : ℝ :=
-  let p := PqxdhInitialRootEventAccepted.protocol env attachedVerify primitives program post kem selected number ancestors disclosed
+  let p := PqxdhInitialRootEventAccepted.protocol (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program post kem selected number ancestors disclosed
   (PqxdhJointIdentity.advantage primitives
     (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
-      (driver env.toDriverEnvironment program) fallback ordinaryFallback)).toReal +
+      (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program) fallback ordinaryFallback)).toReal +
   Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)}[x = true].toReal +
   (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
     (PqxdhChallengeSecretRouting.reduction env.source kem p).toINDCCA).toReal +
@@ -75,23 +77,23 @@ theorem bound
     (functional : FunctionalDecapsulation kem)
     (hmac : HmacSha512) (sourceCorrect : SourceRootCorrect env.source hmac)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : PqxdhJointIdentity.Forgery) :
-    (actual env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed).boolDistance
-      (PqxdhInitialPreparedSourceInput.uniformRoot env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed) ≤
-    loss env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed qPost hmac fallback ordinaryFallback := by
-  have rootBound := (PqxdhInitialRootEventBounds.reduction_bounds attachedVerify primitives env baseImpl kem program post
+    (actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed).boolDistance
+      (PqxdhInitialPreparedSourceInput.uniformRoot (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed) ≤
+    loss (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed qPost hmac fallback ordinaryFallback := by
+  have rootBound := (PqxdhInitialRootEventBounds.reduction_bounds (associatedData := associatedData) (completedBinding := completedBinding) attachedVerify primitives env baseImpl kem program post
     c qPost postTotal selected number ancestors disclosed).2
   have genericRootBound :
       (rootReduction env.source baseImpl kem
-        (PqxdhInitialRootEventExperiment.protocol env kem attachedVerify primitives program post
-          (accepted env attachedVerify primitives program post selected number ancestors disclosed))).IsQueryBoundP
+        (PqxdhInitialRootEventExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post
+          (accepted (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program post selected number ancestors disclosed))).IsQueryBoundP
         IsRoot (1 + (7 + qPost * 67)) := by
     rw [protocol_source]
     exact rootBound
-  have result := PqxdhInitialRootEventComposition.authenticated_root_bound env baseImpl kem attachedVerify primitives program post
-    (accepted env attachedVerify primitives program post selected number ancestors disclosed)
+  have result := PqxdhInitialRootEventComposition.authenticated_root_bound (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post
+    (accepted (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program post selected number ancestors disclosed)
     compatible adapter functional hmac sourceCorrect c.noSign c.noCreate fallback ordinaryFallback
     (1 + (7 + qPost * 67)) genericRootBound
-  have endpoint := PqxdhInitialRootEventAccepted.uniform_source env attachedVerify primitives program post baseImpl kem selected number ancestors disclosed
+  have endpoint := PqxdhInitialRootEventAccepted.uniform_source (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program post baseImpl kem selected number ancestors disclosed
   simpa only [actual, loss, protocol_source, ProbComp.boolDistance, endpoint] using result
 
 end BeaconcryptCore.Computational.PqxdhInitialRootEventSecrecy

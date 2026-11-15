@@ -86,14 +86,15 @@ private theorem state_get_apply {S : Type} {m : Type → Type} [Monad m] (before
     (get : StateT S m S) before = pure (before, before) := rfl
 
 private theorem complete_control {m : Type → Type} [Monad m] [LawfulMonad m]
+    (deriveAd : RegistrationNativePlatformCompletionSdk.AdHash n m)
     (pin : StateT (State n) m (RustM (core.option.Option session.ServerAuthenticationPin)))
     (reserve : StateT (State n) m Bool) (present : U64 → StateT (State n) m Bool)
     (finish : RegistrationNativePlatformCompletionSdk.Completion n m Encoded)
     (token : peer.ConsumedRegistration) (application : Slice U8) :
-    RegistrationNativePlatformCompletionSdk.complete pin reserve present finish token application = (do
+    RegistrationNativePlatformCompletionSdk.complete deriveAd pin reserve present finish token application = (do
       let control ← (fun before => pure (before.control, before) : StateT (State n) m pqxdh.ServerState)
       let current ← pin
-      RegistrationNativePlatformCompletionSdk.afterPin reserve present finish control token application current) := by
+      RegistrationNativePlatformCompletionSdk.afterPin deriveAd reserve present finish control token application current) := by
   funext before
   simp only [RegistrationNativePlatformCompletionSdk.complete, state_bind_apply, state_get_apply, pure_bind]
 
@@ -108,6 +109,8 @@ private theorem take_view (handle : Nat) (before : State n) :
   | some result => cases result <;> rfl
 
 section Controller
+variable (deriveAd : RegistrationNativePlatformCompletionSdk.AdHash n (StateT Platform (OracleComp RegistrationNativePlatformCtxBackend.Spec)))
+variable (ad_law : ∀ pending, Stable (deriveAd pending))
 variable (pin : M (State n) Platform (RustM (core.option.Option session.ServerAuthenticationPin)))
 variable (reserve : M (State n) Platform Bool) (present : U64 → M (State n) Platform Bool)
 variable (finish : RegistrationNativePlatformCompletionSdk.Completion n (StateT Platform (OracleComp RegistrationNativePlatformCtxBackend.Spec)) Encoded)
@@ -121,10 +124,10 @@ theorem fromInitial_stable (control : pqxdh.ServerState) (pending : registration
     Stable (RegistrationNativePlatformCompletionSdk.fromInitial finish control pending) :=
   bind_stable _ _ (finish_law control pending) (fun result => commit_stable result)
 
-include reserve_law finish_law in
+include ad_law reserve_law finish_law in
 /-- Reservation and every completion-lookup failure retain their actual poststate. -/
 theorem afterOccupancy_stable (control : pqxdh.ServerState) (lookup : peer.CompletionLookup) (occupied : Bool) :
-    Stable (RegistrationNativePlatformCompletionSdk.afterOccupancy reserve finish control lookup occupied) := by
+    Stable (RegistrationNativePlatformCompletionSdk.afterOccupancy deriveAd reserve finish control lookup occupied) := by
   unfold RegistrationNativePlatformCompletionSdk.afterOccupancy
   cases lookup.resume occupied with
   | fail error => exact pure_stable _
@@ -132,17 +135,24 @@ theorem afterOccupancy_stable (control : pqxdh.ServerState) (lookup : peer.Compl
   | ok result => cases result with
     | Err previous => exact pure_stable _
     | Ok pending =>
-      apply bind_stable _ _ reserve_law
-      intro admitted
-      cases admitted
-      · exact pure_stable _
-      · exact fromInitial_stable finish finish_law control pending
+      apply bind_stable _ _ (ad_law pending)
+      intro hashed
+      cases hashed with
+      | fail error | div => exact pure_stable _
+      | ok answer => cases answer with
+        | Err previous => exact pure_stable _
+        | Ok initial =>
+          apply bind_stable _ _ reserve_law
+          intro admitted
+          cases admitted
+          · exact pure_stable _
+          · exact fromInitial_stable finish finish_law control initial
 
-include reserve_law present_law finish_law in
+include ad_law reserve_law present_law finish_law in
 /-- Actual pin lookup, preflight and occupancy use no earlier receipt payloads. -/
 theorem afterPin_stable (control : pqxdh.ServerState) (token : peer.ConsumedRegistration) (application : Slice U8)
     (current : RustM (core.option.Option session.ServerAuthenticationPin)) :
-    Stable (RegistrationNativePlatformCompletionSdk.afterPin reserve present finish control token application current) := by
+    Stable (RegistrationNativePlatformCompletionSdk.afterPin deriveAd reserve present finish control token application current) := by
   unfold RegistrationNativePlatformCompletionSdk.afterPin
   cases current with
   | fail error => exact pure_stable _
@@ -166,24 +176,24 @@ theorem afterPin_stable (control : pqxdh.ServerState) (token : peer.ConsumedRegi
             split
             · apply bind_stable _ _ (present_law keyId)
               intro occupied
-              exact afterOccupancy_stable reserve finish reserve_law finish_law control lookup occupied
+              exact afterOccupancy_stable (deriveAd := deriveAd) (ad_law := ad_law) reserve finish reserve_law finish_law control lookup occupied
             · exact pure_stable _
 
-include pin_law reserve_law present_law finish_law in
+include ad_law pin_law reserve_law present_law finish_law in
 /-- The complete actual finish gate retains the same projected SDK and external state. -/
 theorem complete_stable (token : peer.ConsumedRegistration) (application : Slice U8) :
-    Stable (RegistrationNativePlatformCompletionSdk.complete pin reserve present finish token application) := by
+    Stable (RegistrationNativePlatformCompletionSdk.complete deriveAd pin reserve present finish token application) := by
   rw [complete_control]
   apply bind_stable _ _ control_stable
   intro control
   apply bind_stable _ _ pin_law
   intro current
-  exact afterPin_stable reserve present finish reserve_law present_law finish_law control token application current
+  exact afterPin_stable (deriveAd := deriveAd) (ad_law := ad_law) reserve present finish reserve_law present_law finish_law control token application current
 
-include pin_law reserve_law present_law finish_law in
+include ad_law pin_law reserve_law present_law finish_law in
 /-- Taking the actual linear token precedes every later branch, including failed completion. -/
 theorem build_stable (handle : Nat) (application : Option (Slice U8)) :
-    Stable (RegistrationNativePlatformCompletionSdk.build pin reserve present finish handle application) := by
+    Stable (RegistrationNativePlatformCompletionSdk.build deriveAd pin reserve present finish handle application) := by
   rintro ⟨before, previous⟩
   have moved := take_view handle before
   cases taken : RegistrationServerSdkSource.take handle before with
@@ -200,7 +210,7 @@ theorem build_stable (handle : Nat) (application : Option (Slice U8)) :
           view, taken, moved, state_pure_apply, map_pure, Prod.map_def, id_eq]
         rfl
       | some application =>
-        have same := complete_stable pin reserve present finish pin_law reserve_law present_law finish_law token application (current, previous)
+        have same := complete_stable (deriveAd := deriveAd) (ad_law := ad_law) pin reserve present finish pin_law reserve_law present_law finish_law token application (current, previous)
         simpa only [pack, RegistrationNativePlatformCompletionSdk.build, StateT.run,
           view, taken, moved] using same
 end Controller

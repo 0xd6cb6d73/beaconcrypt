@@ -252,6 +252,51 @@ class ManifestTests(unittest.TestCase):
     def test_manifest_is_consistent(self):
         CHECKER.validate_targets()
 
+    def test_owner_approved_limit_exceptions(self):
+        # Owner decisions of 2026-11-12 and 2026-11-13: only A1, s2b-C1 and s2b-C3 get
+        # 4000 s, and only A1 and s2b-C1 a 14 GiB address space; every other target
+        # keeps the group limits.
+        group = (1800, 10485760)
+        for name in ("A1", "s2b-C1"):
+            self.assertEqual(
+                CHECKER.target_limits(target(name), *group), (4000, 14680064)
+            )
+        self.assertEqual(
+            CHECKER.target_limits(target("s2b-C3"), *group), (4000, 10485760)
+        )
+        for each in CHECKER.TARGETS:
+            if each.name not in ("A1", "s2b-C1", "s2b-C3"):
+                self.assertEqual(CHECKER.target_limits(each, *group), group, each.name)
+        # A larger group limit still applies, and no cap is added to an uncapped run.
+        self.assertEqual(CHECKER.target_limits(target("A1"), 7200, 0), (7200, 0))
+        self.assertEqual(CHECKER.target_limits(target("s2b-C1"), 7200, 0), (7200, 0))
+        # Only the manifest entry itself, never a changed target with the same name.
+        changed = dataclasses.replace(target("A1"), bound=2)
+        self.assertEqual(CHECKER.target_limits(changed, *group), group)
+
+    def test_limit_exceptions_are_reviewed(self):
+        original = dict(CHECKER.LIMIT_EXCEPTIONS)
+        try:
+            for name, limits in (
+                ("R3", (4000, None)),
+                ("C-NOCHECK", (4000, None)),
+                ("missing", (4000, None)),
+                ("A1", (4001, 14680064)),
+                ("A1", (4000, 14680065)),
+                ("s2b-C1", (4000, 14680065)),
+                ("s2b-C3", (4001, None)),
+            ):
+                with self.subTest(name=name, limits=limits):
+                    CHECKER.LIMIT_EXCEPTIONS.clear()
+                    CHECKER.LIMIT_EXCEPTIONS.update(original)
+                    CHECKER.LIMIT_EXCEPTIONS[name] = limits
+                    with self.assertRaises(ValueError):
+                        CHECKER.validate_targets()
+        finally:
+            CHECKER.LIMIT_EXCEPTIONS.clear()
+            CHECKER.LIMIT_EXCEPTIONS.update(original)
+        CHECKER.validate_targets()
+
     def test_classes_and_bounds(self):
         counts = {scenario: {} for scenario in CHECKER.SCENARIOS}
         for each in CHECKER.TARGETS:
@@ -758,6 +803,26 @@ class ProcessTests(unittest.TestCase):
                 self.assertIn(f"({logs[0]})", str(caught.exception))
                 self.assertIn(f"logs kept in {logs[0].parent}", errors.getvalue())
                 self.assertTrue(logs[0].read_text())
+
+    def test_run_applies_the_limit_exception(self):
+        each = target("A1")
+        calls = []
+        original = CHECKER.check_target
+
+        def record(proverif, target, logdir, timeout, address_space_kib):
+            calls.append((target.name, timeout, address_space_kib))
+            return 1.0, 1
+
+        CHECKER.check_target = record
+        try:
+            with contextlib.redirect_stdout(io.StringIO()) as output:
+                CHECKER.run(
+                    "proverif", (each, target("A2")), Path("."), 1800, 10485760, None
+                )
+        finally:
+            CHECKER.check_target = original
+        self.assertEqual(calls, [("A1", 4000, 14680064), ("A2", 1800, 10485760)])
+        self.assertIn("owner-approved limits 4000 s, 14680064 KiB", output.getvalue())
 
     def test_successful_run_removes_its_temporary_logs(self):
         each = target("R3")

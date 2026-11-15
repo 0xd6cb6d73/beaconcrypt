@@ -3,7 +3,7 @@
 """Extract exactly the three original ratchet HKDF wrappers without Rust edits.
 
 The canonical and both role-only profiles must produce identical source bodies
-and external signatures. The two source Core getter method names are rebound
+and external signatures. The four phase-specific source Core getter method names are rebound
 to their existing extracted `.impl` methods, avoiding the pure field projections
 with the same Rust names. No control-flow or primitive implementation is changed.
 """
@@ -50,6 +50,14 @@ variable [BeaconcryptCore.Refinement.AdapterRatchetKdfPrimitive.Operations]
 """
 INTERFACES = [
     (
+        "beaconcrypt_core.ratchet.InitialRatchetKdfRequest.input",
+        "beaconcrypt_core.ratchet.InitialRatchetKdfRequest.impl.input",
+    ),
+    (
+        "beaconcrypt_core.ratchet.InitialRatchetKdfRequest.info",
+        "beaconcrypt_core.ratchet.InitialRatchetKdfRequest.impl.info",
+    ),
+    (
         "beaconcrypt_core.ratchet.SymmetricRatchetKdfRequest.input",
         "beaconcrypt_core.ratchet.SymmetricRatchetKdfRequest.impl.input",
     ),
@@ -70,7 +78,7 @@ PROOF_ARGUMENTS = [
 ]
 RAW_SHA256 = {
     "Types.lean": "2d4994bc3fec987fd7eeb689793a7316c64e3e11240672572a346aa3e3000a50",
-    "Funs.lean": "06bcad89719dc400b69bf81fcbc50e00348db575b99f118130c7590e9a5bd36b",
+    "Funs.lean": "3739372b895cf0acf468314367862dff8d7169c066733162d0fcf2d20baba2e3",
     "TypesExternal_Template.lean": "8523567a9ec3d2416673fd29f4aa75fe72104a375dba090d9d0746e2e9ca447e",
     "FunsExternal_Template.lean": "b73667671f9b9f286555ca76596811457bd785d3fcfcde5cf43f8b34a5b38a2a",
 }
@@ -88,8 +96,11 @@ PLATFORM_SIGNATURES = {
     "CryptoOperations.extract": "Option (Slice U8) -> Slice U8 -> RustM (Result Prk Error); the existing public-adapter operation is reused unchanged",
     "AdapterRatchetKdfPrimitive.expandInto": "Slice U8 -> Option (Slice U8) -> Prk -> RustM (Result Unit Error * Slice U8); failure, divergence and Result.Err remain representable",
     "AdapterRatchetKdfPrimitive.errorDebug": "core.fmt.Debug Error; no formatter execution-totality assumption",
+    "InitialRatchetKdfRequest.input": "original initial-only Core method rebound to existing impl.input: InitialRequest -> RustM (Array U8 32)",
+    "InitialRatchetKdfRequest.info": "original initial-only Core method rebound to existing impl.info: InitialRequest -> RustM (Array U8 45)",
+    "symmetric_ratchet_hkdf.input_info": "private helper borrows input32 and actual info Slice; no output-size-to-label branch",
     "SymmetricRatchetKdfRequest.input": "original Core method rebound to existing impl.input: Request -> RustM (Array U8 32)",
-    "SymmetricRatchetKdfRequest.info": "original Core method rebound to existing impl.info: Request -> RustM (Array U8 41)",
+    "SymmetricRatchetKdfRequest.info": "original Core method rebound to existing impl.info: Request -> RustM (Array U8 48)",
     "RatchetKdfResponse.from_bytes": "existing extracted Core constructor: Array U8 76 -> RustM Response",
     "Zeroizing": "existing payload wrapper; new/deref retain the payload; no drop or physical-erasure claim",
     "Zeroizing.deref_mut": "Zeroizing T -> RustM (T * (T -> Zeroizing T)); pure write-back wraps the actual replacement",

@@ -43,7 +43,7 @@ def world (work : StateT (PqxdhRecordLiftWorld.State n) ProbComp Value) : M n Ke
 
 noncomputable def beacon (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeIdentityFrontend.M n KemSK RegistrationServerRoleBackend.State mlSource Value) :
     M n KemSK mlSource Value := fun before => do
   let result ← simulateQ dynamicLift
@@ -92,7 +92,7 @@ noncomputable def record (setup : Setup base KemSK) (wire : Wire) (route : RawCt
 noncomputable def handler (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource) :
     QueryImpl RegistrationNativeRawAdapter.TypedSpec (M n KemSK mlSource)
   | .inl coin => world (PqxdhRecordLiftWorld.effects (.inl coin))
   | .inr (.create edPin mlPin keyId) => beacon setup checks representation created
@@ -117,7 +117,7 @@ noncomputable def handler (setup : Setup base KemSK) (checks : Checks) (wire : W
 noncomputable def run (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value) (before : State n KemSK mlSource) :=
   (fun result => (result.1.1, (result.1.2, result.2))) <$>

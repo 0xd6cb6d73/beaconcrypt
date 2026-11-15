@@ -13,7 +13,7 @@ namespace BeaconcryptCore.Computational.RegistrationNativePlatformBuildIssuance
 open BeaconcryptCore.Refinement
 open RegistrationServerFrontendCompiler (State)
 open RegistrationServerRootCompiler (Local)
-open RegistrationNativePlatformCompletionSdk (Completion)
+open RegistrationNativePlatformCompletionSdk (AdHash Completion)
 variable {n : Nat} {Platform Encoded Value : Type}
 
 abbrev history (before : State n) := before.world.world.2
@@ -96,6 +96,7 @@ private theorem fromInitial_reached
   exact ⟨reply, completed, called, historyEq, cacheEq⟩
 
 structure Reached
+    (deriveAd : AdHash n (StateT Platform ProbComp))
     (pin : StateT (State n) (StateT Platform ProbComp) (RustM (Option session.ServerAuthenticationPin)))
     (reserve : StateT (State n) (StateT Platform ProbComp) Bool)
     (present : U64 → StateT (State n) (StateT Platform ProbComp) Bool)
@@ -113,6 +114,9 @@ structure Reached
   occupied : Bool
   located : State n
   lookupPlatform : Platform
+  pendingAd : registration.ServerAdHash
+  hashed : State n
+  hashPlatform : Platform
   initial : registration.ServerInitialKdf
   reserved : State n
   reservePlatform : Platform
@@ -125,25 +129,27 @@ structure Reached
   keyRequested : lookup.request = .ok keyId
   preflight : RegistrationServerSdkSource.preflight plaintext keyId = true
   occupancyCalled : ((occupied, located), lookupPlatform) ∈ support (((present keyId).run pinnedState).run pinPlatform)
-  occupancyResumed : lookup.resume occupied = .ok (.Ok initial)
-  reserveCalled : ((true, reserved), reservePlatform) ∈ support ((reserve.run located).run lookupPlatform)
+  occupancyResumed : lookup.resume occupied = .ok (.Ok pendingAd)
+  adHashCalled : ((.ok (.Ok initial), hashed), hashPlatform) ∈ support (((deriveAd pendingAd).run located).run lookupPlatform)
+  reserveCalled : ((true, reserved), reservePlatform) ∈ support ((reserve.run hashed).run hashPlatform)
   finishCalled : ((reply, completed), next) ∈ support (((finish current.control initial).run reserved.world).run reservePlatform)
   historyBefore : reserved.world.world.2 = history before
   historyAfter : completed.world.2 = history result.2
   cacheAfter : completed.world.1.primitive.2 = cache result.2
 
 private theorem reached
+    (deriveAd : AdHash n (StateT Platform ProbComp))
     (pin : StateT (State n) (StateT Platform ProbComp) (RustM (Option session.ServerAuthenticationPin)))
     (reserve : StateT (State n) (StateT Platform ProbComp) Bool)
     (present : U64 → StateT (State n) (StateT Platform ProbComp) Bool)
     (finish : Completion n (StateT Platform ProbComp) Encoded)
-    (pinQuiet : Quiet pin) (reserveQuiet : Quiet reserve) (presentQuiet : ∀ keyId, Quiet (present keyId))
+    (adQuiet : ∀ pending, Quiet (deriveAd pending)) (pinQuiet : Quiet pin) (reserveQuiet : Quiet reserve) (presentQuiet : ∀ keyId, Quiet (present keyId))
     (handle : Nat) (application : Option (Slice U8)) (before : State n) (previous : Platform)
     (result : RustM (Option (U64 × Encoded)) × State n) (next : Platform)
     (supported : (result, next) ∈ support
-      (((RegistrationNativePlatformCompletionSdk.build pin reserve present finish handle application).run before).run previous))
+      (((RegistrationNativePlatformCompletionSdk.build deriveAd pin reserve present finish handle application).run before).run previous))
     (changed : history result.2 ≠ history before) :
-    Nonempty (Reached pin reserve present finish handle application before previous result next) := by
+    Nonempty (Reached deriveAd pin reserve present finish handle application before previous result next) := by
   have retained := take_history handle before
   simp only [RegistrationNativePlatformCompletionSdk.build, StateT.run] at supported
   cases taken : RegistrationServerSdkSource.take handle before with
@@ -156,7 +162,7 @@ private theorem reached
           | none => exact False.elim (early _ current previous result next (history before) retained changed supported)
           | some plaintext =>
               change (result, next) ∈ support
-                (((RegistrationNativePlatformCompletionSdk.complete pin reserve present finish token plaintext).run current).run previous) at supported
+                (((RegistrationNativePlatformCompletionSdk.complete deriveAd pin reserve present finish token plaintext).run current).run previous) at supported
               simp only [RegistrationNativePlatformCompletionSdk.complete, StateT.run_bind, StateT.run_get, pure_bind] at supported
               rw [mem_support_bind_iff] at supported
               obtain ⟨⟨⟨pinReply, pinnedState⟩, pinPlatform⟩, pinCalled, continued⟩ := supported
@@ -201,21 +207,31 @@ private theorem reached
                                   | Err prior =>
                                       rw [resumed] at continued
                                       exact False.elim (early _ located lookupPlatform result next _ locatedSame changed continued)
-                                  | Ok initial =>
+                                  | Ok pendingAd =>
                                       rw [resumed] at continued
                                       dsimp only at continued
                                       simp only [StateT.run_bind, mem_support_bind_iff] at continued
-                                      obtain ⟨⟨⟨admitted, reserved⟩, reservePlatform⟩, reserveCalled, continued⟩ := continued
-                                      have reservedSame := (reserveQuiet located lookupPlatform (admitted, reserved) reservePlatform reserveCalled).trans locatedSame
-                                      cases admitted with
-                                      | false => exact False.elim (early _ reserved reservePlatform result next _ reservedSame changed continued)
-                                      | true =>
-                                          obtain ⟨reply, completed, finishCalled, historyEq, cacheEq⟩ :=
-                                            fromInitial_reached finish current.control initial reserved reservePlatform result next continued
-                                          exact ⟨⟨token, current, plaintext, pinned, pinnedState, pinPlatform, lookup, keyId,
-                                            occupied, located, lookupPlatform, initial, reserved, reservePlatform, reply, completed,
-                                            taken, rfl, pinCalled, started, requested, preflight, occupancyCalled, resumed,
-                                            reserveCalled, finishCalled, reservedSame, historyEq.symm, cacheEq.symm⟩⟩
+                                      obtain ⟨⟨⟨adReply, hashed⟩, hashPlatform⟩, adHashCalled, continued⟩ := continued
+                                      have hashedSame := (adQuiet pendingAd located lookupPlatform (adReply, hashed) hashPlatform adHashCalled).trans locatedSame
+                                      cases adReply with
+                                      | fail error | div =>
+                                          exact False.elim (early _ hashed hashPlatform result next _ hashedSame changed continued)
+                                      | ok answer => cases answer with
+                                        | Err prior =>
+                                            exact False.elim (early _ hashed hashPlatform result next _ hashedSame changed continued)
+                                        | Ok initial =>
+                                            simp only [StateT.run_bind, mem_support_bind_iff] at continued
+                                            obtain ⟨⟨⟨admitted, reserved⟩, reservePlatform⟩, reserveCalled, continued⟩ := continued
+                                            have reservedSame := (reserveQuiet hashed hashPlatform (admitted, reserved) reservePlatform reserveCalled).trans hashedSame
+                                            cases admitted with
+                                            | false => exact False.elim (early _ reserved reservePlatform result next _ reservedSame changed continued)
+                                            | true =>
+                                                obtain ⟨reply, completed, finishCalled, historyEq, cacheEq⟩ :=
+                                                  fromInitial_reached finish current.control initial reserved reservePlatform result next continued
+                                                exact ⟨⟨token, current, plaintext, pinned, pinnedState, pinPlatform, lookup, keyId,
+                                                  occupied, located, lookupPlatform, pendingAd, hashed, hashPlatform, initial, reserved, reservePlatform, reply, completed,
+                                                  taken, rfl, pinCalled, started, requested, preflight, occupancyCalled, resumed,
+                                                  adHashCalled, reserveCalled, finishCalled, reservedSame, historyEq.symm, cacheEq.symm⟩⟩
                               next rejected => exact False.elim (early _ pinnedState pinPlatform result next _ pinnedSame changed continued)
 
 private theorem pin_quiet (coins : QueryImpl unifSpec (StateT Platform ProbComp)) :
@@ -246,6 +262,28 @@ private theorem capability_quiet (coins : QueryImpl unifSpec (StateT Platform Pr
   have same := congrArg (fun value => value.2.world.2) equal
   exact same.symm
 
+private theorem adHash_quiet (coins : QueryImpl unifSpec (StateT Platform ProbComp))
+    (pending : registration.ServerAdHash) :
+    Quiet (RegistrationNativePlatformCompletionSdk.nativeAdHash (n := n) coins pending) := by
+  intro before previous result next supported
+  simp only [RegistrationNativePlatformCompletionSdk.nativeAdHash, RegistrationNativePlatformServerSdk.adHash,
+    RegistrationNativePlatformServerSdk.world, StateT.run, state_map_apply, support_map] at supported
+  obtain ⟨⟨inner, platform⟩, called, equal⟩ := supported
+  have same := congrArg (fun value => history value.1.2) equal
+  rw [← same]
+  apply RegistrationServerAdHash.state_preserves _ (fun current : Local n => current.world.2) ?_
+    pending before.world inner.2 previous platform inner.1 called
+  intro request current previous reply after next reached
+  simp only [StateT.run_bind, mem_support_bind_iff] at reached
+  obtain ⟨middle, queried, returned⟩ := reached
+  have retained := capability_quiet coins (.hash (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request))
+    current previous middle.1 middle.2 queried
+  simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff,
+    Prod.mk.injEq] at returned
+  have stateEq := returned.1.2
+  cases stateEq
+  exact retained
+
 private theorem present_quiet (coins : QueryImpl unifSpec (StateT Platform ProbComp)) (keyId : U64) :
     Quiet (RegistrationNativePlatformCompletionSdk.nativePresent (n := n) coins keyId) := by
   intro before previous result next supported
@@ -275,7 +313,7 @@ theorem source (coins : QueryImpl unifSpec (StateT Platform ProbComp))
       (((RegistrationNativePlatformSourceSeal.build coins setup codec view failure allocation erased reservePeer sign helper writer
         handle application).run before).run previous))
     (changed : history result.2 ≠ history before) :
-    ∃ cut : Reached (RegistrationNativePlatformSourceBuild.pin coins) (StateT.lift reservePeer)
+    ∃ cut : Reached (RegistrationNativePlatformCompletionSdk.nativeAdHash coins) (RegistrationNativePlatformSourceBuild.pin coins) (StateT.lift reservePeer)
       (RegistrationNativePlatformCompletionSdk.nativePresent coins)
       (RegistrationNativePlatformSourceBuild.finishSource coins setup codec
         (RegistrationNativePlatformSourceSeal.sealing coins setup codec view failure allocation)
@@ -288,12 +326,12 @@ theorem source (coins : QueryImpl unifSpec (StateT Platform ProbComp))
       current.world.1.primitive.2 ≤ cache result.2 ∧
       ((cut.reply, cut.completed), next) ∈ support
         (((RegistrationNativePlatformSourceBuildCut.afterRecord coins sign writer cut.current.control hashed).run current).run platform) := by
-  obtain ⟨cut⟩ := reached (RegistrationNativePlatformSourceBuild.pin coins) (StateT.lift reservePeer)
+  obtain ⟨cut⟩ := reached (RegistrationNativePlatformCompletionSdk.nativeAdHash coins) (RegistrationNativePlatformSourceBuild.pin coins) (StateT.lift reservePeer)
     (RegistrationNativePlatformCompletionSdk.nativePresent coins)
     (RegistrationNativePlatformSourceBuild.finishSource coins setup codec
       (RegistrationNativePlatformSourceSeal.sealing coins setup codec view failure allocation)
       (RegistrationNativePlatformSourceSeal.hash coins setup codec erased) sign helper writer)
-    (pin_quiet coins) (reserve_quiet reservePeer) (present_quiet coins)
+    (adHash_quiet coins) (pin_quiet coins) (reserve_quiet reservePeer) (present_quiet coins)
     handle application before previous result next supported changed
   have changedLocal : cut.completed.world.2 ≠ cut.reserved.world.world.2 := by
     intro same

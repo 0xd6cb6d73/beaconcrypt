@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhDeploymentCompileRegistration
 
-/-! One step of the CE-3 compile lemma. The compiled handler, run under the source14 native handler on the product of the compiled program's local state and the source14 state, is related to the native deployment handler by the projection `merge`. For every command, under a simulation invariant, merging after the compiled step gives exactly the native step from the merged state (`step_merge`). The invariant consists of facts about the source14 state and the compiled program's public log: the Server key ID is the public one, every local copy refers to an installed peer or an established owner, the log counts every created owner, and every installed peer and established owner is publicly reconstructible from the log. Preservation of the invariant is a separate obligation. -/
+/-! One step of the CE-3 compile lemma. The compiled handler, run under the source14 native handler on the product of the compiled program's local state and the source14 state, is related to the native deployment handler by the projection `merge`. For every command, under a simulation invariant, merging after the compiled step gives exactly the native step from the merged state (`step_merge`). The invariant consists of facts about the source14 state and the compiled program's public log: the Server key ID is the public one, every local copy refers to an installed peer or an established owner, the log counts every created owner, every installed peer and established owner is publicly reconstructible from the log, and the public registration transcript of each installed peer and established owner is cached in the source14 BLAKE2b cache at the digest whose `PqxdhTranscriptAd.adOf` is its associated data (so the copy's forwarded transcript hash is a cache hit). Preservation of the invariant is a separate obligation. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
@@ -39,7 +39,12 @@ structure Inv (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (co
   copied : Copied copies native
   beaconVisible : ∀ index owner control associatedData kernel, native.owners[index]? = some owner →
     owner.beacon.phase = .established control associatedData kernel →
-    PqxdhDeploymentCompile.ownerView codec copies.log index = some (owner.beacon.identityKeyId, control, associatedData)
+    ∃ transcript digest, PqxdhDeploymentCompile.ownerView codec copies.log index =
+      some (owner.beacon.identityKeyId, control, transcript) ∧
+      native.shared.2.ctx ((), transcript) = some digest ∧ associatedData = PqxdhTranscriptAd.adOf digest
+  peerCached : ∀ kid peer, native.shared.2.server.server.peers kid = some peer →
+    ∃ transcript digest, PqxdhDeploymentCompile.peerTranscript codec copies.log kid = some transcript ∧
+      native.shared.2.ctx ((), transcript) = some digest ∧ peer.metadata = PqxdhTranscriptAd.adOf digest
 
 /-- Merging ignores the public log. -/
 theorem merge_log (copies : Local) (log : PqxdhDeploymentCompile.Log) (native : PqxdhRegistrationSchedule.State KemSK) :
@@ -134,12 +139,12 @@ theorem step_merge (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
     | accept raw =>
         simp only [compileImpl, PqxdhDeploymentNative.handler]
         rw [forwardLogged_run, onNative_run, PqxdhDeploymentCompileRegistration.shared_merge setup codec checks serverSeed
-          copies native _ trivial inv.installed, Functor.map_map, Functor.map_map]
+          copies native (.accept raw) trivial inv.installed, Functor.map_map, Functor.map_map]
         rfl
     | build session payload =>
         simp only [compileImpl, PqxdhDeploymentNative.handler]
         rw [forwardLogged_run, onNative_run, PqxdhDeploymentCompileRegistration.shared_merge setup codec checks serverSeed
-          copies native _ trivial inv.installed, Functor.map_map, Functor.map_map]
+          copies native (.build session payload) trivial inv.installed, Functor.map_map, Functor.map_map]
         rfl
     | finish index raw =>
         simp only [compileImpl, PqxdhDeploymentNative.handler]
@@ -149,24 +154,24 @@ theorem step_merge (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
     | hmac key message =>
         simp only [compileImpl, PqxdhDeploymentNative.handler]
         rw [forward_run, onNative_run, PqxdhDeploymentCompileRegistration.shared_merge setup codec checks serverSeed
-          copies native _ trivial inv.installed, Functor.map_map, Functor.map_map]
+          copies native (.hmac key message) trivial inv.installed, Functor.map_map, Functor.map_map]
         rfl
     | hash bytes =>
         simp only [compileImpl, PqxdhDeploymentNative.handler]
         rw [forward_run, onNative_run, PqxdhDeploymentCompileRegistration.shared_merge setup codec checks serverSeed
-          copies native _ trivial inv.installed, Functor.map_map, Functor.map_map]
+          copies native (.hash bytes) trivial inv.installed, Functor.map_map, Functor.map_map]
         rfl
     | serverSend kid plaintext =>
-        exact PqxdhDeploymentCompileRecords.server_record setup codec checks route serverSeed (.inl (plaintext, kid)) copies native inv.keyId
-          inv.installed inv.serverVisible
+        exact PqxdhDeploymentCompileRecords.server_record_cached setup codec checks route serverSeed (.inl (plaintext, kid)) copies native
+          inv.keyId inv.installed inv.serverVisible inv.peerCached
     | serverRaw raw =>
-        exact PqxdhDeploymentCompileRecords.server_record setup codec checks route serverSeed (.inr raw) copies native inv.keyId
-          inv.installed inv.serverVisible
+        exact PqxdhDeploymentCompileRecords.server_record_cached setup codec checks route serverSeed (.inr raw) copies native
+          inv.keyId inv.installed inv.serverVisible inv.peerCached
     | beaconSend index plaintext =>
-        exact PqxdhDeploymentCompileRecords.beacon_record setup codec checks serverSeed index (.inl plaintext) copies native inv.count
+        exact PqxdhDeploymentCompileRecords.beacon_record_cached setup codec checks serverSeed index (.inl plaintext) copies native inv.count
           inv.copied inv.beaconVisible
     | beaconRaw index raw =>
-        exact PqxdhDeploymentCompileRecords.beacon_record setup codec checks serverSeed index (.inr raw) copies native inv.count
+        exact PqxdhDeploymentCompileRecords.beacon_record_cached setup codec checks serverSeed index (.inr raw) copies native inv.count
           inv.copied inv.beaconVisible
 
 /-- The compile simulation for any invariant that implies `Inv` and is preserved by every compiled step: the compiled program run under the source14 native handler, merged at the end, has exactly the distribution of the native deployment run from the merged start state, jointly with the adversary's output. -/

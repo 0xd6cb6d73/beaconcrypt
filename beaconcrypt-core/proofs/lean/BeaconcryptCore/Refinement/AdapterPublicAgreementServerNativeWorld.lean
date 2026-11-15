@@ -33,7 +33,7 @@ noncomputable def restore (view : AdapterPublicWrapperState.MaterialView source 
 
 noncomputable section
 theorem native (model : Model (m := ProbComp) generator setup checks view) (entropy : Entropy model)
-    (identity : material.EdSecretKey) (created : PqxdhLiveServerConstruction.Created Unit)
+    (identity : material.EdSecretKey) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (identityView : view.edSecret identity = created.seed) (rng : R) (packet : registration.InitPacket)
     (authenticated : registration.AuthenticatedInit)
     (before : RegistrationNativeExperiment.State n KemSK source)
@@ -61,7 +61,7 @@ theorem native (model : Model (m := ProbComp) generator setup checks view) (entr
   | fail error => rfl
   | div => rfl
 theorem indexed (model : Model (m := ProbComp) generator setup checks view) (entropy : Entropy model)
-    (identity : material.EdSecretKey) (created : PqxdhLiveServerConstruction.Created Unit)
+    (identity : material.EdSecretKey) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (identityView : view.edSecret identity = created.seed) (rng : R) (packet : registration.InitPacket)
     (authenticated : registration.AuthenticatedInit)
     (before : RegistrationNativeExperiment.State n KemSK source)

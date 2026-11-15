@@ -13,7 +13,8 @@ open PqxdhRegistrationJointGeneratedFinish (EncodedEntry EncodedState)
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response A Result : Type}
 
 abbrev Spec (KemSK : Type) := PqxdhRegistrationJointServerBirth.Spec KemSK
-abbrev Outcome (KemSK Result : Type) := ClientCreated Unit × Result × NativeState KemSK × List EncodedEntry
+abbrev Outcome (KemSK Result : Type) :=
+  ClientCreated Unit × Result × NativeState KemSK × (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))
 
 def poolLift : QueryImpl (PqxdhLiveKemBirth.Spec KemSK) (OracleComp (Spec KemSK)) :=
   fun query => (Spec KemSK).query (.inl query)
@@ -45,13 +46,13 @@ noncomputable def client (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
     (fun result => some (created, result.1.1, result.2, result.1.2)) <$>
       simulateQ poolLift
         ((PqxdhRegistrationJointOpenBackend.compile setup codec checks created.server.server.metadata.identityIndex
-          created.publicIdentity (simulateQ (PqxdhRegistrationJointRevealSchedule.client setup codec) program) []).run
+          created.publicIdentity (simulateQ (PqxdhRegistrationJointRevealSchedule.client setup codec) program) ([], fun _ => none)).run
             (PqxdhRegistrationJointInitializedAccept.initial created))
 
 /-- Reattach only interpreter-private representation state to the retained analysis output; this does not add an adversary observation. -/
 def attach (pool : PqxdhRegistrationJointPreparation.Pool KemSK) (result : Outcome KemSK Result) :
     PqxdhRegistrationJointInitializedSchedule.Outcome KemSK Result :=
-  (result.1, result.2.1, ⟨pool, result.2.2.1, result.2.2.2⟩)
+  (result.1, result.2.1, ⟨pool, result.2.2.1, result.2.2.2.1, result.2.2.2.2⟩)
 
 /-- Final interpretation supplies runtime initialization, known imports and the ordinary private identity/KEM services, retaining every final coordinate. -/
 noncomputable def run (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)

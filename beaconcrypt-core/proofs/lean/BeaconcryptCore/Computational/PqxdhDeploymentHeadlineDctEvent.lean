@@ -2,6 +2,7 @@
 import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineSymbolicLor
 import BeaconcryptCore.Computational.PqxdhDeploymentHeadlineChain
 import BeaconcryptCore.Computational.PqxdhDeploymentRecordReplay
+import BeaconcryptCore.Computational.MldsaServerRoutingCases
 
 /-!
 # CE-12 D-ct, the CE side: the named ciphertext-gap event and its split over targets
@@ -64,7 +65,7 @@ noncomputable def ctGapNamed (setup : Setup baseSpec KemSK) (codec : Codec Reade
 def r1Cap (budget : Budget) : ℕ := budget.hmac + budget.accept + budget.finish
 
 /-- BLAKE2b calls of the record world (`PqxdhDeploymentEnvironment.c4_closed`'s count, CE-11's shared-hash cap). -/
-def ctxCap (budget : Budget) : ℕ := budget.hash + budget.sends + budget.receives + budget.build + budget.finish
+def ctxCap (budget : Budget) : ℕ := budget.hash + budget.sends + budget.receives + 2 * budget.build + 2 * budget.finish
 
 /-- The statistical term of one target: the averaged R1 term and the birthday term of the record world's BLAKE2b cache. -/
 noncomputable def ctStat (budget : Budget) : ℝ≥0∞ :=
@@ -97,7 +98,7 @@ theorem peersKept_trans {first second third : PqxdhDeploymentNative.State KemSK}
   fun kid installed => two kid (one kid installed)
 
 /-- A registration step that keeps every peer kernel except installations keeps every peer. -/
-theorem peerStep_kept (c : Pqxdh.Crypto) (before after : RawCtxServerRouting.Server Unit Unit) (step : PeerStep c before after)
+theorem peerStep_kept (c : Pqxdh.Crypto) (before after : RawCtxServerRouting.Server Unit PqxdhTranscriptAd.AssociatedData) (step : PeerStep c before after)
     (kid : Aeneas.Std.U64) (installed : (before.peers kid).isSome = true) : (after.peers kid).isSome = true := by
   have kernel : (peerKernel before kid).isSome = true := by
     simp only [peerKernel, Option.isSome_map]
@@ -109,8 +110,8 @@ theorem peerStep_kept (c : Pqxdh.Crypto) (before after : RawCtxServerRouting.Ser
     cases kernel
 
 /-- Putting a peer back keeps every peer. -/
-theorem putPeer_kept (server : RawCtxServerRouting.Server Unit Unit) (selected : Aeneas.Std.U64)
-    (peer : RawCtxServerRouting.Peer Unit) (kernel : beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel)
+theorem putPeer_kept (server : RawCtxServerRouting.Server Unit PqxdhTranscriptAd.AssociatedData) (selected : Aeneas.Std.U64)
+    (peer : RawCtxServerRouting.Peer PqxdhTranscriptAd.AssociatedData) (kernel : beaconcrypt_core.ratchet.concrete.ConcreteRatchetKernel)
     (kid : Aeneas.Std.U64) (installed : (server.peers kid).isSome = true) :
     ((RawCtxServerRouting.putPeer server selected peer kernel).peers kid).isSome = true := by
   by_cases same : kid = selected
@@ -136,24 +137,22 @@ theorem serverStep_kept (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
   have reached := PqxdhDeploymentRecordReplay.logged_support _ _ _ recorded recordedMember
   change ((recorded.1.1.2.server.peers kid).isSome = true)
   rcases query with ⟨plaintext, target⟩ | raw
-  · change _ ∈ support ((simulateQ (PqxdhDeploymentNative.primitives setup codec) (RawCtxServerMixed.sendServer
-      (PqxdhDeploymentNative.senderId state) plaintext target (PqxdhDeploymentNative.serverView state))).run _) at reached
-    rw [RawCtxServerMixed.send_interpretation] at reached
-    rcases RawCtxServerSend.sendGame_cases _ _ plaintext target _ _ _ reached with ⟨_, missing⟩ | ⟨peer, step, _,
-      _, shape⟩
-    · rw [congrArg (fun reached => reached.1.2) missing]
+  · change _ ∈ support ((simulateQ (PqxdhDeploymentNative.primitives setup codec) (MldsaServerRouting.send
+      PqxdhRefinement.absBytes (PqxdhDeploymentNative.senderId state) plaintext target
+        (PqxdhDeploymentNative.serverView state))).run _) at reached
+    rcases MldsaServerRoutingCases.send_cases _ setup codec _ plaintext target _ _ _ reached with
+      same | ⟨peer, step, _, _, _, shape⟩
+    · rw [same]
       exact installed
-    · rw [congrArg (fun reached => reached.1.2) shape]
+    · rw [shape]
       exact putPeer_kept _ target peer _ kid installed
-  · change _ ∈ support ((simulateQ (PqxdhDeploymentNative.primitives setup codec) (RawCtxServerMixed.rawServer route
-      codec.frameRead raw (PqxdhDeploymentNative.serverView state))).run _) at reached
-    rw [RawCtxServerMixed.raw_interpretation, PqxdhDeploymentNative.primitives,
-      RawCtxReceiveConsumption.shared_receiveNative] at reached
-    rcases RawCtxServerRouting.rawGame_cases _ route codec.frameRead raw _ _ _ reached with
-      rejected | ⟨routed, peer, received, _, _, _, shape⟩
-    · rw [congrArg (fun reached => reached.1.2) rejected]
+  · change _ ∈ support ((simulateQ (PqxdhDeploymentNative.primitives setup codec) (MldsaServerRouting.receive
+      PqxdhRefinement.absBytes route codec.frameRead raw (PqxdhDeploymentNative.serverView state))).run _) at reached
+    rcases MldsaServerRoutingCases.receive_cases _ setup codec route raw _ _ _ reached with
+      ⟨_, same⟩ | ⟨routed, peer, received, _, _, _, _, shape⟩
+    · rw [same]
       exact installed
-    · rw [congrArg (fun reached => reached.1.2) shape]
+    · rw [shape]
       exact putPeer_kept _ routed peer _ kid installed
 
 /-- Every query of the native deployment handler keeps every Server peer. -/
@@ -277,7 +276,7 @@ theorem native_build_fresh (setup : Setup baseSpec KemSK) (codec : Codec Reader 
     PqxdhDeploymentCompileInvariant.shared_footprint setup serverSeed _ state.native inner innerMember
   obtain ⟨_, _, _, _, _, _, published⟩ := PqxdhDeploymentCompileFootprint.build_footprint setup codec checks session
     payload _ _ reached
-  obtain ⟨token, kernel, fields, _, free, peers, _⟩ := published response built
+  obtain ⟨token, kernel, fields, digest, _, free, peers, _⟩ := published response built
   refine ⟨free, ?_⟩
   change (inner.2.shared.2.server.server.peers response.keyId).isSome = true
   rw [peers, Function.update_self]

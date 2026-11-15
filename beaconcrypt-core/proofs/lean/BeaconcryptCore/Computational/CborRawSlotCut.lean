@@ -6,6 +6,7 @@ import BeaconcryptCore.Computational.CborRawCutRelations
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.CborRawSlotCut
 open PqxdhServerAuthExperiment (Setup Codec Checks)
 open PqxdhServerRootPreparation (Verified)
@@ -29,7 +30,7 @@ noncomputable def itemRest (created : PqxdhRegistrationJointServerBirth.ClientCr
       (PqxdhDeploymentIdealCut.opaqueRest setup (CborRawCompile.sourceCodec wire parse) checks created.server.server.metadata.identityIndex
         created.publicIdentity (PqxdhRegistrationJointAcceptCutTag.decideTag decision)
         ((CborRawInitializedCut.compilerCut setup wire parse reached.1,
-          (PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2).owners), reached.2.shared))).run).run
+          ((PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2).owners, (PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2).inits)), reached.2.shared))).run).run
       (reached.2.pool.1, PqxdhDeploymentIdealPoolSource.routerOf reached.2.pool.2) >>= fun result =>
     itemPost setup (CborRawCompile.sourceCodec wire parse) checks t p decision (.ready created p.others result.1 result.2 after)
 
@@ -90,7 +91,7 @@ theorem itemPost_dead (created : PqxdhRegistrationJointServerBirth.ClientCreated
 
 theorem opaqueRest_dead {R : Type} (identityIndex : ℕ) (publicIdentity : PqxdhJointIdentity.PublicIdentity)
     (observe : (Y × CborAdmissionCompiler.Local) × PqxdhRegistrationJointAcceptCutTag.Tag → R) (cutCE : CutCE Y) (copies : CborAdmissionCompiler.Local)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry)
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))
     (state : PqxdhServerAuthNative.NativeState KemSK)
     (dead : ∀ raw next, cutCE = .pending raw next → ∀ value,
       PqxdhRegistrationJointRawSignatures.verified setup (CborRawCompile.sourceCodec wire parse) checks raw = some value → value.keys.pqKey ≠ p.chosen.1)
@@ -151,7 +152,7 @@ theorem itemRest_selected {A Y : Type} (t : Target count) (p : Params KemSK coun
         | none => pure false
         | some ephemeral => itemPost setup (CborRawCompile.sourceCodec wire parse) checks t p decision
             (.ready created p.others (some (.pending raw value ephemeral pre.2 reached.2.shared
-              (PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2).owners
+              ((PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2).owners, (PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2).inits)
               (CborRawPostActive.compiledNext setup wire parse raw next reached.1.2)))
               (reached.2.pool.1, PqxdhDeploymentIdealPoolSource.routerOf reached.2.pool.2) after)) := by
   rcases reached with ⟨⟨cut, copies⟩, source⟩

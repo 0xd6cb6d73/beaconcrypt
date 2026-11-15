@@ -77,8 +77,8 @@ LEGACY_SOURCE_CHECKERS = {
     "check-exact-interface-strong",
 }
 LEGACY_SOURCE_SCOPE = (
-    "classical projection; mandatory ML-DSA guards and AD fingerprints omitted; "
-    "no full ML-DSA source lift; "
+    "classical projection with registration version 3 transcript AD151 as every record AD; current pinned-Server ML-DSA response omitted; "
+    "no version3 source/API/computational theorem; "
 )
 
 
@@ -173,11 +173,26 @@ def extension_profile_scope(name, target, driver):
             if target.process == "A1Main(true)"
             else "post-initial Server chain and initial Beacon chain disclosed"
         )
-        claim = (
-            "auxiliary completed-root secrecy"
-            if target.name == "A1-root"
-            else "initial-response origin/projection witness or control"
-        )
+        claim = {
+            "A1-root": "auxiliary completed-root secrecy",
+            "A1-C-binding": (
+                "binding-removed control under production transcript AD151: AD151 binds the LE64 "
+                "assigned ID, so the relabeled response does not open; evidence that AD151 "
+                "independently binds the assigned ID"
+            ),
+            "A1-C-binding-ad-omits-assigned-id": (
+                "counterfactual control (never a production profile): binding removed and "
+                "transcript AD151 with only the assigned ID omitted; reproduces the original "
+                "relabeled-response trace; with A1-delayed-ad-omits-assigned-id it shows "
+                "that the binding check is load-bearing in that AD"
+            ),
+            "A1-delayed-ad-omits-assigned-id": (
+                "counterfactual differential control (never a production profile): binding "
+                "check present and transcript AD151 with only the assigned ID omitted; "
+                "positive half of the assigned-ID counterfactual pair: A1 holds, so the "
+                "binding check alone blocks the relabeled response in that AD"
+            ),
+        }.get(target.name, "initial-response origin/projection witness or control")
         scope = (
             f"exact T0 fresh target source-event/knowledge projection; {claim}; "
             "one selected fresh Beacon; unbounded accepts and delayed one-use private pending contexts; "
@@ -288,69 +303,59 @@ def extension_profile_scope(name, target, driver):
 
 
 def mldsa_class_scope(target, position, driver):
-    """Exact scope for the separate assumed-interface profile and its controls."""
+    """Server-only origin, arbitrary admission and fixed-material AD controls."""
     common = (
-        "focused assumed-interface ML-DSA authentication profile; "
-        "one honest agent ML key and one pinned server ML key unrevealed; "
-        "classical identity/DH secrets exposed; attacker-owned ML registrations admitted without enrollment; "
-        "independent key-reveal and closed separation/AD fixtures; "
-        "ideal ML-signature unforgeability and collision-free hash assumed; "
+        "current server-only ML-DSA assumed-interface profile; pinned Server ML key unrevealed; "
+        "classical identity/DH secrets exposed; arbitrary registrations and copied classical identities admitted without enrollment; "
+        "no Beacon ML credential, enrollment or protected request-origin claim; "
+        "ideal ML-signature unforgeability and collision-free symbolic BLAKE2b assumed; "
         "no computational/QPT, full-protocol, parser/compiler or native-library theorem; "
     )
     claims = (
         (
             "security",
-            "noninjective Init origin scoped to the exact honest ML public key",
+            "pinned-Server origin binds the retained request digest and all response fields including raw C||T||U and assigned ID, excluding signature bytes",
         ),
         (
-            "security",
-            "pinned-server origin of request digest and all unsigned decoded response fields, including raw C||T||U and assigned ID, excluding signature bytes",
+            "witness",
+            "arbitrary registration admission is reachable without a Beacon ML credential",
         ),
-        ("witness", "honest request/response verification is reachable"),
         (
             "limitation",
-            "attacker-owned ML key with the recovered honest Ed identity is admitted; no Ed-identity-only post-quantum authentication claim",
+            "copied/recovered classical identity is admitted; no enrollment or legitimate-Beacon classifier",
         ),
+        ("witness", "honest pinned-Server response verification is reachable"),
         (
             "negative-control",
-            "independent exposed agent ML signing key permits acceptance without an honest-sign event",
+            "independent exposed Server ML signing key permits acceptance without an honest signing event",
         ),
         (
-            "negative-control",
-            "independent exposed server ML signing key permits acceptance without an honest-sign event",
-        ),
-        (
-            "definitional",
-            "closed shared-material fixture opens with ordered server/agent ML-key hashes in AD281",
+            "witness",
+            "same-material fixture opens under context87 plus exact transcript digest64",
         ),
         (
             "definitional",
-            "closed shared-material fixture rejects a changed server ML-key hash in AD281",
+            "same-material fixture rejects a changed included response field in AD151",
         ),
         (
             "definitional",
-            "closed shared-material fixture rejects a changed agent ML-key hash in AD281",
+            "same-material fixture rejects a changed retained attached-signature Init buffer in AD151",
         ),
-        ("definitional", "closed signature fixture rejects a changed role label"),
-        (
-            "definitional",
-            "closed signature fixture rejects a changed FIPS signing context",
-        ),
-        ("definitional", "closed signature fixture rejects a different request digest"),
+        ("definitional", "signature wrapper rejects a different role label"),
+        ("definitional", "signature rejects a different FIPS signing context"),
+        ("definitional", "signature rejects a different retained request digest"),
     )
+    controls = {
+        "without-response-verifier": "reconstructed pinned-response origin counterexample after bypassing Server verification",
+        "without-response-ad-binding": "reconstructed same-key/nonce open after replacing the changed response field by its original value",
+        "without-init-ad-binding": "reconstructed same-key/nonce open after replacing the changed Init field by its original buffer",
+    }
     if target == "mldsa-registration-auth" and 1 <= position <= len(claims):
         cls, claim = claims[position - 1]
-    elif target in {control[0] for control in driver.CONTROLS} and position == 1:
-        cls = "negative-control"
-        claim = (
-            "reconstructed origin counterexample after bypassing only the "
-            + {
-                "without-init-verifier": "Init ML verifier",
-                "without-response-verifier": "response ML verifier",
-            }[target]
-        )
+    elif target in controls and position == 1:
+        cls, claim = "negative-control", controls[target]
     else:
-        raise ValueError("unknown ML-DSA verdict identity")
+        raise ValueError("unknown current server-auth verdict identity")
     return cls, common + claim + "; libraries=" + ";".join(
         (*driver.LIBRARIES, "mldsa-registration-auth.pvl")
     )
@@ -367,92 +372,91 @@ def validate_mldsa_scope(rows):
 
 
 def mldsa_joint_class_scope(target, position, driver):
-    """Exact bounded execution, assumptions and target for each joint expectation."""
+    """Exact current session lineage, source phases, assumptions and finite scope."""
     common = (
-        "bounded joint ML-DSA/PQXDH symbolic profile; "
-        "one honest Beacon request/response, two generic Server attempts with one atomic consumed-ID set; "
-        "replay ID is Ed identity plus one-time key, excluding ML keys; "
-        "initial server sequence1, one server record sequence2 and one beacon record sequence1, one receive attempt per endpoint; "
-        "public Ed25519/X25519 recovery equations, independent unrevealed honest ML signing keys and ML-KEM secret with fresh hidden KEM coins; "
-        "attacker-owned ML registrations admitted without enrollment; protected-ML challenge payload selection only after admission; "
-        "ideal ML-signature unforgeability, collision-free symbolic hash/KDF and authenticated AEAD/CTX assumed; "
-        "ML-KEM public-key binding assumed beyond generic IND-CCA; "
-        "public per-invocation assigned labels abstract concrete counter allocation order; "
+        "bounded version3 server-only ML-DSA/PQXDH symbolic profile; "
+        "one created honest request/KEM lineage, two generic Server attempts and one atomic consumed-ID set; "
+        "arbitrary registrations admitted without enrollment, including copied/recovered Ed identities and copied honest KEM public keys; replay ID is Ed identity plus one-time key, excluding ML keys; "
+        "exact created request selects challenge traffic only after admission, other requests receive canary traffic; "
+        "initial Server sequence1, one server record sequence2, one Beacon record sequence1 and one receive attempt per endpoint; "
+        "public Ed25519/X25519 recovery, unrevealed pinned Server ML key and selected KEM secret, fresh hidden KEM coins; "
+        "ideal Server signature unforgeability, collision-free symbolic hash/KDF, AEAD/CTX assumed; ML-KEM public-key binding assumed beyond generic IND-CCA; public per-invocation assigned labels abstract concrete counter allocation order; "
+        "AD=context87||hash(exact remaining Init fields and pre-sealing response fields); "
+        "initial45 and message48 HKDF domains are distinct; "
         "no computational/QPT, arbitrary schedule/cache, injective replay, failure/rollback, forward-secrecy, parser/compiler or native-library theorem; "
     )
     claims = (
         (
             "security",
-            "noninjective Init origin scoped to the exact protected honest ML key",
+            "pinned-Server response origin binds the retained Init digest and complete response including raw initial application record, excluding ML signature bytes",
         ),
         (
             "security",
-            "pinned-server response origin binds retained Init digest and every unsigned response field, including raw C||T||U and assigned ID, excluding ML signature bytes",
+            "successful Beacon Finish agrees with earlier actual Server signing/commit stage on exact request, Server pin, response, root, AD151, assigned ID and initial plaintext",
         ),
         (
             "security",
-            "completed Beacon agrees with a Server commit on both ML keys, retained Init digest, unsigned response, actual derived root, ordered AD, assigned ID and initial plaintext",
+            "Server-to-Beacon record origin for the actual created request/KEM lineage matches root, AD151, sequence, sender, receiver and plaintext",
         ),
         (
             "security",
-            "noninjective server-to-beacon record origin for the protected ML key matches Init digest, derived root, AD, sequence, sender, receiver and plaintext",
+            "Beacon-to-Server record origin for the actual created request/KEM lineage matches root, AD151, sequence, sender, receiver and plaintext",
         ),
         (
             "security",
-            "noninjective beacon-to-server record origin for the protected ML key matches Init digest, derived root, AD, sequence, sender, receiver and plaintext",
+            "selected request initial payload is not deducible under admitted attacker registrations",
         ),
         (
             "security",
-            "initial canary non-deducibility under the protected-ML payload policy",
+            "selected request Server record payload is not deducible under admitted attacker registrations",
         ),
         (
             "security",
-            "server-record canary non-deducibility under the protected-ML payload policy",
-        ),
-        (
-            "security",
-            "beacon-record canary non-deducibility after protected Beacon completion",
+            "selected Beacon record payload is not deducible after authenticated Finish",
         ),
         (
             "witness",
-            "honest completion of the joint KEX and initial CTX opening is reachable",
+            "honest session completion and initial CTX/AEAD opening is reachable",
         ),
-        (
-            "witness",
-            "one subsequent server-to-beacon record opens after honest completion",
-        ),
-        ("witness", "one beacon-to-server record opens after honest completion"),
+        ("witness", "one subsequent Server-to-Beacon record opens"),
+        ("witness", "one Beacon-to-Server record opens"),
         (
             "limitation",
-            "attacker-owned ML key with recovered honest Ed identity is admitted; no Ed-only enrollment or authentication guarantee",
-        ),
-        (
-            "witness",
-            "passive private observation matches insertion and rejection of the same actual registration ID in distinct Server invocations, with the rejecting invocation consuming the matching token released after insertion; no arbitrary replay-schedule theorem",
+            "attacker-owned KEM registration using the recovered selected Ed identity is admitted",
         ),
         (
             "limitation",
-            "both classical Ed and DH recovery capabilities execute; no ML signing or ML-KEM recovery rule is added",
+            "registration copying the honest KEM public key and replacing classical fields is admitted",
+        ),
+        ("witness", "attacker decrypts its own routed initial canary traffic"),
+        ("witness", "attacker decrypts its own routed ordinary-record canary traffic"),
+        (
+            "witness",
+            "actual consumed-ID rejection observes the prior token released for the same registration ID by a distinct invocation; no arbitrary replay-schedule theorem",
+        ),
+        (
+            "limitation",
+            "classical Ed/DH recovery is available without Server ML or selected ML-KEM secret recovery",
         ),
     )
     controls = {
-        "without-init-verifier-origin": "Init-origin counterexample after bypassing only the Init ML verifier",
-        "without-response-verifier-origin": "response-origin counterexample after bypassing only the response ML verifier",
-        "without-response-verifier-session": "completed-session counterexample after bypassing only the response ML verifier with KEX and CTX checks retained",
-        "without-init-verifier-secrecy": "initial-canary disclosure after bypassing only the Init ML verifier with KEX and CTX construction retained",
-        "without-response-verifier-secrecy": "beacon-record canary disclosure after bypassing only the response ML verifier with KEX and CTX checks retained",
+        "without-response-verifier-origin": "response-origin counterexample after bypassing pinned-Server verification",
+        "without-response-verifier-session": "Finish-agreement counterexample after bypassing pinned-Server verification with KEX/CTX retained",
+        "without-response-verifier-secrecy": "Beacon payload disclosure after bypassing pinned-Server verification with KEX/CTX retained",
+        "with-selected-kem-secret-compromise": "initial payload disclosure when the selected KEM secret is exposed alongside classical recovery",
+        "with-server-signing-key-compromise": "response-origin counterexample when the pinned Server signing key is explicitly exposed",
     }
     if target == "mldsa-joint-session" and 1 <= position <= len(claims):
         cls, claim = claims[position - 1]
     elif target in controls and position == 1:
-        cls = "negative-control"
-        claim = (
+        cls, claim = (
+            "negative-control",
             "reconstructed "
             + controls[target]
-            + "; altered model, not a primitive break"
+            + "; altered model, not a primitive break",
         )
     else:
-        raise ValueError("unknown joint ML-DSA verdict identity")
+        raise ValueError("unknown current joint-session verdict identity")
     return (
         cls,
         common

@@ -28,26 +28,25 @@ variable [BeaconcryptCore.Refinement.PublicWrapperPlatform.CryptoOperations]
 variable [BeaconcryptCore.Refinement.AdapterRatchetKdfPrimitive.Operations]
 
 /-- [beaconcrypt::ratchet::symmetric_ratchet_hkdf]:
-    Source: 'beaconcrypt/src/ratchet.rs', lines 88:0-98:1 -/
+    Source: 'beaconcrypt/src/ratchet.rs', lines 88:0-99:1 -/
 def ratchet.symmetric_ratchet_hkdf
-  (OUTPUT_SIZE : Std.Usize)
-  (request : beaconcrypt_core.ratchet.SymmetricRatchetKdfRequest) :
+  (OUTPUT_SIZE : Std.Usize) (input : Array Std.U8 32#usize)
+  (info : Slice Std.U8) :
   RustM (Array Std.U8 OUTPUT_SIZE)
   := do
   let i ← 255#usize * 64#usize
   massert (OUTPUT_SIZE <= i)
-  let a ← beaconcrypt_core.ratchet.SymmetricRatchetKdfRequest.impl.input request
-  let s ← lift (Array.to_slice a)
+  let s ← lift (Array.to_slice input)
   let r ←
     beaconcrypt_crypto.crypto_kdf.hkdf.sha512.extract core.option.Option.None s
   let prk ←
     core.result.Result.expect beaconcrypt_crypto.CryptoError.Insts.CoreFmtDebug
       r (toStr "HKDF-SHA-512 extract accepts every fixed-width ratchet chain" (by simp only [U32.max, U32.numBits]; decide_cbv))
-  let a1 := Array.repeat OUTPUT_SIZE 0#u8
+  let a := Array.repeat OUTPUT_SIZE 0#u8
   let output ←
     zeroize.Zeroizing.new (zeroize.Array.Insts.ZeroizeZeroize OUTPUT_SIZE
-      (zeroize.Zeroize.Blanket zeroize.U8.Insts.ZeroizeDefaultIsZeroes)) a1
-  let (a2, deref_mut_back) ←
+      (zeroize.Zeroize.Blanket zeroize.U8.Insts.ZeroizeDefaultIsZeroes)) a
+  let (a1, deref_mut_back) ←
     zeroize.Zeroizing.Insts.CoreOpsDerefDerefMut.deref_mut
       (zeroize.Array.Insts.ZeroizeZeroize OUTPUT_SIZE (zeroize.Zeroize.Blanket
       zeroize.U8.Insts.ZeroizeDefaultIsZeroes)) output
@@ -55,36 +54,40 @@ def ratchet.symmetric_ratchet_hkdf
     core.Array.Insts.CoreOpsIndexIndexMut.index_mut
       (core.Slice.Insts.CoreOpsIndexIndexMut
       (core.ops.range.RangeFull.Insts.CoreSliceIndexSliceIndexSliceSlice
-      Std.U8)) a2 ()
-  let a3 ← beaconcrypt_core.ratchet.SymmetricRatchetKdfRequest.impl.info request
-  let s2 ← lift (Array.to_slice a3)
-  let (r1, s3) ←
+      Std.U8)) a1 ()
+  let (r1, s2) ←
     beaconcrypt_crypto.crypto_kdf.hkdf.sha512.expand_into s1
-      (core.option.Option.Some s2) prk
+      (core.option.Option.Some info) prk
   core.result.Result.expect beaconcrypt_crypto.CryptoError.Insts.CoreFmtDebug
     r1 (toStr
     "the fixed ratchet output sizes are below the HKDF-SHA-512 limit" (by simp only [U32.max, U32.numBits]; decide_cbv))
-  let a4 := index_mut_back s3
-  let output1 := deref_mut_back a4
+  let a2 := index_mut_back s2
+  let output1 := deref_mut_back a2
   zeroize.Zeroizing.Insts.CoreOpsDerefDeref.deref
     (zeroize.Array.Insts.ZeroizeZeroize OUTPUT_SIZE (zeroize.Zeroize.Blanket
     zeroize.U8.Insts.ZeroizeDefaultIsZeroes)) output1
 
 /-- [beaconcrypt::ratchet::ratchet_hkdf]:
-    Source: 'beaconcrypt/src/ratchet.rs', lines 100:0-104:1 -/
+    Source: 'beaconcrypt/src/ratchet.rs', lines 101:0-108:1 -/
 def ratchet.ratchet_hkdf
   (request : beaconcrypt_core.ratchet.SymmetricRatchetKdfRequest) :
   RustM beaconcrypt_core.ratchet.RatchetKdfResponse
   := do
-  let a ← ratchet.symmetric_ratchet_hkdf 76#usize request
-  beaconcrypt_core.ratchet.RatchetKdfResponse.from_bytes a
+  let a ← beaconcrypt_core.ratchet.SymmetricRatchetKdfRequest.impl.input request
+  let a1 ← beaconcrypt_core.ratchet.SymmetricRatchetKdfRequest.impl.info request
+  let s ← lift (Array.to_slice a1)
+  let a2 ← ratchet.symmetric_ratchet_hkdf 76#usize a s
+  beaconcrypt_core.ratchet.RatchetKdfResponse.from_bytes a2
 
 /-- [beaconcrypt::ratchet::initial_ratchet_hkdf]:
-    Source: 'beaconcrypt/src/ratchet.rs', lines 106:0-110:1 -/
+    Source: 'beaconcrypt/src/ratchet.rs', lines 110:0-114:1 -/
 def ratchet.initial_ratchet_hkdf
-  (request : beaconcrypt_core.ratchet.SymmetricRatchetKdfRequest) :
+  (request : beaconcrypt_core.ratchet.InitialRatchetKdfRequest) :
   RustM (Array Std.U8 64#usize)
   := do
-  ratchet.symmetric_ratchet_hkdf 64#usize request
+  let a ← beaconcrypt_core.ratchet.InitialRatchetKdfRequest.impl.input request
+  let a1 ← beaconcrypt_core.ratchet.InitialRatchetKdfRequest.impl.info request
+  let s ← lift (Array.to_slice a1)
+  ratchet.symmetric_ratchet_hkdf 64#usize a s
 
 end beaconcrypt_ratchet_kdf

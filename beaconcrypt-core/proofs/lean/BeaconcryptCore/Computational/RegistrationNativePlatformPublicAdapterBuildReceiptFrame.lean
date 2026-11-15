@@ -82,12 +82,16 @@ theorem query (query :RegistrationNativePlatformPublicAdapterBuildProgram.Spec.D
     (AdapterPublicServerCompletionNative.outgoing coins sign) previousChildren coins setup codec erased
     (AdapterPublicServerCompletionNative.writer writer)
   cases query with
-  | inl self=>
-    change result∈support ((((beaconcrypt_public_request.server.Server.authentication_pin (m:=RustT M) self).run).run before).run previous) at supported
-    rw [AdapterPublicWrapperPin.server_program self _ _ (AdapterPublicServerCutPin.hash coins sign) rfl rfl (fun _=>rfl)] at supported
-    exact RegistrationNativePlatformPublicAdapterBundleSigningDelta.persistent_program _ (fun current=>history current=history before)
-      (fun request current external held output called=>(hash coins sign request current external output called).trans held)
-      _ before previous rfl result supported
+  | inl operation=>cases operation with
+    | inl self=>
+      change result∈support ((((beaconcrypt_public_request.server.Server.authentication_pin (m:=RustT M) self).run).run before).run previous) at supported
+      rw [AdapterPublicWrapperPin.server_program self _ _ rfl rfl] at supported
+      simp only [StateT.run_pure,mem_support_pure_iff] at supported
+      cases supported
+      rfl
+    | inr request=>
+      change result ∈ support (((AdapterPublicServerCutPin.hash coins sign request).run before).run previous) at supported
+      exact hash coins sign request before previous result supported
   | inr query=>cases query with
     | inl pair=>
       let requested :Base (RustM Bool):=(original.mapContains core.U64.Insts.CoreCmpEq core.U64.Insts.CoreHashHash

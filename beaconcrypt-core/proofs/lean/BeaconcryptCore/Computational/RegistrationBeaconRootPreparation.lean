@@ -42,9 +42,9 @@ theorem finish_admission (authenticated : registration.AuthenticatedResponse)
     (input : PqxdhBeaconPhase2Preparation.Inputs registration.AuthenticatedResponse)
     (fields : Fields authenticated input) :
     agreement.finish_dh (state authenticated input) = (do
-      let accepted ← pqxdh.beacon_prepare_finish authenticated.pending.control input.finishInputs
+      let accepted ← pqxdh.beacon_prepare_finish authenticated.control input.finishInputs
       match accepted with
-      | .Ok candidate => .ok (.RootKdf ⟨.Beacon candidate authenticated.pending.binding authenticated.packet.application⟩)
+      | .Ok candidate => .ok (.RootKdf ⟨.Beacon candidate authenticated.binding authenticated.packet.application⟩)
       | .Err _ => .ok (rejected authenticated)) := by
   simp only [state, agreement.finish_dh, ratchet.RatchetChain.as_bytes, bind_tc_ok]
   have inputs : (⟨authenticated.packet.public.identity_key, authenticated.packet.public.key_id,
@@ -57,7 +57,7 @@ def afterPrepared (authenticated : registration.AuthenticatedResponse) :
     Option (PqxdhBeaconPhase2Preparation.Prepared registration.AuthenticatedResponse) →
       OracleComp Spec (RustM agreement.AgreementEffect)
   | none => pure (.ok (rejected authenticated))
-  | some prepared => drive 2 (.RootKdf ⟨.Beacon prepared.candidate authenticated.pending.binding authenticated.packet.application⟩)
+  | some prepared => drive 2 (.RootKdf ⟨.Beacon prepared.candidate authenticated.binding authenticated.packet.application⟩)
 
 private theorem drive_rejected (fuel : Nat) (aborted : core.option.Option pqxdh.BeaconAborted) :
     drive fuel (.Rejected aborted) = pure (.ok (.Rejected aborted)) := by
@@ -67,7 +67,7 @@ private theorem drive_rejected (fuel : Nat) (aborted : core.option.Option pqxdh.
 
 noncomputable def prepared (authenticated : registration.AuthenticatedResponse) : OracleComp Spec (RustM agreement.AgreementEffect) := do
   let prepared ← simulateQ (callbacks authenticated)
-    (PqxdhBeaconPhase2Preparation.prepare authenticated.pending.control () false true () [])
+    (PqxdhBeaconPhase2Preparation.prepare (completedBinding := authenticated.binding) authenticated.control () false true () [])
   afterPrepared authenticated prepared
 
 /-- Native root admission is reached only from the actual collected response and its exact callback results. -/
@@ -81,13 +81,13 @@ theorem normalized_prepared (authenticated : registration.AuthenticatedResponse)
   | some input =>
       have fields := collect_fields authenticated input supported
       change finish authenticated input =
-        (simulateQ (callbacks authenticated) (PqxdhBeaconPhase2Preparation.afterInputs authenticated.pending.control input) >>=
+        (simulateQ (callbacks authenticated) (PqxdhBeaconPhase2Preparation.afterInputs (completedBinding := authenticated.binding) authenticated.control input) >>=
           afterPrepared authenticated)
       rw [finish, finish_admission authenticated input fields,
         PqxdhBeaconPhase2Preparation.normalPrepare_exact]
       simp only [PqxdhBeaconPhase2Preparation.afterInputs, simulateQ_bind, simulateQ_spec_query,
         callbacks, pure_bind, simulateQ_pure]
-      cases PqxdhBeaconPhase2Preparation.normalPrepare authenticated.pending.control input.finishInputs <;>
+      cases PqxdhBeaconPhase2Preparation.normalPrepare authenticated.control input.finishInputs <;>
         simp only [bind_tc_ok, continueWith, afterPrepared, rejected, drive_rejected]
 
 end BeaconcryptCore.Computational.RegistrationBeaconRootPreparation

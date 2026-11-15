@@ -3,7 +3,7 @@ import BeaconcryptCore.Computational.PqxdhServerAuthNegativeControl
 /-!
 The B5b negative control executes the original source admission and registration builder while privately recording its actual first-send KDF request. Its separate reveal returns a copy of the installed kernel with only the send chain replaced by that recorded input. The headline authentication handler and the actual installed kernel remain unchanged. Complete callback/program erasure and source support prove the provenance of the disclosed chain; no root-to-chain reconstruction or assumed successful publication supplies it.
 
-The concrete adversary relays the honest Phase1, obtains one actual registration, then uses the altered reveal to recompute sequence-one material and reseal a different application payload. Its public commitment query and final delivery use the same shared cache and unchanged Beacon finish. With the existing functional control laws, accepting allocation checks, distinct nonempty bounded payloads and a nonexhausted Server identifier, the W2 winning probability is at least one minus ordinary KEM correctness error. The root-Extract and CTX/BLAKE2b random-oracle idealizations remain those of the original R1 experiment. This result tests the reveal boundary; it is not an attack on the unchanged headline protocol.
+The concrete adversary relays the honest Phase1, obtains one actual registration, then uses the altered reveal to recompute sequence-one material and reseal a different application payload. The altered build runs the original hashed build steps: the Server hashes the 2638-byte registration transcript with the shared BLAKE2b oracle and seals under `AD151 = context87 ‖ digest`. The adversary forms the same associated data from one public BLAKE2b query of the transcript built from the published Phase 1 Init buffers and the Server's public response fields. Its two public BLAKE2b queries (transcript and commitment) and final delivery use the same shared cache and unchanged Beacon finish, which hashes the same transcript. With the existing functional control laws, accepting allocation checks, distinct nonempty bounded payloads and a nonexhausted Server identifier, the W2 winning probability is at least one minus ordinary KEM correctness error. The root-Extract and CTX/BLAKE2b random-oracle idealizations remain those of the original R1 experiment. This result tests the reveal boundary; it is not an attack on the unchanged headline protocol.
 -/
 
 open OracleComp OracleSpec CoreModels Aeneas
@@ -14,6 +14,7 @@ set_option autoImplicit false
 set_option maxRecDepth 100000
 
 namespace BeaconcryptCore.Computational.PqxdhServerAuthPresealControl
+variable (associatedData : PqxdhTranscriptAd.AssociatedData)
 open PqxdhJointIdentity PqxdhJointGapDh PqxdhSecretInputKdf PqxdhJointKdfGame
 open PqxdhServerAuthExperiment PqxdhServerAuthNegativeControl
 open PqxdhEd25519EufCma (Ed25519PublicKey)
@@ -118,17 +119,19 @@ theorem send_history (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
 theorem after_history (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Pqxdh.Bytes)
     (kernel : ConcreteRatchetKernel)
-    (server : PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes)) (state : TailState)
+    (server : PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes)) (state : TailState)
     (notFull : kernel.refined.control.send_sequence ≠ core.num.U64.MAX)
     (result : (Option PqxdhServerRegistrationPublication.Response ×
-      PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes)) × TailState)
+      PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes)) × TailState)
     (supported : result ∈ support ((simulateQ (tail setup codec checks)
-      (PqxdhServerRegistrationPublication.afterInitialization candidate authenticated kernel () server)).run state)) :
+      (PqxdhServerRegistrationPublication.afterInitialization (associatedData := associatedData) candidate authenticated kernel
+        associatedData server)).run state)) :
     result.2.1 = state.1 ++ [⟨kernel.refined.send_chain.bytes, SYM_RATCHET_INFO⟩] := by
   obtain ⟨sent, afterSend, afterErase, hsent, herase, rest⟩ :=
-    PqxdhServerRegistrationPublication.afterInitialization_support _ candidate authenticated kernel () server state result supported
+    PqxdhServerRegistrationPublication.afterInitialization_support (associatedData := associatedData) _ candidate authenticated
+      kernel associatedData server state result supported
   have sentHistory := send_history setup codec checks kernel
-    (PqxdhServerRegistrationPublication.firstContext candidate authenticated) state notFull
+    (PqxdhServerRegistrationPublication.firstContext candidate associatedData authenticated) state notFull
     (sent, afterSend) (by simpa only [sendImpl, QueryImpl.simulateQ_compose] using hsent)
   have eraseHistory := tail_history setup codec checks (.inr (.erase authenticated)) afterSend ((), afterErase) herase
   cases hs : sent.2 with
@@ -147,16 +150,18 @@ theorem after_history (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
 theorem after_peer (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Pqxdh.Bytes)
     (kernel : ConcreteRatchetKernel)
-    (server : PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes)) (state : TailState)
+    (server : PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes)) (state : TailState)
     (result : (Option PqxdhServerRegistrationPublication.Response ×
-      PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes)) × TailState)
+      PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes)) × TailState)
     (supported : result ∈ support ((simulateQ (tail setup codec checks)
-      (PqxdhServerRegistrationPublication.afterInitialization candidate authenticated kernel () server)).run state))
+      (PqxdhServerRegistrationPublication.afterInitialization (associatedData := associatedData) candidate authenticated kernel
+        associatedData server)).run state))
     (response : PqxdhServerRegistrationPublication.Response) (published : result.1.1 = some response) :
     ∃ advanced, result.1.2.server.peers response.keyId =
-      some ⟨candidate.beacon_identity_public_key, advanced, ()⟩ := by
+      some ⟨candidate.beacon_identity_public_key, advanced, associatedData⟩ := by
   obtain ⟨sent, afterSend, afterErase, _, _, rest⟩ :=
-    PqxdhServerRegistrationPublication.afterInitialization_support _ candidate authenticated kernel () server state result supported
+    PqxdhServerRegistrationPublication.afterInitialization_support (associatedData := associatedData) _ candidate authenticated
+      kernel associatedData server state result supported
   cases hs : sent.2 with
   | none =>
       rw [hs] at rest
@@ -195,11 +200,12 @@ theorem tail_aux (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) 
 /-- Every successful actual builder execution records exactly the source initializer's old send chain and installs a peer at the returned key ID. Rejected callbacks, optional writers and all original state remain in the execution. -/
 theorem build_history_peer (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (pending : pqxdh.PendingServerRegistration) (root : RootOutput) (payload : Option Pqxdh.Bytes)
-    (server : PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes)) (state : TailState)
+    (server : PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes)) (state : TailState)
     (result : RustM (Option PqxdhServerRegistrationPublication.Response ×
-      PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes)) × TailState)
+      PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes)) × TailState)
     (supported : result ∈ support ((simulateQ (tail setup codec checks)
-      (PqxdhServerRegistrationPublication.build setup.source pending root payload () server)).run state))
+      (PqxdhServerRegistrationPublication.build (associatedData := associatedData) setup.source pending root payload
+        associatedData server)).run state))
     (response : PqxdhServerRegistrationPublication.Response)
     (published : (settle server result.1).1 = some response) :
     ∃ kernel, PqxdhRootTableInitialization.initialKernelRun setup.source false root = ok kernel ∧
@@ -275,9 +281,9 @@ theorem build_history_peer (setup : Setup baseSpec KemSK) (codec : Codec Reader 
               have values := congrArg UScalar.val equal
               simp only [refines.sendSequence] at values
               contradiction
-            have history := after_history setup codec checks candidate _ kernel server state notFull inner innerSupported
+            have history := after_history associatedData setup codec checks candidate _ kernel server state notFull inner innerSupported
             have innerPublished : inner.1.1 = some response := published
-            obtain ⟨advanced, peer⟩ := after_peer setup codec checks candidate _ kernel server state inner innerSupported
+            obtain ⟨advanced, peer⟩ := after_peer associatedData setup codec checks candidate _ kernel server state inner innerSupported
               response innerPublished
             refine ⟨kernel, hrun, history, ?_⟩
             change (inner.1.2.server.peers response.keyId).isSome = true
@@ -301,7 +307,7 @@ def forward {Result : Type} (work : Game KemSK Result) : ControlGame KemSK Resul
 /-- The original publication update, with no saved-chain component. -/
 def ordinaryBuilt (session : Nat) (state : GameState KemSK)
     (result : RustM (Option PqxdhServerRegistrationPublication.Response ×
-      PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes)) ×
+      PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes)) ×
       RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext)) :
     Option PqxdhServerRegistrationPublication.Response × GameState KemSK :=
   let settled := settle state.server result.1
@@ -314,7 +320,7 @@ def ordinaryBuilt (session : Nat) (state : GameState KemSK)
 /-- The altered build saves only a request actually observed in this build, under its successful response's assigned key ID. -/
 def builtState (session : Nat) (state : ControlState KemSK)
     (result : RustM (Option PqxdhServerRegistrationPublication.Response ×
-      PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes)) × TailState) :
+      PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes)) × TailState) :
     Option PqxdhServerRegistrationPublication.Response × ControlState KemSK :=
   let settled := settle state.ordinary.server result.1
   let saved := match settled.1, result.2.1.head? with
@@ -326,14 +332,22 @@ def builtState (session : Nat) (state : ControlState KemSK)
     ctx := result.2.2.2
     ghost := { state.ordinary.ghost with seals := state.ordinary.ghost.seals ++ result.2.2.1.map (fun context => (session, context)) } }, saved⟩)
 
-/-- The altered builder executes the same literal extracted builder once, with the source observer. Its ordinary protocol update is unchanged. -/
+/-- The altered builder runs the original build oracle's steps (`PqxdhServerAuthExperiment.buildOracle`): the pending token is consumed; the modelled pre-hash guard runs first and a rejection answers nothing; otherwise the Server hashes the token's registration transcript with the shared BLAKE2b oracle and executes the same literal extracted builder once at the AD of that digest, with the source observer. Its ordinary protocol update is unchanged. -/
 noncomputable def build (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (session : Nat) (payload : Option Pqxdh.Bytes) : ControlGame KemSK (Option PqxdhServerRegistrationPublication.Response) :=
   fun state => match state.ordinary.pending session with
   | none => pure (none, state)
-  | some token => familyCoins (builtState session state <$> (simulateQ (tail setup codec checks)
-      (PqxdhServerRegistrationPublication.build setup.source token.pending token.root payload () state.ordinary.server)).run
-        ([], ([], state.ordinary.ctx)))
+  | some token =>
+    match PqxdhServerRegistrationPublication.prehash state.ordinary.server token.pending payload with
+    | none => pure (none, { state with ordinary := { state.ordinary with
+        pending := Function.update state.ordinary.pending session none } })
+    | some candidate => do
+        let hashed ← (hashOracle (PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf token.init)
+          (PqxdhTranscriptAd.serverResponse candidate)) : Game KemSK CtxRomAuth.CtxDigest).run state.ordinary
+        familyCoins (builtState session { state with ordinary := hashed.2 } <$> (simulateQ (tail setup codec checks)
+          (PqxdhServerRegistrationPublication.build (associatedData := PqxdhTranscriptAd.adOf hashed.1) setup.source
+            token.pending token.root payload (PqxdhTranscriptAd.adOf hashed.1) hashed.2.server)).run
+              ([], ([], hashed.2.ctx)))
 
 /-- Only the returned copy of the actual installed kernel is changed: the saved chain replaces its send chain. No internal installed state is rolled back. -/
 def reveal (keyId : Std.U64) (state : ControlState KemSK) : Option ConcreteRatchetKernel := do
@@ -360,16 +374,16 @@ theorem built_reveal (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
     (session : Nat) (state : ControlState KemSK) (pending : pqxdh.PendingServerRegistration)
     (root : RootOutput) (payload : Option Pqxdh.Bytes)
     (result : RustM (Option PqxdhServerRegistrationPublication.Response ×
-      PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes)) × TailState)
+      PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes)) × TailState)
     (supported : result ∈ support ((simulateQ (tail setup codec checks)
-      (PqxdhServerRegistrationPublication.build setup.source pending root payload () state.ordinary.server)).run
-        ([], ([], state.ordinary.ctx))))
+      (PqxdhServerRegistrationPublication.build (associatedData := associatedData) setup.source pending root payload
+        associatedData state.ordinary.server)).run ([], ([], state.ordinary.ctx))))
     (response : PqxdhServerRegistrationPublication.Response)
     (published : (settle state.ordinary.server result.1).1 = some response) :
     ∃ initial revealed, PqxdhRootTableInitialization.initialKernelRun setup.source false root = ok initial ∧
       reveal response.keyId (builtState session state result).2 = some revealed ∧
       revealed.refined.send_chain = initial.refined.send_chain := by
-  obtain ⟨initial, init, history, installed⟩ := build_history_peer setup codec checks pending root payload
+  obtain ⟨initial, init, history, installed⟩ := build_history_peer associatedData setup codec checks pending root payload
     state.ordinary.server ([], ([], state.ordinary.ctx)) result supported response published
   cases hp : (settle state.ordinary.server result.1).2.server.peers response.keyId with
   | none => simp only [hp, Option.isSome_none, Bool.false_eq_true] at installed
@@ -390,26 +404,37 @@ theorem build_erase (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   cases hp : state.ordinary.pending session with
   | none => simp only [StateT.run_pure, map_pure]; rfl
   | some token =>
-      simp only [liftCoins, StateT.run_bind, StateT.run_lift, StateT.run_map, StateT.run_set, map_pure,
-        bind_pure_comp]
-      rw [← program_erase setup codec checks
-        (PqxdhServerRegistrationPublication.build setup.source token.pending token.root payload () state.ordinary.server)
-        ([], ([], state.ordinary.ctx))]
-      simp only [familyCoins, simulateQ_map, Functor.map_map]
-      rfl
+      dsimp only
+      cases PqxdhServerRegistrationPublication.prehash state.ordinary.server token.pending payload with
+      | none => simp only [StateT.run_bind, StateT.run_set, pure_bind, StateT.run_pure, map_pure]; rfl
+      | some candidate =>
+          dsimp only
+          rw [StateT.run_bind, map_bind]
+          refine bind_congr fun hashed => ?_
+          simp only [liftCoins, StateT.run_bind, StateT.run_get, pure_bind, StateT.run_lift, StateT.run_map,
+            StateT.run_set, map_pure, bind_pure_comp]
+          rw [← program_erase setup codec checks
+            (PqxdhServerRegistrationPublication.build (associatedData := PqxdhTranscriptAd.adOf hashed.1) setup.source
+              token.pending token.root payload (PqxdhTranscriptAd.adOf hashed.1) hashed.2.server)
+            ([], ([], hashed.2.ctx))]
+          simp only [familyCoins, simulateQ_map, Functor.map_map]
+          rfl
 
-/-- The adversary locally recomputes sequence-one material from the revealed actual chain, uses only public transcript fields, asks the ordinary commitment oracle and delivers a freshly written Phase2 carrying its different payload. -/
+/-- The adversary locally recomputes sequence-one material from the revealed actual chain and uses only public transcript fields: it reads the four Init buffers of the published Phase 1 (`PqxdhServerAuthNegativeControl.publicInit`) and the response fields of the Server's Phase 2, forms the record associated data `context87 ‖ H(T)` from one public BLAKE2b query of that registration transcript `T`, asks the ordinary commitment oracle and delivers a freshly written Phase2 carrying its different payload. -/
 noncomputable def reseal (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (input : AuthInput) (identity : Ed25519PublicKey) (other : Pqxdh.Bytes)
+    (input : AuthInput) (_identity : Ed25519PublicKey) (other : Pqxdh.Bytes)
     (response : PqxdhServerRegistrationPublication.Response) (kernel : ConcreteRatchetKernel) :
     OracleComp ServerAuthSpec Unit :=
   match codec.read2 response.serialized with
   | none => pure ()
   | some original =>
-      match codec.ciphertext original, codec.ephemeral original with
-      | some ciphertext, some ephemeral => do
+      match codec.ciphertext original, codec.ephemeral original, input.phase1.bind (publicInit codec) with
+      | some ciphertext, some ephemeral, some init => do
           let material := chainMaterial setup.source.crypto kernel.refined.send_chain
-          let ad := absBytes (PqxdhBeaconPhase2Shared.associatedData (controlOf input identity))
+          let adDigest ← (ServerAuthSpec.query (.inr (.hash (PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf init)
+            (PqxdhTranscriptAd.adResponse (PqxdhRootTableInitialization.rootArray input.server.ed25519) ephemeral ciphertext
+              response.keyId)))) : OracleComp ServerAuthSpec CtxRomAuth.CtxDigest)
+          let ad := absBytes (PqxdhTranscriptAd.adOf adDigest)
           let sealed := setup.source.crypto.aeadSeal (absMaterial material).1 (absMaterial material).2 ad
             (Pqxdh.LE64 response.keyId.val ++ other)
           let digest ← (ServerAuthSpec.query (.inr (.hash (Pqxdh.ctxPreimage (absMaterial material)
@@ -423,7 +448,7 @@ noncomputable def reseal (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
               | some phase2 => do
                   let _ ← (ServerAuthSpec.query (.inr (.finish phase2)) : OracleComp ServerAuthSpec (Option Pqxdh.Bytes))
                   pure ()
-      | _, _ => pure ()
+      | _, _, _ => pure ()
 
 /-- The public response selects the ordinary reveal handle; only a present kernel permits the attack continuation. -/
 noncomputable def revealThen (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -504,9 +529,9 @@ theorem forward_run {A : Type} (setup : Setup baseSpec KemSK) (seed : IdentitySe
     ((fun result => (result.1, { state with ordinary := result.2 })) <$> work.run state.ordinary)).run family = _
   simp only [simulateQ_map, StateT.run_map]
 
-/-- The concrete attack has at most one accept, zero public HMAC calls and one public commitment-hash request, counting every optional-rejection branch. -/
-theorem adversary_budget (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (payload other : Pqxdh.Bytes) : AuthBudget (adversary setup codec payload other) 1 0 1 := by
+/-- The concrete attack has at most one accept, zero public HMAC calls and two public BLAKE2b requests (the registration-transcript hash that forms its associated data and the commitment hash), counting every optional-rejection branch. Replaces the base `adversary_budget` (one BLAKE2b request): the record associated data is now the hash of the registration transcript. -/
+theorem adversary_budget_transcript (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (payload other : Pqxdh.Bytes) : AuthBudget (adversary setup codec payload other) 1 0 2 := by
   refine ⟨fun input => ?_, fun input => ?_, fun input => ?_⟩ <;>
   · unfold adversary
     split
@@ -532,6 +557,8 @@ theorem adversary_budget (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
               · simp
               · split
                 · refine (isQueryBoundP_query_bind_iff _ _ _ _).2
+                    ⟨by simp [IsAcceptQuery, IsRomQuery, IsHashQuery], fun adDigest => ?_⟩
+                  refine (isQueryBoundP_query_bind_iff _ _ _ _).2
                     ⟨by simp [IsAcceptQuery, IsRomQuery, IsHashQuery], fun digest => ?_⟩
                   split
                   · simp
@@ -547,10 +574,10 @@ noncomputable def controlBody (setup : Setup baseSpec KemSK) (codec : Codec Read
   let beaconSeed ← familyCoins sampleSeed
   let oneTime ← familyCoins PqxdhJointGapDh.sampleScalar
   let keys ← familyCoins (simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl) setup.kem.keygen)
-  let published ← familyCoins (phase1Run setup codec beaconSeed publicValue oneTime keys.1 keys.2)
-  let input : AuthInput := ⟨publicValue.identity, setup.serverKeyId, published.1, none⟩
+  let published ← familyCoins (phase1Logged setup codec beaconSeed publicValue oneTime keys.1 keys.2)
+  let input : AuthInput := ⟨publicValue.identity, setup.serverKeyId, published.1.1, none⟩
   (fun result => result.2.ordinary) <$> (simulateQ (handler setup codec checks publicValue beaconSeed) (client input)).run
-    ⟨initialGameState setup publicValue published.2, fun _ => none⟩
+    ⟨initialGameState setup publicValue published.1.2 published.2, fun _ => none⟩
 
 /-- The altered reveal experiment uses the same complete constructor schedule, family table and final event state as R1. The extra saved-chain map is erased from the final observation. -/
 noncomputable def controlState (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -563,21 +590,38 @@ noncomputable def controlState (setup : Setup baseSpec KemSK) (codec : Codec Rea
     PqxdhJointDhExtractFamily.empty
   pure (seed, scalar, result.1, result.2)
 
-/-- A pending-token build runs the observed literal tail once; every original source effect and the family cache remain visible in the complete result. -/
+/-- A pending-token build consumes the token; when the pre-hash guard passes it hashes the registration transcript on the shared cache and runs the observed literal tail once at the AD of the digest; every original source effect and the family cache remain visible in the complete result. Restated for the hashed build (as `PqxdhServerAuthNegativeControl.run_build`). -/
 theorem run_build (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (seed : IdentitySeed) (scalar : ScalarBytes) (beaconSeed : IdentitySeed) (session : Nat)
     (payload : Option Pqxdh.Bytes) (state : ControlState KemSK) (family : PqxdhJointDhExtractFamily.State)
     (token : PqxdhServerRelatedRootConsumer.Returned) (pending : state.ordinary.pending session = some token) :
     run setup codec checks seed scalar beaconSeed (liftM (ServerAuthSpec.query (.inr (.build session payload))))
-      state family = (fun result => (builtState session state result, family)) <$>
-      (simulateQ (tail setup codec checks)
-        (PqxdhServerRegistrationPublication.build setup.source token.pending token.root payload () state.ordinary.server)).run
-          ([], ([], state.ordinary.ctx)) := by
+      state family =
+      match PqxdhServerRegistrationPublication.prehash state.ordinary.server token.pending payload with
+      | none => pure ((none, { state with ordinary := { state.ordinary with
+          pending := Function.update state.ordinary.pending session none } }), family)
+      | some candidate =>
+        (CtxRomAuth.ctxRandomOracle ((), PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf token.init)
+          (PqxdhTranscriptAd.serverResponse candidate))).run state.ordinary.ctx >>= fun hashed =>
+        (fun result => (builtState session { state with ordinary := { state.ordinary with ctx := hashed.2 } } result,
+            family)) <$>
+          (simulateQ (tail setup codec checks)
+            (PqxdhServerRegistrationPublication.build (associatedData := PqxdhTranscriptAd.adOf hashed.1) setup.source
+              token.pending token.root payload (PqxdhTranscriptAd.adOf hashed.1) state.ordinary.server)).run
+                ([], ([], hashed.2)) := by
   rw [run_query]
   change (simulateQ (romReduction setup seed scalar) (build setup codec checks session payload state)).run family = _
-  simp only [build, pending, romReduction]
-  rw [rom_coins]
-  simp only [Functor.map_map]
+  simp only [build, pending]
+  cases PqxdhServerRegistrationPublication.prehash state.ordinary.server token.pending payload with
+  | none => simp only [simulateQ_pure, StateT.run_pure]
+  | some candidate =>
+      dsimp only
+      rw [hashOracle_run]
+      simp only [bind_assoc, pure_bind, simulateQ_bind, StateT.run_bind]
+      simp only [romReduction]
+      rw [rom_coins, bind_map_left]
+      refine bind_congr fun hashed => ?_
+      rw [rom_coins, Functor.map_map]
 
 /-- The altered reveal is deterministic, changes no state or cache, and adds no primitive work. -/
 theorem run_reveal (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -624,8 +668,8 @@ theorem run_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
   exact forward_run setup seed scalar (finishOracle setup codec
     (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar) beaconSeed bytes) state family
 
-/-- Given the actual revealed first-send chain and the already-produced source partner/seal history, the replacement ciphertext reaches the original Beacon handler and wins W2. The following source-builder consumer supplies these operational facts. -/
-theorem reseal_wins (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+/-- Given the actual revealed first-send chain and the already-produced source partner/seal history, the replacement ciphertext reaches the original Beacon handler and wins W2. The adversary's transcript query reads the Beacon's retained Init bundle from the published Phase 1, so the Beacon's own transcript hash returns the same digest and both use the same associated data. The following source-builder consumer supplies these operational facts. Replaces the base `reseal_wins`: the premises `hinit` (the Beacon retains the bundle `init`) and `hpublic` (the published Phase 1 reads back as `init`) are new, because the record associated data is now the hash of a transcript containing that bundle. -/
+theorem reseal_wins_retained (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (limit : Nat) (laws : ControlLaws setup codec limit)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)
     (other : Pqxdh.Bytes) (nonempty : other ≠ []) (short : other.length + 88 < limit)
@@ -640,12 +684,14 @@ theorem reseal_wins (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     (state : ControlState KemSK) (family : PqxdhJointDhExtractFamily.State)
     (hbeacon : state.ordinary.beacon = publishedBeacon setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar)
       beaconSeed oneTime keys.2)
+    (init : PqxdhEd25519EufCma.Phase1Candidate) (hinit : state.ordinary.beaconInit = some init)
     (context : RawCtxSourceSend.SealContext) (different : context.plaintext.drop 8 ≠ other)
     (hghost : state.ordinary.ghost = ⟨[.session 0 (PqxdhServerRelatedRootInput.message (honestInputs setup
       (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar) beaconSeed oneTime keys.1 reader e encapsulated))
         (some (expandRoot setup.hmac prk))], [(0, context)], none⟩)
     (hprk : family.cache bytes = some prk)
-    (phase1 : Option Pqxdh.Bytes) (response : PqxdhServerRegistrationPublication.Response) (original : Response)
+    (phase1 : Option Pqxdh.Bytes) (hpublic : phase1.bind (publicInit codec) = some init)
+    (response : PqxdhServerRegistrationPublication.Response) (original : Response)
     (originalRead : codec.read2 response.serialized = some original)
     (originalCt : codec.ciphertext original = some (PqxdhAcceptedRegistration.ciphertextArray encapsulated.1))
     (originalEphemeral : codec.ephemeral original = some (rootArray (setup.dh.publicKey e)))
@@ -658,13 +704,26 @@ theorem reseal_wins (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
         (setup.joint.publicKeys beaconSeed).ed25519 other response disclosed) state family)) :
     W2 setup seed scalar result.1.2.ordinary.ghost := by
   have material := material_agree setup.source (expandRoot setup.hmac prk) initial initialized
-  simp only [reseal, originalRead, originalCt, originalEphemeral, disclosedChain, material] at supported
+  have hphase1 : (controlInput setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar) phase1 none).phase1.bind
+      (publicInit codec) = some init := hpublic
+  simp only [reseal, originalRead, originalCt, originalEphemeral, hphase1, disclosedChain, material] at supported
+  rw [run_bind, mem_support_bind_iff] at supported
+  obtain ⟨adHashed, adRun, supported⟩ := supported
+  rw [run_hash, support_map, Set.mem_image] at adRun
+  obtain ⟨adNative, adNativeRun, rfl⟩ := adRun
+  obtain ⟨adCache, adState, adCached, adFamily⟩ :=
+    PqxdhServerAuthNegativeControl.run_hash setup codec checks seed scalar beaconSeed _ state.ordinary family adNative
+      adNativeRun
   rw [run_bind, mem_support_bind_iff] at supported
   obtain ⟨hashed, hashRun, supported⟩ := supported
   rw [run_hash, support_map, Set.mem_image] at hashRun
   obtain ⟨nativeHash, nativeHashRun, rfl⟩ := hashRun
+  have hashGrow := PqxdhServerAuthNegativeControl.run_hash_le setup codec checks seed scalar beaconSeed _ _ _ nativeHash
+    nativeHashRun
   obtain ⟨cache, hashState, cached, sameFamily⟩ :=
-    PqxdhServerAuthNegativeControl.run_hash setup codec checks seed scalar beaconSeed _ state.ordinary family nativeHash nativeHashRun
+    PqxdhServerAuthNegativeControl.run_hash setup codec checks seed scalar beaconSeed _ _ _ nativeHash nativeHashRun
+  rw [adState] at hashState hashGrow
+  rw [adFamily] at sameFamily
   have hshort : ∀ key nonce ad : Pqxdh.Bytes, ∀ digest : CtxRomAuth.CtxDigest,
       ((setup.source.crypto.aeadSeal key nonce ad (Pqxdh.LE64 response.keyId.val ++ other)).1 ++
         (setup.source.crypto.aeadSeal key nonce ad (Pqxdh.LE64 response.keyId.val ++ other)).2 ++
@@ -700,12 +759,12 @@ theorem reseal_wins (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   have beaconInput := beacon_input_eq setup laws.nonzero seed scalar beaconSeed oneTime e decoded
     (PqxdhAcceptedRegistration.ciphertextArray encapsulated.1) response.keyId encapsulated.2 keys.1
   rw [← server_input_eq, hinputS] at beaconInput
-  obtain ⟨beacon', family', finishedEq⟩ := beacon_finish setup codec functional laws.nonzero seed scalar beaconSeed
-    oneTime e keys.2 phase2 decoded (PqxdhAcceptedRegistration.ciphertextArray encapsulated.1) response.keyId
-    encapsulated.2 decodedRead decodedCt decodedEphemeral decodedIdentity decodedId decap frameBytes _ _ _ other
-    nativeHash.1.1 decodedApp frameNonempty frameRead rfl rfl rfl (bodyNonempty _ _ _) nonempty
+  obtain ⟨beacon', family', finishedEq⟩ := beacon_finish_hashed setup codec functional laws.nonzero seed scalar
+    beaconSeed oneTime e keys.2 phase2 decoded (PqxdhAcceptedRegistration.ciphertextArray encapsulated.1) response.keyId
+    encapsulated.2 decodedRead decodedCt decodedEphemeral decodedIdentity decodedId decap init adNative.1.1 frameBytes
+    _ _ _ other nativeHash.1.1 decodedApp frameNonempty frameRead rfl rfl rfl (bodyNonempty _ _ _) nonempty
     bytes prk nativeHash.2 beaconInput (by rw [sameFamily]; exact hprk) rfl nativeHash.1.2
-    (by rw [hashState]; exact hbeacon) (by
+    (by rw [hashState]; exact hbeacon) (by rw [hashState]; exact hinit) (hashGrow adCached) (by
       rw [hashState]
       rw [disclosedChain, material] at cached
       exact cached)
@@ -731,8 +790,8 @@ theorem reseal_wins (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     rcases member with ⟨rfl, rfl⟩
     exact different (congrArg Accepted.payload same)
 
-/-- The actual observed build and altered reveal discharge the resealing lemma's old-chain premise. Publication liveness is a source property, consumed from accepting checks and bounded writers by the complete control theorem. -/
-theorem after_accept_wins (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+/-- The actual observed build and altered reveal discharge the resealing lemma's old-chain premise. Publication liveness is a source property, consumed from accepting checks and bounded writers by the complete control theorem. Replaces the base `after_accept_wins`: the pending token carries the retained Init bundle (`Returned.init`), and the premises `hinit` (the Beacon retains its written candidate) and `hpublic` (the published Phase 1 reads back as that candidate) are new, because the record associated data is now the hash of a transcript containing that bundle. -/
+theorem after_accept_wins_retained (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (limit : Nat) (laws : ControlLaws setup codec limit)
     (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)
     (payload other : Pqxdh.Bytes) (different : payload ≠ other)
@@ -749,9 +808,12 @@ theorem after_accept_wins (setup : Setup baseSpec KemSK) (codec : Codec Reader R
     (pending : state.ordinary.pending 0 = some ⟨expandRoot setup.hmac prk, PqxdhServerClearedRoot.pending
       (binding setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar))
         (honestInputs setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar) beaconSeed oneTime keys.1
-          reader e encapsulated)⟩)
+          reader e encapsulated), beaconCandidate setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar)
+            beaconSeed oneTime keys.1⟩)
     (hbeacon : state.ordinary.beacon = publishedBeacon setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar)
       beaconSeed oneTime keys.2)
+    (hinit : state.ordinary.beaconInit = some (beaconCandidate setup
+      (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar) beaconSeed oneTime keys.1))
     (hghost : state.ordinary.ghost = ⟨[.session 0 (PqxdhServerRelatedRootInput.message (honestInputs setup
       (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar) beaconSeed oneTime keys.1 reader e encapsulated))
         (some (expandRoot setup.hmac prk))], [], none⟩)
@@ -760,49 +822,76 @@ theorem after_accept_wins (setup : Setup baseSpec KemSK) (codec : Codec Reader R
       (binding setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar))
       (honestInputs setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar) beaconSeed oneTime keys.1
         reader e encapsulated)) (expandRoot setup.hmac prk) (some payload) state.ordinary.server state.ordinary.ctx)
-    (phase1 : Option Pqxdh.Bytes) (result : (Unit × ControlState KemSK) × PqxdhJointDhExtractFamily.State)
+    (phase1 : Option Pqxdh.Bytes)
+    (hpublic : phase1.bind (publicInit codec) = some (beaconCandidate setup
+      (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar) beaconSeed oneTime keys.1))
+    (result : (Unit × ControlState KemSK) × PqxdhJointDhExtractFamily.State)
     (supported : result ∈ support (run setup codec checks seed scalar beaconSeed
       (buildThen setup codec (controlInput setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar) phase1 none)
         (setup.joint.publicKeys beaconSeed).ed25519 payload other (some 0)) state family)) :
     W2 setup seed scalar result.1.2.ordinary.ghost := by
   simp only [buildThen] at supported
-  rw [run_bind, run_build setup codec checks seed scalar beaconSeed 0 (some payload) state family _ pending,
-    bind_map_left, mem_support_bind_iff] at supported
-  obtain ⟨built, builtRun, supported⟩ := supported
-  have originalRun : (built.1, built.2.2) ∈ support ((simulateQ (tailImpl setup codec checks)
-      (PqxdhServerRegistrationPublication.build setup.source
-        (PqxdhServerClearedRoot.pending (binding setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar))
-          (honestInputs setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar) beaconSeed oneTime keys.1
-            reader e encapsulated)) (expandRoot setup.hmac prk) (some payload) () state.ordinary.server)).run ([], state.ordinary.ctx)) := by
-    rw [← program_erase setup codec checks _ ([], ([], state.ordinary.ctx)), support_map, Set.mem_image]
-    exact ⟨built, builtRun, rfl⟩
-  cases published : (settle state.ordinary.server built.1).1 with
-  | none => exact absurd (publishes (built.1, built.2.2) originalRun) (by rw [published]; simp)
-  | some response =>
-      obtain ⟨initial, disclosed, initialized, disclosedReply, disclosedChain⟩ :=
-        built_reveal setup codec checks 0 state _ (expandRoot setup.hmac prk) (some payload) built builtRun response published
-      obtain ⟨candidate, sourceKernel, digest, frameBytes, _, _, _, ephemeral, ciphertext, _, _, _, _, _, written, sealLog⟩ :=
-        build_published setup codec checks _ _ (some payload) state.ordinary.server state.ordinary.ctx
-          (built.1, built.2.2) originalRun response published
-      change result ∈ support (run setup codec checks seed scalar beaconSeed
-        (revealThen setup codec _ _ other ((settle state.ordinary.server built.1).1))
-        (builtState 0 state built).2 family) at supported
-      rw [published] at supported
-      simp only [revealThen] at supported
-      rw [run_bind, run_reveal, pure_bind, disclosedReply] at supported
-      obtain ⟨original, originalRead, originalCt, originalEphemeral, _, _, _⟩ := laws.phase2 _ response.serialized written
-      rw [ciphertext] at originalCt
-      rw [ephemeral] at originalEphemeral
-      refine reseal_wins setup codec checks limit laws functional other nonempty short seed scalar beaconSeed oneTime
-        keys reader e encapsulated good bytes prk hinputS (builtState 0 state built).2 family ?_
-        (PqxdhServerRegistrationPublication.firstContext candidate (Pqxdh.LE64 candidate.key_id.val ++ payload))
-        ?_ ?_ hprk phase1 response original originalRead originalCt originalEphemeral initial disclosed initialized
-        disclosedChain result supported
-      · exact hbeacon
-      · simpa only [PqxdhServerRegistrationPublication.firstContext, drop_binding] using different
-      · simp only [builtState, hghost, List.nil_append]
-        rw [sealLog]
-        rfl
+  rw [run_bind, run_build setup codec checks seed scalar beaconSeed 0 (some payload) state family _ pending]
+    at supported
+  dsimp only at supported
+  cases hpre : PqxdhServerRegistrationPublication.prehash state.ordinary.server (PqxdhServerClearedRoot.pending
+      (binding setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar))
+      (honestInputs setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar) beaconSeed oneTime keys.1
+        reader e encapsulated)) (some payload) with
+  | none =>
+      exfalso
+      obtain ⟨⟨passed, hpassed⟩, _⟩ := publishes
+      rw [hpre] at hpassed
+      cases hpassed
+  | some prepared =>
+      rw [hpre] at supported
+      simp only [bind_assoc, bind_map_left, mem_support_bind_iff] at supported
+      obtain ⟨hashed, hashRun, built, builtRun, supported⟩ := supported
+      have hashLe : state.ordinary.ctx ≤ hashed.2 :=
+        QueryImpl.withCaching_cache_le uniformSampleImpl _ state.ordinary.ctx hashed hashRun
+      have originalRun : (built.1, built.2.2) ∈ support ((simulateQ (tailImpl setup codec checks)
+          (PqxdhServerRegistrationPublication.build (associatedData := PqxdhTranscriptAd.adOf hashed.1) setup.source
+            (PqxdhServerClearedRoot.pending (binding setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar))
+              (honestInputs setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar) beaconSeed oneTime keys.1
+                reader e encapsulated)) (expandRoot setup.hmac prk) (some payload) (PqxdhTranscriptAd.adOf hashed.1)
+              state.ordinary.server)).run ([], hashed.2)) := by
+        rw [← program_erase setup codec checks _ ([], ([], hashed.2)), support_map, Set.mem_image]
+        exact ⟨built, builtRun, rfl⟩
+      cases published : (settle state.ordinary.server built.1).1 with
+      | none => exact absurd (publishes.2 _ _ hashLe (built.1, built.2.2) originalRun) (by rw [published]; simp)
+      | some response =>
+          obtain ⟨initial, disclosed, initialized, disclosedReply, disclosedChain⟩ :=
+            built_reveal (PqxdhTranscriptAd.adOf hashed.1) setup codec checks 0
+              { state with ordinary := { state.ordinary with ctx := hashed.2 } } _ (expandRoot setup.hmac prk)
+              (some payload) built builtRun response published
+          obtain ⟨candidate, sourceKernel, digest, frameBytes, _, _, _, ephemeral, ciphertext, _, _, _, _, written,
+              sealLog⟩ :=
+            build_published (PqxdhTranscriptAd.adOf hashed.1) (PqxdhTranscriptAd.adOf hashed.1) setup codec checks _ _
+              (some payload) state.ordinary.server hashed.2 (built.1, built.2.2) originalRun response published
+          change result ∈ support (run setup codec checks seed scalar beaconSeed
+            (revealThen setup codec _ _ other ((settle state.ordinary.server built.1).1))
+            (builtState 0 { state with ordinary := { state.ordinary with ctx := hashed.2 } } built).2 family) at supported
+          rw [published] at supported
+          simp only [revealThen] at supported
+          rw [run_bind, run_reveal, pure_bind, disclosedReply] at supported
+          obtain ⟨original, originalRead, originalCt, originalEphemeral, _, _, _⟩ :=
+            laws.phase2 _ response.serialized written
+          rw [ciphertext] at originalCt
+          rw [ephemeral] at originalEphemeral
+          refine reseal_wins_retained setup codec checks limit laws functional other nonempty short seed scalar beaconSeed
+            oneTime keys reader e encapsulated good bytes prk hinputS
+            (builtState 0 { state with ordinary := { state.ordinary with ctx := hashed.2 } } built).2 family ?_
+            (beaconCandidate setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar) beaconSeed oneTime keys.1)
+            ?_ (PqxdhServerRegistrationPublication.firstContext candidate (PqxdhTranscriptAd.adOf hashed.1)
+              (Pqxdh.LE64 candidate.key_id.val ++ payload))
+            ?_ ?_ hprk phase1 hpublic response original originalRead originalCt originalEphemeral initial disclosed
+            initialized disclosedChain result supported
+          · exact hbeacon
+          · exact hinit
+          · simpa only [PqxdhServerRegistrationPublication.firstContext, drop_binding] using different
+          · simp only [builtState, hghost, List.nil_append]
+            rw [sealLog]
+            rfl
 
 /-- For each actual sampled KEM pair, every run with correct decapsulation wins after one honest admission/build and the altered pre-seal reveal. The remaining failure mass is exactly bounded by the ordinary pair's correctness error. -/
 theorem pair_failure (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (limit : Nat)
@@ -819,14 +908,17 @@ theorem pair_failure (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
             beaconSeed oneTime keys.1 keys.2).1 none))
         ⟨initialGameState setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar)
           (phase1Result setup codec (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar)
-            beaconSeed oneTime keys.1 keys.2).2, fun _ => none⟩
+            beaconSeed oneTime keys.1 keys.2).2
+          (phase1Init setup codec (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar) beaconSeed oneTime keys.1),
+          fun _ => none⟩
         PqxdhJointDhExtractFamily.empty)}[¬ W2 setup seed scalar result.1.2.ordinary.ghost] ≤ keyPairError setup functional keys := by
   have prAssoc : ∀ {α β γ : Type} (x : ProbComp α) (f : α → ProbComp β) (g : β → ProbComp γ) (p : γ → Prop),
       Pr{let y ← (x >>= f >>= g)}[p y] = Pr{let y ← (x >>= fun a => f a >>= g)}[p y] := fun x f g p => by
     rw [bind_assoc x f g]
   obtain ⟨phase1, written⟩ := laws.phase1Total (beaconCandidate setup
     (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar) beaconSeed oneTime keys.1)
-  rw [phase1Result_some setup codec _ beaconSeed oneTime keys.1 keys.2 phase1 written]
+  rw [phase1Result_some setup codec _ beaconSeed oneTime keys.1 keys.2 phase1 written,
+    phase1Init_some setup codec _ beaconSeed oneTime keys.1 phase1 written]
   simp only [controlInput, adversary, parse_honest setup codec laws.phase1 _ beaconSeed oneTime keys.1 phase1 written]
   rw [run_bind, run_accept, bind_map_left, PqxdhServerAuthNegativeControl.run_accept, prAssoc]
   obtain ⟨reader, hread, hidentity, hpq, hpre, hone⟩ := laws.phase1 _ phase1 written
@@ -856,9 +948,10 @@ theorem pair_failure (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
   obtain ⟨answer, answerRun, supported⟩ := supported
   have cached := randomOracle_cached (spec := HmacOracle) _ _ _ answerRun
   apply not_not.mpr
-  refine after_accept_wins setup codec acceptAll limit laws functional payload other different otherNonempty otherShort
-    seed scalar beaconSeed oneTime keys reader e encapsulated good bytes answer.1 sourceInput _ _
-    (by simp [initialGameState]) rfl (by simp [initialGameState, Ghost.empty]) cached ?_ (some phase1) result supported
+  refine after_accept_wins_retained setup codec acceptAll limit laws functional payload other different otherNonempty
+    otherShort seed scalar beaconSeed oneTime keys reader e encapsulated good bytes answer.1 sourceInput _ _
+    (by simp [initialGameState]; rfl) rfl rfl (by simp [initialGameState, Ghost.empty]) cached ?_ (some phase1)
+    (by simpa only [Option.bind_some] using publicInit_honest codec laws.phase1 _ phase1 written) result supported
   exact build_publishes setup codec limit laws _ _ (some payload) _ _ below (fun _ => rfl) rfl rfl
     payloadNonempty allocatable payloadShort
 
@@ -874,12 +967,14 @@ theorem controlBody_run (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
             beaconSeed oneTime keys.1 keys.2).1 none))
         ⟨initialGameState setup (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar)
           (phase1Result setup codec (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar)
-            beaconSeed oneTime keys.1 keys.2).2, fun _ => none⟩
+            beaconSeed oneTime keys.1 keys.2).2
+          (phase1Init setup codec (PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar) beaconSeed oneTime keys.1),
+          fun _ => none⟩
         PqxdhJointDhExtractFamily.empty := by
   simp only [controlBody, simulateQ_bind, StateT.run_bind, rom_coins, bind_map_left, simulateQ_map, StateT.run_map,
     romReduction]
   refine bind_congr fun beaconSeed => bind_congr fun oneTime => bind_congr fun keys => ?_
-  rw [phase1Run_eq, pure_bind]
+  rw [phase1Logged_result, pure_bind]
   rfl
 
 /-- Averaging the source attack over its unchanged complete constructor sampler bounds its failure by the ordinary ML-KEM correctness experiment. There is no assumed publication or security event. -/
@@ -953,11 +1048,11 @@ def HasClass (category : ApiClass) (query : ServerAuthSpec.Domain) : Prop := cla
 instance (category : ApiClass) : DecidablePred (HasClass category) := fun query =>
   inferInstanceAs (Decidable (classify query = category))
 
-/-- Every adaptive reply branch makes at most one accept, build, reveal, hash and finish, and no adversary coin or public HMAC request. Local real KDF/AEAD work remains present in the concrete adversary. -/
-theorem adversary_classes (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+/-- Every adaptive reply branch makes at most one accept, build, reveal and finish, at most two BLAKE2b requests (the registration-transcript hash and the commitment hash), and no adversary coin or public HMAC request. Local real KDF/AEAD work remains present in the concrete adversary. Replaces the base `adversary_classes` (one hash request). -/
+theorem adversary_classes_transcript (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (payload other : Pqxdh.Bytes) (input : AuthInput) (category : ApiClass) :
     (adversary setup codec payload other input).IsQueryBoundP (HasClass category)
-      (match category with | .coin | .hmac => 0 | _ => 1) := by
+      (match category with | .coin | .hmac => 0 | .hash => 2 | _ => 1) := by
   cases category <;>
   · unfold adversary
     split
@@ -983,6 +1078,8 @@ theorem adversary_classes (setup : Setup baseSpec KemSK) (codec : Codec Reader R
               · simp
               · split
                 · refine (isQueryBoundP_query_bind_iff _ _ _ _).2
+                    ⟨by simp [HasClass, classify], fun adDigest => ?_⟩
+                  refine (isQueryBoundP_query_bind_iff _ _ _ _).2
                     ⟨by simp [HasClass, classify], fun digest => ?_⟩
                   split
                   · simp
@@ -992,10 +1089,10 @@ theorem adversary_classes (setup : Setup baseSpec KemSK) (codec : Codec Reader R
                         ⟨by simp [HasClass, classify], fun _ => by simp⟩
                 · simp
 
-/-- The complete concrete adversary issues at most five API queries in total; rejected branches are included and do not create retries. -/
-theorem adversary_total (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+/-- The complete concrete adversary issues at most six API queries in total (accept, build, reveal, the transcript and commitment hashes, finish); rejected branches are included and do not create retries. Replaces the base `adversary_total` (five queries). -/
+theorem adversary_total_transcript (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (payload other : Pqxdh.Bytes) (input : AuthInput) :
-    (adversary setup codec payload other input).IsTotalQueryBound 5 := by
+    (adversary setup codec payload other input).IsTotalQueryBound 6 := by
   apply (isQueryBoundP_true_iff _ _).1
   unfold adversary
   split
@@ -1021,6 +1118,8 @@ theorem adversary_total (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
             · simp
             · split
               · refine (isQueryBoundP_query_bind_iff _ _ _ _).2
+                  ⟨by simp, fun adDigest => ?_⟩
+                refine (isQueryBoundP_query_bind_iff _ _ _ _).2
                   ⟨by simp, fun digest => ?_⟩
                 split
                 · simp
@@ -1155,11 +1254,11 @@ end BeaconcryptCore.Computational.PqxdhServerAuthPresealControl
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhServerAuthPresealControl.forward_run
-/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthPresealControl.adversary_budget' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthPresealControl.adversary_budget_transcript' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhServerAuthPresealControl.adversary_budget
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthPresealControl.adversary_budget_transcript
 /-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthPresealControl.run_build' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
@@ -1185,16 +1284,16 @@ end BeaconcryptCore.Computational.PqxdhServerAuthPresealControl
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhServerAuthPresealControl.run_finish
-/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthPresealControl.reseal_wins' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthPresealControl.reseal_wins_retained' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhServerAuthPresealControl.reseal_wins
-/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthPresealControl.after_accept_wins' depends on axioms: [propext,
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthPresealControl.reseal_wins_retained
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthPresealControl.after_accept_wins_retained' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhServerAuthPresealControl.after_accept_wins
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthPresealControl.after_accept_wins_retained
 /-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthPresealControl.pair_failure' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
@@ -1215,16 +1314,16 @@ end BeaconcryptCore.Computational.PqxdhServerAuthPresealControl
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhServerAuthPresealControl.preseal_control
-/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthPresealControl.adversary_classes' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthPresealControl.adversary_classes_transcript' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhServerAuthPresealControl.adversary_classes
-/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthPresealControl.adversary_total' depends on axioms: [propext,
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthPresealControl.adversary_classes_transcript
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthPresealControl.adversary_total_transcript' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhServerAuthPresealControl.adversary_total
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthPresealControl.adversary_total_transcript
 /-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthPresealControl.presealGame_event' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/

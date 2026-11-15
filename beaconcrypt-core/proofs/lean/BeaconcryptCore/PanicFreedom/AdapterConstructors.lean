@@ -29,29 +29,19 @@ variable [authentication : beaconcrypt.auth.Operations]
 structure BeaconContracts {R E : Type} (generator : rand_core.TryCryptoRng R E) : Prop where
   parse : ∀ input, Normal (primitive.parse input)
   edPublicBytes : ∀ key, Normal (crypto.edPublicBytes key)
-  mldsaGenerate : ∀ rng,
-    Normal (generators.mldsaGenerate generator rng)
   edGenerate : ∀ rng,
     Normal (generators.edGenerate generator rng)
   kxGenerate : ∀ rng,
     Normal (crypto.kxGenerate generator rng)
   kemGenerate : ∀ rng,
     Normal (generators.kemGenerate generator rng)
-  hash : ∀ request, Normal (authentication.hash request)
 
-omit material platform primitive crypto generators standard in
-theorem fingerprint_pin_total
-    (hash : ∀ request, Normal (authentication.hash request))
+omit material platform primitive crypto generators standard authentication in
+theorem server_pin_total
     (binding : pqxdh.ServerBinding) (publicKey : Array U8 1952#usize) :
-    ∃ result, auth.fingerprint_pin binding publicKey = ok result := by
-  obtain ⟨pending, started⟩ := RegistrationTrivial.begin_server_pin_total binding publicKey
-  obtain ⟨request, requested⟩ := RegistrationTrivial.PinFingerprint_request_total pending
-  obtain ⟨digest, hashed⟩ := hash request
-  obtain ⟨result, resumed⟩ := RegistrationTrivial.PinFingerprint_resume_total pending digest
-  exact ⟨result, by simp only [auth.fingerprint_pin, started, requested,
-    beaconcrypt.auth.execute_hash, hashed, resumed, bind_tc_ok]⟩
+    ∃ result, auth.server_pin binding publicKey = ok result := ⟨_, rfl⟩
 
-omit platform standard in
+omit platform standard authentication in
 theorem beacon_try_new_with_rng_total
     {R E : Type} (generator : rand_core.TryCryptoRng R E) (contracts : BeaconContracts generator) (identifier : U64)
     (identityKey mldsaKey : Slice U8) (rng : R) :
@@ -77,25 +67,24 @@ theorem beacon_try_new_with_rng_total
       | (solve | simp_all)
       | exact contracts.parse _
       | exact contracts.edPublicBytes _
-      | exact contracts.mldsaGenerate _
       | exact contracts.edGenerate _
       | exact contracts.kxGenerate _
       | exact contracts.kemGenerate _
-      | exact fingerprint_pin_total contracts.hash _ _
+      | exact server_pin_total _ _
       | exact RegistrationInputs.copied_slice_total _ _
       | (intro value)
       | (split)
       | (split at *)
       | apply normal_bind_at
 
-omit platform in
+omit platform authentication in
 theorem beacon_try_new_total (contracts : BeaconContracts standard.os) (identifier : U64)
     (identityKey mldsaKey : Slice U8) :
     ∃ result, beaconcrypt_constructor.beacon.Beacon.try_new identifier identityKey mldsaKey = ok result := by
   obtain ⟨⟨result, rng⟩, returned⟩ := beacon_try_new_with_rng_total standard.os contracts identifier identityKey mldsaKey ()
   exact ⟨result, by simp only [beaconcrypt_constructor.beacon.Beacon.try_new, beaconcrypt_crypto.OsRng.Insts.Rand_coreTryCryptoRngError, returned, bind_tc_ok]; rfl⟩
 
-omit platform in
+omit platform authentication in
 theorem beacon_new_of_success (identifier : U64) (identityKey mldsaKey : Slice U8)
     (beacon : beacon.Beacon)
     (constructed : beaconcrypt_constructor.beacon.Beacon.try_new identifier identityKey mldsaKey = ok (.Ok beacon)) :

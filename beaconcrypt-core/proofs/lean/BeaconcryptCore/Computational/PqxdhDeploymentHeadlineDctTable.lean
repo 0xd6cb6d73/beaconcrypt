@@ -16,6 +16,7 @@ The hidden key `key32_0` is the key part of slot 0's material in the final split
 open OracleComp OracleSpec ENNReal
 
 set_option autoImplicit false
+set_option warningAsError true
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctTable
 open OracleComp.ProgramLogic (wp)
@@ -300,6 +301,39 @@ theorem chargedD_frame {α : Type} (work : StateT (PqxdhDeploymentNative.State K
   rw [kept state r member]
   rfl
 
+/-- The actual transcript hash preserves the independent R1 table, so its R1 potential charge is zero. -/
+theorem chargedN_hash (bytes : Pqxdh.Bytes) :
+    ChargedN setup (PqxdhServerAuthNative.nativeHash (KemSK := KemSK) bytes) 0 :=
+  chargedN_frame setup _ fun state r member => by
+    simp only [PqxdhServerAuthNative.nativeHash, StateT.run, support_map] at member
+    obtain ⟨_, _, rfl⟩ := member
+    rfl
+
+/-- The native owner at its actual per-call completed binding makes at most one root request. -/
+theorem chargedN_nativeOwner (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+    (codec : Codec Reader Response) (raw : Pqxdh.Bytes) (owner : PqxdhRegistrationSchedule.Owner KemSK) :
+    ChargedN setup (simulateQ (PqxdhRegistrationSchedule.callbacks setup codec)
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw owner)) 1 :=
+  chargedN_run setup (PqxdhRegistrationSchedule.callbacks setup codec)
+    (fun query => PqxdhRegistrationJointKemRomSplit.rootNative query = true)
+    (fun query root => by simpa [root] using chargedN_callbacks setup codec query)
+    (fun query root => by simpa [root] using chargedN_callbacks setup codec query) _ 1
+    (PqxdhRegistrationJointKemRomSplit.nativeOwner_root (completedBinding := completedBinding) codec.frameRead raw owner)
+
+/-- The actual source transcript-hash prefix is free in the R1 potential, before the single native owner root read. -/
+theorem chargedN_ownerFinish (codec : Codec Reader Response)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) :
+    ChargedN setup (PqxdhRegistrationSchedule.ownerFinish setup codec retained raw owner) 1 := by
+  unfold PqxdhRegistrationSchedule.ownerFinish
+  split
+  · rename_i control prekey oneTime kem active
+    split
+    · exact chargedN_bind setup (m := 0) (n := 1) (chargedN_hash setup _)
+        (fun digest => chargedN_nativeOwner setup (PqxdhTranscriptAd.completedOf control digest) codec raw owner)
+    · exact chargedN_mono setup (chargedN_pure setup _) (by omega)
+  · exact chargedN_mono setup (chargedN_pure setup _) (by omega)
+
 /-- The source schedule's Beacon finish costs one unit: the native owner makes at most one root request (`nativeOwner_root`). -/
 theorem chargedR_finish (codec : Codec Reader Response) (index : ℕ) (raw : Pqxdh.Bytes) :
     ChargedR setup (PqxdhRegistrationSchedule.finish setup codec index raw) 1 := by
@@ -313,11 +347,7 @@ theorem chargedR_finish (codec : Codec Reader Response) (index : ℕ) (raw : Pqx
       change wp (PqxdhRegistrationSchedule.finish setup codec index raw state) _ ≤ _
       rw [PqxdhRegistrationSchedule.finish_source setup codec index raw state owner found,
         OracleComp.ProgramLogic.wp_map]
-      exact chargedN_run setup (PqxdhRegistrationSchedule.callbacks setup codec)
-        (fun query => PqxdhRegistrationJointKemRomSplit.rootNative query = true)
-        (fun query root => by simpa [root] using chargedN_callbacks setup codec query)
-        (fun query root => by simpa [root] using chargedN_callbacks setup codec query) _ 1
-        (PqxdhRegistrationJointKemRomSplit.nativeOwner_root codec.frameRead raw owner) key b state.shared
+      exact chargedN_ownerFinish setup codec (state.inits index) raw owner key b state.shared
 
 end Lifts
 
@@ -494,8 +524,12 @@ theorem chargedN_build (session : ℕ) (payload : Option Pqxdh.Bytes) :
   refine chargedN_bind setup (m := 0) (n := 0) (chargedN_local setup _) fun state => ?_
   split
   · exact chargedN_pure setup _
-  · exact chargedN_bind setup (m := 0) (n := 0) (chargedN_coins setup _) fun _ =>
-      chargedN_bind setup (m := 0) (n := 0) (chargedN_local setup _) fun _ => chargedN_pure setup _
+  · split
+    · exact chargedN_bind setup (m := 0) (n := 0) (chargedN_local setup _) fun _ => chargedN_pure setup _
+    · exact chargedN_bind setup (m := 0) (n := 0) (chargedN_hash setup _) fun _ =>
+        chargedN_bind setup (m := 0) (n := 0) (chargedN_local setup _) fun _ =>
+        chargedN_bind setup (m := 0) (n := 0) (chargedN_coins setup _) fun _ =>
+        chargedN_bind setup (m := 0) (n := 0) (chargedN_local setup _) fun _ => chargedN_pure setup _
 
 /-- Every query of the native deployment handler is charged at most its R1 charge. -/
 theorem chargedD_handler (seed : PqxdhJointIdentity.IdentitySeed) (query : PqxdhDeploymentInterface.Spec.Domain) :
@@ -676,8 +710,12 @@ theorem chargedN_buildHidden (hidden : PqxdhRegistrationJointKemPostSkeleton.Hid
   refine chargedN_bind setup (m := 0) (n := 0) (chargedN_local setup _) fun state => ?_
   split
   · exact chargedN_pure setup _
-  · exact chargedN_bind setup (m := 0) (n := 0) (chargedN_coins setup _) fun _ =>
-      chargedN_bind setup (m := 0) (n := 0) (chargedN_local setup _) fun _ => chargedN_pure setup _
+  · split
+    · exact chargedN_bind setup (m := 0) (n := 0) (chargedN_local setup _) fun _ => chargedN_pure setup _
+    · exact chargedN_bind setup (m := 0) (n := 0) (chargedN_hash setup _) fun _ =>
+        chargedN_bind setup (m := 0) (n := 0) (chargedN_local setup _) fun _ =>
+        chargedN_bind setup (m := 0) (n := 0) (chargedN_coins setup _) fun _ =>
+        chargedN_bind setup (m := 0) (n := 0) (chargedN_local setup _) fun _ => chargedN_pure setup _
 
 /-- The known-handle grouped finish of the Beacon costs one unit: the private root read, then the continuation on the CTX cache. -/
 theorem chargedN_knownGroup (pending : PqxdhRegistrationJointKemPostSkeleton.Pending Response) :
@@ -784,8 +822,8 @@ def ownerGroupCE : (PqxdhDeploymentIdealSteps.OwnerSpecCE KemSK Response).Domain
   | .inl _ => false
 
 /-- The grouped native owner issues at most one grouped finish request. -/
-theorem groupedOwnerCE_bound (raw : Pqxdh.Bytes) (state : PqxdhRegistrationSchedule.Owner KemSK) :
-    (PqxdhDeploymentIdealSteps.groupedOwnerCE (Response := Response) raw state).IsQueryBoundP
+theorem groupedOwnerCE_bound (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding) (raw : Pqxdh.Bytes) (state : PqxdhRegistrationSchedule.Owner KemSK) :
+    (PqxdhDeploymentIdealSteps.groupedOwnerCE (Response := Response) completedBinding raw state).IsQueryBoundP
       (fun query => ownerGroupCE query = true) 1 := by
   unfold PqxdhDeploymentIdealSteps.groupedOwnerCE
   split
@@ -822,6 +860,44 @@ theorem chargedG_groupCE (hidden : PqxdhServerAuthKeySchedule.Output → PqxdhRe
       exact tablePotential_mono setup _ (by omega) _
   · exact chargedG_native setup _ 1 (chargedN_knownGroup setup codec pending) b s q
 
+/-- The grouped native owner at its actual per-call binding has one R1 charge. -/
+theorem chargedG_groupedOwnerCE (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+    (hidden : PqxdhServerAuthKeySchedule.Output → PqxdhRegistrationJointKemPostSkeleton.Hidden Response)
+    (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) :
+    ChargedG setup (fun z : NativeState KemSK × Option Coord => z.1.1.cache)
+      (simulateQ (PqxdhDeploymentIdealSteps.ownerImplCE setup codec hidden challenge)
+        (PqxdhDeploymentIdealSteps.groupedOwnerCE (Response := Response) completedBinding raw owner)) 1 := by
+  exact chargedG_run setup (fun z : NativeState KemSK × Option Coord => z.1.1.cache)
+    (PqxdhDeploymentIdealSteps.ownerImplCE setup codec hidden challenge) (fun query => ownerGroupCE query = true)
+    (fun query grouped => by
+      rcases query with query | pending
+      · simp [ownerGroupCE] at grouped
+      · exact chargedG_groupCE setup codec hidden pending)
+    (fun query single => by
+      rcases query with query | pending
+      · exact chargedG_coins setup _ _
+      · simp [ownerGroupCE] at single) _ 1 (groupedOwnerCE_bound completedBinding raw owner)
+
+/-- The actual hidden source hash is R1-free and keeps its full CTX poststate before the charged grouped finish. -/
+theorem chargedG_hashedOwnerCE
+    (hidden : PqxdhServerAuthKeySchedule.Output → PqxdhRegistrationJointKemPostSkeleton.Hidden Response)
+    (challenge : PqxdhKemIndCca.MlKem768Ciphertext)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) :
+    ChargedG setup (fun z : NativeState KemSK × Option Coord => z.1.1.cache)
+      (PqxdhDeploymentIdealSteps.hashedOwnerCE setup codec hidden challenge retained raw owner) 1 := by
+  unfold PqxdhDeploymentIdealSteps.hashedOwnerCE
+  split
+  · rename_i control prekey oneTime kem active
+    split
+    · exact chargedG_bind setup (fun z : NativeState KemSK × Option Coord => z.1.1.cache)
+        (m := 0) (n := 1) (chargedG_native setup _ 0 (chargedN_hash setup _))
+        (fun digest => chargedG_groupedOwnerCE setup codec (PqxdhTranscriptAd.completedOf control digest)
+          hidden challenge raw owner)
+    · exact chargedG_mono setup _ (chargedG_pure setup _ _) (by omega)
+  · exact chargedG_mono setup _ (chargedG_pure setup _ _) (by omega)
+
 /-- Owner k's challenge finish costs one unit. -/
 theorem chargedG_finishChallenge
     (hidden : PqxdhServerAuthKeySchedule.Output → PqxdhRegistrationJointKemPostSkeleton.Hidden Response)
@@ -837,16 +913,7 @@ theorem chargedG_finishChallenge
     exact tablePotential_mono setup _ (by omega) _
   · rw [simulateQ_bind, StateT.run_bind, OracleComp.ProgramLogic.wp_bind]
     simp only [simulateQ_pure, StateT.run_pure, OracleComp.ProgramLogic.wp_pure]
-    exact chargedG_run setup (fun z : NativeState KemSK × Option Coord => z.1.1.cache)
-      (PqxdhDeploymentIdealSteps.ownerImplCE setup codec hidden challenge) (fun query => ownerGroupCE query = true)
-      (fun query grouped => by
-        rcases query with query | pending
-        · simp [ownerGroupCE] at grouped
-        · exact chargedG_groupCE setup codec hidden pending)
-      (fun query single => by
-        rcases query with query | pending
-        · exact chargedG_coins setup _ _
-        · simp [ownerGroupCE] at single) _ 1 (groupedOwnerCE_bound raw _) b (s.1.shared, s.2) q
+    exact chargedG_hashedOwnerCE setup codec hidden challenge (s.1.inits index) raw _ b (s.1.shared, s.2) q
 
 end SlotCommands
 
@@ -1782,3 +1849,43 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctTable.world_keyHi
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctTable.world_keyHit
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctTable.chargedN_hash' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctTable.chargedN_hash
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctTable.chargedN_nativeOwner' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctTable.chargedN_nativeOwner
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctTable.chargedN_ownerFinish' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctTable.chargedN_ownerFinish
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctTable.chargedG_groupedOwnerCE' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctTable.chargedG_groupedOwnerCE
+
+/--
+info: 'BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctTable.chargedG_hashedOwnerCE' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctTable.chargedG_hashedOwnerCE

@@ -37,7 +37,7 @@ private theorem consumed_source (authenticated : registration.AuthenticatedInit)
   rfl
 
 noncomputable def afterAuthentication (setup : Setup base KemSK) (checks : Checks) (reserve : StateT Platform ProbComp Bool)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit) : M (State n) Platform (RustM (Option Nat)) := do
   let used ← consumed authenticated
   if used then pure (.ok none)
@@ -56,7 +56,7 @@ attribute [local irreducible] RegistrationServerNativeSource.agree RegistrationS
 
 /-- Replay rejection, actual reservation poststate, source agreement and one-use retention agree on every outcome. -/
 theorem afterAuthentication_source (setup : Setup base KemSK) (checks : Checks) (reserve : StateT Platform ProbComp Bool)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit) :
     Coupled (afterAuthentication (n := n) setup checks reserve representation created packet authenticated)
       (RegistrationNativePlatformServerSdk.afterAuthentication RegistrationNativePlatformMldsaProgram.coins setup checks
@@ -103,7 +103,7 @@ theorem afterAuthentication_source (setup : Setup base KemSK) (checks : Checks) 
 
 noncomputable def afterPin (setup : Setup base KemSK) (checks : Checks) (reserve : StateT Platform ProbComp Bool)
     (verify : MldsaTranscriptAuth.Verify) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (result : RegistrationNativeServerPinRecompute.PinReply) : M (State n) Platform (RustM (Option Nat)) :=
   match result with
   | .fail error => pure (.fail error)
@@ -120,7 +120,7 @@ noncomputable def afterPin (setup : Setup base KemSK) (checks : Checks) (reserve
 /-- Every incoming authentication and optional failure branch reaches the same actual source continuation. -/
 theorem afterPin_source (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks) (reserve : StateT Platform ProbComp Bool)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (result : RegistrationNativeServerPinRecompute.PinReply) :
     Coupled (afterPin (n := n) setup checks reserve verify representation created packet result)
       (RegistrationNativePlatformSourceAccept.afterPin RegistrationNativePlatformMldsaProgram.coins setup codec checks (StateT.lift reserve)
@@ -143,14 +143,14 @@ theorem afterPin_source (setup : Setup base KemSK) (codec : Codec Reader Respons
 
 noncomputable def accept (setup : Setup base KemSK) (checks : Checks) (reserve : StateT Platform ProbComp Bool)
     (verify : MldsaTranscriptAuth.Verify) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket) : M (State n) Platform (RustM (Option Nat)) := do
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket) : M (State n) Platform (RustM (Option Nat)) := do
   let current ← RegistrationNativePlatformCtxSdk.pin
   afterPin setup checks reserve verify representation created packet current
 
 /-- Complete actual source acceptance has a physical CTX realization without a root-reference or whole-handler premise. -/
 theorem accept_source (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks) (reserve : StateT Platform ProbComp Bool)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) :
     Coupled (accept (n := n) setup checks reserve verify representation created packet)
       (RegistrationNativePlatformSourceAccept.accept RegistrationNativePlatformMldsaProgram.coins setup codec checks reserve

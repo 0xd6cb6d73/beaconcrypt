@@ -2,6 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativeMldsaGhostCount
 import BeaconcryptCore.Computational.RegistrationNativePlatformMldsaCountStop
 import BeaconcryptCore.Computational.RegistrationNativeMldsaZeroSource
+import BeaconcryptCore.Computational.RegistrationNativeMldsaTableStop
 
 /-! The dynamic first-candidate source game learns its target public key from the actual selected generation reply. Its source code receives only an attempt ordinal, never a future key. Effectful startup, all typed native callbacks and first-candidate stopping remain literal; accounting normalization retains the exact public generation ghost. -/
 open OracleComp OracleSpec CoreModels Aeneas beaconcrypt_core

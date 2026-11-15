@@ -2,7 +2,7 @@
 import BeaconcryptCore.Refinement.AdapterInitAuthenticationDriver
 import BeaconcryptCore.Computational.RegistrationAuthenticationTermination
 
-/-! The actual Aeneas Init loop equals its finite source-body driver for every concrete primitive implementation. Source RustM errors, divergence, parse errors and absent primitive replies are retained; a continued source iteration must reduce the actual seven-callback rank. -/
+/-! The actual Aeneas Init loop equals its finite source-body driver for every concrete primitive implementation. Source RustM errors, divergence, parse errors and absent primitive replies are retained; a continued source iteration must reduce the actual four-callback rank. -/
 open CoreModels Aeneas OracleComp OracleSpec
 open Aeneas.Std hiding namespace core alloc
 open RustM ControlFlow beaconcrypt_core
@@ -52,9 +52,6 @@ theorem body_progress [primitive : AdapterInitEdPrimitive.Operations] [beaconcry
   | HashRequested pending =>
       exact callback_progress _ after pending.request beaconcrypt.auth.execute_hash pending.resume Event.hash
         (fun reply next resumed => .hash pending reply next resumed) actual
-  | MldsaVerificationRequested pending =>
-      exact callback_progress _ after pending.request beaconcrypt.auth.verify_requested pending.resume Event.mldsa
-        (fun reply next resumed => .mldsa pending reply next resumed) actual
   | Ed25519VerificationRequested pending =>
       exact callback_progress _ after pending.request (fun request => do
         let opened ← beaconcrypt.auth.authenticate_init.closure.Insts.CoreOpsFunctionFnTupleOptionVecU8.call
@@ -63,12 +60,6 @@ theorem body_progress [primitive : AdapterInitEdPrimitive.Operations] [beaconcry
         pending.resume (Event.ed25519 pending.stage)
         (fun reply next resumed => .ed25519 pending reply next resumed)
         (by simpa only [beaconcrypt.auth.authenticate_init_loop.body, bind_assoc_eq] using actual)
-  | ServerFingerprintRequested pending =>
-      exact callback_progress _ after pending.request beaconcrypt.auth.execute_hash pending.resume Event.serverFingerprint
-        (fun reply next resumed => .serverFingerprint pending reply next resumed) actual
-  | BeaconFingerprintRequested pending =>
-      exact callback_progress _ after pending.request beaconcrypt.auth.execute_hash pending.resume Event.beaconFingerprint
-        (fun reply next resumed => .beaconFingerprint pending reply next resumed) actual
   | Accepted authenticated | Rejected => cases actual
 
 variable [primitive : AdapterInitEdPrimitive.Operations]
@@ -104,14 +95,14 @@ def authenticate {m : Type → Type} [Monad m] [LiftRust m] [Operations m]
     (pin : session.ServerAuthenticationPin) (packet : registration.InitPacket) :
     m (core.option.Option registration.AuthenticatedInit) := do
   let state ← liftRust (registration.begin_init_authentication pin packet)
-  drive 8 state
+  drive 5 state
 
 /-- The complete lifted Init entrypoint specializes to the exact original Rust controller, including all optional failures and source errors. -/
 theorem specializes [beaconcrypt.auth.Operations] (pin : session.ServerAuthenticationPin) (packet : registration.InitPacket) :
     authenticate (m := RustM) pin packet = beaconcrypt.auth.authenticate_init pin packet := by
   obtain ⟨initial, started, _packet, _pin, _input⟩ := RegistrationAuthentication.begin_init_exact pin packet
   simp only [authenticate, beaconcrypt.auth.authenticate_init, started, liftRust, bind_tc_ok]
-  exact loop_specializes 8 _ (by simpa only [RegistrationAuthenticationTermination.rank] using (by decide : 7 < 8))
+  exact loop_specializes 5 _ (by simpa only [RegistrationAuthenticationTermination.rank] using (by decide : 4 < 5))
 
 /-- The generic source driver is the same free Program used by the checked native controller bridge. -/
 theorem program_drive (fuel : Nat) (state : registration.InitAuthentication) :

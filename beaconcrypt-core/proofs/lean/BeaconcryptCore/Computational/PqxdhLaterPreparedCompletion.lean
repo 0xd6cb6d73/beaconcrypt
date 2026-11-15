@@ -7,6 +7,8 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option maxHeartbeats 500000
 namespace BeaconcryptCore.Computational.PqxdhLaterPreparedCompletion
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPhase1AcceptanceOracle PqxdhKemIndCca PqxdhInitializerSecrecy
 open CtxRomAuth AdaptiveCtxSharedHash PqxdhSecretInputKdf PqxdhFullSecretInputKdf
@@ -36,7 +38,7 @@ noncomputable def evaluated (result : PqxdhLaterSavedSampler.Carrier (setup := s
     (key : RootOutput)
     (component : AdaptiveCtxDynamicKnownKeys.SourceState) (qPost : Nat) (fits : PqxdhInitialOriginCertificates.Fits qPost pending.1) :
     ProbComp (Bool × ((Front × Trace) × RawCtxSharedPrimitive.SharedState (Local A (BareState 1) RootOracle.QueryCache))) :=
-  PqxdhLaterSavedContext.complete
+  PqxdhLaterSavedContext.complete (completedBinding := completedBinding)
     (PqxdhPreparedPrefixCallbacks.preparation attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem result.1.1.1 result.1.1.2)
     (PqxdhPreparedPrefixCallbacks.application attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem result.1.1.1 result.1.1.2)
     (initialLocal (A := A) (N := BareState 1) (env0).source start.1.selectedMessage zeroRoot (PqxdhInitialSampledParent.response start))
@@ -56,8 +58,8 @@ noncomputable def native (result : PqxdhLaterSavedSampler.Carrier (setup := setu
     (privateTable (view (productionStream env.source.crypto) pending.2.store.1) (some (result.1.2.1.1.2)) (result.1.2.1.2) (RawCtxSelectedMessageKdf.response key (result.1.2.2.1) (result.1.2.2.2)))
     (PqxdhInitialOriginFinishPath.withInitial env.source start.1.selectedMessage zeroRoot
       (PqxdhInitialSampledParent.response start) start.1.other))
-    (PqxdhInitialOriginContext.resume (PqxdhInitialSampledParent.marker env.source start) env.senderId env.route env.decode pending.1
-      (PqxdhInitialParentBuilderContext.reply env.senderId env.route env.decode pending.1.original
+    (PqxdhInitialOriginContext.resume (completedBinding := completedBinding) (PqxdhInitialSampledParent.marker env.source start) env.senderId env.route env.decode pending.1
+      (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) env.senderId env.route env.decode pending.1.original
         (RawCtxSelectedParentEntry.realize (result.1.2.1.1.2) (result.1.2.1.2))))).run
     (PqxdhInitialNativeRetained.project (attach pending.2 result.2).1)
 
@@ -70,21 +72,21 @@ theorem source (result : PqxdhLaterSavedSampler.Carrier (setup := setup) (M := M
       (KemHandle K) A (BareState 1) RootOracle.QueryCache S (B + 1))
     (key : RootOutput)
     (component : AdaptiveCtxDynamicKnownKeys.SourceState) (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl kem program post) (depth : Nat)
-    (supported : result ∈ support ((simulateQ hashImpl (PqxdhLaterSavedSampler.run setup env callbacks program post attachedVerify primitives baseImpl kem
+    (supported : result ∈ support ((simulateQ hashImpl (PqxdhLaterSavedSampler.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem
       selected number ancestors disclosed depth)).run ∅))
     (shape : result.1.2.1.1.1 = .inr (start, .inr pending)) (cache : component.cache = result.2) :
-    native setup env result start pending key =
+    native (completedBinding := completedBinding) setup env result start pending key =
       (fun value => ((value.1, value.2.1), retainedOf value.2.2)) <$>
-        evaluated setup env callbacks attachedVerify primitives baseImpl kem result start pending key component
+        evaluated (completedBinding := completedBinding) setup env callbacks attachedVerify primitives baseImpl kem result start pending key component
           (PqxdhInitialPreparedSourceCaps.postCap env0 baseImpl kem program post c)
-          (PqxdhLaterSavedSampler.pending_scope setup env callbacks program post attachedVerify primitives baseImpl kem
+          (PqxdhLaterSavedSampler.pending_scope (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem
             selected number ancestors disclosed c depth result supported start pending shape).1 := by
-  have scopeFacts := PqxdhLaterSavedSampler.pending_scope setup env callbacks program post attachedVerify primitives baseImpl kem
+  have scopeFacts := PqxdhLaterSavedSampler.pending_scope (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem
     selected number ancestors disclosed c depth result supported start pending shape
   have external := PqxdhSelectedFirstRecord.prepared_lifted setup env callbacks ∅ baseImpl kem attachedVerify primitives
     result.1.1.1 result.1.1.2 start.1.selectedMessage zeroRoot (PqxdhInitialSampledParent.response start)
   rw [← scopeFacts.2.2.2] at external
-  have actual := PqxdhLaterSavedContext.retained_complete
+  have actual := PqxdhLaterSavedContext.retained_complete (completedBinding := completedBinding)
     (PqxdhPreparedPrefixCallbacks.preparation attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem result.1.1.1 result.1.1.2)
     (PqxdhPreparedPrefixCallbacks.application attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem result.1.1.1 result.1.1.2)
     (initialLocal (A := A) (N := BareState 1) (env0).source start.1.selectedMessage zeroRoot (PqxdhInitialSampledParent.response start))

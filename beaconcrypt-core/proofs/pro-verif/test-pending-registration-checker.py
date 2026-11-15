@@ -168,8 +168,8 @@ class PendingTests(unittest.TestCase):
     def test_exact_ad_order(self):
         self.mutate_model(
             "fs-pending-response.pvl",
-            "build_associated_data(server_identity, beacon_identity)",
-            "build_associated_data(beacon_identity, server_identity)",
+            "signed_one_time, signed_pq, server_identity, ephemeral, ciphertext, assigned)",
+            "signed_one_time, signed_pq, ephemeral, server_identity, ciphertext, assigned)",
             CHECKER.check_tail,
         )
 

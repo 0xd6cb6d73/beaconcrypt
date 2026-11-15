@@ -25,7 +25,7 @@ variable [BeaconcryptCore.Refinement.AdapterSealPrimitive.Operations]
 variable [BeaconcryptCore.Refinement.AdapterSealJoinCallbacks.Operations]
 
 /-- [beaconcrypt::ratchet::execute_seal_request]:
-    Source: 'beaconcrypt/src/ratchet.rs', lines 459:0-486:1 -/
+    Source: 'beaconcrypt/src/ratchet.rs', lines 463:0-490:1 -/
 def ratchet.execute_seal_request
   (request : beaconcrypt_core.record_effects.AeadSealRequest) :
   RustM (core.option.Option ((alloc.vec.Vec Std.U8) × (Array Std.U8

@@ -3,7 +3,7 @@ import BeaconcryptCore.Computational.RegistrationNativePublicStartupFrame
 import BeaconcryptCore.Computational.RegistrationNativePublicSourceEffects
 import BeaconcryptCore.Computational.RegistrationNativeSeedStart
 
-/-! Fixed-private-seed native startup restores only private constructor and root coordinates. Its public initialization, complete World and pin fingerprint are the actual native startup operations with the same counted constructor and ML-generation prefixes. -/
+/-! Fixed-private-seed native startup restores only private constructor and root coordinates. Its public initialization and complete World retain the same counted constructor and mandatory Server ML-generation prefixes; full-pin construction is pure and issues no fingerprint hash. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core PqxdhRefinement
@@ -30,10 +30,9 @@ noncomputable def initialized (identity : PublicIdentity) (identityIndex : Nat) 
     StateT (PqxdhRecordLiftWorld.State n) ProbComp (RegistrationNativePublicStartup.Started source) := do
   let created := RegistrationServerStartup.publicCreated identity identityIndex serverKeyId
   let _ ← PqxdhRecordLiftWorld.initializeServer created
-  let digest ← PqxdhRecordLiftWorld.effects (.inr (.hash (absBytes credential.publicKey)))
   let pin : session.ServerAuthenticationPin :=
     ⟨⟨PqxdhRootTableInitialization.rootArray identity.ed25519, serverKeyId⟩,
-      credential.publicKey, RegistrationAuthenticationShared.digestArray digest⟩
+      credential.publicKey⟩
   pure ⟨credential, ⟨RegistrationServerMaterialFrontend.initial created.control pin, [],
     ⟨RegistrationServerRoleBackend.empty, [], [], []⟩, 0⟩⟩
 
@@ -49,14 +48,11 @@ theorem initialize_server (joint : PqxdhJointIdentity.Primitives) (seed : Identi
 
 private theorem pin_native (binding : pqxdh.ServerBinding) (publicKey : Std.Array U8 1952#usize) :
     RegistrationWorldServerFrontend.initializePin (n := n) (Auxiliary := RegistrationServerRoleBackend.State) binding publicKey =
-      (fun before => do
-        let result ← (RegistrationWorldServerCompletion.capability (.hash (absBytes publicKey))).run before.2
-        pure (.ok (.Some (⟨binding, publicKey, RegistrationAuthenticationShared.digestArray result.1⟩ : session.ServerAuthenticationPin)),
-          (before.1, result.2))) := by
+      (fun before => pure (.ok (.Some (⟨binding, publicKey⟩ : session.ServerAuthenticationPin)), before)) := by
   funext before
   exact RegistrationWorldServerFrontend.initializePin_native binding publicKey before
 
-/-- The final startup initializer has the actual native pin/hash/World and privately restored empty frontend state. -/
+/-- The final startup initializer has the actual pure full pin and native World and privately restored empty frontend state. -/
 theorem initialize_source (setup : Setup base KemSK) (source : RegistrationNativeMldsa.Source)
     (seed : IdentitySeed) (scalar : PqxdhJointGapDh.ScalarBytes) (identityIndex : Nat) (serverKeyId : U64)
     (credential : RegistrationNativeMldsa.Credential source) (before : PqxdhRecordLiftWorld.State n) :
@@ -75,9 +71,7 @@ theorem initialize_source (setup : Setup base KemSK) (source : RegistrationNativ
   apply bind_congr
   intro installed
   rw [pin_native]
-  simp only [StateT.run, RegistrationWorldServerCompletion.capability, bind_map_left, pure_bind, bind_pure_comp, Functor.map_map]
-  apply bind_congr
-  intro hashed
+  simp only [pure_bind]
   simp only [observe, Option.map_some, privateAt, RegistrationNativePublicSourceState.restore,
     RegistrationNativePublicSourceState.owners, RegistrationNativePublicInterpreter.initial,
     RegistrationServerMaterialSourceState.restore, RegistrationServerReferenceRestore.restore,

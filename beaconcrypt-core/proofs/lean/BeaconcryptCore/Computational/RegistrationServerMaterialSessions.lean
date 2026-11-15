@@ -80,15 +80,29 @@ theorem complete_sessions (wire : RegistrationNativeWire.Wire) (reservePeer : Bo
                   simp only [resumeEq, mem_support_pure_iff] at supported
                   subst result
                   rfl
-              | Ok initial =>
+              | Ok selected =>
                   simp only [resumeEq] at supported
-                  split at supported
-                  · rw [mem_support_bind_iff] at supported
-                    obtain ⟨published, _possible, supported⟩ := supported
-                    exact finish_sessions published before result supported
-                  · rw [mem_support_pure_iff] at supported
-                    subst result
-                    rfl
+                  rw [mem_support_bind_iff] at supported
+                  obtain ⟨hashed, _hashPossible, supported⟩ := supported
+                  cases hashed with
+                  | fail error | div =>
+                      rw [mem_support_pure_iff] at supported
+                      subst result
+                      rfl
+                  | ok completion => cases completion with
+                    | Err previous =>
+                        rw [mem_support_pure_iff] at supported
+                        subst result
+                        rfl
+                    | Ok initial =>
+                        dsimp only at supported
+                        split at supported
+                        · rw [mem_support_bind_iff] at supported
+                          obtain ⟨published, _possible, supported⟩ := supported
+                          exact finish_sessions published before result supported
+                        · rw [mem_support_pure_iff] at supported
+                          subst result
+                          rfl
           · rw [mem_support_pure_iff] at supported
             subst result
             rfl

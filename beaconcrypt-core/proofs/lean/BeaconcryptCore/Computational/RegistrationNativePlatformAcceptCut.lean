@@ -21,7 +21,7 @@ attribute [local irreducible] RegistrationNativePlatformSourceBuild.pin
 structure Cut (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (reserve : StateT Platform ProbComp Bool) (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (before after : State n) (previous next : Platform) (handle : Nat) where
   pin : session.ServerAuthenticationPin
   pinned : State n
@@ -42,7 +42,7 @@ structure Cut (coins : QueryImpl unifSpec (StateT Platform ProbComp))
 theorem accept (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (reserve : StateT Platform ProbComp Bool) (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (before after : State n) (previous next : Platform) (handle : Nat)
     (supported : ((.ok (some handle), after), next) ∈ support
       (((RegistrationNativePlatformSourceAccept.accept coins setup codec checks reserve route verify representation created packet).run before).run previous)) :
@@ -65,17 +65,16 @@ theorem accept (coins : QueryImpl unifSpec (StateT Platform ProbComp))
         | Accepted authenticated => exact ⟨⟨pin, pinned, pinPlatform, events, authenticated, checked, authPlatform, pinCalled, authCalled, later⟩⟩
         | _ => simp [StateT.run_pure] at later
 
-/-- A reached stored-pin hash receipt identifies both the actual recomputed pin and the pin retained at its real poststate. -/
+/-- Pure configured pin selection identifies both the actual returned pin and the pin retained at its real poststate. -/
 theorem pin_fields (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (reserve : StateT Platform ProbComp Bool) (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (before after : State n) (previous next : Platform) (handle : Nat)
-    (cut : Cut coins setup codec checks reserve route verify representation created packet before after previous next handle)
-    (cached : RegistrationNativeServerPinRecompute.Cached before.pin before.world.world.1.primitive.2) :
+    (cut : Cut coins setup codec checks reserve route verify representation created packet before after previous next handle) :
     cut.pin = before.pin ∧ cut.pinned.pin = before.pin := by
   have called := cut.pinCalled
-  rw [RegistrationNativePlatformSourceBuild.pin_hit coins before cached] at called
+  rw [RegistrationNativePlatformSourceBuild.pin_exact coins before] at called
   simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at called
   have answer := congrArg (fun result => result.1.1) called
   have samePin : cut.pin = before.pin := by simpa only [RustM.ok.injEq, Option.some.injEq] using answer
@@ -84,17 +83,16 @@ theorem pin_fields (coins : QueryImpl unifSpec (StateT Platform ProbComp))
 
 attribute [local irreducible] RegistrationServerNativeSource.authenticate
 
-/-- The actual mandatory source authentication cut is the original native authentication body at the actual reached state, once the earlier stored-pin cache receipt is supplied. -/
+/-- The actual mandatory source authentication cut is the original native authentication body at the actual reached state. -/
 theorem authentication (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (reserve : StateT Platform ProbComp Bool) (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (before after : State n) (previous next : Platform) (handle : Nat)
-    (cut : Cut coins setup codec checks reserve route verify representation created packet before after previous next handle)
-    (cached : RegistrationNativeServerPinRecompute.Cached before.pin before.world.world.1.primitive.2) :
+    (cut : Cut coins setup codec checks reserve route verify representation created packet before after previous next handle) :
     (.ok (cut.events, .Accepted cut.authenticated), cut.checked) ∈ support
       ((RegistrationServerNativeSource.authenticate setup codec route verify created packet).run cut.pinned) := by
-  obtain ⟨samePin, sameStored⟩ := pin_fields coins setup codec checks reserve route verify representation created packet before after previous next handle cut cached
+  obtain ⟨samePin, sameStored⟩ := pin_fields coins setup codec checks reserve route verify representation created packet before after previous next handle cut
   have called := cut.authCalled
   rw [samePin.trans sameStored.symm, RegistrationNativePlatformSourceAccept.authenticate_stored coins setup codec route verify created packet cut.pinned] at called
   exact RegistrationNativePlatformHashReceipt.native_support coins _ _ cut.pinPlatform cut.authPlatform called

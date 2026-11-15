@@ -516,7 +516,7 @@ def transport.validate_and_parse_kexresponse
         transport.bcExtractedToken6f7074696f6e5f5fc2b75472616e73706f72745f6b6578726573706f6e7365c2b7c2b7c2b750756c73655f4c69625f536c6963655f736c696365c2b775696e74385f74c2b7.None
 
 /-- [beaconcrypt_parse::transport::validate_and_parse_initkex]:
-    Source: 'beaconcrypt-parse/src/extraction_validator_transport.rs', lines 4293:0-4325:1
+    Source: 'beaconcrypt-parse/src/extraction_validator_transport.rs', lines 3719:0-3751:1
     Visibility: public -/
 def transport.validate_and_parse_initkex
   (s : Slice Std.U8) :
@@ -546,12 +546,12 @@ def transport.validate_and_parse_initkex
         transport.bcExtractedToken6f7074696f6e5f5fc2b75472616e73706f72745f696e69746b6578c2b7c2b7c2b750756c73655f4c69625f536c6963655f736c696365c2b775696e74385f74c2b7.None
 
 /-- [beaconcrypt_parse::extraction_decode_init]:
-    Source: 'beaconcrypt-parse/src/lib.rs', lines 163:0-170:1
+    Source: 'beaconcrypt-parse/src/lib.rs', lines 161:0-168:1
     Visibility: public -/
 def extraction_decode_init
   (input : Slice Std.U8) : RustM (core.option.Option transport.initkex) := do
-  let a := Array.repeat 6#usize 2#u8
-  let s ← lift (Array.to_slice (Array.make 3#usize [ 136#u8, 2#u8, 0#u8 ]))
+  let a := Array.repeat 4#usize 2#u8
+  let s ← lift (Array.to_slice (Array.make 3#usize [ 134#u8, 3#u8, 0#u8 ]))
   let s1 ← lift (Array.to_slice a)
   let o ← registration_validator_primitive.preflightSlice input s s1
   let cf ← core.option.Option.Insts.CoreOpsTry_traitTry.branch o
@@ -576,13 +576,13 @@ def extraction_decode_init
       transport.initkex residual
 
 /-- [beaconcrypt_parse::extraction_decode_response]:
-    Source: 'beaconcrypt-parse/src/lib.rs', lines 172:0-179:1
+    Source: 'beaconcrypt-parse/src/lib.rs', lines 170:0-177:1
     Visibility: public -/
 def extraction_decode_response
   (input : Slice Std.U8) :
   RustM (core.option.Option transport.kexresponse)
   := do
-  let s ← lift (Array.to_slice (Array.make 3#usize [ 136#u8, 2#u8, 1#u8 ]))
+  let s ← lift (Array.to_slice (Array.make 3#usize [ 136#u8, 3#u8, 1#u8 ]))
   let s1 ←
     lift (Array.to_slice
       (Array.make 6#usize [ 2#u8, 2#u8, 2#u8, 2#u8, 0#u8, 2#u8 ]))

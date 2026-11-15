@@ -80,7 +80,7 @@ def NoReserve : AdapterSealNative.Request → Prop
 
 /-- The actual detached-seal source specialization on Single plaintext never requests the prefixed join allocator, including failed key or nonce conversion. -/
 theorem single_no_reserve (E : Type) (key : Array U8 32#usize) (nonce : Array U8 12#usize)
-    (associated : Array U8 281#usize) (plaintext : Slice U8) :
+    (associated : Array U8 151#usize) (plaintext : Slice U8) :
     (AdapterSealNative.execute E ⟨key, nonce, associated, .Single plaintext⟩).AllQueriesSatisfy NoReserve := by
   unfold AdapterSealNative.execute
   cases AdapterSealRequestMonad.Lifted.key (m := RustM) key with

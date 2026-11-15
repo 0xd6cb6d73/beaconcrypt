@@ -272,7 +272,7 @@ theorem effects (query : (EnvEffects n).Domain) (before : Control n)
     rfl
   | inr query => exact capability query before result continued
 
-private theorem import_origins (created : PqxdhLiveServerConstruction.Created Unit) (before : Control n)
+private theorem import_origins (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (before : Control n)
     (result : Unit × Control n)
     (supported : result ∈ support (PqxdhRecordLiftProtocol.initializeServer created before)) :
     origins result.2=origins before := by

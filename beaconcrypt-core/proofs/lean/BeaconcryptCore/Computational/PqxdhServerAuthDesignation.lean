@@ -240,14 +240,20 @@ theorem finish_covered (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
   simp only [finishStep, StateT.run] at supported
   cases phase : state.1.beacon.beacon.phase with
   | initSent control prekey oneTime kem =>
-      simp only [phase, mem_support_bind_iff] at supported
-      obtain ⟨prepared, _, supported⟩ := supported
+      simp only [phase] at supported
+      split at supported
+      rotate_left
+      · simp only [support_pure, Set.mem_singleton_iff] at supported
+        subst supported
+        exact covered
+      simp only [mem_support_bind_iff] at supported
+      obtain ⟨hashed, _, prepared, _, supported⟩ := supported
       cases found : prepared with
       | none =>
           simp only [found, support_pure, Set.mem_singleton_iff] at supported
           subst supported
           exact Covered.transport setup context Q j state.1.ghost _ state.2.2 state.2.2
-            covered (finishOutcome_touches control state.1 none) id
+            covered (finishOutcome_touches control _ none) id
       | some pending =>
           simp only [found, mem_support_bind_iff] at supported
           obtain ⟨derived, derivedSupported, supported⟩ := supported
@@ -268,7 +274,7 @@ theorem finish_covered (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
           | rejected =>
               simp only [reply, support_pure, Set.mem_singleton_iff] at supported
               subst supported
-              exact kept state.1.ctx none
+              exact kept hashed.2 none
           | root root =>
               simp only [reply, mem_support_bind_iff] at supported
               obtain ⟨staged, _, supported⟩ := supported
@@ -326,11 +332,16 @@ theorem skeleton_covered (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
               subst supported
               exact covered
           | some token =>
-              simp only [found, mem_support_bind_iff] at supported
-              obtain ⟨built, _, supported⟩ := supported
-              simp only [support_pure, Set.mem_singleton_iff] at supported
-              subst supported
-              exact covered
+              simp only [found] at supported
+              split at supported
+              · simp only [support_pure, Set.mem_singleton_iff] at supported
+                subst supported
+                exact covered
+              · simp only [mem_support_bind_iff] at supported
+                obtain ⟨hashed, _, built, _, supported⟩ := supported
+                simp only [support_pure, Set.mem_singleton_iff] at supported
+                subst supported
+                exact covered
       | hmac key bytes =>
           simp only [skeleton, hmacStep, StateT.run] at supported
           split_ifs at supported with inside
@@ -482,13 +493,19 @@ theorem finish_resolved (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
   simp only [finishStep, StateT.run] at supported
   cases phase : state.1.beacon.beacon.phase with
   | initSent control prekey oneTime kem =>
-      simp only [phase, mem_support_bind_iff] at supported
-      obtain ⟨prepared, _, supported⟩ := supported
+      simp only [phase] at supported
+      split at supported
+      rotate_left
+      · simp only [support_pure, Set.mem_singleton_iff] at supported
+        subst supported
+        exact resolved
+      simp only [mem_support_bind_iff] at supported
+      obtain ⟨hashed, _, prepared, _, supported⟩ := supported
       cases found : prepared with
       | none =>
           simp only [found, support_pure, Set.mem_singleton_iff] at supported
           subst supported
-          exact Resolved.finish_none setup context control state.1 resolved
+          exact Resolved.finish_none setup context control _ resolved
       | some pending =>
           simp only [found, mem_support_bind_iff] at supported
           obtain ⟨derived, derivedSupported, supported⟩ := supported
@@ -500,7 +517,7 @@ theorem finish_resolved (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
               simp only [reply, support_pure, Set.mem_singleton_iff] at supported
               subst supported
               exact Resolved.finish_none setup context control
-                { state.1 with ghost := { state.1.ghost with touches := state.1.ghost.touches ++
+                { state.1 with ctx := hashed.2, ghost := { state.1.ghost with touches := state.1.ghost.touches ++
                   [.beacon (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected)] } } resolved
           | root root =>
               simp only [reply, mem_support_bind_iff] at supported
@@ -566,11 +583,16 @@ theorem skeleton_resolved (setup : Setup baseSpec KemSK) (codec : Codec Reader R
               subst supported
               exact resolved
           | some token =>
-              simp only [found, mem_support_bind_iff] at supported
-              obtain ⟨built, _, supported⟩ := supported
-              simp only [support_pure, Set.mem_singleton_iff] at supported
-              subst supported
-              exact resolved
+              simp only [found] at supported
+              split at supported
+              · simp only [support_pure, Set.mem_singleton_iff] at supported
+                subst supported
+                exact resolved
+              · simp only [mem_support_bind_iff] at supported
+                obtain ⟨hashed, _, built, _, supported⟩ := supported
+                simp only [support_pure, Set.mem_singleton_iff] at supported
+                subst supported
+                exact resolved
       | hmac key bytes =>
           simp only [skeleton, hmacStep, StateT.run] at supported
           split_ifs at supported

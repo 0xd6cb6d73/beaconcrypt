@@ -25,7 +25,7 @@ private theorem map_apply {S X Y : Type} {m : Type → Type} [Monad m] [LawfulMo
     (f <$> work) before = Prod.map f id <$> work before := StateT.run_map f work before
 
 private theorem native_support (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeIdentityFrontend.M n KemSK RegistrationServerRoleBackend.State source A)
     (before : Full n KemSK Platform source) (result : A × Full n KemSK Platform source)
     (reached : result ∈ support ((interpret setup.joint (RegistrationNativePlatformIdentityCtxMain.beacon setup checks representation created
@@ -55,7 +55,7 @@ private theorem native_support (setup : Setup base KemSK) (checks : Checks)
   exact third.trans (first.trans second)
 
 private theorem beacon_keys (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativePlatformIdentityProgram.M n KemSK RegistrationServerRoleBackend.State Platform source A)
     (metadata : RegistrationNativePlatformIdentityBundleMetadata.Preserves work)
     (before : Full n KemSK Platform source) (result : A × Full n KemSK Platform source)
@@ -75,7 +75,7 @@ private theorem beacon_keys (setup : Setup base KemSK) (checks : Checks)
 
 /-- Creation preserves all old immutable tuples at exactly their original positions. -/
 theorem create_prefix (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (before : Full n KemSK Platform source) (result : RustM (Option Nat) × Full n KemSK Platform source)
     (reached : result ∈ support ((interpret setup.joint
@@ -88,7 +88,7 @@ theorem create_prefix (setup : Setup base KemSK) (checks : Checks)
 
 /-- The actual private source assigns a distinct handle even if public keys alias. -/
 theorem create_distinct (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (before : Full n KemSK Platform source) (result : RustM (Option Nat) × Full n KemSK Platform source)
     (owned : Owned setup.joint before) (distinct : RegistrationNativeIdentityHistorySync.Distinct before.1.1.beacons)
@@ -106,7 +106,7 @@ theorem create_distinct (setup : Setup base KemSK) (checks : Checks)
 
 /-- Stateful publication, including a failed writer, changes no immutable tuple. -/
 theorem bundle_keys (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) (index : Nat)
     (before : Full n KemSK Platform source) (result : RustM (Option Pqxdh.Bytes) × Full n KemSK Platform source)
     (reached : result ∈ support ((interpret setup.joint
@@ -125,7 +125,7 @@ theorem bundle_keys (setup : Setup base KemSK) (checks : Checks)
 
 /-- Corrected assigned-ID finish retains every captured key tuple through all terminal branches. -/
 theorem finish_keys (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat) (packet : Option registration.ResponsePacket)
     (before : Full n KemSK Platform source) (result : RustM (Option Pqxdh.Bytes) × Full n KemSK Platform source)
     (reached : result ∈ support ((interpret setup.joint

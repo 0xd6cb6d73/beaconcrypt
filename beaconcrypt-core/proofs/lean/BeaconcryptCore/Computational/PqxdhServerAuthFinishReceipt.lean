@@ -9,6 +9,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.refined ratchet.concrete PqxdhRefinement
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhServerAuthFinishReceipt
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhSecretInputKdf PqxdhJointKdfGame PqxdhServerAuthCtxCalls
 
 /-- The actual first uncached opening selects precisely its stored material and sequence one. -/
@@ -29,7 +30,7 @@ theorem opening_input (send receiving next : Chain) (material : Material)
 /-- The complete sequence-one driver reaches one selected raw request and returns that request's actual optional plaintext before the source finish. -/
 theorem execute_selected (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
     (read : RawCtxReceive.FrameDecoder) (expected : Std.U64) (send : Chain)
-    (context : RawCtxWholeOwner.OpenContext) (width : context.associatedData.length = 281) :
+    (context : RawCtxWholeOwner.OpenContext) (width : context.associatedData.length = 151) :
     simulateQ (receive source rest read expected)
       (RawCtxChainReceive.execute (PqxdhServerAuthBeaconFirstOpening.initial send .hidden) 1#u64 context) =
       (do
@@ -52,7 +53,7 @@ noncomputable def completed (rest : Residual) (candidate : pqxdh.BeaconRegistrat
     (context : RawCtxWholeOwner.OpenContext) (plaintext : Option Pqxdh.Bytes) :
     Option PqxdhBeaconPhase2Publication.Staged :=
   let reply := RawCtxSharedOpeningConsumer.apiReply 1#u64 context plaintext
-  PqxdhBeaconPhase2Publication.afterOpening candidate
+  PqxdhBeaconPhase2Publication.afterOpening candidate associatedData
     (PqxdhServerAuthCtxBuildSettlement.resolve (match reply with
       | .None => PqxdhServerAuthFinishMaterial.initial rest.2.2
       | .Some _ => PqxdhServerAuthBeaconFirstOpening.published
@@ -65,11 +66,11 @@ theorem raw_one (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
     (candidate : pqxdh.BeaconRegistrationCandidate) (frame : RawCtxReceive.DecodedFrame)
     (nonempty : bytes.isEmpty = false) (decoded : read bytes = some frame)
     (valid : RawCtxReceive.ValidFrame candidate.server_binding.identity_key_id
-      (absBytes candidate.associated_data) frame) (one : frame.sequence = 1#u64) :
-    PqxdhServerAuthFinishMaterial.rawProgram source rest read bytes candidate =
-      completed rest candidate ⟨bytes, frame, absBytes candidate.associated_data⟩ <$>
+      (absBytes associatedData) frame) (one : frame.sequence = 1#u64) :
+    PqxdhServerAuthFinishMaterial.rawProgram source rest read bytes candidate associatedData =
+      completed (associatedData := associatedData) rest candidate ⟨bytes, frame, absBytes associatedData⟩ <$>
         (AdaptiveCtxDynamicKnownKeys.Spec.query (.inl (.inr (RawCtxUniversalDecoder.pack
-          (RawCtxUniversalDecoder.envelope rest.1 ⟨bytes, frame, absBytes candidate.associated_data⟩ valid.2.2)))) :
+          (RawCtxUniversalDecoder.envelope rest.1 ⟨bytes, frame, absBytes associatedData⟩ valid.2.2)))) :
           OracleComp AdaptiveCtxDynamicKnownKeys.Spec (Option Pqxdh.Bytes)) := by
   simp only [PqxdhServerAuthFinishMaterial.rawProgram, raw, RawCtxChainOwner.rawReceive,
     StateT.run, nonempty, Bool.false_eq_true, ite_false, decoded,
@@ -84,10 +85,10 @@ theorem raw_accepts (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
     (read : RawCtxReceive.FrameDecoder) (bytes : Pqxdh.Bytes)
     (candidate : pqxdh.BeaconRegistrationCandidate) (staged : PqxdhBeaconPhase2Publication.Staged)
     (supported : some staged ∈ support
-      (PqxdhServerAuthFinishMaterial.rawProgram source rest read bytes candidate)) :
+      (PqxdhServerAuthFinishMaterial.rawProgram source rest read bytes candidate associatedData)) :
     bytes.isEmpty = false ∧ ∃ frame, read bytes = some frame ∧
       RawCtxReceive.ValidFrame candidate.server_binding.identity_key_id
-        (absBytes candidate.associated_data) frame ∧ frame.sequence = 1#u64 := by
+        (absBytes associatedData) frame ∧ frame.sequence = 1#u64 := by
   unfold PqxdhServerAuthFinishMaterial.rawProgram raw RawCtxChainOwner.rawReceive at supported
   dsimp only [StateT.run] at supported
   split at supported
@@ -107,11 +108,11 @@ theorem raw_accepts (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
         by_contra wrong
         simp only [bind_pure_comp, Functor.map_map, PqxdhServerAuthFinishMaterial.observe,
           RawCtxChainOwner.publish, calls] at supported
-        have rejected := PqxdhServerAuthFinishMaterial.program_wrong source rest read frame.sender candidate
+        have rejected := PqxdhServerAuthFinishMaterial.program_wrong source rest read frame.sender candidate associatedData
           PqxdhServerAuthCtxBuildSettlement.resolve frame.sequence
-          ⟨bytes, frame, absBytes candidate.associated_data⟩
+          ⟨bytes, frame, absBytes associatedData⟩
           (RawCtxChainReceive.normalBegin (PqxdhServerAuthFinishMaterial.initial rest.2.2) frame.sequence
-            ⟨bytes, frame, absBytes candidate.associated_data⟩) (begin_scope _ _ _) wrong
+            ⟨bytes, frame, absBytes associatedData⟩) (begin_scope _ _ _) wrong
         simp only [RawCtxChainReceive.execute, PqxdhServerAuthFinishMaterial.localState] at supported
         rw [rejected] at supported
         simp only [support_map, Set.mem_image, reduceCtorEq, and_false, exists_false] at supported
@@ -126,22 +127,22 @@ theorem monitored_raw (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
     (candidate : pqxdh.BeaconRegistrationCandidate) (staged : PqxdhBeaconPhase2Publication.Staged)
     (before after : RawCtxSelectedAuthenticationObserver.State)
     (supported : (some staged, after) ∈ support (monitor
-      (PqxdhServerAuthFinishMaterial.rawProgram source rest read bytes candidate) before)) :
+      (PqxdhServerAuthFinishMaterial.rawProgram source rest read bytes candidate associatedData) before)) :
     bytes.isEmpty = false ∧ ∃ (frame : RawCtxReceive.DecodedFrame)
       (valid : RawCtxReceive.ValidFrame candidate.server_binding.identity_key_id
-        (absBytes candidate.associated_data) frame) (plaintext : Pqxdh.Bytes),
+        (absBytes associatedData) frame) (plaintext : Pqxdh.Bytes),
       read bytes = some frame ∧ frame.sequence = 1#u64 ∧
-      completed rest candidate ⟨bytes, frame, absBytes candidate.associated_data⟩ (some plaintext) = some staged ∧
+      completed (associatedData := associatedData) rest candidate ⟨bytes, frame, absBytes associatedData⟩ (some plaintext) = some staged ∧
       after = RawCtxSelectedAuthenticationObserver.step (.inl (.inr (RawCtxUniversalDecoder.pack
-        (RawCtxUniversalDecoder.envelope rest.1 ⟨bytes, frame, absBytes candidate.associated_data⟩ valid.2.2))))
+        (RawCtxUniversalDecoder.envelope rest.1 ⟨bytes, frame, absBytes associatedData⟩ valid.2.2))))
         (some plaintext) before := by
   have syntactic : some staged ∈ support
-      (PqxdhServerAuthFinishMaterial.rawProgram source rest read bytes candidate) := by
-    rw [← monitor_erase (PqxdhServerAuthFinishMaterial.rawProgram source rest read bytes candidate) before, support_map]
+      (PqxdhServerAuthFinishMaterial.rawProgram source rest read bytes candidate associatedData) := by
+    rw [← monitor_erase (PqxdhServerAuthFinishMaterial.rawProgram source rest read bytes candidate associatedData) before, support_map]
     exact ⟨(some staged, after), supported, rfl⟩
-  obtain ⟨nonempty, frame, decoded, valid, one⟩ := raw_accepts source rest read bytes candidate staged syntactic
+  obtain ⟨nonempty, frame, decoded, valid, one⟩ := raw_accepts (associatedData := associatedData) source rest read bytes candidate staged syntactic
   refine ⟨nonempty, frame, valid, ?_⟩
-  rw [raw_one source rest read bytes candidate frame nonempty decoded valid one] at supported
+  rw [raw_one (associatedData := associatedData) source rest read bytes candidate frame nonempty decoded valid one] at supported
   rw [RawCtxSelectedAcceptedRecord.monitor_map, support_map] at supported
   obtain ⟨result, reached, equal⟩ := supported
   simp only [monitor, simulateQ_spec_query, handler, StateT.run, mem_support_bind_iff,
@@ -162,27 +163,27 @@ theorem raw_target (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
     (candidate : pqxdh.BeaconRegistrationCandidate) (staged : PqxdhBeaconPhase2Publication.Staged)
     (before after : RawCtxSelectedAuthenticationObserver.State)
     (supported : (some staged, after) ∈ support (monitor
-      (PqxdhServerAuthFinishMaterial.rawProgram source rest read bytes candidate) before)) :
+      (PqxdhServerAuthFinishMaterial.rawProgram source rest read bytes candidate associatedData) before)) :
     ∃ (componentBytes : Pqxdh.Bytes) (target : CtxUnclaimedAcceptance.Target) (kernel : ConcreteRatchetKernel),
       RawCtxUniversalDecoder.decoder read componentBytes = some target ∧
-      PqxdhPhase2LocalMatching.LocalTarget read bytes candidate staged.opened target ∧
-      PqxdhBeaconPhase2Publication.afterOpening candidate kernel (.Some staged.opened) = some staged ∧
+      PqxdhPhase2LocalMatching.LocalTarget (associatedData := associatedData) read bytes candidate staged.opened target ∧
+      PqxdhBeaconPhase2Publication.afterOpening candidate associatedData kernel (.Some staged.opened) = some staged ∧
       ⟨componentBytes, some staged.opened.plaintext, before.seals⟩ ∈ after.attempts := by
   obtain ⟨nonempty, frame, valid, plaintext, decoded, one, accepted, afterEq⟩ :=
-    monitored_raw source rest read bytes candidate staged before after supported
+    monitored_raw (associatedData := associatedData) source rest read bytes candidate staged before after supported
   obtain ⟨slices, parsed⟩ := (RawCtxFrameDecoding.fromPayload_some_iff frame.payload).2 valid.2.1
-  let context : RawCtxWholeOwner.OpenContext := ⟨bytes, frame, absBytes candidate.associated_data⟩
+  let context : RawCtxWholeOwner.OpenContext := ⟨bytes, frame, absBytes associatedData⟩
   let envelope := RawCtxUniversalDecoder.envelope rest.1 context valid.2.2
-  let target := RawCtxKeyFreeDecoder.target rest.1 frame.sequence frame (absBytes candidate.associated_data)
+  let target := RawCtxKeyFreeDecoder.target rest.1 frame.sequence frame (absBytes associatedData)
     slices parsed valid.2.2
   let kernel : ConcreteRatchetKernel := PqxdhServerAuthCtxBuildSettlement.resolve
     (PqxdhServerAuthBeaconFirstOpening.published
       (.known (RawCtxFreshChainCut.concreteChain rest.2.2))
       (.known (RawCtxFreshChainCut.concreteChain rest.2.1)))
-  have success : PqxdhBeaconPhase2Publication.afterOpening candidate kernel
+  have success : PqxdhBeaconPhase2Publication.afterOpening candidate associatedData kernel
       (.Some ⟨plaintext, frame.sender, 1#u64⟩) = some staged := accepted
   have opened : staged.opened = ⟨plaintext, frame.sender, 1#u64⟩ := by
-    have same := (PqxdhPhase2LocalMatching.authenticated_binding candidate kernel _ staged success).1
+    have same := (PqxdhPhase2LocalMatching.authenticated_binding (associatedData := associatedData) candidate kernel _ staged success).1
     injection same with same
     exact same.symm
   refine ⟨RawCtxUniversalDecoder.pack envelope, target, kernel, ?_, ?_, ?_, ?_⟩
@@ -205,7 +206,8 @@ theorem program_raw (source : FixedHkdfSha512NoSaltSource) (codec : Codec Reader
     ∃ bytes, codec.application (PqxdhPhase2DhRootConsumer.cleared pending).response = some bytes ∧
       (some staged, after) ∈ support (monitor (PqxdhServerAuthFinishMaterial.rawProgram source rest
         codec.frameRead bytes (PqxdhBeaconPhase2Publication.clearedCandidate
-          (PqxdhPhase2DhRootConsumer.cleared pending).candidate)) before) := by
+          (PqxdhPhase2DhRootConsumer.cleared pending).candidate)
+        (PqxdhPhase2DhRootConsumer.cleared pending).binding.associated_data) before) := by
   unfold PqxdhServerAuthFinishMaterial.program at supported
   dsimp only at supported
   cases found : codec.application (PqxdhPhase2DhRootConsumer.cleared pending).response with
@@ -225,12 +227,12 @@ theorem program_target (source : FixedHkdfSha512NoSaltSource) (codec : Codec Rea
     ∃ (bytes componentBytes : Pqxdh.Bytes) (target : CtxUnclaimedAcceptance.Target) (kernel : ConcreteRatchetKernel),
       codec.application prepared.response = some bytes ∧
       RawCtxUniversalDecoder.decoder codec.frameRead componentBytes = some target ∧
-      PqxdhPhase2LocalMatching.LocalTarget codec.frameRead bytes candidate staged.opened target ∧
-      PqxdhBeaconPhase2Publication.afterOpening candidate kernel (.Some staged.opened) = some staged ∧
+      PqxdhPhase2LocalMatching.LocalTarget (associatedData := (PqxdhPhase2DhRootConsumer.cleared pending).binding.associated_data) codec.frameRead bytes candidate staged.opened target ∧
+      PqxdhBeaconPhase2Publication.afterOpening candidate (PqxdhPhase2DhRootConsumer.cleared pending).binding.associated_data kernel (.Some staged.opened) = some staged ∧
       ⟨componentBytes, some staged.opened.plaintext, before.seals⟩ ∈ after.attempts := by
   obtain ⟨bytes, application, reached⟩ := program_raw source codec rest pending staged before after supported
   obtain ⟨componentBytes, target, kernel, decoded, delivery, success, attempt⟩ :=
-    raw_target source rest codec.frameRead bytes _ staged before after reached
+    raw_target (associatedData := (PqxdhPhase2DhRootConsumer.cleared pending).binding.associated_data) source rest codec.frameRead bytes _ staged before after reached
   exact ⟨bytes, componentBytes, target, kernel, application, decoded, delivery, success, attempt⟩
 
 /-- In the actual ordinary component interpretation, every accepted complete Beacon callback either wins the existing observer or matches a prior selected seal with exactly the accepted plaintext. The correct-history invariant is the existing invariant proved from empty endpoint state. -/
@@ -248,8 +250,8 @@ theorem program_or_match (source : FixedHkdfSha512NoSaltSource) (codec : Codec R
       ∃ (bytes : Pqxdh.Bytes) (target : CtxUnclaimedAcceptance.Target) (kernel : ConcreteRatchetKernel)
         (entry : CtxRomAuth.CtxSuccessfulSeal),
         codec.application prepared.response = some bytes ∧
-        PqxdhPhase2LocalMatching.LocalTarget codec.frameRead bytes candidate staged.opened target ∧
-        PqxdhBeaconPhase2Publication.afterOpening candidate kernel (.Some staged.opened) = some staged ∧
+        PqxdhPhase2LocalMatching.LocalTarget (associatedData := (PqxdhPhase2DhRootConsumer.cleared pending).binding.associated_data) codec.frameRead bytes candidate staged.opened target ∧
+        PqxdhBeaconPhase2Publication.afterOpening candidate (PqxdhPhase2DhRootConsumer.cleared pending).binding.associated_data kernel (.Some staged.opened) = some staged ∧
         entry ∈ before.1.seals ∧ target.toLegacy.sameFullTupleAsSuccessfulSeal entry ∧
         staged.opened.plaintext = entry.input.plaintext := by
   classical
@@ -277,17 +279,17 @@ theorem program_or_match (source : FixedHkdfSha512NoSaltSource) (codec : Codec R
 /-- An actual matching selected seal with its source binding context fixes precisely the accepted registration fields. This compares the authenticated fields rather than raw serialization bytes. -/
 theorem matched_fields (candidate : pqxdh.BeaconRegistrationCandidate) (kernel : ConcreteRatchetKernel)
     (staged : PqxdhBeaconPhase2Publication.Staged)
-    (success : PqxdhBeaconPhase2Publication.afterOpening candidate kernel (.Some staged.opened) = some staged)
+    (success : PqxdhBeaconPhase2Publication.afterOpening candidate associatedData kernel (.Some staged.opened) = some staged)
     (read : RawCtxReceive.FrameDecoder) (bytes : Pqxdh.Bytes) (target : CtxUnclaimedAcceptance.Target)
-    (delivery : PqxdhPhase2LocalMatching.LocalTarget read bytes candidate staged.opened target)
+    (delivery : PqxdhPhase2LocalMatching.LocalTarget (associatedData := associatedData) read bytes candidate staged.opened target)
     (entry : CtxRomAuth.CtxSuccessfulSeal) (same : target.toLegacy.sameFullTupleAsSuccessfulSeal entry)
     (plaintext : staged.opened.plaintext = entry.input.plaintext)
     (context : RawCtxSourceSend.SealContext) (records : PqxdhPhase2LocalMatching.Records entry context)
     (bound : PqxdhPhase2LocalMatching.KeyIdBound context) :
     PqxdhPhase2LocalMatching.acceptedFields staged = PqxdhPhase2LocalMatching.sealedFields context := by
-  have ad := (PqxdhPhase2LocalMatching.localTarget_context read bytes candidate staged.opened target delivery).1
+  have ad := (PqxdhPhase2LocalMatching.localTarget_context (associatedData := associatedData) read bytes candidate staged.opened target delivery).1
   have entryAd := same.2.1.symm.trans ad
-  exact PqxdhPhase2LocalMatching.accepted_of_plaintext candidate kernel _ staged success context bound
+  exact PqxdhPhase2LocalMatching.accepted_of_plaintext (associatedData := associatedData) candidate kernel _ staged success context bound
     (plaintext.trans records.1) ((congrArg (fun value => value.bytes) entryAd).symm.trans records.2.1)
 
 /-- The approved abstract readable-frame contract rules out writer failure only for the concrete seal frame that actually matches an accepted decoded target. It requires no canonical encoding or blanket writer totality. -/
@@ -295,7 +297,7 @@ theorem matched_writable (writer : RawCtxMixedShared.Writer) (read : RawCtxRecei
     (writable : PqxdhFirstBeaconRecordCanonical.ReadWritable writer read)
     (bytes : Pqxdh.Bytes) (candidate : pqxdh.BeaconRegistrationCandidate)
     (opened : RawCtxWholeOwner.Decrypted) (target : CtxUnclaimedAcceptance.Target)
-    (delivery : PqxdhPhase2LocalMatching.LocalTarget read bytes candidate opened target)
+    (delivery : PqxdhPhase2LocalMatching.LocalTarget (associatedData := associatedData) read bytes candidate opened target)
     (entry : CtxRomAuth.CtxSuccessfulSeal) (same : target.toLegacy.sameFullTupleAsSuccessfulSeal entry)
     (sequence sender : Std.U64) (seq : entry.input.context.ad.seq = sequence.val)
     (sid : entry.input.context.ad.sid = sender.val) :

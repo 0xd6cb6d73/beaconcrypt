@@ -10,6 +10,8 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhInitialRootEventBounds
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf
 open PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily PqxdhCorrelatedExpandHybrid
 open PqxdhInitialBeaconAmbient PqxdhKemIndCca PqxdhEd25519EufCma PqxdhJointIdentity
@@ -132,35 +134,35 @@ include postTotal
 
 omit localBound in
 /-- The actual instrumented source client retains the full seven-call first builder and every caller-bounded adaptive post request. -/
-theorem client_total (prepared : PqxdhPrivateRootSource.Prepared setup (driver env.toDriverEnvironment program).State) (ready : Ready) :
-    (PqxdhInitialRootEventAccepted.client env program post prepared ready).IsTotalQueryBound (7 + qPost * 67) := by
-  exact PqxdhInitialOriginPost.sequence_total env.source _ _ _ env.senderId env.route env.decode env.index env.metadata ready
+theorem client_total (prepared : PqxdhPrivateRootSource.Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State) (ready : Ready) :
+    (PqxdhInitialRootEventAccepted.client (associatedData := associatedData) (completedBinding := completedBinding) env program post prepared ready).IsTotalQueryBound (7 + qPost * 67) := by
+  exact PqxdhInitialOriginPost.sequence_total (associatedData := associatedData) (completedBinding := completedBinding) env.source _ _ _ env.senderId env.route env.decode env.index env.metadata ready
     (post prepared.1.context.selection.1) qPost (postTotal _) _
 
 omit localBound in
 /-- The actual final event adds no query to the source execution; its complete target bill comes from concrete source callbacks. -/
-theorem accepted_bound (prepared : PqxdhPrivateRootSource.Prepared setup (driver env.toDriverEnvironment program).State) (ready : Ready)
+theorem accepted_bound (prepared : PqxdhPrivateRootSource.Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State) (ready : Ready)
     (selected : RawCtxProtocolReveals.Owner S (B + 1)) (number : Std.U64) (ancestors disclosed : List RatchetChain)
     (resource : Resource) :
-    (PqxdhInitialRootEventAccepted.target env attachedVerify primitives program post prepared ready selected number ancestors disclosed).IsQueryBoundP
+    (PqxdhInitialRootEventAccepted.target (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program post prepared ready selected number ancestors disclosed).IsQueryBoundP
       (predicate (baseSpec := baseSpec) resource) ((7 + qPost * 67) * callbackBill c.qLocal c.qAux resource) := by
   simp only [PqxdhInitialRootEventAccepted.target, isQueryBoundP_map_iff]
   exact PqxdhBeaconPhase2Bounds.interpreted_total_bound _ _ _ _
     (fun query state => step_bound env.source env.recordWriter attachedVerify primitives 1 env.localImpl c.qLocal c.localBound
       env.aux c.qAux c.auxBound ready.ciphertext resource query state)
-    _ (client_total env program post qPost postTotal prepared ready) _
+    _ (client_total (associatedData := associatedData) (completedBinding := completedBinding) env program post qPost postTotal prepared ready) _
 
 omit localBound in
 /-- Both completed and pending modes have source-derived uniform, base, decapsulation and private-root caps in the same executable root-event protocol. -/
 theorem sampler_bounds (selected : RawCtxProtocolReveals.Owner S (B + 1)) (number : Std.U64) (ancestors disclosed : List RatchetChain) :
     SamplerBounds baseImpl kem
-      (PqxdhInitialRootEventAccepted.protocol env attachedVerify primitives program post kem selected number ancestors disclosed)
+      (PqxdhInitialRootEventAccepted.protocol (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program post kem selected number ancestors disclosed)
       c.qKeygen c.qEncap c.qBase c.qDecap c.uPre c.bPre c.dPre
       ((7 + qPost * 67) * callbackBill c.qLocal c.qAux .uniform)
       (7 + qPost * 67) (7 + qPost * 67) (7 + qPost * 67) := by
   refine ⟨c.keygenBound, c.encapsBound, c.baseBound, c.decapsBound, ?_, ?_⟩
   · intro key
-    have original := PqxdhAuthenticatedRootBudgets.prepare_bounds env baseImpl kem attachedVerify primitives program post c key
+    have original := PqxdhAuthenticatedRootBudgets.prepare_bounds (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c key
     exact ⟨original.uniforms, original.bases, original.decaps⟩
   · intro key ciphertext mode root
     cases mode with
@@ -169,7 +171,7 @@ theorem sampler_bounds (selected : RawCtxProtocolReveals.Owner S (B + 1)) (numbe
       cases root with
       | none => exact ⟨by trivial, by trivial, by trivial, by trivial⟩
       | some value =>
-        have bounded := fun resource => accepted_bound attachedVerify primitives env baseImpl kem program post c qPost postTotal prepared
+        have bounded := fun resource => accepted_bound (associatedData := associatedData) (completedBinding := completedBinding) attachedVerify primitives env baseImpl kem program post c qPost postTotal prepared
           (ready env.server env.application prepared.1.context.publicIdentity.ed25519 prepared.1.context.generated.after.publicKey
             ephemeral ciphertext value) selected number ancestors disclosed resource
         exact ⟨bounded .uniform, by simpa only [callbackBill, predicate, publicPredicate, PqxdhInitialRootEventAccepted.protocol, Nat.mul_one] using bounded .base,
@@ -180,14 +182,14 @@ omit localBound in
 /-- The full root-family reduction pays the actual key generation, original preparation, source-event callbacks and one initial root before every possible continued private request. -/
 theorem reduction_bounds (selected : RawCtxProtocolReveals.Owner S (B + 1)) (number : Std.U64) (ancestors disclosed : List RatchetChain) :
     let nextCalls := 7 + qPost * 67
-    let p := PqxdhInitialRootEventAccepted.protocol env attachedVerify primitives program post kem selected number ancestors disclosed
+    let p := PqxdhInitialRootEventAccepted.protocol (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program post kem selected number ancestors disclosed
     let coins := c.qKeygen + ((c.uPre + c.qBase * c.bPre + c.qDecap * c.dPre) + c.qEncap) +
       (nextCalls * callbackBill c.qLocal c.qAux .uniform + c.qBase * nextCalls + c.qDecap * (nextCalls + nextCalls))
     (rootReduction env.source baseImpl kem p).IsQueryBoundP PqxdhCorrelatedExpandQueryBounds.IsCoin coins ∧
     (rootReduction env.source baseImpl kem p).IsQueryBoundP IsRoot (1 + nextCalls) := by
   exact PqxdhCorrelatedExpandQueryBounds.reduction_bounds env.source baseImpl kem
-    (PqxdhInitialRootEventAccepted.protocol env attachedVerify primitives program post kem selected number ancestors disclosed)
-    _ _ _ _ _ _ _ _ _ _ _ (sampler_bounds attachedVerify primitives env baseImpl kem program post c qPost postTotal selected number ancestors disclosed)
+    (PqxdhInitialRootEventAccepted.protocol (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program post kem selected number ancestors disclosed)
+    _ _ _ _ _ _ _ _ _ _ _ (sampler_bounds (associatedData := associatedData) (completedBinding := completedBinding) attachedVerify primitives env baseImpl kem program post c qPost postTotal selected number ancestors disclosed)
 
 end Accepted
 

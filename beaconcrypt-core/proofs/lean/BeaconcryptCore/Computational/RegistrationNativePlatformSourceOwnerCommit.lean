@@ -47,7 +47,7 @@ private theorem commit_pair_view (returned : Output source Platform Value) (befo
 /-- Every adaptive joint owner program commits its literal reached source outputs to the same complete native view, retaining P in the result. -/
 theorem program_source (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential source) (roots : Roots)
     (work : OracleComp (Spec n KemSK) (Output source Platform Value))
     (allowed : work.AllQueriesSatisfy (Allowed (KemSK := KemSK)))

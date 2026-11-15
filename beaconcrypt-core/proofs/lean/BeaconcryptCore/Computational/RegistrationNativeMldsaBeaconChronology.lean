@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativeMldsaChronology
 import BeaconcryptCore.Computational.RegistrationNativeMldsaBundle
 
-/-! Every actual reified outgoing Beacon callback appends the same chronological complete-request attempt and native unsigned-payload receipt at the true-count private table. Hash and Ed callbacks preserve both histories; no closed opaque signer is used for the named ML branch. -/
+/-! Current outgoing Beacon callbacks preserve the Server signing table and existing chronological receipts. Hash and Ed callbacks preserve both histories; no ML signing branch is invoked. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core PqxdhRefinement
@@ -26,7 +26,7 @@ private theorem map_apply {S A B : Type} {m : Type → Type} [Monad m] [LawfulMo
 
 private theorem hash_receipts (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat)
     (owner : RegistrationNativeBeaconFrontend.Owner (handleSource source)) (request : registration.HashRequest)
     (before : Local n KemSK (handleSource source))
     (result : CtxRomAuth.CtxDigest × Local n KemSK (handleSource source))
@@ -44,7 +44,7 @@ private theorem hash_receipts (setup : Setup base KemSK) (checks : Checks)
 
 private theorem ed_receipts (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat)
     (owner : RegistrationNativeBeaconFrontend.Owner (handleSource source)) (request : registration.Ed25519SigningRequest)
     (before : Local n KemSK (handleSource source))
     (result : RegistrationSigningShared.SignReply × Local n KemSK (handleSource source))
@@ -62,7 +62,7 @@ private theorem ed_receipts (setup : Setup base KemSK) (checks : Checks)
 /-- An actual outgoing Beacon callback links its complete private request to the same source payload/digest receipt, including failed replies. -/
 theorem outgoing (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat)
     (owner : RegistrationNativeBeaconFrontend.Owner (handleSource source))
     (query : RegistrationBeaconInitExecutor.Spec.Domain) (correct : BeaconQuery query)
     (before : Local n KemSK (handleSource source)) (pool : Pool source)
@@ -82,14 +82,11 @@ theorem outgoing (setup : Setup base KemSK) (checks : Checks)
         rw [hash_receipts source setup checks representation created index owner request before reply possible]
         exact aligned
     | sign request payload digest =>
-        simp only [RegistrationNativeMldsaBundle.outgoing, StateT.run, bind_pure_comp, runState, evaluate,
-          simulateQ_map, map_apply, support_map] at supported
-        obtain ⟨reply, possible, same⟩ := supported
-        cases same
-        have history := call_history source .environment before.2.2.server.world.world.1 pool owner.mldsa request reply possible
-        dsimp only [Prod.map, id] at ⊢
-        rw [history]
-        exact append _ _ _ _ aligned ⟨rfl, correct, rfl⟩
+        simp only [RegistrationNativeMldsaBundle.outgoing, RegistrationNativeMldsaBundle.native,
+          RegistrationNativeMldsaTableProgram.run_liftState, RegistrationNativeBeaconFrontend.outgoing,
+          RegistrationNativeMldsaShared.lower, StateT.run] at supported
+        cases supported
+        exact aligned
   | inr request =>
       change result ∈ support (runState source (RegistrationNativeMldsaBundle.native setup checks representation created
         (RegistrationNativeBeaconFrontend.outgoing setup (handleSource source) index owner (.inr request))) before pool) at supported
@@ -102,7 +99,7 @@ theorem outgoing (setup : Setup base KemSK) (checks : Checks)
 /-- Whole actual outgoing Init programs preserve the complete chronological source/table history correspondence. -/
 theorem program (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat)
     (owner : RegistrationNativeBeaconFrontend.Owner (handleSource source))
     (work : OracleComp RegistrationBeaconInitExecutor.Spec Value) (correct : work.AllQueriesSatisfy BeaconQuery)
     (before : Local n KemSK (handleSource source)) (pool : Pool source)
@@ -127,20 +124,20 @@ theorem program (setup : Setup base KemSK) (checks : Checks)
 /-- Actual complete Init signing derives request alignment itself from the source continuations, without a correct-request premise at the use site. -/
 theorem begin (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat)
     (owner : RegistrationNativeBeaconFrontend.Owner (handleSource source))
-    (encode : registration.SignedInitView → core.option.Option Value)
+    (encode : registration.InitView → core.option.Option Value)
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize)
+    (pin : session.ServerAuthenticationPin)
     (before : Local n KemSK (handleSource source)) (pool : Pool source)
     (result : (RustM (RegistrationBeaconInitExecutor.Result Value) × Local n KemSK (handleSource source)) × Pool source)
     (aligned : Aligned pool.signing before.2.1.receipts)
     (supported : result ∈ support (runState source
       (simulateQ (RegistrationNativeMldsaBundle.outgoing setup checks representation created index owner)
-        (RegistrationBeaconInitExecutor.begin encode control inputs coins pin mldsa)) before pool)) :
+        (RegistrationBeaconInitExecutor.begin encode control inputs coins pin)) before pool)) :
     Aligned result.2.signing result.1.2.2.1.receipts :=
   program source setup checks representation created index owner _
-    (RegistrationNativeMldsaRequestAlignment.Beacon.begin_all encode control inputs coins pin mldsa) before pool result aligned supported
+    (RegistrationNativeMldsaRequestAlignment.Beacon.begin_all encode control inputs coins pin) before pool result aligned supported
 
 private def NoSign (work : RegistrationNativeBeaconFrontend.M n KemSK (handleSource source) RegistrationServerRoleBackend.State Value) : Prop :=
   ∀ owners env result, result ∈ support ((work.run owners).run env) → result.2.receipts = env.receipts
@@ -212,7 +209,7 @@ private theorem bind_keeps {Next : Type}
 
 private theorem native_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK (handleSource source) RegistrationServerRoleBackend.State Value)
     (law : NoSign source work) : Keeps source (RegistrationNativeMldsaBundle.native setup checks representation created work) := by
   intro before pool result aligned supported
@@ -233,7 +230,7 @@ private theorem native_keeps (setup : Setup base KemSK) (checks : Checks)
 
 private theorem afterPublished_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat)
     (owner : RegistrationNativeBeaconFrontend.Owner (handleSource source)) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (published : RustM (RegistrationBeaconInitExecutor.Result Pqxdh.Bytes)) :
     Keeps source (RegistrationNativeMldsaBundle.afterPublished (n := n) setup checks representation created index owner oneTime published) := by
@@ -255,7 +252,7 @@ set_option maxHeartbeats 1000000 in
 /-- Actual complete reified bundle callbacks preserve correspondence of every prior and reached ML attempt and native payload receipt, including failed publication. -/
 theorem bundle (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat)
     (before : Local n KemSK (handleSource source)) (pool : Pool source)
     (result : (RustM (Option Pqxdh.Bytes) × Local n KemSK (handleSource source)) × Pool source)
     (aligned : Aligned pool.signing before.2.1.receipts)
@@ -277,7 +274,7 @@ theorem bundle (setup : Setup base KemSK) (checks : Checks) (wire : Registration
             · intro oneTime
               apply bind_keeps source _ _ (begin source setup checks representation created index owner wire.encodeInit
                 ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-                ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)
+                ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)
               exact afterPublished_keeps source setup checks representation created index owner oneTime
             · first | exact pure_keeps source _
                     | exact native_keeps source setup checks representation created _ (noSign_sample source _)
@@ -287,7 +284,7 @@ theorem bundle (setup : Setup base KemSK) (checks : Checks) (wire : Registration
 /-- The outer original native closure publishes that same chronological correspondence into the literal global ML receipt list. -/
 theorem sourceBundle (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat)
     (before : RegistrationNativeExperiment.State n KemSK (handleSource source)) (pool : Pool source)
     (result : (RustM (Option Pqxdh.Bytes) × RegistrationNativeExperiment.State n KemSK (handleSource source)) × Pool source)
     (aligned : Aligned pool.signing before.server.world.world.2)

@@ -14,38 +14,6 @@ variable {n : Nat} {KemSK : Type} (source : Source)
 def CredentialLive (before : Pool source) (credential : Credential (handleSource source)) : Prop :=
   ∃ key, Live source before credential key
 
-def OwnersLive (before : Pool source) (current : RegistrationNativeBeaconFrontend.State (handleSource source)) : Prop :=
-  ∀ owner ∈ current, CredentialLive source before owner.mldsa
-
-def StateLive (before : Pool source) (current : RegistrationNativeExperiment.State n KemSK (handleSource source)) : Prop :=
-  OwnersLive source before current.beacons
-
-theorem owners_empty (before : Pool source) : OwnersLive source before [] := by
-  intro current absent
-  cases absent
-
-theorem owners_append (before : Pool source) (current : RegistrationNativeBeaconFrontend.State (handleSource source))
-    (added : RegistrationNativeBeaconFrontend.Owner (handleSource source))
-    (old : OwnersLive source before current) (fresh : CredentialLive source before added.mldsa) :
-    OwnersLive source before (current ++ [added]) := by
-  intro selected member
-  rcases List.mem_append.mp member with earlier | last
-  · exact old selected earlier
-  · have same : selected = added := List.mem_singleton.mp last
-    exact same ▸ fresh
-
-theorem birth_owners (before : Pool source) (generated : Option (Credential source) × Nat)
-    (current : RegistrationNativeBeaconFrontend.State (handleSource source)) (live : OwnersLive source before current) :
-    OwnersLive source (birth source before generated).2 current := by
-  intro selected member
-  obtain ⟨key, row⟩ := live selected member
-  exact ⟨key, RegistrationNativeMldsaOpaque.birth_preserves source before generated selected.mldsa key row⟩
-
-theorem record_owners (before : Pool source) (credential : Credential (handleSource source))
-    (request : beaconcrypt_core.registration.MldsaSigningRequest) (reply : RegistrationSigningShared.SignReply)
-    (current : RegistrationNativeBeaconFrontend.State (handleSource source)) (live : OwnersLive source before current) :
-    OwnersLive source (record source before credential request reply) current := live
-
 theorem record_restore (fallback : Credential source) (before : Pool source) (credential : Credential (handleSource source))
     (request : beaconcrypt_core.registration.MldsaSigningRequest) (reply : RegistrationSigningShared.SignReply) :
     restore source fallback (record source before credential request reply) = restore source fallback before := rfl
@@ -60,54 +28,23 @@ theorem birth_credential_restore (fallback : Credential source) (before : Pool s
     (RegistrationNativeMldsaOpaque.birth_preserves source before generated credential key row),
     RegistrationNativeMldsaOpaque.restore_live source fallback before credential key row]
 
+/-- Beacon owner restoration does not depend on any private ML row. -/
 theorem birth_owner_restore (fallback : Credential source) (before : Pool source)
-    (generated : Option (Credential source) × Nat) (current : RegistrationNativeBeaconFrontend.Owner (handleSource source))
-    (live : CredentialLive source before current.mldsa) :
+    (generated : Option (Credential source) × Nat) (current : RegistrationNativeBeaconFrontend.Owner (handleSource source)) :
     RegistrationNativeMldsaMap.owner (restore source fallback (birth source before generated).2) current =
-      RegistrationNativeMldsaMap.owner (restore source fallback before) current := by
-  have same := birth_credential_restore source fallback before generated current.mldsa live
-  simp only [RegistrationNativeMldsaMap.owner]
-  rw [same]
+      RegistrationNativeMldsaMap.owner (restore source fallback before) current := rfl
 
 theorem birth_owners_restore (fallback : Credential source) (before : Pool source)
-    (generated : Option (Credential source) × Nat) (current : RegistrationNativeBeaconFrontend.State (handleSource source))
-    (live : OwnersLive source before current) :
+    (generated : Option (Credential source) × Nat) (current : RegistrationNativeBeaconFrontend.State (handleSource source)) :
     RegistrationNativeMldsaMap.owners (restore source fallback (birth source before generated).2) current =
-      RegistrationNativeMldsaMap.owners (restore source fallback before) current :=
-  List.map_congr_left fun selected member => birth_owner_restore source fallback before generated selected (live selected member)
+      RegistrationNativeMldsaMap.owners (restore source fallback before) current := rfl
 
 theorem birth_state_restore (fallback : Credential source) (before : Pool source)
-    (generated : Option (Credential source) × Nat) (current : RegistrationNativeExperiment.State n KemSK (handleSource source))
-    (live : StateLive source before current) :
+    (generated : Option (Credential source) × Nat) (current : RegistrationNativeExperiment.State n KemSK (handleSource source)) :
     RegistrationNativeMldsaMap.nativeState (restore source fallback (birth source before generated).2) current =
-      RegistrationNativeMldsaMap.nativeState (restore source fallback before) current := by
-  simp only [RegistrationNativeMldsaMap.nativeState, birth_owners_restore source fallback before generated current.beacons live]
+      RegistrationNativeMldsaMap.nativeState (restore source fallback before) current := rfl
 
 end BeaconcryptCore.Computational.RegistrationNativeMldsaPoolMap
-
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaPoolMap.owners_empty' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaPoolMap.owners_empty
-
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaPoolMap.owners_append' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaPoolMap.owners_append
-
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaPoolMap.birth_owners' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaPoolMap.birth_owners
-
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaPoolMap.record_owners' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaPoolMap.record_owners
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaPoolMap.record_restore' depends on axioms: [propext,
  Classical.choice,

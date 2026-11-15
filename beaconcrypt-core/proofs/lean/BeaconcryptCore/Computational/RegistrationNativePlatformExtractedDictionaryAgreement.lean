@@ -46,7 +46,7 @@ variable (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup
 
 local notation "Native"=>RegistrationNativeExperiment.State n KemSK source
 
-noncomputable def callback (created : PqxdhLiveServerConstruction.Created Unit)
+noncomputable def callback (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential source) :
     QueryImpl TypedSpec (StateT (Native×Platform) ProbComp) :=
   fun query=>RegistrationNativePlatformPackedState.pack
@@ -59,7 +59,7 @@ variable (sealLength : RegistrationNativePlatformOrdinarySourceWorld.AeadLength 
     (edFunctional : RegistrationNativePlatformAuthentication.EdFunctional setup.source.crypto)
 
 include sealLength openLength converted edFunctional in
-theorem callback_source (created : PqxdhLiveServerConstruction.Created Unit)
+theorem callback_source (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential source) :
     callback (n:=n) setup checks route representation source view failure allocation reserveRegistration reservePeer reserveFrame erased reserveBytes reservePackets created credential=
       RegistrationNativePlatformOrdinaryKemClientJournal.actual setup checks wire route representation created credential view failure allocation

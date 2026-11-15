@@ -6,6 +6,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.refined ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhLaterSavedUniformBounds
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 
 /-- A uniform finite service allowance composes through the full stateful source program on every oracle-reply path. -/
 theorem state_cost {ι κ σ R : Type} {sourceSpec : OracleSpec ι} {targetSpec : OracleSpec κ}
@@ -54,20 +55,20 @@ theorem owner_step (query : (PqxdhSelectedInitialOwnerCompiler.Spec extra I D K 
   | inr request =>
     simp only [PqxdhSelectedInitialOwnerCompiler.lower, StateT.run, isQueryBoundP_map_iff]
     exact (PqxdhSelectedBeaconCompiler.finish_queries prior parent target nonce next read request.control request.before
-      request.candidate request.kernel request.application).isQueryBoundP.mono positive
+      request.candidate request.associatedData request.kernel request.application).isQueryBoundP.mono positive
 
 /-- A complete attempted owner finish includes at most sixteen literal service calls, each paid at the concrete callback allowance. -/
 theorem owner_cost (raw : Pqxdh.Bytes) (owner : PqxdhSelectedInitialOwnerCompiler.Beacon I D K) (before : Local A N C) :
     ((simulateQ (PqxdhSelectedInitialOwnerCompiler.lower pre application initial selector aux prior parent target nonce next read)
-      (PqxdhSelectedInitialOwnerCompiler.owner raw owner)).run before).IsQueryBoundP predicate (16 * cost) := by
+      (PqxdhSelectedInitialOwnerCompiler.owner (completedBinding := completedBinding) raw owner)).run before).IsQueryBoundP predicate (16 * cost) := by
   apply state_cost _ predicate cost
     (owner_step pre application initial selector aux prior parent target nonce next read predicate cost positive externalBound)
-    _ 16 (PqxdhSelectedInitialOwnerCompiler.owner_queries raw owner)
+    _ 16 (PqxdhSelectedInitialOwnerCompiler.owner_queries (completedBinding := completedBinding) raw owner)
 
 /-- Each original Post request pays its full record/public operation, selector work or complete attempted owner finish. -/
 theorem post_step (query : (PqxdhInitialGenericPost.Spec extra S B).Domain)
     (before : PqxdhSelectedPostCompiler.State M P I D K A N C S B) :
-    (((PqxdhSelectedPostCompiler.impl pre application initial selector aux fixed writer prior parent target nonce next sender route read query).run).run before).IsQueryBoundP predicate (16 * cost) := by
+    (((PqxdhSelectedPostCompiler.impl (completedBinding := completedBinding) pre application initial selector aux fixed writer prior parent target nonce next sender route read query).run).run before).IsQueryBoundP predicate (16 * cost) := by
   rcases query with (request | request) | request
   · simp only [PqxdhSelectedPostCompiler.impl, OptionT.run_mk, StateT.run, isQueryBoundP_map_iff]
     exact (RawCtxSelectedFamilyLiveCompiler.step_queries fixed writer prior parent target nonce next sender route read request before.1.roles).isQueryBoundP.mono
@@ -77,22 +78,22 @@ theorem post_step (query : (PqxdhInitialGenericPost.Spec extra S B).Domain)
   · cases request with
     | finish index raw =>
       simpa only [PqxdhSelectedPostCompiler.impl, OptionT.run_mk, StateT.run, isQueryBoundP_map_iff] using
-        owner_cost pre application initial selector aux prior parent target nonce next read predicate cost positive externalBound
+        owner_cost (completedBinding := completedBinding) pre application initial selector aux prior parent target nonce next read predicate cost positive externalBound
           raw (before.1.roles.1.2 index) before.2
 
 /-- Instrumentation preserves the exact oracle syntax; all adaptive Post callbacks remain paid, including the callback that refuses and stops the continuation. -/
 theorem post_cost (work : OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result)
     (qPost : Nat) (bounded : work.IsTotalQueryBound qPost) (before : InsState M P I D K A N C S B) :
-    (((simulateQ (insImpl pre application initial selector aux fixed writer prior parent target nonce next sender route read mark monitor)
+    (((simulateQ (insImpl (completedBinding := completedBinding) pre application initial selector aux fixed writer prior parent target nonce next sender route read mark monitor)
       work).run).run before).IsQueryBoundP predicate (qPost * (16 * cost)) := by
   induction work using OracleComp.inductionOn generalizing qPost before with
   | pure value => trivial
   | query_bind query continuation ih =>
     rw [isTotalQueryBound_query_bind_iff] at bounded
     obtain ⟨remaining, rfl⟩ := Nat.exists_eq_succ_of_ne_zero (Nat.ne_of_gt bounded.1)
-    have step := post_step pre application initial selector aux fixed writer prior parent target nonce next sender route read
+    have step := post_step (completedBinding := completedBinding) pre application initial selector aux fixed writer prior parent target nonce next sender route read
       predicate cost positive externalBound query before.1
-    rw [← insImpl_erase pre application initial selector aux fixed writer prior parent target nonce next sender route read mark monitor query before,
+    rw [← insImpl_erase (completedBinding := completedBinding) pre application initial selector aux fixed writer prior parent target nonce next sender route read mark monitor query before,
       isQueryBoundP_map_iff] at step
     simp only [simulateQ_bind, simulateQ_spec_query, OptionT.run_bind, Option.elimM, StateT.run_bind]
     rw [Nat.succ_mul, Nat.add_comm]
@@ -132,7 +133,7 @@ theorem prepare_cost (qPost : Nat) (context : PqxdhInitialOriginContext.Context 
       exact isQueryBoundP_bind
         (RawCtxSelectedPendingRoleCompiler.live_queries fixed writer prior target nonce next read inner material fits.2).isQueryBoundP
         (fun _ _ => by trivial)
-    | finish index roles control candidate outside inner =>
+    | finish index roles control candidate associatedData outside inner =>
       unfold PqxdhLaterSavedPostCompiler.prepare
       exact isQueryBoundP_bind
         (RawCtxSelectedPendingOwnerCompiler.owner_queries fixed writer prior target nonce next read inner material fits.2).isQueryBoundP
@@ -148,14 +149,14 @@ theorem prepare_cost (qPost : Nat) (context : PqxdhInitialOriginContext.Context 
 theorem complete_cost (qPost : Nat) (context : PqxdhInitialOriginContext.Context extra M P I D K Result Bool S B)
     (material : PqxdhOrderedChainHybrids.Material) (fits : PqxdhInitialOriginCertificates.Fits qPost context)
     (before : Local A N C) :
-    (PqxdhLaterSavedPostCompiler.complete pre application initial selector aux fixed writer prior target nonce next mark sender route read monitor
+    (PqxdhLaterSavedPostCompiler.complete (completedBinding := completedBinding) pre application initial selector aux fixed writer prior target nonce next mark sender route read monitor
       qPost context material fits before).IsQueryBoundP predicate (1 + (cost + cost) + qPost * (16 * cost)) := by
   unfold PqxdhLaterSavedPostCompiler.complete
   apply isQueryBoundP_bind
     (prepare_cost pre application initial selector aux fixed writer prior target nonce next sender read predicate cost externalBound
       qPost context material fits before)
   intro prepared supported
-  exact post_cost pre application initial selector aux fixed writer prior
+  exact post_cost (completedBinding := completedBinding) pre application initial selector aux fixed writer prior
     (some (Entry.mk (PqxdhInitialBuilderContext.address context.original) material)) target nonce next mark sender route read monitor
     predicate cost positive externalBound prepared.1 qPost
     (PqxdhLaterSavedPostBounds.prepare_post pre application initial selector aux fixed writer prior target nonce next sender read

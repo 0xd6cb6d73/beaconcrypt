@@ -20,6 +20,7 @@ variable [LocalOperations (RustT (StateT (PqxdhRecordLiftWorld.State n) ProbComp
 variable [CryptoOperations (RustT (StateT (PqxdhRecordLiftWorld.State n) ProbComp))]
 variable [ChildOperations (RustT (StateT (PqxdhRecordLiftWorld.State n) ProbComp))]
 
+omit [ChildOperations (RustT (StateT (PqxdhRecordLiftWorld.State n) ProbComp))] in
 theorem returned (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (view : MaterialView mlSource KemSK) (identityIndex : Nat) (identifier : U64)
     (self : beaconcrypt_public_wrapper.server.Server) (rng : R)

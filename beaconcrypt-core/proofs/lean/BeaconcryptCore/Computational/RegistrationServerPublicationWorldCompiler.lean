@@ -1,6 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationServerWorldInstallSource
 import BeaconcryptCore.Computational.RegistrationServerRecordTargetProjection
+import BeaconcryptCore.Computational.RegistrationServerPublicationWorldEffect
 
 /-! The actual native bound publication compiler runs pure components on the caller's current World and signing receipts. This lens preserves the local auxiliary state and request logs; it does not identify an arbitrary mutable environment with a nested copy of itself. -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -11,10 +12,6 @@ set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationServerPublicationWorldCompiler
 variable {n : Nat} {Auxiliary Value : Type}
 
-noncomputable def effect : QueryImpl (PqxdhRecordLiftInterface.EnvEffects n)
-    (StateT (RegistrationWorldAgreement.State n Auxiliary) ProbComp) := fun query before =>
-  (fun result => (result.1, { before with world := (result.2, before.world.2) })) <$>
-    (PqxdhRecordLiftWorld.effects query).run before.world.1
 
 private theorem effect_run (query : (PqxdhRecordLiftInterface.EnvEffects n).Domain)
     (before : RegistrationWorldAgreement.State n Auxiliary) :

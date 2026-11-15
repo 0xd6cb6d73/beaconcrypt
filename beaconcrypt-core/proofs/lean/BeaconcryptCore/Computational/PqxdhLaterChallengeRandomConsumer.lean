@@ -7,7 +7,10 @@ open OracleComp OracleSpec CoreModels Aeneas OracleComp.ProgramLogic.Relational
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeRandomConsumer
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPhase1AcceptanceOracle PqxdhKemIndCca PqxdhInitializerSecrecy
 open CtxRomAuth AdaptiveCtxSharedHash PqxdhSecretInputKdf PqxdhFullSecretInputKdf
@@ -55,22 +58,22 @@ noncomputable def resume (qPost : Nat) (bit : Bool) (key : Key) : ProbComp Bool 
   match key with
   | none => pure false
   | some (payload, state) => Prod.fst <$> (simulateQ impl
-      (PqxdhLaterChallengeBeforeConsumer.client setup env callbacks program owner number
+      (PqxdhLaterChallengeBeforeConsumer.client (completedBinding := completedBinding) setup env callbacks program owner number
         attachedVerify primitives baseImpl kem qPost bit (some payload))).run state
 
 /-- A reached random prefix imports its actual source chronology through the exact public dictionary projection and resumes from its entire reached component state. -/
 theorem reached (depth qPost : Nat) (sourceBit : Bool)
     (result : Carrier × Option program.Selection) (after : RandomState)
     (supported : (result, after) ∈ support ((simulateQ backend
-      (PqxdhLaterChallengeGeneratedContinuation.run setup env callbacks program adversary owner number sourceBit
+      (PqxdhLaterChallengeGeneratedContinuation.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number sourceBit
         attachedVerify primitives baseImpl kem ancestors disclosed depth)).run randomInitial)) :
-    𝒟[resume setup env callbacks program owner number attachedVerify primitives baseImpl kem qPost false
+    𝒟[resume (completedBinding := completedBinding) setup env callbacks program owner number attachedVerify primitives baseImpl kem qPost false
       (PqxdhLaterChallengeRandomBefore.beforeKey setup program (result, after))] {true} =
-    𝒟[resume setup env callbacks program owner number attachedVerify primitives baseImpl kem qPost true
+    𝒟[resume (completedBinding := completedBinding) setup env callbacks program owner number attachedVerify primitives baseImpl kem qPost true
       (PqxdhLaterChallengeRandomBefore.beforeKey setup program (result, after))] {true} := by
   have source := PqxdhLaterChallengeRandomProjection.supported
     (RawCtxUniversalDecoder.decoder env.decode) env.source.crypto _ randomInitial after result supported
-  have paired := PqxdhLaterChallengeBeforeConsumer.generated_random setup env callbacks program adversary owner number
+  have paired := PqxdhLaterChallengeBeforeConsumer.generated_random (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number
     attachedVerify primitives baseImpl kem ancestors disclosed depth qPost sourceBit result
     (PqxdhLaterChallengeRandomProjection.cache after) source after
   rw [PqxdhLaterChallengeRandomBefore.retained]
@@ -82,16 +85,16 @@ theorem reached (depth qPost : Nat) (sourceBit : Bool)
 
 /-- Complete generated prefix followed by the concrete monitored before consumer from its actual reached state. The two parameters expose the adjacent prefix and continuation changes. -/
 noncomputable def run (depth qPost : Nat) (prefixBit continuationBit : Bool) : ProbComp Bool :=
-  (simulateQ backend (PqxdhLaterChallengeGeneratedContinuation.run setup env callbacks program adversary owner number prefixBit
+  (simulateQ backend (PqxdhLaterChallengeGeneratedContinuation.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number prefixBit
     attachedVerify primitives baseImpl kem ancestors disclosed depth)).run randomInitial >>= fun result =>
-    resume setup env callbacks program owner number attachedVerify primitives baseImpl kem qPost continuationBit
+    resume (completedBinding := completedBinding) setup env callbacks program owner number attachedVerify primitives baseImpl kem qPost continuationBit
       (PqxdhLaterChallengeRandomBefore.beforeKey setup program result)
 
 /-- Keep the actual complete generated prefix distribution fixed and change the concrete monitored continuation, using source chronology for every reached result. -/
 theorem same_prefix (depth qPost : Nat) (sourceBit : Bool) :
-    𝒟[run setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+    𝒟[run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
       depth qPost sourceBit false] {true} =
-    𝒟[run setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+    𝒟[run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
       depth qPost sourceBit true] {true} := by
   simp only [run]
   rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true]
@@ -99,9 +102,9 @@ theorem same_prefix (depth qPost : Nat) (sourceBit : Bool) :
   apply tsum_congr
   intro result
   by_cases actual : result ∈ support ((simulateQ backend
-      (PqxdhLaterChallengeGeneratedContinuation.run setup env callbacks program adversary owner number sourceBit
+      (PqxdhLaterChallengeGeneratedContinuation.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number sourceBit
         attachedVerify primitives baseImpl kem ancestors disclosed depth)).run randomInitial)
-  · have equal := reached setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem
+  · have equal := reached (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem
       ancestors disclosed depth qPost sourceBit result.1 result.2 actual
     rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true] at equal
     rw [equal]
@@ -110,28 +113,28 @@ theorem same_prefix (depth qPost : Nat) (sourceBit : Bool) :
 
 /-- For any fixed continuation world, the complete before observation, including the full reached component state, gives the same actual resumed distribution in either generated prefix world. -/
 theorem same_continuation (depth qPost : Nat) (first second bit : Bool) :
-    𝒟[run setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+    𝒟[run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
       depth qPost first bit] =
-    𝒟[run setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+    𝒟[run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
       depth qPost second bit] := by
   refine EvalDistEq.evalDist_eq ?_
   apply evalDistEq_of_relTriple_eqRel
-  have paired := relTriple_bind (PqxdhLaterChallengeRandomBefore.carried setup env callbacks program
+  have paired := relTriple_bind (PqxdhLaterChallengeRandomBefore.carried (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program
     adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed depth first second randomInitial)
     (fun left right same => by
       cases same
-      exact relTriple_refl (resume setup env callbacks program owner number attachedVerify primitives baseImpl kem qPost bit left))
+      exact relTriple_refl (resume (completedBinding := completedBinding) setup env callbacks program owner number attachedVerify primitives baseImpl kem qPost bit left))
   simpa only [bind_map_left, run] using paired
 
 /-- The actual forwarded random prefix and concrete monitored before continuation have equal success probability in both challenge worlds, retaining all histories and complementary/refusal mass. -/
 theorem random (depth qPost : Nat) :
-    𝒟[run setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+    𝒟[run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
       depth qPost false false] {true} =
-    𝒟[run setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+    𝒟[run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
       depth qPost true true] {true} := by
-  exact (same_prefix setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+  exact (same_prefix (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
     depth qPost false).trans (congrArg (fun measure => measure {true})
-      (same_continuation setup env callbacks program adversary owner number
+      (same_continuation (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number
         attachedVerify primitives baseImpl kem ancestors disclosed depth qPost false true true))
 
 end BeaconcryptCore.Computational.PqxdhLaterChallengeRandomConsumer

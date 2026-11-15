@@ -7,6 +7,8 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 open OracleComp OracleSpec
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhRetainedSelectedOrigins
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhInitialReceiptConstruction PqxdhInitialPendingPost
 variable {A N I D K X Response : Type}
 
@@ -36,14 +38,14 @@ theorem receipt_selected (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource
     (entry : RawCtxGenericRoleStorage.BeaconState (KernelOf RatchetChain) I D K) (before : InitialState A N)
     (result : PqxdhInitialFinishReceipt.Result (KernelOf RatchetChain) Bool I D K Response
       PqxdhPhase2DecapsulationRouting.Shared × InitialState A N)
-    (supported : result ∈ support ((PqxdhInitialFinishReceipt.owner
+    (supported : result ∈ support ((PqxdhInitialFinishReceipt.owner (completedBinding := completedBinding)
       (PqxdhInitialSelectedOrigin.mark source selected) pre calls application
       (initial source selected root response) decode raw entry).run before))
     (receipt : PqxdhInitialFinishReceipt.Receipt (KernelOf RatchetChain) Response PqxdhPhase2DecapsulationRouting.Shared)
     (recorded : result.1.2 = some receipt) (marked : result.1.1.2 = some true) :
     receipt.initial = (PqxdhInitialRootAudit.kernel (root, response)).refined := by
   obtain ⟨control, prekey, oneTime, kem, atPrepared, atInitial, staged, phase, prepared,
-    initialized, finished, tagged⟩ := PqxdhInitialFinishReceipt.owner_origin
+    initialized, finished, tagged⟩ := PqxdhInitialFinishReceipt.owner_origin (completedBinding := completedBinding)
       (PqxdhInitialSelectedOrigin.mark source selected) pre calls application
       (initial source selected root response) decode raw entry before result supported receipt recorded
   rw [tagged] at marked
@@ -80,8 +82,8 @@ private theorem owner_interpretation (impl : QueryImpl spec m)
     (initial : PqxdhBeaconPhase2Shared.Secrets Shared → OracleComp spec (Option Kernel))
     (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
     (entry : RawCtxGenericRoleStorage.BeaconState Kernel I D K) :
-    simulateQ impl (PqxdhInitialFinishReceipt.owner mark pre calls application initial decode raw entry) =
-      PqxdhInitialFinishReceipt.owner mark (impl ∘ₛ pre)
+    simulateQ impl (PqxdhInitialFinishReceipt.owner (completedBinding := completedBinding) mark pre calls application initial decode raw entry) =
+      PqxdhInitialFinishReceipt.owner (completedBinding := completedBinding) mark (impl ∘ₛ pre)
         (RawCtxGenericOwnerInterpretation.interpretedCalls impl calls)
         (fun reply => simulateQ impl (application reply))
         (fun secrets => simulateQ impl (initial secrets)) decode raw entry := by
@@ -100,18 +102,18 @@ private theorem receipt_presence {State : Type}
     (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
     (entry : RawCtxGenericRoleStorage.BeaconState Kernel I D K) (before : State)
     (result : PqxdhInitialFinishReceipt.Result Kernel Origin I D K Response Shared × State)
-    (supported : result ∈ support ((PqxdhInitialFinishReceipt.owner mark pre calls application initial decode raw entry).run before)) :
+    (supported : result ∈ support ((PqxdhInitialFinishReceipt.owner (completedBinding := completedBinding) mark pre calls application initial decode raw entry).run before)) :
     result.1.1.2.isSome = result.1.1.1.1.isSome ∧
       (result.1.1.1.1.isSome = true → result.1.2.isSome = true) := by
-  have erased := PqxdhInitialFinishReceipt.owner_erase mark pre calls application initial decode raw entry
+  have erased := PqxdhInitialFinishReceipt.owner_erase (completedBinding := completedBinding) mark pre calls application initial decode raw entry
   have projected : (result.1.1, result.2) ∈ support
-      ((PqxdhInitialFinishOrigin.owner mark pre calls application initial decode raw entry).run before) := by
+      ((PqxdhInitialFinishOrigin.owner (completedBinding := completedBinding) mark pre calls application initial decode raw entry).run before) := by
     rw [← erased, StateT.run_map, support_map]
     exact ⟨result, supported, rfl⟩
-  refine ⟨PqxdhInitialFinishOrigin.published mark pre calls application initial decode raw entry before _ projected, ?_⟩
+  refine ⟨PqxdhInitialFinishOrigin.published (completedBinding := completedBinding) mark pre calls application initial decode raw entry before _ projected, ?_⟩
   intro accepted
   simpa only [PqxdhInitialFinishReceipt.successful, accepted, ite_true] using
-    PqxdhInitialFinishReceipt.published mark pre calls application initial decode raw entry before result supported
+    PqxdhInitialFinishReceipt.published (completedBinding := completedBinding) mark pre calls application initial decode raw entry before result supported
 
 end Interpretation
 
@@ -202,12 +204,12 @@ theorem handler_receipt_selected (decode : RawCtxReceive.FrameDecoder) (raw : Pq
     (result : PqxdhInitialFinishReceipt.Result (KernelOf RatchetChain) Bool I D K Response
       PqxdhPhase2DecapsulationRouting.Shared × InitialState A N)
     (supported : result ∈ support ((simulateQ sourceHandler
-      (PqxdhInitialFinishReceipt.owner mark preForward calls applicationForward initialForward decode raw entry)).run before))
+      (PqxdhInitialFinishReceipt.owner (completedBinding := completedBinding) mark preForward calls applicationForward initialForward decode raw entry)).run before))
     (receipt : PqxdhInitialFinishReceipt.Receipt (KernelOf RatchetChain) Response PqxdhPhase2DecapsulationRouting.Shared)
     (recorded : result.1.2 = some receipt) (marked : result.1.1.2 = some true) :
     receipt.initial = (PqxdhInitialRootAudit.kernel (root, response)).refined := by
   rw [owner_interpretation] at supported
-  apply receipt_selected source selected root response (sourceHandler ∘ₛ preForward)
+  apply receipt_selected (completedBinding := completedBinding) source selected root response (sourceHandler ∘ₛ preForward)
     (RawCtxGenericOwnerInterpretation.interpretedCalls sourceHandler calls)
     (fun reply => simulateQ sourceHandler (applicationForward reply)) decode raw entry before result
     ?_ receipt recorded marked
@@ -224,7 +226,7 @@ theorem step_selected (serverInitial : RustM (KernelOf RatchetChain))
     (result : ((PqxdhInitialGenericPost.Spec extra S B).Range query ×
       PqxdhInitialInstallOccurrence.State RatchetChain M P I D K Response PqxdhPhase2DecapsulationRouting.Shared Bool S B) × InitialState A N)
     (supported : result ∈ support ((simulateQ sourceHandler
-      ((PqxdhInitialInstallOccurrence.compiler mark sender route decode query).run entry)).run before)) :
+      ((PqxdhInitialInstallOccurrence.compiler (completedBinding := completedBinding) mark sender route decode query).run entry)).run before)) :
     Selected serverInitial (PqxdhInitialRootAudit.kernel (root, response)).refined result.1.2.1.2 result.1.2.2 := by
   rcases query with (query | query) | ⟨index, raw⟩
   · simp only [PqxdhInitialInstallOccurrence.compiler, PqxdhInitialOriginPost.compiler, StateT.run,
@@ -246,12 +248,12 @@ theorem step_selected (serverInitial : RustM (KernelOf RatchetChain))
     obtain ⟨completed, reached, rfl⟩ := supported
     have interpreted := reached
     rw [owner_interpretation] at interpreted
-    have presence := receipt_presence mark (sourceHandler ∘ₛ preForward)
+    have presence := receipt_presence (completedBinding := completedBinding) mark (sourceHandler ∘ₛ preForward)
       (RawCtxGenericOwnerInterpretation.interpretedCalls sourceHandler calls)
       (fun reply => simulateQ sourceHandler (applicationForward reply))
       (fun secrets => simulateQ sourceHandler (initialForward secrets)) decode raw _ before completed interpreted
     exact finish_selected serverInitial _ entry.1.2 entry.2 valid index raw completed.1 presence.1 presence.2
-      (fun receipt recorded marked => handler_receipt_selected source writer prior selected root response
+      (fun receipt recorded marked => handler_receipt_selected (completedBinding := completedBinding) source writer prior selected root response
         pre application selector aux decode raw _ before completed reached receipt recorded marked)
 
 /-- The same selected-installation provenance survives every supported complete adaptive Post, including rejected finishes, disclosures and repeated record requests. -/
@@ -263,7 +265,7 @@ theorem program_selected {Result : Type} (serverInitial : RustM (KernelOf Ratche
     (valid : Selected serverInitial (PqxdhInitialRootAudit.kernel (root, response)).refined entry.1.2 entry.2)
     (result : (Result × PqxdhInitialInstallOccurrence.State RatchetChain M P I D K Response PqxdhPhase2DecapsulationRouting.Shared Bool S B) × InitialState A N)
     (supported : result ∈ support ((simulateQ sourceHandler
-      ((simulateQ (PqxdhInitialInstallOccurrence.compiler mark sender route decode) client).run entry)).run before)) :
+      ((simulateQ (PqxdhInitialInstallOccurrence.compiler (completedBinding := completedBinding) mark sender route decode) client).run entry)).run before)) :
     Selected serverInitial (PqxdhInitialRootAudit.kernel (root, response)).refined result.1.2.1.2 result.1.2.2 := by
   induction client using OracleComp.inductionOn generalizing entry before result with
   | pure value =>
@@ -272,13 +274,13 @@ theorem program_selected {Result : Type} (serverInitial : RustM (KernelOf Ratche
     simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind] at supported
     change result ∈ support
       (((simulateQ sourceHandler
-          ((PqxdhInitialInstallOccurrence.compiler mark sender route decode query).run entry)).run before) >>= fun reply =>
+          ((PqxdhInitialInstallOccurrence.compiler (completedBinding := completedBinding) mark sender route decode query).run entry)).run before) >>= fun reply =>
         ((simulateQ sourceHandler
-          ((simulateQ (PqxdhInitialInstallOccurrence.compiler mark sender route decode) (next reply.1.1)).run reply.1.2)).run reply.2)) at supported
+          ((simulateQ (PqxdhInitialInstallOccurrence.compiler (completedBinding := completedBinding) mark sender route decode) (next reply.1.1)).run reply.1.2)).run reply.2)) at supported
     rw [mem_support_bind_iff] at supported
     obtain ⟨reply, head, tail⟩ := supported
     exact ih reply.1.1 reply.1.2 reply.2
-      (step_selected source writer prior selected root response pre application selector aux serverInitial
+      (step_selected (completedBinding := completedBinding) source writer prior selected root response pre application selector aux serverInitial
         sender route decode query entry before valid reply head) result tail
 
 /-- The actual initial Server builder links its assigned-key Boolean marker to the same successful receipt and literal caller initializer. Failed and unpublished attempts preserve all prior installed labels. -/
@@ -292,7 +294,7 @@ theorem builder_selected (serverInitial : RustM (KernelOf RatchetChain))
     (result : ((RustM (Option PqxdhServerRegistrationPublication.Response) ×
       Option (PqxdhInitialBuilderReceipt.Receipt (KernelOf RatchetChain))) × Front RatchetChain M P I D K S B) × InitialState A N)
     (supported : result ∈ support ((simulateQ sourceHandler
-      ((PqxdhInitialBuilderReceipt.build source serverInitial sender index metadata ready).run entry)).run before)) :
+      ((PqxdhInitialBuilderReceipt.build (associatedData := associatedData) source serverInitial sender index metadata ready).run entry)).run before)) :
     Selected serverInitial beaconInitial
       (PqxdhInitialOriginPost.afterBuilder origins result.1.2 index origin result.1.1.1)
       (PqxdhInitialInstallOccurrence.built (PqxdhInitialInstallOccurrence.begin receipts) receipts.nextAttempt
@@ -314,7 +316,7 @@ theorem builder_selected (serverInitial : RustM (KernelOf RatchetChain))
         ite_false, PqxdhInitialInstallOccurrence.begin] using valid
     | some reply =>
       obtain ⟨receipt, recorded, initialized, keyEq, advanced, encrypted, atSend, atSent, peer, sent⟩ :=
-        PqxdhInitialReceiptPublication.build_published sourceHandler source serverInitial sender index metadata
+        PqxdhInitialReceiptPublication.build_published (associatedData := associatedData) sourceHandler source serverInitial sender index metadata
           ready entry before result supported reply answer
       rw [keyEq] at peer
       simp only [Selected, PqxdhInitialOriginPost.afterBuilder, peer, PqxdhInitialInstallOccurrence.built,
@@ -335,16 +337,16 @@ theorem sequence_selected {Result : Type} (serverInitial : RustM (KernelOf Ratch
     (entry : Front RatchetChain M P I D K S B) (before : InitialState A N)
     (result : (Result × PqxdhInitialInstallOccurrence.State RatchetChain M P I D K Response PqxdhPhase2DecapsulationRouting.Shared Bool S B) × InitialState A N)
     (supported : result ∈ support ((simulateQ sourceHandler
-      ((PqxdhInitialInstallOccurrence.sequence source serverInitial mark origin sender route decode index metadata ready post).run
+      ((PqxdhInitialInstallOccurrence.sequence (associatedData := associatedData) (completedBinding := completedBinding) source serverInitial mark origin sender route decode index metadata ready post).run
         ((entry, PqxdhInitialSourcePublication.empty), PqxdhInitialInstallOccurrence.empty))).run before)) :
     Selected serverInitial (PqxdhInitialRootAudit.kernel (root, response)).refined result.1.2.1.2 result.1.2.2 := by
   simp only [PqxdhInitialInstallOccurrence.sequence, StateT.run, simulateQ_bind] at supported
   change result ∈ support (StateT.run _ before) at supported
   rw [StateT.run_bind, mem_support_bind_iff] at supported
   obtain ⟨builtResult, builtSupported, rest⟩ := supported
-  apply program_selected source writer prior selected root response pre application selector aux serverInitial
+  apply program_selected (completedBinding := completedBinding) source writer prior selected root response pre application selector aux serverInitial
     sender route decode (post builtResult.1.1.1) _ builtResult.2 _ result rest
-  apply builder_selected source writer prior selected root response pre application selector aux serverInitial
+  apply builder_selected (associatedData := associatedData) source writer prior selected root response pre application selector aux serverInitial
     _ origin sender index metadata ready entry before PqxdhInitialSourcePublication.empty
     PqxdhInitialInstallOccurrence.empty _ builtResult builtSupported
   intro owner impossible

@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeObservedStageTrace
+import VCVio.OracleComp.SimSemantics.StateT.StateSeparating
 /-! Full closed-source call snapshots project to an executable free-controller journal while the complete private backend remains outside that journal and is preserved in the live state. -/
 open OracleComp OracleSpec
 set_option autoImplicit false

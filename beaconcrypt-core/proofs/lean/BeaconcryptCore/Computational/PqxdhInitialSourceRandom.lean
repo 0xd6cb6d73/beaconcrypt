@@ -7,6 +7,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialSourceRandom
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily
 open PqxdhInitialBeaconAmbient PqxdhInitialSourceExperiment
 variable {ι M P I D K X Response A N : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -53,25 +55,25 @@ noncomputable def randomRun (output : PqxdhFullSecretInputKdf.FullOutput) :=
   (simulateQ (PqxdhInitialNativeRetained.retained source writer
     (RawCtxSelectedParentPrivatePatch.privatePatch (productionStream source.crypto) (root source previousRoot response64 selected) output)
     (PqxdhInitialOriginFinishPath.withInitial source selectedMessage previousRoot response64 other))
-    (PqxdhInitialNativeCarried.original source (PqxdhInitialSelectedOrigin.mark source selectedMessage)
+    (PqxdhInitialNativeCarried.original (associatedData := associatedData) (completedBinding := completedBinding) source (PqxdhInitialSelectedOrigin.mark source selectedMessage)
       sender route decode (execution response64 index metadata ready post before))).run (shared, (privateState, cache))
 
 /-- The complete actual stage-one source experiment, including its original publication and byte freshness event, is the early full76 child draw against the exact private-only patched function. The original initializer and every public HKDF evaluation remain real. -/
 theorem game_source (number : Std.U64) (positive : 0 < number.val) (ancestors disclosed : List RatchetChain) :
-    𝒟[game source writer selectedMessage previousRoot response64 other sender route decode index metadata ready post before
+    𝒟[PqxdhInitialSourceExperiment.game (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode index metadata ready post before
       selected number ancestors disclosed shared privateState cache 1] =
     𝒟[($ᵗ PqxdhFullSecretInputKdf.FullOutput) >>= fun output =>
       decision source previousRoot response64 selected output number ancestors disclosed <$>
-        randomRun source writer selectedMessage previousRoot response64 other sender route decode index metadata ready post before
+        randomRun (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode index metadata ready post before
           selected shared privateState cache output] := by
   have equality := PqxdhInitialNativeParentRandom.source_random source writer
     (PqxdhInitialOriginFinishPath.withInitial source selectedMessage previousRoot response64 other)
-    (PqxdhInitialNativeCarried.original source (PqxdhInitialSelectedOrigin.mark source selectedMessage)
+    (PqxdhInitialNativeCarried.original (associatedData := associatedData) (completedBinding := completedBinding) source (PqxdhInitialSelectedOrigin.mark source selectedMessage)
       sender route decode (execution response64 index metadata ready post before))
     (initialState (root source previousRoot response64 selected) shared privateState cache) rfl
     (root source previousRoot response64 selected) selected number positive ancestors disclosed (by
       intro result supported gate
-      exact published_cached source writer selectedMessage previousRoot response64 other sender route decode
+      exact PqxdhInitialSourceExperiment.published_cached (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage previousRoot response64 other sender route decode
         index metadata ready post before selected number shared privateState cache 1 result supported gate.2)
   refine equality.trans ?_
   apply congrArg evalDist
@@ -87,7 +89,7 @@ theorem game_source (number : Std.U64) (positive : 0 < number.val) (ancestors di
         (QueryCache.cacheQuery (spec := JointKdfRO) ∅
           (RawCtxFirstParentRisk.inputAddress (root source previousRoot response64 selected)) output))
       (PqxdhInitialOriginFinishPath.withInitial source selectedMessage previousRoot response64 other))
-      (PqxdhInitialNativeCarried.original source (PqxdhInitialSelectedOrigin.mark source selectedMessage)
+      (PqxdhInitialNativeCarried.original (associatedData := associatedData) (completedBinding := completedBinding) source (PqxdhInitialSelectedOrigin.mark source selectedMessage)
         sender route decode (execution response64 index metadata ready post before))).run (shared, (privateState, cache)) = _
   rw [initial_view]
   rfl

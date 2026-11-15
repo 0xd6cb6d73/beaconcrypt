@@ -34,6 +34,12 @@ private theorem present (coins : QueryImpl unifSpec m) (keyId : U64) :
   simpa only [RegistrationNativePlatformServerCompletion.capability,
     RegistrationNativePlatformServerCompletion.liftNative, StateT.run, simulateQ_map] using actual
 
+omit primitive in
+private theorem adHash (coins : QueryImpl unifSpec m) (pending : registration.ServerAdHash) :
+    Stable (nativeView (n := n)) (RegistrationNativePlatformCompletionSdk.nativeAdHash coins pending) := by
+  apply RegistrationNativePlatformSdkMetricView.world
+  exact RegistrationNativePlatformSourceLocalMetricView.adHash coins pending
+
 /-- The literal actual source build is stable on its complete Native/P execution, preserving true uniforms and all operational fields. -/
 theorem build (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (codec : Codec Reader Response)
     (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
@@ -44,7 +50,7 @@ theorem build (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (codec :
     (handle : Nat) (application : Option (Slice U8)) :
     Stable (nativeView (n := n)) (RegistrationNativePlatformSourceSeal.build coins setup codec view failure allocation erased reserve sign helper writer handle application) := by
   unfold RegistrationNativePlatformSourceSeal.build RegistrationNativePlatformSourceBuild.buildSource
-  exact RegistrationNativePlatformSdkMetricView.build _ _ _ _
+  exact RegistrationNativePlatformSdkMetricView.build _ (adHash coins) _ _ _ _
     (RegistrationNativePlatformSourceAcceptMetricView.pin coins) (external reserve) (present coins)
     (RegistrationNativePlatformSourceLocalMetricView.finish coins setup codec view failure allocation erased sign helper writer) handle application
 end BeaconcryptCore.Computational.RegistrationNativePlatformSourceBuildMetricView

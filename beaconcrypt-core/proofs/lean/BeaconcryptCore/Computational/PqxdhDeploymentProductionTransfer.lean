@@ -1,6 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhBoundaryDeployment
 import BeaconcryptCore.Computational.PqxdhBoundaryDeploymentLater
+import BeaconcryptCore.Computational.PqxdhFirstBeaconRecordCanonical
 
 /-!
 # Production composition of items 3 and 7: generic transfer lemmas
@@ -29,7 +30,7 @@ variable {ι KemSK Reader Response Message Root A X Out Z : Type} {baseSpec : Or
 
 /-- Observation transfer for the classical game at index 0 (through `classical_zero`): every observation of the CE game's returned value at the production codec and route is the same computation as the observation read back through `unwrap` on the classical source game. -/
 theorem observe_zero (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 227#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool) (bounds : FreshBounds) (mode : Mode)
     (adversary : OracleComp (ModeSpec mode) X) (runtime : A)
     (observe : PqxdhBoundaryDeployment.GameOutcome KemSK X × A → Z) :
@@ -45,7 +46,7 @@ theorem observe_zero (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
 
 /-- Distribution transfer for the classical game at index 0 (through `classical_evalDist`): for every measurable observation of the CE game's returned value, its output distribution on the CE game at the production codec and route equals the distribution of the observation read back through `unwrap` on the classical source game; in particular every event of the returned value has the same probability on both. -/
 theorem evalDist_zero [MeasurableSpace Z] (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 227#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool) (bounds : FreshBounds) (mode : Mode)
     (adversary : OracleComp (ModeSpec mode) X) (runtime : A)
     (observe : PqxdhBoundaryDeployment.GameOutcome KemSK X × A → Z) :
@@ -59,7 +60,7 @@ theorem evalDist_zero [MeasurableSpace Z] (setup : Setup baseSpec KemSK) (codec 
 
 /-- Boolean-event transfer for the classical game at index 0: the chance of a decision on the CE game's returned value at the production codec and route equals the chance of the same decision read back through `unwrap` on the classical source game. -/
 theorem chance (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 227#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool) (bounds : FreshBounds) (mode : Mode)
     (adversary : OracleComp (ModeSpec mode) X) (runtime : A)
     (decision : PqxdhBoundaryDeployment.GameOutcome KemSK X × A → Bool) :
@@ -73,7 +74,7 @@ theorem chance (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
 
 /-- Observation transfer for the LQ-F game at index 0 (through `later_zero`): every observation of the LQ-F game's returned value at the production codec and route is the same computation as the observation read back through `unwrap` on the LQ-F source game. -/
 theorem observe_later_zero (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 227#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool) (bounds : FreshBounds) (mode : Mode)
     (first : OracleComp (ModeSpec mode) X) (second : X → Reveal → OracleComp PostSpec Out) (runtime : A)
     (observe : PqxdhBoundaryDeploymentLater.GameOutcome KemSK Out × A → Z) :
@@ -89,7 +90,7 @@ theorem observe_later_zero (setup : Setup baseSpec KemSK) (codec : Codec Reader 
 
 /-- Distribution transfer for the LQ-F game at index 0 (through `later_evalDist`): for every measurable observation of the LQ-F game's returned value, its output distribution on the LQ-F game at the production codec and route equals the distribution of the observation read back through `unwrap` on the LQ-F source game. -/
 theorem evalDist_later_zero [MeasurableSpace Z] (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 227#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool) (bounds : FreshBounds) (mode : Mode)
     (first : OracleComp (ModeSpec mode) X) (second : X → Reveal → OracleComp PostSpec Out) (runtime : A)
     (observe : PqxdhBoundaryDeploymentLater.GameOutcome KemSK Out × A → Z) :
@@ -103,7 +104,7 @@ theorem evalDist_later_zero [MeasurableSpace Z] (setup : Setup baseSpec KemSK) (
 
 /-- Boolean-event transfer for the LQ-F game at index 0: the chance of a decision on the LQ-F game's returned value at the production codec and route equals the chance of the same decision read back through `unwrap` on the LQ-F source game. -/
 theorem chance_later (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 357#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (erased : Aeneas.Std.Array Aeneas.Std.U8 227#usize)
     (checks : Checks) (ensureInit : StateT A ProbComp Bool) (bounds : FreshBounds) (mode : Mode)
     (first : OracleComp (ModeSpec mode) X) (second : X → Reveal → OracleComp PostSpec Out) (runtime : A)
     (decision : PqxdhBoundaryDeploymentLater.GameOutcome KemSK Out × A → Bool) :

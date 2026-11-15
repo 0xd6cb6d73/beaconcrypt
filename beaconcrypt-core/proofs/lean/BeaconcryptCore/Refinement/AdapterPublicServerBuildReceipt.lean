@@ -91,8 +91,9 @@ theorem lookup (self : Server) (pending : peer.CompletionLookup) (plaintext : Sl
     (response : beaconcrypt_public_wrapper.server.RegResponse) (current : Server) (before after : State)
     (supported : (.ok (.Some response, current), after) ∈ support
       (((AdapterPublicServerBuildBody.lookup (m := StateT State ProbComp) self pending plaintext).run).run before)) :
-    ∃ occupied initial middle,
-      pending.resume occupied = .ok (.Ok initial) ∧
+    ∃ occupied pendingAd digest initial middle,
+      pending.resume occupied = .ok (.Ok pendingAd) ∧
+      pendingAd.resume (.Some digest) = .ok (.Ok initial) ∧
       (.ok (.Some response, current), after) ∈ support
         (((AdapterPublicServerBuildBody.reserved (m := StateT State ProbComp) self initial).run).run middle) := by
   unfold AdapterPublicServerBuildBody.lookup at supported
@@ -104,16 +105,22 @@ theorem lookup (self : Server) (pending : peer.CompletionLookup) (plaintext : Sl
       Prod.mk.injEq, RustM.ok.injEq, reduceCtorEq, false_and] at continued
   | some length =>
     obtain ⟨occupied, s4, _present, continued⟩ := bind_success _ _ _ _ _ continued
-    obtain ⟨initial, resumed, reached⟩ := checked_success self _ _ response current s4 after continued
-    exact ⟨occupied, initial, s4, resumed, reached⟩
+    obtain ⟨pendingAd, resumed, reached⟩ := checked_success self _ _ response current s4 after continued
+    unfold AdapterPublicServerBuildBody.adHash at reached
+    obtain ⟨request, s5, _requested, reached⟩ := bind_success _ _ _ _ _ reached
+    obtain ⟨digest, s6, _hashed, reached⟩ := bind_success _ _ _ _ _ reached
+    obtain ⟨initial, completed, reached⟩ := checked_success self _ _ response current s6 after reached
+    obtain ⟨actualDigest, _some, completed⟩ := RegistrationServerAdHash.resumed_digest pendingAd digest initial completed
+    exact ⟨occupied, pendingAd, actualDigest, initial, s6, resumed, completed, reached⟩
 
 theorem build (self : Server) (token : beaconcrypt_public_wrapper.server.RegistrationOutput)
     (data : core.option.Option (Slice U8)) (response : beaconcrypt_public_wrapper.server.RegResponse)
     (current : Server) (before after : State)
     (supported : (.ok (.Some response, current), after) ∈ support
       (((AdapterPublicServerBuildBody.build (m := StateT State ProbComp) self token data).run).run before)) :
-    ∃ initial known middle,
-      initial.binding = token.registration.agreement.binding ∧ initial.candidate.previous_state = self.control ∧
+    ∃ digest binding initial known middle,
+      token.registration.agreement.binding.complete digest = .ok binding ∧
+      initial.binding = binding ∧ initial.candidate.previous_state = self.control ∧
       (.ok (.Some response, current), after) ∈ support
         (((AdapterPublicServerBuildBody.record (m := StateT State ProbComp) { self with known_ids := known } initial).run).run middle) := by
   unfold AdapterPublicServerBuildBody.build at supported
@@ -125,26 +132,31 @@ theorem build (self : Server) (token : beaconcrypt_public_wrapper.server.Registr
       Prod.mk.injEq, RustM.ok.injEq, reduceCtorEq, false_and] at continued
   | some pin =>
     obtain ⟨pending, began, continued⟩ := checked_success self _ _ response current s3 after continued
-    obtain ⟨occupied, initial, s4, resumed, continued⟩ := lookup self pending plaintext response current s3 after continued
+    obtain ⟨occupied, pendingAd, adDigest, initial, s4, resumed, adResumed, continued⟩ := lookup self pending plaintext response current s3 after continued
     obtain ⟨known, middle, _reserved, recorded⟩ := reserved self initial response current s4 after continued
     have fields := lookup_fields self.control pin token.registration plaintext pending began
     have started : registration.begin_server_completion self.control pin
-        (if occupied then .Occupied else .Available) token.registration.agreement plaintext = .ok (.Ok initial) := by
+        (if occupied then .Occupied else .Available) token.registration.agreement plaintext = .ok (.Ok pendingAd) := by
       cases occupied <;> simpa only [PeerOwnership.completion_lookup_resume, fields.1, fields.2.1,
         fields.2.2.1, fields.2.2.2] using resumed
-    refine ⟨initial, known, middle, RegistrationServerRecordExecutor.initial_binding _ _ _ _ _ _ started, ?_, recorded⟩
-    have previous := RegistrationServerCompletionSnapshot.initial self.control pin
-      (if occupied then .Occupied else .Available) token.registration.agreement plaintext
-    rw [started] at previous
-    exact previous (.Ok initial) rfl
+    have admitted : RegistrationAd.ServerAdmission self.control pin
+        (if occupied then .Occupied else .Available) token.registration.agreement plaintext initial :=
+      ⟨pendingAd, adDigest, started, adResumed⟩
+    obtain ⟨digest, binding, completed, bindingSame, _consistent, prepared⟩ := RegistrationAd.server_admission_binding
+      self.control pin (if occupied then .Occupied else .Available) token.registration.agreement plaintext initial admitted
+    exact ⟨digest, binding, initial, known, middle, completed, bindingSame,
+      RegistrationServerCompletionSnapshot.prepare self.control token.registration.agreement.pending pin.binding
+        (if occupied then .Occupied else .Available) initial.candidate prepared, recorded⟩
+
 theorem actual (self : Server) (token : beaconcrypt_public_wrapper.server.RegistrationOutput)
     (data : core.option.Option (Slice U8)) (response : beaconcrypt_public_wrapper.server.RegResponse)
     (current : Server) (before after : State)
     (supported : (.ok (.Some response, current), after) ∈ support
       (((beaconcrypt_public_request.server.Server.Insts.BeaconcryptServerProviderServer.build_registration_response
         (m := RustT (StateT State ProbComp)) self token data).run).run before)) :
-    ∃ initial known middle,
-      initial.binding = token.registration.agreement.binding ∧ initial.candidate.previous_state = self.control ∧
+    ∃ digest binding initial known middle,
+      token.registration.agreement.binding.complete digest = .ok binding ∧
+      initial.binding = binding ∧ initial.candidate.previous_state = self.control ∧
       (.ok (.Some response, current), after) ∈ support
         (((AdapterPublicServerBuildBody.record (m := StateT State ProbComp) { self with known_ids := known } initial).run).run middle) := by
   rw [AdapterPublicServerBuildBody.source] at supported

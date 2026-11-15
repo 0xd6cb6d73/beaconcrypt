@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePlatformPrivateKdfSource
+import BeaconcryptCore.Computational.RegistrationBoundSource
 import BeaconcryptCore.Computational.RegistrationNativePlatformPrivateRecordPrefix
 import BeaconcryptCore.Computational.RegistrationNativePlatformBoundPublication
 /-! Exact source KDF callback accounting is independent of its private operands. Initial derivation appends its public kind marker; ongoing derivation additionally increments the actual native KDF counter. All World, cache, uniform and external coordinates are retained literally. -/
@@ -26,7 +27,7 @@ def ratchetState (before : RegistrationWorldAgreement.State n Auxiliary) : Regis
 
 /-- The actual initial callback returns the actual fixed source response and records exactly its public kind. -/
 theorem initial (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (codec : Codec Reader Response)
-    (request : ratchet.SymmetricRatchetKdfRequest) (before : RegistrationWorldAgreement.State n Auxiliary) :
+    (request : ratchet.InitialRatchetKdfRequest) (before : RegistrationWorldAgreement.State n Auxiliary) :
     ((RegistrationNativePlatformServerCompletion.records coins setup codec (.initialKdf request)).run before) =
       pure (.Some (RawCtxSourceHkdf.initialResponse setup.source.crypto request), initialState before) := by
   rfl
@@ -54,7 +55,7 @@ theorem private_prefix (coins : QueryImpl unifSpec m) (setup : Setup base KemSK)
         (RawCtxKdfRequestTable.fullResponse (PqxdhServerAuthKeySchedule.fromRoot setup.source root).1),
         ratchetState (initialState before)) := by
   have initialRequested : initial.request =
-      .ok ⟨PqxdhRootTableInitialization.rootArray root, ratchet.SYM_RATCHET_INFO⟩ := by
+      .ok ⟨PqxdhRootTableInitialization.rootArray root, ratchet.INITIAL_RATCHET_INFO⟩ := by
     simp only [registration.ServerInitialKdf.request, role,
       pqxdh.concrete.InitialRatchetKdfPending.impl.request, PqxdhInitialRatchetComplementarity.serverPending]
   obtain ⟨next, initialRun, nextRequested⟩ := RegistrationBoundSource.next_request initial _ role

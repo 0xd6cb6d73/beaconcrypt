@@ -81,7 +81,7 @@ theorem journal_query (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
   rfl
 
 /-- A genuine successful build whose allocated coordinate is marked in the final source supplies every later selected record's actual response-writer witnesses. Original prefix validity and reservation are operational invariants, and the suffix keeps every original component effect. -/
-theorem successful_suffix (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+theorem successful_suffix_transcript (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (context : Context KemSK) (rest : PqxdhServerAuthCtxCalls.Residual)
     (key : RootOutput) (Q : Nat) (j : Fin (Q + 1)) (index : Nat) (payload : Option Pqxdh.Bytes)
     (state : Local KemSK × Option Nat) (before : Observed)
@@ -100,9 +100,11 @@ theorem successful_suffix (setup : Setup baseSpec KemSK) (codec : Codec Reader R
       ((simulateQ (PqxdhServerAuthCtxReserve.stopped (PqxdhServerAuthCtxHandler.handler setup codec checks context rest Q j))
         work).run.run middle.1.2)).run middle.2))
     (reply : Result) (normal : last.1.1 = some reply) (marked : last.1.2.1.1.2.1 index = true) :
-    ∃ token, state.1.1.1.pending index = some token ∧
+    ∃ (token : PqxdhServerRelatedRootConsumer.Returned) (digest : CtxRomAuth.CtxDigest),
+      state.1.1.1.pending index = some token ∧
       ∀ entry ∈ last.2.1.seals,
-        PqxdhServerAuthPublicationBuiltRecord.At codec token.pending payload state.1.1.1.server response entry := by
+        PqxdhServerAuthPublicationBuiltRecord.At (PqxdhTranscriptAd.adOf digest) codec token.pending payload
+          state.1.1.1.server response entry := by
   have actual := PqxdhServerAuthPublicationRecordReserve.observed_support setup.source codec.frameRead key _ before middle built
   obtain ⟨token, present⟩ := PqxdhServerAuthPublicationBuiltRecord.build_present setup codec checks context rest Q j index payload
     state middle.1.2 response (by rw [← returned]; exact actual)
@@ -114,17 +116,17 @@ theorem successful_suffix (setup : Setup baseSpec KemSK) (codec : Codec Reader R
     (PqxdhServerAuthPublicationRecordReserve.observed_support setup.source codec.frameRead key _ middle.2 last continued) reply normal
   have currentMark : state.1.1.2.1 index = true := (suffix.2.trans step.2).symm.trans marked
   have empty := PqxdhServerAuthPublicationRecordReserve.selected_empty state before.1 reserved index token currentMark present
-  have records := PqxdhServerAuthPublicationBuiltRecord.stopped_at setup codec checks context rest Q j index token payload
+  obtain ⟨digest, records⟩ := PqxdhServerAuthPublicationBuiltRecord.stopped_at_transcript setup codec checks context rest Q j index token payload
     state middle.1.2 currentMark present before.1 middle.2.1 empty response
       (by rw [← returned]; exact PqxdhFirstBeaconRecordCanonical.observed_monitor _ _ _ _ before middle built)
   have closed := PqxdhServerAuthPublicationRecordReserve.selected_closed setup codec checks context rest Q j index payload state
     reserved.1 token currentMark present middle.1 actual (some response) returned
   have same := PqxdhServerAuthPublicationRecordReserve.suffix_records setup codec checks context rest key Q j work middle.1.2
     middle.2 closed.1 closed.2 last continued
-  exact ⟨token, present, fun entry found => records entry (same ▸ found)⟩
+  exact ⟨token, digest, present, fun entry found => records entry (same ▸ found)⟩
 
 /-- An actual successful public-journal entry at a finally marked coordinate supplies the response-writer origin of every final selected record. The proof follows the literal callback occurrence, not a serialization preimage or an equal-key session. -/
-theorem public_records (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+theorem public_records_transcript (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (context : Context KemSK) (rest : PqxdhServerAuthCtxCalls.Residual)
     (key : RootOutput) (Q : Nat) (j : Fin (Q + 1)) (work : OracleComp ServerAuthSpec Result)
     (state : Local KemSK × Option Nat) (before : Observed)
@@ -139,8 +141,9 @@ theorem public_records (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
     (published : (⟨.inr (.build index payload), some response⟩ :
       (query : ServerAuthSpec.Domain) × ServerAuthSpec.Range query) ∈ journal)
     (marked : result.1.2.1.1.2.1 index = true) :
-    ∃ (token : PqxdhServerRelatedRootConsumer.Returned) (server : ServerState),
-      ∀ entry ∈ result.2.1.seals, PqxdhServerAuthPublicationBuiltRecord.At codec token.pending payload server response entry := by
+    ∃ (token : PqxdhServerRelatedRootConsumer.Returned) (server : ServerState) (digest : CtxRomAuth.CtxDigest),
+      ∀ entry ∈ result.2.1.seals,
+        PqxdhServerAuthPublicationBuiltRecord.At (PqxdhTranscriptAd.adOf digest) codec token.pending payload server response entry := by
   induction work using OracleComp.inductionOn generalizing state before result answer journal with
   | pure value =>
       change result ∈ support (pure ((some (value, []), state), before)) at supported
@@ -173,11 +176,11 @@ theorem public_records (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
                 cases querySame
                 have valueSame : some response = value := eq_of_heq (Sigma.mk.inj_iff.mp head).2
                 subst value
-                obtain ⟨token, _, records⟩ := successful_suffix setup codec checks context rest key Q j index payload
+                obtain ⟨token, digest, _, records⟩ := successful_suffix_transcript setup codec checks context rest key Q j index payload
                   state before reserved valid response middle reached returned
                   (PqxdhServerAuthApiJournal.record (next (some response))) last continued
                   (tailAnswer, tailJournal) tailReply marked
-                exact ⟨token, state.1.1.1.server, records⟩
+                exact ⟨token, state.1.1.1.server, digest, records⟩
               · have actual := PqxdhServerAuthPublicationRecordReserve.observed_support setup.source codec.frameRead key _ before middle reached
                 have footprint := PqxdhServerAuthPublicationJournalClean.stopped_footprint setup codec checks context rest Q j query
                   state middle.1 actual value returned
@@ -188,7 +191,7 @@ theorem public_records (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
                   last continued tailAnswer tailJournal tailReply tail marked
 
 /-- The literal empty source and observer histories discharge every local reservation and allocation premise of the whole public-journal result. -/
-theorem initial_records (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+theorem initial_records_transcript (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (adversary : Adversary) (context : Context KemSK) (rest : PqxdhServerAuthCtxCalls.Residual)
     (key : RootOutput) (Q : Nat) (j : Fin (Q + 1))
     (result : (Option (Unit × QueryLog ServerAuthSpec) × (Local KemSK × Option Nat)) × Observed)
@@ -201,9 +204,10 @@ theorem initial_records (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
     (published : (⟨.inr (.build index payload), some response⟩ :
       (query : ServerAuthSpec.Domain) × ServerAuthSpec.Range query) ∈ journal)
     (marked : result.1.2.1.1.2.1 index = true) :
-    ∃ (token : PqxdhServerRelatedRootConsumer.Returned) (server : ServerState),
-      ∀ entry ∈ result.2.1.seals, PqxdhServerAuthPublicationBuiltRecord.At codec token.pending payload server response entry :=
-  public_records setup codec checks context rest key Q j (adversary (contextInput setup false context))
+    ∃ (token : PqxdhServerRelatedRootConsumer.Returned) (server : ServerState) (digest : CtxRomAuth.CtxDigest),
+      ∀ entry ∈ result.2.1.seals,
+        PqxdhServerAuthPublicationBuiltRecord.At (PqxdhTranscriptAd.adOf digest) codec token.pending payload server response entry :=
+  public_records_transcript setup codec checks context rest key Q j (adversary (contextInput setup false context))
     (PqxdhServerAuthCtxReserve.initial setup context).1 _
     (PqxdhServerAuthPublicationRecordReserve.initial_reserved setup context)
     (by intro index token found; cases found) result supported () journal normal index payload response published marked
@@ -292,7 +296,7 @@ theorem receipt_marked (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
   exact same ▸ marked
 
 /-- A successful public build at the accepted owner is either accompanied by the ordinary authentication observer's win, or supplies the actual response writers for every retained selected record. All allocation, mark and empty-history obligations come from this same original execution. -/
-theorem accepted_records (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+theorem accepted_records_transcript (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (checks : Checks) (adversary : Adversary) (context : Context KemSK) (rest : PqxdhServerAuthCtxCalls.Residual)
     (key : RootOutput) (Q : Nat) (j : Fin (Q + 1))
     (writable : PqxdhFirstBeaconRecordCanonical.ReadWritable codec.frameWrite codec.frameRead)
@@ -311,13 +315,14 @@ theorem accepted_records (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
       (query : ServerAuthSpec.Domain) × ServerAuthSpec.Range query) ∈ journal) :
     RawCtxSelectedAuthenticationObserver.won (RawCtxUniversalDecoder.decoder codec.frameRead) result.2.1 = true ∨
       PqxdhServerAuthPublicationOccurrence.ReceiptAt setup codec context j.val snap result.2.1 ∧
-      ∃ (token : PqxdhServerRelatedRootConsumer.Returned) (server : ServerState),
+      ∃ (token : PqxdhServerRelatedRootConsumer.Returned) (server : ServerState) (digest : CtxRomAuth.CtxDigest),
         ∀ entry ∈ result.2.1.seals,
-          PqxdhServerAuthPublicationBuiltRecord.At codec token.pending payload server response entry := by
+          PqxdhServerAuthPublicationBuiltRecord.At (PqxdhTranscriptAd.adOf digest) codec token.pending payload server response
+            entry := by
   rcases PqxdhServerAuthPublicationOccurrence.journal_receipt setup codec checks adversary context rest key Q j writable
     result supported journal normal snap accepted owned notBad unique with won | ⟨_, receipt⟩
   · exact Or.inl won
-  · exact Or.inr ⟨receipt, initial_records setup codec checks adversary context rest key Q j result supported journal normal
+  · exact Or.inr ⟨receipt, initial_records_transcript setup codec checks adversary context rest key Q j result supported journal normal
       j.val payload response published
       (receipt_marked setup codec checks adversary context rest key Q j result supported journal normal snap accepted owned unique receipt)⟩
 
@@ -338,21 +343,21 @@ end BeaconcryptCore.Computational.PqxdhServerAuthPublicationBuildJournal
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhServerAuthPublicationBuildJournal.journal_query
-/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthPublicationBuildJournal.successful_suffix' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthPublicationBuildJournal.successful_suffix_transcript' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhServerAuthPublicationBuildJournal.successful_suffix
-/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthPublicationBuildJournal.public_records' depends on axioms: [propext,
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthPublicationBuildJournal.successful_suffix_transcript
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthPublicationBuildJournal.public_records_transcript' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhServerAuthPublicationBuildJournal.public_records
-/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthPublicationBuildJournal.initial_records' depends on axioms: [propext,
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthPublicationBuildJournal.public_records_transcript
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthPublicationBuildJournal.initial_records_transcript' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhServerAuthPublicationBuildJournal.initial_records
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthPublicationBuildJournal.initial_records_transcript
 /-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthPublicationBuildJournal.marked_of_record' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
@@ -372,8 +377,8 @@ end BeaconcryptCore.Computational.PqxdhServerAuthPublicationBuildJournal
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhServerAuthPublicationBuildJournal.receipt_marked
-/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthPublicationBuildJournal.accepted_records' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthPublicationBuildJournal.accepted_records_transcript' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.PqxdhServerAuthPublicationBuildJournal.accepted_records
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthPublicationBuildJournal.accepted_records_transcript

@@ -6,6 +6,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core PqxdhRefinement
 set_option autoImplicit false
+set_option warningAsError true
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativeSecretWordServerMaterial
 open RegistrationNativeSecretWordMessage (Message ServerReady ServerState)
@@ -58,6 +59,15 @@ def admitted (encode : registration.SignedResponseView → core.option.Option En
   | some choice =>
       simulateQ commonLift (RegistrationNativePairedServerService.publicBranch encode control initial choice)
 
+/-- The selected transcript request runs through the same public World effect before any reservation or private material demand. -/
+def adHash (pending : registration.ServerAdHash) : OracleComp (Spec n) RegistrationServerAdHash.Result :=
+  match pending.request with
+  | .fail error => pure (.fail error)
+  | .div => pure .div
+  | .ok request => do
+    let digest ← effect (.inr (.hash (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request)))
+    pure (pending.resume (.Some (RegistrationAuthenticationShared.digestArray digest)))
+
 /-- The actual lookup is evaluated before preflight/occupancy and reservePeer; only an admitted native initializer asks the material service. -/
 noncomputable def complete (wire : RegistrationNativeWire.Wire) (reservePeer : Bool)
     (ready : Ready) (application : Slice U8) : StateT State (OracleComp (Spec n)) Result := fun before =>
@@ -75,12 +85,18 @@ noncomputable def complete (wire : RegistrationNativeWire.Wire) (reservePeer : B
             | .fail error => pure (.fail error, before)
             | .div => pure (.div, before)
             | .ok (.Err _) => pure (.ok none, before)
-            | .ok (.Ok selected) =>
-                if reservePeer then do
-                  let published ← admitted wire.encodeResponse before.control
-                    (RegistrationBoundKeySchedule.publicInitial selected) ready.reference
-                  (finish published).run before
-                else pure (.ok none, before)
+            | .ok (.Ok selected) => do
+                let hashed ← adHash selected
+                match hashed with
+                | .fail error => pure (.fail error, before)
+                | .div => pure (.div, before)
+                | .ok (.Err _) => pure (.ok none, before)
+                | .ok (.Ok initial) =>
+                  if reservePeer then do
+                    let published ← admitted wire.encodeResponse before.control
+                      (RegistrationBoundKeySchedule.publicInitial initial) ready.reference
+                    (finish published).run before
+                  else pure (.ok none, before)
           else pure (.ok none, before)
 
 /-- None is explicit raw-adapter cancellation. Every case first consumes the one-use handle, including oversized application and every later native failure. -/
@@ -122,6 +138,16 @@ theorem admitted_source (candidate : PqxdhKemIndCca.MlKemSharedSecret)
           RegistrationNativePairedServerService.publicCommon]
       rw [same]
 
+/-- Evaluating the symbolic private address retains the complete same selected hash effect and owned continuation. -/
+theorem adHash_source (candidate : PqxdhKemIndCca.MlKemSharedSecret) (pending : registration.ServerAdHash) :
+    simulateQ (realize candidate) (adHash (n := n) pending) = RegistrationServerMaterialFrontend.adHash pending := by
+  unfold adHash RegistrationServerMaterialFrontend.adHash
+  cases pending.request with
+  | fail error | div => simp only [simulateQ_pure]
+  | ok request =>
+      simp only [simulateQ_bind, simulateQ_spec_query, simulateQ_pure, effect, realize,
+        RegistrationServerMaterialFrontend.effect]
+
 /-- The consumed native token is independent of symbolic reference evaluation. -/
 theorem token_eval (candidate : PqxdhKemIndCca.MlKemSharedSecret) (ready : Ready) :
     RegistrationServerMaterialFrontend.token (ready.eval candidate) = token ready := rfl
@@ -162,11 +188,21 @@ theorem complete_source (candidate : PqxdhKemIndCca.MlKemSharedSecret) (wire : R
   apply bind_congr
   intro occupied
   split <;> try simp_all only [simulateQ_pure, map_pure, Prod.map, id_eq, ServerState.eval]
-  split <;> try simp_all only [simulateQ_pure, map_pure, Prod.map, id_eq, ServerState.eval]
-  simp only [simulateQ_bind, map_bind, admitted_source]
+  simp only [simulateQ_bind, map_bind, adHash_source]
   apply bind_congr
-  intro published
-  exact finish_source candidate published before
+  intro hashed
+  cases hashed with
+  | fail error | div => simp only [simulateQ_pure, map_pure, Prod.map, id_eq, ServerState.eval]
+  | ok answer => cases answer with
+    | Err previous => simp only [simulateQ_pure, map_pure, Prod.map, id_eq, ServerState.eval]
+    | Ok initial =>
+      dsimp only
+      by_cases reserved : reservePeer = true
+      · simp only [reserved, ite_true, simulateQ_bind, map_bind, admitted_source]
+        apply bind_congr
+        intro published
+        exact finish_source candidate published before
+      · simp only [reserved, Bool.false_eq_true, ite_false, simulateQ_pure, map_pure, Prod.map, id_eq, ServerState.eval]
 
 /-- The actual whole one-use build controller has the exact native evaluated result and session state, including cancellation and every subsequent failure. -/
 theorem build_source (candidate : PqxdhKemIndCca.MlKemSharedSecret) (wire : RegistrationNativeWire.Wire)
@@ -211,3 +247,9 @@ end BeaconcryptCore.Computational.RegistrationNativeSecretWordServerMaterial
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativeSecretWordServerMaterial.build_source
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeSecretWordServerMaterial.adHash_source' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativeSecretWordServerMaterial.adHash_source

@@ -25,7 +25,7 @@ attribute [local irreducible] RegistrationNativeExperiment.handler
 private theorem raw_success (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (raw : Pqxdh.Bytes) (packet : registration.InitPacket) (session : Nat)
     (first last : State n KemSK source) (read : RegistrationNativeWire.readInit wire raw = some packet)
     (supported : (some session, last) ∈ support
@@ -47,7 +47,7 @@ private theorem raw_success (setup : Setup base KemSK) (checks : Checks) (wire :
 private theorem prefix_call (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (current : Native (n := n) (KemSK := KemSK) (source := source))
     (valid : RegistrationNativeMldsaPrefixReceipts.Holds
       (RegistrationNativeParsedCounterLedger.native setup checks wire route representation created credential) wire 0 current)
@@ -89,47 +89,9 @@ theorem captured_call (setup : Setup base KemSK) (checks : Checks) (wire : Regis
     (congrArg (Option.map Prod.snd) found)
   exact ⟨call, Option.some.inj (call.canonical.symm.trans first)⟩
 
-/-- All saved endpoints from that one run use their own causal prior signing prefix for native staged origin. -/
-theorem captured_staged (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
-    (route : RawCtxServerRouting.SenderDecoder)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (ensureInit : StateT Unit ProbComp Bool) (identityIndex : Nat) (serverKeyId : U64)
-    (initial : Initial n KemSK source)
-    (startup : some initial ∈ support (RegistrationNativeExperiment.start setup source ensureInit identityIndex serverKeyId))
-    (bounds : FreshBounds) (mode : Mode) (work : OracleComp (ModeSpec mode) Value) {sessions owners : Nat}
-    (result : Value × Snapshots (n := n) (KemSK := KemSK) (source := source) (Endpoints sessions owners))
-    (supported : result ∈ support (RegistrationNativeStagedSnapshots.run setup checks wire route representation initial.created
-      initial.credential bounds mode work initial.state))
-    (endpoint : Endpoints sessions owners) (snapshot : Journal FullSpec × Native (n := n) (KemSK := KemSK) (source := source))
-    (saved : result.2.captured endpoint = some snapshot) (parsed session : Nat) (raw : Pqxdh.Bytes)
-    (found : RegistrationNativePublicObservation.firstAccept wire session
-      (snapshot.2.1.transcript.map RegistrationNativeLedgerHiding.view) = some (parsed, raw))
-    (decodable : (RegistrationNativeWire.readInit wire raw).isSome) :
-    ∃ call : Call (n := n) setup checks wire route representation initial.created initial.credential snapshot.2.1.transcript parsed session,
-      call.raw = raw ∧ ∀ publicKey : PublicKey, call.packet.mldsa_public_key = publicKey →
-      MldsaTranscriptAuth.Accepted (MldsaSharedAuthentication.cacheHash call.last.server.world.world.1.primitive.2) source.verify
-        (RegistrationAuthenticationNative.trial true call.first.server.pin call.packet
-          (RegistrationSigningShared.historyFor (PqxdhRefinement.absBytes call.packet.mldsa_public_key)
-            (RegistrationNativeMldsaShared.nativeProject call.first))) ∧
-      (MldsaTranscriptAuth.Issued (RegistrationAuthenticationNative.trial true call.first.server.pin call.packet
-        (RegistrationSigningShared.historyFor (PqxdhRefinement.absBytes call.packet.mldsa_public_key)
-          (RegistrationNativeMldsaShared.nativeProject call.first))) ∨
-        (∃ forgery, RegistrationNativeMldsaTrialObserver.observe source.verify publicKey (.inr (.accept call.packet))
-          call.first (.ok (some session)) call.last = some forgery) ∨ CacheHasCollision call.last.server.world.world.1.primitive.2) := by
-  obtain ⟨call, same⟩ := captured_call setup checks wire route representation ensureInit identityIndex serverKeyId initial startup
-    bounds mode work result supported endpoint snapshot saved parsed session raw found decodable
-  exact ⟨call, same, fun publicKey matching => RegistrationNativeMldsaCausalOrigin.staged setup checks wire route representation
-    initial.created initial.credential snapshot.2.1.transcript parsed session call publicKey matching⟩
-
 end BeaconcryptCore.Computational.RegistrationNativeStagedSnapshotOrigin
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativeStagedSnapshotOrigin.captured_call' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativeStagedSnapshotOrigin.captured_call
-
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeStagedSnapshotOrigin.captured_staged' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeStagedSnapshotOrigin.captured_staged

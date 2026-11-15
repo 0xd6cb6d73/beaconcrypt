@@ -97,18 +97,18 @@ theorem template_source (leading trailing : Pqxdh.Bytes) (signature : Ed25519Sig
         (RegistrationNativePlatformCtxBackend.physical (leading ++ signature.toList ++ trailing)).run before.hash := by
   simp only [template, physical, StateT.run, address, stored, Option.getD_some, Functor.map_map]
 
-/-- The original source fingerprint/hash continuation derives this exact private physical address from its actual retained one-time attachment. -/
-theorem actual_template (pending : registration.BeaconFingerprint) (digest : Std.Array U8 64#usize)
+/-- The original source request-hash continuation derives this exact private physical address from its actual retained one-time attachment. -/
+theorem actual_template (pending : registration.BeaconInitHash) (canonical : RegistrationNativeInitStageContents.Canonical pending)
     (signature : Ed25519Signature) (message : Pqxdh.Bytes)
     (attached : PqxdhRefinement.absBytes pending.state.one_time_key = signature.toList ++ message)
     (before : State) (stored : before.canonical = some signature) :
-    ∃ next request, pending.resume (.Some digest) = .ok (.HashRequested next) ∧ next.request = .ok request ∧
+    ∃ request, pending.request = .ok request ∧
       address before (RegistrationNativeIdentityCensorOperational.parts (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request)).1
         (RegistrationNativeIdentityCensorOperational.parts (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request)).2 =
           BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request := by
-  obtain ⟨next, request, resumed, requested, _framing, literal⟩ :=
-    RegistrationNativeIdentityPublicHashTemplate.source pending digest signature message attached
-  refine ⟨next, request, resumed, requested, ?_⟩
+  obtain ⟨request, requested, _framing, literal⟩ :=
+    RegistrationNativeIdentityPublicHashTemplate.source pending canonical signature message attached
+  refine ⟨request, requested, ?_⟩
   simpa only [address, stored, Option.getD_some, RegistrationNativeIdentityCensorOperational.parts,
     RegistrationNativeIdentityPublicHashTemplate.parts] using literal.symm
 

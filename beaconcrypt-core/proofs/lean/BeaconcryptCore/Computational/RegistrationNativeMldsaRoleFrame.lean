@@ -17,7 +17,7 @@ open RegistrationNativeMldsaShared (Local lower project nativeProject)
 open RegistrationSigningShared (Receipt)
 open RegistrationWorldAgreementCompiler (EnvState)
 open RegistrationNativeMldsaNoSign (Holds)
-open RegistrationNativeMldsaRoleSyntax (BeaconRole)
+open RegistrationNativeMldsaRoleSyntax (NoMldsa)
 variable {n : Nat} {ι KemSK Value Next Encoded Auxiliary : Type} {base : OracleSpec ι}
 variable {source : RegistrationNativeMldsa.Source}
 
@@ -25,7 +25,7 @@ def serverReceipts (receipts : List Receipt) : List Receipt :=
   receipts.filter fun receipt => decide (receipt.observation.payload.role = .server)
 
 private theorem shared_query (setup : Setup base KemSK) (owner : Owner source)
-    (query : RegistrationBeaconInitExecutor.Spec.Domain) (allowed : BeaconRole query)
+    (query : RegistrationBeaconInitExecutor.Spec.Domain) (allowed : NoMldsa query)
     (before : RegistrationSigningShared.State)
     (result : RegistrationBeaconInitExecutor.Spec.Range query × RegistrationSigningShared.State)
     (supported : result ∈ support ((RegistrationNativeMldsaShared.implementation setup owner query).run before)) :
@@ -38,19 +38,14 @@ private theorem shared_query (setup : Setup base KemSK) (owner : Owner source)
         obtain ⟨inner, _queried, same⟩ := supported
         cases same
         rfl
-    | sign request payload digest =>
-        change payload.role = .beacon at allowed
-        simp only [RegistrationNativeMldsaShared.implementation, RegistrationSigningShared.implementation, StateT.run, support_map] at supported
-        obtain ⟨reply, _signed, same⟩ := supported
-        cases same
-        simp [serverReceipts, allowed]
+    | sign request payload digest => exact False.elim allowed
   | inr request =>
       simp only [RegistrationNativeMldsaShared.implementation, StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
       cases supported
       rfl
 
 private theorem shared_program (setup : Setup base KemSK) (owner : Owner source)
-    (work : OracleComp RegistrationBeaconInitExecutor.Spec Value) (allowed : AllQueriesSatisfy work BeaconRole)
+    (work : OracleComp RegistrationBeaconInitExecutor.Spec Value) (allowed : AllQueriesSatisfy work NoMldsa)
     (before : RegistrationSigningShared.State) (result : Value × RegistrationSigningShared.State)
     (supported : result ∈ support ((simulateQ (RegistrationNativeMldsaShared.implementation setup owner) work).run before)) :
     serverReceipts result.2.1 = serverReceipts before.1 := by
@@ -69,17 +64,17 @@ private theorem shared_program (setup : Setup base KemSK) (owner : Owner source)
 /-- The actual complete outgoing Beacon Init preserves the exact Server-role receipt subsequence in the reached shared state. -/
 theorem begin_local (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (owner : Owner source)
-    (encode : registration.SignedInitView → core.option.Option Encoded)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (owner : Owner source)
+    (encode : registration.InitView → core.option.Option Encoded)
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize)
+    (pin : session.ServerAuthenticationPin)
     (before : Local n KemSK source)
     (result : RustM (RegistrationBeaconInitExecutor.Result Encoded) × Local n KemSK source)
     (supported : result ∈ support ((lower setup checks representation created
       (simulateQ (RegistrationNativeBeaconFrontend.outgoing setup source index owner)
-        (RegistrationBeaconInitExecutor.begin encode control inputs coins pin mldsa))).run before)) :
+        (RegistrationBeaconInitExecutor.begin encode control inputs coins pin))).run before)) :
     serverReceipts (project result.2).1 = serverReceipts (project before).1 := by
-  apply shared_program setup owner _ (RegistrationNativeMldsaRoleSyntax.begin_all encode control inputs coins pin mldsa)
+  apply shared_program setup owner _ (RegistrationNativeMldsaRoleSyntax.begin_all encode control inputs coins pin)
     (project before) (result.1, project result.2)
   rw [← RegistrationNativeMldsaShared.program, support_map]
   exact ⟨result, supported, rfl⟩
@@ -149,7 +144,7 @@ private theorem phase_holds (index : Nat) (phase : Phase) :
 
 private theorem local_noSign (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : M n KemSK source RegistrationServerRoleBackend.State Value) (noSign : Holds work)
     (before : Local n KemSK source) (result : Value × Local n KemSK source)
     (supported : result ∈ support ((lower setup checks representation created work).run before)) :
@@ -168,7 +163,7 @@ private theorem local_noSign (setup : Setup base KemSK) (checks : Checks)
 
 private def Keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : M n KemSK source RegistrationServerRoleBackend.State Value) : Prop :=
   ∀ (before : Local n KemSK source) result,
     result ∈ support ((lower setup checks representation created work).run before) →
@@ -176,7 +171,7 @@ private def Keeps (setup : Setup base KemSK) (checks : Checks)
 
 private theorem noSign_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : M n KemSK source RegistrationServerRoleBackend.State Value) (noSign : Holds work) :
     Keeps setup checks representation created work := local_noSign setup checks representation created work noSign
 
@@ -186,7 +181,7 @@ private theorem state_bind_apply {S X Y : Type} {m : Type → Type} [Monad m]
 
 private theorem lower_bind (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : M n KemSK source RegistrationServerRoleBackend.State Value)
     (next : Value → M n KemSK source RegistrationServerRoleBackend.State Next) :
     RegistrationNativeMldsaShared.lower setup checks representation created (work >>= next) =
@@ -198,7 +193,7 @@ private theorem lower_bind (setup : Setup base KemSK) (checks : Checks)
 
 private theorem bind_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : M n KemSK source RegistrationServerRoleBackend.State Value)
     (next : Value → M n KemSK source RegistrationServerRoleBackend.State Next)
     (first : Keeps setup checks representation created work)
@@ -211,18 +206,18 @@ private theorem bind_keeps (setup : Setup base KemSK) (checks : Checks)
 
 private theorem begin_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (owner : Owner source)
-    (encode : registration.SignedInitView → core.option.Option Value)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (owner : Owner source)
+    (encode : registration.InitView → core.option.Option Value)
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array Std.U8 1952#usize) :
+    (pin : session.ServerAuthenticationPin) :
     Keeps (n := n) setup checks representation created
       (simulateQ (outgoing setup source index owner)
-        (RegistrationBeaconInitExecutor.begin encode control inputs coins pin mldsa)) :=
-  begin_local setup checks representation created index owner encode control inputs coins pin mldsa
+        (RegistrationBeaconInitExecutor.begin encode control inputs coins pin)) :=
+  begin_local setup checks representation created index owner encode control inputs coins pin
 
 private theorem bundle_keeps (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) :
     Keeps (n := n) setup checks representation created (bundle setup source wire index) := by
   unfold bundle
   apply bind_keeps _ _ _ _ _ _ (noSign_keeps _ _ _ _ _ get_holds)
@@ -238,7 +233,7 @@ private theorem bundle_keeps (setup : Setup base KemSK) (checks : Checks) (wire 
               | exact noSign_keeps _ _ _ _ _ (sample_holds _)
               | exact noSign_keeps _ _ _ _ _ (pure_holds _)
           · intro oneTime
-            apply bind_keeps _ _ _ _ _ _ (begin_keeps setup checks representation created index owner _ _ _ _ _ _)
+            apply bind_keeps _ _ _ _ _ _ (begin_keeps setup checks representation created index owner _ _ _ _ _)
             intro published
             cases published with
             | fail error | div => exact noSign_keeps _ _ _ _ _ (pure_holds _)
@@ -253,7 +248,7 @@ private theorem bundle_keeps (setup : Setup base KemSK) (checks : Checks) (wire 
 
 private theorem source_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : M n KemSK source RegistrationServerRoleBackend.State Value)
     (keeps : Keeps setup checks representation created work)
     (before : RegistrationNativeExperiment.State n KemSK source)
@@ -276,7 +271,7 @@ private theorem source_keeps (setup : Setup base KemSK) (checks : Checks)
 /-- Actual outgoing bundles preserve all earlier Server-role receipts and add only Beacon-role attempts. -/
 theorem bundle (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat)
     (before : RegistrationNativeExperiment.State n KemSK source)
     (result : RustM (Option Pqxdh.Bytes) × RegistrationNativeExperiment.State n KemSK source)
     (supported : result ∈ support ((RegistrationNativeExperiment.beacon setup checks representation created
@@ -287,7 +282,7 @@ theorem bundle (setup : Setup base KemSK) (checks : Checks) (wire : Registration
 /-- Actual construction and every failed generation path add no Server-role signing receipt. -/
 theorem create (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (before : RegistrationNativeExperiment.State n KemSK source)
     (result : RustM (Option Nat) × RegistrationNativeExperiment.State n KemSK source)
@@ -306,7 +301,7 @@ attribute [local irreducible] RegistrationNativeExperiment.handler
 /-- Every complete original typed callback except response build preserves the exact Server-role receipt subsequence, including all source failures. -/
 theorem handler (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (allowed : NonBuild query)
     (before : RegistrationNativeExperiment.State n KemSK source)
     (result : RegistrationNativeRawAdapter.TypedSpec.Range query × RegistrationNativeExperiment.State n KemSK source)

@@ -25,7 +25,7 @@ def project (old : OldResult n (RegistrationNativeEntropyPort.State E) Secret Va
 noncomputable def oldRun (service : QueryImpl (ServiceSpec n) (StateT Secret ProbComp))
     (env : Environment n E) (crypto : Pqxdh.Crypto) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (serverKid : U64) (bounds : FreshBounds)
-    (mode : Mode) (work : OracleComp (ModeSpec mode) Value) (created : PqxdhLiveServerConstruction.Created Unit)
+    (mode : Mode) (work : OracleComp (ModeSpec mode) Value) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (before : CborRawRecordOriginService.State n E Secret) : ProbComp (OldResult n E Secret Value) :=
   (fun result => ((some (PqxdhRegistrationJointServerBirth.encode created,
     (result.1, result.2.1), result.2.2.1.1.1), result.2.2.1.2), result.2.2.2)) <$>
@@ -36,7 +36,7 @@ noncomputable def oldRun (service : QueryImpl (ServiceSpec n) (StateT Secret Pro
 theorem old_run_flat (service : QueryImpl (ServiceSpec n) (StateT Secret ProbComp))
     (env : Environment n E) (crypto : Pqxdh.Crypto) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (serverKid : U64) (bounds : FreshBounds)
-    (mode : Mode) (work : OracleComp (ModeSpec mode) Value) (created : PqxdhLiveServerConstruction.Created Unit)
+    (mode : Mode) (work : OracleComp (ModeSpec mode) Value) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (before : CborRawRecordOriginService.State n E Secret) :
     oldRun service env crypto codec route serverKid bounds mode work created before =
       (fun result => ((result.1.1.1, result.1.2), result.2)) <$>
@@ -59,7 +59,7 @@ theorem old_run_flat (service : QueryImpl (ServiceSpec n) (StateT Secret ProbCom
 noncomputable def run (service : QueryImpl (ServiceSpec n) (StateT Secret ProbComp))
     (env : RegistrationNativeEntropyInterface.Environment n E) (crypto : Pqxdh.Crypto) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (serverKid : U64) (bounds : FreshBounds) (mode : Mode)
-    (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value) (created : PqxdhLiveServerConstruction.Created Unit)
+    (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (initial : E) (shell : CborRecordWorldClient.Shell) (control : Control n) (secret : Secret) : ProbComp (Result n E Secret Value) :=
   (fun result => ((result.1.1.1, result.1.2), result.2)) <$>
     CborRawRecordOriginFlatten.interpret service codec route
@@ -69,7 +69,7 @@ noncomputable def run (service : QueryImpl (ServiceSpec n) (StateT Secret ProbCo
 theorem run_transport (service : QueryImpl (ServiceSpec n) (StateT Secret ProbComp))
     (env : RegistrationNativeEntropyInterface.Environment n E) (crypto : Pqxdh.Crypto) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (serverKid : U64) (bounds : FreshBounds) (mode : Mode)
-    (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value) (created : PqxdhLiveServerConstruction.Created Unit)
+    (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (initial : E) (shell : CborRecordWorldClient.Shell) (control : Control n) (secret : Secret) :
     project <$> oldRun service (RegistrationNativeEntropyPort.environment env) crypto codec route serverKid bounds mode
       (RegistrationNativeEntropyCompile.compile mode work) created (((([], initial), shell), control), secret) =

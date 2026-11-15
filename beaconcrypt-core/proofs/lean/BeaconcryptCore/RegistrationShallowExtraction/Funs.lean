@@ -363,7 +363,7 @@ def
   ok (self1 = other1)
 
 /-- [beaconcrypt_parse::extraction_mk_byte_string]:
-    Source: 'beaconcrypt-parse/src/lib.rs', lines 154:0-188:1
+    Source: 'beaconcrypt-parse/src/lib.rs', lines 152:0-186:1
     Visibility: public -/
 def extraction_mk_byte_string
   (s : Slice Std.U8) :
@@ -388,7 +388,7 @@ def extraction_mk_byte_string
   else ok cbordetver.bcExtractedToken6f7074696f6e5f5f43424f525f50756c73655f5261775f547970655f63626f725f726177.None
 
 /-- [beaconcrypt_parse::extraction_string_kind_equal]:
-    Source: 'beaconcrypt-parse/src/lib.rs', lines 190:0-193:27
+    Source: 'beaconcrypt-parse/src/lib.rs', lines 188:0-191:27
     Visibility: public -/
 def extraction_string_kind_equal
   (left : cbordetver.cbor_det_string_kind)

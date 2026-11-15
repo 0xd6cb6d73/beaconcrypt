@@ -37,7 +37,7 @@ def finalCursor (value : transport.kexresponse) : Usize :=
   Usize.wrapping_add (beforeArray value) 1#usize
 
 def payload (value : transport.kexresponse) : List U8 :=
-  [2#u8, 1#u8] ++ fieldBytes value.identity_key ++ fieldBytes value.ephemeral_key ++
+  [3#u8, 1#u8] ++ fieldBytes value.identity_key ++ fieldBytes value.ephemeral_key ++
     fieldBytes value.kem_cipher_text ++ fieldBytes value.app_cipher_text ++
     encodedBytes cbor_major_type_uint64 value.key_id ++ fieldBytes value.signature
 
@@ -84,7 +84,7 @@ theorem offsets (value : transport.kexresponse) (out : Slice U8)
   exact ⟨bytes, application, key, body, complete⟩
 
 structure ResponseStages (other : OtherBranches) (value : transport.kexresponse) (out : Slice U8) where
-  first : UIntStage other out 0#usize 2#u64
+  first : UIntStage other out 0#usize 3#u64
   second : UIntStage other first.stage.after 1#usize 1#u64
   identity : Stage (@transport.serialize_bstr (operations other) value.identity_key) second.stage.after
     2#usize 34#usize (fieldBytes value.identity_key)
@@ -107,7 +107,7 @@ theorem response_stages (other : OtherBranches) (value : transport.kexresponse) 
   have expanded := full
   unfold applicationLength keyLength at expanded
   obtain ⟨appCount, appOffset, keyOffset, bodyOffset, outputOffset⟩ := offsets value out room
-  obtain ⟨first⟩ := source_uint_stage other out 0#usize 2#u64 (by
+  obtain ⟨first⟩ := source_uint_stage other out 0#usize 3#u64 (by
     change (0#usize).val + 1 ≤ out.length
     scalar_tac)
   have firstLength : first.stage.after.length = out.length := first.stage.sameLength
@@ -235,13 +235,13 @@ theorem stages_framed (other : OtherBranches) (value : transport.kexresponse) (o
   have keyBytes : (encodedBytes cbor_major_type_uint64 value.key_id).length = keyLength value :=
     encoded_length _ _
   have first := stage_append stages.first.stage out.val [] (by simp) (by simp)
-  have firstBytes : stages.first.stage.after.val = [2#u8] ++ out.val.drop 1 := by
-    simpa only [encoded_two, show (writtenCount 2#u64).val = 1 from rfl,
+  have firstBytes : stages.first.stage.after.val = [3#u8] ++ out.val.drop 1 := by
+    simpa only [encoded_three, show (writtenCount 3#u64).val = 1 from rfl,
       val0, List.nil_append, Nat.zero_add] using first
-  have second := stage_append stages.second.stage out.val [2#u8] firstBytes (by simp only [List.length_cons, List.length_nil, val1])
-  let part0 : List U8 := [2#u8, 1#u8]
+  have second := stage_append stages.second.stage out.val [3#u8] firstBytes (by simp only [List.length_cons, List.length_nil, val1])
+  let part0 : List U8 := [3#u8, 1#u8]
   have prior0 : stages.second.stage.after.val = part0 ++ out.val.drop 2 := by
-    change stages.second.stage.after.val = [2#u8, 1#u8] ++ out.val.drop 2
+    change stages.second.stage.after.val = [3#u8, 1#u8] ++ out.val.drop 2
     simpa only [encoded_one, show (writtenCount 1#u64).val = 1 from rfl,
       val1, List.cons_append, List.nil_append] using second
   let part1 := part0 ++ fieldBytes value.identity_key
@@ -394,7 +394,7 @@ theorem controller_to_array (other : OtherBranches) (value : transport.kexrespon
   rw [stages.first.factory]
   simp only [bind_tc_ok]
   rw [stages.first.actualSerialize]
-  simp only [show writtenCount 2#u64 = 1#usize from rfl, bind_tc_ok]
+  simp only [show writtenCount 3#u64 = 1#usize from rfl, bind_tc_ok]
   simp only [bind_tc_ok, uncurry, nonzero1, ↓reduceIte]
   rw [show core.num.U64.wrapping_add 0#u64 1#u64 = .ok 1#u64 from rfl]
   simp only [bind_tc_ok]

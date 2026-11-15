@@ -125,9 +125,7 @@ theorem outgoing_preserves (setup : PqxdhServerAuthExperiment.Setup base KemSK) 
   cases query with
   | inl query => cases query with
     | hash request => exact lift_preserves _ _
-    | sign request payload digest =>
-        exact bind_preserves _ _ _ (sample_preserves _ _) (fun _ =>
-          bind_preserves _ _ _ (lift_preserves _ _) (fun _ => pure_preserves _ _))
+    | sign request payload digest => exact pure_preserves _ _
   | inr request =>
       classical
       by_cases matching : request.public_key = PqxdhRootTableInitialization.rootArray (setup.joint.publicKeys owner.identitySeed).ed25519
@@ -136,17 +134,17 @@ theorem outgoing_preserves (setup : PqxdhServerAuthExperiment.Setup base KemSK) 
       · simp only [outgoing, ite_eq_right matching]
         exact pure_preserves _ _
 
-/-- The full actual Ed3/fingerprint/ML/publication controller preserves every owner's fixed-prekey signing history on all return paths. -/
+/-- The full actual three-Ed/request-hash/publication controller preserves every owner's fixed-prekey signing history on all return paths. -/
 theorem init_preserves (setup : PqxdhServerAuthExperiment.Setup base KemSK) (source : RegistrationNativeMldsa.Source)
     (wire : RegistrationNativeWire.Wire) (index : Nat) (owner : Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes) :
     Preserves (n := n) (Auxiliary := Auxiliary) (Inv index (PqxdhPhase2InputBytes.word owner.prekeyPublic))
       (simulateQ (outgoing setup source index owner)
         (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨owner.pin.binding⟩ (inputs setup owner)
-          ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)) := by
+          ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)) := by
   apply simulate_preserves _ _ (RegistrationNativeEdSigningBounds.AllowedQuery _)
     (fun query allowed => outgoing_preserves setup source index owner query allowed)
   apply RegistrationNativeEdSigningBounds.begin_all wire.encodeInit ⟨owner.pin.binding⟩ (inputs setup owner)
-    ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey
+    ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin
     (PqxdhPhase2InputBytes.word owner.prekeyPublic) (setup.dh.publicKey oneTime) owner.kemPublic
   · rfl
   · exact PqxdhRootTableInitialization.rootArray_bytes _
@@ -176,7 +174,7 @@ private noncomputable def bundled (setup : PqxdhServerAuthExperiment.Setup base 
     M n KemSK source Auxiliary (RustM (Option Pqxdh.Bytes)) := do
   let published ← simulateQ (outgoing setup source index owner)
     (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨owner.pin.binding⟩ (inputs setup owner)
-      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)
+      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)
   match published with
   | .fail error => pure (.fail error)
   | .div => pure .div

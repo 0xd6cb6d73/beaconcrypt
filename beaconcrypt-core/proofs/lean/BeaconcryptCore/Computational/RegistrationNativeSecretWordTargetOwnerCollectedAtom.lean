@@ -40,7 +40,7 @@ theorem collect (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire) 
       pending.collected.plain.ciphertext = authenticated.packet.public.kem_cipher_text ∧
       pending.collected.plain.server = authenticated.packet.public.identity_key ∧
       setup.source.crypto.xpkConv (absBytes pending.collected.plain.server) = some (absBytes pending.collected.plain.serverConverted) ∧
-      PqxdhPhase2DhMetadata.admitted authenticated.pending.control pending.collected.plain = some pending.metadata := by
+      PqxdhPhase2DhMetadata.admitted (completedBinding := authenticated.binding) authenticated.control pending.collected.plain = some pending.metadata := by
   rw [RegistrationNativeSecretWordTargetOwnerCollect.collect_run] at supported
   simp only [RegistrationNativeSecretWordBeaconPrepare.prepare, simulateQ_bind, StateT.run_bind,
     mem_support_bind_iff] at supported
@@ -48,7 +48,7 @@ theorem collect (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire) 
   cases collected with
   | none => simp only [simulateQ_pure, StateT.run_pure, Option.bind_none, mem_support_pure_iff] at supported; cases supported
   | some collected =>
-      cases admitted : PqxdhPhase2DhMetadata.admitted authenticated.pending.control collected.plain with
+      cases admitted : PqxdhPhase2DhMetadata.admitted (completedBinding := authenticated.binding) authenticated.control collected.plain with
       | none => simp only [Option.bind_some, admitted, Option.map_none, simulateQ_pure, StateT.run_pure, mem_support_pure_iff] at supported; cases supported
       | some metadata =>
           simp only [Option.bind_some, admitted, Option.map_some, simulateQ_pure, StateT.run_pure,

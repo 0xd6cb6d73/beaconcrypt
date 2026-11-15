@@ -75,7 +75,8 @@ theorem commands_cut {Reader Response : Type} (setup : Setup baseSpec KemSK)
     (codec : Codec Reader Response) (checks : Checks) (identityIndex : Nat)
     (publicIdentity : PqxdhJointIdentity.PublicIdentity)
     (work : OracleComp (PqxdhRegistrationJointKemCommands.SourceSpec KemSK) Result)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) (state : PqxdhServerAuthNative.NativeState KemSK)
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))
+    (state : PqxdhServerAuthNative.NativeState KemSK)
     (index : Nat) :
     (scan setup (commands setup codec checks identityIndex publicIdentity work owners state) index >>= finish setup) =
       PqxdhRegistrationJointKemCommands.program setup codec checks identityIndex publicIdentity work owners state := by

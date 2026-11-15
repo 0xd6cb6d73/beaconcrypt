@@ -6,7 +6,10 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengePreparedContinuation
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily
 open PqxdhKemIndCca PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma
 open PqxdhPhase2GeneratedDriver PqxdhAuthenticatedRootExperiment PqxdhPhase1AcceptanceOracle
@@ -35,9 +38,9 @@ theorem prefix_continuation (start : Input) (output : HmacBlock) (depth : Nat)
     (details : Option (Details (SelectorSpec baseSpec) M P (IdentityHandle I) (DhPair setup) (KemHandle K) Bool S (B + 1)))
     (reached : Local A (BareState 1) RootOracle.QueryCache)
     (supported : RawCtxForwardScan.Cut.pending (context, details) reached ∈ support
-      (capturedPrefix original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number bit adversary)) :
+      (capturedPrefix (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number bit adversary)) :
     PqxdhLaterChallengeBuilderContinuation.Continuation owner number bit adversary (context, details) := by
-  exact PqxdhLaterChallengeBuilderContinuation.shared_continuation _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ supported
+  exact PqxdhLaterChallengeBuilderContinuation.shared_continuation (associatedData := associatedData) (completedBinding := completedBinding) (supported := supported)
 
 
 /-- The complete collector carries the exact source-generated continuation only on its actual pending branch; completed and cached decisions remain unchanged. -/
@@ -47,13 +50,13 @@ theorem run_continuation (start : Input) (output : HmacBlock) (depth : Nat)
     (pending : PqxdhSharedParentCollect.Pending (SelectorSpec baseSpec) M P (IdentityHandle I) (DhPair setup) (KemHandle K) A (BareState 1) RootOracle.QueryCache S (B + 1))
     (details : Option (Details (SelectorSpec baseSpec) M P (IdentityHandle I) (DhPair setup) (KemHandle K) Bool S (B + 1)))
     (supported : Sum.inr (pending, details) ∈ support
-      (PqxdhLaterChallengePreparedCapture.run original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number bit adversary)) :
+      (PqxdhLaterChallengePreparedCapture.run (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge start output depth owner number bit adversary)) :
     PqxdhLaterChallengeBuilderContinuation.Continuation owner number bit adversary (pending.1, details) := by
   simp only [PqxdhLaterChallengePreparedCapture.run, mem_support_bind_iff] at supported
   obtain ⟨cut, reached, collected⟩ := supported
-  exact prefix_continuation original callbacks baseImpl kem attachedVerify primitives secret challenge
+  exact prefix_continuation (associatedData := associatedData) (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge
     start output depth owner number bit adversary pending.1 details pending.2
-    ((collect_pending original callbacks baseImpl kem attachedVerify primitives secret challenge
+    ((collect_pending (completedBinding := completedBinding) original callbacks baseImpl kem attachedVerify primitives secret challenge
       (withPost (setup := setup) start owner number bit adversary) output depth cut pending details collected) ▸ reached)
 
 end BeaconcryptCore.Computational.PqxdhLaterChallengePreparedContinuation

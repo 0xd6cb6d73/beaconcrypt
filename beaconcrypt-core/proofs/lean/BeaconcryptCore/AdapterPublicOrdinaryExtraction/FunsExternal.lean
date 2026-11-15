@@ -11,7 +11,7 @@ noncomputable section
 namespace BeaconcryptCore.Refinement.AdapterPublicOrdinaryPlatform
 open PublicWrapperPlatform
 def assertBool (value : Bool) : RustM Unit := massert value
-def associatedData (binding : beaconcrypt_core.session.SessionBinding) : RustM (Array U8 281#usize) :=
+def associatedData (binding : beaconcrypt_core.session.SessionBinding) : RustM (Array U8 151#usize) :=
   .ok binding.associated_data
 variable [platform : Platform] [Allocator]
 /-- Individual standard-map lookup and mutable entry lens, including their Rust outcomes. -/

@@ -9,6 +9,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialPendingPost
+variable (completedBinding : session.CompletedRegistrationBinding)
 open PqxdhInitialGenericBeacon
 variable {ι Chain Kernel M P I D K X Response Shared Result : Type}
 variable {extra : OracleSpec ι} {S B : Nat}
@@ -60,8 +61,8 @@ theorem owner_interpretation (impl : QueryImpl spec m)
     (initial : PqxdhBeaconPhase2Shared.Secrets Shared → OracleComp spec (Option Kernel))
     (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
     (state : RawCtxGenericRoleStorage.BeaconState Kernel I D K) :
-    simulateQ impl (owner pre calls application initial decode raw state) =
-      owner (impl ∘ₛ pre) (RawCtxGenericOwnerInterpretation.interpretedCalls impl calls)
+    simulateQ impl (PqxdhInitialGenericBeacon.owner (completedBinding := completedBinding) pre calls application initial decode raw state) =
+      PqxdhInitialGenericBeacon.owner (completedBinding := completedBinding) (impl ∘ₛ pre) (RawCtxGenericOwnerInterpretation.interpretedCalls impl calls)
         (fun reply => simulateQ impl (application reply))
         (fun secrets => simulateQ impl (initial secrets)) decode raw state := by
   unfold owner
@@ -132,7 +133,7 @@ noncomputable def compiler (sender : M → Std.U64) (route : RawCtxServerRouting
       let reply ← selectorForward query
       pure (reply, before)
   | .inr (.finish index raw) => fun before => do
-      let result ← owner preForward calls applicationForward initialForward decode raw (before.roles.1.2 index)
+      let result ← PqxdhInitialGenericBeacon.owner (completedBinding := completedBinding) preForward calls applicationForward initialForward decode raw (before.roles.1.2 index)
       pure (result.1, install index before result.2)
 
 section Run
@@ -172,7 +173,7 @@ noncomputable def interpreted
       let reply ← selector query
       pure (reply, before)
   | .inr (.finish index raw) => fun before => do
-      let result ← owner pre
+      let result ← PqxdhInitialGenericBeacon.owner (completedBinding := completedBinding) pre
         (RawCtxGenericOwnerInterpretation.interpretedCalls primitive RawCtxPendingOwnerQueries.calls)
         application initial decode raw (before.roles.1.2 index)
       pure (result.1, install index before result.2)
@@ -201,8 +202,8 @@ theorem step_interpretation
     (query : (PqxdhInitialGenericPost.Spec extra S B).Domain)
     (before : Front Chain M P I D K S B) :
     simulateQ (handler primitive reader pre application initial selector aux)
-      ((compiler sender route decode query).run before) =
-      (interpreted primitive reader pre application initial selector sender route decode query).run before := by
+      ((compiler (completedBinding := completedBinding) sender route decode query).run before) =
+      (interpreted (completedBinding := completedBinding) primitive reader pre application initial selector sender route decode query).run before := by
   rcases query with (query | query) | query
   · simp only [compiler, interpreted, StateT.run, bind_pure_comp, simulateQ_map,
       ← QueryImpl.simulateQ_compose]
@@ -231,8 +232,8 @@ theorem program_interpretation
     (client : OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result)
     (before : Front Chain M P I D K S B) :
     simulateQ (handler primitive reader pre application initial selector aux)
-      ((simulateQ (compiler sender route decode) client).run before) =
-      (simulateQ (interpreted primitive reader pre application initial selector sender route decode) client).run before := by
+      ((simulateQ (compiler (completedBinding := completedBinding) sender route decode) client).run before) =
+      (simulateQ (interpreted (completedBinding := completedBinding) primitive reader pre application initial selector sender route decode) client).run before := by
   induction client using OracleComp.inductionOn generalizing before with
   | pure result => simp only [simulateQ_pure, StateT.run_pure]
   | query_bind query next ih =>

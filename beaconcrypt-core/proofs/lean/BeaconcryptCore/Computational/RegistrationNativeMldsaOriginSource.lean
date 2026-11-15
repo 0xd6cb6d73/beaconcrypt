@@ -13,13 +13,12 @@ namespace BeaconcryptCore.Computational.RegistrationNativeMldsaOriginSource
 open PqxdhServerAuthExperiment (Setup Checks)
 open RegistrationNativeMldsa (Source Credential)
 open RegistrationNativeMldsaOpaque (Pool handleSource restore Live)
-open RegistrationNativeMldsaPoolMap (StateLive)
 open RegistrationNativeMldsaMap (nativeState)
 open RegistrationNativeMldsaOriginEvent (Bad)
 variable {n : Nat} {ι KemSK V : Type} {base : OracleSpec ι}
 variable (source : Source) (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 local notation "Native" => RegistrationNativeExperiment.State n KemSK source
 local notation "Table" => RegistrationNativeMldsaTableStop.State (n := n) (KemSK := KemSK) source
 attribute [local irreducible] RegistrationNativeExperiment.handler
@@ -39,7 +38,7 @@ local notation "original" => handler source setup checks wire route representati
 
 /-- One actual complete callback transports its original bad-cut marker, with its actual private-key restoration. -/
 theorem step (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (before : Table × Bool)
-    (server : Live source before.1.2 credential fallback) (owners : StateLive source before.1.2 before.1.1) :
+    (server : Live source before.1.2 credential fallback) :
     Prod.map id (project source fallback) <$> (tableHandler query).run before = (original query).run (project source fallback before) := by
   classical
   have bare : (fun result => (result.1, nativeState (restore source fallback result.2.2) result.2.1)) <$>
@@ -47,7 +46,7 @@ theorem step (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (before : T
       (RegistrationNativeExperiment.handler setup checks wire route representation created source fallback query).run
         (nativeState (restore source fallback before.1.2) before.1.1) := by
     simp only [RegistrationNativeMldsaTableStop.callback, StateT.run, Functor.map_map]
-    exact RegistrationNativeMldsaTableHandler.restored source setup checks wire route representation created credential fallback before.1.2 server query before.1.1 owners
+    exact RegistrationNativeMldsaTableHandler.restored source setup checks wire route representation created credential fallback before.1.2 server query before.1.1
   have event (reply : RegistrationNativeRawAdapter.TypedSpec.Range query) :
       Bad source fallback query (nativeState (restore source fallback before.1.2) before.1.1) reply ↔
         RegistrationNativeMldsaBadCut.Bad source credential query before.1 reply := by
@@ -64,22 +63,20 @@ theorem step (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (before : T
   simpa only [RegistrationNativeMldsaBadSource.handler, handler, project, StateT.run, Functor.map_map, Prod.map, id_eq, marker] using same
 
 private theorem live_step (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (before : Table × Bool)
-    (server : Live source before.1.2 credential fallback) (owners : StateLive source before.1.2 before.1.1)
+    (server : Live source before.1.2 credential fallback)
     (result : RegistrationNativeRawAdapter.TypedSpec.Range query × (Table × Bool))
     (supported : result ∈ support ((tableHandler query).run before)) :
-    Live source result.2.1.2 credential fallback ∧ StateLive source result.2.1.2 result.2.1.1 := by
+    Live source result.2.1.2 credential fallback := by
   simp only [RegistrationNativeMldsaBadSource.handler, RegistrationNativeMldsaTableStop.callback,
     StateT.run, Functor.map_map, support_map] at supported
   obtain ⟨inner, reached, same⟩ := supported
   cases same
-  exact ⟨RegistrationNativeMldsaTableHandler.server_live source setup checks wire route representation created credential fallback
-    before.1.2 server query before.1.1 owners inner reached,
-    RegistrationNativeMldsaTableHandler.live source setup checks wire route representation created credential fallback
-    before.1.2 server query before.1.1 owners inner reached⟩
+  exact RegistrationNativeMldsaTableHandler.server_live source setup checks wire route representation created credential fallback
+    before.1.2 server query before.1.1 inner reached
 
 /-- Every adaptive typed source execution preserves the exact original native marker through the dynamic actual table. -/
 theorem program (work : OracleComp RegistrationNativeRawAdapter.TypedSpec V) (before : Table × Bool)
-    (server : Live source before.1.2 credential fallback) (owners : StateLive source before.1.2 before.1.1) :
+    (server : Live source before.1.2 credential fallback) :
     Prod.map id (project source fallback) <$> (simulateQ tableHandler work).run before =
       (simulateQ original work).run (project source fallback before) := by
   induction work using OracleComp.inductionOn generalizing before with
@@ -93,13 +90,13 @@ theorem program (work : OracleComp RegistrationNativeRawAdapter.TypedSpec V) (be
             (simulateQ original (next middle.1)).run (project source fallback middle.2) := by
           apply bind_congr_of_forall_mem_support
           intro middle reached
-          obtain ⟨nextServer, nextOwners⟩ := live_step source setup checks wire route representation created credential fallback query before server owners middle reached
-          exact ih middle.1 middle.2 nextServer nextOwners
+          have nextServer := live_step source setup checks wire route representation created credential fallback query before server middle reached
+          exact ih middle.1 middle.2 nextServer
         _ = (Prod.map id (project source fallback) <$> (tableHandler query).run before) >>= fun middle =>
             (simulateQ original (next middle.1)).run middle.2 := by
           rw [bind_map_left]
           rfl
-        _ = _ := by rw [step source setup checks wire route representation created credential fallback query before server owners]
+        _ = _ := by rw [step source setup checks wire route representation created credential fallback query before server]
 
 end BeaconcryptCore.Computational.RegistrationNativeMldsaOriginSource
 

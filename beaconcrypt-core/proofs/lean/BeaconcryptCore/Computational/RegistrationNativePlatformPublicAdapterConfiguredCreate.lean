@@ -36,12 +36,12 @@ open RegistrationNativePlatformSdkOrdinaryBeaconSelected (raw)
 local notation "allocation"=>RegistrationNativePlatformExtractedSdkBuildNormal.allocation configuration.allocateJoin
 local notation "helper"=>RegistrationNativePlatformConcreteSource.helper configuration.reserveFrame
 local notation "writer"=>RegistrationNativePlatformConcreteSource.writer configuration.reservePackets
-variable (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
 
 noncomputable def precast (current :Native×P) (before :Private configuration created credential current)
     (identityKey mlKey :Slice U8) (keyId :U64) :=
   RegistrationNativePlatformPublicAdapterCreatePhysical.dispatch coins setup checks configuration.agreement.representation created configuration.view
-    children configuration.generator configuration.kem configuration.mlGeneration configuration.edGeneration configuration.prekeyGeneration configuration.kemGeneration
+    children configuration.generator configuration.kem configuration.edGeneration configuration.prekeyGeneration configuration.kemGeneration
     configuration.views credential configuration.pins keyId identityKey mlKey current before
 
 noncomputable def step (current :Native×P) (before :Private configuration created credential current)
@@ -61,7 +61,7 @@ theorem query (current :Native×P) (before :Private configuration created creden
   unfold step
   rw [raw_cast]
   exact RegistrationNativePlatformPublicAdapterCreateNormalized.query coins setup checks configuration.agreement.representation created configuration.view
-    children children configuration.generator configuration.kem configuration.mlGeneration configuration.edGeneration configuration.prekeyGeneration configuration.kemGeneration
+    children children configuration.generator configuration.kem configuration.edGeneration configuration.prekeyGeneration configuration.kemGeneration
     configuration.views credential configuration.pins keyId identityKey mlKey current before
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterConfiguredCreate

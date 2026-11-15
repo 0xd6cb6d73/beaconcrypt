@@ -48,7 +48,7 @@ variable {source : RegistrationNativeMldsa.Source} {KemSK ι : Type} {base : Ora
 theorem agree (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (views : AdapterPublicWrapperStorage.Views) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (checks : PqxdhServerAuthExperiment.Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (self : beaconcrypt_public_wrapper.server.Server) (before after : RegistrationServerFrontendCompiler.State n)
     (related : AdapterPublicWrapperState.Server view views created credential self before)
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit)

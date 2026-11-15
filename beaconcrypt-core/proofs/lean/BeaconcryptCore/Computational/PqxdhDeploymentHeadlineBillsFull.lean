@@ -20,6 +20,7 @@ Premises: `KemBound setup caps`, the total query bound `qInit` of the runtime in
 open OracleComp OracleSpec ENNReal
 
 set_option autoImplicit false
+set_option warningAsError true
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentHeadlineBillsFull
 open PqxdhServerAuthExperiment (Setup Codec Checks)

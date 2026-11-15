@@ -2,7 +2,7 @@ import BeaconcryptCore.Computational.RawCtxChainRealization
 import BeaconcryptCore.Computational.RawCtxSourceMaterialLabels
 
 /-!
-Private chain provenance uses root, first-output and next-output handles. Their fixed-source interpretation executes the same actual76 function; first32 is both a possible initial chain and the material key, second32 is the next chain, and last12 is the nonce. Equal interpreted inputs share the complete output, even for different handles. The supplied root interpretation stays private.
+Private chain provenance distinguishes root, initial-first, initial-second, message-first and message-next handles. Initial handles evaluate the initial45 label; message handles evaluate the distinct message48 label. The selected projections retain their actual source bytes. Equal interpreted inputs share the complete output, even for different handles. The supplied root interpretation stays private.
 
 Both direction callbacks execute the actual native KDF request before retaining its next/parent handles. Opening and sealing use unchanged source-selected native arguments and the same complete auxiliary/CTX cache state. Full send and receive equalities discharge the joint callback equations internally for the existing fixed functional HKDF/shared primitive backend. Native optional primitive errors outside that existing functional contract are not covered.
 
@@ -20,6 +20,8 @@ open RawCtxMaterialInterpretation RawCtxChainInterpretation RawCtxInterpretedOpe
 /-- Private provenance syntax, not bytes, owner identifiers, network values or proof of distinct keys. -/
 inductive Chain (Atom : Type) where
   | root : Atom → Chain Atom
+  | initialFirst : Chain Atom → Chain Atom
+  | initialSecond : Chain Atom → Chain Atom
   | first : Chain Atom → Chain Atom
   | next : Chain Atom → Chain Atom
 
@@ -28,6 +30,14 @@ noncomputable def chainOf {Atom : Type}
     (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (roots : Atom → RatchetChain) :
     Chain Atom → RatchetChain
   | .root atom => roots atom
+  | .initialFirst parent => ⟨⟨((source.crypto.hkdf
+      (PqxdhRefinement.absBytes (chainOf source roots parent).bytes) Pqxdh.INFO_INIT 64).take 32).map
+        BeaconcryptCore.Refinement.ProtocolComposition.concreteByte,
+      by simp [source.crypto.hkdf_length]⟩⟩
+  | .initialSecond parent => ⟨⟨((source.crypto.hkdf
+      (PqxdhRefinement.absBytes (chainOf source roots parent).bytes) Pqxdh.INFO_INIT 64).drop 32).map
+        BeaconcryptCore.Refinement.ProtocolComposition.concreteByte,
+      by simp [source.crypto.hkdf_length]⟩⟩
   | .first parent => ⟨(RawCtxInterpretedReceive.decodeResponse
       (RawCtxSourceHkdf.response source.crypto (RawCtxChainSend.nativeRequest (chainOf source roots parent)))).2.key.bytes⟩
   | .next parent => (RawCtxInterpretedReceive.decodeResponse

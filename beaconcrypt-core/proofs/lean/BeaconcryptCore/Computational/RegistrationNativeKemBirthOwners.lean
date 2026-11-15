@@ -67,31 +67,12 @@ theorem prepare_owners (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 195
     result.1.2 = owners := by
   have law : Unchanged (prepare (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) mlSource edPin mlPin keyId) := by
     unfold prepare
-    apply bind_unchanged _ _ (sample_unchanged _)
-    intro generated
-    cases generated with
-    | none => exact pure_unchanged _
-    | some credential =>
-        dsimp only
-        cases registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
-        | fail error => exact pure_unchanged _
-        | div => exact pure_unchanged _
-        | ok pending =>
-          dsimp only
-          cases requestRun : pending.request with
-          | fail error => exact pure_unchanged _
-          | div => exact pure_unchanged _
-          | ok request =>
-              apply bind_unchanged _ _ (effect_unchanged _)
-              intro digest
-              cases pending.resume (.Some (RegistrationAuthenticationShared.digestArray digest)) with
-              | fail error => exact pure_unchanged _
-              | div => exact pure_unchanged _
-              | ok reply => cases reply with
-                | none => exact pure_unchanged _
-                | some pin =>
-                    exact bind_unchanged _ _ (sample_unchanged _) (fun _ =>
-                      bind_unchanged _ _ (sample_unchanged _) (fun _ => pure_unchanged _))
+    cases registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
+    | fail error => exact pure_unchanged _
+    | div => exact pure_unchanged _
+    | ok pin =>
+        exact bind_unchanged _ _ (sample_unchanged _) (fun _ =>
+          bind_unchanged _ _ (sample_unchanged _) (fun _ => pure_unchanged _))
   exact law owners env result supported
 
 /-- Every successful local bundle contains an actual successful outgoing callback for an owner found in the original local list. -/
@@ -107,7 +88,7 @@ theorem bundle_receipt (setup : Setup base KemSK) (source : RegistrationNativeMl
         (((simulateQ (outgoing (n := n) (Auxiliary := Auxiliary) setup source index selected)
           (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨selected.pin.binding⟩ (inputs setup selected)
             ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩
-            selected.pin selected.mldsa.publicKey)).run beforeOwners).run beforeEnv) := by
+            selected.pin)).run beforeOwners).run beforeEnv) := by
   simp only [bundle, StateT.run_bind, StateT.run_get, pure_bind] at supported
   cases found : owners[index]? with
   | none => simp [found, StateT.run_pure] at supported

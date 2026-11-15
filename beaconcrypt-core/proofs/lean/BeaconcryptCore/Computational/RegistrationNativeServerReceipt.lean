@@ -19,6 +19,10 @@ variable {source : RegistrationNativeMldsa.Source}
 private theorem state_pure_apply {S X : Type} {m : Type → Type} [Monad m]
     (value : X) (state : S) : (pure value : StateT S m X) state = pure (value, state) := rfl
 
+private theorem state_bind_apply {S X Y : Type} {m : Type → Type} [Monad m]
+    (work : StateT S m X) (next : X → StateT S m Y) (state : S) :
+    (work >>= next) state = (do let reached ← work state; next reached.1 reached.2) := rfl
+
 attribute [local irreducible] RegistrationServerSdkSource.complete RegistrationServerSdkSource.fromInitial
   RegistrationWorldServerCompletion.fromInitial RegistrationWorldServerCompletion.publish
   RegistrationWorldServerCompletion.signing RegistrationWorldServerCompletion.install
@@ -50,7 +54,7 @@ theorem build_cut (setup : Setup base KemSK) (codec : Codec Reader Response) (ch
               cases supported
           | some plaintext => exact ⟨token, current, plaintext, rfl, rfl, by simpa only [taken, StateT.run] using supported⟩
 
-/-- Successful native completion has the same current-pin lookup, actual public size gate and occupancy reply, and a real initial-record capability after the peer reservation. -/
+/-- Successful native completion has the same current-pin lookup, actual public size gate and occupancy reply, and the actual AD hash and its reached state before peer reservation and the initial-record capability. -/
 theorem complete_cut (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (sign : registration.MldsaSigningRequest → ProbComp SignReply)
     (encode : registration.SignedResponseView → core.option.Option Pqxdh.Bytes)
@@ -58,14 +62,16 @@ theorem complete_cut (setup : Setup base KemSK) (codec : Codec Reader Response) 
     (keyId : U64) (bytes : Pqxdh.Bytes)
     (supported : (.ok (some (keyId, bytes)), after) ∈ support
       ((RegistrationServerSdkSource.complete setup codec checks sign encode token application).run before)) :
-    ∃ lookup requested occupied middle pending,
+    ∃ lookup requested occupied middle pending initial hashedAt,
       peer.begin_completion_lookup before.control before.pin token application = .ok (.Ok lookup) ∧
       lookup.request = .ok requested ∧ RegistrationServerSdkSource.preflight application requested = true ∧
       (occupied, middle) ∈ support
         ((RegistrationServerSdkSource.world (RegistrationWorldServerCompletion.capability (.peerPresent requested))).run before) ∧
-      lookup.resume occupied = .ok (.Ok pending) ∧ checks.reservePeer = true ∧
+      lookup.resume occupied = .ok (.Ok pending) ∧
+      (.ok (.Ok initial), hashedAt) ∈ support ((RegistrationServerSdkSource.adHash pending).run middle) ∧
+      checks.reservePeer = true ∧
       (.ok (some (keyId, bytes)), after) ∈ support
-        ((RegistrationServerSdkSource.fromInitial setup codec sign encode before.control pending).run middle) := by
+        ((RegistrationServerSdkSource.fromInitial setup codec sign encode before.control initial).run hashedAt) := by
   simp only [RegistrationServerSdkSource.complete, StateT.run] at supported
   cases looked : peer.begin_completion_lookup before.control before.pin token application with
   | fail error | div =>
@@ -96,11 +102,22 @@ theorem complete_cut (setup : Setup base KemSK) (codec : Codec Reader Response) 
                     simp only [resumed, state_pure_apply, support_pure, Set.mem_singleton_iff] at continued
                     cases continued
                 | Ok pending =>
-                    simp only [resumed] at continued
-                    split_ifs at continued with reserved
-                    · exact ⟨lookup, requestedId, occupied, middle, pending, rfl, requested, fits, queried, resumed, reserved, continued⟩
-                    · simp only [state_pure_apply, support_pure, Set.mem_singleton_iff] at continued
-                      cases continued
+                    simp only [resumed, state_bind_apply, mem_support_bind_iff] at continued
+                    obtain ⟨⟨hashed, hashedAt⟩, hashedSupport, continued⟩ := continued
+                    cases hashed with
+                    | fail error | div =>
+                        simp only [state_pure_apply, support_pure, Set.mem_singleton_iff] at continued
+                        cases continued
+                    | ok result => cases result with
+                      | Err previous =>
+                          simp only [state_pure_apply, support_pure, Set.mem_singleton_iff] at continued
+                          cases continued
+                      | Ok initial =>
+                          split_ifs at continued with reserved
+                          · exact ⟨lookup, requestedId, occupied, middle, pending, initial, hashedAt,
+                              rfl, requested, fits, queried, resumed, hashedSupport, reserved, continued⟩
+                          · simp only [state_pure_apply, support_pure, Set.mem_singleton_iff] at continued
+                            cases continued
             · simp only [support_pure, Set.mem_singleton_iff] at supported
               cases supported
 

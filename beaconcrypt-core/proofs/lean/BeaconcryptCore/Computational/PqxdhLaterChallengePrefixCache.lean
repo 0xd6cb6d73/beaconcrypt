@@ -6,7 +6,10 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengePrefixCache
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhInitialPostContext PqxdhInitialBeaconAmbient PqxdhSecretInputKdf PqxdhJointKdfGame
 open PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily
 open PqxdhRecordConfidentialityChallenge PqxdhRecordConfidentialityTrace
@@ -27,7 +30,7 @@ local notation "mark" => PqxdhInitialSelectedOrigin.mark source selectedMessage
 local notation "Snapshot" => NativeFront M P I D K S B × PqxdhInitialOriginPost.Trace Bool S B
 local notation "Backend" => PqxdhInitialNativeAudit.State A N RootOracle.QueryCache
 local notation "Full" => Snapshot × Backend
-local notation "postImpl" => PqxdhLaterChallengeCutChronology.postImpl mark sender route decode native
+local notation "postImpl" => PqxdhLaterChallengeCutChronology.postImpl (completedBinding := completedBinding) mark sender route decode native
 
 private theorem external_initial :
     PqxdhInitialOriginFinishPath.withInitial source selectedMessage previousRoot response external = external := by
@@ -41,10 +44,10 @@ theorem program_invariant (serverRoot : RootOutput) (owner : RawCtxProtocolRevea
       (PqxdhInitialOriginPostPath.rootFor serverRoot previousRoot response owner) owner before state.1)
     (result : (Result × Snapshot) × Backend)
     (supported : result ∈ support ((simulateQ native
-      ((simulateQ (PqxdhInitialOriginPost.compiler mark sender route decode) client).run before)).run state)) :
+      ((simulateQ (PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) mark sender route decode) client).run before)).run state)) :
     PqxdhInitialOriginPostPath.Invariant
       (PqxdhInitialOriginPostPath.rootFor serverRoot previousRoot response owner) owner result.1.2 result.2.1 := by
-  apply PqxdhInitialOriginPostPath.program_invariant source writer stage selectedMessage previousRoot response
+  apply PqxdhInitialOriginPostPath.program_invariant (completedBinding := completedBinding) source writer stage selectedMessage previousRoot response
     external serverRoot owner sender route decode client before state.1 valid (result.1, result.2.1)
   simp only [PqxdhInitialOriginPostPath.program, external_initial]
   rw [← PqxdhInitialNativeAudit.program_erase source writer stage pre application initial selector aux, support_map]
@@ -65,7 +68,7 @@ theorem reaches_invariant (serverRoot : RootOutput) (owner : RawCtxProtocolRevea
       apply ih
       rw [PqxdhLaterChallengeCutChronology.post_program, support_map] at actual
       obtain ⟨completed, supported, rfl⟩ := actual
-      exact program_invariant source writer stage selectedMessage previousRoot response pre application selector aux
+      exact program_invariant (completedBinding := completedBinding) source writer stage selectedMessage previousRoot response pre application selector aux
         sender route decode serverRoot owner ((handler owner number bit query).run before)
         ambient.1 ambient.2 valid completed supported
 
@@ -75,12 +78,12 @@ theorem builder_invariant (owner : RawCtxProtocolReveals.Owner S B)
     (before : NativeFront M P I D K S B) (state : Backend)
     (result : (PqxdhInitialBuilderContext.BuildResult × Snapshot) × Backend)
     (supported : result ∈ support ((simulateQ native (simulateQ RawCtxForwardAnnotation.erase
-      (PqxdhInitialOriginForwardBuilder.program source mark true sender route decode
+      (PqxdhInitialOriginForwardBuilder.program (associatedData := associatedData) (completedBinding := completedBinding) source mark true sender route decode
         (ConcreteRatchetKernel.refined <$> PqxdhInitialReplyErasure.kernelOf false response)
         index metadata ready pure before PqxdhInitialSourcePublication.empty))).run state)) :
     PqxdhInitialOriginPostPath.Invariant
       (PqxdhInitialSourceExperiment.root source previousRoot response owner) owner result.1.2 result.2.1 := by
-  apply PqxdhInitialSourcePublication.sequence_invariant source writer stage selectedMessage previousRoot response
+  apply PqxdhInitialSourcePublication.sequence_invariant (associatedData := associatedData) (completedBinding := completedBinding) source writer stage selectedMessage previousRoot response
     external (PqxdhInitialSourceExperiment.server source response)
     (PqxdhInitialSourceExperiment.server_created source response) owner sender route decode index metadata ready
     pure before state.1 (result.1, result.2.1)

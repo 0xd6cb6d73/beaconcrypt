@@ -33,6 +33,17 @@ class ConstructorSourceControls(unittest.TestCase):
             (self.root / target.REQUEST).read_bytes(),
         )
 
+    def test_no_beacon_ml_generator(self):
+        self.assertNotIn(b"MldsaIdentity.generate_with_rng", self.raw["Funs.lean"])
+        request_body = (
+            (self.root / target.REQUEST)
+            .read_bytes()
+            .split(b"namespace beaconcrypt_constructor_request", 1)[1]
+        )
+        self.assertNotIn(b"mldsaGenerate", request_body)
+        self.assertEqual(self.raw["Funs.lean"].count(b"KeyPair.generate_with_rng"), 3)
+        self.assertIn(b"auth.server_pin", self.raw["Funs.lean"])
+
     def test_absent_constructor(self):
         changed = self.raw["Funs.lean"].replace(
             b"def beacon.Beacon.try_new_with_rng\n", b"def missing_constructor\n", 1
@@ -66,15 +77,15 @@ class ConstructorSourceControls(unittest.TestCase):
 
     def test_generator_order(self):
         changed = self.raw["Funs.lean"].replace(
-            b"auth.MldsaIdentity.generate_with_rng",
-            b"changed.MldsaIdentity.generate_with_rng",
+            b"beaconcrypt_crypto.crypto_sign.KeyPair.generate_with_rng",
+            b"beaconcrypt_crypto.crypto_kx.KeyPair.generate_with_rng",
             1,
         )
         with self.assertRaisesRegex(ValueError, "unreviewed original"):
             target.normalize(changed, "Funs.lean", self.shared)
 
     def test_rng_error_poststate(self):
-        changed = self.raw["Funs.lean"].replace(b"ok (r10, rng3)", b"ok (r10, rng2)", 1)
+        changed = self.raw["Funs.lean"].replace(b"ok (r11, rng3)", b"ok (r11, rng2)", 1)
         self.assertNotEqual(changed, self.raw["Funs.lean"])
         with self.assertRaises(ValueError):
             target.normalize(changed, "Funs.lean", self.shared)
@@ -95,7 +106,7 @@ class ConstructorSourceControls(unittest.TestCase):
 
     def test_request_source(self):
         with self.assertRaisesRegex(ValueError, "request source changed"):
-            target.request(self.source.replace(b"rng4", b"rng3", 1), self.bindings)
+            target.request(self.source.replace(b"rng3", b"rng2", 1), self.bindings)
 
     def fixture(self, directory):
         root = Path(directory)
@@ -119,7 +130,11 @@ class ConstructorSourceControls(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="bc-constructor-control-") as directory:
             root, destination = self.fixture(directory)
             path = destination / "FunsExternal.lean"
-            path.write_bytes(path.read_bytes().replace(b"Unit \xc3\x97 R", b"Unit", 1))
+            path.write_bytes(
+                path.read_bytes().replace(
+                    b"primitive.Error \xc3\x97 R", b"primitive.Error", 1
+                )
+            )
             with self.assertRaisesRegex(ValueError, "drift"):
                 target.check_source(root, destination)
 

@@ -21,7 +21,7 @@ theorem view_idempotent (before : State n) : nativeView (nativeView before) = na
 /-- Actual post-authentication agreement retains every private consumed-ID branch and actual native reply. -/
 theorem agree_input (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (authenticated : registration.AuthenticatedInit) :
     Stable (nativeView (n := n)) (RegistrationServerNativeSource.agree setup checks representation created packet authenticated) := by
   intro before
@@ -34,7 +34,7 @@ theorem agree_input (setup : Setup base KemSK) (checks : Checks)
     Prod.map, id_eq, nativeView, Function.comp_def] using law
 
 /-- Retaining an accepted token uses exactly the actual consume result and append position. -/
-theorem retain_input (created : PqxdhLiveServerConstruction.Created Unit) (accepted : agreement.ServerAgreement) :
+theorem retain_input (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (accepted : agreement.ServerAgreement) :
     Stable (nativeView (n := n)) (RegistrationServerNativeSource.retain created accepted) := by
   intro before
   simp only [RegistrationServerNativeSource.retain, RegistrationServerNativeSource.sourceStep,
@@ -51,7 +51,7 @@ theorem retain_input (created : PqxdhLiveServerConstruction.Created Unit) (accep
 /-- Replay and reservation failure retain the same complete reached authentication state. -/
 theorem after_input (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (authenticated : registration.AuthenticatedInit) :
     Stable (nativeView (n := n))
       (RegistrationServerSdkSource.afterAuthentication setup checks representation created packet authenticated) := by
@@ -95,7 +95,7 @@ theorem after_input (setup : Setup base KemSK) (checks : Checks)
 theorem accept_input (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket) :
     Stable (nativeView (n := n))
       (RegistrationServerSdkSource.accept setup codec checks route verify representation created packet) := by
   unfold RegistrationServerSdkSource.accept

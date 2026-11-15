@@ -18,12 +18,12 @@ noncomputable def body (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
   let beaconSeed ← familyCoins sampleSeed
   let oneTime ← familyCoins PqxdhJointGapDh.sampleScalar
   let keys ← familyCoins (simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl) setup.kem.keygen)
-  let published ← familyCoins (phase1Run setup codec beaconSeed publicValue oneTime keys.1 keys.2)
-  let input : AuthInput := ⟨publicValue.identity, setup.serverKeyId, published.1, revealed⟩
+  let published ← familyCoins (phase1Logged setup codec beaconSeed publicValue oneTime keys.1 keys.2)
+  let input : AuthInput := ⟨publicValue.identity, setup.serverKeyId, published.1.1, revealed⟩
   (fun result => (result.1.2, result.2)) <$>
     (simulateQ (authHandler setup codec checks publicValue beaconSeed)
       (PqxdhServerAuthApiJournal.record (adversary input))).run
-        (initialGameState setup publicValue published.2)
+        (initialGameState setup publicValue published.1.2 published.2)
 
 /-- Erasing the external journal recovers the complete original source body as an oracle-program equality. -/
 theorem body_erase (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -35,8 +35,8 @@ theorem body_erase (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
   refine bind_congr fun beaconSeed => bind_congr fun oneTime => bind_congr fun keys => bind_congr fun published => ?_
   simpa only [Functor.map_map] using congrArg (Functor.map Prod.snd)
     (PqxdhServerAuthApiJournal.interpreted_erase (authHandler setup codec checks publicValue beaconSeed)
-      (adversary ⟨publicValue.identity, setup.serverKeyId, published.1, revealed⟩)
-      (initialGameState setup publicValue published.2))
+      (adversary ⟨publicValue.identity, setup.serverKeyId, published.1.1, revealed⟩)
+      (initialGameState setup publicValue published.1.2 published.2))
 
 /-- Exact original result with the chronological public history retained beside the native state. -/
 abbrev Result (KemSK : Type) := IdentitySeed × ScalarBytes ×
@@ -174,7 +174,8 @@ theorem observed_flat (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
   apply relTriple_map
   apply relTriple_post_mono (flatReal_couple setup codec checks (challenge setup.joint setup.dh seed scalar)
     beaconSeed seed scalar _
-    (initialGameState setup (challenge setup.joint setup.dh seed scalar) published.2, PqxdhJointDhExtractFamily.empty))
+    (initialGameState setup (challenge setup.joint setup.dh seed scalar) published.1.2 published.2,
+      PqxdhJointDhExtractFamily.empty))
   rintro left right (⟨same, related⟩ | ⟨bad, _⟩)
   · simp only [related, project, same]
     rfl

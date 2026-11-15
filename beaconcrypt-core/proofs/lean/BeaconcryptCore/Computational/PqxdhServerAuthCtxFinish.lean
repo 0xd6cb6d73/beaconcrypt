@@ -1,5 +1,6 @@
 import BeaconcryptCore.Computational.PqxdhServerAuthCtxState
 import BeaconcryptCore.Computational.PqxdhServerAuthFinishMaterial
+import BeaconcryptCore.Computational.PqxdhServerAuthEntryFinish
 
 /-! The actual finish handler uses the original probabilistic prefix and omitted table, then either the ordinary native receive or the concrete selected raw callback. Its only shared cache lives in the component interpreter. -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -128,26 +129,43 @@ def touched (state : Local KemSK) (message : PqxdhJointDhExtractFamily.Message) 
   (({ state.1.1 with ghost := { state.1.1.ghost with touches := state.1.1.ghost.touches ++ [Touch.beacon message] } },
     state.1.2.1, table), state.2)
 
-/-- The full key-free finish compiler retains the real prefix, exact selected-table dispatch and both complete source tail programs. -/
+/-- The finish compiler after the transcript hash, for a given completed binding: the real prefix, exact selected-table dispatch and both complete source tail programs. -/
+noncomputable def staged (setup : Setup baseSpec KemSK) (codec : Codec Reader WireResponse)
+    (context : Context KemSK) (rest : PqxdhServerAuthCtxCalls.Residual) (select : Bool)
+    (completed : session.CompletedRegistrationBinding) (control : pqxdh.BeaconInitSent)
+    (oneTime : Unit ⊕ PqxdhJointGapDh.ScalarBytes) (kem : KemSK)
+    (raw : Pqxdh.Bytes) : Program KemSK (Option Pqxdh.Bytes) :=
+  fun state => do
+    let prepared ← simulateQ PqxdhServerAuthCtxAmbient.coin
+      ((beaconPrefix completed setup codec context.beaconSeed control state.1.1.beacon.beacon.identity oneTime kem raw).run' ())
+    match prepared with
+    | none => pure (complete control state none)
+    | some pending => do
+        let message := PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected
+        let derived ← simulateQ PqxdhServerAuthCtxAmbient.coin
+          (((PqxdhServerAuthCtxState.tableServices (WireResponse := WireResponse) setup context select).derive message).run state.1.2.2)
+        let next := touched state message derived.2
+        match derived.1 with
+        | .rejected => pure (complete control next none)
+        | .root root => (known setup.source codec control pending root).run next
+        | .hidden => (selected setup.source codec rest control pending).run next
+
+/-- The full key-free finish compiler: in the InitSent phase with a retained bundle and a decodable Phase 2, the component's transcript hash, then `staged` at the completed binding of the digest; otherwise an InitSent Beacon aborts before any hash. -/
 noncomputable def finish (setup : Setup baseSpec KemSK) (codec : Codec Reader WireResponse)
     (context : Context KemSK) (rest : PqxdhServerAuthCtxCalls.Residual) (select : Bool)
     (raw : Pqxdh.Bytes) : Program KemSK (Option Pqxdh.Bytes) :=
   fun state =>
     match state.1.1.beacon.beacon.phase with
-    | .initSent control _ oneTime kem => do
-        let prepared ← simulateQ PqxdhServerAuthCtxAmbient.coin
-          ((beaconPrefix setup codec context.beaconSeed control state.1.1.beacon.beacon.identity oneTime kem raw).run' ())
-        match prepared with
-        | none => pure (complete control state none)
-        | some pending => do
-            let message := PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected
-            let derived ← simulateQ PqxdhServerAuthCtxAmbient.coin
-              (((PqxdhServerAuthCtxState.tableServices (WireResponse := WireResponse) setup context select).derive message).run state.1.2.2)
-            let next := touched state message derived.2
-            match derived.1 with
-            | .rejected => pure (complete control next none)
-            | .root root => (known setup.source codec control pending root).run next
-            | .hidden => (selected setup.source codec rest control pending).run next
+    | .initSent control _ oneTime kem =>
+      match state.1.1.beaconInit, responseOf codec raw with
+      | some init, some response =>
+          (PqxdhServerAuthCtxState.hash (PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf init) response) >>=
+            fun digest => staged setup codec context rest select (PqxdhTranscriptAd.completedOf control digest)
+              control oneTime kem raw).run state
+      | _, _ =>
+          pure ((PqxdhBeaconPhase2Publication.finish control state.1.1.beacon none).1,
+            (({ state.1.1 with beacon := (PqxdhBeaconPhase2Publication.finish control state.1.1.beacon none).2 },
+              state.1.2), state.2))
     | _ => pure (none, state)
 
 /-- Installing the component-owned cache commutes with the actual Beacon touch and table-result update. -/
@@ -156,23 +174,41 @@ theorem touched_restore (state : Local KemSK) (message : PqxdhJointDhExtractFami
     touched (restore state cache) message table = restore (touched state message table) cache := by
   rfl
 
-/-- The actual complete Beacon finish has the same reply and full source poststate under the dynamic component interpreter, for arbitrary raw input and either designation route. -/
-theorem finish_source (setup : Setup baseSpec KemSK) (codec : Codec Reader WireResponse)
+/-- The component's transcript hash reads and extends the component-owned shared cache and records the hashed bytes among the selected component's public inputs; the local state and every other component field are retained. -/
+theorem hash_run (source : FixedHkdfSha512NoSaltSource) (key : RootOutput)
+    (read : RawCtxReceive.FrameDecoder) (bytes : Pqxdh.Bytes) (state : State KemSK) :
+    (evaluate source key read (PqxdhServerAuthCtxState.hash bytes)).run state =
+      (fun result => (result.1, (state.1, { state.2 with
+        selected := ({ state.2.selected.1 with publicInputs := bytes :: state.2.selected.1.publicInputs },
+          state.2.selected.2)
+        cache := result.2 }))) <$>
+        (CtxRomAuth.ctxRandomOracle ((), bytes)).run state.2.cache := by
+  rw [evaluate, PqxdhServerAuthCtxState.hash, PqxdhServerAuthCtxNative.lift_evaluate]
+  simp [PqxdhServerAuthCtxAmbient.hash, RawCtxSelectedReceiveCompiler.evaluated,
+    AdaptiveCtxDynamicKnownKeys.sourceImpl, AdaptiveCtxSharedModes.localImpl, AdaptiveCtxSharedHash.localImpl,
+    AdaptiveCtxSharedHash.hashImpl, StateT.run]
+  rw [← map_bind]
+  change (_ <$> StateT.run (_ <$> _) _) = _
+  rw [StateT.run_map, Functor.map_map]
+  rfl
+
+/-- After the transcript hash, the finish compiler for any completed binding has the same reply and full source poststate as the flattened staged finish, for arbitrary raw input and either designation route. -/
+theorem staged_source (setup : Setup baseSpec KemSK) (codec : Codec Reader WireResponse)
     (checks : Checks) (context : Context KemSK) (rest : PqxdhServerAuthCtxCalls.Residual)
-    (select : Bool) (raw : Pqxdh.Bytes) (key : RootOutput) (state : State KemSK) :
+    (select : Bool) (completed : session.CompletedRegistrationBinding) (control : pqxdh.BeaconInitSent)
+    (oneTime : Unit ⊕ PqxdhJointGapDh.ScalarBytes) (kem : KemSK) (raw : Pqxdh.Bytes) (key : RootOutput)
+    (state : State KemSK) :
     Prod.map id PqxdhServerAuthCtxState.project <$>
-      (evaluate setup.source key codec.frameRead (finish setup codec context rest select raw)).run state =
+      (evaluate setup.source key codec.frameRead
+        (staged setup codec context rest select completed control oneTime kem raw)).run state =
       (fun reply => (reply.1, (reply.2, state.1.2))) <$>
-        (finishStep setup codec (context.publicValue setup) context.beaconSeed
+        (stagedStep setup codec (context.publicValue setup) context.beaconSeed
           (if select then selectingServices setup context
             (factorServices setup codec checks context (PqxdhServerAuthCtxMaterial.output key rest))
-            else factorServices setup codec checks context (PqxdhServerAuthCtxMaterial.output key rest)) raw).run
-              (PqxdhServerAuthCtxState.project state).1 := by
-  cases phase : state.1.1.1.beacon.beacon.phase <;>
-    simp only [evaluate, PqxdhServerAuthCtxNative.evaluate, PqxdhSelectedStateInterpreter.evaluate,
-      finish, finishStep, PqxdhServerAuthCtxState.project, restore, restoreFlat, StateT.run, phase]
-  all_goals try simp only [simulateQ_pure, map_pure]
-  all_goals try rfl
+            else factorServices setup codec checks context (PqxdhServerAuthCtxMaterial.output key rest))
+          completed control oneTime kem raw).run (PqxdhServerAuthCtxState.project state).1 := by
+  simp only [evaluate, PqxdhServerAuthCtxNative.evaluate, PqxdhSelectedStateInterpreter.evaluate,
+    staged, stagedStep, PqxdhServerAuthCtxState.project, restore, restoreFlat, StateT.run]
   have runBind {σ α β : Type} (work : StateT σ ProbComp α)
       (next : α → StateT σ ProbComp β) (initial : σ) :
       (work >>= next) initial = work initial >>= fun result => next result.1 result.2 := rfl
@@ -194,18 +230,63 @@ theorem finish_source (setup : Setup baseSpec KemSK) (codec : Codec Reader WireR
   cases derived.1 <;> simp only [simulateQ_pure, map_pure, bind_pure_comp, Functor.map_map]
   all_goals try rfl
   case root root =>
-    rename_i control prekey oneTime kem pending
+    rename_i pending
     simpa only [evaluate, PqxdhServerAuthCtxNative.evaluate, PqxdhSelectedStateInterpreter.evaluate,
       StateT.run, Functor.map_map, complete, restore, restoreFlat, touched] using
       (known_source setup codec key control pending root
         (touched state.1 (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected) derived.2, state.2))
   case hidden =>
-    rename_i control prekey oneTime kem pending
+    rename_i pending
     cases select <;> simpa only [Bool.false_eq_true, ite_false, ite_true, selectingServices,
       evaluate, PqxdhServerAuthCtxNative.evaluate, PqxdhSelectedStateInterpreter.evaluate,
       StateT.run, Functor.map_map, complete, restore, restoreFlat, touched] using
       (selected_source setup codec checks context key rest control pending
         (touched state.1 (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected) derived.2, state.2))
+
+/-- The actual complete Beacon finish has the same reply and full source poststate under the dynamic component interpreter, for arbitrary raw input and either designation route. -/
+theorem finish_source (setup : Setup baseSpec KemSK) (codec : Codec Reader WireResponse)
+    (checks : Checks) (context : Context KemSK) (rest : PqxdhServerAuthCtxCalls.Residual)
+    (select : Bool) (raw : Pqxdh.Bytes) (key : RootOutput) (state : State KemSK) :
+    Prod.map id PqxdhServerAuthCtxState.project <$>
+      (evaluate setup.source key codec.frameRead (finish setup codec context rest select raw)).run state =
+      (fun reply => (reply.1, (reply.2, state.1.2))) <$>
+        (finishStep setup codec (context.publicValue setup) context.beaconSeed
+          (if select then selectingServices setup context
+            (factorServices setup codec checks context (PqxdhServerAuthCtxMaterial.output key rest))
+            else factorServices setup codec checks context (PqxdhServerAuthCtxMaterial.output key rest)) raw).run
+              (PqxdhServerAuthCtxState.project state).1 := by
+  rw [finishStep_hashed]
+  cases phase : state.1.1.1.beacon.beacon.phase <;>
+    simp only [evaluate, PqxdhServerAuthCtxNative.evaluate, PqxdhSelectedStateInterpreter.evaluate,
+      finish, PqxdhServerAuthCtxState.project, restore, restoreFlat, StateT.run, phase]
+  all_goals try simp only [simulateQ_pure, map_pure]
+  all_goals try rfl
+  rename_i control prekey oneTime kem
+  cases init : state.1.1.1.beaconInit <;> cases response : responseOf codec raw <;>
+    try simp only [simulateQ_pure, map_pure]
+  all_goals try rfl
+  rename_i initial fields
+  change Prod.map id PqxdhServerAuthCtxState.project <$>
+      (PqxdhSelectedStateInterpreter.evaluate
+        (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder codec.frameRead)
+          setup.source.crypto key)
+        (PqxdhServerAuthCtxState.hash (PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf initial) fields) >>=
+          fun digest => staged setup codec context rest select (PqxdhTranscriptAd.completedOf control digest)
+            control oneTime kem raw)).run state = _
+  rw [PqxdhSelectedStateInterpreter.bind_evaluate, StateT.run_bind]
+  have hashed := hash_run setup.source key codec.frameRead
+    (PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf initial) fields) state
+  simp only [evaluate, PqxdhServerAuthCtxNative.evaluate] at hashed
+  rw [hashed, bind_map_left, map_bind, map_bind]
+  refine bind_congr fun digest => ?_
+  have same := staged_source setup codec checks context rest select
+    (PqxdhTranscriptAd.completedOf control digest.1) control oneTime kem raw key
+    (state.1, { state.2 with
+      selected := ({ state.2.selected.1 with publicInputs := (PqxdhTranscriptAd.transcript
+          (PqxdhTranscriptAd.initOf initial) fields :: state.2.selected.1.publicInputs) }, state.2.selected.2)
+      cache := digest.2 })
+  simpa only [evaluate, PqxdhServerAuthCtxNative.evaluate, StateT.run, PqxdhServerAuthCtxState.project, restore,
+    restoreFlat, init] using same
 
 end BeaconcryptCore.Computational.PqxdhServerAuthCtxFinish
 
@@ -250,6 +331,18 @@ end BeaconcryptCore.Computational.PqxdhServerAuthCtxFinish
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhServerAuthCtxFinish.touched_restore
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthCtxFinish.hash_run' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthCtxFinish.hash_run
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthCtxFinish.staged_source' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthCtxFinish.staged_source
 
 /-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthCtxFinish.finish_source' depends on axioms: [propext,
  Classical.choice,

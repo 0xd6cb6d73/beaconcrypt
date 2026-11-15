@@ -30,7 +30,7 @@ private theorem pure_present (value : Value) (before : State n) (previous : Plat
 
 private theorem agree_sessions (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (authenticated : registration.AuthenticatedInit) (before : State n)
     (result : RustM agreement.AgreementEffect × State n)
     (supported : result ∈ support ((RegistrationServerNativeSource.agree setup checks representation created packet authenticated).run before)) :
@@ -40,7 +40,7 @@ private theorem agree_sessions (setup : Setup base KemSK) (checks : Checks)
   cases same
   rfl
 
-private theorem retain_reply (created : PqxdhLiveServerConstruction.Created Unit) (accepted : agreement.ServerAgreement)
+private theorem retain_reply (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (accepted : agreement.ServerAgreement)
     (before : State n) (result : RustM (Option Nat) × State n)
     (supported : result ∈ support ((RegistrationServerNativeSource.retain created accepted).run before))
     (token : peer.ConsumedRegistration) (present : Present token result.2) (newToken : ¬ Present token before) :
@@ -68,7 +68,7 @@ private theorem retain_reply (created : PqxdhLiveServerConstruction.Created Unit
 theorem afterAuthentication (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (reserve : StateT Platform ProbComp Bool)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (authenticated : registration.AuthenticatedInit) (before : State n) (previous : Platform)
     (result : (RustM (Option Nat) × State n) × Platform)
     (supported : result ∈ support
@@ -138,7 +138,7 @@ theorem accept (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks) (reserve : StateT Platform ProbComp Bool)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (before : State n) (previous : Platform) (result : (RustM (Option Nat) × State n) × Platform)
     (supported : result ∈ support (((RegistrationNativePlatformSourceAccept.accept coins setup codec checks reserve route verify representation created packet).run before).run previous))
     (token : peer.ConsumedRegistration) (present : Present token result.1.2) :

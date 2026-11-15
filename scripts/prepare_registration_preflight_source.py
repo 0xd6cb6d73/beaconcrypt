@@ -4,7 +4,7 @@
 """Prepare original handwritten preflight with proved standard slice unfoldings.
 
 Only a new external fixture is written. Production and fixture EverCDDL files
-remain unchanged. Standard-library bodies and the exact two six-field callsites
+remain unchanged. Standard-library bodies and the exact four-field Init and six-field Response callsites
 are fingerprinted. No public codec correctness law is assumed or installed.
 """
 
@@ -22,7 +22,7 @@ import registration_codec_normalization as syntax
 
 ROOT = checkpoint.ROOT
 LIB = "beaconcrypt-parse/src/lib.rs"
-LIB_SHA256 = "e3ee33763548d8e22950e0f1b459b686f392a182f85d55289f718dd8a3f3b378"
+LIB_SHA256 = "1566e1f7314eb0c46354c6d0763e019272fbb891ef95a08959ed153d63917b9a"
 STD_SOURCE = (
     Path.home()
     / ".rustup/toolchains/nightly-2026-08-18-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core/src/slice/mod.rs"
@@ -182,7 +182,9 @@ variable {S : Type} {m : Type → Type v} [Monad m] [LawfulMonad m]
             + previous
             + " "
             + fields[-1]
-            + ") :=\n  RegistrationCodecFixedFields.fold_six step initial "
+            + ") :=\n  RegistrationCodecFixedFields.fold_"
+            + ("four" if len(fields) == 4 else "six")
+            + " step initial "
             + " ".join(fields)
             + "\n"
         )
@@ -237,8 +239,8 @@ def expected(
             }
         )
     expected_calls = [
-        ("init", [136, 2, 0], [2, 2, 2, 2, 2, 2]),
-        ("response", [136, 2, 1], [2, 2, 2, 2, 0, 2]),
+        ("init", [134, 3, 0], [2, 2, 2, 2]),
+        ("response", [136, 3, 1], [2, 2, 2, 2, 0, 2]),
     ]
     if [
         (item["role"], item["prefix"], item["fields"]) for item in calls
@@ -317,6 +319,37 @@ def expected(
         + prefix_body
         + "\n}\n"
     )
+    six_signature, six_body = function_body(prepared, r"fn preflight\(")
+    four_signature = six_signature.replace(
+        "fn preflight(", "fn extraction_preflight_four(", 1
+    ).replace("fields: &[u8;6]", "fields: &[u8;4]", 1)
+    four_body = six_body
+    for index in (4, 5):
+        step_line = (
+            "\tremaining = extraction_preflight_field(remaining, fields["
+            + str(index)
+            + "])?;\n"
+        )
+        if four_body.count(step_line) != 1:
+            raise ValueError("fixed preflight specialization step roster changed")
+        four_body = four_body.replace(step_line, "", 1)
+    init_call = calls[0]["original_call"]
+    if prepared.count(init_call) != 1:
+        raise ValueError("Init preflight specialization call roster changed")
+    prepared = prepared.replace(
+        init_call, init_call.replace("preflight(", "extraction_preflight_four(", 1), 1
+    )
+    prepared += "\n" + four_signature + "{" + four_body + "}\n"
+    specialization = {
+        "original_source_body": loop,
+        "six_signature": six_signature,
+        "six_body": six_body,
+        "four_signature": four_signature,
+        "four_body": four_body,
+        "init_call": init_call,
+        "field_counts": [4, 6],
+        "state_forwarded_at_every_step": True,
+    }
     lean = certificate(calls)
     manifest = {
         "format": 1,
@@ -333,12 +366,14 @@ def expected(
         "effectful_field_step": step,
         "standard_prefix_body": prefix_body,
         "callsites": calls,
+        "fixed_specializations": specialization,
         "certificate_sha256": checkpoint.digest(lean.encode()),
         "normalization_endpoints": [
             "RegistrationCodecStandardSlices.checked_split_lowering",
             "RegistrationCodecStandardSlices.checked_split_existing_model",
             "RegistrationCodecStandardSlices.copied_first_lowering",
             "RegistrationCodecStandardSlices.slice_pattern_identity",
+            "RegistrationCodecFixedFields.fold_four",
             "RegistrationCodecFixedFields.fold_six",
         ],
         "production_source_modified": False,

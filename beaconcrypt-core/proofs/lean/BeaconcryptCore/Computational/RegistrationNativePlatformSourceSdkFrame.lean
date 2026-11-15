@@ -11,7 +11,7 @@ set_option maxRecDepth 8192
 set_option maxHeartbeats 1000000
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativePlatformSourceSdkFrame
-open RegistrationNativePlatformCompletionSdk (Completion)
+open RegistrationNativePlatformCompletionSdk (Completion AdHash)
 variable {n : Nat} {Platform Value Next Encoded : Type}
 def Keeps {S F : Type} (observe : S → F) (work : StateT S (StateT Platform ProbComp) Value) : Prop :=
   ∀ before previous result next, (result, next) ∈ support ((work.run before).run previous) → observe result.2 = observe before
@@ -71,25 +71,36 @@ private theorem fromInitial (finish : Completion n (StateT Platform ProbComp) En
   exact bind_keeps serverFields _ _ (world _ (allowed control initial)) (commit)
 
 /-- Occupancy and stateful reservation preserve the agreement frame. -/
-private theorem afterOccupancy (reserve : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) Bool)
+private theorem afterOccupancy (deriveAd : AdHash n (StateT Platform ProbComp))
+    (adFrame : ∀ pending, Keeps serverFields (deriveAd pending))
+    (reserve : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) Bool)
     (reserved : Keeps serverFields reserve) (finish : Completion n (StateT Platform ProbComp) Encoded)
     (allowed : ∀ control initial, Keeps localFields (finish control initial))
     (control : pqxdh.ServerState) (lookup : peer.CompletionLookup) (occupied : Bool) :
-    Keeps serverFields (RegistrationNativePlatformCompletionSdk.afterOccupancy reserve finish control lookup occupied) := by
+    Keeps serverFields (RegistrationNativePlatformCompletionSdk.afterOccupancy deriveAd reserve finish control lookup occupied) := by
   unfold RegistrationNativePlatformCompletionSdk.afterOccupancy
   cases lookup.resume occupied with
   | fail error | div => exact pure_keeps serverFields _
   | ok answer => cases answer with
     | Err prior => exact pure_keeps serverFields _
-    | Ok initial =>
-      apply bind_keeps serverFields _ _ reserved
-      intro admitted
-      cases admitted with
-      | false => exact pure_keeps serverFields _
-      | true => exact fromInitial finish allowed control initial
+    | Ok pending =>
+      apply bind_keeps serverFields _ _ (adFrame pending)
+      intro hashed
+      cases hashed with
+      | fail error | div => exact pure_keeps serverFields _
+      | ok answer => cases answer with
+        | Err previous => exact pure_keeps serverFields _
+        | Ok initial =>
+          apply bind_keeps serverFields _ _ reserved
+          intro admitted
+          cases admitted with
+          | false => exact pure_keeps serverFields _
+          | true => exact fromInitial finish allowed control initial
 
 /-- Pin, lookup and preflight branches retain the agreement frame. -/
-private theorem afterPin (reserve : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) Bool)
+private theorem afterPin (deriveAd : AdHash n (StateT Platform ProbComp))
+    (adFrame : ∀ pending, Keeps serverFields (deriveAd pending))
+    (reserve : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) Bool)
     (reserved : Keeps serverFields reserve)
     (present : U64 → StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) Bool)
     (presence : ∀ keyId, Keeps serverFields (present keyId))
@@ -97,7 +108,7 @@ private theorem afterPin (reserve : StateT (RegistrationServerFrontendCompiler.S
     (allowed : ∀ control initial, Keeps localFields (finish control initial))
     (control : pqxdh.ServerState) (token : peer.ConsumedRegistration) (application : Slice U8)
     (pin : RustM (core.option.Option session.ServerAuthenticationPin)) :
-    Keeps serverFields (RegistrationNativePlatformCompletionSdk.afterPin reserve present finish control token application pin) := by
+    Keeps serverFields (RegistrationNativePlatformCompletionSdk.afterPin deriveAd reserve present finish control token application pin) := by
   unfold RegistrationNativePlatformCompletionSdk.afterPin
   cases pin with
   | fail error | div => exact pure_keeps serverFields _
@@ -117,7 +128,7 @@ private theorem afterPin (reserve : StateT (RegistrationServerFrontendCompiler.S
             dsimp only
             split
             · exact bind_keeps serverFields _ _ (presence keyId)
-                (afterOccupancy reserve reserved finish allowed control lookup)
+                (afterOccupancy deriveAd adFrame reserve reserved finish allowed control lookup)
             · exact pure_keeps serverFields _
 
 private theorem get_keeps : Keeps (serverFields (n := n))
@@ -128,6 +139,8 @@ private theorem get_keeps : Keeps (serverFields (n := n))
 
 /-- The literal SDK control read and pin execution preserve the agreement frame. -/
 private theorem complete
+    (deriveAd : AdHash n (StateT Platform ProbComp))
+    (adFrame : ∀ pending, Keeps serverFields (deriveAd pending))
     (pin : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) (RustM (core.option.Option session.ServerAuthenticationPin)))
     (pinned : Keeps serverFields pin)
     (reserve : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) Bool)
@@ -136,12 +149,12 @@ private theorem complete
     (presence : ∀ keyId, Keeps serverFields (present keyId)) (finish : Completion n (StateT Platform ProbComp) Encoded)
     (allowed : ∀ control initial, Keeps localFields (finish control initial))
     (token : peer.ConsumedRegistration) (application : Slice U8) :
-    Keeps serverFields (RegistrationNativePlatformCompletionSdk.complete pin reserve present finish token application) := by
+    Keeps serverFields (RegistrationNativePlatformCompletionSdk.complete deriveAd pin reserve present finish token application) := by
   unfold RegistrationNativePlatformCompletionSdk.complete
   apply bind_keeps serverFields _ _ (get_keeps)
   intro before
   exact bind_keeps serverFields _ _ pinned
-    (fun selected => afterPin reserve reserved present presence finish allowed before.control token application selected)
+    (fun selected => afterPin deriveAd adFrame reserve reserved present presence finish allowed before.control token application selected)
 
 private def take (handle : Nat) : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) (Option peer.ConsumedRegistration) :=
   fun before => pure (RegistrationServerSdkSource.take handle before)
@@ -154,14 +167,15 @@ private theorem take_keeps (handle : Nat) : Keeps (serverFields (n := n)) (take 
   | some stored => cases stored <;> simp only [RegistrationServerSdkSource.take, found]; rfl
 
 private theorem build_shape
+    (deriveAd : AdHash n (StateT Platform ProbComp))
     (pin : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) (RustM (core.option.Option session.ServerAuthenticationPin)))
     (reserve : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) Bool)
     (present : U64 → StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) Bool)
     (finish : Completion n (StateT Platform ProbComp) Encoded) (handle : Nat) (application : Option (Slice U8)) :
-    RegistrationNativePlatformCompletionSdk.build pin reserve present finish handle application = (do
+    RegistrationNativePlatformCompletionSdk.build deriveAd pin reserve present finish handle application = (do
       let token ← take handle
       match token, application with
-      | some token, some application => RegistrationNativePlatformCompletionSdk.complete pin reserve present finish token application
+      | some token, some application => RegistrationNativePlatformCompletionSdk.complete deriveAd pin reserve present finish token application
       | _, _ => pure (.ok none)) := by
   funext before previous
   simp only [RegistrationNativePlatformCompletionSdk.build, take, bind_apply, pure_apply, pure_bind, StateT.run]
@@ -170,6 +184,8 @@ private theorem build_shape
 
 /-- All moved-token build branches preserve the agreement frame through failed reservation, publication and installation. -/
 theorem build
+    (deriveAd : AdHash n (StateT Platform ProbComp))
+    (adFrame : ∀ pending, Keeps serverFields (deriveAd pending))
     (pin : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) (RustM (core.option.Option session.ServerAuthenticationPin)))
     (pinned : Keeps serverFields pin)
     (reserve : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) Bool)
@@ -178,7 +194,7 @@ theorem build
     (presence : ∀ keyId, Keeps serverFields (present keyId)) (finish : Completion n (StateT Platform ProbComp) Encoded)
     (allowed : ∀ control initial, Keeps localFields (finish control initial))
     (handle : Nat) (application : Option (Slice U8)) :
-    Keeps serverFields (RegistrationNativePlatformCompletionSdk.build pin reserve present finish handle application) := by
+    Keeps serverFields (RegistrationNativePlatformCompletionSdk.build deriveAd pin reserve present finish handle application) := by
   rw [build_shape]
   apply bind_keeps serverFields _ _ (take_keeps handle)
   intro token
@@ -186,7 +202,25 @@ theorem build
   | none => exact pure_keeps serverFields _
   | some token => cases application with
     | none => exact pure_keeps serverFields _
-    | some application => exact complete pin pinned reserve reserved present presence finish allowed token application
+    | some application => exact complete deriveAd adFrame pin pinned reserve reserved present presence finish allowed token application
+
+private theorem nativeAdHash_keeps (coins : QueryImpl unifSpec (StateT Platform ProbComp))
+    (pending : registration.ServerAdHash) :
+    Keeps (serverFields (n := n)) (RegistrationNativePlatformCompletionSdk.nativeAdHash coins pending) := by
+  apply world
+  intro before previous result next supported
+  unfold RegistrationNativePlatformServerCompletion.adHash RegistrationNativePlatformServerCompletion.adHashWith at supported
+  apply RegistrationServerAdHash.state_preserves _ localFields ?_ pending before result.2 previous next result.1 supported
+  intro request current previous reply after next called
+  simp only [StateT.run_bind, mem_support_bind_iff] at called
+  obtain ⟨middle, queried, returned⟩ := called
+  have actual := RegistrationNativePlatformHashReceipt.native_support coins _ middle.1 previous middle.2 queried
+  have preserved : localFields middle.1.2 = localFields current := by
+    simp only [RegistrationWorldServerCompletion.capability, StateT.run, support_map] at actual
+    obtain ⟨inner, _hashed, same⟩ := actual
+    exact (congrArg (fun value => localFields value.2) same).symm
+  simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff, Prod.mk.injEq] at returned
+  exact (congrArg localFields returned.1.2).trans preserved
 
 open BeaconcryptCore.Refinement
 open PqxdhServerAuthExperiment (Setup Codec)
@@ -204,6 +238,7 @@ theorem source (coins : QueryImpl unifSpec (StateT Platform ProbComp)) (setup : 
     (handle : Nat) (application : Option (Slice U8)) :
     Keeps serverFields (RegistrationNativePlatformSourceSeal.build (n := n) coins setup codec view failure allocation erased reserve sign helper writer handle application) := by
   apply build
+  · exact nativeAdHash_keeps coins
   · intro before previous result next supported
     simp only [RegistrationNativePlatformSourceBuild.pin, StateT.run, map_apply, support_map] at supported
     obtain ⟨inner, _called, same⟩ := supported

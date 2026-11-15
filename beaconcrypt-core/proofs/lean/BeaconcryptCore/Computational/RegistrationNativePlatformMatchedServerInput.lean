@@ -24,7 +24,7 @@ variable [primitive : AdapterSealPrimitive.Operations]
 variable (coins : QueryImpl unifSpec (StateT Platform ProbComp))
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
 variable (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 variable (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
 variable (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
 variable (reserveRegistration reservePeer : StateT Platform ProbComp Bool) (erased : commitment.CommitmentTranscript)
@@ -47,7 +47,7 @@ theorem from_taken (ensureInit : StateT Unit ProbComp Bool) (identityIndex : Nat
     (taken : RegistrationServerSdkSource.take handle buildCall.before.1.server = (some token, current))
     (pin : session.ServerAuthenticationPin) (plaintext : Slice U8) (availability : pqxdh.KeyIdAvailability)
     (serverInitial : registration.ServerInitialKdf) (hashed : registration.ServerResponseHash)
-    (admitted : registration.begin_server_completion current.control pin availability token.agreement plaintext = .ok (.Ok serverInitial))
+    (admitted : BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission current.control pin availability token.agreement plaintext serverInitial)
     (recordPath : RegistrationServerRecordExecutor.Path serverInitial hashed)
     (initHash : hashed.binding.init_hash = pending.binding.init_hash)
     (collisionFree : ¬ CacheHasCollision (RegistrationNativeWorldCache.cache final.1)) :
@@ -68,11 +68,8 @@ theorem from_taken (ensureInit : StateT Unit ProbComp Bool) (identityIndex : Nat
     RegistrationNativePlatformTokenTrace.taken_origin coins setup checks wire route representation created credential view failure allocation reserveRegistration reservePeer erased helper writer
       beforeBuild empty handle token current taken
   obtain ⟨packet, recomputed, pinned, pinPlatform, events, authenticated, afterAuthentication, authPlatform, _queryEq, pinCalled, authCalled, birth, summaryEq⟩ := tokenOrigin
-  have cachedPin := RegistrationNativePlatformPathState.pinned coins setup checks wire route representation created credential view failure allocation
-    reserveRegistration reservePeer erased helper writer beforeAccept
-    (RegistrationNativeServerPinCached.start setup ensureInit identityIndex serverKeyId initial startup)
   obtain ⟨_recomputed, storedPin, checked⟩ := RegistrationNativePlatformTokenCacheSource.authentication coins setup (RegistrationNativeWire.ledgerCodec wire) route source.verify created packet
-    acceptCall.before.1.server pinned afterAuthentication acceptCall.before.2 pinPlatform authPlatform recomputed events authenticated cachedPin pinCalled authCalled
+    acceptCall.before.1.server pinned afterAuthentication acceptCall.before.2 pinPlatform authPlatform recomputed events authenticated pinCalled authCalled
   obtain ⟨afterAgreement, _history, agreed, _consumed, ⟨root⟩⟩ := RegistrationNativeTokenRootReceipt.born
     setup checks representation created packet authenticated afterAuthentication token birth
   have afterAccept : Path impl acceptCall.after (between ++ buildCall :: buildTrailing) final :=
@@ -85,17 +82,23 @@ theorem from_taken (ensureInit : StateT Unit ProbComp Bool) (identityIndex : Nat
     rw [cacheEq]
     exact extension
   have tokenBinding : token.agreement.binding = authenticated.binding := congrArg (fun value : agreement.ServerAgreement => value.binding) root.completedEq
-  have initialBinding := (RegistrationNativeServerBindingReceipt.initial_root current.control pin availability token.agreement plaintext serverInitial admitted).2.1
+  obtain ⟨serverAdDigest, serverBinding, completedAt, initialBinding, _application, _root⟩ :=
+    (RegistrationNativeServerBindingReceipt.initial_root current.control pin availability token.agreement plaintext serverInitial admitted).2
+  obtain ⟨expectedBinding, expectedAt, _pin, hashRetained, _identity, _digest, _consistent⟩ :=
+    BeaconcryptCore.Refinement.SessionBinding.complete_refines token.agreement.binding serverAdDigest
+  have completedSame : expectedBinding = serverBinding := RustM.ok.inj (expectedAt.symm.trans completedAt)
   have retained := (RegistrationNativeServerContents.path_contents serverInitial hashed recordPath).1
+  have tokenHash : token.agreement.binding.init_hash = pending.binding.init_hash :=
+    (hashRetained ▸ congrArg (fun binding : session.CompletedRegistrationBinding => binding.init_hash)
+      ((retained.trans initialBinding).trans completedSame.symm)).symm.trans initHash
   have authHash : authenticated.binding.init_hash = RegistrationAuthenticationShared.digestArray pendingInput.digest :=
     (congrArg (fun value : session.RegistrationBinding => value.init_hash) tokenBinding.symm).trans
-      ((congrArg (fun value : session.RegistrationBinding => value.init_hash) (retained.trans initialBinding)).symm.trans
-        (initHash.trans pendingInput.initHash))
-  have startedSame : pendingInput.fingerprint.state.started = pendingInput.started := by
+      (tokenHash.trans pendingInput.initHash)
+  have startedSame : pendingInput.hashing.state.started = pendingInput.started := by
     simpa only [RegistrationNativeInitTupleSource.Fixed, RegistrationNativeInitTupleSource.metadata] using congrArg Prod.fst pendingInput.fixed
   have matched := RegistrationNativeInitTupleAgreement.registration setup (RegistrationNativeWire.ledgerCodec wire) route source.verify
     created packet pinned afterAuthentication events authenticated checked (RegistrationNativeWorldCache.cache final.1)
-      authExtension pendingInput.fingerprint.state pendingInput.started _ startedSame pendingInput.attached pendingInput.validated
+      authExtension pendingInput.hashing.state pendingInput.started _ startedSame pendingInput.attached pendingInput.validated
         pendingInput.digest pendingInput.cached authHash collisionFree
   have fromAccept : Path impl acceptCall.before (acceptCall :: between ++ buildCall :: buildTrailing) final :=
     .cons acceptCall accepted _ _ afterAccept
@@ -118,7 +121,7 @@ theorem initialized (ensureInit : StateT Unit ProbComp Bool) (identityIndex : Na
     (taken : RegistrationServerSdkSource.take handle buildCall.before.1.server = (some token, current))
     (pin : session.ServerAuthenticationPin) (plaintext : Slice U8) (availability : pqxdh.KeyIdAvailability)
     (serverInitial : registration.ServerInitialKdf) (hashed : registration.ServerResponseHash)
-    (admitted : registration.begin_server_completion current.control pin availability token.agreement plaintext = .ok (.Ok serverInitial))
+    (admitted : BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission current.control pin availability token.agreement plaintext serverInitial)
     (recordPath : RegistrationServerRecordExecutor.Path serverInitial hashed)
     (initHash : hashed.binding.init_hash = pending.binding.init_hash)
     (collisionFree : ¬ CacheHasCollision (RegistrationNativeWorldCache.cache result.2.1.1)) :

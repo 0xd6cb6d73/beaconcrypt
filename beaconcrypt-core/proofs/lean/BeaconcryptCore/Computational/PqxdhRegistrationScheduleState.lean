@@ -10,6 +10,28 @@ namespace BeaconcryptCore.Computational.PqxdhRegistrationSchedule
 open PqxdhJointIdentity PqxdhJointGapDh PqxdhServerAuthExperiment PqxdhServerAuthNative
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response : Type}
 
+/-- One owner's hashed finish preserves every shared protocol field: the transcript query and all native owner callbacks change only the shared CTX/BLAKE2b cache. -/
+theorem ownerFinish_fields (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes) (owner : Owner KemSK)
+    (state : NativeState KemSK) (result : (Option Pqxdh.Bytes × Owner KemSK) × NativeState KemSK)
+    (supported : result ∈ support ((ownerFinish setup codec retained raw owner).run state)) :
+    result.2.2 = { state.2 with ctx := result.2.2.ctx } := by
+  unfold ownerFinish at supported
+  split at supported
+  · split at supported
+    · rw [StateT.run_bind, mem_support_bind_iff] at supported
+      obtain ⟨hashed, hashedMember, member⟩ := supported
+      simp only [nativeHash, StateT.run, support_map, Set.mem_image] at hashedMember
+      obtain ⟨value, _, rfl⟩ := hashedMember
+      have := program_fields setup codec _ _ result member
+      rw [this]
+    · simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
+      subst supported
+      rfl
+  · simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
+    subst supported
+    rfl
+
 /-- Every complete Beacon finish preserves the shared Server, consumed pairs, pending entries, attempt counter and shared Server-side observations. Both primitive caches retain the original actual callback effects. -/
 theorem finish_fields (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (index : Nat) (raw : Pqxdh.Bytes) (state : State KemSK)
@@ -24,7 +46,7 @@ theorem finish_fields (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
   | some owner =>
       simp only [finish_source setup codec index raw state owner found, support_map, Set.mem_image] at supported
       obtain ⟨reached, member, rfl⟩ := supported
-      exact program_fields setup codec _ state.shared reached member
+      exact ownerFinish_fields setup codec _ raw owner state.shared reached member
 
 /-- Exactly the capabilities that operate on the dynamic Beacon registry. They may change shared cryptographic caches while preserving Server protocol fields. -/
 def IsOwnerQuery : Spec.Domain → Prop
@@ -342,3 +364,8 @@ end BeaconcryptCore.Computational.PqxdhRegistrationSchedule
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhRegistrationSchedule.accept_pending
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationSchedule.ownerFinish_fields' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationSchedule.ownerFinish_fields

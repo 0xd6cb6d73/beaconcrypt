@@ -8,6 +8,7 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 open OracleComp OracleSpec
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhNativeSharedContinuation
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhNativeSharedPrefix
 open CtxRomAuth AdaptiveCtxSharedHash PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhInitialBeaconAmbient
 variable {ι I D K X Response Shared A N C : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -50,15 +51,15 @@ noncomputable def finish (cut : Carried extra M P I D K Result Origin A N C S B)
   match cut with
   | .complete result state => pure (result, state)
   | .pending context state => do
-      let frame := PqxdhInitialOriginContext.frame (X := X) (Response := Response) mark sender route decode context
+      let frame := PqxdhInitialOriginContext.frame (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode context
       let result ← ((compiler source writer stage pre application initial selector aux) frame.1).run state
       (simulateQ (compiler source writer stage pre application initial selector aux) (frame.2 result.1)).run result.2
 
 /-- Finishing the actual saved source continuation preserves the complete native result and every reached cache entry, while erasing only the additional candidate audit. -/
 theorem finish_source (cut : Carried extra M P I D K Result Origin A N C S B) (cache : CtxRO.QueryCache) :
     (fun result => (result.1.1, (attach result.1.2 result.2).1)) <$>
-      (simulateQ hashImpl (finish source writer stage pre application initial selector aux mark sender route decode cut)).run cache =
-    PqxdhInitialNativeAdjacent.continued source writer mark sender route decode
+      (simulateQ hashImpl (finish (completedBinding := completedBinding) source writer stage pre application initial selector aux mark sender route decode cut)).run cache =
+    PqxdhInitialNativeAdjacent.continued (completedBinding := completedBinding) source writer mark sender route decode
       (PqxdhInitialNativeAudit.external (fun request => localLift (pre request))
         (fun reply => localLift (application reply)) (fun secrets => localLift (initial secrets))
         (fun request => localLift (selector request)) (fun request => localLift (aux request))) stage
@@ -66,7 +67,7 @@ theorem finish_source (cut : Carried extra M P I D K Result Origin A N C S B) (c
   cases cut with
   | complete result state => rfl
   | pending context state =>
-    let frame := PqxdhInitialOriginContext.frame (X := X) (Response := Response) mark sender route decode context
+    let frame := PqxdhInitialOriginContext.frame (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode context
     let client : OracleComp (PqxdhInitialNativeAudit.Spec extra RatchetChain I D K X Response Shared S B)
         (PqxdhInitialNativeCarried.Final M P I D K Result Origin S B) := do
       let answer ← (PqxdhInitialNativeAudit.Spec extra RatchetChain I D K X Response Shared S B).query frame.1

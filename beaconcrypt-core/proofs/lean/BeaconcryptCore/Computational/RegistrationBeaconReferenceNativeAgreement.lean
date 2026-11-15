@@ -22,7 +22,7 @@ def dropCache : RegistrationNativeBeaconRootSource.State (Local n KemSK mlSource
 
 noncomputable def prefixHandler (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (owner : SelectedOwner mlSource) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (authenticated : registration.AuthenticatedResponse) :
     QueryImpl (PqxdhPhase2GapDhSource.PrefixSpec Unit Unit Unit Unit registration.AuthenticatedResponse)
@@ -45,7 +45,7 @@ private theorem cache_run {Auxiliary : Type} (work : StateT Auxiliary ProbComp V
 
 private theorem lower_run (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : StateT (RegistrationWorldAgreementCompiler.EnvState RegistrationServerRoleBackend.State)
       (OracleComp (RegistrationNativeBeaconFrontend.Trusted n KemSK)) Value)
     (before : Local n KemSK mlSource) :
@@ -56,7 +56,7 @@ private theorem lower_run (setup : Setup base KemSK) (checks : Checks)
 
 private theorem prefix_query (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (owner : SelectedOwner mlSource) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (authenticated : registration.AuthenticatedResponse)
     (query : (PqxdhPhase2GapDhSource.PrefixSpec Unit Unit Unit Unit registration.AuthenticatedResponse).Domain)
@@ -102,14 +102,14 @@ private theorem family_program
 
 noncomputable def stage (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (owner : SelectedOwner mlSource) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (implementation : QueryImpl RegistrationNativeRelatedRoot.RootSpec
       (StateT RegistrationNativeRelatedFamily.State ProbComp))
     (authenticated : registration.AuthenticatedResponse) :
     StateT (Plain n KemSK mlSource) ProbComp (RustM agreement.AgreementEffect) := do
   let pending ← simulateQ (prefixHandler setup checks representation created owner oneTime authenticated)
-    (PqxdhPhase2DhMetadata.prepare authenticated.pending.control () () () [])
+    (PqxdhPhase2DhMetadata.prepare (completedBinding := authenticated.binding) authenticated.control () () () [])
   match pending with
   | none => pure (.ok (RegistrationBeaconAgreementRoot.rejected authenticated))
   | some pending => simulateQ (family implementation) (RegistrationNativeBeaconRootSource.client authenticated pending)
@@ -117,7 +117,7 @@ noncomputable def stage (setup : Setup base KemSK) (checks : Checks)
 /-- Removing the unused cache frame commutes with the complete actual public collection and private root step. -/
 theorem stage_project (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (owner : SelectedOwner mlSource) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (implementation : QueryImpl RegistrationNativeRelatedRoot.RootSpec
       (StateT RegistrationNativeRelatedFamily.State ProbComp))
@@ -131,7 +131,7 @@ theorem stage_project (setup : Setup base KemSK) (checks : Checks)
       (stage setup checks representation created owner oneTime implementation authenticated).run (dropCache before) := by
   have collected := OracleComp.map_run_simulateQ_eq_of_query_map_eq _ _ dropCache
     (prefix_query setup checks representation created owner oneTime authenticated)
-    (PqxdhPhase2DhMetadata.prepare authenticated.pending.control () () () []) before
+    (PqxdhPhase2DhMetadata.prepare (completedBinding := authenticated.binding) authenticated.control () () () []) before
   simp only [RegistrationNativeBeaconRootStage.stage, stage, StateT.run_bind, map_bind]
   rw [← collected, bind_map_left]
   apply bind_congr
@@ -143,10 +143,10 @@ theorem stage_project (setup : Setup base KemSK) (checks : Checks)
 /-- The native arbitrary-pin descriptor phase reconstructs the complete actual agreement controller on the full reached World and private KEM pool. -/
 theorem stage_native (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (owner : SelectedOwner mlSource) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (authenticated : registration.AuthenticatedResponse)
-    (coherent : authenticated.pending.control.expected_server_binding = authenticated.pending.binding.server_pin.binding)
+    (coherent : authenticated.control.expected_server_binding = authenticated.binding.server_pin.binding)
     (before : Plain n KemSK mlSource) :
     Prod.map id Prod.snd <$>
       (stage setup checks representation created owner oneTime
@@ -165,11 +165,11 @@ theorem stage_native (setup : Setup base KemSK) (checks : Checks)
 
 private theorem framed_collect (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (owner : SelectedOwner mlSource) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (authenticated : registration.AuthenticatedResponse) (before : Plain n KemSK mlSource) :
     (simulateQ (prefixHandler setup checks representation created owner oneTime authenticated)
-      (PqxdhPhase2DhMetadata.prepare authenticated.pending.control () () () [])).run before =
+      (PqxdhPhase2DhMetadata.prepare (completedBinding := authenticated.binding) authenticated.control () () () [])).run before =
       (fun result => (result.1, (before.1, result.2))) <$>
         (lower setup checks representation created
           (RegistrationBeaconReferenceCompiler.trustedCollect setup owner oneTime authenticated)).run before.2 := by
@@ -180,7 +180,7 @@ private theorem framed_collect (setup : Setup base KemSK) (checks : Checks)
         (RegistrationBeaconRootInterpreter.auxImpl (RegistrationBeaconReferenceCompiler.trustedBackend setup owner oneTime) authenticated)
         RegistrationBeaconReferenceCompiler.trustedVisit query))
     (prefixHandler setup checks representation created owner oneTime authenticated) embed
-    (fun _ _ => rfl) (PqxdhPhase2DhMetadata.prepare authenticated.pending.control () () () []) before.2
+    (fun _ _ => rfl) (PqxdhPhase2DhMetadata.prepare (completedBinding := authenticated.binding) authenticated.control () () () []) before.2
   rw [← RegistrationBeaconReferenceNativeStage.lower_program] at framed
   simpa only [RegistrationBeaconReferenceCompiler.trustedCollect, embed, Prod.map_def, id_eq] using framed.symm
 
@@ -198,7 +198,7 @@ private theorem family_only
 /-- The executable ready value and its private returned root reconstruct the actual complete native descriptor stage, including every reached collection effect. -/
 theorem agreement_stage (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential mlSource)
     (owner : SelectedOwner mlSource) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (authenticated : registration.AuthenticatedResponse)
@@ -239,11 +239,11 @@ theorem agreement_stage (setup : Setup base KemSK) (checks : Checks) (wire : Reg
 /-- Complete native source agreement is recovered from the executable reference and private root memo on the same reached World and private KEM pool. -/
 theorem agreement_source (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential mlSource)
     (owner : SelectedOwner mlSource) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (authenticated : registration.AuthenticatedResponse)
-    (coherent : authenticated.pending.control.expected_server_binding = authenticated.pending.binding.server_pin.binding)
+    (coherent : authenticated.control.expected_server_binding = authenticated.binding.server_pin.binding)
     (env : RegistrationWorldAgreementCompiler.EnvState RegistrationServerRoleBackend.State)
     (before : RegistrationBeaconReferenceNativeInterpreter.State n KemSK mlSource) :
     (fun result => (RegistrationBeaconReferenceNativePreparation.restored result.2.1 authenticated result.1.1,

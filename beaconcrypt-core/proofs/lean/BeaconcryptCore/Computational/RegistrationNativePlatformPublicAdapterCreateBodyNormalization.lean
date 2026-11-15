@@ -25,7 +25,7 @@ variable [original : AdapterBeaconConstructorRequestMonad.Operations (RustT Prob
 variable [originalCrypto : CryptoOperations (RustT ProbComp)]
 variable (coins : QueryImpl unifSpec (StateT P ProbComp))
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (view : AdapterPublicWrapperState.MaterialView mlSource KemSK)
 local notation "SourceM" => AdapterBeaconConstructorNative.M n KemSK mlSource RegistrationServerRoleBackend.State (StateT P ProbComp)
 local notation "PhysicalM" => StateT (Backend n KemSK) (StateT P ProbComp)
@@ -34,29 +34,28 @@ local notation "PhysicalM" => StateT (Backend n KemSK) (StateT P ProbComp)
 open RegistrationNativePlatformPublicAdapterPhysicalBackend (erase)
 variable (previous : ChildOperations (RustT (StateT (Backend n KemSK) (StateT P ProbComp))))
 variable (generator : rand_core.TryCryptoRng R Error) (kem : AdapterBeaconConstructorKem.Representation view R)
-variable (ml : AdapterBeaconConstructorGeneration.MldsaContract generator view (RegistrationNativeMldsa.generate mlSource))
 variable (signing : AdapterBeaconConstructorGeneration.EdContract generator view setup.joint PqxdhJointIdentity.sampleSeed)
 variable (prekey : AdapterBeaconConstructorGeneration.KxContract generator view
   (fun scalar => PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)) PqxdhJointGapDh.sampleScalar)
 variable (kemContract : RegistrationNativePlatformPublicAdapterCreateKem.Contract view setup kem generator)
 
-include ml signing prekey kemContract in
+include signing prekey kemContract in
 theorem body (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicKey) (mlPin : Std.Array U8 1952#usize) (rng : R)
     (before : Backend n KemSK) :
     Prod.map id erase <$> (RegistrationNativePlatformPublicAdapterCreateBody.physical coins setup checks representation created view previous generator keyId serverId mlPin rng).run.run before =
     Prod.map id erase <$> (RegistrationNativePlatformPublicAdapterCreateBody.physical coins setup checks representation created view previous generator keyId serverId mlPin rng).run.run (erase before) := by
-  rw [RegistrationNativePlatformPublicAdapterCreateBody.physical_tree coins setup checks representation created view generator kem ml signing prekey kemContract]
+  rw [RegistrationNativePlatformPublicAdapterCreateBody.physical_tree coins setup checks representation created view generator kem signing prekey kemContract]
   simp only [RustT.run_lift,StateT.run_map,Functor.map_map]
-  have law := RegistrationNativePlatformPublicAdapterCreateNormalization.stable coins setup checks representation created view kem ml.joint signing.joint prekey.joint
-    (RegistrationNativePlatformPublicAdapterCreateProgram.program (view.edPublic serverId) mlPin keyId rng) before
-  have observed := congrArg (fun work => Prod.map (fun value => RustM.ok (RegistrationNativePlatformPublicAdapterCreateBody.outcome setup view generator ml signing prekey keyId serverId value)) id <$> work) law
+  have law := RegistrationNativePlatformPublicAdapterCreateNormalization.stable coins setup checks representation created view kem signing.joint prekey.joint
+    (RegistrationNativePlatformPublicAdapterCreateProgram.program (source := mlSource) (view.edPublic serverId) mlPin keyId rng) before
+  have observed := congrArg (fun work => Prod.map (fun value => RustM.ok (RegistrationNativePlatformPublicAdapterCreateBody.outcome setup view generator signing prekey keyId serverId value)) id <$> work) law
   simpa only [Functor.map_map,Prod.map_def,id_eq] using observed
 
 omit material ed original originalCrypto in
 private theorem lift_ok {m : Type → Type} [Monad m] {A : Type} (value : A) :
     (AdapterRecordRequestMonad.liftRust (.ok value) : RustT m A) = pure value := rfl
 
-include ml signing prekey kemContract in
+include signing prekey kemContract in
 theorem full (keyId : U64) (identityKey mlKey : Slice U8) (rng : R) (before : Backend n KemSK) :
     Prod.map id erase <$> (RegistrationNativePlatformPublicAdapterCreateSource.physical coins setup checks representation created view previous generator keyId identityKey mlKey rng).run.run before =
     Prod.map id erase <$> (RegistrationNativePlatformPublicAdapterCreateSource.physical coins setup checks representation created view previous generator keyId identityKey mlKey rng).run.run (erase before) := by
@@ -89,14 +88,14 @@ theorem full (keyId : U64) (identityKey mlKey : Slice U8) (rng : R) (before : Ba
         | Err error =>
           simp only [AdapterBeaconConstructorBody.reject,RustT.run_pure,StateT.run_pure,map_pure,Prod.map_def,id_eq,RegistrationNativePlatformPublicAdapterPhysicalBackend.idempotent]
         | Ok mlPin =>
-          exact body coins setup checks representation created view previous generator kem ml signing prekey kemContract keyId serverId mlPin rng before
+          exact body coins setup checks representation created view previous generator kem signing prekey kemContract keyId serverId mlPin rng before
 
-include ml signing prekey kemContract in
+include signing prekey kemContract in
 theorem platform (keyId : U64) (identityKey mlKey : Slice U8) (rng : R) (before : Backend n KemSK) (previousP : P) :
     Prod.map (Prod.map id erase) id <$> ((RegistrationNativePlatformPublicAdapterCreateSource.physical coins setup checks representation created view previous generator keyId identityKey mlKey rng).run.run before).run previousP =
     Prod.map (Prod.map id erase) id <$> ((RegistrationNativePlatformPublicAdapterCreateSource.physical coins setup checks representation created view previous generator keyId identityKey mlKey rng).run.run (erase before)).run previousP := by
   have law := congrArg (fun work => work.run previousP)
-    (full coins setup checks representation created view previous generator kem ml signing prekey kemContract keyId identityKey mlKey rng before)
+    (full coins setup checks representation created view previous generator kem signing prekey kemContract keyId identityKey mlKey rng before)
   simpa only [StateT.run_map,Prod.map_def,id_eq] using law
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterCreateBodyNormalization

@@ -45,7 +45,7 @@ variable [material : PublicWrapperPlatform.Material] [platform : PublicWrapperPl
 variable {n : Nat} {I KemSK Platform R : Type} {base : OracleSpec I} {source : RegistrationNativeMldsa.Source}
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK)
 variable (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : AdapterPublicWrapperStorage.Views)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 
 structure Carrier (current : RegistrationNativeExperiment.State n KemSK source ×Platform) where
   base : RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views created credential current

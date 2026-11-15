@@ -148,25 +148,50 @@ theorem admitted_split (encode : registration.SignedResponseView → core.option
   | none => simp only [Option.map_none, simulateQ_pure]
   | some choice => simp only [Option.map_some, common_program, branch_split]
 
-/-- Both services run this actual root-free native gate before material demand. -/
+/-- The selected public descriptor runs its actual shared hash callback before material demand. Restoring a private zero root changes no AD input or public completion metadata. -/
+def adHash (pending : RegistrationBoundKeySchedule.PublicAd) :
+    OracleComp (Common n)
+      (RustM (core.result.Result RegistrationBoundKeySchedule.PublicInitial pqxdh.ServerState)) :=
+  let selected := RegistrationBoundKeySchedule.restoreAd pending RegistrationBoundKeySchedule.zero
+  match selected.request with
+  | .fail error => pure (.fail error)
+  | .div => pure .div
+  | .ok request => do
+      let digest ← (Common n).query
+        (.inr (.inr (.hash (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request))))
+      pure (RegistrationPublicationKernelErasure.mapOk RegistrationBoundKeySchedule.publicInitial <$>
+        selected.resume (.Some (RegistrationAuthenticationShared.digestArray digest)))
+
+/-- Both services run the actual root-free gate and owned AD hash before material demand. -/
 def gated {I : Type} {spec : OracleSpec I}
+    (deriveAd : RegistrationBoundKeySchedule.PublicAd → OracleComp spec
+      (RustM (core.result.Result RegistrationBoundKeySchedule.PublicInitial pqxdh.ServerState)))
     (admitted : RegistrationBoundKeySchedule.PublicInitial → OracleComp spec (RustM (Result Encoded)))
     (control : pqxdh.ServerState) (pin : session.ServerAuthenticationPin) (availability : pqxdh.KeyIdAvailability)
     (agreement : RegistrationBoundGate.PublicAgreement) (application : Slice U8) :
     OracleComp spec (RustM (Result Encoded)) :=
   match RegistrationBoundGate.gate control pin availability agreement application with
-  | .ok (.Ok initial) => admitted initial
+  | .ok (.Ok pending) => do
+      let hashed ← deriveAd pending
+      match hashed with
+      | .ok (.Ok initial) => admitted initial
+      | .ok (.Err previous) => pure (.ok (.Err previous))
+      | .fail error => pure (.fail error)
+      | .div => pure .div
   | .ok (.Err previous) => pure (.ok (.Err previous))
   | .fail error => pure (.fail error)
   | .div => pure .div
 
-/-- Actual rejection makes no material query. On success, the complete native service equals its seed-free public continuation. -/
+/-- Actual rejection makes no material query. Both successful services retain the same real shared AD hash and complete seed-free continuation. -/
 theorem gated_split (encode : registration.SignedResponseView → core.option.Option Encoded)
     (control : pqxdh.ServerState) (pin : session.ServerAuthenticationPin) (availability : pqxdh.KeyIdAvailability)
     (agreement : RegistrationBoundGate.PublicAgreement) (application : Slice U8) (message : Message) :
-    simulateQ (erase (n := n)) (gated (fun initial => publicAdmitted encode control initial message)
-      control pin availability agreement application) =
-      gated (fun initial => privateAdmitted encode control initial message)
+    simulateQ (erase (n := n))
+      (gated (fun pending => simulateQ publicCommon (adHash pending))
+        (fun initial => publicAdmitted encode control initial message)
+        control pin availability agreement application) =
+      gated (fun pending => simulateQ privateCommon (adHash pending))
+        (fun initial => privateAdmitted encode control initial message)
         control pin availability agreement application := by
   unfold gated
   cases RegistrationBoundGate.gate control pin availability agreement application with
@@ -174,7 +199,16 @@ theorem gated_split (encode : registration.SignedResponseView → core.option.Op
   | div => simpa only using simulateQ_pure erase (.div : RustM (Result Encoded))
   | ok result => cases result with
     | Err previous => simpa only using simulateQ_pure erase (.ok (.Err previous) : RustM (Result Encoded))
-    | Ok initial => exact admitted_split encode control initial message
+    | Ok pending =>
+      rw [simulateQ_bind, common_program]
+      apply bind_congr
+      intro hashed
+      cases hashed with
+      | fail error => simpa only using simulateQ_pure erase (.fail error : RustM (Result Encoded))
+      | div => simpa only using simulateQ_pure erase (.div : RustM (Result Encoded))
+      | ok result => cases result with
+        | Err previous => simpa only using simulateQ_pure erase (.ok (.Err previous) : RustM (Result Encoded))
+        | Ok initial => exact admitted_split encode control initial message
 
 end BeaconcryptCore.Computational.RegistrationNativePairedServerService
 

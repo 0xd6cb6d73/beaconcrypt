@@ -23,7 +23,7 @@ local notation "Whole" => Native × Platform
 def SourceAt (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (call : Call RegistrationNativeRawAdapter.TypedSpec Whole) (token : peer.ConsumedRegistration) : Prop :=
   ∃ packet pin pinned pinPlatform events authenticated checked authPlatform,
     call.query = .inr (.accept packet) ∧
@@ -38,7 +38,7 @@ variable [primitive : AdapterSealPrimitive.Operations]
 variable (coins : QueryImpl unifSpec (StateT Platform ProbComp))
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
 variable (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 variable (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
 variable (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
 variable (reserveRegistration reservePeer : StateT Platform ProbComp Bool) (erased : commitment.CommitmentTranscript)
@@ -147,8 +147,7 @@ theorem initialized_taken (ensureInit : StateT Unit ProbComp Bool) (identityInde
 omit primitive in
 /-- The actual token's earlier source authentication leaves its original Init preimage at the actual returned acceptance cache. -/
 theorem source_cache (call : Call RegistrationNativeRawAdapter.TypedSpec Whole) (token : peer.ConsumedRegistration)
-    (origin : SourceAt coins setup checks wire route representation created call token)
-    (cached : RegistrationNativeServerPinRecompute.Cached call.before.1.server.pin call.before.1.server.world.world.1.primitive.2) :
+    (origin : SourceAt coins setup checks wire route representation created call token) :
     ∃ packet authenticated, ∃ (checked : RegistrationServerFrontendCompiler.State n), ∃ digest,
       call.query = .inr (.accept packet) ∧ Born setup checks representation created packet authenticated checked token ∧
       call.after.1.server.world.world.1.primitive.2
@@ -156,7 +155,7 @@ theorem source_cache (call : Call RegistrationNativeRawAdapter.TypedSpec Whole) 
       authenticated.binding.init_hash = RegistrationAuthenticationShared.digestArray digest := by
   obtain ⟨packet, pin, pinned, pinPlatform, events, authenticated, checked, authPlatform, queryEq, pinCalled, authCalled, born, summaryEq⟩ := origin
   obtain ⟨digest, receipt, binding⟩ := RegistrationNativePlatformTokenCacheSource.authenticated_cache coins setup (RegistrationNativeWire.ledgerCodec wire) route source.verify
-    created packet call.before.1.server pinned checked call.before.2 pinPlatform authPlatform pin events authenticated cached pinCalled authCalled
+    created packet call.before.1.server pinned checked call.before.2 pinPlatform authPlatform pin events authenticated pinCalled authCalled
   have cacheEq : checked.world.world.1.primitive.2 = call.after.1.server.world.world.1.primitive.2 :=
     congrArg (fun value : RegistrationSigningShared.State => value.2) summaryEq
   rw [cacheEq] at receipt

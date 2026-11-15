@@ -65,11 +65,7 @@ private theorem lift_source {S : Type} (seeds : Seeds n)
 private theorem pin_quiet (current : session.ServerAuthenticationPin) :
     RegistrationNativePlatformPairedPublicationFree.Quiet
       (RegistrationNativePlatformServerRestrictedService.pin (n := n) (Platform := Platform) current) := by
-  unfold RegistrationNativePlatformServerRestrictedService.pin
-  apply RegistrationNativePlatformPairedPublicationFree.bind_quiet
-  · exact effect_quiet _ (fun _ impossible => impossible.elim)
-  · intro digest
-    exact RegistrationNativePlatformPairedPublicationFree.pure_quiet _
+  exact RegistrationNativePlatformPairedPublicationFree.pure_quiet _
 
 private theorem reserve_quiet (reserve : StateT Platform ProbComp Bool) :
     RegistrationNativePlatformPairedPublicationFree.Quiet
@@ -109,7 +105,7 @@ private theorem service_source (seeds : Seeds n) (control : pqxdh.ServerState)
       simulateQ (translate false seeds)
         (simulateQ embed ((RegistrationNativePlatformServerRestrictedService.branch source view failure allocation erased helper sign writer control initial choice).run before))
     rw [effects_true, effects_false, RegistrationNativePlatformMaterializedServer.branch source view failure allocation erased helper sign writer control initial choice seeds before]
-/-- Each literal source frontend request has identical full-material and opaque-slot interpretations, including repeated pin hashing and stateful reserve refusal. -/
+/-- Each literal source frontend request has identical full-material and opaque-slot interpretations, including the public pin, actual selected AD hashing and stateful reserve refusal. -/
 theorem query_source (reserve : StateT Platform ProbComp Bool) (seeds : Seeds n)
     (query : RegistrationNativePlatformServerFrontendProgram.Spec.Domain)
     (before : RegistrationNativePlatformBoundCompiler.PublicState Platform) :
@@ -119,6 +115,19 @@ theorem query_source (reserve : StateT Platform ProbComp Bool) (seeds : Seeds n)
         ((target source view failure allocation erased helper sign writer reserve query).run before) := by
   cases query with
   | pin current => exact lift_source seeds _ (pin_quiet current) before
+  | adHash pending =>
+    apply lift_source
+    unfold RegistrationNativePlatformServerRestrictedService.adHash RegistrationServerAdHash.runWith
+    split
+    · exact RegistrationNativePlatformPairedPublicationFree.pure_quiet _
+    · exact RegistrationNativePlatformPairedPublicationFree.pure_quiet _
+    · apply RegistrationNativePlatformPairedPublicationFree.bind_quiet
+      · apply RegistrationNativePlatformPairedPublicationFree.bind_quiet
+        · exact effect_quiet _ (fun _ impossible => impossible.elim)
+        · intro digest
+          exact RegistrationNativePlatformPairedPublicationFree.pure_quiet _
+      · intro digest
+        exact RegistrationNativePlatformPairedPublicationFree.pure_quiet _
   | reserve => exact lift_source seeds _ (reserve_quiet reserve) before
   | present keyId => exact lift_source seeds _ (effect_quiet (.inr (.peerPresent keyId)) (fun _ impossible => impossible.elim)) before
   | service control initial message => exact service_source source view failure allocation erased helper sign writer seeds control initial message before

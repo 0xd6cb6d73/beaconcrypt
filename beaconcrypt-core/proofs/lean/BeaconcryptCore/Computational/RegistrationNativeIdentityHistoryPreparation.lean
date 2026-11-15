@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativeIdentityHistoryReserved
 import BeaconcryptCore.Computational.RegistrationNativeIdentitySourceFresh
 
-/-! Actual native preparation performs ordinary ML/pin work, one indexed identity birth and ordinary prekey sampling. It issues no signing or static-DH service, so every earlier generated-handle history stays exact on success and failure. -/
+/-! Actual native preparation performs pure full-pin selection, one indexed identity birth and ordinary prekey sampling. It issues no signing or static-DH service, so every earlier generated-handle history stays exact on success and failure. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -16,12 +16,12 @@ variable {source : RegistrationNativeMldsa.Source}
 
 theorem suffix_history (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
-    (credentials : RegistrationNativeMldsa.Credential source) (pin : session.ServerAuthenticationPin)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
+    (pin : session.ServerAuthenticationPin)
     (before : State n KemSK)
     (result : RustM (Option (RegistrationNativeIdentityFrontend.Prepared source)) × State n KemSK)
     (supported : result ∈ support ((simulateQ (implementation (mlSource := source) setup checks representation created)
-      (RegistrationNativeIdentitySourceSuffix.exposed credentials pin)).run before)) :
+      (RegistrationNativeIdentitySourceSuffix.exposed (source := source) pin)).run before)) :
     ∀ identity, history identity result.2.identities.transcript = history identity before.identities.transcript := by
   simp only [RegistrationNativeIdentitySourceSuffix.exposed, simulateQ_bind, StateT.run_bind] at supported
   rw [RegistrationNativeIdentitySourceBirth.create_source, bind_map_left, mem_support_bind_iff] at supported
@@ -38,7 +38,7 @@ theorem suffix_history (setup : Setup base KemSK) (checks : Checks)
 
 theorem program_history (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64) (before : State n KemSK)
     (result : RustM (Option (RegistrationNativeIdentityFrontend.Prepared source)) × State n KemSK)
     (supported : result ∈ support ((simulateQ (implementation (mlSource := source) setup checks representation created)
@@ -63,13 +63,13 @@ theorem program_history (setup : Setup base KemSK) (checks : Checks)
         intro identity
         rfl
     | some selected =>
-        exact suffix_history setup checks representation created selected.1 selected.2
+        exact suffix_history setup checks representation created selected
           ⟨current, before.identities⟩ result continued
 
 /-- The complete nested actual preparation retains every prior source history without assuming source success. -/
 theorem prepare_history (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (current : RegistrationNativeIdentityFrontend.State source)
     (env : RegistrationWorldAgreementCompiler.EnvState RegistrationServerRoleBackend.State) (before : State n KemSK)

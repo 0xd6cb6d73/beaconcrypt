@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeIdentityCensorRealTail
+import BeaconcryptCore.Computational.RegistrationNativeInitTupleSource
 import BeaconcryptCore.Computational.RegistrationNativeIdentityCensorEdForwardSource
 import BeaconcryptCore.Computational.RegistrationNativeIdentityCensorFirstSource
 
@@ -19,15 +20,15 @@ open BeaconcryptCore.Refinement
 variable {n : Nat} {I KemSK Platform : Type} {base : OracleSpec I} {mlSource : RegistrationNativeMldsa.Source}
 attribute [local irreducible] registration.BeaconEd25519Signing.resume
 variable (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner mlSource)
-variable (writer : registration.SignedInitView → StateT Platform ProbComp (RustM (core.option.Option (alloc.vec.Vec U8))))
+variable (writer : registration.InitView → StateT Platform ProbComp (RustM (core.option.Option (alloc.vec.Vec U8))))
 local notation "Main" => RegistrationNativePlatformIdentityCtxMain.beacon (n := n) (Platform := Platform) (source := mlSource) setup checks representation created
 local notation "callback" => (fun query => Main (RegistrationNativePlatformIdentityProgram.native
   (RegistrationNativeIdentityFrontend.outgoing (n := n) (Auxiliary := RegistrationServerRoleBackend.State) setup mlSource index owner query)))
 local notation "encoder" => (fun fields => Main (RegistrationNativePlatformIdentityProgram.external (writer fields)))
 
-/-- The role-separated PQ request cannot alter the selected one-time memo. Every actual optional reply either rejects normally or carries the same canonical attachment into the checked fingerprint/hash/writer source suffix. -/
+/-- The role-separated PQ request cannot alter the selected one-time memo. Every actual optional reply either rejects normally or carries the same canonical attachment into the checked request-hash/writer source suffix. -/
 theorem pq (selected : Nat) (placeholder : Ed25519Signature)
     (pending : registration.BeaconEd25519Signing) (stage : pending.stage = .PqKey)
     (tagged : RegistrationNativeIdentitySigningRole.Tagged pending.state.started)
@@ -64,11 +65,11 @@ theorem pq (selected : Nat) (placeholder : Ed25519Signature)
   cases effect <;> simp only [RegistrationSigning.EdReplyTransition, stage] at facts
   case Rejected previous => simp only [StateT.run_pure, map_pure, Prod.map_apply, id_eq]
   case Ed25519SigningRequested next => exact False.elim facts.2
-  case FingerprintRequested next =>
+  case HashRequested next =>
     have retained := congrArg (fun state : registration.BeaconInitState => PqxdhRefinement.absBytes state.one_time_key) facts.2.2.2
     change PqxdhRefinement.absBytes next.state.one_time_key = PqxdhRefinement.absBytes pending.state.one_time_key at retained
-    exact RegistrationNativeIdentityCensorRealTail.fingerprint setup checks representation created index owner writer selected placeholder
-      next signature message (retained.trans attached) after stillStored stillActive
+    exact RegistrationNativeIdentityCensorRealTail.request_hash setup checks representation created index owner writer selected placeholder
+      next (RegistrationNativeInitTupleSource.canonical_of_resume pending reply next resumed) signature message (retained.trans attached) after stillStored stillActive
 
 private theorem one_time_message (pending : registration.BeaconEd25519Signing) (request : registration.Ed25519SigningRequest)
     (requested : pending.request = .ok request) (stage : pending.stage = .OneTimeKey) :
@@ -91,7 +92,7 @@ private theorem attached (pending : registration.BeaconEd25519Signing) (signatur
     List.map_append, List.map_map, Function.comp_def] using copied
 
 
-/-- A matching selected one-time call derives the canonical attachment before the original PQ/fingerprint/hash/ML/writer suffix, including repeated target messages. -/
+/-- A matching selected one-time call derives the canonical attachment before the original PQ-Ed/hash/Ready/writer suffix, including repeated target messages. -/
 theorem one_time (selected : Nat) (placeholder : Ed25519Signature)
     (pending : registration.BeaconEd25519Signing) (request : registration.Ed25519SigningRequest)
     (requested : pending.request = .ok request) (stage : pending.stage = .OneTimeKey)

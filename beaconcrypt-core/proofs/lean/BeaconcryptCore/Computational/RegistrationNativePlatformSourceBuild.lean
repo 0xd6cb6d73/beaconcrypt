@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativePlatformCompletionSdk
 import BeaconcryptCore.Computational.RegistrationNativeServerPinRecompute
 
-/-! This additive native Server build uses both actual source writer request bodies, an external stateful reservation, and the actual repeated pin fingerprint hash. Platform callbacks receive their public source requests and cannot inspect or change private native coordinates. Native crypto, history, record-call markers and installation remain in the original Local/Server state; all effects are interpreted through the same outer monad. Public container and decoder correspondence remain separate source obligations. -/
+/-! This additive native Server build uses both actual source writer request bodies, an external stateful reservation, and pure exact Server pin selection. Platform callbacks receive their public source requests and cannot inspect or change private native coordinates. Native crypto, history, record-call markers and installation remain in the original Local/Server state; all effects are interpreted through the same outer monad. Public container and decoder correspondence remain separate source obligations. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -65,7 +65,7 @@ noncomputable def build (coins : QueryImpl unifSpec m) (setup : Setup base KemSK
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) m)
     (handle : Nat) (application : Option (Slice U8)) :
     StateT (State n) m (RustM (Option (U64 × alloc.vec.Vec U8))) :=
-  RegistrationNativePlatformCompletionSdk.build (pin coins) (StateT.lift reserve)
+  RegistrationNativePlatformCompletionSdk.build (RegistrationNativePlatformCompletionSdk.nativeAdHash coins) (pin coins) (StateT.lift reserve)
     (RegistrationNativePlatformCompletionSdk.nativePresent coins)
     (finish coins setup codec sign helper writer) handle application
 
@@ -78,7 +78,7 @@ noncomputable def buildSource (coins : QueryImpl unifSpec m) (setup : Setup base
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) m)
     (handle : Nat) (application : Option (Slice U8)) :
     StateT (State n) m (RustM (Option (U64 × alloc.vec.Vec U8))) :=
-  RegistrationNativePlatformCompletionSdk.build (pin coins) (StateT.lift reserve)
+  RegistrationNativePlatformCompletionSdk.build (RegistrationNativePlatformCompletionSdk.nativeAdHash coins) (pin coins) (StateT.lift reserve)
     (RegistrationNativePlatformCompletionSdk.nativePresent coins)
     (finishSource coins setup codec sealing hash sign helper writer) handle application
 
@@ -116,21 +116,16 @@ theorem buildSource_native (coins : QueryImpl unifSpec m) (setup : Setup base Ke
         RegistrationNativePlatformServerCompletion.records coins setup codec (.hash transcript))
       reserve sign helper writer handle application = build coins setup codec reserve sign helper writer handle application := by
   unfold buildSource build
-  apply congrArg (fun finish => RegistrationNativePlatformCompletionSdk.build (pin coins) (StateT.lift reserve)
+  apply congrArg (fun finish => RegistrationNativePlatformCompletionSdk.build (RegistrationNativePlatformCompletionSdk.nativeAdHash coins) (pin coins) (StateT.lift reserve)
     (RegistrationNativePlatformCompletionSdk.nativePresent coins) finish handle application)
   funext control pending
   exact finishSource_native coins setup codec erased sign helper writer control pending
 
-theorem pin_hit (coins : QueryImpl unifSpec m) (before : State n)
-    (cached : RegistrationNativeServerPinRecompute.Cached before.pin before.world.world.1.primitive.2) :
-    (pin coins).run before = pure (.ok (.Some before.pin), { before with world :=
-      { before.world with world :=
-        (PqxdhRecordLiftWorld.chargeEffect
-          (.inr (.hash (PqxdhRefinement.absBytes before.pin.public_key))) before.world.world.1,
-          before.world.world.2) } }) := by
+/-- Repeated pin selection has no primitive effect and preserves the complete compiler state. -/
+theorem pin_exact (coins : QueryImpl unifSpec m) (before : State n) :
+    (pin coins).run before = pure (.ok (.Some before.pin), before) := by
   unfold pin StateT.run
-  rw [RegistrationNativeServerPinRecompute.native_hit before.pin before.world.world.1 cached,
-    simulateQ_pure, map_pure]
+  rw [RegistrationNativeServerPinRecompute.native_exact, simulateQ_pure, map_pure]
 
 theorem encode_run (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) m)
     (view : registration.SignedResponseView) (before : Local n) :
@@ -159,7 +154,7 @@ theorem write_native {Platform : Type}
   exact ⟨rfl, rfl, rfl, rfl⟩
 
 section Interpret
-open RegistrationNativePlatformInterpret (state)
+open RegistrationNativePlatformInterpret (state state_pure state_bind)
 variable {κ : Type} {spec : OracleSpec.{0, 0} κ}
 
 private theorem helper_interpret (implementation : QueryImpl spec m)
@@ -273,6 +268,12 @@ private theorem present_interpret (implementation : QueryImpl spec m) (coins : Q
   rw [world_interpret]
   simp only [RegistrationNativePlatformServerCompletion.capability, RegistrationNativePlatformBuildInterpret.local_native]
 
+private theorem adHash_interpret (implementation : QueryImpl spec m) (coins : QueryImpl unifSpec (OracleComp spec))
+    (pending : registration.ServerAdHash) :
+    state implementation (RegistrationNativePlatformCompletionSdk.nativeAdHash (n := n) coins pending) =
+      RegistrationNativePlatformCompletionSdk.nativeAdHash (fun query => simulateQ implementation (coins query)) pending := by
+  exact RegistrationNativePlatformBuildInterpret.sdk_adHash implementation coins pending
+
 theorem build_interpret (implementation : QueryImpl spec m) (coins : QueryImpl unifSpec (OracleComp spec))
     (setup : Setup base KemSK) (codec : Codec Reader Response) (reserve : OracleComp spec Bool)
     (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
@@ -285,7 +286,7 @@ theorem build_interpret (implementation : QueryImpl spec m) (coins : QueryImpl u
         (fun query => simulateQ implementation (writer query)) handle application := by
   unfold build
   rw [RegistrationNativePlatformCompletionSdk.build_interpret]
-  simp only [pin_interpret, lift_interpret, present_interpret, finish_interpret]
+  simp only [adHash_interpret, pin_interpret, lift_interpret, present_interpret, finish_interpret]
 
 theorem buildSource_interpret (implementation : QueryImpl spec m) (coins : QueryImpl unifSpec (OracleComp spec))
     (setup : Setup base KemSK) (codec : Codec Reader Response)
@@ -304,7 +305,7 @@ theorem buildSource_interpret (implementation : QueryImpl spec m) (coins : Query
         (fun query => simulateQ implementation (writer query)) handle application := by
   unfold buildSource
   rw [RegistrationNativePlatformCompletionSdk.build_interpret]
-  simp only [pin_interpret, lift_interpret, present_interpret, finishSource_interpret]
+  simp only [adHash_interpret, pin_interpret, lift_interpret, present_interpret, finishSource_interpret]
 
 theorem buildSource_continuation (implementation : QueryImpl spec m) (coins : QueryImpl unifSpec (OracleComp spec))
     (setup : Setup base KemSK) (codec : Codec Reader Response)
@@ -348,11 +349,11 @@ end BeaconcryptCore.Computational.RegistrationNativePlatformSourceBuild
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativePlatformSourceBuild.write_run
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformSourceBuild.pin_hit' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformSourceBuild.pin_exact' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformSourceBuild.pin_hit
+#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformSourceBuild.pin_exact
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformSourceBuild.encode_run' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/

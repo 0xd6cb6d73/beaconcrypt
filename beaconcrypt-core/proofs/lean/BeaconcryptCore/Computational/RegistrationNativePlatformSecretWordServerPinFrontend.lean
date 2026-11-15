@@ -11,6 +11,7 @@ set_option maxRecDepth 8192
 set_option maxHeartbeats 1200000
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativePlatformSecretWordServerPinFrontend
+attribute [local irreducible] RegistrationNativePlatformSecretWordOpen.accept
 open PqxdhServerAuthExperiment (Setup Checks)
 open RegistrationNativePlatformSecretWordOrdinary (State)
 variable {n : Nat} {I KemSK Platform E : Type} {base : OracleSpec I}
@@ -44,11 +45,11 @@ private theorem build [primitive : BeaconcryptCore.Refinement.AdapterSealPrimiti
   obtain ⟨reached,called,equal⟩ := supported
   cases equal
   have original := PqxdhDeploymentEnvironment.support_simulateQ_subset _ _ called
-  exact (RegistrationNativePlatformSecretWordServerPinControl.build_pin _ _ _ _ handle application
+  exact (RegistrationNativePlatformSecretWordServerPinControl.build_pin _ _ _ _ _ handle application
     before.1.server (before.1.environment.receipts,before.2) reached original).trans
     (RegistrationNativeSecretWordMaterialPin.take_pin handle before.1.server)
 
-/-- Every literal corrected Word callback retains the stored Server pin; current repeated hash results do not overwrite its configured binding. -/
+/-- Every literal corrected Word callback retains the stored Server pin; pure supplied-pin selection and actual registration transcript hashing preserve its configured binding. -/
 theorem query [primitive : BeaconcryptCore.Refinement.AdapterSealPrimitive.Operations]
     (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)

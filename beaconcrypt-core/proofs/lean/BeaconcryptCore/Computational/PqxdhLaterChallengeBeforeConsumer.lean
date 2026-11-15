@@ -8,7 +8,10 @@ open OracleComp OracleSpec CoreModels Aeneas OracleComp.ProgramLogic.Relational
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeBeforeConsumer
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPhase1AcceptanceOracle PqxdhKemIndCca PqxdhInitializerSecrecy
 open CtxRomAuth AdaptiveCtxSharedHash PqxdhSecretInputKdf PqxdhFullSecretInputKdf
@@ -75,7 +78,7 @@ noncomputable def client (qPost : Nat) (bit : Bool) (key : Key) : OracleComp Ada
   | some (credentials, start, output, details, native, parent, target, nonce, next, _) =>
     if fits : Fits setup owner number qPost details then
       if RawCtxSelectedParentPrivatePatch.targetAddress target ≠ PqxdhInitialBuilderContext.address details.callback.original then
-        decision setup <$> PqxdhLaterChallengeSavedMonitor.resume
+        decision setup <$> PqxdhLaterChallengeSavedMonitor.resume (completedBinding := completedBinding)
           (PqxdhPreparedPrefixCallbacks.preparation attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem credentials.1 credentials.2)
           (PqxdhPreparedPrefixCallbacks.application attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem credentials.1 credentials.2)
           (initialLocal (A := A) (N := BareState 1) (env0).source start.selectedMessage zeroRoot (PqxdhInitialSampledParent.response (start, output)))
@@ -92,12 +95,12 @@ noncomputable def client (qPost : Nat) (bit : Bool) (key : Key) : OracleComp Ada
 theorem generated_pre (depth qPost : Nat) (sourceBit : Bool)
     (result : Carrier × Option program.Selection) (after : CtxRO.QueryCache)
     (supported : (result, after) ∈ support ((simulateQ hashImpl
-      (PqxdhLaterChallengeGeneratedContinuation.run setup env callbacks program adversary owner number sourceBit
+      (PqxdhLaterChallengeGeneratedContinuation.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number sourceBit
         attachedVerify primitives baseImpl kem ancestors disclosed depth)).run ∅)) :
     Pre (fun a b => a = b) (fun a => a = false) (fun b => b = false)
-      (client setup env callbacks program owner number attachedVerify primitives baseImpl kem qPost false
+      (client (completedBinding := completedBinding) setup env callbacks program owner number attachedVerify primitives baseImpl kem qPost false
         (PqxdhLaterChallengeGeneratedBeforeObservation.beforeKey setup program (result, after)))
-      (client setup env callbacks program owner number attachedVerify primitives baseImpl kem qPost true
+      (client (completedBinding := completedBinding) setup env callbacks program owner number attachedVerify primitives baseImpl kem qPost true
         (PqxdhLaterChallengeGeneratedBeforeObservation.beforeKey setup program (result, after))) := by
   classical
   rcases result with ⟨⟨⟨credentials, ⟨⟨⟨packet, parent⟩, target⟩, nonce, next⟩⟩, captured⟩, selection⟩
@@ -115,7 +118,7 @@ theorem generated_pre (depth qPost : Nat) (sourceBit : Bool)
         · rename_i fits
           split
           · rename_i separate
-            have paired := PqxdhLaterChallengeSourceBefore.generated_resume_pre setup env callbacks program adversary
+            have paired := PqxdhLaterChallengeSourceBefore.generated_resume_pre (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary
               owner number sourceBit attachedVerify primitives baseImpl kem ancestors disclosed
               (PqxdhPreparedPrefixCallbacks.preparation attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem credentials.1 credentials.2)
               (PqxdhPreparedPrefixCallbacks.application attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem credentials.1 credentials.2)
@@ -137,19 +140,19 @@ theorem generated_pre (depth qPost : Nat) (sourceBit : Bool)
 theorem generated_random (depth qPost : Nat) (sourceBit : Bool)
     (result : Carrier × Option program.Selection) (after : CtxRO.QueryCache)
     (supported : (result, after) ∈ support ((simulateQ hashImpl
-      (PqxdhLaterChallengeGeneratedContinuation.run setup env callbacks program adversary owner number sourceBit
+      (PqxdhLaterChallengeGeneratedContinuation.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number sourceBit
         attachedVerify primitives baseImpl kem ancestors disclosed depth)).run ∅))
     (state : RandomState) :
     𝒟[Prod.fst <$> (simulateQ (confRandomImpl (RawCtxUniversalDecoder.decoder env.decode) env.source.crypto)
-      (client setup env callbacks program owner number attachedVerify primitives baseImpl kem qPost false
+      (client (completedBinding := completedBinding) setup env callbacks program owner number attachedVerify primitives baseImpl kem qPost false
         (PqxdhLaterChallengeGeneratedBeforeObservation.beforeKey setup program (result, after)))).run state] {true} =
     𝒟[Prod.fst <$> (simulateQ (confRandomImpl (RawCtxUniversalDecoder.decoder env.decode) env.source.crypto)
-      (client setup env callbacks program owner number attachedVerify primitives baseImpl kem qPost true
+      (client (completedBinding := completedBinding) setup env callbacks program owner number attachedVerify primitives baseImpl kem qPost true
         (PqxdhLaterChallengeGeneratedBeforeObservation.beforeKey setup program (result, after)))).run state] {true} := by
   rw [← prEvent_eq_evalDist_singleton _ true, ← prEvent_eq_evalDist_singleton _ true, prEvent_map, prEvent_map]
   exact pre_event (confRandomImpl (RawCtxUniversalDecoder.decoder env.decode) env.source.crypto)
     (fun m0 m1 => identRandom m0 m1)
-    (generated_pre setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+    (generated_pre (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
       depth qPost sourceBit result after supported)
     (fun a => a = true) (fun b => b = true) (fun a b same => by rw [same])
     (fun a dead => by simp [dead]) (fun b dead => by simp [dead])
@@ -157,11 +160,11 @@ theorem generated_random (depth qPost : Nat) (sourceBit : Bool)
 
 /-- Every accepted before continuation bills its saved operation and the complete carried outside program. The three bounds count attempted selected seals, adaptive raw openings and routed public hash work, including execution before refusal. -/
 theorem client_bills (qPost : Nat) (bit : Bool) (key : Key) :
-    (client setup env callbacks program owner number attachedVerify primitives baseImpl kem qPost bit key).IsQueryBoundP
+    (client (completedBinding := completedBinding) setup env callbacks program owner number attachedVerify primitives baseImpl kem qPost bit key).IsQueryBoundP
       (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxQueryBounds.SourceSeal) (1 + qPost) ∧
-    (client setup env callbacks program owner number attachedVerify primitives baseImpl kem qPost bit key).IsQueryBoundP
+    (client (completedBinding := completedBinding) setup env callbacks program owner number attachedVerify primitives baseImpl kem qPost bit key).IsQueryBoundP
       (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxReceive.IsRawQuery) (1 + qPost) ∧
-    (client setup env callbacks program owner number attachedVerify primitives baseImpl kem qPost bit key).IsQueryBoundP
+    (client (completedBinding := completedBinding) setup env callbacks program owner number attachedVerify primitives baseImpl kem qPost bit key).IsQueryBoundP
       AdaptiveCtxDynamicKnownBounds.HashRoute (1 + qPost) := by
   classical
   unfold client
@@ -172,7 +175,7 @@ theorem client_bills (qPost : Nat) (bit : Bool) (key : Key) :
     · rename_i fits
       split
       · simp only [isQueryBoundP_map_iff]
-        have bills := PqxdhLaterSavedPostBounds.component_bills
+        have bills := PqxdhLaterSavedPostBounds.component_bills (completedBinding := completedBinding)
           (PqxdhPreparedPrefixCallbacks.preparation attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem credentials.1 credentials.2)
           (PqxdhPreparedPrefixCallbacks.application attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem credentials.1 credentials.2)
           (initialLocal (A := A) (N := BareState 1) (env0).source start.selectedMessage zeroRoot (PqxdhInitialSampledParent.response (start, output)))
@@ -182,7 +185,7 @@ theorem client_bills (qPost : Nat) (bit : Bool) (key : Key) :
           target nonce next (PqxdhInitialSampledParent.marker env.source (start, output)) env.senderId env.route env.decode
           ⟨0, Nat.zero_lt_succ _⟩ qPost (PqxdhLaterChallengeScanCoupling.tagged owner number bit details).1
           parent.material (fits bit) (PqxdhLaterChallengeCollectorCoupling.detach native).1
-        rw [← PqxdhLaterChallengeSavedMonitor.resume_erase
+        rw [← PqxdhLaterChallengeSavedMonitor.resume_erase (completedBinding := completedBinding)
           (PqxdhPreparedPrefixCallbacks.preparation attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem credentials.1 credentials.2)
           (PqxdhPreparedPrefixCallbacks.application attachedVerify primitives 1 (env0).source (env0).localImpl baseImpl kem credentials.1 credentials.2)
           (initialLocal (A := A) (N := BareState 1) (env0).source start.selectedMessage zeroRoot (PqxdhInitialSampledParent.response (start, output)))

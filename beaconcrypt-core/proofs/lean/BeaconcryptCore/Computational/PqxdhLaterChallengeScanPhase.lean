@@ -7,7 +7,9 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeScanPhase
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhRecordConfidentialityChallenge PqxdhFirstRecordConfidentiality
 variable {ι M P I D K X Response Shared Origin Local Result : Type} {extra : OracleSpec ι} {S B : Nat}
 
@@ -41,12 +43,12 @@ theorem used_pending
     (details : PqxdhLaterChallengeCapture.Details extra M P I D K Origin S B)
     (supported : Cut.pending (context, details) reached ∈ support
       (scan PqxdhInitialForwardPost.selected chosen selection impl
-        (PqxdhLaterChallengeCapture.captured mark sender route read owner number bit work current before trace)
-        (PqxdhLaterChallengeCapture.captured_covered mark sender route read owner number bit work current before trace) state))
+        (PqxdhLaterChallengeCapture.captured (completedBinding := completedBinding) mark sender route read owner number bit work current before trace)
+        (PqxdhLaterChallengeCapture.captured_covered (completedBinding := completedBinding) mark sender route read owner number bit work current before trace) state))
     (used : current.pair.isSome) :
     PqxdhLaterChallengeSavedClassification.phase (some details) = .used := by
   obtain ⟨front, history, ambient, reachedRequest, cut⟩ :=
-    PqxdhLaterChallengeCutChronology.captured_reaches mark sender route read impl chosen selection owner number bit work
+    PqxdhLaterChallengeCutChronology.captured_reaches (completedBinding := completedBinding) mark sender route read impl chosen selection owner number bit work
       current before trace state reached context details supported
   have kept := reaches_kept _ owner number bit _ _ current details.request.before _ _ reachedRequest
   exact (PqxdhLaterChallengeSavedClassification.phase_used details).mpr (by simpa only [(kept.1 used).1] using used)
@@ -75,8 +77,8 @@ theorem admitted_pending
     (details : PqxdhLaterChallengeCapture.Details extra M P I D K Origin S B)
     (supported : Cut.pending (context, details) reached ∈ support
       (scan PqxdhInitialForwardPost.selected chosen selection impl
-        (PqxdhLaterChallengeCapture.captured mark sender route read owner number bit (((AdvSpec extra S B).query (.inr (left, right)) : OracleComp (AdvSpec extra S B) _) >>= next) current before trace)
-        (PqxdhLaterChallengeCapture.captured_covered mark sender route read owner number bit (((AdvSpec extra S B).query (.inr (left, right)) : OracleComp (AdvSpec extra S B) _) >>= next) current before trace) state))
+        (PqxdhLaterChallengeCapture.captured (completedBinding := completedBinding) mark sender route read owner number bit (((AdvSpec extra S B).query (.inr (left, right)) : OracleComp (AdvSpec extra S B) _) >>= next) current before trace)
+        (PqxdhLaterChallengeCapture.captured_covered (completedBinding := completedBinding) mark sender route read owner number bit (((AdvSpec extra S B).query (.inr (left, right)) : OracleComp (AdvSpec extra S B) _) >>= next) current before trace) state))
     (unused : current.pair = none) :
     PqxdhLaterChallengeSavedClassification.phase (some details) = .inside ∨
       PqxdhLaterChallengeSavedClassification.phase (some details) = .used := by
@@ -87,13 +89,13 @@ theorem admitted_pending
       (fun reply => PqxdhLaterChallengeCapture.wrapped owner number bit (next reply.1) reply.2) callback,
       (⟨⟨query, current, next⟩, callback⟩ : PqxdhLaterChallengeCapture.Details extra M P I D K Origin S B))
   have headCovered := (PqxdhLaterChallengeCapture.covered_tags liftTag PqxdhInitialForwardPost.selected
-    (program (X := X) (Response := Response) mark sender route read
+    (program (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route read
       ((handler owner number bit query).run current) before trace)).mpr
-    (program_covered mark sender route read ((handler owner number bit query).run current) before trace)
+    (program_covered (completedBinding := completedBinding) mark sender route read ((handler owner number bit query).run current) before trace)
   rcases PqxdhLaterChallengeCutChronology.native_pending_cases PqxdhInitialForwardPost.selected chosen selection impl _ _ headCovered
-    (fun value => PqxdhLaterChallengeCapture.captured_covered mark sender route read owner number bit
+    (fun value => PqxdhLaterChallengeCapture.captured_covered (completedBinding := completedBinding) mark sender route read owner number bit
       (next value.1.1) value.1.2 value.2.1 value.2.2)
-    (PqxdhLaterChallengeCapture.captured_covered mark sender route read owner number bit
+    (PqxdhLaterChallengeCapture.captured_covered (completedBinding := completedBinding) mark sender route read owner number bit
       (((AdvSpec extra S B).query query : OracleComp (AdvSpec extra S B) _) >>= next) current before trace)
     state reached (context, details) supported with inside | later
   case inr =>
@@ -101,13 +103,13 @@ theorem admitted_pending
     rw [RawCtxForwardAnnotation.erase_mapTags, program_erase] at actual
     have logical := PqxdhFirstRecordStopTagged.support_state_simulation _ _ _ value
       (PqxdhFirstRecordStopTagged.support_state_simulation impl _ state (value, backend) actual)
-    exact Or.inr (used_pending mark sender route read impl chosen selection owner number bit (next value.1.1)
+    exact Or.inr (used_pending (completedBinding := completedBinding) mark sender route read impl chosen selection owner number bit (next value.1.1)
       value.1.2 value.2.1 value.2.2 backend reached context details remaining
       (admitted_used owner number bit left right equal current unused value.1 logical))
   case inl =>
     obtain ⟨callback, same, pending⟩ := PqxdhLaterChallengeCutChronology.native_pending_map liftTag PqxdhInitialForwardPost.selected chosen selection impl
-      (program mark sender route read ((handler owner number bit query).run current) before trace)
-      (program_covered mark sender route read ((handler owner number bit query).run current) before trace)
+      (program (completedBinding := completedBinding) mark sender route read ((handler owner number bit query).run current) before trace)
+      (program_covered (completedBinding := completedBinding) mark sender route read ((handler owner number bit query).run current) before trace)
       state reached (context, details) inside
     obtain ⟨rfl, rfl⟩ := Prod.mk.inj same
     exact Or.inl (by simp only [PqxdhLaterChallengeSavedClassification.phase, unused, query, equal, ite_true])

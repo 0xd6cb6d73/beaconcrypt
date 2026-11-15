@@ -7,6 +7,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete PqxdhRefinement
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhServerAuthFinishResponse
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointIdentity PqxdhJointGapDh PqxdhPhase2GapDhSource PqxdhServerAuthExperiment
 variable {ι KemSK Reader Response : Type} {baseSpec : OracleSpec ι}
 
@@ -40,7 +42,7 @@ theorem prefix_response (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
     (seed : IdentitySeed) (control : pqxdh.BeaconInitSent) (identity : Unit)
     (oneTime : Unit ⊕ ScalarBytes) (kem : KemSK) (raw : Pqxdh.Bytes)
     (pending : PqxdhPhase2DhMetadata.Prepared Response)
-    (supported : some pending ∈ support ((beaconPrefix setup codec seed control identity oneTime kem raw).run' ())) :
+    (supported : some pending ∈ support ((beaconPrefix (completedBinding := completedBinding) setup codec seed control identity oneTime kem raw).run' ())) :
     codec.read2 raw = some pending.collected.response := by
   simp only [beaconPrefix, PqxdhPhase2DhMetadata.prepare, simulateQ_bind, simulateQ_pure,
     StateT.run'_eq, StateT.run_bind, StateT.run_pure, map_bind, map_pure, mem_support_bind_iff,
@@ -49,7 +51,7 @@ theorem prefix_response (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
   cases collected with
   | none => simp only [Option.bind_none, reduceCtorEq] at same
   | some value =>
-    cases admitted : PqxdhPhase2DhMetadata.admitted control value with
+    cases admitted : PqxdhPhase2DhMetadata.admitted (completedBinding := completedBinding) control value with
     | none => simp only [Option.bind_some, admitted, Option.map_none, reduceCtorEq] at same
     | some metadata =>
       simp only [Option.bind_some, admitted, Option.map_some, Option.some.injEq] at same
@@ -64,12 +66,12 @@ theorem prefix_frame (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
     (seed : IdentitySeed) (control : pqxdh.BeaconInitSent) (identity : Unit)
     (oneTime : Unit ⊕ ScalarBytes) (kem : KemSK) (raw : Pqxdh.Bytes)
     (pending : PqxdhPhase2DhMetadata.Prepared Response)
-    (supported : some pending ∈ support ((beaconPrefix setup codec seed control identity oneTime kem raw).run' ()))
+    (supported : some pending ∈ support ((beaconPrefix (completedBinding := completedBinding) setup codec seed control identity oneTime kem raw).run' ()))
     (bytes : Pqxdh.Bytes) (record : RawCtxReceive.DecodedFrame)
     (application : codec.application (PqxdhPhase2DhRootConsumer.cleared pending).response = some bytes)
     (decoded : codec.frameRead bytes = some record) :
     PqxdhServerAuthRecordPublicationEvent.frame codec raw = some record := by
-  have response := prefix_response setup codec seed control identity oneTime kem raw pending supported
+  have response := prefix_response (completedBinding := completedBinding) setup codec seed control identity oneTime kem raw pending supported
   change codec.application pending.collected.response = some bytes at application
   simpa only [PqxdhServerAuthRecordPublicationEvent.frame, response,
     Option.bind_eq_bind, Option.bind_some, application] using decoded
@@ -79,7 +81,7 @@ theorem prefix_program_origin (setup : Setup baseSpec KemSK) (codec : Codec Read
     (seed : IdentitySeed) (control : pqxdh.BeaconInitSent) (identity : Unit)
     (oneTime : Unit ⊕ ScalarBytes) (kem : KemSK) (raw : Pqxdh.Bytes)
     (pending : PqxdhPhase2DhMetadata.Prepared Response)
-    (prefixReached : some pending ∈ support ((beaconPrefix setup codec seed control identity oneTime kem raw).run' ()))
+    (prefixReached : some pending ∈ support ((beaconPrefix (completedBinding := completedBinding) setup codec seed control identity oneTime kem raw).run' ()))
     (key : PqxdhSecretInputKdf.RootOutput) (rest : PqxdhServerAuthCtxCalls.Residual)
     (staged : PqxdhBeaconPhase2Publication.Staged)
     (before after : RawCtxSelectedAuthenticationObserver.State × AdaptiveCtxDynamicKnownKeys.SourceState)
@@ -95,8 +97,8 @@ theorem prefix_program_origin (setup : Setup baseSpec KemSK) (codec : Codec Read
       ∃ (bytes : Pqxdh.Bytes) (target : CtxUnclaimedAcceptance.Target) (kernel : ConcreteRatchetKernel)
         (entry : CtxRomAuth.CtxSuccessfulSeal),
         codec.application prepared.response = some bytes ∧
-        PqxdhPhase2LocalMatching.LocalTarget codec.frameRead bytes candidate staged.opened target ∧
-        PqxdhBeaconPhase2Publication.afterOpening candidate kernel (.Some staged.opened) = some staged ∧
+        PqxdhPhase2LocalMatching.LocalTarget (associatedData := prepared.binding.associated_data) codec.frameRead bytes candidate staged.opened target ∧
+        PqxdhBeaconPhase2Publication.afterOpening candidate prepared.binding.associated_data kernel (.Some staged.opened) = some staged ∧
         entry ∈ before.1.seals ∧ target.toLegacy.sameFullTupleAsSuccessfulSeal entry ∧
         staged.opened.plaintext = entry.input.plaintext ∧
         PqxdhServerAuthRecordPublicationEvent.frame codec raw =
@@ -105,7 +107,7 @@ theorem prefix_program_origin (setup : Setup baseSpec KemSK) (codec : Codec Read
     before after good supported).imp_right ?_
   rintro ⟨bytes, target, kernel, entry, application, delivery, success, member, same, plaintext, decoded⟩
   exact ⟨bytes, target, kernel, entry, application, delivery, success, member, same, plaintext,
-    prefix_frame setup codec seed control identity oneTime kem raw pending prefixReached bytes _ application decoded⟩
+    prefix_frame (completedBinding := completedBinding) setup codec seed control identity oneTime kem raw pending prefixReached bytes _ application decoded⟩
 
 end BeaconcryptCore.Computational.PqxdhServerAuthFinishResponse
 

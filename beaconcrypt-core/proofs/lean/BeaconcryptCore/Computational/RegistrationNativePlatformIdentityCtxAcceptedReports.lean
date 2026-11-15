@@ -19,7 +19,7 @@ variable {n count : Nat} {I KemSK Platform E : Type} {base : OracleSpec I} {sour
 variable [primitive : AdapterSealPrimitive.Operations]
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
 variable (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 variable (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
 variable (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
 variable (reserveRegistration reservePeer : StateT Platform ProbComp Bool)
@@ -30,6 +30,7 @@ variable (shortRejects : ∀ (publicKey : PqxdhEd25519EufCma.Ed25519PublicKey) b
   setup.source.crypto.verify publicKey.toList bytes = none)
 local notation "frontend" => RegistrationNativePlatformIdentityCtxTyped.handler (n := n) setup checks wire route representation created credential
   view failure allocation reserveRegistration reservePeer reserveFrame erased helper writer
+attribute [local irreducible] RegistrationNativePlatformCtxAccept.accept RegistrationNativePlatformIdentityCtxOrdinary.ordinary
 include shortRejects in
 /-- Every successful literal typed Context accept validates its original detached candidate, without any owner, created-key or admission condition. -/
 theorem accepted (packet : registration.InitPacket) (tokenIndex : Nat) (before after : Full n KemSK Platform source)

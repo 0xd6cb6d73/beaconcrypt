@@ -49,7 +49,7 @@ private theorem world_run (setup : Setup base KemSK)
 /-- Every actual logged native Server agreement query retains the full World and private pool in its indexed source. -/
 theorem query_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (query : RegistrationAgreementExecutor.Request)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (query : RegistrationAgreementExecutor.Request)
     (before : Client) (pool : Pool KemSK) :
     (execute setup (RegistrationNativeKemCountedServerPrimitive.agreement setup checks representation created query)).run (before, pool) =
       (RegistrationNativeKemServerCompiler.nativeAgreement setup checks representation created query).run (before, pool) := by
@@ -134,7 +134,7 @@ private theorem execute_simulate {κ : Type} {spec : OracleSpec κ} (setup : Set
 /-- Every adaptive actual Server agreement continuation has the same complete indexed source state. -/
 theorem program_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp RegistrationAgreementExecutor.Spec Value) (before : Client) (pool : Pool KemSK) :
     (execute setup (simulateQ (RegistrationNativeKemCountedServerPrimitive.agreement setup checks representation created) work)).run (before, pool) =
       (simulateQ (RegistrationNativeKemServerCompiler.nativeAgreement setup checks representation created) work).run (before, pool) := by
@@ -151,7 +151,7 @@ private def worldEmbed (before : Client) (pool : Pool KemSK)
 
 private theorem native_program (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp RegistrationAgreementExecutor.Spec Value) (before : Client) (pool : Pool KemSK) :
     (simulateQ (RegistrationNativeKemServerCompiler.nativeAgreement setup checks representation created) work).run (before, pool) =
       (fun result => (result.1, worldEmbed before pool result.2)) <$>
@@ -178,7 +178,7 @@ private theorem run_get (setup : Setup base KemSK) (before : Client) (pool : Poo
 /-- The literal complete native Server agreement, including replay rejection and all failed continuations, has the exact counted indexed source. -/
 theorem agree_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (authenticated : registration.AuthenticatedInit) (before : Native) :
     (execute setup (RegistrationNativeKemCountedServerPrimitive.agree setup checks representation created authenticated)).run
       (RegistrationNativeKemCountedTrusted.project before) =
@@ -201,7 +201,7 @@ theorem agree_source (setup : Setup base KemSK) (checks : Checks)
 /-- Reassembling the entire private pool yields the literal actual native Server agreement and all original state fields. -/
 theorem agree_native (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (authenticated : registration.AuthenticatedInit) (before : Native) :
     Prod.map id (fun current => RegistrationNativeKemServerState.toNative current.1 current.2) <$>
       (execute setup (RegistrationNativeKemCountedServerPrimitive.agree setup checks representation created authenticated)).run

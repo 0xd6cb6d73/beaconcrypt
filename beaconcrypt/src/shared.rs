@@ -476,8 +476,8 @@ impl<PkType: SignaturePk> EstablishedRemote<PkType> {
 		}
 	}
 
-	pub(crate) fn mldsa_public_key_hash(&self) -> &[u8; 64] {
-		self.peer.binding().beacon_fingerprint()
+	pub(crate) fn session_transcript_hash(&self) -> &[u8; 64] {
+		self.peer.binding().session_transcript_hash()
 	}
 
 	pub(crate) fn binding(&self) -> &beaconcrypt_core::session::SessionBinding {
@@ -932,18 +932,18 @@ mod tests {
 		assert_eq!(
 			key_bytes(first.material().key()),
 			decode_hex::<AEAD_KEY_LEN>(
-				"f57007f1b1c7a62a7d6cdfa5df07538c43d83656906764d607e627401906e42a"
+				"95eef77611289a6d9149cc2d0312298e1ec049fe3680f7d3fd3c067a22553220"
 			)
 		);
 		assert_eq!(
 			nonce_bytes(first.material().nonce()),
-			decode_hex::<AEAD_NONCE_LEN>("43483e81091a393409afbf53")
+			decode_hex::<AEAD_NONCE_LEN>("e84a15a549c16b5ed5f49443")
 		);
 		let (kernel, _) = first.finish(None::<()>);
 		assert_eq!(
 			*kernel.send_chain().as_bytes(),
 			decode_hex::<KDF_STATE_SIZE>(
-				"5936897d8bd06b7daf70bd0d64b2f607a055fd843ddb779051cb975bbb02b1d3"
+				"68077f4476c2e526c51d0d02827617bc420d65bbedab24e5e33393ed6734bf0b"
 			)
 		);
 
@@ -959,18 +959,18 @@ mod tests {
 		assert_eq!(
 			key_bytes(second.material().key()),
 			decode_hex::<AEAD_KEY_LEN>(
-				"f30ee97ccdc39577bb1320268d7fc10d55c53649e879e98a9670d58b9a1539d0"
+				"27163ac8e0647af96d921e8572e47fe674c53e11f58013540a8035505aa42949"
 			)
 		);
 		assert_eq!(
 			nonce_bytes(second.material().nonce()),
-			decode_hex::<AEAD_NONCE_LEN>("d497a96123dfcbe5700b5cc0")
+			decode_hex::<AEAD_NONCE_LEN>("2d144fb1bd113cabd938cb77")
 		);
 		let (kernel, _) = second.finish(None::<()>);
 		assert_eq!(
 			*kernel.send_chain().as_bytes(),
 			decode_hex::<KDF_STATE_SIZE>(
-				"d11e3c43fa3bbfec95a41973521d7e1b4aacddfc96591fe40fa30e9581b5e4e2"
+				"4d31d053bda72c85b3252e8fd300c2438f39832574ef2a9974b369968fd554d7"
 			)
 		);
 	}
@@ -982,7 +982,7 @@ mod tests {
 	/// import hashlib
 	/// key = bytes([0x11]) * 32
 	/// nonce = bytes([0x22]) * 12
-	/// ad = bytes([0x41]) * 281
+	/// ad = bytes([0x41]) * 151
 	/// tag = bytes([0x33]) * 16
 	/// seq = (0x44).to_bytes(8, "little")
 	/// kid = (0x55).to_bytes(8, "little")
@@ -994,8 +994,8 @@ mod tests {
 		let associated_data = [0x41; AD_SIZE];
 		let tag = [0x33; AEAD_TAG_LEN];
 		let expected = decode_hex::<COMMITMENT_SIZE>(
-			"0f5c8650fb355350716556eb153d01c9c39f9ed8f3e80a55d5afa15884a2fa00\
-			 e6b8a93a2cf767c5d76ae756f8691a2296b03ac2bff730117307b7e5a8d63889",
+			"d81c457b9a0cb817b75149ef535adfa78ce5b291abfd9ac1a893c141395a752cb\
+			 198aa1408863e49008ab65e799a4b5e92a314f9e76ecff75f130fbf4c35183d",
 		);
 		let key_seq = 0x44u64;
 		let key_id = 0x55u64;
@@ -1060,10 +1060,10 @@ mod tests {
 			 92ddbd7f2d778b8c9803aee328091b58fab324e4fad675945585808b4831d7bc\
 			 3ff4def08e4b7a9de576d26586cec64b6116",
 		);
-		let expected_tag = decode_hex::<AEAD_TAG_LEN>("6a4ebb0cb2dd9643a193f35050a66886");
+		let expected_tag = decode_hex::<AEAD_TAG_LEN>("924ca595f5af29abc8d3f9c9aa7bb3bb");
 		let expected_commitment = decode_hex::<COMMITMENT_SIZE>(
-			"ad464df12846b88b8106622d4823c48f88cfcf4a2ced02c46d060e2d1a559349\
-			 46bb95c59d26444c6719b7e6a4bb9d53c1d3250fa28c7e9879185ac3067f554c",
+			"147c1d5ebf8d1a0650f3fa1cfba08b94101db9bb7db7c30788e55f77b85e78fd\
+			 7aa30d60023750d024dcc1902a2468d79d21569b7df5b85edeb0ab8ec35d4418",
 		);
 		let aead_key: AeadKey = key.into();
 		let aead_nonce: AeadNonce = nonce.into();
@@ -1187,7 +1187,7 @@ mod tests {
 			"000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
 		);
 		let key_two = decode_hex::<AEAD_KEY_LEN>(
-			"9ad90ef720e8fceffcc710361c3c760dbe50bf28bc0e21c67404e2c44399b3ef",
+			"559586cbd11fe2d5b02eee85d19355dc28cdf19dd3a20530c9f30dbbad046e4b",
 		);
 		let nonce = decode_hex::<AEAD_NONCE_LEN>("000102030405060708090a0b");
 		let mut ad_one = [0; AD_SIZE];
@@ -1195,11 +1195,11 @@ mod tests {
 			*byte = index as u8;
 		}
 		let mut ad_two = ad_one;
-		ad_two[..16].copy_from_slice(&decode_hex::<16>("d0ab0bfa3600d9d715b82befab62d160"));
+		ad_two[..16].copy_from_slice(&decode_hex::<16>("010fd10b0825d387f0f6bea280011e46"));
 		let ciphertext = decode_hex::<16>("00112233445566778899aabbccddeeff");
-		let tag = decode_hex::<AEAD_TAG_LEN>("39996c6c0e78fdfb0bbf29d428aaed4d");
+		let tag = decode_hex::<AEAD_TAG_LEN>("8658cdca66b4af19115ed2cacd108b16");
 		let expected_plaintext_one = decode_hex::<16>("89ea2a336d42c3373f1a954854c0e09c");
-		let expected_plaintext_two = decode_hex::<16>("d4de696c5b25e8438e777ca060a610b3");
+		let expected_plaintext_two = decode_hex::<16>("e67265bb4291d1ec9582c8eabcdac109");
 		let aead_key_one: AeadKey = key_one.into();
 		let aead_key_two: AeadKey = key_two.into();
 		let aead_nonce: AeadNonce = nonce.into();
@@ -1227,12 +1227,12 @@ mod tests {
 		let commitment_one = commitment_for_test(key_one, nonce, &ad_one, &tag, 1, 7);
 		let commitment_two = commitment_for_test(key_two, nonce, &ad_two, &tag, 1, 7);
 		let expected_commitment_one = decode_hex::<COMMITMENT_SIZE>(
-			"22240e4b6a5dff2b3ffbb4a2ebb6119ce9af9607a6f36e8c15ec5a63c4c3f8d1\
-			 115dff685176f902f0fdf0c789077981040634d35a69ff311efb56209a10a7e5",
+			"335d85c266d397fd4de866d696bae4f368549735d235361d4ba6ada7b7bae8b4b\
+			 df608d9886de6742a727be65aaf8ff57e63243ed8ace2ae109cbeccb09f8384",
 		);
 		let expected_commitment_two = decode_hex::<COMMITMENT_SIZE>(
-			"1cf9be23057b32477e24a24931e86b136ecda0fcdcb0bf117247c1c0c72ccae2\
-			 efb7500568150c94f151c138fa889d8c78a4573189fb5f3204c82ea1792c2dcf",
+			"866da120fb65ba24573e9a202377109a8dc9a992aa27d61191676426d018d695d\
+			 5cbd13246e54b2b5a0cd6544ddf13a133d39f5c068d64a39490071d3b1dca31",
 		);
 		assert_eq!(commitment_one, expected_commitment_one);
 		assert_eq!(commitment_two, expected_commitment_two);
@@ -1773,7 +1773,6 @@ mod tests {
 				},
 				5,
 				[6; 32],
-				[7; 64],
 				[8; 64],
 			),
 		);

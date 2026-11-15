@@ -16,11 +16,12 @@ from Crypto.Protocol.KDF import HKDF
 AEAD_KEY_LEN = 32
 AEAD_NONCE_LEN = 12
 AEAD_TAG_LEN = 16
-AD_SIZE = 281
+AD_SIZE = 151
 KDF_STATE_LEN = 32
 KDF_OUTPUT_LEN = AEAD_KEY_LEN + KDF_STATE_LEN + AEAD_NONCE_LEN
 
-SYM_RATCHET_INFO = b"SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305"
+INITIAL_RATCHET_INFO = b"SymRatchetInit_HKDF_SHA-512_CHACHA20_POLY1305"
+SYM_RATCHET_INFO = b"SymRatchetMessage_HKDF_SHA-512_CHACHA20_POLY1305"
 PQXDH_INFO = b"BeaconcryptPqxdh_CURVE25519_SHA-512_ML-KEM-768"
 
 
@@ -103,6 +104,14 @@ def commitment_known_answer() -> None:
 def ratchet_known_answer() -> None:
     state = bytes([0x24]) * KDF_STATE_LEN
 
+    print("[ratchet-initial]")
+    initial = hkdf_sha512(state, INITIAL_RATCHET_INFO, 64)
+    print_value("directional-chains", initial)
+    # Equal-width prefixes test labels independently of the requested output lengths.
+    message_prefix = hkdf_sha512(state, SYM_RATCHET_INFO, 64)
+    assert initial != message_prefix
+    print_value("message-prefix", message_prefix)
+
     print("[ratchet]")
     for step in range(1, 3):
         output = hkdf_sha512(state, SYM_RATCHET_INFO, KDF_OUTPUT_LEN)
@@ -152,7 +161,7 @@ def rfc8439_and_commitment_known_answer() -> None:
         "3ff4def08e4b7a9de576d26586cec64b"
         "6116"
     )
-    expected_tag = bytes.fromhex("6a4ebb0cb2dd9643a193f35050a66886")
+    expected_tag = bytes.fromhex("924ca595f5af29abc8d3f9c9aa7bb3bb")
     ciphertext, tag = chacha20poly1305_encrypt(key, nonce, associated_data, plaintext)
     assert ciphertext == expected_ciphertext
     assert tag == expected_tag
@@ -175,8 +184,8 @@ def chacha20poly1305_multi_opening_fixture() -> None:
     """Validate two fixed, distinct openings of one ciphertext and tag."""
 
     # Retain the construction metadata emitted by the derivation script.
-    attempt = 3
-    carry = 1
+    attempt = 2
+    carry = 0
     key_one = bytes(range(AEAD_KEY_LEN))
     key_two = SHA256.new(
         b"beaconcrypt-ctx-fixture-" + attempt.to_bytes(4, "little")
@@ -184,11 +193,11 @@ def chacha20poly1305_multi_opening_fixture() -> None:
     nonce = bytes(range(AEAD_NONCE_LEN))
     associated_data_one = bytes(index % 256 for index in range(AD_SIZE))
     associated_data_two = (
-        bytes.fromhex("d0ab0bfa3600d9d715b82befab62d160") + associated_data_one[16:]
+        bytes.fromhex("010fd10b0825d387f0f6bea280011e46") + associated_data_one[16:]
     )
     plaintext_one = bytes.fromhex("89ea2a336d42c3373f1a954854c0e09c")
     expected_ciphertext = bytes.fromhex("00112233445566778899aabbccddeeff")
-    expected_tag = bytes.fromhex("39996c6c0e78fdfb0bbf29d428aaed4d")
+    expected_tag = bytes.fromhex("8658cdca66b4af19115ed2cacd108b16")
 
     ciphertext, tag = chacha20poly1305_encrypt(
         key_one, nonce, associated_data_one, plaintext_one

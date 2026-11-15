@@ -1,5 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
-import BeaconcryptCore.Computational.RegistrationNativeFullCompiler
+import BeaconcryptCore.Computational.RegistrationNativeLedger
+import BeaconcryptCore.Computational.RegistrationNativeWire
+import BeaconcryptCore.Computational.PqxdhDeploymentTranscript
 
 /-! Public native designation uses a parsed-accept ordinal and the actual successful owner/session replies. A parsed-accept ordinal counts all decodable native accept calls, including authentication and replay rejection. It is distinct from both the raw accept ordinal and the encapsulation getter ordinal. Honest publication is witnessed by an earlier successful bundle with identical bytes; no public-key equality is treated as a birth receipt. The original fresh-message ledger is retained literally. These definitions make no claim that every changed accepted packet came from an honest bundle. -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -24,7 +26,7 @@ def parsedAccept (wire : Wire) : Entry → Bool
 def parsedAcceptCount (wire : Wire) (transcript : List Entry) : Nat :=
   (transcript.filter (parsedAccept wire)).length
 
-/-- Membership refers to an actual earlier successful outgoing bundle, including its entire six-field native representation. -/
+/-- Membership refers to an actual earlier successful outgoing bundle, including the exact bytes of all four retained Init fields. -/
 def PublishedBefore (owner : Nat) (raw : Pqxdh.Bytes) (before : List Entry) : Prop :=
   ∃ pre post, before = pre ++ (Entry.mk (.inl (.inr (.bundle owner))) (some raw)) :: post
 
@@ -66,7 +68,7 @@ noncomputable def exactBundleAppEvent (wire : Wire) (target : Target) (claim : V
     (observed : Observed Value NativeState) : Bool := decide (ExactBundleApp wire target claim observed)
 
 
-/-- Full native APP eligibility retains the original CE verified-key designation, including changed valid packets. Native six-field decoding supplies the public classical fields; the extra ML fields remain in the native transcript. -/
+/-- Full native APP eligibility retains the original CE verified-key designation, including changed valid packets. Native four-field decoding supplies the retained classical fields, and the native transcript keeps their exact received bytes. -/
 def CEAppWin (crypto : Pqxdh.Crypto) (wire : Wire) (serverKid : U64)
     (budget : PqxdhDeploymentInterface.Budget) (claim : Value → Option (Nat × Pqxdh.Bytes))
     (observed : Observed Value NativeState) : Prop :=

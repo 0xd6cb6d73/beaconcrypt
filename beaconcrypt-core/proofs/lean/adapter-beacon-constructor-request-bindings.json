@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "source_sha256": "3fbbee1763a536c0c8da34460ae041774be73895645833e0e790845a636346b0",
+  "source_sha256": "b75a7c4e29129825efcead614b5b90bb90917113c415f416527d9da81e45bafb",
   "definitions": [
     {
       "name": "beacon.Beacon.try_new_with_rng",
-      "sha256": "00126d4a4f5c11a044747c43e9f7b8d2dc853f69d28c3999ae27366cd161a861",
+      "sha256": "eb86b414b5c9384f42afb216049d4a9147747e11dbf3ff50a67eb1130efd0086",
       "signature": [
         {
           "before": "RustM",
@@ -14,13 +14,8 @@
       ],
       "body": [
         {
-          "before": "auth.MldsaIdentity.generate_with_rng",
-          "after": "(BeaconcryptCore.Refinement.AdapterBeaconConstructorRequestMonad.Operations.mldsaGenerate (m := m))",
-          "count": 1
-        },
-        {
-          "before": "auth.fingerprint_pin",
-          "after": "(beaconcrypt_public_request.auth.fingerprint_pin (m := m))",
+          "before": "auth.server_pin",
+          "after": "(beaconcrypt_public_request.auth.server_pin (m := m))",
           "count": 1
         },
         {
@@ -91,12 +86,12 @@
         {
           "before": "core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual",
           "after": "(fun T conversion residual => BeaconcryptCore.Refinement.AdapterRecordRequestMonad.liftRust (m := m) (core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual T conversion residual))",
-          "count": 7
+          "count": 6
         },
         {
           "before": "core.result.Result.Insts.CoreOpsTry_traitTry.branch",
           "after": "(BeaconcryptCore.Refinement.AdapterPublicWrapperLiftFunction.call (m := m) core.result.Result.Insts.CoreOpsTry_traitTry.branch)",
-          "count": 7
+          "count": 6
         },
         {
           "before": "core.result.Result.map_err",
@@ -106,13 +101,13 @@
         {
           "before": "ok",
           "after": "pure",
-          "count": 8
+          "count": 7
         }
       ]
     },
     {
       "name": "beacon.Beacon.try_new",
-      "sha256": "8ce8760019ef9e35f695e2d9628c793b5b6045d564e9bbc8e5c93eb0e56c3e23",
+      "sha256": "f0c020686f96b54beeb35c90a2b74e8a10621d73958a3afebd5dc015ec74562b",
       "signature": [
         {
           "before": "RustM",
@@ -135,7 +130,7 @@
     },
     {
       "name": "beacon.Beacon.new",
-      "sha256": "be85c6811283712e8f28946763487359e871403b585dc426f91191f815f9f9ee",
+      "sha256": "736202bfd9657b43c45a6af1baaade5aa2cdbfe863a63c4a1d29804e21c6547e",
       "signature": [
         {
           "before": "RustM",

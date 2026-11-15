@@ -104,7 +104,7 @@ query session: bitstring, root: bitstring;
     root,
     zero_sequence(),
     hkdf_second_32(
-      hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+      hkdf_sha512_no_salt(root, initial_ratchet_domain())
     ),
     next_sequence(next_sequence(first_sequence())),
     hkdf_second_32(
@@ -114,7 +114,7 @@ query session: bitstring, root: bitstring;
             hkdf_second_32(
               hkdf_sha512_no_salt(
                 hkdf_first_32(
-                  hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                  hkdf_sha512_no_salt(root, initial_ratchet_domain())
                 ),
                 symmetric_ratchet_domain()
               )
@@ -133,7 +133,7 @@ query session: bitstring, root: bitstring;
             hkdf_second_32(
               hkdf_sha512_no_salt(
                 hkdf_first_32(
-                  hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                  hkdf_sha512_no_salt(root, initial_ratchet_domain())
                 ),
                 symmetric_ratchet_domain()
               )
@@ -146,7 +146,7 @@ query session: bitstring, root: bitstring;
             hkdf_second_32(
               hkdf_sha512_no_salt(
                 hkdf_first_32(
-                  hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                  hkdf_sha512_no_salt(root, initial_ratchet_domain())
                 ),
                 symmetric_ratchet_domain()
               )
@@ -161,7 +161,7 @@ query session: bitstring, root: bitstring;
           hkdf_first_32(
             hkdf_sha512_no_salt(
               hkdf_first_32(
-                hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                hkdf_sha512_no_salt(root, initial_ratchet_domain())
               ),
               symmetric_ratchet_domain()
             )
@@ -169,7 +169,7 @@ query session: bitstring, root: bitstring;
           hkdf_final_12(
             hkdf_sha512_no_salt(
               hkdf_first_32(
-                hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                hkdf_sha512_no_salt(root, initial_ratchet_domain())
               ),
               symmetric_ratchet_domain()
             )
@@ -181,7 +181,7 @@ query session: bitstring, root: bitstring;
     later_registration_ratchet_state(
       zero_sequence(),
       hkdf_second_32(
-        hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+        hkdf_sha512_no_salt(root, initial_ratchet_domain())
       ),
       receive_state(
         next_sequence(next_sequence(first_sequence())),
@@ -192,7 +192,7 @@ query session: bitstring, root: bitstring;
                 hkdf_second_32(
                   hkdf_sha512_no_salt(
                     hkdf_first_32(
-                      hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                      hkdf_sha512_no_salt(root, initial_ratchet_domain())
                     ),
                     symmetric_ratchet_domain()
                   )
@@ -211,7 +211,7 @@ query session: bitstring, root: bitstring;
                 hkdf_second_32(
                   hkdf_sha512_no_salt(
                     hkdf_first_32(
-                      hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                      hkdf_sha512_no_salt(root, initial_ratchet_domain())
                     ),
                     symmetric_ratchet_domain()
                   )
@@ -224,7 +224,7 @@ query session: bitstring, root: bitstring;
                 hkdf_second_32(
                   hkdf_sha512_no_salt(
                     hkdf_first_32(
-                      hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                      hkdf_sha512_no_salt(root, initial_ratchet_domain())
                     ),
                     symmetric_ratchet_domain()
                   )
@@ -239,7 +239,7 @@ query session: bitstring, root: bitstring;
               hkdf_first_32(
                 hkdf_sha512_no_salt(
                   hkdf_first_32(
-                    hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                    hkdf_sha512_no_salt(root, initial_ratchet_domain())
                   ),
                   symmetric_ratchet_domain()
                 )
@@ -247,7 +247,7 @@ query session: bitstring, root: bitstring;
               hkdf_final_12(
                 hkdf_sha512_no_salt(
                   hkdf_first_32(
-                    hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                    hkdf_sha512_no_salt(root, initial_ratchet_domain())
                   ),
                   symmetric_ratchet_domain()
                 )
@@ -274,7 +274,7 @@ query session: bitstring, root: bitstring;
               hkdf_second_32(
                 hkdf_sha512_no_salt(
                   hkdf_first_32(
-                    hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                    hkdf_sha512_no_salt(root, initial_ratchet_domain())
                   ),
                   symmetric_ratchet_domain()
                 )
@@ -292,7 +292,7 @@ query session: bitstring, root: bitstring;
               hkdf_second_32(
                 hkdf_sha512_no_salt(
                   hkdf_first_32(
-                    hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                    hkdf_sha512_no_salt(root, initial_ratchet_domain())
                   ),
                   symmetric_ratchet_domain()
                 )
@@ -312,7 +312,7 @@ query session: bitstring, root: bitstring;
             hkdf_second_32(
               hkdf_sha512_no_salt(
                 hkdf_first_32(
-                  hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                  hkdf_sha512_no_salt(root, initial_ratchet_domain())
                 ),
                 symmetric_ratchet_domain()
               )
@@ -325,7 +325,7 @@ query session: bitstring, root: bitstring;
             hkdf_second_32(
               hkdf_sha512_no_salt(
                 hkdf_first_32(
-                  hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                  hkdf_sha512_no_salt(root, initial_ratchet_domain())
                 ),
                 symmetric_ratchet_domain()
               )
@@ -340,7 +340,7 @@ query session: bitstring, root: bitstring;
           hkdf_first_32(
             hkdf_sha512_no_salt(
               hkdf_first_32(
-                hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                hkdf_sha512_no_salt(root, initial_ratchet_domain())
               ),
               symmetric_ratchet_domain()
             )
@@ -348,7 +348,7 @@ query session: bitstring, root: bitstring;
           hkdf_final_12(
             hkdf_sha512_no_salt(
               hkdf_first_32(
-                hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                hkdf_sha512_no_salt(root, initial_ratchet_domain())
               ),
               symmetric_ratchet_domain()
             )
@@ -360,7 +360,7 @@ query session: bitstring, root: bitstring;
     later_registration_ratchet_state(
       zero_sequence(),
       hkdf_second_32(
-        hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+        hkdf_sha512_no_salt(root, initial_ratchet_domain())
       ),
       receive_state(
         next_sequence(next_sequence(first_sequence())),
@@ -371,7 +371,7 @@ query session: bitstring, root: bitstring;
                 hkdf_second_32(
                   hkdf_sha512_no_salt(
                     hkdf_first_32(
-                      hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                      hkdf_sha512_no_salt(root, initial_ratchet_domain())
                     ),
                     symmetric_ratchet_domain()
                   )
@@ -390,7 +390,7 @@ query session: bitstring, root: bitstring;
                 hkdf_second_32(
                   hkdf_sha512_no_salt(
                     hkdf_first_32(
-                      hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                      hkdf_sha512_no_salt(root, initial_ratchet_domain())
                     ),
                     symmetric_ratchet_domain()
                   )
@@ -403,7 +403,7 @@ query session: bitstring, root: bitstring;
                 hkdf_second_32(
                   hkdf_sha512_no_salt(
                     hkdf_first_32(
-                      hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                      hkdf_sha512_no_salt(root, initial_ratchet_domain())
                     ),
                     symmetric_ratchet_domain()
                   )
@@ -418,7 +418,7 @@ query session: bitstring, root: bitstring;
               hkdf_first_32(
                 hkdf_sha512_no_salt(
                   hkdf_first_32(
-                    hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                    hkdf_sha512_no_salt(root, initial_ratchet_domain())
                   ),
                   symmetric_ratchet_domain()
                 )
@@ -426,7 +426,7 @@ query session: bitstring, root: bitstring;
               hkdf_final_12(
                 hkdf_sha512_no_salt(
                   hkdf_first_32(
-                    hkdf_sha512_no_salt(root, symmetric_ratchet_domain())
+                    hkdf_sha512_no_salt(root, initial_ratchet_domain())
                   ),
                   symmetric_ratchet_domain()
                 )

@@ -35,7 +35,7 @@ theorem post_couple (modes : Label n → KeyMode) (setup : Setup baseSpec KemSK)
     (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder) (env : Environment n E)
     (serverKid : Std.U64) (reveal : E → R) (second : X → R → OracleComp PostSpec Out)
     (decision eligible : PublicHiding n E Out → Bool)
-    (created : PqxdhRegistrationJointServerBirth.ClientCreated Unit)
+    (created : PqxdhRegistrationJointServerBirth.ClientCreated (Std.Array Std.U8 151#usize))
     (firstResult secondResult : X × Ledger × NativeState n E)
     (related : SimRel Related (Escaped setup.source.crypto codec serverKid)
       (Escaped setup.source.crypto codec serverKid) firstResult secondResult) :

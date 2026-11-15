@@ -20,7 +20,7 @@ variable {n : Nat} {ι KemSK V : Type} {base : OracleSpec ι} {source : Registra
 variable {κ : Type} {spec : OracleSpec κ}
 
 private theorem lower_simulate (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (implementation : QueryImpl spec (M n KemSK source RegistrationServerRoleBackend.State)) (work : OracleComp spec V) :
     lower setup checks representation created (simulateQ implementation work) =
       simulateQ (fun query => lower setup checks representation created (implementation query)) work := by
@@ -31,11 +31,11 @@ private theorem lower_simulate (setup : Setup base KemSK) (checks : Checks)
 /-- Actual matched Init and completed native Response agreement determine the same source-derived root, without any caller-supplied root equality. -/
 theorem root (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (owner : Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (owner : Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (token : peer.ConsumedRegistration) (pin : session.ServerAuthenticationPin) (cache : CtxRomAuth.CtxRO.QueryCache)
     (serverReceipt : RegistrationNativeMatchedServerInput.Receipt (n := n) setup checks wire route representation created owner oneTime token pin cache)
     (authenticated : registration.AuthenticatedResponse)
-    (coherent : authenticated.pending.control.expected_server_binding = authenticated.pending.binding.server_pin.binding)
+    (coherent : authenticated.control.expected_server_binding = authenticated.binding.server_pin.binding)
     (completed : agreement.BeaconAgreement) (before after : Local n KemSK source)
     (beaconAgreed : (.ok (.BeaconComplete completed), after) ∈ support
       ((lower setup checks representation created
@@ -62,7 +62,7 @@ theorem root (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNa
     authenticated beaconInput before atRoot beaconCollected generatedPool owned identity prekeyEq oneTimeKey pqKey
     serverIdentity (ephemeral.trans ephemeralEq) (ciphertext.trans ciphertextEq) correct
     serverReceipt.afterAuthentication.control serverReceipt.root.next serverReceipt.authenticated.binding.server_pin.binding
-    serverReceipt.root.original serverReceipt.root.accepted authenticated.pending.control original prepared
+    serverReceipt.root.original serverReceipt.root.accepted authenticated.control original prepared
   have serverRoot := RegistrationNativeTokenRootReceipt.Input.root setup checks representation created
     serverReceipt.packet serverReceipt.authenticated serverReceipt.afterAuthentication serverReceipt.afterAgreement token.agreement serverReceipt.root
   have beaconRoot := congrArg (fun value : agreement.BeaconAgreement => value.root.bytes) completedEq

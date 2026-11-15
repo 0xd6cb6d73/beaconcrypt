@@ -29,13 +29,19 @@ theorem finish_none (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   simp only [finishStep, StateT.run] at supported
   cases phase : state.1.beacon.beacon.phase with
   | initSent control prekey oneTime kem =>
-    simp only [phase, mem_support_bind_iff] at supported
-    obtain ⟨prepared, _, supported⟩ := supported
+    simp only [phase] at supported
+    split at supported
+    rotate_left
+    · simp only [support_pure, Set.mem_singleton_iff] at supported
+      subst supported
+      exact outcome_none control _ none rejected
+    simp only [mem_support_bind_iff] at supported
+    obtain ⟨hashed, _, prepared, _, supported⟩ := supported
     cases prepared with
     | none =>
       simp only [mem_support_pure_iff] at supported
       subst result
-      exact outcome_none control state.1 none rejected
+      exact outcome_none control _ none rejected
     | some pending =>
       simp only [mem_support_bind_iff] at supported
       obtain ⟨derived, _, supported⟩ := supported

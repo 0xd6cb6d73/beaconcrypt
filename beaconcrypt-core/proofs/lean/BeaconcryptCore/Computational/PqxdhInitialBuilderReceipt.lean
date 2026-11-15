@@ -9,6 +9,7 @@ open RustM beaconcrypt_core ratchet ratchet.concrete PqxdhRefinement
 open OracleComp OracleSpec
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialBuilderReceipt
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhServerRegistrationPublication (AuxSpec Response registrationWitness)
 open PqxdhInitialGenericPublication
 open PqxdhInitialGenericBuilder (continueRust)
@@ -34,7 +35,7 @@ noncomputable def afterInitial (calls : RawCtxChainOwner.Calls Kernel m) (aux : 
     let allocated ← aux (.reservePlaintext (8 + plaintext.length))
     if !allocated then pure (.ok (none, state)) else
       continueRust candidate.key_id_binding fun binding =>
-        RustM.ok <$> PqxdhInitialGenericPublication.afterInitialization calls aux candidate
+        RustM.ok <$> PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) calls aux candidate
           (absBytes binding.bytes ++ plaintext) kernel metadata state
   else pure (.ok (none, state))
 
@@ -50,7 +51,7 @@ noncomputable def candidate (calls : RawCtxChainOwner.Calls Kernel m) (aux : Que
       | .div => pure (.div, none)
       | .ok kernel =>
           (fun result => (result, some ⟨pending, kernel⟩)) <$>
-            afterInitial calls aux kernel pending data metadata state
+            afterInitial (associatedData := associatedData) calls aux kernel pending data metadata state
 
 noncomputable def used (calls : RawCtxChainOwner.Calls Kernel m) (aux : QueryImpl AuxSpec m)
     (initial : RustM Kernel) (pending : PqxdhRegistrationInputs.UsedInput) (data : Option Pqxdh.Bytes)
@@ -65,20 +66,20 @@ noncomputable def used (calls : RawCtxChainOwner.Calls Kernel m) (aux : QueryImp
       | .fail error => pure (.fail error, none)
       | .div => pure (.div, none)
       | .ok (.Err _) => pure (.ok (none, state), none)
-      | .ok (.Ok pending) => candidate calls aux initial pending data metadata state
+      | .ok (.Ok pending) => candidate (associatedData := associatedData) calls aux initial pending data metadata state
 
 noncomputable def ready (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (calls : RawCtxChainOwner.Calls Kernel m) (aux : QueryImpl AuxSpec m) (initial : RustM Kernel)
     (binding : pqxdh.ServerBinding) (input : PqxdhPrivateAcceptedRoot.Ready)
     (metadata : P) (state : State Kernel M P Consumed) : m (Result Kernel M P Consumed) :=
-  used calls aux initial (PqxdhAcceptedRegistration.usedReady source.crypto binding input) input.application metadata state
+  used (associatedData := associatedData) calls aux initial (PqxdhAcceptedRegistration.usedReady source.crypto binding input) input.application metadata state
 
 /-- Receipt erasure preserves the actual identity/reservation gates, initializer return and complete later plaintext, first-send and writer continuation. -/
 theorem candidate_erase (calls : RawCtxChainOwner.Calls Kernel m) (aux : QueryImpl AuxSpec m)
     (initial : RustM Kernel) (pending : pqxdh.ServerRegistrationCandidate) (data : Option Pqxdh.Bytes)
     (metadata : P) (state : State Kernel M P Consumed) :
-    Prod.fst <$> candidate calls aux initial pending data metadata state =
-      PqxdhInitialGenericBuilder.candidate calls aux initial pending data metadata state := by
+    Prod.fst <$> candidate (associatedData := associatedData) calls aux initial pending data metadata state =
+      PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) calls aux initial pending data metadata state := by
   simp only [candidate, PqxdhInitialGenericBuilder.candidate, map_bind]
   apply bind_congr
   intro valid
@@ -96,8 +97,8 @@ theorem candidate_erase (calls : RawCtxChainOwner.Calls Kernel m) (aux : QueryIm
 theorem used_erase (calls : RawCtxChainOwner.Calls Kernel m) (aux : QueryImpl AuxSpec m)
     (initial : RustM Kernel) (pending : PqxdhRegistrationInputs.UsedInput) (data : Option Pqxdh.Bytes)
     (metadata : P) (state : State Kernel M P Consumed) :
-    Prod.fst <$> used calls aux initial pending data metadata state =
-      PqxdhInitialGenericBuilder.usedBuild calls aux initial pending data metadata state := by
+    Prod.fst <$> used (associatedData := associatedData) calls aux initial pending data metadata state =
+      PqxdhInitialGenericBuilder.usedBuild (associatedData := associatedData) calls aux initial pending data metadata state := by
   unfold used PqxdhInitialGenericBuilder.usedBuild
   cases allocated : pqxdh.server_next_key_id state.control with
   | fail error => simp only [continueRust, map_pure]
@@ -115,16 +116,16 @@ theorem used_erase (calls : RawCtxChainOwner.Calls Kernel m) (aux : QueryImpl Au
           | ok prepared =>
               cases prepared with
               | Err error => simp only [map_pure]
-              | Ok pending => exact candidate_erase calls aux initial pending data metadata state
+              | Ok pending => exact candidate_erase (associatedData := associatedData) calls aux initial pending data metadata state
 
 /-- The receipt uses the same consumed Ready input and actual source binding, preserving the complete original registration builder. -/
 theorem ready_erase (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (calls : RawCtxChainOwner.Calls Kernel m) (aux : QueryImpl AuxSpec m) (initial : RustM Kernel)
     (binding : pqxdh.ServerBinding) (input : PqxdhPrivateAcceptedRoot.Ready)
     (metadata : P) (state : State Kernel M P Consumed) :
-    Prod.fst <$> ready source calls aux initial binding input metadata state =
-      PqxdhInitialGenericBuilder.readyBuild source calls aux initial binding input metadata state :=
-  used_erase calls aux initial _ _ metadata state
+    Prod.fst <$> ready (associatedData := associatedData) source calls aux initial binding input metadata state =
+      PqxdhInitialGenericBuilder.readyBuild (associatedData := associatedData) source calls aux initial binding input metadata state :=
+  used_erase (associatedData := associatedData) calls aux initial _ _ metadata state
 
 end Effects
 
@@ -137,8 +138,8 @@ theorem after_interpretation (impl : QueryImpl spec m)
     (aux : QueryImpl AuxSpec (OracleComp spec)) (kernel : Kernel)
     (pending : pqxdh.ServerRegistrationCandidate) (data : Option Pqxdh.Bytes)
     (metadata : P) (state : State Kernel M P (List Pqxdh.Bytes)) :
-    simulateQ impl (afterInitial calls aux kernel pending data metadata state) =
-      afterInitial (RawCtxGenericOwnerInterpretation.interpretedCalls impl calls) (impl ∘ₛ aux)
+    simulateQ impl (afterInitial (associatedData := associatedData) calls aux kernel pending data metadata state) =
+      afterInitial (associatedData := associatedData) (RawCtxGenericOwnerInterpretation.interpretedCalls impl calls) (impl ∘ₛ aux)
         kernel pending data metadata state := by
   dsimp only [afterInitial]
   split
@@ -163,8 +164,8 @@ theorem candidate_interpretation (impl : QueryImpl spec m)
     (aux : QueryImpl AuxSpec (OracleComp spec)) (initial : RustM Kernel)
     (pending : pqxdh.ServerRegistrationCandidate) (data : Option Pqxdh.Bytes)
     (metadata : P) (state : State Kernel M P (List Pqxdh.Bytes)) :
-    simulateQ impl (candidate calls aux initial pending data metadata state) =
-      candidate (RawCtxGenericOwnerInterpretation.interpretedCalls impl calls) (impl ∘ₛ aux)
+    simulateQ impl (candidate (associatedData := associatedData) calls aux initial pending data metadata state) =
+      candidate (associatedData := associatedData) (RawCtxGenericOwnerInterpretation.interpretedCalls impl calls) (impl ∘ₛ aux)
         initial pending data metadata state := by
   simp only [candidate, simulateQ_bind]
   apply bind_congr
@@ -186,8 +187,8 @@ theorem ready_interpretation (impl : QueryImpl spec m)
     (aux : QueryImpl PqxdhServerRegistrationPublication.AuxSpec (OracleComp spec))
     (initial : RustM Kernel) (binding : pqxdh.ServerBinding) (input : PqxdhPrivateAcceptedRoot.Ready)
     (metadata : P) (state : PqxdhInitialGenericPublication.State Kernel M P (List Pqxdh.Bytes)) :
-    simulateQ impl (ready source calls aux initial binding input metadata state) =
-      ready source (RawCtxGenericOwnerInterpretation.interpretedCalls impl calls) (impl ∘ₛ aux)
+    simulateQ impl (ready (associatedData := associatedData) source calls aux initial binding input metadata state) =
+      ready (associatedData := associatedData) source (RawCtxGenericOwnerInterpretation.interpretedCalls impl calls) (impl ∘ₛ aux)
         initial binding input metadata state := by
   unfold ready used
   cases next : pqxdh.server_next_key_id state.control with
@@ -207,7 +208,7 @@ theorem ready_interpretation (impl : QueryImpl spec m)
           | ok result =>
               cases result with
               | Err error => exact simulateQ_pure _ _
-              | Ok candidate => exact candidate_interpretation impl calls aux initial candidate input.application metadata state
+              | Ok candidate => exact candidate_interpretation (associatedData := associatedData) impl calls aux initial candidate input.application metadata state
 
 end Interpretation
 
@@ -218,13 +219,13 @@ theorem candidate_origin {Auxiliary ξ : Type} {base : OracleSpec ξ}
     (initial : RustM Kernel) (pending : pqxdh.ServerRegistrationCandidate) (data : Option Pqxdh.Bytes)
     (metadata : P) (state : State Kernel M P Consumed) (before : Auxiliary)
     (result : Result Kernel M P Consumed × Auxiliary)
-    (supported : result ∈ support ((candidate calls aux initial pending data metadata state).run before))
+    (supported : result ∈ support ((candidate (associatedData := associatedData) calls aux initial pending data metadata state).run before))
     (receipt : Receipt Kernel) (recorded : result.1.2 = some receipt) :
     ∃ (atIdentity atReserved : Auxiliary),
       (true, atIdentity) ∈ support ((aux (.checkIdentity pending.beacon_identity_public_key)).run before) ∧
       (true, atReserved) ∈ support ((aux .reservePeer).run atIdentity) ∧
       receipt.candidate = pending ∧ initial = .ok receipt.initial ∧
-      (result.1.1, result.2) ∈ support ((afterInitial calls aux receipt.initial pending data metadata state).run atReserved) := by
+      (result.1.1, result.2) ∈ support ((afterInitial (associatedData := associatedData) calls aux receipt.initial pending data metadata state).run atReserved) := by
   unfold candidate at supported
   simp only [StateT.run_bind, mem_support_bind_iff] at supported
   obtain ⟨valid, checked, rest⟩ := supported
@@ -266,7 +267,7 @@ theorem used_origin {Auxiliary ξ : Type} {base : OracleSpec ξ}
     (initial : RustM Kernel) (pending : PqxdhRegistrationInputs.UsedInput) (data : Option Pqxdh.Bytes)
     (metadata : P) (state : State Kernel M P Consumed) (before : Auxiliary)
     (result : Result Kernel M P Consumed × Auxiliary)
-    (supported : result ∈ support ((used calls aux initial pending data metadata state).run before))
+    (supported : result ∈ support ((used (associatedData := associatedData) calls aux initial pending data metadata state).run before))
     (receipt : Receipt Kernel) (recorded : result.1.2 = some receipt) :
     ∃ next,
       pqxdh.server_next_key_id state.control = .ok (.Ok next) ∧
@@ -274,7 +275,7 @@ theorem used_origin {Auxiliary ξ : Type} {base : OracleSpec ξ}
         (if (state.server.peers next).isSome then pqxdh.KeyIdAvailability.Occupied else .Available) =
           .ok (.Ok receipt.candidate) ∧
       initial = .ok receipt.initial ∧
-      result ∈ support ((candidate calls aux initial receipt.candidate data metadata state).run before) := by
+      result ∈ support ((candidate (associatedData := associatedData) calls aux initial receipt.candidate data metadata state).run before) := by
   unfold used at supported
   split at supported
   all_goals try { simp only [StateT.run_pure, mem_support_pure_iff] at supported; subst result; cases recorded }
@@ -291,7 +292,7 @@ theorem used_origin {Auxiliary ξ : Type} {base : OracleSpec ξ}
       | Ok found =>
           simp only [prepared] at supported
           obtain ⟨_, _, _, _, candidateFound, initialized, _⟩ :=
-            candidate_origin calls aux initial found data metadata state before result supported receipt recorded
+            candidate_origin (associatedData := associatedData) calls aux initial found data metadata state before result supported receipt recorded
           exact ⟨next, allocated, candidateFound ▸ prepared, initialized, candidateFound ▸ supported⟩
 
 open PqxdhInitialPendingPost
@@ -307,16 +308,16 @@ noncomputable def build (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
   (fun result =>
     let installed := PqxdhInitialPendingBuilder.reinstall index current result.1
     ((installed.1, result.2), installed.2)) <$>
-      ready source calls auxForward initial ⟨selected.server.identity, selected.identityKeyId⟩ input metadata selected
+      ready (associatedData := associatedData) source calls auxForward initial ⟨selected.server.identity, selected.identityKeyId⟩ input metadata selected
 
 /-- Erasing only the attempted-initializer receipt preserves the actual consumed state, returned response and complete indexed peer/control reinstallation. -/
 theorem build_erase (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (initial : RustM (KernelOf Chain)) (sender : M → Std.U64) (index : Fin S) (metadata : P)
     (input : PqxdhPrivateAcceptedRoot.Ready) (before : Front Chain M P I D K S B) :
     Prod.map Prod.fst id <$>
-      (build (extra := extra) (X := X) (SourceResponse := SourceResponse) (Shared := Shared)
+      (build (associatedData := associatedData) (extra := extra) (X := X) (SourceResponse := SourceResponse) (Shared := Shared)
         source initial sender index metadata input).run before =
-      (PqxdhInitialPendingBuilder.build source initial sender index metadata input).run before := by
+      (PqxdhInitialPendingBuilder.build (associatedData := associatedData) source initial sender index metadata input).run before := by
   simp only [build, PqxdhInitialPendingBuilder.build, StateT.run, Functor.map_map]
   rw [← ready_erase]
   simp only [Functor.map_map]
@@ -330,11 +331,11 @@ theorem build_initialized {Auxiliary ξ : Type} {base : OracleSpec.{0, 0} ξ}
     (input : PqxdhPrivateAcceptedRoot.Ready) (before : Front Chain M P I D K S B) (state : Auxiliary)
     (result : ((RustM (Option Response) × Option (Receipt (KernelOf Chain))) × Front Chain M P I D K S B) × Auxiliary)
     (supported : result ∈ support ((simulateQ impl
-      ((build source initial sender index metadata input).run before)).run state))
+      ((build (associatedData := associatedData) source initial sender index metadata input).run before)).run state))
     (receipt : Receipt (KernelOf Chain)) (recorded : result.1.1.2 = some receipt) :
     initial = .ok receipt.initial := by
   simp only [build, StateT.run, simulateQ_map] at supported
-  have mapped := PqxdhInitialBuilderReceipt.ready_interpretation impl source calls auxForward initial
+  have mapped := PqxdhInitialBuilderReceipt.ready_interpretation (associatedData := associatedData) impl source calls auxForward initial
     ⟨(PqxdhInitialPendingBuilder.selected sender index (PqxdhInitialPendingBuilder.consume index input before)).server.identity,
       (PqxdhInitialPendingBuilder.selected sender index (PqxdhInitialPendingBuilder.consume index input before)).identityKeyId⟩
     input metadata (PqxdhInitialPendingBuilder.selected sender index (PqxdhInitialPendingBuilder.consume index input before))
@@ -342,7 +343,7 @@ theorem build_initialized {Auxiliary ξ : Type} {base : OracleSpec.{0, 0} ξ}
   change result ∈ support (StateT.run _ state) at supported
   rw [StateT.run_map, support_map] at supported
   obtain ⟨original, reached, rfl⟩ := supported
-  obtain ⟨_, _, _, initialized, _⟩ := used_origin
+  obtain ⟨_, _, _, initialized, _⟩ := used_origin (associatedData := associatedData)
     (RawCtxGenericOwnerInterpretation.interpretedCalls impl calls) (impl ∘ₛ auxForward) initial _ _ metadata _
       state original reached receipt recorded
   exact initialized
@@ -352,8 +353,8 @@ theorem queries (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (input : PqxdhPrivateAcceptedRoot.Ready) (before : Front Chain M P I D K S B)
     (predicate : (Spec extra Chain I D K X SourceResponse Shared S B).Domain → Prop)
     [DecidablePred predicate] (budget : Nat) :
-    ((build (extra := extra) source initial sender index metadata input).run before).IsQueryBoundP predicate budget ↔
-      ((PqxdhInitialPendingBuilder.build (extra := extra) source initial sender index metadata input).run before).IsQueryBoundP predicate budget := by
+    ((build (associatedData := associatedData) (extra := extra) source initial sender index metadata input).run before).IsQueryBoundP predicate budget ↔
+      ((PqxdhInitialPendingBuilder.build (associatedData := associatedData) (extra := extra) source initial sender index metadata input).run before).IsQueryBoundP predicate budget := by
   rw [← build_erase, isQueryBoundP_map_iff]
 
 end BeaconcryptCore.Computational.PqxdhInitialBuilderReceipt

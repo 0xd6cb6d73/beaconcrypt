@@ -34,7 +34,7 @@ def publication (placeholder : Ed25519Signature)
   | _ => none
 
 variable (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (selected index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner mlSource) (placeholder : Ed25519Signature)
 variable (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E))
 local notation "Main" => RegistrationNativePlatformIdentityCtxMain.beacon (n := n) (Platform := Platform) (source := mlSource) setup checks representation created
@@ -44,7 +44,7 @@ local notation "publish(" oneTime ")" => Main (simulateQ
   (RegistrationNativePlatformIdentityPublication.callback (n := n) (Auxiliary := RegistrationServerRoleBackend.State)
     setup index owner (RegistrationNativePlatformConcreteSource.writer reserve))
   (RegistrationNativePlatformWriter.begin E (pqxdh.BeaconFresh.mk owner.pin.binding) (RegistrationNativeIdentityFrontend.inputs owner)
-    (pqxdh.BeaconCoins.mk (PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime))) owner.pin owner.mldsa.publicKey))
+    (pqxdh.BeaconCoins.mk (PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime))) owner.pin))
 
 private theorem terminal (censored : Bool) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (reply : RegistrationNativePlatformIdentityBundle.Reply)
@@ -85,7 +85,7 @@ theorem paired (oneTime : PqxdhJointGapDh.ScalarBytes)
   rw [source, source]
   have same := RegistrationNativeIdentityCensorPublicationSource.paired setup checks representation created selected index owner placeholder reserve
     (pqxdh.BeaconFresh.mk owner.pin.binding) (RegistrationNativeIdentityFrontend.inputs owner)
-    (pqxdh.BeaconCoins.mk (PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime))) owner.pin owner.mldsa.publicKey
+    (pqxdh.BeaconCoins.mk (PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime))) owner.pin
     started built rfl before seed handle armed held sourceTarget fresh found
   have mapped := congrArg (fun distribution => (fun returned => returned.1.map (fun _ => returned.2)) <$> distribution) same
   have observed : (fun returned : RegistrationNativePlatformIdentityBundle.Reply × Full (n := n) (KemSK := KemSK) (Platform := Platform) (mlSource := mlSource) =>
@@ -108,7 +108,7 @@ theorem normal (censored : Bool) (oneTime : PqxdhJointGapDh.ScalarBytes)
   obtain ⟨⟨reply, middle⟩, published, continued⟩ := possible
   have returned := RegistrationNativeIdentityCensorPublicationSource.normal setup checks representation created selected index owner placeholder reserve censored
     (pqxdh.BeaconFresh.mk owner.pin.binding) (RegistrationNativeIdentityFrontend.inputs owner)
-    (pqxdh.BeaconCoins.mk (PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime))) owner.pin owner.mldsa.publicKey before (reply, middle) published
+    (pqxdh.BeaconCoins.mk (PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime))) owner.pin before (reply, middle) published
   have value := (RegistrationNativeIdentityCensorBundleTerminal.frame setup checks representation created index owner oneTime reply selected placeholder censored middle result continued).1
   rw [value]
   cases reply with

@@ -10,6 +10,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhPhase2SourceAuxBounds
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhPhase2SourceAux PqxdhKemIndCca PqxdhPrivateKemSource PqxdhJointKdfGame
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhGeneratedBeaconState
 open PqxdhChallengeSecretRouting PqxdhPhase1AcceptanceOracle
@@ -29,13 +30,13 @@ theorem pre_classes
     (auxiliary : SharedState A × BareState count) :
     let aux := borrowedAux (baseSpec := baseSpec) attachedVerify primitives count source localImpl
     let run := (simulateQ (PqxdhPhase2PreChallenge.pre source aux)
-      (PqxdhBeaconPhase2Publication.nativeOwner decode raw state)).run auxiliary
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw state)).run auxiliary
     run.IsQueryBoundP IsMlKemUniformQuery (69 * max qLocal 64) ∧
       run.IsQueryBoundP IsMlKemBaseQuery 0 ∧
       run.IsQueryBoundP IsMlKemLogicalDecapsulationQuery 69 := by
   have bounds := borrowed_classes (baseSpec := baseSpec) attachedVerify primitives count source localImpl qLocal localBound
   simpa only [Nat.mul_zero, Nat.zero_add, Nat.mul_one] using
-    PqxdhPhase2PreChallenge.owner_pre_classes source
+    PqxdhPhase2PreChallenge.owner_pre_classes (completedBinding := completedBinding) source
       (borrowedAux attachedVerify primitives count source localImpl) (max qLocal 64) 0 0
       (fun query auxiliary => (bounds query auxiliary).1)
       (fun query auxiliary => (bounds query auxiliary).2.1)
@@ -52,11 +53,11 @@ theorem post_classes
     (auxiliary : SharedState A × BareState count) :
     PostBounds ((simulateQ (PqxdhBeaconPhase2Routed.handles source challenge
       (borrowedAux (baseSpec := baseSpec) attachedVerify primitives count source localImpl))
-      (PqxdhBeaconPhase2Shared.owner decode raw state)).run auxiliary)
+      (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) decode raw state)).run auxiliary)
       (69 * max qLocal 64) 0 1 1 := by
   have bounds := borrowed_classes (baseSpec := baseSpec) attachedVerify primitives count source localImpl qLocal localBound
   simpa only [Nat.mul_zero, Nat.zero_add] using
-    PqxdhBeaconPhase2RoutedBounds.owner_classes source challenge
+    PqxdhBeaconPhase2RoutedBounds.owner_classes (completedBinding := completedBinding) source challenge
       (borrowedAux attachedVerify primitives count source localImpl) (max qLocal 64) 0 0
       (fun query auxiliary => (bounds query auxiliary).1)
       (fun query auxiliary => (bounds query auxiliary).2.1)
@@ -75,13 +76,13 @@ theorem ordinary_classes
     let run := simulateQ (route source challenge supplied)
       ((simulateQ (PqxdhBeaconPhase2Routed.handles source challenge
         (borrowedAux (baseSpec := baseSpec) attachedVerify primitives count source localImpl))
-        (PqxdhBeaconPhase2Shared.owner decode raw state)).run auxiliary)
+        (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) decode raw state)).run auxiliary)
     run.IsQueryBoundP IsMlKemUniformQuery (69 * max qLocal 64) ∧
       run.IsQueryBoundP IsMlKemBaseQuery 0 ∧
       run.IsQueryBoundP IsMlKemLogicalDecapsulationQuery 1 := by
   have bounds := borrowed_classes (baseSpec := baseSpec) attachedVerify primitives count source localImpl qLocal localBound
   simpa only [Nat.mul_zero, Nat.zero_add] using
-    PqxdhPhase2CcaBounds.owner_classes source challenge supplied
+    PqxdhPhase2CcaBounds.owner_classes (completedBinding := completedBinding) source challenge supplied
       (borrowedAux attachedVerify primitives count source localImpl) (max qLocal 64) 0 0
       (fun query auxiliary => (bounds query auxiliary).1)
       (fun query auxiliary => (bounds query auxiliary).2.1)
@@ -104,11 +105,11 @@ theorem pre_continuation_classes {Result : Type}
       (next result).IsQueryBoundP IsMlKemLogicalDecapsulationQuery dNext) :
     let run := ((simulateQ (PqxdhPhase2PreChallenge.pre source
       (borrowedAux attachedVerify primitives count source localImpl))
-      (PqxdhBeaconPhase2Publication.nativeOwner decode raw state)).run auxiliary) >>= next
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw state)).run auxiliary) >>= next
     run.IsQueryBoundP IsMlKemUniformQuery (69 * max qLocal 64 + uNext) ∧
       run.IsQueryBoundP IsMlKemBaseQuery bNext ∧
       run.IsQueryBoundP IsMlKemLogicalDecapsulationQuery (69 + dNext) := by
-  have before := pre_classes (baseSpec := baseSpec) attachedVerify primitives count source localImpl
+  have before := pre_classes (completedBinding := completedBinding) (baseSpec := baseSpec) attachedVerify primitives count source localImpl
     qLocal localBound decode raw state auxiliary
   refine ⟨isQueryBoundP_bind before.1 (fun result _ => (nextBound result).1), ?_,
     isQueryBoundP_bind before.2.2 (fun result _ => (nextBound result).2.2)⟩
@@ -129,9 +130,9 @@ theorem post_continuation_classes {Result : Type}
     (nextBound : ∀ result, PostBounds (next result) uNext bNext dNext rNext) :
     PostBounds (((simulateQ (PqxdhBeaconPhase2Routed.handles source challenge
       (borrowedAux attachedVerify primitives count source localImpl))
-      (PqxdhBeaconPhase2Shared.owner decode raw state)).run auxiliary) >>= next)
+      (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) decode raw state)).run auxiliary) >>= next)
       (69 * max qLocal 64 + uNext) bNext (1 + dNext) (1 + rNext) := by
-  have before := post_classes (baseSpec := baseSpec) attachedVerify primitives count source localImpl
+  have before := post_classes (completedBinding := completedBinding) (baseSpec := baseSpec) attachedVerify primitives count source localImpl
     qLocal localBound challenge decode raw state auxiliary
   refine ⟨isQueryBoundP_bind before.uniforms (fun result _ => (nextBound result).uniforms), ?_,
     isQueryBoundP_bind before.decaps (fun result _ => (nextBound result).decaps),
@@ -158,11 +159,11 @@ theorem ordinary_continuation_classes {Result : Type}
     let run := simulateQ (route source challenge supplied)
       (((simulateQ (PqxdhBeaconPhase2Routed.handles source challenge
         (borrowedAux attachedVerify primitives count source localImpl))
-        (PqxdhBeaconPhase2Shared.owner decode raw state)).run auxiliary) >>= next)
+        (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) decode raw state)).run auxiliary) >>= next)
     run.IsQueryBoundP IsMlKemUniformQuery (69 * max qLocal 64 + uNext) ∧
       run.IsQueryBoundP IsMlKemBaseQuery bNext ∧
       run.IsQueryBoundP IsMlKemLogicalDecapsulationQuery (1 + dNext) := by
-  have before := ordinary_classes (baseSpec := baseSpec) attachedVerify primitives count source localImpl
+  have before := ordinary_classes (completedBinding := completedBinding) (baseSpec := baseSpec) attachedVerify primitives count source localImpl
     qLocal localBound challenge supplied decode raw state auxiliary
   simp only [simulateQ_bind]
   refine ⟨isQueryBoundP_bind before.1 (fun result _ => (nextBound result).1), ?_,

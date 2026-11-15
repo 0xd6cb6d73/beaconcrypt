@@ -34,9 +34,8 @@ private theorem tail_bytes (identity : Array Std.U8 33#usize) (key : Array Std.U
     simp only [getElem!_pos identity.val (index + 1) inside, Nat.add_comm 1 index]
 
 private def KeyMetadata (packet : registration.InitPacket) : registration.InitAuthentication → Prop
-  | .HashRequested before => before.packet = packet
-  | .MldsaVerificationRequested before => before.state.packet = packet
-  | .Ed25519VerificationRequested before => before.state.packet = packet ∧
+  | .HashRequested before => before.fields = ownedFields packet
+  | .Ed25519VerificationRequested before => before.state.fields = ownedFields packet ∧
       absBytes before.public_key = (absBytes packet.identity_key).drop 1
   | _ => True
 
@@ -47,42 +46,26 @@ private theorem key_step (packet : registration.InitPacket) {before after : regi
       cases reply with
       | none => exact (RustM.ok.inj run) ▸ True.intro
       | some digest =>
-          obtain ⟨next, resumed, packetSame, _pin, _digest, _input⟩ := init_hash_success before digest
-          exact (RustM.ok.inj (resumed.symm.trans run)) ▸
-            (show KeyMetadata packet (.MldsaVerificationRequested next) from packetSame.trans prior)
-  | mldsa before verified after run =>
-      obtain ⟨result, resumed, outcome⟩ := init_mldsa_exact before verified
-      have facts : initMldsaOutcome before verified after := (RustM.ok.inj (resumed.symm.trans run)) ▸ outcome
-      cases after
-      all_goals simp only [initMldsaOutcome] at facts
-      case Rejected => trivial
-      case Ed25519VerificationRequested next =>
-        obtain ⟨_verified, _tag, stateSame, _stage, key⟩ := facts
-        refine ⟨by simpa only [KeyMetadata, stateSame] using prior, ?_⟩
-        have exactTail := tail_bytes before.state.packet.identity_key next.public_key key
-        simpa only [show before.state.packet = packet from prior] using exactTail
+          obtain ⟨result, resumed, outcome⟩ := init_hash_resume_refines before digest
+          have facts : initHashOutcome before digest after := (RustM.ok.inj (resumed.symm.trans run)) ▸ outcome
+          cases after
+          all_goals simp only [initHashOutcome] at facts
+          case Rejected => trivial
+          case Ed25519VerificationRequested next =>
+            obtain ⟨_tag, fieldsSame, _pin, _digest, _stage, key⟩ := facts
+            refine ⟨fieldsSame.trans prior, ?_⟩
+            have exactTail := tail_bytes before.fields.identity_key next.public_key key
+            simpa only [show before.fields = ownedFields packet from prior, ownedFields] using exactTail
   | ed25519 before opened after run =>
       obtain ⟨result, resumed, progress⟩ := init_ed_resume_refines before opened
       have facts : edProgress before opened after := (RustM.ok.inj (resumed.symm.trans run)) ▸ progress
       cases after
       all_goals simp only [edProgress] at facts
       case Rejected => trivial
-      case ServerFingerprintRequested next => trivial
+      case Accepted => trivial
       case Ed25519VerificationRequested next =>
         obtain ⟨_bytes, _reply, _suffix, stateSame, keySame, _transition⟩ := facts
         exact ⟨by simpa only [stateSame] using prior.1, by simpa only [keySame] using prior.2⟩
-  | serverFingerprint before reply after run =>
-      cases reply with
-      | none => exact (RustM.ok.inj run) ▸ True.intro
-      | some digest =>
-          obtain ⟨next, resumed, _⟩ := init_server_fingerprint_exact before digest
-          exact (RustM.ok.inj (resumed.symm.trans run)) ▸ True.intro
-  | beaconFingerprint before reply after run =>
-      cases reply with
-      | none => exact (RustM.ok.inj run) ▸ True.intro
-      | some digest =>
-          obtain ⟨next, resumed, _⟩ := init_beacon_fingerprint_exact before digest
-          exact (RustM.ok.inj (resumed.symm.trans run)) ▸ True.intro
 
 def signedBytes (packet : registration.InitPacket) : registration.SignedKeyStage → Pqxdh.Bytes
   | .PqKey => absBytes packet.pq_key
@@ -138,9 +121,6 @@ private theorem step_receipt {Auxiliary : Type} (crypto : Pqxdh.Crypto) (verify 
     exact Set.mem_image_of_mem Prod.fst supported
   cases native with
   | hash => trivial
-  | mldsa => trivial
-  | serverFingerprint => trivial
-  | beaconFingerprint => trivial
   | ed25519 pending reply final resumed =>
       cases reply with
       | none => trivial
@@ -161,7 +141,7 @@ private theorem step_receipt {Auxiliary : Type} (crypto : Pqxdh.Crypto) (verify 
             some (TranscriptAuthParts.absSlice opened)
           rw [key, prior.2] at actualVerify
           have bytes : TranscriptAuthParts.absSlice request.signed = signedBytes packet pending.stage := by
-            simp only [TranscriptAuthParts.absSlice, signed, edSignedBytes, signedBytes, prior.1, absBytes]
+            simp only [TranscriptAuthParts.absSlice, signed, edSignedBytes, signedBytes, prior.1, ownedFields, absBytes]
             cases pending.stage <;> rfl
           simpa only [bytes] using actualVerify
 
@@ -208,15 +188,15 @@ theorem accepted_suffixes {Auxiliary : Type} (crypto : Pqxdh.Crypto) (verify : M
     RegistrationAuthenticationNative.begin_parts crypto verify writer kdf pin packet before after events
       (.Accepted accepted) supported
   have trace := RegistrationAuthenticationInterpretation.execute_trace
-    (RegistrationAuthenticationShared.implementation crypto verify writer kdf) 8 (.HashRequested initial)
+    (RegistrationAuthenticationShared.implementation crypto verify writer kdf) 5 (.HashRequested initial)
     events (.Accepted accepted) before after executed
   have receipts := trace_receipts crypto verify writer kdf packet trace
     (show KeyMetadata packet (.HashRequested initial) from packetSame)
   have execution := simulated_begin_sound
     (RegistrationAuthenticationShared.implementation crypto verify writer kdf) pin packet events
     (.Accepted accepted) before after supported
-  obtain ⟨digest, pq, pre, oneTime, serverFp, beaconFp, eventList, pqSuffix, preSuffix, oneTimeSuffix⟩ :=
-    accepted_requires_gates pin packet events accepted execution
+  obtain ⟨digest, pq, pre, oneTime, eventList, pqSuffix, preSuffix, oneTimeSuffix⟩ :=
+    accepted_requires_classical_checks pin packet events accepted execution
   have pqReceipt := receipts (.ed25519 .PqKey (.Some pq)) (by rw [eventList]; simp)
   have preReceipt := receipts (.ed25519 .PreKey (.Some pre)) (by rw [eventList]; simp)
   have oneTimeReceipt := receipts (.ed25519 .OneTimeKey (.Some oneTime)) (by rw [eventList]; simp)

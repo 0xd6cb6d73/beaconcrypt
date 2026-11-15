@@ -42,7 +42,7 @@ local notation "codec"=>RegistrationNativeWire.ledgerCodec wire
 local notation "allocation"=>RegistrationNativePlatformExtractedSdkBuildNormal.allocation configuration.allocateJoin
 local notation "helper"=>RegistrationNativePlatformConcreteSource.helper configuration.reserveFrame
 local notation "writer"=>RegistrationNativePlatformConcreteSource.writer configuration.reservePackets
-variable (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)local notation "auditPrivate"=>RegistrationNativePlatformPublicAdapterAuditModel.Private configuration created credential
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)local notation "auditPrivate"=>RegistrationNativePlatformPublicAdapterAuditModel.Private configuration created credential
 local notation "auditModel"=>RegistrationNativePlatformPublicAdapterAuditModel.model configuration created credential
 local notation "auditPhysical"=>RegistrationNativePlatformPublicAdapterAuditModel.physical configuration created credential
 
@@ -121,7 +121,7 @@ theorem active_query (before :RegistrationNativePlatformPublicAdapterAuditModel.
   unfold RegistrationNativePlatformPublicAdapterConfiguredCreateTyped.step
   rw [raw_map_cast,RegistrationNativePlatformPublicAdapterConfiguredCreateTyped.mapped]
   have sourceLaw:=RegistrationNativePlatformPublicAdapterCreatePhysical.active_physical coins setup checks configuration.agreement.representation created configuration.view children children
-    configuration.generator configuration.kem configuration.mlGeneration configuration.edGeneration configuration.prekeyGeneration configuration.kemGeneration
+    configuration.generator configuration.kem configuration.edGeneration configuration.prekeyGeneration configuration.kemGeneration
     configuration.views credential keyId (configuration.pins.object edBytes) mlBytes identityKey mlKey
       (RegistrationNativePlatformPublicAdapterPinParsing.ed_decoded configuration.view configuration.pins identityKey edBytes edParsed)
       (RegistrationNativePlatformPublicAdapterPinParsing.ml_decoded mlKey mlBytes mlParsed) before.1 stored
@@ -130,7 +130,7 @@ theorem active_query (before :RegistrationNativePlatformPublicAdapterAuditModel.
   · exact raw_normalized
       (RegistrationNativePlatformSdkOrdinaryBeaconSelected.strongPhysical setup configuration.view configuration.views created credential) _
   · exact RegistrationNativePlatformPublicAdapterCreateNormalized.stable coins setup checks configuration.agreement.representation created configuration.view children
-      configuration.generator configuration.kem configuration.mlGeneration configuration.edGeneration configuration.prekeyGeneration configuration.kemGeneration
+      configuration.generator configuration.kem configuration.edGeneration configuration.prekeyGeneration configuration.kemGeneration
       keyId identityKey mlKey (RegistrationNativePlatformPublicAdapterStore.erase stored.base.objects)
 
 noncomputable def step (before :RegistrationNativePlatformPublicAdapterAuditModel.State n KemSK P source) (stored :auditPrivate before)

@@ -1,10 +1,11 @@
 import BeaconcryptCore.Computational.RawCtxOwnerProvenance
 import BeaconcryptCore.Refinement.PqxdhCore
+import BeaconcryptCore.Refinement.ProtocolComposition
 
 /-!
-This is a source-shaped synchronous receive wrapper for the complete Server peer map. Header routing and later full payload decoding remain separate functions, allowing the source header probe to succeed before payload rejection. The same assigned-u64 entry supplies its public identity, the exact extracted associated-data bytes and the complete selected ratchet. Every failed receive preserves the full server; actual primitive effects remain outside rollback. Successful replies retain source material, original raw/frame/context and actual optional plaintext. Raw-only adaptive schedules preserve every peer identity/metadata and count all attempts.
+This is the historical identity-prefix synchronous receive model for the complete Server peer map. Header routing and later full payload decoding remain separate functions, allowing the source header probe to succeed before payload rejection. The same assigned-u64 entry supplies its public identity, the historical identity-prefix associated-data bytes and the complete selected ratchet. Every failed receive preserves the full server; actual primitive effects remain outside rollback. Successful replies retain source material, original raw/frame/context and actual optional plaintext. Raw-only adaptive schedules preserve every peer identity/metadata and count all attempts.
 
-The u64 function map is a mathematical representation, not an extraction or implementation proof of native HashMap. It has a finite machine-key domain but supplies no useful enrolled-peer/session resource budget. The normal synchronous ownership and ready-kernel representation, native codec and compiler, native map storage, exceptions/crashes, concurrent send/registration/reveal actions, persistence and cryptographic multi-key composition remain separate boundaries. Equal public identities at different assigned handles are permitted. These operational results assert neither cryptographic origin nor secrecy, and the API's returned plaintext is distinct from public network observation. Existing source-rank/opening counts and inner component costs remain separate; no lookup or ambient primitive work is hidden in a new security assumption.
+The u64 function map is a mathematical representation, not an extraction or implementation proof of native HashMap. It has a finite machine-key domain but supplies no useful enrolled-peer/session resource budget. The normal synchronous ownership and ready-kernel representation, native codec and compiler, native map storage, exceptions/crashes, concurrent send/registration/reveal actions, persistence and cryptographic multi-key composition remain separate boundaries. Equal public identities at different assigned handles are permitted. This module does not refine current version-3 registration AD. These operational results assert neither cryptographic origin nor secrecy, and the API's returned plaintext is distinct from public network observation. Existing source-rank/opening counts and inner component costs remain separate; no lookup or ambient primitive work is hidden in a new security assumption.
 -/
 
 open CoreModels Aeneas
@@ -18,20 +19,23 @@ namespace BeaconcryptCore.Computational.RawCtxServerRouting
 
 abbrev Identity := Std.Array Std.U8 32#usize
 
-/-- Exact associated-data builder from the extracted core, in source server/beacon order. -/
+/-- Historical identity-prefix embedding for the older routing model. Current registration endpoints install their completed binding's transcript AD instead. This function is not extracted source. -/
 noncomputable def associatedArray (server peer : Identity) : Std.Array Std.U8 281#usize :=
-  (build_associated_data_abs server peer).choose
+  ⟨(Pqxdh.assocData (absBytes server) (absBytes peer)).map
+      BeaconcryptCore.Refinement.ProtocolComposition.concreteByte,
+    by simpa using Pqxdh.assocData_length (absBytes_length server) (absBytes_length peer)⟩
 
+/-- The historical embedding represents only the explicitly historical identity-prefix model. -/
 theorem associatedArray_exact (server peer : Identity) :
-    pqxdh.build_associated_data server peer = ok (associatedArray server peer) :=
-  (build_associated_data_abs server peer).choose_spec.1
+    absBytes (associatedArray server peer) = Pqxdh.assocData (absBytes server) (absBytes peer) := by
+  simp [associatedArray, absBytes, List.map_map, Function.comp_def]
 
 noncomputable def associatedBytes (server peer : Identity) : Pqxdh.Bytes :=
   absBytes (associatedArray server peer)
 
 theorem associatedBytes_exact (server peer : Identity) :
     associatedBytes server peer = Pqxdh.assocData (absBytes server) (absBytes peer) :=
-  (build_associated_data_abs server peer).choose_spec.2
+  associatedArray_exact server peer
 
 theorem associatedBytes_length (server peer : Identity) :
     (associatedBytes server peer).length = 281 := by

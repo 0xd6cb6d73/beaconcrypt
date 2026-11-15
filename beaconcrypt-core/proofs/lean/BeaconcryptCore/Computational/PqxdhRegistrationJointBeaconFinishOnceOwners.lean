@@ -149,9 +149,10 @@ theorem finish_phaseKem (control : beaconcrypt_core.pqxdh.BeaconInitSent) (state
         · rfl
 
 /-- The source's Beacon finish owner acts only on `initSent` and leaves an aborted or established owner. -/
-theorem owner_settles {X Response : Type} (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
-    (state : PqxdhRegistrationJointBundle.Owner) :
-    ∀ result ∈ support (PqxdhBeaconPhase2Publication.owner (X := X) (Response := Response) decode raw state),
+theorem owner_settles {X Response : Type} (binding : beaconcrypt_core.session.CompletedRegistrationBinding)
+    (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes) (state : PqxdhRegistrationJointBundle.Owner) :
+    ∀ result ∈ support (PqxdhBeaconPhase2Publication.owner (completedBinding := binding) (X := X) (Response := Response)
+      decode raw state),
       Settled state result.2 := by
   intro result member
   unfold PqxdhBeaconPhase2Publication.owner at member
@@ -177,8 +178,9 @@ theorem owner_settles {X Response : Type} (decode : RawCtxReceive.FrameDecoder) 
     exact notActive control prekey oneTime kem active
 
 /-- The grouped Beacon owner of stage S1b acts only on `initSent` and leaves an aborted or established owner. -/
-theorem groupedOwner_settles {Response : Type} (raw : Pqxdh.Bytes) (state : PqxdhRegistrationJointBundle.Owner) :
-    ∀ result ∈ support (PqxdhRegistrationJointKemPostSkeleton.groupedOwner (Response := Response) raw state),
+theorem groupedOwner_settles {Response : Type} (binding : beaconcrypt_core.session.CompletedRegistrationBinding)
+    (raw : Pqxdh.Bytes) (state : PqxdhRegistrationJointBundle.Owner) :
+    ∀ result ∈ support (PqxdhRegistrationJointKemPostSkeleton.groupedOwner (Response := Response) binding raw state),
       Settled state result.2 := by
   intro result member
   unfold PqxdhRegistrationJointKemPostSkeleton.groupedOwner at member
@@ -203,6 +205,57 @@ theorem groupedOwner_settles {Response : Type} (raw : Pqxdh.Bytes) (state : Pqxd
     rename_i notActive
     exact notActive control prekey oneTime kem active
 
+
+/-- The source's hashed owner finish (`PqxdhRegistrationJointServiceSchedule.finishOwner`) leaves a settled owner: its transcript hash changes no owner, the abort branch aborts, and the owner program at the hashed binding settles (`owner_settles`). -/
+theorem finishOwner_settles {KemSK Reader Response : Type} {ι : Type} {baseSpec : OracleSpec ι}
+    (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes) (state : PqxdhRegistrationJointBundle.Owner) :
+    ∀ result ∈ support (PqxdhRegistrationJointServiceSchedule.finishOwner setup codec retained raw state),
+      Settled state result.2 := by
+  intro result member
+  unfold PqxdhRegistrationJointServiceSchedule.finishOwner at member
+  split at member
+  · rename_i control prekey oneTime kem active
+    split at member
+    · rw [mem_support_bind_iff] at member
+      obtain ⟨digest, -, member⟩ := member
+      exact owner_settles _ _ _ _ result (simulate_support _ _ (simulate_support _ _ (simulate_support _ _ member)))
+    · simp only [support_pure, Set.mem_singleton_iff] at member
+      rw [member]
+      right
+      exact finish_phaseKem control state none
+  · left
+    simp only [support_pure, Set.mem_singleton_iff] at member
+    rw [member]
+    refine ⟨rfl, fun control prekey oneTime kem active => ?_⟩
+    rename_i notActive
+    exact notActive control prekey oneTime kem active
+
+/-- The grouped hashed owner finish (`PqxdhRegistrationJointKemPostSkeleton.groupedHashed`) leaves a settled owner. -/
+theorem groupedHashed_settles {KemSK Reader Response : Type} {ι : Type} {baseSpec : OracleSpec ι}
+    (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (selected : Nat)
+    (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (retained : Option PqxdhEd25519EufCma.Phase1Candidate)
+    (raw : Pqxdh.Bytes) (state : PqxdhRegistrationJointBundle.Owner) :
+    ∀ result ∈ support (PqxdhRegistrationJointKemPostSkeleton.groupedHashed setup codec selected challenge retained raw
+      state), Settled state result.2 := by
+  intro result member
+  unfold PqxdhRegistrationJointKemPostSkeleton.groupedHashed at member
+  split at member
+  · rename_i control prekey oneTime kem active
+    split at member
+    · rw [mem_support_bind_iff] at member
+      obtain ⟨digest, -, member⟩ := member
+      exact groupedOwner_settles _ _ _ result (simulate_support _ _ member)
+    · simp only [support_pure, Set.mem_singleton_iff] at member
+      rw [member]
+      right
+      exact finish_phaseKem control state none
+  · left
+    simp only [support_pure, Set.mem_singleton_iff] at member
+    rw [member]
+    refine ⟨rfl, fun control prekey oneTime kem active => ?_⟩
+    rename_i notActive
+    exact notActive control prekey oneTime kem active
 /-- A settled owner keeps or clears its KEM index. -/
 theorem settled_kept {before after : PqxdhRegistrationJointBundle.Owner} (settled : Settled before after) :
     phaseKem after = phaseKem before ∨ phaseKem after = none := by
@@ -315,11 +368,11 @@ theorem ownerCount_birth (selected : Nat) (owners : List EncodedEntry) (pin : Pq
 
 /-- The raw `create` request runs the joint creation client and appends the born owner if there is one. -/
 theorem create_run (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
-    (pin : PqxdhBeaconPhase2Preparation.Word32) (keyId : Std.U64) (owners : List EncodedEntry) :
+    (pin : PqxdhBeaconPhase2Preparation.Word32) (keyId : Std.U64) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) :
     (PqxdhRegistrationJointRevealSchedule.client setup codec (.inl (.inr (.create pin keyId)))).run owners =
-      (fun value => (owners.length, match value with
-        | none => owners
-        | some value => owners ++ [PqxdhRegistrationJointServiceSchedule.birth pin keyId value])) <$>
+      (fun value => (owners.1.length, (match value with
+        | none => owners.1
+        | some value => owners.1 ++ [PqxdhRegistrationJointServiceSchedule.birth pin keyId value], owners.2))) <$>
         simulateQ PqxdhRegistrationJointServiceSchedule.poolLift (PqxdhRegistrationJointCreation.client (KemSK := KemSK)) := by
   simp only [PqxdhRegistrationJointRevealSchedule.client, PqxdhRegistrationJointServiceSchedule.handler,
     PqxdhRegistrationJointServiceSchedule.create, StateT.run, map_eq_bind_pure_comp]
@@ -327,9 +380,9 @@ theorem create_run (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
 
 /-- The source's finish request leaves a settled owner at its address. -/
 theorem finish_count (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (selected : Nat)
-    (address : Nat) (raw : Pqxdh.Bytes) (owners : List EncodedEntry) :
+    (address : Nat) (raw : Pqxdh.Bytes) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) :
     ∀ result ∈ support ((PqxdhRegistrationJointServiceSchedule.finish setup codec address raw).run owners),
-      ownerCount selected result.2 ≤ ownerCount selected owners := by
+      ownerCount selected result.2.1 ≤ ownerCount selected owners.1 := by
   intro result member
   simp only [PqxdhRegistrationJointServiceSchedule.finish, StateT.run] at member
   split at member
@@ -338,15 +391,14 @@ theorem finish_count (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
   · rename_i entry found
     rw [support_map] at member
     obtain ⟨inner, reached, rfl⟩ := member
-    have settled := owner_settles _ _ _ inner (simulate_support _ _
-      (simulate_support _ _ (simulate_support _ _ reached)))
-    exact ownerCount_set_le selected owners address entry _ found (settled_kept settled)
+    have settled := finishOwner_settles setup codec _ _ _ inner reached
+    exact ownerCount_set_le selected owners.1 address entry _ found (settled_kept settled)
 
 /-- The source's bundle request keeps the owner's KEM handle. -/
 theorem bundle_count (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (selected : Nat)
-    (address : Nat) (owners : List EncodedEntry) :
+    (address : Nat) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) :
     ∀ result ∈ support ((PqxdhRegistrationJointServiceSchedule.bundle setup codec address).run owners),
-      ownerCount selected result.2 ≤ ownerCount selected owners := by
+      ownerCount selected result.2.1 ≤ ownerCount selected owners.1 := by
   intro result member
   simp only [PqxdhRegistrationJointServiceSchedule.bundle, StateT.run] at member
   split at member
@@ -355,15 +407,20 @@ theorem bundle_count (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
   · rename_i entry found
     rw [support_map] at member
     obtain ⟨inner, reached, rfl⟩ := member
-    have kept := bundle_kem _ _ inner (simulate_support _ _ (simulate_support _ _ reached))
-    exact ownerCount_set_le selected owners address entry _ found (Or.inl kept)
+    have program : inner.1 ∈ support (PqxdhLivePhase1Bundle.bundle (PqxdhRegistrationJointBundle.projection setup) entry.2.2) := by
+      refine support_simulateQ_run'_subset (PqxdhRegistrationJointServiceSchedule.logCompiler (KemSK := KemSK) codec) _
+        (owners.2 address) ?_
+      rw [StateT.run'_eq, support_map]
+      exact Set.mem_image_of_mem _ (simulate_support _ _ reached)
+    have kept := bundle_kem _ _ inner.1 program
+    exact ownerCount_set_le selected owners.1 address entry _ found (Or.inl kept)
 
 /-- No source request other than `create` increases the number of owners holding a KEM index. -/
 theorem client_count (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (selected : Nat)
     (query : (PqxdhRegistrationJointRevealSchedule.Spec KemSK).Domain) (notCreate : ¬ CreateKind query)
-    (owners : List EncodedEntry) :
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) :
     ∀ result ∈ support ((PqxdhRegistrationJointRevealSchedule.client setup codec query).run owners),
-      ownerCount selected result.2 ≤ ownerCount selected owners := by
+      ownerCount selected result.2.1 ≤ ownerCount selected owners.1 := by
   intro result member
   rcases query with (coin | request) | read
   · simp only [PqxdhRegistrationJointRevealSchedule.client, PqxdhRegistrationJointServiceSchedule.handler,
@@ -390,10 +447,10 @@ theorem client_count (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
 /-- The grouped Beacon finish leaves a settled owner at its address, and clears the selected KEM index of an owner that awaited its finish with it. -/
 theorem groupedFinish_count (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (selected : Nat)
     (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (marker : Nat) (address : Nat) (raw : Pqxdh.Bytes)
-    (owners : List EncodedEntry) :
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) :
     ∀ result ∈ support ((PqxdhRegistrationJointKemPostSkeleton.groupedFinish setup codec marker challenge address
         raw).run owners),
-      ownerCount selected result.2 + finishMark selected owners address ≤ ownerCount selected owners := by
+      ownerCount selected result.2.1 + finishMark selected owners.1 address ≤ ownerCount selected owners.1 := by
   intro result member
   simp only [PqxdhRegistrationJointKemPostSkeleton.groupedFinish, StateT.run] at member
   split at member
@@ -404,26 +461,26 @@ theorem groupedFinish_count (setup : Setup baseSpec KemSK) (codec : Codec Reader
   · rename_i entry found
     rw [support_map] at member
     obtain ⟨inner, reached, rfl⟩ := member
-    have settled := groupedOwner_settles _ _ inner (simulate_support _ _ reached)
+    have settled := groupedHashed_settles setup codec _ _ _ _ _ inner reached
     simp only [finishMark, found]
     split
     · rename_i holds
-      have := ownerCount_set_drop selected owners address entry (entry.1, entry.2.1, inner.2) found
+      have := ownerCount_set_drop selected owners.1 address entry (entry.1, entry.2.1, inner.2) found
         (awaits_kem selected _ holds) (settled_awaits settled holds)
       omega
-    · simpa using ownerCount_set_le selected owners address entry (entry.1, entry.2.1, inner.2) found
+    · simpa using ownerCount_set_le selected owners.1 address entry (entry.1, entry.2.1, inner.2) found
         (settled_kept settled)
 
 /-- No request of the grouped client other than `create` increases the count, and a grouped finish of an owner that awaits its finish with the selected index decreases it by one. -/
 theorem groupedClient_count (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (selected : Nat)
     (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (marker : Nat)
     (query : (PqxdhRegistrationJointRevealSchedule.Spec KemSK).Domain) (notCreate : ¬ CreateKind query)
-    (owners : List EncodedEntry) :
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) :
     ∀ result ∈ support ((PqxdhRegistrationJointKemPostSkeleton.groupedClient setup codec marker challenge query).run
         owners),
-      ownerCount selected result.2 + (match FinishAt query with
-        | some request => finishMark selected owners request.1
-        | none => 0) ≤ ownerCount selected owners := by
+      ownerCount selected result.2.1 + (match FinishAt query with
+        | some request => finishMark selected owners.1 request.1
+        | none => 0) ≤ ownerCount selected owners.1 := by
   intro result member
   rcases query with (coin | request) | read
   · have := client_count setup codec selected _ notCreate owners result
@@ -570,3 +627,13 @@ end BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconFinishOnce
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconFinishOnce.groupedClient_count
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconFinishOnce.finishOwner_settles' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconFinishOnce.finishOwner_settles
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconFinishOnce.groupedHashed_settles' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconFinishOnce.groupedHashed_settles

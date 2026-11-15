@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Refinement.AdapterPublicInitReady
 import BeaconcryptCore.Computational.RegistrationNativePlatformBeaconPublication
-/-! Actual source Ed/ML reply conversion and the public Init driver's fingerprint/hash/ML stages fold to the stateful native publication stages. Primitive getter/sign/hash leaf contracts are explicit; every source serializer failure and common monadic poststate is retained. Whole Ed-stage and beginning-of-bundle folds are separate continuation work. -/
+/-! Actual source Ed reply conversion and the public Init driver's final request-hash stage fold to the stateful native publication stages. Primitive getter/sign/hash leaf contracts are explicit; every source serializer failure and common monadic poststate is retained. Whole Ed-stage and beginning-of-bundle folds are separate continuation work. -/
 open CoreModels Aeneas OracleComp OracleSpec
 open Aeneas.Std hiding namespace core alloc
 open RustM ControlFlow beaconcrypt_core
@@ -64,14 +64,14 @@ theorem ed_leaf (beacon : beaconcrypt_public_wrapper.beacon.Beacon)
 
 
 def outgoing (hash : registration.HashRequest → m CtxRomAuth.CtxDigest)
-    (sign : registration.MldsaSigningRequest → m (core.option.Option (alloc.vec.Vec U8))) (edMethod : registration.Ed25519SigningRequest → m RegistrationSigningShared.SignReply) :
+    (edMethod : registration.Ed25519SigningRequest → m RegistrationSigningShared.SignReply) :
     QueryImpl RegistrationBeaconInitExecutor.Spec m
   | .inl (.hash request) => hash request
-  | .inl (.sign request _ _) => borrowed <$> sign request
+  | .inl (.sign _ _ _) => pure .None
   | .inr request => edMethod request
 
 def publication (control : pqxdh.BeaconFresh)
-    (encode : registration.SignedInitView → m (RustM (core.option.Option Encoded)))
+    (encode : registration.InitView → m (RustM (core.option.Option Encoded)))
     (work : RustT m (core.option.Option registration.BeaconInitReady)) :
     m (RustM (RegistrationBeaconInitExecutor.Result Encoded)) := do
   let reply ← work.run
@@ -83,7 +83,7 @@ def publication (control : pqxdh.BeaconFresh)
 
 omit material platform primitive localOps crypto children in
 theorem publication_step (control : pqxdh.BeaconFresh)
-    (encode : registration.SignedInitView → m (RustM (core.option.Option Encoded)))
+    (encode : registration.InitView → m (RustM (core.option.Option Encoded)))
     (body : registration.BeaconInitEffect → RustT m
       (ControlFlow registration.BeaconInitEffect (core.option.Option registration.BeaconInitReady)))
     (fuel : Nat) (effect : registration.BeaconInitEffect) :
@@ -105,64 +105,18 @@ theorem publication_step (control : pqxdh.BeaconFresh)
     | cont next => rfl
 
 
-omit material platform primitive localOps crypto children [Monad m] [LawfulMonad m] in
-theorem signing_shapes (pending : registration.BeaconMldsaSigning)
-    (signature : core.option.Option (Slice U8)) :
-    ∃ effect, pending.resume signature = .ok effect ∧
-      (effect = .Rejected pending.state.original_control ∨ ∃ ready, effect = .Ready ready) := by
-  cases signature with
-  | none => exact ⟨_, rfl, .inl rfl⟩
-  | some signature =>
-      obtain ⟨effect, resumed, shapes⟩ := RegistrationSigningContinuations.beacon_mldsa_signature_exact pending signature
-      refine ⟨effect, resumed, ?_⟩
-      cases effect with
-      | Rejected original => exact .inl (congrArg registration.BeaconInitEffect.Rejected shapes.1)
-      | Ready ready => exact .inr ⟨ready, rfl⟩
-      | _ => cases shapes
 
-theorem signing_source (beacon : beaconcrypt_public_wrapper.beacon.Beacon)
-    (pending : registration.BeaconMldsaSigning)
-    (hash : registration.HashRequest → m CtxRomAuth.CtxDigest)
-    (sign : registration.MldsaSigningRequest → m (core.option.Option (alloc.vec.Vec U8)))
-    (edMethod : registration.Ed25519SigningRequest → m RegistrationSigningShared.SignReply)
-    (encode : registration.SignedInitView → m (RustM (core.option.Option Encoded)))
-    (payload : MldsaTranscriptAuth.Payload) (digest : CtxRomAuth.CtxDigest)
-    (signLeaf : ∀ request, (localOps.auth_MldsaIdentity_sign_requested beacon.authentication.identity request).run =
-      RustM.ok <$> sign request) :
-    publication pending.state.original_control encode
-      (beaconcrypt_public_request.beacon._proof_beacon_init_ready_loop (m := RustT m) (.MldsaSigningRequested pending) beacon) =
-    RegistrationNativePlatformBeaconPublication.fromSigning (outgoing hash sign edMethod) encode payload digest pending := by
-  rw [AdapterPublicInitReady.loop_source]
-  simp only [AdapterPublicInitSourceLoop.rank, AdapterPublicWrapperLiftFunction.loopFuel,
-    AdapterPublicInitReady.step, publication, RustT.run_bind, RustT.run_liftRust, RustT.run_pure,
-    RegistrationNativePlatformBeaconPublication.fromSigning]
-  cases requested : pending.request with
-  | fail error | div => simp only [pure_bind, RegistrationNativePlatformBeaconPublication.continueWith]
-  | ok request =>
-      simp only [pure_bind, RegistrationNativePlatformBeaconPublication.continueWith,
-        signLeaf, outgoing, bind_map_left, bind_assoc]
-      apply bind_congr
-      intro signature
-      simp only [borrowed_source]
-      obtain ⟨effect, resumed, shapes⟩ := signing_shapes pending (borrowed signature)
-      rw [resumed]
-      rcases shapes with rfl | ⟨ready, rfl⟩
-      all_goals simp only [pure_bind, RustT.run_pure]
-
-
+omit platform localOps in
 theorem hash_source (beacon : beaconcrypt_public_wrapper.beacon.Beacon)
     (pending : registration.BeaconInitHash)
     (hash : registration.HashRequest → m CtxRomAuth.CtxDigest)
-    (sign : registration.MldsaSigningRequest → m (core.option.Option (alloc.vec.Vec U8)))
     (edMethod : registration.Ed25519SigningRequest → m RegistrationSigningShared.SignReply)
-    (encode : registration.SignedInitView → m (RustM (core.option.Option Encoded)))
+    (encode : registration.InitView → m (RustM (core.option.Option Encoded)))
     (hashLeaf : ∀ request, (children.executeHash request).run =
-      (fun digest => .ok (some (RegistrationAuthenticationShared.digestArray digest))) <$> hash request)
-    (signLeaf : ∀ request, (localOps.auth_MldsaIdentity_sign_requested beacon.authentication.identity request).run =
-      RustM.ok <$> sign request) :
+      (fun digest => .ok (some (RegistrationAuthenticationShared.digestArray digest))) <$> hash request) :
     publication pending.state.original_control encode
       (beaconcrypt_public_request.beacon._proof_beacon_init_ready_loop (m := RustT m) (.HashRequested pending) beacon) =
-    RegistrationNativePlatformBeaconPublication.fromHash (outgoing hash sign edMethod) encode pending := by
+    RegistrationNativePlatformBeaconPublication.fromHash (outgoing hash edMethod) encode pending := by
   rw [AdapterPublicInitReady.loop_source]
   simp only [AdapterPublicInitSourceLoop.rank, AdapterPublicWrapperLiftFunction.loopFuel,
     AdapterPublicInitReady.step, publication, RustT.run_bind, RustT.run_liftRust, RustT.run_pure,
@@ -174,49 +128,9 @@ theorem hash_source (beacon : beaconcrypt_public_wrapper.beacon.Beacon)
         hashLeaf, outgoing, bind_map_left, bind_assoc]
       apply bind_congr
       intro digest
-      obtain ⟨signing, resumed, stateSame, _fingerprint, _digest, _request⟩ :=
+      obtain ⟨ready, resumed, stateSame, _digest, _message⟩ :=
         RegistrationSigningContinuations.beacon_init_hash_some_exact pending (RegistrationAuthenticationShared.digestArray digest)
-      simp only [resumed]
-      have continued := signing_source beacon signing hash sign edMethod encode
-        ⟨.beacon, RegistrationInputs.hashBytes request⟩ digest signLeaf
-      rw [AdapterPublicInitReady.loop_source] at continued
-      simpa only [AdapterPublicInitSourceLoop.rank, AdapterPublicWrapperLiftFunction.loopFuel,
-        AdapterPublicInitReady.step, publication, RustT.run_bind, RustT.run_liftRust, RustT.run_pure,
-        stateSame, pure_bind] using continued
-
-
-theorem fingerprint_source (beacon : beaconcrypt_public_wrapper.beacon.Beacon)
-    (pending : registration.BeaconFingerprint)
-    (hash : registration.HashRequest → m CtxRomAuth.CtxDigest)
-    (sign : registration.MldsaSigningRequest → m (core.option.Option (alloc.vec.Vec U8)))
-    (edMethod : registration.Ed25519SigningRequest → m RegistrationSigningShared.SignReply)
-    (encode : registration.SignedInitView → m (RustM (core.option.Option Encoded)))
-    (hashLeaf : ∀ request, (children.executeHash request).run =
-      (fun digest => .ok (some (RegistrationAuthenticationShared.digestArray digest))) <$> hash request)
-    (signLeaf : ∀ request, (localOps.auth_MldsaIdentity_sign_requested beacon.authentication.identity request).run =
-      RustM.ok <$> sign request) :
-    publication pending.state.original_control encode
-      (beaconcrypt_public_request.beacon._proof_beacon_init_ready_loop (m := RustT m) (.FingerprintRequested pending) beacon) =
-    RegistrationNativePlatformBeaconPublication.fromFingerprint (outgoing hash sign edMethod) encode pending := by
-  rw [AdapterPublicInitReady.loop_source]
-  simp only [AdapterPublicInitSourceLoop.rank, AdapterPublicWrapperLiftFunction.loopFuel,
-    AdapterPublicInitReady.step, publication, RustT.run_bind, RustT.run_liftRust, RustT.run_pure,
-    RegistrationNativePlatformBeaconPublication.fromFingerprint]
-  cases requested : pending.request with
-  | fail error | div => simp only [pure_bind, RegistrationNativePlatformBeaconPublication.continueWith]
-  | ok request =>
-      simp only [pure_bind, RegistrationNativePlatformBeaconPublication.continueWith,
-        hashLeaf, outgoing, bind_map_left, bind_assoc]
-      apply bind_congr
-      intro digest
-      obtain ⟨hashing, resumed, stateSame, _fingerprint, _request⟩ :=
-        RegistrationSigningContinuations.beacon_fingerprint_some_exact pending (RegistrationAuthenticationShared.digestArray digest)
-      simp only [resumed]
-      have continued := hash_source beacon hashing hash sign edMethod encode hashLeaf signLeaf
-      rw [AdapterPublicInitReady.loop_source] at continued
-      simpa only [AdapterPublicInitSourceLoop.rank, AdapterPublicWrapperLiftFunction.loopFuel,
-        AdapterPublicInitReady.step, publication, RustT.run_bind, RustT.run_liftRust, RustT.run_pure,
-        stateSame, pure_bind] using continued
+      simp only [resumed, pure_bind, RustT.run_pure, RegistrationNativePlatformBeaconPublication.ready]
 
 end BeaconcryptCore.Refinement.AdapterPublicInitPublication
 
@@ -236,26 +150,8 @@ end BeaconcryptCore.Refinement.AdapterPublicInitPublication
 #guard_msgs in
 #print axioms BeaconcryptCore.Refinement.AdapterPublicInitPublication.publication_step
 
-/-- info: 'BeaconcryptCore.Refinement.AdapterPublicInitPublication.signing_shapes' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Refinement.AdapterPublicInitPublication.signing_shapes
-
-/-- info: 'BeaconcryptCore.Refinement.AdapterPublicInitPublication.signing_source' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Refinement.AdapterPublicInitPublication.signing_source
-
 /-- info: 'BeaconcryptCore.Refinement.AdapterPublicInitPublication.hash_source' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Refinement.AdapterPublicInitPublication.hash_source
-
-/-- info: 'BeaconcryptCore.Refinement.AdapterPublicInitPublication.fingerprint_source' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Refinement.AdapterPublicInitPublication.fingerprint_source

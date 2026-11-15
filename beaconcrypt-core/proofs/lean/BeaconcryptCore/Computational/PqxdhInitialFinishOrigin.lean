@@ -9,6 +9,7 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 open OracleComp OracleSpec
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialFinishOrigin
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open RawCtxGenericRoleStorage PqxdhBeaconPhase2Shared PqxdhInitialGenericBeacon
 variable {Kernel Other Origin I D K X Response Shared : Type}
 
@@ -28,7 +29,7 @@ noncomputable def owner (mark : Secrets Shared → Origin)
     (raw : Pqxdh.Bytes) (state : BeaconState Kernel I D K) : m (Result Kernel Origin I D K) :=
   match state.beacon.phase with
   | .initSent control prekey oneTime kem => do
-      let prepared ← simulateQ pre (PqxdhBeaconPhase2Shared.prepare control state.beacon.identity prekey oneTime kem raw)
+      let prepared ← simulateQ pre (PqxdhBeaconPhase2Shared.prepare (completedBinding := completedBinding) control state.beacon.identity prekey oneTime kem raw)
       match prepared with
       | none => pure (finish control state none, none)
       | some prepared => do
@@ -44,8 +45,8 @@ theorem erase (mark : Secrets Shared → Origin)
     (calls : RawCtxChainOwner.Calls Kernel m) (application : Response → m (Option Pqxdh.Bytes))
     (initial : Secrets Shared → m (Option Kernel)) (decode : RawCtxReceive.FrameDecoder)
     (raw : Pqxdh.Bytes) (state : BeaconState Kernel I D K) :
-    Prod.fst <$> owner mark pre calls application initial decode raw state =
-      PqxdhInitialGenericBeacon.owner pre calls application initial decode raw state := by
+    Prod.fst <$> owner (completedBinding := completedBinding) mark pre calls application initial decode raw state =
+      PqxdhInitialGenericBeacon.owner (completedBinding := completedBinding) pre calls application initial decode raw state := by
   unfold owner PqxdhInitialGenericBeacon.owner
   cases phase : state.beacon.phase
   case initSent control prekey oneTime kem =>
@@ -67,8 +68,8 @@ theorem owner_map (interpret : Kernel → Other) (mark : Secrets Shared → Orig
     (initial : Secrets Shared → m (Option Kernel)) (otherInitial : Secrets Shared → m (Option Other))
     (initialMap : ∀ secrets, otherInitial secrets = Option.map interpret <$> initial secrets)
     (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes) (state : BeaconState Kernel I D K) :
-    owner mark pre otherCalls application otherInitial decode raw (mapBeacon interpret state) =
-      Prod.map (Prod.map id (mapBeacon interpret)) id <$> owner mark pre calls application initial decode raw state := by
+    owner (completedBinding := completedBinding) mark pre otherCalls application otherInitial decode raw (mapBeacon interpret state) =
+      Prod.map (Prod.map id (mapBeacon interpret)) id <$> owner (completedBinding := completedBinding) mark pre calls application initial decode raw state := by
   unfold owner
   simp only [mapBeacon]
   cases phase : state.beacon.phase
@@ -100,12 +101,12 @@ theorem origin {State : Type} (mark : Secrets Shared → Origin)
     (initial : Secrets Shared → StateT State ProbComp (Option Kernel)) (decode : RawCtxReceive.FrameDecoder)
     (raw : Pqxdh.Bytes) (entry : BeaconState Kernel I D K) (before : State)
     (result : Result Kernel Origin I D K × State)
-    (supported : result ∈ support ((owner mark pre calls application initial decode raw entry).run before))
+    (supported : result ∈ support ((owner (completedBinding := completedBinding) mark pre calls application initial decode raw entry).run before))
     (marker : Origin) (recorded : result.1.2 = some marker) :
     ∃ control prekey oneTime kem, ∃ (prepared : Prepared Response Shared) (atTail : State) (staged : Option (Staged Kernel)),
       entry.beacon.phase = .initSent control prekey oneTime kem ∧
       (some prepared, atTail) ∈ support ((simulateQ pre
-        (PqxdhBeaconPhase2Shared.prepare control entry.beacon.identity prekey oneTime kem raw)).run before) ∧
+        (PqxdhBeaconPhase2Shared.prepare (completedBinding := completedBinding) control entry.beacon.identity prekey oneTime kem raw)).run before) ∧
       (staged, result.2) ∈ support ((tail calls application initial decode prepared).run atTail) ∧
       result.1.1 = finish control entry staged ∧ result.1.1.1.isSome = true ∧ marker = mark prepared.root := by
   unfold owner at supported
@@ -141,7 +142,7 @@ theorem published {State : Type} (mark : Secrets Shared → Origin)
     (initial : Secrets Shared → StateT State ProbComp (Option Kernel)) (decode : RawCtxReceive.FrameDecoder)
     (raw : Pqxdh.Bytes) (entry : BeaconState Kernel I D K) (before : State)
     (result : Result Kernel Origin I D K × State)
-    (supported : result ∈ support ((owner mark pre calls application initial decode raw entry).run before)) :
+    (supported : result ∈ support ((owner (completedBinding := completedBinding) mark pre calls application initial decode raw entry).run before)) :
     result.1.2.isSome = result.1.1.1.isSome := by
   unfold owner at supported
   cases phase : entry.beacon.phase

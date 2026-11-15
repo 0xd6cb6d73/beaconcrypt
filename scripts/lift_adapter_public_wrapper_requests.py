@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: 0BSD
-"""Lift all 49 reviewed public-wrapper definitions by exact typed leaf rebinding.
+"""Lift all 48 reviewed public-wrapper definitions by exact typed leaf rebinding.
 
 The frozen binding table records each signature and body identifier separately.
 Control flow, continuation placement, callback captures and source ordering are
@@ -28,7 +28,7 @@ BINDINGS = Path(
 DESTINATION = Path(
     "beaconcrypt-core/proofs/lean/BeaconcryptCore/AdapterPublicWrapperRequestExtraction.lean"
 )
-BINDINGS_SHA256 = "f237aa3629951d5ac351f2edfc80662ddf3cbedc850ae387413f6de99e09295d"
+BINDINGS_SHA256 = "2c07329b6700e7cd8a220971ebe478903b419b806c82a6d54f89f167fc44da2a"
 TOKEN = re.compile(
     r"(?<![\w])(?:[A-Za-z_][A-Za-z0-9_']*)(?:\.[A-Za-z_][A-Za-z0-9_']*)*"
 )
@@ -64,14 +64,14 @@ def transform(source: bytes, bindings: bytes) -> bytes:
     if digest(source) != control["source_sha256"]:
         raise ValueError("reviewed public wrapper source changed")
     source_text = source.decode()
-    marker = "/-- [beaconcrypt::auth::fingerprint_pin]"
+    marker = "/-- [beaconcrypt::auth::server_pin]"
     if source_text.count(marker) != 1:
         raise ValueError("public wrapper source boundary changed")
     selected = source_text[source_text.index(marker) :].replace(
         "end beaconcrypt_public_wrapper\n", "end beaconcrypt_parse\n"
     )
     groups = schema.chunks(selected)
-    if len(groups) != 49 or [names[0] for names, _ in groups] != [
+    if len(groups) != 48 or [names[0] for names, _ in groups] != [
         row["name"] for row in control["definitions"]
     ]:
         raise ValueError("public wrapper declaration roster changed")
@@ -141,7 +141,7 @@ def main() -> int:
         parser.error(
             "public wrapper requests differ; review generated diff with --write"
         )
-    print("public wrapper requests match all 49 reviewed source definitions")
+    print("public wrapper requests match all 48 reviewed source definitions")
     return 0
 
 

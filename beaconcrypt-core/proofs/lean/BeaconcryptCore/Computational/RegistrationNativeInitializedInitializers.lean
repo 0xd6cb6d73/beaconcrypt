@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeInitializerAgreement
+import BeaconcryptCore.Computational.RegistrationNativeInitializedRootAgreement
 
 /-! Original initialized protected native finish determines complementary computations at both actually reached source initializers. The root is proved by the same-run primitive/source argument; the actual pending initializers and concrete fixed-source replies give complementary chains and all logical message-key streams under a common step interpretation. Later consumed record kernels and application equality are separate content obligations. -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -23,9 +24,9 @@ def Initializers (crypto : Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMa
     (serverInitial : registration.ServerInitialKdf) (beaconInitial : registration.BeaconInitialKdf) : Prop :=
   ∃ beaconOrigin serverOrigin beaconKernel serverKernel,
     pqxdh.concrete.resume_initial_ratchet_kdf beaconInitial.pending
-      (RawCtxSourceHkdf.initialResponse source.crypto ⟨beaconCapability.root.bytes, ratchet.SYM_RATCHET_INFO⟩) = .ok beaconKernel ∧
+      (RawCtxSourceHkdf.initialResponse source.crypto ⟨beaconCapability.root.bytes, ratchet.INITIAL_RATCHET_INFO⟩) = .ok beaconKernel ∧
     pqxdh.concrete.resume_initial_ratchet_kdf serverInitial.pending
-      (RawCtxSourceHkdf.initialResponse source.crypto ⟨serverCapability.root.bytes, ratchet.SYM_RATCHET_INFO⟩) = .ok serverKernel ∧
+      (RawCtxSourceHkdf.initialResponse source.crypto ⟨serverCapability.root.bytes, ratchet.INITIAL_RATCHET_INFO⟩) = .ok serverKernel ∧
     ConcreteSession crypto beaconOrigin serverOrigin beaconKernel serverKernel ∧
     beaconKernel.refined.send_chain = serverKernel.refined.receive_chain ∧
     beaconKernel.refined.receive_chain = serverKernel.refined.send_chain ∧
@@ -37,11 +38,12 @@ def Outcome (crypto : Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMateria
     (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (token : peer.ConsumedRegistration)
     (serverInitial : registration.ServerInitialKdf) (pending : registration.BeaconPending) (application : Pqxdh.Bytes) : Prop :=
     ∃ (capability : agreement.BeaconAgreement) (established : registration.CompletedBeacon)
-      (initial : registration.BeaconInitialKdf) (aead : registration.BeaconRecordAead) (plaintext : Slice U8),
+      (initial : registration.BeaconInitialKdf) (aead : registration.BeaconRecordAead) (plaintext : Slice U8)
+      (adDigest : CtxRomAuth.CtxDigest),
       Initializers crypto source token.agreement capability serverInitial initial ∧
       token.agreement.root.bytes = capability.root.bytes ∧
-      capability.binding = pending.binding ∧
-      established.binding = BeaconcryptCore.Refinement.RegistrationPublication.completedBinding pending.binding capability.candidate.assigned_key_id ∧
+      capability.binding = RegistrationResponseExecutor.completedBinding pending adDigest ∧
+      established.binding = BeaconcryptCore.Refinement.RegistrationPublication.completedBinding (RegistrationResponseExecutor.completedBinding pending adDigest) capability.candidate.assigned_key_id ∧
       registration.begin_beacon_completion capability = .ok initial ∧ initial.agreement = capability ∧
       BeaconcryptCore.Refinement.RegistrationReachability.BeaconRecordReachable initial (.AeadRequested aead) ∧
       aead.agreement = capability ∧
@@ -70,19 +72,19 @@ theorem path_initializers (crypto : Ratchet.Crypto ratchet.RatchetChain ratchet.
     ∃ serverCall ∈ calls, ∃ handle token current plaintext availability serverInitial hashed,
       serverCall.query = .inr (.build handle (some plaintext)) ∧
       RegistrationServerSdkSource.take handle serverCall.before.server = (some token, current) ∧
-      registration.begin_server_completion current.control current.pin availability token.agreement plaintext = .ok (.Ok serverInitial) ∧
+      BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission current.control current.pin availability token.agreement plaintext serverInitial ∧
       RegistrationServerRecordExecutor.Path serverInitial hashed ∧ Outcome crypto setup.source token serverInitial pending application := by
   obtain ⟨serverCall, memberServer, handle, token, current, plaintext, availability, serverInitial, hashed,
       query, taken, admitted, path, rootOutcome⟩ := RegistrationNativeInitializedRootAgreement.path_root
     setup checks wire route representation ensureInit identityIndex serverKid initial startup calls final actual
     index pending packet owner oneTime beforeFinish afterFinish application member found phase good keyProtected collisionFree correct
-  obtain ⟨capability, established, beaconInitial, aead, opened, rootEq, binding, metadata, started,
+  obtain ⟨capability, established, beaconInitial, aead, opened, adDigest, rootEq, binding, metadata, started,
       sameAgreement, reached, aeadAgreement, kernel, message, returned⟩ := rootOutcome
   have paired : Initializers crypto setup.source token.agreement capability serverInitial beaconInitial :=
     RegistrationNativeInitializerAgreement.kernels crypto setup.source current.control current.pin availability token.agreement
       capability plaintext serverInitial beaconInitial admitted started rootEq
   exact ⟨serverCall, memberServer, handle, token, current, plaintext, availability, serverInitial, hashed,
-    query, taken, admitted, path, capability, established, beaconInitial, aead, opened, paired, rootEq, binding, metadata,
+    query, taken, admitted, path, capability, established, beaconInitial, aead, opened, adDigest, paired, rootEq, binding, metadata,
     started, sameAgreement, reached, aeadAgreement, kernel, message, returned⟩
 
 end BeaconcryptCore.Computational.RegistrationNativeInitializedInitializers

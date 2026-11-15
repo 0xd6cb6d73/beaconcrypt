@@ -4,13 +4,16 @@
     "AdapterRatchetKdfPrimitive.expandInto": "Slice U8 -> Option (Slice U8) -> Prk -> RustM (Result Unit Error * Slice U8); failure, divergence and Result.Err remain representable",
     "Array.index_mut_RangeFull": "existing CoreModels full-array mutable slice and pure write-back; source-correspondent mutable output length is a separate structural law",
     "CryptoOperations.extract": "Option (Slice U8) -> Slice U8 -> RustM (Result Prk Error); the existing public-adapter operation is reused unchanged",
+    "InitialRatchetKdfRequest.info": "original initial-only Core method rebound to existing impl.info: InitialRequest -> RustM (Array U8 45)",
+    "InitialRatchetKdfRequest.input": "original initial-only Core method rebound to existing impl.input: InitialRequest -> RustM (Array U8 32)",
     "RatchetKdfResponse.from_bytes": "existing extracted Core constructor: Array U8 76 -> RustM Response",
     "Result.expect": "existing CoreModels Result.expect; Err returns represented panic, success ignores the formatter",
-    "SymmetricRatchetKdfRequest.info": "original Core method rebound to existing impl.info: Request -> RustM (Array U8 41)",
+    "SymmetricRatchetKdfRequest.info": "original Core method rebound to existing impl.info: Request -> RustM (Array U8 48)",
     "SymmetricRatchetKdfRequest.input": "original Core method rebound to existing impl.input: Request -> RustM (Array U8 32)",
     "Zeroizing": "existing payload wrapper; new/deref retain the payload; no drop or physical-erasure claim",
     "Zeroizing.deref_mut": "Zeroizing T -> RustM (T * (T -> Zeroizing T)); pure write-back wraps the actual replacement",
-    "output_bound": "literal extracted checked multiplication 255 * 64 and massert OUTPUT_SIZE <= bound, retained unchanged"
+    "output_bound": "literal extracted checked multiplication 255 * 64 and massert OUTPUT_SIZE <= bound, retained unchanged",
+    "symmetric_ratchet_hkdf.input_info": "private helper borrows input32 and actual info Slice; no output-size-to-label branch"
   },
   "templates": {
     "FunsExternal_Template.lean": {

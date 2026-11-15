@@ -1,8 +1,9 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeMldsaCoinPrimitives
 import BeaconcryptCore.Computational.RegistrationNativeInitCosts
+import BeaconcryptCore.Computational.RegistrationNativeMldsaBundle
 
-/-! Literal ordinary-randomness bounds for free outgoing Beacon publication, with raw ML replies unrestricted. The named ML signing request itself emits no uniform query; hashes, optional one-time scalar sampling and publication effects retain their actual source schedules. -/
+/-! Literal ordinary-randomness bounds for free outgoing Beacon publication. Three attached Ed signatures precede the retained request hash; optional one-time scalar sampling and publication effects retain their actual source schedules. The Beacon controller issues no ML signing query. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -20,7 +21,7 @@ variable {n : Nat} {ι KemSK Value : Type} {base : OracleSpec ι}
 variable {source : Source}
 variable (setup : Setup base KemSK) (checks : Checks)
 variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 
 private theorem state_lift_apply {S X : Type} {m : Type → Type} [Monad m] [LawfulMonad m]
     (work : m X) (state : S) : (StateT.lift work) state = (fun value => (value, state)) <$> work := by
@@ -83,10 +84,8 @@ theorem outgoing (index : Nat) (owner : Owner source)
           isQueryBound_map_iff] using CtxComputationalSecurity.ctxRandomOracle_total_query_bound
             ((), BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request) (RegistrationNativeMldsaShared.project before).2
     | sign request payload digest =>
-        simp only [RegistrationNativeMldsaBundle.outgoing, StateT.run]
-        apply (isQueryBoundP_bind (n := 0) (m := 0)
-          (RegistrationNativeMldsaCoinPrimitives.call .environment (.sign owner.mldsa request) before.2.2.server.world.world.1)
-          (fun _ _ => isQueryBoundP_pure _ _ _)).mono (Nat.zero_le 64)
+        apply native_outgoing setup checks representation created index owner (.inl (.sign request payload digest)) before
+        simp only [RegistrationNativeMldsaShared.implementation, StateT.run_pure, IsTotalQueryBound, isQueryBound_pure]
   | inr request =>
       apply native_outgoing setup checks representation created index owner (.inr request) before
       simp only [RegistrationNativeMldsaShared.implementation, StateT.run_pure, IsTotalQueryBound, isQueryBound_pure]
@@ -159,7 +158,7 @@ private theorem scalar (before : Local n KemSK source) :
 private theorem native_get (before : Local n KemSK source) :
     (RegistrationNativeMldsaBundle.native setup checks representation created get).run before = pure (before.1, before) := rfl
 
-/-- Every free source bundle has at most32 optional scalar draws plus six source slots of at most64 ordinary draws. -/
+/-- Every free source bundle has at most32 optional scalar draws plus four source callbacks (three Ed signatures and the request hash) of at most64 ordinary draws, within the retained 416-draw allowance. -/
 theorem bundle (wire : RegistrationNativeWire.Wire) (index : Nat) (before : Local n KemSK source) :
     ((RegistrationNativeMldsaBundle.bundle setup checks wire representation created index).run before).IsQueryBoundP IsCoin 416 := by
   simp only [RegistrationNativeMldsaBundle.bundle, StateT.run_bind, native_get setup checks representation created, pure_bind]
@@ -171,12 +170,12 @@ theorem bundle (wire : RegistrationNativeWire.Wire) (index : Nat) (before : Loca
             let published ← simulateQ (RegistrationNativeMldsaBundle.outgoing setup checks representation created index owner)
               (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨owner.pin.binding⟩
                 (RegistrationNativeBeaconFrontend.inputs setup owner)
-                ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)
+                ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)
             RegistrationNativeMldsaBundle.afterPublished setup checks representation created index owner oneTime published).run current).IsQueryBoundP IsCoin 384 := by
         rw [StateT.run_bind]
         apply isQueryBoundP_bind (n := 384) (m := 0)
-        · exact simulated setup checks representation created index owner _ 6
-            (RegistrationNativeInitCosts.begin_bound wire.encodeInit _ _ _ _ _) current
+        · exact (simulated setup checks representation created index owner _ 4
+            (RegistrationNativeInitCosts.begin_bound wire.encodeInit _ _ _ _) current).mono (by decide)
         · intro result _
           exact afterPublished setup checks representation created index owner oneTime result.1 result.2
       cases phase : owner.phase <;> simp only [phase]

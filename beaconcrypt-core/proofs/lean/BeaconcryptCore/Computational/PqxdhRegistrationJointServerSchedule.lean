@@ -35,7 +35,7 @@ theorem accept_native (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
             (PqxdhRegistrationJointSchedule.source state) := by
   simp only [onBackend, PqxdhRegistrationSchedule.onShared, StateT.run, Functor.map_map]
   simpa only [StateT.run, Functor.map_map, PqxdhRegistrationJointSchedule.source] using congrArg
-    (fun work => (fun result => (result.1, (⟨result.2, state.owners.map PqxdhRegistrationJointOwnership.Entry.owner⟩ : PqxdhRegistrationSchedule.State KemSK))) <$> work)
+    (fun work => (fun result => (result.1, (⟨result.2, state.owners.map PqxdhRegistrationJointOwnership.Entry.owner, state.inits⟩ : PqxdhRegistrationSchedule.State KemSK))) <$> work)
     (PqxdhRegistrationJointServerAccept.source_native setup codec checks seed identityIndex raw (state.pool, state.shared))
 
 /-- Every public request projects to the original native scheduler with the same complete owner registry, pending state, caches and current-field answer. -/
@@ -128,18 +128,33 @@ theorem base_query_slot (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
     result.2.pool.1.seeds[index]? = some seed := by
   rcases query with coin | request
   case inr =>
-    cases request <;> first
-    | exact native_slot _ state result seed index owned supported
-    | skip
+    cases request
+    all_goals try exact native_slot _ state result seed index owned supported
     case finish address raw =>
       cases found : state.owners[address]? <;>
         simp only [PqxdhRegistrationJointSchedule.handler, PqxdhRegistrationJointSchedule.finish,
           StateT.run, found, support_map, Set.mem_image, mem_support_pure_iff] at supported
       case some entry =>
         obtain ⟨reached, member, rfl⟩ := supported
-        have slots := PqxdhRegistrationJointFinish.annotated_program_slots setup codec entry.identityIndex entry.kemIndex
-          (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw entry.owner) (state.pool, state.shared) reached member
-        simpa only [slots.1] using owned
+        change reached ∈ support ((PqxdhRegistrationJointFinish.annotatedFinish setup codec entry.identityIndex
+          entry.kemIndex (state.inits address) raw entry.owner).run (state.pool, state.shared)) at member
+        unfold PqxdhRegistrationJointFinish.annotatedFinish at member
+        cases phase : entry.owner.beacon.phase <;> simp only [phase, StateT.run_pure, mem_support_pure_iff] at member
+        case initSent control prekey oneTime kem =>
+          cases retained : state.inits address <;> cases decoded : responseOf codec raw <;>
+            simp only [retained, decoded, StateT.run_pure, mem_support_pure_iff] at member
+          case some.some init response =>
+            rw [StateT.run_bind, mem_support_bind_iff] at member
+            obtain ⟨hashed, hashMember, member⟩ := member
+            simp only [PqxdhRegistrationJointFinish.onNative, StateT.run, support_map, Set.mem_image] at hashMember
+            obtain ⟨value, _, rfl⟩ := hashMember
+            have slots := PqxdhRegistrationJointFinish.annotated_program_slots setup codec entry.identityIndex
+              entry.kemIndex _ (state.pool, value.2) reached member
+            simpa only [slots.1] using owned
+          all_goals subst member
+          all_goals exact owned
+        all_goals subst member
+        all_goals exact owned
       case none => simpa only [supported] using owned
     case bundle address =>
       cases found : state.owners[address]? <;>
@@ -147,7 +162,13 @@ theorem base_query_slot (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
           StateT.run, found, support_map, Set.mem_image, mem_support_pure_iff] at supported
       case some entry =>
         obtain ⟨reached, member, rfl⟩ := supported
-        simpa only [bundle_seeds setup codec entry.identityIndex entry.owner state.pool.1 reached member] using owned
+        have traced : reached.1 ∈ support (PqxdhRegistrationJointBundle.trace setup codec entry.identityIndex
+            entry.owner state.pool.1) := by
+          rw [← PqxdhRegistrationJointBundle.trace_log setup codec entry.identityIndex entry.owner state.pool.1
+            (state.inits address)]
+          rw [support_map]
+          exact ⟨reached, member, rfl⟩
+        simpa only [bundle_seeds setup codec entry.identityIndex entry.owner state.pool.1 reached.1 traced] using owned
       case none => simpa only [supported] using owned
     case create pin keyId =>
       simp only [PqxdhRegistrationJointSchedule.handler, PqxdhRegistrationJointSchedule.create,

@@ -5,7 +5,9 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeSendLog
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhInitialBeaconAmbient
 variable {ι I D K X Response Shared A N C Result : Type} {extra : OracleSpec ι} {S B : Nat}
 variable (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer) (stage : Nat)
@@ -203,7 +205,7 @@ theorem origin_input {M P Origin : Type}
     (result : ((SourceSpec S B).Range query ×
       (PqxdhInitialPendingPost.Front RatchetChain M P I D K S B × PqxdhInitialOriginPost.Trace Origin S B)) × Backend)
     (supported : result ∈ support ((simulateQ impl
-      ((PqxdhInitialOriginPost.compiler mark sender route decode (.inl (.inl query))).run entry)).run before))
+      ((PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) mark sender route decode (.inl (.inl query))).run entry)).run before))
     (selected : Owner S B) (number : Std.U64)
     (recorded : (selected, number) ∈ RawCtxPublishedRecords.record query result.1.1) :
     ∃ kernel, RawCtxGenericRoleFamily.selectedKernel selected entry.1.roles.1 = some kernel ∧
@@ -228,7 +230,7 @@ theorem challenge_input {M P Origin : Type}
       PqxdhInitialOriginPost.Trace Origin S B) × Backend)
     (record : RawCtxSourceSend.Encrypted)
     (supported : (some record, after) ∈ support ((simulateQ
-      (PqxdhLaterChallengeCutChronology.postImpl mark sender route decode impl)
+      (PqxdhLaterChallengeCutChronology.postImpl (completedBinding := completedBinding) mark sender route decode impl)
       (PqxdhRecordConfidentialityChallenge.send owner plaintext)).run before)) :
     ∃ kernel, RawCtxGenericRoleFamily.selectedKernel owner before.1.1.roles.1 = some kernel ∧
       RawCtxSelectedPendingCut.requestAddress kernel.send_chain ∈ after.2.1.1.2 := by
@@ -239,7 +241,7 @@ theorem challenge_input {M P Origin : Type}
       simp only [PqxdhLaterChallengeCutChronology.postImpl, StateT.run, support_map] at supported
       obtain ⟨⟨⟨reply, front⟩, backend⟩, reached, same⟩ := supported
       rcases Prod.mk.inj same with ⟨rfl, rfl⟩
-      exact origin_input source writer stage pre application initial selector aux mark sender route decode
+      exact origin_input (completedBinding := completedBinding) source writer stage pre application initial selector aux mark sender route decode
         (.inl (.inl ⟨index, .inl (plaintext, peer)⟩)) before.1 before.2 _ reached
         (.server index peer) record.sequence (by simp only [RawCtxPublishedRecords.record, List.mem_singleton])
   | beacon index =>
@@ -248,7 +250,7 @@ theorem challenge_input {M P Origin : Type}
       simp only [PqxdhLaterChallengeCutChronology.postImpl, StateT.run, support_map] at supported
       obtain ⟨⟨⟨reply, front⟩, backend⟩, reached, same⟩ := supported
       rcases Prod.mk.inj same with ⟨rfl, rfl⟩
-      exact origin_input source writer stage pre application initial selector aux mark sender route decode
+      exact origin_input (completedBinding := completedBinding) source writer stage pre application initial selector aux mark sender route decode
         (.inl (.inr (.inl ⟨index, .inl plaintext⟩))) before.1 before.2 _ reached
         (.beacon index) record.sequence (by simp only [RawCtxPublishedRecords.record, List.mem_singleton])
 

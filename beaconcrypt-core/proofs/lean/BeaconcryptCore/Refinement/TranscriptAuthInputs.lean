@@ -2,9 +2,10 @@
 import BeaconcryptCore.Extraction.Funs
 import BeaconcryptCore.Refinement.PqxdhEncoding
 import BeaconcryptCore.Model.Pqxdh.TranscriptAuth
+import BeaconcryptCore.Model.Pqxdh.SessionTranscript
 
 /-!
-The runtime authentication constants, role-separated signing input, and associated-data overwrite refine the deterministic byte model through the current full-crate Hax extraction.
+The runtime authentication constants, role-separated signing input, and session transcript context assembly refine the deterministic byte model through the current full-crate Hax extraction.
 These theorems establish byte construction only; hashing, ML-DSA security, codec parsing, and the adapter's native primitive calls remain outside this refinement.
 -/
 
@@ -64,43 +65,67 @@ private theorem getByte_append (left right : List Std.U8) (index : Nat) :
   simp only [List.getElem!_eq_getElem?_getD, List.getElem?_append]
   split_ifs <;> rfl
 
-private theorem ad_closure_list (base : Std.Array Std.U8 281#usize)
-    (server beacon : Std.Array Std.U8 64#usize) (index : Nat) (bound : index < 281) :
-    let closure : authentication.bind_associated_data.closure := (base, server, beacon)
-    authentication.bind_associated_data.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
-        closure ⟨BitVec.ofNat _ index⟩ =
-      ok ((base.val.take 153 ++ server.val ++ beacon.val)[index]!, closure) := by
+/-- The retained context is independent of both current ratchet KDF labels. -/
+theorem ad_context_abs : absBytes authentication.AD_CONTEXT = SessionTranscript.context := by
+  simp [absBytes, authentication.AD_CONTEXT, SessionTranscript.context, absByte, Std.Array.make]
+
+private theorem ad_closure_list (digest : Std.Array Std.U8 64#usize)
+    (index : Nat) (bound : index < 151) :
+    authentication.assemble_associated_data.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
+        digest ⟨BitVec.ofNat _ index⟩ =
+      ok ((authentication.AD_CONTEXT.val ++ digest.val)[index]!, digest) := by
   have value := usize_mk_val index (by omega)
-  simp only [authentication.bind_associated_data.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut,
-    Std.UScalar.lt_equiv, value, getByte_append, List.length_append, Std.Array.length_eq, List.length_take]
-  dsimp! only [authentication.bind_associated_data.closure]
+  simp only [authentication.assemble_associated_data.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut,
+    Std.UScalar.lt_equiv, value, getByte_append, Std.Array.length_eq]
+  dsimp! only [authentication.assemble_associated_data.closure]
   norm_num only [Std.UScalar.ofNatCore_val_eq]
-  rcases (show index < 153 ∨ (153 ≤ index ∧ index < 217) ∨ 217 ≤ index by omega) with
-    region | region | region
+  rcases (show index < 87 ∨ 87 ≤ index by omega) with region | region
   all_goals repeat' first | rw [ite_eq_left (by omega)] | rw [ite_eq_right (by omega)]
   all_goals try erw [index_sub_eq]
   all_goals dsimp only [Std.UScalarTy.numBits] at value
   all_goals norm_num only [value, Std.UScalar.ofNatCore_val_eq]
   all_goals try omega
-  all_goals try rfl
   erw [index_usize_eq]
   all_goals simp only [bind_tc_ok, value, Std.UScalar.ofNatCore_val_eq]
-  all_goals first | omega | simp only [List.getElem!_eq_getElem?_getD, List.getElem?_take_of_lt region]
+  all_goals omega
 
-/-- The runtime AD builder preserves the classical prefix and fills both fingerprint slots. -/
-theorem bind_associated_data_abs (base : Std.Array Std.U8 281#usize)
-    (server beacon : Std.Array Std.U8 64#usize) :
-    ∃ output, authentication.bind_associated_data base server beacon = ok output ∧
-      absBytes output = TranscriptAuth.fillAssociatedData (absBytes base)
-        (absBytes server) (absBytes beacon) := by
-  unfold authentication.bind_associated_data
-  obtain ⟨output, run, bytes⟩ := from_fn_list 281#usize
-    authentication.bind_associated_data.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8
-    (base, server, beacon) (base.val.take 153 ++ server.val ++ beacon.val)
-    (by simp [Std.Array.length_eq]) (fun index bound => ad_closure_list base server beacon index bound)
+/-- Every actual successful assembly emits exactly context87 followed by the supplied digest64. -/
+theorem assemble_associated_data_abs (digest : Std.Array Std.U8 64#usize) :
+    ∃ output, authentication.assemble_associated_data digest = ok output ∧
+      absBytes output = SessionTranscript.associatedData (absBytes digest) := by
+  unfold authentication.assemble_associated_data
+  obtain ⟨output, run, bytes⟩ := from_fn_list 151#usize
+    authentication.assemble_associated_data.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8
+    digest (authentication.AD_CONTEXT.val ++ digest.val)
+    (by simp [Std.Array.length_eq]) (fun index bound => ad_closure_list digest index bound)
   refine ⟨output, run, ?_⟩
-  simp only [absBytes, bytes, List.map_append, List.map_take,
-    TranscriptAuth.fillAssociatedData, TranscriptAuth.associatedData]
+  simp only [absBytes, bytes, List.map_append, SessionTranscript.associatedData]
+  rw [← ad_context_abs]
+  rfl
+
+private theorem owned_identity_byte (fields : authentication.OwnedInitFields) (index : Std.Usize)
+    (inside : index.val < 32) :
+    authentication.OwnedInitFields.identity_public_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
+      fields index = ok (fields.identity_key.val[index.val + 1]!, fields) := by
+  obtain ⟨next, nextRun, nextValue⟩ := usize_add_val index 1#usize
+    (lt_numBits _ (by simp; omega))
+  simp [authentication.OwnedInitFields.identity_public_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut,
+    nextRun, index_usize_eq fields.identity_key next (by simp at nextValue ⊢; omega), nextValue]
+
+/-- The retained public identity is exactly the complete 32-byte suffix after the tagged field. -/
+theorem identity_public_key_exact (fields : authentication.OwnedInitFields) :
+    ∃ publicKey : Std.Array Std.U8 32#usize,
+      authentication.OwnedInitFields.identity_public_key fields = ok publicKey ∧
+      publicKey.val = (List.range (32#usize).val).map
+        (fun index => fields.identity_key.val[index + 1]!) := by
+  unfold authentication.OwnedInitFields.identity_public_key
+  apply from_fn_pure 32#usize
+    authentication.OwnedInitFields.identity_public_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8
+    fields (fun index => fields.identity_key.val[index + 1]!)
+  intro index inside
+  have indexValue := usize_mk_val index (by scalar_tac)
+  simpa only [indexValue] using owned_identity_byte fields ⟨BitVec.ofNat _ index⟩
+    (by simpa only [indexValue, usize_val_32] using inside)
 
 def absRole : authentication.AuthRole → TranscriptAuth.Role
   | .Beacon => .beacon
@@ -168,6 +193,14 @@ end TranscriptAuthInputsRefinement
 /-- info: 'TranscriptAuthInputsRefinement.build_signature_input_abs' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms TranscriptAuthInputsRefinement.build_signature_input_abs
-/-- info: 'TranscriptAuthInputsRefinement.bind_associated_data_abs' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+/-- info: 'TranscriptAuthInputsRefinement.assemble_associated_data_abs' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
-#print axioms TranscriptAuthInputsRefinement.bind_associated_data_abs
+#print axioms TranscriptAuthInputsRefinement.assemble_associated_data_abs
+
+/-- info: 'TranscriptAuthInputsRefinement.ad_context_abs' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms TranscriptAuthInputsRefinement.ad_context_abs
+
+/-- info: 'TranscriptAuthInputsRefinement.identity_public_key_exact' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms TranscriptAuthInputsRefinement.identity_public_key_exact

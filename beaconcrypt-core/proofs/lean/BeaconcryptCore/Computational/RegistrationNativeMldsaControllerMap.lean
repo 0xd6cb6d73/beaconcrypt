@@ -22,58 +22,35 @@ def preparedResult (mapping : Map left right)
   | .div => .div
 
 set_option backward.isDefEq.respectTransparency false in
-theorem afterGenerated_natural (mapping : Map left right)
-    (edPin : Std.Array Std.U8 32#usize) (mlPin : Std.Array Std.U8 1952#usize) (keyId : Std.U64)
-    (generated : Option (RegistrationNativeMldsa.Credential left)) :
+theorem prepare_natural (mapping : Map left right)
+    (edPin : Std.Array Std.U8 32#usize) (mlPin : Std.Array Std.U8 1952#usize) (keyId : Std.U64) :
     Natural (n := n) (KemSK := KemSK) (Auxiliary := RegistrationServerRoleBackend.State) mapping (preparedResult mapping)
-      (RegistrationNativeMldsaCreation.afterGenerated edPin mlPin keyId generated)
-      (RegistrationNativeMldsaCreation.afterGenerated edPin mlPin keyId (generated.map (RegistrationNativeMldsaMap.credential mapping))) := by
-  unfold RegistrationNativeMldsaCreation.afterGenerated
-  cases generated with
-  | none => exact pure_natural mapping (preparedResult mapping) _
-  | some credential =>
-      simp only [Option.map_some]
-      cases registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
-      | fail error => exact pure_natural mapping (preparedResult mapping) _
-      | div => exact pure_natural mapping (preparedResult mapping) _
-      | ok pending =>
-          simp only
-          cases pending.request with
-          | fail error => exact pure_natural mapping (preparedResult mapping) _
-          | div => exact pure_natural mapping (preparedResult mapping) _
-          | ok request =>
-              simp only
-              apply bind_natural mapping id (preparedResult mapping) _ _ _ _ (hash_natural mapping request)
-              intro digest
-              simp only [id_eq]
-              cases pending.resume (.Some (RegistrationAuthenticationShared.digestArray digest)) with
-              | fail error => exact pure_natural mapping (preparedResult mapping) _
-              | div => exact pure_natural mapping (preparedResult mapping) _
-              | ok result => cases result with
-                | none => exact pure_natural mapping (preparedResult mapping) _
-                | some pin =>
-                    apply bind_natural mapping id (preparedResult mapping) _ _ _ _ (sample_natural mapping PqxdhJointIdentity.sampleSeed)
-                    intro identity
-                    apply bind_natural mapping id (preparedResult mapping) _ _ _ _ (sample_natural mapping PqxdhJointGapDh.sampleScalar)
-                    intro prekey
-                    exact pure_natural mapping (preparedResult mapping) _
+      (RegistrationNativeBeaconFrontend.prepare left edPin mlPin keyId)
+      (RegistrationNativeBeaconFrontend.prepare right edPin mlPin keyId) := by
+  unfold RegistrationNativeBeaconFrontend.prepare
+  cases registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
+  | fail error | div => exact pure_natural mapping (preparedResult mapping) _
+  | ok pin =>
+      apply bind_natural mapping id (preparedResult mapping) _ _ _ _ (sample_natural mapping PqxdhJointIdentity.sampleSeed)
+      intro identity
+      apply bind_natural mapping id (preparedResult mapping) _ _ _ _ (sample_natural mapping PqxdhJointGapDh.sampleScalar)
+      intro prekey
+      exact pure_natural mapping (preparedResult mapping) _
 
 set_option backward.isDefEq.respectTransparency false in
-theorem createSuffix_natural (mapping : Map left right) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
-    (edPin : Std.Array Std.U8 32#usize) (mlPin : Std.Array Std.U8 1952#usize) (keyId : Std.U64)
-    (generated : Option (RegistrationNativeMldsa.Credential left)) :
+theorem create_natural (mapping : Map left right) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
+    (edPin : Std.Array Std.U8 32#usize) (mlPin : Std.Array Std.U8 1952#usize) (keyId : Std.U64) :
     Natural (n := n) (Auxiliary := RegistrationServerRoleBackend.State) mapping id
-      (RegistrationNativeMldsaCreation.createSuffix setup edPin mlPin keyId generated)
-      (RegistrationNativeMldsaCreation.createSuffix setup edPin mlPin keyId (generated.map (RegistrationNativeMldsaMap.credential mapping))) := by
-  unfold RegistrationNativeMldsaCreation.createSuffix
-  apply bind_natural mapping (preparedResult mapping) id _ _ _ _ (afterGenerated_natural mapping edPin mlPin keyId generated)
+      (RegistrationNativeBeaconFrontend.create setup left edPin mlPin keyId)
+      (RegistrationNativeBeaconFrontend.create setup right edPin mlPin keyId) := by
+  unfold RegistrationNativeBeaconFrontend.create
+  apply bind_natural mapping (preparedResult mapping) id _ _ _ _ (prepare_natural mapping edPin mlPin keyId)
   intro action
   cases action with
-  | fail error => exact pure_natural mapping id _
-  | div => exact pure_natural mapping id _
+  | fail error | div => exact pure_natural mapping id _
   | ok result => cases result with
     | none => exact pure_natural mapping id _
-    | some prepared => exact appendBorn_natural mapping setup edPin keyId prepared.pin prepared.credentials prepared.identity prepared.prekey
+    | some prepared => exact appendBorn_natural mapping setup edPin keyId prepared.pin prepared.identity prepared.prekey
 
 set_option backward.isDefEq.respectTransparency false in
 theorem record_natural (mapping : Map left right) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
@@ -86,6 +63,10 @@ theorem record_natural (mapping : Map left right) (setup : PqxdhServerAuthExperi
   cases query with
   | hash transcript =>
       apply bind_natural mapping id id _ _ _ _ (hash_natural mapping (.Single (Std.Array.to_slice transcript.bytes)))
+      intro digest
+      exact pure_natural mapping id _
+  | adHash request =>
+      apply bind_natural mapping id id _ _ _ _ (hash_natural mapping request)
       intro digest
       exact pure_natural mapping id _
   | rootKdf request | initialKdf request | ratchetKdf request | «seal» request | write request | openAead request =>
@@ -175,17 +156,17 @@ theorem finish_natural (mapping : Map left right) (sameVerify : left.verify = ri
 
 end BeaconcryptCore.Computational.RegistrationNativeMldsaControllerMap
 
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaControllerMap.afterGenerated_natural' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaControllerMap.prepare_natural' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaControllerMap.afterGenerated_natural
+#print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaControllerMap.prepare_natural
 
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaControllerMap.createSuffix_natural' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaControllerMap.create_natural' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaControllerMap.createSuffix_natural
+#print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaControllerMap.create_natural
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaControllerMap.record_natural' depends on axioms: [propext,
  Classical.choice,

@@ -8,6 +8,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialSampledResources
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf
 open PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily PqxdhInitialBeaconAmbient
 open PqxdhInitialSourceInitialSecrecy PqxdhInitialSourcePreparedSecrecy
@@ -44,9 +46,9 @@ theorem candidate_cap (input : Input extra M P I D K X Response A N S B)
 /-- Each supported source input supplies both the complete stopped-observer uniform cost and every candidate appended by the source and checker. -/
 theorem one_bounds (start : Start extra M P I D K X Response A N S B)
     (caps : Caps start.1 qPost qPre qApplication qSelector qAux qKnown)
-    (context : Carrier source writer sender route decode depth start × Entry) (output : FullOutput) :
-    let work := PqxdhInitialCommonSecrecy.observed source writer (marker source start) sender route decode
-      (PqxdhInitialSampledParent.view source writer sender route decode depth remaining start) context output
+    (context : PqxdhInitialSampledParent.Carrier (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth start × Entry) (output : FullOutput) :
+    let work := PqxdhInitialCommonSecrecy.observed (completedBinding := completedBinding) source writer (marker source start) sender route decode
+      (PqxdhInitialSampledParent.view (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth remaining start) context output
     work.IsTotalQueryBound (observerBudget remaining qPost qPre qApplication qSelector qAux) ∧
       ∀ result ∈ support work, (PqxdhInitialCommonSecrecy.candidates result).length ≤ candidateCap remaining qPost qKnown := by
   let initial := PqxdhInitialNativeInitializer.initial (A := A) (N := N) source start.1.selectedMessage zeroRoot (response start)
@@ -57,7 +59,7 @@ theorem one_bounds (start : Start extra M P I D K X Response A N S B)
   have callbacks := PqxdhInitialAuditedResources.retained_callbacks source start.1.selectedMessage zeroRoot (response start)
     (pre start.1.other) (application start.1.other) (selector start.1.other) (aux start.1.other)
     qPre qApplication qSelector qAux caps.preBound caps.applicationBound caps.selectorBound caps.auxBound
-  have uniforms := PqxdhInitialSourceSecrecyResources.observed_uniform source writer (pre start.1.other) (application start.1.other)
+  have uniforms := PqxdhInitialSourceSecrecyResources.observed_uniform (associatedData := associatedData) (completedBinding := completedBinding) source writer (pre start.1.other) (application start.1.other)
     initial (selector start.1.other) (aux start.1.other) (marker source start) sender route decode execution depth state
     root start.1.ancestors start.1.disclosed start.1.selected start.1.number remaining qPost caps.postBound costs callbacks context output
   constructor
@@ -65,7 +67,7 @@ theorem one_bounds (start : Start extra M P I D K X Response A N S B)
       PqxdhInitialSourceSecrecyResources.callbackBudget, PqxdhInitialParentObserverBudgets.Costs.cap,
       PqxdhInitialAuditedResources.retainedCosts] using uniforms
   · intro result supported
-    have count := PqxdhInitialSourceSecrecyResources.candidates_bound source writer (pre start.1.other) (application start.1.other)
+    have count := PqxdhInitialSourceSecrecyResources.candidates_bound (associatedData := associatedData) (completedBinding := completedBinding) source writer (pre start.1.other) (application start.1.other)
       initial (selector start.1.other) (aux start.1.other) (marker source start) sender route decode execution depth state
       root start.1.ancestors start.1.disclosed start.1.selected start.1.number remaining qPost caps.postBound costs callbacks context output result supported
     have localCap : (PqxdhInitialCommonSecrecy.candidates result).length ≤ candidateBudget start.1.before start.1.disclosed remaining qPost := by
@@ -79,10 +81,10 @@ variable (prior : ProbComp (Context extra M P I D K X Response A N S B))
 
 include sourceCaps in
 /-- Every actual global carrier has its supported original source certificate; unreachable arbitrary inputs introduce no uniform or candidate premise. -/
-theorem observed_bounds (context : Packet (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K) (X := X) (Response := Response) (A := A) (N := N) (S := S) (B := B) source writer sender route decode depth prior × Entry) (output : FullOutput) :
-    (observed source writer sender route decode depth remaining context output).IsTotalQueryBound
+theorem observed_bounds (context : PqxdhInitialSampledParent.Packet (associatedData := associatedData) (completedBinding := completedBinding) (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K) (X := X) (Response := Response) (A := A) (N := N) (S := S) (B := B) source writer sender route decode depth prior × Entry) (output : FullOutput) :
+    (PqxdhInitialSampledParent.observed (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth remaining context output).IsTotalQueryBound
       (observerBudget remaining qPost qPre qApplication qSelector qAux) ∧
-      ∀ result ∈ support (observed source writer sender route decode depth remaining context output),
+      ∀ result ∈ support (PqxdhInitialSampledParent.observed (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth remaining context output),
         (PqxdhInitialCommonSecrecy.candidates result).length ≤ candidateCap remaining qPost qKnown := by
   rcases context with ⟨decision | ⟨start, pending⟩, entry⟩
   · refine ⟨by trivial, ?_⟩
@@ -90,14 +92,14 @@ theorem observed_bounds (context : Packet (extra := extra) (M := M) (P := P) (I 
     simp only [observed, mem_support_pure_iff] at reached
     subst result
     simp [PqxdhInitialCommonSecrecy.candidates]
-  · exact one_bounds source writer sender route decode depth remaining qPost qPre qApplication qSelector qAux qKnown
+  · exact one_bounds (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth remaining qPost qPre qApplication qSelector qAux qKnown
       start (sourceCaps start.1 pending.property) (pending.val, entry) output
 
 include sourceCaps in
 set_option maxRecDepth 2048 in
 /-- The full reduction prefix pays the exact original preparation, the shared64-byte initial response and the complete original stopped-source sampler. -/
 theorem sample_uniform (qPrior : Nat) (priorBound : prior.IsTotalQueryBound qPrior) :
-    (PqxdhInitialSampledParent.sample source writer sender route decode depth prior).IsTotalQueryBound
+    (PqxdhInitialSampledParent.sample (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth prior).IsTotalQueryBound
       (qPrior + (64 + sampleBudget qPost qPre qApplication qSelector qAux)) := by
   have annotated : (RawCtxSupportedSample.sum prior).IsTotalQueryBound qPrior := by
     apply (isQueryBound_map_iff _ (Sum.map id Subtype.val) _ _ _).mp
@@ -115,7 +117,7 @@ theorem sample_uniform (qPrior : Nat) (priorBound : prior.IsTotalQueryBound qPri
     rw [bind_pure_comp]
     apply (isQueryBound_map_iff _ _ _ _ _).2
     have caps := sourceCaps input.val input.property
-    exact PqxdhInitialSourcePreparedSecrecy.sample_uniform source writer input.val.selectedMessage zeroRoot
+    exact PqxdhInitialSourcePreparedSecrecy.sample_uniform (associatedData := associatedData) (completedBinding := completedBinding) source writer input.val.selectedMessage zeroRoot
       (RawCtxSelectedInitialConstructor.response64 output) input.val.other sender route decode input.val.index input.val.metadata
       { input.val.ready with root := zeroRoot } input.val.post input.val.before input.val.selected input.val.number
       input.val.ancestors input.val.disclosed input.val.shared input.val.privateState input.val.cache depth
@@ -124,24 +126,24 @@ theorem sample_uniform (qPrior : Nat) (priorBound : prior.IsTotalQueryBound qPri
 include sourceCaps in
 /-- The main ordinary observer and the separate real-HKDF candidate tester retain the complete original source and appended-checker sampling bill. -/
 theorem observer_bounds :
-    (∀ (context : Packet (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K) (X := X) (Response := Response) (A := A) (N := N) (S := S) (B := B) source writer sender route decode depth prior × Entry) output,
-      (observer source writer sender route decode depth remaining context output).IsTotalQueryBound
+    (∀ (context : PqxdhInitialSampledParent.Packet (associatedData := associatedData) (completedBinding := completedBinding) (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K) (X := X) (Response := Response) (A := A) (N := N) (S := S) (B := B) source writer sender route decode depth prior × Entry) output,
+      (PqxdhInitialSampledParent.observer (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth remaining context output).IsTotalQueryBound
         (observerBudget remaining qPost qPre qApplication qSelector qAux)) ∧
-      (∀ (context : Packet (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K) (X := X) (Response := Response) (A := A) (N := N) (S := S) (B := B) source writer sender route decode depth prior × Entry) output,
-      (PqxdhInitialSampledParentSecrecy.aliasTester source writer sender route decode depth remaining context output).IsTotalQueryBound
+      (∀ (context : PqxdhInitialSampledParent.Packet (associatedData := associatedData) (completedBinding := completedBinding) (extra := extra) (M := M) (P := P) (I := I) (D := D) (K := K) (X := X) (Response := Response) (A := A) (N := N) (S := S) (B := B) source writer sender route decode depth prior × Entry) output,
+      (PqxdhInitialSampledParentSecrecy.aliasTester (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth remaining context output).IsTotalQueryBound
         (observerBudget remaining qPost qPre qApplication qSelector qAux)) := by
   constructor
   · intro context output
     rcases context with ⟨decision | ⟨start, pending⟩, entry⟩
     · trivial
-    · exact (PqxdhInitialCommonSecrecy.observer_bounds source writer (marker source start) sender route decode
-        (PqxdhInitialSampledParent.view source writer sender route decode depth remaining start)
+    · exact (PqxdhInitialCommonSecrecy.observer_bounds (completedBinding := completedBinding) source writer (marker source start) sender route decode
+        (PqxdhInitialSampledParent.view (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth remaining start)
         (observerBudget remaining qPost qPre qApplication qSelector qAux)
-        (fun context output => (one_bounds source writer sender route decode depth remaining
+        (fun context output => (one_bounds (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth remaining
           qPost qPre qApplication qSelector qAux qKnown start (sourceCaps start.1 pending.property) context output).1)).1
         (pending.val, entry) output
   · exact RawCtxFullPreimageTester.tester_uniform _ _ _
-      (fun context output => (observed_bounds source writer sender route decode depth remaining
+      (fun context output => (observed_bounds (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth remaining
         qPost qPre qApplication qSelector qAux qKnown prior sourceCaps context output).1)
 
 end BeaconcryptCore.Computational.PqxdhInitialSampledResources

@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthJournal
 
-/-! The embedding's own ServerAuth journal tracks the registration view of the frozen source14 journal (CE-8). `saReg c` reads an accept, build or finish of a ServerAuth journal as a registration entry, with the finish attributed to owner `c`; coin, HMAC, BLAKE2b and reveal queries are `Quiet`, and so are all queries of local Beacons (`coins_quiet`, `localCallbacks_quiet`). `Track` relates the registration view of the frozen journal, the embedding state and `R_c`'s own ServerAuth journal: one embedding entry per created owner, the target's placeholder exactly at `c` when the `c`-th create carried the input's binding, the slot of `c` that the summary determines (`slotOf`), no phase, failure or bundle for owners not yet created, no first bundle of the Fresh target and the input's published Phase 1 as its first bundle afterwards, every accept, build and finish of the ServerAuth journal in the view, every finish the target's and successful only once the target accepted or left InitSent, and, once the target accepted, a ServerAuth journal that ends with that acceptance, preceded only by entries of the view before it and by no successful finish. Each embedding step before the stop keeps `Track` (`track_step`, from `track_quiet`, `track_silent`, `track_create`, `track_targetBundle`, `track_targetFinish` and `track_local`), so every outcome of `R_c` is tracked (`adversary_track`). On a tracked outcome, the A1 failure of `c` under the input's binding gives a successful ServerAuth finish and no session with both an earlier publication of the accepted decoded record and an accept carrying the input's published keys (`track_unmatched`, `adversary_unmatched`); this holds on every outcome of `R_c` as a program, for every reply of every query. No security claim is made here. -/
+/-! The embedding's own ServerAuth journal tracks the registration view of the frozen source14 journal (CE-8). `saReg c` reads an accept, build or finish of a ServerAuth journal as a registration entry, with the finish attributed to owner `c`; coin, HMAC, BLAKE2b and reveal queries are `Quiet`, and so are all queries of local Beacons (`coins_quiet`, `localCallbacks_quiet`, `localFinish_quiet`: a local finish's transcript hash is a public BLAKE2b query). `Track` relates the registration view of the frozen journal, the embedding state and `R_c`'s own ServerAuth journal: one embedding entry per created owner, the target's placeholder exactly at `c` when the `c`-th create carried the input's binding, the slot of `c` that the summary determines (`slotOf`), no phase, failure or bundle for owners not yet created, no first bundle of the Fresh target and the input's published Phase 1 as its first bundle afterwards, every accept, build and finish of the ServerAuth journal in the view, every finish the target's and successful only once the target accepted or left InitSent, and, once the target accepted, a ServerAuth journal that ends with that acceptance, preceded only by entries of the view before it and by no successful finish. Each embedding step before the stop keeps `Track` (`track_step`, from `track_quiet`, `track_silent`, `track_create`, `track_targetBundle`, `track_targetFinish` and `track_local`), so every outcome of `R_c` is tracked (`adversary_track`). On a tracked outcome, the A1 failure of `c` under the input's binding gives a successful ServerAuth finish and no session with both an earlier publication of the accepted decoded record and an accept carrying the input's published keys (`track_unmatched`, `adversary_unmatched`); this holds on every outcome of `R_c` as a program, for every reply of every query. No security claim is made here. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
@@ -71,6 +71,19 @@ theorem localCallbacks_quiet (setup : Setup baseSpec KemSK) (codec : Codec Reade
   · exact allQueriesSatisfy_pure _ _
   · exact map_quiet _ _ ((allQueriesSatisfy_query_iff (spec := ServerAuthSpec) (.inr (.hmac _ _)) Quiet).mpr trivial)
   · exact allQueriesSatisfy_pure _ _
+  · exact allQueriesSatisfy_pure _ _
+
+/-- A local Beacon's hashed finish issues only coin, HMAC and BLAKE2b queries: its transcript hash is a public BLAKE2b query. -/
+theorem localFinish_quiet (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes) (owner : Owner KemSK) :
+    AllQueriesSatisfy (PqxdhDeploymentServerAuthEmbed.localFinish setup codec retained raw owner) Quiet := by
+  unfold PqxdhDeploymentServerAuthEmbed.localFinish
+  split
+  · split
+    · exact allQueriesSatisfy_bind
+        ((allQueriesSatisfy_query_iff (spec := ServerAuthSpec) (.inr (.hash _)) Quiet).mpr trivial)
+        (fun _ => simulateQ_quiet _ (localCallbacks_quiet setup codec) _)
+    · exact allQueriesSatisfy_pure _ _
   · exact allQueriesSatisfy_pure _ _
 
 /-! ## Journals of steps -/
@@ -743,7 +756,8 @@ theorem track_targetFinish (c : Nat) (input : AuthInput) (regs : List Reg) (emb 
 /-- A bundle or finish of a local owner, which changes only that owner's summary entry, keeps its phase created, adds no first bundle of another owner and can accept only at `c`, with quiet ServerAuth entries, keeps the tracking before the stop. -/
 theorem track_local (c : Nat) (input : AuthInput) (regs : List Reg) (emb : Emb KemSK)
     (log : QueryLog ServerAuthSpec) (track : Track c input regs emb log) (open_ : ¬ Stop c regs) (index : Nat)
-    (owner : Owner KemSK) (placed : emb.owners[index]? = some (some owner)) (updated : Owner KemSK) (reg : Reg)
+    (owner : Owner KemSK) (placed : emb.owners[index]? = some (some owner)) (updated : Owner KemSK)
+    (retained : Nat → Option PqxdhEd25519EufCma.Phase1Candidate) (reg : Reg)
     (owners : (stepReg (summarizeReg regs) reg).owners = (summarizeReg regs).owners)
     (others : ∀ other, other ≠ index → (stepReg (summarizeReg regs) reg).phases other = (summarizeReg regs).phases other ∧
       (stepReg (summarizeReg regs) reg).failures other = (summarizeReg regs).failures other)
@@ -751,7 +765,8 @@ theorem track_local (c : Nat) (input : AuthInput) (regs : List Reg) (emb : Emb K
     (bundles : ∀ other, other ≠ index → bundleOfReg [reg] other = none)
     (check : ∀ before raw, acceptCheck c (summarizeReg regs) regs reg = some (before, raw) → index = c ∧ before = regs)
     (extra : QueryLog ServerAuthSpec) (quiet : ∀ entry ∈ extra, saReg c entry = none) :
-    Track c input (regs ++ [reg]) { emb with owners := emb.owners.set index (some updated) } (log ++ extra) := by
+    Track c input (regs ++ [reg]) { emb with owners := emb.owners.set index (some updated), inits := retained }
+      (log ++ extra) := by
   obtain ⟨notAccepted, _⟩ := stop_open c regs open_
   have below : index < (summarizeReg regs).owners.length := by
     rw [← track.count]
@@ -1008,9 +1023,9 @@ theorem track_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
                 obtain ⟨result, outcomeEq, bundled⟩ := record_map_mem _ _ outcome member
                 have quiet := record_quiet _ (coins_quiet _) _ bundled
                 obtain ⟨owners, others, stays, bundles, check⟩ :=
-                  local_bundle c (regsOfSource journal) index result.1
-                have stepped := track_local c input _ emb log track open' index owner found result.2
-                  (.bundle index result.1) owners others stays bundles check outcome.2
+                  local_bundle c (regsOfSource journal) index result.1.1
+                have stepped := track_local c input _ emb log track open' index owner found result.1.2
+                  (Function.update emb.inits index result.2) (.bundle index result.1.1) owners others stays bundles check outcome.2
                   (fun entry member => saReg_quiet c entry (quiet entry member))
                 rw [outcomeEq]
                 simpa [regOfSource] using stepped
@@ -1067,10 +1082,10 @@ theorem track_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
             | some owner =>
                 simp only [found] at member
                 obtain ⟨result, outcomeEq, finished⟩ := record_map_mem _ _ outcome member
-                have quiet := record_quiet _ (simulateQ_quiet _ (localCallbacks_quiet setup codec) _) _ finished
+                have quiet := record_quiet _ (localFinish_quiet setup codec _ raw owner) _ finished
                 obtain ⟨owners, others, stays, bundles, check⟩ :=
                   local_finish c (regsOfSource journal) index raw result.1
-                have stepped := track_local c input _ emb log track open' index owner found result.2
+                have stepped := track_local c input _ emb log track open' index owner found result.2 emb.inits
                   (.finish index raw result.1) owners others stays bundles check outcome.2
                   (fun entry member => saReg_quiet c entry (quiet entry member))
                 rw [outcomeEq]
@@ -1136,6 +1151,131 @@ theorem adversary_unmatched (crypto : Pqxdh.Crypto) (setup : Setup baseSpec KemS
         keysOfBundle codec input.phase1 ≠ some keys :=
   track_unmatched crypto codec c input _ _ _ (adversary_track setup codec c program input outcome member) failure
 
+
+/-! ## The transcript failure -/
+
+/-- Session `session` transcript-matches owner `owner` before its acceptance: it matches (`MatchedAt`), and a successful build of the same session before the acceptance returned a response whose public registration transcript with the matching accept bytes (`PqxdhDeploymentCompile.publicTranscript`: the Init fields read from the accept bytes and the response fields decoded from the build response) is the public registration transcript of the owner's first published bundle and the accepted raw input. Only public bytes, the public attached verification of `Pqxdh.Crypto`, the codec readers and the parsers are used. -/
+def TranscriptMatchedAt (crypto : Pqxdh.Crypto) (codec : Codec Reader Response) (owner session : Nat)
+    (before : List Reg) (raw : Pqxdh.Bytes) : Prop :=
+  ∃ acceptRaw candidate keys payload reply record transcriptPayload transcriptReply bundle transcript,
+    Reg.accept acceptRaw (some session) ∈ before ∧ candidateOf codec acceptRaw = some candidate ∧
+    acceptedKeys crypto candidate = some keys ∧ publishedKeys codec before owner = some keys ∧
+    Reg.build session payload (some reply) ∈ before ∧
+    PqxdhServerAuthRecordPublicationEvent.frame codec raw = some record ∧
+    PqxdhServerAuthRecordPublicationEvent.frame codec reply.serialized = some record ∧
+    Reg.build session transcriptPayload (some transcriptReply) ∈ before ∧ bundleOfReg before owner = some bundle ∧
+    PqxdhDeploymentCompile.publicTranscript codec acceptRaw transcriptReply.serialized = some transcript ∧
+    PqxdhDeploymentCompile.publicTranscript codec bundle raw = some transcript
+
+/-- The A1 transcript failure at owner `c` under `binding`: `c` accepted; before the acceptance, the `c`-th created owner carried `binding` and no bundle call of `c` in Fresh was rejected; and no session transcript-matches `c`. -/
+def Untranscripted (crypto : Pqxdh.Crypto) (codec : Codec Reader Response) (binding : Word32 × Std.U64) (c : Nat)
+    (regs : List Reg) : Prop :=
+  ∃ before raw, PqxdhDeploymentServerAuthEvent.accepted c regs = some (before, raw) ∧
+    (summarizeReg before).owners[c]? = some binding ∧ (summarizeReg before).failures c = false ∧
+    ¬ ∃ session, TranscriptMatchedAt crypto codec c session before raw
+
+/-- A transcript match is a match. -/
+theorem transcriptMatched_matched (crypto : Pqxdh.Crypto) (codec : Codec Reader Response) (owner session : Nat)
+    (before : List Reg) (raw : Pqxdh.Bytes) (matched : TranscriptMatchedAt crypto codec owner session before raw) :
+    MatchedAt crypto codec owner session before raw := by
+  obtain ⟨acceptRaw, candidate, keys, payload, reply, record, _, _, _, _, acceptMember, candidateEq, keysEq,
+    publishedEq, buildMember, frameRaw, frameReply, _⟩ := matched
+  exact ⟨acceptRaw, candidate, keys, payload, reply, record, acceptMember, candidateEq, keysEq, publishedEq,
+    buildMember, frameRaw, frameReply⟩
+
+/-- After a stop, the A1 transcript failure at `c` is decided: it holds on every extension exactly when it holds on the stopped view. -/
+theorem untranscripted_stop (crypto : Pqxdh.Crypto) (codec : Codec Reader Response) (binding : Word32 × Std.U64)
+    (c : Nat) (regs extra : List Reg) (stopped : Stop c regs) :
+    Untranscripted crypto codec binding c (regs ++ extra) ↔ Untranscripted crypto codec binding c regs := by
+  cases found : PqxdhDeploymentServerAuthEvent.accepted c regs with
+  | some result =>
+      rw [Untranscripted, Untranscripted, PqxdhDeploymentServerAuthEvent.accepted_append c regs extra result found,
+        found]
+  | none =>
+      have failed : (summarizeReg regs).failures c = true := by
+        rcases stopped with someAccepted | failed
+        · rw [found] at someAccepted
+          cases someAccepted
+        · exact failed
+      constructor
+      · rintro ⟨before, raw, late, _, noFailure, _⟩
+        have prefixed := PqxdhDeploymentServerAuthEvent.acceptedFrom_late c [] regs extra (before, raw) found late
+        simp only [List.nil_append] at prefixed
+        obtain ⟨tail, rfl⟩ := prefixed
+        rw [PqxdhDeploymentServerAuthEvent.failures_append regs tail c failed] at noFailure
+        cases noFailure
+      · rintro ⟨before, raw, early, _⟩
+        rw [found] at early
+        cases early
+
+/-- On a tracked state, the A1 transcript failure of `c` under the input's binding gives a successful ServerAuth finish and, for every session with an earlier publication of the accepted decoded record and an accept carrying the input's published keys, a public registration transcript of the accept bytes and every successful build response of that session that differs from the public registration transcript of the input's published Phase 1 and every successful finish input. -/
+theorem track_untranscripted (crypto : Pqxdh.Crypto) (codec : Codec Reader Response) (c : Nat) (input : AuthInput)
+    (regs : List Reg) (emb : Emb KemSK) (log : QueryLog ServerAuthSpec) (track : Track c input regs emb log)
+    (failure : Untranscripted crypto codec (inputBinding input) c regs) :
+    (∃ raw payload, (⟨.inr (.finish raw), some payload⟩ : SaEntry) ∈ log) ∧
+    ∀ index, PqxdhServerAuthRecordPublicationEvent.RecordPublished codec index log →
+      ∀ acceptRaw candidate keys, (⟨.inr (.accept acceptRaw), some index⟩ : SaEntry) ∈ log →
+        candidateOf codec acceptRaw = some candidate → acceptedKeys crypto candidate = some keys →
+        keysOfBundle codec input.phase1 = some keys →
+        ∀ data reply finishRaw finishPayload bundle transcript,
+          (⟨.inr (.build index data), some reply⟩ : SaEntry) ∈ log →
+          (⟨.inr (.finish finishRaw), some finishPayload⟩ : SaEntry) ∈ log → input.phase1 = some bundle →
+          PqxdhDeploymentCompile.publicTranscript codec acceptRaw reply.serialized = some transcript →
+          PqxdhDeploymentCompile.publicTranscript codec bundle finishRaw ≠ some transcript := by
+  obtain ⟨before, raw, found, bound, _, untranscripted⟩ := failure
+  obtain ⟨prior, payload, logEq, priorLogged, priorQuiet, bundleEq⟩ := track.accepted before raw found bound
+  obtain ⟨beforeEq, rawEq⟩ := beforeAcceptance_last c prior raw payload priorQuiet
+  refine ⟨⟨raw, payload, by rw [logEq]; simp⟩, ?_⟩
+  intro index published acceptRaw candidate keys acceptMember candidateEq keysEq bundleKeys data reply finishRaw
+    finishPayload bundle transcript buildMember finishMember phase1Eq serverTranscript beaconTranscript
+  obtain ⟨buildPayload, recordReply, raw', record, recordMember, rawFound, frameRaw, frameReply⟩ := published
+  rw [logEq, beforeEq] at recordMember
+  rw [logEq, rawEq, Option.some.injEq] at rawFound
+  have inPrior : ∀ entry : SaEntry, entry ∈ log → (∀ raw'' payload'', entry ≠ ⟨.inr (.finish raw''), some payload''⟩) →
+      entry ∈ prior := by
+    intro entry member notFinish
+    rw [logEq, List.mem_append, List.mem_singleton] at member
+    rcases member with member | same
+    · exact member
+    · exact absurd same (notFinish raw payload)
+  have acceptPrior : (⟨.inr (.accept acceptRaw), some index⟩ : SaEntry) ∈ prior :=
+    inPrior _ acceptMember fun _ _ same => by cases same
+  have buildPrior : (⟨.inr (.build index data), some reply⟩ : SaEntry) ∈ prior :=
+    inPrior _ buildMember fun _ _ same => by cases same
+  have finishEq : finishRaw = raw := by
+    rw [logEq, List.mem_append, List.mem_singleton] at finishMember
+    rcases finishMember with member | same
+    · exact absurd rfl (priorQuiet _ member finishRaw finishPayload)
+    · cases same
+      rfl
+  apply untranscripted
+  refine ⟨index, acceptRaw, candidate, keys, buildPayload, recordReply, record, data, reply, bundle, transcript,
+    priorLogged _ acceptPrior _ rfl, candidateEq, keysEq, ?_, priorLogged _ recordMember _ rfl, ?_, frameReply,
+    priorLogged _ buildPrior _ rfl, ?_, serverTranscript, ?_⟩
+  · simp only [publishedKeys, bundleEq, bundleKeys]
+  · rw [rawFound]
+    exact frameRaw
+  · rw [bundleEq, phase1Eq]
+  · rw [← finishEq]
+    exact beaconTranscript
+
+/-- On every outcome of `R_c` whose frozen journal has the A1 transcript failure of `c` under the input's binding, `R_c`'s own ServerAuth journal has a successful finish and, for every session with an earlier publication of the accepted decoded record and an accept carrying the input's published keys, a public registration transcript of the accept bytes and every successful build response of that session that differs from the public registration transcript of the input's published Phase 1 and every successful finish input (journal correspondence for accept, build reply, finish input and published bundle). -/
+theorem adversary_untranscripted (crypto : Pqxdh.Crypto) (setup : Setup baseSpec KemSK)
+    (codec : Codec Reader Response) (c : Nat) (program : OracleComp (SourceSpec KemSK) Result) (input : AuthInput)
+    (outcome : ((Result × List (SourceEntry KemSK)) × Emb KemSK) × QueryLog ServerAuthSpec)
+    (member : outcome ∈ support (adversary setup codec c program input))
+    (failure : Untranscripted crypto codec (inputBinding input) c (regsOfSource outcome.1.1.2)) :
+    (∃ raw payload, (⟨.inr (.finish raw), some payload⟩ : SaEntry) ∈ outcome.2) ∧
+    ∀ index, PqxdhServerAuthRecordPublicationEvent.RecordPublished codec index outcome.2 →
+      ∀ acceptRaw candidate keys, (⟨.inr (.accept acceptRaw), some index⟩ : SaEntry) ∈ outcome.2 →
+        candidateOf codec acceptRaw = some candidate → acceptedKeys crypto candidate = some keys →
+        keysOfBundle codec input.phase1 = some keys →
+        ∀ data reply finishRaw finishPayload bundle transcript,
+          (⟨.inr (.build index data), some reply⟩ : SaEntry) ∈ outcome.2 →
+          (⟨.inr (.finish finishRaw), some finishPayload⟩ : SaEntry) ∈ outcome.2 → input.phase1 = some bundle →
+          PqxdhDeploymentCompile.publicTranscript codec acceptRaw reply.serialized = some transcript →
+          PqxdhDeploymentCompile.publicTranscript codec bundle finishRaw ≠ some transcript :=
+  track_untranscripted crypto codec c input _ _ _ (adversary_track setup codec c program input outcome member) failure
 
 end BeaconcryptCore.Computational.PqxdhDeploymentServerAuthTrack
 
@@ -1336,3 +1476,33 @@ end BeaconcryptCore.Computational.PqxdhDeploymentServerAuthTrack
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthTrack.adversary_unmatched
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthTrack.localFinish_quiet' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthTrack.localFinish_quiet
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthTrack.transcriptMatched_matched' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthTrack.transcriptMatched_matched
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthTrack.untranscripted_stop' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthTrack.untranscripted_stop
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthTrack.track_untranscripted' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthTrack.track_untranscripted
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthTrack.adversary_untranscripted' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthTrack.adversary_untranscripted

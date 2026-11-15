@@ -10,6 +10,7 @@ These stronger siblings of `PqxdhDeploymentHeadlineApp` retain the same experime
 open OracleComp OracleSpec ENNReal
 
 set_option autoImplicit false
+set_option warningAsError true
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentHeadlineByteApp
 open PqxdhServerAuthExperiment (Setup Codec Checks)

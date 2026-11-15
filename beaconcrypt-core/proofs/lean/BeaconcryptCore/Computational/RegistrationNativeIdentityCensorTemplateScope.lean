@@ -13,7 +13,7 @@ variable {A : Type}
 
 def Allowed : Spec.Domain → Prop
   | .inl (.inr hash) => hash.input.isSome = true
-  | .inr (.template _ _ leading _) => leading.length = 4140
+  | .inr (.template _ _ leading _) => leading.length = 2188
   | _ => True
 
 

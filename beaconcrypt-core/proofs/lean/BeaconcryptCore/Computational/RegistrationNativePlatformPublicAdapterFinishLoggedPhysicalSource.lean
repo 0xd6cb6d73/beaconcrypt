@@ -44,7 +44,7 @@ noncomputable def project (self :beaconcrypt_public_wrapper.beacon.Beacon) (pend
 omit platform localOriginal in
  theorem active (coins : QueryImpl unifSpec (StateT P ProbComp))
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (note :RegistrationNativePlatformPublicAdapterSourceTrace.Stage→Log)
     (erased :commitment.CommitmentTranscript)
     (parseEd :Slice U8→StateT P ProbComp (RustM (core.result.Result ed.PublicKey ed.Error)))
@@ -108,7 +108,7 @@ omit platform localOriginal in
 omit platform [PublicWrapperPlatform.CryptoOperations] original localOriginal in
  theorem project_run (coins :QueryImpl unifSpec (StateT P ProbComp))
     (setup :PqxdhServerAuthExperiment.Setup base KemSK) (checks :PqxdhServerAuthExperiment.Checks)
-    (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created Unit)
+    (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire :RegistrationNativeWire.Wire) (note :RegistrationNativePlatformPublicAdapterSourceTrace.Stage→Log)
     (self :beaconcrypt_public_wrapper.beacon.Beacon) (pending :registration.BeaconPending) (input :Slice U8)
     (owner :Owner source) (scalar :PqxdhJointGapDh.ScalarBytes)

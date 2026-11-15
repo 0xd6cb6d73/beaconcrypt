@@ -18,7 +18,7 @@ open RegistrationNativePlatformIdentityCtxSigningHistoryFrame (messages)
 variable {A B : Type}
 variable {n : Nat} {I KemSK Platform E : Type} {base : OracleSpec I} {source : RegistrationNativeMldsa.Source}
 variable (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 local notation "Main" => RegistrationNativePlatformIdentityCtxMain.beacon (n := n) (Platform := Platform) (source := source) setup checks representation created
 
 /-- An actual successful bundle with a first one-time history crossing publishes that exact unsigned tuple, using one and the same captured scalar. -/

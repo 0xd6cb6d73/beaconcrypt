@@ -12,6 +12,7 @@ open OracleComp OracleSpec
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhInitialOriginBuilderPath
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhInitialPendingPost PqxdhInitialNativeLog
 open RawCtxSourceSendPath RawCtxCursorLineage
 variable {ι M P I D K X Response Shared A N C : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -55,7 +56,7 @@ theorem after_path (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedS
     (state : PqxdhInitialNativeLog.State A N C)
     (result : (Option PqxdhServerRegistrationPublication.Response × BuildState M P) × PqxdhInitialNativeLog.State A N C)
     (supported : result ∈ support ((simulateQ (handler source writer stage external)
-      (PqxdhInitialGenericPublication.afterInitialization (PqxdhInitialPendingPost.calls (S := S) (B := B))
+      (PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) (PqxdhInitialPendingPost.calls (S := S) (B := B))
         auxForward candidate authenticated entry metadata before)).run state))
     (root : RootOutput) (valid : Path root ⟨entry⟩ state.1.1.2.1)
     (response : PqxdhServerRegistrationPublication.Response) (returned : result.1.1 = some response) :
@@ -91,7 +92,7 @@ theorem candidate_path (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
     (response : PqxdhServerRegistrationPublication.Response) (updated : BuildState M P)
     (supported : (ok (some response, updated), afterState) ∈ support
       ((simulateQ (handler source writer stage external)
-        (PqxdhInitialGenericBuilder.candidate (PqxdhInitialPendingPost.calls (S := S) (B := B))
+        (PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) (PqxdhInitialPendingPost.calls (S := S) (B := B))
           auxForward initial candidate data metadata before)).run state))
     (root : RootOutput)
     (initialPath : ∀ entry, initial = ok entry → ∀ table, Path root ⟨entry⟩ table) :
@@ -123,7 +124,7 @@ theorem candidate_path (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
   obtain ⟨⟨⟨reply, output⟩, finalState⟩, actual, same⟩ := supported
   simp only [Prod.mk.injEq, RustM.ok.injEq] at same
   obtain ⟨⟨rfl, rfl⟩, rfl⟩ := same
-  exact after_path source writer stage external candidate _ _ metadata before afterAllocation
+  exact after_path (associatedData := associatedData) source writer stage external candidate _ _ metadata before afterAllocation
     _ actual root (initialPath _ initialEq _) response rfl
 
 /-- Current key allocation and Ready preparation preserve the source-backed successful publication path. -/
@@ -136,7 +137,7 @@ theorem ready_path (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedS
     (response : PqxdhServerRegistrationPublication.Response) (updated : BuildState M P)
     (supported : (ok (some response, updated), afterState) ∈ support
       ((simulateQ (handler source writer stage external)
-        (PqxdhInitialGenericBuilder.readyBuild source (PqxdhInitialPendingPost.calls (S := S) (B := B))
+        (PqxdhInitialGenericBuilder.readyBuild (associatedData := associatedData) source (PqxdhInitialPendingPost.calls (S := S) (B := B))
           auxForward initial binding ready metadata before)).run state))
     (root : RootOutput)
     (initialPath : ∀ entry, initial = ok entry → ∀ table, Path root ⟨entry⟩ table) :
@@ -152,7 +153,7 @@ theorem ready_path (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedS
     Prod.mk.injEq, reduceCtorEq, false_and] at supported
   split at supported <;> try simp only [simulateQ_pure, StateT.run_pure, mem_support_pure_iff,
     Prod.mk.injEq, RustM.ok.injEq, reduceCtorEq, false_and] at supported
-  exact candidate_path source writer stage external initial _ ready.application metadata before
+  exact candidate_path (associatedData := associatedData) source writer stage external initial _ ready.application metadata before
     state afterState response updated supported root initialPath
 
 /-- The complete source builder installs a peer with its actual first-send path in the full logged final cache. -/
@@ -165,7 +166,7 @@ theorem build_path (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedS
     (response : PqxdhServerRegistrationPublication.Response)
     (supported : ((ok (some response), after), afterState) ∈ support
       ((simulateQ (handler source writer stage external)
-        ((PqxdhInitialPendingBuilder.build source initial sender index metadata ready).run before)).run state))
+        ((PqxdhInitialPendingBuilder.build (associatedData := associatedData) source initial sender index metadata ready).run before)).run state))
     (root : RootOutput)
     (initialPath : ∀ entry, initial = ok entry → ∀ table, Path root ⟨entry⟩ table) :
     ∃ peer, (after.roles.1.1 index).server.peers response.keyId = some peer ∧
@@ -173,7 +174,7 @@ theorem build_path (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedS
   change ((ok (some response), after), afterState) ∈ support
     ((simulateQ (handler source writer stage external)
       (PqxdhInitialPendingBuilder.reinstall index (PqxdhInitialPendingBuilder.consume index ready before) <$>
-        PqxdhInitialGenericBuilder.readyBuild source PqxdhInitialPendingPost.calls auxForward initial
+        PqxdhInitialGenericBuilder.readyBuild (associatedData := associatedData) source PqxdhInitialPendingPost.calls auxForward initial
           ⟨(PqxdhInitialPendingBuilder.selected sender index (PqxdhInitialPendingBuilder.consume index ready before)).server.identity,
             (PqxdhInitialPendingBuilder.selected sender index (PqxdhInitialPendingBuilder.consume index ready before)).identityKeyId⟩
           ready metadata (PqxdhInitialPendingBuilder.selected sender index (PqxdhInitialPendingBuilder.consume index ready before)))).run state) at supported
@@ -185,7 +186,7 @@ theorem build_path (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedS
   rcases built with ⟨reply, updated⟩
   obtain ⟨⟨rfl, rfl⟩, rfl⟩ := same
   simpa only [PqxdhInitialPendingBuilder.install, Function.update_self] using
-    ready_path source writer stage external initial _ ready metadata _ state finalState
+    ready_path (associatedData := associatedData) source writer stage external initial _ ready metadata _ state finalState
       response updated actual root initialPath
 
 /-- The actual supplied Server initializer starts its send path at counter zero under every existing private table. -/
@@ -214,12 +215,12 @@ theorem supplied_build (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
     (response : PqxdhServerRegistrationPublication.Response)
     (supported : ((ok (some response), after), afterState) ∈ support
       ((simulateQ (handler source writer stage external)
-        ((PqxdhInitialPendingBuilder.build source
+        ((PqxdhInitialPendingBuilder.build (associatedData := associatedData) source
           ((fun kernel : ConcreteRatchetKernel => kernel.refined) <$> PqxdhInitialReplyErasure.kernelOf false supplied)
           sender index metadata ready).run before)).run state)) :
     ∃ peer, (after.roles.1.1 index).server.peers response.keyId = some peer ∧
       Path (RawCtxSelectedQueryTrace.rootVector entry.refined.send_chain) ⟨peer.kernel⟩ afterState.1.1.2.1 := by
-  apply build_path source writer stage external _ sender index metadata ready before after state afterState response supported
+  apply build_path (associatedData := associatedData) source writer stage external _ sender index metadata ready before after state afterState response supported
   intro kernel returned table
   rw [initialized, RawCtxMaterialInterpretation.rust_map_ok] at returned
   cases RustM.ok.inj returned
@@ -238,7 +239,7 @@ theorem recorded_cached {Origin : Type}
     (reply : RustM (Option PqxdhServerRegistrationPublication.Response))
     (supported : ((reply, after), afterState) ∈ support
       ((simulateQ (handler source writer stage external)
-        ((PqxdhInitialPendingBuilder.build source
+        ((PqxdhInitialPendingBuilder.build (associatedData := associatedData) source
           ((fun kernel : ConcreteRatchetKernel => kernel.refined) <$> PqxdhInitialReplyErasure.kernelOf false supplied)
           sender index metadata ready).run before)).run state))
     (trace : PqxdhInitialOriginPost.Trace Origin S B) (origin recordedOrigin : Origin)
@@ -251,7 +252,7 @@ theorem recorded_cached {Origin : Type}
   obtain ⟨response, peer, rfl, present, rfl, _⟩ :=
     PqxdhInitialOriginPost.builder_recorded trace after index origin reply publication recordedOrigin recorded new
   obtain ⟨actualPeer, actualPresent, path⟩ :=
-    supplied_build source writer stage external supplied entry initialized sender index metadata ready
+    supplied_build (associatedData := associatedData) source writer stage external supplied entry initialized sender index metadata ready
       before after state afterState response supported
   have same : actualPeer = peer := Option.some.inj (actualPresent.symm.trans present)
   subst peer

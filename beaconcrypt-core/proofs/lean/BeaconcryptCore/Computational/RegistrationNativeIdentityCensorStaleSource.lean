@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeIdentityCensorUnselectedTail
 
-/-! A guessed bundle whose one-time message was already signed makes no new target selection. Its literal source call is forwarded, and its original PQ/fingerprint suffix remains an ordinary source continuation. -/
+/-! A guessed bundle whose one-time message was already signed makes no new target selection. Its literal source call is forwarded, and its original PQ-Ed/hash suffix remains an ordinary source continuation. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -115,7 +115,7 @@ def stable (mode : Mode) (before : State) : Mode × State :=
   ({mode with active := false}, {before with pool := {before.pool with transcript := []}})
 
 variable (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (selected index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner mlSource) (request : registration.Ed25519SigningRequest)
 variable (placeholder : Ed25519Signature)
 local notation "message" => TranscriptAuthParts.absSlice request.message
@@ -186,7 +186,7 @@ local notation "encoder(" reserve "," censored ")" => (fun fields => interpret s
   (RegistrationNativePlatformIdentityCtxMain.beacon (n := n) (Platform := Platform) (source := mlSource) setup checks representation created
     (RegistrationNativePlatformIdentityProgram.external (RegistrationNativeIdentityCensorConcreteWriter.encode reserve fields))))
 
-/-- A nonfresh one-time message forwards normally into the original PQ/fingerprint source tail. Every current reply and complete state remains literal, so unsuccessful guesses require no suppressed-signature coupling. -/
+/-- A nonfresh one-time message forwards normally into the original PQ-Ed/hash source tail. Every current reply and complete state remains literal, so unsuccessful guesses require no suppressed-signature coupling. -/
 theorem one_time (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E))
     (pending : registration.BeaconEd25519Signing) (requested : pending.request = .ok request) (stage : pending.stage = .OneTimeKey)
     (tagged : RegistrationNativeIdentitySigningRole.Tagged pending.state.started)
@@ -217,7 +217,7 @@ theorem one_time (reserve : Usize → StateT Platform ProbComp (core.result.Resu
   rw [resumed]
   cases effect <;> simp only [BeaconcryptCore.Refinement.RegistrationSigning.EdReplyTransition, stage] at facts
   case Rejected previous => rfl
-  case FingerprintRequested next => cases facts.2.1
+  case HashRequested next => cases facts.2.1
   case Ed25519SigningRequested next =>
     have nextTagged := RegistrationNativeIdentitySigningRole.preserved pending tagged reply _ resumed
     change RegistrationNativeIdentitySigningRole.Tagged next.state.started at nextTagged

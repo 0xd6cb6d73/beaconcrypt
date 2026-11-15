@@ -17,8 +17,7 @@ def frameLen (sequence sender payload : Nat) : Nat :=
   3 + argumentLen sequence + argumentLen sender + byteStringLen payload
 
 def initLen : Nat :=
-  3 + byteStringLen 33 + byteStringLen 98 + byteStringLen 98 + byteStringLen 1249 +
-    byteStringLen 1952 + byteStringLen 3309
+  3 + byteStringLen 33 + byteStringLen 98 + byteStringLen 98 + byteStringLen 1249
 
 def responseLen (payload assigned : Nat) : Nat :=
   3 + byteStringLen 32 + byteStringLen 32 + byteStringLen 1088 +
@@ -48,8 +47,8 @@ theorem registration_frame_fits (payload assigned sender : Nat)
     frameLen 1 sender payload ≤ maxMessageSize :=
   Nat.le_trans (registration_frame_le_response payload assigned sender) admitted
 
-/-- The fixed-size signed registration bundle has the same size at every session. -/
-theorem init_size : initLen = 6757 := by
+/-- The fixed-size four-field registration Init has the same size at every session. -/
+theorem init_size : initLen = 1490 := by
   decide
 
 /-- The inclusive limit and the next rejected byte agree with both native size-boundary tests. -/

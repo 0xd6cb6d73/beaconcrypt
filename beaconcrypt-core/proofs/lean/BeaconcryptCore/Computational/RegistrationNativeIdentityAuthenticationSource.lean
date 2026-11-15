@@ -14,7 +14,7 @@ variable {source : RegistrationNativeMldsa.Source}
 
 theorem query_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List PqxdhJointIdentity.IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List PqxdhJointIdentity.IdentitySeed)
     (query : RegistrationAuthenticationExecutor.Request) :
     Related (n := n) (Auxiliary := Auxiliary) setup checks representation created seeds
       (RegistrationNativeIdentityFrontend.authentication setup source query)
@@ -29,7 +29,7 @@ theorem query_source (setup : Setup base KemSK) (checks : Checks)
 
 theorem query_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (query : RegistrationAuthenticationExecutor.Request) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (query : RegistrationAuthenticationExecutor.Request) :
     Keeps (n := n) (Auxiliary := Auxiliary) setup checks representation created
       (RegistrationNativeIdentityFrontend.authentication setup source query) := by
   cases query with
@@ -42,7 +42,7 @@ theorem query_keeps (setup : Setup base KemSK) (checks : Checks)
 /-- The whole actual native response-authentication controller, including failure paths, has exactly the original source replies and full state. -/
 theorem program_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List PqxdhJointIdentity.IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List PqxdhJointIdentity.IdentitySeed)
     (work : OracleComp RegistrationAuthenticationExecutor.Spec Value) :
     Related (n := n) (Auxiliary := Auxiliary) setup checks representation created seeds
       (simulateQ (RegistrationNativeIdentityFrontend.authentication setup source) work)
@@ -52,7 +52,7 @@ theorem program_source (setup : Setup base KemSK) (checks : Checks)
 
 theorem program_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (work : OracleComp RegistrationAuthenticationExecutor.Spec Value) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (work : OracleComp RegistrationAuthenticationExecutor.Spec Value) :
     Keeps (n := n) (Auxiliary := Auxiliary) setup checks representation created
       (simulateQ (RegistrationNativeIdentityFrontend.authentication setup source) work) :=
   keeps_program setup checks representation created _ (query_keeps setup checks representation created) work

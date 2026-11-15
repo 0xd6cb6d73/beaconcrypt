@@ -25,7 +25,7 @@ attribute [local irreducible] RegistrationNativeExperiment.handler
 structure Call (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (transcript : List Entry) (parsed session : Nat) where
   before : List Entry
   raw : Pqxdh.Bytes
@@ -46,7 +46,7 @@ structure Call (setup : Setup base KemSK) (checks : Checks) (wire : Registration
 private theorem raw_success (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (raw : Pqxdh.Bytes) (packet : registration.InitPacket) (session : Nat)
     (first last : State n KemSK source) (read : RegistrationNativeWire.readInit wire raw = some packet)
     (supported : (some session, last) ∈ support
@@ -113,30 +113,8 @@ theorem public_call (setup : Setup base KemSK) (checks : Checks) (wire : Registr
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
 variable (route : RawCtxServerRouting.SenderDecoder)
 variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 variable (transcript : List Entry) (parsed session : Nat)
-
-/-- The successful native prefix gives its accepted protected-key trial, and either earlier unsigned issuance or an executable ordinary candidate/shared-cache collision at the same cut. -/
-theorem staged (call : Call (n := n) setup checks wire route representation created credential transcript parsed session)
-    (publicKey : PublicKey) (matching : call.packet.mldsa_public_key = publicKey) :
-    MldsaTranscriptAuth.Accepted (MldsaSharedAuthentication.cacheHash call.last.server.world.world.1.primitive.2) source.verify
-      (RegistrationAuthenticationNative.trial true call.first.server.pin call.packet
-        (RegistrationSigningShared.historyFor (PqxdhRefinement.absBytes call.packet.mldsa_public_key)
-          (RegistrationNativeMldsaShared.nativeProject call.first))) ∧
-    (MldsaTranscriptAuth.Issued (RegistrationAuthenticationNative.trial true call.first.server.pin call.packet
-      (RegistrationSigningShared.historyFor (PqxdhRefinement.absBytes call.packet.mldsa_public_key)
-        (RegistrationNativeMldsaShared.nativeProject call.first))) ∨
-      (∃ forgery, RegistrationNativeMldsaTrialObserver.observe source.verify publicKey (.inr (.accept call.packet))
-        call.first (.ok (some session)) call.last = some forgery) ∨ CacheHasCollision call.last.server.world.world.1.primitive.2) := by
-  refine ⟨RegistrationNativeInitFinal.typed_accepted setup checks wire route representation created credential call.packet
-    call.first call.last session call.success true rfl, ?_⟩
-  classical
-  by_cases issued : MldsaTranscriptAuth.Issued (RegistrationAuthenticationNative.trial true call.first.server.pin call.packet
-      (RegistrationSigningShared.historyFor (PqxdhRefinement.absBytes call.packet.mldsa_public_key)
-        (RegistrationNativeMldsaShared.nativeProject call.first)))
-  · exact Or.inl issued
-  · exact Or.inr (RegistrationNativeMldsaTypedOrigin.accept setup checks wire route representation created credential
-      publicKey call.packet call.first call.last session call.success matching call.cached_before issued)
 
 end BeaconcryptCore.Computational.RegistrationNativeMldsaCausalOrigin
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaCausalOrigin.initialized_call' depends on axioms: [propext,
@@ -150,9 +128,3 @@ end BeaconcryptCore.Computational.RegistrationNativeMldsaCausalOrigin
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaCausalOrigin.public_call
-
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaCausalOrigin.staged' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaCausalOrigin.staged

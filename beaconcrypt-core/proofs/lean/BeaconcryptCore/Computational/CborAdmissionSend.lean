@@ -43,21 +43,17 @@ theorem server_empty (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
       pure (none, state) := by
   cases selected : state.native.shared.2.server.server.peers keyId
   case some peer =>
-    simp only [handler, serverStep, StateT.run, RawCtxServerMixed.serverImpl,
-      RawCtxServerMixed.sendServer, RawCtxServerSend.sendServer, serverView,
-      RawCtxServerRouting.peerAssociatedData, selected]
-    simp only [Option.bind_eq_bind, Option.bind_some, Option.pure_def,
-      RawCtxSourceSend.sendOwner, List.isEmpty_nil, ite_true, simulateQ_pure, pure_bind]
-    simp only [RawCtxServerRouting.selectedOwner,
-      RawCtxServerRouting.putPeer_entry _ _ _ selected, logged_pure, record,
+    simp only [handler, serverStep, StateT.run, MldsaServerRouting.handler, MldsaServerRouting.send,
+      serverView, selected]
+    simp only [RawCtxMixedOwner.ownerImpl, StateT.run, RawCtxSourceSend.sendOwner, List.isEmpty_nil,
+      ite_true, simulateQ_pure, pure_bind, MldsaServerRouting.selected]
+    simp only [RawCtxServerRouting.putPeer_entry _ _ _ selected, logged_pure, record,
       PqxdhRegistrationSchedule.onShared, PqxdhServerAuthNative.nativeCtx,
       simulateQ_pure, StateT.run_pure, map_pure, pure_bind, withServer, produce,
       List.map_nil, List.append_nil]
   case none =>
-    simp only [handler, serverStep, StateT.run, RawCtxServerMixed.serverImpl,
-      RawCtxServerMixed.sendServer, RawCtxServerSend.sendServer, serverView,
-      RawCtxServerRouting.peerAssociatedData, selected, Option.bind_eq_bind, Option.bind_none,
-      simulateQ_pure, logged_pure, record, PqxdhRegistrationSchedule.onShared,
+    simp only [handler, serverStep, StateT.run, MldsaServerRouting.handler, MldsaServerRouting.send,
+      serverView, selected, simulateQ_pure, logged_pure, record, PqxdhRegistrationSchedule.onShared,
       PqxdhServerAuthNative.nativeCtx, withServer, produce]
     simp only [StateT.monad_pure_def, StateT.pure, map_pure, pure_bind,
       List.map_nil, List.append_nil]

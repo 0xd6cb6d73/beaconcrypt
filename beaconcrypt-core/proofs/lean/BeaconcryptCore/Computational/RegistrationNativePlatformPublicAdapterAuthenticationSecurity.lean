@@ -42,7 +42,7 @@ noncomputable def event (publication :RegistrationNativeExperiment.Public)
   exact decide (RegistrationNativePlatformPublicAdapterSourceAuthenticationMonitor.flag configuration.view publication.mldsaPublic stored.backend.2.2=true ∨
     CacheHasCollision stored.backend.1.world.primitive.2)
 
-theorem audit_program (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+theorem audit_program (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
     (work :OracleComp RegistrationNativePlatformPublicAdapterLowSpec.Spec Value)
     (before :RegistrationNativePlatformPublicAdapterLoggedJoint.State (n:=n) configuration created credential) :
     (fun result:Value×RegistrationNativePlatformPublicAdapterLoggedJoint.State (n:=n) configuration created credential=>(result.1,result.2.1.1)) <$>
@@ -56,7 +56,7 @@ theorem audit_program (created :PqxdhLiveServerConstruction.Created Unit) (crede
   simpa only [Functor.map_map,Prod.map,id_eq,RegistrationNativePlatformExtractedSdkPublic.project] using native
 
 omit [PublicWrapperPlatform.CryptoOperations] [FrameDispatchFallback.Operations] in
-theorem source_cache (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+theorem source_cache (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
     (current :RegistrationNativePlatformPublicAdapterLoggedJoint.State (n:=n) configuration created credential) :
     (RegistrationNativePlatformPublicAdapterLoggedJoint.sourceState configuration created credential current).backend.1.world.primitive.2=
       current.1.1.1.1.server.world.world.1.primitive.2 :=
@@ -64,7 +64,7 @@ theorem source_cache (created :PqxdhLiveServerConstruction.Created Unit) (creden
 
 
 omit [PublicWrapperPlatform.CryptoOperations] [FrameDispatchFallback.Operations] in
-theorem included (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+theorem included (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
     (publication :RegistrationNativeExperiment.Public) (publicKey :publication.mldsaPublic=credential.publicKey)
     (current :RegistrationNativePlatformPublicAdapterLoggedJoint.State (n:=n) configuration created credential)
     (held :RegistrationNativePlatformPublicAdapterSourceAuthenticationCallback.Invariant configuration created credential current)
@@ -81,7 +81,7 @@ theorem included (created :PqxdhLiveServerConstruction.Created Unit) (credential
 
 
 
-theorem program_bound (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+theorem program_bound (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
     (publication :RegistrationNativeExperiment.Public) (publicKey :publication.mldsaPublic=credential.publicKey)
     (work :OracleComp RegistrationNativePlatformPublicAdapterLowSpec.Spec (Value×RegistrationNativeLedger.State))
     (before :RegistrationNativePlatformPublicAdapterLoggedJoint.State (n:=n) configuration created credential)

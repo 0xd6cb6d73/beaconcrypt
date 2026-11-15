@@ -17,13 +17,14 @@ def initial (created : ClientCreated Unit) : NativeState KemSK :=
   (PqxdhJointDhExtractFamily.empty,
     { ctx := ∅
       server :=
-        { server := ⟨created.server.server.identity, created.server.server.peers, ()⟩
+        { server := ⟨created.server.server.identity, fun _ => none, ()⟩
           identityKeyId := created.server.server.metadata.sender
           control := created.control
           consumed := created.consumed }
       pending := fun _ => none
       beacon := ⟨⟨(), created.server.server.metadata.sender, created.server.server.identity,
         .aborted ⟨created.server.server.metadata.sender⟩⟩, 0⟩
+      beaconInit := none
       sessions := 0
       ghost := Ghost.empty })
 

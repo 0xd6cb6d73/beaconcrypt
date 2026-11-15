@@ -50,7 +50,7 @@ variable {n : Nat} {I KemSK Platform E : Type} {base : OracleSpec I} {source : R
 
 /-- The literal captured bundled body derives its own source-message scope; failed source writers and optional signing replies remain present. -/
 theorem bundled (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (selected index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner source) (scalar : PqxdhJointGapDh.ScalarBytes)
     (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (placeholder : Ed25519Signature) (masked : Bool) (wanted : Pqxdh.Bytes)

@@ -20,24 +20,24 @@ variable {source : RegistrationNativeMldsa.Source}
 /-- The original full source publication tree takes the one-time PUBLIC key; it never receives its scalar. -/
 noncomputable def program (setup : Setup base KemSK) (source : RegistrationNativeMldsa.Source)
     (index : Nat) (owner : Owner source) (oneTime : PqxdhEd25519EufCma.X25519PublicKey)
-    (encode : registration.SignedInitView → RegistrationNativeBeaconFrontend.M n KemSK source Auxiliary
+    (encode : registration.InitView → RegistrationNativeBeaconFrontend.M n KemSK source Auxiliary
       (RustM (core.option.Option Encoded))) :=
   RegistrationNativePlatformBeaconPublication.begin
     (RegistrationNativeBeaconFrontend.outgoing setup source index owner) encode ⟨owner.pin.binding⟩
     (RegistrationNativeBeaconFrontend.inputs setup owner)
-    ⟨PqxdhRootTableInitialization.rootArray oneTime⟩ owner.pin owner.mldsa.publicKey
+    ⟨PqxdhRootTableInitialization.rootArray oneTime⟩ owner.pin
 
 /-- Resetting only phase and the private signing-history coordinate leaves the complete source request/continuation tree unchanged. -/
 theorem metadata_program (setup : Setup base KemSK) (source : RegistrationNativeMldsa.Source)
     (index : Nat) (owner : Owner source) (oneTime : PqxdhEd25519EufCma.X25519PublicKey)
-    (encode : registration.SignedInitView → RegistrationNativeBeaconFrontend.M n KemSK source Auxiliary
+    (encode : registration.InitView → RegistrationNativeBeaconFrontend.M n KemSK source Auxiliary
       (RustM (core.option.Option Encoded))) :
     program setup source index owner oneTime encode = program setup source index (metadata owner) oneTime encode := rfl
 
 /-- The full actual source tree is stable under immutable metadata and repeated tagged one-time message, regardless of how its private scalar was obtained. -/
 theorem one_time (setup : Setup base KemSK) (source : RegistrationNativeMldsa.Source)
     (index : Nat) (left right : Owner source) (oneTimeLeft oneTimeRight : PqxdhEd25519EufCma.X25519PublicKey)
-    (encode : registration.SignedInitView → RegistrationNativeBeaconFrontend.M n KemSK source Auxiliary
+    (encode : registration.InitView → RegistrationNativeBeaconFrontend.M n KemSK source Auxiliary
       (RustM (core.option.Option Encoded)))
     (retained : metadata left = metadata right)
     (message : PqxdhEd25519EufCma.oneTimeMessage oneTimeLeft = PqxdhEd25519EufCma.oneTimeMessage oneTimeRight) :
@@ -51,7 +51,7 @@ theorem one_time (setup : Setup base KemSK) (source : RegistrationNativeMldsa.So
 /-- Metadata preservation is taken from the literal prior source bundle, including a failed writer. A repeated one-time message then selects the identical full publication tree at the next attempt. -/
 theorem retry {E Platform : Type} (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (source : RegistrationNativeMldsa.Source)
     (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (index : Nat) (before after : RegistrationNativeExperiment.State n KemSK source) (previous next : Platform)
@@ -60,7 +60,7 @@ theorem retry {E Platform : Type} (coins : QueryImpl unifSpec (StateT Platform P
       (((RegistrationNativePlatformExperiment.bundle coins setup checks representation created source writer index).run before).run previous))
     (left right : Owner source) (foundLeft : before.beacons[index]? = some left) (foundRight : after.beacons[index]? = some right)
     (oneTimeLeft oneTimeRight : PqxdhEd25519EufCma.X25519PublicKey)
-    (encode : registration.SignedInitView → RegistrationNativeBeaconFrontend.M n KemSK source Auxiliary
+    (encode : registration.InitView → RegistrationNativeBeaconFrontend.M n KemSK source Auxiliary
       (RustM (core.option.Option Encoded)))
     (message : PqxdhEd25519EufCma.oneTimeMessage oneTimeLeft = PqxdhEd25519EufCma.oneTimeMessage oneTimeRight) :
     program setup source index left oneTimeLeft encode = program setup source index right oneTimeRight encode := by
@@ -68,22 +68,6 @@ theorem retry {E Platform : Type} (coins : QueryImpl unifSpec (StateT Platform P
   have lookup := congrArg (fun owners => owners[index]?) kept
   simp only [List.getElem?_map, foundLeft, foundRight, Option.map_some, Option.some.injEq] at lookup
   exact one_time setup source index left right oneTimeLeft oneTimeRight encode lookup.symm message
-
-/-- Different actual fingerprint replies produce the same next unsigned-Init hash input. No equality of physical caches or fingerprint outputs is required. -/
-theorem fingerprint_address (pending : registration.BeaconFingerprint)
-    (left right : Std.Array U8 64#usize) :
-    ∃ nextLeft nextRight requestLeft requestRight,
-      pending.resume (.Some left) = .ok (.HashRequested nextLeft) ∧
-      pending.resume (.Some right) = .ok (.HashRequested nextRight) ∧
-      nextLeft.request = .ok requestLeft ∧ nextRight.request = .ok requestRight ∧
-      BeaconcryptCore.Refinement.RegistrationInputs.hashBytes requestLeft =
-        BeaconcryptCore.Refinement.RegistrationInputs.hashBytes requestRight := by
-  obtain ⟨nextLeft, resumedLeft, _, _, requestLeft, requestedLeft, inputLeft⟩ :=
-    BeaconcryptCore.Refinement.RegistrationSigningContinuations.beacon_fingerprint_some_exact pending left
-  obtain ⟨nextRight, resumedRight, _, _, requestRight, requestedRight, inputRight⟩ :=
-    BeaconcryptCore.Refinement.RegistrationSigningContinuations.beacon_fingerprint_some_exact pending right
-  exact ⟨nextLeft, nextRight, requestLeft, requestRight, resumedLeft, resumedRight,
-    requestedLeft, requestedRight, inputLeft.trans inputRight.symm⟩
 
 end BeaconcryptCore.Computational.RegistrationNativeIdentityTemplateAlias
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativeIdentityTemplateAlias.metadata_program' depends on axioms: [propext,
@@ -101,8 +85,3 @@ end BeaconcryptCore.Computational.RegistrationNativeIdentityTemplateAlias
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativeIdentityTemplateAlias.retry
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeIdentityTemplateAlias.fingerprint_address' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeIdentityTemplateAlias.fingerprint_address

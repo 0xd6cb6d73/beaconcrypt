@@ -23,7 +23,7 @@ def increment (wire : Wire) : Spec.Domain → Nat
 private theorem projected_counter (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (query : TypedSpec.Domain) {Value : Type} (project : TypedSpec.Range query → Value)
     (before : State n KemSK mlSource) (result : Value × State n KemSK mlSource)
     (reached : result ∈ support (Prod.map project id <$>
@@ -37,7 +37,7 @@ private theorem projected_counter (setup : Setup base KemSK) (checks : Checks) (
 theorem raw_counter (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (query : Spec.Domain) (before : State n KemSK mlSource)
     (result : Spec.Range query × State n KemSK mlSource)
     (reached : result ∈ support ((RegistrationNativeRawAdapter.handler wire

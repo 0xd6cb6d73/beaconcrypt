@@ -34,7 +34,7 @@ structure Good (setup : Setup base KemSK) (seed : PqxdhJointIdentity.IdentitySee
 theorem query_source (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential source) (selectedOwner selectedAccept : Nat)
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (before : State n KemSK source)
     (good : Good setup created.seed scalar selectedOwner before) :
@@ -89,7 +89,7 @@ theorem query_source (setup : Setup base KemSK) (checks : Checks) (wire : Regist
 /-- Every actual source query preserves all internal invariants needed by the complete native correspondence. -/
 theorem query_good (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential source) (selectedOwner selectedAccept : Nat)
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (before : State n KemSK source)
     (result : RegistrationNativeRawAdapter.TypedSpec.Range query × State n KemSK source)
@@ -150,7 +150,7 @@ private theorem project_program {Index S T Result : Type} {spec : OracleSpec Ind
           exact (RegistrationStateView.program_stable view idempotent targetImpl stable (next value) after).symm
 
 private theorem execute_program (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
-    (route : RawCtxServerRouting.SenderDecoder) (created : PqxdhLiveServerConstruction.Created Unit)
+    (route : RawCtxServerRouting.SenderDecoder) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (scalar : PqxdhJointGapDh.ScalarBytes) (credential : RegistrationNativeMldsa.Credential source)
     (selectedOwner selectedAccept : Nat) (work : OracleComp RegistrationNativeRawAdapter.TypedSpec Value)
     (before : State n KemSK source) :
@@ -175,7 +175,7 @@ private theorem execute_program (setup : Setup base KemSK) (checks : Checks) (wi
 theorem program_source (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential source) (selectedOwner selectedAccept : Nat)
     (work : OracleComp RegistrationNativeRawAdapter.TypedSpec Value) (before : State n KemSK source)
     (good : Good setup created.seed scalar selectedOwner before) :

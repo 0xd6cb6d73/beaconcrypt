@@ -20,7 +20,7 @@ theorem fresh_bytes (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wi
     (budget : PqxdhDeploymentInterface.Budget)
     (work : OracleComp (RegistrationNativeInterface.ModeSpec .P) Value)
     (claim : Value → Option (Nat × Pqxdh.Bytes)) (target : Target budget)
-    (created : PqxdhLiveServerConstruction.Created Unit) (initial : E)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (initial : E)
     (shell : CborRecordWorldClient.Shell) (control : PqxdhRecordLiftProtocol.Control n)
     (secret : PqxdhRecordLiftIdeal.CtxPrivate n) :
     𝒟[winning setup.source.crypto wire serverKeyId budget claim target <$>

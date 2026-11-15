@@ -58,7 +58,7 @@ theorem recognizes (joint : PqxdhJointIdentity.Primitives) (wire : RegistrationN
 /-- Complete actual native execution, with arbitrary earlier coins and no earlier indexed service, supplies every final reporting invariant internally. -/
 theorem run_detects (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value) (budget : PqxdhDeploymentInterface.Budget)
     (bounded : RegistrationNativeInterface.Respects budget work) (context : Context n KemSK) (count : Nat)

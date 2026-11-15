@@ -63,7 +63,7 @@ private theorem evaluate_map {A B : Type} (setup : Setup base KemSK)
   rfl
 
 private theorem accept_macro
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (packet : registration.InitPacket) (before : RegistrationNativeKemServerState.State n source × Platform) :
     (RegistrationNativePlatformOrdinaryKemClientJournal.free setup checks wire route representation created credential
       view failure allocation reserveRegistration reservePeer reserveFrame erased helper writer (.inr (.accept packet))).run before =
@@ -78,8 +78,10 @@ private theorem accept_macro
   simp only [bind_apply, modify_apply, pure_apply, pure_bind]
   rfl
 
+-- The counted accept program now builds the 2638-byte Init transcript; keep it opaque so whnf of the support hypotheses does not evaluate it (`accept_macro` above still unfolds it).
+attribute [local irreducible] RegistrationNativePlatformKemCountedAccept.accept in
 /-- A newly inserted token in an actually evaluated typed accept is attached to its same native collector and actual global lower log. -/
-theorem callback_new (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+theorem callback_new (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (packet : registration.InitPacket) (handle : Nat) (before after : Client × Platform)
     (block log : Log KemSK) (beforePool afterPool : Pool KemSK)
     (supported : (((.ok (some handle), after), block), afterPool) ∈ support
@@ -107,6 +109,8 @@ theorem callback_new (created : PqxdhLiveServerConstruction.Created Unit) (crede
     { cut.receipt.root with root := { cut.receipt.root.root with encapsulated := included _ cut.receipt.root.root.encapsulated } }
   exact ⟨{ cut with receipt := { cut.receipt with root := root } }, tokenEq⟩
 
+-- The counted accept program now builds the 2638-byte Init transcript; keep it opaque so whnf of the support hypotheses does not evaluate it (`accept_macro` above still unfolds it).
+attribute [local irreducible] RegistrationNativePlatformKemCountedAccept.accept in
 /-- A token moved by an actual build has one earlier same-execution successful accept whose actual native Root operands name this exact analysis log's encapsulation reply. -/
 theorem taken (budget : Budget) (functional : PqxdhChallengeSecretRouting.FunctionalDecapsulation setup.kem)
     (result : RegistrationNativeKemRecipientLogSource.Result KemSK (Option (History n source Value Platform) × Platform) budget.create)

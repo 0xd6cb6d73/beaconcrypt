@@ -118,20 +118,20 @@ TOKEN_SHA256 = {
     "registration-provenance.pvl": "121a4f12eff4f89c82684491ec2c72f5ad4f0f666e806479b6d219f0988aa307",
 }
 
-# Reviewed classical projection of the ML-DSA source; see doc/impl/mldsa-source-pins.md.
+# Classical projection: every record AD is registration version 3 transcript AD151 (pvport3); the pinned-Server ML-DSA response signature is omitted and covered by the separate current profile.
 # Full authentication/AD lifting is not inferred from these whole-file tripwires.
 SOURCE_SHA256 = {
-    "beaconcrypt/src/beacon.rs": "71fb13a0d12ba7a49377178cdfb2754564350c12912a95c6784efbd1a582823b",
-    "beaconcrypt/src/server.rs": "9bd205117f41c690f5fae2936c2f70de61e751f04caee78de800e2ba51dffb13",
-    "beaconcrypt-core/src/pqxdh.rs": "bff5dca4b9a292a025ad96ab9fba8761bc63d2e49dac493a2bae0d1cea67a018",
-    "beaconcrypt-core/src/session.rs": "3779c778ce4f8ec534c2fa610c0a334302ada76fc5cd601ade575802ff9c07c4",
-    "beaconcrypt/src/auth.rs": "45b2513e304b4d4b12b41ca15ff15b94db54886e302453971d99ec0f1ce4f884",
-    "beaconcrypt/src/pqxdh.rs": "f3b880ec118bebfd49851156588e681da40f50761470fbacc6940fd69cabc319",
-    "beaconcrypt-core/src/agreement.rs": "cea8e603c7943f18ba79f95743cc113e3d16e8589c3614240b542ee3ac1109de",
-    "beaconcrypt-core/src/registration.rs": "fb6f679499585a9d9976abaea31f8dbd8f68f53f6c0f1deb7462ee393acf9f25",
+    "beaconcrypt/src/beacon.rs": "669482d038c8143ac25698bd4a1517480745c9b29c348d7d5c023992f813a845",
+    "beaconcrypt/src/server.rs": "b5e6992a58eacce5b51d2624ff58206fbd56c744a97561146d07176a9242b66b",
+    "beaconcrypt-core/src/pqxdh.rs": "0e90604b6537968f73873850ca7626f5019a9482c3225bb333d9a3ff555fde4f",
+    "beaconcrypt-core/src/session.rs": "4f83234a89c0fe8df60d68753930339f68208e2f14c464849177006af550c15e",
+    "beaconcrypt/src/auth.rs": "f812e268cdd86cac01c43fdba5b25b944ebcdda1f6c03407203a6fbfa9ed16b5",
+    "beaconcrypt/src/pqxdh.rs": "031465df2916c2fd118a28b3cb91f79484f535e2149c9c5bc48d3c5395dacf23",
+    "beaconcrypt-core/src/agreement.rs": "7abf5bb56eb76ed461d52d0d6efff8bb18f165cc6831417a4f78f6e4d0672fa6",
+    "beaconcrypt-core/src/registration.rs": "8be65a2c601a151d0ec9d2a570b929d55d72394edceac59599e1b11d741bba83",
     "beaconcrypt-core/src/record_effects.rs": "dbdf79661a17c8d8c128ff349a7efe906d6713912e5510c9a0476b0c3efad2b5",
-    "beaconcrypt-core/src/peer.rs": "df4b0fc85a7a303f56908b13a4d90fb7d9233601040b43e035a99d341bd757bc",
-    "beaconcrypt-core/src/transport.rs": "bc3f347f251cb07e44c47699c6fa3db4c9ae8b73c6d1d54c6f9eb54911a463a9",
+    "beaconcrypt-core/src/peer.rs": "5ace82b81a3e1c191223fd0629be3f00bbd321336baed0b568c9e432df0f9d77",
+    "beaconcrypt-core/src/transport.rs": "795012d453a3ed209d6f8815eeedb2ccabaebd9a81d03f932d64f95aea9c3617",
     "beaconcrypt-crypto/src/crypto_aead.rs": "1b62a128ed169c81a45825ede6853b32ae715ce9ea96f9d53803e7fb461b9bf1",
     "beaconcrypt-crypto/src/crypto_generichash.rs": "292e806217ff105632f48ac32d89f3e9820b8a2b118810790be06e60104168f3",
     "beaconcrypt-crypto/src/crypto_kdf.rs": "8fc41159cc32f483a89ee4a273b9ebdf32fd75d23591580c991efb8b8c70cdf2",
@@ -166,7 +166,9 @@ def validate_targets(targets=TARGETS, directory=HERE, source_root=None):
                 "review changed signature-provenance model/query: " + filename
             )
     audit = THEORY.audit(directory)
-    if len(audit["reductions"]) != 28 or len(audit["data_constructors"]) != 44:
+    # 45 -> 48 (pvport3): fs-common.pvl copies the three public transcript-AD151
+    # data constructors of environment.pvl; no reduction or barrier changed.
+    if len(audit["reductions"]) != 28 or len(audit["data_constructors"]) != 48:
         raise ValueError("review changed protected-term rule inventory")
     root = source_root if source_root is not None else HERE.parents[2]
     for filename, wanted in SOURCE_SHA256.items():
@@ -257,7 +259,7 @@ def main():
         parser.error("retain the reviewed 180-second and 10-GiB maximum caps")
     if args.check_only:
         print(
-            "Signature provenance manifest: 6 targets, 28 reductions, 44 data constructors."
+            "Signature provenance manifest: 6 targets, 28 reductions, 48 data constructors."
         )
         return
     if args.log_dir:

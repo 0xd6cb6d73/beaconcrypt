@@ -42,7 +42,7 @@ class ExactMldsaGate(unittest.TestCase):
 
     def test_alpha_suffixes_preserve_formula(self):
         renamed = re.sub(
-            r"\b(agent_ml|server_ml|init_hash|classical_init|response)\b",
+            r"\b(server_ml|init_hash|response)\b",
             r"\1_937",
             self.text,
         )
@@ -52,13 +52,13 @@ class ExactMldsaGate(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.check(
                 self.text.replace(
-                    "MldsaInitSigned(agent_ml,", "MldsaInitSigned(agent_ml_3,"
+                    "MldsaResponseSigned(server_ml,", "MldsaResponseSigned(server_ml_3,"
                 )
             )
 
     def test_distinct_variables_cannot_merge(self):
         with self.assertRaises(ValueError):
-            self.check(self.text.replace("agent_ml,server_ml", "agent_ml,agent_ml"))
+            self.check(self.text.replace("server_ml,init_hash", "server_ml,server_ml"))
 
     def test_event_and_bound_hash_cannot_change(self):
         for changed in [

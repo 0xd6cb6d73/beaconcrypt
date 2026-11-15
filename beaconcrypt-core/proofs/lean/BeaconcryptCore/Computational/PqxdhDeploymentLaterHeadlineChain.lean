@@ -27,6 +27,7 @@ The anomaly is a run-phase event: it reads only the run-phase transcript, which 
 open OracleComp OracleSpec ENNReal
 
 set_option autoImplicit false
+set_option warningAsError true
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentLaterHeadlineChain
 open PqxdhServerAuthExperiment (Setup Codec Checks)

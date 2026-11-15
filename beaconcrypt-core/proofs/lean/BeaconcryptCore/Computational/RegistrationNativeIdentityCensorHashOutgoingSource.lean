@@ -84,7 +84,7 @@ private theorem interpret_run (joint : PqxdhJointIdentity.Primitives) (selected 
       pure (result.1.1.1, ((result.1.1.2, result.1.2), result.2))) := rfl
 
 private theorem transformed (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (selected : Nat) (placeholder : Ed25519Signature) (request : registration.HashRequest)
     (before : Full (n := n) (KemSK := KemSK) (Platform := Platform) (mlSource := mlSource)) :
     (simulateQ (RegistrationNativeIdentityCensorOperational.implementation selected placeholder)
@@ -99,7 +99,7 @@ private theorem transformed (setup : Setup base KemSK) (checks : Checks)
 
 section Actual
 variable (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (selected : Nat) (placeholder : Ed25519Signature)
 local notation "action" request => RegistrationNativePlatformIdentityCtxMain.beacon setup checks representation created
   (RegistrationNativePlatformIdentityProgram.native

@@ -11,6 +11,7 @@ set_option maxRecDepth 4096
 set_option maxHeartbeats 1000000
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativePlatformPublicFrontendCaps
+attribute [local irreducible] RegistrationNativePlatformServerOpenControl.accept
 open PqxdhServerAuthExperiment (Setup Checks)
 open RegistrationNativePlatformPublicFrontend (Spec LocalSpec State LocalM embedLocal executeLocal)
 variable {n : Nat} {E Platform ι KemSK A : Type} {base : OracleSpec ι}

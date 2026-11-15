@@ -31,7 +31,7 @@ theorem app_event (crypto : Pqxdh.Crypto) (wire : Wire) (serverKid : U64) (budge
 theorem compile_run (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (mlSource : RegistrationNativeMldsa.Source) (credential : RegistrationNativeMldsa.Credential mlSource)
     (bounds : FreshBounds) (mode : Mode) (work : OracleComp (ModeSpec mode) Value) (before : State n KemSK mlSource) :
     RegistrationNativeExperiment.run setup checks wire route representation created mlSource credential bounds mode work before =
@@ -44,7 +44,7 @@ theorem compile_run (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
 theorem ledger_projection (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (mlSource : RegistrationNativeMldsa.Source) (credential : RegistrationNativeMldsa.Credential mlSource)
     (bounds : FreshBounds) (mode : Mode) (work : OracleComp (ModeSpec mode) Value) (before : State n KemSK mlSource)
     (result : Value × (RegistrationNativeLedger.State × State n KemSK mlSource))
@@ -57,7 +57,7 @@ theorem ledger_projection (setup : Setup base KemSK) (checks : Checks) (wire : W
 theorem app_observation (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (mlSource : RegistrationNativeMldsa.Source) (credential : RegistrationNativeMldsa.Credential mlSource)
     (bounds : FreshBounds) (budget : Budget) (claim : Value → Option (Nat × Pqxdh.Bytes))
     (work : OracleComp (ModeSpec .P) Value) (before : State n KemSK mlSource) :
@@ -71,7 +71,7 @@ theorem app_observation (setup : Setup base KemSK) (checks : Checks) (wire : Wir
 theorem app_compiled (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (mlSource : RegistrationNativeMldsa.Source) (credential : RegistrationNativeMldsa.Credential mlSource)
     (bounds : FreshBounds) (budget : Budget) (claim : Value → Option (Nat × Pqxdh.Bytes))
     (work : OracleComp (ModeSpec .P) Value) (before : State n KemSK mlSource) :
@@ -83,7 +83,7 @@ theorem app_compiled (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
   rw [app_observation, compile_run, Functor.map_map, Functor.map_map]
 
 /-- The actual native compiler retains all original twelve command bills, including the unchanged hidden-bit and fresh-byte allowances. -/
-theorem compile_bound (setup : Setup base KemSK) (wire : Wire) (created : PqxdhLiveServerConstruction.Created Unit)
+theorem compile_bound (setup : Setup base KemSK) (wire : Wire) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (bounds : FreshBounds) (mode : Mode) (work : OracleComp (ModeSpec mode) Value) (budget : Budget)
     (bounded : Respects budget work) (kind : Fin 12) :
     (RegistrationNativeFullCompiler.compile setup.source.crypto wire created.server.server.metadata.sender bounds mode work).IsQueryBoundP

@@ -63,7 +63,7 @@ theorem ordinary_inv (joint : PqxdhJointIdentity.Primitives)
 
 /-- External platform coins preserve the private future-handle invariant, and actual native queries use its existing per-leaf receipt. -/
 theorem reserved_query (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (RegistrationNativePlatformIdentityProgram.Spec n KemSK).Domain)
     (before : RegistrationNativeIdentityWorld.State n KemSK)
     (result : (RegistrationNativePlatformIdentityProgram.Spec n KemSK).Range query × RegistrationNativeIdentityWorld.State n KemSK)
@@ -79,7 +79,7 @@ theorem reserved_query (setup : Setup base KemSK) (checks : Checks)
 
 /-- The actual combined source interpreter retains every future generated row through arbitrary adaptive trees. -/
 theorem reserved_program (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     {A : Type} (work : OracleComp (RegistrationNativePlatformIdentityProgram.Spec n KemSK) A)
     (before : RegistrationNativeIdentityWorld.State n KemSK) (result : A × RegistrationNativeIdentityWorld.State n KemSK)
     (prior : ReservedEmpty before.identities)
@@ -90,7 +90,7 @@ theorem reserved_program (setup : Setup base KemSK) (checks : Checks)
     work before prior result supported
 
 private theorem beacon_inv (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativePlatformIdentityProgram.M n KemSK RegistrationServerRoleBackend.State Platform source Value)
     (preserves : ∀ before result,Holds setup.joint before.1.2.identities before.1.1.1 → ReservedEmpty before.1.2.identities →
       result ∈ support (RegistrationNativePlatformIdentityProgram.runNew setup checks representation created work before) →
@@ -117,7 +117,7 @@ private theorem beacon_inv (setup : Setup base KemSK) (checks : Checks)
 
 /-- Actual current creation retains all earlier histories and obtains the new row from the genuine ordinary source. -/
 theorem create_inv (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (before : (State n KemSK source × Platform) × SourceState)
     (result : RustM (Option Nat) × ((State n KemSK source × Platform) × SourceState)) (prior : Inv setup.joint before)
@@ -140,7 +140,7 @@ private theorem interpret_map {Next : Type} (joint : PqxdhJointIdentity.Primitiv
 
 /-- Full actual stateful publication preserves every attempted Ed signature through allocation and serialization failures. -/
 theorem bundle_inv {E : Type} (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) (index : Nat)
     (before : (State n KemSK source × Platform) × SourceState)
     (result : RustM (Option Pqxdh.Bytes) × ((State n KemSK source × Platform) × SourceState)) (prior : Inv setup.joint before)
@@ -155,7 +155,7 @@ theorem bundle_inv {E : Type} (setup : Setup base KemSK) (checks : Checks)
 
 /-- The actual corrected assigned-ID finish retains every owner's synchronized signing history on all outcomes. -/
 theorem finish_inv (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat) (packet : Option registration.ResponsePacket)
     (before : (State n KemSK source × Platform) × SourceState)
     (result : RustM (Option Pqxdh.Bytes) × ((State n KemSK source × Platform) × SourceState)) (prior : Inv setup.joint before)

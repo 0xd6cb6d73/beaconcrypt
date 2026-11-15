@@ -53,7 +53,7 @@ private theorem append_holds (before after : State n KemSK source) (prior : Hold
 
 private theorem beacon_metadata (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State Value)
     (localLaw : ∀ owners env result, result ∈ support ((work.run owners).run env) → result.1.2.map metadata = owners.map metadata)
     (before : State n KemSK source) (result : Value × State n KemSK source)
@@ -73,7 +73,7 @@ private theorem beacon_metadata (setup : Setup base KemSK) (checks : Checks)
 /-- Actual successful and failed bundles preserve the derived local-owner/private-handle alignment. -/
 theorem bundle_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire) (index : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire) (index : Nat)
     (before : State n KemSK source) (result : RustM (Option Pqxdh.Bytes) × State n KemSK source)
     (prior : Holds before)
     (supported : result ∈ support ((RegistrationNativeExperiment.beacon setup checks representation created
@@ -87,7 +87,7 @@ theorem bundle_keeps (setup : Setup base KemSK) (checks : Checks)
 /-- Actual finish, including private decapsulation and all rejected opens, preserves the derived alignment. -/
 theorem finish_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire) (index : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire) (index : Nat)
     (packet : Option registration.ResponsePacket) (before : State n KemSK source)
     (result : RustM (Option Pqxdh.Bytes) × State n KemSK source) (prior : Holds before)
     (supported : result ∈ support ((RegistrationNativeExperiment.beacon setup checks representation created
@@ -101,7 +101,7 @@ theorem finish_keeps (setup : Setup base KemSK) (checks : Checks)
 /-- The actual constructor increments private pool and local roster together after every pre-birth failure gate. -/
 theorem create_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (before : State n KemSK source) (result : RustM (Option Nat) × State n KemSK source) (prior : Holds before)
     (supported : result ∈ support ((RegistrationNativeExperiment.beacon setup checks representation created
@@ -147,7 +147,7 @@ theorem create_keeps (setup : Setup base KemSK) (checks : Checks)
         cases terminal
         cases returned
         apply append_holds before _ prior
-          (RegistrationNativeBeaconBirth.owner setup source ready.pin ready.credentials ready.identity ready.prekey born.1 allocated.1)
+          (RegistrationNativeBeaconBirth.owner setup source ready.pin ready.identity ready.prekey born.1 allocated.1)
         · rw [owners]
         · rw [afterAllocation, poolAfter, keys, List.length_append, List.length_singleton]
         · change born.1.1 = before.beacons.length

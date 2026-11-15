@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeIdentitySourceNativeProgram
 
-/-! Actual indexed preparation and ordinary source preparation share the literal optional prefix and source seed/prekey suffix. The only erased state here is the indexed identity pool/transcript, after its exact stored seed has realized the returned native preparation. -/
+/-! Actual indexed preparation and ordinary source preparation share the literal pure-pin prefix and source seed/prekey suffix. The only erased state here is the indexed identity pool/transcript, after its exact stored seed has realized the returned native preparation. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -16,7 +16,7 @@ variable {source : RegistrationNativeMldsa.Source}
 /-- Every actual public preparation query program has the complete original native preparation reply and World/context after private credential realization. -/
 theorem program_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (before : State n KemSK) :
     (fun result => (RegistrationNativeIdentityRealization.preparedReply result.2.identities result.1, result.2.context)) <$>
@@ -43,7 +43,7 @@ theorem program_source (setup : Setup base KemSK) (checks : Checks)
         simp only [RegistrationNativeIdentitySourceCommon.afterExposed, RegistrationNativeIdentitySourceCommon.afterNative,
           simulateQ_pure, StateT.run_pure, map_pure, RegistrationNativeIdentityRealization.preparedReply, Option.map_none]
     | some prepared =>
-        exact RegistrationNativeIdentitySourceSuffix.source_exact setup checks representation created prepared.1 prepared.2
+        exact RegistrationNativeIdentitySourceSuffix.source_exact setup checks representation created prepared
           ⟨current, before.identities⟩
 
 end BeaconcryptCore.Computational.RegistrationNativeIdentityPreparationSource

@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativePlatformSecretWordFrontend
 import BeaconcryptCore.Computational.RegistrationNativePlatformSecretWordInstallTransport
 import BeaconcryptCore.Computational.RegistrationNativeSecretWordAtomServerInstallCaps
-/-! The actual corrected OPEN Word accept contains no installation of either role. Repeated pin, mandatory authentication, owned replay, same mutable reservation, ordered collector and one-use retention keep all source failure and platform outcomes. -/
+/-! The actual corrected OPEN Word accept contains no installation of either role. Supplied pin, mandatory authentication, owned replay, same mutable reservation, ordered collector and one-use retention keep all source failure and platform outcomes. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -175,7 +175,7 @@ private theorem pin_free (selected : Bool) (current : session.ServerAuthenticati
       ((PqxdhRecordLiftInterface.EnvEffects n).query
         (.inr (.hash (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request))) : OracleComp (PqxdhRecordLiftInterface.EnvEffects n) _) (by simp [InstallEnv, isQueryBoundP_query_iff]) before
 
-/-- Repeated pin hashing, mandatory authentication, mutable reservation and actual ordered preparation perform no role installation. -/
+/-- Supplied-pin selection, mandatory authentication, mutable reservation and actual ordered preparation perform no role installation. -/
 theorem accept_free (selected : Bool) (reserve : StateT Platform ProbComp Bool)
     (setup : Setup base KemSK) (checks : Checks) (verify : MldsaTranscriptAuth.Verify) (packet : registration.InitPacket)
     (before : ServerState) (env : Environment) (previous : Platform) :
@@ -183,8 +183,9 @@ theorem accept_free (selected : Bool) (reserve : StateT Platform ProbComp Bool)
       (RegistrationNativePlatformSecretWordOrdinary.platform (n := n) (KemSK := KemSK) reserve) setup checks verify packet).run before).run env).run previous).IsQueryBoundP
       (Install role (n := n) (KemSK := KemSK)) 0 := by
   simp only [RegistrationNativePlatformSecretWordOpen.accept, StateT.run_bind, StateT.run_get, pure_bind]
-  apply bind_free role _ _ (fun before env previous => lift_free role _ (pin_free role selected _) before env previous)
-  intro current after nextEnv nextPlatform
+  apply isQueryBoundP_bind (m := 0)
+    (lift_free role _ (pin_free role selected before.pin) before env previous)
+  rintro ⟨⟨⟨current, after⟩, nextEnv⟩, nextPlatform⟩ _
   exact afterPin_free role selected reserve setup checks verify packet current after nextEnv nextPlatform
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformSecretWordAcceptInstall

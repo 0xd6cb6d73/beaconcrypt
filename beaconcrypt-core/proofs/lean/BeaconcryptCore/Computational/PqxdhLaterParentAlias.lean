@@ -8,6 +8,8 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option maxRecDepth 2048
 namespace BeaconcryptCore.Computational.PqxdhLaterParentAlias
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhJointKdf PqxdhJointKdfGame
 open PqxdhOrderedChainHybrids RawCtxSelectedParentEntry
 
@@ -17,7 +19,7 @@ theorem target_address (target : RootOutput) :
   change (⟨_, (RawCtxSelectedQueryTrace.rootVector (RawCtxFreshChainCut.concreteChain target)).toList⟩ : JointKdfAddress) = _
   rw [RawCtxSelectedQueryTrace.rootVector_concrete]
   exact congrArg (fun info => (⟨info, target.toList⟩ : JointKdfAddress))
-    (by simpa only [RawCtxChainSend.nativeRequest, FixedHkdfDomain.info, pqxdh.SYM_RATCHET_INFO] using PqxdhRefinement.absBytes_SYM_RATCHET_INFO)
+    (by simpa only [RawCtxChainSend.nativeRequest, FixedHkdfDomain.info, ratchet.SYM_RATCHET_INFO] using PqxdhRefinement.absBytes_SYM_RATCHET_INFO)
 
 noncomputable def fullAlias (address : JointKdfAddress) (parent : FullOutput) : Bool :=
   by classical exact decide (RawCtxSelectedParentPrivatePatch.targetAddress (nextChain parent) = address)
@@ -44,7 +46,7 @@ theorem prepared_alias (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (depth : Nat)
     (prior : ProbComp (PqxdhInitialSourceInitialSecrecy.Context extra M P I D K X Response A N S B)) :
-    𝒟[collision <$> PqxdhErasedParentMaterial.prepare source writer sender route decode depth prior] {true} ≤
+    𝒟[collision <$> PqxdhErasedParentMaterial.prepare (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth prior] {true} ≤
       (2 ^ 256 : ℝ≥0∞)⁻¹ := by
   unfold PqxdhErasedParentMaterial.prepare
   generalize full_eq : ($ᵗ FullOutput) = fullWork
@@ -104,11 +106,11 @@ noncomputable def carrierAlias (result : Carrier) : Bool :=
 theorem certified_alias (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl kem program post) (depth : Nat) :
     𝒟[(fun result => carrierAlias setup result.1.val) <$>
       ((simulateQ AdaptiveCtxSharedHash.hashImpl
-        (PqxdhLaterExecutableCertificates.certified env callbacks baseImpl kem attachedVerify primitives program post
+        (PqxdhLaterExecutableCertificates.certified (associatedData := associatedData) (completedBinding := completedBinding) env callbacks baseImpl kem attachedVerify primitives program post
           selected number ancestors disclosed c depth)).run ∅)] {true} ≤ (2 ^ 256 : ℝ≥0∞)⁻¹ := by
-  have bound := prepared_alias env.source env.recordWriter env.senderId env.route env.decode depth
-    (PqxdhInitialPreparedSourceInput.prior env0 baseImpl kem attachedVerify primitives program post selected number ancestors disclosed)
-  rw [← PqxdhLaterExecutableCertificates.certified_source env callbacks baseImpl kem attachedVerify primitives program post
+  have bound := prepared_alias (associatedData := associatedData) (completedBinding := completedBinding) env.source env.recordWriter env.senderId env.route env.decode depth
+    (PqxdhInitialPreparedSourceInput.prior (associatedData := associatedData) (completedBinding := completedBinding) env0 baseImpl kem attachedVerify primitives program post selected number ancestors disclosed)
+  rw [← PqxdhLaterExecutableCertificates.certified_source (associatedData := associatedData) (completedBinding := completedBinding) env callbacks baseImpl kem attachedVerify primitives program post
     selected number ancestors disclosed c depth] at bound
   simpa only [Functor.map_map, collision, carrierAlias, PqxdhLaterSharedMessagePrefix.restore] using bound
 
@@ -119,12 +121,12 @@ theorem component_prefix_alias (c : PqxdhAuthenticatedRootBudgets.Certificate en
     𝒟[(fun result => carrierAlias setup result.1.val) <$>
       ((simulateQ (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder env.decode) env.source.crypto key)
         (simulateQ RawCtxSourceSharedRom.forward
-          (PqxdhLaterExecutableCertificates.certified env callbacks baseImpl kem attachedVerify primitives program post
+          (PqxdhLaterExecutableCertificates.certified (associatedData := associatedData) (completedBinding := completedBinding) env callbacks baseImpl kem attachedVerify primitives program post
             selected number ancestors disclosed c depth))).run AdaptiveCtxDynamicKnownKeys.initialSource)] {true} ≤
       (2 ^ 256 : ℝ≥0∞)⁻¹ := by
-  have bound := certified_alias setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth
+  have bound := certified_alias (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth
   have source := RawCtxSourceSharedRom.forward_cache true (RawCtxUniversalDecoder.decoder env.decode) env.source.crypto key
-    (PqxdhLaterExecutableCertificates.certified env callbacks baseImpl kem attachedVerify primitives program post
+    (PqxdhLaterExecutableCertificates.certified (associatedData := associatedData) (completedBinding := completedBinding) env callbacks baseImpl kem attachedVerify primitives program post
       selected number ancestors disclosed c depth) AdaptiveCtxDynamicKnownKeys.initialSource
   simp only [RawCtxPrefixKeyOrder.initial_cache] at source
   rw [← source] at bound
@@ -141,7 +143,7 @@ noncomputable def outputAlias : Output → Bool
 theorem suffix_alias (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl kem program post)
     (result : PqxdhLaterExecutableCertificates.Certified (setup := setup) (M := M) (P := P) (I := I) (K := K) (X := X) (Response := Response) (A := A) (KemSK := KemSK) (S := S) (B := B) (PqxdhInitialPreparedSourceCaps.postCap (PqxdhSourceSharedPreparation.environment setup env callbacks ∅) baseImpl kem program post c))
     (out : Output)
-    (supported : out ∈ support (PqxdhLaterExecutableCompletion.suffix setup env callbacks program post attachedVerify primitives baseImpl kem c result))
+    (supported : out ∈ support (PqxdhLaterExecutableCompletion.suffix (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem c result))
     (hit : outputAlias setup out = true) : carrierAlias setup result.val = true := by
   unfold PqxdhLaterExecutableCompletion.suffix at supported
   split at supported
@@ -160,14 +162,14 @@ theorem suffix_alias (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImp
 theorem client_alias (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl kem program post) (depth : Nat) :
     𝒟[(fun final => outputAlias setup final.1) <$>
       AdaptiveCtxDynamicKnownKeys.sourceGame true (RawCtxUniversalDecoder.decoder env.decode) env.source.crypto
-        (PqxdhLaterExecutableCompletion.client setup env callbacks program post attachedVerify primitives baseImpl kem
+        (PqxdhLaterExecutableCompletion.client (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem
           selected number ancestors disclosed c depth)] {true} ≤ (2 ^ 256 : ℝ≥0∞)⁻¹ := by
   simp only [AdaptiveCtxDynamicKnownKeys.sourceGame, PqxdhLaterExecutableCompletion.client,
     simulateQ_bind, StateT.run_bind, map_bind]
   rw [← prEvent_eq_evalDist_singleton _ true]
   apply prEvent_bind_le_of_forall_le_of_support
   intro key keySupported
-  have prefixBound := component_prefix_alias setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth key
+  have prefixBound := component_prefix_alias (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem selected number ancestors disclosed c depth key
   rw [← prEvent_eq_evalDist_singleton _ true, prEvent_map] at prefixBound
   apply le_trans ?_ prefixBound
   apply prEvent_bind_le_prEvent_of_support
@@ -176,7 +178,7 @@ theorem client_alias (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImp
   apply (OracleComp.prEvent_eq_zero_iff _ _).mpr
   intro final reached hit
   apply absent
-  apply suffix_alias setup env callbacks program post attachedVerify primitives baseImpl kem c result.1 final.1 ?_ hit
+  apply suffix_alias (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem c result.1 final.1 ?_ hit
   apply support_simulateQ_run'_subset (AdaptiveCtxDynamicKnownKeys.sourceImpl true
     (RawCtxUniversalDecoder.decoder env.decode) env.source.crypto key) _ result.2
   rw [StateT.run'_eq, support_map]

@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeMldsaCoinAcceptPrimitives
+import BeaconcryptCore.Computational.RegistrationNativeMldsaProfile
 
 /-! Actual Server SDK acceptance has a source-derived ordinary-uniform bill from authentication, private replay lookup, allocator gates and native agreement. Only the actual KEM encapsulation algorithm's draw cap is supplied. Every failed prefix and the native parsed-attempt counter remain in the original execution; no callback frame or successful-authentication premise is introduced. -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -28,7 +29,7 @@ private theorem state_modify_apply {S : Type} {m : Type → Type} [Monad m]
 /-- Actual authentication is the same512-draw source bound under the SDK's retained state lens. -/
 theorem authenticate (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (before : RegistrationServerFrontendCompiler.State n) :
     ((RegistrationServerNativeSource.authenticate setup codec route verify created packet).run before).IsTotalQueryBound 512 := by
   simpa only [RegistrationServerNativeSource.authenticate, RegistrationServerNativeSource.sourceStep,
@@ -36,7 +37,7 @@ theorem authenticate (setup : Setup base KemSK) (codec : Codec Reader Response)
     IsTotalQueryBound, isQueryBound_map_iff] using
     RegistrationNativeMldsaCoinAcceptPrimitives.authentication setup codec route verify before.pin packet before.world.world.1
 
-private theorem retain (created : PqxdhLiveServerConstruction.Created Unit) (accepted : agreement.ServerAgreement)
+private theorem retain (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (accepted : agreement.ServerAgreement)
     (before : RegistrationServerFrontendCompiler.State n) :
     ((RegistrationServerNativeSource.retain created accepted).run before).IsTotalQueryBound 0 := by
   simp only [RegistrationServerNativeSource.retain, RegistrationServerNativeSource.sourceStep,
@@ -46,7 +47,7 @@ private theorem retain (created : PqxdhLiveServerConstruction.Created Unit) (acc
   | ok result => rcases result with ⟨option, history⟩; cases option <;> trivial
 
 private theorem afterAuthentication (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (qEncap : Nat) (encapsulation : ∀ key, (simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl)
       (setup.kem.encaps key)).IsTotalQueryBound qEncap)
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit)
@@ -70,7 +71,7 @@ private theorem afterAuthentication (setup : Setup base KemSK) (checks : Checks)
 /-- All actual SDK accept outcomes pay at most authentication512 plus nine native agreement slots; only the encapsulation primitive cap is assumed. -/
 theorem accept (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (qEncap : Nat) (encapsulation : ∀ key, (simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl)
       (setup.kem.encaps key)).IsTotalQueryBound qEncap)
     (packet : registration.InitPacket) (before : RegistrationServerFrontendCompiler.State n) :
@@ -90,7 +91,7 @@ theorem accept (setup : Setup base KemSK) (codec : Codec Reader Response) (check
 /-- The actual free typed accept callback retains that source-derived bill, including its parsed-attempt update. -/
 theorem handler (source : RegistrationNativeMldsa.Source) (setup : Setup base KemSK) (checks : Checks)
     (wire : RegistrationNativeWire.Wire) (route : RawCtxServerRouting.SenderDecoder)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential source) (qEncap : Nat)
     (encapsulation : ∀ key, (simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl setup.baseImpl)
       (setup.kem.encaps key)).IsTotalQueryBound qEncap)

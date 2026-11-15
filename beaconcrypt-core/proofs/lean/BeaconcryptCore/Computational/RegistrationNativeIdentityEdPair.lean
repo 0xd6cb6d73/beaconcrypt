@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativeIdentityEdProgress
 import BeaconcryptCore.Computational.RegistrationNativeIdentityHashPair
 
-/-! The literal source Ed continuations preserve a paired state differing only in its attached one-time field. The selected one-time reply may differ; subsequent equal PQ replies restore the pair needed by the common fingerprint/hash continuation. All copied bytes and source stages are derived from the actual resume bodies. -/
+/-! The literal source Ed continuations preserve a paired state differing only in its attached one-time field. The selected one-time reply may differ; subsequent equal PQ replies restore the pair needed by the common request-hash continuation. All copied bytes and source stages are derived from the actual resume bodies. -/
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -51,8 +51,8 @@ theorem pq_key (left right : registration.BeaconEd25519Signing) (same : Same lef
     (matchingLeft : replyTailMatches left (.Some signed)) (matchingRight : replyTailMatches right (.Some signed))
     (width : signed.val.length = 1249) :
     ∃ nextLeft nextRight,
-      left.resume (.Some signed) = .ok (.FingerprintRequested nextLeft) ∧
-      right.resume (.Some signed) = .ok (.FingerprintRequested nextRight) ∧
+      left.resume (.Some signed) = .ok (.HashRequested nextLeft) ∧
+      right.resume (.Some signed) = .ok (.HashRequested nextRight) ∧
       stripState nextLeft.state = stripState nextRight.state := by
   obtain ⟨nextLeft, runLeft, bytesLeft, restoreLeft⟩ :=
     RegistrationNativeIdentityEdProgress.pq_key left signed stage matchingLeft width

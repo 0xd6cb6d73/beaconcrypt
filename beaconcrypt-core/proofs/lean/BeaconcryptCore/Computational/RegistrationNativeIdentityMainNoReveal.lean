@@ -50,7 +50,7 @@ theorem record_safe (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wi
 theorem handler_safe (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain) :
     Safe (RegistrationNativeIdentityMain.handler (n := n) setup checks wire route representation created credential query) := by
   cases query with
@@ -84,7 +84,7 @@ theorem handler_safe (setup : Setup base KemSK) (checks : Checks) (wire : Regist
 theorem program_safe (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (work : OracleComp RegistrationNativeRawAdapter.TypedSpec Value) :
     Safe (simulateQ (RegistrationNativeIdentityMain.handler (n := n) setup checks wire route representation created credential) work) := by
   induction work using OracleComp.inductionOn with
@@ -97,7 +97,7 @@ theorem program_safe (setup : Setup base KemSK) (checks : Checks) (wire : Regist
 theorem run_safe (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value) (before : State n KemSK mlSource) :
     AllQueriesSatisfy (RegistrationNativeIdentityMain.run setup checks wire route representation created credential bounds mode work before) Allowed :=

@@ -81,7 +81,7 @@ theorem server_update (before : Objects (n:=n) (KemSK:=KemSK) (Platform:=Platfor
       server (erase before) returned (RegistrationNativePlatformSdkReification.persistent snapshot.committed) := rfl
 
 theorem retained (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created Unit)
+    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential source) (current : RegistrationNativeExperiment.State n KemSK source ×Platform)
     (objects : Carrier (R:=R) view views joint created credential current) :
     (erase objects.objects).backend=RegistrationNativePlatformSdkReification.persistent current := objects.backend
@@ -101,7 +101,7 @@ theorem finish_update (before : Objects (n:=n) (KemSK:=KemSK) (Platform:=Platfor
         (RegistrationNativePlatformSdkReification.persistent (SourceSnapshot.committed (.environment environment sourceAfter))) := rfl
 
 theorem move_update (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created Unit)
+    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential source) (current : RegistrationNativeExperiment.State n KemSK source ×Platform)
     (objects : Carrier (R:=R) view views joint created credential current) (handle : Nat) :
     erase (RegistrationNativePlatformExtractedSdkCarrier.move view views joint created credential current objects handle).objects=

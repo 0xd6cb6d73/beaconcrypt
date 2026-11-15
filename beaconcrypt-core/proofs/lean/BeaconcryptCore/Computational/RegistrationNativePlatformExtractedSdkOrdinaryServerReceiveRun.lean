@@ -25,8 +25,8 @@ variable [PublicWrapperPlatform.LocalOperations] [PublicWrapperPlatform.Containe
 variable [AdapterPublicOrdinaryPlatform.LookupOperations]
 variable [primitives : AdapterSealPrimitive.Operations] [FrameDispatchFallback.Operations]
 
-noncomputable def runner (setup : Setup base KemSK) (erased : Array U8 357#usize)
-    (_server : PqxdhRecordLiftWorld.Server) (key : U64) (peer : RawCtxServerRouting.Peer (Array U8 281#usize))
+noncomputable def runner (setup : Setup base KemSK) (erased : Array U8 227#usize)
+    (_server : PqxdhRecordLiftWorld.Server) (key : U64) (peer : RawCtxServerRouting.Peer (Array U8 151#usize))
     (bytes : Slice U8) (before : Native) (previous : Platform) : ProbComp (Sample Platform) :=
   ((RegistrationNativePlatformExtractedSdkOrdinaryReceiveCommon.sample setup (RegistrationNativeWire.ledgerCodec RegistrationNativeConcreteCodec.wire)
     erased peer.kernel key peer.metadata bytes).run (before.server.world.world.1.primitive,[])).run previous
@@ -47,7 +47,7 @@ omit material platform [PublicWrapperPlatform.Allocator] ed [PublicWrapperPlatfo
   [PublicWrapperPlatform.ContainerOperations] [AdapterPublicOrdinaryPlatform.LookupOperations]
   primitives [FrameDispatchFallback.Operations] in
 def native (before : Native) (server : PqxdhRecordLiftWorld.Server) (key : U64)
-    (peer : RawCtxServerRouting.Peer (Array U8 281#usize)) (reached : Sample Platform) :
+    (peer : RawCtxServerRouting.Peer (Array U8 151#usize)) (reached : Sample Platform) :
     Option RawCtxWholeOwner.Decrypted ×(Native ×Platform) :=
   let result:=RegistrationNativePlatformExtractedSdkOrdinaryServerReceiveWorld.project before.server.world.world.1 server key peer reached
   (result.1.1,(RegistrationNativePlatformOrdinaryExperiment.replaceWorld before result.1.2,result.2))
@@ -83,10 +83,10 @@ omit material platform [PublicWrapperPlatform.Allocator] ed [PublicWrapperPlatfo
   primitives [FrameDispatchFallback.Operations] in
 theorem native_exact (setup : Setup base KemSK)
     (reserve : Nat →StateT Platform ProbComp (core.result.Result Unit E))
-    (length : RegistrationNativeExtractedReceive.AeadLength setup.source.crypto) (erased : Array U8 357#usize)
+    (length : RegistrationNativeExtractedReceive.AeadLength setup.source.crypto) (erased : Array U8 227#usize)
     (route : RawCtxServerRouting.SenderDecoder)
     (before : Native) (previous : Platform) (server : PqxdhRecordLiftWorld.Server)
-    (key : U64) (peer : RawCtxServerRouting.Peer (Array U8 281#usize)) (bytes : Slice U8)
+    (key : U64) (peer : RawCtxServerRouting.Peer (Array U8 151#usize)) (bytes : Slice U8)
     (present : before.server.world.world.1.server=some server) (selected : server.records.server.peers key=some peer)
     (routed : route (TranscriptAuthParts.absSlice bytes)=some key) :
     native before server key peer <$>runner setup erased server key peer bytes before previous =
@@ -148,11 +148,11 @@ omit [PublicWrapperPlatform.Allocator] [PublicWrapperPlatform.LocalOperations]
   [PublicWrapperPlatform.ContainerOperations] [AdapterPublicOrdinaryPlatform.LookupOperations]
   primitives [FrameDispatchFallback.Operations] in
 theorem normal (setup : Setup base KemSK)
-    (length : RegistrationNativeExtractedReceive.AeadLength setup.source.crypto) (erased : Array U8 357#usize)
+    (length : RegistrationNativeExtractedReceive.AeadLength setup.source.crypto) (erased : Array U8 227#usize)
     (self : beaconcrypt_public_wrapper.server.Server) (remote : AdapterPublicWrapperStorage.Remote ed.PublicKey)
     (back : Option (AdapterPublicWrapperStorage.Remote ed.PublicKey) →AdapterPublicWrapperStorage.PeerMap)
     (bytes : Slice U8) (before : Native) (previous : Platform) (server : PqxdhRecordLiftWorld.Server)
-    (key : U64) (peer : RawCtxServerRouting.Peer (Array U8 281#usize)) (reached : Sample Platform)
+    (key : U64) (peer : RawCtxServerRouting.Peer (Array U8 151#usize)) (reached : Sample Platform)
     (supported : reached∈support (runner setup erased server key peer bytes before previous)) :
     ∃returned,(source before server.records.rawAttempts self remote back reached).outcome=.ok returned := by
   obtain ⟨value,normal⟩:=RegistrationNativePlatformExtractedSdkOrdinaryReceiveCommon.normal setup (RegistrationNativeWire.ledgerCodec RegistrationNativeConcreteCodec.wire) length erased
@@ -173,7 +173,7 @@ omit [PublicWrapperPlatform.Allocator] [PublicWrapperPlatform.LocalOperations]
   [PublicWrapperPlatform.ContainerOperations] [AdapterPublicOrdinaryPlatform.LookupOperations]
   primitives [FrameDispatchFallback.Operations] in
 theorem reply (before : Native) (server : PqxdhRecordLiftWorld.Server) (key : U64)
-    (peer : RawCtxServerRouting.Peer (Array U8 281#usize))
+    (peer : RawCtxServerRouting.Peer (Array U8 151#usize))
     (self : beaconcrypt_public_wrapper.server.Server) (remote : AdapterPublicWrapperStorage.Remote ed.PublicKey)
     (back : Option (AdapterPublicWrapperStorage.Remote ed.PublicKey) →AdapterPublicWrapperStorage.PeerMap)
     (reached : Sample Platform)

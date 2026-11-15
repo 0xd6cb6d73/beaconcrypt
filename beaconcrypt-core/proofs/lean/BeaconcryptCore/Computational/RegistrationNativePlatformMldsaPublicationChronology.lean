@@ -61,11 +61,10 @@ theorem closed (receipts : Native → List RegistrationSigningShared.Receipt)
 
 namespace Beacon
 open RegistrationNativePlatformBeaconPublication
-attribute [local irreducible] registration.BeaconInitHash.resume registration.BeaconFingerprint.resume
-  registration.BeaconMldsaSigning.resume registration.BeaconEd25519Signing.resume registration.begin_beacon_init
+attribute [local irreducible] registration.BeaconInitHash.resume registration.BeaconEd25519Signing.resume registration.begin_beacon_init
 variable (receipts : Native → List RegistrationSigningShared.Receipt)
 variable (impl : QueryImpl RegistrationBeaconInitExecutor.Spec (StateT Native (M (handleSource source) Platform)))
-variable (encode : registration.SignedInitView → StateT Native (M (handleSource source) Platform) (RustM (core.option.Option Encoded)))
+variable (encode : registration.InitView → StateT Native (M (handleSource source) Platform) (RustM (core.option.Option Encoded)))
 variable (queries : ∀ query, BeaconQuery query → Keeps source receipts (impl query))
 variable (encoding : ∀ view, Keeps source receipts (encode view))
 
@@ -82,40 +81,9 @@ private theorem ready_keeps (pending : registration.BeaconInitReady) : Keeps sou
   exact continue_keeps source receipts _ _ (fun _ => bind_keeps source receipts _ _ (encoding _) (fun _ => pure_keeps source receipts _))
 
 include queries encoding
-private theorem signing_keeps (payload : MldsaTranscriptAuth.Payload) (digest : CtxRomAuth.CtxDigest)
-    (pending : registration.BeaconMldsaSigning) (request : registration.MldsaSigningRequest)
-    (requested : pending.request = .ok request) (correct : Correct request payload digest) :
-    Keeps source receipts (fromSigning impl encode payload digest pending) := by
-  unfold fromSigning
-  rw [requested]
-  apply bind_keeps source receipts _ _ (queries (.inl (.sign request payload digest)) correct)
-  intro reply
-  apply continue_keeps
-  intro effect
-  cases effect with
-  | Ready next => exact ready_keeps source receipts encode encoding next
-  | _ => exact pure_keeps source receipts _
-
-/-- Every reached source Init signing request is aligned with its actual hash reply before the effectful writer can execute. -/
+/-- The sole outgoing request hash is followed by publication readiness, with no ML signing request. -/
 theorem hash_keeps (pending : registration.BeaconInitHash) : Keeps source receipts (fromHash impl encode pending) := by
-  obtain ⟨request, requested, _bytes⟩ := BeaconcryptCore.Refinement.RegistrationSigningTrace.command_request_exact (.beacon pending)
-  change pending.request = .ok request at requested
   unfold fromHash
-  rw [requested]
-  apply bind_keeps source receipts _ _ (queries (.inl (.hash request)) trivial)
-  intro digest
-  obtain ⟨selected, resumed, _state, _fingerprint, _hash, signing, signed, _key, role, _context, contextBytes, inputBytes⟩ :=
-    BeaconcryptCore.Refinement.RegistrationSigningContinuations.beacon_init_hash_some_exact pending
-      (RegistrationAuthenticationShared.digestArray digest)
-  rw [resumed]
-  apply signing_keeps source receipts impl encode queries encoding _ digest selected signing signed
-  refine ⟨?_, contextBytes, ?_⟩
-  · simp only [role, TranscriptAuthInputsRefinement.absRole]
-  · simpa only [RegistrationAuthenticationShared.digest_array_bytes] using inputBytes
-
-private theorem fingerprint_keeps (pending : registration.BeaconFingerprint) :
-    Keeps source receipts (fromFingerprint impl encode pending) := by
-  unfold fromFingerprint
   apply continue_keeps
   intro request
   apply bind_keeps source receipts _ _ (queries (.inl (.hash request)) trivial)
@@ -123,7 +91,7 @@ private theorem fingerprint_keeps (pending : registration.BeaconFingerprint) :
   apply continue_keeps
   intro effect
   cases effect with
-  | HashRequested next => exact hash_keeps source receipts impl encode queries encoding next
+  | Ready next => exact ready_keeps source receipts encode encoding next
   | _ => exact pure_keeps source receipts _
 
 /-- All three Ed stages, including optional failures, retain same-position raw-request/native-payload receipts through the actual effectful publication. -/
@@ -137,15 +105,15 @@ theorem ed_keeps (pending : registration.BeaconEd25519Signing) : Keeps source re
   | fail error | div => exact pure_keeps source receipts _
   | ok effect => cases effect with
     | Ed25519SigningRequested next => exact ed_keeps next
-    | FingerprintRequested next => exact fingerprint_keeps source receipts impl encode queries encoding next
+    | HashRequested next => exact hash_keeps source receipts impl encode queries encoding next
     | _ => exact pure_keeps source receipts _
 termination_by RegistrationBeaconInitExecutor.edRank pending
 decreasing_by exact RegistrationBeaconInitExecutor.ed_rank pending reply next actual
 
 /-- Complete actual stateful Init publication derives request alignment internally and retains every failed prefix. -/
 theorem begin_keeps (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize) :
-    Keeps source receipts (begin impl encode control inputs coins pin mldsa) := by
+    (pin : session.ServerAuthenticationPin) :
+    Keeps source receipts (begin impl encode control inputs coins pin) := by
   unfold begin
   apply continue_keeps
   intro effect

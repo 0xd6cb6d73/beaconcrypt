@@ -39,7 +39,7 @@ local notation "codec"=>RegistrationNativeWire.ledgerCodec wire
 local notation "allocation"=>RegistrationNativePlatformExtractedSdkBuildNormal.allocation configuration.allocateJoin
 local notation "helper"=>RegistrationNativePlatformConcreteSource.helper configuration.reserveFrame
 local notation "writer"=>RegistrationNativePlatformConcreteSource.writer configuration.reservePackets
-variable (created :PqxdhLiveServerConstruction.Created Unit)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 local notation "PhysicalM"=>StateT (RegistrationNativePlatformSdkReification.Backend n KemSK) (StateT P ProbComp)
 @[instance_reducible] noncomputable def physicalCrypto :CryptoOperations (RustT (StateT (RegistrationNativePlatformSdkReification.Backend n KemSK) (StateT P ProbComp))):=
   RegistrationNativePlatformPublicAdapterAcceptObserver.cryptography coins configuration.view

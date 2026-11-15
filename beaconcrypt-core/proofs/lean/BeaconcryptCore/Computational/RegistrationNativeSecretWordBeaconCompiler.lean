@@ -52,7 +52,7 @@ noncomputable def collect (setup : Setup base KemSK) {source : RegistrationNativ
     (owner : SelectedOwner source) (oneTime : ScalarBytes) (authenticated : registration.AuthenticatedResponse) :
     M n KemSK Auxiliary (Option (RegistrationNativeSecretWordBeaconPrepare.Prepared registration.AuthenticatedResponse)) :=
   simulateQ (prefixImpl setup owner oneTime authenticated)
-    (RegistrationNativeSecretWordBeaconPrepare.prepare authenticated.pending.control () () () [])
+    (RegistrationNativeSecretWordBeaconPrepare.prepare (completedBinding := authenticated.binding) authenticated.control () () () [])
 
 /-- This actual callback interpreter restores the complete ordered preparation and every reached environment field. -/
 theorem collect_source (setup : Setup base KemSK) {source : RegistrationNativeMldsa.Source}
@@ -60,10 +60,10 @@ theorem collect_source (setup : Setup base KemSK) {source : RegistrationNativeMl
     (candidate : PqxdhKemIndCca.MlKemSharedSecret) :
     simulateQ (prefixImpl (n := n) (Auxiliary := Auxiliary) setup owner oneTime authenticated ∘ₛ
       RegistrationNativeSecretWordBeaconCollect.realize candidate)
-      (PqxdhPhase2DhMetadata.prepare authenticated.pending.control () () () []) =
+      (PqxdhPhase2DhMetadata.prepare (completedBinding := authenticated.binding) authenticated.control () () () []) =
       Option.map (RegistrationNativeSecretWordBeaconPrepare.eval candidate) <$> collect setup owner oneTime authenticated :=
-  RegistrationNativeSecretWordBeaconPrepare.prepare_program (prefixImpl setup owner oneTime authenticated) candidate
-    authenticated.pending.control () () () []
+  RegistrationNativeSecretWordBeaconPrepare.prepare_program (completedBinding := authenticated.binding) (prefixImpl setup owner oneTime authenticated) candidate
+    authenticated.control () () () []
 
 noncomputable def agreement (setup : Setup base KemSK) {source : RegistrationNativeMldsa.Source}
     (owner : SelectedOwner source) (oneTime : ScalarBytes) (authenticated : registration.AuthenticatedResponse) :
@@ -81,7 +81,7 @@ noncomputable def finishPreparation (setup : Setup base KemSK) (source : Registr
       | .fail error => pure (.fail error)
       | .div => pure .div
       | .ok aborted => do
-          set { owner with phase := .aborted aborted }
+          set ({ owner with phase := .aborted aborted } : SelectedOwner source)
           let accepted ← StateT.lift (StateT.lift (simulateQ effect
             (simulateQ (RegistrationAuthenticationCompiler.callbacks setup.source.crypto source.verify)
               (RegistrationResponseExecutor.begin pending (match packet with | none => .None | some packet => .Some packet)))))

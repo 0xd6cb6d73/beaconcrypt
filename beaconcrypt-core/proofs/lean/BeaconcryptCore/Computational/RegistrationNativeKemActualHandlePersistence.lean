@@ -18,7 +18,7 @@ local notation "Native" => RegistrationNativeExperiment.State n KemSK source
 
 /-- The exact existing private pair survives every actually executed trusted request tree. -/
 theorem trusted (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp (RegistrationNativeBeaconFrontend.Trusted n KemSK) Value)
     (before after : Native) (value : Value)
     (supported : (value, after) ∈ support ((simulateQ
@@ -39,7 +39,7 @@ theorem trusted (setup : Setup base KemSK) (checks : Checks)
 
 /-- Full actual owner/Env lowering preserves existing private pairs through authentication, collection and first-record stages. -/
 theorem lower (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State Value)
     (before after : RegistrationNativeMldsaShared.Local n KemSK source) (value : Value)
     (supported : (value, after) ∈ support ((RegistrationNativeMldsaShared.lower setup checks representation created work).run before))

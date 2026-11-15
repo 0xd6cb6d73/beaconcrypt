@@ -6,6 +6,7 @@ import BeaconcryptCore.Computational.CborRawAnomalyStartup
 open OracleComp OracleSpec CoreModels Aeneas ENNReal
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.CborRawAnomalyWhole
 open PqxdhServerAuthExperiment (Setup Codec Checks)
 open PqxdhDeploymentInterface (FreshBounds Mode ModeSpec asModeO)
@@ -24,12 +25,25 @@ variable (setup : Setup baseSpec KemSK) (wire : Codec Reader Response)
     (target : Target count) (parameters : Params KemSK count) (ensureInit : StateT A ProbComp Bool) (runtime : A)
     (bounds : FreshBounds) (mode : Mode) (adversary : OracleComp (ModeSpec mode) X)
 
+private noncomputable def recordBirth : ProbComp (Option (PqxdhLiveServerConstruction.Created PqxdhTranscriptAd.AssociatedData) ×
+    PqxdhRegistrationJointServerPrefix.State KemSK A) :=
+  (PqxdhRegistrationJointServerBirth.source setup.joint ensureInit setup.serverKeyId none).run
+    ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime)
+
+private theorem birth_erase :
+    (fun result => (result.1.map PqxdhDeploymentEnvironment.eraseCreatedMetadata, result.2)) <$>
+      recordBirth setup ensureInit runtime = CborRawHeadlineSlot.birth setup ensureInit runtime := by
+  simp only [recordBirth, CborRawHeadlineSlot.birth, PqxdhRegistrationJointServerBirth.source, StateT.run,
+    PqxdhLiveServerConstruction.construct, Functor.map_map, map_bind]
+  refine bind_congr fun ready => ?_
+  split <;> simp only [map_pure, Functor.map_map] <;> rfl
+
 /-- The actual source constructor remains a counted World draw before its complete hit continuation. -/
 theorem fixed_observe (world : PqxdhRecordLiftWorld.State 2) :
     observe wire parse target <$> (simulateQ (CborRecordWorldSimulation.guarded setup (boundaryWire wire parse)
       (CborRawCompile.route parse)) (fixedClient setup wire parse checks target ensureInit runtime parameters
         (wrap setup.source.crypto (boundaryWire wire parse) setup.serverKeyId bounds (asModeO mode adversary)))).run world =
-      (coins setup (boundaryWire wire parse) (CborRawCompile.route parse) (CborRawHeadlineSlot.birth setup ensureInit runtime)
+      (coins setup (boundaryWire wire parse) (CborRawCompile.route parse) (recordBirth setup ensureInit runtime)
         world >>= fun born => match born.1.1 with
           | none => pure false
           | some created => observe wire parse target <$>
@@ -59,7 +73,7 @@ theorem fixed_pool (lengths : RawCtxSourcePublication.BodyLength setup.source.cr
       CborRawAnomalyPool.fixed setup wire parse checks target parameters ensureInit runtime bounds mode adversary] {true} := by
   rw [fixed_observe]
   have weighted := CborRawAnomalyStartup.counted_le setup (boundaryWire wire parse) (CborRawCompile.route parse)
-    (CborRawHeadlineSlot.birth setup ensureInit runtime)
+    (recordBirth setup ensureInit runtime)
     (fun born current => match born.1 with
       | none => pure false
       | some created => observe wire parse target <$>
@@ -69,7 +83,7 @@ theorem fixed_pool (lengths : RawCtxSourcePublication.BodyLength setup.source.cr
     (fun born => match born.1 with
       | none => pure false
       | some created => (fun value => decide (value = some parameters.challenge)) <$>
-          CborRawAnomalyPool.atPool setup wire parse checks target parameters created bounds mode adversary) world (by
+          CborRawAnomalyPool.atPool setup wire parse checks target parameters (PqxdhDeploymentEnvironment.eraseCreatedMetadata created) bounds mode adversary) world (by
       intro born supported current same
       cases found : born.1 with
       | none => exact le_rfl
@@ -77,18 +91,23 @@ theorem fixed_pool (lengths : RawCtxSourcePublication.BodyLength setup.source.cr
           exact le_of_eq (CborRawAnomalyWorld.after_pool setup wire parse checks target parameters ensureInit runtime
             bounds mode adversary lengths parser phase1 phase2 created
             ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime) born.2
-            (by rw [← found]; exact supported) current (same.trans fresh)))
-  have rightEq : (CborRawHeadlineSlot.birth setup ensureInit runtime >>= fun born => match born.1 with
+            (by
+              change (born.1, born.2) ∈ support (recordBirth setup ensureInit runtime) at supported
+              rw [found] at supported
+              exact supported) current (same.trans fresh)))
+  have rightEq : (recordBirth setup ensureInit runtime >>= fun born => match born.1 with
       | none => pure false
       | some created => (fun value => decide (value = some parameters.challenge)) <$>
-          CborRawAnomalyPool.atPool setup wire parse checks target parameters created bounds mode adversary) =
+          CborRawAnomalyPool.atPool setup wire parse checks target parameters (PqxdhDeploymentEnvironment.eraseCreatedMetadata created) bounds mode adversary) =
       (fun value => decide (value = some parameters.challenge)) <$>
         CborRawAnomalyPool.fixed setup wire parse checks target parameters ensureInit runtime bounds mode adversary := by
     rw [← CborRawAnomalyStartup.fixed_source setup wire parse checks target parameters ensureInit runtime bounds mode adversary,
       map_bind]
+    change (recordBirth setup ensureInit runtime >>= _) = (CborRawHeadlineSlot.birth setup ensureInit runtime >>= _)
+    rw [← birth_erase setup ensureInit runtime, bind_map_left]
     apply bind_congr
     intro born
-    cases born.1 <;> simp only [map_pure, reduceCtorEq, decide_false]
+    cases born.1 <;> simp only [Option.map_none, Option.map_some, map_pure, reduceCtorEq, decide_false]
   rw [rightEq] at weighted
   exact weighted
 

@@ -29,7 +29,7 @@ namespace beaconcrypt
 variable [beaconcrypt.auth.Operations]
 
 /-- [beaconcrypt::auth::authenticate_response]:
-    Source: 'beaconcrypt/src/auth.rs', lines 266:0-278:1 -/
+    Source: 'beaconcrypt/src/auth.rs', lines 248:0-262:1 -/
 def auth.authenticate_response
   (pending : beaconcrypt_core.registration.BeaconPending)
   (packet : core.option.Option beaconcrypt_core.registration.ResponsePacket) :
@@ -50,8 +50,20 @@ def auth.authenticate_response
       let mvr ←
         beaconcrypt_core.registration.ResponseMldsaVerification.request val1
       let verified ← auth.verify_requested mvr
-      beaconcrypt_core.registration.ResponseMldsaVerification.resume val1
-        verified
+      let r2 ←
+        beaconcrypt_core.registration.ResponseMldsaVerification.resume val1
+          verified
+      let cf2 ← core.result.Result.Insts.CoreOpsTry_traitTry.branch r2
+      match cf2 with
+      | core.ops.control_flow.ControlFlow.Continue val2 =>
+        let hr1 ← beaconcrypt_core.registration.BeaconAdHash.request val2
+        let digest1 ← auth.execute_hash hr1
+        beaconcrypt_core.registration.BeaconAdHash.resume val2 digest1
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
+          beaconcrypt_core.registration.AuthenticatedResponse
+          (core.convert.From.Blanket beaconcrypt_core.pqxdh.BeaconAborted)
+          residual
     | core.ops.control_flow.ControlFlow.Break residual =>
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResultInfallibleE.from_residual
         beaconcrypt_core.registration.AuthenticatedResponse

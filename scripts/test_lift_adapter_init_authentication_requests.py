@@ -41,8 +41,10 @@ class InitRequestLifting(unittest.TestCase):
     def test_changed_hash_leaf(self):
         self.rejected("auth.execute_hash hr", "auth.unreviewed_hash hr")
 
-    def test_changed_verification(self):
-        self.rejected("        verified", "        true")
+    def test_reintroduced_ml_operation(self):
+        self.rejected(
+            "InitHash.resume pending hash", "InitMldsaVerification.resume pending true"
+        )
 
     def test_changed_opened_view(self):
         self.rejected("Std.U8) opened", "Std.U8) .None")

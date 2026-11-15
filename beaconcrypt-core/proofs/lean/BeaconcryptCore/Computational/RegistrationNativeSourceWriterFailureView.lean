@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeSourceWriterReadback
 
-/-! The actual fixed-width Init source serializer's failure flag and complete shared platform poststate do not depend on the hidden signature bytes. Its capacity is always6757. This is only a concrete writer frame, not a protocol publication-security assumption or a full client-history replacement theorem. -/
+/-! The actual fixed-width Init source serializer's failure flag and complete shared platform poststate do not depend on the hidden signature bytes. Its capacity is always1490. This is only a concrete writer frame, not a protocol publication-security assumption or a full client-history replacement theorem. -/
 open CoreModels Aeneas OracleComp OracleSpec
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -16,7 +16,7 @@ open RegistrationSerializerReachableSource
 variable {E Platform : Type}
 
 noncomputable def writer (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E))
-    (other : OtherBranches) (view : registration.SignedInitView) :
+    (other : OtherBranches) (view : registration.InitView) :
     StateT Platform ProbComp (RustM (core.option.Option (alloc.vec.Vec U8))) :=
   simulateQ (RegistrationSourceWriterBody.platform reserve
       (@beaconcrypt_parse.extraction_encode_init (operations other))
@@ -30,9 +30,9 @@ def flag : RustM (core.option.Option (alloc.vec.Vec U8)) → Bool
 
 /-- Actual source allocation, failure result and full external poststate are independent of every value in the fixed-width signed Init view. -/
 theorem flag_source (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E))
-    (other : OtherBranches) (view : registration.SignedInitView) (before : Platform) :
+    (other : OtherBranches) (view : registration.InitView) (before : Platform) :
     Prod.map flag id <$> (writer reserve other view).run before =
-      (fun result => ((match result.1 with | .Ok _ => true | .Err _ => false), result.2)) <$> (reserve 6757#usize).run before := by
+      (fun result => ((match result.1 with | .Ok _ => true | .Err _ => false), result.2)) <$> (reserve 1490#usize).run before := by
   rw [writer, RegistrationNativeSourceWriterReadback.init_source]
   simp only [StateT.run_map, Functor.map_map, Prod.map, id_eq]
   congr 1
@@ -41,16 +41,16 @@ theorem flag_source (reserve : Usize → StateT Platform ProbComp (core.result.R
 
 /-- Replacing an unpublished signature or unsigned fields preserves the actual complete failure-flag/platform distribution at the concrete source writer boundary. -/
 theorem flag_independent (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E))
-    (other : OtherBranches) (first second : registration.SignedInitView) (before : Platform) :
+    (other : OtherBranches) (first second : registration.InitView) (before : Platform) :
     Prod.map flag id <$> (writer reserve other first).run before =
       Prod.map flag id <$> (writer reserve other second).run before := by
   rw [flag_source, flag_source]
 
 /-- A failed concrete source Init writer returned no bytes because that same reached reservation failed; no serializer/adversary security conclusion is assumed. -/
 theorem failure (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E))
-    (other : OtherBranches) (view : registration.SignedInitView) (before after : Platform) :
+    (other : OtherBranches) (view : registration.InitView) (before after : Platform) :
     (.ok .None, after) ∈ support ((writer reserve other view).run before) ↔
-      ∃ error, (.Err error, after) ∈ support ((reserve 6757#usize).run before) := by
+      ∃ error, (.Err error, after) ∈ support ((reserve 1490#usize).run before) := by
   rw [writer, RegistrationNativeSourceWriterReadback.init_source, StateT.run_map, support_map]
   constructor
   · rintro ⟨⟨allocation, final⟩, called, same⟩
@@ -64,7 +64,7 @@ theorem failure (reserve : Usize → StateT Platform ProbComp (core.result.Resul
 
 /-- Every same-platform failed write has the identical failed outcome for any replacement signed view at this actual source boundary. -/
 theorem failure_independent (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E))
-    (other : OtherBranches) (first second : registration.SignedInitView) (before after : Platform) :
+    (other : OtherBranches) (first second : registration.InitView) (before after : Platform) :
     (.ok .None, after) ∈ support ((writer reserve other first).run before) ↔
       (.ok .None, after) ∈ support ((writer reserve other second).run before) := by
   rw [failure, failure]

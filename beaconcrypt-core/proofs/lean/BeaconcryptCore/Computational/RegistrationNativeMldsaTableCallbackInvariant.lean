@@ -12,7 +12,6 @@ set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativeMldsaTableCallbackInvariant
 open PqxdhServerAuthExperiment (Setup Checks)
 open RegistrationNativeMldsaOpaque (Pool handleSource restore Live)
-open RegistrationNativeMldsaPoolMap (StateLive)
 open RegistrationNativeMldsaChronology (Aligned)
 open RegistrationNativeMldsaTableProgram (runState)
 variable {n : Nat} {ι KemSK : Type} {base : OracleSpec ι}
@@ -22,11 +21,11 @@ variable (source : RegistrationNativeMldsa.Source)
 theorem cached (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential (handleSource source)) (fallback : RegistrationNativeMldsa.Credential source)
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain)
     (before : RegistrationNativeExperiment.State n KemSK (handleSource source)) (pool : Pool source)
-    (server : Live source pool credential fallback) (owners : StateLive source pool before)
+    (server : Live source pool credential fallback)
     (valid : RegistrationSigningShared.Cached (RegistrationNativeMldsaShared.nativeProject before))
     (result : (RegistrationNativeRawAdapter.TypedSpec.Range query × RegistrationNativeExperiment.State n KemSK (handleSource source)) × Pool source)
     (supported : result ∈ support (runState source
@@ -36,7 +35,7 @@ theorem cached (setup : Setup base KemSK) (checks : Checks) (wire : Registration
       ((RegistrationNativeExperiment.handler setup checks wire route representation created source fallback query).run
         (RegistrationNativeMldsaMap.nativeState (restore source fallback pool) before)) := by
     rw [← RegistrationNativeMldsaTableHandler.restored source setup checks wire route representation created
-      credential fallback pool server query before owners, support_map]
+      credential fallback pool server query before, support_map]
     exact ⟨result, supported, rfl⟩
   exact RegistrationNativeMldsaInvariant.handler setup checks wire route representation created fallback query
     (RegistrationNativeMldsaMap.nativeState (restore source fallback pool) before) valid

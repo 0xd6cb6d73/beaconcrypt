@@ -22,13 +22,14 @@ variable [crypto : AdapterPublicWrapperRequestMonad.CryptoOperations (RustT (Sou
 variable [children : AdapterPublicWrapperRequestMonad.ChildOperations (RustT (SourceM n KemSK source Platform))]
 variable (coins : QueryImpl unifSpec (StateT Platform ProbComp)) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (checks : PqxdhServerAuthExperiment.Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (generator : rand_core.TryCryptoRng R Error) (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (kem : AdapterBeaconConstructorKem.Representation view R)
 variable (leaves : AdapterBeaconConstructorNative.Leaves (n := n) (Auxiliary := RegistrationServerRoleBackend.State)
       coins setup checks representation created generator view kem)
 
 
+omit children in
 theorem native (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicKey)
     (mlPin : Std.Array U8 1952#usize) (rng : R)
     (before : RegistrationNativeExperiment.State n KemSK source) (previous next : Platform)
@@ -45,6 +46,7 @@ theorem native (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicKe
   rw [←equation,support_map]
   exact ⟨(packet,next),supported,rfl⟩
 
+omit children in
 theorem backend (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicKey)
     (mlPin : Std.Array U8 1952#usize) (rng : R)
     (before : RegistrationNativeExperiment.State n KemSK source) (previous next : Platform)
@@ -58,6 +60,7 @@ theorem backend (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicK
   subst packet
   exact RegistrationNativePlatformExtractedSdkCreateCommit.backend coins setup checks representation created generator view kem leaves keyId serverId captured owners environment current next
 
+omit children in
 theorem reply (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicKey)
     (mlPin : Std.Array U8 1952#usize) (rng : R)
     (before : RegistrationNativeExperiment.State n KemSK source) (previous next : Platform)
@@ -88,6 +91,7 @@ theorem reply (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicKey
       rw [←indexSame]
       exact RegistrationNativePlatformExtractedSdkCreateCommit.reply coins setup checks representation created generator view kem leaves keyId serverId captured owners environment current
 
+omit children in
 theorem entry_support (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicKey)
     (mlPin : Std.Array U8 1952#usize) (rng : R)
     (before : RegistrationNativeExperiment.State n KemSK source) (previous next : Platform)
@@ -103,6 +107,7 @@ theorem entry_support (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.P
   rw [←equation,support_map]
   exact ⟨(packet,next),supported,rfl⟩
 
+omit children in
 theorem created_material (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicKey)
     (mlPin : Std.Array U8 1952#usize) (rng afterRng : R)
     (before : RegistrationNativeExperiment.State n KemSK source) (previous next : Platform)

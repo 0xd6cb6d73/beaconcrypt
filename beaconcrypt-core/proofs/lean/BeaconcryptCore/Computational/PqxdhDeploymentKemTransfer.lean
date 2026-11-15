@@ -640,12 +640,12 @@ theorem kem_transfer_sum (setup : Setup baseSpec KemSK)
     mode adversary budget respects event claim g runtime
 
 
-/-- The native uniform allowance of the KEM bills at the transported caps, in closed form: experiment coins, 32 per create and per bundle, `96 + encapsCost` per accept, 64 per build, `64 · 56` per finish, 64 per HMAC and 64 per BLAKE2b query; Server kernel reveals and established-kernel reads add nothing. -/
+/-- The native uniform allowance of the KEM bills at the transported caps, in closed form: experiment coins, 32 per create and per bundle, `96 + encapsCost` per accept, `2 · 64` per build (the Server's transcript hash and its commitment), `64 · 57` per finish (the Beacon's transcript hash added), 64 per HMAC and 64 per BLAKE2b query, two per record command (each CE-COMPILE copy forwards one transcript hash besides its commitment hash); Server kernel reveals and established-kernel reads add nothing. -/
 theorem transported_total (caps : PqxdhServerAuthSourceCosts.KemCaps) (bounds : FreshBounds) (budget : Budget) :
     PqxdhRegistrationJointOpenUniform.total caps (PqxdhDeploymentCompileCaps.transported bounds budget) =
       (budget.coin + budget.test + budget.freshBytes bounds) + 32 * budget.create + 32 * budget.bundle +
-        (96 + caps.encapsCost) * budget.accept + 64 * budget.build + (64 * 56) * budget.finish + 64 * budget.hmac +
-        64 * (budget.hash + budget.sends + budget.receives + budget.test + budget.fresh) := by
+        (96 + caps.encapsCost) * budget.accept + (2 * 64) * budget.build + (64 * 57) * budget.finish + 64 * budget.hmac +
+        64 * (budget.hash + 2 * (budget.sends + budget.receives + budget.test + budget.fresh)) := by
   simp [PqxdhRegistrationJointOpenUniform.total, PqxdhDeploymentCompileCaps.transported]
 
 end BeaconcryptCore.Computational.PqxdhDeploymentKemTransfer

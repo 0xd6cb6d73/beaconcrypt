@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Refinement.AdapterPublicServerBuildTrace
+import BeaconcryptCore.Refinement.AdapterPublicServerAdHash
 import BeaconcryptCore.Refinement.AdapterPublicServerCompletionInstall
 import BeaconcryptCore.Refinement.AdapterPublicServerBuildReceipt
 import BeaconcryptCore.Refinement.AdapterPublicServerPrefixMaterial
@@ -87,7 +88,7 @@ theorem reserved
 (fallback : registration.MldsaSigningRequest → NativeM RegistrationSigningShared.SignReply)
 
     (view : MaterialView mlSource KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : Server) (before : Cut) (related : AdapterPublicWrapperState.Server view views created credential self before.1.server)
     (initial : registration.ServerInitialKdf) (previous : initial.candidate.previous_state = self.control)
     (parsed : AdapterPublicServerToken.ParsedKey initial.binding.beacon_identity_public_key)
@@ -146,19 +147,26 @@ noncomputable def lookupNative
       | .fail error => pure (.fail error)
       | .div => pure .div
       | .ok (.Err _) => pure (.ok none)
-      | .ok (.Ok initial) => do
-        let ok ← reserve
-        if ok then
-          RegistrationNativePlatformExperiment.server
-            (RegistrationNativePlatformCompletionSdk.fromInitial done control initial)
-        else pure (.ok none)
+      | .ok (.Ok pendingAd) => do
+        let hashed ← RegistrationNativePlatformExperiment.server
+          (RegistrationNativePlatformCompletionSdk.nativeAdHash coins pendingAd)
+        match hashed with
+        | .fail error => pure (.fail error)
+        | .div => pure .div
+        | .ok (.Err _) => pure (.ok none)
+        | .ok (.Ok initial) => do
+          let ok ← reserve
+          if ok then
+            RegistrationNativePlatformExperiment.server
+              (RegistrationNativePlatformCompletionSdk.fromInitial done control initial)
+          else pure (.ok none)
     else pure (.ok none)
 
 
 omit primitive [PublicWrapperPlatform.Allocator] [PublicWrapperPlatform.LocalOperations] [PublicWrapperPlatform.ContainerOperations] containers in
 private theorem present_run (coins : QueryImpl unifSpec Base)
     (view : MaterialView mlSource KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : Server) (before : Native)
     (related : AdapterPublicWrapperState.Server view views created credential self before.server) (identifier : U64) :
     (RegistrationNativePlatformExperiment.server
@@ -167,6 +175,91 @@ private theorem present_run (coins : QueryImpl unifSpec Base)
         {before with server := AdapterPublicServerPresenceNative.charged before.server identifier}) := by
   rw [AdapterPublicServerSourceLens.server_run,
     AdapterPublicServerPresenceNative.source coins view views created credential self before.server related identifier, map_pure]
+
+theorem hashed
+(coins : QueryImpl unifSpec Base) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
+(codec : PqxdhServerAuthExperiment.Codec Reader Response)
+(keyView : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
+(allocation : RegistrationNativePlatformSourceSeal.Allocation E Base)
+(helper : QueryImpl (AdapterRecordHelperRequestMonad.Spec E) Base)
+(erased : commitment.CommitmentTranscript)
+(sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
+(writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) Base)
+(fallback : registration.MldsaSigningRequest → NativeM RegistrationSigningShared.SignReply)
+
+    [children : ChildOperations (RustT SourceM)]
+    (hashOperation : ∀ request, (children.executeHash request).run = AdapterPublicServerCutPin.hash coins sign request)
+    (view : MaterialView mlSource KemSK) (views : Views)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array U8 151#usize))
+    (credential : RegistrationNativeMldsa.Credential mlSource)
+    (self : Server) (before : Cut)
+    (related : AdapterPublicWrapperState.Server view views created credential self before.1.server)
+    (pending : registration.ServerAdHash)
+    (previous : pending.candidate.previous_state = self.control)
+    (parsed : AdapterPublicServerToken.ParsedBinding pending.binding)
+    (allocated : Base AllocationReply)
+    (reserveOperation : (containers.mapReserve core.U64.Insts.CoreCmpEq core.U64.Insts.CoreHashHash
+      beaconcrypt_public_request.collections.KeyedHasher.Insts.CoreHashBuildHasherSipHasher13
+      hashbrown.alloc.inner.Global.Insts.HashbrownAllocInnerAllocator self.known_ids 1#usize).run =
+        RustM.ok <$> StateT.lift allocated)
+    (footprint : ∀ external reply next, (reply, next) ∈ support (allocated.run external) → PeerReserve views self.known_ids reply)
+    (standard : ∀ known publication inserting publicKey,
+      peer.begin_peer_insert self.control publication = .ok (.Ok inserting) →
+      beaconcrypt_crypto.crypto_sign.PublicKey.from_bytes inserting.peer.binding.beacon_identity_public_key.to_slice = .ok (.Ok publicKey) →
+      AdapterPublicServerInstallFunctional.Standard (m := SourceM) views {self with known_ids := known} inserting publicKey) :
+    project self.control <$>
+      ((AdapterPublicServerBuildTrace.adHash (completion coins setup codec keyView failure allocation helper erased sign writer fallback)
+        self pending).run before) =
+      ((do
+        let hashed ← RegistrationNativePlatformExperiment.server
+          (RegistrationNativePlatformCompletionSdk.nativeAdHash coins pending)
+        match hashed with
+        | .fail error => pure (.fail error)
+        | .div => pure .div
+        | .ok (.Err _) => pure (.ok none)
+        | .ok (.Ok initial) => do
+          let ok ← reserveNative allocated
+          if ok then
+            RegistrationNativePlatformExperiment.server
+              (RegistrationNativePlatformCompletionSdk.fromInitial
+                (finish coins setup codec keyView failure allocation helper erased sign writer) self.control initial)
+          else pure (.ok none)) : NativeM (RustM (Option (U64 × alloc.vec.Vec U8)))).run before.1 := by
+  rw [← AdapterPublicServerAdHash.native_source coins sign pending]
+  unfold AdapterPublicServerBuildTrace.adHash AdapterPublicServerBuildTrace.invoke AdapterPublicServerAdHash.native
+  simp only [RustT.run_liftRust, pure_bind]
+  cases requested : pending.request with
+  | fail error | div => simp only [StateT.run_pure, map_pure, pure_bind, project,
+      AdapterPublicServerPublicationInstall.project]
+  | ok request =>
+    simp only []
+    rw [hashOperation]
+    simp only [StateT.run_bind]
+    rw [AdapterPublicServerAdHash.hash_run]
+    apply StateT.ext
+    intro external
+    simp only [StateT.run_bind, StateT.run_map, StateT.run_pure, map_bind, bind_map_left, pure_bind, bind_assoc]
+    apply OracleComp.bind_congr_of_forall_mem_support
+    rintro ⟨⟨digest, current⟩, next⟩ called
+    have materialNow := AdapterPublicServerAdHash.hash_material coins sign view views created credential
+      self before.1 current related request digest external next called
+    cases resumed : pending.resume (.Some (RegistrationAuthenticationShared.digestArray digest)) with
+    | fail error | div => simp only [AdapterPublicServerBuildTrace.checked, StateT.run_pure, map_pure,
+        project, AdapterPublicServerPublicationInstall.project]
+    | ok result => cases result with
+      | Err old => simp only [AdapterPublicServerBuildTrace.checked, StateT.run_pure, map_pure,
+          project, AdapterPublicServerPublicationInstall.project, AdapterPublicServerPublicationInstall.output]
+      | Ok initial =>
+        obtain ⟨binding, completed, bindingEq, _consistent, candidateEq⟩ := RegistrationAd.server_ad_resume_binding
+          pending (RegistrationAuthenticationShared.digestArray digest) initial resumed
+        have initialParsed : AdapterPublicServerToken.ParsedKey initial.binding.beacon_identity_public_key := by
+          rw [bindingEq]
+          exact AdapterPublicServerToken.completed_parsed pending.binding _ binding completed parsed
+        have previousState : initial.candidate.previous_state = self.control := by rw [candidateEq, previous]
+        simpa only [AdapterPublicServerBuildTrace.checked, resumed, StateT.run_map] using congrArg (fun work => work.run next)
+          (reserved coins setup codec keyView failure allocation helper erased sign writer fallback
+            view views created credential self
+            (current, some (⟨request, digest⟩ : RegistrationNativePlatformSigningJournal.Cut))
+            materialNow initial previousState initialParsed allocated reserveOperation footprint standard)
 
 theorem lookup
 (coins : QueryImpl unifSpec Base) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
@@ -179,8 +272,10 @@ theorem lookup
 (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) Base)
 (fallback : registration.MldsaSigningRequest → NativeM RegistrationSigningShared.SignReply)
 
+    [children : ChildOperations (RustT SourceM)]
+    (hashOperation : ∀ request, (children.executeHash request).run = AdapterPublicServerCutPin.hash coins sign request)
     (view : MaterialView mlSource KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : Server) (before : Cut) (related : AdapterPublicWrapperState.Server view views created credential self before.1.server)
     (pin : session.ServerAuthenticationPin) (token : beaconcrypt_public_wrapper.server.RegistrationOutput)
     (plaintext : Slice U8) (pending : peer.CompletionLookup)
@@ -255,25 +350,27 @@ theorem lookup
             ({before.1 with server := AdapterPublicServerPresenceNative.charged before.1.server identifier}, before.2)) : Base _) =
             pure (.ok none, {before.1 with server := AdapterPublicServerPresenceNative.charged before.1.server identifier})
           simp only [map_pure, project, AdapterPublicServerPublicationInstall.project, AdapterPublicServerPublicationInstall.output]
-        | Ok initial =>
-          have beganInitial : registration.begin_server_completion self.control pin
+        | Ok pendingAd =>
+          have selected : registration.begin_server_completion self.control pin
               (if (views.peer self.known_ids identifier).isSome then .Occupied else .Available)
-              token.registration.agreement plaintext = .ok (.Ok initial) := by
+              token.registration.agreement plaintext = .ok (.Ok pendingAd) := by
             cases occupied : (views.peer self.known_ids identifier).isSome <;>
               simpa only [occupied, PeerOwnership.completion_lookup_resume, fields.1, fields.2.1,
                 fields.2.2.1, fields.2.2.2] using resumed
-          have previous := RegistrationServerCompletionSnapshot.initial self.control pin
+          have previous := RegistrationServerCompletionSnapshot.ad_selection self.control pin
             (if (views.peer self.known_ids identifier).isSome then .Occupied else .Available)
-            token.registration.agreement plaintext
-          rw [beganInitial] at previous
-          have parsedInitial := AdapterPublicServerCompletionInstall.initial_parsed self.control pin
+            token.registration.agreement plaintext (.Ok pendingAd) selected
+          have origin := RegistrationAd.server_ad_origin self.control pin
             (if (views.peer self.known_ids identifier).isSome then .Occupied else .Available)
-            token plaintext initial beganInitial parsed
+            token.registration.agreement plaintext pendingAd selected
+          have parsedPending : AdapterPublicServerToken.ParsedBinding pendingAd.binding := by
+            rw [origin.2.1]
+            exact parsed
           have currentMaterial := AdapterPublicServerPresenceNative.material_related view views created credential self before.1.server related identifier
-          exact reserved coins setup codec keyView failure allocation helper erased sign writer fallback
+          exact hashed coins setup codec keyView failure allocation helper erased sign writer fallback hashOperation
             view views created credential self
             ({before.1 with server := AdapterPublicServerPresenceNative.charged before.1.server identifier}, before.2)
-            currentMaterial initial (previous (.Ok initial) rfl) parsedInitial allocated reserveOperation footprint standard
+            currentMaterial pendingAd previous parsedPending allocated reserveOperation footprint standard
 
 
 omit material primitive containers [PublicWrapperPlatform.Allocator]
@@ -288,6 +385,7 @@ theorem lookup_global (coins : QueryImpl unifSpec Base) (allocated : Base Alloca
       | .ok identifier => if RegistrationServerSdkSource.preflight plaintext identifier then do
           let occupied ← RegistrationNativePlatformCompletionSdk.nativePresent coins identifier
           RegistrationNativePlatformCompletionSdk.afterOccupancy
+            (RegistrationNativePlatformCompletionSdk.nativeAdHash coins)
             (admitted <$> StateT.lift allocated) done control pending occupied
         else pure (.ok none)) := by
   unfold lookupNative
@@ -304,19 +402,28 @@ theorem lookup_global (coins : QueryImpl unifSpec Base) (allocated : Base Alloca
       | fail error | div => exact (AdapterPublicServerSourceLens.server_pure _).symm
       | ok result => cases result with
         | Err _ => exact (AdapterPublicServerSourceLens.server_pure _).symm
-        | Ok initial =>
-          simp only [map_eq_pure_bind, AdapterPublicServerSourceLens.server_bind, AdapterPublicServerSourceLens.server_lift,
-            bind_assoc, pure_bind, reserveNative]
+        | Ok pendingAd =>
+          rw [AdapterPublicServerSourceLens.server_bind]
           apply bind_congr
-          intro reply
-          cases admitted reply <;> simp only [Bool.false_eq_true, ↓reduceIte, AdapterPublicServerSourceLens.server_pure]
+          intro hashed
+          cases hashed with
+          | fail error | div => exact (AdapterPublicServerSourceLens.server_pure _).symm
+          | ok result => cases result with
+            | Err _ => exact (AdapterPublicServerSourceLens.server_pure _).symm
+            | Ok initial =>
+              simp only [map_eq_pure_bind, AdapterPublicServerSourceLens.server_bind, AdapterPublicServerSourceLens.server_lift,
+                bind_assoc, pure_bind, reserveNative]
+              apply bind_congr
+              intro reply
+              cases admitted reply <;> simp only [Bool.false_eq_true, ↓reduceIte, AdapterPublicServerSourceLens.server_pure]
+
     · exact (AdapterPublicServerSourceLens.server_pure _).symm
 
 omit primitive containers [PublicWrapperPlatform.Allocator] [PublicWrapperPlatform.LocalOperations]
   [PublicWrapperPlatform.ContainerOperations] in
 theorem pin_material (coins : QueryImpl unifSpec Base)
     (view : MaterialView mlSource KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : Server) (before after : Native)
     (related : AdapterPublicWrapperState.Server view views created credential self before.server)
     (reply : RustM (core.option.Option session.ServerAuthenticationPin)) (external next : Platform)
@@ -341,7 +448,7 @@ theorem pin_material (coins : QueryImpl unifSpec Base)
   exact AdapterPublicServerPrefixMaterial.related_world view views created credential self before related world kept
 
 
-noncomputable def afterPin
+noncomputable def afterPin [ChildOperations (RustT SourceM)]
     (done : Server → registration.ServerInitialKdf → SourceM (AdapterPublicServerBuildTrace.Publication × RustM Reply))
     (self : Server) (token : beaconcrypt_public_wrapper.server.RegistrationOutput) (plaintext : Slice U8)
     (pinned : RustM (core.option.Option session.ServerAuthenticationPin)) : SourceM AdapterPublicServerBuildTrace.Word :=
@@ -364,8 +471,10 @@ theorem after_pin
 (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) Base)
 (fallback : registration.MldsaSigningRequest → NativeM RegistrationSigningShared.SignReply)
 
+    [children : ChildOperations (RustT SourceM)]
+    (hashOperation : ∀ request, (children.executeHash request).run = AdapterPublicServerCutPin.hash coins sign request)
     (view : MaterialView mlSource KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (self : Server) (before : Cut) (related : AdapterPublicWrapperState.Server view views created credential self before.1.server)
     (token : beaconcrypt_public_wrapper.server.RegistrationOutput) (plaintext : Slice U8)
     (pinned : RustM (core.option.Option session.ServerAuthenticationPin))
@@ -393,6 +502,7 @@ theorem after_pin
       ((afterPin (completion coins setup codec keyView failure allocation helper erased sign writer fallback) self token plaintext pinned).run before) =
     (RegistrationNativePlatformExperiment.server
       (RegistrationNativePlatformCompletionSdk.afterPin
+        (RegistrationNativePlatformCompletionSdk.nativeAdHash coins)
         (admitted <$> StateT.lift allocated)
         (RegistrationNativePlatformCompletionSdk.nativePresent coins)
         (finish coins setup codec keyView failure allocation helper erased sign writer)
@@ -414,7 +524,7 @@ theorem after_pin
         | Err old => simp only [AdapterPublicServerSourceLens.server_pure, StateT.run_pure, map_pure, project,
             AdapterPublicServerPublicationInstall.project, AdapterPublicServerPublicationInstall.output]
         | Ok pending =>
-          rw [lookup coins setup codec keyView failure allocation helper erased sign writer fallback
+          rw [lookup coins setup codec keyView failure allocation helper erased sign writer fallback hashOperation
             view views created credential self before related pin token plaintext pending began parsed
             allocated reserveOperation footprint containsOperation standard, lookup_global]
           rfl
@@ -453,6 +563,7 @@ theorem normalized
 omit material platform ed primitive containers [PublicWrapperPlatform.Allocator]
   [PublicWrapperPlatform.LocalOperations] [PublicWrapperPlatform.ContainerOperations] in
 theorem complete_global_run
+    (deriveAd : RegistrationNativePlatformCompletionSdk.AdHash n Base)
     (pin : StateT (RegistrationServerFrontendCompiler.State n) Base
       (RustM (core.option.Option session.ServerAuthenticationPin)))
     (reserve : StateT (RegistrationServerFrontendCompiler.State n) Base Bool)
@@ -460,9 +571,9 @@ theorem complete_global_run
     (done : RegistrationNativePlatformCompletionSdk.Completion n Base (alloc.vec.Vec U8))
     (token : peer.ConsumedRegistration) (plaintext : Slice U8) (before : Native) :
     (RegistrationNativePlatformExperiment.server
-      (RegistrationNativePlatformCompletionSdk.complete pin reserve present done token plaintext)).run before = (do
+      (RegistrationNativePlatformCompletionSdk.complete deriveAd pin reserve present done token plaintext)).run before = (do
       let (pinned, current) ← (RegistrationNativePlatformExperiment.server pin).run before
-      (RegistrationNativePlatformExperiment.server (RegistrationNativePlatformCompletionSdk.afterPin reserve present done
+      (RegistrationNativePlatformExperiment.server (RegistrationNativePlatformCompletionSdk.afterPin deriveAd reserve present done
         before.server.control token plaintext pinned)).run current) := by
   rw [AdapterPublicServerSourceLens.server_run, RegistrationNativePlatformCompletionSdk.complete_run]
   simp only [AdapterPublicServerSourceLens.server_run, map_bind, bind_map_left]
@@ -510,3 +621,9 @@ end BeaconcryptCore.Refinement.AdapterPublicServerBuildPrefix
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Refinement.AdapterPublicServerBuildPrefix.complete_global_run
+
+/-- info: 'BeaconcryptCore.Refinement.AdapterPublicServerBuildPrefix.hashed' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.AdapterPublicServerBuildPrefix.hashed

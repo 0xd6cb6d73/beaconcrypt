@@ -6,7 +6,10 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeGeneratedContinuation
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPhase1AcceptanceOracle PqxdhKemIndCca PqxdhInitializerSecrecy
 open CtxRomAuth AdaptiveCtxSharedHash PqxdhSecretInputKdf PqxdhFullSecretInputKdf
@@ -38,9 +41,9 @@ abbrev Carrier := PqxdhLaterChallengeSampler.Carrier (setup := setup) (M := M) (
 /-- Carry the selection directly from the actual generated preparation. Every original branch, source callback and material draw still executes in its original order. -/
 noncomputable def run (depth : Nat) : OracleComp HashSpec (Carrier setup program (M := M) (P := P) (I := I) (K := K)
     (X := X) (Response := Response) (A := A) (KemSK := KemSK) (S := S) (B := B)) := do
-  let packet ← PqxdhSourceSharedPreparation.prepare setup env callbacks program post attachedVerify primitives baseImpl kem
+  let packet ← PqxdhSourceSharedPreparation.prepare (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem
   let output ← simulateQ RawCtxSelectiveSharedRom.coins ($ᵗ HmacBlock)
-  let localPacket ← PqxdhLaterChallengeSampler.after setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem
+  let localPacket ← PqxdhLaterChallengeSampler.after (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem
     ancestors disclosed packet output depth
   let parent ← simulateQ RawCtxSelectiveSharedRom.coins ($ᵗ FullOutput)
   let nonce ← simulateQ RawCtxSelectiveSharedRom.coins ($ᵗ NonceOutput)
@@ -53,16 +56,16 @@ noncomputable def run (depth : Nat) : OracleComp HashSpec (Carrier setup program
 
 /-- Erasing only the carried selection restores the complete original sampler syntax, rather than only its marginal distribution. -/
 theorem run_erase (depth : Nat) :
-    Prod.fst <$> run setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed depth =
-      PqxdhLaterChallengeSampler.run setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed depth := by
+    Prod.fst <$> run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed depth =
+      PqxdhLaterChallengeSampler.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed depth := by
   simp only [run, PqxdhLaterChallengeSampler.run, map_bind, map_pure]
 
 /-- Carrying the original selection changes no all-reply budget, including weighted source costs. -/
 theorem run_budget {Budget : Type} (depth : Nat) (budget : Budget)
     (allowed : HashSpec.Domain → Budget → Prop) (cost : HashSpec.Domain → Budget → Budget) :
-    (run setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed depth).IsQueryBound budget allowed cost ↔
-    (PqxdhLaterChallengeSampler.run setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed depth).IsQueryBound budget allowed cost := by
-  rw [← run_erase setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed depth,
+    (run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed depth).IsQueryBound budget allowed cost ↔
+    (PqxdhLaterChallengeSampler.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed depth).IsQueryBound budget allowed cost := by
+  rw [← run_erase (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed depth,
     isQueryBound_map_iff]
 
 /-- Complete evaluation followed by any original state-dependent continuation is unchanged. The sampler's full final backend is passed onward in both programs. -/
@@ -71,12 +74,12 @@ theorem continued {State Result : Type} (depth : Nat)
     (continuation : PqxdhLaterChallengeSampler.Carrier (setup := setup) (M := M) (P := P) (I := I) (K := K)
       (X := X) (Response := Response) (A := A) (KemSK := KemSK) (S := S) (B := B) → State → ProbComp Result) :
     (do let result ← (simulateQ impl
-          (run setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed depth)).run before
+          (run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed depth)).run before
         continuation result.1.1 result.2) =
     (do let result ← (simulateQ impl
-          (PqxdhLaterChallengeSampler.run setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed depth)).run before
+          (PqxdhLaterChallengeSampler.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed depth)).run before
         continuation result.1 result.2) := by
-  rw [← run_erase setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed depth]
+  rw [← run_erase (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed depth]
   simp only [simulateQ_map, StateT.run_map, bind_map_left]
 
 /-- The normalized stored start retains the literal wrapper continuation passed to this prepared source call, including captures in the initial Builder. -/
@@ -87,7 +90,7 @@ theorem prepared_continuation (secret : KemSK) (challenge : MlKem768Ciphertext)
     (stored : Input × HmacBlock) (pending : Pending)
     (details : Option (Details (setup := setup) (M := M) (P := P) (I := I) (K := K) (S := S) (B := B)))
     (supported : (Sum.inr (stored, Sum.inr pending), details) ∈ support
-      (PqxdhLaterChallengeSampler.prepared setup env callbacks owner number bit attachedVerify primitives baseImpl kem
+      (PqxdhLaterChallengeSampler.prepared (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks owner number bit attachedVerify primitives baseImpl kem
         secret challenge start output depth continuation)) :
     stored.1.post = fun reply => PqxdhLaterChallengeCapture.wrapped owner number bit (continuation reply)
       PqxdhRecordConfidentialityChallenge.initial := by
@@ -104,7 +107,7 @@ theorem run_selection (depth : Nat)
       (A := A) (KemSK := KemSK) (S := S) (B := B))
     (stored : Input × HmacBlock) (pending : Pending)
     (supported : result ∈ support
-      (run setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed depth))
+      (run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed depth))
     (shape : result.1.1.2.1.1.1 = Sum.inr (stored, Sum.inr pending)) :
     ∃ selection, result.2 = some selection ∧
       stored.1.post = PqxdhRecordConfidentialityChallenge.post adversary owner number bit selection := by
@@ -122,7 +125,7 @@ theorem run_selection (depth : Nat)
       simp only [PqxdhLaterChallengeSampler.after, PqxdhSourceSharedInput.input, PqxdhInitialPreparedSourceInput.input,
         PqxdhSourceSharedPreparation.restore, PqxdhCommonSharedDispatch.restoreMode] at sampled
       refine ⟨prefixOutput.context.selection.1, rfl, ?_⟩
-      exact prepared_continuation setup env callbacks owner number bit attachedVerify primitives baseImpl kem
+      exact prepared_continuation (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks owner number bit attachedVerify primitives baseImpl kem
         secretKey ciphertext _ output depth (adversary prefixOutput.context.selection.1) stored pending details sampled
 
 /-- The same carried selection identifies the original stored continuation after complete actual interpreter execution, with no caller-supplied selection or source-start premise. -/
@@ -132,11 +135,11 @@ theorem evaluated_selection {State : Type} (depth : Nat)
       (A := A) (KemSK := KemSK) (S := S) (B := B))
     (stored : Input × HmacBlock) (pending : Pending)
     (supported : (result, after) ∈ support ((simulateQ impl
-      (run setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed depth)).run before))
+      (run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed depth)).run before))
     (shape : result.1.1.2.1.1.1 = Sum.inr (stored, Sum.inr pending)) :
     ∃ selection, result.2 = some selection ∧
       stored.1.post = PqxdhRecordConfidentialityChallenge.post adversary owner number bit selection := by
-  apply run_selection setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed
+  apply run_selection (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed
     depth result stored pending ?_ shape
   apply support_simulateQ_run'_subset impl _ before
   rw [StateT.run'_eq, support_map]
@@ -150,7 +153,7 @@ theorem prepared_capture (secret : KemSK) (challenge : MlKem768Ciphertext)
     (stored : Input × HmacBlock) (pending : Pending)
     (details : Option (Details (setup := setup) (M := M) (P := P) (I := I) (K := K) (S := S) (B := B)))
     (supported : (Sum.inr (stored, Sum.inr pending), details) ∈ support
-      (PqxdhLaterChallengeSampler.prepared setup env callbacks owner number bit attachedVerify primitives baseImpl kem
+      (PqxdhLaterChallengeSampler.prepared (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks owner number bit attachedVerify primitives baseImpl kem
         secret challenge start output depth continuation)) :
     PqxdhLaterChallengeBuilderContinuation.Continuation owner number bit continuation (pending.1, details) := by
   simp only [PqxdhLaterChallengeSampler.prepared, mem_support_bind_iff, mem_support_pure_iff] at supported
@@ -159,7 +162,7 @@ theorem prepared_capture (secret : KemSK) (challenge : MlKem768Ciphertext)
   · simp only [Prod.mk.injEq, Sum.inr.injEq, reduceCtorEq, and_false, false_and] at same
   · simp only [Prod.mk.injEq, Sum.inr.injEq] at same
     obtain ⟨⟨_, rfl⟩, rfl⟩ := same
-    exact PqxdhLaterChallengePreparedContinuation.run_continuation _ callbacks baseImpl kem attachedVerify primitives
+    exact PqxdhLaterChallengePreparedContinuation.run_continuation (associatedData := associatedData) (completedBinding := completedBinding) _ callbacks baseImpl kem attachedVerify primitives
       secret challenge start output depth owner number bit continuation _ _ reached
 
 /-- One carried source selection supplies the stored Post and, when `result.1.2 = none`, the descriptor's literal Builder outside wrapper for `adversary selection`. When `result.1.2 = some details`, `Continuation owner number bit (adversary selection) (pending.1, result.1.2)` ignores its adversary argument and is only the selection-independent `Joined` composition of the actual `details.callback` and `details.request.next`, which is not related to `adversary selection` by this theorem; see `GeneratedChronology.run_reaches`. No selection or function is chosen existentially from the descriptor. -/
@@ -168,7 +171,7 @@ theorem run_capture (depth : Nat)
       (A := A) (KemSK := KemSK) (S := S) (B := B))
     (stored : Input × HmacBlock) (pending : Pending)
     (supported : result ∈ support
-      (run setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed depth))
+      (run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed depth))
     (shape : result.1.1.2.1.1.1 = Sum.inr (stored, Sum.inr pending)) :
     ∃ selection, result.2 = some selection ∧
       stored.1.post = PqxdhRecordConfidentialityChallenge.post adversary owner number bit selection ∧
@@ -187,9 +190,9 @@ theorem run_capture (depth : Nat)
       simp only [PqxdhLaterChallengeSampler.after, PqxdhSourceSharedInput.input, PqxdhInitialPreparedSourceInput.input,
         PqxdhSourceSharedPreparation.restore, PqxdhCommonSharedDispatch.restoreMode] at sampled
       exact ⟨prefixOutput.context.selection.1, rfl,
-        prepared_continuation setup env callbacks owner number bit attachedVerify primitives baseImpl kem
+        prepared_continuation (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks owner number bit attachedVerify primitives baseImpl kem
           secretKey ciphertext _ output depth (adversary prefixOutput.context.selection.1) stored pending details sampled,
-        prepared_capture setup env callbacks owner number bit attachedVerify primitives baseImpl kem
+        prepared_capture (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks owner number bit attachedVerify primitives baseImpl kem
           secretKey ciphertext _ output depth (adversary prefixOutput.context.selection.1) stored pending details sampled⟩
 
 /-- After complete actual interpreter execution, the same carried selection still supplies the stored Post and, when `result.1.2 = none`, the literal Builder outside wrapper. When `result.1.2 = some details`, the descriptor satisfies the selection-independent `Joined` composition of `details.callback` and `details.request.next`, which is not related to `adversary selection` by this theorem; see `GeneratedChronology.run_reaches`. Only support is projected; no probability or budget is transferred. -/
@@ -199,12 +202,12 @@ theorem evaluated_capture {State : Type} (depth : Nat)
       (A := A) (KemSK := KemSK) (S := S) (B := B))
     (stored : Input × HmacBlock) (pending : Pending)
     (supported : (result, after) ∈ support ((simulateQ impl
-      (run setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed depth)).run before))
+      (run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed depth)).run before))
     (shape : result.1.1.2.1.1.1 = Sum.inr (stored, Sum.inr pending)) :
     ∃ selection, result.2 = some selection ∧
       stored.1.post = PqxdhRecordConfidentialityChallenge.post adversary owner number bit selection ∧
       PqxdhLaterChallengeBuilderContinuation.Continuation owner number bit (adversary selection) (pending.1, result.1.2) := by
-  apply run_capture setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed
+  apply run_capture (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem ancestors disclosed
     depth result stored pending ?_ shape
   apply support_simulateQ_run'_subset impl _ before
   rw [StateT.run'_eq, support_map]

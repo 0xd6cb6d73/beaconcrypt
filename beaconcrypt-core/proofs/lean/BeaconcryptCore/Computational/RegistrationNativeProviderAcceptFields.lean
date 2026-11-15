@@ -60,7 +60,7 @@ theorem retain_restore (roots : RegistrationServerReferenceRestore.Roots) (ready
     rfl
 
 /-- This field operation is the literal native SDK retention, with its complete primitive state kept outside the pure field lens. -/
-theorem sdk_retain {n : Nat} (created : PqxdhLiveServerConstruction.Created Unit)
+theorem sdk_retain {n : Nat} (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (accepted : agreement.ServerAgreement) (before : RegistrationServerFrontendCompiler.State n) :
     (fun result => (result.1, ofNative result.2)) <$>
       (RegistrationServerNativeSource.retain created accepted).run before =

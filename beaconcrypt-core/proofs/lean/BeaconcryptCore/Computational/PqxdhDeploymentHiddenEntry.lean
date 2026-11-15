@@ -22,6 +22,7 @@ open RustM beaconcrypt_core ratchet ratchet.refined ratchet.concrete PqxdhRefine
 set_option autoImplicit false
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentHiddenEntry
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhServerAuthSendFactor (Kernel Factor resolve)
 open RawCtxSelectedChain (Slot)
 open PqxdhSecretInputKdf PqxdhJointKdfGame PqxdhFullSecretInputKdf
@@ -31,7 +32,7 @@ open PqxdhDeploymentHiddenKernels (ctxLens openPoint finishErased factoredBody S
 open LazyOracleDiscard (Commutes StateLens CacheLens)
 
 /-- The hidden-build service type of item 2's services (`PqxdhServerAuthEntryFactor.Services.hiddenBuild`). -/
-abbrev HiddenBuild := PqxdhServerRelatedRootConsumer.Returned → Option Pqxdh.Bytes →
+abbrev HiddenBuild := PqxdhServerRelatedRootConsumer.Returned → Option Pqxdh.Bytes → PqxdhTranscriptAd.AssociatedData →
   PqxdhServerAuthEntryFactor.ServerState →
     StateT PqxdhServerAuthEntryFactor.SealState ProbComp
       (RustM (Option PqxdhServerRegistrationPublication.Response × PqxdhServerAuthEntryFactor.ServerState))
@@ -45,11 +46,11 @@ variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response : Type}
   (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
 
 /-- The factor-form hidden build at the 108-byte value assembled from the material and the seed: the logged factored Server build. -/
-noncomputable def buildFactor (m : Material) (seed : PqxdhRecordLiftSeed.Seed) : HiddenBuild := fun token payload server =>
-  PqxdhServerAuthLoggedSendFactor.factored (fun entry _ _ => pure (entry, .None))
+noncomputable def buildFactor (m : Material) (seed : PqxdhRecordLiftSeed.Seed) : HiddenBuild := fun token payload ad server =>
+  PqxdhServerAuthLoggedSendFactor.factored (associatedData := ad) (fun entry _ _ => pure (entry, .None))
     (PqxdhServerAuthLoggedSendFactor.loggedPrim setup codec checks) setup.source
     (PqxdhServerAuthLoggedSendFactor.loggedAux setup codec checks)
-    (PqxdhServerAuthCtxMaterial.factor (joinOutput m seed)) token.pending payload () server
+    (PqxdhServerAuthCtxMaterial.factor (joinOutput m seed)) token.pending payload ad server
 
 /-- The factor-form hidden build is the hidden-build field of item 2's factor services at `joinOutput m seed`. -/
 theorem buildFactor_services (context : PqxdhServerAuthEntryFactor.Context KemSK) (m : Material)
@@ -227,7 +228,7 @@ theorem afterInitialization_commutes (calls : RawCtxChainOwner.Calls Kernel (Sta
     (send : ∀ entry context, Commutes L (calls.send entry context)) (auxCommutes : ∀ query, Commutes L (aux query))
     (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Pqxdh.Bytes) (kernel : Kernel)
     (metadata : PeerMetadata) (state : PqxdhInitialGenericPublication.State Kernel Metadata PeerMetadata Consumed) :
-    Commutes L (PqxdhInitialGenericPublication.afterInitialization calls aux candidate authenticated kernel metadata
+    Commutes L (PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) calls aux candidate authenticated kernel metadata
       state) := by
   unfold PqxdhInitialGenericPublication.afterInitialization
   refine LazyOracleDiscard.commutes_bind L (send _ _) (fun sent => ?_)
@@ -247,7 +248,7 @@ theorem candidate_commutes (calls : RawCtxChainOwner.Calls Kernel (StateT σ Pro
     (send : ∀ entry context, Commutes L (calls.send entry context)) (auxCommutes : ∀ query, Commutes L (aux query))
     (initial : RustM Kernel) (candidate : pqxdh.ServerRegistrationCandidate) (data : Option Pqxdh.Bytes)
     (metadata : PeerMetadata) (state : PqxdhInitialGenericPublication.State Kernel Metadata PeerMetadata Consumed) :
-    Commutes L (PqxdhInitialGenericBuilder.candidate calls aux initial candidate data metadata state) := by
+    Commutes L (PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) calls aux initial candidate data metadata state) := by
   unfold PqxdhInitialGenericBuilder.candidate
   refine LazyOracleDiscard.commutes_bind L (auxCommutes _) (fun valid => ?_)
   by_cases hvalid : (!valid) = true
@@ -270,7 +271,7 @@ theorem candidate_commutes (calls : RawCtxChainOwner.Calls Kernel (StateT σ Pro
           · simp only [hallocated, Bool.false_eq_true, ite_false]
             refine continueRust_commutes L _ _ (fun binding => ?_)
             exact LazyOracleDiscard.commutes_map L _
-              (afterInitialization_commutes L calls aux send auxCommutes _ _ _ _ _)
+              (afterInitialization_commutes (associatedData := associatedData) L calls aux send auxCommutes _ _ _ _ _)
         · exact LazyOracleDiscard.commutes_pure L _
 
 /-- The generic Server build commutes with completions of a lensed cache whenever its send and auxiliary callbacks do. -/
@@ -280,7 +281,7 @@ theorem genericBuild_commutes (calls : RawCtxChainOwner.Calls Kernel (StateT σ 
     (initial : RustM Kernel) (pending : pqxdh.PendingServerRegistration) (data : Option Pqxdh.Bytes)
     (metadata : PeerMetadata)
     (state : PqxdhInitialGenericPublication.State Kernel Metadata PeerMetadata Consumed) :
-    Commutes L (PqxdhServerAuthSendFactor.genericBuild calls aux initial pending data metadata state) := by
+    Commutes L (PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData) calls aux initial pending data metadata state) := by
   unfold PqxdhServerAuthSendFactor.genericBuild
   refine continueRust_commutes L _ _ (fun next => ?_)
   cases next with
@@ -289,7 +290,7 @@ theorem genericBuild_commutes (calls : RawCtxChainOwner.Calls Kernel (StateT σ 
       refine continueRust_commutes L _ _ (fun prepared => ?_)
       cases prepared with
       | Err error => exact LazyOracleDiscard.commutes_pure L _
-      | Ok candidate => exact candidate_commutes L calls aux send auxCommutes _ _ _ _ _
+      | Ok candidate => exact candidate_commutes (associatedData := associatedData) L calls aux send auxCommutes _ _ _ _ _
 
 end Build
 
@@ -300,10 +301,10 @@ variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response : Type}
 /-- M5: the factor-form hidden build commutes with completions of the CTX cache of its seal state. -/
 theorem buildFactor_commutes_ctx (m : Material) (seed : PqxdhRecordLiftSeed.Seed)
     (token : PqxdhServerRelatedRootConsumer.Returned) (payload : Option Pqxdh.Bytes)
-    (server : PqxdhServerAuthEntryFactor.ServerState) :
-    Commutes (sharedLens (List RawCtxSourceSend.SealContext)) (buildFactor setup codec checks m seed token payload server) := by
+    (ad : PqxdhTranscriptAd.AssociatedData) (server : PqxdhServerAuthEntryFactor.ServerState) :
+    Commutes (sharedLens (List RawCtxSourceSend.SealContext)) (buildFactor setup codec checks m seed token payload ad server) := by
   unfold buildFactor PqxdhServerAuthLoggedSendFactor.factored
-  refine LazyOracleDiscard.commutes_map _ _ (genericBuild_commutes _ _ _ (fun entry context => ?_)
+  refine LazyOracleDiscard.commutes_map _ _ (genericBuild_commutes (associatedData := ad) _ _ _ (fun entry context => ?_)
     (fun query => tailImpl_commutes setup codec checks (.inr query)) _ _ _ _ _)
   refine LazyOracleDiscard.commutes_simulateQ _ _ (fun query => ?_) _
   rcases query with slot | pending
@@ -355,7 +356,7 @@ noncomputable def finishRequests {Response : Type} (decode : RawCtxReceive.Frame
     (prepared : PqxdhBeaconPhase2Preparation.Prepared Response) (value : Factor) (raw : Pqxdh.Bytes) :
     OracleComp RequestSpec (core.option.Option RawCtxWholeOwner.Decrypted × RawCtxChainOwner.State Kernel Unit) :=
   (RawCtxChainOwner.rawReceive requestCalls decode raw).run
-    (PqxdhServerAuthBeaconFactor.localState (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate)
+    (PqxdhServerAuthBeaconFactor.localState (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate) prepared.binding.associated_data
       (PqxdhServerAuthBeaconFactor.initial value.2))
 
 /-- The finish body runs the finish-time receive requests under the labelled primitive interpreter: every KDF request is answered by the selected chain step and every opening by one primitive call. -/
@@ -366,7 +367,7 @@ theorem factoredBody_requests {m : Type → Type} [Monad m] [LawfulMonad m] {Res
     (prepared : PqxdhBeaconPhase2Preparation.Prepared Response) (value : Factor) (raw : Pqxdh.Bytes) :
     factoredBody prim sendCall source decode prepared value raw =
       (fun result => PqxdhBeaconPhase2Publication.afterOpening
-          (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate) (resolve result.2.kernel) result.1) <$>
+          (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate) prepared.binding.associated_data (resolve result.2.kernel) result.1) <$>
         simulateQ (PqxdhServerAuthBeaconFactor.primLabels prim source value.1)
           (finishRequests decode prepared value raw) := by
   simp only [factoredBody, finishRequests, RawCtxChainOwner.rawReceive, StateT.run]

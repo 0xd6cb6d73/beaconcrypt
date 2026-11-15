@@ -63,7 +63,7 @@ noncomputable def modelCast {N Reply :Type} {Private :N →Type}
 
 private noncomputable def declined {R :Type}
     (setup :PqxdhServerAuthExperiment.Setup base KemSK) (view :MaterialView mlSource KemSK) (views :Views)
-    (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential mlSource)
+    (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential mlSource)
     (current nextCurrent :Native×Platform)
     (before :RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views created credential current)
     (next :RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views created credential nextCurrent) :
@@ -95,7 +95,7 @@ def response (result :RustM (Option (U64×alloc.vec.Vec U8))) :Option PqxdhServe
 omit primitive [PublicWrapperPlatform.Allocator] [PublicWrapperPlatform.LocalOperations] [PublicWrapperPlatform.ContainerOperations] originalCrypto in
 theorem declined_raw {R :Type}
     (setup :PqxdhServerAuthExperiment.Setup base KemSK) (view :MaterialView mlSource KemSK) (views :Views)
-    (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential mlSource)
+    (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential mlSource)
     (current nextCurrent :Native×Platform)
     (before :RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views created credential current)
     (next :RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views created credential nextCurrent) :
@@ -121,7 +121,7 @@ noncomputable def nativeStep {R : Type}
 (originalContainers : ContainerOperations (RustT Base))
 (previousChildren : ChildOperations (RustT SourceM))
 (view : MaterialView mlSource KemSK) (views : Views)
-(created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+(created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
 (current : Native×Platform)
 (before : RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views created credential current)
 (handle :Nat) (payload :Option Pqxdh.Bytes)
@@ -147,7 +147,7 @@ noncomputable def nativeStep {R : Type}
       (RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views created credential)
       (RegistrationNativePlatformPackedState.pack
           (RegistrationNativePlatformExperiment.server
-            (RegistrationNativePlatformCompletionSdk.build (RegistrationNativePlatformSourceBuild.pin coins)
+            (RegistrationNativePlatformCompletionSdk.build (RegistrationNativePlatformCompletionSdk.nativeAdHash coins) (RegistrationNativePlatformSourceBuild.pin coins)
               (admitted <$>StateT.lift allocated) (RegistrationNativePlatformCompletionSdk.nativePresent coins)
               (RegistrationNativePlatformExtractedSdkServer.Build.sourceFinish coins setup codec keyView failure
                 (RegistrationNativePlatformExtractedSdkBuildNormal.allocation allocate)
@@ -163,7 +163,7 @@ noncomputable def nativeStep {R : Type}
   classical
   exact if selected :before.base.objects.tokens handle=none then
     modelCast (RegistrationNativePlatformExtractedSdkBuildDispatch.missing_model view views setup.joint created credential current before.base
-      pin reserve present finish handle selected (RegistrationNativeRawAdapter.application payload)).symm
+      (RegistrationNativePlatformCompletionSdk.nativeAdHash coins) pin reserve present finish handle selected (RegistrationNativeRawAdapter.application payload)).symm
       (declined setup view views created credential current current before before)
   else by
     have has : (before.base.objects.tokens handle).isSome=true :=by
@@ -175,7 +175,7 @@ noncomputable def nativeStep {R : Type}
     exact if convertedPayload :RegistrationNativeRawAdapter.application payload=none then
       modelCast (by
         rw [convertedPayload,RegistrationNativePlatformExtractedSdkBuildDispatch.cancel_model view views setup.joint created credential current before.base
-          pin reserve present finish handle token stored])
+          (RegistrationNativePlatformCompletionSdk.nativeAdHash coins) pin reserve present finish handle token stored])
         (declined setup view views created credential current
           (AdapterPublicServerBuildOwnership.moved handle current.1,current.2) before
           (RegistrationNativePlatformPublicAdapterBuildDispatch.move setup view views created credential current before handle))
@@ -187,7 +187,7 @@ noncomputable def nativeStep {R : Type}
       let app:=(RegistrationNativeRawAdapter.application payload).get valid
       have applicationEq :RegistrationNativeRawAdapter.application payload=some app :=(Option.some_get valid).symm
       apply modelCast (by rw [applicationEq,RegistrationNativePlatformExtractedSdkBuildDispatch.live_model view views setup.joint created credential current before.base
-        pin reserve present finish handle token stored app])
+        (RegistrationNativePlatformCompletionSdk.nativeAdHash coins) pin reserve present finish handle token stored app])
       exact RegistrationNativePlatformPublicAdapterStrongBuild.complete coins setup codec keyView converted failure allocate reserveFrame erased reservePackets
         originalLocal originalContainers previousChildren view views created credential
         (AdapterPublicServerBuildOwnership.moved handle current.1,current.2)
@@ -207,7 +207,7 @@ noncomputable def step {R : Type}
 (originalContainers : ContainerOperations (RustT Base))
 (previousChildren : ChildOperations (RustT SourceM))
 (view : MaterialView mlSource KemSK) (views : Views)
-(created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+(created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
 (current : Native×Platform)
 (before : RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views created credential current)
 (handle :Nat) (payload :Option Pqxdh.Bytes)
@@ -234,7 +234,7 @@ noncomputable def step {R : Type}
       (Prod.map response id <$>
         RegistrationNativePlatformPackedState.pack
           (RegistrationNativePlatformExperiment.server
-            (RegistrationNativePlatformCompletionSdk.build (RegistrationNativePlatformSourceBuild.pin coins)
+            (RegistrationNativePlatformCompletionSdk.build (RegistrationNativePlatformCompletionSdk.nativeAdHash coins) (RegistrationNativePlatformSourceBuild.pin coins)
               (admitted <$>StateT.lift allocated) (RegistrationNativePlatformCompletionSdk.nativePresent coins)
               (RegistrationNativePlatformExtractedSdkServer.Build.sourceFinish coins setup codec keyView failure
                 (RegistrationNativePlatformExtractedSdkBuildNormal.allocation allocate)

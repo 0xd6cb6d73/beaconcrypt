@@ -4,7 +4,7 @@ import BeaconcryptCore.PanicFreedom.AdapterNormal
 import BeaconcryptCore.PanicFreedom.AdapterRegistrationWriterCallers
 import BeaconcryptCore.Computational.RegistrationNativeSourceEncoders
 
-/-! Direct native registration writers select the maintained source serializers. Only the packet shape produced by a signed core view is required; the actual adapter size check supplies output capacity. Reservation refusal and complete-message size rejection remain normal returns. No universal packet/buffer serializer contract is assumed. -/
+/-! Direct native registration writers select the maintained source serializers. Only the packet shape produced by its core view is required; the actual adapter size check supplies output capacity. Reservation refusal and complete-message size rejection remain normal returns. No universal packet/buffer serializer contract is assumed. -/
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -33,21 +33,19 @@ omit allocator in
 theorem init_capacity (value : beaconcrypt_parse.transport.initkex)
     (shape : RegistrationSerializerInitBytes.InitShape value) (capacity : Usize)
     (sized : transport.encoded_init_len
-      (Array.make 6#usize [value.identity_key.len, value.pre_key.len, value.one_time_key.len,
-        value.pq_key.len, value.mldsa_public_key.len, value.signature.len]) = ok (some capacity)) :
-    capacity.val = 6757 := by
-  rcases shape with ⟨identity, prekey, oneTime, pq, mldsa, signature⟩
+      (Array.make 4#usize [value.identity_key.len, value.pre_key.len, value.one_time_key.len,
+        value.pq_key.len]) = ok (some capacity)) :
+    capacity.val = 1490 := by
+  rcases shape with ⟨identity, prekey, oneTime, pq⟩
   have length0 := slice_len_from_length value.identity_key 33#usize identity
   have length1 := slice_len_from_length value.pre_key 98#usize prekey
   have length2 := slice_len_from_length value.one_time_key 98#usize oneTime
   have length3 := slice_len_from_length value.pq_key 1249#usize pq
-  have length4 := slice_len_from_length value.mldsa_public_key 1952#usize mldsa
-  have length5 := slice_len_from_length value.signature 3309#usize signature
   obtain ⟨reply, actual, represented⟩ := TransportSizingBridge.encoded_current_init_len_exact
   have source : transport.encoded_init_len
-      (Array.make 6#usize [value.identity_key.len, value.pre_key.len, value.one_time_key.len,
-        value.pq_key.len, value.mldsa_public_key.len, value.signature.len]) = ok reply := by
-    simpa only [length0, length1, length2, length3, length4, length5] using actual
+      (Array.make 4#usize [value.identity_key.len, value.pre_key.len, value.one_time_key.len,
+        value.pq_key.len]) = ok reply := by
+    simpa only [length0, length1, length2, length3] using actual
   have same := RustM.ok.inj (source.symm.trans sized)
   subst reply
   exact Option.some.inj represented
@@ -73,8 +71,8 @@ theorem init_total (allocation : AdapterWire.Contracts) (other : OtherBranches)
     Normal (beaconcrypt_registration_writer.wire.encode_init value) := by
   let _ := sourceOperations other
   obtain ⟨capacity, sized⟩ := Transport.encoded_init_len_total
-    (Array.make 6#usize [value.identity_key.len, value.pre_key.len, value.one_time_key.len,
-      value.pq_key.len, value.mldsa_public_key.len, value.signature.len])
+    (Array.make 4#usize [value.identity_key.len, value.pre_key.len, value.one_time_key.len,
+      value.pq_key.len])
   cases capacity with
   | none =>
     exact ⟨none, by simp only [beaconcrypt_registration_writer.wire.encode_init,
@@ -85,7 +83,7 @@ theorem init_total (allocation : AdapterWire.Contracts) (other : OtherBranches)
       bind_tc_ok]⟩
   | some capacity =>
     have exactCapacity := init_capacity value shape capacity sized
-    have room : 6757 ≤ (AdapterWireVector.zeros capacity).length := by
+    have room : 1490 ≤ (AdapterWireVector.zeros capacity).length := by
       simp only [AdapterWireVector.zeros, Slice.length, List.length_replicate]
       omega
     obtain ⟨after, serialized, _, _⟩ := RegistrationSerializerInitBytes.public_bytes
@@ -153,7 +151,7 @@ theorem response_total (allocation : AdapterWire.Contracts) (other : OtherBranch
         capacity value serializerNormal
 
 theorem init_view_total (allocation : AdapterWire.Contracts) (other : OtherBranches)
-    (view : registration.SignedInitView) :
+    (view : registration.InitView) :
     letI := sourceOperations other
     Normal (beaconcrypt_registration_writer.wire.encode_init (initSyntax view)) :=
   init_total allocation other (initSyntax view) (RegistrationNativeSourceEncoders.init_shape view)

@@ -10,7 +10,7 @@ C7 for `CE.idealGame g` (CE-11b design-v2 section 4): the ideal registration cor
 - The real commands on every backend commute with completions of the CTX cache (`realRegAt_commutes_ctx`, central's `realReg_commutes_ctx` transported by `commutes_focus`), and so do create, bundle and HMAC of the ideal core (`idealCore_real_commutes_ctx`).
 - The selected accept is a frame of the CTX cache (`acceptExposed_frame`): the native steps before encapsulation and the marker client under `tailCE` never read or write the cache, and the marker tail's install request writes back the game state it was given (`tailCE_tail_frame`, `serverTail_frame`). Every raw accept therefore commutes (`acceptStep_commutes`).
 - The marked build commutes (`buildStep_commutes`, `buildHidden_factored_commutes`: central's `buildFactor_commutes_ctx` at the material and seed of the value read, `factoredHidden_build`).
-- Owner k's challenge finish: `ownerRun` restructures the grouped owner under `ownerImplCE` (the preparation as coins, then at most one grouped finish request, then the source commit). The pointed finish (`groupPointed`, `ownerPointed`, `finishChallengePointed`, `finishStepPointed`) runs the erased hidden finish that reports the opening it discards (`PqxdhDeploymentHiddenEntry.finishPointed`). `finishStep_factor` (from `finishFactor_pointed` at the value's material and seed, `factoredHidden_after`) is an exact program equality: the finish with the factored hidden services is the pointed finish followed by the completion of the reported CTX point. `finishStep_erase` shows that the pointed finish without its report is the finish with the erased hidden services, which commutes with completions (`finishStep_erased_commutes`).
+- Owner k's challenge finish: `ownerRun` restructures the grouped owner under `ownerImplCE` (the preparation as coins, then at most one grouped finish request, then the source commit). The owner's challenge finish is hashed (`PqxdhDeploymentIdealSteps.hashedOwnerCE`: the transcript hash on the shared CTX cache, then the grouped owner at the completed binding of the digest); its pointed form `hashedPointed` shares the hash step (`hashStep`), which is the lazy query on the CTX cache and so commutes with completions (`hashStep_commutes`). The pointed finish (`groupPointed`, `ownerPointed`, `hashedPointed`, `finishChallengePointed`, `finishStepPointed`) runs the erased hidden finish that reports the opening it discards (`PqxdhDeploymentHiddenEntry.finishPointed`). `finishStep_factor` (from `finishFactor_pointed` at the value's material and seed, `factoredHidden_after`) is an exact program equality: the finish with the factored hidden services is the pointed finish followed by the completion of the reported CTX point. `finishStep_erase` shows that the pointed finish without its report is the finish with the erased hidden services, which commutes with completions (`finishStep_erased_commutes`).
 
 These are equalities of programs and equalities in law of a lazily sampled cache. They charge nothing and make no security claim.
 -/
@@ -646,56 +646,73 @@ theorem factoredHidden_after (value : PqxdhServerAuthKeySchedule.Output) :
   rw [PqxdhDeploymentHiddenLayout.join_split]
   rfl
 
-/-- The marked build of a session with a present pending token, in focused form. -/
+/-- The marked build of a session with a present pending token past the pre-hash guard, in focused form, at the AD of the transcript digest. -/
 noncomputable def hiddenTokenBuild (hidden : Hidden Response) (session : ℕ) (payload : Option Pqxdh.Bytes)
-    (token : PqxdhServerRelatedRootConsumer.Returned) : NativeGame KemSK (Option PqxdhServerRegistrationPublication.Response) :=
+    (token : PqxdhServerRelatedRootConsumer.Returned) (ad : PqxdhTranscriptAd.AssociatedData) :
+    NativeGame KemSK (Option PqxdhServerRegistrationPublication.Response) :=
   fun s => (fun r => ((PqxdhServerAuthExperiment.settle s.2.server r.1).1, (s.1, { s.2 with
       pending := Function.update s.2.pending session none
       server := (PqxdhServerAuthExperiment.settle s.2.server r.1).2
       ctx := r.2.2
       ghost := { s.2.ghost with seals := s.2.ghost.seals ++ r.2.1.map (fun context => (session, context)) } }))) <$>
-    (hidden.hiddenBuild token payload s.2.server).run ([], s.2.ctx)
+    (hidden.hiddenBuild token payload ad s.2.server).run ([], s.2.ctx)
 
-/-- The marked build commutes with completions of the CTX cache when its hidden build service does (the pattern of `PqxdhDeploymentBackend.nativeBuild_commutes`). -/
+/-- The marked build commutes with completions of the CTX cache when its hidden build service does at every AD (the pattern of `PqxdhDeploymentBackend.nativeBuild_commutes`: the pending token and the pre-hash guard read no cache, the rejected token's consumption is a frame, the transcript hash is one query of the cache). -/
 theorem buildHidden_commutes (hidden : Hidden Response) (session : ℕ) (payload : Option Pqxdh.Bytes)
-    (commutes : ∀ token payload server, Commutes (PqxdhDeploymentHiddenEntry.sharedLens (List RawCtxSourceSend.SealContext))
-      (hidden.hiddenBuild token payload server)) :
+    (commutes : ∀ token payload ad server,
+      Commutes (PqxdhDeploymentHiddenEntry.sharedLens (List RawCtxSourceSend.SealContext))
+        (hidden.hiddenBuild token payload ad server)) :
     Commutes gameCtxLens (buildHidden (KemSK := KemSK) hidden session payload) := by
-  refine PqxdhDeploymentBackend.commutes_dispatch gameCtxLens _ (fun s => s.2.pending session) (fun _ _ => rfl)
+  refine PqxdhDeploymentBackend.commutes_dispatch gameCtxLens _ (fun s => (s.2.pending session).map fun token =>
+      (token, PqxdhServerRegistrationPublication.prehash s.2.server token.pending payload)) (fun _ _ => rfl)
     (fun found => match found with
       | none => pure none
-      | some token => hiddenTokenBuild hidden session payload token)
+      | some (_, none) => PqxdhServerAuthNative.localState fun game =>
+          (none, { game with pending := Function.update game.pending session none })
+      | some (token, some candidate) => do
+          let digest ← PqxdhServerAuthNative.nativeHash (PqxdhTranscriptAd.transcript
+            (PqxdhTranscriptAd.initOf token.init) (PqxdhTranscriptAd.serverResponse candidate))
+          hiddenTokenBuild hidden session payload token (PqxdhTranscriptAd.adOf digest))
     (fun s => ?_) (fun found => ?_)
   · change (PqxdhServerAuthNative.nativeGet >>= _).run s = _
     rw [PqxdhDeploymentBackend.nativeGet_bind]
     rcases found : s.2.pending session with _ | token
     · rfl
-    · change (PqxdhServerAuthNative.nativeCoins _ >>= _).run s = _
-      rw [PqxdhDeploymentBackend.nativeCoins_bind]
-      simp only [hiddenTokenBuild, StateT.run, map_eq_bind_pure_comp]
-      rfl
-  · cases found with
-    | none => exact LazyOracleDiscard.commutes_pure _ _
-    | some token =>
-        refine PqxdhDeploymentBackend.commutes_focus gameCtxLens
+    · rcases pre : PqxdhServerRegistrationPublication.prehash s.2.server token.pending payload with _ | candidate
+      · simp only [Option.map, pre]
+        rfl
+      · simp only [Option.map, pre]
+        refine congrArg (fun k => StateT.run (PqxdhServerAuthNative.nativeHash _ >>= k) s) (funext fun digest => ?_)
+        funext current
+        change (PqxdhServerAuthNative.nativeGet >>= _).run current = _
+        rw [PqxdhDeploymentBackend.nativeGet_bind, PqxdhDeploymentBackend.nativeCoins_bind]
+        simp only [hiddenTokenBuild, StateT.run, map_eq_bind_pure_comp]
+        rfl
+  · rcases found with _ | ⟨token, _ | candidate⟩
+    · exact LazyOracleDiscard.commutes_pure _ _
+    · exact LazyOracleDiscard.commutes_frame _ _ fun s c => rfl
+    · refine LazyOracleDiscard.commutes_bind _ ?_ fun digest => ?_
+      · rw [PqxdhDeploymentBackend.nativeHash_query]
+        exact LazyOracleDiscard.commutes_query _ _
+      · refine PqxdhDeploymentBackend.commutes_focus gameCtxLens
           (PqxdhDeploymentHiddenEntry.sharedLens (List RawCtxSourceSend.SealContext)) _
-          (fun s => ([], s.2.ctx)) (fun s => hidden.hiddenBuild token payload s.2.server)
+          (fun s => ([], s.2.ctx)) (fun s => hidden.hiddenBuild token payload (PqxdhTranscriptAd.adOf digest) s.2.server)
           (fun s b r => ((PqxdhServerAuthExperiment.settle s.2.server b).1, (s.1, { s.2 with
             pending := Function.update s.2.pending session none
             server := (PqxdhServerAuthExperiment.settle s.2.server b).2
             ctx := r.2
             ghost := { s.2.ghost with seals := s.2.ghost.seals ++ r.1.map (fun context => (session, context)) } })))
           (fun s => rfl) (fun _ _ => rfl) (fun _ _ => rfl) (fun _ _ _ _ => rfl) (fun _ _ _ _ => rfl)
-          (fun s => commutes token payload s.2.server)
+          (fun s => commutes token payload (PqxdhTranscriptAd.adOf digest) s.2.server)
 
 /-- The factored marked build commutes with completions of the CTX cache. -/
 theorem buildHidden_factored_commutes (value : PqxdhServerAuthKeySchedule.Output) (session : ℕ)
     (payload : Option Pqxdh.Bytes) :
     Commutes gameCtxLens (buildHidden (KemSK := KemSK)
       (PqxdhRegistrationJointKemEntryFactor.factoredHidden setup codec checks value) session payload) :=
-  buildHidden_commutes _ session payload fun token payload server => by
+  buildHidden_commutes _ session payload fun token payload ad server => by
     rw [factoredHidden_build]
-    exact PqxdhDeploymentHiddenEntry.buildFactor_commutes_ctx setup codec checks _ _ token payload server
+    exact PqxdhDeploymentHiddenEntry.buildFactor_commutes_ctx setup codec checks _ _ token payload ad server
 
 end BuildCommutes
 
@@ -729,13 +746,14 @@ theorem ownerImpl_prepare (hidden : PqxdhServerAuthKeySchedule.Output → Hidden
 
 /-- The grouped owner under `ownerImplCE`: the preparation as coins, then either the source commit without a staged result or the grouped finish request answered by `groupCE`, then the source commit. -/
 theorem ownerRun (hidden : PqxdhServerAuthKeySchedule.Output → Hidden Response)
-    (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (raw : Pqxdh.Bytes) (owner : PqxdhRegistrationSchedule.Owner KemSK)
-    (s : NativeState KemSK × Option Coord) :
-    (simulateQ (ownerImplCE setup codec hidden challenge) (groupedOwnerCE (Response := Response) raw owner)).run s =
+    (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (binding : beaconcrypt_core.session.CompletedRegistrationBinding)
+    (raw : Pqxdh.Bytes) (owner : PqxdhRegistrationSchedule.Owner KemSK) (s : NativeState KemSK × Option Coord) :
+    (simulateQ (ownerImplCE setup codec hidden challenge) (groupedOwnerCE (Response := Response) binding raw owner)).run s =
       match owner.beacon.phase with
       | .initSent control prekey oneTime kem =>
           liftS (simulateQ (preparationCE setup codec challenge)
-            (PqxdhBeaconPhase2Shared.prepare control owner.beacon.identity prekey oneTime kem raw)) >>= fun prepared =>
+            (PqxdhBeaconPhase2Shared.prepare (completedBinding := binding) control owner.beacon.identity prekey oneTime
+              kem raw)) >>= fun prepared =>
               match prepared with
               | none => pure (PqxdhBeaconPhase2Publication.finish control owner none, s)
               | some prepared => (fun r => (PqxdhBeaconPhase2Publication.finish control owner r.1, r.2)) <$>
@@ -819,21 +837,44 @@ noncomputable def groupPointed (pending : Pending Response) :
   | .known _ => (fun r => ((r.1, none), r.2)) <$> (groupCE setup codec (erasedHidden setup codec checks) pending).run s
 
 /-- The grouped owner under `ownerImplCE`, restructured (`ownerRun`), with the pointed grouped finish. -/
-noncomputable def ownerPointed (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (raw : Pqxdh.Bytes)
+noncomputable def ownerPointed (challenge : PqxdhKemIndCca.MlKem768Ciphertext)
+    (binding : beaconcrypt_core.session.CompletedRegistrationBinding) (raw : Pqxdh.Bytes)
     (owner : PqxdhRegistrationSchedule.Owner KemSK) :
     StateT (NativeState KemSK × Option Coord) (OracleComp SlotSpec)
       ((Option Pqxdh.Bytes × PqxdhRegistrationSchedule.Owner KemSK) × Option CtxRomAuth.CtxRO.Domain) := fun s =>
   match owner.beacon.phase with
   | .initSent control prekey oneTime kem =>
       liftS (simulateQ (preparationCE setup codec challenge)
-        (PqxdhBeaconPhase2Shared.prepare control owner.beacon.identity prekey oneTime kem raw)) >>= fun prepared =>
+        (PqxdhBeaconPhase2Shared.prepare (completedBinding := binding) control owner.beacon.identity prekey oneTime kem
+          raw)) >>= fun prepared =>
           match prepared with
           | none => pure ((PqxdhBeaconPhase2Publication.finish control owner none, none), s)
           | some prepared => (fun r => ((PqxdhBeaconPhase2Publication.finish control owner r.1.1, r.1.2), r.2)) <$>
               (groupPointed setup codec checks prepared).run s
   | _ => pure (((none, owner), none), s)
 
-/-- Owner k's challenge finish in pointed form (`finishChallenge` with `ownerPointed`). -/
+/-- The transcript hash step of the hashed grouped owner finish (`PqxdhDeploymentIdealSteps.hashedOwnerCE`): the native BLAKE2b oracle on the shared native state, the recorded coordinates unchanged. -/
+noncomputable def hashStep (bytes : Pqxdh.Bytes) :
+    StateT (NativeState KemSK × Option Coord) (OracleComp SlotSpec) CtxRomAuth.CtxDigest :=
+  fun s => (fun r => (r.1, (r.2, s.2))) <$> liftS ((PqxdhServerAuthNative.nativeHash (KemSK := KemSK) bytes).run s.1)
+
+/-- The hashed grouped owner finish in pointed form (`PqxdhDeploymentIdealSteps.hashedOwnerCE` with `ownerPointed` at the completed binding of the digest); the abort and non-InitSent branches report no point. -/
+noncomputable def hashedPointed (challenge : PqxdhKemIndCca.MlKem768Ciphertext)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) :
+    StateT (NativeState KemSK × Option Coord) (OracleComp SlotSpec)
+      ((Option Pqxdh.Bytes × PqxdhRegistrationSchedule.Owner KemSK) × Option CtxRomAuth.CtxRO.Domain) :=
+  match owner.beacon.phase with
+  | .initSent control _ _ _ =>
+    match retained, PqxdhServerAuthExperiment.responseOf codec raw with
+    | some init, some response => do
+        let digest ← hashStep (KemSK := KemSK)
+          (PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf init) response)
+        ownerPointed setup codec checks challenge (PqxdhTranscriptAd.completedOf control digest) raw owner
+    | _, _ => pure ((none, PqxdhBeaconPhase2Preparation.abort control owner), none)
+  | _ => pure ((none, owner), none)
+
+/-- Owner k's challenge finish in pointed form (`finishChallenge` with `hashedPointed` at the owner's retained Phase 1 bundle). -/
 noncomputable def finishChallengePointed (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (index : ℕ)
     (raw : Pqxdh.Bytes) :
     StateT (PqxdhRegistrationSchedule.State KemSK × Option Coord) (OracleComp SlotSpec)
@@ -841,9 +882,10 @@ noncomputable def finishChallengePointed (challenge : PqxdhKemIndCca.MlKem768Cip
   match state.1.owners[index]? with
   | none => pure ((none, none), state)
   | some owner => do
-      let result ← (ownerPointed setup codec checks challenge raw owner).run (state.1.shared, state.2)
+      let result ← (hashedPointed setup codec checks challenge (state.1.inits index) raw owner).run
+        (state.1.shared, state.2)
       pure ((result.1.1.1, result.1.2),
-        ({ shared := result.2.1, owners := state.1.owners.set index result.1.1.2 }, result.2.2))
+        ({ state.1 with shared := result.2.1, owners := state.1.owners.set index result.1.1.2 }, result.2.2))
 
 /-- The finish of the ideal registration in pointed form: `finishStep` with `finishChallengePointed`; the real finish reports no point. -/
 noncomputable def finishStepPointed (t : Target count) (p : Params KemSK count) (created : PqxdhLiveServerConstruction.Created Unit)
@@ -906,11 +948,12 @@ theorem group_factor (pending : Pending Response) (s : NativeState KemSK × Opti
       OracleComp.liftComp_pure, Function.comp_def]
 
 /-- The grouped owner with the factored hidden services is its pointed form followed by the completion of the reported point. -/
-theorem owner_factor (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (raw : Pqxdh.Bytes)
+theorem owner_factor (challenge : PqxdhKemIndCca.MlKem768Ciphertext)
+    (binding : beaconcrypt_core.session.CompletedRegistrationBinding) (raw : Pqxdh.Bytes)
     (owner : PqxdhRegistrationSchedule.Owner KemSK) (s : NativeState KemSK × Option Coord) :
     (simulateQ (ownerImplCE setup codec (PqxdhRegistrationJointKemEntryFactor.factoredHidden setup codec checks) challenge)
-        (groupedOwnerCE (Response := Response) raw owner)).run s =
-      (ownerPointed setup codec checks challenge raw owner).run s >>= fun r =>
+        (groupedOwnerCE (Response := Response) binding raw owner)).run s =
+      (ownerPointed setup codec checks challenge binding raw owner).run s >>= fun r =>
         (r.1.1, ·) <$> liftS (groupLens.completeOpt r.1.2 r.2) := by
   rw [ownerRun]
   unfold ownerPointed
@@ -925,6 +968,26 @@ theorem owner_factor (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (raw : Pqxd
         simp only [h, map_bind, bind_map_left, Functor.map_map]
   · simp only [StateT.run, pure_bind, StateLens.completeOpt, OracleComp.liftComp_pure, map_pure]
 
+/-- The hashed grouped owner finish with the factored hidden services is its pointed form followed by the completion of the reported point (the transcript hash step is shared by both sides). -/
+theorem hashed_factor (challenge : PqxdhKemIndCca.MlKem768Ciphertext)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) (s : NativeState KemSK × Option Coord) :
+    (PqxdhDeploymentIdealSteps.hashedOwnerCE setup codec
+        (PqxdhRegistrationJointKemEntryFactor.factoredHidden setup codec checks) challenge retained raw owner).run s =
+      (hashedPointed setup codec checks challenge retained raw owner).run s >>= fun r =>
+        (r.1.1, ·) <$> liftS (groupLens.completeOpt r.1.2 r.2) := by
+  unfold PqxdhDeploymentIdealSteps.hashedOwnerCE hashedPointed
+  cases phase : owner.beacon.phase <;> simp only
+  case initSent control prekey oneTime kem =>
+    rcases retained with _ | init
+    · simp only [StateT.run_pure, pure_bind, StateLens.completeOpt, OracleComp.liftComp_pure, map_pure]
+    · rcases decoded : PqxdhServerAuthExperiment.responseOf codec raw with _ | response
+      · simp only [StateT.run_pure, pure_bind, StateLens.completeOpt, OracleComp.liftComp_pure, map_pure]
+      · rw [StateT.run_bind, StateT.run_bind, bind_assoc]
+        refine bind_congr fun digest => ?_
+        exact owner_factor setup codec checks challenge _ raw owner digest.2
+  all_goals simp only [StateT.run_pure, pure_bind, StateLens.completeOpt, OracleComp.liftComp_pure, map_pure]
+
 /-- Owner k's challenge finish with the factored hidden services is its pointed form followed by the completion of the reported point. -/
 theorem challenge_factor (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (index : ℕ) (raw : Pqxdh.Bytes)
     (state : PqxdhRegistrationSchedule.State KemSK × Option Coord) :
@@ -936,13 +999,14 @@ theorem challenge_factor (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (index 
   simp only [StateT.run]
   rcases found : state.1.owners[index]? with _ | owner
   · simp only [pure_bind, StateLens.completeOpt, OracleComp.liftComp_pure, map_pure]
-  · have h := owner_factor setup codec checks challenge raw owner (state.1.shared, state.2)
+  · have h := hashed_factor setup codec checks challenge (state.1.inits index) raw owner (state.1.shared, state.2)
     simp only [StateT.run] at h
     simp only [h, bind_assoc, pure_bind, map_eq_bind_pure_comp, Function.comp_def]
     refine bind_congr fun r => ?_
     have moved := completeOpt_map groupLens challengeLens
       (fun n : NativeState KemSK × Option Coord =>
-        (({ shared := n.1, owners := state.1.owners.set index r.1.1.2 } : PqxdhRegistrationSchedule.State KemSK), n.2))
+        (({ state.1 with shared := n.1, owners := state.1.owners.set index r.1.1.2 } :
+          PqxdhRegistrationSchedule.State KemSK), n.2))
       (fun _ => rfl) (fun _ _ => rfl) r.1.2 r.2
     rw [← moved]
     simp only [map_eq_bind_pure_comp, Function.comp_def, OracleComp.liftComp_bind, OracleComp.liftComp_pure,
@@ -1009,11 +1073,12 @@ theorem group_erase (pending : Pending Response) (s : NativeState KemSK × Optio
   · simp only [StateT.run, Functor.map_map]
 
 /-- The pointed grouped owner without its report is the grouped owner under `ownerImplCE` with the erased hidden services. -/
-theorem owner_erase (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (raw : Pqxdh.Bytes)
+theorem owner_erase (challenge : PqxdhKemIndCca.MlKem768Ciphertext)
+    (binding : beaconcrypt_core.session.CompletedRegistrationBinding) (raw : Pqxdh.Bytes)
     (owner : PqxdhRegistrationSchedule.Owner KemSK) (s : NativeState KemSK × Option Coord) :
-    (fun r => (r.1.1, r.2)) <$> (ownerPointed setup codec checks challenge raw owner).run s =
+    (fun r => (r.1.1, r.2)) <$> (ownerPointed setup codec checks challenge binding raw owner).run s =
       (simulateQ (ownerImplCE setup codec (erasedHidden setup codec checks) challenge)
-        (groupedOwnerCE (Response := Response) raw owner)).run s := by
+        (groupedOwnerCE (Response := Response) binding raw owner)).run s := by
   rw [ownerRun]
   unfold ownerPointed
   split
@@ -1027,6 +1092,25 @@ theorem owner_erase (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (raw : Pqxdh
         simp only [← h, Functor.map_map]
   · simp only [StateT.run, map_pure]
 
+/-- The pointed hashed grouped owner finish without its report is the hashed grouped owner finish with the erased hidden services. -/
+theorem hashed_erase (challenge : PqxdhKemIndCca.MlKem768Ciphertext)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) (s : NativeState KemSK × Option Coord) :
+    (fun r => (r.1.1, r.2)) <$> (hashedPointed setup codec checks challenge retained raw owner).run s =
+      (PqxdhDeploymentIdealSteps.hashedOwnerCE setup codec (erasedHidden setup codec checks) challenge retained raw
+        owner).run s := by
+  unfold PqxdhDeploymentIdealSteps.hashedOwnerCE hashedPointed
+  cases phase : owner.beacon.phase <;> simp only
+  case initSent control prekey oneTime kem =>
+    rcases retained with _ | init
+    · simp only [StateT.run_pure, map_pure]
+    · rcases decoded : PqxdhServerAuthExperiment.responseOf codec raw with _ | response
+      · simp only [StateT.run_pure, map_pure]
+      · rw [StateT.run_bind, StateT.run_bind, map_bind]
+        refine bind_congr fun digest => ?_
+        exact owner_erase setup codec checks challenge _ raw owner digest.2
+  all_goals simp only [StateT.run_pure, map_pure]
+
 /-- The pointed challenge finish without its report is the challenge finish with the erased hidden services. -/
 theorem challenge_erase (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (index : ℕ) (raw : Pqxdh.Bytes)
     (state : PqxdhRegistrationSchedule.State KemSK × Option Coord) :
@@ -1036,7 +1120,7 @@ theorem challenge_erase (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (index :
   simp only [StateT.run]
   rcases found : state.1.owners[index]? with _ | owner
   · simp only [map_pure]
-  · have h := owner_erase setup codec checks challenge raw owner (state.1.shared, state.2)
+  · have h := hashed_erase setup codec checks challenge (state.1.inits index) raw owner (state.1.shared, state.2)
     simp only [StateT.run] at h
     simp only [← h, map_bind, map_pure, bind_map_left]
 
@@ -1304,13 +1388,15 @@ theorem groupCE_erased_commutes (pending : Pending Response) :
 
 /-- The grouped owner under `ownerImplCE` as a slot step with chosen branches (`ownerRun`). -/
 noncomputable def ownerExplicit (hidden : PqxdhServerAuthKeySchedule.Output → Hidden Response)
-    (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (raw : Pqxdh.Bytes) (owner : PqxdhRegistrationSchedule.Owner KemSK) :
+    (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (binding : beaconcrypt_core.session.CompletedRegistrationBinding)
+    (raw : Pqxdh.Bytes) (owner : PqxdhRegistrationSchedule.Owner KemSK) :
     StateT (NativeState KemSK × Option Coord) (OracleComp SlotSpec)
       (Option Pqxdh.Bytes × PqxdhRegistrationSchedule.Owner KemSK) :=
   match owner.beacon.phase with
   | .initSent control prekey oneTime kem =>
       onSlots (StateT.lift (simulateQ (preparationCE setup codec challenge)
-        (PqxdhBeaconPhase2Shared.prepare control owner.beacon.identity prekey oneTime kem raw))) >>= fun prepared =>
+        (PqxdhBeaconPhase2Shared.prepare (completedBinding := binding) control owner.beacon.identity prekey oneTime kem
+          raw))) >>= fun prepared =>
           match prepared with
           | none => pure (PqxdhBeaconPhase2Publication.finish control owner none)
           | some prepared => (fun staged => PqxdhBeaconPhase2Publication.finish control owner staged) <$>
@@ -1318,12 +1404,14 @@ noncomputable def ownerExplicit (hidden : PqxdhServerAuthKeySchedule.Output → 
   | _ => pure (none, owner)
 
 theorem owner_explicit (hidden : PqxdhServerAuthKeySchedule.Output → Hidden Response)
-    (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (raw : Pqxdh.Bytes) (owner : PqxdhRegistrationSchedule.Owner KemSK) :
-    simulateQ (ownerImplCE setup codec hidden challenge) (groupedOwnerCE (Response := Response) raw owner) =
-      ownerExplicit setup codec hidden challenge raw owner := by
+    (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (binding : beaconcrypt_core.session.CompletedRegistrationBinding)
+    (raw : Pqxdh.Bytes) (owner : PqxdhRegistrationSchedule.Owner KemSK) :
+    simulateQ (ownerImplCE setup codec hidden challenge) (groupedOwnerCE (Response := Response) binding raw owner) =
+      ownerExplicit setup codec hidden challenge binding raw owner := by
   funext s
-  change (simulateQ (ownerImplCE setup codec hidden challenge) (groupedOwnerCE (Response := Response) raw owner)).run s =
-    (ownerExplicit setup codec hidden challenge raw owner).run s
+  change (simulateQ (ownerImplCE setup codec hidden challenge)
+      (groupedOwnerCE (Response := Response) binding raw owner)).run s =
+    (ownerExplicit setup codec hidden challenge binding raw owner).run s
   rw [ownerRun]
   unfold ownerExplicit
   split
@@ -1337,10 +1425,11 @@ theorem owner_explicit (hidden : PqxdhServerAuthKeySchedule.Output → Hidden Re
   · rfl
 
 /-- The grouped owner with the erased hidden services commutes on pairs with completions of the CTX cache. -/
-theorem owner_erased_commutes (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (raw : Pqxdh.Bytes)
+theorem owner_erased_commutes (challenge : PqxdhKemIndCca.MlKem768Ciphertext)
+    (binding : beaconcrypt_core.session.CompletedRegistrationBinding) (raw : Pqxdh.Bytes)
     (owner : PqxdhRegistrationSchedule.Owner KemSK) :
     Commutes (pairLens (n := 2) (S := S) groupLens) (onPair svc (simulateQ (ownerImplCE setup codec
-      (erasedHidden setup codec checks) challenge) (groupedOwnerCE (Response := Response) raw owner))) := by
+      (erasedHidden setup codec checks) challenge) (groupedOwnerCE (Response := Response) binding raw owner))) := by
   rw [owner_explicit]
   unfold ownerExplicit
   split
@@ -1357,41 +1446,79 @@ theorem owner_erased_commutes (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (r
   · rw [onPair_pure]
     exact LazyOracleDiscard.commutes_pure _ _
 
-/-- Owner k's challenge finish with its branch chosen from the addressed owner. -/
+/-- The transcript hash step is a coins-only slot step: the native BLAKE2b oracle on the shared native state, the recorded coordinates unchanged. -/
+theorem hashStep_onSlots (bytes : Pqxdh.Bytes) :
+    hashStep (KemSK := KemSK) bytes = onSlots (fun s => (fun r => (r.1, (r.2, s.2))) <$>
+      (PqxdhServerAuthNative.nativeHash (KemSK := KemSK) bytes).run s.1) := by
+  funext s
+  exact (OracleComp.liftComp_map _ _ _).symm
+
+/-- The transcript hash step on the shared native state commutes on pairs with completions of the CTX cache (it is the lazy query on that cache). -/
+theorem hashStep_commutes (bytes : Pqxdh.Bytes) :
+    Commutes (pairLens (n := 2) (S := S) groupLens) (onPair svc (hashStep (KemSK := KemSK) bytes)) := by
+  rw [hashStep_onSlots]
+  exact onPair_commutes_onSlots groupLens svc _ (PqxdhDeploymentBackend.commutes_focus groupLens gameCtxLens _
+    (fun s => s.1) (fun _ => PqxdhServerAuthNative.nativeHash bytes) (fun s b r => (b, (r, s.2)))
+    (fun _ => rfl) (fun _ _ => rfl) (fun _ _ => rfl) (fun _ _ _ _ => rfl) (fun _ _ _ _ => rfl)
+    fun _ => by
+      rw [PqxdhDeploymentBackend.nativeHash_query]
+      exact LazyOracleDiscard.commutes_query _ _)
+
+/-- The hashed grouped owner finish with the erased hidden services commutes on pairs with completions of the CTX cache: the transcript hash is the lazy query on that cache, and the grouped owner at the completed binding of every digest commutes (`owner_erased_commutes`). -/
+theorem hashedOwner_erased_commutes (challenge : PqxdhKemIndCca.MlKem768Ciphertext)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) :
+    Commutes (pairLens (n := 2) (S := S) groupLens) (onPair svc (PqxdhDeploymentIdealSteps.hashedOwnerCE setup codec
+      (erasedHidden setup codec checks) challenge retained raw owner)) := by
+  unfold PqxdhDeploymentIdealSteps.hashedOwnerCE
+  cases phase : owner.beacon.phase <;> simp only
+  case initSent control prekey oneTime kem =>
+    rcases retained with _ | init
+    · rw [onPair_pure]
+      exact LazyOracleDiscard.commutes_pure _ _
+    · rcases decoded : PqxdhServerAuthExperiment.responseOf codec raw with _ | response
+      · rw [onPair_pure]
+        exact LazyOracleDiscard.commutes_pure _ _
+      · change Commutes _ (onPair svc (hashStep _ >>= _))
+        rw [onPair_bind]
+        exact LazyOracleDiscard.commutes_bind _ (hashStep_commutes svc _) fun digest =>
+          owner_erased_commutes setup codec checks svc challenge _ raw owner
+  all_goals rw [onPair_pure]
+  all_goals exact LazyOracleDiscard.commutes_pure _ _
+
+/-- Owner k's challenge finish with its branch chosen from the addressed owner and its retained Phase 1 bundle. -/
 noncomputable def challengeBranch (hidden : PqxdhServerAuthKeySchedule.Output → Hidden Response)
     (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (index : ℕ) (raw : Pqxdh.Bytes)
-    (found : Option (PqxdhRegistrationSchedule.Owner KemSK)) :
+    (found : Option (PqxdhRegistrationSchedule.Owner KemSK) × Option PqxdhEd25519EufCma.Phase1Candidate) :
     StateT (PqxdhRegistrationSchedule.State KemSK × Option Coord) (OracleComp SlotSpec) (Option Pqxdh.Bytes) :=
   match found with
-  | none => pure none
-  | some owner => fun state => (fun result => (result.1.1,
-      (({ shared := result.2.1, owners := state.1.owners.set index result.1.2 } : PqxdhRegistrationSchedule.State KemSK),
-        result.2.2))) <$>
-      (simulateQ (ownerImplCE setup codec hidden challenge) (groupedOwnerCE (Response := Response) raw owner)).run
+  | (none, _) => pure none
+  | (some owner, retained) => fun state => (fun result => (result.1.1,
+      (({ state.1 with shared := result.2.1, owners := state.1.owners.set index result.1.2 } :
+        PqxdhRegistrationSchedule.State KemSK), result.2.2))) <$>
+      (PqxdhDeploymentIdealSteps.hashedOwnerCE setup codec hidden challenge retained raw owner).run
         (state.1.shared, state.2)
 
 /-- Owner k's challenge finish with the erased hidden services commutes on pairs with completions of the CTX cache. -/
 theorem challenge_erased_commutes (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (index : ℕ) (raw : Pqxdh.Bytes) :
     Commutes (pairLens (n := 2) (S := S) challengeLens)
       (onPair svc (finishChallenge (KemSK := KemSK) setup codec (erasedHidden setup codec checks) challenge index raw)) := by
-  refine onPair_commutes_dispatch challengeLens svc _ (fun state => state.1.owners[index]?) (fun _ _ => rfl)
-    (challengeBranch setup codec (erasedHidden setup codec checks) challenge index raw) (fun state => ?_)
-    (fun found => ?_)
+  refine onPair_commutes_dispatch challengeLens svc _ (fun state => (state.1.owners[index]?, state.1.inits index))
+    (fun _ _ => rfl) (challengeBranch setup codec (erasedHidden setup codec checks) challenge index raw)
+    (fun state => ?_) (fun found => ?_)
   · unfold finishChallenge challengeBranch
     simp only [StateT.run]
     rcases state.1.owners[index]? with _ | owner
     · rfl
     · simp only [map_eq_bind_pure_comp, Function.comp_def]
-  · cases found with
-    | none =>
-        simp only [challengeBranch]
-        rw [onPair_pure]
-        exact LazyOracleDiscard.commutes_pure _ _
-    | some owner =>
-        exact onPair_commutes_focus challengeLens groupLens svc _ _ (fun state => (state.1.shared, state.2))
-          (fun state b r => (b.1, (({ shared := r.1, owners := state.1.owners.set index b.2 } :
-            PqxdhRegistrationSchedule.State KemSK), r.2))) (fun _ => rfl) (fun _ _ => rfl) (fun _ _ _ _ => rfl)
-          (fun _ _ _ _ => rfl) (owner_erased_commutes setup codec checks svc challenge raw owner)
+  · rcases found with ⟨_ | owner, retained⟩
+    · simp only [challengeBranch]
+      rw [onPair_pure]
+      exact LazyOracleDiscard.commutes_pure _ _
+    · exact onPair_commutes_focus challengeLens groupLens svc _ _ (fun state => (state.1.shared, state.2))
+        (fun state b r => (b.1, (({ state.1 with shared := r.1, owners := state.1.owners.set index b.2 } :
+          PqxdhRegistrationSchedule.State KemSK), r.2))) (fun _ => rfl) (fun _ _ => rfl) (fun _ _ _ _ => rfl)
+        (fun _ _ _ _ => rfl) (hashedOwner_erased_commutes setup codec checks svc challenge retained raw owner)
 
 /-- The finish of the ideal registration with its branch chosen. -/
 noncomputable def finishBranch (hidden : PqxdhServerAuthKeySchedule.Output → Hidden Response) (p : Params KemSK count)
@@ -2208,3 +2335,28 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealErase.erase_idealGame' 
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealErase.erase_idealGame
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealErase.hashed_factor' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealErase.hashed_factor
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealErase.hashed_erase' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealErase.hashed_erase
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealErase.hashStep_commutes' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealErase.hashStep_commutes
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealErase.hashedOwner_erased_commutes' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealErase.hashedOwner_erased_commutes
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealErase.hashStep_onSlots' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealErase.hashStep_onSlots

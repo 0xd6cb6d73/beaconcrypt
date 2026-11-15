@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Model.Pqxdh.TranscriptAuth
+import BeaconcryptCore.Model.Pqxdh.SessionTranscript
 import Mathlib.MeasureTheory.Measure.Basic
 
 /-!
@@ -10,8 +11,7 @@ module imports neither a VCVio signature theorem nor an ML-DSA implementation.
 The trace distribution is supplied by the caller. A post-quantum interpretation
 requires the external assumptions to cover that attacker's classical signing
 interface and trace distribution; no quantum execution semantics is claimed.
-The protected key is an honest, unrevealed ML-DSA key. Attacker-owned registration
-keys are outside that event, rather than forbidden by the protocol.
+The current protected ML-DSA key is the pinned Server key. The generic signature experiment is used for Server response origin; it does not authenticate an enrolled Beacon principal. Attacker registrations remain admitted. Transcript AD instead binds the full selected request/response preimage up to the explicit hash-collision event below.
 -/
 
 set_option autoImplicit false
@@ -137,23 +137,30 @@ theorem origin_failure_le_assumed_errors [MeasurableSpace Trial]
 def CollisionPair (hash : Hash512) (left right : Bytes) : Prop :=
   left ≠ right ∧ hash left = hash right
 
-/-- Equal AD binds both ordered ML keys, unless one of the displayed key pairs collides. -/
-theorem associated_data_key_binding (hash : Hash512)
-    (hashWidth : Pqxdh.TranscriptAuth.HashWidth hash)
-    (leftBase rightBase leftServer rightServer leftBeacon rightBeacon : Bytes)
-    (baseWidths : leftBase.length = rightBase.length)
-    (same : Pqxdh.TranscriptAuth.associatedData leftBase (hash leftServer) (hash leftBeacon) =
-      Pqxdh.TranscriptAuth.associatedData rightBase (hash rightServer) (hash rightBeacon)) :
-    (leftServer = rightServer ∧ leftBeacon = rightBeacon) ∨
-      CollisionPair hash leftServer rightServer ∨ CollisionPair hash leftBeacon rightBeacon := by
-  have components := Pqxdh.TranscriptAuth.associatedData_inj baseWidths
-    ((hashWidth leftServer).trans (hashWidth rightServer).symm) same
-  exact match eq_or_ne leftServer rightServer, eq_or_ne leftBeacon rightBeacon with
-    | Or.inl sameServer, Or.inl sameBeacon => Or.inl ⟨sameServer, sameBeacon⟩
-    | Or.inr differentServer, _ =>
-      Or.inr (Or.inl ⟨differentServer, components.2.1⟩)
-    | _, Or.inr differentBeacon =>
-      Or.inr (Or.inr ⟨differentBeacon, components.2.2⟩)
+/-- Equal complete AD identifies the exact transcript preimage unless that pair is a hash collision. No hash injectivity is assumed. -/
+theorem transcript_ad_preimage_binding (hash : Hash512) (left right : Bytes)
+    (same : Pqxdh.SessionTranscript.associatedData (hash left) =
+      Pqxdh.SessionTranscript.associatedData (hash right)) :
+    left = right ∨ CollisionPair hash left right := by
+  by_cases equal : left = right
+  · exact Or.inl equal
+  · exact Or.inr ⟨equal, Pqxdh.SessionTranscript.associatedData_inj _ _ same⟩
+
+/-- All exact signed Init fields and all pre-seal response fields agree, or their displayed encodings collide under the supplied hash. -/
+theorem transcript_ad_fields_binding (hash : Hash512)
+    (leftInit rightInit : Pqxdh.SessionTranscript.InitFields)
+    (leftResponse rightResponse : Pqxdh.SessionTranscript.ResponseFields)
+    (leftInitValid : leftInit.WellFormed) (rightInitValid : rightInit.WellFormed)
+    (leftResponseValid : leftResponse.WellFormed) (rightResponseValid : rightResponse.WellFormed)
+    (same : Pqxdh.SessionTranscript.associatedData (hash (Pqxdh.SessionTranscript.encode leftInit leftResponse)) =
+      Pqxdh.SessionTranscript.associatedData (hash (Pqxdh.SessionTranscript.encode rightInit rightResponse))) :
+    (leftInit = rightInit ∧ leftResponse = rightResponse) ∨
+      CollisionPair hash (Pqxdh.SessionTranscript.encode leftInit leftResponse)
+        (Pqxdh.SessionTranscript.encode rightInit rightResponse) := by
+  rcases transcript_ad_preimage_binding hash _ _ same with identical | collision
+  · exact Or.inl (Pqxdh.SessionTranscript.encode_inj leftInitValid rightInitValid
+      leftResponseValid rightResponseValid identical)
+  · exact Or.inr collision
 
 /-- info: 'BeaconcryptCore.Computational.MldsaTranscriptAuth.origin_failure_split' depends on axioms: [propext,
  Classical.choice,
@@ -173,10 +180,14 @@ theorem associated_data_key_binding (hash : Hash512)
 #guard_msgs in
 #print axioms origin_failure_le_assumed_errors
 
-/-- info: 'BeaconcryptCore.Computational.MldsaTranscriptAuth.associated_data_key_binding' depends on axioms: [propext,
- Classical.choice,
+
+/-- info: 'BeaconcryptCore.Computational.MldsaTranscriptAuth.transcript_ad_preimage_binding' depends on axioms: [propext] -/
+#guard_msgs in
+#print axioms transcript_ad_preimage_binding
+
+/-- info: 'BeaconcryptCore.Computational.MldsaTranscriptAuth.transcript_ad_fields_binding' depends on axioms: [propext,
  Quot.sound] -/
 #guard_msgs in
-#print axioms associated_data_key_binding
+#print axioms transcript_ad_fields_binding
 
 end BeaconcryptCore.Computational.MldsaTranscriptAuth

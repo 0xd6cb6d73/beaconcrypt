@@ -23,7 +23,7 @@ def encodeOutcome (setup : Setup baseSpec KemSK) (result : SourceOutcome KemSK R
   (result.1, result.2.1, encodeState setup result.2.2)
 
 def initial (pool : PqxdhRegistrationJointPreparation.Pool KemSK) (created : ClientCreated Unit) : EncodedState KemSK :=
-  ⟨pool, PqxdhRegistrationJointInitializedAccept.initial created, []⟩
+  ⟨pool, PqxdhRegistrationJointInitializedAccept.initial created, [], fun _ => none⟩
 
 /-- The client starts from exactly the encoded source initialization, including the complete shared state and empty owner registry. -/
 theorem initial_encode (setup : Setup baseSpec KemSK) (pool : PqxdhRegistrationJointPreparation.Pool KemSK)

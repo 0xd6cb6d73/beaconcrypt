@@ -64,7 +64,7 @@ theorem query_slot (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
           PqxdhRegistrationJointSchedule.handler, PqxdhRegistrationJointSchedule.bundle,
           StateT.run, calledFound, support_map, Set.mem_image] at supported
         obtain ⟨returned, _, rfl⟩ := supported
-        exact set_slot state.owners address called calledEntry entry calledFound found returned.1.2
+        exact set_slot state.owners address called calledEntry entry calledFound found returned.1.1.2
     case finish called raw =>
       cases calledFound : state.owners[called]? with
       | none =>
@@ -106,7 +106,9 @@ private theorem after_linked (setup : Setup baseSpec KemSK) (codec : Codec Reade
     (found : state.1.owners[address]? = some entry) (generated : Option PqxdhJointGapDh.ScalarBytes) :
     let returned := PqxdhRegistrationJointBundle.after setup codec entry.identityIndex entry.owner generated state.1.pool.1
     Linked (⟨(returned.2, state.1.pool.2), state.1.shared,
-      state.1.owners.set address { entry with owner := returned.1.2 }⟩,
+      state.1.owners.set address { entry with owner := returned.1.2 },
+      Function.update state.1.inits address
+        (PqxdhRegistrationJointBundle.afterLog setup codec entry.owner generated (state.1.inits address))⟩,
       state.2.record address entry.identityIndex returned.1.1
         (PqxdhRegistrationJointAttemptTrace.issued setup entry.owner generated)) := by
   apply record_linked state _ held address entry.identityIndex
@@ -118,11 +120,14 @@ private theorem after_linked (setup : Setup baseSpec KemSK) (codec : Codec Reade
 theorem trace_linked (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (address : Nat) (state : State KemSK) (held : Linked state) (entry : Entry KemSK)
     (found : state.1.owners[address]? = some entry)
-    (result : PqxdhRegistrationJointAttemptTrace.NativeResult KemSK × Audit)
-    (supported : result ∈ support (trace setup codec address entry.identityIndex entry.owner state.1.pool.1 state.2)) :
-    Linked (⟨(result.1.2, state.1.pool.2), state.1.shared,
-      state.1.owners.set address { entry with owner := result.1.1.2 }⟩, result.2) := by
-  rw [trace_after] at supported
+    (result : (PqxdhRegistrationJointAttemptTrace.NativeResult KemSK × Audit) ×
+      Option PqxdhEd25519EufCma.Phase1Candidate)
+    (supported : result ∈ support (traceLogged setup codec address entry.identityIndex entry.owner state.1.pool.1 state.2
+      (state.1.inits address))) :
+    Linked (⟨(result.1.1.2, state.1.pool.2), state.1.shared,
+      state.1.owners.set address { entry with owner := result.1.1.1.2 },
+      Function.update state.1.inits address result.2⟩, result.1.2) := by
+  simp only [traceLogged] at supported
   cases phase : entry.owner.beacon.phase <;> simp only [phase] at supported
   case fresh =>
     simp only [support_map, Set.mem_image] at supported
@@ -133,7 +138,8 @@ theorem trace_linked (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
     subst result
     first
     | exact after_linked setup codec address state held entry found none
-    | simpa only [PqxdhRegistrationJointBundle.after, PqxdhBeaconPhase1Publication.prepare,
+    | simpa only [PqxdhRegistrationJointBundle.after, PqxdhRegistrationJointBundle.afterLog,
+        PqxdhBeaconPhase1Publication.prepare,
         PqxdhRegistrationJointAttemptTrace.issued, phase, Option.map_none, Option.toList_none] using
         after_linked setup codec address state held entry found none
 

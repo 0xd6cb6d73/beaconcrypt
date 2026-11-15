@@ -72,7 +72,7 @@ theorem accept_source (setup : Setup base KemSK) (codec : Codec Reader Response)
     (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (selected : Bool) (packet : registration.InitPacket) (before : State n KemSK source) :
     Prod.map id (RegistrationServerOpenReferenceSourceEntry.project setup created.seed scalar ∘ layout) <$>
       (run setup wire route sign created.seed scalar selected

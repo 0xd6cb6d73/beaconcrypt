@@ -35,12 +35,12 @@ theorem argument_short (header : initial_byte_t) :
 theorem argument_simple_rejected (header : initial_byte_t) (value : U8) :
     argument_as_uint64 header (.LongArgumentSimpleValue value) = .fail .panic := rfl
 
-theorem init_fields (identity pre oneTime pq mldsa signature : Slice U8) :
+theorem init_fields (identity pre oneTime pq : Slice U8) :
     beaconcrypt_parse.transport.initkex_right
-      ((), ((), (identity, (pre, (oneTime, (pq, (mldsa, signature))))))) =
+      ((), ((), (identity, (pre, (oneTime, pq))))) =
       .ok {
         identity_key := identity, pre_key := pre, one_time_key := oneTime,
-        pq_key := pq, mldsa_public_key := mldsa, signature := signature } := rfl
+        pq_key := pq } := rfl
 
 theorem response_fields (identity ephemeral kem app signature : Slice U8) (keyId : U64) :
     beaconcrypt_parse.transport.kexresponse_right

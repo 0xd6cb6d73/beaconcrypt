@@ -16,11 +16,12 @@ import prepare_adapter_public_ordinary as preparation
 ROOT = Path(__file__).resolve().parents[1]
 SUBDIRECTORY = "BeaconcryptCore/AdapterPublicOrdinaryExtraction"
 DESTINATION = ROOT / "beaconcrypt-core/proofs/lean" / SUBDIRECTORY
+# Reviewed actual final extraction: current Beacon pin-only layout, AD151, and source spans.
 RAW_SHA256 = {
-    "Funs.lean": "7f1c2bd8963d6edae7dedeef11d072669e045168b9e0df0db42cab09dbff98e6",
-    "FunsExternal_Template.lean": "8f37d17c4edb9bf4494f15f1036088ca54e9f9f82a09c81a923d454701fdb76b",
-    "Types.lean": "b049d04c578ad32319e4d119bf54aa27111185e26c11f2ba7dbbb83ef829e440",
-    "TypesExternal_Template.lean": "ecee449db44f5ccb0373c2da8d051c62d8e9fdaa5ac15a4fcc81fe668e99c83b",
+    "Funs.lean": "314b9dadf2e16b1b6a9700a4d4c37649d70ac424fae2be03cd15e14263e2c753",
+    "FunsExternal_Template.lean": "c1de56cb5b1272c97ad399d328f10c582ebfe0bf39cf9d5a34c73a189a17011a",
+    "Types.lean": "3b12f1be1dcbf03ab81ea2b9079bbc3a79988f508e1cd9fddb5ba45d4ecfbf12",
+    "TypesExternal_Template.lean": "9d20f7f0ad6038ace8d9a8e9606fa518c7acf12ca665c2306824ecd6ade04098",
 }
 SELECTION = {
     "opaque": [
@@ -94,7 +95,7 @@ FLAGS = (
 )
 MODEL_SHA256 = {
     "TypesExternal.lean": "c321c9f323f93e9b9caa148b4b33d74018eec323477cf14aa068f8f2fde460fa",
-    "FunsExternal.lean": "bfa79db313b9f954ed6acfca483583029f2e4b5b3e36736aaf2c7953bce129ee",
+    "FunsExternal.lean": "ad3e0111047fd57a6066c189eccf64429dba839434f25ebdd3b0783dde0a87f6",
 }
 DEPENDENCIES = (
     "scripts/extract_adapter_public_ordinary.py",

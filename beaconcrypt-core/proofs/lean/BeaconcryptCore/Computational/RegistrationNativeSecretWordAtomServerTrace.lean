@@ -7,6 +7,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
+set_option warningAsError true
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativeSecretWordAtomServerTrace
 open PqxdhRecordLiftInterface (Role)
@@ -150,6 +151,31 @@ private theorem finish_count (role : Role) (selected : Bool) (source : PqxdhJoin
       cases published <;> simp only [RegistrationNativeSecretWordServerMaterial.finish, StateT.run, compile_pure] at supported
       all_goals exact pure_count role _ trace result supported
 
+/-- The actual shared transcript hash preserves the complete analysis trace and its current descriptor. It still emits its public hash effect. -/
+private theorem adHash_trace (selected : Bool) (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
+    (wire : RegistrationNativeWire.Wire)
+    (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
+    (pending : registration.ServerAdHash) (before : Environment) (trace : State)
+    (result : (RegistrationServerAdHash.Result × Environment) × State)
+    (supported : result ∈ support ((simulateQ handler (compile (n := n) (KemSK := KemSK) selected source wire sign
+      (RegistrationNativeSecretWordServerMaterial.adHash pending) before)).run trace)) :
+    result.2 = trace := by
+  unfold RegistrationNativeSecretWordServerMaterial.adHash at supported
+  cases requested : pending.request with
+  | fail error | div =>
+      simp only [requested, compile_pure, simulateQ_pure, StateT.run_pure, mem_support_pure_iff] at supported
+      cases supported
+      rfl
+  | ok request =>
+      simp only [requested] at supported
+      rw [compile_bind, compile_effect, simulateQ_bind, StateT.run_bind] at supported
+      simp only [simulateQ_map, StateT.run, map_apply, simulateQ_spec_query, handler, begin, finish,
+        bind_map_left, mem_support_bind_iff] at supported
+      obtain ⟨digest, _queried, supported⟩ := supported
+      simp only [compile_pure, simulateQ_pure] at supported
+      cases supported
+      rfl
+
 attribute [local irreducible] peer.begin_completion_lookup RegistrationServerSdkSource.preflight
 
 /-- Native lookup, preflight and reservation can only skip the actual material stage; its own descriptor bounds every later role attempt. -/
@@ -171,12 +197,33 @@ theorem complete (role : Role) (selected : Bool) (source : PqxdhJointKdfGame.Fix
     bind_map_left, mem_support_bind_iff] at supported
   obtain ⟨occupied, _possible, continued⟩ := supported
   split at continued <;> try (rw [compile_pure] at continued; have same := pure_count role _ trace result continued; omega)
-  split at continued <;> try (rw [compile_pure] at continued; have same := pure_count role _ trace result continued; omega)
   rw [compile_bind, simulateQ_bind, bind_apply, mem_support_bind_iff] at continued
-  obtain ⟨published, material, finished⟩ := continued
-  have first := admitted role selected source wire sign before.control _ ready.reference env trace published material
-  have last := finish_count role selected source wire sign published.1.1 before published.1.2 published.2 result finished
-  exact last.trans first
+  obtain ⟨hashed, hashSupport, continued⟩ := continued
+  have unchanged := adHash_trace selected source wire sign _ env trace hashed hashSupport
+  rcases hashed with ⟨⟨reply, reachedEnv⟩, reachedTrace⟩
+  dsimp only at unchanged
+  subst reachedTrace
+  cases reply with
+  | fail error | div =>
+      rw [compile_pure] at continued
+      have same := pure_count role _ trace result continued
+      omega
+  | ok answer => cases answer with
+    | Err previous =>
+        rw [compile_pure] at continued
+        have same := pure_count role _ trace result continued
+        omega
+    | Ok initial =>
+        dsimp only at continued
+        split_ifs at continued with reserved
+        · rw [compile_bind, simulateQ_bind, bind_apply, mem_support_bind_iff] at continued
+          obtain ⟨published, material, finished⟩ := continued
+          have first := admitted role selected source wire sign before.control _ ready.reference reachedEnv trace published material
+          have last := finish_count role selected source wire sign published.1.1 before published.1.2 published.2 result finished
+          exact last.trans first
+        · rw [compile_pure] at continued
+          have same := pure_count role _ trace result continued
+          omega
 
 /-- The actual build takes its one-use Ready before all cancellations and subsequent callbacks; only that moved Ready can fund an atom installation attempt. -/
 theorem build (role : Role) (selected : Bool) (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)

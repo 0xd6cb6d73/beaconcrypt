@@ -25,7 +25,7 @@ private theorem state_lift_apply {S A : Type} {m : Type → Type} [Monad m]
     (StateT.lift work : StateT S m A) before = (do let value ← work; pure (value, before)) := rfl
 
 private theorem beacon_pure (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (value : X) (before : State n KemSK source) :
     (RegistrationNativeExperiment.beacon setup checks representation created
       (pure value : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State X)).run before = pure (value, before) := by
@@ -36,7 +36,7 @@ private theorem beacon_pure (setup : Setup base KemSK) (checks : Checks)
 variable [primitive : AdapterSealPrimitive.Operations]
 variable (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
 variable (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 variable (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
 variable (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
 variable (reserveRegistration reservePeer : StateT Platform ProbComp Bool)
@@ -112,7 +112,7 @@ theorem after_step (selected : Nat) (edPin : Std.Array U8 32#usize) (keyId : U64
       have moved := RegistrationNativeScalarSource.scalar_eager setup checks representation created before
         (fun scalar current => do
           let result ← (RegistrationNativeExperiment.beacon setup checks representation created
-            (RegistrationNativeBeaconFrontend.appendBorn setup source edPin keyId prepared.pin prepared.credentials prepared.identity scalar)).run current
+            (RegistrationNativeBeaconFrontend.appendBorn setup source edPin keyId prepared.pin prepared.identity scalar)).run current
           ((simulateQ ordinary (next result.1)).run result.2).run previous)
       refine moved.trans ?_
       apply _root_.EvalDistEq.bind_right

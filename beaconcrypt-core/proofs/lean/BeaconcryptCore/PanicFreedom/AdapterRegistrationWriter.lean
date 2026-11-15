@@ -35,8 +35,8 @@ theorem encode_init_total (contracts : Contracts) (allocation : AdapterWire.Cont
     (value : beaconcrypt_parse.transport.initkex) :
     ∃ result, beaconcrypt_registration_writer.wire.encode_init value = ok result := by
   obtain ⟨capacity, sized⟩ := Transport.encoded_init_len_total
-    (Array.make 6#usize [value.identity_key.len, value.pre_key.len, value.one_time_key.len,
-      value.pq_key.len, value.mldsa_public_key.len, value.signature.len])
+    (Array.make 4#usize [value.identity_key.len, value.pre_key.len, value.one_time_key.len,
+      value.pq_key.len])
   cases capacity with
   | none =>
     exact ⟨.None, by simp! only [beaconcrypt_registration_writer.wire.encode_init,

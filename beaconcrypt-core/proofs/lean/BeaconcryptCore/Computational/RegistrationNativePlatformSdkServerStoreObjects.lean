@@ -40,7 +40,7 @@ local notation "Native" => RegistrationNativeExperiment.State n KemSK mlSource
 omit [PublicWrapperPlatform.Allocator] [PublicWrapperPlatform.LocalOperations] [PublicWrapperPlatform.ContainerOperations] original localOps containers in
 private theorem transport_objects {R : Type}
     (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created Unit)
+    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential mlSource) (current after : Native×PlatformState)
     (same : current=after)
     (stored : RegistrationNativePlatformExtractedSdkCarrier.Carrier (R:=R) view views joint created credential after) :
@@ -59,7 +59,7 @@ theorem accept_raw_objects {E R Error : Type} (coins : QueryImpl unifSpec (State
     (joint : PqxdhJointIdentity.Primitives)
     (model : AdapterPublicAgreementPrimitiveModel.Model (m := ProbComp) generator setup checks view)
     (entropy : AdapterPublicAgreementServerNative.Entropy model)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (current : Native×PlatformState)
     (before : RegistrationNativePlatformExtractedSdkCarrier.Carrier (R:=R) view views joint created credential current)
     (input : Slice U8)
@@ -108,7 +108,7 @@ theorem accept_store_objects {E R Error : Type} (coins : QueryImpl unifSpec (Sta
     (joint : PqxdhJointIdentity.Primitives)
     (model : AdapterPublicAgreementPrimitiveModel.Model (m := ProbComp) generator setup checks view)
     (entropy : AdapterPublicAgreementServerNative.Entropy model)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (current : Native×PlatformState)
     (before : RegistrationNativePlatformExtractedSdkCarrier.Carrier (R:=R) view views joint created credential current)
     (input : Slice U8)
@@ -155,7 +155,7 @@ theorem accept_objects {E R Error : Type} (coins : QueryImpl unifSpec (StateT Pl
     (joint : PqxdhJointIdentity.Primitives)
     (model : AdapterPublicAgreementPrimitiveModel.Model (m := ProbComp) generator setup checks view)
     (entropy : AdapterPublicAgreementServerNative.Entropy model)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (current : Native×PlatformState)
     (before : RegistrationNativePlatformExtractedSdkCarrier.Carrier (R:=R) view views joint created credential current)
     (input : Slice U8)

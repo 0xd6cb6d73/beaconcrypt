@@ -34,7 +34,7 @@ theorem reparse (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (before after : PqxdhRecordLiftWorld.State n)
     (called : (.ok (events, .Accepted authenticated), after) ∈ support
       ((RegistrationWorldAuthentication.begin setup codec route verify pin packet).run before)) :
-    AdapterPublicServerToken.ParsedKey authenticated.binding.beacon_identity_public_key := by
+    AdapterPublicServerToken.ParsedBinding authenticated.binding := by
   let native := RegistrationNativePlatformAuthentication.native (n := n) (QueryImpl.id' unifSpec) setup codec route verify edLaws
   have callbacks : native ∘ₛ AdapterInitAuthenticationStateful.abstractNative =
       RegistrationNativePlatformAuthentication.core (QueryImpl.id' unifSpec) setup codec route verify := by
@@ -44,8 +44,12 @@ theorem reparse (setup : PqxdhServerAuthExperiment.Setup base KemSK)
       (RegistrationAuthenticationExecutor.begin pin packet)).run before =
       (RegistrationWorldAuthentication.begin setup codec route verify pin packet).run before := by
     rw [callbacks, AdapterPublicServerAuthenticationPrefix.core_run, simulateQ_id']
-  exact RegistrationAuthenticationReparse.reparse native (parser setup codec route verify edLaws)
-    pin packet events authenticated before after (by rw [run]; exact called)
+  have nativeCalled := called
+  rw [← run] at nativeCalled
+  exact ⟨authenticated.registration.beacon_identity_public_key,
+    RegistrationAuthenticationReparse.binding_identity _ pin packet events authenticated before after nativeCalled,
+    RegistrationAuthenticationReparse.reparse native (parser setup codec route verify edLaws)
+      pin packet events authenticated before after nativeCalled⟩
 
 theorem program {PlatformState : Type}
     (coins : QueryImpl unifSpec (StateT PlatformState ProbComp))
@@ -57,7 +61,7 @@ theorem program {PlatformState : Type}
     (pending : peer.RegistrationLookup) (previous next : PlatformState)
     (supported : ((.ok (.Some pending), after), next) ∈ support
       (((AdapterPublicServerAuthenticationPrefix.program coins setup codec route verify edLaws control binding publicKey packet).run before).run previous)) :
-    AdapterPublicServerToken.ParsedKey pending.authenticated.binding.beacon_identity_public_key := by
+    AdapterPublicServerToken.ParsedBinding pending.authenticated.binding := by
   simp only [AdapterPublicServerAuthenticationPrefix.program, StateT.run_bind, mem_support_bind_iff] at supported
   obtain ⟨⟨⟨pinReply, middle⟩, between⟩, _called, continued⟩ := supported
   rw [AdapterPublicServerAuthenticationPrefix.after_pin_run] at continued

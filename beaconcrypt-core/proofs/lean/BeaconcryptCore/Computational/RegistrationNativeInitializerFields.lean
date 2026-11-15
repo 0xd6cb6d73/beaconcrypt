@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
-import BeaconcryptCore.Computational.RegistrationNativeInitialKdfReceipt
+import BeaconcryptCore.Computational.PqxdhInitialRatchetComplementarity
+import BeaconcryptCore.Refinement.RegistrationAd
 import BeaconcryptCore.Refinement.PqxdhConcreteSession
 
 /-! Actual source initializer construction retains the exact root/input and the two role-specific chain partitions. This is a functional source fact used before identifying actual initial-KDF replies and kernels. -/
@@ -29,18 +30,18 @@ theorem beacon_start (candidate : pqxdh.BeaconRegistrationCandidate) (root : Std
 theorem server (control : pqxdh.ServerState) (pin : session.ServerAuthenticationPin)
     (availability : pqxdh.KeyIdAvailability) (capability : agreement.ServerAgreement) (application : Slice U8)
     (initial : registration.ServerInitialKdf)
-    (started : registration.begin_server_completion control pin availability capability application = .ok (.Ok initial)) :
+    (started : BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission control pin availability capability application initial) :
     initial.pending = serverPending capability.root.bytes ∧
-      initial.request = .ok ⟨capability.root.bytes, ratchet.SYM_RATCHET_INFO⟩ := by
-  have rooted := (RegistrationNativeServerBindingReceipt.initial_root control pin availability capability application initial started).2.2.2
-  have same : initial.pending = serverPending capability.root.bytes := RustM.ok.inj (rooted.symm.trans (server_start _ _))
+      initial.request = .ok ⟨capability.root.bytes, ratchet.INITIAL_RATCHET_INFO⟩ := by
+  have same := BeaconcryptCore.Refinement.RegistrationAd.server_admission_pending
+    control pin availability capability application initial started
   exact ⟨same, by simp only [registration.ServerInitialKdf.request, same, pqxdh.concrete.InitialRatchetKdfPending.impl.request]; rfl⟩
 
 /-- Actual Beacon completion retains its root-bearing agreement, canonical opposite role pending value and exact request. -/
 theorem beacon (capability : agreement.BeaconAgreement) (initial : registration.BeaconInitialKdf)
     (started : registration.begin_beacon_completion capability = .ok initial) :
     initial.agreement = capability ∧ initial.pending = beaconPending capability.root.bytes ∧
-      initial.request = .ok ⟨capability.root.bytes, ratchet.SYM_RATCHET_INFO⟩ := by
+      initial.request = .ok ⟨capability.root.bytes, ratchet.INITIAL_RATCHET_INFO⟩ := by
   have actual : registration.begin_beacon_completion capability = .ok ⟨capability, beaconPending capability.root.bytes⟩ := by
     simp only [registration.begin_beacon_completion, ratchet.RatchetChain.as_bytes, bind_tc_ok, beacon_start]
   cases RustM.ok.inj (started.symm.trans actual)

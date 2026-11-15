@@ -4,7 +4,7 @@ import BeaconcryptCore.PanicFreedom.Registration
 import BeaconcryptCore.PanicFreedom.AdapterNormal
 import BeaconcryptCore.Refinement.AdapterInitAuthenticationSourceLoop
 
-/-! Direct normal returns for the extracted Init controller, with the source-derived seven-callback rank. Invalid public keys, absent hashes/openings and false verification remain ordinary replies. -/
+/-! Direct normal returns for the extracted Init controller, with the source-derived four-callback rank. Invalid public keys, absent hashes/openings and false verification remain ordinary replies. -/
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM ControlFlow beaconcrypt_core
@@ -18,7 +18,6 @@ variable [primitive : Refinement.AdapterInitEdPrimitive.Operations]
 
 structure Contracts : Prop where
   hash : ∀ request, ∃ result, operations.hash request = ok result
-  verify : ∀ request, ∃ result, operations.verify request = ok result
   parse : ∀ input, ∃ result, primitive.parse input = ok result
   edVerify : ∀ signed key, ∃ result, primitive.verify signed key = ok result
 
@@ -63,30 +62,12 @@ theorem authenticate_init_loop_body_total (contracts : Contracts) (effect : regi
       (Registration.InitHash_resume_total pending reply).elim fun next resumed =>
       ⟨.cont next, by simp only [beaconcrypt.auth.authenticate_init_loop.body, requested,
         beaconcrypt.auth.execute_hash, replied, resumed, bind_tc_ok]⟩
-  | MldsaVerificationRequested pending =>
-    exact (RegistrationTrivial.InitMldsaVerification_request_total pending).elim fun request requested =>
-      (contracts.verify request).elim fun reply replied =>
-      (Registration.InitMldsaVerification_resume_total pending reply).elim fun next resumed =>
-      ⟨.cont next, by simp only [beaconcrypt.auth.authenticate_init_loop.body, requested,
-        beaconcrypt.auth.verify_requested, replied, resumed, bind_tc_ok]⟩
   | Ed25519VerificationRequested pending =>
     exact (Registration.InitEd25519Verification_request_total pending).elim fun request requested =>
       (closure_call_total contracts (request.public_key, request.signed) ()).elim fun opened openedRun =>
       (Registration.InitEd25519Verification_resume_total pending opened).elim fun next resumed =>
       ⟨.cont next, by simp! only [beaconcrypt.auth.authenticate_init_loop.body, requested,
         openedRun, Refinement.AdapterOptionDeref.byte_vector, resumed, bind_tc_ok]⟩
-  | ServerFingerprintRequested pending =>
-    exact (RegistrationTrivial.InitServerFingerprint_request_total pending).elim fun request requested =>
-      (contracts.hash request).elim fun reply replied =>
-      (RegistrationTrivial.InitServerFingerprint_resume_total pending reply).elim fun next resumed =>
-      ⟨.cont next, by simp only [beaconcrypt.auth.authenticate_init_loop.body, requested,
-        beaconcrypt.auth.execute_hash, replied, resumed, bind_tc_ok]⟩
-  | BeaconFingerprintRequested pending =>
-    exact (RegistrationTrivial.InitBeaconFingerprint_request_total pending).elim fun request requested =>
-      (contracts.hash request).elim fun reply replied =>
-      (Registration.InitBeaconFingerprint_resume_total pending reply).elim fun next resumed =>
-      ⟨.cont next, by simp only [beaconcrypt.auth.authenticate_init_loop.body, requested,
-        beaconcrypt.auth.execute_hash, replied, resumed, bind_tc_ok]⟩
   | Accepted authenticated => exact ⟨_, rfl⟩
   | Rejected => exact ⟨_, rfl⟩
 

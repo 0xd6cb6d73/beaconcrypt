@@ -6,6 +6,7 @@ import BeaconcryptCore.Computational.RegistrationNativePlatformExtractedSdkIniti
 import BeaconcryptCore.Refinement.AdapterServerConstructorRetained
 import BeaconcryptCore.Refinement.AdapterServerConstructorKeyFrame
 import BeaconcryptCore.Refinement.AdapterServerConstructorMaterial
+import BeaconcryptCore.Refinement.AdapterServerConstructorGeneration
 open CoreModels Aeneas OracleComp OracleSpec
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -41,14 +42,13 @@ local notation "edSample"   =>   PqxdhRecordLiftWorld.sampled (n:=n) (AdapterSer
 local notation "mlSample"   =>   PqxdhRecordLiftWorld.sampled (n:=n) (RegistrationNativeMldsa.generate mlSource)
 variable (ed : AdapterServerConstructorJoint.EdContract generator view setup.joint
   (PqxdhRecordLiftWorld.sampled (n:=n) (AdapterServerConstructorStartup.edCore ensureInit)))
-variable (ml : AdapterBeaconConstructorGeneration.MldsaContract generator view
+variable (ml : AdapterServerConstructorGeneration.MldsaContract generator view
   (PqxdhRecordLiftWorld.sampled (n:=n) (RegistrationNativeMldsa.generate mlSource)))
 include views objects ed ml
 
 variable (edGetter : ∀key,(crypto.edPublicBytes key).run=pure (.ok (view.edPublic key)))
 variable (mlGetter : ∀identity,(localOps.auth_MldsaIdentity_public_key identity).run=pure (.ok (view.mldsa identity).publicKey))
-variable (hashLeaf : ∀request,(children.executeHash request).run=RegistrationNativeServerPinRecompute.nativeHash request)
-include edGetter mlGetter hashLeaf
+include edGetter mlGetter
 
 variable {Platform : Type}
 
@@ -60,18 +60,19 @@ noncomputable def carrier (identityIndex : Nat) (identifier : U64) (rng : R)
     (returned : receipt.ready=some ready) :
     RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views ready.initial.created ready.initial.credential
       (ready.initial.state,previous) := by
-  let original:=RegistrationNativePlatformExtractedSdkStartup.carrier setup generator view views objects ensureInit ed ml edGetter mlGetter hashLeaf identityIndex identifier rng receipt ready previous supported returned
-  have derived:=AdapterServerConstructorReady.material setup generator view views objects ensureInit ed ml edGetter mlGetter hashLeaf
+  let original:=RegistrationNativePlatformExtractedSdkStartup.carrier setup generator view views objects ensureInit ed ml edGetter mlGetter identityIndex identifier rng receipt ready previous supported returned
+  have derived:=AdapterServerConstructorReady.material setup generator view views objects ensureInit ed ml edGetter mlGetter
     identityIndex identifier rng receipt ready supported returned
   exact RegistrationNativePlatformSdkStrongCarrier.empty setup view views ready.initial.created ready.initial.credential
     (ready.initial.state,previous) original derived.2.1
 
+omit children in
 theorem base_carrier (identityIndex : Nat) (identifier : U64) (rng : R)
     (receipt : Receipt n KemSK R mlSource) (ready : AdapterServerConstructorInitialized.Ready n KemSK R mlSource)
     (previous : Platform) (supported : receipt∈support (game setup view identityIndex identifier generator rng))
     (returned : receipt.ready=some ready) :
-    (carrier setup generator view views objects ensureInit ed ml edGetter mlGetter hashLeaf identityIndex identifier rng receipt ready previous supported returned).base=
-      RegistrationNativePlatformExtractedSdkStartup.carrier setup generator view views objects ensureInit ed ml edGetter mlGetter hashLeaf identityIndex identifier rng receipt ready previous supported returned := rfl
+    (carrier setup generator view views objects ensureInit ed ml edGetter mlGetter identityIndex identifier rng receipt ready previous supported returned).base=
+      RegistrationNativePlatformExtractedSdkStartup.carrier setup generator view views objects ensureInit ed ml edGetter mlGetter identityIndex identifier rng receipt ready previous supported returned := rfl
 
 noncomputable def store (identityIndex : Nat) (identifier : U64) (rng : R) (previous : Platform)
     (packet : {receipt //receipt∈support (game (n:=n) setup view identityIndex identifier generator rng)}) :
@@ -81,7 +82,7 @@ noncomputable def store (identityIndex : Nat) (identifier : U64) (rng : R) (prev
   cases returned:packet.val.ready with
   | none=>exact PUnit.unit
   | some ready=>
-    exact carrier setup generator view views objects ensureInit ed ml edGetter mlGetter hashLeaf
+    exact carrier setup generator view views objects ensureInit ed ml edGetter mlGetter
       identityIndex identifier rng packet.val ready previous packet.property returned
 end BeaconcryptCore.Computational.RegistrationNativePlatformSdkStrongInitialized
 

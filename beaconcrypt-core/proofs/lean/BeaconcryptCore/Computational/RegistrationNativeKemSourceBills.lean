@@ -99,7 +99,7 @@ theorem source_bound (setup : Setup base KemSK) (checks : Checks)
 /-- The original deployment's retained uniform bill is bounded before opening or projecting the selected native KEM call. -/
 theorem trusted_uniform (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (caps : Caps setup)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (caps : Caps setup)
     (query : (RegistrationNativeKemInterface.Spec OtherSpec KemSK).Domain)
     (before after : RegistrationNativeExperiment.State n KemSK mlSource)
     (reply : (RegistrationNativeKemInterface.Spec OtherSpec KemSK).Range query)

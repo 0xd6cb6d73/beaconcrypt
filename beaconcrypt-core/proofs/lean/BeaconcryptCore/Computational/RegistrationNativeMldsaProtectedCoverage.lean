@@ -12,7 +12,7 @@ set_option warningAsError true
 set_option maxRecDepth 2048
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativeMldsaProtectedCoverage
-attribute [local irreducible] RegistrationNativeExperiment.handler RegistrationSigningShared.historyFor RegistrationAuthenticationNative.trial
+attribute [local irreducible] RegistrationNativeExperiment.handler RegistrationSigningShared.historyFor
 open RegistrationNativeMldsa (Source Credential)
 open RegistrationNativeMldsaOpaque (Pool handleSource Live)
 open RegistrationNativeMldsaBirthProvenance (Provenance)
@@ -42,7 +42,7 @@ theorem born_key_fin (pool : Pool source) (good : Provenance source pool)
 
 private theorem original (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : Credential (handleSource source))
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential (handleSource source))
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (free : RegistrationNativeMldsaReceiptPreservation.NonSigning query)
     (before : State (n := n) (KemSK := KemSK) source)
     (result : RegistrationNativeRawAdapter.TypedSpec.Range query × State (n := n) (KemSK := KemSK) source)
@@ -68,34 +68,8 @@ private theorem original (setup : Setup base KemSK) (checks : Checks) (wire : Re
 section Actual
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : Credential (handleSource source))
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential (handleSource source))
     (fallback : Credential source)
-
-/-- Actual protected Beacon-key Init origin failure selects a previous successful generation and same-cut candidate, or the literal shared-cache collision event. -/
-theorem accept (packet : registration.InitPacket) (before after : State (n := n) (KemSK := KemSK) source) (session : Nat)
-    (safe : Safe source credential fallback before) (provenance : Provenance source before.2)
-    (owner : RegistrationNativeBeaconFrontend.Owner (handleSource source)) (owned : owner ∈ before.1.beacons)
-    (keyProtected : packet.mldsa_public_key = owner.mldsa.publicKey)
-    (supported : (.ok (some session), after) ∈ support
-      ((callback source setup checks wire route representation created credential (.inr (.accept packet))).run before))
-    (absent : ¬ MldsaTranscriptAuth.Issued (RegistrationAuthenticationNative.trial true before.1.server.pin packet
-      (RegistrationSigningShared.historyFor (PqxdhRefinement.absBytes packet.mldsa_public_key)
-        (RegistrationNativeMldsaShared.nativeProject before.1)))) :
-    CacheHasCollision after.1.server.world.world.1.primitive.2 ∨
-      ∃ ordinal, ordinal < before.2.attempts ∧ BornKey source before.2 ordinal owner.mldsa.publicKey ∧
-        ∃ forgery, observe source owner.mldsa.publicKey (.inr (.accept packet)) before (.ok (some session)) after = some forgery ∧
-          Good source owner.mldsa.publicKey after forgery := by
-  obtain ⟨key, live⟩ := safe.owners owner owned
-  obtain ⟨ordinal, earlier, born⟩ := born_key source before.2 provenance owner.mldsa key live
-  have supportedOriginal := original source setup checks wire route representation created credential (.inr (.accept packet)) trivial
-    before (.ok (some session), after) supported
-  rcases RegistrationNativeMldsaTypedOrigin.accept setup checks wire route representation created credential owner.mldsa.publicKey packet
-    before.1 after.1 session supportedOriginal keyProtected safe.cached absent with candidate | collision
-  · obtain ⟨forgery, chosen⟩ := candidate
-    exact Or.inr ⟨ordinal, earlier, born, forgery, chosen,
-      RegistrationNativeMldsaTableStop.captured source setup checks wire route representation created credential owner.mldsa.publicKey fallback
-        (.inr (.accept packet)) before (.ok (some session), after) forgery safe supported chosen⟩
-  · exact Or.inl collision
 
 /-- Actual protected initial-Server response origin failure selects that generated key's earlier attempt, retaining the unchanged shared-cache collision alternative. -/
 theorem finish (index : Nat) (owner : RegistrationNativeBeaconFrontend.Owner (handleSource source))
@@ -132,11 +106,6 @@ end BeaconcryptCore.Computational.RegistrationNativeMldsaProtectedCoverage
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaProtectedCoverage.born_key
 
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaProtectedCoverage.accept' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaProtectedCoverage.accept
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaProtectedCoverage.finish' depends on axioms: [propext,
  Classical.choice,

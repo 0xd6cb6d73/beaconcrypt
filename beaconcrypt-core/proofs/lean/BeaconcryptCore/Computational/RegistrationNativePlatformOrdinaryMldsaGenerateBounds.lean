@@ -31,7 +31,7 @@ variable [primitive : AdapterSealPrimitive.Operations]
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
 variable (route : RawCtxServerRouting.SenderDecoder)
 variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 variable (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
 variable (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
 variable (reserveRegistration reservePeer : StateT Platform ProbComp Bool)
@@ -55,6 +55,14 @@ theorem handler (query : RegistrationNativeRawAdapter.TypedSpec.Domain)
     | serverRaw raw => exact ordinary _ before previous
     | beaconSend owner plaintext => exact ordinary _ before previous
     | beaconRaw owner raw => exact ordinary _ before previous
+    | accept packet =>
+        simp only [RegistrationNativePlatformOrdinaryMldsaProfile.handler, RegistrationNativePlatformMldsaProfile.handler,
+          RegistrationNativeRawAdapter.kind, Fin.reduceEq, ite_false]
+        generalize RegistrationNativePlatformExperiment.handler RegistrationNativePlatformMldsaProgram.coins setup checks
+          (RegistrationNativePlatformOrdinaryExperiment.canonicalWire wire) route representation created source credential
+          view failure allocation reserveRegistration reservePeer erased helper writer
+          (Sum.inr (RegistrationNativeRawAdapter.Command.accept packet)) = work
+        exact ordinary work before previous
     | _ => exact original
 
 /-- Both state layers retain the raw program's literal create-attempt cap. -/

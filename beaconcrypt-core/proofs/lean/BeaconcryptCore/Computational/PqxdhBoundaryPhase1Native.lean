@@ -58,17 +58,66 @@ theorem owner_source_order (setup : Setup baseSpec KemSK) (codec : Codec Reader 
   cases phase : owner.beacon.phase <;> simp only [ownerProgram, PqxdhLivePhase1Bundle.bundle, phase, simulateQ_bind, simulateQ_spec_query, simulateQ_pure, native_prepared]
   simp only [PqxdhRegistrationSchedule.bundleCallbacks, bind_pure_comp, Functor.map_map]
 
-/-- The actual source14 bundle reinstalls precisely the returned owner; every other owner and shared field is retained on success and failure. -/
+/-- The addressed native owner's logged bundle run: the generator/signature/writer callbacks of `ownerProgram`, with the bundle handed to the writer retained exactly when the write succeeds (`PqxdhRegistrationSchedule.bundleLogCallbacks`), starting from the owner's previously retained bundle. -/
+def ownerLogProgram (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (index : Nat) (owner : Owner KemSK) (logged : Option PqxdhEd25519EufCma.Phase1Candidate) :
+    ProbComp ((Option Pqxdh.Bytes × Owner KemSK) × Option PqxdhEd25519EufCma.Phase1Candidate) :=
+  (simulateQ (PqxdhRegistrationSchedule.bundleLogCallbacks setup codec owner.beacon.identity)
+    (PqxdhLivePhase1Bundle.bundle (PqxdhRegistrationSchedule.projection setup index) owner)).run logged
+
+/-- The prepared result is the owner part of the indexed client's analysed continuation (`PqxdhRegistrationJointBundle.after`), whose pool record is not part of the native result. -/
+theorem prepared_after (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (generated : Option PqxdhJointGapDh.ScalarBytes) (owner : Owner KemSK) :
+    preparedResult setup codec generated owner =
+      (PqxdhRegistrationJointBundle.after setup codec 0 owner generated PqxdhDynamicIdentityPool.initialState).1 := by
+  unfold preparedResult PqxdhRegistrationJointBundle.after
+  cases PqxdhBeaconPhase1Publication.prepare owner generated with
+  | none => rfl
+  | some prepared =>
+      dsimp only
+      split <;> (rename_i written; simp only [written])
+
+/-- The logged native preparation returns the prepared result and retains the signed candidate exactly when the writer accepts it (`PqxdhRegistrationJointBundle.afterLog`). -/
+theorem native_prepared_log (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (index : Nat) (generated : Option PqxdhJointGapDh.ScalarBytes) (owner : Owner KemSK)
+    (logged : Option PqxdhEd25519EufCma.Phase1Candidate) :
+    (simulateQ (PqxdhRegistrationSchedule.bundleLogCallbacks setup codec owner.beacon.identity)
+      (PqxdhLivePhase1Bundle.afterGenerated (PqxdhRegistrationSchedule.projection setup index) generated owner)).run
+        logged =
+      pure (preparedResult setup codec generated owner,
+        PqxdhRegistrationJointBundle.afterLog setup codec owner generated logged) := by
+  rw [PqxdhRegistrationJointBundle.native_after_log setup codec index 0 owner generated
+    PqxdhDynamicIdentityPool.initialState logged, prepared_after]
+
+set_option backward.isDefEq.respectTransparency false in
+/-- `owner_source_order` for the logged run: the same local draw and prepared results, with the retained bundle of `PqxdhRegistrationJointBundle.afterLog` (unchanged in inactive phases). -/
+theorem owner_log_order (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (index : Nat) (owner : Owner KemSK) (logged : Option PqxdhEd25519EufCma.Phase1Candidate) :
+    ownerLogProgram setup codec index owner logged =
+      match owner.beacon.phase with
+      | .fresh _ _ _ => (fun generated => (preparedResult setup codec (some generated) owner,
+            PqxdhRegistrationJointBundle.afterLog setup codec owner (some generated) logged)) <$>
+          PqxdhJointGapDh.sampleScalar
+      | .freshWithCoins _ _ _ _ => pure (preparedResult setup codec none owner,
+          PqxdhRegistrationJointBundle.afterLog setup codec owner none logged)
+      | _ => pure ((none, owner), logged) := by
+  cases phase : owner.beacon.phase <;> simp only [ownerLogProgram, PqxdhLivePhase1Bundle.bundle, phase,
+    simulateQ_bind, simulateQ_spec_query, simulateQ_pure, PqxdhRegistrationSchedule.bundleLogCallbacks,
+    PqxdhRegistrationSchedule.bundleCallbacks, StateT.run_bind, StateT.run_lift, StateT.run_pure,
+    native_prepared_log, bind_pure_comp, Functor.map_map]
+
+/-- The actual source14 bundle reinstalls precisely the returned owner and records the owner's retained Phase 1 bundle of the logged run; every other owner, retained bundle and shared field is retained on success and failure. -/
 theorem source14_bundle (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (index : Nat) (state : PqxdhRegistrationSchedule.State KemSK) :
     (PqxdhRegistrationSchedule.bundle setup codec index).run state =
       match state.owners[index]? with
       | none => pure (none, state)
-      | some owner => (fun result => (result.1, { state with owners := state.owners.set index result.2 })) <$>
-        ownerProgram setup codec index owner := by
+      | some owner => (fun result => (result.1.1,
+          { state with owners := state.owners.set index result.1.2, inits := Function.update state.inits index result.2 })) <$>
+        ownerLogProgram setup codec index owner (state.inits index) := by
   simp only [PqxdhRegistrationSchedule.bundle, StateT.run_bind, StateT.run_get, pure_bind]
   cases found : state.owners[index]? <;> simp only [StateT.run_pure, StateT.run_bind, StateT.run_lift, StateT.run_modify, pure_bind]
-  simp only [bind_pure_comp, ownerProgram, Functor.map_map]
+  simp only [bind_pure_comp, ownerLogProgram, Functor.map_map]
 
 /-- CE's literal bundle command has the exact source14 optional reply and complete deployment poststate, with counters and produced-record log unchanged. -/
 theorem native_bundle (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -77,9 +126,12 @@ theorem native_bundle (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
     (PqxdhDeploymentNative.handler setup codec checks route serverSeed (.inr (.bundle index))).run state =
       match state.native.owners[index]? with
       | none => pure (none, state)
-      | some owner => (fun result => (result.1,
-          { state with native := { state.native with owners := state.native.owners.set index result.2 } })) <$>
-        ownerProgram setup codec index owner := by
+      | some owner => (fun result => (result.1.1,
+          { state with native :=
+            { state.native with
+              owners := state.native.owners.set index result.1.2
+              inits := Function.update state.native.inits index result.2 } })) <$>
+        ownerLogProgram setup codec index owner (state.native.inits index) := by
   change (fun result => (result.1, { state with native := result.2 })) <$>
     (PqxdhRegistrationSchedule.bundle setup codec index).run state.native = _
   rw [source14_bundle]
@@ -94,15 +146,20 @@ theorem native_continuation (setup : Setup baseSpec KemSK) (codec : Codec Reader
       match state.native.owners[index]? with
       | none => next (none, state)
       | some owner =>
-          let resume := fun result : Option Pqxdh.Bytes × Owner KemSK =>
-            next (result.1, { state with native := { state.native with owners := state.native.owners.set index result.2 } })
+          let resume := fun result : (Option Pqxdh.Bytes × Owner KemSK) × Option PqxdhEd25519EufCma.Phase1Candidate =>
+            next (result.1.1, { state with native :=
+              { state.native with
+                owners := state.native.owners.set index result.1.2
+                inits := Function.update state.native.inits index result.2 } })
           match owner.beacon.phase with
           | .fresh _ _ _ => PqxdhJointGapDh.sampleScalar >>= fun generated =>
-              resume (preparedResult setup codec (some generated) owner)
-          | .freshWithCoins _ _ _ _ => resume (preparedResult setup codec none owner)
-          | _ => resume (none, owner) := by
+              resume (preparedResult setup codec (some generated) owner,
+                PqxdhRegistrationJointBundle.afterLog setup codec owner (some generated) (state.native.inits index))
+          | .freshWithCoins _ _ _ _ => resume (preparedResult setup codec none owner,
+              PqxdhRegistrationJointBundle.afterLog setup codec owner none (state.native.inits index))
+          | _ => resume ((none, owner), state.native.inits index) := by
   rw [native_bundle]
-  cases found : state.native.owners[index]? <;> simp only [pure_bind, owner_source_order]
+  cases found : state.native.owners[index]? <;> simp only [pure_bind, owner_log_order]
   rename_i owner
   cases owner.beacon.phase <;> simp only [map_pure, pure_bind, Functor.map_map]
   simp only [← bind_pure_comp, bind_assoc, pure_bind]
@@ -154,3 +211,18 @@ end BeaconcryptCore.Computational.PqxdhBoundaryPhase1Native
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhBoundaryPhase1Native.native_uniform
+/-- info: 'BeaconcryptCore.Computational.PqxdhBoundaryPhase1Native.prepared_after' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhBoundaryPhase1Native.prepared_after
+/-- info: 'BeaconcryptCore.Computational.PqxdhBoundaryPhase1Native.native_prepared_log' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhBoundaryPhase1Native.native_prepared_log
+/-- info: 'BeaconcryptCore.Computational.PqxdhBoundaryPhase1Native.owner_log_order' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhBoundaryPhase1Native.owner_log_order

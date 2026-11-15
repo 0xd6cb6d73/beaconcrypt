@@ -18,7 +18,7 @@ variable {mlSource : RegistrationNativeMldsa.Source}
 
 private theorem beacon_keeps_metadata (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK mlSource RegistrationServerRoleBackend.State Value)
     (localLaw : ∀ owners env result, result ∈ support ((work.run owners).run env) →
       result.1.2.map metadata = owners.map metadata)
@@ -46,7 +46,7 @@ private theorem beacon_keeps_metadata (setup : Setup base KemSK) (checks : Check
 /-- The actual source bundle preserves the complete initialized owner-to-private-key relation on every outcome. -/
 theorem bundle_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire) (index : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire) (index : Nat)
     (before after : State n KemSK mlSource) (reply : RustM (Option Pqxdh.Bytes))
     (prior : Holds setup before.beacons before.pool)
     (supported : (reply, after) ∈ support ((RegistrationNativeExperiment.beacon setup checks representation created
@@ -58,7 +58,7 @@ theorem bundle_keeps (setup : Setup base KemSK) (checks : Checks)
 /-- Actual finish rejection, abort, successful private decapsulation and record installation retain every generated owner binding. -/
 theorem finish_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire) (index : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire) (index : Nat)
     (packet : Option beaconcrypt_core.registration.ResponsePacket)
     (before after : State n KemSK mlSource) (reply : RustM (Option Pqxdh.Bytes))
     (prior : Holds setup before.beacons before.pool)
@@ -71,7 +71,7 @@ theorem finish_keeps (setup : Setup base KemSK) (checks : Checks)
 /-- The complete actual constructor appends a genuinely generated owner while retaining every earlier owner's exact indexed secret. -/
 theorem create_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (before after : State n KemSK mlSource) (reply : RustM (Option Nat))
     (prior : Holds setup before.beacons before.pool)

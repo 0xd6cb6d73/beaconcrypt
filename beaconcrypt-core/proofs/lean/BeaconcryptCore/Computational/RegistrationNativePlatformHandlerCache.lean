@@ -17,6 +17,7 @@ open BeaconcryptCore.Refinement
 open PqxdhServerAuthExperiment (Setup Checks)
 open RegistrationNativeWorldCache (cache)
 variable {n : Nat} {E Platform Value ι KemSK : Type} {base : OracleSpec ι} {source : RegistrationNativeMldsa.Source}
+attribute [local irreducible] RegistrationNativePlatformSourceAccept.accept
 
 private theorem map_apply {S X Y : Type} {m : Type → Type} [Monad m] [LawfulMonad m]
     (f : X → Y) (work : StateT S m X) (before : S) :
@@ -37,7 +38,7 @@ variable [primitive : AdapterSealPrimitive.Operations]
 variable (coins : QueryImpl unifSpec (StateT Platform ProbComp))
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
 variable (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 variable (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
 variable (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
 variable (reserveRegistration reservePeer : StateT Platform ProbComp Bool) (erased : commitment.CommitmentTranscript)
@@ -104,7 +105,6 @@ theorem table (realSource : RegistrationNativeMldsa.Source)
     (server : RegistrationNativeMldsaOpaque.Live realSource pool opaqueCredential fallback)
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain)
     (before : RegistrationNativeExperiment.State n KemSK (RegistrationNativeMldsaOpaque.handleSource realSource)) (previous : Platform)
-    (owners : RegistrationNativeMldsaPoolMap.StateLive realSource pool before)
     (result : ((RegistrationNativeRawAdapter.TypedSpec.Range query × RegistrationNativeExperiment.State n KemSK (RegistrationNativeMldsaOpaque.handleSource realSource)) × Platform) × RegistrationNativeMldsaOpaque.Pool realSource)
     (supported : result ∈ support (RegistrationNativePlatformMldsaTableProgram.runState realSource
       (RegistrationNativePlatformMldsaProfile.handler setup checks wire route representation created opaqueCredential view failure allocation
@@ -115,7 +115,7 @@ theorem table (realSource : RegistrationNativeMldsa.Source)
         view failure allocation reserveRegistration reservePeer erased helper writer query).run
           (RegistrationNativeMldsaMap.nativeState (RegistrationNativeMldsaOpaque.restore realSource fallback pool) before)).run previous) := by
     rw [← RegistrationNativePlatformMldsaTableHandler.restored realSource setup checks wire route representation created opaqueCredential
-      view failure allocation reserveRegistration reservePeer erased helper writer fallback pool server query before previous owners, support_map]
+      view failure allocation reserveRegistration reservePeer erased helper writer fallback pool server query before previous, support_map]
     exact ⟨result, supported, rfl⟩
   exact handler RegistrationNativePlatformMldsaProgram.coins setup checks wire route representation created fallback
     view failure allocation reserveRegistration reservePeer erased helper writer query _ previous _ actual

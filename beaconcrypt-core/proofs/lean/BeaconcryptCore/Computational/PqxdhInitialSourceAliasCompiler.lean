@@ -11,6 +11,8 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhInitialSourceAliasCompiler
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+  (associatedData : Std.Array Std.U8 151#usize)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily
 open PqxdhInitialBeaconAmbient
 variable {ι M P I D K X Response A N Result : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -156,15 +158,15 @@ noncomputable def client : OracleComp PqxdhInitialLabelCompiler.Spec
     ((Bool × PqxdhInitialOriginPostPath.Snapshot M P I D K S B) × LocalState A N) := do
   let response ← PqxdhInitialLabelCompiler.Spec.query (.inr (.family selected))
   (simulateQ (compiler source writer stage external)
-    (PqxdhInitialNativeCarried.original source (PqxdhInitialSelectedOrigin.mark source selected) sender route decode
+    (PqxdhInitialNativeCarried.original (associatedData := associatedData) (completedBinding := completedBinding) source (PqxdhInitialSelectedOrigin.mark source selected) sender route decode
       (PqxdhInitialSourceExperiment.execution response index metadata ready post before))).run
     (initialState source owner shared privateState response)
 
 /-- The alias client obtains the shared initializer response once, then exactly runs the complete original source experiment with its whole final state. -/
 theorem client_source (cache : RootOracle.QueryCache) :
     restore <$> (simulateQ labelled
-      (client source writer stage external selected sender route decode index metadata ready post before owner shared privateState)).run cache =
-      PqxdhInitialSourceExperiment.run source writer selected zeroRoot response (plainExternal external)
+      (client (associatedData := associatedData) (completedBinding := completedBinding) source writer stage external selected sender route decode index metadata ready post before owner shared privateState)).run cache =
+      PqxdhInitialSourceExperiment.run (associatedData := associatedData) (completedBinding := completedBinding) source writer selected zeroRoot response (plainExternal external)
         sender route decode index metadata ready post before owner shared privateState cache stage := by
   unfold client
   simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind,
@@ -176,7 +178,7 @@ theorem client_source (cache : RootOracle.QueryCache) :
 
 /-- The response-only source client counts its initial shared response plus every possible initializer callback in the original builder and bounded adaptive suffix. -/
 theorem client_initial (qPost : Nat) (bounded : ∀ reply, (post reply).IsTotalQueryBound qPost) :
-    (client source writer stage external selected sender route decode index metadata ready post before owner shared privateState).IsQueryBoundP
+    (client (associatedData := associatedData) (completedBinding := completedBinding) source writer stage external selected sender route decode index metadata ready post before owner shared privateState).IsQueryBoundP
       PqxdhInitialObserverCallbackBudgets.IsService (1 + (7 + qPost * 67)) := by
   unfold client
   apply isQueryBoundP_bind
@@ -184,7 +186,7 @@ theorem client_initial (qPost : Nat) (bounded : ∀ reply, (post reply).IsTotalQ
       simp [PqxdhInitialObserverCallbackBudgets.IsService])
   intro response _
   apply program_initial
-  exact PqxdhInitialOriginPost.sequence_total source _ _ _ sender route decode index metadata ready post qPost bounded _
+  exact PqxdhInitialOriginPost.sequence_total (associatedData := associatedData) (completedBinding := completedBinding) source _ _ _ sender route decode index metadata ready post qPost bounded _
 
 noncomputable def observation (response : PqxdhInitialRootLabelService.Response) (number : Std.U64)
     (ancestors disclosed : List RatchetChain)
@@ -195,10 +197,10 @@ noncomputable def observation (response : PqxdhInitialRootLabelService.Response)
 /-- The labelled alias client preserves the exact original publication and complete source-lineage freshness observation for any selected record, stage and initializer response. -/
 theorem observed_source (cache : RootOracle.QueryCache) (number : Std.U64) (ancestors disclosed : List RatchetChain) :
     observation source owner response number ancestors disclosed <$>
-      (simulateQ labelled (client source writer stage external selected sender route decode index metadata ready post before owner shared privateState)).run cache =
-      PqxdhInitialSourceExperiment.game source writer selected zeroRoot response (plainExternal external)
+      (simulateQ labelled (client (associatedData := associatedData) (completedBinding := completedBinding) source writer stage external selected sender route decode index metadata ready post before owner shared privateState)).run cache =
+      PqxdhInitialSourceExperiment.game (associatedData := associatedData) (completedBinding := completedBinding) source writer selected zeroRoot response (plainExternal external)
         sender route decode index metadata ready post before owner number ancestors disclosed shared privateState cache stage := by
-  rw [PqxdhInitialSourceExperiment.game, ← client_source source writer stage external selected response
+  rw [PqxdhInitialSourceExperiment.game, ← client_source (associatedData := associatedData) (completedBinding := completedBinding) source writer stage external selected response
     sender route decode index metadata ready post before owner shared privateState cache]
   simp only [Functor.map_map]
   rfl

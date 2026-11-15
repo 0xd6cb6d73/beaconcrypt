@@ -228,7 +228,8 @@ theorem good_create_pool (pool : List (Pair KemSK)) (pin : PqxdhBeaconPhase2Prep
     Good setup codec { copies with log := { copies.log with owners := copies.log.owners ++ [(pin, keyId)] } }
       result.2 := by
   obtain ⟨identity, prekey, keys, rfl⟩ := createPool_support setup pool pin keyId native result supported
-  refine ⟨good.keyId, good.installed, good.serverVisible, ?_, ?_, ?_, good.pending, good.accepts⟩
+  refine ⟨good.keyId, good.installed, good.serverVisible, ?_, ?_, ?_, good.pending, good.accepts, good.peers,
+    good.pendingInit⟩
   · simp only [List.length_append, List.length_singleton, good.count]
   · intro index current copied
     obtain ⟨owner, control, associatedData, kernel, found, phase⟩ := good.copied index current copied
@@ -237,8 +238,8 @@ theorem good_create_pool (pool : List (Pair KemSK)) (pin : PqxdhBeaconPhase2Prep
   · intro index owner found
     by_cases bound : index < native.owners.length
     · rw [List.getElem?_append_left bound] at found
-      exact PqxdhDeploymentCompileInvariant.ownerShape_extend codec copies.log (pin, keyId) index (good.count ▸ bound)
-        owner (good.owners index owner found)
+      exact PqxdhDeploymentCompileInvariant.ownerShape_extend codec copies.log (pin, keyId) native.inits
+        native.shared.2.ctx index (good.count ▸ bound) owner (good.owners index owner found)
     · have last : index = native.owners.length := by
         have := (List.getElem?_eq_some_iff.mp found).1
         simp only [List.length_append, List.length_singleton] at this

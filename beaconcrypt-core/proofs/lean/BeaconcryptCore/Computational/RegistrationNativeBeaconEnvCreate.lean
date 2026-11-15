@@ -15,46 +15,23 @@ open PqxdhServerAuthExperiment (Setup)
 variable {n : Nat} {ι KemSK Auxiliary : Type} {base : OracleSpec ι}
 variable {mlSource : RegistrationNativeMldsa.Source}
 
-/-- The complete local prefix retains actual ML generation, pin hash, identity and prekey draws on all optional failure branches. -/
+/-- Pure pin selection and the actual identity/prekey draws preserve unrelated analysis input. -/
 theorem prepare_stable (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : Std.U64) :
     Stable (RegistrationNativeBeaconFrontend.prepare mlSource edPin mlPin keyId : M n KemSK mlSource Auxiliary _) := by
   unfold RegistrationNativeBeaconFrontend.prepare
-  apply RegistrationNativeBeaconEnvView.bind_stable
-  · exact sample_stable _
-  · intro generated
-    cases generated with
-    | none => exact RegistrationNativeBeaconEnvView.pure_stable _
-    | some credentials =>
-      cases registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
-      | fail error | div => exact RegistrationNativeBeaconEnvView.pure_stable _
-      | ok pending =>
-        dsimp only
-        cases requested : pending.request with
-        | fail error | div =>
-            exact RegistrationNativeBeaconEnvView.pure_stable _
-        | ok request =>
-          dsimp only
-          apply RegistrationNativeBeaconEnvView.bind_stable
-          · exact hash_stable request
-          · intro digest
-            cases pending.resume (.Some (RegistrationAuthenticationShared.digestArray digest)) with
-            | fail error | div => exact RegistrationNativeBeaconEnvView.pure_stable _
-            | ok pin => cases pin with
-              | none => exact RegistrationNativeBeaconEnvView.pure_stable _
-              | some pin =>
-                apply RegistrationNativeBeaconEnvView.bind_stable
-                · exact sample_stable _
-                · intro identity
-                  apply RegistrationNativeBeaconEnvView.bind_stable
-                  · exact sample_stable _
-                  · intro prekey; exact RegistrationNativeBeaconEnvView.pure_stable _
+  cases registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
+  | fail error | div => exact RegistrationNativeBeaconEnvView.pure_stable _
+  | ok pin =>
+      exact RegistrationNativeBeaconEnvView.bind_stable _ _ (sample_stable _) (fun _ =>
+        RegistrationNativeBeaconEnvView.bind_stable _ _ (sample_stable _) (fun _ =>
+          RegistrationNativeBeaconEnvView.pure_stable _))
 
 /-- Successful source birth appends the same actual generated KEM handle and complete owner state. -/
 theorem append_stable (setup : Setup base KemSK)
     (edPin : Std.Array U8 32#usize) (keyId : Std.U64) (pin : session.ServerAuthenticationPin)
-    (credentials : RegistrationNativeMldsa.Credential mlSource) (identity : PqxdhJointIdentity.IdentitySeed)
+    (identity : PqxdhJointIdentity.IdentitySeed)
     (prekey : PqxdhJointGapDh.ScalarBytes) :
-    Stable (RegistrationNativeBeaconFrontend.appendBorn setup mlSource edPin keyId pin credentials identity prekey :
+    Stable (RegistrationNativeBeaconFrontend.appendBorn setup mlSource edPin keyId pin identity prekey :
       M n KemSK mlSource Auxiliary _) := by
   unfold RegistrationNativeBeaconFrontend.appendBorn
   apply RegistrationNativeBeaconEnvView.bind_stable
@@ -82,7 +59,7 @@ theorem create_stable (setup : Setup base KemSK)
     | fail error | div => exact RegistrationNativeBeaconEnvView.pure_stable _
     | ok prepared => cases prepared with
       | none => exact RegistrationNativeBeaconEnvView.pure_stable _
-      | some prepared => exact append_stable setup edPin keyId prepared.pin prepared.credentials prepared.identity prepared.prekey
+      | some prepared => exact append_stable setup edPin keyId prepared.pin prepared.identity prepared.prekey
 
 end BeaconcryptCore.Computational.RegistrationNativeBeaconEnvCreate
 

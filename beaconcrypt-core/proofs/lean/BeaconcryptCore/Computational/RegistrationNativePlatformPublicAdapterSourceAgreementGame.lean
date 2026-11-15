@@ -91,6 +91,15 @@ def Holds (crypto :Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMaterial A
   ∀outcome,outcome∈support (RegistrationNativePlatformPublicAdapterKemHistory.sample (n:=n) configuration objects ensureInit serverEd identityIndex identifier rng bounds mode adversary previous)→
     RegistrationNativePlatformPublicAdapterKemHistory.project configuration previous outcome=observation→¬Failure configuration crypto outcome
 
+def HoldsWithSessionAd (crypto :Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMaterial AD PT CT) (previous :P)
+    (observation :RegistrationNativePlatformPublicAdapterKemHistory.Observed (n:=n) (KemSK:=KemSK) (source:=source) (P:=P) (Value:=Value)) :Prop:=
+  ∀outcome,outcome∈support (RegistrationNativePlatformPublicAdapterKemHistory.sample (n:=n) configuration objects ensureInit serverEd identityIndex identifier rng bounds mode adversary previous)→
+    RegistrationNativePlatformPublicAdapterKemHistory.project configuration previous outcome=observation→
+    match outcome with
+    | none => True
+    | some ⟨initial,result⟩ => RegistrationNativePlatformPublicAdapterSourceAgreement.AllOwnersWithSessionAd
+        crypto setup.source initial.public.mldsaPublic result.2.2
+
 include objects serverEd in
 theorem cover (crypto :Ratchet.Crypto ratchet.RatchetChain ratchet.RatchetMaterial AD PT CT) (previous :P) :
     Pr{let outcome←(RegistrationNativePlatformPublicAdapterExecution.profile (n:=n) configuration identityIndex identifier rng bounds mode adversary

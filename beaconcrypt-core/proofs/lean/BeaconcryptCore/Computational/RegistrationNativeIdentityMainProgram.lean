@@ -30,7 +30,7 @@ theorem interpret_program {I : Type} {spec : OracleSpec I}
 noncomputable def compiled (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource) :
     QueryImpl RegistrationNativeRawAdapter.TypedSpec (StateT (State n KemSK mlSource × SourceState) ProbComp) :=
   fun query => interpret setup.joint (RegistrationNativeIdentityMain.handler setup checks wire route representation created credential query)
 
@@ -38,7 +38,7 @@ noncomputable def compiled (setup : Setup base KemSK) (checks : Checks) (wire : 
 theorem program_owned (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (work : OracleComp RegistrationNativeRawAdapter.TypedSpec Value)
     (before : State n KemSK mlSource × SourceState)
     (result : Value × (State n KemSK mlSource × SourceState)) (owned : Owned setup.joint before)
@@ -56,7 +56,7 @@ theorem program_owned (setup : Setup base KemSK) (checks : Checks) (wire : Regis
 theorem program_source (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (work : OracleComp RegistrationNativeRawAdapter.TypedSpec Value)
     (before : State n KemSK mlSource × SourceState) (owned : Owned setup.joint before) :
     Prod.map id project <$> (interpret setup.joint

@@ -102,6 +102,9 @@ theorem from_fn_pure (N : Std.Usize) (inst : core.ops.function.FnMut F Std.Usize
 @[simp] theorem usize_val_33 : (33#usize).val = 33 := by scalar_tac
 @[simp] theorem usize_val_34 : (34#usize).val = 34 := by scalar_tac
 @[simp] theorem usize_val_64 : (64#usize).val = 64 := by scalar_tac
+@[simp] theorem usize_val_87 : (87#usize).val = 87 := by scalar_tac
+@[simp] theorem usize_val_151 : (151#usize).val = 151 := by scalar_tac
+@[simp] theorem usize_val_227 : (227#usize).val = 227 := by scalar_tac
 @[simp] theorem usize_val_153 : (153#usize).val = 153 := by scalar_tac
 @[simp] theorem usize_val_281 : (281#usize).val = 281 := by scalar_tac
 @[simp] theorem usize_val_192 : (192#usize).val = 192 := by scalar_tac

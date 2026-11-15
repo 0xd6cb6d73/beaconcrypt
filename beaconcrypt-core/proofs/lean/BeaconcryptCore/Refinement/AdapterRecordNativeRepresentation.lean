@@ -149,7 +149,7 @@ theorem aead_queries (pending : record_effects.RecordReceiveAead) :
       trivial
 
 /-- The commitment phase preserves the same bound through optional hash failure, exact comparison and the retained continuation. -/
-theorem commitment_queries (erased : Array Std.U8 357#usize)
+theorem commitment_queries (erased : Array Std.U8 227#usize)
     (pending : record_effects.RecordReceiveCommitment) :
     (RecordEffectsReceiveProgram.executeCommitment erased pending).AllQueriesSatisfy OpenFits := by
   unfold RecordEffectsReceiveProgram.executeCommitment
@@ -189,7 +189,7 @@ theorem openLift_queries {Value : Type} (work : OracleComp RawCtxSourceOpen.Open
         exact ih reply (safe.2 reply)
 
 /-- All possible queries of the complete extracted effect program fit source representations, including repeated KDF continuations and optional failures. -/
-theorem execute_queries (erased : Array Std.U8 357#usize)
+theorem execute_queries (erased : Array Std.U8 227#usize)
     (effect : record_effects.RecordReceiveEffect) :
     (RecordEffectsReceiveProgram.execute erased effect).AllQueriesSatisfy Fits := by
   generalize depthEq : RecordEffectsReceiveRank.rank effect = depth
@@ -228,7 +228,7 @@ theorem program_native {PrimitiveState Value : Type}
 /-- The actual lifted receive loop runs on the original complete shared primitive state under only fixed hash width and AEAD output-length functional contracts. -/
 theorem controller_native {PrimitiveState : Type}
     (impl : QueryImpl RawCtxSourceOpen.NativeSpec (StateT PrimitiveState ProbComp))
-    (functional : Functional impl) (erased : Array Std.U8 357#usize)
+    (functional : Functional impl) (erased : Array Std.U8 227#usize)
     (effect : record_effects.RecordReceiveEffect) (before : PrimitiveState) :
     (simulateQ (typed impl) ((fun result => AdapterRecordReceive.decodeResult <$> result) <$>
       AdapterRecordStatefulReceive.interpret erased
@@ -245,8 +245,8 @@ theorem controller_native {PrimitiveState : Type}
 /-- The source-selected actual controller and core admission interpreted on the original primitive state. -/
 def receive {PrimitiveState : Type}
     (impl : QueryImpl RawCtxSourceOpen.NativeSpec (StateT PrimitiveState ProbComp))
-    (erased : Array Std.U8 357#usize) (kernel : ratchet.concrete.ConcreteRatchetKernel)
-    (sequence : Std.U64) (payload : Slice Std.U8) (ad : Array Std.U8 281#usize) (sender : Std.U64) :=
+    (erased : Array Std.U8 227#usize) (kernel : ratchet.concrete.ConcreteRatchetKernel)
+    (sequence : Std.U64) (payload : Slice Std.U8) (ad : Array Std.U8 151#usize) (sender : Std.U64) :=
   simulateQ (typed impl) ((fun result => AdapterRecordReceive.decodeResult <$> result) <$>
     AdapterRecordStatefulReceive.interpret erased
       (AdapterRecordStatefulReceive.receive kernel sequence payload ad sender))
@@ -254,9 +254,9 @@ def receive {PrimitiveState : Type}
 /-- The entire actual receive entrypoint preserves the full original kernel/result and primitive state, including malformed admission and every optional primitive failure. -/
 theorem receive_native {PrimitiveState : Type}
     (impl : QueryImpl RawCtxSourceOpen.NativeSpec (StateT PrimitiveState ProbComp))
-    (functional : Functional impl) (erased : Array Std.U8 357#usize)
+    (functional : Functional impl) (erased : Array Std.U8 227#usize)
     (kernel : ratchet.concrete.ConcreteRatchetKernel) (sequence : Std.U64)
-    (payload : Slice Std.U8) (ad : Array Std.U8 281#usize) (sender : Std.U64)
+    (payload : Slice Std.U8) (ad : Array Std.U8 151#usize) (sender : Std.U64)
     (before : PrimitiveState) :
     (receive impl erased kernel sequence payload ad sender).run before =
       (simulateQ impl
@@ -271,9 +271,9 @@ theorem receive_native {PrimitiveState : Type}
 /-- Later native callbacks execute from the identical joint result and full primitive poststate. -/
 theorem receive_continuation {PrimitiveState Output : Type}
     (impl : QueryImpl RawCtxSourceOpen.NativeSpec (StateT PrimitiveState ProbComp))
-    (functional : Functional impl) (erased : Array Std.U8 357#usize)
+    (functional : Functional impl) (erased : Array Std.U8 227#usize)
     (kernel : ratchet.concrete.ConcreteRatchetKernel) (sequence : Std.U64)
-    (payload : Slice Std.U8) (ad : Array Std.U8 281#usize) (sender : Std.U64)
+    (payload : Slice Std.U8) (ad : Array Std.U8 151#usize) (sender : Std.U64)
     (later : RustM RecordEffectsReceiveProgram.Result → StateT PrimitiveState ProbComp Output)
     (before : PrimitiveState) :
     (do

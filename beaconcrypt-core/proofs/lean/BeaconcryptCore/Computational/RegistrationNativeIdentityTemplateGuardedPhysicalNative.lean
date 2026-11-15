@@ -52,7 +52,11 @@ theorem conditional (initial : RegistrationNativeExperiment.Initial n KemSK sour
     PqxdhJointIdentity.advantage setup.joint
       (RegistrationNativeIdentityTemplateGuardedLateNativeClient.conditional (n := n) setup checks wire route representation view failure allocation
         reserveRegistration reservePeer reserveFrame erased helper reserve source bounds mode adversary previous target bundle accept placeholder fallback (some initial)) := by
-  have warm := RegistrationNativeIdentityCensorCacheProvenance.initialized setup ensureInit identityIndex serverKeyId initial started
+  have empty := RegistrationNativeIdentityCensorCacheProvenance.initialized setup ensureInit identityIndex serverKeyId initial started
+  have warm : RegistrationNativeIdentityCensorCacheProvenance.Known ⟨PqxdhDynamicIdentityPool.initialState,
+      (RegistrationNativeWorldCache.cache initial.state,[PqxdhRefinement.absBytes initial.credential.publicKey]),none,none,none⟩ := by
+    intro bytes present
+    exact absurd (empty bytes present) List.not_mem_nil
   have loss := RegistrationNativeIdentityTemplateGuardedWins.loss setup target.val bundle accept placeholder
     (RegistrationNativeIdentityCensorAdaptivePostselection.normalized setup checks wire route representation initial.created initial.credential view failure allocation
       reserveRegistration reservePeer reserveFrame erased helper reserve placeholder)

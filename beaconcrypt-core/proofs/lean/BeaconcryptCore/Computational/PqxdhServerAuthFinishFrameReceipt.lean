@@ -41,7 +41,7 @@ theorem program_receipt (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
   have retained : after.1.seals = before.1.seals := PqxdhFirstBeaconRecordCanonical.observed_seals _ _ _ _
     (PqxdhServerAuthFinishMaterial.program_other setup.source codec rest pending).1 before (some staged, after) supported
   have context := same.2.1.symm.trans
-    (PqxdhPhase2LocalMatching.localTarget_context codec.frameRead bytes _ staged.opened target delivery).1
+    (PqxdhPhase2LocalMatching.localTarget_context (associatedData := (PqxdhPhase2DhRootConsumer.cleared pending).binding.associated_data) codec.frameRead bytes _ staged.opened target delivery).1
   refine ⟨entry, by simpa only [retained] using member,
     ⟨staged.opened.sequence, staged.opened.keyId, entry.record.encode⟩, ?_,
     (congrArg Pqxdh.RecordAD.seq context).symm, (congrArg Pqxdh.RecordAD.sid context).symm, rfl⟩
@@ -97,8 +97,24 @@ theorem active_finish_receipt (setup : Setup baseSpec KemSK) (codec : Codec Read
       (initial : RawCtxSelectedAuthenticationObserver.State × AdaptiveCtxDynamicKnownKeys.SourceState) :=
     PqxdhServerAuthCtxAcceptanceCover.observed_coins setup.source key codec.frameRead work initial
   simp only [StateT.run] at runCoins
-  simp only [PqxdhServerAuthCtxFinish.finish, StateT.run, phase, simulateQ_bind,
-    runBind, runCoins, bind_map_left, mem_support_bind_iff] at supported
+  simp only [PqxdhServerAuthCtxFinish.finish, StateT.run, phase] at supported
+  split at supported
+  rotate_left
+  · simp only [simulateQ_pure] at supported
+    have same := congrArg (fun value => value.1.1) ((mem_support_pure_iff _ _).mp supported)
+    simp [PqxdhBeaconPhase2Publication.finish] at same
+  have liftBind : ∀ {β : Type} (x : OracleComp AdaptiveCtxDynamicKnownKeys.Spec CtxRomAuth.CtxDigest)
+      (f : CtxRomAuth.CtxDigest → PqxdhServerAuthCtxState.Program KemSK β) (s : PqxdhServerAuthCtxState.Local KemSK),
+      (StateT.lift x >>= f) s = x >>= fun digest => f digest s := by
+    intro β x f s
+    change StateT.run _ s = _
+    simp only [StateT.run_bind, StateT.run_lift, bind_assoc, pure_bind]
+    rfl
+  simp only [PqxdhServerAuthCtxState.hash, liftBind, simulateQ_bind, runBind, mem_support_bind_iff] at supported
+  obtain ⟨hashed, hashReached, supported⟩ := supported
+  have hashGood := RawCtxSelectedPlaintextOrigins.schedule_good _ _ _ _ before invariant.good _ hashReached
+  simp only [PqxdhServerAuthCtxFinish.staged, simulateQ_bind, runBind, runCoins, bind_map_left,
+    mem_support_bind_iff] at supported
   obtain ⟨prepared, prefixReached, supported⟩ := supported
   cases prepared with
   | none =>
@@ -117,7 +133,7 @@ theorem active_finish_receipt (setup : Setup baseSpec KemSK) (codec : Codec Read
         (PqxdhJointDhExtractRoot.beaconMessage (context.publicValue setup) pending.collected)
         state.1.2.2 derived.2 root (by rw [← reply]; exact reached)
       refine Or.inr (Or.inl (PqxdhServerAuthCtxAcceptanceCover.known_ordinary setup codec context key
-        control pending root _ final ?_ before after (some payload) supported))
+        control pending root _ final ?_ hashed.2 after (some payload) supported))
       refine ⟨bytes, ?_, occupied⟩
       change beaconInput setup context.seed context.scalar
         (state.1.1.ghost.touches ++ [Touch.beacon _]) = some bytes
@@ -127,9 +143,10 @@ theorem active_finish_receipt (setup : Setup baseSpec KemSK) (codec : Codec Read
     | hidden =>
       simp only [reply] at supported
       exact (selected_receipt setup codec key rest pending control raw payload
-        (PqxdhServerAuthFinishResponse.prefix_response setup codec context.beaconSeed control
+        (PqxdhServerAuthFinishResponse.prefix_response
+          (completedBinding := PqxdhTranscriptAd.completedOf control hashed.1) setup codec context.beaconSeed control
           state.1.1.beacon.beacon.identity oneTime kem raw pending prefixReached)
-        _ final before after invariant.good supported).imp_right Or.inr
+        _ final hashed.2 after hashGood supported).imp_right Or.inr
 
 /-- Every successful complete finish, with all original phase checks and rejection behavior, retains the exact original public-frame receipt or one of the existing ordinary alternatives. -/
 theorem finish_receipt (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)

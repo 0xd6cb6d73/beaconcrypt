@@ -7,7 +7,7 @@ import VCVio.OracleComp.QueryTracking.RandomOracle.Basic
 /-!
 # Bounded real-or-random game for the joint BeaconCrypt HKDF stream
 
-This module exposes exactly the two production HKDF-SHA-512/no-salt domains and the three public stream projections used by the symbolic model.
+This module exposes exactly the three production HKDF-SHA-512/no-salt domains and the three public stream projections used by the symbolic model.
 Every projection at one exact `(input, domain)` address is backed by one shared 76-byte stream.
 
 The real world calls the fixed production source through `Pqxdh.Crypto.hkdf` and carries the separate functional prefix-consistency contract from `PqxdhJointKdf`.
@@ -26,15 +26,17 @@ namespace BeaconcryptCore.Computational.PqxdhJointKdfGame
 
 open PqxdhJointKdf
 
-/-- The only two public HKDF domains fixed by the BeaconCrypt source. -/
+/-- The three public HKDF domains fixed by the BeaconCrypt source. -/
 inductive FixedHkdfDomain where
   | pqxdh
+  | initial
   | ratchet
 deriving DecidableEq
 
 /-- Map a typed public domain to its exact production `info` bytes. -/
 def FixedHkdfDomain.info : FixedHkdfDomain → Pqxdh.Bytes
   | .pqxdh => Pqxdh.INFO_PQ
+  | .initial => Pqxdh.INFO_INIT
   | .ratchet => Pqxdh.INFO_R
 
 @[simp] theorem FixedHkdfDomain.info_pqxdh :
@@ -45,15 +47,16 @@ def FixedHkdfDomain.info : FixedHkdfDomain → Pqxdh.Bytes
     FixedHkdfDomain.ratchet.info = Pqxdh.INFO_R := by
   rfl
 
-/-- The typed domain map is injective because the two exact source labels differ. -/
-theorem FixedHkdfDomain.info_injective :
-    Function.Injective FixedHkdfDomain.info := by
+@[simp] theorem FixedHkdfDomain.info_initial :
+    FixedHkdfDomain.initial.info = Pqxdh.INFO_INIT := rfl
+
+/-- All three current source labels are distinct; output length is absent from this map. -/
+theorem FixedHkdfDomain.info_injective : Function.Injective FixedHkdfDomain.info := by
   intro left right equality
-  cases left <;> cases right
-  · rfl
-  · exact (Pqxdh.INFO_PQ_ne_INFO_R equality).elim
-  · exact (Pqxdh.INFO_PQ_ne_INFO_R equality.symm).elim
-  · rfl
+  cases left <;> cases right <;>
+    simp_all [FixedHkdfDomain.info, Pqxdh.INFO_PQ_ne_INFO_R, Pqxdh.INFO_PQ_ne_INFO_INIT,
+      Pqxdh.INFO_INIT_ne_INFO_R, Ne.symm Pqxdh.INFO_PQ_ne_INFO_R,
+      Ne.symm Pqxdh.INFO_PQ_ne_INFO_INIT, Ne.symm Pqxdh.INFO_INIT_ne_INFO_R]
 
 /-- Map the public `(input, domain)` pair to the one canonical internal stream address. -/
 def FixedHkdfDomain.address (domain : FixedHkdfDomain)
@@ -67,6 +70,9 @@ def FixedHkdfDomain.address (domain : FixedHkdfDomain)
 @[simp] theorem FixedHkdfDomain.address_ratchet (input : Pqxdh.Bytes) :
     FixedHkdfDomain.ratchet.address input = ratchetAddress input := by
   rfl
+
+@[simp] theorem FixedHkdfDomain.address_initial (input : Pqxdh.Bytes) :
+    FixedHkdfDomain.initial.address input = initialAddress input := rfl
 
 /-- Typed public addresses are equal exactly when both the source domain and input agree. -/
 theorem FixedHkdfDomain.address_injective :
@@ -375,7 +381,7 @@ theorem FixedHkdfSha512NoSaltSource.rootChains_eq_realStream
     (source : FixedHkdfSha512NoSaltSource) (input : Pqxdh.Bytes) :
     Pqxdh.rootChains source.crypto input =
       initialProjection
-        (productionStream source.crypto (FixedHkdfDomain.ratchet.address input)) := by
+        (productionStream source.crypto (FixedHkdfDomain.initial.address input)) := by
   simpa using rootChains_eq_initialProjection source.crypto
     source.prefixConsistent input
 
@@ -423,12 +429,14 @@ def IsFixedHkdfSha512UntypedStreamQuery :
   | .inl _ => False
   | .inr address =>
       address ≠ FixedHkdfDomain.pqxdh.address address.input ∧
+        address ≠ FixedHkdfDomain.initial.address address.input ∧
         address ≠ FixedHkdfDomain.ratchet.address address.input
 
 instance : DecidablePred IsFixedHkdfSha512UntypedStreamQuery
   | .inl _ => isFalse id
   | .inr address => inferInstanceAs (Decidable
       (address ≠ FixedHkdfDomain.pqxdh.address address.input ∧
+        address ≠ FixedHkdfDomain.initial.address address.input ∧
         address ≠ FixedHkdfDomain.ratchet.address address.input))
 
 /-- One forwarding step emits no raw address outside the two typed source domains. -/
@@ -462,7 +470,9 @@ theorem jointKdfViewForwardImpl_no_untyped_query_step
         cases domain with
         | pqxdh => exact outside.1 (by
             simp [JointKdfViewQuery.address, FixedHkdfDomain.address])
-        | ratchet => exact outside.2 (by
+        | initial => exact outside.2.1 (by
+            simp [JointKdfViewQuery.address, FixedHkdfDomain.address])
+        | ratchet => exact outside.2.2 (by
             simp [JointKdfViewQuery.address, FixedHkdfDomain.address]))
 
 /-- Every complete-stream query emitted while forwarding an arbitrary public computation is typed. -/

@@ -108,14 +108,14 @@ abbrev LeafSpec (KemSK : Type) := unifSpec + ((Pqxdh.Bytes →ₒ CtxRomAuth.Ctx
 
 /-- Only primitive requests occur here. Source protocol ownership is supplied by the returned SDK objects, separately from this private backend. -/
 noncomputable def leaf (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit) :
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     QueryImpl (LeafSpec KemSK) (RegistrationNativeExperiment.M n KemSK source)
   | .inl coin => RegistrationNativeExperiment.trusted setup checks representation created source (.inl (.inl coin))
   | .inr (.inl bytes) => RegistrationNativeExperiment.trusted setup checks representation created source (.inl (.inr (.hash bytes)))
   | .inr (.inr kem) => RegistrationNativeExperiment.trusted setup checks representation created source (.inr kem)
 
 noncomputable def backendLeaf (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit) :
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     QueryImpl (LeafSpec KemSK) (StateT (Backend n KemSK) ProbComp)
   | .inl coin => fun before =>
       (fun result => (result.1,{before with world := worldBackend result.2})) <$>
@@ -137,7 +137,7 @@ private theorem sampled_worldBackend {A : Type} (work : ProbComp A) (world : Pqx
   rfl
 
 theorem kem_backend (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (kem : (KemSpec KemSK).Domain) (before : Native) :
     Prod.map id backend <$> (leaf setup checks representation created (.inr (.inr kem))).run before=
       (backendLeaf setup checks representation created (.inr (.inr kem))).run (backend before) := by
@@ -147,7 +147,7 @@ theorem kem_backend (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks
   simp only [Function.update_idem]
 
 theorem coin_backend (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (coin : unifSpec.Domain) (before : Native) :
     Prod.map id backend <$> (leaf setup checks representation created (.inl coin)).run before=
       (backendLeaf setup checks representation created (.inl coin)).run (backend before) := by
@@ -163,7 +163,7 @@ theorem coin_backend (setup : PqxdhServerAuthExperiment.Setup base KemSK) (check
   cases kind <;> simp
 
 theorem hash_backend (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (bytes : Pqxdh.Bytes) (before : Native) :
     Prod.map id backend <$> (leaf setup checks representation created (.inr (.inl bytes))).run before=
       (backendLeaf setup checks representation created (.inr (.inl bytes))).run (backend before) := by
@@ -180,7 +180,7 @@ theorem hash_backend (setup : PqxdhServerAuthExperiment.Setup base KemSK) (check
   cases kind <;> simp
 
 theorem query_backend (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (LeafSpec KemSK).Domain) (before : Native) :
     Prod.map id backend <$> (leaf setup checks representation created query).run before=
       (backendLeaf setup checks representation created query).run (backend before) := by
@@ -192,7 +192,7 @@ theorem query_backend (setup : PqxdhServerAuthExperiment.Setup base KemSK) (chec
 
 /-- Every adaptive source primitive request program, with repeated calls and arbitrary stopping, factors through the persistent backend. This does not assume that source protocol objects equal the native bookkeeping. -/
 theorem program_backend {A : Type} (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp (LeafSpec KemSK) A) (before : Native) :
     Prod.map id backend <$> (simulateQ (leaf setup checks representation created) work).run before=
       (simulateQ (backendLeaf setup checks representation created) work).run (backend before) := by
@@ -203,7 +203,7 @@ theorem program_backend {A : Type} (setup : PqxdhServerAuthExperiment.Setup base
 /-- Interpreting the same source primitive program through an arbitrary persistent platform keeps its complete poststate jointly with the primitive backend. -/
 theorem program_platform {A : Type} (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp (LeafSpec KemSK) A) (before : Native) (previous : Platform) :
     Prod.map (Prod.map id backend) id <$>
       (simulateQ coins ((simulateQ (leaf setup checks representation created) work).run before)).run previous=
@@ -214,7 +214,7 @@ theorem program_platform {A : Type} (coins : QueryImpl unifSpec (StateT Platform
 /-- Reifying the returned pending source object cannot change any subsequent source primitive request program. Source storage supplies its new phase; physical backend and platform state persist. -/
 theorem bundle_continuation {A : Type} (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp (LeafSpec KemSK) A) (index : Nat) (owner : RegistrationNativeBeaconFrontend.Owner source)
     (scalar : PqxdhJointGapDh.ScalarBytes)
     (publication : RustM (RegistrationBeaconInitExecutor.Result (alloc.vec.Vec U8))) (before : Native) (previous : Platform) :
@@ -228,7 +228,7 @@ theorem bundle_continuation {A : Type} (coins : QueryImpl unifSpec (StateT Platf
 /-- Finish commits its actual returned environment before reifying the returned source object. No preterminal auxiliary state is revived. -/
 theorem finish_continuation {A : Type} (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp (LeafSpec KemSK) A) (index : Nat) (owner : RegistrationNativeBeaconFrontend.Owner source)
     (control : pqxdh.BeaconAborted) (reply : RustM (Option registration.CompletedBeacon))
     (owners : List (RegistrationNativeBeaconFrontend.Owner source))

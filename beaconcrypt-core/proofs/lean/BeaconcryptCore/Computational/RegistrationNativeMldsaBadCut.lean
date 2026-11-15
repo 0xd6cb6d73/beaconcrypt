@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeMldsaGhostFamily
 
-/-! The original protected native unsigned-origin failure is an actual successful Init acceptance or Beacon finish with no earlier same-key payload issuance. A finite simultaneous family covers that cut using its actual prior generation row or the shared-cache collision. -/
+/-! The original protected Server response unsigned-origin failure is an actual successful Beacon finish with no earlier same-key payload issuance. A finite simultaneous family covers that cut using its actual prior generation row or the shared-cache collision. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -17,20 +17,12 @@ open RegistrationNativeMldsaProtectedInvariant (Holds)
 open RegistrationNativeMldsaProtectedCoverage (BornKey)
 open PqxdhServerAuthExperiment (Setup Checks)
 variable {n cap : Nat} {ι KemSK : Type} {base : OracleSpec ι}
-attribute [local irreducible] RegistrationNativeExperiment.handler RegistrationSigningShared.historyFor RegistrationAuthenticationNative.trial
+attribute [local irreducible] RegistrationNativeExperiment.handler RegistrationSigningShared.historyFor
 
 inductive Bad (source : Source) (credential : Credential (handleSource source)) :
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain) →
       RegistrationNativeMldsaTableStop.State (n := n) (KemSK := KemSK) source →
       RegistrationNativeRawAdapter.TypedSpec.Range query → Prop where
-  | accept (packet : registration.InitPacket) (session : Nat)
-      (before : RegistrationNativeMldsaTableStop.State (n := n) (KemSK := KemSK) source)
-      (owner : RegistrationNativeBeaconFrontend.Owner (handleSource source))
-      (owned : owner ∈ before.1.beacons) (keyProtected : packet.mldsa_public_key = owner.mldsa.publicKey)
-      (absent : ¬ MldsaTranscriptAuth.Issued (RegistrationAuthenticationNative.trial true before.1.server.pin packet
-        (RegistrationSigningShared.historyFor (PqxdhRefinement.absBytes packet.mldsa_public_key)
-          (RegistrationNativeMldsaShared.nativeProject before.1)))) :
-      Bad source credential (.inr (.accept packet)) before (.ok (some session))
   | finish (index : Nat) (packet : registration.ResponsePacket) (application : Pqxdh.Bytes)
       (before : RegistrationNativeMldsaTableStop.State (n := n) (KemSK := KemSK) source)
       (owner : RegistrationNativeBeaconFrontend.Owner (handleSource source))
@@ -44,7 +36,7 @@ inductive Bad (source : Source) (credential : Credential (handleSource source)) 
 
 variable (source : Source) (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : Credential (handleSource source))
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential (handleSource source))
 
 private theorem original (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (before : State source cap n KemSK)
     (result : RegistrationNativeRawAdapter.TypedSpec.Range query × State source cap n KemSK)
@@ -93,15 +85,6 @@ theorem cover (fallback : Credential source) (query : RegistrationNativeRawAdapt
   rcases result with ⟨reply, after⟩
   have reached := original source setup checks wire route representation created credential query before (reply, after) supported
   cases bad with
-  | accept packet session _ owner owned matching absent =>
-      rcases RegistrationNativeMldsaProtectedCoverage.accept source setup checks wire route representation created credential fallback packet
-        (nativeState source before) (nativeState source after) session good.safe good.provenance owner owned matching reached absent with collision | issued
-      · exact Or.inl collision
-      · obtain ⟨ordinal, earlier, born, forgery, chosen, _fresh⟩ := issued
-        let index : Fin cap := ⟨ordinal, Nat.lt_of_lt_of_le earlier room⟩
-        have captured := selected source setup checks wire route representation created credential index (.inr (.accept packet))
-          before (.ok (some session), after) (rows index) supported trivial owner.mldsa.publicKey born forgery chosen
-        exact Or.inr ⟨index, by rw [captured]; rfl⟩
   | finish index packet application _ owner pending oneTime found phase matching absent =>
       rcases RegistrationNativeMldsaProtectedCoverage.finish source setup checks wire route representation created credential fallback index owner pending oneTime packet
         (nativeState source before) (nativeState source after) application good.safe good.provenance found phase matching reached absent with collision | issued

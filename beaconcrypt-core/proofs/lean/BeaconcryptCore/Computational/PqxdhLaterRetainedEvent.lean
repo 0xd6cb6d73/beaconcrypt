@@ -8,6 +8,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhLaterRetainedEvent
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhJointKdfGame PqxdhOrderedChainHybrids
 open RawCtxSelectedParentTable RawCtxSelectedParentEntry RawCtxSelectedParentPrivatePatch
 open PqxdhInitialBeaconAmbient PqxdhInitialNativeParentRealization
@@ -31,21 +32,21 @@ theorem retained_source
     (simulateQ (PqxdhInitialNativeRetained.retained source writer
       (lookup (privatePatch prior target output) entry target)
       (PqxdhInitialNativeAudit.external pre application initial selector aux))
-      (PqxdhInitialOriginContext.resume mark sender route decode context
-        (PqxdhInitialParentBuilderContext.reply sender route decode context.original (realize entry target)))).run state =
+      (PqxdhInitialOriginContext.resume (completedBinding := completedBinding) mark sender route decode context
+        (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode context.original (realize entry target)))).run state =
     (fun result => (Prod.map id (Prod.map (PqxdhInitialParentPost.mapFront
       (RawCtxSelectedParentCalls.nativeKernel target)) id) result.1, flat result.2)) <$>
       (simulateQ (PqxdhInitialParentPrivateObserver.handler source writer prior entry output
         pre application initial selector aux (RawCtxSelectedLiveTrace.nativeReader (RawCtxFreshChainCut.concreteChain target)) target)
         (simulateQ PqxdhInitialParentObserverCompiler.compiler
-          (PqxdhInitialOriginContext.stopped mark sender route decode context entry.material))).run (nested state) := by
+          (PqxdhInitialOriginContext.stopped (completedBinding := completedBinding) mark sender route decode context entry.material))).run (nested state) := by
   have coordinates := parts entry target
   have materialEq : material (realize entry target) = entry.material := congrArg Prod.fst coordinates
   have nextEq : nextChain (realize entry target) = target := congrArg Prod.snd coordinates
   have sameEntry : fromOutput (PqxdhInitialBuilderContext.address context.original) (realize entry target) = entry := by
     change Entry.mk _ (material (realize entry target)) = entry
     rw [← address, materialEq]
-  have sourceEq := PqxdhInitialNativeParentChild.frame_compiled source writer prior pre application initial selector aux
+  have sourceEq := PqxdhInitialNativeParentChild.frame_compiled (completedBinding := completedBinding) source writer prior pre application initial selector aux
     mark sender route decode context (realize entry target) output state
       (by simpa only [nextEq, ← address] using separate)
   rw [sameEntry, nextEq, materialEq] at sourceEq
@@ -60,7 +61,7 @@ theorem original_event (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Bool)
     (selected : RawCtxProtocolReveals.Owner S B) (number : Std.U64)
     (address : entry.address = PqxdhInitialBuilderContext.address input.1.original)
     (separate : targetAddress target ≠ entry.address) :
-    PqxdhInitialCommonSecrecy.native source writer mark sender route decode
+    PqxdhInitialCommonSecrecy.native (completedBinding := completedBinding) source writer mark sender route decode
       (PqxdhErasedParentView.view source pre application initial selector aux root ancestors disclosed selected number 0)
       (.inr input, entry) target output =
     (fun result => PqxdhInitialNativeParentEvent.nativeDecision
@@ -70,15 +71,15 @@ theorem original_event (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Bool)
       (simulateQ (PqxdhInitialNativeRetained.retained source writer
         (lookup (privatePatch (view (productionStream source.crypto) input.2.1.1.1.2.1) target output) entry target)
         (PqxdhInitialNativeAudit.external pre application initial selector aux))
-        (PqxdhInitialOriginContext.resume mark sender route decode input.1
-          (PqxdhInitialParentBuilderContext.reply sender route decode input.1.original (realize entry target)))).run
+        (PqxdhInitialOriginContext.resume (completedBinding := completedBinding) mark sender route decode input.1
+          (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode input.1.original (realize entry target)))).run
           (flat (PqxdhInitialSupportedCertificate.ambient input)) := by
-  have decision := PqxdhInitialNativeParentChecked.decision_source source writer sender route decode mark
+  have decision := PqxdhInitialNativeParentChecked.decision_source (completedBinding := completedBinding) source writer sender route decode mark
     (PqxdhErasedParentView.view source pre application initial selector aux root ancestors disclosed selected number 0).continuation
     (input, entry) target output disclosed (PqxdhInitialSupportedCertificate.ambient input) input.2.2 0 rfl
     ((PqxdhInitialSourceSecrecyResources.earlierInputs root input).map RawCtxFreshChainCut.concreteChain)
     ancestors selected number
-  rw [retained_source source writer (view (productionStream source.crypto) input.2.1.1.1.2.1)
+  rw [retained_source (completedBinding := completedBinding) source writer (view (productionStream source.crypto) input.2.1.1.1.2.1)
     pre application initial selector aux mark sender route decode input.1 entry target output
     (flat (PqxdhInitialSupportedCertificate.ambient input)) address separate, Functor.map_map]
   simpa only [PqxdhInitialCommonSecrecy.native, PqxdhErasedParentView.view,

@@ -16,7 +16,7 @@ variable {source : RegistrationNativeMldsa.Source}
 
 private theorem aborting (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index handle : Nat) (owner : Owner source) (value : Value) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index handle : Nat) (owner : Owner source) (value : Value) :
     Preserves (n := n) (Auxiliary := Auxiliary) setup checks representation created index handle
       (RegistrationNativeIdentityFrontend.abort owner *> pure value) := by
   simp only [seqRight_eq_bind, RegistrationNativeIdentityFrontend.abort, bind_assoc, pure_bind]
@@ -26,7 +26,7 @@ private theorem aborting (setup : Setup base KemSK) (checks : Checks)
 
 private theorem after_record (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index : Nat) (owner : Owner source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index : Nat) (owner : Owner source)
     (reply : RustM RegistrationBeaconRecordExecutor.Result) :
     Preserves (n := n) (Auxiliary := Auxiliary) setup checks representation created index owner.identity.handle
       (RegistrationNativeIdentityFinishRecord.after index owner reply) := by
@@ -47,7 +47,7 @@ private theorem after_record (setup : Setup base KemSK) (checks : Checks)
 
 private theorem after_agreement (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (index : Nat) (owner : Owner source) (reply : RustM agreement.AgreementEffect) :
     Preserves (n := n) (Auxiliary := Auxiliary) setup checks representation created index owner.identity.handle
       (RegistrationNativeIdentityFinishSteps.afterAgreement setup wire index owner reply) := by
@@ -65,7 +65,7 @@ private theorem after_agreement (setup : Setup base KemSK) (checks : Checks)
 
 private theorem after_authentication (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (index : Nat) (owner : Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (reply : RustM RegistrationResponseExecutor.ResponseResult) :
     Preserves (n := n) (Auxiliary := Auxiliary) setup checks representation created index owner.identity.handle
@@ -82,7 +82,7 @@ private theorem after_authentication (setup : Setup base KemSK) (checks : Checks
 
 private theorem begin_preserves (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (index : Nat) (owner : Owner source) (pending : registration.BeaconPending) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (packet : Option registration.ResponsePacket) :
     Preserves (n := n) (Auxiliary := Auxiliary) setup checks representation created index owner.identity.handle
@@ -102,7 +102,7 @@ private theorem begin_preserves (setup : Setup base KemSK) (checks : Checks)
 
 private theorem start_preserves (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (index : Nat) (owner : Owner source) (packet : Option registration.ResponsePacket) :
     Preserves (n := n) (Auxiliary := Auxiliary) setup checks representation created index owner.identity.handle
       (RegistrationNativeIdentityFinishDispatch.start setup wire index owner packet) := by
@@ -118,7 +118,7 @@ private theorem start_preserves (setup : Setup base KemSK) (checks : Checks)
 /-- Actual incoming finish retains all generated ownership receipts and exact ordinary joint signing history on every result. -/
 theorem finish_holds (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire) (index : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire) (index : Nat)
     (packet : Option registration.ResponsePacket)
     (before : NewState n KemSK Auxiliary source) (result : RustM (Option Pqxdh.Bytes) × NewState n KemSK Auxiliary source)
     (prior : Holds setup.joint before.2.identities before.1.1)

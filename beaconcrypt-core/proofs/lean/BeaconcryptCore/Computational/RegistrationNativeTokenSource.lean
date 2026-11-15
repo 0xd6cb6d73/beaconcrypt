@@ -21,7 +21,7 @@ def Present (token : peer.ConsumedRegistration) (before : State n) : Prop := som
 
 def Born (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (authenticated : registration.AuthenticatedInit) (before : State n)
     (token : peer.ConsumedRegistration) : Prop :=
   ∃ accepted afterAgreement history,
@@ -38,7 +38,7 @@ private theorem pure_present (value : Value) (before : State n) (result : Value 
 
 private theorem authenticate_sessions (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (before : State n) (result : RustM (List BeaconcryptCore.Refinement.RegistrationAuthenticationFlow.Event × registration.InitAuthentication) × State n)
     (supported : result ∈ support ((RegistrationServerNativeSource.authenticate setup codec route verify created packet).run before)) :
     result.2.sessions = before.sessions := by
@@ -49,7 +49,7 @@ private theorem authenticate_sessions (setup : Setup base KemSK) (codec : Codec 
 
 private theorem agree_sessions (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (authenticated : registration.AuthenticatedInit) (before : State n)
     (result : RustM agreement.AgreementEffect × State n)
     (supported : result ∈ support ((RegistrationServerNativeSource.agree setup checks representation created packet authenticated).run before)) :
@@ -60,7 +60,7 @@ private theorem agree_sessions (setup : Setup base KemSK) (checks : Checks)
   rfl
 
 /-- A source retain either preserves an old token or inserts exactly the consumed agreement returned by replay insertion. -/
-theorem retain (created : PqxdhLiveServerConstruction.Created Unit) (accepted : agreement.ServerAgreement)
+theorem retain (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (accepted : agreement.ServerAgreement)
     (before : State n) (result : RustM (Option Nat) × State n)
     (supported : result ∈ support ((RegistrationServerNativeSource.retain created accepted).run before))
     (token : peer.ConsumedRegistration) (present : Present token result.2) :
@@ -93,7 +93,7 @@ theorem retain (created : PqxdhLiveServerConstruction.Created Unit) (accepted : 
 /-- A token present after the actual post-authentication continuation was already present or came from an actually supported agreement completion and replay consume. -/
 theorem afterAuthentication (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (authenticated : registration.AuthenticatedInit) (before : State n)
     (result : RustM (Option Nat) × State n)
     (supported : result ∈ support ((RegistrationServerSdkSource.afterAuthentication setup checks representation created packet authenticated).run before))
@@ -128,7 +128,7 @@ theorem afterAuthentication (setup : Setup base KemSK) (checks : Checks)
 theorem accept (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (before : State n) (result : RustM (Option Nat) × State n)
     (supported : result ∈ support ((RegistrationServerSdkSource.accept setup codec checks route verify representation created packet).run before))
     (token : peer.ConsumedRegistration) (present : Present token result.2) :
@@ -211,12 +211,27 @@ private theorem afterOccupancy_sessions (setup : Setup base KemSK) (codec : Code
         cases supported
         rfl
     | Ok pending =>
-        simp only [resumed] at supported
-        split_ifs at supported with reserved
-        · exact fromInitial_sessions setup codec sign encode control pending before result supported
-        · simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
-          cases supported
-          rfl
+        simp only [resumed, StateT.run_bind, mem_support_bind_iff] at supported
+        obtain ⟨hashed, queried, continued⟩ := supported
+        rcases hashed with ⟨reply, afterHash⟩
+        have same : afterHash.sessions = before.sessions := world_sessions _ before (reply, afterHash) queried
+        cases replyEq : reply with
+        | fail error | div =>
+            simp only [replyEq, StateT.run_pure, support_pure, Set.mem_singleton_iff] at continued
+            cases continued
+            exact same
+        | ok answer => cases answer with
+          | Err previous =>
+              simp only [replyEq, StateT.run_pure, support_pure, Set.mem_singleton_iff] at continued
+              cases continued
+              exact same
+          | Ok initial =>
+              simp only [replyEq] at continued
+              split_ifs at continued with reserved
+              · exact (fromInitial_sessions setup codec sign encode control initial afterHash result continued).trans same
+              · simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at continued
+                cases continued
+                exact same
 
 /-- Native completion retains exactly the already-moved token table through all later gates and publication outcomes. -/
 theorem complete_sessions (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)

@@ -12,6 +12,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhProtocolNativeAcceptance
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhEd25519EufCma PqxdhKemIndCca PqxdhSourceAuthenticatedRoot PqxdhHiddenRoot
 open PqxdhPrivateAcceptedRoot PqxdhProtocolExperiment
 
@@ -36,7 +37,7 @@ noncomputable def nativeAccept
   match PqxdhProtocolAcceptance.accept source.crypto secretIdentity senderId index metadata state
     identity keys ephemeral ciphertext secret with
   | .ok (.Ok (_, pending)) =>
-      (PqxdhRegistrationProtocolState.nativeBuild source writer aux senderId index metadata pending
+      (PqxdhRegistrationProtocolState.nativeBuild (associatedData := associatedData) source writer aux senderId index metadata pending
         (nativeRoot source pending) application).run
           { state with
             consumed := Function.update state.consumed index
@@ -57,11 +58,11 @@ theorem native_accept_eq_build
     (ephemeral : List.Vector UInt8 32) (ciphertext : MlKem768Ciphertext) (secret : MlKemSharedSecret)
     (fresh : identity.toList ++ keys.oneTime.toList ∉ server.consumed)
     (valid : rootFailure source.crypto server.ikSk ephemeral.toList identity keys.prekey keys.oneTime = none) :
-    (nativeAccept source writer aux secretIdentity senderId index metadata application identity keys ephemeral ciphertext secret).run state =
-      (PqxdhRegistrationProtocolState.build source writer aux senderId index metadata
+    (nativeAccept (associatedData := associatedData) source writer aux secretIdentity senderId index metadata application identity keys ephemeral ciphertext secret).run state =
+      (PqxdhRegistrationProtocolState.build (associatedData := associatedData) source writer aux senderId index metadata
         (ready server application identity keys.oneTime ephemeral ciphertext
           (productionHiddenRoot source (serverCoordinates source.crypto server.ikSk ephemeral.toList identity keys.prekey keys.oneTime) secret))).run state := by
-  obtain ⟨pending, accepted, rootBytes, _, builder⟩ := PqxdhProtocolAcceptance.accepted_builder
+  obtain ⟨pending, accepted, rootBytes, _, builder⟩ := PqxdhProtocolAcceptance.accepted_builder (associatedData := associatedData)
     source writer aux secretIdentity senderId index metadata state server related application identity keys ephemeral ciphertext secret
     (productionHiddenRoot source (serverCoordinates source.crypto server.ikSk ephemeral.toList identity keys.prekey keys.oneTime) secret)
     fresh valid
@@ -87,8 +88,8 @@ theorem accepted_native_run (env : Environment baseSpec M P I D K A S B)
       execution = ready env.parameters.server env.parameters.application identity keys.oneTime ephemeral ciphertext
         (productionHiddenRoot env.parameters.source (serverCoordinates env.parameters.source.crypto
           env.parameters.server.ikSk ephemeral.toList identity keys.prekey keys.oneTime) secret) ∧
-      (env.observer setup program post).accepted output execution = PqxdhProtocolRegistration.coins (do
-        let result ← (nativeAccept env.parameters.source env.writer env.aux secretIdentity env.senderId env.index env.metadata
+      (env.observer (associatedData := associatedData) setup program post).accepted output execution = PqxdhProtocolRegistration.coins (do
+        let result ← (nativeAccept (associatedData := associatedData) env.parameters.source env.writer env.aux secretIdentity env.senderId env.index env.metadata
           env.parameters.application identity keys ephemeral ciphertext secret).run
             (PqxdhProtocolRegistration.reached env.initial output)
         Prod.fst <$> (simulateQ (PqxdhRegistrationProtocolState.sourceImpl env.parameters.source env.writer env.senderId
@@ -96,7 +97,7 @@ theorem accepted_native_run (env : Environment baseSpec M P I D K A S B)
   obtain ⟨identity, keys, ephemeral, ciphertext, secret, candidate, fresh, valid, rfl⟩ := admitted
   refine ⟨identity, keys, ephemeral, ciphertext, secret, candidate, rfl, ?_⟩
   rw [Environment.observer, Environment.plan, PqxdhProtocolRegistration.accepted_run,
-    native_accept_eq_build env.parameters.source env.writer env.aux secretIdentity env.senderId env.index env.metadata
+    native_accept_eq_build (associatedData := associatedData) env.parameters.source env.writer env.aux secretIdentity env.senderId env.index env.metadata
       (PqxdhProtocolRegistration.reached env.initial output) env.parameters.server related env.parameters.application
       identity keys ephemeral ciphertext secret fresh valid]
 

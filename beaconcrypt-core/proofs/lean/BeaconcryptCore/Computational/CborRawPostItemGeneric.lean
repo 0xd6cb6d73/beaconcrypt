@@ -37,7 +37,7 @@ theorem itemPost_active {A R : Type} {count : ℕ} (setup : Setup baseSpec KemSK
     (value : PqxdhServerRootPreparation.Verified Reader) (matched : value.keys.pqKey = p.chosen.1)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes) (consumed : List Pqxdh.Bytes)
     (native : PqxdhServerAuthNative.NativeState KemSK)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry)
+    (owners : (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate)))
     (next : Option ℕ → OracleComp (PqxdhRegistrationJointKemCommands.SourceSpec KemSK) (R))
     (state : PqxdhDynamicKemJointSource.State KemSK) (after : A) :
     itemPost setup codec checks t p decision
@@ -74,7 +74,7 @@ theorem itemPost_erased {A R : Type} {count : ℕ} (setup : Setup baseSpec KemSK
     (value : PqxdhServerRootPreparation.Verified Reader) (matched : value.keys.pqKey = p.chosen.1)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes) (consumed : List Pqxdh.Bytes)
     (native : PqxdhServerAuthNative.NativeState KemSK)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry)
+    (owners : (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate)))
     (next : Option ℕ → OracleComp (PqxdhRegistrationJointKemCommands.SourceSpec KemSK) (R))
     (state : PqxdhDynamicKemJointSource.State KemSK) (after : A) :
     itemPost setup codec checks t p decision
@@ -112,7 +112,7 @@ theorem itemPost_clean {A R : Type} {count : ℕ} (setup : Setup baseSpec KemSK)
     (value : PqxdhServerRootPreparation.Verified Reader) (matched : value.keys.pqKey = p.chosen.1)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes) (consumed : List Pqxdh.Bytes)
     (native : PqxdhServerAuthNative.NativeState KemSK)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry)
+    (owners : (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate)))
     (next : Option ℕ → OracleComp (PqxdhRegistrationJointKemCommands.SourceSpec KemSK) (R))
     (state : PqxdhDynamicKemJointSource.State KemSK) (after : A) :
     itemPost setup codec checks t p decision
@@ -142,7 +142,7 @@ theorem itemPost_clean {A R : Type} {count : ℕ} (setup : Setup baseSpec KemSK)
             created.publicIdentity t.kem.val p.challenge (factoredServices setup codec checks)))
           (PqxdhRegistrationJointAcceptKemCut.tagged (PqxdhRegistrationJointAcceptCutTag.decideTag decision) raw
             next answer.1)).run (owners, cleanSkel answer.2) =
-      (fun result : (Bool × List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) × SkelState KemSK Output =>
+      (fun result : (Bool × (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate))) × SkelState KemSK Output =>
           (result.1, cleanSkel result.2)) <$>
         ((fun result => ((result.1, result.2.1), result.2.2)) <$>
           (simulateQ (PqxdhDeploymentIdealPostSim.upperLayer setup codec checks created.server.server.metadata.identityIndex
@@ -192,7 +192,7 @@ theorem itemPost_middle {A R : Type} (decision : R → Bool)
     itemPost setup codec checks t p decision
         (.ready (PqxdhRegistrationJointServerBirth.encode created) p.others
           (some (.pending raw value ephemeral consumed joint.shared
-            (PqxdhRegistrationJointGeneratedFinish.encodeState setup joint).owners next))
+            ((PqxdhRegistrationJointGeneratedFinish.encodeState setup joint).owners, joint.inits) next))
           (joint.pool.1, PqxdhDeploymentIdealPoolSource.routerOf joint.pool.2) after) =
       (simulateQ (PqxdhRegistrationJointKemSecondEntry.slotImpl PqxdhDeploymentSeedSplit.tableService)
           ((PqxdhDeploymentIdealActive.acceptAfter setup codec checks created.seed p.challenge value ephemeral consumed
@@ -212,8 +212,8 @@ theorem itemPost_middle {A R : Type} (decision : R → Bool)
     rfl
   rw [counts]
   have toC : ∀ work : OracleComp (PqxdhRegistrationJointKemPostSkeleton.Enc KemSK +
-      PqxdhRegistrationJointKemPostSkeleton.TSpec Output) ((Bool × List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) ×
-        PqxdhRegistrationJointKemPostSkeleton.SkelState KemSK Output),
+      PqxdhRegistrationJointKemPostSkeleton.TSpec Output) ((Bool × (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry ×
+        (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate))) × PqxdhRegistrationJointKemPostSkeleton.SkelState KemSK Output),
       PqxdhRegistrationJointKemPostSkeleton.skelDecide <$> ((simulateQ (PqxdhDeploymentIdealPostSteps.lowerE setup t p)
         work).run).run (PqxdhDeploymentIdealPostSim.eraseService ((joint.pool.1,
           PqxdhDeploymentIdealPoolSource.routerOf joint.pool.2), (joint.shared.1.cache,
@@ -239,7 +239,8 @@ theorem itemPost_middle {A R : Type} (decision : R → Bool)
       (fun answer skel => (fun result => ((result.1, result.2.1), result.2.2)) <$>
         (simulateQ (PqxdhDeploymentIdealPostSteps.upperE setup codec checks t p created)
           (PqxdhRegistrationJointAcceptKemCut.tagged (PqxdhRegistrationJointAcceptCutTag.decideTag decision) raw next
-            answer)).run ((PqxdhRegistrationJointGeneratedFinish.encodeState setup joint).owners, skel)))) ?_
+            answer)).run (((PqxdhRegistrationJointGeneratedFinish.encodeState setup joint).owners, joint.inits),
+              skel)))) ?_
   rw [show (PqxdhRegistrationJointServerBirth.encode created).publicIdentity = setup.joint.publicKeys created.seed
       from identity, simulateQ_bind, OptionT.run_bind, Option.elimM, StateT.run_bind,
     PqxdhDeploymentIdealPostAccept.resume_accept setup codec checks t p created.seed
@@ -261,7 +262,8 @@ theorem itemPost_middle {A R : Type} (decision : R → Bool)
     _ PqxdhRegistrationJointKemSecondEntry.slotGood_empty (by decide) w member
   have holds := itemInv_after t p created joint owned prefixed indexed w active good stored
   have encodeAfter : encodeMidC setup (afterSelected t joint w) =
-      (((PqxdhRegistrationJointGeneratedFinish.encodeState setup joint).owners, (clean w.1.2.2, marksOf w.1.1.2.2 w.2)),
+      ((((PqxdhRegistrationJointGeneratedFinish.encodeState setup joint).owners, joint.inits),
+          (clean w.1.2.2, marksOf w.1.1.2.2 w.2)),
         eraseServiceC ((joint.pool.1, PqxdhDeploymentIdealPoolSource.routerOf joint.pool.2), (w.1.2.1.cache, w.2))) := by
     simp only [encodeMidC, PqxdhDeploymentIdealPostSteps.encodeMid, eraseServiceC, Prod.map,
       PqxdhRegistrationJointKemObserverFree.eraseJoint_idem]

@@ -22,11 +22,11 @@ noncomputable def factorServices (setup : Setup baseSpec KemSK) (codec : Codec R
     Services Response HiddenTable where
   derive := hiddenDerive setup.hmac setup.joint setup.dh context.seed context.scalar
   table := hiddenPublic
-  hiddenBuild token payload server := PqxdhServerAuthLoggedSendFactor.factored
+  hiddenBuild token payload ad server := PqxdhServerAuthLoggedSendFactor.factored (associatedData := ad)
     (fun entry _ _ => pure (entry, .None))
     (PqxdhServerAuthLoggedSendFactor.loggedPrim setup codec checks) setup.source
     (PqxdhServerAuthLoggedSendFactor.loggedAux setup codec checks)
-    (PqxdhServerAuthCtxMaterial.factor value) token.pending payload () server
+    (PqxdhServerAuthCtxMaterial.factor value) token.pending payload ad server
   hiddenAfter pending := PqxdhServerAuthBeaconFactor.factored
     (PqxdhServerAuthBeaconFactor.nativePrim setup codec)
     (fun entry _ => pure (entry, none)) setup.source (fun response => pure (codec.application response))
@@ -39,8 +39,8 @@ theorem source_factor_services (setup : Setup baseSpec KemSK) (codec : Codec Rea
       factorServices setup codec checks context (PqxdhServerAuthKeySchedule.fromRoot setup.source root) := by
   simp only [sourceHiddenServices, factorServices, PqxdhServerAuthCtxMaterial.factor_source]
   congr 1
-  · funext token payload server
-    exact PqxdhServerAuthLoggedSendFactor.logged_server_send_factor setup codec checks _ _ _ _ _ _
+  · funext token payload ad server
+    exact PqxdhServerAuthLoggedSendFactor.logged_server_send_factor (associatedData := ad) setup codec checks _ _ _ _ _ _
   · funext pending
     exact PqxdhServerAuthBeaconFactor.beacon_afterRoot_factor setup codec _ _ _
 

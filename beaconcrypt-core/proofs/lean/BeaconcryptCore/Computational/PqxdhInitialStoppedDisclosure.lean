@@ -10,6 +10,7 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhInitialStoppedDisclosure
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhSecretInputKdf PqxdhInitialPendingPost RawCtxSelectedChain RawCtxFamilyFreshnessProxy
 open PqxdhInitialDisclosureState PqxdhInitialOriginContext
 variable {ι M P I D K X Response Shared Result Origin Z : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -17,7 +18,7 @@ variable {ι M P I D K X Response Shared Result Origin Z : Type} {extra : Oracle
 def history (context : Context extra M P I D K Result Origin S B) : RawCtxProtocolReveals.History S B :=
   match context.original with
   | .inl (.record _ _ _ inner) => RawCtxFamilyStoppedResources.history inner
-  | .inl (.finish _ before _ _ _ _) => before.roles.2
+  | .inl (.finish _ before _ _ _ _ _) => before.roles.2
   | .inr builder => builder.before.roles.2
 
 /-- The stopped family continuation begins at its own actual saved history and retains the complete final disclosure invariant. -/
@@ -80,13 +81,13 @@ theorem complete_invariant (target : RootOutput)
     (sent : KernelOf Slot × Option RawCtxSourceSend.Encrypted)
     (state : State Z) (valid : Invariant target prior before.roles.2 state)
     (result : (Result × (Front Slot M P I D K S B × PqxdhInitialOriginPost.Trace Origin S B)) × State Z)
-    (supported : result ∈ support ((simulateQ impl (complete mark sender route decode index before trace origin
+    (supported : result ∈ support ((simulateQ impl (complete (completedBinding := completedBinding) mark sender route decode index before trace origin
       candidate authenticated metadata outside sent)).run state)) :
     Invariant target prior result.1.2.1.roles.2 result.2 := by
   simp only [complete, simulateQ_bind, StateT.run_bind, mem_support_bind_iff] at supported
   obtain ⟨completed, reached, rest⟩ := supported
   have kept := quiet_program target impl rules _ (after_send_quiet candidate authenticated metadata _ sent) state completed reached
-  exact schedule_invariant target impl rules prior mark sender route decode _ _ completed.2
+  exact schedule_invariant (completedBinding := completedBinding) target impl rules prior mark sender route decode _ _ completed.2
     (invariant_keep target prior before.roles.2 state completed.2 valid kept) result rest
 
 /-- The literal material-only saved source cut derives its full final disclosure invariant in all record, finish and first-builder cases. -/
@@ -98,7 +99,7 @@ theorem stopped_invariant (target : RootOutput)
     (context : Context extra M P I D K Result Origin S B) (material : PqxdhOrderedChainHybrids.Material)
     (state : State Z) (valid : Invariant target prior (history context) state)
     (result : (Result × (Front Slot M P I D K S B × PqxdhInitialOriginPost.Trace Origin S B)) × State Z)
-    (supported : result ∈ support ((simulateQ impl (stopped mark sender route decode context material)).run state)) :
+    (supported : result ∈ support ((simulateQ impl (stopped (completedBinding := completedBinding) mark sender route decode context material)).run state)) :
     Invariant target prior result.1.2.1.roles.2 result.2 := by
   rcases context with ⟨original, trace, origin⟩
   cases original with
@@ -107,19 +108,19 @@ theorem stopped_invariant (target : RootOutput)
     | record request before outside inner =>
       simp only [stopped, simulateQ_bind, StateT.run_bind, mem_support_bind_iff] at supported
       obtain ⟨completed, reached, rest⟩ := supported
-      exact schedule_invariant target impl rules prior mark sender route decode _ _ completed.2
+      exact schedule_invariant (completedBinding := completedBinding) target impl rules prior mark sender route decode _ _ completed.2
         (family_stopped target impl rules prior sender route decode inner material state valid completed reached) result rest
-    | finish index before control candidate outside inner =>
+    | finish index before control candidate associatedData outside inner =>
       simp only [stopped, simulateQ_bind, StateT.run_bind, mem_support_bind_iff] at supported
       obtain ⟨completed, reached, rest⟩ := supported
       have kept := quiet_program target impl rules _ (primitive_quiet _) state completed reached
-      exact schedule_invariant target impl rules prior mark sender route decode _ _ completed.2
+      exact schedule_invariant (completedBinding := completedBinding) target impl rules prior mark sender route decode _ _ completed.2
         (invariant_keep target prior before.roles.2 state completed.2 valid kept) result rest
   | inr builder =>
     simp only [stopped, simulateQ_bind, simulateQ_spec_query, StateT.run_bind, mem_support_bind_iff] at supported
     obtain ⟨completed, reached, rest⟩ := supported
     have kept := rules.quiet _ (by simp only [isRead, not_false_eq_true]) state completed reached
-    exact complete_invariant target impl rules prior mark sender route decode _ _ _ _ _ _ _ _ _ completed.2
+    exact complete_invariant (completedBinding := completedBinding) target impl rules prior mark sender route decode _ _ _ _ _ _ _ _ _ completed.2
       (invariant_keep target prior builder.before.roles.2 state completed.2 valid kept) result rest
 
 
@@ -159,11 +160,11 @@ theorem actual_stopped (disclosed : List RatchetChain)
     (supported : result ∈ support ((simulateQ
       (PqxdhInitialParentObserverAliases.observed source writer prior entry output pre application initializer selector aux
         (RawCtxSelectedLiveTrace.nativeReader (RawCtxFreshChainCut.concreteChain target)) target)
-      (simulateQ PqxdhInitialParentObserverCompiler.compiler (stopped mark sender route decode context material))).run
+      (simulateQ PqxdhInitialParentObserverCompiler.compiler (stopped (completedBinding := completedBinding) mark sender route decode context material))).run
         (initial disclosed context state candidates))) :
     Invariant target disclosed result.1.2.1.roles.2 result.2 := by
   rw [← QueryImpl.simulateQ_compose] at supported
-  exact stopped_invariant target _ (actual_rules source writer prior entry output pre application initializer selector aux target)
+  exact stopped_invariant (completedBinding := completedBinding) target _ (actual_rules source writer prior entry output pre application initializer selector aux target)
     disclosed mark sender route decode context material _ (initial_invariant target disclosed context state candidates) result supported
 
 end Actual
@@ -202,13 +203,13 @@ theorem checked_invariant {A N C ContextId : Type}
         (continuation.pre context.1) (continuation.application context.1) (continuation.initializer context.1)
         (continuation.selector context.1) (continuation.aux context.1)
         (RawCtxSelectedLiveTrace.nativeReader (RawCtxFreshChainCut.concreteChain target)) target)
-      (PqxdhInitialParentStoppedHop.program mark sender route decode continuation context)).run
+      (PqxdhInitialParentStoppedHop.program (completedBinding := completedBinding) mark sender route decode continuation context)).run
         (initial disclosed (continuation.cut context.1) state candidates))) :
     Invariant target disclosed result.1.1.2.1.roles.2 result.2 := by
   simp only [PqxdhInitialParentStoppedHop.program, simulateQ_bind, StateT.run_bind, mem_support_bind_iff,
     simulateQ_pure, StateT.run_pure, mem_support_pure_iff] at supported
   obtain ⟨completed, sourceReached, checked, checkerReached, rfl⟩ := supported
-  have established := actual_stopped source writer (continuation.prior context.1) context.2 output
+  have established := actual_stopped (completedBinding := completedBinding) source writer (continuation.prior context.1) context.2 output
     (continuation.pre context.1) (continuation.application context.1) (continuation.initializer context.1)
     (continuation.selector context.1) (continuation.aux context.1) target disclosed mark sender route decode
     (continuation.cut context.1) context.2.material state candidates completed sourceReached

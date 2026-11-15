@@ -34,8 +34,8 @@ def result (kernel : ratchet.concrete.ConcreteRatchetKernel)
 
 noncomputable def afterDecode
     (impl : QueryImpl RawCtxSourceOpen.NativeSpec (StateT PrimitiveState ProbComp))
-    (erased : Array Std.U8 357#usize) (kernel : ratchet.concrete.ConcreteRatchetKernel)
-    (expected : Std.U64) (frame : CborProductionBoundary.NativeFrame) (ad : Array Std.U8 281#usize) :
+    (erased : Array Std.U8 227#usize) (kernel : ratchet.concrete.ConcreteRatchetKernel)
+    (expected : Std.U64) (frame : CborProductionBoundary.NativeFrame) (ad : Array Std.U8 151#usize) :
     StateT PrimitiveState ProbComp (RustM RecordEffectsReceiveProgram.Result) :=
   if frame.sender = expected then
     AdapterRecordNativeRepresentation.receive impl erased kernel frame.sequence frame.payload ad frame.sender
@@ -45,9 +45,9 @@ noncomputable def afterDecode
 theorem afterDecode_native
     (impl : QueryImpl RawCtxSourceOpen.NativeSpec (StateT PrimitiveState ProbComp))
     (functional : AdapterRecordNativeRepresentation.Functional impl)
-    (erased : Array Std.U8 357#usize) (kernel : ratchet.concrete.ConcreteRatchetKernel)
+    (erased : Array Std.U8 227#usize) (kernel : ratchet.concrete.ConcreteRatchetKernel)
     (expected : Std.U64) (raw : Pqxdh.Bytes) (frame : CborProductionBoundary.NativeFrame)
-    (ad : Array Std.U8 281#usize) (before : PrimitiveState) :
+    (ad : Array Std.U8 151#usize) (before : PrimitiveState) :
     (afterDecode impl erased kernel expected frame ad).run before =
       (simulateQ impl ((fun result => .ok result) <$> simulateQ RawCtxSourceOpen.nativeAdapter
         (if RawCtxReceive.ValidFrame expected (absBytes ad) (CborProductionBoundary.decoded frame) then
@@ -69,9 +69,9 @@ theorem afterDecode_native
 /-- The source-selected raw operation retains the original literal parser order and reinstalls one complete returned kernel. -/
 noncomputable def raw
     (impl : QueryImpl RawCtxSourceOpen.NativeSpec (StateT PrimitiveState ProbComp))
-    (erased : Array Std.U8 357#usize)
+    (erased : Array Std.U8 227#usize)
     (parse : Pqxdh.Bytes → Option CborProductionBoundary.NativeFrame)
-    (ad : Array Std.U8 281#usize) (bytes : Pqxdh.Bytes) (state : RawCtxWholeOwner.OwnerState Metadata) :
+    (ad : Array Std.U8 151#usize) (bytes : Pqxdh.Bytes) (state : RawCtxWholeOwner.OwnerState Metadata) :
     StateT PrimitiveState ProbComp (Option RawCtxWholeOwner.Decrypted × RawCtxWholeOwner.OwnerState Metadata) :=
   if bytes.isEmpty then pure (RawCtxWholeOwner.publish state (state.owner.kernel, none))
   else match parsed parse bytes with
@@ -84,9 +84,9 @@ noncomputable def raw
 theorem raw_native
     (impl : QueryImpl RawCtxSourceOpen.NativeSpec (StateT PrimitiveState ProbComp))
     (functional : AdapterRecordNativeRepresentation.Functional impl)
-    (erased : Array Std.U8 357#usize)
+    (erased : Array Std.U8 227#usize)
     (parse : Pqxdh.Bytes → Option CborProductionBoundary.NativeFrame)
-    (ad : Array Std.U8 281#usize) (bytes : Pqxdh.Bytes)
+    (ad : Array Std.U8 151#usize) (bytes : Pqxdh.Bytes)
     (state : RawCtxWholeOwner.OwnerState Metadata) (represented : state.owner.associatedData = absBytes ad)
     (before : PrimitiveState) :
     (raw impl erased parse ad bytes state).run before =

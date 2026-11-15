@@ -64,7 +64,7 @@ def BeaconTable (view : AdapterPublicWrapperState.MaterialView source KemSK)
 
 structure Carrier (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (containers : AdapterPublicWrapperStorage.Views) (joint : PqxdhJointIdentity.Primitives)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (current : RegistrationNativeExperiment.State n KemSK source ×Platform) where
   objects : Objects (n:=n) (KemSK:=KemSK) (Platform:=Platform) (source:=source) R
   server : AdapterPublicWrapperState.Server view containers created credential objects.server current.1.server
@@ -79,7 +79,7 @@ structure Carrier (view : AdapterPublicWrapperState.MaterialView source KemSK)
 
 variable (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (containers : AdapterPublicWrapperStorage.Views) (joint : PqxdhJointIdentity.Primitives)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 variable (current : RegistrationNativeExperiment.State n KemSK source ×Platform) (before : Carrier (R:=R) view containers joint created credential current)
 
 theorem token (handle : Nat) (consumed : peer.ConsumedRegistration)
@@ -147,6 +147,7 @@ theorem source_token (handle : Nat) (token : beaconcrypt_public_wrapper.server.R
         subst actual
         exact ⟨consumed,rfl,related⟩
 
+variable (deriveAd : RegistrationNativePlatformCompletionSdk.AdHash n (StateT Platform ProbComp))
 variable (pin : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp)
     (RustM (core.option.Option session.ServerAuthenticationPin)))
 variable (reserve : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) Bool)
@@ -154,15 +155,15 @@ variable (present : U64 →StateT (RegistrationServerFrontendCompiler.State n) (
 variable (finish : RegistrationNativePlatformCompletionSdk.Completion n (StateT Platform ProbComp) (alloc.vec.Vec U8))
 theorem build_live (handle : Nat) (token : beaconcrypt_public_wrapper.server.RegistrationOutput)
     (stored : before.objects.tokens handle=some token) (application : Slice U8) :
-    (RegistrationNativePlatformCompletionSdk.build pin reserve present finish handle (some application)).run current.1.server=
-      (RegistrationNativePlatformCompletionSdk.complete pin reserve present finish token.registration application).run
+    (RegistrationNativePlatformCompletionSdk.build deriveAd pin reserve present finish handle (some application)).run current.1.server=
+      (RegistrationNativePlatformCompletionSdk.complete deriveAd pin reserve present finish token.registration application).run
         (AdapterPublicServerBuildOwnership.moved handle current.1).server := by
   obtain ⟨consumed,live,related⟩ := source_token view containers joint created credential current before handle token stored
-  exact AdapterPublicServerBuildOwnership.build_live pin reserve present finish token consumed current.1 handle related live application
+  exact AdapterPublicServerBuildOwnership.build_live deriveAd pin reserve present finish token consumed current.1 handle related live application
 
 theorem build_cancel (handle : Nat) (token : beaconcrypt_public_wrapper.server.RegistrationOutput)
     (stored : before.objects.tokens handle=some token) :
-    (RegistrationNativePlatformCompletionSdk.build pin reserve present finish handle none).run current.1.server=
+    (RegistrationNativePlatformCompletionSdk.build deriveAd pin reserve present finish handle none).run current.1.server=
       pure (.ok none,(AdapterPublicServerBuildOwnership.moved handle current.1).server) := by
   obtain ⟨consumed,live,related⟩ := source_token view containers joint created credential current before handle token stored
   unfold RegistrationNativePlatformCompletionSdk.build
@@ -171,7 +172,7 @@ theorem build_cancel (handle : Nat) (token : beaconcrypt_public_wrapper.server.R
 
  theorem build_missing (handle : Nat) (missing : before.objects.tokens handle=none)
     (application : Option (Slice U8)) :
-    (RegistrationNativePlatformCompletionSdk.build pin reserve present finish handle application).run current.1.server=
+    (RegistrationNativePlatformCompletionSdk.build deriveAd pin reserve present finish handle application).run current.1.server=
       pure (.ok none,current.1.server) := by
   have table:=before.tokens handle
   cases found:current.1.server.sessions[handle]? with

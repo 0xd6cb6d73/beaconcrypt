@@ -8,6 +8,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialSourceRootErasure
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily
 open PqxdhInitialBeaconAmbient PqxdhInitialSourceExperiment
 variable {ι M P I D K X Response A N : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -63,35 +65,35 @@ variable (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writ
 
 /-- The full original adaptive source run is root-erased, retaining all final fields rather than only its final decision. -/
 theorem run_root_unused (stage : Nat) :
-    run source writer selectedMessage left response64 other sender route decode index metadata ready post before
+    run (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage left response64 other sender route decode index metadata ready post before
       selected shared privateState cache stage =
-    run source writer selectedMessage right response64 other sender route decode index metadata ready post before
+    run (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage right response64 other sender route decode index metadata ready post before
       selected shared privateState cache stage := by
   simp only [run_source, root_unused source left right response64 selected,
     external_root_unused source selectedMessage left right response64 other]
 
 /-- The same original publication and byte-lineage freshness decision is root-erased in every chain stage. -/
 theorem game_root_unused (number : Std.U64) (ancestors disclosed : List RatchetChain) (stage : Nat) :
-    game source writer selectedMessage left response64 other sender route decode index metadata ready post before
+    game (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage left response64 other sender route decode index metadata ready post before
       selected number ancestors disclosed shared privateState cache stage =
-    game source writer selectedMessage right response64 other sender route decode index metadata ready post before
+    game (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage right response64 other sender route decode index metadata ready post before
       selected number ancestors disclosed shared privateState cache stage := by
   rw [game, game, root_unused source left right response64 selected,
-    run_root_unused source writer selectedMessage left right response64 other sender route decode index metadata ready post before
+    run_root_unused (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage left right response64 other sender route decode index metadata ready post before
       selected shared privateState cache stage]
 
 /-- The supplied initializer also removes the Ready root field from the original builder and its complete adaptive continuation. -/
 theorem run_ready_root_unused (replacement : RootOutput) (stage : Nat) :
-    run source writer selectedMessage left response64 other sender route decode index metadata { ready with root := replacement } post before
+    run (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage left response64 other sender route decode index metadata { ready with root := replacement } post before
       selected shared privateState cache stage =
-    run source writer selectedMessage left response64 other sender route decode index metadata ready post before
+    run (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage left response64 other sender route decode index metadata ready post before
       selected shared privateState cache stage := rfl
 
 /-- The original source publication and full byte freshness event retain the same decision after erasing the unused Ready root. -/
 theorem game_ready_root_unused (replacement : RootOutput) (number : Std.U64) (ancestors disclosed : List RatchetChain) (stage : Nat) :
-    game source writer selectedMessage left response64 other sender route decode index metadata { ready with root := replacement } post before
+    game (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage left response64 other sender route decode index metadata { ready with root := replacement } post before
       selected number ancestors disclosed shared privateState cache stage =
-    game source writer selectedMessage left response64 other sender route decode index metadata ready post before
+    game (associatedData := associatedData) (completedBinding := completedBinding) source writer selectedMessage left response64 other sender route decode index metadata ready post before
       selected number ancestors disclosed shared privateState cache stage := rfl
 
 end BeaconcryptCore.Computational.PqxdhInitialSourceRootErasure

@@ -27,7 +27,7 @@ variable [original : AdapterBeaconConstructorRequestMonad.Operations (RustT Prob
 variable [originalCrypto : CryptoOperations (RustT ProbComp)]
 variable (coins : QueryImpl unifSpec (StateT P ProbComp))
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (view : AdapterPublicWrapperState.MaterialView mlSource KemSK)
 local notation "SourceM" => AdapterBeaconConstructorNative.M n KemSK mlSource RegistrationServerRoleBackend.State (StateT P ProbComp)
 local notation "PhysicalM" => StateT (Backend n KemSK) (StateT P ProbComp)
@@ -36,7 +36,6 @@ local notation "PhysicalM" => StateT (Backend n KemSK) (StateT P ProbComp)
 variable (sourcePrevious : ChildOperations (RustT (AdapterBeaconConstructorNative.M n KemSK mlSource RegistrationServerRoleBackend.State (StateT P ProbComp))))
 variable (physicalPrevious : ChildOperations (RustT (StateT (Backend n KemSK) (StateT P ProbComp))))
 variable (generator : rand_core.TryCryptoRng R Error) (kem : AdapterBeaconConstructorKem.Representation view R)
-variable (ml : AdapterBeaconConstructorGeneration.MldsaContract generator view (RegistrationNativeMldsa.generate mlSource))
 variable (signing : AdapterBeaconConstructorGeneration.EdContract generator view setup.joint PqxdhJointIdentity.sampleSeed)
 variable (prekey : AdapterBeaconConstructorGeneration.KxContract generator view
   (fun scalar => PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)) PqxdhJointGapDh.sampleScalar)
@@ -68,12 +67,12 @@ theorem finish (before : Store n KemSK R P) (returned : RustM (AdapterBeaconCons
 noncomputable def source (keyId : U64) (identityKey mlKey : Slice U8) (before : Store n KemSK R P) :=
   result <$> RegistrationNativePlatformPublicAdapterCreatePhysical.run coins setup checks representation created view physicalPrevious generator keyId identityKey mlKey before
 
-include ml signing prekey kemContract in
+include signing prekey kemContract in
 theorem stable (keyId : U64) (identityKey mlKey : Slice U8) (before : Store n KemSK R P) :
     source coins setup checks representation created view physicalPrevious generator keyId identityKey mlKey before =
       source coins setup checks representation created view physicalPrevious generator keyId identityKey mlKey
         (RegistrationNativePlatformPublicAdapterPhysicalBackend.normalize before) := by
-  have law := RegistrationNativePlatformPublicAdapterCreateBodyNormalization.platform coins setup checks representation created view physicalPrevious generator kem ml signing prekey kemContract
+  have law := RegistrationNativePlatformPublicAdapterCreateBodyNormalization.platform coins setup checks representation created view physicalPrevious generator kem signing prekey kemContract
     keyId identityKey mlKey before.rng before.backend.1 before.backend.2
   have observed := congrArg (fun work => (fun raw => RegistrationNativePlatformPublicAdapterCreateStore.finish
     (RegistrationNativePlatformPublicAdapterPhysicalBackend.normalize before) raw.1.1 (raw.1.2,raw.2)) <$> work) law
@@ -85,7 +84,7 @@ theorem stable (keyId : U64) (identityKey mlKey : Slice U8) (before : Store n Ke
 noncomputable def physical
     (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (current : Native × P)
     (before : RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views created credential current) : Store n KemSK R P :=
   RegistrationNativePlatformPublicAdapterPhysicalBackend.normalize (erase before.base.objects)
@@ -94,20 +93,20 @@ theorem query (parsing : RegistrationNativePlatformPublicAdapterPinParsing.EdCon
     (keyId : U64) (identityKey mlKey : Slice U8) (current : Native × P)
     (before : RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views created credential current) :
     RegistrationNativePlatformSdkOrdinaryBeaconSelected.raw (physical setup view views created credential)
-      (RegistrationNativePlatformPublicAdapterCreatePhysical.dispatch coins setup checks representation created view sourcePrevious generator kem ml signing prekey kemContract views credential parsing keyId identityKey mlKey current before) =
+      (RegistrationNativePlatformPublicAdapterCreatePhysical.dispatch coins setup checks representation created view sourcePrevious generator kem signing prekey kemContract views credential parsing keyId identityKey mlKey current before) =
     source coins setup checks representation created view physicalPrevious generator keyId identityKey mlKey
       (physical setup view views created credential current before) := by
   have projected : RegistrationNativePlatformSdkOrdinaryBeaconSelected.raw (physical setup view views created credential)
-      (RegistrationNativePlatformPublicAdapterCreatePhysical.dispatch coins setup checks representation created view sourcePrevious generator kem ml signing prekey kemContract views credential parsing keyId identityKey mlKey current before) =
+      (RegistrationNativePlatformPublicAdapterCreatePhysical.dispatch coins setup checks representation created view sourcePrevious generator kem signing prekey kemContract views credential parsing keyId identityKey mlKey current before) =
     result <$> RegistrationNativePlatformSdkOrdinaryBeaconSelected.raw (strongPhysical setup view views created credential)
-      (RegistrationNativePlatformPublicAdapterCreatePhysical.dispatch coins setup checks representation created view sourcePrevious generator kem ml signing prekey kemContract views credential parsing keyId identityKey mlKey current before) := by
+      (RegistrationNativePlatformPublicAdapterCreatePhysical.dispatch coins setup checks representation created view sourcePrevious generator kem signing prekey kemContract views credential parsing keyId identityKey mlKey current before) := by
     unfold RegistrationNativePlatformSdkOrdinaryBeaconSelected.raw
     conv_rhs => erw [Functor.map_map]
     rfl
   rw [projected,RegistrationNativePlatformPublicAdapterCreatePhysical.query]
-  exact stable coins setup checks representation created view physicalPrevious generator kem ml signing prekey kemContract keyId identityKey mlKey (erase before.base.objects)
+  exact stable coins setup checks representation created view physicalPrevious generator kem signing prekey kemContract keyId identityKey mlKey (erase before.base.objects)
 
-include sourcePrevious ml signing prekey kemContract in
+include sourcePrevious signing prekey kemContract in
 theorem normal (parsing : RegistrationNativePlatformPublicAdapterPinParsing.EdContract view)
     (keyId : U64) (identityKey mlKey : Slice U8) (current : Native × P)
     (before : RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views created credential current)
@@ -115,11 +114,11 @@ theorem normal (parsing : RegistrationNativePlatformPublicAdapterPinParsing.EdCo
     (supported : output∈support (source coins setup checks representation created view physicalPrevious generator keyId identityKey mlKey
       (physical setup view views created credential current before))) :
     ∃reply next,output=(.ok (reply,next),next.backend) := by
-  rw [←query coins setup checks representation created view sourcePrevious physicalPrevious generator kem ml signing prekey kemContract views credential parsing keyId identityKey mlKey current before,
+  rw [←query coins setup checks representation created view sourcePrevious physicalPrevious generator kem signing prekey kemContract views credential parsing keyId identityKey mlKey current before,
     RegistrationNativePlatformSdkOrdinaryBeaconSelected.raw] at supported
   erw [support_map] at supported
   obtain ⟨packet,_possible,same⟩ := supported
-  let call := RegistrationNativePlatformPublicAdapterCreatePhysical.dispatch coins setup checks representation created view sourcePrevious generator kem ml signing prekey kemContract views credential parsing keyId identityKey mlKey current before
+  let call := RegistrationNativePlatformPublicAdapterCreatePhysical.dispatch coins setup checks representation created view sourcePrevious generator kem signing prekey kemContract views credential parsing keyId identityKey mlKey current before
   exact ⟨call.observe (returned call packet),physical setup view views created credential _ (store call packet),same.symm⟩
 
 

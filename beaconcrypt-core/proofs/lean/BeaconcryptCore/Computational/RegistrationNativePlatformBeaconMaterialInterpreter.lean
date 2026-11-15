@@ -26,7 +26,7 @@ theorem effect_lift : trustedLift (n := n) (KemSK := KemSK) ∘ₛ environment =
 
 theorem chosen_source (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential source) (owner current : SelectedOwner source)
     (ready : RegistrationBeaconReferenceRoot.Ready) (choice : RegistrationNativePairedChoice.Choice n)
     (env : EnvState RegistrationServerRoleBackend.State) (before : State n KemSK source) :
@@ -41,7 +41,7 @@ theorem chosen_source (setup : Setup base KemSK) (checks : Checks) (wire : Regis
 
 theorem complete_known (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential source) (owner current : SelectedOwner source)
     (ready : RegistrationBeaconReferenceRoot.Ready) (root : PqxdhSecretInputKdf.RootOutput)
     (env : EnvState RegistrationServerRoleBackend.State) (before : State n KemSK source)
@@ -60,7 +60,7 @@ theorem complete_known (setup : Setup base KemSK) (checks : Checks) (wire : Regi
 
 theorem abort_source {Value : Type} (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential source) (owner current : SelectedOwner source)
     (env : EnvState RegistrationServerRoleBackend.State) (value : Value) (before : State n KemSK source) :
     (simulateQ (implementation setup checks wire representation created scalar credential)
@@ -84,7 +84,7 @@ theorem abort_source {Value : Type} (setup : Setup base KemSK) (checks : Checks)
 
 theorem complete_missing (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential source) (owner current : SelectedOwner source)
     (ready : RegistrationBeaconReferenceRoot.Ready)
     (env : EnvState RegistrationServerRoleBackend.State) (before : State n KemSK source)

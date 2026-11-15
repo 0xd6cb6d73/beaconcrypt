@@ -2,7 +2,7 @@ import BeaconcryptCore.Computational.RawCtxSourceMaterialLabels
 import BeaconcryptCore.Computational.PqxdhOrderedChainHybrids
 
 /-!
-Fixed-source complete-response memoization at unchanged input/info addresses. The exact arbitrary-stateful continuation law erases only the private table. Initial64 and ongoing76 views share one response; the existing full-output partition retains every byte under arbitrary continuations.
+Fixed-source complete-response memoization at unchanged input/info addresses. The exact arbitrary-stateful continuation law erases only the private table. Initial64 and ongoing76 views occupy distinct label addresses; each view preserves its response; the existing full-output partition retains every byte under arbitrary continuations.
 
 This is functional source equality, not a random publicly evaluable HKDF replacement. The table contains prior chain inputs and next-chain outputs and cannot be passed wholesale to a secret-input observer or exposed by a new network/reveal capability. Local memoization/HMAC/byte work and any sampled unused tail must be accounted separately. No selected-input freshness, restore policy, evolving-key or global-security conclusion follows here.
 -/
@@ -20,6 +20,9 @@ open BeaconcryptCore.Refinement.RepresentationBridge BeaconcryptCore.Refinement.
 abbrev Label := RawCtxSourceMaterialLabels.Label
 
 def address (request : Label) : JointKdfAddress :=
+  ⟨absBytes request.info, absBytes request.input⟩
+
+def initialAddress (request : InitialRatchetKdfRequest) : JointKdfAddress :=
   ⟨absBytes request.info, absBytes request.input⟩
 
 def fullResponse (output : FullOutput) : RatchetKdfResponse :=
@@ -43,17 +46,16 @@ theorem fullResponse_source (source : FixedHkdfSha512NoSaltSource) (request : La
     fullResponse (productionStream source.crypto (address request)) = RawCtxSourceHkdf.response source.crypto request := by
   rfl
 
-/-- The actual initialization request and later same-address step share their whole first block. -/
+/-- Initial64 projects only the complete stream at the initial45 address. -/
 theorem initialResponse_source (source : FixedHkdfSha512NoSaltSource)
     (input : Std.Array Std.U8 32#usize) :
-    initialResponse (productionStream source.crypto (address ⟨input, ratchet.SYM_RATCHET_INFO⟩)) =
-      RawCtxSourceHkdf.initialResponse source.crypto ⟨input, ratchet.SYM_RATCHET_INFO⟩ := by
+    initialResponse (productionStream source.crypto (initialAddress ⟨input, ratchet.INITIAL_RATCHET_INFO⟩)) =
+      RawCtxSourceHkdf.initialResponse source.crypto ⟨input, ratchet.INITIAL_RATCHET_INFO⟩ := by
   have bytes : absBytes (initialResponse (productionStream source.crypto
-      (address ⟨input, ratchet.SYM_RATCHET_INFO⟩))).bytes =
-      absBytes (RawCtxSourceHkdf.initialResponse source.crypto ⟨input, ratchet.SYM_RATCHET_INFO⟩).bytes := by
+      (initialAddress ⟨input, ratchet.INITIAL_RATCHET_INFO⟩))).bytes =
+      absBytes (RawCtxSourceHkdf.initialResponse source.crypto ⟨input, ratchet.INITIAL_RATCHET_INFO⟩).bytes := by
     rw [initialResponse_bytes, RawCtxSourceHkdf.initialResponse_prefix]
-    rw [RawCtxSourceHkdf.response_stream]
-    rfl
+    simp only [initialAddress, absBytes_INITIAL_RATCHET_INFO, PqxdhJointKdf.initialAddress, streamBytes]
   have arrays := Subtype.ext ((absBytes_inj_iff _ _).mp bytes)
   exact congrArg pqxdh.concrete.InitialRatchetKdfResponse.mk arrays
 

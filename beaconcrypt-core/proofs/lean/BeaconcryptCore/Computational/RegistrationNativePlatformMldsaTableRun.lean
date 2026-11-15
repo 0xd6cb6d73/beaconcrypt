@@ -15,14 +15,13 @@ open PqxdhServerAuthExperiment (Setup Checks)
 open RegistrationNativeMldsa (Source Credential)
 open RegistrationNativeMldsaOpaque (Pool handleSource restore Live)
 open RegistrationNativeMldsaMap (nativeState)
-open RegistrationNativeMldsaPoolMap (StateLive)
 open RegistrationNativePlatformMldsaTableProgram (runState)
 open RegistrationNativePlatformMldsaTableRestore (observe)
 variable {n : Nat} {KemSK Platform E Value ι : Type} {base : OracleSpec ι}
 variable (source : Source) (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
 variable (route : RawCtxServerRouting.SenderDecoder)
 variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-variable (created : PqxdhLiveServerConstruction.Created Unit) (credential : Credential (handleSource source)) (fallback : Credential source)
+variable (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential (handleSource source)) (fallback : Credential source)
 variable [primitive : AdapterSealPrimitive.Operations]
 variable (view : RegistrationNativePlatformSourceSeal.KeyView) (failure : primitive.Error)
 variable (allocation : RegistrationNativePlatformSourceSeal.Allocation E (StateT Platform ProbComp))
@@ -35,7 +34,7 @@ local notation "original" => RegistrationNativePlatformExperiment.handler (n := 
 /-- Arbitrary adaptive source programs restore exactly at their actual final table, with every native and public platform poststate retained. -/
 theorem program (work : OracleComp RegistrationNativeRawAdapter.TypedSpec Value)
     (before : RegistrationNativeExperiment.State n KemSK (handleSource source)) (previous : Platform) (pool : Pool source)
-    (server : Live source pool credential fallback) (owners : StateLive source pool before) :
+    (server : Live source pool credential fallback) :
     observe source fallback <$> runState source (simulateQ callback work) before previous pool =
       (((simulateQ original work).run (nativeState (restore source fallback pool) before)).run previous) := by
   induction work using OracleComp.inductionOn generalizing before previous pool with
@@ -53,22 +52,20 @@ theorem program (work : OracleComp RegistrationNativeRawAdapter.TypedSpec Value)
         intro middle reached
         exact ih middle.1.1.1 middle.1.1.2 middle.1.2 middle.2
           (RegistrationNativePlatformMldsaTableHandler.server_live source setup checks wire route representation created credential
-            view failure allocation reserveRegistration reservePeer erased helper writer fallback pool server query before previous owners middle reached)
-          (RegistrationNativePlatformMldsaTableHandler.live source setup checks wire route representation created credential
-            view failure allocation reserveRegistration reservePeer erased helper writer pool ⟨fallback, server⟩ query before previous owners middle reached)
+            view failure allocation reserveRegistration reservePeer erased helper writer fallback pool server query before previous middle reached)
       _ = (observe source fallback <$> runState source (callback query) before previous pool) >>= fun middle =>
           (((simulateQ original (next middle.1.1)).run middle.1.2).run middle.2) := by
         rw [bind_map_left]
         rfl
       _ = _ := by
         rw [RegistrationNativePlatformMldsaTableHandler.restored source setup checks wire route representation created credential
-          view failure allocation reserveRegistration reservePeer erased helper writer fallback pool server query before previous owners]
+          view failure allocation reserveRegistration reservePeer erased helper writer fallback pool server query before previous]
 
 /-- The complete unchanged raw/secrecy compiler preserves its literal ledger and test bit under actual corrected platform restoration. -/
 theorem run (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value)
     (before : RegistrationNativeExperiment.State n KemSK (handleSource source)) (previous : Platform) (pool : Pool source)
-    (server : Live source pool credential fallback) (owners : StateLive source pool before) :
+    (server : Live source pool credential fallback) :
     observe source fallback <$>
       RegistrationNativeMldsaTableProgram.evaluate source
         ((RegistrationNativePlatformMldsaProfile.run setup checks wire route representation created credential view failure allocation
@@ -77,7 +74,7 @@ theorem run (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploym
         view failure allocation reserveRegistration reservePeer erased helper writer bounds mode work
           (nativeState (restore source fallback pool) before)).run previous) :=
   program source setup checks wire route representation created credential fallback view failure allocation reserveRegistration reservePeer erased helper writer
-    (RegistrationNativeFullCompiler.compile setup.source.crypto wire created.server.server.metadata.sender bounds mode work) before previous pool server owners
+    (RegistrationNativeFullCompiler.compile setup.source.crypto wire created.server.server.metadata.sender bounds mode work) before previous pool server
 end BeaconcryptCore.Computational.RegistrationNativePlatformMldsaTableRun
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformMldsaTableRun.program' depends on axioms: [propext,

@@ -490,7 +490,7 @@ fn aead_ciphertext_tags_and_authentication_failures_match_sodium() {
 	let native_nonce = native::Nonce::try_from_slice(&[0x24; 12]).unwrap();
 	let rust_nonce = rust::Nonce::try_from_slice(&[0x24; 12]).unwrap();
 	for message in [&b""[..], &b"record"[..], &[0x17; 257][..]] {
-		for ad in [None, Some(&b""[..]), Some(&[0x55; 281][..])] {
+		for ad in [None, Some(&b""[..]), Some(&[0x55; 151][..])] {
 			let (native_cipher, native_tag) =
 				native::encrypt_detached(message, ad, &native_nonce, &native_key).unwrap();
 			let (rust_cipher, rust_tag) =
@@ -530,7 +530,9 @@ mod protocol {
 	const SERVER_SEED: [u8; 32] = [0x51; 32];
 	const AUTH_SEED: [u8; 32] = [0x52; 32];
 	const PQ_DOMAIN: &[u8] = b"BeaconcryptPqxdh_CURVE25519_SHA-512_ML-KEM-768";
-	const RATCHET_DOMAIN: &[u8] = b"SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305";
+	const AD_RATCHET_CONTEXT: &[u8] = b"SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305";
+	const INITIAL_DOMAIN: &[u8] = b"SymRatchetInit_HKDF_SHA-512_CHACHA20_POLY1305";
+	const RATCHET_DOMAIN: &[u8] = b"SymRatchetMessage_HKDF_SHA-512_CHACHA20_POLY1305";
 
 	fn hash(bytes: &[u8]) -> [u8; 64] {
 		sodium::crypto_generichash::generichash(bytes, None, 64)
@@ -550,10 +552,9 @@ mod protocol {
 	}
 
 	fn init_hash(init: InitKex<'_>, server_ed: &[u8], server_auth: &[u8]) -> [u8; 64] {
-		let mut bytes = b"beaconcrypt ML-DSA-65 init transcript v1\0".to_vec();
+		let mut bytes = b"beaconcrypt ML-DSA-65 init transcript v2\0".to_vec();
 		bytes.extend_from_slice(&SERVER_ID.to_le_bytes());
 		bytes.extend_from_slice(server_ed);
-		bytes.extend_from_slice(init.mldsa_public_key);
 		bytes.extend_from_slice(server_auth);
 		for field in [
 			init.identity_key,
@@ -567,7 +568,7 @@ mod protocol {
 	}
 
 	fn response_hash(init_hash: &[u8; 64], response: KexResponse<'_>) -> [u8; 64] {
-		let mut bytes = b"beaconcrypt ML-DSA-65 response transcript v1\0".to_vec();
+		let mut bytes = b"beaconcrypt ML-DSA-65 response transcript v2\0".to_vec();
 		bytes.extend_from_slice(init_hash);
 		for field in [
 			response.identity_key,
@@ -614,6 +615,28 @@ mod protocol {
 		));
 	}
 
+	fn record_ad(init: InitKex<'_>, response: KexResponse<'_>) -> Vec<u8> {
+		let mut transcript = Vec::new();
+		for field in [
+			init.identity_key,
+			init.pre_key,
+			init.one_time_key,
+			init.pq_key,
+			response.identity_key,
+			response.ephemeral_key,
+			response.kem_cipher_text,
+		] {
+			transcript.extend_from_slice(field);
+		}
+		transcript.extend_from_slice(&response.key_id.to_le_bytes());
+		assert_eq!(transcript.len(), 2638);
+		let mut ad = PQ_DOMAIN.to_vec();
+		ad.extend_from_slice(AD_RATCHET_CONTEXT);
+		ad.extend_from_slice(&hash(&transcript));
+		assert_eq!(ad.len(), 151);
+		ad
+	}
+
 	struct LegacySession {
 		send: [u8; 32],
 		receive: [u8; 32],
@@ -625,31 +648,14 @@ mod protocol {
 	}
 
 	impl LegacySession {
-		fn new(
-			secrets: [&[u8]; 5],
-			server: bool,
-			peer_id: u64,
-			server_ed: &[u8],
-			beacon_ed: &[u8],
-			server_auth: &[u8],
-			beacon_auth: &[u8],
-		) -> Self {
+		fn new(secrets: [&[u8]; 5], server: bool, peer_id: u64, ad: Vec<u8>) -> Self {
 			let mut root_input = vec![0xff; 32];
 			for secret in secrets {
 				root_input.extend_from_slice(secret);
 			}
 			assert_eq!(root_input.len(), 192);
 			let root = hkdf(&root_input, PQ_DOMAIN, 32);
-			let chains = hkdf(&root, RATCHET_DOMAIN, 64);
-			let mut ad = vec![1];
-			ad.extend_from_slice(server_ed);
-			ad.push(1);
-			ad.extend_from_slice(beacon_ed);
-			ad.extend_from_slice(PQ_DOMAIN);
-			ad.extend_from_slice(RATCHET_DOMAIN);
-			ad.extend_from_slice(&hash(server_auth));
-			ad.extend_from_slice(&hash(beacon_auth));
-			assert_eq!(ad.len(), 281);
+			let chains = hkdf(&root, INITIAL_DOMAIN, 64);
 			let (send, receive) = if server {
 				(&chains[..32], &chains[32..])
 			} else {
@@ -673,7 +679,7 @@ mod protocol {
 			input.extend_from_slice(tag);
 			input.extend_from_slice(&sequence.to_le_bytes());
 			input.extend_from_slice(&sender.to_le_bytes());
-			assert_eq!(input.len(), 357);
+			assert_eq!(input.len(), 227);
 			hash(&input)
 		}
 
@@ -727,6 +733,21 @@ mod protocol {
 			plaintext
 		}
 
+		// Report the CTX and AEAD checks instead of panicking, for attacker-side attempts.
+		fn attempt_open_raw(&self, payload: &[u8], seq: u64) -> (bool, Option<Vec<u8>>) {
+			use sodium::crypto_aead::chacha20poly1305_ietf as aead;
+			assert_eq!(seq, self.receive_seq + 1);
+			let material = hkdf(&self.receive, RATCHET_DOMAIN, 76);
+			let boundary = payload.len() - 64;
+			let tag = &payload[boundary - 16..boundary];
+			let committed =
+				payload[boundary..] == self.commitment(&material, tag, seq, self.remote_id);
+			let key = aead::Key::from_bytes(&material[..32]).unwrap();
+			let nonce = aead::Nonce::try_from_slice(&material[64..76]).unwrap();
+			let plaintext = aead::decrypt(&payload[..boundary], Some(&self.ad), &nonce, &key).ok();
+			(committed, plaintext)
+		}
+
 		fn open(&mut self, bytes: &[u8]) -> Vec<u8> {
 			let frame = beaconcrypt_parse::decode_frame(bytes).unwrap();
 			assert_eq!(frame.key_id, self.remote_id);
@@ -753,7 +774,6 @@ mod protocol {
 		let init_bytes = beacon.get_registration_bundle().unwrap();
 		let init = beaconcrypt_parse::decode_init(&init_bytes).unwrap();
 		let digest = init_hash(init, server.public_key.as_bytes(), &auth_public);
-		verify_auth(init.mldsa_public_key, init.signature, false, &digest);
 		let beacon_ed = crypto_sign::PublicKey::from_bytes(&init.identity_key[1..]).unwrap();
 		let prekey = crypto_sign::verify(init.pre_key, &beacon_ed).unwrap();
 		let onetime = crypto_sign::verify(init.one_time_key, &beacon_ed).unwrap();
@@ -777,14 +797,19 @@ mod protocol {
 		let dh4 =
 			crypto_scalarmult::scalarmult(ephemeral.secret_key.as_bytes(), &onetime[2..]).unwrap();
 		let assigned = 41u64;
+		let public_response = KexResponse {
+			identity_key: server.public_key.as_bytes(),
+			ephemeral_key: ephemeral.public_key.as_bytes(),
+			kem_cipher_text: kem_cipher.as_bytes(),
+			key_id: assigned,
+			app_cipher_text: &[],
+			signature: &[],
+		};
 		let mut legacy = LegacySession::new(
 			[&dh1, &dh2, &dh3, &dh4, kem_shared.as_bytes()],
 			true,
 			assigned,
-			server.public_key.as_bytes(),
-			beacon_ed.as_bytes(),
-			&auth_public,
-			init.mldsa_public_key,
+			record_ad(init, public_response),
 		);
 		let mut plaintext = assigned.to_le_bytes().to_vec();
 		plaintext.extend_from_slice(b"legacy registration");
@@ -826,8 +851,6 @@ mod protocol {
 		use sodium::{crypto_kem::mlkem768, crypto_kx, crypto_scalarmult, crypto_sign};
 		let mut server = Server::try_new(SERVER_ID, Some(&SERVER_SEED), Some(&AUTH_SEED)).unwrap();
 		let beacon = crypto_sign::KeyPair::from_seed(&[0x71; 32]).unwrap();
-		let auth = SigningKey::<MlDsa65>::from_seed((&[0x72; 32]).into());
-		let auth_public = auth.verifying_key().encode();
 		let prekey = crypto_kx::KeyPair::from_seed(&[0x73; 32]).unwrap();
 		let onetime = crypto_kx::KeyPair::from_seed(&[0x74; 32]).unwrap();
 		let pq = mlkem768::KeyPair::from_seed(&[0x75; 64]).unwrap();
@@ -847,23 +870,14 @@ mod protocol {
 			pre_key: &prekey_signed,
 			one_time_key: &onetime_signed,
 			pq_key: &pq_signed,
-			mldsa_public_key: &auth_public,
-			signature: &[],
 		};
 		let digest = init_hash(
 			init,
 			server.identity_pk().as_bytes(),
 			&server.mldsa_public_key(),
 		);
-		let signature = sign_auth(&auth, false, &digest);
 		let mut init_bytes = vec![0; 8192];
-		let written = beaconcrypt_parse::encode_init(
-			InitKex {
-				signature: &signature,
-				..init
-			},
-			&mut init_bytes,
-		);
+		let written = beaconcrypt_parse::encode_init(init, &mut init_bytes);
 		assert_ne!(written, 0);
 		init_bytes.truncate(written);
 		let pending = server.get_shared_secret(&init_bytes).unwrap();
@@ -899,10 +913,7 @@ mod protocol {
 			[&dh1, &dh2, &dh3, &dh4, kem_shared.as_bytes()],
 			false,
 			response.key_id,
-			server_ed.as_bytes(),
-			beacon.public_key.as_bytes(),
-			&server.mldsa_public_key(),
-			&auth_public,
+			record_ad(init, response),
 		);
 		let decrypted = legacy.open_raw(response.app_cipher_text, 1);
 		assert_eq!(&decrypted[..8], &response.key_id.to_le_bytes());
@@ -922,5 +933,119 @@ mod protocol {
 			.encrypt_message(b"portable server record", response.key_id)
 			.unwrap();
 		assert_eq!(legacy.open(&reply.ciphertext), b"portable server record");
+	}
+
+	#[test]
+	fn self_consistent_attacker_request_around_a_copied_honest_kem_key_releases_nothing() {
+		use super::portable::crypto_kem::mlkem768 as portable_kem;
+		use sodium::{crypto_kem::mlkem768, crypto_kx, crypto_scalarmult, crypto_sign};
+		let mut server = Server::try_new(SERVER_ID, Some(&SERVER_SEED), Some(&AUTH_SEED)).unwrap();
+		let mut honest = Beacon::try_new(
+			SERVER_ID,
+			server.identity_pk().as_bytes(),
+			&server.mldsa_public_key(),
+		)
+		.unwrap();
+		let honest_request = honest.get_registration_bundle().unwrap();
+		let honest_init = beaconcrypt_parse::decode_init(&honest_request).unwrap();
+		let honest_ed =
+			crypto_sign::PublicKey::from_bytes(honest.identity_pk().as_bytes()).unwrap();
+		let copied_kem = crypto_sign::verify(honest_init.pq_key, &honest_ed).unwrap();
+		assert_eq!(copied_kem[0], 3);
+		assert_eq!(&copied_kem[1..], honest.pq_pk().unwrap().as_bytes());
+
+		// The attacker owns every other key and signs every field itself, including the copied KEM.
+		let attacker = crypto_sign::KeyPair::from_seed(&[0x81; 32]).unwrap();
+		let prekey = crypto_kx::KeyPair::from_seed(&[0x83; 32]).unwrap();
+		let onetime = crypto_kx::KeyPair::from_seed(&[0x84; 32]).unwrap();
+		assert_ne!(attacker.public_key.as_bytes(), honest_ed.as_bytes());
+		let mut identity = vec![1];
+		identity.extend_from_slice(attacker.public_key.as_bytes());
+		let mut prekey_bytes = vec![4, 0x80];
+		prekey_bytes.extend_from_slice(prekey.public_key.as_bytes());
+		let mut onetime_bytes = vec![4, 0x81];
+		onetime_bytes.extend_from_slice(onetime.public_key.as_bytes());
+		let prekey_signed = crypto_sign::sign(&prekey_bytes, &attacker.secret_key).unwrap();
+		let onetime_signed = crypto_sign::sign(&onetime_bytes, &attacker.secret_key).unwrap();
+		let pq_signed = crypto_sign::sign(&copied_kem, &attacker.secret_key).unwrap();
+		let init = InitKex {
+			identity_key: &identity,
+			pre_key: &prekey_signed,
+			one_time_key: &onetime_signed,
+			pq_key: &pq_signed,
+		};
+		let mut init_bytes = vec![0; 8192];
+		let written = beaconcrypt_parse::encode_init(init, &mut init_bytes);
+		assert_ne!(written, 0);
+		init_bytes.truncate(written);
+		let pending = server.get_shared_secret(&init_bytes).unwrap();
+		let response_bytes = server
+			.build_registration_response(pending, Some(b"routed to the KEM owner"))
+			.unwrap();
+		let response = beaconcrypt_parse::decode_response(&response_bytes.serialized).unwrap();
+
+		let server_ed = crypto_sign::PublicKey::from_bytes(response.identity_key).unwrap();
+		let server_public = crypto_sign::ed25519_pk_to_curve25519(&server_ed).unwrap();
+		let identity_secret = crypto_sign::ed25519_sk_to_curve25519(&attacker.secret_key).unwrap();
+		let dh1 =
+			crypto_scalarmult::scalarmult(prekey.secret_key.as_bytes(), &server_public).unwrap();
+		let dh2 = crypto_scalarmult::scalarmult(&identity_secret, response.ephemeral_key).unwrap();
+		let dh3 =
+			crypto_scalarmult::scalarmult(prekey.secret_key.as_bytes(), response.ephemeral_key)
+				.unwrap();
+		let dh4 =
+			crypto_scalarmult::scalarmult(onetime.secret_key.as_bytes(), response.ephemeral_key)
+				.unwrap();
+		let session = |kem_shared: &[u8]| {
+			LegacySession::new(
+				[&dh1, &dh2, &dh3, &dh4, kem_shared],
+				false,
+				response.key_id,
+				record_ad(init, response),
+			)
+		};
+		// Without the honest KEM secret, decapsulating under an attacker-owned key fails both checks.
+		let own_kem = mlkem768::KeyPair::from_seed(&[0x85; 64]).unwrap();
+		let guessed = mlkem768::decapsulate(
+			&mlkem768::Ciphertext::from_bytes(response.kem_cipher_text).unwrap(),
+			&own_kem.secret_key,
+		)
+		.unwrap();
+		assert_eq!(
+			session(guessed.as_bytes()).attempt_open_raw(response.app_cipher_text, 1),
+			(false, None)
+		);
+		// Control: the same derivation opens it with the honest KEM secret, the only missing input.
+		let owner_shared = portable_kem::decapsulate(
+			&portable_kem::Ciphertext::from_bytes(response.kem_cipher_text).unwrap(),
+			honest.pq_sk().unwrap(),
+		)
+		.unwrap();
+		let (committed, plaintext) =
+			session(owner_shared.as_bytes()).attempt_open_raw(response.app_cipher_text, 1);
+		assert!(committed);
+		let plaintext = plaintext.unwrap();
+		assert_eq!(&plaintext[..8], &response.key_id.to_le_bytes());
+		assert_eq!(&plaintext[8..], b"routed to the KEM owner");
+
+		// The honest session is still admitted separately and receives only its own traffic.
+		let accepted = server.get_shared_secret(&honest_request).unwrap();
+		let honest_response = server
+			.build_registration_response(accepted, Some(b"honest secret"))
+			.unwrap();
+		assert_ne!(honest_response.kid, response.key_id);
+		assert_eq!(
+			honest
+				.finish_registration(&honest_response.serialized)
+				.unwrap(),
+			b"honest secret"
+		);
+		let record = server
+			.encrypt_message(b"honest record", honest_response.kid)
+			.unwrap();
+		assert_eq!(
+			honest.decrypt_message(&record).unwrap().plaintext,
+			b"honest record"
+		);
 	}
 }

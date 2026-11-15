@@ -19,9 +19,9 @@ open BeaconcryptCore.Refinement
 variable {n : Nat} {I KemSK Platform : Type} {base : OracleSpec I} {mlSource : RegistrationNativeMldsa.Source}
 attribute [local irreducible] registration.BeaconEd25519Signing.resume
 variable (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner mlSource)
-variable (writer : registration.SignedInitView → StateT Platform ProbComp (RustM (core.option.Option (alloc.vec.Vec U8))))
+variable (writer : registration.InitView → StateT Platform ProbComp (RustM (core.option.Option (alloc.vec.Vec U8))))
 local notation "Main" => RegistrationNativePlatformIdentityCtxMain.beacon (n := n) (Platform := Platform) (source := mlSource) setup checks representation created
 local notation "callback" => (fun query => Main (RegistrationNativePlatformIdentityProgram.native
   (RegistrationNativeIdentityFrontend.outgoing (n := n) (Auxiliary := RegistrationServerRoleBackend.State) setup mlSource index owner query)))
@@ -67,7 +67,7 @@ theorem pre_key (selected : Nat) (placeholder : Ed25519Signature)
   rw [resumed]
   cases effect <;> simp only [RegistrationSigning.EdReplyTransition, stage] at facts
   case Rejected previous => simp only [StateT.run_pure, map_pure, Prod.map_apply, id_eq]
-  case FingerprintRequested next => cases facts.2.1
+  case HashRequested next => cases facts.2.1
   case Ed25519SigningRequested next =>
     have nextStage : next.stage = .OneTimeKey := facts.2.1
     have nextStarted := congrArg (fun state : registration.BeaconInitState => state.started) facts.2.2.2
@@ -94,10 +94,10 @@ private def BeginProgress (inputs : pqxdh.BeaconStartInputs) (started : pqxdh.Be
   | _ => False
 
 private theorem begin_progress (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Array U8 1952#usize)
+    (pin : session.ServerAuthenticationPin)
     (started : pqxdh.BeaconStart) (built : pqxdh.beacon_start control inputs coins = .ok started) :
-    ∃ effect, registration.begin_beacon_init control inputs coins pin mldsa = .ok effect ∧ BeginProgress inputs started effect := by
-  obtain ⟨actual, actualRun, begun⟩ := RegistrationSigningContinuations.begin_beacon_init_exact control inputs coins pin mldsa
+    ∃ effect, registration.begin_beacon_init control inputs coins pin = .ok effect ∧ BeginProgress inputs started effect := by
+  obtain ⟨actual, actualRun, begun⟩ := RegistrationSigningContinuations.begin_beacon_init_exact control inputs coins pin
   have same : actual = started := RustM.ok.inj (actualRun.symm.trans built)
   subst actual
   rw [begun]
@@ -107,7 +107,7 @@ private theorem begin_progress (control : pqxdh.BeaconFresh) (inputs : pqxdh.Bea
 
 private def fromEffect {S Encoded : Type}
     (impl : QueryImpl RegistrationBeaconInitExecutor.Spec (StateT S ProbComp))
-    (encode : registration.SignedInitView → StateT S ProbComp (RustM (core.option.Option Encoded))) :
+    (encode : registration.InitView → StateT S ProbComp (RustM (core.option.Option Encoded))) :
     registration.BeaconInitEffect → StateT S ProbComp (RustM (RegistrationBeaconInitExecutor.Result Encoded))
   | .Rejected previous => pure (.ok (.Err previous))
   | .Ed25519SigningRequested pending => RegistrationNativePlatformBeaconPublication.fromEd impl encode pending
@@ -115,12 +115,12 @@ private def fromEffect {S Encoded : Type}
 
 private theorem begin_eq {S Encoded : Type}
     (impl : QueryImpl RegistrationBeaconInitExecutor.Spec (StateT S ProbComp))
-    (encode : registration.SignedInitView → StateT S ProbComp (RustM (core.option.Option Encoded)))
+    (encode : registration.InitView → StateT S ProbComp (RustM (core.option.Option Encoded)))
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Array U8 1952#usize)
+    (pin : session.ServerAuthenticationPin)
     (effect : registration.BeaconInitEffect)
-    (begun : registration.begin_beacon_init control inputs coins pin mldsa = .ok effect) :
-    RegistrationNativePlatformBeaconPublication.begin impl encode control inputs coins pin mldsa = fromEffect impl encode effect := by
+    (begun : registration.begin_beacon_init control inputs coins pin = .ok effect) :
+    RegistrationNativePlatformBeaconPublication.begin impl encode control inputs coins pin = fromEffect impl encode effect := by
   unfold RegistrationNativePlatformBeaconPublication.begin
   rw [begun]
   cases effect <;> rfl
@@ -129,7 +129,7 @@ private theorem begin_eq {S Encoded : Type}
 /-- The literal begin/pin gate and stale prekey prefix retain the original full source marginal, including early rejection and failed publication. -/
 theorem begin (selected : Nat) (placeholder : Ed25519Signature)
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Array U8 1952#usize)
+    (pin : session.ServerAuthenticationPin)
     (started : pqxdh.BeaconStart) (built : pqxdh.beacon_start control inputs coins = .ok started)
     (lineage : inputs.identity_public_key = PqxdhRootTableInitialization.rootArray owner.identity.publicIdentity.ed25519)
     (before : Full (n := n) (KemSK := KemSK) (Platform := Platform) (mlSource := mlSource)) (seed : PqxdhJointIdentity.IdentitySeed)
@@ -141,16 +141,16 @@ theorem begin (selected : Nat) (placeholder : Ed25519Signature)
     Prod.map id RegistrationNativeIdentityCensorActualHashSource.project <$>
       (RegistrationNativePlatformBeaconPublication.begin
         (fun query => interpret setup.joint selected placeholder false (callback query))
-        (fun fields => interpret setup.joint selected placeholder false (encoder fields)) control inputs coins pin mldsa).run before =
+        (fun fields => interpret setup.joint selected placeholder false (encoder fields)) control inputs coins pin).run before =
       (RegistrationNativePlatformBeaconPublication.begin
         (fun query => RegistrationNativePlatformIdentityCtxMain.interpret setup.joint (callback query))
-        (fun fields => RegistrationNativePlatformIdentityCtxMain.interpret setup.joint (encoder fields)) control inputs coins pin mldsa).run
+        (fun fields => RegistrationNativePlatformIdentityCtxMain.interpret setup.joint (encoder fields)) control inputs coins pin).run
           (RegistrationNativeIdentityCensorActualHashSource.project before) := by
-  obtain ⟨effect, begun, progress⟩ := begin_progress control inputs coins pin mldsa started built
+  obtain ⟨effect, begun, progress⟩ := begin_progress control inputs coins pin started built
   obtain ⟨taggedStart, tagRun, tagged⟩ := RegistrationNativeIdentitySigningRole.initial control inputs coins
   have taggedSame : taggedStart = started := RustM.ok.inj (tagRun.symm.trans built)
   subst taggedStart
-  rw [begin_eq _ _ control inputs coins pin mldsa effect begun, begin_eq _ _ control inputs coins pin mldsa effect begun]
+  rw [begin_eq _ _ control inputs coins pin effect begun, begin_eq _ _ control inputs coins pin effect begun]
   cases effect <;> simp only [BeginProgress] at progress
   case Rejected previous => simp only [fromEffect, StateT.run_pure, map_pure, Prod.map_apply, id_eq]
   case Ed25519SigningRequested pending =>

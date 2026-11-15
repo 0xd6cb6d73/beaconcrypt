@@ -84,7 +84,7 @@ noncomputable def stage {Auxiliary : Type} {joint : Primitives} {dh : DhInterfac
     (publicValue : PublicChallenge) (authenticated : registration.AuthenticatedResponse) :
     StateT (State Auxiliary) ProbComp (RustM agreement.AgreementEffect) := do
   let pending ← (simulateQ (PqxdhPhase2GapDhSource.prefixImpl domain (auxImpl (lifted backend) authenticated)
-    (fun point => RegistrationRootStage.lift (visit point))) (PqxdhPhase2DhMetadata.prepare authenticated.pending.control () () () []))
+    (fun point => RegistrationRootStage.lift (visit point))) (PqxdhPhase2DhMetadata.prepare (completedBinding := authenticated.binding) authenticated.control () () () []))
   match pending with
   | none => pure (.ok (RegistrationBeaconAgreementRoot.rejected authenticated))
   | some pending =>
@@ -112,9 +112,9 @@ theorem stage_source {Auxiliary : Type} (source : PqxdhJointKdfGame.FixedHkdfSha
     (primitive : QueryImpl RegistrationAgreementShared.PrimitiveSpec (StateT Auxiliary ProbComp))
     (visit : Word32 → StateT (RawCtxSharedPrimitive.SharedState Auxiliary) ProbComp Unit)
     (authenticated : registration.AuthenticatedResponse)
-    (pin : absBytes authenticated.pending.control.expected_server_binding.identity_public_key =
+    (pin : absBytes authenticated.control.expected_server_binding.identity_public_key =
       (joint.publicKeys seed).ed25519.toList)
-    (coherent : authenticated.pending.control.expected_server_binding = authenticated.pending.binding.server_pin.binding)
+    (coherent : authenticated.control.expected_server_binding = authenticated.binding.server_pin.binding)
     (before : State (RawCtxSharedPrimitive.SharedState Auxiliary)) :
     Prod.map id Prod.snd <$>
       (stage domain (RegistrationBeaconConversion.backend source primitive) visit
@@ -125,7 +125,7 @@ theorem stage_source {Auxiliary : Type} (source : PqxdhJointKdfGame.FixedHkdfSha
   rw [RegistrationBeaconPreparationInterpreter.beacon_source dh scalar
     (RegistrationBeaconConversion.backend source primitive) visit authenticated coherent, StateT.run_bind]
   rw [← native_program_project dh scalar (RegistrationBeaconConversion.backend source primitive) visit authenticated
-    (PqxdhBeaconPhase2Preparation.prepare authenticated.pending.control () (.inl ()) (.inr ()) () []) before,
+    (PqxdhBeaconPhase2Preparation.prepare (completedBinding := authenticated.binding) authenticated.control () (.inl ()) (.inr ()) () []) before,
     bind_map_left]
   simp only [stage, PqxdhPhase2DhMetadata.prepare, PqxdhBeaconPhase2Preparation.prepare,
     simulateQ_bind, StateT.run_bind, simulateQ_pure, StateT.run_pure, map_bind]
@@ -144,9 +144,9 @@ theorem stage_source {Auxiliary : Type} (source : PqxdhJointKdfGame.FixedHkdfSha
       simulateQ_bind, simulateQ_spec_query, PqxdhPhase2GapDhSource.nativeImpl, auxImpl,
       RegistrationBeaconAgreementRoot.callbacks, simulateQ_pure, StateT.run_pure,
       pure_bind]
-    have metadataEq := (PqxdhPhase2DhMetadata.admitted_exact dh domain scalar
-      authenticated.pending.control collected references).symm
-    cases actual : PqxdhBeaconPhase2Preparation.normalPrepare authenticated.pending.control
+    have metadataEq := (PqxdhPhase2DhMetadata.admitted_exact (completedBinding := authenticated.binding) dh domain scalar
+      authenticated.control collected references).symm
+    cases actual : PqxdhBeaconPhase2Preparation.normalPrepare authenticated.control
         (PqxdhPhase2GapDhSource.concreteInputs dh scalar collected).finishInputs with
     | Err error =>
         simp only [actual, PqxdhBeaconPhase2Shared.optionalMetadata] at metadataEq
@@ -154,23 +154,23 @@ theorem stage_source {Auxiliary : Type} (source : PqxdhJointKdfGame.FixedHkdfSha
           RegistrationBeaconRootPreparation.afterPrepared, map_pure, Prod.map_apply, id_eq]
     | Ok candidate =>
         simp only [actual, PqxdhBeaconPhase2Shared.optionalMetadata] at metadataEq
-        have converted := RegistrationBeaconConversion.collected_conversion source.crypto joint dh domain
+        have converted := RegistrationBeaconConversion.collected_conversion (completedBinding := authenticated.binding) source.crypto joint dh domain
           secretOfSeed wiring seed
           (auxImpl (lifted (RegistrationBeaconConversion.backend source primitive)) authenticated)
           (lifted_aux_conversion source primitive authenticated)
-          (fun point => RegistrationRootStage.lift (visit point)) authenticated.pending.control pin
-          before after collected (PqxdhBeaconPhase2Shared.candidateMetadata candidate) reached metadataEq
-        have related := PqxdhPhase2DhMetadata.prepared_related dh scalar authenticated.pending.control collected candidate actual
+          (fun point => RegistrationRootStage.lift (visit point)) authenticated.control pin
+          before after collected (PqxdhBeaconPhase2Shared.candidateMetadata (completedBinding := authenticated.binding) candidate) reached metadataEq
+        have related := PqxdhPhase2DhMetadata.prepared_related (completedBinding := authenticated.binding) dh scalar authenticated.control collected candidate actual
         have sourceEq := RegistrationBeaconRelatedRoot.client_source source hmac dh domain seed scalar
           (RegistrationPublicConversion.primitive source.crypto primitive) authenticated
-          ⟨collected.response, collected.ciphertext, collected.ephemeral, candidate⟩
-          ⟨collected, PqxdhBeaconPhase2Shared.candidateMetadata candidate⟩ references converted related
+          ⟨collected.response, collected.ciphertext, collected.ephemeral, candidate, authenticated.binding⟩
+          ⟨collected, PqxdhBeaconPhase2Shared.candidateMetadata (completedBinding := authenticated.binding) candidate⟩ references converted related
         simp only [metadataEq, Option.map_some, Prod.map_apply, id_eq,
           RegistrationBeaconRootPreparation.afterPrepared]
         rw [sourceEq]
         exact RegistrationBeaconRelatedRoot.instrument_program source hmac
           (RegistrationPublicConversion.primitive source.crypto primitive) (challenge joint dh seed scalar)
-          ⟨collected, PqxdhBeaconPhase2Shared.candidateMetadata candidate⟩ _ after
+          ⟨collected, PqxdhBeaconPhase2Shared.candidateMetadata (completedBinding := authenticated.binding) candidate⟩ _ after
 
 /-- Per-call source conversion fidelity permits native conversion effects and request instrumentation to remain in the real related-root stage. -/
 theorem stage_source_effectful {Auxiliary : Type} (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
@@ -183,9 +183,9 @@ theorem stage_source_effectful {Auxiliary : Type} (source : PqxdhJointKdfGame.Fi
       ((auxImpl (RegistrationAgreementShared.implementation source primitive) authenticated
         (.publicConversion key)).run before) → source.crypto.xpkConv (absBytes key) = some (absBytes converted))
     (visit : Word32 → StateT (RawCtxSharedPrimitive.SharedState Auxiliary) ProbComp Unit)
-    (pin : absBytes authenticated.pending.control.expected_server_binding.identity_public_key =
+    (pin : absBytes authenticated.control.expected_server_binding.identity_public_key =
       (joint.publicKeys seed).ed25519.toList)
-    (coherent : authenticated.pending.control.expected_server_binding = authenticated.pending.binding.server_pin.binding)
+    (coherent : authenticated.control.expected_server_binding = authenticated.binding.server_pin.binding)
     (before : State (RawCtxSharedPrimitive.SharedState Auxiliary)) :
     Prod.map id Prod.snd <$>
       (stage domain (RegistrationAgreementShared.implementation source primitive) visit
@@ -196,7 +196,7 @@ theorem stage_source_effectful {Auxiliary : Type} (source : PqxdhJointKdfGame.Fi
   rw [RegistrationBeaconPreparationInterpreter.beacon_source dh scalar
     (RegistrationAgreementShared.implementation source primitive) visit authenticated coherent, StateT.run_bind]
   rw [← native_program_project dh scalar (RegistrationAgreementShared.implementation source primitive) visit authenticated
-    (PqxdhBeaconPhase2Preparation.prepare authenticated.pending.control () (.inl ()) (.inr ()) () []) before,
+    (PqxdhBeaconPhase2Preparation.prepare (completedBinding := authenticated.binding) authenticated.control () (.inl ()) (.inr ()) () []) before,
     bind_map_left]
   simp only [stage, PqxdhPhase2DhMetadata.prepare, PqxdhBeaconPhase2Preparation.prepare,
     simulateQ_bind, StateT.run_bind, simulateQ_pure, StateT.run_pure, map_bind]
@@ -215,9 +215,9 @@ theorem stage_source_effectful {Auxiliary : Type} (source : PqxdhJointKdfGame.Fi
       simulateQ_bind, simulateQ_spec_query, PqxdhPhase2GapDhSource.nativeImpl, auxImpl,
       RegistrationBeaconAgreementRoot.callbacks, simulateQ_pure, StateT.run_pure,
       pure_bind]
-    have metadataEq := (PqxdhPhase2DhMetadata.admitted_exact dh domain scalar
-      authenticated.pending.control collected references).symm
-    cases actual : PqxdhBeaconPhase2Preparation.normalPrepare authenticated.pending.control
+    have metadataEq := (PqxdhPhase2DhMetadata.admitted_exact (completedBinding := authenticated.binding) dh domain scalar
+      authenticated.control collected references).symm
+    cases actual : PqxdhBeaconPhase2Preparation.normalPrepare authenticated.control
         (PqxdhPhase2GapDhSource.concreteInputs dh scalar collected).finishInputs with
     | Err error =>
         simp only [actual, PqxdhBeaconPhase2Shared.optionalMetadata] at metadataEq
@@ -225,26 +225,26 @@ theorem stage_source_effectful {Auxiliary : Type} (source : PqxdhJointKdfGame.Fi
           RegistrationBeaconRootPreparation.afterPrepared, map_pure, Prod.map_apply, id_eq]
     | Ok candidate =>
         simp only [actual, PqxdhBeaconPhase2Shared.optionalMetadata] at metadataEq
-        have converted := RegistrationBeaconConversion.collected_conversion source.crypto joint dh domain
+        have converted := RegistrationBeaconConversion.collected_conversion (completedBinding := authenticated.binding) source.crypto joint dh domain
           secretOfSeed wiring seed
           (auxImpl (lifted (RegistrationAgreementShared.implementation source primitive)) authenticated)
           (fun key before converted after supported => conversion key before.2 converted after.2 (by
             rw [← aux_project (RegistrationAgreementShared.implementation source primitive) authenticated
               (.publicConversion key) before, support_map]
             exact ⟨_, supported, rfl⟩))
-          (fun point => RegistrationRootStage.lift (visit point)) authenticated.pending.control pin
-          before after collected (PqxdhBeaconPhase2Shared.candidateMetadata candidate) reached metadataEq
-        have related := PqxdhPhase2DhMetadata.prepared_related dh scalar authenticated.pending.control collected candidate actual
+          (fun point => RegistrationRootStage.lift (visit point)) authenticated.control pin
+          before after collected (PqxdhBeaconPhase2Shared.candidateMetadata (completedBinding := authenticated.binding) candidate) reached metadataEq
+        have related := PqxdhPhase2DhMetadata.prepared_related (completedBinding := authenticated.binding) dh scalar authenticated.control collected candidate actual
         have sourceEq := RegistrationBeaconRelatedRoot.client_source source hmac dh domain seed scalar
           primitive authenticated
-          ⟨collected.response, collected.ciphertext, collected.ephemeral, candidate⟩
-          ⟨collected, PqxdhBeaconPhase2Shared.candidateMetadata candidate⟩ references converted related
+          ⟨collected.response, collected.ciphertext, collected.ephemeral, candidate, authenticated.binding⟩
+          ⟨collected, PqxdhBeaconPhase2Shared.candidateMetadata (completedBinding := authenticated.binding) candidate⟩ references converted related
         simp only [metadataEq, Option.map_some, Prod.map_apply, id_eq,
           RegistrationBeaconRootPreparation.afterPrepared]
         rw [sourceEq]
         exact RegistrationBeaconRelatedRoot.instrument_program source hmac
           primitive (challenge joint dh seed scalar)
-          ⟨collected, PqxdhBeaconPhase2Shared.candidateMetadata candidate⟩ _ after
+          ⟨collected, PqxdhBeaconPhase2Shared.candidateMetadata (completedBinding := authenticated.binding) candidate⟩ _ after
 
 theorem stage_real_effectful {Auxiliary : Type} (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (hmac : PqxdhSecretInputKdf.HmacSha512) (correct : PqxdhSecretInputKdf.SourceRootCorrect source hmac)
@@ -257,9 +257,9 @@ theorem stage_real_effectful {Auxiliary : Type} (source : PqxdhJointKdfGame.Fixe
       ((auxImpl (RegistrationAgreementShared.implementation source primitive) authenticated
         (.publicConversion key)).run before) → source.crypto.xpkConv (absBytes key) = some (absBytes converted))
     (visit : Word32 → StateT (RawCtxSharedPrimitive.SharedState Auxiliary) ProbComp Unit)
-    (pin : absBytes authenticated.pending.control.expected_server_binding.identity_public_key =
+    (pin : absBytes authenticated.control.expected_server_binding.identity_public_key =
       (joint.publicKeys seed).ed25519.toList)
-    (coherent : authenticated.pending.control.expected_server_binding = authenticated.pending.binding.server_pin.binding)
+    (coherent : authenticated.control.expected_server_binding = authenticated.binding.server_pin.binding)
     (before : State (RawCtxSharedPrimitive.SharedState Auxiliary)) :
     Prod.map id Prod.snd <$>
       (stage domain (RegistrationAgreementShared.implementation source primitive) visit
@@ -280,9 +280,9 @@ theorem stage_real {Auxiliary : Type} (source : PqxdhJointKdfGame.FixedHkdfSha51
     (primitive : QueryImpl RegistrationAgreementShared.PrimitiveSpec (StateT Auxiliary ProbComp))
     (visit : Word32 → StateT (RawCtxSharedPrimitive.SharedState Auxiliary) ProbComp Unit)
     (authenticated : registration.AuthenticatedResponse)
-    (pin : absBytes authenticated.pending.control.expected_server_binding.identity_public_key =
+    (pin : absBytes authenticated.control.expected_server_binding.identity_public_key =
       (joint.publicKeys seed).ed25519.toList)
-    (coherent : authenticated.pending.control.expected_server_binding = authenticated.pending.binding.server_pin.binding)
+    (coherent : authenticated.control.expected_server_binding = authenticated.binding.server_pin.binding)
     (before : State (RawCtxSharedPrimitive.SharedState Auxiliary)) :
     Prod.map id Prod.snd <$>
       (stage domain (RegistrationBeaconConversion.backend source primitive) visit

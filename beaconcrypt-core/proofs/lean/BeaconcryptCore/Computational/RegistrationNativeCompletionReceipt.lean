@@ -23,7 +23,7 @@ variable {source : RegistrationNativeMldsa.Source} {spec : OracleSpec Index}
 
 private theorem lower_simulate (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (implementation : QueryImpl spec (M n KemSK source RegistrationServerRoleBackend.State))
     (work : OracleComp spec Value) :
     lower setup checks representation created (simulateQ implementation work) =
@@ -34,7 +34,7 @@ private theorem lower_simulate (setup : Setup base KemSK) (checks : Checks)
 
 private theorem source_support (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (implementation : QueryImpl spec (M n KemSK source RegistrationServerRoleBackend.State))
     (work : OracleComp spec Value) (before after : Local n KemSK source) (value : Value)
     (supported : (value, after) ∈ support
@@ -48,7 +48,7 @@ private theorem source_support (setup : Setup base KemSK) (checks : Checks)
 
 private theorem terminal (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : M n KemSK source RegistrationServerRoleBackend.State Value)
     (outcome : RustM (Option Pqxdh.Bytes)) (before after : Local n KemSK source) (application : Pqxdh.Bytes)
     (supported : (.ok (some application), after) ∈ support
@@ -64,7 +64,7 @@ attribute [local irreducible] agreement record abort effect RegistrationAgreemen
 /-- Successful actual post-authentication execution contains one actual completed agreement, first-record result and true install reply, before publishing the exact application suffix. -/
 theorem completion_cut (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (index : Nat) (owner : Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (authenticated : registration.AuthenticatedResponse) (before after : Local n KemSK source)
     (application : Pqxdh.Bytes)
@@ -117,24 +117,24 @@ theorem completion_cut (setup : Setup base KemSK) (checks : Checks)
         have impossible := terminal setup checks representation created (abort owner) _ agreed after application continued
         cases impossible
 
-/-- The actual agreement capability in a complete native finish retains every authenticated registration-binding field, including both pins and populated AD281. -/
+/-- The actual agreement capability in a complete native finish retains every authenticated registration-binding field, including the full Server pin and transcript-derived AD151. -/
 theorem binding (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (owner : Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (authenticated : registration.AuthenticatedResponse) (capability : agreement.BeaconAgreement)
     (before after : Local n KemSK source)
     (supported : (.ok (.BeaconComplete capability), after) ∈ support
       ((lower setup checks representation created
         (simulateQ (agreement setup owner oneTime) (RegistrationAgreementExecutor.beacon authenticated))).run before)) :
-    capability.binding = authenticated.pending.binding :=
+    capability.binding = authenticated.binding :=
   RegistrationAgreementExecutor.beacon_binding authenticated capability
     (source_support setup checks representation created _ _ before after _ supported)
 
 /-- The first-record continuation reaches its actual native AEAD finish from the exact initial capability carrying that agreement root. -/
 theorem record_reaches (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (capability : agreement.BeaconAgreement) (completed : registration.CompletedBeacon)
     (before after : Local n KemSK source)
     (supported : (.ok (.Ok completed), after) ∈ support
@@ -162,7 +162,7 @@ theorem record_reaches (setup : Setup base KemSK) (checks : Checks)
 /-- Native first-record success retains the actual agreement root, initial capability, populated metadata, consumed sequence-one kernel and admitted application bytes. -/
 theorem record_consumed (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (capability : agreement.BeaconAgreement) (completed : registration.CompletedBeacon)
     (before after : Local n KemSK source)
     (supported : (.ok (.Ok completed), after) ∈ support
@@ -205,7 +205,7 @@ theorem record_consumed (setup : Setup base KemSK) (checks : Checks)
 /-- Every successful actual post-authentication finish has its full source-stage agreement and consumed-kernel receipt; all retained pins, root and initial state belong to that same supported execution. -/
 theorem complete (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (index : Nat) (owner : Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (authenticated : registration.AuthenticatedResponse) (before after : Local n KemSK source)
     (application : Pqxdh.Bytes)
@@ -214,9 +214,9 @@ theorem complete (setup : Setup base KemSK) (checks : Checks)
         (afterAuthentication setup wire index owner oneTime authenticated)).run before)) :
     ∃ (capability : agreement.BeaconAgreement) (established : registration.CompletedBeacon)
       (initial : registration.BeaconInitialKdf) (pending : registration.BeaconRecordAead) (plaintext : Slice Std.U8),
-      capability.binding = authenticated.pending.binding ∧
+      capability.binding = authenticated.binding ∧
       established.binding = BeaconcryptCore.Refinement.RegistrationPublication.completedBinding
-        authenticated.pending.binding capability.candidate.assigned_key_id ∧
+        authenticated.binding capability.candidate.assigned_key_id ∧
       registration.begin_beacon_completion capability = .ok initial ∧ initial.agreement = capability ∧
       BeaconcryptCore.Refinement.RegistrationReachability.BeaconRecordReachable initial (.AeadRequested pending) ∧
       pending.agreement = capability ∧
@@ -237,13 +237,13 @@ theorem complete (setup : Setup base KemSK) (checks : Checks)
 def Receipt (owners : State source) (index : Nat) (packet : Option registration.ResponsePacket)
     (application : Pqxdh.Bytes) : Prop :=
   ∃ (owner : Owner source) (original : registration.BeaconPending) (oneTime : PqxdhJointGapDh.ScalarBytes)
-    (received : registration.ResponsePacket) (capability : agreement.BeaconAgreement)
+    (received : registration.ResponsePacket) (adDigest : CtxRomAuth.CtxDigest) (capability : agreement.BeaconAgreement)
     (established : registration.CompletedBeacon) (initial : registration.BeaconInitialKdf)
     (pending : registration.BeaconRecordAead) (plaintext : Slice Std.U8),
     owners[index]? = some owner ∧ owner.phase = .initSent original oneTime ∧ packet = some received ∧
-    capability.binding = original.binding ∧
+    capability.binding = RegistrationResponseExecutor.completedBinding original adDigest ∧
     established.binding = BeaconcryptCore.Refinement.RegistrationPublication.completedBinding
-      original.binding capability.candidate.assigned_key_id ∧
+      (RegistrationResponseExecutor.completedBinding original adDigest) capability.candidate.assigned_key_id ∧
     registration.begin_beacon_completion capability = .ok initial ∧ initial.agreement = capability ∧
     BeaconcryptCore.Refinement.RegistrationReachability.BeaconRecordReachable initial (.AeadRequested pending) ∧
     pending.agreement = capability ∧
@@ -256,7 +256,7 @@ def Receipt (owners : State source) (index : Nat) (packet : Option registration.
 /-- Original complete finish success derives its complete source-stage receipt directly, including mandatory response authentication, with no completed-agreement premise. -/
 theorem finish (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (index : Nat) (packet : Option registration.ResponsePacket) (before after : Local n KemSK source)
     (application : Pqxdh.Bytes)
     (supported : (.ok (some application), after) ∈ support
@@ -285,13 +285,14 @@ theorem finish (setup : Setup base KemSK) (checks : Checks)
       obtain ⟨capability, established, initial, pending, plaintext, retained, metadata, started,
         initialSame, reached, sameAgreement, kernel, message, returned⟩ :=
         complete setup checks representation created wire index owner oneTime authenticated middle after application continued
+      obtain ⟨adDigest, same⟩ := same
       subst authenticated
-      exact ⟨owner, original, oneTime, received, capability, established, initial, pending, plaintext,
+      exact ⟨owner, original, oneTime, received, adDigest, capability, established, initial, pending, plaintext,
         selected, phase, rfl, retained, metadata, started, initialSame, reached, sameAgreement, kernel, message, returned⟩
 
 private theorem source_lower (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : M n KemSK source RegistrationServerRoleBackend.State Value)
     (before : RegistrationNativeExperiment.State n KemSK source) :
     (RegistrationNativeExperiment.beacon setup checks representation created work).run before =
@@ -303,7 +304,7 @@ private theorem source_lower (setup : Setup base KemSK) (checks : Checks)
 /-- The original mandatory-ML typed finish, on its unchanged source profile, derives the same complete consumed-kernel receipt. -/
 theorem typed_finish (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (credential : RegistrationNativeMldsa.Credential source)
     (index : Nat) (packet : Option registration.ResponsePacket)
     (before after : RegistrationNativeExperiment.State n KemSK source) (application : Pqxdh.Bytes)

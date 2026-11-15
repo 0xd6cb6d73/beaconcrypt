@@ -1,6 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePlatformOrdinaryMldsaCountStop
 import BeaconcryptCore.Computational.RegistrationNativeMldsaZeroSource
+import BeaconcryptCore.Computational.RegistrationNativeMldsaTableStop
 
 /-! The complete corrected fixed-key first-candidate game retains actual startup and every reached callback with its external state. Its candidate and private signing-prefix interpretation are unchanged by the checked count normalization. Validity and freshness at captured cuts are separate source invariants. -/
 open OracleComp OracleSpec CoreModels Aeneas beaconcrypt_core

@@ -57,6 +57,11 @@ theorem record_free (kind : Kind) (setup : PqxdhServerAuthExperiment.Setup base 
   apply bind_bound _ _ _ 0 0 (env_free kind _)
   intro unused
   cases query with
+  | adHash request =>
+      change Bounded (NativeCounted kind) 0 (do
+        let digest ← RegistrationNativeBeaconFrontend.hash request
+        pure ((core.option.Option.Some (RegistrationAuthenticationShared.digestArray digest)) : core.option.Option (Std.Array U8 64#usize)))
+      exact bind_bound _ _ _ 0 0 (hash_free kind _) (fun _ => pure_bound _ 0 _)
   | hash transcript =>
       change Bounded (NativeCounted kind) 0 (do
         let digest ← RegistrationNativeBeaconFrontend.hash (.Single (Std.Array.to_slice transcript.bytes))

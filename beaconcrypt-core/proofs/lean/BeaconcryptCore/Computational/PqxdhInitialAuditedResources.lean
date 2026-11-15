@@ -10,6 +10,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialAuditedResources
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhInitialBeaconAmbient PqxdhInitialNativeAudit
 open PqxdhInitialParentObserverBudgets (Costs ExternalUniform)
 variable {ι M P I D K X Response Shared Result Origin A N C : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -50,21 +52,21 @@ variable (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writ
 theorem source_uniform (stage qPost : Nat) (sourceBound : ∀ reply, (execution.outside reply).IsTotalQueryBound qPost)
     (state : State A N C) :
     ((simulateQ (handler source writer stage pre application initial selector aux)
-      (PqxdhInitialNativeCarried.original source mark sender route decode execution)).run state).IsTotalQueryBound (uniformBudget costs qPost) := by
+      (PqxdhInitialNativeCarried.original (associatedData := associatedData) (completedBinding := completedBinding) source mark sender route decode execution)).run state).IsTotalQueryBound (uniformBudget costs qPost) := by
   apply (isQueryBound_map_iff _ (Prod.map id Prod.fst) _ _ _).mp
   rw [program_erase source writer stage pre application initial selector aux]
-  exact PqxdhInitialNativeBudgets.source_uniform source writer stage (external pre application initial selector aux)
+  exact PqxdhInitialNativeBudgets.source_uniform (associatedData := associatedData) (completedBinding := completedBinding) source writer stage (external pre application initial selector aux)
     (externalBudget costs) (local_bounds pre application initial selector aux costs bounded)
     mark sender route decode execution qPost sourceBound state.1
 
 /-- The exact descriptor-carrying audited source sampler pays the same derived original source cap, preserving every cache, private field and candidate entry. -/
 theorem carried_uniform (depth stage qPost : Nat) (sourceBound : ∀ reply, (execution.outside reply).IsTotalQueryBound qPost)
     (state : State A N C) :
-    (PqxdhInitialNativeAuditCarried.carried source writer pre application initial selector aux mark sender route decode execution
+    (PqxdhInitialNativeAuditCarried.carried (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initial selector aux mark sender route decode execution
       depth stage state).IsTotalQueryBound (uniformBudget costs qPost) :=
-  PqxdhInitialNativeAuditCarried.carried_uniform source writer pre application initial selector aux mark sender route decode execution
+  PqxdhInitialNativeAuditCarried.carried_uniform (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initial selector aux mark sender route decode execution
     depth stage (uniformBudget costs qPost) state
-    (PqxdhInitialNativeBudgets.source_uniform source writer stage (external pre application initial selector aux)
+    (PqxdhInitialNativeBudgets.source_uniform (associatedData := associatedData) (completedBinding := completedBinding) source writer stage (external pre application initial selector aux)
       (externalBudget costs) (local_bounds pre application initial selector aux costs bounded)
       mark sender route decode execution qPost sourceBound state.1)
 

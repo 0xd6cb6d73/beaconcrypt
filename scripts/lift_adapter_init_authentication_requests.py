@@ -26,7 +26,7 @@ SELECTED = (
         "body",
         "def auth.authenticate_init_loop.body",
         "/-- [beaconcrypt::auth::authenticate_init]: loop 0:",
-        "313d070e33047bbfd67fb95fe8e4185dfe31b4288af90ea1371ccc29b7e13994",
+        "c45022819570455fbbfd828e3d0228f3527022648e887f50b72d7047755b382a",
     ),
 )
 REPLACEMENTS = {
@@ -60,8 +60,7 @@ REPLACEMENTS = {
     "body": [
         ("def auth.authenticate_init_loop.body", "def body", 1),
         ("RustM (ControlFlow", "m (ControlFlow", 1),
-        ("auth.execute_hash", "Operations.hash", 3),
-        ("auth.verify_requested", "Operations.verifyMldsa", 1),
+        ("auth.execute_hash", "Operations.hash", 1),
         (
             "auth.authenticate_init.closure.Insts.CoreOpsFunctionFnTupleOptionVecU8.call",
             "ed",
@@ -72,20 +71,10 @@ REPLACEMENTS = {
             "Lifted.asDeref opened",
             1,
         ),
-        ("ok (cont effect1)", "pure (cont effect1)", 5),
+        ("ok (cont effect1)", "pure (cont effect1)", 2),
         ("ok (done", "pure (done", 2),
         ("beaconcrypt_core.registration.InitHash.request", "Lifted.hashRequest", 1),
         ("beaconcrypt_core.registration.InitHash.resume", "Lifted.hashResume", 1),
-        (
-            "beaconcrypt_core.registration.InitMldsaVerification.request",
-            "Lifted.mldsaRequest",
-            1,
-        ),
-        (
-            "beaconcrypt_core.registration.InitMldsaVerification.resume",
-            "Lifted.mldsaResume",
-            1,
-        ),
         (
             "beaconcrypt_core.registration.InitEd25519Verification.request",
             "Lifted.edRequest",
@@ -94,26 +83,6 @@ REPLACEMENTS = {
         (
             "beaconcrypt_core.registration.InitEd25519Verification.resume",
             "Lifted.edResume",
-            1,
-        ),
-        (
-            "beaconcrypt_core.registration.InitServerFingerprint.request",
-            "Lifted.serverRequest",
-            1,
-        ),
-        (
-            "beaconcrypt_core.registration.InitServerFingerprint.resume",
-            "Lifted.serverResume",
-            1,
-        ),
-        (
-            "beaconcrypt_core.registration.InitBeaconFingerprint.request",
-            "Lifted.beaconRequest",
-            1,
-        ),
-        (
-            "beaconcrypt_core.registration.InitBeaconFingerprint.resume",
-            "Lifted.beaconResume",
             1,
         ),
     ],

@@ -51,7 +51,7 @@ noncomputable def complete {R : Type}
 (originalContainers : ContainerOperations (RustT Base))
 (previousChildren : ChildOperations (RustT SourceM))
 (view : MaterialView mlSource KemSK) (views : Views)
-(created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+(created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
 (current : Native×Platform)
 (before : RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views created credential current)
 (token : beaconcrypt_public_wrapper.server.RegistrationOutput) (data : core.option.Option (Slice U8))
@@ -77,7 +77,7 @@ noncomputable def complete {R : Type}
       (RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views created credential)
       (RegistrationNativePlatformPackedState.pack
         (RegistrationNativePlatformExperiment.server
-          (RegistrationNativePlatformCompletionSdk.complete (RegistrationNativePlatformSourceBuild.pin coins)
+          (RegistrationNativePlatformCompletionSdk.complete (RegistrationNativePlatformCompletionSdk.nativeAdHash coins) (RegistrationNativePlatformSourceBuild.pin coins)
             (admitted <$>StateT.lift allocated) (RegistrationNativePlatformCompletionSdk.nativePresent coins)
             (RegistrationNativePlatformExtractedSdkServer.Build.sourceFinish coins setup codec keyView failure
               (RegistrationNativePlatformExtractedSdkBuildNormal.allocation allocate)
@@ -92,9 +92,13 @@ noncomputable def complete {R : Type}
   let fallback (request : registration.MldsaSigningRequest) :NativeM RegistrationSigningShared.SignReply:=
     RegistrationNativePlatformExperiment.liftNative coins
       (RegistrationNativeExperiment.world (PqxdhRecordLiftWorld.sampled (RegistrationNativeMldsa.owned mlSource credential request)))
+  have tokenParsed : AdapterPublicServerToken.ParsedToken token := by
+    obtain ⟨tokenKey, tokenCopied, _⟩ :=
+      TranscriptAuthInputsRefinement.identity_public_key_exact token.registration.agreement.binding.init_fields
+    exact ⟨tokenKey, tokenCopied, RegistrationNativePlatformPublicAdapterPinArrays.parsed view edContract tokenKey⟩
   apply RegistrationNativePlatformSdkStrongServerBuildStep.complete coins setup codec keyView converted failure allocate reserveFrame erased
     (RegistrationNativeMldsa.owned mlSource credential) reservePackets fallback previousLocal previousChildren view views created credential current before token data
-    (RegistrationNativePlatformPublicAdapterPinArrays.parsed view edContract token.registration.agreement.binding.beacon_identity_public_key)
+    tokenParsed
     (fun _=>rfl) (fun _=>rfl) allocated
     (RegistrationNativePlatformPublicAdapterBuildDictionaries.reserve (n:=n) (source:=mlSource) originalContainers before.base.objects.server allocated reserveLeaf)
     footprint

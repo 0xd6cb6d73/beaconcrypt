@@ -1,6 +1,9 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePlatformServerMaterialFrontend
 import BeaconcryptCore.Computational.RegistrationServerReferenceRestore
+import BeaconcryptCore.Computational.RegistrationNativePlatformPairedServerService
+import BeaconcryptCore.Computational.RegistrationNativePlatformCompletionSdk
+import BeaconcryptCore.Computational.RegistrationNativeServerPinRecompute
 /-! Private interpretation restores the exact earlier root only at a source initializer. The executable frontend holds public one-use references while the complete Local World and platform effects stay threaded through the common outer monad. Native accounting is retained literally. -/
 open OracleComp OracleSpec CoreModels Aeneas beaconcrypt_core
 open Aeneas.Std hiding namespace core alloc
@@ -30,6 +33,66 @@ noncomputable def pin (coins : QueryImpl unifSpec m) (current : session.ServerAu
     StateT (Local n) m (RustM (core.option.Option session.ServerAuthenticationPin)) := fun before =>
   (fun result => (result.1, { before with world := (result.2, before.world.2) })) <$>
     simulateQ coins ((RegistrationNativeServerPinRecompute.native current.binding current.public_key).run before.world.1)
+
+/-- The actual selected request and optional reply run through the owned core AD continuation. -/
+noncomputable def adHash (coins : QueryImpl unifSpec m) (pending : registration.ServerAdHash) :
+    StateT (Local n) m RegistrationServerAdHash.Result :=
+  RegistrationNativePlatformServerCompletion.adHash coins pending
+
+private theorem restore_public_ad (pending : registration.ServerAdHash) :
+    RegistrationBoundKeySchedule.restoreAd (RegistrationBoundKeySchedule.publicAd pending)
+      (RegistrationBoundSource.rootValue pending.root.bytes) = pending := by
+  cases pending with
+  | mk candidate binding root application input =>
+    cases root
+    simp only [RegistrationBoundKeySchedule.restoreAd,RegistrationBoundKeySchedule.publicAd,
+      RegistrationBoundSource.root_value_array]
+
+/-- Restoring a private root changes neither the selected AD query nor the completed public metadata. -/
+theorem ad_public_resume (left right : registration.ServerAdHash)
+    (same : RegistrationBoundKeySchedule.publicAd left = RegistrationBoundKeySchedule.publicAd right)
+    (reply : core.option.Option (Std.Array U8 64#usize)) :
+    RegistrationPublicationKernelErasure.mapOk RegistrationBoundKeySchedule.publicInitial <$> left.resume reply =
+      RegistrationPublicationKernelErasure.mapOk RegistrationBoundKeySchedule.publicInitial <$> right.resume reply := by
+  have leftRun := RegistrationBoundGate.ad_resume_public_root
+    (RegistrationBoundKeySchedule.publicAd left) (RegistrationBoundSource.rootValue left.root.bytes) reply
+  have rightRun := RegistrationBoundGate.ad_resume_public_root
+    (RegistrationBoundKeySchedule.publicAd right) (RegistrationBoundSource.rootValue right.root.bytes) reply
+  rw [restore_public_ad left] at leftRun
+  rw [restore_public_ad right] at rightRun
+  rw [same] at leftRun
+  exact leftRun.trans rightRun.symm
+
+/-- The owned hash continuation observes the same callback and poststate whenever its complete public descriptor agrees. -/
+theorem runWith_public (hash : registration.HashRequest → m (core.option.Option (Std.Array U8 64#usize)))
+    (left right : registration.ServerAdHash)
+    (same : RegistrationBoundKeySchedule.publicAd left = RegistrationBoundKeySchedule.publicAd right) :
+    (fun result => RegistrationPublicationKernelErasure.mapOk RegistrationBoundKeySchedule.publicInitial <$> result) <$>
+        RegistrationServerAdHash.runWith hash left =
+      (fun result => RegistrationPublicationKernelErasure.mapOk RegistrationBoundKeySchedule.publicInitial <$> result) <$>
+        RegistrationServerAdHash.runWith hash right := by
+  have requested : left.request = right.request := by
+    have inputs := congrArg RegistrationBoundKeySchedule.PublicAd.input same
+    change left.input = right.input at inputs
+    simp only [registration.ServerAdHash.request,inputs]
+  unfold RegistrationServerAdHash.runWith
+  rw [requested]
+  cases right.request with
+  | fail error | div => rfl
+  | ok request =>
+    simp only [map_bind,map_pure]
+    apply bind_congr
+    intro reply
+    exact congrArg pure (ad_public_resume left right same reply)
+
+theorem adHash_public (coins : QueryImpl unifSpec m) (left right : registration.ServerAdHash)
+    (same : RegistrationBoundKeySchedule.publicAd left = RegistrationBoundKeySchedule.publicAd right) :
+    (fun result => RegistrationPublicationKernelErasure.mapOk RegistrationBoundKeySchedule.publicInitial <$> result) <$>
+        adHash (n := n) coins left =
+      (fun result => RegistrationPublicationKernelErasure.mapOk RegistrationBoundKeySchedule.publicInitial <$> result) <$>
+        adHash (n := n) coins right := by
+  unfold adHash RegistrationNativePlatformServerCompletion.adHash RegistrationNativePlatformServerCompletion.adHashWith
+  exact runWith_public _ left right same
 
 noncomputable def service (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (_codec : Codec Reader Response)
     (sealing : record_effects.AeadSealRequest → StateT (Local n) m
@@ -82,6 +145,17 @@ theorem lift_close (work : StateT (Local n) m Value) (before : State n) :
     (close (StateT.lift work)).run before =
       (fun result => (result.1, (before.1, result.2))) <$> work.run before.2 := by
   simp only [close, StateT.run, lift_apply, map_apply, Functor.map_map, Prod.map, id_eq]
+
+/-- The actual AD effect commutes with restoring public reference state beside its unchanged private Local. -/
+theorem adHash_close (coins : QueryImpl unifSpec m) (roots : Roots)
+    (pending : registration.ServerAdHash) (before : State n) :
+    Prod.map id (restore roots) <$>
+        (close (StateT.lift (adHash coins pending))).run before =
+      (RegistrationNativePlatformCompletionSdk.nativeAdHash coins pending).run (restore roots before) := by
+  rw [lift_close]
+  simp only [RegistrationNativePlatformCompletionSdk.nativeAdHash,RegistrationNativePlatformServerSdk.adHash,
+    RegistrationNativePlatformServerSdk.world,adHash,StateT.run,Functor.map_map,Prod.map,id_eq,
+    restore,RegistrationServerReferenceRestore.restore]
 
 
 /-- An actual reached source initializer uses the earlier private root and the same complete stateful material service, then commits exactly the public control/reply. -/
@@ -144,3 +218,27 @@ end BeaconcryptCore.Computational.RegistrationNativePlatformServerMaterialState
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativePlatformServerMaterialState.initial
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformServerMaterialState.ad_public_resume' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformServerMaterialState.ad_public_resume
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformServerMaterialState.runWith_public' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformServerMaterialState.runWith_public
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformServerMaterialState.adHash_public' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformServerMaterialState.adHash_public
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformServerMaterialState.adHash_close' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformServerMaterialState.adHash_close

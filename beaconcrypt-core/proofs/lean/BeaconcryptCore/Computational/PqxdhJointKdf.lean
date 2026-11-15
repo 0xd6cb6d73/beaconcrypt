@@ -4,9 +4,9 @@ import VCVio.OracleComp.QueryTracking.Structures
 /-!
 # Exact joint HKDF stream for BeaconCrypt PQXDH
 
-This module gives the two production HKDF-SHA-512 domains one common 76-byte stream surface indexed only by the exact domain bytes and input bytes.
+This module gives the three production HKDF-SHA-512 domains a 76-byte stream surface indexed by the exact domain bytes and input bytes.
 The PQXDH root is the first 32-byte projection under `INFO_PQ`.
-Initial ratchet chains and record-step material share the first two 32-byte projections under `INFO_R`, while the record nonce is the final 12-byte projection.
+Initial ratchet chains use `INFO_INIT`; record key, next chain and nonce use the distinct `INFO_R` message domain. Prefix consistency applies only within one input and label address.
 
 `ProductionHkdfPrefixConsistent` is only the functional prefix contract supplied by the fixed no-salt HKDF-SHA-512 source implementation.
 It is separate from `Pqxdh.Crypto` and states no primitive-security assumption.
@@ -38,7 +38,16 @@ abbrev JointKdfRO := (JointKdfAddress →ₒ JointKdfStream)
 def rootAddress (input : Pqxdh.Bytes) : JointKdfAddress :=
   ⟨Pqxdh.INFO_PQ, input⟩
 
-/-- The exact no-salt symmetric-ratchet address used by both initialization and record steps. -/
+/-- The exact no-salt initial directional-chain address. -/
+def initialAddress (input : Pqxdh.Bytes) : JointKdfAddress :=
+  ⟨Pqxdh.INFO_INIT, input⟩
+
+/-- Initial and message addresses remain distinct even for identical input bytes. -/
+theorem initialAddress_ne_ratchetAddress_value (initialInput messageInput : Pqxdh.Bytes) :
+    initialAddress initialInput ≠ (⟨Pqxdh.INFO_R, messageInput⟩ : JointKdfAddress) :=
+  fun same => Pqxdh.INFO_INIT_ne_INFO_R (congrArg JointKdfAddress.info same)
+
+/-- The exact no-salt message-ratchet address. -/
 def ratchetAddress (input : Pqxdh.Bytes) : JointKdfAddress :=
   ⟨Pqxdh.INFO_R, input⟩
 
@@ -141,12 +150,12 @@ theorem streamBytes_eq_step_parts (stream : JointKdfStream) :
   rw [← first64_append_final12, first64_eq_first32_append_second32]
   rfl
 
-/-- For an equal input, the initial left chain and record-step key are the same projection. -/
+/-- The first projection of one fixed stream is independent of the view name. This does not identify different KDF addresses. -/
 @[simp] theorem initial_left_eq_stepKey (stream : JointKdfStream) :
     (initialProjection stream).1 = stepKey stream := by
   rfl
 
-/-- For an equal input, the initial right chain and record-step next chain are the same projection. -/
+/-- The second projection of one fixed stream is independent of the view name. This does not identify different KDF addresses. -/
 @[simp] theorem initial_right_eq_stepNext (stream : JointKdfStream) :
     (initialProjection stream).2 = stepNext stream := by
   rfl
@@ -177,7 +186,10 @@ structure ProductionHkdfPrefixConsistent (c : Pqxdh.Crypto) : Prop where
   /-- The 32-byte root call is the first projection of the root-domain stream. -/
   rootPrefix : ∀ input,
     c.hkdf input Pqxdh.INFO_PQ 32 = (c.hkdf input Pqxdh.INFO_PQ 76).take 32
-  /-- The 64-byte initialization call is the shared prefix of the symmetric 76-byte stream. -/
+  /-- Initialization is a prefix of the complete expansion under the same initial label. -/
+  initialPrefix : ∀ input,
+    c.hkdf input Pqxdh.INFO_INIT 64 = (c.hkdf input Pqxdh.INFO_INIT 76).take 64
+  /-- Prefix consistency for the separate message label; never a cross-phase equality. -/
   ratchetPrefix : ∀ input,
     c.hkdf input Pqxdh.INFO_R 64 = (c.hkdf input Pqxdh.INFO_R 76).take 64
 
@@ -191,20 +203,21 @@ theorem rootSecret_eq_rootProjection (c : Pqxdh.Crypto)
 /-- The existing initial-chain wrapper is exactly the two shared symmetric projections. -/
 theorem rootChains_eq_initialProjection (c : Pqxdh.Crypto)
     (hprefix : ProductionHkdfPrefixConsistent c) (input : Pqxdh.Bytes) :
-    Pqxdh.rootChains c input = initialProjection (productionStream c (ratchetAddress input)) := by
+    Pqxdh.rootChains c input = initialProjection (productionStream c (initialAddress input)) := by
   apply Prod.ext
-  · rw [Pqxdh.rootChains, hprefix.ratchetPrefix]
-    simp [initialProjection, first32, productionStream, streamBytes, ratchetAddress,
+  · rw [Pqxdh.rootChains, hprefix.initialPrefix]
+    simp [initialProjection, first32, productionStream, streamBytes, initialAddress,
       List.take_take]
-  · rw [Pqxdh.rootChains, hprefix.ratchetPrefix]
-    simp [initialProjection, second32, productionStream, streamBytes, ratchetAddress,
+  · rw [Pqxdh.rootChains, hprefix.initialPrefix]
+    simp [initialProjection, second32, productionStream, streamBytes, initialAddress,
       List.drop_take]
 
-/-- The exact 64-byte source call is the prefix of the existing 76-byte record wrapper. -/
-theorem initialOutput_eq_ratchetOut_prefix (c : Pqxdh.Crypto)
+/-- The initial output is the prefix of the stream at its own exact initial-label address. -/
+theorem initialOutput_eq_initialStream_prefix (c : Pqxdh.Crypto)
     (hprefix : ProductionHkdfPrefixConsistent c) (input : Pqxdh.Bytes) :
-    c.hkdf input Pqxdh.INFO_R 64 = (Pqxdh.ratchetOut c input).take 64 := by
-  simpa only [Pqxdh.ratchetOut] using hprefix.ratchetPrefix input
+    c.hkdf input Pqxdh.INFO_INIT 64 =
+      (streamBytes (productionStream c (initialAddress input))).take 64 :=
+  hprefix.initialPrefix input
 
 /-- The existing record expansion is definitionally the complete symmetric stream. -/
 theorem ratchetOut_eq_streamBytes (c : Pqxdh.Crypto) (input : Pqxdh.Bytes) :
@@ -223,20 +236,10 @@ theorem msgMaterial_eq_stepKey_stepNonce (c : Pqxdh.Crypto) (input : Pqxdh.Bytes
         stepNonce (productionStream c (ratchetAddress input))) := by
   rfl
 
-/-- For equal symmetric inputs, production initialization's left chain equals the record-step message key. -/
-theorem rootChains_left_eq_msgMaterial_key (c : Pqxdh.Crypto)
-    (hprefix : ProductionHkdfPrefixConsistent c) (input : Pqxdh.Bytes) :
-    (Pqxdh.rootChains c input).1 = (Pqxdh.msgMaterial c input).1 := by
-  rw [rootChains_eq_initialProjection c hprefix,
-    msgMaterial_eq_stepKey_stepNonce]
-  rfl
-
-/-- For equal symmetric inputs, production initialization's right chain equals the record-step next chain. -/
-theorem rootChains_right_eq_nextChain (c : Pqxdh.Crypto)
-    (hprefix : ProductionHkdfPrefixConsistent c) (input : Pqxdh.Bytes) :
-    (Pqxdh.rootChains c input).2 = Pqxdh.nextChain c input := by
-  rw [rootChains_eq_initialProjection c hprefix, nextChain_eq_stepNext]
-  rfl
+/-- Current initial and message requests use different actual domain addresses. Their output values need not be assumed unequal. -/
+theorem initialAddress_ne_ratchetAddress (initialInput messageInput : Pqxdh.Bytes) :
+    initialAddress initialInput ≠ ratchetAddress messageInput :=
+  initialAddress_ne_ratchetAddress_value initialInput messageInput
 
 /-- The exact PQXDH transcript wrapper feeds the canonical root-domain stream without adding any field. -/
 theorem pqxdhIKM_rootSecret_eq_rootProjection (c : Pqxdh.Crypto)

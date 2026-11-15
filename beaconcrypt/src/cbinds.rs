@@ -841,17 +841,6 @@ pub extern "C" fn beaconcrypt_server_mldsa_public_key(handle: *const Server) -> 
 	into_buffer(provider.0.mldsa_public_key().to_vec())
 }
 
-/// Copy the beacon's ML-DSA-65 public key into a caller-owned buffer.
-/// Returns an empty buffer for a null handle.
-#[unsafe(no_mangle)]
-pub extern "C" fn beaconcrypt_beacon_mldsa_public_key(handle: *const Beacon) -> Buffer {
-	if handle.is_null() {
-		return empty_buffer();
-	}
-	let provider = unsafe { &*handle };
-	into_buffer(provider.mldsa_public_key().to_vec())
-}
-
 /// Generate the beacon's serialized registration bundle.
 ///
 /// Returns an empty buffer when the handle is invalid or the beacon cannot generate a bundle in its current state.
@@ -2279,9 +2268,6 @@ mod tests {
 			mldsa_key.len(),
 		);
 		assert!(!beacon.is_null());
-		let beacon_key = copy_buffer(beaconcrypt_beacon_mldsa_public_key(beacon));
-		assert_eq!(beacon_key.len(), crate::MLDSA_PUBLIC_KEY_LEN);
-		assert_ne!(beacon_key, mldsa_key);
 		beaconcrypt_beacon_free(beacon);
 	}
 
@@ -2359,11 +2345,6 @@ mod tests {
 		);
 		assert!(
 			beaconcrypt_server_mldsa_public_key(std::ptr::null())
-				.ptr
-				.is_null()
-		);
-		assert!(
-			beaconcrypt_beacon_mldsa_public_key(std::ptr::null())
 				.ptr
 				.is_null()
 		);

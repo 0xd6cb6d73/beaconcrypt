@@ -193,7 +193,7 @@ theorem accept_ordered (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
   rfl
 
 /-- The local state of the logged command compiler: the owner registry and the ephemeral log. -/
-abbrev Local := List EncodedEntry × Log
+abbrev Local := (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) × Log
 
 /-- The logged command handler over the exposed interface. A raw accept runs the exposed logged accept and appends its entry to the log; every other source14 request runs the unchanged exposed backend on the unchanged level-2 client; the Server read reveals the Server's identity-pool slot and returns it with the log. -/
 noncomputable def impl (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -211,14 +211,14 @@ noncomputable def impl (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
 /-- The complete logged command run: final result, owner registry, log and native state. -/
 noncomputable def run (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (work : OracleComp (Spec KemSK) Result)
-    (owners : List EncodedEntry) (log : Log) (state : NativeState KemSK) :
+    (owners : (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))) (log : Log) (state : NativeState KemSK) :
     OracleComp (PqxdhRegistrationJointKemEncapsulation.Spec KemSK) ((Result × Local) × NativeState KemSK) :=
   ((simulateQ (impl setup codec checks identityIndex publicIdentity) work).run (owners, log)).run state
 
 /-- The logged command program with the outcome type of the existing chain: the final log is dropped. -/
 noncomputable def commands (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (work : OracleComp (Spec KemSK) Result)
-    (owners : List EncodedEntry) (log : Log) (state : NativeState KemSK) :
+    (owners : (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))) (log : Log) (state : NativeState KemSK) :
     OracleComp (PqxdhRegistrationJointKemEncapsulation.Spec KemSK) (Outcome KemSK Result) :=
   (fun result => ((result.1.1, result.1.2.1), result.2)) <$>
     run setup codec checks identityIndex publicIdentity work owners log state
@@ -226,7 +226,7 @@ noncomputable def commands (setup : Setup baseSpec KemSK) (codec : Codec Reader 
 /-- A logged run of a sequential program is the run of its first part followed by the run of the rest from the reached owners, log and native state. -/
 theorem run_bind (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (work : OracleComp (Spec KemSK) Result)
-    (next : Result → OracleComp (Spec KemSK) Next) (owners : List EncodedEntry) (log : Log)
+    (next : Result → OracleComp (Spec KemSK) Next) (owners : (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))) (log : Log)
     (state : NativeState KemSK) :
     run setup codec checks identityIndex publicIdentity (work >>= next) owners log state =
       (run setup codec checks identityIndex publicIdentity work owners log state >>= fun result =>
@@ -234,7 +234,7 @@ theorem run_bind (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) 
   simp only [run, simulateQ_bind, StateT.run_bind]
 
 /-- Keeping a fixed log beside a level-2 client step and dropping it again changes nothing. -/
-theorem map_held {α : Type} (work : PqxdhRegistrationJointKemEncapsulation.Client KemSK (α × List EncodedEntry))
+theorem map_held {α : Type} (work : PqxdhRegistrationJointKemEncapsulation.Client KemSK (α × (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))))
     (log : Log) (state : NativeState KemSK) :
     (fun result => ((result.1.1, result.1.2.1), result.2)) <$>
       ((fun result => (result.1, (result.2, log))) <$> work).run state = work.run state := by
@@ -245,7 +245,7 @@ theorem map_held {α : Type} (work : PqxdhRegistrationJointKemEncapsulation.Clie
 theorem query_embed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity)
     (query : (PqxdhRegistrationJointRevealSchedule.Spec KemSK).Domain)
-    (owners : List EncodedEntry) (log : Log) (state : NativeState KemSK) :
+    (owners : (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))) (log : Log) (state : NativeState KemSK) :
     (fun result => ((result.1.1, result.1.2.1), result.2)) <$>
       ((impl setup codec checks identityIndex publicIdentity (.inl query)).run (owners, log)).run state =
       (simulateQ (PqxdhRegistrationJointKemEncapsulation.impl setup codec checks identityIndex publicIdentity)
@@ -270,7 +270,7 @@ theorem query_embed (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
 theorem commands_embed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity)
     (work : OracleComp (PqxdhRegistrationJointRevealSchedule.Spec KemSK) Result)
-    (owners : List EncodedEntry) (log : Log) (state : NativeState KemSK) :
+    (owners : (List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))) (log : Log) (state : NativeState KemSK) :
     commands setup codec checks identityIndex publicIdentity (simulateQ embed work) owners log state =
       PqxdhRegistrationJointKemEncapsulation.commands setup codec checks identityIndex publicIdentity work owners
         state := by

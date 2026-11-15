@@ -6,6 +6,7 @@ import BeaconcryptCore.Computational.CborRawIdealProvenanceStartup
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.CborRawIdealKeymatchStartup
 open PqxdhServerAuthExperiment (Setup Codec Checks)
 open PqxdhDeploymentInterface (FreshBounds Mode ModeSpec)
@@ -75,7 +76,7 @@ theorem world (setup : Setup baseSpec KemSK) (wire : Codec Reader Response)
     cases found
   · have vacant : w.server = none := congrArg PqxdhRecordLiftWorld.State.server fresh
     have initRun : (CborRawIdealProvenanceGuard.handler setup (boundaryWire wire parse) (route parse) (.inl created)).run (w, PqxdhRecordLiftOrigins.empty) =
-        pure ((), (PqxdhDeploymentEnvironmentJoin.initialized created w, PqxdhRecordLiftOrigins.empty)) := by
+        pure ((), (CborRawIdealProvenanceStartup.initialized created w, PqxdhRecordLiftOrigins.empty)) := by
       change (PqxdhRecordLiftOrigins.handler setup (boundaryWire wire parse) (route parse) (.inl created)).run
         (w, PqxdhRecordLiftOrigins.empty) = _
       rw [PqxdhDeploymentIdealOrigins.handler_other setup (boundaryWire wire parse) (route parse) _ _ rfl]
@@ -107,9 +108,13 @@ theorem world (setup : Setup baseSpec KemSK) (wire : Codec Reader Response)
         obtain ⟨parameters, _, constructed⟩ := supported
         have begins := PqxdhDeploymentEnvironment.start_initial setup ensureInit identityIndex runtime
           (fun made => (parameters, PqxdhDeploymentIdealSteps.splitInit made)) made environment constructed
+        have initSame := CborRawIdealProvenanceStartup.initialized_start setup
+          ensureInit identityIndex runtime (fun made => (parameters, PqxdhDeploymentIdealSteps.splitInit made))
+          made environment constructed w
+        rw [initSame] at middleMember
         subst begins
         exact CborRawIdealKeymatchStartupRest.rest_keyFacts setup wire parse checks target parameters ensureInit
-          identityIndex runtime made w fresh bounds (PqxdhDeploymentInterface.asModeO mode adversary)
+          identityIndex runtime (PqxdhDeploymentEnvironment.eraseCreatedMetadata made) w fresh bounds (PqxdhDeploymentInterface.asModeO mode adversary)
           ⟨PqxdhDeploymentCompile.Log.empty, setup.serverKeyId⟩ middle middleMember
 
 end BeaconcryptCore.Computational.CborRawIdealKeymatchStartup

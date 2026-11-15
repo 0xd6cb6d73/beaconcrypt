@@ -55,10 +55,10 @@ section Publication
 open RegistrationNativePlatformBeaconPublication
 variable (implementation : QueryImpl RegistrationBeaconInitExecutor.Spec
   (Work (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (Platform := Platform) (source := source)))
-variable (encode : registration.SignedInitView → Work (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (Platform := Platform) (source := source) (RustM (core.option.Option Encoded)))
+variable (encode : registration.InitView → Work (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (Platform := Platform) (source := source) (RustM (core.option.Option Encoded)))
 variable (cap : Nat) (native : ∀ query, Bounded (implementation query) 0) (encoded : ∀ view, Bounded (encode view) cap)
-attribute [local irreducible] registration.BeaconInitHash.resume registration.BeaconFingerprint.resume
-  registration.BeaconMldsaSigning.resume registration.BeaconEd25519Signing.resume registration.begin_beacon_init
+attribute [local irreducible] registration.BeaconInitHash.resume
+  registration.BeaconEd25519Signing.resume registration.begin_beacon_init
 
 private theorem continue_bound {Input : Type} (action : RustM Input)
     (next : Input → Work (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (Platform := Platform) (source := source)
@@ -75,19 +75,6 @@ private theorem ready_bound (pending : registration.BeaconInitReady) : Bounded (
   intro view
   exact bind_tail_zero _ _ cap (encoded view) (fun _ => pure_bound _ 0)
 include native encoded in
-private theorem signing_bound (payload : MldsaTranscriptAuth.Payload) (digest : CtxRomAuth.CtxDigest)
-    (pending : registration.BeaconMldsaSigning) : Bounded (fromSigning implementation encode payload digest pending) cap := by
-  unfold fromSigning
-  apply continue_bound
-  intro request
-  apply bind_zero _ _ cap (native _)
-  intro reply
-  apply continue_bound
-  intro effect
-  cases effect with
-  | Ready selected => exact ready_bound encode cap encoded selected
-  | _ => exact pure_bound _ cap
-include native encoded in
 private theorem hash_bound (pending : registration.BeaconInitHash) : Bounded (fromHash implementation encode pending) cap := by
   unfold fromHash
   apply continue_bound
@@ -97,19 +84,7 @@ private theorem hash_bound (pending : registration.BeaconInitHash) : Bounded (fr
   apply continue_bound
   intro effect
   cases effect with
-  | MldsaSigningRequested selected => exact signing_bound implementation encode cap native encoded _ _ selected
-  | _ => exact pure_bound _ cap
-include native encoded in
-private theorem fingerprint_bound (pending : registration.BeaconFingerprint) : Bounded (fromFingerprint implementation encode pending) cap := by
-  unfold fromFingerprint
-  apply continue_bound
-  intro request
-  apply bind_zero _ _ cap (native _)
-  intro digest
-  apply continue_bound
-  intro effect
-  cases effect with
-  | HashRequested selected => exact hash_bound implementation encode cap native encoded selected
+  | Ready selected => exact ready_bound encode cap encoded selected
   | _ => exact pure_bound _ cap
 include native encoded in
 private theorem ed_bound (pending : registration.BeaconEd25519Signing) : Bounded (fromEd implementation encode pending) cap := by
@@ -122,7 +97,7 @@ private theorem ed_bound (pending : registration.BeaconEd25519Signing) : Bounded
   | fail error | div => exact pure_bound _ cap
   | ok effect => cases effect with
     | Ed25519SigningRequested next => exact ed_bound next
-    | FingerprintRequested selected => exact fingerprint_bound implementation encode cap native encoded selected
+    | HashRequested selected => exact hash_bound implementation encode cap native encoded selected
     | _ => exact pure_bound _ cap
 termination_by RegistrationBeaconInitExecutor.edRank pending
 decreasing_by exact RegistrationBeaconInitExecutor.ed_rank pending reply next actual
@@ -130,8 +105,8 @@ decreasing_by exact RegistrationBeaconInitExecutor.ed_rank pending reply next ac
 include native encoded in
 /-- All actual source signing and hashing prefixes pay only the one reached external encoder allowance, with every optional failure retained. -/
 theorem begin_bound (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize) :
-    Bounded (begin implementation encode control inputs coins pin mldsa) cap := by
+    (pin : session.ServerAuthenticationPin) :
+    Bounded (begin implementation encode control inputs coins pin) cap := by
   unfold begin
   apply continue_bound
   intro effect
@@ -149,7 +124,7 @@ private theorem legacy_zero
 
 /-- Actual source encoding of the signed Init has its single public capacity sampler cap inside the full owner/Env/P stack. -/
 theorem encoder_bound (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E))
-    (cap : Nat) (bounded : ∀ amount before, ((reserve amount).run before).IsTotalQueryBound cap) (view : registration.SignedInitView) :
+    (cap : Nat) (bounded : ∀ amount before, ((reserve amount).run before).IsTotalQueryBound cap) (view : registration.InitView) :
     Bounded (RegistrationNativePlatformGenericBundle.encoderWith
       (writer (n := n) (KemSK := KemSK) (RegistrationNativePlatformConcreteSource.writer reserve)) view :
         Work (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (Platform := Platform) (source := source) (RustM (core.option.Option (alloc.vec.Vec U8)))) cap := by
@@ -188,7 +163,7 @@ theorem bundle_bound (setup : Setup base KemSK)
         · first | exact legacy_zero _ | exact pure_bound _ 0
         · intro oneTime
           apply bind_tail_zero _ _ cap
-          · exact begin_bound _ _ cap (fun _ => legacy_zero _) (encoder_bound reserve cap bounded) _ _ _ _ _
+          · exact begin_bound _ _ cap (fun _ => legacy_zero _) (encoder_bound reserve cap bounded) _ _ _ _
           · intro published
             cases published with
             | fail error | div => exact pure_bound _ 0

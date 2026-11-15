@@ -58,8 +58,8 @@ FLAGS = [
 RAW_SHA256 = {
     "Funs.lean": "616f67b973cc248ab5653785ca0c559e1e46ad550706ffdf143073e4eb32b67c",
     "Types.lean": "c35396a6b12d0d49c06d11bb2580d22ef144fb210d3a373186b7ef20675131e3",
-    "FunsExternal_Template.lean": "e258ea16aa19709ce0ffcdb2ab2ef8389a68ed550ed6646a20d6c0597b03e32d",
-    "TypesExternal_Template.lean": "950944225b9f91c0ad1425fc58bc6b6d2acd8bc71c2330c7220e1e55c193de9e",
+    "FunsExternal_Template.lean": "c2b1c875e516733608aff6ba1f1bf9be7c2b9840961140c4e756f3f586213c34",
+    "TypesExternal_Template.lean": "f621d86ce0c5a2374d75a9835eae17cafcc302dcc224b0d705ca24ce787f04fe",
 }
 MODEL_SHA256 = {
     "TypesExternal.lean": "3343d63056b46225cf7619534f067617574f79a289ee7b3935604823f5868b72",

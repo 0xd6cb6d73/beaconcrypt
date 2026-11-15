@@ -41,7 +41,8 @@ variable (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (route :
 
 /-- The upper layers on the public HMAC: the skeleton's HMAC step on its state. -/
 theorem upperLayer_hmac (key : PqxdhSecretInputKdf.HmacBlock) (message : Pqxdh.Bytes)
-    (state : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × SkelState KemSK Output) :
+    (state : (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate)) ×
+      SkelState KemSK Output) :
     (upperLayer setup codec checks created.server.server.metadata.identityIndex created.publicIdentity t.kem.val
         p.challenge (factoredServices setup codec checks) (.inl (.inr (.hmac key message)))).run state =
       (fun result => (result.1, (state.1, result.2))) <$> simulateQ (fwd (T := TSpec Output) (coinLift (KemSK := KemSK)))
@@ -157,17 +158,18 @@ theorem localValue_encode (field : Field) (entry : PqxdhRegistrationJointOwnersh
 /-- A local field read. -/
 theorem step_read (address : ℕ) (field : Field) (direct : LocalField field) (m : Mid KemSK) :
     StepAt setup codec route checks t p created (.inr (address, field)) m := by
-  have upper : ∀ state : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × SkelState KemSK Output,
+  have upper : ∀ state : (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate)) ×
+      SkelState KemSK Output,
       (upperLayer setup codec checks created.server.server.metadata.identityIndex created.publicIdentity t.kem.val
         p.challenge (factoredServices setup codec checks) (.inr (address, field))).run state =
-      pure ((state.1[address]?).bind fun entry => localValue field entry.2.2, state) := by
+      pure ((state.1.1[address]?).bind fun entry => localValue field entry.2.2, state) := by
     intro state
-    rcases state with ⟨owners, skel⟩
+    rcases state with ⟨⟨owners, inits⟩, skel⟩
     simp only [upperLayer, QueryImpl.flattenStateT, QueryImpl.mapStateTBase, StateT.run_mk,
       PqxdhRegistrationJointKemPostSkeleton.groupedClient, PqxdhRegistrationJointRevealSchedule.client]
     change (fun x => (x.1.1, x.1.2, x.2)) <$> StateT.run (simulateQ _
       (simulateQ PqxdhRegistrationJointKemPostSkeleton.groupedLift
-        (PqxdhRegistrationJointLiveRead.clientStep (Response := Response) (address, field) owners))) skel = _
+        (PqxdhRegistrationJointLiveRead.clientStep (Response := Response) (address, field) (owners, inits)))) skel = _
     rcases found : owners[address]? with _ | entry
     · simp [PqxdhRegistrationJointLiveRead.clientStep, found]
     · rcases field <;> simp_all [LocalField, PqxdhRegistrationJointLiveRead.clientStep,
@@ -179,7 +181,7 @@ theorem step_read (address : ℕ) (field : Field) (direct : LocalField field) (m
     (pure (PqxdhRegistrationJointLiveRead.sourceStep (address, field) m.joint) : ProbComp _))
   rw [map_pure, map_pure, OptionT.run_pure, StateT.run_pure]
   simp only [PqxdhRegistrationJointLiveRead.sourceStep]
-  have encoded : (encodeMid setup m).1.1[address]? =
+  have encoded : (encodeMid setup m).1.1.1[address]? =
       (m.joint.owners[address]?).map (PqxdhRegistrationJointGeneratedFinish.encodeEntry setup) := by
     simp [encodeMid, PqxdhRegistrationJointGeneratedFinish.encodeState, List.getElem?_map]
   rw [encoded]
@@ -493,12 +495,13 @@ def grown (pin : PqxdhBeaconPhase2Preparation.Word32) (keyId : Std.U64)
   | none => owners
   | some value => owners ++ [PqxdhRegistrationJointServiceSchedule.birth pin keyId value]
 
-/-- The upper layers on a create: the indexed constructor client sent to the exposed encapsulation interface, then the new encoded owner appended. -/
+/-- The upper layers on a create: the indexed constructor client sent to the exposed encapsulation interface, then the new encoded owner appended (the retained Phase 1 bundles are kept). -/
 theorem upperLayer_create (pin : PqxdhBeaconPhase2Preparation.Word32) (keyId : Std.U64)
-    (state : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × SkelState KemSK Output) :
+    (state : (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate)) ×
+      SkelState KemSK Output) :
     (upperLayer setup codec checks created.server.server.metadata.identityIndex created.publicIdentity t.kem.val
         p.challenge (factoredServices setup codec checks) (.inl (.inr (.create pin keyId)))).run state =
-      (fun value => (state.1.length, (grown pin keyId state.1 value, state.2))) <$>
+      (fun value => (state.1.1.length, ((grown pin keyId state.1.1 value, state.1.2), state.2))) <$>
         simulateQ poolUp (PqxdhRegistrationJointCreation.client (KemSK := KemSK)) := by
   simp only [upperLayer, QueryImpl.flattenStateT, QueryImpl.mapStateTBase, StateT.run_mk,
     PqxdhRegistrationJointKemPostSkeleton.groupedClient, PqxdhRegistrationJointRevealSchedule.client,
@@ -564,44 +567,49 @@ variable (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (route :
   (checks : Checks) {count : ℕ} (t : Target count) (p : Params KemSK count)
   (created : PqxdhLiveServerConstruction.Created Unit)
 
-/-- The bundle program of an encoded owner, as private-service requests. -/
-noncomputable abbrev bundleProgram (owner : PqxdhRegistrationJointBundle.Owner) :
-    OracleComp (PqxdhLiveKemBirth.Spec KemSK) (Option Pqxdh.Bytes × PqxdhRegistrationJointBundle.Owner) :=
-  simulateQ (PqxdhRegistrationJointBundleCompiler.compiler (KemSK := KemSK) codec)
-    (PqxdhLivePhase1Bundle.bundle (PqxdhRegistrationJointBundle.projection setup) owner)
+/-- The bundle program of an encoded owner, as private-service requests, with the Phase 1 bundle handed to the writer retained from the owner's previously retained bundle (`PqxdhRegistrationJointServiceSchedule.logCompiler`). -/
+noncomputable abbrev bundleProgram (owner : PqxdhRegistrationJointBundle.Owner)
+    (logged : Option PqxdhEd25519EufCma.Phase1Candidate) :
+    OracleComp (PqxdhLiveKemBirth.Spec KemSK)
+      ((Option Pqxdh.Bytes × PqxdhRegistrationJointBundle.Owner) × Option PqxdhEd25519EufCma.Phase1Candidate) :=
+  (simulateQ (PqxdhRegistrationJointServiceSchedule.logCompiler (KemSK := KemSK) codec)
+    (PqxdhLivePhase1Bundle.bundle (PqxdhRegistrationJointBundle.projection setup) owner)).run logged
 
 /-- The upper layers on a bundle at an absent address: no request, nothing changes. -/
 theorem upperLayer_bundle_none (address : ℕ)
-    (state : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × SkelState KemSK Output)
-    (missing : state.1[address]? = none) :
+    (state : (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate)) ×
+      SkelState KemSK Output)
+    (missing : state.1.1[address]? = none) :
     (upperLayer setup codec checks created.server.server.metadata.identityIndex created.publicIdentity t.kem.val
         p.challenge (factoredServices setup codec checks) (.inl (.inr (.bundle address)))).run state =
       pure (none, state) := by
-  rcases state with ⟨owners, skel⟩
+  rcases state with ⟨⟨owners, inits⟩, skel⟩
   simp only [upperLayer, QueryImpl.flattenStateT, QueryImpl.mapStateTBase, StateT.run_mk,
     PqxdhRegistrationJointKemPostSkeleton.groupedClient, PqxdhRegistrationJointRevealSchedule.client,
     PqxdhRegistrationJointServiceSchedule.handler]
   change (fun x => (x.1.1, x.1.2, x.2)) <$> StateT.run (simulateQ _
     (simulateQ PqxdhRegistrationJointKemPostSkeleton.groupedLift
-      (PqxdhRegistrationJointServiceSchedule.bundle (Response := Response) setup codec address owners))) skel = _
+      (PqxdhRegistrationJointServiceSchedule.bundle (Response := Response) setup codec address (owners, inits)))) skel = _
   simp only [PqxdhRegistrationJointServiceSchedule.bundle, missing]
   simp
 
-/-- The upper layers on a bundle at a present address: the owner's bundle program sent to the exposed encapsulation interface, then the owner reinstalled. -/
+/-- The upper layers on a bundle at a present address: the owner's logged bundle program sent to the exposed encapsulation interface, then the owner reinstalled and its retained Phase 1 bundle updated. -/
 theorem upperLayer_bundle (address : ℕ) (entry : PqxdhRegistrationJointGeneratedFinish.EncodedEntry)
-    (state : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × SkelState KemSK Output)
-    (found : state.1[address]? = some entry) :
+    (state : (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate)) ×
+      SkelState KemSK Output)
+    (found : state.1.1[address]? = some entry) :
     (upperLayer setup codec checks created.server.server.metadata.identityIndex created.publicIdentity t.kem.val
         p.challenge (factoredServices setup codec checks) (.inl (.inr (.bundle address)))).run state =
-      (fun result => (result.1, (state.1.set address (entry.1, entry.2.1, result.2), state.2))) <$>
-        simulateQ poolUp (bundleProgram setup codec entry.2.2) := by
-  rcases state with ⟨owners, skel⟩
+      (fun result => (result.1.1, ((state.1.1.set address (entry.1, entry.2.1, result.1.2),
+          Function.update state.1.2 address result.2), state.2))) <$>
+        simulateQ poolUp (bundleProgram setup codec entry.2.2 (state.1.2 address)) := by
+  rcases state with ⟨⟨owners, inits⟩, skel⟩
   simp only [upperLayer, QueryImpl.flattenStateT, QueryImpl.mapStateTBase, StateT.run_mk,
     PqxdhRegistrationJointKemPostSkeleton.groupedClient, PqxdhRegistrationJointRevealSchedule.client,
     PqxdhRegistrationJointServiceSchedule.handler]
   change (fun x => (x.1.1, x.1.2, x.2)) <$> StateT.run (simulateQ _
     (simulateQ PqxdhRegistrationJointKemPostSkeleton.groupedLift
-      (PqxdhRegistrationJointServiceSchedule.bundle (Response := Response) setup codec address owners))) skel = _
+      (PqxdhRegistrationJointServiceSchedule.bundle (Response := Response) setup codec address (owners, inits)))) skel = _
   simp only [PqxdhRegistrationJointServiceSchedule.bundle, found, simulateQ_map, StateT.run_map, skel_pool,
     Functor.map_map]
 
@@ -626,30 +634,43 @@ theorem step_bundle (address : ℕ) (m : Mid KemSK) (owned : PqxdhRegistrationJo
   rw [PqxdhDeploymentIdealPostSteps.upperE_run setup codec checks t p created _ _
       (PqxdhDeploymentIdealPostSteps.encodeMid_clean setup m), sourceMid_bundle]
   rcases found : m.joint.owners[address]? with _ | entry
-  · have missing : (encodeMid setup m).1.1[address]? = none := by
+  · have missing : (encodeMid setup m).1.1.1[address]? = none := by
       simp [encodeMid, PqxdhRegistrationJointGeneratedFinish.encodeState, List.getElem?_map, found]
     rw [upperLayer_bundle_none setup codec checks t p created address _ missing, map_pure, simulateQ_pure]
     simp only [PqxdhRegistrationJointSchedule.bundle, found, StateT.run]
     simp only [OptionT.run_pure, map_pure]
     rfl
-  · have present : (encodeMid setup m).1.1[address]? =
+  · have present : (encodeMid setup m).1.1.1[address]? =
         some (PqxdhRegistrationJointGeneratedFinish.encodeEntry setup entry) := by
       simp [encodeMid, PqxdhRegistrationJointGeneratedFinish.encodeState, List.getElem?_map, found]
+    have logBound : ∀ (P : (PqxdhLiveKemBirth.Spec KemSK).Domain → Prop) [DecidablePred P] (n : ℕ),
+        (simulateQ (PqxdhRegistrationJointBundleCompiler.compiler (KemSK := KemSK) codec) (PqxdhLivePhase1Bundle.bundle
+          (PqxdhRegistrationJointBundle.projection setup)
+          (PqxdhRegistrationJointGeneratedFinish.encodeEntry setup entry).2.2)).IsQueryBoundP P n →
+        (bundleProgram setup codec (PqxdhRegistrationJointGeneratedFinish.encodeEntry setup entry).2.2
+          (m.joint.inits address)).IsQueryBoundP P n := by
+      intro P _ n bound
+      rw [← PqxdhRegistrationJointServiceLedger.log_fst codec _ (m.joint.inits address)] at bound
+      exact (isQueryBoundP_map_iff _ _ _).mp bound
     have bounded := PqxdhRegistrationJointServiceCosts.bundle_queries (KemSK := KemSK) setup codec
       (PqxdhRegistrationJointGeneratedFinish.encodeEntry setup entry).2.2 .kemCreate
-    have noCreate : (bundleProgram setup codec (PqxdhRegistrationJointGeneratedFinish.encodeEntry setup entry).2.2 :
-        OracleComp (PqxdhLiveKemBirth.Spec KemSK) _).IsQueryBoundP (PqxdhLiveKemReservation.IsCreate (KemSK := KemSK)) 0 := by
+    have noCreate : (bundleProgram setup codec (PqxdhRegistrationJointGeneratedFinish.encodeEntry setup entry).2.2
+        (m.joint.inits address) : OracleComp (PqxdhLiveKemBirth.Spec KemSK) _).IsQueryBoundP
+          (PqxdhLiveKemReservation.IsCreate (KemSK := KemSK)) 0 := by
+      apply logBound
       refine (isQueryBoundP_congr_pred (fun query => ?_)).mpr (by simpa [PqxdhRegistrationJointServiceCosts.bundleCap] using bounded)
       rw [PqxdhDeploymentIdealPoolSource.isCreate_class]
-    have noReveal : (bundleProgram setup codec (PqxdhRegistrationJointGeneratedFinish.encodeEntry setup entry).2.2 :
-        OracleComp (PqxdhLiveKemBirth.Spec KemSK) _).IsQueryBoundP
+    have noReveal : (bundleProgram setup codec (PqxdhRegistrationJointGeneratedFinish.encodeEntry setup entry).2.2
+        (m.joint.inits address) : OracleComp (PqxdhLiveKemBirth.Spec KemSK) _).IsQueryBoundP
           (fun query => PqxdhRegistrationJointServiceCosts.poolClass (KemSK := KemSK) query = .other) 0 := by
+      apply logBound
       simpa [PqxdhRegistrationJointServiceCosts.bundleCap] using
         PqxdhRegistrationJointServiceCosts.bundle_queries (KemSK := KemSK) setup codec
           (PqxdhRegistrationJointGeneratedFinish.encodeEntry setup entry).2.2 .other
     have fresh := fresh_of_noDecaps t.kem.val p.challenge
-      (bundleProgram setup codec (PqxdhRegistrationJointGeneratedFinish.encodeEntry setup entry).2.2 :
-        OracleComp (PqxdhLiveKemBirth.Spec KemSK) _) (by
+      (bundleProgram setup codec (PqxdhRegistrationJointGeneratedFinish.encodeEntry setup entry).2.2
+        (m.joint.inits address) : OracleComp (PqxdhLiveKemBirth.Spec KemSK) _) (by
+      apply logBound
       simpa [PqxdhRegistrationJointServiceCosts.bundleCap] using
         PqxdhRegistrationJointServiceCosts.bundle_queries (KemSK := KemSK) setup codec
           (PqxdhRegistrationJointGeneratedFinish.encodeEntry setup entry).2.2 .decapsulate)
@@ -658,15 +679,20 @@ theorem step_bundle (address : ℕ) (m : Mid KemSK) (owned : PqxdhRegistrationJo
     rw [show (encodeMid setup m).2 = (PqxdhRegistrationJointKemObserverFree.eraseJoint
         (m.joint.pool.1, PqxdhDeploymentIdealPoolSource.routerOf m.joint.pool.2),
         (m.joint.shared.1.cache, (m.backend.2.1, m.backend.1))) from rfl,
+      show (encodeMid setup m).1.1.2 address = m.joint.inits address from rfl,
       lowerE_pool setup t p _ 0 noCreate noReveal fresh m.joint.pool.1 m.joint.pool.2 prefixed
         (by simpa using prefix_length _ _ prefixed),
       PqxdhDeploymentIdealPoolSource.reserved_noCreate setup (p.pool t) _ noCreate]
-    have source := PqxdhRegistrationJointBundleCompiler.bundle_source setup codec entry.identityIndex entry.kemIndex
-      entry.owner (m.joint.pool.1, m.joint.pool.2) (owned entry (List.mem_of_getElem? found)).1
-    rw [show bundleProgram setup codec (PqxdhRegistrationJointGeneratedFinish.encodeEntry setup entry).2.2 =
-      simulateQ (PqxdhRegistrationJointBundleCompiler.compiler (KemSK := KemSK) codec) (PqxdhLivePhase1Bundle.bundle
+    rw [show bundleProgram setup codec (PqxdhRegistrationJointGeneratedFinish.encodeEntry setup entry).2.2
+        (m.joint.inits address) =
+      (simulateQ (PqxdhRegistrationJointServiceSchedule.logCompiler (KemSK := KemSK) codec) (PqxdhLivePhase1Bundle.bundle
         (PqxdhRegistrationJointBundle.projection setup)
-        (PqxdhRegistrationJointBundle.encode setup entry.identityIndex entry.kemIndex entry.owner)) from rfl, source]
+        (PqxdhRegistrationJointBundle.encode setup entry.identityIndex entry.kemIndex entry.owner))).run
+          (m.joint.inits address) from rfl]
+    erw [PqxdhRegistrationJointServiceSchedule.log_interpreted setup codec _ (m.joint.inits address)
+        (m.joint.pool.1, m.joint.pool.2),
+      PqxdhRegistrationJointServiceSchedule.client_log setup codec entry.identityIndex entry.kemIndex entry.owner
+        m.joint.pool.1 m.joint.pool.2 (m.joint.inits address) (owned entry (List.mem_of_getElem? found)).1]
     simp only [PqxdhRegistrationJointSchedule.bundle, found, StateT.run, Functor.map_map]
     refine congrArg (fun f => f <$> _) (funext fun result => ?_)
     simp [encodeMid, PqxdhRegistrationJointGeneratedFinish.encodeState, PqxdhRegistrationJointGeneratedFinish.encodeEntry,

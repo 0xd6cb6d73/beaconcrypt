@@ -25,7 +25,7 @@ def world {m : Type → Type} [Functor m] (work : StateT (PqxdhRecordLiftWorld.S
     world := (result.2, before.server.world.world.2)}}})) <$> work.run before.server.world.world.1
 
 noncomputable def program (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit) :
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     QueryImpl (RegistrationNativeIdentityFrontend.Ambient n KemSK) (StateT (Context n KemSK) (OracleComp Spec))
   | .inl query => world (RegistrationNativePlatformCtxEffects.program query)
   | .inr query => fun before => simulateQ RegistrationNativePlatformCtxBackend.coin
@@ -36,7 +36,7 @@ abbrev Full (n : Nat) (KemSK : Type) := Context n KemSK × RegistrationNativePla
 def realize (before : Full n KemSK) : Context n KemSK := replace before.2.1 before.1
 
 noncomputable def implementation (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit) :
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     QueryImpl (RegistrationNativeIdentityFrontend.Ambient n KemSK) (StateT (Full n KemSK) ProbComp) :=
   fun query before => (fun result => (result.1.1, (result.1.2, result.2))) <$>
     (simulateQ RegistrationNativePlatformCtxBackend.implementation
@@ -44,7 +44,7 @@ noncomputable def implementation (setup : Setup base KemSK) (checks : Checks)
 
 /-- KEM calls retain their actual costs/private history and are independent of CTX cache addresses. -/
 theorem kem_frame (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (RegistrationNativeKemInterface.Spec RegistrationNativeKemInterface.OtherSpec KemSK).Domain)
     (cache : Cache) (before : Context n KemSK) :
     Prod.map id (replace cache) <$>
@@ -60,7 +60,7 @@ private theorem map_apply {S A B : Type} {m : Type → Type} [Monad m] [LawfulMo
     (change <$> work) before = Prod.map change id <$> work before := StateT.run_map change work before
 
 private theorem effects_source (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (PqxdhRecordLiftInterface.EnvEffects n).Domain) (before : Full n KemSK) :
     Prod.map id realize <$> (implementation (source := source) setup checks representation created (.inl query)).run before =
       (RegistrationNativeIdentityWorld.ambient (mlSource := source) setup checks representation created (.inl query)).run (realize before) := by
@@ -75,7 +75,7 @@ private theorem effects_source (setup : Setup base KemSK) (checks : Checks)
   exact same
 
 private theorem kem_source (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (RegistrationNativeKemInterface.Spec RegistrationNativeKemInterface.OtherSpec KemSK).Domain) (before : Full n KemSK) :
     Prod.map id realize <$> (implementation (source := source) setup checks representation created (.inr query)).run before =
       (RegistrationNativeIdentityWorld.ambient (mlSource := source) setup checks representation created (.inr query)).run (realize before) := by
@@ -89,7 +89,7 @@ private theorem kem_source (setup : Setup base KemSK) (checks : Checks)
 
 /-- Every literal actual trusted ambient callback restores full Context/private-pool state and exact counters from one shared physical hash interpreter. -/
 theorem query_source (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (RegistrationNativeIdentityFrontend.Ambient n KemSK).Domain) (before : Full n KemSK) :
     Prod.map id realize <$> (implementation (source := source) setup checks representation created query).run before =
       (RegistrationNativeIdentityWorld.ambient (mlSource := source) setup checks representation created query).run (realize before) := by
@@ -99,7 +99,7 @@ theorem query_source (setup : Setup base KemSK) (checks : Checks)
 
 /-- All adaptive ambient work exposes CTX requests without source event or whole-handler assumptions. -/
 theorem complete (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp (RegistrationNativeIdentityFrontend.Ambient n KemSK) Value) (before : Full n KemSK) :
     Prod.map id realize <$> (simulateQ (implementation (source := source) setup checks representation created) work).run before =
       (simulateQ (RegistrationNativeIdentityWorld.ambient (mlSource := source) setup checks representation created) work).run (realize before) :=

@@ -427,7 +427,7 @@ theorem compile_server_game (setup : Setup baseSpec KemSK) (codec : Codec Reader
   · obtain ⟨sender, peers⟩ := PqxdhDeploymentCompileGame.construct_fields setup.joint ensureInit identityIndex
       setup.serverKeyId runtime created after born
     have compiled := compile_server_native setup codec checks route created.seed phase1 phase2 bounds mode first
-      second (PqxdhRegistrationSchedule.initial created) sender peers rfl (fun _ => rfl)
+      second (PqxdhRegistrationSchedule.initial created) sender (fun _ => rfl) rfl (fun _ => rfl)
     simp only [PqxdhDeploymentNative.initial]
     rw [← compiled, Functor.map_map, Functor.map_map]
     rfl

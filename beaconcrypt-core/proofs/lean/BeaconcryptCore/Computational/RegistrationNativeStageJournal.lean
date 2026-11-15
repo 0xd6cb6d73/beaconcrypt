@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeStageTrace
+import BeaconcryptCore.Computational.RegistrationNativeServerIssuance
 
 /-! A new response receipt in the actual private native source journal is attached to the exact earlier build cut, moved token, root-bearing initial capability and source record path. All callback outcomes are admitted; no completed peer or later-ratchet reconstruction is used. -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -17,7 +18,7 @@ open BeaconcryptCore.Refinement.RegistrationSigningTrace (Command)
 variable {n : Nat} {ι KemSK V : Type} {base : OracleSpec ι} {source : RegistrationNativeMldsa.Source}
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 local notation "implementation" => RegistrationNativeExperiment.handler setup checks wire route representation created source credential
 local notation "Native" => RegistrationNativeExperiment.State n KemSK source
 
@@ -34,7 +35,7 @@ theorem build_receipt (work : OracleComp RegistrationNativeRawAdapter.TypedSpec 
       result.2.2 = leading ++ (⟨.inr (.build index application), beforeBuild, answer, afterBuild⟩ : Call RegistrationNativeRawAdapter.TypedSpec Native) :: trailing ∧
       Path implementation initial leading beforeBuild ∧ Path implementation afterBuild trailing result.2.1 ∧
       RegistrationServerSdkSource.take index beforeBuild.server = (some token, current) ∧ application = some plaintext ∧
-      registration.begin_server_completion current.control current.pin availability token.agreement plaintext = .ok (.Ok firstRecord) ∧
+      BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission current.control current.pin availability token.agreement plaintext firstRecord ∧
       RegistrationServerRecordExecutor.Path firstRecord hashed ∧
       receipt.observation.publicKey = hashed.binding.server_pin.public_key ∧ receipt.observation.payload = Command.payload (.server hashed) := by
   have actual := RegistrationNativeStageTrace.path implementation work initial result supported

@@ -11,6 +11,7 @@ set_option maxRecDepth 8192
 set_option maxHeartbeats 1200000
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativePlatformPublicKemCaps
+attribute [local irreducible] RegistrationNativePlatformServerOpenControl.accept
 open PqxdhServerAuthExperiment (Setup Checks)
 open RegistrationNativePlatformPublicFrontend
 open RegistrationNativePlatformPublicKemLocal (IsPrivate LocalPrivate embed_bound)

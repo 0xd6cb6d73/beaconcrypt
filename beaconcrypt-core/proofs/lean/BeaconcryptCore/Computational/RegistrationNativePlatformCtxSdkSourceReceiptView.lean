@@ -19,19 +19,30 @@ variable {n : Nat} {I KemSK Reader Response Platform E : Type} {base : OracleSpe
 
 private theorem local_pin (current : session.ServerAuthenticationPin) :
     RegistrationNativePlatformIdentityReceiptView.Stable (RegistrationNativePlatformCtxPin.pin (n := n) (Auxiliary := RegistrationServerRoleBackend.State) current) := by
-  unfold RegistrationNativePlatformCtxPin.pin
-  apply RegistrationNativePlatformViewStable.bind_stable
-  · exact RegistrationNativePlatformIdentityReceiptView.effects _
-  · intro digest
-    exact RegistrationNativePlatformViewStable.pure_stable RegistrationNativePlatformIdentityReceiptView.view (fun _ => rfl) _
+  exact RegistrationNativePlatformViewStable.pure_stable
+    RegistrationNativePlatformIdentityReceiptView.view (fun _ => rfl) _
 
-/-- The repeated actual pin hash has no input dependency on the private signing log. -/
+/-- Pure pin selection has no input dependency on the private signing log and performs no hash. -/
 theorem pin_stable : Stable (RegistrationNativePlatformCtxSdk.pin : M (State n) Platform _) := by
   rintro ⟨before, previous⟩
   have same := world_stable (privateWork (RegistrationNativePlatformCtxPin.pin before.pin))
     (RegistrationNativePlatformCtxReceiptView.private_stable _ (local_pin before.pin)) (before, previous)
   simpa only [RegistrationNativePlatformCtxSdk.pin, RegistrationNativePlatformPackedState.pack,
     StateT.run, view, serverView] using same
+
+/-- The actual AD hash and owned resume ignore earlier raw signing receipts while retaining the complete hash cache and all other state. -/
+theorem adHash_stable (pending : registration.ServerAdHash) :
+    Stable (RegistrationNativePlatformCtxSdk.adHash pending : M (State n) Platform _) := by
+  unfold RegistrationNativePlatformCtxSdk.adHash RegistrationServerAdHash.runWith
+  cases pending.request with
+  | fail error | div => exact RegistrationNativePlatformCtxSdkReceiptView.pure_stable _
+  | ok request =>
+    simp only [bind_assoc, pure_bind]
+    apply RegistrationNativePlatformCtxSdkReceiptView.bind_stable _ _
+      (world_stable _ (RegistrationNativePlatformCtxReceiptView.private_stable _
+        (RegistrationNativePlatformIdentityReceiptView.effects _)))
+    intro digest
+    exact RegistrationNativePlatformCtxSdkReceiptView.pure_stable _
 
 /-- The actual occupancy capability retains all projected server and external coordinates. -/
 theorem present_stable (keyId : U64) : Stable (RegistrationNativePlatformCtxSdk.present keyId : M (State n) Platform Bool) :=
@@ -56,6 +67,7 @@ variable (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (Sta
 theorem build_stable (reserve : StateT Platform ProbComp Bool) (handle : Nat) (application : Option (Slice U8)) :
     Stable (RegistrationNativePlatformCtxSdk.build (n := n) setup codec keys failure allocation erased sign helper writer reserve handle application) := by
   apply RegistrationNativePlatformCtxSdkReceiptView.build_stable
+    (deriveAd := RegistrationNativePlatformCtxSdk.adHash) (ad_law := adHash_stable)
   · exact pin_stable
   · exact reserve_stable reserve
   · exact present_stable
@@ -68,6 +80,12 @@ end BeaconcryptCore.Computational.RegistrationNativePlatformCtxSdkSourceReceiptV
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativePlatformCtxSdkSourceReceiptView.pin_stable
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformCtxSdkSourceReceiptView.adHash_stable' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformCtxSdkSourceReceiptView.adHash_stable
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformCtxSdkSourceReceiptView.present_stable' depends on axioms: [propext,
  Classical.choice,

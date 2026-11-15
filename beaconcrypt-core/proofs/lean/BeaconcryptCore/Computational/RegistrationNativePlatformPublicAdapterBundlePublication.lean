@@ -15,14 +15,13 @@ open RegistrationNativePlatformSdkReification (Backend backend)
 variable {n : Nat} {I KemSK E P A : Type} {base : OracleSpec I} {source : RegistrationNativeMldsa.Source}
 variable (coins : QueryImpl unifSpec (StateT P ProbComp))
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT P ProbComp))
 local notation "Native"=>RegistrationNativeExperiment.State n KemSK source
 
-noncomputable def handler (credential : RegistrationNativeMldsa.Credential source)
-    (identity : PqxdhJointIdentity.IdentitySeed) :
+noncomputable def handler (identity : PqxdhJointIdentity.IdentitySeed) :
     QueryImpl (RegistrationNativePlatformWriter.Spec E) (StateT (Backend n KemSK) (StateT P ProbComp))
-  | .inl query=>RegistrationNativePlatformPublicAdapterBundleSigning.outgoing coins setup checks representation created credential identity query
+  | .inl query=>RegistrationNativePlatformPublicAdapterBundleSigning.outgoing coins setup checks representation created identity query
   | .inr query=>StateT.lift (writer query)
 
 private noncomputable def nativeHandler (index : Nat) (owner : RegistrationNativeBeaconFrontend.Owner source) :
@@ -34,7 +33,7 @@ private theorem native_tree (index : Nat) (owner : RegistrationNativeBeaconFront
     (scalar : PqxdhJointGapDh.ScalarBytes) :
     simulateQ (nativeHandler coins setup checks representation created writer index owner)
       (RegistrationNativePlatformWriter.begin E ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin owner.mldsa.publicKey)=
+        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin)=
       RegistrationNativeBundleLifetime.tree (n:=n) coins setup checks representation created writer index owner scalar := by
   rw [RegistrationNativePlatformWriter.begin_interpret,RegistrationNativeBundleLifetime.tree_lower]
   congr 1
@@ -43,19 +42,19 @@ private theorem native_tree (index : Nat) (owner : RegistrationNativeBeaconFront
   rw [RegistrationNativeBundleInterpretation.encoder_source]
   exact simulateQ_liftTarget writer _
 
-noncomputable def program (credential : RegistrationNativeMldsa.Credential source) (identity : PqxdhJointIdentity.IdentitySeed)
+noncomputable def program (identity : PqxdhJointIdentity.IdentitySeed)
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (oneTime : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize) :=
-  simulateQ (handler (n:=n) coins setup checks representation created writer credential identity)
-    (RegistrationNativePlatformWriter.begin E control inputs oneTime pin mldsa)
+    (pin : session.ServerAuthenticationPin) :=
+  simulateQ (handler (n:=n) coins setup checks representation created writer identity)
+    (RegistrationNativePlatformWriter.begin E control inputs oneTime pin)
 
 theorem tree_source (index : Nat) (owner : RegistrationNativeBeaconFrontend.Owner source)
     (scalar : PqxdhJointGapDh.ScalarBytes) (before : Native) :
     Prod.map id backend <$>
       (RegistrationNativeBundleLifetime.tree coins setup checks representation created writer index owner scalar).run before=
-      (program coins setup checks representation created writer owner.mldsa owner.identitySeed
+      (program coins setup checks representation created writer owner.identitySeed
         ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin owner.mldsa.publicKey).run (backend before) := by
+        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin).run (backend before) := by
   rw [←native_tree]
   unfold program
   apply OracleComp.map_run_simulateQ_eq_of_query_map_eq
@@ -70,26 +69,26 @@ theorem tree_platform (index : Nat) (owner : RegistrationNativeBeaconFrontend.Ow
     (scalar : PqxdhJointGapDh.ScalarBytes) (before : Native) (previous : P) :
     Prod.map (Prod.map id backend) id <$>
       ((RegistrationNativeBundleLifetime.tree coins setup checks representation created writer index owner scalar).run before).run previous=
-      ((program coins setup checks representation created writer owner.mldsa owner.identitySeed
+      ((program coins setup checks representation created writer owner.identitySeed
         ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin owner.mldsa.publicKey).run (backend before)).run previous := by
+        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ owner.pin).run (backend before)).run previous := by
   rw [←tree_source coins setup checks representation created writer index owner scalar before,StateT.run_map]
   rfl
 
-noncomputable def freshProgram (credential : RegistrationNativeMldsa.Credential source) (identity : PqxdhJointIdentity.IdentitySeed)
+noncomputable def freshProgram (identity : PqxdhJointIdentity.IdentitySeed)
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize) :=do
+    (pin : session.ServerAuthenticationPin) :=do
   let scalar←RegistrationNativePlatformPublicAdapterBundleSigning.sample (n:=n) coins setup checks representation created PqxdhJointGapDh.sampleScalar
-  let published←program coins setup checks representation created writer credential identity control inputs
-    ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ pin mldsa
+  let published←program coins setup checks representation created writer identity control inputs
+    ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)⟩ pin
   pure (scalar,published)
 
 theorem fresh_tree_source (index : Nat) (owner : RegistrationNativeBeaconFrontend.Owner source)
     (before : Native) :
     Prod.map id backend <$>
       (RegistrationNativeBundleLifetime.fresh_tree coins setup checks representation created writer index owner).run before=
-      (freshProgram coins setup checks representation created writer owner.mldsa owner.identitySeed
-        ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner) owner.pin owner.mldsa.publicKey).run (backend before) := by
+      (freshProgram coins setup checks representation created writer owner.identitySeed
+        ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner) owner.pin).run (backend before) := by
   have first:=RegistrationNativePlatformPublicAdapterBundleSigning.sample_source (source:=source)
     coins setup checks representation created PqxdhJointGapDh.sampleScalar before
   unfold RegistrationNativeBundleLifetime.fresh_tree RegistrationNativeBundleLifetime.sample freshProgram

@@ -80,39 +80,38 @@ theorem publish {R : Type} (self : beaconcrypt_public_wrapper.beacon.Beacon)
       have result := publish_ready (m := m) self prekey oneTime kem rng control selected
       simpa only [publication, RustT.run_pure, pure_bind] using result
 
+omit platform localOps in
 theorem withKeys {R : Type} (self : beaconcrypt_public_wrapper.beacon.Beacon)
     (control : pqxdh.BeaconFresh)
     (prekey oneTime : beaconcrypt_crypto.crypto_kx.KeyPair) (kem : beaconcrypt_crypto.crypto_kem.mlkem768.KeyPair) (rng : R)
     (prekeyPublic oneTimePublic identity : Std.Array U8 32#usize)
-    (kemPublic : Std.Array U8 1184#usize) (mldsa : Std.Array U8 1952#usize)
+    (kemPublic : Std.Array U8 1184#usize)
     (edSign : Slice U8 → m (core.result.Result (alloc.vec.Vec U8) primitive.Error))
     (hash : registration.HashRequest → m CtxRomAuth.CtxDigest)
-    (sign : registration.MldsaSigningRequest → m (core.option.Option (alloc.vec.Vec U8)))
     (prekeyGetter : (crypto.kxPublicBytes prekey.public_key).run = pure (.ok prekeyPublic))
     (oneTimeGetter : (crypto.kxPublicBytes oneTime.public_key).run = pure (.ok oneTimePublic))
     (kemGetter : (crypto.kemPublicBytes kem.public_key).run = pure (.ok kemPublic))
     (identityGetter : (crypto.edPublicBytes self.identity_key.public_key).run = pure (.ok identity))
-    (mldsaGetter : (localOps.auth_MldsaIdentity_public_key self.authentication.identity).run = pure (.ok mldsa))
     (edSignLeaf : ∀ message, (crypto.edSign message self.identity_key.secret_key).run = RustM.ok <$> edSign message)
     (hashLeaf : ∀ request, (children.executeHash request).run =
       (fun digest => .ok (some (RegistrationAuthenticationShared.digestArray digest))) <$> hash request)
-    (signLeaf : ∀ request, (localOps.auth_MldsaIdentity_sign_requested self.authentication.identity request).run = RustM.ok <$> sign request) :
+ :
     (AdapterPublicBundleBody.withKeys (m := m) self control prekey oneTime kem rng).run = (do
-      let published ← RegistrationNativePlatformBeaconPublication.begin (outgoing hash sign (edMethod identity edSign))
+      let published ← RegistrationNativePlatformBeaconPublication.begin (outgoing hash (edMethod identity edSign))
         (fun view => (children.encodeInit (AdapterPublicBundleBody.packet view)).run)
-        control ⟨identity, prekeyPublic, kemPublic⟩ ⟨oneTimePublic⟩ self.authentication.server_pin mldsa
+        control ⟨identity, prekeyPublic, kemPublic⟩ ⟨oneTimePublic⟩ self.authentication.server_pin
       pure (install self prekey oneTime kem rng published)) := by
   have getters : AdapterPublicBundleBody.withKeys (m := m) self control prekey oneTime kem rng = (do
       let effect ← liftRust (registration.begin_beacon_init control ⟨identity, prekeyPublic, kemPublic⟩
-        ⟨oneTimePublic⟩ self.authentication.server_pin mldsa)
+        ⟨oneTimePublic⟩ self.authentication.server_pin)
       let ready ← beaconcrypt_public_request.beacon._proof_beacon_init_ready_loop (m := RustT m) effect self
       AdapterPublicBundleBody.publish self prekey oneTime kem rng ready) := by
     apply RustT.ext
     simp only [AdapterPublicBundleBody.withKeys, RustT.run_bind, prekeyGetter, oneTimeGetter,
-      kemGetter, identityGetter, mldsaGetter, pure_bind]
+      kemGetter, identityGetter, pure_bind]
   rw [getters, ← bind_assoc, publish]
-  rw [AdapterPublicInitEdPublication.begin_source self control _ _ _ _ identity edSign hash sign _
-    identityGetter edSignLeaf hashLeaf signLeaf]
+  rw [AdapterPublicInitEdPublication.begin_source self control _ _ _ identity edSign hash _
+    identityGetter edSignLeaf hashLeaf]
 end BeaconcryptCore.Refinement.AdapterPublicBundlePublication
 
 /-- info: 'BeaconcryptCore.Refinement.AdapterPublicBundlePublication.publish' depends on axioms: [propext,

@@ -186,7 +186,7 @@ theorem blocks (history : History n source Value Platform) (finalPlatform : Plat
       exact List.mem_append_right _ (included entry member)
 
 private theorem accept_macro
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (packet : registration.InitPacket) (before : RegistrationNativeKemServerState.State n source × Platform) :
     (RegistrationNativePlatformOrdinaryKemClientJournal.free setup checks wire route representation created credential
       view failure allocation reserveRegistration reservePeer reserveFrame erased helper writer (.inr (.accept packet))).run before =
@@ -201,6 +201,8 @@ private theorem accept_macro
   simp only [bind_apply, modify_apply, pure_apply, pure_bind]
   rfl
 
+-- The concrete counted accept builds the 2638-byte Init transcript; keep it opaque so the `accepted` hypothesis is matched syntactically instead of being whnf-evaluated.
+attribute [local irreducible] RegistrationNativePlatformKemCountedAccept.accept in
 /-- Every successful typed accept in the complete initialized history has a mandatory-authenticated, actually retained token and exact Root/encapsulation receipt in the complete run's lower log. -/
 theorem accept_receipt (history : History n source Value Platform) (finalPlatform : Platform)
     (log : RegistrationNativeKemCountedServerTrace.Log KemSK)

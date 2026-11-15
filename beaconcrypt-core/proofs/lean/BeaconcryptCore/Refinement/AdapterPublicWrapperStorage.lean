@@ -1,6 +1,5 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.AdapterPublicWrapperExtraction.Funs
-import BeaconcryptCore.Computational.RegistrationReplaySchedule
 import BeaconcryptCore.Computational.RawCtxServerRouting
 
 /-! Actual owned peer/ratchet construction and narrow standard-container views for the selected public wrappers. Container contracts state membership, one-key insertion and mutable entry-lens footprints, never wrapper acceptance or protocol security. Reservations may change private allocation representation while preserving logical contents. -/
@@ -16,7 +15,7 @@ abbrev Manager := beaconcrypt_public_wrapper.ratchet.RatchetManager
 abbrev Remote (PublicKey : Type) := beaconcrypt_public_wrapper.shared.EstablishedRemote PublicKey
 
 def peerView {PublicKey : Type} (remote : Remote PublicKey) :
-    Option (BeaconcryptCore.Computational.RawCtxServerRouting.Peer (Std.Array U8 281#usize)) :=
+    Option (BeaconcryptCore.Computational.RawCtxServerRouting.Peer (Std.Array U8 151#usize)) :=
   Option.map (fun kernel =>
     ⟨remote.peer.binding.beacon_identity_public_key, kernel, remote.peer.binding.associated_data⟩)
     remote.peer.ratchet.refined.kernel
@@ -78,12 +77,12 @@ def VacantInsert (views : Views) (before : PeerMap) (identifier : U64) (back : E
       if query = identifier then some changed else views.peer before query
 
 def PeersRelated (views : Views) (stored : PeerMap)
-    (native : U64 → Option (BeaconcryptCore.Computational.RawCtxServerRouting.Peer (Std.Array U8 281#usize))) : Prop :=
+    (native : U64 → Option (BeaconcryptCore.Computational.RawCtxServerRouting.Peer (Std.Array U8 151#usize))) : Prop :=
   ∀ identifier, Option.bind (views.peer stored identifier) peerView = native identifier ∧
     (views.peer stored identifier).isSome = (native identifier).isSome
 
 theorem peer_reserve (views : Views) (before : PeerMap)
-    (native : U64 → Option (BeaconcryptCore.Computational.RawCtxServerRouting.Peer (Std.Array U8 281#usize)))
+    (native : U64 → Option (BeaconcryptCore.Computational.RawCtxServerRouting.Peer (Std.Array U8 151#usize)))
     (result : core.result.Result Unit platform.ReserveError × PeerMap)
     (related : PeersRelated views before native) (preserves : PeerReserve views before result) :
     PeersRelated views result.2 native := by
@@ -92,7 +91,7 @@ theorem peer_reserve (views : Views) (before : PeerMap)
   exact related identifier
 
 theorem vacant_absent (views : Views) (before : PeerMap)
-    (native : U64 → Option (BeaconcryptCore.Computational.RawCtxServerRouting.Peer (Std.Array U8 281#usize)))
+    (native : U64 → Option (BeaconcryptCore.Computational.RawCtxServerRouting.Peer (Std.Array U8 151#usize)))
     (identifier : U64) (entry : Vacant) (back : Entry → PeerMap)
     (related : PeersRelated views before native) (lookedUp : PeerEntry views before identifier (.Vacant entry, back)) :
     native identifier = none := by
@@ -104,10 +103,10 @@ theorem vacant_absent (views : Views) (before : PeerMap)
       cases impossible
 
 theorem peer_insert (views : Views) (before : PeerMap)
-    (native : U64 → Option (BeaconcryptCore.Computational.RawCtxServerRouting.Peer (Std.Array U8 281#usize)))
+    (native : U64 → Option (BeaconcryptCore.Computational.RawCtxServerRouting.Peer (Std.Array U8 151#usize)))
     (identifier : U64) (back : Entry → PeerMap) (value : Remote ed.PublicKey)
     (result : Remote ed.PublicKey × (Remote ed.PublicKey → Vacant))
-    (installed : BeaconcryptCore.Computational.RawCtxServerRouting.Peer (Std.Array U8 281#usize))
+    (installed : BeaconcryptCore.Computational.RawCtxServerRouting.Peer (Std.Array U8 151#usize))
     (related : PeersRelated views before native) (updates : VacantInsert views before identifier back value result)
     (viewed : peerView value = some installed) :
     PeersRelated views (back (.Vacant (result.2 result.1))) (Function.update native identifier (some installed)) := by

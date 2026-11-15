@@ -20,6 +20,7 @@ Premises: `FunctionalDecapsulation setup.kem`, `Phase1ReadBack`, `Phase2ReadBack
 open OracleComp OracleSpec ENNReal
 
 set_option autoImplicit false
+set_option warningAsError true
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentHeadlineLor
 open PqxdhServerAuthExperiment (Setup Codec Checks)
@@ -363,11 +364,11 @@ theorem lor_final (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (runtime : A) (guess : X → Bool) (filter : List (PqxdhDeploymentInterface.PublicEntry .P) → Bool) :
     𝒟[slotted setup codec budget (lorWinEvent setup.source.crypto codec setup.serverKeyId budget guess filter)
         lorClaim g <$> (ctxView <$> idealRecords setup codec route
-          (PqxdhDeploymentIdealEnv.envGD setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
+          (PqxdhDeploymentIdealEnv.envGD   setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
           setup.serverKeyId bounds .P adversary)] {true} =
       2⁻¹ * 𝒟[slotted setup codec budget (lorEligEvent setup.source.crypto codec setup.serverKeyId budget filter)
         lorClaim g <$> (ctxView <$> idealRecords setup codec route
-          (PqxdhDeploymentIdealEnv.envGD setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
+          (PqxdhDeploymentIdealEnv.envGD   setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
           setup.serverKeyId bounds .P adversary)] {true} := by
   have invariant : ∀ view view' : View 2 (EnvG KemSK budget) X, publicHiding view = publicHiding view' →
       slotted setup codec budget (lorEligEvent setup.source.crypto codec setup.serverKeyId budget filter) lorClaim g
@@ -408,12 +409,12 @@ theorem lor_peer_final (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
     (runtime : A) (guess : X → Bool) (filter : List (PqxdhDeploymentInterface.PublicEntry .P) → Bool) :
     𝒟[serverSlotted setup codec budget (lorWinPeerEvent setup.source.crypto codec setup.serverKeyId budget guess filter)
         lorClaim g <$> (ctxView <$> idealRecords setup codec route
-          (PqxdhDeploymentIdealEnv.envGD setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
+          (PqxdhDeploymentIdealEnv.envGD   setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
           setup.serverKeyId bounds .P adversary)] {true} =
       2⁻¹ * 𝒟[serverSlotted setup codec budget
         (lorEligPeerEvent setup.source.crypto codec setup.serverKeyId budget filter) lorClaim g <$>
           (ctxView <$> idealRecords setup codec route
-            (PqxdhDeploymentIdealEnv.envGD setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
+            (PqxdhDeploymentIdealEnv.envGD   setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
             setup.serverKeyId bounds .P adversary)] {true} := by
   have invariant : ∀ view view' : View 2 (EnvG KemSK budget) X, publicHiding view = publicHiding view' →
       serverSlotted setup codec budget (lorEligPeerEvent setup.source.crypto codec setup.serverKeyId budget filter)
@@ -581,18 +582,18 @@ theorem server_view (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     (g : Fin budget.accept × Fin budget.capacity) (runtime : A) :
     𝒟[(fun view => (viewObserved view).any (decisionOn setup codec budget event claim g)) <$>
         (chainView <$> realChains setup codec route
-          (PqxdhDeploymentIdealEnv.envGD setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
+          (PqxdhDeploymentIdealEnv.envGD   setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
           setup.serverKeyId bounds mode adversary)] {true} =
       𝒟[serverSlotted setup codec budget event claim g <$>
         (chainView <$> realChains setup codec route
-          (PqxdhDeploymentIdealEnv.envGD setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
+          (PqxdhDeploymentIdealEnv.envGD   setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
           setup.serverKeyId bounds mode adversary)] {true} := by
   congr 2
   rw [Functor.map_map, Functor.map_map]
   refine PqxdhDeploymentKemTransfer.map_support_congr _ _ _ fun result member => ?_
   simp only [serverSlotted]
   rw [Bool.eq_iff_iff, decide_eq_true_iff]
-  exact ⟨fun held => ⟨held, PqxdhDeploymentHeadlineChain.real_slots_server setup codec checks route phase1
+  exact ⟨fun held => ⟨held, PqxdhDeploymentHeadlineChain.real_slots_server   setup codec checks route phase1
     (Target.ofCE budget g) ensureInit 0 runtime bounds mode adversary result member⟩, And.left⟩
 
 open Classical in
@@ -611,12 +612,12 @@ theorem ce_lor_target (setup : Setup baseSpec KemSK)
     ENNReal.ofReal |(𝒟[(fun outcome => decide (happens (lorWinEvent setup.source.crypto codec setup.serverKeyId budget
           guess filter) outcome = true ∧
           designated setup.source.crypto codec setup.serverKeyId budget lorClaim outcome = some g)) <$>
-        (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds .P adversary).run runtime]
+        (PqxdhDeploymentSecrecy.game   setup codec checks route ensureInit 0 bounds .P adversary).run runtime]
           {true}).toReal -
         (1 / 2) * (𝒟[(fun outcome => decide (happens (lorEligEvent setup.source.crypto codec setup.serverKeyId budget
           filter) outcome = true ∧
           designated setup.source.crypto codec setup.serverKeyId budget lorClaim outcome = some g)) <$>
-        (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds .P adversary).run runtime]
+        (PqxdhDeploymentSecrecy.game   setup codec checks route ensureInit 0 bounds .P adversary).run runtime]
           {true}).toReal| ≤
       ENNReal.ofReal (kemLoss setup codec checks route ensureInit bounds .P adversary budget
         (lorWinEvent setup.source.crypto codec setup.serverKeyId budget guess filter) lorClaim g runtime) +
@@ -634,10 +635,10 @@ theorem ce_lor_target (setup : Setup baseSpec KemSK)
             lorClaim g)) +
       2⁻¹ * beta setup codec route checks ensureInit bounds .P adversary budget g runtime := by
   set realView := chainView <$> realChains setup codec route
-    (PqxdhDeploymentIdealEnv.envGD setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
+    (PqxdhDeploymentIdealEnv.envGD   setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
     setup.serverKeyId bounds .P adversary with hrealView
   set idealView := ctxView <$> idealRecords setup codec route
-    (PqxdhDeploymentIdealEnv.envGD setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
+    (PqxdhDeploymentIdealEnv.envGD   setup codec checks (Target.ofCE budget g) ensureInit 0 runtime)
     setup.serverKeyId bounds .P adversary with hidealView
   set win := lorWinEvent setup.source.crypto codec setup.serverKeyId budget guess filter with hwin
   set elig := lorEligEvent setup.source.crypto codec setup.serverKeyId budget filter with helig
@@ -662,19 +663,19 @@ theorem ce_lor_target (setup : Setup baseSpec KemSK)
     (fun view held => by
       rw [decide_eq_true_iff] at held ⊢
       exact ⟨winElig view held.1, held.2⟩)
-  have anomaly := (PqxdhDeploymentHeadlineChain.view_unslotted setup codec checks route phase1 phase2
+  have anomaly := (PqxdhDeploymentHeadlineChain.view_unslotted   setup codec checks route phase1 phase2
     (Target.ofCE budget g) ensureInit 0 runtime bounds .P adversary
     (fun view => (viewObserved view).any (decisionOn setup codec budget elig lorClaim g))).trans
-      (PqxdhDeploymentHeadlineAnomaly.anomaly_beta setup functional codec checks route ensureInit phase1 phase2 bounds .P
+      (PqxdhDeploymentHeadlineAnomaly.anomaly_beta   setup functional codec checks route ensureInit phase1 phase2 bounds .P
         adversary budget g runtime)
-  have final := lor_final setup codec checks route ensureInit bounds adversary budget g runtime guess filter
-  have chainW := PqxdhDeploymentHeadlineChain.chain_close setup functional codec checks route ensureInit phase1 phase2
+  have final := lor_final   setup codec checks route ensureInit bounds adversary budget g runtime guess filter
+  have chainW := PqxdhDeploymentHeadlineChain.chain_close   setup functional codec checks route ensureInit phase1 phase2
     correct bounds .P adversary budget respects win lorClaim g runtime
-  have chainE := PqxdhDeploymentHeadlineChain.chain_close setup functional codec checks route ensureInit phase1 phase2
+  have chainE := PqxdhDeploymentHeadlineChain.chain_close   setup functional codec checks route ensureInit phase1 phase2
     correct bounds .P adversary budget respects elig lorClaim g runtime
-  have liftW := PqxdhDeploymentHeadlineChain.records_close setup codec checks route correct caps bounded ensureInit qInit
+  have liftW := PqxdhDeploymentHeadlineChain.records_close   setup codec checks route correct caps bounded ensureInit qInit
     initBound bounds .P adversary budget respects g runtime fallback (slotted setup codec budget win lorClaim g)
-  have liftE := PqxdhDeploymentHeadlineChain.records_close setup codec checks route correct caps bounded ensureInit qInit
+  have liftE := PqxdhDeploymentHeadlineChain.records_close   setup codec checks route correct caps bounded ensureInit qInit
     initBound bounds .P adversary budget respects g runtime fallback (slotted setup codec budget elig lorClaim g)
   have bound := lor_bound _ _ _ _ _ _ _ _ _ _ (chance_ne_top _ _) (chance_ne_top _ _) (chance_ne_top _ _)
     (chance_ne_top _ _) splitW splitE final below _ _ chainW chainE _ _ liftW liftE _ anomaly
@@ -695,11 +696,11 @@ theorem ce_lor (setup : Setup baseSpec KemSK)
     (guess : X → Bool) (filter : List (PqxdhDeploymentInterface.PublicEntry .P) → Bool) :
     ENNReal.ofReal |(𝒟[(fun outcome => happens (lorWinEvent setup.source.crypto codec setup.serverKeyId budget guess
           filter) outcome) <$>
-        (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds .P adversary).run runtime]
+        (PqxdhDeploymentSecrecy.game   setup codec checks route ensureInit 0 bounds .P adversary).run runtime]
           {true}).toReal -
         (1 / 2) * (𝒟[(fun outcome => happens (lorEligEvent setup.source.crypto codec setup.serverKeyId budget filter)
           outcome) <$>
-        (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds .P adversary).run runtime]
+        (PqxdhDeploymentSecrecy.game   setup codec checks route ensureInit 0 bounds .P adversary).run runtime]
           {true}).toReal| ≤
       ∑ g : Fin budget.accept × Fin budget.create,
         (ENNReal.ofReal (kemLoss setup codec checks route ensureInit bounds .P adversary budget
@@ -723,15 +724,15 @@ theorem ce_lor (setup : Setup baseSpec KemSK)
                 (lorEligEvent setup.source.crypto codec setup.serverKeyId budget filter) lorClaim
                 (g.1, g.2.castSucc))) +
           2⁻¹ * beta setup codec route checks ensureInit bounds .P adversary budget (g.1, g.2.castSucc) runtime) := by
-  rw [PqxdhDeploymentHeadlineChain.split_named setup codec checks route ensureInit phase1 phase2 bounds .P adversary
+  rw [PqxdhDeploymentHeadlineChain.split_named   setup codec checks route ensureInit phase1 phase2 bounds .P adversary
       budget respects _ lorClaim runtime (lorWin_named setup.source.crypto codec setup.serverKeyId budget guess filter),
-    PqxdhDeploymentHeadlineChain.split_named setup codec checks route ensureInit phase1 phase2 bounds .P adversary
+    PqxdhDeploymentHeadlineChain.split_named   setup codec checks route ensureInit phase1 phase2 bounds .P adversary
       budget respects _ lorClaim runtime (lorElig_named setup.source.crypto codec setup.serverKeyId budget filter),
     ENNReal.toReal_sum (fun _ _ => chance_ne_top _ _), ENNReal.toReal_sum (fun _ _ => chance_ne_top _ _),
     Finset.mul_sum, ← Finset.sum_sub_distrib]
   refine (ENNReal.ofReal_le_ofReal (Finset.abs_sum_le_sum_abs _ _)).trans ?_
   rw [ENNReal.ofReal_sum_of_nonneg (fun _ _ => abs_nonneg _)]
-  exact Finset.sum_le_sum fun g _ => ce_lor_target setup functional codec checks route ensureInit phase1 phase2 correct
+  exact Finset.sum_le_sum fun g _ => ce_lor_target   setup functional codec checks route ensureInit phase1 phase2 correct
     caps bounded qInit initBound bounds adversary budget respects runtime fallback guess filter (g.1, g.2.castSucc)
 
 open Classical in
@@ -750,12 +751,12 @@ theorem ce_lor_server_target (setup : Setup baseSpec KemSK)
     ENNReal.ofReal |(𝒟[(fun outcome => decide (happens (lorWinPeerEvent setup.source.crypto codec setup.serverKeyId
           budget guess filter) outcome = true ∧
           designated setup.source.crypto codec setup.serverKeyId budget lorClaim outcome = some g)) <$>
-        (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds .P adversary).run runtime]
+        (PqxdhDeploymentSecrecy.game   setup codec checks route ensureInit 0 bounds .P adversary).run runtime]
           {true}).toReal -
         (1 / 2) * (𝒟[(fun outcome => decide (happens (lorEligPeerEvent setup.source.crypto codec setup.serverKeyId
           budget filter) outcome = true ∧
           designated setup.source.crypto codec setup.serverKeyId budget lorClaim outcome = some g)) <$>
-        (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds .P adversary).run runtime]
+        (PqxdhDeploymentSecrecy.game   setup codec checks route ensureInit 0 bounds .P adversary).run runtime]
           {true}).toReal| ≤
       ENNReal.ofReal (kemLoss setup codec checks route ensureInit bounds .P adversary budget
         (lorWinPeerEvent setup.source.crypto codec setup.serverKeyId budget guess filter) lorClaim g runtime) +
@@ -771,21 +772,21 @@ theorem ce_lor_server_target (setup : Setup baseSpec KemSK)
         recLoss setup codec checks route ensureInit bounds .P adversary budget g runtime fallback caps qInit
           (serverSlotted setup codec budget
             (lorEligPeerEvent setup.source.crypto codec setup.serverKeyId budget filter) lorClaim g)) := by
-  have viewW := server_view setup codec checks route phase1 ensureInit bounds .P adversary budget
+  have viewW := server_view   setup codec checks route phase1 ensureInit bounds .P adversary budget
     (lorWinPeerEvent setup.source.crypto codec setup.serverKeyId budget guess filter) lorClaim g runtime
-  have viewE := server_view setup codec checks route phase1 ensureInit bounds .P adversary budget
+  have viewE := server_view   setup codec checks route phase1 ensureInit bounds .P adversary budget
     (lorEligPeerEvent setup.source.crypto codec setup.serverKeyId budget filter) lorClaim g runtime
-  have final := lor_peer_final setup codec checks route ensureInit bounds adversary budget g runtime guess filter
-  have chainW := PqxdhDeploymentHeadlineChain.chain_close setup functional codec checks route ensureInit phase1 phase2
+  have final := lor_peer_final   setup codec checks route ensureInit bounds adversary budget g runtime guess filter
+  have chainW := PqxdhDeploymentHeadlineChain.chain_close   setup functional codec checks route ensureInit phase1 phase2
     correct bounds .P adversary budget respects
     (lorWinPeerEvent setup.source.crypto codec setup.serverKeyId budget guess filter) lorClaim g runtime
-  have chainE := PqxdhDeploymentHeadlineChain.chain_close setup functional codec checks route ensureInit phase1 phase2
+  have chainE := PqxdhDeploymentHeadlineChain.chain_close   setup functional codec checks route ensureInit phase1 phase2
     correct bounds .P adversary budget respects
     (lorEligPeerEvent setup.source.crypto codec setup.serverKeyId budget filter) lorClaim g runtime
-  have liftW := PqxdhDeploymentHeadlineChain.records_close setup codec checks route correct caps bounded ensureInit qInit
+  have liftW := PqxdhDeploymentHeadlineChain.records_close   setup codec checks route correct caps bounded ensureInit qInit
     initBound bounds .P adversary budget respects g runtime fallback (serverSlotted setup codec budget
       (lorWinPeerEvent setup.source.crypto codec setup.serverKeyId budget guess filter) lorClaim g)
-  have liftE := PqxdhDeploymentHeadlineChain.records_close setup codec checks route correct caps bounded ensureInit qInit
+  have liftE := PqxdhDeploymentHeadlineChain.records_close   setup codec checks route correct caps bounded ensureInit qInit
     initBound bounds .P adversary budget respects g runtime fallback (serverSlotted setup codec budget
       (lorEligPeerEvent setup.source.crypto codec setup.serverKeyId budget filter) lorClaim g)
   have bound := lor_bound_server _ _ _ _ _ _ _ _ (chance_ne_top _ _) (chance_ne_top _ _) viewW viewE final _ _ chainW
@@ -807,11 +808,11 @@ theorem ce_lor_server (setup : Setup baseSpec KemSK)
     (guess : X → Bool) (filter : List (PqxdhDeploymentInterface.PublicEntry .P) → Bool) :
     ENNReal.ofReal |(𝒟[(fun outcome => happens (lorWinPeerEvent setup.source.crypto codec setup.serverKeyId budget guess
           filter) outcome) <$>
-        (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds .P adversary).run runtime]
+        (PqxdhDeploymentSecrecy.game   setup codec checks route ensureInit 0 bounds .P adversary).run runtime]
           {true}).toReal -
         (1 / 2) * (𝒟[(fun outcome => happens (lorEligPeerEvent setup.source.crypto codec setup.serverKeyId budget
           filter) outcome) <$>
-        (PqxdhDeploymentSecrecy.game setup codec checks route ensureInit 0 bounds .P adversary).run runtime]
+        (PqxdhDeploymentSecrecy.game   setup codec checks route ensureInit 0 bounds .P adversary).run runtime]
           {true}).toReal| ≤
       ∑ g : Fin budget.accept × Fin budget.create,
         (ENNReal.ofReal (kemLoss setup codec checks route ensureInit bounds .P adversary budget
@@ -834,16 +835,16 @@ theorem ce_lor_server (setup : Setup baseSpec KemSK)
               caps qInit (serverSlotted setup codec budget
                 (lorEligPeerEvent setup.source.crypto codec setup.serverKeyId budget filter) lorClaim
                 (g.1, g.2.castSucc)))) := by
-  rw [PqxdhDeploymentHeadlineChain.split_named setup codec checks route ensureInit phase1 phase2 bounds .P adversary
+  rw [PqxdhDeploymentHeadlineChain.split_named   setup codec checks route ensureInit phase1 phase2 bounds .P adversary
       budget respects _ lorClaim runtime
       (lorWinPeer_named setup.source.crypto codec setup.serverKeyId budget guess filter),
-    PqxdhDeploymentHeadlineChain.split_named setup codec checks route ensureInit phase1 phase2 bounds .P adversary
+    PqxdhDeploymentHeadlineChain.split_named   setup codec checks route ensureInit phase1 phase2 bounds .P adversary
       budget respects _ lorClaim runtime (lorEligPeer_named setup.source.crypto codec setup.serverKeyId budget filter),
     ENNReal.toReal_sum (fun _ _ => chance_ne_top _ _), ENNReal.toReal_sum (fun _ _ => chance_ne_top _ _),
     Finset.mul_sum, ← Finset.sum_sub_distrib]
   refine (ENNReal.ofReal_le_ofReal (Finset.abs_sum_le_sum_abs _ _)).trans ?_
   rw [ENNReal.ofReal_sum_of_nonneg (fun _ _ => abs_nonneg _)]
-  exact Finset.sum_le_sum fun g _ => ce_lor_server_target setup functional codec checks route ensureInit phase1 phase2
+  exact Finset.sum_le_sum fun g _ => ce_lor_server_target   setup functional codec checks route ensureInit phase1 phase2
     correct caps bounded qInit initBound bounds adversary budget respects runtime fallback guess filter
     (g.1, g.2.castSucc)
 

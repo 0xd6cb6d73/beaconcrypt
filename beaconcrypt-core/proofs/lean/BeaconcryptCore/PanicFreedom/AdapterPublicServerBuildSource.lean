@@ -61,6 +61,7 @@ variable [writer : RegistrationWriterPrimitive.Operations]
 /-- Remaining individual leaves of the public builder, with seal/write discharged by the source implementation. -/
 structure Contracts : Prop where
   publicLeaves : AdapterPublicTrivial.Contracts
+  hash : ∀ request, Normal (authentication.hash request)
   allocation : AdapterWire.Contracts
   serialization : AdapterRegistrationWriterCallers.ResponseCallerContracts
   sealingPrimitive : AdapterSeal.PrimitiveContracts
@@ -79,15 +80,15 @@ theorem component_contracts (contracts : Contracts)
     (writerFallback : RecordRoutingCallbacks.Operations) :
     letI := sourceLocalOperations localOps sealFallback writerFallback
     AdapterPublicServerBuild.Contracts := by
-  rcases contracts with ⟨publicLeaves, allocation, serialization, sealingPrimitive, parse,
+  rcases contracts with ⟨publicLeaves, hash, allocation, serialization, sealingPrimitive, parse,
     initial, kdf, commitment, sign, contains, reserve, entry, insert⟩
-  rcases publicLeaves with ⟨mldsaPublic, edPublicBytes, hash⟩
+  rcases publicLeaves with ⟨mldsaPublic, edPublicBytes⟩
   let _ := sourceLocalOperations localOps sealFallback writerFallback
   exact {
     publicLeaves := {
       mldsaPublic := mldsaPublic
-      edPublicBytes := edPublicBytes
-      hash := hash }
+      edPublicBytes := edPublicBytes }
+    hash := hash
     allocation := allocation
     serialization := serialization
     parse := parse

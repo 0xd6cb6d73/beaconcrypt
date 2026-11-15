@@ -25,7 +25,7 @@ attribute [local irreducible] RegistrationServerNativeSource.authenticate Regist
 /-- The actual pool-free ambient callbacks retain the parsed-attempt counter except for the literal local-state put. -/
 theorem other_counter (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (query : (RegistrationNativeKemParsedRouting.Ambient n mlSource).Domain)
     (before after : State n mlSource) (reply : (RegistrationNativeKemParsedRouting.Ambient n mlSource).Range query)
     (supported : (reply, after) ∈ support

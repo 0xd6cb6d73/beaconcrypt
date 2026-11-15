@@ -78,15 +78,16 @@ theorem realFinish_none {Bk : Type} {n : ℕ} (owner : ℕ) (raw : Pqxdh.Bytes)
     have phase : ∀ control prekey oneTime kem, before.beacon.phase ≠ .initSent control prekey oneTime kem := by
       intro control prekey oneTime kem same
       simp only [initSentAt, owned, same, Bool.true_eq_false] at notInitSent
-    have native : PqxdhBeaconPhase2Publication.owner (X := PqxdhJointIdentity.IdentitySeed) (Response := Response)
-        codec.frameRead raw before = pure (none, before) := by
-      unfold PqxdhBeaconPhase2Publication.owner
+    have native : ∀ (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (shared : PqxdhServerAuthNative.NativeState KemSK),
+        (PqxdhDeploymentEnvironment.ownerFinishFwd (n := n) setup codec retained raw before).run shared =
+          pure ((none, before), shared) := by
+      intro retained shared
+      unfold PqxdhDeploymentEnvironment.ownerFinishFwd
       split
       · rename_i control prekey oneTime kem same
         exact absurd same (phase control prekey oneTime kem)
       · rfl
-    rw [PqxdhBeaconPhase2Publication.nativeOwner, native, simulateQ_pure, simulateQ_pure, StateT.run_pure,
-      support_pure, Set.mem_singleton_iff] at resultMember
+    rw [native, support_pure, Set.mem_singleton_iff] at resultMember
     subst resultMember
     rfl
 
@@ -164,15 +165,16 @@ section Prepare
 variable {ι : Type} {baseSpec : OracleSpec ι} {Reader Response : Type}
   (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK) (codec : PqxdhServerAuthExperiment.Codec Reader Response)
 
-/-- Owner k's preparation with the challenge handle on a finish input whose Phase 2 reader gives a ciphertext with the challenge ciphertext's bytes: every prepared finish carries the challenge marker as its decapsulation handle. -/
-theorem prepare_challenge (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (control : beaconcrypt_core.pqxdh.BeaconInitSent)
+/-- Owner k's preparation with the challenge handle, at every completed binding, on a finish input whose Phase 2 reader gives a ciphertext with the challenge ciphertext's bytes: every prepared finish carries the challenge marker as its decapsulation handle. -/
+theorem prepare_challenge (challenge : PqxdhKemIndCca.MlKem768Ciphertext)
+    (binding : beaconcrypt_core.session.CompletedRegistrationBinding) (control : beaconcrypt_core.pqxdh.BeaconInitSent)
     (identity : PqxdhJointIdentity.IdentitySeed) (prekey oneTime : PqxdhJointGapDh.ScalarBytes)
     (kem : PqxdhKemIndCca.MlKem768PublicKey × KemSK) (raw : Pqxdh.Bytes)
     (ciphertext : PqxdhBeaconPhase2Preparation.Ciphertext)
     (read : (codec.read2 raw).bind codec.ciphertext = some ciphertext)
     (same : PqxdhPhase2InputBytes.ciphertext ciphertext = challenge) :
     ∀ prepared ∈ support (simulateQ (PqxdhDeploymentIdealSteps.preparationCE (Response := Response) setup codec challenge)
-        (PqxdhBeaconPhase2Shared.prepare control identity prekey oneTime kem raw)),
+        (PqxdhBeaconPhase2Shared.prepare binding control identity prekey oneTime kem raw)),
       ∀ pending, prepared = some pending → pending.root.shared = .challenge := by
   intro prepared member pending found
   obtain ⟨response, decoded, readCiphertext⟩ := Option.bind_eq_some_iff.mp read
@@ -242,44 +244,50 @@ theorem finishChallenge_beacon (p : Params KemSK count) (owner : ℕ) (raw : Pqx
     subst member
     cases returned
   rename_i control prekey oneTime kem phase
-  rw [mem_support_bind_iff] at member
-  obtain ⟨prepared, preparedMember, member⟩ := member
-  have marker := prepare_challenge setup codec p.challenge control before.beacon.identity prekey oneTime kem raw ciphertext
-    read same prepared (PqxdhDeploymentEnvironment.support_simulateQ_subset _ _ preparedMember)
-  rcases prepared with _ | pending
-  · rw [commitEnv_none e owner control before _ v member] at returned
-    cases returned
-  dsimp only at member
-  unfold groupEnv at member
-  rw [marker pending rfl] at member
-  dsimp only at member
   split at member
-  rotate_left
-  · rw [commitEnv_none e owner control before _ v member] at returned
+  · rw [mem_support_bind_iff] at member
+    obtain ⟨digest, -, member⟩ := member
+    rw [mem_support_bind_iff] at member
+    obtain ⟨prepared, preparedMember, member⟩ := member
+    have marker := prepare_challenge setup codec p.challenge _ control before.beacon.identity prekey oneTime kem raw
+      ciphertext read same prepared (PqxdhDeploymentEnvironment.support_simulateQ_subset _ _ preparedMember)
+    rcases prepared with _ | pending
+    · rw [commitEnv_none e owner control before _ v member] at returned
+      cases returned
+    dsimp only at member
+    unfold groupEnv at member
+    rw [marker pending rfl] at member
+    dsimp only at member
+    split at member
+    rotate_left
+    · rw [commitEnv_none e owner control before _ v member] at returned
+      cases returned
+    rw [mem_support_bind_iff] at member
+    obtain ⟨readOut, -, member⟩ := member
+    split at member
+    rotate_left
+    · rw [commitEnv_none e owner control before _ v member] at returned
+      cases returned
+    rename_i j allocated
+    rw [support_map] at member
+    obtain ⟨committed, committedMember, rfl⟩ := member
+    unfold PqxdhDeploymentEnvironment.finishSplitEnv at committedMember
+    rw [mem_support_bind_iff] at committedMember
+    obtain ⟨staged, -, committedMember⟩ := committedMember
+    rw [mem_support_bind_iff] at committedMember
+    obtain ⟨_, -, committedMember⟩ := committedMember
+    rw [support_pure, Set.mem_singleton_iff] at committedMember
+    subst committedMember
+    obtain ⟨control', associatedData, kernel, established⟩ := finish_some control before staged bytes returned
+    have below : owner < e.native.owners.length := (List.getElem?_eq_some_iff.mp owned).1
+    have opened : establishedAt (e.native.owners.set owner (PqxdhBeaconPhase2Publication.finish control before
+        staged).2) owner = true := by
+      simp only [establishedAt, List.getElem?_set_self below, established]
+    refine ⟨_, j, ?_, allocated⟩
+    simp only [finishedEnv, hiddenBackend, opened, ↓reduceIte, Option.some_or]
+  all_goals
+    rw [commitEnv_none e owner control before _ v member] at returned
     cases returned
-  rw [mem_support_bind_iff] at member
-  obtain ⟨readOut, -, member⟩ := member
-  split at member
-  rotate_left
-  · rw [commitEnv_none e owner control before _ v member] at returned
-    cases returned
-  rename_i j allocated
-  rw [support_map] at member
-  obtain ⟨committed, committedMember, rfl⟩ := member
-  unfold PqxdhDeploymentEnvironment.finishSplitEnv at committedMember
-  rw [mem_support_bind_iff] at committedMember
-  obtain ⟨staged, -, committedMember⟩ := committedMember
-  rw [mem_support_bind_iff] at committedMember
-  obtain ⟨_, -, committedMember⟩ := committedMember
-  rw [support_pure, Set.mem_singleton_iff] at committedMember
-  subst committedMember
-  obtain ⟨control', associatedData, kernel, established⟩ := finish_some control before staged bytes returned
-  have below : owner < e.native.owners.length := (List.getElem?_eq_some_iff.mp owned).1
-  have opened : establishedAt (e.native.owners.set owner (PqxdhBeaconPhase2Publication.finish control before
-      staged).2) owner = true := by
-    simp only [establishedAt, List.getElem?_set_self below, established]
-  refine ⟨_, j, ?_, allocated⟩
-  simp only [finishedEnv, hiddenBackend, opened, ↓reduceIte, Option.some_or]
 
 end Challenge
 
@@ -555,6 +563,7 @@ section GenericWrite
 open beaconcrypt_core
 open PqxdhServerRegistrationPublication (AuxSpec Response ResponseFields responseFields)
 variable {Kernel Metadata PeerMetadata Consumed : Type} {ι' : Type} {spec' : OracleSpec ι'}
+variable (associatedData : PqxdhTranscriptAd.AssociatedData)
 open PqxdhInitialGenericPublication (State)
 
 /-- A generic Server build's published response is the Phase 2 writer's output on the fields of a candidate that carries the pending registration's KEM ciphertext. -/
@@ -572,8 +581,8 @@ theorem afterInitialization_written (write : ResponseFields → Option Pqxdh.Byt
     (carried : candidate.kem_ciphertext = pending.kem_ciphertext)
     (authenticated : Pqxdh.Bytes) (kernel : Kernel) (metadata : PeerMetadata)
     (state : State Kernel Metadata PeerMetadata Consumed) :
-    ∀ result ∈ support (PqxdhInitialGenericPublication.afterInitialization calls aux candidate authenticated kernel
-      metadata state), GWritten write pending (.ok result) := by
+    ∀ result ∈ support (PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) calls aux
+      candidate authenticated kernel metadata state), GWritten write pending (.ok result) := by
   intro result supported
   unfold PqxdhInitialGenericPublication.afterInitialization at supported
   rw [mem_support_bind_iff] at supported
@@ -606,8 +615,8 @@ theorem candidate_written (write : ResponseFields → Option Pqxdh.Bytes)
     (pending : pqxdh.PendingServerRegistration) (initial : RustM Kernel) (candidate : pqxdh.ServerRegistrationCandidate)
     (carried : candidate.kem_ciphertext = pending.kem_ciphertext)
     (data : Option Pqxdh.Bytes) (metadata : PeerMetadata) (state : State Kernel Metadata PeerMetadata Consumed) :
-    ∀ result ∈ support (PqxdhInitialGenericBuilder.candidate calls aux initial candidate data metadata state),
-      GWritten write pending result := by
+    ∀ result ∈ support (PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) calls aux initial
+      candidate data metadata state), GWritten write pending result := by
   intro result supported
   unfold PqxdhInitialGenericBuilder.candidate at supported
   rw [mem_support_bind_iff] at supported
@@ -639,8 +648,8 @@ theorem candidate_written (write : ResponseFields → Option Pqxdh.Bytes)
             innerMember
           rw [support_map] at finalMember
           obtain ⟨published, publishedMember, rfl⟩ := finalMember
-          exact afterInitialization_written write calls aux writes pending candidate carried _ _ metadata state
-            published publishedMember
+          exact afterInitialization_written associatedData write calls aux writes pending candidate carried _ _
+            metadata state published publishedMember
       · simp only [support_pure, Set.mem_singleton_iff] at innerMember
         subst innerMember
         trivial
@@ -651,8 +660,8 @@ theorem genericBuild_written (write : ResponseFields → Option Pqxdh.Bytes)
     (writes : ∀ fields bytes, bytes ∈ support (aux (.write fields)) → bytes = write fields)
     (initial : RustM Kernel) (pending : pqxdh.PendingServerRegistration)
     (data : Option Pqxdh.Bytes) (metadata : PeerMetadata) (state : State Kernel Metadata PeerMetadata Consumed) :
-    ∀ result ∈ support (PqxdhServerAuthSendFactor.genericBuild calls aux initial pending data metadata state),
-      GWritten write pending result := by
+    ∀ result ∈ support (PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData) calls aux initial
+      pending data metadata state), GWritten write pending result := by
   intro result supported
   unfold PqxdhServerAuthSendFactor.genericBuild PqxdhInitialGenericBuilder.continueRust at supported
   cases next : pqxdh.server_next_key_id state.control with
@@ -665,9 +674,9 @@ theorem genericBuild_written (write : ResponseFields → Option Pqxdh.Bytes)
         | ok value =>
             rw [prepared] at supported
             rcases value with candidate | error
-            · have carried := (PqxdhServerAuthNegativeControl.prepare_commit_fields _ _ _ _ candidate prepared).2.2.2.2.1
-              exact candidate_written write calls aux writes pending initial candidate carried data metadata state result
-                supported
+            · have carried := (PqxdhServerAuthNegativeControl.prepare_commit_fields _ _ _ _ candidate prepared).2.2.2.2
+              exact candidate_written associatedData write calls aux writes pending initial candidate carried data
+                metadata state result supported
             · simp only [support_pure, Set.mem_singleton_iff] at supported
               subst supported
               trivial
@@ -723,9 +732,9 @@ theorem tailFwd_writeImpl {n : ℕ} {α : Type} (work : OracleComp TailSpec α) 
 
 /-- Every response of the environment's forwarded split build is the Phase 2 writer's output on the fields of a candidate that carries the KEM ciphertext of the session's pending token. -/
 theorem buildSplitFwd_written (material : PqxdhDeploymentHiddenLayout.Material)
-    (token : PqxdhServerRelatedRootConsumer.Returned) (payload : Option Pqxdh.Bytes)
+    (token : PqxdhServerRelatedRootConsumer.Returned) (payload : Option Pqxdh.Bytes) (ad : PqxdhTranscriptAd.AssociatedData)
     (server : PqxdhServerAuthEntryFactor.ServerState) :
-    ∀ v ∈ support ((PqxdhDeploymentEnvironment.buildSplitFwd (n := 2) setup codec checks material token payload
+    ∀ v ∈ support ((PqxdhDeploymentEnvironment.buildSplitFwd (n := 2) setup codec checks material token payload ad
         server).run []), ∀ response, (PqxdhServerAuthExperiment.settle server v.1).1 = some response →
       ∃ candidate encrypted, candidate.kem_ciphertext = token.pending.kem_ciphertext ∧
         codec.write2 (responseFields candidate encrypted) = some response.serialized := by
@@ -734,12 +743,12 @@ theorem buildSplitFwd_written (material : PqxdhDeploymentHiddenLayout.Material)
   obtain ⟨⟨rust, log⟩, rustMember, rfl⟩ := member
   rw [← tailFwd_writeImpl setup codec checks] at rustMember
   have free := PqxdhDeploymentEnvironmentReal.run_support _ _ _ _ rustMember
-  rw [← PqxdhDeploymentSplitFactor.factored_free (writeImpl codec)] at free
+  rw [← PqxdhDeploymentSplitFactor.factored_free ad (writeImpl codec)] at free
   unfold PqxdhServerAuthLoggedSendFactor.factored at free
   rw [support_map] at free
   obtain ⟨inner, innerMember, rfl⟩ := free
-  have written := genericBuild_written codec.write2 _ (fun request => writeImpl codec (.inr request))
-    (fun fields bytes found => by simpa [writeImpl] using found) _ token.pending payload () _ inner innerMember
+  have written := genericBuild_written ad codec.write2 _ (fun request => writeImpl codec (.inr request))
+    (fun fields bytes found => by simpa [writeImpl] using found) _ token.pending payload ad _ inner innerMember
   rcases inner with ⟨_ | built, after⟩ | error | _
   · exact absurd settled (by intro same; cases same)
   · have reply : (PqxdhServerAuthExperiment.settle server
@@ -763,13 +772,20 @@ theorem buildCached_written (session : ℕ) (payload : Option Pqxdh.Bytes) (coor
         codec.write2 (responseFields candidate encrypted) = some response.serialized := by
   intro v member response replied
   rw [PqxdhDeploymentIdealProvenance.buildCached_program setup codec checks session payload coords e j token material
-    allocated pending cached, mem_support_bind_iff] at member
+    allocated pending cached] at member
+  split at member
+  · rw [support_pure, Set.mem_singleton_iff] at member
+    subst member
+    cases replied
+  rw [mem_support_bind_iff] at member
+  obtain ⟨_, -, member⟩ := member
+  rw [mem_support_bind_iff] at member
   obtain ⟨value, valueMember, member⟩ := member
   rw [mem_support_bind_iff] at member
   obtain ⟨_, -, member⟩ := member
   rw [support_pure, Set.mem_singleton_iff] at member
   subst member
-  exact buildSplitFwd_written setup codec checks material token payload _ value valueMember response replied
+  exact buildSplitFwd_written setup codec checks material token payload _ _ value valueMember response replied
 
 end SplitWrite
 

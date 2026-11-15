@@ -25,7 +25,7 @@ def snapshot (before : Native) (self : beaconcrypt_public_wrapper.server.Server)
     tag,frames,rawBefore,invoked⟩
 
 noncomputable def put (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (views : Views)
-    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created Unit)
+    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential mlSource) (current : Native ×Platform)
     (before : Carrier (R:=R) view views joint created credential current)
     (primitive : PqxdhRecordLiftWorld.Primitive) (frames : PqxdhRecordLiftLoggedAdapters.Frames)
@@ -56,7 +56,7 @@ noncomputable def put (view : AdapterPublicWrapperState.MaterialView mlSource Ke
   exact ⟨rfl,(matched key).2.trans (congrArg Option.isSome (matched key).1.symm)⟩
 
 theorem objects (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (views : Views)
-    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created Unit)
+    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential mlSource) (current : Native ×Platform)
     (before : Carrier (R:=R) view views joint created credential current)
     (primitive : PqxdhRecordLiftWorld.Primitive) (frames : PqxdhRecordLiftLoggedAdapters.Frames)

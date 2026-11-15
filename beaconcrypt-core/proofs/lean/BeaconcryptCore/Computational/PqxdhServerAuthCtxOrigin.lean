@@ -8,6 +8,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete PqxdhRefinement
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhServerAuthCtxOrigin
+variable (associatedData : PqxdhTranscriptAd.AssociatedData)
 open PqxdhServerAuthExperiment PqxdhServerAuthEntryFactor
 open PqxdhSecretInputKdf PqxdhJointKdfGame CtxRomAuth
 open PqxdhServerAuthBuildReceipt (FrameOrigin)
@@ -56,10 +57,10 @@ theorem build_origins (setup : Setup baseSpec KemSK) (codec : Codec Reader WireR
     (log : PqxdhServerAuthBuildProgram.Log) (cache : CtxRO.QueryCache)
     (supported : ((some outcome, log), after) ∈ support
       (RawCtxSelectedAuthenticationObserver.monitor
-        ((PqxdhServerAuthBuildProgram.compiled setup.source codec checks rest pending data () game.server).run.run []) before)) :
+        ((PqxdhServerAuthBuildProgram.compiled (associatedData := associatedData) setup.source codec checks rest pending data associatedData game.server).run.run []) before)) :
     Origins setup context codec.frameWrite (afterBuild index game (outcome, (log, cache))).2.ghost hidden after := by
-  have receipts := (PqxdhServerAuthBuildReceipt.compiled_receipts setup.source codec checks rest pending data
-    () game.server [] log before after (some outcome) supported).2
+  have receipts := (PqxdhServerAuthBuildReceipt.compiled_receipts (associatedData := associatedData) setup.source codec checks rest pending data
+    associatedData game.server [] log before after (some outcome) supported).2
   intro entry found
   rcases receipts entry found with old | ⟨sealContext, sequence, bound, records, seq, sender, publication⟩
   · exact Origins.grows setup context codec.frameWrite game.ghost
@@ -97,11 +98,11 @@ theorem finish_origin (setup : Setup baseSpec KemSK) (codec : Codec Reader WireR
   · obtain ⟨raw, target, kernel, entry, _, delivery, success, member, same, plaintext⟩ := matched
     obtain ⟨index, message, reply, bytes, sealContext, sequence, touched, selected, input, bound,
       records, seq, sender, publication⟩ := origins entry member
-    obtain ⟨encoded, written⟩ := PqxdhServerAuthFinishReceipt.matched_writable codec.frameWrite codec.frameRead
+    obtain ⟨encoded, written⟩ := PqxdhServerAuthFinishReceipt.matched_writable (associatedData := (PqxdhPhase2DhRootConsumer.cleared pending).binding.associated_data) codec.frameWrite codec.frameRead
       writable raw _ staged.opened target delivery entry same sequence sealContext.senderId seq sender
     refine Or.inr ⟨index, message, reply, bytes, sealContext, touched, selected, input,
       publication.resolve_left (by rw [written]; exact Option.some_ne_none encoded), ?_⟩
-    exact PqxdhServerAuthFinishReceipt.matched_fields _ kernel staged success codec.frameRead raw target
+    exact PqxdhServerAuthFinishReceipt.matched_fields (associatedData := (PqxdhPhase2DhRootConsumer.cleared pending).binding.associated_data) _ kernel staged success codec.frameRead raw target
       delivery entry same plaintext sealContext records bound
 
 /-- The original first-acceptance event is impossible when its frozen source logs contain a partner's matching seal. This is an event calculation, not an authentication hypothesis. -/

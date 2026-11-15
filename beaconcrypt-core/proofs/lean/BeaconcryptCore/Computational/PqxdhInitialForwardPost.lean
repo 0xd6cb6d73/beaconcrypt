@@ -8,6 +8,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.refined ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialForwardPost
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhInitialPostContext RawCtxForwardAnnotation RawCtxSelectedFamilyContext
 variable {ι M P I D K X Response Shared Result : Type} {extra : OracleSpec ι} {S B : Nat}
 
@@ -35,13 +36,13 @@ noncomputable def record (sender : M → Std.U64) (route : RawCtxServerRouting.S
 
 noncomputable def ownerLift (index : Fin B) (before : NativeFront M P I D K S B)
     (control : pqxdh.BeaconInitSent) (candidate : pqxdh.BeaconRegistrationCandidate)
-    (outside : Option Pqxdh.Bytes → OracleComp (PostSpec extra S B) Result)
+    (associatedData : Std.Array Std.U8 151#usize) (outside : Option Pqxdh.Bytes → OracleComp (PostSpec extra S B) Result)
     (client : OracleComp (RawCtxForwardOwner.Spec Unit (core.option.Option RawCtxWholeOwner.Decrypted))
       (core.option.Option RawCtxWholeOwner.Decrypted × RawCtxPendingOwnerTails.Owner RatchetChain Unit)) :
     OracleComp (Spec extra M P I D K X Response Shared Result S B)
       (core.option.Option RawCtxWholeOwner.Decrypted × RawCtxPendingOwnerTails.Owner RatchetChain Unit) :=
   RawCtxForwardAnnotationLift.lift
-    (fun inner => PqxdhInitialPostContext.Context.finish index before control candidate outside inner)
+    (fun inner => PqxdhInitialPostContext.Context.finish index before control candidate associatedData outside inner)
     (RawCtxForwardAnnotationLift.lift (extra := RawCtxGenericFamilyRead.ReadSpec
       (RawCtxPendingOwnerQueries.Kernel RatchetChain) S B) id client)
 
@@ -54,7 +55,7 @@ noncomputable def finish (decode : RawCtxReceive.FrameDecoder)
   match (before.roles.1.2 index).beacon.phase with
   | .initSent control prekey oneTime kem => do
       let prepared ← simulateQ (plain ∘ₛ PqxdhInitialPendingPost.preForward)
-        (PqxdhBeaconPhase2Shared.prepare control (before.roles.1.2 index).beacon.identity prekey oneTime kem raw)
+        (PqxdhBeaconPhase2Shared.prepare (completedBinding := completedBinding) control (before.roles.1.2 index).beacon.identity prekey oneTime kem raw)
       match prepared with
       | none =>
           let result := PqxdhInitialGenericBeacon.finish control (before.roles.1.2 index) none
@@ -73,11 +74,11 @@ noncomputable def finish (decode : RawCtxReceive.FrameDecoder)
                   after result.1 (PqxdhInitialPendingPost.install index before result.2)
               | some application => do
                   let candidate := PqxdhBeaconPhase2Shared.clearedMetadata prepared.metadata
-                  let result ← ownerLift index before control candidate outside
+                  let result ← ownerLift index before control candidate prepared.metadata.associatedData outside
                     (RawCtxForwardOwner.program candidate.server_binding.identity_key_id decode
                       (RawCtxSelectedPublicTrace.SourceSpec.query (.inl (.inr application)))
-                      (PqxdhInitialGenericBeacon.localOwner candidate kernel))
-                  let published := finishResult index before control candidate result
+                      (PqxdhInitialGenericBeacon.localOwner candidate prepared.metadata.associatedData kernel))
+                  let published := finishResult index before control candidate prepared.metadata.associatedData result
                   after published.1 published.2
   | _ => after none (PqxdhInitialPendingPost.install index before (before.roles.1.2 index))
 
@@ -91,7 +92,7 @@ noncomputable def program (sender : M → Std.U64) (route : RawCtxServerRouting.
       | .inl (.inr query) => do
           let reply ← simulateQ plain (PqxdhInitialPendingPost.selectorForward query)
           recurse reply state
-      | .inr (.finish index raw) => finish decode index raw state outside recurse)
+      | .inr (.finish index raw) => finish (completedBinding := completedBinding) decode index raw state outside recurse)
 
 /-- Untagged callbacks remain literal original source queries after annotation erasure. -/
 theorem plain_erase {Value : Type}
@@ -105,10 +106,10 @@ theorem plain_erase {Value : Type}
 
 private theorem ownerLift_erase (index : Fin B) (before : NativeFront M P I D K S B)
     (control : pqxdh.BeaconInitSent) (candidate : pqxdh.BeaconRegistrationCandidate)
-    (outside : Option Pqxdh.Bytes → OracleComp (PostSpec extra S B) Result)
+    (associatedData : Std.Array Std.U8 151#usize) (outside : Option Pqxdh.Bytes → OracleComp (PostSpec extra S B) Result)
     (client : OracleComp (RawCtxForwardOwner.Spec Unit (core.option.Option RawCtxWholeOwner.Decrypted))
       (core.option.Option RawCtxWholeOwner.Decrypted × RawCtxPendingOwnerTails.Owner RatchetChain Unit)) :
-    simulateQ erase (ownerLift (X := X) (Response := Response) (Shared := Shared) index before control candidate outside client) =
+    simulateQ erase (ownerLift (X := X) (Response := Response) (Shared := Shared) index before control candidate associatedData outside client) =
       simulateQ PqxdhInitialPendingPost.primitiveForward (simulateQ erase client) := by
   simp only [ownerLift, RawCtxForwardAnnotationLift.erase_lift]
   have forwards : (RawCtxForwardAnnotationLift.forward : QueryImpl
@@ -128,8 +129,8 @@ theorem finish_erase (decode : RawCtxReceive.FrameDecoder)
     (outside : Option Pqxdh.Bytes → OracleComp (PostSpec extra S B) Result)
     (after : Option Pqxdh.Bytes → NativeFront M P I D K S B →
       OracleComp (Spec extra M P I D K X Response Shared Result S B) (Result × NativeFront M P I D K S B)) :
-    simulateQ erase (finish decode index raw before outside after) =
-      (PqxdhInitialGenericBeacon.owner PqxdhInitialPendingPost.preForward PqxdhInitialPendingPost.calls
+    simulateQ erase (finish (completedBinding := completedBinding) decode index raw before outside after) =
+      (PqxdhInitialGenericBeacon.owner (completedBinding := completedBinding) PqxdhInitialPendingPost.preForward PqxdhInitialPendingPost.calls
         PqxdhInitialPendingPost.applicationForward PqxdhInitialPendingPost.initialForward decode raw (before.roles.1.2 index) >>=
           fun result => simulateQ erase (after result.1 (PqxdhInitialPendingPost.install index before result.2))) := by
   unfold finish PqxdhInitialGenericBeacon.owner
@@ -157,9 +158,9 @@ theorem finish_erase (decode : RawCtxReceive.FrameDecoder)
                 have singleton : RawCtxPendingOwnerTails.program
                     (PqxdhBeaconPhase2Shared.clearedMetadata prepared.metadata).server_binding.identity_key_id decode
                     (RawCtxSelectedPublicTrace.SourceSpec.query (.inl (.inr application)))
-                    (PqxdhInitialGenericBeacon.localOwner (PqxdhBeaconPhase2Shared.clearedMetadata prepared.metadata) kernel) =
+                    (PqxdhInitialGenericBeacon.localOwner (PqxdhBeaconPhase2Shared.clearedMetadata prepared.metadata) prepared.metadata.associatedData kernel) =
                     (RawCtxChainOwner.rawReceive RawCtxPendingOwnerQueries.calls decode application).run
-                      (PqxdhInitialGenericBeacon.localOwner (PqxdhBeaconPhase2Shared.clearedMetadata prepared.metadata) kernel) := by
+                      (PqxdhInitialGenericBeacon.localOwner (PqxdhBeaconPhase2Shared.clearedMetadata prepared.metadata) prepared.metadata.associatedData kernel) := by
                   simp [RawCtxPendingOwnerTails.program, RawCtxPendingOwnerQueries.compiler,
                     RawCtxChainOwner.ownerImpl, OracleSpec.query]
                 rw [singleton, RawCtxGenericOwnerInterpretation.raw_interpretation]
@@ -171,16 +172,16 @@ theorem program_query (sender : M → Std.U64) (route : RawCtxServerRouting.Send
     (decode : RawCtxReceive.FrameDecoder) (request : (PostSpec extra S B).Domain)
     (outside : (PostSpec extra S B).Range request → OracleComp (PostSpec extra S B) Result)
     (state : NativeFront M P I D K S B) :
-    program (X := X) (Response := Response) (Shared := Shared) sender route decode
+    program (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared) sender route decode
       (((PostSpec extra S B).query request : OracleComp (PostSpec extra S B) _) >>= outside) state =
       (match request, outside with
       | .inl (.inl query), outside => record sender route decode query state outside
-          (fun reply updated => program sender route decode (outside reply) updated)
+          (fun reply updated => program (completedBinding := completedBinding) sender route decode (outside reply) updated)
       | .inl (.inr query), outside => do
           let reply ← simulateQ plain (PqxdhInitialPendingPost.selectorForward query)
-          program sender route decode (outside reply) state
-      | .inr (.finish index raw), outside => finish decode index raw state outside
-          (fun reply updated => program sender route decode (outside reply) updated)) := by
+          program (completedBinding := completedBinding) sender route decode (outside reply) state
+      | .inr (.finish index raw), outside => finish (completedBinding := completedBinding) decode index raw state outside
+          (fun reply updated => program (completedBinding := completedBinding) sender route decode (outside reply) updated)) := by
   rcases request with (request | request) | request
   · rfl
   · rfl
@@ -191,8 +192,8 @@ set_option backward.isDefEq.respectTransparency false in
 theorem program_erase (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
     (decode : RawCtxReceive.FrameDecoder) (client : OracleComp (PostSpec extra S B) Result)
     (before : NativeFront M P I D K S B) :
-    simulateQ erase (program (X := X) (Response := Response) (Shared := Shared) sender route decode client before) =
-      (simulateQ (PqxdhInitialPendingPost.compiler sender route decode) client).run before := by
+    simulateQ erase (program (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared) sender route decode client before) =
+      (simulateQ (PqxdhInitialPendingPost.compiler (completedBinding := completedBinding) sender route decode) client).run before := by
   induction client using OracleComp.inductionOn generalizing before with
   | pure value => rfl
   | query_bind request outside ih =>
@@ -261,11 +262,11 @@ private theorem record_sound (sender : M → Std.U64) (route : RawCtxServerRouti
     (after : (RawCtxProtocolReveals.SourceSpec S B).Range request → NativeFront M P I D K S B →
       OracleComp (Spec extra M P I D K X Response Shared Result S B) (Result × NativeFront M P I D K S B))
     (afterErase : ∀ reply updated, simulateQ erase (after reply updated) =
-      (simulateQ (PqxdhInitialPendingPost.compiler sender route decode) (outside reply)).run updated)
-    (afterSound : ∀ reply updated, Sound (PqxdhInitialPostContext.frame sender route decode) (after reply updated)) :
-    Sound (PqxdhInitialPostContext.frame sender route decode) (record sender route decode request before outside after) := by
+      (simulateQ (PqxdhInitialPendingPost.compiler (completedBinding := completedBinding) sender route decode) (outside reply)).run updated)
+    (afterSound : ∀ reply updated, Sound (PqxdhInitialPostContext.frame (completedBinding := completedBinding) sender route decode) (after reply updated)) :
+    Sound (PqxdhInitialPostContext.frame (completedBinding := completedBinding) sender route decode) (record sender route decode request before outside after) := by
   apply RawCtxForwardAnnotationLift.sound_lift_bind (RawCtxSelectedFamilyContext.frame sender route decode)
-    (PqxdhInitialPostContext.frame sender route decode) _ _ _
+    (PqxdhInitialPostContext.frame (completedBinding := completedBinding) sender route decode) _ _ _
     (RawCtxForwardLive.program_sound sender route decode _ _) (fun result => afterSound result.1 { before with roles := result.2 })
   intro tag
   simp only [PqxdhInitialPostContext.frame, RawCtxForwardAnnotationComposition.appendFrame,
@@ -276,22 +277,22 @@ set_option backward.isDefEq.respectTransparency false in
 private theorem ownerLift_sound_bind (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
     (decode : RawCtxReceive.FrameDecoder) (index : Fin B) (before : NativeFront M P I D K S B)
     (control : pqxdh.BeaconInitSent) (candidate : pqxdh.BeaconRegistrationCandidate)
-    (outside : Option Pqxdh.Bytes → OracleComp (PostSpec extra S B) Result)
+    (associatedData : Std.Array Std.U8 151#usize) (outside : Option Pqxdh.Bytes → OracleComp (PostSpec extra S B) Result)
     (after : Option Pqxdh.Bytes → NativeFront M P I D K S B →
       OracleComp (Spec extra M P I D K X Response Shared Result S B) (Result × NativeFront M P I D K S B))
     (afterErase : ∀ reply updated, simulateQ erase (after reply updated) =
-      (simulateQ (PqxdhInitialPendingPost.compiler sender route decode) (outside reply)).run updated)
-    (afterSound : ∀ reply updated, Sound (PqxdhInitialPostContext.frame sender route decode) (after reply updated))
+      (simulateQ (PqxdhInitialPendingPost.compiler (completedBinding := completedBinding) sender route decode) (outside reply)).run updated)
+    (afterSound : ∀ reply updated, Sound (PqxdhInitialPostContext.frame (completedBinding := completedBinding) sender route decode) (after reply updated))
     (client : OracleComp (RawCtxForwardOwner.Spec Unit (core.option.Option RawCtxWholeOwner.Decrypted))
       (core.option.Option RawCtxWholeOwner.Decrypted × RawCtxPendingOwnerTails.Owner RatchetChain Unit))
     (innerSound : Sound (ownerFrame candidate.server_binding.identity_key_id decode) client) :
-    Sound (PqxdhInitialPostContext.frame sender route decode)
-      (ownerLift index before control candidate outside client >>= fun result =>
-        let published := finishResult index before control candidate result
+    Sound (PqxdhInitialPostContext.frame (completedBinding := completedBinding) sender route decode)
+      (ownerLift index before control candidate associatedData outside client >>= fun result =>
+        let published := finishResult index before control candidate associatedData result
         after published.1 published.2) := by
   apply RawCtxForwardAnnotationLift.sound_lift_bind
     (fun tag => RawCtxForwardAnnotationLift.liftFrame (ownerFrame candidate.server_binding.identity_key_id decode tag))
-    (PqxdhInitialPostContext.frame sender route decode) _ _ _
+    (PqxdhInitialPostContext.frame (completedBinding := completedBinding) sender route decode) _ _ _
     (sound_lift _ _ innerSound) (fun result => afterSound _ _)
   intro tag
   simp only [PqxdhInitialPostContext.frame, RawCtxForwardAnnotationComposition.appendFrame,
@@ -314,9 +315,9 @@ private theorem finish_sound (sender : M → Std.U64) (route : RawCtxServerRouti
     (after : Option Pqxdh.Bytes → NativeFront M P I D K S B →
       OracleComp (Spec extra M P I D K X Response Shared Result S B) (Result × NativeFront M P I D K S B))
     (afterErase : ∀ reply updated, simulateQ erase (after reply updated) =
-      (simulateQ (PqxdhInitialPendingPost.compiler sender route decode) (outside reply)).run updated)
-    (afterSound : ∀ reply updated, Sound (PqxdhInitialPostContext.frame sender route decode) (after reply updated)) :
-    Sound (PqxdhInitialPostContext.frame sender route decode) (finish decode index raw before outside after) := by
+      (simulateQ (PqxdhInitialPendingPost.compiler (completedBinding := completedBinding) sender route decode) (outside reply)).run updated)
+    (afterSound : ∀ reply updated, Sound (PqxdhInitialPostContext.frame (completedBinding := completedBinding) sender route decode) (after reply updated)) :
+    Sound (PqxdhInitialPostContext.frame (completedBinding := completedBinding) sender route decode) (finish (completedBinding := completedBinding) decode index raw before outside after) := by
   unfold finish
   cases phase : (before.roles.1.2 index).beacon.phase
   case initSent control prekey oneTime kem =>
@@ -337,7 +338,7 @@ private theorem finish_sound (sender : M → Std.U64) (route : RawCtxServerRouti
             cases application with
             | none => exact afterSound _ _
             | some application =>
-                exact ownerLift_sound_bind sender route decode index before control _ outside after afterErase afterSound _
+                exact ownerLift_sound_bind (completedBinding := completedBinding) sender route decode index before control _ prepared.metadata.associatedData outside after afterErase afterSound _
                   (RawCtxForwardOwner.program_sound _ _ _ _)
   all_goals exact afterSound _ _
 
@@ -345,20 +346,20 @@ private theorem finish_sound (sender : M → Std.U64) (route : RawCtxServerRouti
 theorem program_sound (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
     (decode : RawCtxReceive.FrameDecoder) (client : OracleComp (PostSpec extra S B) Result)
     (before : NativeFront M P I D K S B) :
-    Sound (PqxdhInitialPostContext.frame sender route decode)
-      (program (X := X) (Response := Response) (Shared := Shared) sender route decode client before) := by
+    Sound (PqxdhInitialPostContext.frame (completedBinding := completedBinding) sender route decode)
+      (program (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared) sender route decode client before) := by
   induction client using OracleComp.inductionOn generalizing before with
   | pure value => trivial
   | query_bind request outside ih =>
       rw [program_query]
       rcases request with (request | request) | request
-      · exact record_sound sender route decode request before outside _
-          (fun reply updated => program_erase sender route decode (outside reply) updated) ih
+      · exact record_sound (completedBinding := completedBinding) sender route decode request before outside _
+          (fun reply updated => program_erase (completedBinding := completedBinding) sender route decode (outside reply) updated) ih
       · exact plain_sound_bind _ _ _ (fun reply => ih reply before)
       · cases request with
         | finish index raw =>
-            exact finish_sound sender route decode index raw before outside _
-              (fun reply updated => program_erase sender route decode (outside reply) updated) ih
+            exact finish_sound (completedBinding := completedBinding) sender route decode index raw before outside _
+              (fun reply updated => program_erase (completedBinding := completedBinding) sender route decode (outside reply) updated) ih
 
 private theorem pre_covered_bind {Value : Type}
     (client : OracleComp (PqxdhBeaconPhase2Shared.Spec I D K X Response Shared) Value)
@@ -374,7 +375,7 @@ private theorem pre_covered_bind {Value : Type}
 
 private theorem ownerLift_covered_bind (index : Fin B) (before : NativeFront M P I D K S B)
     (control : pqxdh.BeaconInitSent) (candidate : pqxdh.BeaconRegistrationCandidate)
-    (outside : Option Pqxdh.Bytes → OracleComp (PostSpec extra S B) Result)
+    (associatedData : Std.Array Std.U8 151#usize) (outside : Option Pqxdh.Bytes → OracleComp (PostSpec extra S B) Result)
     (after : Option Pqxdh.Bytes → NativeFront M P I D K S B →
       OracleComp (Spec extra M P I D K X Response Shared Result S B) (Result × NativeFront M P I D K S B))
     (afterCovered : ∀ reply updated, RawCtxForwardCoverage.Covered selected (after reply updated))
@@ -382,8 +383,8 @@ private theorem ownerLift_covered_bind (index : Fin B) (before : NativeFront M P
       (core.option.Option RawCtxWholeOwner.Decrypted × RawCtxPendingOwnerTails.Owner RatchetChain Unit))
     (innerCovered : RawCtxForwardCoverage.Covered RawCtxPendingMixedPrefix.ownerSelected client) :
     RawCtxForwardCoverage.Covered selected
-      (ownerLift index before control candidate outside client >>= fun result =>
-        let published := finishResult index before control candidate result
+      (ownerLift index before control candidate associatedData outside client >>= fun result =>
+        let published := finishResult index before control candidate associatedData result
         after published.1 published.2) := by
   have lifted : RawCtxForwardCoverage.Covered (RawCtxPendingFamilyLiveTails.selected (serverCount := S) (beaconCount := B))
       (RawCtxForwardAnnotationLift.lift id client) := by
@@ -402,7 +403,7 @@ private theorem finish_covered (decode : RawCtxReceive.FrameDecoder)
     (after : Option Pqxdh.Bytes → NativeFront M P I D K S B →
       OracleComp (Spec extra M P I D K X Response Shared Result S B) (Result × NativeFront M P I D K S B))
     (afterCovered : ∀ reply updated, RawCtxForwardCoverage.Covered selected (after reply updated)) :
-    RawCtxForwardCoverage.Covered selected (finish decode index raw before outside after) := by
+    RawCtxForwardCoverage.Covered selected (finish (completedBinding := completedBinding) decode index raw before outside after) := by
   unfold finish
   cases phase : (before.roles.1.2 index).beacon.phase
   case initSent control prekey oneTime kem =>
@@ -423,7 +424,7 @@ private theorem finish_covered (decode : RawCtxReceive.FrameDecoder)
             cases application with
             | none => exact afterCovered _ _
             | some application =>
-                exact ownerLift_covered_bind index before control _ outside after afterCovered _
+                exact ownerLift_covered_bind index before control _ prepared.metadata.associatedData outside after afterCovered _
                   (RawCtxForwardOwner.program_covered _ _ _ _)
   all_goals exact afterCovered _ _
 
@@ -432,7 +433,7 @@ theorem program_covered (sender : M → Std.U64) (route : RawCtxServerRouting.Se
     (decode : RawCtxReceive.FrameDecoder) (client : OracleComp (PostSpec extra S B) Result)
     (before : NativeFront M P I D K S B) :
     RawCtxForwardCoverage.Covered selected
-      (program (X := X) (Response := Response) (Shared := Shared) sender route decode client before) := by
+      (program (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared) sender route decode client before) := by
   induction client using OracleComp.inductionOn generalizing before with
   | pure value => trivial
   | query_bind request outside ih =>
@@ -444,7 +445,7 @@ theorem program_covered (sender : M → Std.U64) (route : RawCtxServerRouting.Se
       · change none.isSome = false ∧ _
         exact ⟨rfl, fun reply => ih reply before⟩
       · cases request with
-        | finish index raw => exact finish_covered decode index raw before outside _ ih
+        | finish index raw => exact finish_covered (completedBinding := completedBinding) decode index raw before outside _ ih
 
 end BeaconcryptCore.Computational.PqxdhInitialForwardPost
 

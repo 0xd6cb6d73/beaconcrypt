@@ -17,7 +17,7 @@ class LocalOperations where
     auth.MldsaIdentity → beaconcrypt_core.registration.MldsaSigningRequest →
       RustM (core.option.Option (alloc.vec.Vec Std.U8))
   ratchet_initial_ratchet_hkdf :
-    beaconcrypt_core.ratchet.SymmetricRatchetKdfRequest → RustM (Array Std.U8
+    beaconcrypt_core.ratchet.InitialRatchetKdfRequest → RustM (Array Std.U8
       64#usize)
   collections_KeyedHasher_Insts_CoreHashBuildHasherSipHasher13_build_hasher : collections.KeyedHasher → RustM siphasher.sip.SipHasher13
   ratchet_execute_seal_request :

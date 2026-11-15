@@ -161,16 +161,57 @@ theorem bundle_transport (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
         PqxdhDeploymentPublicationHistoryRebase.replaceHistory, StateT.run, found, bundleTransport,
         Audit.record, absent, Selection.blocks, PqxdhDeploymentPublicationHistoryRebase.rebase]
   | some entry =>
+      have transported :
+          (fun result =>
+            (localTransport entry.owner state.1.pool.1 replacement selection
+              (targetAt result.1.2.occurrences state.2.nextBundle) result.1.1,
+            if (selection.next (targetAt result.1.2.occurrences state.2.nextBundle)).blocks
+              (targetAt result.1.2.occurrences state.2.nextBundle) then state.1.inits address else result.2)) <$>
+            PqxdhDeploymentPublicationSuppressionTrace.traceLogged setup codec address entry.identityIndex
+              entry.owner state.1.pool.1 state.2 (state.1.inits address) =
+          PqxdhDeploymentPublicationSuppressionLogged.traceLogged setup codec entry.identityIndex entry.owner
+            (poolWithHistory replacement state.1.pool.1) selection (state.1.inits address) := by
+        cases phase : entry.owner.beacon.phase
+        case fresh =>
+          simp only [PqxdhDeploymentPublicationSuppressionTrace.traceLogged,
+            PqxdhDeploymentPublicationSuppressionLogged.traceLogged, phase, Functor.map_map, Function.comp_def]
+          congr 1
+          funext scalar
+          rw [recorded_current setup entry.identityIndex address entry.owner (some scalar) state.2 _ past]
+          simp only [localTransport, PqxdhDeploymentPublicationSuppressionLogged.afterLogged, bundle_after_rebase]
+          split <;> rfl
+        case freshWithCoins =>
+          simp only [PqxdhDeploymentPublicationSuppressionTrace.traceLogged,
+            PqxdhDeploymentPublicationSuppressionLogged.traceLogged, phase, map_pure]
+          congr 1
+          rw [recorded_current setup entry.identityIndex address entry.owner none state.2 _ past]
+          simp only [localTransport, PqxdhDeploymentPublicationSuppressionLogged.afterLogged, bundle_after_rebase]
+          split <;> rfl
+        all_goals
+          have unprepared : PqxdhBeaconPhase1Publication.prepare entry.owner none = none := by
+            simp [PqxdhBeaconPhase1Publication.prepare, phase]
+          have absent := PqxdhDeploymentPublicationSelectionFacts.targetAt_future state.2.occurrences state.2.nextBundle
+            state.2.nextBundle past le_rfl
+          simp only [PqxdhDeploymentPublicationSuppressionTrace.traceLogged,
+            PqxdhDeploymentPublicationSuppressionLogged.traceLogged, phase, map_pure,
+            Audit.record, List.map_nil, List.append_nil, localTransport, absent,
+            PqxdhDeploymentPublicationSuppression.Selection.blocks, Bool.false_eq_true, ite_false,
+            PqxdhDeploymentPublicationSuppressionLogged.afterLogged,
+            PqxdhDeploymentPublicationSuppression.nativeCurrent,
+            PqxdhDeploymentPublicationSuppression.current, unprepared, Option.map_none,
+            PqxdhRegistrationJointBundle.after, PqxdhRegistrationJointBundle.afterLog,
+            rebasePool, poolWithHistory, List.drop_length, List.append_nil]
       simp only [PqxdhDeploymentPublicationSuppressionTrace.bundle,
         PqxdhDeploymentPublicationSuppressionSchedule.bundle, StateT.run,
         PqxdhDeploymentPublicationHistoryRebase.replaceHistory, found, Functor.map_map]
-      change _ = (fun result : PqxdhDeploymentPublicationSuppression.NativeResult KemSK × Selection =>
-        (result.1.1.1, ((⟨(result.1.2, state.1.pool.2), state.1.shared,
-          state.1.owners.set address { entry with owner := result.1.1.2 }⟩ : PqxdhRegistrationJointSchedule.State KemSK), result.2))) <$>
-        PqxdhDeploymentPublicationSuppression.trace setup codec entry.identityIndex entry.owner
-          (poolWithHistory replacement state.1.pool.1) selection
-      rw [← trace_transport setup codec address entry.identityIndex entry.owner state.1.pool.1 replacement selection
-        state.2 past]
+      change _ = (fun result :
+          (PqxdhDeploymentPublicationSuppression.NativeResult KemSK × Selection) × Option PqxdhEd25519EufCma.Phase1Candidate =>
+        (result.1.1.1.1, ((⟨(result.1.1.2, state.1.pool.2), state.1.shared,
+          state.1.owners.set address { entry with owner := result.1.1.1.2 },
+          Function.update state.1.inits address result.2⟩ : PqxdhRegistrationJointSchedule.State KemSK), result.1.2))) <$>
+        PqxdhDeploymentPublicationSuppressionLogged.traceLogged setup codec entry.identityIndex entry.owner
+          (poolWithHistory replacement state.1.pool.1) selection (state.1.inits address)
+      rw [← transported]
       simp only [Functor.map_map]
       congr 1
       funext outcome
@@ -179,6 +220,7 @@ theorem bundle_transport (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
       · simp only [poolWithHistory]
         rw [show ({ entry with owner := entry.owner } : PqxdhRegistrationJointOwnership.Entry KemSK) = entry from rfl,
           set_same state.1.owners address entry found]
+        simp only [Function.update_eq_self]
         rfl
       · rfl
 

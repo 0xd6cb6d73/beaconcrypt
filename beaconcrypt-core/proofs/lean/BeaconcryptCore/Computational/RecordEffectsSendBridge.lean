@@ -67,7 +67,7 @@ def executeWrite (pending : record_effects.SealWrite) :
         pure (pending.finish (toCoreOption written))
 
 /-- The transcript is erased through the actual borrowed getter before its continuation resumes. -/
-def executeCommitment (erased : Std.Array Std.U8 357#usize)
+def executeCommitment (erased : Std.Array Std.U8 227#usize)
     (pending : record_effects.SealCommitment) :
     OracleComp PrimitiveSpec (RustM (ConcreteRatchetKernel ×
       core.option.Option (record_effects.SealedRecord Pqxdh.Bytes))) :=
@@ -83,7 +83,7 @@ def executeCommitment (erased : Std.Array Std.U8 357#usize)
       | .WriteRequested writer => executeWrite writer
 
 /-- Only primitive requests are interpreted; extraction supplies every phase and failure kernel. -/
-def execute (erased : Std.Array Std.U8 357#usize) (pending : record_effects.SealAead) :
+def execute (erased : Std.Array Std.U8 227#usize) (pending : record_effects.SealAead) :
     OracleComp PrimitiveSpec (RustM (ConcreteRatchetKernel ×
       core.option.Option (record_effects.SealedRecord Pqxdh.Bytes))) :=
   bindResult pending.request fun request => do
@@ -139,7 +139,7 @@ theorem write_finish_old_exact (pending : record_effects.SealWrite)
     Option.map_none, Option.map_some, SendSeal.finish_returns_interpreter_result]
 
 /-- Erasure changes no retained operand, and all three hash/writer reply failures stay explicit. -/
-theorem executeCommitment_exact (erased : Std.Array Std.U8 357#usize)
+theorem executeCommitment_exact (erased : Std.Array Std.U8 227#usize)
     (pending : record_effects.SealCommitment)
     (framed : pending.seal.context.encoding = .Frame) :
     executeCommitment erased pending = (do
@@ -181,7 +181,7 @@ def sealProgram (pending : SendSeal record_effects.SealFrameContext) :
           pure (finishResult pending written)
 
 /-- The actual extracted continuation program is exactly the byte-level primitive ledger. -/
-theorem execute_exact (erased : Std.Array Std.U8 357#usize) (pending : record_effects.SealAead)
+theorem execute_exact (erased : Std.Array Std.U8 227#usize) (pending : record_effects.SealAead)
     (ordinary : pending.seal.context.prefix = .None)
     (framed : pending.seal.context.encoding = .Frame) :
     execute erased pending = sealProgram pending.seal := by
@@ -223,7 +223,7 @@ theorem model_exact (pending : SendSeal record_effects.SealFrameContext) :
   | some pair =>
       rcases pair with ⟨body, tag⟩
       simp only [Option.map_some,
-        show (inputOf pending).context.associatedData.length = 281 from absBytes_length pending.context.associated_data,
+        show (inputOf pending).context.associatedData.length = 151 from absBytes_length pending.context.associated_data,
         absBytes_length, ite_true]
       rw [ite_eq_left (by decide : (16#usize).val = 16)]
       rw [simulateQ_bind, simulateQ_spec_query]
@@ -237,7 +237,7 @@ theorem model_exact (pending : SendSeal record_effects.SealFrameContext) :
           cases written <;> rfl
 
 /-- The extracted ordinary-frame send refines the existing sealing model for every represented primitive reply. -/
-theorem source_seal_model (erased : Std.Array Std.U8 357#usize) (pending : record_effects.SealAead)
+theorem source_seal_model (erased : Std.Array Std.U8 227#usize) (pending : record_effects.SealAead)
     (ordinary : pending.seal.context.prefix = .None)
     (framed : pending.seal.context.encoding = .Frame) :
     execute erased pending = (do
@@ -256,7 +256,7 @@ theorem finishResult_exact (pending : SendSeal record_effects.SealFrameContext)
 /-- Arbitrary stateful probabilistic primitives retain exactly the same complete state, including on failure. -/
 theorem stateful_execution {PrimitiveState : Type} {ι : Type} {base : OracleSpec ι}
     (impl : QueryImpl PrimitiveSpec (StateT PrimitiveState (OracleComp base)))
-    (erased : Std.Array Std.U8 357#usize) (pending : record_effects.SealAead)
+    (erased : Std.Array Std.U8 227#usize) (pending : record_effects.SealAead)
     (ordinary : pending.seal.context.prefix = .None)
     (framed : pending.seal.context.encoding = .Frame) (state : PrimitiveState) :
     (simulateQ impl (execute erased pending)).run state =

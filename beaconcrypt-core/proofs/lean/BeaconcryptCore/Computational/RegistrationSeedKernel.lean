@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
-import BeaconcryptCore.Computational.RegistrationPostRootServices
+import BeaconcryptCore.Computational.RegistrationServerRecordExecutor
+import BeaconcryptCore.Refinement.RegistrationAd
 import BeaconcryptCore.Computational.PqxdhRecordLiftSeed
 
 /-! The actual authenticated Server completion consumes its first send before publication. The equations here identify that complete consumed kernel with the existing seed constructor; the public binding changes only the record context. A private generated seed remains a private generated seed, rather than becoming a caller-known installation merely because the concrete controller returns a kernel. -/
@@ -16,32 +17,11 @@ namespace BeaconcryptCore.Computational.RegistrationSeedKernel
 theorem server_pending (control : pqxdh.ServerState) (current : session.ServerAuthenticationPin)
     (availability : pqxdh.KeyIdAvailability) (agreement : agreement.ServerAgreement) (application : Slice Std.U8)
     (initial : registration.ServerInitialKdf)
-    (actual : registration.begin_server_completion control current availability agreement application = .ok (.Ok initial)) :
-    initial.pending = PqxdhInitialRatchetComplementarity.serverPending agreement.root.bytes := by
-  obtain ⟨empty, emptyRun⟩ : ∃ result, core.slice.Slice.is_empty application = .ok result := ⟨_, rfl⟩
-  obtain ⟨matched, matchRun⟩ := BeaconcryptCore.PanicFreedom.SessionBinding.RegistrationBinding_matches_server_total
-    agreement.binding current
-  obtain ⟨prepared, prepareRun⟩ := BeaconcryptCore.PanicFreedom.server_prepare_commit_ok control agreement.pending
-    current.binding availability
-  cases prepared with
-  | Err error =>
-      cases empty <;> cases matched <;>
-        simp [registration.begin_server_completion, session.ServerAuthenticationPin.impl.binding,
-          emptyRun, matchRun, prepareRun] at actual
-  | Ok candidate =>
-      have initialRun : pqxdh.concrete.start_server_candidate_ratchet_kdf candidate agreement.root.bytes =
-          .ok (PqxdhInitialRatchetComplementarity.serverPending agreement.root.bytes) := by
-        simpa only [pqxdh.concrete.start_server_candidate_ratchet_kdf,
-          pqxdh.ServerRegistrationCandidate.ratchet_initialization,
-          pqxdh.concrete.start_server_ratchet_kdf, PqxdhInitialRatchetComplementarity.serverPending] using
-          pqxdh.concrete.start_server_ratchet_kdf_exact agreement.root.bytes
-      cases empty <;> cases matched
-      all_goals simp only [registration.begin_server_completion, session.ServerAuthenticationPin.impl.binding,
-        ratchet.RatchetChain.as_bytes, emptyRun, matchRun, prepareRun, initialRun, bind_tc_ok,
-        Bool.false_eq_true, ite_false, ite_true, RustM.ok.injEq, core.result.Result.Ok.injEq,
-        reduceCtorEq] at actual
-      cases actual
-      rfl
+    (actual : BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission
+      control current availability agreement application initial) :
+    initial.pending = PqxdhInitialRatchetComplementarity.serverPending agreement.root.bytes :=
+  BeaconcryptCore.Refinement.RegistrationAd.server_admission_pending
+    control current availability agreement application initial actual
 
 /-- Both supplied KDF replies follow the actual retained send capability; even an absent sealing result leaves its advanced kernel consumed. -/
 theorem source_send (initial : registration.ServerInitialKdf)
@@ -80,7 +60,7 @@ theorem source_send (initial : registration.ServerInitialKdf)
   · simp [registration.ServerInitialKdf.resume, pqxdh.server_abort_candidate,
       kernelRun, pqxdh.ServerRegistrationCandidate.impl.key_id,
       pqxdh.ServerRegistrationCandidate.impl.server_identity_key_id,
-      session.RegistrationBinding.impl.associated_data, contextRun, recordRun, next]
+      session.CompletedRegistrationBinding.impl.associated_data, contextRun, recordRun, next]
   · simp only [registration.ServerInitialSeal.resume, record_effects.RecordSendKdf.resume,
       next, RawCtxSourceSend.resumeSend_exact, bind_tc_ok, selected, ready]
   · simp only [PqxdhRecordLiftSeed.sendOne, pendingRun, bind_tc_ok,
@@ -91,7 +71,7 @@ theorem source_send (initial : registration.ServerInitialKdf)
 theorem server_seed (control : pqxdh.ServerState) (current : session.ServerAuthenticationPin)
     (availability : pqxdh.KeyIdAvailability) (agreement : agreement.ServerAgreement) (application : Slice Std.U8)
     (initial : registration.ServerInitialKdf)
-    (actual : registration.begin_server_completion control current availability agreement application = .ok (.Ok initial))
+    (actual : BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission control current availability agreement application initial)
     (left right : PqxdhSecretInputKdf.RootOutput) (output : PqxdhFullSecretInputKdf.FullOutput) :
     ∃ (next : registration.ServerInitialSeal) (selected : registration.ServerRecordAead),
       initial.resume (.Some (RawCtxSelectedInitialConstructor.response64 (left ++ right))) = .ok (.Ok next) ∧
@@ -117,7 +97,7 @@ theorem server_seed (control : pqxdh.ServerState) (current : session.ServerAuthe
 theorem server_seed_parts (control : pqxdh.ServerState) (current : session.ServerAuthenticationPin)
     (availability : pqxdh.KeyIdAvailability) (agreement : agreement.ServerAgreement) (application : Slice Std.U8)
     (initial : registration.ServerInitialKdf)
-    (actual : registration.begin_server_completion control current availability agreement application = .ok (.Ok initial))
+    (actual : BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission control current availability agreement application initial)
     (left key : PqxdhSecretInputKdf.RootOutput) (seed : PqxdhRecordLiftSeed.Seed)
     (nonce : PqxdhFullSecretInputKdf.NonceOutput) :
     ∃ (next : registration.ServerInitialSeal) (selected : registration.ServerRecordAead),

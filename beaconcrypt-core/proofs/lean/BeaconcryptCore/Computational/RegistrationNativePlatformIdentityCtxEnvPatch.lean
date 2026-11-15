@@ -33,7 +33,7 @@ private theorem world_frame {m : Type → Type} [Monad m] [LawfulMonad m]
 
 /-- Literal physical/hash/identity leaves within the syntactic publication scope are exactly equivariant under replacing the separately threaded compact environment. -/
 theorem query (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (request : (RegistrationNativePlatformIdentityProgram.Spec n KemSK).Domain) (allowed : Allowed (n := n) (KemSK := KemSK) request)
     (environment : Env) (before : Context n KemSK) :
     Prod.map id (patch environment) <$>
@@ -62,7 +62,7 @@ theorem query (setup : Setup base KemSK) (checks : Checks)
 
 /-- Every source tree within the syntactic publication scope has the same environment-patch commutation with all emitted free requests preserved. -/
 theorem program (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp (RegistrationNativePlatformIdentityProgram.Spec n KemSK) Value)
     (allowed : work.AllQueriesSatisfy (Allowed (n := n) (KemSK := KemSK))) (environment : Env) (before : Context n KemSK) :
     Prod.map id (patch environment) <$>

@@ -110,7 +110,7 @@ private theorem outgoing_safe (setup : Setup base KemSK) (index : Nat) (owner : 
   cases query with
   | inl query => cases query with
     | hash request => exact effect_safe _
-    | sign request payload digest => exact bind_safe _ _ (sample_safe _) (fun _ => bind_safe _ _ (update_safe _) (fun _ => pure_safe _))
+    | sign request payload digest => exact pure_safe _
   | inr request =>
       simp only [outgoing]
       split
@@ -183,7 +183,7 @@ private theorem bundle_start_safe (setup : Setup base KemSK) (wire : Registratio
       simpa only [RegistrationNativeIdentityBundleDispatch.start, phase] using
         (pure_safe (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (source := source) (.ok none : RustM (Option Pqxdh.Bytes)))
 
-/-- Full Ed3/fingerprint/ML/publication and every retry or failure path create no indexed identity. -/
+/-- Full three-Ed/hash/publication and every retry or failure path create no indexed identity. -/
 theorem bundle_safe (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire) (index : Nat) :
     Safe (bundle (n := n) (Auxiliary := Auxiliary) setup source wire index) := by
   intro owners env

@@ -23,7 +23,7 @@ def rowState (before : State source n KemSK) := before.2
 
 noncomputable def callback (selected : Nat) (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : Credential (handleSource source)) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential (handleSource source)) :
     QueryImpl RegistrationNativeRawAdapter.TypedSpec (StateT (State source n KemSK) ProbComp) := fun query before =>
   (fun result => (result.1.1, (result.1.2.1, (result.1.2.2, result.2)))) <$>
     RegistrationNativeMldsaTableProgram.runState source
@@ -40,7 +40,7 @@ private theorem map_apply {S A B : Type} (function : A → B) (work : StateT S P
 /-- Erasing only the generation ghost retains the exact callback reply, complete native state and actual private table. -/
 theorem project (selected : Nat) (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : Credential (handleSource source))
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential (handleSource source))
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (before : State source n KemSK) :
     (fun result => (result.1, nativeState source result.2)) <$>
       (callback source selected setup checks wire route representation created credential query).run before =
@@ -56,7 +56,7 @@ theorem project (selected : Nat) (setup : Setup base KemSK) (checks : Checks) (w
 /-- Every reached actual tracked callback retains complete selected-row public-key provenance. -/
 theorem rows (selected : Nat) (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : Credential (handleSource source))
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential (handleSource source))
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (before : State source n KemSK)
     (good : RegistrationNativeMldsaGhostRows.Safe source selected (rowState source before))
     (result : RegistrationNativeRawAdapter.TypedSpec.Range query × State source n KemSK)
@@ -78,7 +78,7 @@ theorem rows (selected : Nat) (setup : Setup base KemSK) (checks : Checks) (wire
 /-- A candidate at the literal selected successful birth is selected by the dynamic actual ghost observer. -/
 theorem capture (selected : Nat) (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : Credential (handleSource source))
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential (handleSource source))
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (before : State source n KemSK)
     (good : RegistrationNativeMldsaGhostRows.Safe source selected (rowState source before))
     (result : RegistrationNativeRawAdapter.TypedSpec.Range query × State source n KemSK)

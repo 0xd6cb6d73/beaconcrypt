@@ -7,6 +7,7 @@ import BeaconcryptCore.Computational.CborRawCompileCaps
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.CborRawInitializedCut
 open PqxdhServerAuthExperiment (Setup Codec Checks)
 open PqxdhDeploymentInterface (Spec)
@@ -107,10 +108,10 @@ theorem stopped_prefix (pool : PqxdhRegistrationJointPreparation.Pool KemSK)
       (simulateQ (PqxdhRegistrationJointKemEncapsulation.actual setup)
         (PqxdhRegistrationJointKemEncapsulation.commands setup (CborRawCompile.sourceCodec wire parse) checks
           created.server.server.metadata.identityIndex (setup.joint.publicKeys created.seed)
-          (scan (CborRawCompile.compile setup wire parse work) target.accept) []
+          (scan (CborRawCompile.compile setup wire parse work) target.accept) ([], fun _ => none)
           (PqxdhRegistrationSchedule.initial created).shared))).run).run
           (pool.1, PqxdhDynamicKemRouter.empty) =
-      (fun value => (some (((compilerCut setup wire parse value.1, (encodeState setup value.2).owners),
+      (fun value => (some (((compilerCut setup wire parse value.1, ((encodeState setup value.2).owners, (encodeState setup value.2).inits)),
         value.2.shared)), (value.2.pool.1, routerOf value.2.pool.2))) <$>
         commonPrefix setup wire parse checks target parameters created pool work := by
   have owned : PoolOwned created.seed created.server.server.metadata.identityIndex (sourceInit created pool) :=
@@ -159,7 +160,7 @@ theorem item2_prefix (ensureInit : StateT A ProbComp Bool)
               (opaqueRest setup (CborRawCompile.sourceCodec wire parse) checks
                 created.server.server.metadata.identityIndex created.publicIdentity
                 (PqxdhRegistrationJointAcceptCutTag.decideTag decision)
-                ((compilerCut setup wire parse value.1, (encodeState setup value.2).owners), value.2.shared))).run).run
+                ((compilerCut setup wire parse value.1, ((encodeState setup value.2).owners, (encodeState setup value.2).inits)), value.2.shared))).run).run
                   (value.2.pool.1, routerOf value.2.pool.2)) >>= fun result =>
             pure (.ready (PqxdhRegistrationJointServerBirth.encode created) parameters.others result.1 result.2 born.2.2)) := by
   unfold PqxdhDeploymentIdealParams.preOpaquePool
@@ -181,7 +182,7 @@ theorem item2_prefix (ensureInit : StateT A ProbComp Bool)
       (PqxdhRegistrationJointKemRawOpaque.opaqueScan (Reader := Reader) setup (CborRawCompile.sourceCodec wire parse)
         checks created.server.server.metadata.identityIndex created.publicIdentity
         (PqxdhRegistrationJointAcceptCutTag.decideTag decision) (CborRawCompile.compile setup wire parse work)
-        target.accept [] (PqxdhRegistrationSchedule.initial created).shared)).run).run
+        target.accept ([], fun _ => none) (PqxdhRegistrationSchedule.initial created).shared)).run).run
           (after.1.1, PqxdhDynamicKemRouter.empty) = _
     rw [PqxdhDeploymentIdealCut.opaqueScan_split, simulateQ_bind, OptionT.run_bind, Option.elimM,
       StateT.run_bind, publicSame, stopped_prefix setup wire parse checks target parameters created after.1 empty

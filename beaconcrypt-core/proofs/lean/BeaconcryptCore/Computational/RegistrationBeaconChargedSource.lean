@@ -19,7 +19,7 @@ noncomputable def primitive (read : QueryImpl RegistrationRawReceiveBridge.Spec 
     QueryImpl RawCtxWholeOwner.PrimitiveSpec m :=
   read ∘ₛ (RegistrationRawReceiveBridge.modelAdapter ∘ₛ RawCtxSourceOpen.nativeAdapter)
 
-theorem receive_source (read : QueryImpl RegistrationRawReceiveBridge.Spec m) (erased : Std.Array U8 357#usize)
+theorem receive_source (read : QueryImpl RegistrationRawReceiveBridge.Spec m) (erased : Std.Array U8 227#usize)
     (descriptor : PublicAgreement) (root : RootOutput) (kernel : ConcreteRatchetKernel) :
     simulateQ read
       (RegistrationRawReceiveBridge.finishModel (atRoot descriptor root) <$>
@@ -84,7 +84,7 @@ theorem source_factor (read : QueryImpl RegistrationRawReceiveBridge.Spec m)
     (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (initialCharge ratchetCharge : m Unit)
     (initial : ∀ request, read (.inl (.initialKdf request)) = initialCharge *> pure (.Some (RawCtxSourceHkdf.initialResponse source.crypto request)))
     (kdf : ∀ request, primitive read (.inl request) = ratchetCharge *> pure (RawCtxSourceHkdf.response source.crypto request))
-    (erased : Std.Array U8 357#usize) (descriptor : PublicAgreement) (root : RootOutput) :
+    (erased : Std.Array U8 227#usize) (descriptor : PublicAgreement) (root : RootOutput) :
     simulateQ read (RegistrationBeaconPostRootServices.beacon erased (atRoot descriptor root)) = (do
       let _ ← initialCharge
       let _ ← if RawCtxReceive.ValidFrame descriptor.candidate.server_binding.identity_key_id
@@ -104,7 +104,7 @@ theorem source_factor (read : QueryImpl RegistrationRawReceiveBridge.Spec m)
   have kernelRun := PqxdhBeaconPhase2Publication.normalInitial_exact
     (PqxdhInitialRatchetComplementarity.beaconPending (PqxdhRootTableInitialization.rootArray root))
     (RawCtxSourceHkdf.initialResponse source.crypto
-      ⟨PqxdhRootTableInitialization.rootArray root, SYM_RATCHET_INFO⟩)
+      ⟨PqxdhRootTableInitialization.rootArray root, INITIAL_RATCHET_INFO⟩)
   have initialEq := PqxdhServerAuthBeaconFactor.initial_source source root
   simp only [PqxdhInitialRatchetComplementarity.beaconPending] at kernelRun initialEq
   rw [initialEq] at kernelRun

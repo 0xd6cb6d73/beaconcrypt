@@ -19,7 +19,7 @@ open RegistrationNativePlatformPublicAdapterPhysicalFrame
 variable {n : Nat} {I KemSK E P A : Type} {base : OracleSpec I} {source : RegistrationNativeMldsa.Source}
 variable (coins : QueryImpl unifSpec (StateT P ProbComp))
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 
 theorem coin (request : unifSpec.Domain) :
     Compatible (RegistrationNativePlatformPublicAdapterBundleGeneration.backendUniform (n:=n) coins setup checks representation created request) :=by
@@ -40,9 +40,9 @@ theorem hash (bytes : Pqxdh.Bytes) :
   simp only [RegistrationNativePlatformPublicAdapterAuthentication.hash,backendLeaf,StateT.run,Functor.map_map,erase]
   rfl
 
-theorem outgoing (credential : RegistrationNativeMldsa.Credential source) (identity : PqxdhJointIdentity.IdentitySeed)
+theorem outgoing (identity : PqxdhJointIdentity.IdentitySeed)
     (query : RegistrationBeaconInitExecutor.Spec.Domain) :
-    Compatible (RegistrationNativePlatformPublicAdapterBundleSigning.outgoing (n:=n) coins setup checks representation created credential identity query) :=by
+    Compatible (RegistrationNativePlatformPublicAdapterBundleSigning.outgoing (n:=n) coins setup checks representation created identity query) :=by
   apply interpret_frame
   cases query with
   | inl query=>cases query with
@@ -51,23 +51,21 @@ theorem outgoing (credential : RegistrationNativeMldsa.Credential source) (ident
       simp only [RegistrationNativePlatformPublicAdapterBundleSigning.rawOutgoing,RegistrationNativePlatformPublicAdapterAuthentication.hash,backendLeaf,StateT.run,Functor.map_map,erase]
       rfl
     | sign request payload digest=>
-      apply program_frame
-      intro request before
-      simp only [backendLeaf,StateT.run,Functor.map_map,erase]
-      rfl
+      simp only [RegistrationNativePlatformPublicAdapterBundleSigning.rawOutgoing]
+      exact pure_frame _
   | inr request=>
     simp only [RegistrationNativePlatformPublicAdapterBundleSigning.rawOutgoing]
     split <;> exact pure_frame _
 
 theorem publication (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT P ProbComp))
-    (credential : RegistrationNativeMldsa.Credential source) (identity : PqxdhJointIdentity.IdentitySeed)
+    (identity : PqxdhJointIdentity.IdentitySeed)
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (oneTime : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize) :
-    Compatible (RegistrationNativePlatformPublicAdapterBundlePublication.program (n:=n) coins setup checks representation created writer credential identity control inputs oneTime pin mldsa) :=by
+    (pin : session.ServerAuthenticationPin) :
+    Compatible (RegistrationNativePlatformPublicAdapterBundlePublication.program (n:=n) coins setup checks representation created writer identity control inputs oneTime pin) :=by
   apply program_frame
   intro query
   cases query with
-  | inl query=>exact outgoing coins setup checks representation created credential identity query
+  | inl query=>exact outgoing coins setup checks representation created identity query
   | inr query=>exact lift_frame _
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterBundleFrame

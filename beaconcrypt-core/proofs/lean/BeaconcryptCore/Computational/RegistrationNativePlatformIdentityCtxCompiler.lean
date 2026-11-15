@@ -143,7 +143,7 @@ omit [Monad m] in
 /-- Specializing only the ambient backend recovers the already checked literal actual indexed compiler, including true creation costs and external coins. -/
 theorem legacy {I : Type} {base : OracleSpec I} (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (checks : PqxdhServerAuthExperiment.Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     implementation RegistrationNativeIdentityCompiler.coins
       (fun query => (DynamicSpec.query (.inr query) : OracleComp DynamicSpec _))
       (fun query current => simulateQ RegistrationNativeIdentityCompiler.coins

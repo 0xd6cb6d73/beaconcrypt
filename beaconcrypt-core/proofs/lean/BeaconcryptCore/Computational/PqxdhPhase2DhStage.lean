@@ -10,6 +10,7 @@ open BeaconcryptCore.Refinement.RepresentationBridge PqxdhRefinement
 set_option autoImplicit false
 set_option maxRecDepth 100000
 namespace BeaconcryptCore.Computational.PqxdhPhase2DhStage
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointIdentity PqxdhJointGapDh PqxdhPhase2GapDhSource
 open PqxdhBeaconPhase2Preparation (Word32)
 open PqxdhJointDhExtractRoot PqxdhSecretInputKdf PqxdhJointKdfGame
@@ -102,7 +103,7 @@ noncomputable def stage {I D K X Response : Type} (publicValue : PublicChallenge
     (decode : RawCtxReceive.FrameDecoder) (control : pqxdh.BeaconInitSent)
     (identity : I) (oneTime : D) (kem : K) (raw : Pqxdh.Bytes) :
     OracleComp (Spec I D K X Response) (Option PqxdhBeaconPhase2Publication.Staged) := do
-  let pending ← simulateQ prefixLift (PqxdhPhase2DhMetadata.prepare control identity oneTime kem raw)
+  let pending ← simulateQ prefixLift (PqxdhPhase2DhMetadata.prepare (completedBinding := completedBinding) control identity oneTime kem raw)
   match pending with
   | none => pure none
   | some pending => simulateQ tailLift (PqxdhPhase2DhRootConsumer.tail publicValue decode pending)
@@ -130,7 +131,7 @@ noncomputable def sourceStage {joint : Primitives} (dh : DhInterface joint) (sca
     (identity : I) (oneTime : D) (kem : K) (raw : Pqxdh.Bytes) :
     StateT (PqxdhPhase2DhRootConsumer.State A) ProbComp (Option PqxdhBeaconPhase2Publication.Staged) := do
   let prepared ← simulateQ (PqxdhPhase2GapDhSource.nativeImpl dh scalar aux visit)
-    (PqxdhBeaconPhase2Preparation.prepare control identity (.inl ()) (.inr oneTime) kem raw)
+    (PqxdhBeaconPhase2Preparation.prepare (completedBinding := completedBinding) control identity (.inl ()) (.inr oneTime) kem raw)
   match prepared with
   | none => pure none
   | some original => sourceTail source hmac publicValue native decode original
@@ -152,9 +153,9 @@ theorem stage_source {joint : Primitives} (dh : DhInterface joint) (domain : Pub
     (decode : RawCtxReceive.FrameDecoder) (control : pqxdh.BeaconInitSent)
     (pin : absBytes control.expected_server_binding.identity_public_key = (joint.publicKeys seed).ed25519.toList)
     (identity : I) (oneTime : D) (kem : K) (raw : Pqxdh.Bytes) :
-    sourceStage dh scalar source hmac (challenge joint dh seed scalar) aux visit native decode control identity oneTime kem raw =
+    sourceStage (completedBinding := completedBinding) dh scalar source hmac (challenge joint dh seed scalar) aux visit native decode control identity oneTime kem raw =
       simulateQ (impl domain aux visit (sourceImpl source hmac joint dh seed scalar) native)
-        (stage (challenge joint dh seed scalar) decode control identity oneTime kem raw) := by
+        (stage (completedBinding := completedBinding) (challenge joint dh seed scalar) decode control identity oneTime kem raw) := by
   have preEq : impl domain aux visit (sourceImpl source hmac joint dh seed scalar) native ∘ₛ prefixLift =
       prefixImpl domain aux visit := by
     funext query
@@ -164,15 +165,15 @@ theorem stage_source {joint : Primitives} (dh : DhInterface joint) (domain : Pub
     funext query
     exact simulateQ_spec_query (impl domain aux visit (sourceImpl source hmac joint dh seed scalar) native) _
   funext initial
-  change (sourceStage dh scalar source hmac (challenge joint dh seed scalar) aux visit native decode control identity oneTime kem raw).run initial = _
+  change (sourceStage (completedBinding := completedBinding) dh scalar source hmac (challenge joint dh seed scalar) aux visit native decode control identity oneTime kem raw).run initial = _
   simp only [sourceStage, stage, simulateQ_bind, ← QueryImpl.simulateQ_compose, preEq, StateT.run_bind]
-  apply PqxdhPhase2DhMetadata.prepare_converted_continuation dh domain scalar source.crypto aux conversion visit erase
+  apply PqxdhPhase2DhMetadata.prepare_converted_continuation (completedBinding := completedBinding) dh domain scalar source.crypto aux conversion visit erase
     control identity oneTime kem raw initial
   · intro state
     simp only [simulateQ_pure, StateT.run_pure]
     rfl
   · intro original pending state references converted admitted related
-    have actualConversion := PqxdhPhase2DhMetadata.pinned_conversion source.crypto joint secretOfSeed wiring seed
+    have actualConversion := PqxdhPhase2DhMetadata.pinned_conversion (completedBinding := completedBinding) source.crypto joint secretOfSeed wiring seed
       control pending.collected pending.metadata pin admitted converted
     change (sourceTail source hmac (challenge joint dh seed scalar) native decode original).run state =
       (simulateQ (impl domain aux visit (sourceImpl source hmac joint dh seed scalar) native)
@@ -184,11 +185,11 @@ theorem stage_source {joint : Primitives} (dh : DhInterface joint) (domain : Pub
 theorem stage_bound {I D K X Response : Type} (publicValue : PublicChallenge)
     (decode : RawCtxReceive.FrameDecoder) (control : pqxdh.BeaconInitSent)
     (identity : I) (oneTime : D) (kem : K) (raw : Pqxdh.Bytes) :
-    (stage (X := X) (Response := Response) publicValue decode control identity oneTime kem raw).IsTotalQueryBound 68 := by
+    (stage (completedBinding := completedBinding) (X := X) (Response := Response) publicValue decode control identity oneTime kem raw).IsTotalQueryBound 68 := by
   unfold stage
   apply isTotalQueryBound_bind (n₁ := 12) (n₂ := 56)
   · apply PqxdhBeaconPhase2Bounds.simulate_total prefixLift _ 12
-      (PqxdhPhase2DhMetadata.prepare_bound control identity oneTime kem raw)
+      (PqxdhPhase2DhMetadata.prepare_bound (completedBinding := completedBinding) control identity oneTime kem raw)
     intro query
     exact (isQueryBoundP_true_iff _ _).mp
       ((isQueryBoundP_query_iff (spec := Spec I D K X Response) (p := fun _ => True) (.inl query) 1).mpr (by decide))
@@ -217,7 +218,7 @@ theorem stage_uniform {joint : Primitives} {dh : DhInterface joint} (domain : Pu
     (publicValue : PublicChallenge) (decode : RawCtxReceive.FrameDecoder) (control : pqxdh.BeaconInitSent)
     (identity : I) (oneTime : D) (kem : K) (raw : Pqxdh.Bytes) (state : PqxdhPhase2DhRootConsumer.State A) :
     ((simulateQ (impl domain aux visit family native)
-      (stage publicValue decode control identity oneTime kem raw)).run state).IsTotalQueryBound
+      (stage (completedBinding := completedBinding) publicValue decode control identity oneTime kem raw)).run state).IsTotalQueryBound
       ((10 * qAux + 2 * qVisit) + (qFamily + 55 * qNative)) := by
   have preEq : impl domain aux visit family native ∘ₛ prefixLift = prefixImpl domain aux visit := by
     funext query
@@ -227,7 +228,7 @@ theorem stage_uniform {joint : Primitives} {dh : DhInterface joint} (domain : Pu
     exact simulateQ_spec_query (impl domain aux visit family native) _
   simp only [stage, simulateQ_bind, ← QueryImpl.simulateQ_compose, preEq, StateT.run_bind]
   apply isTotalQueryBound_bind
-  · exact (isQueryBoundP_true_iff _ _).mp (PqxdhPhase2DhMetadata.interpreted_bound domain aux visit
+  · exact (isQueryBoundP_true_iff _ _).mp (PqxdhPhase2DhMetadata.interpreted_bound (completedBinding := completedBinding) domain aux visit
       (fun _ => True) qAux qVisit (fun query state => (auxBound query state).isQueryBoundP)
       (fun input state => (visitBound input state).isQueryBoundP) control identity oneTime kem raw state)
   · rintro ⟨pending, post⟩
@@ -238,6 +239,52 @@ theorem stage_uniform {joint : Primitives} {dh : DhInterface joint} (domain : Pu
           (simulateQ tailLift (PqxdhPhase2DhRootConsumer.tail publicValue decode pending))).run post).IsTotalQueryBound _
         rw [← QueryImpl.simulateQ_compose, tailEq]
         exact PqxdhPhase2DhRootConsumer.tail_uniform family native qFamily qNative familyBound nativeBound publicValue decode pending post
+
+/-- An undecodable response stops the stage at its first, pure callbacks. When the response decoder, or one of the ciphertext, ephemeral-key and Server-identity getters run after it, fails (`PqxdhPhase2GapDhSource.collect`), and these four callbacks answer purely, the interpreted stage returns `none` and issues no other callback: no conversion, decapsulation, DH or erasure, no family request and no native tail (hash, KDF or opening) request. This holds for every completed binding. -/
+theorem stage_undecoded {I D K X Response : Type} {m : Type → Type} [Monad m] [LawfulMonad m]
+    (impl : QueryImpl (Spec I D K X Response) m)
+    (read : Pqxdh.Bytes → Option Response)
+    (ciphertext : Response → Option PqxdhBeaconPhase2Preparation.Ciphertext)
+    (ephemeral serverIdentity : Response → Option Word32)
+    (decodeCall : ∀ bytes, impl (.inl (.decode bytes)) = pure (read bytes))
+    (ciphertextCall : ∀ response, impl (.inl (.ciphertext response)) = pure (ciphertext response))
+    (ephemeralCall : ∀ response, impl (.inl (.ephemeral response)) = pure (ephemeral response))
+    (serverIdentityCall : ∀ response,
+      impl (.inl (.serverIdentity response)) = pure (serverIdentity response))
+    (publicValue : PublicChallenge) (decode : RawCtxReceive.FrameDecoder) (control : pqxdh.BeaconInitSent)
+    (identity : I) (oneTime : D) (kem : K) (raw : Pqxdh.Bytes)
+    (undecoded : read raw = none ∨ ∃ response, read raw = some response ∧
+      (ciphertext response = none ∨ ephemeral response = none ∨ serverIdentity response = none)) :
+    simulateQ impl (stage (completedBinding := completedBinding) publicValue decode control identity oneTime kem raw) =
+      pure none := by
+  have preEq : ∀ query, (impl ∘ₛ prefixLift) query = impl (.inl query) := fun query =>
+    simulateQ_spec_query impl _
+  have collected : simulateQ (impl ∘ₛ prefixLift)
+      (PqxdhPhase2GapDhSource.collect (I := I) (D := D) (K := K) (X := X) identity oneTime kem raw) =
+        pure none := by
+    simp only [PqxdhPhase2GapDhSource.collect, OptionT.run_bind, OptionT.run_mk, Option.elimM,
+      simulateQ_bind, simulateQ_spec_query, preEq, decodeCall, pure_bind]
+    rcases undecoded with absent | ⟨response, present, failed⟩
+    · simp only [absent, Option.elim_none, simulateQ_pure]
+    · simp only [present, Option.elim_some, simulateQ_bind, simulateQ_spec_query, preEq,
+        ciphertextCall, pure_bind]
+      cases hc : ciphertext response with
+      | none => simp only [Option.elim_none, simulateQ_pure]
+      | some value =>
+          simp only [Option.elim_some, simulateQ_bind, simulateQ_spec_query, preEq,
+            ephemeralCall, pure_bind]
+          cases he : ephemeral response with
+          | none => simp only [Option.elim_none, simulateQ_pure]
+          | some point =>
+              have hs : serverIdentity response = none := by
+                rcases failed with h | h | h
+                · simp only [hc, reduceCtorEq] at h
+                · simp only [he, reduceCtorEq] at h
+                · exact h
+              simp only [Option.elim_some, simulateQ_bind, simulateQ_spec_query, preEq,
+                serverIdentityCall, hs, pure_bind, Option.elim_none, simulateQ_pure]
+  simp only [stage, PqxdhPhase2DhMetadata.prepare, simulateQ_bind, ← QueryImpl.simulateQ_compose,
+    collected, pure_bind, Option.bind_none, simulateQ_pure]
 
 end BeaconcryptCore.Computational.PqxdhPhase2DhStage
 
@@ -274,3 +321,9 @@ end BeaconcryptCore.Computational.PqxdhPhase2DhStage
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhPhase2DhStage.stage_uniform
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhPhase2DhStage.stage_undecoded' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhPhase2DhStage.stage_undecoded

@@ -225,7 +225,7 @@ theorem collect_lift (setup : Setup base KemSK) {mlSource : RegistrationNativeMl
     simulateQ (trustedLift (n := n)) ((trustedCollect setup owner oneTime authenticated).run env) =
       (collect setup owner oneTime authenticated).run env :=
   simulateQ_StateT_compose _ _ _ (prefix_lift setup owner oneTime authenticated)
-    (PqxdhPhase2DhMetadata.prepare authenticated.pending.control () () () []) env
+    (PqxdhPhase2DhMetadata.prepare (completedBinding := authenticated.binding) authenticated.control () () () []) env
 
 end BeaconcryptCore.Computational.RegistrationBeaconReferenceCallbacks
 

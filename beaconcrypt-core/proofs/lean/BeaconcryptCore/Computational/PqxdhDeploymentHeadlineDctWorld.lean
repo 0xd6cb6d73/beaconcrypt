@@ -17,6 +17,7 @@ No new assumption: the premises are the existing read-back contracts (`Phase1Rea
 open OracleComp OracleSpec ENNReal
 
 set_option autoImplicit false
+set_option warningAsError true
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctWorld
 open PqxdhServerAuthExperiment (Setup Codec Checks)
@@ -152,9 +153,11 @@ theorem dct_contain (phase1 : Phase1ReadBack codec) (phase2 : Phase2ReadBack cod
   have notRead := PqxdhDeploymentHeadlineDctCommit.not_challengeRead codec _ raw (some response.serialized) carries
     differ
   -- The commitment invariant on the reassembled state.
-  have joinedEq : PqxdhDeploymentEnvironmentJoin.joined result = some (value.1, value.2.1.1, value.2.1.2,
-      PqxdhDeploymentEnvironmentJoin.merge value.2.2 result.2) := by
+  obtain ⟨created, joinedEq⟩ : ∃ created : PqxdhRegistrationJointServerBirth.ClientCreated Unit,
+      PqxdhDeploymentEnvironmentJoin.joined result = some (created, value.2.1.1, value.2.1.2,
+        PqxdhDeploymentEnvironmentJoin.merge value.2.2 result.2) := by
     simp only [PqxdhDeploymentEnvironmentJoin.joined, found, Option.map_some]
+    exact ⟨_, rfl⟩
   have dct := PqxdhDeploymentHeadlineDctInvariant.world_dctInv setup codec checks route (Target.ofCE budget g) phase2
     frameBack ensureInit 0 runtime bounds mode adversary result member _ joinedEq
   obtain ⟨u, v, rootFound, rootCommit⟩ := dct.finishRoot c raw finishReply finishMember notRead

@@ -7,6 +7,8 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialLegalObserver
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhKemIndCca PqxdhCorrelatedExpand PqxdhCorrelatedExpandHybrid
 open PqxdhCorrelatedExtractFamily PqxdhInitializerSecrecy PqxdhChallengeSecretRouting
 open PqxdhPhase2SourceAux PqxdhPhase1AcceptanceOracle PqxdhEd25519EufCma PqxdhJointIdentity PqxdhPrivateKemSource
@@ -44,9 +46,9 @@ theorem post_source
     (selected : Message) (root : RootOutput) (cache : RootOracle.QueryCache) :
     Prod.map id (completeCache selected root) <$>
       (simulateQ (labelledFull fixed (QueryImpl.ofLift unifSpec ProbComp) selected (realInitial fixed root))
-        ((simulateQ (PqxdhInitialLabelPost.target attachedVerify primitives count fixed localImpl writer sender route decode baseImpl kem secret challenge) client).run state)).run cache =
+        ((simulateQ (PqxdhInitialLabelPost.target (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl writer sender route decode baseImpl kem secret challenge) client).run state)).run cache =
       (simulateQ uniformImpl (simulateQ (rootPost fixed baseImpl kem secret challenge)
-        ((simulateQ (PqxdhPhase2PostScheduler.target attachedVerify primitives count fixed localImpl writer sender route decode challenge) client).run state))).run
+        ((simulateQ (PqxdhPhase2PostScheduler.target (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl writer sender route decode challenge) client).run state))).run
           (completeCache selected root cache) := by
   rw [complete_source, ← PqxdhInitialLabelCompiler.source_program, PqxdhInitialLabelPost.program_source]
 
@@ -60,10 +62,10 @@ noncomputable def accepted {setup : StatefulPhase1Setup baseSpec}
     (attachedVerify : Ed25519PublicKey → Pqxdh.Bytes → Option Pqxdh.Bytes) (primitives : Primitives)
     (program : Program baseSpec setup.Context S (B + 1)) (post : Post (baseSpec := baseSpec) program.Selection S (B + 1))
     (secret : KemSK) (selected : Message)
-    (prepared : PqxdhPrivateRootSource.Prepared setup (driver env.toDriverEnvironment program).State)
+    (prepared : PqxdhPrivateRootSource.Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)
     (ready : Ready) : OracleComp PqxdhInitialLabelCompiler.Spec Bool := do
-  let result ← PqxdhInitialLabelBuilder.build env.source env.recordWriter env.aux env.senderId env.index env.metadata selected ready prepared.1.context.selection.2
-  Prod.fst <$> (simulateQ (PqxdhInitialLabelPost.target attachedVerify primitives 1 env.source env.localImpl
+  let result ← PqxdhInitialLabelBuilder.build (associatedData := associatedData) env.source env.recordWriter env.aux env.senderId env.index env.metadata selected ready prepared.1.context.selection.2
+  Prod.fst <$> (simulateQ (PqxdhInitialLabelPost.target (completedBinding := completedBinding) attachedVerify primitives 1 env.source env.localImpl
     env.recordWriter env.senderId env.route env.decode baseImpl kem secret ready.ciphertext)
     (post prepared.1.context.selection.1 result.1)).run (result.2, prepared.2)
 
@@ -74,10 +76,10 @@ theorem accepted_root_unused {setup : StatefulPhase1Setup baseSpec}
     (attachedVerify : Ed25519PublicKey → Pqxdh.Bytes → Option Pqxdh.Bytes) (primitives : Primitives)
     (program : Program baseSpec setup.Context S (B + 1)) (post : Post (baseSpec := baseSpec) program.Selection S (B + 1))
     (secret : KemSK) (selected : Message)
-    (prepared : PqxdhPrivateRootSource.Prepared setup (driver env.toDriverEnvironment program).State)
+    (prepared : PqxdhPrivateRootSource.Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)
     (ready : Ready) (root : RootOutput) :
-    accepted env baseImpl kem attachedVerify primitives program post secret selected prepared { ready with root := root } =
-      accepted env baseImpl kem attachedVerify primitives program post secret selected prepared ready := rfl
+    accepted (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post secret selected prepared { ready with root := root } =
+      accepted (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post secret selected prepared ready := rfl
 
 /-- The actual current accepted-root continuation, including its real Server build and every adaptive post callback, is recovered from the root-erased response-only observer by private root-cache reconstruction. -/
 theorem accepted_source {setup : StatefulPhase1Setup baseSpec}
@@ -86,19 +88,19 @@ theorem accepted_source {setup : StatefulPhase1Setup baseSpec}
     (attachedVerify : Ed25519PublicKey → Pqxdh.Bytes → Option Pqxdh.Bytes) (primitives : Primitives)
     (program : Program baseSpec setup.Context S (B + 1)) (post : Post (baseSpec := baseSpec) program.Selection S (B + 1))
     (secret : KemSK) (selected : Message)
-    (prepared : PqxdhPrivateRootSource.Prepared setup (driver env.toDriverEnvironment program).State)
+    (prepared : PqxdhPrivateRootSource.Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)
     (ready : Ready) (cache : RootOracle.QueryCache) :
     Prod.map id (completeCache selected ready.root) <$>
       (simulateQ (labelledFull env.source (QueryImpl.ofLift unifSpec ProbComp) selected (realInitial env.source ready.root))
-        (accepted env baseImpl kem attachedVerify primitives program post secret selected prepared ready)).run cache =
+        (accepted (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post secret selected prepared ready)).run cache =
       (simulateQ uniformImpl (simulateQ (rootPost env.source baseImpl kem secret ready.ciphertext)
-        (targetAccepted env attachedVerify primitives program post prepared ready))).run
+        (PqxdhAuthenticatedRootExperiment.targetAccepted (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program post prepared ready))).run
           (completeCache selected ready.root cache) := by
   simp only [accepted, targetAccepted, simulateQ_bind, StateT.run_bind, map_bind,
     PqxdhInitialLabelBuilder.build_source, localCoins_source, PqxdhInitialRootContext.coins_complete, bind_map_left]
   apply bind_congr
   intro result
-  have complete := post_source attachedVerify primitives 1 env.source env.localImpl
+  have complete := post_source (completedBinding := completedBinding) attachedVerify primitives 1 env.source env.localImpl
     env.recordWriter env.senderId env.route env.decode baseImpl kem secret ready.ciphertext
     (post prepared.1.context.selection.1 result.1) (result.2, prepared.2) selected ready.root cache
   have projected := congrArg (Functor.map (fun pair => (pair.1.1, pair.2))) complete
@@ -110,10 +112,10 @@ noncomputable def acceptedDecision {setup : StatefulPhase1Setup baseSpec}
     (attachedVerify : Ed25519PublicKey → Pqxdh.Bytes → Option Pqxdh.Bytes) (primitives : Primitives)
     (program : Program baseSpec setup.Context S (B + 1)) (post : Post (baseSpec := baseSpec) program.Selection S (B + 1))
     (secret : KemSK) (selected : Message)
-    (prepared : PqxdhPrivateRootSource.Prepared setup (driver env.toDriverEnvironment program).State)
+    (prepared : PqxdhPrivateRootSource.Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)
     (ready : Ready) (response : PqxdhInitialRootLabelService.Response) : ProbComp Bool :=
   (simulateQ (labelledFull env.source (QueryImpl.ofLift unifSpec ProbComp) selected response)
-    (accepted env baseImpl kem attachedVerify primitives program post secret selected prepared ready)).run' ∅
+    (accepted (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post secret selected prepared ready)).run' ∅
 
 /-- The source decision at the actual first-miss cache is exactly the selected-response observer decision; only the source interpreter receives the selected raw root cache entry. -/
 theorem accepted_decision_source {setup : StatefulPhase1Setup baseSpec}
@@ -122,15 +124,15 @@ theorem accepted_decision_source {setup : StatefulPhase1Setup baseSpec}
     (attachedVerify : Ed25519PublicKey → Pqxdh.Bytes → Option Pqxdh.Bytes) (primitives : Primitives)
     (program : Program baseSpec setup.Context S (B + 1)) (post : Post (baseSpec := baseSpec) program.Selection S (B + 1))
     (secret : KemSK) (selected : Message)
-    (prepared : PqxdhPrivateRootSource.Prepared setup (driver env.toDriverEnvironment program).State)
+    (prepared : PqxdhPrivateRootSource.Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)
     (ready : Ready) :
-    acceptedDecision env baseImpl kem attachedVerify primitives program post secret selected prepared
+    acceptedDecision (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post secret selected prepared
       (PqxdhInitialBuilderCut.eraseRoot ready) (realInitial env.source ready.root) =
       (simulateQ uniformImpl (simulateQ (rootPost env.source baseImpl kem secret ready.ciphertext)
-        (targetAccepted env attachedVerify primitives program post prepared ready))).run'
+        (PqxdhAuthenticatedRootExperiment.targetAccepted (associatedData := associatedData) (completedBinding := completedBinding) env attachedVerify primitives program post prepared ready))).run'
           ((∅ : RootOracle.QueryCache).cacheQuery selected ready.root) := by
   have complete := congrArg (Functor.map Prod.fst)
-    (accepted_source env baseImpl kem attachedVerify primitives program post secret selected prepared ready ∅)
+    (accepted_source (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post secret selected prepared ready ∅)
   simpa only [acceptedDecision, StateT.run'_eq, Functor.map_map, Prod.map_fst, id_eq,
     completeCache, PqxdhInitialBuilderCut.eraseRoot, accepted_root_unused] using complete
 
@@ -140,21 +142,21 @@ abbrev Context {setup : StatefulPhase1Setup baseSpec}
     (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
     (attachedVerify : Ed25519PublicKey → Pqxdh.Bytes → Option Pqxdh.Bytes) (primitives : Primitives)
     (program : Program baseSpec setup.Context S (B + 1)) (post : Post (baseSpec := baseSpec) program.Selection S (B + 1)) :=
-  PqxdhCorrelatedExtractFamily.Prepared (protocol env kem attachedVerify primitives program post) KemSK
+  PqxdhCorrelatedExtractFamily.Prepared (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post) KemSK
 
 noncomputable def observe {setup : StatefulPhase1Setup baseSpec}
     (env : PqxdhAuthenticatedRootExperiment.Environment setup M P I K X Response A S B)
     (baseImpl : QueryImpl baseSpec ProbComp) (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
     (attachedVerify : Ed25519PublicKey → Pqxdh.Bytes → Option Pqxdh.Bytes) (primitives : Primitives)
     (program : Program baseSpec setup.Context S (B + 1)) (post : Post (baseSpec := baseSpec) program.Selection S (B + 1))
-    (context : Context env kem attachedVerify primitives program post)
+    (context : Context (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post)
     (response : PqxdhInitialRootLabelService.Response) : ProbComp Bool :=
   match context.state with
   | .completed decision => pure decision
   | .pending prepared ephemeral =>
       let selected := coordinates (serverCoordinates env.source.crypto env.server.ikSk ephemeral.toList
         prepared.1.context.publicIdentity.ed25519 prepared.1.context.generated.before.publicKey prepared.1.context.generated.after.publicKey)
-      acceptedDecision env baseImpl kem attachedVerify primitives program post context.secretKey selected prepared
+      acceptedDecision (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post context.secretKey selected prepared
         (ready env.server env.application prepared.1.context.publicIdentity.ed25519 prepared.1.context.generated.after.publicKey
           ephemeral context.ciphertext (List.Vector.replicate 32 0)) response
 
@@ -164,9 +166,9 @@ theorem first_miss_observer {setup : StatefulPhase1Setup baseSpec}
     (baseImpl : QueryImpl baseSpec ProbComp) (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
     (attachedVerify : Ed25519PublicKey → Pqxdh.Bytes → Option Pqxdh.Bytes) (primitives : Primitives)
     (program : Program baseSpec setup.Context S (B + 1)) (post : Post (baseSpec := baseSpec) program.Selection S (B + 1))
-    (context : Context env kem attachedVerify primitives program post) :
-    𝒟[($ᵗ RootOutput) >>= fun root => observe env baseImpl kem attachedVerify primitives program post context (realInitial env.source root)] =
-      𝒟[Prod.fst <$> PqxdhInitialRootContext.firstMiss env.source baseImpl kem (protocol env kem attachedVerify primitives program post) context] := by
+    (context : Context (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post) :
+    𝒟[($ᵗ RootOutput) >>= fun root => observe (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post context (realInitial env.source root)] =
+      𝒟[Prod.fst <$> PqxdhInitialRootContext.firstMiss env.source baseImpl kem (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post) context] := by
   cases mode : context.state with
   | completed decision =>
       simp only [observe, mode, PqxdhInitialRootContext.firstMiss, protocol,
@@ -178,7 +180,7 @@ theorem first_miss_observer {setup : StatefulPhase1Setup baseSpec}
       apply congrArg evalDist
       apply bind_congr
       intro root
-      have same := accepted_decision_source env baseImpl kem attachedVerify primitives program post context.secretKey
+      have same := accepted_decision_source (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post context.secretKey
         (coordinates (serverCoordinates env.source.crypto env.server.ikSk ephemeral.toList
           prepared.1.context.publicIdentity.ed25519 prepared.1.context.generated.before.publicKey prepared.1.context.generated.after.publicKey))
         prepared (ready env.server env.application prepared.1.context.publicIdentity.ed25519
@@ -190,8 +192,8 @@ noncomputable def sample {setup : StatefulPhase1Setup baseSpec}
     (baseImpl : QueryImpl baseSpec ProbComp) (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
     (attachedVerify : Ed25519PublicKey → Pqxdh.Bytes → Option Pqxdh.Bytes) (primitives : Primitives)
     (program : Program baseSpec setup.Context S (B + 1)) (post : Post (baseSpec := baseSpec) program.Selection S (B + 1)) :
-    ProbComp (Context env kem attachedVerify primitives program post × RootOutput) := do
-  let context ← PqxdhCorrelatedExtractFamily.prepare baseImpl kem (protocol env kem attachedVerify primitives program post)
+    ProbComp (Context (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post × RootOutput) := do
+  let context ← PqxdhCorrelatedExtractFamily.prepare baseImpl kem (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post)
   let root ← $ᵗ RootOutput
   pure (context, root)
 
@@ -201,13 +203,13 @@ theorem current_game {setup : StatefulPhase1Setup baseSpec}
     (baseImpl : QueryImpl baseSpec ProbComp) (kem : MlKemScheme (baseSpec := baseSpec) (SK := KemSK))
     (attachedVerify : Ed25519PublicKey → Pqxdh.Bytes → Option Pqxdh.Bytes) (primitives : Primitives)
     (program : Program baseSpec setup.Context S (B + 1)) (post : Post (baseSpec := baseSpec) program.Selection S (B + 1)) :
-    𝒟[sample env baseImpl kem attachedVerify primitives program post >>= fun pair =>
-      observe env baseImpl kem attachedVerify primitives program post pair.1 (realInitial env.source pair.2)] =
+    𝒟[sample (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post >>= fun pair =>
+      observe (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post pair.1 (realInitial env.source pair.2)] =
       𝒟[uniformGame (PqxdhCorrelatedExpand.rootReduction env.source baseImpl kem
-        (protocol env kem attachedVerify primitives program post))] := by
+        (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post))] := by
   simp only [sample, bind_assoc, pure_bind, PqxdhInitialRootContext.current_game, map_bind]
   apply evalDist_bind_congr
-  exact first_miss_observer env baseImpl kem attachedVerify primitives program post
+  exact first_miss_observer (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post
 
 end Current
 end BeaconcryptCore.Computational.PqxdhInitialLegalObserver

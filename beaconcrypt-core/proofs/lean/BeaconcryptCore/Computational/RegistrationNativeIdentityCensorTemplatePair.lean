@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativeIdentityCensorSource
 import BeaconcryptCore.Computational.RegistrationNativeIdentityHashPair
 
-/-! Actual paired fingerprint continuations emit identical public template markers, even though their retained raw hash addresses differ. The private marker interpreter then performs the real canonical address with the same physical cache, input journal and exact draw reply. No physical address or canonical signature is an executable client input. -/
+/-! Actual paired request-hash continuations emit identical public template markers, even though their retained raw hash addresses differ. The private marker interpreter then performs the real canonical address with the same physical cache, input journal and exact draw reply. No physical address or canonical signature is an executable client input. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core PqxdhRefinement
@@ -29,27 +29,28 @@ private theorem trailing_same (left right : registration.BeaconInitState) (messa
     congrArg (fun state => RegistrationNativeIdentityHashTemplate.trailing state message) same
 
 /-- Actual canonical and placeholder source continuations determine the same framing outside the signature window. -/
-theorem source (left right : registration.BeaconFingerprint) (same : stripState left.state = stripState right.state)
-    (digest : Std.Array U8 64#usize) (canonical placeholder : Ed25519Signature) (message : Pqxdh.Bytes)
+theorem source (left right : registration.BeaconInitHash) (same : stripState left.state = stripState right.state)
+    (canonicalLeft : RegistrationNativeInitStageContents.Canonical left)
+    (canonicalRight : RegistrationNativeInitStageContents.Canonical right)
+    (canonical placeholder : Ed25519Signature) (message : Pqxdh.Bytes)
     (attachedLeft : absBytes left.state.one_time_key = canonical.toList ++ message)
     (attachedRight : absBytes right.state.one_time_key = placeholder.toList ++ message) :
-    ∃ nextLeft requestLeft nextRight requestRight,
-      left.resume (.Some digest) = .ok (.HashRequested nextLeft) ∧ nextLeft.request = .ok requestLeft ∧
-      right.resume (.Some digest) = .ok (.HashRequested nextRight) ∧ nextRight.request = .ok requestRight ∧
+    ∃ requestLeft requestRight,
+      left.request = .ok requestLeft ∧ right.request = .ok requestRight ∧
       parts (RegistrationInputs.hashBytes requestLeft) = parts (RegistrationInputs.hashBytes requestRight) ∧
       RegistrationInputs.hashBytes requestLeft =
         (parts (RegistrationInputs.hashBytes requestRight)).1 ++ canonical.toList ++ (parts (RegistrationInputs.hashBytes requestRight)).2 := by
-  obtain ⟨nextLeft, requestLeft, resumedLeft, requestedLeft, framedLeft, literalLeft⟩ :=
-    RegistrationNativeIdentityPublicHashTemplate.source left digest canonical message attachedLeft
-  obtain ⟨nextRight, requestRight, resumedRight, requestedRight, framedRight, _literalRight⟩ :=
-    RegistrationNativeIdentityPublicHashTemplate.source right digest placeholder message attachedRight
+  obtain ⟨requestLeft, requestedLeft, framedLeft, literalLeft⟩ :=
+    RegistrationNativeIdentityPublicHashTemplate.source left canonicalLeft canonical message attachedLeft
+  obtain ⟨requestRight, requestedRight, framedRight, _literalRight⟩ :=
+    RegistrationNativeIdentityPublicHashTemplate.source right canonicalRight placeholder message attachedRight
   have framing : parts (RegistrationInputs.hashBytes requestLeft) = parts (RegistrationInputs.hashBytes requestRight) := by
     change RegistrationNativeIdentityPublicHashTemplate.parts _ = RegistrationNativeIdentityPublicHashTemplate.parts _
     rw [framedLeft, framedRight, leading_same left.state right.state same, trailing_same left.state right.state message same]
   change RegistrationInputs.hashBytes requestLeft =
     (parts (RegistrationInputs.hashBytes requestLeft)).1 ++ canonical.toList ++ (parts (RegistrationInputs.hashBytes requestLeft)).2 at literalLeft
   rw [framing] at literalLeft
-  exact ⟨nextLeft, requestLeft, nextRight, requestRight, resumedLeft, requestedLeft, resumedRight, requestedRight, framing, literalLeft⟩
+  exact ⟨requestLeft, requestRight, requestedLeft, requestedRight, framing, literalLeft⟩
 
 private theorem requested_route (pending : registration.BeaconInitHash) (request : registration.HashRequest)
     (requested : pending.request = .ok request) : RegistrationNativeIdentityHashRoute.route (RegistrationInputs.hashBytes request) = none := by

@@ -128,7 +128,7 @@ func (fixture *fixture) call(command command) (response, error) {
 		if object.server != nil {
 			result.Data, err = object.server.MLDSAPublicKey()
 		} else {
-			result.Data, err = object.beacon.MLDSAPublicKey()
+			err = beaconcrypt.ErrCrypto
 		}
 	case "registration":
 		result.Data, err = object.beacon.GenerateRegistration()

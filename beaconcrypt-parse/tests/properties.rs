@@ -54,7 +54,7 @@ enum Message {
 		key_id: u64,
 		ciphertext: Vec<u8>,
 	},
-	Init([Vec<u8>; 6]),
+	Init([Vec<u8>; 4]),
 	Response {
 		fields: [Vec<u8>; 5],
 		key_id: u64,
@@ -87,8 +87,6 @@ impl Message {
 			pre_key: &fields[1],
 			one_time_key: &fields[2],
 			pq_key: &fields[3],
-			mldsa_public_key: &fields[4],
-			signature: &fields[5],
 		}
 	}
 
@@ -141,8 +139,6 @@ impl Message {
 					value.pre_key.to_vec(),
 					value.one_time_key.to_vec(),
 					value.pq_key.to_vec(),
-					value.mldsa_public_key.to_vec(),
-					value.signature.to_vec(),
 				])
 			}),
 			Self::Response { .. } => decode_response(input).map(|value| Self::Response {
@@ -162,8 +158,8 @@ impl Message {
 	fn reference_bytes(&self) -> Vec<u8> {
 		let mut bytes = match self {
 			Self::Frame { .. } => vec![0x85, 1, 2],
-			Self::Init(_) => vec![0x88, 2, 0],
-			Self::Response { .. } => vec![0x88, 2, 1],
+			Self::Init(_) => vec![0x86, 3, 0],
+			Self::Response { .. } => vec![0x88, 3, 1],
 		};
 		match self {
 			Self::Frame {
@@ -223,11 +219,9 @@ fn inits() -> impl Strategy<Value = Message> {
 		proptest::collection::vec(any::<u8>(), 98),
 		proptest::collection::vec(any::<u8>(), 98),
 		proptest::collection::vec(any::<u8>(), 1249),
-		proptest::collection::vec(any::<u8>(), 1952),
-		proptest::collection::vec(any::<u8>(), 3309),
 	)
-		.prop_map(|(identity, prekey, one_time, pq, mldsa, signature)| {
-			Message::Init([identity, prekey, one_time, pq, mldsa, signature])
+		.prop_map(|(identity, prekey, one_time, pq)| {
+			Message::Init([identity, prekey, one_time, pq])
 		})
 }
 
@@ -381,9 +375,9 @@ proptest! {
 		if !matches!(wrong_size, Message::Frame { .. }) {
 			prop_assert!(message.decode(&wrong_size.reference_bytes()).is_none(), "wrong identity width");
 		}
-		// Mandatory ML-DSA fields must keep their exact widths, and v1 registration is rejected.
+		// The mandatory Server signature retains its exact width.
 		let auth_indices: &[usize] = match &message {
-			Message::Init(_) => &[4, 5],
+			Message::Init(_) => &[],
 			Message::Response { .. } => &[4],
 			Message::Frame { .. } => &[],
 		};
@@ -396,11 +390,13 @@ proptest! {
 			}
 			prop_assert!(message.decode(&wrong_auth.reference_bytes()).is_none(), "wrong authentication width");
 		}
-		if !auth_indices.is_empty() {
-			let mut old_version = wire.clone();
-			old_version[1] = 1;
-			prop_assert!(message.decode(&old_version).is_none(), "v1 registration");
-		}
+  if !matches!(message, Message::Frame { .. }) {
+   for version in [1, 2] {
+	let mut old_version = wire.clone();
+	old_version[1] = version;
+	prop_assert!(message.decode(&old_version).is_none(), "previous registration version");
+   }
+  }
 	}
 
 	#[test]
@@ -415,7 +411,7 @@ proptest! {
 		seq in integers(), key_id in integers(), lengths in proptest::array::uniform6(sizing_lengths()),
 	) {
 		prop_assert_eq!(encoded_frame_len(seq, key_id, lengths[0]), reference_len(&lengths[..1], &[seq, key_id]));
-		prop_assert_eq!(encoded_init_len(lengths), reference_len(&lengths, &[]));
+		prop_assert_eq!(encoded_init_len(lengths[..4].try_into().unwrap()), reference_len(&lengths[..4], &[]));
 		prop_assert_eq!(encoded_response_len(lengths[..5].try_into().unwrap(), key_id), reference_len(&lengths[..5], &[key_id]));
 	}
 }

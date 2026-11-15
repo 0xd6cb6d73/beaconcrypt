@@ -3,7 +3,7 @@
 """Lift the actual extracted response-authentication body into requests.
 
 The complete reviewed body fingerprint and leaf multiplicities fail closed.
-Only monadic core leaves and the two primitive calls are replaced; matches,
+Only monadic core leaves and the hash and verification primitive calls are replaced; matches,
 request order, residual exits and returned protocol fields are retained.
 The RustM specialization is independently checked against the original source
 by AdapterAuthenticationStatefulResponse.controller_specializes.
@@ -26,13 +26,13 @@ DESTINATION = Path(
 START = "def auth.authenticate_response"
 STOP = "\nend beaconcrypt"
 REVIEWED_BODY_SHA256 = (
-    "0e57a1eb745ea1047689d65f40803c3c76106e23360e70fc82999c8e158dc9c8"
+    "424eefd55a99fde2aade11be1e45b0b1565240638676a4d41daa4d12994bb75b"
 )
 REPLACEMENTS = (
     (START, "def authenticate", 1),
     ("RustM (core.result.Result", "m (core.result.Result", 1),
     ("beaconcrypt_core.registration.begin_response_authentication", "Lifted.begin", 1),
-    ("core.result.Result.Insts.CoreOpsTry_traitTry.branch", "Lifted.branch", 2),
+    ("core.result.Result.Insts.CoreOpsTry_traitTry.branch", "Lifted.branch", 3),
     ("beaconcrypt_core.registration.ResponseHash.request", "Lifted.hashRequest", 1),
     ("beaconcrypt_core.registration.ResponseHash.resume", "Lifted.hashResume", 1),
     (
@@ -45,7 +45,9 @@ REPLACEMENTS = (
         "Lifted.verifyResume",
         1,
     ),
-    ("auth.execute_hash", "Operations.hash", 1),
+    ("beaconcrypt_core.registration.BeaconAdHash.request", "Lifted.adHashRequest", 1),
+    ("beaconcrypt_core.registration.BeaconAdHash.resume", "Lifted.adHashResume", 1),
+    ("auth.execute_hash", "Operations.hash", 2),
     ("auth.verify_requested", "Operations.verify", 1),
 )
 RESIDUAL = (
@@ -93,7 +95,7 @@ def transform(source: bytes) -> bytes:
             raise ValueError(f"reviewed leaf {old!r} changed multiplicity")
         body = body.replace(old, new)
     body, count = re.subn(RESIDUAL, "Lifted.fromResidual residual", body)
-    if count != 2:
+    if count != 3:
         raise ValueError("reviewed residual return leaf changed multiplicity")
     if re.search(
         r"\b(?:RustM|auth)\.|(?:registration\.[A-Za-z]+\.(?:request|resume))|from_residual",

@@ -11,6 +11,7 @@ open OracleComp OracleSpec
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhSelectedPostCompiler
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhJointKdfGame PqxdhNativeSharedPrefix
 open RawCtxSelectedParentTable RawCtxSelectedParentEntry
 variable {ι I D K X Response Shared A N C M P Result : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -64,14 +65,14 @@ noncomputable def impl (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
   | .inr (.finish index raw) =>
       (fun result => (some result.1.1, (install index before.1 result.1.2, result.2))) <$>
         ((simulateQ (PqxdhSelectedInitialOwnerCompiler.lower pre application initial selector aux prior parent target nonce next read)
-          (PqxdhSelectedInitialOwnerCompiler.owner raw (before.1.roles.1.2 index))).run before.2)
+          (PqxdhSelectedInitialOwnerCompiler.owner (completedBinding := completedBinding) raw (before.1.roles.1.2 index))).run before.2)
 
 noncomputable def client (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (prior : Prior) (parent : Option Entry) (target : RootOutput) (nonce : NonceOutput) (next : RootOutput)
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (read : RawCtxReceive.FrameDecoder)
     (original : OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result) (before : State M P I D K A N C S B) :
     Base (Option Result × State M P I D K A N C S B) :=
-  ((simulateQ (impl pre application initial selector aux source writer prior parent target nonce next sender route read) original).run).run before
+  ((simulateQ (impl (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read) original).run).run before
 
 noncomputable def Stops (prior : Prior) (parent : Option Entry) (target : RootOutput) (nonce : NonceOutput) (next : RootOutput)
     (sender : M → Std.U64) (query : (PqxdhInitialGenericPost.Spec extra S B).Domain)
@@ -86,7 +87,7 @@ noncomputable def evaluated (source : FixedHkdfSha512NoSaltSource) (writer : Raw
     QueryImpl (Optional (PqxdhInitialGenericPost.Spec extra S B)) (StateT (Full M P I D K A N C S B) ProbComp) :=
   fun query => PqxdhSelectedStateInterpreter.evaluate
     (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder read) source.crypto key)
-      ((impl pre application initial selector aux source writer prior parent target nonce next sender route read query).run)
+      ((impl (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read query).run)
 
 noncomputable def augmented (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (prior : Prior) (parent : Option Entry) (key target : RootOutput) (nonce : NonceOutput) (next : RootOutput)
@@ -97,7 +98,7 @@ noncomputable def augmented (source : FixedHkdfSha512NoSaltSource) (writer : Raw
       (fun result => (result.1, (({ before.1.1 with roles := result.2.1 }, result.2.2.1), result.2.2.2))) <$>
         (RawCtxSelectedFamilyNonceCoupling.augmented source writer prior parent key target nonce next sender route read request).run
           (before.1.1.roles, (before.1.2, before.2))
-  | query => (evaluated pre application initial selector aux source writer prior parent key target nonce next sender route read query).run before
+  | query => (evaluated (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read query).run before
 
 noncomputable def original (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (prior : Prior) (parent : Option Entry) (key target : RootOutput) (nonce : NonceOutput) (next : RootOutput)
@@ -114,15 +115,15 @@ noncomputable def original (source : FixedHkdfSha512NoSaltSource) (writer : RawC
   | .inr (.finish index raw) =>
       (fun result => (some result.1.1, (install index before.1 result.1.2, result.2))) <$>
         (simulateQ (PqxdhSelectedInitialOwnerCompiler.source pre application initial selector aux source writer prior parent key target nonce next read)
-          (PqxdhSelectedInitialOwnerCompiler.owner raw (before.1.roles.1.2 index))).run before.2
+          (PqxdhSelectedInitialOwnerCompiler.owner (completedBinding := completedBinding) raw (before.1.roles.1.2 index))).run before.2
 
 /-- Projecting the exact augmented post callback preserves the original record/reveal service, selector or complete attempted finish and all retained source state. -/
 theorem augmented_step (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (prior : Prior) (parent : Option Entry) (key target : RootOutput) (nonce : NonceOutput) (next : RootOutput)
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (read : RawCtxReceive.FrameDecoder)
     (query : (Optional (PqxdhInitialGenericPost.Spec extra S B)).Domain) (before : Full M P I D K A N C S B) :
-    Prod.map id project <$> (augmented pre application initial selector aux source writer prior parent key target nonce next sender route read query).run before =
-      (original pre application initial selector aux source writer prior parent key target nonce next sender route read query).run (project before) := by
+    Prod.map id project <$> (augmented (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read query).run before =
+      (original (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read query).run (project before) := by
   rcases query with (request | request) | request
   · have actual := RawCtxSelectedFamilyNonceCoupling.augmented_step source writer prior parent key target nonce next sender route read request
       (before.1.1.roles, (before.1.2, before.2))
@@ -140,7 +141,7 @@ theorem augmented_step (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
   · cases request with
     | finish index raw =>
       have actual := PqxdhSelectedInitialOwnerCompiler.program_source pre application initial selector aux source writer prior parent key target nonce next read
-        (PqxdhSelectedInitialOwnerCompiler.owner raw (before.1.1.roles.1.2 index)) (before.1.2, before.2)
+        (PqxdhSelectedInitialOwnerCompiler.owner (completedBinding := completedBinding) raw (before.1.1.roles.1.2 index)) (before.1.2, before.2)
       have mapped := congrArg (fun work => (fun result => (some result.1.1, (install index before.1.1 result.1.2, result.2))) <$> work) actual
       convert mapped using 1 <;> simp only [augmented, original, evaluated, impl, OptionT.run_mk, StateT.run, state_map_apply,
         PqxdhSelectedStateInterpreter.evaluate, PqxdhSelectedStateInterpreter.pair,
@@ -153,12 +154,12 @@ theorem augmented_program (source : FixedHkdfSha512NoSaltSource) (writer : RawCt
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (read : RawCtxReceive.FrameDecoder)
     (work : OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result) (before : Full M P I D K A N C S B) :
     Prod.map id project <$>
-      (simulateQ (augmented pre application initial selector aux source writer prior parent key target nonce next sender route read)
+      (simulateQ (augmented (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read)
         (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run before =
-      (simulateQ (original pre application initial selector aux source writer prior parent key target nonce next sender route read)
+      (simulateQ (original (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read)
         (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run (project before) :=
   map_run_simulateQ_eq_of_query_map_eq _ _ project
-    (augmented_step pre application initial selector aux source writer prior parent key target nonce next sender route read)
+    (augmented_step (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read)
     (RawCtxSelectedFamilyNonceCoupling.optionalClient work) before
 
 /-- The actual compiled and augmented post callbacks coincide until the exact selected-nonce stop, with the complete component ledger still present. -/
@@ -167,8 +168,8 @@ theorem augmented_nonstop (source : FixedHkdfSha512NoSaltSource) (writer : RawCt
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (read : RawCtxReceive.FrameDecoder)
     (query : (Optional (PqxdhInitialGenericPost.Spec extra S B)).Domain) (before : Full M P I D K A N C S B)
     (clear : ¬ Stops (extra := extra) prior parent target nonce next sender query before) :
-    (augmented pre application initial selector aux source writer prior parent key target nonce next sender route read query).run before =
-      (evaluated pre application initial selector aux source writer prior parent key target nonce next sender route read query).run before := by
+    (augmented (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read query).run before =
+      (evaluated (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read query).run before := by
   rcases query with (request | request) | request
   · have actual := RawCtxSelectedFamilyNonceCoupling.augmented_nonstop source writer prior parent key target nonce next sender route read request
       (before.1.1.roles, (before.1.2, before.2)) clear
@@ -187,11 +188,11 @@ theorem evaluated_program (source : FixedHkdfSha512NoSaltSource) (writer : RawCt
     (work : OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result) :
     PqxdhSelectedStateInterpreter.evaluate
       (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder read) source.crypto key)
-      (simulateQ (impl (P := P) pre application initial selector aux source writer prior parent target nonce next sender route read) work).run =
-      simulateQ (evaluated (P := P) pre application initial selector aux source writer prior parent key target nonce next sender route read)
+      (simulateQ (impl (completedBinding := completedBinding) (P := P) pre application initial selector aux source writer prior parent target nonce next sender route read) work).run =
+      simulateQ (evaluated (completedBinding := completedBinding) (P := P) pre application initial selector aux source writer prior parent key target nonce next sender route read)
         (RawCtxSelectedFamilyNonceCoupling.optionalClient work) := by
   rw [← RawCtxSelectedFamilyNonceCoupling.optional_client
-    (impl (P := P) pre application initial selector aux source writer prior parent target nonce next sender route read) work]
+    (impl (completedBinding := completedBinding) (P := P) pre application initial selector aux source writer prior parent target nonce next sender route read) work]
   exact PqxdhSelectedStateInterpreter.program _ _ _
 
 /-- The full interleaved post source and evaluated executable differ by at most the same augmented run's actual selected-nonce stop probability, with coefficient one and complete terminal output/state comparison. -/
@@ -200,26 +201,26 @@ theorem source_distance (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxM
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (read : RawCtxReceive.FrameDecoder)
     (work : OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result) (before : Full M P I D K A N C S B) :
     discreteDistance
-      ((simulateQ (original pre application initial selector aux source writer prior parent key target nonce next sender route read)
+      ((simulateQ (original (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read)
         (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run (project before))
       (Prod.map id project <$> (PqxdhSelectedStateInterpreter.evaluate
         (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder read) source.crypto key)
-        (simulateQ (impl pre application initial selector aux source writer prior parent target nonce next sender route read) work).run).run before) ≤
+        (simulateQ (impl (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read) work).run).run before) ≤
       (𝒟[(fun result => result.2.2) <$>
         (simulateQ (RawCtxSelectedFamilyNonceCoupling.marked
-          (augmented pre application initial selector aux source writer prior parent key target nonce next sender route read)
+          (augmented (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read)
           (Stops (extra := extra) prior parent target nonce next sender))
           (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run (before, false)] {true}).toReal := by
   have bound := (discreteDistance_map_le (Prod.map id project)
-    ((simulateQ (augmented pre application initial selector aux source writer prior parent key target nonce next sender route read)
+    ((simulateQ (augmented (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read)
       (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run before)
-    ((simulateQ (evaluated pre application initial selector aux source writer prior parent key target nonce next sender route read)
+    ((simulateQ (evaluated (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read)
       (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run before)).trans
       (RawCtxSelectedFamilyNonceCoupling.unmarked_distance
-        (augmented pre application initial selector aux source writer prior parent key target nonce next sender route read)
-        (evaluated pre application initial selector aux source writer prior parent key target nonce next sender route read)
+        (augmented (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read)
+        (evaluated (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read)
         (Stops (extra := extra) prior parent target nonce next sender)
-        (augmented_nonstop pre application initial selector aux source writer prior parent key target nonce next sender route read)
+        (augmented_nonstop (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read)
         (RawCtxSelectedFamilyNonceCoupling.optionalClient work) before)
   simpa only [augmented_program, evaluated_program] using bound
 
@@ -228,7 +229,7 @@ theorem step_opens (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedS
     (prior : Prior) (parent : Option Entry) (target : RootOutput) (nonce : NonceOutput) (next : RootOutput)
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (read : RawCtxReceive.FrameDecoder)
     (query : (PqxdhInitialGenericPost.Spec extra S B).Domain) (before : State M P I D K A N C S B) :
-    (((impl pre application initial selector aux source writer prior parent target nonce next sender route read query).run).run before).IsQueryBoundP
+    (((impl (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read query).run).run before).IsQueryBoundP
       (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxReceive.IsRawQuery) 1 := by
   rcases query with (request | request) | request
   · simp only [impl, OptionT.run_mk, StateT.run, isQueryBoundP_map_iff]
@@ -241,7 +242,7 @@ theorem step_opens (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedS
   · cases request with
     | finish index raw =>
       simp only [impl, OptionT.run_mk, StateT.run, isQueryBoundP_map_iff]
-      exact PqxdhSelectedInitialOwnerCompiler.compiled_opens pre application initial selector aux prior parent target nonce next read raw (before.1.roles.1.2 index) before.2
+      exact PqxdhSelectedInitialOwnerCompiler.compiled_opens (completedBinding := completedBinding) pre application initial selector aux prior parent target nonce next read raw (before.1.roles.1.2 index) before.2
 
 /-- The actual adaptive outer query budget bounds every selected verification attempt, including rejected raw records and later attempted registrations. -/
 theorem client_opens (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
@@ -249,7 +250,7 @@ theorem client_opens (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixe
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (read : RawCtxReceive.FrameDecoder)
     (work : OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result) (qPost : Nat)
     (bounded : work.IsTotalQueryBound qPost) (before : State M P I D K A N C S B) :
-    (client pre application initial selector aux source writer prior parent target nonce next sender route read work before).IsQueryBoundP
+    (client (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read work before).IsQueryBoundP
       (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxReceive.IsRawQuery) qPost := by
   induction work using OracleComp.inductionOn generalizing qPost before with
   | pure value => trivial
@@ -258,7 +259,7 @@ theorem client_opens (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixe
     obtain ⟨remaining, rfl⟩ := Nat.exists_eq_succ_of_ne_zero (Nat.ne_of_gt bounded.1)
     simp only [client, simulateQ_bind, simulateQ_spec_query, OptionT.run_bind, Option.elimM, StateT.run_bind]
     rw [Nat.succ_eq_add_one, Nat.add_comm]
-    apply isQueryBoundP_bind (step_opens pre application initial selector aux source writer prior parent target nonce next sender route read query before)
+    apply isQueryBoundP_bind (step_opens (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read query before)
     rintro ⟨none | answer, after⟩ _
     · trivial
     · exact ih answer remaining (by simpa using bounded.2 answer) after

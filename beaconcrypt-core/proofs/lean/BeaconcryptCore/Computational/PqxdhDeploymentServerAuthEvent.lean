@@ -1,5 +1,8 @@
 -- SPDX-License-Identifier: 0BSD
-import BeaconcryptCore.Computational.PqxdhDeploymentPublishedTuple
+import BeaconcryptCore.Computational.PqxdhPublishedTupleParser
+import BeaconcryptCore.Computational.PqxdhDeploymentTranscript
+import BeaconcryptCore.Computational.PqxdhDeploymentSecrecy
+import BeaconcryptCore.Computational.PqxdhRegistrationJointRevealSchedule
 import BeaconcryptCore.Computational.PqxdhServerAuthRecordPublicationEvent
 
 /-! The initial-response-origin event CE-A1 of the common deployment experiment (CE-8), on the registration view of a transcript. `regsOf` keeps exactly the registration entries of a transcript, in order: every create whose pin parses (with its word, key ID and returned owner handle), and every bundle, accept, build and finish with its reply; `regsOfSource` reads the same view from the journal of a source14 program. `summarizeReg` folds the view into unit A's public summary (`summarize_regs`: it is the summary of the transcript). `accepted c` scans the view with the summary and returns the registration entries strictly before owner `c`'s accepting finish (the first successful finish of `c` while the summary has `c` in InitSent) together with that finish's raw input. A session `i` matches owner `c` before its acceptance (`MatchedAt`) when, before the acceptance, an accept returned `i` on bytes whose raw candidate the source attached verification accepts with exactly the identity key and key tuple read, without a signature check, from `c`'s first published bundle (`publishedKeys`), and a build of `i` returned a response whose decoded record (`PqxdhServerAuthRecordPublicationEvent.frame`) is the decoded record of the raw input `c` accepted. `Unmatched binding c` is the A1 failure at `c`: `c` accepted, its creation before the acceptance carried `binding`, no bundle call of `c` in Fresh was rejected before the acceptance, and no session matches it. Only public bytes, the public attached verification of `Pqxdh.Crypto`, the codec readers and the parsers are used; no secret, root, partner or ghost. The event is fixed once `c` stops (`Stop`: `c` accepted or a bundle call of `c` in Fresh was rejected): appending entries after the stop does not change it (`unmatched_stop`), so it is the same on a transcript and on its prefix up to the stop (`unmatched_untilStop`). No security claim is made here. -/
@@ -7,6 +10,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEvent
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhServerAuthExperiment
 open PqxdhDeploymentInterface (Entry parsePin)
 open PqxdhDeploymentTranscript (PublicPhase Summary candidateOf acceptedKeys)

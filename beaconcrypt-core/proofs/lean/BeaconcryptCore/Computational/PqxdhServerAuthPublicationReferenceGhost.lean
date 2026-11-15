@@ -16,12 +16,19 @@ theorem build_project (source : FixedHkdfSha512NoSaltSource)
     (session : Nat) (payload : Option Pqxdh.Bytes) (state : Local KemSK) :
     Prod.map id PqxdhServerAuthPublicationGhost.project <$> (PqxdhServerAuthPublicationReference.build source codec checks rest session payload).run.run state =
       Prod.map id PqxdhServerAuthPublicationGhost.project <$> (PqxdhServerAuthPublicationReference.build source codec checks rest session payload).run.run (PqxdhServerAuthPublicationGhost.project state) := by
-  simp only [PqxdhServerAuthPublicationReference.build, OptionT.run_mk, StateT.run, PqxdhServerAuthPublicationGhost.project, flat, game]
+  simp only [PqxdhServerAuthPublicationReference.build, OptionT.run_mk, StateT.run_bind, StateT.run_lift,
+    PqxdhServerAuthCtxState.hash]
+  simp only [StateT.run, PqxdhServerAuthPublicationGhost.project, flat, game, bind_assoc, pure_bind]
   cases state.1.1.pending session with
   | none => rfl
   | some token =>
       simp only []
-      split <;> exact build_after session _ state
+      split
+      · rfl
+      · simp only [map_bind]
+        refine bind_congr fun digest => ?_
+        rcases Bool.eq_false_or_eq_true (state.1.2.1 session) with marked | marked <;>
+          simp only [marked, Bool.false_eq_true, ↓reduceIte] <;> exact build_after session _ state
 
 /-- Every complete reference API route preserves the same public reply and ghost-erased operational state, with identical component requests. -/
 theorem route_project (setup : Setup baseSpec KemSK) (codec : Codec Reader WireResponse)

@@ -38,7 +38,7 @@ theorem send (self : beacon.Beacon) (control : pqxdh.BeaconEstablished) (binding
   rw [stored]
   change (do
     let server ← (liftRust (.ok control.server_binding.identity_key_id) : RustT m U64)
-    let ad ← (liftRust (.ok binding.associated_data) : RustT m (Array U8 281#usize))
+    let ad ← (liftRust (.ok binding.associated_data) : RustT m (Array U8 151#usize))
     let sent ← beaconcrypt_public_ordinary_request.ratchet.encrypt_message_with_ratchet (m := RustT m)
       bytes server self.identity_key_kid ad (manager kernel)
     pure (sent.1,{self with state := .Established control binding sent.2})) = _
@@ -74,7 +74,7 @@ theorem receive (self : beacon.Beacon) (control : pqxdh.BeaconEstablished) (bind
   rw [stored]
   change (do
     let server ← (liftRust (.ok control.server_binding.identity_key_id) : RustT m U64)
-    let ad ← (liftRust (.ok binding.associated_data) : RustT m (Array U8 281#usize))
+    let ad ← (liftRust (.ok binding.associated_data) : RustT m (Array U8 151#usize))
     let received ← beaconcrypt_public_ordinary_request.ratchet.decrypt_message_with_ratchet (m := RustT m)
       bytes server ad (manager kernel)
     pure (received.1,{self with state := .Established control binding received.2})) = _

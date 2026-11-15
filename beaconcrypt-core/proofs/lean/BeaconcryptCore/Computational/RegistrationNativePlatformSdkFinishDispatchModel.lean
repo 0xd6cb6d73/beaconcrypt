@@ -14,7 +14,7 @@ private theorem apply_pure {S A : Type} {m : Type→Type} [Monad m] (value : A) 
 variable {n : Nat} {I KemSK Platform : Type} {base : OracleSpec I} {source : RegistrationNativeMldsa.Source}
 local notation "Native"=>RegistrationNativeExperiment.State n KemSK source
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (wire : RegistrationNativeWire.Wire) (index : Nat) (packet : Option registration.ResponsePacket)
 variable (before : RegistrationNativeExperiment.State n KemSK source) (coins : QueryImpl unifSpec (StateT Platform ProbComp)) (previous : Platform)
 

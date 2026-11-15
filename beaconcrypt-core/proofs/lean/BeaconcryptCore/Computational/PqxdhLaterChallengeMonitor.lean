@@ -6,7 +6,9 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeMonitor
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhJointKdfGame PqxdhNativeSharedPrefix
 open RawCtxSelectedParentTable RawCtxSelectedParentEntry PqxdhFirstRecordConfidentiality
 variable {ι M P I D K X Response Shared A N C : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -48,16 +50,16 @@ noncomputable def handler (owner : RawCtxProtocolReveals.Owner S B) (number : St
     QueryImpl (AdvSpec extra S B) (Stepper PqxdhRecordConfidentialityChallenge.State (State M P I D K A N C S B)) :=
   fun query current => OptionT.mk fun before =>
     (fun result => (result.1, (result.2, record target owner query current before))) <$>
-      runStepper (PqxdhLaterChallengeTwin.handler pre application initial selector aux source writer prior parent target nonce next sender route
+      runStepper (PqxdhLaterChallengeTwin.handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route
         read mark monitor owner number bit query) current before.1
 
 /-- Erasing only the new private marker recovers one complete original callback, its optional reply, wrapper state and original full private state. -/
 theorem query_source (owner : RawCtxProtocolReveals.Owner S B) (number : Std.U64) (bit : Bool)
     (query : (AdvSpec extra S B).Domain) (current : PqxdhRecordConfidentialityChallenge.State)
     (before : State M P I D K A N C S B) :
-    Prod.map id Prod.fst <$> runStepper (handler pre application initial selector aux source writer prior parent target nonce next sender route
+    Prod.map id Prod.fst <$> runStepper (handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route
       read mark monitor owner number bit query) current before =
-    runStepper (PqxdhLaterChallengeTwin.handler pre application initial selector aux source writer prior parent target nonce next sender route
+    runStepper (PqxdhLaterChallengeTwin.handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route
       read mark monitor owner number bit query) current before.1 := by
   simp only [handler, runStepper, StateT.run, OptionT.run_mk, Functor.map_map]
   exact id_map _
@@ -66,15 +68,15 @@ theorem query_source (owner : RawCtxProtocolReveals.Owner S B) (number : Std.U64
 theorem program_source {Result : Type} (owner : RawCtxProtocolReveals.Owner S B) (number : Std.U64) (bit : Bool)
     (work : OracleComp (AdvSpec extra S B) Result) (current : PqxdhRecordConfidentialityChallenge.State)
     (before : State M P I D K A N C S B) :
-    Prod.map id Prod.fst <$> runStepper (simulateQ (handler pre application initial selector aux source writer prior parent target nonce next sender
+    Prod.map id Prod.fst <$> runStepper (simulateQ (handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender
       route read mark monitor owner number bit) work) current before =
-    runStepper (simulateQ (PqxdhLaterChallengeTwin.handler pre application initial selector aux source writer prior parent target nonce next sender
+    runStepper (simulateQ (PqxdhLaterChallengeTwin.handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender
       route read mark monitor owner number bit) work) current before.1 := by
   induction work using OracleComp.inductionOn generalizing current before with
   | pure value => rfl
   | query_bind query next ih =>
     simp only [simulateQ_bind, simulateQ_spec_query, runStepper_bind, map_bind]
-    rw [← query_source pre application initial selector aux source writer prior parent target nonce _ sender route read mark monitor
+    rw [← query_source (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce _ sender route read mark monitor
       owner number bit query current before, bind_map_left]
     congr 1
     funext result
@@ -86,17 +88,17 @@ theorem program_source {Result : Type} (owner : RawCtxProtocolReveals.Owner S B)
 theorem recorded_program {Result : Type} (owner : RawCtxProtocolReveals.Owner S B) (number : Std.U64) (bit value : Bool)
     (work : OracleComp (AdvSpec extra S B) Result) (current : PqxdhRecordConfidentialityChallenge.State)
     (before : InsState M P I D K A N C S B) :
-    runStepper (simulateQ (handler pre application initial selector aux source writer prior parent target nonce next sender route read mark
+    runStepper (simulateQ (handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark
       monitor owner number bit) work) current (before, some value) =
     (fun result => (result.1, (result.2, some value))) <$>
-      runStepper (simulateQ (PqxdhLaterChallengeTwin.handler pre application initial selector aux source writer prior parent target nonce next
+      runStepper (simulateQ (PqxdhLaterChallengeTwin.handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next
         sender route read mark monitor owner number bit) work) current before := by
   induction work using OracleComp.inductionOn generalizing current before with
   | pure result => rfl
   | query_bind query next ih =>
     simp only [simulateQ_bind, simulateQ_spec_query, runStepper_bind, map_bind]
     change ((fun result => (result.1, (result.2, some value))) <$>
-      runStepper (PqxdhLaterChallengeTwin.handler pre application initial selector aux source writer prior parent target nonce _ sender route
+      runStepper (PqxdhLaterChallengeTwin.handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce _ sender route
         read mark monitor owner number bit query) current before) >>= _ = _
     rw [bind_map_left]
     congr 1
@@ -110,10 +112,10 @@ theorem admitted_query (owner : RawCtxProtocolReveals.Owner S B) (number : Std.U
     (left right : Pqxdh.Bytes) (equal : left.length = right.length)
     (current : PqxdhRecordConfidentialityChallenge.State) (unused : current.pair = none)
     (before : InsState M P I D K A N C S B) :
-    runStepper (handler pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
+    runStepper (handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
       owner number bit (.inr (left, right))) current (before, none) =
     (fun result => (result.1, (result.2, some (@decide (Selected target owner before) (Classical.propDecidable _))))) <$>
-      runStepper (PqxdhLaterChallengeTwin.handler pre application initial selector aux source writer prior parent target nonce next sender route
+      runStepper (PqxdhLaterChallengeTwin.handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route
         read mark monitor owner number bit (.inr (left, right))) current before := by
   simp only [handler, runStepper, StateT.run, OptionT.run_mk, record, unused, Option.isSome_none, Bool.false_eq_true,
     equal, ne_eq, not_true_eq_false, or_self, ite_false]
@@ -124,19 +126,19 @@ theorem admitted_program {Result : Type} (owner : RawCtxProtocolReveals.Owner S 
     (continuation : Option RawCtxSourceSend.Encrypted → OracleComp (AdvSpec extra S B) Result)
     (current : PqxdhRecordConfidentialityChallenge.State) (unused : current.pair = none)
     (before : InsState M P I D K A N C S B) :
-    runStepper (simulateQ (handler pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
+    runStepper (simulateQ (handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
       owner number bit) ((liftM ((AdvSpec extra S B).query (.inr (left, right)))) >>= continuation)) current (before, none) =
     (fun result => (result.1, (result.2, some (@decide (Selected target owner before) (Classical.propDecidable _))))) <$>
-      runStepper (simulateQ (PqxdhLaterChallengeTwin.handler pre application initial selector aux source writer prior parent target nonce next sender
+      runStepper (simulateQ (PqxdhLaterChallengeTwin.handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender
         route read mark monitor owner number bit) ((liftM ((AdvSpec extra S B).query (.inr (left, right)))) >>= continuation)) current before := by
   rw [simulateQ_bind, simulateQ_bind, simulateQ_spec_query, simulateQ_spec_query, runStepper_bind, runStepper_bind,
-    admitted_query pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
+    admitted_query (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
       owner number bit left right equal current unused before, bind_map_left, map_bind]
   congr 1
   funext result
   rcases result with ⟨_ | ⟨reply, current'⟩, after⟩
   · rfl
-  · exact recorded_program pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
+  · exact recorded_program (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
       owner number bit _ (continuation reply) current' after
 
 /-- Only the private failed designation or the actual selected finish-opening event restricts the final observation. Neither event changes source execution. -/
@@ -151,19 +153,19 @@ theorem admitted_pre {Result : Type} (owner : RawCtxProtocolReveals.Owner S B) (
     (before : InsState M P I D K A N C S B)
     (separate : RawCtxSelectedParentPrivatePatch.targetAddress target ≠ parent.address) :
     Pre (fun a b => a = b) (fun result => Dead result.2) (fun result => Dead result.2)
-      (runStepper (simulateQ (handler pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
+      (runStepper (simulateQ (handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
         owner number false) ((liftM ((AdvSpec extra S B).query (.inr (left, right)))) >>= continuation)) current (before, none))
-      (runStepper (simulateQ (handler pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
+      (runStepper (simulateQ (handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
         owner number true) ((liftM ((AdvSpec extra S B).query (.inr (left, right)))) >>= continuation)) current (before, none)) := by
   classical
-  rw [admitted_program pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
+  rw [admitted_program (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
     owner number false left right equal continuation current unused before,
-    admitted_program pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
+    admitted_program (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
     owner number true left right equal continuation current unused before]
   by_cases selected : Selected target owner before
   · apply Pre.switch left right equal
     refine twin_map left right
-      (PqxdhLaterChallengeSuffix.challenge_then_twin pre application initial selector aux source writer prior parent target nonce next sender route
+      (PqxdhLaterChallengeSuffix.challenge_then_twin (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route
         read mark monitor owner number left right equal continuation current unused before selected separate) _ _
       (fun _ _ same => by cases same; rfl) (fun _ raised => Or.inr raised) (fun _ raised => Or.inr raised)
   · apply Pre.dead
@@ -175,10 +177,10 @@ theorem admitted_pre {Result : Type} (owner : RawCtxProtocolReveals.Owner S B) (
 theorem ordinary_query (owner : RawCtxProtocolReveals.Owner S B) (number : Std.U64) (bit : Bool)
     (query : (ConfPostSpec extra S B).Domain) (current : PqxdhRecordConfidentialityChallenge.State)
     (before : InsState M P I D K A N C S B) :
-    runStepper (handler pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
+    runStepper (handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
       owner number bit (.inl query)) current (before, none) =
     (fun result => (result.1, (result.2, none))) <$>
-      runStepper (PqxdhLaterChallengeTwin.handler pre application initial selector aux source writer prior parent target nonce next sender route
+      runStepper (PqxdhLaterChallengeTwin.handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route
         read mark monitor owner number false (.inl query)) current before := by
   rfl
 
@@ -188,7 +190,7 @@ theorem ordinary_normal (owner : RawCtxProtocolReveals.Owner S B) (number : Std.
     (before : InsState M P I D K A N C S B) (finalState : State M P I D K A N C S B)
     (reply : (ConfPostSpec extra S B).Range query)
     (supported : (some (reply, after), finalState) ∈ support (runStepper
-      (handler pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
+      (handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
         owner number bit (.inl query)) current (before, none))) :
     after.pair = current.pair ∧ finalState.2 = none := by
   rw [ordinary_query, PqxdhLaterChallengeSuffix.adv_run, Functor.map_map, support_map] at supported
@@ -203,7 +205,7 @@ theorem ordinary_normal (owner : RawCtxProtocolReveals.Owner S B) (number : Std.
 theorem unequal_query (owner : RawCtxProtocolReveals.Owner S B) (number : Std.U64) (bit : Bool)
     (left right : Pqxdh.Bytes) (unequal : left.length ≠ right.length)
     (current : PqxdhRecordConfidentialityChallenge.State) (before : InsState M P I D K A N C S B) :
-    runStepper (handler pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
+    runStepper (handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
       owner number bit (.inr (left, right))) current (before, none) = pure (some (none, current), (before, none)) := by
   simp only [handler, record, runStepper, StateT.run, OptionT.run_mk,
     PqxdhLaterChallengeTwin.handler, PqxdhRecordConfidentialityChallenge.handler]
@@ -216,9 +218,9 @@ theorem program_pre {Result : Type} (owner : RawCtxProtocolReveals.Owner S B) (n
     (unused : current.pair = none) (before : InsState M P I D K A N C S B)
     (separate : RawCtxSelectedParentPrivatePatch.targetAddress target ≠ parent.address) :
     Pre (fun a b => a = b) (fun result => Dead result.2) (fun result => Dead result.2)
-      (runStepper (simulateQ (handler pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
+      (runStepper (simulateQ (handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
         owner number false) work) current (before, none))
-      (runStepper (simulateQ (handler pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
+      (runStepper (simulateQ (handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
         owner number true) work) current (before, none)) := by
   induction work using OracleComp.inductionOn generalizing current before with
   | pure value => exact Pre.pure rfl
@@ -231,19 +233,19 @@ theorem program_pre {Result : Type} (owner : RawCtxProtocolReveals.Owner S B) (n
       intro result supported
       rcases result with ⟨_ | ⟨reply, current'⟩, ⟨after, choice⟩⟩
       · exact Pre.pure rfl
-      · obtain ⟨paired, same⟩ := ordinary_normal pre application initial selector aux source writer prior parent target nonce _ sender route
+      · obtain ⟨paired, same⟩ := ordinary_normal (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce _ sender route
           read mark monitor owner number false query current current' before (after, choice) reply (by rwa [ordinary_query])
         cases same
         exact ih reply current' (paired.trans unused) after
     | inr pair =>
       rcases pair with ⟨left, right⟩
       by_cases equal : left.length = right.length
-      · exact admitted_pre pre application initial selector aux source writer prior parent target nonce _ sender route read mark monitor
+      · exact admitted_pre (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce _ sender route read mark monitor
           owner number left right equal next current unused before separate
       · rw [simulateQ_bind, simulateQ_bind, simulateQ_spec_query, simulateQ_spec_query, runStepper_bind, runStepper_bind,
-          unequal_query pre application initial selector aux source writer prior parent target nonce _ sender route read mark monitor
+          unequal_query (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce _ sender route read mark monitor
             owner number false left right equal current before,
-          unequal_query pre application initial selector aux source writer prior parent target nonce _ sender route read mark monitor
+          unequal_query (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce _ sender route read mark monitor
             owner number true left right equal current before, pure_bind, pure_bind]
         exact ih none current unused before
 
@@ -258,7 +260,7 @@ noncomputable def client (owner : RawCtxProtocolReveals.Owner S B) (number : Std
     (work : OracleComp (AdvSpec extra S B) Bool) (before : InsState M P I D K A N C S B) :
     OracleComp AdaptiveCtxDynamicKnownKeys.Spec Bool :=
   observed number <$> runStepper (simulateQ
-    (handler pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor owner number bit)
+    (handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor owner number bit)
     work) PqxdhRecordConfidentialityChallenge.initial (before, none)
 
 /-- The monitored client preserves every complete query budget of the original adaptive program; refusal and dead-event branches retain all executed work. -/
@@ -266,11 +268,11 @@ theorem client_budget {Budget : Type} (owner : RawCtxProtocolReveals.Owner S B) 
     (work : OracleComp (AdvSpec extra S B) Bool) (before : InsState M P I D K A N C S B)
     (available : Budget) (allowed : AdaptiveCtxDynamicKnownKeys.Spec.Domain → Budget → Prop)
     (cost : AdaptiveCtxDynamicKnownKeys.Spec.Domain → Budget → Budget) :
-    (client pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
+    (client (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
       owner number bit work before).IsQueryBound available allowed cost ↔
-    (runStepper (simulateQ (PqxdhLaterChallengeTwin.handler pre application initial selector aux source writer prior parent target nonce next sender
+    (runStepper (simulateQ (PqxdhLaterChallengeTwin.handler (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender
       route read mark monitor owner number bit) work) PqxdhRecordConfidentialityChallenge.initial before).IsQueryBound available allowed cost := by
-  rw [← program_source pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
+  rw [← program_source (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
     owner number bit work PqxdhRecordConfidentialityChallenge.initial (before, none)]
   simp only [client, isQueryBound_map_iff]
 
@@ -280,15 +282,15 @@ theorem random_client (owner : RawCtxProtocolReveals.Owner S B) (number : Std.U6
     (separate : RawCtxSelectedParentPrivatePatch.targetAddress target ≠ parent.address) :
     𝒟[AdaptiveCtxPrivacyGuard.randomView (RawCtxUniversalDecoder.decoder read)
       (AdaptiveCtxDynamicKnownKeys.decisionClient source.crypto
-        (client pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
+        (client (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
           owner number false work before))] {true} =
     𝒟[AdaptiveCtxPrivacyGuard.randomView (RawCtxUniversalDecoder.decoder read)
       (AdaptiveCtxDynamicKnownKeys.decisionClient source.crypto
-        (client pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
+        (client (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
           owner number true work before))] {true} := by
   apply randomView_pre
   exact pre_map
-    (program_pre pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
+    (program_pre (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next sender route read mark monitor
       owner number work PqxdhRecordConfidentialityChallenge.initial rfl before separate)
     _ _ (fun _ _ same => congrArg _ same)
     (fun _ dead => by simp only [observed, ite_eq_left dead])

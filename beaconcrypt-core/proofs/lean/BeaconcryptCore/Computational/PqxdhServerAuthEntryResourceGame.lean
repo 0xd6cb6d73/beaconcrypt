@@ -57,7 +57,7 @@ theorem entry_reduction_uniform (setup : Setup baseSpec KemSK) (codec : Codec Re
 /-- The complete reduction bill exposes all source sampler, KEM and interpreted base terms. These are uniform oracle counts, not a runtime bound on deterministic public primitives. -/
 theorem entry_reduction_budget_expanded (caps : KemCaps) (qCoin Q qHash qH : Nat) :
     entryReductionBudget caps qCoin Q qHash qH =
-      256 + qCoin + 160 * Q + 64 * (qHash + qH) +
+      320 + qCoin + 224 * Q + 64 * (qHash + qH) +
       caps.keygenUniform + Q * caps.encapsUniform + caps.decapsUniform +
       caps.baseUniform * (caps.keygenBase + Q * caps.encapsBase + caps.decapsBase) :=
   entry_budget_expanded caps qCoin Q qHash qH

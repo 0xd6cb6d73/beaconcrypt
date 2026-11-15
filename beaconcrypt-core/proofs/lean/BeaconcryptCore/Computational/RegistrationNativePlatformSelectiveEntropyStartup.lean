@@ -78,7 +78,7 @@ noncomputable def referenceProgram (ensureInit : StateT Unit ProbComp Bool) (ide
         (adversary ⟨setup.joint.publicKeys seed,born.native.credential.publicKey,serverKeyId⟩) ((born.native.frontend,previous),privateBefore)
 
 omit primitive in
-private def finish (created : PqxdhLiveServerConstruction.Created Unit)
+private def finish (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (result : (Value × RegistrationNativeLedger.State) × RegistrationNativeHiddenEnvironmentWorld.State n
       (State n KemSK ProviderState Platform source) Secret) :=
   (((some (PqxdhRegistrationJointServerBirth.encode created,result.1,result.2.1.1.1),result.2.1.1.2),result.2.1.2),result.2.2)
@@ -87,7 +87,7 @@ omit primitive in
 private theorem package_lower
     (service : QueryImpl (PqxdhRecordLiftProtocol.ServiceSpec n) (StateT Secret ProbComp))
     (codec : PqxdhServerAuthExperiment.Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : StateT (State n KemSK ProviderState Platform source) (OracleComp (WorldSpec n)) (Value × RegistrationNativeLedger.State))
     (before : State n KemSK ProviderState Platform source) (shell : CborRecordWorldClient.Shell)
     (control : PqxdhRecordLiftProtocol.Control n) (secret : Secret) :

@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativePlatformMldsaPublicationChronology
 import BeaconcryptCore.Computational.RegistrationNativePlatformCompletionSdk
 
-/-! The actual corrected SDK threads the private-table/native signing-history alignment through its precise pin, occupancy, reservation, completion and commit control. Every raw optional ML reply/count and complete shared platform poststate is retained. -/
+/-! The actual corrected SDK threads the private-table/native signing-history alignment through its precise pin, occupancy, owned AD hash, reservation, completion and commit control. Every raw optional ML reply/count and complete shared platform poststate is retained. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -15,7 +15,7 @@ open RegistrationNativePlatformMldsaPublicationChronology (Keeps pure_keeps bind
 open RegistrationNativePlatformMldsaProgram (M)
 open RegistrationNativeMldsaOpaque (handleSource)
 open RegistrationNativePlatformMldsaTableProgram (runState)
-open RegistrationNativePlatformCompletionSdk (Completion)
+open RegistrationNativePlatformCompletionSdk (Completion AdHash)
 variable {n : Nat} {Platform Value Encoded : Type} (source : RegistrationNativeMldsa.Source)
 
 def localReceipts (before : RegistrationServerRootCompiler.Local n) := before.world.2
@@ -65,26 +65,40 @@ theorem fromInitial (finish : Completion n (M (handleSource source) Platform) En
   unfold RegistrationNativePlatformCompletionSdk.fromInitial
   exact bind_keeps source serverReceipts _ _ (world source _ (allowed control initial)) (commit source)
 
-/-- Exact occupancy and stateful reservation branches retain both same-position chronological histories. -/
-theorem afterOccupancy (reserve : StateT (RegistrationServerFrontendCompiler.State n) (M (handleSource source) Platform) Bool)
+/-- The real owned hash phase precedes stateful reservation and retains both same-position chronological histories through every outcome. -/
+theorem afterOccupancy
+    (deriveAd : AdHash n (M (handleSource source) Platform))
+    (hashed : ∀ pending, Keeps source serverReceipts (deriveAd pending))
+    (reserve : StateT (RegistrationServerFrontendCompiler.State n) (M (handleSource source) Platform) Bool)
     (reserved : Keeps source serverReceipts reserve) (finish : Completion n (M (handleSource source) Platform) Encoded)
     (allowed : ∀ control initial, Keeps source localReceipts (finish control initial))
     (control : pqxdh.ServerState) (lookup : peer.CompletionLookup) (occupied : Bool) :
-    Keeps source serverReceipts (RegistrationNativePlatformCompletionSdk.afterOccupancy reserve finish control lookup occupied) := by
+    Keeps source serverReceipts (RegistrationNativePlatformCompletionSdk.afterOccupancy deriveAd reserve finish control lookup occupied) := by
   unfold RegistrationNativePlatformCompletionSdk.afterOccupancy
   cases lookup.resume occupied with
   | fail error | div => exact pure_keeps source serverReceipts _
   | ok answer => cases answer with
     | Err prior => exact pure_keeps source serverReceipts _
-    | Ok initial =>
-      apply bind_keeps source serverReceipts _ _ reserved
-      intro admitted
-      cases admitted with
-      | false => exact pure_keeps source serverReceipts _
-      | true => exact fromInitial source finish allowed control initial
+    | Ok pending =>
+      apply bind_keeps source serverReceipts _ _ (hashed pending)
+      intro result
+      cases result with
+      | fail error | div => exact pure_keeps source serverReceipts _
+      | ok result => cases result with
+        | Err previous => exact pure_keeps source serverReceipts _
+        | Ok initial =>
+          dsimp only
+          apply bind_keeps source serverReceipts _ _ reserved
+          intro admitted
+          cases admitted with
+          | false => exact pure_keeps source serverReceipts _
+          | true => exact fromInitial source finish allowed control initial
 
 /-- Actual pin, lookup and preflight failures retain the original signing logs without dropping reached state. -/
-theorem afterPin (reserve : StateT (RegistrationServerFrontendCompiler.State n) (M (handleSource source) Platform) Bool)
+theorem afterPin
+    (deriveAd : AdHash n (M (handleSource source) Platform))
+    (hashed : ∀ pending, Keeps source serverReceipts (deriveAd pending))
+    (reserve : StateT (RegistrationServerFrontendCompiler.State n) (M (handleSource source) Platform) Bool)
     (reserved : Keeps source serverReceipts reserve)
     (present : U64 → StateT (RegistrationServerFrontendCompiler.State n) (M (handleSource source) Platform) Bool)
     (presence : ∀ keyId, Keeps source serverReceipts (present keyId))
@@ -92,7 +106,7 @@ theorem afterPin (reserve : StateT (RegistrationServerFrontendCompiler.State n) 
     (allowed : ∀ control initial, Keeps source localReceipts (finish control initial))
     (control : pqxdh.ServerState) (token : peer.ConsumedRegistration) (application : Slice U8)
     (pin : RustM (core.option.Option session.ServerAuthenticationPin)) :
-    Keeps source serverReceipts (RegistrationNativePlatformCompletionSdk.afterPin reserve present finish control token application pin) := by
+    Keeps source serverReceipts (RegistrationNativePlatformCompletionSdk.afterPin deriveAd reserve present finish control token application pin) := by
   unfold RegistrationNativePlatformCompletionSdk.afterPin
   cases pin with
   | fail error | div => exact pure_keeps source serverReceipts _
@@ -112,7 +126,7 @@ theorem afterPin (reserve : StateT (RegistrationServerFrontendCompiler.State n) 
             dsimp only
             split
             · exact bind_keeps source serverReceipts _ _ (presence keyId)
-                (afterOccupancy source reserve reserved finish allowed control lookup)
+                (afterOccupancy source deriveAd hashed reserve reserved finish allowed control lookup)
             · exact pure_keeps source serverReceipts _
 
 private theorem get_keeps : Keeps source (serverReceipts (n := n))
@@ -125,6 +139,8 @@ private theorem get_keeps : Keeps source (serverReceipts (n := n))
 
 /-- The complete literal SDK control read and pin execution preserve same-position ML request and native payload history. -/
 theorem complete
+    (deriveAd : AdHash n (M (handleSource source) Platform))
+    (hashed : ∀ pending, Keeps source serverReceipts (deriveAd pending))
     (pin : StateT (RegistrationServerFrontendCompiler.State n) (M (handleSource source) Platform) (RustM (core.option.Option session.ServerAuthenticationPin)))
     (pinned : Keeps source serverReceipts pin)
     (reserve : StateT (RegistrationServerFrontendCompiler.State n) (M (handleSource source) Platform) Bool)
@@ -133,12 +149,12 @@ theorem complete
     (presence : ∀ keyId, Keeps source serverReceipts (present keyId)) (finish : Completion n (M (handleSource source) Platform) Encoded)
     (allowed : ∀ control initial, Keeps source localReceipts (finish control initial))
     (token : peer.ConsumedRegistration) (application : Slice U8) :
-    Keeps source serverReceipts (RegistrationNativePlatformCompletionSdk.complete pin reserve present finish token application) := by
+    Keeps source serverReceipts (RegistrationNativePlatformCompletionSdk.complete deriveAd pin reserve present finish token application) := by
   unfold RegistrationNativePlatformCompletionSdk.complete
   apply bind_keeps source serverReceipts _ _ (get_keeps source)
   intro before
   exact bind_keeps source serverReceipts _ _ pinned
-    (fun selected => afterPin source reserve reserved present presence finish allowed before.control token application selected)
+    (fun selected => afterPin source deriveAd hashed reserve reserved present presence finish allowed before.control token application selected)
 
 private def take (handle : Nat) : StateT (RegistrationServerFrontendCompiler.State n) (M (handleSource source) Platform) (Option peer.ConsumedRegistration) :=
   fun before => pure (RegistrationServerSdkSource.take handle before)
@@ -152,14 +168,15 @@ private theorem take_keeps (handle : Nat) : Keeps source (serverReceipts (n := n
   | some stored => cases stored <;> simpa only [serverReceipts, RegistrationServerSdkSource.take, found] using aligned
 
 private theorem build_shape
+    (deriveAd : AdHash n (M (handleSource source) Platform))
     (pin : StateT (RegistrationServerFrontendCompiler.State n) (M (handleSource source) Platform) (RustM (core.option.Option session.ServerAuthenticationPin)))
     (reserve : StateT (RegistrationServerFrontendCompiler.State n) (M (handleSource source) Platform) Bool)
     (present : U64 → StateT (RegistrationServerFrontendCompiler.State n) (M (handleSource source) Platform) Bool)
     (finish : Completion n (M (handleSource source) Platform) Encoded) (handle : Nat) (application : Option (Slice U8)) :
-    RegistrationNativePlatformCompletionSdk.build pin reserve present finish handle application = (do
+    RegistrationNativePlatformCompletionSdk.build deriveAd pin reserve present finish handle application = (do
       let token ← take source handle
       match token, application with
-      | some token, some application => RegistrationNativePlatformCompletionSdk.complete pin reserve present finish token application
+      | some token, some application => RegistrationNativePlatformCompletionSdk.complete deriveAd pin reserve present finish token application
       | _, _ => pure (.ok none)) := by
   funext before previous
   simp only [RegistrationNativePlatformCompletionSdk.build, take, bind_apply, pure_apply, pure_bind, StateT.run]
@@ -168,6 +185,8 @@ private theorem build_shape
 
 /-- All actual moved-token build branches preserve the chronological relation through failed reservation, publication and installation. -/
 theorem build
+    (deriveAd : AdHash n (M (handleSource source) Platform))
+    (hashed : ∀ pending, Keeps source serverReceipts (deriveAd pending))
     (pin : StateT (RegistrationServerFrontendCompiler.State n) (M (handleSource source) Platform) (RustM (core.option.Option session.ServerAuthenticationPin)))
     (pinned : Keeps source serverReceipts pin)
     (reserve : StateT (RegistrationServerFrontendCompiler.State n) (M (handleSource source) Platform) Bool)
@@ -176,7 +195,7 @@ theorem build
     (presence : ∀ keyId, Keeps source serverReceipts (present keyId)) (finish : Completion n (M (handleSource source) Platform) Encoded)
     (allowed : ∀ control initial, Keeps source localReceipts (finish control initial))
     (handle : Nat) (application : Option (Slice U8)) :
-    Keeps source serverReceipts (RegistrationNativePlatformCompletionSdk.build pin reserve present finish handle application) := by
+    Keeps source serverReceipts (RegistrationNativePlatformCompletionSdk.build deriveAd pin reserve present finish handle application) := by
   rw [build_shape]
   apply bind_keeps source serverReceipts _ _ (take_keeps source handle)
   intro token
@@ -184,7 +203,7 @@ theorem build
   | none => exact pure_keeps source serverReceipts _
   | some token => cases application with
     | none => exact pure_keeps source serverReceipts _
-    | some application => exact complete source pin pinned reserve reserved present presence finish allowed token application
+    | some application => exact complete source deriveAd hashed pin pinned reserve reserved present presence finish allowed token application
 end BeaconcryptCore.Computational.RegistrationNativePlatformMldsaSdkChronology
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformMldsaSdkChronology.world' depends on axioms: [propext,

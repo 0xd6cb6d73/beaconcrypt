@@ -17,41 +17,41 @@ open PqxdhInitialGenericBeacon
 open PqxdhSelectedMessageBeacon (interpretKernel nativeCalls materialCalls)
 variable {A I D K : Type}
 
-noncomputable def stage {Kernel : Type} (candidate : pqxdh.BeaconRegistrationCandidate)
+noncomputable def stage {Kernel : Type} (candidate : pqxdh.BeaconRegistrationCandidate) (associatedData : Std.Array Std.U8 151#usize)
     (result : core.option.Option RawCtxWholeOwner.Decrypted × RawCtxChainOwner.State Kernel Unit) : Option (Staged Kernel) :=
-  afterOpening candidate result.2.kernel result.1
+  afterOpening candidate associatedData result.2.kernel result.1
 
 noncomputable def afterApplication (prior : Prior) (parent : Option Entry) (target : RootOutput)
     (nonce : NonceOutput) (next : RootOutput) (read : RawCtxReceive.FrameDecoder)
-    (candidate : pqxdh.BeaconRegistrationCandidate) (kernel : RawCtxSelectedMessageReveals.Kernel)
+    (candidate : pqxdh.BeaconRegistrationCandidate) (associatedData : Std.Array Std.U8 151#usize) (kernel : RawCtxSelectedMessageReveals.Kernel)
     (application : Option Pqxdh.Bytes) :
     OracleComp AdaptiveCtxDynamicKnownKeys.Spec (Option (Staged RawCtxSelectedMessageReveals.Kernel)) :=
   match application with
   | none => pure none
   | some raw =>
-      (stage candidate) <$>
-        RawCtxSelectedReceiveCompiler.raw prior parent target nonce next read raw (localOwner candidate kernel)
+      (stage candidate associatedData) <$>
+        RawCtxSelectedReceiveCompiler.raw prior parent target nonce next read raw (localOwner candidate associatedData kernel)
 
 noncomputable def finishApplication (prior : Prior) (parent : Option Entry) (target : RootOutput)
     (nonce : NonceOutput) (next : RootOutput) (read : RawCtxReceive.FrameDecoder)
     (control : pqxdh.BeaconInitSent)
     (before : RawCtxGenericRoleStorage.BeaconState RawCtxSelectedMessageReveals.Kernel I D K)
-    (candidate : pqxdh.BeaconRegistrationCandidate) (kernel : RawCtxSelectedMessageReveals.Kernel)
+    (candidate : pqxdh.BeaconRegistrationCandidate) (associatedData : Std.Array Std.U8 151#usize) (kernel : RawCtxSelectedMessageReveals.Kernel)
     (application : Option Pqxdh.Bytes) :=
-  finish control before <$> afterApplication prior parent target nonce next read candidate kernel application
+  finish control before <$> afterApplication prior parent target nonce next read candidate associatedData kernel application
 
 /-- Exact source continuation after the original response getter. Both absent application data and every arbitrary raw string retain their actual result and full source state. -/
 theorem after_application_source (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (prior : Prior) (parent : Option Entry) (key target : RootOutput) (nonce : NonceOutput) (next : RootOutput)
-    (read : RawCtxReceive.FrameDecoder) (candidate : pqxdh.BeaconRegistrationCandidate)
+    (read : RawCtxReceive.FrameDecoder) (candidate : pqxdh.BeaconRegistrationCandidate) (associatedData : Std.Array Std.U8 151#usize)
     (kernel : RawCtxSelectedMessageReveals.Kernel) (application : Option Pqxdh.Bytes) (state : State A) :
     Prod.map id project <$> (evaluated source key read
-      (afterApplication prior parent target nonce next read candidate kernel application)).run state =
+      (afterApplication prior parent target nonce next read candidate associatedData kernel application)).run state =
       ((match application with
         | none => pure none
-        | some raw => (stage candidate) <$>
+        | some raw => (stage candidate associatedData) <$>
             (RawCtxChainOwner.rawReceive (materialCalls source writer prior parent key target nonce next) read raw).run
-              (localOwner candidate kernel))).run (project state) := by
+              (localOwner candidate associatedData kernel))).run (project state) := by
   cases application with
   | none => rfl
   | some raw =>
@@ -68,43 +68,43 @@ theorem finish_application_source (source : FixedHkdfSha512NoSaltSource) (writer
     (prior : Prior) (parent : Option Entry) (key target : RootOutput) (nonce : NonceOutput) (next : RootOutput)
     (read : RawCtxReceive.FrameDecoder) (control : pqxdh.BeaconInitSent)
     (before : RawCtxGenericRoleStorage.BeaconState RawCtxSelectedMessageReveals.Kernel I D K)
-    (candidate : pqxdh.BeaconRegistrationCandidate) (kernel : RawCtxSelectedMessageReveals.Kernel)
+    (candidate : pqxdh.BeaconRegistrationCandidate) (associatedData : Std.Array Std.U8 151#usize) (kernel : RawCtxSelectedMessageReveals.Kernel)
     (application : Option Pqxdh.Bytes) (state : State A) :
     Prod.map id project <$> (evaluated source key read
-      (finishApplication prior parent target nonce next read control before candidate kernel application)).run state =
+      (finishApplication prior parent target nonce next read control before candidate associatedData kernel application)).run state =
       (finish control before <$>
         (match application with
         | none => pure none
-        | some raw => (stage candidate) <$>
+        | some raw => (stage candidate associatedData) <$>
             (RawCtxChainOwner.rawReceive (materialCalls source writer prior parent key target nonce next) read raw).run
-              (localOwner candidate kernel))).run (project state) := by
+              (localOwner candidate associatedData kernel))).run (project state) := by
   have mapped := congrArg (fun work => (fun result => (finish control before result.1, result.2)) <$> work)
-    (after_application_source source writer prior parent key target nonce next read candidate kernel application state)
+    (after_application_source source writer prior parent key target nonce next read candidate associatedData kernel application state)
   simpa only [finishApplication, RawCtxSelectedReceiveCompiler.evaluated_map, StateT.run_map, Functor.map_map,
     Prod.map_def, id_eq] using mapped
 
 /-- Native private-kernel interpretation leaves the real response-getter continuation unchanged, including the exact sequence and binding checks. -/
 theorem native_after_application (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (prior : Prior) (parent : Option Entry) (key target : RootOutput) (nonce : NonceOutput) (next : RootOutput)
-    (read : RawCtxReceive.FrameDecoder) (candidate : pqxdh.BeaconRegistrationCandidate)
+    (read : RawCtxReceive.FrameDecoder) (candidate : pqxdh.BeaconRegistrationCandidate) (associatedData : Std.Array Std.U8 151#usize)
     (kernel : RawCtxSelectedMessageReveals.Kernel) (application : Option Pqxdh.Bytes) :
     (match application with
       | none => pure none
-      | some raw => (stage candidate) <$>
+      | some raw => (stage candidate associatedData) <$>
           (RawCtxChainOwner.rawReceive (nativeCalls (A := A) source writer prior parent key target nonce next) read raw).run
-            (localOwner candidate (interpretKernel key kernel))) =
+            (localOwner candidate associatedData (interpretKernel key kernel))) =
     Option.map (mapStaged (interpretKernel key)) <$>
       (match application with
       | none => pure none
-      | some raw => (stage candidate) <$>
+      | some raw => (stage candidate associatedData) <$>
           (RawCtxChainOwner.rawReceive (materialCalls source writer prior parent key target nonce next) read raw).run
-            (localOwner candidate kernel)) := by
+            (localOwner candidate associatedData kernel)) := by
   cases application with
   | none => simp only [map_pure, Option.map_none]
   | some raw =>
     simp only
-    rw [show localOwner candidate (interpretKernel key kernel) =
-      RawCtxGenericOwnerMap.mapOwner (interpretKernel key) (localOwner candidate kernel) from rfl]
+    rw [show localOwner candidate associatedData (interpretKernel key kernel) =
+      RawCtxGenericOwnerMap.mapOwner (interpretKernel key) (localOwner candidate associatedData kernel) from rfl]
     rw [RawCtxGenericOwnerMap.raw_map (interpretKernel key)
       (materialCalls source writer prior parent key target nonce next)
       (nativeCalls source writer prior parent key target nonce next)
@@ -113,7 +113,7 @@ theorem native_after_application (source : FixedHkdfSha512NoSaltSource) (writer 
     unfold stage
     congr 1
     funext result
-    exact opening_map (interpretKernel key) candidate result.2.kernel result.1
+    exact opening_map (interpretKernel key) candidate associatedData result.2.kernel result.1
 
 
 /-- The actual native Beacon continuation after preparation, initialization and the getter is exactly the key-free CTX continuation, with the original optional plaintext suffix and every native terminal state field. -/
@@ -121,22 +121,22 @@ theorem native_finish_application (source : FixedHkdfSha512NoSaltSource) (writer
     (prior : Prior) (parent : Option Entry) (key target : RootOutput) (nonce : NonceOutput) (next : RootOutput)
     (read : RawCtxReceive.FrameDecoder) (control : pqxdh.BeaconInitSent)
     (before : RawCtxGenericRoleStorage.BeaconState RawCtxSelectedMessageReveals.Kernel I D K)
-    (candidate : pqxdh.BeaconRegistrationCandidate) (kernel : RawCtxSelectedMessageReveals.Kernel)
+    (candidate : pqxdh.BeaconRegistrationCandidate) (associatedData : Std.Array Std.U8 151#usize) (kernel : RawCtxSelectedMessageReveals.Kernel)
     (application : Option Pqxdh.Bytes) (state : State A) :
     (fun result => (Prod.map id (RawCtxGenericRoleStorage.mapBeacon (interpretKernel key)) result.1, project result.2)) <$>
       (evaluated source key read
-        (finishApplication prior parent target nonce next read control before candidate kernel application)).run state =
+        (finishApplication prior parent target nonce next read control before candidate associatedData kernel application)).run state =
       (finish control (RawCtxGenericRoleStorage.mapBeacon (interpretKernel key) before) <$>
         (match application with
         | none => pure none
-        | some raw => stage candidate <$>
+        | some raw => stage candidate associatedData <$>
             (RawCtxChainOwner.rawReceive (nativeCalls source writer prior parent key target nonce next) read raw).run
-              (localOwner candidate (interpretKernel key kernel)))).run (project state) := by
+              (localOwner candidate associatedData (interpretKernel key kernel)))).run (project state) := by
   rw [native_after_application, Functor.map_map]
   simp only [finish_map]
   have mapped := congrArg (fun work => (fun result =>
     (Prod.map id (RawCtxGenericRoleStorage.mapBeacon (interpretKernel key)) result.1, result.2)) <$> work)
-      (finish_application_source source writer prior parent key target nonce next read control before candidate kernel application state)
+      (finish_application_source source writer prior parent key target nonce next read control before candidate associatedData kernel application state)
   simpa only [StateT.run_map, Functor.map_map, Prod.map_def, id_eq] using mapped
 
 /-- The complete first-receive finish pays for at most one raw CTX verification attempt; getter absence and all parser, sequence, binding or publication rejection paths can only reduce that count. -/
@@ -144,15 +144,15 @@ theorem finish_queries (prior : Prior) (parent : Option Entry) (target : RootOut
     (nonce : NonceOutput) (next : RootOutput) (read : RawCtxReceive.FrameDecoder)
     (control : pqxdh.BeaconInitSent)
     (before : RawCtxGenericRoleStorage.BeaconState RawCtxSelectedMessageReveals.Kernel I D K)
-    (candidate : pqxdh.BeaconRegistrationCandidate) (kernel : RawCtxSelectedMessageReveals.Kernel)
+    (candidate : pqxdh.BeaconRegistrationCandidate) (associatedData : Std.Array Std.U8 151#usize) (kernel : RawCtxSelectedMessageReveals.Kernel)
     (application : Option Pqxdh.Bytes) :
-    (finishApplication prior parent target nonce next read control before candidate kernel application).IsTotalQueryBound 1 := by
+    (finishApplication prior parent target nonce next read control before candidate associatedData kernel application).IsTotalQueryBound 1 := by
   simp only [finishApplication, IsTotalQueryBound, isQueryBound_map_iff]
   cases application with
   | none => trivial
   | some raw =>
     simp only [afterApplication, isQueryBound_map_iff]
-    exact RawCtxSelectedReceiveCompiler.raw_queries prior parent target nonce next read raw (localOwner candidate kernel)
+    exact RawCtxSelectedReceiveCompiler.raw_queries prior parent target nonce next read raw (localOwner candidate associatedData kernel)
 
 end BeaconcryptCore.Computational.PqxdhSelectedBeaconCompiler
 

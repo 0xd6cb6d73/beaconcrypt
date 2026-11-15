@@ -6,7 +6,9 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeInsideRetained
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhInitialPostContext PqxdhFullSecretInputKdf PqxdhJointKdfGame
 open PqxdhFirstRecordConfidentiality RawCtxSelectedParentTable
 variable {ι M P I D K X Response Shared Result Origin A N C : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -23,9 +25,9 @@ theorem callback {State : Type} (mark : PqxdhBeaconPhase2Shared.Secrets Shared �
     (front : NativeFront M P I D K S B) (trace : PqxdhInitialOriginPost.Trace Origin S B) (state reached : State)
     (cut : RawCtxForwardScan.Cut.pending details.callback reached ∈ support
       (RawCtxForwardScan.scan PqxdhInitialOriginForwardPost.selected selected selection impl
-        (PqxdhInitialOriginForwardPost.program mark sender route decode
+        (PqxdhInitialOriginForwardPost.program (completedBinding := completedBinding) mark sender route decode
           ((PqxdhRecordConfidentialityChallenge.handler owner number bit details.request.query).run details.request.before) front trace)
-        (PqxdhInitialOriginForwardPost.program_covered mark sender route decode
+        (PqxdhInitialOriginForwardPost.program_covered (completedBinding := completedBinding) mark sender route decode
           ((PqxdhRecordConfidentialityChallenge.handler owner number bit details.request.query).run details.request.before) front trace) state))
     (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (prior : Prior) (entry : RawCtxSelectedParentEntry.Entry)
@@ -36,17 +38,17 @@ theorem callback {State : Type} (mark : PqxdhBeaconPhase2Shared.Secrets Shared �
     (backend : PqxdhInitialNativeRetained.RetainedState A N C) :
     (simulateQ (PqxdhInitialNativeRetained.retained source writer
       (RawCtxSelectedMessageDriver.privateTable prior (some entry) target output) external)
-      ((simulateQ (PqxdhInitialOriginPost.compiler (X := X) (Response := Response) mark sender route decode)
+      ((simulateQ (PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode)
         ((PqxdhRecordConfidentialityChallenge.handler owner number bit details.request.query).run details.request.before)).run
           (front, trace))).run backend =
       (simulateQ (PqxdhInitialNativeRetained.retained source writer
         (RawCtxSelectedMessageDriver.privateTable prior (some entry) target output) external)
-        ((PqxdhInitialOriginContext.frame mark sender route decode details.callback).2
-          (PqxdhInitialParentBuilderContext.reply sender route decode details.callback.original
+        ((PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode details.callback).2
+          (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode details.callback.original
             (RawCtxSelectedParentEntry.realize entry target)))).run backend := by
-  rw [(PqxdhLaterChallengeInsideFirst.cut_start mark sender route decode owner number bit details classified
+  rw [(PqxdhLaterChallengeInsideFirst.cut_start (completedBinding := completedBinding) mark sender route decode owner number bit details classified
     selected selection impl front trace state reached cut).2]
-  exact PqxdhLaterChallengeRetainedHead.parent_execute source writer prior entry target output external
+  exact PqxdhLaterChallengeRetainedHead.parent_execute (completedBinding := completedBinding) source writer prior entry target output external
     mark sender route decode details.callback atParent backend
 
 /-- A successful actual saved inside continuation returns the next record sequence of its literal pre-cut source kernel. -/
@@ -61,9 +63,9 @@ theorem resumed_kernel {State : Type} (mark : PqxdhBeaconPhase2Shared.Secrets Sh
     (front : NativeFront M P I D K S B) (trace : PqxdhInitialOriginPost.Trace Origin S B) (state reached : State)
     (cut : RawCtxForwardScan.Cut.pending details.callback reached ∈ support
       (RawCtxForwardScan.scan PqxdhInitialOriginForwardPost.selected selected selection impl
-        (PqxdhInitialOriginForwardPost.program mark sender route decode
+        (PqxdhInitialOriginForwardPost.program (completedBinding := completedBinding) mark sender route decode
           ((PqxdhRecordConfidentialityChallenge.handler owner number bit details.request.query).run details.request.before) front trace)
-        (PqxdhInitialOriginForwardPost.program_covered mark sender route decode
+        (PqxdhInitialOriginForwardPost.program_covered (completedBinding := completedBinding) mark sender route decode
           ((PqxdhRecordConfidentialityChallenge.handler owner number bit details.request.query).run details.request.before) front trace) state))
     (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (prior : Prior) (entry : RawCtxSelectedParentEntry.Entry)
@@ -80,12 +82,12 @@ theorem resumed_kernel {State : Type} (mark : PqxdhBeaconPhase2Shared.Secrets Sh
     (supported : (((reply, after.1.1), after.1.2), after.2) ∈ support
       ((simulateQ (PqxdhInitialNativeRetained.retained source writer
         (RawCtxSelectedMessageDriver.privateTable prior (some entry) target output) external)
-        ((PqxdhInitialOriginContext.frame mark sender route decode details.callback).2
-          (PqxdhInitialParentBuilderContext.reply sender route decode details.callback.original
+        ((PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode details.callback).2
+          (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode details.callback.original
             (RawCtxSelectedParentEntry.realize entry target)))).run backend)) :
     ∃ kernel, RawCtxGenericRoleFamily.selectedKernel owner front.roles.1 = some kernel ∧
       record.sequence.val = kernel.control.send_sequence.val + 1 := by
-  rw [← callback mark sender route decode owner number bit details classified selected selection impl
+  rw [← callback (completedBinding := completedBinding) mark sender route decode owner number bit details classified selected selection impl
     front trace state reached cut source writer prior entry target output external atParent backend] at supported
   rcases details with ⟨⟨query, current, next⟩, context⟩
   cases used : current.pair with
@@ -94,7 +96,7 @@ theorem resumed_kernel {State : Type} (mark : PqxdhBeaconPhase2Shared.Secrets Sh
       rcases query with request | ⟨left, right⟩
       · simp only [PqxdhLaterChallengeSavedClassification.phase, used, reduceCtorEq] at classified
       · by_cases equal : left.length = right.length
-        · exact PqxdhLaterChallengeRetainedSequence.challenge_kernel source writer
+        · exact PqxdhLaterChallengeRetainedSequence.challenge_kernel (completedBinding := completedBinding) source writer
             (RawCtxSelectedMessageDriver.privateTable prior (some entry) target output) external mark sender route decode
             owner number bit left right equal current used front trace backend after reply record returned supported
         · simp only [PqxdhLaterChallengeSavedClassification.phase, used, equal, ite_false, reduceCtorEq] at classified

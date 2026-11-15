@@ -64,7 +64,7 @@ theorem ordinary_owned (joint : PqxdhJointIdentity.Primitives)
   exact shifted ▸ retained
 
 private theorem beacon_owned (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativePlatformIdentityProgram.M n KemSK RegistrationServerRoleBackend.State Platform source Value)
     (metadata : RegistrationNativePlatformIdentityBundleMetadata.Preserves work)
     (keeps : RegistrationNativePlatformIdentityProgram.Keeps setup checks representation created work)
@@ -94,7 +94,7 @@ private theorem beacon_owned (setup : Setup base KemSK) (checks : Checks)
 
 /-- Actual creation obtains the same genuinely generated row and preserves every prior handle, including failures. -/
 theorem create_owned (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64)
     (before : (State n KemSK source × Platform) × SourceState)
     (result : RustM (Option Nat) × ((State n KemSK source × Platform) × SourceState)) (owned : Owned setup.joint before)
@@ -108,7 +108,7 @@ theorem create_owned (setup : Setup base KemSK) (checks : Checks)
 
 /-- Every stateful bundle outcome preserves genuine generated ownership, including Ed/ML signing and source writer failures. -/
 theorem bundle_owned {E : Type} (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) (index : Nat)
     (before : (State n KemSK source × Platform) × SourceState)
     (result : RustM (Option Pqxdh.Bytes) × ((State n KemSK source × Platform) × SourceState)) (owned : Owned setup.joint before)
@@ -122,7 +122,7 @@ theorem bundle_owned {E : Type} (setup : Setup base KemSK) (checks : Checks)
 
 /-- Actual corrected assigned-ID finish keeps generated handles through all authentication, agreement, record and installation outcomes. -/
 theorem finish_owned (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat) (packet : Option registration.ResponsePacket)
     (before : (State n KemSK source × Platform) × SourceState)
     (result : RustM (Option Pqxdh.Bytes) × ((State n KemSK source × Platform) × SourceState)) (owned : Owned setup.joint before)

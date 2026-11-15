@@ -15,12 +15,14 @@ open BeaconcryptCore.Refinement
 open PqxdhRefinement
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhBeaconPhase2Publication
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhBeaconPhase2Preparation (Bytes Word32 State Prepared)
 open PqxdhInitialRatchetComplementarity (beaconPending)
 
 inductive AuxQuery (Response : Type) where
   | root : pqxdh.RootKeyInput → AuxQuery Response
-  | initial : SymmetricRatchetKdfRequest → AuxQuery Response
+  | initial : InitialRatchetKdfRequest → AuxQuery Response
   | application : Response → AuxQuery Response
 
 abbrev AuxSpec (Response : Type) : OracleSpec (AuxQuery Response)
@@ -64,12 +66,13 @@ theorem normalAuthenticate_exact (candidate : pqxdh.BeaconRegistrationCandidate)
 /-- Staged registration data remains private until both final native pin checks pass. -/
 structure Staged where
   authenticated : pqxdh.AuthenticatedBeaconRegistration
-  associatedData : Std.Array Std.U8 281#usize
+  associatedData : Std.Array Std.U8 151#usize
   kernel : ConcreteRatchetKernel
   opened : RawCtxWholeOwner.Decrypted
 
 /-- The post-opening sequence-one gate precedes both binding parsing and extracted authentication. -/
-noncomputable def afterOpening (candidate : pqxdh.BeaconRegistrationCandidate) (kernel : ConcreteRatchetKernel)
+noncomputable def afterOpening (candidate : pqxdh.BeaconRegistrationCandidate)
+    (associatedData : Std.Array Std.U8 151#usize) (kernel : ConcreteRatchetKernel)
     (reply : core.option.Option RawCtxWholeOwner.Decrypted) : Option Staged :=
   match reply with
   | .None => none
@@ -78,13 +81,14 @@ noncomputable def afterOpening (candidate : pqxdh.BeaconRegistrationCandidate) (
       else if length : 8 < opened.plaintext.length then
         match normalAuthenticate candidate opened.keyId (ProtocolComposition.plaintextBinding opened.plaintext length) with
         | .Err _ => none
-        | .Ok authenticated => some ⟨authenticated, candidate.associated_data, kernel, opened⟩
+        | .Ok authenticated => some ⟨authenticated, associatedData, kernel, opened⟩
       else none
 
 /-- The local raw owner uses the actual candidate pin/AD and both directions of the initial kernel. Its ghost attempt count is not a native Phase2 field. -/
-def localOwner (candidate : pqxdh.BeaconRegistrationCandidate) (kernel : ConcreteRatchetKernel) :
+def localOwner (candidate : pqxdh.BeaconRegistrationCandidate)
+    (associatedData : Std.Array Std.U8 151#usize) (kernel : ConcreteRatchetKernel) :
     RawCtxWholeOwner.OwnerState Unit :=
-  ⟨⟨kernel, candidate.server_binding.identity_key_id, absBytes candidate.associated_data, ()⟩, 0⟩
+  ⟨⟨kernel, candidate.server_binding.identity_key_id, absBytes associatedData, ()⟩, 0⟩
 
 def rawLift {Response : Type} : QueryImpl RawCtxWholeOwner.PrimitiveSpec (OracleComp (TailSpec Response)) :=
   fun query => liftM ((TailSpec Response).query (.inl query))
@@ -98,8 +102,8 @@ noncomputable def afterRoot {Response : Type} (decode : RawCtxReceive.FrameDecod
   match raw with
   | none => pure none
   | some raw => do
-      let result ← simulateQ rawLift ((RawCtxWholeOwner.rawReceive decode raw).run (localOwner candidate kernel))
-      pure (afterOpening candidate result.2.owner.kernel result.1)
+      let result ← simulateQ rawLift ((RawCtxWholeOwner.rawReceive decode raw).run (localOwner candidate prepared.binding.associated_data kernel))
+      pure (afterOpening candidate prepared.binding.associated_data result.2.owner.kernel result.1)
 
 /-- Root processing retains its actual optional result and interpreter effects before any initial KDF or app parsing. -/
 noncomputable def tail {Response : Type} (decode : RawCtxReceive.FrameDecoder)
@@ -142,7 +146,7 @@ noncomputable def owner {I D K X Response : Type} (decode : RawCtxReceive.FrameD
   match state.beacon.phase with
   | .initSent control prekey oneTime kem => do
       let prepared ← simulateQ preLift
-        (PqxdhBeaconPhase2Preparation.prepare control state.beacon.identity prekey oneTime kem raw)
+        (PqxdhBeaconPhase2Preparation.prepare (completedBinding := completedBinding) control state.beacon.identity prekey oneTime kem raw)
       match prepared with
       | none => pure (finish control state none)
       | some prepared => do
@@ -153,30 +157,29 @@ noncomputable def owner {I D K X Response : Type} (decode : RawCtxReceive.FrameD
 /-- The callback request comes from the actual candidate initializer and retains its exact source label/input. -/
 theorem initial_request (candidate : pqxdh.BeaconRegistrationCandidate) (root : Word32) :
     pqxdh.concrete.start_beacon_candidate_ratchet_kdf candidate root = ok (beaconPending root) ∧
-    (beaconPending root).request = ⟨root, SYM_RATCHET_INFO⟩ := by
+    (beaconPending root).request = ⟨root, ratchet.INITIAL_RATCHET_INFO⟩ := by
   exact ⟨pqxdh.concrete.start_beacon_ratchet_kdf_exact root, rfl⟩
 
-/-- Clearing the private root input preserves the candidate's complete binding and session AD. -/
+/-- Clearing the private root input preserves the candidate's Server binding and assigned ID; completed AD remains in the separate retained binding. -/
 theorem clearedCandidate_fields (candidate : pqxdh.BeaconRegistrationCandidate) :
     (clearedCandidate candidate).server_binding = candidate.server_binding ∧
     (clearedCandidate candidate).assigned_key_id = candidate.assigned_key_id ∧
-    (clearedCandidate candidate).associated_data = candidate.associated_data ∧
     (clearedCandidate candidate).root_key_input.bytes.val = List.replicate 192 0#u8 :=
-  ⟨rfl, rfl, rfl, rfl⟩
+  ⟨rfl, rfl, rfl⟩
 
 /-- Any authenticated non-one sequence is rejected before the plaintext binding is inspected. -/
 theorem afterOpening_wrong_sequence (candidate : pqxdh.BeaconRegistrationCandidate)
     (kernel : ConcreteRatchetKernel) (opened : RawCtxWholeOwner.Decrypted)
-    (wrong : opened.sequence ≠ 1#u64) : afterOpening candidate kernel (.Some opened) = none := by
+    (wrong : opened.sequence ≠ 1#u64) : afterOpening candidate associatedData kernel (.Some opened) = none := by
   change (if opened.sequence ≠ 1#u64 then none else _) = none
   exact ite_eq_left wrong
 
 /-- Every staged success retains the actual raw result/kernel and derives sequence one plus the extracted plaintext-binding acceptance. -/
 theorem afterOpening_success (candidate : pqxdh.BeaconRegistrationCandidate)
     (kernel : ConcreteRatchetKernel) (reply : core.option.Option RawCtxWholeOwner.Decrypted)
-    (staged : Staged) (success : afterOpening candidate kernel reply = some staged) :
+    (staged : Staged) (success : afterOpening candidate associatedData kernel reply = some staged) :
     reply = .Some staged.opened ∧ staged.opened.sequence = 1#u64 ∧
-    staged.kernel = kernel ∧ staged.associatedData = candidate.associated_data ∧
+    staged.kernel = kernel ∧ staged.associatedData = associatedData ∧
     ∃ length : 8 < staged.opened.plaintext.length,
       pqxdh.authenticate_registration_key_id_binding candidate staged.opened.keyId
         (ProtocolComposition.plaintextBinding staged.opened.plaintext length) = ok (.Ok staged.authenticated) := by
@@ -225,9 +228,9 @@ theorem afterRoot_complete {Response A Result : Type}
           | none => next (none, application.2)
           | some raw =>
               RawCtxWholeOwner.rawGame (fun query => handler (.inl query)) decode raw
-                (localOwner (clearedCandidate prepared.candidate) (normalInitial (beaconPending root) initial.1))
+                (localOwner (clearedCandidate prepared.candidate) prepared.binding.associated_data (normalInitial (beaconPending root) initial.1))
                 application.2 >>= fun received =>
-                next (afterOpening (clearedCandidate prepared.candidate) received.1.2.owner.kernel received.1.1,
+                next (afterOpening (clearedCandidate prepared.candidate) prepared.binding.associated_data received.1.2.owner.kernel received.1.1,
                   received.2) := by
   simp only [afterRoot, initialRun, simulateQ_bind, simulateQ_spec_query, StateT.run_bind,
     bind_assoc, pure_bind]
@@ -293,7 +296,7 @@ theorem finish_success {I D K : Type} (control : pqxdh.BeaconInitSent) (state ne
 theorem owner_inactive {I D K X Response : Type} (decode : RawCtxReceive.FrameDecoder)
     (raw : Bytes) (state : State I D K)
     (inactive : ∀ control prekey oneTime kem, state.beacon.phase ≠ .initSent control prekey oneTime kem) :
-    owner (X := X) (Response := Response) decode raw state = pure (none, state) := by
+    owner (completedBinding := completedBinding) (X := X) (Response := Response) decode raw state = pure (none, state) := by
   cases active : state.beacon.phase with
   | initSent control prekey oneTime kem => exact False.elim (inactive _ _ _ _ active)
   | _ => simp only [owner, active]
@@ -308,9 +311,9 @@ theorem afterRoot_supported {Response A : Type}
       (initial, initialState) ∈ support ((handler (.inr (.initial (beaconPending root).request))).run auxiliary) ∧
       (some raw, appState) ∈ support ((handler (.inr (.application prepared.response))).run initialState) ∧
       received ∈ support (RawCtxWholeOwner.rawGame (fun query => handler (.inl query)) decode raw
-        (localOwner (clearedCandidate prepared.candidate) (normalInitial (beaconPending root) initial)) appState) ∧
+        (localOwner (clearedCandidate prepared.candidate) prepared.binding.associated_data (normalInitial (beaconPending root) initial)) appState) ∧
       received.2 = final ∧
-      afterOpening (clearedCandidate prepared.candidate) received.1.2.owner.kernel received.1.1 = some staged := by
+      afterOpening (clearedCandidate prepared.candidate) prepared.binding.associated_data received.1.2.owner.kernel received.1.1 = some staged := by
   have equation := afterRoot_complete handler decode prepared root auxiliary (fun result => pure result)
   simp only [bind_pure] at equation
   rw [equation, mem_support_bind_iff] at supported
@@ -353,7 +356,7 @@ theorem tail_sequence_one {Response A : Type}
   obtain ⟨root, intermediate, _, after⟩ := tail_supported handler decode prepared auxiliary final staged supported
   obtain ⟨initial, initialState, raw, appState, received, _, _, _, _, opening⟩ :=
     afterRoot_supported handler decode prepared root intermediate final staged after
-  obtain ⟨_, sequence, _, _, length, _⟩ := afterOpening_success _ _ _ staged opening
+  obtain ⟨_, sequence, _, _, length, _⟩ := afterOpening_success (associatedData := prepared.binding.associated_data) _ _ _ staged opening
   exact ⟨sequence, length⟩
 
 /-- All active Phase2 callbacks execute in one interpreter state before the exact original finish/abort projection and arbitrary continuation. -/
@@ -363,9 +366,9 @@ theorem owner_complete {I D K X Response A Result : Type}
     (control : pqxdh.BeaconInitSent) (prekey oneTime : D) (kem : K)
     (active : state.beacon.phase = .initSent control prekey oneTime kem) (auxiliary : A)
     (next : (Option Bytes × State I D K) × A → ProbComp Result) :
-    (simulateQ handler (owner decode raw state)).run auxiliary >>= next =
+    (simulateQ handler (owner (completedBinding := completedBinding) decode raw state)).run auxiliary >>= next =
       (simulateQ (fun query => handler (.inl query))
-        (PqxdhBeaconPhase2Preparation.prepare control state.beacon.identity prekey oneTime kem raw)).run auxiliary >>=
+        (PqxdhBeaconPhase2Preparation.prepare (completedBinding := completedBinding) control state.beacon.identity prekey oneTime kem raw)).run auxiliary >>=
         fun prepared => match prepared.1 with
         | none => next (finish control state none, prepared.2)
         | some preparedValue =>
@@ -392,18 +395,18 @@ theorem owner_success {I D K X Response A : Type}
     (handler : QueryImpl (FullSpec I D K X Response) (StateT A ProbComp))
     (decode : RawCtxReceive.FrameDecoder) (raw plaintext : Bytes) (state next : State I D K)
     (auxiliary final : A)
-    (supported : ((some plaintext, next), final) ∈ support ((simulateQ handler (owner decode raw state)).run auxiliary)) :
+    (supported : ((some plaintext, next), final) ∈ support ((simulateQ handler (owner (completedBinding := completedBinding) decode raw state)).run auxiliary)) :
     ∃ control prekey oneTime kem prepared intermediate staged,
       state.beacon.phase = .initSent control prekey oneTime kem ∧
       (some prepared, intermediate) ∈ support ((simulateQ (fun query => handler (.inl query))
-        (PqxdhBeaconPhase2Preparation.prepare control state.beacon.identity prekey oneTime kem raw)).run auxiliary) ∧
+        (PqxdhBeaconPhase2Preparation.prepare (completedBinding := completedBinding) control state.beacon.identity prekey oneTime kem raw)).run auxiliary) ∧
       (some staged, final) ∈ support ((simulateQ (fun query => handler (.inr query)) (tail decode prepared)).run intermediate) ∧
       finish control state (some staged) = (some plaintext, next) ∧
       staged.opened.sequence = 1#u64 ∧ 8 < staged.opened.plaintext.length ∧
       publish state staged = (plaintext, next) := by
   cases active : state.beacon.phase with
   | initSent control prekey oneTime kem =>
-      have equation := owner_complete handler decode raw state control prekey oneTime kem active auxiliary
+      have equation := owner_complete (completedBinding := completedBinding) handler decode raw state control prekey oneTime kem active auxiliary
         (fun result => pure result)
       simp only [bind_pure] at equation
       rw [equation, mem_support_bind_iff] at supported
@@ -432,13 +435,13 @@ theorem owner_success {I D K X Response A : Type}
 theorem owner_failure {I D K X Response A : Type}
     (handler : QueryImpl (FullSpec I D K X Response) (StateT A ProbComp))
     (decode : RawCtxReceive.FrameDecoder) (raw : Bytes) (state next : State I D K) (auxiliary final : A)
-    (supported : ((none, next), final) ∈ support ((simulateQ handler (owner decode raw state)).run auxiliary)) :
+    (supported : ((none, next), final) ∈ support ((simulateQ handler (owner (completedBinding := completedBinding) decode raw state)).run auxiliary)) :
     match state.beacon.phase with
     | .initSent control _ _ _ => next = PqxdhBeaconPhase2Preparation.abort control state
     | _ => next = state ∧ final = auxiliary := by
   cases active : state.beacon.phase with
   | initSent control prekey oneTime kem =>
-      have equation := owner_complete handler decode raw state control prekey oneTime kem active auxiliary
+      have equation := owner_complete (completedBinding := completedBinding) handler decode raw state control prekey oneTime kem active auxiliary
         (fun result => pure result)
       simp only [bind_pure] at equation
       rw [equation, mem_support_bind_iff] at supported
@@ -480,39 +483,39 @@ def nativeAdapter {I D K X Response : Type} : QueryImpl (FullSpec I D K X Respon
 /-- This is the whole native-shaped Phase2 program, with optional hash and AEAD effects rather than an assumed CTX success. -/
 noncomputable def nativeOwner {I D K X Response : Type} (decode : RawCtxReceive.FrameDecoder)
     (raw : Bytes) (state : State I D K) : OracleComp (NativeSpec I D K X Response) (Option Bytes × State I D K) :=
-  simulateQ nativeAdapter (owner decode raw state)
+  simulateQ nativeAdapter (owner (completedBinding := completedBinding) decode raw state)
 
 /-- Native hash/AEAD expansion preserves every original codec, root and initial callback argument and keeps the complete interpreter state. -/
 theorem native_complete {I D K X Response A Result : Type}
     (handler : QueryImpl (NativeSpec I D K X Response) (StateT A ProbComp))
     (decode : RawCtxReceive.FrameDecoder) (raw : Bytes) (state : State I D K) (auxiliary : A)
     (next : (Option Bytes × State I D K) × A → ProbComp Result) :
-    (simulateQ handler (nativeOwner decode raw state)).run auxiliary >>= next =
-      (simulateQ (handler ∘ₛ nativeAdapter) (owner decode raw state)).run auxiliary >>= next := by
+    (simulateQ handler (nativeOwner (completedBinding := completedBinding) decode raw state)).run auxiliary >>= next =
+      (simulateQ (handler ∘ₛ nativeAdapter) (owner (completedBinding := completedBinding) decode raw state)).run auxiliary >>= next := by
   rw [nativeOwner, ← QueryImpl.simulateQ_compose]
 
 /-- The complete native primitive expansion still derives authenticated sequence-one publication from actual supported outcomes. -/
 theorem native_success {I D K X Response A : Type}
     (handler : QueryImpl (NativeSpec I D K X Response) (StateT A ProbComp))
     (decode : RawCtxReceive.FrameDecoder) (raw plaintext : Bytes) (state next : State I D K) (auxiliary final : A)
-    (supported : ((some plaintext, next), final) ∈ support ((simulateQ handler (nativeOwner decode raw state)).run auxiliary)) :
+    (supported : ((some plaintext, next), final) ∈ support ((simulateQ handler (nativeOwner (completedBinding := completedBinding) decode raw state)).run auxiliary)) :
     ∃ staged, staged.opened.sequence = 1#u64 ∧ 8 < staged.opened.plaintext.length ∧
       publish state staged = (plaintext, next) := by
   rw [nativeOwner, ← QueryImpl.simulateQ_compose] at supported
   obtain ⟨control, prekey, oneTime, kem, prepared, intermediate, staged, _, _, _, _, sequence, length, published⟩ :=
-    owner_success (handler ∘ₛ nativeAdapter) decode raw plaintext state next auxiliary final supported
+    owner_success (completedBinding := completedBinding) (handler ∘ₛ nativeAdapter) decode raw plaintext state next auxiliary final supported
   exact ⟨staged, sequence, length, published⟩
 
 /-- Hash rejection, commitment mismatch and AEAD failure retain their actual effects and terminally abort active Phase2. -/
 theorem native_failure {I D K X Response A : Type}
     (handler : QueryImpl (NativeSpec I D K X Response) (StateT A ProbComp))
     (decode : RawCtxReceive.FrameDecoder) (raw : Bytes) (state next : State I D K) (auxiliary final : A)
-    (supported : ((none, next), final) ∈ support ((simulateQ handler (nativeOwner decode raw state)).run auxiliary)) :
+    (supported : ((none, next), final) ∈ support ((simulateQ handler (nativeOwner (completedBinding := completedBinding) decode raw state)).run auxiliary)) :
     match state.beacon.phase with
     | .initSent control _ _ _ => next = PqxdhBeaconPhase2Preparation.abort control state
     | _ => next = state ∧ final = auxiliary := by
   rw [nativeOwner, ← QueryImpl.simulateQ_compose] at supported
-  exact owner_failure (handler ∘ₛ nativeAdapter) decode raw state next auxiliary final supported
+  exact owner_failure (completedBinding := completedBinding) (handler ∘ₛ nativeAdapter) decode raw state next auxiliary final supported
 
 end BeaconcryptCore.Computational.PqxdhBeaconPhase2Publication
 

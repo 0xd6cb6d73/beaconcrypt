@@ -7,6 +7,7 @@ Actual live finish requests execute the native owner through the private challen
 open OracleComp OracleSpec CoreModels Aeneas
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhLivePrivateFinish
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhLivePhase2PrivateRoot PqxdhKemIndCca PqxdhJointIdentity PqxdhJointKdfGame
 open PqxdhPrivateKemSource PqxdhChallengeSecretRouting
 open PqxdhLivePhase2Aux (Identity LocalSpec)
@@ -40,7 +41,7 @@ noncomputable def finish (primitives : Primitives)
     QueryImpl (PqxdhPhase2LiveFinish.FinishSpec B)
       (StateT (State M P D A S B) (OracleComp (LocalPostSpec baseSpec)))
   | .finish index raw => fun before => install selected target index before <$>
-      privateOwner primitives kem selected keys source callbacks challenge read raw
+      privateOwner (completedBinding := completedBinding) primitives kem selected keys source callbacks challenge read raw
         (PqxdhBeaconPhase1Publication.mapState id (encode selected) (before.1.roles.1.2 index))
         ((before.1.primitive, before.2.1), [])
 
@@ -62,7 +63,7 @@ noncomputable def service (primitives : Primitives)
     QueryImpl (PqxdhPhase2LiveFinish.Spec S B)
       (StateT (State M P D A S B) (OracleComp (LocalPostSpec baseSpec)))
   | .inl query => old source writer senderId route read query
-  | .inr query => finish primitives kem selected target keys source callbacks challenge read query
+  | .inr query => finish (completedBinding := completedBinding) primitives kem selected target keys source callbacks challenge read query
 
 /-- Mathematical source comparison restores the original private pool and its complete ordered observation history. The public API does not receive this value. -/
 def restored (pool : PqxdhLiveKemBirth.Pool KemSK) (supplied : MlKemSharedSecret)
@@ -80,7 +81,7 @@ noncomputable def sourceFinish (baseImpl : QueryImpl baseSpec ProbComp) (primiti
         PqxdhPhase2LiveFinish.install index before.1 result.1.2 result.2.1, result.2.2)) <$>
         (simulateQ (PqxdhLivePhase2Aux.dispatch source
           (PqxdhLivePhase2Aux.direct baseImpl primitives kem source callbacks))
-          (PqxdhBeaconPhase2Publication.nativeOwner read raw (before.1.roles.1.2 index))).run
+          (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) read raw (before.1.roles.1.2 index))).run
             (before.1.primitive, before.2)
 
 /-- Original source requests preserve the indexed KEM pool while executing the same complete record/public/reveal state transition. -/
@@ -100,7 +101,7 @@ noncomputable def sourceService (baseImpl : QueryImpl baseSpec ProbComp) (primit
     QueryImpl (PqxdhPhase2LiveFinish.Spec S B)
       (StateT (Live M P D A S B × PqxdhLiveKemBirth.State KemSK) ProbComp)
   | .inl query => sourceOld source writer senderId route read query
-  | .inr query => sourceFinish baseImpl primitives kem source callbacks read query
+  | .inr query => sourceFinish (completedBinding := completedBinding) baseImpl primitives kem source callbacks read query
 
 
 /-- Appending the new attempt log restores exactly the source pool already containing every earlier attempt. No previous observation is removed or replayed. -/
@@ -138,11 +139,11 @@ theorem finish_source (baseImpl : QueryImpl baseSpec ProbComp) (primitives : Pri
     (fun result => (result.1, restored pool supplied result.2)) <$>
       simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl baseImpl)
         (simulateQ (actualImpl source kem secret challenge)
-          ((finish primitives kem selected target (PqxdhLiveKemRouting.redact selected pool)
+          ((finish (completedBinding := completedBinding) primitives kem selected target (PqxdhLiveKemRouting.redact selected pool)
             source callbacks challenge read (.finish index raw)).run before)) =
-      (sourceFinish baseImpl primitives kem source callbacks read (.finish index raw)).run
+      (sourceFinish (completedBinding := completedBinding) baseImpl primitives kem source callbacks read (.finish index raw)).run
         (restored pool supplied before) := by
-  have complete := privateOwner_source baseImpl primitives kem (restored pool supplied before).2.2
+  have complete := privateOwner_source (completedBinding := completedBinding) baseImpl primitives kem (restored pool supplied before).2.2
     selected target secret present source callbacks challenge supplied agreement read raw
     (before.1.roles.1.2 index) valid (before.1.primitive, before.2.1)
   rw [show PqxdhLiveKemRouting.redact selected (restored pool supplied before).2.2 =
@@ -192,16 +193,16 @@ theorem step_source (baseImpl : QueryImpl baseSpec ProbComp) (primitives : Primi
     (fun result => (result.1, restored pool supplied result.2)) <$>
       simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl baseImpl)
         (simulateQ (actualImpl source kem secret challenge)
-          ((service primitives kem selected target (PqxdhLiveKemRouting.redact selected pool)
+          ((service (completedBinding := completedBinding) primitives kem selected target (PqxdhLiveKemRouting.redact selected pool)
             source callbacks writer senderId routeFrame read challenge query).run before)) =
-      (sourceService baseImpl primitives kem source callbacks writer senderId routeFrame read query).run
+      (sourceService (completedBinding := completedBinding) baseImpl primitives kem source callbacks writer senderId routeFrame read query).run
         (restored pool supplied before) := by
   cases query with
   | inl query => exact old_source baseImpl kem pool secret source writer senderId routeFrame read challenge supplied query before
   | inr query =>
     cases query with
     | finish index raw =>
-      exact finish_source baseImpl primitives kem pool selected target secret present
+      exact finish_source (completedBinding := completedBinding) baseImpl primitives kem pool selected target secret present
         source callbacks challenge supplied agreement read index raw before (valid index)
 
 
@@ -219,7 +220,7 @@ theorem shared_owned {I K X : Type} (predicate : K → Prop)
     (read : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes) (owner : RawCtxBeaconLifecycle.State I D K)
     (valid : PqxdhPhase2KemProvenance.Phase predicate owner.beacon.phase)
     (result : Option Pqxdh.Bytes × RawCtxBeaconLifecycle.State I D K)
-    (supported : result ∈ support (PqxdhBeaconPhase2Shared.owner (X := X) (Response := Response) (Shared := Shared) read raw owner)) :
+    (supported : result ∈ support (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared) read raw owner)) :
     PqxdhPhase2KemProvenance.Phase predicate result.2.beacon.phase := by
   cases active : owner.beacon.phase
   all_goals simp only [PqxdhBeaconPhase2Shared.owner, active, mem_support_pure_iff] at supported
@@ -260,22 +261,22 @@ theorem private_owned (primitives : Primitives)
     (state : AuxState A × List (DecapsulationEvent Shared))
     (result : (Option Pqxdh.Bytes × RawCtxBeaconLifecycle.State Identity D (Option (OtherHandle selected))) ×
       (AuxState A × List (DecapsulationEvent Shared)))
-    (supported : result ∈ support (privateOwner primitives kem selected (PqxdhLiveKemRouting.redact selected pool)
+    (supported : result ∈ support (privateOwner (completedBinding := completedBinding) primitives kem selected (PqxdhLiveKemRouting.redact selected pool)
       source callbacks challenge read raw (PqxdhBeaconPhase1Publication.mapState id (encode selected) owner) state)) :
     PqxdhLiveKemOwnership.Owner pool (PqxdhBeaconPhase1Publication.mapState id (decode selected target) result.1.2) := by
   have original := support_simulateQ_run'_subset
     (logged selected (PqxdhBeaconPhase2Routed.handles source challenge
       (auxiliary primitives kem selected (PqxdhLiveKemRouting.redact selected pool) source callbacks)))
-    (PqxdhBeaconPhase2Shared.owner read raw (PqxdhBeaconPhase1Publication.mapState id (encode selected) owner)) state
+    (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) read raw (PqxdhBeaconPhase1Publication.mapState id (encode selected) owner)) state
   have pureSupport := original (show result.1 ∈ support ((simulateQ
       (logged selected (PqxdhBeaconPhase2Routed.handles source challenge
         (auxiliary primitives kem selected (PqxdhLiveKemRouting.redact selected pool) source callbacks)))
-      (PqxdhBeaconPhase2Shared.owner read raw (PqxdhBeaconPhase1Publication.mapState id (encode selected) owner))).run' state) from by
+      (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) read raw (PqxdhBeaconPhase1Publication.mapState id (encode selected) owner))).run' state) from by
     rw [StateT.run'_eq, support_map]
     exact Set.mem_image_of_mem _ supported)
   change PqxdhPhase2KemProvenance.Phase (PqxdhLiveKemRouting.Known pool) _
   rw [map_owned]
-  apply shared_owned _ read raw _ _ result.1 pureSupport
+  apply shared_owned (completedBinding := completedBinding) _ read raw _ _ result.1 pureSupport
   rw [← map_owned, owner_inverse pool selected target secret present owner valid]
   exact valid
 
@@ -364,7 +365,7 @@ theorem step_owned (primitives : Primitives)
     (query : (PqxdhPhase2LiveFinish.Spec S B).Domain) (before : State M P D A S B)
     (valid : ∀ index, PqxdhLiveKemOwnership.Owner pool (before.1.roles.1.2 index))
     (result : (PqxdhPhase2LiveFinish.Spec S B).Range query × State M P D A S B)
-    (supported : result ∈ support ((service primitives kem selected target (PqxdhLiveKemRouting.redact selected pool)
+    (supported : result ∈ support ((service (completedBinding := completedBinding) primitives kem selected target (PqxdhLiveKemRouting.redact selected pool)
       source callbacks writer senderId routeFrame read challenge query).run before)) :
     ∀ index, PqxdhLiveKemOwnership.Owner pool (result.2.1.roles.1.2 index) := by
   cases query with
@@ -379,7 +380,7 @@ theorem step_owned (primitives : Primitives)
     | finish index raw =>
       simp only [service, finish, StateT.run, support_map] at supported
       obtain ⟨actual, actualSupport, rfl⟩ := supported
-      have changed := private_owned primitives kem pool selected target secret present source callbacks challenge
+      have changed := private_owned (completedBinding := completedBinding) primitives kem pool selected target secret present source callbacks challenge
         read raw (before.1.roles.1.2 index) (valid index) _ actual actualSupport
       intro other
       by_cases same : other = index
@@ -409,25 +410,25 @@ theorem schedule_source {Result : Type} (baseImpl : QueryImpl baseSpec ProbComp)
     (fun result => (result.1, restored pool supplied result.2)) <$>
       simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl baseImpl)
         (simulateQ (actualImpl source kem secret challenge)
-          ((simulateQ (service primitives kem selected target (PqxdhLiveKemRouting.redact selected pool)
+          ((simulateQ (service (completedBinding := completedBinding) primitives kem selected target (PqxdhLiveKemRouting.redact selected pool)
             source callbacks writer senderId routeFrame read challenge) client).run before)) =
-      (simulateQ (sourceService baseImpl primitives kem source callbacks writer senderId routeFrame read) client).run
+      (simulateQ (sourceService (completedBinding := completedBinding) baseImpl primitives kem source callbacks writer senderId routeFrame read) client).run
         (restored pool supplied before) := by
   have complete := map_run_simulateQ_eq_of_query_map_eq_inv'
     ((evaluation source baseImpl kem secret challenge).mapStateTBase
-      (service primitives kem selected target (PqxdhLiveKemRouting.redact selected pool)
+      (service (completedBinding := completedBinding) primitives kem selected target (PqxdhLiveKemRouting.redact selected pool)
         source callbacks writer senderId routeFrame read challenge))
-    (sourceService baseImpl primitives kem source callbacks writer senderId routeFrame read)
+    (sourceService (completedBinding := completedBinding) baseImpl primitives kem source callbacks writer senderId routeFrame read)
     (fun state => ∀ index, PqxdhLiveKemOwnership.Owner pool (state.1.roles.1.2 index))
     (restored pool supplied)
     (by
       intro query state owned result supported
-      exact step_owned primitives kem pool selected target secret present source callbacks writer senderId
+      exact step_owned (completedBinding := completedBinding) primitives kem pool selected target secret present source callbacks writer senderId
         routeFrame read challenge query state owned result (support_interpretation _ _ supported))
     (by
       intro query state owned
       simpa only [QueryImpl.mapStateTBase, StateT.run, StateT.mk, evaluation, QueryImpl.simulateQ_compose, Prod.map_def, id_eq] using
-        step_source baseImpl primitives kem pool selected target secret present source callbacks writer senderId
+        step_source (completedBinding := completedBinding) baseImpl primitives kem pool selected target secret present source callbacks writer senderId
           routeFrame read challenge supplied agreement query state owned) client before valid
   simpa only [← QueryImpl.simulateQ_mapStateTBase_run, evaluation, QueryImpl.simulateQ_compose, Prod.map_def, id_eq] using complete
 
@@ -440,7 +441,7 @@ noncomputable def post {Result : Type} (primitives : Primitives)
     (writer : RawCtxMixedShared.Writer) (senderId : M → Aeneas.Std.U64)
     (routeFrame : RawCtxServerRouting.SenderDecoder) (read : RawCtxReceive.FrameDecoder) (challenge : MlKem768Ciphertext)
     (client : OracleComp (PqxdhPhase2LiveFinish.Spec S B) Result) (before : State M P D A S B) :=
-  Prod.fst <$> (simulateQ (service primitives kem selected target keys source callbacks writer senderId routeFrame read challenge)
+  Prod.fst <$> (simulateQ (service (completedBinding := completedBinding) primitives kem selected target keys source callbacks writer senderId routeFrame read challenge)
     client).run before
 
 /-- The actual public source continuation is simulated by ordinary blocked one-key CCA calls and private use of the one supplied shared secret. The original adaptive client supplies the final observation. -/
@@ -455,14 +456,14 @@ theorem post_source {Result : Type} (baseImpl : QueryImpl baseSpec ProbComp) (pr
     (agreement : kem.decaps secret challenge = pure (some supplied))
     (client : OracleComp (PqxdhPhase2LiveFinish.Spec S B) Result) (before : State M P D A S B)
     (valid : ∀ index, PqxdhLiveKemOwnership.Owner pool (before.1.roles.1.2 index)) :
-    Prod.fst <$> (simulateQ (sourceService baseImpl primitives kem source callbacks writer senderId routeFrame read) client).run
+    Prod.fst <$> (simulateQ (sourceService (completedBinding := completedBinding) baseImpl primitives kem source callbacks writer senderId routeFrame read) client).run
       (restored pool supplied before) =
     simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl baseImpl)
       (simulateQ (publicImpl kem secret challenge) (simulateQ (route source challenge supplied)
-        (post primitives kem selected target (PqxdhLiveKemRouting.redact selected pool) source callbacks
+        (post (completedBinding := completedBinding) primitives kem selected target (PqxdhLiveKemRouting.redact selected pool) source callbacks
           writer senderId routeFrame read challenge client before))) := by
   have complete := congrArg (Functor.map Prod.fst)
-    (schedule_source baseImpl primitives kem pool selected target secret present source callbacks writer senderId
+    (schedule_source (completedBinding := completedBinding) baseImpl primitives kem pool selected target secret present source callbacks writer senderId
       routeFrame read challenge supplied agreement client before valid)
   simp only [Functor.map_map] at complete
   simpa only [route_complete source kem secret challenge supplied agreement, post, simulateQ_map] using complete.symm
@@ -484,13 +485,13 @@ theorem supported_post {Result : Type} (baseImpl : QueryImpl baseSpec ProbComp) 
       (simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl baseImpl) (kem.encaps target)))
     (client : OracleComp (PqxdhPhase2LiveFinish.Spec S B) Result) (before : State M P D A S B)
     (valid : ∀ index, PqxdhLiveKemOwnership.Owner pool (before.1.roles.1.2 index)) :
-    Prod.fst <$> (simulateQ (sourceService baseImpl primitives kem source callbacks writer senderId routeFrame read) client).run
+    Prod.fst <$> (simulateQ (sourceService (completedBinding := completedBinding) baseImpl primitives kem source callbacks writer senderId routeFrame read) client).run
       (restored pool supplied before) =
     simulateQ (PqxdhInitializerSecrecy.kemAmbientImpl baseImpl)
       (simulateQ (publicImpl kem secret challenge) (simulateQ (route source challenge supplied)
-        (post primitives kem selected target (PqxdhLiveKemRouting.redact selected pool) source callbacks
+        (post (completedBinding := completedBinding) primitives kem selected target (PqxdhLiveKemRouting.redact selected pool) source callbacks
           writer senderId routeFrame read challenge client before))) :=
-  post_source baseImpl primitives kem pool selected target secret present source callbacks writer senderId routeFrame read
+  post_source (completedBinding := completedBinding) baseImpl primitives kem pool selected target secret present source callbacks writer senderId routeFrame read
     challenge supplied (honest_decapsulation_program baseImpl kem functional correct generated encapsulated) client before valid
 
 end BeaconcryptCore.Computational.PqxdhLivePrivateFinish

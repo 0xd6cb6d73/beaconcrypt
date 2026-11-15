@@ -29,6 +29,7 @@ open PqxdhServerRegistrationPublication (AuxSpec Response ResponseFields respons
 /-! ### The generic Server build with its Phase 2 writer -/
 
 section WriterShape
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 variable {Kernel Metadata PeerMetadata Consumed : Type} {ι' : Type} {spec' : OracleSpec ι'}
 open PqxdhInitialGenericPublication (State)
 
@@ -51,8 +52,8 @@ theorem afterInitializationW_shape (write : ResponseFields → Option Pqxdh.Byte
     (candidate : pqxdh.ServerRegistrationCandidate) (holds : good candidate)
     (authenticated : Pqxdh.Bytes) (kernel : Kernel) (metadata : PeerMetadata)
     (state : State Kernel Metadata PeerMetadata Consumed) (vacant : state.server.peers candidate.key_id = none) :
-    ∀ result ∈ support (PqxdhInitialGenericPublication.afterInitialization calls aux candidate authenticated kernel
-      metadata state), WBuilt write good state metadata (.ok result) := by
+    ∀ result ∈ support (PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) calls aux
+      candidate authenticated kernel metadata state), WBuilt write good state metadata (.ok result) := by
   intro result supported
   unfold PqxdhInitialGenericPublication.afterInitialization at supported
   rw [mem_support_bind_iff] at supported
@@ -103,8 +104,8 @@ theorem candidateW_shape (write : ResponseFields → Option Pqxdh.Bytes)
     (initial : RustM Kernel) (candidate : pqxdh.ServerRegistrationCandidate) (holds : good candidate)
     (data : Option Pqxdh.Bytes) (metadata : PeerMetadata) (state : State Kernel Metadata PeerMetadata Consumed)
     (vacant : state.server.peers candidate.key_id = none) :
-    ∀ result ∈ support (PqxdhInitialGenericBuilder.candidate calls aux initial candidate data metadata state),
-      WBuilt write good state metadata result := by
+    ∀ result ∈ support (PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) calls aux initial
+      candidate data metadata state), WBuilt write good state metadata result := by
   intro result supported
   unfold PqxdhInitialGenericBuilder.candidate at supported
   rw [mem_support_bind_iff] at supported
@@ -137,8 +138,8 @@ theorem candidateW_shape (write : ResponseFields → Option Pqxdh.Bytes)
             (fun binding final finalMember => ?_) inner innerMember
           rw [support_map] at finalMember
           obtain ⟨published, publishedMember, rfl⟩ := finalMember
-          exact afterInitializationW_shape write good calls aux writes candidate holds _ _ metadata state vacant published
-            publishedMember
+          exact afterInitializationW_shape associatedData write good calls aux writes candidate holds _ _ metadata state
+            vacant published publishedMember
       · simp only [support_pure, Set.mem_singleton_iff] at innerMember
         subst innerMember
         rfl
@@ -149,9 +150,12 @@ theorem genericBuildW_shape (write : ResponseFields → Option Pqxdh.Bytes)
     (writes : ∀ fields, ∀ bytes ∈ support (aux (.write fields)), bytes = write fields)
     (initial : RustM Kernel) (pending : pqxdh.PendingServerRegistration)
     (data : Option Pqxdh.Bytes) (metadata : PeerMetadata) (state : State Kernel Metadata PeerMetadata Consumed) :
-    ∀ result ∈ support (PqxdhServerAuthSendFactor.genericBuild calls aux initial pending data metadata state),
+    ∀ result ∈ support (PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData) calls aux initial
+      pending data metadata state),
       WBuilt write (fun candidate => candidate.server_identity_public_key = state.server.identity ∧
-        candidate.beacon_identity_public_key = pending.beacon_identity_public_key) state metadata result := by
+        candidate.beacon_identity_public_key = pending.beacon_identity_public_key ∧
+        candidate.ephemeral_public_key = pending.ephemeral_public_key ∧ candidate.kem_ciphertext = pending.kem_ciphertext ∧
+        pqxdh.server_next_key_id state.control = .ok (.Ok candidate.key_id)) state metadata result := by
   intro result supported
   unfold PqxdhServerAuthSendFactor.genericBuild PqxdhInitialGenericBuilder.continueRust at supported
   cases next : pqxdh.server_next_key_id state.control with
@@ -175,8 +179,9 @@ theorem genericBuildW_shape (write : ResponseFields → Option Pqxdh.Bytes)
                 rw [Option.isSome_iff_ne_none.mpr occupied] at available
                 simp at available
               have fields := PqxdhServerAuthNegativeControl.prepare_commit_fields _ _ _ _ candidate prepared
-              exact candidateW_shape write _ calls aux writes initial candidate ⟨fields.2.1, fields.1⟩ data metadata state
-                vacant result supported
+              exact candidateW_shape associatedData write _ calls aux writes initial candidate
+                ⟨fields.2.1, fields.1, fields.2.2.2.1, fields.2.2.2.2, by rw [← keyEq]⟩ data metadata state vacant result
+                supported
             · simp only [support_pure, Set.mem_singleton_iff] at supported
               subst supported
               rfl
@@ -238,48 +243,52 @@ theorem tailImpl_write {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Resp
 
 /-- The logged factored build (the hidden build of the factored services) is the native logged tail run on the free factored build with the Phase 2 writer answered by the codec. -/
 theorem factored_logged {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response : Type} (setup : Setup baseSpec KemSK)
-    (codec : Codec Reader Response) (checks : Checks) (value : PqxdhServerAuthSendFactor.Factor)
+    (codec : Codec Reader Response) (checks : Checks) (associatedData : PqxdhTranscriptAd.AssociatedData)
+    (value : PqxdhServerAuthSendFactor.Factor)
     (pending : pqxdh.PendingServerRegistration) (data : Option Pqxdh.Bytes)
     (server : PqxdhServerAuthEntryFactor.ServerState) :
-    PqxdhServerAuthLoggedSendFactor.factored (fun entry _ _ => pure (entry, .None))
+    PqxdhServerAuthLoggedSendFactor.factored (associatedData := associatedData) (fun entry _ _ => pure (entry, .None))
         (PqxdhServerAuthLoggedSendFactor.loggedPrim setup codec checks) setup.source
-        (PqxdhServerAuthLoggedSendFactor.loggedAux setup codec checks) value pending data () server =
+        (PqxdhServerAuthLoggedSendFactor.loggedAux setup codec checks) value pending data associatedData server =
       simulateQ (PqxdhServerAuthExperiment.tailImpl setup codec checks)
-        (simulateQ (writeImpl codec.write2) (freeBuild setup.source value pending data server)) := by
+        (simulateQ (writeImpl codec.write2) (freeBuild associatedData setup.source value pending data server)) := by
   rw [← QueryImpl.simulateQ_compose, tailImpl_write]
-  exact PqxdhDeploymentSplitFactor.factored_free (PqxdhServerAuthExperiment.tailImpl setup codec checks) setup.source
-    value pending data server
+  exact PqxdhDeploymentSplitFactor.factored_free associatedData (PqxdhServerAuthExperiment.tailImpl setup codec checks)
+    setup.source value pending data server
 
-/-- A native Server build's result with its written response: a diagnostic, no publication with the Server kept, or one publication at a key ID that was vacant, of a candidate carrying the Server's identity and the pending registration's Beacon identity, whose response bytes are the writer's output on the candidate's response fields. -/
+/-- A native Server build's result with its written response: a diagnostic, no publication with the Server kept, or one publication at a key ID that was vacant, of a candidate carrying the Server's identity, the pending registration's Beacon identity, ephemeral key and KEM ciphertext, and the Server's next key ID, installed with the given peer metadata, whose response bytes are the writer's output on the candidate's response fields. -/
 def NBuilt (write : ResponseFields → Option Pqxdh.Bytes) (server : PqxdhServerAuthEntryFactor.ServerState)
-    (pending : pqxdh.PendingServerRegistration) :
+    (pending : pqxdh.PendingServerRegistration) (associatedData : PqxdhTranscriptAd.AssociatedData) :
     RustM (Option Response × PqxdhServerAuthEntryFactor.ServerState) → Prop
   | .ok (none, after) => after = server
   | .ok (some response, after) => ∃ candidate kernel encrypted,
       candidate.server_identity_public_key = server.server.identity ∧
       candidate.beacon_identity_public_key = pending.beacon_identity_public_key ∧
+      candidate.ephemeral_public_key = pending.ephemeral_public_key ∧ candidate.kem_ciphertext = pending.kem_ciphertext ∧
+      pqxdh.server_next_key_id server.control = .ok (.Ok candidate.key_id) ∧
       response.keyId = candidate.key_id ∧ server.server.peers candidate.key_id = none ∧
-      after = PqxdhServerRegistrationPublication.publish server candidate kernel () ∧
+      after = PqxdhServerRegistrationPublication.publish server candidate kernel associatedData ∧
       write (responseFields candidate encrypted) = some response.serialized
   | _ => True
 
 /-- Every outcome of the free factored build with the Phase 2 writer answered by a writer function has the native shape with its written response. -/
-theorem freeWrite_shape (write : ResponseFields → Option Pqxdh.Bytes)
+theorem freeWrite_shape (write : ResponseFields → Option Pqxdh.Bytes) (associatedData : PqxdhTranscriptAd.AssociatedData)
     (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (value : PqxdhServerAuthSendFactor.Factor)
     (pending : pqxdh.PendingServerRegistration) (data : Option Pqxdh.Bytes)
     (server : PqxdhServerAuthEntryFactor.ServerState) :
-    ∀ result ∈ support (simulateQ (writeImpl write) (freeBuild source value pending data server)),
-      NBuilt write server pending result := by
+    ∀ result ∈ support (simulateQ (writeImpl write) (freeBuild associatedData source value pending data server)),
+      NBuilt write server pending associatedData result := by
   intro result supported
-  rw [← PqxdhDeploymentSplitFactor.factored_free (writeImpl write) source value pending data server] at supported
+  rw [← PqxdhDeploymentSplitFactor.factored_free associatedData (writeImpl write) source value pending data server]
+    at supported
   unfold PqxdhServerAuthLoggedSendFactor.factored at supported
   rw [support_map] at supported
   obtain ⟨inner, member, rfl⟩ := supported
-  have shape := genericBuildW_shape write _ (fun request => writeImpl write (.inr request))
+  have shape := genericBuildW_shape associatedData write _ (fun request => writeImpl write (.inr request))
     (fun fields bytes written => by
       change bytes ∈ support (pure (write fields) : OracleComp TailSpec _) at written
       rw [support_pure, Set.mem_singleton_iff] at written
-      exact written) _ pending data () _ inner member
+      exact written) _ pending data associatedData _ inner member
   have back : PqxdhInitialGenericPublication.native PqxdhServerAuthSendFactor.resolve
       (PqxdhServerAuthSendFactor.embed server) = server :=
     PqxdhServerAuthSendFactor.native_embed RawCtxSelectedChain.unusedChain server
@@ -289,9 +298,11 @@ theorem freeWrite_shape (write : ResponseFields → Option Pqxdh.Bytes)
     change PqxdhInitialGenericPublication.native PqxdhServerAuthSendFactor.resolve
       (PqxdhServerAuthSendFactor.embed server) = server
     exact back
-  · obtain ⟨candidate, kernel, encrypted, ⟨identity, beacon⟩, keyEq, vacant, published, written⟩ := shape
+  · obtain ⟨candidate, kernel, encrypted, ⟨identity, beacon, ephemeralEq, cipherEq, nextEq⟩, keyEq, vacant, published,
+      written⟩ := shape
     subst published
-    refine ⟨candidate, PqxdhServerAuthSendFactor.resolve kernel, encrypted, identity, beacon, keyEq, ?_, ?_, written⟩
+    refine ⟨candidate, PqxdhServerAuthSendFactor.resolve kernel, encrypted, identity, beacon, ephemeralEq, cipherEq, nextEq,
+      keyEq, ?_, ?_, written⟩
     · simpa only [PqxdhServerAuthSendFactor.embed, Option.map_eq_none_iff] using vacant
     · rw [PqxdhInitialGenericPublication.publish_native, back]
   · trivial
@@ -301,19 +312,19 @@ theorem freeWrite_shape (write : ResponseFields → Option Pqxdh.Bytes)
 theorem hiddenBuild_shape {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response : Type} (setup : Setup baseSpec KemSK)
     (codec : Codec Reader Response) (checks : Checks) (value : PqxdhRegistrationJointKemEntryFactor.Output)
     (token : PqxdhServerRelatedRootConsumer.Returned) (payload : Option Pqxdh.Bytes)
-    (server : PqxdhServerAuthEntryFactor.ServerState)
+    (associatedData : PqxdhTranscriptAd.AssociatedData) (server : PqxdhServerAuthEntryFactor.ServerState)
     (s : RawCtxSharedPrimitive.SharedState (List RawCtxSourceSend.SealContext)) :
     ∀ result ∈ support (((PqxdhRegistrationJointKemEntryFactor.factoredHidden setup codec checks value).hiddenBuild
-      token payload server).run s), NBuilt codec.write2 server token.pending result.1 := by
+      token payload associatedData server).run s), NBuilt codec.write2 server token.pending associatedData result.1 := by
   intro result supported
   have inner : result.1 ∈ support (simulateQ (writeImpl codec.write2)
-      (freeBuild setup.source (PqxdhServerAuthCtxMaterial.factor value) token.pending payload server)) := by
+      (freeBuild associatedData setup.source (PqxdhServerAuthCtxMaterial.factor value) token.pending payload server)) := by
     apply OracleComp.support_simulateQ_run'_subset (PqxdhServerAuthExperiment.tailImpl setup codec checks) _ s
     rw [StateT.run'_eq, support_map]
     refine ⟨result, ?_, rfl⟩
     rw [← factored_logged]
     exact supported
-  exact freeWrite_shape _ _ _ _ _ _ result.1 inner
+  exact freeWrite_shape _ _ _ _ _ _ _ result.1 inner
 
 end Factored
 
@@ -323,7 +334,28 @@ section Footprint
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response : Type} (setup : Setup baseSpec KemSK)
   (codec : Codec Reader Response) (checks : Checks)
 
-/-- The marked build with the factored services at any 108-byte value (`PqxdhDeploymentIdealSteps.buildHidden`), as CE-3's `PqxdhDeploymentCompileFootprint.build_footprint` for the real build: it never changes the Server identity, key ID or session counter and always removes the session's token; a rejected build keeps the peer map, and a successful build installs exactly one new peer, at the previously unoccupied key ID returned in the response, with the Beacon identity of the consumed token, and returns the Phase 2 writer output of fields carrying the Server's own identity. -/
+/-- The prehash candidate is admitted at the Server's next key ID. -/
+theorem prehash_key {Metadata PeerMetadata Consumed : Type}
+    (state : PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed)
+    (pending : pqxdh.PendingServerRegistration) (data : Option Pqxdh.Bytes) (candidate : pqxdh.ServerRegistrationCandidate)
+    (passed : PqxdhServerRegistrationPublication.prehash state pending data = some candidate) :
+    pqxdh.server_next_key_id state.control = .ok (.Ok candidate.key_id) := by
+  obtain ⟨next, hnext⟩ := BeaconcryptCore.PanicFreedom.server_next_key_id_ok state.control
+  simp only [PqxdhServerRegistrationPublication.prehash, hnext] at passed
+  cases next with
+  | Ok key =>
+      dsimp only at passed
+      split_ifs at passed
+      all_goals first
+        | cases passed
+        | (split at passed
+           · rename_i prepared
+             cases passed
+             exact (PqxdhDeploymentCompileRegistration.prepare_key _ _ _ _ _ prepared).2
+           · cases passed)
+  | Err _ => cases passed
+
+/-- The marked build with the factored services at any 108-byte value (`PqxdhDeploymentIdealSteps.buildHidden`, the pre-hash guard, the transcript hash on the shared BLAKE2b cache, then the factored response tail at the hashed AD), as CE-3's `PqxdhDeploymentCompileFootprint.build_footprint` for the real build: it never changes the Server identity, key ID or session counter and always removes the session's token; a rejected build keeps the peer map, and a successful build installs exactly one new peer, at the previously unoccupied key ID returned in the response, with the Beacon identity of the consumed token and the AD of a digest that the final cache holds for the transcript of the token's Init bundle and the written response fields, and returns the Phase 2 writer output of fields carrying the Server's own identity; the BLAKE2b cache only grows. -/
 theorem buildHidden_footprint (value : PqxdhRegistrationJointKemEntryFactor.Output) (session : ℕ)
     (payload : Option Pqxdh.Bytes) (shared : PqxdhServerAuthNative.NativeState KemSK)
     (result : Option PqxdhServerRegistrationPublication.Response × PqxdhServerAuthNative.NativeState KemSK)
@@ -334,69 +366,89 @@ theorem buildHidden_footprint (value : PqxdhRegistrationJointKemEntryFactor.Outp
       (∀ other, other ≠ session → result.2.2.pending other = shared.2.pending other) ∧
       result.2.2.pending session = none ∧
       (result.1 = none → result.2.2.server.server.peers = shared.2.server.server.peers) ∧
-      (∀ response, result.1 = some response → ∃ token kernel fields,
+      (∀ response, result.1 = some response → ∃ token kernel fields digest,
         shared.2.pending session = some token ∧ shared.2.server.server.peers response.keyId = none ∧
         result.2.2.server.server.peers = Function.update shared.2.server.server.peers response.keyId
-          (some ⟨token.pending.beacon_identity_public_key, kernel, ()⟩) ∧
-        codec.write2 fields = some response.serialized ∧ fields.identity = shared.2.server.server.identity) := by
+          (some ⟨token.pending.beacon_identity_public_key, kernel, PqxdhTranscriptAd.adOf digest⟩) ∧
+        codec.write2 fields = some response.serialized ∧ fields.identity = shared.2.server.server.identity ∧
+        result.2.2.ctx ((), PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf token.init)
+          (PqxdhTranscriptAd.adResponse fields.identity fields.ephemeral fields.kemCiphertext fields.keyId)) =
+          some digest) ∧
+      shared.2.ctx ≤ result.2.2.ctx := by
   unfold PqxdhDeploymentIdealSteps.buildHidden at supported
   rw [PqxdhDeploymentBackend.nativeGet_bind] at supported
   split at supported
   · rename_i found
     simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
     subst supported
-    exact ⟨rfl, rfl, rfl, fun _ _ => rfl, found, fun _ => rfl, fun _ reply => by cases reply⟩
+    exact ⟨rfl, rfl, rfl, fun _ _ => rfl, found, fun _ => rfl, (fun _ reply => by cases reply), le_rfl⟩
   · rename_i token found
-    rw [PqxdhDeploymentBackend.nativeCoins_bind, mem_support_bind_iff] at supported
-    obtain ⟨built, builtMember, supported⟩ := supported
-    simp only [PqxdhServerAuthNative.nativeSet, StateT.run] at supported
-    subst supported
-    have shape := hiddenBuild_shape setup codec checks value token payload shared.2.server ([], shared.2.ctx) built
-      builtMember
-    refine ⟨?_, ?_, rfl, fun other different => Function.update_of_ne different _ _, Function.update_self .., ?_, ?_⟩
-    · rcases built with ⟨⟨(_ | response), after⟩ | error | _, _⟩
+    split at supported
+    · rw [PqxdhDeploymentBackend.nativeSet_run_bind] at supported
+      simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
+      subst supported
+      exact ⟨rfl, rfl, rfl, fun other different => Function.update_of_ne different _ _, Function.update_self ..,
+        fun _ => rfl, (fun _ reply => by cases reply), le_rfl⟩
+    · rename_i candidate passed
+      rw [StateT.run_bind, mem_support_bind_iff] at supported
+      obtain ⟨hashed, hashing, supported⟩ := supported
+      simp only [PqxdhServerAuthNative.nativeHash, StateT.run, support_map, Set.mem_image] at hashing
+      obtain ⟨⟨digest, cache⟩, member, rfl⟩ := hashing
+      have grownHash := QueryImpl.withCaching_cache_le uniformSampleImpl _ shared.2.ctx _ member
+      have cachedHash := QueryImpl.withCaching_run_caches uniformSampleImpl _ shared.2.ctx _ member
+      rw [PqxdhDeploymentBackend.nativeGet_bind, PqxdhDeploymentBackend.nativeCoins_bind, mem_support_bind_iff]
+        at supported
+      obtain ⟨built, builtMember, supported⟩ := supported
+      simp only [PqxdhServerAuthNative.nativeSet, StateT.run] at supported
+      subst supported
+      have shape := hiddenBuild_shape setup codec checks value token payload (PqxdhTranscriptAd.adOf digest)
+        shared.2.server ([], cache) built builtMember
+      have grownBuild : cache ≤ built.2.2 := by
+        apply PqxdhServerAuthExperiment.tail_run_grows setup codec checks (simulateQ (writeImpl codec.write2)
+          (PqxdhDeploymentSplitFactor.freeBuild (PqxdhTranscriptAd.adOf digest) setup.source
+            (PqxdhServerAuthCtxMaterial.factor value) token.pending payload shared.2.server)) ([], cache) built
+        rw [← factored_logged]
+        exact builtMember
+      have grown : shared.2.ctx ≤ built.2.2 := le_trans grownHash grownBuild
+      rcases built with ⟨⟨(_ | response), after⟩ | error | _, log, final⟩
       · change after = _ at shape
         subst shape
-        rfl
-      · obtain ⟨candidate, kernel, encrypted, _, _, _, _, published, _⟩ := shape
+        exact ⟨rfl, rfl, rfl, fun other different => Function.update_of_ne different _ _, Function.update_self ..,
+          fun _ => rfl, (fun _ reply => by cases reply), grown⟩
+      · obtain ⟨candidate', kernel, encrypted, identity, beacon, ephemeralEq, cipherEq, nextEq, keyEq, vacant, published,
+          written⟩ := shape
         change after = _ at published
         subst published
-        rfl
-      · rfl
-      · rfl
-    · rcases built with ⟨⟨(_ | response), after⟩ | error | _, _⟩
-      · change after = _ at shape
-        subst shape
-        rfl
-      · obtain ⟨candidate, kernel, encrypted, _, _, _, _, published, _⟩ := shape
-        change after = _ at published
-        subst published
-        rfl
-      · rfl
-      · rfl
-    · intro none
-      rcases built with ⟨⟨(_ | response), after⟩ | error | _, _⟩
-      · change after = _ at shape
-        subst shape
-        rfl
-      · cases none
-      · rfl
-      · rfl
-    · intro response reply
-      rcases built with ⟨⟨(_ | reply'), after⟩ | error | _, _⟩
-      · cases reply
-      · change some reply' = some response at reply
+        obtain ⟨_, preIdentity, _, preEphemeral, preCipher⟩ :=
+          PqxdhServerAuthNegativeControl.prehash_fields _ _ _ _ passed
+        have sameKey : candidate'.key_id = candidate.key_id := by
+          have both := (prehash_key _ _ _ _ passed).symm.trans nextEq
+          injection both with inner
+          injection inner with key
+          exact key.symm
+        have sameResponse : PqxdhTranscriptAd.serverResponse candidate =
+            PqxdhTranscriptAd.adResponse candidate'.server_identity_public_key candidate'.ephemeral_public_key
+              candidate'.kem_ciphertext candidate'.key_id := by
+          unfold PqxdhTranscriptAd.serverResponse
+          rw [preIdentity, ← identity, preEphemeral, ← ephemeralEq, preCipher, ← cipherEq, sameKey]
+        refine ⟨rfl, rfl, rfl, fun other different => Function.update_of_ne different _ _, Function.update_self ..,
+          (fun reply => by cases reply), fun response' reply => ?_, grown⟩
+        change some response = some response' at reply
         cases reply
-        obtain ⟨candidate, kernel, encrypted, identity, beacon, keyEq, vacant, published, written⟩ := shape
-        change after = _ at published
-        subst published
-        refine ⟨token, kernel, responseFields candidate encrypted, found, by rw [keyEq]; exact vacant, ?_, written,
-          identity⟩
-        change Function.update shared.2.server.server.peers candidate.key_id
-          (some ⟨candidate.beacon_identity_public_key, kernel, ()⟩) = _
-        rw [keyEq, beacon]
-      · cases reply
-      · cases reply
+        refine ⟨token, kernel, responseFields candidate' encrypted, digest, found, by rw [keyEq]; exact vacant, ?_,
+          written, identity, ?_⟩
+        · change Function.update shared.2.server.server.peers candidate'.key_id
+            (some ⟨candidate'.beacon_identity_public_key, kernel, PqxdhTranscriptAd.adOf digest⟩) = _
+          rw [keyEq, beacon]
+        · change final ((), PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf token.init)
+            (PqxdhTranscriptAd.adResponse candidate'.server_identity_public_key candidate'.ephemeral_public_key
+              candidate'.kem_ciphertext candidate'.key_id)) = some digest
+          rw [← sameResponse]
+          exact grownBuild cachedHash
+      · exact ⟨rfl, rfl, rfl, fun other different => Function.update_of_ne different _ _, Function.update_self ..,
+          fun _ => rfl, (fun _ reply => by cases reply), grown⟩
+      · exact ⟨rfl, rfl, rfl, fun other different => Function.update_of_ne different _ _, Function.update_self ..,
+          fun _ => rfl, (fun _ reply => by cases reply), grown⟩
 
 end Footprint
 
@@ -408,27 +460,32 @@ variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response : Type} (
 open PqxdhDeploymentCompile (Local)
 open PqxdhDeploymentCompileInvariant (Good)
 
-/-- The footprint of a Server build on the game state, as in CE-3's `PqxdhDeploymentCompileFootprint.build_footprint` (the conclusion of `buildHidden_footprint`). -/
+/-- The footprint of a Server build on the game state, as in CE-3's `PqxdhDeploymentCompileFootprint.build_footprint` (the conclusion of `buildHidden_footprint`): a published peer carries the AD of a digest that the final cache holds for the transcript of the token's Init bundle and the written response fields, and the BLAKE2b cache only grows. -/
 def BuildFootprint (session : ℕ) (before after : GameState KemSK)
     (reply : Option PqxdhServerRegistrationPublication.Response) : Prop :=
   after.server.server.identity = before.server.server.identity ∧
     after.server.identityKeyId = before.server.identityKeyId ∧ after.sessions = before.sessions ∧
     (∀ other, other ≠ session → after.pending other = before.pending other) ∧ after.pending session = none ∧
     (reply = none → after.server.server.peers = before.server.server.peers) ∧
-    (∀ response, reply = some response → ∃ token kernel fields,
+    (∀ response, reply = some response → ∃ token kernel fields digest,
       before.pending session = some token ∧ before.server.server.peers response.keyId = none ∧
       after.server.server.peers = Function.update before.server.server.peers response.keyId
-        (some ⟨token.pending.beacon_identity_public_key, kernel, ()⟩) ∧
-      codec.write2 fields = some response.serialized ∧ fields.identity = before.server.server.identity)
+        (some ⟨token.pending.beacon_identity_public_key, kernel, PqxdhTranscriptAd.adOf digest⟩) ∧
+      codec.write2 fields = some response.serialized ∧ fields.identity = before.server.server.identity ∧
+      after.ctx ((), PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf token.init)
+        (PqxdhTranscriptAd.adResponse fields.identity fields.ephemeral fields.kemCiphertext fields.keyId)) =
+        some digest) ∧
+    before.ctx ≤ after.ctx
 
-/-- CE-3's invariant survives every Server build with the footprint of `BuildFootprint` that keeps the owners, with the reply logged, under the approved Phase 2 read-back contract (the argument of CE-3's `PqxdhDeploymentCompileInvariant.good_build`, from the footprint alone). -/
+/-- CE-3's invariant survives every Server build with the footprint of `BuildFootprint` that keeps the owners and the retained bundles, with the reply logged, under the approved Phase 2 read-back contract (the argument of CE-3's `PqxdhDeploymentCompileInvariant.good_build`, from the footprint alone). -/
 theorem good_of_build (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack codec) (session : ℕ)
     (payload : Option Pqxdh.Bytes) (copies : Local) (native after : PqxdhRegistrationSchedule.State KemSK)
     (good : Good setup codec copies native) (reply : Option PqxdhServerRegistrationPublication.Response)
-    (owners : after.owners = native.owners) (footprint : BuildFootprint codec session native.shared.2 after.shared.2 reply) :
+    (owners : after.owners = native.owners) (inits : after.inits = native.inits)
+    (footprint : BuildFootprint codec session native.shared.2 after.shared.2 reply) :
     Good setup codec { copies with log := PqxdhDeploymentCompile.logReply copies.log (.build session payload) reply }
       after := by
-  obtain ⟨identity, keyId, sessions, others, removed, rejected, published⟩ := footprint
+  obtain ⟨identity, keyId, sessions, others, removed, rejected, published, grow⟩ := footprint
   have pendingKept : ∀ other token, after.shared.2.pending other = some token →
       native.shared.2.pending other = some token := by
     intro other token found
@@ -438,10 +495,17 @@ theorem good_of_build (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack co
       cases found
     · rw [← others other same]
       exact found
+  have ownersKept : ∀ index owner, after.owners[index]? = some owner →
+      PqxdhDeploymentCompileInvariant.OwnerShape codec copies.log after.inits after.shared.2.ctx index owner := by
+    intro index owner found
+    rw [owners] at found
+    rw [inits]
+    exact PqxdhDeploymentCompileInvariant.ownerShape_grow codec copies.log native.inits grow index owner
+      (good.owners index owner found)
   rcases reply with _ | response
   · have peers := rejected rfl
     simp only [PqxdhDeploymentCompile.logReply]
-    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    refine ⟨?_, ?_, ?_, ?_, ?_, ownersKept, ?_, ?_, ?_, ?_⟩
     · rw [keyId]; exact good.keyId
     · intro kid current copied
       rw [peers]
@@ -451,16 +515,23 @@ theorem good_of_build (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack co
     · intro index current copied
       rw [owners]
       exact good.copied index current copied
-    · rw [owners]; exact good.owners
     · intro other token found
       rw [sessions]
       exact good.pending other token (pendingKept other token found)
     · rw [sessions]; exact good.accepts
-  · obtain ⟨token, kernel, fields, tokenFound, free, peers, written, fieldsIdentity⟩ := published response rfl
+    · intro kid peer found
+      rw [peers] at found
+      obtain ⟨transcript, digest, view, cached, adEq⟩ := good.peers kid peer found
+      exact ⟨transcript, digest, view, grow cached, adEq⟩
+    · intro other token found
+      exact good.pendingInit other token (pendingKept other token found)
+  · obtain ⟨token, kernel, fields, digest, tokenFound, free, peers, written, fieldsIdentity, cachedNew⟩ :=
+      published response rfl
     obtain ⟨_, raw, logged, identified⟩ := good.pending session token tokenFound
-    obtain ⟨decoded, decodedRead, _, _, serverRead, _, _⟩ := phase2 fields response.serialized written
+    obtain ⟨decoded, decodedRead, cipherRead, ephemeralRead, serverRead, assignedRead, _⟩ :=
+      phase2 fields response.serialized written
     simp only [PqxdhDeploymentCompile.logReply]
-    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    refine ⟨?_, ?_, ?_, ?_, ?_, ownersKept, ?_, ?_, ?_, ?_⟩
     · rw [keyId]; exact good.keyId
     · intro kid current copied
       rw [peers]
@@ -486,11 +557,31 @@ theorem good_of_build (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack co
     · intro index current copied
       rw [owners]
       exact good.copied index current copied
-    · rw [owners]; exact good.owners
     · intro other token found
       rw [sessions]
       exact good.pending other token (pendingKept other token found)
     · rw [sessions]; exact good.accepts
+    · intro kid peer found
+      rw [peers] at found
+      by_cases same : kid = response.keyId
+      · subst same
+        simp only [Function.update_self, Option.some.injEq] at found
+        subst found
+        obtain ⟨raw', loggedInit, publicInitEq⟩ := good.pendingInit session token tokenFound
+        rw [logged, Option.some.injEq] at loggedInit
+        subst loggedInit
+        refine ⟨PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf token.init)
+          (PqxdhTranscriptAd.adResponse fields.identity fields.ephemeral fields.kemCiphertext fields.keyId), digest, ?_,
+          cachedNew, rfl⟩
+        simp only [PqxdhDeploymentCompile.peerTranscript, PqxdhDeploymentCompile.publicTranscript, Function.update_self,
+          Option.bind_eq_bind, Option.bind_some, logged, publicInitEq, PqxdhServerAuthExperiment.responseOf, decodedRead,
+          cipherRead, ephemeralRead, serverRead, assignedRead, Option.pure_def]
+      · rw [Function.update_of_ne same] at found
+        obtain ⟨transcript, digest', view, cached, adEq⟩ := good.peers kid peer found
+        exact ⟨transcript, digest', by simpa only [PqxdhDeploymentCompile.peerTranscript, Function.update_of_ne same]
+          using view, grow cached, adEq⟩
+    · intro other token found
+      exact good.pendingInit other token (pendingKept other token found)
 
 end Good
 
@@ -578,7 +669,7 @@ theorem good_buildHidden (phase2 : PqxdhServerAuthNegativeControl.Phase2ReadBack
     compiledMid_buildHidden setup codec route checks t p created session payload copies m hidden result supported
   refine ⟨?_, accepts⟩
   rw [copied, joint]
-  exact good_of_build setup codec phase2 session payload copies _ _ good result.1 rfl
+  exact good_of_build setup codec phase2 session payload copies _ _ good result.1 rfl rfl
     (buildHidden_footprint setup codec checks value session payload m.joint.shared (result.1, shared) member)
 
 end Middle
@@ -681,3 +772,8 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodBuild.good_buil
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodBuild.good_buildHidden
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodBuild.prehash_key' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealPostGoodBuild.prehash_key

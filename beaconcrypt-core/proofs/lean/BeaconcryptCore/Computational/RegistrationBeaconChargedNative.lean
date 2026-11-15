@@ -44,7 +44,7 @@ theorem record (setup : PqxdhServerAuthExperiment.Setup base KemSK) (wire : Regi
   cases query <;> first | rfl | (rename_i writing; cases writing <;> rfl)
 
 theorem initial (setup : PqxdhServerAuthExperiment.Setup base KemSK) (wire : RegistrationNativeWire.Wire)
-    (request : ratchet.SymmetricRatchetKdfRequest) :
+    (request : ratchet.InitialRatchetKdfRequest) :
     read (n := n) (source := source) (Auxiliary := Auxiliary) setup wire (.inl (.initialKdf request)) =
       charge .initialKdf *> pure (.Some (RawCtxSourceHkdf.initialResponse setup.source.crypto request)) := by
   simp only [read, kind, RegistrationWorldAgreement.recordCall, RegistrationBeaconRecordSourceProgram.initial_source]
@@ -57,7 +57,7 @@ theorem ratchet (setup : PqxdhServerAuthExperiment.Setup base KemSK) (wire : Reg
   rfl
 
 theorem controller (setup : PqxdhServerAuthExperiment.Setup base KemSK) (wire : RegistrationNativeWire.Wire)
-    (erased : Std.Array U8 357#usize) (descriptor : RegistrationBeaconBoundSource.PublicAgreement)
+    (erased : Std.Array U8 227#usize) (descriptor : RegistrationBeaconBoundSource.PublicAgreement)
     (root : PqxdhSecretInputKdf.RootOutput) :
     simulateQ (RegistrationNativeBeaconFrontend.record (n := n) (mldsaSource := source) (Auxiliary := Auxiliary) setup wire)
       (RegistrationBeaconRecordExecutor.begin (RegistrationBeaconBoundSource.atRoot descriptor root)) = (do
@@ -80,7 +80,7 @@ noncomputable def postRoot (setup : PqxdhServerAuthExperiment.Setup base KemSK) 
   RegistrationNativePlatformBeaconSettle.native index owner opened
 
 theorem post_root (setup : PqxdhServerAuthExperiment.Setup base KemSK) (wire : RegistrationNativeWire.Wire)
-    (erased : Std.Array U8 357#usize) (index : Nat) (owner : Owner source)
+    (erased : Std.Array U8 227#usize) (index : Nat) (owner : Owner source)
     (descriptor : RegistrationBeaconBoundSource.PublicAgreement) (root : PqxdhSecretInputKdf.RootOutput) :
     postRoot (n := n) (Auxiliary := Auxiliary) setup wire index owner (RegistrationBeaconBoundSource.atRoot descriptor root) = (do
       let _ ← charge .initialKdf

@@ -206,7 +206,7 @@ theorem ownerChange_free (index : ℕ) (before after : List (PqxdhRegistrationSc
 
 /-- Publishing a Server build installs no hidden kernel. -/
 theorem serverEffect_free (settled : Option PqxdhServerRegistrationPublication.Response ×
-    PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes)) :
+    PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes)) :
     (PqxdhDeploymentEnvironment.serverEffect (n := 2) settled).IsQueryBoundP (fun effect => isHidden effect = true) 0 := by
   unfold PqxdhDeploymentEnvironment.serverEffect
   split
@@ -254,10 +254,16 @@ theorem realStep_free (query : PqxdhRecordLiftInterface.EnvQuery) (e : EnvState 
       split
       · trivial
       · rename_i token _
+        split
+        · trivial
+        rw [show (0 : ℕ) = 0 + 0 from rfl]
+        refine isQueryBoundP_bind (hiddenFree_of_noAdmin _ ?_) fun digest _ => ?_
+        · simpa only [reduceCtorEq, ite_false] using
+            PqxdhDeploymentEnvironment.request_hash_bound (n := 2) _ .administrative
         rw [show (0 : ℕ) = 0 + 0 from rfl]
         refine isQueryBoundP_bind (hiddenFree_of_noAdmin _ ?_) fun _ _ => ?_
         · have bound := PqxdhDeploymentEnvironment.build_fwd_bound (n := 2) setup codec checks token.pending token.root
-            payload e.native.shared.2.server [] .administrative
+            payload (PqxdhTranscriptAd.adOf digest) e.native.shared.2.server [] .administrative
           simp only [reduceCtorEq, ite_false] at bound
           exact bound
         · rw [show (0 : ℕ) = 0 + 0 from rfl]
@@ -269,8 +275,8 @@ theorem realStep_free (query : PqxdhRecordLiftInterface.EnvQuery) (e : EnvState 
       split
       · trivial
       · rw [show (0 : ℕ) = 0 + 0 from rfl]
-        refine isQueryBoundP_bind (hiddenFree_of_noAdmin _ (PqxdhDeploymentEnvironmentReal.finishFwd_noAdmin setup codec
-          _ _)) fun _ _ => ?_
+        refine isQueryBoundP_bind (hiddenFree_of_noAdmin _ (PqxdhDeploymentEnvironmentReal.ownerFinishFwd_noAdmin setup codec
+          _ _ _ _)) fun _ _ => ?_
         rw [show (0 : ℕ) = 0 + 0 from rfl]
         exact isQueryBoundP_bind (ownerEffect_free _ _ _) fun _ _ => trivial
   | hmac key message =>
@@ -513,11 +519,17 @@ theorem realStep_move {Bk : Type} (k : ℕ) (query : PqxdhRecordLiftInterface.En
       | some current =>
           rw [PqxdhDeploymentEnvironmentReal.bundle_run_found setup codec owner _ current owned, support_map] at inner
           obtain ⟨b, bMember, rfl⟩ := inner
-          have shape := PqxdhDeploymentEnvironmentReal.bundle_shape _ current b
-            (PqxdhDeploymentEnvironment.support_simulateQ_subset _ _ bMember)
+          have projected : b.1 ∈ support (simulateQ (PqxdhRegistrationSchedule.bundleCallbacks setup codec
+              current.beacon.identity) (PqxdhLivePhase1Bundle.bundle (PqxdhRegistrationSchedule.projection setup owner)
+                current)) := by
+            rw [← PqxdhRegistrationSchedule.bundleLog_fst setup codec current.beacon.identity _ (e.native.inits owner),
+              support_map]
+            exact ⟨b, bMember, rfl⟩
+          have shape := PqxdhDeploymentEnvironmentReal.bundle_shape _ current b.1
+            (PqxdhDeploymentEnvironment.support_simulateQ_subset _ _ projected)
           exact ⟨rfl, SessionMove.refl _, fun terminal => by
             rw [terminalAt_strip]
-            exact terminalAt_set _ owner k current b.2 owned (bundled_keep current b.2 shape) terminal⟩
+            exact terminalAt_set _ owner k current b.1.2 owned (bundled_keep current b.1.2 shape) terminal⟩
   | accept raw =>
       intro v member
       change v ∈ support ((PqxdhDeploymentEnvironment.acceptStep (n := 2) setup codec checks raw).run
@@ -542,8 +554,16 @@ theorem realStep_move {Bk : Type} (k : ℕ) (query : PqxdhRecordLiftInterface.En
       · simp only [support_pure, Set.mem_singleton_iff] at member
         subst member
         exact ⟨rfl, SessionMove.refl _, id⟩
-      · simp only [mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at member
-        obtain ⟨_, _, _, _, rfl⟩ := member
+      · split at member
+        · simp only [support_pure, Set.mem_singleton_iff] at member
+          subst member
+          refine ⟨rfl, ⟨le_refl _, fun s _ found => ?_⟩, fun terminal => by rw [terminalAt_strip]; exact terminal⟩
+          by_cases same : s = session
+          · subst same
+            simp [strip, PqxdhDeploymentEnvironment.snapped] at found
+          · simpa [strip, PqxdhDeploymentEnvironment.snapped, Function.update_of_ne same] using found
+        simp only [mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at member
+        obtain ⟨_, _, _, _, _, _, rfl⟩ := member
         refine ⟨rfl, ⟨le_refl _, fun s _ found => ?_⟩, fun terminal => by rw [terminalAt_strip]; exact terminal⟩
         by_cases same : s = session
         · subst same
@@ -562,9 +582,8 @@ theorem realStep_move {Bk : Type} (k : ℕ) (query : PqxdhRecordLiftInterface.En
       · rename_i before owned
         simp only [mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at member
         obtain ⟨result, resultMember, _, _, rfl⟩ := member
-        have game := PqxdhDeploymentEnvironmentReal.finishFwd_game setup codec _ _ result resultMember
-        have shape := PqxdhDeploymentEnvironmentReal.finish_shape codec.frameRead raw before result.1
-          (PqxdhDeploymentEnvironmentReal.run_support _ _ _ _ resultMember)
+        have game := PqxdhDeploymentEnvironmentReal.ownerFinishFwd_game setup codec _ _ _ _ result resultMember
+        have shape := PqxdhDeploymentEnvironmentReal.ownerFinishFwd_shape setup codec _ raw before _ result resultMember
         refine ⟨rfl, SessionMove.of_eq (congrArg (fun g => g.sessions) game) (congrArg (fun g => g.pending) game),
           fun terminal => ?_⟩
         rw [terminalAt_strip]
@@ -1167,16 +1186,16 @@ theorem buildHidden_exact (created : PqxdhLiveServerConstruction.Created Unit) (
       ∃ material log cache,
         (result.1.1 = none ∧ result.1.2 = builtEnv e session coords material ((none, e.native.shared.2.server), log) ∧
           result.2 = uncount (withCache w cache)) ∨
-        (∃ response candidate seed table, response.keyId = candidate.key_id ∧
+        (∃ response candidate seed table ad, response.keyId = candidate.key_id ∧
           e.native.shared.2.server.server.peers candidate.key_id = none ∧ table.1 j = some seed ∧
           w.seeds.1 ≤ table.1 ∧ (∀ k, k ≠ j → table.1 k = w.seeds.1 k) ∧ result.1.1 = some response ∧
           result.1.2 = builtEnv e session coords material ((some response, PqxdhServerRegistrationPublication.publish
-            e.native.shared.2.server candidate PqxdhDeploymentHiddenSplit.placeholderKernel ()), log) ∧
+            e.native.shared.2.server candidate PqxdhDeploymentHiddenSplit.placeholderKernel ad), log) ∧
           result.2 = uncount { withCache w cache with
             seeds := table
             used := Function.update w.used j (Function.update (w.used j) .server true)
             server := some (installPeer world candidate.key_id candidate.beacon_identity_public_key
-              (PqxdhRecordLiftWorld.kernel .server seed)) }) := by
+              (PqxdhRecordLiftWorld.kernel .server seed) ad) }) := by
   obtain ⟨world', found', _, _, peersRaw⟩ := good.server
   rw [found] at found'
   cases found'
@@ -1184,24 +1203,38 @@ theorem buildHidden_exact (created : PqxdhLiveServerConstruction.Created Unit) (
   rw [buildHidden_effects setup codec checks session payload coords e w j token allocated pending,
     mem_support_bind_iff] at supported
   obtain ⟨drawn, _, supported⟩ := supported
-  rw [mem_support_bind_iff, PqxdhDeploymentSplitFactor.buildSplitFwd_free, StateT.run_map, simulateQ_map,
+  rcases pre : PqxdhServerRegistrationPublication.prehash e.native.shared.2.server token.pending payload with
+    _ | candidate₀
+  · rw [pre, support_pure, Set.mem_singleton_iff] at supported
+    subst supported
+    exact ⟨drawn.2, [], w.primitive.2, Or.inl ⟨rfl, rfl, rfl⟩⟩
+  rw [pre] at supported
+  dsimp only at supported
+  rw [mem_support_bind_iff] at supported
+  obtain ⟨hashed, _, supported⟩ := supported
+  generalize PqxdhTranscriptAd.adOf hashed.1 = ad at supported
+  rw [mem_support_bind_iff, PqxdhDeploymentSplitFactor.buildSplitFwd_free ad, StateT.run_map, simulateQ_map,
     StateT.run_map, support_map] at supported
   obtain ⟨_, ⟨⟨⟨rust, log⟩, cache⟩, member, rfl⟩, final⟩ := supported
-  have built : Built e.native.shared.2.server () rust :=
-    freeBuild_shape _ _ _ _ _ rust (run_support _ _ [] (rust, log) (run_support _ _ w.primitive.2 ((rust, log), cache) member))
+  have built : Built e.native.shared.2.server ad rust :=
+    freeBuild_shape ad _ _ _ _ _ rust (run_support _ _ [] (rust, log) (run_support _ _ hashed.2 ((rust, log), cache) member))
   refine ⟨drawn.2, log, cache, ?_⟩
   have effect : PqxdhDeploymentEnvironment.hiddenServerEffect (n := 2) j (none, e.native.shared.2.server) = pure () :=
     rfl
+  have quietCase : result ∈ support (Prod.map id uncount <$> (simulateQ PqxdhRecordLiftWorld.effects
+      (PqxdhDeploymentEnvironment.hiddenServerEffect j (none, e.native.shared.2.server) >>= fun _ =>
+        pure (none, builtEnv e session coords drawn.2 ((none, e.native.shared.2.server), log)))).run
+          (withCache w cache)) →
+      (result.1.1 = none ∧ result.1.2 = builtEnv e session coords drawn.2 ((none, e.native.shared.2.server), log) ∧
+        result.2 = uncount (withCache w cache)) := by
+    intro final
+    rw [effect, pure_bind, simulateQ_pure, StateT.run_pure, map_pure, support_pure, Set.mem_singleton_iff] at final
+    subst final
+    exact ⟨rfl, rfl, rfl⟩
   rcases rust with ⟨_ | response, after⟩ | error | _
   · have same : after = e.native.shared.2.server := built
     subst same
-    change result ∈ support (Prod.map id uncount <$> (simulateQ PqxdhRecordLiftWorld.effects
-      (PqxdhDeploymentEnvironment.hiddenServerEffect j (none, e.native.shared.2.server) >>= fun _ =>
-        pure (none, builtEnv e session coords drawn.2 ((none, e.native.shared.2.server), log)))).run
-          (withCache w cache)) at final
-    rw [effect, pure_bind, simulateQ_pure, StateT.run_pure, map_pure, support_pure, Set.mem_singleton_iff] at final
-    subst final
-    exact Or.inl ⟨rfl, rfl, rfl⟩
+    exact Or.inl (quietCase final)
   · obtain ⟨candidate, kernel, keyEq, vacant, published⟩ := built
     subst published
     have vacantWorld : world.records.server.peers candidate.key_id = none := by
@@ -1212,43 +1245,32 @@ theorem buildHidden_exact (created : PqxdhLiveServerConstruction.Created Unit) (
       | some peer => rw [hworld] at mapped; cases mapped
     have replaced : PqxdhServerAuthExperiment.settle e.native.shared.2.server
         (PqxdhDeploymentHiddenSplit.replaceRaw PqxdhDeploymentHiddenSplit.placeholderKernel <$>
-          RustM.ok (some response, PqxdhServerRegistrationPublication.publish e.native.shared.2.server candidate kernel ())) =
+          RustM.ok (some response, PqxdhServerRegistrationPublication.publish e.native.shared.2.server candidate kernel ad)) =
         (some response, PqxdhServerRegistrationPublication.publish e.native.shared.2.server candidate
-          PqxdhDeploymentHiddenSplit.placeholderKernel ()) := by
+          PqxdhDeploymentHiddenSplit.placeholderKernel ad) := by
       change (some response, PqxdhDeploymentHiddenSplit.setPeerKernel (PqxdhServerRegistrationPublication.publish
-        e.native.shared.2.server candidate kernel ()) response.keyId PqxdhDeploymentHiddenSplit.placeholderKernel) = _
+        e.native.shared.2.server candidate kernel ad) response.keyId PqxdhDeploymentHiddenSplit.placeholderKernel) = _
       rw [keyEq, PqxdhDeploymentHiddenSplit.publish_setPeerKernel]
     have peerAt := (PqxdhServerRegistrationPublication.publish_fields e.native.shared.2.server candidate
-      PqxdhDeploymentHiddenSplit.placeholderKernel ()).1
+      PqxdhDeploymentHiddenSplit.placeholderKernel ad).1
     have effect : PqxdhDeploymentEnvironment.hiddenServerEffect (n := 2) j (some response,
         PqxdhServerRegistrationPublication.publish e.native.shared.2.server candidate
-          PqxdhDeploymentHiddenSplit.placeholderKernel ()) =
-        PqxdhDeploymentEnvironment.issue (.installServer response.keyId candidate.beacon_identity_public_key (.hidden j)) := by
+          PqxdhDeploymentHiddenSplit.placeholderKernel ad) =
+        PqxdhDeploymentEnvironment.issue (.installServer response.keyId ⟨candidate.beacon_identity_public_key, ad⟩
+          (.hidden j)) := by
       unfold PqxdhDeploymentEnvironment.hiddenServerEffect
       simp only [keyEq, peerAt]
     rw [replaced, effect, PqxdhDeploymentEnvironmentReal.effects_issue_then,
-      effects_hiddenServer response.keyId candidate.beacon_identity_public_key j (withCache w cache) world found
+      effects_hiddenServer response.keyId candidate.beacon_identity_public_key ad j (withCache w cache) world found
         (by rw [keyEq]; exact vacantWorld) unused, Functor.map_map, support_map] at final
     obtain ⟨⟨seed, table⟩, inTable, rfl⟩ := final
     have facts := PqxdhRecordLiftLazyTable.step_facts j w.seeds (seed, table) inTable
-    refine Or.inr ⟨response, candidate, seed, table, keyEq, vacant, facts.1, facts.2.1,
+    refine Or.inr ⟨response, candidate, seed, table, ad, keyEq, vacant, facts.1, facts.2.1,
       lazy_other j w.seeds (seed, table) inTable, rfl, rfl, ?_⟩
     rw [keyEq]
     rfl
-  · change result ∈ support (Prod.map id uncount <$> (simulateQ PqxdhRecordLiftWorld.effects
-      (PqxdhDeploymentEnvironment.hiddenServerEffect j (none, e.native.shared.2.server) >>= fun _ =>
-        pure (none, builtEnv e session coords drawn.2 ((none, e.native.shared.2.server), log)))).run
-          (withCache w cache)) at final
-    rw [effect, pure_bind, simulateQ_pure, StateT.run_pure, map_pure, support_pure, Set.mem_singleton_iff] at final
-    subst final
-    exact Or.inl ⟨rfl, rfl, rfl⟩
-  · change result ∈ support (Prod.map id uncount <$> (simulateQ PqxdhRecordLiftWorld.effects
-      (PqxdhDeploymentEnvironment.hiddenServerEffect j (none, e.native.shared.2.server) >>= fun _ =>
-        pure (none, builtEnv e session coords drawn.2 ((none, e.native.shared.2.server), log)))).run
-          (withCache w cache)) at final
-    rw [effect, pure_bind, simulateQ_pure, StateT.run_pure, map_pure, support_pure, Set.mem_singleton_iff] at final
-    subst final
-    exact Or.inl ⟨rfl, rfl, rfl⟩
+  · exact Or.inl (quietCase final)
+  · exact Or.inl (quietCase final)
 
 open PqxdhDeploymentEnvironmentReal (commit_shape effects_issue_then effects_advance) in
 /-- `PqxdhDeploymentIdealEnvFinish.hiddenFinish_outcome` with the seed table exact: every outcome of owner k's hidden finish in capability form at an allocated slot, with the World's counts forgotten, from a World whose owner is in the `initSent` phase and whose Beacon marker of the slot is unused: the owner aborted (its World phase advanced, nothing else changed in the World), or established with the World's Beacon kernel of the slot's seed, which the seed table now holds, the slot's Beacon marker set. -/
@@ -1376,7 +1398,7 @@ theorem buildHidden_move (created : PqxdhLiveServerConstruction.Created Unit) (s
     rw [support_map]
     exact ⟨result, member, rfl⟩
   obtain ⟨material, log, cache, ⟨_, envEq, worldEq⟩ |
-      ⟨response, candidate, seed, table, keyEq, _, seeded, _, other, _, envEq, worldEq⟩⟩ :=
+      ⟨response, candidate, seed, table, ad, keyEq, _, seeded, _, other, _, envEq, worldEq⟩⟩ :=
     buildHidden_exact setup codec checks created session payload coords e w good j token allocated pending unused world
       found _ mapped
   · dsimp only at envEq
@@ -1386,7 +1408,7 @@ theorem buildHidden_move (created : PqxdhLiveServerConstruction.Created Unit) (s
   · dsimp only at envEq
     rw [envEq]
     have peerAt := (PqxdhServerRegistrationPublication.publish_fields e.native.shared.2.server candidate
-      PqxdhDeploymentHiddenSplit.placeholderKernel ()).1
+      PqxdhDeploymentHiddenSplit.placeholderKernel ad).1
     refine ⟨(builtEnv_move e session coords material _).1, (builtEnv_move e session coords material _).2, rfl, rfl, rfl,
       Or.inr ⟨response.keyId, ?_, congrArg (fun x => x.used) worldEq, ?_, fun k ne => ?_⟩⟩
     · simp [builtEnv, publishedKey, keyEq, peerAt]
@@ -1428,7 +1450,8 @@ theorem finishChallenge_move (created : PqxdhLiveServerConstruction.Created Unit
   subst tagEq
   have below : owner < e.native.owners.length := (List.getElem?_eq_some_iff.mp owned).1
   have terminalSet : ∀ (after : PqxdhRegistrationSchedule.Owner KemSK), PqxdhRegistrationSchedule.Terminal after →
-      ∀ shared : NativeState KemSK, terminalAt (strip ⟨shared, e.native.owners.set owner after⟩).owners owner :=
+      ∀ shared : NativeState KemSK, terminalAt (strip ⟨shared, e.native.owners.set owner after, e.native.inits⟩).owners
+        owner :=
     fun after terminal shared => (terminalAt_strip _ owner).2
       ⟨after, List.getElem?_set_self below, terminal⟩
   intro result member
@@ -1437,7 +1460,7 @@ theorem finishChallenge_move (created : PqxdhLiveServerConstruction.Created Unit
     rw [support_map]
     exact ⟨result, member, rfl⟩
   rcases finishChallenge_outcome setup codec p owner raw e w before control prekey oneTime kem owned phase worldPhase
-    _ mapped with ⟨shared, staged, cache, _, game, _, _, outcome⟩ | ⟨pending, coords, read, j, readMember, slotted, hidden⟩
+    _ mapped with ⟨shared, staged, cache, _, game, _, _, outcome⟩ | ⟨pending, coords, read, j, cache₀, readMember, slotted, hidden⟩
   · simp only [Prod.mk.injEq] at outcome
     obtain ⟨envEq, worldEq⟩ := outcome
     rw [envEq]
@@ -1450,7 +1473,7 @@ theorem finishChallenge_move (created : PqxdhLiveServerConstruction.Created Unit
       slotLazy_cached (.inr coords) (e.backend.2.1, (e.backend.1, ∅)) holds read readMember
     obtain ⟨staged, cache', ⟨aborted, outcome⟩ | ⟨control', associatedData, kernel, seed, table, established, seeded, _,
         other, outcome⟩⟩ :=
-      hiddenFinish_exact setup codec e owner control before pending coords read j w w.primitive.2 initSent worldPhase
+      hiddenFinish_exact setup codec e owner control before pending coords read j w cache₀ initSent worldPhase
         (unused j) _ hidden
     · simp only [Prod.mk.injEq] at outcome
       obtain ⟨envEq, worldEq⟩ := outcome

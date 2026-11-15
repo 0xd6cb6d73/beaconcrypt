@@ -10,6 +10,8 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhInitialNativeParentSupport
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+  (associatedData : Std.Array Std.U8 151#usize)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf
 open PqxdhInitialBeaconAmbient PqxdhInitialNativeLog PqxdhInitialNativeCarried
 variable {ι M P I D K X Response Shared A N C Result Origin : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -24,22 +26,22 @@ variable (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writ
 theorem continuation_supported (depth stage : Nat) (initial state : State A N C)
     (context : Context extra M P I D K Result Origin S B)
     (cut : RawCtxForwardScan.Cut.pending context state ∈ support
-      (carried source writer mark sender route decode execution depth stage external initial))
+      (carried (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth stage external initial))
     (reply : (Spec extra RatchetChain I D K X Response Shared S B).Range
-      (PqxdhInitialOriginContext.frame mark sender route decode context).1 × State A N C)
+      (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode context).1 × State A N C)
     (queried : reply ∈ support ((handler source writer stage external
-      (PqxdhInitialOriginContext.frame mark sender route decode context).1).run state))
+      (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode context).1).run state))
     (result : Final M P I D K Result Origin S B × State A N C)
     (continued : result ∈ support ((simulateQ (handler source writer stage external)
-      ((PqxdhInitialOriginContext.frame mark sender route decode context).2 reply.1)).run reply.2)) :
-    result ∈ support (PqxdhInitialNativeAdjacent.run source writer mark sender route decode execution external stage initial) := by
-  rw [PqxdhInitialNativeAdjacent.run, ← carried_finish source writer mark sender route decode execution depth stage external initial,
+      ((PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode context).2 reply.1)).run reply.2)) :
+    result ∈ support (PqxdhInitialNativeAdjacent.run (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution external stage initial) := by
+  rw [PqxdhInitialNativeAdjacent.run, ← carried_finish (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth stage external initial,
     mem_support_bind_iff]
   refine ⟨.pending context state, cut, ?_⟩
   change result ∈ support ((handler source writer stage external
-    (PqxdhInitialOriginContext.frame mark sender route decode context).1).run state >>= fun reply =>
+    (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode context).1).run state >>= fun reply =>
       (simulateQ (handler source writer stage external)
-        ((PqxdhInitialOriginContext.frame mark sender route decode context).2 reply.1)).run reply.2)
+        ((PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode context).2 reply.1)).run reply.2)
   rw [mem_support_bind_iff]
   exact ⟨reply, queried, continued⟩
 
@@ -47,19 +49,19 @@ theorem continuation_supported (depth stage : Nat) (initial state : State A N C)
 theorem parent_supported (depth stage : Nat) (before : depth < stage) (initial state : State A N C)
     (covered : Covered initial) (context : Context extra M P I D K Result Origin S B)
     (cut : RawCtxForwardScan.Cut.pending context state ∈ support
-      (carried source writer mark sender route decode execution depth stage external initial))
+      (carried (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth stage external initial))
     (missing : state.1.1.2.1 (PqxdhInitialBuilderContext.address context.original) = none)
     (parent : FullOutput)
     (result : Final M P I D K Result Origin S B × State A N C)
     (continued : result ∈ support ((simulateQ (handler source writer stage external)
-      ((PqxdhInitialOriginContext.frame mark sender route decode context).2
-        (PqxdhInitialParentBuilderContext.reply sender route decode context.original parent))).run
+      ((PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode context).2
+        (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode context.original parent))).run
           (PqxdhInitialNativeResponse.updated (PqxdhInitialBuilderContext.address context.original) parent state))) :
-    result ∈ support (PqxdhInitialNativeAdjacent.run source writer mark sender route decode execution external stage initial) := by
-  apply continuation_supported source writer mark sender route decode execution external depth stage initial state context cut
-    (PqxdhInitialParentBuilderContext.reply sender route decode context.original parent,
+    result ∈ support (PqxdhInitialNativeAdjacent.run (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution external stage initial) := by
+  apply continuation_supported (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution external depth stage initial state context cut
+    (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode context.original parent,
       PqxdhInitialNativeResponse.updated (PqxdhInitialBuilderContext.address context.original) parent state) _ result continued
-  rw [carried_miss source writer mark sender route decode execution depth stage stage before external initial state covered context cut missing,
+  rw [carried_miss (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth stage stage before external initial state covered context cut missing,
     support_map]
   exact ⟨parent, by simp, rfl⟩
 
@@ -68,18 +70,18 @@ theorem parent_later_supported (depth : Nat) (initial state : State A N C)
     (valid : PqxdhInitialNativePrefix.Depth depth initial) (covered : Covered initial)
     (context : Context extra M P I D K Result Origin S B)
     (cut : RawCtxForwardScan.Cut.pending context state ∈ support
-      (carried source writer mark sender route decode execution depth (depth + 1) external initial))
+      (carried (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth (depth + 1) external initial))
     (missing : state.1.1.2.1 (PqxdhInitialBuilderContext.address context.original) = none)
     (parent : FullOutput)
     (result : Final M P I D K Result Origin S B × State A N C)
     (continued : result ∈ support ((simulateQ (handler source writer (depth + 2) external)
-      ((PqxdhInitialOriginContext.frame mark sender route decode context).2
-        (PqxdhInitialParentBuilderContext.reply sender route decode context.original parent))).run
+      ((PqxdhInitialOriginContext.frame (completedBinding := completedBinding) mark sender route decode context).2
+        (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode context.original parent))).run
           (PqxdhInitialNativeResponse.updated (PqxdhInitialBuilderContext.address context.original) parent state))) :
-    result ∈ support (PqxdhInitialNativeAdjacent.run source writer mark sender route decode execution external (depth + 2) initial) := by
-  apply parent_supported source writer mark sender route decode execution external depth (depth + 2) (by omega)
+    result ∈ support (PqxdhInitialNativeAdjacent.run (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution external (depth + 2) initial) := by
+  apply parent_supported (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution external depth (depth + 2) (by omega)
     initial state covered context _ missing parent result continued
-  rw [← carried_same source writer mark sender route decode execution depth external initial valid]
+  rw [← carried_same (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth external initial valid]
   exact cut
 
 end BeaconcryptCore.Computational.PqxdhInitialNativeParentSupport

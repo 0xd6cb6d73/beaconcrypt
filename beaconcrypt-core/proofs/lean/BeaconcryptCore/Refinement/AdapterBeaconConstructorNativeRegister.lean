@@ -24,25 +24,24 @@ variable [generators : AdapterBeaconConstructorRequestMonad.Operations (RustT (M
 variable [crypto : AdapterPublicWrapperRequestMonad.CryptoOperations (RustT (M n KemSK source Auxiliary m))]
 variable [children : AdapterPublicWrapperRequestMonad.ChildOperations (RustT (M n KemSK source Auxiliary m))]
 variable (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (generator : rand_core.TryCryptoRng R Error) (view : AdapterPublicWrapperState.MaterialView source KemSK)
 variable (kem : AdapterBeaconConstructorKem.Representation view R)
 variable (leaves : Leaves (n := n) (Auxiliary := Auxiliary) coins setup checks representation created generator view kem)
 
-omit [LawfulMonad m] in
+omit children [LawfulMonad m] in
 theorem object_related (keyId : U64) (serverId : beaconcrypt_crypto.crypto_sign.PublicKey)
     (ready : RegistrationNativeBeaconFrontend.Prepared source) (receipt : AdapterBeaconConstructorKem.Receipt R)
     (pool : PqxdhLiveKemBirth.Pool KemSK) (worldOwner : Nat)
     (binding : ready.pin.binding = ⟨view.edPublic serverId, keyId⟩)
     (kemRow : AdapterPublicWrapperState.KemPair view pool receipt.pair receipt.born.1 receipt.born.2) :
     AdapterPublicWrapperState.Beacon view setup.joint pool
-      (AdapterBeaconConstructorJoint.object generator view _ leaves.ml setup.joint _ leaves.ed _ _ leaves.kx keyId serverId (ready, receipt))
-      (RegistrationNativeBeaconBirth.owner setup source ready.pin ready.credentials ready.identity ready.prekey receipt.born worldOwner)
+      (AdapterBeaconConstructorJoint.object generator view setup.joint _ leaves.ed _ _ leaves.kx keyId serverId (ready, receipt))
+      (RegistrationNativeBeaconBirth.owner setup source ready.pin ready.identity ready.prekey receipt.born worldOwner)
       (some (.inactive .fresh)) := by
   constructor
   · exact leaves.ed.publicView _
   · exact leaves.ed.privateView _
-  · exact leaves.ml.privateView _
   · rfl
   · exact congrArg pqxdh.ServerBinding.identity_public_key binding.symm
   · exact congrArg pqxdh.ServerBinding.identity_key_id binding.symm
@@ -64,7 +63,7 @@ theorem register_exact (keyId : U64) (edPin : Std.Array U8 32#usize)
     (owners : RegistrationNativeBeaconFrontend.State source) (env : RegistrationWorldAgreementCompiler.EnvState Auxiliary)
     (before : AdapterBeaconConstructorKem.Native n KemSK source) :
     (((lift coins setup checks representation created (RegistrationNativeBeaconCreateEntry.register setup edPin keyId ready born)).run owners).run env).run before =
-      pure (((.ok (some owners.length), owners ++ [RegistrationNativeBeaconBirth.owner setup source ready.pin ready.credentials ready.identity ready.prekey born before.server.world.world.1.owners.length]), env),
+      pure (((.ok (some owners.length), owners ++ [RegistrationNativeBeaconBirth.owner setup source ready.pin ready.identity ready.prekey born before.server.world.world.1.owners.length]), env),
         AdapterBeaconConstructorMaterial.appendNative keyId edPin before) := by
   change ((RegistrationNativePlatformGenericBundle.liftLegacy (AdapterBeaconConstructorKemLift.implementation coins setup checks representation created)
     (RegistrationNativeBeaconCreateEntry.register setup edPin keyId ready born)).run owners |>.run env |>.run before) = _

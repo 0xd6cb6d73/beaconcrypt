@@ -120,13 +120,13 @@ theorem program (work : OracleComp FullSpec A) (before : Runtime)
       (call.reply,call.after) called receiver raw opened received
 
 
-private def packed (created : PqxdhLiveServerConstruction.Created Unit) (result : A×Whole) :=
+private def packed (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (result : A×Whole) :=
   (((some (PqxdhRegistrationJointServerBirth.encode created,(result.1,result.2.1),result.2.2.1.1.1),
       result.2.2.1.1.2),result.2.2.1.2),result.2.2.2)
 
 private theorem world_source (mode : PqxdhDeploymentInterface.Mode)
     (work : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) A)
-    (created : PqxdhLiveServerConstruction.Created Unit) (initial : E)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (initial : E)
     (shell : CborRecordWorldClient.Shell) (control : PqxdhRecordLiftProtocol.Control n) (secret : CtxPrivate n) :
     (simulateQ service (RegistrationNativePlatformOriginStartupTails.compile codec route
       (RegistrationNativePlatformGatedEntropyWorld.program env reserve setup.source.crypto codec serverKeyId bounds mode work created initial)
@@ -149,7 +149,7 @@ private theorem world_source (mode : PqxdhDeploymentInterface.Mode)
 abbrev TransportRuntime (n : Nat) (E : Type) :=
   PqxdhDeploymentSecrecy.Ledger×CborRawRecordFlat.NativeState n (RegistrationNativeEntropyPort.State E)
 
-def restored (created : PqxdhLiveServerConstruction.Created Unit) (result : A×TransportRuntime n E) :
+def restored (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (result : A×TransportRuntime n E) :
     (((RegistrationNativeEntropyRun.Outcome E A×CborRecordWorldClient.Shell)×PqxdhRecordLiftProtocol.Control n)×CtxPrivate n) :=
   (((some (PqxdhRegistrationJointServerBirth.encode created,
       ((result.1,RegistrationNativeEntropyRestore.ledger result.2.1),result.2.2.1.1.1.2)),
@@ -161,7 +161,7 @@ theorem source
     (nativeReserve : Nat →StateT E ProbComp (core.result.Result Unit Failure))
     (mode : PqxdhDeploymentInterface.Mode)
     (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) A)
-    (created : PqxdhLiveServerConstruction.Created Unit) (initial : E)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (initial : E)
     (shell : CborRecordWorldClient.Shell) (control : PqxdhRecordLiftProtocol.Control n) (secret : CtxPrivate n) :
     (simulateQ service (RegistrationNativePlatformOriginStartupTails.compile codec route
       (RegistrationNativePlatformGatedNativeEntropy.program nativeEnv nativeReserve setup.source.crypto codec serverKeyId bounds mode work created initial)
@@ -186,7 +186,7 @@ theorem initialized_stages
     (nativeReserve : Nat →StateT E ProbComp (core.result.Result Unit Failure))
     (mode : PqxdhDeploymentInterface.Mode)
     (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) A)
-    (created : PqxdhLiveServerConstruction.Created Unit) (initial : E)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (initial : E)
     (shell : CborRecordWorldClient.Shell) (control : PqxdhRecordLiftProtocol.Control n)
     (safe : PqxdhRecordLiftProtocolHistory.Safe control) (secret : CtxPrivate n)
     (result : (((RegistrationNativeEntropyRun.Outcome E A×CborRecordWorldClient.Shell)×PqxdhRecordLiftProtocol.Control n)×CtxPrivate n))

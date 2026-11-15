@@ -47,6 +47,8 @@ theorem program (setup : Setup base KemSK) (free : Callbacks n KemSK Extra Platf
   rw [RegistrationAgreementNestedState.program] at whole
   exact whole
 
+/- Elaborating the closed `accept_free` application normalizes its result type with `whnf`, which would otherwise evaluate the concrete OPEN accept program (pin recomputation) deep into its byte-array construction. The proof only transports the syntactic bound, so the program is opaque here. -/
+attribute [local irreducible] RegistrationNativePlatformServerOpenSyntax.accept in
 theorem accept_program (setup : Setup base KemSK) (checks : Checks) (verify : MldsaTranscriptAuth.Verify)
     (packet : registration.InitPacket) (free : Callbacks n KemSK Extra Platform)
     (native : RegistrationNativePlatformServerOpenKernel.Callbacks n KemSK Extra (StateT Platform ProbComp))

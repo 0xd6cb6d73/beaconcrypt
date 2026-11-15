@@ -9,6 +9,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialNativeRisk
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhInitialNativeLog PqxdhInitialNativePrefix PqxdhInitialBeaconAmbient
 variable {ι I D K X Response Shared A N C Result : Type} {extra : OracleSpec ι} {S B : Nat}
 
@@ -100,10 +102,10 @@ theorem source_risk (depth k qPost : Nat)
     (bounded : ∀ reply, (execution.outside reply).IsTotalQueryBound qPost)
     (state : State A N C) (valid : Valid depth k state) (clean : Clean state) :
     Pr{let result ← (RawCtxStatefulPendingPrefix.scan (selected (extra := extra) depth)
-      (handler source writer (depth + 1) external) (original source mark sender route decode execution) state)}[¬Clean result.2] ≤
+      (handler source writer (depth + 1) external) (original (associatedData := associatedData) (completedBinding := completedBinding) source mark sender route decode execution) state)}[¬Clean result.2] ≤
       ∑ j ∈ Finset.range (7 + qPost * 67), ((k + j + 1 : Nat) : ℝ≥0∞) * (2 ^ 256 : ℝ≥0∞)⁻¹ :=
-  scan_risk source writer depth k (7 + qPost * 67) external (original source mark sender route decode execution)
-    (PqxdhInitialOriginPost.sequence_total source execution.initial mark execution.origin sender route decode
+  scan_risk source writer depth k (7 + qPost * 67) external (original (associatedData := associatedData) (completedBinding := completedBinding) source mark sender route decode execution)
+    (PqxdhInitialOriginPost.sequence_total (associatedData := associatedData) (completedBinding := completedBinding) source execution.initial mark execution.origin sender route decode
       execution.index execution.metadata execution.ready execution.outside qPost bounded
       (execution.before, execution.trace)).isQueryBoundP state valid clean
 
@@ -112,11 +114,11 @@ theorem carried_risk (depth k qPost : Nat)
     (external : QueryImpl (External extra RatchetChain I D K X Response Shared) (Ambient A N C))
     (bounded : ∀ reply, (execution.outside reply).IsTotalQueryBound qPost)
     (state : State A N C) (valid : Valid depth k state) (clean : Clean state) :
-    Pr{let result ← carried source writer mark sender route decode execution depth (depth + 1) external state}[¬Clean (RawCtxForwardScan.pack
-      (PqxdhInitialOriginContext.frame (X := X) (Response := Response) mark sender route decode) result).2] ≤
+    Pr{let result ← carried (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth (depth + 1) external state}[¬Clean (RawCtxForwardScan.pack
+      (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode) result).2] ≤
       ∑ j ∈ Finset.range (7 + qPost * 67), ((k + j + 1 : Nat) : ℝ≥0∞) * (2 ^ 256 : ℝ≥0∞)⁻¹ := by
-  have bound := source_risk source writer mark sender route decode execution depth k qPost external bounded state valid clean
-  rw [← carried_pack source writer mark sender route decode execution depth (depth + 1) external state, prEvent_map] at bound
+  have bound := source_risk (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth k qPost external bounded state valid clean
+  rw [← carried_pack (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth (depth + 1) external state, prEvent_map] at bound
   exact bound
 
 def Cached : Carried extra M P I D K Result Origin A N C S B → Prop
@@ -128,16 +130,16 @@ theorem cached_risk (depth k qPost : Nat)
     (external : QueryImpl (External extra RatchetChain I D K X Response Shared) (Ambient A N C))
     (bounded : ∀ reply, (execution.outside reply).IsTotalQueryBound qPost)
     (state : State A N C) (valid : Valid depth k state) (clean : Clean state) :
-    Pr{let x ← carried source writer mark sender route decode execution depth (depth + 1) external state}[Cached x] ≤
+    Pr{let x ← carried (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth (depth + 1) external state}[Cached x] ≤
       ∑ j ∈ Finset.range (7 + qPost * 67), ((k + j + 1 : Nat) : ℝ≥0∞) * (2 ^ 256 : ℝ≥0∞)⁻¹ := by
   refine (prEvent_mono_of_support _ Cached (fun result => ¬Clean (RawCtxForwardScan.pack
-      (PqxdhInitialOriginContext.frame (X := X) (Response := Response) mark sender route decode) result).2) ?_).trans
-    (carried_risk source writer mark sender route decode execution depth k qPost external bounded state valid clean)
+      (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode) result).2) ?_).trans
+    (carried_risk (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth k qPost external bounded state valid clean)
   intro result supported bad
   cases result with
   | complete value reached => exact False.elim bad
   | pending context reached =>
-      have cases := carried_cases source writer mark sender route decode execution depth (depth + 1) external state reached valid.1 context supported
+      have cases := carried_cases (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth (depth + 1) external state reached valid.1 context supported
       have same : PqxdhInitialBuilderContext.address context.original = RawCtxSelectiveChainGame.cursorAddress reached.1.1.2.2 := by
         simpa only [RawCtxSelectiveChainGame.matched, decide_eq_true_eq] using cases.1
       change reached.1.1.2.1 (RawCtxSelectiveChainGame.cursorAddress reached.1.1.2.2) ≠ none

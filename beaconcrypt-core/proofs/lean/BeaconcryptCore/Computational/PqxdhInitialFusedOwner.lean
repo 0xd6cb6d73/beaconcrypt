@@ -8,6 +8,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialFusedOwner
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 variable {I D K X Response Shared Result : Type}
 
 abbrev Spec (I D K X Response Shared : Type) :=
@@ -28,7 +29,7 @@ noncomputable def owner (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes
     OracleComp (Spec I D K X Response Shared) (Option Pqxdh.Bytes × PqxdhBeaconPhase2Preparation.State I D K) :=
   match state.beacon.phase with
   | .initSent control prekey oneTime kem => do
-      let prepared ← simulateQ preLift (PqxdhBeaconPhase2Shared.prepare control state.beacon.identity prekey oneTime kem raw)
+      let prepared ← simulateQ preLift (PqxdhBeaconPhase2Shared.prepare (completedBinding := completedBinding) control state.beacon.identity prekey oneTime kem raw)
       match prepared with
       | none => pure (PqxdhBeaconPhase2Publication.finish control state none)
       | some prepared => do
@@ -58,8 +59,8 @@ theorem tail_program (work : OracleComp (PqxdhInitialFusedBeacon.Spec Response S
 /-- The entire actual Beacon owner is recovered for every initial/inactive phase, with its original preparation, failures, complete prior state and publication behavior. -/
 theorem owner_native (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
     (state : PqxdhBeaconPhase2Preparation.State I D K) :
-    simulateQ (native (X := X) (Response := Response) (Shared := Shared)) (owner decode raw state) =
-      PqxdhBeaconPhase2Shared.owner decode raw state := by
+    simulateQ (native (X := X) (Response := Response) (Shared := Shared)) (owner (completedBinding := completedBinding) decode raw state) =
+      PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) decode raw state := by
   unfold owner PqxdhBeaconPhase2Shared.owner
   cases phase : state.beacon.phase
   case initSent control prekey oneTime kem =>
@@ -87,7 +88,7 @@ noncomputable def finish
         (OracleComp (LocalPostSpec baseSpec)))
   | .finish index raw => fun before => PqxdhPhase2PostScheduler.installed index before <$>
       (simulateQ (PqxdhPhase2PostScheduler.handles attachedVerify primitives count fixed localImpl challenge ∘ₛ native)
-        (owner decode raw (before.1.roles.1.2 index))).run (before.1.primitive, before.2)
+        (owner (completedBinding := completedBinding) decode raw (before.1.roles.1.2 index))).run (before.1.primitive, before.2)
 
 /-- The actual current post-root Beacon finish factors through the restricted owner and preserves its complete live-role, shared-primitive and private identity poststate on every attempt. -/
 theorem finish_source
@@ -97,8 +98,8 @@ theorem finish_source
     (challenge : MlKem768Ciphertext) (decode : RawCtxReceive.FrameDecoder)
     (query : (PqxdhPhase2LiveFinish.FinishSpec B).Domain)
     (state : PqxdhPhase2PostScheduler.State (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B) count) :
-    (finish (baseSpec := baseSpec) attachedVerify primitives count fixed localImpl challenge decode query).run state =
-      (PqxdhPhase2PostScheduler.targetFinish attachedVerify primitives count fixed localImpl challenge decode query).run state := by
+    (finish (completedBinding := completedBinding) (baseSpec := baseSpec) attachedVerify primitives count fixed localImpl challenge decode query).run state =
+      (PqxdhPhase2PostScheduler.targetFinish (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl challenge decode query).run state := by
   cases query
   simp only [finish, PqxdhPhase2PostScheduler.targetFinish, QueryImpl.simulateQ_compose, owner_native]
 

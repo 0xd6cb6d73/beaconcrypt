@@ -15,7 +15,7 @@ open PqxdhRecordLiftWorldCompiler (Label)
 open PqxdhServerAuthExperiment (Setup Codec)
 variable {n : Nat} {ι KemSK E Value Reader Response First Second : Type} {base : OracleSpec ι}
 
-abbrev Outcome (E Value : Type) := Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+abbrev Outcome (E Value : Type) := Option (PqxdhRegistrationJointServerBirth.ClientCreated (Std.Array Std.U8 151#usize) ×
   (Value × RegistrationNativeLedger.State) × E)
 abbrev Result (n : Nat) (E Value : Type) :=
   (Outcome E Value × PqxdhRecordLiftProtocol.Control n) × CtxPrivate n

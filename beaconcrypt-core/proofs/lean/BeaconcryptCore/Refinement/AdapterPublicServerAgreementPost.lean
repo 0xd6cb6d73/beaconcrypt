@@ -21,7 +21,7 @@ variable {n : Nat} {KemSK : Type} {mlSource : RegistrationNativeMldsa.Source}
 
 noncomputable def Returned {R : Type}
     (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (word : Word R) (native : RustM (Option Nat) × RegistrationNativeExperiment.State n KemSK mlSource) : Prop :=
   AdapterPublicWrapperState.Server view views created credential word.2.1 native.2.server ∧
     match word.1, native.1 with
@@ -35,7 +35,7 @@ variable [PublicWrapperPlatform.Allocator] [PublicWrapperPlatform.LocalOperation
 variable [containers : ContainerOperations (RustT (StateT (RegistrationNativeExperiment.State n KemSK mlSource) m))]
 
 theorem replay {R : Type} (view : AdapterPublicWrapperState.MaterialView mlSource KemSK)
-    (views : AdapterPublicWrapperStorage.Views) (created : PqxdhLiveServerConstruction.Created Unit)
+    (views : AdapterPublicWrapperStorage.Views) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential mlSource) (self : beaconcrypt_public_wrapper.server.Server)
     (before current afterRole : RegistrationNativeExperiment.State n KemSK mlSource)
     (related : AdapterPublicWrapperState.Server view views created credential self afterRole.server)
@@ -94,7 +94,7 @@ theorem program {PlatformState R E : Type}
     (self : beaconcrypt_public_wrapper.server.Server)
     (work : OracleComp Spec (RustM agreement.AgreementEffect)) (rng : R)
     (view : AdapterPublicWrapperState.MaterialView mlSource KemSK)
-    (views : AdapterPublicWrapperStorage.Views) (created : PqxdhLiveServerConstruction.Created Unit)
+    (views : AdapterPublicWrapperStorage.Views) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential mlSource)
     (before after : RegistrationNativeExperiment.State n KemSK mlSource)
     [ContainerOperations (RustT (StateT (RegistrationNativeExperiment.State n KemSK mlSource) (StateT PlatformState ProbComp)))]

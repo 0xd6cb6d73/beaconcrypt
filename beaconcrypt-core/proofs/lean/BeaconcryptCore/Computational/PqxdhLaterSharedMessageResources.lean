@@ -14,6 +14,8 @@ set_option autoImplicit false
 set_option maxRecDepth 2048
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhLaterSharedMessageResources
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPhase1AcceptanceOracle PqxdhKemIndCca PqxdhInitializerSecrecy
 open CtxRomAuth AdaptiveCtxSharedHash PqxdhSecretInputKdf PqxdhFullSecretInputKdf
@@ -64,7 +66,7 @@ def parentCost (hash : Bool) (postCap callbackCap selectorCap auxCap : Nat) : Na
 include postBound in
 /-- Every reached candidate executes its literal parent preparation or completed branch; the post and callback caps come from the original source interfaces. -/
 theorem after (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl kem program post) (hash : Bool) (depth : Nat) (packet : Packet) (output : HmacBlock) :
-    (PqxdhLaterSharedParent.after setup env callbacks program post attachedVerify primitives baseImpl kem
+    (PqxdhLaterSharedParent.after (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem
       selected number ancestors disclosed packet output depth).IsQueryBoundP (HashClass hash)
       (parentCost hash qPost (PqxdhInitialPreparedSourceCaps.callbackCap env0 baseImpl kem program post c)
         (PqxdhInitialPreparedSourceCaps.selectorCap env0 baseImpl kem program post c) c.qAux) := by
@@ -77,7 +79,7 @@ theorem after (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl kem p
       PqxdhCommonSharedDispatch.restoreMode, PqxdhSharedParentInput.run,
       bind_pure_comp]
     apply (isQueryBoundP_map_iff (p := HashClass hash) _ _ _).mpr
-    apply PqxdhPreparedSharedParentBounds.bills env0 callbacks baseImpl kem attachedVerify primitives secretKey ciphertext
+    apply PqxdhPreparedSharedParentBounds.bills (associatedData := associatedData) (completedBinding := completedBinding) env0 callbacks baseImpl kem attachedVerify primitives secretKey ciphertext
       _ output depth qPost (PqxdhInitialPreparedSourceCaps.callbackCap env0 baseImpl kem program post c)
       (PqxdhInitialPreparedSourceCaps.callbackCap env0 baseImpl kem program post c)
       (PqxdhInitialPreparedSourceCaps.selectorCap env0 baseImpl kem program post c) c.qAux
@@ -88,19 +90,19 @@ include postBound selectorBound localBound peerBound plaintextBound writerBound 
     preBound oneBound phase1WriteBound mainBound keygenBound in
 /-- The actual later-record prefix pays source preparation, every cached-parent continuation, and all 64+76+12+32 sampled bytes. -/
 theorem later (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl kem program post) (hash : Bool) (depth : Nat) :
-    (PqxdhLaterSharedMessagePrefix.run setup env callbacks program post attachedVerify primitives baseImpl kem
+    (PqxdhLaterSharedMessagePrefix.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem
       selected number ancestors disclosed depth).IsQueryBoundP (HashClass hash)
       (if hash then (69 * qMain + 1 + 69 * qPost) + (7 + qPost * 67) else
         uniformCost qKeygen qPre qOne qPhase1Write qMain qPost qSelector qLocal qEphemeral qEncaps qPeer qPlaintext qWriter + 184 +
           parentCost false qPost (PqxdhInitialPreparedSourceCaps.callbackCap env0 baseImpl kem program post c)
             (PqxdhInitialPreparedSourceCaps.selectorCap env0 baseImpl kem program post c) c.qAux) := by
-  have prepared := PqxdhSourceSharedPreparationResources.prepare setup env callbacks program post attachedVerify primitives baseImpl kem
+  have prepared := PqxdhSourceSharedPreparationResources.prepare (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem
     qPost qSelector qLocal qPeer qPlaintext qWriter postBound peerBound plaintextBound writerBound
     qEphemeral qEncaps ephemeralBound nativeEncapsBound encapsBound qPre qOne qPhase1Write qMain
     preBound oneBound phase1WriteBound mainBound qKeygen keygenBound selectorBound localBound hash
   have whole := isQueryBoundP_bind prepared (fun packet _ =>
     isQueryBoundP_bind (coins ($ᵗ HmacBlock) 64 (CtxComputationalSecurity.uniformFixedBytes_isTotalQueryBound 64) hash) (fun initial _ =>
-      isQueryBoundP_bind (after setup env callbacks program post attachedVerify primitives baseImpl kem qPost postBound
+      isQueryBoundP_bind (after (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem qPost postBound
         selected number ancestors disclosed c hash depth packet initial) (fun context _ =>
         isQueryBoundP_bind (coins ($ᵗ FullOutput) 76 (CtxComputationalSecurity.uniformFixedBytes_isTotalQueryBound 76) hash) (fun parent _ =>
           isQueryBoundP_bind (coins ($ᵗ NonceOutput) 12 (CtxComputationalSecurity.uniformFixedBytes_isTotalQueryBound 12) hash) (fun nonce _ =>
@@ -117,19 +119,19 @@ include postBound selectorBound localBound peerBound plaintextBound writerBound 
     preBound oneBound phase1WriteBound mainBound keygenBound in
 /-- Forwarding the complete later-record prefix preserves both source bills and makes no selected seal or raw opening before the cut. -/
 theorem forwarded (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl kem program post) (depth : Nat) :
-    (simulateQ RawCtxSourceSharedRom.forward (PqxdhLaterSharedMessagePrefix.run setup env callbacks program post attachedVerify primitives baseImpl kem
+    (simulateQ RawCtxSourceSharedRom.forward (PqxdhLaterSharedMessagePrefix.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem
         selected number ancestors disclosed depth)).IsQueryBoundP AdaptiveCtxDynamicKnownBounds.HashRoute
       ((69 * qMain + 1 + 69 * qPost) + (7 + qPost * 67)) ∧
-    (simulateQ RawCtxSourceSharedRom.forward (PqxdhLaterSharedMessagePrefix.run setup env callbacks program post attachedVerify primitives baseImpl kem
+    (simulateQ RawCtxSourceSharedRom.forward (PqxdhLaterSharedMessagePrefix.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem
         selected number ancestors disclosed depth)).IsQueryBoundP AdaptiveCtxDynamicKnownBounds.UniformRoute
       (uniformCost qKeygen qPre qOne qPhase1Write qMain qPost qSelector qLocal qEphemeral qEncaps qPeer qPlaintext qWriter + 184 +
         parentCost false qPost (PqxdhInitialPreparedSourceCaps.callbackCap env0 baseImpl kem program post c)
           (PqxdhInitialPreparedSourceCaps.selectorCap env0 baseImpl kem program post c) c.qAux) ∧
-    (simulateQ RawCtxSourceSharedRom.forward (PqxdhLaterSharedMessagePrefix.run setup env callbacks program post attachedVerify primitives baseImpl kem
+    (simulateQ RawCtxSourceSharedRom.forward (PqxdhLaterSharedMessagePrefix.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem
         selected number ancestors disclosed depth)).IsQueryBoundP (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxQueryBounds.SourceSeal) 0 ∧
-    (simulateQ RawCtxSourceSharedRom.forward (PqxdhLaterSharedMessagePrefix.run setup env callbacks program post attachedVerify primitives baseImpl kem
+    (simulateQ RawCtxSourceSharedRom.forward (PqxdhLaterSharedMessagePrefix.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem
         selected number ancestors disclosed depth)).IsQueryBoundP (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxReceive.IsRawQuery) 0 := by
-  have bounded := fun hash => later setup env callbacks program post attachedVerify primitives baseImpl kem
+  have bounded := fun hash => later (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem
     qPost qSelector qLocal qPeer qPlaintext qWriter postBound selectorBound localBound peerBound plaintextBound writerBound
     qEphemeral qEncaps ephemeralBound nativeEncapsBound encapsBound qPre qOne qPhase1Write qMain
     preBound oneBound phase1WriteBound mainBound qKeygen keygenBound selected number ancestors disclosed c hash depth
@@ -139,13 +141,13 @@ include postBound selectorBound localBound peerBound plaintextBound writerBound 
     preBound oneBound phase1WriteBound mainBound keygenBound in
 /-- Evaluating the whole later prefix pays a 64-byte cap for each possible shared-ROM miss. The original cache and complete cached continuation remain present; the selected challenger's 32-byte key draw is separate. -/
 theorem evaluated (c : PqxdhAuthenticatedRootBudgets.Certificate env0 baseImpl kem program post) (depth : Nat) (cache : CtxRO.QueryCache) :
-    ((simulateQ hashImpl (PqxdhLaterSharedMessagePrefix.run setup env callbacks program post attachedVerify primitives baseImpl kem
+    ((simulateQ hashImpl (PqxdhLaterSharedMessagePrefix.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem
         selected number ancestors disclosed depth)).run cache).IsTotalQueryBound
       ((uniformCost qKeygen qPre qOne qPhase1Write qMain qPost qSelector qLocal qEphemeral qEncaps qPeer qPlaintext qWriter + 184 +
           parentCost false qPost (PqxdhInitialPreparedSourceCaps.callbackCap env0 baseImpl kem program post c)
             (PqxdhInitialPreparedSourceCaps.selectorCap env0 baseImpl kem program post c) c.qAux) +
         64 * ((69 * qMain + 1 + 69 * qPost) + (7 + qPost * 67))) := by
-  have bounded := fun hash => later setup env callbacks program post attachedVerify primitives baseImpl kem
+  have bounded := fun hash => later (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem
     qPost qSelector qLocal qPeer qPlaintext qWriter postBound selectorBound localBound peerBound plaintextBound writerBound
     qEphemeral qEncaps ephemeralBound nativeEncapsBound encapsBound qPre qOne qPhase1Write qMain
     preBound oneBound phase1WriteBound mainBound qKeygen keygenBound selected number ancestors disclosed c hash depth

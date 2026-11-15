@@ -13,8 +13,8 @@ open AdapterRecordRequestMonad (LiftRust)
 variable [AdapterSealPrimitive.Operations] {E : Type} {m : Type → Type}
 variable [Monad m] [LiftRust m] [Operations E m]
 
--- Extracted input SHA-256: 03d6db0d076ba17e7dcb166c36a854b262749f3ba90f2f8b4ec7b2b6af5a71fb
--- Transformation SHA-256: 388ca1048917586da1d45858afa4e5e797bcb6945dc75a0bd68907d1a02e7b88
+-- Extracted input SHA-256: 272e32d556079a09fbcfce9fb23911d3e1fa1235d7c0f60ef93b8bf2d5d5ae4a
+-- Transformation SHA-256: e0f4fc24a799f3aef52d70e3b6499d301e4403a5ec758bd25178978540ff10c0
 
 def execute
   (request : beaconcrypt_core.record_effects.AeadSealRequest) :

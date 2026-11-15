@@ -25,13 +25,13 @@ inductive OpaqueCut (Reader KemSK X R : Type) where
   | complete (outcome : Outcome KemSK R)
   | pending (raw : Pqxdh.Bytes) (value : PqxdhServerRootPreparation.Verified Reader)
       (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)
-      (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry)
+      (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))
       (next : Option Nat → OracleComp (SourceSpec KemSK) X)
 
 /-- The completion of a raw accept whose collected input is `collected`, from the native state at that accept: the actual accept tail followed by the rest of the tagged client, every later encapsulation interpreted in place by the actual encapsulator. -/
 noncomputable def rejectRun (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)
-    (next : Option Nat → OracleComp (SourceSpec KemSK) X) (owners : List EncodedEntry) (state : NativeState KemSK)
+    (next : Option Nat → OracleComp (SourceSpec KemSK) X) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK)
     (collected : Option (PqxdhServerRootPreparation.Inputs Reader PqxdhJointGapDh.ScalarBytes
       PqxdhBeaconPhase2Preparation.Word32) × List Pqxdh.Bytes) :
     OracleComp (PqxdhLiveKemBirth.Spec KemSK) (OpaqueCut Reader KemSK X R) := do
@@ -43,7 +43,7 @@ noncomputable def rejectRun (setup : Setup baseSpec KemSK) (codec : Codec Reader
 /-- The explicit scan: the actual source prefix up to the selected raw accept, its attached verification and the steps before encapsulation, all interpreted exactly as in `KemCut.scan` of `exposeAt`. A completed prefix, a rejected verification and a rejection before encapsulation complete the whole run; otherwise the source parameters of the active cut are saved. -/
 noncomputable def opaqueScan (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R)
-    (work : OracleComp (SourceSpec KemSK) X) (index : Nat) (owners : List EncodedEntry) (state : NativeState KemSK) :
+    (work : OracleComp (SourceSpec KemSK) X) (index : Nat) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK) :
     OracleComp (PqxdhLiveKemBirth.Spec KemSK) (OpaqueCut Reader KemSK X R) := do
   let reached ← simulateQ (actual setup) (commands setup codec checks identityIndex publicIdentity
     (PqxdhRegistrationJointAcceptCut.scan work index) owners state)
@@ -78,7 +78,7 @@ noncomputable def opaqueResume (setup : Setup baseSpec KemSK) (codec : Codec Rea
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)
     (value : PqxdhServerRootPreparation.Verified Reader)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)
-    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry)
+    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))
     (next : Option Nat → OracleComp (SourceSpec KemSK) X)
     (ciphertext : MlKem768Ciphertext) (candidate : MlKemSharedSecret) :
     OracleComp (PqxdhRegistrationJointKemEncapsulation.Spec KemSK) (Outcome KemSK R) := do
@@ -90,7 +90,7 @@ noncomputable def opaqueResume (setup : Setup baseSpec KemSK) (codec : Codec Rea
 /-- The KEM scan of `exposeAt` is the image of the explicit opaque scan. This is a program equality, not a support statement. -/
 theorem scan_opaque (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R)
-    (work : OracleComp (SourceSpec KemSK) X) (index : Nat) (owners : List EncodedEntry) (state : NativeState KemSK) :
+    (work : OracleComp (SourceSpec KemSK) X) (index : Nat) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK) :
     PqxdhRegistrationJointKemCut.scan setup
       (exposeAt setup codec checks identityIndex publicIdentity observe work index owners state) 0 =
       toCut setup codec checks identityIndex publicIdentity observe <$>
@@ -118,7 +118,7 @@ theorem rawResume_opaque (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)
     (value : PqxdhServerRootPreparation.Verified Reader)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)
-    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry)
+    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))
     (next : Option Nat → OracleComp (SourceSpec KemSK) X)
     (ciphertext : MlKem768Ciphertext) (candidate : MlKemSharedSecret) :
     rawResume setup codec checks identityIndex publicIdentity observe raw value ephemeral consumed native owners next
@@ -133,7 +133,7 @@ theorem rawResume_opaque (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
 /-- Theorem T6, first part. At an active KEM cut of `exposeAt`, reached at the selected raw accept, the request is the raw bytes with the verified PQ key of their attached verification, and for every challenge ciphertext and candidate the saved continuation fed the ordinary challenge reply is the opaque resumption of the same source parameters. -/
 theorem rawCut_resume (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R)
-    (work : OracleComp (SourceSpec KemSK) X) (index : Nat) (owners : List EncodedEntry) (state : NativeState KemSK)
+    (work : OracleComp (SourceSpec KemSK) X) (index : Nat) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK)
     (request : PqxdhRegistrationJointKemCut.Request)
     (resume : PqxdhRegistrationJointKemCut.Reply →
       OracleComp (PqxdhRegistrationJointKemEncapsulation.Spec KemSK) (Outcome KemSK R))
@@ -156,7 +156,7 @@ theorem rawCut_resume (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
 /-- The completion of a rejected raw accept is a completed opaque cut. -/
 theorem rejectRun_complete (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)
-    (next : Option Nat → OracleComp (SourceSpec KemSK) X) (owners : List EncodedEntry) (state : NativeState KemSK)
+    (next : Option Nat → OracleComp (SourceSpec KemSK) X) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK)
     (collected : Option (PqxdhServerRootPreparation.Inputs Reader PqxdhJointGapDh.ScalarBytes
       PqxdhBeaconPhase2Preparation.Word32) × List Pqxdh.Bytes) (cut : OpaqueCut Reader KemSK X R)
     (reached : cut ∈ support (rejectRun setup codec checks identityIndex publicIdentity observe raw next owners state
@@ -171,10 +171,10 @@ theorem rejectRun_complete (setup : Setup baseSpec KemSK) (codec : Codec Reader 
 /-- An active opaque cut saves the raw bytes and client continuation of a reached pending raw-accept cut at the designated ordinal, and the verified record of their attached verification. -/
 theorem opaque_pending (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R)
-    (work : OracleComp (SourceSpec KemSK) X) (index : Nat) (owners : List EncodedEntry) (state : NativeState KemSK)
+    (work : OracleComp (SourceSpec KemSK) X) (index : Nat) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK)
     (raw : Pqxdh.Bytes) (value : PqxdhServerRootPreparation.Verified Reader)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)
-    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (after : List EncodedEntry)
+    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (after : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))
     (next : Option Nat → OracleComp (SourceSpec KemSK) X)
     (reached : OpaqueCut.pending raw value ephemeral consumed native after next ∈
       support (opaqueScan setup codec checks identityIndex publicIdentity observe work index owners state)) :
@@ -236,7 +236,7 @@ noncomputable def sourcePreOpaque (setup : Setup baseSpec KemSK) (codec : Codec 
     let result ← (((simulateQ (PqxdhDynamicKemJointRouter.stopped setup.baseImpl setup.joint setup.kem selected.val
       (List.ofFn (selected.insertNth chosen others)))
       (opaqueScan setup codec checks created.server.server.metadata.identityIndex created.publicIdentity
-        (decideTag decision) work index [] (PqxdhRegistrationJointInitializedAccept.initial created))).run).run
+        (decideTag decision) work index ([], fun _ => none) (PqxdhRegistrationJointInitializedAccept.initial created))).run).run
           (born.2.1.1, PqxdhDynamicKemRouter.empty))
     pure (.ready created others result.1 result.2 born.2.2)
 

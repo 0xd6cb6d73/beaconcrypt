@@ -2,6 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativePlatformIdentityBundleHashBounds
 import BeaconcryptCore.Computational.RegistrationNativePlatformIdentityBirthHashBounds
 import BeaconcryptCore.Computational.RegistrationNativePlatformIdentityCtxFrontendHashBounds
+import BeaconcryptCore.Computational.RegistrationNativePlatformIdentityCtxLifecycle
 /-! The actual full Main owner create and dynamic-writer bundle callbacks inherit one and two physical shared hashes. Public alias reporting remains protocol-only and adds no shared hash. Full source joins retain all fields and all failed prefixes. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
@@ -18,7 +19,7 @@ variable {n : Nat} {I KemSK Platform E : Type} {base : OracleSpec I} {source : R
 
 /-- Actual owner birth carries its one pin hash into Main without another physical shared hash. -/
 theorem create_bound (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64) :
     Bounded (RegistrationNativePlatformIdentityCtxLifecycle.create (n := n) (source := source) (Platform := Platform)
       setup edPin mlPin keyId checks representation created) 1 :=
@@ -28,7 +29,7 @@ theorem create_bound (setup : Setup base KemSK) (checks : Checks)
 
 /-- Literal source bundle lookup, signing, mutable writing and public reply conversion retain their two-hash bill. -/
 theorem bundle_bound (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) (index : Nat) :
     Bounded (RegistrationNativePlatformIdentityCtxLifecycle.bundle (n := n) (source := source) setup checks representation created writer index) 2 := by
   intro before

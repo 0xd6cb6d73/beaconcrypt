@@ -51,7 +51,7 @@ theorem BeaconRecordAead_finish_total (self : registration.BeaconRecordAead)
         self.agreement.candidate opened.key_id bound
       cases authenticated <;>
         simp [splitRun, convertedRun, authRun, pqxdh.AuthenticatedBeaconRegistration.assigned_key_id,
-          session.RegistrationBinding.finish, pqxdh.beacon_commit]
+          session.CompletedRegistrationBinding.finish, pqxdh.beacon_commit]
 
 theorem normalize_beacon_open_total (accepted : agreement.BeaconAgreement) (effect : record_effects.RecordReceiveEffect) :
     ∃ result, registration.normalize_beacon_open accepted effect = ok result := by
@@ -103,7 +103,7 @@ theorem ServerRecordWrite_resume_total (self : registration.ServerRecordWrite)
   repeat first | split | exact ⟨_, rfl⟩
   simp only [bind_tc_ok]
   repeat first | split | exact ⟨_, rfl⟩
-  simp only [bind_tc_ok, session.RegistrationBinding.impl.init_hash,
+  simp only [bind_tc_ok, session.CompletedRegistrationBinding.impl.init_hash,
     pqxdh.ServerRegistrationCandidate.impl.server_identity_public_key,
     pqxdh.ServerRegistrationCandidate.impl.ephemeral_public_key,
     pqxdh.ServerRegistrationCandidate.impl.kem_ciphertext,
@@ -145,11 +145,16 @@ theorem begin_server_completion_total (control : pqxdh.ServerState)
       simp [registration.begin_server_completion, session.ServerAuthenticationPin.impl.binding,
         emptyRun, matchRun, prepareRun]
   | Ok candidate =>
-    obtain ⟨pending, pendingRun⟩ := Structural.pqxdh_concrete_start_server_candidate_ratchet_kdf_total
-      candidate accepted.root.bytes
+    obtain ⟨input, inputRun⟩ := SessionBinding.RegistrationBinding_ad_transcript_total accepted.binding
+      ⟨candidate.server_identity_public_key, candidate.ephemeral_public_key,
+        candidate.kem_ciphertext, candidate.key_id⟩
     cases empty <;> cases matched <;>
       simp [registration.begin_server_completion, session.ServerAuthenticationPin.impl.binding,
-        ratchet.RatchetChain.as_bytes, emptyRun, matchRun, prepareRun, pendingRun]
+        emptyRun, matchRun, prepareRun, inputRun,
+        pqxdh.ServerRegistrationCandidate.impl.server_identity_public_key,
+        pqxdh.ServerRegistrationCandidate.impl.ephemeral_public_key,
+        pqxdh.ServerRegistrationCandidate.impl.kem_ciphertext,
+        pqxdh.ServerRegistrationCandidate.impl.key_id]
 
 theorem ServerResponseHash_resume_total (self : registration.ServerResponseHash)
     (digest : core.option.Option (Array Std.U8 64#usize)) :
@@ -230,7 +235,7 @@ theorem BeaconInitialKdf_resume_total (self : registration.BeaconInitialKdf)
       self.agreement.candidate.server_binding.identity_key_id
     obtain ⟨result, normal⟩ := normalize_beacon_open_total self.agreement effect
     exact ⟨result, by simpa only [registration.BeaconInitialKdf.resume, kernelRun,
-      session.RegistrationBinding.impl.associated_data, pqxdh.BeaconRegistrationCandidate.server_key_id,
+      session.CompletedRegistrationBinding.impl.associated_data, pqxdh.BeaconRegistrationCandidate.server_key_id,
       effectRun, bind_tc_ok] using normal⟩
 
 theorem BeaconRecordKdf_resume_total (self : registration.BeaconRecordKdf)
@@ -263,7 +268,7 @@ theorem ServerInitialKdf_resume_total (self : registration.ServerInitialKdf)
     cases start <;> simp [registration.ServerInitialKdf.resume, pqxdh.server_abort_candidate,
       kernelRun, pqxdh.ServerRegistrationCandidate.impl.key_id,
       pqxdh.ServerRegistrationCandidate.impl.server_identity_key_id,
-      session.RegistrationBinding.impl.associated_data, contextRun, startRun]
+      session.CompletedRegistrationBinding.impl.associated_data, contextRun, startRun]
 
 end BeaconcryptCore.PanicFreedom.RegistrationPublication
 

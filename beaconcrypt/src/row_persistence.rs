@@ -14,7 +14,7 @@ use crate::{
 };
 
 const MAGIC: &[u8; 16] = b"beaconcrypt-row\0";
-const VERSION: u8 = 1;
+const VERSION: u8 = 2;
 const IDENTITY: u8 = 0;
 const ALLOCATOR: u8 = 1;
 const PEER: u8 = 2;
@@ -2021,6 +2021,15 @@ mod tests {
 				"offset {offset}"
 			);
 		}
+		assert_eq!(bytes[16], 2);
+		for version in [0, 1, 3, u8::MAX] {
+			let mut incompatible = bytes.to_vec();
+			incompatible[16] = version;
+			assert_eq!(
+				decode_row(&key, &incompatible).err(),
+				Some(RowError::InvalidRow)
+			);
+		}
 		let maximum = encode_row(&key, u64::MAX, &identity, &[]);
 		assert_eq!(decode_row(&key, &maximum).unwrap().generation, u64::MAX);
 	}
@@ -2048,12 +2057,18 @@ mod tests {
 		missing
 			.as_object_mut()
 			.unwrap()
-			.remove("mldsa_public_key_hash");
+			.remove("session_transcript_hash");
 		let mut short = value.clone();
-		short["mldsa_public_key_hash"] = serde_json::json!([1, 2]);
+		short["session_transcript_hash"] = serde_json::json!([1, 2]);
+		let mut legacy = missing.clone();
+		legacy["mldsa_public_key_hash"] = serde_json::json!(vec![0x35; 64]);
+		let mut null = value.clone();
+		null["session_transcript_hash"] = serde_json::Value::Null;
+		let mut long = value.clone();
+		long["session_transcript_hash"] = serde_json::json!(vec![0x35; 65]);
 		let mut extra = value;
 		extra["unexpected"] = serde_json::json!(0);
-		for malformed in [missing, short, extra] {
+		for malformed in [missing, short, long, null, legacy, extra] {
 			assert_eq!(
 				decode_peer(
 					&server.identity,

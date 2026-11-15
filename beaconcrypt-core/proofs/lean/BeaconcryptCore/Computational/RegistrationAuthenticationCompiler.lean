@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationWorldAuthentication
 
-/-! Incoming mandatory native authentication is an open EnvEffects program. Its actual ML operands and attached Ed25519 message remain local verification inputs; every transcript and fingerprint hash uses the actual record World cache. The compiler has no World in its environment state and no supplied verdict, digest or simulation law. -/
+/-! Incoming mandatory native authentication is an open EnvEffects program. The actual attached Ed25519 messages remain local verification inputs; every request transcript hash uses the actual record World cache. The compiler has no World in its environment state and no supplied verdict, digest or simulation law. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core PqxdhRefinement
@@ -10,7 +10,7 @@ namespace BeaconcryptCore.Computational.RegistrationAuthenticationCompiler
 open PqxdhRecordLiftInterface (EnvEffects EffectKind effectKind)
 open PqxdhServerAuthExperiment (Setup Codec)
 open BeaconcryptCore.Refinement.RegistrationInputs (hashBytes)
-open BeaconcryptCore.Refinement.RegistrationAuthenticationFlow (Event Executes Gates)
+open BeaconcryptCore.Refinement.RegistrationAuthenticationFlow (Event Executes ValidatedRequestHistory)
 variable {n : Nat} {Value ι KemSK Reader Response : Type} {base : OracleSpec ι}
 
 attribute [local irreducible] RegistrationAuthenticationExecutor.execute registration.begin_init_authentication
@@ -68,34 +68,31 @@ theorem begin_execution (setup : Setup base KemSK) (codec : Codec Reader Respons
   rw [program, program_native setup codec route verify] at supported
   exact RegistrationAuthenticationExecutor.simulated_begin_sound _ pin packet events final before after supported
 
-/-- Successful native admission still requires all seven actual authentication callbacks, including the mandatory ML gate. -/
-theorem begin_gates (setup : Setup base KemSK) (codec : Codec Reader Response)
+/-- Successful Init admission requires exactly the four current hash/classical callbacks. -/
+theorem begin_classical_checks (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (pin : session.ServerAuthenticationPin) (packet : registration.InitPacket)
     (before after : PqxdhRecordLiftWorld.State n) (events : List Event) (authenticated : registration.AuthenticatedInit)
     (supported : (.ok (events, .Accepted authenticated), after) ∈ support
       ((simulateQ PqxdhRecordLiftWorld.effects (program setup.source.crypto verify pin packet)).run before)) :
-    Gates packet events ∧ events.length = 7 := by
+    ValidatedRequestHistory packet events ∧ events.length = 4 := by
   rw [program, program_native setup codec route verify] at supported
-  exact RegistrationAuthenticationExecutor.simulated_begin_accepted_requires_gates _ pin packet events authenticated
+  exact RegistrationAuthenticationExecutor.simulated_begin_accepted_classical_checks _ pin packet events authenticated
     before after supported
 
-/-- Populated AD281 retains the actual selected keys and both fingerprints in the reached global cache. -/
-theorem begin_associated_data (setup : Setup base KemSK) (codec : Codec Reader Response)
+/-- The current compiler preserves exact selected pins, request buffers and the initial hash reply; it constructs no early AD. -/
+theorem begin_request_provenance (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (pin : session.ServerAuthenticationPin) (packet : registration.InitPacket)
     (before after : PqxdhRecordLiftWorld.State n) (events : List Event) (authenticated : registration.AuthenticatedInit)
     (supported : (.ok (events, .Accepted authenticated), after) ∈ support
-      ((simulateQ PqxdhRecordLiftWorld.effects (program setup.source.crypto verify pin packet)).run before))
-    (server : RawCtxServerRouting.Identity) :
-    (RegistrationRecordBinding.ofRegistration authenticated.binding).associatedBytes server =
-      BeaconcryptCore.Refinement.SessionBinding.boundAssociatedData
-        (absBytes pin.binding.identity_public_key) (absBytes authenticated.binding.beacon_identity_public_key)
-        (MldsaSharedAuthentication.cacheHash after.primitive.2 (absBytes pin.public_key))
-        (MldsaSharedAuthentication.cacheHash after.primitive.2 (absBytes packet.mldsa_public_key)) := by
+      ((simulateQ PqxdhRecordLiftWorld.effects (program setup.source.crypto verify pin packet)).run before)) :
+    authenticated.binding.server_pin = pin ∧
+      authenticated.binding.init_fields = BeaconcryptCore.Refinement.RegistrationAuthentication.ownedFields packet ∧
+      ∃ tail, events = .hash (.Some authenticated.binding.init_hash) :: tail := by
   rw [begin_native setup codec route verify pin packet] at supported
-  exact RegistrationWorldAuthentication.begin_associated_data setup codec route verify pin packet before after events
-    authenticated supported server
+  exact RegistrationWorldAuthentication.begin_request_provenance setup codec route verify pin packet before after events
+    authenticated supported
 
 /-- Each actual verification callback makes at most one hash effect and no random or administrative effect. -/
 theorem callback_bound (crypto : Pqxdh.Crypto) (verify : MldsaTranscriptAuth.Verify)
@@ -129,16 +126,16 @@ end BeaconcryptCore.Computational.RegistrationAuthenticationCompiler
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationAuthenticationCompiler.begin_execution
-/-- info: 'BeaconcryptCore.Computational.RegistrationAuthenticationCompiler.begin_gates' depends on axioms: [propext,
+/-- info: 'BeaconcryptCore.Computational.RegistrationAuthenticationCompiler.begin_classical_checks' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationAuthenticationCompiler.begin_gates
-/-- info: 'BeaconcryptCore.Computational.RegistrationAuthenticationCompiler.begin_associated_data' depends on axioms: [propext,
+#print axioms BeaconcryptCore.Computational.RegistrationAuthenticationCompiler.begin_classical_checks
+/-- info: 'BeaconcryptCore.Computational.RegistrationAuthenticationCompiler.begin_request_provenance' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/
 #guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationAuthenticationCompiler.begin_associated_data
+#print axioms BeaconcryptCore.Computational.RegistrationAuthenticationCompiler.begin_request_provenance
 /-- info: 'BeaconcryptCore.Computational.RegistrationAuthenticationCompiler.callback_bound' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/

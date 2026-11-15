@@ -33,7 +33,7 @@ variable [ed : AdapterInitEdPrimitive.Operations]
 variable {source : RegistrationNativeMldsa.Source} {KemSK : Type}
 
 theorem charged_related (view : MaterialView source KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (self : beaconcrypt_public_wrapper.server.Server) (native : RegistrationServerFrontendCompiler.State n)
     (related : Server view views created credential self native)
     (pending : peer.PeerInsert (alloc.vec.Vec U8)) :
@@ -41,7 +41,7 @@ theorem charged_related (view : MaterialView source KemSK) (views : Views)
   exact ⟨related.identity, related.control, related.pinIdentity, related.pinIdentifier, related.pinMldsa, related.replay, related.peers⟩
 
 theorem vacant (view : MaterialView source KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (self : beaconcrypt_public_wrapper.server.Server) (native : RegistrationServerFrontendCompiler.State n)
     (related : Server view views created credential self native)
     (pending : peer.PeerInsert (alloc.vec.Vec U8)) (vacant : Vacant) (back : Entry → PeerMap)
@@ -66,7 +66,7 @@ theorem vacant (view : MaterialView source KemSK) (views : Views)
   rfl
 
 theorem occupied (view : MaterialView source KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (self : beaconcrypt_public_wrapper.server.Server) (native : RegistrationServerFrontendCompiler.State n)
     (related : Server view views created credential self native)
     (pending : peer.PeerInsert (alloc.vec.Vec U8)) (selected : Occupied) (back : Entry → PeerMap)
@@ -88,7 +88,7 @@ variable {S : Type}
 variable [containers : AdapterPublicWrapperRequestMonad.ContainerOperations (AdapterPublicWrapperRustT.RustT (StateT S ProbComp))]
 
 theorem source_success (view : MaterialView source KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (self : beaconcrypt_public_wrapper.server.Server) (native : RegistrationServerFrontendCompiler.State n)
     (related : Server view views created credential self native)
     (pending : peer.PeerInsert (alloc.vec.Vec U8)) (publicKey : ed.PublicKey)
@@ -126,7 +126,7 @@ theorem source_success (view : MaterialView source KemSK) (views : Views)
     (charged_related view views created credential self native related pending) pending publicKey
     back (changed, insertedBack) (insertFootprint selected back changed insertedBack middle lookedUp inserted)
 theorem source_none (view : MaterialView source KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (self : beaconcrypt_public_wrapper.server.Server) (native : RegistrationServerFrontendCompiler.State n)
     (related : Server view views created credential self native)
     (pending : peer.PeerInsert (alloc.vec.Vec U8)) (publicKey : ed.PublicKey)

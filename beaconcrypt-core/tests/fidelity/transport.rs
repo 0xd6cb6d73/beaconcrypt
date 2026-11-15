@@ -29,7 +29,7 @@ const CONTRACTS: &[(&str, &str)] = &[
 	),
 	(
 		"encoded_init_len",
-		"CborLength::new().bytes(lengths[0]).bytes(lengths[1]).bytes(lengths[2]).bytes(lengths[3]).bytes(lengths[4]).bytes(lengths[5]).finish()",
+		"CborLength::new().bytes(lengths[0]).bytes(lengths[1]).bytes(lengths[2]).bytes(lengths[3]).finish()",
 	),
 	(
 		"encoded_response_len",
@@ -119,7 +119,7 @@ fn extracted_transport_policy_bypass_controls_are_rejected() {
 			".integer(sender)",
 			".integer(sequence)",
 		),
-		("encoded_init_len", ".bytes(lengths[4])", ".bytes(0)"),
+		("encoded_init_len", ".bytes(lengths[3])", ".bytes(0)"),
 		("encoded_response_len", ".bytes(lengths[4])", ".bytes(0)"),
 		(
 			"protected_frame_len",
@@ -172,7 +172,7 @@ fn extracted_transport_policy_bypass_controls_are_rejected() {
 		checked += 1;
 	}
 	// Every request and response byte-string slot must contribute once in source order.
-	for (name, fields) in [("encoded_init_len", 6), ("encoded_response_len", 5)] {
+	for (name, fields) in [("encoded_init_len", 4), ("encoded_response_len", 5)] {
 		let expected = CONTRACTS
 			.iter()
 			.find(|(function, _)| *function == name)
@@ -288,7 +288,7 @@ fn extracted_transport_policy_bypass_controls_are_rejected() {
 	assert_eq!(checked, TRANSPORT_MUTATION_COUNT);
 }
 
-const TRANSPORT_MUTATION_COUNT: usize = 61;
+const TRANSPORT_MUTATION_COUNT: usize = 57;
 
 fn replace_body(source: &mut String, name: &str, body: &str) {
 	let marker = format!("fn {name}");

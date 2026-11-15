@@ -91,13 +91,13 @@ theorem initial_prefix (entry : Entry) (target : RootOutput) :
     target.toList ++ entry.otherChain.toList
   simp [List.take_append]
 
-/-- The actual source initializer obtains both directional values from this same ratchet-domain entry. -/
+/-- The actual source initializer obtains both directional values from this same initial45-domain entry. -/
 theorem source_initial_chains (source : FixedHkdfSha512NoSaltSource) (input : Pqxdh.Bytes) :
     Pqxdh.rootChains source.crypto input =
       ((JointKdfProjection.first32.project
-          (productionStream source.crypto (FixedHkdfDomain.ratchet.address input))).toList,
-        (fromOutput (FixedHkdfDomain.ratchet.address input)
-          (productionStream source.crypto (FixedHkdfDomain.ratchet.address input))).otherChain.toList) := by
+          (productionStream source.crypto (FixedHkdfDomain.initial.address input))).toList,
+        (fromOutput (FixedHkdfDomain.initial.address input)
+          (productionStream source.crypto (FixedHkdfDomain.initial.address input))).otherChain.toList) := by
   exact rootChains_eq_initialProjection source.crypto source.prefixConsistent input
 
 end BeaconcryptCore.Computational.RawCtxSelectedInitialEntry

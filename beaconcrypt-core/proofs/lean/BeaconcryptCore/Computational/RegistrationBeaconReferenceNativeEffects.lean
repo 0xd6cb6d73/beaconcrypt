@@ -20,14 +20,14 @@ def embed (before : RegistrationNativeExperiment.State n KemSK mlSource)
 
 noncomputable def native (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     QueryImpl (EnvEffects n) (RegistrationNativeExperiment.M n KemSK mlSource) :=
   fun query => RegistrationNativeExperiment.trusted setup checks representation created mlSource (.inl query)
 
 /-- Every adaptive World-effect program retains the entire native envelope, including owner lists, pool, chronological receipts and callback logs. -/
 theorem program (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (work : OracleComp (EnvEffects n) Value)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (work : OracleComp (EnvEffects n) Value)
     (before : RegistrationNativeExperiment.State n KemSK mlSource) :
     (simulateQ (native setup checks representation created) work).run before =
       Prod.map id (embed before) <$>
@@ -44,7 +44,7 @@ theorem program (setup : Setup base KemSK) (checks : Checks)
 /-- The actual Beacon wrapper of a pure World-effect component uses exactly that same World program and cannot overwrite a signing receipt or local callback field. -/
 theorem beacon_program (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (work : OracleComp (EnvEffects n) Value) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (work : OracleComp (EnvEffects n) Value) :
     RegistrationNativeExperiment.beacon setup checks representation created
       (StateT.lift (StateT.lift (simulateQ RegistrationBeaconReferenceNativeRecord.environment work))) =
       simulateQ (native (n := n) (mlSource := mlSource) setup checks representation created) work := by

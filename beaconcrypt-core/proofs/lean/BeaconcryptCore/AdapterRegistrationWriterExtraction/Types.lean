@@ -19,12 +19,12 @@ set_option maxRecDepth 2048
 namespace beaconcrypt_registration_writer
 
 /-- [beaconcrypt::wire::encode_init::closure]
-    Source: 'beaconcrypt/src/wire.rs', lines 60:28-62:5 -/
+    Source: 'beaconcrypt/src/wire.rs', lines 58:28-60:5 -/
 @[reducible]
 def wire.encode_init.closure := beaconcrypt_parse.transport.initkex
 
 /-- [beaconcrypt::wire::encode_response::closure]
-    Source: 'beaconcrypt/src/wire.rs', lines 77:28-79:5 -/
+    Source: 'beaconcrypt/src/wire.rs', lines 75:28-77:5 -/
 @[reducible]
 def wire.encode_response.closure := beaconcrypt_parse.transport.kexresponse
 

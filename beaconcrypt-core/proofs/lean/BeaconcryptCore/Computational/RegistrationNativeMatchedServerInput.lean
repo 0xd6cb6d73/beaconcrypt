@@ -1,6 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePendingTuple
 import BeaconcryptCore.Computational.RegistrationNativeTokenCacheTrace
+import BeaconcryptCore.Computational.RegistrationNativeServerContents
 
 /-! Same-run pending-bundle and consumed-token receipts identify the Server's actual checked root tuple with the current Beacon owner's actual public inputs. Only the common-cache collision exception and actual source-stage Init-hash equality are used. -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -19,7 +20,7 @@ attribute [local irreducible] RegistrationNativeExperiment.handler RegistrationS
 
 structure Receipt (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (owner : RegistrationNativeBeaconFrontend.Owner source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (owner : RegistrationNativeBeaconFrontend.Owner source)
     (oneTime : PqxdhJointGapDh.ScalarBytes) (token : peer.ConsumedRegistration)
     (pin : session.ServerAuthenticationPin) (cache : CtxRomAuth.CtxRO.QueryCache) where
   before : RegistrationServerFrontendCompiler.State n
@@ -61,7 +62,7 @@ theorem from_taken (setup : Setup base KemSK) (checks : Checks) (wire : Registra
     (taken : RegistrationServerSdkSource.take handle buildCall.before.server = (some token, current))
     (plaintext : Slice U8) (availability : pqxdh.KeyIdAvailability) (serverInitial : registration.ServerInitialKdf)
     (hashed : registration.ServerResponseHash)
-    (admitted : registration.begin_server_completion current.control current.pin availability token.agreement plaintext = .ok (.Ok serverInitial))
+    (admitted : BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission current.control current.pin availability token.agreement plaintext serverInitial)
     (recordPath : RegistrationServerRecordExecutor.Path serverInitial hashed)
     (initHash : hashed.binding.init_hash = pending.binding.init_hash)
     (collisionFree : ¬ CacheHasCollision (RegistrationNativeWorldCache.cache final)) :
@@ -86,17 +87,19 @@ theorem from_taken (setup : Setup base KemSK) (checks : Checks) (wire : Registra
     rw [cacheEq]
     exact extension
   have tokenBinding : token.agreement.binding = authenticated.binding := congrArg (fun value : agreement.ServerAgreement => value.binding) root.completedEq
-  have initialBinding := (RegistrationNativeServerBindingReceipt.initial_root current.control current.pin availability token.agreement plaintext serverInitial admitted).2.1
+  have initialHash := BeaconcryptCore.Refinement.RegistrationAd.server_admission_init_hash
+    current.control current.pin availability token.agreement plaintext serverInitial admitted
   have retained := (RegistrationNativeServerContents.path_contents serverInitial hashed recordPath).1
+  have retainedHash : hashed.binding.init_hash = token.agreement.binding.init_hash :=
+    (congrArg (fun value : session.CompletedRegistrationBinding => value.init_hash) retained).trans initialHash
   have authHash : authenticated.binding.init_hash = RegistrationAuthenticationShared.digestArray pendingInput.digest :=
     (congrArg (fun value : session.RegistrationBinding => value.init_hash) tokenBinding.symm).trans
-      ((congrArg (fun value : session.RegistrationBinding => value.init_hash) (retained.trans initialBinding)).symm.trans
-        (initHash.trans pendingInput.initHash))
-  have startedSame : pendingInput.fingerprint.state.started = pendingInput.started := by
+      (retainedHash.symm.trans (initHash.trans pendingInput.initHash))
+  have startedSame : pendingInput.hashing.state.started = pendingInput.started := by
     simpa only [RegistrationNativeInitTupleSource.Fixed, RegistrationNativeInitTupleSource.metadata] using congrArg Prod.fst pendingInput.fixed
   have matched := RegistrationNativeInitTupleAgreement.registration setup (RegistrationNativeWire.ledgerCodec wire) route source.verify
     initial.created packet acceptCall.before.server afterAuthentication events authenticated checked (RegistrationNativeWorldCache.cache final)
-      authExtension pendingInput.fingerprint.state pendingInput.started _ startedSame pendingInput.attached pendingInput.validated
+      authExtension pendingInput.hashing.state pendingInput.started _ startedSame pendingInput.attached pendingInput.validated
         pendingInput.digest pendingInput.cached authHash collisionFree
   have fromAccept : Path (RegistrationNativeExperiment.handler setup checks wire route representation initial.created source initial.credential)
       acceptCall.before (acceptCall :: between ++ buildCall :: buildTrailing) final := .cons acceptCall accepted _ _ afterAccept

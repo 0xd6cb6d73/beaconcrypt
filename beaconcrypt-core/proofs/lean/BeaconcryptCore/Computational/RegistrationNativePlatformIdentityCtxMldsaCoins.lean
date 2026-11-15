@@ -71,7 +71,7 @@ private theorem native_update (change : RegistrationWorldAgreementCompiler.EnvSt
 private theorem native_outgoing (setup : Setup base KemSK) (index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner source)
     (request : registration.MldsaSigningRequest) (payload : MldsaTranscriptAuth.Payload) (digest : CtxRomAuth.CtxDigest) :
     NativeWork (RegistrationNativeIdentityFrontend.outgoing (n := n) (Auxiliary := Auxiliary) setup source index owner (.inl (.sign request payload digest))) :=
-  native_bind _ _ (native_sample _) (fun reply => native_bind _ _ (native_update _) (fun _ => native_pure reply))
+  native_pure (core.option.Option.None : RegistrationSigningShared.SignReply)
 
 private theorem native_lifted (setup : Setup base KemSK) (index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner source)
     (request : registration.MldsaSigningRequest) (payload : MldsaTranscriptAuth.Payload) (digest : CtxRomAuth.CtxDigest)
@@ -96,7 +96,7 @@ private theorem backend_coins (work : ProbComp A) :
     exact (allQueriesSatisfy_query_bind_iff _ _ _).mpr ⟨trivial, ih⟩
 
 private theorem compiler_coin (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (RegistrationNativePlatformIdentityProgram.Spec n KemSK).Domain)
     (permitted : PlatformCoin (n := n) (KemSK := KemSK) query) (before : RegistrationNativeIdentityWorld.Context n KemSK) :
     ((RegistrationNativePlatformIdentityCtxCompiler.free
@@ -132,7 +132,7 @@ private theorem compiled_state {J K S X : Type} {left : OracleSpec J} {right : O
 
 /-- The literal actual current ML outgoing callback can query only ordinary uniform coins. All physical/native/P effects remain in the tree. -/
 theorem outgoing (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner source)
     (request : registration.MldsaSigningRequest) (payload : MldsaTranscriptAuth.Payload) (digest : CtxRomAuth.CtxDigest)
     (before : RegistrationNativeIdentityMain.State n KemSK source × Platform) :

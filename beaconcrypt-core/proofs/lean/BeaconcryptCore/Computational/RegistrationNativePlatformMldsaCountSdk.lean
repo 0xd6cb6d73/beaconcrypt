@@ -18,6 +18,7 @@ open RegistrationNativePlatformPackedState (pack)
 open RegistrationNativeMldsaCountServer (localProject serverProject)
 open RegistrationNativePlatformCompletionSdk (Completion)
 variable {n : Nat} {Platform Value Encoded : Type} {source : RegistrationNativeMldsa.Source}
+variable (deriveAd : RegistrationNativePlatformCompletionSdk.AdHash n (M source Platform))
 
 private theorem local_idempotent (before : RegistrationServerRootCompiler.Local n) : localProject (localProject before) = localProject before := by
   simp only [localProject, RegistrationNativeMldsaWorldView.idempotent]
@@ -74,25 +75,34 @@ theorem fromInitial (finish : Completion n (M source Platform) Encoded)
   exact RegistrationNativePlatformMldsaCountRules.bind serverProject _ _ (world _ (allowed control initial)) commit
 
 /-- Every actual occupancy and reservation branch preserves the same checked count laws. -/
-theorem afterOccupancy (reserve : StateT (RegistrationServerFrontendCompiler.State n) (M source Platform) Bool)
+theorem afterOccupancy
+    (derived : ∀ pending, Correct serverProject (deriveAd pending)) (reserve : StateT (RegistrationServerFrontendCompiler.State n) (M source Platform) Bool)
     (reserved : Correct serverProject reserve) (finish : Completion n (M source Platform) Encoded)
     (allowed : ∀ control initial, Correct localProject (finish control initial))
     (control : pqxdh.ServerState) (lookup : peer.CompletionLookup) (occupied : Bool) :
-    Correct serverProject (RegistrationNativePlatformCompletionSdk.afterOccupancy reserve finish control lookup occupied) := by
+    Correct serverProject (RegistrationNativePlatformCompletionSdk.afterOccupancy deriveAd reserve finish control lookup occupied) := by
   unfold RegistrationNativePlatformCompletionSdk.afterOccupancy
   cases lookup.resume occupied with
   | fail error | div => exact RegistrationNativePlatformMldsaCountRules.pure serverProject server_idempotent _
   | ok answer => cases answer with
     | Err prior => exact RegistrationNativePlatformMldsaCountRules.pure serverProject server_idempotent _
-    | Ok initial =>
-      apply RegistrationNativePlatformMldsaCountRules.bind serverProject _ _ reserved
-      intro admitted
-      cases admitted with
-      | false => exact RegistrationNativePlatformMldsaCountRules.pure serverProject server_idempotent _
-      | true => exact fromInitial finish allowed control initial
+    | Ok pending =>
+      apply RegistrationNativePlatformMldsaCountRules.bind serverProject _ _ (derived pending)
+      intro hashed
+      cases hashed with
+      | fail error | div => exact RegistrationNativePlatformMldsaCountRules.pure serverProject server_idempotent _
+      | ok answer => cases answer with
+        | Err previous => exact RegistrationNativePlatformMldsaCountRules.pure serverProject server_idempotent _
+        | Ok initial =>
+          apply RegistrationNativePlatformMldsaCountRules.bind serverProject _ _ reserved
+          intro admitted
+          cases admitted with
+          | false => exact RegistrationNativePlatformMldsaCountRules.pure serverProject server_idempotent _
+          | true => exact fromInitial finish allowed control initial
 
 /-- Exact pin, lookup, size and occupancy failures preserve the same source control and platform state. -/
-theorem afterPin (reserve : StateT (RegistrationServerFrontendCompiler.State n) (M source Platform) Bool)
+theorem afterPin
+    (derived : ∀ pending, Correct serverProject (deriveAd pending)) (reserve : StateT (RegistrationServerFrontendCompiler.State n) (M source Platform) Bool)
     (reserved : Correct serverProject reserve)
     (present : U64 → StateT (RegistrationServerFrontendCompiler.State n) (M source Platform) Bool)
     (presence : ∀ keyId, Correct serverProject (present keyId))
@@ -100,7 +110,7 @@ theorem afterPin (reserve : StateT (RegistrationServerFrontendCompiler.State n) 
     (allowed : ∀ control initial, Correct localProject (finish control initial))
     (control : pqxdh.ServerState) (token : peer.ConsumedRegistration) (application : Slice U8)
     (pin : RustM (core.option.Option session.ServerAuthenticationPin)) :
-    Correct serverProject (RegistrationNativePlatformCompletionSdk.afterPin reserve present finish control token application pin) := by
+    Correct serverProject (RegistrationNativePlatformCompletionSdk.afterPin deriveAd reserve present finish control token application pin) := by
   unfold RegistrationNativePlatformCompletionSdk.afterPin
   cases pin with
   | fail error | div => exact RegistrationNativePlatformMldsaCountRules.pure serverProject server_idempotent _
@@ -120,7 +130,7 @@ theorem afterPin (reserve : StateT (RegistrationServerFrontendCompiler.State n) 
             dsimp only
             split
             · exact RegistrationNativePlatformMldsaCountRules.bind serverProject _ _ (presence keyId)
-                (afterOccupancy reserve reserved finish allowed control lookup)
+                (afterOccupancy (derived := derived) (deriveAd := deriveAd) reserve reserved finish allowed control lookup)
             · exact RegistrationNativePlatformMldsaCountRules.pure serverProject server_idempotent _
 
 private def readControl : StateT (RegistrationServerFrontendCompiler.State n) (M source Platform) pqxdh.ServerState :=
@@ -135,15 +145,16 @@ private theorem complete_shape
     (reserve : StateT (RegistrationServerFrontendCompiler.State n) (M source Platform) Bool)
     (present : U64 → StateT (RegistrationServerFrontendCompiler.State n) (M source Platform) Bool)
     (finish : Completion n (M source Platform) Encoded) (token : peer.ConsumedRegistration) (application : Slice U8) :
-    RegistrationNativePlatformCompletionSdk.complete pin reserve present finish token application = (do
+    RegistrationNativePlatformCompletionSdk.complete deriveAd pin reserve present finish token application = (do
       let control ← readControl
       let selected ← pin
-      RegistrationNativePlatformCompletionSdk.afterPin reserve present finish control token application selected) := by
+      RegistrationNativePlatformCompletionSdk.afterPin deriveAd reserve present finish control token application selected) := by
   funext before previous
   simp only [RegistrationNativePlatformCompletionSdk.complete, readControl, bind_apply, get_apply, pure_apply, pure_bind]
 
 /-- Actual completion reads only retained control before executing its stateful pin and lookup continuation. -/
 theorem complete
+    (derived : ∀ pending, Correct serverProject (deriveAd pending))
     (pin : StateT (RegistrationServerFrontendCompiler.State n) (M source Platform) (RustM (core.option.Option session.ServerAuthenticationPin)))
     (pinned : Correct serverProject pin) (reserve : StateT (RegistrationServerFrontendCompiler.State n) (M source Platform) Bool)
     (reserved : Correct serverProject reserve)
@@ -151,12 +162,12 @@ theorem complete
     (presence : ∀ keyId, Correct serverProject (present keyId)) (finish : Completion n (M source Platform) Encoded)
     (allowed : ∀ control initial, Correct localProject (finish control initial))
     (token : peer.ConsumedRegistration) (application : Slice U8) :
-    Correct serverProject (RegistrationNativePlatformCompletionSdk.complete pin reserve present finish token application) := by
+    Correct serverProject (RegistrationNativePlatformCompletionSdk.complete deriveAd pin reserve present finish token application) := by
   rw [complete_shape]
   apply RegistrationNativePlatformMldsaCountRules.bind serverProject _ _ read_correct
   intro control
   exact RegistrationNativePlatformMldsaCountRules.bind serverProject _ _ pinned
-    (afterPin reserve reserved present presence finish allowed control token application)
+    (afterPin (derived := derived) (deriveAd := deriveAd) reserve reserved present presence finish allowed control token application)
 
 private def take (handle : Nat) : StateT (RegistrationServerFrontendCompiler.State n) (M source Platform) (Option peer.ConsumedRegistration) :=
   fun before => pure (RegistrationServerSdkSource.take handle before)
@@ -177,10 +188,10 @@ private theorem build_shape
     (reserve : StateT (RegistrationServerFrontendCompiler.State n) (M source Platform) Bool)
     (present : U64 → StateT (RegistrationServerFrontendCompiler.State n) (M source Platform) Bool)
     (finish : Completion n (M source Platform) Encoded) (handle : Nat) (application : Option (Slice U8)) :
-    RegistrationNativePlatformCompletionSdk.build pin reserve present finish handle application = (do
+    RegistrationNativePlatformCompletionSdk.build deriveAd pin reserve present finish handle application = (do
       let token ← take handle
       match token, application with
-      | some token, some application => RegistrationNativePlatformCompletionSdk.complete pin reserve present finish token application
+      | some token, some application => RegistrationNativePlatformCompletionSdk.complete deriveAd pin reserve present finish token application
       | _, _ => pure (.ok none)) := by
   funext before previous
   simp only [RegistrationNativePlatformCompletionSdk.build, take, bind_apply, pure_apply, pure_bind, StateT.run]
@@ -189,6 +200,7 @@ private theorem build_shape
 
 /-- The complete actual SDK build retains moved-token, source pin, reservation and commit behavior under both count equations. -/
 theorem build
+    (derived : ∀ pending, Correct serverProject (deriveAd pending))
     (pin : StateT (RegistrationServerFrontendCompiler.State n) (M source Platform) (RustM (core.option.Option session.ServerAuthenticationPin)))
     (pinned : Correct serverProject pin) (reserve : StateT (RegistrationServerFrontendCompiler.State n) (M source Platform) Bool)
     (reserved : Correct serverProject reserve)
@@ -196,7 +208,7 @@ theorem build
     (presence : ∀ keyId, Correct serverProject (present keyId)) (finish : Completion n (M source Platform) Encoded)
     (allowed : ∀ control initial, Correct localProject (finish control initial))
     (handle : Nat) (application : Option (Slice U8)) :
-    Correct serverProject (RegistrationNativePlatformCompletionSdk.build pin reserve present finish handle application) := by
+    Correct serverProject (RegistrationNativePlatformCompletionSdk.build deriveAd pin reserve present finish handle application) := by
   rw [build_shape]
   apply RegistrationNativePlatformMldsaCountRules.bind serverProject _ _ (take_correct handle)
   intro token
@@ -204,7 +216,7 @@ theorem build
   | none => exact RegistrationNativePlatformMldsaCountRules.pure serverProject server_idempotent _
   | some token => cases application with
     | none => exact RegistrationNativePlatformMldsaCountRules.pure serverProject server_idempotent _
-    | some application => exact complete pin pinned reserve reserved present presence finish allowed token application
+    | some application => exact complete (derived := derived) (deriveAd := deriveAd) pin pinned reserve reserved present presence finish allowed token application
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformMldsaCountSdk
 

@@ -9,6 +9,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialHalfDisclosure
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhInitialPendingPost PqxdhInitialDisclosureState PqxdhSecretInputKdf
 open RawCtxSelectedChain
 variable {ι M P I D K X Response Shared Result Origin Z : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -22,7 +24,7 @@ private theorem aux_quiet (query : PqxdhServerRegistrationPublication.AuxSpec.Do
 theorem after_quiet (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Pqxdh.Bytes)
     (kernel : KernelOf Slot) (metadata : P)
     (before : PqxdhInitialGenericPublication.State (KernelOf Slot) M P (List Pqxdh.Bytes)) :
-    (PqxdhInitialGenericPublication.afterInitialization
+    (PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData)
       (calls (extra := extra) (I := I) (D := D) (K := K) (X := X) (Response := Response) (Shared := Shared) (S := S) (B := B))
       auxForward candidate authenticated kernel metadata before).IsQueryBoundP (isRead (extra := extra)) 0 := by
   unfold PqxdhInitialGenericPublication.afterInitialization
@@ -41,7 +43,7 @@ theorem after_quiet (candidate : pqxdh.ServerRegistrationCandidate) (authenticat
 theorem candidate_quiet (first : RustM (KernelOf Slot)) (candidate : pqxdh.ServerRegistrationCandidate)
     (data : Option Pqxdh.Bytes) (metadata : P)
     (before : PqxdhInitialGenericPublication.State (KernelOf Slot) M P (List Pqxdh.Bytes)) :
-    (PqxdhInitialGenericBuilder.candidate
+    (PqxdhInitialGenericBuilder.candidate (associatedData := associatedData)
       (calls (extra := extra) (I := I) (D := D) (K := K) (X := X) (Response := Response) (Shared := Shared) (S := S) (B := B))
       auxForward first candidate data metadata before).IsQueryBoundP (isRead (extra := extra)) 0 := by
   unfold PqxdhInitialGenericBuilder.candidate
@@ -72,14 +74,14 @@ theorem candidate_quiet (first : RustM (KernelOf Slot)) (candidate : pqxdh.Serve
                 | fail error => trivial
                 | div => trivial
                 | ok binding =>
-                    exact (isQueryBoundP_map_iff _ _ _).mpr (after_quiet candidate _ kernel metadata before)
+                    exact (isQueryBoundP_map_iff _ _ _).mpr (after_quiet (associatedData := associatedData) candidate _ kernel metadata before)
             · trivial
 
 /-- The actual current allocator and Ready preparation introduce no family disclosure callback. -/
 theorem ready_quiet (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (first : RustM (KernelOf Slot))
     (binding : pqxdh.ServerBinding) (ready : PqxdhPrivateAcceptedRoot.Ready) (metadata : P)
     (before : PqxdhInitialGenericPublication.State (KernelOf Slot) M P (List Pqxdh.Bytes)) :
-    (PqxdhInitialGenericBuilder.readyBuild source
+    (PqxdhInitialGenericBuilder.readyBuild (associatedData := associatedData) source
       (calls (extra := extra) (I := I) (D := D) (K := K) (X := X) (Response := Response) (Shared := Shared) (S := S) (B := B))
       auxForward first binding ready metadata before).IsQueryBoundP (isRead (extra := extra)) 0 := by
   unfold PqxdhInitialGenericBuilder.readyBuild PqxdhInitialGenericBuilder.usedBuild
@@ -100,15 +102,15 @@ theorem ready_quiet (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (fi
           | ok result =>
               cases result with
               | Err error => trivial
-              | Ok candidate => exact candidate_quiet first candidate ready.application metadata before
+              | Ok candidate => exact candidate_quiet (associatedData := associatedData) first candidate ready.application metadata before
 
 /-- The complete actual pre-first-send builder has zero adversary reads, including consumption and unsuccessful publication. -/
 theorem build_quiet (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (first : RustM (KernelOf Slot))
     (sender : M → Std.U64) (index : Fin S) (metadata : P) (ready : PqxdhPrivateAcceptedRoot.Ready)
     (before : Front Slot M P I D K S B) :
-    ((PqxdhInitialPendingBuilder.build (extra := extra) (X := X) (Response := Response) (Shared := Shared)
+    ((PqxdhInitialPendingBuilder.build (associatedData := associatedData) (extra := extra) (X := X) (Response := Response) (Shared := Shared)
       source first sender index metadata ready).run before).IsQueryBoundP (isRead (extra := extra)) 0 :=
-  (isQueryBoundP_map_iff _ _ _).mpr (ready_quiet source first _ ready metadata _)
+  (isQueryBoundP_map_iff _ _ _).mpr (ready_quiet (associatedData := associatedData) source first _ ready metadata _)
 
 /-- Consumption and reinstalling the actual builder result preserve the literal pre-builder reveal history on every Rust branch. -/
 theorem reinstall_history (index : Fin S) (ready : PqxdhPrivateAcceptedRoot.Ready)
@@ -131,26 +133,26 @@ theorem sequence_invariant (target : RootOutput)
     (valid : Invariant target disclosed before.1.roles.2 state)
     (result : (Result × (Front Slot M P I D K S B × PqxdhInitialOriginPost.Trace Origin S B)) × State Z)
     (supported : result ∈ support ((simulateQ impl
-      ((PqxdhInitialOriginPost.sequence source first mark origin sender route decode index metadata ready post).run before)).run state)) :
+      ((PqxdhInitialOriginPost.sequence (associatedData := associatedData) (completedBinding := completedBinding) source first mark origin sender route decode index metadata ready post).run before)).run state)) :
     Invariant target disclosed result.1.2.1.roles.2 result.2 := by
   change result ∈ support ((simulateQ impl (do
-    let built ← (PqxdhInitialPendingBuilder.build source first sender index metadata ready).run before.1
-    (simulateQ (PqxdhInitialOriginPost.compiler mark sender route decode) (post built.1)).run
+    let built ← (PqxdhInitialPendingBuilder.build (associatedData := associatedData) source first sender index metadata ready).run before.1
+    (simulateQ (PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) mark sender route decode) (post built.1)).run
       (built.2, PqxdhInitialOriginPost.afterBuilder before.2 built.2 index origin built.1))).run state) at supported
   simp only [simulateQ_bind, StateT.run_bind, mem_support_bind_iff] at supported
   obtain ⟨built, reached, rest⟩ := supported
-  have kept := quiet_program target impl rules _ (build_quiet source first sender index metadata ready before.1) state built reached
+  have kept := quiet_program target impl rules _ (build_quiet (associatedData := associatedData) source first sender index metadata ready before.1) state built reached
   have history : built.1.2.roles.2 = before.1.roles.2 := by
     change built ∈ support ((simulateQ impl (PqxdhInitialPendingBuilder.reinstall index
       (PqxdhInitialPendingBuilder.consume index ready before.1) <$>
-      PqxdhInitialGenericBuilder.readyBuild source calls auxForward first
+      PqxdhInitialGenericBuilder.readyBuild (associatedData := associatedData) source calls auxForward first
         ⟨(PqxdhInitialPendingBuilder.selected sender index (PqxdhInitialPendingBuilder.consume index ready before.1)).server.identity,
           (PqxdhInitialPendingBuilder.selected sender index (PqxdhInitialPendingBuilder.consume index ready before.1)).identityKeyId⟩
         ready metadata (PqxdhInitialPendingBuilder.selected sender index (PqxdhInitialPendingBuilder.consume index ready before.1)))).run state) at reached
     simp only [simulateQ_map, StateT.run_map, support_map] at reached
     obtain ⟨original, _, rfl⟩ := reached
     exact reinstall_history index ready before.1 original.1
-  exact schedule_invariant target impl rules disclosed mark sender route decode (post built.1.1) _ built.2
+  exact schedule_invariant (completedBinding := completedBinding) target impl rules disclosed mark sender route decode (post built.1.1) _ built.2
     (history.symm ▸ invariant_keep target disclosed before.1.roles.2 state built.2 valid kept) result rest
 
 end BeaconcryptCore.Computational.PqxdhInitialHalfDisclosure

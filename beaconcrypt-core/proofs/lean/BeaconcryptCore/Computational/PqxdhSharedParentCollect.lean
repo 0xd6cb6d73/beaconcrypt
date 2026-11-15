@@ -9,6 +9,7 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 open OracleComp OracleSpec
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhSharedParentCollect
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhNativeSharedPrefix PqxdhCorrelatedExpand
 open CtxRomAuth AdaptiveCtxSharedHash PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhInitialBeaconAmbient
 variable {ι I D K X Response Shared A N C : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -54,16 +55,16 @@ noncomputable def collect (depth : Nat)
   | .pending context state =>
     if state.store.1 (PqxdhInitialBuilderContext.address context.original) = none then pure (.inr (context, state))
     else do
-      let result ← PqxdhNativeSharedContinuation.finish source writer (depth + 1) pre application initial selector aux mark sender route decode cut
+      let result ← PqxdhNativeSharedContinuation.finish (completedBinding := completedBinding) source writer (depth + 1) pre application initial selector aux mark sender route decode cut
       pure (.inl (decision source root selected number ancestors disclosed result))
 
 /-- The same missing/hit test and full cached continuation produce the literal original prepared sample, including its complete source Gate/Fresh decision. -/
 theorem collect_source (depth : Nat)
     (cut : PqxdhNativeSharedContinuation.Carried extra M P I D K Bool Bool A N RootOracle.QueryCache S B) (cache : CtxRO.QueryCache) :
     (fun result => restore result.1 result.2) <$>
-      (simulateQ hashImpl (collect source writer pre application initial selector aux mark sender route decode
+      (simulateQ hashImpl (collect (completedBinding := completedBinding) source writer pre application initial selector aux mark sender route decode
         root selected number ancestors disclosed depth cut)).run cache =
-    PqxdhInitialPreparedParent.collect source writer (fun request => localLift (pre request))
+    PqxdhInitialPreparedParent.collect (completedBinding := completedBinding) source writer (fun request => localLift (pre request))
       (fun reply => localLift (application reply)) (fun secrets => localLift (initial secrets))
       (fun request => localLift (selector request)) (fun request => localLift (aux request)) mark sender route decode
       (fun result => pure (PqxdhInitialPublishedEvent.sourceDecision source root selected number ancestors disclosed result)) depth
@@ -81,7 +82,7 @@ theorem collect_source (depth : Nat)
     · have original := congrArg (fun work =>
         (fun result => (Sum.inl (PqxdhInitialPublishedEvent.sourceDecision source root selected number ancestors disclosed result) :
           Bool ⊕ PqxdhInitialPreparedParent.Pending extra M P I D K Bool Bool A N RootOracle.QueryCache S B)) <$> work)
-        (PqxdhNativeSharedContinuation.finish_source source writer (depth + 1) pre application initial selector aux
+        (PqxdhNativeSharedContinuation.finish_source (completedBinding := completedBinding) source writer (depth + 1) pre application initial selector aux
           mark sender route decode (.pending context state) cache)
       simpa only [simulateQ_bind, StateT.run_bind, map_bind, simulateQ_pure, StateT.run_pure,
         map_pure, bind_pure_comp, simulateQ_map, StateT.run_map, Functor.map_map, restore, ← decision_cache,

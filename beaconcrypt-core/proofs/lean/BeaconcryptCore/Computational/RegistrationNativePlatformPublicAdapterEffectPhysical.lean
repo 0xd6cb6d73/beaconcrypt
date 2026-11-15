@@ -19,7 +19,7 @@ private theorem map_ok {A B : Type} (f : A→B) (value : A) :
     f <$>(RustM.ok value)=RustM.ok (f value) :=rfl
 variable {n : Nat} {I KemSK R P : Type} {base : OracleSpec I} {mlSource : RegistrationNativeMldsa.Source}
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 
 noncomputable def leaf : QueryImpl Spec (StateT (Backend n KemSK) ProbComp)
   | .inl coin=>RegistrationNativePlatformSdkReification.backendLeaf setup checks representation created (.inl coin)
@@ -154,7 +154,7 @@ variable {Value : Type}
 noncomputable def pureStep
     (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (current : RegistrationNativeExperiment.State n KemSK mlSource×P)
     (before : RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views created credential current)
     (value : Value) :
@@ -179,7 +179,7 @@ noncomputable def pureStep
 theorem pure_source
     (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (current : RegistrationNativeExperiment.State n KemSK mlSource×P)
     (before : RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views created credential current)
     (value : Value) :

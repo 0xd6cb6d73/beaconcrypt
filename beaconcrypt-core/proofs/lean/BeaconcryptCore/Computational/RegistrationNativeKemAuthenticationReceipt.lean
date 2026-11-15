@@ -18,7 +18,7 @@ attribute [local irreducible] RegistrationWorldAuthentication.begin
 theorem accepted (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (packet : registration.InitPacket) (events : List BeaconcryptCore.Refinement.RegistrationAuthenticationFlow.Event)
     (authenticated : registration.AuthenticatedInit)
     (before after : RegistrationNativeKemServerState.State n mlSource × PqxdhLiveKemBirth.Pool KemSK)

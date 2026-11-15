@@ -272,8 +272,8 @@ def test_missing_malformed_and_noncanonical_snapshots_raise_typed_errors():
     store.snapshot = b"bad"
     assert_error("invalid_snapshot", lambda: BeaconCryptServer.restore(store))
     server, good = create()
-    assert int.from_bytes(good.snapshot[16:18], "little") == 3
-    for version in [1, 2]:
+    assert int.from_bytes(good.snapshot[16:18], "little") == 4
+    for version in [1, 2, 3]:
         corrupted = bytearray(good.snapshot)
         corrupted[16:18] = version.to_bytes(2, "little")
         store.snapshot = bytes(corrupted)
@@ -310,9 +310,7 @@ def test_callback_exceptions_are_chained_and_fail_closed(callback):
 
     store = FailingStore()
     if callback == "load":
-        error = assert_error(
-            "storage", lambda: BeaconCryptServer.restore(store)
-        )
+        error = assert_error("storage", lambda: BeaconCryptServer.restore(store))
     else:
         error = assert_error("commit_unknown", lambda: create(store))
     assert isinstance(error.__cause__, CallbackFailure)
@@ -346,9 +344,7 @@ def test_wrong_callback_return_type_raises_persistence_error_with_type_error_cau
         def load(self):
             return "JSON is not a checkpoint"
 
-    error = assert_error(
-        "storage", lambda: BeaconCryptServer.restore(WrongLoad())
-    )
+    error = assert_error("storage", lambda: BeaconCryptServer.restore(WrongLoad()))
     assert isinstance(error.__cause__, TypeError)
 
 

@@ -63,7 +63,7 @@ theorem program (env : Environment n E) (startup : Nat) (allowance : Fin 14 → 
     (crypto : Pqxdh.Crypto) (codec : Codec Reader Response) (serverKeyId : U64)
     (bounds : FreshBounds) (mode : Mode) (budget : Budget)
     (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) V) (bounded : RegistrationNativeInterface.Respects budget work)
-    (created : PqxdhLiveServerConstruction.Created Unit) (before : E) (kind : EffectKind) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (before : E) (kind : EffectKind) :
     (RegistrationNativePlatformGatedNativeEntropy.program env reserve crypto codec serverKeyId bounds mode work created before).IsQueryBoundP
       (WorldEffect kind) (effectBudget budget bounds allowance reserveCoins kind) := by
   unfold RegistrationNativePlatformGatedNativeEntropy.program

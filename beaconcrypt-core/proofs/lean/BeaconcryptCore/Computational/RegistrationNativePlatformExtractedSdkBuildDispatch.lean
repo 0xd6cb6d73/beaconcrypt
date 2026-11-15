@@ -20,9 +20,10 @@ variable {n : Nat} {KemSK Platform R : Type} {source : RegistrationNativeMldsa.S
 variable [material : PublicWrapperPlatform.Material] [platform : PublicWrapperPlatform.Platform] [ed : AdapterInitEdPrimitive.Operations]
 variable (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (containers : AdapterPublicWrapperStorage.Views) (joint : PqxdhJointIdentity.Primitives)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 variable (current : RegistrationNativeExperiment.State n KemSK source ×Platform)
     (before : Carrier (R:=R) view containers joint created credential current)
+variable (deriveAd : RegistrationNativePlatformCompletionSdk.AdHash n (StateT Platform ProbComp))
 variable (pin : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp)
     (RustM (core.option.Option session.ServerAuthenticationPin)))
 variable (reserve : StateT (RegistrationServerFrontendCompiler.State n) (StateT Platform ProbComp) Bool)
@@ -32,11 +33,11 @@ variable (finish : RegistrationNativePlatformCompletionSdk.Completion n (StateT 
 theorem live_model (handle : Nat) (token : beaconcrypt_public_wrapper.server.RegistrationOutput)
     (stored : before.objects.tokens handle=some token) (application : Slice U8) :
     RegistrationNativePlatformPackedState.pack
-      (RegistrationNativePlatformExperiment.server (RegistrationNativePlatformCompletionSdk.build pin reserve present finish handle (some application))) current=
+      (RegistrationNativePlatformExperiment.server (RegistrationNativePlatformCompletionSdk.build deriveAd pin reserve present finish handle (some application))) current=
     RegistrationNativePlatformPackedState.pack
-      (RegistrationNativePlatformExperiment.server (RegistrationNativePlatformCompletionSdk.complete pin reserve present finish token.registration application))
+      (RegistrationNativePlatformExperiment.server (RegistrationNativePlatformCompletionSdk.complete deriveAd pin reserve present finish token.registration application))
       (AdapterPublicServerBuildOwnership.moved handle current.1,current.2) := by
-  have same:=RegistrationNativePlatformExtractedSdkCarrier.build_live view containers joint created credential current before pin reserve present finish handle token stored application
+  have same:=RegistrationNativePlatformExtractedSdkCarrier.build_live view containers joint created credential current before deriveAd pin reserve present finish handle token stored application
   simp only [StateT.run] at same
   simp only [RegistrationNativePlatformPackedState.pack,RegistrationNativePlatformExperiment.server,StateT.run]
   rw [same]
@@ -46,19 +47,19 @@ noncomputable def live (handle : Nat) (token : beaconcrypt_public_wrapper.server
     (stored : before.objects.tokens handle=some token) (application : Slice U8)
     (call : TotalStep (Carrier (R:=R) view containers joint created credential)
       (RegistrationNativePlatformPackedState.pack
-        (RegistrationNativePlatformExperiment.server (RegistrationNativePlatformCompletionSdk.complete pin reserve present finish token.registration application))
+        (RegistrationNativePlatformExperiment.server (RegistrationNativePlatformCompletionSdk.complete deriveAd pin reserve present finish token.registration application))
         (AdapterPublicServerBuildOwnership.moved handle current.1,current.2))) :
     TotalStep (Carrier (R:=R) view containers joint created credential)
       (RegistrationNativePlatformPackedState.pack
-        (RegistrationNativePlatformExperiment.server (RegistrationNativePlatformCompletionSdk.build pin reserve present finish handle (some application))) current) := by
-  rw [live_model view containers joint created credential current before pin reserve present finish handle token stored application]
+        (RegistrationNativePlatformExperiment.server (RegistrationNativePlatformCompletionSdk.build deriveAd pin reserve present finish handle (some application))) current) := by
+  rw [live_model view containers joint created credential current before deriveAd pin reserve present finish handle token stored application]
   exact call
 
 theorem missing_model (handle : Nat) (missing : before.objects.tokens handle=none) (application : Option (Slice U8)) :
     RegistrationNativePlatformPackedState.pack
-      (RegistrationNativePlatformExperiment.server (RegistrationNativePlatformCompletionSdk.build pin reserve present finish handle application)) current=
+      (RegistrationNativePlatformExperiment.server (RegistrationNativePlatformCompletionSdk.build deriveAd pin reserve present finish handle application)) current=
       pure (.ok none,current) := by
-  have same:=RegistrationNativePlatformExtractedSdkCarrier.build_missing view containers joint created credential current before pin reserve present finish handle missing application
+  have same:=RegistrationNativePlatformExtractedSdkCarrier.build_missing view containers joint created credential current before deriveAd pin reserve present finish handle missing application
   simp only [StateT.run] at same
   simp only [RegistrationNativePlatformPackedState.pack,RegistrationNativePlatformExperiment.server,StateT.run]
   rw [same]
@@ -67,9 +68,9 @@ theorem missing_model (handle : Nat) (missing : before.objects.tokens handle=non
 theorem cancel_model (handle : Nat) (token : beaconcrypt_public_wrapper.server.RegistrationOutput)
     (stored : before.objects.tokens handle=some token) :
     RegistrationNativePlatformPackedState.pack
-      (RegistrationNativePlatformExperiment.server (RegistrationNativePlatformCompletionSdk.build pin reserve present finish handle none)) current=
+      (RegistrationNativePlatformExperiment.server (RegistrationNativePlatformCompletionSdk.build deriveAd pin reserve present finish handle none)) current=
       pure (.ok none,(AdapterPublicServerBuildOwnership.moved handle current.1,current.2)) := by
-  have same:=RegistrationNativePlatformExtractedSdkCarrier.build_cancel view containers joint created credential current before pin reserve present finish handle token stored
+  have same:=RegistrationNativePlatformExtractedSdkCarrier.build_cancel view containers joint created credential current before deriveAd pin reserve present finish handle token stored
   simp only [StateT.run] at same
   simp only [RegistrationNativePlatformPackedState.pack,RegistrationNativePlatformExperiment.server,StateT.run]
   rw [same]
@@ -77,8 +78,8 @@ theorem cancel_model (handle : Nat) (token : beaconcrypt_public_wrapper.server.R
 noncomputable def missing (handle : Nat) (absent : before.objects.tokens handle=none) (application : Option (Slice U8)) :
     TotalStep (Carrier (R:=R) view containers joint created credential)
       (RegistrationNativePlatformPackedState.pack
-        (RegistrationNativePlatformExperiment.server (RegistrationNativePlatformCompletionSdk.build pin reserve present finish handle application)) current) := by
-  rw [missing_model view containers joint created credential current before pin reserve present finish handle absent application]
+        (RegistrationNativePlatformExperiment.server (RegistrationNativePlatformCompletionSdk.build deriveAd pin reserve present finish handle application)) current) := by
+  rw [missing_model view containers joint created credential current before deriveAd pin reserve present finish handle absent application]
   refine {step:={
       Packet:=Unit
       sample:=pure ()
@@ -99,8 +100,8 @@ noncomputable def cancel (handle : Nat) (token : beaconcrypt_public_wrapper.serv
     (stored : before.objects.tokens handle=some token) :
     TotalStep (Carrier (R:=R) view containers joint created credential)
       (RegistrationNativePlatformPackedState.pack
-        (RegistrationNativePlatformExperiment.server (RegistrationNativePlatformCompletionSdk.build pin reserve present finish handle none)) current) := by
-  rw [cancel_model view containers joint created credential current before pin reserve present finish handle token stored]
+        (RegistrationNativePlatformExperiment.server (RegistrationNativePlatformCompletionSdk.build deriveAd pin reserve present finish handle none)) current) := by
+  rw [cancel_model view containers joint created credential current before deriveAd pin reserve present finish handle token stored]
   refine {step:={
       Packet:=Unit
       sample:=pure ()

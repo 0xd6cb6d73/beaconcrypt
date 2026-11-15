@@ -41,13 +41,13 @@ theorem publication_tree {I : Type} {base : OracleSpec I}
     (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) m)
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (index : Nat) (owner : Owner source)
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize) :
+    (pin : session.ServerAuthenticationPin) :
     simulateQ (joint (Auxiliary := Auxiliary) implementation writer setup index owner)
-      (RegistrationNativePlatformWriter.begin E control inputs coins pin mldsa) =
+      (RegistrationNativePlatformWriter.begin E control inputs coins pin) =
       RegistrationNativePlatformBeaconPublication.begin
         (fun query => RegistrationNativePlatformGenericBundle.liftLegacy implementation
           (RegistrationNativeBeaconFrontend.outgoing setup source index owner query))
-        (RegistrationNativePlatformGenericBundle.encoderWith writer) control inputs coins pin mldsa := by
+        (RegistrationNativePlatformGenericBundle.encoderWith writer) control inputs coins pin := by
   rw [RegistrationNativePlatformWriter.begin_interpret]
   simp only [joint]
   congr 1
@@ -59,15 +59,15 @@ theorem publication {I : Type} {base : OracleSpec I}
     (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) m)
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (index : Nat) (owner : Owner source)
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize)
+    (pin : session.ServerAuthenticationPin)
     (selected : Nat) (scalar : ScalarBytes) (publicPrekey : PeerEncoding) :
     Equivariant selected scalar publicPrekey
       (RegistrationNativePlatformBeaconPublication.begin
         (fun query => RegistrationNativePlatformGenericBundle.liftLegacy implementation
           (RegistrationNativeBeaconFrontend.outgoing setup source index owner query))
-        (RegistrationNativePlatformGenericBundle.encoderWith writer) control inputs coins pin mldsa :
+        (RegistrationNativePlatformGenericBundle.encoderWith writer) control inputs coins pin :
           RegistrationNativePlatformGenericBundle.M source Auxiliary m _) := by
-  rw [← publication_tree implementation writer setup index owner control inputs coins pin mldsa]
+  rw [← publication_tree implementation writer setup index owner control inputs coins pin]
   apply program
   intro query
   cases query with

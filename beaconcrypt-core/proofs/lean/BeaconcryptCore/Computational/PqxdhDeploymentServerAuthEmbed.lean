@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEvent
 import BeaconcryptCore.Computational.PqxdhRegistrationR1Authentication
 
-/-! The embedding `R_c` of the common deployment experiment into the Server-authentication game (CE-8). For a creation index `c`, `embed` answers every query of a source14 program with field reads, as a ServerAuth adversary started on the target's public input: coins, accepts, builds, public HMAC, BLAKE2b and Server kernel reveals are forwarded unchanged (restriction 5: Server records are the program's own local work on revealed kernels); the `c`-th create, when its pin and key ID are the protected Server binding of the input, becomes the ServerAuth target, whose first bundle is answered with the target's published Phase 1 from the input, whose later bundles answer nothing, whose finish answers nothing before that first bundle and is the ServerAuth finish after it, and whose field reads answer nothing; every other create makes a local Beacon, drawn with the game's coins exactly as the native constructor draws it, whose bundles and kernel reads are local and whose finish runs the literal native owner program with local callbacks: preparation, KEM decapsulation and DH locally, the root as one public HMAC on the zero-salt Extract slice followed by real Expand, record HKDF and AEAD locally and BLAKE2b through the public hash. `freezeImpl` journals every query of a program and, once a stop predicate holds on the journal, answers every later query with a fixed default without issuing it. `adversary` is `R_c`: the frozen program under the embedding, with the stop of `c` (`PqxdhDeploymentServerAuthEvent.Stop`) on the journal's registration view. The section "Routing" shows that a coin computation and the local root, run through the singleton route and the source14 handler, are the native computations up to the analysis histories. No security claim is made here. -/
+/-! The embedding `R_c` of the common deployment experiment into the Server-authentication game (CE-8). For a creation index `c`, `embed` answers every query of a source14 program with field reads, as a ServerAuth adversary started on the target's public input: coins, accepts, builds, public HMAC, BLAKE2b and Server kernel reveals are forwarded unchanged (restriction 5: Server records are the program's own local work on revealed kernels); the `c`-th create, when its pin and key ID are the protected Server binding of the input, becomes the ServerAuth target, whose first bundle is answered with the target's published Phase 1 from the input, whose later bundles answer nothing, whose finish answers nothing before that first bundle and is the ServerAuth finish after it, and whose field reads answer nothing; every other create makes a local Beacon, drawn with the game's coins exactly as the native constructor draws it, whose bundles and kernel reads are local (a successfully written bundle is retained, `localBundleLog`) and whose finish (`localFinish`) first forwards the transcript of its retained bundle and the decoded response as one public BLAKE2b query, as the scheduler's owner finish hashes on the shared cache (design §4.6), and then runs the literal native owner program at the completed binding of that digest with local callbacks: preparation, KEM decapsulation and DH locally, the root as one public HMAC on the zero-salt Extract slice followed by real Expand, record HKDF and AEAD locally and BLAKE2b through the public hash. `freezeImpl` journals every query of a program and, once a stop predicate holds on the journal, answers every later query with a fixed default without issuing it. `adversary` is `R_c`: the frozen program under the embedding, with the stop of `c` (`PqxdhDeploymentServerAuthEvent.Stop`) on the journal's registration view. The section "Routing" shows that a coin computation and the local root, run through the singleton route and the source14 handler, are the native computations up to the analysis histories. No security claim is made here. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core PqxdhRefinement
@@ -78,6 +78,19 @@ def localBundle (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (
   simulateQ (PqxdhRegistrationSchedule.bundleCallbacks setup codec owner.beacon.identity)
     (PqxdhLivePhase1Bundle.bundle (PqxdhRegistrationSchedule.projection setup index) owner)
 
+/-- `localBundle` with the bundle handed to the writer retained exactly when the write succeeds (`PqxdhRegistrationSchedule.bundleLogCallbacks`), starting from the owner's previously retained bundle. -/
+def localBundleLog (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (index : Nat) (owner : Owner KemSK)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) :
+    ProbComp ((Option Pqxdh.Bytes × Owner KemSK) × Option PqxdhEd25519EufCma.Phase1Candidate) :=
+  (simulateQ (PqxdhRegistrationSchedule.bundleLogCallbacks setup codec owner.beacon.identity)
+    (PqxdhLivePhase1Bundle.bundle (PqxdhRegistrationSchedule.projection setup index) owner)).run retained
+
+/-- The logged local bundle projects to the local bundle. -/
+theorem localBundleLog_fst (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (index : Nat)
+    (owner : Owner KemSK) (retained : Option PqxdhEd25519EufCma.Phase1Candidate) :
+    Prod.fst <$> localBundleLog setup codec index owner retained = localBundle setup codec index owner :=
+  PqxdhRegistrationSchedule.bundleLog_fst setup codec owner.beacon.identity _ retained
+
 /-- The root of a local Beacon: one public HMAC on the zero-salt Extract slice, then real Expand. -/
 def localRoot (setup : Setup baseSpec KemSK) (input : pqxdh.RootKeyInput) : OracleComp ServerAuthSpec (Option Word32) :=
   (fun prk => some (PqxdhRootTableInitialization.rootArray (expandRoot setup.hmac prk))) <$>
@@ -95,6 +108,21 @@ noncomputable def localCallbacks (setup : Setup baseSpec KemSK) (codec : Codec R
   | .inr (.inr (.initial request)) => pure (RawCtxSourceHkdf.initialResponse setup.source.crypto request)
   | .inr (.inr (.application response)) => pure (codec.application response)
 
+/-- A local Beacon's finish (design §4.6): an InitSent owner with its retained bundle and a decodable response forwards the transcript of the bundle and the response's four fields as one public BLAKE2b query, then runs the literal native owner with local callbacks at the completed binding of the digest; an undecodable response (or a missing bundle) aborts before hashing and a non-InitSent owner answers nothing, as `PqxdhRegistrationSchedule.ownerFinish`. -/
+noncomputable def localFinish (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes) (owner : Owner KemSK) :
+    OracleComp ServerAuthSpec (Option Pqxdh.Bytes × Owner KemSK) :=
+  match owner.beacon.phase with
+  | .initSent control _ _ _ =>
+    match retained, responseOf codec raw with
+    | some init, some response => do
+        let digest ← forward (.hash (PqxdhTranscriptAd.transcript (PqxdhTranscriptAd.initOf init) response))
+        simulateQ (localCallbacks setup codec)
+          (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := PqxdhTranscriptAd.completedOf control digest)
+            codec.frameRead raw owner)
+    | _, _ => pure (none, PqxdhBeaconPhase2Preparation.abort control owner)
+  | _ => pure (none, owner)
+
 /-! ## The embedding -/
 
 /-- The embedding's view of creation index `c`: not yet created; created as the ServerAuth target and not yet bundled; bundled with the target's published Phase 1; first bundle rejected; or created with another binding and simulated locally. -/
@@ -106,13 +134,14 @@ inductive Slot where
   | released
   deriving DecidableEq
 
-/-- The embedding's state: one entry per created owner in creation order, a local owner or the target's placeholder, and the slot of `c`. -/
+/-- The embedding's state: one entry per created owner in creation order, a local owner or the target's placeholder, the slot of `c`, and the Phase 1 bundle each local owner last wrote successfully (design §4.6). -/
 structure Emb (KemSK : Type) where
   owners : List (Option (Owner KemSK))
   slot : Slot
+  inits : Nat → Option PqxdhEd25519EufCma.Phase1Candidate
 
-/-- The initial state: no owner, `c` not yet created. -/
-def Emb.empty : Emb KemSK := ⟨[], .waiting⟩
+/-- The initial state: no owner, `c` not yet created, no retained bundle. -/
+def Emb.empty : Emb KemSK := ⟨[], .waiting, fun _ => none⟩
 
 /-- The protected Server binding of a ServerAuth input. -/
 def inputBinding (input : AuthInput) : Word32 × Std.U64 :=
@@ -139,8 +168,10 @@ noncomputable def embed (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
             pure (input.phase1, { emb with slot := if input.phase1.isSome then .bundled else .failed })
           else pure (none, emb)
       | some (some owner) =>
-          (fun result => (result.1, { emb with owners := emb.owners.set index (some result.2) })) <$>
-            coins (localBundle setup codec index owner)
+          (fun result => (result.1.1, { emb with
+            owners := emb.owners.set index (some result.1.2)
+            inits := Function.update emb.inits index result.2 })) <$>
+            coins (localBundleLog setup codec index owner (emb.inits index))
   | .inl (.inr (.accept raw)) => StateT.lift (forward (.accept raw))
   | .inl (.inr (.build session payload)) => StateT.lift (forward (.build session payload))
   | .inl (.inr (.finish index raw)) => fun emb =>
@@ -151,7 +182,7 @@ noncomputable def embed (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
           else pure (none, emb)
       | some (some owner) =>
           (fun result => (result.1, { emb with owners := emb.owners.set index (some result.2) })) <$>
-            simulateQ (localCallbacks setup codec) (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw owner)
+            localFinish setup codec (emb.inits index) raw owner
   | .inl (.inr (.hmac key message)) => StateT.lift (forward (.hmac key message))
   | .inl (.inr (.hash bytes)) => StateT.lift (forward (.hash bytes))
   | .inl (.inr (.reveal keyId)) => StateT.lift (forward (.reveal keyId))
@@ -219,3 +250,8 @@ end BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEmbed
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEmbed.localRoot_route
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEmbed.localBundleLog_fst' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthEmbed.localBundleLog_fst

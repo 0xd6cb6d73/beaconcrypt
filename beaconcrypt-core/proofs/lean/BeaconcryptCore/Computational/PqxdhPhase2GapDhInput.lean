@@ -137,7 +137,7 @@ theorem prepared_test (c : Pqxdh.Crypto) (joint : Primitives) (dh : DhInterface 
   have pinned := pinned_conversion c joint dh scalar secretOfSeed wiring state server seed represented input control pin prepared admitted converted
   have shape := BeaconcryptCore.Refinement.PqxdhSurface.beacon_prepare_finish_success_shape control (concreteInputs dh scalar input).finishInputs
     prepared ((PqxdhBeaconPhase2Preparation.normalPrepare_exact _ _).trans (congrArg ok admitted))
-  exact test_source dh domain seed scalar input references pinned prepared.root_key_input shape.2.2.2.1 candidate history
+  exact test_source dh domain seed scalar input references pinned prepared.root_key_input shape.2.2.2 candidate history
     (fun answer log => next answer log final)
 
 /-- Each candidate recognition costs at most two ordinary anchored decisions and no signing or explicit uniform query; malformed candidates incur neither decision. -/

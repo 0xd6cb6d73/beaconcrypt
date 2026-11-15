@@ -37,7 +37,7 @@ variable [idleCodecs : AdapterPublicWrapperRequestMonad.Codecs (AdapterPublicWra
 
 omit localOps crypto idleLocal idleCrypto idleChildren idleCodecs [PublicWrapperPlatform.CryptoOperations] in
 private noncomputable def absent {R : Type}
-    (setup : PqxdhServerAuthExperiment.Setup base KemSK) (created : PqxdhLiveServerConstruction.Created Unit)
+    (setup : PqxdhServerAuthExperiment.Setup base KemSK) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (view : AdapterPublicWrapperState.MaterialView source KemSK)
     (current : RegistrationNativeExperiment.State n KemSK source×Platform)
     (objects : RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view containersView created credential current) :
@@ -60,7 +60,7 @@ private noncomputable def absent {R : Type}
   reply:=by intro _packet _supported returned actual; cases actual; rfl }
 
 noncomputable def step {R : Type} (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire)
     (erased : commitment.CommitmentTranscript)
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State))

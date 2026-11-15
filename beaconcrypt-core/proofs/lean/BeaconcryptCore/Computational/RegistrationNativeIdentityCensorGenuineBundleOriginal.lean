@@ -18,14 +18,14 @@ open RegistrationNativeIdentityCensorEdOutgoingSource (Full interpret)
 open RegistrationNativeIdentityCensorOtherOwnerSource (Genuine Holds)
 variable {n : Nat} {I KemSK Platform E A Q : Type} {base : OracleSpec I} {queries : OracleSpec Q} {mlSource : RegistrationNativeMldsa.Source}
 variable (setup : Setup base KemSK) (checks : Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (selected index : Nat) (owner : RegistrationNativeIdentityFrontend.Owner mlSource) (placeholder : Ed25519Signature)
 variable (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E))
 local notation "Main" => RegistrationNativePlatformIdentityCtxMain.beacon (n := n) (Platform := Platform) (source := mlSource) setup checks representation created
 local notation "source(" censored "," work ")" => interpret setup.joint selected placeholder censored work
 local notation "original(" work ")" => RegistrationNativePlatformIdentityCtxMain.interpret setup.joint work
 local notation "tree(" scalar ")" => RegistrationNativePlatformWriter.begin E (pqxdh.BeaconFresh.mk owner.pin.binding)
-  (RegistrationNativeIdentityFrontend.inputs owner) (pqxdh.BeaconCoins.mk (PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar))) owner.pin owner.mldsa.publicKey
+  (RegistrationNativeIdentityFrontend.inputs owner) (pqxdh.BeaconCoins.mk (PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar))) owner.pin
 local notation "publication(" scalar ")" => Main (simulateQ
   (RegistrationNativePlatformIdentityPublication.callback (n := n) (Auxiliary := RegistrationServerRoleBackend.State)
     setup index owner (RegistrationNativePlatformConcreteSource.writer reserve)) (tree(scalar)))
@@ -101,7 +101,7 @@ theorem message (censored : Bool) (target : Pqxdh.Bytes) (targetRole : Registrat
     Prod.map id RegistrationNativeIdentityCensorActualHashSource.project <$> (source(censored, body(scalar))).run before =
       (original(body(scalar))).run (RegistrationNativeIdentityCensorActualHashSource.project before) := by
   apply genuine setup checks representation created selected index owner placeholder reserve censored target scalar _ before held
-  apply (RegistrationNativePlatformOneTimeOperandLineage.begin_allowed (E := E) _ _ _ _ _ started built tagged).mono
+  apply (RegistrationNativePlatformOneTimeOperandLineage.begin_allowed (E := E) _ _ _ _ started built tagged).mono
   intro query allowed
   rcases query with (_query | request) | query
   · trivial

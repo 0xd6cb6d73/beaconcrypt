@@ -46,7 +46,7 @@ theorem pre_bound (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (cap : Nat)
     (bounded : ∀ created : PqxdhRegistrationJointServerBirth.ClientCreated Unit,
       (PqxdhRegistrationJointKemEncapsulation.commands setup codec checks
-        created.server.server.metadata.identityIndex created.publicIdentity client []
+        created.server.server.metadata.identityIndex created.publicIdentity client ([], fun _ => none)
         (PqxdhRegistrationJointInitializedAccept.initial created)).IsQueryBoundP predicate cap)
     (context : Context KemSK A Result count)
     (reached : context ∈ support (pre setup codec checks ensureInit supplied client runtime count selected occurrence challengeKey)) :

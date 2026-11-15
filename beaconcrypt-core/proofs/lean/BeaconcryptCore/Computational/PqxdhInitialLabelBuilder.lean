@@ -9,6 +9,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialLabelBuilder
+variable (associatedData : Std.Array Std.U8 151#usize)
 open PqxdhJointKdfGame PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily
 open PqxdhInitialRootLabelService PqxdhInitialReplyErasure
 variable {Result M P I D K A : Type} {S B : Nat}
@@ -47,7 +48,7 @@ noncomputable def build (fixed : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
     (sender : M → Std.U64) (index : Fin S) (metadata : P) (selected : Message)
     (ready : PqxdhPrivateAcceptedRoot.Ready) (state : PqxdhRegistrationProtocolState.State M P I D K A S B) :=
   simulateQ (compiler selected)
-    ((PqxdhInitialServiceBuilder.protocolBuild fixed writer aux sender index metadata
+    ((PqxdhInitialServiceBuilder.protocolBuild (associatedData := associatedData) fixed writer aux sender index metadata
       (PqxdhInitialBuilderCut.eraseRoot ready)).run state)
 
 /-- Changing only the supplied Ready root cannot change any executable compiled builder operation or continuation. -/
@@ -56,8 +57,8 @@ theorem root_unused (fixed : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedS
     (sender : M → Std.U64) (index : Fin S) (metadata : P) (selected : Message)
     (ready : PqxdhPrivateAcceptedRoot.Ready) (root : PqxdhSecretInputKdf.RootOutput)
     (state : PqxdhRegistrationProtocolState.State M P I D K A S B) :
-    build fixed writer aux sender index metadata selected { ready with root := root } state =
-      build fixed writer aux sender index metadata selected ready state := rfl
+    build (associatedData := associatedData) fixed writer aux sender index metadata selected { ready with root := root } state =
+      build (associatedData := associatedData) fixed writer aux sender index metadata selected ready state := rfl
 
 /-- The actual root-erased compiled Server builder consumes the supplied response after its original checks and preserves first-send work and the complete protocol/shared result and root cache. -/
 theorem build_response (fixed : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
@@ -66,9 +67,9 @@ theorem build_response (fixed : FixedHkdfSha512NoSaltSource) (writer : RawCtxMix
     (ready : PqxdhPrivateAcceptedRoot.Ready) (state : PqxdhRegistrationProtocolState.State M P I D K A S B)
     (response : PqxdhInitialRootLabelService.Response) (cache : RootOracle.QueryCache) :
     (simulateQ (labelledFull fixed (QueryImpl.ofLift unifSpec ProbComp) selected response)
-      (build fixed writer aux sender index metadata selected ready state)).run cache =
+      (build (associatedData := associatedData) fixed writer aux sender index metadata selected ready state)).run cache =
       (fun result => (result, cache)) <$>
-        (PqxdhInitialBuilderCut.protocolBuild fixed writer (kernelOf false response) aux sender index metadata
+        (PqxdhInitialBuilderCut.protocolBuild (associatedData := associatedData) fixed writer (kernelOf false response) aux sender index metadata
           (PqxdhInitialBuilderCut.eraseRoot ready)).run state := by
   rw [build, response_program, PqxdhInitialSuppliedBuilder.protocol_supplied]
   rfl
@@ -87,9 +88,9 @@ theorem build_source (fixed : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixed
     (ready : PqxdhPrivateAcceptedRoot.Ready) (state : PqxdhRegistrationProtocolState.State M P I D K A S B)
     (cache : RootOracle.QueryCache) :
     (simulateQ (labelledFull fixed (QueryImpl.ofLift unifSpec ProbComp) selected (realInitial fixed ready.root))
-      (build fixed writer aux sender index metadata selected ready state)).run cache =
+      (build (associatedData := associatedData) fixed writer aux sender index metadata selected ready state)).run cache =
       (fun result => (result, cache)) <$>
-        (PqxdhRegistrationProtocolState.build fixed writer aux sender index metadata ready).run state := by
+        (PqxdhRegistrationProtocolState.build (associatedData := associatedData) fixed writer aux sender index metadata ready).run state := by
   rw [build_response, kernel_source, PqxdhInitialBuilderCut.protocol_erased_source]
 
 end BeaconcryptCore.Computational.PqxdhInitialLabelBuilder

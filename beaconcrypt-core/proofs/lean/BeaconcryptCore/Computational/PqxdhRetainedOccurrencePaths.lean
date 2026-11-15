@@ -6,6 +6,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhRetainedOccurrencePaths
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily
 open PqxdhInitialNativeRetained PqxdhInitialBeaconAmbient PqxdhInitialReceiptConstruction
 open PqxdhRetainedOccurrenceInterpreter
@@ -34,11 +36,11 @@ local notation "Evidence" => PqxdhInitialInstallOccurrence.Trace RatchetChain Re
 theorem sequence_erase (initial : RustM (PqxdhInitialPendingPost.KernelOf RatchetChain))
     (entry : Front × Trace) (state : RetainedState A N RootOracle.QueryCache) :
     Prod.map (Prod.map id Prod.fst) id <$>
-      (simulateQ impl ((PqxdhInitialInstallOccurrence.sequence source initial mark origin sender route decode
+      (simulateQ impl ((PqxdhInitialInstallOccurrence.sequence (associatedData := associatedData) (completedBinding := completedBinding) source initial mark origin sender route decode
         index metadata ready post).run (entry, PqxdhInitialInstallOccurrence.empty))).run state =
-    (simulateQ impl ((PqxdhInitialOriginPost.sequence source initial mark origin sender route decode
+    (simulateQ impl ((PqxdhInitialOriginPost.sequence (associatedData := associatedData) (completedBinding := completedBinding) source initial mark origin sender route decode
       index metadata ready post).run entry)).run state := by
-  rw [← PqxdhInitialInstallOccurrence.sequence_erase source initial mark origin sender route decode
+  rw [← PqxdhInitialInstallOccurrence.sequence_erase (associatedData := associatedData) (completedBinding := completedBinding) source initial mark origin sender route decode
     index metadata ready post (entry, PqxdhInitialInstallOccurrence.empty), simulateQ_map, StateT.run_map]
   rfl
 
@@ -48,12 +50,12 @@ theorem annotated_holds (cr : Ratchet.Crypto RatchetChain RatchetMaterial AD PT 
     (entry : Front × Trace) (state : RetainedState A N RootOracle.QueryCache)
     (result : (Result × ((Front × Trace) × Evidence)) × RetainedState A N RootOracle.QueryCache)
     (supported : result ∈ support ((simulateQ impl
-      ((PqxdhInitialInstallOccurrence.sequence source
+      ((PqxdhInitialInstallOccurrence.sequence (associatedData := associatedData) (completedBinding := completedBinding) source
         (ConcreteRatchetKernel.refined <$> PqxdhInitialReplyErasure.kernelOf false serverResponse)
         mark origin sender route decode index metadata ready post).run
           (entry, PqxdhInitialInstallOccurrence.empty))).run state)) :
     PqxdhInitialOccurrencePaths.Holds cr prior result.1.2.1.1 result.1.2.2 := by
-  apply PqxdhInitialOccurrencePaths.sequence_holds source writer prior selected previousRoot response64
+  apply PqxdhInitialOccurrencePaths.sequence_holds (associatedData := associatedData) (completedBinding := completedBinding) source writer prior selected previousRoot response64
     (fun query => ambient (pre query)) (fun reply => ambient (application reply))
     (fun query => ambient (selector query)) (fun query => ambient (aux query))
     cr serverResponse mark origin sender route decode index metadata ready post entry
@@ -68,22 +70,22 @@ theorem sequence_supported (cr : Ratchet.Crypto RatchetChain RatchetMaterial AD 
     (entry : Front × Trace) (state : RetainedState A N RootOracle.QueryCache)
     (result : (Result × (Front × Trace)) × RetainedState A N RootOracle.QueryCache)
     (supported : result ∈ support ((simulateQ impl
-      ((PqxdhInitialOriginPost.sequence source
+      ((PqxdhInitialOriginPost.sequence (associatedData := associatedData) (completedBinding := completedBinding) source
         (ConcreteRatchetKernel.refined <$> PqxdhInitialReplyErasure.kernelOf false serverResponse)
         mark origin sender route decode index metadata ready post).run entry)).run state)) :
     ∃ evidence : Evidence,
       ((result.1.1, (result.1.2, evidence)), result.2) ∈ support ((simulateQ impl
-        ((PqxdhInitialInstallOccurrence.sequence source
+        ((PqxdhInitialInstallOccurrence.sequence (associatedData := associatedData) (completedBinding := completedBinding) source
           (ConcreteRatchetKernel.refined <$> PqxdhInitialReplyErasure.kernelOf false serverResponse)
           mark origin sender route decode index metadata ready post).run
             (entry, PqxdhInitialInstallOccurrence.empty))).run state) ∧
       PqxdhInitialOccurrencePaths.Holds cr prior result.1.2.1 evidence := by
-  rw [← sequence_erase source writer prior selected previousRoot response64 pre application selector aux
+  rw [← sequence_erase (associatedData := associatedData) (completedBinding := completedBinding) source writer prior selected previousRoot response64 pre application selector aux
     mark origin sender route decode index metadata ready post] at supported
   simp only [support_map, Set.mem_image] at supported
   obtain ⟨⟨⟨value, saved, evidence⟩, after⟩, actual, same⟩ := supported
   cases same
-  exact ⟨evidence, actual, annotated_holds source writer prior selected previousRoot response64
+  exact ⟨evidence, actual, annotated_holds (associatedData := associatedData) (completedBinding := completedBinding) source writer prior selected previousRoot response64
     pre application selector aux mark origin sender route decode index metadata ready post
     cr serverResponse entry state _ actual⟩
 

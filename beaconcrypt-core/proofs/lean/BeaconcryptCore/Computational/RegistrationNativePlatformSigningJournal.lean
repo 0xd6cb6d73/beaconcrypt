@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativeMldsaRequestAlignment
 import BeaconcryptCore.Computational.RegistrationNativePlatformInterpret
 
-/-! The source signer receives only a complete signing request. A private chronological hash cut supplies its unsigned payload and digest; it never inverts the shared hash cache. The actual source hash continuation establishes the cut before either outgoing signing stage. True primitive draws and complete native World state are retained, including failed signing and later publication. -/
+/-! The source signer receives only a complete signing request. A private chronological hash cut supplies its unsigned payload and digest; it never inverts the shared hash cache. The actual source hash continuation establishes the cut before the actual Server outgoing signing stage. True primitive draws and complete native World state are retained, including failed signing and later publication. -/
 open CoreModels Aeneas OracleComp OracleSpec
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -114,8 +114,6 @@ private theorem submit_source (coins : QueryImpl unifSpec m)
     (encoded : core.option.Option Encoded) (request : registration.HashRequest)
     (transcript : hashBytes request = command.payload.transcript)
     (aligned : match stage with
-      | .beacon pending => ∀ selected, pending.request = .ok selected →
-          TranscriptAuthInputsRefinement.absRole selected.role = command.payload.role
       | .server pending => ∀ selected, pending.request = .ok selected →
           TranscriptAuthInputsRefinement.absRole selected.role = command.payload.role
       | _ => True)
@@ -125,7 +123,7 @@ private theorem submit_source (coins : QueryImpl unifSpec m)
       (simulateQ (forward coins primitive) (RegistrationSigningShared.submit command digest stage encoded)).run
         (before, some (⟨request, digest⟩ : Cut)) := by
   cases stage with
-  | beacon pending | server pending =>
+  | server pending =>
       simp only [RegistrationSigningShared.submit]
       cases called : pending.request with
       | fail error | div => simp only [RegistrationSigningShared.continueWith, simulateQ_pure]
@@ -142,7 +140,7 @@ private theorem submit_source (coins : QueryImpl unifSpec m)
           simp only [RegistrationSigningShared.continueWith, simulateQ_bind, simulateQ_spec_query,
             StateT.run_bind, source, forward, simulateQ_pure]
           rw [same]
-  | beaconStopped effect | serverStopped previous => rfl
+  | serverStopped previous => rfl
 
 /-- Actual source hash/sign continuations derive the journal alignment, including every later signature/publication outcome. -/
 theorem dispatch_source (coins : QueryImpl unifSpec m)
@@ -157,16 +155,6 @@ theorem dispatch_source (coins : QueryImpl unifSpec m)
   apply bind_congr
   intro result
   cases command with
-  | beacon hashing =>
-      obtain ⟨pending, selected, resumed, selectedRun, _key, role, _context, _input⟩ :=
-        RegistrationSigningShared.resume_beacon_request hashing result.1
-      rw [resumed]
-      apply submit_source coins primitive (.beacon hashing) result.1 (.beacon pending) encoded request transcript
-      intro query queryRun
-      have same : query = selected := RustM.ok.inj (queryRun.symm.trans selectedRun)
-      subst query
-      simp only [role, TranscriptAuthInputsRefinement.absRole,
-        BeaconcryptCore.Refinement.RegistrationSigningTrace.Command.payload]
   | server hashing =>
       obtain ⟨pending, selected, resumed, selectedRun, _key, role, _context, _input⟩ :=
         RegistrationSigningShared.resume_server_request hashing result.1

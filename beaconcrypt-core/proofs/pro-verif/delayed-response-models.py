@@ -78,6 +78,52 @@ def without_binding(source):
     return result[:start] + result[end:]
 
 
+COUNTERFACTUAL_ASSIGNED = "delayed_counterfactual_ad_omitted_assigned_id"
+COUNTERFACTUAL_LIBRARY = "delayed-response-wrong-binding-ad-omits-assigned-id.pvl"
+# The positive half of the same counterfactual: the binding check present.
+COUNTERFACTUAL_BINDING_LIBRARY = "delayed-response-ad-omits-assigned-id.pvl"
+COUNTERFACTUAL_LIBRARIES = (COUNTERFACTUAL_LIBRARY, COUNTERFACTUAL_BINDING_LIBRARY)
+
+
+def ad_omits_assigned_id(source):
+    """Counterfactual control only (never a production profile).
+
+    Registration version 3 binds the response assigned ID twice: as the LE64
+    last field of the transcript inside AD151 and as the authenticated
+    eight-byte payload prefix. In the binding-removed control the relabeled
+    response is already rejected by AEAD/CTX opening under AD151. This replaces
+    only the assigned-ID transcript field of the two AD151 derivations (the
+    pending Server build and the Beacon finish) by one fixed public constant,
+    so the control again isolates the removed binding check. It is applied to
+    both delayed-response-wrong-binding.pvl (binding check removed: the original
+    trace returns) and delayed-response.pvl (binding check present: A1 stays
+    true), so the pair shows that the binding check alone blocks the trace.
+    """
+    if COUNTERFACTUAL_ASSIGNED in source:
+        raise ValueError("counterfactual constant already present")
+    result = once(
+        source,
+        "ed_public(SERVER_IDENTITY_SECRET),ephemeral,ciphertext,assigned) in",
+        f"ed_public(SERVER_IDENTITY_SECRET),ephemeral,ciphertext,{COUNTERFACTUAL_ASSIGNED}) in",
+    )
+    result = once(
+        result,
+        "    response_server_identity, server_ephemeral, kem_ciphertext, assigned_key_id\n  ) in",
+        f"    response_server_identity, server_ephemeral, kem_ciphertext, {COUNTERFACTUAL_ASSIGNED}\n  ) in",
+    )
+    if result.count("fs_associated_data(") != 2:
+        raise ValueError("expected exactly two delayed-response AD derivations")
+    header = "(* SPDX-License-Identifier: 0BSD *)\n"
+    if not result.startswith(header):
+        raise ValueError("delayed-response control header changed")
+    return (
+        header
+        + "(* Counterfactual control only: the transcript AD omits the assigned ID. *)\n"
+        + f"const {COUNTERFACTUAL_ASSIGNED}: key_id.\n"
+        + result[len(header) :]
+    )
+
+
 def validate(directory=HERE):
     source = (directory / "fs-registration.pvl").read_text()
     model = (directory / "delayed-response.pvl").read_text()
@@ -95,3 +141,15 @@ def validate(directory=HERE):
     expected = once(query, "process FsRegistrationMain()", "process A1Main(false)")
     if tokens((directory / "delayed-response-a1.pv").read_text()) != tokens(expected):
         raise ValueError("delayed response must retain the full original A1 formula")
+    for source in (control, model):
+        derived = ad_omits_assigned_id(source)
+        if tokens(derived).count(COUNTERFACTUAL_ASSIGNED) != 3:
+            raise ValueError(
+                "assigned-ID counterfactual changed more than the two AD fields"
+            )
+    if tokens(without_binding(ad_omits_assigned_id(model))) != tokens(
+        ad_omits_assigned_id(control)
+    ):
+        raise ValueError(
+            "the two assigned-ID counterfactuals differ beyond the binding check"
+        )

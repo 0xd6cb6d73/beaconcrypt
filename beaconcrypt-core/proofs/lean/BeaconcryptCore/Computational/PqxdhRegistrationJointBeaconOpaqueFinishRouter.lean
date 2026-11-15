@@ -126,6 +126,17 @@ theorem simulateQ_free {ι ι' α : Type} {spec : OracleSpec ι} {spec' : Oracle
       simp only [simulateQ_bind, simulateQ_spec_query]
       exact (isQueryBoundP_bind (step query) fun answer _ => ih answer).mono (by omega)
 
+/-- Interpreting a program by a stateful handler whose every step, from every state, avoids a predicate avoids it from every initial state. -/
+theorem simulateQ_state_free {ι ι' σ α : Type} {spec : OracleSpec ι} {spec' : OracleSpec ι'}
+    (impl : QueryImpl spec (StateT σ (OracleComp spec'))) (bad : ι' → Prop) [DecidablePred bad]
+    (step : ∀ query state, ((impl query).run state).IsQueryBoundP bad 0) (work : OracleComp spec α) (state : σ) :
+    ((simulateQ impl work).run state).IsQueryBoundP bad 0 := by
+  induction work using OracleComp.inductionOn generalizing state with
+  | pure value => trivial
+  | query_bind query next ih =>
+      simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind]
+      exact (isQueryBoundP_bind (step query state) fun answer _ => ih answer.1 answer.2).mono (by omega)
+
 /-- Two handlers that agree off a predicate interpret every program avoiding it in the same way. -/
 theorem simulateQ_agree {ι α : Type} {spec : OracleSpec ι} {m : Type → Type} [Monad m] [LawfulMonad m]
     (left right : QueryImpl spec m) (bad : ι → Prop) [DecidablePred bad]
@@ -332,6 +343,19 @@ theorem bundle_compiler_free (selected : Nat) (challenge : MlKem768Ciphertext) (
   · simp [PqxdhRegistrationJointBundleCompiler.compiler, isQueryBoundP_query_iff, IsTarget]
   · trivial
 
+/-- The logged bundle compiler (`PqxdhRegistrationJointServiceSchedule.logCompiler`) never requests a decapsulation, from every retained bundle. -/
+theorem bundle_logCompiler_free (selected : Nat) (challenge : MlKem768Ciphertext) (codec : Codec Reader Response)
+    (query : (PqxdhLivePhase1Bundle.Spec PqxdhJointGapDh.ScalarBytes).Domain)
+    (logged : Option PqxdhEd25519EufCma.Phase1Candidate) :
+    ((PqxdhRegistrationJointServiceSchedule.logCompiler (KemSK := KemSK) codec query).run logged).IsQueryBoundP
+      (IsTarget selected challenge) 0 := by
+  rcases query with generate | (joint | candidate)
+  · simp only [PqxdhRegistrationJointServiceSchedule.logCompiler, StateT.run_lift]
+    exact isQueryBoundP_bind (n := 0) (m := 0) (bundle_compiler_free selected challenge codec _) fun _ _ => trivial
+  · simp only [PqxdhRegistrationJointServiceSchedule.logCompiler, StateT.run_lift]
+    exact isQueryBoundP_bind (n := 0) (m := 0) (bundle_compiler_free selected challenge codec _) fun _ _ => trivial
+  · trivial
+
 theorem read_free (selected : Nat) (challenge : MlKem768Ciphertext) (field : PqxdhRegistrationJointLiveRead.Field)
     (entry : PqxdhRegistrationJointGeneratedFinish.EncodedEntry) :
     (PqxdhRegistrationJointLiveRead.entryClient (KemSK := KemSK) field entry).IsQueryBoundP
@@ -352,7 +376,7 @@ theorem read_free (selected : Nat) (challenge : MlKem768Ciphertext) (field : Pqx
 theorem client_free (selected : Nat) (challenge : MlKem768Ciphertext) (setup : Setup baseSpec KemSK)
     (codec : Codec Reader Response) (query : (PqxdhRegistrationJointRevealSchedule.Spec KemSK).Domain)
     (other : ∀ address raw, query ≠ .inl (.inr (.finish address raw)))
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) :
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) :
     ((PqxdhRegistrationJointRevealSchedule.client setup codec query).run owners).IsQueryBoundP
       (onLeft (onLeft (IsTarget selected challenge))) 0 := by
   rcases query with (coin | request) | read
@@ -371,7 +395,7 @@ theorem client_free (selected : Nat) (challenge : MlKem768Ciphertext) (setup : S
         · trivial
         · rw [isQueryBoundP_map_iff]
           exact poolLift_free selected challenge _
-            (simulateQ_free _ _ (bundle_compiler_free selected challenge codec) _)
+            (simulateQ_state_free _ _ (bundle_logCompiler_free selected challenge codec) _ _)
     | finish address raw => exact absurd rfl (other address raw)
     | _ => simp [PqxdhRegistrationJointRevealSchedule.client, PqxdhRegistrationJointServiceSchedule.handler,
         isQueryBoundP_query_iff]
@@ -422,67 +446,106 @@ theorem markedPoolLift_free {α : Type} (selected : Nat) (challenge : MlKem768Ci
     intro target
     simp [target]) work free
 
-/-- The marked Beacon finish has the same interpretation whether or not the backend marks the selected decapsulation of the challenge: the opaque-handle owner keeps only the presence of that reply. -/
+/-- The opaque-handle Beacon owner's callbacks have the same interpretation whether or not the backend marks the selected decapsulation of the challenge, for every owner program: the opaque-handle owner keeps only the presence of that reply. -/
+theorem compiler_unmarked (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (identityIndex : Nat) (publicIdentity : PublicIdentity) (selected : Nat) (challenge : MlKem768Ciphertext)
+    (candidate marker : MlKemSharedSecret) {α : Type}
+    (program : OracleComp (PqxdhBeaconPhase2Shared.FullSpec PqxdhRegistrationJointBundle.Identity
+      PqxdhJointGapDh.ScalarBytes PqxdhRegistrationJointBundle.Key Nat Response Shared) α) :
+    simulateQ (markedBy setup codec checks identityIndex publicIdentity selected challenge candidate marker)
+        (simulateQ (markedCompiler setup codec selected challenge) program) =
+      simulateQ (eraseImpl eraseObservers (markedImpl setup codec checks identityIndex publicIdentity candidate))
+        (simulateQ (markedCompiler setup codec selected challenge) program) := by
+  rw [← QueryImpl.simulateQ_compose, ← QueryImpl.simulateQ_compose]
+  congr 1
+  funext query
+  rcases query with prepare | (rawQuery | (rootSecrets | initial | application))
+  · by_cases decap : ∃ ciphertext key, prepare =
+        PqxdhBeaconPhase2Shared.Query.decapsulate ciphertext key ∧
+          key.2 = selected ∧ PqxdhPhase2InputBytes.ciphertext ciphertext = challenge
+    · obtain ⟨ciphertext, key, rfl, target⟩ := decap
+      simp only [QueryImpl.apply_compose, markedCompiler, markedPreparation, simulateQ_map, simulateQ_spec_query,
+        markedPoolLift]
+      have markedPool : ∀ query : (PqxdhLiveKemBirth.Spec KemSK).Domain,
+          markedBy (Response := Response) setup codec checks identityIndex publicIdentity selected challenge
+            candidate marker (.inl (.inl (.inl query))) =
+          StateT.mk fun state => (fun answer => (answer, eraseObservers state)) <$>
+            simulateQ PqxdhRegistrationJointKemEncapsulation.forward (markPool selected challenge marker query) :=
+        fun query => sourceMarked_pool setup codec checks identityIndex publicIdentity selected challenge marker query
+      rw [markedPool]
+      apply StateT.ext
+      intro state
+      simp only [StateT.run_map, StateT.run_mk, markPool, target, and_self, ↓reduceIte, simulateQ_map,
+        simulateQ_spec_query, Functor.map_map]
+      simp only [eraseImpl, markedImpl, PqxdhRegistrationJointKemEncapsulation.impl,
+        PqxdhRegistrationJointOpenBackend.impl, PqxdhRegistrationJointOpenBackend.pool,
+        PqxdhRegistrationJointKemEncapsulation.lift, StateT.run, StateT.mk, Functor.map_map, simulateQ_map,
+        simulateQ_spec_query, PqxdhRegistrationJointKemEncapsulation.forward]
+      congr 1
+      funext reply
+      cases reply <;> rfl
+    · simp only [QueryImpl.apply_compose, markedCompiler]
+      refine simulateQ_agree _ _ (onLeft (onLeft (onLeft (IsTarget selected challenge))))
+        (fun query other => markedBy_other setup codec checks identityIndex publicIdentity selected challenge
+          candidate marker query other) _ (markedPoolLift_free selected challenge _ ?_)
+      cases prepare with
+      | decapsulate ciphertext key =>
+          have different : ¬ (key.2 = selected ∧ PqxdhPhase2InputBytes.ciphertext ciphertext = challenge) :=
+            fun target => decap ⟨ciphertext, key, rfl, target⟩
+          exact (isQueryBoundP_map_iff _ _ _).mpr ((isQueryBoundP_query_iff _ _ _).mpr fun target =>
+            absurd target different)
+      | dhIdentity index point =>
+          exact (isQueryBoundP_map_iff _ _ _).mpr ((isQueryBoundP_query_iff _ _ _).mpr fun target =>
+            False.elim target)
+      | _ => trivial
+  all_goals
+    simp only [QueryImpl.apply_compose, markedCompiler, simulateQ_spec_query]
+    exact markedBy_other setup codec checks identityIndex publicIdentity selected challenge candidate marker _
+      (fun target => False.elim target)
+
+
+/-- The marked owner finish has the same interpretation whether or not the backend marks the selected decapsulation of the challenge: its transcript `hash` request is not a pool request, and the owner program after it is covered by `compiler_unmarked`. -/
+theorem markedOwner_unmarked (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
+    (identityIndex : Nat) (publicIdentity : PublicIdentity) (selected : Nat) (challenge : MlKem768Ciphertext)
+    (candidate marker : MlKemSharedSecret) (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationJointBundle.Owner) :
+    simulateQ (markedBy setup codec checks identityIndex publicIdentity selected challenge candidate marker)
+        (markedOwner setup codec selected challenge retained raw owner) =
+      simulateQ (eraseImpl eraseObservers (markedImpl setup codec checks identityIndex publicIdentity candidate))
+        (markedOwner setup codec selected challenge retained raw owner) := by
+  unfold markedOwner
+  rcases owner with ⟨⟨identity, keyId, pin, phase⟩, slot⟩
+  cases phase with
+  | initSent control prekey oneTime kem =>
+      cases retained with
+      | none => simp
+      | some init =>
+          cases responseOf codec raw with
+          | none => simp
+          | some response =>
+              simp only [simulateQ_bind, simulateQ_query, OracleQuery.input_query, OracleQuery.cont_query, id_map]
+              rw [markedBy_other setup codec checks identityIndex publicIdentity selected challenge candidate marker _
+                (by simp [onLeft])]
+              refine bind_congr fun digest => ?_
+              exact compiler_unmarked setup codec checks identityIndex publicIdentity selected challenge candidate marker _
+  | _ => simp
+
+/-- The marked Beacon finish has the same interpretation whether or not the backend marks the selected decapsulation of the challenge: for every owner list and retained bundles (`markedOwner_unmarked`). -/
 theorem finish_unmarked (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (selected : Nat) (challenge : MlKem768Ciphertext)
     (candidate marker : MlKemSharedSecret) (address : Nat) (raw : Pqxdh.Bytes)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) :
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) :
     simulateQ (markedBy setup codec checks identityIndex publicIdentity selected challenge candidate marker)
         ((markedFinish setup codec selected challenge address raw).run owners) =
       simulateQ (eraseImpl eraseObservers (markedImpl setup codec checks identityIndex publicIdentity candidate))
         ((markedFinish setup codec selected challenge address raw).run owners) := by
   simp only [markedFinish, StateT.run]
-  cases found : owners[address]? with
+  cases found : owners.1[address]? with
   | none => simp
   | some entry =>
       simp only [simulateQ_map]
       congr 1
-      rw [← QueryImpl.simulateQ_compose, ← QueryImpl.simulateQ_compose]
-      congr 1
-      funext query
-      rcases query with prepare | (rawQuery | (rootSecrets | initial | application))
-      · by_cases decap : ∃ ciphertext key, prepare =
-            PqxdhBeaconPhase2Shared.Query.decapsulate ciphertext key ∧
-              key.2 = selected ∧ PqxdhPhase2InputBytes.ciphertext ciphertext = challenge
-        · obtain ⟨ciphertext, key, rfl, target⟩ := decap
-          simp only [QueryImpl.apply_compose, markedCompiler, markedPreparation, simulateQ_map, simulateQ_spec_query,
-            markedPoolLift]
-          have markedPool : ∀ query : (PqxdhLiveKemBirth.Spec KemSK).Domain,
-              markedBy (Response := Response) setup codec checks identityIndex publicIdentity selected challenge
-                candidate marker (.inl (.inl (.inl query))) =
-              StateT.mk fun state => (fun answer => (answer, eraseObservers state)) <$>
-                simulateQ PqxdhRegistrationJointKemEncapsulation.forward (markPool selected challenge marker query) :=
-            fun query => sourceMarked_pool setup codec checks identityIndex publicIdentity selected challenge marker query
-          rw [markedPool]
-          apply StateT.ext
-          intro state
-          simp only [StateT.run_map, StateT.run_mk, markPool, target, and_self, ↓reduceIte, simulateQ_map,
-            simulateQ_spec_query, Functor.map_map]
-          simp only [eraseImpl, markedImpl, QueryImpl.add_apply_inl, PqxdhRegistrationJointKemEncapsulation.impl,
-            PqxdhRegistrationJointOpenBackend.impl, PqxdhRegistrationJointOpenBackend.pool,
-            PqxdhRegistrationJointKemEncapsulation.lift, StateT.run, StateT.mk, Functor.map_map, simulateQ_map,
-            simulateQ_spec_query, PqxdhRegistrationJointKemEncapsulation.forward]
-          congr 1
-          funext reply
-          cases reply <;> rfl
-        · simp only [QueryImpl.apply_compose, markedCompiler]
-          refine simulateQ_agree _ _ (onLeft (onLeft (onLeft (IsTarget selected challenge))))
-            (fun query other => markedBy_other setup codec checks identityIndex publicIdentity selected challenge
-              candidate marker query other) _ (markedPoolLift_free selected challenge _ ?_)
-          cases prepare with
-          | decapsulate ciphertext key =>
-              have different : ¬ (key.2 = selected ∧ PqxdhPhase2InputBytes.ciphertext ciphertext = challenge) :=
-                fun target => decap ⟨ciphertext, key, rfl, target⟩
-              exact (isQueryBoundP_map_iff _ _ _).mpr ((isQueryBoundP_query_iff _ _ _).mpr fun target =>
-                absurd target different)
-          | dhIdentity index point =>
-              exact (isQueryBoundP_map_iff _ _ _).mpr ((isQueryBoundP_query_iff _ _ _).mpr fun target =>
-                False.elim target)
-          | _ => trivial
-      all_goals
-        simp only [QueryImpl.apply_compose, markedCompiler, simulateQ_spec_query]
-        exact markedBy_other setup codec checks identityIndex publicIdentity selected challenge candidate marker _
-          (fun target => False.elim target)
+      exact markedOwner_unmarked setup codec checks identityIndex publicIdentity selected challenge candidate marker _ raw _
 
 end Finish
 
@@ -551,7 +614,7 @@ theorem resume_free (selected : Nat) (challenge : MlKem768Ciphertext) (setup : S
 theorem client_unmarked (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (selected : Nat) (challenge : MlKem768Ciphertext)
     (candidate marker : MlKemSharedSecret) (query : (PqxdhRegistrationJointRevealSchedule.Spec KemSK).Domain)
-    (owners : List EncodedEntry) :
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) :
     simulateQ (markedBy setup codec checks identityIndex publicIdentity selected challenge candidate marker)
         ((markedClient setup codec selected challenge query).run owners) =
       simulateQ (eraseImpl eraseObservers (markedImpl setup codec checks identityIndex publicIdentity candidate))
@@ -582,7 +645,7 @@ theorem markedResume_unmarked (setup : Setup baseSpec KemSK) (codec : Codec Read
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)
     (value : PqxdhServerRootPreparation.Verified Reader)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)
-    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry)
+    (consumed : List Pqxdh.Bytes) (native : NativeState KemSK) (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))
     (next : Option Nat → OracleComp (SourceSpec KemSK) X) (selected : Nat)
     (ciphertext : MlKem768Ciphertext) (candidate marker : MlKemSharedSecret) :
     simulateQ (markEnc selected ciphertext marker)
@@ -858,3 +921,23 @@ end BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinishRouter
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinishRouter.opaqueBranch_freeRouter
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinishRouter.simulateQ_state_free' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinishRouter.simulateQ_state_free
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinishRouter.bundle_logCompiler_free' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinishRouter.bundle_logCompiler_free
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinishRouter.compiler_unmarked' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinishRouter.compiler_unmarked
+/-- info: 'BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinishRouter.markedOwner_unmarked' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhRegistrationJointBeaconOpaqueFinishRouter.markedOwner_unmarked

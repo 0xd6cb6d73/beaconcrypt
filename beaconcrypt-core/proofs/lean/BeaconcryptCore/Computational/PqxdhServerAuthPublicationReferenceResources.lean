@@ -26,7 +26,7 @@ theorem route_total (setup : Setup baseSpec KemSK) (codec : Codec Reader WireRes
       | build session payload =>
           simpa only [route, entryBill] using
             (build_bills setup.source codec checks rest session payload state).1.mono
-              (show slotWeight (state.1.1.pending session) ≤ 64 * slotWeight (state.1.1.pending session) by omega)
+              (show 2 * slotWeight (state.1.1.pending session) ≤ 128 * slotWeight (state.1.1.pending session) by omega)
       | accept raw => exact PqxdhServerAuthCtxResources.route_total setup codec checks context rest caps bounded select (.inr (.accept raw)) state
       | finish raw => exact PqxdhServerAuthCtxResources.route_total setup codec checks context rest caps bounded select (.inr (.finish raw)) state
       | hmac key message => exact PqxdhServerAuthCtxResources.route_total setup codec checks context rest caps bounded select (.inr (.hmac key message)) state

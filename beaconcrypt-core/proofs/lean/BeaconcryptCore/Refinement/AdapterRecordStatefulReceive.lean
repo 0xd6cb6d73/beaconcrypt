@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.AdapterRecordRequestExtraction
+import BeaconcryptCore.Refinement.AdapterRecordReceive
 
 /-! The generated request-body specialization equals the actual Aeneas body by a kernel-checked proof. Stateful interpretation uses a separate request for each dynamic occurrence, so repeated identical requests may receive different replies and retain all primitive effects. -/
 
@@ -37,7 +38,7 @@ abbrev NativeSpec := (ratchet.SymmetricRatchetKdfRequest →ₒ ratchet.RatchetK
 open BeaconcryptCore.Computational
 
 /-- Typed native primitive replies retain optional failure without presupposing any security property. -/
-def native (erased : Array Std.U8 357#usize) : QueryImpl Spec (OracleComp NativeSpec)
+def native (erased : Array Std.U8 227#usize) : QueryImpl Spec (OracleComp NativeSpec)
   | .kdf request => .ok <$> NativeSpec.query (.inl request)
   | .hash transcript => (fun digest => .ok (digest, { bytes := erased })) <$>
       NativeSpec.query (.inr (.inl (PqxdhRefinement.absBytes transcript.bytes)))
@@ -65,17 +66,17 @@ def drive : Nat → record_effects.RecordReceiveEffect → Program Result
       | .cont next => drive fuel next
       | .done result => pure result
 
-def interpret {α : Type} (erased : Array Std.U8 357#usize) (work : Program α) :
+def interpret {α : Type} (erased : Array Std.U8 227#usize) (work : Program α) :
     OracleComp NativeSpec (RustM α) := simulateQ (native erased) work.run
 
-@[simp] theorem interpret_pure {α : Type} (erased : Array Std.U8 357#usize) (value : α) :
+@[simp] theorem interpret_pure {α : Type} (erased : Array Std.U8 227#usize) (value : α) :
     interpret erased (pure value) = pure (.ok value) := rfl
 
-@[simp] theorem interpret_lift {α : Type} (erased : Array Std.U8 357#usize) (value : RustM α) :
+@[simp] theorem interpret_lift {α : Type} (erased : Array Std.U8 227#usize) (value : RustM α) :
     interpret erased (liftRust value) = pure value := rfl
 
 /-- Source bind retains the primitive state from the entire prefix on failure and divergence. -/
-theorem interpret_bind {α β : Type} (erased : Array Std.U8 357#usize)
+theorem interpret_bind {α β : Type} (erased : Array Std.U8 227#usize)
     (work : Program α) (next : α → Program β) :
     interpret erased (work >>= next) = (do
       let result ← interpret erased work
@@ -93,12 +94,12 @@ theorem interpret_bind {α β : Type} (erased : Array Std.U8 357#usize)
   refine bind_congr fun result => ?_
   cases result <;> rfl
 
-@[simp] theorem interpret_query (erased : Array Std.U8 357#usize) (request : Request) :
+@[simp] theorem interpret_query (erased : Array Std.U8 227#usize) (request : Request) :
     interpret erased (Program.query request) = native erased request := by
   exact simulateQ_spec_query (native erased) request
 
 /-- A complete AEAD phase returns the generated output closure's exact result and retained kernel. -/
-theorem drive_aead (fuel : Nat) (erased : Array Std.U8 357#usize)
+theorem drive_aead (fuel : Nat) (erased : Array Std.U8 227#usize)
     (pending : record_effects.RecordReceiveAead) :
     (fun result => AdapterRecordReceive.decodeResult <$> result) <$>
       interpret erased (drive (fuel + 1) (.AeadRequested pending)) =
@@ -140,23 +141,23 @@ theorem drive_aead (fuel : Nat) (erased : Array Std.U8 357#usize)
         simulateQ_pure, pure_bind, Program.run_pure, map_pure]
       cases opened <;> rfl
 
-@[simp] theorem drive_rejected (fuel : Nat) (erased : Array Std.U8 357#usize)
+@[simp] theorem drive_rejected (fuel : Nat) (erased : Array Std.U8 227#usize)
     (kernel : ratchet.concrete.ConcreteRatchetKernel) :
     interpret erased (drive (fuel + 1) (.Rejected kernel)) = pure (.ok (kernel, none)) := rfl
 
 /-- Native comparison on the generated array slices is exact byte equality. -/
-theorem native_compare_arrays (erased : Array Std.U8 357#usize)
+theorem native_compare_arrays (erased : Array Std.U8 227#usize)
     (left right : Array Std.U8 64#usize) :
     native erased (.compare left.to_slice right.to_slice) =
       pure (.ok (decide (PqxdhRefinement.absBytes left = PqxdhRefinement.absBytes right))) := rfl
 
-theorem native_hash (erased : Array Std.U8 357#usize)
+theorem native_hash (erased : Array Std.U8 227#usize)
     (transcript : commitment.CommitmentTranscript) :
     native erased (.hash transcript) = (fun digest => .ok (digest, { bytes := erased })) <$>
       (NativeSpec.query (.inr (.inl (PqxdhRefinement.absBytes transcript.bytes))) :
         OracleComp NativeSpec (Option (Array Std.U8 64#usize))) := rfl
 
-theorem native_kdf (erased : Array Std.U8 357#usize)
+theorem native_kdf (erased : Array Std.U8 227#usize)
     (request : ratchet.SymmetricRatchetKdfRequest) :
     native erased (.kdf request) = .ok <$>
       (NativeSpec.query (.inl request) : OracleComp NativeSpec ratchet.RatchetKdfResponse) := rfl
@@ -164,7 +165,7 @@ theorem native_kdf (erased : Array Std.U8 357#usize)
 attribute [local irreducible] native
 
 /-- Hash failure and commitment rejection retain the overwritten transcript and all hash effects. -/
-theorem drive_commitment (fuel : Nat) (erased : Array Std.U8 357#usize)
+theorem drive_commitment (fuel : Nat) (erased : Array Std.U8 227#usize)
     (pending : record_effects.RecordReceiveCommitment) :
     (fun result => AdapterRecordReceive.decodeResult <$> result) <$>
       interpret erased (drive (fuel + 2) (.CommitmentRequested pending)) =
@@ -217,7 +218,7 @@ theorem drive_commitment (fuel : Nat) (erased : Array Std.U8 357#usize)
           drive_aead fuel erased ⟨{ opening := pending.pending.opening }⟩
 
 /-- The mechanically lifted complete receive loop agrees as a request program, for every dynamic primitive reply history. The rank allowance covers every KDF continuation plus commitment and AEAD phases. -/
-theorem drive_source (fuel : Nat) (erased : Array Std.U8 357#usize)
+theorem drive_source (fuel : Nat) (erased : Array Std.U8 227#usize)
     (effect : record_effects.RecordReceiveEffect)
     (enough : RecordEffectsReceiveRank.rank effect + 2 ≤ fuel) :
     (fun result => AdapterRecordReceive.decodeResult <$> result) <$>
@@ -271,7 +272,7 @@ theorem abstract_deterministic (replies : AdapterRecordReceive.Replies) :
 
 /-- The complete lifted loop's fixed-reply specialization is the actual extracted controller, including its output closure and full returned kernel. -/
 theorem controller_specializes (replies : AdapterRecordReceive.Replies)
-    (erased : Array Std.U8 357#usize) (effect : record_effects.RecordReceiveEffect) :
+    (erased : Array Std.U8 227#usize) (effect : record_effects.RecordReceiveEffect) :
     simulateQ (deterministic replies)
       ((fun result => AdapterRecordReceive.decodeResult <$> result) <$>
         interpret erased (drive (RecordEffectsReceiveRank.rank effect + 2) effect)) =
@@ -284,7 +285,7 @@ theorem controller_specializes (replies : AdapterRecordReceive.Replies)
 /-- Both certificates of the checked source transformation and full-state execution correspondence are retained at this endpoint. Primitive state may contain the shared caches, counters and histories of an arbitrary preceding execution. -/
 theorem source_stateful {PrimitiveState ι : Type} {base : OracleSpec ι}
     (impl : QueryImpl NativeSpec (StateT PrimitiveState (OracleComp base)))
-    (erased : Array Std.U8 357#usize) (effect : record_effects.RecordReceiveEffect)
+    (erased : Array Std.U8 227#usize) (effect : record_effects.RecordReceiveEffect)
     (state : PrimitiveState) :
     (∀ (ops : beaconcrypt.ratchet.Operations),
       letI : beaconcrypt.ratchet.Operations := ops
@@ -303,7 +304,7 @@ theorem source_stateful {PrimitiveState ι : Type} {base : OracleSpec ι}
 /-- Arbitrary later API calls and observations run from the same complete primitive poststate; optional failures retain their prior effects. -/
 theorem source_stateful_continuation {PrimitiveState ι Output : Type} {base : OracleSpec ι}
     (impl : QueryImpl NativeSpec (StateT PrimitiveState (OracleComp base)))
-    (erased : Array Std.U8 357#usize) (effect : record_effects.RecordReceiveEffect)
+    (erased : Array Std.U8 227#usize) (effect : record_effects.RecordReceiveEffect)
     (later : RustM RecordEffectsReceiveProgram.Result → OracleComp NativeSpec Output)
     (state : PrimitiveState) :
     (simulateQ impl (do
@@ -318,14 +319,14 @@ theorem source_stateful_continuation {PrimitiveState ι Output : Type} {base : O
 
 /-- Admission is the actual extracted core entrypoint. The complete loop is driven with its proved sufficient allowance. -/
 def receive (kernel : ratchet.concrete.ConcreteRatchetKernel) (sequence : Std.U64)
-    (payload : Slice Std.U8) (ad : Array Std.U8 281#usize) (sender : Std.U64) : Program Result := do
+    (payload : Slice Std.U8) (ad : Array Std.U8 151#usize) (sender : Std.U64) : Program Result := do
   let effect ← liftRust (record_effects.begin_record_receive kernel sequence payload ad sender)
   drive (RecordEffectsReceiveRank.rank effect + 2) effect
 
 /-- Actual admission followed by the lifted generated controller equals the maintained request semantics. -/
-theorem receive_source (erased : Array Std.U8 357#usize)
+theorem receive_source (erased : Array Std.U8 227#usize)
     (kernel : ratchet.concrete.ConcreteRatchetKernel) (sequence : Std.U64)
-    (payload : Slice Std.U8) (ad : Array Std.U8 281#usize) (sender : Std.U64) :
+    (payload : Slice Std.U8) (ad : Array Std.U8 151#usize) (sender : Std.U64) :
     (fun result => AdapterRecordReceive.decodeResult <$> result) <$>
       interpret erased (receive kernel sequence payload ad sender) =
       simulateQ abstractNative
@@ -337,9 +338,9 @@ theorem receive_source (erased : Array Std.U8 357#usize)
   exact drive_source _ _ _ (Nat.le_refl _)
 
 /-- Composition reaches the existing source-native receive bridge with optional failures and the full returned protocol kernel retained. -/
-theorem receive_native_model (erased : Array Std.U8 357#usize)
+theorem receive_native_model (erased : Array Std.U8 227#usize)
     (kernel : ratchet.concrete.ConcreteRatchetKernel) (sequence : Std.U64)
-    (payload : Slice Std.U8) (ad : Array Std.U8 281#usize) (sender : Std.U64) :
+    (payload : Slice Std.U8) (ad : Array Std.U8 151#usize) (sender : Std.U64) :
     (fun result => AdapterRecordReceive.decodeResult <$> result) <$>
       interpret erased (receive kernel sequence payload ad sender) =
       simulateQ abstractNative
@@ -354,9 +355,9 @@ theorem receive_native_model (erased : Array Std.U8 357#usize)
 /-- All later callbacks run from exactly the same returned protocol value and primitive state. This equality permits an arbitrary shared stateful KDF/hash/AEAD implementation and arbitrary preceding primitive histories. -/
 theorem receive_stateful_continuation {PrimitiveState ι Output : Type} {base : OracleSpec ι}
     (impl : QueryImpl NativeSpec (StateT PrimitiveState (OracleComp base)))
-    (erased : Array Std.U8 357#usize)
+    (erased : Array Std.U8 227#usize)
     (kernel : ratchet.concrete.ConcreteRatchetKernel) (sequence : Std.U64)
-    (payload : Slice Std.U8) (ad : Array Std.U8 281#usize) (sender : Std.U64)
+    (payload : Slice Std.U8) (ad : Array Std.U8 151#usize) (sender : Std.U64)
     (later : RustM RecordEffectsReceiveProgram.Result → OracleComp NativeSpec Output)
     (state : PrimitiveState) :
     (simulateQ impl (do

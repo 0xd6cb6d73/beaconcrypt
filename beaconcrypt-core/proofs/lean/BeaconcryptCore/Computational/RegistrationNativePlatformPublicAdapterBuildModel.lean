@@ -22,7 +22,7 @@ local notation "coins"=>RegistrationNativePlatformMldsaProgram.coins
 
 omit [PublicWrapperPlatform.Material] in
 theorem typed (setup :PqxdhServerAuthExperiment.Setup base KemSK) (checks :PqxdhServerAuthExperiment.Checks)
-    (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created Unit)
+    (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential :RegistrationNativeMldsa.Credential source) (view :RegistrationNativePlatformSourceSeal.KeyView)
     (failure :primitive.Error) (allocate :alloc.vec.Vec U8 →Usize →Base (core.result.Result Unit E))
     (reserveRegistration :Base Bool) (allocated :Base AllocationReply)
@@ -35,7 +35,7 @@ theorem typed (setup :PqxdhServerAuthExperiment.Setup base KemSK) (checks :Pqxdh
         (RegistrationNativePlatformConcreteSource.writer reservePackets) (.inr (.build handle (RegistrationNativeRawAdapter.application payload)))=
     (RegistrationNativePlatformPublicAdapterBuildRaw.bytes <$>
       RegistrationNativePlatformExperiment.server (n:=n) (source:=source)
-        (RegistrationNativePlatformCompletionSdk.build (n:=n) (RegistrationNativePlatformSourceBuild.pin (n:=n) coins)
+        (RegistrationNativePlatformCompletionSdk.build (n:=n) (RegistrationNativePlatformCompletionSdk.nativeAdHash (n:=n) coins) (RegistrationNativePlatformSourceBuild.pin (n:=n) coins)
           (admitted <$>StateT.lift allocated) (RegistrationNativePlatformCompletionSdk.nativePresent (n:=n) coins)
           (RegistrationNativePlatformExtractedSdkServer.Build.sourceFinish (n:=n) coins setup
             (RegistrationNativeWire.ledgerCodec (RegistrationNativePlatformOrdinaryExperiment.canonicalWire RegistrationNativeConcreteCodec.wire))
@@ -55,7 +55,7 @@ theorem typed (setup :PqxdhServerAuthExperiment.Setup base KemSK) (checks :Pqxdh
       (RegistrationNativePlatformExtractedSdkBuildNormal.allocation allocate) erased (admitted <$>allocated)
       (RegistrationNativeMldsa.owned source credential) (RegistrationNativePlatformConcreteSource.helper reserveFrame)
       (RegistrationNativePlatformConcreteSource.writer reservePackets) handle (RegistrationNativeRawAdapter.application payload)=
-      RegistrationNativePlatformCompletionSdk.build (RegistrationNativePlatformSourceBuild.pin coins)
+      RegistrationNativePlatformCompletionSdk.build (RegistrationNativePlatformCompletionSdk.nativeAdHash coins) (RegistrationNativePlatformSourceBuild.pin coins)
         (StateT.lift (admitted <$>allocated)) (RegistrationNativePlatformCompletionSdk.nativePresent coins)
         (RegistrationNativePlatformExtractedSdkServer.Build.sourceFinish coins setup codec view failure
           (RegistrationNativePlatformExtractedSdkBuildNormal.allocation allocate)
@@ -73,7 +73,7 @@ theorem typed (setup :PqxdhServerAuthExperiment.Setup base KemSK) (checks :Pqxdh
 
 omit [PublicWrapperPlatform.Material] in
 theorem raw (setup :PqxdhServerAuthExperiment.Setup base KemSK) (checks :PqxdhServerAuthExperiment.Checks)
-    (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created Unit)
+    (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential :RegistrationNativeMldsa.Credential source) (view :RegistrationNativePlatformSourceSeal.KeyView)
     (failure :primitive.Error) (allocate :alloc.vec.Vec U8 →Usize →Base (core.result.Result Unit E))
     (reserveRegistration :Base Bool) (allocated :Base AllocationReply)
@@ -86,7 +86,7 @@ theorem raw (setup :PqxdhServerAuthExperiment.Setup base KemSK) (checks :PqxdhSe
         (RegistrationNativePlatformConcreteSource.writer reservePackets) (.inr (.build handle payload))=
     (RegistrationNativePlatformPublicAdapterBuildRaw.response <$>
       RegistrationNativePlatformExperiment.server (n:=n) (source:=source)
-        (RegistrationNativePlatformCompletionSdk.build (n:=n) (RegistrationNativePlatformSourceBuild.pin (n:=n) coins)
+        (RegistrationNativePlatformCompletionSdk.build (n:=n) (RegistrationNativePlatformCompletionSdk.nativeAdHash (n:=n) coins) (RegistrationNativePlatformSourceBuild.pin (n:=n) coins)
           (admitted <$>StateT.lift allocated) (RegistrationNativePlatformCompletionSdk.nativePresent (n:=n) coins)
           (RegistrationNativePlatformExtractedSdkServer.Build.sourceFinish (n:=n) coins setup
             (RegistrationNativeWire.ledgerCodec (RegistrationNativePlatformOrdinaryExperiment.canonicalWire RegistrationNativeConcreteCodec.wire))

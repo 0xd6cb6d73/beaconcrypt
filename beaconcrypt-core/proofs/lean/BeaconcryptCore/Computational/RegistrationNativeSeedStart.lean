@@ -12,7 +12,7 @@ open RegistrationNativeExperiment (Initial)
 variable {n : Nat} {ι KemSK : Type} {base : OracleSpec ι}
 
 noncomputable def finish (source : RegistrationNativeMldsa.Source)
-    (constructed : (Option (PqxdhLiveServerConstruction.Created Unit) × Unit) × PqxdhRecordLiftWorld.State n) :
+    (constructed : (Option (PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) × Unit) × PqxdhRecordLiftWorld.State n) :
     ProbComp (Option (Initial n KemSK source)) := do
   match constructed.1.1 with
   | none => pure none
@@ -32,7 +32,7 @@ noncomputable def start (setup : Setup base KemSK) (source : RegistrationNativeM
     (ensureInit : StateT Unit ProbComp Bool) (identityIndex : Nat) (serverKeyId : U64)
     (seed : PqxdhJointIdentity.IdentitySeed) : ProbComp (Option (Initial n KemSK source)) := do
   let constructed ← (PqxdhRecordLiftWorld.sampled
-    ((PqxdhLiveServerConstruction.construct (P := Unit) setup.joint ensureInit identityIndex serverKeyId none).run ())).run
+    ((PqxdhLiveServerConstruction.construct (P := Std.Array Std.U8 151#usize) setup.joint ensureInit identityIndex serverKeyId none).run ())).run
       (PqxdhRecordLiftWorld.initial : PqxdhRecordLiftWorld.State n)
   finish source (RegistrationNativeSeedConstruct.replace setup.joint identityIndex serverKeyId seed constructed.1, constructed.2)
 

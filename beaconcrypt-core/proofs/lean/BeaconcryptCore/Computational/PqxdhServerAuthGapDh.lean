@@ -850,6 +850,13 @@ theorem quiet_accept (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
     · exact quiet_bind (quiet_modify _) fun _ => quiet_pure _
     · exact quiet_pure _
 
+/-- A BLAKE2b query is quiet. -/
+theorem quiet_hash (bytes : Pqxdh.Bytes) : Quiet (PqxdhServerAuthExperiment.hashOracle (KemSK := KemSK) bytes) :=
+  fun state => by
+    change (PqxdhServerAuthExperiment.familyCoins ((CtxRomAuth.ctxRandomOracle ((), bytes)).run state.ctx) >>=
+      fun result => pure (result.1, { state with ctx := result.2 })).IsQueryBoundP IsPublicRoot 0
+    simpa using familyCoins_quiet ((CtxRomAuth.ctxRandomOracle ((), bytes)).run state.ctx)
+
 /-- A Server build is quiet. -/
 theorem quiet_build (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (session : Nat) (payload : Option Pqxdh.Bytes) :
@@ -858,7 +865,10 @@ theorem quiet_build (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   refine quiet_bind quiet_get fun state => ?_
   split
   · exact quiet_pure _
-  · exact quiet_bind (quiet_liftCoins _) fun result => quiet_bind (quiet_set _) fun _ => quiet_pure _
+  · split
+    · exact quiet_bind (quiet_set _) fun _ => quiet_pure _
+    · exact quiet_bind (quiet_hash _) fun digest => quiet_bind quiet_get fun current =>
+        quiet_bind (quiet_liftCoins _) fun result => quiet_bind (quiet_set _) fun _ => quiet_pure _
 
 /-- Public requests of the Beacon's related-root tail interface. -/
 def IsPublicTail : (PqxdhPhase2DhRootConsumer.Spec Response).Domain → Prop
@@ -904,10 +914,11 @@ theorem tail_quiet (publicValue : PublicChallenge) (decode : RawCtxReceive.Frame
       exact (isQueryBoundP_query_iff _ _ _).mpr fun found => found.elim
 
 /-- The Beacon's Phase 2 stage makes no public family request. -/
-theorem stage_quiet (publicValue : PublicChallenge) (decode : RawCtxReceive.FrameDecoder)
+theorem stage_quiet (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding) (publicValue : PublicChallenge)
+    (decode : RawCtxReceive.FrameDecoder)
     (control : pqxdh.BeaconInitSent) (identity : Unit) (oneTime : Unit ⊕ ScalarBytes) (kem : KemSK)
     (raw : Pqxdh.Bytes) :
-    (PqxdhPhase2DhStage.stage (X := Unit) (Response := Response) publicValue decode control identity oneTime kem
+    (PqxdhPhase2DhStage.stage (completedBinding := completedBinding) (X := Unit) (Response := Response) publicValue decode control identity oneTime kem
       raw).IsQueryBoundP IsPublicStage 0 := by
   unfold PqxdhPhase2DhStage.stage
   refine isQueryBoundP_bind (n := 0) (m := 0) ?_ fun pending _ => ?_
@@ -945,12 +956,14 @@ theorem stage_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
   · exact quiet_onCtx _ state
 
 /-- The Beacon's stage, run on the game, is quiet. -/
-theorem quiet_stage (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (beaconSeed : IdentitySeed)
-    (publicValue : PublicChallenge) (control : pqxdh.BeaconInitSent) (identity : Unit)
+theorem quiet_stage (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding) (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (beaconSeed : IdentitySeed) (publicValue : PublicChallenge) (control : pqxdh.BeaconInitSent) (identity : Unit)
     (oneTime : Unit ⊕ ScalarBytes) (kem : KemSK) (raw : Pqxdh.Bytes) :
     Quiet (simulateQ (PqxdhServerAuthExperiment.stageImpl setup codec beaconSeed)
-      (PqxdhPhase2DhStage.stage publicValue codec.frameRead control identity oneTime kem raw)) := fun state =>
-  IsQueryBoundP.simulateQ_run_StateT_of_step (stage_quiet publicValue codec.frameRead control identity oneTime kem raw)
+      (PqxdhPhase2DhStage.stage (completedBinding := completedBinding) publicValue codec.frameRead control identity
+        oneTime kem raw)) := fun state =>
+  IsQueryBoundP.simulateQ_run_StateT_of_step
+    (stage_quiet completedBinding publicValue codec.frameRead control identity oneTime kem raw)
     (fun query state => stage_step setup codec beaconSeed query state) state
 
 /-- The target Beacon's finish is quiet. -/
@@ -960,16 +973,12 @@ theorem quiet_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
   unfold PqxdhServerAuthExperiment.finishOracle
   refine quiet_bind quiet_get fun state => ?_
   split
-  · exact quiet_bind (quiet_stage _ _ _ _ _ _ _ _ _) fun staged => quiet_bind quiet_get fun current =>
-      quiet_bind (quiet_set _) fun _ => quiet_pure _
+  · split
+    · exact quiet_bind (quiet_hash _) fun digest => quiet_bind quiet_get fun current =>
+        quiet_bind (quiet_stage _ _ _ _ _ _ _ _ _ _) fun staged => quiet_bind quiet_get fun after =>
+          quiet_bind (quiet_set _) fun _ => quiet_pure _
+    · exact quiet_bind (quiet_set _) fun _ => quiet_pure _
   · exact quiet_pure _
-
-/-- A BLAKE2b query is quiet. -/
-theorem quiet_hash (bytes : Pqxdh.Bytes) : Quiet (PqxdhServerAuthExperiment.hashOracle (KemSK := KemSK) bytes) :=
-  fun state => by
-    change (PqxdhServerAuthExperiment.familyCoins ((CtxRomAuth.ctxRandomOracle ((), bytes)).run state.ctx) >>=
-      fun result => pure (result.1, { state with ctx := result.2 })).IsQueryBoundP IsPublicRoot 0
-    simpa using familyCoins_quiet ((CtxRomAuth.ctxRandomOracle ((), bytes)).run state.ctx)
 
 /-- Honest code makes no public family request (`honest_no_rom_public`): every handler step other than the adversary's public HMAC query issues neither a signing request nor a public HMAC request, in particular no table request. -/
 theorem honest_no_rom_public (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -1149,12 +1158,23 @@ theorem build_touches (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
       subst supported
       rfl
   | some token =>
-      simp only [hp, StateT.run_bind, mem_support_bind_iff] at supported
-      obtain ⟨tail, lifted, supported⟩ := supported
-      obtain ⟨_, same⟩ := PqxdhServerAuthExperiment.liftCoins_mem _ _ _ lifted
-      simp only [same, StateT.run_set, StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
-      obtain ⟨_, rfl, rfl⟩ := supported
-      rfl
+      simp only [hp] at supported
+      cases pre : PqxdhServerRegistrationPublication.prehash state.server token.pending payload with
+      | none =>
+          simp only [pre, StateT.run_bind, StateT.run_set, StateT.run_pure, pure_bind, support_pure,
+            Set.mem_singleton_iff] at supported
+          subst supported
+          rfl
+      | some candidate =>
+          simp only [pre, StateT.run_bind, mem_support_bind_iff] at supported
+          obtain ⟨hashed, hashRun, supported⟩ := supported
+          obtain ⟨cache, hashedEq⟩ := PqxdhServerAuthExperiment.hashOracle_step _ _ _ hashRun
+          simp only [StateT.run_get, support_pure, Set.mem_singleton_iff, exists_eq_left] at supported
+          obtain ⟨tail, lifted, supported⟩ := supported
+          obtain ⟨_, same⟩ := PqxdhServerAuthExperiment.liftCoins_mem _ _ _ lifted
+          simp only [same, StateT.run_set, StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
+          obtain ⟨_, rfl, rfl⟩ := supported
+          rw [hashedEq]
 
 /-- The Beacon's finish logs no adversary touch. -/
 theorem finish_touches (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (publicValue : PublicChallenge)
@@ -1166,15 +1186,25 @@ theorem finish_touches (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
   simp only [PqxdhServerAuthExperiment.finishOracle, StateT.run_bind, StateT.run_get, pure_bind] at supported
   cases hphase : state.beacon.beacon.phase with
   | initSent control prekey oneTime kem =>
-      simp only [hphase, StateT.run_bind, mem_support_bind_iff] at supported
-      obtain ⟨staged, stageRun, supported⟩ := supported
-      obtain ⟨cache, extra, stagedEq, shape⟩ := PqxdhServerAuthExperiment.stage_run setup codec beaconSeed
-        publicValue control state.beacon.beacon.identity oneTime kem raw state staged stageRun
-      simp only [StateT.run_get, StateT.run_set, StateT.run_pure, support_pure,
-        Set.mem_singleton_iff] at supported
-      obtain ⟨_, rfl, _, rfl, rfl⟩ := supported
-      rw [PqxdhServerAuthExperiment.Ghost.accept_touches, stagedEq]
-      rcases shape with ⟨rfl, _, _⟩ | ⟨pending, _, rfl⟩ <;> simp [adversaryTouches]
+      simp only [hphase] at supported
+      split at supported
+      · rename_i init response _ _
+        simp only [StateT.run_bind, mem_support_bind_iff] at supported
+        obtain ⟨hashed, hashRun, supported⟩ := supported
+        obtain ⟨hashCache, hashedEq⟩ := PqxdhServerAuthExperiment.hashOracle_step _ _ _ hashRun
+        simp only [StateT.run_get, support_pure, Set.mem_singleton_iff, exists_eq_left] at supported
+        obtain ⟨staged, stageRun, supported⟩ := supported
+        obtain ⟨cache, extra, stagedEq, shape⟩ := PqxdhServerAuthExperiment.stage_run
+          (PqxdhTranscriptAd.completedOf control hashed.1) setup codec beaconSeed
+          publicValue control hashed.2.beacon.beacon.identity oneTime kem raw hashed.2 staged stageRun
+        simp only [StateT.run_set, StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
+        obtain ⟨_, rfl, _, rfl, rfl⟩ := supported
+        rw [PqxdhServerAuthExperiment.Ghost.accept_touches, stagedEq, hashedEq]
+        rcases shape with ⟨rfl, _, _⟩ | ⟨pending, _, rfl⟩ <;> simp [adversaryTouches]
+      · simp only [StateT.run_bind, StateT.run_set, StateT.run_pure, pure_bind, support_pure,
+          Set.mem_singleton_iff] at supported
+        subst supported
+        rfl
   | _ =>
       simp only [hphase, StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
       subst supported
@@ -1668,6 +1698,13 @@ theorem accept_costs (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
     · exact costs_seq (costs_modify _) (fun _ => costs_pure _) (by omega)
     · exact costs_pure _
 
+/-- A BLAKE2b query makes no family request other than coins. -/
+theorem hash_costs (bytes : Pqxdh.Bytes) : Costs 0 (PqxdhServerAuthExperiment.hashOracle (KemSK := KemSK) bytes) :=
+  fun state => by
+    change (PqxdhServerAuthExperiment.familyCoins ((CtxRomAuth.ctxRandomOracle ((), bytes)).run state.ctx) >>=
+      fun result => pure (result.1, { state with ctx := result.2 })).IsQueryBoundP IsFamilyRequest 0
+    simpa using familyCoins_costs ((CtxRomAuth.ctxRandomOracle ((), bytes)).run state.ctx)
+
 /-- A Server build makes no family request other than coins. -/
 theorem build_costs (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (session : Nat) (payload : Option Pqxdh.Bytes) :
@@ -1676,8 +1713,12 @@ theorem build_costs (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   refine costs_seq (m := 0) costs_get (fun state => ?_) (by omega)
   split
   · exact costs_pure _
-  · exact costs_seq (m := 0) (costs_liftCoins _)
-      (fun result => costs_seq (costs_set _) (fun _ => costs_pure _) (by omega)) (by omega)
+  · split
+    · exact costs_seq (costs_set _) (fun _ => costs_pure _) (by omega)
+    · exact costs_seq (m := 0) (hash_costs _) (fun digest => costs_seq (m := 0) costs_get
+        (fun current => costs_seq (m := 0) (costs_liftCoins _)
+          (fun result => costs_seq (costs_set _) (fun _ => costs_pure _) (by omega)) (by omega)) (by omega))
+        (by omega)
 
 /-- Family requests of the Beacon's related-root tail interface. -/
 def IsTailFamily : (PqxdhPhase2DhRootConsumer.Spec Response).Domain → Prop
@@ -1723,10 +1764,11 @@ theorem tail_costs (publicValue : PublicChallenge) (decode : RawCtxReceive.Frame
       exact (isQueryBoundP_query_iff _ _ _).mpr fun found => found.elim
 
 /-- The Beacon's Phase 2 stage makes at most one family request. -/
-theorem stage_costs (publicValue : PublicChallenge) (decode : RawCtxReceive.FrameDecoder)
+theorem stage_costs (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding) (publicValue : PublicChallenge)
+    (decode : RawCtxReceive.FrameDecoder)
     (control : pqxdh.BeaconInitSent) (identity : Unit) (oneTime : Unit ⊕ ScalarBytes) (kem : KemSK)
     (raw : Pqxdh.Bytes) :
-    (PqxdhPhase2DhStage.stage (X := Unit) (Response := Response) publicValue decode control identity oneTime kem
+    (PqxdhPhase2DhStage.stage (completedBinding := completedBinding) (X := Unit) (Response := Response) publicValue decode control identity oneTime kem
       raw).IsQueryBoundP IsStageFamily 1 := by
   unfold PqxdhPhase2DhStage.stage
   refine isQueryBoundP_bind (n := 0) (m := 1) ?_ fun pending _ => ?_
@@ -1786,10 +1828,14 @@ theorem finish_costs (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
   split
   · rename_i control prekey oneTime kem phase
     rw [phase]
-    exact costs_seq (m := 0) (fun state => IsQueryBoundP.simulateQ_run_StateT_of_step (stage_costs _ _ _ _ _ _ _)
-      (fun query state => stage_costs_step setup codec beaconSeed query state) state)
-      (fun staged => costs_seq (m := 0) costs_get
-        (fun current => costs_seq (costs_set _) (fun _ => costs_pure _) (by omega)) (by omega)) (le_of_eq rfl) state
+    split
+    · exact costs_seq (m := 1) (hash_costs _) (fun digest => costs_seq (m := 1) costs_get (fun current =>
+        costs_seq (m := 0) (fun state => IsQueryBoundP.simulateQ_run_StateT_of_step
+          (stage_costs _ _ _ _ _ _ _ _) (fun query state => stage_costs_step setup codec beaconSeed query state) state)
+          (fun staged => costs_seq (m := 0) costs_get
+            (fun after => costs_seq (costs_set _) (fun _ => costs_pure _) (by omega)) (by omega)) (le_of_eq rfl))
+        (by omega)) (le_of_eq rfl) state
+    · exact costs_seq (m := 0) (costs_set _) (fun _ => costs_pure _) (Nat.zero_le _) state
   · simp
 
 /-- Family coins make no request outside the coins. -/
@@ -1818,13 +1864,6 @@ theorem hmac_costs (p : RootSpec.Domain → Prop) [DecidablePred p] (key : HmacB
   rw [run]
   exact (isQueryBoundP_bind ((isQueryBoundP_query_iff p _ (if p (.inr (.publicHmac key message)) then 1 else 0)).mpr
     (fun found => by simp [found])) (fun _ _ => isQueryBoundP_pure p _ 0)).mono (by simp)
-
-/-- A BLAKE2b query makes no family request other than coins. -/
-theorem hash_costs (bytes : Pqxdh.Bytes) : Costs 0 (PqxdhServerAuthExperiment.hashOracle (KemSK := KemSK) bytes) :=
-  fun state => by
-    change (PqxdhServerAuthExperiment.familyCoins ((CtxRomAuth.ctxRandomOracle ((), bytes)).run state.ctx) >>=
-      fun result => pure (result.1, { state with ctx := result.2 })).IsQueryBoundP IsFamilyRequest 0
-    simpa using familyCoins_costs ((CtxRomAuth.ctxRandomOracle ((), bytes)).run state.ctx)
 
 /-- The experiment body inherits a bound on requests other than coins from every run of the adversary. -/
 theorem body_bound (p : RootSpec.Domain → Prop) [DecidablePred p] (coins : ∀ coin, ¬ p (.inl coin))

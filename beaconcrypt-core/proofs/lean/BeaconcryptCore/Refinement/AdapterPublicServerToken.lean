@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Refinement.AdapterPublicServerAcceptBody
+import BeaconcryptCore.Refinement.PeerOwnership
 import BeaconcryptCore.Refinement.RegistrationAuthenticationReparse
 import BeaconcryptCore.Computational.RegistrationAgreementMetadata
 open CoreModels Aeneas OracleComp OracleSpec
@@ -43,8 +44,22 @@ def ParsedKey (key : Std.Array U8 32#usize) : Prop :=
   ∃ publicKey, beaconcrypt_crypto.crypto_sign.PublicKey.from_bytes key.to_slice = .ok (.Ok publicKey)
 
 omit containers [Monad m] [LawfulMonad m] [PublicWrapperPlatform.Allocator] [PublicWrapperPlatform.LocalOperations] [PublicWrapperPlatform.ContainerOperations] in
+/-- A pending token retains the actual identity-copy request together with the parser receipt for that exact key. -/
+def ParsedBinding (binding : session.RegistrationBinding) : Prop :=
+  ∃ key, authentication.OwnedInitFields.identity_public_key binding.init_fields = .ok key ∧ ParsedKey key
+
+omit material platform containers [Monad m] [LawfulMonad m] [PublicWrapperPlatform.Allocator] [PublicWrapperPlatform.LocalOperations] [PublicWrapperPlatform.ContainerOperations] in
+theorem completed_parsed (pending : session.RegistrationBinding) (digest : Std.Array U8 64#usize)
+    (completed : session.CompletedRegistrationBinding) (resumed : pending.complete digest = .ok completed)
+    (parsed : ParsedBinding pending) : ParsedKey completed.beacon_identity_public_key := by
+  obtain ⟨key, copied, admitted⟩ := parsed
+  have exactCopy := SessionBinding.complete_identity pending digest completed resumed
+  have same : key = completed.beacon_identity_public_key := RustM.ok.inj (copied.symm.trans exactCopy)
+  exact same ▸ admitted
+
+omit containers [Monad m] [LawfulMonad m] [PublicWrapperPlatform.Allocator] [PublicWrapperPlatform.LocalOperations] [PublicWrapperPlatform.ContainerOperations] in
 def ParsedToken (token : beaconcrypt_public_wrapper.server.RegistrationOutput) : Prop :=
-  ParsedKey token.registration.agreement.binding.beacon_identity_public_key
+  ParsedBinding token.registration.agreement.binding
 
 omit containers [Monad m] [LawfulMonad m] [PublicWrapperPlatform.Allocator] [PublicWrapperPlatform.LocalOperations] [PublicWrapperPlatform.ContainerOperations] in
 theorem result_token {R : Type} (self : beaconcrypt_public_wrapper.server.Server) (rng : R)
@@ -65,7 +80,7 @@ theorem result_parsed {R : Type} (self : beaconcrypt_public_wrapper.server.Serve
     (completed : agreement.ServerAgreement) (inserted : Bool) (history : AdapterPublicWrapperStorage.ReplaySet)
     (token : beaconcrypt_public_wrapper.server.RegistrationOutput)
     (returned : (result self rng completed inserted history).1 = .Some token)
-    (parsed : ParsedKey completed.binding.beacon_identity_public_key) : ParsedToken token := by
+    (parsed : ParsedBinding completed.binding) : ParsedToken token := by
   unfold ParsedToken
   rw [(result_token self rng completed inserted history token returned).1]
   exact parsed
@@ -98,7 +113,7 @@ theorem record_parsed {R : Type} (self : beaconcrypt_public_wrapper.server.Serve
     (current : beaconcrypt_public_wrapper.server.Server) (before after : S)
     (supported : (.ok (.Some token, current, nextRng), after) ∈ support
       (((AdapterPublicServerAcceptBody.record (m := StateT S ProbComp) self rng (.ServerComplete completed)).run).run before))
-    (parsed : ParsedKey completed.binding.beacon_identity_public_key) : ParsedToken token := by
+    (parsed : ParsedBinding completed.binding) : ParsedToken token := by
   unfold ParsedToken
   rw [(record_token self rng nextRng completed token current before after supported).1]
   exact parsed
@@ -113,8 +128,8 @@ theorem agreement_parsed (implementation : QueryImpl RegistrationAgreementExecut
     (completed : agreement.ServerAgreement) (before after : S)
     (supported : (.ok (.ServerComplete completed), after) ∈ support
       ((simulateQ implementation (RegistrationAgreementExecutor.server control status authenticated)).run before))
-    (parsed : ParsedKey authenticated.binding.beacon_identity_public_key) :
-    ParsedKey completed.binding.beacon_identity_public_key := by
+    (parsed : ParsedBinding authenticated.binding) :
+    ParsedBinding completed.binding := by
   rw [RegistrationAgreementExecutor.interpreted_server_binding implementation before after control status authenticated completed supported]
   exact parsed
 
@@ -165,3 +180,9 @@ end BeaconcryptCore.Refinement.AdapterPublicServerToken
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Refinement.AdapterPublicServerToken.lookup_program
+
+/-- info: 'BeaconcryptCore.Refinement.AdapterPublicServerToken.completed_parsed' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.AdapterPublicServerToken.completed_parsed

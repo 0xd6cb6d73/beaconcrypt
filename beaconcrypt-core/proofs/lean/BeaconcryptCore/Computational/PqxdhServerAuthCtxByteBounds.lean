@@ -7,6 +7,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.refined ratchet.concrete PqxdhRefinement
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhServerAuthCtxByteBounds
+variable (associatedData : PqxdhTranscriptAd.AssociatedData)
 open PqxdhJointKdfGame
 open PqxdhServerAuthCtxCalls (Kernel Residual)
 open PqxdhServerAuthBuildProgram
@@ -21,7 +22,7 @@ def Sized (context : RawCtxSourceSend.SealContext) : Prop := context.plaintext.l
 theorem candidate_bounded (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
     (initial : RustM Kernel) (candidate : pqxdh.ServerRegistrationCandidate) (data : Option Pqxdh.Bytes)
     (metadata : PeerMetadata) (state : State Kernel Metadata PeerMetadata Consumed) :
-    (PqxdhInitialGenericBuilder.candidate
+    (PqxdhInitialGenericBuilder.candidate (associatedData := associatedData)
       (PqxdhServerAuthCtxBuildSettlement.calls (fun entry _ _ => pure (entry, .None)) source rest sealQuery)
       auxQuery initial candidate data metadata state).IsQueryBoundP (Forbidden Sized) 0 := by
   unfold PqxdhInitialGenericBuilder.candidate
@@ -46,7 +47,7 @@ theorem candidate_bounded (source : FixedHkdfSha512NoSaltSource) (rest : Residua
         case ok bytes =>
           rw [isQueryBoundP_map_iff]
           simpa [Forbidden] using
-            after_context source rest candidate _ entry metadata state Sized (by
+            after_context (associatedData := associatedData) source rest candidate _ entry metadata state Sized (by
               obtain ⟨actual, actualEq, actualBytes⟩ := PqxdhServerRegistrationPublication.candidate_binding candidate
               have same : actual = bytes := RustM.ok.inj (actualEq.symm.trans binding)
               subst actual
@@ -60,7 +61,7 @@ theorem candidate_bounded (source : FixedHkdfSha512NoSaltSource) (rest : Residua
 theorem build_bounded (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
     (initial : RustM Kernel) (pending : pqxdh.PendingServerRegistration) (data : Option Pqxdh.Bytes)
     (metadata : PeerMetadata) (state : State Kernel Metadata PeerMetadata Consumed) :
-    (PqxdhServerAuthSendFactor.genericBuild
+    (PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData)
       (PqxdhServerAuthCtxBuildSettlement.calls (fun entry _ _ => pure (entry, .None)) source rest sealQuery)
       auxQuery initial pending data metadata state).IsQueryBoundP (Forbidden Sized) 0 := by
   unfold PqxdhServerAuthSendFactor.genericBuild
@@ -76,7 +77,7 @@ theorem build_bounded (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
       case ok value =>
         cases value with
         | Err => trivial
-        | Ok candidate => exact candidate_bounded source rest initial candidate data metadata state
+        | Ok candidate => exact candidate_bounded (associatedData := associatedData) source rest initial candidate data metadata state
       all_goals trivial
   all_goals trivial
 
@@ -84,9 +85,9 @@ theorem build_bounded (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
 theorem program_bounded (source : FixedHkdfSha512NoSaltSource) (rest : Residual)
     (pending : pqxdh.PendingServerRegistration) (data : Option Pqxdh.Bytes)
     (metadata : PeerMetadata) (state : PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed) :
-    (program source rest pending data metadata state).IsQueryBoundP (Forbidden Sized) 0 := by
+    (program (associatedData := associatedData) source rest pending data metadata state).IsQueryBoundP (Forbidden Sized) 0 := by
   rw [program, isQueryBoundP_map_iff]
-  exact build_bounded source rest _ pending data metadata _
+  exact build_bounded (associatedData := associatedData) source rest _ pending data metadata _
 
 open AdaptiveCtxDynamicKnownBounds (PlaintextCost PlaintextBound TargetClass)
 
@@ -156,10 +157,10 @@ theorem compiled_bounded (source : FixedHkdfSha512NoSaltSource) (codec : Codec R
     (checks : Checks) (rest : Residual) (pending : pqxdh.PendingServerRegistration)
     (data : Option Pqxdh.Bytes) (metadata : PeerMetadata)
     (state : PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed) (log : Log) :
-    ((compiled source codec checks rest pending data metadata state).run.run log).IsQueryBoundP Oversized 0 := by
+    ((compiled (associatedData := associatedData) source codec checks rest pending data metadata state).run.run log).IsQueryBoundP Oversized 0 := by
   exact PqxdhServerAuthBuildProgramBounds.stopping_bound (compiler source codec checks) (Forbidden Sized) Oversized
-    (compiler_bounded source codec checks) (program source rest pending data metadata state) 0
-    (program_bounded source rest pending data metadata state) log
+    (compiler_bounded source codec checks) (program (associatedData := associatedData) source rest pending data metadata state) 0
+    (program_bounded (associatedData := associatedData) source rest pending data metadata state) log
 
 
 variable {KemSK : Type}
@@ -170,14 +171,15 @@ theorem build_route_bounded (source : FixedHkdfSha512NoSaltSource) (codec : Code
     (checks : Checks) (rest : Residual) (session : Nat) (payload : Option Pqxdh.Bytes)
     (state : Local KemSK) :
     ((PqxdhServerAuthCtxBuild.build source codec checks rest session payload).run.run state).IsQueryBoundP Oversized 0 := by
-  simpa only [ite_self, Nat.zero_mul] using
-    PqxdhServerAuthCtxBuildBounds.build_query_bound source codec checks rest session payload Oversized 0 0
-      (fun token server state => by
+  simpa only [ite_self, Nat.zero_mul, Nat.add_zero] using
+    PqxdhServerAuthCtxBuildBounds.build_query_bound source codec checks rest session payload Oversized 0 0 0
+      (fun bytes state => no_seal _ (PqxdhServerAuthCtxStateBounds.hash_bills bytes state).2.1)
+      (fun ad token server state => by
         simpa only [PqxdhServerAuthCtxBuild.selected, PqxdhServerAuthCtxBuild.after,
           OptionT.run_mk, StateT.run, isQueryBoundP_map_iff] using
-          compiled_bounded source codec checks rest token.pending payload () server [])
-      (fun token server state => no_seal _
-        (PqxdhServerAuthCtxBuildBounds.known_bills source codec checks session token payload server state).2.2.1)
+          compiled_bounded ad source codec checks rest token.pending payload ad server [])
+      (fun ad token server state => no_seal _
+        (PqxdhServerAuthCtxBuildBounds.known_bills ad source codec checks session token payload server state).2.2.1)
       state
 
 

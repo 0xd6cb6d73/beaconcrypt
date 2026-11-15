@@ -8,6 +8,7 @@ open RustM beaconcrypt_core ratchet ratchet.refined ratchet.concrete
 set_option autoImplicit false
 
 namespace BeaconcryptCore.Computational.PqxdhServerAuthCtxNativeBounds
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhJointKdfGame
 open PqxdhServerAuthExperiment (Codec Checks)
 open PqxdhServerAuthCtxNative
@@ -87,12 +88,13 @@ theorem tail_hash (source : FixedHkdfSha512NoSaltSource) (codec : Codec Reader R
 /-- The complete concrete ordinary builder forwards at most one attempted commitment request, with no success premise or omitted writer-failure path. -/
 theorem build_hash (source : FixedHkdfSha512NoSaltSource) (codec : Codec Reader Response) (checks : Checks)
     (pending : pqxdh.PendingServerRegistration) (root : PqxdhSecretInputKdf.RootOutput) (payload : Option Pqxdh.Bytes)
-    (server : PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes))
+    (server : PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes))
     (state : List RawCtxSourceSend.SealContext) :
     ((simulateQ (tail source codec checks)
-      (PqxdhServerRegistrationPublication.build source pending root payload () server)).run state).IsQueryBoundP
+      (PqxdhServerRegistrationPublication.build (associatedData := associatedData) source pending root payload associatedData server)).run state).IsQueryBoundP
         AdaptiveCtxDynamicKnownBounds.HashRoute 1 :=
-  (PqxdhServerRegistrationPublication.build_bound source pending root payload () server .seal).simulateQ_run_StateT_of_step
+  (PqxdhServerRegistrationPublication.build_bound (associatedData := associatedData) source pending root payload
+    associatedData server .seal).simulateQ_run_StateT_of_step
     (tail_hash source codec checks) state
 
 /-- The concrete ordinary registration compiler issues only shared hash requests. Known KDF, AEAD and codec work remains actual local computation. -/
@@ -137,10 +139,10 @@ theorem tail_only_hash (source : FixedHkdfSha512NoSaltSource) (codec : Codec Rea
 /-- Complete ordinary builders make no component requests other than the separately counted shared hashes. -/
 theorem build_only_hash (source : FixedHkdfSha512NoSaltSource) (codec : Codec Reader Response) (checks : Checks)
     (pending : pqxdh.PendingServerRegistration) (root : PqxdhSecretInputKdf.RootOutput) (payload : Option Pqxdh.Bytes)
-    (server : PqxdhServerRegistrationPublication.State Unit Unit (List Pqxdh.Bytes))
+    (server : PqxdhServerRegistrationPublication.State Unit PqxdhTranscriptAd.AssociatedData (List Pqxdh.Bytes))
     (state : List RawCtxSourceSend.SealContext) :
     ((simulateQ (tail source codec checks)
-      (PqxdhServerRegistrationPublication.build source pending root payload () server)).run state).IsQueryBoundP
+      (PqxdhServerRegistrationPublication.build (associatedData := associatedData) source pending root payload associatedData server)).run state).IsQueryBoundP
       (fun query => ¬ AdaptiveCtxDynamicKnownBounds.HashRoute query) 0 := by
   exact (isQueryBoundP_false _ 0).simulateQ_run_StateT_of_step
     (fun query state => by simpa only [ite_false] using tail_only_hash source codec checks query state) state

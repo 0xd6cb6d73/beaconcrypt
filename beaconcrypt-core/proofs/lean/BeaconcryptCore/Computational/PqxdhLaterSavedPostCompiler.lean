@@ -8,6 +8,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.refined ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhLaterSavedPostCompiler
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhJointKdfGame PqxdhNativeSharedPrefix
 open RawCtxSelectedParentTable RawCtxSelectedParentEntry RawCtxSelectedMessageDriver
 open PqxdhSelectedFirstRecord
@@ -38,7 +39,7 @@ local notation "parent" => RawCtxSelectedPendingRoleCompiler.liveEntry inner mat
 noncomputable def record (quiet : PqxdhInitialPostCertificates.LiveQuiet inner) (localState : Local A N C) :
     OracleComp AdaptiveCtxDynamicKnownKeys.Spec (Option Result × InsState M P I D K A N C S B) := do
   let result ← RawCtxSelectedPendingRoleCompiler.live source writer prior target nonce next read inner material quiet
-  ((simulateQ (insImpl pre application initial selector aux source writer prior (some parent) target nonce next
+  ((simulateQ (insImpl (completedBinding := completedBinding) pre application initial selector aux source writer prior (some parent) target nonce next
     sender route read mark monitor) (outside result.1)).run).run
       ((PqxdhLaterSavedRecord.afterRecord before result.2, localState),
         (PqxdhInitialOriginPost.record trace request result.1, none, false))
@@ -48,11 +49,11 @@ theorem record_evaluated (quiet : PqxdhInitialPostCertificates.LiveQuiet inner)
     (state : RawCtxSelectedReceiveCompiler.State (Local A N C)) :
     PqxdhSelectedStateInterpreter.pair <$>
       (simulateQ (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder read) source.crypto key)
-        (record pre application initial selector aux source writer prior target nonce next mark sender route read monitor
+        (record (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next mark sender route read monitor
           request before trace outside inner material quiet state.1)).run state.2 = (do
       let result ← (RawCtxSelectedReceiveCompiler.evaluated source key read
         (RawCtxSelectedPendingRoleCompiler.live source writer prior target nonce next read inner material quiet)).run state
-      (simulateQ (insEvaluated pre application initial selector aux source writer prior (some parent) key target nonce next
+      (simulateQ (insEvaluated (completedBinding := completedBinding) pre application initial selector aux source writer prior (some parent) key target nonce next
         sender route read mark monitor) (RawCtxSelectedFamilyNonceCoupling.optionalClient (outside result.1.1))).run
         (((PqxdhLaterSavedRecord.afterRecord before result.1.2, result.2.1),
           (PqxdhInitialOriginPost.record trace request result.1.1, none, false)), result.2.2)) := by
@@ -63,7 +64,7 @@ theorem record_evaluated (quiet : PqxdhInitialPostCertificates.LiveQuiet inner)
   have evaluated := congrArg (fun handler => handler.run
     (((PqxdhLaterSavedRecord.afterRecord before result.1.2, state.1),
       (PqxdhInitialOriginPost.record trace request result.1.1, none, false)), result.2))
-    (insEvaluated_program pre application initial selector aux source writer prior (some parent) key target nonce next
+    (insEvaluated_program (completedBinding := completedBinding) pre application initial selector aux source writer prior (some parent) key target nonce next
       sender route read mark monitor (outside result.1.1))
   exact evaluated
 
@@ -77,13 +78,13 @@ theorem record_post_good
       (RawCtxSelectedPendingRoleCompiler.live source writer prior target nonce next read inner material quiet)).run state
     let sourceWork := do
       let result ← pendingWork
-      (simulateQ (traced pre application initial selector aux source writer prior (some parent) key target nonce next
+      (simulateQ (traced (completedBinding := completedBinding) pre application initial selector aux source writer prior (some parent) key target nonce next
         sender route read mark) (RawCtxSelectedFamilyNonceCoupling.optionalClient (post result.1.1))).run
         ((PqxdhLaterSavedRecord.afterRecord before result.1.2, RawCtxSelectedReceiveCompiler.project result.2),
           PqxdhInitialOriginPost.record trace request result.1.1)
     let augmentedWork := do
       let result ← pendingWork
-      (simulateQ (insAugmented pre application initial selector aux source writer prior (some parent) key target nonce next
+      (simulateQ (insAugmented (completedBinding := completedBinding) pre application initial selector aux source writer prior (some parent) key target nonce next
         sender route read mark monitor) (RawCtxSelectedFamilyNonceCoupling.optionalClient (post result.1.1))).run
         (((PqxdhLaterSavedRecord.afterRecord before result.1.2, result.2.1),
           (PqxdhInitialOriginPost.record trace request result.1.1, none, false)), result.2.2)
@@ -94,7 +95,7 @@ theorem record_post_good
   dsimp only
   rw [true_mass_eq, true_mass_eq]
   refine prEvent_bind_congr (m := ProbComp) _ _ _ _ _ fun result => ?_
-  have equality := post_source_augmented pre application initial selector aux source writer prior (some parent) key target nonce next
+  have equality := post_source_augmented (completedBinding := completedBinding) pre application initial selector aux source writer prior (some parent) key target nonce next
     sender route read mark monitor (post result.1.1)
     (((PqxdhLaterSavedRecord.afterRecord before result.1.2, result.2.1),
       (PqxdhInitialOriginPost.record trace request result.1.1, none, false)), result.2.2) event
@@ -107,6 +108,7 @@ variable
     (index : Fin B) (before : PqxdhInitialPostContext.NativeFront M P I D K S B)
     (trace : PqxdhInitialOriginPost.Trace Bool S B) (origin : Option Bool)
     (control : pqxdh.BeaconInitSent) (candidate : pqxdh.BeaconRegistrationCandidate)
+    (associatedData : Std.Array Std.U8 151#usize)
     (outside : Option Pqxdh.Bytes → OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result)
     (inner : RawCtxSelectedFamilyContext.OwnerContext Unit (core.option.Option RawCtxWholeOwner.Decrypted))
     (material : PqxdhOrderedChainHybrids.Material)
@@ -115,8 +117,8 @@ local notation "parent" => RawCtxSelectedPendingOwnerCompiler.entry inner materi
 noncomputable def finish (quiet : RawCtxQuietOwnerTails.Quiet inner) (localState : Local A N C) :
     OracleComp AdaptiveCtxDynamicKnownKeys.Spec (Option Result × InsState M P I D K A N C S B) := do
   let result ← RawCtxSelectedPendingOwnerCompiler.owner source writer prior target nonce next read inner material quiet
-  let finished := PqxdhLaterSavedFinish.afterOwner index (initialFront before) control candidate result
-  ((simulateQ (insImpl pre application initial selector aux source writer prior (some parent) target nonce next
+  let finished := PqxdhLaterSavedFinish.afterOwner index (initialFront before) control candidate associatedData result
+  ((simulateQ (insImpl (completedBinding := completedBinding) pre application initial selector aux source writer prior (some parent) target nonce next
     sender route read mark monitor) (outside finished.1)).run).run
       ((finished.2, localState), (PqxdhInitialOriginContext.finishedTrace trace origin index finished.1, none, false))
 
@@ -125,12 +127,12 @@ theorem finish_evaluated (quiet : RawCtxQuietOwnerTails.Quiet inner)
     (state : RawCtxSelectedReceiveCompiler.State (Local A N C)) :
     PqxdhSelectedStateInterpreter.pair <$>
       (simulateQ (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder read) source.crypto key)
-        (finish pre application initial selector aux source writer prior target nonce next mark sender route read monitor
-          index before trace origin control candidate outside inner material quiet state.1)).run state.2 = (do
+        (finish (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next mark sender route read monitor
+          index before trace origin control candidate associatedData outside inner material quiet state.1)).run state.2 = (do
       let result ← (RawCtxSelectedReceiveCompiler.evaluated source key read
         (RawCtxSelectedPendingOwnerCompiler.owner source writer prior target nonce next read inner material quiet)).run state
-      let finished := PqxdhLaterSavedFinish.afterOwner index (initialFront before) control candidate result.1
-      (simulateQ (insEvaluated pre application initial selector aux source writer prior (some parent) key target nonce next
+      let finished := PqxdhLaterSavedFinish.afterOwner index (initialFront before) control candidate associatedData result.1
+      (simulateQ (insEvaluated (completedBinding := completedBinding) pre application initial selector aux source writer prior (some parent) key target nonce next
         sender route read mark monitor) (RawCtxSelectedFamilyNonceCoupling.optionalClient (outside finished.1))).run
         (((finished.2, result.2.1),
           (PqxdhInitialOriginContext.finishedTrace trace origin index finished.1, none, false)), result.2.2)) := by
@@ -138,11 +140,11 @@ theorem finish_evaluated (quiet : RawCtxQuietOwnerTails.Quiet inner)
   simp only [RawCtxSelectedReceiveCompiler.evaluated, StateT.run, bind_map_left]
   apply bind_congr
   intro result
-  let finished := PqxdhLaterSavedFinish.afterOwner index (initialFront before) control candidate result.1
+  let finished := PqxdhLaterSavedFinish.afterOwner index (initialFront before) control candidate associatedData result.1
   have evaluated := congrArg (fun handler => handler.run
     (((finished.2, state.1),
       (PqxdhInitialOriginContext.finishedTrace trace origin index finished.1, none, false)), result.2))
-    (insEvaluated_program pre application initial selector aux source writer prior (some parent) key target nonce next
+    (insEvaluated_program (completedBinding := completedBinding) pre application initial selector aux source writer prior (some parent) key target nonce next
       sender route read mark monitor (outside finished.1))
   exact evaluated
 
@@ -215,7 +217,7 @@ noncomputable def builder (localState : Local A N C) :
   let sealed ← RawCtxSelectedPendingSendCompiler.sealing source.crypto writer (RawCtxChainSend.nativeSeal id id ready)
   let published ← (publication pre application initial selector aux target sender saved material sealed).run localState
   let installed := PqxdhInitialPendingBuilder.reinstall saved.index saved.before (.ok published.1)
-  ((simulateQ (insImpl pre application initial selector aux source writer prior (some parent) target nonce next
+  ((simulateQ (insImpl (completedBinding := completedBinding) pre application initial selector aux source writer prior (some parent) target nonce next
     sender route read mark monitor) (saved.outside installed.1)).run).run
       ((initialFront installed.2, published.2),
         (PqxdhInitialOriginContext.builtTrace trace origin installed.2 saved.index installed.1, none, false))
@@ -224,7 +226,7 @@ noncomputable def builder (localState : Local A N C) :
 theorem builder_evaluated (state : RawCtxSelectedReceiveCompiler.State (Local A N C)) :
     PqxdhSelectedStateInterpreter.pair <$>
       (simulateQ (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder read) source.crypto key)
-        (builder pre application initial selector aux source writer prior target nonce next mark sender route read monitor
+        (builder (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next mark sender route read monitor
           trace origin saved material state.1)).run state.2 = (do
       let sealed ← (RawCtxSelectedReceiveCompiler.evaluated source key read
         (RawCtxSelectedPendingSendCompiler.sealing source.crypto writer (RawCtxChainSend.nativeSeal id id ready))).run state
@@ -232,7 +234,7 @@ theorem builder_evaluated (state : RawCtxSelectedReceiveCompiler.State (Local A 
         (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder read) source.crypto key)
         (publication pre application initial selector aux target sender saved material sealed.1)).run sealed.2
       let installed := PqxdhInitialPendingBuilder.reinstall saved.index saved.before (.ok published.1)
-      (simulateQ (insEvaluated pre application initial selector aux source writer prior (some parent) key target nonce next
+      (simulateQ (insEvaluated (completedBinding := completedBinding) pre application initial selector aux source writer prior (some parent) key target nonce next
         sender route read mark monitor) (RawCtxSelectedFamilyNonceCoupling.optionalClient (saved.outside installed.1))).run
         (((initialFront installed.2, published.2.1),
           (PqxdhInitialOriginContext.builtTrace trace origin installed.2 saved.index installed.1, none, false)), published.2.2)) := by
@@ -247,7 +249,7 @@ theorem builder_evaluated (state : RawCtxSelectedReceiveCompiler.State (Local A 
   have evaluated := congrArg (fun handler => handler.run
     (((initialFront installed.2, published.1.2),
       (PqxdhInitialOriginContext.builtTrace trace origin installed.2 saved.index installed.1, none, false)), published.2))
-    (insEvaluated_program pre application initial selector aux source writer prior (some parent) key target nonce next
+    (insEvaluated_program (completedBinding := completedBinding) pre application initial selector aux source writer prior (some parent) key target nonce next
       sender route read mark monitor (saved.outside installed.1))
   exact evaluated
 
@@ -268,9 +270,9 @@ noncomputable def prepare (fits : PqxdhInitialOriginCertificates.Fits qPost cont
       let result ← RawCtxSelectedPendingRoleCompiler.live source writer prior target nonce next read inner material fits.2
       pure (outside result.1, ((PqxdhLaterSavedRecord.afterRecord before result.2, localState),
         (PqxdhInitialOriginPost.record trace request result.1, none, false)))
-  | ⟨.inl (.finish index before control candidate outside inner), trace, origin⟩, fits => do
+  | ⟨.inl (.finish index before control candidate associatedData outside inner), trace, origin⟩, fits => do
       let result ← RawCtxSelectedPendingOwnerCompiler.owner source writer prior target nonce next read inner material fits.2
-      let finished := PqxdhLaterSavedFinish.afterOwner index (initialFront before) control candidate result
+      let finished := PqxdhLaterSavedFinish.afterOwner index (initialFront before) control candidate associatedData result
       pure (outside finished.1, ((finished.2, localState),
         (PqxdhInitialOriginContext.finishedTrace trace origin index finished.1, none, false)))
   | ⟨.inr saved, trace, origin⟩, _ => do
@@ -286,7 +288,7 @@ noncomputable def prepare (fits : PqxdhInitialOriginCertificates.Fits qPost cont
 noncomputable def complete (fits : PqxdhInitialOriginCertificates.Fits qPost context) (localState : Local A N C) :
     OracleComp AdaptiveCtxDynamicKnownKeys.Spec (Option Result × InsState M P I D K A N C S B) := do
   let prepared ← prepare pre application initial selector aux source writer prior target nonce next sender read qPost context material fits localState
-  ((simulateQ (insImpl pre application initial selector aux source writer prior (some parent) target nonce next
+  ((simulateQ (insImpl (completedBinding := completedBinding) pre application initial selector aux source writer prior (some parent) target nonce next
     sender route read mark monitor) prepared.1).run).run prepared.2
 
 /-- The complete actual saved request, including builder callbacks, hands its entire component poststate to the original adaptive Post compiler. -/
@@ -294,19 +296,19 @@ theorem complete_evaluated (fits : PqxdhInitialOriginCertificates.Fits qPost con
     (state : RawCtxSelectedReceiveCompiler.State (Local A N C)) :
     PqxdhSelectedStateInterpreter.pair <$>
       (simulateQ (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder read) source.crypto key)
-        (complete pre application initial selector aux source writer prior target nonce next mark sender route read monitor
+        (complete (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next mark sender route read monitor
           qPost context material fits state.1)).run state.2 = (do
       let prepared ← (simulateQ (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder read) source.crypto key)
         (prepare pre application initial selector aux source writer prior target nonce next sender read
           qPost context material fits state.1)).run state.2
-      (simulateQ (insEvaluated pre application initial selector aux source writer prior (some parent) key target nonce next
+      (simulateQ (insEvaluated (completedBinding := completedBinding) pre application initial selector aux source writer prior (some parent) key target nonce next
         sender route read mark monitor) (RawCtxSelectedFamilyNonceCoupling.optionalClient prepared.1.1)).run
         (prepared.1.2, prepared.2)) := by
   simp only [complete, simulateQ_bind, StateT.run_bind, map_bind]
   apply bind_congr
   intro prepared
   exact congrArg (fun handler => handler.run (prepared.1.2, prepared.2))
-    (insEvaluated_program pre application initial selector aux source writer prior (some parent) key target nonce next
+    (insEvaluated_program (completedBinding := completedBinding) pre application initial selector aux source writer prior (some parent) key target nonce next
       sender route read mark monitor prepared.1.1)
 
 /-- The compiled setup projects to the same complete saved-source continuation; every common source reply and publication outcome is retained. -/
@@ -317,9 +319,9 @@ theorem source_complete (fits : PqxdhInitialOriginCertificates.Fits qPost contex
         (prepare pre application initial selector aux source writer prior target nonce next sender read
           qPost context material fits state.1)).run state.2
       Prod.map id (tracedProj key) <$>
-        (simulateQ (tracedPlain pre application initial selector aux source writer prior (some parent) key target nonce next
+        (simulateQ (tracedPlain (completedBinding := completedBinding) pre application initial selector aux source writer prior (some parent) key target nonce next
           sender route read mark) prepared.1.1).run (insProject (prepared.1.2, prepared.2))) =
-      PqxdhLaterSavedContext.complete pre application initial selector aux source writer prior key target nonce next mark
+      PqxdhLaterSavedContext.complete (completedBinding := completedBinding) pre application initial selector aux source writer prior key target nonce next mark
         sender route read qPost context material fits state := by
   rcases context with ⟨original, trace, origin⟩
   cases original with
@@ -331,7 +333,7 @@ theorem source_complete (fits : PqxdhInitialOriginCertificates.Fits qPost contex
             RawCtxSelectedReceiveCompiler.evaluated, StateT.run, bind_map_left,
             insProject, RawCtxSelectedReceiveCompiler.project]
           rfl
-      | finish index before control candidate outside inner =>
+      | finish index before control candidate associatedData outside inner =>
           simp only [prepare, simulateQ_bind, simulateQ_pure, StateT.run_bind, StateT.run_pure, pure_bind, bind_assoc]
           simp only [PqxdhLaterSavedContext.complete, PqxdhLaterSavedFinish.selectedPendingFinish,
             RawCtxSelectedReceiveCompiler.evaluated, StateT.run, bind_map_left,

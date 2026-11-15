@@ -57,10 +57,11 @@ theorem collect_cost {I D K X Shared : Type} (caps : KemCaps) (identity : I) (pr
     | intro answer; cases answer
 
 /-- The opaque-handle preparation decapsulates at most once. -/
-theorem prepare_cost {I D K X Shared : Type} (caps : KemCaps) (control : beaconcrypt_core.pqxdh.BeaconInitSent)
-    (identity : I) (prekey oneTime : D) (kem : K) (raw : Pqxdh.Bytes) :
-    WBound (PqxdhBeaconPhase2Shared.prepare (X := X) (Response := Response) (Shared := Shared) control identity prekey
-      oneTime kem raw) (wPrep caps) caps.decapsCost := by
+theorem prepare_cost {I D K X Shared : Type} (caps : KemCaps)
+    (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+    (control : beaconcrypt_core.pqxdh.BeaconInitSent) (identity : I) (prekey oneTime : D) (kem : K) (raw : Pqxdh.Bytes) :
+    WBound (PqxdhBeaconPhase2Shared.prepare (X := X) (Response := Response) (Shared := Shared) completedBinding control
+      identity prekey oneTime kem raw) (wPrep caps) caps.decapsCost := by
   unfold PqxdhBeaconPhase2Shared.prepare
   refine wBound_mono (wBound_bind (a := caps.decapsCost) (b := 0) (collect_cost caps identity prekey oneTime kem raw)
     fun inputs _ => ?_) (by omega)
@@ -74,13 +75,14 @@ def wOwner (caps : KemCaps) : (OwnerSpec Response).Domain → ℕ
   | .inl query => wPrep caps query
   | .inr _ => 128
 
-theorem groupedOwner_cost (caps : KemCaps) (raw : Pqxdh.Bytes) (state : PqxdhRegistrationJointBundle.Owner) :
-    WBound (groupedOwner (Response := Response) raw state) (wOwner caps) (caps.decapsCost + 128) := by
+theorem groupedOwner_cost (caps : KemCaps) (binding : beaconcrypt_core.session.CompletedRegistrationBinding)
+    (raw : Pqxdh.Bytes) (state : PqxdhRegistrationJointBundle.Owner) :
+    WBound (groupedOwner (Response := Response) binding raw state) (wOwner caps) (caps.decapsCost + 128) := by
   unfold groupedOwner
   split
   · refine wBound_bind ?_ fun prepared _ => ?_
     · exact wBound_simulate _ (wPrep caps) (wOwner caps) (fun query => (wBound_query _ _ _).mpr le_rfl)
-        (prepare_cost caps _ _ _ _ _ raw)
+        (prepare_cost caps binding _ _ _ _ _ raw)
     · rcases prepared with _ | prepared
       · exact wBound_pure _ _ _
       · exact wBound_bind (a := 128) (b := 0) ((wBound_query _ _ _).mpr le_rfl) fun _ _ => wBound_pure _ _ _
@@ -98,19 +100,27 @@ theorem groupedCompiler_cost (setup : Setup baseSpec KemSK) (codec : Codec Reade
       | exact wBound_map _ ((wBound_query _ _ _).mpr (by simp [wG, wKind, classify, poolClass, wOwner, wPrep]))
   · exact (wBound_query _ _ _).mpr le_rfl
 
-/-- A grouped Beacon finish costs at most its decapsulation and its grouped request. -/
+/-- A grouped Beacon finish costs at most its transcript digest, its decapsulation and its grouped request. -/
 theorem groupedFinish_cost (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (selected : Nat)
     (challenge : MlKem768Ciphertext) (caps : KemCaps) (address : Nat) (raw : Pqxdh.Bytes)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) :
+    (owners : (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))) :
     WBound ((groupedFinish setup codec selected challenge address raw).run owners)
-      (wG (KemSK := KemSK) (Response := Response) caps) (caps.decapsCost + 128) := by
-  change WBound (match owners[address]? with
+      (wG (KemSK := KemSK) (Response := Response) caps) (64 + (caps.decapsCost + 128)) := by
+  change WBound (match owners.1[address]? with
     | none => pure (none, owners)
     | some entry => _ : OracleComp (GSpec KemSK Response) _) _ _
   split
   · exact wBound_pure _ _ _
-  · exact wBound_map _ (wBound_simulate _ (wOwner caps) _ (groupedCompiler_cost setup codec selected challenge caps)
-      (groupedOwner_cost caps raw _))
+  · refine wBound_map _ ?_
+    unfold groupedHashed
+    split
+    · split
+      · refine wBound_bind (a := 64) (b := caps.decapsCost + 128) ((wBound_query _ _ _).mpr ?_) fun digest _ => ?_
+        · simp [wG, wKind, classify]
+        · exact wBound_simulate _ (wOwner caps) _ (groupedCompiler_cost setup codec selected challenge caps)
+            (groupedOwner_cost caps _ raw _)
+      · exact wBound_pure _ _ _
+    · exact wBound_pure _ _ _
 
 end Finish
 
@@ -129,7 +139,7 @@ theorem kind_univ : (Finset.univ : Finset Kind) = {.identityCreate, .signing, .s
 
 /-- The weight of a source request on the grouped interface. -/
 def wSource (caps : KemCaps) : SourceKind → ℕ
-  | .inl source => ![1, 64, 32, 96 + caps.encapsCost, 64, caps.decapsCost + 128, 64, 64, 0] source
+  | .inl source => ![1, 64, 32, 96 + caps.encapsCost, 2 * 64, 64 + (caps.decapsCost + 128), 64, 64, 0] source
   | .inr field => ![1, 1, 0, 0, 0] field
 
 /-- Every source request other than a Beacon finish emits commands of total weight at most its own weight. -/
@@ -146,7 +156,7 @@ theorem command_sum (caps : KemCaps) (source : SourceKind) (other : source ≠ .
 /-- A source request answered by the source client costs at most the weighted sum of its command classes. -/
 theorem liftGrouped_cost (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (caps : KemCaps)
     (query : (PqxdhRegistrationJointRevealSchedule.Spec KemSK).Domain)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) :
+    (owners : (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))) :
     WBound ((liftGrouped (Response := Response) (PqxdhRegistrationJointRevealSchedule.client setup codec query)).run
       owners) (wG caps) (∑ kind, wKind caps kind * PqxdhRegistrationJointRevealCosts.cost kind (sourceKind query)) := by
   change WBound (simulateQ groupedLift ((PqxdhRegistrationJointRevealSchedule.client setup codec query).run owners))
@@ -160,7 +170,7 @@ theorem liftGrouped_cost (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
 theorem groupedClient_cost (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (selected : Nat)
     (challenge : MlKem768Ciphertext) (caps : KemCaps)
     (query : (PqxdhRegistrationJointRevealSchedule.Spec KemSK).Domain)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) :
+    (owners : (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))) :
     WBound ((groupedClient setup codec selected challenge query).run owners) (wG (Response := Response) caps)
       (wSource caps (sourceKind query)) := by
   rcases query with (coin | request) | read
@@ -177,7 +187,8 @@ theorem groupedClient_cost (setup : Setup baseSpec KemSK) (codec : Codec Reader 
 /-- The weighted source budget in closed form. -/
 def postBill (caps : KemCaps) (budget : SourceKind → ℕ) : ℕ :=
   64 + (budget (.inl 0) + 64 * budget (.inl 1) + 32 * budget (.inl 2) + (96 + caps.encapsCost) * budget (.inl 3) +
-    64 * budget (.inl 4) + (caps.decapsCost + 128) * budget (.inl 5) + 64 * budget (.inl 6) + 64 * budget (.inl 7) +
+    (2 * 64) * budget (.inl 4) + (64 + (caps.decapsCost + 128)) * budget (.inl 5) + 64 * budget (.inl 6) +
+    64 * budget (.inl 7) +
     budget (.inr 0) + budget (.inr 1))
 
 theorem source_sum (caps : KemCaps) (budget : SourceKind → ℕ) :
@@ -206,7 +217,8 @@ theorem skelResume_cost (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)
     (value : PqxdhServerRootPreparation.Verified Reader)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)
-    (consumed : List Pqxdh.Bytes) (game : GameState KemSK) (owners : List EncodedEntry)
+    (consumed : List Pqxdh.Bytes) (game : GameState KemSK)
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))
     (next : Option Nat → OracleComp (SourceSpec KemSK) X) (selected : Nat) (ciphertext : MlKem768Ciphertext)
     (services : Services V Response) (bills : ServiceBills services) (budget : SourceKind → ℕ)
     (inherits : ∀ reply kind, (next reply).IsQueryBoundP (fun query => sourceKind (KemSK := KemSK) query = kind)

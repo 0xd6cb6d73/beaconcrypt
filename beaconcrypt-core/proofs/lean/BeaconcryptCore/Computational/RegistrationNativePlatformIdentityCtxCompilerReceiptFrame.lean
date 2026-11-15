@@ -24,7 +24,7 @@ private theorem world_frame {m : Type → Type} [Monad m] [LawfulMonad m]
     context, RegistrationNativePlatformCtxSdkReceiptView.serverView, RegistrationNativePlatformIdentityReceiptView.view]
 
 private theorem kem_frame (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (RegistrationNativeKemInterface.Spec RegistrationNativeKemInterface.OtherSpec KemSK).Domain) (before : Context n KemSK) :
     Prod.map id context <$> (RegistrationNativeIdentityWorld.ambient (mlSource := source) setup checks representation created (.inr query)).run before =
       (RegistrationNativeIdentityWorld.ambient (mlSource := source) setup checks representation created (.inr query)).run (context before) := by
@@ -35,7 +35,7 @@ private theorem kem_frame (setup : Setup base KemSK) (checks : Checks)
   rfl
 
 private theorem ambient_frame (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (RegistrationNativeIdentityFrontend.Ambient n KemSK).Domain) (before : Context n KemSK) :
     Prod.map id context <$> (RegistrationNativePlatformIdentityCtxAmbient.program (source := source) setup checks representation created query).run before =
       (RegistrationNativePlatformIdentityCtxAmbient.program (source := source) setup checks representation created query).run (context before) := by
@@ -48,7 +48,7 @@ private theorem ambient_frame (setup : Setup base KemSK) (checks : Checks)
 
 /-- Every actual free compiler query is strongly equivariant under clearing only the raw Context ML receipt list; no physical/private operational coordinate is omitted. -/
 theorem query (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (request : (RegistrationNativePlatformIdentityProgram.Spec n KemSK).Domain) (before : Context n KemSK) :
     Prod.map id context <$>
       ((RegistrationNativePlatformIdentityCtxCompiler.free
@@ -73,7 +73,7 @@ theorem query (setup : Setup base KemSK) (checks : Checks)
 
 /-- The exact same free source program commutes with raw receipt erasure throughout all adaptive continuations and retains every emitted backend and indexed protocol call. -/
 theorem program (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp (RegistrationNativePlatformIdentityProgram.Spec n KemSK) A) (before : Context n KemSK) :
     Prod.map id context <$>
       (simulateQ (RegistrationNativePlatformIdentityCtxCompiler.free

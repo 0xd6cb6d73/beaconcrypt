@@ -18,7 +18,8 @@ open AdapterPublicServerBuildTrace (Publication Word)
 variable [material :PublicWrapperPlatform.Material] [platform :PublicWrapperPlatform.Platform]
 variable [ed :AdapterInitEdPrimitive.Operations] [PublicWrapperPlatform.Allocator]
 variable [PublicWrapperPlatform.LocalOperations] [PublicWrapperPlatform.ContainerOperations]
-abbrev Spec :=(Server →ₒ RegistrationNativeServerPinRecompute.PinReply)+
+abbrev Spec :=((Server →ₒ RegistrationNativeServerPinRecompute.PinReply)+
+  (registration.HashRequest →ₒ RustM (core.option.Option (Std.Array U8 64#usize))))+
   (((PeerMap×U64) →ₒ RustM Bool)+
     ((PeerMap →ₒ RustM (core.result.Result Unit platform.ReserveError×PeerMap))+
       ((Server×registration.ServerInitialKdf) →ₒ (Publication×RustM Reply))))
@@ -45,6 +46,12 @@ def reserved (self :Server) (initial :registration.ServerInitialKdf) :OracleComp
     | .Err _=>pure (none,.ok (.None,current))
     | .Ok _=>(fun result=>(some result.1,result.2)) <$>Spec.query (.inr (.inr (.inr (current,initial))))
 
+/-- The explicit source hash leaf keeps its selected request and optional reply before reservation. -/
+def adHash (self : Server) (pending : registration.ServerAdHash) : OracleComp Spec Word :=
+  returned self pending.request fun request => do
+    let reply ← Spec.query (.inl (.inr request))
+    returned self reply fun digest => checked self (pending.resume digest) (reserved self)
+
 def lookup (self :Server) (pending :peer.CompletionLookup) (plaintext :Slice U8) :OracleComp Spec Word :=
   returned self pending.request fun identifier=>
   returned self (CoreModels.core.slice.Slice.len plaintext) fun size=>
@@ -53,13 +60,13 @@ def lookup (self :Server) (pending :peer.CompletionLookup) (plaintext :Slice U8)
     | .None=>pure (none,.ok (.None,self))
     | .Some _=>do
       let reply←Spec.query (.inr (.inl (self.known_ids,identifier)))
-      returned self reply fun occupied=>checked self (pending.resume occupied) (reserved self)
+      returned self reply fun occupied=>checked self (pending.resume occupied) (adHash self)
 
 def program (self :Server) (token :beaconcrypt_public_wrapper.server.RegistrationOutput)
     (data :core.option.Option (Slice U8)) :OracleComp Spec Word :=
   returned self (transport.normalize_registration_application data) fun application=>
   returned self (beaconcrypt_public_wrapper.server.registration_application_bytes application) fun plaintext=>do
-    let reply←Spec.query (.inl self)
+    let reply←Spec.query (.inl (.inl self))
     returned self reply fun optional=>
       match optional with
       | .None=>pure (none,.ok (.None,self))
@@ -71,7 +78,8 @@ variable [localOps :LocalOperations (RustT m)] [crypto :CryptoOperations (RustT 
 variable [children :ChildOperations (RustT m)] [containers :ContainerOperations (RustT m)]
 
 noncomputable def handler (completion :Server → registration.ServerInitialKdf→m (Publication×RustM Reply)) :QueryImpl Spec m
-  | .inl self=>(beaconcrypt_public_request.server.Server.authentication_pin (m:=RustT m) self).run
+  | .inl (.inl self)=>(beaconcrypt_public_request.server.Server.authentication_pin (m:=RustT m) self).run
+  | .inl (.inr request)=>(children.executeHash request).run
   | .inr (.inl (known,identifier))=>
       (containers.mapContains core.U64.Insts.CoreCmpEq core.U64.Insts.CoreHashHash
         beaconcrypt_public_request.collections.KeyedHasher.Insts.CoreHashBuildHasherSipHasher13
@@ -101,6 +109,27 @@ private theorem reserved_source (self :Server) (initial :registration.ServerInit
     | Ok value=>
       simp only [returned,simulateQ_map,simulateQ_spec_query,handler]
       rfl
+
+private theorem adHash_source (self : Server) (pending : registration.ServerAdHash) :
+    simulateQ (handler completion) (adHash self pending) = AdapterPublicServerBuildTrace.adHash completion self pending := by
+  unfold adHash AdapterPublicServerBuildTrace.adHash AdapterPublicServerBuildTrace.invoke
+  simp only [RustT.run_liftRust, pure_bind]
+  cases requested : pending.request with
+  | fail error | div => rfl
+  | ok request =>
+    simp only [returned, simulateQ_bind, simulateQ_spec_query, handler]
+    apply bind_congr
+    intro reply
+    cases reply with
+    | fail error | div => rfl
+    | ok digest =>
+      dsimp only
+      cases resumed : pending.resume digest with
+      | fail error | div => rfl
+      | ok result => cases result with
+        | Err previous => rfl
+        | Ok initial =>
+          simpa only [checked, AdapterPublicServerBuildTrace.checked, resumed] using reserved_source completion self initial
 
 private theorem lookup_source (self :Server) (pending :peer.CompletionLookup) (plaintext :Slice U8) :
     simulateQ (handler completion) (lookup self pending plaintext)=AdapterPublicServerBuildTrace.lookup completion self pending plaintext := by
@@ -134,8 +163,8 @@ private theorem lookup_source (self :Server) (pending :peer.CompletionLookup) (p
             | fail error | div=>rfl
             | ok result=>cases result with
               | Err previous=>rfl
-              | Ok initial=>
-                simpa only [checked,AdapterPublicServerBuildTrace.checked,resumed] using reserved_source completion self initial
+              | Ok selected=>
+                simpa only [checked,AdapterPublicServerBuildTrace.checked,resumed] using adHash_source completion self selected
 
 theorem source (self :Server) (token :beaconcrypt_public_wrapper.server.RegistrationOutput)
     (data :core.option.Option (Slice U8)) :

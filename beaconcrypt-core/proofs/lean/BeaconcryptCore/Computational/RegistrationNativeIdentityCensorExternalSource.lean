@@ -39,7 +39,7 @@ private theorem map_apply {S X Y : Type} (change : X → Y) (work : StateT S (Or
 
 /-- The literal Main closing lens leaves native state unchanged during external P work and exposes only its actual uniform tree. -/
 theorem native (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : StateT Platform ProbComp A) (before : RegistrationNativeIdentityMain.State n KemSK mlSource × Platform) :
     (RegistrationNativePlatformIdentityCtxMain.beacon setup checks representation created
       (RegistrationNativePlatformIdentityProgram.external work)).run before =
@@ -63,7 +63,7 @@ theorem native (setup : Setup base KemSK) (checks : Checks)
 
 /-- Every actual mutable P writer or allocator uses only independent coin leaves; no source signing or hash request is hidden in that action. -/
 theorem coin_only (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : StateT Platform ProbComp A) (before : RegistrationNativeIdentityMain.State n KemSK mlSource × Platform) :
     ((RegistrationNativePlatformIdentityCtxMain.beacon setup checks representation created
       (RegistrationNativePlatformIdentityProgram.external work)).run before).AllQueriesSatisfy
@@ -81,7 +81,7 @@ theorem coin_only (setup : Setup base KemSK) (checks : Checks)
 
 /-- Mapping the returned P value retains the same full native source tree and state. -/
 theorem native_map {B : Type} (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (change : A → B) (work : StateT Platform ProbComp A) :
     RegistrationNativePlatformIdentityCtxMain.beacon (n := n) (source := mlSource) setup checks representation created
       (RegistrationNativePlatformIdentityProgram.external (change <$> work)) =
@@ -103,7 +103,7 @@ private theorem interpret_map {B : Type} (joint : PqxdhJointIdentity.Primitives)
 /-- Actual P-only callbacks have the same prior-log dependency law while all current values and private fields stay literal. -/
 theorem stable (joint : PqxdhJointIdentity.Primitives) (selected : Nat) (placeholder : Ed25519Signature)
     (censored : Bool) (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : StateT Platform ProbComp A) :
     RegistrationNativePlatformViewStable.Stable (RegistrationNativeIdentityCensorOutgoingView.view placeholder)
       (interpret joint selected placeholder censored
@@ -119,8 +119,8 @@ theorem stable (joint : PqxdhJointIdentity.Primitives) (selected : Nat) (placeho
 /-- The concrete original Init writer is the same writer on the full current native/private state, with only its one literal reservation lifted. -/
 theorem writer {E : Type} (joint : PqxdhJointIdentity.Primitives) (selected : Nat) (placeholder : Ed25519Signature)
     (censored : Bool) (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
-    (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E)) (view : registration.SignedInitView) :
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
+    (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E)) (view : registration.InitView) :
     interpret joint selected placeholder censored
       (RegistrationNativePlatformIdentityCtxMain.beacon (n := n) (source := mlSource) setup checks representation created
         (RegistrationNativePlatformIdentityProgram.external (RegistrationNativeIdentityCensorConcreteWriter.encode reserve view))) =
@@ -137,7 +137,7 @@ theorem writer {E : Type} (joint : PqxdhJointIdentity.Primitives) (selected : Na
 /-- Real and private-censored interpretation agree for every literal external P action, including its actual independent random transcript entries. -/
 theorem source_equal (joint : PqxdhJointIdentity.Primitives) (selected : Nat) (placeholder : Ed25519Signature)
     (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : StateT Platform ProbComp A) :
     interpret joint selected placeholder false
       (RegistrationNativePlatformIdentityCtxMain.beacon (n := n) (source := mlSource) setup checks representation created

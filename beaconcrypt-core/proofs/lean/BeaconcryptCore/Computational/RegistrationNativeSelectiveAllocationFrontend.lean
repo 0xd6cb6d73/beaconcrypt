@@ -8,8 +8,10 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
+set_option warningAsError true
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativeSelectiveAllocationFrontend
+attribute [local irreducible] RegistrationNativePublicOwners.create
 open PqxdhServerAuthExperiment (Setup Codec)
 open RegistrationNativeHiddenInterpreter (Provider)
 open RegistrationNativeSelectiveAllocationJoint (State Holds drop dropLocal)

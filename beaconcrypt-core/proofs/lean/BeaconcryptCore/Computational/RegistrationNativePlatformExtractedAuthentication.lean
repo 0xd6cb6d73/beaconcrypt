@@ -19,7 +19,7 @@ variable (coins : QueryImpl unifSpec m) (setup : Setup base KemSK) (codec : Code
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
 
 noncomputable def init (pin : session.ServerAuthenticationPin) (packet : registration.InitPacket) :=
-  simulateQ (RegistrationNativePlatformAuthentication.source (n:=n) coins setup codec route verify)
+  simulateQ (AdapterPublicWrapperChildren.initQueries (RegistrationNativePlatformAuthentication.source (n:=n) coins setup codec route verify))
     (AdapterInitAuthenticationSourceLoop.authenticate (m:=AdapterInitAuthenticationRequestMonad.Program) pin packet).run
 
 /-- Actual extracted Init authentication consumes the same World effects; only its analysis-only event list is projected from the reply. -/
@@ -83,7 +83,7 @@ theorem authenticate_source (functional : RegistrationNativePlatformAuthenticati
 
 variable (checks : PqxdhServerAuthExperiment.Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 
 noncomputable def afterPin (reserve : StateT (RegistrationServerFrontendCompiler.State n) m Bool)
     (packet : registration.InitPacket) (result : RustM (core.option.Option session.ServerAuthenticationPin)) :

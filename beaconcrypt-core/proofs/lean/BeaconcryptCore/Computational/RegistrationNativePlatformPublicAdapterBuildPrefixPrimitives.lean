@@ -113,7 +113,7 @@ noncomputable def pin (coins :QueryImpl unifSpec Base)
 omit [PublicWrapperPlatform.Allocator] [PublicWrapperPlatform.LocalOperations] [PublicWrapperPlatform.ContainerOperations] in
 theorem pin_source {E :Type} (coins :QueryImpl unifSpec Base)
     (sign :registration.MldsaSigningRequest→ProbComp RegistrationSigningShared.SignReply)
-    (setup :PqxdhServerAuthExperiment.Setup base KemSK) (codec :PqxdhServerAuthExperiment.Codec Reader Response)
+    (_setup :PqxdhServerAuthExperiment.Setup base KemSK) (_codec :PqxdhServerAuthExperiment.Codec Reader Response)
     (view :AdapterPublicWrapperState.MaterialView mlSource KemSK) (originalLocal :LocalOperations (RustT Base))
     (previousCrypto :CryptoOperations (RustT SourceM)) (previousChildren :ChildOperations (RustT SourceM))
     (writer :QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) Base)
@@ -130,9 +130,9 @@ theorem pin_source {E :Type} (coins :QueryImpl unifSpec Base)
   let :ChildOperations (RustT SourceM):=AdapterPublicServerSigningNative.children
     (AdapterPublicServerCutPin.outgoing coins sign) previousChildren (AdapterPublicServerCompletionNative.writer writer)
   dsimp only
-  rw [AdapterPublicWrapperPin.server_program self _ _ (AdapterPublicServerCutPin.hash coins sign) rfl rfl (fun _=>rfl)]
-  exact OracleComp.map_run_simulateQ_eq_of_query_map_eq _ _ (fun current=>backend current.1)
-    (hash_source coins sign setup codec) _ before
+  rw [AdapterPublicWrapperPin.server_program self _ _ rfl rfl]
+  simp only [pin,RegistrationNativeServerPinRecompute.program,simulateQ_pure,StateT.run_pure,map_pure,Prod.map,id_eq]
+  rfl
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterBuildPrefixPrimitives
 

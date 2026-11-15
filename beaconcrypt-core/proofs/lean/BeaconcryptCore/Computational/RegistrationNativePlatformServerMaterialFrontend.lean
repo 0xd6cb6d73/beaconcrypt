@@ -1,7 +1,8 @@
 -- SPDX-License-Identifier: 0BSD
-import BeaconcryptCore.Computational.RegistrationNativePlatformPairedServerService
-import BeaconcryptCore.Computational.RegistrationServerReferenceSourceLookup
-/-! The corrected Server frontend retains public control, pin, consumed identifiers and one-use message references. Pin recomputation, peer occupancy, reservation and material demand are effectful operations at their literal source cuts. No root bytes, generated chain or native World occur in this executable frontend state. -/
+import BeaconcryptCore.Computational.RegistrationServerMaterialFrontend
+import BeaconcryptCore.Computational.RegistrationHiddenInstall
+import BeaconcryptCore.Computational.RegistrationServerAdHash
+/-! The current Server frontend retains public control, pin, consumed identifiers and one-use message references. Pure full-pin selection, peer occupancy, owned AD hashing, reservation and material demand occur at their literal source cuts. No root bytes, generated chain or native World occur in this executable frontend state. -/
 open OracleComp OracleSpec CoreModels Aeneas beaconcrypt_core
 open Aeneas.Std hiding namespace core alloc
 open RustM
@@ -18,6 +19,8 @@ abbrev Result (Encoded : Type) := RustM (Option (U64 × Encoded))
 abbrev Service (m : Type → Type) (Encoded : Type) := pqxdh.ServerState →
   RegistrationBoundKeySchedule.PublicInitial → RegistrationNativeRelatedFamily.Message →
   m (RustM (RegistrationHiddenInstall.Result Encoded))
+
+abbrev AdHash (m : Type → Type) := registration.ServerAdHash → m RegistrationServerAdHash.Result
 
 def finish (result : RustM (RegistrationHiddenInstall.Result Encoded)) (before : State) : Result Encoded × State :=
   match result with
@@ -41,13 +44,19 @@ def afterResult (reserve : m Bool) (service : Service m Encoded) (control : pqxd
         fun before => pure (finish published before)
       else pure (.ok none)
 
-def afterOccupancy (reserve : m Bool) (service : Service m Encoded) (control : pqxdh.ServerState)
+def afterOccupancy (deriveAd : AdHash m) (reserve : m Bool) (service : Service m Encoded) (control : pqxdh.ServerState)
     (lookup : peer.CompletionLookup) (reference : RegistrationNativeRelatedFamily.Message) (occupied : Bool) :
     StateT State m (Result Encoded) :=
-  afterResult reserve service control reference
-    (RegistrationPublicationKernelErasure.mapOk RegistrationBoundKeySchedule.publicInitial <$> lookup.resume occupied)
+  match lookup.resume occupied with
+  | .fail error => pure (.fail error)
+  | .div => pure .div
+  | .ok (.Err _) => pure (.ok none)
+  | .ok (.Ok pending) => do
+      let hashed ← StateT.lift (deriveAd pending)
+      afterResult reserve service control reference
+        (RegistrationPublicationKernelErasure.mapOk RegistrationBoundKeySchedule.publicInitial <$> hashed)
 
-def afterPin (reserve : m Bool) (present : U64 → m Bool) (service : Service m Encoded)
+def afterPin (deriveAd : AdHash m) (reserve : m Bool) (present : U64 → m Bool) (service : Service m Encoded)
     (control : pqxdh.ServerState) (ready : Ready) (application : Slice U8)
     (current : RustM (core.option.Option session.ServerAuthenticationPin)) : StateT State m (Result Encoded) := fun before =>
   match current with
@@ -63,22 +72,22 @@ def afterPin (reserve : m Bool) (present : U64 → m Bool) (service : Service m 
       | .div => pure (.div, before)
       | .ok keyId => if RegistrationServerSdkSource.preflight application keyId then do
           let occupied ← present keyId
-          (afterOccupancy reserve service control lookup ready.reference occupied).run before
+          (afterOccupancy deriveAd reserve service control lookup ready.reference occupied).run before
         else pure (.ok none, before)
 
-def complete (pin : session.ServerAuthenticationPin → m (RustM (core.option.Option session.ServerAuthenticationPin)))
+def complete (deriveAd : AdHash m) (pin : session.ServerAuthenticationPin → m (RustM (core.option.Option session.ServerAuthenticationPin)))
     (reserve : m Bool) (present : U64 → m Bool) (service : Service m Encoded)
     (ready : Ready) (application : Slice U8) : StateT State m (Result Encoded) := fun before => do
   let current ← pin before.pin
-  (afterPin reserve present service before.control ready application current).run before
+  (afterPin deriveAd reserve present service before.control ready application current).run before
 
-def build (pin : session.ServerAuthenticationPin → m (RustM (core.option.Option session.ServerAuthenticationPin)))
+def build (deriveAd : AdHash m) (pin : session.ServerAuthenticationPin → m (RustM (core.option.Option session.ServerAuthenticationPin)))
     (reserve : m Bool) (present : U64 → m Bool) (service : Service m Encoded)
     (handle : Nat) (application : Option (Slice U8)) : StateT State m (Result Encoded) := fun before =>
   match take handle before with
   | (none, current) => pure (.ok none, current)
   | (some ready, current) => match application with
     | none => pure (.ok none, current)
-    | some application => (complete pin reserve present service ready application).run current
+    | some application => (complete deriveAd pin reserve present service ready application).run current
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformServerMaterialFrontend

@@ -3,7 +3,7 @@ import BeaconcryptCore.Computational.RawCtxSelectedLiveCompiler
 import BeaconcryptCore.Computational.RawCtxFlaggedQueryTrace
 
 /-!
-Replacing the retained initializer first32 coordinate changes a private known-input KDF callback only when its exact input is the initializer root. Both directions share the actual ratchet domain, so this case is charged to the original candidate list rather than excluded by a new freshness rule. Public projections, optional live replies and complete shared effects stay identical on both sides. The supplied child response may be arbitrary; this module makes no target-independence or small-alias-probability claim.
+Replacing the retained initializer first32 coordinate leaves private message-domain KDF callbacks unchanged. The initializer and message domains are distinct, so message callbacks cannot hit that initial address. The original candidate accounting remains a conservative bound. Public projections, optional live replies and complete shared effects stay identical on both sides. The supplied child response may be arbitrary; this module makes no target-independence or small-alias-probability claim.
 -/
 
 open CoreModels Aeneas
@@ -19,16 +19,15 @@ open PqxdhJointKdf PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf
 abbrev View := (query : JointKdfViewQuery) → JointKdfViewSpec.Range query
 
 def atRoot (root other : RootOutput) (nonce : NonceOutput) : Entry :=
-  ⟨FixedHkdfDomain.ratchet.address root.toList, other, nonce⟩
+  ⟨FixedHkdfDomain.initial.address root.toList, other, nonce⟩
 
-/-- A known private initializer request is exactly an equality of the actual 32 input bytes. -/
+/-- A private message request cannot query the distinct initializer domain, even at equal input bytes. -/
 theorem initializer_exact (root other : RootOutput) (nonce : NonceOutput) (chain : RatchetChain) :
-    initializerQuery (atRoot root other nonce) (.known chain) =
-      decide (root = RawCtxSelectedQueryTrace.rootVector chain) := by
+    initializerQuery (atRoot root other nonce) (.known chain) = false := by
   simp [initializerQuery, atRoot, RawCtxKdfRequestTable.address, RawCtxChainSend.nativeRequest,
-    FixedHkdfDomain.address, FixedHkdfDomain.info, RawCtxSelectedQueryTrace.rootVector]
-  apply decide_eq_decide.mpr
-  exact ⟨fun h => Subtype.ext h.symm, fun h => (congrArg List.Vector.toList h).symm⟩
+    FixedHkdfDomain.address, FixedHkdfDomain.info,
+    PqxdhInitialRatchetComplementarity.absBytes_ratchetSymmetricInfo,
+    Pqxdh.INFO_R, Pqxdh.INFO_INIT]
 
 noncomputable def handler {Auxiliary : Type}
     (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)

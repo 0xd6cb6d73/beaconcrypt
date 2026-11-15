@@ -161,7 +161,7 @@ theorem finish (setup : Setup base KemSK) (source : RegistrationNativeMldsa.Sour
 theorem native_finish (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire) (index : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire) (index : Nat)
     (packet : Option registration.ResponsePacket)
     (before after : RegistrationNativeExperiment.State n KemSK source) (previous next : Platform)
     (reply : RustM (Option Pqxdh.Bytes)) (prior : Holds before.beacons)

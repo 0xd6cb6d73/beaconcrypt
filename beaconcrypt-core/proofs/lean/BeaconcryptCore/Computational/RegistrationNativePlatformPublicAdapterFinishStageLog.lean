@@ -22,7 +22,7 @@ local notation "Native"=>RegistrationNativeExperiment.State n KemSK mlSource
 local notation "Base"=>StateT P ProbComp
 variable (coins :QueryImpl unifSpec (StateT P ProbComp))
 variable (setup :PqxdhServerAuthExperiment.Setup base KemSK) (checks :PqxdhServerAuthExperiment.Checks)
-variable (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created Unit)
+variable (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (wire :RegistrationNativeWire.Wire) (note :Stage→Log)
 
 noncomputable def tree (initial :registration.BeaconInitialKdf) :OracleComp (Trusted n KemSK) (RustM RegistrationBeaconRecordExecutor.Result):=
@@ -51,6 +51,9 @@ theorem tree_safe (initial :registration.BeaconInitialKdf) :
   intro query
   cases query with
   | hash transcript=>
+    unfold RegistrationNativeRecordJournal.core
+    exact allQueriesSatisfy_bind ((allQueriesSatisfy_query_iff _ _).mpr trivial) (fun _=>allQueriesSatisfy_pure _ _)
+  | adHash request=>
     unfold RegistrationNativeRecordJournal.core
     exact allQueriesSatisfy_bind ((allQueriesSatisfy_query_iff _ _).mpr trivial) (fun _=>allQueriesSatisfy_pure _ _)
   | _=>exact coins_safe _

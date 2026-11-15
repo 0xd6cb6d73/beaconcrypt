@@ -120,45 +120,17 @@ const ADDITIONAL: &[(&str, &str, &str, &str, &str)] = &[
 	),
 	(
 		"registration",
-		"impl PinFingerprint",
-		"request",
-		"HashRequest::Single(&self.public_key)",
-		"registration exact server-pin fingerprint request",
-	),
-	(
-		"registration",
-		"impl<'a> InitMldsaVerification",
-		"resume",
-		"letpublic_key=core::array::from_fn(|index|self.state.packet.identity_key[index+1]);",
-		"Phase-1 Server identity decoder",
-	),
-	(
-		"registration",
-		"impl<'a> InitEd25519Verification",
+		"impl InitEd25519Verification",
 		"resume",
 		"self.pre_key=pre_key;self.stage=SignedKeyStage::OneTimeKey;InitAuthentication::Ed25519VerificationRequested(self)",
 		"Phase-1 Server prekey-to-one-time continuation",
 	),
 	(
 		"registration",
-		"impl<'a> InitEd25519Verification",
+		"impl InitEd25519Verification",
 		"resume",
 		"self.pq_key=pq_key;self.stage=SignedKeyStage::PreKey;InitAuthentication::Ed25519VerificationRequested(self)",
 		"Phase-1 Server PQ-to-prekey continuation",
-	),
-	(
-		"registration",
-		"impl<'a> InitServerFingerprint",
-		"request",
-		"HashRequest::Single(self.state.server_pin.public_key())",
-		"registration exact selected server fingerprint",
-	),
-	(
-		"registration",
-		"impl<'a> InitServerFingerprint",
-		"resume",
-		"ServerAuthenticationPin::new(self.state.server_pin.binding(),*self.state.server_pin.public_key(),fingerprint,)",
-		"registration exact reconstructed server fingerprint binding",
 	),
 	(
 		"registration",
@@ -171,7 +143,7 @@ const ADDITIONAL: &[(&str, &str, &str, &str, &str)] = &[
 		"registration",
 		"impl<'a> AuthenticatedResponse",
 		"into_parts",
-		"(self.pending.control,self.pending.binding,self.packet.public,self.packet.application,)",
+		"(self.control,self.binding,self.packet.public,self.packet.application,)",
 		"registration authenticated response decomposition",
 	),
 	(
@@ -180,13 +152,6 @@ const ADDITIONAL: &[(&str, &str, &str, &str, &str)] = &[
 		"begin_response_authentication",
 		"letassigned_id=encode_u64_le(packet.public.key_id);",
 		"MLDSA authenticated response assigned-ID encoding",
-	),
-	(
-		"registration",
-		"impl BeaconFingerprint",
-		"request",
-		"HashRequest::Single(&self.state.beacon_mldsa)",
-		"MLDSA exact beacon fingerprint request",
 	),
 	(
 		"registration",
@@ -360,7 +325,7 @@ const ADDITIONAL: &[(&str, &str, &str, &str, &str)] = &[
 		"auth",
 		"",
 		"authenticate_response",
-		"begin_response_authentication(pending,packet)?;letdigest=execute_hash(&pending.request());letpending=pending.resume(digest)?;letverified=verify_requested(&pending.request());pending.resume(verified)",
+		"begin_response_authentication(pending,packet)?;letdigest=execute_hash(&pending.request());letpending=pending.resume(digest)?;letverified=verify_requested(&pending.request());letpending=pending.resume(verified)?;letdigest=execute_hash(&pending.request());pending.resume(digest)",
 		"MLDSA native response hash-before-verification order",
 	),
 	(
@@ -437,7 +402,7 @@ const ADDITIONAL: &[(&str, &str, &str, &str, &str)] = &[
 		"server",
 		"",
 		"authenticate_registration_lookup",
-		"InitPacket::from_slices(registration.identity_key,registration.pre_key,registration.one_time_key,registration.pq_key,registration.mldsa_public_key,registration.signature,)",
+		"InitPacket::from_slices(registration.identity_key,registration.pre_key,registration.one_time_key,registration.pq_key,)",
 		"registration complete fixed-width init parser mapping",
 	),
 	(
@@ -488,7 +453,7 @@ const AUTHENTICATION: &[(&str, &str, &str, &str)] = &[
 	(
 		"impl<'a> InitPacket",
 		"fields",
-		"InitFields{identity_key:self.identity_key,pre_key:self.pre_key,one_time_key:self.one_time_key,pq_key:self.pq_key,mldsa_public_key:self.mldsa_public_key,}",
+		"InitFields{identity_key:self.identity_key,pre_key:self.pre_key,one_time_key:self.one_time_key,pq_key:self.pq_key,}",
 		"MLDSA request transcript field order and pins",
 	),
 	(
@@ -498,82 +463,52 @@ const AUTHENTICATION: &[(&str, &str, &str, &str)] = &[
 		"MLDSA request transcript field order and pins",
 	),
 	(
-		"impl<'a> InitHash",
+		"impl InitHash",
 		"request",
 		"HashRequest::Single(&self.input)",
 		"MLDSA exact init hash request",
 	),
 	(
-		"impl<'a> InitHash",
+		"impl InitHash",
 		"resume",
-		"input:build_signature_input(AuthRole::Beacon,&init_hash)",
+		"state:InitAuthenticationState{fields:self.fields,server_pin:self.server_pin,init_hash,}",
 		"MLDSA request verification precedes classical and stateful work",
 	),
 	(
-		"impl<'a> InitMldsaVerification",
+		"impl InitEd25519Verification",
 		"request",
-		"MldsaVerificationRequest{public_key:self.state.packet.mldsa_public_key,input:&self.input,context:SIGNING_CONTEXT,signature:self.state.packet.signature,}",
-		"MLDSA request verification precedes classical and stateful work",
-	),
-	(
-		"impl<'a> InitMldsaVerification",
-		"resume",
-		"if!verified||self.state.packet.identity_key[0]!=SIGN_TYPE_ED25519{returnInitAuthentication::Rejected;}",
-		"MLDSA request verification precedes classical and stateful work",
-	),
-	(
-		"impl<'a> InitMldsaVerification",
-		"resume",
-		"stage:SignedKeyStage::PqKey",
-		"Phase-1 Server source evaluation order",
-	),
-	(
-		"impl<'a> InitEd25519Verification",
-		"request",
-		"SignedKeyStage::PreKey=>self.state.packet.pre_key,SignedKeyStage::OneTimeKey=>self.state.packet.one_time_key,SignedKeyStage::PqKey=>self.state.packet.pq_key,",
+		"SignedKeyStage::PreKey=>self.state.fields.fields().pre_key,SignedKeyStage::OneTimeKey=>self.state.fields.fields().one_time_key,SignedKeyStage::PqKey=>self.state.fields.fields().pq_key,",
 		"Phase-1 Server signature request mapping",
 	),
 	(
-		"impl<'a> InitEd25519Verification",
+		"impl InitEd25519Verification",
 		"request",
 		"Ed25519VerificationRequest{public_key:&self.public_key,signed,}",
 		"Phase-1 Server identity decoder",
 	),
 	(
-		"impl<'a> InitEd25519Verification",
+		"impl InitEd25519Verification",
 		"resume",
 		"letSome(opened)=openedelse{returnInitAuthentication::Rejected;};",
 		"Phase-1 Server signature failure",
 	),
 	(
-		"impl<'a> InitEd25519Verification",
+		"impl InitEd25519Verification",
 		"resume",
 		"ifopened!=&self.request().signed[64..]{returnInitAuthentication::Rejected;}",
 		"Phase-1 Server exact attached message",
 	),
 	(
-		"impl<'a> InitEd25519Verification",
+		"impl InitEd25519Verification",
 		"resume",
-		"InitKex::from_encoded(*self.state.packet.identity_key,self.pre_key,one_time_key,self.pq_key,)",
+		"InitKex::from_encoded(*self.state.fields.fields().identity_key,self.pre_key,one_time_key,self.pq_key,)",
 		"Phase-1 Server from_encoded mapping",
 	),
 	(
-		"impl<'a> InitEd25519Verification",
+		"impl InitEd25519Verification",
 		"resume",
 		"letOk(registration)=validate_init_kex(message)else{returnInitAuthentication::Rejected;};",
 		"Phase-1 Server typed tag validation",
-	),
-	(
-		"impl<'a> InitBeaconFingerprint",
-		"request",
-		"HashRequest::Single(self.state.packet.mldsa_public_key)",
-		"MLDSA public-key fingerprint",
-	),
-	(
-		"impl<'a> InitBeaconFingerprint",
-		"resume",
-		"RegistrationBinding::new(self.server_pin,self.state.init_hash,*self.registration.beacon_identity_public_key(),fingerprint,)",
-		"MLDSA private accepted-token context",
 	),
 	(
 		"",
@@ -608,7 +543,7 @@ const AUTHENTICATION: &[(&str, &str, &str, &str)] = &[
 	(
 		"impl BeaconInitState",
 		"fields",
-		"InitFields{identity_key:self.started.message.identity_key(),pre_key:&self.pre_key,one_time_key:&self.one_time_key,pq_key:&self.pq_key,mldsa_public_key:&self.beacon_mldsa,}",
+		"InitFields{identity_key:self.started.message.identity_key(),pre_key:&self.pre_key,one_time_key:&self.one_time_key,pq_key:&self.pq_key,}",
 		"Phase-1 Beacon field mapping",
 	),
 	(
@@ -630,27 +565,9 @@ const AUTHENTICATION: &[(&str, &str, &str, &str)] = &[
 		"Phase-1 Beacon exact signed message",
 	),
 	(
-		"impl BeaconFingerprint",
-		"resume",
-		"build_init_transcript(self.state.fields(),server.identity_key_id,&server.identity_public_key,self.state.server_pin.public_key(),)",
-		"MLDSA request transcript field order and pins",
-	),
-	(
 		"impl BeaconInitHash",
 		"resume",
-		"input:build_signature_input(AuthRole::Beacon,&init_hash)",
-		"MLDSA request signing and retained hash before publication",
-	),
-	(
-		"impl BeaconMldsaSigning",
-		"request",
-		"role:AuthRole::Beacon,public_key:&self.state.beacon_mldsa,input:&self.input,context:SIGNING_CONTEXT,",
-		"MLDSA request signing and retained hash before publication",
-	),
-	(
-		"impl BeaconMldsaSigning",
-		"resume",
-		"RegistrationBinding::new(self.state.server_pin,self.init_hash,self.state.beacon_identity,self.fingerprint,)",
+		"BeaconInitEffect::Ready(BeaconInitReady{state:self.state,init_hash,})",
 		"MLDSA request signing and retained hash before publication",
 	),
 	(
@@ -662,8 +579,98 @@ const AUTHENTICATION: &[(&str, &str, &str, &str)] = &[
 	(
 		"impl BeaconInitReady",
 		"publish",
-		"pending:BeaconPending{control:self.state.started.state,binding:self.binding,},encoded,",
+		"pending:BeaconPending{control:self.state.started.state,binding,},encoded,",
 		"registration Fresh success transition and restoration",
+	),
+	(
+		"",
+		"begin_init_authentication",
+		"fields:OwnedInitFields::new(packet.fields())",
+		"registration exact attached signature retention",
+	),
+	(
+		"impl InitHash",
+		"resume",
+		"ifself.fields.fields().identity_key[0]!=SIGN_TYPE_ED25519{returnInitAuthentication::Rejected;}",
+		"registration tagged identity admission",
+	),
+	(
+		"impl InitHash",
+		"resume",
+		"letpublic_key=self.fields.identity_public_key();",
+		"registration retained identity decoder",
+	),
+	(
+		"impl InitHash",
+		"resume",
+		"stage:SignedKeyStage::PqKey",
+		"registration first attached verification stage",
+	),
+	(
+		"impl InitEd25519Verification",
+		"resume",
+		"RegistrationBinding::new(self.state.server_pin,self.state.init_hash,self.state.fields,)",
+		"registration owned verified request provenance",
+	),
+	(
+		"impl BeaconEd25519Signing",
+		"resume",
+		"build_init_transcript(self.state.fields(),server.identity_key_id,&server.identity_public_key,self.state.server_pin.public_key(),)",
+		"registration exact published request hash",
+	),
+	(
+		"impl BeaconInitReady",
+		"publish",
+		"RegistrationBinding::new(self.state.server_pin,self.init_hash,OwnedInitFields::new(self.state.fields()),)",
+		"registration successful publication retains exact fields",
+	),
+	(
+		"impl<'a> ResponseMldsaVerification",
+		"resume",
+		"self.pending.binding.ad_transcript(AdResponseFields{identity_key:&self.packet.public.identity_key,ephemeral_key:&self.packet.public.ephemeral_key,kem_cipher_text:&self.packet.public.kem_cipher_text,key_id:self.packet.public.key_id,})",
+		"registration verified response exact AD hash input",
+	),
+	(
+		"impl<'a> BeaconAdHash",
+		"request",
+		"HashRequest::Single(&self.input)",
+		"registration Beacon exact AD hash request",
+	),
+	(
+		"impl<'a> BeaconAdHash",
+		"resume",
+		"None=>returnErr(self.pending.abort())",
+		"registration Beacon AD hash failure aborts",
+	),
+	(
+		"impl<'a> BeaconAdHash",
+		"resume",
+		"binding:self.pending.binding.complete(digest)",
+		"registration Beacon successful digest owns final AD",
+	),
+	(
+		"",
+		"begin_server_completion",
+		"agreement.binding.ad_transcript(AdResponseFields{identity_key:candidate.server_identity_public_key(),ephemeral_key:candidate.ephemeral_public_key(),kem_cipher_text:candidate.kem_ciphertext(),key_id:candidate.key_id(),})",
+		"registration Server assigned response exact AD input",
+	),
+	(
+		"impl<'a> ServerAdHash",
+		"request",
+		"HashRequest::Single(&self.input)",
+		"registration Server exact AD hash request",
+	),
+	(
+		"impl<'a> ServerAdHash",
+		"resume",
+		"None=>returnErr(crate::pqxdh::server_abort_candidate(&self.candidate))",
+		"registration Server AD hash failure rejects",
+	),
+	(
+		"impl<'a> ServerAdHash",
+		"resume",
+		"binding:self.binding.complete(digest)",
+		"registration Server successful digest owns final AD",
 	),
 ];
 
@@ -699,13 +706,8 @@ const NATIVE_AUTHENTICATION: &[(&str, &str, &str)] = &[
 		"MLDSA signing context and input",
 	),
 	(
-		"authenticate_init",
-		"letverified=verify_requested(&pending.request());pending.resume(verified)",
-		"MLDSA actual init verifier response",
-	),
-	(
 		"authenticate_response",
-		"letverified=verify_requested(&pending.request());pending.resume(verified)",
+		"letverified=verify_requested(&pending.request());letpending=pending.resume(verified)?",
 		"MLDSA actual response verifier response",
 	),
 ];
@@ -781,9 +783,9 @@ const COMPLETION: &[(&str, &str, &str, &str)] = &[
 		"registration Server candidate preparation",
 	),
 	(
-		"",
-		"begin_server_completion",
-		"start_server_candidate_ratchet_kdf(&candidate,agreement.root.as_bytes())",
+		"impl<'a> ServerAdHash",
+		"resume",
+		"start_server_candidate_ratchet_kdf(&self.candidate,self.root.as_bytes())",
 		"initial ratchet Server root and candidate handoff",
 	),
 	(
@@ -821,7 +823,7 @@ const COMPLETION: &[(&str, &str, &str, &str)] = &[
 const BEACON_LIFECYCLE: &[(&str, &str, &str)] = &[
 	(
 		"try_new_with_rng",
-		"server_pin:auth::fingerprint_pin(server_binding,server_public_key).ok_or(crate::KeyGenError)?",
+		"server_pin:auth::server_pin(server_binding,server_public_key).ok_or(crate::KeyGenError)?",
 		"MLDSA Beacon retains complete selected server pin",
 	),
 	(
@@ -846,7 +848,7 @@ const BEACON_LIFECYCLE: &[(&str, &str, &str)] = &[
 	),
 	(
 		"get_registration_bundle_with_rng",
-		"registration::begin_beacon_init(control,verified_pqxdh::BeaconStartInputs{identity_public_key:*self.identity_pk().as_bytes(),prekey_public_key:prekey_public,pq_public_key:pq_public,},verified_pqxdh::BeaconCoins{one_time_public_key:onetime_public,},self.authentication.server_pin,self.mldsa_public_key(),)",
+		"registration::begin_beacon_init(control,verified_pqxdh::BeaconStartInputs{identity_public_key:*self.identity_pk().as_bytes(),prekey_public_key:prekey_public,pq_public_key:pq_public,},verified_pqxdh::BeaconCoins{one_time_public_key:onetime_public,},self.authentication.server_pin,)",
 		"registration Beacon-start input mapping",
 	),
 	(
@@ -866,7 +868,7 @@ const BEACON_LIFECYCLE: &[(&str, &str, &str)] = &[
 	),
 	(
 		"get_registration_bundle_with_rng",
-		"InitKex{identity_key:message.fields.identity_key,pre_key:message.fields.pre_key,one_time_key:message.fields.one_time_key,pq_key:message.fields.pq_key,mldsa_public_key:message.fields.mldsa_public_key,signature:message.signature,}",
+		"InitKex{identity_key:message.fields.identity_key,pre_key:message.fields.pre_key,one_time_key:message.fields.one_time_key,pq_key:message.fields.pq_key,}",
 		"Phase-1 Beacon complete serializer mapping",
 	),
 	(
@@ -1034,6 +1036,66 @@ pub(super) fn authentication(snapshot: &Snapshot) -> Result<(), String> {
 	for &(function, wanted, label) in NATIVE_AUTHENTICATION {
 		check(snapshot, "auth", "", function, wanted, label)?;
 	}
+	let response = body(snapshot, "auth", "", "authenticate_response")?;
+	require_ordered_once(
+		&response,
+		&[
+			"begin_response_authentication(pending,packet)?",
+			"letverified=verify_requested(&pending.request());",
+			"letpending=pending.resume(verified)?;",
+			"letdigest=execute_hash(&pending.request());pending.resume(digest)",
+		],
+		"registration response signature before AD hash",
+	)?;
+	let core = compact(&uncommented_rust(&snapshot.core_registration)?);
+	for retired in [
+		"InitMldsaVerification",
+		"InitAuthentication::MldsaVerificationRequested",
+		"InitServerFingerprint",
+		"beacon_mldsa",
+		"FingerprintRequested",
+		"MldsaSigningRequested",
+	] {
+		if core.contains(retired) {
+			return Err(format!(
+				"removed Beacon ML credential stage restored: {retired}"
+			));
+		}
+	}
+	let verified = body(
+		snapshot,
+		"registration",
+		"impl<'a> ResponseMldsaVerification",
+		"resume",
+	)?;
+	require_ordered_once(
+		&verified,
+		&[
+			"if!verified{returnErr(self.pending.abort());}",
+			"self.pending.binding.ad_transcript(",
+			"Ok(BeaconAdHash{",
+		],
+		"registration verified Server response before AD hashing",
+	)?;
+	let beacon_hash = body(snapshot, "registration", "impl<'a> BeaconAdHash", "resume")?;
+	require_ordered_once(
+		&beacon_hash,
+		&[
+			"None=>returnErr(self.pending.abort())",
+			"binding:self.pending.binding.complete(digest)",
+		],
+		"registration Beacon failed hash cannot create final AD",
+	)?;
+	let server_hash = body(snapshot, "registration", "impl<'a> ServerAdHash", "resume")?;
+	require_ordered_once(
+		&server_hash,
+		&[
+			"None=>returnErr(crate::pqxdh::server_abort_candidate(&self.candidate))",
+			"start_server_candidate_ratchet_kdf(",
+			"binding:self.binding.complete(digest)",
+		],
+		"registration Server failed hash cannot initialize session",
+	)?;
 	let hash = body(snapshot, "auth", "", "execute_hash")?;
 	let expected = "letmutstate=hash_state()?;matchrequest{beaconcrypt_core::registration::HashRequest::Single(input)=>state.update(input),beaconcrypt_core::registration::HashRequest::Triple(parts)=>{forpartinparts{state.update(part);}}}finish_hash(state)";
 	if hash != expected {
@@ -1138,13 +1200,13 @@ pub(super) fn runtime(snapshot: &Snapshot) -> Result<(), String> {
 			"letnext_key_id=lookup.request();",
 			"registration_response_len(plaintext.len(),next_key_id)?;",
 			"lookup.resume(self.known_ids.contains_key(&next_key_id))",
+			"lethash=auth::execute_hash(&pending.request());letpending=pending.resume(hash).ok()?;self.known_ids.try_reserve(1).ok()?;",
 			"letresponse=crate::ratchet::ratchet_hkdf(pending.request());",
 			"execute_seal_request(pending.request())",
 			"pending.resume(detached_view)",
 			"execute_commitment_hash(pending.transcript_mut())",
 			"execute_write_request(pending.request())",
-			"pending.resume(ciphertext.as_deref())",
-			"auth::execute_hash(&pending.request())",
+			"letpending=pending.resume(ciphertext.as_deref()).ok()?;lethash=auth::execute_hash(&pending.request());letpending=pending.resume(hash).ok()?;",
 			"self.identity.mldsa_identity.sign_requested(&pending.request())",
 			"crate::wire::encode_response(KexResponse{",
 			"beaconcrypt_core::peer::begin_peer_insert(control,ready.publish(buffer).ok()?).ok()?;",
@@ -1212,7 +1274,7 @@ pub(super) fn runtime(snapshot: &Snapshot) -> Result<(), String> {
 	let registration = compact(&uncommented_rust(&snapshot.core_registration)?);
 	for wanted in [
 		"pubstructAuthenticatedInit{registration:VerifiedInitKex,binding:RegistrationBinding,}",
-		"pubstructAuthenticatedResponse<'a>{pending:BeaconPending,packet:ResponsePacket<'a>,}",
+		"pubstructAuthenticatedResponse<'a>{control:crate::pqxdh::BeaconInitSent,binding:CompletedRegistrationBinding,packet:ResponsePacket<'a>,}",
 		"pubstructBeaconPending{control:crate::pqxdh::BeaconInitSent,binding:RegistrationBinding,}",
 	] {
 		require_once(
@@ -1533,12 +1595,12 @@ fn extracted_registration_operand_and_continuation_mutations_are_rejected() {
 			("SignedKeyStage::PqKey", "SignedKeyStage::PreKey"),
 			("SignedKeyStage::PreKey", "SignedKeyStage::OneTimeKey"),
 			(
-				"self.state.packet.pre_key",
-				"self.state.packet.one_time_key",
+				"self.state.fields.fields().pre_key",
+				"self.state.fields.fields().one_time_key",
 			),
 			(
-				"self.state.packet.one_time_key",
-				"self.state.packet.pre_key",
+				"self.state.fields.fields().one_time_key",
+				"self.state.fields.fields().pre_key",
 			),
 			("self.public_key", "replacement_public_key"),
 			("opened!=", "opened=="),
@@ -1613,7 +1675,7 @@ fn extracted_registration_operand_and_continuation_mutations_are_rejected() {
 				"self.agreement.application_ciphertext",
 				"replacement_ciphertext",
 			),
-			("self.agreement.binding.associated_data()", "&[0;281]"),
+			("self.agreement.binding.associated_data()", "&[0;151]"),
 			("sequence:1", "sequence:3"),
 			("self.agreement.candidate.server_key_id()", "0"),
 			("send_sequence()!=0", "send_sequence()!=1"),
@@ -1634,7 +1696,7 @@ fn extracted_registration_operand_and_continuation_mutations_are_rejected() {
 				"self.prefix,self.application",
 				"self.application,&self.prefix",
 			),
-			("self.binding.associated_data()", "&[0;281]"),
+			("self.binding.associated_data()", "&[0;151]"),
 			(
 				"self.candidate.server_identity_key_id()",
 				"self.candidate.key_id()",
@@ -1721,7 +1783,7 @@ fn extracted_registration_operand_and_continuation_mutations_are_rejected() {
 	}
 	eprintln!("extracted registration source mutations: {count}");
 	assert_eq!(
-		count, 507,
+		count, 491,
 		"reviewed registration coverage unexpectedly changed"
 	);
 }
@@ -1832,31 +1894,31 @@ fn registration_failure_bypass_and_publication_order_controls_are_rejected() {
 		),
 		(
 			"registration",
-			"impl<'a> InitEd25519Verification",
+			"impl InitEd25519Verification",
 			"resume",
 			"self.pre_key,one_time_key,self.pq_key,",
 			"one_time_key,self.pre_key,self.pq_key,",
 		),
 		(
 			"registration",
-			"impl<'a> InitEd25519Verification",
+			"impl InitEd25519Verification",
 			"resume",
 			"self.pre_key,one_time_key,self.pq_key,",
 			"self.pre_key,self.pre_key,self.pq_key,",
 		),
 		(
 			"registration",
-			"impl<'a> InitMldsaVerification",
+			"impl InitHash",
 			"resume",
-			"if!verified||self.state.packet.identity_key[0]!=SIGN_TYPE_ED25519",
+			"ifself.fields.fields().identity_key[0]!=SIGN_TYPE_ED25519",
 			"if false",
 		),
 		(
 			"registration",
-			"impl<'a> InitMldsaVerification",
+			"impl<'a> BeaconAdHash",
 			"resume",
-			"if!verified||self.state.packet.identity_key[0]!=SIGN_TYPE_ED25519",
-			"if !verified && self.state.packet.identity_key[0]!=SIGN_TYPE_ED25519",
+			"None=>returnErr(self.pending.abort())",
+			"None=>[0;64]",
 		),
 		(
 			"registration",
@@ -1914,6 +1976,27 @@ fn registration_failure_bypass_and_publication_order_controls_are_rejected() {
 			"ifciphertext.len()!=length",
 			"if false",
 		),
+		(
+			"registration",
+			"impl<'a> ServerAdHash",
+			"resume",
+			"None=>returnErr(crate::pqxdh::server_abort_candidate(&self.candidate))",
+			"None=>[0;64]",
+		),
+		(
+			"registration",
+			"impl<'a> ResponseMldsaVerification",
+			"resume",
+			"if!verified{returnErr(self.pending.abort());}",
+			"iffalse{returnErr(self.pending.abort());}",
+		),
+		(
+			"registration",
+			"impl InitHash",
+			"resume",
+			"letpublic_key=self.fields.identity_public_key();",
+			"letpublic_key=self.fields.identity_public_key();let _gate=InitAuthentication::MldsaVerificationRequested;",
+		),
 	] {
 		let mut changed = baseline.clone();
 		replace_contract(&mut changed, target, scope, function, from, to);
@@ -1956,7 +2039,7 @@ fn registration_failure_bypass_and_publication_order_controls_are_rejected() {
 		);
 		count += 1;
 	}
-	assert_eq!(count, 28);
+	assert_eq!(count, 31);
 }
 
 #[test]
@@ -1973,8 +2056,8 @@ fn registration_capabilities_keep_private_provenance_and_native_erasure() {
 		(
 			"registration",
 			"pub struct AuthenticatedResponse",
-			"pending: BeaconPending,",
-			"pub pending: BeaconPending,",
+			"binding: CompletedRegistrationBinding,",
+			"pub binding: CompletedRegistrationBinding,",
 		),
 		(
 			"registration",

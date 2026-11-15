@@ -1,13 +1,15 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RawCtxNativeFramePrelude
 import BeaconcryptCore.Computational.PqxdhDeploymentNative
+import BeaconcryptCore.Computational.MldsaServerRouting
 
-/-! The extracted complete-input prelude at the actual native record interfaces. -/
+/-! The current extracted complete-input prelude uses stored session AD151. currentServerReceive/current_server_exact route through the selected installed metadata, and completedServer_exact specializes that projection to a completed binding. The independent serverReceive/server_exact equations retain historical identity-derived AD281 mathematics. The CE serverRaw equation runs the current router on the deployment Server, whose peers carry their own installed AD151; it is a pointwise model equality. Beacon and owner prelude statements use their actual stored AD151. -/
 open CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 open OracleComp OracleSpec
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhBoundaryRecordPrelude
 open PqxdhRefinement
 variable {Message Root Metadata PeerMetadata Identity DhPair KemPair Reader Response : Type}
@@ -20,7 +22,7 @@ def withReader (codec : PqxdhServerAuthExperiment.Codec Reader Response)
 
 /-- The native prelude passes the selected stored AD and real optional opening reply through the native primitive interface. -/
 noncomputable def ownerReceive (reader : RawCtxNativeFramePrelude.Reader Message Root)
-    (ad : Std.Array Std.U8 281#usize) (raw : Pqxdh.Bytes)
+    (ad : Std.Array Std.U8 151#usize) (raw : Pqxdh.Bytes)
     (state : RawCtxWholeOwner.OwnerState Metadata) :
     OracleComp RawCtxMixedOwner.NativeSpec
       (core.option.Option RawCtxWholeOwner.Decrypted × RawCtxWholeOwner.OwnerState Metadata) :=
@@ -28,7 +30,7 @@ noncomputable def ownerReceive (reader : RawCtxNativeFramePrelude.Reader Message
 
 /-- The complete native prelude equals the role's actual raw branch, retaining all primitive callbacks and the whole owner. -/
 theorem owner_exact (reader : RawCtxNativeFramePrelude.Reader Message Root)
-    (ad : Std.Array Std.U8 281#usize) (raw : Pqxdh.Bytes)
+    (ad : Std.Array Std.U8 151#usize) (raw : Pqxdh.Bytes)
     (state : RawCtxWholeOwner.OwnerState Metadata) (sender : Std.U64)
     (associated : state.owner.associatedData = absBytes ad) :
     ownerReceive reader ad raw state =
@@ -37,7 +39,7 @@ theorem owner_exact (reader : RawCtxNativeFramePrelude.Reader Message Root)
   rw [RawCtxNativeFramePrelude.receive_source, RawCtxFrameDecoding.sourceReceive_exact reader.model raw state (by simp [associated, absBytes_length])]
   rfl
 
-/-- The source Server reads the same complete header, looks up AD and the peer, runs the native prelude, and reinstalls the returned kernel. -/
+/-- Retained historical CE routing model. It retains its identity-derived AD281 and complete raw owner computation; this is not the current extracted Server prelude. -/
 noncomputable def serverReceive (reader : RawCtxNativeFramePrelude.Reader Message Root)
     (raw : Pqxdh.Bytes) (state : RawCtxServerRouting.State Metadata PeerMetadata) :
     OracleComp RawCtxMixedOwner.NativeSpec
@@ -51,24 +53,67 @@ noncomputable def serverReceive (reader : RawCtxNativeFramePrelude.Reader Messag
           match state.server.peers kid with
           | none => pure (.None, { state with rawAttempts := state.rawAttempts + 1 })
           | some peer => do
-              let result ← ownerReceive reader
-                (RawCtxServerRouting.associatedArray state.server.identity peer.identity) raw
-                ⟨RawCtxServerRouting.selectedOwner kid ad peer, state.rawAttempts⟩
+              let result ← simulateQ RawCtxMixedOwner.receiveAdapter
+                ((RawCtxWholeOwner.rawReceive (RawCtxFrameDecoding.decode reader.model) raw).run
+                  ⟨RawCtxServerRouting.selectedOwner kid ad peer, state.rawAttempts⟩)
               pure (result.1, ⟨RawCtxServerRouting.putPeer state.server kid peer result.2.owner.kernel,
                 result.2.rawAttempts⟩)
 
-/-- Both Server parses and the selected extracted AD instantiate the exact full native raw program without a selected-peer premise. -/
+/-- The historical CE model retains its complete routing, raw owner and publication equations. It supplies no current native-source certificate. -/
 theorem server_exact (reader : RawCtxNativeFramePrelude.Reader Message Root)
     (raw : Pqxdh.Bytes) (state : RawCtxServerRouting.State Metadata PeerMetadata) :
     serverReceive reader raw state = RawCtxServerMixed.rawServer
       (RawCtxFrameDecoding.sender reader.model) (RawCtxFrameDecoding.decode reader.model) raw state := by
-  unfold serverReceive RawCtxServerMixed.rawServer
+  rfl
+
+/-- Current Server routing passes the complete AD151 of the same selected peer to the actual extracted prelude and reinstalls its complete kernel and counter. -/
+noncomputable def currentServerReceive
+    (sessionData : PeerMetadata → Std.Array Std.U8 151#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (raw : Pqxdh.Bytes)
+    (state : RawCtxServerRouting.State Metadata PeerMetadata) :
+    OracleComp RawCtxMixedOwner.NativeSpec
+      (core.option.Option RawCtxWholeOwner.Decrypted × RawCtxServerRouting.State Metadata PeerMetadata) :=
+  match RawCtxFrameDecoding.sender reader.model raw with
+  | none => pure (.None, { state with rawAttempts := state.rawAttempts + 1 })
+  | some kid => match state.server.peers kid with
+    | none => pure (.None, { state with rawAttempts := state.rawAttempts + 1 })
+    | some peer => do
+        let result ← ownerReceive reader (sessionData peer.metadata) raw
+          ⟨MldsaServerRouting.selected (fun metadata => absBytes (sessionData metadata)) kid peer, state.rawAttempts⟩
+        pure (result.1, ⟨RawCtxServerRouting.putPeer state.server kid peer result.2.owner.kernel, result.2.rawAttempts⟩)
+
+/-- The current source prelude equals the complete metadata-routed Server receive, for every peer and raw input, without a global AD or identity-injectivity premise. -/
+theorem current_server_exact (sessionData : PeerMetadata → Std.Array Std.U8 151#usize)
+    (reader : RawCtxNativeFramePrelude.Reader Message Root) (raw : Pqxdh.Bytes)
+    (state : RawCtxServerRouting.State Metadata PeerMetadata) :
+    currentServerReceive sessionData reader raw state =
+      MldsaServerRouting.receive (fun metadata => absBytes (sessionData metadata))
+        (RawCtxFrameDecoding.sender reader.model) (RawCtxFrameDecoding.decode reader.model) raw state := by
+  unfold currentServerReceive MldsaServerRouting.receive
   cases routed : RawCtxFrameDecoding.sender reader.model raw with
   | none => rfl
   | some kid =>
-    cases found : state.server.peers kid <;> simp only [RawCtxServerRouting.peerAssociatedData, found, Bind.bind, Option.bind, pure]
-    rw [owner_exact reader _ raw _ kid rfl]
-    rfl
+    simp only
+    cases found : state.server.peers kid with
+    | none => rfl
+    | some peer =>
+      simp only
+      rw [owner_exact reader (sessionData peer.metadata) raw
+        ⟨MldsaServerRouting.selected (fun metadata => absBytes (sessionData metadata)) kid peer, state.rawAttempts⟩ (0#u64) rfl]
+      rfl
+
+/-- Completed registration metadata supplies exactly the actual stored AD to the current routing handler. Installation/source ownership is a separate receipt; this theorem invents no session or digest. -/
+theorem completedServer_exact (reader : RawCtxNativeFramePrelude.Reader Message Root)
+    (raw : Pqxdh.Bytes)
+    (state : RawCtxServerRouting.State Metadata session.CompletedRegistrationBinding)
+    (sender : Metadata → Std.U64) :
+    currentServerReceive (fun binding : session.CompletedRegistrationBinding => binding.associated_data) reader raw state =
+      (MldsaServerRouting.handler (fun binding : session.CompletedRegistrationBinding => absBytes binding.associated_data) sender
+        (RawCtxFrameDecoding.sender reader.model) (RawCtxFrameDecoding.decode reader.model) (.inr raw)).run state := by
+  change currentServerReceive (fun binding : session.CompletedRegistrationBinding => binding.associated_data) reader raw state =
+    MldsaServerRouting.receive (fun binding : session.CompletedRegistrationBinding => absBytes binding.associated_data)
+      (RawCtxFrameDecoding.sender reader.model) (RawCtxFrameDecoding.decode reader.model) raw state
+  exact current_server_exact (fun binding : session.CompletedRegistrationBinding => binding.associated_data) reader raw state
 
 /-- The source Beacon admits established records with its stored AD and pinned server, and retains every inactive phase on rejection. -/
 noncomputable def beaconReceive (reader : RawCtxNativeFramePrelude.Reader Message Root)
@@ -100,7 +145,7 @@ noncomputable def serverRaw (setup : PqxdhServerAuthExperiment.Setup baseSpec Ke
     (codec : PqxdhServerAuthExperiment.Codec Reader Response)
     (reader : RawCtxNativeFramePrelude.Reader Message Root) (raw : Pqxdh.Bytes) :
     StateT (PqxdhDeploymentNative.State KemSK) ProbComp (core.option.Option RawCtxWholeOwner.Decrypted) := fun state => do
-  let result ← (record setup codec (logged (serverReceive reader raw (serverView state)))).run state.native
+  let result ← (record setup codec (logged (currentServerReceive id reader raw (serverView state)))).run state.native
   pure (result.1.1.1, produce (serverTag (.inr raw)) result.1.2
     (withServer { state with native := result.2 } result.1.1.2))
 
@@ -111,7 +156,7 @@ theorem primitives_withReader (setup : PqxdhServerAuthExperiment.Setup baseSpec 
     primitives setup (withReader codec reader) = primitives setup codec := by
   rfl
 
-/-- The CE raw Server branch is the complete native source prelude, including rejection and shared-cache effects. -/
+/-- The CE Server receive retains its complete current prelude under each peer's installed AD151, shared-cache effects and state; dynamic extracted correspondence remains current_server_exact. -/
 theorem serverRaw_exact (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (codec : PqxdhServerAuthExperiment.Codec Reader Response)
     (reader : RawCtxNativeFramePrelude.Reader Message Root) (raw : Pqxdh.Bytes)
@@ -119,7 +164,7 @@ theorem serverRaw_exact (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (serverRaw setup codec reader raw).run state =
       (serverStep setup (withReader codec reader) (RawCtxFrameDecoding.sender reader.model) (.inr raw)).run state := by
   unfold serverRaw serverStep StateT.run
-  rw [server_exact]
+  rw [current_server_exact]
   rfl
 
 /-- Look up the actual live Beacon, run its native prelude, and reinstall the complete returned owner and logs. -/
@@ -148,7 +193,7 @@ theorem beaconRaw_exact (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
   simp only [beacon_exact]
   rfl
 
-/-- The actual CE Server command consumes the source program on the same bytes and complete state. -/
+/-- The historical CE Server command retains the same model raw computation and complete state. -/
 theorem handler_serverRaw (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (codec : PqxdhServerAuthExperiment.Codec Reader Response)
     (reader : RawCtxNativeFramePrelude.Reader Message Root) (checks : PqxdhServerAuthExperiment.Checks)
@@ -217,3 +262,15 @@ end BeaconcryptCore.Computational.PqxdhBoundaryRecordPrelude
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhBoundaryRecordPrelude.handler_beaconRaw
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhBoundaryRecordPrelude.current_server_exact' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhBoundaryRecordPrelude.current_server_exact
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhBoundaryRecordPrelude.completedServer_exact' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhBoundaryRecordPrelude.completedServer_exact

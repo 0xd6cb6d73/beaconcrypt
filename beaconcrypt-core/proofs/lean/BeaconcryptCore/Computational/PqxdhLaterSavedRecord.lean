@@ -9,6 +9,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.refined ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhLaterSavedRecord
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhJointKdfGame PqxdhNativeSharedPrefix
 open RawCtxSelectedParentTable RawCtxSelectedParentEntry RawCtxSelectedMessageDriver
 open PqxdhSelectedFirstRecord
@@ -54,7 +55,7 @@ noncomputable def nativeRecord (state : RawCtxSelectedReceiveCompiler.State (Loc
     ((RawCtxSelectedFamilyContext.frame sender route read inner).2
       (RawCtxSelectedFamilyNativeContext.reply sender route read inner (realize parent target)))).run
         (RawCtxSelectedReceiveCompiler.project state)
-  (simulateQ (nativeFlat pre application initial selector aux source writer prior (some parent) key target nonce next
+  (simulateQ (nativeFlat (completedBinding := completedBinding) pre application initial selector aux source writer prior (some parent) key target nonce next
     sender route read mark) (outside result.1.1)).run
       (({ before with roles := result.1.2 }, PqxdhInitialOriginPost.record trace request result.1.1), result.2)
 
@@ -63,7 +64,7 @@ noncomputable def selectedRecord (quiet : PqxdhInitialPostCertificates.LiveQuiet
   let result ← (RawCtxSelectedReceiveCompiler.evaluated source key read
     (RawCtxSelectedPendingRoleCompiler.live source writer prior target nonce next read inner material quiet)).run state
   Prod.map id (tracedProj key) <$>
-    (simulateQ (tracedPlain pre application initial selector aux source writer prior (some parent) key target nonce next
+    (simulateQ (tracedPlain (completedBinding := completedBinding) pre application initial selector aux source writer prior (some parent) key target nonce next
       sender route read mark) (outside result.1.1)).run
         ((afterRecord before result.1.2, RawCtxSelectedReceiveCompiler.project result.2),
           PqxdhInitialOriginPost.record trace request result.1.1)
@@ -72,9 +73,9 @@ noncomputable def selectedRecord (quiet : PqxdhInitialPostCertificates.LiveQuiet
 theorem record_source (quiet : PqxdhInitialPostCertificates.LiveQuiet inner)
     (admitted : RawCtxForwardRoleScope.LiveValid read inner)
     (state : RawCtxSelectedReceiveCompiler.State (Local A N C)) :
-    nativeRecord pre application initial selector aux source writer prior key target nonce next mark sender route read
+    nativeRecord (completedBinding := completedBinding) pre application initial selector aux source writer prior key target nonce next mark sender route read
       request before trace outside inner material state =
-    selectedRecord pre application initial selector aux source writer prior key target nonce next mark sender route read
+    selectedRecord (completedBinding := completedBinding) pre application initial selector aux source writer prior key target nonce next mark sender route read
       request before trace outside inner material quiet state := by
   rw [nativeRecord, RawCtxSelectedPendingRoleCompiler.live_source source writer prior key target nonce next
     sender route read inner material state quiet admitted]
@@ -88,11 +89,11 @@ theorem record_resume (origin : Option Bool)
     (fun result => (result.1.1, (result.1.2, result.2))) <$>
     (simulateQ (lowered pre application initial selector aux source writer
       (privateTable prior (some parent) target (RawCtxSelectedMessageKdf.response key nonce next)))
-      (PqxdhInitialOriginContext.resume mark sender route read
+      (PqxdhInitialOriginContext.resume (completedBinding := completedBinding) mark sender route read
         ⟨.inl (.record request before outside inner), trace, origin⟩
         (RawCtxSelectedFamilyNativeContext.reply sender route read inner (realize parent target)))).run
           (RawCtxSelectedReceiveCompiler.project state) =
-      nativeRecord pre application initial selector aux source writer prior key target nonce next mark sender route read
+      nativeRecord (completedBinding := completedBinding) pre application initial selector aux source writer prior key target nonce next mark sender route read
         request before trace outside inner material state := by
   simp only [PqxdhInitialOriginContext.resume, simulateQ_bind, StateT.run_bind]
   simp only [map_bind, ← QueryImpl.simulateQ_compose,
@@ -114,18 +115,18 @@ theorem retained_record (origin : Option Bool)
     (simulateQ (PqxdhInitialNativeRetained.retained source writer
       (privateTable prior (some parent) target (RawCtxSelectedMessageKdf.response key nonce next))
       (lifted pre application initial selector aux))
-      (PqxdhInitialOriginContext.resume mark sender route read
+      (PqxdhInitialOriginContext.resume (completedBinding := completedBinding) mark sender route read
         ⟨.inl (.record request before outside inner), trace, origin⟩
         (RawCtxSelectedFamilyNativeContext.reply sender route read inner (realize parent target)))).run
           (retainedOf (RawCtxSelectedReceiveCompiler.project state)) =
       (fun result => ((result.1, result.2.1), retainedOf result.2.2)) <$>
-        selectedRecord pre application initial selector aux source writer prior key target nonce next mark sender route read
+        selectedRecord (completedBinding := completedBinding) pre application initial selector aux source writer prior key target nonce next mark sender route read
           request before trace outside inner material quiet state := by
   rw [← low_program pre application initial selector aux]
   have actual := congrArg (fun work => (fun result => ((result.1, result.2.1), retainedOf result.2.2)) <$> work)
-    ((record_resume pre application initial selector aux source writer prior key target nonce next mark sender route read
+    ((record_resume (completedBinding := completedBinding) pre application initial selector aux source writer prior key target nonce next mark sender route read
       request before trace outside inner material origin state).trans
-      (record_source pre application initial selector aux source writer prior key target nonce next mark sender route read
+      (record_source (completedBinding := completedBinding) pre application initial selector aux source writer prior key target nonce next mark sender route read
         request before trace outside inner material quiet admitted state))
   simpa only [Functor.map_map, Prod.map_def, id_eq] using actual
 

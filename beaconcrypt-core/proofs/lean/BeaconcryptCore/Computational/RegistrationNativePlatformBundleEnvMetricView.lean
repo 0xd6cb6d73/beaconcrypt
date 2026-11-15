@@ -66,12 +66,12 @@ private theorem external_stable (work : m A) : Stable (StateT.lift (StateT.lift 
 /-- The source common-monad publication body preserves its complete retained owner/Env output through the actual effectful writer. -/
 theorem publication (implementation : QueryImpl (RegistrationNativeBeaconFrontend.Trusted n KemSK) m)
     (setup : Setup base KemSK) (index : Nat) (owner : RegistrationNativeBeaconFrontend.Owner source)
-    (encode : registration.SignedInitView → M source Auxiliary m (RustM (core.option.Option (alloc.vec.Vec U8))))
+    (encode : registration.InitView → M source Auxiliary m (RustM (core.option.Option (alloc.vec.Vec U8))))
     (writer : ∀ view, Stable (encode view)) (oneTime : PqxdhJointGapDh.ScalarBytes) :
     Stable (RegistrationNativePlatformBeaconPublication.begin
       (fun query => RegistrationNativePlatformGenericBundle.liftLegacy implementation (RegistrationNativeBeaconFrontend.outgoing setup source index owner query))
       encode ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey) := by
+      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin) := by
   unfold Stable
   rw [RegistrationNativePlatformBeaconMap.begin close_hom]
   apply RegistrationNativePlatformBeaconPublicationStateView.begin project idem
@@ -82,7 +82,7 @@ theorem publication (implementation : QueryImpl (RegistrationNativeBeaconFronten
 /-- The original source bundle with its literal Ready writer ignores only the unrelated record-kind input ledger. -/
 theorem bundle (implementation : QueryImpl (RegistrationNativeBeaconFrontend.Trusted n KemSK) m)
     (setup : Setup base KemSK)
-    (encode : registration.SignedInitView → M source Auxiliary m (RustM (core.option.Option (alloc.vec.Vec U8))))
+    (encode : registration.InitView → M source Auxiliary m (RustM (core.option.Option (alloc.vec.Vec U8))))
     (writer : ∀ view, Stable (encode view)) (index : Nat) :
     Stable (RegistrationNativePlatformGenericBundle.bundle implementation setup source encode index) := by
   unfold RegistrationNativePlatformGenericBundle.bundle

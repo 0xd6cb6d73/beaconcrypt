@@ -7,7 +7,10 @@ open OracleComp OracleSpec CoreModels Aeneas OracleComp.ProgramLogic.Relational
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeEarlyCompiled
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPhase1AcceptanceOracle PqxdhKemIndCca PqxdhInitializerSecrecy
 open CtxRomAuth AdaptiveCtxSharedHash PqxdhSecretInputKdf PqxdhFullSecretInputKdf
@@ -54,16 +57,16 @@ local notation "impl" => confRandomImpl (RawCtxUniversalDecoder.decoder env.deco
 noncomputable def continuation (qPost : Nat) (bit : Bool) (result : Carrier × Option program.Selection)
     (cache : CtxRO.QueryCache) : OracleComp AdaptiveCtxDynamicKnownKeys.Spec Bool :=
   match PqxdhLaterChallengeRandomEarly.sourceKey setup program (result, cache) with
-  | none => PqxdhLaterChallengeBeforeConsumer.client setup env callbacks program owner number attachedVerify primitives baseImpl kem qPost bit
+  | none => PqxdhLaterChallengeBeforeConsumer.client (completedBinding := completedBinding) setup env callbacks program owner number attachedVerify primitives baseImpl kem qPost bit
       (PqxdhLaterChallengeGeneratedBeforeObservation.beforeKey setup program (result, ∅))
-  | some payload => PqxdhLaterChallengeBuilderConsumer.client setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem qPost bit
+  | some payload => PqxdhLaterChallengeBuilderConsumer.client (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem qPost bit
       (some payload)
 
 /-- The public-cache observation coordinate is ignored by the actual early client, and never installed into the component interpreter. -/
 theorem cache_irrelevant (qPost : Nat) (bit : Bool) (result : Carrier × Option program.Selection)
     (first second : CtxRO.QueryCache) :
-    continuation setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem qPost bit result first =
-    continuation setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem qPost bit result second := by
+    continuation (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem qPost bit result first =
+    continuation (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem qPost bit result second := by
   rcases result with ⟨⟨⟨credentials, ⟨⟨⟨packet, parent⟩, target⟩, nonce, next⟩⟩, captured⟩, selection⟩
   rcases packet with decision | ⟨stored, decision | ⟨⟨original, trace, origin⟩, localState⟩⟩
   · rfl
@@ -77,11 +80,11 @@ theorem cache_irrelevant (qPost : Nat) (bit : Bool) (result : Carrier × Option 
 
 /-- The full-state proof observation executes exactly this source client from the same reached interpreter state, with no reset and no history-reading operation. -/
 theorem resume_blind (qPost : Nat) (bit : Bool) (result : Carrier × Option program.Selection) (state : RandomState) :
-    PqxdhLaterChallengeEarlyConsumer.resume setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem qPost bit
+    PqxdhLaterChallengeEarlyConsumer.resume (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem qPost bit
       (PqxdhLaterChallengeRandomEarly.earlyKey setup program (result, state)) =
     Prod.fst <$> (simulateQ impl
-      (continuation setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem qPost bit result ∅)).run state := by
-  rw [cache_irrelevant setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem qPost bit result
+      (continuation (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem qPost bit result ∅)).run state := by
+  rw [cache_irrelevant (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem qPost bit result
     ∅ (PqxdhLaterChallengeRandomProjection.cache state)]
   simp only [PqxdhLaterChallengeRandomEarly.earlyKey]
   rw [PqxdhLaterChallengeRandomEarly.retained]
@@ -89,7 +92,7 @@ theorem resume_blind (qPost : Nat) (bit : Bool) (result : Carrier × Option prog
       (result, PqxdhLaterChallengeRandomProjection.cache state) with
   | none =>
     simp only [key, Option.map_none, PqxdhLaterChallengeEarlyConsumer.resume, continuation]
-    exact PqxdhLaterChallengeRandomCompiled.resume_blind setup env callbacks program owner number
+    exact PqxdhLaterChallengeRandomCompiled.resume_blind (completedBinding := completedBinding) setup env callbacks program owner number
       attachedVerify primitives baseImpl kem qPost bit result state
   | some payload => simp only [Option.map_some, PqxdhLaterChallengeEarlyConsumer.resume, continuation, key]
 
@@ -97,29 +100,29 @@ theorem resume_blind (qPost : Nat) (bit : Bool) (result : Carrier × Option prog
 noncomputable def client (depth qPost : Nat) (prefixBit continuationBit : Bool) :
     OracleComp AdaptiveCtxDynamicKnownKeys.Spec Bool := do
   let result ← simulateQ RawCtxSourceSharedRom.forward
-    (PqxdhLaterChallengeGeneratedContinuation.run setup env callbacks program adversary owner number prefixBit
+    (PqxdhLaterChallengeGeneratedContinuation.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number prefixBit
       attachedVerify primitives baseImpl kem ancestors disclosed depth)
-  continuation setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem qPost continuationBit result ∅
+  continuation (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem qPost continuationBit result ∅
 
 /-- The complete single-interpreter early program equals the full-prefix proof decomposition, including every actual prelude-created history and optional or complementary outcome. -/
 theorem evaluated (depth qPost : Nat) (prefixBit continuationBit : Bool) :
-    Prod.fst <$> (simulateQ impl (client setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+    Prod.fst <$> (simulateQ impl (client (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
       depth qPost prefixBit continuationBit)).run randomInitial =
-    PqxdhLaterChallengeEarlyConsumer.run setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+    PqxdhLaterChallengeEarlyConsumer.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
       depth qPost prefixBit continuationBit := by
   simp only [client, simulateQ_bind, StateT.run_bind, map_bind, PqxdhLaterChallengeEarlyConsumer.run,
     PqxdhLaterChallengeRandomBackend.forwarded]
-  exact bind_congr fun result => (resume_blind setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem
+  exact bind_congr fun result => (resume_blind (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem
     qPost continuationBit result.1 result.2).symm
 
 /-- The concrete single-interpreter generated early game has equal success probability in both random challenge worlds; no backend-state operation is available to its client. -/
 theorem random (depth qPost : Nat) :
-    𝒟[Prod.fst <$> (simulateQ impl (client setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+    𝒟[Prod.fst <$> (simulateQ impl (client (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
       depth qPost false false)).run randomInitial] {true} =
-    𝒟[Prod.fst <$> (simulateQ impl (client setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
+    𝒟[Prod.fst <$> (simulateQ impl (client (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem ancestors disclosed
       depth qPost true true)).run randomInitial] {true} := by
   rw [evaluated, evaluated]
-  exact PqxdhLaterChallengeEarlyConsumer.random setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem
+  exact PqxdhLaterChallengeEarlyConsumer.random (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number attachedVerify primitives baseImpl kem
     ancestors disclosed depth qPost
 
 end BeaconcryptCore.Computational.PqxdhLaterChallengeEarlyCompiled

@@ -6,6 +6,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.refined ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhLaterSavedPostBounds
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhJointKdfGame PqxdhNativeSharedPrefix
 open RawCtxSelectedParentTable RawCtxSelectedParentEntry RawCtxSelectedMessageDriver
 open PqxdhSelectedFirstRecord PqxdhFirstRecordConfidentiality
@@ -59,7 +60,7 @@ theorem prepare_bound (localState : Local A N C) :
           exact isQueryBoundP_bind (m := 0)
             (RawCtxSelectedPendingRoleCompiler.live_queries fixed writer prior target nonce next read inner material fits.2).isQueryBoundP
             (fun _ _ => trivial)
-      | finish index before control candidate outside inner =>
+      | finish index before control candidate associatedData outside inner =>
           unfold PqxdhLaterSavedPostCompiler.prepare
           exact isQueryBoundP_bind (m := 0)
             (RawCtxSelectedPendingOwnerCompiler.owner_queries fixed writer prior target nonce next read inner material fits.2).isQueryBoundP
@@ -87,7 +88,7 @@ theorem prepare_post (localState : Local A N C)
           simp only [PqxdhLaterSavedPostCompiler.prepare, mem_support_bind_iff, mem_support_pure_iff] at supported
           obtain ⟨reply, _, rfl⟩ := supported
           exact fits.1 reply.1
-      | finish index before control candidate outside inner =>
+      | finish index before control candidate associatedData outside inner =>
           simp only [PqxdhLaterSavedPostCompiler.prepare, mem_support_bind_iff, mem_support_pure_iff] at supported
           obtain ⟨reply, _, rfl⟩ := supported
           exact fits.1 _
@@ -98,17 +99,17 @@ theorem prepare_post (localState : Local A N C)
 
 /-- The saved request plus all of its original adaptive Post has cap `1 + qPost` for any component class absent from the source-local callbacks. -/
 theorem complete_bound (localState : Local A N C) :
-    (PqxdhLaterSavedPostCompiler.complete pre application initial selector aux fixed writer prior target nonce next mark sender route read monitor
+    (PqxdhLaterSavedPostCompiler.complete (completedBinding := completedBinding) pre application initial selector aux fixed writer prior target nonce next mark sender route read monitor
       qPost context material fits localState).IsQueryBoundP predicate (1 + qPost) := by
   unfold PqxdhLaterSavedPostCompiler.complete
   apply isQueryBoundP_bind
     (prepare_bound pre application initial selector aux fixed writer prior target nonce next sender read qPost context material fits
       predicate externalZero localState)
   intro prepared supported
-  exact insPost_client pre application initial selector aux fixed writer prior
+  exact insPost_client (completedBinding := completedBinding) pre application initial selector aux fixed writer prior
     (some (Entry.mk (PqxdhInitialBuilderContext.address context.original) material)) target nonce next
     sender route read mark monitor predicate
-    (insPost_step pre application initial selector aux fixed writer prior
+    (insPost_step (completedBinding := completedBinding) pre application initial selector aux fixed writer prior
       (some (Entry.mk (PqxdhInitialBuilderContext.address context.original) material)) target nonce next
       sender route read mark monitor predicate externalZero)
     prepared.1 qPost (prepare_post pre application initial selector aux fixed writer prior target nonce next sender read
@@ -117,13 +118,13 @@ theorem complete_bound (localState : Local A N C) :
 omit externalZero in
 /-- Actual callback wiring discharges the zero-class premises. The complete saved continuation counts attempted selected seals, raw openings and hash calls, without treating native coins or local primitive work as free. -/
 theorem component_bills (localState : Local A N C) :
-    (PqxdhLaterSavedPostCompiler.complete pre application initial selector aux fixed writer prior target nonce next mark sender route read monitor
+    (PqxdhLaterSavedPostCompiler.complete (completedBinding := completedBinding) pre application initial selector aux fixed writer prior target nonce next mark sender route read monitor
       qPost context material fits localState).IsQueryBoundP
         (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxQueryBounds.SourceSeal) (1 + qPost) ∧
-    (PqxdhLaterSavedPostCompiler.complete pre application initial selector aux fixed writer prior target nonce next mark sender route read monitor
+    (PqxdhLaterSavedPostCompiler.complete (completedBinding := completedBinding) pre application initial selector aux fixed writer prior target nonce next mark sender route read monitor
       qPost context material fits localState).IsQueryBoundP
         (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxReceive.IsRawQuery) (1 + qPost) ∧
-    (PqxdhLaterSavedPostCompiler.complete pre application initial selector aux fixed writer prior target nonce next mark sender route read monitor
+    (PqxdhLaterSavedPostCompiler.complete (completedBinding := completedBinding) pre application initial selector aux fixed writer prior target nonce next mark sender route read monitor
       qPost context material fits localState).IsQueryBoundP AdaptiveCtxDynamicKnownBounds.HashRoute (1 + qPost) := by
   refine ⟨?_, ?_, ?_⟩
   all_goals apply complete_bound

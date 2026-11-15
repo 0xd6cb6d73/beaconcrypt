@@ -18,7 +18,7 @@ variable {n : Nat} {ι KemSK : Type} {base : OracleSpec ι} {mlSource : Registra
 private theorem source_get (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (before : RegistrationNativeExperiment.State n KemSK mlSource) :
     (source setup checks wire route representation created credential (.inl (.inl (.inl .get)))).run (nativeProject before) =
       pure ((nativeProject before).1, nativeProject before) := by
@@ -32,7 +32,7 @@ private theorem source_get (setup : Setup base KemSK) (checks : Checks) (wire : 
 theorem selected_scan (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (packet : registration.InitPacket) (selected : Nat)
     (before : RegistrationNativeExperiment.State n KemSK mlSource) (counter : before.parsedAccepts = selected) :
     (scan (source setup checks wire route representation created credential)
@@ -52,7 +52,7 @@ attribute [local irreducible] RegistrationNativeKemParsedRouting.source Registra
 theorem selected_complete_impossible (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (packet : registration.InitPacket) (selected session : Nat)
     (before : RegistrationNativeExperiment.State n KemSK mlSource) (counter : before.parsedAccepts = selected)
     (after : RegistrationNativeKemServerState.State n mlSource × PqxdhLiveKemBirth.Pool KemSK)
@@ -66,7 +66,7 @@ theorem selected_complete_impossible (setup : Setup base KemSK) (checks : Checks
 theorem selected_pending (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (packet : registration.InitPacket) (selected session : Nat)
     (before after : RegistrationNativeExperiment.State n KemSK mlSource) (counter : before.parsedAccepts = selected)
     (supported : (.ok (some session), after) ∈ support

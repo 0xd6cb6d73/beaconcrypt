@@ -31,7 +31,7 @@ variable (keyView : RegistrationNativePlatformSourceSeal.KeyView)
 variable (converted : RegistrationNativePlatformOrdinarySourceNative.Conversion keyView)
 variable (failure : primitives.Error) (erased : commitment.CommitmentTranscript) (route : RawCtxServerRouting.SenderDecoder)
 variable (view : AdapterPublicWrapperState.MaterialView mlSource KemSK) (views : Views)
-variable (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (credential : RegistrationNativeMldsa.Credential mlSource)
 
 omit material platform [PublicWrapperPlatform.Allocator] ed [PublicWrapperPlatform.LocalOperations]

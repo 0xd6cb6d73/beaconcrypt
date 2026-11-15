@@ -10,6 +10,7 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhInitialNativeParentChecked
+variable (completedBinding : session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf
 open PqxdhInitialParentStoppedHop PqxdhInitialParentObserverCompiler PqxdhInitialBeaconAmbient
 variable {ι Context M P I D K X Response Shared A N C Result Origin : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -68,7 +69,7 @@ theorem checker_source (reader : RawCtxSelectedLiveTrace.Reader) (depth : Option
 theorem native_projection (disclosed : List RatchetChain) (state : PqxdhInitialParentObserver.State A N C)
     (candidates : List RootOutput) :
     (fun result => (result.1, result.2.1.1)) <$>
-      PqxdhInitialPrivateCheckedFreshness.nativeRun source writer mark sender route decode continuation context target output
+      PqxdhInitialPrivateCheckedFreshness.nativeRun (completedBinding := completedBinding) source writer mark sender route decode continuation context target output
         disclosed state candidates =
     (fun result => ((result.1, checkerTrace (continuation.prior context.1) context.2 target output
       (continuation.depth context.1)), result.2)) <$>
@@ -76,7 +77,7 @@ theorem native_projection (disclosed : List RatchetChain) (state : PqxdhInitialP
         (continuation.pre context.1) (continuation.application context.1) (continuation.initializer context.1)
         (continuation.selector context.1) (continuation.aux context.1)
         (RawCtxSelectedLiveTrace.nativeReader (RawCtxFreshChainCut.concreteChain target)) target)
-        (baseProgram mark sender route decode continuation context)).run state := by
+        (baseProgram (completedBinding := completedBinding) mark sender route decode continuation context)).run state := by
   rw [PqxdhInitialPrivateCheckedFreshness.nativeRun, PqxdhInitialParentPrivateObserver.observed, trace_project]
   simp only [program, simulateQ_bind, simulateQ_map, checker_source, map_pure, bind_pure_comp,
     StateT.run_map, PqxdhInitialStoppedDisclosure.initial]
@@ -85,7 +86,7 @@ theorem native_projection (disclosed : List RatchetChain) (state : PqxdhInitialP
 theorem observation (disclosed : List RatchetChain) (state : PqxdhInitialParentObserver.State A N C)
     (candidates : List RootOutput) (observe : SourceFinal M P I D K Result Origin S B → List RawCtxSelectedChain.Slot → Bool) :
     (fun result => observe result.1.1 result.1.2) <$>
-      PqxdhInitialPrivateCheckedFreshness.nativeRun source writer mark sender route decode continuation context target output
+      PqxdhInitialPrivateCheckedFreshness.nativeRun (completedBinding := completedBinding) source writer mark sender route decode continuation context target output
         disclosed state candidates =
     (fun result => observe result.1 (checkerTrace (continuation.prior context.1) context.2 target output
       (continuation.depth context.1))) <$>
@@ -93,11 +94,11 @@ theorem observation (disclosed : List RatchetChain) (state : PqxdhInitialParentO
         (continuation.pre context.1) (continuation.application context.1) (continuation.initializer context.1)
         (continuation.selector context.1) (continuation.aux context.1)
         (RawCtxSelectedLiveTrace.nativeReader (RawCtxFreshChainCut.concreteChain target)) target)
-        (baseProgram mark sender route decode continuation context)).run state := by
+        (baseProgram (completedBinding := completedBinding) mark sender route decode continuation context)).run state := by
   have actual := congrArg
     (fun work : ProbComp (Final M P I D K Result Origin S B × PqxdhInitialParentObserver.State A N C) =>
       (fun result => observe result.1.1 result.1.2) <$> work)
-    (native_projection source writer mark sender route decode continuation context target output disclosed state candidates)
+    (native_projection (completedBinding := completedBinding) source writer mark sender route decode continuation context target output disclosed state candidates)
   simpa only [Functor.map_map] using actual
 
 /-- The concrete native publication/freshness decision on the full partial observer equals the same decision on its complete stopped source result and exact checker trace. -/
@@ -109,7 +110,7 @@ theorem decision_source (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Bool)
     (earlier ancestors : List RatchetChain) (selected : RawCtxProtocolReveals.Owner S B) (number : Std.U64) :
     (PqxdhInitialPrivateCheckedFreshness.actualDecision target (earlier ++ ancestors) disclosed
       (fun result => PqxdhInitialPublishedEvent.Gate selected number result.1.1)) <$>
-      PqxdhInitialPrivateCheckedFreshness.nativeRun source writer mark sender route decode continuation context target output
+      PqxdhInitialPrivateCheckedFreshness.nativeRun (completedBinding := completedBinding) source writer mark sender route decode continuation context target output
         disclosed state candidates =
     (fun result => PqxdhInitialNativeParentEvent.nativeDecision (continuation.prior context.1) context.2 target output
       remaining earlier ancestors disclosed selected number
@@ -118,8 +119,8 @@ theorem decision_source (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Bool)
         (continuation.pre context.1) (continuation.application context.1) (continuation.initializer context.1)
         (continuation.selector context.1) (continuation.aux context.1)
         (RawCtxSelectedLiveTrace.nativeReader (RawCtxFreshChainCut.concreteChain target)) target)
-        (baseProgram mark sender route decode continuation context)).run state := by
-  have actual := observation source writer mark sender route decode continuation context target output disclosed state candidates
+        (baseProgram (completedBinding := completedBinding) mark sender route decode continuation context)).run state := by
+  have actual := observation (completedBinding := completedBinding) source writer mark sender route decode continuation context target output disclosed state candidates
     (fun result slots => @decide (PqxdhInitialPublishedEvent.Gate selected number result ∧
       RawCtxLiveLineage.Fresh (slots.map (RawCtxSelectedChain.interpret (RawCtxFreshChainCut.concreteChain target)) ++
         (earlier ++ ancestors)) disclosed result.2.1.roles.2) (Classical.propDecidable _))

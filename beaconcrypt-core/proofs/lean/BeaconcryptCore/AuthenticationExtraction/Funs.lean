@@ -36,7 +36,7 @@ def authentication.INIT_DOMAIN : Array Std.U8 41#usize :=
     116#u8, 32#u8, 77#u8, 76#u8, 45#u8, 68#u8, 83#u8, 65#u8, 45#u8, 54#u8,
     53#u8, 32#u8, 105#u8, 110#u8, 105#u8, 116#u8, 32#u8, 116#u8, 114#u8, 97#u8,
     110#u8, 115#u8, 99#u8, 114#u8, 105#u8, 112#u8, 116#u8, 32#u8, 118#u8,
-    49#u8, 0#u8
+    50#u8, 0#u8
     ]
 
 /-- [beaconcrypt_core::authentication::RESPONSE_DOMAIN]
@@ -49,7 +49,7 @@ def authentication.RESPONSE_DOMAIN : Array Std.U8 45#usize :=
     116#u8, 32#u8, 77#u8, 76#u8, 45#u8, 68#u8, 83#u8, 65#u8, 45#u8, 54#u8,
     53#u8, 32#u8, 114#u8, 101#u8, 115#u8, 112#u8, 111#u8, 110#u8, 115#u8,
     101#u8, 32#u8, 116#u8, 114#u8, 97#u8, 110#u8, 115#u8, 99#u8, 114#u8,
-    105#u8, 112#u8, 116#u8, 32#u8, 118#u8, 49#u8, 0#u8
+    105#u8, 112#u8, 116#u8, 32#u8, 118#u8, 50#u8, 0#u8
     ]
 
 /-- [beaconcrypt_core::authentication::SIGNING_CONTEXT]
@@ -110,7 +110,7 @@ def authentication.TRANSCRIPT_HASH_LEN : Std.Usize := 64#usize
     Source: 'beaconcrypt-core/src/authentication.rs', lines 17:0-17:44
     Visibility: public -/
 @[global_simps, irreducible]
-def authentication.INIT_TRANSCRIPT_LEN : Std.Usize := 5495#usize
+def authentication.INIT_TRANSCRIPT_LEN : Std.Usize := 3543#usize
 
 /-- [beaconcrypt_core::authentication::RESPONSE_PREFIX_LEN]
     Source: 'beaconcrypt-core/src/authentication.rs', lines 18:0-18:44
@@ -140,13 +140,13 @@ def authentication.__1 : RustM Unit :=
     Source: 'beaconcrypt-core/src/constants.rs', lines 1:0-1:44
     Visibility: public -/
 @[global_simps, irreducible]
-def constants.ASSOCIATED_DATA_SIZE : Std.Usize := 281#usize
+def constants.ASSOCIATED_DATA_SIZE : Std.Usize := 151#usize
 
 /-- [beaconcrypt_core::authentication::_#2]
     Source: 'beaconcrypt-core/src/authentication.rs', lines 24:0-24:69 -/
 @[global_simps, irreducible]
 def authentication.__2 : RustM Unit :=
-  massert (constants.ASSOCIATED_DATA_SIZE = 281#usize)
+  massert (constants.ASSOCIATED_DATA_SIZE = 151#usize)
 
 /-- [beaconcrypt_core::authentication::{impl core::clone::Clone for beaconcrypt_core::authentication::AuthRole}::clone]:
     Source: 'beaconcrypt-core/src/authentication.rs', lines 26:9-26:14
@@ -174,7 +174,7 @@ def authentication.AuthRole.Insts.CoreMarkerCopy : core.marker.Copy
 }
 
 /-- [beaconcrypt_core::authentication::encode_u64_le]:
-    Source: 'beaconcrypt-core/src/authentication.rs', lines 42:0-53:1
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 41:0-52:1
     Visibility: public -/
 def authentication.encode_u64_le
   (value : Std.U64) : RustM (Array Std.U8 8#usize) := do
@@ -195,15 +195,15 @@ def authentication.encode_u64_le
   let i14 ← lift (UScalar.cast .U8 i13)
   ok (Array.make 8#usize [ i, i2, i4, i6, i8, i10, i12, i14 ])
 
-/-- [beaconcrypt_core::authentication::build_init_transcript::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::authentication::build_init_transcript::closure<'_0, '_1, '_2, '_3, '_4, '_5, '_6, '_7, '_8, '_9, '_10>}::call_mut]:
-    Source: 'beaconcrypt-core/src/authentication.rs', lines 66:25-94:5 -/
+/-- [beaconcrypt_core::authentication::build_init_transcript::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::authentication::build_init_transcript::closure<'_0, '_1, '_2, '_3, '_4, '_5, '_6, '_7, '_8, '_9>}::call_mut]:
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 65:25-91:5 -/
 def
   authentication.build_init_transcript.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
   (c : authentication.build_init_transcript.closure) (tupled_args : Std.Usize)
   :
   RustM (Std.U8 × authentication.build_init_transcript.closure)
   := do
-  let (a, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) := c
+  let (a, a1, a2, a3, a4, a5, a6, a7, a8, a9) := c
   if tupled_args < 41#usize
   then
     let i ← Array.index_usize authentication.INIT_DOMAIN tupled_args
@@ -224,63 +224,57 @@ def
         if tupled_args < 2033#usize
         then
           let i ← tupled_args - 81#usize
-          let i1 ← Array.index_usize a6 i
+          let i1 ← Array.index_usize a2 i
           ok (i1, c)
         else
-          if tupled_args < 3985#usize
+          if tupled_args < 2041#usize
           then
             let i ← tupled_args - 2033#usize
-            let i1 ← Array.index_usize a7 i
+            let i1 ← Array.index_usize a3 i
             ok (i1, c)
           else
-            if tupled_args < 3993#usize
+            if tupled_args < 2074#usize
             then
-              let i ← tupled_args - 3985#usize
-              let i1 ← Array.index_usize a8 i
+              let i ← tupled_args - 2041#usize
+              let i1 ← Array.index_usize a4 i
               ok (i1, c)
             else
-              if tupled_args < 4026#usize
+              if tupled_args < 2082#usize
               then
-                let i ← tupled_args - 3993#usize
-                let i1 ← Array.index_usize a2 i
+                let i ← tupled_args - 2074#usize
+                let i1 ← Array.index_usize a8 i
                 ok (i1, c)
               else
-                if tupled_args < 4034#usize
+                if tupled_args < 2180#usize
                 then
-                  let i ← tupled_args - 4026#usize
-                  let i1 ← Array.index_usize a9 i
+                  let i ← tupled_args - 2082#usize
+                  let i1 ← Array.index_usize a5 i
                   ok (i1, c)
                 else
-                  if tupled_args < 4132#usize
+                  if tupled_args < 2188#usize
                   then
-                    let i ← tupled_args - 4034#usize
-                    let i1 ← Array.index_usize a3 i
+                    let i ← tupled_args - 2180#usize
+                    let i1 ← Array.index_usize a8 i
                     ok (i1, c)
                   else
-                    if tupled_args < 4140#usize
+                    if tupled_args < 2286#usize
                     then
-                      let i ← tupled_args - 4132#usize
-                      let i1 ← Array.index_usize a9 i
+                      let i ← tupled_args - 2188#usize
+                      let i1 ← Array.index_usize a6 i
                       ok (i1, c)
                     else
-                      if tupled_args < 4238#usize
+                      if tupled_args < 2294#usize
                       then
-                        let i ← tupled_args - 4140#usize
-                        let i1 ← Array.index_usize a4 i
+                        let i ← tupled_args - 2286#usize
+                        let i1 ← Array.index_usize a9 i
                         ok (i1, c)
                       else
-                        if tupled_args < 4246#usize
-                        then
-                          let i ← tupled_args - 4238#usize
-                          let i1 ← Array.index_usize a10 i
-                          ok (i1, c)
-                        else
-                          let i ← tupled_args - 4246#usize
-                          let i1 ← Array.index_usize a5 i
-                          ok (i1, c)
+                        let i ← tupled_args - 2294#usize
+                        let i1 ← Array.index_usize a7 i
+                        ok (i1, c)
 
-/-- [beaconcrypt_core::authentication::build_init_transcript::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::authentication::build_init_transcript::closure<'_0, '_1, '_2, '_3, '_4, '_5, '_6, '_7, '_8, '_9, '_10>}::call_once]:
-    Source: 'beaconcrypt-core/src/authentication.rs', lines 66:25-94:5 -/
+/-- [beaconcrypt_core::authentication::build_init_transcript::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::authentication::build_init_transcript::closure<'_0, '_1, '_2, '_3, '_4, '_5, '_6, '_7, '_8, '_9>}::call_once]:
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 65:25-91:5 -/
 def
   authentication.build_init_transcript.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
   (c : authentication.build_init_transcript.closure) (i : Std.Usize) :
@@ -291,8 +285,8 @@ def
       c i
   ok i1
 
-/-- Trait implementation: [beaconcrypt_core::authentication::build_init_transcript::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::authentication::build_init_transcript::closure<'_0, '_1, '_2, '_3, '_4, '_5, '_6, '_7, '_8, '_9, '_10>}]
-    Source: 'beaconcrypt-core/src/authentication.rs', lines 66:25-94:5 -/
+/-- Trait implementation: [beaconcrypt_core::authentication::build_init_transcript::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::authentication::build_init_transcript::closure<'_0, '_1, '_2, '_3, '_4, '_5, '_6, '_7, '_8, '_9>}]
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 65:25-91:5 -/
 @[reducible]
 def
   authentication.build_init_transcript.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8
@@ -302,8 +296,8 @@ def
     authentication.build_init_transcript.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
 }
 
-/-- Trait implementation: [beaconcrypt_core::authentication::build_init_transcript::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::authentication::build_init_transcript::closure<'_0, '_1, '_2, '_3, '_4, '_5, '_6, '_7, '_8, '_9, '_10>}]
-    Source: 'beaconcrypt-core/src/authentication.rs', lines 66:25-94:5 -/
+/-- Trait implementation: [beaconcrypt_core::authentication::build_init_transcript::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::authentication::build_init_transcript::closure<'_0, '_1, '_2, '_3, '_4, '_5, '_6, '_7, '_8, '_9>}]
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 65:25-91:5 -/
 @[reducible]
 def
   authentication.build_init_transcript.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8
@@ -316,26 +310,26 @@ def
 }
 
 /-- [beaconcrypt_core::authentication::build_init_transcript]:
-    Source: 'beaconcrypt-core/src/authentication.rs', lines 56:0-95:1
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 55:0-92:1
     Visibility: public -/
 def authentication.build_init_transcript
   (fields : authentication.InitFields) (server_id : Std.U64)
   (server_ed : Array Std.U8 32#usize) (server_mldsa : Array Std.U8 1952#usize)
   :
-  RustM (Array Std.U8 5495#usize)
+  RustM (Array Std.U8 3543#usize)
   := do
   let server_id1 ← authentication.encode_u64_le server_id
   let identity_len ← authentication.encode_u64_le 33#u64
   let signed_key_len ← authentication.encode_u64_le 98#u64
   let pq_key_len ← authentication.encode_u64_le 1249#u64
-  core.array.from_fn 5495#usize
+  core.array.from_fn 3543#usize
     authentication.build_init_transcript.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8
-    (server_id1, server_ed, fields.identity_key, fields.pre_key,
-    fields.one_time_key, fields.pq_key, fields.mldsa_public_key, server_mldsa,
-    identity_len, signed_key_len, pq_key_len)
+    (server_id1, server_ed, server_mldsa, identity_len, fields.identity_key,
+    fields.pre_key, fields.one_time_key, fields.pq_key, signed_key_len,
+    pq_key_len)
 
 /-- [beaconcrypt_core::authentication::build_response_prefix::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::authentication::build_response_prefix::closure<'_0, '_1, '_2, '_3, '_4, '_5, '_6>}::call_mut]:
-    Source: 'beaconcrypt-core/src/authentication.rs', lines 117:25-137:5 -/
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 114:25-134:5 -/
 def
   authentication.build_response_prefix.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
   (c : authentication.build_response_prefix.closure) (tupled_args : Std.Usize)
@@ -395,7 +389,7 @@ def
                   ok (i1, c)
 
 /-- [beaconcrypt_core::authentication::build_response_prefix::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::authentication::build_response_prefix::closure<'_0, '_1, '_2, '_3, '_4, '_5, '_6>}::call_once]:
-    Source: 'beaconcrypt-core/src/authentication.rs', lines 117:25-137:5 -/
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 114:25-134:5 -/
 def
   authentication.build_response_prefix.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
   (c : authentication.build_response_prefix.closure) (i : Std.Usize) :
@@ -407,7 +401,7 @@ def
   ok i1
 
 /-- Trait implementation: [beaconcrypt_core::authentication::build_response_prefix::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::authentication::build_response_prefix::closure<'_0, '_1, '_2, '_3, '_4, '_5, '_6>}]
-    Source: 'beaconcrypt-core/src/authentication.rs', lines 117:25-137:5 -/
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 114:25-134:5 -/
 @[reducible]
 def
   authentication.build_response_prefix.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8
@@ -418,7 +412,7 @@ def
 }
 
 /-- Trait implementation: [beaconcrypt_core::authentication::build_response_prefix::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::authentication::build_response_prefix::closure<'_0, '_1, '_2, '_3, '_4, '_5, '_6>}]
-    Source: 'beaconcrypt-core/src/authentication.rs', lines 117:25-137:5 -/
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 114:25-134:5 -/
 @[reducible]
 def
   authentication.build_response_prefix.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8
@@ -431,7 +425,7 @@ def
 }
 
 /-- [beaconcrypt_core::authentication::build_response_prefix]:
-    Source: 'beaconcrypt-core/src/authentication.rs', lines 107:0-138:1
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 104:0-135:1
     Visibility: public -/
 def authentication.build_response_prefix
   (init_hash : Array Std.U8 64#usize) (identity : Array Std.U8 32#usize)
@@ -447,7 +441,7 @@ def authentication.build_response_prefix
     (init_hash, public_key_len, identity, ephemeral, kem_len, kem, app_len1)
 
 /-- [beaconcrypt_core::authentication::{beaconcrypt_core::authentication::ResponseTranscript<'_0>}::parts]:
-    Source: 'beaconcrypt-core/src/authentication.rs', lines 148:4-150:5
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 145:4-147:5
     Visibility: public -/
 def authentication.ResponseTranscript.parts
   (self : authentication.ResponseTranscript) :
@@ -458,7 +452,7 @@ def authentication.ResponseTranscript.parts
   ok (Array.make 3#usize [ s, self.application, s1 ])
 
 /-- [beaconcrypt_core::authentication::build_response_transcript]:
-    Source: 'beaconcrypt-core/src/authentication.rs', lines 154:0-173:1
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 151:0-170:1
     Visibility: public -/
 def authentication.build_response_transcript
   (init_hash : Array Std.U8 64#usize) (fields : authentication.ResponseFields)
@@ -482,7 +476,7 @@ def authentication.build_response_transcript
   | core.result.Result.Err _ => ok core.option.Option.None
 
 /-- [beaconcrypt_core::authentication::build_signature_input::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::authentication::build_signature_input::closure<'_0, '_1>}::call_mut]:
-    Source: 'beaconcrypt-core/src/authentication.rs', lines 184:25-194:5 -/
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 181:25-191:5 -/
 def
   authentication.build_signature_input.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
   (c : authentication.build_signature_input.closure) (tupled_args : Std.Usize)
@@ -507,7 +501,7 @@ def
         ok (i1, c)
 
 /-- [beaconcrypt_core::authentication::build_signature_input::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::authentication::build_signature_input::closure<'_0, '_1>}::call_once]:
-    Source: 'beaconcrypt-core/src/authentication.rs', lines 184:25-194:5 -/
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 181:25-191:5 -/
 def
   authentication.build_signature_input.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
   (c : authentication.build_signature_input.closure) (i : Std.Usize) :
@@ -519,7 +513,7 @@ def
   ok i1
 
 /-- Trait implementation: [beaconcrypt_core::authentication::build_signature_input::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::authentication::build_signature_input::closure<'_0, '_1>}]
-    Source: 'beaconcrypt-core/src/authentication.rs', lines 184:25-194:5 -/
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 181:25-191:5 -/
 @[reducible]
 def
   authentication.build_signature_input.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8
@@ -530,7 +524,7 @@ def
 }
 
 /-- Trait implementation: [beaconcrypt_core::authentication::build_signature_input::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::authentication::build_signature_input::closure<'_0, '_1>}]
-    Source: 'beaconcrypt-core/src/authentication.rs', lines 184:25-194:5 -/
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 181:25-191:5 -/
 @[reducible]
 def
   authentication.build_signature_input.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8
@@ -543,7 +537,7 @@ def
 }
 
 /-- [beaconcrypt_core::authentication::build_signature_input]:
-    Source: 'beaconcrypt-core/src/authentication.rs', lines 176:0-195:1
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 173:0-192:1
     Visibility: public -/
 def authentication.build_signature_input
   (role : authentication.AuthRole) (digest : Array Std.U8 64#usize) :
@@ -557,74 +551,297 @@ def authentication.build_signature_input
     authentication.build_signature_input.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8
     (label, digest)
 
-/-- [beaconcrypt_core::authentication::bind_associated_data::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::authentication::bind_associated_data::closure<'_0, '_1, '_2>}::call_mut]:
-    Source: 'beaconcrypt-core/src/authentication.rs', lines 203:25-211:5 -/
-def
-  authentication.bind_associated_data.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
-  (c : authentication.bind_associated_data.closure) (tupled_args : Std.Usize) :
-  RustM (Std.U8 × authentication.bind_associated_data.closure)
+/-- [beaconcrypt_core::authentication::{beaconcrypt_core::authentication::OwnedInitFields}::new]:
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 205:4-212:5
+    Visibility: public -/
+def authentication.OwnedInitFields.new
+  (fields : authentication.InitFields) :
+  RustM authentication.OwnedInitFields
   := do
-  let (a, a1, a2) := c
-  if tupled_args < 153#usize
-  then let i ← Array.index_usize a tupled_args
-       ok (i, c)
-  else
-    if tupled_args < 217#usize
-    then
-      let i ← tupled_args - 153#usize
-      let i1 ← Array.index_usize a1 i
-      ok (i1, c)
-    else
-      let i ← tupled_args - 217#usize
-      let i1 ← Array.index_usize a2 i
-      ok (i1, c)
+  ok
+    {
+      identity_key := fields.identity_key,
+      pre_key := fields.pre_key,
+      one_time_key := fields.one_time_key,
+      pq_key := fields.pq_key
+    }
 
-/-- [beaconcrypt_core::authentication::bind_associated_data::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::authentication::bind_associated_data::closure<'_0, '_1, '_2>}::call_once]:
-    Source: 'beaconcrypt-core/src/authentication.rs', lines 203:25-211:5 -/
+/-- [beaconcrypt_core::authentication::{beaconcrypt_core::authentication::OwnedInitFields}::fields]:
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 214:4-221:5
+    Visibility: public -/
+def authentication.OwnedInitFields.fields
+  (self : authentication.OwnedInitFields) :
+  RustM authentication.InitFields
+  := do
+  ok
+    {
+      identity_key := self.identity_key,
+      pre_key := self.pre_key,
+      one_time_key := self.one_time_key,
+      pq_key := self.pq_key
+    }
+
+/-- [beaconcrypt_core::authentication::{beaconcrypt_core::authentication::OwnedInitFields}::identity_public_key::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::authentication::{beaconcrypt_core::authentication::OwnedInitFields}::identity_public_key::closure<'_0>}::call_mut]:
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 224:29-224:57 -/
 def
-  authentication.bind_associated_data.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
-  (c : authentication.bind_associated_data.closure) (i : Std.Usize) :
+  authentication.OwnedInitFields.identity_public_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
+  (c : authentication.OwnedInitFields.identity_public_key.closure)
+  (tupled_args : Std.Usize) :
+  RustM (Std.U8 × authentication.OwnedInitFields.identity_public_key.closure)
+  := do
+  let i ← tupled_args + 1#usize
+  let i1 ← Array.index_usize c.identity_key i
+  ok (i1, c)
+
+/-- [beaconcrypt_core::authentication::{beaconcrypt_core::authentication::OwnedInitFields}::identity_public_key::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::authentication::{beaconcrypt_core::authentication::OwnedInitFields}::identity_public_key::closure<'_0>}::call_once]:
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 224:29-224:57 -/
+def
+  authentication.OwnedInitFields.identity_public_key.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
+  (c : authentication.OwnedInitFields.identity_public_key.closure)
+  (i : Std.Usize) :
   RustM Std.U8
   := do
   let (i1, _) ←
-    authentication.bind_associated_data.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
+    authentication.OwnedInitFields.identity_public_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
       c i
   ok i1
 
-/-- Trait implementation: [beaconcrypt_core::authentication::bind_associated_data::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::authentication::bind_associated_data::closure<'_0, '_1, '_2>}]
-    Source: 'beaconcrypt-core/src/authentication.rs', lines 203:25-211:5 -/
+/-- Trait implementation: [beaconcrypt_core::authentication::{beaconcrypt_core::authentication::OwnedInitFields}::identity_public_key::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::authentication::{beaconcrypt_core::authentication::OwnedInitFields}::identity_public_key::closure<'_0>}]
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 224:29-224:57 -/
 @[reducible]
 def
-  authentication.bind_associated_data.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8
-  : core.ops.function.FnOnce authentication.bind_associated_data.closure
+  authentication.OwnedInitFields.identity_public_key.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8
+  : core.ops.function.FnOnce
+  authentication.OwnedInitFields.identity_public_key.closure Std.Usize Std.U8
+  := {
+  call_once :=
+    authentication.OwnedInitFields.identity_public_key.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
+}
+
+/-- Trait implementation: [beaconcrypt_core::authentication::{beaconcrypt_core::authentication::OwnedInitFields}::identity_public_key::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::authentication::{beaconcrypt_core::authentication::OwnedInitFields}::identity_public_key::closure<'_0>}]
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 224:29-224:57 -/
+@[reducible]
+def
+  authentication.OwnedInitFields.identity_public_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8
+  : core.ops.function.FnMut
+  authentication.OwnedInitFields.identity_public_key.closure Std.Usize Std.U8
+  := {
+  FnOnceInst :=
+    authentication.OwnedInitFields.identity_public_key.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8
+  call_mut :=
+    authentication.OwnedInitFields.identity_public_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
+}
+
+/-- [beaconcrypt_core::authentication::{beaconcrypt_core::authentication::OwnedInitFields}::identity_public_key]:
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 223:4-225:5
+    Visibility: public -/
+def authentication.OwnedInitFields.identity_public_key
+  (self : authentication.OwnedInitFields) : RustM (Array Std.U8 32#usize) := do
+  core.array.from_fn 32#usize
+    authentication.OwnedInitFields.identity_public_key.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8
+    self
+
+/-- [beaconcrypt_core::authentication::INIT_FIELDS_LEN]
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 228:0-228:40
+    Visibility: public -/
+@[global_simps, irreducible]
+def authentication.INIT_FIELDS_LEN : Std.Usize := 1478#usize
+
+/-- [beaconcrypt_core::authentication::RECORD_AD_TRANSCRIPT_LEN]
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 229:0-229:49
+    Visibility: public -/
+@[global_simps, irreducible]
+def authentication.RECORD_AD_TRANSCRIPT_LEN : Std.Usize := 2638#usize
+
+/-- [beaconcrypt_core::authentication::AD_CONTEXT_LEN]
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 230:0-230:37
+    Visibility: public -/
+@[global_simps, irreducible]
+def authentication.AD_CONTEXT_LEN : Std.Usize := 87#usize
+
+/-- [beaconcrypt_core::authentication::AD_CONTEXT]
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 232:0-233:96
+    Visibility: public -/
+@[global_simps, irreducible]
+def authentication.AD_CONTEXT : Array Std.U8 87#usize :=
+  Array.make 87#usize [
+    66#u8, 101#u8, 97#u8, 99#u8, 111#u8, 110#u8, 99#u8, 114#u8, 121#u8, 112#u8,
+    116#u8, 80#u8, 113#u8, 120#u8, 100#u8, 104#u8, 95#u8, 67#u8, 85#u8, 82#u8,
+    86#u8, 69#u8, 50#u8, 53#u8, 53#u8, 49#u8, 57#u8, 95#u8, 83#u8, 72#u8,
+    65#u8, 45#u8, 53#u8, 49#u8, 50#u8, 95#u8, 77#u8, 76#u8, 45#u8, 75#u8,
+    69#u8, 77#u8, 45#u8, 55#u8, 54#u8, 56#u8, 83#u8, 121#u8, 109#u8, 82#u8,
+    97#u8, 116#u8, 99#u8, 104#u8, 101#u8, 116#u8, 95#u8, 72#u8, 75#u8, 68#u8,
+    70#u8, 95#u8, 83#u8, 72#u8, 65#u8, 45#u8, 53#u8, 49#u8, 50#u8, 95#u8,
+    67#u8, 72#u8, 65#u8, 67#u8, 72#u8, 65#u8, 50#u8, 48#u8, 95#u8, 80#u8,
+    79#u8, 76#u8, 89#u8, 49#u8, 51#u8, 48#u8, 53#u8
+    ]
+
+/-- [beaconcrypt_core::authentication::build_record_ad_transcript::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::authentication::build_record_ad_transcript::closure<'_0, '_1, '_2, '_3, '_4, '_5, '_6, '_7>}::call_mut]:
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 249:25-267:5 -/
+def
+  authentication.build_record_ad_transcript.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
+  (c : authentication.build_record_ad_transcript.closure)
+  (tupled_args : Std.Usize) :
+  RustM (Std.U8 × authentication.build_record_ad_transcript.closure)
+  := do
+  let (a, a1, a2, a3, a4, a5, a6, a7) := c
+  if tupled_args < 33#usize
+  then let i ← Array.index_usize a tupled_args
+       ok (i, c)
+  else
+    if tupled_args < 131#usize
+    then
+      let i ← tupled_args - 33#usize
+      let i1 ← Array.index_usize a1 i
+      ok (i1, c)
+    else
+      if tupled_args < 229#usize
+      then
+        let i ← tupled_args - 131#usize
+        let i1 ← Array.index_usize a2 i
+        ok (i1, c)
+      else
+        if tupled_args < 1478#usize
+        then
+          let i ← tupled_args - 229#usize
+          let i1 ← Array.index_usize a3 i
+          ok (i1, c)
+        else
+          if tupled_args < 1510#usize
+          then
+            let i ← tupled_args - 1478#usize
+            let i1 ← Array.index_usize a4 i
+            ok (i1, c)
+          else
+            if tupled_args < 1542#usize
+            then
+              let i ← tupled_args - 1510#usize
+              let i1 ← Array.index_usize a5 i
+              ok (i1, c)
+            else
+              if tupled_args < 2630#usize
+              then
+                let i ← tupled_args - 1542#usize
+                let i1 ← Array.index_usize a6 i
+                ok (i1, c)
+              else
+                let i ← tupled_args - 2630#usize
+                let i1 ← Array.index_usize a7 i
+                ok (i1, c)
+
+/-- [beaconcrypt_core::authentication::build_record_ad_transcript::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::authentication::build_record_ad_transcript::closure<'_0, '_1, '_2, '_3, '_4, '_5, '_6, '_7>}::call_once]:
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 249:25-267:5 -/
+def
+  authentication.build_record_ad_transcript.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
+  (c : authentication.build_record_ad_transcript.closure) (i : Std.Usize) :
+  RustM Std.U8
+  := do
+  let (i1, _) ←
+    authentication.build_record_ad_transcript.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
+      c i
+  ok i1
+
+/-- Trait implementation: [beaconcrypt_core::authentication::build_record_ad_transcript::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::authentication::build_record_ad_transcript::closure<'_0, '_1, '_2, '_3, '_4, '_5, '_6, '_7>}]
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 249:25-267:5 -/
+@[reducible]
+def
+  authentication.build_record_ad_transcript.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8
+  : core.ops.function.FnOnce authentication.build_record_ad_transcript.closure
   Std.Usize Std.U8 := {
   call_once :=
-    authentication.bind_associated_data.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
+    authentication.build_record_ad_transcript.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
 }
 
-/-- Trait implementation: [beaconcrypt_core::authentication::bind_associated_data::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::authentication::bind_associated_data::closure<'_0, '_1, '_2>}]
-    Source: 'beaconcrypt-core/src/authentication.rs', lines 203:25-211:5 -/
+/-- Trait implementation: [beaconcrypt_core::authentication::build_record_ad_transcript::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::authentication::build_record_ad_transcript::closure<'_0, '_1, '_2, '_3, '_4, '_5, '_6, '_7>}]
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 249:25-267:5 -/
 @[reducible]
 def
-  authentication.bind_associated_data.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8
-  : core.ops.function.FnMut authentication.bind_associated_data.closure
+  authentication.build_record_ad_transcript.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8
+  : core.ops.function.FnMut authentication.build_record_ad_transcript.closure
   Std.Usize Std.U8 := {
   FnOnceInst :=
-    authentication.bind_associated_data.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8
+    authentication.build_record_ad_transcript.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8
   call_mut :=
-    authentication.bind_associated_data.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
+    authentication.build_record_ad_transcript.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
 }
 
-/-- [beaconcrypt_core::authentication::bind_associated_data]:
-    Source: 'beaconcrypt-core/src/authentication.rs', lines 198:0-212:1
+/-- [beaconcrypt_core::authentication::build_record_ad_transcript]:
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 244:0-268:1
     Visibility: public -/
-def authentication.bind_associated_data
-  (base : Array Std.U8 281#usize) (server_hash : Array Std.U8 64#usize)
-  (beacon_hash : Array Std.U8 64#usize) :
-  RustM (Array Std.U8 281#usize)
+def authentication.build_record_ad_transcript
+  (init : authentication.InitFields)
+  (response : authentication.AdResponseFields) :
+  RustM (Array Std.U8 2638#usize)
   := do
-  core.array.from_fn 281#usize
-    authentication.bind_associated_data.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8
-    (base, server_hash, beacon_hash)
+  let key_id ← authentication.encode_u64_le response.key_id
+  core.array.from_fn 2638#usize
+    authentication.build_record_ad_transcript.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8
+    (init.identity_key, init.pre_key, init.one_time_key, init.pq_key,
+    response.identity_key, response.ephemeral_key, response.kem_cipher_text,
+    key_id)
+
+/-- [beaconcrypt_core::authentication::assemble_associated_data::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::authentication::assemble_associated_data::closure<'_0>}::call_mut]:
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 274:25-280:5 -/
+def
+  authentication.assemble_associated_data.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
+  (c : authentication.assemble_associated_data.closure)
+  (tupled_args : Std.Usize) :
+  RustM (Std.U8 × authentication.assemble_associated_data.closure)
+  := do
+  if tupled_args < 87#usize
+  then
+    let i ← Array.index_usize authentication.AD_CONTEXT tupled_args
+    ok (i, c)
+  else
+    let i ← tupled_args - 87#usize
+    let i1 ← Array.index_usize c i
+    ok (i1, c)
+
+/-- [beaconcrypt_core::authentication::assemble_associated_data::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::authentication::assemble_associated_data::closure<'_0>}::call_once]:
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 274:25-280:5 -/
+def
+  authentication.assemble_associated_data.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
+  (c : authentication.assemble_associated_data.closure) (i : Std.Usize) :
+  RustM Std.U8
+  := do
+  let (i1, _) ←
+    authentication.assemble_associated_data.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
+      c i
+  ok i1
+
+/-- Trait implementation: [beaconcrypt_core::authentication::assemble_associated_data::{impl core::ops::function::FnOnce<(usize,), u8> for beaconcrypt_core::authentication::assemble_associated_data::closure<'_0>}]
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 274:25-280:5 -/
+@[reducible]
+def
+  authentication.assemble_associated_data.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8
+  : core.ops.function.FnOnce authentication.assemble_associated_data.closure
+  Std.Usize Std.U8 := {
+  call_once :=
+    authentication.assemble_associated_data.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8.call_once
+}
+
+/-- Trait implementation: [beaconcrypt_core::authentication::assemble_associated_data::{impl core::ops::function::FnMut<(usize,), u8> for beaconcrypt_core::authentication::assemble_associated_data::closure<'_0>}]
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 274:25-280:5 -/
+@[reducible]
+def
+  authentication.assemble_associated_data.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8
+  : core.ops.function.FnMut authentication.assemble_associated_data.closure
+  Std.Usize Std.U8 := {
+  FnOnceInst :=
+    authentication.assemble_associated_data.closure.Insts.CoreOpsFunctionFnOnceTupleUsizeU8
+  call_mut :=
+    authentication.assemble_associated_data.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8.call_mut
+}
+
+/-- [beaconcrypt_core::authentication::assemble_associated_data]:
+    Source: 'beaconcrypt-core/src/authentication.rs', lines 271:0-281:1
+    Visibility: public -/
+def authentication.assemble_associated_data
+  (transcript_hash : Array Std.U8 64#usize) :
+  RustM (Array Std.U8 151#usize)
+  := do
+  core.array.from_fn 151#usize
+    authentication.assemble_associated_data.closure.Insts.CoreOpsFunctionFnMutTupleUsizeU8
+    transcript_hash
 
 end beaconcrypt_authentication_core

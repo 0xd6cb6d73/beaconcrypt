@@ -73,7 +73,6 @@ theorem collect_verified {E Shared A : Type}
         mem_support_bind_iff, support_pure, Set.mem_singleton_iff,
         Prod.mk.injEq, Option.some.injEq, Option.some_ne_none, false_and] at reached)
     | (obtain ⟨⟨reply, state⟩, step, reached⟩ := reached; cases reply)
-    | (split at reached)
   all_goals simp_all
 
 /-- Every successful raw prefix checked this exact pair as absent in the unchanged source set. -/
@@ -208,20 +207,36 @@ theorem build_consumed (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
       subst supported
       rfl
   | some token =>
-      simp only [hp, StateT.run_bind, mem_support_bind_iff] at supported
-      obtain ⟨tail, lifted, supported⟩ := supported
-      obtain ⟨tailMember, same⟩ := liftCoins_mem _ _ _ lifted
-      have outcome := build_support (tailImpl setup codec checks) setup.source
-        (tailImpl_kdf setup codec checks) token.pending token.root payload () state.server
-        ([], state.ctx) tail.1 tailMember
-      simp only [same, StateT.run_set, StateT.run_pure, support_pure,
-        Set.mem_singleton_iff] at supported
-      obtain ⟨_, rfl, rfl⟩ := supported
-      rcases outcome with unchanged | ⟨candidate, kernel, response, published, _⟩
-      · rw [unchanged]
-        rfl
-      · rw [published]
-        rfl
+      simp only [hp] at supported
+      cases hpre : PqxdhServerRegistrationPublication.prehash state.server token.pending payload with
+      | none =>
+          simp only [hpre, StateT.run_bind, StateT.run_set, pure_bind, StateT.run_pure, support_pure,
+            Set.mem_singleton_iff] at supported
+          subst supported
+          rfl
+      | some candidate =>
+          simp only [hpre, StateT.run_bind, mem_support_bind_iff] at supported
+          obtain ⟨hashed, hashRun, supported⟩ := supported
+          obtain ⟨hashEq, _, _⟩ := hashOracle_grows _ state hashed hashRun
+          simp only [StateT.run_get] at supported
+          obtain ⟨current, currentRun, supported⟩ := supported
+          rw [support_pure, Set.mem_singleton_iff] at currentRun
+          subst currentRun
+          obtain ⟨tail, lifted, supported⟩ := supported
+          obtain ⟨tailMember, same⟩ := liftCoins_mem _ _ _ lifted
+          rw [hashEq] at tailMember
+          have outcome := build_support _ (tailImpl setup codec checks) setup.source
+            (tailImpl_kdf setup codec checks) token.pending token.root payload _ state.server
+            ([], hashed.2.ctx) tail.1 tailMember
+          simp only [same, StateT.run_set, StateT.run_pure, support_pure,
+            Set.mem_singleton_iff] at supported
+          obtain ⟨_, rfl, rfl⟩ := supported
+          rw [hashEq]
+          rcases outcome with unchanged | ⟨candidate, kernel, response, published, _⟩
+          · rw [unchanged]
+            rfl
+          · rw [published]
+            rfl
 
 /-- The entire Beacon finish leaves the Server's consumed set unchanged. -/
 theorem finish_consumed (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -232,14 +247,30 @@ theorem finish_consumed (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
   simp only [finishOracle, StateT.run_bind, StateT.run_get, pure_bind] at supported
   cases hphase : state.beacon.beacon.phase with
   | initSent control prekey oneTime kem =>
-      simp only [hphase, StateT.run_bind, mem_support_bind_iff] at supported
-      obtain ⟨staged, stageRun, supported⟩ := supported
-      obtain ⟨cache, extra, stagedEq, _⟩ := stage_run setup codec beaconSeed
-        publicValue control state.beacon.beacon.identity oneTime kem raw state staged stageRun
-      simp only [StateT.run_get, StateT.run_set, StateT.run_pure, support_pure,
-        Set.mem_singleton_iff] at supported
-      obtain ⟨_, rfl, _, rfl, rfl⟩ := supported
-      rw [stagedEq]
+      simp only [hphase] at supported
+      rcases hinit : state.beaconInit with _ | init <;>
+        rcases hresp : responseOf codec raw with _ | response <;>
+        simp only [hinit, hresp, StateT.run_bind, StateT.run_set, pure_bind, StateT.run_pure, support_pure,
+          Set.mem_singleton_iff] at supported
+      · subst supported
+        rfl
+      · subst supported
+        rfl
+      · subst supported
+        rfl
+      · simp only [mem_support_bind_iff] at supported
+        obtain ⟨hashed, hashRun, supported⟩ := supported
+        obtain ⟨hashEq, _, _⟩ := hashOracle_grows _ state hashed hashRun
+        simp only [StateT.run_get] at supported
+        obtain ⟨current, currentRun, supported⟩ := supported
+        rw [support_pure, Set.mem_singleton_iff] at currentRun
+        subst currentRun
+        obtain ⟨staged, stageRun, supported⟩ := supported
+        obtain ⟨cache, extra, stagedEq, _⟩ := stage_run _ setup codec beaconSeed
+          publicValue control _ oneTime kem raw _ staged stageRun
+        simp only [support_pure, Set.mem_singleton_iff] at supported
+        obtain ⟨_, rfl, _, rfl, rfl⟩ := supported
+        rw [stagedEq, hashEq]
   | _ =>
       simp only [hphase, StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
       subst supported
@@ -395,7 +426,7 @@ theorem source_ordered_unique (setup : Setup baseSpec KemSK) (codec : Codec Read
   obtain ⟨seed, _, beaconSeed, _, scalar, _, keys, _, oneTime, _, published, publishedMember,
     final, finalMember, rfl⟩ := supported
   have original := PqxdhServerAuthNative.evaluate_support setup seed scalar _
-    (PqxdhJointDhExtractFamily.empty, initialGameState setup (challenge setup.joint setup.dh seed scalar) published.2)
+    (PqxdhJointDhExtractFamily.empty, initialGameState setup (challenge setup.joint setup.dh seed scalar) published.1.2 published.2)
     final (by
       rw [PqxdhServerAuthNative.program_native setup codec checks seed scalar beaconSeed _ _
         (inv_initial setup codec beaconSeed (challenge setup.joint setup.dh seed scalar)
@@ -563,7 +594,7 @@ theorem source_ordered_owner (setup : Setup baseSpec KemSK) (codec : Codec Reade
   obtain ⟨seed, _, beaconSeed, _, scalar, _, keys, _, oneTime, _, published, publishedMember,
     final, finalMember, rfl⟩ := supported
   have original := PqxdhServerAuthNative.evaluate_support setup seed scalar _
-    (PqxdhJointDhExtractFamily.empty, initialGameState setup (challenge setup.joint setup.dh seed scalar) published.2)
+    (PqxdhJointDhExtractFamily.empty, initialGameState setup (challenge setup.joint setup.dh seed scalar) published.1.2 published.2)
     final (by
       rw [PqxdhServerAuthNative.program_native setup codec checks seed scalar beaconSeed _ _
         (inv_initial setup codec beaconSeed (challenge setup.joint setup.dh seed scalar)
@@ -584,7 +615,7 @@ theorem source_ordered_count (setup : Setup baseSpec KemSK) (codec : Codec Reade
   obtain ⟨seed, _, beaconSeed, _, scalar, _, keys, _, oneTime, _, published, publishedMember,
     final, finalMember, rfl⟩ := supported
   have original := PqxdhServerAuthNative.evaluate_support setup seed scalar _
-    (PqxdhJointDhExtractFamily.empty, initialGameState setup (challenge setup.joint setup.dh seed scalar) published.2)
+    (PqxdhJointDhExtractFamily.empty, initialGameState setup (challenge setup.joint setup.dh seed scalar) published.1.2 published.2)
     final (by
       rw [PqxdhServerAuthNative.program_native setup codec checks seed scalar beaconSeed _ _
         (inv_initial setup codec beaconSeed (challenge setup.joint setup.dh seed scalar)

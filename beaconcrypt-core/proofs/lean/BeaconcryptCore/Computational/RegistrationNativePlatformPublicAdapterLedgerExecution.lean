@@ -79,14 +79,14 @@ noncomputable def commonProfile :StateT P ProbComp Bool :=fun previous=>do
         ⟨((ready.initial.state,previous),RegistrationNativePlatformPublicAdapterTypedAudit.empty),stored⟩
 
 omit [PublicWrapperPlatform.CryptoOperations] [AdapterServerConstructorPrimitive.Standard] [FrameDispatchFallback.Operations] in
-theorem external (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+theorem external (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
     (before :RegistrationNativePlatformPublicAdapterAuditLowModel.State n KemSK P source)
     (stored :RegistrationNativePlatformPublicAdapterAuditLowModel.Private (n:=n) configuration created credential before) :
     (RegistrationNativePlatformPublicAdapterAuditLowModel.physical configuration created credential before stored).backend.2=before.1.2 :=
   congrArg Prod.snd stored.base.backend
 
 omit [PublicWrapperPlatform.CryptoOperations] [AdapterServerConstructorPrimitive.Standard] [FrameDispatchFallback.Operations] in
-theorem cache (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+theorem cache (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
     (before :RegistrationNativePlatformPublicAdapterAuditLowModel.State n KemSK P source)
     (stored :RegistrationNativePlatformPublicAdapterAuditLowModel.Private (n:=n) configuration created credential before) :
     (RegistrationNativePlatformPublicAdapterAuditLowModel.physical configuration created credential before stored).backend.1.world.primitive.2=
@@ -158,7 +158,7 @@ noncomputable def nativeProfile :StateT P ProbComp Bool :=
 
 include objects serverEd in
 theorem common_native
-    (event_source :∀(created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+    (event_source :∀(created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
       (current :RegistrationNativePlatformPublicAdapterAuditLowModel.State n KemSK P source)
       (stored :RegistrationNativePlatformPublicAdapterAuditLowModel.Private (n:=n) configuration created credential current)
       (valueLedger :Value×RegistrationNativeLedger.State),
@@ -228,7 +228,7 @@ theorem common_native
 
 include objects serverEd in
 theorem profile_source
-    (event_source :∀(created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+    (event_source :∀(created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
       (current :RegistrationNativePlatformPublicAdapterAuditLowModel.State n KemSK P source)
       (stored :RegistrationNativePlatformPublicAdapterAuditLowModel.Private (n:=n) configuration created credential current)
       (valueLedger :Value×RegistrationNativeLedger.State),

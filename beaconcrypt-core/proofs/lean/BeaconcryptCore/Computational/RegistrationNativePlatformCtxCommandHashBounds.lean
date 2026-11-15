@@ -1,5 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePlatformCtxOrdinaryHashBounds
+import BeaconcryptCore.Computational.RegistrationNativePlatformCtxCommands
+import BeaconcryptCore.Computational.RegistrationNativePlatformCtxSdkHashBounds
 /-! Literal current-runtime Context commands retain physical shared-hash caps: public coins/HMAC cost zero, explicit hashes and each ordinary record operation cost one, and actual source response build costs ten including pin and all optional failures. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc

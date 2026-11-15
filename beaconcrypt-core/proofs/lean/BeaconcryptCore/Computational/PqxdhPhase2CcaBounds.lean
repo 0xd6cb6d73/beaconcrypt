@@ -10,6 +10,7 @@ Subsequent private programs keep their explicitly bounded ordinary interpretatio
 open OracleComp OracleSpec
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhPhase2CcaBounds
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhBeaconPhase2Routed PqxdhBeaconPhase2RoutedBounds
 open PqxdhPhase2RouteQueries PqxdhPhase2DecapsulationRouting
 open PqxdhChallengeSecretRouting PqxdhKemIndCca PqxdhJointKdfGame
@@ -35,14 +36,14 @@ theorem owner_bound
     (decode : RawCtxReceive.FrameDecoder) (raw : PqxdhBeaconPhase2Preparation.Bytes)
     (state : PqxdhBeaconPhase2Preparation.State I D (Option K)) (auxiliary : Auxiliary) :
     ((simulateQ (routedHandles source challenge supplied aux)
-      (PqxdhBeaconPhase2Shared.owner decode raw state)).run auxiliary).IsQueryBoundP
+      (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) decode raw state)).run auxiliary).IsQueryBoundP
         predicate (69 * qAux + qDecapsulation) := by
   have step := routedHandles_allowance source challenge supplied aux predicate qAux qDecapsulation auxBound decapsulationBound
   simp only [allowance_eq] at step
   simpa [Fin.sum_univ_three, publicCost, allowance, Nat.mul_comm] using
     FinitePartitionQueryBounds.weighted_bound kind (publicCost qAux qDecapsulation) allowance
       (routedHandles source challenge supplied aux) predicate
-      (PqxdhBeaconPhase2Shared.owner decode raw state) (owner_kind decode raw state) step auxiliary
+      (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) decode raw state) (owner_kind (completedBinding := completedBinding) decode raw state) step auxiliary
 
 /-- The same bound holds for the literal ordinary interpretation of the original complete callback execution. -/
 theorem owner_route_bound
@@ -57,10 +58,10 @@ theorem owner_route_bound
     (decode : RawCtxReceive.FrameDecoder) (raw : PqxdhBeaconPhase2Preparation.Bytes)
     (state : PqxdhBeaconPhase2Preparation.State I D (Option K)) (auxiliary : Auxiliary) :
     (simulateQ (route source challenge supplied) ((simulateQ (handles source challenge aux)
-      (PqxdhBeaconPhase2Shared.owner decode raw state)).run auxiliary)).IsQueryBoundP
+      (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) decode raw state)).run auxiliary)).IsQueryBoundP
         predicate (69 * qAux + qDecapsulation) := by
   rw [routed_program]
-  exact owner_bound source challenge supplied aux predicate qAux qDecapsulation auxBound decapsulationBound decode raw state auxiliary
+  exact owner_bound (completedBinding := completedBinding) source challenge supplied aux predicate qAux qDecapsulation auxBound decapsulationBound decode raw state auxiliary
 
 /-- Uniform, base and decapsulation classes retain the exact ordinary owner bounds without a second decapsulation charge for its root. -/
 theorem owner_classes
@@ -75,16 +76,16 @@ theorem owner_classes
     (decode : RawCtxReceive.FrameDecoder) (raw : PqxdhBeaconPhase2Preparation.Bytes)
     (state : PqxdhBeaconPhase2Preparation.State I D (Option K)) (auxiliary : Auxiliary) :
     let run := simulateQ (route source challenge supplied) ((simulateQ (handles source challenge aux)
-      (PqxdhBeaconPhase2Shared.owner decode raw state)).run auxiliary)
+      (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) decode raw state)).run auxiliary)
     run.IsQueryBoundP IsMlKemUniformQuery (69 * qUniform) ∧
       run.IsQueryBoundP IsMlKemBaseQuery (69 * qBase) ∧
       run.IsQueryBoundP IsMlKemLogicalDecapsulationQuery (69 * qDecapsulation + 1) := by
   refine ⟨?_, ?_, ?_⟩
-  · simpa only [Nat.add_zero] using owner_route_bound source challenge supplied aux IsMlKemUniformQuery qUniform 0 uniformBound
+  · simpa only [Nat.add_zero] using owner_route_bound (completedBinding := completedBinding) source challenge supplied aux IsMlKemUniformQuery qUniform 0 uniformBound
       (fun _ => by simp [IsMlKemUniformQuery]) decode raw state auxiliary
-  · simpa only [Nat.add_zero] using owner_route_bound source challenge supplied aux IsMlKemBaseQuery qBase 0 baseBound
+  · simpa only [Nat.add_zero] using owner_route_bound (completedBinding := completedBinding) source challenge supplied aux IsMlKemBaseQuery qBase 0 baseBound
       (fun _ => by simp [IsMlKemBaseQuery]) decode raw state auxiliary
-  · exact owner_route_bound source challenge supplied aux IsMlKemLogicalDecapsulationQuery qDecapsulation 1 decapsulationBound
+  · exact owner_route_bound (completedBinding := completedBinding) source challenge supplied aux IsMlKemLogicalDecapsulationQuery qDecapsulation 1 decapsulationBound
       (fun _ => by simp [IsMlKemLogicalDecapsulationQuery]) decode raw state auxiliary
 
 /-- Subsequent private programs are charged at their actual ordinary interpretation from every complete optional owner result. -/
@@ -104,10 +105,10 @@ theorem continuation_bound {Result : Type}
     (qNext : Nat)
     (nextBound : ∀ result, (simulateQ (route source challenge supplied) (next result)).IsQueryBoundP predicate qNext) :
     (simulateQ (route source challenge supplied) (((simulateQ (handles source challenge aux)
-      (PqxdhBeaconPhase2Shared.owner decode raw state)).run auxiliary) >>= next)).IsQueryBoundP
+      (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) decode raw state)).run auxiliary) >>= next)).IsQueryBoundP
         predicate (69 * qAux + qDecapsulation + qNext) := by
   rw [simulateQ_bind]
-  exact isQueryBoundP_bind (owner_route_bound source challenge supplied aux predicate qAux qDecapsulation
+  exact isQueryBoundP_bind (owner_route_bound (completedBinding := completedBinding) source challenge supplied aux predicate qAux qDecapsulation
     auxBound decapsulationBound decode raw state auxiliary) (fun result _ => nextBound result)
 
 /-- Complete ordinary class ledgers add the actual continuation costs at the unchanged owner and auxiliary poststate. -/
@@ -130,16 +131,16 @@ theorem continuation_classes {Result : Type}
       (simulateQ (route source challenge supplied) (next result)).IsQueryBoundP IsMlKemBaseQuery bNext ∧
       (simulateQ (route source challenge supplied) (next result)).IsQueryBoundP IsMlKemLogicalDecapsulationQuery dNext) :
     let run := simulateQ (route source challenge supplied) (((simulateQ (handles source challenge aux)
-      (PqxdhBeaconPhase2Shared.owner decode raw state)).run auxiliary) >>= next)
+      (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) decode raw state)).run auxiliary) >>= next)
     run.IsQueryBoundP IsMlKemUniformQuery (69 * qUniform + uNext) ∧
       run.IsQueryBoundP IsMlKemBaseQuery (69 * qBase + bNext) ∧
       run.IsQueryBoundP IsMlKemLogicalDecapsulationQuery (69 * qDecapsulation + 1 + dNext) := by
   refine ⟨?_, ?_, ?_⟩
-  · simpa only [Nat.add_zero] using continuation_bound source challenge supplied aux IsMlKemUniformQuery qUniform 0 uniformBound
+  · simpa only [Nat.add_zero] using continuation_bound (completedBinding := completedBinding) source challenge supplied aux IsMlKemUniformQuery qUniform 0 uniformBound
       (fun _ => by simp [IsMlKemUniformQuery]) decode raw state auxiliary next uNext (fun result => (nextBound result).1)
-  · simpa only [Nat.add_zero] using continuation_bound source challenge supplied aux IsMlKemBaseQuery qBase 0 baseBound
+  · simpa only [Nat.add_zero] using continuation_bound (completedBinding := completedBinding) source challenge supplied aux IsMlKemBaseQuery qBase 0 baseBound
       (fun _ => by simp [IsMlKemBaseQuery]) decode raw state auxiliary next bNext (fun result => (nextBound result).2.1)
-  · exact continuation_bound source challenge supplied aux IsMlKemLogicalDecapsulationQuery qDecapsulation 1 decapsulationBound
+  · exact continuation_bound (completedBinding := completedBinding) source challenge supplied aux IsMlKemLogicalDecapsulationQuery qDecapsulation 1 decapsulationBound
       (fun _ => by simp [IsMlKemLogicalDecapsulationQuery]) decode raw state auxiliary next dNext (fun result => (nextBound result).2.2)
 
 end BeaconcryptCore.Computational.PqxdhPhase2CcaBounds

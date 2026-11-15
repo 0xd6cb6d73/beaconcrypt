@@ -26,7 +26,7 @@ theorem result_borrowed (failure : ed.Error) (reply : RegistrationSigningShared.
 variable {n : Nat} {I KemSK E : Type} {base : OracleSpec I} {source : RegistrationNativeMldsa.Source}
 variable {m : Type → Type} [Monad m] [LawfulMonad m]
 variable (coins : QueryImpl unifSpec m) (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) m)
 
 noncomputable def sign (index : Nat) (owner : RegistrationNativeBeaconFrontend.Owner source) (failure : ed.Error) (message : Slice U8) :
@@ -89,23 +89,22 @@ noncomputable def signing (index : Nat) (owner : RegistrationNativeBeaconFronten
   fun query => RegistrationNativeBundleInterpretation.outgoing coins setup checks representation created writer index owner (.inl query)
 
 theorem publication (index : Nat) (owner : RegistrationNativeBeaconFrontend.Owner source) (failure : ed.Error)
-    (fallback : registration.MldsaSigningRequest → RegistrationNativePlatformExperiment.M n KemSK source m RegistrationSigningShared.SignReply)
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (scalar : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize)
+    (pin : session.ServerAuthenticationPin)
     (before : RegistrationNativePlatformCutJournal.State (RegistrationNativeExperiment.State n KemSK source)) :
     Prod.map id Prod.fst <$>
       (RegistrationNativePlatformBeaconPublication.begin
-        (AdapterPublicBundleNative.outgoing (signing coins setup checks representation created writer index owner) fallback
+        (AdapterPublicBundleNative.outgoing (signing coins setup checks representation created writer index owner)
           (PqxdhRootTableInitialization.rootArray (setup.joint.publicKeys owner.identitySeed).ed25519)
           (sign coins setup checks representation created writer index owner failure))
         (fun view => RegistrationNativePlatformCutErasure.liftWorld (RegistrationNativeBundleInterpretation.encoder coins setup checks representation created writer view))
-        control inputs scalar pin mldsa).run before =
+        control inputs scalar pin).run before =
       (RegistrationNativePlatformFrontend.interpret
         (RegistrationNativePlatformExperiment.bundleHandler coins setup checks representation created source writer)
         (RegistrationNativePlatformBeaconPublication.begin
           (fun query => RegistrationNativePlatformGenericBundle.liftLegacy RegistrationNativePlatformGenericBundle.trustedLift
             (RegistrationNativeBeaconFrontend.outgoing setup source index owner query))
-          (RegistrationNativePlatformGenericBundle.encoder E) control inputs scalar pin mldsa)).run before.1 := by
+          (RegistrationNativePlatformGenericBundle.encoder E) control inputs scalar pin)).run before.1 := by
   rw [AdapterPublicBundleNative.publication, RegistrationNativeBundleInterpretation.publication]
   have callbacks :
       (RegistrationNativePlatformCutWorld.beaconOutgoing
@@ -116,7 +115,13 @@ theorem publication (index : Nat) (owner : RegistrationNativeBeaconFrontend.Owne
       RegistrationNativeBundleInterpretation.outgoing coins setup checks representation created writer index owner := by
     funext query
     cases query with
-    | inl query => rfl
+    | inl query =>
+      cases query with
+      | hash request => rfl
+      | sign _ _ _ =>
+        simp only [RegistrationNativePlatformCutWorld.beaconOutgoing, RegistrationNativeBundleInterpretation.outgoing,
+          RegistrationNativeBeaconFrontend.outgoing, RegistrationNativePlatformGenericBundle.liftLegacy_pure,
+          RegistrationNativePlatformFrontend.pure_interpret]
     | inr request => exact ed_method (n := n) coins setup checks representation created writer index owner failure request
   rw [callbacks]
 

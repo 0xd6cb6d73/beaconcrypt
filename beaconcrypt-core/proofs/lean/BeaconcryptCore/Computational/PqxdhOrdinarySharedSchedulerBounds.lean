@@ -8,6 +8,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhOrdinarySharedSchedulerBounds
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhOrdinarySharedScheduler PqxdhPhase2SourceAux PqxdhEd25519EufCma PqxdhJointIdentity
 open PqxdhPhase1AcceptanceOracle PqxdhKemIndCca PqxdhJointKdfGame PqxdhPrivateKemSource
 open PqxdhInitializerSecrecy CtxRomAuth AdaptiveCtxSharedHash
@@ -64,14 +65,14 @@ theorem finish_bills (query : (PqxdhPhase2LiveFinish.FinishSpec B).Domain)
     (state : Local M P I D K A S B count) (qLocal : Nat)
     (localBound : ∀ query state, PqxdhOrdinaryNativeCache.sourceSafe query →
       ((PqxdhOrdinaryNativeCache.cacheFree attachedVerify primitives count source localImpl baseImpl kem secret query).run state).IsTotalQueryBound qLocal) :
-    ((finish attachedVerify primitives count source decode localImpl baseImpl kem secret query).run state).IsQueryBoundP (HashClass true) 69 ∧
-      ((finish attachedVerify primitives count source decode localImpl baseImpl kem secret query).run state).IsQueryBoundP (HashClass false) (69 * qLocal) := by
+    ((finish (completedBinding := completedBinding) attachedVerify primitives count source decode localImpl baseImpl kem secret query).run state).IsQueryBoundP (HashClass true) 69 ∧
+      ((finish (completedBinding := completedBinding) attachedVerify primitives count source decode localImpl baseImpl kem secret query).run state).IsQueryBoundP (HashClass false) (69 * qLocal) := by
   cases query with
   | finish index raw =>
     simp only [PqxdhOrdinarySharedScheduler.finish, StateT.run_mk, bind_pure_comp, isQueryBoundP_map_iff]
     exact PqxdhOrdinaryNativeSharedRom.program_bills attachedVerify primitives count source localImpl baseImpl kem secret
-      (PqxdhBeaconPhase2Publication.nativeOwner decode raw (state.roles.1.2 index)) state.auxiliary 69 qLocal
-      (PqxdhBeaconPhase2Bounds.native_owner_bound decode raw _) localBound
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw (state.roles.1.2 index)) state.auxiliary 69 qLocal
+      (PqxdhBeaconPhase2Bounds.native_owner_bound (completedBinding := completedBinding) decode raw _) localBound
 
 variable (qSelector qLocal : Nat)
     (selectorBound : ∀ query state,
@@ -83,22 +84,22 @@ include selectorBound localBound in
 /-- A conservative complete scheduler-step bill counts each source attempt and charges every local primitive computation's actual random calls. -/
 theorem step_bills (query : (PqxdhPhase2SourceScheduler.Spec baseSpec S B).Domain)
     (state : Local M P I D K A S B count) :
-    ((compiler attachedVerify primitives count source writer sender route decode localImpl baseImpl kem secret query).run state).IsQueryBoundP (HashClass true) 69 ∧
-      ((compiler attachedVerify primitives count source writer sender route decode localImpl baseImpl kem secret query).run state).IsQueryBoundP (HashClass false) (1 + qSelector + 69 * qLocal) := by
+    ((compiler (completedBinding := completedBinding) attachedVerify primitives count source writer sender route decode localImpl baseImpl kem secret query).run state).IsQueryBoundP (HashClass true) 69 ∧
+      ((compiler (completedBinding := completedBinding) attachedVerify primitives count source writer sender route decode localImpl baseImpl kem secret query).run state).IsQueryBoundP (HashClass false) (1 + qSelector + 69 * qLocal) := by
   rcases query with ((query | query) | query)
   · have bills := record_bills count source writer sender route decode query state
     exact ⟨bills.1.mono (by omega), bills.2.mono (by omega)⟩
   · have bills := selector_bills attachedVerify primitives count baseImpl kem secret query state qSelector (selectorBound query state.auxiliary.2)
     exact ⟨bills.1.mono (by omega), bills.2.mono (by omega)⟩
-  · have bills := finish_bills attachedVerify primitives count source decode localImpl baseImpl kem secret query state qLocal localBound
+  · have bills := finish_bills (completedBinding := completedBinding) attachedVerify primitives count source decode localImpl baseImpl kem secret query state qLocal localBound
     exact ⟨bills.1, bills.2.mono (by omega)⟩
 
 include selectorBound localBound in
 /-- The original adaptive client bounds the full ordinary prefix, including all rejected requests and local callback work. -/
 theorem program_bills (client : OracleComp (PqxdhPhase2SourceScheduler.Spec baseSpec S B) Result)
     (state : Local M P I D K A S B count) (qCalls : Nat) (bounded : client.IsTotalQueryBound qCalls) :
-    ((simulateQ (compiler attachedVerify primitives count source writer sender route decode localImpl baseImpl kem secret) client).run state).IsQueryBoundP (HashClass true) (69 * qCalls) ∧
-      ((simulateQ (compiler attachedVerify primitives count source writer sender route decode localImpl baseImpl kem secret) client).run state).IsQueryBoundP (HashClass false) (qCalls * (1 + qSelector + 69 * qLocal)) := by
+    ((simulateQ (compiler (completedBinding := completedBinding) attachedVerify primitives count source writer sender route decode localImpl baseImpl kem secret) client).run state).IsQueryBoundP (HashClass true) (69 * qCalls) ∧
+      ((simulateQ (compiler (completedBinding := completedBinding) attachedVerify primitives count source writer sender route decode localImpl baseImpl kem secret) client).run state).IsQueryBoundP (HashClass false) (qCalls * (1 + qSelector + 69 * qLocal)) := by
   induction client using OracleComp.inductionOn generalizing qCalls state with
   | pure value => simp
   | query_bind query next ih =>
@@ -107,7 +108,7 @@ theorem program_bills (client : OracleComp (PqxdhPhase2SourceScheduler.Spec base
     | succ qCalls =>
       rw [isTotalQueryBound_query_bind_iff] at bounded
       simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind]
-      have first := step_bills attachedVerify primitives count source writer sender route decode localImpl baseImpl kem secret
+      have first := step_bills (completedBinding := completedBinding) attachedVerify primitives count source writer sender route decode localImpl baseImpl kem secret
         qSelector qLocal selectorBound localBound query state
       have rest := fun result : (PqxdhPhase2SourceScheduler.Spec baseSpec S B).Range query × Local M P I D K A S B count =>
         ih result.1 result.2 qCalls (by simpa using bounded.2 result.1)

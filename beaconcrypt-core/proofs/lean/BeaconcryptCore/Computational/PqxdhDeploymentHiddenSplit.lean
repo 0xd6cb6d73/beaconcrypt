@@ -19,6 +19,7 @@ open RustM beaconcrypt_core ratchet ratchet.refined ratchet.concrete PqxdhRefine
 set_option autoImplicit false
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentHiddenSplit
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhServerAuthSendFactor (Kernel Factor resolve)
 open RawCtxSelectedChain (Slot)
 open PqxdhSecretInputKdf PqxdhJointKdfGame PqxdhFullSecretInputKdf
@@ -145,8 +146,8 @@ def withKernel (kernel : ConcreteRatchetKernel) (staged : PqxdhBeaconPhase2Publi
 /-- The sequence-one gate and the authentication after the opening do not read the kernel; the kernel is only staged. -/
 theorem afterOpening_kernel (candidate : pqxdh.BeaconRegistrationCandidate) (kernel other : ConcreteRatchetKernel)
     (reply : core.option.Option RawCtxWholeOwner.Decrypted) :
-    PqxdhBeaconPhase2Publication.afterOpening candidate kernel reply =
-      Option.map (withKernel kernel) (PqxdhBeaconPhase2Publication.afterOpening candidate other reply) := by
+    PqxdhBeaconPhase2Publication.afterOpening candidate associatedData kernel reply =
+      Option.map (withKernel kernel) (PqxdhBeaconPhase2Publication.afterOpening candidate associatedData other reply) := by
   unfold PqxdhBeaconPhase2Publication.afterOpening
   cases reply with
   | none => rfl
@@ -197,34 +198,34 @@ theorem body_split (prim : QueryImpl RawCtxWholeOwner.PrimitiveSpec m)
         dsimp only
         by_cases valid : RawCtxReceive.ValidFrame
             (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate).server_binding.identity_key_id
-            (absBytes (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate).associated_data) frame
+            (absBytes prepared.binding.associated_data) frame
         · simp only [valid, ite_true, PqxdhServerAuthBeaconFactor.primCalls,
             RawCtxChainOwner.publish, sequence, bind_pure_comp, PqxdhDeploymentHiddenLayout.factor_join]
           simp only [Functor.map_map]
           have kernel := PqxdhDeploymentHiddenKernels.resolve_after_receive prim source seed.2
             (RawCtxKdfRequestTable.assemble (material.1, seed.1, material.2))
-            ⟨raw, frame, absBytes (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate).associated_data⟩
+            ⟨raw, frame, absBytes prepared.binding.associated_data⟩
             (PqxdhRecordLiftWorld.kernel .beacon seed)
             (fun kernel reply => PqxdhBeaconPhase2Publication.afterOpening
-              (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate) kernel reply)
+              (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate) prepared.binding.associated_data kernel reply)
             (beaconKernel_seed material.1 material.2 seed) (fun _ _ => rfl)
           rw [kernel]
           have restaged : (fun result : Kernel × core.option.Option RawCtxWholeOwner.Decrypted =>
               Option.map (withKernel (PqxdhRecordLiftWorld.kernel .beacon seed))
-                (PqxdhBeaconPhase2Publication.afterOpening (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate)
+                (PqxdhBeaconPhase2Publication.afterOpening (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate) prepared.binding.associated_data
                   (resolve result.1) result.2)) =
               (fun result => PqxdhBeaconPhase2Publication.afterOpening
-                (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate)
+                (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate) prepared.binding.associated_data
                 (PqxdhRecordLiftWorld.kernel .beacon seed) result.2) :=
-            funext fun result => (afterOpening_kernel _ _ _ result.2).symm
+            funext fun result => (afterOpening_kernel (associatedData := prepared.binding.associated_data) _ _ _ result.2).symm
           rw [restaged]
           have replied := reply_unused prim source seed.2 seed'.2
             (RawCtxKdfRequestTable.assemble (material.1, seed.1, material.2))
             (RawCtxKdfRequestTable.assemble (material.1, seed'.1, material.2))
             (by rw [material_assemble, material_assemble])
-            ⟨raw, frame, absBytes (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate).associated_data⟩
+            ⟨raw, frame, absBytes prepared.binding.associated_data⟩
           have composed := congrArg (fun program => (fun reply => PqxdhBeaconPhase2Publication.afterOpening
-            (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate)
+            (PqxdhBeaconPhase2Publication.clearedCandidate prepared.candidate) prepared.binding.associated_data
             (PqxdhRecordLiftWorld.kernel .beacon seed) reply) <$> program) replied
           simpa only [Functor.map_map, Function.comp_def] using composed
         · simp only [valid, ite_false, pure_bind, map_pure, RawCtxChainOwner.publish,
@@ -387,9 +388,9 @@ theorem afterInitialization_kernel (interpret : K → ConcreteRatchetKernel) (ca
     (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Pqxdh.Bytes) (metadata : PeerMetadata)
     (state : PqxdhInitialGenericPublication.State K Metadata PeerMetadata Consumed) :
     Prod.map id (PqxdhInitialGenericPublication.native interpret) <$>
-        PqxdhInitialGenericPublication.afterInitialization calls₁ aux candidate authenticated k₁ metadata state =
+        PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) calls₁ aux candidate authenticated k₁ metadata state =
       replaceRaw kernel₁ <$> (Prod.map id (PqxdhInitialGenericPublication.native interpret) <$>
-        PqxdhInitialGenericPublication.afterInitialization calls₂ aux candidate authenticated k₂ metadata state) := by
+        PqxdhInitialGenericPublication.afterInitialization (associatedData := associatedData) calls₂ aux candidate authenticated k₂ metadata state) := by
   unfold PqxdhInitialGenericPublication.afterInitialization
   rw [send₁, send₂, bind_map_left, bind_map_left, map_bind, map_bind, map_bind]
   refine bind_congr fun sealed => ?_
@@ -418,9 +419,9 @@ theorem candidate_kernel (interpret : K → ConcreteRatchetKernel) (calls₁ cal
     (candidate : pqxdh.ServerRegistrationCandidate) (data : Option Pqxdh.Bytes) (metadata : PeerMetadata)
     (state : PqxdhInitialGenericPublication.State K Metadata PeerMetadata Consumed) :
     Functor.map (Prod.map id (PqxdhInitialGenericPublication.native interpret)) <$>
-        PqxdhInitialGenericBuilder.candidate calls₁ aux (ok k₁) candidate data metadata state =
+        PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) calls₁ aux (ok k₁) candidate data metadata state =
       Functor.map (replaceRaw kernel₁) <$> (Functor.map (Prod.map id (PqxdhInitialGenericPublication.native interpret)) <$>
-        PqxdhInitialGenericBuilder.candidate calls₂ aux (ok k₂) candidate data metadata state) := by
+        PqxdhInitialGenericBuilder.candidate (associatedData := associatedData) calls₂ aux (ok k₂) candidate data metadata state) := by
   unfold PqxdhInitialGenericBuilder.candidate PqxdhInitialGenericBuilder.continueRust
   simp only [map_bind]
   refine bind_congr fun valid => ?_
@@ -444,7 +445,7 @@ theorem candidate_kernel (interpret : K → ConcreteRatchetKernel) (calls₁ cal
           · simp only [hallocated, Bool.false_eq_true, ite_false]
             split
             next _ binding _ =>
-              have key := afterInitialization_kernel interpret calls₁ calls₂ aux k₁ k₂ a₁ a₂ kernel₁ kernel₂ sealing
+              have key := afterInitialization_kernel (associatedData := associatedData) interpret calls₁ calls₂ aux k₁ k₂ a₁ a₂ kernel₁ kernel₂ sealing
                 send₁ send₂ resolved₁ resolved₂ candidate
                 (absBytes binding.bytes ++ data.getD PqxdhServerRegistrationPublication.registrationWitness) metadata state
               have lifted := congrArg (fun program => (ok <$> program : m (RustM _))) key
@@ -466,9 +467,9 @@ theorem genericBuild_kernel (interpret : K → ConcreteRatchetKernel) (calls₁ 
     (pending : pqxdh.PendingServerRegistration) (data : Option Pqxdh.Bytes) (metadata : PeerMetadata)
     (state : PqxdhInitialGenericPublication.State K Metadata PeerMetadata Consumed) :
     Functor.map (Prod.map id (PqxdhInitialGenericPublication.native interpret)) <$>
-        PqxdhServerAuthSendFactor.genericBuild calls₁ aux (ok k₁) pending data metadata state =
+        PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData) calls₁ aux (ok k₁) pending data metadata state =
       Functor.map (replaceRaw kernel₁) <$> (Functor.map (Prod.map id (PqxdhInitialGenericPublication.native interpret)) <$>
-        PqxdhServerAuthSendFactor.genericBuild calls₂ aux (ok k₂) pending data metadata state) := by
+        PqxdhServerAuthSendFactor.genericBuild (associatedData := associatedData) calls₂ aux (ok k₂) pending data metadata state) := by
   unfold PqxdhServerAuthSendFactor.genericBuild PqxdhInitialGenericBuilder.continueRust
   rcases pqxdh.server_next_key_id state.control with (next | error) | error | _
   · dsimp only
@@ -477,7 +478,7 @@ theorem genericBuild_kernel (interpret : K → ConcreteRatchetKernel) (calls₁ 
       cases prepared with
       | Err error => simp only [map_pure]; rfl
       | Ok candidate =>
-          exact candidate_kernel interpret calls₁ calls₂ aux k₁ k₂ a₁ a₂ kernel₁ kernel₂ sealing send₁ send₂
+          exact candidate_kernel (associatedData := associatedData) interpret calls₁ calls₂ aux k₁ k₂ a₁ a₂ kernel₁ kernel₂ sealing send₁ send₂
             resolved₁ resolved₂ _ data metadata state
     next => simp only [map_pure]; rfl
     next => simp only [map_pure]; rfl
@@ -503,10 +504,10 @@ theorem build_split_raw {m : Type → Type} [Monad m] [LawfulMonad m] {Metadata 
     (aux : QueryImpl PqxdhServerRegistrationPublication.AuxSpec m) (material : Material)
     (seed seed' : PqxdhRecordLiftSeed.Seed) (pending : pqxdh.PendingServerRegistration) (data : Option Pqxdh.Bytes)
     (metadata : PeerMetadata) (state : PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed) :
-    PqxdhServerAuthLoggedSendFactor.factored receiveCall prim source aux
+    PqxdhServerAuthLoggedSendFactor.factored (associatedData := associatedData) receiveCall prim source aux
         (PqxdhServerAuthCtxMaterial.factor (joinOutput material seed)) pending data metadata state =
       Functor.map (replaceRaw (PqxdhRecordLiftWorld.kernel .server seed)) <$>
-        PqxdhServerAuthLoggedSendFactor.factored receiveCall prim source aux
+        PqxdhServerAuthLoggedSendFactor.factored (associatedData := associatedData) receiveCall prim source aux
           (PqxdhServerAuthCtxMaterial.factor (joinOutput material seed')) pending data metadata state := by
   let output := RawCtxKdfRequestTable.assemble (material.1, seed.1, material.2)
   let output' := RawCtxKdfRequestTable.assemble (material.1, seed'.1, material.2)
@@ -527,7 +528,7 @@ theorem build_split_raw {m : Type → Type} [Monad m] [LawfulMonad m] {Metadata 
   rw [show RawCtxSelectedInitialConstructor.initial false seed.2 = ok (PqxdhDeploymentHiddenKernels.serverInitial seed.2)
       from rfl, show RawCtxSelectedInitialConstructor.initial false seed'.2 =
         ok (PqxdhDeploymentHiddenKernels.serverInitial seed'.2) from rfl]
-  refine genericBuild_kernel resolve _ _ aux _ _
+  refine genericBuild_kernel (associatedData := associatedData) resolve _ _ aux _ _
     (fun context => (RawCtxChainSend.ready (first context) (RawCtxSelectedChain.step source
       (RawCtxKdfRequestTable.fullResponse output) (first context).request)).advanced)
     (fun context => (RawCtxChainSend.ready (second context) (RawCtxSelectedChain.step source
@@ -564,17 +565,17 @@ variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response : Type}
   (checks : PqxdhServerAuthExperiment.Checks)
 
 /-- The split hidden build with the service type: the factored build on the material alone, publishing the placeholder kernel. -/
-noncomputable def buildSplit (material : Material) : PqxdhDeploymentHiddenEntry.HiddenBuild := fun token payload server =>
+noncomputable def buildSplit (material : Material) : PqxdhDeploymentHiddenEntry.HiddenBuild := fun token payload ad server =>
   Functor.map (replaceRaw placeholderKernel) <$>
-    PqxdhDeploymentHiddenEntry.buildFactor setup codec checks material dummySeed token payload server
+    PqxdhDeploymentHiddenEntry.buildFactor setup codec checks material dummySeed token payload ad server
 
 /-- Kernel identity of the Server (m4): the factor-form hidden build at material and seed is the split build with the World's Server kernel of the seed published in place of the placeholder. -/
 theorem build_factor_split (material : Material) (seed : PqxdhRecordLiftSeed.Seed)
     (token : PqxdhServerRelatedRootConsumer.Returned) (payload : Option Pqxdh.Bytes)
-    (server : PqxdhServerAuthEntryFactor.ServerState) :
-    PqxdhDeploymentHiddenEntry.buildFactor setup codec checks material seed token payload server =
+    (ad : PqxdhTranscriptAd.AssociatedData) (server : PqxdhServerAuthEntryFactor.ServerState) :
+    PqxdhDeploymentHiddenEntry.buildFactor setup codec checks material seed token payload ad server =
       Functor.map (replaceRaw (PqxdhRecordLiftWorld.kernel .server seed)) <$>
-        buildSplit setup codec checks material token payload server := by
+        buildSplit setup codec checks material token payload ad server := by
   simp only [buildSplit]
   rw [Functor.map_map]
   have fold : (fun result : RustM (Option PqxdhServerRegistrationPublication.Response ×
@@ -587,15 +588,15 @@ theorem build_factor_split (material : Material) (seed : PqxdhRecordLiftSeed.See
     | fail error => rfl
     | div => rfl
   rw [fold]
-  exact build_split_raw _ _ setup.source _ material seed dummySeed _ _ () server
+  exact build_split_raw (associatedData := ad) _ _ setup.source _ material seed dummySeed _ _ ad server
 
 /-- The split hidden build commutes with completions of the CTX cache of its seal state. -/
 theorem buildSplit_commutes_ctx (material : Material) (token : PqxdhServerRelatedRootConsumer.Returned)
-    (payload : Option Pqxdh.Bytes) (server : PqxdhServerAuthEntryFactor.ServerState) :
+    (payload : Option Pqxdh.Bytes) (ad : PqxdhTranscriptAd.AssociatedData) (server : PqxdhServerAuthEntryFactor.ServerState) :
     LazyOracleDiscard.Commutes (PqxdhDeploymentHiddenEntry.sharedLens (List RawCtxSourceSend.SealContext))
-      (buildSplit setup codec checks material token payload server) :=
+      (buildSplit setup codec checks material token payload ad server) :=
   LazyOracleDiscard.commutes_map _ _
-    (PqxdhDeploymentHiddenEntry.buildFactor_commutes_ctx setup codec checks material dummySeed token payload server)
+    (PqxdhDeploymentHiddenEntry.buildFactor_commutes_ctx setup codec checks material dummySeed token payload ad server)
 
 end BuildService
 

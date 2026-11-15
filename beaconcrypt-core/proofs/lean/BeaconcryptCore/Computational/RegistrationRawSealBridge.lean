@@ -293,6 +293,8 @@ theorem query_projection {Auxiliary : Type}
       (RegistrationRecordPrimitives.implementation source writer request).run state := by
   cases request with
   | rootKdf request => rfl
+  | adHash request =>
+      simp only [nativeAdapter, simulateQ_spec_query, implementation]
   | initialKdf request => rfl
   | ratchetKdf request => rfl
   | openAead request => rfl

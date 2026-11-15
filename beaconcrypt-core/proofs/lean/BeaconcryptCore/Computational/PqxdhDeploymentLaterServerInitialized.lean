@@ -1,10 +1,11 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhDeploymentLaterServerReserve
 
-/-! LQ-F: the logged command compiler under the actual encapsulator and the actual private pools is the logged annotated source, and the logged initialized source has the distribution of the selected-first game of the logged source. `openPrepare` and `openAccept` are the exposed logged preparation and accept with the encapsulation interpreted by the actual encapsulator (`prepare_actual`, `accept_actual`); under the actual pools, at the Server's seed slot, they are the annotated logged preparation and accept of the source (`prepare_pool`, `accept_pool`), by the existing generic program lemmas `KemEncapsulation.prefix_program`, `OpenBackend.prefix_program` and `ServerPrefix.program_source` applied to the logged collector. `execute` runs a logged program through the logged command compiler, the actual encapsulator and the actual pools from an encoded state and a log. Every request (`generic_step` through the existing per-request `ServerClient.query_source`, `OpenBackend.program_run` and `KemEncapsulation.program_actual`; `accept_step`; `later_step`) and every program (`program_source`, with the Server-slot invariant carried by `LaterServerSource.query_owned`) has the same result, encoded state and log under `execute` as under the logged annotated source. `commands`, `reserved` and `selectedFirst` are `KemInitialization.commands`, `reserved` and `selectedFirst` with the logged commands; `initialized` (with the reservation of `LaterServerReserve.selected_source` and a creation cap derived from the program) and `constructor_order` give `actual_source_first`, the logged counterpart of `KemInitialization.actual_source_first`. No assumption is added. -/
+/-! LQ-F: the logged command compiler under the actual encapsulator and the actual private pools is the logged annotated source, and the logged initialized source has the distribution of the selected-first game of the logged source. `openPrepare` and `openAccept` are the exposed logged preparation and accept with the encapsulation interpreted by the actual encapsulator (`prepare_actual`, `accept_actual`); under the actual pools, at the Server's seed slot, they are the annotated logged preparation and accept of the source (`prepare_pool`, `accept_pool`), by the existing generic program lemmas `KemEncapsulation.prefix_program`, `OpenBackend.prefix_program` and `ServerPrefix.program_source` applied to the logged collector. `execute` runs a logged program through the logged command compiler, the actual encapsulator and the actual pools from an encoded state (owners and retained Init registry included) and a log. Every request (`generic_step` through the existing per-request `ServerClient.query_source`, `OpenBackend.program_run` and `KemEncapsulation.program_actual`; `accept_step`; `later_step`) and every program (`program_source`, with the Server-slot invariant carried by `LaterServerSource.query_owned`) has the same result, encoded state and log under `execute` as under the logged annotated source. `commands`, `reserved` and `selectedFirst` are `KemInitialization.commands`, `reserved` and `selectedFirst` with the logged commands; `initialized` (with the reservation of `LaterServerReserve.selected_source` and a creation cap derived from the program) and `constructor_order` give `actual_source_first`, the logged counterpart of `KemInitialization.actual_source_first`. No assumption is added. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhDeploymentLaterServerInitialized
 open PqxdhJointIdentity PqxdhJointGapDh PqxdhServerAuthExperiment PqxdhServerAuthNative
 open PqxdhServerRootPreparation (Inputs Verified Ephemeral)
@@ -106,10 +107,10 @@ theorem accept_pool (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
 noncomputable def execute (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (work : OracleComp (Spec KemSK) Result)
     (state : EncodedState KemSK) (log : Log) : ProbComp (Result × (EncodedState KemSK × Log)) :=
-  (fun result => (result.1.1.1, (⟨result.2, result.1.2, result.1.1.2.1⟩, result.1.1.2.2))) <$>
+  (fun result => (result.1.1.1, (⟨result.2, result.1.2, result.1.1.2.1.1, result.1.1.2.1.2⟩, result.1.1.2.2))) <$>
     (simulateQ (PqxdhLiveKemBirth.impl setup.baseImpl setup.joint setup.kem)
       (simulateQ (PqxdhRegistrationJointKemEncapsulation.actual setup)
-        (PqxdhDeploymentLaterServerCommands.run setup codec checks identityIndex publicIdentity work state.owners log
+        (PqxdhDeploymentLaterServerCommands.run setup codec checks identityIndex publicIdentity work (state.owners, state.inits) log
           state.shared))).run state.pool
 
 /-- The interpreted logged run of a sequential program is the run of its first part followed by the run of the rest from the reached encoded state and log. -/
@@ -127,7 +128,7 @@ theorem generic_core (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
     (seed : IdentitySeed) (identityIndex : Nat) (query : (PqxdhRegistrationJointRevealSchedule.Spec KemSK).Domain)
     (state : PqxdhRegistrationJointSchedule.State KemSK) (log : Log)
     (owned : PqxdhRegistrationJointServerSchedule.Owned seed identityIndex state) :
-    (fun result => (result.1.1.1, ((⟨result.2, result.1.2, result.1.1.2.1⟩ : EncodedState KemSK), result.1.1.2.2))) <$>
+    (fun result => (result.1.1.1, ((⟨result.2, result.1.2, result.1.1.2.1.1, result.1.1.2.1.2⟩ : EncodedState KemSK), result.1.1.2.2))) <$>
       (simulateQ (PqxdhLiveKemBirth.impl setup.baseImpl setup.joint setup.kem)
         (simulateQ (PqxdhRegistrationJointKemEncapsulation.actual setup)
           (((fun held : PqxdhDeploymentLaterServerCommands.Local =>
@@ -135,14 +136,14 @@ theorem generic_core (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
               simulateQ (PqxdhRegistrationJointKemEncapsulation.impl setup codec checks identityIndex
                 (setup.joint.publicKeys seed))
                 ((PqxdhRegistrationJointRevealSchedule.client setup codec query).run held.1))
-            ((encodeState setup state).owners, log)).run state.shared))).run state.pool =
+            (((encodeState setup state).owners, (encodeState setup state).inits), log)).run state.shared))).run state.pool =
       (fun result => (result.1, (encodeState setup result.2.1, result.2.2))) <$>
         ((fun result => (result.1, (result.2, log))) <$>
           (PqxdhRegistrationJointServerSchedule.source setup codec checks seed identityIndex query).run state) := by
   have client := PqxdhRegistrationJointServerClient.query_source setup codec checks seed identityIndex query state owned
   have opened := PqxdhRegistrationJointOpenBackend.program_run setup codec checks identityIndex
     (setup.joint.publicKeys seed)
-    ((PqxdhRegistrationJointRevealSchedule.client setup codec query).run (encodeState setup state).owners)
+    ((PqxdhRegistrationJointRevealSchedule.client setup codec query).run ((encodeState setup state).owners, (encodeState setup state).inits))
     ((encodeState setup state).pool, (encodeState setup state).shared)
   simp only [PqxdhRegistrationJointServerClient.execute] at client
   rw [← opened] at client
@@ -213,10 +214,10 @@ theorem later_step (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
       (fun result => (result.1, (encodeState setup result.2.1, result.2.2))) <$>
         (PqxdhDeploymentLaterServerSource.source setup codec checks seed identityIndex (.inr read)).run (state, log) := by
   simp only [execute, PqxdhDeploymentLaterServerCommands.run, simulateQ_spec_query]
-  change (fun result => (result.1.1.1, ((⟨result.2, result.1.2, result.1.1.2.1⟩ : EncodedState KemSK), result.1.1.2.2))) <$>
+  change (fun result => (result.1.1.1, ((⟨result.2, result.1.2, result.1.1.2.1.1, result.1.1.2.1.2⟩ : EncodedState KemSK), result.1.1.2.2))) <$>
       (simulateQ (PqxdhLiveKemBirth.impl setup.baseImpl setup.joint setup.kem)
         (simulateQ (PqxdhRegistrationJointKemEncapsulation.actual setup)
-          ((fun seed => (((seed, log), ((encodeState setup state).owners, log)), state.shared)) <$>
+          ((fun seed => (((seed, log), (((encodeState setup state).owners, (encodeState setup state).inits), log)), state.shared)) <$>
             ((PqxdhRegistrationJointKemEncapsulation.Spec KemSK).query (.inl (.inl (.inr (.reveal identityIndex)))) :
               OracleComp (PqxdhRegistrationJointKemEncapsulation.Spec KemSK) (Option IdentitySeed))))).run
         state.pool =
@@ -280,7 +281,7 @@ noncomputable def commands (setup : Setup baseSpec KemSK) (codec : Codec Reader 
       (((simulateQ (PqxdhDynamicKemJointSource.normal setup.baseImpl setup.joint setup.kem selected pairs)
         (simulateQ (PqxdhRegistrationJointKemEncapsulation.actual setup)
           (PqxdhDeploymentLaterServerCommands.commands setup codec checks created.server.server.metadata.identityIndex
-            created.publicIdentity client [] [] (PqxdhRegistrationJointInitializedAccept.initial created)))).run).run
+            created.publicIdentity client ([], fun _ => none) [] (PqxdhRegistrationJointInitializedAccept.initial created)))).run).run
               (joint, PqxdhDynamicKemRouter.empty)))
 
 /-- The bounded reservation after the actual initializer, with the logged commands. -/
@@ -344,7 +345,7 @@ theorem execute_commands (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
         (simulateQ (PqxdhLiveKemBirth.impl setup.baseImpl setup.joint setup.kem)
           (simulateQ (PqxdhRegistrationJointKemEncapsulation.actual setup)
             (PqxdhDeploymentLaterServerCommands.commands setup codec checks identityIndex
-              publicIdentity client [] [] (PqxdhRegistrationJointInitializedAccept.initial created)))).run
+              publicIdentity client ([], fun _ => none) [] (PqxdhRegistrationJointInitializedAccept.initial created)))).run
           (pool.1, PqxdhLiveKemBirth.empty) := by
   rw [← empty]
   simp only [execute, PqxdhDeploymentLaterServerCommands.commands, simulateQ_map, StateT.run_map, Functor.map_map]
@@ -384,7 +385,7 @@ theorem initialized (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
       (PqxdhRegistrationJointSchedule.initial after.1 (PqxdhRegistrationSchedule.initial created).shared) [] owned
     simp only [StateT.run] at same
     have source := PqxdhDeploymentLaterServerReserve.selected_source setup codec checks
-      created.server.server.metadata.identityIndex (setup.joint.publicKeys created.seed) client count bounded [] []
+      created.server.server.metadata.identityIndex (setup.joint.publicKeys created.seed) client count bounded ([], fun _ => none) []
       (PqxdhRegistrationJointInitializedAccept.initial (PqxdhRegistrationJointServerBirth.encode created)) after.1.1
       selected
     have mapped := source.map

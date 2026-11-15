@@ -17,6 +17,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 
 set_option autoImplicit false
+set_option warningAsError true
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentHeadlineDctInvariant
 open PqxdhServerAuthExperiment (Setup Codec Checks)
@@ -359,7 +360,7 @@ theorem world_dctInv {A X : Type} (phase2 : PqxdhServerAuthNegativeControl.Phase
     (frameBack : PqxdhServerAuthNegativeControl.FrameReadBack codec) (ensureInit : StateT A ProbComp Bool)
     (identityIndex : ℕ) (runtime : A) (bounds : PqxdhDeploymentInterface.FreshBounds)
     (mode : PqxdhDeploymentInterface.Mode) (adversary : OracleComp (PqxdhDeploymentInterface.ModeSpec mode) X)
-    (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × (X × PqxdhDeploymentSecrecy.Ledger) ×
+    (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated PqxdhTranscriptAd.AssociatedData × (X × PqxdhDeploymentSecrecy.Ledger) ×
       PqxdhDeploymentEnvironment.EnvState KemSK (Params KemSK count × SplitBk)) × PqxdhRecordLiftWorld.State 2)
     (member : result ∈ support (PqxdhRecordLiftWorld.run setup codec route
       (PqxdhDeploymentIdealEnv.envGD setup codec checks t ensureInit identityIndex runtime) setup.serverKeyId bounds mode

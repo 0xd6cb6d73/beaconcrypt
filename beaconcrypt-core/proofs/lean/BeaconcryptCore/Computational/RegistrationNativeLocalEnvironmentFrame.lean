@@ -40,7 +40,7 @@ private theorem source_aux (baseImpl : QueryImpl base ProbComp)
       rfl
 
 theorem trusted (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (Trusted n KemSK).Domain) (allowed : Allowed query) (before : Native)
     (result : (Trusted n KemSK).Range query × Native)
     (supported : result ∈ support ((RegistrationNativeExperiment.trusted setup checks representation created source query).run before)) :
@@ -72,7 +72,7 @@ theorem trusted (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : P
         rw [same]
 
 theorem program (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp (Trusted n KemSK) A) (allowed : work.AllQueriesSatisfy (Allowed (n := n) (KemSK := KemSK)))
     (before : Native) (result : A × Native)
     (supported : result ∈ support ((simulateQ (RegistrationNativeExperiment.trusted setup checks representation created source) work).run before)) :
@@ -103,7 +103,7 @@ theorem restore_eq (before after : Native) (owners : after.beacons = before.beac
   rw [← owners, ← env, RegistrationWorldAgreementCompiler.join_erase]
 
 theorem beacon_lift (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp (Trusted n KemSK) A) (allowed : work.AllQueriesSatisfy (Allowed (n := n) (KemSK := KemSK))) :
     RegistrationNativeExperiment.beacon setup checks representation created
       (RegistrationNativeAgreementJournal.lift work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State A) =

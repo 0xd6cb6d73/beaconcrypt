@@ -24,7 +24,7 @@ private theorem coin_bound {Value : Type} (work : ProbComp Value) :
 
 /-- Each literal Env operation forwards exactly its syntactic hash charge through the physical Context lens. -/
 theorem effect_bound (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (PqxdhRecordLiftInterface.EnvEffects n).Domain) (before : Context n KemSK) :
     ((RegistrationNativePlatformIdentityCtxAmbient.program (source := source) setup checks representation created (.inl query)).run before).IsQueryBoundP
       RegistrationNativePlatformCtxBirthdayBudget.IsHash
@@ -46,7 +46,7 @@ theorem effect_bound (setup : Setup base KemSK) (checks : Checks)
 
 /-- The literal source compiler charges one shared hash only for an Env hash query. -/
 theorem query_bound (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (RegistrationNativePlatformIdentityProgram.Spec n KemSK).Domain) (before : Context n KemSK) :
     ((RegistrationNativePlatformIdentityCtxCompiler.free
       (RegistrationNativePlatformIdentityCtxAmbient.program (source := source) setup checks representation created) query).run before).IsQueryBoundP IsHash
@@ -68,7 +68,7 @@ theorem query_bound (setup : Setup base KemSK) (checks : Checks)
 
 /-- Arbitrary source scripts preserve their exact shared hash caps through actual Context compilation. -/
 theorem program_bound (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp (RegistrationNativePlatformIdentityProgram.Spec n KemSK) A) (cap : Nat)
     (bounded : work.IsQueryBoundP (RegistrationNativePlatformIdentitySourceHashBounds.IsHash (KemSK := KemSK)) cap)
     (before : Context n KemSK) :
@@ -78,7 +78,7 @@ theorem program_bound (setup : Setup base KemSK) (checks : Checks)
 
 /-- Closing all owner/Env/Main/P state keeps the same literal source cap. -/
 theorem beacon_bound (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativePlatformIdentityProgram.M n KemSK RegistrationServerRoleBackend.State Platform source A)
     (cap : Nat) (bounded : RegistrationNativePlatformIdentitySourceHashBounds.Bounded work cap) :
     Bounded (RegistrationNativePlatformIdentityCtxMain.beacon setup checks representation created work) cap := by

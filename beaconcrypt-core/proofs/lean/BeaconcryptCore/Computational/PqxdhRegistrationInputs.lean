@@ -12,6 +12,7 @@ open BeaconcryptCore.Refinement.ServerTransactionRefinement
 open BeaconcryptCore.Computational
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhRegistrationInputs
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhServerRegistrationPublication
 
 /-- Exactly the pending fields read by the source's consuming prepare call. -/
@@ -53,10 +54,6 @@ def prepare
         if b1
         then ok (core.result.Result.Err pqxdh.RegistrationError.KeyIdCollision)
         else
-          let a ←
-            pqxdh.build_associated_data
-              current_server_binding.identity_public_key
-              pending.beacon_identity_public_key
           ok (core.result.Result.Ok
             {
               previous_state := state,
@@ -67,8 +64,7 @@ def prepare
                 current_server_binding.identity_public_key,
               server_identity_key_id := current_server_binding.identity_key_id,
               ephemeral_public_key := pending.ephemeral_public_key,
-              kem_ciphertext := pending.kem_ciphertext,
-              associated_data := a
+              kem_ciphertext := pending.kem_ciphertext
             })
       | core.result.Result.Err err => ok (core.result.Result.Err err)
     else ok (core.result.Result.Err pqxdh.RegistrationError.IdentityMismatch)
@@ -97,7 +93,7 @@ noncomputable def build {Metadata PeerMetadata Consumed : Type}
           ⟨state.server.identity, state.identityKeyId⟩ availability) fun prepared =>
           match prepared with
           | .Err _ => pure (ok (none, state))
-          | .Ok candidate => candidateTail source candidate root data metadata state
+          | .Ok candidate => PqxdhServerRegistrationPublication.candidateTail (associatedData := associatedData) source candidate root data metadata state
 
 /-- The original full pending value remains on the source side of the exact program equality. -/
 theorem build_exact {Metadata PeerMetadata Consumed : Type}
@@ -105,8 +101,8 @@ theorem build_exact {Metadata PeerMetadata Consumed : Type}
     (pending : pqxdh.PendingServerRegistration)
     (root : PqxdhSecretInputKdf.RootOutput) (data : Option Bytes)
     (metadata : PeerMetadata) (state : State Metadata PeerMetadata Consumed) :
-    build source (used pending) root data metadata state =
-      PqxdhServerRegistrationPublication.build source pending root data metadata state := rfl
+    build (associatedData := associatedData) source (used pending) root data metadata state =
+      PqxdhServerRegistrationPublication.build (associatedData := associatedData) source pending root data metadata state := rfl
 
 /-- Same four read fields imply the same complete computation; unused root-input/RID bytes are not equated. -/
 theorem build_used_congr {Metadata PeerMetadata Consumed : Type}
@@ -114,8 +110,8 @@ theorem build_used_congr {Metadata PeerMetadata Consumed : Type}
     (left right : pqxdh.PendingServerRegistration) (fields : used left = used right)
     (root : PqxdhSecretInputKdf.RootOutput) (data : Option Bytes)
     (metadata : PeerMetadata) (state : State Metadata PeerMetadata Consumed) :
-    PqxdhServerRegistrationPublication.build source left root data metadata state =
-      PqxdhServerRegistrationPublication.build source right root data metadata state := by
+    PqxdhServerRegistrationPublication.build (associatedData := associatedData) source left root data metadata state =
+      PqxdhServerRegistrationPublication.build (associatedData := associatedData) source right root data metadata state := by
   rw [← build_exact, ← build_exact, fields]
 
 
@@ -157,8 +153,8 @@ theorem build_complete {Metadata PeerMetadata Consumed PrimitiveState Result ι 
     (primitive : PrimitiveState)
     (next : (RustM (Option Response × State Metadata PeerMetadata Consumed) × PrimitiveState) →
       OracleComp base Result) :
-    ((simulateQ impl (build source (used pending) root data metadata state)).run primitive >>= next) =
-      ((simulateQ impl (PqxdhServerRegistrationPublication.build source pending root data metadata state)).run primitive >>=
+    ((simulateQ impl (build (associatedData := associatedData) source (used pending) root data metadata state)).run primitive >>= next) =
+      ((simulateQ impl (PqxdhServerRegistrationPublication.build (associatedData := associatedData) source pending root data metadata state)).run primitive >>=
         next) := by
   rw [build_exact]
 
@@ -172,9 +168,9 @@ theorem source_build_exact {Metadata PeerMetadata Consumed PrimitiveState : Type
     (root : PqxdhSecretInputKdf.RootOutput) (data : Option Bytes)
     (metadata : PeerMetadata) (state : State Metadata PeerMetadata Consumed)
     (primitive : PrimitiveState) :
-    sourceBuild execute sealReply aux source pending root data metadata state primitive =
+    PqxdhServerRegistrationPublication.sourceBuild (associatedData := associatedData) execute sealReply aux source pending root data metadata state primitive =
       collectState ((simulateQ (functionalImpl execute sealReply aux)
-        (build source (used pending) root data metadata state)).run primitive) := by
+        (build (associatedData := associatedData) source (used pending) root data metadata state)).run primitive) := by
   rw [build_exact, PqxdhServerRegistrationPublication.source_build_exact]
 
 
@@ -182,14 +178,12 @@ theorem source_build_exact {Metadata PeerMetadata Consumed PrimitiveState : Type
 theorem prepare_ok (state : pqxdh.ServerState) (pending : UsedInput)
     (binding : pqxdh.ServerBinding) (availability : pqxdh.KeyIdAvailability) :
     ∃ result, prepare state pending binding availability = ok result :=
-  (BeaconcryptCore.PanicFreedom.server_next_key_id_ok state).elim fun next hnext =>
-  (BeaconcryptCore.PanicFreedom.build_associated_data_ok binding.identity_public_key
-    pending.beacon_identity_public_key).elim fun _ had => by
+  (BeaconcryptCore.PanicFreedom.server_next_key_id_ok state).elim fun next hnext => by
       cases next <;> cases availability <;>
         by_cases hsender : pending.server_binding.identity_key_id = binding.identity_key_id <;>
         by_cases hidentity : absBytes pending.server_binding.identity_public_key =
           absBytes binding.identity_public_key <;>
-        simp [prepare, hsender, array_eq_abs, hidentity, hnext, had]
+        simp [prepare, hsender, array_eq_abs, hidentity, hnext]
 
 
 theorem build_bound {Metadata PeerMetadata Consumed : Type}
@@ -197,7 +191,7 @@ theorem build_bound {Metadata PeerMetadata Consumed : Type}
     (pending : UsedInput)
     (root : PqxdhSecretInputKdf.RootOutput) (data : Option Bytes)
     (metadata : PeerMetadata) (state : State Metadata PeerMetadata Consumed) (kind : CallKind) :
-    (build source pending root data metadata state).IsQueryBoundP
+    (build (associatedData := associatedData) source pending root data metadata state).IsQueryBoundP
       (fun query => callKind query = kind) 1 := by
   obtain ⟨next, hnext⟩ := BeaconcryptCore.PanicFreedom.server_next_key_id_ok state.control
   simp only [build, hnext, continueRust]
@@ -210,7 +204,7 @@ theorem build_bound {Metadata PeerMetadata Consumed : Type}
     simp only [hprepared]
     cases prepared with
     | Err => exact isQueryBoundP_pure _ _ _
-    | Ok candidate => exact candidate_bound source candidate root data metadata state kind
+    | Ok candidate => exact PqxdhServerRegistrationPublication.candidate_bound (associatedData := associatedData) source candidate root data metadata state kind
 
 
 theorem native_build_bounds {Metadata PeerMetadata Consumed : Type}
@@ -218,14 +212,14 @@ theorem native_build_bounds {Metadata PeerMetadata Consumed : Type}
     (pending : UsedInput)
     (root : PqxdhSecretInputKdf.RootOutput) (data : Option Bytes)
     (metadata : PeerMetadata) (state : State Metadata PeerMetadata Consumed) :
-    let work := simulateQ nativeAdapter (build source pending root data metadata state)
+    let work := simulateQ nativeAdapter (build (associatedData := associatedData) source pending root data metadata state)
     work.IsQueryBoundP (fun query => leftPredicate Sum.isLeft query = true) 1 ∧
       (∀ kind, work.IsQueryBoundP
         (fun query => leftPredicate (RawCtxSourceSeal.category kind) query = true) 1) ∧
       (∀ kind, work.IsQueryBoundP (fun query => auxPredicate kind query = true) 1) := by
-  exact ⟨native_kdf_bound _ 1 (build_bound source pending root data metadata state .kdf),
-    fun kind => native_seal_bound _ 1 (build_bound source pending root data metadata state .seal) kind,
-    fun kind => native_aux_bound _ 1 kind (build_bound source pending root data metadata state kind)⟩
+  exact ⟨native_kdf_bound _ 1 (build_bound (associatedData := associatedData) source pending root data metadata state .kdf),
+    fun kind => native_seal_bound _ 1 (build_bound (associatedData := associatedData) source pending root data metadata state .seal) kind,
+    fun kind => native_aux_bound _ 1 kind (build_bound (associatedData := associatedData) source pending root data metadata state kind)⟩
 
 
 theorem build_normal {Metadata PeerMetadata Consumed : Type}
@@ -233,7 +227,7 @@ theorem build_normal {Metadata PeerMetadata Consumed : Type}
     (pending : UsedInput)
     (root : PqxdhSecretInputKdf.RootOutput) (data : Option Bytes)
     (metadata : PeerMetadata) (state : State Metadata PeerMetadata Consumed) :
-    PqxdhServerRegistrationPublication.Normal (build source pending root data metadata state) := by
+    PqxdhServerRegistrationPublication.Normal (build (associatedData := associatedData) source pending root data metadata state) := by
   obtain ⟨next, hnext⟩ := BeaconcryptCore.PanicFreedom.server_next_key_id_ok state.control
   simp only [build, hnext, continueRust]
   cases next with
@@ -245,7 +239,7 @@ theorem build_normal {Metadata PeerMetadata Consumed : Type}
     simp only [hprepared]
     cases prepared with
     | Err => simp [PqxdhServerRegistrationPublication.Normal]
-    | Ok candidate => exact candidate_normal source candidate root data metadata state
+    | Ok candidate => exact PqxdhServerRegistrationPublication.candidate_normal (associatedData := associatedData) source candidate root data metadata state
 
 
 

@@ -15,6 +15,7 @@ The other bills of the CE-12 terms are existing theorems: `PqxdhDeploymentKemTra
 open OracleComp OracleSpec ENNReal
 
 set_option autoImplicit false
+set_option warningAsError true
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentHeadlineBills
 open PqxdhKemIndCca (MlKem768PublicKey MlKem768Ciphertext MlKemSharedSecret MlKemCCAOracleSpec OneKeyAdversary

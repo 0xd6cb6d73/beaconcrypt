@@ -8,6 +8,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
+set_option warningAsError true
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativeHiddenAllocationFrontend
 open PqxdhServerAuthExperiment (Setup Codec)
@@ -78,6 +79,36 @@ theorem quiet (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire)
     cases returned
     exact (localReceipt inner.1 possible).2
 
+private theorem native_completed (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire)
+    (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
+    (seed : PqxdhJointIdentity.IdentitySeed) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (provider : Provider KemSK ProviderState)
+    (service : QueryImpl (PqxdhRecordLiftProtocol.ServiceSpec n) (StateT Secret ProbComp))
+    (codec : Codec Reader Response) (route : RawCtxServerRouting.SenderDecoder)
+    (selected : Nat) (publicPrekey : PqxdhJointIdentity.PeerEncoding)
+    (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State Value)
+    (before : State n KemSK ProviderState Secret source) (result : Value × State n KemSK ProviderState Secret source)
+    (valid : Holds before)
+    (receipt : ∀ inner, inner ∈ support ((simulateQ
+      (RegistrationNativeHiddenAllocationRuntime.callback setup wire sign seed scalar provider service codec route)
+      ((work.run (before.1.1.1.1.beacons.map RegistrationNativePublicOwners.restore)).run
+        before.1.1.1.1.environment)).run (RegistrationNativeHiddenAllocationExecution.runtime before)) →
+      inner.2.1.2.owners.length = inner.1.1.2.length ∧
+        RegistrationNativeHiddenAllocationOwners.NativeIndexed inner.1.1.2)
+    (supported : result ∈ support ((lower service codec route
+      (RegistrationNativeHiddenEnvironmentEffects.close setup wire sign seed scalar provider
+        (RegistrationNativePublicFrontend.beacon
+          (RegistrationNativePublicOwners.executeLocal selected publicPrekey work)))).run before)) : Holds result.2 := by
+  apply completed service codec route _ before result valid supported
+  all_goals
+    have native := supported
+    rw [RegistrationNativeHiddenAllocationExecution.native, support_map] at native
+    obtain ⟨inner, reached, returned⟩ := native
+    have fields := receipt inner reached
+    cases returned
+  · exact fields.1.trans (RegistrationNativeHiddenAllocationOwners.pack_length selected publicPrekey inner.1.1.2).symm
+  · exact RegistrationNativeHiddenAllocationOwners.pack selected publicPrekey inner.1.1.2 fields.2
+
 /-- Actual public creation preserves joint allocation on every optional constructor outcome. -/
 theorem create (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire)
     (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
@@ -93,24 +124,18 @@ theorem create (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire)
       (RegistrationNativeHiddenEnvironmentEffects.close setup wire sign seed scalar provider
         (RegistrationNativePublicFrontend.beacon
           (RegistrationNativePublicOwners.create setup source selected publicPrekey edPin mlPin keyId)))).run before)) : Holds result.2 := by
-  apply completed service codec route _ before result valid supported
-  all_goals
-    have native := supported
-    change result ∈ support ((lower service codec route
-      (RegistrationNativeHiddenEnvironmentEffects.close setup wire sign seed scalar provider
-        (RegistrationNativePublicFrontend.beacon
-          (RegistrationNativePublicOwners.executeLocal selected publicPrekey
-            (RegistrationNativeBeaconFrontend.create setup source edPin mlPin keyId))))).run before) at native
-    rw [RegistrationNativeHiddenAllocationExecution.native, support_map] at native
-    obtain ⟨inner, reached, returned⟩ := native
-    have fields := RegistrationNativeHiddenAllocationBirth.create setup wire sign seed scalar provider service codec route
-      edPin mlPin keyId (before.1.1.1.1.beacons.map RegistrationNativePublicOwners.restore) before.1.1.1.1.environment
-      (RegistrationNativeHiddenAllocationExecution.runtime before) inner
-      (by simpa only [List.length_map, RegistrationNativeHiddenAllocationExecution.runtime] using valid.length)
-      (RegistrationNativeHiddenAllocationOwners.restore _ valid.indexed) reached
-    cases returned
-  · exact fields.1.trans (RegistrationNativeHiddenAllocationOwners.pack_length selected publicPrekey inner.1.1.2).symm
-  · exact RegistrationNativeHiddenAllocationOwners.pack selected publicPrekey inner.1.1.2 fields.2
+  simp only [RegistrationNativePublicOwners.create] at supported
+  generalize workEq : (RegistrationNativeBeaconFrontend.create setup source edPin mlPin keyId :
+    RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State (RustM (Option Nat))) = work at supported
+  apply native_completed setup wire sign seed scalar provider service codec route selected publicPrekey
+    work before result valid _ supported
+  intro inner reached
+  rw [← workEq] at reached
+  exact RegistrationNativeHiddenAllocationBirth.create setup wire sign seed scalar provider service codec route
+    edPin mlPin keyId (before.1.1.1.1.beacons.map RegistrationNativePublicOwners.restore) before.1.1.1.1.environment
+    (RegistrationNativeHiddenAllocationExecution.runtime before) inner
+    (by simpa only [List.length_map, RegistrationNativeHiddenAllocationExecution.runtime] using valid.length)
+    (RegistrationNativeHiddenAllocationOwners.restore _ valid.indexed) reached
 
 end BeaconcryptCore.Computational.RegistrationNativeHiddenAllocationFrontend
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativeHiddenAllocationFrontend.quiet' depends on axioms: [propext,

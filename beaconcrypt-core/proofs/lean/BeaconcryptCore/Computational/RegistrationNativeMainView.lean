@@ -57,7 +57,7 @@ private theorem parsed_input : Stable (nativeView (n := n) (KemSK := KemSK) (mlS
 theorem handler_input (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain) :
     Stable (nativeView (n := n)) (RegistrationNativeExperiment.handler setup checks wire route representation created mlSource credential query) := by
   cases query with
@@ -94,7 +94,7 @@ theorem handler_input (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
 theorem program_input (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (work : OracleComp RegistrationNativeRawAdapter.TypedSpec Value) :
     Stable (nativeView (n := n))
       (simulateQ (RegistrationNativeExperiment.handler setup checks wire route representation created mlSource credential) work) :=
@@ -108,7 +108,7 @@ def observedView (result : RegistrationNativeEvents.Observed Value (Registration
 theorem full_input (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (bounds : PqxdhDeploymentInterface.FreshBounds) (mode : PqxdhDeploymentInterface.Mode)
     (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value)
     (before : RegistrationNativeExperiment.State n KemSK mlSource) :

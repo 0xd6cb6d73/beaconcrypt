@@ -116,6 +116,26 @@ theorem scan (input : Slice U8) (atoms : List Atom) (size : atoms.length = 8)
     rw [RegistrationHeaderCanonical.cast_value .Usize 8#u64 (by scalar_tac), size]; rfl)]
   simp only [bind_tc_ok, index_pack]
 
+set_option backward.isDefEq.respectTransparency false in
+theorem scan6 (input : Slice U8) (atoms : List Atom) (size : atoms.length = 6)
+    (contents : input.val = RegistrationHeaderCanonical.encodedBytes cbor_major_type_array 6#u64 ++ atomsBytes atoms) :
+    extraction_canonical_scan_0 input = .ok (atoms.all atomMinimal) := by
+  obtain ⟨original, tail, _, children⟩ := RegistrationCanonicalItems.array_item input 6#u64 (atomsBytes atoms) contents
+  let item := fromCanonical original
+  simp only [extraction_canonical_scan_0, show Array.repeat 1#usize = @pack Usize from rfl,
+    show Array.repeat 1#usize = @pack Bool from rfl, index_pack, bind_tc_ok, ↓reduceIte]
+  rw [RegistrationCanonicalTrace.loop_zero_unfold]
+  simp only [show decide (1#usize > 0#usize) = true from rfl]
+  rw [body_true input item 1#usize original.optimal]
+  simp only [bind_tc_ok]
+  change (do let result ← extraction_canonical_scan_0_loop (pack (nextCount 1#usize original.children))
+               (pack true) original.tail (decide (nextCount 1#usize original.children > 0#usize))
+             Array.index_usize result 0#usize) = _
+  rw [children, RegistrationCanonicalTrace.next_initial]
+  rw [flat atoms original.tail (UScalar.cast .Usize 6#u64) tail (by
+    rw [RegistrationHeaderCanonical.cast_value .Usize 6#u64 (by scalar_tac), size]; rfl)]
+  simp only [bind_tc_ok, index_pack]
+
 def canonicalAtom : Atom → RegistrationCanonicalTrace.Atom
   | .uint form => .uint (RegistrationLooseArgument.value form)
   | .bytes _ payload _ => .bytes payload
@@ -182,3 +202,9 @@ end BeaconcryptCore.Refinement.RegistrationLooseWidthTrace
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Refinement.RegistrationLooseWidthTrace.atoms_canonical
+
+/-- info: 'BeaconcryptCore.Refinement.RegistrationLooseWidthTrace.scan6' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.RegistrationLooseWidthTrace.scan6

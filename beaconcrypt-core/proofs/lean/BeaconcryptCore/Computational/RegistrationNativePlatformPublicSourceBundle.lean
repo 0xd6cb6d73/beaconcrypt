@@ -58,7 +58,7 @@ theorem equation (setup : Setup base KemSK)
 /-- The complete actual public bundle source callback agrees with literal native platform publication and the same stateful writer. -/
 theorem bundle_source (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (selected : Nat) (scalar : PqxdhJointGapDh.ScalarBytes) (roots : Roots) (index : Nat)
     (before : RegistrationNativePlatformPublicSourceExecution.State n KemSK Platform source)

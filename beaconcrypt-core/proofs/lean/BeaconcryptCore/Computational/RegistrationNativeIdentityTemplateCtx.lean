@@ -16,7 +16,7 @@ variable {Value : Type}
 
 def WellFormed : Key → Prop
   | .inl _ => True
-  | .inr frame => frame.1.length = 4140
+  | .inr frame => frame.1.length = 2188
 
 def recognize (verify : Ed25519PublicKey → Pqxdh.Bytes → Ed25519Signature → Bool)
     (publicKey : Ed25519PublicKey) (message : Pqxdh.Bytes) : Key → Option Ed25519Signature

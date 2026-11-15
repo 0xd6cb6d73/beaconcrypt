@@ -1,8 +1,9 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeServerPinCached
+import BeaconcryptCore.Computational.RegistrationNativeWorldCache
 import BeaconcryptCore.Computational.RegistrationNativePlatformCtxProvenance
 
-/-! Actual initialized startup retains its warm shared CTX cache. Its sole possible address is the independently generated Server ML public key. Seeding the private backend with that cache and this known-input journal changes no cached answer or source counter and supplies retrospective recognition with a derived provenance invariant. -/
+/-! Actual initialized startup preserves the shared CTX cache without querying it. Pure Server pin selection performs no fingerprint hash, so startup from the genuine empty cache has an exact empty known-input journal. Later real Init, response and AD hash effects retain their own chronological provenance. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core PqxdhRefinement
@@ -50,17 +51,15 @@ private theorem pin_provenance (binding : pqxdh.ServerBinding) (publicKey : Std.
     (prior : Provenance (before.2.world.1.primitive.2, journal))
     (after : RegistrationNativeServerPinRecompute.PinReply × RegistrationWorldServerReplay.Global n Auxiliary)
     (reached : after ∈ support ((RegistrationWorldServerFrontend.initializePin binding publicKey).run before)) :
-    Provenance (after.2.2.world.1.primitive.2, journal ++ [absBytes publicKey]) := by
+    Provenance (after.2.2.world.1.primitive.2, journal) := by
   rw [RegistrationNativeServerPinRecompute.initialize_native, support_map] at reached
   obtain ⟨returned, actual, same⟩ := reached
   cases same
-  rw [RegistrationNativeServerPinRecompute.native_run, mem_support_bind_iff] at actual
-  obtain ⟨hashed, called, continued⟩ := actual
-  rw [mem_support_pure_iff] at continued
-  cases continued
-  exact hash_provenance (absBytes publicKey) journal before.2.world.1 prior hashed called
+  rw [RegistrationNativeServerPinRecompute.native_run, mem_support_pure_iff] at actual
+  cases actual
+  exact prior
 
-private theorem install_cache (created : PqxdhLiveServerConstruction.Created Unit)
+private theorem install_cache (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (before : PqxdhRecordLiftWorld.State n) (after : Unit × PqxdhRecordLiftWorld.State n)
     (reached : after ∈ support ((PqxdhRecordLiftWorld.initializeServer created).run before)) :
     after.2.primitive.2 = before.primitive.2 := by
@@ -74,13 +73,13 @@ private theorem install_cache (created : PqxdhLiveServerConstruction.Created Uni
     cases reached
     rfl
 
-/-- Native Server initialization adds exactly its known public-key input to the inherited actual cache journal. -/
-theorem frontend (created : PqxdhLiveServerConstruction.Created Unit) (publicKey : Std.Array U8 1952#usize)
+/-- Native Server initialization preserves the exact inherited cache journal without querying the public key. -/
+theorem frontend (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (publicKey : Std.Array U8 1952#usize)
     (auxiliary : Auxiliary) (before after : PqxdhRecordLiftWorld.State n)
     (journal : List Pqxdh.Bytes) (prior : Provenance (before.primitive.2, journal))
     (native : RegistrationWorldServerFrontend.State n Auxiliary)
     (reached : (.ok (.Some native), after) ∈ support ((RegistrationWorldServerFrontend.start created publicKey auxiliary).run before)) :
-    Provenance (native.global.2.world.1.primitive.2, journal ++ [absBytes publicKey]) := by
+    Provenance (native.global.2.world.1.primitive.2, journal) := by
   simp only [RegistrationWorldServerFrontend.start, StateT.run, mem_support_bind_iff, mem_support_pure_iff] at reached
   obtain ⟨installed, installedAt, pinned, pinnedAt, returned⟩ := reached
   have inherited : Provenance (installed.2.primitive.2, journal) := by
@@ -97,11 +96,11 @@ theorem frontend (created : PqxdhLiveServerConstruction.Created Unit) (publicKey
       cases returned
       exact known
 
-/-- The actual warm cache after complete successful startup is supported by one known independently generated public-key input. It is never reset to empty. -/
+/-- Complete successful startup preserves the genuine initial empty cache and has no queried hash input. -/
 theorem start (setup : Setup base KemSK) (ensureInit : StateT Unit ProbComp Bool)
     (identityIndex : Nat) (serverKeyId : U64) (initial : RegistrationNativeExperiment.Initial n KemSK source)
     (reached : some initial ∈ support (RegistrationNativeExperiment.start setup source ensureInit identityIndex serverKeyId)) :
-    Provenance (RegistrationNativeWorldCache.cache initial.state, [absBytes initial.credential.publicKey]) := by
+    Provenance (RegistrationNativeWorldCache.cache initial.state, []) := by
   simp only [RegistrationNativeExperiment.start, mem_support_bind_iff] at reached
   obtain ⟨constructed, constructedAt, continued⟩ := reached
   have constructedCache := sampled_cache _ (PqxdhRecordLiftWorld.initial : PqxdhRecordLiftWorld.State n) constructed constructedAt
@@ -130,19 +129,16 @@ theorem start (setup : Setup base KemSK) (ensureInit : StateT Unit ProbComp Bool
           exact frontend created credential.publicKey RegistrationServerRoleBackend.empty generated.2 initialized.2 [] initialKnown state
             (by rw [← shape]; exact initializedAt)
 
-/-- The genuine warm initialized cache has at most one address, so its initial collision event is false before any adversarial callback. -/
+/-- The genuine initialized cache has no queried address, so its collision event is false before any adversarial callback. -/
 theorem collision_free (setup : Setup base KemSK) (ensureInit : StateT Unit ProbComp Bool)
     (identityIndex : Nat) (serverKeyId : U64) (initial : RegistrationNativeExperiment.Initial n KemSK source)
     (reached : some initial ∈ support (RegistrationNativeExperiment.start setup source ensureInit identityIndex serverKeyId)) :
     ¬ CacheHasCollision (RegistrationNativeWorldCache.cache initial.state) := by
   have known := start setup ensureInit identityIndex serverKeyId initial reached
-  rintro ⟨⟨unitLeft, bytesLeft⟩, ⟨unitRight, bytesRight⟩, replyLeft, replyRight, different, cachedLeft, cachedRight, _equalReplies⟩
+  rintro ⟨⟨unitLeft, bytesLeft⟩, _right, replyLeft, _replyRight, _different, cachedLeft, _cachedRight, _equalReplies⟩
   cases unitLeft
-  cases unitRight
-  have left := known bytesLeft (by rw [cachedLeft]; simp only [ne_eq, Option.some_ne_none, not_false_eq_true])
-  have right := known bytesRight (by rw [cachedRight]; simp only [ne_eq, Option.some_ne_none, not_false_eq_true])
-  simp only [List.mem_singleton] at left right
-  exact different (congrArg (fun bytes => ((), bytes)) (left.trans right.symm))
+  have impossible := known bytesLeft (by rw [cachedLeft]; simp only [ne_eq, Option.some_ne_none, not_false_eq_true])
+  cases impossible
 
 end BeaconcryptCore.Computational.RegistrationNativeIdentityStartupJournal
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativeIdentityStartupJournal.frontend' depends on axioms: [propext,

@@ -4,6 +4,7 @@ import BeaconcryptCore.Computational.RegistrationNativeStartupMetricInterface
 /-! Both actual startup samplers agree after erasing their three independently billed accounting coordinates. The constructor and ML generator remain their literal samplers; every ordinary World reply and cache is retained through the existing bilateral non-read law. -/
 open OracleComp OracleSpec CoreModels
 set_option autoImplicit false
+set_option warningAsError true
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativeStartupMetric
 open PqxdhServerAuthExperiment (Setup)
@@ -60,7 +61,7 @@ theorem actual_query (setup : Setup base KemSK) (wire : RegistrationNativeWire.W
       (normalized setup wire route source ensureInit identityIndex serverKeyId query).run (mask before) := by
   rcases query with constructor | generation | world
   · simpa only [actual, normalized, reference, StateT.run, RegistrationNativeG3MetricWorld.mask_idempotent] using
-      sampler_source setup wire route ((PqxdhLiveServerConstruction.construct (P := Unit) setup.joint ensureInit identityIndex serverKeyId none).run ()) before
+      sampler_source setup wire route ((PqxdhLiveServerConstruction.construct (P := Aeneas.Std.Array Aeneas.Std.U8 151#usize) setup.joint ensureInit identityIndex serverKeyId none).run ()) before
   · simpa only [actual, normalized, reference, StateT.run, RegistrationNativeG3MetricWorld.mask_idempotent] using
       sampler_source setup wire route (RegistrationNativeMldsa.generate source) before
   · simpa only [actual, normalized, reference, StateT.run, RegistrationNativeG3MetricWorld.mask_idempotent] using
@@ -75,7 +76,7 @@ theorem reference_query (setup : Setup base KemSK) (wire : RegistrationNativeWir
       (normalized setup wire route source ensureInit identityIndex serverKeyId query).run (mask before) := by
   rcases query with constructor | generation | world
   · simpa only [reference, normalized, StateT.run, RegistrationNativeG3MetricWorld.mask_idempotent] using
-      sampled_input ((PqxdhLiveServerConstruction.construct (P := Unit) setup.joint ensureInit identityIndex serverKeyId none).run ()) before
+      sampled_input ((PqxdhLiveServerConstruction.construct (P := Aeneas.Std.Array Aeneas.Std.U8 151#usize) setup.joint ensureInit identityIndex serverKeyId none).run ()) before
   · simpa only [reference, normalized, StateT.run, RegistrationNativeG3MetricWorld.mask_idempotent] using
       sampled_input (RegistrationNativeMldsa.generate source) before
   · simpa only [normalized, reference, StateT.run, RegistrationNativeG3MetricWorld.mask_idempotent] using

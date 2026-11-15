@@ -23,7 +23,7 @@ class Operations (E : Type) (m : Type → Type) where
 namespace Lifted
 variable {E : Type} {m : Type → Type} [Monad m] [LiftRust m] [ops : Operations E m]
 def len (input : Slice U8) : m Usize := liftRust (core.slice.Slice.len input)
-def initCapacity (lengths : Array Usize 6#usize) := liftRust (beaconcrypt_core.transport.encoded_init_len lengths) (m := m)
+def initCapacity (lengths : Array Usize 4#usize) := liftRust (beaconcrypt_core.transport.encoded_init_len lengths) (m := m)
 def responseCapacity (lengths : Array Usize 5#usize) (keyId : U64) := liftRust (beaconcrypt_core.transport.encoded_response_len lengths keyId) (m := m)
 def branch (input : core.option.Option Usize) := liftRust (core.option.Option.Insts.CoreOpsTry_traitTry.branch input) (m := m)
 def fromResidual (residual : core.option.Option core.convert.Infallible) := liftRust (core.option.Option.Insts.CoreOpsTry_traitFromResidualOptionInfallible.from_residual (alloc.vec.Vec U8) residual) (m := m)

@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhDeploymentServerAuthStable
+import BeaconcryptCore.Computational.PqxdhDeploymentEligibility
 
 /-! One step of the localization of the deployment experiment at creation index `c` (CE-8). The multi-owner side is `eager`: the source14 native handler with field reads (`base`), except that the target's material is drawn before the run (`Pre`: the created owner, the reply of its first bundle and the bundled owner): the `c`-th create, when its binding is the protected one, installs the drawn owner, and the first bundle of `c` after that answers with the drawn reply and installs the drawn bundled owner. The singleton side is the embedding of `PqxdhDeploymentServerAuthEmbed` routed into the source14 handler on the singleton state whose owner zero is the ServerAuth target (`singleStep`). `multiOf` reassembles the multi-owner state from the embedding's state and the singleton state: the shared state of the singleton, and the local owners with the target's owner at `c` (the drawn created owner before the first bundle, the singleton's owner zero after it); `phaseOf` gives the eager phase. `step_commute` is the one-step simulation: under `Ready` (one target slot at `c` at most, the singleton's owner zero is the drawn bundled owner until the first bundle and afterwards neither Fresh nor established, the first bundle not rejected) and for every query other than an identity, KEM, prekey or one-time read, one singleton step mapped by `multiOf` is one eager step on the reassembled state, up to the analysis histories. `base_stable` shows that the native handler reads no analysis history. No security claim is made here. -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -31,11 +32,12 @@ inductive Phase where
   | done
   deriving DecidableEq
 
-/-- The target's material drawn before the run: the created owner, the reply of its first bundle and the bundled owner. -/
+/-- The target's material drawn before the run: the created owner, the reply of its first bundle, the bundled owner and the Phase 1 bundle that first bundle retained (design §4.6). -/
 structure Pre (KemSK : Type) where
   created : Owner KemSK
   reply : Option Pqxdh.Bytes
   bundled : Owner KemSK
+  init : Option PqxdhEd25519EufCma.Phase1Candidate
 
 /-- Run a base step and keep the phase. -/
 noncomputable def keep (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -63,7 +65,9 @@ noncomputable def eager (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
       else keep setup codec checks seed (.inl (.inr (.create pin keyId))) state
   | .inl (.inr (.bundle index)) => fun state =>
       if state.2 = .created ∧ index = c then
-        pure (pre.reply, ({ state.1 with owners := state.1.owners.set c pre.bundled }, .done))
+        pure (pre.reply, ({ state.1 with
+          owners := state.1.owners.set c pre.bundled
+          inits := Function.update state.1.inits c pre.init }, .done))
       else keep setup codec checks seed (.inl (.inr (.bundle index))) state
   | .inl (.inr (.accept raw)) => keep setup codec checks seed (.inl (.inr (.accept raw)))
   | .inl (.inr (.build session payload)) => keep setup codec checks seed (.inl (.inr (.build session payload)))
@@ -84,9 +88,15 @@ noncomputable def singleStep (setup : Setup baseSpec KemSK) (codec : Codec Reade
 def targetOwner (pre : Pre KemSK) (emb : Emb KemSK) (single : State KemSK) : Owner KemSK :=
   if emb.slot = .fresh then pre.created else single.owners.headD pre.created
 
-/-- The reassembled multi-owner state: the singleton's shared state, the local owners and the target's owner at its slot. -/
-def multiOf (pre : Pre KemSK) (emb : Emb KemSK) (single : State KemSK) : State KemSK :=
-  ⟨single.shared, emb.owners.map fun slot => slot.getD (targetOwner pre emb single)⟩
+open Classical in
+/-- The retained Phase 1 bundles in the reassembled state: the embedding's for local owners and for the target before its first bundle, the singleton's owner zero's after it. -/
+noncomputable def initsOf (emb : Emb KemSK) (single : State KemSK) (index : Nat) :
+    Option PqxdhEd25519EufCma.Phase1Candidate :=
+  if emb.owners[index]? = some none ∧ emb.slot ≠ .fresh then single.inits 0 else emb.inits index
+
+/-- The reassembled multi-owner state: the singleton's shared state, the local owners and the target's owner at its slot, and the retained bundles (`initsOf`). -/
+noncomputable def multiOf (pre : Pre KemSK) (emb : Emb KemSK) (single : State KemSK) : State KemSK :=
+  ⟨single.shared, emb.owners.map fun slot => slot.getD (targetOwner pre emb single), initsOf emb single⟩
 
 /-- The eager phase of a slot. -/
 def phaseOf : Slot → Phase
@@ -161,11 +171,11 @@ theorem base_stable (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
               Prod.map id eraseShared <$> PqxdhRegistrationSchedule.finish setup codec index raw (eraseShared state)
             rw [PqxdhRegistrationSchedule.finish_source setup codec index raw state owner found,
               PqxdhRegistrationSchedule.finish_source setup codec index raw _ owner erased, Functor.map_map, Functor.map_map]
-            have stable := callbacks_program setup codec
-              (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw owner) state.shared
+            have stable := PqxdhDeploymentServerAuthStable.ownerFinish_stable setup codec (state.inits index) raw owner
+              state.shared
             have mapped := congrArg (fun computation => (fun result : (Option Pqxdh.Bytes × Owner KemSK) × NativeState KemSK =>
-              (result.1.1, eraseShared ({ shared := result.2, owners := state.owners.set index result.1.2 } : State KemSK))) <$>
-                computation) stable
+              (result.1.1, eraseShared ({ shared := result.2, owners := state.owners.set index result.1.2, inits := state.inits } :
+                State KemSK))) <$> computation) stable
             simp only [Functor.map_map] at mapped
             exact mapped
     | hmac key message =>
@@ -189,8 +199,9 @@ theorem shared_commute {α : Type} (op : NativeGame KemSK α) (stable : Stable o
   rw [PqxdhRegistrationSchedule.onShared_run, PqxdhRegistrationSchedule.onShared_run]
   simp only [Functor.map_map]
   let owners := (multiOf pre emb single).owners
+  let inits := (multiOf pre emb single).inits
   have same := congrArg (fun computation => (fun result => (result.1,
-    ((⟨result.2, owners⟩ : State KemSK)), phase)) <$> computation) (stable single.shared)
+    ((⟨result.2, owners, inits⟩ : State KemSK)), phase)) <$> computation) (stable single.shared)
   simp only [Functor.map_map] at same
   exact same
 
@@ -204,7 +215,7 @@ theorem singleStep_lift (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
         (simulateQ (PqxdhRegistrationSchedule.handler setup codec checks seed) (simulateQ route work)).run single := by
   simp only [singleStep, lifted, StateT.run_lift, bind_pure_comp, simulateQ_map, StateT.run_map]
 
-/-- The embedding's state is ready for one step: only index `c` can hold the target, it holds it exactly from the target's creation on, the singleton has one owner, which is the drawn bundled owner until the first bundle and afterwards in InitSent or aborted, the first bundle was not rejected, and the drawn created owner is Fresh. -/
+/-- The embedding's state is ready for one step: only index `c` can hold the target, it holds it exactly from the target's creation on, the singleton has one owner, which is the drawn bundled owner until the first bundle and afterwards in InitSent or aborted, the first bundle was not rejected, the drawn created owner is Fresh, and the singleton retains the drawn Phase 1 bundle. -/
 structure Ready (c : Nat) (pre : Pre KemSK) (emb : Emb KemSK) (single : State KemSK) : Prop where
   target : ∀ index, emb.owners[index]? = some none → index = c
   noTarget : emb.slot = .waiting ∨ emb.slot = .released → emb.owners[c]? ≠ some none
@@ -216,6 +227,8 @@ structure Ready (c : Nat) (pre : Pre KemSK) (emb : Emb KemSK) (single : State Ke
         PqxdhDeploymentEligibility.phaseClass owner.beacon.phase = .aborted)
   notFailed : emb.slot ≠ .failed
   createdFresh : PqxdhDeploymentEligibility.phaseClass pre.created.beacon.phase = .fresh
+  /-- The singleton's owner zero retains the drawn first bundle's Phase 1 bundle. -/
+  init : single.inits 0 = pre.init
 
 /-- An owner that is not established has no kernel to read. -/
 theorem kernel_none (owner : Owner KemSK)
@@ -280,6 +293,29 @@ theorem targetOwner_slot (pre : Pre KemSK) (first second : Emb KemSK) (single : 
   by_cases fresh : first.slot = .fresh
   · rw [ite_eq_left fresh, ite_eq_left (same.mp fresh)]
   · rw [ite_eq_right fresh, ite_eq_right (fun other => fresh (same.mpr other))]
+
+open Classical in
+/-- The reassembled retained bundles depend only on where the bundled target sits and on the embedding's own retained bundles. -/
+theorem initsOf_congr (first second : Emb KemSK) (single : State KemSK)
+    (target : ∀ index : Nat, (first.owners[index]? = some none ∧ first.slot ≠ .fresh) ↔
+      (second.owners[index]? = some none ∧ second.slot ≠ .fresh))
+    (same : first.inits = second.inits) : initsOf first single = initsOf second single := by
+  funext index
+  simp only [initsOf, target index, same]
+
+/-- Without a bundled target, the reassembled retained bundles are the embedding's. -/
+theorem initsOf_local (emb : Emb KemSK) (single : State KemSK)
+    (local_ : ∀ index : Nat, ¬ (emb.owners[index]? = some none ∧ emb.slot ≠ .fresh)) : initsOf emb single = emb.inits := by
+  funext index
+  simp only [initsOf, local_ index, ite_false]
+
+/-- Appending a local owner adds no target entry. -/
+theorem append_some_target (owners : List (Option (Owner KemSK))) (owner : Owner KemSK) (index : Nat) :
+    (owners ++ [some owner])[index]? = some none ↔ owners[index]? = some none := by
+  rcases Nat.lt_or_ge index owners.length with inside | outside
+  · rw [List.getElem?_append_left inside]
+  · rw [List.getElem?_append_right outside, List.getElem?_eq_none outside]
+    cases shift : index - owners.length <;> simp
 
 open Classical in
 /-- The embedding's create, unfolded. -/
@@ -350,8 +386,11 @@ theorem step_create (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
     simp only [simulateQ_pure, StateT.run_pure, map_pure]
     congr 2
     simp only [multiOf, eraseShared, List.map_append, List.map_cons, List.map_nil, Option.getD_none]
-    have created : targetOwner pre ⟨emb.owners ++ [none], .fresh⟩ single = pre.created := by simp [targetOwner]
-    rw [created, map_getD_irrel emb.owners free pre.created (targetOwner pre emb single)]
+    have created : targetOwner pre ⟨emb.owners ++ [none], .fresh, emb.inits⟩ single = pre.created := by
+      simp [targetOwner]
+    have inits : initsOf ⟨emb.owners ++ [none], .fresh, emb.inits⟩ single = initsOf emb single := by
+      rw [initsOf_local _ _ (fun _ held => held.2 rfl), initsOf_local _ _ (fun index held => free index held.1)]
+    rw [created, map_getD_irrel emb.owners free pre.created (targetOwner pre emb single), inits]
     rfl
   · simp only [singleStep]
     rw [embed_create, ite_eq_right target, simulateQ_map, simulateQ_map, StateT.run_map,
@@ -366,10 +405,15 @@ theorem step_create (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
       congr 1
       funext owner
       simp only [atC, waiting, and_self, ite_true, length]
-      have same : targetOwner pre ⟨emb.owners ++ [some owner], .released⟩ single = targetOwner pre emb single :=
+      have same : targetOwner pre ⟨emb.owners ++ [some owner], .released, emb.inits⟩ single =
+          targetOwner pre emb single :=
         targetOwner_slot pre _ emb single (by simp [waiting])
+      have free := ready_noTarget c pre emb single ready (Or.inl waiting)
+      have inits : initsOf ⟨emb.owners ++ [some owner], .released, emb.inits⟩ single = initsOf emb single := by
+        rw [initsOf_local _ _ (fun index held => free index ((append_some_target _ _ _).mp held.1)),
+          initsOf_local _ _ (fun index held => free index held.1)]
       simp only [multiOf, eraseShared, List.map_append, List.map_cons, List.map_nil, Option.getD_some, same,
-        phaseOf]
+        phaseOf, inits]
       rfl
     · have keepSlot : ¬ (emb.owners.length = c ∧ emb.slot = .waiting) := by
         rintro ⟨atC, waiting⟩
@@ -379,9 +423,12 @@ theorem step_create (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
       congr 1
       funext owner
       simp only [keepSlot, ite_false, length]
-      have same : targetOwner pre ⟨emb.owners ++ [some owner], emb.slot⟩ single = targetOwner pre emb single :=
+      have same : targetOwner pre ⟨emb.owners ++ [some owner], emb.slot, emb.inits⟩ single =
+          targetOwner pre emb single :=
         targetOwner_slot pre _ emb single Iff.rfl
-      simp only [multiOf, eraseShared, List.map_append, List.map_cons, List.map_nil, Option.getD_some, same]
+      have inits : initsOf ⟨emb.owners ++ [some owner], emb.slot, emb.inits⟩ single = initsOf emb single :=
+        initsOf_congr _ _ _ (fun index => by simp only [append_some_target]) rfl
+      simp only [multiOf, eraseShared, List.map_append, List.map_cons, List.map_nil, Option.getD_some, same, inits]
       rfl
 
 /-- The embedding's bundle, unfolded. -/
@@ -395,8 +442,10 @@ theorem embed_bundle (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
             pure (input.phase1, { emb with slot := if input.phase1.isSome then .bundled else .failed })
           else pure (none, emb)
       | some (some owner) =>
-          (fun result => (result.1, { emb with owners := emb.owners.set index (some result.2) })) <$>
-            coins (localBundle setup codec index owner) := rfl
+          (fun result => (result.1.1, { emb with
+            owners := emb.owners.set index (some result.1.2)
+            inits := Function.update emb.inits index result.2 })) <$>
+            coins (PqxdhDeploymentServerAuthEmbed.localBundleLog setup codec index owner (emb.inits index)) := rfl
 
 open Classical in
 /-- The eager bundle, unfolded. -/
@@ -405,7 +454,9 @@ theorem eager_bundle (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
     (state : State KemSK × Phase) :
     (eager setup codec checks seed c binding pre (.inl (.inr (.bundle index)))).run state =
       if state.2 = .created ∧ index = c then
-        pure (pre.reply, ({ state.1 with owners := state.1.owners.set c pre.bundled }, .done))
+        pure (pre.reply, ({ state.1 with
+          owners := state.1.owners.set c pre.bundled
+          inits := Function.update state.1.inits c pre.init }, .done))
       else (keep setup codec checks seed (.inl (.inr (.bundle index)))).run state := rfl
 
 /-- The native bundle, as a base step. -/
@@ -418,8 +469,10 @@ theorem base_bundle (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
 theorem bundle_found (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (index : Nat) (state : State KemSK)
     (owner : Owner KemSK) (found : state.owners[index]? = some owner) :
     (PqxdhRegistrationSchedule.bundle setup codec index).run state =
-      (fun result => (result.1, { state with owners := state.owners.set index result.2 })) <$>
-        localBundle setup codec index owner :=
+      (fun result => (result.1.1, { state with
+        owners := state.owners.set index result.1.2
+        inits := Function.update state.inits index result.2 })) <$>
+        PqxdhDeploymentServerAuthEmbed.localBundleLog setup codec index owner (state.inits index) :=
   PqxdhRegistrationSchedule.bundle_source setup codec index state owner found
 
 /-- With the target only at `c`, changing the reassembly default changes only the entry at `c`. -/
@@ -448,6 +501,46 @@ theorem bundle_sent (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   unfold localBundle
   rcases phase : owner.beacon.phase with ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩
   all_goals simp_all [PqxdhLivePhase1Bundle.bundle, PqxdhDeploymentEligibility.phaseClass]
+
+/-- A logged bundle on a phase that is neither Fresh variant answers nothing and keeps the owner and its retained bundle. -/
+theorem bundleLog_sent (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (index : Nat) (owner : Owner KemSK)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate)
+    (sent : PqxdhDeploymentEligibility.phaseClass owner.beacon.phase ≠ .fresh) :
+    PqxdhDeploymentServerAuthEmbed.localBundleLog setup codec index owner retained = pure ((none, owner), retained) := by
+  unfold PqxdhDeploymentServerAuthEmbed.localBundleLog
+  rcases phase : owner.beacon.phase with ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩
+  all_goals simp_all [PqxdhLivePhase1Bundle.bundle, PqxdhDeploymentEligibility.phaseClass]
+
+/-- A local owner's retained bundle is the embedding's in the reassembly. -/
+theorem initsOf_owner (emb : Emb KemSK) (single : State KemSK) (index : Nat) (owner : Owner KemSK)
+    (found : emb.owners[index]? = some (some owner)) : initsOf emb single index = emb.inits index := by
+  simp [initsOf, found]
+
+/-- Updating a local owner's slot and retained bundle updates the reassembled retained bundles at that slot only. -/
+theorem initsOf_set (emb : Emb KemSK) (single : State KemSK) (index : Nat) (owner updated : Owner KemSK)
+    (found : emb.owners[index]? = some (some owner)) (retained : Option PqxdhEd25519EufCma.Phase1Candidate) :
+    initsOf { emb with owners := emb.owners.set index (some updated), inits := Function.update emb.inits index retained }
+        single = Function.update (initsOf emb single) index retained := by
+  funext other
+  by_cases same : other = index
+  · subst same
+    have bound : other < emb.owners.length := (List.getElem?_eq_some_iff.mp found).1
+    simp [initsOf, List.getElem?_set_self bound]
+  · have kept : (emb.owners.set index (some updated))[other]? = emb.owners[other]? := by
+      simp [Ne.symm same]
+    simp only [initsOf, Function.update_of_ne same]
+    split_ifs <;> simp_all
+
+/-- The target's first bundle, on a ready state: the reassembled retained bundles gain the drawn bundle at `c` and nothing else. -/
+theorem initsOf_first (c : Nat) (pre : Pre KemSK) (emb : Emb KemSK) (single : State KemSK) (ready : Ready c pre emb single)
+    (fresh : emb.slot = .fresh) (slot : Slot) (notFresh : slot ≠ .fresh) :
+    initsOf { emb with slot := slot } single = Function.update (initsOf emb single) c pre.init := by
+  funext other
+  by_cases same : other = c
+  · subst same
+    simp [initsOf, ready.placed (Or.inl fresh), notFresh, ready.init]
+  · have notTarget : ¬ emb.owners[other]? = some none := fun held => same (ready.target other held)
+    simp [initsOf, notTarget, Function.update_of_ne same]
 
 /-- One bundle step commutes with the reassembly. -/
 theorem step_bundle (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -493,7 +586,10 @@ theorem step_bundle (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
               exact drawn (Or.inr (Or.inl fresh))
             have phase : phaseOf (if pre.reply.isSome then Slot.bundled else Slot.failed) = .done := by
               split <;> rfl
-            simp only [multiOf, eraseShared, bundled, phase]
+            have notFresh : (if pre.reply.isSome then Slot.bundled else Slot.failed) ≠ .fresh := by
+              split <;> simp
+            simp only [multiOf, eraseShared, bundled, phase,
+              initsOf_first index pre emb single ready fresh _ notFresh]
             rw [map_getD_set emb.owners index ready.target found (targetOwner pre emb single) pre.bundled]
             rfl
           · have bundledSlot : emb.slot = .bundled := by
@@ -518,8 +614,8 @@ theorem step_bundle (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
                 decide
               · rw [aborted]
                 decide
-            rw [bundle_sent setup codec index owner phaseSent]
-            simp only [simulateQ_pure, StateT.run_pure, map_pure]
+            rw [bundleLog_sent setup codec index owner _ phaseSent]
+            simp only [simulateQ_pure, StateT.run_pure, map_pure, Function.update_eq_self]
             obtain ⟨bound, entry⟩ := List.getElem?_eq_some_iff.mp held
             rw [← entry, List.set_getElem_self bound]
             rfl
@@ -534,10 +630,14 @@ theorem step_bundle (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
           rw [ite_eq_right notCreated, keep_run, base_bundle, bundle_found setup codec index _ owner held]
           dsimp only
           rw [simulateQ_map, simulateQ_map, StateT.run_map, PqxdhDeploymentServerAuthEmbed.coins_route]
+          have retained : (eraseShared (multiOf pre emb single)).inits index = emb.inits index :=
+            initsOf_owner emb single index owner found
+          rw [retained]
           simp only [Functor.map_map]
           congr 1
           funext result
-          simp only [multiOf, eraseShared, List.map_set, Option.getD_some]
+          simp only [multiOf, eraseShared, List.map_set, Option.getD_some,
+            initsOf_set emb single index owner result.1.2 found result.2]
           rfl
 
 /-- The embedding's finish, unfolded. -/
@@ -551,7 +651,7 @@ theorem embed_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
           else pure (none, emb)
       | some (some owner) =>
           (fun result => (result.1, { emb with owners := emb.owners.set index (some result.2) })) <$>
-            simulateQ (localCallbacks setup codec) (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw owner) := rfl
+            PqxdhDeploymentServerAuthEmbed.localFinish setup codec (emb.inits index) raw owner := rfl
 
 /-- The native finish, as a base step. -/
 theorem base_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -563,19 +663,40 @@ theorem base_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
 theorem finish_found (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (index : Nat) (raw : Pqxdh.Bytes)
     (state : State KemSK) (owner : Owner KemSK) (found : state.owners[index]? = some owner) :
     (PqxdhRegistrationSchedule.finish setup codec index raw).run state =
-      (fun result => (result.1.1, ({ shared := result.2, owners := state.owners.set index result.1.2 } : State KemSK))) <$>
-        (simulateQ (PqxdhRegistrationSchedule.callbacks setup codec)
-          (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw owner)).run state.shared :=
+      (fun result => (result.1.1, ({ state with shared := result.2, owners := state.owners.set index result.1.2 } :
+        State KemSK))) <$>
+        (PqxdhRegistrationSchedule.ownerFinish setup codec (state.inits index) raw owner).run state.shared :=
   PqxdhRegistrationSchedule.finish_source setup codec index raw state owner found
 
 /-- A finish outside InitSent answers nothing and keeps the owner, before any callback. -/
-theorem nativeOwner_open (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes) (owner : Owner KemSK)
+theorem nativeOwner_open (binding : session.CompletedRegistrationBinding) (decode : RawCtxReceive.FrameDecoder)
+    (raw : Pqxdh.Bytes) (owner : Owner KemSK)
     (open_ : PqxdhDeploymentEligibility.phaseClass owner.beacon.phase ≠ .initSent) :
-    PqxdhBeaconPhase2Publication.nativeOwner (X := IdentitySeed) (Response := Response) decode raw owner =
-      pure (none, owner) := by
+    PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := binding) (X := IdentitySeed) (Response := Response)
+      decode raw owner = pure (none, owner) := by
   rcases phase : owner.beacon.phase with ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩
   all_goals simp_all [PqxdhBeaconPhase2Publication.nativeOwner, PqxdhBeaconPhase2Publication.owner,
     PqxdhDeploymentEligibility.phaseClass]
+
+/-- A hashed owner finish outside InitSent answers nothing and keeps the owner, before any hash or callback. -/
+theorem ownerFinish_open (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes) (owner : Owner KemSK)
+    (open_ : PqxdhDeploymentEligibility.phaseClass owner.beacon.phase ≠ .initSent) :
+    PqxdhRegistrationSchedule.ownerFinish setup codec retained raw owner = pure (none, owner) := by
+  unfold PqxdhRegistrationSchedule.ownerFinish
+  rcases phase : owner.beacon.phase with ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩ | ⟨⟩
+  all_goals simp_all [PqxdhDeploymentEligibility.phaseClass]
+
+/-- Replacing a local owner keeps the reassembled retained bundles. -/
+theorem initsOf_setOwner (emb : Emb KemSK) (single : State KemSK) (index : Nat) (owner updated : Owner KemSK)
+    (found : emb.owners[index]? = some (some owner)) :
+    initsOf { emb with owners := emb.owners.set index (some updated) } single = initsOf emb single := by
+  refine initsOf_congr _ _ _ (fun other => ?_) rfl
+  by_cases same : other = index
+  · subst same
+    have bound : other < emb.owners.length := (List.getElem?_eq_some_iff.mp found).1
+    simp [List.getElem?_set_self bound, found]
+  · simp [Ne.symm same]
 
 /-- Erasing after reassembling is reassembling from the erased singleton state. -/
 theorem erase_multiOf (pre : Pre KemSK) (emb : Emb KemSK) (single : State KemSK) :
@@ -624,16 +745,19 @@ theorem step_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
             have held : (eraseShared (multiOf pre emb single)).owners[index]? = some owner := by
               rw [found_m, found, Option.map_some, Option.getD_none, target]
             have zero : single.owners[0]? = some owner := by simp [single_eq]
-            rw [ite_eq_left bundled, finish_found setup codec index raw _ owner held]
+            have retained : (eraseShared (multiOf pre emb single)).inits index = single.inits 0 := by
+              simp [eraseShared, multiOf, initsOf, found, notFresh]
+            rw [ite_eq_left bundled, finish_found setup codec index raw _ owner held, retained]
             simp only [forward, simulateQ_map, simulateQ_query, OracleQuery.input_query, OracleQuery.cont_query, id_map,
               route, StateT.run_map, PqxdhRegistrationSchedule.handler]
             rw [finish_found setup codec 0 raw single owner zero]
             simp only [Functor.map_map]
-            have rhs := stable_map _ (callbacks_program setup codec
-              (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw owner))
+            have rhs := stable_map _ (PqxdhDeploymentServerAuthStable.ownerFinish_stable setup codec (single.inits 0) raw
+              owner)
               (fun result : (Option Pqxdh.Bytes × Owner KemSK) × NativeState KemSK =>
                 (result.1.1, (eraseShared (⟨result.2,
-                  (eraseShared (multiOf pre emb single)).owners.set index result.1.2⟩ : State KemSK),
+                  (eraseShared (multiOf pre emb single)).owners.set index result.1.2,
+                  (eraseShared (multiOf pre emb single)).inits⟩ : State KemSK),
                   Phase.done)))
               (fun _ => rfl) single.shared
             have bundledPhase : phaseOf emb.slot = .done := by simp [bundled, phaseOf]
@@ -644,6 +768,7 @@ theorem step_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
             simp only [multiOf, eraseShared, single_eq, List.set_cons_zero]
             have reassembled := map_getD_set emb.owners index ready.target found owner result.1.2
             simp only [targetOwner, notFresh, ite_false, List.headD_cons, reassembled, single_eq]
+            rfl
           · have fresh : emb.slot = .fresh := by
               cases slot : emb.slot with
               | waiting => exact absurd found (ready.noTarget (Or.inl slot))
@@ -658,7 +783,7 @@ theorem step_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
               rw [ready.createdFresh]
               decide
             rw [ite_eq_right bundled, finish_found setup codec index raw _ pre.created held,
-              nativeOwner_open codec.frameRead raw pre.created open_]
+              ownerFinish_open setup codec _ raw pre.created open_]
             simp only [simulateQ_pure, StateT.run_pure, map_pure]
             obtain ⟨bound, entry⟩ := List.getElem?_eq_some_iff.mp held
             rw [← entry, List.set_getElem_self bound]
@@ -666,7 +791,9 @@ theorem step_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
       | some owner =>
           have held : (eraseShared (multiOf pre emb single)).owners[index]? = some owner := by
             rw [found_m, found, Option.map_some, Option.getD_some]
-          rw [finish_found setup codec index raw _ owner held]
+          have retained : (eraseShared (multiOf pre emb single)).inits index = emb.inits index :=
+            initsOf_owner emb single index owner found
+          rw [finish_found setup codec index raw _ owner held, retained]
           dsimp only
           rw [simulateQ_map, simulateQ_map, StateT.run_map]
           simp only [Functor.map_map]
@@ -675,18 +802,20 @@ theorem step_finish (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
                 phaseOf emb.slot))) =
               (fun result => (result.1.1, (multiOf pre { emb with owners := emb.owners.set index (some result.1.2) } result.2,
                 phaseOf emb.slot))) ∘ Prod.map id eraseShared := rfl
-          rw [factor, comp_map, PqxdhDeploymentServerAuthStable.localFinish_route, Functor.map_map]
-          have rhs := stable_map _ (callbacks_program setup codec
-            (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw owner))
+          rw [factor, comp_map, PqxdhDeploymentServerAuthStable.localOwnerFinish_route, Functor.map_map]
+          have rhs := stable_map _ (PqxdhDeploymentServerAuthStable.ownerFinish_stable setup codec (emb.inits index) raw
+            owner)
             (fun result : (Option Pqxdh.Bytes × Owner KemSK) × NativeState KemSK =>
               (result.1.1, (eraseShared (⟨result.2,
-                (eraseShared (multiOf pre emb single)).owners.set index result.1.2⟩ : State KemSK),
+                (eraseShared (multiOf pre emb single)).owners.set index result.1.2,
+                (eraseShared (multiOf pre emb single)).inits⟩ : State KemSK),
                 phaseOf emb.slot)))
             (fun _ => rfl) single.shared
           rw [show (eraseShared (multiOf pre emb single)).shared = eraseObservers single.shared from rfl, ← rhs]
           congr 1
           funext result
-          simp only [multiOf, eraseShared, List.map_set, Option.getD_some]
+          simp only [multiOf, eraseShared, List.map_set, Option.getD_some,
+            initsOf_setOwner emb _ index owner result.1.2 found]
           rfl
 
 /-- One step of the singleton side, reassembled, is one eager step on the reassembled state, up to the histories, for every query other than an identity, KEM, prekey or one-time read. -/
@@ -948,3 +1077,48 @@ end BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocal
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocal.step_commute
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocal.initsOf_congr' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocal.initsOf_congr
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocal.initsOf_local' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocal.initsOf_local
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocal.append_some_target' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocal.append_some_target
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocal.bundleLog_sent' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocal.bundleLog_sent
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocal.initsOf_owner' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocal.initsOf_owner
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocal.initsOf_set' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocal.initsOf_set
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocal.initsOf_first' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocal.initsOf_first
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocal.ownerFinish_open' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocal.ownerFinish_open
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocal.initsOf_setOwner' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentServerAuthLocal.initsOf_setOwner

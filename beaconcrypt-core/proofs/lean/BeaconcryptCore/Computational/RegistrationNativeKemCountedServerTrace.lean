@@ -64,7 +64,7 @@ private theorem map_apply {S A B : Type} {m : Type → Type} [Monad m] [LawfulMo
 /-- This receipt is derived from the actual macro body, including key admission and the exact indexed KEM call. -/
 theorem encapsulate (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (key : Std.Array U8 1184#usize)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (key : Std.Array U8 1184#usize)
     (before after : Client) (reply : Spec.Range (.encapsulate (.Some key))) (log : Log KemSK)
     (supported : ((reply, after), log) ∈ support
       ((RegistrationNativeKemCountedServerPrimitive.agreement setup checks representation created
@@ -97,7 +97,7 @@ theorem encapsulate (setup : Setup base KemSK) (checks : Checks)
 /-- Every higher callback derives its own lower-log receipt; non-encapsulation callbacks impose no such assertion. -/
 theorem query (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (request : Request)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (request : Request)
     (before after : Client) (reply : Spec.Range request) (log : Log KemSK)
     (supported : ((reply, after), log) ∈ support
       ((RegistrationNativeKemCountedServerPrimitive.agreement setup checks representation created request).run before).withQueryLog) :
@@ -111,7 +111,7 @@ theorem query (setup : Setup base KemSK) (checks : Checks)
 /-- Arbitrary adaptive higher trees retain the matching lower capability receipt for every newly logged callback. -/
 theorem program (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp Spec Value) (journal final : Trace) (before after : Client)
     (value : Value) (log : Log KemSK)
     (supported : (((value, final), after), log) ∈ support
@@ -129,7 +129,7 @@ private theorem pq_roundtrip (value : PqxdhKemIndCca.MlKem768PublicKey) :
 /-- The actual higher Root completion and the lower indexed encapsulation draw occur in one execution, including the original draw cost and complete higher journal. -/
 theorem server (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (control : pqxdh.ServerState) (packet : registration.InitPacket)
     (authenticated : registration.AuthenticatedInit) (completed : agreement.ServerAgreement)
     (final : Trace) (before after : Client) (log : Log KemSK)

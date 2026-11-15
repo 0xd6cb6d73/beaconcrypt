@@ -1,26 +1,36 @@
 (* SPDX-License-Identifier: 0BSD *)
 
-(**************************************************************************)
-(* Shared symmetric-HKDF prefix conformance controls                     *)
-(**************************************************************************)
+(* Prefix consistency is a property within one complete input/salt/label address. Current initial45 and message48 requests select different addresses. Free constructors idealize distinct outputs; the runtime fixed-input fixture is only a regression check and is not a collision-impossibility theorem. *)
+free HKDF_INITIAL_PREFIX_WITNESS: bitstring [private].
+free HKDF_MESSAGE_PREFIX_WITNESS: bitstring [private].
+free HKDF_CROSS_PHASE_LEFT_WITNESS: bitstring [private].
+free HKDF_CROSS_PHASE_RIGHT_WITNESS: bitstring [private].
 
-(* Production initialization and record expansion use one HKDF stream for an equal symmetric input, so the two 32-byte initialization halves must be the key and next-chain prefixes of the 76-byte record step. *)
-free HKDF_PREFIX_LEFT_WITNESS: bitstring [private].
-free HKDF_PREFIX_RIGHT_WITNESS: bitstring [private].
-
-event HkdfInitialLeftEqualsStepKey(bitstring).
-event HkdfInitialRightEqualsStepNext(bitstring).
+event HkdfSameInitialLabelPrefix(bitstring).
+event HkdfSameMessageLabelPrefix(bitstring).
+event HkdfCrossPhaseLeftAlias(bitstring).
+event HkdfCrossPhaseRightAlias(bitstring).
 
 let HkdfPrefixConformanceControls() =
-  new symmetric_input: bitstring;
+  new input: bitstring;
   (
-    let initial_left = server_to_beacon_chain(symmetric_input) in
-    let step_key = material_key(ratchet_material(symmetric_input)) in
-    if initial_left = step_key then
-      event HkdfInitialLeftEqualsStepKey(HKDF_PREFIX_LEFT_WITNESS)
+    let initial_left = server_to_beacon_chain(input) in
+    let initial_stream_left = hkdf_first_32(hkdf_sha512_no_salt(input, initial_ratchet_domain())) in
+    if initial_left = initial_stream_left then
+      event HkdfSameInitialLabelPrefix(HKDF_INITIAL_PREFIX_WITNESS)
   |
-    let initial_right = beacon_to_server_chain(symmetric_input) in
-    let step_next = ratchet_next(symmetric_input) in
-    if initial_right = step_next then
-      event HkdfInitialRightEqualsStepNext(HKDF_PREFIX_RIGHT_WITNESS)
+    let message_key = material_key(ratchet_material(input)) in
+    let message_stream_key = hkdf_first_32(hkdf_sha512_no_salt(input, symmetric_ratchet_domain())) in
+    if message_key = message_stream_key then
+      event HkdfSameMessageLabelPrefix(HKDF_MESSAGE_PREFIX_WITNESS)
+  |
+    let initial_left = server_to_beacon_chain(input) in
+    let message_key = material_key(ratchet_material(input)) in
+    if initial_left = message_key then
+      event HkdfCrossPhaseLeftAlias(HKDF_CROSS_PHASE_LEFT_WITNESS)
+  |
+    let initial_right = beacon_to_server_chain(input) in
+    let message_next = ratchet_next(input) in
+    if initial_right = message_next then
+      event HkdfCrossPhaseRightAlias(HKDF_CROSS_PHASE_RIGHT_WITNESS)
   ).

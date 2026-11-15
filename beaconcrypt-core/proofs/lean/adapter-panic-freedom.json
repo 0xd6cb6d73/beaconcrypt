@@ -315,10 +315,10 @@
     },
     "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicServerAccept.get_shared_secret_with_rng_total"
   },
-  "beaconcrypt_public_wrapper.auth.fingerprint_pin": {
+  "beaconcrypt_public_wrapper.auth.server_pin": {
     "form": "exists",
-    "module": "BeaconcryptCore.PanicFreedom.AdapterConstructors",
-    "theorem": "BeaconcryptCore.PanicFreedom.AdapterConstructors.fingerprint_pin_total"
+    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial",
+    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial.server_pin_total"
   },
   "beaconcrypt_public_wrapper.beacon.Beacon.Insts.BeaconcryptBeaconProviderBeacon.finish_registration": {
     "decoder_composition": {
@@ -389,11 +389,6 @@
     "form": "exists",
     "module": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial",
     "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial.beacon_identity_sk_total"
-  },
-  "beaconcrypt_public_wrapper.beacon.Beacon.mldsa_public_key": {
-    "form": "exists",
-    "module": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial",
-    "theorem": "BeaconcryptCore.PanicFreedom.AdapterPublicTrivial.beacon_mldsa_public_key_total"
   },
   "beaconcrypt_public_wrapper.beacon._proof_beacon_init_ready": {
     "form": "exists",

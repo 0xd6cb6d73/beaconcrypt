@@ -20,7 +20,7 @@ variable {source : RegistrationNativeMldsa.Source}
 
 theorem ordinary_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List IdentitySeed)
     (owner : Owner source) (seed : IdentitySeed) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (query : RegistrationAgreementExecutor.Request) (ordinary : Other query) :
     Related (n := n) (Auxiliary := Auxiliary) setup checks representation created seeds
@@ -37,7 +37,7 @@ theorem ordinary_source (setup : Setup base KemSK) (checks : Checks)
 
 theorem ordinary_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (owner : Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (query : RegistrationAgreementExecutor.Request) (ordinary : Other query) :
     Keeps (n := n) (Auxiliary := Auxiliary) setup checks representation created
@@ -64,7 +64,7 @@ theorem original_conversion (setup : Setup base KemSK)
 
 theorem conversion_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List IdentitySeed)
     (owner : Owner source) (seed : IdentitySeed) (oneTime : PqxdhJointGapDh.ScalarBytes) :
     Related (n := n) (Auxiliary := Auxiliary) setup checks representation created seeds
       (RegistrationNativeIdentityFrontend.agreement setup owner oneTime (.convertSecret .LocalIdentity))
@@ -80,7 +80,7 @@ theorem conversion_source (setup : Setup base KemSK) (checks : Checks)
 
 theorem local_dh_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List IdentitySeed)
     (owner : Owner source) (seed : IdentitySeed) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (peer : PqxdhBeaconPhase2Preparation.Word32) (found : seeds[owner.identity.handle]? = some seed) :
     Related (n := n) (Auxiliary := Auxiliary) setup checks representation created seeds
@@ -96,7 +96,7 @@ theorem local_dh_source (setup : Setup base KemSK) (checks : Checks)
 /-- Every actual native agreement request has the original seed-bearing source reply and effects, with local identity operations supplied only by the indexed service. -/
 theorem query_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List IdentitySeed)
     (owner : Owner source) (seed : IdentitySeed) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (found : seeds[owner.identity.handle]? = some seed) (query : RegistrationAgreementExecutor.Request) :
     Related (n := n) (Auxiliary := Auxiliary) setup checks representation created seeds
@@ -123,7 +123,7 @@ theorem query_source (setup : Setup base KemSK) (checks : Checks)
 
 theorem query_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (owner : Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes) (query : RegistrationAgreementExecutor.Request) :
     Keeps (n := n) (Auxiliary := Auxiliary) setup checks representation created
       (RegistrationNativeIdentityFrontend.agreement setup owner oneTime query) := by
@@ -152,7 +152,7 @@ theorem query_keeps (setup : Setup base KemSK) (checks : Checks)
 
 theorem program_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (seeds : List IdentitySeed)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (seeds : List IdentitySeed)
     (owner : Owner source) (seed : IdentitySeed) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (found : seeds[owner.identity.handle]? = some seed) (work : OracleComp RegistrationAgreementExecutor.Spec Value) :
     Related (n := n) (Auxiliary := Auxiliary) setup checks representation created seeds
@@ -164,7 +164,7 @@ theorem program_source (setup : Setup base KemSK) (checks : Checks)
 
 theorem program_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (owner : Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes) (work : OracleComp RegistrationAgreementExecutor.Spec Value) :
     Keeps (n := n) (Auxiliary := Auxiliary) setup checks representation created
       (simulateQ (RegistrationNativeIdentityFrontend.agreement setup owner oneTime) work) :=

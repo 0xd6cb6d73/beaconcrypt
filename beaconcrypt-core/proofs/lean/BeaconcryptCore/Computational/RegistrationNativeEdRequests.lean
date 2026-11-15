@@ -54,18 +54,18 @@ theorem resume_started (pending next : registration.BeaconEd25519Signing)
 
 /-- The real native entry point derives the signing shape from its actual unsigned builder, retaining its pin-rejection branch. -/
 theorem begin_shape (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize)
+    (pin : session.ServerAuthenticationPin)
     (prekey oneTime : X25519PublicKey) (pq : PqxdhKemIndCca.MlKem768PublicKey)
     (prekeyBytes : absBytes inputs.prekey_public_key = prekey.toList)
     (oneTimeBytes : absBytes coins.one_time_public_key = oneTime.toList)
     (pqBytes : absBytes inputs.pq_public_key = pq.toList)
     (pending : registration.BeaconEd25519Signing)
-    (begun : registration.begin_beacon_init control inputs coins pin mldsa = .ok (.Ed25519SigningRequested pending)) :
+    (begun : registration.begin_beacon_init control inputs coins pin = .ok (.Ed25519SigningRequested pending)) :
     Shape prekey pending.state.started := by
   obtain ⟨started, built, _pin, _identity, pre, one, kem⟩ :=
     PqxdhJointPhase1SourceWriter.beacon_start_unsigned control inputs coins
   obtain ⟨actual, actualBuild, exactBegin⟩ :=
-    BeaconcryptCore.Refinement.RegistrationSigningContinuations.begin_beacon_init_exact control inputs coins pin mldsa
+    BeaconcryptCore.Refinement.RegistrationSigningContinuations.begin_beacon_init_exact control inputs coins pin
   have same : started = actual := RustM.ok.inj (built.symm.trans actualBuild)
   subst actual
   rw [exactBegin] at begun

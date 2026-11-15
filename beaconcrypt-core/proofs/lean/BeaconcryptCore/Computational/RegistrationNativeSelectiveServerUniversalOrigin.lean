@@ -7,6 +7,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
+set_option warningAsError true
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativeSelectiveServerUniversalOrigin
 open PqxdhServerAuthExperiment (Setup Codec)
@@ -80,19 +81,33 @@ theorem complete (reservePeer : Bool) (ready : Ready) (application : Slice U8) (
     rw [pure_source, mem_support_pure_iff] at continued
     subst result
     cases successful }
-  split at continued <;> try {
-    rw [pure_source, mem_support_pure_iff] at continued
-    subst result
-    cases successful }
   rw [bind_source, mem_support_bind_iff] at continued
-  obtain ⟨published, admitted, completed⟩ := continued
-  obtain ⟨peer, same, key, control⟩ := finish setup wire route sign seed scalar candidate provider service codec
-    published.1.1.1.1 before published.1.1.1.2 published.1.1.2 published.1.2 published.2 result completed keyId bytes successful
-  have installed := RegistrationNativeSelectiveMaterialUniversal.server setup wire route sign seed scalar candidate provider service codec
-    ready.reference selected wire.encodeResponse before.control _ peer
-    occupied.1.1.1.2 occupied.1.1.2 occupied.1.2 occupied.2 published admitted same
-  rw [control, ← key]
-  exact installed
+  obtain ⟨hashed, _hashedSupport, continued⟩ := continued
+  cases hashResult : hashed.1.1.1.1 with
+  | fail error | div =>
+      simp only [hashResult, pure_source, mem_support_pure_iff] at continued
+      subst result
+      cases successful
+  | ok reply => cases reply with
+    | Err previous =>
+      simp only [hashResult, pure_source, mem_support_pure_iff] at continued
+      subst result
+      cases successful
+    | Ok initial =>
+      simp only [hashResult] at continued
+      split at continued <;> try {
+        rw [pure_source, mem_support_pure_iff] at continued
+        subst result
+        cases successful }
+      rw [bind_source, mem_support_bind_iff] at continued
+      obtain ⟨published, admitted, completed⟩ := continued
+      obtain ⟨peer, same, key, control⟩ := finish setup wire route sign seed scalar candidate provider service codec
+        published.1.1.1.1 before published.1.1.1.2 published.1.1.2 published.1.2 published.2 result completed keyId bytes successful
+      have installed := RegistrationNativeSelectiveMaterialUniversal.server setup wire route sign seed scalar candidate provider service codec
+        ready.reference selected wire.encodeResponse before.control _ peer
+        hashed.1.1.1.2 hashed.1.1.2 hashed.1.2 hashed.2 published admitted same
+      rw [control, ← key]
+      exact installed
 
 /-- The actual selected one-use build uses its same stored Ready and returns a hidden record origin. -/
 theorem build (reservePeer : Bool) (handle : Nat) (application : Option (Slice U8)) (before : State) (ready : Ready)

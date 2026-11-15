@@ -10,6 +10,8 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhInitialHistoryBudget
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhInitialPostContext RawCtxForwardTags PqxdhInitialOriginContext
 open PqxdhInitialBuilderContext (BuildResult)
 variable {ι M P I D K X Response Shared Result Origin : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -79,7 +81,7 @@ private theorem finish_bound (prior : List RatchetChain) (cap : Nat)
     (available : knownLength prior before.roles.2 ≤ cap)
     (later : ∀ reply updated saved, knownLength prior updated.roles.2 = knownLength prior before.roles.2 →
       All (SavedBound prior cap) (after reply updated saved)) :
-    All (SavedBound prior cap) (PqxdhInitialOriginForwardPost.finish mark decode index raw before trace outside after) := by
+    All (SavedBound prior cap) (PqxdhInitialOriginForwardPost.finish (completedBinding := completedBinding) mark decode index raw before trace outside after) := by
   unfold PqxdhInitialOriginForwardPost.finish
   cases phase : (before.roles.1.2 index).beacon.phase
   case initSent control prekey oneTime kem =>
@@ -104,7 +106,7 @@ private theorem finish_bound (prior : List RatchetChain) (cap : Nat)
                 · unfold PqxdhInitialOriginForwardPost.ownerLift
                   apply lift_all (fun _ => True) (SavedBound prior cap)
                     (fun inner => ⟨.inl (.finish index before control
-                      (PqxdhBeaconPhase2Shared.clearedMetadata prepared.metadata) outside inner), trace, some (mark prepared.root)⟩)
+                      (PqxdhBeaconPhase2Shared.clearedMetadata prepared.metadata) prepared.metadata.associatedData outside inner), trace, some (mark prepared.root)⟩)
                     (fun _ _ => available) _ (all_true _)
                 · exact fun result => later _ _ _ rfl
   all_goals exact later _ _ _ rfl
@@ -115,7 +117,7 @@ theorem post_bound (prior : List RatchetChain) (cap : Nat)
     (decode : RawCtxReceive.FrameDecoder) (client : OracleComp (PostSpec extra S B) Result)
     (qPost : Nat) (bounded : client.IsTotalQueryBound qPost) (before : NativeFront M P I D K S B)
     (trace : PqxdhInitialOriginPost.Trace Origin S B) (available : knownLength prior before.roles.2 + qPost ≤ cap) :
-    All (SavedBound prior cap) (PqxdhInitialOriginForwardPost.program (X := X) (Response := Response) (Shared := Shared)
+    All (SavedBound prior cap) (PqxdhInitialOriginForwardPost.program (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
       mark sender route decode client before trace) := by
   induction client using OracleComp.inductionOn generalizing qPost before trace with
   | pure value => trivial
@@ -123,7 +125,7 @@ theorem post_bound (prior : List RatchetChain) (cap : Nat)
       rw [isTotalQueryBound_query_bind_iff] at bounded
       have later : ∀ reply (updated : NativeFront M P I D K S B) (saved : PqxdhInitialOriginPost.Trace Origin S B),
           knownLength prior updated.roles.2 ≤ knownLength prior before.roles.2 + 1 →
-          All (SavedBound prior cap) (PqxdhInitialOriginForwardPost.program (X := X) (Response := Response) (Shared := Shared)
+          All (SavedBound prior cap) (PqxdhInitialOriginForwardPost.program (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
             mark sender route decode (outside reply) updated saved) := by
         intro reply updated saved growth
         exact ih reply (qPost - 1) (bounded.2 reply) updated saved (by omega)
@@ -133,7 +135,7 @@ theorem post_bound (prior : List RatchetChain) (cap : Nat)
       · exact plain_bound prior cap _ _ (fun reply => later reply before trace (Nat.le_add_right _ 1))
       · cases request with
         | finish index raw =>
-            apply finish_bound prior cap mark decode index raw before trace outside _ (by omega)
+            apply finish_bound (completedBinding := completedBinding) prior cap mark decode index raw before trace outside _ (by omega)
             intro reply updated saved unchanged
             exact later reply updated saved (by omega)
 
@@ -143,10 +145,10 @@ private theorem finished_bound (prior : List RatchetChain) (cap : Nat) (mark : P
     (qPost : Nat) (bounded : ∀ reply, (outside reply).IsTotalQueryBound qPost)
     (available : knownLength prior before.roles.2 + qPost ≤ cap)
     (result : RustM (Option PqxdhServerRegistrationPublication.Response × PqxdhInitialOriginForwardBuilder.Publication M P)) :
-    All (SavedBound prior cap) (PqxdhInitialOriginForwardBuilder.finished (X := X) (Response := Response) (Shared := Shared)
+    All (SavedBound prior cap) (PqxdhInitialOriginForwardBuilder.finished (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
       mark origin sender route decode index before trace outside result) :=
 by
-  apply post_bound prior cap mark sender route decode _ qPost (bounded _) _ _
+  apply post_bound (completedBinding := completedBinding) prior cap mark sender route decode _ qPost (bounded _) _ _
   cases result <;> exact available
 
 private theorem builder_plain_bound {Value : Type} (prior : List RatchetChain) (cap : Nat)
@@ -167,10 +169,10 @@ private theorem publication_bound (prior : List RatchetChain) (cap : Nat) (mark 
     (qPost : Nat) (bounded : ∀ reply, (outside reply).IsTotalQueryBound qPost)
     (available : knownLength prior before.roles.2 + qPost ≤ cap)
     (result : PqxdhInitialPendingPost.KernelOf RatchetChain × Option RawCtxSourceSend.Encrypted) :
-    All (SavedBound prior cap) (PqxdhInitialOriginForwardBuilder.publication (X := X) (Response := Response) (Shared := Shared)
+    All (SavedBound prior cap) (PqxdhInitialOriginForwardBuilder.publication (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
       mark origin sender route decode index before trace candidate authenticated metadata outside result) := by
   apply builder_plain_bound prior cap
-  exact fun value => finished_bound prior cap mark origin sender route decode index before trace outside qPost bounded available (.ok value)
+  exact fun value => finished_bound (completedBinding := completedBinding) prior cap mark origin sender route decode index before trace outside qPost bounded available (.ok value)
 
 private theorem send_bound (prior : List RatchetChain) (cap : Nat) (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin) (origin : Origin) (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
     (decode : RawCtxReceive.FrameDecoder) (index : Fin S) (before : NativeFront M P I D K S B) (trace : PqxdhInitialOriginPost.Trace Origin S B)
@@ -179,15 +181,15 @@ private theorem send_bound (prior : List RatchetChain) (cap : Nat) (mark : Pqxdh
     (qPost : Nat) (bounded : ∀ reply, (outside reply).IsTotalQueryBound qPost)
     (available : knownLength prior before.roles.2 + qPost ≤ cap)
     (kernel : PqxdhInitialPendingPost.KernelOf RatchetChain) :
-    All (SavedBound prior cap) (PqxdhInitialOriginForwardBuilder.send (X := X) (Response := Response) (Shared := Shared)
+    All (SavedBound prior cap) (PqxdhInitialOriginForwardBuilder.send (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
       mark origin sender route decode index before trace candidate authenticated metadata outside kernel) := by
   unfold PqxdhInitialOriginForwardBuilder.send
-  cases start : RawCtxChainSend.normalBegin kernel (PqxdhServerRegistrationPublication.firstContext candidate authenticated) with
-  | exhausted entry context => exact publication_bound prior cap mark origin sender route decode index before trace candidate authenticated metadata outside qPost bounded available _
+  cases start : RawCtxChainSend.normalBegin kernel (PqxdhServerRegistrationPublication.firstContext candidate associatedData authenticated) with
+  | exhausted entry context => exact publication_bound (completedBinding := completedBinding) prior cap mark origin sender route decode index before trace candidate authenticated metadata outside qPost bounded available _
   | requested pending =>
       exact ⟨(fun tag same => by cases same; exact (Nat.le_add_right _ qPost).trans available), fun reply =>
         ⟨(fun _ impossible => by cases impossible), fun sealed =>
-          publication_bound prior cap mark origin sender route decode index before trace candidate authenticated metadata outside qPost bounded available _⟩⟩
+          publication_bound (completedBinding := completedBinding) prior cap mark origin sender route decode index before trace candidate authenticated metadata outside qPost bounded available _⟩⟩
 
 private theorem candidate_bound (prior : List RatchetChain) (cap : Nat) (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin) (origin : Origin) (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
     (decode : RawCtxReceive.FrameDecoder) (index : Fin S) (before : NativeFront M P I D K S B) (trace : PqxdhInitialOriginPost.Trace Origin S B)
@@ -196,37 +198,37 @@ private theorem candidate_bound (prior : List RatchetChain) (cap : Nat) (mark : 
     (outside : BuildResult → OracleComp (PostSpec extra S B) Result)
     (qPost : Nat) (bounded : ∀ reply, (outside reply).IsTotalQueryBound qPost)
     (available : knownLength prior before.roles.2 + qPost ≤ cap) :
-    All (SavedBound prior cap) (PqxdhInitialOriginForwardBuilder.candidate (X := X) (Response := Response) (Shared := Shared)
+    All (SavedBound prior cap) (PqxdhInitialOriginForwardBuilder.candidate (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
       mark origin sender route decode index before trace initial candidate data metadata outside) := by
   unfold PqxdhInitialOriginForwardBuilder.candidate
   apply builder_plain_bound prior cap
   intro valid
   cases valid
-  · exact finished_bound prior cap mark origin sender route decode index before trace outside qPost bounded available _
+  · exact finished_bound (completedBinding := completedBinding) prior cap mark origin sender route decode index before trace outside qPost bounded available _
   · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
     apply builder_plain_bound prior cap
     intro reserved
     cases reserved
-    · exact finished_bound prior cap mark origin sender route decode index before trace outside qPost bounded available _
+    · exact finished_bound (completedBinding := completedBinding) prior cap mark origin sender route decode index before trace outside qPost bounded available _
     · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
       cases initial with
-      | fail error => exact finished_bound prior cap mark origin sender route decode index before trace outside qPost bounded available _
-      | div => exact finished_bound prior cap mark origin sender route decode index before trace outside qPost bounded available _
+      | fail error => exact finished_bound (completedBinding := completedBinding) prior cap mark origin sender route decode index before trace outside qPost bounded available _
+      | div => exact finished_bound (completedBinding := completedBinding) prior cap mark origin sender route decode index before trace outside qPost bounded available _
       | ok kernel =>
           dsimp only
           split
-          · exact finished_bound prior cap mark origin sender route decode index before trace outside qPost bounded available _
+          · exact finished_bound (completedBinding := completedBinding) prior cap mark origin sender route decode index before trace outside qPost bounded available _
           · split
             · apply builder_plain_bound prior cap
               intro allocated
               cases allocated
-              · exact finished_bound prior cap mark origin sender route decode index before trace outside qPost bounded available _
+              · exact finished_bound (completedBinding := completedBinding) prior cap mark origin sender route decode index before trace outside qPost bounded available _
               · simp only [Bool.not_true, Bool.false_eq_true, ite_false]
                 cases binding : candidate.key_id_binding with
-                | fail error => exact finished_bound prior cap mark origin sender route decode index before trace outside qPost bounded available _
-                | div => exact finished_bound prior cap mark origin sender route decode index before trace outside qPost bounded available _
-                | ok binding => exact send_bound prior cap mark origin sender route decode index before trace candidate _ metadata outside qPost bounded available kernel
-            · exact finished_bound prior cap mark origin sender route decode index before trace outside qPost bounded available _
+                | fail error => exact finished_bound (completedBinding := completedBinding) prior cap mark origin sender route decode index before trace outside qPost bounded available _
+                | div => exact finished_bound (completedBinding := completedBinding) prior cap mark origin sender route decode index before trace outside qPost bounded available _
+                | ok binding => exact send_bound (associatedData := associatedData) (completedBinding := completedBinding) prior cap mark origin sender route decode index before trace candidate _ metadata outside qPost bounded available kernel
+            · exact finished_bound (completedBinding := completedBinding) prior cap mark origin sender route decode index before trace outside qPost bounded available _
 
 private theorem used_bound (prior : List RatchetChain) (cap : Nat) (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin) (origin : Origin) (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
     (decode : RawCtxReceive.FrameDecoder) (index : Fin S) (before : NativeFront M P I D K S B) (trace : PqxdhInitialOriginPost.Trace Origin S B)
@@ -235,16 +237,16 @@ private theorem used_bound (prior : List RatchetChain) (cap : Nat) (mark : Pqxdh
     (outside : BuildResult → OracleComp (PostSpec extra S B) Result)
     (qPost : Nat) (bounded : ∀ reply, (outside reply).IsTotalQueryBound qPost)
     (available : knownLength prior before.roles.2 + qPost ≤ cap) :
-    All (SavedBound prior cap) (PqxdhInitialOriginForwardBuilder.used (X := X) (Response := Response) (Shared := Shared)
+    All (SavedBound prior cap) (PqxdhInitialOriginForwardBuilder.used (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
       mark origin sender route decode index before trace initial pending data metadata outside) := by
   unfold PqxdhInitialOriginForwardBuilder.used
   dsimp only
   cases nextResult : pqxdh.server_next_key_id (PqxdhInitialPendingBuilder.selected sender index before).control with
-  | fail error => exact finished_bound prior cap mark origin sender route decode index before trace outside qPost bounded available _
-  | div => exact finished_bound prior cap mark origin sender route decode index before trace outside qPost bounded available _
+  | fail error => exact finished_bound (completedBinding := completedBinding) prior cap mark origin sender route decode index before trace outside qPost bounded available _
+  | div => exact finished_bound (completedBinding := completedBinding) prior cap mark origin sender route decode index before trace outside qPost bounded available _
   | ok value =>
       cases value with
-      | Err error => exact finished_bound prior cap mark origin sender route decode index before trace outside qPost bounded available _
+      | Err error => exact finished_bound (completedBinding := completedBinding) prior cap mark origin sender route decode index before trace outside qPost bounded available _
       | Ok key =>
           dsimp only
           cases preparation : PqxdhRegistrationInputs.prepare
@@ -253,12 +255,12 @@ private theorem used_bound (prior : List RatchetChain) (cap : Nat) (mark : Pqxdh
               (PqxdhInitialPendingBuilder.selected sender index before).identityKeyId⟩
             (if ((PqxdhInitialPendingBuilder.selected sender index before).server.peers key).isSome
               then pqxdh.KeyIdAvailability.Occupied else .Available) with
-          | fail error => exact finished_bound prior cap mark origin sender route decode index before trace outside qPost bounded available _
-          | div => exact finished_bound prior cap mark origin sender route decode index before trace outside qPost bounded available _
+          | fail error => exact finished_bound (completedBinding := completedBinding) prior cap mark origin sender route decode index before trace outside qPost bounded available _
+          | div => exact finished_bound (completedBinding := completedBinding) prior cap mark origin sender route decode index before trace outside qPost bounded available _
           | ok prepared =>
               cases prepared with
-              | Err error => exact finished_bound prior cap mark origin sender route decode index before trace outside qPost bounded available _
-              | Ok prepared => exact candidate_bound prior cap mark origin sender route decode index before trace initial prepared data metadata outside qPost bounded available
+              | Err error => exact finished_bound (completedBinding := completedBinding) prior cap mark origin sender route decode index before trace outside qPost bounded available _
+              | Ok prepared => exact candidate_bound (associatedData := associatedData) (completedBinding := completedBinding) prior cap mark origin sender route decode index before trace initial prepared data metadata outside qPost bounded available
 
 /-- Every descriptor constructed by the original first-builder and complete post schedule inherits its actual initial disclosed-value count plus the bounded original request allowance. -/
 theorem program_bound (prior : List RatchetChain) (cap : Nat) (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
@@ -268,9 +270,9 @@ theorem program_bound (prior : List RatchetChain) (cap : Nat) (source : PqxdhJoi
     (qPost : Nat) (bounded : ∀ reply, (outside reply).IsTotalQueryBound qPost)
     (before : NativeFront M P I D K S B) (trace : PqxdhInitialOriginPost.Trace Origin S B)
     (available : knownLength prior before.roles.2 + qPost ≤ cap) :
-    All (SavedBound prior cap) (PqxdhInitialOriginForwardBuilder.program (X := X) (Response := Response) (Shared := Shared)
+    All (SavedBound prior cap) (PqxdhInitialOriginForwardBuilder.program (associatedData := associatedData) (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
       source mark origin sender route decode initial index metadata ready outside before trace) :=
-  used_bound prior cap mark origin sender route decode index _ trace initial _ ready.application metadata outside qPost bounded available
+  used_bound (associatedData := associatedData) (completedBinding := completedBinding) prior cap mark origin sender route decode index _ trace initial _ ready.application metadata outside qPost bounded available
 
 
 variable {A N C : Type}
@@ -288,10 +290,10 @@ theorem carried_bound (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (
     (prior : List RatchetChain) (state reached : PqxdhInitialNativeAudit.State A N C)
     (context : Context extra M P I D K Result Origin S B)
     (supported : RawCtxForwardScan.Cut.pending context reached ∈ support
-      (PqxdhInitialNativeAuditCarried.carried source writer pre application initial selector aux mark sender route decode execution depth stage state)) :
+      (PqxdhInitialNativeAuditCarried.carried (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initial selector aux mark sender route decode execution depth stage state)) :
     knownLength prior (PqxdhInitialStoppedDisclosure.history context) ≤ knownLength prior execution.before.roles.2 + qPost :=
   scan_all _ _ _ _ (SavedBound prior (knownLength prior execution.before.roles.2 + qPost)) _ _
-    (program_bound prior _ source mark execution.origin sender route decode execution.initial execution.index execution.metadata
+    (program_bound (associatedData := associatedData) (completedBinding := completedBinding) prior _ source mark execution.origin sender route decode execution.initial execution.index execution.metadata
       execution.ready execution.outside qPost bounded execution.before execution.trace (le_refl _)) state reached context supported
 
 def seed (prior : List RatchetChain) (context : Context extra M P I D K Result Origin S B)
@@ -318,11 +320,11 @@ theorem carried_seed (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (w
     (prior : List RatchetChain) (state reached : PqxdhInitialNativeAudit.State A N C)
     (context : Context extra M P I D K Result Origin S B)
     (supported : RawCtxForwardScan.Cut.pending context reached ∈ support
-      (PqxdhInitialNativeAuditCarried.carried source writer pre application initial selector aux mark sender route decode execution depth stage state)) :
+      (PqxdhInitialNativeAuditCarried.carried (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initial selector aux mark sender route decode execution depth stage state)) :
     (seed prior context reached.2).length ≤ knownLength prior execution.before.roles.2 + qPost + state.2.length + 3 * (7 + qPost * 67) := by
-  have history := carried_bound source writer pre application initial selector aux mark sender route decode execution
+  have history := carried_bound (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initial selector aux mark sender route decode execution
     depth stage qPost bounded prior state reached context supported
-  obtain ⟨added, same, count⟩ := PqxdhInitialNativeAuditCarried.carried_audit source writer pre application initial selector aux
+  obtain ⟨added, same, count⟩ := PqxdhInitialNativeAuditCarried.carried_audit (associatedData := associatedData) (completedBinding := completedBinding) source writer pre application initial selector aux
     mark sender route decode execution depth stage qPost bounded state (.pending context reached) supported
   change reached.2 = state.2 ++ added at same
   simp only [knownLength] at history ⊢

@@ -16,14 +16,14 @@ variable {n : Nat} {I KemSK Platform A : Type} {base : OracleSpec I} {source : R
 local notation "Native" => RegistrationNativeExperiment.State n KemSK source
 
 noncomputable def handler (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit) :
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) :
     QueryImpl (Trusted n KemSK) (StateT (Backend n KemSK) ProbComp)
   | .inl effect=>fun before=>(fun result=>(result.1,{before with world:=worldBackend result.2})) <$>
       (PqxdhRecordLiftWorld.effects effect).run before.world
   | .inr kem=>backendLeaf setup checks representation created (.inr (.inr kem))
 
 theorem query (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (selected : (Trusted n KemSK).Domain) (safe : RegistrationNativeWorldOwnerFrame.Safe selected) (before : Native) :
     Prod.map id backend <$>(RegistrationNativeExperiment.trusted setup checks representation created source selected).run before=
       (handler setup checks representation created selected).run (backend before) :=by
@@ -36,7 +36,7 @@ theorem query (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : Pqx
       | _=>exact False.elim safe
 
 theorem program (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp (Trusted n KemSK) A) (safe : AllQueriesSatisfy work (RegistrationNativeWorldOwnerFrame.Safe (KemSK:=KemSK)))
     (before : Native) :
     Prod.map id backend <$>(simulateQ (RegistrationNativeExperiment.trusted setup checks representation created source) work).run before=
@@ -53,7 +53,7 @@ theorem program (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : P
 
 theorem platform (coins : QueryImpl unifSpec (StateT Platform ProbComp))
     (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp (Trusted n KemSK) A) (safe : AllQueriesSatisfy work (RegistrationNativeWorldOwnerFrame.Safe (KemSK:=KemSK)))
     (before : Native) (previous : Platform) :
     Prod.map (Prod.map id backend) id <$>

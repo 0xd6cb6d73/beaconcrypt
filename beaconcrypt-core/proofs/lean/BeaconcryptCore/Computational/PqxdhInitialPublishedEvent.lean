@@ -12,6 +12,8 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhInitialPublishedEvent
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf RawCtxSelectedChain
 open PqxdhInitialSourcePublication PqxdhInitialOriginPostPath
 variable {ι Chain M P I D K X Response Shared A N C ContextId : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -60,12 +62,12 @@ theorem checked_bound (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMix
     (selected : RawCtxProtocolReveals.Owner S B) (number : Std.U64) (earlier : List RatchetChain)
     (n : Nat) (depth : continuation.depth context.1 = some n) :
     (PqxdhInitialCheckedFreshness.actualDecision target earlier disclosed (fun result => Gate selected number result.1.1) <$>
-      PqxdhInitialCheckedFreshness.nativeRun source writer mark sender route decode continuation context target output disclosed state candidates).boolDistance
+      PqxdhInitialCheckedFreshness.nativeRun (completedBinding := completedBinding) source writer mark sender route decode continuation context target output disclosed state candidates).boolDistance
       (PqxdhInitialParentStoppedHop.decision
         (PqxdhInitialCheckedFreshness.remainingEvent earlier disclosed (fun result => Gate selected number result.1.1)) <$>
-        PqxdhInitialCheckedFreshness.maskedRun source writer mark sender route decode continuation context output disclosed state candidates) ≤
-      3 * (Pr{let result ← PqxdhInitialCheckedFreshness.maskedRun source writer mark sender route decode continuation context output disclosed state candidates}[target ∈ result.2.1.2]).toReal :=
-  PqxdhInitialCheckedFreshness.bound source writer mark sender route decode continuation context target output disclosed state candidates
+        PqxdhInitialCheckedFreshness.maskedRun (completedBinding := completedBinding) source writer mark sender route decode continuation context output disclosed state candidates) ≤
+      3 * (Pr{let result ← PqxdhInitialCheckedFreshness.maskedRun (completedBinding := completedBinding) source writer mark sender route decode continuation context output disclosed state candidates}[target ∈ result.2.1.2]).toReal :=
+  PqxdhInitialCheckedFreshness.bound (completedBinding := completedBinding) source writer mark sender route decode continuation context target output disclosed state candidates
     earlier (fun result => Gate selected number result.1.1) n depth
 
 
@@ -104,14 +106,14 @@ theorem carried_lineage {Result Origin : Type}
     (initialCursor : state.1.1.2.2 = ⟨root, 0⟩)
     (context : PqxdhInitialOriginContext.Context extra M P I D K Result Origin S B)
     (supported : RawCtxForwardScan.Cut.pending context reached ∈ support
-      (PqxdhInitialNativeCarried.carried source writer mark sender route decode execution depth stage external state)) :
+      (PqxdhInitialNativeCarried.carried (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth stage external state)) :
     ∃ earlier, RawCtxCursorLineage.walk reached.1.1.2.1 reached.1.1.2.2.depth root =
       some (earlier, reached.1.1.2.2.input) := by
   have packed : RawCtxForwardScan.pack
-      (PqxdhInitialOriginContext.frame (X := X) (Response := Response) mark sender route decode)
+      (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode)
       (.pending context reached) ∈ support
-      (RawCtxForwardScan.pack (PqxdhInitialOriginContext.frame (X := X) (Response := Response) mark sender route decode) <$>
-        PqxdhInitialNativeCarried.carried source writer mark sender route decode execution depth stage external state) := by
+      (RawCtxForwardScan.pack (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode) <$>
+        PqxdhInitialNativeCarried.carried (associatedData := associatedData) (completedBinding := completedBinding) source writer mark sender route decode execution depth stage external state) := by
     rw [support_map]
     exact ⟨.pending context reached, supported, rfl⟩
   rw [PqxdhInitialNativeCarried.carried_pack] at packed
@@ -131,7 +133,7 @@ private theorem step_agrees (left right : RawCtxSelectedParentTable.Prior) (inpu
     RawCtxPublishedLineage.step left (RawCtxFreshChainCut.concreteChain input) =
       RawCtxPublishedLineage.step right (RawCtxFreshChainCut.concreteChain input) := by
   have info : PqxdhRefinement.absBytes ratchet.SYM_RATCHET_INFO = Pqxdh.INFO_R := by
-    simpa only [pqxdh.SYM_RATCHET_INFO] using PqxdhRefinement.absBytes_SYM_RATCHET_INFO
+    simpa only [ratchet.SYM_RATCHET_INFO] using PqxdhRefinement.absBytes_SYM_RATCHET_INFO
   have request : RawCtxKdfRequestTable.address (RawCtxChainSend.nativeRequest (RawCtxFreshChainCut.concreteChain input)) =
       RawCtxFirstParentRisk.inputAddress input := by
     simp only [RawCtxKdfRequestTable.address, RawCtxChainSend.nativeRequest, info]

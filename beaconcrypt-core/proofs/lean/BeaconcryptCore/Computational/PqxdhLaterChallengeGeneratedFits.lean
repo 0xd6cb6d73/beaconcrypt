@@ -6,7 +6,10 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeGeneratedFits
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPhase1AcceptanceOracle PqxdhKemIndCca PqxdhInitializerSecrecy
 open CtxRomAuth AdaptiveCtxSharedHash PqxdhSecretInputKdf PqxdhFullSecretInputKdf
@@ -29,7 +32,7 @@ local notation "Packet" => PqxdhSourceSharedPreparation.Packet
   (PqxdhSourceSharedPreparation.LocalOutput (M := M) (P := P) (I := I) (K := K) (A := A) setup program) KemSK
 local notation "LocalPacket" => PqxdhSharedParentInput.LocalPacket (setup := setup) (M := M) (P := P) (I := I) (K := K)
     (X := X) (Response := Response) (A := A) (S := S) (B := B)
-local notation "input" => PqxdhSourceSharedInput.input setup env callbacks program post attachedVerify primitives baseImpl kem owner number ancestors disclosed
+local notation "input" => PqxdhSourceSharedInput.input (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem owner number ancestors disclosed
 abbrev Details := PqxdhLaterChallengeCapture.Details (SelectorSpec baseSpec) M P (IdentityHandle I) (DhPair setup) (KemHandle K) Bool S (B + 1)
 
 local notation "Input" => PqxdhInitialPreparedSourceInput.Input (M := M) (P := P) (I := I) (K := K) (X := X)
@@ -42,12 +45,12 @@ theorem run_fits (depth q : Nat)
     (bounded : ∀ selection reply, (adversary selection reply).IsTotalQueryBound q)
     (result : PqxdhLaterChallengeGeneratedContinuation.Carrier setup program (M := M) (P := P) (I := I) (K := K)
       (X := X) (Response := Response) (A := A) (KemSK := KemSK) (S := S) (B := B))
-    (supported : result ∈ support (PqxdhLaterChallengeGeneratedContinuation.run setup env callbacks program adversary owner number bit
+    (supported : result ∈ support (PqxdhLaterChallengeGeneratedContinuation.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit
       attachedVerify primitives baseImpl kem ancestors disclosed depth)) :
     PqxdhLaterChallengeSamplerFits.PacketFits setup owner number q (result.1.1.2.1.1.1, result.1.2) := by
-  apply PqxdhLaterChallengeSamplerFits.run_fits setup env callbacks program adversary owner number bit
+  apply PqxdhLaterChallengeSamplerFits.run_fits (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit
     attachedVerify primitives baseImpl kem ancestors disclosed depth q bounded result.1
-  rw [← PqxdhLaterChallengeGeneratedContinuation.run_erase setup env callbacks program adversary owner number bit
+  rw [← PqxdhLaterChallengeGeneratedContinuation.run_erase (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit
     attachedVerify primitives baseImpl kem ancestors disclosed depth, support_map]
   exact ⟨result, supported, rfl⟩
 
@@ -82,17 +85,17 @@ noncomputable def certified (depth : Nat) (budget : PqxdhPhase2SourceSchedulerBo
     (bounded : PqxdhRecordConfidentialityChallenge.AdvBounded program owner adversary budget) :
     OracleComp HashSpec (Certified setup program owner number (M := M) (P := P) (I := I) (K := K)
       (X := X) (Response := Response) (A := A) (KemSK := KemSK) (FinitePartitionQueryBounds.bill (fun _ => 1) budget)) :=
-  (fun result => ⟨result.1, run_fits setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem
+  (fun result => ⟨result.1, run_fits (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem
     ancestors disclosed depth _ (adversary_total setup program adversary owner budget bounded) result.1 result.2⟩) <$>
-      MonadAttach.attach (PqxdhLaterChallengeGeneratedContinuation.run setup env callbacks program adversary owner number bit
+      MonadAttach.attach (PqxdhLaterChallengeGeneratedContinuation.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit
         attachedVerify primitives baseImpl kem ancestors disclosed depth)
 
 /-- Erasing the proof recovers exact complete source syntax, including source order, all private state and every complementary result. -/
 theorem certified_erase (depth : Nat) (budget : PqxdhPhase2SourceSchedulerBounds.Budget)
     (bounded : PqxdhRecordConfidentialityChallenge.AdvBounded program owner adversary budget) :
-    Subtype.val <$> certified setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem
+    Subtype.val <$> certified (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit attachedVerify primitives baseImpl kem
       ancestors disclosed depth budget bounded =
-    PqxdhLaterChallengeGeneratedContinuation.run setup env callbacks program adversary owner number bit
+    PqxdhLaterChallengeGeneratedContinuation.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program adversary owner number bit
       attachedVerify primitives baseImpl kem ancestors disclosed depth := by
   unfold certified Certified
   rw [Functor.map_map]

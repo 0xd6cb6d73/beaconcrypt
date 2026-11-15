@@ -141,14 +141,15 @@ def publishAt (index : Nat) (token : PqxdhServerRelatedRootConsumer.Returned) (g
 
 /-- The private root on the challenge marker, the consumption and the publication: the native side publishes the root, the factored side the placeholder root; both mark the session. -/
 theorem challenge_rel (f : RootOutput → Output) (index : Nat) (point : PqxdhCorrelatedExtractFamily.Message)
-    (rid : beaconcrypt_core.pqxdh.RegistrationId) (token : beaconcrypt_core.pqxdh.PendingServerRegistration) :
+    (rid : beaconcrypt_core.pqxdh.RegistrationId) (token : beaconcrypt_core.pqxdh.PendingServerRegistration)
+    (init : PqxdhEd25519EufCma.Phase1Candidate) :
     Rel (KemSK := KemSK) f id (fun state => state.2 = none ∧ index < state.1.sessions) (fun _ => Inv)
       (valueRead point >>= fun value => mark index value >>= fun _ => consumeGame rid >>= fun _ =>
-        PqxdhRegistrationJointKemPostSkeleton.modifyGame (publishAt index ⟨value, token⟩) >>= fun _ =>
+        PqxdhRegistrationJointKemPostSkeleton.modifyGame (publishAt index ⟨value, token, init⟩) >>= fun _ =>
           Pure.pure (some index))
       (valueRead point >>= fun value => mark index value >>= fun _ => consumeGame rid >>= fun _ =>
         PqxdhRegistrationJointKemPostSkeleton.modifyGame
-          (publishAt index ⟨PqxdhServerAuthEntryFactor.sentinel, token⟩) >>= fun _ =>
+          (publishAt index ⟨PqxdhServerAuthEntryFactor.sentinel, token, init⟩) >>= fun _ =>
           Pure.pure (some index)) := by
   rintro ⟨game, marks⟩ ⟨none_marks, below⟩
   simp only at none_marks
@@ -219,7 +220,7 @@ theorem tail_rel (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) 
                 simp only [PqxdhRegistrationJointKemOpaqueTail.tail, PqxdhRegistrationJointKemOpaqueClient.client,
                   accepted, simulateQ_bind, simulateQ_spec_query, simulateQ_pure,
                   PqxdhRegistrationJointKemOpaqueTail.forward, resumeTail, bind_assoc, pure_bind]
-                exact Rel.bind start fun _ => challenge_rel _ _ _ _ _
+                exact Rel.bind start fun _ => challenge_rel _ _ _ _ _ _
             | known secret =>
                 simp only [PqxdhRegistrationJointKemOpaqueTail.tail, PqxdhRegistrationJointKemOpaqueClient.client,
                   accepted, simulateQ_bind, simulateQ_spec_query, simulateQ_pure,
@@ -285,7 +286,8 @@ theorem skelResume_factor (setup : Setup baseSpec KemSK) (codec : Codec Reader R
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (observe : X × Tag → R) (raw : Pqxdh.Bytes)
     (value : PqxdhServerRootPreparation.Verified Reader)
     (ephemeral : PqxdhServerRootPreparation.Ephemeral PqxdhJointGapDh.ScalarBytes)
-    (consumed : List Pqxdh.Bytes) (game : GameState KemSK) (owners : List EncodedEntry)
+    (consumed : List Pqxdh.Bytes) (game : GameState KemSK)
+    (owners : List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate))
     (next : Option Nat → OracleComp (SourceSpec KemSK) X) (selected : Nat) (ciphertext : MlKem768Ciphertext) :
     Prod.map id (proj (PqxdhServerAuthKeySchedule.fromRoot setup.source)) <$>
         skelResume setup codec checks identityIndex publicIdentity observe raw value ephemeral consumed game owners next

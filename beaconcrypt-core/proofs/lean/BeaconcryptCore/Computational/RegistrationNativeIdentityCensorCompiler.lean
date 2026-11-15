@@ -119,14 +119,14 @@ theorem hash_public (before : Mode) (inactive : before.active = false) (bytes : 
     (hashInput before bytes).input = some bytes := by
   simp only [hashInput, inactive, Bool.false_eq_true, ite_false]
 
-/-- The fingerprint stays an ordinary known-address hash even inside the selected callback. -/
+/-- An arbitrary 1952-byte public query stays an ordinary known-address hash even inside the selected callback; this does not model a Beacon fingerprint stage. -/
 theorem hash_fingerprint (before : Mode) (bytes : Pqxdh.Bytes) (width : bytes.length = 1952) :
     (hashInput before bytes).input = some bytes := by
   cases active : before.active <;> simp [hashInput, active, RegistrationNativeIdentityHashRoute.route, width]
 
 /-- The token decision uses only current-callback control and the public source-fixed input width. -/
 theorem hash_token_iff (before : Mode) (bytes : Pqxdh.Bytes) :
-    (hashInput before bytes).input = none ↔ before.active = true ∧ bytes.length = 5495 := by
+    (hashInput before bytes).input = none ↔ before.active = true ∧ bytes.length = 3543 := by
   cases active : before.active <;> simp [hashInput, active, RegistrationNativeIdentityHashRoute.route]
 
 /-- A source OneTimeKey request passes precisely this proxy's executable role test. -/

@@ -52,12 +52,26 @@ theorem build_snapshot (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
       subst result
       rfl
   | some token =>
-      simp only [found, StateT.run_bind, mem_support_bind_iff] at supported
-      obtain ⟨tail, lifted, supported⟩ := supported
-      obtain ⟨_, same⟩ := liftCoins_mem _ _ _ lifted
-      simp only [same, StateT.run_set, StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
-      obtain ⟨_, rfl, rfl⟩ := supported
-      rfl
+      simp only [found] at supported
+      cases hpre : PqxdhServerRegistrationPublication.prehash before.server token.pending payload with
+      | none =>
+          simp only [hpre, StateT.run_bind, StateT.run_set, pure_bind, StateT.run_pure, support_pure,
+            Set.mem_singleton_iff] at supported
+          subst supported
+          rfl
+      | some candidate =>
+          simp only [hpre, StateT.run_bind, mem_support_bind_iff] at supported
+          obtain ⟨hashed, hashRun, supported⟩ := supported
+          obtain ⟨hashEq, _, _⟩ := hashOracle_grows _ before hashed hashRun
+          simp only [StateT.run_get] at supported
+          obtain ⟨current, currentRun, supported⟩ := supported
+          rw [support_pure, Set.mem_singleton_iff] at currentRun
+          subst currentRun
+          obtain ⟨tail, lifted, supported⟩ := supported
+          obtain ⟨_, same⟩ := liftCoins_mem _ _ _ lifted
+          simp only [same, StateT.run_set, StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
+          obtain ⟨_, rfl, rfl⟩ := supported
+          rw [hashEq]
 
 /-- A rejected original finish creates no acceptance, while retaining its actual preparation, opening, cache and abort effects. -/
 theorem finish_none (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
@@ -68,19 +82,33 @@ theorem finish_none (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   simp only [finishOracle, StateT.run_bind, StateT.run_get, pure_bind] at supported
   cases active : before.beacon.beacon.phase with
   | initSent control prekey oneTime kem =>
-      simp only [active, StateT.run_bind, mem_support_bind_iff] at supported
-      obtain ⟨staged, stageRun, supported⟩ := supported
-      obtain ⟨cache, extra, stageEq, _⟩ := stage_run setup codec beaconSeed publicValue control
-        before.beacon.beacon.identity oneTime kem raw before staged stageRun
-      simp only [StateT.run_get, StateT.run_set, StateT.run_pure, support_pure,
-        Set.mem_singleton_iff] at supported
-      obtain ⟨_, rfl, _, rfl, same⟩ := supported
-      have resultEq := congrArg Prod.fst same
-      have stateEq := congrArg Prod.snd same
-      dsimp only at resultEq stateEq
-      rw [stateEq]
-      simp only [← resultEq, acceptedOf, Option.isSome_none, Bool.false_eq_true, ite_false, Ghost.accept]
-      rw [stageEq]
+      simp only [active] at supported
+      rcases hinit : before.beaconInit with _ | init <;> rcases hresp : responseOf codec raw with _ | response
+      all_goals simp only [hinit, hresp] at supported
+      rotate_left 3
+      · simp only [StateT.run_bind, mem_support_bind_iff] at supported
+        obtain ⟨hashed, hashRun, supported⟩ := supported
+        obtain ⟨hashEq, _, _⟩ := hashOracle_grows _ before hashed hashRun
+        simp only [StateT.run_get] at supported
+        obtain ⟨current, currentRun, supported⟩ := supported
+        rw [support_pure, Set.mem_singleton_iff] at currentRun
+        subst currentRun
+        obtain ⟨staged, stageRun, supported⟩ := supported
+        rw [hashEq] at stageRun
+        obtain ⟨cache, extra, stageEq, _⟩ := stage_run _ setup codec beaconSeed publicValue control _ oneTime kem raw _
+          staged stageRun
+        simp only [StateT.run_set, StateT.run_pure, support_pure, Set.mem_singleton_iff] at supported
+        obtain ⟨_, rfl, _, rfl, same⟩ := supported
+        have resultEq := congrArg Prod.fst same
+        have stateEq := congrArg Prod.snd same
+        dsimp only at resultEq stateEq
+        rw [stateEq]
+        simp only [← resultEq, acceptedOf, Option.isSome_none, Bool.false_eq_true, ite_false, Ghost.accept]
+        rw [stageEq]
+      all_goals
+        simp only [StateT.run_bind, StateT.run_set, StateT.run_pure, pure_bind, support_pure,
+          Set.mem_singleton_iff, Prod.mk.injEq] at supported
+        exact congrArg (fun state => state.ghost.acceptance) supported.2
   | _ =>
       simp only [active, StateT.run_pure, support_pure, Set.mem_singleton_iff, Prod.mk.injEq] at supported
       exact congrArg (fun state => state.ghost.acceptance) supported.2

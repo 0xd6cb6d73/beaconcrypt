@@ -10,6 +10,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialSelectedBuilder
+variable (associatedData : Std.Array Std.U8 151#usize)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf
 open PqxdhInitialGenericProtocol PqxdhInitialGenericProtocolBuilder RawCtxInitialSentinelSampler
 variable {M P I D K A : Type} {S B : Nat}
@@ -30,11 +31,11 @@ theorem supplied_build (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
     (sender : M → Std.U64) (index : Fin S) (metadata : P) (ready : PqxdhPrivateAcceptedRoot.Ready)
     (state : State RawCtxSelectedChain.Kernel M P I D K A S B) :
     simulateQ (PqxdhInitialReplyErasure.supplied (RawCtxSelectedInitialConstructor.response64 (join second other target)))
-      ((PqxdhInitialPrivateBuilder.protocolBuild source writer (retainedKdf prior entry target)
+      ((PqxdhInitialPrivateBuilder.protocolBuild (associatedData := associatedData) source writer (retainedKdf prior entry target)
         aux sender index metadata ready).run
         (native (RawCtxSelectedChain.nativeKernel (RawCtxFreshChainCut.concreteChain target)) state)) =
       Prod.map id (native (RawCtxSelectedChain.nativeKernel (RawCtxFreshChainCut.concreteChain target))) <$>
-        (build source (RawCtxSelectedParentCalls.labelCalls source writer prior entry
+        (build (associatedData := associatedData) source (RawCtxSelectedParentCalls.labelCalls source writer prior entry
           (RawCtxSelectedParentCalls.childResponse prior entry target)) aux (labelInitial second false other)
           sender index metadata (PqxdhInitialBuilderCut.eraseRoot ready)).run state := by
   rw [PqxdhInitialPrivateBuilder.protocol_supplied, kernel_response, selected_build]
@@ -50,10 +51,10 @@ theorem labelled_build (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
     (cache : PqxdhCorrelatedExpand.RootOracle.QueryCache) :
     (simulateQ (PqxdhInitialRootLabelService.labelledFull source (QueryImpl.ofLift unifSpec ProbComp) selected
       (RawCtxSelectedInitialConstructor.response64 (join second other target)))
-      (PqxdhInitialPrivateBuilder.build source writer (retainedKdf prior entry target) aux sender index metadata selected ready
+      (PqxdhInitialPrivateBuilder.build (associatedData := associatedData) source writer (retainedKdf prior entry target) aux sender index metadata selected ready
         (native (RawCtxSelectedChain.nativeKernel (RawCtxFreshChainCut.concreteChain target)) state))).run cache =
       (fun result => (Prod.map id (native (RawCtxSelectedChain.nativeKernel (RawCtxFreshChainCut.concreteChain target))) result, cache)) <$>
-        (build source (RawCtxSelectedParentCalls.labelCalls source writer prior entry
+        (build (associatedData := associatedData) source (RawCtxSelectedParentCalls.labelCalls source writer prior entry
           (RawCtxSelectedParentCalls.childResponse prior entry target)) aux (labelInitial second false other)
           sender index metadata (PqxdhInitialBuilderCut.eraseRoot ready)).run state := by
   rw [PqxdhInitialPrivateBuilder.build_response, kernel_response, selected_build, Functor.map_map]
@@ -81,13 +82,13 @@ theorem supplied_known (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
     (sender : M → Std.U64) (index : Fin S) (metadata : P) (ready : PqxdhPrivateAcceptedRoot.Ready)
     (state : PqxdhRegistrationProtocolState.State M P I D K A S B) :
     simulateQ (PqxdhInitialReplyErasure.supplied (RawCtxSelectedInitialConstructor.response64 (join second other target)))
-      ((PqxdhInitialPrivateBuilder.protocolBuild source writer (retainedKdf prior entry target)
+      ((PqxdhInitialPrivateBuilder.protocolBuild (associatedData := associatedData) source writer (retainedKdf prior entry target)
         aux sender index metadata ready).run state) =
       Prod.map id (native (RawCtxSelectedChain.nativeKernel (RawCtxFreshChainCut.concreteChain target))) <$>
-        (build source (RawCtxSelectedParentCalls.labelCalls source writer prior entry
+        (build (associatedData := associatedData) source (RawCtxSelectedParentCalls.labelCalls source writer prior entry
           (RawCtxSelectedParentCalls.childResponse prior entry target)) aux (labelInitial second false other)
           sender index metadata (PqxdhInitialBuilderCut.eraseRoot ready)).run (fromNative knownKernel state) := by
-  simpa only [known_state] using supplied_build source writer prior entry second other target aux sender index metadata ready
+  simpa only [known_state] using supplied_build (associatedData := associatedData) source writer prior entry second other target aux sender index metadata ready
     (fromNative knownKernel state)
 
 end BeaconcryptCore.Computational.PqxdhInitialSelectedBuilder

@@ -6,8 +6,11 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 set_option maxRecDepth 2048
 namespace BeaconcryptCore.Computational.PqxdhLaterSelectedPaths
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhCorrelatedExpand
 open PqxdhInitialBeaconAmbient PqxdhInitialNativeRetained RawCtxSelectedParentTable RawCtxCursorLineage
 open PqxdhLaterPatchedOccurrence PqxdhOrderedChainHybrids RawCtxSelectedParentPrivatePatch
@@ -31,11 +34,11 @@ theorem sample_annotated_selected (source : FixedHkdfSha512NoSaltSource) (writer
       PqxdhInitialOriginPost.Trace Bool S B) × Evidence)) × RetainedState A N RootOracle.QueryCache)
     (supported : result ∈ support ((simulateQ
       (retained source writer prior (sampleExternal source start))
-      (PqxdhPreparedOccurrencePaths.sampleAnnotated source sender route decode start)).run
+      (PqxdhPreparedOccurrencePaths.sampleAnnotated (associatedData := associatedData) (completedBinding := completedBinding) source sender route decode start)).run
         (start.1.shared, (start.1.privateState, start.1.cache)))) :
     Selected (ConcreteRatchetKernel.refined <$> PqxdhInitialReplyErasure.kernelOf false (PqxdhInitialSampledParent.response start))
       (PqxdhInitialRootAudit.kernel (zeroRoot, PqxdhInitialSampledParent.response start)).refined result.1.2.1.2 result.1.2.2 := by
-  apply sequence_selected source writer prior start.1.selectedMessage zeroRoot (PqxdhInitialSampledParent.response start)
+  apply sequence_selected (associatedData := associatedData) (completedBinding := completedBinding) source writer prior start.1.selectedMessage zeroRoot (PqxdhInitialSampledParent.response start)
     (fun query => ambient (PqxdhInitialSourcePreparedSecrecy.pre start.1.other query))
     (fun reply => ambient (PqxdhInitialSourcePreparedSecrecy.application start.1.other reply))
     (fun query => ambient (PqxdhInitialSourcePreparedSecrecy.selector start.1.other query))
@@ -55,28 +58,28 @@ theorem sample_one_selected (source : FixedHkdfSha512NoSaltSource) (writer : Raw
     (cr : Ratchet.Crypto RatchetChain RatchetMaterial AD PT CT)
     (depth : Nat) (start : Start) (pending : Pending)
     (supported : Sum.inr pending ∈ support
-      (PqxdhErasedParentSample.sampleOne source writer sender route decode depth start))
+      (PqxdhErasedParentSample.sampleOne (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth start))
     (parent output : FullOutput)
     (safe : targetAddress (nextChain parent) ∉ pending.2.1.1.2 ++
       [PqxdhInitialBuilderContext.address pending.1.original])
     (result : PqxdhInitialNativeCarried.Final M P I D K Bool Bool S B × RetainedState A N RootOracle.QueryCache)
     (completed : result ∈ support ((simulateQ
       (retained source writer (patchedPrior source pending parent output) (sampleExternal source start))
-      (PqxdhInitialOriginContext.resume (PqxdhInitialSampledParent.marker source start) sender route decode pending.1
-        (PqxdhInitialParentBuilderContext.reply sender route decode pending.1.original parent))).run
+      (PqxdhInitialOriginContext.resume (completedBinding := completedBinding) (PqxdhInitialSampledParent.marker source start) sender route decode pending.1
+        (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode pending.1.original parent))).run
           (project pending.2.1))) :
     ∃ evidence : Evidence,
       ((result.1.1, (result.1.2, evidence)), result.2) ∈ support
         ((simulateQ (retained source writer (patchedPrior source pending parent output) (sampleExternal source start))
-          (PqxdhPreparedOccurrencePaths.sampleAnnotated source sender route decode start)).run
+          (PqxdhPreparedOccurrencePaths.sampleAnnotated (associatedData := associatedData) (completedBinding := completedBinding) source sender route decode start)).run
             (start.1.shared, (start.1.privateState, start.1.cache))) ∧
       PqxdhInitialOccurrencePaths.Holds cr (patchedPrior source pending parent output) result.1.2.1 evidence ∧
       Selected (ConcreteRatchetKernel.refined <$> PqxdhInitialReplyErasure.kernelOf false (PqxdhInitialSampledParent.response start))
         (PqxdhInitialRootAudit.kernel (zeroRoot, PqxdhInitialSampledParent.response start)).refined result.1.2.2 evidence := by
-  obtain ⟨evidence, annotated, paths⟩ := PqxdhLaterPatchedOccurrence.sample_one_paths source writer sender route decode
+  obtain ⟨evidence, annotated, paths⟩ := PqxdhLaterPatchedOccurrence.sample_one_paths (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode
     cr depth start pending supported parent output safe result completed
   exact ⟨evidence, annotated, paths,
-    sample_annotated_selected source writer sender route decode start (patchedPrior source pending parent output)
+    sample_annotated_selected (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode start (patchedPrior source pending parent output)
       ((result.1.1, (result.1.2, evidence)), result.2) annotated⟩
 
 /-- Full material sampling supplies the actual pre-normalization origin and selected initializer together with the existing path certificates. All source callbacks, complete shared cache and original Boolean decisions remain on the same supported run. -/
@@ -85,7 +88,7 @@ theorem material_selected (source : FixedHkdfSha512NoSaltSource) (writer : RawCt
     (cr : Ratchet.Crypto RatchetChain RatchetMaterial AD PT CT) (depth : Nat)
     (prior : ProbComp (PqxdhInitialSourceInitialSecrecy.Context extra M P I D K X Response A N S B))
     (context : MaterialContext)
-    (sampled : context ∈ support (PqxdhErasedParentMaterial.prepare source writer sender route decode depth prior))
+    (sampled : context ∈ support (PqxdhErasedParentMaterial.prepare (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth prior))
     (start : Start) (pending : Pending) (shape : context.1.1.1 = .inr (start, .inr pending))
     (safe : PqxdhLaterInputAlias.collision context = false) (output : FullOutput)
     (result : PqxdhInitialNativeCarried.Final M P I D K Bool Bool S B × RetainedState A N RootOracle.QueryCache)
@@ -93,19 +96,19 @@ theorem material_selected (source : FixedHkdfSha512NoSaltSource) (writer : RawCt
       (retained source writer
         (patchedPrior source pending (RawCtxSelectedParentEntry.realize context.1.1.2 context.1.2) output)
         (sampleExternal source start))
-      (PqxdhInitialOriginContext.resume (PqxdhInitialSampledParent.marker source start) sender route decode pending.1
-        (PqxdhInitialParentBuilderContext.reply sender route decode pending.1.original
+      (PqxdhInitialOriginContext.resume (completedBinding := completedBinding) (PqxdhInitialSampledParent.marker source start) sender route decode pending.1
+        (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route decode pending.1.original
           (RawCtxSelectedParentEntry.realize context.1.1.2 context.1.2)))).run (project pending.2.1))) :
     ∃ actualStart : Start,
       PqxdhErasedParentSample.forgetStart actualStart = start ∧
       Sum.inr actualStart.1 ∈ support prior ∧
-      Sum.inr pending ∈ support (PqxdhErasedParentSample.sampleOne source writer sender route decode depth actualStart) ∧
+      Sum.inr pending ∈ support (PqxdhErasedParentSample.sampleOne (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth actualStart) ∧
       ∃ evidence : Evidence,
         ((result.1.1, (result.1.2, evidence)), result.2) ∈ support
           ((simulateQ (retained source writer
             (patchedPrior source pending (RawCtxSelectedParentEntry.realize context.1.1.2 context.1.2) output)
             (sampleExternal source actualStart))
-            (PqxdhPreparedOccurrencePaths.sampleAnnotated source sender route decode actualStart)).run
+            (PqxdhPreparedOccurrencePaths.sampleAnnotated (associatedData := associatedData) (completedBinding := completedBinding) source sender route decode actualStart)).run
               (actualStart.1.shared, (actualStart.1.privateState, actualStart.1.cache))) ∧
         PqxdhInitialOccurrencePaths.Holds cr
           (patchedPrior source pending (RawCtxSelectedParentEntry.realize context.1.1.2 context.1.2) output)
@@ -113,10 +116,10 @@ theorem material_selected (source : FixedHkdfSha512NoSaltSource) (writer : RawCt
         Selected (ConcreteRatchetKernel.refined <$> PqxdhInitialReplyErasure.kernelOf false (PqxdhInitialSampledParent.response actualStart))
           (PqxdhInitialRootAudit.kernel (zeroRoot, PqxdhInitialSampledParent.response actualStart)).refined result.1.2.2 evidence := by
   obtain ⟨actualStart, normalized, priorReached, sampledPending, evidence, annotated, paths⟩ :=
-    PqxdhLaterPatchedOccurrence.material_paths source writer sender route decode cr depth prior context sampled
+    PqxdhLaterPatchedOccurrence.material_paths (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode cr depth prior context sampled
       start pending shape safe output result completed
   exact ⟨actualStart, normalized, priorReached, sampledPending, evidence, annotated, paths,
-    sample_annotated_selected source writer sender route decode actualStart
+    sample_annotated_selected (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode actualStart
       (patchedPrior source pending (RawCtxSelectedParentEntry.realize context.1.1.2 context.1.2) output)
       ((result.1.1, (result.1.2, evidence)), result.2) annotated⟩
 

@@ -1,6 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Refinement.RegistrationInputs
 import BeaconcryptCore.Refinement.RegistrationBytePrimitives
+import BeaconcryptCore.Refinement.TranscriptAuth
 
 /-! Exact outbound signing requests and continuations. Signatures and hashes remain actual external replies; these facts prove the core's selection, admission and retention. -/
 
@@ -11,6 +12,7 @@ open BeaconcryptCore.Refinement.RegistrationInputs
 open BeaconcryptCore.Refinement.RegistrationBytePrimitives
 
 set_option autoImplicit false
+set_option maxRecDepth 2048
 
 namespace BeaconcryptCore.Refinement.RegistrationSigning
 
@@ -69,7 +71,7 @@ def EdReplyTransition (before : registration.BeaconEd25519Signing)
       | .OneTimeKey => after.stage = .PqKey ∧ after.state.one_time_key.val = replyValues reply ∧
           { after.state with one_time_key := before.state.one_time_key } = before.state
       | .PqKey => False
-  | .FingerprintRequested after => replyTailMatches before reply ∧
+  | .HashRequested after => replyTailMatches before reply ∧
       before.stage = .PqKey ∧ after.state.pq_key.val = replyValues reply ∧
       { after.state with pq_key := before.state.pq_key } = before.state
   | _ => False
@@ -112,12 +114,77 @@ theorem ed_resume_refines (self : registration.BeaconEd25519Signing)
           requestShape.2.2 (by assumption)
       obtain ⟨narrow, narrowRun, narrowShape⟩ := copied_slice_exact 98#usize signed
       obtain ⟨wide, wideRun, wideShape⟩ := copied_slice_exact 1249#usize signed
-      cases stageEq : self.stage
-      all_goals cases narrow
-      all_goals cases wide
-      all_goals simp only [narrowRun, wideRun, bind_tc_ok]
-      all_goals refine ⟨_, rfl, ?_⟩
-      all_goals simp [EdReplyTransition, stageEq, replyValues, narrowShape, wideShape, admitted]
+      have hashInput (state : registration.BeaconInitState) :
+          ∃ output, authentication.build_init_transcript
+            ⟨state.started.message.identity_key, state.pre_key, state.one_time_key, state.pq_key⟩
+            state.server_pin.binding.identity_key_id state.server_pin.binding.identity_public_key
+            state.server_pin.public_key = ok output := by
+        obtain ⟨output, ran, _⟩ := TranscriptAuthRefinement.build_init_transcript_abs
+          ⟨state.started.message.identity_key, state.pre_key, state.one_time_key, state.pq_key⟩
+          state.server_pin.binding.identity_key_id state.server_pin.binding.identity_public_key
+          state.server_pin.public_key
+        exact ⟨output, ran⟩
+      cases stageEq : self.stage with
+      | PreKey =>
+        cases narrow
+        all_goals simp only [narrowRun, bind_tc_ok]
+        all_goals refine ⟨_, rfl, ?_⟩
+        all_goals simp [EdReplyTransition, stageEq, replyValues, narrowShape, admitted]
+      | OneTimeKey =>
+        cases narrow
+        all_goals simp only [narrowRun, bind_tc_ok]
+        all_goals refine ⟨_, rfl, ?_⟩
+        all_goals simp [EdReplyTransition, stageEq, replyValues, narrowShape, admitted]
+      | PqKey =>
+        cases wide with
+        | Err error =>
+          simp only [wideRun, bind_tc_ok]
+          exact ⟨_, rfl, rfl⟩
+        | Ok bytes =>
+          obtain ⟨input, inputRun⟩ := hashInput {self.state with pq_key := bytes}
+          dsimp only at inputRun
+          simp only [wideRun, bind_tc_ok, registration.BeaconInitState.fields,
+            pqxdh.InitKex.impl.identity_key, session.ServerAuthenticationPin.impl.binding, session.ServerAuthenticationPin.impl.public_key,
+            inputRun]
+          refine ⟨_, rfl, ?_⟩
+          simp [EdReplyTransition, stageEq, replyValues, wideShape, admitted]
+
+/-- The final attached signature selects the exact canonical request-hash input of the retained four fields and Server pin. -/
+theorem final_hash_input_exact (before : registration.BeaconEd25519Signing)
+    (reply : core.option.Option (Slice Std.U8)) (after : registration.BeaconInitHash)
+    (resumed : before.resume reply = ok (.HashRequested after)) :
+    authentication.build_init_transcript
+      ⟨after.state.started.message.identity_key, after.state.pre_key, after.state.one_time_key, after.state.pq_key⟩
+      after.state.server_pin.binding.identity_key_id after.state.server_pin.binding.identity_public_key
+      after.state.server_pin.public_key = ok after.input := by
+  obtain ⟨effect, ran, progress⟩ := ed_resume_refines before reply
+  have same : effect = .HashRequested after := RustM.ok.inj (ran.symm.trans resumed)
+  subst effect
+  have stage : before.stage = .PqKey := progress.2.1
+  cases reply with
+  | none => cases resumed
+  | some signed =>
+    obtain ⟨suffix, suffixRun, _suffixShape⟩ := suffix_exact signed 64#usize
+    obtain ⟨request, requestRun, _requestShape⟩ := ed_request_exact before
+    simp only [registration.BeaconEd25519Signing.resume, suffixRun, requestRun,
+      optional_slice_ne_exact, bind_tc_ok, stage] at resumed
+    split at resumed
+    · cases resumed
+    · obtain ⟨wide, wideRun, _wideShape⟩ := copied_slice_exact 1249#usize signed
+      cases wide with
+      | Err error => simp only [wideRun, bind_tc_ok] at resumed; cases resumed
+      | Ok bytes =>
+        obtain ⟨input, inputRun, _inputBytes⟩ := TranscriptAuthRefinement.build_init_transcript_abs
+          ⟨before.state.started.message.identity_key, before.state.pre_key, before.state.one_time_key, bytes⟩
+          before.state.server_pin.binding.identity_key_id before.state.server_pin.binding.identity_public_key
+          before.state.server_pin.public_key
+        simp only [wideRun, bind_tc_ok, registration.BeaconInitState.fields,
+          pqxdh.InitKex.impl.identity_key, session.ServerAuthenticationPin.impl.binding,
+          session.ServerAuthenticationPin.impl.public_key, inputRun] at resumed
+        have exactState : (⟨{ before.state with pq_key := bytes }, input⟩ : registration.BeaconInitHash) = after := by
+          simpa only [RustM.ok.injEq, registration.BeaconInitEffect.HashRequested.injEq] using resumed
+        cases exactState
+        exact inputRun
 
 /-- A missing or mismatched attached-message suffix rejects with the original Fresh control. -/
 theorem bad_suffix_rejects (before : registration.BeaconEd25519Signing)
@@ -152,3 +219,9 @@ end BeaconcryptCore.Refinement.RegistrationSigning
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Refinement.RegistrationSigning.bad_suffix_rejects
+
+/-- info: 'BeaconcryptCore.Refinement.RegistrationSigning.final_hash_input_exact' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Refinement.RegistrationSigning.final_hash_input_exact

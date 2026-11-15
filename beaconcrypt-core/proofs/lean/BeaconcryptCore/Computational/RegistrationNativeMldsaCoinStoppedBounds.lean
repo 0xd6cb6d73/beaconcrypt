@@ -3,6 +3,7 @@ import BeaconcryptCore.Computational.RegistrationNativeMldsaCoinCompilerBounds
 import BeaconcryptCore.Computational.RegistrationNativeMldsaCoinPrimitives
 import BeaconcryptCore.Computational.RegistrationNativeMldsaCoinCallbacks
 import BeaconcryptCore.Computational.RegistrationNativeMldsaDynamicBounds
+import BeaconcryptCore.Computational.RegistrationNativeMldsaSignStoppedBounds
 
 /-! The original typed resource contract gives a concrete all-replies ordinary-uniform allowance for the actual initialized, stopped source program. Primitive receipts constrain only the actual initializer and KEM algorithms. -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -59,14 +60,14 @@ def total (qInit qTyped qKeygen qEncap qDecap : Nat) : Nat :=
 /-- The source allowance is a polynomial in the original typed-command total and the narrow primitive draw caps. -/
 theorem total_eq (qInit qTyped qKeygen qEncap qDecap : Nat) :
     total qInit qTyped qKeygen qEncap qDecap =
-      qInit + 96 + qTyped * (2305 + qKeygen + 9 * qEncap + 9 * qDecap) := by
+      qInit + 96 + qTyped * (2369 + qKeygen + 9 * qEncap + 9 * qDecap) := by
   simp only [total, RegistrationNativeMldsaCoinCallbacks.allowance_eq]
 
 /-- The actual typed stopped source pays only the derived literal callback allowance for each original typed query, including failed prefixes and arbitrary raw ML replies. -/
 theorem stopped {Candidate : Type} {source : Source} (setup : Setup base KemSK) (checks : Checks)
     (wire : RegistrationNativeWire.Wire) (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential source)
     (kem : RegistrationNativeKemSourceBills.Caps setup)
     (observe : RegistrationNativeMldsaStop.Observer (spec := RegistrationNativeRawAdapter.TypedSpec)
       (State := RegistrationNativeExperiment.State n KemSK source) (Candidate := Candidate))
@@ -129,7 +130,7 @@ private theorem tracked_callback (source : Source) (setup : Setup base KemSK) (c
     (wire : RegistrationNativeWire.Wire) (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
     (kem : RegistrationNativeKemSourceBills.Caps setup) (selected : Nat)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : Credential (handleSource source))
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential (handleSource source))
     (query : RegistrationNativeRawAdapter.TypedSpec.Domain)
     (before : RegistrationNativeMldsaDynamicGame.State (n := n) (KemSK := KemSK) source) :
     ((RegistrationNativeMldsaGhostState.track source selected

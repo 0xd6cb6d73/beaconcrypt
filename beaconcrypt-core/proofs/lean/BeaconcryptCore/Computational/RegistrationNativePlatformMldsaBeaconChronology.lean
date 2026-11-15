@@ -34,7 +34,7 @@ private theorem map_apply {S A B : Type} {m : Type → Type} [Monad m] [LawfulMo
 
 /-- Actual outgoing callbacks append the same raw request and native receipt, with no private signer evaluation shortcut. -/
 theorem outgoing (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (index : Nat) (owner : RegistrationNativeBeaconFrontend.Owner (handleSource source))
     (query : RegistrationBeaconInitExecutor.Spec.Domain) (correct : BeaconQuery query) :
     Keeps (Platform := Platform) source (receipts (n := n) (KemSK := KemSK) source)
@@ -93,7 +93,7 @@ private theorem noSign_sample (draw : ProbComp Value) :
       exact lift_bind _ _ (noSign_lift source _) ih
 
 private theorem native_keeps (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK (handleSource source) RegistrationServerRoleBackend.State Value)
     (law : NoSign source work) :
     Keeps (Platform := Platform) source (receipts source)
@@ -114,7 +114,7 @@ private theorem native_keeps (setup : Setup base KemSK) (checks : Checks)
 
 private theorem encoder_keeps
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
-    (view : registration.SignedInitView) :
+    (view : registration.InitView) :
     Keeps source (receipts (n := n) (KemSK := KemSK) source)
       (lift (RegistrationNativePlatformBundleLower.lower
         (RegistrationNativePlatformGenericBundle.encoderWith (source := handleSource source) (Auxiliary := RegistrationServerRoleBackend.State)
@@ -132,7 +132,7 @@ attribute [local irreducible] RegistrationNativePlatformBundleLower.native Regis
 
 /-- All actual bundle branches retain the two literal chronological logs through the same persistent writer state. -/
 theorem bundle (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) (index : Nat) :
     Keeps source (receipts (n := n) (KemSK := KemSK) source)
       (RegistrationNativePlatformMldsaBundle.bundle setup checks representation created
@@ -151,7 +151,7 @@ theorem bundle (setup : Setup base KemSK) (checks : Checks)
       · intro oneTime
         apply bind_keeps source (receipts source) _ _
           (RegistrationNativePlatformMldsaPublicationChronology.Beacon.begin_keeps source (receipts source) _ _
-            (outgoing source setup checks representation created index owner) (encoder_keeps source writer) _ _ _ _ _)
+            (outgoing source setup checks representation created index owner) (encoder_keeps source writer) _ _ _ _)
         intro published
         cases published with
         | fail error | div => exact pure_keeps source (receipts source) _
@@ -168,7 +168,7 @@ theorem bundle (setup : Setup base KemSK) (checks : Checks)
 
 /-- The complete actual source envelope publishes exactly that chronological correspondence into the original global receipt list. -/
 theorem sourceBundle (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) (index : Nat)
     (before : RegistrationNativeExperiment.State n KemSK (handleSource source)) (previous : Platform) (pool : Pool source)
     (result : ((RustM (Option Pqxdh.Bytes) × RegistrationNativeExperiment.State n KemSK (handleSource source)) × Platform) × Pool source)

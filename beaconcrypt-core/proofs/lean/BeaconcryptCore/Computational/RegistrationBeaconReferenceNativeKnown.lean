@@ -18,7 +18,7 @@ variable {mlSource : RegistrationNativeMldsa.Source}
 
 /-- The actual one-owner source's initial64/ongoing76 callbacks use the same bound108 opening; only their explicit request ledger is projected. -/
 theorem record_factor (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire)
-    (erased : Std.Array U8 357#usize) (descriptor : RegistrationBeaconBoundSource.PublicAgreement)
+    (erased : Std.Array U8 227#usize) (descriptor : RegistrationBeaconBoundSource.PublicAgreement)
     (root : PqxdhSecretInputKdf.RootOutput) (env : EnvState Auxiliary) :
     Prod.map id erase <$>
       (simulateQ (RegistrationBeaconReferenceNativeOwner.record (n := n) (mlSource := mlSource) setup wire)
@@ -85,7 +85,7 @@ noncomputable def factored (setup : Setup base KemSK) (wire : RegistrationNative
 
 /-- The whole one-owner native completion consumes exactly the source108 entry before installing its complete advanced kernel and publishing its terminal owner phase. -/
 theorem post_root (setup : Setup base KemSK) (wire : RegistrationNativeWire.Wire)
-    (erased : Std.Array U8 357#usize) (owner current : Owner mlSource)
+    (erased : Std.Array U8 227#usize) (owner current : Owner mlSource)
     (descriptor : RegistrationBeaconBoundSource.PublicAgreement) (root : PqxdhSecretInputKdf.RootOutput)
     (env : EnvState Auxiliary) :
     (fun value => ((value.1.1, eraseOwner value.1.2), erase value.2)) <$>

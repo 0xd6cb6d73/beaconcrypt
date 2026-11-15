@@ -6,6 +6,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.refined ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhLaterSavedFrameJoin
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhJointKdfGame PqxdhNativeSharedPrefix
 open RawCtxSelectedParentTable RawCtxSelectedParentEntry RawCtxSelectedMessageDriver
 open PqxdhSelectedFirstRecord PqxdhFirstRecordConfidentiality
@@ -31,42 +32,42 @@ local notation "parent" => Entry.mk (PqxdhInitialBuilderContext.address context.
 theorem original_frame (admitted : PqxdhInitialDescriptorScope.Valid read context) :
     (fun result => (result.1, ((tracedProj key result.2).1,
       retainedOf (tracedProj key result.2).2))) <$>
-      PqxdhLaterSavedPostComparison.original pre application initial selector aux fixed writer prior key target nonce next mark sender route
+      PqxdhLaterSavedPostComparison.original (completedBinding := completedBinding) pre application initial selector aux fixed writer prior key target nonce next mark sender route
         read qPost context material fits state =
     (fun result => (some result.1.1, (result.1.2, result.2))) <$>
       (simulateQ (PqxdhInitialNativeRetained.retained fixed writer
         (privateTable prior (some parent) target (RawCtxSelectedMessageKdf.response key nonce next))
         (lifted pre application initial selector aux))
-        (PqxdhInitialOriginContext.resume mark sender route read context
-          (PqxdhInitialParentBuilderContext.reply sender route read context.original (realize parent target)))).run
+        (PqxdhInitialOriginContext.resume (completedBinding := completedBinding) mark sender route read context
+          (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route read context.original (realize parent target)))).run
             (retainedOf (RawCtxSelectedReceiveCompiler.project state)) := by
-  rw [PqxdhLaterSavedContext.retained_complete pre application initial selector aux fixed writer prior key target nonce next mark
+  rw [PqxdhLaterSavedContext.retained_complete (completedBinding := completedBinding) pre application initial selector aux fixed writer prior key target nonce next mark
     sender route read qPost context material fits admitted state]
   have projected := congrArg (fun computation =>
     (fun result => (result.1, (result.2.1, retainedOf result.2.2))) <$> computation)
-    (PqxdhLaterSavedPostComparison.original_source pre application initial selector aux fixed writer prior key target nonce next mark
+    (PqxdhLaterSavedPostComparison.original_source (completedBinding := completedBinding) pre application initial selector aux fixed writer prior key target nonce next mark
       sender route read qPost context material fits state)
   simpa only [Functor.map_map] using projected
 
 /-- A successful original comparison result supplies the literal resumed frame result with the same returned bit, complete frontend, publication trace and projected native state. -/
 theorem original_frame_support (admitted : PqxdhInitialDescriptorScope.Valid read context)
     (value : Bool) (after : Traced M P I D K A N C S B)
-    (supported : (some value, after) ∈ support (PqxdhLaterSavedPostComparison.original pre application initial selector aux fixed writer prior
+    (supported : (some value, after) ∈ support (PqxdhLaterSavedPostComparison.original (completedBinding := completedBinding) pre application initial selector aux fixed writer prior
       key target nonce next mark sender route read qPost context material fits state)) :
     ((value, (tracedProj key after).1), retainedOf (tracedProj key after).2) ∈ support
       ((simulateQ (PqxdhInitialNativeRetained.retained fixed writer
         (privateTable prior (some parent) target (RawCtxSelectedMessageKdf.response key nonce next))
         (lifted pre application initial selector aux))
-        (PqxdhInitialOriginContext.resume mark sender route read context
-          (PqxdhInitialParentBuilderContext.reply sender route read context.original (realize parent target)))).run
+        (PqxdhInitialOriginContext.resume (completedBinding := completedBinding) mark sender route read context
+          (PqxdhInitialParentBuilderContext.reply (completedBinding := completedBinding) sender route read context.original (realize parent target)))).run
             (retainedOf (RawCtxSelectedReceiveCompiler.project state))) := by
   have projected : (some value, ((tracedProj key after).1, retainedOf (tracedProj key after).2)) ∈ support
       ((fun result => (result.1, ((tracedProj key result.2).1, retainedOf (tracedProj key result.2).2))) <$>
-        PqxdhLaterSavedPostComparison.original pre application initial selector aux fixed writer prior key target nonce next mark sender route
+        PqxdhLaterSavedPostComparison.original (completedBinding := completedBinding) pre application initial selector aux fixed writer prior key target nonce next mark sender route
           read qPost context material fits state) := by
     rw [support_map]
     exact ⟨(some value, after), supported, rfl⟩
-  rw [original_frame pre application initial selector aux fixed writer prior key target nonce next mark sender route read qPost
+  rw [original_frame (completedBinding := completedBinding) pre application initial selector aux fixed writer prior key target nonce next mark sender route read qPost
     context material fits state admitted, support_map] at projected
   obtain ⟨finished, actual, same⟩ := projected
   have equal : finished = ((value, (tracedProj key after).1), retainedOf (tracedProj key after).2) := by

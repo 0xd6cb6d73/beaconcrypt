@@ -55,7 +55,7 @@ private theorem finish_retains (verified : pqxdh.VerifiedInitKex) (state : agree
     (prior : inputMatches verified state.input) (final : agreement.AgreementEffect)
     (actual : agreement.finish_dh state = .ok final) : Retains verified final := by
   cases inputEq : state.input with
-  | Beacon control binding response application => cases (show False by simpa only [inputMatches, inputEq] using prior)
+  | Beacon control binding response application => cases (show False by simp only [inputMatches, inputEq] at prior)
   | Server control status retained binding =>
     have same : retained = verified := by simpa only [inputMatches, inputEq] using prior
     subst retained
@@ -125,7 +125,7 @@ private theorem step_retains (verified : pqxdh.VerifiedInitKex) {initial final :
     | some root =>
       rw [BeaconcryptCore.Refinement.KeyAgreement.root_success_refines] at resumed
       cases candidateEq : pending.candidate with
-      | Beacon candidate binding ciphertext => exact False.elim (by simpa only [Retains, candidateMatches, candidateEq] using prior)
+      | Beacon candidate binding ciphertext => exact False.elim (by simp only [Retains, candidateMatches, candidateEq] at prior)
       | Server candidate binding =>
         simp only [candidateEq] at resumed
         cases RustM.ok.inj resumed

@@ -46,7 +46,8 @@ theorem source (pending : registration.BeaconPending) (packet : Option registrat
         RegistrationResponse.begin_response_some_exact pending packet
       simp only [authenticate, AdapterAuthenticationRequestExtraction.authenticate,
         Lifted.begin, Lifted.branch, Lifted.hashRequest, Lifted.hashResume,
-        Lifted.verifyRequest, Lifted.verifyResume, Lifted.fromResidual, Operations.hash,
+        Lifted.verifyRequest, Lifted.verifyResume, Lifted.adHashRequest, Lifted.adHashResume,
+        Lifted.fromResidual, Operations.hash,
         Operations.verify, Program.run_bind, Program.run_lift,
         Program.query, admitted, requested, simulateQ_bind, simulateQ_spec_query,
         pure_bind, core.result.Result.Insts.CoreOpsTry_traitTry.branch,
@@ -64,8 +65,16 @@ theorem source (pending : registration.BeaconPending) (packet : Option registrat
           obtain ⟨verification, resumed, _, _, request, requestRun, _⟩ :=
             RegistrationResponse.response_hash_some_exact stage digest
           simp only [resumed, requestRun, Program.run_bind, Program.run_lift,
-            simulateQ_bind, simulateQ_spec_query, pure_bind, native, bind_map_left,
-            simulateQ_pure]
+            simulateQ_bind, simulateQ_spec_query, pure_bind, native, bind_map_left]
+          refine bind_congr fun verified => ?_
+          cases verified with
+          | false => rfl
+          | true =>
+              obtain ⟨adStage, adRun, _pending, _packet, _preimage⟩ :=
+                RegistrationAd.verified_response_selects_exact_ad verification
+              simp only [adRun, Program.run_bind, Program.run_lift,
+                simulateQ_bind, simulateQ_spec_query, pure_bind, native, bind_map_left,
+                simulateQ_pure, registration.BeaconAdHash.request, lift, bind_tc_ok]
 
 /-- The checked transformation retains both its actual-source specialization and its free-request correspondence. -/
 theorem source_certificate (pending : registration.BeaconPending)

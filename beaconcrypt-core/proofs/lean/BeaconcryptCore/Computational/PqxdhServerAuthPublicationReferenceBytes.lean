@@ -18,14 +18,16 @@ theorem build_route_bounded (source : FixedHkdfSha512NoSaltSource) (codec : Code
     (checks : Checks) (rest : Residual) (session : Nat) (payload : Option Pqxdh.Bytes)
     (state : Local KemSK) :
     ((PqxdhServerAuthPublicationReference.build source codec checks rest session payload).run.run state).IsQueryBoundP Oversized 0 := by
-  simpa only [ite_self, Nat.zero_mul] using
-    PqxdhServerAuthPublicationReference.build_query_bound source codec checks rest session payload Oversized 0 0
-      (fun token server state => by
+  simpa only [ite_self, Nat.zero_mul, Nat.add_zero] using
+    PqxdhServerAuthPublicationReference.build_query_bound source codec checks rest session payload Oversized 0 0 0
+      (fun bytes state => no_seal _ (PqxdhServerAuthCtxStateBounds.hash_bills bytes state).2.1)
+      (fun ad token server state => by
         simpa only [PqxdhServerAuthCtxBuild.selected, PqxdhServerAuthCtxBuild.after,
           OptionT.run_mk, StateT.run, isQueryBoundP_map_iff] using
-          compiled_bounded source (PqxdhServerAuthPublicationForcedFrame.referenceCodec codec) checks rest token.pending payload () server [])
-      (fun token server state => no_seal _
-        (PqxdhServerAuthCtxBuildBounds.known_bills source codec checks session token payload server state).2.2.1)
+          compiled_bounded ad source (PqxdhServerAuthPublicationForcedFrame.referenceCodec codec) checks rest
+            token.pending payload ad server [])
+      (fun ad token server state => no_seal _
+        (PqxdhServerAuthCtxBuildBounds.known_bills ad source codec checks session token payload server state).2.2.1)
       state
 
 

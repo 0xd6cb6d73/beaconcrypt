@@ -234,7 +234,8 @@ noncomputable def itemRest (created : PqxdhRegistrationJointServerBirth.ClientCr
       (PqxdhDeploymentIdealCut.opaqueRest setup codec checks created.server.server.metadata.identityIndex
         created.publicIdentity (PqxdhRegistrationJointAcceptCutTag.decideTag decision)
         ((PqxdhDeploymentIdealCut.compileCut setup codec route reached.1,
-          (PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2).owners), reached.2.shared))).run).run
+          ((PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2).owners,
+            (PqxdhRegistrationJointGeneratedFinish.encodeState setup reached.2).inits)), reached.2.shared))).run).run
       (reached.2.pool.1, PqxdhDeploymentIdealPoolSource.routerOf reached.2.pool.2) >>= fun result =>
     itemPost setup codec checks t p decision (.ready created p.others result.1 result.2 after)
 
@@ -341,7 +342,8 @@ variable (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (route :
 theorem rejectRun_complete {Z R : Type} (identityIndex : ℕ) (publicIdentity : PqxdhJointIdentity.PublicIdentity)
     (observe : Z × PqxdhRegistrationJointAcceptCutTag.Tag → R) (raw : Pqxdh.Bytes)
     (next : Option ℕ → OracleComp (PqxdhRegistrationJointKemCommands.SourceSpec KemSK) Z)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) (state : PqxdhServerAuthNative.NativeState KemSK)
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry ×
+      (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : PqxdhServerAuthNative.NativeState KemSK)
     (collected : Option (PqxdhServerRootPreparation.Inputs Reader PqxdhJointGapDh.ScalarBytes
       PqxdhBeaconPhase2Preparation.Word32) × List Pqxdh.Bytes)
     (cut : PqxdhRegistrationJointKemRawOpaque.OpaqueCut Reader KemSK Z R)
@@ -358,7 +360,8 @@ theorem rejectRun_complete {Z R : Type} (identityIndex : ℕ) (publicIdentity : 
 /-- The rest of item 2's opaque scan has an active cut at the selected PQ key only from a pending compiled cut whose raw bytes verify to that key: if the CE cut is complete, or its raw bytes do not verify to the selected PQ key, no result of the rest is a pending cut with the selected PQ key. -/
 theorem opaqueRest_dead {R : Type} (identityIndex : ℕ) (publicIdentity : PqxdhJointIdentity.PublicIdentity)
     (observe : (Y × Local) × PqxdhRegistrationJointAcceptCutTag.Tag → R) (cutCE : CutCE Y) (copies : Local)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry)
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry ×
+      (ℕ → Option PqxdhEd25519EufCma.Phase1Candidate))
     (state : PqxdhServerAuthNative.NativeState KemSK)
     (dead : ∀ raw next, cutCE = .pending raw next → ∀ value,
       PqxdhRegistrationJointRawSignatures.verified setup codec checks raw = some value → value.keys.pqKey ≠ p.chosen.1)

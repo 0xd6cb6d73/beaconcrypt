@@ -29,7 +29,7 @@ variable (configuration :RegistrationNativePlatformPublicAdapterConfiguration.Co
 local notation "coins"=>RegistrationNativePlatformMldsaProgram.coins
 local notation "codec"=>RegistrationNativeWire.ledgerCodec (RegistrationNativePlatformOrdinaryExperiment.canonicalWire RegistrationNativeConcreteCodec.wire)
 local notation "route"=>RegistrationNativePlatformPublicAdapterRouting.route
-variable (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+variable (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
 variable (before :RegistrationNativePlatformPublicAdapterAuditModel.State n KemSK P source)
 variable (stored :RegistrationNativePlatformPublicAdapterAuditModel.Private configuration created credential before)
 variable (input :Slice U8)
@@ -75,6 +75,8 @@ noncomputable def step :RegistrationNativePlatformExtractedSdkPublic.TotalStep
   match decoded:RegistrationNativeConcreteCodec.wire.decodeInit (TranscriptAuthParts.absSlice input) with
   | none=>invalid configuration created credential before stored input decoded
   | some packet=>valid configuration created credential before stored input packet decoded
+
+attribute [local irreducible] RegistrationNativePlatformPublicAdapterAuditModel.typed
 
 omit [PublicWrapperPlatform.CryptoOperations] in
 theorem valid_query (packet :registration.InitPacket)

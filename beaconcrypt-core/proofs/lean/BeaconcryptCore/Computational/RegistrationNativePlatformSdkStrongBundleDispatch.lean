@@ -32,12 +32,11 @@ variable [localOps : LocalOperations (RustT (StateT (RegistrationNativePlatformC
 variable [crypto : CryptoOperations (RustT (StateT (RegistrationNativePlatformCutJournal.State (RegistrationNativeExperiment.State n KemSK source)) (StateT Platform ProbComp)))]
 variable (coins : QueryImpl unifSpec (StateT Platform ProbComp))
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+variable (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (reservePackets : Usize →StateT Platform ProbComp (core.result.Result Unit E))
 local notation "packetWriter" => RegistrationNativePlatformConcreteSource.writer reservePackets
 variable (index : Nat) (failure : ed.Error)
-variable (fallback : registration.MldsaSigningRequest → RegistrationNativePlatformExperiment.M n KemSK source (StateT Platform ProbComp) RegistrationSigningShared.SignReply)
-variable (other : QueryImpl AdapterInitAuthenticationRequestMonad.Spec (StateT (RegistrationNativePlatformCutJournal.State (RegistrationNativeExperiment.State n KemSK source)) (StateT Platform ProbComp)))
+variable (other : QueryImpl AdapterPublicWrapperChildren.AuthenticationSpec (StateT (RegistrationNativePlatformCutJournal.State (RegistrationNativeExperiment.State n KemSK source)) (StateT Platform ProbComp)))
 variable (recording : QueryImpl AdapterRecordRequestMonad.Spec (StateT (RegistrationNativePlatformCutJournal.State (RegistrationNativeExperiment.State n KemSK source)) (StateT Platform ProbComp)))
 
 variable (containersView : AdapterPublicWrapperStorage.Views) (credential : RegistrationNativeMldsa.Credential source)
@@ -82,7 +81,7 @@ noncomputable def step {R Error : Type}
     (before : RegistrationNativePlatformCutJournal.State Native) (previous : Platform)
     (objects : RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view containersView created credential (before.1,previous))
     (leaves : ∀owner self,before.1.beacons[index]?=some owner → objects.base.objects.beacons index=some self →
-      AdapterPublicBundleSourceExecution.Leaves coins setup checks representation created packetWriter index owner failure fallback self) :
+      AdapterPublicBundleSourceExecution.Leaves (n := n) coins setup checks representation created packetWriter index owner failure self) :
     TotalStep (RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view containersView created credential)
       (pack <$> ((RegistrationNativePlatformExtractedBundle.bundle coins setup checks representation created source packetWriter index).run before.1).run previous) := by
   cases selected:before.1.beacons[index]? with
@@ -102,7 +101,7 @@ noncomputable def step {R Error : Type}
         have matched:=related.phase
         cases phaseEq:owner.phase <;> simp only [AdapterPublicWrapperState.Phase,stored,phaseEq] at matched
         rfl
-      exact RegistrationNativePlatformSdkStrongBundleSteps.fresh coins setup checks representation created reservePackets index owner failure fallback other recording containersView credential
+      exact RegistrationNativePlatformSdkStrongBundleSteps.fresh coins setup checks representation created reservePackets index owner failure other recording containersView credential
         self view getters (leaves owner self selected sourceSelected) control prekey kem generator generation stored phase before previous objects sourceSelected selected
     | FreshWithCoins control prekey oneTime kem=>
       have phase : ∃scalar,owner.phase=.freshWithCoins scalar := by
@@ -111,7 +110,7 @@ noncomputable def step {R Error : Type}
         exact ⟨_,rfl⟩
       let scalar:=Classical.choose phase
       have phase:owner.phase=.freshWithCoins scalar:=Classical.choose_spec phase
-      exact RegistrationNativePlatformSdkStrongBundleSteps.withCoins coins setup checks representation created reservePackets index owner failure fallback other recording containersView credential
+      exact RegistrationNativePlatformSdkStrongBundleSteps.withCoins coins setup checks representation created reservePackets index owner failure other recording containersView credential
         self view getters (leaves owner self selected sourceSelected) control scalar prekey oneTime kem generator stored phase before previous objects sourceSelected selected
     | InitSent pending prekey oneTime kem | Established control binding manager | Aborted control=>
       have idle : RegistrationNativePlatformExtractedSdkIdle.BundleIdle self.state := by rw [stored]; trivial

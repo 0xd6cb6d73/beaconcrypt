@@ -55,7 +55,7 @@ theorem source {R : Type}
 (originalContainers : ContainerOperations (RustT Base))
 (previousChildren : ChildOperations (RustT SourceM))
 (view : MaterialView mlSource KemSK) (views : Views)
-(created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+(created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
 (current : Native×Platform)
 (before : RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views created credential current)
 (token : beaconcrypt_public_wrapper.server.RegistrationOutput) (data : core.option.Option (Slice U8))
@@ -121,7 +121,7 @@ theorem objects {R : Type}
 (originalContainers : ContainerOperations (RustT Base))
 (previousChildren : ChildOperations (RustT SourceM))
 (view : MaterialView mlSource KemSK) (views : Views)
-(created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+(created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
 (current : Native×Platform)
 (before : RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views created credential current)
 (token : beaconcrypt_public_wrapper.server.RegistrationOutput) (data : core.option.Option (Slice U8))
@@ -159,7 +159,10 @@ theorem objects {R : Type}
   let fallback (request :registration.MldsaSigningRequest) :NativeM RegistrationSigningShared.SignReply:=
     RegistrationNativePlatformExperiment.liftNative coins
       (RegistrationNativeExperiment.world (PqxdhRecordLiftWorld.sampled (RegistrationNativeMldsa.owned mlSource credential request)))
-  let parsed:=RegistrationNativePlatformPublicAdapterPinArrays.parsed view edContract token.registration.agreement.binding.beacon_identity_public_key
+  obtain ⟨identityKey, copiedIdentity, _⟩ :=
+    TranscriptAuthInputsRefinement.identity_public_key_exact token.registration.agreement.binding.init_fields
+  let parsed : AdapterPublicServerToken.ParsedToken token :=
+    ⟨identityKey, copiedIdentity, RegistrationNativePlatformPublicAdapterPinArrays.parsed view edContract identityKey⟩
   have reserveOperation:=RegistrationNativePlatformPublicAdapterBuildDictionaries.reserve (n:=n) (KemSK:=KemSK) (source:=mlSource) originalContainers before.base.objects.server allocated reserveLeaf
   have containsOperation := fun (_current :Cut) (_related : AdapterPublicWrapperState.Server view views created credential before.base.objects.server _current.1.server) identifier=>
     RegistrationNativePlatformPublicAdapterBuildDictionaries.contains originalContainers views before.base.objects.server identifier (containsLeaf identifier) _current
@@ -193,7 +196,7 @@ theorem stored {R : Type}
 (originalContainers : ContainerOperations (RustT Base))
 (previousChildren : ChildOperations (RustT SourceM))
 (view : MaterialView mlSource KemSK) (views : Views)
-(created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+(created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
 (current : Native×Platform)
 (before : RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup view views created credential current)
 (token : beaconcrypt_public_wrapper.server.RegistrationOutput) (data : core.option.Option (Slice U8))

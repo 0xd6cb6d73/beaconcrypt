@@ -22,7 +22,7 @@ open PqxdhRootTableInitialization (rootArray)
 variable {n : Nat} {I KemSK P : Type} {base : OracleSpec I}
 
  theorem indexed (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (before : Backend n KemSK) (canonical : worldBackend before.world=before.world)
     (handle : Nat) (pair : MlKem768PublicKey × KemSK) (present : before.pool.keys[handle]?=some pair)
     (ciphertext : MlKem768Ciphertext) :
@@ -48,7 +48,7 @@ variable {n : Nat} {I KemSK P : Type} {base : OracleSpec I}
   rw [owners]
 
  theorem mapped (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (before : Backend n KemSK) (canonical : worldBackend before.world=before.world)
     (handle : Nat) (pair : MlKem768PublicKey × KemSK) (present : before.pool.keys[handle]?=some pair)
     (ciphertext : MlKem768Ciphertext) :
@@ -73,7 +73,7 @@ def Aligned (setup : PqxdhServerAuthExperiment.Setup base KemSK)
         (setup.kem.decaps secret (PqxdhPhase2InputBytes.ciphertext ciphertext))
 
  theorem source_leaf (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (decapsulate : AdapterPublicAgreementFields.CipherArray → KemSK → ProbComp (core.option.Option AdapterPublicAgreementFields.Array32))
     (aligned : Aligned setup decapsulate)
     (before : Backend n KemSK) (canonical : worldBackend before.world=before.world)

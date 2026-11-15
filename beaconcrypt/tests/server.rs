@@ -354,7 +354,7 @@ fn snapshots_are_plain_canonical_v3_envelopes_without_a_trailing_tag() {
 	let original_identity = server.identity_pk().clone();
 	let original_mldsa_identity = server.mldsa_public_key();
 	let bytes = store.snapshot_bytes();
-	assert_eq!(u16::from_le_bytes(bytes[16..18].try_into().unwrap()), 3);
+	assert_eq!(u16::from_le_bytes(bytes[16..18].try_into().unwrap()), 4);
 	let payload_len = u64::from_le_bytes(
 		bytes[SNAPSHOT_PAYLOAD_LENGTH_OFFSET..SNAPSHOT_HEADER_SIZE]
 			.try_into()
@@ -370,7 +370,7 @@ fn snapshots_are_plain_canonical_v3_envelopes_without_a_trailing_tag() {
 		payload_json["mldsa_identity_seed"],
 		serde_json::json!(vec![0x32; 32])
 	);
-	for version in [1u16, 2] {
+	for version in [1u16, 2, 3] {
 		let mut legacy = bytes.clone();
 		legacy[16..18].copy_from_slice(&version.to_le_bytes());
 		assert!(matches!(

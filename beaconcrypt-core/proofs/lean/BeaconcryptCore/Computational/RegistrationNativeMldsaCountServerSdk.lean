@@ -59,6 +59,15 @@ theorem fromInitial (setup : Setup base KemSK) (codec : Codec Reader Response)
     (world source _ (RegistrationNativeMldsaCountServer.completionFromInitial source credential setup codec encode control pending))
     (fun result => RegistrationNativeMldsaCountRules.closed _ _ (commit_stable result))
 
+private theorem adHash_stable (pending : registration.ServerAdHash) :
+    RegistrationNativeKemCounterIndependence.Stable (serverProject (n := n)) (RegistrationServerSdkSource.adHash pending) := by
+  intro before
+  have same := congrArg (fun computation => (fun result => (result.1, { before with world := result.2 })) <$> computation)
+    (RegistrationNativeMldsaCountServer.adHash_stable pending before.world)
+  simp only [RegistrationServerSdkSource.adHash, RegistrationServerSdkSource.world, StateT.run,
+    Functor.map_map, Prod.map, id_eq, serverProject] at same ⊢
+  exact same
+
 /-- Every actual occupancy/reservation branch retains both checked normalization laws, including failure. -/
 theorem afterOccupancy (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (encode : registration.SignedResponseView → core.option.Option Pqxdh.Bytes)
@@ -70,10 +79,18 @@ theorem afterOccupancy (setup : Setup base KemSK) (codec : Codec Reader Response
   | ok result => cases result with
     | Err previous => exact RegistrationNativeMldsaCountRules.pure _ server_idempotent _
     | Ok pending =>
-        dsimp only
-        split
-        · exact fromInitial source credential setup codec encode control pending
-        · exact RegistrationNativeMldsaCountRules.pure _ server_idempotent _
+        apply RegistrationNativeMldsaCountRules.bind _ _ _
+          (RegistrationNativeMldsaCountRules.closed _ _ (adHash_stable pending))
+        intro hashed
+        cases hashed with
+        | fail error | div => exact RegistrationNativeMldsaCountRules.pure _ server_idempotent _
+        | ok result => cases result with
+          | Err previous => exact RegistrationNativeMldsaCountRules.pure _ server_idempotent _
+          | Ok initial =>
+              dsimp only
+              split
+              · exact fromInitial source credential setup codec encode control initial
+              · exact RegistrationNativeMldsaCountRules.pure _ server_idempotent _
 
 private def read : StateT (RegistrationServerFrontendCompiler.State n) (OracleComp (Spec source))
     (pqxdh.ServerState × session.ServerAuthenticationPin) := fun before => pure ((before.control, before.pin), before)

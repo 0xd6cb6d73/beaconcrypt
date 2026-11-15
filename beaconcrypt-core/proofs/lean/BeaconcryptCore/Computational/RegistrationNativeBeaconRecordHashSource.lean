@@ -19,7 +19,7 @@ open RegistrationNativeBeaconRecordTrace (Trace)
 variable {n : Nat} {ι KemSK V κ : Type} {base : OracleSpec ι} {source : RegistrationNativeMldsa.Source} {spec : OracleSpec κ}
 
 private theorem lower_simulate (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (implementation : QueryImpl spec (M n KemSK source RegistrationServerRoleBackend.State)) (work : OracleComp spec V) :
     lower setup checks representation created (simulateQ implementation work) =
       simulateQ (fun query => lower setup checks representation created (implementation query)) work := by
@@ -29,13 +29,13 @@ private theorem lower_simulate (setup : Setup base KemSK) (checks : Checks)
 
 /-- The actually checked Beacon commitment has the same returned/supplied digest and remains cached at the actual later source anchor. -/
 theorem run (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (capability : agreement.BeaconAgreement) (completed : registration.CompletedBeacon) (before after : Local n KemSK source)
     (cache : CtxRomAuth.CtxRO.QueryCache)
     (supported : (.ok (.Ok completed), after) ∈ support ((lower setup checks representation created
       (simulateQ (RegistrationNativeBeaconFrontend.record setup wire) (RegistrationBeaconRecordExecutor.begin capability))).run before))
     (extension : RegistrationNativeWorldCache.cache after.2.2 ≤ cache) :
-    ∃ (initial : registration.BeaconInitialKdf) (request : ratchet.SymmetricRatchetKdfRequest)
+    ∃ (initial : registration.BeaconInitialKdf) (request : ratchet.InitialRatchetKdfRequest)
       (atStep : Local n KemSK source) (phase : registration.BeaconInitialOpen)
       (trace : Trace (fun query => lower setup checks representation created (RegistrationNativeBeaconFrontend.record setup wire query)) phase completed atStep after),
     ∃ digest, registration.begin_beacon_completion capability = .ok initial ∧ initial.agreement = capability ∧

@@ -33,16 +33,16 @@ theorem initializer_prefix (source : FixedHkdfSha512NoSaltSource) (root : RootOu
     PqxdhServerAuthKeySchedule.initializer source root =
       initialPrefix (PqxdhJointKdf.productionStream source.crypto
         (PqxdhServerAuthSendFactor.address root)) := by
-  have info : absBytes ratchet.SYM_RATCHET_INFO = Pqxdh.INFO_R := by
-    simpa only [pqxdh.SYM_RATCHET_INFO] using absBytes_SYM_RATCHET_INFO
+  have info : absBytes ratchet.INITIAL_RATCHET_INFO = Pqxdh.INFO_INIT := by
+    exact absBytes_INITIAL_RATCHET_INFO
   simp only [absBytes] at info
   apply List.Vector.toList_injective
   simp only [PqxdhServerAuthKeySchedule.initializer, initialPrefix,
     PqxdhJointKdf.productionStream, PqxdhServerAuthSendFactor.address,
-    RawCtxKdfRequestTable.address, PqxdhRootTableInitialization.rootArray,
+    RawCtxKdfRequestTable.initialAddress, PqxdhRootTableInitialization.rootArray,
     absBytes, List.map_map, Function.comp_def]
   simpa [List.Vector.toList, List.Vector.take, info] using
-    source.prefixConsistent.ratchetPrefix root.toList
+    source.prefixConsistent.initialPrefix root.toList
 
 /-- Both native initial directions come from the same actual initializer prefix. -/
 theorem initial_chains (source : FixedHkdfSha512NoSaltSource) (root : RootOutput) :
@@ -59,7 +59,7 @@ theorem factor_source (source : FixedHkdfSha512NoSaltSource) (root : RootOutput)
     factor (PqxdhServerAuthKeySchedule.fromRoot source root) =
       PqxdhServerAuthSendFactor.factor source root := by
   have info : absBytes ratchet.SYM_RATCHET_INFO = Pqxdh.INFO_R := by
-    simpa only [pqxdh.SYM_RATCHET_INFO] using absBytes_SYM_RATCHET_INFO
+    exact absBytes_SYM_RATCHET_INFO
   simp only [absBytes] at info
   simp only [factor, PqxdhServerAuthKeySchedule.fromRoot,
     PqxdhServerAuthKeySchedule.fromInitializer, (initial_chains source root).1,

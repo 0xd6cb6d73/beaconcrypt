@@ -8,6 +8,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
+set_option warningAsError true
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativeSecretWordInstallServerComplete
 open PqxdhRecordLiftInterface (Role)
@@ -51,6 +52,28 @@ private theorem finish (published : RustM (RegistrationNativePairedServerService
         subst result
         exact ⟨rfl, rfl⟩
 
+/-- The actual public transcript-hash callback preserves the install observer's complete trace state. -/
+theorem adHash_trace (pending : registration.ServerAdHash) (before : RegistrationNativeSecretWordFrontendTrace.State)
+    (result : RegistrationServerAdHash.Result × RegistrationNativeSecretWordFrontendTrace.State)
+    (supported : result ∈ support (run (n := n) (KemSK := KemSK)
+      (RegistrationNativeSecretWordServerMaterial.adHash pending) before)) : result.2 = before := by
+  cases requested : pending.request with
+  | fail error | div =>
+    simp only [RegistrationNativeSecretWordServerMaterial.adHash, requested, pure_source, mem_support_pure_iff] at supported
+    subst result
+    rfl
+  | ok request =>
+    simp only [RegistrationNativeSecretWordServerMaterial.adHash, requested, bind_source, mem_support_bind_iff] at supported
+    obtain ⟨hashed, asked, returned⟩ := supported
+    rw [pure_source, mem_support_pure_iff] at returned
+    subst result
+    simp only [run, RegistrationNativeSecretWordServerMaterial.effect, wordLift, QueryImpl.compose,
+      RegistrationNativeSecretWordInterface.paired, RegistrationNativeSecretWordInterface.liftLocal, simulateQ_spec_query,
+      RegistrationNativeSecretWordFrontendTrace.handler, RegistrationNativeSecretWordFrontendTrace.begin,
+      RegistrationNativeSecretWordFrontendTrace.finish, StateT.run, support_map] at asked
+    obtain ⟨reply, _called, actual⟩ := asked
+    exact (congrArg Prod.snd actual).symm
+
 attribute [local irreducible] peer.begin_completion_lookup RegistrationServerSdkSource.preflight
 
 /-- Every original complete result has exactly its own successful Server descriptor suffix, across all failure branches. -/
@@ -88,15 +111,31 @@ theorem complete (role : Role) (wire : RegistrationNativeWire.Wire) (reservePeer
     rw [pure_source, mem_support_pure_iff] at continued
     subst result
     simp [present] }
-  split at continued <;> try {
-    rw [pure_source, mem_support_pure_iff] at continued
-    subst result
-    simp [present] }
   rw [bind_source, mem_support_bind_iff] at continued
-  obtain ⟨published, admitted, completed⟩ := continued
-  have settled := finish (KemSK := KemSK) published.1 server published.2 result completed
-  have bill := RegistrationNativeSecretWordInstallAdmitted.server role wire.encodeResponse server.control _ ready.reference before published admitted
-  rw [settled.1, bill, ← settled.2]
+  obtain ⟨hashed, hashedSupport, continued⟩ := continued
+  have hashSame := adHash_trace (KemSK := KemSK) _ before hashed hashedSupport
+  rw [hashSame] at continued
+  cases hashResult : hashed.1 with
+  | fail error | div =>
+    simp only [hashResult, pure_source, mem_support_pure_iff] at continued
+    subst result
+    simp [present]
+  | ok reply => cases reply with
+    | Err previous =>
+      simp only [hashResult, pure_source, mem_support_pure_iff] at continued
+      subst result
+      simp [present]
+    | Ok initial =>
+      simp only [hashResult] at continued
+      split at continued <;> try {
+        rw [pure_source, mem_support_pure_iff] at continued
+        subst result
+        simp [present] }
+      rw [bind_source, mem_support_bind_iff] at continued
+      obtain ⟨published, admitted, completed⟩ := continued
+      have settled := finish (KemSK := KemSK) published.1 server published.2 result completed
+      have bill := RegistrationNativeSecretWordInstallAdmitted.server role wire.encodeResponse server.control _ ready.reference before published admitted
+      rw [settled.1, bill, ← settled.2]
 
 /-- The same live one-use session supplies exactly the descriptor counted by a successful original build. -/
 theorem build_live (role : Role) (wire : RegistrationNativeWire.Wire) (reservePeer : Bool)
@@ -129,3 +168,11 @@ end BeaconcryptCore.Computational.RegistrationNativeSecretWordInstallServerCompl
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativeSecretWordInstallServerComplete.build_live
+
+/--
+info: 'BeaconcryptCore.Computational.RegistrationNativeSecretWordInstallServerComplete.adHash_trace' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativeSecretWordInstallServerComplete.adHash_trace

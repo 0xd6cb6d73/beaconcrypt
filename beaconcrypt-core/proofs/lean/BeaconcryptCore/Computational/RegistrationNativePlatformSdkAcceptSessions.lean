@@ -37,7 +37,7 @@ private theorem pure_shape (value : RustM (Option Nat)) (noHandle : ∀index,val
     | some index=>exact (noHandle index rfl).elim
 
 theorem retain (coins : QueryImpl unifSpec (StateT P ProbComp))
-    (created : PqxdhLiveServerConstruction.Created Unit) (accepted : agreement.ServerAgreement)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (accepted : agreement.ServerAgreement)
     (before : RegistrationServerFrontendCompiler.State n) (previous : P)
     (result : (RustM (Option Nat)×RegistrationServerFrontendCompiler.State n)×P)
     (supported : result∈support (((RegistrationNativePlatformServerSdk.liftNative coins
@@ -54,7 +54,7 @@ theorem retain (coins : QueryImpl unifSpec (StateT P ProbComp))
 
 private theorem agreement_sessions (coins : QueryImpl unifSpec (StateT P ProbComp))
     (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit)
     (before : RegistrationServerFrontendCompiler.State n) (previous : P)
     (result : (RustM agreement.AgreementEffect×RegistrationServerFrontendCompiler.State n)×P)
@@ -69,7 +69,7 @@ private theorem agreement_sessions (coins : QueryImpl unifSpec (StateT P ProbCom
 
 theorem after_authentication (coins : QueryImpl unifSpec (StateT P ProbComp))
     (setup : Setup base KemSK) (checks : Checks) (reserve : StateT P ProbComp Bool)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit)
     (before : RegistrationServerFrontendCompiler.State n) (previous : P)
     (result : (RustM (Option Nat)×RegistrationServerFrontendCompiler.State n)×P)
@@ -122,7 +122,7 @@ private theorem authenticate_sessions (coins : QueryImpl unifSpec (StateT P Prob
 theorem after_pin (coins : QueryImpl unifSpec (StateT P ProbComp))
     (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks) (reserve : StateT P ProbComp Bool)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (pinResult : RustM (core.option.Option session.ServerAuthenticationPin))
     (before : RegistrationServerFrontendCompiler.State n) (previous : P)
     (result : (RustM (Option Nat)×RegistrationServerFrontendCompiler.State n)×P)
@@ -171,7 +171,7 @@ private theorem pin_sessions (coins : QueryImpl unifSpec (StateT P ProbComp))
 theorem accept (coins : QueryImpl unifSpec (StateT P ProbComp))
     (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks) (reserve : StateT P ProbComp Bool)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (packet : registration.InitPacket) (before : RegistrationServerFrontendCompiler.State n) (previous : P)
     (result : (RustM (Option Nat)×RegistrationServerFrontendCompiler.State n)×P)
     (supported : result∈support (((RegistrationNativePlatformSourceAccept.accept coins setup codec checks reserve
@@ -188,7 +188,7 @@ theorem native [ed : AdapterInitEdPrimitive.Operations]
     (coins : QueryImpl unifSpec (StateT P ProbComp))
     (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks) (reserve : StateT P ProbComp Bool)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (functional : RegistrationNativePlatformAuthentication.EdFunctional setup.source.crypto)
     (input : Slice U8) (before : RegistrationNativeExperiment.State n KemSK source) (previous : P)
     (result : (RustM (Option Nat)×RegistrationNativeExperiment.State n KemSK source)×P)

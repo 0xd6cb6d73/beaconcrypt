@@ -32,7 +32,7 @@ private theorem world_count (work : StateT (PqxdhRecordLiftWorld.State n) ProbCo
 
 private theorem trusted_count (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (RegistrationNativeBeaconFrontend.Trusted n KemSK).Domain)
     (before : State n KemSK mlSource)
     (result : (RegistrationNativeBeaconFrontend.Trusted n KemSK).Range query × State n KemSK mlSource)
@@ -48,7 +48,7 @@ private theorem trusted_count (setup : Setup base KemSK) (checks : Checks)
 
 private theorem beacon_count (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK mlSource RegistrationServerRoleBackend.State Value)
     (before : State n KemSK mlSource) (result : Value × State n KemSK mlSource)
     (supported : result ∈ support ((RegistrationNativeExperiment.beacon setup checks representation created work).run before)) :
@@ -82,7 +82,7 @@ private theorem record_count (setup : Setup base KemSK) (wire : Wire) (route : R
 theorem typed_step (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (query : TypedSpec.Domain) (before : State n KemSK mlSource)
     (result : TypedSpec.Range query × State n KemSK mlSource)
     (supported : result ∈ support
@@ -115,7 +115,7 @@ theorem typed_step (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
 theorem program_bound (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (work : OracleComp TypedSpec Value) (cap : Nat) (bounded : work.IsQueryBoundP (fun query => kind query = 3) cap)
     (before : State n KemSK mlSource) (result : Value × State n KemSK mlSource)
     (supported : result ∈ support
@@ -141,7 +141,7 @@ theorem program_bound (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
         omega
 
 /-- The unchanged native secrecy compiler charges a typed accept only to an original public raw accept, never to its hidden sends or coins. -/
-theorem compiled_accept_bill (setup : Setup base KemSK) (wire : Wire) (created : PqxdhLiveServerConstruction.Created Unit)
+theorem compiled_accept_bill (setup : Setup base KemSK) (wire : Wire) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (bounds : FreshBounds) (mode : Mode) (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value)
     (budget : Budget) (bounded : RegistrationNativeInterface.Respects budget work) :
     (RegistrationNativeFullCompiler.compile setup.source.crypto wire created.server.server.metadata.sender bounds mode work).IsQueryBoundP
@@ -156,7 +156,7 @@ theorem compiled_accept_bill (setup : Setup base KemSK) (wire : Wire) (created :
 theorem run_bound (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (bounds : FreshBounds) (mode : Mode) (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value)
     (budget : Budget) (bounded : RegistrationNativeInterface.Respects budget work)
     (before : State n KemSK mlSource) (result : Value × (RegistrationNativeLedger.State × State n KemSK mlSource))

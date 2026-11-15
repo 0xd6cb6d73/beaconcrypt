@@ -97,8 +97,7 @@ private theorem outgoing_keeps (setup : Setup base KemSK) (source : Registration
   classical
   rcases query with (hashRequest | signRequest) | edRequest
   · exact lift_keeps expected _
-  · exact bind_keeps expected _ _ (sample_keeps expected _) (fun _ =>
-      bind_keeps expected _ _ (lift_keeps expected _) (fun _ => pure_keeps expected _))
+  · exact pure_keeps expected (core.option.Option.None : RegistrationSigningShared.SignReply)
   · simp only [outgoing]
     split
     · exact bind_keeps expected _ _ (log_keeps expected index _ _) (fun _ => pure_keeps expected _)
@@ -109,7 +108,7 @@ private noncomputable def bundled (setup : Setup base KemSK) (source : Registrat
     (oneTime : PqxdhJointGapDh.ScalarBytes) : M n KemSK source Auxiliary (RustM (Option Pqxdh.Bytes)) := do
   let published ← simulateQ (outgoing setup source index owner)
     (RegistrationBeaconInitExecutor.begin wire.encodeInit ⟨owner.pin.binding⟩ (inputs setup owner)
-      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)
+      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)
   match published with
   | .fail error => pure (.fail error)
   | .div => pure .div

@@ -5,7 +5,9 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeCapturePublication
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhInitialPostContext PqxdhRecordConfidentialityChallenge PqxdhRecordConfidentialityTrace
 open PqxdhFirstRecordConfidentiality (AdvSpec ConfPostSpec)
 variable {ι M P I D K X Response Shared Local Result : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -13,7 +15,7 @@ variable (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Bool)
     (sender : M → U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (impl : QueryImpl (Base extra RatchetChain I D K X Response Shared S B) (StateT Local ProbComp))
 local notation "Full" => (NativeFront M P I D K S B × PqxdhInitialOriginPost.Trace Bool S B) × Local
-local notation "postImpl" => PqxdhLaterChallengeCutChronology.postImpl mark sender route decode impl
+local notation "postImpl" => PqxdhLaterChallengeCutChronology.postImpl (completedBinding := completedBinding) mark sender route decode impl
 
 /-- A new marked publication is exactly the original callback's public record and the marker installed before that callback. Other callbacks keep the publication trace. -/
 theorem step_publication (query : (PqxdhInitialGenericPost.Spec extra S B).Domain)
@@ -56,7 +58,7 @@ theorem used_prefix (owner : RawCtxProtocolReveals.Owner S B) (number : U64) (bi
         have excluded := ((observe_target owner number before query reply.1).mp (kept.2 clear)).2
         exact (ih used clear).trans (by
           simpa only [excluded, false_and, or_false] using
-            step_publication mark sender route decode impl query ambient reply returned (owner, number))
+            step_publication (completedBinding := completedBinding) mark sender route decode impl query ambient reply returned (owner, number))
       · simp only [handler, StateT.run, used, true_or, ite_true, simulateQ_pure] at actual
         change step ∈ support (pure ((none, before), ambient)) at actual
         simp only [mem_support_pure_iff] at actual
@@ -84,7 +86,7 @@ theorem unused_prefix (owner : RawCtxProtocolReveals.Owner S B) (number : U64) (
         obtain ⟨reply, returned, rfl⟩ := actual
         simpa only [((observe_target owner number before query reply.1).mp (kept.2 clear)).2,
           false_and, or_false] using
-          step_publication mark sender route decode impl query ambient reply returned (owner, number)
+          step_publication (completedBinding := completedBinding) mark sender route decode impl query ambient reply returned (owner, number)
       · simp only [handler, StateT.run] at actual
         split at actual
         case isFalse =>
@@ -110,12 +112,12 @@ theorem send_publication (owner : RawCtxProtocolReveals.Owner S B) (plaintext : 
   cases owner with
   | server index peer =>
       simpa only [publications, sendRequest, RawCtxPublishedRecords.record, List.mem_singleton, true_and] using
-        step_publication mark sender route decode impl (sendRequest (extra := extra) (.server index peer) plaintext)
+        step_publication (completedBinding := completedBinding) mark sender route decode impl (sendRequest (extra := extra) (.server index peer) plaintext)
           before (some record, after) (by simpa only [send, simulateQ_spec_query] using supported)
           (.server index peer, record.sequence)
   | beacon index =>
       simpa only [publications, sendRequest, RawCtxPublishedRecords.record, List.mem_singleton, true_and] using
-        step_publication mark sender route decode impl (sendRequest (extra := extra) (.beacon index) plaintext)
+        step_publication (completedBinding := completedBinding) mark sender route decode impl (sendRequest (extra := extra) (.beacon index) plaintext)
           before (some record, after) (by simpa only [send, simulateQ_spec_query] using supported)
           (.beacon index, record.sequence)
 
@@ -137,13 +139,13 @@ theorem marked_prefix (owner : RawCtxProtocolReveals.Owner S B) (number : U64) (
     (absent : ((owner, number), true) ∉ ambient.1.2.published)
     (published : ((owner, number), true) ∈ reached.1.2.published) :
     requestState.1.2.installed owner = some true := by
-  have atSend := (used_prefix mark sender route decode impl owner number bit (next (some record)) rest
+  have atSend := (used_prefix (completedBinding := completedBinding) mark sender route decode impl owner number bit (next (some record)) rest
     _ current sentAfter reached remaining (by rfl) clear).mp published
-  have atRequest := send_publication mark sender route decode impl owner (if bit then right else left)
+  have atRequest := send_publication (completedBinding := completedBinding) mark sender route decode impl owner (if bit then right else left)
     requestState sentAfter record sent
   rw [sequence] at atRequest
   exact (atRequest.mp atSend).resolve_left (fun old => absent
-    ((unused_prefix mark sender route decode impl owner number bit client _ before prior ambient requestState
+    ((unused_prefix (completedBinding := completedBinding) mark sender route decode impl owner number bit client _ before prior ambient requestState
       first unused clean).mp old))
 
 end BeaconcryptCore.Computational.PqxdhLaterChallengeCapturePublication

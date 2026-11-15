@@ -115,7 +115,7 @@ theorem server_install (bytes : Pqxdh.Bytes) (before reached : State n)
     (keyId : U64) (binding : PeerBinding) (after : PqxdhRecordLiftWorld.State n)
     (installed : (true, after) ∈ support
       ((PqxdhRecordLiftWorld.installServer keyId binding (.hidden slot)).run reached.world)) :
-    ∃ (server : PqxdhRecordLiftWorld.Server) (peer : RawCtxServerRouting.Peer (Std.Array U8 281#usize)),
+    ∃ (server : PqxdhRecordLiftWorld.Server) (peer : RawCtxServerRouting.Peer (Std.Array U8 151#usize)),
       after.server = some server ∧ server.records.server.peers keyId = some peer ∧
       peer.kernel = PqxdhRecordLiftWorld.kernel .server (splitOutput value).2 ∧
       peer.metadata = binding.associatedArray server.records.server.identity :=
@@ -154,7 +154,7 @@ theorem server_native_kernel {Encoded : Type} (bytes : Pqxdh.Bytes) (before reac
     (keyId : U64) (binding : PeerBinding) (after : PqxdhRecordLiftWorld.State n)
     (installed : (true, after) ∈ support
       ((PqxdhRecordLiftWorld.installServer keyId binding (.hidden slot)).run reached.world)) :
-    ∃ (server : PqxdhRecordLiftWorld.Server) (peer : RawCtxServerRouting.Peer (Std.Array U8 281#usize)),
+    ∃ (server : PqxdhRecordLiftWorld.Server) (peer : RawCtxServerRouting.Peer (Std.Array U8 151#usize)),
       after.server = some server ∧ server.records.server.peers keyId = some peer ∧
       peer.kernel = published.kernel ∧ peer.metadata = binding.associatedArray server.records.server.identity := by
   obtain ⟨server, peer, present, stored, kernel, data⟩ :=

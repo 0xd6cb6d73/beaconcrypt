@@ -62,17 +62,16 @@ variable {ι E : Type} {base : OracleSpec ι}
 theorem bundle (fallback : Credential source) (pool : Pool source)
     (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) (index : Nat)
-    (before : RegistrationNativeExperiment.State n KemSK (handleSource source)) (previous : Platform)
-    (live : RegistrationNativeMldsaPoolMap.StateLive source pool before) :
+    (before : RegistrationNativeExperiment.State n KemSK (handleSource source)) (previous : Platform) :
     observe source fallback <$> evaluate source
       (((RegistrationNativePlatformMldsaBundle.sourceBundle setup checks representation created writer index).run before).run previous) pool =
       (((RegistrationNativePlatformExperiment.bundle RegistrationNativePlatformMldsaProgram.coins
         setup checks representation created source writer index).run
           (nativeState (restore source fallback pool) before)).run previous) := by
   rw [program source fallback pool _
-    (RegistrationNativePlatformMldsaControllerValid.Bundle.sourceBundle source pool setup checks representation created writer index before previous live),
+    (RegistrationNativePlatformMldsaControllerValid.Bundle.sourceBundle source pool setup checks representation created writer index before previous),
     RegistrationNativePlatformMldsaBundleMap.sourceBundle_natural]
   exact congrFun (congrFun (RegistrationNativePlatformMldsaBundle.evaluate_sourceBundle
     (source := source) setup checks representation created writer index)

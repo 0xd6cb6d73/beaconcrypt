@@ -11,6 +11,7 @@ Every step is an exchange of independent draws (`LazyOracleDiscard.lawEq_swap`) 
 
 open OracleComp OracleSpec
 set_option autoImplicit false
+set_option warningAsError true
 
 namespace BeaconcryptCore.Computational.PqxdhDeploymentIdealLaterParams
 open PqxdhServerAuthExperiment (Setup Codec Checks)
@@ -44,7 +45,7 @@ noncomputable def preOpaquePoolL (count : ℕ) (selected : Fin (count + 1)) (ind
     let result ← (((simulateQ (PqxdhDynamicKemJointRouter.stopped setup.baseImpl setup.joint setup.kem selected.val
       (List.ofFn (selected.insertNth chosen others)))
       (opaqueScan setup codec checks created.server.server.metadata.identityIndex created.publicIdentity
-        (decideTag decision) work index [] [] (PqxdhRegistrationJointInitializedAccept.initial created))).run).run
+        (decideTag decision) work index ([], fun _ => none) [] (PqxdhRegistrationJointInitializedAccept.initial created))).run).run
           (born.2.1.1, PqxdhDynamicKemRouter.empty))
     pure (.ready created others result.1 result.2 born.2.2)
 

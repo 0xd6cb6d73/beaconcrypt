@@ -17,7 +17,7 @@ variable {m : Type → Type} [Monad m]
 noncomputable def interpret (coins : QueryImpl unifSpec m) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (checks : PqxdhServerAuthExperiment.Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : M n KemSK source RegistrationServerRoleBackend.State Value) :
     StateT (RegistrationNativeExperiment.State n KemSK source) m Value :=
   RegistrationNativePlatformExperiment.liftNative coins (RegistrationNativeExperiment.beacon setup checks representation created work)
@@ -25,7 +25,7 @@ noncomputable def interpret (coins : QueryImpl unifSpec m) (setup : PqxdhServerA
 theorem post_root (coins : QueryImpl unifSpec m) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (checks : PqxdhServerAuthExperiment.Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (erased : commitment.CommitmentTranscript)
     (index : Nat) (owner : Owner source) (descriptor : RegistrationBeaconBoundSource.PublicAgreement)
     (root : PqxdhSecretInputKdf.RootOutput) :

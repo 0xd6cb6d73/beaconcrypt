@@ -44,7 +44,7 @@ theorem prepared (source : RegistrationNativeMldsa.Source) (packet : registratio
         RegistrationNativeSecretWordProtection.inside (setup.joint.staticDh seed (setup.dh.publicKey scalar)) key.head=true := by
   obtain ⟨pending,oneTime,aborted,authenticated,middle,phase,_moved,checked,agreed⟩ :=
     RegistrationNativePlatformLorSourceOwnerControl.preparation localImpl setup source (some packet) owner afterOwner ready before after supported
-  obtain ⟨supplied,suppliedEq,authenticatedEq⟩ :=
+  obtain ⟨supplied,suppliedEq,_digest,_completed,_completedRun,authenticatedEq⟩ :=
     RegistrationNativePlatformLorSourceOwnerControl.packet localImpl setup source pending (some packet) authenticated before middle checked
   have packetEq : packet=supplied := Option.some.inj suppliedEq
   subst supplied
@@ -52,7 +52,7 @@ theorem prepared (source : RegistrationNativeMldsa.Source) (packet : registratio
     RegistrationNativePlatformLorSourceOwnerControl.agreement localImpl setup owner oneTime authenticated ready middle after agreed
   have fields := RegistrationNativePlatformLorSourceOwnerCollect.collect_atom setup implementation owner oneTime authenticated
     selected pairs publicKey challenge kem nativeInput contract middle reached collected handle (by rw [authenticatedEq];exact ciphertext) called
-  have collectedPin := (PqxdhPhase2DhMetadata.admitted_fields authenticated.pending.control
+  have collectedPin := (PqxdhPhase2DhMetadata.admitted_fields (completedBinding := authenticated.binding) authenticated.control
     collected.collected.plain collected.metadata fields.2.2.2.2.2).1
   rw [authenticatedEq] at collectedPin
   rw [pendingPin pending oneTime phase] at collectedPin

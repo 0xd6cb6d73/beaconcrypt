@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeSelectiveEntropyNative
+import BeaconcryptCore.Computational.RegistrationNativeEntropyWorld
 
 /-! Every non-Beacon-record raw callback of the actual thin frontend is exactly its initialized entropy environment callback. The actual pure-start field is irrelevant to these reached-state laws; public startup hashing stays outside the original ledger and in the same World. -/
 open OracleComp OracleSpec CoreModels Aeneas
@@ -23,7 +24,7 @@ theorem query_source (setup : Setup base KemSK) (checks : Checks) (wire : Regist
     (source : RegistrationNativeMldsa.Source) (credential : RegistrationNativeMldsa.Credential source)
     (seed : PqxdhJointIdentity.IdentitySeed) (scalar : PqxdhJointGapDh.ScalarBytes)
     (candidate : PqxdhKemIndCca.MlKemSharedSecret) (provider : Provider KemSK ProviderState) (selectedOwner selectedAccept : Nat)
-    (startup : ProbComp (Option (PqxdhLiveServerConstruction.Created Unit × State n KemSK ProviderState source)))
+    (startup : ProbComp (Option (PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize) × State n KemSK ProviderState source)))
     (query : RegistrationNativeInterface.Spec.Domain) (ordinary : Ordinary query)
     (before : State n KemSK ProviderState source) :
     (handler setup checks wire source credential seed scalar candidate provider selectedOwner selectedAccept query).run before =

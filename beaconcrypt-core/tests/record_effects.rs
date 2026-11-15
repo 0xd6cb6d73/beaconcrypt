@@ -75,7 +75,7 @@ fn payload() -> Vec<u8> {
 
 #[test]
 fn exact_seal_operands_ordered_frame_parts_and_source_metadata() {
-	let ad = [6; 281];
+	let ad = [6; 151];
 	let aead = send(SealFrameContext::new(
 		b"msg",
 		77,
@@ -131,7 +131,7 @@ fn exact_seal_operands_ordered_frame_parts_and_source_metadata() {
 #[test]
 fn registration_owns_its_exact_prefix_and_ad_and_requests_raw_output() {
 	let aead = {
-		let ad = [6; 281];
+		let ad = [6; 151];
 		send(SealFrameContext::registration(
 			b"app",
 			0x0807060504030201,
@@ -139,7 +139,7 @@ fn registration_owns_its_exact_prefix_and_ad_and_requests_raw_output() {
 			&ad,
 		))
 	};
-	assert_eq!(aead.request().associated_data, &[6; 281]);
+	assert_eq!(aead.request().associated_data, &[6; 151]);
 	match aead.request().plaintext {
 		SealPlaintextRequest::Prefixed {
 			prefix,
@@ -166,19 +166,19 @@ fn registration_owns_its_exact_prefix_and_ad_and_requests_raw_output() {
 #[test]
 fn admission_and_cancel_preserve_entry_but_each_later_failure_consumes_send_key() {
 	let original = snapshot(&kernel());
-	let context = SealFrameContext::new(&[], 77, 99, &[6; 281], RecordEncoding::Frame);
+	let context = SealFrameContext::new(&[], 77, 99, &[6; 151], RecordEncoding::Frame);
 	let rejected = match begin_record_send(kernel(), context) {
 		RecordSendStart::Rejected(kernel) => kernel,
 		_ => panic!("empty send rejects"),
 	};
 	assert_eq!(snapshot(&rejected), original);
-	let context = SealFrameContext::new(b"msg", 77, 99, &[6; 281], RecordEncoding::Frame);
+	let context = SealFrameContext::new(b"msg", 77, 99, &[6; 151], RecordEncoding::Frame);
 	let canceled = match begin_record_send(kernel(), context) {
 		RecordSendStart::KdfRequested(pending) => pending.cancel(),
 		_ => panic!("nonempty send"),
 	};
 	assert_eq!(snapshot(&canceled), original);
-	let context = || SealFrameContext::new(b"msg", 77, 99, &[6; 281], RecordEncoding::Frame);
+	let context = || SealFrameContext::new(b"msg", 77, 99, &[6; 151], RecordEncoding::Frame);
 	let failed_aead = match send(context()).resume(None) {
 		SealAfterAead::Rejected(kernel) => kernel,
 		_ => panic!("AEAD failure"),
@@ -211,13 +211,13 @@ fn admission_and_cancel_preserve_entry_but_each_later_failure_consumes_send_key(
 fn future_commitment_and_aead_failures_restore_the_complete_entry_kernel() {
 	let original = snapshot(&kernel());
 	let payload = payload();
-	let pending = receive_commitment(begin_record_receive(kernel(), 3, &payload, &[6; 281], 99));
+	let pending = receive_commitment(begin_record_receive(kernel(), 3, &payload, &[6; 151], 99));
 	let rejected = match pending.resume(false) {
 		RecordReceiveEffect::Rejected(kernel) => kernel,
 		_ => panic!("mismatched commitment"),
 	};
 	assert_eq!(snapshot(&rejected), original);
-	let pending = receive_commitment(begin_record_receive(kernel(), 3, &payload, &[6; 281], 99));
+	let pending = receive_commitment(begin_record_receive(kernel(), 3, &payload, &[6; 151], 99));
 	let aead = match pending.resume(true) {
 		RecordReceiveEffect::AeadRequested(pending) => pending,
 		_ => panic!("matching commitment"),
@@ -230,7 +230,7 @@ fn future_commitment_and_aead_failures_restore_the_complete_entry_kernel() {
 #[test]
 fn future_success_publishes_once_cached_rejection_stutters_and_replay_rejects() {
 	let payload = payload();
-	let pending = receive_commitment(begin_record_receive(kernel(), 3, &payload, &[6; 281], 99));
+	let pending = receive_commitment(begin_record_receive(kernel(), 3, &payload, &[6; 151], 99));
 	let aead = match pending.resume(true) {
 		RecordReceiveEffect::AeadRequested(pending) => pending,
 		_ => panic!("matching commitment"),
@@ -242,13 +242,13 @@ fn future_success_publishes_once_cached_rejection_stutters_and_replay_rejects() 
 	assert_eq!(kernel.receive_sequence(), 3);
 	assert_eq!(kernel.receive_cache_len(), 2);
 	let before_cached = snapshot(&kernel);
-	let pending = receive_commitment(begin_record_receive(kernel, 1, &payload, &[6; 281], 99));
+	let pending = receive_commitment(begin_record_receive(kernel, 1, &payload, &[6; 151], 99));
 	let rejected = match pending.resume(false) {
 		RecordReceiveEffect::Rejected(kernel) => kernel,
 		_ => panic!("cached commitment failure"),
 	};
 	assert_eq!(snapshot(&rejected), before_cached);
-	let pending = receive_commitment(begin_record_receive(rejected, 1, &payload, &[6; 281], 99));
+	let pending = receive_commitment(begin_record_receive(rejected, 1, &payload, &[6; 151], 99));
 	let aead = match pending.resume(true) {
 		RecordReceiveEffect::AeadRequested(pending) => pending,
 		_ => panic!("cached commitment success"),
@@ -256,7 +256,7 @@ fn future_success_publishes_once_cached_rejection_stutters_and_replay_rejects() 
 	let (kernel, _) = aead.finish(Some(b"cached plaintext"));
 	assert_eq!(kernel.receive_cache_len(), 1);
 	let before_replay = snapshot(&kernel);
-	let rejected = match begin_record_receive(kernel, 1, &payload, &[6; 281], 99) {
+	let rejected = match begin_record_receive(kernel, 1, &payload, &[6; 151], 99) {
 		RecordReceiveEffect::Rejected(kernel) => kernel,
 		_ => panic!("consumed cached sequence rejects before primitives"),
 	};

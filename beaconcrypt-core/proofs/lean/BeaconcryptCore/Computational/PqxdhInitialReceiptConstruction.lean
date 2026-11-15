@@ -11,6 +11,8 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 open OracleComp OracleSpec
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialReceiptConstruction
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhInitialPendingPost PqxdhInitialKernelConstruction
 variable {ι ξ M P I D K X Response Shared Auxiliary AD PT CT : Type}
 variable {extra : OracleSpec ι} {base : OracleSpec.{0, 0} ξ} {S B : Nat}
@@ -23,14 +25,14 @@ theorem server (impl : QueryImpl (Spec extra RatchetChain I D K X Response Share
     (input : PqxdhPrivateAcceptedRoot.Ready) (before : Front RatchetChain M P I D K S B) (state : Auxiliary)
     (result : ((RustM (Option PqxdhServerRegistrationPublication.Response) ×
       Option (PqxdhInitialBuilderReceipt.Receipt (KernelOf RatchetChain))) × Front RatchetChain M P I D K S B) × Auxiliary)
-    (supported : result ∈ support ((simulateQ impl ((PqxdhInitialBuilderReceipt.build source
+    (supported : result ∈ support ((simulateQ impl ((PqxdhInitialBuilderReceipt.build (associatedData := associatedData) source
       (ConcreteRatchetKernel.refined <$> PqxdhInitialReplyErasure.kernelOf false response)
       sender index metadata input).run before)).run state))
     (receipt : PqxdhInitialBuilderReceipt.Receipt (KernelOf RatchetChain)) (recorded : result.1.1.2 = some receipt)
     (cr : Ratchet.Crypto RatchetChain RatchetMaterial AD PT CT) :
     ConcreteRatchetKernel.new receipt.initial.send_chain receipt.initial.receive_chain = .ok ⟨receipt.initial⟩ ∧
       RoleReachable cr receipt.initial.send_chain receipt.initial.receive_chain ⟨receipt.initial⟩ := by
-  have initialized := PqxdhInitialBuilderReceipt.build_initialized impl source _ sender index metadata input
+  have initialized := PqxdhInitialBuilderReceipt.build_initialized (associatedData := associatedData) impl source _ sender index metadata input
     before state result supported receipt recorded
   obtain ⟨_, kernel, _, created, _⟩ := PqxdhInitialSuppliedPositions.pair_positioned source.crypto response
   have same : kernel.refined = receipt.initial := by
@@ -83,7 +85,7 @@ theorem beacon {A N Origin : Type}
     (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
     (entry : RawCtxGenericRoleStorage.BeaconState (KernelOf RatchetChain) I D K) (before : InitialState A N)
     (result : PqxdhInitialFinishReceipt.Result (KernelOf RatchetChain) Origin I D K Response PqxdhPhase2DecapsulationRouting.Shared × InitialState A N)
-    (supported : result ∈ support ((PqxdhInitialFinishReceipt.owner mark pre calls application
+    (supported : result ∈ support ((PqxdhInitialFinishReceipt.owner (completedBinding := completedBinding) mark pre calls application
       (initial fixed selected previousRoot response) decode raw entry).run before))
     (receipt : PqxdhInitialFinishReceipt.Receipt (KernelOf RatchetChain) Response PqxdhPhase2DecapsulationRouting.Shared)
     (recorded : result.1.2 = some receipt)
@@ -91,7 +93,7 @@ theorem beacon {A N Origin : Type}
     ConcreteRatchetKernel.new receipt.initial.send_chain receipt.initial.receive_chain = .ok ⟨receipt.initial⟩ ∧
       RoleReachable cr receipt.initial.send_chain receipt.initial.receive_chain ⟨receipt.initial⟩ := by
   obtain ⟨_, _, _, _, atPrepared, atInitial, _, _, _, initialized, _, _⟩ :=
-    PqxdhInitialFinishReceipt.owner_origin mark pre calls application (initial fixed selected previousRoot response)
+    PqxdhInitialFinishReceipt.owner_origin (completedBinding := completedBinding) mark pre calls application (initial fixed selected previousRoot response)
       decode raw entry before result supported receipt recorded
   exact initial_constructed fixed selected previousRoot response receipt.prepared.root cr
     atPrepared atInitial receipt.initial initialized

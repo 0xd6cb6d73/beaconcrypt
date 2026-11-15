@@ -72,6 +72,8 @@ local notation "allocation" => RegistrationNativePlatformConcreteSource.rawAlloc
 local notation "helper" => RegistrationNativePlatformConcreteSource.helper reserveBytes
 local notation "writer" => RegistrationNativePlatformConcreteSource.writer reservePackets
 local notation "callback" => handler (n := n) setup checks wire source sign selectedOwner selectedAccept publicPrekey view failure allocation reserveRegistration reservePeer reserveBytes erased helper writer
+-- Keep the corrected OPEN accept program opaque while `execute_bound` unifies the accept callback: after the fingerprint removal its Server pin is selected purely by `registration.begin_server_pin`, and unfolding it exhausts the recursion depth (as in RegistrationNativePlatformPublicAcceptState).
+attribute [local irreducible] RegistrationNativePlatformServerOpenControl.accept in
 include registrationBound peerBound bytesBound packetsBound in
 /-- Every literal corrected callback has a derived external-coin bound from four individual public samplers. Source helper, seal and ordinary frame share one capacity-only reservation and persistent P. -/
 theorem handler_bound (query : RegistrationNativeRawAdapter.TypedSpec.Domain) :

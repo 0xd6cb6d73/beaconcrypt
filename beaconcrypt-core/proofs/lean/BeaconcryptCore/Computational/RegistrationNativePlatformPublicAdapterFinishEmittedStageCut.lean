@@ -80,7 +80,7 @@ theorem body_shift (pending:registration.BeaconPending) (decoded:core.option.Opt
   bind_shift _ _ (lift_shift _) (authentication_shift setup wire note owner scalar)
 
 theorem sample_shift (coins:QueryImpl unifSpec (StateT P ProbComp)) (checks:PqxdhServerAuthExperiment.Checks)
-    (representation:RegistrationServerRoleBackend.ConvertedIdentity setup) (created:PqxdhLiveServerConstruction.Created Unit)
+    (representation:RegistrationServerRoleBackend.ConvertedIdentity setup) (created:PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (pending:registration.BeaconPending) (input:Slice U8) (owner:Owner mlSource) (scalar:PqxdhJointGapDh.ScalarBytes)
     (before:Native) (previous:P) (past:List Log) :
     sample setup wire note coins checks representation created pending (packet input) owner scalar before previous past=
@@ -95,7 +95,7 @@ theorem sample_shift (coins:QueryImpl unifSpec (StateT P ProbComp)) (checks:Pqxd
   simp only [simulateQ_map,StateT.run_map,Functor.map_map]
 
 theorem emitted_sample_cut (coins :QueryImpl unifSpec (StateT P ProbComp)) (checks :PqxdhServerAuthExperiment.Checks)
-    (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created Unit) (injective :Function.Injective note)
+    (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (injective :Function.Injective note)
     (initial :registration.BeaconInitialKdf) (completed :registration.CompletedBeacon)
     (pending :registration.BeaconPending) (input :Slice U8) (owner :Owner mlSource) (scalar :PqxdhJointGapDh.ScalarBytes)
     (before :Native) (previous :P) (past suffix :List Log)

@@ -30,25 +30,25 @@ variable (configuration :RegistrationNativePlatformPublicAdapterConfiguration.Co
 local notation "Native"=>RegistrationNativeExperiment.State n KemSK source
 local notation "coins"=>RegistrationNativePlatformMldsaProgram.coins
 
-abbrev Private (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+abbrev Private (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
     (current :RegistrationNativeExperiment.State n KemSK source×P) :=
   RegistrationNativePlatformSdkStrongCarrier.StrongCarrier (R:=R) setup configuration.view configuration.views created credential current
 
-noncomputable def native (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source) :=
+noncomputable def native (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source) :=
   RegistrationNativePlatformPublicAdapterRawModel.raw (n:=n) setup checks configuration.agreement.representation created credential
     configuration.keyView configuration.sealFailure (RegistrationNativePlatformExtractedSdkBuildNormal.allocation configuration.allocateJoin)
     configuration.reserveRegistration configuration.reservePeer configuration.reserveFrame configuration.erased
     (RegistrationNativePlatformConcreteSource.helper configuration.reserveFrame)
     (RegistrationNativePlatformConcreteSource.writer configuration.reservePackets)
 
-noncomputable def model (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source) :
+noncomputable def model (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source) :
     QueryImpl RegistrationNativePlatformPublicAdapterInterface.Spec (StateT (Native×P) ProbComp)
   | .inl query=>fun current=>RegistrationNativePlatformExtractedSdkAdaptive.pack <$>
     (((native configuration created credential (.inl query)).run current.1).run current.2)
   | .inr query=>fun current=>RegistrationNativePlatformExtractedSdkAdaptive.pack <$>
     (((native configuration created credential (.inr (RegistrationNativePlatformPublicAdapterInterface.nativeCommand query))).run current.1).run current.2)
 
-noncomputable def physical (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+noncomputable def physical (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
     (current :RegistrationNativeExperiment.State n KemSK source×P) (before :Private configuration created credential current) :=
   RegistrationNativePlatformPublicAdapterPhysicalBackend.normalize (RegistrationNativePlatformPublicAdapterStore.erase before.base.objects)
 

@@ -201,7 +201,7 @@ open PqxdhDeploymentIdealSteps (tailCE acceptActive acceptInactive)
 open PqxdhServerAuthExperiment (GameState)
 
 /-- The record coordinates of the shared native state that the reassembly fills in: the CTX cache, the Server's routing record and its identity key ID. -/
-abbrev RecordCoords := CtxRomAuth.CtxRO.QueryCache × RawCtxServerRouting.Server Unit Unit × Std.U64
+abbrev RecordCoords := CtxRomAuth.CtxRO.QueryCache × RawCtxServerRouting.Server Unit PqxdhTranscriptAd.AssociatedData × Std.U64
 
 /-- The record coordinates of a shared native state replaced. -/
 def gamePut (s : NativeState KemSK) (c : RecordCoords) : NativeState KemSK :=
@@ -527,7 +527,7 @@ theorem acceptSelected_effects (p : Params KemSK count) (raw : Pqxdh.Bytes) (e :
 
 /-- The selected accept is a native frame of the record coordinates. -/
 theorem acceptGame_nframe (p : Params KemSK count) (seed : PqxdhJointIdentity.IdentitySeed) (raw : Pqxdh.Bytes)
-    (start : SlotState) (cache : CtxRomAuth.CtxRO.QueryCache) (server : RawCtxServerRouting.Server Unit Unit)
+    (start : SlotState) (cache : CtxRomAuth.CtxRO.QueryCache) (server : RawCtxServerRouting.Server Unit PqxdhTranscriptAd.AssociatedData)
     (keyId : Std.U64) :
     PqxdhDeploymentEnvironmentReal.NFrame (PqxdhDeploymentEnvironmentReal.frameGame cache server keyId)
       (acceptGame setup codec checks p seed raw start) :=
@@ -583,7 +583,7 @@ open PqxdhDeploymentIdealEnvReal (realAt_splits_create realAt_splits_bundle real
 theorem good_backend {Bk Bk' : Type} (created : PqxdhLiveServerConstruction.Created Unit) (e : EnvState KemSK Bk)
     (w : PqxdhRecordLiftWorld.State 2) (good : Good created e w) (b : Bk') :
     Good created (⟨e.native, b, e.snap, e.log, e.created⟩ : EnvState KemSK Bk') w :=
-  ⟨good.stripped, good.createdEq, good.server, good.ownersLength, good.owners, good.legacyAD⟩
+  ⟨good.stripped, good.createdEq, good.server, good.ownersLength, good.owners⟩
 
 /-- Filling the World's record coordinates keeps which owners are in the `initSent` phase. -/
 theorem initSentAt_fill (w : PqxdhRecordLiftWorld.State 2) (state : PqxdhRegistrationSchedule.State KemSK) (index : ℕ) :

@@ -100,7 +100,7 @@ theorem functional (setup : Setup base KemSK) (codec : Codec Reader Response)
 
 /-- The source controller uses the World's exact instrumented primitive service, including its original cache and every primitive/uniform counter. -/
 theorem controller_world (setup : Setup base KemSK) (codec : Codec Reader Response)
-    (length : AeadLength setup.source.crypto) (erased : Array Std.U8 357#usize)
+    (length : AeadLength setup.source.crypto) (erased : Array Std.U8 227#usize)
     (effect : record_effects.RecordReceiveEffect) (before : PqxdhRecordLiftWorld.Primitive) :
     (simulateQ (AdapterRecordNativeRepresentation.typed (primitives setup codec))
       ((fun result => AdapterRecordReceive.decodeResult <$> result) <$>
@@ -112,9 +112,9 @@ theorem controller_world (setup : Setup base KemSK) (codec : Codec Reader Respon
 
 /-- Actual extracted admission and complete source receive execution preserve the exact World primitive state jointly with the full returned protocol kernel. -/
 theorem receive_world (setup : Setup base KemSK) (codec : Codec Reader Response)
-    (length : AeadLength setup.source.crypto) (erased : Array Std.U8 357#usize)
+    (length : AeadLength setup.source.crypto) (erased : Array Std.U8 227#usize)
     (kernel : ratchet.concrete.ConcreteRatchetKernel) (sequence : Std.U64)
-    (payload : Slice Std.U8) (ad : Array Std.U8 281#usize) (sender : Std.U64)
+    (payload : Slice Std.U8) (ad : Array Std.U8 151#usize) (sender : Std.U64)
     (before : PqxdhRecordLiftWorld.Primitive) :
     (AdapterRecordNativeRepresentation.receive (primitives setup codec)
       erased kernel sequence payload ad sender).run before =
@@ -125,9 +125,9 @@ theorem receive_world (setup : Setup base KemSK) (codec : Codec Reader Response)
 
 /-- The existing decoded sender check surrounds the source-selected inner controller. This is a typed model context, with outer Rust parser/routing correspondence left separate. -/
 noncomputable def afterDecode (setup : Setup base KemSK) (codec : Codec Reader Response)
-    (erased : Array Std.U8 357#usize) (kernel : ratchet.concrete.ConcreteRatchetKernel)
+    (erased : Array Std.U8 227#usize) (kernel : ratchet.concrete.ConcreteRatchetKernel)
     (expected : Std.U64) (frame : RawCtxReceive.DecodedFrame)
-    (payload : Slice Std.U8) (ad : Array Std.U8 281#usize) :
+    (payload : Slice Std.U8) (ad : Array Std.U8 151#usize) :
     StateT PqxdhRecordLiftWorld.Primitive ProbComp (RustM RecordEffectsReceiveProgram.Result) :=
   if frame.sender = expected then
     AdapterRecordNativeRepresentation.receive (primitives setup codec)
@@ -136,10 +136,10 @@ noncomputable def afterDecode (setup : Setup base KemSK) (codec : Codec Reader R
 
 /-- Exact post-decode equality includes wrong-sender refusal, malformed protected payload, every optional primitive failure and all World counters/cache effects. -/
 theorem afterDecode_native (setup : Setup base KemSK) (codec : Codec Reader Response)
-    (length : AeadLength setup.source.crypto) (erased : Array Std.U8 357#usize)
+    (length : AeadLength setup.source.crypto) (erased : Array Std.U8 227#usize)
     (kernel : ratchet.concrete.ConcreteRatchetKernel) (expected : Std.U64)
     (frame : RawCtxReceive.DecodedFrame) (payload : Slice Std.U8)
-    (ad : Array Std.U8 281#usize) (before : PqxdhRecordLiftWorld.Primitive) :
+    (ad : Array Std.U8 151#usize) (before : PqxdhRecordLiftWorld.Primitive) :
     (afterDecode setup codec erased kernel expected frame payload ad).run before =
       (simulateQ (primitives setup codec)
         (RecordEffectsReceiveProgram.decoded erased kernel expected frame payload ad)).run before := by
@@ -150,10 +150,10 @@ theorem afterDecode_native (setup : Setup base KemSK) (codec : Codec Reader Resp
 
 /-- The selected source receive stage reaches the original World-owner receive interface with the exact represented payload and AD. These byte equalities do not assume a parser law or any security property. -/
 theorem owner_native (setup : Setup base KemSK) (codec : Codec Reader Response)
-    (length : AeadLength setup.source.crypto) (erased : Array Std.U8 357#usize)
+    (length : AeadLength setup.source.crypto) (erased : Array Std.U8 227#usize)
     (kernel : ratchet.concrete.ConcreteRatchetKernel) (expected : Std.U64) (raw : Pqxdh.Bytes)
     (frame : RawCtxReceive.DecodedFrame) (associatedData : Pqxdh.Bytes)
-    (payload : Slice Std.U8) (ad : Array Std.U8 281#usize)
+    (payload : Slice Std.U8) (ad : Array Std.U8 151#usize)
     (payloadBytes : RawCtxNativeFramePrelude.sliceBytes payload = frame.payload)
     (adBytes : PqxdhRefinement.absBytes ad = associatedData) (before : PqxdhRecordLiftWorld.Primitive) :
     (afterDecode setup codec erased kernel expected frame payload ad).run before =

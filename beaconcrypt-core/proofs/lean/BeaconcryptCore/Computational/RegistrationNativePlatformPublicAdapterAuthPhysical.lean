@@ -21,7 +21,7 @@ private theorem map_apply {S A B :Type} {m :Type→Type} [Monad m] [LawfulMonad 
 variable {n :Nat} {I KemSK P :Type} {base :OracleSpec I} {source :RegistrationNativeMldsa.Source}
 variable (coins :QueryImpl unifSpec (StateT P ProbComp))
 variable (setup :PqxdhServerAuthExperiment.Setup base KemSK) (checks :PqxdhServerAuthExperiment.Checks)
-variable (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created Unit)
+variable (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (verify :MldsaTranscriptAuth.Verify)
 local notation "PhysicalM"=>StateT (Backend n KemSK) (StateT P ProbComp)
 
@@ -106,8 +106,7 @@ theorem hash_child (request :registration.HashRequest) :
         (RegistrationNativePlatformPublicAdapterAuthentication.pinHash setup checks representation created request) :=by
   change (AdapterPublicWrapperChildNative.normalAuthentication
     (native (n:=n) coins setup checks representation created verify edLaws)) (.hash request)=_
-  simp only [AdapterPublicWrapperChildNative.normalAuthentication,QueryImpl.apply_compose,
-    AdapterInitAuthenticationStateful.native,simulateQ_map,simulateQ_spec_query,native]
+  simp only [AdapterPublicWrapperChildNative.normalAuthentication,native]
   unfold core RegistrationNativePlatformInterpret.state RegistrationNativePlatformPublicAdapterAuthentication.callbacks
     RegistrationNativePlatformPublicAdapterAuthentication.pinHash
   funext before
@@ -127,18 +126,13 @@ theorem pin (self :beaconcrypt_public_wrapper.server.Server) :
         (view.mldsa (platform.arcView self.identity).mldsa_identity).publicKey).run before) :=by
   let :ChildOperations (RustT PhysicalM):=children coins setup checks representation created verify edLaws recording writer
   dsimp only
-  have original:=AdapterPublicWrapperPin.server_program self
+  rw [AdapterPublicWrapperPin.server_program self
     (view.edPublic (platform.arcView self.identity).identity_key.public_key)
     (view.mldsa (platform.arcView self.identity).mldsa_identity).publicKey
-    (fun request=>RegistrationNativePlatformInterpret.state coins
-      (RegistrationNativePlatformPublicAdapterAuthentication.pinHash setup checks representation created request))
     (edGetter (platform.arcView self.identity).identity_key.public_key)
-    (mlGetter (platform.arcView self.identity).mldsa_identity)
-    (hash_child coins setup checks representation created verify edLaws recording writer)
-  exact original.trans (RegistrationNativePlatformInterpret.state_simulate coins
-    (RegistrationNativePlatformPublicAdapterAuthentication.pinHash setup checks representation created)
-    (RegistrationNativeServerPinRecompute.program (RegistrationNativePlatformPublicAdapterAccept.binding view self)
-      (view.mldsa (platform.arcView self.identity).mldsa_identity).publicKey)).symm
+    (mlGetter (platform.arcView self.identity).mldsa_identity)]
+  funext before
+  rfl
 
 include edGetter mlGetter in
 theorem authenticate (self :beaconcrypt_public_wrapper.server.Server) (input :Slice U8) :

@@ -8,6 +8,8 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialObserverBudgets
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhInitialObserverCallbackBudgets PqxdhInitialLegalObserver PqxdhInitialRootLabelService
 open PqxdhJointKdfGame PqxdhKemIndCca PqxdhAuthenticatedRootExperiment PqxdhAuthenticatedRootBudgets
 open PqxdhStatefulPhase1EufCma PqxdhPhase2GeneratedDriver PqxdhEd25519EufCma PqxdhJointIdentity
@@ -21,13 +23,13 @@ theorem sample_uniform {setup : StatefulPhase1Setup baseSpec}
     (attachedVerify : Ed25519PublicKey → Pqxdh.Bytes → Option Pqxdh.Bytes) (primitives : Primitives)
     (program : Program baseSpec setup.Context S (B + 1)) (post : Post (baseSpec := baseSpec) program.Selection S (B + 1))
     (c : Certificate env baseImpl kem program post) :
-    (sample env baseImpl kem attachedVerify primitives program post).IsTotalQueryBound
+    (PqxdhInitialLegalObserver.sample (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post).IsTotalQueryBound
       (c.qKeygen + ((c.uPre + c.qBase * c.bPre + c.qDecap * c.dPre) + c.qEncap) + 32) := by
   unfold sample
   apply isTotalQueryBound_bind
     (PqxdhCorrelatedExtractQueryBounds.prepare_uniform_bound baseImpl kem
-      (protocol env kem attachedVerify primitives program post) _ _ _ _ _ _ _ _ _ _ _
-      (PqxdhAuthenticatedRootBudgets.sampler_bounds env baseImpl kem attachedVerify primitives program post c))
+      (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post) _ _ _ _ _ _ _ _ _ _ _
+      (PqxdhAuthenticatedRootBudgets.sampler_bounds (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c))
   intro context
   simpa only [bind_pure_comp, IsTotalQueryBound, isQueryBound_map_iff] using
     CtxComputationalSecurity.uniformFixedBytes_isTotalQueryBound 32
@@ -62,18 +64,18 @@ include localBound baseBound decapBound in
 theorem target_uniform
     (query : (PqxdhPhase2SourceScheduler.Spec baseSpec S B).Domain)
     (state : PqxdhPhase2PostScheduler.State (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B) count) :
-    ((PqxdhInitialLabelPost.target attachedVerify primitives count fixed localImpl writer sender route decode baseImpl kem secret challenge query).run state).IsQueryBoundP
+    ((PqxdhInitialLabelPost.target (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl writer sender route decode baseImpl kem secret challenge query).run state).IsQueryBoundP
       IsCoin (postCost qLocal qBase qDecap (PqxdhPhase2SourceSchedulerBounds.classify (baseSpec := baseSpec) query)) := by
   cases query with
   | inl query =>
       simp only [PqxdhInitialLabelPost.target, StateT.run]
       apply coins_uniform
       apply public_uniform baseImpl kem secret challenge qBase qDecap baseBound decapBound
-      · exact PqxdhPhase2PostSchedulerBounds.target_step attachedVerify primitives count fixed localImpl qLocal localBound
+      · exact PqxdhPhase2PostSchedulerBounds.target_step (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl qLocal localBound
           writer sender route decode challenge .uniform (.inl query) state
-      · exact PqxdhPhase2PostSchedulerBounds.target_step attachedVerify primitives count fixed localImpl qLocal localBound
+      · exact PqxdhPhase2PostSchedulerBounds.target_step (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl qLocal localBound
           writer sender route decode challenge .base (.inl query) state
-      · exact PqxdhPhase2PostSchedulerBounds.target_step attachedVerify primitives count fixed localImpl qLocal localBound
+      · exact PqxdhPhase2PostSchedulerBounds.target_step (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl qLocal localBound
           writer sender route decode challenge .decapsulation (.inl query) state
   | inr query =>
       cases query with
@@ -83,7 +85,7 @@ theorem target_uniform
             PqxdhPhase2PostSchedulerBounds.cost, PqxdhPhase2PostSchedulerBounds.finishCost,
             ite_true, Nat.mul_zero, Nat.mul_one, Nat.add_zero, PqxdhBeaconPhase2Preparation.State,
             StateT.run] using
-            (owner_bounds attachedVerify primitives count fixed localImpl baseImpl kem secret challenge
+            (PqxdhInitialObserverCallbackBudgets.owner_bounds (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl baseImpl kem secret challenge
               qLocal qBase qDecap localBound baseBound decapBound decode raw (state.1.roles.1.2 index) (state.1.primitive, state.2)).1
 
 set_option backward.isDefEq.respectTransparency false in
@@ -91,13 +93,13 @@ set_option backward.isDefEq.respectTransparency false in
 theorem target_service
     (query : (PqxdhPhase2SourceScheduler.Spec baseSpec S B).Domain)
     (state : PqxdhPhase2PostScheduler.State (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B) count) :
-    ((PqxdhInitialLabelPost.target attachedVerify primitives count fixed localImpl writer sender route decode baseImpl kem secret challenge query).run state).IsQueryBoundP
+    ((PqxdhInitialLabelPost.target (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl writer sender route decode baseImpl kem secret challenge query).run state).IsQueryBoundP
       IsService (if PqxdhPhase2SourceSchedulerBounds.classify (baseSpec := baseSpec) query = .inr 5 then 1 else 0) := by
   cases query with
   | inl query =>
       have zero := coins_service
         (simulateQ (PqxdhInitialRootFreeCallbacks.publicOnly baseImpl kem secret challenge)
-          ((PqxdhPhase2PostScheduler.target attachedVerify primitives count fixed localImpl writer sender route decode challenge (.inl query)).run state))
+          ((PqxdhPhase2PostScheduler.target (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl writer sender route decode challenge (.inl query)).run state))
       apply zero.mono
       exact Nat.zero_le _
   | inr query =>
@@ -105,8 +107,8 @@ theorem target_service
       | finish index raw =>
           simp only [PqxdhInitialLabelPost.target, PqxdhInitialLabelPost.finish, StateT.run, isQueryBoundP_map_iff,
             PqxdhPhase2SourceSchedulerBounds.classify, ite_true]
-          exact (PqxdhInitialFusedBudgets.owner_service decode raw (state.1.roles.1.2 index)).simulateQ_run_StateT_of_step
-            (fun query before => compiler_service attachedVerify primitives count fixed localImpl baseImpl kem secret challenge query before)
+          exact (PqxdhInitialFusedBudgets.owner_service (completedBinding := completedBinding) decode raw (state.1.roles.1.2 index)).simulateQ_run_StateT_of_step
+            (fun query before => PqxdhInitialObserverCallbackBudgets.compiler_service attachedVerify primitives count fixed localImpl baseImpl kem secret challenge query before)
             (state.1.primitive, state.2)
 
 include localBound baseBound decapBound in
@@ -115,18 +117,18 @@ theorem post_bounds (client : OracleComp (PqxdhPhase2SourceScheduler.Spec baseSp
     (budget : PqxdhPhase2SourceSchedulerBounds.Budget)
     (bounded : PqxdhPhase2SourceSchedulerBounds.Bounded client budget)
     (state : PqxdhPhase2PostScheduler.State (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B) count) :
-    let actual := (simulateQ (PqxdhInitialLabelPost.target attachedVerify primitives count fixed localImpl writer sender route decode baseImpl kem secret challenge) client).run state
+    let actual := (simulateQ (PqxdhInitialLabelPost.target (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl writer sender route decode baseImpl kem secret challenge) client).run state
     actual.IsQueryBoundP IsCoin (postBill qLocal qBase qDecap budget) ∧
     actual.IsQueryBoundP IsService (budget (.inr 5)) := by
   constructor
   · exact FinitePartitionQueryBounds.weighted_bound (PqxdhPhase2SourceSchedulerBounds.classify (baseSpec := baseSpec))
       (postCost qLocal qBase qDecap) budget
-      (PqxdhInitialLabelPost.target attachedVerify primitives count fixed localImpl writer sender route decode baseImpl kem secret challenge)
+      (PqxdhInitialLabelPost.target (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl writer sender route decode baseImpl kem secret challenge)
       IsCoin client bounded
-      (target_uniform attachedVerify primitives count fixed localImpl writer sender route decode baseImpl kem secret challenge
+      (target_uniform (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl writer sender route decode baseImpl kem secret challenge
         qLocal qBase qDecap localBound baseBound decapBound) state
   · exact (bounded (.inr 5)).simulateQ_run_StateT_of_step
-      (target_service attachedVerify primitives count fixed localImpl writer sender route decode baseImpl kem secret challenge) state
+      (target_service (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl writer sender route decode baseImpl kem secret challenge) state
 
 end Post
 
@@ -193,21 +195,21 @@ theorem accepted_uniform {setup : StatefulPhase1Setup baseSpec}
     (attachedVerify : Ed25519PublicKey → Pqxdh.Bytes → Option Pqxdh.Bytes) (primitives : Primitives)
     (program : Program baseSpec setup.Context S (B + 1)) (post : Post (baseSpec := baseSpec) program.Selection S (B + 1))
     (c : Certificate env baseImpl kem program post) (secret : KemSK) (selected : PqxdhCorrelatedExtractFamily.Message)
-    (prepared : PqxdhPrivateRootSource.Prepared setup (driver env.toDriverEnvironment program).State)
+    (prepared : PqxdhPrivateRootSource.Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)
     (ready : PqxdhPrivateAcceptedRoot.Ready) (response : PqxdhInitialRootLabelService.Response) :
-    (acceptedDecision env baseImpl kem attachedVerify primitives program post secret selected prepared ready response).IsTotalQueryBound
+    (PqxdhInitialLegalObserver.acceptedDecision (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post secret selected prepared ready response).IsTotalQueryBound
       (c.uPost + c.qBase * c.bPost + c.qDecap * c.dPost + 32 * c.privatePost) := by
   unfold acceptedDecision
   simp only [StateT.run'_eq, IsTotalQueryBound, isQueryBound_map_iff]
   change ((simulateQ (labelledFull env.source (QueryImpl.ofLift unifSpec ProbComp) selected response)
-    (accepted env baseImpl kem attachedVerify primitives program post secret selected prepared ready)).run ∅).IsTotalQueryBound _
+    (PqxdhInitialLegalObserver.accepted (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post secret selected prepared ready)).run ∅).IsTotalQueryBound _
   simp only [accepted, simulateQ_bind, StateT.run_bind, PqxdhInitialLabelBuilder.build_response, bind_map_left]
-  have builder := PqxdhInitialBuilderQueryBounds.protocol_uniform env.source env.recordWriter
+  have builder := PqxdhInitialBuilderQueryBounds.protocol_uniform (associatedData := associatedData) env.source env.recordWriter
     (PqxdhInitialReplyErasure.kernelOf false response) env.aux c.qAux c.auxBound env.senderId env.index env.metadata
     (PqxdhInitialBuilderCut.eraseRoot ready) prepared.1.context.selection.2
   refine (isTotalQueryBound_bind builder (n₂ := postBill c.qLocal c.qBase c.qDecap c.postBudget + 32 * c.privatePost) ?_).mono ?_
   · intro result
-    have bounds := post_bounds attachedVerify primitives 1 env.source env.localImpl env.recordWriter env.senderId env.route env.decode
+    have bounds := post_bounds (completedBinding := completedBinding) attachedVerify primitives 1 env.source env.localImpl env.recordWriter env.senderId env.route env.decode
       baseImpl kem secret ready.ciphertext c.qLocal c.qBase c.qDecap c.localBound c.baseBound (c.decapsBound secret)
       (post prepared.1.context.selection.1 result.1) c.postBudget (c.postBound _ _) (result.2, prepared.2)
     have cost := labelled_uniform env.source selected response _ _ _ bounds.1 bounds.2 ∅
@@ -225,15 +227,15 @@ theorem observe_uniform {setup : StatefulPhase1Setup baseSpec}
     (attachedVerify : Ed25519PublicKey → Pqxdh.Bytes → Option Pqxdh.Bytes) (primitives : Primitives)
     (program : Program baseSpec setup.Context S (B + 1)) (post : Post (baseSpec := baseSpec) program.Selection S (B + 1))
     (c : Certificate env baseImpl kem program post)
-    (context : PqxdhInitialLegalObserver.Context env kem attachedVerify primitives program post)
+    (context : PqxdhInitialLegalObserver.Context (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post)
     (response : PqxdhInitialRootLabelService.Response) :
-    (observe env baseImpl kem attachedVerify primitives program post context response).IsTotalQueryBound
+    (PqxdhInitialLegalObserver.observe (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post context response).IsTotalQueryBound
       (c.uPost + c.qBase * c.bPost + c.qDecap * c.dPost + 32 * c.privatePost) := by
   cases mode : context.state with
   | completed decision => simp only [observe, mode]; trivial
   | pending prepared ephemeral =>
       simp only [observe, mode]
-      exact accepted_uniform env baseImpl kem attachedVerify primitives program post c _ _ _ _ _
+      exact accepted_uniform (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c _ _ _ _ _
 
 end BeaconcryptCore.Computational.PqxdhInitialObserverBudgets
 

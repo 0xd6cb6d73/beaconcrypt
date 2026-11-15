@@ -132,6 +132,19 @@ private theorem present (keyId : U64) :
   obtain ⟨inner, _called, same⟩ := original
   exact ⟨(congrArg (fun value => value.1.2.world.world.2) same).symm, extension⟩
 
+/-- AD hashing preserves existing signing receipts while executing its actual shared hash query. -/
+theorem adHash (pending : registration.ServerAdHash) :
+    Keeps (Platform := Platform) (serverProject (n := n)) (RegistrationNativePlatformCompletionSdk.nativeAdHash coins pending) := by
+  apply RegistrationNativePlatformSdkCached.world
+  unfold RegistrationNativePlatformServerCompletion.adHash RegistrationNativePlatformServerCompletion.adHashWith RegistrationServerAdHash.runWith
+  cases pending.request with
+  | fail error | div => exact pure_keeps localProject _
+  | ok request =>
+      simp only [bind_assoc, pure_bind]
+      apply bind_keeps localProject _ _ (capability (.hash (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request)))
+      intro _digest
+      exact pure_keeps localProject _
+
 variable [primitive : AdapterSealPrimitive.Operations]
 
 /-- Actual first-record execution and its complete response suffix retain all prior and newly attempted cached signing receipts. -/
@@ -179,7 +192,7 @@ theorem build (setup : Setup base KemSK) (codec : Codec Reader Response)
     Keeps (serverProject (n := n))
       (RegistrationNativePlatformSourceSeal.build coins setup codec view failure allocation erased reservePeer sign helper writer handle application) := by
   unfold RegistrationNativePlatformSourceSeal.build RegistrationNativePlatformSourceBuild.buildSource
-  exact RegistrationNativePlatformSdkCached.build _ pin _ (reserve reservePeer) _ present _
+  exact RegistrationNativePlatformSdkCached.build _ adHash _ pin _ (reserve reservePeer) _ present _
     (finish setup codec view failure allocation erased sign helper writer) handle application
 
 end BeaconcryptCore.Computational.RegistrationNativePlatformServerCached
@@ -201,3 +214,9 @@ end BeaconcryptCore.Computational.RegistrationNativePlatformServerCached
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativePlatformServerCached.build
+
+/-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformServerCached.adHash' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.RegistrationNativePlatformServerCached.adHash

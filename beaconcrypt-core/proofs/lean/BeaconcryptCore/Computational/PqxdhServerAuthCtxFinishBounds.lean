@@ -1,6 +1,7 @@
 import VCVio.OracleComp.QueryTracking.QueryBound.Partition
 import BeaconcryptCore.Computational.PqxdhServerAuthCtxFinish
 import BeaconcryptCore.Computational.PqxdhServerAuthEntryResourceHandlers
+import BeaconcryptCore.Computational.PqxdhServerAuthCtxStateBounds
 
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
@@ -12,14 +13,54 @@ open PqxdhServerAuthCtxFinish PqxdhServerAuthSourceCosts PqxdhServerAuthGapDh
 open PqxdhSecretInputKdf PqxdhJointKdfGame
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response : Type}
 
-/-- The complete actual finish pays its real prefix, table and reached tail bills before any optional rejection. Inactive phases make no calls. -/
-theorem finish_query_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+/-- After the transcript hash, the finish compiler for any completed binding pays its real prefix, table and reached tail bills before any optional rejection. -/
+theorem staged_query_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (context : Context KemSK) (rest : PqxdhServerAuthCtxCalls.Residual) (select : Bool) (raw : Pqxdh.Bytes)
     (predicate : AdaptiveCtxDynamicKnownKeys.Spec.Domain → Prop) [DecidablePred predicate]
     (prefixBill tableBill tailBill : Nat)
-    (prefixBound : ∀ control identity oneTime kem,
+    (prefixBound : ∀ completed control identity oneTime kem,
       (simulateQ PqxdhServerAuthCtxAmbient.coin
-        ((beaconPrefix setup codec context.beaconSeed control identity oneTime kem raw).run' ())).IsQueryBoundP predicate prefixBill)
+        ((beaconPrefix completed setup codec context.beaconSeed control identity oneTime kem raw).run' ())).IsQueryBoundP
+          predicate prefixBill)
+    (table : ∀ message cache,
+      (simulateQ PqxdhServerAuthCtxAmbient.coin
+        (((tableServices (WireResponse := Response) setup context select).derive message).run cache)).IsQueryBoundP predicate tableBill)
+    (ordinary : ∀ control pending root state,
+      ((known setup.source codec control pending root).run state : OracleComp AdaptiveCtxDynamicKnownKeys.Spec
+        (Option Pqxdh.Bytes × Local KemSK)).IsQueryBoundP predicate tailBill)
+    (hidden : ∀ control pending state,
+      ((selected setup.source codec rest control pending).run state : OracleComp AdaptiveCtxDynamicKnownKeys.Spec
+        (Option Pqxdh.Bytes × Local KemSK)).IsQueryBoundP predicate tailBill)
+    (completed : beaconcrypt_core.session.CompletedRegistrationBinding) (control : pqxdh.BeaconInitSent)
+    (oneTime : Unit ⊕ PqxdhJointGapDh.ScalarBytes) (kem : KemSK) (state : Local KemSK) :
+    ((staged setup codec context rest select completed control oneTime kem raw).run state).IsQueryBoundP predicate
+      (prefixBill + tableBill + tailBill) := by
+  unfold staged
+  simp only [StateT.run, Nat.add_assoc]
+  apply isQueryBoundP_bind (m := tableBill + tailBill) (prefixBound completed control _ oneTime kem)
+  intro prepared _
+  cases prepared with
+  | none => trivial
+  | some pending =>
+    apply isQueryBoundP_bind (m := tailBill) (table _ _)
+    intro derived _
+    cases derived.1 with
+    | rejected => trivial
+    | root root => exact ordinary control pending root _
+    | hidden => exact hidden control pending _
+
+/-- The complete actual finish pays its transcript hash, real prefix, table and reached tail bills before any optional rejection. Inactive phases and aborts before the hash make no calls. -/
+theorem finish_query_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (context : Context KemSK) (rest : PqxdhServerAuthCtxCalls.Residual) (select : Bool) (raw : Pqxdh.Bytes)
+    (predicate : AdaptiveCtxDynamicKnownKeys.Spec.Domain → Prop) [DecidablePred predicate]
+    (hashBill prefixBill tableBill tailBill : Nat)
+    (hashBound : ∀ bytes state,
+      ((PqxdhServerAuthCtxState.hash bytes).run state : OracleComp AdaptiveCtxDynamicKnownKeys.Spec
+        (CtxRomAuth.CtxDigest × Local KemSK)).IsQueryBoundP predicate hashBill)
+    (prefixBound : ∀ completed control identity oneTime kem,
+      (simulateQ PqxdhServerAuthCtxAmbient.coin
+        ((beaconPrefix completed setup codec context.beaconSeed control identity oneTime kem raw).run' ())).IsQueryBoundP
+          predicate prefixBill)
     (table : ∀ message cache,
       (simulateQ PqxdhServerAuthCtxAmbient.coin
         (((tableServices (WireResponse := Response) setup context select).derive message).run cache)).IsQueryBoundP predicate tableBill)
@@ -31,23 +72,20 @@ theorem finish_query_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader 
         (Option Pqxdh.Bytes × Local KemSK)).IsQueryBoundP predicate tailBill)
     (state : Local KemSK) :
     ((finish setup codec context rest select raw).run state).IsQueryBoundP predicate
-      ((prefixBill + tableBill + tailBill) * initSentFlag state.1.1) := by
+      ((hashBill + prefixBill + tableBill + tailBill) * initSentFlag state.1.1) := by
   unfold finish
   simp only [StateT.run]
   cases phase : state.1.1.beacon.beacon.phase with
   | initSent control prekey oneTime kem =>
     simp only [initSentFlag, phase, Nat.mul_one, Nat.add_assoc]
-    apply isQueryBoundP_bind (m := tableBill + tailBill) (prefixBound control _ oneTime kem)
-    intro prepared _
-    cases prepared with
-    | none => trivial
-    | some pending =>
-      apply isQueryBoundP_bind (m := tailBill) (table _ _)
-      intro derived _
-      cases derived.1 with
-      | rejected => trivial
-      | root root => exact ordinary control pending root _
-      | hidden => exact hidden control pending _
+    split
+    · change (StateT.run (PqxdhServerAuthCtxState.hash _ >>= _) state).IsQueryBoundP predicate _
+      rw [StateT.run_bind]
+      apply isQueryBoundP_bind (m := prefixBill + (tableBill + tailBill)) (hashBound _ _)
+      intro digest _
+      simpa only [Nat.add_assoc] using staged_query_bound setup codec context rest select raw predicate
+        prefixBill tableBill tailBill prefixBound table ordinary hidden _ control oneTime kem digest.2
+    · trivial
   | _ => trivial
 
 /-- The ordinary complete post-root callback forwards only its one attempted hash; native optional failures and local KDF work remain present. -/
@@ -99,27 +137,30 @@ theorem finish_record_bills (setup : Setup baseSpec KemSK) (codec : Codec Reader
     (context : Context KemSK) (rest : PqxdhServerAuthCtxCalls.Residual) (select : Bool)
     (raw : Pqxdh.Bytes) (state : Local KemSK) :
     ((finish setup codec context rest select raw).run state).IsQueryBoundP
-        AdaptiveCtxDynamicKnownBounds.HashRoute (initSentFlag state.1.1) ∧
+        AdaptiveCtxDynamicKnownBounds.HashRoute (2 * initSentFlag state.1.1) ∧
       ((finish setup codec context rest select raw).run state).IsQueryBoundP
         (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxQueryBounds.SourceSeal) 0 ∧
       ((finish setup codec context rest select raw).run state).IsQueryBoundP
         (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxReceive.IsRawQuery) (initSentFlag state.1.1) := by
   refine ⟨?_, ?_, ?_⟩
-  · simpa only [Nat.zero_add, Nat.one_mul] using finish_query_bound setup codec context rest select raw
-      AdaptiveCtxDynamicKnownBounds.HashRoute 0 0 1
-      (fun _ _ _ _ => (PqxdhServerAuthCtxAmbient.coin_other _).1)
+  · simpa only [Nat.zero_add, Nat.add_zero] using finish_query_bound setup codec context rest select raw
+      AdaptiveCtxDynamicKnownBounds.HashRoute 1 0 0 1
+      (fun bytes state => (PqxdhServerAuthCtxStateBounds.hash_bills bytes state).1)
+      (fun _ _ _ _ _ => (PqxdhServerAuthCtxAmbient.coin_other _).1)
       (fun _ _ => (PqxdhServerAuthCtxAmbient.coin_other _).1)
       (fun control pending root state => (known_bills setup.source codec control pending root state).2.1)
       (fun control pending state => (selected_bills setup.source codec rest control pending state).2.1) state
   · simpa only [Nat.zero_add, Nat.zero_mul] using finish_query_bound setup codec context rest select raw
-      (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxQueryBounds.SourceSeal) 0 0 0
-      (fun _ _ _ _ => (PqxdhServerAuthCtxAmbient.coin_other _).2.1)
+      (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxQueryBounds.SourceSeal) 0 0 0 0
+      (fun bytes state => (PqxdhServerAuthCtxStateBounds.hash_bills bytes state).2.1)
+      (fun _ _ _ _ _ => (PqxdhServerAuthCtxAmbient.coin_other _).2.1)
       (fun _ _ => (PqxdhServerAuthCtxAmbient.coin_other _).2.1)
       (fun control pending root state => (known_bills setup.source codec control pending root state).2.2.1)
       (fun control pending state => (selected_bills setup.source codec rest control pending state).2.2.1) state
   · simpa only [Nat.zero_add, Nat.one_mul] using finish_query_bound setup codec context rest select raw
-      (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxReceive.IsRawQuery) 0 0 1
-      (fun _ _ _ _ => (PqxdhServerAuthCtxAmbient.coin_other _).2.2)
+      (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxReceive.IsRawQuery) 0 0 0 1
+      (fun bytes state => (PqxdhServerAuthCtxStateBounds.hash_bills bytes state).2.2.1)
+      (fun _ _ _ _ _ => (PqxdhServerAuthCtxAmbient.coin_other _).2.2)
       (fun _ _ => (PqxdhServerAuthCtxAmbient.coin_other _).2.2)
       (fun control pending root state => ((known_bills setup.source codec control pending root state).2.2.2.1).mono (by decide))
       (fun control pending state => (selected_bills setup.source codec rest control pending state).2.2.2.1) state
@@ -127,13 +168,15 @@ theorem finish_record_bills (setup : Setup baseSpec KemSK) (codec : Codec Reader
 /-- The literal prefix forwards every direct and base-interpreted decapsulation coin; all parsing, validation and DH callback work remains in the source program. -/
 theorem prefix_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (context : Context KemSK) (caps : KemCaps) (bounded : KemBound setup caps)
-    (control : pqxdh.BeaconInitSent) (identity : Unit) (oneTime : Unit ⊕ PqxdhJointGapDh.ScalarBytes)
+    (completed : beaconcrypt_core.session.CompletedRegistrationBinding) (control : pqxdh.BeaconInitSent) (identity : Unit) (oneTime : Unit ⊕ PqxdhJointGapDh.ScalarBytes)
     (kem : KemSK) (raw : Pqxdh.Bytes) :
     (simulateQ PqxdhServerAuthCtxAmbient.coin
-      ((beaconPrefix setup codec context.beaconSeed control identity oneTime kem raw).run' ())).IsTotalQueryBound caps.decapsCost := by
+      ((beaconPrefix completed setup codec context.beaconSeed control identity oneTime kem raw).run' ())).IsTotalQueryBound
+        caps.decapsCost := by
   apply PqxdhServerAuthCtxAmbient.coin_bound
   simpa only [StateT.run', StateT.run, IsTotalQueryBound, isQueryBound_map_iff] using
-    beacon_prefix_uniform setup codec context.beaconSeed caps bounded control identity oneTime kem raw ()
+    beacon_prefix_uniform (completedBinding := completed) setup codec context.beaconSeed caps bounded control identity
+      oneTime kem raw ()
 
 /-- Every actual unselected table miss retains its sixty-four source samples, including bad-state continuations; designation itself samples nothing. -/
 theorem table_bound (setup : Setup baseSpec KemSK) (context : Context KemSK) (select : Bool)
@@ -151,10 +194,12 @@ theorem finish_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Resp
     (caps : KemCaps) (bounded : KemBound setup caps) (raw : Pqxdh.Bytes) (state : Local KemSK) :
     ((finish setup codec context rest select raw).run state).IsQueryBoundP AdaptiveCtxDynamicKnownBounds.UniformRoute
       ((caps.decapsCost + 64) * initSentFlag state.1.1) := by
-  simpa only [Nat.add_zero] using finish_query_bound setup codec context rest select raw
-    AdaptiveCtxDynamicKnownBounds.UniformRoute caps.decapsCost 64 0
-    (fun control identity oneTime kem => IsQueryBoundP.of_imp (fun _ _ => True.intro)
-      ((isQueryBoundP_true_iff _ _).2 (prefix_bound setup codec context caps bounded control identity oneTime kem raw)))
+  simpa only [Nat.add_zero, Nat.zero_add] using finish_query_bound setup codec context rest select raw
+    AdaptiveCtxDynamicKnownBounds.UniformRoute 0 caps.decapsCost 64 0
+    (fun bytes state => (PqxdhServerAuthCtxStateBounds.hash_bills bytes state).2.2.2)
+    (fun completed control identity oneTime kem => IsQueryBoundP.of_imp (fun _ _ => True.intro)
+      ((isQueryBoundP_true_iff _ _).2
+        (prefix_bound setup codec context caps bounded completed control identity oneTime kem raw)))
     (fun message cache => IsQueryBoundP.of_imp (fun _ _ => True.intro)
       ((isQueryBoundP_true_iff _ _).2 (table_bound (Response := Response) setup context select message cache)))
     (fun control pending root state => (known_bills setup.source codec control pending root state).2.2.2.2)
@@ -165,12 +210,14 @@ theorem finish_total (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
     (context : Context KemSK) (rest : PqxdhServerAuthCtxCalls.Residual) (select : Bool)
     (caps : KemCaps) (bounded : KemBound setup caps) (raw : Pqxdh.Bytes) (state : Local KemSK) :
     ((finish setup codec context rest select raw).run state).IsTotalQueryBound
-      ((caps.decapsCost + 65) * initSentFlag state.1.1) := by
+      ((caps.decapsCost + 66) * initSentFlag state.1.1) := by
   apply (isQueryBoundP_true_iff _ _).1
-  simpa only [Nat.add_assoc] using finish_query_bound setup codec context rest select raw
-    (fun _ => True) caps.decapsCost 64 1
-    (fun control identity oneTime kem => (isQueryBoundP_true_iff _ _).2
-      (prefix_bound setup codec context caps bounded control identity oneTime kem raw))
+  rw [show caps.decapsCost + 66 = 1 + caps.decapsCost + 64 + 1 by omega]
+  exact finish_query_bound setup codec context rest select raw
+    (fun _ => True) 1 caps.decapsCost 64 1
+    (fun bytes state => (isQueryBoundP_true_iff _ _).2 (PqxdhServerAuthCtxState.hash_bound bytes state))
+    (fun completed control identity oneTime kem => (isQueryBoundP_true_iff _ _).2
+      (prefix_bound setup codec context caps bounded completed control identity oneTime kem raw))
     (fun message cache => (isQueryBoundP_true_iff _ _).2
       (table_bound (Response := Response) setup context select message cache))
     (fun control pending root state => (isQueryBoundP_true_iff _ _).2
@@ -184,7 +231,7 @@ theorem finish_evaluated_uniform (setup : Setup baseSpec KemSK) (codec : Codec R
     (caps : KemCaps) (bounded : KemBound setup caps) (raw : Pqxdh.Bytes) (key : RootOutput)
     (state : State KemSK) :
     ((evaluate setup.source key codec.frameRead (finish setup codec context rest select raw)).run state).IsTotalQueryBound
-      ((caps.decapsCost + 128) * initSentFlag state.1.1.1) := by
+      ((caps.decapsCost + 192) * initSentFlag state.1.1.1) := by
   have services : ServiceUniform (if select then selectingServices setup context
       (factorServices setup codec checks context (PqxdhServerAuthCtxMaterial.output key rest))
       else factorServices setup codec checks context (PqxdhServerAuthCtxMaterial.output key rest)) := by
@@ -196,7 +243,7 @@ theorem finish_evaluated_uniform (setup : Setup baseSpec KemSK) (codec : Codec R
   have same := finish_source setup codec checks context rest select raw key state
   have mapped : (Prod.map id PqxdhServerAuthCtxState.project <$>
       (evaluate setup.source key codec.frameRead (finish setup codec context rest select raw)).run state).IsTotalQueryBound
-        ((caps.decapsCost + 128) * initSentFlag state.1.1.1) := by
+        ((caps.decapsCost + 192) * initSentFlag state.1.1.1) := by
     rw [same]
     simpa only [IsTotalQueryBound, isQueryBound_map_iff, PqxdhServerAuthCtxState.project, restore, restoreFlat, initSentFlag] using bill
   simpa only [IsTotalQueryBound, isQueryBound_map_iff] using mapped
@@ -223,7 +270,19 @@ theorem finish_footprint (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
   simp only [finish, StateT.run] at supported
   cases phase : state.1.1.beacon.beacon.phase with
   | initSent control prekey oneTime kem =>
-      simp only [phase, mem_support_bind_iff] at supported
+      simp only [phase] at supported
+      split at supported
+      rotate_left
+      · simp only [support_pure, Set.mem_singleton_iff] at supported
+        subst supported
+        refine ⟨⟨rfl, rfl, initSentFlag_zero _ ?_⟩, rfl, rfl⟩
+        rintro ⟨control', prekey', oneTime', kem', active⟩
+        exact finish_phase control state.1.1.beacon none control' prekey' oneTime' kem' active
+      change result ∈ support (StateT.run (PqxdhServerAuthCtxState.hash _ >>= _) state) at supported
+      rw [StateT.run_bind, mem_support_bind_iff] at supported
+      obtain ⟨hashed, hashRun, supported⟩ := supported
+      rw [PqxdhServerAuthCtxStateBounds.hash_state _ state hashed hashRun] at supported
+      simp only [staged, StateT.run, mem_support_bind_iff] at supported
       obtain ⟨prepared, _, supported⟩ := supported
       cases found : prepared with
       | none =>
@@ -255,6 +314,12 @@ theorem finish_footprint (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
       exact ⟨⟨rfl, rfl, by simp only [initSentFlag, phase]⟩, rfl, rfl⟩
 
 end BeaconcryptCore.Computational.PqxdhServerAuthCtxFinishBounds
+
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthCtxFinishBounds.staged_query_bound' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhServerAuthCtxFinishBounds.staged_query_bound
 
 /-- info: 'BeaconcryptCore.Computational.PqxdhServerAuthCtxFinishBounds.finish_query_bound' depends on axioms: [propext,
  Classical.choice,

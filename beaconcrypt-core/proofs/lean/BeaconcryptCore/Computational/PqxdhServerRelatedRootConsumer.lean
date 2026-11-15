@@ -12,9 +12,11 @@ open PqxdhServerRootPreparation PqxdhServerStaticDhSource PqxdhServerRelatedRoot
 open PqxdhJointIdentity PqxdhJointGapDh PqxdhSecretInputKdf PqxdhJointKdfGame PqxdhJointDhExtractRoot
 open PqxdhBeaconPhase2Preparation (Word32)
 
+/-- The opaque Server token: the derived root, the cleared pending registration and the four retained Init buffers exactly as received (`initOf` of this candidate is the Init part of the transcript that the build hashes, plan 2.1). -/
 structure Returned where
   root : RootOutput
   pending : pqxdh.PendingServerRegistration
+  init : PqxdhEd25519EufCma.Phase1Candidate
 
 inductive Auxiliary where
   | eraseShared
@@ -41,7 +43,27 @@ noncomputable def client {Reader E : Type} (binding : pqxdh.ServerBinding)
       | some root => do
           let token := pending binding input
           let _ ← Spec.query (.inr (.consume token.registration_id))
-          pure (ok (some ⟨root, token⟩))
+          pure (ok (some ⟨root, token, input.verified.candidate⟩))
+
+/-- A returned token retains the verified Phase 1 candidate of its input: the received identity, prekey, one-time and PQ buffers. -/
+theorem client_init {Reader E : Type} (binding : pqxdh.ServerBinding) (input : Inputs Reader E PeerEncoding)
+    (outcome : RustM (Option Returned)) (supported : outcome ∈ support (client binding input))
+    (returned : Returned) (found : outcome = ok (some returned)) : returned.init = input.verified.candidate := by
+  classical
+  subst found
+  simp only [client, mem_support_bind_iff] at supported
+  obtain ⟨_, _, supported⟩ := supported
+  by_cases valid : localNonzero input
+  · simp only [valid, not_true_eq_false, ite_false, mem_support_bind_iff] at supported
+    obtain ⟨root, _, _, _, supported⟩ := supported
+    cases root with
+    | none => simp at supported
+    | some root =>
+        simp only [mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at supported
+        obtain ⟨_, _, supported⟩ := supported
+        simp only [RustM.ok.injEq, Option.some.injEq] at supported
+        rw [supported]
+  · simp [valid] at supported
 
 def familyImpl {A : Type} (family : QueryImpl RootSpec (StateT PqxdhJointDhExtractFamily.State ProbComp)) :
     QueryImpl RootSpec (StateT (State A) ProbComp) := fun query state =>
@@ -83,7 +105,7 @@ noncomputable def source {A Reader E : Type} (kdf : FixedHkdfSha512NoSaltSource)
       let root ← nativeRoot kdf hmac input original
       let _ ← auxImpl aux .eraseInput
       let _ ← auxImpl aux (.consume original.registration_id)
-      pure (ok (some ⟨root, cleared original⟩))
+      pure (ok (some ⟨root, cleared original, input.verified.candidate⟩))
 
 set_option backward.isDefEq.respectTransparency false in
 /-- At the exact reached input, the real family reply has the same complete native root and primitive poststate. -/
@@ -194,6 +216,11 @@ end BeaconcryptCore.Computational.PqxdhServerRelatedRootConsumer
  Quot.sound] -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhServerRelatedRootConsumer.root_source
+/-- info: 'BeaconcryptCore.Computational.PqxdhServerRelatedRootConsumer.client_init' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhServerRelatedRootConsumer.client_init
 /-- info: 'BeaconcryptCore.Computational.PqxdhServerRelatedRootConsumer.client_source' depends on axioms: [propext,
  Classical.choice,
  Quot.sound] -/

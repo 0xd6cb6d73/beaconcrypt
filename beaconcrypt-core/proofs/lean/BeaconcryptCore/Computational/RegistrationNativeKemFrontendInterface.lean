@@ -56,7 +56,7 @@ noncomputable def record (setup : Setup base KemSK) (wire : Wire) (route : RawCt
 noncomputable def other (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource) :
     QueryImpl (Ambient n mlSource) (StateT (State n mlSource) ProbComp)
   | .inl query => RegistrationNativeKemServerInterface.other setup (ledgerCodec wire) checks route mlSource.verify representation created query
   | .inr (.build session application) => RegistrationNativeKemServerInterface.server
@@ -67,7 +67,7 @@ noncomputable def other (setup : Setup base KemSK) (checks : Checks) (wire : Wir
 noncomputable def source (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource) :
     QueryImpl (Spec n mlSource KemSK) (StateT (State n mlSource × PqxdhLiveKemBirth.Pool KemSK) ProbComp) :=
   RegistrationNativeKemInterface.source setup.baseImpl setup.kem (Ambient n mlSource)
     (other setup checks wire route representation created credential)
@@ -76,7 +76,7 @@ noncomputable def source (setup : Setup base KemSK) (checks : Checks) (wire : Wi
 theorem lift_program (setup : Setup base KemSK) (checks : Checks) (wire : Wire)
     (route : RawCtxServerRouting.SenderDecoder)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (work : OracleComp (RegistrationNativeKemServerInterface.Spec n mlSource KemSK) Value)
     (before : State n mlSource × PqxdhLiveKemBirth.Pool KemSK) :
     (simulateQ (source setup checks wire route representation created credential) (simulateQ lift work)).run before =

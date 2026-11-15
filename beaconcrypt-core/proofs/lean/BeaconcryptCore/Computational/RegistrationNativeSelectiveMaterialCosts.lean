@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativePrimitiveCosts
+import BeaconcryptCore.Computational.RegistrationNativeSelectiveHiddenService
 
 /-! The actual selective material service pays at most108 environment coin draws: selected inputs use the original44-byte material service, while nonselected protected inputs use their persistent108-byte output cache. Both branches make zero shared hashes and zero installation/administrative queries. Every failed preparation or capacity refusal remains in the literal stateful branch. -/
 

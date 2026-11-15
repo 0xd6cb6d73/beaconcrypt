@@ -11,6 +11,7 @@ open RustM beaconcrypt_core ratchet ratchet.refined ratchet.concrete
 open OracleComp OracleSpec
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhSelectedMessageBeacon
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhJointKdfGame PqxdhInitialBeaconAmbient
 open RawCtxSelectedMessageKey RawCtxSelectedMessageReveals RawCtxSelectedMessageDriver
 open RawCtxSelectedMessageKdf
@@ -66,14 +67,14 @@ theorem owner_source
     (initial : PqxdhBeaconPhase2Shared.Secrets Shared → Ambient A N C (Option NativeKernel))
     (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
     (state : RawCtxGenericRoleStorage.BeaconState RawCtxSelectedMessageReveals.Kernel I D K) :
-    PqxdhInitialGenericBeacon.owner pre
+    PqxdhInitialGenericBeacon.owner (completedBinding := completedBinding) pre
       (liftCalls (nativeCalls source writer prior parent key target nonce next)) application initial decode raw
       (RawCtxGenericRoleStorage.mapBeacon (interpretKernel key) state) =
     Prod.map id (RawCtxGenericRoleStorage.mapBeacon (interpretKernel key)) <$>
-      PqxdhInitialGenericBeacon.owner pre
+      PqxdhInitialGenericBeacon.owner (completedBinding := completedBinding) pre
         (liftCalls (materialCalls source writer prior parent key target nonce next)) application
         (knownInitial initial) decode raw state := by
-  apply PqxdhInitialGenericBeacon.owner_map
+  apply PqxdhInitialGenericBeacon.owner_map (completedBinding := completedBinding)
   · intro kernel sequence context
     simp only [liftCalls, receive_map, lift_map]
   · intro secrets

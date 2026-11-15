@@ -25,7 +25,7 @@ variable [original : AdapterBeaconConstructorRequestMonad.Operations (RustT Prob
 variable [originalCrypto : CryptoOperations (RustT ProbComp)]
 variable (coins : QueryImpl unifSpec (StateT P ProbComp))
 variable (setup : PqxdhServerAuthExperiment.Setup base KemSK) (checks : PqxdhServerAuthExperiment.Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (view : AdapterPublicWrapperState.MaterialView mlSource KemSK)
 local notation "SourceM" => AdapterBeaconConstructorNative.M n KemSK mlSource RegistrationServerRoleBackend.State (StateT P ProbComp)
 local notation "PhysicalM" => StateT (Backend n KemSK) (StateT P ProbComp)
@@ -46,7 +46,6 @@ noncomputable def physical (previous : ChildOperations (RustT PhysicalM)) (gener
 
 
 variable (generator : rand_core.TryCryptoRng R Error) (kem : AdapterBeaconConstructorKem.Representation view R)
-variable (ml : AdapterBeaconConstructorGeneration.MldsaContract generator view (RegistrationNativeMldsa.generate mlSource))
 variable (signing : AdapterBeaconConstructorGeneration.EdContract generator view setup.joint PqxdhJointIdentity.sampleSeed)
 variable (prekey : AdapterBeaconConstructorGeneration.KxContract generator view
   (fun scalar => PqxdhRootTableInitialization.rootArray (setup.dh.publicKey scalar)) PqxdhJointGapDh.sampleScalar)
@@ -63,7 +62,7 @@ omit material ed original originalCrypto in
 private theorem lift_ok {m : Type → Type} [Monad m] {A : Type} (value : A) :
     (AdapterRecordRequestMonad.liftRust (.ok value) : RustT m A) = pure value := rfl
 
-include ml signing prekey kemContract in
+include signing prekey kemContract in
 theorem full_source (sourcePrevious : ChildOperations (RustT SourceM))
     (physicalPrevious : ChildOperations (RustT PhysicalM))
     (keyId : U64) (identityKey mlKey : Slice U8) (rng : R)
@@ -110,9 +109,9 @@ theorem full_source (sourcePrevious : ChildOperations (RustT SourceM))
           rfl
         | Ok mlPin =>
           exact RegistrationNativePlatformPublicAdapterCreateBody.body_source coins setup checks representation created view
-            generator kem ml signing prekey kemContract sourcePrevious physicalPrevious keyId serverId mlPin rng before
+            generator kem signing prekey kemContract sourcePrevious physicalPrevious keyId serverId mlPin rng before
 
-include ml signing prekey kemContract in
+include signing prekey kemContract in
 theorem full_platform (sourcePrevious : ChildOperations (RustT SourceM))
     (physicalPrevious : ChildOperations (RustT PhysicalM))
     (keyId : U64) (identityKey mlKey : Slice U8) (rng : R)
@@ -121,7 +120,7 @@ theorem full_platform (sourcePrevious : ChildOperations (RustT SourceM))
       (source coins setup checks representation created view sourcePrevious generator keyId identityKey mlKey rng).run).run before).run previous =
     ((physical coins setup checks representation created view physicalPrevious generator keyId identityKey mlKey rng).run.run (backend before)).run previous := by
   have law := congrArg (fun work => work.run previous)
-    (full_source coins setup checks representation created view generator kem ml signing prekey kemContract
+    (full_source coins setup checks representation created view generator kem signing prekey kemContract
       sourcePrevious physicalPrevious keyId identityKey mlKey rng before)
   rw [StateT.run_map] at law
   exact law

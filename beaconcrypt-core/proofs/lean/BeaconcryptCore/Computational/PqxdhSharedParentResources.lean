@@ -11,6 +11,8 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhSharedParentResources
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhNativeSharedPrefix PqxdhNativeSharedContinuation
 open CtxRomAuth AdaptiveCtxSharedHash PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhCorrelatedExpand
 variable {ι M P I D K X Response Shared A N : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -26,23 +28,23 @@ variable (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writ
 
 /-- The source prefix and its exact saved continuation execute the full original audited oracle program. -/
 theorem carried_finish (depth stage : Nat) (state : Local A N RootOracle.QueryCache) :
-    (carried source writer stage pre application initial selector aux mark sender route decode execution depth state >>=
-      finish source writer stage pre application initial selector aux mark sender route decode) =
+    (carried (completedBinding := completedBinding) (associatedData := associatedData) source writer stage pre application initial selector aux mark sender route decode execution depth state >>=
+      finish (completedBinding := completedBinding) source writer stage pre application initial selector aux mark sender route decode) =
     (simulateQ (compiler source writer stage pre application initial selector aux)
-      (simulateQ RawCtxForwardAnnotation.erase (PqxdhInitialNativeCarried.code source mark sender route decode execution))).run state := by
+      (simulateQ RawCtxForwardAnnotation.erase (PqxdhInitialNativeCarried.code (associatedData := associatedData) (completedBinding := completedBinding) source mark sender route decode execution))).run state := by
   have complete := RawCtxSharedPrefixCompletion.scan_finish
     PqxdhInitialForwardPost.selected (PqxdhNativeSharedPrefix.selected depth)
     (fun query state chosen => native_selection depth query (attach state ∅) chosen)
     (compiler source writer stage pre application initial selector aux)
-    (PqxdhInitialOriginContext.frame (X := X) (Response := Response) mark sender route decode)
-    (PqxdhInitialNativeCarried.code source mark sender route decode execution)
-    (PqxdhInitialOriginForwardBuilder.program_covered source mark execution.origin sender route decode
+    (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode)
+    (PqxdhInitialNativeCarried.code (associatedData := associatedData) (completedBinding := completedBinding) source mark sender route decode execution)
+    (PqxdhInitialOriginForwardBuilder.program_covered (associatedData := associatedData) (completedBinding := completedBinding) source mark execution.origin sender route decode
       execution.initial execution.index execution.metadata execution.ready execution.outside execution.before execution.trace)
-    (PqxdhInitialOriginForwardBuilder.program_sound source mark execution.origin sender route decode
+    (PqxdhInitialOriginForwardBuilder.program_sound (associatedData := associatedData) (completedBinding := completedBinding) source mark execution.origin sender route decode
       execution.initial execution.index execution.metadata execution.ready execution.outside execution.before execution.trace) state
-  have sameFinish : finish (P := P) (Result := Bool) (S := S) (B := B) source writer stage pre application initial selector aux mark sender route decode =
+  have sameFinish : finish (completedBinding := completedBinding) (P := P) (Result := Bool) (S := S) (B := B) source writer stage pre application initial selector aux mark sender route decode =
       RawCtxSharedPrefixCompletion.finish (compiler source writer stage pre application initial selector aux)
-        (PqxdhInitialOriginContext.frame (X := X) (Response := Response) mark sender route decode) := by
+        (PqxdhInitialOriginContext.frame (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode) := by
     funext cut
     cases cut <;> rfl
   rw [sameFinish]
@@ -56,16 +58,16 @@ noncomputable def resume (stage : Nat) :
   | .inl decision => pure decision
   | .inr (context, state) =>
       PqxdhSharedParentCollect.decision source root selected number ancestors disclosed <$>
-        finish source writer stage pre application initial selector aux mark sender route decode (.pending context state)
+        finish (completedBinding := completedBinding) source writer stage pre application initial selector aux mark sender route decode (.pending context state)
 
 /-- Cached and completed branches already contain the original decision; resuming only the missing branch recovers the same full source execution. -/
 theorem collect_finish (depth : Nat)
     (cut : Carried extra M P I D K Bool Bool A N RootOracle.QueryCache S B) :
-    (PqxdhSharedParentCollect.collect source writer pre application initial selector aux mark sender route decode
+    (PqxdhSharedParentCollect.collect (completedBinding := completedBinding) source writer pre application initial selector aux mark sender route decode
       root selected number ancestors disclosed depth cut >>=
-      resume source writer pre application initial selector aux mark sender route decode root selected number ancestors disclosed (depth + 1)) =
+      resume (completedBinding := completedBinding) source writer pre application initial selector aux mark sender route decode root selected number ancestors disclosed (depth + 1)) =
     PqxdhSharedParentCollect.decision source root selected number ancestors disclosed <$>
-      finish source writer (depth + 1) pre application initial selector aux mark sender route decode cut := by
+      finish (completedBinding := completedBinding) source writer (depth + 1) pre application initial selector aux mark sender route decode cut := by
   classical
   cases cut with
   | complete result state => rfl
@@ -75,13 +77,13 @@ theorem collect_finish (depth : Nat)
 
 /-- Completing only the missing output of the actual shared sampler gives its full original oracle program and final decision. -/
 theorem prepared_finish (depth : Nat) (state : Local A N RootOracle.QueryCache) :
-    ((carried source writer (depth + 1) pre application initial selector aux mark sender route decode execution depth state >>=
-      PqxdhSharedParentCollect.collect source writer pre application initial selector aux mark sender route decode
+    ((carried (completedBinding := completedBinding) (associatedData := associatedData) source writer (depth + 1) pre application initial selector aux mark sender route decode execution depth state >>=
+      PqxdhSharedParentCollect.collect (completedBinding := completedBinding) source writer pre application initial selector aux mark sender route decode
         root selected number ancestors disclosed depth) >>=
-      resume source writer pre application initial selector aux mark sender route decode root selected number ancestors disclosed (depth + 1)) =
+      resume (completedBinding := completedBinding) source writer pre application initial selector aux mark sender route decode root selected number ancestors disclosed (depth + 1)) =
     PqxdhSharedParentCollect.decision source root selected number ancestors disclosed <$>
       (simulateQ (compiler source writer (depth + 1) pre application initial selector aux)
-        (simulateQ RawCtxForwardAnnotation.erase (PqxdhInitialNativeCarried.code source mark sender route decode execution))).run state := by
+        (simulateQ RawCtxForwardAnnotation.erase (PqxdhInitialNativeCarried.code (associatedData := associatedData) (completedBinding := completedBinding) source mark sender route decode execution))).run state := by
   rw [bind_assoc]
   simp only [collect_finish]
   rw [← map_bind, carried_finish]
@@ -95,18 +97,18 @@ theorem prepared_bound (depth qPost qPre qApplication qInitial qSelector qAux : 
     (auxBound : ∀ query state, ((aux query).run state).IsTotalQueryBound qAux)
     (postBound : ∀ reply, (execution.outside reply).IsTotalQueryBound qPost)
     (hash : Bool) (state : Local A N RootOracle.QueryCache) :
-    (carried source writer (depth + 1) pre application initial selector aux mark sender route decode execution depth state >>=
-      PqxdhSharedParentCollect.collect source writer pre application initial selector aux mark sender route decode
+    (carried (completedBinding := completedBinding) (associatedData := associatedData) source writer (depth + 1) pre application initial selector aux mark sender route decode execution depth state >>=
+      PqxdhSharedParentCollect.collect (completedBinding := completedBinding) source writer pre application initial selector aux mark sender route decode
         root selected number ancestors disclosed depth).IsQueryBoundP (HashClass hash)
       ((7 + qPost * 67) * (if hash then 1 else 76 + qPre + qApplication + qInitial + qSelector + qAux)) := by
   apply RawCtxSharedPrefixCompletion.prefix_bound _
-    (resume source writer pre application initial selector aux mark sender route decode root selected number ancestors disclosed (depth + 1))
+    (resume (completedBinding := completedBinding) source writer pre application initial selector aux mark sender route decode root selected number ancestors disclosed (depth + 1))
   rw [prepared_finish, isQueryBoundP_map_iff]
   apply PqxdhBeaconPhase2Bounds.interpreted_total_bound
   · exact PqxdhNativeSharedPrefixBounds.step_bound source writer (depth + 1) pre application initial selector aux
       qPre qApplication qInitial qSelector qAux preBound applicationBound initialBound selectorBound auxBound hash
   · exact (RawCtxSharedPrefixBounds.annotation_total _ _).mpr
-      (PqxdhNativeSharedPrefixBounds.code_total source mark sender route decode execution qPost postBound)
+      (PqxdhNativeSharedPrefixBounds.code_total (associatedData := associatedData) (completedBinding := completedBinding) source mark sender route decode execution qPost postBound)
 
 end BeaconcryptCore.Computational.PqxdhSharedParentResources
 

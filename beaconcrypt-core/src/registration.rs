@@ -8,16 +8,17 @@
 
 use crate::agreement::ResponsePublic;
 use crate::authentication::{
-	AuthRole, INIT_TRANSCRIPT_LEN, InitFields, MLDSA_PUBLIC_KEY_LEN, MLDSA_SIGNATURE_LEN,
-	RESPONSE_PREFIX_LEN, SIGNATURE_INPUT_LEN, SIGNING_CONTEXT, TRANSCRIPT_HASH_LEN,
-	build_init_transcript, build_response_prefix, build_signature_input, encode_u64_le,
+	AdResponseFields, AuthRole, INIT_TRANSCRIPT_LEN, InitFields, MLDSA_PUBLIC_KEY_LEN,
+	MLDSA_SIGNATURE_LEN, OwnedInitFields, RECORD_AD_TRANSCRIPT_LEN, RESPONSE_PREFIX_LEN,
+	SIGNATURE_INPUT_LEN, SIGNING_CONTEXT, TRANSCRIPT_HASH_LEN, build_init_transcript,
+	build_response_prefix, build_signature_input, encode_u64_le,
 };
 use crate::pqxdh::{
 	ENCODED_MLKEM768_PUBLIC_KEY_SIZE, ENCODED_X25519_PUBLIC_KEY_SIZE, InitKex, SIGN_TYPE_ED25519,
 	ServerBinding, VerifiedInitKex, validate_init_kex,
 };
 use crate::record_effects as records;
-use crate::session::{RegistrationBinding, ServerAuthenticationPin};
+use crate::session::{CompletedRegistrationBinding, RegistrationBinding, ServerAuthenticationPin};
 
 /// The exact single input or ordered transcript parts selected by the current phase.
 pub enum HashRequest<'a> {
@@ -43,8 +44,6 @@ pub struct InitPacket<'a> {
 	pre_key: &'a [u8; 98],
 	one_time_key: &'a [u8; 98],
 	pq_key: &'a [u8; 1249],
-	mldsa_public_key: &'a [u8; MLDSA_PUBLIC_KEY_LEN],
-	signature: &'a [u8; MLDSA_SIGNATURE_LEN],
 }
 
 impl<'a> InitPacket<'a> {
@@ -53,8 +52,6 @@ impl<'a> InitPacket<'a> {
 		pre_key: &'a [u8],
 		one_time_key: &'a [u8],
 		pq_key: &'a [u8],
-		mldsa_public_key: &'a [u8],
-		signature: &'a [u8],
 	) -> Option<Self> {
 		Some(Self {
 			identity_key: match identity_key.try_into() {
@@ -73,14 +70,6 @@ impl<'a> InitPacket<'a> {
 				Ok(value) => value,
 				Err(_) => return None,
 			},
-			mldsa_public_key: match mldsa_public_key.try_into() {
-				Ok(value) => value,
-				Err(_) => return None,
-			},
-			signature: match signature.try_into() {
-				Ok(value) => value,
-				Err(_) => return None,
-			},
 		})
 	}
 
@@ -90,72 +79,41 @@ impl<'a> InitPacket<'a> {
 			pre_key: self.pre_key,
 			one_time_key: self.one_time_key,
 			pq_key: self.pq_key,
-			mldsa_public_key: self.mldsa_public_key,
 		}
 	}
 }
 
-pub struct PinFingerprint {
-	binding: ServerBinding,
-	public_key: [u8; MLDSA_PUBLIC_KEY_LEN],
-}
-
+/// Pin parsing is an adapter obligation; this phase adds no fingerprint operation.
 pub fn begin_server_pin(
 	binding: ServerBinding,
 	public_key: [u8; MLDSA_PUBLIC_KEY_LEN],
-) -> PinFingerprint {
-	PinFingerprint {
-		binding,
-		public_key,
-	}
+) -> ServerAuthenticationPin {
+	ServerAuthenticationPin::new(binding, public_key)
 }
 
-impl PinFingerprint {
-	pub fn request(&self) -> HashRequest<'_> {
-		HashRequest::Single(&self.public_key)
-	}
-
-	pub fn resume(
-		self,
-		fingerprint: Option<[u8; TRANSCRIPT_HASH_LEN]>,
-	) -> Option<ServerAuthenticationPin> {
-		Some(ServerAuthenticationPin::new(
-			self.binding,
-			self.public_key,
-			match fingerprint {
-				Some(value) => value,
-				None => return None,
-			},
-		))
-	}
-}
-
-struct InitAuthenticationState<'a> {
-	packet: InitPacket<'a>,
+struct InitAuthenticationState {
+	fields: OwnedInitFields,
 	server_pin: ServerAuthenticationPin,
 	init_hash: [u8; TRANSCRIPT_HASH_LEN],
 }
 
-pub enum InitAuthentication<'a> {
-	HashRequested(InitHash<'a>),
-	MldsaVerificationRequested(InitMldsaVerification<'a>),
-	Ed25519VerificationRequested(InitEd25519Verification<'a>),
-	ServerFingerprintRequested(InitServerFingerprint<'a>),
-	BeaconFingerprintRequested(InitBeaconFingerprint<'a>),
+pub enum InitAuthentication {
+	HashRequested(InitHash),
+	Ed25519VerificationRequested(InitEd25519Verification),
 	Accepted(AuthenticatedInit),
 	Rejected,
 }
 
-pub struct InitHash<'a> {
-	packet: InitPacket<'a>,
+pub struct InitHash {
+	fields: OwnedInitFields,
 	server_pin: ServerAuthenticationPin,
 	input: [u8; INIT_TRANSCRIPT_LEN],
 }
 
-pub fn begin_init_authentication<'a>(
+pub fn begin_init_authentication(
 	server_pin: ServerAuthenticationPin,
-	packet: InitPacket<'a>,
-) -> InitAuthentication<'a> {
+	packet: InitPacket<'_>,
+) -> InitAuthentication {
 	let server = server_pin.binding();
 	let input = build_init_transcript(
 		packet.fields(),
@@ -164,54 +122,31 @@ pub fn begin_init_authentication<'a>(
 		server_pin.public_key(),
 	);
 	InitAuthentication::HashRequested(InitHash {
-		packet,
+		fields: OwnedInitFields::new(packet.fields()),
 		server_pin,
 		input,
 	})
 }
 
-impl<'a> InitHash<'a> {
+impl InitHash {
 	pub fn request(&self) -> HashRequest<'_> {
 		HashRequest::Single(&self.input)
 	}
 
-	pub fn resume(self, hash: Option<[u8; TRANSCRIPT_HASH_LEN]>) -> InitAuthentication<'a> {
+	pub fn resume(self, hash: Option<[u8; TRANSCRIPT_HASH_LEN]>) -> InitAuthentication {
 		let Some(init_hash) = hash else {
 			return InitAuthentication::Rejected;
 		};
-		InitAuthentication::MldsaVerificationRequested(InitMldsaVerification {
-			input: build_signature_input(AuthRole::Beacon, &init_hash),
+		if self.fields.fields().identity_key[0] != SIGN_TYPE_ED25519 {
+			return InitAuthentication::Rejected;
+		}
+		let public_key = self.fields.identity_public_key();
+		InitAuthentication::Ed25519VerificationRequested(InitEd25519Verification {
 			state: InitAuthenticationState {
-				packet: self.packet,
+				fields: self.fields,
 				server_pin: self.server_pin,
 				init_hash,
 			},
-		})
-	}
-}
-
-pub struct InitMldsaVerification<'a> {
-	state: InitAuthenticationState<'a>,
-	input: [u8; SIGNATURE_INPUT_LEN],
-}
-
-impl<'a> InitMldsaVerification<'a> {
-	pub fn request(&self) -> MldsaVerificationRequest<'_> {
-		MldsaVerificationRequest {
-			public_key: self.state.packet.mldsa_public_key,
-			input: &self.input,
-			context: SIGNING_CONTEXT,
-			signature: self.state.packet.signature,
-		}
-	}
-
-	pub fn resume(self, verified: bool) -> InitAuthentication<'a> {
-		if !verified || self.state.packet.identity_key[0] != SIGN_TYPE_ED25519 {
-			return InitAuthentication::Rejected;
-		}
-		let public_key = core::array::from_fn(|index| self.state.packet.identity_key[index + 1]);
-		InitAuthentication::Ed25519VerificationRequested(InitEd25519Verification {
-			state: self.state,
 			public_key,
 			stage: SignedKeyStage::PqKey,
 			pre_key: [0; ENCODED_X25519_PUBLIC_KEY_SIZE],
@@ -220,26 +155,28 @@ impl<'a> InitMldsaVerification<'a> {
 	}
 }
 
+// Keep field names aligned with the extracted attached-signature role transitions.
+#[allow(clippy::enum_variant_names)]
 enum SignedKeyStage {
 	PreKey,
 	OneTimeKey,
 	PqKey,
 }
 
-pub struct InitEd25519Verification<'a> {
-	state: InitAuthenticationState<'a>,
+pub struct InitEd25519Verification {
+	state: InitAuthenticationState,
 	public_key: [u8; 32],
 	stage: SignedKeyStage,
 	pre_key: [u8; ENCODED_X25519_PUBLIC_KEY_SIZE],
 	pq_key: [u8; ENCODED_MLKEM768_PUBLIC_KEY_SIZE],
 }
 
-impl<'a> InitEd25519Verification<'a> {
+impl InitEd25519Verification {
 	pub fn request(&self) -> Ed25519VerificationRequest<'_> {
 		let signed: &[u8] = match self.stage {
-			SignedKeyStage::PreKey => self.state.packet.pre_key,
-			SignedKeyStage::OneTimeKey => self.state.packet.one_time_key,
-			SignedKeyStage::PqKey => self.state.packet.pq_key,
+			SignedKeyStage::PreKey => self.state.fields.fields().pre_key,
+			SignedKeyStage::OneTimeKey => self.state.fields.fields().one_time_key,
+			SignedKeyStage::PqKey => self.state.fields.fields().pq_key,
 		};
 		Ed25519VerificationRequest {
 			public_key: &self.public_key,
@@ -247,7 +184,7 @@ impl<'a> InitEd25519Verification<'a> {
 		}
 	}
 
-	pub fn resume(mut self, opened: Option<&[u8]>) -> InitAuthentication<'a> {
+	pub fn resume(mut self, opened: Option<&[u8]>) -> InitAuthentication {
 		let Some(opened) = opened else {
 			return InitAuthentication::Rejected;
 		};
@@ -269,7 +206,7 @@ impl<'a> InitEd25519Verification<'a> {
 					return InitAuthentication::Rejected;
 				};
 				let message = InitKex::from_encoded(
-					*self.state.packet.identity_key,
+					*self.state.fields.fields().identity_key,
 					self.pre_key,
 					one_time_key,
 					self.pq_key,
@@ -277,9 +214,14 @@ impl<'a> InitEd25519Verification<'a> {
 				let Ok(registration) = validate_init_kex(message) else {
 					return InitAuthentication::Rejected;
 				};
-				InitAuthentication::ServerFingerprintRequested(InitServerFingerprint {
-					state: self.state,
+				let binding = RegistrationBinding::new(
+					self.state.server_pin,
+					self.state.init_hash,
+					self.state.fields,
+				);
+				InitAuthentication::Accepted(AuthenticatedInit {
 					registration,
+					binding,
 				})
 			}
 			SignedKeyStage::PqKey => {
@@ -291,60 +233,6 @@ impl<'a> InitEd25519Verification<'a> {
 				InitAuthentication::Ed25519VerificationRequested(self)
 			}
 		}
-	}
-}
-
-pub struct InitServerFingerprint<'a> {
-	state: InitAuthenticationState<'a>,
-	registration: VerifiedInitKex,
-}
-
-impl<'a> InitServerFingerprint<'a> {
-	pub fn request(&self) -> HashRequest<'_> {
-		HashRequest::Single(self.state.server_pin.public_key())
-	}
-
-	pub fn resume(self, fingerprint: Option<[u8; TRANSCRIPT_HASH_LEN]>) -> InitAuthentication<'a> {
-		let Some(fingerprint) = fingerprint else {
-			return InitAuthentication::Rejected;
-		};
-		InitAuthentication::BeaconFingerprintRequested(InitBeaconFingerprint {
-			server_pin: ServerAuthenticationPin::new(
-				self.state.server_pin.binding(),
-				*self.state.server_pin.public_key(),
-				fingerprint,
-			),
-			state: self.state,
-			registration: self.registration,
-		})
-	}
-}
-
-pub struct InitBeaconFingerprint<'a> {
-	state: InitAuthenticationState<'a>,
-	server_pin: ServerAuthenticationPin,
-	registration: VerifiedInitKex,
-}
-
-impl<'a> InitBeaconFingerprint<'a> {
-	pub fn request(&self) -> HashRequest<'_> {
-		HashRequest::Single(self.state.packet.mldsa_public_key)
-	}
-
-	pub fn resume(self, fingerprint: Option<[u8; TRANSCRIPT_HASH_LEN]>) -> InitAuthentication<'a> {
-		let Some(fingerprint) = fingerprint else {
-			return InitAuthentication::Rejected;
-		};
-		let binding = RegistrationBinding::new(
-			self.server_pin,
-			self.state.init_hash,
-			*self.registration.beacon_identity_public_key(),
-			fingerprint,
-		);
-		InitAuthentication::Accepted(AuthenticatedInit {
-			registration: self.registration,
-			binding,
-		})
 	}
 }
 
@@ -494,22 +382,55 @@ impl<'a> ResponseMldsaVerification<'a> {
 		}
 	}
 
-	pub fn resume(
-		self,
-		verified: bool,
-	) -> Result<AuthenticatedResponse<'a>, crate::pqxdh::BeaconAborted> {
+	pub fn resume(self, verified: bool) -> Result<BeaconAdHash<'a>, crate::pqxdh::BeaconAborted> {
 		if !verified {
 			return Err(self.pending.abort());
 		}
-		Ok(AuthenticatedResponse {
+		let input = self.pending.binding.ad_transcript(AdResponseFields {
+			identity_key: &self.packet.public.identity_key,
+			ephemeral_key: &self.packet.public.ephemeral_key,
+			kem_cipher_text: &self.packet.public.kem_cipher_text,
+			key_id: self.packet.public.key_id,
+		});
+		Ok(BeaconAdHash {
 			pending: self.pending,
+			packet: self.packet,
+			input,
+		})
+	}
+}
+
+/// Available only after verification of the pinned Server's complete response signature.
+pub struct BeaconAdHash<'a> {
+	pending: BeaconPending,
+	packet: ResponsePacket<'a>,
+	input: [u8; RECORD_AD_TRANSCRIPT_LEN],
+}
+
+impl<'a> BeaconAdHash<'a> {
+	pub fn request(&self) -> HashRequest<'_> {
+		HashRequest::Single(&self.input)
+	}
+
+	pub fn resume(
+		self,
+		digest: Option<[u8; TRANSCRIPT_HASH_LEN]>,
+	) -> Result<AuthenticatedResponse<'a>, crate::pqxdh::BeaconAborted> {
+		let digest = match digest {
+			Some(digest) => digest,
+			None => return Err(self.pending.abort()),
+		};
+		Ok(AuthenticatedResponse {
+			control: self.pending.control,
+			binding: self.pending.binding.complete(digest),
 			packet: self.packet,
 		})
 	}
 }
 
 pub struct AuthenticatedResponse<'a> {
-	pending: BeaconPending,
+	control: crate::pqxdh::BeaconInitSent,
+	binding: CompletedRegistrationBinding,
 	packet: ResponsePacket<'a>,
 }
 
@@ -518,13 +439,13 @@ impl<'a> AuthenticatedResponse<'a> {
 		self,
 	) -> (
 		crate::pqxdh::BeaconInitSent,
-		RegistrationBinding,
+		CompletedRegistrationBinding,
 		ResponsePublic,
 		&'a [u8],
 	) {
 		(
-			self.pending.control,
-			self.pending.binding,
+			self.control,
+			self.binding,
 			self.packet.public,
 			self.packet.application,
 		)
@@ -549,7 +470,6 @@ struct BeaconInitState {
 	started: crate::pqxdh::BeaconStart,
 	server_pin: ServerAuthenticationPin,
 	beacon_identity: [u8; 32],
-	beacon_mldsa: [u8; MLDSA_PUBLIC_KEY_LEN],
 	pre_key: [u8; 98],
 	one_time_key: [u8; 98],
 	pq_key: [u8; 1249],
@@ -562,7 +482,6 @@ impl BeaconInitState {
 			pre_key: &self.pre_key,
 			one_time_key: &self.one_time_key,
 			pq_key: &self.pq_key,
-			mldsa_public_key: &self.beacon_mldsa,
 		}
 	}
 }
@@ -570,9 +489,7 @@ impl BeaconInitState {
 pub enum BeaconInitEffect {
 	Rejected(crate::pqxdh::BeaconFresh),
 	Ed25519SigningRequested(BeaconEd25519Signing),
-	FingerprintRequested(BeaconFingerprint),
 	HashRequested(BeaconInitHash),
-	MldsaSigningRequested(BeaconMldsaSigning),
 	Ready(BeaconInitReady),
 }
 
@@ -581,7 +498,6 @@ pub fn begin_beacon_init(
 	inputs: crate::pqxdh::BeaconStartInputs,
 	coins: crate::pqxdh::BeaconCoins,
 	server_pin: ServerAuthenticationPin,
-	beacon_mldsa: [u8; MLDSA_PUBLIC_KEY_LEN],
 ) -> BeaconInitEffect {
 	let expected = control.expected_server_binding();
 	let actual = server_pin.binding();
@@ -598,7 +514,6 @@ pub fn begin_beacon_init(
 			started,
 			server_pin,
 			beacon_identity,
-			beacon_mldsa,
 			pre_key: [0; 98],
 			one_time_key: [0; 98],
 			pq_key: [0; 1249],
@@ -655,43 +570,24 @@ impl BeaconEd25519Signing {
 					return BeaconInitEffect::Rejected(self.state.original_control);
 				};
 				self.state.pq_key = bytes;
-				BeaconInitEffect::FingerprintRequested(BeaconFingerprint { state: self.state })
+				let server = self.state.server_pin.binding();
+				let input = build_init_transcript(
+					self.state.fields(),
+					server.identity_key_id,
+					&server.identity_public_key,
+					self.state.server_pin.public_key(),
+				);
+				BeaconInitEffect::HashRequested(BeaconInitHash {
+					state: self.state,
+					input,
+				})
 			}
 		}
 	}
 }
 
-pub struct BeaconFingerprint {
-	state: BeaconInitState,
-}
-
-impl BeaconFingerprint {
-	pub fn request(&self) -> HashRequest<'_> {
-		HashRequest::Single(&self.state.beacon_mldsa)
-	}
-
-	pub fn resume(self, fingerprint: Option<[u8; TRANSCRIPT_HASH_LEN]>) -> BeaconInitEffect {
-		let Some(fingerprint) = fingerprint else {
-			return BeaconInitEffect::Rejected(self.state.original_control);
-		};
-		let server = self.state.server_pin.binding();
-		let input = build_init_transcript(
-			self.state.fields(),
-			server.identity_key_id,
-			&server.identity_public_key,
-			self.state.server_pin.public_key(),
-		);
-		BeaconInitEffect::HashRequested(BeaconInitHash {
-			state: self.state,
-			fingerprint,
-			input,
-		})
-	}
-}
-
 pub struct BeaconInitHash {
 	state: BeaconInitState,
-	fingerprint: [u8; TRANSCRIPT_HASH_LEN],
 	input: [u8; INIT_TRANSCRIPT_LEN],
 }
 
@@ -704,69 +600,26 @@ impl BeaconInitHash {
 		let Some(init_hash) = hash else {
 			return BeaconInitEffect::Rejected(self.state.original_control);
 		};
-		BeaconInitEffect::MldsaSigningRequested(BeaconMldsaSigning {
-			state: self.state,
-			fingerprint: self.fingerprint,
-			init_hash,
-			input: build_signature_input(AuthRole::Beacon, &init_hash),
-		})
-	}
-}
-
-pub struct BeaconMldsaSigning {
-	state: BeaconInitState,
-	fingerprint: [u8; TRANSCRIPT_HASH_LEN],
-	init_hash: [u8; TRANSCRIPT_HASH_LEN],
-	input: [u8; SIGNATURE_INPUT_LEN],
-}
-
-impl BeaconMldsaSigning {
-	pub fn request(&self) -> MldsaSigningRequest<'_> {
-		MldsaSigningRequest {
-			role: AuthRole::Beacon,
-			public_key: &self.state.beacon_mldsa,
-			input: &self.input,
-			context: SIGNING_CONTEXT,
-		}
-	}
-
-	pub fn resume(self, signature: Option<&[u8]>) -> BeaconInitEffect {
-		let Some(signature) = signature else {
-			return BeaconInitEffect::Rejected(self.state.original_control);
-		};
-		let Ok(signature) = signature.try_into() else {
-			return BeaconInitEffect::Rejected(self.state.original_control);
-		};
-		let binding = RegistrationBinding::new(
-			self.state.server_pin,
-			self.init_hash,
-			self.state.beacon_identity,
-			self.fingerprint,
-		);
 		BeaconInitEffect::Ready(BeaconInitReady {
 			state: self.state,
-			binding,
-			signature,
+			init_hash,
 		})
 	}
 }
 
-pub struct SignedInitView<'a> {
+pub struct InitView<'a> {
 	pub fields: InitFields<'a>,
-	pub signature: &'a [u8; MLDSA_SIGNATURE_LEN],
 }
 
 pub struct BeaconInitReady {
 	state: BeaconInitState,
-	binding: RegistrationBinding,
-	signature: [u8; MLDSA_SIGNATURE_LEN],
+	init_hash: [u8; TRANSCRIPT_HASH_LEN],
 }
 
 impl BeaconInitReady {
-	pub fn message(&self) -> SignedInitView<'_> {
-		SignedInitView {
+	pub fn message(&self) -> InitView<'_> {
+		InitView {
 			fields: self.state.fields(),
-			signature: &self.signature,
 		}
 	}
 
@@ -778,10 +631,15 @@ impl BeaconInitReady {
 			Some(encoded) => encoded,
 			None => return Err(self.state.original_control),
 		};
+		let binding = RegistrationBinding::new(
+			self.state.server_pin,
+			self.init_hash,
+			OwnedInitFields::new(self.state.fields()),
+		);
 		Ok(PublishedBeaconInit {
 			pending: BeaconPending {
 				control: self.state.started.state,
-				binding: self.binding,
+				binding,
 			},
 			encoded,
 		})
@@ -815,7 +673,7 @@ pub fn begin_beacon_completion(
 }
 
 impl<'a> BeaconInitialKdf<'a> {
-	pub const fn request(&self) -> &crate::ratchet::SymmetricRatchetKdfRequest {
+	pub const fn request(&self) -> &crate::ratchet::InitialRatchetKdfRequest {
 		self.pending.request()
 	}
 
@@ -1003,7 +861,7 @@ impl<'a> CompletedBeacon<'a> {
 
 pub struct ServerInitialKdf<'a> {
 	candidate: crate::pqxdh::ServerRegistrationCandidate,
-	binding: RegistrationBinding,
+	binding: CompletedRegistrationBinding,
 	application: &'a [u8],
 	pending: crate::pqxdh::InitialRatchetKdfPending,
 }
@@ -1014,7 +872,7 @@ pub fn begin_server_completion<'a>(
 	availability: crate::pqxdh::KeyIdAvailability,
 	agreement: crate::agreement::ServerAgreement,
 	application: &'a [u8],
-) -> Result<ServerInitialKdf<'a>, crate::pqxdh::ServerState> {
+) -> Result<ServerAdHash<'a>, crate::pqxdh::ServerState> {
 	let rejected = control;
 	if application.is_empty() || !agreement.binding.matches_server(current_pin) {
 		return Err(rejected);
@@ -1028,24 +886,62 @@ pub fn begin_server_completion<'a>(
 		Ok(candidate) => candidate,
 		Err(_) => return Err(rejected),
 	};
-	let pending =
-		crate::pqxdh::start_server_candidate_ratchet_kdf(&candidate, agreement.root.as_bytes());
-	Ok(ServerInitialKdf {
+	let input = agreement.binding.ad_transcript(AdResponseFields {
+		identity_key: candidate.server_identity_public_key(),
+		ephemeral_key: candidate.ephemeral_public_key(),
+		kem_cipher_text: candidate.kem_ciphertext(),
+		key_id: candidate.key_id(),
+	});
+	Ok(ServerAdHash {
 		candidate,
 		binding: agreement.binding,
+		root: agreement.root,
 		application,
-		pending,
+		input,
 	})
+}
+
+/// The replay ledger remains consumed if this hash or any later completion effect fails.
+pub struct ServerAdHash<'a> {
+	candidate: crate::pqxdh::ServerRegistrationCandidate,
+	binding: RegistrationBinding,
+	root: crate::ratchet::RatchetChain,
+	application: &'a [u8],
+	input: [u8; RECORD_AD_TRANSCRIPT_LEN],
+}
+
+impl<'a> ServerAdHash<'a> {
+	pub fn request(&self) -> HashRequest<'_> {
+		HashRequest::Single(&self.input)
+	}
+
+	pub fn resume(
+		self,
+		digest: Option<[u8; TRANSCRIPT_HASH_LEN]>,
+	) -> Result<ServerInitialKdf<'a>, crate::pqxdh::ServerState> {
+		let digest = match digest {
+			Some(digest) => digest,
+			None => return Err(crate::pqxdh::server_abort_candidate(&self.candidate)),
+		};
+		let pending =
+			crate::pqxdh::start_server_candidate_ratchet_kdf(&self.candidate, self.root.as_bytes());
+		Ok(ServerInitialKdf {
+			candidate: self.candidate,
+			binding: self.binding.complete(digest),
+			application: self.application,
+			pending,
+		})
+	}
 }
 
 struct ServerRecordState<'a> {
 	candidate: crate::pqxdh::ServerRegistrationCandidate,
-	binding: RegistrationBinding,
+	binding: CompletedRegistrationBinding,
 	application: &'a [u8],
 }
 
 impl<'a> ServerInitialKdf<'a> {
-	pub const fn request(&self) -> &crate::ratchet::SymmetricRatchetKdfRequest {
+	pub const fn request(&self) -> &crate::ratchet::InitialRatchetKdfRequest {
 		self.pending.request()
 	}
 
@@ -1216,7 +1112,7 @@ impl ServerRecordWrite<'_, '_> {
 
 pub struct ServerResponseHash<'a> {
 	candidate: crate::pqxdh::ServerRegistrationCandidate,
-	binding: RegistrationBinding,
+	binding: CompletedRegistrationBinding,
 	kernel: crate::ratchet::ConcreteRatchetKernel,
 	ciphertext: &'a [u8],
 	prefix: [u8; RESPONSE_PREFIX_LEN],
@@ -1251,7 +1147,7 @@ impl<'a> ServerResponseHash<'a> {
 
 pub struct ServerResponseSigning<'a> {
 	candidate: crate::pqxdh::ServerRegistrationCandidate,
-	binding: RegistrationBinding,
+	binding: CompletedRegistrationBinding,
 	kernel: crate::ratchet::ConcreteRatchetKernel,
 	ciphertext: &'a [u8],
 	input: [u8; SIGNATURE_INPUT_LEN],
@@ -1299,7 +1195,7 @@ pub struct SignedResponseView<'a> {
 
 pub struct ServerResponseReady<'a> {
 	candidate: crate::pqxdh::ServerRegistrationCandidate,
-	binding: RegistrationBinding,
+	binding: CompletedRegistrationBinding,
 	kernel: crate::ratchet::ConcreteRatchetKernel,
 	ciphertext: &'a [u8],
 	signature: [u8; MLDSA_SIGNATURE_LEN],

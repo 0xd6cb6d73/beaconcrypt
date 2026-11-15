@@ -38,7 +38,7 @@ omit [LawfulMonad m] in
 theorem supplied_factored (control : pqxdh.ServerState) (current : session.ServerAuthenticationPin)
     (availability : pqxdh.KeyIdAvailability) (agreement : agreement.ServerAgreement) (application : Slice U8)
     (initial : registration.ServerInitialKdf)
-    (actual : registration.begin_server_completion control current availability agreement application = .ok (.Ok initial))
+    (actual : BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission control current availability agreement application initial)
     (left right : PqxdhSecretInputKdf.RootOutput) (output : PqxdhFullSecretInputKdf.FullOutput) :
     supplied sealing hash write initial left right output =
       record sealing hash write (RegistrationBoundKeySchedule.publicInitial initial) (output, right) := by

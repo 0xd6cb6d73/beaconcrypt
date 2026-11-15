@@ -12,6 +12,8 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhInitialPreparedSourceCaps
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhCorrelatedExpand PqxdhCorrelatedExtractFamily
 open PqxdhInitialBeaconAmbient PqxdhKemIndCca PqxdhEd25519EufCma PqxdhJointIdentity
 open PqxdhStatefulPhase1EufCma PqxdhPhase2GeneratedDriver PqxdhAuthenticatedRootExperiment
@@ -95,11 +97,11 @@ theorem callbacks (secret : KemSK) (challenge : MlKem768Ciphertext) :
 
 /-- A pending root dispatch retains precisely its original prepared source state; all abort and non-target paths finish instead. -/
 theorem dispatch_pending (secret : KemSK)
-    (prepared found : PqxdhPrivateRootSource.Prepared setup (driver env.toDriverEnvironment program).State)
+    (prepared found : PqxdhPrivateRootSource.Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)
     (ephemeral : List.Vector UInt8 32)
     (supported : PqxdhPrivateRootSource.Mode.pending found ephemeral ∈ support
       (evalKem baseImpl kem secret (PqxdhPrivateAcceptedRoot.dispatch kem env.parameters attachedVerify primitives setup
-        (commonObserver env program post) prepared))) : found = prepared := by
+        (commonObserver (associatedData := associatedData) (completedBinding := completedBinding) env program post) prepared))) : found = prepared := by
   unfold PqxdhPrivateAcceptedRoot.dispatch at supported
   split at supported
   · simp only [evalKem, simulateQ_pure, mem_support_pure_iff] at supported
@@ -120,9 +122,9 @@ theorem dispatch_pending (secret : KemSK)
 
 /-- The actual evaluated generated-prefix state retains at most the original initial observations plus the complete prechallenge source request allowance. -/
 theorem prefix_history (secret : KemSK) (key : TargetKemPublicKey)
-    (prepared : PqxdhPrivateRootSource.Prepared setup (driver env.toDriverEnvironment program).State)
+    (prepared : PqxdhPrivateRootSource.Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)
     (supported : prepared ∈ support (evalKem baseImpl kem secret
-      (PqxdhGeneratedRootSource.borrowedPrefix attachedVerify primitives setup (driver env.toDriverEnvironment program) key))) :
+      (PqxdhGeneratedRootSource.borrowedPrefix attachedVerify primitives setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program) key))) :
     prepared.1.context.selection.2.roles.2.observations.length ≤
       env.initial.roles.2.observations.length + preCap env baseImpl kem program post c := by
   rw [PqxdhGeneratedRootSource.borrowedPrefix_evaluated] at supported
@@ -132,7 +134,7 @@ theorem prefix_history (secret : KemSK) (key : TargetKemPublicKey)
   rw [PqxdhPhase2GeneratedDriver.driver_private] at reached
   simp only [evalKem, simulateQ_map, support_map] at reached
   obtain ⟨actual, actualSupport, rfl⟩ := reached
-  have length := PqxdhPhase2SourceHistory.driver_length attachedVerify primitives 1 baseImpl kem secret
+  have length := PqxdhPhase2SourceHistory.driver_length (completedBinding := completedBinding) attachedVerify primitives 1 baseImpl kem secret
     env.toDriverEnvironment program (preCap env baseImpl kem program post c)
     (fun reply => FinitePartitionTotal.bound PqxdhPhase2SourceSchedulerBounds.classify (program.main reply) c.preBudget (c.preBound reply))
     _ _ _ _ _ actual actualSupport
@@ -140,10 +142,10 @@ theorem prefix_history (secret : KemSK) (key : TargetKemPublicKey)
 
 /-- The actual preparation sampler's pending state comes from its same generated source prefix; dispatch cannot replace the retained history. -/
 theorem prepared_history
-    (context : PqxdhInitialLegalObserver.Context env kem attachedVerify primitives program post)
+    (context : PqxdhInitialLegalObserver.Context (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post)
     (supported : context ∈ support (PqxdhCorrelatedExtractFamily.prepare baseImpl kem
-      (protocol env kem attachedVerify primitives program post)))
-    (prepared : PqxdhPrivateRootSource.Prepared setup (driver env.toDriverEnvironment program).State)
+      (protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post)))
+    (prepared : PqxdhPrivateRootSource.Prepared setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program).State)
     (ephemeral : List.Vector UInt8 32) (pending : context.state = .pending prepared ephemeral) :
     prepared.1.context.selection.2.roles.2.observations.length ≤
       env.initial.roles.2.observations.length + preCap env baseImpl kem program post c := by
@@ -153,12 +155,12 @@ theorem prepared_history
   change mode = .pending prepared ephemeral at pending
   subst mode
   change PqxdhPrivateRootSource.Mode.pending prepared ephemeral ∈ support
-    (evalKem baseImpl kem keys.2 ((protocol env kem attachedVerify primitives program post).prepare keys.1)) at modeSupport
+    (evalKem baseImpl kem keys.2 ((protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post).prepare keys.1)) at modeSupport
   simp only [protocol, evalKem_bind, mem_support_bind_iff] at modeSupport
   obtain ⟨original, sourceSupport, dispatched⟩ := modeSupport
-  have same := dispatch_pending env baseImpl kem attachedVerify primitives program post keys.2 original prepared ephemeral dispatched
+  have same := dispatch_pending (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post keys.2 original prepared ephemeral dispatched
   subst prepared
-  exact prefix_history env baseImpl kem attachedVerify primitives program post c keys.2 keys.1 original sourceSupport
+  exact prefix_history (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c keys.2 keys.1 original sourceSupport
 
 /-- Counting actual prior observations bounds every disclosed32-byte candidate, including duplicate values, without assuming byte distinctness. -/
 theorem known_length (disclosed : List RatchetChain) (history : RawCtxProtocolReveals.History S B) :
@@ -177,7 +179,7 @@ theorem known_length (disclosed : List RatchetChain) (history : RawCtxProtocolRe
 theorem supported_caps (selected : RawCtxProtocolReveals.Owner S (B + 1)) (number : Std.U64)
     (ancestors disclosed : List RatchetChain)
     (actual : PqxdhInitialPreparedSourceInput.Input (M := M) (P := P) (I := I) (K := K) (X := X) (Response := Response) (A := A) (S := S) (B := B) (setup := setup))
-    (supported : Sum.inr actual ∈ support (prior env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed)) :
+    (supported : Sum.inr actual ∈ support (prior (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed)) :
     PqxdhInitialSampledResources.Caps actual (postCap env baseImpl kem program post c)
       (callbackCap env baseImpl kem program post c) (callbackCap env baseImpl kem program post c)
       (selectorCap env baseImpl kem program post c) c.qAux (knownCap env baseImpl kem program post c disclosed) := by
@@ -188,7 +190,7 @@ theorem supported_caps (selected : RawCtxProtocolReveals.Owner S (B + 1)) (numbe
     simp only [input, mode] at equality
     cases equality
   | pending prepared ephemeral =>
-    have history := prepared_history env baseImpl kem attachedVerify primitives program post c context preparedSupport prepared ephemeral mode
+    have history := prepared_history (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c context preparedSupport prepared ephemeral mode
     have caps := callbacks env baseImpl kem attachedVerify primitives program post c context.secretKey context.ciphertext
     simp only [input, mode] at equality
     cases equality
@@ -203,12 +205,12 @@ theorem supported_caps (selected : RawCtxProtocolReveals.Owner S (B + 1)) (numbe
 /-- The actual prepared source sampler pays the original key generation, preparation, base and decapsulation work, and encapsulation before any independent root or initial expansion draw. -/
 theorem prior_uniform (selected : RawCtxProtocolReveals.Owner S (B + 1)) (number : Std.U64)
     (ancestors disclosed : List RatchetChain) :
-    (prior env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed).IsTotalQueryBound
+    (prior (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post selected number ancestors disclosed).IsTotalQueryBound
       (c.qKeygen + ((c.uPre + c.qBase * c.bPre + c.qDecap * c.dPre) + c.qEncap)) := by
   apply (isQueryBound_map_iff _ _ _ _ _).2
   exact PqxdhCorrelatedExtractQueryBounds.prepare_uniform_bound baseImpl kem
-    (protocol env kem attachedVerify primitives program post) _ _ _ _ _ _ _ _ _ _ _
-    (PqxdhAuthenticatedRootBudgets.sampler_bounds env baseImpl kem attachedVerify primitives program post c)
+    (protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post) _ _ _ _ _ _ _ _ _ _ _
+    (PqxdhAuthenticatedRootBudgets.sampler_bounds (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post c)
 
 end BeaconcryptCore.Computational.PqxdhInitialPreparedSourceCaps
 

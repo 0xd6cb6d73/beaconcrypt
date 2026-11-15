@@ -104,12 +104,19 @@ theorem build_project (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
     (session : Nat) (payload : Option Pqxdh.Bytes) (state : Local KemSK) :
     Prod.map id project <$> (PqxdhServerAuthCtxBuild.build source codec checks rest session payload).run.run state =
       Prod.map id project <$> (PqxdhServerAuthCtxBuild.build source codec checks rest session payload).run.run (project state) := by
-  simp only [PqxdhServerAuthCtxBuild.build, OptionT.run_mk, StateT.run, project, flat, game]
+  simp only [PqxdhServerAuthCtxBuild.build, OptionT.run_mk, StateT.run_bind, StateT.run_lift,
+    PqxdhServerAuthCtxState.hash]
+  simp only [StateT.run, project, flat, game, bind_assoc, pure_bind]
   cases state.1.1.pending session with
   | none => rfl
   | some token =>
       simp only []
-      split <;> exact build_after session _ state
+      split
+      · rfl
+      · simp only [map_bind]
+        refine bind_congr fun digest => ?_
+        rcases Bool.eq_false_or_eq_true (state.1.2.1 session) with marked | marked <;>
+          simp only [marked, Bool.false_eq_true, ↓reduceIte] <;> exact build_after session _ state
 
 /-- The literal Beacon final checks depend on the actual staged plaintext and phase, while old ghost contents affect only the new ghost. -/
 theorem finish_complete (control : pqxdh.BeaconInitSent) (state : Local KemSK)
@@ -132,9 +139,22 @@ theorem finish_project (setup : Setup baseSpec KemSK) (codec : Codec Reader Wire
     (raw : Pqxdh.Bytes) (state : Local KemSK) :
     Prod.map id project <$> (PqxdhServerAuthCtxFinish.finish setup codec context rest select raw).run state =
       Prod.map id project <$> (PqxdhServerAuthCtxFinish.finish setup codec context rest select raw).run (project state) := by
+  rcases state with ⟨⟨⟨ctx, server, pending, beacon, beaconInit, sessions, ghost⟩, marks⟩, latch⟩
   simp only [PqxdhServerAuthCtxFinish.finish, StateT.run, project, flat, game]
-  cases state.1.1.beacon.beacon.phase <;> simp only [map_pure]
+  cases beacon.beacon.phase <;> simp only [map_pure]
   all_goals try rfl
+  cases beaconInit <;> cases responseOf codec raw <;> simp only [map_pure]
+  all_goals try rfl
+  have liftBind : ∀ {β : Type} (x : OracleComp AdaptiveCtxDynamicKnownKeys.Spec CtxRomAuth.CtxDigest)
+      (f : CtxRomAuth.CtxDigest → Program KemSK β) (s : Local KemSK),
+      (StateT.lift x >>= f) s = x >>= fun digest => f digest s := by
+    intro β x f s
+    change StateT.run _ s = _
+    simp only [StateT.run_bind, StateT.run_lift, bind_assoc, pure_bind]
+    rfl
+  simp only [PqxdhServerAuthCtxState.hash, liftBind, map_bind]
+  refine bind_congr fun digest => ?_
+  simp only [PqxdhServerAuthCtxFinish.staged]
   simp only [map_bind]
   refine bind_congr fun prepared => ?_
   cases prepared with
@@ -143,7 +163,7 @@ theorem finish_project (setup : Setup baseSpec KemSK) (codec : Codec Reader Wire
       simp only [map_bind]
       refine bind_congr fun derived => ?_
       cases derived.1 <;> simp only [PqxdhServerAuthCtxFinish.known, PqxdhServerAuthCtxFinish.selected,
-        PqxdhServerAuthCtxFinish.after, Functor.map_map, map_pure] <;> rfl
+        PqxdhServerAuthCtxFinish.after, StateT.run, Functor.map_map, map_pure] <;> rfl
 
 /-- Optional lifting preserves a proved complete callback ghost projection. -/
 theorem lifted_project (work : Program KemSK Result) (state : Local KemSK)

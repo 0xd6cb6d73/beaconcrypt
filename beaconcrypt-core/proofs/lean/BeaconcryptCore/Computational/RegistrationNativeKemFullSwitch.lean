@@ -17,7 +17,7 @@ variable {ι KemSK Value : Type} {base : OracleSpec ι} {n : Nat} {mlSource : Re
 /-- Full actual native online candidate execution is the concrete total reserved provider on the same complete source output, pool and current local state. -/
 theorem program_source (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (bounds : FreshBounds) (mode : Mode) (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value)
     (budget : Budget) (bounded : RegistrationNativeInterface.Respects budget work) (parsed : Nat)
     (selected : Fin budget.capacity) (chosen : MlKem768PublicKey × KemSK) (others : Fin budget.create → MlKem768PublicKey × KemSK)
@@ -48,7 +48,7 @@ theorem program_source (setup : Setup base KemSK) (checks : Checks) (wire : Regi
 /-- Actual complete native candidate execution has no outer stop; ordinary missing handles and KEM rejection remain inner optional replies. -/
 theorem no_halt (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (bounds : FreshBounds) (mode : Mode) (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value)
     (budget : Budget) (bounded : RegistrationNativeInterface.Respects budget work) (parsed : Nat)
     (selected : Fin budget.capacity) (chosen : MlKem768PublicKey × KemSK) (others : Fin budget.create → MlKem768PublicKey × KemSK)

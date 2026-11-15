@@ -57,9 +57,9 @@ class RegistrationPreflightTests(unittest.TestCase):
         source, certificate, metadata = preparation.expected()
         self.assertEqual(
             [item["fields"] for item in metadata["callsites"]],
-            [[2, 2, 2, 2, 2, 2], [2, 2, 2, 2, 0, 2]],
+            [[2, 2, 2, 2], [2, 2, 2, 2, 0, 2]],
         )
-        self.assertEqual(source.count("remaining = extraction_preflight_field"), 6)
+        self.assertEqual(source.count("remaining = extraction_preflight_field"), 10)
         self.assertIn("init_fields_preserved", certificate)
         self.assertIn("response_fields_preserved", certificate)
         self.assertNotIn("axiom ", certificate)

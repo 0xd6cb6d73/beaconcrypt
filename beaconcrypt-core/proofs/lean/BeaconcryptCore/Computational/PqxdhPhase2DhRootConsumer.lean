@@ -19,7 +19,7 @@ open PqxdhSecretInputKdf PqxdhJointKdfGame
 def cleared {Response : Type} (pending : PqxdhPhase2DhMetadata.Prepared Response) :
     PqxdhBeaconPhase2Preparation.Prepared Response :=
   ⟨pending.collected.response, pending.collected.ciphertext, pending.collected.ephemeral,
-    PqxdhBeaconPhase2Shared.clearedMetadata pending.metadata⟩
+    PqxdhBeaconPhase2Shared.clearedMetadata pending.metadata, pending.metadata.completed⟩
 
 /-- Continue with the original native initializer, parser, opening, sequence-one check and binding checks. -/
 noncomputable def afterRoot {Response : Type} (decode : RawCtxReceive.FrameDecoder)
@@ -37,6 +37,8 @@ theorem afterRoot_source {joint : Primitives} (dh : DhInterface joint) (scalar :
     simulateQ PqxdhBeaconPhase2Publication.nativeTailAdapter
       (PqxdhBeaconPhase2Publication.afterRoot decode original root) = afterRoot decode pending root := by
   have responseEq : original.response = pending.collected.response := related.1
+  have bindingEq : original.binding = pending.metadata.completed :=
+    congrArg PqxdhBeaconPhase2Shared.Metadata.completed related.2.2.2.1
   unfold afterRoot PqxdhBeaconPhase2Publication.afterRoot
   rw [PqxdhPhase2DhMetadata.cleared_related dh scalar original pending related, responseEq]
   have clearedEq (metadata : PqxdhBeaconPhase2Shared.Metadata) :
@@ -44,7 +46,7 @@ theorem afterRoot_source {joint : Primitives} (dh : DhInterface joint) (scalar :
       PqxdhBeaconPhase2Shared.clearedMetadata metadata := by
     unfold PqxdhBeaconPhase2Publication.clearedCandidate PqxdhBeaconPhase2Shared.clearedMetadata
     congr
-  simp only [cleared, clearedEq]
+  simp only [cleared, clearedEq, bindingEq]
   congr 2
   funext kernel
   congr 1

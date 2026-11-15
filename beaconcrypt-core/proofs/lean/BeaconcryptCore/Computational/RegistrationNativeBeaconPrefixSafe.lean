@@ -95,10 +95,11 @@ theorem record_safe (setup : PqxdhServerAuthExperiment.Setup base KemSK) (wire :
   intro unused
   cases query with
   | hash transcript => exact bind_safe _ _ (effect_safe _ trivial) (fun _ => pure_safe _)
+  | adHash request => exact bind_safe _ _ (effect_safe _ trivial) (fun _ => pure_safe _)
   | rootKdf request | initialKdf request | ratchetKdf request | «seal» request | write request | openAead request => apply sample_safe
 theorem lower_owners (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (checks : PqxdhServerAuthExperiment.Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : M n KemSK source RegistrationServerRoleBackend.State A) (allowed : Work work)
     (before : RegistrationNativeExperiment.State n KemSK source)
     (result : A × RegistrationNativeExperiment.State n KemSK source)
@@ -113,7 +114,7 @@ theorem lower_owners (setup : PqxdhServerAuthExperiment.Setup base KemSK)
 
 theorem authentication_owners (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (checks : PqxdhServerAuthExperiment.Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp RegistrationAuthenticationExecutor.Spec A)
     (before : RegistrationNativeExperiment.State n KemSK source)
     (result : A × RegistrationNativeExperiment.State n KemSK source)
@@ -124,7 +125,7 @@ theorem authentication_owners (setup : PqxdhServerAuthExperiment.Setup base KemS
 
 theorem agreement_owners (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (checks : PqxdhServerAuthExperiment.Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (owner : Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (owner : Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes)
     (work : OracleComp RegistrationAgreementExecutor.Spec A)
     (before : RegistrationNativeExperiment.State n KemSK source)
     (result : A × RegistrationNativeExperiment.State n KemSK source)
@@ -135,7 +136,7 @@ theorem agreement_owners (setup : PqxdhServerAuthExperiment.Setup base KemSK)
 
 theorem record_owners (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (checks : PqxdhServerAuthExperiment.Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (wire : RegistrationNativeWire.Wire)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (wire : RegistrationNativeWire.Wire)
     (work : OracleComp RegistrationRecordPrimitives.Spec A)
     (before : RegistrationNativeExperiment.State n KemSK source)
     (result : A × RegistrationNativeExperiment.State n KemSK source)

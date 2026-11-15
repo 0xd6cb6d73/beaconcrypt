@@ -9,6 +9,8 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialHalfSecrecy
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+variable (associatedData : Std.Array Std.U8 151#usize)
 open PqxdhJointKdf PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf
 open RawCtxSelectedParentEntry PqxdhInitialBeaconAmbient
 variable {ι Context M P I D K X Response Shared A N C : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -42,7 +44,7 @@ noncomputable def native (context : (Bool ⊕ Context) × Entry) (target : RootO
   | .inr pending =>
     PqxdhInitialHalfCheckedFreshness.actualDecision target (view.ancestors pending) (view.disclosed pending)
         (fun result => PqxdhInitialPublishedEvent.Gate (view.selected pending) (view.number pending) result.1.1) <$>
-      PqxdhInitialHalfCheckedFreshness.nativeRun source writer (view.prior pending) context.2
+      PqxdhInitialHalfCheckedFreshness.nativeRun (completedBinding := completedBinding) (associatedData := associatedData) source writer (view.prior pending) context.2
         (view.pre pending) (view.application pending) (view.initializer (pending, context.2)) (view.selector pending) (view.aux pending)
         (mark pending) sender route decode (view.execution (pending, context.2)) ((view.number pending).val - 1) target output
         (view.disclosed pending) (view.ambient pending) (view.priorCandidates (pending, context.2))
@@ -52,7 +54,7 @@ noncomputable def observed (context : (Bool ⊕ Context) × Entry) (output : Ful
   | .inl result => pure (.inl result)
   | .inr pending =>
     Sum.inr <$>
-    PqxdhInitialHalfCheckedFreshness.maskedRun source writer (view.prior pending) context.2
+    PqxdhInitialHalfCheckedFreshness.maskedRun (completedBinding := completedBinding) (associatedData := associatedData) source writer (view.prior pending) context.2
         (view.pre pending) (view.application pending) (view.initializer (pending, context.2)) (view.selector pending) (view.aux pending)
         (mark pending) sender route decode (view.execution (pending, context.2)) ((view.number pending).val - 1) output
         (view.disclosed pending) (view.ambient pending) (view.priorCandidates (pending, context.2))
@@ -64,7 +66,7 @@ noncomputable def observer (context : (Bool ⊕ Context) × Entry) (output : Ful
     PqxdhInitialParentStoppedHop.decision
         (PqxdhInitialHalfCheckedFreshness.remainingEvent (view.ancestors pending) (view.disclosed pending)
           (fun result => PqxdhInitialPublishedEvent.Gate (view.selected pending) (view.number pending) result.1.1)) <$>
-        PqxdhInitialHalfCheckedFreshness.maskedRun source writer (view.prior pending) context.2
+        PqxdhInitialHalfCheckedFreshness.maskedRun (completedBinding := completedBinding) (associatedData := associatedData) source writer (view.prior pending) context.2
         (view.pre pending) (view.application pending) (view.initializer (pending, context.2)) (view.selector pending) (view.aux pending)
         (mark pending) sender route decode (view.execution (pending, context.2)) ((view.number pending).val - 1) output
         (view.disclosed pending) (view.ambient pending) (view.priorCandidates (pending, context.2))
@@ -74,24 +76,24 @@ def candidates : Trace M P I D K A N C S B → List RootOutput
   | .inr result => result.2.1.2
 
 noncomputable def bad (context : (Bool ⊕ Context) × Entry) (target : RootOutput) (output : FullOutput) : ProbComp Bool :=
-  (fun result => decide (target ∈ candidates result)) <$> observed source writer mark sender route decode view context output
+  (fun result => decide (target ∈ candidates result)) <$> observed (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view context output
 
 noncomputable def aliasTester : FullObserver ((Bool ⊕ Context) × Entry) :=
   RawCtxFullPreimageTester.tester (RawCtxFullPreimageTester.production source)
-    (observed source writer mark sender route decode view) candidates
+    (observed (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view) candidates
 
 set_option backward.isDefEq.respectTransparency false in
 /-- The complete pre-first-send source event and its ordinary full observer pay three copies of the same masked candidate event, with legitimate disclosures excluded by actual freshness. -/
 theorem local_bound (context : (Bool ⊕ Context) × Entry) (target : RootOutput) (output : FullOutput) :
-    (native source writer mark sender route decode view context target output).boolDistance
-      (observer source writer mark sender route decode view context output) ≤
-    3 * Pr{let x ← bad source writer mark sender route decode view context target output}[x = true].toReal := by
+    (native (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view context target output).boolDistance
+      (observer (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view context output) ≤
+    3 * Pr{let x ← bad (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view context target output}[x = true].toReal := by
   rcases context with ⟨common | pending, entry⟩
   · refine le_of_eq_of_le ?_ (mul_nonneg (by norm_num) ENNReal.toReal_nonneg)
     simp [native, observer, ProbComp.boolDistance]
   · simpa only [native, observer, bad, observed, Functor.map_map, Function.comp_def, candidates,
       prEvent_map, decide_eq_true_eq] using
-      PqxdhInitialHalfCheckedFreshness.bound source writer (view.prior pending) entry
+      PqxdhInitialHalfCheckedFreshness.bound (completedBinding := completedBinding) (associatedData := associatedData) source writer (view.prior pending) entry
         (view.pre pending) (view.application pending) (view.initializer (pending, entry)) (view.selector pending) (view.aux pending)
         (mark pending) sender route decode (view.execution (pending, entry)) ((view.number pending).val - 1) target output
         (view.disclosed pending) (view.ambient pending) (view.priorCandidates (pending, entry))
@@ -101,42 +103,42 @@ theorem local_bound (context : (Bool ⊕ Context) × Entry) (target : RootOutput
 noncomputable def actual (sample : ProbComp (Bool ⊕ Context))
     (address : (Bool ⊕ Context) → JointKdfAddress) : ProbComp Bool := do
   let pair ← RawCtxSelectedParentCandidates.sample sample address
-  native source writer mark sender route decode view pair.1 pair.2
+  native (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view pair.1 pair.2
     (productionStream source.crypto (FixedHkdfDomain.ratchet.address pair.2.toList))
 
 noncomputable def random (sample : ProbComp (Bool ⊕ Context))
     (address : (Bool ⊕ Context) → JointKdfAddress) : ProbComp Bool := do
   let pair ← RawCtxSelectedParentCandidates.sample sample address
   let output ← $ᵗ FullOutput
-  native source writer mark sender route decode view pair.1 pair.2 output
+  native (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view pair.1 pair.2 output
 
 /-- Averaging the real-child freshness comparison retains the exact full predecessor sampler and charges three copies of its actual input-candidate event. -/
 theorem actual_route (sample : ProbComp (Bool ⊕ Context))
     (address : (Bool ⊕ Context) → JointKdfAddress) :
-    (actual source writer mark sender route decode view sample address).boolDistance
+    (actual (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view sample address).boolDistance
       (RawCtxSelectedParentSecrecy.actual source sample address
-        (observer source writer mark sender route decode view)) ≤
+        (observer (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view)) ≤
       3 * Pr{let pair ← (RawCtxFullPreimageTester.actual (RawCtxFullPreimageTester.production source)
           (RawCtxSelectedParentCandidates.sample sample address)
-          (observed source writer mark sender route decode view))}[pair.1 ∈ candidates pair.2].toReal := by
+          (observed (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view))}[pair.1 ∈ candidates pair.2].toReal := by
   have bound := RawCtxScaledBadEventMixture.bind_bound (RawCtxSelectedParentCandidates.sample sample address)
-        (fun pair => native source writer mark sender route decode view pair.1 pair.2
+        (fun pair => native (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view pair.1 pair.2
           (productionStream source.crypto (FixedHkdfDomain.ratchet.address pair.2.toList)))
-        (fun pair => observer source writer mark sender route decode view pair.1
+        (fun pair => observer (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view pair.1
           (productionStream source.crypto (FixedHkdfDomain.ratchet.address pair.2.toList)))
-        (fun pair => bad source writer mark sender route decode view pair.1 pair.2
+        (fun pair => bad (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view pair.1 pair.2
           (productionStream source.crypto (FixedHkdfDomain.ratchet.address pair.2.toList))) 3
-        (fun pair => local_bound source writer mark sender route decode view pair.1 pair.2 _)
+        (fun pair => local_bound (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view pair.1 pair.2 _)
   have bindCongr : ∀ {α β γ : Type} (first : ProbComp α) (f : α → ProbComp β) (g : α → ProbComp γ)
       (p : β → Prop) (q : γ → Prop), (∀ a, Pr{let x ← f a}[p x] = Pr{let y ← g a}[q y]) →
         Pr{let x ← first >>= f}[p x] = Pr{let y ← first >>= g}[q y] :=
     fun first f g p q same => prEvent_bind_congr first f g p q same
   have event : Pr{let x ← ((RawCtxSelectedParentCandidates.sample sample address) >>= fun pair =>
-        bad source writer mark sender route decode view pair.1 pair.2
+        bad (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view pair.1 pair.2
           (productionStream source.crypto (FixedHkdfDomain.ratchet.address pair.2.toList)))}[x = true] =
       Pr{let pair ← (RawCtxFullPreimageTester.actual (RawCtxFullPreimageTester.production source)
           (RawCtxSelectedParentCandidates.sample sample address)
-          (observed source writer mark sender route decode view))}[pair.1 ∈ candidates pair.2] := by
+          (observed (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view))}[pair.1 ∈ candidates pair.2] := by
     rw [RawCtxFullPreimageTester.actual]
     refine bindCongr _ _ _ _ _ fun pair => ?_
     obtain ⟨context, target⟩ := pair
@@ -155,54 +157,54 @@ set_option maxRecDepth 2048 in
 /-- The independent-child freshness comparison retains the full delayed-coordinate candidate experiment with the same explicit factor three. -/
 theorem random_route (sample : ProbComp (Bool ⊕ Context))
     (address : (Bool ⊕ Context) → JointKdfAddress) :
-    (random source writer mark sender route decode view sample address).boolDistance
+    (random (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view sample address).boolDistance
       (RawCtxSelectedParentSecrecy.random sample address
-        (observer source writer mark sender route decode view)) ≤
+        (observer (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view)) ≤
       3 * Pr{let pair ← (RawCtxSelectedParentCandidates.uniform sample address
-          (observed source writer mark sender route decode view))}[pair.1 ∈ candidates pair.2].toReal := by
+          (observed (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view))}[pair.1 ∈ candidates pair.2].toReal := by
   have bound := RawCtxScaledBadEventMixture.bind_bound
     (do let pair ← RawCtxSelectedParentCandidates.sample sample address
         let output ← $ᵗ FullOutput
         pure (pair, output))
-    (fun value => native source writer mark sender route decode view value.1.1 value.1.2 value.2)
-    (fun value => observer source writer mark sender route decode view value.1.1 value.2)
-    (fun value => bad source writer mark sender route decode view value.1.1 value.1.2 value.2) 3
-    (fun value => local_bound source writer mark sender route decode view value.1.1 value.1.2 value.2)
+    (fun value => native (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view value.1.1 value.1.2 value.2)
+    (fun value => observer (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view value.1.1 value.2)
+    (fun value => bad (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view value.1.1 value.1.2 value.2) 3
+    (fun value => local_bound (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view value.1.1 value.1.2 value.2)
   have bindCongr : ∀ {α β γ : Type} (first : ProbComp α) (f : α → ProbComp β) (g : α → ProbComp γ)
       (p : β → Prop) (q : γ → Prop), (∀ a, Pr{let x ← f a}[p x] = Pr{let y ← g a}[q y]) →
         Pr{let x ← first >>= f}[p x] = Pr{let y ← first >>= g}[q y] :=
     fun first f g p q same => prEvent_bind_congr first f g p q same
   have leftEq : (RawCtxSelectedParentCandidates.sample sample address >>= fun pair =>
           ($ᵗ FullOutput) >>= fun output => pure (pair, output)) >>=
-        (fun value => native source writer mark sender route decode view value.1.1 value.1.2 value.2) =
-      random source writer mark sender route decode view sample address := by
+        (fun value => native (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view value.1.1 value.1.2 value.2) =
+      random (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view sample address := by
     simp only [random, bind_assoc, pure_bind]
   have rightEq : (RawCtxSelectedParentCandidates.sample sample address >>= fun pair =>
           ($ᵗ FullOutput) >>= fun output => pure (pair, output)) >>=
-        (fun value => observer source writer mark sender route decode view value.1.1 value.2) =
-      RawCtxSelectedParentSecrecy.random sample address (observer source writer mark sender route decode view) := by
+        (fun value => observer (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view value.1.1 value.2) =
+      RawCtxSelectedParentSecrecy.random sample address (observer (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view) := by
     simp only [RawCtxSelectedParentSecrecy.random, independentFullGame, RawCtxSelectedParentSecrecy.joint,
       RawCtxSelectedParentCandidates.sample, bind_assoc, pure_bind]
   have lhsComp : (RawCtxSelectedParentCandidates.sample sample address >>= fun pair =>
           ($ᵗ FullOutput) >>= fun output => pure (pair, output)) >>=
-        (fun value => bad source writer mark sender route decode view value.1.1 value.1.2 value.2) =
+        (fun value => bad (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view value.1.1 value.1.2 value.2) =
       RawCtxSelectedParentCandidates.sample sample address >>= fun pair =>
-        ($ᵗ FullOutput) >>= fun output => bad source writer mark sender route decode view pair.1 pair.2 output := by
+        ($ᵗ FullOutput) >>= fun output => bad (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view pair.1 pair.2 output := by
     simp only [bind_assoc, pure_bind]
-  have rhsComp : RawCtxSelectedParentCandidates.uniform sample address (observed source writer mark sender route decode view) =
+  have rhsComp : RawCtxSelectedParentCandidates.uniform sample address (observed (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view) =
       RawCtxSelectedParentCandidates.sample sample address >>= fun pair =>
-        (($ᵗ FullOutput) >>= fun child => observed source writer mark sender route decode view pair.1 child) >>= fun result =>
+        (($ᵗ FullOutput) >>= fun child => observed (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view pair.1 child) >>= fun result =>
           pure (pair.2, result) := by
     simp only [RawCtxSelectedParentCandidates.uniform, RawCtxSelectedParentSampler.original,
       RawCtxSelectedParentCandidates.sample, bind_assoc, pure_bind]
   have event : Pr{let x ← ((RawCtxSelectedParentCandidates.sample sample address >>= fun pair =>
           ($ᵗ FullOutput) >>= fun output => pure (pair, output)) >>=
-            (fun value => bad source writer mark sender route decode view value.1.1 value.1.2 value.2))}[x = true] =
-      Pr{let pair ← RawCtxSelectedParentCandidates.uniform sample address (observed source writer mark sender route decode view)}[
+            (fun value => bad (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view value.1.1 value.1.2 value.2))}[x = true] =
+      Pr{let pair ← RawCtxSelectedParentCandidates.uniform sample address (observed (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view)}[
         pair.1 ∈ candidates pair.2] := by
     rw [lhsComp, rhsComp]
     refine bindCongr _ _ _ _ _ fun pair => ?_
-    rw [bind_pure_comp _ (($ᵗ FullOutput) >>= fun child => observed source writer mark sender route decode view pair.1 child), prEvent_map]
+    rw [bind_pure_comp _ (($ᵗ FullOutput) >>= fun child => observed (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view pair.1 child), prEvent_map]
     refine bindCongr _ _ _ _ _ fun output => ?_
     rw [bad, prEvent_map]
     exact prEvent_congr _ _ _ fun result => by simp only [decide_eq_true_eq]
@@ -217,24 +219,24 @@ theorem actual_bound (source : FixedHkdfSha512NoSaltSource) (hmac : HmacSha512) 
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (view : View Context extra M P I D K X Response Shared A N C S B)
     (sample : ProbComp (Bool ⊕ Context)) (address : (Bool ⊕ Context) → JointKdfAddress) :
-    (actual source writer mark sender route decode view sample address).boolDistance
+    (actual (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view sample address).boolDistance
       (RawCtxSelectedParentSecrecy.actual source sample address
-        (observer source writer mark sender route decode view)) ≤
+        (observer (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view)) ≤
       3 * ((2 ^ 352 : ℝ)⁻¹ +
-        RawCtxSelectedParentHop.extractLoss hmac sample address (aliasTester source writer mark sender route decode view) +
-        RawCtxSelectedParentHop.hmacLoss hmac sample address (aliasTester source writer mark sender route decode view)) := by
+        RawCtxSelectedParentHop.extractLoss hmac sample address (aliasTester (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view) +
+        RawCtxSelectedParentHop.hmacLoss hmac sample address (aliasTester (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view)) := by
   have bound := ENNReal.toReal_mono
     (show ((2 ^ 352 : ENNReal)⁻¹ + ENNReal.ofReal (
-      RawCtxSelectedParentHop.extractLoss hmac sample address (aliasTester source writer mark sender route decode view) +
-        RawCtxSelectedParentHop.hmacLoss hmac sample address (aliasTester source writer mark sender route decode view))) ≠ ⊤ by simp)
+      RawCtxSelectedParentHop.extractLoss hmac sample address (aliasTester (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view) +
+        RawCtxSelectedParentHop.hmacLoss hmac sample address (aliasTester (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view))) ≠ ⊤ by simp)
     (RawCtxSelectedParentCandidates.real_bound source hmac correct sample address
-      (observed source writer mark sender route decode view) candidates)
+      (observed (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view) candidates)
   have nonnegative : 0 ≤
-      RawCtxSelectedParentHop.extractLoss hmac sample address (aliasTester source writer mark sender route decode view) +
-        RawCtxSelectedParentHop.hmacLoss hmac sample address (aliasTester source writer mark sender route decode view) :=
+      RawCtxSelectedParentHop.extractLoss hmac sample address (aliasTester (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view) +
+        RawCtxSelectedParentHop.hmacLoss hmac sample address (aliasTester (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view) :=
     add_nonneg (abs_nonneg _) (abs_nonneg _)
   simpa [ENNReal.toReal_add, ENNReal.toReal_ofReal nonnegative, add_assoc] using
-    (actual_route source writer mark sender route decode view sample address).trans (mul_le_mul_of_nonneg_left bound (by norm_num))
+    (actual_route (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view sample address).trans (mul_le_mul_of_nonneg_left bound (by norm_num))
 
 
 
@@ -242,17 +244,17 @@ theorem actual_bound (source : FixedHkdfSha512NoSaltSource) (hmac : HmacSha512) 
 theorem random_bound (sample : ProbComp (Bool ⊕ Context))
     (address : (Bool ⊕ Context) → JointKdfAddress) (qCandidates : Nat)
     (bounded : ∀ context output result,
-      result ∈ support (observed source writer mark sender route decode view context output) →
+      result ∈ support (observed (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view context output) →
         (candidates result).length ≤ qCandidates) :
-    (random source writer mark sender route decode view sample address).boolDistance
+    (random (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view sample address).boolDistance
       (RawCtxSelectedParentSecrecy.random sample address
-        (observer source writer mark sender route decode view)) ≤
+        (observer (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view)) ≤
       3 * ((qCandidates : ℝ) / (2 ^ 256 : ℝ)) := by
-  simpa using (random_route source writer mark sender route decode view sample address).trans
+  simpa using (random_route (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view sample address).trans
     (mul_le_mul_of_nonneg_left
       (ENNReal.toReal_mono (ENNReal.div_ne_top (by simp) (by simp))
         (RawCtxSelectedParentCandidates.uniform_bound sample address
-          (observed source writer mark sender route decode view)
+          (observed (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view)
           candidates qCandidates bounded)) (by norm_num))
 
 
@@ -272,51 +274,51 @@ theorem bound (source : FixedHkdfSha512NoSaltSource) (hmac : HmacSha512) (correc
     (view : View Context extra M P I D K X Response Shared A N C S B)
     (sample : ProbComp (Bool ⊕ Context)) (address : (Bool ⊕ Context) → JointKdfAddress) (qCandidates : Nat)
     (bounded : ∀ context output result,
-      result ∈ support (observed source writer mark sender route decode view context output) →
+      result ∈ support (observed (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view context output) →
         (candidates result).length ≤ qCandidates) :
-    (actual source writer mark sender route decode view sample address).boolDistance
-      (random source writer mark sender route decode view sample address) ≤
-      RawCtxSelectedParentHop.extractLoss hmac sample address (observer source writer mark sender route decode view) +
-        RawCtxSelectedParentHop.hmacLoss hmac sample address (observer source writer mark sender route decode view) +
-        3 * (RawCtxSelectedParentHop.extractLoss hmac sample address (aliasTester source writer mark sender route decode view) +
-          RawCtxSelectedParentHop.hmacLoss hmac sample address (aliasTester source writer mark sender route decode view) +
+    (actual (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view sample address).boolDistance
+      (random (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view sample address) ≤
+      RawCtxSelectedParentHop.extractLoss hmac sample address (observer (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view) +
+        RawCtxSelectedParentHop.hmacLoss hmac sample address (observer (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view) +
+        3 * (RawCtxSelectedParentHop.extractLoss hmac sample address (aliasTester (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view) +
+          RawCtxSelectedParentHop.hmacLoss hmac sample address (aliasTester (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view) +
           (2 ^ 352 : ℝ)⁻¹ + (qCandidates : ℝ) / (2 ^ 256 : ℝ)) := by
   have triangle := (ProbComp.boolDistance_triangle
-    (actual source writer mark sender route decode view sample address)
+    (actual (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view sample address)
     (RawCtxSelectedParentSecrecy.actual source sample address
-      (observer source writer mark sender route decode view))
-    (random source writer mark sender route decode view sample address)).trans
+      (observer (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view))
+    (random (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view sample address)).trans
       (add_le_add le_rfl (ProbComp.boolDistance_triangle _
         (RawCtxSelectedParentSecrecy.random sample address
-          (observer source writer mark sender route decode view)) _))
+          (observer (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view)) _))
   have main : (RawCtxSelectedParentSecrecy.actual source sample address
-      (observer source writer mark sender route decode view)).boolDistance
+      (observer (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view)).boolDistance
         (RawCtxSelectedParentSecrecy.random sample address
-          (observer source writer mark sender route decode view)) ≤
+          (observer (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view)) ≤
       RawCtxSelectedParentHop.extractLoss hmac sample address
-        (observer source writer mark sender route decode view) +
+        (observer (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view) +
           RawCtxSelectedParentHop.hmacLoss hmac sample address
-            (observer source writer mark sender route decode view) :=
+            (observer (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view) :=
     RawCtxSelectedParentSecrecy.primitive_bound source hmac correct sample address
-      (observer source writer mark sender route decode view)
+      (observer (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view)
   have back : (RawCtxSelectedParentSecrecy.random sample address
-      (observer source writer mark sender route decode view)).boolDistance
-        (random source writer mark sender route decode view sample address) ≤ 3 * ((qCandidates : ℝ) / (2 ^ 256 : ℝ)) := by
+      (observer (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view)).boolDistance
+        (random (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view sample address) ≤ 3 * ((qCandidates : ℝ) / (2 ^ 256 : ℝ)) := by
     simpa only [ProbComp.boolDistance, abs_sub_comm] using
-      random_bound source writer mark sender route decode view sample address qCandidates bounded
-  exact loss_sum triangle (actual_bound source hmac correct writer mark sender route decode view sample address) main back
+      random_bound (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view sample address qCandidates bounded
+  exact loss_sum triangle (actual_bound (completedBinding := completedBinding) (associatedData := associatedData) source hmac correct writer mark sender route decode view sample address) main back
 
 
 
 noncomputable def reductionObserver : Bool → FullObserver ((Bool ⊕ Context) × Entry)
-  | false => observer source writer mark sender route decode view
-  | true => aliasTester source writer mark sender route decode view
+  | false => observer (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view
+  | true => aliasTester (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view
 
 /-- Main and tester observers retain every original source/checker sample. Real fixed-HKDF testing is separately billed local work. -/
 theorem observer_bounds (q : Nat)
-    (bounded : ∀ context output, (observed source writer mark sender route decode view context output).IsTotalQueryBound q) :
-    (∀ context output, (observer source writer mark sender route decode view context output).IsTotalQueryBound q) ∧
-    (∀ context output, (aliasTester source writer mark sender route decode view context output).IsTotalQueryBound q) := by
+    (bounded : ∀ context output, (observed (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view context output).IsTotalQueryBound q) :
+    (∀ context output, (observer (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view context output).IsTotalQueryBound q) ∧
+    (∀ context output, (aliasTester (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view context output).IsTotalQueryBound q) := by
   constructor
   · intro context output
     rcases context with ⟨common | pending, entry⟩
@@ -333,20 +335,20 @@ theorem reduction_queries
     (view : View Context extra M P I D K X Response Shared A N C S B) (priorSample : ProbComp (Bool ⊕ Context))
     (address : (Bool ⊕ Context) → JointKdfAddress) (qSample qObserve qCandidates : Nat)
     (sampleBound : priorSample.IsTotalQueryBound qSample)
-    (observeBound : ∀ context output, (observed source writer mark sender route decode view context output).IsTotalQueryBound qObserve)
-    (candidateBound : ∀ context output result, result ∈ support (observed source writer mark sender route decode view context output) →
+    (observeBound : ∀ context output, (observed (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view context output).IsTotalQueryBound qObserve)
+    (candidateBound : ∀ context output result, result ∈ support (observed (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view context output) →
       (candidates result).length ≤ qCandidates) :
-    (∀ forTester, let observe := reductionObserver source writer mark sender route decode view forTester
+    (∀ forTester, let observe := reductionObserver (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view forTester
       (fullExpandReduction .ratchet (RawCtxSelectedParentSecrecy.joint priorSample address) observe).IsQueryBoundP IsHmacChallengeQuery 2 ∧
         (fullExpandReduction .ratchet (RawCtxSelectedParentSecrecy.joint priorSample address) observe).IsQueryBoundP
           PqxdhFullSecretInputKdf.IsHmacUniformQuery ((qSample + 76) + qObserve)) ∧
-      (∀ context output result, result ∈ support (observed source writer mark sender route decode view context output) →
+      (∀ context output result, result ∈ support (observed (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view context output) →
         (RawCtxFullPreimageTester.evaluate output (candidates result)).IsTotalQueryBound qCandidates) := by
   refine ⟨fun forTester => RawCtxSelectedParentSecrecy.reduction_bounds priorSample address _ qSample qObserve sampleBound ?_,
     RawCtxFullPreimageTester.tester_evaluation_bound _ _ candidateBound⟩
   cases forTester
-  · exact (observer_bounds source writer mark sender route decode view qObserve observeBound).1
-  · exact (observer_bounds source writer mark sender route decode view qObserve observeBound).2
+  · exact (observer_bounds (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view qObserve observeBound).1
+  · exact (observer_bounds (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view qObserve observeBound).2
 
 
 
@@ -358,9 +360,9 @@ theorem challenger_queries
     (view : View Context extra M P I D K X Response Shared A N C S B) (priorSample : ProbComp (Bool ⊕ Context))
     (address : (Bool ⊕ Context) → JointKdfAddress) (qSample qObserve : Nat)
     (sampleBound : priorSample.IsTotalQueryBound qSample)
-    (observeBound : ∀ context output, (observed source writer mark sender route decode view context output).IsTotalQueryBound qObserve)
+    (observeBound : ∀ context output, (observed (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view context output).IsTotalQueryBound qObserve)
     (forTester : Bool) :
-    let observe := reductionObserver source writer mark sender route decode view forTester
+    let observe := reductionObserver (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view forTester
     let joint := RawCtxSelectedParentSecrecy.joint priorSample address
     (extractRealGame hmac joint (fullExtractReduction hmac .ratchet observe)).IsTotalQueryBound
         ((qSample + 76) + qObserve) ∧
@@ -374,8 +376,8 @@ theorem challenger_queries
         ((qSample + 76) + (76 + qObserve)) := by
   apply RawCtxSelectedParentSecrecy.challenger_bounds hmac priorSample address _ qSample qObserve sampleBound
   cases forTester
-  · exact (observer_bounds source writer mark sender route decode view qObserve observeBound).1
-  · exact (observer_bounds source writer mark sender route decode view qObserve observeBound).2
+  · exact (observer_bounds (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view qObserve observeBound).1
+  · exact (observer_bounds (completedBinding := completedBinding) (associatedData := associatedData) source writer mark sender route decode view qObserve observeBound).2
 
 
 

@@ -133,6 +133,9 @@ variable (reserveFrame : Nat → StateT Platform ProbComp (core.result.Result Un
 variable (helper : QueryImpl (BeaconcryptCore.Refinement.AdapterRecordHelperRequestMonad.Spec E) (StateT Platform ProbComp))
 variable (implementation : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
 
+/- The corrected OPEN accept selects the Server pin purely (no fingerprint hash query), so elaboration-time defeq checks
+   on terms containing the concrete accept program would evaluate through `begin_server_pin`; keep it opaque here. -/
+attribute [local irreducible] RegistrationNativePlatformServerOpenControl.accept in
 /-- Only the actual corrected build and finish callbacks may demand material, once each. -/
 theorem handler_bound (query : RegistrationNativeRawAdapter.TypedSpec.Domain) (before : State source Platform) :
     ((handler (n := n) setup checks wire source sign selectedOwner selectedAccept publicPrekey view failure allocation

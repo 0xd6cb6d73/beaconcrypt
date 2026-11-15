@@ -44,7 +44,7 @@ private theorem bind_keeps (work : PWork (n := n) (KemSK := KemSK) (Platform := 
 
 /-- Literal complete effectful source publication derives cached signing receipts from its actual preceding hashes. -/
 theorem publication (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (index : Nat) (owner : RegistrationNativeBeaconFrontend.Owner source) (oneTime : PqxdhJointGapDh.ScalarBytes) :
     Keeps source (RegistrationNativePlatformInitTupleCache.program (n := n) coins setup checks representation created writer index owner oneTime) := by
@@ -60,17 +60,19 @@ theorem publication (setup : Setup base KemSK) (checks : Checks)
       (((RegistrationNativePlatformBeaconPublication.begin (RegistrationNativePlatformPublicationProject.shared coins setup owner)
         (fun view => StateT.lift (RegistrationNativePlatformPublicationProject.encode writer view))
         ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey).run (project before)).run previous) := by
+        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin).run (project before)).run previous) := by
     exact (RegistrationNativePlatformRawFrame.joint_support _ _ (project before) (project result.1.2) previous result.2).mp mapped
   have implEq : RegistrationNativePlatformPublicationProject.shared (Platform := Platform) coins setup owner =
-      RegistrationNativePlatformSharedCached.outgoing (RegistrationNativeMldsa.owned source owner.mldsa) (RegistrationNativeMldsaShared.edReply setup owner) := by
+      RegistrationNativePlatformSharedCached.outgoing (fun _ => pure .None) (RegistrationNativeMldsaShared.edReply setup owner) := by
     funext query current
-    cases query <;> rfl
+    cases query with
+    | inl query => cases query <;> rfl
+    | inr request => rfl
   rw [implEq] at sharedSupported
-  exact RegistrationNativePlatformSharedCached.beacon (RegistrationNativeMldsa.owned source owner.mldsa)
+  exact RegistrationNativePlatformSharedCached.beacon (fun _ => pure .None)
     (RegistrationNativeMldsaShared.edReply setup owner) (RegistrationNativePlatformPublicationProject.encode writer)
     ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-    ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey
+    ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin
     (project before) valid previous ((result.1.1, project result.1.2), result.2) sharedSupported
 
 private def NoSign (work : RegistrationNativeBeaconFrontend.M n KemSK (source) RegistrationServerRoleBackend.State Value) : Prop :=
@@ -121,7 +123,7 @@ private theorem noSign_sample (draw : ProbComp Value) :
       exact lift_bind _ _ (noSign_lift source _) ih
 
 private theorem native_keeps (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State Value)
     (law : NoSign source work) :
     Keeps source (RegistrationNativePlatformBundleLower.native (m := StateT Platform ProbComp) coins setup checks representation created work) := by
@@ -147,7 +149,7 @@ attribute [local irreducible] RegistrationNativePlatformBundleLower.native Regis
 
 /-- All actual source bundle selection, failed publication and later phase/World branches retain cached native signing receipts. -/
 theorem bundle (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) (index : Nat) :
     Keeps source (RegistrationNativePlatformBundleLower.bundle (n := n) coins setup checks representation created
       (RegistrationNativePlatformGenericBundle.encoderWith (source := source) (Auxiliary := RegistrationServerRoleBackend.State)
@@ -183,7 +185,7 @@ private theorem map_apply {S A B : Type} {m : Type → Type} [Monad m] [LawfulMo
 
 /-- Literal complete native source bundle execution preserves cached ML receipts at its actual returned native/platform cut. -/
 theorem native_bundle (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp)) (index : Nat)
     (before : RegistrationNativeExperiment.State n KemSK source) (previous : Platform)
     (result : (RustM (Option Pqxdh.Bytes) × RegistrationNativeExperiment.State n KemSK source) × Platform)

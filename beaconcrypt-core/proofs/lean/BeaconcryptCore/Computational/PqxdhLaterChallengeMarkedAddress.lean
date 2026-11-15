@@ -7,7 +7,10 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeMarkedAddress
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhCorrelatedExpand PqxdhOrderedChainHybrids
 open PqxdhLaterChallengePaths PqxdhFirstRecordConfidentiality
 open PqxdhLaterChallengeMarkedTrace
@@ -29,7 +32,7 @@ theorem sampled_marker (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (cr : Ratchet.Crypto RatchetChain RatchetMaterial AD PT CT)
     (depth : Nat) (start : Start) (pending : Pending)
-    (sampled : Sum.inr pending ∈ support (PqxdhErasedParentSample.sampleOne source writer sender route decode depth start))
+    (sampled : Sum.inr pending ∈ support (PqxdhErasedParentSample.sampleOne (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode depth start))
     (parent output : FullOutput)
     (safe : RawCtxSelectedParentPrivatePatch.targetAddress (nextChain parent) ∉ pending.2.1.1.2 ++
       [PqxdhInitialBuilderContext.address pending.1.original])
@@ -43,7 +46,7 @@ theorem sampled_marker (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
     (absent : ((start.1.selected, number), true) ∉ ambient.1.1.2.published)
     (result : Result × PqxdhLaterChallengeSourceMonitor.State Source)
     (supported : result ∈ support ((simulateQ (annotated
-      (PqxdhLaterChallengeAddress.sampleHandler source writer
+      (PqxdhLaterChallengeAddress.sampleHandler (completedBinding := completedBinding) source writer
         (PqxdhLaterPatchedOccurrence.patchedPrior source pending parent output) sender route decode start)
       (Selected (nextChain parent) start.1.selected) start.1.selected number bit) client).run ((current, ambient), none)))
     (accepted : PqxdhRecordConfidentialityChallenge.Target number result.2.1.1)
@@ -53,13 +56,13 @@ theorem sampled_marker (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMi
     origin _ _ start.1.selected number bit client (current, ambient) result supported unused accepted
   have sourceTail := PqxdhRecordConfidentialityTrace.run_trace _ start.1.selected number bit (next (some record)) _ after _
     (original_supported _ _ start.1.selected number bit (next (some record)) _ result tail)
-  have facts := PqxdhLaterChallengeOrigin.request_facts source writer
+  have facts := PqxdhLaterChallengeOrigin.request_facts (completedBinding := completedBinding) source writer
     (PqxdhLaterPatchedOccurrence.patchedPrior source pending parent output) start.1.selectedMessage zeroRoot
     (PqxdhInitialSampledParent.response start) _ _ _ _ sender route decode cr _ start.1.selected number bit
     client left right next current atRequest ambient reached after record _ initial
     (Reaches.source _ _ _ _ _ traced) unchosen clear sent sourceTail sequence accepted absent published
   obtain ⟨valid, marked, kernel, found, counter⟩ := facts
-  have address := PqxdhLaterSendAddress.marked_address source writer sender route decode cr depth start pending sampled
+  have address := PqxdhLaterSendAddress.marked_address (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode cr depth start pending sampled
     parent output safe reached.1.1.1 reached.1.1.2 reached.1.2 valid.1 valid.2 marked kernel found (by omega)
   have selected : Selected (nextChain parent) start.1.selected reached := by
     intro chosen lookup

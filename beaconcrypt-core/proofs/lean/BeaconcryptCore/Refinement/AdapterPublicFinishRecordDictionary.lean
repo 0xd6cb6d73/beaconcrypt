@@ -30,7 +30,7 @@ variable [ed : AdapterInitEdPrimitive.Operations] {E : Type}
 
 omit material platform in
 theorem source_leaves (setup : PqxdhServerAuthExperiment.Setup base KemSK) (erased : commitment.CommitmentTranscript)
-    (authentication : QueryImpl AdapterInitAuthenticationRequestMonad.Spec (M n KemSK source Auxiliary))
+    (authentication : QueryImpl AdapterPublicWrapperChildren.AuthenticationSpec (M n KemSK source Auxiliary))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (M n KemSK source Auxiliary)) :
     letI : ChildOperations (RustT (M n KemSK source Auxiliary)) :=
       AdapterPublicWrapperChildren.children authentication (recording setup erased) writer
@@ -45,7 +45,7 @@ variable [PublicWrapperPlatform.CryptoOperations]
 omit [PublicWrapperPlatform.CryptoOperations] in
 theorem first_open (setup : PqxdhServerAuthExperiment.Setup base KemSK) (wire : RegistrationNativeWire.Wire)
     (erased : commitment.CommitmentTranscript)
-    (authentication : QueryImpl AdapterInitAuthenticationRequestMonad.Spec (M n KemSK source Auxiliary))
+    (authentication : QueryImpl AdapterPublicWrapperChildren.AuthenticationSpec (M n KemSK source Auxiliary))
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (M n KemSK source Auxiliary))
     (initial : ∀ request, (localOps.ratchet_initial_ratchet_hkdf request).run =
       pure (.ok (RawCtxSourceHkdf.initialResponse setup.source.crypto request).bytes))

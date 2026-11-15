@@ -12,6 +12,7 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 open OracleComp OracleSpec
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhFirstRecordNonceStop
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhJointKdfGame PqxdhNativeSharedPrefix
 open RawCtxSelectedParentTable RawCtxSelectedParentEntry RawCtxSelectedDriverAudit
 open PqxdhSelectedPostCompiler (Optional Full)
@@ -69,9 +70,9 @@ theorem finish_nonseal (prior : Prior) (parent : Option Entry) (target : RootOut
     (nonce : NonceOutput) (next : RootOutput) (read : RawCtxReceive.FrameDecoder)
     (raw : Pqxdh.Bytes) (before : PqxdhSelectedInitialOwnerCompiler.Beacon I D K) (state : Local A N C) :
     ((simulateQ (PqxdhSelectedInitialOwnerCompiler.lower pre application initial selector aux prior parent target nonce next read)
-      (PqxdhSelectedInitialOwnerCompiler.owner raw before)).run state).IsQueryBoundP
+      (PqxdhSelectedInitialOwnerCompiler.owner (completedBinding := completedBinding) raw before)).run state).IsQueryBoundP
         (AdaptiveCtxDynamicKnownBounds.TargetClass AdaptiveCtxQueryBounds.SourceSeal) 0 := by
-  apply (isQueryBoundP_false (PqxdhSelectedInitialOwnerCompiler.owner (extra := extra) (X := X) (Response := Response)
+  apply (isQueryBoundP_false (PqxdhSelectedInitialOwnerCompiler.owner (completedBinding := completedBinding) (extra := extra) (X := X) (Response := Response)
     (Shared := Shared) raw before) 0).simulateQ_run_of_step
   · intro _ impossible
     exact False.elim impossible
@@ -86,7 +87,7 @@ theorem finish_nonseal (prior : Prior) (parent : Option Entry) (target : RootOut
       | some raw =>
         simp only [PqxdhSelectedBeaconCompiler.afterApplication, isQueryBoundP_map_iff]
         exact RawCtxSelectedSendAuditLedger.raw_quiet prior parent target nonce next read raw
-          (PqxdhInitialGenericBeacon.localOwner request.candidate request.kernel)
+          (PqxdhInitialGenericBeacon.localOwner request.candidate request.associatedData request.kernel)
 
 /-- Evaluating any source-local program with no selected sealing request keeps the selected nonce ledger of the CTX component. -/
 theorem evaluate_quiet {Local Value : Type} (source : FixedHkdfSha512NoSaltSource) (key : RootOutput)
@@ -109,7 +110,7 @@ variable (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writ
 /-- Every new selected nonce of one augmented post callback belongs to that callback's recorded send trailer; selectors and attempted finishes keep the ledger. -/
 theorem step_used (query : (Optional (PqxdhInitialGenericPost.Spec extra S B)).Domain) (before : Full M P I D K A N C S B)
     (result : (Optional (PqxdhInitialGenericPost.Spec extra S B)).Range query × Full M P I D K A N C S B)
-    (supported : result ∈ support ((PqxdhSelectedPostCompiler.augmented pre application initial selector aux source writer
+    (supported : result ∈ support ((PqxdhSelectedPostCompiler.augmented (completedBinding := completedBinding) pre application initial selector aux source writer
       prior parent key target nonce next sender route read query).run before)) :
     RawCtxSelectedRoleAuditLedger.UsedBy (events prior parent target nonce next sender query before) before.2 result.2.2 := by
   rcases query with (request | request) | ⟨index, raw⟩
@@ -126,7 +127,7 @@ theorem step_used (query : (Optional (PqxdhInitialGenericPost.Spec extra S B)).D
   · have unchanged := evaluate_quiet source key read _
       (fun state => by
         simp only [PqxdhSelectedPostCompiler.impl, OptionT.run_mk, StateT.run, isQueryBoundP_map_iff]
-        exact finish_nonseal pre application initial selector aux prior parent target nonce next read raw _ state.2)
+        exact finish_nonseal (completedBinding := completedBinding) pre application initial selector aux prior parent target nonce next read raw _ state.2)
       before result supported
     intro value used
     exact Or.inl (unchanged ▸ used)
@@ -135,14 +136,14 @@ theorem step_used (query : (Optional (PqxdhInitialGenericPost.Spec extra S B)).D
 noncomputable def observed :
     QueryImpl (Optional (PqxdhInitialGenericPost.Spec extra S B)) (StateT (Observed M P I D K A N C S B) ProbComp) :=
   fun query before => (fun result => (result.1, (before.1 ++ events prior parent target nonce next sender query before.2, result.2))) <$>
-    (PqxdhSelectedPostCompiler.augmented pre application initial selector aux source writer prior parent key target nonce next
+    (PqxdhSelectedPostCompiler.augmented (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next
       sender route read query).run before.2
 
 /-- Erasing the history from one observed callback gives the augmented callback with its complete reply and state. -/
 theorem erased_step (query : (Optional (PqxdhInitialGenericPost.Spec extra S B)).Domain) (before : Observed M P I D K A N C S B) :
-    Prod.map id Prod.snd <$> (observed pre application initial selector aux source writer prior parent key target nonce next
+    Prod.map id Prod.snd <$> (observed (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next
       sender route read query).run before =
-      (PqxdhSelectedPostCompiler.augmented pre application initial selector aux source writer prior parent key target nonce next
+      (PqxdhSelectedPostCompiler.augmented (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next
         sender route read query).run before.2 := by
   simp only [observed, StateT.run, Functor.map_map, Prod.map_def, id_eq]
   exact id_map _
@@ -150,26 +151,26 @@ theorem erased_step (query : (Optional (PqxdhInitialGenericPost.Spec extra S B))
 /-- Erasing the history from a complete adaptive observed post run gives the augmented post run. -/
 theorem erased_program (client : OracleComp (Optional (PqxdhInitialGenericPost.Spec extra S B)) Result)
     (before : Observed M P I D K A N C S B) :
-    Prod.map id Prod.snd <$> (simulateQ (observed pre application initial selector aux source writer prior parent key target nonce next
+    Prod.map id Prod.snd <$> (simulateQ (observed (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next
       sender route read) client).run before =
-      (simulateQ (PqxdhSelectedPostCompiler.augmented pre application initial selector aux source writer prior parent key target nonce next
+      (simulateQ (PqxdhSelectedPostCompiler.augmented (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next
         sender route read) client).run before.2 :=
   map_run_simulateQ_eq_of_query_map_eq _ _ Prod.snd
-    (erased_step pre application initial selector aux source writer prior parent key target nonce next sender route read) client before
+    (erased_step (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read) client before
 
 /-- The observed post run projects to the original stopped-source post interpreter, with its complete optional result and source state. -/
 theorem observed_source (work : OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result) (before : Full M P I D K A N C S B) :
     (fun result => (result.1, PqxdhSelectedPostCompiler.project result.2.2)) <$>
-      (simulateQ (observed pre application initial selector aux source writer prior parent key target nonce next sender route read)
+      (simulateQ (observed (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read)
         (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run ([], before) =
-      (simulateQ (PqxdhSelectedPostCompiler.original pre application initial selector aux source writer prior parent key target nonce next
+      (simulateQ (PqxdhSelectedPostCompiler.original (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next
         sender route read) (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run (PqxdhSelectedPostCompiler.project before) := by
   have erased := congrArg (fun run => Prod.map id PqxdhSelectedPostCompiler.project <$> run)
-    (erased_program pre application initial selector aux source writer prior parent key target nonce next sender route read
+    (erased_program (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read
       (RawCtxSelectedFamilyNonceCoupling.optionalClient work) ([], before))
   simp only [Functor.map_map, Prod.map_def, id_eq] at erased
   rw [erased]
-  exact PqxdhSelectedPostCompiler.augmented_program pre application initial selector aux source writer prior parent key target nonce next
+  exact PqxdhSelectedPostCompiler.augmented_program (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next
     sender route read work before
 
 /-- The original stopped-source post interpreter extended by the same chronological send-trailer history. It carries no CTX component and no selected-nonce ledger. -/
@@ -177,15 +178,15 @@ noncomputable def sourceObserved :
     QueryImpl (Optional (PqxdhInitialGenericPost.Spec extra S B))
       (StateT (History S B × PqxdhSelectedPostCompiler.SourceState M P I D K A N C S B) ProbComp) :=
   fun query before => (fun result => (result.1, (before.1 ++ sourceEvents prior parent target nonce next sender query before.2, result.2))) <$>
-    (PqxdhSelectedPostCompiler.original pre application initial selector aux source writer prior parent key target nonce next
+    (PqxdhSelectedPostCompiler.original (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next
       sender route read query).run before.2
 
 /-- Erasing the history from the history-extended source post gives the original stopped-source post run with its complete result and state. -/
 theorem source_erased_program (client : OracleComp (Optional (PqxdhInitialGenericPost.Spec extra S B)) Result)
     (before : History S B × PqxdhSelectedPostCompiler.SourceState M P I D K A N C S B) :
-    Prod.map id Prod.snd <$> (simulateQ (sourceObserved pre application initial selector aux source writer prior parent key target
+    Prod.map id Prod.snd <$> (simulateQ (sourceObserved (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target
       nonce next sender route read) client).run before =
-      (simulateQ (PqxdhSelectedPostCompiler.original pre application initial selector aux source writer prior parent key target
+      (simulateQ (PqxdhSelectedPostCompiler.original (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target
         nonce next sender route read) client).run before.2 :=
   map_run_simulateQ_eq_of_query_map_eq _ _ Prod.snd (fun query state => by
     simp only [sourceObserved, StateT.run, Functor.map_map, Prod.map_def, id_eq]
@@ -199,14 +200,14 @@ def projectObserved (state : Observed M P I D K A N C S B) :
 /-- One observed callback projects to the history-extended original source callback, with the same reply, history and source state. -/
 theorem source_observed_step (query : (Optional (PqxdhInitialGenericPost.Spec extra S B)).Domain)
     (before : Observed M P I D K A N C S B) :
-    Prod.map id projectObserved <$> (observed pre application initial selector aux source writer prior parent key target nonce next
+    Prod.map id projectObserved <$> (observed (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next
       sender route read query).run before =
-      (sourceObserved pre application initial selector aux source writer prior parent key target nonce next
+      (sourceObserved (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next
         sender route read query).run (projectObserved before) := by
   have trailer : events prior parent target nonce next sender query before.2 =
       sourceEvents prior parent target nonce next sender query (PqxdhSelectedPostCompiler.project before.2) := by
     rcases query with (request | request) | request <;> rfl
-  have step := PqxdhSelectedPostCompiler.augmented_step pre application initial selector aux source writer prior parent key target
+  have step := PqxdhSelectedPostCompiler.augmented_step (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target
     nonce next sender route read query before.2
   simp only [StateT.run] at step
   simp only [observed, sourceObserved, projectObserved, StateT.run, trailer, Functor.map_map, Prod.map_def, id_eq]
@@ -216,12 +217,12 @@ theorem source_observed_step (query : (Optional (PqxdhInitialGenericPost.Spec ex
 /-- Every complete adaptive observed run projects to the history-extended original source-post run, with the same result, history and source state. -/
 theorem source_observed_program (client : OracleComp (Optional (PqxdhInitialGenericPost.Spec extra S B)) Result)
     (before : Observed M P I D K A N C S B) :
-    Prod.map id projectObserved <$> (simulateQ (observed pre application initial selector aux source writer prior parent key target
+    Prod.map id projectObserved <$> (simulateQ (observed (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target
       nonce next sender route read) client).run before =
-      (simulateQ (sourceObserved pre application initial selector aux source writer prior parent key target nonce next
+      (simulateQ (sourceObserved (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next
         sender route read) client).run (projectObserved before) :=
   map_run_simulateQ_eq_of_query_map_eq _ _ projectObserved
-    (source_observed_step pre application initial selector aux source writer prior parent key target nonce next sender route read)
+    (source_observed_step (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read)
     client before
 
 /-- The stop predicate read from the observed state. -/
@@ -240,7 +241,7 @@ theorem marked_step_consistent (query : (Optional (PqxdhInitialGenericPost.Spec 
     (before : Observed M P I D K A N C S B × Bool)
     (result : (Optional (PqxdhInitialGenericPost.Spec extra S B)).Range query × (Observed M P I D K A N C S B × Bool))
     (supported : result ∈ support ((RawCtxSelectedFamilyNonceCoupling.marked
-      (observed pre application initial selector aux source writer prior parent key target nonce next sender route read)
+      (observed (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read)
       (observedStops (extra := extra) prior parent target nonce next sender) query).run before))
     (previous : Consistent prior parent target nonce next before) :
     Consistent prior parent target nonce next result.2 := by
@@ -251,7 +252,7 @@ theorem marked_step_consistent (query : (Optional (PqxdhInitialGenericPost.Spec 
   obtain ⟨step, stepped, rfl⟩ := reached
   refine ⟨?_, ?_, ?_⟩
   · exact RawCtxSelectedRoleAuditLedger.tracked _ before.1.1 before.1.2.2 step.2.2
-      (step_used pre application initial selector aux source writer prior parent key target nonce next sender route read
+      (step_used (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read
         query before.1.2 step stepped) previous.1
   · intro occurrence found
     rcases List.mem_append.mp found with old | current
@@ -277,7 +278,7 @@ theorem marked_step_consistent (query : (Optional (PqxdhInitialGenericPost.Spec 
 theorem marked_program_consistent (client : OracleComp (Optional (PqxdhInitialGenericPost.Spec extra S B)) Result)
     (before : Observed M P I D K A N C S B × Bool) (result : Result × (Observed M P I D K A N C S B × Bool))
     (supported : result ∈ support ((simulateQ (RawCtxSelectedFamilyNonceCoupling.marked
-      (observed pre application initial selector aux source writer prior parent key target nonce next sender route read)
+      (observed (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read)
       (observedStops (extra := extra) prior parent target nonce next sender)) client).run before))
     (previous : Consistent prior parent target nonce next before) :
     Consistent prior parent target nonce next result.2 := by
@@ -290,7 +291,7 @@ theorem marked_program_consistent (client : OracleComp (Optional (PqxdhInitialGe
       simp only [simulateQ_bind, simulateQ_spec_query, StateT.run_bind, mem_support_bind_iff] at supported
       obtain ⟨reply, reached, tail⟩ := supported
       exact ih reply.1 reply.2 result tail
-        (marked_step_consistent pre application initial selector aux source writer prior parent key target nonce next sender route read
+        (marked_step_consistent (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read
           query before reply reached previous)
 
 /-- Drop the history from a marked observed state. -/
@@ -300,10 +301,10 @@ def forgetHistory (state : Observed M P I D K A N C S B × Bool) : Full M P I D 
 theorem marked_step_erased (query : (Optional (PqxdhInitialGenericPost.Spec extra S B)).Domain)
     (before : Observed M P I D K A N C S B × Bool) :
     Prod.map id forgetHistory <$> (RawCtxSelectedFamilyNonceCoupling.marked
-      (observed pre application initial selector aux source writer prior parent key target nonce next sender route read)
+      (observed (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read)
       (observedStops (extra := extra) prior parent target nonce next sender) query).run before =
       (RawCtxSelectedFamilyNonceCoupling.marked
-        (PqxdhSelectedPostCompiler.augmented pre application initial selector aux source writer prior parent key target nonce next
+        (PqxdhSelectedPostCompiler.augmented (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next
           sender route read)
         (PqxdhSelectedPostCompiler.Stops (extra := extra) prior parent target nonce next sender) query).run (forgetHistory before) := by
   simp only [RawCtxSelectedFamilyNonceCoupling.marked, observed, observedStops, forgetHistory, StateT.run,
@@ -314,14 +315,14 @@ theorem marked_step_erased (query : (Optional (PqxdhInitialGenericPost.Spec extr
 theorem marked_program_erased (client : OracleComp (Optional (PqxdhInitialGenericPost.Spec extra S B)) Result)
     (before : Observed M P I D K A N C S B × Bool) :
     Prod.map id forgetHistory <$> (simulateQ (RawCtxSelectedFamilyNonceCoupling.marked
-      (observed pre application initial selector aux source writer prior parent key target nonce next sender route read)
+      (observed (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read)
       (observedStops (extra := extra) prior parent target nonce next sender)) client).run before =
       (simulateQ (RawCtxSelectedFamilyNonceCoupling.marked
-        (PqxdhSelectedPostCompiler.augmented pre application initial selector aux source writer prior parent key target nonce next
+        (PqxdhSelectedPostCompiler.augmented (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next
           sender route read)
         (PqxdhSelectedPostCompiler.Stops (extra := extra) prior parent target nonce next sender)) client).run (forgetHistory before) :=
   map_run_simulateQ_eq_of_query_map_eq _ _ forgetHistory
-    (marked_step_erased pre application initial selector aux source writer prior parent key target nonce next sender route read) client before
+    (marked_step_erased (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read) client before
 
 end Quiet
 
@@ -359,20 +360,20 @@ variable
 theorem input_bound (client : OracleComp (Optional (PqxdhInitialGenericPost.Spec extra S B)) Result)
     (before : Full M P I D K A N C S B) (empty : before.2.selected.1.usedNonces = []) :
     𝒟[(fun result => result.2.2) <$> (simulateQ (RawCtxSelectedFamilyNonceCoupling.marked
-      (PqxdhSelectedPostCompiler.augmented pre application initial selector aux source writer prior parent key target nonce next
+      (PqxdhSelectedPostCompiler.augmented (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next
         sender route read)
       (PqxdhSelectedPostCompiler.Stops (extra := extra) prior parent target nonce next sender)) client).run (before, false)] {true} ≤
       𝒟[(fun result => decide (RawCtxSelectedSourceSendInputs.RepeatedInput target result.2.1)) <$>
-        (simulateQ (observed pre application initial selector aux source writer prior parent key target nonce next sender route read)
+        (simulateQ (observed (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read)
           client).run ([], before)] {true} := by
   have flags := congrArg (fun work => (fun result => result.2.2) <$> work)
-    (marked_program_erased pre application initial selector aux source writer prior parent key target nonce next sender route read
+    (marked_program_erased (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read
       client (([], before), false))
   simp only [Functor.map_map, Prod.map_def, id_eq, forgetHistory] at flags
   rw [← flags]
   have histories := congrArg (fun work => (fun result => decide (RawCtxSelectedSourceSendInputs.RepeatedInput target result.2.1)) <$> work)
     (RawCtxSelectedFamilyNonceCoupling.marked_client
-      (observed pre application initial selector aux source writer prior parent key target nonce next sender route read)
+      (observed (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read)
       (observedStops (extra := extra) prior parent target nonce next sender) client (([], before), false))
   simp only [Functor.map_map, Prod.map_def, id_eq] at histories
   rw [← histories]
@@ -380,7 +381,7 @@ theorem input_bound (client : OracleComp (Optional (PqxdhInitialGenericPost.Spec
   simp only [decide_eq_true_eq]
   apply prEvent_mono_of_support
   intro result supported flagged
-  have consistent := marked_program_consistent pre application initial selector aux source writer prior parent key target nonce next
+  have consistent := marked_program_consistent (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next
     sender route read client (([], before), false) result supported
     ⟨RawCtxSelectedSendTrace.tracked_empty before.2 empty, fun _ impossible => False.elim (List.not_mem_nil impossible),
       fun impossible => False.elim (Bool.false_ne_true impossible)⟩
@@ -390,60 +391,60 @@ theorem input_bound (client : OracleComp (Optional (PqxdhInitialGenericPost.Spec
 theorem source_input_distance (work : OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result)
     (before : Full M P I D K A N C S B) (empty : before.2.selected.1.usedNonces = []) :
     discreteDistance
-      ((simulateQ (PqxdhSelectedPostCompiler.original pre application initial selector aux source writer prior parent key target nonce next
+      ((simulateQ (PqxdhSelectedPostCompiler.original (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next
         sender route read) (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run (PqxdhSelectedPostCompiler.project before))
       (Prod.map id PqxdhSelectedPostCompiler.project <$> (PqxdhSelectedStateInterpreter.evaluate
         (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder read) source.crypto key)
-        (simulateQ (PqxdhSelectedPostCompiler.impl pre application initial selector aux source writer prior parent target nonce next
+        (simulateQ (PqxdhSelectedPostCompiler.impl (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next
           sender route read) work).run).run before) ≤
       (𝒟[(fun result => decide (RawCtxSelectedSourceSendInputs.RepeatedInput target result.2.1)) <$>
-        (simulateQ (observed pre application initial selector aux source writer prior parent key target nonce next sender route read)
+        (simulateQ (observed (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read)
           (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run ([], before)] {true}).toReal := by
-  apply (PqxdhSelectedPostCompiler.source_distance pre application initial selector aux source writer prior parent key target nonce next
+  apply (PqxdhSelectedPostCompiler.source_distance (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next
     sender route read work before).trans
   apply ENNReal.toReal_mono
   · rw [← prEvent_eq_evalDist_singleton _ true]
     exact prEvent_ne_top _
-  · exact input_bound pre application initial selector aux source writer prior parent key target nonce next sender route read
+  · exact input_bound (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read
       (RawCtxSelectedFamilyNonceCoupling.optionalClient work) before empty
 
 /-- The stop probability is at most the probability of two ordered sealing positions at the exact selected sending chain in the history-extended original source post, which has no CTX component or selected-nonce ledger. -/
 theorem source_input_bound (client : OracleComp (Optional (PqxdhInitialGenericPost.Spec extra S B)) Result)
     (before : Full M P I D K A N C S B) (empty : before.2.selected.1.usedNonces = []) :
     𝒟[(fun result => result.2.2) <$> (simulateQ (RawCtxSelectedFamilyNonceCoupling.marked
-      (PqxdhSelectedPostCompiler.augmented pre application initial selector aux source writer prior parent key target nonce next
+      (PqxdhSelectedPostCompiler.augmented (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next
         sender route read)
       (PqxdhSelectedPostCompiler.Stops (extra := extra) prior parent target nonce next sender)) client).run (before, false)] {true} ≤
       𝒟[(fun result => decide (RawCtxSelectedSourceSendInputs.RepeatedInput target result.2.1)) <$>
-        (simulateQ (sourceObserved pre application initial selector aux source writer prior parent key target nonce next sender route read)
+        (simulateQ (sourceObserved (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read)
           client).run ([], PqxdhSelectedPostCompiler.project before)] {true} := by
   have projected := congrArg (fun work => (fun result => decide (RawCtxSelectedSourceSendInputs.RepeatedInput target result.2.1)) <$> work)
-    (source_observed_program pre application initial selector aux source writer prior parent key target nonce next sender route read
+    (source_observed_program (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read
       client ([], before))
   simp only [Functor.map_map, Prod.map_def, id_eq, projectObserved] at projected
   rw [← projected]
-  exact input_bound pre application initial selector aux source writer prior parent key target nonce next sender route read
+  exact input_bound (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read
     client before empty
 
 /-- The complete post source and the evaluated executable CTX post differ by at most the probability of a repeated selected sending input in the history-extended original source post from the projected state, with coefficient one and complete terminal output and state comparison. -/
 theorem source_history_distance (work : OracleComp (PqxdhInitialGenericPost.Spec extra S B) Result)
     (before : Full M P I D K A N C S B) (empty : before.2.selected.1.usedNonces = []) :
     discreteDistance
-      ((simulateQ (PqxdhSelectedPostCompiler.original pre application initial selector aux source writer prior parent key target nonce next
+      ((simulateQ (PqxdhSelectedPostCompiler.original (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next
         sender route read) (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run (PqxdhSelectedPostCompiler.project before))
       (Prod.map id PqxdhSelectedPostCompiler.project <$> (PqxdhSelectedStateInterpreter.evaluate
         (AdaptiveCtxDynamicKnownKeys.sourceImpl true (RawCtxUniversalDecoder.decoder read) source.crypto key)
-        (simulateQ (PqxdhSelectedPostCompiler.impl pre application initial selector aux source writer prior parent target nonce next
+        (simulateQ (PqxdhSelectedPostCompiler.impl (completedBinding := completedBinding) pre application initial selector aux source writer prior parent target nonce next
           sender route read) work).run).run before) ≤
       (𝒟[(fun result => decide (RawCtxSelectedSourceSendInputs.RepeatedInput target result.2.1)) <$>
-        (simulateQ (sourceObserved pre application initial selector aux source writer prior parent key target nonce next sender route read)
+        (simulateQ (sourceObserved (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read)
           (RawCtxSelectedFamilyNonceCoupling.optionalClient work)).run ([], PqxdhSelectedPostCompiler.project before)] {true}).toReal := by
-  apply (PqxdhSelectedPostCompiler.source_distance pre application initial selector aux source writer prior parent key target nonce next
+  apply (PqxdhSelectedPostCompiler.source_distance (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next
     sender route read work before).trans
   apply ENNReal.toReal_mono
   · rw [← prEvent_eq_evalDist_singleton _ true]
     exact prEvent_ne_top _
-  · exact source_input_bound pre application initial selector aux source writer prior parent key target nonce next sender route read
+  · exact source_input_bound (completedBinding := completedBinding) pre application initial selector aux source writer prior parent key target nonce next sender route read
       (RawCtxSelectedFamilyNonceCoupling.optionalClient work) before empty
 
 end Bound

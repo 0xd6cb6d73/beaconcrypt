@@ -22,12 +22,11 @@ attribute [local irreducible] RegistrationServerNativeSource.authenticate Regist
 /-- Actual source pin/authentication, the token's own Root receipt and the original pending hash derive the matched Server input without perfect recipient correctness or a desired root equality. -/
 theorem matched (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (packet : registration.InitPacket)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (packet : registration.InitPacket)
     (before after : RegistrationNativeKemServerState.State n source) (previous finalPlatform : Platform)
     (handle : Nat) (log : RegistrationNativeKemCountedServerTrace.Log KemSK)
     (cut : RegistrationNativePlatformAcceptActualToken.SourceCut setup (RegistrationNativeWire.ledgerCodec wire) checks route representation created
       packet before after previous finalPlatform handle log)
-    (cachedPin : RegistrationNativeServerPinRecompute.Cached before.server.pin before.server.world.world.1.primitive.2)
     (token : peer.ConsumedRegistration) (tokenEq : token.agreement = cut.receipt.root.accepted)
     (owner : RegistrationNativeBeaconFrontend.Owner source) (pending : registration.BeaconPending)
     (oneTime : PqxdhJointGapDh.ScalarBytes) (cache : CtxRomAuth.CtxRO.QueryCache)
@@ -38,7 +37,7 @@ theorem matched (setup : Setup base KemSK) (checks : Checks) (wire : Registratio
     Nonempty (RegistrationNativeMatchedServerInput.Receipt (n := n) setup checks wire route representation created owner oneTime token before.server.pin cache) := by
   obtain ⟨_pin, stored, checked⟩ := RegistrationNativePlatformTokenCacheSource.authentication RegistrationNativePlatformMldsaProgram.coins
     setup (RegistrationNativeWire.ledgerCodec wire) route source.verify created packet before.server cut.current.server cut.receipt.afterCheck.server
-      previous cut.currentPlatform cut.receipt.checkPlatform cut.pin cut.receipt.events cut.receipt.authenticated cachedPin cut.pinned cut.authenticated
+      previous cut.currentPlatform cut.receipt.checkPlatform cut.pin cut.receipt.events cut.receipt.authenticated cut.pinned cut.authenticated
   have agreed := RegistrationNativePlatformAcceptActualToken.agreed_native setup checks representation created packet cut.receipt.authenticated
     handle after finalPlatform log cut.receipt.root
   rw [cut.beforeEq, ← tokenEq] at agreed
@@ -56,11 +55,11 @@ theorem matched (setup : Setup base KemSK) (checks : Checks) (wire : Registratio
     congrArg (fun value : agreement.ServerAgreement => value.binding) root.completedEq
   have authHash : cut.receipt.authenticated.binding.init_hash = RegistrationAuthenticationShared.digestArray pendingInput.digest :=
     (congrArg (fun value : session.RegistrationBinding => value.init_hash) binding).symm.trans (initHash.trans pendingInput.initHash)
-  have startedSame : pendingInput.fingerprint.state.started = pendingInput.started := by
+  have startedSame : pendingInput.hashing.state.started = pendingInput.started := by
     simpa only [RegistrationNativeInitTupleSource.Fixed, RegistrationNativeInitTupleSource.metadata] using congrArg Prod.fst pendingInput.fixed
   have registration := RegistrationNativeInitTupleAgreement.registration setup (RegistrationNativeWire.ledgerCodec wire) route source.verify created packet
     cut.current.server cut.receipt.afterCheck.server cut.receipt.events cut.receipt.authenticated checked cache authExtension
-      pendingInput.fingerprint.state pendingInput.started _ startedSame pendingInput.attached pendingInput.validated pendingInput.digest pendingInput.cached authHash collisionFree
+      pendingInput.hashing.state pendingInput.started _ startedSame pendingInput.attached pendingInput.validated pendingInput.digest pendingInput.cached authHash collisionFree
   exact ⟨⟨cut.current.server, packet, cut.receipt.events, cut.receipt.authenticated, cut.receipt.afterCheck.server,
     cut.receipt.root.afterAgreement.server, checked, agreed, root, registration, stored, authExtension⟩⟩
 

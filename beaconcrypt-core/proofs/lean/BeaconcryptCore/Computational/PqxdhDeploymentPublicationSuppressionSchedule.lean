@@ -1,6 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.PqxdhDeploymentPublicationSuppressionFreshness
 import BeaconcryptCore.Computational.PqxdhRegistrationJointServerClient
+import BeaconcryptCore.Computational.PqxdhDeploymentPublicationSuppressionLogged
 
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
@@ -10,12 +11,13 @@ set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhDeploymentPublicationSuppressionSchedule
 open PqxdhJointIdentity PqxdhJointGapDh PqxdhServerAuthExperiment PqxdhServerAuthNative
 open PqxdhDeploymentPublicationSuppression
+open PqxdhDeploymentPublicationSuppressionLogged
 open PqxdhRegistrationJointGeneratedFinish (EncodedEntry EncodedState encodeEntry encodeState)
 open PqxdhRegistrationJointOwnership (Entry Owned)
 variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response Result Next : Type}
 
 abbrev State (KemSK : Type) := PqxdhRegistrationJointSchedule.State KemSK × Selection
-abbrev Client (KemSK Response Result : Type) := StateT (List EncodedEntry × Selection)
+abbrev Client (KemSK Response Result : Type) := StateT ((List EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) × Selection)
   (OracleComp (PqxdhRegistrationJointServiceSchedule.Spec KemSK Response)) Result
 
 def bundle (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (address : Nat) :
@@ -23,10 +25,11 @@ def bundle (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (addre
   match state.1.owners[address]? with
   | none => pure (none, (state.1, state.2.next none))
   | some entry =>
-    (fun result => (result.1.1.1, ({ state.1 with
-      pool := (result.1.2, state.1.pool.2),
-      owners := state.1.owners.set address { entry with owner := result.1.1.2 } }, result.2))) <$>
-        trace setup codec entry.identityIndex entry.owner state.1.pool.1 state.2
+    (fun result => (result.1.1.1.1, ({ state.1 with
+      pool := (result.1.1.2, state.1.pool.2)
+      owners := state.1.owners.set address { entry with owner := result.1.1.1.2 }
+      inits := Function.update state.1.inits address result.2 }, result.1.2))) <$>
+        traceLogged setup codec entry.identityIndex entry.owner state.1.pool.1 state.2 (state.1.inits address)
 
 def onSource (work : StateT (PqxdhRegistrationJointSchedule.State KemSK) ProbComp Result) :
     StateT (State KemSK) ProbComp Result := fun state =>
@@ -45,13 +48,16 @@ def carry (work : PqxdhRegistrationJointServiceSchedule.Client KemSK Response Re
 /-- The selected role is a handle owner; no generated identity secret enters this dispatcher. -/
 def bundleClient (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (address : Nat) :
     Client KemSK Response (Option Pqxdh.Bytes) := fun state =>
-  match state.1[address]? with
+  match state.1.1[address]? with
   | none => pure (none, (state.1, state.2.next none))
   | some entry =>
-    (fun result => (result.1.1, (state.1.set address (entry.1, entry.2.1, result.1.2), result.2))) <$>
+    (fun result => (result.1.1.1,
+      ((state.1.1.set address (entry.1, entry.2.1, result.1.1.2),
+        Function.update state.1.2 address result.2), result.1.2))) <$>
       simulateQ PqxdhRegistrationJointServiceSchedule.poolLift
-        (simulateQ (PqxdhRegistrationJointBundleCompiler.compiler codec)
-          (PqxdhDeploymentPublicationSuppression.client (PqxdhRegistrationJointBundle.projection setup) entry.2.2 state.2))
+        ((simulateQ (PqxdhRegistrationJointServiceSchedule.logCompiler codec)
+          (PqxdhDeploymentPublicationSuppression.client (PqxdhRegistrationJointBundle.projection setup)
+            entry.2.2 state.2)).run (state.1.2 address))
 
 noncomputable def handler (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) :
     QueryImpl (PqxdhRegistrationJointRevealSchedule.Spec KemSK) (Client KemSK Response)
@@ -62,9 +68,9 @@ noncomputable def handler (setup : Setup baseSpec KemSK) (codec : Codec Reader R
 noncomputable def execute (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (index : Nat) (publicIdentity : PublicIdentity) (work : Client KemSK Response Result)
     (state : EncodedState KemSK × Selection) : ProbComp (Result × (EncodedState KemSK × Selection)) :=
-  (fun result => (result.1.1, (⟨result.2.1, result.2.2, result.1.2.1⟩, result.1.2.2))) <$>
+  (fun result => (result.1.1, (⟨result.2.1, result.2.2, result.1.2.1.1, result.1.2.1.2⟩, result.1.2.2))) <$>
     (simulateQ (PqxdhRegistrationJointServerClient.impl setup codec checks index publicIdentity)
-      (work.run (state.1.owners, state.2))).run (state.1.pool, state.1.shared)
+      (work.run ((state.1.owners, state.1.inits), state.2))).run (state.1.pool, state.1.shared)
 
 /-- Every unmodified source operation retains its complete result and exact suppression bookkeeping. -/
 theorem carry_execute (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -74,8 +80,8 @@ theorem carry_execute (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
     execute setup codec checks index publicIdentity (carry work) (state, selection) =
       (fun result => (result.1, (result.2, selection))) <$>
         PqxdhRegistrationJointServerClient.execute setup codec checks index publicIdentity work state := by
-  have carried : (carry work).run (state.owners, selection) =
-      (fun result => (result.1, (result.2, selection))) <$> work.run state.owners := rfl
+  have carried : (carry work).run ((state.owners, state.inits), selection) =
+      (fun result => (result.1, (result.2, selection))) <$> work.run (state.owners, state.inits) := rfl
   simp only [execute, PqxdhRegistrationJointServerClient.execute, Functor.map_map]
   rw [carried, simulateQ_map, StateT.run_map]
   simp only [Functor.map_map]
@@ -95,9 +101,11 @@ theorem bundle_source (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
       simp only [execute, StateT.run, bundleClient, encodeState, List.getElem?_map, found,
         Option.map_some, encodeEntry, simulateQ_map]
       change _ <$> StateT.run (_ <$> _) _ = _
-      rw [StateT.run_map, PqxdhRegistrationJointServerClient.pool_program,
-        compiled_source setup codec entry.identityIndex entry.kemIndex entry.owner state.1.pool state.2
-          (owned entry (List.mem_of_getElem? found)).1]
+      rw [StateT.run_map, PqxdhRegistrationJointServerClient.pool_program]
+      have logged := compiled_logged setup codec entry.identityIndex entry.kemIndex entry.owner state.1.pool state.2
+        (state.1.inits address) (owned entry (List.mem_of_getElem? found)).1
+      simp only [StateT.run] at logged ⊢
+      rw [logged]
       simp [bundle, found, Functor.map_map, encodeEntry]
 
 /-- Skipping a block cannot change any private seed slot or the selected owner's key ownership. -/
@@ -141,10 +149,15 @@ theorem bundle_owned (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
   case none => simpa only [supported] using owned
   case some entry =>
     obtain ⟨reached, member, rfl⟩ := supported
-    have preserved := trace_owned setup codec entry state.1.pool state.2 reached
-      (owned.1 entry (List.mem_of_getElem? found)) member
-    exact ⟨PqxdhRegistrationJointSchedule.updated_owned state.1 (reached.1.2, state.1.pool.2) state.1.shared address
-      { entry with owner := reached.1.1.2 } owned.1 preserved.1 rfl preserved.2,
+    have original : reached.1 ∈ support (trace setup codec entry.identityIndex entry.owner state.1.pool.1 state.2) := by
+      rw [← traceLogged_fst setup codec entry.identityIndex entry.owner state.1.pool.1 state.2
+        (state.1.inits address), support_map]
+      exact ⟨reached, member, rfl⟩
+    have preserved := trace_owned setup codec entry state.1.pool state.2 reached.1
+      (owned.1 entry (List.mem_of_getElem? found)) original
+    exact ⟨PqxdhRegistrationJointSchedule.updated_owned state.1 (reached.1.1.2, state.1.pool.2) state.1.shared
+      (Function.update state.1.inits address reached.2) address
+      { entry with owner := reached.1.1.1.2 } owned.1 preserved.1 rfl preserved.2,
       by simpa only [preserved.1] using owned.2⟩
 
 /-- Reassociation keeps the complete adaptive continuation on the same source/backend state. -/

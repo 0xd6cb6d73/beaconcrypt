@@ -2,12 +2,12 @@
 
 use alloc::vec::Vec;
 
+use crate::auth;
 #[cfg(test)]
 use crate::auth::AuthRole;
-use crate::auth::{self, MLDSA_PUBLIC_KEY_LEN, MldsaIdentity};
-use crate::pqxdh::AD_SIZE;
 #[cfg(test)]
-use crate::pqxdh::mldsa_associated_data;
+use crate::auth::MldsaIdentity;
+use crate::pqxdh::AD_SIZE;
 #[cfg(test)]
 use crate::pqxdh::{derive_root_key_input, shared_secrets, zeroize_shared_secrets};
 #[cfg(test)]
@@ -17,7 +17,6 @@ use crate::ratchet::{
 };
 
 struct RegistrationAuthentication {
-	identity: MldsaIdentity,
 	server_pin: ServerAuthenticationPin,
 }
 
@@ -113,8 +112,7 @@ impl Beacon {
 			identity_key_id: server_kid,
 		};
 		let authentication = RegistrationAuthentication {
-			identity: MldsaIdentity::generate_with_rng(rng)?,
-			server_pin: auth::fingerprint_pin(server_binding, server_public_key)
+			server_pin: auth::server_pin(server_binding, server_public_key)
 				.ok_or(crate::KeyGenError)?,
 		};
 		Ok(Self {
@@ -131,10 +129,6 @@ impl Beacon {
 			server_id: id,
 			authentication,
 		})
-	}
-	/// The signing identity authenticated in InitKex; the server key is pinned at construction.
-	pub fn mldsa_public_key(&self) -> [u8; MLDSA_PUBLIC_KEY_LEN] {
-		self.authentication.identity.public_key()
 	}
 
 	pub fn identity_key_kid(&self) -> u64 {
@@ -409,7 +403,6 @@ impl Beacon {
 				one_time_public_key: onetime_public,
 			},
 			self.authentication.server_pin,
-			self.mldsa_public_key(),
 		);
 		let ready = loop {
 			effect = match effect {
@@ -424,20 +417,9 @@ impl Beacon {
 					};
 					pending.resume(signed.as_deref())
 				}
-				BeaconInitEffect::FingerprintRequested(pending) => {
-					let fingerprint = auth::execute_hash(&pending.request());
-					pending.resume(fingerprint)
-				}
 				BeaconInitEffect::HashRequested(pending) => {
 					let hash = auth::execute_hash(&pending.request());
 					pending.resume(hash)
-				}
-				BeaconInitEffect::MldsaSigningRequested(pending) => {
-					let signature = self
-						.authentication
-						.identity
-						.sign_requested(&pending.request());
-					pending.resume(signature.as_deref())
 				}
 			};
 		};
@@ -447,8 +429,6 @@ impl Beacon {
 			pre_key: message.fields.pre_key,
 			one_time_key: message.fields.one_time_key,
 			pq_key: message.fields.pq_key,
-			mldsa_public_key: message.fields.mldsa_public_key,
-			signature: message.signature,
 		});
 		let (pending, buffer) = ready.publish(buffer).ok()?.into_parts();
 		let fallback = BeaconState::Aborted {
@@ -624,7 +604,7 @@ mod tests {
 		let mut server =
 			Server::try_new_with_rng(19, Some(&[7; 32]), Some(&[8; 32]), &mut TestRng::new(0))
 				.unwrap();
-		for fail_after in 0..4 {
+		for fail_after in 0..3 {
 			assert!(
 				Beacon::try_new_with_rng(
 					19,
@@ -644,7 +624,7 @@ mod tests {
 			&mut rng,
 		)
 		.unwrap();
-		assert_eq!(rng.calls, 4);
+		assert_eq!(rng.calls, 3);
 		assert!(
 			beacon
 				.get_registration_bundle_with_rng(&mut TestRng::new(0))
@@ -752,14 +732,7 @@ mod tests {
 			let root = derive_root_key_input(&mut input).unwrap();
 			let pending = verified_pqxdh::start_server_ratchet_kdf(root.as_array());
 			let mut sender = RatchetManager::from_kernel(finish_initial_ratchet_kdf(pending));
-			let ad = mldsa_associated_data(
-				&verified_pqxdh::build_associated_data(
-					*server.identity_pk().as_bytes(),
-					*beacon.identity_pk().as_bytes(),
-				),
-				&auth::public_key_hash(&server.mldsa_public_key()).unwrap(),
-				&auth::public_key_hash(&beacon.mldsa_public_key()).unwrap(),
-			);
+			let ad = server.associated_data(original.kid).unwrap();
 			let payload = if case < 8 {
 				original.kid.to_le_bytes()[..case + 1].to_vec()
 			} else {

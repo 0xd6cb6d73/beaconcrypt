@@ -16,6 +16,7 @@ namespace BeaconcryptCore.Computational.RegistrationAuthenticationExecutor
 
 open BeaconcryptCore.Refinement.RegistrationAuthenticationFlow
 
+/-- Shared primitive interface. ML-DSA verification serves the Server response executor; the Init step below issues only hash/Ed25519 requests. -/
 inductive Request where
   | hash (request : registration.HashRequest)
   | mldsa (request : registration.MldsaVerificationRequest)
@@ -47,18 +48,9 @@ def step (state : registration.InitAuthentication) :
   | .HashRequested before => continueWith before.request fun request => do
       let reply ← Spec.query (.hash request)
       pure (edge (.hash reply) (before.resume reply))
-  | .MldsaVerificationRequested before => continueWith before.request fun request => do
-      let reply ← Spec.query (.mldsa request)
-      pure (edge (.mldsa reply) (before.resume reply))
   | .Ed25519VerificationRequested before => continueWith before.request fun request => do
       let reply ← Spec.query (.ed25519 request)
       pure (edge (.ed25519 before.stage reply) (before.resume reply))
-  | .ServerFingerprintRequested before => continueWith before.request fun request => do
-      let reply ← Spec.query (.hash request)
-      pure (edge (.serverFingerprint reply) (before.resume reply))
-  | .BeaconFingerprintRequested before => continueWith before.request fun request => do
-      let reply ← Spec.query (.hash request)
-      pure (edge (.beaconFingerprint reply) (before.resume reply))
   | .Accepted _ | .Rejected => pure (.ok none)
 
 /-- Fuel bounds callbacks, while an early terminal result keeps its complete trace. -/
@@ -73,10 +65,10 @@ def execute : Nat → registration.InitAuthentication →
           let rest ← execute fuel after
           continueWith rest fun final => pure (.ok (event :: final.1, final.2))
 
-/-- The real entry point executes at most seven callbacks, with one terminal check. -/
+/-- The real entry point executes at most four callbacks, with one terminal check. -/
 def begin (pin : session.ServerAuthenticationPin) (packet : registration.InitPacket) :
     OracleComp Spec (RustM (List Event × registration.InitAuthentication)) :=
-  continueWith (registration.begin_init_authentication pin packet) (execute 8)
+  continueWith (registration.begin_init_authentication pin packet) (execute 5)
 
 theorem execute_zero (state : registration.InitAuthentication) :
     execute 0 state = pure (.ok ([], state)) := by

@@ -8,6 +8,8 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option maxRecDepth 2048
 namespace BeaconcryptCore.Computational.PqxdhAdaptiveCoordinateResources
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame PqxdhSecretInputKdf PqxdhInitialSourceInitialSecrecy
 open PqxdhInitialSourceInitialResources
 variable {ι M P I D K X Response A N : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -21,7 +23,7 @@ theorem sampled_uniform
     (caps : ∀ input : Input extra M P I D K X Response A N S B, Sum.inr input ∈ support prior →
       PqxdhInitialSourceFirstResources.Caps input qPost qCheck qKnown qPre qApplication qSelector qAux)
     (qPrior : Nat) (priorBound : prior.IsTotalQueryBound qPrior) (stage : Nat) :
-    (PqxdhInitialSourceSampled.game source writer sender route decode prior stage).IsTotalQueryBound
+    (PqxdhInitialSourceSampled.game (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode prior stage).IsTotalQueryBound
       (qPrior + (64 + uniformCap qPost qPre qApplication qSelector qAux)) := by
   unfold PqxdhInitialSourceSampled.game
   rw [← RawCtxSupportedSample.sum_run prior]
@@ -36,7 +38,7 @@ theorem sampled_uniform
   cases context with
   | inl decision => trivial
   | inr input =>
-    exact one_uniform source writer sender route decode qPost qCheck qKnown qPre qApplication qSelector qAux
+    exact one_uniform (associatedData := associatedData) (completedBinding := completedBinding) source writer sender route decode qPost qCheck qKnown qPre qApplication qSelector qAux
       input.val (caps input.val input.property) _ _ stage
 
 section Actual
@@ -58,16 +60,16 @@ theorem target_uniform (selected : Choice) :
     let qPost := PqxdhInitialPreparedSourceCaps.postCap env baseImpl kem program (mapPost post (choose selected)) projected
     let qCallback := PqxdhInitialPreparedSourceCaps.callbackCap env baseImpl kem program (mapPost post (choose selected)) projected
     let qSelector := PqxdhInitialPreparedSourceCaps.selectorCap env baseImpl kem program (mapPost post (choose selected)) projected
-    (PqxdhAdaptiveCoordinateSecrecy.targetIdeal env baseImpl kem attachedVerify primitives program post targets selected).IsTotalQueryBound
+    (PqxdhAdaptiveCoordinateSecrecy.targetIdeal (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post targets selected).IsTotalQueryBound
       (qPrior + (64 + uniformCap qPost qCallback qCallback qSelector projected.qAux)) := by
-  exact sampled_uniform env.source env.recordWriter env.senderId env.route env.decode
-    (PqxdhInitialPreparedSourceInput.prior env baseImpl kem attachedVerify primitives program (mapPost post (choose selected))
+  exact sampled_uniform (associatedData := associatedData) (completedBinding := completedBinding) env.source env.recordWriter env.senderId env.route env.decode
+    (PqxdhInitialPreparedSourceInput.prior (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program (mapPost post (choose selected))
       (targets selected).owner (targets selected).number (targets selected).ancestors (targets selected).disclosed)
     _ ((targets selected).number.val - 1 + 1) _ _ _ _ _
-    (PqxdhAuthenticatedEvolvingResources.first_caps env baseImpl kem attachedVerify primitives program
+    (PqxdhAuthenticatedEvolvingResources.first_caps (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program
       (mapPost post (choose selected)) (certificate env baseImpl kem program post c (choose selected))
       (targets selected).owner (targets selected).number (targets selected).ancestors (targets selected).disclosed)
-    _ (PqxdhInitialPreparedSourceCaps.prior_uniform env baseImpl kem attachedVerify primitives program
+    _ (PqxdhInitialPreparedSourceCaps.prior_uniform (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program
       (mapPost post (choose selected)) (certificate env baseImpl kem program post c (choose selected))
       (targets selected).owner (targets selected).number (targets selected).ancestors (targets selected).disclosed) _
 

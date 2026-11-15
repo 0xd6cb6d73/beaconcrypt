@@ -45,9 +45,12 @@ letfun fs_strong_s2b_finish(server_identity:bitstring,beacon_identity:bitstring,
   let receive_chain_3 = ratchet_next(receive_chain_2) in
   let receive_chain_4 = ratchet_next(receive_chain_3) in
 
-  let associated_data = beaconcrypt_core__pqxdh__build_associated_data(
-    server_identity,
-    beacon_identity
+  let associated_data = transcript_associated_data(
+    tag_ed25519(beacon_identity),
+    sign(tag_x25519_prekey(x25519_public(beacon_prekey_secret)), beacon_identity_secret),
+    sign(tag_x25519_one_time(x25519_public(beacon_one_time_secret)), beacon_identity_secret),
+    sign(tag_mlkem768(mlkem_public(beacon_pq_secret)), beacon_identity_secret),
+    response_server_identity, server_ephemeral, kem_ciphertext, assigned_key_id
   ) in
   let expected_binding = beaconcrypt_core__pqxdh__RegistrationKeyIdBinding(
     key_id_encoding(assigned_key_id)
@@ -149,9 +152,10 @@ let FsS2bServer(obj: bitstring) =
   let send_chain_2 = ratchet_next(send_chain_1) in
   let send_chain_3 = ratchet_next(send_chain_2) in
 
-  let associated_data = beaconcrypt_core__pqxdh__build_associated_data(
-    server_identity,
-    identity
+  let associated_data = transcript_associated_data(
+    tag_ed25519(identity), signed_prekey, signed_one_time, signed_pq,
+    server_identity, x25519_public(ephemeral_secret),
+    mlkem_ciphertext(pq, kem_coins), assigned_key_id
   ) in
   
   new payload: bitstring;

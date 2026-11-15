@@ -1,5 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationNativeServerRecordFields
+import BeaconcryptCore.Computational.RegistrationWorldRecords
 
 /-! The actual Server first-record writer emits precisely the reached detached ciphertext, tag and returned commitment digest. The transcript fields and raw byte equation come from source continuations and the actual callback, without a message or root-equality premise. -/
 open OracleComp OracleSpec CoreModels Aeneas

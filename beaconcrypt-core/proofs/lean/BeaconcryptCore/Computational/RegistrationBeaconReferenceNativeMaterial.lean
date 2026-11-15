@@ -46,7 +46,7 @@ private theorem framed (work : RegistrationNativeExperiment.M n KemSK mlSource V
 /-- Each actual raw opening primitive lowers to its explicit existing World-effect program on the reached native state. -/
 theorem raw_query (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential mlSource)
     (query : RegistrationRawSealBridge.Spec.Domain) (before : State n KemSK mlSource) :
     (simulateQ (implementation setup checks wire representation created scalar credential) (rawLift query)).run before =
@@ -64,7 +64,7 @@ theorem raw_query (setup : Setup base KemSK) (checks : Checks) (wire : Registrat
 /-- The complete actual opening AST preserves the private root memo/family and uses precisely the native World and callback effects. -/
 theorem raw_program (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential mlSource)
     (work : OracleComp RegistrationRawSealBridge.Spec Value) (before : State n KemSK mlSource) :
     (simulateQ (implementation setup checks wire representation created scalar credential)
@@ -89,7 +89,7 @@ theorem raw_program (setup : Setup base KemSK) (checks : Checks) (wire : Registr
 /-- Explicit World effects in the material continuation use the same actual source interpreter and preserve the private preparation state. -/
 theorem effects_program (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential mlSource)
     (work : OracleComp (PqxdhRecordLiftInterface.EnvEffects n) Value) (before : State n KemSK mlSource) :
     (simulateQ (implementation setup checks wire representation created scalar credential)
@@ -136,7 +136,7 @@ theorem known_program (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource)
 /-- Interpreting the whole known continuation retains the complete actual native state and all optional opening/install outcomes. -/
 theorem known_source (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential mlSource)
     (owner : Nat) (sender : U64) (descriptor : RegistrationBeaconBoundSource.PublicAgreement)
     (output : PqxdhServerAuthKeySchedule.Output) (before : State n KemSK mlSource) :
@@ -160,7 +160,7 @@ theorem known_source (setup : Setup base KemSK) (checks : Checks) (wire : Regist
 /-- Actual successful preparation forces the deferred source branch to use its returned root; no independent material or root assumption is inserted. -/
 theorem admitted_known (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (credential : RegistrationNativeMldsa.Credential mlSource)
     (owner : Nat) (sender : U64) (ready : RegistrationBeaconReferenceRoot.Ready)
     (root : PqxdhSecretInputKdf.RootOutput) (before : State n KemSK mlSource)

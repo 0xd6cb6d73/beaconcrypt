@@ -11,6 +11,8 @@ The root-query cap is stated for the actual compiled root client and must includ
 open OracleComp OracleSpec ENNReal
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhAuthenticatedRootComposition
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhKemIndCca PqxdhInitializerSecrecy PqxdhJointKdfGame PqxdhChallengeSecretRouting
 open PqxdhStatefulPhase1EufCma PqxdhEd25519EufCma PqxdhJointIdentity PqxdhPrivateRootSource
 open PqxdhPhase2GeneratedDriver PqxdhAuthenticatedRootExperiment PqxdhPrivateAcceptedRoot
@@ -26,10 +28,10 @@ variable {setup : StatefulPhase1Setup baseSpec}
 
 /-- The source bridge and endpoint use the same literal native program, with no sampled-order or state projection change. -/
 theorem nativeMain_eq_endpointMain :
-    PqxdhAuthenticatedRootSource.nativeMain env baseImpl kem attachedVerify primitives program post =
+    PqxdhAuthenticatedRootSource.nativeMain (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post =
       PqxdhAuthenticatedRootCorrectness.main baseImpl kem
-        (PqxdhAuthenticatedRootEndpoint.protocolPrefix (protocol env kem attachedVerify primitives program post))
-        (nativeAfter env baseImpl kem attachedVerify primitives program post) := by
+        (PqxdhAuthenticatedRootEndpoint.protocolPrefix (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post))
+        (PqxdhAuthenticatedRootExperiment.nativeAfter (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post) := by
   rfl
 
 /-- The actual all-candidate generated native experiment has the explicit five-term authenticated-root bound. Both authentication filtering and the supported good-sample simulation are derived, with no abstract hop or honest-candidate premise. -/
@@ -45,13 +47,13 @@ theorem authenticated_root_bound
       (PqxdhPhase2SourceSchedulerBounds.ForwardedSource (baseSpec := baseSpec) PqxdhPrivatePhase1Prefix.Creating) 0)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : PqxdhJointIdentity.Forgery)
     (qRoot : Nat) (rootBound :
-      (rootReduction env.source baseImpl kem (protocol env kem attachedVerify primitives program post)).IsQueryBoundP IsRoot qRoot) :
-    let p := protocol env kem attachedVerify primitives program post
-    (actual env baseImpl kem attachedVerify primitives program post).boolDistance
+      (rootReduction env.source baseImpl kem (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post)).IsQueryBoundP IsRoot qRoot) :
+    let p := PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post
+    (PqxdhAuthenticatedRootExperiment.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post).boolDistance
       (uniformGame (rootReduction env.source baseImpl kem p)) ≤
       (PqxdhJointIdentity.advantage primitives
         (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
-          (driver env.toDriverEnvironment program) fallback ordinaryFallback)).toReal +
+          (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program) fallback ordinaryFallback)).toReal +
       Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)}[x = true].toReal +
       (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
         (PqxdhChallengeSecretRouting.reduction env.source kem p).toINDCCA).toReal +
@@ -60,14 +62,14 @@ theorem authenticated_root_bound
       ∑ index ∈ Finset.range qRoot,
         (hmacPrfRealGame hmac (indexedReduction hmac (rootReduction env.source baseImpl kem p) index)).boolDistance
           (hmacPrfRandomGame (indexedReduction hmac (rootReduction env.source baseImpl kem p) index)) := by
-  have auth := PqxdhAuthenticatedRootSource.authentication_hop env baseImpl kem attachedVerify primitives program post
+  have auth := PqxdhAuthenticatedRootSource.authentication_hop (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post
     compatible adapter noSign noCreate fallback ordinaryFallback
   rw [nativeMain_eq_endpointMain] at auth
   exact PqxdhAuthenticatedRootEndpoint.authenticated_uniform_bound env.source baseImpl kem functional
-    (protocol env kem attachedVerify primitives program post)
-    (nativeAfter env baseImpl kem attachedVerify primitives program post)
-    (PqxdhAuthenticatedRootGoodSimulation.goodSimulation env baseImpl kem attachedVerify primitives program post functional)
-    hmac sourceCorrect qRoot rootBound (actual env baseImpl kem attachedVerify primitives program post) _ auth
+    (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post)
+    (PqxdhAuthenticatedRootExperiment.nativeAfter (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post)
+    (PqxdhAuthenticatedRootGoodSimulation.goodSimulation (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post functional)
+    hmac sourceCorrect qRoot rootBound (PqxdhAuthenticatedRootExperiment.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post) _ auth
 
 /-- The same generated prefix used by the authentication reduction makes at most three signing calls and one identity-creation call under the actual caller restrictions. This counts the prefix through selection, not the arbitrary later native continuation. -/
 theorem prefix_source_caps
@@ -76,12 +78,12 @@ theorem prefix_source_caps
         PqxdhJointPhase1AcceptanceComposition.IsSigning) 0)
     (noCreate : ∀ reply, (program.main reply).IsQueryBoundP
       (PqxdhPhase2SourceSchedulerBounds.ForwardedSource (baseSpec := baseSpec) PqxdhPrivatePhase1Prefix.Creating) 0) :
-    let work := PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (driver env.toDriverEnvironment program)
+    let work := PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program)
     work.IsQueryBoundP (fun query => PqxdhJointPhase1AcceptanceComposition.IsSigning
       (PqxdhPrivateSourceCoins.translated query)) 3 ∧
     work.IsQueryBoundP (fun query => PqxdhPrivatePhase1Prefix.Creating
       (PqxdhPrivateSourceCoins.translated query)) 1 := by
-  exact PqxdhPhase2GeneratedDriverBounds.program_source_caps env.toDriverEnvironment program baseImpl kem noSign noCreate
+  exact PqxdhPhase2GeneratedDriverBounds.program_source_caps (completedBinding := completedBinding) env.toDriverEnvironment program baseImpl kem noSign noCreate
 
 /-- The same security bound is paired with the derived reached Server representation on every actual supported generated prefix. The initial representation relation is consumed, while changing peer maps and the full native state remain retained. -/
 theorem authenticated_native_root_bound
@@ -96,16 +98,16 @@ theorem authenticated_native_root_bound
       (PqxdhPhase2SourceSchedulerBounds.ForwardedSource (baseSpec := baseSpec) PqxdhPrivatePhase1Prefix.Creating) 0)
     (fallback : PqxdhDynamicIdentityRouting.DynamicForgery) (ordinaryFallback : PqxdhJointIdentity.Forgery)
     (qRoot : Nat) (rootBound :
-      (rootReduction env.source baseImpl kem (protocol env kem attachedVerify primitives program post)).IsQueryBoundP IsRoot qRoot)
+      (rootReduction env.source baseImpl kem (PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post)).IsQueryBoundP IsRoot qRoot)
     (secretIdentity : M → Pqxdh.Bytes)
     (initialMatch : PqxdhProtocolServerInvariant.RootFields env.source.crypto secretIdentity
       env.senderId env.index env.server env.initial) :
-    let p := protocol env kem attachedVerify primitives program post
-    ((actual env baseImpl kem attachedVerify primitives program post).boolDistance
+    let p := PqxdhAuthenticatedRootExperiment.protocol (associatedData := associatedData) (completedBinding := completedBinding) env kem attachedVerify primitives program post
+    ((PqxdhAuthenticatedRootExperiment.actual (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post).boolDistance
       (uniformGame (rootReduction env.source baseImpl kem p)) ≤
       (PqxdhJointIdentity.advantage primitives
         (PqxdhGeneratedPhase1Prefix.privateReduction primitives baseImpl kem setup
-          (driver env.toDriverEnvironment program) fallback ordinaryFallback)).toReal +
+          (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program) fallback ordinaryFallback)).toReal +
       Pr{let x ← simulateQ (kemAmbientImpl baseImpl) (PqxdhKemCorrectnessError.errorExperiment kem)}[x = true].toReal +
       (kem.IND_CCA_Advantage (runtimeOfImpl (kemAmbientImpl baseImpl))
         (PqxdhChallengeSecretRouting.reduction env.source kem p).toINDCCA).toReal +
@@ -115,13 +117,13 @@ theorem authenticated_native_root_bound
         (hmacPrfRealGame hmac (indexedReduction hmac (rootReduction env.source baseImpl kem p) index)).boolDistance
           (hmacPrfRandomGame (indexedReduction hmac (rootReduction env.source baseImpl kem p) index))) ∧
     ∀ result ∈ support (PqxdhPrivateSourceCoins.privateRun attachedVerify primitives 1
-      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (driver env.toDriverEnvironment program))),
+      (PqxdhGeneratedPhase1Prefix.program baseImpl kem setup (PqxdhPhase2GeneratedDriver.driver (completedBinding := completedBinding) env.toDriverEnvironment program))),
       ∃ output, result.1.map PqxdhPrivateRootSource.eraseOutput = some output ∧
         PqxdhProtocolServerInvariant.RootFields env.source.crypto secretIdentity env.senderId env.index
           env.server output.context.selection.2 := by
-  exact ⟨authenticated_root_bound env baseImpl kem attachedVerify primitives program post
+  exact ⟨authenticated_root_bound (associatedData := associatedData) (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives program post
       compatible adapter functional hmac sourceCorrect noSign noCreate fallback ordinaryFallback qRoot rootBound,
-    fun result present => PqxdhAuthenticatedRootBoundary.reached_root_fields env baseImpl kem attachedVerify primitives
+    fun result present => PqxdhAuthenticatedRootBoundary.reached_root_fields (completedBinding := completedBinding) env baseImpl kem attachedVerify primitives
       program secretIdentity initialMatch result present⟩
 
 end BeaconcryptCore.Computational.PqxdhAuthenticatedRootComposition

@@ -45,11 +45,11 @@ theorem handler (query : TypedSpec.Domain) (before : State source Platform) :
     exact RegistrationNativePlatformSecretWordOrdinary.handler_source setup checks wire source sign selectedOwner selectedAccept publicPrekey view failure allocation reserveRegistration reservePeer reserveFrame erased helper writer inside candidate (input setup.joint setup.dh seed scalar) query ordinary before
   · cases query with
     | inl coin => exact (ordinary trivial).elim
-    | inr query => cases query <;> first
-      | exact (ordinary trivial).elim
-      | exact RegistrationNativePlatformSecretWordAcceptCallback.accept setup checks wire source sign selectedOwner selectedAccept publicPrekey view failure allocation reserveRegistration reservePeer reserveFrame erased helper writer inside candidate seed scalar _ before
-      | exact RegistrationNativePlatformSecretWordBuildSource.build setup source sign view failure allocation erased helper writer reservePeer inside candidate seed scalar _ _ before
-      | exact RegistrationNativePlatformSecretWordFinishSource.finish setup wire source inside candidate seed scalar _ _ before
+    | inr query => cases query with
+      | accept packet => exact RegistrationNativePlatformSecretWordAcceptCallback.accept setup checks wire source sign selectedOwner selectedAccept publicPrekey view failure allocation reserveRegistration reservePeer reserveFrame erased helper writer inside candidate seed scalar packet before
+      | build handle application => exact RegistrationNativePlatformSecretWordBuildSource.build setup source sign view failure allocation erased helper writer reservePeer inside candidate seed scalar handle application before
+      | finish index packet => exact RegistrationNativePlatformSecretWordFinishSource.finish setup wire source inside candidate seed scalar index packet before
+      | _ => exact (ordinary trivial).elim
 
 /-- Adaptive execution preserves the entire same-run result and frontend/platform poststate after symbolic reference evaluation. -/
 theorem program (work : OracleComp TypedSpec A) (before : State source Platform) :

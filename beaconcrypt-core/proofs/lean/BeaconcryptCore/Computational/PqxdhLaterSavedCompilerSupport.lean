@@ -5,7 +5,9 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterSavedCompilerSupport
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 
 /-- Successful optional compilation returns a value from the original all-reply program. Refusal is not turned into a reply. -/
 theorem optional_support {ι Result : Type} {spec : OracleSpec.{0, 0} ι}
@@ -78,7 +80,7 @@ theorem complete_returns (property : Result → Prop) (qPost : Nat)
     (material : PqxdhOrderedChainHybrids.Material) (fits : PqxdhInitialOriginCertificates.Fits qPost context)
     (valid : PqxdhLaterSavedOutsideSupport.Returns property context) (localState : Local A N C)
     (value : Result) (after : InsState M P I D K A N C S B)
-    (supported : (some value, after) ∈ support (PqxdhLaterSavedPostCompiler.complete pre application initial selector aux source writer
+    (supported : (some value, after) ∈ support (PqxdhLaterSavedPostCompiler.complete (completedBinding := completedBinding) pre application initial selector aux source writer
       prior target nonce next mark sender route read monitor qPost context material fits localState)) :
     property value := by
   simp only [PqxdhLaterSavedPostCompiler.complete, mem_support_bind_iff] at supported
@@ -98,16 +100,16 @@ theorem source_support {State : Type}
     (context : PqxdhInitialOriginContext.Context extra M P I D K Result Bool S B)
     (cut : RawCtxForwardScan.Cut.pending context reached ∈ support
       (RawCtxForwardScan.scan PqxdhInitialOriginForwardPost.selected selected selection impl
-        (PqxdhInitialOriginForwardPost.program mark sender route read client before trace)
-        (PqxdhInitialOriginForwardPost.program_covered mark sender route read client before trace) state))
+        (PqxdhInitialOriginForwardPost.program (completedBinding := completedBinding) mark sender route read client before trace)
+        (PqxdhInitialOriginForwardPost.program_covered (completedBinding := completedBinding) mark sender route read client before trace) state))
     (material : PqxdhOrderedChainHybrids.Material) (fits : PqxdhInitialOriginCertificates.Fits qPost context)
     (localState : Local A N C) (value : Result) (after : InsState M P I D K A N C S B)
-    (completed : (some value, after) ∈ support (PqxdhLaterSavedPostCompiler.complete pre application initial selector aux source writer
+    (completed : (some value, after) ∈ support (PqxdhLaterSavedPostCompiler.complete (completedBinding := completedBinding) pre application initial selector aux source writer
       prior target nonce next mark sender route read monitor qPost context material fits localState)) :
     value ∈ support client :=
-  complete_returns pre application initial selector aux source writer prior target nonce next sender route read mark monitor
+  complete_returns (completedBinding := completedBinding) pre application initial selector aux source writer prior target nonce next sender route read mark monitor
     (fun result => result ∈ support client) qPost context material fits
-    (PqxdhLaterSavedOutsideSupport.scan_returns (fun result => result ∈ support client) mark sender route read selected selection
+    (PqxdhLaterSavedOutsideSupport.scan_returns (completedBinding := completedBinding) (fun result => result ∈ support client) mark sender route read selected selection
       impl client (fun _ supported => supported) before trace state reached context cut) localState value after completed
 
 end BeaconcryptCore.Computational.PqxdhLaterSavedCompilerSupport

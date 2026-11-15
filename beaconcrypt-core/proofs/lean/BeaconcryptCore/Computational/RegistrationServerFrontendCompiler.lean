@@ -24,7 +24,7 @@ structure State (n : Nat) where
 def erase (state : RegistrationWorldServerFrontend.State n RegistrationServerRoleBackend.State) : State n :=
   ⟨state.control, state.pin, state.consumed, state.sessions, state.global.2⟩
 
-def restore (created : PqxdhLiveServerConstruction.Created Unit) (state : Family × State n) :
+def restore (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (state : Family × State n) :
     RegistrationWorldServerFrontend.State n RegistrationServerRoleBackend.State :=
   ⟨created, state.2.control, state.2.pin, state.2.consumed, state.2.sessions, (state.1, state.2.world)⟩
 
@@ -121,10 +121,10 @@ private theorem map_state_apply {S X Y : Type} (f : X → Y) (work : StateT S Pr
 theorem restore_erase (state : RegistrationWorldServerFrontend.State n RegistrationServerRoleBackend.State) :
     restore state.created (state.global.1, erase state) = state := rfl
 
-/-- Actual ML/Ed authentication, all failed gates, cache effects and prior receipts are identical. -/
+/-- Actual attached Ed Init authentication, all failed gates, cache effects and prior receipts are identical. -/
 theorem authenticate_native (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (packet : registration.InitPacket) (before : Family × State n) :
     Prod.map id (restore created) <$>
       (RegistrationServerRootCompiler.interpret (RegistrationServerRootCompiler.family setup.hmac setup.joint setup.dh created.seed scalar)
@@ -138,7 +138,7 @@ theorem authenticate_native (setup : Setup base KemSK) (codec : Codec Reader Res
 /-- Actual owned replay lookup and complete real-family agreement preserve the entire private family and populated native state. -/
 theorem agree_native (setup : Setup base KemSK) (checks : Checks)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (packet : registration.InitPacket) (authenticated : registration.AuthenticatedInit) (before : Family × State n) :
     Prod.map id (restore created) <$>
       (RegistrationServerRootCompiler.interpret (RegistrationServerRootCompiler.family setup.hmac setup.joint setup.dh created.seed scalar)
@@ -160,7 +160,7 @@ theorem agree_native (setup : Setup base KemSK) (checks : Checks)
       RegistrationWorldServerFrontend.parameters, restore, withWorld, Prod.map, id_eq, Prod.mk.eta] using mapped
 
 /-- Consumption precedes later work and retains every actual native rejection outcome. -/
-theorem retain_native (setup : Setup base KemSK) (created : PqxdhLiveServerConstruction.Created Unit)
+theorem retain_native (setup : Setup base KemSK) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (scalar : PqxdhJointGapDh.ScalarBytes) (accepted : agreement.ServerAgreement) (before : Family × State n) :
     Prod.map id (restore created) <$>
       (RegistrationServerRootCompiler.interpret (RegistrationServerRootCompiler.family setup.hmac setup.joint setup.dh created.seed scalar)
@@ -175,7 +175,7 @@ theorem retain_native (setup : Setup base KemSK) (created : PqxdhLiveServerConst
     | mk option history => cases option <;> simp only [simulateQ_pure, ] <;> rfl
 
 private theorem pure_native {Value : Type} (family : QueryImpl RootSpec (StateT Family ProbComp))
-    (created : PqxdhLiveServerConstruction.Created Unit) (value : Value) (before : Family × State n) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (value : Value) (before : Family × State n) :
     Prod.map id (restore created) <$>
       (RegistrationServerRootCompiler.interpret family (pure value)).run before =
       pure (value, restore created before) := by
@@ -183,7 +183,7 @@ private theorem pure_native {Value : Type} (family : QueryImpl RootSpec (StateT 
   simp only [StateT.run_pure, map_pure, Prod.map, id_eq]
 
 private theorem bind_native {Value Result : Type} (family : QueryImpl RootSpec (StateT Family ProbComp))
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : StateT (State n) (OracleComp RootSpec) Value)
     (native : StateT (RegistrationWorldServerFrontend.State n RegistrationServerRoleBackend.State) ProbComp Value)
     (next : Value → StateT (State n) (OracleComp RootSpec) Result)
@@ -203,11 +203,11 @@ private theorem bind_native {Value Result : Type} (family : QueryImpl RootSpec (
   funext result
   exact rest result.1 result.2
 
-/-- The whole actual mandatory-ML accept path, including owned replay insertion before every build, is the concrete open-root client. -/
+/-- The whole actual Ed-authenticated accept path, including owned replay insertion before every build, is the concrete open-root client. -/
 theorem accept_native (setup : Setup base KemSK) (codec : Codec Reader Response) (checks : Checks)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (packet : registration.InitPacket) (before : Family × State n) :
     Prod.map id (restore created) <$>
       (RegistrationServerRootCompiler.interpret (RegistrationServerRootCompiler.family setup.hmac setup.joint setup.dh created.seed scalar)
@@ -237,7 +237,7 @@ theorem accept_native (setup : Setup base KemSK) (codec : Codec Reader Response)
 theorem complete_native (setup : Setup base KemSK) (codec : Codec Reader Response)
     (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
     (encode : registration.SignedResponseView → core.option.Option Encoded)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (consumed : peer.ConsumedRegistration) (application : Slice U8) (before : Family × State n) :
     Prod.map id (restore created) <$>
       (RegistrationServerRootCompiler.interpret (RegistrationServerRootCompiler.family setup.hmac setup.joint setup.dh created.seed scalar)
@@ -258,7 +258,7 @@ theorem complete_native (setup : Setup base KemSK) (codec : Codec Reader Respons
   | ok result => cases result <;> rfl
 
 /-- Taking a session capability before admission is part of the compiled native program. -/
-theorem take_native (setup : Setup base KemSK) (created : PqxdhLiveServerConstruction.Created Unit)
+theorem take_native (setup : Setup base KemSK) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (scalar : PqxdhJointGapDh.ScalarBytes) (handle : Nat) (before : Family × State n) :
     Prod.map id (restore created) <$>
       (RegistrationServerRootCompiler.interpret (RegistrationServerRootCompiler.family setup.hmac setup.joint setup.dh created.seed scalar)
@@ -280,7 +280,7 @@ private theorem get_bind {S Value : Type} {m : Type → Type} [Monad m] [LawfulM
 theorem build_native (setup : Setup base KemSK) (codec : Codec Reader Response)
     (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
     (encode : registration.SignedResponseView → core.option.Option Encoded)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (handle : Nat) (application : Slice U8) (before : Family × State n) :
     Prod.map id (restore created) <$>
       (RegistrationServerRootCompiler.interpret (RegistrationServerRootCompiler.family setup.hmac setup.joint setup.dh created.seed scalar)

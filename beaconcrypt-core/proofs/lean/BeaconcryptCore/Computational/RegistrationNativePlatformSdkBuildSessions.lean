@@ -62,26 +62,37 @@ private theorem initial_keeps (finish : RegistrationNativePlatformCompletionSdk.
     (control : pqxdh.ServerState) (pending : registration.ServerInitialKdf) :
     Keeps (RegistrationNativePlatformCompletionSdk.fromInitial finish control pending) :=
   bind_keeps _ _ (world_keeps _) commit_keeps
-private theorem occupancy_keeps (reserve : StateT P ProbComp Bool)
+private theorem occupancy_keeps
+    (deriveAd : RegistrationNativePlatformCompletionSdk.AdHash n (StateT P ProbComp))
+    (adKept : ∀ pending, Keeps (deriveAd pending)) (reserve : StateT P ProbComp Bool)
     (finish : RegistrationNativePlatformCompletionSdk.Completion n (StateT P ProbComp) Encoded)
     (control : pqxdh.ServerState) (lookup : peer.CompletionLookup) (occupied : Bool) :
-    Keeps (RegistrationNativePlatformCompletionSdk.afterOccupancy (StateT.lift reserve) finish control lookup occupied) := by
+    Keeps (RegistrationNativePlatformCompletionSdk.afterOccupancy deriveAd (StateT.lift reserve) finish control lookup occupied) := by
   unfold RegistrationNativePlatformCompletionSdk.afterOccupancy
   split
   · exact pure_keeps _
   · exact pure_keeps _
   · exact pure_keeps _
-  · apply bind_keeps _ _ (lift_keeps reserve)
-    intro admitted
-    split
-    · exact initial_keeps _ _ _
-    · exact pure_keeps _
-private theorem after_pin_keeps (reserve : StateT P ProbComp Bool)
+  · apply bind_keeps _ _ (adKept _)
+    intro reply
+    cases reply with
+    | fail error | div => exact pure_keeps _
+    | ok result => cases result with
+      | Err previous => exact pure_keeps _
+      | Ok initial =>
+        apply bind_keeps _ _ (lift_keeps reserve)
+        intro admitted
+        split
+        · exact initial_keeps _ _ _
+        · exact pure_keeps _
+private theorem after_pin_keeps
+    (deriveAd : RegistrationNativePlatformCompletionSdk.AdHash n (StateT P ProbComp))
+    (adKept : ∀ pending, Keeps (deriveAd pending)) (reserve : StateT P ProbComp Bool)
     (present : U64 → StateT State (StateT P ProbComp) Bool) (presentKept : ∀key,Keeps (present key))
     (finish : RegistrationNativePlatformCompletionSdk.Completion n (StateT P ProbComp) Encoded)
     (control : pqxdh.ServerState) (token : peer.ConsumedRegistration) (application : Slice U8)
     (pinResult : RustM (core.option.Option session.ServerAuthenticationPin)) :
-    Keeps (RegistrationNativePlatformCompletionSdk.afterPin (StateT.lift reserve) present finish control token application pinResult) := by
+    Keeps (RegistrationNativePlatformCompletionSdk.afterPin deriveAd (StateT.lift reserve) present finish control token application pinResult) := by
   unfold RegistrationNativePlatformCompletionSdk.afterPin
   split
   · exact pure_keeps _
@@ -97,7 +108,7 @@ private theorem after_pin_keeps (reserve : StateT P ProbComp Bool)
       · split
         · apply bind_keeps _ _ (presentKept _)
           intro occupied
-          exact occupancy_keeps reserve finish control _ occupied
+          exact occupancy_keeps deriveAd adKept reserve finish control _ occupied
         · exact pure_keeps _
 private theorem pin_keeps (coins : QueryImpl unifSpec (StateT P ProbComp)) :
     Keeps (n:=n) (RegistrationNativePlatformSourceBuild.pin coins) := by
@@ -114,11 +125,11 @@ theorem complete (coins : QueryImpl unifSpec (StateT P ProbComp)) (reserve : Sta
     (token : peer.ConsumedRegistration) (application : Slice U8) (before : State) (previous : P)
     (result : (RustM (Option (U64×Encoded))×State)×P)
     (supported : result∈support (((RegistrationNativePlatformCompletionSdk.complete
-      (RegistrationNativePlatformSourceBuild.pin coins) (StateT.lift reserve)
+      (RegistrationNativePlatformCompletionSdk.nativeAdHash coins) (RegistrationNativePlatformSourceBuild.pin coins) (StateT.lift reserve)
       (RegistrationNativePlatformCompletionSdk.nativePresent coins) finish token application).run before).run previous)) :
     result.1.2.sessions=before.sessions := by
   have kept : Keeps (RegistrationNativePlatformCompletionSdk.complete
-      (RegistrationNativePlatformSourceBuild.pin coins) (StateT.lift reserve)
+      (RegistrationNativePlatformCompletionSdk.nativeAdHash coins) (RegistrationNativePlatformSourceBuild.pin coins) (StateT.lift reserve)
       (RegistrationNativePlatformCompletionSdk.nativePresent coins) finish token application) := by
     unfold RegistrationNativePlatformCompletionSdk.complete
     apply bind_keeps _ _
@@ -128,7 +139,8 @@ theorem complete (coins : QueryImpl unifSpec (StateT P ProbComp)) (reserve : Sta
       rfl
     · intro current
       exact bind_keeps _ _ (pin_keeps coins) fun pinResult=>
-        after_pin_keeps reserve _ (fun _=>world_keeps _) finish current.control token application pinResult
+        after_pin_keeps (RegistrationNativePlatformCompletionSdk.nativeAdHash coins)
+          (fun _ => world_keeps _) reserve _ (fun _=>world_keeps _) finish current.control token application pinResult
   exact kept before previous result supported
 
 variable {KemSK : Type} {source : RegistrationNativeMldsa.Source}
@@ -138,7 +150,7 @@ theorem native_complete (coins : QueryImpl unifSpec (StateT P ProbComp)) (reserv
     (before : RegistrationNativeExperiment.State n KemSK source) (previous : P)
     (result : (RustM (Option (U64×Encoded))×RegistrationNativeExperiment.State n KemSK source)×P)
     (supported : result∈support (((RegistrationNativePlatformExperiment.server
-      (RegistrationNativePlatformCompletionSdk.complete (RegistrationNativePlatformSourceBuild.pin coins) (StateT.lift reserve)
+      (RegistrationNativePlatformCompletionSdk.complete (RegistrationNativePlatformCompletionSdk.nativeAdHash coins) (RegistrationNativePlatformSourceBuild.pin coins) (StateT.lift reserve)
         (RegistrationNativePlatformCompletionSdk.nativePresent coins) finish token application)).run before).run previous)) :
     result.1.2.server.sessions=before.server.sessions := by
   rw [BeaconcryptCore.Refinement.AdapterPublicServerSourceLens.server_run,StateT.run_map,support_map] at supported

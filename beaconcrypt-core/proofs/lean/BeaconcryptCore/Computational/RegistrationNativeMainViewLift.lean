@@ -45,7 +45,7 @@ theorem world_input (work : StateT (PqxdhRecordLiftWorld.State n) ProbComp Value
 /-- Real indexed KEM and ambient World requests ignore omitted bookkeeping while keeping all actual generated key and auxiliary state. -/
 theorem trusted_input (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (RegistrationNativeBeaconFrontend.Trusted n KemSK).Domain) :
     Stable (nativeView (mlSource := mlSource))
       (RegistrationNativeExperiment.trusted setup checks representation created mlSource query) := by
@@ -72,7 +72,7 @@ theorem trusted_input (setup : Setup base KemSK) (checks : Checks)
 /-- Any adaptive trusted source program retains its complete literal outcome under the stated Main view. -/
 theorem trusted_program (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp (RegistrationNativeBeaconFrontend.Trusted n KemSK) Value) :
     Stable (nativeView (mlSource := mlSource))
       (simulateQ (RegistrationNativeExperiment.trusted setup checks representation created mlSource) work) :=

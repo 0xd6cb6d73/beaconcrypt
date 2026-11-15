@@ -32,8 +32,8 @@ def surfaceKind : SurfaceSpec.Domain → Fin 9
 
 /-- Concrete callback costs include all source and interpreted primitive base draws. A zero read allowance means no uniform-oracle request, not zero local work. -/
 def uniformCost (caps : KemCaps) (qInit : Nat) : Fin 9 → Nat :=
-  ![1, qInit + 64 + caps.keygenCost, 32, 96 + caps.encapsCost, 64,
-    69 * max 64 caps.decapsCost, 64, 64, 0]
+  ![1, qInit + 64 + caps.keygenCost, 32, 96 + caps.encapsCost, 128,
+    64 + 69 * max 64 caps.decapsCost, 64, 64, 0]
 
 /-- The actual typed internal scheduler has the advertised per-attempt bill, preserving complete shared and owner state on every optional result. -/
 theorem handler_uniform (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -126,8 +126,8 @@ theorem surfaceExperiment_uniform (setup : Setup baseSpec KemSK) (codec : Codec 
 theorem uniform_bill (caps : KemCaps) (qInit : Nat) (budget : Fin 9 → Nat) :
     (∑ kind, uniformCost caps qInit kind * budget kind) =
       budget 0 + (qInit + 64 + caps.keygenCost) * budget 1 + 32 * budget 2 +
-      (96 + caps.encapsCost) * budget 3 + 64 * budget 4 +
-      (69 * max 64 caps.decapsCost) * budget 5 + 64 * budget 6 + 64 * budget 7 := by
+      (96 + caps.encapsCost) * budget 3 + 128 * budget 4 +
+      (64 + 69 * max 64 caps.decapsCost) * budget 5 + 64 * budget 6 + 64 * budget 7 := by
   simp [uniformCost, Fin.sum_univ_succ, Nat.add_assoc]
 
 end BeaconcryptCore.Computational.PqxdhRegistrationSchedule

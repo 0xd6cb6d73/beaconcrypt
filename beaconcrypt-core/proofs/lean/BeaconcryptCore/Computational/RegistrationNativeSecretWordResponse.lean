@@ -7,6 +7,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
+set_option warningAsError true
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativeSecretWordResponse
 open RegistrationNativeSecretWordMessage (Message ServerReady ServerState)
@@ -47,6 +48,17 @@ def EncodedFrom (wire : RegistrationNativeWire.Wire) (ready : ServerReady)
   RegistrationNativeResponseCiphertext.EncodedFrom wire.encodeResponse ready.agreement.pending.kem_ciphertext bytes ∧
     RegistrationNativeResponseIdentity.EncodedFrom wire.encodeResponse pin.binding.identity_public_key bytes
 
+private theorem hash_receipt (pending : registration.ServerAdHash) (initial : registration.ServerInitialKdf)
+    (supported : .ok (.Ok initial) ∈ support (RegistrationNativeSecretWordServerMaterial.adHash (n := n) pending)) :
+    ∃ digest, pending.resume (.Some digest) = .ok (.Ok initial) := by
+  cases requested : pending.request with
+  | fail error | div => simp [RegistrationNativeSecretWordServerMaterial.adHash, requested] at supported
+  | ok request =>
+      simp only [RegistrationNativeSecretWordServerMaterial.adHash, requested, mem_support_bind_iff] at supported
+      obtain ⟨digest, _, returned⟩ := supported
+      simp only [mem_support_pure_iff] at returned
+      exact ⟨RegistrationAuthenticationShared.digestArray digest, returned.symm⟩
+
 /-- Every successful one-use completion encodes the same stored token ciphertext and current lookup pin. -/
 theorem complete (wire : RegistrationNativeWire.Wire) (reservePeer : Bool)
     (ready : ServerReady) (application : Slice U8) (before after : ServerState)
@@ -72,32 +84,40 @@ theorem complete (wire : RegistrationNativeWire.Wire) (reservePeer : Bool)
         | fail error | div => simp only [resumed] at continued; cases continued
         | ok result => cases result with
           | Err previous => simp only [resumed] at continued; cases continued
-          | Ok initial =>
-              rw [resumed] at continued
-              dsimp only at continued
-              split at continued
-              · simp only [mem_support_bind_iff] at continued
-                obtain ⟨published, reached, finished⟩ := continued
-                obtain ⟨actual, successful, encoded⟩ := finish_success published before after keyId bytes finished
-                rw [successful] at reached
-                have fields := admitted wire before.control (RegistrationBoundKeySchedule.publicInitial initial)
-                  ready.reference actual reached
-                have initialized : registration.begin_server_completion before.control before.pin
-                    (if (show Bool from occupied) then .Occupied else .Available)
-                    (RegistrationNativeSecretWordServerMaterial.token ready).agreement application = .ok (.Ok initial) := by
-                  exact (BeaconcryptCore.Refinement.PeerOwnership.completion_lookup_resume
-                    (peer.CompletionLookup.mk before.control before.pin
-                      (RegistrationNativeSecretWordServerMaterial.token ready) application allocated) occupied).symm.trans resumed
-                have ct := RegistrationNativeResponseCipherCandidate.initial_ciphertext _ _ _ _ _ _ initialized
-                have identity := RegistrationNativeResponseCandidate.initial_identity _ _ _ _ _ _ initialized
-                change RegistrationNativeResponseCiphertext.EncodedFrom wire.encodeResponse
-                    initial.candidate.kem_ciphertext actual.encoded ∧
-                  RegistrationNativeResponseIdentity.EncodedFrom wire.encodeResponse
-                    initial.candidate.server_identity_public_key actual.encoded at fields
-                rw [ct, identity, encoded] at fields
-                exact fields
-              · simp only [mem_support_pure_iff] at continued
-                cases continued
+          | Ok selected =>
+              simp only [resumed, mem_support_bind_iff] at continued
+              obtain ⟨hashed, hashCalled, continued⟩ := continued
+              cases hashed with
+              | fail error | div => simp at continued
+              | ok answer => cases answer with
+                | Err previous => simp at continued
+                | Ok initial =>
+                    obtain ⟨digest, hashResumed⟩ := hash_receipt selected initial hashCalled
+                    dsimp only at continued
+                    split at continued
+                    · simp only [mem_support_bind_iff] at continued
+                      obtain ⟨published, reached, finished⟩ := continued
+                      obtain ⟨actual, successful, encoded⟩ := finish_success published before after keyId bytes finished
+                      rw [successful] at reached
+                      have fields := admitted wire before.control (RegistrationBoundKeySchedule.publicInitial initial)
+                        ready.reference actual reached
+                      have initialized : BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission before.control before.pin
+                          (if (show Bool from occupied) then .Occupied else .Available)
+                          (RegistrationNativeSecretWordServerMaterial.token ready).agreement application initial := by
+                        refine ⟨selected, digest, ?_, hashResumed⟩
+                        exact (BeaconcryptCore.Refinement.PeerOwnership.completion_lookup_resume
+                          (peer.CompletionLookup.mk before.control before.pin
+                            (RegistrationNativeSecretWordServerMaterial.token ready) application allocated) occupied).symm.trans resumed
+                      have ct := RegistrationNativeResponseCipherCandidate.initial_ciphertext _ _ _ _ _ _ initialized
+                      have identity := RegistrationNativeResponseCandidate.initial_identity _ _ _ _ _ _ initialized
+                      change RegistrationNativeResponseCiphertext.EncodedFrom wire.encodeResponse
+                          initial.candidate.kem_ciphertext actual.encoded ∧
+                        RegistrationNativeResponseIdentity.EncodedFrom wire.encodeResponse
+                          initial.candidate.server_identity_public_key actual.encoded at fields
+                      rw [ct, identity, encoded] at fields
+                      exact fields
+                    · simp only [mem_support_pure_iff] at continued
+                      cases continued
       · simp only [mem_support_pure_iff] at supported
         cases supported
 

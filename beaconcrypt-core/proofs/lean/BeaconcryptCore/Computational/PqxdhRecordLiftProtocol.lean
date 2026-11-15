@@ -9,6 +9,7 @@ open beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 
 namespace BeaconcryptCore.Computational.PqxdhRecordLiftProtocol
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 open PqxdhRecordLiftInterface
 open PqxdhRecordLiftWorldCompiler (StoredKernel Peer Server Phase Owner Label LabeledKernel)
 variable {n : Nat}
@@ -147,7 +148,7 @@ def initialControl : Control n := control PqxdhRecordLiftWorldCompiler.initial
 def initialPrivate : Private n := privateState PqxdhRecordLiftWorldCompiler.initial
 
 /-- Duplicate initialization cannot reset the source control. Existing constructor peers are imported as caller-known kernels. -/
-noncomputable def initializeServer (created : PqxdhLiveServerConstruction.Created Unit) : Client n Unit :=
+noncomputable def initializeServer (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) : Client n Unit :=
   fun state => match state.server with
   | some _ => pure ((), state)
   | none => pure ((), { state with server := some (PqxdhRecordLiftWorldCompiler.Server.fromKnown
@@ -713,7 +714,7 @@ theorem initialize_factor {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader R
     (policy : PqxdhRecordLiftWorldCompiler.LookupPolicy n)
     (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
     (codec : PqxdhServerAuthExperiment.Codec Reader Response)
-    (created : PqxdhLiveServerConstruction.Created Unit) (state : PqxdhRecordLiftWorldCompiler.State n) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (state : PqxdhRecordLiftWorldCompiler.State n) :
     (simulateQ (interpreter policy setup codec) ((initializeServer created).run (control state))).run (privateState state) =
       splitResult <$> (PqxdhRecordLiftWorldCompiler.initializeServer created).run state := by
   cases existing : state.server <;>
@@ -929,7 +930,7 @@ theorem run_source {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response
     (PqxdhRecordLiftInterface.program env setup.source.crypto codec serverKid bounds mode adversary)
 
 abbrev RunResult (n : Nat) (E X : Type) :=
-  (Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit × (X × PqxdhDeploymentSecrecy.Ledger) × E) ×
+  (Option (PqxdhRegistrationJointServerBirth.ClientCreated (Std.Array Std.U8 151#usize) × (X × PqxdhDeploymentSecrecy.Ledger) × E) ×
     Control n) × Private n
 
 /-- This record-analysis view reads only the actual result, world-owned ledger and produced frames. It reads no seed, label, primitive counter, table or environment state. -/
@@ -945,13 +946,13 @@ def analysis {E X : Type} (result : RunResult n E X) :=
 
 /-- The record-analysis projection agrees definitionally with the reviewed compiler view. -/
 theorem observed_splitResult {E X : Type}
-    (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+    (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated (Std.Array Std.U8 151#usize) ×
       (X × PqxdhDeploymentSecrecy.Ledger) × E) × PqxdhRecordLiftWorldCompiler.State n) :
     observed (splitResult result) = PqxdhRecordLiftWorldCompiler.observed result := rfl
 
 /-- Raw-attempt ghosts agree as well; actual primitive work remains interpreter-private. -/
 theorem analysis_splitResult {E X : Type}
-    (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated Unit ×
+    (result : Option (PqxdhRegistrationJointServerBirth.ClientCreated (Std.Array Std.U8 151#usize) ×
       (X × PqxdhDeploymentSecrecy.Ledger) × E) × PqxdhRecordLiftWorldCompiler.State n) :
     analysis (splitResult result) = PqxdhRecordLiftWorldCompiler.analysis result := rfl
 

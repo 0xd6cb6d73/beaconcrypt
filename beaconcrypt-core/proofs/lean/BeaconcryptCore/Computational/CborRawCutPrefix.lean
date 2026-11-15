@@ -5,6 +5,7 @@ import BeaconcryptCore.Computational.CborRawPoolCompiler
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.CborRawCutPrefix
 open PqxdhServerAuthExperiment (Setup Codec Checks)
 open PqxdhDeploymentInterface (Spec)
@@ -105,9 +106,9 @@ theorem stopped_scan (selected : Nat) (work : OracleComp Spec X) (index : Nat)
         (PqxdhRegistrationJointKemCommands.program setup (CborRawCompile.sourceCodec wire parse) checks
           identityIndex (setup.joint.publicKeys seed)
           (scan ((simulateQ (CborRawCompile.compileImpl setup wire parse) work).run memory) index)
-          (encodeState setup state).owners state.shared)).run).run (state.pool.1, routerOf state.pool.2) =
+          ((encodeState setup state).owners, (encodeState setup state).inits) state.shared)).run).run (state.pool.1, routerOf state.pool.2) =
       (fun value => (some (((CborRawCompileCut.cut (CborRawCompile.compileImpl setup wire parse)
-          CborRawCompileCut.logAccept value.1, (encodeState setup value.2).owners), value.2.shared)),
+          CborRawCompileCut.logAccept value.1, ((encodeState setup value.2).owners, (encodeState setup value.2).inits)), value.2.shared)),
           (value.2.pool.1, routerOf value.2.pool.2))) <$>
         (simulateQ (source setup wire parse checks seed identityIndex pairs)
           ((simulateQ (CborRawCompile.compileImpl setup wire parse) (scanCE work index)).run memory)).run state := by

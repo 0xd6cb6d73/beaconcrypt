@@ -17,7 +17,7 @@ private theorem map_apply {S A B : Type} (f : A → B) (work : StateT S ProbComp
 
 /-- Every actual successful Init source writer returned the concrete source serializer's literal vector. -/
 theorem source_writer (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E))
-    (view : registration.SignedInitView) (before : Platform)
+    (view : registration.InitView) (before : Platform)
     (result : RustM (core.option.Option (alloc.vec.Vec U8)) × Platform)
     (supported : result ∈ support ((simulateQ (RegistrationNativePlatformConcreteSource.writer reserve)
       (AdapterRegistrationWriterRequestExtraction.encodeInit
@@ -43,7 +43,7 @@ theorem source_writer (reserve : Usize → StateT Platform ProbComp (core.result
 
 /-- Public coin forwarding cannot change the concrete writer's successful returned vector or shared platform poststate. -/
 theorem public_writer (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E))
-    (view : registration.SignedInitView) (before : Platform)
+    (view : registration.InitView) (before : Platform)
     (result : RustM (core.option.Option (alloc.vec.Vec U8)) × Platform)
     (supported : result ∈ support ((simulateQ
       (RegistrationNativePlatformPublicFrontend.writer (n := n) (KemSK := KemSK) (RegistrationNativePlatformConcreteSource.writer reserve))
@@ -65,7 +65,7 @@ variable {source : RegistrationNativeMldsa.Source} {Auxiliary : Type}
 
 /-- The literal public bundle encoder retains the concrete source vector under the full owner/environment/platform state. -/
 theorem encoder (reserve : Usize → StateT Platform ProbComp (core.result.Result Unit E))
-    (view : registration.SignedInitView) (owners : RegistrationNativeBeaconFrontend.State source)
+    (view : registration.InitView) (owners : RegistrationNativeBeaconFrontend.State source)
     (env : RegistrationWorldAgreementCompiler.EnvState Auxiliary) (previous : Platform)
     (result : ((RustM (core.option.Option (alloc.vec.Vec U8)) × RegistrationNativeBeaconFrontend.State source) ×
       RegistrationWorldAgreementCompiler.EnvState Auxiliary) × Platform)
@@ -79,13 +79,13 @@ theorem encoder (reserve : Usize → StateT Platform ProbComp (core.result.Resul
   exact public_writer reserve view previous actual called bytes ((congrArg (fun output => output.1.1.1) same).trans returned)
 
 /-- The actual concrete source vector and mathematical wire encoder have exactly the same bytes. -/
-theorem init_encoding (view : registration.SignedInitView) :
+theorem init_encoding (view : registration.InitView) :
     RegistrationNativePlatformConcreteSource.wire.encodeInit view =
       .Some (TranscriptAuthParts.absSlice (RegistrationNativeSourceWriterReadback.initVector view)) := by
   exact RegistrationNativeConcreteCodec.init_bytes view
 
 /-- Source serialization readback derives the packet directly; no caller-supplied codec property is used. -/
-theorem decoded (view : registration.SignedInitView) :
+theorem decoded (view : registration.InitView) :
     RegistrationNativeWire.readInit RegistrationNativePlatformConcreteSource.wire
       (TranscriptAuthParts.absSlice (RegistrationNativeSourceWriterReadback.initVector view)) =
       some (RegistrationNativeWire.initPacket view) :=

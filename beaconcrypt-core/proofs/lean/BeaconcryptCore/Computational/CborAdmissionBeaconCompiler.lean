@@ -103,8 +103,9 @@ theorem step_exact (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
     case some kernel =>
       obtain ⟨owner, control, associatedData, old, found, phase, mergedPhase⟩ :=
         observed_some memory.copies native index kernel selected
-      have visible := (PqxdhDeploymentCompileInvariant.good_inv setup codec memory.copies native good.nativeGood).beaconVisible
-        index owner control associatedData old found phase
+      obtain ⟨transcript, digest, visible, _, _⟩ :=
+        (PqxdhDeploymentCompileInvariant.good_inv setup codec memory.copies native good.nativeGood).beaconVisible
+          index owner control associatedData old found phase
       simp only [visible]
       have loadedGood := CborAdmissionPreload.preload_owner_good setup codec memory.copies native
         good.nativeGood index kernel ⟨owner, control, associatedData, old, found, phase⟩
@@ -120,7 +121,7 @@ theorem step_exact (setup : Setup baseSpec KemSK) (codec : Codec Reader Response
         PqxdhDeploymentCompileRecords.mergeOwner_identityKeyId]
       split_ifs with fits
       case pos =>
-        have old := PqxdhDeploymentCompileRecords.beacon_record setup codec checks seed index (.inl plaintext)
+        have old := PqxdhDeploymentCompileRecords.beacon_record_cached setup codec checks seed index (.inl plaintext)
           { memory.copies with owners := Function.update memory.copies.owners index (some kernel) }
           native loadedGood.count loadedGood.copied
           (PqxdhDeploymentCompileInvariant.good_inv setup codec _ native loadedGood).beaconVisible
@@ -161,8 +162,9 @@ theorem good_support (setup : Setup baseSpec KemSK) (codec : Codec Reader Respon
     case some kernel =>
       obtain ⟨owner, control, associatedData, old, found, phase, mergedPhase⟩ :=
         observed_some memory.copies native index kernel selected
-      have visible := (PqxdhDeploymentCompileInvariant.good_inv setup codec memory.copies native good.nativeGood).beaconVisible
-        index owner control associatedData old found phase
+      obtain ⟨transcript, digest, visible, _, _⟩ :=
+        (PqxdhDeploymentCompileInvariant.good_inv setup codec memory.copies native good.nativeGood).beaconVisible
+          index owner control associatedData old found phase
       have loadedGood := CborAdmissionPreload.preload_owner_good setup codec memory.copies native
         good.nativeGood index kernel ⟨owner, control, associatedData, old, found, phase⟩
       simp only [selected, visible] at supported

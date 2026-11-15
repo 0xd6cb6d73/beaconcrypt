@@ -164,6 +164,9 @@ private theorem syntax_program (selected : Bool) (reserve : StateT Platform Prob
     · intro result
       exact ih result.1 (later result.1) result.2
 
+attribute [local irreducible] RegistrationNativePlatformServerOpenSyntax.accept
+  RegistrationNativePlatformServerOpenControl.afterPin
+
 /-- Literal corrected OPEN acceptance performs no physical append, including its actual stateful reservation and every failed prefix. -/
 theorem accept (selected : Bool) (reserve : StateT Platform ProbComp Bool)
     (setup : Setup base KemSK) (checks : Checks) (verify : MldsaTranscriptAuth.Verify) (packet : registration.InitPacket)

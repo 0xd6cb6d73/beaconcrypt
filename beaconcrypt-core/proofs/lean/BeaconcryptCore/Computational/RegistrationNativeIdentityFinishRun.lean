@@ -17,7 +17,7 @@ variable {source : RegistrationNativeMldsa.Source}
 /-- The whole actual finishing operation equals the original native source operation after private credential realization; all authentication/agreement/opening failures keep their reached effects. -/
 theorem finish_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat) (packet : Option registration.ResponsePacket) (seeds : List PqxdhJointIdentity.IdentitySeed)
     (before : NewState n KemSK Auxiliary source) (prior : before.2.identities.seeds = seeds)
     (owned : RegistrationNativeIdentityRealization.Owned setup.joint before.2.identities before.1.1) :
@@ -52,7 +52,7 @@ theorem finish_source (setup : Setup base KemSK) (checks : Checks)
 /-- Complete actual finishing execution preserves the existing private identity prefix on every return path. -/
 theorem finish_keeps (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat) (packet : Option registration.ResponsePacket) :
     Keeps (n := n) (Auxiliary := Auxiliary) (source := source) setup checks representation created
       (RegistrationNativeIdentityFrontend.finish setup source wire index packet) := by

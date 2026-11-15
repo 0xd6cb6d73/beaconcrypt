@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.Computational.RegistrationServerFrontendCompiler
 
-/-! The adaptive native Server API is compiled to a concrete related-root distinguishing client. Accept and build keep the actual ML gates, populated binding, private replay and one-use session order. Record, hash and adversary coin queries use the unchanged instrumented World. The family probability endpoint below is one composition hop; hidden-seed/key-schedule and selected-fresh event reductions remain separate. -/
+/-! The adaptive native Server API is compiled to a concrete related-root distinguishing client. Accept keeps the actual attached Ed Init gates; build keeps mandatory Server ML response signing. Completed binding, private replay and one-use session order are retained. Record, hash and adversary coin queries use the unchanged instrumented World. The family probability endpoint below is one composition hop; hidden-seed/key-schedule and selected-fresh event reductions remain separate. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -73,7 +73,7 @@ noncomputable def native (setup : Setup base KemSK) (codec : Codec Reader Respon
   | .inr (.hash bytes) => nativeWorld (ordinary setup codec route (.inr (.inl (.inr (.hash bytes)))))
 
 private theorem world_native {Value : Type} (setup : Setup base KemSK)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (work : StateT (Local n) ProbComp Value) (before : Family × State n) :
     Prod.map id (restore created) <$>
       (RegistrationServerRootCompiler.interpret (RegistrationServerRootCompiler.family setup.hmac setup.joint setup.dh created.seed scalar)
@@ -89,7 +89,7 @@ theorem query_native (setup : Setup base KemSK) (codec : Codec Reader Response) 
     (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
     (encode : registration.SignedResponseView → core.option.Option Encoded)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (query : (Spec Encoded).Domain) (before : Family × State n) :
     Prod.map id (restore created) <$>
       (RegistrationServerRootCompiler.interpret (RegistrationServerRootCompiler.family setup.hmac setup.joint setup.dh created.seed scalar)
@@ -110,7 +110,7 @@ theorem program_native (setup : Setup base KemSK) (codec : Codec Reader Response
     (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
     (encode : registration.SignedResponseView → core.option.Option Encoded)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (work : OracleComp (Spec Encoded) Result) (before : Family × State n) :
     Prod.map id (restore created) <$>
       (RegistrationServerRootCompiler.interpret (RegistrationServerRootCompiler.family setup.hmac setup.joint setup.dh created.seed scalar)
@@ -149,7 +149,7 @@ noncomputable def realProfile (setup : Setup base KemSK) (codec : Codec Reader R
   let seed ← PqxdhJointIdentity.sampleSeed
   let scalar ← PqxdhJointGapDh.sampleScalar
   let publicValue := PqxdhJointGapDh.challenge setup.joint setup.dh seed scalar
-  let created := PqxdhLiveServerConstruction.initialized (P := Unit) setup.joint identityIndex serverKid .generated seed
+  let created := PqxdhLiveServerConstruction.initialized (P := Std.Array Std.U8 151#usize) setup.joint identityIndex serverKid .generated seed
   let before ← initial publicValue
   let result ← (simulateQ (native setup codec checks route verify sign encode correct scalar) (adversary publicValue)).run
     (restore created (PqxdhJointDhExtractFamily.empty, before))
@@ -190,7 +190,7 @@ private theorem client_native (setup : Setup base KemSK) (codec : Codec Reader R
     (sign : registration.MldsaSigningRequest → ProbComp RegistrationSigningShared.SignReply)
     (encode : registration.SignedResponseView → core.option.Option Encoded)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
-    (created : PqxdhLiveServerConstruction.Created Unit) (scalar : PqxdhJointGapDh.ScalarBytes)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (scalar : PqxdhJointGapDh.ScalarBytes)
     (initial : PqxdhJointGapDh.PublicChallenge → ProbComp (State n))
     (adversary : PqxdhJointGapDh.PublicChallenge → OracleComp (Spec Encoded) Result)
     (event : PqxdhJointGapDh.PublicChallenge → Result → State n → Bool)
@@ -231,7 +231,7 @@ theorem profile_real (setup : Setup base KemSK) (codec : Codec Reader Response) 
   apply congrArg (fun continuation => PqxdhJointGapDh.sampleScalar >>= continuation)
   funext scalar
   exact client_native setup codec checks route verify sign encode correct
-    (PqxdhLiveServerConstruction.initialized (P := Unit) setup.joint identityIndex serverKid .generated seed)
+    (PqxdhLiveServerConstruction.initialized (P := Std.Array Std.U8 151#usize) setup.joint identityIndex serverKid .generated seed)
     scalar initial adversary event _
 
 /-- The real native mandatory-ML Server profile pays exactly the constructed related-input family advantage to its ideal-root profile. This endpoint makes no smallness assumption and does not replace later key-schedule, hidden installation, or fresh-event record bounds. -/

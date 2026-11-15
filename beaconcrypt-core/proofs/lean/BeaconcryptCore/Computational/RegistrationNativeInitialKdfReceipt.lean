@@ -19,7 +19,7 @@ variable {n : Nat} {ι KemSK Auxiliary Reader Encoded V κ : Type} {base : Oracl
 variable {source : RegistrationNativeMldsa.Source} {spec : OracleSpec κ}
 
 private theorem lower_simulate (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (implementation : QueryImpl spec (M n KemSK source RegistrationServerRoleBackend.State)) (work : OracleComp spec V) :
     lower setup checks representation created (simulateQ implementation work) =
       simulateQ (fun query => lower setup checks representation created (implementation query)) work := by
@@ -46,7 +46,7 @@ theorem server (setup : Setup base KemSK) (codec : PqxdhServerAuthExperiment.Cod
 
 /-- Actual lowered Beacon record success consumes the concrete initial reply before its unchanged source receive loop. -/
 theorem beacon (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (initial : registration.BeaconInitialKdf) (completed : registration.CompletedBeacon) (before after : Local n KemSK source)
     (supported : (.ok (.Ok completed), after) ∈ support ((lower setup checks representation created
       (simulateQ (RegistrationNativeBeaconFrontend.record setup wire) (RegistrationBeaconRecordExecutor.fromInitial initial))).run before)) :
@@ -67,7 +67,7 @@ theorem beacon (setup : Setup base KemSK) (checks : Checks) (wire : Registration
 
 /-- Successful original Beacon first-record begin exposes its actual root-bearing initializer and same-cut concrete initial response. -/
 theorem beacon_begin (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (capability : agreement.BeaconAgreement) (completed : registration.CompletedBeacon) (before after : Local n KemSK source)
     (supported : (.ok (.Ok completed), after) ∈ support ((lower setup checks representation created
       (simulateQ (RegistrationNativeBeaconFrontend.record setup wire) (RegistrationBeaconRecordExecutor.begin capability))).run before)) :

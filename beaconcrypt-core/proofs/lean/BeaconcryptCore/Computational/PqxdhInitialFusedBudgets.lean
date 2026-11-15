@@ -11,6 +11,7 @@ set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialFusedBudgets
 open PqxdhInitialFusedOwner
 open PqxdhBeaconPhase2Bounds (simulate_total native_raw_total)
+variable (completedBinding : session.CompletedRegistrationBinding)
 variable {I D K X Response Shared : Type}
 
 def IsTailService : (PqxdhInitialFusedBeacon.Spec Response Shared).Domain → Prop
@@ -66,12 +67,12 @@ theorem tail_total (decode : RawCtxReceive.FrameDecoder)
 /-- Every active or inactive attempted fused owner has at most68 actual callbacks, including all failures. -/
 theorem owner_total (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
     (state : PqxdhBeaconPhase2Preparation.State I D K) :
-    (owner (X := X) (Response := Response) (Shared := Shared) decode raw state).IsTotalQueryBound 68 := by
+    (owner (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared) decode raw state).IsTotalQueryBound 68 := by
   cases active : state.beacon.phase with
   | initSent control prekey oneTime kem =>
       simp only [owner, active]
       apply isTotalQueryBound_bind (n₁ := 13) (n₂ := 55)
-      · apply simulate_total preLift _ 13 (PqxdhPhase2SharedBounds.prepare_total _ _ _ _ _ _)
+      · apply simulate_total preLift _ 13 (PqxdhPhase2SharedBounds.prepare_total (completedBinding := completedBinding) _ _ _ _ _ _)
         exact fun query => (isQueryBoundP_true_iff _ _).mp
           ((isQueryBoundP_query_iff (spec := Spec I D K X Response Shared) (p := fun _ => True) (.inl query) 1).mpr (by decide))
       · intro pending
@@ -114,7 +115,7 @@ theorem tail_service (decode : RawCtxReceive.FrameDecoder)
 /-- The complete actual owner attempts at most one response-only initializer service, independently of all arbitrary replies. -/
 theorem owner_service (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
     (state : PqxdhBeaconPhase2Preparation.State I D K) :
-    (owner (X := X) (Response := Response) (Shared := Shared) decode raw state).IsQueryBoundP IsService 1 := by
+    (owner (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared) decode raw state).IsQueryBoundP IsService 1 := by
   cases active : state.beacon.phase with
   | initSent control prekey oneTime kem =>
       simp only [owner, active]
@@ -137,13 +138,13 @@ theorem owner_service (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
 /-- The actual collection's single decapsulation bound survives the fused tail; no response-only or raw callback can add a decapsulation. -/
 theorem owner_decapsulation (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes)
     (state : PqxdhBeaconPhase2Preparation.State I D K) :
-    (owner (X := X) (Response := Response) (Shared := Shared) decode raw state).IsQueryBoundP IsDecapsulation 1 := by
+    (owner (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared) decode raw state).IsQueryBoundP IsDecapsulation 1 := by
   cases active : state.beacon.phase with
   | initSent control prekey oneTime kem =>
       simp only [owner, active]
       apply isQueryBoundP_bind (n := 1) (m := 0)
       · apply RawCtxSourceOpen.simulate_bound preLift PqxdhPhase2SharedBounds.IsDecapsulation IsDecapsulation _ 1
-          (PqxdhPhase2SharedBounds.prepare_decapsulation _ _ _ _ _ _)
+          (PqxdhPhase2SharedBounds.prepare_decapsulation (completedBinding := completedBinding) _ _ _ _ _ _)
         exact fun query => (isQueryBoundP_query_iff (spec := Spec I D K X Response Shared)
           (p := IsDecapsulation) (.inl query) _).mpr (by
             intro selected

@@ -9,6 +9,7 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeRetainedSequence
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhJointKdfGame RawCtxSelectedParentTable PqxdhInitialNativeRetained
 variable {ι M P I D K X Response Shared A N C Result Origin : Type} {extra : OracleSpec ι} {S B : Nat}
 
@@ -92,7 +93,7 @@ theorem origin_kernel (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMix
     (result : ((RawCtxProtocolReveals.SourceSpec S B).Range query ×
       (PqxdhInitialPostContext.NativeFront M P I D K S B × PqxdhInitialOriginPost.Trace Origin S B)) × RetainedState A N C)
     (supported : result ∈ support ((simulateQ (retained source writer prior external)
-      ((PqxdhInitialOriginPost.compiler mark sender route decode (.inl (.inl query))).run (front, trace))).run state))
+      ((PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) mark sender route decode (.inl (.inl query))).run (front, trace))).run state))
     (owner : RawCtxProtocolReveals.Owner S B) (number : Std.U64)
     (recorded : (owner, number) ∈ RawCtxPublishedRecords.record query result.1.1) :
     ∃ kernel, RawCtxGenericRoleFamily.selectedKernel owner front.roles.1 = some kernel ∧
@@ -115,19 +116,19 @@ theorem send_kernel (source : FixedHkdfSha512NoSaltSource) (writer : RawCtxMixed
     (after : (PqxdhInitialPostContext.NativeFront M P I D K S B × PqxdhInitialOriginPost.Trace Origin S B) × RetainedState A N C)
     (record : RawCtxSourceSend.Encrypted)
     (supported : ((some record, after.1), after.2) ∈ support ((simulateQ (retained source writer prior external)
-      ((simulateQ (PqxdhInitialOriginPost.compiler mark sender route decode)
+      ((simulateQ (PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) mark sender route decode)
         (PqxdhRecordConfidentialityChallenge.send owner plaintext)).run (front, trace))).run state)) :
     ∃ kernel, RawCtxGenericRoleFamily.selectedKernel owner front.roles.1 = some kernel ∧
       record.sequence.val = kernel.control.send_sequence.val + 1 := by
   cases owner with
   | server index peer =>
-      exact origin_kernel source writer prior external mark sender route decode
+      exact origin_kernel (completedBinding := completedBinding) source writer prior external mark sender route decode
         (.inl (.inl ⟨index, .inl (plaintext, peer)⟩)) front trace state ((some record, after.1), after.2)
         (by simpa only [PqxdhRecordConfidentialityChallenge.send,
           PqxdhRecordConfidentialityChallenge.sendRequest, simulateQ_spec_query] using supported)
         (.server index peer) record.sequence (by simp [RawCtxPublishedRecords.record])
   | beacon index =>
-      exact origin_kernel source writer prior external mark sender route decode
+      exact origin_kernel (completedBinding := completedBinding) source writer prior external mark sender route decode
         (.inl (.inr (.inl ⟨index, .inl plaintext⟩))) front trace state ((some record, after.1), after.2)
         (by simpa only [PqxdhRecordConfidentialityChallenge.send,
           PqxdhRecordConfidentialityChallenge.sendRequest, simulateQ_spec_query] using supported)
@@ -150,7 +151,7 @@ theorem challenge_kernel (source : FixedHkdfSha512NoSaltSource) (writer : RawCtx
     (returned : after.1.1.reply = some (some record))
     (supported : (((reply, after.1.1), after.1.2), after.2) ∈ support
       ((simulateQ (retained source writer prior external)
-        ((simulateQ (PqxdhInitialOriginPost.compiler mark sender route decode)
+        ((simulateQ (PqxdhInitialOriginPost.compiler (completedBinding := completedBinding) mark sender route decode)
           ((PqxdhRecordConfidentialityChallenge.handler owner number bit (.inr (left, right))).run current)).run
             (front, trace))).run state)) :
     ∃ kernel, RawCtxGenericRoleFamily.selectedKernel owner front.roles.1 = some kernel ∧
@@ -160,7 +161,7 @@ theorem challenge_kernel (source : FixedHkdfSha512NoSaltSource) (writer : RawCtx
   obtain ⟨actual, reached, same⟩ := supported
   have value : actual.1.1 = some record := Option.some.inj
     ((congrArg (fun value => value.1.1.2.reply) same).trans returned)
-  exact send_kernel source writer prior external mark sender route decode owner (if bit then right else left)
+  exact send_kernel (completedBinding := completedBinding) source writer prior external mark sender route decode owner (if bit then right else left)
     front trace state (actual.1.2, actual.2) record (by simpa only [← value, Prod.eta] using reached)
 
 end BeaconcryptCore.Computational.PqxdhLaterChallengeRetainedSequence

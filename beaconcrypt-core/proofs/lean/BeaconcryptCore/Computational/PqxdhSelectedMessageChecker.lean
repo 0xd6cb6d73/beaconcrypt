@@ -7,6 +7,7 @@ open RustM beaconcrypt_core ratchet ratchet.concrete
 open OracleComp OracleSpec
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhSelectedMessageChecker
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhSecretInputKdf PqxdhFullSecretInputKdf PqxdhOrderedChainHybrids RawCtxFreshChainCut
 open PqxdhJointKdfGame PqxdhInitialBeaconAmbient PqxdhInitialParentObserverCompiler PqxdhInitialParentObserver
 variable {ι I D K X Response Shared A N C : Type} {extra : OracleSpec ι}
@@ -61,7 +62,7 @@ theorem returned_zero {M P Result Origin Context : Type} {S B : Nat}
     (disclosed : List RatchetChain) (state : State A N C) (candidates : List RootOutput)
     (depth : continuation.depth context.1 = some 0)
     (result : PqxdhInitialParentStoppedHop.Trace M P I D K A N C Result Origin S B)
-    (supported : result ∈ support (PqxdhInitialPrivateCheckedFreshness.nativeRun source writer mark sender route decode
+    (supported : result ∈ support (PqxdhInitialPrivateCheckedFreshness.nativeRun (completedBinding := completedBinding) source writer mark sender route decode
       continuation context target output disclosed state candidates)) :
     result.1.2 = [RawCtxSelectedChain.Slot.hidden, .known (concreteChain (material output).1)] := by
   simp only [PqxdhInitialPrivateCheckedFreshness.nativeRun, PqxdhInitialParentStoppedHop.program,
@@ -82,7 +83,7 @@ theorem decision_factor {M P Result Origin Context : Type} {S B : Nat}
     (depth : continuation.depth context.1 = some 0)
     (gate : PqxdhInitialParentStoppedHop.Trace M P I D K A N C Result Origin S B → Prop)
     (result : PqxdhInitialParentStoppedHop.Trace M P I D K A N C Result Origin S B)
-    (supported : result ∈ support (PqxdhInitialPrivateCheckedFreshness.nativeRun source writer mark sender route decode
+    (supported : result ∈ support (PqxdhInitialPrivateCheckedFreshness.nativeRun (completedBinding := completedBinding) source writer mark sender route decode
       continuation context target output disclosed state candidates))
     (history : RawCtxSelectedMessageFreshness.History S B)
     (historyEq : result.1.1.2.1.roles.2 = RawCtxSelectedMessageFreshness.interpretHistory (material output).1 history) :
@@ -91,7 +92,7 @@ theorem decision_factor {M P Result Origin Context : Type} {S B : Nat}
         RawCtxLiveLineage.FreshValues (concreteChain target :: earlier) (RawCtxSelectedMessageFreshness.known disclosed history) ∧
         concreteChain (material output).1 ∉ RawCtxSelectedMessageFreshness.known disclosed history := by
   simp only [PqxdhInitialPrivateCheckedFreshness.actualDecision, decide_eq_true_eq]
-  rw [returned_zero source writer output mark sender route decode continuation context target disclosed state candidates depth result supported,
+  rw [returned_zero (completedBinding := completedBinding) source writer output mark sender route decode continuation context target disclosed state candidates depth result supported,
     historyEq]
   change (gate result ∧ RawCtxLiveLineage.Fresh
     ([concreteChain target, concreteChain (material output).1] ++ earlier) disclosed

@@ -25,7 +25,7 @@ def Valid (setup : Setup base KemSK) (before : Native) : Prop :=
 /-- Every actual source path retains the three independently proved key/control invariants. -/
 theorem path (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     {before after : Native} {calls : List (Call RegistrationNativeRawAdapter.TypedSpec Native)}
     (actual : Path (RegistrationNativeExperiment.handler setup checks wire route representation created source credential) before calls after)
     (prior : Valid setup before) : Valid setup after := by

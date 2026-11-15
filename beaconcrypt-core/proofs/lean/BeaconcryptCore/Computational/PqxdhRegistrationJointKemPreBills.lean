@@ -16,7 +16,7 @@ noncomputable def sourceScan (setup : PqxdhServerAuthExperiment.Setup baseSpec K
     (created : PqxdhRegistrationJointServerBirth.ClientCreated Unit) (occurrence : Nat) :=
   PqxdhRegistrationJointKemCut.scan setup
     (PqxdhRegistrationJointKemEncapsulation.commands setup codec checks created.server.server.metadata.identityIndex
-      created.publicIdentity client [] (PqxdhRegistrationJointInitializedAccept.initial created)) occurrence
+      created.publicIdentity client ([], fun _ => none) (PqxdhRegistrationJointInitializedAccept.initial created)) occurrence
 
 /-- The literal initialized source scan supplies all private and native uniform bounds on arbitrary intermediate replies. -/
 theorem scan_bills (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
@@ -31,7 +31,7 @@ theorem scan_bills (setup : PqxdhServerAuthExperiment.Setup baseSpec KemSK)
       (PqxdhRegistrationJointOpenUniform.total caps budget + caps.encapsCost * budget (.inl 3)) :=
   PqxdhRegistrationJointKemCutInterpreted.scan_bills setup caps bounded _ _ _ _ _ occurrence
     (PqxdhRegistrationJointKemProgramBills.commands setup codec checks caps bounded
-      created.server.server.metadata.identityIndex created.publicIdentity client budget certified []
+      created.server.server.metadata.identityIndex created.publicIdentity client budget certified ([], fun _ => none)
       (PqxdhRegistrationJointInitializedAccept.initial created))
 
 /-- Full actual prephase uniform allowance, including failed initialization and all locally reserved pairs even when never used. The selected KEM key generator belongs separately to the ordinary challenger. -/

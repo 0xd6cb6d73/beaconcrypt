@@ -63,13 +63,13 @@ theorem accepted_cleared {Reader E : Type} (binding : pqxdh.ServerBinding)
   simp only [cleared, pending, ridSame, PqxdhProtocolAcceptance.verified]
 
 /-- Erasing the temporary input leaves every byte read by the existing response builder unchanged. -/
-theorem cleared_tail {Metadata PeerMetadata Consumed : Type}
+theorem cleared_tail (associatedData : Std.Array Std.U8 151#usize) {Metadata PeerMetadata Consumed : Type}
     (source : FixedHkdfSha512NoSaltSource) (original : pqxdh.PendingServerRegistration)
     (root : RootOutput) (data : Option Pqxdh.Bytes) (metadata : PeerMetadata)
     (state : PqxdhServerRegistrationPublication.State Metadata PeerMetadata Consumed) :
-    PqxdhServerRegistrationPublication.build source (cleared original) root data metadata state =
-      PqxdhServerRegistrationPublication.build source original root data metadata state :=
-  PqxdhRegistrationInputs.build_used_congr source (cleared original) original rfl root data metadata state
+    PqxdhServerRegistrationPublication.build (associatedData := associatedData) source (cleared original) root data metadata state =
+      PqxdhServerRegistrationPublication.build (associatedData := associatedData) source original root data metadata state :=
+  PqxdhRegistrationInputs.build_used_congr (associatedData := associatedData) source (cleared original) original rfl root data metadata state
 
 /-- The complete reconstructed token uses no materialized static-DH output, including its registration-ID field. -/
 theorem pending_materialized (joint : Primitives) (seed : IdentitySeed) {Reader E : Type}

@@ -32,7 +32,7 @@ theorem accepted {E R Error : Type} (coins : QueryImpl unifSpec (StateT Platform
     (writer : QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) NativeM)
     (generator : rand_core.TryCryptoRng R Error)
     (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (current : RegistrationNativeExperiment.State n KemSK source ×Platform)
     (before : RegistrationNativePlatformPublicAdapterTokenLineage.Carrier (R:=R) setup view views created credential current)
     (input : Slice U8)

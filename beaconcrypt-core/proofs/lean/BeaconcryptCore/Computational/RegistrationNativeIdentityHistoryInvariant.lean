@@ -28,7 +28,7 @@ def Good (joint : PqxdhJointIdentity.Primitives) (index handle : Nat)
 
 def Preserves (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index handle : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index handle : Nat)
     (work : RegistrationNativeIdentityFrontend.M n KemSK Auxiliary source Value) : Prop :=
   ∀ before result, Good setup.joint index handle before →
     result ∈ support (runNew setup checks representation created work before) → Good setup.joint index handle result.2
@@ -51,7 +51,7 @@ theorem at_fields (index handle : Nat) (before after : RegistrationNativeIdentit
 
 theorem pure_preserves (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index handle : Nat) (value : Value) :
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index handle : Nat) (value : Value) :
     Preserves (n := n) (Auxiliary := Auxiliary) (source := source) setup checks representation created index handle (pure value) := by
   intro before result prior supported
   simp only [runNew, StateT.run_pure, simulateQ_pure, map_pure, mem_support_pure_iff] at supported
@@ -60,7 +60,7 @@ theorem pure_preserves (setup : Setup base KemSK) (checks : Checks)
 
 theorem bind_preserves (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index handle : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index handle : Nat)
     (work : RegistrationNativeIdentityFrontend.M n KemSK Auxiliary source Value)
     (next : Value → RegistrationNativeIdentityFrontend.M n KemSK Auxiliary source Other)
     (first : Preserves setup checks representation created index handle work)
@@ -73,7 +73,7 @@ theorem bind_preserves (setup : Setup base KemSK) (checks : Checks)
 
 theorem ambient_preserves (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index handle : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index handle : Nat)
     (work : StateT (RegistrationWorldAgreementCompiler.EnvState Auxiliary)
       (OracleComp (RegistrationNativeIdentityFrontend.Ambient n KemSK)) Value) :
     Preserves (source := source) setup checks representation created index handle (liftAmbient work) := by
@@ -93,7 +93,7 @@ theorem fields_preserve (joint : PqxdhJointIdentity.Primitives) (index handle : 
 
 theorem fields_run (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeIdentityFrontend.M n KemSK Auxiliary source Value)
     (metadata : RegistrationNativeIdentityMetadata.Preserves work)
     (before : NewState n KemSK Auxiliary source) (result : Value × NewState n KemSK Auxiliary source)
@@ -107,7 +107,7 @@ theorem fields_run (setup : Setup base KemSK) (checks : Checks)
 
 theorem phase_preserves (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (index handle target : Nat)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (index handle target : Nat)
     (phase : RegistrationNativeBeaconFrontend.Phase) :
     Preserves (n := n) (Auxiliary := Auxiliary) (source := source) setup checks representation created index handle
       (RegistrationNativeIdentityFrontend.updatePhase target phase) := by

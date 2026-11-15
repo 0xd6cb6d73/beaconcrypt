@@ -17,7 +17,7 @@ variable {source : RegistrationNativeMldsa.Source}
 /-- Actual finish execution privately realizes exactly the original complete native finish operation, retaining all mutable source fields and optional failures. -/
 theorem finish_source (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (wire : RegistrationNativeWire.Wire) (index : Nat) (packet : Option registration.ResponsePacket)
     (current : RegistrationNativeIdentityFrontend.State source)
     (env : RegistrationWorldAgreementCompiler.EnvState Auxiliary)

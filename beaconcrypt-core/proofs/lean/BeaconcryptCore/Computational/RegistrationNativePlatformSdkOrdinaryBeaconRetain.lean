@@ -39,7 +39,7 @@ theorem snapshot_true (current : Native×Platform) (self : beaconcrypt_public_wr
     PqxdhRecordLiftWorld.produce,List.map_nil,List.append_nil]
 
 noncomputable def put (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created Unit)
+    (joint : PqxdhJointIdentity.Primitives) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (credential : RegistrationNativeMldsa.Credential source) (current : Native×Platform)
     (before : Carrier (R:=R) view views joint created credential current)
     (self : beaconcrypt_public_wrapper.beacon.Beacon) (worldOwner : Nat) (invoked : Bool) :
@@ -56,7 +56,7 @@ noncomputable def put (view : AdapterPublicWrapperState.MaterialView source KemS
 
 noncomputable def strong (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (current : Native×Platform) (before : StrongCarrier (R:=R) setup view views created credential current)
     (self : beaconcrypt_public_wrapper.beacon.Beacon) (worldOwner : Nat) (invoked : Bool) :
     StrongCarrier (R:=R) setup view views created credential (snapshot current self worldOwner invoked).committed :=
@@ -64,7 +64,7 @@ noncomputable def strong (setup : PqxdhServerAuthExperiment.Setup base KemSK)
 
 theorem strong_objects (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (view : AdapterPublicWrapperState.MaterialView source KemSK) (views : AdapterPublicWrapperStorage.Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (current : Native×Platform) (before : StrongCarrier (R:=R) setup view views created credential current)
     (self : beaconcrypt_public_wrapper.beacon.Beacon) (worldOwner : Nat) (invoked : Bool) :
     (strong setup view views created credential current before self worldOwner invoked).base.objects=

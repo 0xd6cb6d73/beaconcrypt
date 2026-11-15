@@ -30,7 +30,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 763
+                  "Deduplicated": 762
                 }
               }
             }
@@ -42,8 +42,8 @@
             ]
           }
         ],
-        "switch": 252,
-        "tail_sha256": "3b2712f8a2b95dde5089295fce3678896a3313ade09bdd0ff9d17fbc34d14601"
+        "switch": 246,
+        "tail_sha256": "426a6560692d6890300433da2cb89945eb95578c9348b9ad67179b4dc601f7ec"
       },
       {
         "branches": 2,
@@ -74,7 +74,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 763
+                  "Deduplicated": 762
                 }
               }
             }
@@ -86,8 +86,8 @@
             ]
           }
         ],
-        "switch": 231,
-        "tail_sha256": "2f9c4771001af73a00a46cd024b150e5576769f051ddb09b900d4c72dde545d5"
+        "switch": 225,
+        "tail_sha256": "4534db7280bb2fe14c70989fa2a16fd681d2866d8125de3066918f8632488943"
       },
       {
         "branches": 2,
@@ -118,7 +118,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 763
+                  "Deduplicated": 762
                 }
               }
             }
@@ -130,8 +130,8 @@
             ]
           }
         ],
-        "switch": 208,
-        "tail_sha256": "c1f0f5f74fd6eea58f30648cdfa979021401355ad90e5cb403351c3421926dc7"
+        "switch": 202,
+        "tail_sha256": "780614565bbf661e950a222515469a007a442ad880bfb79b15178e14d875e270"
       },
       {
         "branches": 2,
@@ -162,7 +162,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 763
+                  "Deduplicated": 762
                 }
               }
             }
@@ -174,8 +174,8 @@
             ]
           }
         ],
-        "switch": 188,
-        "tail_sha256": "c1f0f5f74fd6eea58f30648cdfa979021401355ad90e5cb403351c3421926dc7"
+        "switch": 182,
+        "tail_sha256": "780614565bbf661e950a222515469a007a442ad880bfb79b15178e14d875e270"
       },
       {
         "branches": 2,
@@ -206,7 +206,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 763
+                  "Deduplicated": 762
                 }
               }
             }
@@ -218,8 +218,8 @@
             ]
           }
         ],
-        "switch": 342,
-        "tail_sha256": "704ce6191c7276e680b81e74abf18f8b8258a2ac8944daf46adf6d47fa4d138a"
+        "switch": 336,
+        "tail_sha256": "a27dce9efc1b22b47538ea3bee7dfa626f466aedc5cd096d9b301d24e212b34e"
       },
       {
         "branches": 2,
@@ -250,7 +250,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 763
+                  "Deduplicated": 762
                 }
               }
             }
@@ -262,8 +262,8 @@
             ]
           }
         ],
-        "switch": 649,
-        "tail_sha256": "c795e8f4a8f0120c1bba64143147b05c53d5515767beb64ef52ef1b717849170"
+        "switch": 643,
+        "tail_sha256": "ae74c0b7545a2871b8bc4670152238f2d6bb654940a28e818d4d09deff7bec49"
       },
       {
         "branches": 2,
@@ -294,7 +294,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 763
+                  "Deduplicated": 762
                 }
               }
             }
@@ -306,8 +306,8 @@
             ]
           }
         ],
-        "switch": 648,
-        "tail_sha256": "c795e8f4a8f0120c1bba64143147b05c53d5515767beb64ef52ef1b717849170"
+        "switch": 642,
+        "tail_sha256": "ae74c0b7545a2871b8bc4670152238f2d6bb654940a28e818d4d09deff7bec49"
       },
       {
         "branches": 2,
@@ -338,7 +338,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 763
+                  "Deduplicated": 762
                 }
               }
             }
@@ -350,8 +350,8 @@
             ]
           }
         ],
-        "switch": 624,
-        "tail_sha256": "9b59c0c0007a50c349f29acfdc1971df53b2d676a411af35fa2fe893c0734dde"
+        "switch": 618,
+        "tail_sha256": "ecba287fc935420f69e0723a9c538922d343a2537888ef77a8f4e0ec407c8e7a"
       },
       {
         "branches": 2,
@@ -382,7 +382,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 763
+                  "Deduplicated": 762
                 }
               }
             }
@@ -394,8 +394,8 @@
             ]
           }
         ],
-        "switch": 621,
-        "tail_sha256": "9b59c0c0007a50c349f29acfdc1971df53b2d676a411af35fa2fe893c0734dde"
+        "switch": 615,
+        "tail_sha256": "ecba287fc935420f69e0723a9c538922d343a2537888ef77a8f4e0ec407c8e7a"
       },
       {
         "branches": 2,
@@ -426,7 +426,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 763
+                  "Deduplicated": 762
                 }
               }
             }
@@ -438,8 +438,8 @@
             ]
           }
         ],
-        "switch": 649,
-        "tail_sha256": "c795e8f4a8f0120c1bba64143147b05c53d5515767beb64ef52ef1b717849170"
+        "switch": 643,
+        "tail_sha256": "ae74c0b7545a2871b8bc4670152238f2d6bb654940a28e818d4d09deff7bec49"
       },
       {
         "branches": 2,
@@ -470,7 +470,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 763
+                  "Deduplicated": 762
                 }
               }
             }
@@ -482,8 +482,8 @@
             ]
           }
         ],
-        "switch": 648,
-        "tail_sha256": "c795e8f4a8f0120c1bba64143147b05c53d5515767beb64ef52ef1b717849170"
+        "switch": 642,
+        "tail_sha256": "ae74c0b7545a2871b8bc4670152238f2d6bb654940a28e818d4d09deff7bec49"
       },
       {
         "branches": 2,
@@ -514,7 +514,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 763
+                  "Deduplicated": 762
                 }
               }
             }
@@ -526,8 +526,8 @@
             ]
           }
         ],
-        "switch": 624,
-        "tail_sha256": "9b59c0c0007a50c349f29acfdc1971df53b2d676a411af35fa2fe893c0734dde"
+        "switch": 618,
+        "tail_sha256": "ecba287fc935420f69e0723a9c538922d343a2537888ef77a8f4e0ec407c8e7a"
       },
       {
         "branches": 2,
@@ -558,7 +558,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 763
+                  "Deduplicated": 762
                 }
               }
             }
@@ -570,8 +570,8 @@
             ]
           }
         ],
-        "switch": 621,
-        "tail_sha256": "9b59c0c0007a50c349f29acfdc1971df53b2d676a411af35fa2fe893c0734dde"
+        "switch": 615,
+        "tail_sha256": "ecba287fc935420f69e0723a9c538922d343a2537888ef77a8f4e0ec407c8e7a"
       },
       {
         "branches": 2,
@@ -600,8 +600,8 @@
             ]
           }
         ],
-        "switch": 11454,
-        "tail_sha256": "77f9802eec77ff4cdb2a1b7e6f4fbb09a4b765d2e1f616d694fff02dbe1109ab"
+        "switch": 12088,
+        "tail_sha256": "f257d05105addb1d73484a25ff4a0a28584fc250bb7cd14f821a683b858f4ddc"
       },
       {
         "branches": 2,
@@ -630,8 +630,8 @@
             ]
           }
         ],
-        "switch": 11416,
-        "tail_sha256": "77f9802eec77ff4cdb2a1b7e6f4fbb09a4b765d2e1f616d694fff02dbe1109ab"
+        "switch": 12049,
+        "tail_sha256": "f257d05105addb1d73484a25ff4a0a28584fc250bb7cd14f821a683b858f4ddc"
       },
       {
         "branches": 2,
@@ -660,8 +660,8 @@
             ]
           }
         ],
-        "switch": 11380,
-        "tail_sha256": "22152102f647c8e7c6e46adb62b2cc43adc5ed8111c85133c8e6ccb9cfdab7ed"
+        "switch": 12012,
+        "tail_sha256": "1150aad1979a3231c30375c3e03b85a3ab53b34899af2d1006a87d6a01ad65fe"
       },
       {
         "branches": 2,
@@ -690,8 +690,8 @@
             ]
           }
         ],
-        "switch": 11344,
-        "tail_sha256": "e6e164726309eeeaceebe79ac987d1c8e95b3662d6241b4710d6b7a152cc9238"
+        "switch": 11975,
+        "tail_sha256": "76d350f094353cad66f068b0697b316a8ea0bae9f536d62132a3910f35196e11"
       },
       {
         "branches": 2,
@@ -720,8 +720,8 @@
             ]
           }
         ],
-        "switch": 11310,
-        "tail_sha256": "e6e164726309eeeaceebe79ac987d1c8e95b3662d6241b4710d6b7a152cc9238"
+        "switch": 11937,
+        "tail_sha256": "ed1eab07f82cf508c6cef4f1752f711a3206a031f8a585fa58bf4d27101eff18"
       },
       {
         "branches": 2,
@@ -750,8 +750,8 @@
             ]
           }
         ],
-        "switch": 11273,
-        "tail_sha256": "2b4bd17ca79623a37999e4019bf1c27ac09abd04e2ab2f5c404be2a769066657"
+        "switch": 11903,
+        "tail_sha256": "ed1eab07f82cf508c6cef4f1752f711a3206a031f8a585fa58bf4d27101eff18"
       },
       {
         "branches": 2,
@@ -780,8 +780,8 @@
             ]
           }
         ],
-        "switch": 11237,
-        "tail_sha256": "ddfcb986e54fdb2391749467135645827e11de18235700698fb53a42e07217ef"
+        "switch": 11865,
+        "tail_sha256": "e861eda2cea9194514c5c6ed081c85355c859a42bf9993d67ef37b3b14665d7d"
       },
       {
         "branches": 2,
@@ -810,8 +810,8 @@
             ]
           }
         ],
-        "switch": 11178,
-        "tail_sha256": "c96e2c941f558d755d42669a86db5f167120f79681721320c1ef167f840fd79c"
+        "switch": 11828,
+        "tail_sha256": "8a7ff23f964f2409a8f7955aae14e72fed22a10ec652e769a7466840afced110"
       },
       {
         "branches": 2,
@@ -840,8 +840,8 @@
             ]
           }
         ],
-        "switch": 11120,
-        "tail_sha256": "da98b8c0d42d996e48fa8f918daa71316bbc8b6f27426bba03ebe0be4bc4c53f"
+        "switch": 11767,
+        "tail_sha256": "c23921620696552aa334a710411c4823903292de01e820a06f1a990967577db8"
       },
       {
         "branches": 2,
@@ -870,8 +870,8 @@
             ]
           }
         ],
-        "switch": 11018,
-        "tail_sha256": "f1e0376a8db4ab7a6aba0f2f26b528f84c5d45e2259f0a06d59a5a70e7ec3e0e"
+        "switch": 11707,
+        "tail_sha256": "07efad7950b6c07014c603f09857317d96280be8c4773f7fbdcfde62c1e94fa5"
       },
       {
         "branches": 2,
@@ -900,8 +900,8 @@
             ]
           }
         ],
-        "switch": 10938,
-        "tail_sha256": "aef883cb6e521957228d178590c64514c842ff1354addfc8ab17e65d1a31d984"
+        "switch": 11601,
+        "tail_sha256": "43c9883a15c0482ec36e25b712b5cc18f221e16fb6659bb017724b9d24b87acb"
       },
       {
         "branches": 2,
@@ -930,8 +930,8 @@
             ]
           }
         ],
-        "switch": 10792,
-        "tail_sha256": "977fb21837884ee66f0433c4d00bb70a0d3b656b7e56b6f64662752272722ddf"
+        "switch": 11518,
+        "tail_sha256": "25fdb47412d7162bbbad979c3f5c7b9eda235ed17d621f285f4a266ff8a8ebe7"
       },
       {
         "branches": 2,
@@ -960,8 +960,8 @@
             ]
           }
         ],
-        "switch": 10601,
-        "tail_sha256": "e3fc143dcd3b6aebf0c0f8665122567ce4b00dde907f3ca67779c90bbc1fbf21"
+        "switch": 11366,
+        "tail_sha256": "12bb2c3171b52135b86249b8e3e365554f24773abfdf5862decd8bb996901cb4"
       },
       {
         "branches": 2,
@@ -990,8 +990,8 @@
             ]
           }
         ],
-        "switch": 10343,
-        "tail_sha256": "e3fc143dcd3b6aebf0c0f8665122567ce4b00dde907f3ca67779c90bbc1fbf21"
+        "switch": 11167,
+        "tail_sha256": "ba4fa761e4982d03df0ceb8ae8547f3c341568d70c87273124acf7e7c4038718"
       },
       {
         "branches": 2,
@@ -1020,8 +1020,8 @@
             ]
           }
         ],
-        "switch": 9688,
-        "tail_sha256": "534da61abcb25d2eb05d643a878df59e0c3de79263b52477ad2ab8754a830246"
+        "switch": 10898,
+        "tail_sha256": "ba4fa761e4982d03df0ceb8ae8547f3c341568d70c87273124acf7e7c4038718"
       },
       {
         "branches": 2,
@@ -1050,8 +1050,8 @@
             ]
           }
         ],
-        "switch": 6814,
-        "tail_sha256": "2f21f704aaaef696a86c98fd6b42a6975fbfe05e68bb2d784a6b0fd7d2b40432"
+        "switch": 10214,
+        "tail_sha256": "3ea4c13d29f580a437990f2f2fb384e6a0a167883891f091140fb3a14c2af6e0"
       },
       {
         "branches": 2,
@@ -1080,8 +1080,8 @@
             ]
           }
         ],
-        "switch": 9521,
-        "tail_sha256": "534da61abcb25d2eb05d643a878df59e0c3de79263b52477ad2ab8754a830246"
+        "switch": 7212,
+        "tail_sha256": "31a9cdfbb684b2c2c06eeeb27beee29f99a8f3cb0a4a8043d2a45bdfeb5fcbe2"
       },
       {
         "branches": 2,
@@ -1110,8 +1110,38 @@
             ]
           }
         ],
-        "switch": 9521,
-        "tail_sha256": "534da61abcb25d2eb05d643a878df59e0c3de79263b52477ad2ab8754a830246"
+        "switch": 10040,
+        "tail_sha256": "3ea4c13d29f580a437990f2f2fb384e6a0a167883891f091140fb3a14c2af6e0"
+      },
+      {
+        "branches": 2,
+        "function": [
+          {
+            "Ident": [
+              "beaconcrypt",
+              0
+            ]
+          },
+          {
+            "Ident": [
+              "server",
+              0
+            ]
+          },
+          {
+            "Impl": {
+              "Trait": 0
+            }
+          },
+          {
+            "Ident": [
+              "build_registration_response",
+              0
+            ]
+          }
+        ],
+        "switch": 10040,
+        "tail_sha256": "3ea4c13d29f580a437990f2f2fb384e6a0a167883891f091140fb3a14c2af6e0"
       },
       {
         "branches": 2,
@@ -1142,7 +1172,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -1154,8 +1184,8 @@
             ]
           }
         ],
-        "switch": 11499,
-        "tail_sha256": "3c9c616d86c9dcc6932a1432ce0f3809fb64470962bb957eb3172636a4ed392a"
+        "switch": 12134,
+        "tail_sha256": "28a231e1019b1c90d68a07b349c41638529424b3d04e534ee28e0bddb9677b81"
       },
       {
         "branches": 2,
@@ -1186,7 +1216,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -1198,8 +1228,8 @@
             ]
           }
         ],
-        "switch": 11702,
-        "tail_sha256": "10e96271837d38f49b2e2331ce2ed32743d191b480478ffa42202073e57a55c6"
+        "switch": 12337,
+        "tail_sha256": "54305d71ea0aaf6e14cb2e853f11e00139f4b168d5de6371219523286b33c0c0"
       },
       {
         "branches": 2,
@@ -1230,7 +1260,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -1242,8 +1272,8 @@
             ]
           }
         ],
-        "switch": 11698,
-        "tail_sha256": "10e96271837d38f49b2e2331ce2ed32743d191b480478ffa42202073e57a55c6"
+        "switch": 12333,
+        "tail_sha256": "54305d71ea0aaf6e14cb2e853f11e00139f4b168d5de6371219523286b33c0c0"
       },
       {
         "branches": 3,
@@ -1274,7 +1304,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -1286,8 +1316,8 @@
             ]
           }
         ],
-        "switch": 21727,
-        "tail_sha256": "30f8e41e120f61c23d5c7d9a81452f1dd775b91641cf0cf0623d5826e8d7415f"
+        "switch": 22280,
+        "tail_sha256": "080383cc22e17b3545fcb1b8d950f1a084886594faef6cb5ed85c629b2d5d528"
       },
       {
         "branches": 2,
@@ -1318,7 +1348,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -1330,8 +1360,8 @@
             ]
           }
         ],
-        "switch": 16769,
-        "tail_sha256": "30f8e41e120f61c23d5c7d9a81452f1dd775b91641cf0cf0623d5826e8d7415f"
+        "switch": 17363,
+        "tail_sha256": "080383cc22e17b3545fcb1b8d950f1a084886594faef6cb5ed85c629b2d5d528"
       },
       {
         "branches": 2,
@@ -1362,7 +1392,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -1374,8 +1404,8 @@
             ]
           }
         ],
-        "switch": 16713,
-        "tail_sha256": "de1ed59867e5fbd027f4e40374a2bd45d71bd82776524e477318df4d9f5e987a"
+        "switch": 17307,
+        "tail_sha256": "74a0f31ce2ca01a77750263a7f1c0d7f6a9381c36c8c7ca2501daf290418825c"
       },
       {
         "branches": 2,
@@ -1406,7 +1436,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -1418,8 +1448,8 @@
             ]
           }
         ],
-        "switch": 16651,
-        "tail_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9"
+        "switch": 17245,
+        "tail_sha256": "98e8aecd82d821a322e745be433a62145c9d2e97f4884566474664aa0cd757e2"
       },
       {
         "branches": 3,
@@ -1450,7 +1480,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -1462,8 +1492,8 @@
             ]
           }
         ],
-        "switch": 16554,
-        "tail_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9"
+        "switch": 17148,
+        "tail_sha256": "98e8aecd82d821a322e745be433a62145c9d2e97f4884566474664aa0cd757e2"
       },
       {
         "branches": 2,
@@ -1494,7 +1524,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -1506,8 +1536,8 @@
             ]
           }
         ],
-        "switch": 14958,
-        "tail_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9"
+        "switch": 15552,
+        "tail_sha256": "98e8aecd82d821a322e745be433a62145c9d2e97f4884566474664aa0cd757e2"
       },
       {
         "branches": 2,
@@ -1538,7 +1568,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -1550,8 +1580,8 @@
             ]
           }
         ],
-        "switch": 21715,
-        "tail_sha256": "6d81d9b7a13489ca4b1553a756132690be69f1c0b5f7622196e814d862fe50b0"
+        "switch": 22268,
+        "tail_sha256": "89e2f40a4b2633623afef5cc41b068f9adc75cdd2417d3c7a52ceab0513a9ace"
       },
       {
         "branches": 2,
@@ -1582,7 +1612,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -1594,8 +1624,8 @@
             ]
           }
         ],
-        "switch": 21653,
-        "tail_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333"
+        "switch": 22206,
+        "tail_sha256": "b326146509e2cead1d1c37ffcf94ae3a889eebb0a36edef7808e479580c78691"
       },
       {
         "branches": 3,
@@ -1626,7 +1656,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -1638,8 +1668,8 @@
             ]
           }
         ],
-        "switch": 21556,
-        "tail_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333"
+        "switch": 22109,
+        "tail_sha256": "b326146509e2cead1d1c37ffcf94ae3a889eebb0a36edef7808e479580c78691"
       },
       {
         "branches": 2,
@@ -1670,7 +1700,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -1682,8 +1712,8 @@
             ]
           }
         ],
-        "switch": 19960,
-        "tail_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333"
+        "switch": 20513,
+        "tail_sha256": "b326146509e2cead1d1c37ffcf94ae3a889eebb0a36edef7808e479580c78691"
       },
       {
         "branches": 3,
@@ -1714,7 +1744,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -1726,8 +1756,8 @@
             ]
           }
         ],
-        "switch": 21727,
-        "tail_sha256": "30f8e41e120f61c23d5c7d9a81452f1dd775b91641cf0cf0623d5826e8d7415f"
+        "switch": 22280,
+        "tail_sha256": "080383cc22e17b3545fcb1b8d950f1a084886594faef6cb5ed85c629b2d5d528"
       },
       {
         "branches": 2,
@@ -1758,7 +1788,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -1770,8 +1800,8 @@
             ]
           }
         ],
-        "switch": 16769,
-        "tail_sha256": "30f8e41e120f61c23d5c7d9a81452f1dd775b91641cf0cf0623d5826e8d7415f"
+        "switch": 17363,
+        "tail_sha256": "080383cc22e17b3545fcb1b8d950f1a084886594faef6cb5ed85c629b2d5d528"
       },
       {
         "branches": 2,
@@ -1802,7 +1832,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -1814,8 +1844,8 @@
             ]
           }
         ],
-        "switch": 16713,
-        "tail_sha256": "de1ed59867e5fbd027f4e40374a2bd45d71bd82776524e477318df4d9f5e987a"
+        "switch": 17307,
+        "tail_sha256": "74a0f31ce2ca01a77750263a7f1c0d7f6a9381c36c8c7ca2501daf290418825c"
       },
       {
         "branches": 2,
@@ -1846,7 +1876,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -1858,8 +1888,8 @@
             ]
           }
         ],
-        "switch": 16651,
-        "tail_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9"
+        "switch": 17245,
+        "tail_sha256": "98e8aecd82d821a322e745be433a62145c9d2e97f4884566474664aa0cd757e2"
       },
       {
         "branches": 3,
@@ -1890,7 +1920,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -1902,8 +1932,8 @@
             ]
           }
         ],
-        "switch": 16554,
-        "tail_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9"
+        "switch": 17148,
+        "tail_sha256": "98e8aecd82d821a322e745be433a62145c9d2e97f4884566474664aa0cd757e2"
       },
       {
         "branches": 2,
@@ -1934,7 +1964,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -1946,8 +1976,8 @@
             ]
           }
         ],
-        "switch": 14958,
-        "tail_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9"
+        "switch": 15552,
+        "tail_sha256": "98e8aecd82d821a322e745be433a62145c9d2e97f4884566474664aa0cd757e2"
       },
       {
         "branches": 2,
@@ -1978,7 +2008,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -1990,8 +2020,8 @@
             ]
           }
         ],
-        "switch": 21715,
-        "tail_sha256": "6d81d9b7a13489ca4b1553a756132690be69f1c0b5f7622196e814d862fe50b0"
+        "switch": 22268,
+        "tail_sha256": "89e2f40a4b2633623afef5cc41b068f9adc75cdd2417d3c7a52ceab0513a9ace"
       },
       {
         "branches": 2,
@@ -2022,7 +2052,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -2034,8 +2064,8 @@
             ]
           }
         ],
-        "switch": 21653,
-        "tail_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333"
+        "switch": 22206,
+        "tail_sha256": "b326146509e2cead1d1c37ffcf94ae3a889eebb0a36edef7808e479580c78691"
       },
       {
         "branches": 3,
@@ -2066,7 +2096,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -2078,8 +2108,8 @@
             ]
           }
         ],
-        "switch": 21556,
-        "tail_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333"
+        "switch": 22109,
+        "tail_sha256": "b326146509e2cead1d1c37ffcf94ae3a889eebb0a36edef7808e479580c78691"
       },
       {
         "branches": 2,
@@ -2110,7 +2140,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -2122,8 +2152,8 @@
             ]
           }
         ],
-        "switch": 19960,
-        "tail_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333"
+        "switch": 20513,
+        "tail_sha256": "b326146509e2cead1d1c37ffcf94ae3a889eebb0a36edef7808e479580c78691"
       },
       {
         "branches": 2,
@@ -2154,7 +2184,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -2166,8 +2196,8 @@
             ]
           }
         ],
-        "switch": 11702,
-        "tail_sha256": "10e96271837d38f49b2e2331ce2ed32743d191b480478ffa42202073e57a55c6"
+        "switch": 12337,
+        "tail_sha256": "54305d71ea0aaf6e14cb2e853f11e00139f4b168d5de6371219523286b33c0c0"
       },
       {
         "branches": 2,
@@ -2198,7 +2228,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -2210,8 +2240,8 @@
             ]
           }
         ],
-        "switch": 11698,
-        "tail_sha256": "10e96271837d38f49b2e2331ce2ed32743d191b480478ffa42202073e57a55c6"
+        "switch": 12333,
+        "tail_sha256": "54305d71ea0aaf6e14cb2e853f11e00139f4b168d5de6371219523286b33c0c0"
       },
       {
         "branches": 3,
@@ -2242,7 +2272,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -2254,8 +2284,8 @@
             ]
           }
         ],
-        "switch": 21727,
-        "tail_sha256": "30f8e41e120f61c23d5c7d9a81452f1dd775b91641cf0cf0623d5826e8d7415f"
+        "switch": 22280,
+        "tail_sha256": "080383cc22e17b3545fcb1b8d950f1a084886594faef6cb5ed85c629b2d5d528"
       },
       {
         "branches": 2,
@@ -2286,7 +2316,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -2298,8 +2328,8 @@
             ]
           }
         ],
-        "switch": 16769,
-        "tail_sha256": "30f8e41e120f61c23d5c7d9a81452f1dd775b91641cf0cf0623d5826e8d7415f"
+        "switch": 17363,
+        "tail_sha256": "080383cc22e17b3545fcb1b8d950f1a084886594faef6cb5ed85c629b2d5d528"
       },
       {
         "branches": 2,
@@ -2330,7 +2360,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -2342,8 +2372,8 @@
             ]
           }
         ],
-        "switch": 16713,
-        "tail_sha256": "de1ed59867e5fbd027f4e40374a2bd45d71bd82776524e477318df4d9f5e987a"
+        "switch": 17307,
+        "tail_sha256": "74a0f31ce2ca01a77750263a7f1c0d7f6a9381c36c8c7ca2501daf290418825c"
       },
       {
         "branches": 2,
@@ -2374,7 +2404,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -2386,8 +2416,8 @@
             ]
           }
         ],
-        "switch": 16651,
-        "tail_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9"
+        "switch": 17245,
+        "tail_sha256": "98e8aecd82d821a322e745be433a62145c9d2e97f4884566474664aa0cd757e2"
       },
       {
         "branches": 3,
@@ -2418,7 +2448,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -2430,8 +2460,8 @@
             ]
           }
         ],
-        "switch": 16554,
-        "tail_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9"
+        "switch": 17148,
+        "tail_sha256": "98e8aecd82d821a322e745be433a62145c9d2e97f4884566474664aa0cd757e2"
       },
       {
         "branches": 2,
@@ -2462,7 +2492,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -2474,8 +2504,8 @@
             ]
           }
         ],
-        "switch": 14958,
-        "tail_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9"
+        "switch": 15552,
+        "tail_sha256": "98e8aecd82d821a322e745be433a62145c9d2e97f4884566474664aa0cd757e2"
       },
       {
         "branches": 2,
@@ -2506,7 +2536,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -2518,8 +2548,8 @@
             ]
           }
         ],
-        "switch": 21715,
-        "tail_sha256": "6d81d9b7a13489ca4b1553a756132690be69f1c0b5f7622196e814d862fe50b0"
+        "switch": 22268,
+        "tail_sha256": "89e2f40a4b2633623afef5cc41b068f9adc75cdd2417d3c7a52ceab0513a9ace"
       },
       {
         "branches": 2,
@@ -2550,7 +2580,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -2562,8 +2592,8 @@
             ]
           }
         ],
-        "switch": 21653,
-        "tail_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333"
+        "switch": 22206,
+        "tail_sha256": "b326146509e2cead1d1c37ffcf94ae3a889eebb0a36edef7808e479580c78691"
       },
       {
         "branches": 3,
@@ -2594,7 +2624,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -2606,8 +2636,8 @@
             ]
           }
         ],
-        "switch": 21556,
-        "tail_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333"
+        "switch": 22109,
+        "tail_sha256": "b326146509e2cead1d1c37ffcf94ae3a889eebb0a36edef7808e479580c78691"
       },
       {
         "branches": 2,
@@ -2638,7 +2668,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -2650,8 +2680,8 @@
             ]
           }
         ],
-        "switch": 19960,
-        "tail_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333"
+        "switch": 20513,
+        "tail_sha256": "b326146509e2cead1d1c37ffcf94ae3a889eebb0a36edef7808e479580c78691"
       },
       {
         "branches": 3,
@@ -2682,7 +2712,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -2694,8 +2724,8 @@
             ]
           }
         ],
-        "switch": 21727,
-        "tail_sha256": "30f8e41e120f61c23d5c7d9a81452f1dd775b91641cf0cf0623d5826e8d7415f"
+        "switch": 22280,
+        "tail_sha256": "080383cc22e17b3545fcb1b8d950f1a084886594faef6cb5ed85c629b2d5d528"
       },
       {
         "branches": 2,
@@ -2726,7 +2756,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -2738,8 +2768,8 @@
             ]
           }
         ],
-        "switch": 16769,
-        "tail_sha256": "30f8e41e120f61c23d5c7d9a81452f1dd775b91641cf0cf0623d5826e8d7415f"
+        "switch": 17363,
+        "tail_sha256": "080383cc22e17b3545fcb1b8d950f1a084886594faef6cb5ed85c629b2d5d528"
       },
       {
         "branches": 2,
@@ -2770,7 +2800,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -2782,8 +2812,8 @@
             ]
           }
         ],
-        "switch": 16713,
-        "tail_sha256": "de1ed59867e5fbd027f4e40374a2bd45d71bd82776524e477318df4d9f5e987a"
+        "switch": 17307,
+        "tail_sha256": "74a0f31ce2ca01a77750263a7f1c0d7f6a9381c36c8c7ca2501daf290418825c"
       },
       {
         "branches": 2,
@@ -2814,7 +2844,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -2826,8 +2856,8 @@
             ]
           }
         ],
-        "switch": 16651,
-        "tail_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9"
+        "switch": 17245,
+        "tail_sha256": "98e8aecd82d821a322e745be433a62145c9d2e97f4884566474664aa0cd757e2"
       },
       {
         "branches": 3,
@@ -2858,7 +2888,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -2870,8 +2900,8 @@
             ]
           }
         ],
-        "switch": 16554,
-        "tail_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9"
+        "switch": 17148,
+        "tail_sha256": "98e8aecd82d821a322e745be433a62145c9d2e97f4884566474664aa0cd757e2"
       },
       {
         "branches": 2,
@@ -2902,7 +2932,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -2914,8 +2944,8 @@
             ]
           }
         ],
-        "switch": 14958,
-        "tail_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9"
+        "switch": 15552,
+        "tail_sha256": "98e8aecd82d821a322e745be433a62145c9d2e97f4884566474664aa0cd757e2"
       },
       {
         "branches": 2,
@@ -2946,7 +2976,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -2958,8 +2988,8 @@
             ]
           }
         ],
-        "switch": 21715,
-        "tail_sha256": "6d81d9b7a13489ca4b1553a756132690be69f1c0b5f7622196e814d862fe50b0"
+        "switch": 22268,
+        "tail_sha256": "89e2f40a4b2633623afef5cc41b068f9adc75cdd2417d3c7a52ceab0513a9ace"
       },
       {
         "branches": 2,
@@ -2990,7 +3020,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -3002,8 +3032,8 @@
             ]
           }
         ],
-        "switch": 21653,
-        "tail_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333"
+        "switch": 22206,
+        "tail_sha256": "b326146509e2cead1d1c37ffcf94ae3a889eebb0a36edef7808e479580c78691"
       },
       {
         "branches": 3,
@@ -3034,7 +3064,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -3046,8 +3076,8 @@
             ]
           }
         ],
-        "switch": 21556,
-        "tail_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333"
+        "switch": 22109,
+        "tail_sha256": "b326146509e2cead1d1c37ffcf94ae3a889eebb0a36edef7808e479580c78691"
       },
       {
         "branches": 2,
@@ -3078,7 +3108,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -3090,8 +3120,8 @@
             ]
           }
         ],
-        "switch": 19960,
-        "tail_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333"
+        "switch": 20513,
+        "tail_sha256": "b326146509e2cead1d1c37ffcf94ae3a889eebb0a36edef7808e479580c78691"
       },
       {
         "branches": 2,
@@ -3120,8 +3150,8 @@
             ]
           }
         ],
-        "switch": 21786,
-        "tail_sha256": "205a5491683097ffbaf2eb890b2f23ca4355e7614b00bd6a4a59fc1b56a99662"
+        "switch": 22339,
+        "tail_sha256": "c5d861ed04319abe7b9e3529f75f4cef287e28b32b57429b5fc77faa2bff93d1"
       },
       {
         "branches": 2,
@@ -3150,8 +3180,8 @@
             ]
           }
         ],
-        "switch": 26081,
-        "tail_sha256": "f55c12c159dcb0a6c50bd7c89623afb931de5f7106238662c58d15ed3794c2d6"
+        "switch": 26634,
+        "tail_sha256": "5049642675b08b19f60d5831eee38646bd6790787630e5068e9d434d44811ff7"
       },
       {
         "branches": 2,
@@ -3180,8 +3210,8 @@
             ]
           }
         ],
-        "switch": 25936,
-        "tail_sha256": "9d82d21d1327a398b27921ff48c1784de58fd925da64d878cf71acdc77ee76f0"
+        "switch": 26489,
+        "tail_sha256": "ffd68d726b0d5b1c850b544d3b2a5db3e600a118cc21df0812b87c045dcd1f7e"
       },
       {
         "branches": 3,
@@ -3210,8 +3240,8 @@
             ]
           }
         ],
-        "switch": 25751,
-        "tail_sha256": "6e945155f00f76734174925eaf248a033c73bc2b30e0de314657d140ff2ef285"
+        "switch": 26304,
+        "tail_sha256": "78f52aafed043c7639c9070965121290323d292be7405507952572b775aca4b5"
       },
       {
         "branches": 2,
@@ -3240,8 +3270,8 @@
             ]
           }
         ],
-        "switch": 22566,
-        "tail_sha256": "6e945155f00f76734174925eaf248a033c73bc2b30e0de314657d140ff2ef285"
+        "switch": 23119,
+        "tail_sha256": "78f52aafed043c7639c9070965121290323d292be7405507952572b775aca4b5"
       },
       {
         "branches": 2,
@@ -3270,8 +3300,8 @@
             ]
           }
         ],
-        "switch": 25744,
-        "tail_sha256": "7e689ec85f44371750cbabb59fd0a0cb2da29da129f8d8ee45ef0ec18d72002f"
+        "switch": 26297,
+        "tail_sha256": "6b6a41d313d7a94d426be5862d17a92c6892581b7dc96860ff592f6d3a97a4cf"
       },
       {
         "branches": 2,
@@ -3300,8 +3330,8 @@
             ]
           }
         ],
-        "switch": 23769,
-        "tail_sha256": "7f6dbcbbe73931cc1745d1b10d6093a56ba51fb53baf3b154046d9515e3dd9ec"
+        "switch": 24322,
+        "tail_sha256": "811e16b880499fb350354420056afb5c2e67f5f91cde163a7371967f8a06fa4d"
       },
       {
         "branches": 2,
@@ -3330,8 +3360,8 @@
             ]
           }
         ],
-        "switch": 25476,
-        "tail_sha256": "e77069d12653e6b9eb0862cf7557d2c0f7be49410fe8c2441bcbf9754e9e9d66"
+        "switch": 26029,
+        "tail_sha256": "6af95682f4cf76149039d3c0f5116320e24ecdc0fa3849e63b76cf24a2d5c556"
       },
       {
         "branches": 4,
@@ -3355,8 +3385,8 @@
             ]
           }
         ],
-        "switch": 27143,
-        "tail_sha256": "194bd01b580e6287e6b6a4e50e9f7575f8b336630c2ba18fa43dac64dfb967fb"
+        "switch": 27696,
+        "tail_sha256": "68d5ca9f2521e84fb12b10806009ef8d3b356099b64fa2493f2e8376d8f90493"
       },
       {
         "branches": 2,
@@ -3380,8 +3410,8 @@
             ]
           }
         ],
-        "switch": 27472,
-        "tail_sha256": "2e1c396f4ee76e6cbc04880cc359879fa168a098283f2de3062e91eebcdf694d"
+        "switch": 28016,
+        "tail_sha256": "99c49169d2a47cffc58939b2fdda7ff4d6289042e663b3e8ff9664e05ab67541"
       },
       {
         "branches": 2,
@@ -3406,7 +3436,7 @@
           },
           {
             "Impl": {
-              "Trait": 22
+              "Trait": 23
             }
           },
           {
@@ -3416,8 +3446,8 @@
             ]
           }
         ],
-        "switch": 27849,
-        "tail_sha256": "cf614ca2c69327a6c122c00af8a05169766578d0e609d894df51f195590e89cc"
+        "switch": 28242,
+        "tail_sha256": "dd4e93b80414ec465d634864f1ff91f925f52da10419888e07312e8c5f8400f9"
       },
       {
         "branches": 2,
@@ -3442,7 +3472,7 @@
           },
           {
             "Impl": {
-              "Trait": 32
+              "Trait": 33
             }
           },
           {
@@ -3452,8 +3482,8 @@
             ]
           }
         ],
-        "switch": 27865,
-        "tail_sha256": "5872eb6b37df76e8eafde27d413f0035be9860458e8def118385f825f81d67b6"
+        "switch": 28258,
+        "tail_sha256": "8106702563494218b753e135d05117fe4c31301bbe8c3beadde1207cacf8664b"
       },
       {
         "branches": 2,
@@ -3484,7 +3514,7 @@
           },
           {
             "Impl": {
-              "Trait": 33
+              "Trait": 34
             }
           },
           {
@@ -3494,8 +3524,8 @@
             ]
           }
         ],
-        "switch": 27885,
-        "tail_sha256": "fbf57da054da977c1a038c62246ffe40b1aeadd43a8a4621229fda091c37385d"
+        "switch": 28278,
+        "tail_sha256": "b894a9b77c0b31de8e8cf984a73fa47360d351a76f1f01fe68d07ccb1879959f"
       },
       {
         "branches": 4,
@@ -3520,7 +3550,7 @@
           },
           {
             "Impl": {
-              "Trait": 46
+              "Trait": 47
             }
           },
           {
@@ -3530,8 +3560,8 @@
             ]
           }
         ],
-        "switch": 28035,
-        "tail_sha256": "8cd0cf8e90e28c36836faecf7ec5a22d0837952dc96a75360a90dfb5412943f6"
+        "switch": 28428,
+        "tail_sha256": "74e3a3ff9cb3f368eacf76b97c8030e03155b613015fedfaec2eef19bc915dc0"
       },
       {
         "branches": 2,
@@ -3556,7 +3586,7 @@
           },
           {
             "Impl": {
-              "Trait": 61
+              "Trait": 62
             }
           },
           {
@@ -3566,8 +3596,8 @@
             ]
           }
         ],
-        "switch": 28455,
-        "tail_sha256": "92d3de9ab29028c6428d6e575259ffc7653791a25c2e2545683d77d1e8a81712"
+        "switch": 28848,
+        "tail_sha256": "7595bb2069d5e337a5f386fb09e47b4fc72b78ab9329ca0adedeffb48a1e42b3"
       },
       {
         "branches": 2,
@@ -3592,7 +3622,7 @@
           },
           {
             "Impl": {
-              "Trait": 61
+              "Trait": 62
             }
           },
           {
@@ -3602,8 +3632,8 @@
             ]
           }
         ],
-        "switch": 28432,
-        "tail_sha256": "92d3de9ab29028c6428d6e575259ffc7653791a25c2e2545683d77d1e8a81712"
+        "switch": 28825,
+        "tail_sha256": "7595bb2069d5e337a5f386fb09e47b4fc72b78ab9329ca0adedeffb48a1e42b3"
       },
       {
         "branches": 2,
@@ -3628,7 +3658,7 @@
           },
           {
             "Impl": {
-              "Trait": 61
+              "Trait": 62
             }
           },
           {
@@ -3638,8 +3668,8 @@
             ]
           }
         ],
-        "switch": 28412,
-        "tail_sha256": "92d3de9ab29028c6428d6e575259ffc7653791a25c2e2545683d77d1e8a81712"
+        "switch": 28805,
+        "tail_sha256": "7595bb2069d5e337a5f386fb09e47b4fc72b78ab9329ca0adedeffb48a1e42b3"
       },
       {
         "branches": 2,
@@ -3664,7 +3694,7 @@
           },
           {
             "Impl": {
-              "Trait": 64
+              "Trait": 65
             }
           },
           {
@@ -3674,8 +3704,8 @@
             ]
           }
         ],
-        "switch": 28837,
-        "tail_sha256": "3a04a56fb5d6490be90f221c18a2c08e65be70c0f4617bd0d1c5abf9e67fe97f"
+        "switch": 29230,
+        "tail_sha256": "ce345c590e5ba75d31b620804150d65b13137fe8c0c1f8998b7e10b2eb4c1137"
       },
       {
         "branches": 2,
@@ -3700,7 +3730,7 @@
           },
           {
             "Impl": {
-              "Trait": 64
+              "Trait": 65
             }
           },
           {
@@ -3710,8 +3740,8 @@
             ]
           }
         ],
-        "switch": 28813,
-        "tail_sha256": "3a04a56fb5d6490be90f221c18a2c08e65be70c0f4617bd0d1c5abf9e67fe97f"
+        "switch": 29206,
+        "tail_sha256": "ce345c590e5ba75d31b620804150d65b13137fe8c0c1f8998b7e10b2eb4c1137"
       },
       {
         "branches": 2,
@@ -3736,7 +3766,7 @@
           },
           {
             "Impl": {
-              "Trait": 64
+              "Trait": 65
             }
           },
           {
@@ -3746,8 +3776,8 @@
             ]
           }
         ],
-        "switch": 28786,
-        "tail_sha256": "3a48ae7b1151086d87d0d52fcb68eae09572087b272922cacd16532ac99e6e73"
+        "switch": 29179,
+        "tail_sha256": "e2d23d2939aa0085c648249a20bc5355b02808f97590e92f86e81ab55d5efc55"
       },
       {
         "branches": 2,
@@ -3772,7 +3802,7 @@
           },
           {
             "Impl": {
-              "Trait": 64
+              "Trait": 65
             }
           },
           {
@@ -3782,8 +3812,8 @@
             ]
           }
         ],
-        "switch": 28764,
-        "tail_sha256": "3a48ae7b1151086d87d0d52fcb68eae09572087b272922cacd16532ac99e6e73"
+        "switch": 29157,
+        "tail_sha256": "e2d23d2939aa0085c648249a20bc5355b02808f97590e92f86e81ab55d5efc55"
       },
       {
         "branches": 2,
@@ -3808,7 +3838,7 @@
           },
           {
             "Impl": {
-              "Trait": 71
+              "Trait": 72
             }
           },
           {
@@ -3818,8 +3848,8 @@
             ]
           }
         ],
-        "switch": 29491,
-        "tail_sha256": "ab5a6dad41898a2d476a122834e4d08b4d689cb96d4c5755e04795cb580af62c"
+        "switch": 29884,
+        "tail_sha256": "0f548902c6da817a37dbe3d05c21548b87917bc1581a5d36f77d8f514c87b640"
       },
       {
         "branches": 2,
@@ -3844,7 +3874,7 @@
           },
           {
             "Impl": {
-              "Trait": 71
+              "Trait": 72
             }
           },
           {
@@ -3854,8 +3884,8 @@
             ]
           }
         ],
-        "switch": 29462,
-        "tail_sha256": "ab5a6dad41898a2d476a122834e4d08b4d689cb96d4c5755e04795cb580af62c"
+        "switch": 29855,
+        "tail_sha256": "0f548902c6da817a37dbe3d05c21548b87917bc1581a5d36f77d8f514c87b640"
       }
     ],
     "functions": [
@@ -3886,7 +3916,7 @@
                 "types_outlive": []
               },
               "skip_binder": {
-                "Deduplicated": 763
+                "Deduplicated": 762
               }
             }
           }
@@ -3925,7 +3955,7 @@
                 "types_outlive": []
               },
               "skip_binder": {
-                "Deduplicated": 763
+                "Deduplicated": 762
               }
             }
           }
@@ -3989,7 +4019,7 @@
                 "types_outlive": []
               },
               "skip_binder": {
-                "Deduplicated": 1068
+                "Deduplicated": 1060
               }
             }
           }
@@ -4053,7 +4083,7 @@
                 "types_outlive": []
               },
               "skip_binder": {
-                "Deduplicated": 763
+                "Deduplicated": 762
               }
             }
           }
@@ -4092,7 +4122,7 @@
                 "types_outlive": []
               },
               "skip_binder": {
-                "Deduplicated": 763
+                "Deduplicated": 762
               }
             }
           }
@@ -4192,7 +4222,7 @@
                           "trait_refs": [],
                           "types": [
                             {
-                              "Deduplicated": 2191
+                              "Deduplicated": 2169
                             }
                           ]
                         },
@@ -4213,7 +4243,7 @@
               },
               "skip_binder": {
                 "HashConsedValue": [
-                  23410,
+                  23324,
                   {
                     "Adt": {
                       "builtin": null,
@@ -4223,7 +4253,7 @@
                         "trait_refs": [],
                         "types": [
                           {
-                            "Deduplicated": 2193
+                            "Deduplicated": 2171
                           }
                         ]
                       },
@@ -4269,7 +4299,7 @@
                 "types_outlive": []
               },
               "skip_binder": {
-                "Deduplicated": 1068
+                "Deduplicated": 1060
               }
             }
           }
@@ -4277,45 +4307,6 @@
         {
           "Ident": [
             "identity_pk",
-            0
-          ]
-        }
-      ],
-      [
-        {
-          "Ident": [
-            "beaconcrypt",
-            0
-          ]
-        },
-        {
-          "Ident": [
-            "beacon",
-            0
-          ]
-        },
-        {
-          "Impl": {
-            "Ty": {
-              "kind": "InherentImplBlock",
-              "params": {
-                "const_generics": [],
-                "regions": [],
-                "regions_outlive": [],
-                "trait_clauses": [],
-                "trait_type_constraints": [],
-                "types": [],
-                "types_outlive": []
-              },
-              "skip_binder": {
-                "Deduplicated": 1068
-              }
-            }
-          }
-        },
-        {
-          "Ident": [
-            "mldsa_public_key",
             0
           ]
         }
@@ -4367,7 +4358,7 @@
                 "types_outlive": []
               },
               "skip_binder": {
-                "Deduplicated": 1068
+                "Deduplicated": 1060
               }
             }
           }
@@ -4426,7 +4417,7 @@
                 "types_outlive": []
               },
               "skip_binder": {
-                "Deduplicated": 13572
+                "Deduplicated": 13640
               }
             }
           }
@@ -4465,7 +4456,7 @@
                 "types_outlive": []
               },
               "skip_binder": {
-                "Deduplicated": 763
+                "Deduplicated": 762
               }
             }
           }
@@ -4504,7 +4495,7 @@
                 "types_outlive": []
               },
               "skip_binder": {
-                "Deduplicated": 763
+                "Deduplicated": 762
               }
             }
           }
@@ -4543,7 +4534,7 @@
                 "types_outlive": []
               },
               "skip_binder": {
-                "Deduplicated": 763
+                "Deduplicated": 762
               }
             }
           }
@@ -4570,7 +4561,7 @@
         },
         {
           "Ident": [
-            "fingerprint_pin",
+            "server_pin",
             0
           ]
         }
@@ -4596,7 +4587,7 @@
         },
         {
           "Impl": {
-            "Trait": 22
+            "Trait": 23
           }
         },
         {
@@ -4627,7 +4618,7 @@
         },
         {
           "Impl": {
-            "Trait": 32
+            "Trait": 33
           }
         },
         {
@@ -4664,7 +4655,7 @@
         },
         {
           "Impl": {
-            "Trait": 33
+            "Trait": 34
           }
         },
         {
@@ -4682,7 +4673,7 @@
         },
         {
           "Impl": {
-            "Trait": 35
+            "Trait": 36
           }
         },
         {
@@ -4720,7 +4711,7 @@
         },
         {
           "Impl": {
-            "Trait": 40
+            "Trait": 41
           }
         },
         {
@@ -4751,7 +4742,7 @@
         },
         {
           "Impl": {
-            "Trait": 42
+            "Trait": 43
           }
         },
         {
@@ -4782,7 +4773,7 @@
         },
         {
           "Impl": {
-            "Trait": 43
+            "Trait": 44
           }
         },
         {
@@ -4813,7 +4804,7 @@
         },
         {
           "Impl": {
-            "Trait": 46
+            "Trait": 47
           }
         },
         {
@@ -4850,7 +4841,7 @@
         },
         {
           "Impl": {
-            "Trait": 47
+            "Trait": 48
           }
         },
         {
@@ -4887,7 +4878,7 @@
                 "types_outlive": []
               },
               "skip_binder": {
-                "Deduplicated": 16891
+                "Deduplicated": 16813
               }
             }
           }
@@ -4895,37 +4886,6 @@
         {
           "Ident": [
             "new",
-            0
-          ]
-        }
-      ],
-      [
-        {
-          "Ident": [
-            "beaconcrypt",
-            0
-          ]
-        },
-        {
-          "Ident": [
-            "pqxdh",
-            0
-          ]
-        },
-        {
-          "Ident": [
-            "execute_agreement",
-            0
-          ]
-        },
-        {
-          "Impl": {
-            "Trait": 58
-          }
-        },
-        {
-          "Ident": [
-            "call_once",
             0
           ]
         }
@@ -5018,7 +4978,7 @@
         },
         {
           "Ident": [
-            "call_mut",
+            "call_once",
             0
           ]
         }
@@ -5049,7 +5009,7 @@
         },
         {
           "Ident": [
-            "call_once",
+            "call_mut",
             0
           ]
         }
@@ -5080,7 +5040,7 @@
         },
         {
           "Ident": [
-            "call_mut",
+            "call_once",
             0
           ]
         }
@@ -5111,7 +5071,7 @@
         },
         {
           "Ident": [
-            "call",
+            "call_mut",
             0
           ]
         }
@@ -5142,7 +5102,7 @@
         },
         {
           "Ident": [
-            "call_once",
+            "call",
             0
           ]
         }
@@ -5297,7 +5257,7 @@
         },
         {
           "Ident": [
-            "call_mut",
+            "call_once",
             0
           ]
         }
@@ -5328,6 +5288,37 @@
         },
         {
           "Ident": [
+            "call_mut",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "pqxdh",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "execute_agreement",
+            0
+          ]
+        },
+        {
+          "Impl": {
+            "Trait": 72
+          }
+        },
+        {
+          "Ident": [
             "call",
             0
           ]
@@ -5336,7 +5327,7 @@
       [
         {
           "Impl": {
-            "Trait": 72
+            "Trait": 73
           }
         },
         {
@@ -5373,43 +5364,6 @@
         },
         {
           "Impl": {
-            "Trait": 74
-          }
-        },
-        {
-          "Ident": [
-            "drop_glue",
-            0
-          ]
-        }
-      ],
-      [
-        {
-          "Ident": [
-            "beaconcrypt",
-            0
-          ]
-        },
-        {
-          "Ident": [
-            "pqxdh",
-            0
-          ]
-        },
-        {
-          "Ident": [
-            "execute_agreement",
-            0
-          ]
-        },
-        {
-          "Ident": [
-            "closure",
-            0
-          ]
-        },
-        {
-          "Impl": {
             "Trait": 75
           }
         },
@@ -5442,7 +5396,7 @@
         {
           "Ident": [
             "closure",
-            6
+            0
           ]
         },
         {
@@ -5479,7 +5433,7 @@
         {
           "Ident": [
             "closure",
-            4
+            6
           ]
         },
         {
@@ -5516,7 +5470,7 @@
         {
           "Ident": [
             "closure",
-            5
+            4
           ]
         },
         {
@@ -5553,12 +5507,49 @@
         {
           "Ident": [
             "closure",
-            1
+            5
           ]
         },
         {
           "Impl": {
             "Trait": 79
+          }
+        },
+        {
+          "Ident": [
+            "drop_glue",
+            0
+          ]
+        }
+      ],
+      [
+        {
+          "Ident": [
+            "beaconcrypt",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "pqxdh",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "execute_agreement",
+            0
+          ]
+        },
+        {
+          "Ident": [
+            "closure",
+            1
+          ]
+        },
+        {
+          "Impl": {
+            "Trait": 80
           }
         },
         {
@@ -5615,7 +5606,7 @@
         },
         {
           "Impl": {
-            "Trait": 90
+            "Trait": 91
           }
         },
         {
@@ -5652,7 +5643,7 @@
         },
         {
           "Impl": {
-            "Trait": 93
+            "Trait": 94
           }
         },
         {
@@ -5689,7 +5680,7 @@
         },
         {
           "Impl": {
-            "Trait": 96
+            "Trait": 97
           }
         },
         {
@@ -5702,7 +5693,7 @@
       [
         {
           "Impl": {
-            "Trait": 103
+            "Trait": 104
           }
         },
         {
@@ -5718,11 +5709,11 @@
       "AdapterPublicControlNormalization.terminal_tail",
       "AdapterPublicControlNormalization.loop_congr"
     ],
-    "refreshed_labels": 30887,
+    "refreshed_labels": 30598,
     "terminal_tails": [
       {
-        "discarded_sha256": "c1f0f5f74fd6eea58f30648cdfa979021401355ad90e5cb403351c3421926dc7",
-        "exit": 170,
+        "discarded_sha256": "780614565bbf661e950a222515469a007a442ad880bfb79b15178e14d875e270",
+        "exit": 164,
         "function": [
           {
             "Ident": [
@@ -5750,7 +5741,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 763
+                  "Deduplicated": 762
                 }
               }
             }
@@ -5764,8 +5755,8 @@
         ]
       },
       {
-        "discarded_sha256": "9b59c0c0007a50c349f29acfdc1971df53b2d676a411af35fa2fe893c0734dde",
-        "exit": 597,
+        "discarded_sha256": "ecba287fc935420f69e0723a9c538922d343a2537888ef77a8f4e0ec407c8e7a",
+        "exit": 591,
         "function": [
           {
             "Ident": [
@@ -5793,7 +5784,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 763
+                  "Deduplicated": 762
                 }
               }
             }
@@ -5807,8 +5798,8 @@
         ]
       },
       {
-        "discarded_sha256": "9b59c0c0007a50c349f29acfdc1971df53b2d676a411af35fa2fe893c0734dde",
-        "exit": 597,
+        "discarded_sha256": "ecba287fc935420f69e0723a9c538922d343a2537888ef77a8f4e0ec407c8e7a",
+        "exit": 591,
         "function": [
           {
             "Ident": [
@@ -5836,7 +5827,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 763
+                  "Deduplicated": 762
                 }
               }
             }
@@ -5850,8 +5841,8 @@
         ]
       },
       {
-        "discarded_sha256": "534da61abcb25d2eb05d643a878df59e0c3de79263b52477ad2ab8754a830246",
-        "exit": 9177,
+        "discarded_sha256": "3ea4c13d29f580a437990f2f2fb384e6a0a167883891f091140fb3a14c2af6e0",
+        "exit": 9681,
         "function": [
           {
             "Ident": [
@@ -5879,8 +5870,8 @@
         ]
       },
       {
-        "discarded_sha256": "534da61abcb25d2eb05d643a878df59e0c3de79263b52477ad2ab8754a830246",
-        "exit": 9177,
+        "discarded_sha256": "3ea4c13d29f580a437990f2f2fb384e6a0a167883891f091140fb3a14c2af6e0",
+        "exit": 9681,
         "function": [
           {
             "Ident": [
@@ -5908,8 +5899,8 @@
         ]
       },
       {
-        "discarded_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9",
-        "exit": 14105,
+        "discarded_sha256": "98e8aecd82d821a322e745be433a62145c9d2e97f4884566474664aa0cd757e2",
+        "exit": 14699,
         "function": [
           {
             "Ident": [
@@ -5937,7 +5928,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -5951,8 +5942,8 @@
         ]
       },
       {
-        "discarded_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9",
-        "exit": 16142,
+        "discarded_sha256": "98e8aecd82d821a322e745be433a62145c9d2e97f4884566474664aa0cd757e2",
+        "exit": 16736,
         "function": [
           {
             "Ident": [
@@ -5980,7 +5971,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -5994,8 +5985,8 @@
         ]
       },
       {
-        "discarded_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333",
-        "exit": 19107,
+        "discarded_sha256": "b326146509e2cead1d1c37ffcf94ae3a889eebb0a36edef7808e479580c78691",
+        "exit": 19660,
         "function": [
           {
             "Ident": [
@@ -6023,7 +6014,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -6037,8 +6028,8 @@
         ]
       },
       {
-        "discarded_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333",
-        "exit": 21144,
+        "discarded_sha256": "b326146509e2cead1d1c37ffcf94ae3a889eebb0a36edef7808e479580c78691",
+        "exit": 21697,
         "function": [
           {
             "Ident": [
@@ -6066,7 +6057,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -6080,8 +6071,8 @@
         ]
       },
       {
-        "discarded_sha256": "10e96271837d38f49b2e2331ce2ed32743d191b480478ffa42202073e57a55c6",
-        "exit": 11695,
+        "discarded_sha256": "54305d71ea0aaf6e14cb2e853f11e00139f4b168d5de6371219523286b33c0c0",
+        "exit": 12330,
         "function": [
           {
             "Ident": [
@@ -6109,7 +6100,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -6123,8 +6114,8 @@
         ]
       },
       {
-        "discarded_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9",
-        "exit": 14105,
+        "discarded_sha256": "98e8aecd82d821a322e745be433a62145c9d2e97f4884566474664aa0cd757e2",
+        "exit": 14699,
         "function": [
           {
             "Ident": [
@@ -6152,7 +6143,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -6166,8 +6157,8 @@
         ]
       },
       {
-        "discarded_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9",
-        "exit": 16142,
+        "discarded_sha256": "98e8aecd82d821a322e745be433a62145c9d2e97f4884566474664aa0cd757e2",
+        "exit": 16736,
         "function": [
           {
             "Ident": [
@@ -6195,7 +6186,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -6209,8 +6200,8 @@
         ]
       },
       {
-        "discarded_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333",
-        "exit": 19107,
+        "discarded_sha256": "b326146509e2cead1d1c37ffcf94ae3a889eebb0a36edef7808e479580c78691",
+        "exit": 19660,
         "function": [
           {
             "Ident": [
@@ -6238,7 +6229,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -6252,8 +6243,8 @@
         ]
       },
       {
-        "discarded_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333",
-        "exit": 21144,
+        "discarded_sha256": "b326146509e2cead1d1c37ffcf94ae3a889eebb0a36edef7808e479580c78691",
+        "exit": 21697,
         "function": [
           {
             "Ident": [
@@ -6281,7 +6272,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -6295,8 +6286,8 @@
         ]
       },
       {
-        "discarded_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9",
-        "exit": 14105,
+        "discarded_sha256": "98e8aecd82d821a322e745be433a62145c9d2e97f4884566474664aa0cd757e2",
+        "exit": 14699,
         "function": [
           {
             "Ident": [
@@ -6324,7 +6315,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -6338,8 +6329,8 @@
         ]
       },
       {
-        "discarded_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9",
-        "exit": 16142,
+        "discarded_sha256": "98e8aecd82d821a322e745be433a62145c9d2e97f4884566474664aa0cd757e2",
+        "exit": 16736,
         "function": [
           {
             "Ident": [
@@ -6367,7 +6358,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -6381,8 +6372,8 @@
         ]
       },
       {
-        "discarded_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333",
-        "exit": 19107,
+        "discarded_sha256": "b326146509e2cead1d1c37ffcf94ae3a889eebb0a36edef7808e479580c78691",
+        "exit": 19660,
         "function": [
           {
             "Ident": [
@@ -6410,7 +6401,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -6424,8 +6415,8 @@
         ]
       },
       {
-        "discarded_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333",
-        "exit": 21144,
+        "discarded_sha256": "b326146509e2cead1d1c37ffcf94ae3a889eebb0a36edef7808e479580c78691",
+        "exit": 21697,
         "function": [
           {
             "Ident": [
@@ -6453,7 +6444,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -6467,8 +6458,8 @@
         ]
       },
       {
-        "discarded_sha256": "10e96271837d38f49b2e2331ce2ed32743d191b480478ffa42202073e57a55c6",
-        "exit": 11695,
+        "discarded_sha256": "54305d71ea0aaf6e14cb2e853f11e00139f4b168d5de6371219523286b33c0c0",
+        "exit": 12330,
         "function": [
           {
             "Ident": [
@@ -6496,7 +6487,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -6510,8 +6501,8 @@
         ]
       },
       {
-        "discarded_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9",
-        "exit": 14105,
+        "discarded_sha256": "98e8aecd82d821a322e745be433a62145c9d2e97f4884566474664aa0cd757e2",
+        "exit": 14699,
         "function": [
           {
             "Ident": [
@@ -6539,7 +6530,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -6553,8 +6544,8 @@
         ]
       },
       {
-        "discarded_sha256": "405899c87b600092aba3d7c6fa98b2ae9ff003e64222c97ffbaa2f1f7036f8a9",
-        "exit": 16142,
+        "discarded_sha256": "98e8aecd82d821a322e745be433a62145c9d2e97f4884566474664aa0cd757e2",
+        "exit": 16736,
         "function": [
           {
             "Ident": [
@@ -6582,7 +6573,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -6596,8 +6587,8 @@
         ]
       },
       {
-        "discarded_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333",
-        "exit": 19107,
+        "discarded_sha256": "b326146509e2cead1d1c37ffcf94ae3a889eebb0a36edef7808e479580c78691",
+        "exit": 19660,
         "function": [
           {
             "Ident": [
@@ -6625,7 +6616,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -6639,8 +6630,8 @@
         ]
       },
       {
-        "discarded_sha256": "9fb2602d4b73d05a141ce62a60298d6e2f40e2700d93502329d9dba132b9c333",
-        "exit": 21144,
+        "discarded_sha256": "b326146509e2cead1d1c37ffcf94ae3a889eebb0a36edef7808e479580c78691",
+        "exit": 21697,
         "function": [
           {
             "Ident": [
@@ -6668,7 +6659,7 @@
                   "types_outlive": []
                 },
                 "skip_binder": {
-                  "Deduplicated": 1068
+                  "Deduplicated": 1060
                 }
               }
             }
@@ -6682,8 +6673,8 @@
         ]
       },
       {
-        "discarded_sha256": "205a5491683097ffbaf2eb890b2f23ca4355e7614b00bd6a4a59fc1b56a99662",
-        "exit": 21785,
+        "discarded_sha256": "c5d861ed04319abe7b9e3529f75f4cef287e28b32b57429b5fc77faa2bff93d1",
+        "exit": 22338,
         "function": [
           {
             "Ident": [
@@ -6711,8 +6702,8 @@
         ]
       },
       {
-        "discarded_sha256": "cf614ca2c69327a6c122c00af8a05169766578d0e609d894df51f195590e89cc",
-        "exit": 27848,
+        "discarded_sha256": "dd4e93b80414ec465d634864f1ff91f925f52da10419888e07312e8c5f8400f9",
+        "exit": 28241,
         "function": [
           {
             "Ident": [
@@ -6734,7 +6725,7 @@
           },
           {
             "Impl": {
-              "Trait": 22
+              "Trait": 23
             }
           },
           {
@@ -6746,8 +6737,8 @@
         ]
       },
       {
-        "discarded_sha256": "5872eb6b37df76e8eafde27d413f0035be9860458e8def118385f825f81d67b6",
-        "exit": 27864,
+        "discarded_sha256": "8106702563494218b753e135d05117fe4c31301bbe8c3beadde1207cacf8664b",
+        "exit": 28257,
         "function": [
           {
             "Ident": [
@@ -6769,7 +6760,7 @@
           },
           {
             "Impl": {
-              "Trait": 32
+              "Trait": 33
             }
           },
           {
@@ -6781,8 +6772,8 @@
         ]
       },
       {
-        "discarded_sha256": "fbf57da054da977c1a038c62246ffe40b1aeadd43a8a4621229fda091c37385d",
-        "exit": 27884,
+        "discarded_sha256": "b894a9b77c0b31de8e8cf984a73fa47360d351a76f1f01fe68d07ccb1879959f",
+        "exit": 28277,
         "function": [
           {
             "Ident": [
@@ -6810,7 +6801,7 @@
           },
           {
             "Impl": {
-              "Trait": 33
+              "Trait": 34
             }
           },
           {
@@ -6822,8 +6813,8 @@
         ]
       },
       {
-        "discarded_sha256": "8cd0cf8e90e28c36836faecf7ec5a22d0837952dc96a75360a90dfb5412943f6",
-        "exit": 28004,
+        "discarded_sha256": "74e3a3ff9cb3f368eacf76b97c8030e03155b613015fedfaec2eef19bc915dc0",
+        "exit": 28397,
         "function": [
           {
             "Ident": [
@@ -6845,7 +6836,7 @@
           },
           {
             "Impl": {
-              "Trait": 46
+              "Trait": 47
             }
           },
           {
@@ -6857,8 +6848,8 @@
         ]
       },
       {
-        "discarded_sha256": "8cd0cf8e90e28c36836faecf7ec5a22d0837952dc96a75360a90dfb5412943f6",
-        "exit": 28031,
+        "discarded_sha256": "74e3a3ff9cb3f368eacf76b97c8030e03155b613015fedfaec2eef19bc915dc0",
+        "exit": 28424,
         "function": [
           {
             "Ident": [
@@ -6880,7 +6871,7 @@
           },
           {
             "Impl": {
-              "Trait": 46
+              "Trait": 47
             }
           },
           {
@@ -6892,8 +6883,8 @@
         ]
       },
       {
-        "discarded_sha256": "8cd0cf8e90e28c36836faecf7ec5a22d0837952dc96a75360a90dfb5412943f6",
-        "exit": 28034,
+        "discarded_sha256": "74e3a3ff9cb3f368eacf76b97c8030e03155b613015fedfaec2eef19bc915dc0",
+        "exit": 28427,
         "function": [
           {
             "Ident": [
@@ -6915,7 +6906,7 @@
           },
           {
             "Impl": {
-              "Trait": 46
+              "Trait": 47
             }
           },
           {
@@ -6927,8 +6918,8 @@
         ]
       },
       {
-        "discarded_sha256": "92d3de9ab29028c6428d6e575259ffc7653791a25c2e2545683d77d1e8a81712",
-        "exit": 28378,
+        "discarded_sha256": "7595bb2069d5e337a5f386fb09e47b4fc72b78ab9329ca0adedeffb48a1e42b3",
+        "exit": 28771,
         "function": [
           {
             "Ident": [
@@ -6950,7 +6941,7 @@
           },
           {
             "Impl": {
-              "Trait": 61
+              "Trait": 62
             }
           },
           {
@@ -6962,8 +6953,8 @@
         ]
       },
       {
-        "discarded_sha256": "3a48ae7b1151086d87d0d52fcb68eae09572087b272922cacd16532ac99e6e73",
-        "exit": 28730,
+        "discarded_sha256": "e2d23d2939aa0085c648249a20bc5355b02808f97590e92f86e81ab55d5efc55",
+        "exit": 29123,
         "function": [
           {
             "Ident": [
@@ -6985,7 +6976,7 @@
           },
           {
             "Impl": {
-              "Trait": 64
+              "Trait": 65
             }
           },
           {
@@ -6997,8 +6988,8 @@
         ]
       },
       {
-        "discarded_sha256": "ab5a6dad41898a2d476a122834e4d08b4d689cb96d4c5755e04795cb580af62c",
-        "exit": 29412,
+        "discarded_sha256": "0f548902c6da817a37dbe3d05c21548b87917bc1581a5d36f77d8f514c87b640",
+        "exit": 29805,
         "function": [
           {
             "Ident": [
@@ -7020,7 +7011,7 @@
           },
           {
             "Impl": {
-              "Trait": 71
+              "Trait": 72
             }
           },
           {
@@ -7040,20 +7031,20 @@
           "return None",
           "return Some(ready)"
         ],
-        "helper_body": "\n\t\t\teffect = match effect {\n\t\t\t\tBeaconInitEffect::Rejected(_) => return None,\n\t\t\t\tBeaconInitEffect::Ready(ready) => return Some(ready),\n\t\t\t\tBeaconInitEffect::Ed25519SigningRequested(pending) => {\n\t\t\t\t\tlet request = pending.request();\n\t\t\t\t\tlet signed = if beacon.identity_pk().as_bytes() == request.public_key {\n\t\t\t\t\t\tcrypto_sign::sign(request.message, beacon.identity_sk()).ok()\n\t\t\t\t\t} else {\n\t\t\t\t\t\tNone\n\t\t\t\t\t};\n\t\t\t\t\tpending.resume(signed.as_deref())\n\t\t\t\t}\n\t\t\t\tBeaconInitEffect::FingerprintRequested(pending) => {\n\t\t\t\t\tlet fingerprint = auth::execute_hash(&pending.request());\n\t\t\t\t\tpending.resume(fingerprint)\n\t\t\t\t}\n\t\t\t\tBeaconInitEffect::HashRequested(pending) => {\n\t\t\t\t\tlet hash = auth::execute_hash(&pending.request());\n\t\t\t\t\tpending.resume(hash)\n\t\t\t\t}\n\t\t\t\tBeaconInitEffect::MldsaSigningRequested(pending) => {\n\t\t\t\t\tlet signature = beacon\n\t\t\t\t\t\t.authentication\n\t\t\t\t\t\t.identity\n\t\t\t\t\t\t.sign_requested(&pending.request());\n\t\t\t\t\tpending.resume(signature.as_deref())\n\t\t\t\t}\n\t\t\t};\n\t\t",
-        "helper_sha256": "2a0ce3cdab87ea29014a10e4490a9f14c43b30b40cc00871af819fcd8e18e1c9",
+        "helper_body": "\n\t\t\teffect = match effect {\n\t\t\t\tBeaconInitEffect::Rejected(_) => return None,\n\t\t\t\tBeaconInitEffect::Ready(ready) => return Some(ready),\n\t\t\t\tBeaconInitEffect::Ed25519SigningRequested(pending) => {\n\t\t\t\t\tlet request = pending.request();\n\t\t\t\t\tlet signed = if beacon.identity_pk().as_bytes() == request.public_key {\n\t\t\t\t\t\tcrypto_sign::sign(request.message, beacon.identity_sk()).ok()\n\t\t\t\t\t} else {\n\t\t\t\t\t\tNone\n\t\t\t\t\t};\n\t\t\t\t\tpending.resume(signed.as_deref())\n\t\t\t\t}\n\t\t\t\tBeaconInitEffect::HashRequested(pending) => {\n\t\t\t\t\tlet hash = auth::execute_hash(&pending.request());\n\t\t\t\t\tpending.resume(hash)\n\t\t\t\t}\n\t\t\t};\n\t\t",
+        "helper_sha256": "8908c7d4cbf56fa77b8e0ae4c117082db812d19d025536acb8fa03478e60f27a",
         "law": "AdapterPublicControlNormalization.init_loop_factor",
-        "original": "\t\tlet ready = loop {\n\t\t\teffect = match effect {\n\t\t\t\tBeaconInitEffect::Rejected(_) => return None,\n\t\t\t\tBeaconInitEffect::Ready(ready) => break ready,\n\t\t\t\tBeaconInitEffect::Ed25519SigningRequested(pending) => {\n\t\t\t\t\tlet request = pending.request();\n\t\t\t\t\tlet signed = if self.identity_pk().as_bytes() == request.public_key {\n\t\t\t\t\t\tcrypto_sign::sign(request.message, self.identity_sk()).ok()\n\t\t\t\t\t} else {\n\t\t\t\t\t\tNone\n\t\t\t\t\t};\n\t\t\t\t\tpending.resume(signed.as_deref())\n\t\t\t\t}\n\t\t\t\tBeaconInitEffect::FingerprintRequested(pending) => {\n\t\t\t\t\tlet fingerprint = auth::execute_hash(&pending.request());\n\t\t\t\t\tpending.resume(fingerprint)\n\t\t\t\t}\n\t\t\t\tBeaconInitEffect::HashRequested(pending) => {\n\t\t\t\t\tlet hash = auth::execute_hash(&pending.request());\n\t\t\t\t\tpending.resume(hash)\n\t\t\t\t}\n\t\t\t\tBeaconInitEffect::MldsaSigningRequested(pending) => {\n\t\t\t\t\tlet signature = self\n\t\t\t\t\t\t.authentication\n\t\t\t\t\t\t.identity\n\t\t\t\t\t\t.sign_requested(&pending.request());\n\t\t\t\t\tpending.resume(signature.as_deref())\n\t\t\t\t}\n\t\t\t};\n\t\t};",
-        "original_sha256": "fc816e6aabb2192209722867be2199c450adb4f5cbf5d992c1dfa7035d1ef5ca",
-        "prepared_sha256": "ddc988cbda878a5b2deaba290e8f1c63e69dd463f0fcdaa435f55febaf392820",
-        "source_sha256": "71fb13a0d12ba7a49377178cdfb2754564350c12912a95c6784efbd1a582823b"
+        "original": "\t\tlet ready = loop {\n\t\t\teffect = match effect {\n\t\t\t\tBeaconInitEffect::Rejected(_) => return None,\n\t\t\t\tBeaconInitEffect::Ready(ready) => break ready,\n\t\t\t\tBeaconInitEffect::Ed25519SigningRequested(pending) => {\n\t\t\t\t\tlet request = pending.request();\n\t\t\t\t\tlet signed = if self.identity_pk().as_bytes() == request.public_key {\n\t\t\t\t\t\tcrypto_sign::sign(request.message, self.identity_sk()).ok()\n\t\t\t\t\t} else {\n\t\t\t\t\t\tNone\n\t\t\t\t\t};\n\t\t\t\t\tpending.resume(signed.as_deref())\n\t\t\t\t}\n\t\t\t\tBeaconInitEffect::HashRequested(pending) => {\n\t\t\t\t\tlet hash = auth::execute_hash(&pending.request());\n\t\t\t\t\tpending.resume(hash)\n\t\t\t\t}\n\t\t\t};\n\t\t};",
+        "original_sha256": "d63c59d9e331b085cf28e1e591af76624defdfcd98af1a06785cef2b0ea5e832",
+        "prepared_sha256": "721d3206902a32080b6f8a790ac0396c4ccd72d7113b8a82fc0d9a1e59eca58b",
+        "source_sha256": "669482d038c8143ac25698bd4a1517480745c9b29c348d7d5c023992f813a845"
       },
       "beaconcrypt/src/pqxdh.rs": {
         "law": "AdapterPublicControlNormalization.dh_selectionM",
         "original": "\t\t\t\tlet secret: Option<&[u8]> = match request.secret_role {\n\t\t\t\t\tDhSecretRole::LocalIdentity => {\n\t\t\t\t\t\tlocal_identity.as_ref().map(|key| key.as_slice())\n\t\t\t\t\t}\n\t\t\t\t\tDhSecretRole::ServerEphemeral => server_ephemeral\n\t\t\t\t\t\t.as_ref()\n\t\t\t\t\t\t.map(|key| key.secret_key.as_bytes().as_slice()),\n\t\t\t\t\tDhSecretRole::BeaconPrekey => {\n\t\t\t\t\t\tkeys.beacon_prekey.map(|key| key.as_bytes().as_slice())\n\t\t\t\t\t}\n\t\t\t\t\tDhSecretRole::BeaconOneTime => {\n\t\t\t\t\t\tkeys.beacon_one_time.map(|key| key.as_bytes().as_slice())\n\t\t\t\t\t}\n\t\t\t\t};\n\t\t\t\tlet shared = secret.and_then(|secret| {\n\t\t\t\t\tcrypto_scalarmult::scalarmult(secret, request.public_key).ok()\n\t\t\t\t});",
         "original_sha256": "3203fc86d6d3efa27ac19233e31d607179f22b2e16640b0767fd1c3535630274",
         "prepared": "\t\t\t\tlet shared = match request.secret_role {\n\t\t\t\t\tDhSecretRole::LocalIdentity => local_identity.as_ref().and_then(|key| {\n\t\t\t\t\t\tcrypto_scalarmult::scalarmult(key.as_slice(), request.public_key).ok()\n\t\t\t\t\t}),\n\t\t\t\t\tDhSecretRole::ServerEphemeral => server_ephemeral.as_ref().and_then(|key| {\n\t\t\t\t\t\tcrypto_scalarmult::scalarmult(key.secret_key.as_bytes().as_slice(), request.public_key).ok()\n\t\t\t\t\t}),\n\t\t\t\t\tDhSecretRole::BeaconPrekey => keys.beacon_prekey.and_then(|key| {\n\t\t\t\t\t\tcrypto_scalarmult::scalarmult(key.as_bytes().as_slice(), request.public_key).ok()\n\t\t\t\t\t}),\n\t\t\t\t\tDhSecretRole::BeaconOneTime => keys.beacon_one_time.and_then(|key| {\n\t\t\t\t\t\tcrypto_scalarmult::scalarmult(key.as_bytes().as_slice(), request.public_key).ok()\n\t\t\t\t\t}),\n\t\t\t\t};",
-        "prepared_sha256": "756927bb98155b25aeec14411bc52287605828b0c26a610832a5232c5ddf4b81",
+        "prepared_sha256": "b95d95778eb1ff7ad7cd0ef969579e578a1a5cbc3cdb8416ebbb5adcfba85f2a",
         "roles": [
           [
             "LocalIdentity",
@@ -7076,30 +7067,30 @@
             "key.as_bytes().as_slice()"
           ]
         ],
-        "source_sha256": "f3b880ec118bebfd49851156588e681da40f50761470fbacc6940fd69cabc319"
+        "source_sha256": "031465df2916c2fd118a28b3cb91f79484f535e2149c9c5bc48d3c5395dacf23"
       }
     },
     "unchanged_sha256": {
       "Cargo.lock": "2f9299d8f9844467ef90c9bbea76cdcacec7e1dffae7025930565ef56906b8e6",
       "Cargo.toml": "755b24b6a434712ac0b941dcb1cf629321f128555a43b5e574c38dd5bf1b3b53",
       "beaconcrypt-core/Cargo.toml": "8e41a5e7c6f9715417628967f404745000e89d177902bde70d1969ef00af5f09",
-      "beaconcrypt-core/src/agreement.rs": "cea8e603c7943f18ba79f95743cc113e3d16e8589c3614240b542ee3ac1109de",
-      "beaconcrypt-core/src/authentication.rs": "794db37d54728df926e9c5f150ded8734eb7521d5781fa3fc4e2f4b2c1f5d1ef",
-      "beaconcrypt-core/src/commitment.rs": "44bd939e02cbfd02671142fae08b83e9e971b8955c6a84c04cc309c17c087a48",
-      "beaconcrypt-core/src/constants.rs": "748979a5b3b340b692bc10a687a27250ef5e6e2a67d43876a32585177226ef0a",
-      "beaconcrypt-core/src/lib.rs": "f32716d2a108cdc1782274bd82cac40bbd70f36e50835e7d09cc31b94e167958",
-      "beaconcrypt-core/src/peer.rs": "df4b0fc85a7a303f56908b13a4d90fb7d9233601040b43e035a99d341bd757bc",
-      "beaconcrypt-core/src/pqxdh.rs": "bff5dca4b9a292a025ad96ab9fba8761bc63d2e49dac493a2bae0d1cea67a018",
-      "beaconcrypt-core/src/pqxdh/concrete.rs": "b3a22f8a7c4adb087e217d58e2d302a057fd5ae224cd8fe2c44777472e469c50",
-      "beaconcrypt-core/src/ratchet.rs": "3ed4d65ed1a63605819f8e685707d47b718a91ea9ee23069da88501c8031fa51",
+      "beaconcrypt-core/src/agreement.rs": "7abf5bb56eb76ed461d52d0d6efff8bb18f165cc6831417a4f78f6e4d0672fa6",
+      "beaconcrypt-core/src/authentication.rs": "eef28a2a39d5134528173e40d22d02f9846319d2c2d67dc4b0e60d14d6637659",
+      "beaconcrypt-core/src/commitment.rs": "ca2e0a3eb7ce3712b1933a8bc6f548fa9fff5093a677ee6f7fb8bcdf090a162d",
+      "beaconcrypt-core/src/constants.rs": "60cfbabca698e1aeb53166425f589989b17f4b936aa271b102750deaf1d54418",
+      "beaconcrypt-core/src/lib.rs": "2b43ceb71b1b71fa69a69d9f41c2e62de7a54c54198803633412927234c627d6",
+      "beaconcrypt-core/src/peer.rs": "5ace82b81a3e1c191223fd0629be3f00bbd321336baed0b568c9e432df0f9d77",
+      "beaconcrypt-core/src/pqxdh.rs": "0e90604b6537968f73873850ca7626f5019a9482c3225bb333d9a3ff555fde4f",
+      "beaconcrypt-core/src/pqxdh/concrete.rs": "fb8bfbbf3c2a6615540983a4665def830ffd6493a1dfaa9ffad396793bd0c5f0",
+      "beaconcrypt-core/src/ratchet.rs": "ff8981ab40ed42f406e04b1258063b8e5a9418af76cccc9f065f12160fa08f47",
       "beaconcrypt-core/src/ratchet/concrete.rs": "c9f907f20f23ac2851792ff6eef77565a843e61ff266d21617411100e12e431d",
       "beaconcrypt-core/src/ratchet/control.rs": "6c17cc0dbe7445be04dc3ab123a60ecbf3d757da6337a7132d5dafd3e06f5639",
       "beaconcrypt-core/src/ratchet/refined.rs": "ce940e42b1e95bc841121ba80107ce74757fea4f4fcbd771834b93e28cdb459f",
       "beaconcrypt-core/src/record.rs": "530f820ec1998cb60ce9f2d6666f33feabcfcc597fd06997d1272d3abba9edc0",
       "beaconcrypt-core/src/record_effects.rs": "dbdf79661a17c8d8c128ff349a7efe906d6713912e5510c9a0476b0c3efad2b5",
-      "beaconcrypt-core/src/registration.rs": "fb6f679499585a9d9976abaea31f8dbd8f68f53f6c0f1deb7462ee393acf9f25",
-      "beaconcrypt-core/src/session.rs": "3779c778ce4f8ec534c2fa610c0a334302ada76fc5cd601ade575802ff9c07c4",
-      "beaconcrypt-core/src/transport.rs": "bc3f347f251cb07e44c47699c6fa3db4c9ae8b73c6d1d54c6f9eb54911a463a9",
+      "beaconcrypt-core/src/registration.rs": "8be65a2c601a151d0ec9d2a570b929d55d72394edceac59599e1b11d741bba83",
+      "beaconcrypt-core/src/session.rs": "4f83234a89c0fe8df60d68753930339f68208e2f14c464849177006af550c15e",
+      "beaconcrypt-core/src/transport.rs": "795012d453a3ed209d6f8815eeedb2ccabaebd9a81d03f932d64f95aea9c3617",
       "beaconcrypt-crypto/Cargo.toml": "dc34ba30e7cfbe1c17e27be5ffe2e49f151c9ba170fed7e42baf5bc09cec4560",
       "beaconcrypt-crypto/src/crypto_aead.rs": "1b62a128ed169c81a45825ede6853b32ae715ce9ea96f9d53803e7fb461b9bf1",
       "beaconcrypt-crypto/src/crypto_generichash.rs": "292e806217ff105632f48ac32d89f3e9820b8a2b118810790be06e60104168f3",
@@ -7116,44 +7107,44 @@
       "beaconcrypt-parse/src/frame_tests.rs": "1061147b64fed42af962accf164ab4e6fe885a9226052c0b17ff9ab9b08483a2",
       "beaconcrypt-parse/src/generated/cbordetver.rs": "e60e27d58b3fe7eeaca202e9751b596c88884b4a76d5bf57a345a21861066d6c",
       "beaconcrypt-parse/src/generated/cbordetveraux.rs": "36420e78b9feed0a4c4a1b6a57b28aeba16ae38be9c61f5ff8165fa088ac3589",
-      "beaconcrypt-parse/src/generated/transport.rs": "218245bef2baa287d6d2a77f6013fe7d78c887b4416a88756618240ad83e3fa8",
-      "beaconcrypt-parse/src/lib.rs": "e3ee33763548d8e22950e0f1b459b686f392a182f85d55289f718dd8a3f3b378",
-      "beaconcrypt-parse/src/preflight_tests.rs": "c0e3299054d9003e28dc060d5c3d83e8b5a98219d0f4605ec4482d3ae658479f",
+      "beaconcrypt-parse/src/generated/transport.rs": "c271a30fe4aa35fb90782c7cec8755c50148fdab139fa7e1eadafd5e4b373b66",
+      "beaconcrypt-parse/src/lib.rs": "1566e1f7314eb0c46354c6d0763e019272fbb891ef95a08959ed153d63917b9a",
+      "beaconcrypt-parse/src/preflight_tests.rs": "509c205dcecd6e86ae23a5183500dbafc1ecc397de77ed6da317ac50e133c46a",
       "beaconcrypt-wasm/Cargo.toml": "e4a7a2c3aeec7038b8e09b75f2894473e16be0a92750c0dd62c92d5e81ddf616",
-      "beaconcrypt-wasm/src/abi.rs": "8bb2dfaac6c05e0501f39a8350f2828f4d6c6864937406424180bf7cb0dadff9",
+      "beaconcrypt-wasm/src/abi.rs": "dca21659fe559463e64002bf33962f50675d5ee6a4514bc47d869289af787ece",
       "beaconcrypt-wasm/src/abi_tests.rs": "82f0ad94b7aa097bb27f53c65d5a658597107cbadd19a31bfe64ead660bcbddb",
-      "beaconcrypt-wasm/src/lib.rs": "4d54ba1abb5e333dca82f8ae81e052fb250a2e72f4596d4ae93f4a8b765725f7",
+      "beaconcrypt-wasm/src/lib.rs": "61a9783a97a8d7ac929c586100d7e5240bbb7fb44e1761a644d0b866113ee6cb",
       "beaconcrypt-wasm/src/store.rs": "24e9719ab0115328b2b3865f3bb7d18da809e0a4a58736df7e9f345cfcd24b3b",
       "beaconcrypt-wasm/src/store_tests.rs": "63edd62fdaebab5ecc04d29155d99456404259977853d992cb123962d6b0fcfc",
-      "beaconcrypt-wasm/src/tests.rs": "a646de2495c2658e493fb602016b4eda02d9350965f9fd02849d8558d75ee48e",
+      "beaconcrypt-wasm/src/tests.rs": "15749c3248c46bba2a078acc6d3869ae3a3fbf66677731217510a109d72a59bf",
       "beaconcrypt/Cargo.toml": "bd72a2dd47102f91b1f927b90666f78674a9e4af91419dffad3ac69d7195a098",
-      "beaconcrypt/src/auth.rs": "45b2513e304b4d4b12b41ca15ff15b94db54886e302453971d99ec0f1ce4f884",
-      "beaconcrypt/src/cbinds.rs": "72892223fa8d6815419dcda3dbc8a8a1a4a85f373cc4931b43b79c9c196bded1",
+      "beaconcrypt/src/auth.rs": "f812e268cdd86cac01c43fdba5b25b944ebcdda1f6c03407203a6fbfa9ed16b5",
+      "beaconcrypt/src/cbinds.rs": "d6b84d410a604fa89ee95e2e237df94012e8ef7f6532130ad7c21a31eef04d46",
       "beaconcrypt/src/collections.rs": "2eac87345a8673bad9fe89e705a65eb0f20c6ac67a2516872fedd599576b8334",
-      "beaconcrypt/src/deser.rs": "35b49d73e89dafe0d9f5699f513adc4293f1ff2b24146584a6ac5cb272eb6af2",
+      "beaconcrypt/src/deser.rs": "b112980cd91dc0e6b08048859bd3c373dd6eebc01e3e55f5d5c29af92a3be6a1",
       "beaconcrypt/src/error.rs": "588ef788b61ad3914b4b8d2ca031cd0229d0d0e3c158b4e42f285ad169019753",
       "beaconcrypt/src/lib.rs": "59b2239615ff5c4bfa10db7a7162b078db5abdd10f143f9a3624937a6ff4a3ba",
-      "beaconcrypt/src/persistence.rs": "dd3cbba3843e7899cb51407cd8ec605eeb3818635b0867fbb44e2e10cc332050",
-      "beaconcrypt/src/pybinds.rs": "99add1792edca9c8feb9e94e0e500152baf34c99912be19b3ee9bb77c3b7127e",
-      "beaconcrypt/src/ratchet.rs": "ff38395eceb8695cabee418be5e20074eee8482bd4f9e6d0bb2f801d368fffda",
+      "beaconcrypt/src/persistence.rs": "6e34349583feff9bb372a5a9a0ef5c387708ac69be189e8893bf176be3086bbf",
+      "beaconcrypt/src/pybinds.rs": "47065efeda4b5908cfa4c2d08ed160a07de5b00fa2aa4a941d692727b76d93fb",
+      "beaconcrypt/src/ratchet.rs": "f9fa5f0b41821cc54fe5f626d18a853489300a7a2cde061efd8f7f0da277370d",
       "beaconcrypt/src/row_binding_server.rs": "337de396cec39c4dde6be0022a378bc3669151a9659d6dfbaadae880732a22b3",
       "beaconcrypt/src/row_cbinds.rs": "c7fd1f48d414573d3d0e984e7e33a005bb727e3f7faa4d16ee987972bd15bf07",
-      "beaconcrypt/src/row_persistence.rs": "8520a908923d130b33f1de85b27d0e2ab8e1232c2783eb4d78a5ba806d9ddea3",
+      "beaconcrypt/src/row_persistence.rs": "5da4c4e3edac635df5a38963d85e4ce3a02a68818e8366249cbed0cdb4b6aad6",
       "beaconcrypt/src/row_pybinds.rs": "d954d1ccea96f37d1a6cedf84e952b6807d14d827495b0eb8369f13d39f06eb4",
-      "beaconcrypt/src/ser.rs": "eeaad56b6a315e156b4c546b0c82570ece53a336430933ea7dec1050eb36613f",
-      "beaconcrypt/src/server.rs": "9bd205117f41c690f5fae2936c2f70de61e751f04caee78de800e2ba51dffb13",
-      "beaconcrypt/src/shared.rs": "6457931a67e77c2159bd6c33e366b433f1affe95cab2150f5a3df2dfda30a5b9",
-      "beaconcrypt/src/wire.rs": "443e1320beafe10872b7517689da3c669e206ef5444a8e36fcdc86a304504549"
+      "beaconcrypt/src/ser.rs": "ada89cf894690a70a03dd604ac8b1689e28311e055bfd657d47d7a765fe8260c",
+      "beaconcrypt/src/server.rs": "b5e6992a58eacce5b51d2624ff58206fbd56c744a97561146d07176a9242b66b",
+      "beaconcrypt/src/shared.rs": "98ff9810f5b1a8425a2177dab49c53eda6aa75cf5f78aedb1617712b4da17387",
+      "beaconcrypt/src/wire.rs": "74acbaed761b8c7d4d492ac8acc4cc4c9374852ffb278ca5b948e092f6b0aa74"
     }
   },
   "templates": {
     "FunsExternal_Template.lean": {
-      "sha256": "3f200d4524ee710bb60842f9617c64299d94b55688fa0df3da3f4ffd484d2758",
-      "source": "-- THIS FILE WAS AUTOMATICALLY GENERATED BY AENEAS\n-- [beaconcrypt]: external functions.\n-- This is a template file: rename it to \"FunsExternal.lean\" and fill the holes.\nimport Aeneas\nimport CoreModels\nimport BeaconcryptCore.AdapterPublicWrapperExtraction.Types\nopen CoreModels Aeneas\nopen Aeneas.Std hiding namespace core alloc\nopen RustM ControlFlow Error\nopen Std.Do\nset_option linter.dupNamespace false\nset_option linter.hashCommand false\nset_option linter.unusedVariables false\nset_option linter.style.whitespace false\nset_option linter.style.setOption false\nset_option linter.style.longLine false\n\n/- You can set the `maxHeartbeats` value with the `-max-heartbeats` CLI option -/\nset_option maxHeartbeats 1000000\n\n/- You can set the `maxRecDepth` value with the `-max-recdepth` CLI option -/\nset_option maxRecDepth 2048\nopen beaconcrypt\n\n/-- [beaconcrypt::auth::{beaconcrypt::auth::MldsaIdentity}::public_key]:\n    Source: 'beaconcrypt/src/auth.rs', lines 66:4-68:5\n    Visibility: public -/\naxiom auth.MldsaIdentity.public_key\n  : auth.MldsaIdentity \u2192 RustM (Array Std.U8 1952#usize)\n\n/-- [beaconcrypt::auth::execute_hash]:\n    Source: 'beaconcrypt/src/auth.rs', lines 167:0-180:1 -/\naxiom auth.execute_hash\n  :\n  beaconcrypt_core.registration.HashRequest \u2192 RustM (core.option.Option\n    (Array Std.U8 64#usize))\n\n/-- [beaconcrypt::auth::{beaconcrypt::auth::MldsaIdentity}::sign_requested]:\n    Source: 'beaconcrypt/src/auth.rs', lines 209:4-221:5 -/\naxiom auth.MldsaIdentity.sign_requested\n  :\n  auth.MldsaIdentity \u2192 beaconcrypt_core.registration.MldsaSigningRequest \u2192\n    RustM (core.option.Option (alloc.vec.Vec Std.U8))\n\n/-- [beaconcrypt::auth::authenticate_init]:\n    Source: 'beaconcrypt/src/auth.rs', lines 225:0-263:1 -/\naxiom auth.authenticate_init\n  :\n  beaconcrypt_core.session.ServerAuthenticationPin \u2192\n    beaconcrypt_core.registration.InitPacket \u2192 RustM (core.option.Option\n    beaconcrypt_core.registration.AuthenticatedInit)\n\n/-- [beaconcrypt::auth::authenticate_response]:\n    Source: 'beaconcrypt/src/auth.rs', lines 266:0-278:1 -/\naxiom auth.authenticate_response\n  :\n  beaconcrypt_core.registration.BeaconPending \u2192 core.option.Option\n    beaconcrypt_core.registration.ResponsePacket \u2192 RustM (core.result.Result\n    beaconcrypt_core.registration.AuthenticatedResponse\n    beaconcrypt_core.pqxdh.BeaconAborted)\n\n/-- [beaconcrypt::wire::encode_init]:\n    Source: 'beaconcrypt/src/wire.rs', lines 51:0-63:1 -/\naxiom wire.encode_init\n  :\n  beaconcrypt_parse.transport.initkex \u2192 RustM (core.option.Option\n    (alloc.vec.Vec Std.U8))\n\n/-- [beaconcrypt::ratchet::execute_open_request]:\n    Source: 'beaconcrypt/src/ratchet.rs', lines 522:0-535:1 -/\naxiom ratchet.execute_open_request\n  :\n  core.option.Option beaconcrypt_core.record.AeadRequest \u2192 RustM\n    (core.option.Option (alloc.vec.Vec Std.U8))\n\n/-- [beaconcrypt::ratchet::execute_commitment_hash]:\n    Source: 'beaconcrypt/src/ratchet.rs', lines 489:0-496:1 -/\naxiom ratchet.execute_commitment_hash\n  :\n  beaconcrypt_core.commitment.CommitmentTranscript \u2192 RustM\n    ((core.option.Option (Array Std.U8 64#usize)) \u00d7\n    beaconcrypt_core.commitment.CommitmentTranscript)\n\n/-- [beaconcrypt::ratchet::initial_ratchet_hkdf]:\n    Source: 'beaconcrypt/src/ratchet.rs', lines 106:0-110:1 -/\naxiom ratchet.initial_ratchet_hkdf\n  :\n  beaconcrypt_core.ratchet.SymmetricRatchetKdfRequest \u2192 RustM (Array Std.U8\n    64#usize)\n\n/-- [beaconcrypt::ratchet::ratchet_hkdf]:\n    Source: 'beaconcrypt/src/ratchet.rs', lines 100:0-104:1 -/\naxiom ratchet.ratchet_hkdf\n  :\n  beaconcrypt_core.ratchet.SymmetricRatchetKdfRequest \u2192 RustM\n    beaconcrypt_core.ratchet.RatchetKdfResponse\n\n/-- [beaconcrypt::pqxdh::{impl rand_core::TryRng<beaconcrypt_crypto::CryptoError> for beaconcrypt::pqxdh::NoEntropy}::try_fill_bytes]:\n    Source: 'beaconcrypt/src/pqxdh.rs', lines 208:4-210:5\n    Visibility: public -/\naxiom pqxdh.NoEntropy.Insts.Rand_coreTryRngCryptoError.try_fill_bytes\n  :\n  pqxdh.NoEntropy \u2192 Slice Std.U8 \u2192 RustM ((core.result.Result Unit\n    beaconcrypt_crypto.CryptoError) \u00d7 pqxdh.NoEntropy \u00d7 (Slice Std.U8))\n\n/-- [beaconcrypt::pqxdh::{impl rand_core::TryRng<beaconcrypt_crypto::CryptoError> for beaconcrypt::pqxdh::NoEntropy}::try_next_u64]:\n    Source: 'beaconcrypt/src/pqxdh.rs', lines 204:4-206:5\n    Visibility: public -/\naxiom pqxdh.NoEntropy.Insts.Rand_coreTryRngCryptoError.try_next_u64\n  :\n  pqxdh.NoEntropy \u2192 RustM ((core.result.Result Std.U64\n    beaconcrypt_crypto.CryptoError) \u00d7 pqxdh.NoEntropy)\n\n/-- [beaconcrypt::pqxdh::{impl rand_core::TryRng<beaconcrypt_crypto::CryptoError> for beaconcrypt::pqxdh::NoEntropy}::try_next_u32]:\n    Source: 'beaconcrypt/src/pqxdh.rs', lines 200:4-202:5\n    Visibility: public -/\naxiom pqxdh.NoEntropy.Insts.Rand_coreTryRngCryptoError.try_next_u32\n  :\n  pqxdh.NoEntropy \u2192 RustM ((core.result.Result Std.U32\n    beaconcrypt_crypto.CryptoError) \u00d7 pqxdh.NoEntropy)\n\n/-- [beaconcrypt::beacon::{impl beaconcrypt::beacon::ProviderBeacon for beaconcrypt::beacon::Beacon}::finish_registration::{impl core::ops::function::FnOnce<(beaconcrypt_parse::transport::kexresponse<'_>,), core::option::Option<beaconcrypt_core::registration::ResponsePacket<'_>>> for beaconcrypt::beacon::{impl beaconcrypt::beacon::ProviderBeacon for beaconcrypt::beacon::Beacon}::finish_registration::closure}::call_once]:\n    Source: 'beaconcrypt/src/beacon.rs', lines 492:53-501:9 -/\naxiom\n  beacon.ProviderBeaconBeacon.finish_registration.closure.Insts.CoreOpsFunctionFnOnceTuplekexresponseOptionResponsePacket.call_once\n  :\n  beacon.ProviderBeaconBeacon.finish_registration.closure \u2192\n    beaconcrypt_parse.transport.kexresponse \u2192 RustM (core.option.Option\n    beaconcrypt_core.registration.ResponsePacket)\n\n/-- [beaconcrypt::collections::{impl core::hash::BuildHasher<siphasher::sip::SipHasher13> for beaconcrypt::collections::KeyedHasher}::build_hasher]:\n    Source: 'beaconcrypt/src/collections.rs', lines 17:4-19:5\n    Visibility: public -/\naxiom collections.KeyedHasher.Insts.CoreHashBuildHasherSipHasher13.build_hasher\n  : collections.KeyedHasher \u2192 RustM siphasher.sip.SipHasher13\n\n/-- [beaconcrypt::ratchet::execute_seal_request]:\n    Source: 'beaconcrypt/src/ratchet.rs', lines 459:0-486:1 -/\naxiom ratchet.execute_seal_request\n  :\n  beaconcrypt_core.record_effects.AeadSealRequest \u2192 RustM (core.option.Option\n    ((alloc.vec.Vec Std.U8) \u00d7 (Array Std.U8 16#usize)))\n\n/-- [beaconcrypt::ratchet::execute_write_request]:\n    Source: 'beaconcrypt/src/ratchet.rs', lines 511:0-520:1 -/\naxiom ratchet.execute_write_request\n  :\n  beaconcrypt_core.record_effects.RecordWriteRequest \u2192 RustM\n    (core.option.Option (alloc.vec.Vec Std.U8))\n\n/-- [beaconcrypt::server::registration_application_bytes]:\n    Source: 'beaconcrypt/src/server.rs', lines 58:0-65:1 -/\naxiom server.registration_application_bytes\n  : beaconcrypt_core.transport.RegistrationApplication \u2192 RustM (Slice Std.U8)\n\n/-- [beaconcrypt::wire::encode_response]:\n    Source: 'beaconcrypt/src/wire.rs', lines 66:0-80:1 -/\naxiom wire.encode_response\n  :\n  beaconcrypt_parse.transport.kexresponse \u2192 RustM (core.option.Option\n    (alloc.vec.Vec Std.U8))\n\n/-- [beaconcrypt::server::{impl beaconcrypt::server::ProviderServer for beaconcrypt::server::Server}::build_registration_response::{impl core::ops::function::FnOnce<(&'_ (alloc::vec::Vec<u8>, [u8; 16usize]),), (&'_ [u8], [u8; 16usize])> for beaconcrypt::server::{impl beaconcrypt::server::ProviderServer for beaconcrypt::server::Server}::build_registration_response::closure}::call_once]:\n    Source: 'beaconcrypt/src/server.rs', lines 640:50-640:87 -/\naxiom\n  server.ProviderServerServer.build_registration_response.closure.Insts.CoreOpsFunctionFnOnceTupleSharedPairVecU8ArrayU816PairSharedSliceU8ArrayU816.call_once\n  :\n  server.ProviderServerServer.build_registration_response.closure \u2192\n    ((alloc.vec.Vec Std.U8) \u00d7 (Array Std.U8 16#usize)) \u2192 RustM ((Slice\n    Std.U8) \u00d7 (Array Std.U8 16#usize))\n\n"
+      "sha256": "82ebd1df189df86f25f0631617a603c52f78f7c1d408e585d0dc53dd25f504b3",
+      "source": "-- THIS FILE WAS AUTOMATICALLY GENERATED BY AENEAS\n-- [beaconcrypt]: external functions.\n-- This is a template file: rename it to \"FunsExternal.lean\" and fill the holes.\nimport Aeneas\nimport CoreModels\nimport BeaconcryptCore.AdapterPublicWrapperExtraction.Types\nopen CoreModels Aeneas\nopen Aeneas.Std hiding namespace core alloc\nopen RustM ControlFlow Error\nopen Std.Do\nset_option linter.dupNamespace false\nset_option linter.hashCommand false\nset_option linter.unusedVariables false\nset_option linter.style.whitespace false\nset_option linter.style.setOption false\nset_option linter.style.longLine false\n\n/- You can set the `maxHeartbeats` value with the `-max-heartbeats` CLI option -/\nset_option maxHeartbeats 1000000\n\n/- You can set the `maxRecDepth` value with the `-max-recdepth` CLI option -/\nset_option maxRecDepth 2048\nopen beaconcrypt\n\n/-- [beaconcrypt::auth::{beaconcrypt::auth::MldsaIdentity}::public_key]:\n    Source: 'beaconcrypt/src/auth.rs', lines 69:4-71:5\n    Visibility: public -/\naxiom auth.MldsaIdentity.public_key\n  : auth.MldsaIdentity \u2192 RustM (Array Std.U8 1952#usize)\n\n/-- [beaconcrypt::auth::execute_hash]:\n    Source: 'beaconcrypt/src/auth.rs', lines 158:0-171:1 -/\naxiom auth.execute_hash\n  :\n  beaconcrypt_core.registration.HashRequest \u2192 RustM (core.option.Option\n    (Array Std.U8 64#usize))\n\n/-- [beaconcrypt::auth::{beaconcrypt::auth::MldsaIdentity}::sign_requested]:\n    Source: 'beaconcrypt/src/auth.rs', lines 202:4-214:5 -/\naxiom auth.MldsaIdentity.sign_requested\n  :\n  auth.MldsaIdentity \u2192 beaconcrypt_core.registration.MldsaSigningRequest \u2192\n    RustM (core.option.Option (alloc.vec.Vec Std.U8))\n\n/-- [beaconcrypt::auth::authenticate_init]:\n    Source: 'beaconcrypt/src/auth.rs', lines 218:0-245:1 -/\naxiom auth.authenticate_init\n  :\n  beaconcrypt_core.session.ServerAuthenticationPin \u2192\n    beaconcrypt_core.registration.InitPacket \u2192 RustM (core.option.Option\n    beaconcrypt_core.registration.AuthenticatedInit)\n\n/-- [beaconcrypt::auth::authenticate_response]:\n    Source: 'beaconcrypt/src/auth.rs', lines 248:0-262:1 -/\naxiom auth.authenticate_response\n  :\n  beaconcrypt_core.registration.BeaconPending \u2192 core.option.Option\n    beaconcrypt_core.registration.ResponsePacket \u2192 RustM (core.result.Result\n    beaconcrypt_core.registration.AuthenticatedResponse\n    beaconcrypt_core.pqxdh.BeaconAborted)\n\n/-- [beaconcrypt::wire::encode_init]:\n    Source: 'beaconcrypt/src/wire.rs', lines 51:0-61:1 -/\naxiom wire.encode_init\n  :\n  beaconcrypt_parse.transport.initkex \u2192 RustM (core.option.Option\n    (alloc.vec.Vec Std.U8))\n\n/-- [beaconcrypt::ratchet::execute_open_request]:\n    Source: 'beaconcrypt/src/ratchet.rs', lines 526:0-539:1 -/\naxiom ratchet.execute_open_request\n  :\n  core.option.Option beaconcrypt_core.record.AeadRequest \u2192 RustM\n    (core.option.Option (alloc.vec.Vec Std.U8))\n\n/-- [beaconcrypt::ratchet::execute_commitment_hash]:\n    Source: 'beaconcrypt/src/ratchet.rs', lines 493:0-500:1 -/\naxiom ratchet.execute_commitment_hash\n  :\n  beaconcrypt_core.commitment.CommitmentTranscript \u2192 RustM\n    ((core.option.Option (Array Std.U8 64#usize)) \u00d7\n    beaconcrypt_core.commitment.CommitmentTranscript)\n\n/-- [beaconcrypt::ratchet::initial_ratchet_hkdf]:\n    Source: 'beaconcrypt/src/ratchet.rs', lines 110:0-114:1 -/\naxiom ratchet.initial_ratchet_hkdf\n  :\n  beaconcrypt_core.ratchet.InitialRatchetKdfRequest \u2192 RustM (Array Std.U8\n    64#usize)\n\n/-- [beaconcrypt::ratchet::ratchet_hkdf]:\n    Source: 'beaconcrypt/src/ratchet.rs', lines 101:0-108:1 -/\naxiom ratchet.ratchet_hkdf\n  :\n  beaconcrypt_core.ratchet.SymmetricRatchetKdfRequest \u2192 RustM\n    beaconcrypt_core.ratchet.RatchetKdfResponse\n\n/-- [beaconcrypt::pqxdh::{impl rand_core::TryRng<beaconcrypt_crypto::CryptoError> for beaconcrypt::pqxdh::NoEntropy}::try_fill_bytes]:\n    Source: 'beaconcrypt/src/pqxdh.rs', lines 191:4-193:5\n    Visibility: public -/\naxiom pqxdh.NoEntropy.Insts.Rand_coreTryRngCryptoError.try_fill_bytes\n  :\n  pqxdh.NoEntropy \u2192 Slice Std.U8 \u2192 RustM ((core.result.Result Unit\n    beaconcrypt_crypto.CryptoError) \u00d7 pqxdh.NoEntropy \u00d7 (Slice Std.U8))\n\n/-- [beaconcrypt::pqxdh::{impl rand_core::TryRng<beaconcrypt_crypto::CryptoError> for beaconcrypt::pqxdh::NoEntropy}::try_next_u64]:\n    Source: 'beaconcrypt/src/pqxdh.rs', lines 187:4-189:5\n    Visibility: public -/\naxiom pqxdh.NoEntropy.Insts.Rand_coreTryRngCryptoError.try_next_u64\n  :\n  pqxdh.NoEntropy \u2192 RustM ((core.result.Result Std.U64\n    beaconcrypt_crypto.CryptoError) \u00d7 pqxdh.NoEntropy)\n\n/-- [beaconcrypt::pqxdh::{impl rand_core::TryRng<beaconcrypt_crypto::CryptoError> for beaconcrypt::pqxdh::NoEntropy}::try_next_u32]:\n    Source: 'beaconcrypt/src/pqxdh.rs', lines 183:4-185:5\n    Visibility: public -/\naxiom pqxdh.NoEntropy.Insts.Rand_coreTryRngCryptoError.try_next_u32\n  :\n  pqxdh.NoEntropy \u2192 RustM ((core.result.Result Std.U32\n    beaconcrypt_crypto.CryptoError) \u00d7 pqxdh.NoEntropy)\n\n/-- [beaconcrypt::beacon::{impl beaconcrypt::beacon::ProviderBeacon for beaconcrypt::beacon::Beacon}::finish_registration::{impl core::ops::function::FnOnce<(beaconcrypt_parse::transport::kexresponse<'_>,), core::option::Option<beaconcrypt_core::registration::ResponsePacket<'_>>> for beaconcrypt::beacon::{impl beaconcrypt::beacon::ProviderBeacon for beaconcrypt::beacon::Beacon}::finish_registration::closure}::call_once]:\n    Source: 'beaconcrypt/src/beacon.rs', lines 483:53-492:9 -/\naxiom\n  beacon.ProviderBeaconBeacon.finish_registration.closure.Insts.CoreOpsFunctionFnOnceTuplekexresponseOptionResponsePacket.call_once\n  :\n  beacon.ProviderBeaconBeacon.finish_registration.closure \u2192\n    beaconcrypt_parse.transport.kexresponse \u2192 RustM (core.option.Option\n    beaconcrypt_core.registration.ResponsePacket)\n\n/-- [beaconcrypt::collections::{impl core::hash::BuildHasher<siphasher::sip::SipHasher13> for beaconcrypt::collections::KeyedHasher}::build_hasher]:\n    Source: 'beaconcrypt/src/collections.rs', lines 17:4-19:5\n    Visibility: public -/\naxiom collections.KeyedHasher.Insts.CoreHashBuildHasherSipHasher13.build_hasher\n  : collections.KeyedHasher \u2192 RustM siphasher.sip.SipHasher13\n\n/-- [beaconcrypt::ratchet::execute_seal_request]:\n    Source: 'beaconcrypt/src/ratchet.rs', lines 463:0-490:1 -/\naxiom ratchet.execute_seal_request\n  :\n  beaconcrypt_core.record_effects.AeadSealRequest \u2192 RustM (core.option.Option\n    ((alloc.vec.Vec Std.U8) \u00d7 (Array Std.U8 16#usize)))\n\n/-- [beaconcrypt::ratchet::execute_write_request]:\n    Source: 'beaconcrypt/src/ratchet.rs', lines 515:0-524:1 -/\naxiom ratchet.execute_write_request\n  :\n  beaconcrypt_core.record_effects.RecordWriteRequest \u2192 RustM\n    (core.option.Option (alloc.vec.Vec Std.U8))\n\n/-- [beaconcrypt::server::registration_application_bytes]:\n    Source: 'beaconcrypt/src/server.rs', lines 58:0-65:1 -/\naxiom server.registration_application_bytes\n  : beaconcrypt_core.transport.RegistrationApplication \u2192 RustM (Slice Std.U8)\n\n/-- [beaconcrypt::wire::encode_response]:\n    Source: 'beaconcrypt/src/wire.rs', lines 64:0-78:1 -/\naxiom wire.encode_response\n  :\n  beaconcrypt_parse.transport.kexresponse \u2192 RustM (core.option.Option\n    (alloc.vec.Vec Std.U8))\n\n/-- [beaconcrypt::server::{impl beaconcrypt::server::ProviderServer for beaconcrypt::server::Server}::build_registration_response::{impl core::ops::function::FnOnce<(&'_ (alloc::vec::Vec<u8>, [u8; 16usize]),), (&'_ [u8], [u8; 16usize])> for beaconcrypt::server::{impl beaconcrypt::server::ProviderServer for beaconcrypt::server::Server}::build_registration_response::closure}::call_once]:\n    Source: 'beaconcrypt/src/server.rs', lines 630:50-630:87 -/\naxiom\n  server.ProviderServerServer.build_registration_response.closure.Insts.CoreOpsFunctionFnOnceTupleSharedPairVecU8ArrayU816PairSharedSliceU8ArrayU816.call_once\n  :\n  server.ProviderServerServer.build_registration_response.closure \u2192\n    ((alloc.vec.Vec Std.U8) \u00d7 (Array Std.U8 16#usize)) \u2192 RustM ((Slice\n    Std.U8) \u00d7 (Array Std.U8 16#usize))\n\n"
     },
     "TypesExternal_Template.lean": {
-      "sha256": "ecee449db44f5ccb0373c2da8d051c62d8e9fdaa5ac15a4fcc81fe668e99c83b",
-      "source": "-- THIS FILE WAS AUTOMATICALLY GENERATED BY AENEAS\n-- [beaconcrypt]: external types.\n-- This is a template file: rename it to \"TypesExternal.lean\" and fill the holes.\nimport Aeneas\nimport CoreModels\nopen CoreModels Aeneas\nopen Aeneas.Std hiding namespace core alloc\nopen RustM ControlFlow Error\nopen Std.Do\nset_option linter.dupNamespace false\nset_option linter.hashCommand false\nset_option linter.unusedVariables false\nset_option linter.style.whitespace false\nset_option linter.style.setOption false\nset_option linter.style.longLine false\n\n/- You can set the `maxHeartbeats` value with the `-max-heartbeats` CLI option -/\nset_option maxHeartbeats 1000000\n\n/- You can set the `maxRecDepth` value with the `-max-recdepth` CLI option -/\nset_option maxRecDepth 2048\n\n/-- [beaconcrypt::auth::MldsaIdentity]\n    Source: 'beaconcrypt/src/auth.rs', lines 29:0-31:1\n    Visibility: public -/\naxiom auth.MldsaIdentity : Type\n\n/-- [beaconcrypt::collections::KeyedHasher]\n    Source: 'beaconcrypt/src/collections.rs', lines 12:0-12:40 -/\naxiom collections.KeyedHasher : Type\n\n"
+      "sha256": "9d20f7f0ad6038ace8d9a8e9606fa518c7acf12ca665c2306824ecd6ade04098",
+      "source": "-- THIS FILE WAS AUTOMATICALLY GENERATED BY AENEAS\n-- [beaconcrypt]: external types.\n-- This is a template file: rename it to \"TypesExternal.lean\" and fill the holes.\nimport Aeneas\nimport CoreModels\nopen CoreModels Aeneas\nopen Aeneas.Std hiding namespace core alloc\nopen RustM ControlFlow Error\nopen Std.Do\nset_option linter.dupNamespace false\nset_option linter.hashCommand false\nset_option linter.unusedVariables false\nset_option linter.style.whitespace false\nset_option linter.style.setOption false\nset_option linter.style.longLine false\n\n/- You can set the `maxHeartbeats` value with the `-max-heartbeats` CLI option -/\nset_option maxHeartbeats 1000000\n\n/- You can set the `maxRecDepth` value with the `-max-recdepth` CLI option -/\nset_option maxRecDepth 2048\n\n/-- [beaconcrypt::auth::MldsaIdentity]\n    Source: 'beaconcrypt/src/auth.rs', lines 32:0-34:1\n    Visibility: public -/\naxiom auth.MldsaIdentity : Type\n\n/-- [beaconcrypt::collections::KeyedHasher]\n    Source: 'beaconcrypt/src/collections.rs', lines 12:0-12:40 -/\naxiom collections.KeyedHasher : Type\n\n"
     }
   }
 }

@@ -1,7 +1,6 @@
 -- SPDX-License-Identifier: 0BSD
 import BeaconcryptCore.AdapterRatchetKdfExtraction.Funs
 import BeaconcryptCore.PanicFreedom.AdapterNormal
-import BeaconcryptCore.PanicFreedom.Trivial
 
 /-! The original ratchet HKDF wrapper retains both Result.expect calls. Safety needs successful HKDF API execution on the reached legal inputs, not just normal Err returns. The contracts select one output width and couple expansion to the PRK actually returned by the selected extract dictionary. Output-length preservation models the native mutable-slice borrow and supports exact returned-byte correspondence; primitive security is separate. -/
 open CoreModels Aeneas
@@ -17,7 +16,7 @@ theorem diagnostic_bound_irrelevant (message : String)
     toStr message first = toStr message second := rfl
 
 theorem reached_input_widths (request : ratchet.SymmetricRatchetKdfRequest) :
-    request.input.to_slice.length = 32 ∧ request.info.to_slice.length = 41 :=
+    request.input.to_slice.length = 32 ∧ request.info.to_slice.length = 48 :=
   ⟨Array.length_to_slice _, Array.length_to_slice _⟩
 
 theorem zeroed_output_width (size : Usize) :
@@ -28,30 +27,29 @@ variable [primitive : AdapterInitEdPrimitive.Operations]
 variable [crypto : PublicWrapperPlatform.CryptoOperations]
 variable [operations : AdapterRatchetKdfPrimitive.Operations]
 
-/-- Only zero-initialized storage of the selected width and PRKs returned by this extract operation are reached. -/
+/-- Only zero-initialized storage of the selected width and PRKs returned by this extract operation are reached. The helper borrows the exact input and info supplied by each typed wrapper. -/
 structure Contracts (size : Usize) : Prop where
-  extract : ∀ request : ratchet.SymmetricRatchetKdfRequest,
-    ∃ prk, crypto.extract .None request.input.to_slice = ok (.Ok prk)
-  expand : size.val ≤ 16320 → ∀ (request : ratchet.SymmetricRatchetKdfRequest) prk,
-    crypto.extract .None request.input.to_slice = ok (.Ok prk) →
-    ∃ after, operations.expandInto (Array.repeat size 0#u8).to_slice (.Some request.info.to_slice) prk =
+  extract : ∀ input : Array U8 32#usize,
+    ∃ prk, crypto.extract .None input.to_slice = ok (.Ok prk)
+  expand : size.val ≤ 16320 → ∀ (input : Array U8 32#usize) (info : Slice U8) prk,
+    crypto.extract .None input.to_slice = ok (.Ok prk) →
+    ∃ after, operations.expandInto (Array.repeat size 0#u8).to_slice (.Some info) prk =
       ok (.Ok (), after) ∧ after.length = size.val
 
 /-- Direct RustM execution of the original body; write-back is pure even without a length law. -/
 theorem symmetric_returns_of_calls (size : Usize) (bound : size.val ≤ 16320)
-    (request : ratchet.SymmetricRatchetKdfRequest)
+    (input : Array U8 32#usize) (info : Slice U8)
     (prk : beaconcrypt_crypto.crypto_kdf.hkdf.sha512.Prk) (after : Slice U8)
-    (extracted : crypto.extract .None request.input.to_slice = ok (.Ok prk))
-    (expanded : operations.expandInto (Array.repeat size 0#u8).to_slice (.Some request.info.to_slice) prk =
+    (extracted : crypto.extract .None input.to_slice = ok (.Ok prk))
+    (expanded : operations.expandInto (Array.repeat size 0#u8).to_slice (.Some info) prk =
       ok (.Ok (), after)) :
-    beaconcrypt_ratchet_kdf.ratchet.symmetric_ratchet_hkdf size request =
+    beaconcrypt_ratchet_kdf.ratchet.symmetric_ratchet_hkdf size input info =
       ok (Array.from_slice (Array.repeat size 0#u8) after) := by
   have within : (255 * 64 : Nat) < 2 ^ System.Platform.numBits := by scalar_tac
   have scaled : (255#usize * 64#usize : RustM Usize) = ok 16320#usize := by simp [HMul.hMul, UScalar.mul, UScalar.tryMk, UScalar.tryMkOpt, within]
   have admitted : size ≤ 16320#usize := by scalar_tac
   simp! only [beaconcrypt_ratchet_kdf.ratchet.symmetric_ratchet_hkdf, scaled,
-    massert, admitted, ↓reduceIte, ratchet.SymmetricRatchetKdfRequest.impl.input,
-    ratchet.SymmetricRatchetKdfRequest.impl.info, lift, bind_tc_ok,
+    massert, admitted, ↓reduceIte, lift, bind_tc_ok,
     beaconcrypt_crypto.crypto_kdf.hkdf.sha512.extract, extracted,
     core.result.Result.expect, zeroize.Zeroizing.new,
     zeroize.Zeroizing.Insts.CoreOpsDerefDerefMut.deref_mut,
@@ -63,36 +61,44 @@ theorem symmetric_returns_of_calls (size : Usize) (bound : size.val ≤ 16320)
     zeroize.Zeroizing.Insts.CoreOpsDerefDeref.deref]
 
 theorem symmetric_ratchet_hkdf_total (size : Usize) (contracts : Contracts size)
-    (bound : size.val ≤ 16320) (request : ratchet.SymmetricRatchetKdfRequest) :
-    Normal (beaconcrypt_ratchet_kdf.ratchet.symmetric_ratchet_hkdf size request) := by
-  exact (contracts.extract request).elim fun prk extracted =>
-    (contracts.expand bound request prk extracted).elim fun after result =>
-    ⟨_, symmetric_returns_of_calls size bound request prk after extracted result.1⟩
+    (bound : size.val ≤ 16320) (input : Array U8 32#usize) (info : Slice U8) :
+    Normal (beaconcrypt_ratchet_kdf.ratchet.symmetric_ratchet_hkdf size input info) := by
+  exact (contracts.extract input).elim fun prk extracted =>
+    (contracts.expand bound input info prk extracted).elim fun after result =>
+    ⟨_, symmetric_returns_of_calls size bound input info prk after extracted result.1⟩
 
 theorem ratchet_hkdf_total (contracts : Contracts 76#usize)
     (request : ratchet.SymmetricRatchetKdfRequest) :
     Normal (beaconcrypt_ratchet_kdf.ratchet.ratchet_hkdf request) := by
-  exact normal_bind _ _ (symmetric_ratchet_hkdf_total 76#usize contracts (by scalar_tac) request)
-    (fun bytes => Trivial.ratchet_RatchetKdfResponse_from_bytes_total bytes)
+  simp only [beaconcrypt_ratchet_kdf.ratchet.ratchet_hkdf,
+    ratchet.SymmetricRatchetKdfRequest.impl.input, ratchet.SymmetricRatchetKdfRequest.impl.info,
+    lift, bind_tc_ok]
+  exact normal_bind _ _ (symmetric_ratchet_hkdf_total 76#usize contracts (by scalar_tac)
+      request.input request.info.to_slice)
+    (fun bytes => ⟨_, rfl⟩)
 
 theorem initial_ratchet_hkdf_total (contracts : Contracts 64#usize)
-    (request : ratchet.SymmetricRatchetKdfRequest) :
+    (request : ratchet.InitialRatchetKdfRequest) :
     Normal (beaconcrypt_ratchet_kdf.ratchet.initial_ratchet_hkdf request) := by
-  exact symmetric_ratchet_hkdf_total 64#usize contracts (by scalar_tac) request
+  simp only [beaconcrypt_ratchet_kdf.ratchet.initial_ratchet_hkdf,
+    ratchet.InitialRatchetKdfRequest.impl.input, ratchet.InitialRatchetKdfRequest.impl.info,
+    lift, bind_tc_ok]
+  exact symmetric_ratchet_hkdf_total 64#usize contracts (by scalar_tac)
+    request.input request.info.to_slice
 
 /-- The native write-back contains exactly the expansion's returned bytes; no model fallback is used. -/
 theorem symmetric_output_bytes (size : Usize) (contracts : Contracts size)
-    (bound : size.val ≤ 16320) (request : ratchet.SymmetricRatchetKdfRequest) :
+    (bound : size.val ≤ 16320) (input : Array U8 32#usize) (info : Slice U8) :
     ∃ prk after result,
-      crypto.extract .None request.input.to_slice = ok (.Ok prk) ∧
-      operations.expandInto (Array.repeat size 0#u8).to_slice (.Some request.info.to_slice) prk =
+      crypto.extract .None input.to_slice = ok (.Ok prk) ∧
+      operations.expandInto (Array.repeat size 0#u8).to_slice (.Some info) prk =
         ok (.Ok (), after) ∧
-      beaconcrypt_ratchet_kdf.ratchet.symmetric_ratchet_hkdf size request = ok result ∧
+      beaconcrypt_ratchet_kdf.ratchet.symmetric_ratchet_hkdf size input info = ok result ∧
       result.val = after.val ∧ after.length = size.val := by
-  exact (contracts.extract request).elim fun prk extracted =>
-    (contracts.expand bound request prk extracted).elim fun after result =>
+  exact (contracts.extract input).elim fun prk extracted =>
+    (contracts.expand bound input info prk extracted).elim fun after result =>
     ⟨prk, after, Array.from_slice (Array.repeat size 0#u8) after, extracted, result.1,
-      symmetric_returns_of_calls size bound request prk after extracted result.1,
+      symmetric_returns_of_calls size bound input info prk after extracted result.1,
       Array.from_slice_val _ after result.2, result.2⟩
 
 end BeaconcryptCore.PanicFreedom.AdapterRatchetKdf

@@ -141,7 +141,7 @@ theorem source_aead_program (pending : record_effects.RecordReceiveAead) :
   funext request
   cases request <;> apply bind_congr <;> intro plaintext <;> exact bind_result_pure _ _
 
-def model (erased : Std.Array Std.U8 357#usize) (agreement : agreement.BeaconAgreement)
+def model (erased : Std.Array Std.U8 227#usize) (agreement : agreement.BeaconAgreement)
     (effect : record_effects.RecordReceiveEffect) : OracleComp Spec (RustM RegistrationBeaconRecordExecutor.Result) :=
   finishModel agreement <$> simulateQ modelAdapter (RecordEffectsReceiveProgram.execute erased effect)
 
@@ -190,7 +190,7 @@ theorem aead_exact (pending : registration.BeaconRecordAead)
             map_pure, finished, finishModel]
           exact congrArg pure admitted
 
-theorem commitment_exact (erased : Std.Array Std.U8 357#usize) (pending : registration.BeaconRecordCommitment)
+theorem commitment_exact (erased : Std.Array Std.U8 227#usize) (pending : registration.BeaconRecordCommitment)
     (origin : BeaconPhaseMetadata pending.agreement (.CommitmentRequested pending)) :
     simulateQ nativeAdapter (RegistrationBeaconRecordExecutor.program (.CommitmentRequested pending)) =
       finishModel pending.agreement <$> simulateQ (modelAdapter ∘ₛ RawCtxSourceOpen.openLift)
@@ -237,7 +237,7 @@ theorem commitment_exact (erased : Std.Array Std.U8 357#usize) (pending : regist
             ite_true, bind_tc_ok, registration.normalize_beacon_open]
           exact aead_exact _ openingOrigin
 
-theorem normalized_exact (erased : Std.Array Std.U8 357#usize) (agreement : agreement.BeaconAgreement)
+theorem normalized_exact (erased : Std.Array Std.U8 227#usize) (agreement : agreement.BeaconAgreement)
     (effect : record_effects.RecordReceiveEffect) (metadata : recordMetadata agreement effect) :
     normalized agreement effect = model erased agreement effect := by
   cases effectEq : effect with
@@ -310,6 +310,8 @@ theorem query_projection {Auxiliary : Type}
       (RegistrationRecordPrimitives.implementation source writer request).run state := by
   cases request with
   | rootKdf request => rfl
+  | adHash request =>
+      simp only [nativeAdapter, simulateQ_spec_query, implementation]
   | initialKdf request => rfl
   | ratchetKdf request => rfl
   | openAead request => rfl

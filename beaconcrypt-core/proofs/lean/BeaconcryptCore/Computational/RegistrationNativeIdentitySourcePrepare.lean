@@ -2,7 +2,7 @@
 import BeaconcryptCore.Computational.RegistrationNativeIdentityRealization
 import BeaconcryptCore.Computational.RegistrationNativeScalarSource
 
-/-! The seed-free identity constructor's preparation is an actual public query program with no owner or environment mutation. Its primitive source realization is proved separately; this factor retains every optional ML/pin/identity failure and actual callback order. -/
+/-! The seed-free identity constructor's preparation is an actual public query program with no owner or environment mutation. Its primitive source realization is proved separately; this factor retains pure pin selection, every optional indexed-identity failure and actual callback order. -/
 open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -24,28 +24,17 @@ def lift {source : RegistrationNativeMldsa.Source} (work : OracleComp (Trusted n
 
 noncomputable def program (source : RegistrationNativeMldsa.Source)
     (edPin : Std.Array U8 32#usize) (mlPin : Std.Array U8 1952#usize) (keyId : U64) :
-    OracleComp (Trusted n KemSK) (RustM (Option (Prepared source))) := do
-  match ← simulateQ coins (RegistrationNativeMldsa.generate source) with
-  | none => pure (.ok none)
-  | some credentials => match registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
-    | .fail error => pure (.fail error)
-    | .div => pure .div
-    | .ok pending => match pending.request with
-      | .fail error => pure (.fail error)
-      | .div => pure .div
-      | .ok request => do
-          let digest ← hash request
-          match pending.resume (.Some (RegistrationAuthenticationShared.digestArray digest)) with
-          | .fail error => pure (.fail error)
-          | .div => pure .div
-          | .ok .None => pure (.ok none)
-          | .ok (.Some pin) =>
-              let identity ← RegistrationNativeIdentityInterface.create (Ambient n KemSK)
-              match identity with
-              | none => pure (.ok none)
-              | some identity => do
-                  let prekey ← simulateQ coins PqxdhJointGapDh.sampleScalar
-                  pure (.ok (some ⟨credentials, pin, identity, prekey⟩))
+    OracleComp (Trusted n KemSK) (RustM (Option (Prepared source))) :=
+  match registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
+  | .fail error => pure (.fail error)
+  | .div => pure .div
+  | .ok pin => do
+      let identity ← RegistrationNativeIdentityInterface.create (Ambient n KemSK)
+      match identity with
+      | none => pure (.ok none)
+      | some identity => do
+          let prekey ← simulateQ coins PqxdhJointGapDh.sampleScalar
+          pure (.ok (some ⟨pin, identity, prekey⟩))
 
 private theorem lift_bind {source : RegistrationNativeMldsa.Source} {Result : Type}
     (work : OracleComp (Trusted n KemSK) Value) (next : Value → OracleComp (Trusted n KemSK) Result) :
@@ -77,39 +66,18 @@ theorem prepare_program (source : RegistrationNativeMldsa.Source) (edPin : Std.A
     (mlPin : Std.Array U8 1952#usize) (keyId : U64) :
     RegistrationNativeIdentityFrontend.prepare (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) source edPin mlPin keyId =
       lift (program source edPin mlPin keyId) := by
-  simp only [RegistrationNativeIdentityFrontend.prepare, program, lift_bind, sample_lift]
-  apply congrArg (fun continuation => (lift (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (source := source)
-    (simulateQ coins (RegistrationNativeMldsa.generate source)) >>= continuation))
-  funext generated
-  cases generated with
-  | none => exact (lift_pure _).symm
-  | some credentials =>
-      cases initial : registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
-      | fail error => exact (lift_pure _).symm
-      | div => exact (lift_pure _).symm
-      | ok pending =>
-          cases requested : pending.request with
-          | fail error => simp only [requested, lift_pure]
-          | div => simp only [requested, lift_pure]
-          | ok request =>
-              simp only [requested, lift_bind]
-              apply congrArg (fun continuation => (lift (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (source := source)
-                (hash request) >>= continuation))
-              funext digest
-              cases resumed : pending.resume (.Some (RegistrationAuthenticationShared.digestArray digest)) with
-              | fail error => exact (lift_pure _).symm
-              | div => exact (lift_pure _).symm
-              | ok reply => cases reply with
-                | none => exact (lift_pure _).symm
-                | some pin =>
-                    simp only [lift_bind]
-                    apply congrArg (fun continuation =>
-                      (lift (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (source := source)
-                        (RegistrationNativeIdentityInterface.create (Ambient n KemSK)) >>= continuation))
-                    funext identity
-                    cases identity with
-                    | none => exact (lift_pure _).symm
-                    | some identity => simp only [lift_bind, lift_pure]
+  unfold RegistrationNativeIdentityFrontend.prepare program
+  cases initial : registration.begin_server_pin ⟨edPin, keyId⟩ mlPin with
+  | fail error | div => exact (lift_pure _).symm
+  | ok pin =>
+      rw [lift_bind]
+      apply congrArg (fun continuation =>
+        (lift (n := n) (KemSK := KemSK) (Auxiliary := Auxiliary) (source := source)
+          (RegistrationNativeIdentityInterface.create (Ambient n KemSK)) >>= continuation))
+      funext identity
+      cases identity with
+      | none => exact (lift_pure _).symm
+      | some identity => simp only [lift_bind, lift_pure, sample_lift]
 
 /-- Preparation keeps the current public owner list and mutable environment while executing every actual query. -/
 theorem prepare_run (source : RegistrationNativeMldsa.Source) (edPin : Std.Array U8 32#usize)

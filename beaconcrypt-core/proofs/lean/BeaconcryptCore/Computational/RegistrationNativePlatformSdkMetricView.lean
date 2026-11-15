@@ -15,7 +15,7 @@ open RegistrationServerFrontendCompiler (State)
 open RegistrationServerMaterialSourceState (nativeView)
 open RegistrationStateView (Stable pure_stable bind_stable)
 open RegistrationNativeServerViewAccept (view_idempotent)
-open RegistrationNativePlatformCompletionSdk (Completion)
+open RegistrationNativePlatformCompletionSdk (AdHash Completion)
 variable {n : Nat} {Value Encoded : Type}
 variable {m : Type → Type} [Monad m] [LawfulMonad m]
 
@@ -45,30 +45,39 @@ private theorem initial (finish : Completion n m Encoded)
   unfold RegistrationNativePlatformCompletionSdk.fromInitial
   exact bind_stable _ _ _ (world _ (stable control pending)) commit
 
-private theorem after (reserve : StateT (State n) m Bool) (finish : Completion n m Encoded)
+private theorem after (deriveAd : AdHash n m)
+    (adStable : ∀ pending, Stable nativeView (deriveAd pending)) (reserve : StateT (State n) m Bool) (finish : Completion n m Encoded)
     (reserveStable : Stable nativeView reserve)
     (finishStable : ∀ control pending, Stable RegistrationServerRecordWorldSource.project (finish control pending))
     (control : pqxdh.ServerState) (lookup : peer.CompletionLookup) (occupied : Bool) :
-    Stable nativeView (RegistrationNativePlatformCompletionSdk.afterOccupancy reserve finish control lookup occupied) := by
+    Stable nativeView (RegistrationNativePlatformCompletionSdk.afterOccupancy deriveAd reserve finish control lookup occupied) := by
   unfold RegistrationNativePlatformCompletionSdk.afterOccupancy
   cases lookup.resume occupied with
   | fail error | div => exact pure_stable _ view_idempotent _
   | ok result => cases result with
     | Err previous => exact pure_stable _ view_idempotent _
     | Ok pending =>
-      apply bind_stable _ _ _ reserveStable
-      intro allowed
-      cases allowed with
-      | false => exact pure_stable _ view_idempotent _
-      | true => exact initial finish finishStable control pending
+      apply bind_stable _ _ _ (adStable pending)
+      intro reply
+      cases reply with
+      | fail error | div => exact pure_stable _ view_idempotent _
+      | ok result => cases result with
+        | Err previous => exact pure_stable _ view_idempotent _
+        | Ok prepared =>
+          apply bind_stable _ _ _ reserveStable
+          intro allowed
+          cases allowed with
+          | false => exact pure_stable _ view_idempotent _
+          | true => exact initial finish finishStable control prepared
 
-private theorem afterPin (reserve : StateT (State n) m Bool) (present : U64 → StateT (State n) m Bool)
+private theorem afterPin (deriveAd : AdHash n m)
+    (adStable : ∀ pending, Stable nativeView (deriveAd pending)) (reserve : StateT (State n) m Bool) (present : U64 → StateT (State n) m Bool)
     (finish : Completion n m Encoded) (reserveStable : Stable nativeView reserve)
     (presentStable : ∀ keyId, Stable nativeView (present keyId))
     (finishStable : ∀ control pending, Stable RegistrationServerRecordWorldSource.project (finish control pending))
     (control : pqxdh.ServerState) (token : peer.ConsumedRegistration) (application : Slice U8)
     (reply : RustM (core.option.Option session.ServerAuthenticationPin)) :
-    Stable nativeView (RegistrationNativePlatformCompletionSdk.afterPin reserve present finish control token application reply) := by
+    Stable nativeView (RegistrationNativePlatformCompletionSdk.afterPin deriveAd reserve present finish control token application reply) := by
   unfold RegistrationNativePlatformCompletionSdk.afterPin
   cases reply with
   | fail error | div => exact pure_stable _ view_idempotent _
@@ -87,7 +96,7 @@ private theorem afterPin (reserve : StateT (State n) m Bool) (present : U64 → 
           | ok keyId =>
             dsimp only
             split
-            · exact bind_stable _ _ _ (presentStable keyId) (after reserve finish reserveStable finishStable control lookup)
+            · exact bind_stable _ _ _ (presentStable keyId) (after deriveAd adStable reserve finish reserveStable finishStable control lookup)
             · exact pure_stable _ view_idempotent _
 
 private def control : StateT (State n) m pqxdh.ServerState := fun before => pure (before.control, before)
@@ -101,31 +110,33 @@ private theorem bind_apply {S A B : Type} (work : StateT S m A) (next : A → St
 omit [LawfulMonad m] in
 private theorem get_apply {S : Type} (before : S) : (get : StateT S m S) before = pure (before, before) := rfl
 
-private theorem complete (pin : StateT (State n) m (RustM (core.option.Option session.ServerAuthenticationPin)))
+private theorem complete (deriveAd : AdHash n m)
+    (adStable : ∀ pending, Stable nativeView (deriveAd pending)) (pin : StateT (State n) m (RustM (core.option.Option session.ServerAuthenticationPin)))
     (reserve : StateT (State n) m Bool) (present : U64 → StateT (State n) m Bool) (finish : Completion n m Encoded)
     (pinStable : Stable nativeView pin) (reserveStable : Stable nativeView reserve)
     (presentStable : ∀ keyId, Stable nativeView (present keyId))
     (finishStable : ∀ control pending, Stable RegistrationServerRecordWorldSource.project (finish control pending))
     (token : peer.ConsumedRegistration) (application : Slice U8) :
-    Stable nativeView (RegistrationNativePlatformCompletionSdk.complete pin reserve present finish token application) := by
-  have shape : RegistrationNativePlatformCompletionSdk.complete pin reserve present finish token application = (do
+    Stable nativeView (RegistrationNativePlatformCompletionSdk.complete deriveAd pin reserve present finish token application) := by
+  have shape : RegistrationNativePlatformCompletionSdk.complete deriveAd pin reserve present finish token application = (do
       let current ← control
       let reply ← pin
-      RegistrationNativePlatformCompletionSdk.afterPin reserve present finish current token application reply) := by
+      RegistrationNativePlatformCompletionSdk.afterPin deriveAd reserve present finish current token application reply) := by
     funext before
     simp only [RegistrationNativePlatformCompletionSdk.complete, bind_apply, get_apply, control, pure_bind]
   rw [shape]
   exact bind_stable _ _ _ control_stable (fun current =>
-    bind_stable _ _ _ pinStable (afterPin reserve present finish reserveStable presentStable finishStable current token application))
+    bind_stable _ _ _ pinStable (afterPin deriveAd adStable reserve present finish reserveStable presentStable finishStable current token application))
 
 /-- Actual moved-handle consumption and all later source SDK gates preserve the named instrumentation view. -/
-theorem build (pin : StateT (State n) m (RustM (core.option.Option session.ServerAuthenticationPin)))
+theorem build (deriveAd : AdHash n m)
+    (adStable : ∀ pending, Stable nativeView (deriveAd pending)) (pin : StateT (State n) m (RustM (core.option.Option session.ServerAuthenticationPin)))
     (reserve : StateT (State n) m Bool) (present : U64 → StateT (State n) m Bool) (finish : Completion n m Encoded)
     (pinStable : Stable nativeView pin) (reserveStable : Stable nativeView reserve)
     (presentStable : ∀ keyId, Stable nativeView (present keyId))
     (finishStable : ∀ control pending, Stable RegistrationServerRecordWorldSource.project (finish control pending))
     (handle : Nat) (application : Option (Slice U8)) :
-    Stable nativeView (RegistrationNativePlatformCompletionSdk.build pin reserve present finish handle application) := by
+    Stable nativeView (RegistrationNativePlatformCompletionSdk.build deriveAd pin reserve present finish handle application) := by
   intro before
   unfold RegistrationNativePlatformCompletionSdk.build
   dsimp only [StateT.run]
@@ -136,7 +147,7 @@ theorem build (pin : StateT (State n) m (RustM (core.option.Option session.Serve
     | none => simp only [Prod.map_def, id_eq, map_pure, view_idempotent]
     | some token => cases application with
       | none => simp only [Prod.map_def, id_eq, map_pure, view_idempotent]
-      | some application => exact complete pin reserve present finish pinStable reserveStable presentStable finishStable token application current
+      | some application => exact complete deriveAd adStable pin reserve present finish pinStable reserveStable presentStable finishStable token application current
 end BeaconcryptCore.Computational.RegistrationNativePlatformSdkMetricView
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativePlatformSdkMetricView.world' depends on axioms: [propext,

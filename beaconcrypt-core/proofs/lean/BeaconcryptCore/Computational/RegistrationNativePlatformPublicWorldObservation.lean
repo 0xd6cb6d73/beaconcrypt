@@ -57,7 +57,7 @@ private theorem native_world (before : RegistrationNativeExperiment.State n KemS
 /-- Every World-view decision has the actual complete source/runtime law on the same final P, including source writer failures and attempted produced frames. -/
 theorem world_source (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
-    (created : PqxdhLiveServerConstruction.Created Unit) (bounds : PqxdhDeploymentInterface.FreshBounds)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (bounds : PqxdhDeploymentInterface.FreshBounds)
     (mode : PqxdhDeploymentInterface.Mode) (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value)
     (front : RegistrationNativePublicFrontend.State source) (before : RegistrationNativePublicInterpreter.State n KemSK) (previous : Platform)
     (good : Good setup created.seed scalar selectedOwner ((front, previous), before))
@@ -79,7 +79,7 @@ theorem world_source (representation : RegistrationServerRoleBackend.ConvertedId
 /-- CTX-cache, crypto-produced-stage and raw-attempt decisions transfer on their exact literal source fields, with no event-invariance premise. -/
 theorem record_source (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
-    (created : PqxdhLiveServerConstruction.Created Unit) (bounds : PqxdhDeploymentInterface.FreshBounds)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (bounds : PqxdhDeploymentInterface.FreshBounds)
     (mode : PqxdhDeploymentInterface.Mode) (work : OracleComp (RegistrationNativeInterface.ModeSpec mode) Value)
     (front : RegistrationNativePublicFrontend.State source) (before : RegistrationNativePublicInterpreter.State n KemSK) (previous : Platform)
     (good : Good setup created.seed scalar selectedOwner ((front, previous), before))

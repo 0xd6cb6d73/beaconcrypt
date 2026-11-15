@@ -20,7 +20,7 @@ def sessions (before : RegistrationNativeExperiment.State n KemSK source) := bef
 /-- Actual environment and private indexed KEM calls retain the token table. -/
 theorem trusted (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (query : (RegistrationNativeBeaconFrontend.Trusted n KemSK).Domain)
     (before : RegistrationNativeExperiment.State n KemSK source)
     (result : (RegistrationNativeBeaconFrontend.Trusted n KemSK).Range query × RegistrationNativeExperiment.State n KemSK source)
@@ -42,7 +42,7 @@ theorem trusted (setup : Setup base KemSK) (checks : Checks)
 /-- Complete actual trusted programs retain the exact token table. -/
 theorem program (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : OracleComp (RegistrationNativeBeaconFrontend.Trusted n KemSK) Value)
     (before : RegistrationNativeExperiment.State n KemSK source)
     (result : Value × RegistrationNativeExperiment.State n KemSK source)
@@ -63,7 +63,7 @@ theorem program (setup : Setup base KemSK) (checks : Checks)
 /-- Native owner/environment closure cannot drop a hash receipt reached inside the actual callback. -/
 theorem beacon (setup : Setup base KemSK) (checks : Checks)
     (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State Value)
     (before : RegistrationNativeExperiment.State n KemSK source)
     (result : Value × RegistrationNativeExperiment.State n KemSK source)
@@ -108,7 +108,7 @@ open RegistrationNativeTokenSource (Present Born)
 open RegistrationNativeStageTrace (Call Path Executed)
 variable (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
 local notation "Native" => RegistrationNativeExperiment.State n KemSK source
 local notation "implementation" => RegistrationNativeExperiment.handler setup checks wire route representation created source credential
 attribute [local irreducible] RegistrationNativeExperiment.handler RegistrationServerSdkSource.accept RegistrationServerSdkSource.build
@@ -203,7 +203,7 @@ theorem path_origin {first last : Native} {calls : List (Call RegistrationNative
         · exact Or.inr ⟨call, List.mem_cons_self, born⟩
       · exact Or.inr ⟨earlier, List.mem_cons_of_mem _ member, origin⟩
 
-private theorem world_start_empty (created : PqxdhLiveServerConstruction.Created Unit)
+private theorem world_start_empty (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (publicKey : Std.Array U8 1952#usize) (before after : PqxdhRecordLiftWorld.State n)
     (native : RegistrationWorldServerFrontend.State n RegistrationServerRoleBackend.State)
     (supported : (.ok (.Some native), after) ∈ support
@@ -224,7 +224,8 @@ theorem start_empty (ensureInit : StateT Unit ProbComp Bool) (identityIndex : Na
     (initial : RegistrationNativeExperiment.Initial n KemSK source)
     (startup : some initial ∈ support (RegistrationNativeExperiment.start setup source ensureInit identityIndex serverKid)) :
     initial.state.server.sessions = [] := by
-  simp only [RegistrationNativeExperiment.start, mem_support_bind_iff] at startup
+  delta RegistrationNativeExperiment.start at startup
+  simp only [mem_support_bind_iff] at startup
   obtain ⟨constructed, _constructor, continued⟩ := startup
   cases born : constructed.1.1 with
   | none =>

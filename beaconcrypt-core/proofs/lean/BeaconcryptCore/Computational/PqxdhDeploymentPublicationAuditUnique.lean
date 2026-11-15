@@ -38,20 +38,45 @@ private theorem trace_success (setup : Setup baseSpec KemSK) (codec : Codec Read
     cases published
   · exact ⟨fresh, phase⟩
 
-private theorem native_finish_nonfresh {Aux : Type} (_setup : Setup baseSpec KemSK)
+private theorem native_finish_nonfresh (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
+    {Aux : Type} (_setup : Setup baseSpec KemSK)
     (impl : QueryImpl (PqxdhRegistrationJointFinish.NativeSpec KemSK Response) (StateT Aux ProbComp))
     (decode : RawCtxReceive.FrameDecoder) (raw : Pqxdh.Bytes) (owner : PqxdhRegistrationSchedule.Owner KemSK)
     (before : Aux) (result : (Option Pqxdh.Bytes × PqxdhRegistrationSchedule.Owner KemSK) × Aux)
-    (supported : result ∈ support ((simulateQ impl (PqxdhBeaconPhase2Publication.nativeOwner decode raw owner)).run before))
+    (supported : result ∈ support ((simulateQ impl (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw owner)).run before))
     (closed : phaseClass owner.beacon.phase ≠ .fresh) : phaseClass result.1.2.beacon.phase ≠ .fresh := by
   rcases result with ⟨⟨_ | bytes, after⟩, final⟩
-  · have failure := PqxdhBeaconPhase2Publication.native_failure impl decode raw owner after before final supported
+  · have failure := PqxdhBeaconPhase2Publication.native_failure (completedBinding := completedBinding) impl decode raw owner after before final supported
     cases phase : owner.beacon.phase <;> simp only [phase] at failure closed <;>
       simp_all [phaseClass, PqxdhBeaconPhase2Preparation.abort]
   · obtain ⟨staged, _, _, published⟩ :=
-      PqxdhBeaconPhase2Publication.native_success impl decode raw bytes owner after before final supported
+      PqxdhBeaconPhase2Publication.native_success (completedBinding := completedBinding) impl decode raw bytes owner after before final supported
     rw [← congrArg Prod.snd published]
     simp [PqxdhBeaconPhase2Publication.publish, phaseClass]
+
+private theorem annotated_finish_nonfresh (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
+    (identityIndex kemIndex : Nat) (retained : Option Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) (state : PqxdhRegistrationJointFinish.State KemSK)
+    (result : (Option Pqxdh.Bytes × PqxdhRegistrationSchedule.Owner KemSK) × PqxdhRegistrationJointFinish.State KemSK)
+    (supported : result ∈ support ((PqxdhRegistrationJointFinish.annotatedFinish setup codec identityIndex kemIndex
+      retained raw owner).run state))
+    (closed : phaseClass owner.beacon.phase ≠ .fresh) : phaseClass result.1.2.beacon.phase ≠ .fresh := by
+  cases phase : owner.beacon.phase <;>
+    simp only [PqxdhRegistrationJointFinish.annotatedFinish, phase] at supported
+  case initSent control prekey oneTime kem =>
+    cases retained <;> cases response : PqxdhServerAuthExperiment.responseOf codec raw <;>
+      simp only [StateT.run_pure, mem_support_pure_iff, response] at supported
+    all_goals first
+      | (subst result; simp [PqxdhBeaconPhase2Preparation.abort, phaseClass])
+      | (simp only [StateT.run_bind, mem_support_bind_iff] at supported
+         obtain ⟨hashed, _hashSupport, continued⟩ := supported
+         exact native_finish_nonfresh (PqxdhTranscriptAd.completedOf control hashed.1) setup
+           (PqxdhRegistrationJointFinish.annotated setup codec identityIndex kemIndex) codec.frameRead raw owner
+           hashed.2 result continued closed)
+  all_goals
+    simp only [StateT.run_pure, mem_support_pure_iff] at supported
+    subst result
+    exact closed
 
 /-- A source bundle cannot restore an owner that has left Fresh. -/
 theorem bundle_nonfresh (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (called address : Nat)
@@ -73,9 +98,16 @@ theorem bundle_nonfresh (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
     · subst called
       have sameOwner : entry = old := Option.some.inj (found.symm.trans oldFound)
       subst old
-      rw [trace_stopped setup codec entry.identityIndex entry.owner state.pool.1 closed] at member
-      simp only [support_pure, Set.mem_singleton_iff] at member
-      subst returned
+      have traced : returned.1 ∈ support (PqxdhRegistrationJointBundle.trace setup codec entry.identityIndex
+          entry.owner state.pool.1) := by
+        rw [← PqxdhRegistrationJointBundle.trace_log setup codec entry.identityIndex entry.owner state.pool.1
+          (state.inits address), support_map]
+        exact ⟨returned, member, rfl⟩
+      rw [trace_stopped setup codec entry.identityIndex entry.owner state.pool.1 closed] at traced
+      simp only [support_pure, Set.mem_singleton_iff] at traced
+      rcases returned with ⟨native, logged⟩
+      dsimp only at traced
+      subst native
       refine ⟨entry, ?_, closed⟩
       exact List.getElem?_set_self (List.getElem?_eq_some_iff.mp found).1
     · refine ⟨old, ?_, closed⟩
@@ -105,7 +137,8 @@ theorem finish_nonfresh (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
       subst old
       refine ⟨{ entry with owner := returned.1.2 }, ?_, ?_⟩
       · exact List.getElem?_set_self (List.getElem?_eq_some_iff.mp found).1
-      · exact native_finish_nonfresh setup _ codec.frameRead raw entry.owner (state.pool, state.shared) returned member closed
+      · exact annotated_finish_nonfresh setup codec entry.identityIndex entry.kemIndex (state.inits address) raw
+          entry.owner (state.pool, state.shared) returned member closed
     · refine ⟨old, ?_, closed⟩
       rw [List.getElem?_set_ne sameAddress]
       exact oldFound
@@ -160,13 +193,18 @@ theorem bundle_publication_shape (setup : Setup baseSpec KemSK) (codec : Codec R
     simp only [bundle, StateT.run, found, support_map, Set.mem_image] at supported
     obtain ⟨returned, member, same⟩ := supported
     subst result
-    have original : returned.1 ∈ support (PqxdhRegistrationJointBundle.trace setup codec entry.identityIndex
+    have audited : returned.1 ∈ support (trace setup codec address entry.identityIndex entry.owner
+        state.1.pool.1 state.2) := by
+      rw [← traceLogged_trace setup codec address entry.identityIndex entry.owner state.1.pool.1 state.2
+        (state.1.inits address), support_map]
+      exact ⟨returned, member, rfl⟩
+    have original : returned.1.1 ∈ support (PqxdhRegistrationJointBundle.trace setup codec entry.identityIndex
         entry.owner state.1.pool.1) := by
       rw [← trace_source setup codec address entry.identityIndex entry.owner state.1.pool.1 state.2, support_map]
-      exact ⟨returned, member, rfl⟩
+      exact ⟨returned.1, audited, rfl⟩
     obtain ⟨fresh, afterPhase⟩ := trace_success setup codec entry.identityIndex entry.owner state.1.pool.1
-      returned.1 original bytes published
-    refine ⟨⟨entry, rfl, fresh⟩, { entry with owner := returned.1.1.2 }, ?_, ?_⟩
+      returned.1.1 original bytes published
+    refine ⟨⟨entry, rfl, fresh⟩, { entry with owner := returned.1.1.1.2 }, ?_, ?_⟩
     · exact List.getElem?_set_self (List.getElem?_eq_some_iff.mp found).1
     · rw [afterPhase]
       decide
@@ -194,10 +232,15 @@ theorem bundle_completed (setup : Setup baseSpec KemSK) (codec : Codec Reader Re
     simp only [bundle, StateT.run, found, support_map, Set.mem_image] at supported
     obtain ⟨returned, member, same⟩ := supported
     subst result
+    have audited : returned.1 ∈ support (trace setup codec address entry.identityIndex entry.owner
+        state.1.pool.1 state.2) := by
+      rw [← traceLogged_trace setup codec address entry.identityIndex entry.owner state.1.pool.1 state.2
+        (state.1.inits address), support_map]
+      exact ⟨returned, member, rfl⟩
     obtain ⟨tuples, _, recorded⟩ := PqxdhDeploymentPublicationAuditBounds.trace_record setup codec address
-      entry.identityIndex entry.owner state.1.pool.1 state.2 returned member
+      entry.identityIndex entry.owner state.1.pool.1 state.2 returned.1 audited
     intro occurrence occurred bytes published
-    change occurrence ∈ returned.2.occurrences at occurred
+    change occurrence ∈ returned.1.2.occurrences at occurred
     rw [recorded] at occurred
     rcases List.mem_append.mp occurred with old | added
     · exact bundle_nonfresh setup codec address occurrence.ownerAddress state.1

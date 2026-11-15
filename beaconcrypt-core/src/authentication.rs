@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: 0BSD
 
-//! Exact ML-DSA registration authentication inputs, without hashing or signing.
+//! Exact registration authentication and record-context inputs, without hashing or signing.
 //!
 //! The adapter streams these bytes into BLAKE2b-512 and supplies the resulting digest to ML-DSA.
 //! Keeping the layout here makes the production construction available to Hax extraction.
 
-pub const INIT_DOMAIN: [u8; 41] = *b"beaconcrypt ML-DSA-65 init transcript v1\0";
-pub const RESPONSE_DOMAIN: [u8; 45] = *b"beaconcrypt ML-DSA-65 response transcript v1\0";
+pub const INIT_DOMAIN: [u8; 41] = *b"beaconcrypt ML-DSA-65 init transcript v2\0";
+pub const RESPONSE_DOMAIN: [u8; 45] = *b"beaconcrypt ML-DSA-65 response transcript v2\0";
 pub const SIGNING_CONTEXT: [u8; 32] = *b"beaconcrypt registration auth v1";
 pub const BEACON_LABEL: [u8; 34] = *b"beaconcrypt v1 beacon registration";
 pub const SERVER_LABEL: [u8; 34] = *b"beaconcrypt v1 server registration";
@@ -14,14 +14,14 @@ pub const SERVER_LABEL: [u8; 34] = *b"beaconcrypt v1 server registration";
 pub const MLDSA_PUBLIC_KEY_LEN: usize = 1952;
 pub const MLDSA_SIGNATURE_LEN: usize = 3309;
 pub const TRANSCRIPT_HASH_LEN: usize = 64;
-pub const INIT_TRANSCRIPT_LEN: usize = 5495;
+pub const INIT_TRANSCRIPT_LEN: usize = 3543;
 pub const RESPONSE_PREFIX_LEN: usize = 1293;
 pub const SIGNATURE_INPUT_LEN: usize = 163;
 
 // Tie the literal offsets exposed by Hax to the production sizes.
 const _: () = assert!(MLDSA_PUBLIC_KEY_LEN == 1952);
 const _: () = assert!(TRANSCRIPT_HASH_LEN == 64);
-const _: () = assert!(crate::constants::ASSOCIATED_DATA_SIZE == 281);
+const _: () = assert!(crate::constants::ASSOCIATED_DATA_SIZE == 151);
 
 #[derive(Clone, Copy)]
 #[cfg_attr(not(hax_compilation), derive(Debug, Eq, PartialEq))]
@@ -30,13 +30,12 @@ pub enum AuthRole {
 	Server,
 }
 
-/// The unsigned, decoded request fields; the authentication signature is deliberately absent.
+/// The exact remaining decoded InitKex fields, including their attached Ed25519 signatures.
 pub struct InitFields<'a> {
 	pub identity_key: &'a [u8; 33],
 	pub pre_key: &'a [u8; 98],
 	pub one_time_key: &'a [u8; 98],
 	pub pq_key: &'a [u8; 1249],
-	pub mldsa_public_key: &'a [u8; MLDSA_PUBLIC_KEY_LEN],
 }
 
 pub const fn encode_u64_le(value: u64) -> [u8; 8] {
@@ -52,7 +51,7 @@ pub const fn encode_u64_le(value: u64) -> [u8; 8] {
 	]
 }
 
-/// Build the domain, server pins, both ML-DSA keys, and LE64-framed request key material.
+/// Build the versioned request digest input with the Server pin and LE64-framed key fields.
 pub fn build_init_transcript(
 	fields: InitFields<'_>,
 	server_id: u64,
@@ -71,25 +70,23 @@ pub fn build_init_transcript(
 		} else if i < 81 {
 			server_ed[i - 49]
 		} else if i < 2033 {
-			fields.mldsa_public_key[i - 81]
-		} else if i < 3985 {
-			server_mldsa[i - 2033]
-		} else if i < 3993 {
-			identity_len[i - 3985]
-		} else if i < 4026 {
-			fields.identity_key[i - 3993]
-		} else if i < 4034 {
-			signed_key_len[i - 4026]
-		} else if i < 4132 {
-			fields.pre_key[i - 4034]
-		} else if i < 4140 {
-			signed_key_len[i - 4132]
-		} else if i < 4238 {
-			fields.one_time_key[i - 4140]
-		} else if i < 4246 {
-			pq_key_len[i - 4238]
+			server_mldsa[i - 81]
+		} else if i < 2041 {
+			identity_len[i - 2033]
+		} else if i < 2074 {
+			fields.identity_key[i - 2041]
+		} else if i < 2082 {
+			signed_key_len[i - 2074]
+		} else if i < 2180 {
+			fields.pre_key[i - 2082]
+		} else if i < 2188 {
+			signed_key_len[i - 2180]
+		} else if i < 2286 {
+			fields.one_time_key[i - 2188]
+		} else if i < 2294 {
+			pq_key_len[i - 2286]
 		} else {
-			fields.pq_key[i - 4246]
+			fields.pq_key[i - 2294]
 		}
 	})
 }
@@ -194,19 +191,91 @@ pub fn build_signature_input(
 	})
 }
 
-/// Replace both reserved fingerprint slots after the classical 153-byte AD prefix.
-pub fn bind_associated_data(
-	base: &[u8; crate::constants::ASSOCIATED_DATA_SIZE],
-	server_hash: &[u8; TRANSCRIPT_HASH_LEN],
-	beacon_hash: &[u8; TRANSCRIPT_HASH_LEN],
+/// Public InitKex buffers retained unchanged until the response public fields exist.
+///
+/// These include all three attached Ed25519 signatures; opened public keys are insufficient.
+pub struct OwnedInitFields {
+	identity_key: [u8; 33],
+	pre_key: [u8; 98],
+	one_time_key: [u8; 98],
+	pq_key: [u8; 1249],
+}
+
+impl OwnedInitFields {
+	pub fn new(fields: InitFields<'_>) -> Self {
+		Self {
+			identity_key: *fields.identity_key,
+			pre_key: *fields.pre_key,
+			one_time_key: *fields.one_time_key,
+			pq_key: *fields.pq_key,
+		}
+	}
+
+	pub const fn fields(&self) -> InitFields<'_> {
+		InitFields {
+			identity_key: &self.identity_key,
+			pre_key: &self.pre_key,
+			one_time_key: &self.one_time_key,
+			pq_key: &self.pq_key,
+		}
+	}
+
+	pub fn identity_public_key(&self) -> [u8; 32] {
+		core::array::from_fn(|i| self.identity_key[i + 1])
+	}
+}
+
+pub const INIT_FIELDS_LEN: usize = 1478;
+pub const RECORD_AD_TRANSCRIPT_LEN: usize = 2638;
+pub const AD_CONTEXT_LEN: usize = 87;
+/// The context retained outside the transcript digest, independent of either ratchet KDF label.
+pub const AD_CONTEXT: [u8; AD_CONTEXT_LEN] =
+	*b"BeaconcryptPqxdh_CURVE25519_SHA-512_ML-KEM-768SymRatchet_HKDF_SHA-512_CHACHA20_POLY1305";
+
+/// Only response fields available before the first protected record is sealed.
+pub struct AdResponseFields<'a> {
+	pub identity_key: &'a [u8; 32],
+	pub ephemeral_key: &'a [u8; 32],
+	pub kem_cipher_text: &'a [u8; 1088],
+	pub key_id: u64,
+}
+
+/// Allocation-free, exact-width encoding; field positions are role framing.
+pub fn build_record_ad_transcript(
+	init: InitFields<'_>,
+	response: AdResponseFields<'_>,
+) -> [u8; RECORD_AD_TRANSCRIPT_LEN] {
+	let key_id = encode_u64_le(response.key_id);
+	core::array::from_fn(|i| {
+		if i < 33 {
+			init.identity_key[i]
+		} else if i < 131 {
+			init.pre_key[i - 33]
+		} else if i < 229 {
+			init.one_time_key[i - 131]
+		} else if i < 1478 {
+			init.pq_key[i - 229]
+		} else if i < 1510 {
+			response.identity_key[i - 1478]
+		} else if i < 1542 {
+			response.ephemeral_key[i - 1510]
+		} else if i < 2630 {
+			response.kem_cipher_text[i - 1542]
+		} else {
+			key_id[i - 2630]
+		}
+	})
+}
+
+/// Assemble the one authoritative public context for AEAD and CTX in this session.
+pub fn assemble_associated_data(
+	transcript_hash: &[u8; TRANSCRIPT_HASH_LEN],
 ) -> [u8; crate::constants::ASSOCIATED_DATA_SIZE] {
 	core::array::from_fn(|i| {
-		if i < 153 {
-			base[i]
-		} else if i < 217 {
-			server_hash[i - 153]
+		if i < 87 {
+			AD_CONTEXT[i]
 		} else {
-			beacon_hash[i - 217]
+			transcript_hash[i - 87]
 		}
 	})
 }

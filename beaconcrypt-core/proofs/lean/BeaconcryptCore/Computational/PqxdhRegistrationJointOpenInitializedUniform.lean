@@ -68,7 +68,7 @@ theorem initialized_coins (setup : Setup baseSpec KemSK) (codec : Codec Reader R
   · trivial
   · simpa only [isQueryBoundP_map_iff, lifted_coins, PqxdhRegistrationJointKemCommands.program] using
       PqxdhRegistrationJointOpenUniform.command_program setup codec checks caps bounded
-        created.server.server.metadata.identityIndex created.publicIdentity program budget certified []
+        created.server.server.metadata.identityIndex created.publicIdentity program budget certified ([], fun _ => none)
         (PqxdhRegistrationJointInitializedAccept.initial created)
 
 end BeaconcryptCore.Computational.PqxdhRegistrationJointOpenInitializedUniform

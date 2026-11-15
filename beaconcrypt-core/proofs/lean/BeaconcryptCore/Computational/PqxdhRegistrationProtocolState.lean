@@ -2,7 +2,7 @@ import BeaconcryptCore.Computational.PqxdhAcceptedRegistration
 import BeaconcryptCore.Computational.RawCtxProtocolReveals
 
 /-!
-Ten operational statements retain the actual finite role families, registration allocation controls, consumed-ID histories and one shared primitive state. Source record/public/reveal execution changes only its actual fields. Successful response construction installs only the selected reached Server; other owners and all primitive effects remain present. Native binding and identity-key-ID accessors select stored fields. Consumed-list versus native HashSet representation, allocator effects, codecs and deployment ownership remain explicit contracts. These statements add no freshness or cryptographic-security assumption.
+The generic post-hash registration suffix takes explicit complete AD151. Current entry correspondence separately supplies the completed-binding and actual hash-admission receipt; these wrappers do not reconstruct AD from identities. Ten operational statements retain the actual finite role families, registration allocation controls, consumed-ID histories and one shared primitive state. Source record/public/reveal execution changes only its actual fields. Successful response construction installs only the selected reached Server; other owners and all primitive effects remain present. Native binding and identity-key-ID accessors select stored fields. Consumed-list versus native HashSet representation, allocator effects, codecs and deployment ownership remain explicit contracts. These statements add no freshness or cryptographic-security assumption.
 -/
 
 open OracleComp OracleSpec CoreModels Aeneas
@@ -10,6 +10,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhRegistrationProtocolState
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
 
 abbrev Roles (M P I D K : Type) (S B : Nat) :=
   RawCtxProtocolReveals.State M P I D K S B
@@ -115,7 +116,7 @@ theorem input_consume (senderId : M → Std.U64) (index : Fin S) (metadata : P)
       (input senderId index metadata state).afterReady ready := by
   simp [input, consume, PqxdhAcceptedRegistration.Input.afterReady]
 
-/-- The first registration send uses exactly the same fixed KDF, AEAD, writer and CTX cache as subsequent record operations. -/
+/-- The registration message send uses the message KDF domain, AEAD, writer and CTX cache after separate initial-domain chain construction. -/
 noncomputable def registrationImpl
     (source : PqxdhJointKdfGame.FixedHkdfSha512NoSaltSource) (writer : RawCtxMixedShared.Writer)
     (aux : QueryImpl PqxdhServerRegistrationPublication.AuxSpec
@@ -151,7 +152,7 @@ noncomputable def build
     let selected := input senderId index metadata current
     reinstall index current <$> (simulateQ (registrationImpl source writer aux)
       (simulateQ PqxdhServerRegistrationPublication.nativeAdapter
-        (PqxdhAcceptedRegistration.buildReady source selected.binding ready metadata selected.state))).run current.primitive
+        (PqxdhAcceptedRegistration.buildReady (associatedData := associatedData) source selected.binding ready metadata selected.state))).run current.primitive
 
 /-- This is the original consumed pending token and supplied root, executed on the selected current native Server. -/
 noncomputable def nativeBuild
@@ -166,7 +167,7 @@ noncomputable def nativeBuild
     let selected := input senderId index metadata state
     reinstall index state <$> (simulateQ (registrationImpl source writer aux)
       (simulateQ PqxdhServerRegistrationPublication.nativeAdapter
-        (PqxdhServerRegistrationPublication.build source pending root application metadata selected.state))).run state.primitive
+        (PqxdhServerRegistrationPublication.build (associatedData := associatedData) source pending root application metadata selected.state))).run state.primitive
 
 /-- Actual field correspondence replaces no state: the same complete builder result is installed back into the reached role family. -/
 theorem build_native
@@ -178,8 +179,8 @@ theorem build_native
     (pending : pqxdh.PendingServerRegistration)
     (fields : PqxdhRegistrationInputs.used pending =
       PqxdhAcceptedRegistration.usedReady source.crypto (input senderId index metadata state).binding ready) :
-    (build source writer aux senderId index metadata ready).run state =
-      (nativeBuild source writer aux senderId index metadata pending ready.root ready.application).run
+    (build (associatedData := associatedData) source writer aux senderId index metadata ready).run state =
+      (nativeBuild (associatedData := associatedData) source writer aux senderId index metadata pending ready.root ready.application).run
         (consume index ready state) := by
   simp only [build, nativeBuild, StateT.run, PqxdhAcceptedRegistration.buildReady]
   rw [show (input senderId index metadata (consume index ready state)).binding =
@@ -193,12 +194,12 @@ theorem build_normal
     (senderId : M → Std.U64) (index : Fin S) (metadata : P)
     (ready : PqxdhPrivateAcceptedRoot.Ready) (state : State M P I D K A S B)
     (result : RustM (Option PqxdhServerRegistrationPublication.Response) × State M P I D K A S B)
-    (present : result ∈ support ((build source writer aux senderId index metadata ready).run state)) :
+    (present : result ∈ support ((build (associatedData := associatedData) source writer aux senderId index metadata ready).run state)) :
     ∃ reply, result.1 = ok reply := by
   dsimp only [build, StateT.run] at present
   rw [support_map] at present
   obtain ⟨original, present, rfl⟩ := present
-  obtain ⟨value, equal⟩ := PqxdhAcceptedRegistration.buildReady_run_normal
+  obtain ⟨value, equal⟩ := PqxdhAcceptedRegistration.buildReady_run_normal (associatedData := associatedData)
     (registrationImpl source writer aux) source (input senderId index metadata (consume index ready state)).binding
     ready metadata (input senderId index metadata (consume index ready state)).state
     (consume index ready state).primitive original present

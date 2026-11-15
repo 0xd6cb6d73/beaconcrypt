@@ -4,7 +4,7 @@ import BeaconcryptCore.Computational.RegistrationNativePlatformPublicAdapterSour
 import BeaconcryptCore.Computational.RegistrationNativePlatformHashReceipt
 import BeaconcryptCore.Computational.RegistrationNativeMldsaShared
 import BeaconcryptCore.Computational.RegistrationNativeMldsaReceiptPreservation
-/-! The same recorded Bundle leaf updates the native ML receipt prefix by precisely its actual source signing observation. Hashes, Ed signing and writer failures create no ML receipt. Persistent platform state and missing signature replies stay in the same execution. -/
+/-! The same recorded Bundle leaf preserves the complete earlier ML receipt prefix through actual hashing, Ed signing and writer failures. The retired Beacon ML-sign fallback returns None without a source signing operation or receipt. Persistent platform state and every failure reply stay in the same execution. -/
 open CoreModels Aeneas OracleComp OracleSpec
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
@@ -27,7 +27,7 @@ local notation "Base"=>StateT P ProbComp
 abbrev Spec (E :Type):=RegistrationNativePlatformWriter.Spec E
 
 variable (coins :QueryImpl unifSpec (StateT P ProbComp)) (setup :PqxdhServerAuthExperiment.Setup base KemSK) (checks :PqxdhServerAuthExperiment.Checks)
-variable (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created Unit)
+variable (representation :RegistrationServerRoleBackend.ConvertedIdentity setup) (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
 variable (writer :QueryImpl (AdapterRegistrationWriterRequestMonad.Spec E) (StateT P ProbComp))
 variable (index :Nat) (owner :RegistrationNativeBeaconFrontend.Owner mlSource)
 
@@ -61,15 +61,10 @@ theorem outgoing (query :RegistrationBeaconInitExecutor.Spec.Domain) (before :Na
         RegistrationNativePlatformPublicAdapterSourceTrace.signingObservation,receipts,List.filterMap_cons,List.filterMap_nil,
         RegistrationNativePlatformPublicAdapterSourceSigningHistory.receipt,List.append_nil] using sameHistory.symm
     | sign request payload digest=>
-      simp only [RegistrationNativeMldsaShared.implementation,RegistrationSigningShared.implementation,StateT.run,support_map] at projected
-      obtain ⟨reply,_called,same⟩:=projected
-      have sameReply:=congrArg Prod.fst same
-      have sameHistory:=congrArg (fun value=>value.2.1) same
-      simp only at sameReply
-      rw [←sameReply]
+      simp only [RegistrationNativeMldsaShared.implementation,StateT.run_pure,support_pure,Set.mem_singleton_iff] at projected
+      have sameHistory:=congrArg (fun value=>value.2.1) projected
       simpa only [history,RegistrationNativeMldsaShared.nativeProject,RegistrationNativePlatformPublicAdapterBundleStageLog.observation,
-        RegistrationNativePlatformPublicAdapterSourceTrace.signingObservation,receipts,List.filterMap_cons,List.filterMap_nil,
-        RegistrationNativePlatformPublicAdapterSourceSigningHistory.receipt] using sameHistory.symm
+        receipts,List.filterMap_nil,List.append_nil] using sameHistory
   | inr request=>
     simp only [RegistrationNativeMldsaShared.implementation,StateT.run_pure,support_pure,Set.mem_singleton_iff] at projected
     have sameHistory:=congrArg (fun value=>value.2.1) projected

@@ -14,7 +14,7 @@ variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response Result Ne
 theorem commands_bind (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity)
     (work : OracleComp (Spec KemSK) Result) (next : Result → OracleComp (Spec KemSK) Next)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) (state : NativeState KemSK) :
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK) :
     commands setup codec checks identityIndex publicIdentity (work >>= next) owners state =
       (commands setup codec checks identityIndex publicIdentity work owners state >>= fun result =>
         commands setup codec checks identityIndex publicIdentity (next result.1.1) result.1.2 result.2) := by
@@ -24,7 +24,7 @@ theorem commands_bind (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
 theorem commands_resume (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity)
     (work : OracleComp (Spec KemSK) Result) (index : Nat)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) (state : NativeState KemSK) :
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK) :
     (commands setup codec checks identityIndex publicIdentity (PqxdhRegistrationJointAcceptCut.scan work index) owners state >>= fun result =>
       commands setup codec checks identityIndex publicIdentity
         (PqxdhRegistrationJointAcceptCut.finish result.1.1) result.1.2 result.2) =
@@ -35,7 +35,7 @@ theorem commands_resume (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
 theorem pending_command (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
     (identityIndex : Nat) (publicIdentity : PublicIdentity) (raw : Pqxdh.Bytes)
     (next : Option Nat → OracleComp (Spec KemSK) Result)
-    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry) (state : NativeState KemSK) :
+    (owners : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) (state : NativeState KemSK) :
     commands setup codec checks identityIndex publicIdentity
       (PqxdhRegistrationJointAcceptCut.finish (.pending raw next)) owners state =
       ((PqxdhRegistrationJointKemEncapsulation.accept setup codec checks identityIndex publicIdentity raw).run state >>= fun result =>

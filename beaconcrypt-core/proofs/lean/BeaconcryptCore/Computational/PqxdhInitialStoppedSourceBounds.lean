@@ -11,6 +11,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.refined ratchet.concrete
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialStoppedSourceBounds
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open RawCtxSelectedFamilyContext RawCtxFamilyPrimitiveBudgets RawCtxFamilyCompletionBudgets
 open PqxdhInitialPendingPost PqxdhInitialPostContext PqxdhOrderedChainHybrids
 variable {ι Chain M P I D K X Response Shared Result : Type} {extra : OracleSpec ι} {S B : Nat}
@@ -89,7 +90,7 @@ theorem live_total (sender : M → Std.U64) (route : RawCtxServerRouting.SenderD
 theorem post_total (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
     (decode : RawCtxReceive.FrameDecoder) (context : PqxdhInitialPostContext.Context extra M P I D K Result S B)
     (qPost : Nat) (fits : PqxdhInitialPostCertificates.Fits qPost context) (material : Material) :
-    (PqxdhInitialPostContext.stopped (X := X) (Response := Response) (Shared := Shared)
+    (PqxdhInitialPostContext.stopped (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
       sender route decode context material).IsTotalQueryBound (255 + qPost * 67) := by
   cases context with
   | record request before outside inner =>
@@ -98,14 +99,14 @@ theorem post_total (sender : M → Std.U64) (route : RawCtxServerRouting.SenderD
       · exact PqxdhBeaconPhase2Bounds.simulate_total liveForward _ 255
           (live_total sender route decode inner fits.2 material) (fun _ => one_query _)
       · intro result
-        exact PqxdhInitialPendingSourceBounds.program_total sender route decode (outside result.1) qPost (fits.1 result.1) _
-  | finish index before control candidate outside inner =>
+        exact PqxdhInitialPendingSourceBounds.program_total (completedBinding := completedBinding) sender route decode (outside result.1) qPost (fits.1 result.1) _
+  | finish index before control candidate associatedData outside inner =>
       unfold PqxdhInitialPostContext.stopped
       apply isTotalQueryBound_bind (n₁ := 255) (n₂ := qPost * 67)
       · exact PqxdhBeaconPhase2Bounds.simulate_total primitiveForward _ 255
           (owner_total candidate.server_binding.identity_key_id decode inner fits.2 material) (fun _ => one_query _)
       · intro result
-        exact PqxdhInitialPendingSourceBounds.program_total sender route decode _ qPost (fits.1 _) _
+        exact PqxdhInitialPendingSourceBounds.program_total (completedBinding := completedBinding) sender route decode _ qPost (fits.1 _) _
 
 private theorem after_send_total (candidate : pqxdh.ServerRegistrationCandidate) (authenticated : Pqxdh.Bytes)
     (metadata : P) (state : PqxdhInitialGenericPublication.State (KernelOf Chain) M P (List Pqxdh.Bytes))
@@ -127,25 +128,25 @@ theorem complete_total (sender : M → Std.U64) (route : RawCtxServerRouting.Sen
     (outside : PqxdhInitialBuilderContext.BuildResult → OracleComp (PostSpec extra S B) Result)
     (qPost : Nat) (bounded : ∀ reply, (outside reply).IsTotalQueryBound qPost)
     (result : KernelOf Chain × Option RawCtxSourceSend.Encrypted) :
-    (PqxdhInitialBuilderContext.complete (X := X) (Response := Response) (Shared := Shared)
+    (PqxdhInitialBuilderContext.complete (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
       sender route decode index before candidate authenticated metadata outside result).IsTotalQueryBound (2 + qPost * 67) := by
   apply isTotalQueryBound_bind (n₁ := 2) (n₂ := qPost * 67)
   · exact after_send_total candidate authenticated metadata _ result
   · intro published
-    exact PqxdhInitialPendingSourceBounds.program_total sender route decode _ qPost (bounded _) _
+    exact PqxdhInitialPendingSourceBounds.program_total (completedBinding := completedBinding) sender route decode _ qPost (bounded _) _
 
 /-- A first-builder cut pays one sealing plus its complete publication/post continuation; every later cut pays the source-certified receive-or-send reserve. -/
 theorem stopped_total (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder)
     (decode : RawCtxReceive.FrameDecoder) (context : PqxdhInitialBuilderContext.Context extra M P I D K Result S B)
     (qPost : Nat) (fits : PqxdhInitialBuilderCertificates.Fits qPost context) (material : Material) :
-    (PqxdhInitialBuilderContext.stopped (X := X) (Response := Response) (Shared := Shared)
+    (PqxdhInitialBuilderContext.stopped (completedBinding := completedBinding) (X := X) (Response := Response) (Shared := Shared)
       sender route decode context material).IsTotalQueryBound (255 + qPost * 67) := by
   cases context with
-  | inl context => exact post_total sender route decode context qPost fits material
+  | inl context => exact post_total (completedBinding := completedBinding) sender route decode context qPost fits material
   | inr builder =>
       apply (isTotalQueryBound_bind (n₁ := 1) (n₂ := 2 + qPost * 67) (one_query _) ?_).mono (by omega)
       intro sealed
-      exact complete_total sender route decode builder.index _ builder.candidate builder.authenticated
+      exact complete_total (completedBinding := completedBinding) sender route decode builder.index _ builder.candidate builder.authenticated
         builder.metadata builder.outside qPost fits _
 
 /-- The complete source origin/publication transcript preserves the derived pending completion and outside-source bill. -/
@@ -153,11 +154,11 @@ theorem origin_total {Origin : Type} (mark : PqxdhBeaconPhase2Shared.Secrets Sha
     (sender : M → Std.U64) (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder)
     (context : PqxdhInitialOriginContext.Context extra M P I D K Result Origin S B)
     (qPost : Nat) (fits : PqxdhInitialBuilderCertificates.Fits qPost context.original) (material : Material) :
-    (PqxdhInitialOriginContext.stopped (X := X) (Response := Response) mark sender route decode context material).IsTotalQueryBound
+    (PqxdhInitialOriginContext.stopped (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode context material).IsTotalQueryBound
       (255 + qPost * 67) := by
   apply (isQueryBoundP_true_iff _ _).mp
   rw [PqxdhInitialOriginContext.stopped_query_bound]
-  exact (stopped_total sender route decode context.original qPost fits material).isQueryBoundP
+  exact (stopped_total (completedBinding := completedBinding) sender route decode context.original qPost fits material).isQueryBoundP
 
 /-- The concrete ordinary observer adapter pays at most two callbacks for each source-bounded pending callback, including initializer audit and full origin metadata. -/
 theorem compiled_total {Origin : Type} (mark : PqxdhBeaconPhase2Shared.Secrets Shared → Origin)
@@ -165,9 +166,9 @@ theorem compiled_total {Origin : Type} (mark : PqxdhBeaconPhase2Shared.Secrets S
     (context : PqxdhInitialOriginContext.Context extra M P I D K Result Origin S B)
     (qPost : Nat) (fits : PqxdhInitialBuilderCertificates.Fits qPost context.original) (material : Material) :
     (simulateQ PqxdhInitialParentObserverCompiler.compiler
-      (PqxdhInitialOriginContext.stopped (X := X) (Response := Response) mark sender route decode context material)).IsTotalQueryBound
+      (PqxdhInitialOriginContext.stopped (completedBinding := completedBinding) (X := X) (Response := Response) mark sender route decode context material)).IsTotalQueryBound
       (2 * (255 + qPost * 67)) :=
-  PqxdhInitialParentObserverCompiler.program_bound _ _ (origin_total mark sender route decode context qPost fits material)
+  PqxdhInitialParentObserverCompiler.program_bound _ _ (origin_total (completedBinding := completedBinding) mark sender route decode context qPost fits material)
 
 end BeaconcryptCore.Computational.PqxdhInitialStoppedSourceBounds
 

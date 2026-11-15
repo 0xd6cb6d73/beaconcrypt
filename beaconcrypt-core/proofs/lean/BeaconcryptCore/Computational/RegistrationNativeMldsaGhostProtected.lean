@@ -16,11 +16,11 @@ open RegistrationNativeMldsaGhostNative (State nativeState rowState callback obs
 open RegistrationNativeMldsaProtectedInvariant (Holds)
 open RegistrationNativeMldsaProtectedCoverage (BornKey)
 open PqxdhServerAuthExperiment (Setup Checks)
-attribute [local irreducible] RegistrationNativeExperiment.handler RegistrationSigningShared.historyFor RegistrationAuthenticationNative.trial
+attribute [local irreducible] RegistrationNativeExperiment.handler RegistrationSigningShared.historyFor
 variable {n : Nat} {ι KemSK : Type} {base : OracleSpec ι}
 variable (source : Source) (selected : Nat) (setup : Setup base KemSK) (checks : Checks) (wire : RegistrationNativeWire.Wire)
     (route : RawCtxServerRouting.SenderDecoder) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : Credential (handleSource source))
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : Credential (handleSource source))
 
 private theorem projected (query : RegistrationNativeRawAdapter.TypedSpec.Domain)
     (before : State source n KemSK) (result : RegistrationNativeRawAdapter.TypedSpec.Range query × State source n KemSK)
@@ -49,34 +49,6 @@ theorem pool (query : RegistrationNativeRawAdapter.TypedSpec.Domain)
   rw [law, RegistrationNativeMldsaTableProgram.run_liftState, Functor.map_map, support_map] at possible
   obtain ⟨inner, _possible, same⟩ := possible
   exact (congrArg (fun value => value.2.2) same).symm
-
-/-- A protected Init origin failure at its actual selected birth is covered dynamically or has the literal cache collision. -/
-theorem accept (fallback : Credential source) (packet : registration.InitPacket)
-    (before after : State source n KemSK) (session : Nat)
-    (good : Holds source credential fallback (nativeState source before))
-    (rows : RegistrationNativeMldsaGhostRows.Safe source selected (rowState source before))
-    (owner : RegistrationNativeBeaconFrontend.Owner (handleSource source)) (owned : owner ∈ before.1.beacons)
-    (keyProtected : packet.mldsa_public_key = owner.mldsa.publicKey)
-    (born : BornKey source before.2.2 selected owner.mldsa.publicKey)
-    (supported : (.ok (some session), after) ∈ support
-      ((callback source selected setup checks wire route representation created credential (.inr (.accept packet))).run before))
-    (absent : ¬ MldsaTranscriptAuth.Issued (RegistrationAuthenticationNative.trial true before.1.server.pin packet
-      (RegistrationSigningShared.historyFor (PqxdhRefinement.absBytes packet.mldsa_public_key)
-        (RegistrationNativeMldsaShared.nativeProject before.1)))) :
-    CacheHasCollision after.1.server.world.world.1.primitive.2 ∨
-      ∃ forgery, observe source (.inr (.accept packet)) before (.ok (some session)) after = some forgery ∧
-        RegistrationNativeMldsaTableStop.Good source owner.mldsa.publicKey (nativeState source after) forgery := by
-  have underlying := projected source selected setup checks wire route representation created credential
-    (.inr (.accept packet)) before (.ok (some session), after) supported
-  rcases RegistrationNativeMldsaProtectedCoverage.accept source setup checks wire route representation created credential fallback packet
-    (nativeState source before) (nativeState source after) session good.safe good.provenance owner owned keyProtected underlying absent with collision | candidate
-  · exact Or.inl collision
-  · obtain ⟨_ordinal, _earlier, _born, forgery, chosen, fresh⟩ := candidate
-    have afterBorn : BornKey source after.2.2 selected owner.mldsa.publicKey := by
-      rw [pool source selected setup checks wire route representation created credential (.inr (.accept packet)) trivial before (.ok (some session), after) supported]
-      exact born
-    exact Or.inr ⟨forgery, RegistrationNativeMldsaGhostNative.capture source selected setup checks wire route representation created credential
-      (.inr (.accept packet)) before rows (.ok (some session), after) supported owner.mldsa.publicKey afterBorn forgery chosen, fresh⟩
 
 /-- A protected response origin failure uses the initial Server credential's selected birth at the actual tracked callback. -/
 theorem finish (fallback : Credential source) (index : Nat) (owner : RegistrationNativeBeaconFrontend.Owner (handleSource source))
@@ -114,11 +86,6 @@ end BeaconcryptCore.Computational.RegistrationNativeMldsaGhostProtected
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaGhostProtected.pool
 
-/-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaGhostProtected.accept' depends on axioms: [propext,
- Classical.choice,
- Quot.sound] -/
-#guard_msgs in
-#print axioms BeaconcryptCore.Computational.RegistrationNativeMldsaGhostProtected.accept
 
 /-- info: 'BeaconcryptCore.Computational.RegistrationNativeMldsaGhostProtected.finish' depends on axioms: [propext,
  Classical.choice,

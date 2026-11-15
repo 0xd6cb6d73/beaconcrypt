@@ -8,6 +8,7 @@ open OracleComp OracleSpec CoreModels Aeneas
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core PqxdhRefinement
 set_option autoImplicit false
+set_option warningAsError true
 set_option backward.isDefEq.respectTransparency false
 namespace BeaconcryptCore.Computational.RegistrationNativeStartupMetric
 open PqxdhServerAuthExperiment (Setup)
@@ -16,7 +17,7 @@ open RegistrationNativeG3MetricWorld (mask)
 variable {n : Nat} {ι KemSK Value : Type} {base : OracleSpec ι}
 
 abbrev Spec (n : Nat) (source : RegistrationNativeMldsa.Source) :=
-  (Unit →ₒ (Option (PqxdhLiveServerConstruction.Created Unit) × Unit)) +
+  (Unit →ₒ (Option (PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) × Unit)) +
     ((Unit →ₒ Option (RegistrationNativeMldsa.Credential source)) + WorldSpec n)
 
 noncomputable def program (source : RegistrationNativeMldsa.Source) (identityIndex : Nat) (serverKeyId : U64)
@@ -31,10 +32,9 @@ noncomputable def program (source : RegistrationNativeMldsa.Source) (identityInd
       | some credential =>
           let created := RegistrationServerStartup.publicCreated identity identityIndex serverKeyId
           let _ ← (Spec n source).query (.inr (.inr (.inl created)))
-          let digest ← (Spec n source).query (.inr (.inr (.inr (.inl (.inr (.hash (absBytes credential.publicKey)))))))
           let pin : session.ServerAuthenticationPin :=
             ⟨⟨PqxdhRootTableInitialization.rootArray identity.ed25519, serverKeyId⟩,
-              credential.publicKey, RegistrationAuthenticationShared.digestArray digest⟩
+              credential.publicKey⟩
           let frontend : RegistrationNativePublicFrontend.State source :=
             ⟨RegistrationServerMaterialFrontend.initial created.control pin, [],
               ⟨RegistrationServerRoleBackend.empty, [], [], []⟩, 0⟩
@@ -45,7 +45,7 @@ noncomputable def actual (setup : Setup base KemSK) (wire : RegistrationNativeWi
     (ensureInit : StateT Unit ProbComp Bool) (identityIndex : Nat) (serverKeyId : U64) :
     QueryImpl (Spec n source) (StateT (PqxdhRecordLiftWorld.State n) ProbComp)
   | .inl _ => simulateQ (CborRecordWorldSimulation.guarded setup (RegistrationNativeWire.ledgerCodec wire) route)
-      (simulateQ coinLift ((PqxdhLiveServerConstruction.construct (P := Unit) setup.joint ensureInit identityIndex serverKeyId none).run ()))
+      (simulateQ coinLift ((PqxdhLiveServerConstruction.construct (P := Std.Array Std.U8 151#usize) setup.joint ensureInit identityIndex serverKeyId none).run ()))
   | .inr (.inl _) => simulateQ (CborRecordWorldSimulation.guarded setup (RegistrationNativeWire.ledgerCodec wire) route)
       (simulateQ coinLift (RegistrationNativeMldsa.generate source))
   | .inr (.inr query) => CborRecordWorldSimulation.guarded setup (RegistrationNativeWire.ledgerCodec wire) route query
@@ -55,7 +55,7 @@ noncomputable def reference (setup : Setup base KemSK) (wire : RegistrationNativ
     (ensureInit : StateT Unit ProbComp Bool) (identityIndex : Nat) (serverKeyId : U64) :
     QueryImpl (Spec n source) (StateT (PqxdhRecordLiftWorld.State n) ProbComp)
   | .inl _ => PqxdhRecordLiftWorld.sampled
-      ((PqxdhLiveServerConstruction.construct (P := Unit) setup.joint ensureInit identityIndex serverKeyId none).run ())
+      ((PqxdhLiveServerConstruction.construct (P := Std.Array Std.U8 151#usize) setup.joint ensureInit identityIndex serverKeyId none).run ())
   | .inr (.inl _) => PqxdhRecordLiftWorld.sampled (RegistrationNativeMldsa.generate source)
   | .inr (.inr query) => CborRecordWorldSimulation.guarded setup (RegistrationNativeWire.ledgerCodec wire) route query
 
@@ -104,8 +104,6 @@ theorem reference_source (setup : Setup base KemSK) (wire : RegistrationNativeWi
             simulateQ_pure, StateT.run_pure, map_pure]
           apply bind_congr
           intro installed
-          apply bind_congr
-          intro digest
           rfl
 
 end BeaconcryptCore.Computational.RegistrationNativeStartupMetric

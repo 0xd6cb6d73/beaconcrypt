@@ -1,5 +1,6 @@
 (* SPDX-License-Identifier: 0BSD *)
 
-(* Both events must be reachable; these queries therefore have the intentional result "false". *)
-query event(HkdfInitialLeftEqualsStepKey(HKDF_PREFIX_LEFT_WITNESS)).
-query event(HkdfInitialRightEqualsStepNext(HKDF_PREFIX_RIGHT_WITNESS)).
+query event(HkdfSameInitialLabelPrefix(HKDF_INITIAL_PREFIX_WITNESS)).
+query event(HkdfSameMessageLabelPrefix(HKDF_MESSAGE_PREFIX_WITNESS)).
+query event(HkdfCrossPhaseLeftAlias(HKDF_CROSS_PHASE_LEFT_WITNESS)).
+query event(HkdfCrossPhaseRightAlias(HKDF_CROSS_PHASE_RIGHT_WITNESS)).

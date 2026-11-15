@@ -8,6 +8,8 @@ open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
 set_option maxHeartbeats 1500000
 namespace BeaconcryptCore.Computational.PqxdhSourceSharedPreparationResources
+variable (associatedData : Std.Array Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPhase1AcceptanceOracle PqxdhKemIndCca PqxdhInitializerSecrecy
 open CtxRomAuth AdaptiveCtxSharedHash
@@ -51,9 +53,9 @@ theorem coins {Result : Type} (work : ProbComp Result) (q : Nat) (bounded : work
 include postBound selectorBound localBound in
 /-- Common rejection and ineligible completion execute the whole original ordinary post schedule. -/
 theorem completed (hash : Bool) (output : LocalOutput) :
-    (PqxdhCommonSharedContinuation.completed setup env program post attachedVerify primitives baseImpl kem secret output).IsQueryBoundP
+    (PqxdhCommonSharedContinuation.completed (completedBinding := completedBinding) setup env program post attachedVerify primitives baseImpl kem secret output).IsQueryBoundP
       (HashClass hash) (postCost hash qPost qSelector qLocal) := by
-  have bounded := PqxdhOrdinarySharedSchedulerBounds.program_bills attachedVerify primitives 1 env.source env.recordWriter
+  have bounded := PqxdhOrdinarySharedSchedulerBounds.program_bills (completedBinding := completedBinding) attachedVerify primitives 1 env.source env.recordWriter
     env.senderId env.route env.decode env.localImpl baseImpl kem secret qSelector qLocal selectorBound localBound
     (post output.context.selection.1 (.ok none)) output.context.selection.2 qPost (postBound _ _)
   cases hash
@@ -63,13 +65,13 @@ theorem completed (hash : Bool) (output : LocalOutput) :
 include postBound selectorBound localBound peerBound plaintextBound writerBound in
 /-- Accepted common candidates pay the actual registration builder and then the full adaptive post schedule, for every builder reply. -/
 theorem accepted (hash : Bool) (output : LocalOutput) (ready : PqxdhPrivateAcceptedRoot.Ready) :
-    (PqxdhCommonSharedContinuation.accepted setup env callbacks program post attachedVerify primitives baseImpl kem secret output ready).IsQueryBoundP
+    (PqxdhCommonSharedContinuation.accepted (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem secret output ready).IsQueryBoundP
       (HashClass hash) (registrationCost hash qPeer qPlaintext qWriter + postCost hash qPost qSelector qLocal) := by
   simp only [PqxdhCommonSharedContinuation.accepted]
-  apply isQueryBoundP_bind (PqxdhCommonSharedRegistrationResources.build env.source env.recordWriter callbacks
+  apply isQueryBoundP_bind (PqxdhCommonSharedRegistrationResources.build (associatedData := associatedData) env.source env.recordWriter callbacks
     qPeer qPlaintext qWriter peerBound plaintextBound writerBound hash _ _ _ _ _)
   intro built _
-  have bounded := PqxdhOrdinarySharedSchedulerBounds.program_bills attachedVerify primitives 1 env.source env.recordWriter
+  have bounded := PqxdhOrdinarySharedSchedulerBounds.program_bills (completedBinding := completedBinding) attachedVerify primitives 1 env.source env.recordWriter
     env.senderId env.route env.decode env.localImpl baseImpl kem secret qSelector qLocal selectorBound localBound
     (post output.context.selection.1 built.1)
     (PqxdhOrdinarySharedScheduler.separate (PqxdhPhase2OldSource.packState built.2
@@ -83,10 +85,10 @@ include postBound selectorBound localBound peerBound plaintextBound writerBound 
 /-- Every optional encapsulation and DH-check outcome keeps its corresponding complete common continuation. -/
 theorem afterEncapsulation (hash : Bool) (output : LocalOutput) (identity : Ed25519PublicKey) (keys : Phase1KeyTuple)
     (ephemeral : List.Vector UInt8 32) (encapsulated : Option (MlKem768Ciphertext × MlKemSharedSecret)) :
-    (PqxdhCommonSharedDispatch.afterEncapsulation setup env callbacks program post attachedVerify primitives baseImpl kem secret
+    (PqxdhCommonSharedDispatch.afterEncapsulation (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem secret
       output identity keys ephemeral encapsulated).IsQueryBoundP (HashClass hash)
       (registrationCost hash qPeer qPlaintext qWriter + postCost hash qPost qSelector qLocal) := by
-  have rejected := (completed setup env program post attachedVerify primitives baseImpl kem secret qPost qSelector qLocal
+  have rejected := (completed (completedBinding := completedBinding) setup env program post attachedVerify primitives baseImpl kem secret qPost qSelector qLocal
     postBound selectorBound localBound hash output).mono (Nat.le_add_left _ (registrationCost hash qPeer qPlaintext qWriter))
   cases encapsulated with
   | none => exact rejected
@@ -95,7 +97,7 @@ theorem afterEncapsulation (hash : Bool) (output : LocalOutput) (identity : Ed25
     simp only [PqxdhCommonSharedDispatch.afterEncapsulation]
     split
     · exact rejected
-    · exact accepted setup env callbacks program post attachedVerify primitives baseImpl kem secret
+    · exact accepted (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem secret
         qPost qSelector qLocal qPeer qPlaintext qWriter postBound selectorBound localBound peerBound plaintextBound writerBound hash output _
 
 variable (qEphemeral qEncaps : Nat)
@@ -106,10 +108,10 @@ variable (qEphemeral qEncaps : Nat)
 include postBound selectorBound localBound peerBound plaintextBound writerBound ephemeralBound nativeEncapsBound in
 /-- Attacker-owned and rejected candidate routes retain replay checks, optional native encapsulation, actual source DH checks, and all post work. -/
 theorem common (hash : Bool) (output : LocalOutput) :
-    (PqxdhCommonSharedDispatch.common setup env callbacks program post attachedVerify primitives baseImpl kem secret output).IsQueryBoundP
+    (PqxdhCommonSharedDispatch.common (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem secret output).IsQueryBoundP
       (HashClass hash) (coinsCost hash qEphemeral + coinsCost hash qEncaps +
         registrationCost hash qPeer qPlaintext qWriter + postCost hash qPost qSelector qLocal) := by
-  have rejected := completed setup env program post attachedVerify primitives baseImpl kem secret qPost qSelector qLocal
+  have rejected := completed (completedBinding := completedBinding) setup env program post attachedVerify primitives baseImpl kem secret qPost qSelector qLocal
     postBound selectorBound localBound hash output
   simp only [PqxdhCommonSharedDispatch.common]
   split
@@ -121,13 +123,13 @@ theorem common (hash : Bool) (output : LocalOutput) :
       intro ephemeral _
       apply isQueryBoundP_bind (coins _ qEncaps (nativeEncapsBound _) hash)
       intro encapsulated _
-      exact afterEncapsulation setup env callbacks program post attachedVerify primitives baseImpl kem secret
+      exact afterEncapsulation (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem secret
         qPost qSelector qLocal qPeer qPlaintext qWriter postBound selectorBound localBound peerBound plaintextBound writerBound hash output _ _ ephemeral encapsulated
 
 include postBound selectorBound localBound peerBound plaintextBound writerBound ephemeralBound nativeEncapsBound encapsBound in
 /-- One actual candidate dispatcher pays at most one ephemeral draw and one encapsulation before the complete registration/post continuation. The internally rejected changed-signature branch remains present. -/
 theorem dispatch (hash : Bool) (output : LocalOutput) :
-    (PqxdhCommonSharedDispatch.dispatch setup env callbacks program post attachedVerify primitives baseImpl kem secret output).IsQueryBoundP
+    (PqxdhCommonSharedDispatch.dispatch (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem secret output).IsQueryBoundP
       (HashClass hash) (coinsCost hash qEphemeral + coinsCost hash qEncaps +
         registrationCost hash qPeer qPlaintext qWriter + postCost hash qPost qSelector qLocal) := by
   simp only [PqxdhCommonSharedDispatch.dispatch]
@@ -142,9 +144,9 @@ theorem dispatch (hash : Bool) (output : LocalOutput) :
       · apply isQueryBoundP_bind (coins _ qEncaps (encapsBound _) hash)
         intro encapsulated _
         simp only [isQueryBoundP_map_iff]
-        exact (completed setup env program post attachedVerify primitives baseImpl kem secret qPost qSelector qLocal
+        exact (completed (completedBinding := completedBinding) setup env program post attachedVerify primitives baseImpl kem secret qPost qSelector qLocal
           postBound selectorBound localBound hash output).mono (by omega)
-    · simpa only [isQueryBoundP_map_iff] using common setup env callbacks program post attachedVerify primitives baseImpl kem secret
+    · simpa only [isQueryBoundP_map_iff] using common (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem secret
         qPost qSelector qLocal qPeer qPlaintext qWriter postBound selectorBound localBound peerBound plaintextBound writerBound
         qEphemeral qEncaps ephemeralBound nativeEncapsBound hash output
 
@@ -161,19 +163,19 @@ include postBound selectorBound localBound peerBound plaintextBound writerBound 
     preBound oneBound phase1WriteBound mainBound in
 /-- The whole original generated prefix and candidate dispatcher retain every source sampler and complete common continuation in one ledger. -/
 theorem run (hash : Bool) (target : TargetKemPublicKey) :
-    (PqxdhSourceSharedPreparation.run setup env callbacks program post attachedVerify primitives baseImpl kem secret target).IsQueryBoundP
+    (PqxdhSourceSharedPreparation.run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem secret target).IsQueryBoundP
       (HashClass hash) (generatedCost hash qPre qOne qPhase1Write qMain qSelector qLocal +
         (coinsCost hash qEphemeral + coinsCost hash qEncaps +
         registrationCost hash qPeer qPlaintext qWriter + postCost hash qPost qSelector qLocal)) := by
-  have generated := PqxdhGeneratedSharedPrefixBounds.borrowed_bills setup env.toDriverEnvironment callbacks program
+  have generated := PqxdhGeneratedSharedPrefixBounds.borrowed_bills (completedBinding := completedBinding) setup env.toDriverEnvironment callbacks program
     attachedVerify primitives baseImpl kem secret qPhase1Write qMain qSelector qLocal phase1WriteBound mainBound
     qPre qOne preBound oneBound selectorBound localBound target
-  have bounded : (PqxdhBorrowedSharedPrefix.run setup env.toDriverEnvironment callbacks program attachedVerify primitives baseImpl kem secret target).IsQueryBoundP
+  have bounded : (PqxdhBorrowedSharedPrefix.run (completedBinding := completedBinding) setup env.toDriverEnvironment callbacks program attachedVerify primitives baseImpl kem secret target).IsQueryBoundP
       (HashClass hash) (generatedCost hash qPre qOne qPhase1Write qMain qSelector qLocal) := by
     cases hash
     · exact generated.2
     · exact generated.1
-  exact isQueryBoundP_bind bounded (fun output _ => dispatch setup env callbacks program post attachedVerify primitives baseImpl kem secret
+  exact isQueryBoundP_bind bounded (fun output _ => dispatch (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem secret
     qPost qSelector qLocal qPeer qPlaintext qWriter postBound selectorBound localBound peerBound plaintextBound writerBound
     qEphemeral qEncaps ephemeralBound nativeEncapsBound encapsBound hash output)
 
@@ -193,11 +195,11 @@ theorem prepare (qKeygen : Nat)
     (localAllBound : ∀ secret query state, PqxdhOrdinaryNativeCache.sourceSafe query →
       ((PqxdhOrdinaryNativeCache.cacheFree attachedVerify primitives 1 env.source env.localImpl baseImpl kem secret query).run state).IsTotalQueryBound qLocal)
     (hash : Bool) :
-    (PqxdhSourceSharedPreparation.prepare setup env callbacks program post attachedVerify primitives baseImpl kem).IsQueryBoundP
+    (PqxdhSourceSharedPreparation.prepare (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem).IsQueryBoundP
       (HashClass hash) (if hash then 69 * qMain + 1 + 69 * qPost else
         uniformCost qKeygen qPre qOne qPhase1Write qMain qPost qSelector qLocal qEphemeral qEncaps qPeer qPlaintext qWriter) := by
   have whole := isQueryBoundP_bind (coins _ qKeygen keygenBound hash) (fun pair _ =>
-    isQueryBoundP_bind (run setup env callbacks program post attachedVerify primitives baseImpl kem pair.2
+    isQueryBoundP_bind (run (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks program post attachedVerify primitives baseImpl kem pair.2
       qPost qSelector qLocal qPeer qPlaintext qWriter postBound (selectorAllBound pair.2) (localAllBound pair.2)
       peerBound plaintextBound writerBound qEphemeral qEncaps ephemeralBound nativeEncapsBound encapsBound
       qPre qOne qPhase1Write qMain preBound oneBound phase1WriteBound mainBound hash pair.1)

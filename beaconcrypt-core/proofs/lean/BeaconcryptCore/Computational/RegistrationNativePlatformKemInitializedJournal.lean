@@ -192,7 +192,7 @@ theorem blocks (history : History n source Value Platform) (finalPlatform : Plat
       exact List.mem_append_right _ (included entry member)
 
 private theorem accept_macro
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential source)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential source)
     (packet : registration.InitPacket) (before : RegistrationNativeKemServerState.State n source × Platform) :
     (RegistrationNativePlatformKemClientJournal.free setup checks wire route representation created credential
       view failure allocation reserveRegistration reservePeer erased helper writer (.inr (.accept packet))).run before =
@@ -218,15 +218,17 @@ theorem accept_receipt (history : History n source Value Platform) (finalPlatfor
     ∃ pin current currentPlatform,
       Nonempty (RegistrationNativePlatformAcceptRecipientCut.CheckedCut setup (RegistrationNativeWire.ledgerCodec wire) checks route representation
         history.initial.created packet pin current currentPlatform handle after.1 after.2 log) := by
-  obtain ⟨block, ran, included⟩ := blocks setup checks wire route representation source ensureInit identityIndex serverKeyId view failure allocation
+  obtain ⟨block, ranIncluded⟩ := blocks setup checks wire route representation source ensureInit identityIndex serverKeyId view failure allocation
     reserveRegistration reservePeer erased helper writer bounds mode adversary previous history finalPlatform log supported _ member
-  rw [accept_macro, RegistrationAgreementMacroTrace.logging_map, support_map] at ran
-  obtain ⟨⟨⟨⟨reply, finalClient⟩, finalP⟩, actualLog⟩, accepted, returned⟩ := ran
+  have included := ranIncluded.2
+  rw [accept_macro, RegistrationAgreementMacroTrace.logging_map, support_map] at ranIncluded
+  obtain ⟨⟨⟨⟨⟨reply, finalClient⟩, finalP⟩, actualLog⟩, acceptedReturned⟩, -⟩ := ranIncluded
+  have returned := acceptedReturned.2
   simp only [Prod.map, id_eq, Prod.mk.injEq] at returned
   rcases returned with ⟨⟨rfl, ⟨rfl, rfl⟩⟩, rfl⟩
-  obtain ⟨pin, current, currentPlatform, _pinLog, _laterLog, _pinned, _split, ⟨checked⟩⟩ :=
-    RegistrationNativePlatformAcceptRecipientCut.accept setup (RegistrationNativeWire.ledgerCodec wire) checks (StateT.lift reserveRegistration)
-      route representation history.initial.created packet { before.1 with parsedAccepts := before.1.parsedAccepts + 1 } finalClient before.2 finalP handle actualLog accepted
+  have cut := RegistrationNativePlatformAcceptRecipientCut.accept setup (RegistrationNativeWire.ledgerCodec wire) checks (StateT.lift reserveRegistration)
+    route representation history.initial.created packet { before.1 with parsedAccepts := before.1.parsedAccepts + 1 } finalClient before.2 finalP handle actualLog
+  obtain ⟨pin, current, currentPlatform, _pinLog, _laterLog, -, _split, ⟨checked⟩⟩ := (cut ∘ And.left) acceptedReturned
   refine ⟨pin, current, currentPlatform, ⟨{ checked with root := { checked.root with root :=
     { checked.root.root with encapsulated := included _ checked.root.root.encapsulated } } }⟩⟩
 

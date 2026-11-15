@@ -9,6 +9,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhInitialServicePost
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhInitialResponseService PqxdhPhase2SourceAux PqxdhJointKdfGame PqxdhKemIndCca
 open PqxdhPhase1AcceptanceOracle
 open PqxdhJointIdentity PqxdhEd25519EufCma PqxdhPrivateKemSource PqxdhChallengeSecretRouting
@@ -80,7 +81,7 @@ noncomputable def finish
         (OracleComp (RunSpec baseSpec)))
   | .finish index raw => fun before => PqxdhPhase2PostScheduler.installed index before <$>
       (simulateQ (handles attachedVerify primitives count fixed localImpl challenge)
-        (PqxdhBeaconPhase2Shared.owner decode raw (before.1.roles.1.2 index))).run
+        (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) decode raw (before.1.roles.1.2 index))).run
           (before.1.primitive, before.2)
 
 set_option backward.isDefEq.respectTransparency false in
@@ -92,14 +93,14 @@ theorem finish_source
     (challenge : MlKem768Ciphertext) (decode : RawCtxReceive.FrameDecoder)
     (query : (PqxdhPhase2LiveFinish.FinishSpec B).Domain)
     (state : PqxdhPhase2PostScheduler.State (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B) count) :
-    simulateQ (source fixed) ((finish attachedVerify primitives count fixed localImpl challenge decode query).run state) =
-      (PqxdhPhase2PostScheduler.targetFinish (baseSpec := baseSpec) attachedVerify primitives count fixed localImpl challenge decode query).run state := by
+    simulateQ (source fixed) ((finish (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl challenge decode query).run state) =
+      (PqxdhPhase2PostScheduler.targetFinish (completedBinding := completedBinding) (baseSpec := baseSpec) attachedVerify primitives count fixed localImpl challenge decode query).run state := by
   cases query with
   | finish index raw =>
       simpa only [finish, PqxdhPhase2PostScheduler.targetFinish, StateT.run, simulateQ_map] using
         congrArg (Functor.map (PqxdhPhase2PostScheduler.installed index state))
           (handles_program attachedVerify primitives count fixed localImpl challenge
-            (PqxdhBeaconPhase2Shared.owner decode raw (state.1.roles.1.2 index)) (state.1.primitive, state.2))
+            (PqxdhBeaconPhase2Shared.owner (completedBinding := completedBinding) decode raw (state.1.roles.1.2 index)) (state.1.primitive, state.2))
 
 noncomputable def target
     (attachedVerify : Ed25519PublicKey → Pqxdh.Bytes → Option Pqxdh.Bytes)
@@ -111,9 +112,9 @@ noncomputable def target
       (StateT (PqxdhPhase2PostScheduler.State (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B) count)
         (OracleComp (RunSpec baseSpec)))
   | .inl query => fun state => simulateQ original
-      ((PqxdhPhase2PostScheduler.target attachedVerify primitives count fixed localImpl writer sender route decode challenge
+      ((PqxdhPhase2PostScheduler.target (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl writer sender route decode challenge
         (.inl query)).run state)
-  | .inr query => finish attachedVerify primitives count fixed localImpl challenge decode query
+  | .inr query => finish (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl challenge decode query
 
 /-- All original record/public/reveal and selector calls remain unchanged; only actual Beacon completion exposes its private initializer callback. -/
 theorem target_source
@@ -124,11 +125,11 @@ theorem target_source
     (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder) (challenge : MlKem768Ciphertext)
     (query : (PqxdhPhase2SourceScheduler.Spec baseSpec S B).Domain)
     (state : PqxdhPhase2PostScheduler.State (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B) count) :
-    simulateQ (source fixed) ((target attachedVerify primitives count fixed localImpl writer sender route decode challenge query).run state) =
-      (PqxdhPhase2PostScheduler.target attachedVerify primitives count fixed localImpl writer sender route decode challenge query).run state := by
+    simulateQ (source fixed) ((target (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl writer sender route decode challenge query).run state) =
+      (PqxdhPhase2PostScheduler.target (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl writer sender route decode challenge query).run state := by
   cases query with
   | inl query => exact original_program fixed _
-  | inr query => exact finish_source attachedVerify primitives count fixed localImpl challenge decode query state
+  | inr query => exact finish_source (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl challenge decode query state
 
 /-- The entire original adaptive post-root schedule preserves complete live, identity and shared state under the common initializer source interpretation. -/
 theorem target_program {Result : Type}
@@ -139,9 +140,9 @@ theorem target_program {Result : Type}
     (route : RawCtxServerRouting.SenderDecoder) (decode : RawCtxReceive.FrameDecoder) (challenge : MlKem768Ciphertext)
     (work : OracleComp (PqxdhPhase2SourceScheduler.Spec baseSpec S B) Result)
     (state : PqxdhPhase2PostScheduler.State (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B) count) :
-    simulateQ (source fixed) ((simulateQ (target attachedVerify primitives count fixed localImpl writer sender route decode challenge) work).run state) =
-      (simulateQ (PqxdhPhase2PostScheduler.target attachedVerify primitives count fixed localImpl writer sender route decode challenge) work).run state :=
-  simulateQ_StateT_compose _ _ _ (target_source attachedVerify primitives count fixed localImpl writer sender route decode challenge) work state
+    simulateQ (source fixed) ((simulateQ (target (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl writer sender route decode challenge) work).run state) =
+      (simulateQ (PqxdhPhase2PostScheduler.target (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl writer sender route decode challenge) work).run state :=
+  simulateQ_StateT_compose _ _ _ (target_source (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl writer sender route decode challenge) work state
 
 /-- On the same explicitly good KEM sample used by the authenticated-root source bridge, the complete actual native Beacon finish equals the new initializer-service interpretation. -/
 theorem finish_native {KemSK : Type}
@@ -153,11 +154,11 @@ theorem finish_native {KemSK : Type}
     (agreement : kem.decaps secret challenge = pure (some shared)) (decode : RawCtxReceive.FrameDecoder)
     (query : (PqxdhPhase2LiveFinish.FinishSpec B).Domain)
     (state : PqxdhPhase2PostScheduler.State (M := M) (P := P) (I := I) (D := D) (K := K) (A := A) (S := S) (B := B) count) :
-    (PqxdhPhase2PostScheduler.nativeFinish attachedVerify primitives count fixed localImpl baseImpl kem secret decode query).run state =
+    (PqxdhPhase2PostScheduler.nativeFinish (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl baseImpl kem secret decode query).run state =
       simulateQ (PqxdhPhase2PostScheduler.interpretation fixed baseImpl kem secret challenge)
-        (simulateQ (source fixed) ((finish attachedVerify primitives count fixed localImpl challenge decode query).run state)) := by
+        (simulateQ (source fixed) ((finish (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl challenge decode query).run state)) := by
   rw [finish_source, PqxdhPhase2PostScheduler.interpretation, QueryImpl.simulateQ_compose]
-  exact PqxdhPhase2PostScheduler.finish_actual attachedVerify primitives count fixed localImpl baseImpl kem secret
+  exact PqxdhPhase2PostScheduler.finish_actual (completedBinding := completedBinding) attachedVerify primitives count fixed localImpl baseImpl kem secret
     challenge shared agreement decode query state
 
 end BeaconcryptCore.Computational.PqxdhInitialServicePost

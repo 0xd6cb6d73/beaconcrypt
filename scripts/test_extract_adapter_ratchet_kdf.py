@@ -56,7 +56,7 @@ class RatchetKdfExtraction(unittest.TestCase):
         for name, source in self.raw.items():
             installed = (extraction.DESTINATION / name).read_bytes()
             self.assertEqual(extraction.normalize(source, name), installed)
-        self.assertEqual(len(extraction.INTERFACES), 2)
+        self.assertEqual(len(extraction.INTERFACES), 4)
         self.assertEqual(extraction.TRANSFORMATION["control_flow_rewrites"], [])
         self.assertEqual(extraction.TRANSFORMATION["fixture_rust_rewrites"], [])
         for before, after in extraction.INTERFACES:
@@ -139,7 +139,10 @@ class RatchetKdfExtraction(unittest.TestCase):
                 b"SymmetricRatchetKdfRequest.input request",
                 b"SymmetricRatchetKdfRequest.info request",
             ),
-            (b"(core.option.Option.Some s2) prk", b"(core.option.Option.Some s1) prk"),
+            (
+                b"(core.option.Option.Some info) prk",
+                b"(core.option.Option.Some replacement) prk",
+            ),
             (b"expand_into s1", b"expand_into s2"),
         ):
             with self.subTest(before=before):
@@ -150,8 +153,8 @@ class RatchetKdfExtraction(unittest.TestCase):
             (b"Array.repeat OUTPUT_SIZE 0#u8", b"Array.repeat OUTPUT_SIZE 1#u8"),
             (b"Zeroizing.new", b"Zeroizing.unchecked_new"),
             (b"DerefDerefMut.deref_mut", b"DerefDerefMut.unchecked"),
-            (b"index_mut_back s3", b"index_mut_back s1"),
-            (b"deref_mut_back a4", b"deref_mut_back a2"),
+            (b"index_mut_back s2", b"index_mut_back s1"),
+            (b"deref_mut_back a2", b"deref_mut_back a1"),
         ):
             with self.subTest(before=before):
                 self.reject_body(before, after)
@@ -159,12 +162,12 @@ class RatchetKdfExtraction(unittest.TestCase):
     def test_production_widths_are_not_interchanged(self):
         for before, after in (
             (
-                b"symmetric_ratchet_hkdf 76#usize request",
-                b"symmetric_ratchet_hkdf 64#usize request",
+                b"symmetric_ratchet_hkdf 76#usize a s",
+                b"symmetric_ratchet_hkdf 64#usize a s",
             ),
             (
-                b"symmetric_ratchet_hkdf 64#usize request",
-                b"symmetric_ratchet_hkdf 76#usize request",
+                b"symmetric_ratchet_hkdf 64#usize a s",
+                b"symmetric_ratchet_hkdf 76#usize a s",
             ),
         ):
             with self.subTest(before=before):

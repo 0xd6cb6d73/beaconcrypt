@@ -55,7 +55,7 @@ noncomputable def complete {R : Type}
     (previousLocal : LocalOperations (RustT SourceM))
     (previousChildren : ChildOperations (RustT SourceM))
     (view : MaterialView mlSource KemSK) (views : Views)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (joint : PqxdhJointIdentity.Primitives) (current : Native×Platform)
     (before : RegistrationNativePlatformExtractedSdkCarrier.Carrier (R:=R) view views joint created credential current)
     (token : beaconcrypt_public_wrapper.server.RegistrationOutput) (data : core.option.Option (Slice U8))
@@ -87,7 +87,7 @@ noncomputable def complete {R : Type}
       (RegistrationNativePlatformExtractedSdkCarrier.Carrier (R:=R) view views joint created credential)
       (RegistrationNativePlatformPackedState.pack
         (RegistrationNativePlatformExperiment.server
-          (RegistrationNativePlatformCompletionSdk.complete (RegistrationNativePlatformSourceBuild.pin coins)
+          (RegistrationNativePlatformCompletionSdk.complete (RegistrationNativePlatformCompletionSdk.nativeAdHash coins) (RegistrationNativePlatformSourceBuild.pin coins)
             (admitted <$>StateT.lift allocated) (RegistrationNativePlatformCompletionSdk.nativePresent coins)
             (RegistrationNativePlatformExtractedSdkServer.Build.sourceFinish coins setup codec keyView failure
               (RegistrationNativePlatformExtractedSdkBuildNormal.allocation allocate)
@@ -111,7 +111,7 @@ noncomputable def complete {R : Type}
   let after:=(project before.objects.server.control ((publication,.ok (reply,self)),rawAfter)).2
   have actual : (((project before.objects.server.control ((publication,.ok (reply,self)),rawAfter)).1,after),platformAfter)∈support
       (((RegistrationNativePlatformExperiment.server
-          (RegistrationNativePlatformCompletionSdk.complete (RegistrationNativePlatformSourceBuild.pin coins)
+          (RegistrationNativePlatformCompletionSdk.complete (RegistrationNativePlatformCompletionSdk.nativeAdHash coins) (RegistrationNativePlatformSourceBuild.pin coins)
             (admitted <$>StateT.lift allocated) (RegistrationNativePlatformCompletionSdk.nativePresent coins)
             (RegistrationNativePlatformExtractedSdkServer.Build.sourceFinish coins setup codec keyView failure
               (RegistrationNativePlatformExtractedSdkBuildNormal.allocation allocate)

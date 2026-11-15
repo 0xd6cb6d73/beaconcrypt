@@ -54,8 +54,6 @@ pub(crate) fn encode_init(init: InitKex<'_>) -> Option<Vec<u8>> {
 		init.pre_key.len(),
 		init.one_time_key.len(),
 		init.pq_key.len(),
-		init.mldsa_public_key.len(),
-		init.signature.len(),
 	])?;
 	encode_record(capacity, |output| {
 		beaconcrypt_parse::encode_init(init, output)
@@ -112,8 +110,6 @@ mod tests {
 			pre_key: &[0; 98],
 			one_time_key: &[0; 98],
 			pq_key: &[0; 1_249],
-			mldsa_public_key: &[0; crate::auth::MLDSA_PUBLIC_KEY_LEN],
-			signature: &[0; crate::auth::MLDSA_SIGNATURE_LEN],
 		};
 		assert!(beaconcrypt_parse::decode_init(&encode_init(init).unwrap()) == Some(init));
 		let response = KexResponse {

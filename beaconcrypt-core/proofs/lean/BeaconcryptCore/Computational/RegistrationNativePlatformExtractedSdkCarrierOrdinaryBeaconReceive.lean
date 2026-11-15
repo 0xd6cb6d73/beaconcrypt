@@ -68,7 +68,7 @@ theorem native_eq (before : Native) (worldOwner : Nat) (self : beaconcrypt_publi
 
 noncomputable def put (view : AdapterPublicWrapperState.MaterialView mlSource KemSK)
     (containers : AdapterPublicWrapperStorage.Views) (joint : PqxdhJointIdentity.Primitives)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (current : Native ×Platform) (before : Carrier (R:=R) view containers joint created credential current)
     (logical : Nat) (owner : RegistrationNativeBeaconFrontend.Owner mlSource) (selected : current.1.beacons[logical]?=some owner)
     (self : beaconcrypt_public_wrapper.beacon.Beacon) (sourceSelected : before.objects.beacons logical=some self)
@@ -156,7 +156,7 @@ noncomputable def put (view : AdapterPublicWrapperState.MaterialView mlSource Ke
 
 theorem put_objects (view : AdapterPublicWrapperState.MaterialView mlSource KemSK)
     (containers : AdapterPublicWrapperStorage.Views) (joint : PqxdhJointIdentity.Primitives)
-    (created : PqxdhLiveServerConstruction.Created Unit) (credential : RegistrationNativeMldsa.Credential mlSource)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential : RegistrationNativeMldsa.Credential mlSource)
     (current : Native ×Platform) (before : Carrier (R:=R) view containers joint created credential current)
     (logical : Nat) (owner : RegistrationNativeBeaconFrontend.Owner mlSource) (selected : current.1.beacons[logical]?=some owner)
     (self : beaconcrypt_public_wrapper.beacon.Beacon) (sourceSelected : before.objects.beacons logical=some self)

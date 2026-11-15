@@ -19,7 +19,7 @@ variable [LocalOperations] [CryptoOperations] [ContainerOperations] [Codecs]
 variable [beaconcrypt.ratchet.Operations] [beaconcrypt.auth.Operations]
 variable [RegistrationWriterPrimitive.Operations] [AdapterWirePrimitive.Operations]
 
-omit [Allocator] [ContainerOperations] [Codecs] [beaconcrypt.ratchet.Operations] in
+omit [Platform] [Allocator] [LocalOperations] [ContainerOperations] [Codecs] [beaconcrypt.ratchet.Operations] in
 theorem bundle_unavailable {R E : Type} (random : rand_core.TryCryptoRng R E)
     (before : beacon.Beacon) (rng : R)
     (unavailable : match before.state with

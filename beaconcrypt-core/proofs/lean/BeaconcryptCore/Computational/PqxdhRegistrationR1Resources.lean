@@ -81,8 +81,8 @@ theorem generated_uniform_bill (caps : KemCaps) (qInit : Nat) (budget : Fin 9 â†
     (noCreate : budget 1 = 0) (noBundle : budget 2 = 0) :
     (qInit + 32 + âˆ‘ kind, uniformCost caps qInit kind * programBudget budget kind) =
       2 * qInit + 128 + caps.keygenCost + budget 0 +
-        (96 + caps.encapsCost) * budget 3 + 64 * budget 4 +
-        (69 * max 64 caps.decapsCost) * budget 5 + 64 * budget 6 + 64 * budget 7 := by
+        (96 + caps.encapsCost) * budget 3 + 128 * budget 4 +
+        (64 + 69 * max 64 caps.decapsCost) * budget 5 + 64 * budget 6 + 64 * budget 7 := by
   rw [uniform_bill]
   simp [programBudget, noCreate, noBundle]
   omega

@@ -29,8 +29,13 @@ theorem bundle_held (setup : Setup baseSpec KemSK) (codec : Codec Reader Respons
   | some entry =>
     simp only [bundle, StateT.run, found, support_map, Set.mem_image] at supported
     obtain ⟨returned, returnedSupport, rfl⟩ := supported
+    have original : returned.1 ∈ support (trace setup codec address entry.identityIndex entry.owner
+        state.1.pool.1 state.2) := by
+      rw [← traceLogged_trace setup codec address entry.identityIndex entry.owner state.1.pool.1 state.2
+        (state.1.inits address), support_map]
+      exact ⟨returned, returnedSupport, rfl⟩
     exact trace_held setup codec priorMessages address entry.identityIndex entry.owner state.1.pool.1
-      state.2 held returned returnedSupport
+      state.2 held returned.1 original
 
 /-- Forwarded source commands retain their exact transcript prefix and add no unrecorded signature. -/
 theorem forwarded_held (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)

@@ -49,7 +49,7 @@ theorem lift_safe (kind : Kind) (work : RegistrationNativeBeaconFrontend.M n Kem
     intro paid
     exact False.elim (free paid)
 
-theorem encoder_safe (kind : Kind) (view : registration.SignedInitView) :
+theorem encoder_safe (kind : Kind) (view : registration.InitView) :
     Safe (queries := Spec E n KemSK) (Allowed (E := E) (n := n) (KemSK := KemSK) kind)
       (encoder (KemSK := KemSK) (source := source) (Auxiliary := Auxiliary) E view) := by
   intro owners env
@@ -82,7 +82,7 @@ theorem program_safe (kind : Kind) (setup : PqxdhServerAuthExperiment.Setup base
         apply bind_safe (Allowed (E := E) (n := n) (KemSK := KemSK) kind) _ _
           (RegistrationPublicationQuerySafety.Beacon.begin (Allowed (E := E) (n := n) (KemSK := KemSK) kind) _
             (fun query => lift_safe kind _ (RegistrationNativeKemResourceFootprint.outgoing_zero setup kind index owner query))
-            _ (encoder_safe kind) _ _ _ _ _)
+            _ (encoder_safe kind) _ _ _ _)
         intro published
         cases published with
         | fail error | div => exact pure_safe (Allowed (E := E) (n := n) (KemSK := KemSK) kind) _
@@ -100,7 +100,7 @@ theorem program_safe (kind : Kind) (setup : PqxdhServerAuthExperiment.Setup base
 
 theorem handler_bound {Platform : Type} (kind : Kind) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (checks : PqxdhServerAuthExperiment.Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (query : (Spec E n KemSK).Domain) (before : RegistrationNativeKemServerState.State n source) (previous : Platform) :
     (((RegistrationNativePlatformKemCountedBundle.handler setup checks representation created writer query).run before).run previous).IsQueryBoundP
@@ -121,7 +121,7 @@ private theorem map_apply {S X Y : Type} {m : Type → Type} [Monad m] [LawfulMo
 
 theorem counted_program {Platform : Type} (kind : Kind) (setup : PqxdhServerAuthExperiment.Setup base KemSK)
     (checks : PqxdhServerAuthExperiment.Checks) (representation : RegistrationServerRoleBackend.ConvertedIdentity setup)
-    (created : PqxdhLiveServerConstruction.Created Unit)
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (writer : QueryImpl (BeaconcryptCore.Refinement.AdapterRegistrationWriterRequestMonad.Spec E) (StateT Platform ProbComp))
     (index : Nat) (before : RegistrationNativeKemServerState.State n source) (previous : Platform) :
     (((RegistrationNativePlatformKemCountedBundle.program setup checks representation created writer index).run before).run previous).IsQueryBoundP

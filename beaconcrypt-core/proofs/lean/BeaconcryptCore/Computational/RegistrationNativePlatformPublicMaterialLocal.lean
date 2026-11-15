@@ -132,6 +132,9 @@ private def acceptHandler (selected : Bool) (reserve : StateT Platform ProbComp 
   | .inl query => localHandler selected query
   | .inr _ => platform reserve
 
+/- The corrected OPEN accept selects the Server pin purely (no fingerprint hash query), so elaboration-time defeq checks
+   on terms containing the concrete accept program would evaluate through `begin_server_pin`; keep it opaque here. -/
+attribute [local irreducible] RegistrationNativePlatformServerOpenControl.accept in
 theorem accept_zero (selected : Bool) (reserve : StateT Platform ProbComp Bool)
     (setup : Setup base KemSK) (checks : Checks) (verify : MldsaTranscriptAuth.Verify) (packet : registration.InitPacket)
     (front : RegistrationServerMaterialFrontend.State) (env : RegistrationServerReferenceCompiler.Environment) (before : Platform) :

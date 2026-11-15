@@ -29,7 +29,7 @@ variable (configuration :RegistrationNativePlatformPublicAdapterConfiguration.Co
 local notation "TypedSpec"=>RegistrationNativeRawAdapter.TypedSpec
 local notation "Native"=>RegistrationNativeExperiment.State n KemSK source
 
-noncomputable def typed (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source) :
+noncomputable def typed (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source) :
     QueryImpl TypedSpec (StateT (Native×P) ProbComp) :=fun query=>
   RegistrationNativePlatformPackedState.pack
     (RegistrationNativePlatformPublicAdapterRawModel.typed (n:=n) setup checks configuration.agreement.representation created credential
@@ -47,26 +47,26 @@ abbrev State (n :Nat) (KemSK P :Type) (source :RegistrationNativeMldsa.Source) :
     RegistrationNativePlatformPublicAdapterTypedAudit.Audit RegistrationNativeRawAdapter.TypedSpec
       (RegistrationNativeExperiment.State n KemSK source×P)
 
-noncomputable def raw (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source) :
+noncomputable def raw (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source) :
     QueryImpl RegistrationNativeInterface.Spec (StateT (State n KemSK P source) ProbComp) :=
   RegistrationNativeRawAdapter.handler RegistrationNativeConcreteCodec.wire
     (RegistrationNativePlatformPublicAdapterTypedAudit.handler (typed configuration created credential) (failure credential))
 
-noncomputable def model (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source) :
+noncomputable def model (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source) :
     QueryImpl RegistrationNativePlatformPublicAdapterInterface.Spec (StateT (State n KemSK P source) ProbComp)
   | .inl query=>raw configuration created credential (.inl query)
   | .inr query=>raw configuration created credential (.inr (RegistrationNativePlatformPublicAdapterInterface.nativeCommand query))
 
-abbrev Private (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+abbrev Private (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
     (before :State n KemSK P source) :=
   RegistrationNativePlatformPublicAdapterDispatcherCore.Private configuration created credential before.1
 
-noncomputable def physical (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+noncomputable def physical (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
     (before :State n KemSK P source) (stored :Private configuration created credential before) :=
   RegistrationNativePlatformPublicAdapterDispatcherCore.physical configuration created credential before.1 stored
 
 omit [PublicWrapperPlatform.CryptoOperations] in
-theorem raw_native (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+theorem raw_native (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
     (query :RegistrationNativeInterface.Spec.Domain) (before :State n KemSK P source) :
     Prod.map id Prod.fst <$> ((raw configuration created credential query).run before)=
       (RegistrationNativePlatformPackedState.pack
@@ -83,7 +83,7 @@ theorem raw_native (created :PqxdhLiveServerConstruction.Created Unit) (credenti
   exact congrArg (fun implementation=>implementation.run before.1) same.symm
 
 omit [PublicWrapperPlatform.CryptoOperations] in
-theorem native_query (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+theorem native_query (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
     (query :RegistrationNativePlatformPublicAdapterInterface.Spec.Domain) (before :State n KemSK P source) :
     Prod.map id Prod.fst <$> ((model configuration created credential query).run before)=
       ((RegistrationNativePlatformPublicAdapterDispatcherCore.model configuration created credential query).run before.1) :=by
@@ -92,14 +92,14 @@ theorem native_query (created :PqxdhLiveServerConstruction.Created Unit) (creden
   | inr command=>exact raw_native configuration created credential (.inr (RegistrationNativePlatformPublicAdapterInterface.nativeCommand command)) before
 
 omit [PublicWrapperPlatform.CryptoOperations] in
-theorem native_program {Value :Type} (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+theorem native_program {Value :Type} (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
     (work :OracleComp RegistrationNativePlatformPublicAdapterInterface.Spec Value) (before :State n KemSK P source) :
     Prod.map id Prod.fst <$> (simulateQ (model configuration created credential) work).run before=
       (simulateQ (RegistrationNativePlatformPublicAdapterDispatcherCore.model configuration created credential) work).run before.1 :=
   OracleComp.map_run_simulateQ_eq_of_query_map_eq _ _ Prod.fst (native_query configuration created credential) work before
 
 omit [PublicWrapperPlatform.CryptoOperations] in
-theorem raw_program {Value :Type} (created :PqxdhLiveServerConstruction.Created Unit) (credential :RegistrationNativeMldsa.Credential source)
+theorem raw_program {Value :Type} (created :PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) (credential :RegistrationNativeMldsa.Credential source)
     (work :OracleComp RegistrationNativePlatformPublicAdapterInterface.Spec Value) :
     simulateQ (model (n:=n) configuration created credential) work=
       simulateQ (raw (n:=n) configuration created credential)

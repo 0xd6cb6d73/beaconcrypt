@@ -3,7 +3,7 @@ import BeaconcryptCore.Computational.RegistrationNativePlatformBeaconCryptoBound
 import BeaconcryptCore.Computational.RegistrationNativePlatformPublicNativeLocal
 import BeaconcryptCore.Computational.RegistrationNativePlatformFrontend
 import BeaconcryptCore.Computational.RegistrationNativeBundleCosts
-/-! The actual dynamic Init writer adds no old/global cost. One possible scalar draw, all six source crypto callbacks and the retained phase capability give the native bundle bill; external writer coins remain separately accounted. -/
+/-! The actual dynamic Init writer adds no old/global cost. One possible scalar draw, all four source crypto callbacks and the retained phase capability give the native bundle bill; external writer coins remain separately accounted. -/
 open OracleComp OracleSpec CoreModels Aeneas beaconcrypt_core
 open Aeneas.Std hiding namespace core alloc
 open RustM
@@ -35,7 +35,7 @@ private theorem legacy_bound (qKem : Nat) (kind : EffectKind)
   intro query
   simp [trustedLift, Weighted, bill, isQueryBound_query_iff]
 
-/-- The actual shared crypto/writer publication pays only its six source crypto callback bills. -/
+/-- The actual shared crypto/writer publication pays only its four source crypto callback bills. -/
 theorem publication_bound (setup : Setup base KemSK) (qSign qKem : Nat)
     (signing : ∀ key request, (source.sign key request).IsTotalQueryBound qSign)
     (index : Nat) (owner : RegistrationNativeBeaconFrontend.Owner source)
@@ -46,13 +46,13 @@ theorem publication_bound (setup : Setup base KemSK) (qSign qKem : Nat)
         (fun query => liftLegacy trustedLift (RegistrationNativeBeaconFrontend.outgoing setup source index owner query))
         (RegistrationNativePlatformGenericBundle.encoder E) ⟨owner.pin.binding⟩
         (RegistrationNativeBeaconFrontend.inputs setup owner)
-        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey).run owners).run env)
-      (outgoingCost qSign kind * 6) := by
+        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin).run owners).run env)
+      (outgoingCost qSign kind * 4) := by
   rw [← RegistrationNativePlatformFrontend.publication_tree]
   apply RegistrationNativeWeightedContext.run_bound
     (fun query => if RegistrationNativePlatformBeaconCryptoBounds.IsCrypto query then outgoingCost qSign kind else 0)
     _ _ _ _ owners env
-  · exact weighted_indicator _ _ _ 6 (RegistrationNativePlatformBeaconCryptoBounds.begin_bound _ _ _ _ _)
+  · exact weighted_indicator _ _ _ 4 (RegistrationNativePlatformBeaconCryptoBounds.begin_bound _ _ _ _)
   · intro query current environment
     cases query with
     | inl query =>
@@ -68,7 +68,7 @@ private noncomputable def suffix (setup : Setup base KemSK) (index : Nat)
   let published ← RegistrationNativePlatformBeaconPublication.begin
     (fun query => liftLegacy trustedLift (RegistrationNativeBeaconFrontend.outgoing setup source index owner query))
     (RegistrationNativePlatformGenericBundle.encoder E) ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-    ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey
+    ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin
   match published with
   | .fail error => pure (.fail error)
   | .div => pure .div
@@ -90,7 +90,7 @@ private theorem suffix_bound (setup : Setup base KemSK) (qSign qKem : Nat)
     (oneTime : PqxdhJointGapDh.ScalarBytes) (owners : RegistrationNativeBeaconFrontend.State source)
     (env : RegistrationWorldAgreementCompiler.EnvState RegistrationServerRoleBackend.State) (kind : EffectKind) :
     Weighted (bill (E := E) (n := n) (KemSK := KemSK) qKem kind) (((suffix setup index owner oneTime).run owners).run env)
-      (outgoingCost qSign kind * 6 + administrativeCost kind) := by
+      (outgoingCost qSign kind * 4 + administrativeCost kind) := by
   simp only [suffix, StateT.run_bind]
   apply weighted_bind _ _ _ _ _ (publication_bound setup qSign qKem signing index owner oneTime owners env kind)
   intro published
@@ -135,7 +135,7 @@ theorem program_bound (setup : Setup base KemSK) (qSign qKem : Nat)
       have combined := weighted_bind (bill (E := E) (n := n) (KemSK := KemSK) qKem kind)
         (((liftLegacy trustedLift (RegistrationNativeBeaconFrontend.sample PqxdhJointGapDh.sampleScalar)).run owners).run env)
         (fun sampled => ((suffix setup index owner sampled.1.1).run sampled.1.2).run sampled.2)
-        (coinCost 32 kind) (outgoingCost qSign kind * 6 + administrativeCost kind) first
+        (coinCost 32 kind) (outgoingCost qSign kind * 4 + administrativeCost kind) first
         (fun sampled => suffix_bound (n := n) (KemSK := KemSK) setup qSign qKem signing index owner sampled.1.1 sampled.1.2 sampled.2 kind)
       convert combined using 1
       simp only [suffix, StateT.run_bind]
@@ -148,7 +148,7 @@ theorem program_bound (setup : Setup base KemSK) (qSign qKem : Nat)
       | ok result => cases result <;> rfl
       all_goals rfl
     | freshWithCoins oneTime =>
-      have bounded := weighted_mono _ _ (outgoingCost qSign kind * 6 + administrativeCost kind)
+      have bounded := weighted_mono _ _ (outgoingCost qSign kind * 4 + administrativeCost kind)
         (bundleBill qSign kind) (suffix_bound (E := E) (n := n) (KemSK := KemSK) setup qSign qKem signing index owner oneTime owners env kind)
         (by unfold bundleBill; omega)
       convert bounded using 1

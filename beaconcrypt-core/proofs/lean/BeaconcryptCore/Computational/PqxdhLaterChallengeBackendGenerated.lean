@@ -7,7 +7,10 @@ open OracleComp OracleSpec CoreModels Aeneas OracleComp.ProgramLogic.Relational
 open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core ratchet ratchet.concrete
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.PqxdhLaterChallengeBackendGenerated
+variable (associatedData : Aeneas.Std.Array Aeneas.Std.U8 151#usize)
+variable (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding)
 open PqxdhEd25519EufCma PqxdhJointIdentity PqxdhStatefulPhase1EufCma PqxdhPrivateKemSource
 open PqxdhGeneratedBeaconState PqxdhPhase1AcceptanceOracle PqxdhKemIndCca PqxdhInitializerSecrecy
 open CtxRomAuth AdaptiveCtxSharedHash PqxdhSecretInputKdf PqxdhFullSecretInputKdf
@@ -58,10 +61,10 @@ theorem prepared_map (secret : KemSK) (challenge : MlKem768Ciphertext)
     (start : Input) (output : HmacBlock) (depth : Nat) (bit : Bool)
     (continuation : PqxdhInitialBuilderContext.BuildResult → OracleComp
       (PqxdhFirstRecordConfidentiality.AdvSpec (SelectorSpec baseSpec) S (B + 1)) Bool) (cache : Backend) :
-    (simulateQ backend (PqxdhLaterChallengeSampler.prepared setup env callbacks owner number bit attachedVerify primitives baseImpl kem
+    (simulateQ backend (PqxdhLaterChallengeSampler.prepared (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks owner number bit attachedVerify primitives baseImpl kem
       secret challenge start output depth continuation)).run cache =
     encodePrepared setup env callbacks owner number attachedVerify primitives baseImpl kem secret challenge start output bit continuation <$>
-      (simulateQ backend (PqxdhLaterChallengePreparedCapture.run env0 callbacks baseImpl kem attachedVerify primitives
+      (simulateQ backend (PqxdhLaterChallengePreparedCapture.run (associatedData := associatedData) (completedBinding := completedBinding) env0 callbacks baseImpl kem attachedVerify primitives
         secret challenge start output depth owner number bit continuation)).run cache := by
   simp only [PqxdhLaterChallengeSampler.prepared, bind_pure_comp, simulateQ_map, StateT.run_map]
   rfl
@@ -83,15 +86,15 @@ theorem prepared (secret : KemSK) (challenge : MlKem768Ciphertext)
     (continuation : PqxdhInitialBuilderContext.BuildResult → OracleComp
       (PqxdhFirstRecordConfidentiality.AdvSpec (SelectorSpec baseSpec) S (B + 1)) Bool) (cache : Backend) :
     RelTriple
-      ((simulateQ backend (PqxdhLaterChallengeSampler.prepared setup env callbacks owner number first attachedVerify primitives baseImpl kem
+      ((simulateQ backend (PqxdhLaterChallengeSampler.prepared (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks owner number first attachedVerify primitives baseImpl kem
         secret challenge start output depth continuation)).run cache)
-      ((simulateQ backend (PqxdhLaterChallengeSampler.prepared setup env callbacks owner number second attachedVerify primitives baseImpl kem
+      ((simulateQ backend (PqxdhLaterChallengeSampler.prepared (associatedData := associatedData) (completedBinding := completedBinding) setup env callbacks owner number second attachedVerify primitives baseImpl kem
         secret challenge start output depth continuation)).run cache)
       (PreparedRelated setup env callbacks owner number attachedVerify primitives baseImpl kem secret challenge start output first second continuation) := by
   rw [prepared_map, prepared_map]
   apply relTriple_map
   exact relTriple_post_mono
-    (PqxdhLaterChallengeBackendCollector.prepared env0 callbacks baseImpl kem attachedVerify primitives secret challenge backend
+    (PqxdhLaterChallengeBackendCollector.prepared (associatedData := associatedData) (completedBinding := completedBinding) env0 callbacks baseImpl kem attachedVerify primitives secret challenge backend
       start output depth owner number first second continuation cache)
     (fun left right related => ⟨left, right, rfl, rfl, related⟩)
 

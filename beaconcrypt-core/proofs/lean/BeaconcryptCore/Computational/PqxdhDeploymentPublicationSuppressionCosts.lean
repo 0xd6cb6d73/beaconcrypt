@@ -19,19 +19,21 @@ variable {ι : Type} {baseSpec : OracleSpec ι} {KemSK Reader Response A Result 
 
 /-- The selected bundle has precisely the original attempted-generation/signing service budget. -/
 theorem bundle_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (address : Nat)
-    (state : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × Selection) (kind : Kind) :
+    (state : (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) × Selection) (kind : Kind) :
     ((PqxdhDeploymentPublicationSuppressionSchedule.bundleClient (Response := Response) setup codec address).run state).IsQueryBoundP
       (fun query => classify (KemSK := KemSK) query = kind) (PqxdhRegistrationJointServiceCosts.bundleCap kind) := by
-  cases found : state.1[address]? with
+  cases found : state.1.1[address]? with
   | none => simp only [PqxdhDeploymentPublicationSuppressionSchedule.bundleClient, StateT.run, found, isQueryBoundP_pure]
   | some entry =>
-    simpa only [PqxdhDeploymentPublicationSuppressionSchedule.bundleClient, StateT.run, found,
-      isQueryBoundP_map_iff, PqxdhRegistrationJointServiceLedger.pool_queries] using
-      PqxdhDeploymentPublicationSuppression.client_queries setup codec entry.2.2 state.2 kind
+    simp only [PqxdhDeploymentPublicationSuppressionSchedule.bundleClient, StateT.run, found,
+      isQueryBoundP_map_iff, PqxdhRegistrationJointServiceLedger.pool_queries]
+    rw [← isQueryBoundP_map_iff (f := Prod.fst)]
+    erw [PqxdhRegistrationJointServiceLedger.log_fst]
+    exact PqxdhDeploymentPublicationSuppression.client_queries setup codec entry.2.2 state.2 kind
 
 /-- Additional private selection state emits no query while forwarding an unchanged source command. -/
 theorem carry_bound (work : PqxdhRegistrationJointServiceSchedule.Client KemSK Response Result)
-    (state : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × Selection)
+    (state : (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) × Selection)
     (kind : Kind) (bound : Nat)
     (bounded : (work.run state.1).IsQueryBoundP (fun query => classify (KemSK := KemSK) query = kind) bound) :
     ((PqxdhDeploymentPublicationSuppressionSchedule.carry work).run state).IsQueryBoundP
@@ -43,7 +45,7 @@ theorem carry_bound (work : PqxdhRegistrationJointServiceSchedule.Client KemSK R
 /-- Every source class retains the existing complete capability matrix on all typed replies. -/
 theorem query_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Response)
     (query : (PqxdhRegistrationJointRevealSchedule.Spec KemSK).Domain)
-    (state : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × Selection) (kind : Kind) :
+    (state : (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) × Selection) (kind : Kind) :
     ((PqxdhDeploymentPublicationSuppressionSchedule.handler setup codec query).run state).IsQueryBoundP
       (fun query => classify (KemSK := KemSK) query = kind)
       (PqxdhRegistrationJointRevealCosts.cost kind (sourceKind (KemSK := KemSK) query)) := by
@@ -59,7 +61,7 @@ theorem program_bound (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
     (program : OracleComp (PqxdhRegistrationJointRevealSchedule.Spec KemSK) Result) (budget : SourceKind → Nat)
     (certified : ∀ source, program.IsQueryBoundP
       (fun query => sourceKind (KemSK := KemSK) query = source) (budget source))
-    (state : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × Selection) (kind : Kind) :
+    (state : (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) × Selection) (kind : Kind) :
     ((simulateQ (PqxdhDeploymentPublicationSuppressionSchedule.handler setup codec) program).run state).IsQueryBoundP
       (fun query => classify (KemSK := KemSK) query = kind)
       (PqxdhRegistrationJointOpenCosts.oldBudget budget kind) := by
@@ -76,7 +78,7 @@ theorem command_program (setup : Setup baseSpec KemSK) (codec : Codec Reader Res
     (program : OracleComp (PqxdhRegistrationJointRevealSchedule.Spec KemSK) Result) (budget : SourceKind → Nat)
     (certified : ∀ source, program.IsQueryBoundP
       (fun query => sourceKind (KemSK := KemSK) query = source) (budget source))
-    (state : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × Selection) (native : NativeState KemSK)
+    (state : (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) × Selection) (native : NativeState KemSK)
     (kind : Kind) (nonuniform : kind ≠ .uniform) :
     ((simulateQ (PqxdhRegistrationJointOpenBackend.impl setup codec checks index publicIdentity)
       ((simulateQ (PqxdhDeploymentPublicationSuppressionSchedule.handler setup codec) program).run state)).run native).IsQueryBoundP
@@ -104,7 +106,7 @@ theorem open_initialized_private (setup : Setup baseSpec KemSK) (codec : Codec R
   · trivial
   · simpa only [isQueryBoundP_map_iff, PqxdhRegistrationJointOpenInitializedCosts.lifted_queries] using
       command_program setup codec checks created.server.server.metadata.identityIndex created.publicIdentity
-        program budget certified ([], Selection.initial ordinal)
+        program budget certified (([], fun _ => none), Selection.initial ordinal)
         (PqxdhRegistrationJointInitializedAccept.initial created) kind nonuniform
 
 /-- The ordinary generated-identity client uses the unchanged actual signing, converted-DH, creation and reveal caps. -/
@@ -137,7 +139,7 @@ theorem initialized_local (setup : Setup baseSpec KemSK) (codec : Codec Reader R
       ((simulateQ (PqxdhRegistrationJointOpenBackend.impl setup codec checks
           created.server.server.metadata.identityIndex created.publicIdentity)
         ((simulateQ (PqxdhDeploymentPublicationSuppressionSchedule.handler setup codec) program).run
-          ([], Selection.initial ordinal))).run (PqxdhRegistrationJointInitializedAccept.initial created)) kind
+          (([], fun _ => none), Selection.initial ordinal))).run (PqxdhRegistrationJointInitializedAccept.initial created)) kind
 
 /-- Opening the modified handle schedule pays the unchanged actual native randomness matrix on every typed service reply. -/
 theorem command_coins (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)
@@ -146,7 +148,7 @@ theorem command_coins (setup : Setup baseSpec KemSK) (codec : Codec Reader Respo
     (program : OracleComp (PqxdhRegistrationJointRevealSchedule.Spec KemSK) Result) (budget : SourceKind → Nat)
     (certified : ∀ source, program.IsQueryBoundP
       (fun query => sourceKind (KemSK := KemSK) query = source) (budget source))
-    (state : List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × Selection) (native : NativeState KemSK) :
+    (state : (List PqxdhRegistrationJointGeneratedFinish.EncodedEntry × (Nat → Option PqxdhEd25519EufCma.Phase1Candidate)) × Selection) (native : NativeState KemSK) :
     ((simulateQ (PqxdhRegistrationJointOpenBackend.impl setup codec checks index publicIdentity)
       ((simulateQ (PqxdhDeploymentPublicationSuppressionSchedule.handler setup codec) program).run state)).run native).IsQueryBoundP
       (PqxdhDynamicKemJointBounds.IsUniform (KemSK := KemSK)) (PqxdhRegistrationJointOpenUniform.total caps budget) := by
@@ -172,7 +174,7 @@ theorem initialized_coins (setup : Setup baseSpec KemSK) (codec : Codec Reader R
   · trivial
   · simpa only [isQueryBoundP_map_iff, PqxdhRegistrationJointOpenInitializedUniform.lifted_coins] using
       command_coins setup codec checks caps bounded created.server.server.metadata.identityIndex created.publicIdentity
-        program budget certified ([], Selection.initial ordinal) (PqxdhRegistrationJointInitializedAccept.initial created)
+        program budget certified (([], fun _ => none), Selection.initial ordinal) (PqxdhRegistrationJointInitializedAccept.initial created)
 
 /-- The modified executable constructor satisfies every coordinate of the existing complete compiler partition. -/
 theorem initialized_allowances (setup : Setup baseSpec KemSK) (codec : Codec Reader Response) (checks : Checks)

@@ -2,7 +2,7 @@ import BeaconcryptCore.Computational.PqxdhBeaconPhase2Routed
 import BeaconcryptCore.Computational.PqxdhBeaconPhase2Bounds
 
 /-!
-Prechallenge Phase2 attempts execute immediately through the ordinary unblocked decapsulation interface. Their complete owner result and auxiliary state survive into the subsequent challenge selection; no callback or terminal abort is deferred. The secret key occurs only in the native interpreter. Concrete source auxiliary installation and the whole scheduler remain separate consuming work.
+These post-authentication wrappers receive the completed binding explicitly; reaching and validating its AD hash belongs to the mandatory response controller. Prechallenge Phase2 attempts execute immediately through the ordinary unblocked decapsulation interface. Their complete owner result and auxiliary state survive into the subsequent challenge selection; no callback or terminal abort is deferred. The secret key occurs only in the native interpreter. Concrete source auxiliary installation and the whole scheduler remain separate consuming work.
 -/
 
 open OracleComp OracleSpec CoreModels Aeneas
@@ -10,6 +10,7 @@ open Aeneas.Std hiding namespace core alloc
 open RustM beaconcrypt_core
 set_option autoImplicit false
 namespace BeaconcryptCore.Computational.PqxdhPhase2PreChallenge
+variable (completedBinding : session.CompletedRegistrationBinding)
 open PqxdhBeaconPhase2Routed (AuxSpec)
 open PqxdhBeaconPhase2Preparation (Bytes Word32 Ciphertext)
 open PqxdhKemIndCca PqxdhJointKdfGame PqxdhStatefulPhase1EufCma
@@ -102,9 +103,9 @@ theorem owner_pre
     (decode : RawCtxReceive.FrameDecoder) (raw : Bytes)
     (state : PqxdhBeaconPhase2Preparation.State I D (Option K)) (auxiliary : Auxiliary) :
     ((simulateQ (nativePre source kem secret aux)
-      (PqxdhBeaconPhase2Publication.nativeOwner decode raw state)).run auxiliary) =
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw state)).run auxiliary) =
       simulateQ (localKemPreChallengeImpl kem secret)
-        ((simulateQ (pre source aux) (PqxdhBeaconPhase2Publication.nativeOwner decode raw state)).run auxiliary) := by
+        ((simulateQ (pre source aux) (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw state)).run auxiliary) := by
   exact (simulateQ_StateT_compose (pre source aux)
     (localKemPreChallengeImpl kem secret) (nativePre source kem secret aux)
     (pre_step source kem secret aux) _ auxiliary).symm
@@ -119,10 +120,10 @@ theorem owner_pre_continuation {Result : Type}
     (next : ((Option Bytes × PqxdhBeaconPhase2Preparation.State I D (Option K)) × Auxiliary) →
       OracleComp (MlKemCCAOracleSpec baseSpec) Result) :
     (((simulateQ (nativePre source kem secret aux)
-      (PqxdhBeaconPhase2Publication.nativeOwner decode raw state)).run auxiliary) >>=
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw state)).run auxiliary) >>=
         fun result => simulateQ (localKemPreChallengeImpl kem secret) (next result)) =
       simulateQ (localKemPreChallengeImpl kem secret)
-        (((simulateQ (pre source aux) (PqxdhBeaconPhase2Publication.nativeOwner decode raw state)).run auxiliary) >>= next) := by
+        (((simulateQ (pre source aux) (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw state)).run auxiliary) >>= next) := by
   rw [owner_pre, simulateQ_bind]
 
 /-- Every prechallenge callback has an explicit selected-query allowance, including locally owned prior keys. -/
@@ -163,9 +164,9 @@ theorem owner_pre_bound
     (decapsulationBound : ∀ ciphertext, (if predicate (.inr ciphertext) then 1 else 0) ≤ qDecapsulation)
     (decode : RawCtxReceive.FrameDecoder) (raw : Bytes)
     (state : PqxdhBeaconPhase2Preparation.State I D (Option K)) (auxiliary : Auxiliary) :
-    ((simulateQ (pre source aux) (PqxdhBeaconPhase2Publication.nativeOwner decode raw state)).run auxiliary).IsQueryBoundP
+    ((simulateQ (pre source aux) (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw state)).run auxiliary).IsQueryBoundP
       predicate (69 * (qAux + qDecapsulation)) :=
-  PqxdhBeaconPhase2Bounds.native_interpreted_bound (pre source aux) predicate (qAux + qDecapsulation)
+  PqxdhBeaconPhase2Bounds.native_interpreted_bound (completedBinding := completedBinding) (pre source aux) predicate (qAux + qDecapsulation)
     (pre_step_bound source aux predicate qAux qDecapsulation auxBound decapsulationBound) decode raw state auxiliary
 
 /-- Ordinary prechallenge uniform, base and selected-decapsulation costs remain separate. The decapsulation bill is conservative; no callback work is erased on rejection. -/
@@ -178,16 +179,16 @@ theorem owner_pre_classes
     (decapsulationBound : ∀ query auxiliary, ((aux query).run auxiliary).IsQueryBoundP IsMlKemLogicalDecapsulationQuery qDecapsulation)
     (decode : RawCtxReceive.FrameDecoder) (raw : Bytes)
     (state : PqxdhBeaconPhase2Preparation.State I D (Option K)) (auxiliary : Auxiliary) :
-    let run := (simulateQ (pre source aux) (PqxdhBeaconPhase2Publication.nativeOwner decode raw state)).run auxiliary
+    let run := (simulateQ (pre source aux) (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw state)).run auxiliary
     run.IsQueryBoundP IsMlKemUniformQuery (69 * qUniform) ∧
       run.IsQueryBoundP IsMlKemBaseQuery (69 * qBase) ∧
       run.IsQueryBoundP IsMlKemLogicalDecapsulationQuery (69 * (qDecapsulation + 1)) := by
   refine ⟨?_, ?_, ?_⟩
-  · simpa only [Nat.add_zero] using owner_pre_bound source aux IsMlKemUniformQuery qUniform 0 uniformBound
+  · simpa only [Nat.add_zero] using owner_pre_bound (completedBinding := completedBinding) source aux IsMlKemUniformQuery qUniform 0 uniformBound
       (fun _ => by simp [IsMlKemUniformQuery]) decode raw state auxiliary
-  · simpa only [Nat.add_zero] using owner_pre_bound source aux IsMlKemBaseQuery qBase 0 baseBound
+  · simpa only [Nat.add_zero] using owner_pre_bound (completedBinding := completedBinding) source aux IsMlKemBaseQuery qBase 0 baseBound
       (fun _ => by simp [IsMlKemBaseQuery]) decode raw state auxiliary
-  · exact owner_pre_bound source aux IsMlKemLogicalDecapsulationQuery qDecapsulation 1 decapsulationBound
+  · exact owner_pre_bound (completedBinding := completedBinding) source aux IsMlKemLogicalDecapsulationQuery qDecapsulation 1 decapsulationBound
       (fun _ => by simp [IsMlKemLogicalDecapsulationQuery]) decode raw state auxiliary
 
 /-- Every later ordinary prechallenge program is charged at the complete original owner result and auxiliary state. -/
@@ -206,11 +207,11 @@ theorem continuation_pre_classes {Result : Type}
     (nextBound : ∀ result, (next result).IsQueryBoundP IsMlKemUniformQuery uNext ∧
       (next result).IsQueryBoundP IsMlKemBaseQuery bNext ∧
       (next result).IsQueryBoundP IsMlKemLogicalDecapsulationQuery dNext) :
-    let run := ((simulateQ (pre source aux) (PqxdhBeaconPhase2Publication.nativeOwner decode raw state)).run auxiliary) >>= next
+    let run := ((simulateQ (pre source aux) (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) decode raw state)).run auxiliary) >>= next
     run.IsQueryBoundP IsMlKemUniformQuery (69 * qUniform + uNext) ∧
       run.IsQueryBoundP IsMlKemBaseQuery (69 * qBase + bNext) ∧
       run.IsQueryBoundP IsMlKemLogicalDecapsulationQuery (69 * (qDecapsulation + 1) + dNext) := by
-  have bounded := owner_pre_classes source aux qUniform qBase qDecapsulation uniformBound baseBound decapsulationBound decode raw state auxiliary
+  have bounded := owner_pre_classes (completedBinding := completedBinding) source aux qUniform qBase qDecapsulation uniformBound baseBound decapsulationBound decode raw state auxiliary
   exact ⟨isQueryBoundP_bind bounded.1 (fun result _ => (nextBound result).1),
     isQueryBoundP_bind bounded.2.1 (fun result _ => (nextBound result).2.1),
     isQueryBoundP_bind bounded.2.2 (fun result _ => (nextBound result).2.2)⟩

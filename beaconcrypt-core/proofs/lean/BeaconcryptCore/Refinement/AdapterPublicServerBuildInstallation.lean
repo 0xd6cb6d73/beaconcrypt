@@ -32,8 +32,9 @@ theorem source (operations : AdapterPublicServerPublication.Primitives (StateT S
     (supported : (.ok (.Some response, current), after) ∈ support
       (((beaconcrypt_public_request.server.Server.Insts.BeaconcryptServerProviderServer.build_registration_response
         (m := RustT (StateT State ProbComp)) self token data).run).run before)) :
-    ∃ initial known beforeRecord published beforeInstall pending publicKey,
-      initial.binding = token.registration.agreement.binding ∧
+    ∃ digest binding initial known beforeRecord published beforeInstall pending publicKey,
+      token.registration.agreement.binding.complete digest = .ok binding ∧
+      initial.binding = binding ∧
       initial.candidate.previous_state = self.control ∧
       (.ok (.Some response, current), after) ∈ support
         (((AdapterPublicServerBuildBody.record (m := StateT State ProbComp) { self with known_ids := known } initial).run).run beforeRecord) ∧
@@ -44,18 +45,18 @@ theorem source (operations : AdapterPublicServerPublication.Primitives (StateT S
       (.ok (.Some response, current), after) ∈ support
         (((AdapterPublicServerBuildBody.install (m := StateT State ProbComp) { self with known_ids := known } pending).run).run beforeInstall) ∧
       pending.previous = self.control ∧ pending.next = initial.candidate.next_state ∧
-      pending.peer.binding = RegistrationPublication.completedBinding token.registration.agreement.binding initial.candidate.key_id ∧
+      pending.peer.binding = RegistrationPublication.completedBinding binding initial.candidate.key_id ∧
       (∃ selected : ratchet.concrete.SendSeal record_effects.SealFrameContext,
         pending.peer.ratchet = selected.advanced ∧ selected.sequence.val = 1 ∧
-        selected.context.associated_data = token.registration.agreement.binding.associated_data) ∧
+        selected.context.associated_data = binding.associated_data) ∧
       response.serialized = pending.encoded ∧ response.kid = pending.peer.binding.assigned_key_id ∧
       current.control = pending.next ∧ current.identity = self.identity ∧
       current.consumed_registrations = self.consumed_registrations := by
-  obtain ⟨initial, known, beforeRecord, bindingSame, previous, recorded⟩ :=
+  obtain ⟨digest, binding, initial, known, beforeRecord, completedBinding, bindingSame, previous, recorded⟩ :=
     AdapterPublicServerBuildReceipt.actual self token data response current before after supported
   have initialParsed : AdapterPublicServerToken.ParsedKey initial.binding.beacon_identity_public_key := by
     rw [bindingSame]
-    exact parsed
+    exact AdapterPublicServerToken.completed_parsed token.registration.agreement.binding digest binding completedBinding parsed
   have contractCurrent : AdapterPublicServerPublication.Contract operations { self with known_ids := known } := ⟨AdapterPublicServerPublication.Contract.hash (self := self) contract, AdapterPublicServerPublication.Contract.sign (self := self) contract⟩
   obtain ⟨published, beforeInstall, pending, publication, began, reparsed, installed⟩ :=
     AdapterPublicServerRecordReceipt.parsed operations { self with known_ids := known } contractCurrent kdf kdfContract initial
@@ -70,8 +71,8 @@ theorem source (operations : AdapterPublicServerPublication.Primitives (StateT S
   obtain ⟨vacant, back, changed, insertedBack, _entryState, _lookedUp, _inserted, bytesSame, identifierSame, returnedSelf⟩ :=
     AdapterPublicServerInstallStateful.success { self with known_ids := known } pending publicKey parsedKey
       response current beforeInstall after installed
-  refine ⟨initial, known, beforeRecord, published, beforeInstall, pending, publicKey,
-    bindingSame, previous, recorded, publication, began, parsedKey, installed,
+  refine ⟨digest, binding, initial, known, beforeRecord, published, beforeInstall, pending, publicKey,
+    completedBinding, bindingSame, previous, recorded, publication, began, parsedKey, installed,
     fields.1, fields.2.1.trans retained.1, ?_, ?_, bytesSame, identifierSame, ?_, ?_, ?_⟩
   · rw [fields.2.2.1, retained.2.1, bindingSame]
   · exact ⟨selected, fields.2.2.2.1.trans kernelSame, sequence, by simpa only [bindingSame] using adSame⟩

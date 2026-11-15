@@ -13,7 +13,7 @@ open PqxdhRecordLiftInterface
 variable {n : Nat} {Auxiliary Encoded ι KemSK Reader Response : Type} {base : OracleSpec ι}
 
 structure State (n : Nat) (Auxiliary : Type) where
-  created : PqxdhLiveServerConstruction.Created Unit
+  created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)
   control : pqxdh.ServerState
   pin : session.ServerAuthenticationPin
   consumed : RegistrationReplaySchedule.State
@@ -27,27 +27,18 @@ def parameters (setup : Setup base KemSK)
     (correct : PqxdhSecretInputKdf.SourceRootCorrect setup.source setup.hmac)
     (scalar : PqxdhJointGapDh.ScalarBytes)
     (native : QueryImpl RegistrationAgreementShared.PrimitiveSpec (StateT Auxiliary ProbComp))
-    (created : PqxdhLiveServerConstruction.Created Unit) : RegistrationWorldServerReplay.Parameters Auxiliary :=
+    (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize)) : RegistrationWorldServerReplay.Parameters Auxiliary :=
   ⟨setup.source, setup.hmac, correct, setup.joint, setup.dh, setup.serverDomain, setup.secretOfSeed,
     setup.wiring, created.seed, scalar, native⟩
 
-/-- The actual pin fingerprint is hashed through the same cache as authentication and record commitments. -/
+/-- Core pin selection retains the exact configured Server binding and ML public key without a fingerprint query. -/
 noncomputable def initializePin (binding : pqxdh.ServerBinding) (publicKey : Std.Array U8 1952#usize) :
     StateT (RegistrationWorldServerReplay.Global n Auxiliary) ProbComp
-      (RustM (core.option.Option session.ServerAuthenticationPin)) := fun before => do
-  match registration.begin_server_pin binding publicKey with
-  | .fail error => pure (.fail error, before)
-  | .div => pure (.div, before)
-  | .ok pending => match pending.request with
-      | .fail error => pure (.fail error, before)
-      | .div => pure (.div, before)
-      | .ok request => do
-          let hashed ← (RegistrationWorldServerCompletion.capability
-            (.hash (BeaconcryptCore.Refinement.RegistrationInputs.hashBytes request))).run before.2
-          pure (pending.resume (.Some (RegistrationAuthenticationShared.digestArray hashed.1)), (before.1, hashed.2))
+      (RustM (core.option.Option session.ServerAuthenticationPin)) := fun before =>
+  pure ((do let pin ← registration.begin_server_pin binding publicKey; ok (.Some pin)), before)
 
-/-- The constructor fixes the actual static identity, control and consumed-ID set. Pin creation pays its own shared fingerprint query. -/
-noncomputable def start (created : PqxdhLiveServerConstruction.Created Unit)
+/-- The constructor fixes the actual static identity, control and consumed-ID set. Pin creation retains the exact configured key without a primitive callback. -/
+noncomputable def start (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (publicKey : Std.Array U8 1952#usize) (auxiliary : Auxiliary) :
     StateT (PqxdhRecordLiftWorld.State n) ProbComp (RustM (core.option.Option (State n Auxiliary))) := fun world => do
   let installed ← (PqxdhRecordLiftWorld.initializeServer created).run world
@@ -59,7 +50,7 @@ noncomputable def start (created : PqxdhLiveServerConstruction.Created Unit)
       | .Some pin => .Some (⟨created, created.control, pin, created.consumed, [], pinned.2⟩ : State n Auxiliary)) <$> pinned.1,
     pinned.2.2.world.1)
 
-/-- Incoming actual ML and Ed25519 checks execute against the current stored pin and update the single World cache. -/
+/-- Incoming request hashing and Ed25519 checks execute against the current stored pin and update the single World cache. -/
 noncomputable def authenticate (setup : Setup base KemSK) (codec : Codec Reader Response)
     (route : RawCtxServerRouting.SenderDecoder) (verify : MldsaTranscriptAuth.Verify)
     (packet : registration.InitPacket) : StateT (State n Auxiliary) ProbComp
@@ -152,17 +143,11 @@ noncomputable def build (setup : Setup base KemSK) (codec : Codec Reader Respons
       if responseAdmitted current.control application then complete setup codec sign encode consumed application
       else pure (.ok none)
 
-/-- The native source field transfer keeps the actual constructor and consumes no independent fingerprint fixture. -/
+/-- Pin selection keeps the exact configured fields and the complete native state. -/
 theorem initializePin_native (binding : pqxdh.ServerBinding) (publicKey : Std.Array U8 1952#usize)
     (before : RegistrationWorldServerReplay.Global n Auxiliary) :
-    (initializePin binding publicKey).run before = (do
-      let result ← (RegistrationWorldServerCompletion.capability (.hash (absBytes publicKey))).run before.2
-      pure (.ok (.Some (⟨binding, publicKey, RegistrationAuthenticationShared.digestArray result.1⟩ : session.ServerAuthenticationPin)),
-        (before.1, result.2))) := by
-  simp only [initializePin, StateT.run, registration.begin_server_pin,
-    registration.PinFingerprint.request, BeaconcryptCore.Refinement.RegistrationInputs.hashBytes,
-    Std.Array.to_slice, lift, ]
-  rfl
+    (initializePin binding publicKey).run before =
+      pure (.ok (.Some (⟨binding, publicKey⟩ : session.ServerAuthenticationPin)), before) := rfl
 
 /-- Native first authentication retains exactly the actual World execution and cache. -/
 theorem authenticate_native (setup : Setup base KemSK) (codec : Codec Reader Response)

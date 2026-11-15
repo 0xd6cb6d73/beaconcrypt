@@ -63,25 +63,12 @@ private theorem continue_keeps {Input : Type} (action : RustM Input)
   cases action with
   | fail error | div => exact pure_keeps index _
   | ok value => exact law value
-private theorem ready_keeps (encode : registration.SignedInitView → M (E := E) (n := n) (KemSK := KemSK) (source := source) (Auxiliary := Auxiliary) (RustM (core.option.Option Encoded)))
+private theorem ready_keeps (encode : registration.InitView → M (E := E) (n := n) (KemSK := KemSK) (source := source) (Auxiliary := Auxiliary) (RustM (core.option.Option Encoded)))
     (law : ∀ view, Keeps index (encode view)) (pending : registration.BeaconInitReady) : Keeps index (ready encode pending) := by
   unfold ready
   exact continue_keeps index _ _ fun view => bind_keeps index _ _ (law view) fun _ => pure_keeps index _
-private theorem signing_keeps (impl : QueryImpl RegistrationBeaconInitExecutor.Spec (M (E := E) (n := n) (KemSK := KemSK) (source := source) (Auxiliary := Auxiliary)))
-    (encode : registration.SignedInitView → M (E := E) (n := n) (KemSK := KemSK) (source := source) (Auxiliary := Auxiliary) (RustM (core.option.Option Encoded)))
-    (queries : ∀ query, Keeps index (impl query)) (encoding : ∀ view, Keeps index (encode view))
-    (payload : MldsaTranscriptAuth.Payload) (digest : CtxRomAuth.CtxDigest) (pending : registration.BeaconMldsaSigning) :
-    Keeps index (fromSigning impl encode payload digest pending) := by
-  unfold fromSigning
-  apply continue_keeps index _ _
-  intro request
-  apply bind_keeps index _ _ (queries _)
-  intro signature
-  apply continue_keeps index _ _
-  intro effect
-  cases effect <;> first | exact pure_keeps index _ | exact ready_keeps index encode encoding _
 private theorem hash_keeps (impl : QueryImpl RegistrationBeaconInitExecutor.Spec (M (E := E) (n := n) (KemSK := KemSK) (source := source) (Auxiliary := Auxiliary)))
-    (encode : registration.SignedInitView → M (E := E) (n := n) (KemSK := KemSK) (source := source) (Auxiliary := Auxiliary) (RustM (core.option.Option Encoded)))
+    (encode : registration.InitView → M (E := E) (n := n) (KemSK := KemSK) (source := source) (Auxiliary := Auxiliary) (RustM (core.option.Option Encoded)))
     (queries : ∀ query, Keeps index (impl query)) (encoding : ∀ view, Keeps index (encode view))
     (pending : registration.BeaconInitHash) : Keeps index (fromHash impl encode pending) := by
   unfold fromHash
@@ -91,21 +78,9 @@ private theorem hash_keeps (impl : QueryImpl RegistrationBeaconInitExecutor.Spec
   intro digest
   apply continue_keeps index _ _
   intro effect
-  cases effect <;> first | exact pure_keeps index _ | exact signing_keeps index impl encode queries encoding _ _ _
-private theorem fingerprint_keeps (impl : QueryImpl RegistrationBeaconInitExecutor.Spec (M (E := E) (n := n) (KemSK := KemSK) (source := source) (Auxiliary := Auxiliary)))
-    (encode : registration.SignedInitView → M (E := E) (n := n) (KemSK := KemSK) (source := source) (Auxiliary := Auxiliary) (RustM (core.option.Option Encoded)))
-    (queries : ∀ query, Keeps index (impl query)) (encoding : ∀ view, Keeps index (encode view))
-    (pending : registration.BeaconFingerprint) : Keeps index (fromFingerprint impl encode pending) := by
-  unfold fromFingerprint
-  apply continue_keeps index _ _
-  intro request
-  apply bind_keeps index _ _ (queries _)
-  intro digest
-  apply continue_keeps index _ _
-  intro effect
-  cases effect <;> first | exact pure_keeps index _ | exact hash_keeps index impl encode queries encoding _
+  cases effect <;> first | exact pure_keeps index _ | exact ready_keeps index encode encoding _
 private theorem ed_keeps (impl : QueryImpl RegistrationBeaconInitExecutor.Spec (M (E := E) (n := n) (KemSK := KemSK) (source := source) (Auxiliary := Auxiliary)))
-    (encode : registration.SignedInitView → M (E := E) (n := n) (KemSK := KemSK) (source := source) (Auxiliary := Auxiliary) (RustM (core.option.Option Encoded)))
+    (encode : registration.InitView → M (E := E) (n := n) (KemSK := KemSK) (source := source) (Auxiliary := Auxiliary) (RustM (core.option.Option Encoded)))
     (queries : ∀ query, Keeps index (impl query)) (encoding : ∀ view, Keeps index (encode view))
     (pending : registration.BeaconEd25519Signing) : Keeps index (fromEd impl encode pending) := by
   rw [fromEd.eq_def]
@@ -118,18 +93,18 @@ private theorem ed_keeps (impl : QueryImpl RegistrationBeaconInitExecutor.Spec (
   | ok effect => cases effect with
     | Rejected previous => exact pure_keeps index _
     | Ed25519SigningRequested next => exact ed_keeps impl encode queries encoding next
-    | FingerprintRequested selected => exact fingerprint_keeps index impl encode queries encoding selected
+    | HashRequested selected => exact hash_keeps index impl encode queries encoding selected
     | _ => exact pure_keeps index _
 termination_by RegistrationBeaconInitExecutor.edRank pending
 decreasing_by exact RegistrationBeaconInitExecutor.ed_rank pending reply next resumed
 
 /-- Every actual source publication stage preserves owner metadata under arbitrary crypto/writer replies, including failure and recursive Ed-signing stages. -/
 private theorem publication (impl : QueryImpl RegistrationBeaconInitExecutor.Spec (M (E := E) (n := n) (KemSK := KemSK) (source := source) (Auxiliary := Auxiliary)))
-    (encode : registration.SignedInitView → M (E := E) (n := n) (KemSK := KemSK) (source := source) (Auxiliary := Auxiliary) (RustM (core.option.Option Encoded)))
+    (encode : registration.InitView → M (E := E) (n := n) (KemSK := KemSK) (source := source) (Auxiliary := Auxiliary) (RustM (core.option.Option Encoded)))
     (queries : ∀ query, Keeps index (impl query)) (encoding : ∀ view, Keeps index (encode view))
     (control : pqxdh.BeaconFresh) (inputs : pqxdh.BeaconStartInputs) (coins : pqxdh.BeaconCoins)
-    (pin : session.ServerAuthenticationPin) (mldsa : Std.Array U8 1952#usize) :
-    Keeps index (begin impl encode control inputs coins pin mldsa) := by
+    (pin : session.ServerAuthenticationPin) :
+    Keeps index (begin impl encode control inputs coins pin) := by
   unfold begin
   apply continue_keeps index _ _
   intro effect
@@ -178,7 +153,7 @@ private theorem phase_foreign (target : Nat) (different : index ≠ target) (pha
       obtain ⟨earlier, atIndex, terminal⟩ := valid
       refine ⟨earlier, ?_, terminal⟩
       simpa only [found, List.getElem?_set_ne (Ne.symm different)] using atIndex
-private theorem encoder_keeps (view : registration.SignedInitView) :
+private theorem encoder_keeps (view : registration.InitView) :
     Keeps index (RegistrationNativePlatformGenericBundle.encoder (Auxiliary := Auxiliary) (source := source) (n := n) (KemSK := KemSK) E view) :=
   lift_keeps index _
 private theorem published_keeps (setup : Setup base KemSK) (target : Nat) (owner : Owner source)
@@ -187,9 +162,9 @@ private theorem published_keeps (setup : Setup base KemSK) (target : Nat) (owner
       (fun query => RegistrationNativePlatformGenericBundle.liftLegacy RegistrationNativePlatformGenericBundle.trustedLift
         (RegistrationNativeBeaconFrontend.outgoing setup source target owner query))
       (RegistrationNativePlatformGenericBundle.encoder E) ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey :
+      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin :
       M E n KemSK Auxiliary source _) :=
-  publication index _ _ (outgoing_keeps index setup target owner) (encoder_keeps index) _ _ _ _ _
+  publication index _ _ (outgoing_keeps index setup target owner) (encoder_keeps index) _ _ _ _
 private theorem next_keeps (target : Nat) (different : index ≠ target) (owner : Owner source)
     (oneTime : PqxdhJointGapDh.ScalarBytes)
     (reply : RustM (RegistrationBeaconInitExecutor.Result (alloc.vec.Vec U8))) :

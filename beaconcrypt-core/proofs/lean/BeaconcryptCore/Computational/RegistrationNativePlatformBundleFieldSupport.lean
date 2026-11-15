@@ -31,7 +31,7 @@ theorem publication (encoding : ∀ view bytes, Possible (encode view) (.ok (.So
       (fun query => RegistrationNativePlatformGenericBundle.liftLegacy trusted
         (RegistrationNativeBeaconFrontend.outgoing setup source index owner query))
       encode ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey)
+      ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin)
       (.ok (.Ok published))) :
     ∃ packet, RegistrationNativeWire.readInit RegistrationNativePlatformConcreteSource.wire
         (TranscriptAuthParts.absSlice published.encoded) = some packet ∧
@@ -42,10 +42,10 @@ theorem publication (encoding : ∀ view bytes, Possible (encode view) (.ok (.So
     (fun query => RegistrationNativePlatformGenericBundle.liftLegacy trusted
       (RegistrationNativeBeaconFrontend.outgoing setup source index owner query))
     encode pureEncode encoding ⟨owner.pin.binding⟩ (RegistrationNativeBeaconFrontend.inputs setup owner)
-    ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey published possible
+    ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin published possible
   have receipt := RegistrationNativePrekeyPublication.begin_key pureEncode ⟨owner.pin.binding⟩
     (RegistrationNativeBeaconFrontend.inputs setup owner)
-    ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey published sourceReceipt
+    ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin published sourceReceipt
   have retained : RegistrationNativePrekeyPublication.PublishedKey pureEncode
       (PqxdhPhase2InputBytes.word owner.prekeyPublic) published := by
     simpa only [RegistrationNativeBeaconFrontend.inputs] using receipt
@@ -56,7 +56,7 @@ theorem publication (encoding : ∀ view bytes, Possible (encode view) (.ok (.So
     simpa only [RegistrationNativeBeaconFrontend.inputs,PqxdhPhase2InputBytes.word_rootArray] using
       RegistrationNativeIdentityPublication.begin_key pureEncode ⟨owner.pin.binding⟩
         (RegistrationNativeBeaconFrontend.inputs setup owner)
-        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin owner.mldsa.publicKey published sourceReceipt
+        ⟨PqxdhRootTableInitialization.rootArray (setup.dh.publicKey oneTime)⟩ owner.pin published sourceReceipt
   obtain ⟨identityView,identityWritten,identityBytes⟩ := identityReceipt
   have sameVectors : RegistrationNativeSourceWriterReadback.initVector view = RegistrationNativeSourceWriterReadback.initVector identityView :=
     bytesEq.trans (Option.some.inj identityWritten).symm

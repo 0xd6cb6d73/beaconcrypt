@@ -67,7 +67,7 @@ theorem path_contents (setup : Setup base KemSK) (checks : Checks) (wire : Regis
         calls = leading ++ (⟨.inr (.finish index (some packet)), beforeFinish, .ok (some application), afterFinish⟩ : Call RegistrationNativeRawAdapter.TypedSpec Native) :: trailing ∧
         serverCall ∈ leading ∧ serverCall.query = .inr (.build serverIndex serverInput) ∧
         RegistrationServerSdkSource.take serverIndex serverCall.before.server = (some token, current) ∧ serverInput = some plaintext ∧
-        SourceAt setup wire serverCall receipt ∧ registration.begin_server_completion current.control current.pin availability token.agreement plaintext = .ok (.Ok serverInitial) ∧
+        SourceAt setup wire serverCall receipt ∧ BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission current.control current.pin availability token.agreement plaintext serverInitial ∧
         RegistrationServerRecordExecutor.Path serverInitial hashed ∧
         RegistrationNativeServerRecordIssuance.RecordCut (n := n) setup (RegistrationNativeWire.ledgerCodec wire) serverInitial hashed (RegistrationNativeWorldCache.cache serverCall.after) ∧
         hashed.candidate.server_identity_public_key = packet.public.identity_key ∧
@@ -94,7 +94,8 @@ theorem path_contents (setup : Setup base KemSK) (checks : Checks) (wire : Regis
     have samePayload : Command.payload (.server hashed) = RegistrationResponseExecutor.payload pending packet := payload.symm.trans content
     obtain ⟨identity, ephemeral, kem, ciphertext, assigned, initHash⟩ :=
       RegistrationNativeResponseStageContents.native_fields serverInitial hashed path pending packet samePayload
-    have rooted := (RegistrationNativeServerBindingReceipt.initial_root current.control current.pin availability token.agreement plaintext serverInitial admitted).2.2.2
+    obtain ⟨_adDigest, _completedBinding, _completedAt, _initialBinding, _application, rooted⟩ :=
+      (RegistrationNativeServerBindingReceipt.initial_root current.control current.pin availability token.agreement plaintext serverInitial admitted).2
     exact ⟨completed, verified, leading, trailing, serverCall, receipt, serverIndex, serverInput, token, current, plaintext, availability, serverInitial, hashed,
       split, earlier, query, taken, plaintextEq, stageReceipt, admitted, path, recordCut, identity, ephemeral, kem, ciphertext, assigned, initHash, rooted⟩
 

@@ -118,42 +118,29 @@ def transport.validate_kexresponse.closure_1.closure :=
 def transport.validate_initkex.closure := Unit
 
 /-- [beaconcrypt_parse::transport::validate_initkex::closure#1]
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2546:28-2864:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2546:28-2745:1 -/
 @[reducible]
 def transport.validate_initkex.closure_1 := transport.validate_initkex.closure
 
 /-- [beaconcrypt_parse::transport::validate_initkex::closure#2]
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2875:28-2893:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2756:28-2774:1 -/
 def transport.validate_initkex.closure_2 :=
   cbordetveraux.cbor_raw × transport.validate_initkex.closure_1
 
-/-- [beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::closure::closure::closure]
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2586:28-2643:1 -/
-@[reducible]
-def transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4.bcSchemaRepeatedClosure5
-  :=
-  transport.validate_initkex.closure
-
-/-- [beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::closure::closure]
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2577:28-2693:1 -/
-@[reducible]
-def transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3.bcSchemaRepeatedClosure4 :=
-  transport.validate_initkex.closure
-
 /-- [beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure::closure]
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2568:28-2737:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2568:28-2618:1 -/
 @[reducible]
 def transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2.bcSchemaRepeatedClosure3 :=
   transport.validate_initkex.closure
 
 /-- [beaconcrypt_parse::transport::validate_initkex::closure#1::closure::closure]
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2559:28-2780:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2559:28-2661:1 -/
 @[reducible]
 def transport.validate_initkex.closure_1.closure.bcSchemaRepeatedClosure2 :=
   transport.validate_initkex.closure
 
 /-- [beaconcrypt_parse::transport::validate_initkex::closure#1::closure]
-    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2551:28-2823:1 -/
+    Source: 'beaconcrypt-parse/src/generated/transport.rs', lines 2551:28-2704:1 -/
 @[reducible]
 def transport.validate_initkex.closure_1.closure :=
   transport.validate_initkex.closure

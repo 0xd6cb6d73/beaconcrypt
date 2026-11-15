@@ -6,6 +6,7 @@ import BeaconcryptCore.Computational.CborRawMarkedBound
 open OracleComp OracleSpec CoreModels Aeneas ENNReal
 open Aeneas.Std hiding namespace core alloc
 set_option autoImplicit false
+set_option warningAsError true
 namespace BeaconcryptCore.Computational.CborRawHeadlineSlot
 open PqxdhServerAuthExperiment (Setup Codec Checks)
 open PqxdhRecordLiftInterface (WorldSpec)
@@ -33,13 +34,26 @@ noncomputable def birth : ProbComp (Option (PqxdhLiveServerConstruction.Created 
   (PqxdhRegistrationJointServerBirth.source setup.joint ensureInit setup.serverKeyId none).run
     ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime)
 
+private noncomputable def recordBirth : ProbComp (Option (PqxdhLiveServerConstruction.Created PqxdhTranscriptAd.AssociatedData) ×
+    PqxdhRegistrationJointServerPrefix.State KemSK A) :=
+  (PqxdhRegistrationJointServerBirth.source setup.joint ensureInit setup.serverKeyId none).run
+    ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime)
+
+private theorem birth_erase :
+    (fun result => (result.1.map PqxdhDeploymentEnvironment.eraseCreatedMetadata, result.2)) <$>
+      recordBirth setup ensureInit runtime = birth setup ensureInit runtime := by
+  simp only [recordBirth, birth, PqxdhRegistrationJointServerBirth.source, StateT.run,
+    PqxdhLiveServerConstruction.construct, Functor.map_map, map_bind]
+  refine bind_congr fun ready => ?_
+  split <;> simp only [map_pure, Functor.map_map] <;> rfl
+
 /-- The exact source constructor draws are counted before the fixed raw continuation. -/
 theorem fixed_event (world : PqxdhRecordLiftWorld.State 2) :
     observe event <$> (simulateQ (CborRecordWorldSimulation.guarded setup (boundaryWire wire parse)
       (CborRawCompile.route parse))
       (fixedClient setup wire parse checks target ensureInit runtime parameters work)).run world =
       (CborRawHeadlineStartup.coins setup (boundaryWire wire parse) (CborRawCompile.route parse)
-        (birth setup ensureInit runtime) world >>= fun born =>
+        (recordBirth setup ensureInit runtime) world >>= fun born =>
         match born.1.1 with
         | none => pure false
         | some created => observe event <$>
@@ -54,7 +68,7 @@ theorem fixed_event (world : PqxdhRecordLiftWorld.State 2) :
   | some created => simp only []
 
 /-- Actual Server initialization followed by the fixed raw continuation retains precisely its result and produced frames. -/
-theorem after_event (created : PqxdhLiveServerConstruction.Created Unit) (world : PqxdhRecordLiftWorld.State 2)
+theorem after_event (created : PqxdhLiveServerConstruction.Created PqxdhTranscriptAd.AssociatedData) (world : PqxdhRecordLiftWorld.State 2)
     (fresh : uncount world = uncount PqxdhRecordLiftWorld.initial) :
     observe event <$> (simulateQ (CborRecordWorldSimulation.guarded setup (boundaryWire wire parse)
       (CborRawCompile.route parse))
@@ -65,11 +79,11 @@ theorem after_event (created : PqxdhLiveServerConstruction.Created Unit) (world 
             (PqxdhDeploymentIdealEnv.envG setup (CborRawCompile.sourceCodec wire parse) checks target parameters ensureInit
               0 runtime) setup.serverKeyId)) work).run
               (⟨PqxdhDeploymentCompile.Log.empty, setup.serverKeyId⟩,
-                PqxdhDeploymentEnvironment.envInitial created (PqxdhDeploymentIdealSteps.splitInit created)))).run
-                  (initialized created world) := by
+                PqxdhDeploymentEnvironment.envInitial (PqxdhDeploymentEnvironment.eraseCreatedMetadata created) (PqxdhDeploymentIdealSteps.splitInit (PqxdhDeploymentEnvironment.eraseCreatedMetadata created))))).run
+                  (CborRawIdealProvenanceStartup.initialized created world) := by
   have vacant : world.server = none := congrArg PqxdhRecordLiftWorld.State.server fresh
   have bornRun : (CborRecordWorldSimulation.guarded setup (boundaryWire wire parse)
-      (CborRawCompile.route parse) (.inl created)).run world = pure ((), initialized created world) := by
+      (CborRawCompile.route parse) (.inl created)).run world = pure ((), CborRawIdealProvenanceStartup.initialized created world) := by
     change PqxdhRecordLiftWorld.initializeServer created world = _
     simp only [PqxdhRecordLiftWorld.initializeServer, vacant]
     rfl
@@ -78,23 +92,35 @@ theorem after_event (created : PqxdhLiveServerConstruction.Created Unit) (world 
   rfl
 
 /-- Every actual marked native execution is bounded by the initialized actual raw World event. -/
-theorem marked_world (created : PqxdhLiveServerConstruction.Created Unit) (world : PqxdhRecordLiftWorld.State 2)
+theorem marked_world (created : PqxdhLiveServerConstruction.Created PqxdhTranscriptAd.AssociatedData)
+    (afterBirth : PqxdhRegistrationJointServerPrefix.State KemSK A)
+    (born : (some created, afterBirth) ∈ support (recordBirth setup ensureInit runtime))
+    (world : PqxdhRecordLiftWorld.State 2)
     (fresh : uncount world = uncount PqxdhRecordLiftWorld.initial) :
-    𝒟[CborRawMarkedPrefix.run setup wire parse checks target parameters created work event
+    𝒟[CborRawMarkedPrefix.run setup wire parse checks target parameters (PqxdhDeploymentEnvironment.eraseCreatedMetadata created) work event
       (⟨PqxdhDeploymentCompile.Log.empty, setup.serverKeyId⟩,
-        PqxdhDeploymentBackend.xinitial created (PqxdhDeploymentIdealSteps.idealInit created))] {true} ≤
+        PqxdhDeploymentBackend.xinitial (PqxdhDeploymentEnvironment.eraseCreatedMetadata created) (PqxdhDeploymentIdealSteps.idealInit (PqxdhDeploymentEnvironment.eraseCreatedMetadata created)))] {true} ≤
       𝒟[observe event <$> (simulateQ (CborRecordWorldSimulation.guarded setup (boundaryWire wire parse)
         (CborRawCompile.route parse))
         (after setup wire parse checks target ensureInit runtime parameters created work)).run world] {true} := by
-  have bounded := CborRawMarkedBound.marked_le setup wire parse checks target parameters created work event
+  have actualConstructor := (PqxdhRegistrationJointServerBirth.source_constructor setup.joint ensureInit
+    setup.serverKeyId none ((PqxdhDynamicIdentityPool.initialState, PqxdhLiveKemBirth.empty), runtime)
+    afterBirth created born).2
+  have initializedSame : CborRawIdealProvenanceStartup.initialized created world =
+      initialized (PqxdhDeploymentEnvironment.eraseCreatedMetadata created) world := by
+    obtain ⟨seed, canonical, _⟩ := PqxdhLiveServerConstruction.construct_origin setup.joint ensureInit
+      0 setup.serverKeyId none runtime afterBirth.2 created actualConstructor
+    subst created
+    rfl
+  have bounded := CborRawMarkedBound.marked_le setup wire parse checks target parameters (PqxdhDeploymentEnvironment.eraseCreatedMetadata created) work event
     (⟨PqxdhDeploymentCompile.Log.empty, setup.serverKeyId⟩,
-      PqxdhDeploymentBackend.xinitial created (PqxdhDeploymentIdealSteps.idealInit created))
-  have joined := (CborRawWorldCoreHandoff.middle_world_from setup wire parse checks target parameters created ensureInit 0
+      PqxdhDeploymentBackend.xinitial (PqxdhDeploymentEnvironment.eraseCreatedMetadata created) (PqxdhDeploymentIdealSteps.idealInit (PqxdhDeploymentEnvironment.eraseCreatedMetadata created)))
+  have joined := (CborRawWorldCoreHandoff.middle_world_from setup wire parse checks target parameters (PqxdhDeploymentEnvironment.eraseCreatedMetadata created) ensureInit 0
     runtime world fresh work (⟨PqxdhDeploymentCompile.Log.empty, setup.serverKeyId⟩ : Public)).map
       (fun value => event (value.1, value.2.2.1))
   simp only [Functor.map_map] at joined
   rw [joined.evalDist_eq, CborRecordWorldSimulation.client_simulation] at bounded
-  rw [after_event setup wire parse checks target parameters ensureInit runtime work event created world fresh]
+  rw [after_event setup wire parse checks target parameters ensureInit runtime work event created world fresh, initializedSame]
   exact bounded
 
 /-- The complete initialized source slot game is bounded by its actual counted raw record-World event. -/
@@ -116,26 +142,34 @@ theorem slot_world
   have source := CborRawInitializedSlot.slot_native setup wire parse checks target parameters phase1 phase2 ensureInit
     runtime work event budget bounded unreadIdentity unreadKem room
   rw [source.evalDist_eq, fixed_event setup wire parse checks target parameters ensureInit runtime work event world]
+  change 𝒟[birth setup ensureInit runtime >>= _] {true} ≤ _
+  rw [← birth_erase setup ensureInit runtime, bind_map_left]
   have result := CborRawHeadlineStartup.bind_le setup (boundaryWire wire parse) (CborRawCompile.route parse)
-    (birth setup ensureInit runtime)
+    (recordBirth setup ensureInit runtime)
     (fun born => match born.1 with
       | none => pure false
-      | some created => CborRawMarkedPrefix.run setup wire parse checks target parameters created work event
+      | some created => CborRawMarkedPrefix.run setup wire parse checks target parameters (PqxdhDeploymentEnvironment.eraseCreatedMetadata created) work event
           (⟨PqxdhDeploymentCompile.Log.empty, setup.serverKeyId⟩,
-            PqxdhDeploymentBackend.xinitial created (PqxdhDeploymentIdealSteps.idealInit created)))
+            PqxdhDeploymentBackend.xinitial (PqxdhDeploymentEnvironment.eraseCreatedMetadata created) (PqxdhDeploymentIdealSteps.idealInit (PqxdhDeploymentEnvironment.eraseCreatedMetadata created))))
     (fun born current => match born.1 with
       | none => pure false
       | some created => observe event <$>
           (simulateQ (CborRecordWorldSimulation.guarded setup (boundaryWire wire parse) (CborRawCompile.route parse))
             (after setup wire parse checks target ensureInit runtime parameters created work)).run current) world (by
-      intro born _ current same
+      intro born supported current same
       cases found : born.1 with
       | none => exact le_rfl
       | some created =>
-          exact marked_world setup wire parse checks target parameters ensureInit runtime work event created current
-            (same.trans fresh))
+          exact marked_world setup wire parse checks target parameters ensureInit runtime work event created born.2
+            (by
+              change (born.1, born.2) ∈ support (recordBirth setup ensureInit runtime) at supported
+              rw [found] at supported
+              exact supported) current (same.trans fresh))
   convert result using 1
-  rfl
+  congr 1
+  apply congrArg evalDist
+  apply bind_congr
+  rintro ⟨_ | created, afterBirth⟩ <;> rfl
 
 end Slot
 

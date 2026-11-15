@@ -45,7 +45,7 @@ private theorem take_pin (handle : Nat) (before current : RegistrationServerFron
       exact (congrArg (fun state => state.pin) taken.2).symm
 
 private theorem source_lower (setup : Setup base KemSK) (checks : Checks)
-    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created Unit)
+    (representation : RegistrationServerRoleBackend.ConvertedIdentity setup) (created : PqxdhLiveServerConstruction.Created (Std.Array Std.U8 151#usize))
     (work : RegistrationNativeBeaconFrontend.M n KemSK source RegistrationServerRoleBackend.State V) (before : Native) :
     (RegistrationNativeExperiment.beacon setup checks representation created work).run before =
       Prod.map id RegistrationNativeMldsaShared.close <$> (lower setup checks representation created work).run
@@ -56,10 +56,11 @@ private theorem source_lower (setup : Setup base KemSK) (checks : Checks)
 /-- The exact root-bearing Beacon initializer and consumed receive state at successful source finish. -/
 def Outcome (token : peer.ConsumedRegistration) (pending : registration.BeaconPending) (application : Pqxdh.Bytes) : Prop :=
     ∃ (capability : agreement.BeaconAgreement) (established : registration.CompletedBeacon)
-      (initial : registration.BeaconInitialKdf) (aead : registration.BeaconRecordAead) (plaintext : Slice U8),
+      (initial : registration.BeaconInitialKdf) (aead : registration.BeaconRecordAead) (plaintext : Slice U8)
+      (adDigest : CtxRomAuth.CtxDigest),
       token.agreement.root.bytes = capability.root.bytes ∧
-      capability.binding = pending.binding ∧
-      established.binding = BeaconcryptCore.Refinement.RegistrationPublication.completedBinding pending.binding capability.candidate.assigned_key_id ∧
+      capability.binding = RegistrationResponseExecutor.completedBinding pending adDigest ∧
+      established.binding = BeaconcryptCore.Refinement.RegistrationPublication.completedBinding (RegistrationResponseExecutor.completedBinding pending adDigest) capability.candidate.assigned_key_id ∧
       registration.begin_beacon_completion capability = .ok initial ∧ initial.agreement = capability ∧
       BeaconcryptCore.Refinement.RegistrationReachability.BeaconRecordReachable initial (.AeadRequested aead) ∧
       aead.agreement = capability ∧
@@ -90,7 +91,7 @@ theorem path_root (setup : Setup base KemSK) (checks : Checks) (wire : Registrat
     ∃ serverCall ∈ calls, ∃ handle token current plaintext availability serverInitial hashed,
       serverCall.query = .inr (.build handle (some plaintext)) ∧
       RegistrationServerSdkSource.take handle serverCall.before.server = (some token, current) ∧
-      registration.begin_server_completion current.control current.pin availability token.agreement plaintext = .ok (.Ok serverInitial) ∧
+      BeaconcryptCore.Refinement.RegistrationAd.ServerAdmission current.control current.pin availability token.agreement plaintext serverInitial ∧
       RegistrationServerRecordExecutor.Path serverInitial hashed ∧ Outcome token pending application := by
   have issued := RegistrationNativeMldsaOriginJournal.finish_issued initial.credential calls good index packet application
     beforeFinish afterFinish member owner pending oneTime found phase keyProtected

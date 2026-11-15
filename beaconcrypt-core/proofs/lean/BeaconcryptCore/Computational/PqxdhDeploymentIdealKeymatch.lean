@@ -129,21 +129,48 @@ theorem reg_sessions (seed : IdentitySeed) (request : PqxdhRegistrationSchedule.
     (fun raw same => notAccept raw (by cases same; rfl)) native inner member
 
 /-- The owner after a native finish attempt holds no KEM key pair, or is unchanged. -/
-theorem nativeOwner_kem (raw : Pqxdh.Bytes) (owner : PqxdhRegistrationSchedule.Owner KemSK) (shared : NativeState KemSK)
+theorem nativeOwner_kem (completedBinding : beaconcrypt_core.session.CompletedRegistrationBinding) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) (shared : NativeState KemSK)
     (result : (Option Pqxdh.Bytes × PqxdhRegistrationSchedule.Owner KemSK) × NativeState KemSK)
     (member : result ∈ support ((simulateQ (PqxdhRegistrationSchedule.callbacks setup codec)
-      (PqxdhBeaconPhase2Publication.nativeOwner codec.frameRead raw owner)).run shared)) :
+      (PqxdhBeaconPhase2Publication.nativeOwner (completedBinding := completedBinding) codec.frameRead raw owner)).run
+        shared)) :
     kemPublic result.1.2.beacon.phase = none ∨ result.1.2 = owner := by
   cases phase : owner.beacon.phase with
   | initSent control prekey oneTime kem =>
-      exact Or.inl (terminal_kem _ (PqxdhRegistrationSchedule.native_attempt_terminal setup codec raw owner control
-        prekey oneTime kem phase shared result member))
+      exact Or.inl (terminal_kem _ (PqxdhRegistrationSchedule.native_attempt_terminal completedBinding setup codec raw
+        owner control prekey oneTime kem phase shared result member))
   | _ =>
       right
       simp only [PqxdhBeaconPhase2Publication.nativeOwner, PqxdhBeaconPhase2Publication.owner, phase, simulateQ_pure,
         StateT.run_pure, support_pure, Set.mem_singleton_iff] at member
       subst member
       rfl
+
+/-- The owner after a hashed native finish attempt (`PqxdhRegistrationSchedule.ownerFinish`) holds no KEM key pair, or is unchanged: the transcript hash is followed by the native owner at the completed binding of the digest (`nativeOwner_kem`), and the abort before hashing is terminal. -/
+theorem ownerFinish_kem (retained : Option PqxdhEd25519EufCma.Phase1Candidate) (raw : Pqxdh.Bytes)
+    (owner : PqxdhRegistrationSchedule.Owner KemSK) (shared : NativeState KemSK)
+    (result : (Option Pqxdh.Bytes × PqxdhRegistrationSchedule.Owner KemSK) × NativeState KemSK)
+    (member : result ∈ support ((PqxdhRegistrationSchedule.ownerFinish setup codec retained raw owner).run shared)) :
+    kemPublic result.1.2.beacon.phase = none ∨ result.1.2 = owner := by
+  unfold PqxdhRegistrationSchedule.ownerFinish at member
+  cases phase : owner.beacon.phase <;> simp only [phase] at member
+  case initSent control prekey oneTime kem =>
+    rcases retained with _ | init
+    · simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at member
+      subst member
+      exact Or.inl (terminal_kem _ (PqxdhRegistrationSchedule.finish_terminal control owner none))
+    · rcases decoded : PqxdhServerAuthExperiment.responseOf codec raw with _ | response
+      · simp only [decoded, StateT.run_pure, support_pure, Set.mem_singleton_iff] at member
+        subst member
+        exact Or.inl (terminal_kem _ (PqxdhRegistrationSchedule.finish_terminal control owner none))
+      · simp only [decoded] at member
+        rw [StateT.run_bind, mem_support_bind_iff] at member
+        obtain ⟨digest, _, member⟩ := member
+        exact nativeOwner_kem setup codec _ raw owner digest.2 result member
+  all_goals simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at member
+  all_goals subst member
+  all_goals exact Or.inr rfl
 
 /-- A native bundle call keeps the session counter and the pool owners, and a published bundle is the Phase 1 writer output of a candidate whose PQ key the owner holds. -/
 theorem reg_bundle (seed : IdentitySeed) (index : ℕ) (pool : List (Pair KemSK))
@@ -171,12 +198,17 @@ theorem reg_bundle (seed : IdentitySeed) (index : ℕ) (pool : List (Pair KemSK)
   | some owner =>
       change inner ∈ support (PqxdhRegistrationSchedule.bundle setup codec index native) at member
       rw [PqxdhRegistrationSchedule.bundle_source setup codec index native owner found, support_map] at member
-      obtain ⟨reached, reachedMember, rfl⟩ := member
-      obtain ⟨rejected, published⟩ := PqxdhDeploymentEligibility.bundle_candidate setup codec index owner reached
+      obtain ⟨logged, loggedMember, rfl⟩ := member
+      have reachedMember : logged.1 ∈ support (simulateQ (PqxdhRegistrationSchedule.bundleCallbacks setup codec
+          owner.beacon.identity) (PqxdhLivePhase1Bundle.bundle (PqxdhRegistrationSchedule.projection setup index) owner)) := by
+        rw [← PqxdhRegistrationSchedule.bundleLog_fst setup codec owner.beacon.identity _ (native.inits index),
+          support_map]
+        exact ⟨logged, loggedMember, rfl⟩
+      obtain ⟨rejected, published⟩ := PqxdhDeploymentEligibility.bundle_candidate setup codec index owner logged.1
         reachedMember
       refine ⟨sessions, ?_, ?_⟩
-      · refine poolOwners_set pool native.owners held index reached.2 (Or.inr ⟨owner, found, ?_⟩)
-        rcases outcome : reached.1 with _ | bytes
+      · refine poolOwners_set pool native.owners held index logged.1.2 (Or.inr ⟨owner, found, ?_⟩)
+        rcases outcome : logged.1.1 with _ | bytes
         · rw [rejected outcome]
         · obtain ⟨fresh, prekey, oneTime, kem, _, _, _, wasFresh, installed, _⟩ := published bytes outcome
           rw [installed]
@@ -208,7 +240,8 @@ theorem reg_finish (seed : IdentitySeed) (index : ℕ) (raw : Pqxdh.Bytes) (pool
       rw [PqxdhRegistrationSchedule.finish_source setup codec index raw native owner found, support_map] at member
       obtain ⟨reached, reachedMember, rfl⟩ := member
       refine poolOwners_set pool native.owners held index reached.1.2 ?_
-      rcases nativeOwner_kem setup codec raw owner native.shared reached reachedMember with none | same
+      rcases ownerFinish_kem setup codec (native.inits index) raw owner native.shared reached reachedMember with
+        none | same
       · exact Or.inl none
       · exact Or.inr ⟨owner, found, by rw [same]⟩
 
@@ -669,11 +702,19 @@ theorem buildHidden_sessions (hidden : PqxdhRegistrationJointKemPostSkeleton.Hid
   · simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at member
     subst member
     rfl
-  · rw [PqxdhDeploymentBackend.nativeCoins_bind, mem_support_bind_iff] at member
-    obtain ⟨_, _, member⟩ := member
-    simp only [PqxdhServerAuthNative.nativeSet, StateT.run] at member
-    subst member
-    rfl
+  · split at member
+    · simp only [PqxdhServerAuthNative.nativeSet, StateT.run] at member
+      subst member
+      rfl
+    · rw [StateT.run_bind, mem_support_bind_iff] at member
+      obtain ⟨digest, digestMember, member⟩ := member
+      simp only [PqxdhServerAuthNative.nativeHash, StateT.run, support_map, Set.mem_image] at digestMember
+      obtain ⟨_, _, rfl⟩ := digestMember
+      rw [PqxdhDeploymentBackend.nativeGet_bind, PqxdhDeploymentBackend.nativeCoins_bind, mem_support_bind_iff] at member
+      obtain ⟨_, _, member⟩ := member
+      simp only [PqxdhServerAuthNative.nativeSet, StateT.run] at member
+      subst member
+      rfl
 
 /-- The build command of the ideal registration keeps the accept counter, the mark, the session counter and the owners. -/
 theorem prog_build {count : ℕ} (t : Target count) (p : Params KemSK count)
@@ -765,6 +806,85 @@ theorem groupCE_sessions (hidden : PqxdhRegistrationJointKemEntryFactor.Output �
       obtain ⟨_, _, rfl⟩ := innerMember
       rfl
 
+/-- The grouped owner under `ownerImplCE`, at any completed binding, keeps the session counter, and its returned owner holds no KEM key pair or is unchanged. -/
+theorem groupedOwner_facts (hidden : PqxdhRegistrationJointKemEntryFactor.Output →
+      PqxdhRegistrationJointKemPostSkeleton.Hidden Response)
+    (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (binding : beaconcrypt_core.session.CompletedRegistrationBinding)
+    (raw : Pqxdh.Bytes) (owner : PqxdhRegistrationSchedule.Owner KemSK) (s : NativeState KemSK × Option Coord)
+    (result : (Option Pqxdh.Bytes × PqxdhRegistrationSchedule.Owner KemSK) × (NativeState KemSK × Option Coord))
+    (resultMember : result ∈ support ((simulateQ (PqxdhDeploymentIdealSteps.ownerImplCE setup codec hidden challenge)
+      (PqxdhDeploymentIdealSteps.groupedOwnerCE (Response := Response) binding raw owner)).run s)) :
+    result.2.1.2.sessions = s.1.2.sessions ∧ (kemPublic result.1.2.beacon.phase = none ∨ result.1.2 = owner) := by
+  have kept := keeps_any (PqxdhDeploymentIdealSteps.ownerImplCE setup codec hidden challenge)
+    (fun state : NativeState KemSK × Option Coord => state.1.2.sessions = s.1.2.sessions)
+    (fun query state good after afterMember => by
+      rcases query with preparation | pending
+      · change after ∈ support ((fun reply => (reply, state)) <$> liftS _) at afterMember
+        rw [support_map] at afterMember
+        obtain ⟨_, _, rfl⟩ := afterMember
+        exact good
+      · exact (groupCE_sessions setup codec hidden pending state after afterMember).trans good)
+    (PqxdhDeploymentIdealSteps.groupedOwnerCE (Response := Response) binding raw owner) s rfl result resultMember
+  refine ⟨kept, ?_⟩
+  have produced : result.1 ∈ support (PqxdhDeploymentIdealSteps.groupedOwnerCE (Response := Response) binding raw
+      owner) := by
+    apply OracleComp.support_simulateQ_run'_subset (PqxdhDeploymentIdealSteps.ownerImplCE setup codec hidden challenge)
+      _ s
+    rw [StateT.run'_eq, support_map]
+    exact ⟨result, resultMember, rfl⟩
+  unfold PqxdhDeploymentIdealSteps.groupedOwnerCE at produced
+  split at produced
+  · rename_i control prekey oneTime kem phase
+    rw [mem_support_bind_iff] at produced
+    obtain ⟨prepared, -, produced⟩ := produced
+    left
+    split at produced
+    · rw [support_pure, Set.mem_singleton_iff] at produced
+      rw [produced]
+      exact terminal_kem _ (PqxdhRegistrationSchedule.finish_terminal control owner none)
+    · rw [mem_support_bind_iff] at produced
+      obtain ⟨staged, -, produced⟩ := produced
+      rw [support_pure, Set.mem_singleton_iff] at produced
+      rw [produced]
+      exact terminal_kem _ (PqxdhRegistrationSchedule.finish_terminal control owner staged)
+  · rw [support_pure, Set.mem_singleton_iff] at produced
+    right
+    rw [produced]
+
+/-- The hashed grouped owner finish (`PqxdhDeploymentIdealSteps.hashedOwnerCE`) keeps the session counter (the transcript hash changes only the CTX cache), and its returned owner holds no KEM key pair (an attempt or the abort before hashing is terminal) or is unchanged. -/
+theorem hashedOwner_facts (hidden : PqxdhRegistrationJointKemEntryFactor.Output →
+      PqxdhRegistrationJointKemPostSkeleton.Hidden Response)
+    (challenge : PqxdhKemIndCca.MlKem768Ciphertext) (retained : Option PqxdhEd25519EufCma.Phase1Candidate)
+    (raw : Pqxdh.Bytes) (owner : PqxdhRegistrationSchedule.Owner KemSK) (s : NativeState KemSK × Option Coord)
+    (result : (Option Pqxdh.Bytes × PqxdhRegistrationSchedule.Owner KemSK) × (NativeState KemSK × Option Coord))
+    (resultMember : result ∈ support ((PqxdhDeploymentIdealSteps.hashedOwnerCE setup codec hidden challenge retained
+      raw owner).run s)) :
+    result.2.1.2.sessions = s.1.2.sessions ∧ (kemPublic result.1.2.beacon.phase = none ∨ result.1.2 = owner) := by
+  unfold PqxdhDeploymentIdealSteps.hashedOwnerCE at resultMember
+  cases phase : owner.beacon.phase <;> simp only [phase] at resultMember
+  case initSent control prekey oneTime kem =>
+    rcases retained with _ | init
+    · simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at resultMember
+      subst resultMember
+      exact ⟨rfl, Or.inl (terminal_kem _ (PqxdhRegistrationSchedule.finish_terminal control owner none))⟩
+    · rcases decoded : PqxdhServerAuthExperiment.responseOf codec raw with _ | response
+      · simp only [decoded, StateT.run_pure, support_pure, Set.mem_singleton_iff] at resultMember
+        subst resultMember
+        exact ⟨rfl, Or.inl (terminal_kem _ (PqxdhRegistrationSchedule.finish_terminal control owner none))⟩
+      · simp only [decoded] at resultMember
+        rw [StateT.run_bind, mem_support_bind_iff] at resultMember
+        obtain ⟨digest, digestMember, resultMember⟩ := resultMember
+        obtain ⟨kept, kem'⟩ := groupedOwner_facts setup codec hidden challenge _ raw owner digest.2 result resultMember
+        refine ⟨kept.trans ?_, kem'⟩
+        simp only [PqxdhServerAuthNative.nativeHash, StateT.run, support_map, support_liftComp, Set.mem_image]
+          at digestMember
+        obtain ⟨hashed, hashedMember, rfl⟩ := digestMember
+        obtain ⟨_, _, rfl⟩ := hashedMember
+        rfl
+  all_goals simp only [StateT.run_pure, support_pure, Set.mem_singleton_iff] at resultMember
+  all_goals subst resultMember
+  all_goals exact ⟨rfl, Or.inr rfl⟩
+
 /-- Owner k's challenge finish keeps the session counter, and the reinstalled owner holds no KEM key pair or is unchanged; hence it keeps the pool owners. -/
 theorem finishChallenge_facts (hidden : PqxdhRegistrationJointKemEntryFactor.Output →
       PqxdhRegistrationJointKemPostSkeleton.Hidden Response)
@@ -786,42 +906,12 @@ theorem finishChallenge_facts (hidden : PqxdhRegistrationJointKemEntryFactor.Out
     obtain ⟨result, resultMember, member⟩ := member
     rw [support_pure, Set.mem_singleton_iff] at member
     subst member
-    have kept := keeps_any (PqxdhDeploymentIdealSteps.ownerImplCE setup codec hidden challenge)
-      (fun s : NativeState KemSK × Option Coord => s.1.2.sessions = st.1.shared.2.sessions)
-      (fun query state good after afterMember => by
-        rcases query with preparation | pending
-        · change after ∈ support ((fun reply => (reply, state)) <$> liftS _) at afterMember
-          rw [support_map] at afterMember
-          obtain ⟨_, _, rfl⟩ := afterMember
-          exact good
-        · exact (groupCE_sessions setup codec hidden pending state after afterMember).trans good)
-      (PqxdhDeploymentIdealSteps.groupedOwnerCE (Response := Response) raw owner) (st.1.shared, st.2) rfl result
-      resultMember
-    refine ⟨kept, fun held => ?_⟩
-    have produced : result.1 ∈ support (PqxdhDeploymentIdealSteps.groupedOwnerCE (Response := Response) raw owner) := by
-      apply OracleComp.support_simulateQ_run'_subset (PqxdhDeploymentIdealSteps.ownerImplCE setup codec hidden challenge)
-        _ (st.1.shared, st.2)
-      rw [StateT.run'_eq, support_map]
-      exact ⟨result, resultMember, rfl⟩
-    refine poolOwners_set pool st.1.owners held index result.1.2 ?_
-    unfold PqxdhDeploymentIdealSteps.groupedOwnerCE at produced
-    split at produced
-    · rename_i control prekey oneTime kem phase
-      rw [mem_support_bind_iff] at produced
-      obtain ⟨prepared, -, produced⟩ := produced
-      left
-      split at produced
-      · rw [support_pure, Set.mem_singleton_iff] at produced
-        rw [produced]
-        exact terminal_kem _ (PqxdhRegistrationSchedule.finish_terminal control owner none)
-      · rw [mem_support_bind_iff] at produced
-        obtain ⟨staged, -, produced⟩ := produced
-        rw [support_pure, Set.mem_singleton_iff] at produced
-        rw [produced]
-        exact terminal_kem _ (PqxdhRegistrationSchedule.finish_terminal control owner staged)
-    · rw [support_pure, Set.mem_singleton_iff] at produced
-      right
-      exact ⟨owner, found, by rw [produced]⟩
+    obtain ⟨kept, kem⟩ := hashedOwner_facts setup codec hidden challenge (st.1.inits index) raw owner
+      (st.1.shared, st.2) result resultMember
+    refine ⟨kept, fun held => poolOwners_set pool st.1.owners held index result.1.2 ?_⟩
+    rcases kem with none | same
+    · exact Or.inl none
+    · exact Or.inr ⟨owner, found, by rw [same]⟩
 
 /-- The finish command of the ideal registration keeps the accept counter, the mark, the session counter and the pool owners. -/
 theorem prog_finish {count : ℕ} (t : Target count) (p : Params KemSK count)
@@ -1728,3 +1818,18 @@ info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealKeymatch.handler_accept
 -/
 #guard_msgs in
 #print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealKeymatch.handler_accept_inactive
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealKeymatch.ownerFinish_kem' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealKeymatch.ownerFinish_kem
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealKeymatch.groupedOwner_facts' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealKeymatch.groupedOwner_facts
+/-- info: 'BeaconcryptCore.Computational.PqxdhDeploymentIdealKeymatch.hashedOwner_facts' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound] -/
+#guard_msgs in
+#print axioms BeaconcryptCore.Computational.PqxdhDeploymentIdealKeymatch.hashedOwner_facts
